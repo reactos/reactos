@@ -143,7 +143,6 @@ struct cond_str {
 static LPWSTR COND_GetString( const struct cond_str *str );
 static LPWSTR COND_GetLiteral( const struct cond_str *str );
 static int cond_lex( void *COND_lval, COND_input *info);
-static const WCHAR szEmpty[] = { 0 };
 
 static INT compare_int( INT a, INT operator, INT b );
 static INT compare_string( LPCWSTR a, INT operator, LPCWSTR b, BOOL convert );
@@ -185,7 +184,7 @@ static BOOL num_from_prop( LPCWSTR p, INT *val )
 
 
 /* Line 189 of yacc.c  */
-#line 189 "cond.tab.c"
+#line 188 "cond.tab.c"
 
 /* Enabling traces.  */
 #ifndef YYDEBUG
@@ -260,7 +259,7 @@ typedef union YYSTYPE
 {
 
 /* Line 214 of yacc.c  */
-#line 111 "cond.y"
+#line 110 "cond.y"
 
     struct cond_str str;
     LPWSTR    string;
@@ -269,7 +268,7 @@ typedef union YYSTYPE
 
 
 /* Line 214 of yacc.c  */
-#line 273 "cond.tab.c"
+#line 272 "cond.tab.c"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -281,7 +280,7 @@ typedef union YYSTYPE
 
 
 /* Line 264 of yacc.c  */
-#line 285 "cond.tab.c"
+#line 284 "cond.tab.c"
 
 #ifdef short
 # undef short
@@ -585,12 +584,12 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   135,   135,   141,   148,   152,   156,   160,   164,   171,
-     175,   182,   186,   190,   195,   199,   208,   217,   221,   225,
-     229,   233,   238,   243,   251,   252,   253,   254,   255,   256,
-     257,   258,   259,   260,   261,   262,   263,   264,   265,   266,
-     267,   268,   272,   276,   283,   292,   296,   305,   314,   327,
-     339,   346,   360,   369
+       0,   134,   134,   140,   147,   151,   155,   159,   163,   170,
+     174,   181,   185,   189,   194,   198,   207,   216,   220,   224,
+     228,   232,   237,   242,   250,   251,   252,   253,   254,   255,
+     256,   257,   258,   259,   260,   261,   262,   263,   264,   265,
+     266,   267,   271,   275,   282,   291,   295,   304,   313,   326,
+     338,   345,   359,   368
 };
 #endif
 
@@ -1541,7 +1540,7 @@ yyreduce:
         case 2:
 
 /* Line 1455 of yacc.c  */
-#line 136 "cond.y"
+#line 135 "cond.y"
     {
             COND_input* cond = (COND_input*) info;
             cond->result = (yyvsp[(1) - (1)].value);
@@ -1551,7 +1550,7 @@ yyreduce:
   case 3:
 
 /* Line 1455 of yacc.c  */
-#line 141 "cond.y"
+#line 140 "cond.y"
     {
             COND_input* cond = (COND_input*) info;
             cond->result = MSICONDITION_NONE;
@@ -1561,7 +1560,7 @@ yyreduce:
   case 4:
 
 /* Line 1455 of yacc.c  */
-#line 149 "cond.y"
+#line 148 "cond.y"
     {
             (yyval.value) = (yyvsp[(1) - (1)].value);
         ;}
@@ -1570,7 +1569,7 @@ yyreduce:
   case 5:
 
 /* Line 1455 of yacc.c  */
-#line 153 "cond.y"
+#line 152 "cond.y"
     {
             (yyval.value) = (yyvsp[(1) - (3)].value) || (yyvsp[(3) - (3)].value);
         ;}
@@ -1579,7 +1578,7 @@ yyreduce:
   case 6:
 
 /* Line 1455 of yacc.c  */
-#line 157 "cond.y"
+#line 156 "cond.y"
     {
             (yyval.value) = !(yyvsp[(1) - (3)].value) || (yyvsp[(3) - (3)].value);
         ;}
@@ -1588,7 +1587,7 @@ yyreduce:
   case 7:
 
 /* Line 1455 of yacc.c  */
-#line 161 "cond.y"
+#line 160 "cond.y"
     {
             (yyval.value) = ( (yyvsp[(1) - (3)].value) || (yyvsp[(3) - (3)].value) ) && !( (yyvsp[(1) - (3)].value) && (yyvsp[(3) - (3)].value) );
         ;}
@@ -1597,7 +1596,7 @@ yyreduce:
   case 8:
 
 /* Line 1455 of yacc.c  */
-#line 165 "cond.y"
+#line 164 "cond.y"
     {
             (yyval.value) = ( (yyvsp[(1) - (3)].value) && (yyvsp[(3) - (3)].value) ) || ( !(yyvsp[(1) - (3)].value) && !(yyvsp[(3) - (3)].value) );
         ;}
@@ -1606,7 +1605,7 @@ yyreduce:
   case 9:
 
 /* Line 1455 of yacc.c  */
-#line 172 "cond.y"
+#line 171 "cond.y"
     {
             (yyval.value) = (yyvsp[(1) - (1)].value);
         ;}
@@ -1615,7 +1614,7 @@ yyreduce:
   case 10:
 
 /* Line 1455 of yacc.c  */
-#line 176 "cond.y"
+#line 175 "cond.y"
     {
             (yyval.value) = (yyvsp[(1) - (3)].value) && (yyvsp[(3) - (3)].value);
         ;}
@@ -1624,7 +1623,7 @@ yyreduce:
   case 11:
 
 /* Line 1455 of yacc.c  */
-#line 183 "cond.y"
+#line 182 "cond.y"
     {
             (yyval.value) = (yyvsp[(2) - (2)].value) ? 0 : 1;
         ;}
@@ -1633,7 +1632,7 @@ yyreduce:
   case 12:
 
 /* Line 1455 of yacc.c  */
-#line 187 "cond.y"
+#line 186 "cond.y"
     {
             (yyval.value) = (yyvsp[(1) - (1)].value) ? 1 : 0;
         ;}
@@ -1642,7 +1641,7 @@ yyreduce:
   case 13:
 
 /* Line 1455 of yacc.c  */
-#line 191 "cond.y"
+#line 190 "cond.y"
     {
             (yyval.value) = ((yyvsp[(1) - (1)].string) && (yyvsp[(1) - (1)].string)[0]) ? 1 : 0;
             msi_free((yyvsp[(1) - (1)].string));
@@ -1652,7 +1651,7 @@ yyreduce:
   case 14:
 
 /* Line 1455 of yacc.c  */
-#line 196 "cond.y"
+#line 195 "cond.y"
     {
             (yyval.value) = compare_int( (yyvsp[(1) - (3)].value), (yyvsp[(2) - (3)].value), (yyvsp[(3) - (3)].value) );
         ;}
@@ -1661,7 +1660,7 @@ yyreduce:
   case 15:
 
 /* Line 1455 of yacc.c  */
-#line 200 "cond.y"
+#line 199 "cond.y"
     {
             int num;
             if (num_from_prop( (yyvsp[(1) - (3)].string), &num ))
@@ -1675,7 +1674,7 @@ yyreduce:
   case 16:
 
 /* Line 1455 of yacc.c  */
-#line 209 "cond.y"
+#line 208 "cond.y"
     {
             int num;
             if (num_from_prop( (yyvsp[(3) - (3)].string), &num ))
@@ -1689,7 +1688,7 @@ yyreduce:
   case 17:
 
 /* Line 1455 of yacc.c  */
-#line 218 "cond.y"
+#line 217 "cond.y"
     {
             (yyval.value) = compare_and_free_strings( (yyvsp[(1) - (3)].string), (yyvsp[(2) - (3)].value), (yyvsp[(3) - (3)].string), TRUE );
         ;}
@@ -1698,7 +1697,7 @@ yyreduce:
   case 18:
 
 /* Line 1455 of yacc.c  */
-#line 222 "cond.y"
+#line 221 "cond.y"
     {
             (yyval.value) = compare_and_free_strings( (yyvsp[(1) - (3)].string), (yyvsp[(2) - (3)].value), (yyvsp[(3) - (3)].string), TRUE );
         ;}
@@ -1707,7 +1706,7 @@ yyreduce:
   case 19:
 
 /* Line 1455 of yacc.c  */
-#line 226 "cond.y"
+#line 225 "cond.y"
     {
             (yyval.value) = compare_and_free_strings( (yyvsp[(1) - (3)].string), (yyvsp[(2) - (3)].value), (yyvsp[(3) - (3)].string), TRUE );
         ;}
@@ -1716,7 +1715,7 @@ yyreduce:
   case 20:
 
 /* Line 1455 of yacc.c  */
-#line 230 "cond.y"
+#line 229 "cond.y"
     {
             (yyval.value) = compare_and_free_strings( (yyvsp[(1) - (3)].string), (yyvsp[(2) - (3)].value), (yyvsp[(3) - (3)].string), FALSE );
         ;}
@@ -1725,7 +1724,7 @@ yyreduce:
   case 21:
 
 /* Line 1455 of yacc.c  */
-#line 234 "cond.y"
+#line 233 "cond.y"
     {
             (yyval.value) = 0;
             msi_free((yyvsp[(1) - (3)].string));
@@ -1735,7 +1734,7 @@ yyreduce:
   case 22:
 
 /* Line 1455 of yacc.c  */
-#line 239 "cond.y"
+#line 238 "cond.y"
     {
             (yyval.value) = 0;
             msi_free((yyvsp[(3) - (3)].string));
@@ -1745,7 +1744,7 @@ yyreduce:
   case 23:
 
 /* Line 1455 of yacc.c  */
-#line 244 "cond.y"
+#line 243 "cond.y"
     {
             (yyval.value) = (yyvsp[(2) - (3)].value);
         ;}
@@ -1754,133 +1753,133 @@ yyreduce:
   case 24:
 
 /* Line 1455 of yacc.c  */
-#line 251 "cond.y"
+#line 250 "cond.y"
     { (yyval.value) = COND_EQ; ;}
     break;
 
   case 25:
 
 /* Line 1455 of yacc.c  */
-#line 252 "cond.y"
+#line 251 "cond.y"
     { (yyval.value) = COND_NE; ;}
     break;
 
   case 26:
 
 /* Line 1455 of yacc.c  */
-#line 253 "cond.y"
+#line 252 "cond.y"
     { (yyval.value) = COND_LT; ;}
     break;
 
   case 27:
 
 /* Line 1455 of yacc.c  */
-#line 254 "cond.y"
+#line 253 "cond.y"
     { (yyval.value) = COND_GT; ;}
     break;
 
   case 28:
 
 /* Line 1455 of yacc.c  */
-#line 255 "cond.y"
+#line 254 "cond.y"
     { (yyval.value) = COND_LE; ;}
     break;
 
   case 29:
 
 /* Line 1455 of yacc.c  */
-#line 256 "cond.y"
+#line 255 "cond.y"
     { (yyval.value) = COND_GE; ;}
     break;
 
   case 30:
 
 /* Line 1455 of yacc.c  */
-#line 257 "cond.y"
+#line 256 "cond.y"
     { (yyval.value) = COND_SS; ;}
     break;
 
   case 31:
 
 /* Line 1455 of yacc.c  */
-#line 258 "cond.y"
+#line 257 "cond.y"
     { (yyval.value) = COND_IEQ; ;}
     break;
 
   case 32:
 
 /* Line 1455 of yacc.c  */
-#line 259 "cond.y"
+#line 258 "cond.y"
     { (yyval.value) = COND_INE; ;}
     break;
 
   case 33:
 
 /* Line 1455 of yacc.c  */
-#line 260 "cond.y"
+#line 259 "cond.y"
     { (yyval.value) = COND_ILT; ;}
     break;
 
   case 34:
 
 /* Line 1455 of yacc.c  */
-#line 261 "cond.y"
+#line 260 "cond.y"
     { (yyval.value) = COND_IGT; ;}
     break;
 
   case 35:
 
 /* Line 1455 of yacc.c  */
-#line 262 "cond.y"
+#line 261 "cond.y"
     { (yyval.value) = COND_ILE; ;}
     break;
 
   case 36:
 
 /* Line 1455 of yacc.c  */
-#line 263 "cond.y"
+#line 262 "cond.y"
     { (yyval.value) = COND_IGE; ;}
     break;
 
   case 37:
 
 /* Line 1455 of yacc.c  */
-#line 264 "cond.y"
+#line 263 "cond.y"
     { (yyval.value) = COND_ISS; ;}
     break;
 
   case 38:
 
 /* Line 1455 of yacc.c  */
-#line 265 "cond.y"
+#line 264 "cond.y"
     { (yyval.value) = COND_LHS; ;}
     break;
 
   case 39:
 
 /* Line 1455 of yacc.c  */
-#line 266 "cond.y"
+#line 265 "cond.y"
     { (yyval.value) = COND_RHS; ;}
     break;
 
   case 40:
 
 /* Line 1455 of yacc.c  */
-#line 267 "cond.y"
+#line 266 "cond.y"
     { (yyval.value) = COND_ILHS; ;}
     break;
 
   case 41:
 
 /* Line 1455 of yacc.c  */
-#line 268 "cond.y"
+#line 267 "cond.y"
     { (yyval.value) = COND_IRHS; ;}
     break;
 
   case 42:
 
 /* Line 1455 of yacc.c  */
-#line 273 "cond.y"
+#line 272 "cond.y"
     {
         (yyval.string) = (yyvsp[(1) - (1)].string);
     ;}
@@ -1889,7 +1888,7 @@ yyreduce:
   case 43:
 
 /* Line 1455 of yacc.c  */
-#line 277 "cond.y"
+#line 276 "cond.y"
     {
         (yyval.string) = (yyvsp[(1) - (1)].string);
     ;}
@@ -1898,7 +1897,7 @@ yyreduce:
   case 44:
 
 /* Line 1455 of yacc.c  */
-#line 284 "cond.y"
+#line 283 "cond.y"
     {
             (yyval.string) = COND_GetLiteral(&(yyvsp[(1) - (1)].str));
             if( !(yyval.string) )
@@ -1909,7 +1908,7 @@ yyreduce:
   case 45:
 
 /* Line 1455 of yacc.c  */
-#line 293 "cond.y"
+#line 292 "cond.y"
     {
             (yyval.value) = (yyvsp[(1) - (1)].value);
         ;}
@@ -1918,7 +1917,7 @@ yyreduce:
   case 46:
 
 /* Line 1455 of yacc.c  */
-#line 297 "cond.y"
+#line 296 "cond.y"
     {
             COND_input* cond = (COND_input*) info;
             INSTALLSTATE install = INSTALLSTATE_UNKNOWN, action = INSTALLSTATE_UNKNOWN;
@@ -1932,7 +1931,7 @@ yyreduce:
   case 47:
 
 /* Line 1455 of yacc.c  */
-#line 306 "cond.y"
+#line 305 "cond.y"
     {
             COND_input* cond = (COND_input*) info;
             INSTALLSTATE install = INSTALLSTATE_UNKNOWN, action = INSTALLSTATE_UNKNOWN;
@@ -1946,7 +1945,7 @@ yyreduce:
   case 48:
 
 /* Line 1455 of yacc.c  */
-#line 315 "cond.y"
+#line 314 "cond.y"
     {
             COND_input* cond = (COND_input*) info;
             INSTALLSTATE install = INSTALLSTATE_UNKNOWN, action = INSTALLSTATE_UNKNOWN;
@@ -1964,7 +1963,7 @@ yyreduce:
   case 49:
 
 /* Line 1455 of yacc.c  */
-#line 328 "cond.y"
+#line 327 "cond.y"
     {
             COND_input* cond = (COND_input*) info;
             INSTALLSTATE install = INSTALLSTATE_UNKNOWN, action = INSTALLSTATE_UNKNOWN;
@@ -1978,7 +1977,7 @@ yyreduce:
   case 50:
 
 /* Line 1455 of yacc.c  */
-#line 340 "cond.y"
+#line 339 "cond.y"
     {
             COND_input* cond = (COND_input*) info;
 
@@ -1990,7 +1989,7 @@ yyreduce:
   case 51:
 
 /* Line 1455 of yacc.c  */
-#line 347 "cond.y"
+#line 346 "cond.y"
     {
             UINT len = GetEnvironmentVariableW( (yyvsp[(2) - (2)].string), NULL, 0 );
             (yyval.string) = NULL;
@@ -2006,7 +2005,7 @@ yyreduce:
   case 52:
 
 /* Line 1455 of yacc.c  */
-#line 361 "cond.y"
+#line 360 "cond.y"
     {
             (yyval.string) = COND_GetString(&(yyvsp[(1) - (1)].str));
             if( !(yyval.string) )
@@ -2017,7 +2016,7 @@ yyreduce:
   case 53:
 
 /* Line 1455 of yacc.c  */
-#line 370 "cond.y"
+#line 369 "cond.y"
     {
             LPWSTR szNum = COND_GetString(&(yyvsp[(1) - (1)].str));
             if( !szNum )
@@ -2030,7 +2029,7 @@ yyreduce:
 
 
 /* Line 1455 of yacc.c  */
-#line 2034 "cond.tab.c"
+#line 2033 "cond.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -2242,7 +2241,7 @@ yyreturn:
 
 
 /* Line 1675 of yacc.c  */
-#line 379 "cond.y"
+#line 378 "cond.y"
 
 
 

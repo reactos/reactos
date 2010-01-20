@@ -53,6 +53,12 @@ xHalHaltSystem(
     VOID
 );
 
+UCHAR
+NTAPI
+xHalVectorToIDTEntry(
+    IN ULONG Vector
+);
+
 
 //
 // Various offsets in the boot record

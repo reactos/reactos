@@ -482,7 +482,7 @@ unsigned char get_array_fc(const type_t *type)
         /* ref pointers cannot just be block copied. unique pointers to
          * interfaces need special treatment. either case means the array is
          * complex */
-        if (get_pointer_fc(elem_type, NULL, FALSE) == RPC_FC_RP)
+        if (get_pointer_fc(elem_type, NULL, FALSE) == RPC_FC_RP || pointer_size != 4)
             fc = RPC_FC_BOGUS_ARRAY;
         break;
     case TGT_BASIC:
@@ -529,8 +529,7 @@ static int type_has_pointers(const type_t *type)
     case TGT_POINTER:
         return TRUE;
     case TGT_ARRAY:
-        /* FIXME: array can be pointer */
-        return type_has_pointers(type_array_get_element(type));
+        return type_array_is_decl_as_ptr(type) || type_has_pointers(type_array_get_element(type));
     case TGT_STRUCT:
     {
         var_list_t *fields = type_struct_get_fields(type);
@@ -1574,6 +1573,30 @@ static void write_member_type(FILE *file, const type_t *cont,
         error("Unsupported member type %d\n", type_get_type(type));
 }
 
+static void write_array_element_type(FILE *file, const type_t *type,
+                                     int cont_is_complex, unsigned int *tfsoff)
+{
+    type_t *elem = type_array_get_element(type);
+
+    if (!is_embedded_complex(elem) && is_ptr(elem))
+    {
+        type_t *ref = type_pointer_get_ref(elem);
+
+        if (processed(ref))
+        {
+            write_nonsimple_pointer(file, NULL, elem, FALSE, ref->typestring_offset, tfsoff);
+            return;
+        }
+        if (!is_string_type(NULL, elem) &&
+            (type_get_type(ref) == TYPE_BASIC || type_get_type(ref) == TYPE_ENUM))
+        {
+            *tfsoff += write_simple_pointer(file, NULL, elem, FALSE);
+            return;
+        }
+    }
+    return write_member_type(file, type, cont_is_complex, NULL, elem, NULL, tfsoff);
+}
+
 static void write_end(FILE *file, unsigned int *tfsoff)
 {
     if (*tfsoff % 2 == 0)
@@ -1615,87 +1638,6 @@ static void write_descriptors(FILE *file, type_t *type, unsigned int *tfsoff)
     }
 }
 
-static int write_no_repeat_pointer_descriptions(
-    FILE *file, const attr_list_t *attrs, type_t *type,
-    unsigned int *offset_in_memory, unsigned int *offset_in_buffer,
-    unsigned int *typestring_offset)
-{
-    int written = 0;
-    unsigned int align;
-
-    if (is_ptr(type) ||
-        (is_conformant_array(type) && type_array_is_decl_as_ptr(type)))
-    {
-        unsigned int memsize;
-
-        print_file(file, 2, "0x%02x, /* FC_NO_REPEAT */\n", RPC_FC_NO_REPEAT);
-        print_file(file, 2, "0x%02x, /* FC_PAD */\n", RPC_FC_PAD);
-
-        /* pointer instance */
-        print_file(file, 2, "NdrFcShort(0x%hx),\t/* Memory offset = %d */\n", *offset_in_memory, *offset_in_memory);
-        print_file(file, 2, "NdrFcShort(0x%hx),\t/* Buffer offset = %d */\n", *offset_in_buffer, *offset_in_buffer);
-        *typestring_offset += 6;
-
-        if (is_ptr(type))
-        {
-            if (is_string_type(attrs, type))
-                write_string_tfs(file, attrs, type, FALSE, NULL, typestring_offset);
-            else
-                write_pointer_tfs(file, attrs, type, FALSE, typestring_offset);
-        }
-        else
-        {
-            unsigned int offset = type->typestring_offset;
-            /* skip over the pointer that is written for strings, since a
-             * pointer has to be written in-place here */
-            if (is_string_type(attrs, type))
-                offset += 4;
-            write_nonsimple_pointer(file, attrs, type, FALSE, offset, typestring_offset);
-        }
-
-        align = 0;
-        memsize = type_memsize(type, &align);
-        *offset_in_memory += memsize;
-        /* increment these separately as in the case of conformant (varying)
-         * structures these start at different values */
-        *offset_in_buffer += memsize;
-
-        return 1;
-    }
-
-    if (is_non_complex_struct(type))
-    {
-        const var_t *v;
-        LIST_FOR_EACH_ENTRY( v, type_struct_get_fields(type), const var_t, entry )
-        {
-            if (offset_in_memory && offset_in_buffer)
-            {
-                unsigned int padding;
-                align = 0;
-                type_memsize(v->type, &align);
-                padding = ROUNDING(*offset_in_memory, align);
-                *offset_in_memory += padding;
-                *offset_in_buffer += padding;
-            }
-            written += write_no_repeat_pointer_descriptions(
-                file, v->attrs, v->type,
-                offset_in_memory, offset_in_buffer, typestring_offset);
-        }
-    }
-    else
-    {
-        unsigned int memsize;
-        align = 0;
-        memsize = type_memsize(type, &align);
-        *offset_in_memory += memsize;
-        /* increment these separately as in the case of conformant (varying)
-         * structures these start at different values */
-        *offset_in_buffer += memsize;
-    }
-
-    return written;
-}
-
 static int write_pointer_description_offsets(
     FILE *file, const attr_list_t *attrs, type_t *type,
     unsigned int *offset_in_memory, unsigned int *offset_in_buffer,
@@ -1704,10 +1646,9 @@ static int write_pointer_description_offsets(
     int written = 0;
     unsigned int align;
 
-    if (is_ptr(type) && type_get_type(type_pointer_get_ref(type)) != TYPE_INTERFACE)
+    if ((is_ptr(type) && type_get_type(type_pointer_get_ref(type)) != TYPE_INTERFACE) ||
+        (is_array(type) && type_array_is_decl_as_ptr(type)))
     {
-        type_t *ref = type_pointer_get_ref(type);
-
         if (offset_in_memory && offset_in_buffer)
         {
             unsigned int memsize;
@@ -1726,12 +1667,28 @@ static int write_pointer_description_offsets(
         }
         *typestring_offset += 4;
 
-        if (is_string_type(attrs, type))
-            write_string_tfs(file, attrs, type, FALSE, NULL, typestring_offset);
-        else if (processed(ref) || type_get_type(ref) == TYPE_BASIC || type_get_type(ref) == TYPE_ENUM)
-            write_pointer_tfs(file, attrs, type, FALSE, typestring_offset);
+        if (is_ptr(type))
+        {
+            type_t *ref = type_pointer_get_ref(type);
+
+            if (is_string_type(attrs, type))
+                write_string_tfs(file, attrs, type, FALSE, NULL, typestring_offset);
+            else if (processed(ref))
+                write_nonsimple_pointer(file, attrs, type, FALSE, ref->typestring_offset, typestring_offset);
+            else if (type_get_type(ref) == TYPE_BASIC || type_get_type(ref) == TYPE_ENUM)
+                *typestring_offset += write_simple_pointer(file, attrs, type, FALSE);
+            else
+                error("write_pointer_description_offsets: type format string unknown\n");
+        }
         else
-            error("write_pointer_description_offsets: type format string unknown\n");
+        {
+            unsigned int offset = type->typestring_offset;
+            /* skip over the pointer that is written for strings, since a
+             * pointer has to be written in-place here */
+            if (is_string_type(attrs, type))
+                offset += 4;
+            write_nonsimple_pointer(file, attrs, type, FALSE, offset, typestring_offset);
+        }
 
         return 1;
     }
@@ -1774,6 +1731,58 @@ static int write_pointer_description_offsets(
              * structures these start at different values */
             *offset_in_buffer += memsize;
         }
+    }
+
+    return written;
+}
+
+static int write_no_repeat_pointer_descriptions(
+    FILE *file, const attr_list_t *attrs, type_t *type,
+    unsigned int *offset_in_memory, unsigned int *offset_in_buffer,
+    unsigned int *typestring_offset)
+{
+    int written = 0;
+    unsigned int align;
+
+    if (is_ptr(type) ||
+        (is_conformant_array(type) && type_array_is_decl_as_ptr(type)))
+    {
+        print_file(file, 2, "0x%02x, /* FC_NO_REPEAT */\n", RPC_FC_NO_REPEAT);
+        print_file(file, 2, "0x%02x, /* FC_PAD */\n", RPC_FC_PAD);
+        *typestring_offset += 2;
+
+        return write_pointer_description_offsets(file, attrs, type,
+                       offset_in_memory, offset_in_buffer, typestring_offset);
+    }
+
+    if (is_non_complex_struct(type))
+    {
+        const var_t *v;
+        LIST_FOR_EACH_ENTRY( v, type_struct_get_fields(type), const var_t, entry )
+        {
+            if (offset_in_memory && offset_in_buffer)
+            {
+                unsigned int padding;
+                align = 0;
+                type_memsize(v->type, &align);
+                padding = ROUNDING(*offset_in_memory, align);
+                *offset_in_memory += padding;
+                *offset_in_buffer += padding;
+            }
+            written += write_no_repeat_pointer_descriptions(
+                file, v->attrs, v->type,
+                offset_in_memory, offset_in_buffer, typestring_offset);
+        }
+    }
+    else
+    {
+        unsigned int memsize;
+        align = 0;
+        memsize = type_memsize(type, &align);
+        *offset_in_memory += memsize;
+        /* increment these separately as in the case of conformant (varying)
+         * structures these start at different values */
+        *offset_in_buffer += memsize;
     }
 
     return written;
@@ -1935,7 +1944,7 @@ static int write_varying_array_pointer_descriptions(
             *typestring_offset += 8;
 
             pointer_count = write_pointer_description_offsets(
-                file, attrs, type, offset_in_memory,
+                file, attrs, type_array_get_element(type), offset_in_memory,
                 offset_in_buffer, typestring_offset);
         }
     }
@@ -2228,7 +2237,7 @@ static unsigned int write_array_tfs(FILE *file, const attr_list_t *attrs, type_t
             *typestring_offset += 1;
         }
 
-        write_member_type(file, type, FALSE, NULL, type_array_get_element(type), NULL, typestring_offset);
+        write_array_element_type(file, type, FALSE, typestring_offset);
         write_end(file, typestring_offset);
     }
     else
@@ -2242,7 +2251,8 @@ static unsigned int write_array_tfs(FILE *file, const attr_list_t *attrs, type_t
         *typestring_offset
             += write_conf_or_var_desc(file, current_structure, baseoff,
                                       type, length_is);
-        write_member_type(file, type, TRUE, NULL, type_array_get_element(type), NULL, typestring_offset);
+
+        write_array_element_type(file, type, TRUE, typestring_offset);
         write_end(file, typestring_offset);
     }
 
@@ -4053,7 +4063,7 @@ void write_exceptions( FILE *file )
     fprintf( file, "#undef RpcAbnormalTermination\n");
     fprintf( file, "\n");
     fprintf( file, "struct __exception_frame;\n");
-    fprintf( file, "typedef int (*__filter_func)(EXCEPTION_RECORD *, struct __exception_frame *);\n");
+    fprintf( file, "typedef int (*__filter_func)(struct __exception_frame *);\n");
     fprintf( file, "typedef void (*__finally_func)(struct __exception_frame *);\n");
     fprintf( file, "\n");
     fprintf( file, "#define __DECL_EXCEPTION_FRAME \\\n");
@@ -4100,7 +4110,7 @@ void write_exceptions( FILE *file )
     fprintf( file, "        return ExceptionContinueSearch;\n");
     fprintf( file, "    }\n" );
     fprintf( file, "    exc_frame->code = record->ExceptionCode;\n");
-    fprintf( file, "    if (exc_frame->filter_level && exc_frame->filter( record, exc_frame ) == EXCEPTION_EXECUTE_HANDLER)\n" );
+    fprintf( file, "    if (exc_frame->filter_level && exc_frame->filter( exc_frame ) == EXCEPTION_EXECUTE_HANDLER)\n" );
     fprintf( file, "        __wine_rtl_unwind( frame, record, __widl_unwind_target );\n");
     fprintf( file, "    return ExceptionContinueSearch;\n");
     fprintf( file, "}\n");

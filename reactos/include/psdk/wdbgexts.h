@@ -27,6 +27,26 @@ enum
 
 #define KDBG_TAG                                        'GBDK'
 
+typedef enum _DBGKD_MAJOR_TYPES
+{
+    DBGKD_MAJOR_NT,
+    DBGKD_MAJOR_XBOX,
+    DBGKD_MAJOR_BIG,
+    DBGKD_MAJOR_EXDI,
+    DBGKD_MAJOR_NTBD,
+    DBGKD_MAJOR_EFI,
+    DBGKD_MAJOR_TNT,
+    DBGKD_MAJOR_SINGULARITY,
+    DBGKD_MAJOR_HYPERVISOR,
+    DBGKD_MAJOR_COUNT
+} DBGKD_MAJOR_TYPES;
+
+//
+// The major type is in the high byte
+//
+#define DBGKD_MAJOR_TYPE(MajorVersion) \
+    ((DBGKD_MAJOR_TYPES)((MajorVersion) >> 8))
+
 typedef struct _DBGKD_GET_VERSION32
 {
     USHORT MajorVersion;
@@ -285,7 +305,11 @@ typedef struct _KDDEBUGGER_DATA64
     USHORT Gdt64R3CmTeb;
     GCC_ULONG64 IopNumTriageDumpDataBlocks;
     GCC_ULONG64 IopTriageDumpDataBlocks;
+#if 0 // Longhorn/Vista and later
     GCC_ULONG64 VfCrashDataBlock;
+    GCC_ULONG64 MmBadPagesDetected;
+    GCC_ULONG64 MmZeroedPageSingleBitErrorsDetected;
+#endif
 } KDDEBUGGER_DATA64, *PKDDEBUGGER_DATA64;
 
 #endif

@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #ifndef _atlcore_h
@@ -181,6 +181,13 @@ class CAtlBaseModule : public _ATL_BASE_MODULE
 public :
 	static bool								m_bInitFailed;
 public:
+	CAtlBaseModule()
+	{
+		cbSize = sizeof(_ATL_BASE_MODULE);
+		GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCWSTR)this, &m_hInst);
+		m_hInstResource = m_hInst;
+	}
+
 	HINSTANCE GetModuleInstance()
 	{
 		return m_hInst;

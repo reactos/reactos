@@ -217,6 +217,12 @@ ULONG MmUserProbeAddress;
 PVOID MmHighestUserAddress;
 PVOID MmSystemRangeStart;
 
+
+
+PVOID MmSystemCacheStart;
+PVOID MmSystemCacheEnd;
+MMSUPPORT MmSystemCacheWs;
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 //

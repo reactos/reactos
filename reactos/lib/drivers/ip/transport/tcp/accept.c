@@ -90,7 +90,6 @@ NTSTATUS TCPListen( PCONNECTION_ENDPOINT Connection, UINT Backlog ) {
     TI_DbgPrint(DEBUG_TCP,("AddressToBind - %x:%x\n", AddressToBind.sin_addr, AddressToBind.sin_port));
 
     Status = TCPTranslateError( OskitTCPBind( Connection->SocketContext,
-                        Connection,
                         &AddressToBind,
                         sizeof(AddressToBind) ) );
 

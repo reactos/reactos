@@ -314,9 +314,8 @@ int msi_addstringW( string_table *st, UINT n, const WCHAR *data, int len, UINT r
 /* find the string identified by an id - return null if there's none */
 const WCHAR *msi_string_lookup_id( const string_table *st, UINT id )
 {
-    static const WCHAR zero[] = { 0 };
     if( id == 0 )
-        return zero;
+        return szEmpty;
 
     if( id >= st->maxcount )
         return NULL;

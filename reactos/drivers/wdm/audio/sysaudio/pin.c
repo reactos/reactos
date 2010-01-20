@@ -17,7 +17,7 @@ Pin_fnDeviceIoControl(
     PDISPATCH_CONTEXT Context;
     NTSTATUS Status;
     ULONG BytesReturned;
-    PFILE_OBJECT FileObject;
+    PFILE_OBJECT FileObject = NULL;
     PIO_STACK_LOCATION IoStack;
 
     DPRINT("Pin_fnDeviceIoControl called DeviceObject %p Irp %p\n", DeviceObject, Irp);
@@ -73,12 +73,9 @@ Pin_fnWrite(
     PIO_STACK_LOCATION IoStack;
     PFILE_OBJECT FileObject;
     NTSTATUS Status;
-    ULONG Length;
 
     /* Get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-    Length = IoStack->Parameters.Write.Length;
 
     /* The dispatch context is stored in the FsContext member */
     Context = (PDISPATCH_CONTEXT)IoStack->FileObject->FsContext;
@@ -113,9 +110,7 @@ Pin_fnWrite(
     /* store file object of next device object */
     IoStack->FileObject = FileObject;
     IoStack->MajorFunction = IRP_MJ_DEVICE_CONTROL;
-    IoStack->Parameters.DeviceIoControl.IoControlCode = IOCTL_KS_WRITE_STREAM; //FIXME
-    IoStack->Parameters.DeviceIoControl.OutputBufferLength = Length;
-    ASSERT(Irp->AssociatedIrp.SystemBuffer);
+    //ASSERT(Irp->AssociatedIrp.SystemBuffer);
 
     /* now call the driver */
     Status = IoCallDriver(IoGetRelatedDeviceObject(FileObject), Irp);
@@ -136,7 +131,7 @@ Pin_fnClose(
     PDISPATCH_CONTEXT Context;
     PIO_STACK_LOCATION IoStack;
 
-    DPRINT("Pin_fnClose called DeviceObject %p Irp %p\n", DeviceObject, Irp);
+    //DPRINT("Pin_fnClose called DeviceObject %p Irp %p\n", DeviceObject, Irp);
 
     /* Get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -148,7 +143,11 @@ Pin_fnClose(
     {
         ZwClose(Context->Handle);
     }
-    ZwClose(Context->hMixerPin);
+
+    if (Context->hMixerPin)
+    {
+        ZwClose(Context->hMixerPin);
+    }
 
     ExFreePool(Context);
 
@@ -222,7 +221,7 @@ CreateMixerPinAndSetFormat(
 {
     NTSTATUS Status;
     HANDLE PinHandle;
-    PFILE_OBJECT FileObject;
+    PFILE_OBJECT FileObject = NULL;
 
     Status = KsCreatePin(KMixerHandle, PinConnect, GENERIC_READ | GENERIC_WRITE, &PinHandle);
 
@@ -247,6 +246,7 @@ CreateMixerPinAndSetFormat(
     {
         ObDereferenceObject(FileObject);
         ZwClose(PinHandle);
+        return Status;
     }
 
     ObDereferenceObject(FileObject);
@@ -305,6 +305,13 @@ InstantiatePins(
 
     if (!NT_SUCCESS(Status))
     {
+        /* FIXME disable kmixer
+         */
+        return STATUS_UNSUCCESSFUL;
+    }
+#if 0
+    if (!NT_SUCCESS(Status))
+    {
         /* the audio irp pin didnt accept the input format
          * let's compute a compatible format
          */
@@ -345,6 +352,7 @@ InstantiatePins(
             return Status;
         }
     }
+#endif
 
     DeviceEntry->Pins[Connect->PinId].References = 0;
 
@@ -353,6 +361,8 @@ InstantiatePins(
     DispatchContext->PinId = Connect->PinId;
     DispatchContext->AudioEntry = DeviceEntry;
 
+
+    DPRINT1("RealPinHandle %p\n", RealPinHandle);
 
     /* Do we need to transform the audio stream */
     if (OutputFormat != NULL)

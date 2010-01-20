@@ -4,6 +4,7 @@
  * FILE:            ntoskrnl/kd64/kdapi.c
  * PURPOSE:         KD64 Public Routines and Internal Support
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Stefan Ginsberg (stefan.ginsberg@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
@@ -23,65 +24,72 @@ KdpCopyMemoryChunks(IN ULONG64 Address,
                     IN ULONG Flags,
                     OUT PULONG ActualSize OPTIONAL)
 {
-    ULONG Length;
     NTSTATUS Status;
+    ULONG RemainingLength, CopyChunk;
 
-    /* Check if this is physical or virtual copy */
-    if (Flags & MMDBG_COPY_PHYSICAL)
+    /* Check if we didn't get a chunk size or if it is too big */
+    if (ChunkSize == 0)
     {
-        /* Fail physical memory read/write for now */
-        if (Flags & MMDBG_COPY_WRITE)
-        {
-            KdpDprintf("KdpCopyMemoryChunks: Failing write for Physical Address 0x%I64x Length: %x\n",
-                       Address,
-                       TotalSize);
-        }
-        else
-        {
-            KdpDprintf("KdpCopyMemoryChunks: Failing read for Physical Address 0x%I64x Length: %x\n",
-                       Address,
-                       TotalSize);
-        }
-
-        /* Return an error */
-        Length = 0;
-        Status = STATUS_UNSUCCESSFUL;
+        /* Default to 4 byte chunks */
+        ChunkSize = 4;
     }
-    else
+    else if (ChunkSize > MMDBG_COPY_MAX_SIZE)
     {
-        /* Protect against NULL */
-        if (!Address)
-        {
-            if (ActualSize) *ActualSize = 0;
-            return STATUS_UNSUCCESSFUL;
-        }
-
-        /* Check if this is read or write */
-        if (Flags & MMDBG_COPY_WRITE)
-        {
-            /* Do the write */
-            RtlCopyMemory((PVOID)(ULONG_PTR)Address,
-                          Buffer,
-                          TotalSize);
-        }
-        else
-        {
-            /* Do the read */
-            RtlCopyMemory(Buffer,
-                          (PVOID)(ULONG_PTR)Address,
-                          TotalSize);
-        }
-
-        /* Set size and status */
-        Length = TotalSize;
-        Status = STATUS_SUCCESS;
+        /* Normalize to maximum size */
+        ChunkSize = MMDBG_COPY_MAX_SIZE;
     }
 
-    /* Return the actual length if requested */
-    if (ActualSize) *ActualSize = Length;
+    /* Copy the whole range in aligned chunks */
+    RemainingLength = TotalSize;
+    CopyChunk = 1;
+    while (RemainingLength > 0)
+    {
+        /*
+         * Determine the best chunk size for this round.
+         * The ideal size is aligned, isn't larger than the
+         * the remaining length and respects the chunk limit.
+         */
+        while (((CopyChunk * 2) <= RemainingLength) &&
+               (CopyChunk < ChunkSize) &&
+               ((Address & ((CopyChunk * 2) - 1)) == 0))
+        {
+            /* Increase it */
+            CopyChunk *= 2;
+        }
 
-    /* Return status */
-    return Status;
+        /*
+         * The chunk size can be larger than the remaining size if this isn't
+         * the first round, so check if we need to shrink it back
+         */
+        while (CopyChunk > RemainingLength)
+        {
+            /* Shrink it */
+            CopyChunk /= 2;
+        }
+
+        /* Do the copy */
+        Status = MmDbgCopyMemory(Address,
+                                 Buffer,
+                                 CopyChunk,
+                                 Flags);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Copy failed, break out */
+            break;
+        }
+
+        /* Update pointers and length for the next run */
+        Address = Address + CopyChunk;
+        Buffer = (PVOID)((ULONG_PTR)Buffer + CopyChunk);
+        RemainingLength = RemainingLength - CopyChunk;
+    }
+
+    /*
+     * Return the size we managed to copy
+     * and return success if we could copy the whole range
+     */
+    if (ActualSize) *ActualSize = TotalSize - RemainingLength;
+    return RemainingLength == 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 }
 
 VOID
@@ -140,9 +148,20 @@ KdpSearchMemory(IN PDBGKD_MANIPULATE_STATE64 State,
                 IN PSTRING Data,
                 IN PCONTEXT Context)
 {
-    /* FIXME: STUB */
-    KdpDprintf("KdpSearchMemory called\n");
-    while (TRUE);
+    //PDBGKD_SEARCH_MEMORY SearchMemory = &State->u.SearchMemory;
+    STRING Header;
+
+    /* TODO */
+    KdpDprintf("Memory Search support is unimplemented!\n");
+
+    /* Send a failure packet */
+    State->ReturnStatus = STATUS_UNSUCCESSFUL;
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 NULL,
+                 &KdpContext);
 }
 
 VOID
@@ -151,9 +170,20 @@ KdpFillMemory(IN PDBGKD_MANIPULATE_STATE64 State,
               IN PSTRING Data,
               IN PCONTEXT Context)
 {
-    /* FIXME: STUB */
-    KdpDprintf("KdpFillMemory called\n");
-    while (TRUE);
+    //PDBGKD_FILL_MEMORY FillMemory = &State->u.FillMemory;
+    STRING Header;
+
+    /* TODO */
+    KdpDprintf("Memory Fill support is unimplemented!\n");
+
+    /* Send a failure packet */
+    State->ReturnStatus = STATUS_UNSUCCESSFUL;
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 NULL,
+                 &KdpContext);
 }
 
 VOID
@@ -230,9 +260,20 @@ KdpWriteBreakPointEx(IN PDBGKD_MANIPULATE_STATE64 State,
                      IN PSTRING Data,
                      IN PCONTEXT Context)
 {
-    /* FIXME: STUB */
-    KdpDprintf("KdpWriteBreakPointEx called\n");
-    while (TRUE);
+    //PDBGKD_BREAKPOINTEX = &State->u.BreakPointEx;
+    STRING Header;
+
+    /* TODO */
+    KdpDprintf("Extended Breakpoint Write support is unimplemented!\n");
+
+    /* Send a failure packet */
+    State->ReturnStatus = STATUS_UNSUCCESSFUL;
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 Data,
+                 &KdpContext);
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -242,9 +283,20 @@ KdpRestoreBreakPointEx(IN PDBGKD_MANIPULATE_STATE64 State,
                        IN PSTRING Data,
                        IN PCONTEXT Context)
 {
-    /* FIXME: STUB */
-    KdpDprintf("KdpRestoreBreakPointEx called\n");
-    while (TRUE);
+    //PDBGKD_BREAKPOINTEX = &State->u.BreakPointEx;
+    STRING Header;
+
+    /* TODO */
+    KdpDprintf("Extended Breakpoint Restore support is unimplemented!\n");
+
+    /* Send a failure packet */
+    State->ReturnStatus = STATUS_UNSUCCESSFUL;
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 Data,
+                 &KdpContext);
 }
 
 VOID
@@ -266,9 +318,9 @@ VOID
 NTAPI
 KdpSetCommonState(IN ULONG NewState,
                   IN PCONTEXT Context,
-                  IN PDBGKD_WAIT_STATE_CHANGE64 WaitStateChange)
+                  IN PDBGKD_ANY_WAIT_STATE_CHANGE WaitStateChange)
 {
-    USHORT InstructionCount;
+    ULONG InstructionCount;
     BOOLEAN HadBreakpoints;
 
     /* Setup common stuff available for all CPU architectures */
@@ -279,15 +331,17 @@ KdpSetCommonState(IN ULONG NewState,
     WaitStateChange->Thread = (ULONG64)(LONG_PTR)KeGetCurrentThread();
     WaitStateChange->ProgramCounter = (ULONG64)(LONG_PTR)KeGetContextPc(Context);
 
-    /* Zero out the Control Report */
-    RtlZeroMemory(&WaitStateChange->ControlReport,
-                  sizeof(DBGKD_CONTROL_REPORT));
+    /* Zero out the entire Control Report */
+    RtlZeroMemory(&WaitStateChange->AnyControlReport,
+                  sizeof(DBGKD_ANY_CONTROL_REPORT));
 
     /* Now copy the instruction stream and set the count */
-    RtlCopyMemory(&WaitStateChange->ControlReport.InstructionStream[0],
-                  (PVOID)(ULONG_PTR)WaitStateChange->ProgramCounter,
-                  DBGKD_MAXSTREAM);
-    InstructionCount = DBGKD_MAXSTREAM;
+    KdpCopyMemoryChunks((ULONG_PTR)WaitStateChange->ProgramCounter,
+                        &WaitStateChange->ControlReport.InstructionStream[0],
+                        DBGKD_MAXSTREAM,
+                        0,
+                        MMDBG_COPY_UNSAFE,
+                        &InstructionCount);
     WaitStateChange->ControlReport.InstructionCount = InstructionCount;
 
     /* Clear all the breakpoints in this region */
@@ -298,10 +352,21 @@ KdpSetCommonState(IN ULONG NewState,
     if (HadBreakpoints)
     {
         /* Copy the instruction stream again, this time without breakpoints */
-        RtlCopyMemory(&WaitStateChange->ControlReport.InstructionStream[0],
-                      (PVOID)(ULONG_PTR)WaitStateChange->ProgramCounter,
-                      WaitStateChange->ControlReport.InstructionCount);
+        KdpCopyMemoryChunks((ULONG_PTR)WaitStateChange->ProgramCounter,
+                            &WaitStateChange->ControlReport.InstructionStream[0],
+                            InstructionCount,
+                            0,
+                            MMDBG_COPY_UNSAFE,
+                            NULL);
     }
+}
+
+VOID
+NTAPI
+KdpSysGetVersion(IN PDBGKD_GET_VERSION64 Version)
+{
+    /* Copy the version block */
+    RtlCopyMemory(Version, &KdVersionBlock, sizeof(DBGKD_GET_VERSION64));
 }
 
 VOID
@@ -583,7 +648,7 @@ KdpGetContext(IN PDBGKD_MANIPULATE_STATE64 State,
               IN PCONTEXT Context)
 {
     STRING Header;
-    PVOID ControlStart;
+    PCONTEXT TargetContext;
 
     /* Setup the header */
     Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
@@ -597,19 +662,21 @@ KdpGetContext(IN PDBGKD_MANIPULATE_STATE64 State,
         if (State->Processor == KeGetCurrentPrcb()->Number)
         {
             /* We're just copying our own context */
-            ControlStart = Context;
+            TargetContext = Context;
         }
         else
         {
-            /* SMP not yet handled */
-            KdpDprintf("KdpGetContext: SMP UNHANDLED\n");
-            ControlStart = NULL;
-            while (TRUE);
+            /* Get the context from the PRCB array */
+            TargetContext = &KiProcessorBlock[State->Processor]->
+                            ProcessorState.ContextFrame;
         }
 
-        /* Copy the memory */
-        RtlCopyMemory(Data->Buffer, ControlStart, sizeof(CONTEXT));
+        /* Copy it over to the debugger */
+        RtlCopyMemory(Data->Buffer, TargetContext, sizeof(CONTEXT));
         Data->Length = sizeof(CONTEXT);
+
+        /* Let the debugger set the context now */
+        KdpContextSent = TRUE;
 
         /* Finish up */
         State->ReturnStatus = STATUS_SUCCESS;
@@ -634,7 +701,7 @@ KdpSetContext(IN PDBGKD_MANIPULATE_STATE64 State,
               IN PCONTEXT Context)
 {
     STRING Header;
-    PVOID ControlStart;
+    PCONTEXT TargetContext;
 
     /* Setup the header */
     Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
@@ -642,24 +709,23 @@ KdpSetContext(IN PDBGKD_MANIPULATE_STATE64 State,
     ASSERT(Data->Length == sizeof(CONTEXT));
 
     /* Make sure that this is a valid request */
-    if (State->Processor < KeNumberProcessors)
+    if ((State->Processor < KeNumberProcessors) && (KdpContextSent == TRUE))
     {
         /* Check if the request is for this CPU */
         if (State->Processor == KeGetCurrentPrcb()->Number)
         {
             /* We're just copying our own context */
-            ControlStart = Context;
+            TargetContext = Context;
         }
         else
         {
-            /* SMP not yet handled */
-            KdpDprintf("KdpSetContext: SMP UNHANDLED\n");
-            ControlStart = NULL;
-            while (TRUE);
+            /* Get the context from the PRCB array */
+            TargetContext = &KiProcessorBlock[State->Processor]->
+                            ProcessorState.ContextFrame;
         }
 
-        /* Copy the memory */
-        RtlCopyMemory(ControlStart, Data->Buffer, sizeof(CONTEXT));
+        /* Copy the new context to it */
+        RtlCopyMemory(TargetContext, Data->Buffer, sizeof(CONTEXT));
 
         /* Finish up */
         State->ReturnStatus = STATUS_SUCCESS;
@@ -673,7 +739,7 @@ KdpSetContext(IN PDBGKD_MANIPULATE_STATE64 State,
     /* Send the reply */
     KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
-                 Data,
+                 NULL,
                  &KdpContext);
 }
 
@@ -814,7 +880,7 @@ KdpSetBusData(IN PDBGKD_MANIPULATE_STATE64 State,
     /* Send the reply */
     KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
                  &Header,
-                 Data,
+                 NULL,
                  &KdpContext);
 }
 
@@ -972,6 +1038,26 @@ KdpCheckLowMemory(IN PDBGKD_MANIPULATE_STATE64 State)
                  &KdpContext);
 }
 
+VOID
+NTAPI
+KdpNotSupported(IN PDBGKD_MANIPULATE_STATE64 State)
+{
+    STRING Header;
+
+    /* Set failure */
+    State->ReturnStatus = STATUS_UNSUCCESSFUL;
+
+    /* Setup the packet */
+    Header.Length = sizeof(DBGKD_MANIPULATE_STATE64);
+    Header.Buffer = (PCHAR)State;
+
+    /* Send it */
+    KdSendPacket(PACKET_TYPE_KD_STATE_MANIPULATE,
+                 &Header,
+                 NULL,
+                 &KdpContext);
+}
+
 KCONTINUE_STATUS
 NTAPI
 KdpSendWaitContinue(IN ULONG PacketType,
@@ -989,7 +1075,12 @@ KdpSendWaitContinue(IN ULONG PacketType,
     Header.Buffer = (PCHAR)&ManipulateState;
     Data.MaximumLength = sizeof(KdpMessageBuffer);
     Data.Buffer = KdpMessageBuffer;
-    //KdpContextSent = FALSE;
+
+    /* 
+     * Reset the context state to ensure the debugger has received
+     * the current context before it sets it
+     */
+    KdpContextSent = FALSE;
 
 SendPacket:
     /* Send the Packet */
@@ -1117,38 +1208,20 @@ SendPacket:
                 break;
 
             case DbgKdQuerySpecialCallsApi:
-
-                /* FIXME: TODO */
-                KdpDprintf("DbgKdQuerySpecialCallsApi called\n");
-                while (TRUE);
-                break;
-
             case DbgKdSetSpecialCallApi:
-
-                /* FIXME: TODO */
-                KdpDprintf("DbgKdSetSpecialCallApi called\n");
-                while (TRUE);
-                break;
-
             case DbgKdClearSpecialCallsApi:
 
-                /* FIXME: TODO */
-                KdpDprintf("DbgKdClearSpecialCallsApi called\n");
-                while (TRUE);
+                /* TODO */
+                KdpDprintf("Special Call support is unimplemented!\n");
+                KdpNotSupported(&ManipulateState);
                 break;
 
             case DbgKdSetInternalBreakPointApi:
-
-                /* FIXME: TODO */
-                KdpDprintf("DbgKdSetInternalBreakPointApi called\n");
-                while (TRUE);
-                break;
-
             case DbgKdGetInternalBreakPointApi:
 
-                /* FIXME: TODO */
-                KdpDprintf("DbgKdGetInternalBreakPointApi called\n");
-                while (TRUE);
+                /* TODO */
+                KdpDprintf("Internal Breakpoint support is unimplemented!\n");
+                KdpNotSupported(&ManipulateState);
                 break;
 
             case DbgKdReadIoSpaceExtendedApi:
@@ -1195,16 +1268,16 @@ SendPacket:
 
             case DbgKdSwitchProcessor:
 
-                /* FIXME: TODO */
-                KdpDprintf("DbgKdSwitchProcessor called\n");
-                while (TRUE);
+                /* TODO */
+                KdpDprintf("Processor Switch support is unimplemented!\n");
+                KdpNotSupported(&ManipulateState);
                 break;
 
             case DbgKdPageInApi:
 
-                /* FIXME: TODO */
-                KdpDprintf("DbgKdPageInApi called\n");
-                while (TRUE);
+                /* TODO */
+                KdpDprintf("Page-In support is unimplemented!\n");
+                KdpNotSupported(&ManipulateState);
                 break;
 
             case DbgKdReadMachineSpecificRegister:
@@ -1263,9 +1336,9 @@ SendPacket:
 
             case DbgKdSwitchPartition:
 
-                /* FIXME: TODO */
-                KdpDprintf("DbgKdSwitchPartition called\n");
-                while (TRUE);
+                /* TODO */
+                KdpDprintf("Partition Switch support is unimplemented!\n");
+                KdpNotSupported(&ManipulateState);
                 break;
 
             /* Unsupported Message */
@@ -1286,7 +1359,7 @@ SendPacket:
     }
 }
 
-BOOLEAN
+VOID
 NTAPI
 KdpReportLoadSymbolsStateChange(IN PSTRING PathName,
                                 IN PKD_SYMBOLS_INFO SymbolInfo,
@@ -1295,7 +1368,8 @@ KdpReportLoadSymbolsStateChange(IN PSTRING PathName,
 {
     PSTRING ExtraData;
     STRING Data, Header;
-    DBGKD_WAIT_STATE_CHANGE64 WaitStateChange;
+    DBGKD_ANY_WAIT_STATE_CHANGE WaitStateChange;
+    ULONG PathNameLength;
     KCONTINUE_STATUS Status;
 
     /* Start wait loop */
@@ -1316,14 +1390,26 @@ KdpReportLoadSymbolsStateChange(IN PSTRING PathName,
         WaitStateChange.u.LoadSymbols.CheckSum = SymbolInfo->CheckSum;
         WaitStateChange.u.LoadSymbols.SizeOfImage = SymbolInfo->SizeOfImage;
 
-        /* Check if we have a symbol name */
+        /* Check if we have a path name */
         if (PathName)
         {
-            /* Setup the information */
-            WaitStateChange.u.LoadSymbols.PathNameLength = PathName->Length;
-            RtlCopyMemory(KdpPathBuffer, PathName->Buffer, PathName->Length);
+            /* Copy it to the path buffer */
+            KdpCopyMemoryChunks((ULONG_PTR)PathName->Buffer,
+                                KdpPathBuffer,
+                                PathName->Length,
+                                0,
+                                MMDBG_COPY_UNSAFE,
+                                &PathNameLength);
+
+            /* Null terminate */
+            KdpPathBuffer[PathNameLength++] = ANSI_NULL;
+
+            /* Set the path length */
+            WaitStateChange.u.LoadSymbols.PathNameLength = PathNameLength;
+
+            /* Set up the data */
             Data.Buffer = KdpPathBuffer;
-            Data.Length = WaitStateChange.u.LoadSymbols.PathNameLength;
+            Data.Length = PathNameLength;
             ExtraData = &Data;
         }
         else
@@ -1334,7 +1420,7 @@ KdpReportLoadSymbolsStateChange(IN PSTRING PathName,
         }
 
         /* Setup the header */
-        Header.Length = sizeof(DBGKD_WAIT_STATE_CHANGE64);
+        Header.Length = sizeof(DBGKD_ANY_WAIT_STATE_CHANGE);
         Header.Buffer = (PCHAR)&WaitStateChange;
 
         /* Send the packet */
@@ -1343,9 +1429,83 @@ KdpReportLoadSymbolsStateChange(IN PSTRING PathName,
                                      ExtraData,
                                      Context);
     } while (Status == ContinueProcessorReselected);
+}
 
-    /* Return status */
-    return Status;
+VOID
+NTAPI
+KdpReportCommandStringStateChange(IN PSTRING NameString,
+                                  IN PSTRING CommandString,
+                                  IN OUT PCONTEXT Context)
+{
+    STRING Header, Data;
+    DBGKD_ANY_WAIT_STATE_CHANGE WaitStateChange;
+    ULONG Length, ActualLength, TotalLength;
+    KCONTINUE_STATUS Status;
+
+    /* Start wait loop */
+    do
+    {
+        /* Build the architecture common parts of the message */
+        KdpSetCommonState(DbgKdCommandStringStateChange,
+                          Context,
+                          &WaitStateChange);
+
+        /* Set the context */
+        KdpSetContextState(&WaitStateChange, Context);
+
+        /* Clear the command string structure */
+        RtlZeroMemory(&WaitStateChange.u.CommandString,
+                      sizeof(DBGKD_COMMAND_STRING));
+
+        /* Normalize name string to max */
+        Length = min(128 - 1, NameString->Length);
+
+        /* Copy it to the message buffer */
+        KdpCopyMemoryChunks((ULONG_PTR)NameString->Buffer,
+                            KdpMessageBuffer,
+                            Length,
+                            0,
+                            MMDBG_COPY_UNSAFE,
+                            &ActualLength);
+
+        /* Null terminate and calculate the total length */
+        TotalLength = ActualLength;
+        KdpMessageBuffer[TotalLength++] = ANSI_NULL;
+
+        /* Check if the command string is too long */
+        Length = CommandString->Length;
+        if (Length > (PACKET_MAX_SIZE -
+                      sizeof(DBGKD_ANY_WAIT_STATE_CHANGE) - TotalLength))
+        {
+            /* Use maximum possible size */
+            Length = (PACKET_MAX_SIZE -
+                      sizeof(DBGKD_ANY_WAIT_STATE_CHANGE) - TotalLength);
+        }
+
+        /* Copy it to the message buffer */
+        KdpCopyMemoryChunks((ULONG_PTR)CommandString->Buffer,
+                            KdpMessageBuffer + TotalLength,
+                            Length,
+                            0,
+                            MMDBG_COPY_UNSAFE,
+                            &ActualLength);
+
+        /* Null terminate and calculate the total length */
+        TotalLength += ActualLength;
+        KdpMessageBuffer[TotalLength++] = ANSI_NULL;
+
+        /* Now set up the header and the data */
+        Header.Length = sizeof(DBGKD_ANY_WAIT_STATE_CHANGE);
+        Header.Buffer = (PCHAR)&WaitStateChange;
+        Data.Length = TotalLength;
+        Data.Buffer = KdpMessageBuffer;
+
+        /* Send State Change packet and wait for a reply */
+        Status = KdpSendWaitContinue(PACKET_TYPE_KD_STATE_CHANGE64,
+                                     &Header,
+                                     &Data,
+                                     Context);
+    } while (Status == ContinueProcessorReselected);
 }
 
 BOOLEAN
@@ -1355,7 +1515,7 @@ KdpReportExceptionStateChange(IN PEXCEPTION_RECORD ExceptionRecord,
                               IN BOOLEAN SecondChanceException)
 {
     STRING Header, Data;
-    DBGKD_WAIT_STATE_CHANGE64 WaitStateChange;
+    DBGKD_ANY_WAIT_STATE_CHANGE WaitStateChange;
     KCONTINUE_STATUS Status;
 
     /* Start report loop */
@@ -1365,15 +1525,21 @@ KdpReportExceptionStateChange(IN PEXCEPTION_RECORD ExceptionRecord,
         KdpSetCommonState(DbgKdExceptionStateChange, Context, &WaitStateChange);
 
         /* Copy the Exception Record and set First Chance flag */
-        CopyExceptionRecord(ExceptionRecord,
-                            &WaitStateChange.u.Exception.ExceptionRecord);
+#if !defined(_WIN64)
+        ExceptionRecord32To64((PEXCEPTION_RECORD32)ExceptionRecord,
+                              &WaitStateChange.u.Exception.ExceptionRecord);
+#else
+        RtlCopyMemory(&WaitStateChange.u.Exception.ExceptionRecord,
+                      ExceptionRecord,
+                      sizeof(EXCEPTION_RECORD));
+#endif
         WaitStateChange.u.Exception.FirstChance = !SecondChanceException;
 
         /* Now finish creating the structure */
         KdpSetContextState(&WaitStateChange, Context);
 
         /* Setup the actual header to send to KD */
-        Header.Length = sizeof(DBGKD_WAIT_STATE_CHANGE64);
+        Header.Length = sizeof(DBGKD_ANY_WAIT_STATE_CHANGE);
         Header.Buffer = (PCHAR)&WaitStateChange;
 
         /* Setup the trace data */
@@ -1785,12 +1951,13 @@ KdSystemDebugControl(IN SYSDBG_COMMAND Command,
                      IN OUT PULONG ReturnLength,
                      IN KPROCESSOR_MODE PreviousMode)
 {
-    /* HACK */
-    return STATUS_SUCCESS;
+    /* Local kernel debugging is not yet supported */
+    DbgPrint("KdSystemDebugControl is unimplemented!\n");
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
@@ -1801,47 +1968,213 @@ KdChangeOption(IN KD_OPTION Option,
                OUT PVOID OutBuffer,
                OUT PULONG OutBufferNeeded OPTIONAL)
 {
-    /* HACK */
+    /* Fail if there is no debugger */
+    if (KdPitchDebugger)
+    {
+        /* No debugger, no options */
+        return STATUS_DEBUGGER_INACTIVE;
+    }
+
+    /* Do we recognize this option? */
+    if (Option != KD_OPTION_SET_BLOCK_ENABLE)
+    {
+        /* We don't, clear the output length and fail */
+        if (OutBufferNeeded) *OutBufferNeeded = 0;
+        return STATUS_INVALID_INFO_CLASS;
+    }
+
+    /* Verify parameters */
+    if ((InBufferBytes != sizeof(BOOLEAN)) ||
+        (OutBufferBytes != 0) ||
+        (OutBuffer != NULL))
+    {
+        /* Invalid parameters for this option, fail */
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /*
+     * Check if the high bit is set, meaning we don't
+     * allow the debugger to be enabled
+     */
+    if (KdBlockEnable & 0x80)
+    {
+        /* Fail regardless of what state the caller tried to set */
+        return STATUS_ACCESS_VIOLATION;
+    }
+
+    /* Set the new block enable state */
+    KdBlockEnable = *(PBOOLEAN)InBuffer;
+
+    /* No output buffer required for this option */
+    if (OutBufferNeeded) *OutBufferNeeded = 0;
+
+    /* We are done */
     return STATUS_SUCCESS;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
 KdPowerTransition(IN DEVICE_POWER_STATE NewState)
 {
-    /* HACK */
-    return STATUS_SUCCESS;
+    /* Check what power state this is */
+    if (NewState == PowerDeviceD0)
+    {
+        /* Wake up the debug port */
+        KdD0Transition();
+        return STATUS_SUCCESS;
+    }
+    else if ((NewState == PowerDeviceD1) ||
+             (NewState == PowerDeviceD2) ||
+             (NewState == PowerDeviceD3))
+    {
+        /* Power down the debug port */
+        KdD3Transition();
+        return STATUS_SUCCESS;
+    }
+    else
+    {
+        /* Invalid state! */
+        return STATUS_INVALID_PARAMETER_1;
+    }
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 NTAPI
 KdRefreshDebuggerNotPresent(VOID)
 {
-    /* HACK */
-    return KdDebuggerNotPresent;
+    BOOLEAN Entered, DebuggerNotPresent;
+
+    /* Check if the debugger is completely disabled */
+    if (KdPitchDebugger)
+    {
+        /* Don't try to refresh then -- fail early */
+        return TRUE;
+    }
+
+    /* Enter the debugger */
+    Entered = KdEnterDebugger(NULL, NULL);
+
+    /*
+     * Attempt to send a string to the debugger to refresh the
+     * connection state
+     */
+    KdpDprintf("KDTARGET: Refreshing KD connection\n");
+
+    /* Save the state while we are holding the lock */
+    DebuggerNotPresent = KdDebuggerNotPresent;
+
+    /* Exit the debugger and return the state */
+    KdExitDebugger(Entered);
+    return DebuggerNotPresent;
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS
 NTAPI
-NtQueryDebugFilterState(ULONG ComponentId,
-                        ULONG Level)
+NtQueryDebugFilterState(IN ULONG ComponentId,
+                        IN ULONG Level)
 {
-    /* HACK */
-    return STATUS_SUCCESS;
+    PULONG Mask;
+
+    /* Check if the ID fits in the component table */
+    if (ComponentId < KdComponentTableSize)
+    {
+        /* It does, so get the mask from there */
+        Mask = KdComponentTable[ComponentId];
+    }
+    else if (ComponentId == MAXULONG)
+    {
+        /*
+         * This is the internal ID used for DbgPrint messages without ID and
+         * Level. Use the system-wide mask for those.
+         */
+        Mask = &Kd_WIN2000_Mask;
+    }
+    else
+    {
+        /* Invalid ID, fail */
+        return STATUS_INVALID_PARAMETER_1;
+    }
+
+    /* Convert Level to bit field if necessary */
+    if (Level < 32) Level = 1 << Level;
+
+    /* Determine if this Level is filtered out */
+    if ((Kd_WIN2000_Mask & Level) ||
+        (*Mask & Level))
+    {
+        /* This mask will get through to the debugger */
+        return (NTSTATUS)TRUE;
+    }
+    else
+    {
+        /* This mask is filtered out */
+        return (NTSTATUS)FALSE;
+    }
 }
 
+/*
+ * @implemented
+ */
 NTSTATUS
 NTAPI
-NtSetDebugFilterState(ULONG ComponentId,
-                      ULONG Level,
-                      BOOLEAN State)
+NtSetDebugFilterState(IN ULONG ComponentId,
+                      IN ULONG Level,
+                      IN BOOLEAN State)
 {
-    /* HACK */
+    PULONG Mask;
+
+    /* Modifying debug filters requires the debug privilege */
+    if (!SeSinglePrivilegeCheck(SeDebugPrivilege,
+                                ExGetPreviousMode()))
+    {
+        /* Fail */
+        return STATUS_ACCESS_DENIED;
+    }
+
+    /* Check if the ID fits in the component table */
+    if (ComponentId < KdComponentTableSize)
+    {
+        /* It does, so get the mask from there */
+        Mask = KdComponentTable[ComponentId];
+    }
+    else if (ComponentId == MAXULONG)
+    {
+        /*
+         * This is the internal ID used for DbgPrint messages without ID and
+         * Level. Use the system-wide mask for those.
+         */
+        Mask = &Kd_WIN2000_Mask;
+    }
+    else
+    {
+        /* Invalid ID, fail */
+        return STATUS_INVALID_PARAMETER_1;
+    }
+
+    /* Convert Level to bit field if required */
+    if (Level < 32) Level = 1 << Level;
+
+    /* Check what kind of operation this is */
+    if (State)
+    {
+        /* Set the Level */
+        *Mask |= Level;
+    }
+    else
+    {
+        /* Remove the Level */
+        *Mask &= ~Level;
+    }
+
+    /* Success */
     return STATUS_SUCCESS;
 }

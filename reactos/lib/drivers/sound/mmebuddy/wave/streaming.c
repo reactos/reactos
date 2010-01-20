@@ -170,6 +170,7 @@ CompleteIO(
     PWAVEHDR WaveHdr;
     PWAVEHDR_EXTENSION HdrExtension;
     MMRESULT Result;
+    DWORD Bytes;
 
     WaveHdr = (PWAVEHDR) SoundOverlapped->Header;
     SND_ASSERT( WaveHdr );
@@ -187,18 +188,48 @@ CompleteIO(
     Result = GetSoundDeviceType(SoundDevice, &DeviceType);
     SND_ASSERT( MMSUCCESS(Result) );
 
-    HdrExtension->BytesCompleted += dwNumberOfBytesTransferred;
-    SND_TRACE(L"%d/%d bytes of wavehdr completed\n", HdrExtension->BytesCompleted, WaveHdr->dwBufferLength);
+    do
+	{
 
-    /* We have an available buffer now */
-    -- SoundDeviceInstance->OutstandingBuffers;
+        /* We have an available buffer now */
+        -- SoundDeviceInstance->OutstandingBuffers;
 
-    /* Did we finish a WAVEHDR and aren't looping? */
-    if ( HdrExtension->BytesCompleted == WaveHdr->dwBufferLength &&
-         SoundOverlapped->PerformCompletion )
-    {
-        CompleteWaveHeader(SoundDeviceInstance, WaveHdr);
-    }
+        /* Did we finish a WAVEHDR and aren't looping? */
+        if ( HdrExtension->BytesCompleted + dwNumberOfBytesTransferred >= WaveHdr->dwBufferLength &&
+            SoundOverlapped->PerformCompletion )
+        {
+            /* Wave buffer fully completed */
+            Bytes = WaveHdr->dwBufferLength - HdrExtension->BytesCompleted;
+
+            HdrExtension->BytesCompleted += Bytes;
+            dwNumberOfBytesTransferred -= Bytes;
+
+            CompleteWaveHeader(SoundDeviceInstance, WaveHdr);
+            SND_TRACE(L"%d/%d bytes of wavehdr completed\n", HdrExtension->BytesCompleted, WaveHdr->dwBufferLength);
+        }
+		else
+		{
+            SND_TRACE(L"%d/%d bytes of wavehdr completed\n", HdrExtension->BytesCompleted, WaveHdr->dwBufferLength);
+            /* Partially completed */
+            HdrExtension->BytesCompleted += dwNumberOfBytesTransferred;
+            break;
+		}
+
+        /* Move to next wave header */
+        WaveHdr = WaveHdr->lpNext;
+
+        if (!WaveHdr)
+		{
+            /* No following WaveHdr */
+            SND_ASSERT(dwNumberOfBytesTransferred == 0);
+            break;
+		}
+
+        HdrExtension = (PWAVEHDR_EXTENSION) WaveHdr->reserved;
+        SND_ASSERT( HdrExtension );
+
+
+	}while(dwNumberOfBytesTransferred);
 
     DoWaveStreaming(SoundDeviceInstance);
 

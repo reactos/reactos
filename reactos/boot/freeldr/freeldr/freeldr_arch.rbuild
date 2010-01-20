@@ -25,6 +25,8 @@
 			<if property="ARCH" value="i386">
 				<file>_alloca.S</file>
 				<file>archmach.c</file>
+				<file>custom.c</file>
+				<file>drivemap.c</file>
 				<file>hardware.c</file>
 				<file>hwacpi.c</file>
 				<file>hwapm.c</file>
@@ -34,6 +36,7 @@
 				<file>i386vid.c</file>
 				<file>loader.c</file>
 				<file>machpc.c</file>
+				<file>miscboot.c</file>
 				<file>pccons.c</file>
 				<file>pcdisk.c</file>
 				<file>pcmem.c</file>

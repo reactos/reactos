@@ -160,16 +160,39 @@ TDI_STATUS InfoTdiQueryGetRouteTable( PIP_INTERFACE IF,
                                       PNDIS_BUFFER Buffer,
                                       PUINT BufferSize );
 
-TDI_STATUS InfoTdiSetRoute(PIP_INTERFACE IF, PIPROUTE_ENTRY Route);
+TDI_STATUS InfoTdiSetRoute(PIP_INTERFACE IF,
+                           PVOID Buffer,
+                           UINT BufferSize);
+
+TDI_STATUS InfoTdiSetArptableMIB(PIP_INTERFACE IF,
+                                 PVOID Buffer,
+                                 UINT BufferSize);
 
 TDI_STATUS InfoTdiQueryGetArptableMIB(TDIEntityID ID,
 				      PIP_INTERFACE Interface,
 				      PNDIS_BUFFER Buffer,
 				      PUINT BufferSize);
 
-/* Insert and remove interface entities */
+TDI_STATUS SetAddressFileInfo(TDIObjectID *ID,
+                              PADDRESS_FILE AddrFile,
+                              PVOID Buffer,
+                              UINT BufferSize);
+
+TDI_STATUS GetAddressFileInfo(TDIObjectID *ID,
+                              PADDRESS_FILE AddrFile,
+                              PVOID Buffer,
+                              PUINT BufferSize);
+
+/* Insert and remove entities */
 VOID InsertTDIInterfaceEntity( PIP_INTERFACE Interface );
+
 VOID RemoveTDIInterfaceEntity( PIP_INTERFACE Interface );
+
+VOID AddEntity(ULONG EntityType,
+               PVOID Context,
+               ULONG Flags);
+
+VOID RemoveEntityByContext(PVOID Context);
 
 #endif /* __INFO_H */
 

@@ -118,6 +118,37 @@ typedef struct tagHOOK
   UNICODE_STRING ModuleName; /* Module name for global hooks */
 } HOOK, *PHOOK;
 
+/* THREADINFO Flags */
+#define TIF_INCLEANUP               0x00000001
+#define TIF_16BIT                   0x00000002
+#define TIF_SYSTEMTHREAD            0x00000004
+#define TIF_CSRSSTHREAD             0x00000008
+#define TIF_TRACKRECTVISIBLE        0x00000010
+#define TIF_ALLOWFOREGROUNDACTIVATE 0x00000020
+#define TIF_DONTATTACHQUEUE         0x00000040
+#define TIF_DONTJOURNALATTACH       0x00000080
+#define TIF_WOW64                   0x00000100
+#define TIF_INACTIVATEAPPMSG        0x00000200
+#define TIF_SPINNING                0x00000400
+#define TIF_PALETTEAWARE            0x00000800
+#define TIF_SHAREDWOW               0x00001000
+#define TIF_FIRSTIDLE               0x00002000
+#define TIF_WAITFORINPUTIDLE        0x00004000
+#define TIF_MOVESIZETRACKING        0x00008000
+#define TIF_VDMAPP                  0x00010000
+#define TIF_DOSEMULATOR             0x00020000
+#define TIF_GLOBALHOOKER            0x00040000
+#define TIF_DELAYEDEVENT            0x00080000
+#define TIF_MSGPOSCHANGED           0x00100000
+#define TIF_SHUTDOWNCOMPLETE        0x00200000
+#define TIF_IGNOREPLAYBACKDELAY     0x00400000
+#define TIF_ALLOWOTHERACCOUNTHOOK   0x00800000
+#define TIF_GUITHREADINITIALIZED    0x02000000
+#define TIF_DISABLEIME              0x04000000
+#define TIF_INGETTEXTLENGTH         0x08000000
+#define TIF_ANSILENGTH              0x10000000
+#define TIF_DISABLEHOOKS            0x20000000
+
 typedef struct _CALLBACKWND
 {
      HWND hWnd;
@@ -139,7 +170,7 @@ typedef struct _CLIENTINFO
     DWORD dwExpWinVer;
     DWORD dwCompatFlags;
     DWORD dwCompatFlags2;
-    DWORD dwTIFlags;
+    DWORD dwTIFlags; // ThreadInfo TIF_Xxx flags for User space.
     PDESKTOPINFO pDeskInfo;
     ULONG_PTR ulClientDelta;
     PHOOK phkCurrent;

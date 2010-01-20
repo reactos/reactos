@@ -12,6 +12,15 @@
 #define KD_BREAKPOINT_MAX                               32
 
 //
+// Default size of the DbgPrint log buffer
+//
+#if DBG
+#define KD_DEFAULT_LOG_BUFFER_SIZE                      0x8000
+#else
+#define KD_DEFAULT_LOG_BUFFER_SIZE                      0x1000
+#endif
+
+//
 // Breakpoint Status Flags
 //
 typedef enum _KDP_BREAKPOINT_FLAGS
@@ -192,7 +201,7 @@ NTSTATUS
 NTAPI
 KdpPrint(
     IN ULONG ComponentId,
-    IN ULONG ComponentMask,
+    IN ULONG Level,
     IN LPSTR String,
     IN USHORT Length,
     IN KPROCESSOR_MODE PreviousMode,
@@ -201,13 +210,13 @@ KdpPrint(
     OUT PBOOLEAN Status
 );
 
-BOOLEAN
+USHORT
 NTAPI
 KdpPrompt(
-    IN LPSTR InString,
-    IN USHORT InStringLength,
-    OUT LPSTR OutString,
-    IN USHORT OutStringLength,
+    IN LPSTR PromptString,
+    IN USHORT PromptLength,
+    OUT LPSTR ResponseString,
+    IN USHORT MaximumResponseLength,
     IN KPROCESSOR_MODE PreviousMode,
     IN PKTRAP_FRAME TrapFrame,
     IN PKEXCEPTION_FRAME ExceptionFrame
@@ -217,7 +226,7 @@ VOID
 NTAPI
 KdpSymbol(
     IN PSTRING DllPath,
-    IN PKD_SYMBOLS_INFO DllBase,
+    IN PKD_SYMBOLS_INFO SymbolInfo,
     IN BOOLEAN Unload,
     IN KPROCESSOR_MODE PreviousMode,
     IN PCONTEXT ContextRecord,
@@ -228,8 +237,8 @@ KdpSymbol(
 VOID
 NTAPI
 KdpCommandString(
-    IN ULONG Length,
-    IN LPSTR String,
+    IN PSTRING NameString,
+    IN PSTRING CommandString,
     IN KPROCESSOR_MODE PreviousMode,
     IN PCONTEXT ContextRecord,
     IN PKTRAP_FRAME TrapFrame,
@@ -239,12 +248,20 @@ KdpCommandString(
 //
 // State Change Notifications
 //
-BOOLEAN
+VOID
 NTAPI
 KdpReportLoadSymbolsStateChange(
     IN PSTRING PathName,
     IN PKD_SYMBOLS_INFO SymbolInfo,
     IN BOOLEAN Unload,
+    IN OUT PCONTEXT Context
+);
+
+VOID
+NTAPI
+KdpReportCommandStringStateChange(
+    IN PSTRING NameString,
+    IN PSTRING CommandString,
     IN OUT PCONTEXT Context
 );
 
@@ -297,7 +314,21 @@ KdpSuspendAllBreakPoints(
 );
 
 //
-// Architecture dependent support routines
+// Safe memory read & write Support
+//
+NTSTATUS
+NTAPI
+KdpCopyMemoryChunks(
+    IN ULONG64 Address,
+    IN PVOID Buffer,
+    IN ULONG TotalSize,
+    IN ULONG ChunkSize,
+    IN ULONG Flags,
+    OUT PULONG ActualSize OPTIONAL
+);
+
+//
+// Low Level Support Routines for the KD API
 //
 
 //
@@ -322,7 +353,7 @@ KdpGetStateChange(
 VOID
 NTAPI
 KdpSetContextState(
-    IN PDBGKD_WAIT_STATE_CHANGE64 WaitStateChange,
+    IN PDBGKD_ANY_WAIT_STATE_CHANGE WaitStateChange,
     IN PCONTEXT Context
 );
 
@@ -470,12 +501,14 @@ extern PKEVENT KdpTimeSlipEvent;
 extern KSPIN_LOCK KdpTimeSlipEventLock;
 extern BOOLEAN KdpPortLocked;
 extern BOOLEAN KdpControlCPressed;
+extern BOOLEAN KdpContextSent;
 extern KSPIN_LOCK KdpDebuggerLock;
 extern LARGE_INTEGER KdTimerStop, KdTimerStart, KdTimerDifference;
 extern ULONG KdComponentTableSize;
 extern ULONG Kd_WIN2000_Mask;
 extern PULONG KdComponentTable[104];
-extern CHAR KdpMessageBuffer[4096], KdpPathBuffer[4096];
+extern CHAR KdpMessageBuffer[0x1000], KdpPathBuffer[0x1000];
+extern CHAR KdPrintDefaultCircularBuffer[KD_DEFAULT_LOG_BUFFER_SIZE];
 extern BREAKPOINT_ENTRY KdpBreakpointTable[KD_BREAKPOINT_MAX];
 extern KD_BREAKPOINT_TYPE KdpBreakpointInstruction;
 extern BOOLEAN KdpOweBreakpoint;

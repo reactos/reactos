@@ -987,7 +987,7 @@ static MUI_ENTRY esESBootLoaderEntries[] =
     {
         8,
         12,
-        "Instalar cargador de arranque en el disco duro (MBR).",
+        "Instalar cargador de arranque en el disco duro (sector de boot).",
         TEXT_STYLE_NORMAL
     },
     {

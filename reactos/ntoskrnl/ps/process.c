@@ -70,22 +70,6 @@ KPRIORITY PspPriorityTable[PROCESS_PRIORITY_CLASS_ABOVE_NORMAL + 1] =
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-NTSTATUS
-NTAPI
-PspDeleteLdt(PEPROCESS Process)
-{
-    /* FIXME */
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
-PspDeleteVdmObjects(PEPROCESS Process)
-{
-    /* FIXME */
-    return STATUS_SUCCESS;
-}
-
 PETHREAD
 NTAPI
 PsGetNextProcessThread(IN PEPROCESS Process,

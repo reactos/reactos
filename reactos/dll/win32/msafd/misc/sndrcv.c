@@ -561,8 +561,8 @@ WSPSendTo(SOCKET Handle,
     SendInfo.BufferArray = (PAFD_WSABUF)lpBuffers;
     SendInfo.AfdFlags = Socket->SharedData.NonBlocking ? AFD_IMMEDIATE : 0;
     SendInfo.BufferCount = dwBufferCount;
-    SendInfo.RemoteAddress = RemoteAddress;
-    SendInfo.SizeOfRemoteAddress = Socket->HelperData->MaxTDIAddressLength;
+    SendInfo.TdiConnection.RemoteAddress = RemoteAddress;
+    SendInfo.TdiConnection.RemoteAddressLength = Socket->HelperData->MaxTDIAddressLength;
 
     /* Verifiy if we should use APC */
     if (lpOverlapped == NULL)

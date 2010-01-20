@@ -88,7 +88,7 @@
 @ stub NetErrorLogRead
 @ stub NetErrorLogWrite
 @ stub NetFileClose
-@ stub NetFileEnum
+@ stdcall NetFileEnum(wstr wstr wstr long ptr long ptr ptr ptr)
 @ stub NetFileGetInfo
 @ stub NetGetAnyDCName
 @ stdcall NetGetDCName(wstr wstr ptr)
@@ -99,7 +99,7 @@
 @ stub NetGroupDel
 @ stub NetGroupDelUser
 @ stdcall NetGroupEnum(wstr long ptr long ptr ptr ptr)
-@ stub NetGroupGetInfo
+@ stdcall NetGroupGetInfo(wstr wstr long ptr)
 @ stub NetGroupGetUsers
 @ stub NetGroupSetInfo
 @ stub NetGroupSetUsers

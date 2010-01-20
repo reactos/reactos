@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <precomp.h>
@@ -493,7 +493,7 @@ void AddProcess(ULONG Index)
         pData = (LPPROCESS_PAGE_LIST_ITEM)HeapAlloc(GetProcessHeap(), 0, sizeof(PROCESS_PAGE_LIST_ITEM));
         pData->Index = Index;
         pData->ProcessId = pid;
-        
+
         /* Add the item to the list */
         memset(&item, 0, sizeof(LV_ITEM));
         item.mask = LVIF_TEXT|LVIF_PARAM;

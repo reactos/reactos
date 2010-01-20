@@ -102,26 +102,6 @@ VOID DispDataRequestComplete(
     TI_DbgPrint(DEBUG_IRP, ("Done Completing IRP\n"));
 }
 
-VOID DispDoDisconnect( PVOID Data ) {
-    PDISCONNECT_TYPE DisType = (PDISCONNECT_TYPE)Data;
-
-    TI_DbgPrint(DEBUG_IRP, ("PostCancel: DoDisconnect\n"));
-    TcpipRecursiveMutexEnter(&TCPLock, TRUE);
-    TCPDisconnect
-	( DisType->Context,
-	  DisType->Type,
-	  NULL,
-	  NULL,
-	  DispDataRequestComplete,
-	  DisType->Irp );
-    TcpipRecursiveMutexLeave(&TCPLock);
-    TI_DbgPrint(DEBUG_IRP, ("PostCancel: DoDisconnect done\n"));
-
-    DispDataRequestComplete(DisType->Irp, STATUS_CANCELLED, 0);
-
-    exFreePool(DisType);
-}
-
 VOID NTAPI DispCancelRequest(
     PDEVICE_OBJECT Device,
     PIRP Irp)
@@ -136,7 +116,6 @@ VOID NTAPI DispCancelRequest(
     PTRANSPORT_CONTEXT TranContext;
     PFILE_OBJECT FileObject;
     UCHAR MinorFunction;
-    PDISCONNECT_TYPE DisType;
 
     TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
@@ -159,22 +138,8 @@ VOID NTAPI DispCancelRequest(
     switch(MinorFunction) {
     case TDI_SEND:
     case TDI_RECEIVE:
-        DisType = exAllocatePool(NonPagedPool, sizeof(DISCONNECT_TYPE));
-        if (DisType)
-        {
-	    DisType->Type = TDI_DISCONNECT_RELEASE |
-	       ((MinorFunction == TDI_RECEIVE) ? TDI_DISCONNECT_ABORT : 0);
-	    DisType->Context = TranContext->Handle.ConnectionContext;
-	    DisType->Irp = Irp;
-
-	    TCPRemoveIRP( TranContext->Handle.ConnectionContext, Irp );
-
-            if (!ChewCreate(DispDoDisconnect, DisType))
-                exFreePool(DisType);
-        }
-
-	IoReleaseCancelSpinLock(Irp->CancelIrql);
-        return;
+	TCPRemoveIRP( TranContext->Handle.ConnectionContext, Irp );
+        break;
 
     case TDI_SEND_DATAGRAM:
         if (FileObject->FsContext2 != (PVOID)TDI_TRANSPORT_ADDRESS_FILE) {

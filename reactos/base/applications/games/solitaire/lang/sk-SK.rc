@@ -80,7 +80,7 @@ BEGIN
     POPUP "&Pomocník"
     BEGIN
         MENUITEM "&Obsah\tF1",                   IDM_HELP_CONTENTS
-        MENUITEM "&Èo je Solitér",             IDM_HELP_ABOUT
+        MENUITEM "&Èo je Solitér",               IDM_HELP_ABOUT
     END
 END
 

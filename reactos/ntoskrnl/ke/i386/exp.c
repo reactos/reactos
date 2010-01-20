@@ -930,9 +930,8 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
         {
             /* 
              * Break into the kernel debugger unless a user mode debugger
-             * is present or user mode exceptions are ignored, unless this is
-             * a breakpoint or a debug service in which case we have to
-             * handle it.
+             * is present or user mode exceptions are ignored, except if this
+             * is a debug service which we must always pass to KD
              */
             if ((!(PsGetCurrentProcess()->DebugPort) &&
                  !(KdIgnoreUmExceptions)) ||

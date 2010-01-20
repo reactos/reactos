@@ -1,6 +1,9 @@
 /*
- * Portuguese Brazilian Language resource file
- * Translated by: Wagner Leandro Bueno Angelo
+ * PROJECT:     PAINT for ReactOS
+ * LICENSE:     unknown (LGPL assumed)
+ * FILE:        base/applications/paint/lang/pt-BR.rc
+ * PURPOSE:     Portuguese Brazilian Language resource file
+ * TRANSLATORS: Wagner Leandro Bueno Angelo
  */
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
@@ -137,9 +140,9 @@ BEGIN
     LTEXT "Data do arquivo:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
     LTEXT "Tamanho do arquivo:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
     LTEXT "Resolução:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
-    LTEXT "não disponível", IDD_ATTRIBUTESTEXT6, 70, 5, 60, 10
-    LTEXT "não disponível", IDD_ATTRIBUTESTEXT7, 70, 15, 60, 10
-    LTEXT "não disponível", IDD_ATTRIBUTESTEXT8, 70, 25, 60, 10
+    LTEXT "não disponível", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
+    LTEXT "não disponível", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
+    LTEXT "não disponível", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
     GROUPBOX "Unidades", IDD_ATTRIBUTESGROUP1, 6, 57, 139, 27
     AUTORADIOBUTTON "P&olegadas", IDD_ATTRIBUTESRB1, 12, 69, 35, 10, WS_GROUP
     AUTORADIOBUTTON "c&m", IDD_ATTRIBUTESRB2, 52, 69, 35, 10

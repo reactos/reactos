@@ -13,15 +13,37 @@
 #include <debug.h>
 
 PUCHAR KdComPortInUse;
+PADDRESS_USAGE HalpAddressUsageList;
+IDTUsageFlags HalpIDTUsageFlags[MAXIMUM_IDTVECTOR];
+IDTUsage HalpIDTUsage[MAXIMUM_IDTVECTOR];
+
+ADDRESS_USAGE HalpDefaultIoSpace =
+{
+    NULL, CmResourceTypePort, IDT_INTERNAL,
+    {
+        {0x2000,  0xC000}, /* PIC?? */
+        {0xC000,  0x1000}, /* DMA 2 */
+        {0x8000,  0x1000}, /* DMA 1 */
+        {0x2000,  0x200},  /* PIC 1 */
+        {0xA000,  0x200},  /* PIC 2 */
+        {0x4000,  0x400},  /* PIT 1 */
+        {0x4800,  0x400},  /* PIT 2 */
+        {0x9200,  0x100},  /* ????? */
+        {0x7000,  0x200},  /* CMOS  */
+        {0xF000,  0x1000}, /* ????? */
+        {0xCF800, 0x800},  /* PCI 0 */
+        {0,0},
+    }
+};
 
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
 NTAPI
-HaliQuerySystemInformation(IN     HAL_QUERY_INFORMATION_CLASS InformationClass,
-                           IN     ULONG  BufferSize,
-                           IN OUT PVOID  Buffer,
-                              OUT PULONG ReturnedLength)
+HaliQuerySystemInformation(IN HAL_QUERY_INFORMATION_CLASS InformationClass,
+                           IN ULONG BufferSize,
+                           IN OUT PVOID Buffer,
+                           OUT PULONG ReturnedLength)
 {
 #define REPORT_THIS_CASE(X) case X: DPRINT1("Unhandled case: %s\n", #X); break
 	switch (InformationClass)
@@ -66,6 +88,46 @@ HaliSetSystemInformation(IN HAL_SET_INFORMATION_CLASS InformationClass,
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
+}
+
+VOID
+NTAPI
+HalpRegisterVector(IN UCHAR Flags,
+                   IN ULONG BusVector,
+                   IN ULONG SystemVector,
+                   IN KIRQL Irql)
+{
+    /* Save the vector flags */
+    HalpIDTUsageFlags[SystemVector].Flags = Flags;
+
+    /* Save the vector data */
+    HalpIDTUsage[SystemVector].Irql  = Irql;
+    HalpIDTUsage[SystemVector].BusReleativeVector = BusVector;
+}
+
+VOID
+NTAPI
+HalpEnableInterruptHandler(IN UCHAR Flags,
+                           IN ULONG BusVector,
+                           IN ULONG SystemVector,
+                           IN KIRQL Irql,
+                           IN PVOID Handler,
+                           IN KINTERRUPT_MODE Mode)
+{
+    UCHAR Entry;
+
+    /* Convert the vector into the IDT entry */
+    Entry = HalVectorToIDTEntry(SystemVector);
+
+    /* Register the vector */
+    HalpRegisterVector(Flags, BusVector, SystemVector, Irql);
+
+    /* Connect the interrupt */
+    ((PKIPCR)KeGetPcr())->IDT[Entry].ExtendedOffset = (USHORT)(((ULONG_PTR)Handler >> 16) & 0xFFFF);
+    ((PKIPCR)KeGetPcr())->IDT[Entry].Offset = (USHORT)((ULONG_PTR)Handler);
+
+    /* Enable the interrupt */
+    HalEnableSystemInterrupt(SystemVector, Irql, Mode);
 }
 
 /* EOF */

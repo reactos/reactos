@@ -467,7 +467,7 @@ DECLARE_INTERFACE_(IProgressDialog,IUnknown)
 
 /* IDeskBarClient interface */
 #define INTERFACE IDeskBarClient
-DECLARE_INTERFACE_(IDeskBarClient,IUnknown)
+DECLARE_INTERFACE_(IDeskBarClient,IOleWindow)
 {
     /*** IUnknown methods ***/
     STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
@@ -1576,29 +1576,6 @@ HRESULT WINAPI SHOpenWithDialog(
   const OPENASINFO *poainfo
 );
 
-/*****************************************************************************
- * IInitializeObject interface
- */
-#undef  INTERFACE
-#define INTERFACE IInitializeObject
-
-DECLARE_INTERFACE_(IInitializeObject, IUnknown)//, "4622AD16-FF23-11d0-8D34-00A0C90F2719")
-{
-    STDMETHOD(QueryInterface) (THIS_ REFIID riid, void **ppv) PURE;
-    STDMETHOD_(ULONG,AddRef) (THIS)  PURE;
-    STDMETHOD_(ULONG,Release) (THIS) PURE;
-
-    STDMETHOD(Initialize)(THIS) PURE;
-};
-#undef INTERFACE
-#if !defined(__cplusplus) || defined(CINTERFACE)
-#define IInitializeObject_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
-#define IInitializeObject_AddRef(T) (T)->lpVtbl->AddRef(T)
-#define IInitializeObject_Release(T) (T)->lpVtbl->Release(T)
-#define IInitializeObject_Initialize(T) (T)->lpVtbl->Initialize(T)
-#endif
-
-
 #define INTERFACE   IShellIconOverlayIdentifier
 
 DEFINE_GUID(IID_IShellIconOverlayIdentifier, 0x0c6c4200L, 0xc589, 0x11d0, 0x99, 0x9a, 0x00, 0xc0, 0x4f, 0xd6, 0x55, 0xe1);
@@ -1618,37 +1595,40 @@ DECLARE_INTERFACE_(IShellIconOverlayIdentifier, IUnknown)
 
 #undef INTERFACE
 
-/*****************************************************************************
- * IBanneredBar interface
+/****************************************************************************
+ * Travel log
  */
-enum
-{
-    BMICON_LARGE = 0,
-    BMICON_SMALL
-};
-#define INTERFACE IBanneredBar
-DECLARE_INTERFACE_(IBanneredBar, IUnknown)//, "596A9A94-013E-11d1-8D34-00A0C90F2719")
-{
-    STDMETHOD(QueryInterface) (THIS_ REFIID riid, void **ppv) PURE;
-    STDMETHOD_(ULONG,AddRef) (THIS)  PURE;
-    STDMETHOD_(ULONG,Release) (THIS) PURE;
 
-    STDMETHOD(SetIconSize)(THIS_ DWORD iIcon) PURE;
-    STDMETHOD(GetIconSize)(THIS_ DWORD* piIcon) PURE;
-    STDMETHOD(SetBitmap)(THIS_ HBITMAP hBitmap) PURE;
-    STDMETHOD(GetBitmap)(THIS_ HBITMAP* phBitmap) PURE;
+#define TLOG_BACK  -1 
+#define TLOG_FORE   1 
 
+#define TLMENUF_INCLUDECURRENT      0x00000001 
+#define TLMENUF_CHECKCURRENT        (TLMENUF_INCLUDECURRENT | 0x00000002) 
+#define TLMENUF_BACK                0x00000010  // Default 
+#define TLMENUF_FORE                0x00000020 
+#define TLMENUF_BACKANDFORTH        (TLMENUF_BACK | TLMENUF_FORE | TLMENUF_INCLUDECURRENT) 
+
+/*****************************************************************************
+ * IDockingWindowSite interface
+ */
+#define INTERFACE   IDockingWindowSite
+DECLARE_INTERFACE_(IDockingWindowSite, IOleWindow)
+{
+    // *** IUnknown methods ***
+    STDMETHOD(QueryInterface)(THIS_ REFIID riid, void **ppv) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS)  PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+
+    // *** IOleWindow methods ***
+    STDMETHOD(GetWindow)(THIS_ HWND *lphwnd) PURE;
+    STDMETHOD(ContextSensitiveHelp)(THIS_ BOOL fEnterMode) PURE;
+
+    // *** IDockingWindowSite methods ***
+    STDMETHOD(GetBorderDW)(THIS_ IUnknown *punkObj, LPRECT prcBorder) PURE;
+    STDMETHOD(RequestBorderSpaceDW)(THIS_ IUnknown *punkObj, LPCBORDERWIDTHS pbw) PURE;
+    STDMETHOD(SetBorderSpaceDW)(THIS_ IUnknown *punkObj, LPCBORDERWIDTHS pbw) PURE;
 };
 #undef INTERFACE
-#if !defined(__cplusplus) || defined(CINTERFACE)
-#define IBanneredBar_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
-#define IBanneredBar_AddRef(T) (T)->lpVtbl->AddRef(T)
-#define IBanneredBar_Release(T) (T)->lpVtbl->Release(T)
-#define IBanneredBar_SetIconSize(T,a) (T)->lpVtbl->SetIconSize(T,a)
-#define IBanneredBar_GetIconSize(T,a) (T)->lpVtbl->GetIconSize(T,a)
-#define IBanneredBar_SetBitmap(T,a) (T)->lpVtbl->SetBitmap(T,a)
-#define IBanneredBar_GetBitmap(T,a) (T)->lpVtbl->GetBitmap(T,a)
-#endif
 
 #ifdef __cplusplus
 } /* extern "C" */

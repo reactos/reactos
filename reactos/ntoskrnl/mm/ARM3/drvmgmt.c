@@ -116,44 +116,49 @@ PVOID
 NTAPI
 MmPageEntireDriver(IN PVOID AddressWithinSection)
 {
-    PAGED_CODE();
-    //
-    // We should find the driver loader entry and return its base address
-    //
     //PMMPTE StartPte, EndPte;
-    PLDR_DATA_TABLE_ENTRY pLdrDataTabEntry =
-        MiLookupDataTableEntry(AddressWithinSection);
-    if (pLdrDataTabEntry)
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    PAGED_CODE();
+
+    //
+    // Get the loader entry
+    //
+    LdrEntry = MiLookupDataTableEntry(AddressWithinSection);
+    if (!LdrEntry) return NULL;
+
+    //
+    // Check if paging of kernel mode is disabled or if the driver is mapped as
+    // an image
+    //
+    if ((MmDisablePagingExecutive & 0x1) || (LdrEntry->SectionPointer))
     {
         //
-        //  Is Paging disabled or it's mapped as an image
+        // Don't do anything, just return the base address
         //
-        if ((MmDisablePagingExecutive & 1) || pLdrDataTabEntry->SectionPointer)
-           return pLdrDataTabEntry->DllBase;
-
-        //
-        // Flush all queued DPCs.
-        //
-        KeFlushQueuedDpcs();
-
-        //
-        // Get PTE range for this section
-        //
-        //StartPte = MiGetPteAddress(pLdrDataTabEntry->DllBase);
-        //EndPte = MiGetPteAddress(pLdrDataTabEntry->DllBase +
-        //                         pLdrDataTabEntry->SizeOfImage);
-
-        //
-        // Set paging for specified PTE range
-        //
-        //MiSetPagingOfDriver(StartPte, EndPte);
-
-        //
-        // Return base address
-        //
-        return pLdrDataTabEntry->DllBase;
+        return LdrEntry->DllBase;
     }
-    return NULL;
+
+    //
+    // Wait for active DPCs to finish before we page out the driver
+    //
+    KeFlushQueuedDpcs();
+
+    //
+    // Get the PTE range for the whole driver image
+    //
+    //StartPte = MiGetPteAddress(LdrEntry->DllBase);
+    //EndPte = MiGetPteAddress(LdrEntry->DllBase +
+    //                         LdrEntry->SizeOfImage);
+
+    //
+    // Enable paging for the PTE range
+    //
+    //MiSetPagingOfDriver(StartPte, EndPte);
+
+    //
+    // Return the base address
+    //
+    return LdrEntry->DllBase;
 }
 
 /*

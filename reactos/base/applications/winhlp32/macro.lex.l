@@ -152,7 +152,7 @@ static const char* ts(int t)
     }
 }
 
-static int MACRO_CallBoolFunc(FARPROC fn, const char* args, void** ret);
+static int MACRO_CallBoolFunc(void *fn, const char* args, void** ret);
 
 /******************************************************************
  *		MACRO_CheckArgs
@@ -222,7 +222,7 @@ CheckArgs_end:
  * Invokes boolean function fn, which arguments are defined by args
  * stores bool result into ret
  */
-static int MACRO_CallBoolFunc(FARPROC fn, const char* args, void** ret)
+static int MACRO_CallBoolFunc(void *fn, const char* args, void** ret)
 {
     void*       pa[2];
     int         idx = MACRO_CheckArgs(pa, sizeof(pa)/sizeof(pa[0]), args);
@@ -234,8 +234,18 @@ static int MACRO_CallBoolFunc(FARPROC fn, const char* args, void** ret)
 
     switch (strlen(args))
     {
-    case 0: *ret = (void*)(fn)();          break;
-    case 1: *ret = (void*)(fn)(pa[0]);     break;
+    case 0:
+    {
+        BOOL (WINAPI *func)(void) = fn;
+        *ret = (void *)(ULONG_PTR)func();
+        break;
+    }
+    case 1:
+    {
+        BOOL (WINAPI *func)(void *) = fn;
+        *ret = (void *)(ULONG_PTR)func( pa[0]);
+        break;
+    }
     default: WINE_FIXME("NIY\n");
     }
 
@@ -247,7 +257,7 @@ static int MACRO_CallBoolFunc(FARPROC fn, const char* args, void** ret)
  *
  *
  */
-static int MACRO_CallVoidFunc(FARPROC fn, const char* args)
+static int MACRO_CallVoidFunc(void *fn, const char* args)
 {
     void*       pa[6];
     int         idx = MACRO_CheckArgs(pa, sizeof(pa)/sizeof(pa[0]), args);
@@ -259,13 +269,48 @@ static int MACRO_CallVoidFunc(FARPROC fn, const char* args)
 
     switch (strlen(args))
     {
-    case 0: (fn)();                                     break;
-    case 1: (fn)(pa[0]);                                break;
-    case 2: (fn)(pa[0],pa[1]);                          break;
-    case 3: (fn)(pa[0],pa[1],pa[2]);                    break;
-    case 4: (fn)(pa[0],pa[1],pa[2],pa[3]);              break;
-    case 5: (fn)(pa[0],pa[1],pa[2],pa[3],pa[4]);        break;
-    case 6: (fn)(pa[0],pa[1],pa[2],pa[3],pa[4],pa[5]);  break;
+    case 0:
+    {
+        void (WINAPI *func)(void) = fn;
+        func();
+        break;
+    }
+    case 1:
+    {
+        void (WINAPI *func)(void*) = fn;
+        func( pa[0] );
+        break;
+    }
+    case 2:
+    {
+        void (WINAPI *func)(void*,void*) = fn;
+        func( pa[0], pa[1] );
+        break;
+    }
+    case 3:
+    {
+        void (WINAPI *func)(void*,void*,void*) = fn;
+        func( pa[0], pa[1], pa[2] );
+        break;
+    }
+    case 4:
+    {
+        void (WINAPI *func)(void*,void*,void*,void*) = fn;
+        func( pa[0], pa[1], pa[2], pa[3] );
+        break;
+    }
+    case 5:
+    {
+        void (WINAPI *func)(void*,void*,void*,void*,void*) = fn;
+        func( pa[0], pa[1], pa[2], pa[3], pa[4] );
+        break;
+    }
+    case 6:
+    {
+        void (WINAPI *func)(void*,void*,void*,void*,void*,void*) = fn;
+        func( pa[0], pa[1], pa[2], pa[3], pa[4], pa[5] );
+        break;
+    }
     default: WINE_FIXME("NIY\n");
     }
 

@@ -42,17 +42,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
-
-extern const WCHAR szRegisterClassInfo[];
-extern const WCHAR szRegisterProgIdInfo[];
-extern const WCHAR szRegisterExtensionInfo[];
-extern const WCHAR szRegisterMIMEInfo[];
-
-extern const WCHAR szUnregisterClassInfo[];
-extern const WCHAR szUnregisterExtensionInfo[];
-extern const WCHAR szUnregisterMIMEInfo[];
-extern const WCHAR szUnregisterProgIdInfo[];
-
 static MSIAPPID *load_appid( MSIPACKAGE* package, MSIRECORD *row )
 {
     LPCWSTR buffer;
@@ -798,7 +787,6 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
     static const WCHAR szProgID[] = { 'P','r','o','g','I','D',0 };
     static const WCHAR szVIProgID[] = { 'V','e','r','s','i','o','n','I','n','d','e','p','e','n','d','e','n','t','P','r','o','g','I','D',0 };
     static const WCHAR szAppID[] = { 'A','p','p','I','D',0 };
-    static const WCHAR szSpace[] = {' ',0};
     static const WCHAR szFileType_fmt[] = {'F','i','l','e','T','y','p','e','\\','%','s','\\','%','i',0};
     HKEY hkey,hkey2,hkey3;
     MSICLASS *cls;
@@ -1098,7 +1086,6 @@ static UINT register_verb(MSIPACKAGE *package, LPCWSTR progid,
      strcpyW(command,advertise);
      if (verb->Argument)
      {
-         static const WCHAR szSpace[] = {' ',0};
          strcatW(command,szSpace);
          strcatW(command,verb->Argument);
      }

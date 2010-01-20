@@ -1478,8 +1478,7 @@ void NetBTInit(void)
             gBCastQueries = dword;
         size = sizeof(dword);
         if (RegQueryValueExW(hKey, BcastNameQueryTimeoutW, NULL, NULL,
-         (LPBYTE)&dword, &size) == ERROR_SUCCESS && dword >= MIN_QUERY_TIMEOUT
-         && dword <= MAX_QUERY_TIMEOUT)
+         (LPBYTE)&dword, &size) == ERROR_SUCCESS && dword >= MIN_QUERY_TIMEOUT)
             gBCastQueryTimeout = dword;
         size = sizeof(dword);
         if (RegQueryValueExW(hKey, NameSrvQueryCountW, NULL, NULL,
@@ -1488,8 +1487,7 @@ void NetBTInit(void)
             gWINSQueries = dword;
         size = sizeof(dword);
         if (RegQueryValueExW(hKey, NameSrvQueryTimeoutW, NULL, NULL,
-         (LPBYTE)&dword, &size) == ERROR_SUCCESS && dword >= MIN_QUERY_TIMEOUT
-         && dword <= MAX_QUERY_TIMEOUT)
+         (LPBYTE)&dword, &size) == ERROR_SUCCESS && dword >= MIN_QUERY_TIMEOUT)
             gWINSQueryTimeout = dword;
         size = sizeof(gScopeID) - 1;
         if (RegQueryValueExW(hKey, ScopeIDW, NULL, NULL, (LPBYTE)gScopeID + 1, &size)

@@ -8,6 +8,22 @@
 
 #include "private.hpp"
 
+
+KSPIN_INTERFACE PinInterfaces[] = 
+{
+    {
+        {STATIC_KSINTERFACESETID_Standard},
+        KSINTERFACE_STANDARD_STREAMING,
+        0
+    },
+    {
+        {STATIC_KSINTERFACESETID_Standard},
+        KSINTERFACE_STANDARD_LOOPED_STREAMING,
+        0
+    }
+};
+
+
 NTSTATUS
 NTAPI
 KsoDispatchCreateWithGenericFactory(
@@ -449,6 +465,9 @@ PcCreateSubdeviceDescriptor(
         for(Index = 0; Index < FilterDescription->PinCount; Index++)
         {
             RtlMoveMemory(&Descriptor->Factory.KsPinDescriptor[Index], &SrcDescriptor->KsPinDescriptor, sizeof(KSPIN_DESCRIPTOR));
+
+            Descriptor->Factory.KsPinDescriptor[Index].Interfaces = PinInterfaces;
+            Descriptor->Factory.KsPinDescriptor[Index].InterfacesCount = sizeof(PinInterfaces) / sizeof(KSPIN_INTERFACE);
 
             DPRINT("Index %u DataRangeCount %u\n", Index, SrcDescriptor->KsPinDescriptor.DataRangesCount);
 

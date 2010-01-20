@@ -16,7 +16,7 @@ extern "C" {
   {
     // put error handling here
 
-    KeBugCheck(0);
+    DbgBreakPoint();
 
   }
 }

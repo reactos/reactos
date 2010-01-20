@@ -25,6 +25,7 @@ NTSTATUS RawIPShutdown(
     VOID);
 
 NTSTATUS AddGenericHeaderIPv4(
+    PADDRESS_FILE AddrFile,
     PIP_ADDRESS RemoteAddress,
     USHORT RemotePort,
     PIP_ADDRESS LocalAddress,

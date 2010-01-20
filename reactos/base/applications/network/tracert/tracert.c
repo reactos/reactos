@@ -260,10 +260,10 @@ PreparePacket(PAPPINFO pInfo,
     pInfo->SendPacket->icmpheader.code     = 0;
     pInfo->SendPacket->icmpheader.checksum = 0;
     pInfo->SendPacket->icmpheader.id       = (USHORT)GetCurrentProcessId();
-    pInfo->SendPacket->icmpheader.seq      = iSeqNum;
+    pInfo->SendPacket->icmpheader.seq      = htons((USHORT)iSeqNum);
 
     /* calculate checksum of packet */
-    pInfo->SendPacket->icmpheader.checksum  = CheckSum((PUSHORT)&pInfo->SendPacket,
+    pInfo->SendPacket->icmpheader.checksum  = CheckSum((PUSHORT)&pInfo->SendPacket->icmpheader,
                                                        sizeof(ICMP_HEADER) + PACKET_SIZE);
 }
 
@@ -279,8 +279,8 @@ SendPacket(PAPPINFO pInfo)
     pInfo->lTimeStart = GetTime(pInfo);
 
     iSockRet = sendto(pInfo->icmpSock,              //socket
-                      (char *)pInfo->SendPacket,   //buffer
-                      PACKET_SIZE,                  //size of buffer
+                      (char *)&pInfo->SendPacket->icmpheader,//buffer
+                      sizeof(ICMP_HEADER) + PACKET_SIZE,//size of buffer
                       0,                            //flags
                       (SOCKADDR *)&pInfo->dest,     //destination
                       sizeof(pInfo->dest));         //address length
@@ -598,7 +598,7 @@ Cleanup(PAPPINFO pInfo)
                  0,
                  pInfo->SendPacket);
 
-    if (pInfo->SendPacket)
+    if (pInfo->RecvPacket)
         HeapFree(GetProcessHeap(),
                  0,
                  pInfo->RecvPacket);

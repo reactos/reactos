@@ -85,6 +85,9 @@ typedef struct _SCHANNEL_ALG {
   DWORD  dwReserved;
 } SCHANNEL_ALG, *PSCHANNEL_ALG;
 
+
+#define CRYPT_IPSEC_HMAC_KEY 0x0100
+
 typedef struct _HMAC_INFO {
   ALG_ID HashAlgid;
   BYTE*  pbInnerString;

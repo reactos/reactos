@@ -54,7 +54,6 @@ static MSIPREVIEW *MSI_EnableUIPreview( MSIDATABASE *db )
         if( preview )
         {
             preview->package = package;
-            preview->dialog = 0;
             msiobj_addref( &package->hdr );
         }
         msiobj_release( &package->hdr );

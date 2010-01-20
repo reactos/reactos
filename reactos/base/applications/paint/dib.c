@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        dib.c
+ * FILE:        base/applications/paint/dib.c
  * PURPOSE:     Some DIB related functions
  * PROGRAMMERS: Benedikt Freisen
  */
@@ -12,7 +12,8 @@
 
 /* FUNCTIONS ********************************************************/
 
-HBITMAP CreateDIBWithProperties(int width, int height)
+HBITMAP
+CreateDIBWithProperties(int width, int height)
 {
     BITMAPINFO bmi;
     ZeroMemory(&bmi, sizeof(BITMAPINFO));
@@ -25,21 +26,24 @@ HBITMAP CreateDIBWithProperties(int width, int height)
     return CreateDIBSection(NULL, &bmi, DIB_RGB_COLORS, NULL, NULL, 0);
 }
 
-int GetDIBWidth(HBITMAP hBitmap)
+int
+GetDIBWidth(HBITMAP hBitmap)
 {
     BITMAP bm;
     GetObject(hBitmap, sizeof(BITMAP), &bm);
     return bm.bmWidth;
 }
 
-int GetDIBHeight(HBITMAP hBitmap)
+int
+GetDIBHeight(HBITMAP hBitmap)
 {
     BITMAP bm;
     GetObject(hBitmap, sizeof(BITMAP), &bm);
     return bm.bmHeight;
 }
 
-void SaveDIBToFile(HBITMAP hBitmap, LPTSTR FileName, HDC hDC, LPSYSTEMTIME time, int *size, int hRes, int vRes)
+void
+SaveDIBToFile(HBITMAP hBitmap, LPTSTR FileName, HDC hDC, LPSYSTEMTIME time, int *size, int hRes, int vRes)
 {
     BITMAP bm;
     HANDLE hFile;
@@ -47,7 +51,7 @@ void SaveDIBToFile(HBITMAP hBitmap, LPTSTR FileName, HDC hDC, LPSYSTEMTIME time,
     BITMAPINFOHEADER bi;
     int imgDataSize;
     DWORD dwBytesWritten;
-    char* buffer;
+    char *buffer;
 
     GetObject(hBitmap, sizeof(BITMAP), &bm);
 
@@ -55,7 +59,7 @@ void SaveDIBToFile(HBITMAP hBitmap, LPTSTR FileName, HDC hDC, LPSYSTEMTIME time,
     ZeroMemory(&bi, sizeof(BITMAPINFOHEADER));
 
     imgDataSize = bm.bmWidthBytes * bm.bmHeight;
-    bf.bfType = 0x4d42; /* BM */
+    bf.bfType = 0x4d42;         /* BM */
     bf.bfSize = imgDataSize + 52;
     bf.bfOffBits = 54;
     bi.biSize = sizeof(BITMAPINFOHEADER);
@@ -68,7 +72,7 @@ void SaveDIBToFile(HBITMAP hBitmap, LPTSTR FileName, HDC hDC, LPSYSTEMTIME time,
     bi.biYPelsPerMeter = vRes;
 
     buffer = HeapAlloc(GetProcessHeap(), 0, imgDataSize);
-    GetDIBits(hDC, hBitmap, 0, bm.bmHeight, buffer, (LPBITMAPINFO)&bi, DIB_RGB_COLORS);
+    GetDIBits(hDC, hBitmap, 0, bm.bmHeight, buffer, (LPBITMAPINFO) & bi, DIB_RGB_COLORS);
 
     hFile = CreateFile(FileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
@@ -91,18 +95,20 @@ void SaveDIBToFile(HBITMAP hBitmap, LPTSTR FileName, HDC hDC, LPSYSTEMTIME time,
     HeapFree(GetProcessHeap(), 0, buffer);
 }
 
-void LoadDIBFromFile(HBITMAP *hBitmap, LPTSTR name, LPSYSTEMTIME time, int *size, int *hRes, int *vRes)
+void
+LoadDIBFromFile(HBITMAP * hBitmap, LPTSTR name, LPSYSTEMTIME time, int *size, int *hRes, int *vRes)
 {
     BITMAPFILEHEADER bfh;
     BITMAPINFO *bi;
     PVOID pvBits;
     DWORD dwBytesRead;
     HANDLE hFile;
-    
+
     if (!hBitmap)
         return;
 
-    hFile = CreateFile(name, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+    hFile =
+        CreateFile(name, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
         return;
 
@@ -113,7 +119,7 @@ void LoadDIBFromFile(HBITMAP *hBitmap, LPTSTR name, LPSYSTEMTIME time, int *size
         CloseHandle(hFile);
         return;
     }
-    
+
     if (time)
     {
         FILETIME ft;
@@ -130,12 +136,12 @@ void LoadDIBFromFile(HBITMAP *hBitmap, LPTSTR name, LPSYSTEMTIME time, int *size
     ReadFile(hFile, bi, bfh.bfOffBits - sizeof(BITMAPFILEHEADER), &dwBytesRead, NULL);
     *hBitmap = CreateDIBSection(NULL, bi, DIB_RGB_COLORS, &pvBits, NULL, 0);
     ReadFile(hFile, pvBits, bfh.bfSize - bfh.bfOffBits, &dwBytesRead, NULL);
-    
+
     if (hRes)
         *hRes = (*bi).bmiHeader.biXPelsPerMeter;
     if (vRes)
         *vRes = (*bi).bmiHeader.biYPelsPerMeter;
-    
+
     CloseHandle(hFile);
     HeapFree(GetProcessHeap(), 0, bi);
 }

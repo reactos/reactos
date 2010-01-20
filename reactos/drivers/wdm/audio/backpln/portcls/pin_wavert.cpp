@@ -697,6 +697,7 @@ CPortPinWaveRT::Init(
     {
         DPRINT("Unexpected Communication %u DataFlow %u\n", KsPinDescriptor->Communication, KsPinDescriptor->DataFlow);
         KeBugCheck(0);
+        while(TRUE);
     }
 
     Status = m_Miniport->NewStream(&m_Stream, m_PortStream, ConnectDetails->PinId, Capture, m_Format);

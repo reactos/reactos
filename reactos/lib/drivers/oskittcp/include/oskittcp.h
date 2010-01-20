@@ -127,7 +127,7 @@ extern int OskitTCPConnect( void *socket, void *connection,
 			    void *nam, OSK_UINT namelen );
 extern int OskitTCPClose( void *socket );
 
-extern int OskitTCPBind( void *socket, void *connection,
+extern int OskitTCPBind( void *socket,
 			 void *nam, OSK_UINT namelen );
 
 extern int OskitTCPAccept( void *socket, void **new_socket,
@@ -144,11 +144,25 @@ extern int OskitTCPRecv( void *connection,
 			 OSK_UINT *OutLen,
 			 OSK_UINT Flags );
 
-void OskitTCPGetAddress( void *socket,
+int OskitTCPGetAddress( void *socket,
 			 OSK_UINT *LocalAddress,
 			 OSK_UI16 *LocalPort,
 			 OSK_UINT *RemoteAddress,
 			 OSK_UI16 *RemotePort );
+
+int OskitTCPGetSockOpt(void *socket,
+                       int level,
+                       int optname,
+                       char *buffer,
+                       int *size);
+
+int OskitTCPSetSockOpt(void *socket,
+                       int level,
+                       int optname,
+                       char *buffer,
+                       int size);
+
+int OskitTCPDisconnect(void *socket);
 
 #undef errno
 
@@ -169,5 +183,8 @@ void fbsd_free( void *data, char *file, unsigned line, ... );
 #define OSK_MSG_OOB      0x01
 #define OSK_MSG_PEEK     0x02
 #define OSK_MSG_DONTWAIT 0x80
+
+#define	FREAD		0x0001
+#define	FWRITE		0x0002
 
 #endif/*OSKITTCP_H*/

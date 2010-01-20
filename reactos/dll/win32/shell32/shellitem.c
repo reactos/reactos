@@ -54,7 +54,7 @@ static HRESULT WINAPI ShellItem_QueryInterface(IShellItem *iface, REFIID riid,
     }
     else if (IsEqualIID(&IID_IPersist, riid) || IsEqualIID(&IID_IPersistIDList, riid))
     {
-        *ppv = &(This->lpIPersistIDListVtbl);
+        *ppv = (IPersistIDListVtbl *)&(This->lpIPersistIDListVtbl);
     }
     else {
         FIXME("not implemented for %s\n", shdebugstr_guid(riid));

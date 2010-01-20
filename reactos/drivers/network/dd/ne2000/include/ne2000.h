@@ -55,7 +55,8 @@
 /* Interrupt Mask Register value */
 #define DRIVER_INTERRUPT_MASK   IMR_ALLE - IMR_RDCE
 
-
+/* Maximum number of interrupts handled per call to MiniportHandleInterrupt */
+#define INTERRUPT_LIMIT 10
 
 /* Global structures */
 

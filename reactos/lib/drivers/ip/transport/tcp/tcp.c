@@ -44,15 +44,6 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection ) {
            Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
            Complete = Bucket->Request.RequestNotifyObject;
 
-           /* We have to notify oskittcp of the abortion */
-           TCPDisconnect
-	     ( Connection,
-	       TDI_DISCONNECT_RELEASE | TDI_DISCONNECT_ABORT,
-	       NULL,
-	       NULL,
-	       Bucket->Request.RequestNotifyObject,
-	       (PIRP)Bucket->Request.RequestContext );
-
            Complete( Bucket->Request.RequestContext, STATUS_CANCELLED, 0 );
 
            exFreePool(Bucket);
@@ -63,15 +54,6 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection ) {
         {
            Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
            Complete = Bucket->Request.RequestNotifyObject;
-
-           /* We have to notify oskittcp of the abortion */
-           TCPDisconnect
-	     ( Connection,
-	       TDI_DISCONNECT_RELEASE,
-	       NULL,
-	       NULL,
-	       Bucket->Request.RequestNotifyObject,
-	       (PIRP)Bucket->Request.RequestContext );
 
            Complete( Bucket->Request.RequestContext, STATUS_CANCELLED, 0 );
 
@@ -89,6 +71,8 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection ) {
                                Connection);
 
            Complete( Bucket->Request.RequestContext, STATUS_CANCELLED, 0 );
+
+           exFreePool(Bucket);
         }
 
         while ((Entry = ExInterlockedRemoveHeadList( &Connection->ConnectRequest,
@@ -98,6 +82,8 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection ) {
            Complete = Bucket->Request.RequestNotifyObject;
 
            Complete( Bucket->Request.RequestContext, STATUS_CANCELLED, 0 );
+
+           exFreePool(Bucket);
         }
 
         Connection->SignalState = 0;
@@ -555,17 +541,28 @@ NTSTATUS TCPShutdown(VOID)
 }
 
 NTSTATUS TCPTranslateError( int OskitError ) {
-    NTSTATUS Status = STATUS_UNSUCCESSFUL;
+    NTSTATUS Status;
 
     switch( OskitError ) {
     case 0: Status = STATUS_SUCCESS; break;
-    case OSK_EADDRNOTAVAIL:
+    case OSK_EADDRNOTAVAIL: Status = STATUS_INVALID_ADDRESS; break;
     case OSK_EAFNOSUPPORT: Status = STATUS_INVALID_CONNECTION; break;
     case OSK_ECONNREFUSED:
     case OSK_ECONNRESET: Status = STATUS_REMOTE_NOT_LISTENING; break;
-    case OSK_EINPROGRESS:
-    case OSK_EAGAIN: Status = STATUS_PENDING; break;
-    default: Status = STATUS_INVALID_CONNECTION; break;
+    case OSK_EWOULDBLOCK:
+    case OSK_EINPROGRESS: Status = STATUS_PENDING; break;
+    case OSK_EINVAL: Status = STATUS_INVALID_PARAMETER; break;
+    case OSK_ENOMEM:
+    case OSK_ENOBUFS: Status = STATUS_INSUFFICIENT_RESOURCES; break;
+    case OSK_ESHUTDOWN: Status = STATUS_FILE_CLOSED; break;
+    case OSK_EMSGSIZE: Status = STATUS_BUFFER_TOO_SMALL; break;
+    case OSK_ETIMEDOUT: Status = STATUS_TIMEOUT; break;
+    case OSK_ENETUNREACH: Status = STATUS_NETWORK_UNREACHABLE; break;
+    case OSK_EFAULT: Status = STATUS_ACCESS_VIOLATION; break;
+    default:
+       DbgPrint("OskitTCP returned unhandled error code: %d\n", OskitError);
+       Status = STATUS_INVALID_CONNECTION;
+       break;
     }
 
     TI_DbgPrint(DEBUG_TCP,("Error %d -> %x\n", OskitError, Status));
@@ -604,11 +601,6 @@ NTSTATUS TCPConnect
         return STATUS_NETWORK_UNREACHABLE;
     }
 
-    if (Connection->State & SEL_FIN)
-    {
-        return STATUS_REMOTE_DISCONNECT;
-    }
-
     /* Freed in TCPSocketState */
     TI_DbgPrint(DEBUG_TCP,
                 ("Connecting to address %x:%x\n",
@@ -621,7 +613,6 @@ NTSTATUS TCPConnect
 
     Status = TCPTranslateError
         ( OskitTCPBind( Connection->SocketContext,
-                        Connection,
                         &AddressToBind,
                         sizeof(AddressToBind) ) );
 
@@ -661,29 +652,17 @@ NTSTATUS TCPDisconnect
   PTDI_CONNECTION_INFORMATION ReturnInfo,
   PTCP_COMPLETION_ROUTINE Complete,
   PVOID Context ) {
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_INVALID_PARAMETER;
 
     ASSERT_LOCKED(&TCPLock);
 
     TI_DbgPrint(DEBUG_TCP,("started\n"));
 
-    switch( Flags & (TDI_DISCONNECT_ABORT | TDI_DISCONNECT_RELEASE) ) {
-    case 0:
-    case TDI_DISCONNECT_ABORT:
-        Flags = 0;
-        break;
+    if (Flags & TDI_DISCONNECT_RELEASE)
+        Status = TCPTranslateError(OskitTCPDisconnect(Connection->SocketContext));
 
-    case TDI_DISCONNECT_ABORT | TDI_DISCONNECT_RELEASE:
-        Flags = 2;
-        break;
-
-    case TDI_DISCONNECT_RELEASE:
-        Flags = 1;
-        break;
-    }
-
-    Status = TCPTranslateError
-        ( OskitTCPShutdown( Connection->SocketContext, Flags ) );
+    if ((Flags & TDI_DISCONNECT_ABORT) || !Flags)
+        Status = TCPTranslateError(OskitTCPShutdown(Connection->SocketContext, FWRITE | FREAD));
 
     TI_DbgPrint(DEBUG_TCP,("finished %x\n", Status));
 
@@ -699,10 +678,12 @@ NTSTATUS TCPClose
     ASSERT_LOCKED(&TCPLock);
 
     /* Make our code remove all pending IRPs */
-    Connection->State |= SEL_FIN;
-    DrainSignals();
+    Connection->SignalState |= SEL_FIN;
+    HandleSignalledConnection(Connection);
 
     Status = TCPTranslateError( OskitTCPClose( Connection->SocketContext ) );
+    if (Status == STATUS_SUCCESS)
+        Connection->SocketContext = NULL;
 
     TI_DbgPrint(DEBUG_TCP,("TCPClose finished %x\n", Status));
 
@@ -728,13 +709,6 @@ NTSTATUS TCPReceiveData
     ASSERT_LOCKED(&TCPLock);
 
     ASSERT_KM_POINTER(Connection->SocketContext);
-
-    /* Closing */
-    if (Connection->State & SEL_FIN)
-    {
-        *BytesReceived = 0;
-        return STATUS_REMOTE_DISCONNECT;
-    }
 
     NdisQueryBuffer( Buffer, &DataBuffer, &DataLen );
 
@@ -800,12 +774,6 @@ NTSTATUS TCPSendData
     TI_DbgPrint(DEBUG_TCP,("Connection->SocketContext = %x\n",
                            Connection->SocketContext));
 
-    /* Closing */
-    if (Connection->State & SEL_FIN)
-    {
-        *BytesSent = 0;
-        return STATUS_REMOTE_DISCONNECT;
-    }
 
     Status = TCPTranslateError
         ( OskitTCPSend( Connection->SocketContext,
@@ -867,13 +835,15 @@ NTSTATUS TCPGetSockAddress
     OSK_UINT LocalAddress, RemoteAddress;
     OSK_UI16 LocalPort, RemotePort;
     PTA_IP_ADDRESS AddressIP = (PTA_IP_ADDRESS)Address;
+    NTSTATUS Status;
 
     ASSERT_LOCKED(&TCPLock);
 
-    OskitTCPGetAddress
-        ( Connection->SocketContext,
-          &LocalAddress, &LocalPort,
-          &RemoteAddress, &RemotePort );
+    Status = TCPTranslateError(OskitTCPGetAddress(Connection->SocketContext,
+                                                  &LocalAddress, &LocalPort,
+                                                  &RemoteAddress, &RemotePort));
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     AddressIP->TAAddressCount = 1;
     AddressIP->Address[0].AddressLength = TDI_ADDRESS_LENGTH_IP;
@@ -881,7 +851,7 @@ NTSTATUS TCPGetSockAddress
     AddressIP->Address[0].Address[0].sin_port = GetRemote ? RemotePort : LocalPort;
     AddressIP->Address[0].Address[0].in_addr = GetRemote ? RemoteAddress : LocalAddress;
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 VOID TCPRemoveIRP( PCONNECTION_ENDPOINT Endpoint, PIRP Irp ) {

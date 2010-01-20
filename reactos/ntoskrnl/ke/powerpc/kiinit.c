@@ -352,6 +352,6 @@ KiInitMachineDependent(VOID)
 
 void abort()
 {
-    KeBugCheck(0);
+    KeBugCheck(KMODE_EXCEPTION_NOT_HANDLED);
     while(1);
 }

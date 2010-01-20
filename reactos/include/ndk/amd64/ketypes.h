@@ -116,7 +116,7 @@ Author:
 //
 // HAL Variables
 //
-#define INITIAL_STALL_COUNT     0x64
+#define INITIAL_STALL_COUNT     100
 
 //
 // IOPM Definitions

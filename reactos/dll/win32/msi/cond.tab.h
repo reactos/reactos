@@ -87,7 +87,7 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 111 "cond.y"
+#line 110 "cond.y"
 
     struct cond_str str;
     LPWSTR    string;

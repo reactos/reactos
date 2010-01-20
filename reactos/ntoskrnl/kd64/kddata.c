@@ -9,7 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
-#include "../mm/arm3/miarm.h"
+#include "../mm/ARM3/miarm.h"
 #define NDEBUG
 #include <debug.h>
 
@@ -18,27 +18,36 @@ VOID NTAPI RtlpBreakWithStatusInstruction(VOID);
 //
 // Apply the KIPCR WDK workaround for x86 and AMD64
 //
-#if defined(_M_IX86) || defined(_M_AMD64)
+#if defined(_X86_) || defined(_AMD64_)
 #define KPCR KIPCR
 #endif
 
-#if defined(_M_IX86)
+#if defined(_X86_)
 
-#define KPCR_SELF_OFFSET               FIELD_OFFSET(KPCR, Self)
+#define KPCR_SELF_PCR_OFFSET           FIELD_OFFSET(KPCR, Self)
 #define KPCR_CURRENT_PRCB_OFFSET       FIELD_OFFSET(KPCR, Prcb)
 #define KPCR_CONTAINED_PRCB_OFFSET     FIELD_OFFSET(KPCR, PrcbData)
+#define KPCR_INITIAL_STACK_OFFSET      0
+#define KPCR_STACK_LIMIT_OFFSET        0
+#define KPRCB_PCR_PAGE_OFFSET          0
 
-#elif defined(_M_AMD64)
+#elif defined(_AMD64_)
 
-#define KPCR_SELF_OFFSET               FIELD_OFFSET(KPCR, Self)
+#define KPCR_SELF_PCR_OFFSET           FIELD_OFFSET(KPCR, Self)
 #define KPCR_CURRENT_PRCB_OFFSET       FIELD_OFFSET(KPCR, CurrentPrcb)
 #define KPCR_CONTAINED_PRCB_OFFSET     FIELD_OFFSET(KPCR, Prcb)
+#define KPCR_INITIAL_STACK_OFFSET      0
+#define KPCR_STACK_LIMIT_OFFSET        0
+#define KPRCB_PCR_PAGE_OFFSET          0
 
-#elif defined(_M_ARM)
+#elif defined(_ARM_)
 
-//#define KPCR_SELF_OFFSET
+#define KPCR_SELF_PCR_OFFSET           0
 #define KPCR_CURRENT_PRCB_OFFSET       FIELD_OFFSET(KPCR, Prcb)
-//#define KPCR_CONTAINED_PRCB_OFFSET
+#define KPCR_CONTAINED_PRCB_OFFSET     0
+#define KPCR_INITIAL_STACK_OFFSET      FIELD_OFFSET(KPCR, InitialStack)
+#define KPCR_STACK_LIMIT_OFFSET        FIELD_OFFSET(KPCR, StackLimit)
+#define KPRCB_PCR_PAGE_OFFSET          FIELD_OFFSET(KPRCB, PcrPage)
 
 #else
 #error Unsupported Architecture
@@ -53,6 +62,7 @@ KD_CONTEXT KdpContext;
 BOOLEAN KdpPortLocked;
 KSPIN_LOCK KdpDebuggerLock;
 BOOLEAN KdpControlCPressed;
+BOOLEAN KdpContextSent;
 
 //
 // Debug Trap Handlers
@@ -110,13 +120,13 @@ LARGE_INTEGER KdTimerStop, KdTimerStart, KdTimerDifference;
 //
 // Buffers
 //
-CHAR KdpMessageBuffer[4096];
-CHAR KdpPathBuffer[4096];
+CHAR KdpMessageBuffer[0x1000];
+CHAR KdpPathBuffer[0x1000];
 
 //
 // KdPrint Buffers
 //
-CHAR KdPrintDefaultCircularBuffer[0x8000];
+CHAR KdPrintDefaultCircularBuffer[KD_DEFAULT_LOG_BUFFER_SIZE];
 PCHAR KdPrintWritePointer = KdPrintDefaultCircularBuffer;
 ULONG KdPrintRolloverCount;
 PCHAR KdPrintCircularBuffer = KdPrintDefaultCircularBuffer;
@@ -360,7 +370,7 @@ DBGKD_GET_VERSION64 KdVersionBlock =
     0,
     DBGKD_64BIT_PROTOCOL_VERSION2,
     CURRENT_KD_SECONDARY_VERSION,
-#if defined(_M_AMD64)
+#if defined(_WIN64)
     DBGKD_VERS_FLAG_DATA | DBGKD_VERS_FLAG_PTR64,
 #else
     DBGKD_VERS_FLAG_DATA,
@@ -391,22 +401,22 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
     {(ULONG_PTR)&PsActiveProcessHead},
     {(ULONG_PTR)&PspCidTable},
     {(ULONG_PTR)&ExpSystemResourcesList},
-    {0},                                                        // ExpPagedPoolDescriptor
-    {0},                                                        // ExpNumberOfPagedPools
+    {(ULONG_PTR)ExpPagedPoolDescriptor},
+    {(ULONG_PTR)&ExpNumberOfPagedPools},
     {(ULONG_PTR)&KeTimeIncrement},
     {(ULONG_PTR)&KeBugcheckCallbackListHead},
     {(ULONG_PTR)KiBugCheckData},
     {(ULONG_PTR)&IopErrorLogListHead},
     {(ULONG_PTR)&ObpRootDirectoryObject},
     {(ULONG_PTR)&ObpTypeObjectType},
-    {0},                                                        // MmSystemCacheStart
-    {0},                                                        // MmSystemCacheEnd
-    {0},                                                        // MmSystemCacheWs
+    {(ULONG_PTR)&MmSystemCacheStart},
+    {(ULONG_PTR)&MmSystemCacheEnd},
+    {(ULONG_PTR)&MmSystemCacheWs},
     {(ULONG_PTR)&MmPfnDatabase},
     {(ULONG_PTR)MmSystemPtesStart},
     {(ULONG_PTR)MmSystemPtesEnd},
-    {0},                                                        // MmSubsectionBase
-    {0},                                                        // MmNumberOfPagingFiles
+    {(ULONG_PTR)&MmSubsectionBase},
+    {(ULONG_PTR)&MmNumberOfPagingFiles},
     {(ULONG_PTR)&MmLowestPhysicalPage},
     {(ULONG_PTR)&MmHighestPhysicalPage},
     {(ULONG_PTR)&MmNumberOfPhysicalPages},
@@ -419,21 +429,21 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
     {(ULONG_PTR)&MmPagedPoolInfo},
     PAGE_SIZE,
     {(ULONG_PTR)&MmSizeOfPagedPoolInBytes},
-    {0},                                                        // MmTotalCommitLimit
-    {0},                                                        // MmTotalCommittedPages
-    {0},                                                        // MmSharedCommit
-    {0},                                                        // MmDriverCommit
-    {0},                                                        // MmProcessCommit
-    {0},                                                        // MmPagedPoolCommit
+    {(ULONG_PTR)&MmTotalCommitLimit},
+    {(ULONG_PTR)&MmTotalCommittedPages},
+    {(ULONG_PTR)&MmSharedCommit},
+    {(ULONG_PTR)&MmDriverCommit},
+    {(ULONG_PTR)&MmProcessCommit},
+    {(ULONG_PTR)&MmPagedPoolCommit},
     {0},
-    {0},                                                        // MmZeroedPageListHead
-    {0},                                                        // MmFreePageListHead
-    {0},                                                        // MmStandbyPageListHead
-    {0},                                                        // MmModifiedPageListHead
-    {0},                                                        // MmModifiedNoWritePageListHead
-    {0},                                                        // MmAvailablePages
-    {0},                                                        // MmResidentAvailablePages
-    {0},                                                        // PoolTrackTable
+    {(ULONG_PTR)&MmZeroedPageListHead},
+    {(ULONG_PTR)&MmFreePageListHead},
+    {(ULONG_PTR)&MmStandbyPageListHead},
+    {(ULONG_PTR)&MmModifiedPageListHead},
+    {(ULONG_PTR)&MmModifiedNoWritePageListHead},
+    {(ULONG_PTR)&MmAvailablePages},
+    {(ULONG_PTR)&MmResidentAvailablePages},
+    {(ULONG_PTR)&PoolTrackTable},
     {(ULONG_PTR)&NonPagedPoolDescriptor},
     {(ULONG_PTR)&MmHighestUserAddress},
     {(ULONG_PTR)&MmSystemRangeStart},
@@ -442,19 +452,19 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
     {(ULONG_PTR)KdPrintDefaultCircularBuffer + 1},
     {(ULONG_PTR)&KdPrintWritePointer},
     {(ULONG_PTR)&KdPrintRolloverCount},
-    {0},                                                        // MmLoadedUserImageList
+    {(ULONG_PTR)&MmLoadedUserImageList},
     {(ULONG_PTR)&NtBuildLab},
     {0},
     {(ULONG_PTR)KiProcessorBlock},
-    {0},                                                        // MmUnloadedDrivers
-    {0},                                                        // MmLastUnloadedDrivers
-    {0},                                                        // MmTriageActionTaken
-    {0},                                                        // MmSpecialPoolTag
-    {0},                                                        // KernelVerifier
-    {0},                                                        // MmVerifierData
-    {0},                                                        // MmAllocatedNonPagedPool
-    {0},                                                        // MmPeakCommitment
-    {0},                                                        // MmtotalCommitLimitMaximum
+    {(ULONG_PTR)&MmUnloadedDrivers},
+    {(ULONG_PTR)&MmLastUnloadedDrivers},
+    {(ULONG_PTR)&MmTriageActionTaken},
+    {(ULONG_PTR)&MmSpecialPoolTag},
+    {(ULONG_PTR)&KernelVerifier},
+    {(ULONG_PTR)&MmVerifierData},
+    {(ULONG_PTR)&MmAllocatedNonPagedPool},
+    {(ULONG_PTR)&MmPeakCommitment},
+    {(ULONG_PTR)&MmtotalCommitLimitMaximum},
     {(ULONG_PTR)&CmNtCSDVersion},
     {(ULONG_PTR)&MmPhysicalMemoryBlock},
     {(ULONG_PTR)&MmSessionBase},
@@ -485,16 +495,15 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
     {(ULONG_PTR)KdPrintDefaultCircularBuffer},
     {(ULONG_PTR)&KdPrintBufferSize},
     {(ULONG_PTR)&KeLoaderBlock},
-    sizeof(KPCR) + sizeof(KPRCB),
-    KPCR_SELF_OFFSET,
+    sizeof(KPCR),
+    KPCR_SELF_PCR_OFFSET,
     KPCR_CURRENT_PRCB_OFFSET,
     KPCR_CONTAINED_PRCB_OFFSET,
     0,
     0,
-    0,
-    0,
-    0,
-    KPCR_CONTAINED_PRCB_OFFSET +
+    KPCR_INITIAL_STACK_OFFSET,
+    KPCR_STACK_LIMIT_OFFSET,
+    KPRCB_PCR_PAGE_OFFSET,
     FIELD_OFFSET(KPRCB, ProcessorState.SpecialRegisters),
 #if defined(_M_IX86)
     //
@@ -539,6 +548,6 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
     0,
     0,
 #endif
-    {0},                                                        // IopNumTriageDumpDataBlocks
-    {0},                                                        // IopTriageDumpDataBlocks
+    {(ULONG_PTR)&IopNumTriageDumpDataBlocks},
+    {(ULONG_PTR)IopTriageDumpDataBlocks},
 };

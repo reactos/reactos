@@ -1,7 +1,9 @@
 /*
- * Slovak Language resource file
- * Translated by: M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
- * Last changed:  02-07-2009
+ * PROJECT:     PAINT for ReactOS
+ * LICENSE:     unknown (LGPL assumed)
+ * FILE:        base/applications/paint/lang/sk-SK.rc
+ * PURPOSE:     Slovak Language resource file
+ * TRANSLATORS: M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -139,9 +141,9 @@ BEGIN
     LTEXT "D·tum zmeny:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10 //File date
     LTEXT "Veækosù s˙boru:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10 //File size
     LTEXT "RozlÌöenie:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
-    LTEXT "Nie je k dispozÌcii", IDD_ATTRIBUTESTEXT6, 70, 5, 60, 10
-    LTEXT "Nie je k dispozÌcii", IDD_ATTRIBUTESTEXT7, 70, 15, 60, 10
-    LTEXT "Nie je k dispozÌcii", IDD_ATTRIBUTESTEXT8, 70, 25, 60, 10
+    LTEXT "Nie je k dispozÌcii", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
+    LTEXT "Nie je k dispozÌcii", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
+    LTEXT "Nie je k dispozÌcii", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
     GROUPBOX "Jednotky", IDD_ATTRIBUTESGROUP1, 6, 57, 139, 27
     AUTORADIOBUTTON "palce", IDD_ATTRIBUTESRB1, 12, 69, 35, 10, WS_GROUP
     AUTORADIOBUTTON "cm", IDD_ATTRIBUTESRB2, 52, 69, 35, 10

@@ -1,6 +1,9 @@
 /*
- * Italian Language resource file
- * Tradotto da: gabriel ilardi, febbraio 2009
+ * PROJECT:     PAINT for ReactOS
+ * LICENSE:     unknown (LGPL assumed)
+ * FILE:        base/applications/paint/lang/it-IT.rc
+ * PURPOSE:     Italian Language resource file
+ * TRANSLATORS: gabriel ilardi
  */
  
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
@@ -137,9 +140,9 @@ BEGIN
     LTEXT "Ultimo salvataggio:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
     LTEXT "Dimensioni su disco:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
     LTEXT "Risoluzione:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
-    LTEXT "Non disponibile", IDD_ATTRIBUTESTEXT6, 70, 5, 60, 10
-    LTEXT "Non disponibile", IDD_ATTRIBUTESTEXT7, 70, 15, 60, 10
-    LTEXT "Non disponibile", IDD_ATTRIBUTESTEXT8, 70, 25, 60, 10
+    LTEXT "Non disponibile", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
+    LTEXT "Non disponibile", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
+    LTEXT "Non disponibile", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
     GROUPBOX "Unità di misura", IDD_ATTRIBUTESGROUP1, 6, 57, 139, 27
     AUTORADIOBUTTON "Pollici", IDD_ATTRIBUTESRB1, 12, 69, 35, 10, WS_GROUP
     AUTORADIOBUTTON "Cm", IDD_ATTRIBUTESRB2, 52, 69, 35, 10

@@ -14,15 +14,16 @@
 	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>user32</library>
+	<library>pseh</library>
 	<file>driver.c</file>
 	<file>joystick.c</file>
 	<file>lolvldrv.c</file>
 	<file>mci.c</file>
 	<file>mmio.c</file>
 	<file>playsound.c</file>
+	<file>registry.c</file>
 	<file>time.c</file>
 	<file>winmm.c</file>
-	<file>registry.c</file>
 	<file>winmm_res.rc</file>
 </module>
 </group>

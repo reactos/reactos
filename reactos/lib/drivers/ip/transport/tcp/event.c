@@ -26,7 +26,7 @@ int TCPSocketState(void *ClientData,
 
     TI_DbgPrint(DEBUG_TCP,("Called: NewState %x (Conn %x) (Change %x)\n",
                NewState, Connection,
-               Connection ? Connection->State ^ NewState :
+               Connection ? Connection->SignalState ^ NewState :
                NewState));
 
     if( !Connection ) {

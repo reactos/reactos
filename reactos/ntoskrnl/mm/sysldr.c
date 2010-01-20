@@ -28,10 +28,17 @@ sprintf_nt(IN PCHAR Buffer,
 /* GLOBALS *******************************************************************/
 
 LIST_ENTRY PsLoadedModuleList;
+LIST_ENTRY MmLoadedUserImageList;
 KSPIN_LOCK PsLoadedModuleSpinLock;
 ULONG_PTR PsNtosImageBase;
 KMUTANT MmSystemLoadLock;
 extern ULONG NtGlobalFlag;
+
+PVOID MmUnloadedDrivers;
+PVOID MmLastUnloadedDrivers;
+PVOID MmTriageActionTaken;
+PVOID KernelVerifier;
+MM_DRIVER_VERIFIER_DATA MmVerifierData;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -730,7 +737,7 @@ MmUnloadSystemImage(IN PVOID ImageHandle)
     PLDR_DATA_TABLE_ENTRY LdrEntry = ImageHandle;
     PVOID BaseAddress = LdrEntry->DllBase;
     NTSTATUS Status;
-    ANSI_STRING TempName;
+    STRING TempName;
     BOOLEAN HadEntry = FALSE;
 
     /* Acquire the loader lock */
@@ -761,7 +768,9 @@ MmUnloadSystemImage(IN PVOID ImageHandle)
         if (NT_SUCCESS(Status))
         {
             /* Unload the symbols */
-            DbgUnLoadImageSymbols(&TempName, BaseAddress, -1);
+            DbgUnLoadImageSymbols(&TempName,
+                                  BaseAddress,
+                                  (ULONG_PTR)ZwCurrentProcess());
             RtlFreeAnsiString(&TempName);
         }
     }
@@ -1528,7 +1537,7 @@ MmLoadSystemImage(IN PUNICODE_STRING FileName,
     BOOLEAN LockOwned = FALSE;
     PLIST_ENTRY NextEntry;
     IMAGE_INFO ImageInfo;
-    ANSI_STRING AnsiTemp;
+    STRING AnsiTemp;
     PAGED_CODE();
 
     /* Detect session-load */
@@ -1941,7 +1950,9 @@ LoaderScan:
         RtlInitString(&AnsiTemp, Buffer);
 
         /* Notify the debugger */
-        DbgLoadImageSymbols(&AnsiTemp, LdrEntry->DllBase, -1);
+        DbgLoadImageSymbols(&AnsiTemp,
+                            LdrEntry->DllBase,
+                            (ULONG_PTR)ZwCurrentProcess());
         LdrEntry->Flags |= LDRP_DEBUG_SYMBOLS_LOADED;
     }
 

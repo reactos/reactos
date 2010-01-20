@@ -405,6 +405,9 @@
 		<file>dbgpool.c</file>
 		<file>freelist.c</file>
 		<file>marea.c</file>
+		<if property="_WINKD_" value ="1">
+			<file>mmdbg.c</file>
+		</if>
 		<file>mmfault.c</file>
 		<file>mminit.c</file>
 		<file>mpw.c</file>
@@ -444,6 +447,7 @@
 		<if property="ARCH" value="i386">
 			<directory name="i386">
 				<file>psctx.c</file>
+				<file>psldt.c</file>
 			</directory>
 		</if>
 		<if property="ARCH" value="arm">

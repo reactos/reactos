@@ -49,6 +49,7 @@ DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 #include "exdisp.h"
 
 #include "shlguid.h"
+#include "shlguid_undoc.h"
 #include "shlobj.h"
 #include "shldisp.h"
 #include "comcat.h"

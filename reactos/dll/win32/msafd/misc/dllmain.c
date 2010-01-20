@@ -1230,7 +1230,7 @@ WSPAccept(SOCKET Handle,
                               NULL);
 
     /* Set up the Accept Structure */
-    AcceptData.ListenHandle = AcceptSocket;
+    AcceptData.ListenHandle = (HANDLE)AcceptSocket;
     AcceptData.SequenceNumber = ListenReceiveData->SequenceNumber;
 
     /* Send IOCTL to Accept */

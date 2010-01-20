@@ -44,18 +44,25 @@ RtlInitializeRangeListPackage(VOID)
 
 BOOLEAN
 NTAPI
-RtlpCheckForActiveDebugger(BOOLEAN Type)
+RtlpCheckForActiveDebugger(VOID)
 {
     /* This check is meaningless in kernel-mode */
-    return Type;
+    return FALSE;
 }
 
 BOOLEAN
 NTAPI
-RtlpSetInDbgPrint(IN BOOLEAN NewValue)
+RtlpSetInDbgPrint(VOID)
 {
-    /* This check is meaningless in kernel-mode */
+    /* Nothing to set in kernel mode */
     return FALSE;
+}
+
+VOID
+NTAPI
+RtlpClearInDbgPrint(VOID)
+{
+    /* Nothing to clear in kernel mode */
 }
 
 KPROCESSOR_MODE

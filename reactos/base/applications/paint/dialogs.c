@@ -1,7 +1,7 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        dialogs.c
+ * FILE:        base/applications/paint/dialogs.c
  * PURPOSE:     Window procedures of the dialog windows plus launching functions
  * PROGRAMMERS: Benedikt Freisen
  */
@@ -15,7 +15,8 @@
 
 /* FUNCTIONS ********************************************************/
 
-LRESULT CALLBACK MRDlgWinProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK
+MRDlgWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
@@ -63,44 +64,46 @@ LRESULT CALLBACK MRDlgWinProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lP
     return TRUE;
 }
 
-int mirrorRotateDlg()
+int
+mirrorRotateDlg()
 {
-    return DialogBox(hProgInstance, MAKEINTRESOURCE(IDD_MIRRORROTATE), hMainWnd, (DLGPROC)MRDlgWinProc);
+    return DialogBox(hProgInstance, MAKEINTRESOURCE(IDD_MIRRORROTATE), hMainWnd, (DLGPROC) MRDlgWinProc);
 }
 
-LRESULT CALLBACK ATTDlgWinProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK
+ATTDlgWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
         case WM_INITDIALOG:
+        {
+            TCHAR strrc[100];
+            TCHAR res[100];
+
+            CheckDlgButton(hwnd, IDD_ATTRIBUTESRB3, BST_CHECKED);
+            CheckDlgButton(hwnd, IDD_ATTRIBUTESRB5, BST_CHECKED);
+            SetDlgItemInt(hwnd, IDD_ATTRIBUTESEDIT1, imgXRes, FALSE);
+            SetDlgItemInt(hwnd, IDD_ATTRIBUTESEDIT2, imgYRes, FALSE);
+
+            if (isAFile)
             {
-                TCHAR strrc[100];
-                TCHAR res[100];
-                
-                CheckDlgButton(hwnd, IDD_ATTRIBUTESRB3, BST_CHECKED);
-                CheckDlgButton(hwnd, IDD_ATTRIBUTESRB5, BST_CHECKED);
-                SetDlgItemInt(hwnd, IDD_ATTRIBUTESEDIT1, imgXRes, FALSE);
-                SetDlgItemInt(hwnd, IDD_ATTRIBUTESEDIT2, imgYRes, FALSE);
-                
-                if (isAFile)
-                {
-                    TCHAR date[100];
-                    TCHAR size[100];
-                    TCHAR temp[100];
-                    GetDateFormat(LOCALE_USER_DEFAULT, 0, &fileTime, NULL, date, sizeof(date));
-                    GetTimeFormat(LOCALE_USER_DEFAULT, 0, &fileTime, NULL, temp, sizeof(temp));
-                    _tcscat(date, _T(" "));
-                    _tcscat(date, temp);
-                    LoadString(hProgInstance, IDS_FILESIZE, strrc, sizeof(strrc));
-                    _stprintf(size, strrc, fileSize);
-                    SetDlgItemText(hwnd, IDD_ATTRIBUTESTEXT6, date);
-                    SetDlgItemText(hwnd, IDD_ATTRIBUTESTEXT7, size);
-                }
-                LoadString(hProgInstance, IDS_PRINTRES, strrc, sizeof(strrc));
-                _stprintf(res, strrc, fileHPPM, fileVPPM);
-                SetDlgItemText(hwnd, IDD_ATTRIBUTESTEXT8, res);
-                return TRUE;
+                TCHAR date[100];
+                TCHAR size[100];
+                TCHAR temp[100];
+                GetDateFormat(LOCALE_USER_DEFAULT, 0, &fileTime, NULL, date, SIZEOF(date));
+                GetTimeFormat(LOCALE_USER_DEFAULT, 0, &fileTime, NULL, temp, SIZEOF(temp));
+                _tcscat(date, _T(" "));
+                _tcscat(date, temp);
+                LoadString(hProgInstance, IDS_FILESIZE, strrc, SIZEOF(strrc));
+                _stprintf(size, strrc, fileSize);
+                SetDlgItemText(hwnd, IDD_ATTRIBUTESTEXT6, date);
+                SetDlgItemText(hwnd, IDD_ATTRIBUTESTEXT7, size);
             }
+            LoadString(hProgInstance, IDS_PRINTRES, strrc, SIZEOF(strrc));
+            _stprintf(res, strrc, fileHPPM, fileVPPM);
+            SetDlgItemText(hwnd, IDD_ATTRIBUTESTEXT8, res);
+            return TRUE;
+        }
         case WM_CLOSE:
             EndDialog(hwnd, 0);
             break;
@@ -108,7 +111,10 @@ LRESULT CALLBACK ATTDlgWinProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM l
             switch (LOWORD(wParam))
             {
                 case IDOK:
-                    EndDialog(hwnd, GetDlgItemInt(hwnd, IDD_ATTRIBUTESEDIT1, NULL, FALSE) | (GetDlgItemInt(hwnd, IDD_ATTRIBUTESEDIT2, NULL, FALSE)<<16));
+                    EndDialog(hwnd,
+                              GetDlgItemInt(hwnd, IDD_ATTRIBUTESEDIT1, NULL,
+                                            FALSE) | (GetDlgItemInt(hwnd, IDD_ATTRIBUTESEDIT2, NULL,
+                                                                    FALSE) << 16));
                     break;
                 case IDCANCEL:
                     EndDialog(hwnd, 0);
@@ -127,12 +133,14 @@ LRESULT CALLBACK ATTDlgWinProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM l
     return TRUE;
 }
 
-int attributesDlg()
+int
+attributesDlg()
 {
-    return DialogBox(hProgInstance, MAKEINTRESOURCE(IDD_ATTRIBUTES), hMainWnd, (DLGPROC)ATTDlgWinProc);
+    return DialogBox(hProgInstance, MAKEINTRESOURCE(IDD_ATTRIBUTES), hMainWnd, (DLGPROC) ATTDlgWinProc);
 }
 
-LRESULT CALLBACK CHSIZEDlgWinProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK
+CHSIZEDlgWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
@@ -147,7 +155,10 @@ LRESULT CALLBACK CHSIZEDlgWinProc (HWND hwnd, UINT message, WPARAM wParam, LPARA
             switch (LOWORD(wParam))
             {
                 case IDOK:
-                    EndDialog(hwnd, GetDlgItemInt(hwnd, IDD_CHANGESIZEEDIT1, NULL, FALSE) | (GetDlgItemInt(hwnd, IDD_CHANGESIZEEDIT2, NULL, FALSE)<<16));
+                    EndDialog(hwnd,
+                              GetDlgItemInt(hwnd, IDD_CHANGESIZEEDIT1, NULL,
+                                            FALSE) | (GetDlgItemInt(hwnd, IDD_CHANGESIZEEDIT2, NULL,
+                                                                    FALSE) << 16));
                     break;
                 case IDCANCEL:
                     EndDialog(hwnd, 0);
@@ -160,7 +171,8 @@ LRESULT CALLBACK CHSIZEDlgWinProc (HWND hwnd, UINT message, WPARAM wParam, LPARA
     return TRUE;
 }
 
-int changeSizeDlg()
+int
+changeSizeDlg()
 {
-    return DialogBox(hProgInstance, MAKEINTRESOURCE(IDD_CHANGESIZE), hMainWnd, (DLGPROC)CHSIZEDlgWinProc);
+    return DialogBox(hProgInstance, MAKEINTRESOURCE(IDD_CHANGESIZE), hMainWnd, (DLGPROC) CHSIZEDlgWinProc);
 }

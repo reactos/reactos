@@ -13,7 +13,7 @@
 #define TTL_EXCEEDED 11
 
 #define MAX_PING_PACKET_SIZE 1024
-#define MAX_PING_DATA_SIZE (MAX_PING_PACKET_SIZE + sizeof(IPv4Header)
+#define MAX_PING_DATA_SIZE (MAX_PING_PACKET_SIZE + sizeof(IPv4Header))
 #define PACKET_SIZE 32
 #define ICMP_MIN_SIZE 8
 
@@ -53,8 +53,8 @@ typedef struct ICMPHeader
 /* ICMP Echo Reply Header, 12 bytes */
 typedef struct EchoReplyHeader
 {
-    struct ICMPHeader icmpheader;
     struct timeval timestamp;
+    struct ICMPHeader icmpheader;
 } ECHO_REPLY_HEADER, *PECHO_REPLY_HEADER;
 
 /* ICMP Echo Reply Header, 12 bytes */

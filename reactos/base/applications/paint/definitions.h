@@ -1,8 +1,8 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        definitions.h
- * PURPOSE:     Defines the resource ids
+ * FILE:        base/applications/paint/definitions.h
+ * PURPOSE:     Defines the resource ids and other stuff
  * PROGRAMMERS: Benedikt Freisen
  */
  
@@ -12,6 +12,7 @@
 /* HISTORYSIZE = number of possible undo-steps + 1 */
 
 #define SIZEOF(a)  (sizeof(a) / sizeof((a)[0]))
+/* sizeof for string constants; equals max. number of characters */
 
 #define IDI_APPICON 500
 
@@ -72,7 +73,7 @@
 #define IDM_IMAGEINVERTCOLORS   253
 #define IDM_IMAGEATTRIBUTES     254
 #define IDM_IMAGEDELETEIMAGE    255
-#define IDM_IMAGEDRAWOPAQUE    256
+#define IDM_IMAGEDRAWOPAQUE     256
 
 #define IDM_COLORSEDITPALETTE   260
 

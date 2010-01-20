@@ -212,7 +212,8 @@ PinPropertyHandler(
     if (!NT_SUCCESS(Status))
     {
         DPRINT("Failed to obtain ISubdevice interface from port driver\n");
-        KeBugCheck(0);
+        DbgBreakPoint();
+        while(TRUE);
     }
 
     // get current stack location

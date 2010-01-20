@@ -97,7 +97,7 @@ NET_API_STATUS WINAPI NetServerEnumEx(
  */
 NET_API_STATUS WINAPI NetServerGetInfo(LMSTR servername, DWORD level, LPBYTE* bufptr)
 {
-    FIXME("stub (%p, %d, %p)\n", servername, level, bufptr);
+    FIXME("stub (%s, %d, %p)\n", debugstr_w(servername), level, bufptr);
     return ERROR_ACCESS_DENIED;
 }
 

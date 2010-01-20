@@ -424,6 +424,9 @@ MmInitSystem(IN ULONG Phase,
         /* Initialize working sets */
         MmInitializeMemoryConsumer(MC_USER, MmTrimUserMemory);
 
+        /* Initialize the user mode image list */
+        InitializeListHead(&MmLoadedUserImageList);
+
         /* Initialize the Loader Lock */
         KeInitializeMutant(&MmSystemLoadLock, FALSE);
 

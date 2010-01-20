@@ -3,8 +3,7 @@
  * LAST CHANGE:  04-09-2009
  * ---------------------------------------
  * TODO:
- * 1. treba usporiada jednotky pod¾a abecedy
- * 2. pridanie navigaènıch znaèiek "&"
+ * pridanie navigaènıch znaèiek "&" ?
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT

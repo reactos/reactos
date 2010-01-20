@@ -1,9 +1,9 @@
 /*
- * PROJECT:     Paint for ReactOS
+ * PROJECT:     PAINT for ReactOS
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/applications/devmgmt/lang/uk-UA.rc
+ * FILE:        base/applications/paint/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for Paint
- * TRANSLATOR:  Artem Reznikov, Sakara Yevhen
+ * TRANSLATORS: Artem Reznikov, Sakara Yevhen
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
@@ -140,9 +140,9 @@ BEGIN
     LTEXT "Дата файла:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
     LTEXT "Розмір файла:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
     LTEXT "Роздільна здатність:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
-    LTEXT "Not available", IDD_ATTRIBUTESTEXT6, 70, 5, 60, 10
-    LTEXT "Not available", IDD_ATTRIBUTESTEXT7, 70, 15, 60, 10
-    LTEXT "Not available", IDD_ATTRIBUTESTEXT8, 70, 25, 60, 10
+    LTEXT "Not available", IDD_ATTRIBUTESTEXT6, 60, 5, 90, 10
+    LTEXT "Not available", IDD_ATTRIBUTESTEXT7, 60, 15, 90, 10
+    LTEXT "Not available", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
     GROUPBOX "Одиниці вимірювання", IDD_ATTRIBUTESGROUP1, 6, 57, 139, 27
     AUTORADIOBUTTON "дюйми", IDD_ATTRIBUTESRB1, 12, 69, 35, 10, WS_GROUP
     AUTORADIOBUTTON "см", IDD_ATTRIBUTESRB2, 52, 69, 35, 10

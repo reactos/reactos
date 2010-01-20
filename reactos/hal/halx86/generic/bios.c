@@ -109,7 +109,7 @@ HalpSwitchToRealModeTrapHandlers(VOID)
     ULONG Handler;
     PHARDWARE_PTE IdtPte;
 
-    /* On i586, the first 7 entries of IDT are write-protected, unprotect them. */
+    /* On i586, the first 7 entries of IDT are write-protected, unprotect them. */ // Nasty hto hack
     if (KeGetCurrentPrcb()->CpuType == 5)
     {
         IdtPte = GetPteAddress(((PKIPCR)KeGetPcr())->IDT);
@@ -197,6 +197,7 @@ HalpUnmapRealModeMemory(VOID)
         Pte = GetPteAddress((PVOID)i);
         Pte->Valid = 0;
         Pte->Write = 0;
+        //Pte->Owner = 0; // Missing this?
         Pte->PageFrameNumber = 0;
     }
     

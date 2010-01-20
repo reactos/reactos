@@ -67,6 +67,11 @@ Author:
 #define KGDT_NMI_TSS            0x58
 
 //
+// Define the number of GDTs that can be queried by user mode
+//
+#define KGDT_NUMBER             10
+
+//
 // CR4
 //
 #define CR4_VME                 0x1
@@ -119,7 +124,7 @@ Author:
 //
 // HAL Variables
 //
-#define INITIAL_STALL_COUNT     0x64
+#define INITIAL_STALL_COUNT     100
 
 //
 // IOPM Definitions
@@ -130,6 +135,11 @@ Author:
     (MapNumber == IO_ACCESS_MAP_NONE) ?             \
         (USHORT)(sizeof(KTSS)) :                    \
         (USHORT)(FIELD_OFFSET(KTSS, IoMaps[MapNumber-1].IoMap))
+
+//
+// Size of the XMM register save area in the FXSAVE format
+//
+#define SIZE_OF_FX_REGISTERS    128
 
 //
 // Static Kernel-Mode Address start (use MM_KSEG0_BASE for actual)
@@ -333,7 +343,7 @@ typedef struct _FXSAVE_FORMAT
     ULONG DataSelector;
     ULONG MXCsr;
     ULONG MXCsrMask;
-    UCHAR RegisterArea[128];
+    UCHAR RegisterArea[SIZE_OF_FX_REGISTERS];
     UCHAR Reserved3[128];
     UCHAR Reserved4[224];
     UCHAR Align16Byte[8];

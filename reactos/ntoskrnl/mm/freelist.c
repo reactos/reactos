@@ -51,6 +51,22 @@
 PPHYSICAL_PAGE MmPfnDatabase;
 
 ULONG MmAvailablePages;
+ULONG MmResidentAvailablePages;
+
+SIZE_T MmTotalCommitLimit;
+SIZE_T MmTotalCommittedPages;
+SIZE_T MmSharedCommit;
+SIZE_T MmDriverCommit;
+SIZE_T MmProcessCommit;
+SIZE_T MmPagedPoolCommit;
+SIZE_T MmPeakCommitment;
+SIZE_T MmtotalCommitLimitMaximum;
+
+MMPFNLIST MmZeroedPageListHead;
+MMPFNLIST MmFreePageListHead;
+MMPFNLIST MmStandbyPageListHead;
+MMPFNLIST MmModifiedPageListHead;
+MMPFNLIST MmModifiedNoWritePageListHead;
 
 /* List of pages allocated to the MC_USER Consumer */
 static LIST_ENTRY UserPageListHead;

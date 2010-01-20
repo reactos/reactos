@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #include <freeldr.h>
@@ -169,29 +169,28 @@ AllocateListMemoryFailed:
 BOOLEAN RemoveQuotes(PCHAR QuotedString)
 {
 	CHAR	TempString[200];
+	PCHAR p;
+	PSTR Start;
 
 	//
-	// If this string is not quoted then return FALSE
+	// Skip spaces up to "
 	//
-	if ((QuotedString[0] != '\"') && (QuotedString[strlen(QuotedString)-1] != '\"'))
-	{
-		return FALSE;
-	}
+	p = QuotedString;
+	while (*p == ' ' || *p == '"')
+		p++;
+	Start = p;
 
-	if (QuotedString[0] == '\"')
-	{
-		strcpy(TempString, (QuotedString + 1));
-	}
-	else
-	{
-		strcpy(TempString, QuotedString);
-	}
+	//
+	// Go up to next "
+	//
+	while (*p != '"' && *p != ANSI_NULL)
+		p++;
+	*p = ANSI_NULL;
 
-	if (TempString[strlen(TempString)-1] == '\"')
-	{
-		TempString[strlen(TempString)-1] = '\0';
-	}
-
+	//
+	// Copy result
+	//
+	strcpy(TempString, Start);
 	strcpy(QuotedString, TempString);
 
 	return TRUE;

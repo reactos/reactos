@@ -170,7 +170,6 @@ static UINT ControlEvent_DoAction(MSIPACKAGE* package, LPCWSTR argument,
 static UINT ControlEvent_AddLocal(MSIPACKAGE* package, LPCWSTR argument, 
                                   msi_dialog* dialog)
 {
-    static const WCHAR szAll[] = {'A','L','L',0};
     MSIFEATURE *feature = NULL;
 
     if (lstrcmpW(szAll,argument))
@@ -190,7 +189,6 @@ static UINT ControlEvent_AddLocal(MSIPACKAGE* package, LPCWSTR argument,
 static UINT ControlEvent_Remove(MSIPACKAGE* package, LPCWSTR argument, 
                                 msi_dialog* dialog)
 {
-    static const WCHAR szAll[] = {'A','L','L',0};
     MSIFEATURE *feature = NULL;
 
     if (lstrcmpW(szAll,argument))
@@ -210,7 +208,6 @@ static UINT ControlEvent_Remove(MSIPACKAGE* package, LPCWSTR argument,
 static UINT ControlEvent_AddSource(MSIPACKAGE* package, LPCWSTR argument, 
                                    msi_dialog* dialog)
 {
-    static const WCHAR szAll[] = {'A','L','L',0};
     MSIFEATURE *feature = NULL;
 
     if (lstrcmpW(szAll,argument))
@@ -383,7 +380,6 @@ static UINT ControlEvent_DirectoryListUp(MSIPACKAGE *package, LPCWSTR argument,
 static UINT ControlEvent_ReinstallMode(MSIPACKAGE *package, LPCWSTR argument,
                                        msi_dialog *dialog)
 {
-    static const WCHAR szReinstallMode[] = {'R','E','I','N','S','T','A','L','L','M','O','D','E',0};
     return MSI_SetPropertyW( package, szReinstallMode, argument );
 }
 

@@ -1,6 +1,9 @@
 /*
- * Spanish Language resource file
- * Traducido por: Gabriel Ilardi febrero 2009
+ * PROJECT:     PAINT for ReactOS
+ * LICENSE:     unknown (LGPL assumed)
+ * FILE:        base/applications/paint/lang/es-ES.rc
+ * PURPOSE:     Spanish Language resource file
+ * TRANSLATORS: Gabriel Ilardi
  */
  
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
@@ -138,9 +141,9 @@ BEGIN
     LTEXT "Fecha modificación:", IDD_ATTRIBUTESTEXT3, 10, 5, 80, 10
     LTEXT "Espacio en disco:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
     LTEXT "Resolución:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
-    LTEXT "No disponible", IDD_ATTRIBUTESTEXT6, 73, 5, 60, 10
-    LTEXT "No disponible", IDD_ATTRIBUTESTEXT7, 73, 15, 60, 10
-    LTEXT "No disponible", IDD_ATTRIBUTESTEXT8, 73, 25, 60, 10
+    LTEXT "No disponible", IDD_ATTRIBUTESTEXT6, 73, 5, 80, 10
+    LTEXT "No disponible", IDD_ATTRIBUTESTEXT7, 73, 15, 80, 10
+    LTEXT "No disponible", IDD_ATTRIBUTESTEXT8, 73, 25, 80, 10
     GROUPBOX "Unidades ", IDD_ATTRIBUTESGROUP1, 6, 57, 139, 27
     AUTORADIOBUTTON "Pulgadas", IDD_ATTRIBUTESRB1, 12, 69, 35, 10, WS_GROUP
     AUTORADIOBUTTON "cm", IDD_ATTRIBUTESRB2, 60, 69, 35, 10

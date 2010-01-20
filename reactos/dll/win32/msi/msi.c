@@ -264,8 +264,6 @@ UINT WINAPI MsiReinstallProductA(LPCSTR szProduct, DWORD dwReinstallMode)
 
 UINT WINAPI MsiReinstallProductW(LPCWSTR szProduct, DWORD dwReinstallMode)
 {
-    static const WCHAR szAll[] = {'A','L','L',0};
-
     TRACE("%s %08x\n", debugstr_w(szProduct), dwReinstallMode);
 
     return MsiReinstallFeatureW(szProduct, szAll, dwReinstallMode);
@@ -311,7 +309,6 @@ static UINT MSI_ApplyPatchW(LPCWSTR szPatchPackage, LPCWSTR szProductCode, LPCWS
     LPWSTR beg, end;
     LPWSTR cmd = NULL, codes = NULL;
 
-    static const WCHAR space[] = {' ',0};
     static const WCHAR patcheq[] = {'P','A','T','C','H','=',0};
     static WCHAR empty[] = {0};
 
@@ -361,7 +358,7 @@ static UINT MSI_ApplyPatchW(LPCWSTR szPatchPackage, LPCWSTR szProductCode, LPCWS
     }
 
     lstrcpyW(cmd, cmd_ptr);
-    if (szCommandLine) lstrcatW(cmd, space);
+    if (szCommandLine) lstrcatW(cmd, szSpace);
     lstrcatW(cmd, patcheq);
     lstrcatW(cmd, szPatchPackage);
 
@@ -1216,9 +1213,7 @@ UINT WINAPI MsiGetProductInfoExW(LPCWSTR szProductCode, LPCWSTR szUserSid,
     DWORD type;
     UINT r = ERROR_UNKNOWN_PRODUCT;
 
-    static const WCHAR one[] = {'1',0};
     static const WCHAR five[] = {'5',0};
-    static const WCHAR empty[] = {0};
     static const WCHAR displayname[] = {
         'D','i','s','p','l','a','y','N','a','m','e',0};
     static const WCHAR displayversion[] = {
@@ -1315,7 +1310,7 @@ UINT WINAPI MsiGetProductInfoExW(LPCWSTR szProductCode, LPCWSTR szUserSid,
 
         val = msi_reg_get_value(props, szProperty, &type);
         if (!val)
-            val = strdupW(empty);
+            val = strdupW(szEmpty);
 
         r = msi_copy_outval(val, szValue, pcchValue);
     }
@@ -1340,7 +1335,7 @@ UINT WINAPI MsiGetProductInfoExW(LPCWSTR szProductCode, LPCWSTR szUserSid,
 
         val = msi_reg_get_value(hkey, szProperty, &type);
         if (!val)
-            val = strdupW(empty);
+            val = strdupW(szEmpty);
 
         r = msi_copy_outval(val, szValue, pcchValue);
     }
@@ -1358,7 +1353,7 @@ UINT WINAPI MsiGetProductInfoExW(LPCWSTR szProductCode, LPCWSTR szUserSid,
                 val = strdupW(five);
             }
             else
-                val = strdupW(one);
+                val = strdupW(szOne);
 
             r = msi_copy_outval(val, szValue, pcchValue);
             goto done;
@@ -1372,7 +1367,7 @@ UINT WINAPI MsiGetProductInfoExW(LPCWSTR szProductCode, LPCWSTR szUserSid,
         }
 
         if (prod || managed)
-            val = strdupW(one);
+            val = strdupW(szOne);
         else
             goto done;
 
@@ -1384,7 +1379,7 @@ UINT WINAPI MsiGetProductInfoExW(LPCWSTR szProductCode, LPCWSTR szUserSid,
             goto done;
 
         /* FIXME */
-        val = strdupW(empty);
+        val = strdupW(szEmpty);
         r = msi_copy_outval(val, szValue, pcchValue);
     }
     else
@@ -1482,9 +1477,6 @@ UINT WINAPI MsiGetPatchInfoExW(LPCWSTR szPatchCode, LPCWSTR szProductCode,
     DWORD len;
     LONG res;
 
-    static const WCHAR szEmpty[] = {0};
-    static const WCHAR szPatches[] = {'P','a','t','c','h','e','s',0};
-    static const WCHAR szInstalled[] = {'I','n','s','t','a','l','l','e','d',0};
     static const WCHAR szManagedPackage[] = {'M','a','n','a','g','e','d',
         'L','o','c','a','l','P','a','c','k','a','g','e',0};
 
@@ -2971,8 +2963,6 @@ static USERINFOSTATE MSI_GetUserInfo(LPCWSTR szProduct,
     LPCWSTR orgptr;
     UINT r;
 
-    static const WCHAR szEmpty[] = {0};
-
     TRACE("%s %p %p %p %p %p %p\n", debugstr_w(szProduct), lpUserNameBuf,
           pcchUserNameBuf, lpOrgNameBuf, pcchOrgNameBuf, lpSerialBuf,
           pcchSerialBuf);
@@ -3385,10 +3375,6 @@ UINT WINAPI MsiReinstallFeatureW( LPCWSTR szProduct, LPCWSTR szFeature,
     WCHAR filename[MAX_PATH];
     static const WCHAR szLogVerbose[] = {
         ' ','L','O','G','V','E','R','B','O','S','E',0 };
-    static const WCHAR szInstalled[] = { 'I','n','s','t','a','l','l','e','d',0};
-    static const WCHAR szReinstall[] = {'R','E','I','N','S','T','A','L','L',0};
-    static const WCHAR szReinstallMode[] = {'R','E','I','N','S','T','A','L','L','M','O','D','E',0};
-    static const WCHAR szOne[] = {'1',0};
     WCHAR reinstallmode[11];
     LPWSTR ptr;
     DWORD sz;

@@ -232,7 +232,7 @@ PcRegisterSubdevice(
     if (!DeviceExt)
     {
         // should not happen
-        KeBugCheck(0);
+        DbgBreakPoint();
         return STATUS_UNSUCCESSFUL;
     }
 

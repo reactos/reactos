@@ -40,7 +40,7 @@ KiInitMachineDependent(VOID)
     if (KeFeatureBits & KF_LARGE_PAGE)
     {
         /* FIXME: Support this */
-        DPRINT("Large Page support detected but not yet taken advantage of!\n");
+        DPRINT1("Large Page support detected but not yet taken advantage of\n");
     }
 
     /* Check for global page support */

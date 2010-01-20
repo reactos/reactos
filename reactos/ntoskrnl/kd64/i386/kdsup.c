@@ -3,7 +3,8 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/kd64/i386/kdsup.c
  * PURPOSE:         KD support routines for x86
- * PROGRAMMERS:     Stefan Ginsberg (stefan.ginsberg@reactos.org)
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Stefan Ginsberg (stefan.ginsberg@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -13,14 +14,6 @@
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
-
-VOID
-NTAPI
-KdpSysGetVersion(IN PDBGKD_GET_VERSION64 Version)
-{
-    /* Copy the version block */
-    RtlCopyMemory(Version, &KdVersionBlock, sizeof(DBGKD_GET_VERSION64));
-}
 
 VOID
 NTAPI
@@ -68,7 +61,7 @@ KdpGetStateChange(IN PDBGKD_MANIPULATE_STATE64 State,
 
 VOID
 NTAPI
-KdpSetContextState(IN PDBGKD_WAIT_STATE_CHANGE64 WaitStateChange,
+KdpSetContextState(IN PDBGKD_ANY_WAIT_STATE_CHANGE WaitStateChange,
                    IN PCONTEXT Context)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
@@ -159,7 +152,7 @@ KdpSysReadBusData(IN ULONG BusDataType,
                                           Length);
 
     /* Return status */
-    return (*ActualLength != 0) ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
+    return *ActualLength != 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 }
 
 NTSTATUS
@@ -181,7 +174,7 @@ KdpSysWriteBusData(IN ULONG BusDataType,
                                           Length);
 
     /* Return status */
-    return (*ActualLength != 0) ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
+    return *ActualLength != 0 ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 }
 
 NTSTATUS
@@ -208,12 +201,13 @@ KdpSysReadControlSpace(IN ULONG Processor,
                                (ULONG_PTR)&KiProcessorBlock[Processor]->
                                            ProcessorState);
 
-        /* Copy the memory */
-        RtlCopyMemory(Buffer, ControlStart, Length);
-
-        /* Finish up */
-        *ActualLength = Length;
-        return STATUS_SUCCESS;
+        /* Read the control state safely */
+        return KdpCopyMemoryChunks((ULONG_PTR)Buffer,
+                                   ControlStart,
+                                   Length,
+                                   0,
+                                   MMDBG_COPY_UNSAFE | MMDBG_COPY_WRITE,
+                                   ActualLength);
     }
     else
     {
@@ -242,12 +236,13 @@ KdpSysWriteControlSpace(IN ULONG Processor,
                                (ULONG_PTR)&KiProcessorBlock[Processor]->
                                            ProcessorState);
 
-        /* Copy the memory */
-        RtlCopyMemory(ControlStart, Buffer, Length);
-
-        /* Finish up */
-        *ActualLength = Length;
-        return STATUS_SUCCESS;
+        /* Write the control state safely */
+        return KdpCopyMemoryChunks((ULONG_PTR)Buffer,
+                                   ControlStart,
+                                   Length,
+                                   0,
+                                   MMDBG_COPY_UNSAFE,
+                                   ActualLength);
     }
     else
     {

@@ -6,8 +6,13 @@
 		<include base="ntoskrnl">include</include>
 		<define name="_NTHAL_" />
 		<directory name="generic">
+			<directory name="bus">
+				<file>bushndlr.c</file>
+				<file>isabus.c</file>
+				<file>halbus.c</file>
+				<file>sysbus.c</file>
+			</directory>
 			<file>beep.c</file>
-			<file>bus.c</file>
 			<file>cmos.c</file>
 			<file>dma.c</file>
 			<file>drive.c</file>

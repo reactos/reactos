@@ -88,6 +88,14 @@ KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
                 KTRAP_FRAME TrapFrame);
 #endif
 
+NTSTATUS
+NTAPI
+Ke386GetGdtEntryThread(
+    IN PKTHREAD Thread,
+    IN ULONG Offset,
+    IN PKGDTENTRY Descriptor
+);
+
 #endif
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_I386_KE_H */
 
