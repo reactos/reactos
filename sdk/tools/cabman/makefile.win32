@@ -1,0 +1,29 @@
+# $Id$
+
+PATH_TO_TOP = ../..
+
+TARGET_TYPE = program
+
+TARGET_APPTYPE = console
+
+TARGET_NAME = cabman
+#TARGET_NAME = test
+
+TARGET_CPPAPP = yes
+
+TARGET_OBJECTS = cabinet.o mszip.o raw.o main.o dfp.o
+
+TARGET_SDKLIBS = zlib.a
+
+TARGET_CFLAGS = -I$(PATH_TO_TOP)/lib/zlib -Werror -Wall
+
+TARGET_CPPFLAGS = $(TARGET_CFLAGS)
+
+TARGET_GCCLIBS = stdc++
+
+TARGET_NORC = yes
+
+include $(PATH_TO_TOP)/rules.mak
+
+include $(TOOLS_PATH)/helper.mk
+
