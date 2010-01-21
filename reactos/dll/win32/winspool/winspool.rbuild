@@ -3,7 +3,6 @@
 	<include base="winspool">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<library>ntdll</library>
-	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>shlwapi</library>
 	<file>info.c</file>

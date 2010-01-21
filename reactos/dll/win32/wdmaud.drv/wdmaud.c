@@ -321,24 +321,27 @@ MixerEventThreadRoutine(
             break;
         }
 
-        Result = SyncOverlappedDeviceIoControl(KernelHandle,
-                                               IOCTL_GET_MIXER_EVENT,
-                                               (LPVOID) &DeviceInfo,
-                                               sizeof(WDMAUD_DEVICE_INFO),
-                                               (LPVOID) &DeviceInfo,
-                                               sizeof(WDMAUD_DEVICE_INFO),
-                                               NULL);
-
-        if (Result == MMSYSERR_NOERROR)
+        do
         {
-            DriverCallback(Instance->WinMM.ClientCallback,
-                           HIWORD(Instance->WinMM.Flags),
-                           Instance->WinMM.Handle,
-                           DeviceInfo.u.MixerEvent.NotificationType,
-                           Instance->WinMM.ClientCallbackInstanceData,
-                           (DWORD_PTR)DeviceInfo.u.MixerEvent.Value,
-                           0);
-        }
+            Result = SyncOverlappedDeviceIoControl(KernelHandle,
+                                                   IOCTL_GET_MIXER_EVENT,
+                                                   (LPVOID) &DeviceInfo,
+                                                   sizeof(WDMAUD_DEVICE_INFO),
+                                                   (LPVOID) &DeviceInfo,
+                                                   sizeof(WDMAUD_DEVICE_INFO),
+                                                   NULL);
+
+            if (Result == MMSYSERR_NOERROR)
+            {
+                DriverCallback(Instance->WinMM.ClientCallback,
+                               HIWORD(Instance->WinMM.Flags),
+                               Instance->WinMM.Handle,
+                               DeviceInfo.u.MixerEvent.NotificationType,
+                               Instance->WinMM.ClientCallbackInstanceData,
+                               (DWORD_PTR)DeviceInfo.u.MixerEvent.Value,
+                               0);
+            }
+        }while(Result == MMSYSERR_NOERROR);
     }while(TRUE);
 
     /* done */
@@ -443,7 +446,7 @@ SetWdmWaveDeviceFormat(
     ZeroMemory(&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO));
     DeviceInfo.DeviceType = DeviceType;
     DeviceInfo.DeviceIndex = DeviceId;
-    DeviceInfo.u.WaveFormatEx.cbSize = WaveFormat->cbSize;
+    DeviceInfo.u.WaveFormatEx.cbSize = sizeof(WAVEFORMATEX); //WaveFormat->cbSize;
     DeviceInfo.u.WaveFormatEx.wFormatTag = WaveFormat->wFormatTag;
 #ifdef USERMODE_MIXER
     DeviceInfo.u.WaveFormatEx.nChannels = 2;
@@ -747,6 +750,35 @@ GetWdmPosition(
 }
 
 MMRESULT
+ResetStream(
+    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
+    IN  MMDEVICE_TYPE DeviceType,
+    IN  BOOLEAN bStartReset)
+{
+    MMRESULT Result;
+    HANDLE Handle;
+    WDMAUD_DEVICE_INFO DeviceInfo;
+
+    Result = GetSoundDeviceInstanceHandle(SoundDeviceInstance, &Handle);
+    SND_ASSERT( Result == MMSYSERR_NOERROR );
+
+    ZeroMemory(&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO));
+    DeviceInfo.hDevice = Handle;
+    DeviceInfo.DeviceType = DeviceType;
+    DeviceInfo.u.ResetStream = (bStartReset ? KSRESET_BEGIN : KSRESET_END);
+
+    Result = SyncOverlappedDeviceIoControl(KernelHandle,
+                                           IOCTL_RESET_STREAM,
+                                           (LPVOID) &DeviceInfo,
+                                           sizeof(WDMAUD_DEVICE_INFO),
+                                           (LPVOID) &DeviceInfo,
+                                           sizeof(WDMAUD_DEVICE_INFO),
+                                           NULL);
+    return Result;
+}
+
+
+MMRESULT
 QueryMixerInfo(
     IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
     IN UINT uMsg,
@@ -808,7 +840,7 @@ QueryMixerInfo(
 
     if ( ! MMSUCCESS(Result) )
     {
-        return TranslateInternalMmResult(Result);
+        return Result;
     }
 
     switch(uMsg)
@@ -876,6 +908,7 @@ PopulateWdmDeviceList(
         if (DeviceType == WAVE_IN_DEVICE_TYPE || DeviceType == WAVE_OUT_DEVICE_TYPE)
         {
             FuncTable.SetState = SetWdmWaveState;
+            FuncTable.ResetStream = ResetStream;
         }
 
         FuncTable.Open = OpenWdmSoundDevice;

@@ -32,6 +32,7 @@
 #include "objbase.h"
 #include "shlwapi.h"
 #include "mapiutil.h"
+#include "util.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(mapi);
@@ -62,6 +63,9 @@ extern LONG MAPI_ObjectCount; /* In mapi32_main.c */
 LPMALLOC WINAPI MAPIGetDefaultMalloc(void)
 {
     TRACE("()\n");
+
+    if (mapiFunctions.MAPIGetDefaultMalloc)
+        return mapiFunctions.MAPIGetDefaultMalloc();
 
     IMalloc_AddRef((LPMALLOC)&MAPI_IMalloc);
     return (LPMALLOC)&MAPI_IMalloc;

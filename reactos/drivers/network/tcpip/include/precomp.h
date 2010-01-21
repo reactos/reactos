@@ -3,6 +3,7 @@
 #include <ntifs.h>
 #include <tdi.h>
 #include <tdistat.h>
+#include <../recmutex/recmutex.h>
 #include <tcpip.h>
 #include <loopback.h>
 #include <ip.h>

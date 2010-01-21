@@ -43,7 +43,6 @@ static void WINAPI CRYPT_FileCloseStore(HCERTSTORE hCertStore, DWORD dwFlags)
     if (store->dirty)
         CertSaveStore(store->memStore, X509_ASN_ENCODING | PKCS_7_ASN_ENCODING,
          store->type, CERT_STORE_SAVE_TO_FILE, store->file, 0);
-    CertCloseStore(store->memStore, dwFlags);
     CloseHandle(store->file);
     CryptMemFree(store);
 }

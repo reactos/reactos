@@ -7,7 +7,6 @@
 	<define name="__WINESRC__" />
 	<library>wine</library>
 	<library>advapi32</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 	<file>cryptdll.c</file>
 </module>

@@ -4,7 +4,6 @@
 	<include base="calc">.</include>
 	<define name="DISABLE_HTMLHELP_SUPPORT">1</define>
 	<library>advapi32</library>
-	<library>kernel32</library>
 	<library>gdi32</library>
 	<library>user32</library>
 	<file>about.c</file>

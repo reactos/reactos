@@ -209,11 +209,12 @@ static UINT SELECT_get_dimensions( struct tagMSIVIEW *view, UINT *rows, UINT *co
 }
 
 static UINT SELECT_get_column_info( struct tagMSIVIEW *view,
-                UINT n, LPWSTR *name, UINT *type, BOOL *temporary )
+                UINT n, LPWSTR *name, UINT *type, BOOL *temporary,
+                LPWSTR *table_name)
 {
     MSISELECTVIEW *sv = (MSISELECTVIEW*)view;
 
-    TRACE("%p %d %p %p %p\n", sv, n, name, type, temporary );
+    TRACE("%p %d %p %p %p %p\n", sv, n, name, type, temporary, table_name );
 
     if( !sv->table )
          return ERROR_FUNCTION_FAILED;
@@ -224,7 +225,7 @@ static UINT SELECT_get_column_info( struct tagMSIVIEW *view,
     n = sv->cols[ n - 1 ];
 
     return sv->table->ops->get_column_info( sv->table, n, name,
-                                            type, temporary );
+                                            type, temporary, table_name );
 }
 
 static UINT msi_select_update(struct tagMSIVIEW *view, MSIRECORD *rec, UINT row)
@@ -247,7 +248,7 @@ static UINT msi_select_update(struct tagMSIVIEW *view, MSIRECORD *rec, UINT row)
     {
         col = sv->cols[i];
 
-        r = SELECT_get_column_info(view, i + 1, &name, &type, NULL);
+        r = SELECT_get_column_info(view, i + 1, &name, &type, NULL, NULL);
         msi_free(name);
         if (r != ERROR_SUCCESS)
         {
@@ -388,7 +389,7 @@ static UINT SELECT_AddColumn( MSISELECTVIEW *sv, LPCWSTR name )
     if( sv->num_cols >= sv->max_cols )
         return ERROR_FUNCTION_FAILED;
 
-    r = VIEW_find_column( table, name, &n );
+    r = VIEW_find_column( table, name, NULL, &n );
     if( r != ERROR_SUCCESS )
         return r;
 

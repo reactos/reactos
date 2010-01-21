@@ -61,7 +61,7 @@ extern BOOL lengthen_path(GpPath *path, INT len);
 extern GpStatus trace_path(GpGraphics *graphics, GpPath *path);
 
 typedef struct region_element region_element;
-extern inline void delete_element(region_element *element);
+extern void delete_element(region_element *element);
 
 static inline INT roundr(REAL x)
 {
@@ -166,6 +166,9 @@ struct GpLineGradient{
     REAL* blendfac;  /* blend factors */
     REAL* blendpos;  /* blend positions */
     INT blendcount;
+    ARGB* pblendcolor; /* preset blend colors */
+    REAL* pblendpos; /* preset blend positions */
+    INT pblendcount;
 };
 
 struct GpTexture{
@@ -208,6 +211,7 @@ struct GpAdustableArrowCap{
 struct GpImage{
     IPicture* picture;
     ImageType type;
+    GUID format;
     UINT flags;
 };
 

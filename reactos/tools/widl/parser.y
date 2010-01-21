@@ -101,7 +101,7 @@ static attr_t *make_attrv(enum attr_type type, unsigned long val);
 static attr_t *make_attrp(enum attr_type type, void *val);
 static expr_list_t *append_expr(expr_list_t *list, expr_t *expr);
 static array_dims_t *append_array(array_dims_t *list, expr_t *expr);
-static void set_type(var_t *v, decl_spec_t *decl_spec, const declarator_t *decl, int top);
+static var_t *declare_var(attr_list_t *attrs, decl_spec_t *decl_spec, const declarator_t *decl, int top);
 static var_list_t *set_var_types(attr_list_t *attrs, decl_spec_t *decl_spec, declarator_list_t *decls);
 static ifref_list_t *append_ifref(ifref_list_t *list, ifref_t *iface);
 static ifref_t *make_ifref(type_t *iface);
@@ -121,7 +121,7 @@ static type_t *find_type_or_error2(char *name, int t);
 static var_t *reg_const(var_t *var);
 
 static char *gen_name(void);
-static void check_arg(var_t *arg);
+static void check_arg_attrs(const var_t *arg);
 static void check_statements(const statement_list_t *stmts, int is_inside_library);
 static void check_all_user_types(const statement_list_t *stmts);
 static attr_list_t *check_iface_attrs(const char *name, attr_list_t *attrs);
@@ -194,7 +194,8 @@ static statement_list_t *append_statement(statement_list_t *list, statement_t *s
 %token EQUALITY INEQUALITY
 %token GREATEREQUAL LESSEQUAL
 %token LOGICALOR LOGICALAND
-%token tAGGREGATABLE tALLOCATE tAPPOBJECT tASYNC tASYNCUUID
+%token ELLIPSIS
+%token tAGGREGATABLE tALLOCATE tANNOTATION tAPPOBJECT tASYNC tASYNCUUID
 %token tAUTOHANDLE tBINDABLE tBOOLEAN tBROADCAST tBYTE tBYTECOUNT
 %token tCALLAS tCALLBACK tCASE tCDECL tCHAR tCOCLASS tCODE tCOMMSTATUS
 %token tCONST tCONTEXTHANDLE tCONTEXTHANDLENOSERIALIZE
@@ -224,7 +225,7 @@ static statement_list_t *append_statement(statement_list_t *list, statement_t *s
 %token tIMPORT tIMPORTLIB
 %token tIN tIN_LINE tINLINE
 %token tINPUTSYNC
-%token tINT tINT64
+%token tINT tINT3264 tINT64
 %token tINTERFACE
 %token tLCID
 %token tLENGTHIS tLIBRARY
@@ -278,7 +279,7 @@ static statement_list_t *append_statement(statement_list_t *list, statement_t *s
 %type <attr> attribute type_qualifier function_specifier
 %type <attr_list> m_attributes attributes attrib_list m_type_qual_list
 %type <str_list> str_list
-%type <expr> m_expr expr expr_const expr_int_const array
+%type <expr> m_expr expr expr_const expr_int_const array m_bitfield
 %type <expr_list> m_exprs /* exprs expr_list */ expr_list_int_const
 %type <ifinfo> interfacehdr
 %type <stgclass> storage_cls_spec
@@ -292,10 +293,13 @@ static statement_list_t *append_statement(statement_list_t *list, statement_t *s
 %type <ifref> coclass_int
 %type <ifref_list> coclass_ints
 %type <var> arg ne_union_field union_field s_field case enum declaration
-%type <var_list> m_args no_args args fields ne_union_fields cases enums enum_list dispint_props field
+%type <var_list> m_args arg_list args
+%type <var_list> fields ne_union_fields cases enums enum_list dispint_props field
 %type <var> m_ident ident
-%type <declarator> declarator direct_declarator init_declarator
-%type <declarator_list> declarator_list
+%type <declarator> declarator direct_declarator init_declarator struct_declarator
+%type <declarator> m_any_declarator any_declarator any_declarator_no_direct any_direct_declarator
+%type <declarator> m_abstract_declarator abstract_declarator abstract_declarator_no_direct abstract_direct_declarator
+%type <declarator_list> declarator_list struct_declarator_list
 %type <func> funcdef
 %type <type> coclass coclasshdr coclassdef
 %type <num> pointer_type version
@@ -425,27 +429,24 @@ m_args:						{ $$ = NULL; }
 	| args
 	;
 
-no_args:  tVOID					{ $$ = NULL; }
+arg_list: arg					{ check_arg_attrs($1); $$ = append_var( NULL, $1 ); }
+	| arg_list ',' arg			{ check_arg_attrs($3); $$ = append_var( $1, $3 ); }
 	;
 
-args:	  arg					{ check_arg($1); $$ = append_var( NULL, $1 ); }
-	| args ',' arg				{ check_arg($3); $$ = append_var( $1, $3); }
-	| no_args
+args:	  arg_list
+	| arg_list ',' ELLIPSIS			{ $$ = append_var( $1, make_var(strdup("...")) ); }
 	;
 
 /* split into two rules to get bison to resolve a tVOID conflict */
-arg:	  attributes decl_spec declarator	{ $$ = $3->var;
-						  $$->attrs = $1;
-						  if ($2->stgclass != STG_NONE && $2->stgclass != STG_REGISTER)
+arg:	  attributes decl_spec m_any_declarator	{ if ($2->stgclass != STG_NONE && $2->stgclass != STG_REGISTER)
 						    error_loc("invalid storage class for function parameter\n");
-						  set_type($$, $2, $3, TRUE);
-						  free($3);
+						  $$ = declare_var($1, $2, $3, TRUE);
+						  free($2); free($3);
 						}
-	| decl_spec declarator			{ $$ = $2->var;
-						  if ($1->stgclass != STG_NONE && $1->stgclass != STG_REGISTER)
+	| decl_spec m_any_declarator		{ if ($1->stgclass != STG_NONE && $1->stgclass != STG_REGISTER)
 						    error_loc("invalid storage class for function parameter\n");
-						  set_type($$, $1, $2, TRUE);
-						  free($2);
+						  $$ = declare_var(NULL, $1, $2, TRUE);
+						  free($1); free($2);
 						}
 	;
 
@@ -472,6 +473,7 @@ str_list: aSTRING                               { $$ = append_str( NULL, $1 ); }
 
 attribute:					{ $$ = NULL; }
 	| tAGGREGATABLE				{ $$ = make_attr(ATTR_AGGREGATABLE); }
+	| tANNOTATION '(' aSTRING ')'		{ $$ = make_attrp(ATTR_ANNOTATION, $3); }
 	| tAPPOBJECT				{ $$ = make_attr(ATTR_APPOBJECT); }
 	| tASYNC				{ $$ = make_attr(ATTR_ASYNC); }
 	| tAUTOHANDLE				{ $$ = make_attr(ATTR_AUTO_HANDLE); }
@@ -658,8 +660,10 @@ expr:	  aNUM					{ $$ = make_exprl(EXPR_NUM, $1); }
 	| '*' expr %prec PPTR			{ $$ = make_expr1(EXPR_PPTR, $2); }
 	| expr MEMBERPTR aIDENTIFIER		{ $$ = make_expr2(EXPR_MEMBER, make_expr1(EXPR_PPTR, $1), make_exprs(EXPR_IDENTIFIER, $3)); }
 	| expr '.' aIDENTIFIER			{ $$ = make_expr2(EXPR_MEMBER, $1, make_exprs(EXPR_IDENTIFIER, $3)); }
-	| '(' type ')' expr %prec CAST		{ $$ = make_exprt(EXPR_CAST, $2, $4); }
-	| tSIZEOF '(' type ')'			{ $$ = make_exprt(EXPR_SIZEOF, $3, NULL); }
+	| '(' decl_spec m_abstract_declarator ')' expr %prec CAST
+						{ $$ = make_exprt(EXPR_CAST, declare_var(NULL, $2, $3, 0), $5); free($2); free($3); }
+	| tSIZEOF '(' decl_spec m_abstract_declarator ')'
+						{ $$ = make_exprt(EXPR_SIZEOF, declare_var(NULL, $3, $4, 0), NULL); free($3); free($4); }
 	| expr '[' expr ']'			{ $$ = make_expr2(EXPR_ARRAY, $1, $3); }
 	| '(' expr ')'				{ $$ = $2; }
 	;
@@ -684,7 +688,7 @@ fields:						{ $$ = NULL; }
 	| fields field				{ $$ = append_var_list($1, $2); }
 	;
 
-field:	  m_attributes decl_spec declarator_list ';'
+field:	  m_attributes decl_spec struct_declarator_list ';'
 						{ const char *first = LIST_ENTRY(list_head($3), declarator_t, entry)->var->name;
 						  check_field_attrs(first, $1);
 						  $$ = set_var_types($1, $2, $3);
@@ -709,17 +713,16 @@ union_field:
 	| ';'					{ $$ = NULL; }
         ;
 
-s_field:  m_attributes decl_spec declarator	{ $$ = $3->var;
-						  $$->attrs = check_field_attrs($$->name, $1);
-						  set_type($$, $2, $3, FALSE);
+s_field:  m_attributes decl_spec declarator	{ $$ = declare_var(check_field_attrs($3->var->name, $1),
+						                $2, $3, FALSE);
 						  free($3);
 						}
 	;
 
 funcdef:
-	  m_attributes decl_spec declarator	{ var_t *v = $3->var;
-						  v->attrs = check_function_attrs(v->name, $1);
-						  set_type(v, $2, $3, FALSE);
+	  m_attributes decl_spec declarator	{ var_t *v;
+						  v = declare_var(check_function_attrs($3->var->name, $1),
+						               $2, $3, FALSE);
 						  free($3);
 						  $$ = make_func(v);
 						}
@@ -727,13 +730,10 @@ funcdef:
 
 declaration:
 	  attributes decl_spec init_declarator
-						{ $$ = $3->var;
-						  $$->attrs = $1;
-						  set_type($$, $2, $3, FALSE);
+						{ $$ = declare_var($1, $2, $3, FALSE);
 						  free($3);
 						}
-	| decl_spec init_declarator		{ $$ = $2->var;
-						  set_type($$, $1, $2, FALSE);
+	| decl_spec init_declarator		{ $$ = declare_var(NULL, $1, $2, FALSE);
 						  free($2);
 						}
 	;
@@ -776,6 +776,7 @@ int_std:  tINT					{ $$ = type_new_int(TYPE_BASIC_INT, 0); }
 	| tHYPER m_int				{ $$ = type_new_int(TYPE_BASIC_HYPER, 0); }
 	| tINT64				{ $$ = type_new_int(TYPE_BASIC_INT64, 0); }
 	| tCHAR					{ $$ = type_new_int(TYPE_BASIC_CHAR, 0); }
+	| tINT3264				{ $$ = type_new_int(TYPE_BASIC_INT3264, 0); }
 	;
 
 coclass:  tCOCLASS aIDENTIFIER			{ $$ = type_new_coclass($2); }
@@ -944,9 +945,102 @@ direct_declarator:
 						}
 	;
 
+/* abstract declarator */
+abstract_declarator:
+	  '*' m_type_qual_list m_abstract_declarator %prec PPTR
+						{ $$ = $3; $$->type = append_ptrchain_type($$->type, type_new_pointer(pointer_default, NULL, $2)); }
+	| callconv m_abstract_declarator	{ $$ = $2; $$->type->attrs = append_attr($$->type->attrs, make_attrp(ATTR_CALLCONV, $1)); }
+	| abstract_direct_declarator
+	;
+
+/* abstract declarator without accepting direct declarator */
+abstract_declarator_no_direct:
+	  '*' m_type_qual_list m_any_declarator %prec PPTR
+						{ $$ = $3; $$->type = append_ptrchain_type($$->type, type_new_pointer(pointer_default, NULL, $2)); }
+	| callconv m_any_declarator		{ $$ = $2; $$->type->attrs = append_attr($$->type->attrs, make_attrp(ATTR_CALLCONV, $1)); }
+	;
+
+/* abstract declarator or empty */
+m_abstract_declarator: 				{ $$ = make_declarator(NULL); }
+	| abstract_declarator
+	;
+
+/* abstract direct declarator */
+abstract_direct_declarator:
+	  '(' abstract_declarator_no_direct ')'	{ $$ = $2; }
+	| abstract_direct_declarator array	{ $$ = $1; $$->array = append_array($$->array, $2); }
+	| array					{ $$ = make_declarator(NULL); $$->array = append_array($$->array, $1); }
+	| '(' m_args ')'
+						{ $$ = make_declarator(NULL);
+						  $$->func_type = append_ptrchain_type($$->type, type_new_function($2));
+						  $$->type = NULL;
+						}
+	| abstract_direct_declarator '(' m_args ')'
+						{ $$ = $1;
+						  $$->func_type = append_ptrchain_type($$->type, type_new_function($3));
+						  $$->type = NULL;
+						}
+	;
+
+/* abstract or non-abstract declarator */
+any_declarator:
+	  '*' m_type_qual_list m_any_declarator %prec PPTR
+						{ $$ = $3; $$->type = append_ptrchain_type($$->type, type_new_pointer(pointer_default, NULL, $2)); }
+	| callconv m_any_declarator		{ $$ = $2; $$->type->attrs = append_attr($$->type->attrs, make_attrp(ATTR_CALLCONV, $1)); }
+	| any_direct_declarator
+	;
+
+/* abstract or non-abstract declarator without accepting direct declarator */
+any_declarator_no_direct:
+	  '*' m_type_qual_list m_any_declarator %prec PPTR
+						{ $$ = $3; $$->type = append_ptrchain_type($$->type, type_new_pointer(pointer_default, NULL, $2)); }
+	| callconv m_any_declarator		{ $$ = $2; $$->type->attrs = append_attr($$->type->attrs, make_attrp(ATTR_CALLCONV, $1)); }
+	;
+
+/* abstract or non-abstract declarator or empty */
+m_any_declarator: 				{ $$ = make_declarator(NULL); }
+	| any_declarator
+	;
+
+/* abstract or non-abstract direct declarator. note: direct declarators
+ * aren't accepted inside brackets to avoid ambiguity with the rule for
+ * function arguments */
+any_direct_declarator:
+	  ident					{ $$ = make_declarator($1); }
+	| '(' any_declarator_no_direct ')'	{ $$ = $2; }
+	| any_direct_declarator array		{ $$ = $1; $$->array = append_array($$->array, $2); }
+	| array					{ $$ = make_declarator(NULL); $$->array = append_array($$->array, $1); }
+	| '(' m_args ')'
+						{ $$ = make_declarator(NULL);
+						  $$->func_type = append_ptrchain_type($$->type, type_new_function($2));
+						  $$->type = NULL;
+						}
+	| any_direct_declarator '(' m_args ')'
+						{ $$ = $1;
+						  $$->func_type = append_ptrchain_type($$->type, type_new_function($3));
+						  $$->type = NULL;
+						}
+	;
+
 declarator_list:
 	  declarator				{ $$ = append_declarator( NULL, $1 ); }
 	| declarator_list ',' declarator	{ $$ = append_declarator( $1, $3 ); }
+	;
+
+m_bitfield:					{ $$ = NULL; }
+	| ':' expr_const			{ $$ = $2; }
+	;
+
+struct_declarator: any_declarator m_bitfield	{ $$ = $1; $$->bits = $2;
+						  if (!$$->bits && !$$->var->name)
+						    error_loc("unnamed fields are not allowed");
+						}
+	;
+
+struct_declarator_list:
+	  struct_declarator			{ $$ = append_declarator( NULL, $1 ); }
+	| struct_declarator_list ',' struct_declarator
+						{ $$ = append_declarator( $1, $3 ); }
 	;
 
 init_declarator:
@@ -1237,6 +1331,38 @@ static void type_function_add_head_arg(type_t *type, var_t *arg)
     list_add_head( type->details.function->args, &arg->entry );
 }
 
+static int is_allowed_range_type(const type_t *type)
+{
+    switch (type_get_type(type))
+    {
+    case TYPE_ENUM:
+        return TRUE;
+    case TYPE_BASIC:
+        switch (type_basic_get_type(type))
+        {
+        case TYPE_BASIC_INT8:
+        case TYPE_BASIC_INT16:
+        case TYPE_BASIC_INT32:
+        case TYPE_BASIC_INT64:
+        case TYPE_BASIC_INT:
+        case TYPE_BASIC_INT3264:
+        case TYPE_BASIC_BYTE:
+        case TYPE_BASIC_CHAR:
+        case TYPE_BASIC_WCHAR:
+        case TYPE_BASIC_HYPER:
+            return TRUE;
+        case TYPE_BASIC_FLOAT:
+        case TYPE_BASIC_DOUBLE:
+        case TYPE_BASIC_ERROR_STATUS_T:
+        case TYPE_BASIC_HANDLE:
+            return FALSE;
+        }
+        return FALSE;
+    default:
+        return FALSE;
+    }
+}
+
 static type_t *append_ptrchain_type(type_t *ptrchain, type_t *type)
 {
   type_t *ptrchain_type;
@@ -1249,11 +1375,12 @@ static type_t *append_ptrchain_type(type_t *ptrchain, type_t *type)
   return ptrchain;
 }
 
-static void set_type(var_t *v, decl_spec_t *decl_spec, const declarator_t *decl,
-                     int top)
+static var_t *declare_var(attr_list_t *attrs, decl_spec_t *decl_spec, const declarator_t *decl,
+                       int top)
 {
-  expr_list_t *sizes = get_attrp(v->attrs, ATTR_SIZEIS);
-  expr_list_t *lengs = get_attrp(v->attrs, ATTR_LENGTHIS);
+  var_t *v = decl->var;
+  expr_list_t *sizes = get_attrp(attrs, ATTR_SIZEIS);
+  expr_list_t *lengs = get_attrp(attrs, ATTR_LENGTHIS);
   int sizeless;
   expr_t *dim;
   type_t **ptype;
@@ -1278,6 +1405,7 @@ static void set_type(var_t *v, decl_spec_t *decl_spec, const declarator_t *decl,
   /* add type onto the end of the pointers in pident->type */
   v->type = append_ptrchain_type(decl ? decl->type : NULL, type);
   v->stgclass = decl_spec->stgclass;
+  v->attrs = attrs;
 
   /* check for pointer attribute being applied to non-pointer, non-array
    * type */
@@ -1316,15 +1444,36 @@ static void set_type(var_t *v, decl_spec_t *decl_spec, const declarator_t *decl,
        error_loc("%s: pointer attribute applied to non-pointer type\n", v->name);
   }
 
-  if (is_attr(v->attrs, ATTR_STRING) && !is_ptr(v->type) && !arr)
-    error_loc("'%s': [string] attribute applied to non-pointer, non-array type\n",
-              v->name);
+  if (is_attr(v->attrs, ATTR_STRING))
+  {
+    type_t *t = type;
+
+    if (!is_ptr(v->type) && !arr)
+      error_loc("'%s': [string] attribute applied to non-pointer, non-array type\n",
+                v->name);
+
+    while (is_ptr(t))
+      t = type_pointer_get_ref(t);
+
+    if (type_get_type(t) != TYPE_BASIC &&
+        (get_basic_fc(t) != RPC_FC_CHAR &&
+         get_basic_fc(t) != RPC_FC_BYTE &&
+         get_basic_fc(t) != RPC_FC_WCHAR))
+    {
+      error_loc("'%s': [string] attribute is only valid on 'char', 'byte', or 'wchar_t' pointers and arrays\n",
+                v->name);
+    }
+  }
 
   if (is_attr(v->attrs, ATTR_V1ENUM))
   {
     if (type_get_type_detect_alias(v->type) != TYPE_ENUM)
       error_loc("'%s': [v1_enum] attribute applied to non-enum type\n", v->name);
   }
+
+  if (is_attr(v->attrs, ATTR_RANGE) && !is_allowed_range_type(v->type))
+    error_loc("'%s': [range] attribute applied to non-integer type\n",
+              v->name);
 
   ptype = &v->type;
   sizeless = FALSE;
@@ -1442,6 +1591,11 @@ static void set_type(var_t *v, decl_spec_t *decl_spec, const declarator_t *decl,
       if (is_attr(t->attrs, ATTR_CALLCONV))
         error_loc("calling convention applied to non-function-pointer type\n");
   }
+
+  if (decl->bits)
+    v->type = type_new_bitfield(v->type, decl->bits);
+
+  return v;
 }
 
 static var_list_t *set_var_types(attr_list_t *attrs, decl_spec_t *decl_spec, declarator_list_t *decls)
@@ -1451,13 +1605,11 @@ static var_list_t *set_var_types(attr_list_t *attrs, decl_spec_t *decl_spec, dec
 
   LIST_FOR_EACH_ENTRY_SAFE( decl, next, decls, declarator_t, entry )
   {
-    var_t *var = decl->var;
-
-    var->attrs = attrs;
-    set_type(var, decl_spec, decl, 0);
+    var_t *var = declare_var(attrs, decl_spec, decl, 0);
     var_list = append_var(var_list, var);
     free(decl);
   }
+  free(decl_spec);
   return var_list;
 }
 
@@ -1531,10 +1683,11 @@ static declarator_list_t *append_declarator(declarator_list_t *list, declarator_
 static declarator_t *make_declarator(var_t *var)
 {
   declarator_t *d = xmalloc(sizeof(*d));
-  d->var = var;
+  d->var = var ? var : make_var(NULL);
   d->type = NULL;
   d->func_type = NULL;
   d->array = NULL;
+  d->bits = NULL;
   return d;
 }
 
@@ -1675,26 +1828,7 @@ static void fix_incomplete_types(type_t *complete_type)
 static type_t *reg_typedefs(decl_spec_t *decl_spec, declarator_list_t *decls, attr_list_t *attrs)
 {
   const declarator_t *decl;
-  int is_str = is_attr(attrs, ATTR_STRING);
   type_t *type = decl_spec->type;
-
-  if (is_str)
-  {
-    type_t *t = decl_spec->type;
-
-    while (is_ptr(t))
-      t = type_pointer_get_ref(t);
-
-    if (type_get_type(t) != TYPE_BASIC &&
-        (get_basic_fc(t) != RPC_FC_CHAR &&
-         get_basic_fc(t) != RPC_FC_BYTE &&
-         get_basic_fc(t) != RPC_FC_WCHAR))
-    {
-      decl = LIST_ENTRY( list_head( decls ), const declarator_t, entry );
-      error_loc("'%s': [string] attribute is only valid on 'char', 'byte', or 'wchar_t' pointers and arrays\n",
-              decl->var->name);
-    }
-  }
 
   /* We must generate names for tagless enum, struct or union.
      Typedef-ing a tagless enum, struct or union means we want the typedef
@@ -1714,20 +1848,18 @@ static type_t *reg_typedefs(decl_spec_t *decl_spec, declarator_list_t *decls, at
 
   LIST_FOR_EACH_ENTRY( decl, decls, const declarator_t, entry )
   {
-    var_t *name = decl->var;
 
-    if (name->name) {
+    if (decl->var->name) {
       type_t *cur;
+      var_t *name;
 
-      cur = find_type(name->name, 0);
+      cur = find_type(decl->var->name, 0);
       if (cur)
           error_loc("%s: redefinition error; original definition was at %s:%d\n",
                     cur->name, cur->loc_info.input_name,
                     cur->loc_info.line_number);
 
-      /* set the attributes to allow set_type to do some checks on them */
-      name->attrs = attrs;
-      set_type(name, decl_spec, decl, 0);
+      name = declare_var(attrs, decl_spec, decl, 0);
       cur = type_new_alias(name->type, name->name);
       cur->attrs = attrs;
 
@@ -1872,6 +2004,7 @@ struct allowed_attr allowed_attr[] =
 {
     /* attr                        { D ACF I Fn ARG T En St Un Fi  L  DI M  C  <display name> } */
     /* ATTR_AGGREGATABLE */        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, "aggregatable" },
+    /* ATTR_ANNOTATION */          { 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, "annotation" },
     /* ATTR_APPOBJECT */           { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, "appobject" },
     /* ATTR_ASYNC */               { 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "async" },
     /* ATTR_AUTO_HANDLE */         { 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "auto_handle" },
@@ -1977,13 +2110,9 @@ static attr_list_t *check_function_attrs(const char *name, attr_list_t *attrs)
   return attrs;
 }
 
-static void check_arg(var_t *arg)
+static void check_arg_attrs(const var_t *arg)
 {
-  const type_t *t = arg->type;
   const attr_t *attr;
-
-  if (type_get_type(t) == TYPE_VOID)
-    error_loc("argument '%s' has void type\n", arg->name);
 
   if (arg->attrs)
   {
@@ -2150,6 +2279,7 @@ static int is_allowed_conf_type(const type_t *type)
     case TYPE_COCLASS:
     case TYPE_FUNCTION:
     case TYPE_INTERFACE:
+    case TYPE_BITFIELD:
         return FALSE;
     }
     return FALSE;
@@ -2193,24 +2323,30 @@ static void check_field_common(const type_t *container_type,
 {
     type_t *type = arg->type;
     int more_to_do;
-    const char *container_type_name = NULL;
+    const char *container_type_name;
+    const char *var_type;
 
-    switch (type_get_type_detect_alias(type))
+    switch (type_get_type(container_type))
     {
     case TYPE_STRUCT:
         container_type_name = "struct";
+        var_type = "field";
         break;
     case TYPE_UNION:
         container_type_name = "union";
+        var_type = "arm";
         break;
     case TYPE_ENCAPSULATED_UNION:
         container_type_name = "encapsulated union";
+        var_type = "arm";
         break;
     case TYPE_FUNCTION:
         container_type_name = "function";
+        var_type = "parameter";
         break;
     default:
-        break;
+        /* should be no other container types */
+        assert(0);
     }
 
     if (is_attr(arg->attrs, ATTR_LENGTHIS) &&
@@ -2270,28 +2406,48 @@ static void check_field_common(const type_t *container_type,
             check_remoting_fields(arg, type);
             break;
         case TGT_INVALID:
+        {
+            const char *reason = "is invalid";
             switch (type_get_type(type))
             {
             case TYPE_VOID:
-                error_loc_info(&arg->loc_info, "parameter \'%s\' of %s \'%s\' cannot derive from void *\n",
-                               arg->name, container_type_name, container_name);
+                reason = "cannot derive from void *";
                 break;
             case TYPE_FUNCTION:
-                error_loc_info(&arg->loc_info, "parameter \'%s\' of %s \'%s\' cannot be a function pointer\n",
-                               arg->name, container_type_name, container_name);
+                reason = "cannot be a function pointer";
+                break;
+            case TYPE_BITFIELD:
+                reason = "cannot be a bit-field";
                 break;
             case TYPE_COCLASS:
+                reason = "cannot be a class";
+                break;
             case TYPE_INTERFACE:
+                reason = "cannot be a non-pointer to an interface";
+                break;
             case TYPE_MODULE:
-                /* FIXME */
+                reason = "cannot be a module";
                 break;
             default:
                 break;
             }
+            error_loc_info(&arg->loc_info, "%s \'%s\' of %s \'%s\' %s\n",
+                           var_type, arg->name, container_type_name, container_name, reason);
+            break;
+        }
         case TGT_CTXT_HANDLE:
         case TGT_CTXT_HANDLE_POINTER:
             /* FIXME */
             break;
+        case TGT_STRING:
+        {
+            const type_t *t = type;
+            while (is_ptr(t))
+                t = type_pointer_get_ref(t);
+            if (is_aliaschain_attr(t, ATTR_RANGE))
+                warning_loc_info(&arg->loc_info, "%s: range not verified for a string of ranged types\n", arg->name);
+            break;
+        }
         case TGT_POINTER:
             type = type_pointer_get_ref(type);
             more_to_do = TRUE;
@@ -2301,10 +2457,10 @@ static void check_field_common(const type_t *container_type,
             more_to_do = TRUE;
             break;
         case TGT_USER_TYPE:
-        case TGT_STRING:
         case TGT_IFACE_POINTER:
         case TGT_BASIC:
         case TGT_ENUM:
+        case TGT_RANGE:
             /* nothing to do */
             break;
         }
@@ -2354,6 +2510,7 @@ static void check_remoting_args(const var_t *func)
             {
             case TGT_BASIC:
             case TGT_ENUM:
+            case TGT_RANGE:
             case TGT_STRUCT:
             case TGT_UNION:
             case TGT_CTXT_HANDLE:
@@ -2380,6 +2537,16 @@ static void check_remoting_args(const var_t *func)
         }
 
         check_field_common(func->type, funcname, arg);
+    }
+
+    if (type_get_type(type_function_get_rettype(func->type)) != TYPE_VOID)
+    {
+        var_t var;
+        var = *func;
+        var.type = type_function_get_rettype(func->type);
+        var.name = xstrdup("return value");
+        check_field_common(func->type, funcname, &var);
+        free(var.name);
     }
 }
 

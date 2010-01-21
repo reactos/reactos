@@ -57,6 +57,7 @@ typedef struct
             ULONG Value;
         }MixerEvent;
         KSSTATE State;
+        KSRESET ResetStream;
         ULONG Volume;
         ULONG FrameSize;
         HANDLE hNotifyEvent;
@@ -346,7 +347,7 @@ typedef struct
 
 /// IOCTL_GET_MIXER_EVENT
 ///
-/// Description: This IOCTL queries for 
+/// Description: This IOCTL queries for wdmaud driver if there any new kernel streaming events available
 ///
 /// Arguments:  InputBuffer is a pointer to a WDMAUD_DEVICE_INFO structure,
 ///             InputBufferSize is size of WDMAUD_DEVICE_INFO structure
@@ -360,5 +361,18 @@ typedef struct
              METHOD_BUFFERED, \
              FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS)
 
+/// IOCTL_RESET_STREAM
+///
+/// Description: This IOCTL instructs wdmaud to reset a stream
+///
+/// Arguments:  InputBuffer is a pointer to a WDMAUD_DEVICE_INFO structure,
+///             InputBufferSize is size of WDMAUD_DEVICE_INFO structure
+/// Note:       The hDevice member must be set and DeviceType
+/// ReturnCode:  STATUS_SUCCESS indicates success
 
+#define IOCTL_RESET_STREAM \
+    CTL_CODE(FILE_DEVICE_SOUND, \
+             17, \
+             METHOD_BUFFERED, \
+             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS)
 #endif

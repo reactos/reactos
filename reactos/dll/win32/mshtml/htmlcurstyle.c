@@ -899,12 +899,12 @@ HRESULT HTMLCurrentStyle_Create(HTMLElement *elem, IHTMLCurrentStyle **p)
     HTMLCurrentStyle *ret;
     nsresult nsres;
 
-    if(!elem->node.doc->basedoc.nsdoc)  {
+    if(!elem->node.doc->nsdoc)  {
         WARN("NULL nsdoc\n");
         return E_UNEXPECTED;
     }
 
-    nsres = nsIDOMHTMLDocument_QueryInterface(elem->node.doc->basedoc.nsdoc, &IID_nsIDOMDocumentView, (void**)&nsdocview);
+    nsres = nsIDOMHTMLDocument_QueryInterface(elem->node.doc->nsdoc, &IID_nsIDOMDocumentView, (void**)&nsdocview);
     if(NS_FAILED(nsres)) {
         ERR("Could not get nsIDOMDocumentView: %08x\n", nsres);
         return E_FAIL;

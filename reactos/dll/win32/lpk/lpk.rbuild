@@ -3,7 +3,6 @@
 	<include base="lpk">include</include>
 	<define name="LANGPACK" />
 	<library>ntdll</library>
-	<library>kernel32</library>
 	<library>user32</library>
 	<library>usp10</library>
 

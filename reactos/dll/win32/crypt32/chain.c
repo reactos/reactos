@@ -69,6 +69,24 @@ static inline void CRYPT_CloseStores(DWORD cStores, HCERTSTORE *stores)
 
 static const WCHAR rootW[] = { 'R','o','o','t',0 };
 
+/* Finds cert in store by comparing the cert's hashes. */
+static PCCERT_CONTEXT CRYPT_FindCertInStore(HCERTSTORE store,
+ PCCERT_CONTEXT cert)
+{
+    PCCERT_CONTEXT matching = NULL;
+    BYTE hash[20];
+    DWORD size = sizeof(hash);
+
+    if (CertGetCertificateContextProperty(cert, CERT_HASH_PROP_ID, hash, &size))
+    {
+        CRYPT_HASH_BLOB blob = { sizeof(hash), hash };
+
+        matching = CertFindCertificateInStore(store, cert->dwCertEncodingType,
+         0, CERT_FIND_SHA1_HASH, &blob, NULL);
+    }
+    return matching;
+}
+
 static BOOL CRYPT_CheckRestrictedRoot(HCERTSTORE store)
 {
     BOOL ret = TRUE;
@@ -77,29 +95,15 @@ static BOOL CRYPT_CheckRestrictedRoot(HCERTSTORE store)
     {
         HCERTSTORE rootStore = CertOpenSystemStoreW(0, rootW);
         PCCERT_CONTEXT cert = NULL, check;
-        BYTE hash[20];
-        DWORD size;
 
         do {
             cert = CertEnumCertificatesInStore(store, cert);
             if (cert)
             {
-                size = sizeof(hash);
-
-                ret = CertGetCertificateContextProperty(cert, CERT_HASH_PROP_ID,
-                 hash, &size);
-                if (ret)
-                {
-                    CRYPT_HASH_BLOB blob = { sizeof(hash), hash };
-
-                    check = CertFindCertificateInStore(rootStore,
-                     cert->dwCertEncodingType, 0, CERT_FIND_SHA1_HASH, &blob,
-                     NULL);
-                    if (!check)
-                        ret = FALSE;
-                    else
-                        CertFreeCertificateContext(check);
-                }
+                if (!(check = CRYPT_FindCertInStore(rootStore, cert)))
+                    ret = FALSE;
+                else
+                    CertFreeCertificateContext(check);
             }
         } while (ret && cert);
         if (cert)
@@ -336,16 +340,9 @@ static void CRYPT_FreeSimpleChain(PCERT_SIMPLE_CHAIN chain)
 static void CRYPT_CheckTrustedStatus(HCERTSTORE hRoot,
  PCERT_CHAIN_ELEMENT rootElement)
 {
-    BYTE hash[20];
-    DWORD size = sizeof(hash);
-    CRYPT_HASH_BLOB blob = { sizeof(hash), hash };
-    PCCERT_CONTEXT trustedRoot;
+    PCCERT_CONTEXT trustedRoot = CRYPT_FindCertInStore(hRoot,
+     rootElement->pCertContext);
 
-    CertGetCertificateContextProperty(rootElement->pCertContext,
-     CERT_HASH_PROP_ID, hash, &size);
-    trustedRoot = CertFindCertificateInStore(hRoot,
-     rootElement->pCertContext->dwCertEncodingType, 0, CERT_FIND_SHA1_HASH,
-     &blob, NULL);
     if (!trustedRoot)
         rootElement->TrustStatus.dwErrorStatus |=
          CERT_TRUST_IS_UNTRUSTED_ROOT;
@@ -418,11 +415,22 @@ static BOOL CRYPT_DecodeBasicConstraints(PCCERT_CONTEXT cert,
 }
 
 /* Checks element's basic constraints to see if it can act as a CA, with
- * remainingCAs CAs left in this chain.  A root certificate is assumed to be
- * allowed to be a CA whether or not the basic constraints extension is present,
- * whereas an intermediate CA cert is not.  This matches the expected usage in
- * RFC 3280:  a conforming intermediate CA MUST contain the basic constraints
- * extension.  It also appears to match Microsoft's implementation.
+ * remainingCAs CAs left in this chain.  In general, a cert must include the
+ * basic constraints extension, with the CA flag asserted, in order to be
+ * allowed to be a CA.  A V1 or V2 cert, which has no extensions, is also
+ * allowed to be a CA if it's installed locally (in the engine's world store.)
+ * This matches the expected usage in RFC 5280, section 4.2.1.9:  a conforming
+ * CA MUST include the basic constraints extension in all certificates that are
+ * used to validate digital signatures on certificates.  It also matches
+ * section 6.1.4(k): "If a certificate is a v1 or v2 certificate, then the
+ * application MUST either verify that the certificate is a CA certificate
+ * through out-of-band means or reject the certificate." Rejecting the
+ * certificate prohibits a large number of commonly used certificates, so
+ * accepting locally installed ones is a compromise.
+ * Root certificates are also allowed to be CAs even without a basic
+ * constraints extension.  This is implied by RFC 5280, section 6.1:  the
+ * root of a certificate chain's only requirement is that it was used to issue
+ * the next certificate in the chain.
  * Updates chainConstraints with the element's constraints, if:
  * 1. chainConstraints doesn't have a path length constraint, or
  * 2. element's path length constraint is smaller than chainConstraints's
@@ -431,16 +439,40 @@ static BOOL CRYPT_DecodeBasicConstraints(PCCERT_CONTEXT cert,
  * Returns TRUE if the element can be a CA, and the length of the remaining
  * chain is valid.
  */
-static BOOL CRYPT_CheckBasicConstraintsForCA(PCCERT_CONTEXT cert,
- CERT_BASIC_CONSTRAINTS2_INFO *chainConstraints, DWORD remainingCAs,
- BOOL isRoot, BOOL *pathLengthConstraintViolated)
+static BOOL CRYPT_CheckBasicConstraintsForCA(PCertificateChainEngine engine,
+ PCCERT_CONTEXT cert, CERT_BASIC_CONSTRAINTS2_INFO *chainConstraints,
+ DWORD remainingCAs, BOOL isRoot, BOOL *pathLengthConstraintViolated)
 {
-    BOOL validBasicConstraints;
+    BOOL validBasicConstraints, implicitCA = FALSE;
     CERT_BASIC_CONSTRAINTS2_INFO constraints;
 
-    if ((validBasicConstraints = CRYPT_DecodeBasicConstraints(cert,
-     &constraints, isRoot)))
+    if (isRoot)
+        implicitCA = TRUE;
+    else if (cert->pCertInfo->dwVersion == CERT_V1 ||
+     cert->pCertInfo->dwVersion == CERT_V2)
     {
+        BYTE hash[20];
+        DWORD size = sizeof(hash);
+
+        if (CertGetCertificateContextProperty(cert, CERT_HASH_PROP_ID,
+         hash, &size))
+        {
+            CRYPT_HASH_BLOB blob = { sizeof(hash), hash };
+            PCCERT_CONTEXT localCert = CertFindCertificateInStore(
+             engine->hWorld, cert->dwCertEncodingType, 0, CERT_FIND_SHA1_HASH,
+             &blob, NULL);
+
+            if (localCert)
+            {
+                CertFreeCertificateContext(localCert);
+                implicitCA = TRUE;
+            }
+        }
+    }
+    if ((validBasicConstraints = CRYPT_DecodeBasicConstraints(cert,
+     &constraints, implicitCA)))
+    {
+        chainConstraints->fCA = constraints.fCA;
         if (!constraints.fCA)
         {
             TRACE_(chain)("chain element %d can't be a CA\n", remainingCAs + 1);
@@ -547,9 +579,13 @@ static BOOL ip_address_matches(const CRYPT_DATA_BLOB *constraint,
     TRACE("(%d, %p), (%d, %p)\n", constraint->cbData, constraint->pbData,
      name->cbData, name->pbData);
 
-    if (constraint->cbData != sizeof(DWORD) * 2)
+    /* RFC5280, section 4.2.1.10, iPAddress syntax: either 8 or 32 bytes, for
+     * IPv4 or IPv6 addresses, respectively.
+     */
+    if (constraint->cbData != sizeof(DWORD) * 2 && constraint->cbData != 32)
         *trustErrorStatus |= CERT_TRUST_INVALID_NAME_CONSTRAINTS;
-    else if (name->cbData == sizeof(DWORD))
+    else if (name->cbData == sizeof(DWORD) &&
+     constraint->cbData == sizeof(DWORD) * 2)
     {
         DWORD subnet, mask, addr;
 
@@ -560,6 +596,19 @@ static BOOL ip_address_matches(const CRYPT_DATA_BLOB *constraint,
          * don't need to swap to host order
          */
         match = (subnet & mask) == (addr & mask);
+    }
+    else if (name->cbData == 16 && constraint->cbData == 32)
+    {
+        const BYTE *subnet, *mask, *addr;
+        DWORD i;
+
+        subnet = constraint->pbData;
+        mask = constraint->pbData + 16;
+        addr = name->pbData;
+        match = TRUE;
+        for (i = 0; match && i < 16; i++)
+            if ((subnet[i] & mask[i]) != (addr[i] & mask[i]))
+                match = FALSE;
     }
     /* else: name is wrong size, no match */
 
@@ -608,6 +657,18 @@ static void CRYPT_FindMatchingNameEntry(const CERT_ALT_NAME_ENTRY *constraint,
     *trustErrorStatus |= match ? errorIfFound : errorIfNotFound;
 }
 
+static inline PCERT_EXTENSION get_subject_alt_name_ext(const CERT_INFO *cert)
+{
+    PCERT_EXTENSION ext;
+
+    ext = CertFindExtension(szOID_SUBJECT_ALT_NAME2,
+     cert->cExtension, cert->rgExtension);
+    if (!ext)
+        ext = CertFindExtension(szOID_SUBJECT_ALT_NAME,
+         cert->cExtension, cert->rgExtension);
+    return ext;
+}
+
 static void CRYPT_CheckNameConstraints(
  const CERT_NAME_CONSTRAINTS_INFO *nameConstraints, const CERT_INFO *cert,
  DWORD *trustErrorStatus)
@@ -615,10 +676,9 @@ static void CRYPT_CheckNameConstraints(
     /* If there aren't any existing constraints, don't bother checking */
     if (nameConstraints->cPermittedSubtree || nameConstraints->cExcludedSubtree)
     {
-        CERT_EXTENSION *ext;
+        CERT_EXTENSION *ext = get_subject_alt_name_ext(cert);
 
-        if ((ext = CertFindExtension(szOID_SUBJECT_ALT_NAME, cert->cExtension,
-         cert->rgExtension)))
+        if (ext)
         {
             CERT_ALT_NAME_INFO *subjectName;
             DWORD size;
@@ -638,15 +698,20 @@ static void CRYPT_CheckNameConstraints(
                 for (i = 0; i < nameConstraints->cPermittedSubtree; i++)
                     CRYPT_FindMatchingNameEntry(
                      &nameConstraints->rgPermittedSubtree[i].Base, subjectName,
-                     trustErrorStatus,
-                     0, CERT_TRUST_HAS_NOT_PERMITTED_NAME_CONSTRAINT);
+                     trustErrorStatus, 0,
+                     CERT_TRUST_HAS_NOT_PERMITTED_NAME_CONSTRAINT);
                 LocalFree(subjectName);
             }
+            else
+                *trustErrorStatus |=
+                 CERT_TRUST_INVALID_EXTENSION |
+                 CERT_TRUST_INVALID_NAME_CONSTRAINTS;
         }
         else
         {
             if (nameConstraints->cPermittedSubtree)
                 *trustErrorStatus |=
+                 CERT_TRUST_HAS_NOT_DEFINED_NAME_CONSTRAINT |
                  CERT_TRUST_HAS_NOT_PERMITTED_NAME_CONSTRAINT;
             if (nameConstraints->cExcludedSubtree)
                 *trustErrorStatus |=
@@ -675,6 +740,40 @@ static CERT_NAME_CONSTRAINTS_INFO *CRYPT_GetNameConstraints(CERT_INFO *cert)
     return info;
 }
 
+static BOOL CRYPT_IsValidNameConstraint(const CERT_NAME_CONSTRAINTS_INFO *info)
+{
+    DWORD i;
+    BOOL ret = TRUE;
+
+    /* Check that none of the constraints specifies a minimum or a maximum.
+     * See RFC 5280, section 4.2.1.10:
+     * "Within this profile, the minimum and maximum fields are not used with
+     *  any name forms, thus, the minimum MUST be zero, and maximum MUST be
+     *  absent.  However, if an application encounters a critical name
+     *  constraints extension that specifies other values for minimum or
+     *  maximum for a name form that appears in a subsequent certificate, the
+     *  application MUST either process these fields or reject the
+     *  certificate."
+     * Since it gives no guidance as to how to process these fields, we
+     * reject any name constraint that contains them.
+     */
+    for (i = 0; ret && i < info->cPermittedSubtree; i++)
+        if (info->rgPermittedSubtree[i].dwMinimum ||
+         info->rgPermittedSubtree[i].fMaximum)
+        {
+            TRACE_(chain)("found a minimum or maximum in permitted subtrees\n");
+            ret = FALSE;
+        }
+    for (i = 0; ret && i < info->cExcludedSubtree; i++)
+        if (info->rgExcludedSubtree[i].dwMinimum ||
+         info->rgExcludedSubtree[i].fMaximum)
+        {
+            TRACE_(chain)("found a minimum or maximum in excluded subtrees\n");
+            ret = FALSE;
+        }
+    return ret;
+}
+
 static void CRYPT_CheckChainNameConstraints(PCERT_SIMPLE_CHAIN chain)
 {
     int i, j;
@@ -698,25 +797,105 @@ static void CRYPT_CheckChainNameConstraints(PCERT_SIMPLE_CHAIN chain)
         if ((nameConstraints = CRYPT_GetNameConstraints(
          chain->rgpElement[i]->pCertContext->pCertInfo)))
         {
-            for (j = i - 1; j >= 0; j--)
+            if (!CRYPT_IsValidNameConstraint(nameConstraints))
+                chain->rgpElement[i]->TrustStatus.dwErrorStatus |=
+                 CERT_TRUST_HAS_NOT_SUPPORTED_NAME_CONSTRAINT;
+            else
             {
-                DWORD errorStatus = 0;
-
-                /* According to RFC 3280, self-signed certs don't have name
-                 * constraints checked unless they're the end cert.
-                 */
-                if (j == 0 || !CRYPT_IsCertificateSelfSigned(
-                 chain->rgpElement[j]->pCertContext))
+                for (j = i - 1; j >= 0; j--)
                 {
-                    CRYPT_CheckNameConstraints(nameConstraints,
-                     chain->rgpElement[i]->pCertContext->pCertInfo,
-                     &errorStatus);
-                    chain->rgpElement[i]->TrustStatus.dwErrorStatus |=
-                     errorStatus;
+                    DWORD errorStatus = 0;
+
+                    /* According to RFC 3280, self-signed certs don't have name
+                     * constraints checked unless they're the end cert.
+                     */
+                    if (j == 0 || !CRYPT_IsCertificateSelfSigned(
+                     chain->rgpElement[j]->pCertContext))
+                    {
+                        CRYPT_CheckNameConstraints(nameConstraints,
+                         chain->rgpElement[j]->pCertContext->pCertInfo,
+                         &errorStatus);
+                        chain->rgpElement[i]->TrustStatus.dwErrorStatus |=
+                         errorStatus;
+                    }
                 }
             }
             LocalFree(nameConstraints);
         }
+    }
+}
+
+static LPWSTR name_value_to_str(const CERT_NAME_BLOB *name)
+{
+    DWORD len = cert_name_to_str_with_indent(X509_ASN_ENCODING, 0, name,
+     CERT_SIMPLE_NAME_STR, NULL, 0);
+    LPWSTR str = NULL;
+
+    if (len)
+    {
+        str = CryptMemAlloc(len * sizeof(WCHAR));
+        if (str)
+            cert_name_to_str_with_indent(X509_ASN_ENCODING, 0, name,
+             CERT_SIMPLE_NAME_STR, str, len);
+    }
+    return str;
+}
+
+static void dump_alt_name_entry(const CERT_ALT_NAME_ENTRY *entry)
+{
+    LPWSTR str;
+
+    switch (entry->dwAltNameChoice)
+    {
+    case CERT_ALT_NAME_OTHER_NAME:
+        TRACE_(chain)("CERT_ALT_NAME_OTHER_NAME, oid = %s\n",
+         debugstr_a(entry->u.pOtherName->pszObjId));
+         break;
+    case CERT_ALT_NAME_RFC822_NAME:
+        TRACE_(chain)("CERT_ALT_NAME_RFC822_NAME: %s\n",
+         debugstr_w(entry->u.pwszRfc822Name));
+        break;
+    case CERT_ALT_NAME_DNS_NAME:
+        TRACE_(chain)("CERT_ALT_NAME_DNS_NAME: %s\n",
+         debugstr_w(entry->u.pwszDNSName));
+        break;
+    case CERT_ALT_NAME_DIRECTORY_NAME:
+        str = name_value_to_str(&entry->u.DirectoryName);
+        TRACE_(chain)("CERT_ALT_NAME_DIRECTORY_NAME: %s\n", debugstr_w(str));
+        CryptMemFree(str);
+        break;
+    case CERT_ALT_NAME_URL:
+        TRACE_(chain)("CERT_ALT_NAME_URL: %s\n", debugstr_w(entry->u.pwszURL));
+        break;
+    case CERT_ALT_NAME_IP_ADDRESS:
+        TRACE_(chain)("CERT_ALT_NAME_IP_ADDRESS: %d bytes\n",
+         entry->u.IPAddress.cbData);
+        break;
+    case CERT_ALT_NAME_REGISTERED_ID:
+        TRACE_(chain)("CERT_ALT_NAME_REGISTERED_ID: %s\n",
+         debugstr_a(entry->u.pszRegisteredID));
+        break;
+    default:
+        TRACE_(chain)("dwAltNameChoice = %d\n", entry->dwAltNameChoice);
+    }
+}
+
+static void dump_alt_name(LPCSTR type, const CERT_EXTENSION *ext)
+{
+    CERT_ALT_NAME_INFO *name;
+    DWORD size;
+
+    TRACE_(chain)("%s:\n", type);
+    if (CryptDecodeObjectEx(X509_ASN_ENCODING, X509_ALTERNATE_NAME,
+     ext->Value.pbData, ext->Value.cbData,
+     CRYPT_DECODE_ALLOC_FLAG | CRYPT_DECODE_NOCOPY_FLAG, NULL, &name, &size))
+    {
+        DWORD i;
+
+        TRACE_(chain)("%d alt name entries:\n", name->cAltEntry);
+        for (i = 0; i < name->cAltEntry; i++)
+            dump_alt_name_entry(&name->rgAltEntry[i]);
+        LocalFree(name);
     }
 }
 
@@ -754,14 +933,161 @@ static void dump_basic_constraints2(const CERT_EXTENSION *ext)
     }
 }
 
+static void dump_key_usage(const CERT_EXTENSION *ext)
+{
+    CRYPT_BIT_BLOB usage;
+    DWORD size = sizeof(usage);
+
+    if (CryptDecodeObjectEx(X509_ASN_ENCODING, X509_BITS, ext->Value.pbData,
+     ext->Value.cbData, CRYPT_DECODE_NOCOPY_FLAG, NULL, &usage, &size))
+    {
+#define trace_usage_bit(bits, bit) \
+ if ((bits) & (bit)) TRACE_(chain)("%s\n", #bit)
+        if (usage.cbData)
+        {
+            trace_usage_bit(usage.pbData[0], CERT_DIGITAL_SIGNATURE_KEY_USAGE);
+            trace_usage_bit(usage.pbData[0], CERT_NON_REPUDIATION_KEY_USAGE);
+            trace_usage_bit(usage.pbData[0], CERT_KEY_ENCIPHERMENT_KEY_USAGE);
+            trace_usage_bit(usage.pbData[0], CERT_DATA_ENCIPHERMENT_KEY_USAGE);
+            trace_usage_bit(usage.pbData[0], CERT_KEY_AGREEMENT_KEY_USAGE);
+            trace_usage_bit(usage.pbData[0], CERT_KEY_CERT_SIGN_KEY_USAGE);
+            trace_usage_bit(usage.pbData[0], CERT_CRL_SIGN_KEY_USAGE);
+            trace_usage_bit(usage.pbData[0], CERT_ENCIPHER_ONLY_KEY_USAGE);
+        }
+#undef trace_usage_bit
+        if (usage.cbData > 1 && usage.pbData[1] & CERT_DECIPHER_ONLY_KEY_USAGE)
+            TRACE_(chain)("CERT_DECIPHER_ONLY_KEY_USAGE\n");
+    }
+}
+
+static void dump_general_subtree(const CERT_GENERAL_SUBTREE *subtree)
+{
+    dump_alt_name_entry(&subtree->Base);
+    TRACE_(chain)("dwMinimum = %d, fMaximum = %d, dwMaximum = %d\n",
+     subtree->dwMinimum, subtree->fMaximum, subtree->dwMaximum);
+}
+
+static void dump_name_constraints(const CERT_EXTENSION *ext)
+{
+    CERT_NAME_CONSTRAINTS_INFO *nameConstraints;
+    DWORD size;
+
+    if (CryptDecodeObjectEx(X509_ASN_ENCODING, X509_NAME_CONSTRAINTS,
+     ext->Value.pbData, ext->Value.cbData,
+     CRYPT_DECODE_ALLOC_FLAG | CRYPT_DECODE_NOCOPY_FLAG, NULL, &nameConstraints,
+     &size))
+    {
+        DWORD i;
+
+        TRACE_(chain)("%d permitted subtrees:\n",
+         nameConstraints->cPermittedSubtree);
+        for (i = 0; i < nameConstraints->cPermittedSubtree; i++)
+            dump_general_subtree(&nameConstraints->rgPermittedSubtree[i]);
+        TRACE_(chain)("%d excluded subtrees:\n",
+         nameConstraints->cExcludedSubtree);
+        for (i = 0; i < nameConstraints->cExcludedSubtree; i++)
+            dump_general_subtree(&nameConstraints->rgExcludedSubtree[i]);
+        LocalFree(nameConstraints);
+    }
+}
+
+static void dump_cert_policies(const CERT_EXTENSION *ext)
+{
+    CERT_POLICIES_INFO *policies;
+    DWORD size;
+
+    if (CryptDecodeObjectEx(X509_ASN_ENCODING, X509_CERT_POLICIES,
+     ext->Value.pbData, ext->Value.cbData, CRYPT_DECODE_ALLOC_FLAG, NULL,
+     &policies, &size))
+    {
+        DWORD i, j;
+
+        TRACE_(chain)("%d policies:\n", policies->cPolicyInfo);
+        for (i = 0; i < policies->cPolicyInfo; i++)
+        {
+            TRACE_(chain)("policy identifier: %s\n",
+             debugstr_a(policies->rgPolicyInfo[i].pszPolicyIdentifier));
+            TRACE_(chain)("%d policy qualifiers:\n",
+             policies->rgPolicyInfo[i].cPolicyQualifier);
+            for (j = 0; j < policies->rgPolicyInfo[i].cPolicyQualifier; j++)
+                TRACE_(chain)("%s\n", debugstr_a(
+                 policies->rgPolicyInfo[i].rgPolicyQualifier[j].
+                 pszPolicyQualifierId));
+        }
+        LocalFree(policies);
+    }
+}
+
+static void dump_enhanced_key_usage(const CERT_EXTENSION *ext)
+{
+    CERT_ENHKEY_USAGE *usage;
+    DWORD size;
+
+    if (CryptDecodeObjectEx(X509_ASN_ENCODING, X509_ENHANCED_KEY_USAGE,
+     ext->Value.pbData, ext->Value.cbData, CRYPT_DECODE_ALLOC_FLAG, NULL,
+     &usage, &size))
+    {
+        DWORD i;
+
+        TRACE_(chain)("%d usages:\n", usage->cUsageIdentifier);
+        for (i = 0; i < usage->cUsageIdentifier; i++)
+            TRACE_(chain)("%s\n", usage->rgpszUsageIdentifier[i]);
+        LocalFree(usage);
+    }
+}
+
+static void dump_netscape_cert_type(const CERT_EXTENSION *ext)
+{
+    CRYPT_BIT_BLOB usage;
+    DWORD size = sizeof(usage);
+
+    if (CryptDecodeObjectEx(X509_ASN_ENCODING, X509_BITS, ext->Value.pbData,
+     ext->Value.cbData, CRYPT_DECODE_NOCOPY_FLAG, NULL, &usage, &size))
+    {
+#define trace_cert_type_bit(bits, bit) \
+ if ((bits) & (bit)) TRACE_(chain)("%s\n", #bit)
+        if (usage.cbData)
+        {
+            trace_cert_type_bit(usage.pbData[0],
+             NETSCAPE_SSL_CLIENT_AUTH_CERT_TYPE);
+            trace_cert_type_bit(usage.pbData[0],
+             NETSCAPE_SSL_SERVER_AUTH_CERT_TYPE);
+            trace_cert_type_bit(usage.pbData[0], NETSCAPE_SMIME_CERT_TYPE);
+            trace_cert_type_bit(usage.pbData[0], NETSCAPE_SIGN_CERT_TYPE);
+            trace_cert_type_bit(usage.pbData[0], NETSCAPE_SSL_CA_CERT_TYPE);
+            trace_cert_type_bit(usage.pbData[0], NETSCAPE_SMIME_CA_CERT_TYPE);
+            trace_cert_type_bit(usage.pbData[0], NETSCAPE_SIGN_CA_CERT_TYPE);
+        }
+#undef trace_cert_type_bit
+    }
+}
+
 static void dump_extension(const CERT_EXTENSION *ext)
 {
     TRACE_(chain)("%s (%scritical)\n", debugstr_a(ext->pszObjId),
      ext->fCritical ? "" : "not ");
-    if (!strcmp(ext->pszObjId, szOID_BASIC_CONSTRAINTS))
+    if (!strcmp(ext->pszObjId, szOID_SUBJECT_ALT_NAME))
+        dump_alt_name("subject alt name", ext);
+    else  if (!strcmp(ext->pszObjId, szOID_ISSUER_ALT_NAME))
+        dump_alt_name("issuer alt name", ext);
+    else if (!strcmp(ext->pszObjId, szOID_BASIC_CONSTRAINTS))
         dump_basic_constraints(ext);
+    else if (!strcmp(ext->pszObjId, szOID_KEY_USAGE))
+        dump_key_usage(ext);
+    else if (!strcmp(ext->pszObjId, szOID_SUBJECT_ALT_NAME2))
+        dump_alt_name("subject alt name 2", ext);
+    else if (!strcmp(ext->pszObjId, szOID_ISSUER_ALT_NAME2))
+        dump_alt_name("issuer alt name 2", ext);
     else if (!strcmp(ext->pszObjId, szOID_BASIC_CONSTRAINTS2))
         dump_basic_constraints2(ext);
+    else if (!strcmp(ext->pszObjId, szOID_NAME_CONSTRAINTS))
+        dump_name_constraints(ext);
+    else if (!strcmp(ext->pszObjId, szOID_CERT_POLICIES))
+        dump_cert_policies(ext);
+    else if (!strcmp(ext->pszObjId, szOID_ENHANCED_KEY_USAGE))
+        dump_enhanced_key_usage(ext);
+    else if (!strcmp(ext->pszObjId, szOID_NETSCAPE_CERT_TYPE))
+        dump_netscape_cert_type(ext);
 }
 
 static LPCWSTR filetime_to_str(const FILETIME *time)
@@ -785,7 +1111,7 @@ static void dump_element(PCCERT_CONTEXT cert)
     LPWSTR name = NULL;
     DWORD len, i;
 
-    TRACE_(chain)("%p\n", cert);
+    TRACE_(chain)("%p: version %d\n", cert, cert->pCertInfo->dwVersion);
     len = CertGetNameStringW(cert, CERT_NAME_SIMPLE_DISPLAY_TYPE,
      CERT_NAME_ISSUER_FLAG, NULL, NULL, 0);
     name = CryptMemAlloc(len * sizeof(WCHAR));
@@ -814,33 +1140,263 @@ static void dump_element(PCCERT_CONTEXT cert)
         dump_extension(&cert->pCertInfo->rgExtension[i]);
 }
 
+static BOOL CRYPT_KeyUsageValid(PCertificateChainEngine engine,
+ PCCERT_CONTEXT cert, BOOL isRoot, BOOL isCA, DWORD index)
+{
+    PCERT_EXTENSION ext;
+    BOOL ret;
+    BYTE usageBits = 0;
+
+    ext = CertFindExtension(szOID_KEY_USAGE, cert->pCertInfo->cExtension,
+     cert->pCertInfo->rgExtension);
+    if (ext)
+    {
+        CRYPT_BIT_BLOB usage;
+        DWORD size = sizeof(usage);
+
+        ret = CryptDecodeObjectEx(cert->dwCertEncodingType, X509_BITS,
+         ext->Value.pbData, ext->Value.cbData, CRYPT_DECODE_NOCOPY_FLAG, NULL,
+         &usage, &size);
+        if (!ret)
+            return FALSE;
+        else if (usage.cbData > 2)
+        {
+            /* The key usage extension only defines 9 bits => no more than 2
+             * bytes are needed to encode all known usages.
+             */
+            return FALSE;
+        }
+        else
+        {
+            /* The only bit relevant to chain validation is the keyCertSign
+             * bit, which is always in the least significant byte of the
+             * key usage bits.
+             */
+            usageBits = usage.pbData[usage.cbData - 1];
+        }
+    }
+    if (isCA)
+    {
+        if (!ext)
+        {
+            /* MS appears to violate RFC 5280, section 4.2.1.3 (Key Usage)
+             * here.  Quoting the RFC:
+             * "This [key usage] extension MUST appear in certificates that
+             * contain public keys that are used to validate digital signatures
+             * on other public key certificates or CRLs."
+             * MS appears to accept certs that do not contain key usage
+             * extensions as CA certs.  V1 and V2 certificates did not have
+             * extensions, and many root certificates are V1 certificates, so
+             * perhaps this is prudent.  On the other hand, MS also accepts V3
+             * certs without key usage extensions.  We are more restrictive:
+             * we accept locally installed V1 or V2 certs as CA certs.
+             * We also accept a lack of key usage extension on root certs,
+             * which is implied in RFC 5280, section 6.1:  the trust anchor's
+             * only requirement is that it was used to issue the next
+             * certificate in the chain.
+             */
+            if (isRoot)
+                ret = TRUE;
+            else if (cert->pCertInfo->dwVersion == CERT_V1 ||
+             cert->pCertInfo->dwVersion == CERT_V2)
+            {
+                PCCERT_CONTEXT localCert = CRYPT_FindCertInStore(
+                 engine->hWorld, cert);
+
+                ret = localCert != NULL;
+                CertFreeCertificateContext(localCert);
+            }
+            else
+                ret = FALSE;
+            if (!ret)
+                WARN_(chain)("no key usage extension on a CA cert\n");
+        }
+        else
+        {
+            if (!(usageBits & CERT_KEY_CERT_SIGN_KEY_USAGE))
+            {
+                WARN_(chain)("keyCertSign not asserted on a CA cert\n");
+                ret = FALSE;
+            }
+            else
+                ret = TRUE;
+        }
+    }
+    else
+    {
+        if (ext && (usageBits & CERT_KEY_CERT_SIGN_KEY_USAGE))
+        {
+            WARN_(chain)("keyCertSign asserted on a non-CA cert\n");
+            ret = FALSE;
+        }
+        else
+            ret = TRUE;
+    }
+    return ret;
+}
+
+static BOOL CRYPT_ExtendedKeyUsageValidForCA(PCCERT_CONTEXT cert)
+{
+    PCERT_EXTENSION ext;
+    BOOL ret;
+
+    /* RFC 5280, section 4.2.1.12:  "In general, this extension will only
+     * appear in end entity certificates."  And, "If a certificate contains
+     * both a key usage extension and an extended key usage extension, then
+     * both extensions MUST be processed independently and the certificate MUST
+     * only be used for a purpose consistent with both extensions."  This seems
+     * to imply that it should be checked if present, and ignored if not.
+     * Unfortunately some CAs, e.g. the Thawte SGC CA, don't include the code
+     * signing extended key usage, whereas they do include the keyCertSign
+     * key usage.  Thus, when checking for a CA, we only require the
+     * code signing extended key usage if the extended key usage is critical.
+     */
+    ext = CertFindExtension(szOID_ENHANCED_KEY_USAGE,
+     cert->pCertInfo->cExtension, cert->pCertInfo->rgExtension);
+    if (ext && ext->fCritical)
+    {
+        CERT_ENHKEY_USAGE *usage;
+        DWORD size;
+
+        ret = CryptDecodeObjectEx(cert->dwCertEncodingType,
+         X509_ENHANCED_KEY_USAGE, ext->Value.pbData, ext->Value.cbData,
+         CRYPT_DECODE_ALLOC_FLAG, NULL, &usage, &size);
+        if (ret)
+        {
+            DWORD i;
+
+            /* Explicitly require the code signing extended key usage for a CA
+             * with an extended key usage extension.  That is, don't assume
+             * a cert is allowed to be a CA if it specifies the
+             * anyExtendedKeyUsage usage oid.  See again RFC 5280, section
+             * 4.2.1.12: "Applications that require the presence of a
+             * particular purpose MAY reject certificates that include the
+             * anyExtendedKeyUsage OID but not the particular OID expected for
+             * the application."
+             */
+            ret = FALSE;
+            for (i = 0; !ret && i < usage->cUsageIdentifier; i++)
+                if (!strcmp(usage->rgpszUsageIdentifier[i],
+                 szOID_PKIX_KP_CODE_SIGNING))
+                    ret = TRUE;
+            LocalFree(usage);
+        }
+    }
+    else
+        ret = TRUE;
+    return ret;
+}
+
+static BOOL CRYPT_CriticalExtensionsSupported(PCCERT_CONTEXT cert)
+{
+    BOOL ret = TRUE;
+    DWORD i;
+
+    for (i = 0; ret && i < cert->pCertInfo->cExtension; i++)
+    {
+        if (cert->pCertInfo->rgExtension[i].fCritical)
+        {
+            LPCSTR oid = cert->pCertInfo->rgExtension[i].pszObjId;
+
+            if (!strcmp(oid, szOID_BASIC_CONSTRAINTS))
+                ret = TRUE;
+            else if (!strcmp(oid, szOID_BASIC_CONSTRAINTS2))
+                ret = TRUE;
+            else if (!strcmp(oid, szOID_NAME_CONSTRAINTS))
+                ret = TRUE;
+            else if (!strcmp(oid, szOID_KEY_USAGE))
+                ret = TRUE;
+            else if (!strcmp(oid, szOID_SUBJECT_ALT_NAME))
+                ret = TRUE;
+            else if (!strcmp(oid, szOID_SUBJECT_ALT_NAME2))
+                ret = TRUE;
+            else if (!strcmp(oid, szOID_ENHANCED_KEY_USAGE))
+                ret = TRUE;
+            else
+            {
+                FIXME("unsupported critical extension %s\n",
+                 debugstr_a(oid));
+                ret = FALSE;
+            }
+        }
+    }
+    return ret;
+}
+
+static BOOL CRYPT_IsCertVersionValid(PCCERT_CONTEXT cert)
+{
+    BOOL ret = TRUE;
+
+    /* Checks whether the contents of the cert match the cert's version. */
+    switch (cert->pCertInfo->dwVersion)
+    {
+    case CERT_V1:
+        /* A V1 cert may not contain unique identifiers.  See RFC 5280,
+         * section 4.1.2.8:
+         * "These fields MUST only appear if the version is 2 or 3 (Section
+         *  4.1.2.1).  These fields MUST NOT appear if the version is 1."
+         */
+        if (cert->pCertInfo->IssuerUniqueId.cbData ||
+         cert->pCertInfo->SubjectUniqueId.cbData)
+            ret = FALSE;
+        /* A V1 cert may not contain extensions.  See RFC 5280, section 4.1.2.9:
+         * "This field MUST only appear if the version is 3 (Section 4.1.2.1)."
+         */
+        if (cert->pCertInfo->cExtension)
+            ret = FALSE;
+        break;
+    case CERT_V2:
+        /* A V2 cert may not contain extensions.  See RFC 5280, section 4.1.2.9:
+         * "This field MUST only appear if the version is 3 (Section 4.1.2.1)."
+         */
+        if (cert->pCertInfo->cExtension)
+            ret = FALSE;
+        break;
+    case CERT_V3:
+        /* Do nothing, all fields are allowed for V3 certs */
+        break;
+    default:
+        WARN_(chain)("invalid cert version %d\n", cert->pCertInfo->dwVersion);
+        ret = FALSE;
+    }
+    return ret;
+}
+
 static void CRYPT_CheckSimpleChain(PCertificateChainEngine engine,
  PCERT_SIMPLE_CHAIN chain, LPFILETIME time)
 {
     PCERT_CHAIN_ELEMENT rootElement = chain->rgpElement[chain->cElement - 1];
     int i;
     BOOL pathLengthConstraintViolated = FALSE;
-    CERT_BASIC_CONSTRAINTS2_INFO constraints = { TRUE, FALSE, 0 };
+    CERT_BASIC_CONSTRAINTS2_INFO constraints = { FALSE, FALSE, 0 };
 
     TRACE_(chain)("checking chain with %d elements for time %s\n",
      chain->cElement, debugstr_w(filetime_to_str(time)));
     for (i = chain->cElement - 1; i >= 0; i--)
     {
+        BOOL isRoot;
+
         if (TRACE_ON(chain))
             dump_element(chain->rgpElement[i]->pCertContext);
+        if (i == chain->cElement - 1)
+            isRoot = CRYPT_IsCertificateSelfSigned(
+             chain->rgpElement[i]->pCertContext);
+        else
+            isRoot = FALSE;
+        if (!CRYPT_IsCertVersionValid(chain->rgpElement[i]->pCertContext))
+        {
+            /* MS appears to accept certs whose versions don't match their
+             * contents, so there isn't an appropriate error code.
+             */
+            chain->rgpElement[i]->TrustStatus.dwErrorStatus |=
+             CERT_TRUST_INVALID_EXTENSION;
+        }
         if (CertVerifyTimeValidity(time,
          chain->rgpElement[i]->pCertContext->pCertInfo) != 0)
             chain->rgpElement[i]->TrustStatus.dwErrorStatus |=
              CERT_TRUST_IS_NOT_TIME_VALID;
         if (i != 0)
         {
-            BOOL isRoot;
-
-            if (i == chain->cElement - 1)
-                isRoot = CRYPT_IsCertificateSelfSigned(
-                 chain->rgpElement[i]->pCertContext);
-            else
-                isRoot = FALSE;
             /* Check the signature of the cert this issued */
             if (!CryptVerifyCertificateSignatureEx(0, X509_ASN_ENCODING,
              CRYPT_VERIFY_CERT_SIGN_SUBJECT_CERT,
@@ -855,9 +1411,9 @@ static void CRYPT_CheckSimpleChain(PCertificateChainEngine engine,
             if (pathLengthConstraintViolated)
                 chain->rgpElement[i]->TrustStatus.dwErrorStatus |=
                  CERT_TRUST_INVALID_BASIC_CONSTRAINTS;
-            else if (!CRYPT_CheckBasicConstraintsForCA(
-             chain->rgpElement[i]->pCertContext, &constraints, i - 1,
-             isRoot, &pathLengthConstraintViolated))
+            else if (!CRYPT_CheckBasicConstraintsForCA(engine,
+             chain->rgpElement[i]->pCertContext, &constraints, i - 1, isRoot,
+             &pathLengthConstraintViolated))
                 chain->rgpElement[i]->TrustStatus.dwErrorStatus |=
                  CERT_TRUST_INVALID_BASIC_CONSTRAINTS;
             else if (constraints.fPathLenConstraint &&
@@ -867,6 +1423,23 @@ static void CRYPT_CheckSimpleChain(PCertificateChainEngine engine,
                 constraints.dwPathLenConstraint--;
             }
         }
+        else
+        {
+            /* Check whether end cert has a basic constraints extension */
+            if (!CRYPT_DecodeBasicConstraints(
+             chain->rgpElement[i]->pCertContext, &constraints, FALSE))
+                chain->rgpElement[i]->TrustStatus.dwErrorStatus |=
+                 CERT_TRUST_INVALID_BASIC_CONSTRAINTS;
+        }
+        if (!CRYPT_KeyUsageValid(engine, chain->rgpElement[i]->pCertContext,
+         isRoot, constraints.fCA, i))
+            chain->rgpElement[i]->TrustStatus.dwErrorStatus |=
+             CERT_TRUST_IS_NOT_VALID_FOR_USAGE;
+        if (i != 0)
+            if (!CRYPT_ExtendedKeyUsageValidForCA(
+             chain->rgpElement[i]->pCertContext))
+                chain->rgpElement[i]->TrustStatus.dwErrorStatus |=
+                 CERT_TRUST_IS_NOT_VALID_FOR_USAGE;
         if (CRYPT_IsSimpleChainCyclic(chain))
         {
             /* If the chain is cyclic, then the path length constraints
@@ -877,7 +1450,11 @@ static void CRYPT_CheckSimpleChain(PCertificateChainEngine engine,
              CERT_TRUST_IS_PARTIAL_CHAIN |
              CERT_TRUST_INVALID_BASIC_CONSTRAINTS;
         }
-        /* FIXME: check valid usages */
+        /* Check whether every critical extension is supported */
+        if (!CRYPT_CriticalExtensionsSupported(
+         chain->rgpElement[i]->pCertContext))
+            chain->rgpElement[i]->TrustStatus.dwErrorStatus |=
+             CERT_TRUST_INVALID_EXTENSION;
         CRYPT_CombineTrustStatus(&chain->TrustStatus,
          &chain->rgpElement[i]->TrustStatus);
     }
@@ -1333,14 +1910,16 @@ static PCertificateChain CRYPT_BuildAlternateContextFromChain(
     return alternate;
 }
 
-#define CHAIN_QUALITY_SIGNATURE_VALID 8
-#define CHAIN_QUALITY_TIME_VALID      4
-#define CHAIN_QUALITY_COMPLETE_CHAIN  2
-#define CHAIN_QUALITY_TRUSTED_ROOT    1
+#define CHAIN_QUALITY_SIGNATURE_VALID   0x16
+#define CHAIN_QUALITY_TIME_VALID        8
+#define CHAIN_QUALITY_COMPLETE_CHAIN    4
+#define CHAIN_QUALITY_BASIC_CONSTRAINTS 2
+#define CHAIN_QUALITY_TRUSTED_ROOT      1
 
 #define CHAIN_QUALITY_HIGHEST \
  CHAIN_QUALITY_SIGNATURE_VALID | CHAIN_QUALITY_TIME_VALID | \
- CHAIN_QUALITY_COMPLETE_CHAIN | CHAIN_QUALITY_TRUSTED_ROOT
+ CHAIN_QUALITY_COMPLETE_CHAIN | CHAIN_QUALITY_BASIC_CONSTRAINTS | \
+ CHAIN_QUALITY_TRUSTED_ROOT
 
 #define IS_TRUST_ERROR_SET(TrustStatus, bits) \
  (TrustStatus)->dwErrorStatus & (bits)
@@ -1353,8 +1932,10 @@ static DWORD CRYPT_ChainQuality(const CertificateChain *chain)
      CERT_TRUST_IS_UNTRUSTED_ROOT))
         quality &= ~CHAIN_QUALITY_TRUSTED_ROOT;
     if (IS_TRUST_ERROR_SET(&chain->context.TrustStatus,
+     CERT_TRUST_INVALID_BASIC_CONSTRAINTS))
+        quality &= ~CHAIN_QUALITY_BASIC_CONSTRAINTS;
+    if (IS_TRUST_ERROR_SET(&chain->context.TrustStatus,
      CERT_TRUST_IS_PARTIAL_CHAIN))
-    if (chain->context.TrustStatus.dwErrorStatus & CERT_TRUST_IS_PARTIAL_CHAIN)
         quality &= ~CHAIN_QUALITY_COMPLETE_CHAIN;
     if (IS_TRUST_ERROR_SET(&chain->context.TrustStatus,
      CERT_TRUST_IS_NOT_TIME_VALID | CERT_TRUST_IS_NOT_TIME_NESTED))
@@ -1544,6 +2125,31 @@ static void CRYPT_VerifyChainRevocation(PCERT_CHAIN_CONTEXT chain,
     }
 }
 
+static void dump_usage_match(LPCSTR name, const CERT_USAGE_MATCH *usageMatch)
+{
+    DWORD i;
+
+    TRACE_(chain)("%s: %s\n", name,
+     usageMatch->dwType == USAGE_MATCH_TYPE_AND ? "AND" : "OR");
+    for (i = 0; i < usageMatch->Usage.cUsageIdentifier; i++)
+        TRACE_(chain)("%s\n", usageMatch->Usage.rgpszUsageIdentifier[i]);
+}
+
+static void dump_chain_para(const CERT_CHAIN_PARA *pChainPara)
+{
+    TRACE_(chain)("%d\n", pChainPara->cbSize);
+    if (pChainPara->cbSize >= sizeof(CERT_CHAIN_PARA_NO_EXTRA_FIELDS))
+        dump_usage_match("RequestedUsage", &pChainPara->RequestedUsage);
+    if (pChainPara->cbSize >= sizeof(CERT_CHAIN_PARA))
+    {
+        dump_usage_match("RequestedIssuancePolicy",
+         &pChainPara->RequestedIssuancePolicy);
+        TRACE_(chain)("%d\n", pChainPara->dwUrlRetrievalTimeout);
+        TRACE_(chain)("%d\n", pChainPara->fCheckRevocationFreshnessTime);
+        TRACE_(chain)("%d\n", pChainPara->dwRevocationFreshnessTime);
+    }
+}
+
 BOOL WINAPI CertGetCertificateChain(HCERTCHAINENGINE hChainEngine,
  PCCERT_CONTEXT pCertContext, LPFILETIME pTime, HCERTSTORE hAdditionalStore,
  PCERT_CHAIN_PARA pChainPara, DWORD dwFlags, LPVOID pvReserved,
@@ -1570,6 +2176,8 @@ BOOL WINAPI CertGetCertificateChain(HCERTCHAINENGINE hChainEngine,
 
     if (!hChainEngine)
         hChainEngine = CRYPT_GetDefaultChainEngine();
+    if (TRACE_ON(chain))
+        dump_chain_para(pChainPara);
     /* FIXME: what about HCCE_LOCAL_MACHINE? */
     ret = CRYPT_BuildCandidateChainFromCert(hChainEngine, pCertContext, pTime,
      hAdditionalStore, &chain);
@@ -1746,6 +2354,348 @@ static BOOL WINAPI verify_basic_constraints_policy(LPCSTR szPolicyOID,
     return TRUE;
 }
 
+static BOOL match_dns_to_subject_alt_name(PCERT_EXTENSION ext,
+ LPCWSTR server_name)
+{
+    BOOL matches = FALSE;
+    CERT_ALT_NAME_INFO *subjectName;
+    DWORD size;
+
+    TRACE_(chain)("%s\n", debugstr_w(server_name));
+    /* This could be spoofed by the embedded NULL vulnerability, since the
+     * returned CERT_ALT_NAME_INFO doesn't have a way to indicate the
+     * encoded length of a name.  Fortunately CryptDecodeObjectEx fails if
+     * the encoded form of the name contains a NULL.
+     */
+    if (CryptDecodeObjectEx(X509_ASN_ENCODING, X509_ALTERNATE_NAME,
+     ext->Value.pbData, ext->Value.cbData,
+     CRYPT_DECODE_ALLOC_FLAG | CRYPT_DECODE_NOCOPY_FLAG, NULL,
+     &subjectName, &size))
+    {
+        DWORD i;
+
+        /* RFC 5280 states that multiple instances of each name type may exist,
+         * in section 4.2.1.6:
+         * "Multiple name forms, and multiple instances of each name form,
+         *  MAY be included."
+         * It doesn't specify the behavior in such cases, but common usage is
+         * to accept a certificate if any name matches.
+         */
+        for (i = 0; !matches && i < subjectName->cAltEntry; i++)
+        {
+            if (subjectName->rgAltEntry[i].dwAltNameChoice ==
+             CERT_ALT_NAME_DNS_NAME)
+            {
+                TRACE_(chain)("dNSName: %s\n", debugstr_w(
+                 subjectName->rgAltEntry[i].u.pwszDNSName));
+                if (!strcmpiW(server_name,
+                 subjectName->rgAltEntry[i].u.pwszDNSName))
+                    matches = TRUE;
+            }
+        }
+        LocalFree(subjectName);
+    }
+    return matches;
+}
+
+static BOOL find_matching_domain_component(CERT_NAME_INFO *name,
+ LPCWSTR component)
+{
+    BOOL matches = FALSE;
+    DWORD i, j;
+
+    for (i = 0; !matches && i < name->cRDN; i++)
+        for (j = 0; j < name->rgRDN[i].cRDNAttr; j++)
+            if (!strcmp(szOID_DOMAIN_COMPONENT,
+             name->rgRDN[i].rgRDNAttr[j].pszObjId))
+            {
+                PCERT_RDN_ATTR attr;
+
+                attr = &name->rgRDN[i].rgRDNAttr[j];
+                /* Compare with memicmpW rather than strcmpiW in order to avoid
+                 * a match with a string with an embedded NULL.  The component
+                 * must match one domain component attribute's entire string
+                 * value with a case-insensitive match.
+                 */
+                matches = !memicmpW(component, (LPWSTR)attr->Value.pbData,
+                 attr->Value.cbData / sizeof(WCHAR));
+            }
+    return matches;
+}
+
+static BOOL match_domain_component(LPCWSTR allowed_component, DWORD allowed_len,
+ LPCWSTR server_component, DWORD server_len, BOOL allow_wildcards,
+ BOOL *see_wildcard)
+{
+    LPCWSTR allowed_ptr, server_ptr;
+    BOOL matches = TRUE;
+
+    *see_wildcard = FALSE;
+    if (server_len < allowed_len)
+    {
+        WARN_(chain)("domain component %s too short for %s\n",
+         debugstr_wn(server_component, server_len),
+         debugstr_wn(allowed_component, allowed_len));
+        /* A domain component can't contain a wildcard character, so a domain
+         * component shorter than the allowed string can't produce a match.
+         */
+        return FALSE;
+    }
+    for (allowed_ptr = allowed_component, server_ptr = server_component;
+         matches && allowed_ptr - allowed_component < allowed_len;
+         allowed_ptr++, server_ptr++)
+    {
+        if (*allowed_ptr == '*')
+        {
+            if (allowed_ptr - allowed_component < allowed_len - 1)
+            {
+                WARN_(chain)("non-wildcard characters after wildcard not supported\n");
+                matches = FALSE;
+            }
+            else if (!allow_wildcards)
+            {
+                WARN_(chain)("wildcard after non-wildcard component\n");
+                matches = FALSE;
+            }
+            else
+            {
+                /* the preceding characters must have matched, so the rest of
+                 * the component also matches.
+                 */
+                *see_wildcard = TRUE;
+                break;
+            }
+        }
+        matches = tolowerW(*allowed_ptr) == tolowerW(*server_ptr);
+    }
+    if (matches && server_ptr - server_component < server_len)
+    {
+        /* If there are unmatched characters in the server domain component,
+         * the server domain only matches if the allowed string ended in a '*'.
+         */
+        matches = *allowed_ptr == '*';
+    }
+    return matches;
+}
+
+static BOOL match_common_name(LPCWSTR server_name, PCERT_RDN_ATTR nameAttr)
+{
+    LPCWSTR allowed = (LPCWSTR)nameAttr->Value.pbData;
+    LPCWSTR allowed_component = allowed;
+    DWORD allowed_len = nameAttr->Value.cbData / sizeof(WCHAR);
+    LPCWSTR server_component = server_name;
+    DWORD server_len = strlenW(server_name);
+    BOOL matches = TRUE, allow_wildcards = TRUE;
+
+    TRACE_(chain)("CN = %s\n", debugstr_wn(allowed_component, allowed_len));
+
+    /* From RFC 2818 (HTTP over TLS), section 3.1:
+     * "Names may contain the wildcard character * which is considered to match
+     *  any single domain name component or component fragment. E.g.,
+     *  *.a.com matches foo.a.com but not bar.foo.a.com. f*.com matches foo.com
+     *  but not bar.com."
+     *
+     * And from RFC 2595 (Using TLS with IMAP, POP3 and ACAP), section 2.4:
+     * "A "*" wildcard character MAY be used as the left-most name component in
+     *  the certificate.  For example, *.example.com would match a.example.com,
+     *  foo.example.com, etc. but would not match example.com."
+     *
+     * There are other protocols which use TLS, and none of them is
+     * authoritative.  This accepts certificates in common usage, e.g.
+     * *.domain.com matches www.domain.com but not domain.com, and
+     * www*.domain.com matches www1.domain.com but not mail.domain.com.
+     */
+    do {
+        LPCWSTR allowed_dot, server_dot;
+
+        allowed_dot = memchrW(allowed_component, '.',
+         allowed_len - (allowed_component - allowed));
+        server_dot = memchrW(server_component, '.',
+         server_len - (server_component - server_name));
+        /* The number of components must match */
+        if ((!allowed_dot && server_dot) || (allowed_dot && !server_dot))
+        {
+            if (!allowed_dot)
+                WARN_(chain)("%s: too many components for CN=%s\n",
+                 debugstr_w(server_name), debugstr_wn(allowed, allowed_len));
+            else
+                WARN_(chain)("%s: not enough components for CN=%s\n",
+                 debugstr_w(server_name), debugstr_wn(allowed, allowed_len));
+            matches = FALSE;
+        }
+        else
+        {
+            LPCWSTR allowed_end, server_end;
+            BOOL has_wildcard;
+
+            allowed_end = allowed_dot ? allowed_dot : allowed + allowed_len;
+            server_end = server_dot ? server_dot : server_name + server_len;
+            matches = match_domain_component(allowed_component,
+             allowed_end - allowed_component, server_component,
+             server_end - server_component, allow_wildcards, &has_wildcard);
+            /* Once a non-wildcard component is seen, no wildcard components
+             * may follow
+             */
+            if (!has_wildcard)
+                allow_wildcards = FALSE;
+            if (matches)
+            {
+                allowed_component = allowed_dot ? allowed_dot + 1 : allowed_end;
+                server_component = server_dot ? server_dot + 1 : server_end;
+            }
+        }
+    } while (matches && allowed_component &&
+     allowed_component - allowed < allowed_len &&
+     server_component && server_component - server_name < server_len);
+    TRACE_(chain)("returning %d\n", matches);
+    return matches;
+}
+
+static BOOL match_dns_to_subject_dn(PCCERT_CONTEXT cert, LPCWSTR server_name)
+{
+    BOOL matches = FALSE;
+    CERT_NAME_INFO *name;
+    DWORD size;
+
+    TRACE_(chain)("%s\n", debugstr_w(server_name));
+    if (CryptDecodeObjectEx(X509_ASN_ENCODING, X509_UNICODE_NAME,
+     cert->pCertInfo->Subject.pbData, cert->pCertInfo->Subject.cbData,
+     CRYPT_DECODE_ALLOC_FLAG | CRYPT_DECODE_NOCOPY_FLAG, NULL,
+     &name, &size))
+    {
+        /* If the subject distinguished name contains any name components,
+         * make sure all of them are present.
+         */
+        if (CertFindRDNAttr(szOID_DOMAIN_COMPONENT, name))
+        {
+            LPCWSTR ptr = server_name;
+
+            matches = TRUE;
+            do {
+                LPCWSTR dot = strchrW(ptr, '.'), end;
+                /* 254 is the maximum DNS label length, see RFC 1035 */
+                WCHAR component[255];
+                DWORD len;
+
+                end = dot ? dot : ptr + strlenW(ptr);
+                len = end - ptr;
+                if (len >= sizeof(component) / sizeof(component[0]))
+                {
+                    WARN_(chain)("domain component %s too long\n",
+                     debugstr_wn(ptr, len));
+                    matches = FALSE;
+                }
+                else
+                {
+                    memcpy(component, ptr, len * sizeof(WCHAR));
+                    component[len] = 0;
+                    matches = find_matching_domain_component(name, component);
+                }
+                ptr = dot ? dot + 1 : end;
+            } while (matches && ptr && *ptr);
+        }
+        else
+        {
+            PCERT_RDN_ATTR attr;
+
+            /* If the certificate isn't using a DN attribute in the name, make
+             * make sure the common name matches.
+             */
+            if ((attr = CertFindRDNAttr(szOID_COMMON_NAME, name)))
+                matches = match_common_name(server_name, attr);
+        }
+        LocalFree(name);
+    }
+    return matches;
+}
+
+static BOOL WINAPI verify_ssl_policy(LPCSTR szPolicyOID,
+ PCCERT_CHAIN_CONTEXT pChainContext, PCERT_CHAIN_POLICY_PARA pPolicyPara,
+ PCERT_CHAIN_POLICY_STATUS pPolicyStatus)
+{
+    pPolicyStatus->lChainIndex = pPolicyStatus->lElementIndex = -1;
+    if (pChainContext->TrustStatus.dwErrorStatus &
+     CERT_TRUST_IS_NOT_SIGNATURE_VALID)
+    {
+        pPolicyStatus->dwError = TRUST_E_CERT_SIGNATURE;
+        find_element_with_error(pChainContext,
+         CERT_TRUST_IS_NOT_SIGNATURE_VALID, &pPolicyStatus->lChainIndex,
+         &pPolicyStatus->lElementIndex);
+    }
+    else if (pChainContext->TrustStatus.dwErrorStatus &
+     CERT_TRUST_IS_UNTRUSTED_ROOT)
+    {
+        pPolicyStatus->dwError = CERT_E_UNTRUSTEDROOT;
+        find_element_with_error(pChainContext,
+         CERT_TRUST_IS_UNTRUSTED_ROOT, &pPolicyStatus->lChainIndex,
+         &pPolicyStatus->lElementIndex);
+    }
+    else if (pChainContext->TrustStatus.dwErrorStatus & CERT_TRUST_IS_CYCLIC)
+    {
+        pPolicyStatus->dwError = CERT_E_UNTRUSTEDROOT;
+        find_element_with_error(pChainContext,
+         CERT_TRUST_IS_CYCLIC, &pPolicyStatus->lChainIndex,
+         &pPolicyStatus->lElementIndex);
+        /* For a cyclic chain, which element is a cycle isn't meaningful */
+        pPolicyStatus->lElementIndex = -1;
+    }
+    else if (pChainContext->TrustStatus.dwErrorStatus &
+     CERT_TRUST_IS_NOT_TIME_VALID)
+    {
+        pPolicyStatus->dwError = CERT_E_EXPIRED;
+        find_element_with_error(pChainContext,
+         CERT_TRUST_IS_NOT_TIME_VALID, &pPolicyStatus->lChainIndex,
+         &pPolicyStatus->lElementIndex);
+    }
+    else
+        pPolicyStatus->dwError = NO_ERROR;
+    /* We only need bother checking whether the name in the end certificate
+     * matches if the chain is otherwise okay.
+     */
+    if (!pPolicyStatus->dwError && pPolicyPara &&
+     pPolicyPara->cbSize >= sizeof(CERT_CHAIN_POLICY_PARA))
+    {
+        HTTPSPolicyCallbackData *sslPara = pPolicyPara->pvExtraPolicyPara;
+
+        if (sslPara && sslPara->u.cbSize >= sizeof(HTTPSPolicyCallbackData))
+        {
+            if (sslPara->dwAuthType == AUTHTYPE_SERVER &&
+             sslPara->pwszServerName)
+            {
+                PCCERT_CONTEXT cert;
+                PCERT_EXTENSION altNameExt;
+                BOOL matches;
+
+                cert = pChainContext->rgpChain[0]->rgpElement[0]->pCertContext;
+                altNameExt = get_subject_alt_name_ext(cert->pCertInfo);
+                /* If the alternate name extension exists, the name it contains
+                 * is bound to the certificate, so make sure the name matches
+                 * it.  Otherwise, look for the server name in the subject
+                 * distinguished name.  RFC5280, section 4.2.1.6:
+                 * "Whenever such identities are to be bound into a
+                 *  certificate, the subject alternative name (or issuer
+                 *  alternative name) extension MUST be used; however, a DNS
+                 *  name MAY also be represented in the subject field using the
+                 *  domainComponent attribute."
+                 */
+                if (altNameExt)
+                    matches = match_dns_to_subject_alt_name(altNameExt,
+                     sslPara->pwszServerName);
+                else
+                    matches = match_dns_to_subject_dn(cert,
+                     sslPara->pwszServerName);
+                if (!matches)
+                {
+                    pPolicyStatus->dwError = CERT_E_CN_NO_MATCH;
+                    pPolicyStatus->lChainIndex = 0;
+                    pPolicyStatus->lElementIndex = 0;
+                }
+            }
+        }
+    }
+    return TRUE;
+}
+
 static BYTE msPubKey1[] = {
 0x30,0x82,0x01,0x0a,0x02,0x82,0x01,0x01,0x00,0xdf,0x08,0xba,0xe3,0x3f,0x6e,
 0x64,0x9b,0xf5,0x89,0xaf,0x28,0x96,0x4a,0x07,0x8f,0x1b,0x2e,0x8b,0x3e,0x1d,
@@ -1886,6 +2836,9 @@ BOOL WINAPI CertVerifyCertificateChainPolicy(LPCSTR szPolicyOID,
         case LOWORD(CERT_CHAIN_POLICY_AUTHENTICODE):
             verifyPolicy = verify_authenticode_policy;
             break;
+        case LOWORD(CERT_CHAIN_POLICY_SSL):
+            verifyPolicy = verify_ssl_policy;
+            break;
         case LOWORD(CERT_CHAIN_POLICY_BASIC_CONSTRAINTS):
             verifyPolicy = verify_basic_constraints_policy;
             break;
@@ -1909,5 +2862,6 @@ BOOL WINAPI CertVerifyCertificateChainPolicy(LPCSTR szPolicyOID,
          pPolicyStatus);
     if (hFunc)
         CryptFreeOIDFunctionAddress(hFunc, 0);
+    TRACE("returning %d (%08x)\n", ret, pPolicyStatus->dwError);
     return ret;
 }

@@ -9,7 +9,6 @@
 	<file>main.c</file>
 	<library>wine</library>
 	<library>snmpapi</library>
-	<library>kernel32</library>
 	<library>iphlpapi</library>
 	<library>ntdll</library>
 </module>

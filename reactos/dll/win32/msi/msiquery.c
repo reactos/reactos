@@ -56,9 +56,10 @@ static void MSI_CloseView( MSIOBJECTHDR *arg )
     }
 }
 
-UINT VIEW_find_column( MSIVIEW *table, LPCWSTR name, UINT *n )
+UINT VIEW_find_column( MSIVIEW *table, LPCWSTR name, LPCWSTR table_name, UINT *n )
 {
     LPWSTR col_name;
+    LPWSTR haystack_table_name;
     UINT i, count, r;
 
     r = table->ops->get_dimensions( table, NULL, &count );
@@ -70,11 +71,15 @@ UINT VIEW_find_column( MSIVIEW *table, LPCWSTR name, UINT *n )
         INT x;
 
         col_name = NULL;
-        r = table->ops->get_column_info( table, i, &col_name, NULL, NULL );
+        r = table->ops->get_column_info( table, i, &col_name, NULL,
+                                         NULL, &haystack_table_name );
         if( r != ERROR_SUCCESS )
             return r;
         x = lstrcmpW( name, col_name );
+        if( table_name )
+            x |= lstrcmpW( table_name, haystack_table_name );
         msi_free( col_name );
+        msi_free( haystack_table_name );
         if( !x )
         {
             *n = i;
@@ -306,7 +311,7 @@ UINT msi_view_get_row(MSIDATABASE *db, MSIVIEW *view, UINT row, MSIRECORD **rec)
 
     for (i = 1; i <= col_count; i++)
     {
-        ret = view->ops->get_column_info(view, i, NULL, &type, NULL);
+        ret = view->ops->get_column_info(view, i, NULL, &type, NULL, NULL);
         if (ret)
         {
             ERR("Error getting column type for %d\n", i);
@@ -553,7 +558,8 @@ UINT MSI_ViewGetColumnInfo( MSIQUERY *query, MSICOLINFO info, MSIRECORD **prec )
     for( i=0; i<count; i++ )
     {
         name = NULL;
-        r = view->ops->get_column_info( view, i+1, &name, &type, &temporary );
+        r = view->ops->get_column_info( view, i+1, &name, &type, &temporary,
+                                        NULL );
         if( r != ERROR_SUCCESS )
             continue;
         if (info == MSICOLINFO_NAMES)

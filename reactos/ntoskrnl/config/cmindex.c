@@ -733,6 +733,33 @@ CmpFindSubKeyByName(IN PHHIVE Hive,
             /* Check if this is another index root */
             if (IndexRoot->Signature == CM_KEY_INDEX_ROOT)
             {
+
+#ifndef SOMEONE_WAS_NICE_ENOUGH_TO_MAKE_OUR_CELLS_LEXICALLY_SORTED
+                /* CmpFindSubKeyInRoot is useless for actually finding the correct leaf when keys are not sorted */
+                LONG ii;
+                PCM_KEY_INDEX Leaf;
+                /* Loop through each leaf in the index root */
+                for (ii=0; ii<IndexRoot->Count; ii++)
+                {
+                    Leaf = HvGetCell(Hive, IndexRoot->List[ii]);
+                    if (Leaf)
+                    {
+                        Found = CmpFindSubKeyInLeaf(Hive, Leaf, SearchName, &SubKey);
+                        HvReleaseCell(Hive, IndexRoot->List[ii]);
+                        if (Found & 0x80000000)
+                        {
+                            HvReleaseCell(Hive, CellToRelease);
+                            return HCELL_NIL;
+                        }
+
+                        if (SubKey != HCELL_NIL)
+                        {
+                            HvReleaseCell(Hive, CellToRelease);
+                            return SubKey;
+                        }
+                    }
+                 }
+#endif
                 /* Lookup the name in the root */
                 Found = CmpFindSubKeyInRoot(Hive,
                                             IndexRoot,
@@ -1344,6 +1371,8 @@ CmpSelectLeaf(IN PHHIVE Hive,
                 *RootCell = &IndexKey->List[SubKeyIndex];
                 return LeafCell;
             }
+
+            /* It didn't fit, so proceed to splitting */
         }
         else
         {
@@ -1380,22 +1409,22 @@ CmpSelectLeaf(IN PHHIVE Hive,
             /* Check if it's above */
             if (Result >= 0)
             {
-                /* Get the first cell in the index */
-                LeafCell = IndexKey->List[0];
+                /* Get the cell in the index */
+                LeafCell = IndexKey->List[SubKeyIndex];
                 LeafKey = (PCM_KEY_INDEX)HvGetCell(Hive, LeafCell);
 
                 /* Return an error in case of problems */
                 if (!LeafKey) return HCELL_NIL;
 
-                /* Check if it fits into this leaf and break */
+                /* Check if it fits into this leaf */
                 if (LeafKey->Count < CmpMaxIndexPerHblock)
                 {
                     /* Fill in the result and return the cell */
-                    *RootCell = &IndexKey->List[SubKeyIndex + 1];
+                    *RootCell = &IndexKey->List[SubKeyIndex];
                     return LeafCell;
                 }
 
-                /* No, it doesn't fit, check the other leaf */
+                /* No, it doesn't fit, check the next adjacent leaf */
                 if (SubKeyIndex < (IndexKey->Count - 1))
                 {
                     /* Yes, there is space */
@@ -1413,6 +1442,8 @@ CmpSelectLeaf(IN PHHIVE Hive,
                         return LeafCell;
                     }
                 }
+
+                /* It didn't fit, so proceed to splitting */
             }
             else
             {
@@ -1429,11 +1460,8 @@ CmpSelectLeaf(IN PHHIVE Hive,
                     /* Check if it fits and break */
                     if (LeafKey->Count < CmpMaxIndexPerHblock)
                     {
-                        /* Decrement the subkey index */
-                        SubKeyIndex--;
-
                         /* Fill in the result and return the cell */
-                        *RootCell = &IndexKey->List[SubKeyIndex];
+                        *RootCell = &IndexKey->List[SubKeyIndex - 1];
                         return LeafCell;
                     }
                 }

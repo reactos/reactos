@@ -4,7 +4,6 @@
 	<importlibrary definition="avicap32.spec" />
 	<include base="avicap32">.</include>
 	<library>advapi32</library>
-	<library>kernel32</library>
 	<library>msvfw32</library>
 	<library>user32</library>
 	<library>gdi32</library>

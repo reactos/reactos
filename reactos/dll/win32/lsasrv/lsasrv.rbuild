@@ -4,7 +4,6 @@
 	<include base="lsa_server">.</include>
 	<library>lsa_server</library>
 	<library>wine</library>
-	<library>kernel32</library>
 	<library>rpcrt4</library>
 	<library>ntdll</library>
 	<library>pseh</library>

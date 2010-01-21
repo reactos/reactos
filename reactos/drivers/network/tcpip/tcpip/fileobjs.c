@@ -295,6 +295,9 @@ NTSTATUS FileOpenAddress(
   /* Initialize spin lock that protects the address file object */
   KeInitializeSpinLock(&AddrFile->Lock);
 
+  /* Set valid flag so the address can be used */
+  AF_SET_VALID(AddrFile);
+
   /* Return address file object */
   Request->Handle.AddressHandle = AddrFile;
 
@@ -325,7 +328,7 @@ NTSTATUS FileCloseAddress(
   KIRQL OldIrql;
   PDATAGRAM_RECEIVE_REQUEST ReceiveRequest;
   PDATAGRAM_SEND_REQUEST SendRequest;
-  PLIST_ENTRY CurrentEntry;
+  PLIST_ENTRY CurrentEntry, NextEntry;
 
   AddrFile = Request->Handle.AddressHandle;
 
@@ -336,6 +339,8 @@ NTSTATUS FileCloseAddress(
   RemoveEntryList(&AddrFile->ListEntry);
   TcpipReleaseSpinLock(&AddressFileListLock, OldIrql);
 
+  TcpipAcquireSpinLock(&AddrFile->Lock, &OldIrql);
+
   /* FIXME: Kill TCP connections on this address file object */
 
   /* Return pending requests with error */
@@ -343,27 +348,45 @@ NTSTATUS FileCloseAddress(
   TI_DbgPrint(DEBUG_ADDRFILE, ("Aborting receive requests on AddrFile at (0x%X).\n", AddrFile));
 
   /* Go through pending receive request list and cancel them all */
-  while ((CurrentEntry = ExInterlockedRemoveHeadList(&AddrFile->ReceiveQueue, &AddrFile->Lock))) {
+  CurrentEntry = AddrFile->ReceiveQueue.Flink;
+  while (CurrentEntry != &AddrFile->ReceiveQueue) {
+    NextEntry = CurrentEntry->Flink;
     ReceiveRequest = CONTAINING_RECORD(CurrentEntry, DATAGRAM_RECEIVE_REQUEST, ListEntry);
+    /* Abort the request and free its resources */
+    TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
     (*ReceiveRequest->Complete)(ReceiveRequest->Context, STATUS_CANCELLED, 0);
-    /* exFreePool(ReceiveRequest); FIXME: WTF? */
+    TcpipAcquireSpinLock(&AddrFile->Lock, &OldIrql);
+    CurrentEntry = NextEntry;
   }
 
   TI_DbgPrint(DEBUG_ADDRFILE, ("Aborting send requests on address file at (0x%X).\n", AddrFile));
 
   /* Go through pending send request list and cancel them all */
-  while ((CurrentEntry = ExInterlockedRemoveHeadList(&AddrFile->ReceiveQueue, &AddrFile->Lock))) {
-    SendRequest = CONTAINING_RECORD(CurrentEntry, DATAGRAM_SEND_REQUEST, ListEntry);
+  CurrentEntry = AddrFile->TransmitQueue.Flink;
+  while (CurrentEntry != &AddrFile->TransmitQueue) {
+    NextEntry = CurrentEntry->Flink;
+    SendRequest = CONTAINING_RECORD(CurrentEntry,
+				    DATAGRAM_SEND_REQUEST, ListEntry);
+    /* Abort the request and free its resources */
+    TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
     (*SendRequest->Complete)(SendRequest->Context, STATUS_CANCELLED, 0);
     exFreePool(SendRequest);
+    TcpipAcquireSpinLock(&AddrFile->Lock, &OldIrql);
+    CurrentEntry = NextEntry;
   }
+
+  TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
 
   /* Protocol specific handling */
   switch (AddrFile->Protocol) {
   case IPPROTO_TCP:
     TCPFreePort( AddrFile->Port );
-    if( AddrFile->Listener )
-	TCPClose( AddrFile->Listener );
+    if( AddrFile->Listener ) {
+            TcpipRecursiveMutexEnter(&TCPLock, TRUE);
+	    TCPClose( AddrFile->Listener );
+            TcpipRecursiveMutexLeave(&TCPLock);
+	    exFreePool( AddrFile->Listener );
+    }
     break;
 
   case IPPROTO_UDP:
@@ -402,7 +425,9 @@ NTSTATUS FileOpenConnection(
 
   if( !Connection ) return STATUS_NO_MEMORY;
 
+  TcpipRecursiveMutexEnter(&TCPLock, TRUE);
   Status = TCPSocket( Connection, AF_INET, SOCK_STREAM, IPPROTO_TCP );
+  TcpipRecursiveMutexLeave(&TCPLock);
 
   if( !NT_SUCCESS(Status) ) {
       TCPFreeConnectionEndpoint( Connection );
@@ -412,9 +437,46 @@ NTSTATUS FileOpenConnection(
   /* Return connection endpoint file object */
   Request->Handle.ConnectionContext = Connection;
 
+  /* Add connection endpoint to global list */
+  ExInterlockedInsertTailList(
+    &ConnectionEndpointListHead,
+    &Connection->ListEntry,
+    &ConnectionEndpointListLock);
+
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 
   return STATUS_SUCCESS;
+}
+
+
+/*
+ * FUNCTION: Find a connection by examining the context field.  This
+ * is needed in some situations where a FIN reply is needed after a
+ * socket is formally broken.
+ * ARGUMENTS:
+ *     Request = Pointer to TDI request structure for this request
+ * RETURNS:
+ *     Status of operation
+ */
+PCONNECTION_ENDPOINT FileFindConnectionByContext( PVOID Context ) {
+    PLIST_ENTRY Entry;
+    KIRQL OldIrql;
+    PCONNECTION_ENDPOINT Connection = NULL;
+
+    TcpipAcquireSpinLock( &ConnectionEndpointListLock, &OldIrql );
+
+    for( Entry = ConnectionEndpointListHead.Flink;
+	 Entry != &ConnectionEndpointListHead;
+	 Entry = Entry->Flink ) {
+	Connection =
+	    CONTAINING_RECORD( Entry, CONNECTION_ENDPOINT, ListEntry );
+	if( Connection->SocketContext == Context ) break;
+	else Connection = NULL;
+    }
+
+    TcpipReleaseSpinLock( &ConnectionEndpointListLock, OldIrql );
+
+    return Connection;
 }
 
 /*
@@ -428,12 +490,21 @@ NTSTATUS FileCloseConnection(
   PTDI_REQUEST Request)
 {
   PCONNECTION_ENDPOINT Connection;
+  KIRQL OldIrql;
 
   TI_DbgPrint(MID_TRACE, ("Called.\n"));
 
   Connection = Request->Handle.ConnectionContext;
 
+  TcpipAcquireSpinLock(&ConnectionEndpointListLock, &OldIrql);
+  RemoveEntryList(&Connection->ListEntry);
+  TcpipReleaseSpinLock(&ConnectionEndpointListLock, OldIrql);
+
+  TcpipRecursiveMutexEnter( &TCPLock, TRUE );
   TCPClose( Connection );
+  TcpipRecursiveMutexLeave( &TCPLock );
+
+  TCPFreeConnectionEndpoint(Connection);
 
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 

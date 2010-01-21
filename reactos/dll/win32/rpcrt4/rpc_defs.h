@@ -31,13 +31,13 @@ typedef struct
   unsigned char drep[4];          /* Data representation */
   unsigned short frag_len;        /* Data size in bytes including header and tail. */
   unsigned short auth_len;        /* Authentication length  */
-  unsigned int  call_id;          /* Call identifier. */
+  unsigned long call_id;          /* Call identifier. */
 } RpcPktCommonHdr;
 
 typedef struct
 {
   RpcPktCommonHdr common;
-  unsigned int   alloc_hint;      /* Data size in bytes excluding header and tail. */
+  unsigned long alloc_hint;       /* Data size in bytes excluding header and tail. */
   unsigned short context_id;      /* Presentation context identifier */
   unsigned short opnum;
 } RpcPktRequestHdr;
@@ -45,7 +45,7 @@ typedef struct
 typedef struct
 {
   RpcPktCommonHdr common;
-  unsigned int   alloc_hint;      /* Data size in bytes excluding header and tail. */
+  unsigned long alloc_hint;       /* Data size in bytes excluding header and tail. */
   unsigned short context_id;      /* Presentation context identifier */
   unsigned char cancel_count;
   unsigned char reserved;
@@ -54,12 +54,12 @@ typedef struct
 typedef struct
 {
   RpcPktCommonHdr common;
-  unsigned int   alloc_hint;      /* Data size in bytes excluding header and tail. */
+  unsigned long alloc_hint;       /* Data size in bytes excluding header and tail. */
   unsigned short context_id;      /* Presentation context identifier */
   unsigned char cancel_count;     /* Received cancel count */
   unsigned char reserved;         /* Force alignment! */
-  unsigned int  status;           /* Runtime fault code (RPC_STATUS) */
-  unsigned int  reserved2;
+  unsigned long status;           /* Runtime fault code (RPC_STATUS) */
+  unsigned long reserved2;
 } RpcPktFaultHdr;
 
 typedef struct
@@ -67,7 +67,7 @@ typedef struct
   RpcPktCommonHdr common;
   unsigned short max_tsize;       /* Maximum transmission fragment size */
   unsigned short max_rsize;       /* Maximum receive fragment size */
-  unsigned int  assoc_gid;        /* Associated group id */
+  unsigned long assoc_gid;        /* Associated group id */
   unsigned char num_elements;     /* Number of elements */
   unsigned char padding[3];       /* Force alignment! */
   unsigned short context_id;      /* Presentation context identifier */
@@ -99,7 +99,7 @@ typedef struct
   RpcPktCommonHdr common;
   unsigned short max_tsize;       /* Maximum transmission fragment size */
   unsigned short max_rsize;       /* Maximum receive fragment size */
-  unsigned int assoc_gid;         /* Associated group id */
+  unsigned long assoc_gid;        /* Associated group id */
   /* 
    * Following this header are these fields:
    *   RpcAddressString server_address;
@@ -120,14 +120,6 @@ typedef struct
   } protocols[1];
 } RpcPktBindNAckHdr;
 
-/* undocumented packet sent during RPC over HTTP */
-typedef struct
-{
-  RpcPktCommonHdr common;
-  unsigned short flags;
-  unsigned short num_data_items;
-} RpcPktHttpHdr;
-
 /* Union representing all possible packet headers */
 typedef union
 {
@@ -138,7 +130,6 @@ typedef union
   RpcPktBindHdr bind;
   RpcPktBindAckHdr bind_ack;
   RpcPktBindNAckHdr bind_nack;
-  RpcPktHttpHdr http;
 } RpcPktHdr;
 
 typedef struct
@@ -147,7 +138,7 @@ typedef struct
   unsigned char auth_level;      /* RPC_C_AUTHN_LEVEL* */
   unsigned char auth_pad_length; /* length of padding to restore n % 4 alignment */
   unsigned char auth_reserved;   /* reserved, must be zero */
-  unsigned int  auth_context_id; /* unique value for the authenticated connection */
+  unsigned long auth_context_id; /* unique value for the authenticated connection */
 } RpcAuthVerifier;
 
 #define RPC_AUTH_VERIFIER_LEN(common_hdr) \
@@ -183,7 +174,6 @@ typedef struct
 #define PKT_SHUTDOWN           17
 #define PKT_CO_CANCEL          18
 #define PKT_ORPHANED           19
-#define PKT_HTTP               20
 
 #define RESULT_ACCEPT               0
 #define RESULT_USER_REJECTION       1

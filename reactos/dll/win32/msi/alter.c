@@ -183,11 +183,12 @@ static UINT ALTER_get_dimensions( struct tagMSIVIEW *view, UINT *rows, UINT *col
 }
 
 static UINT ALTER_get_column_info( struct tagMSIVIEW *view,
-                UINT n, LPWSTR *name, UINT *type, BOOL *temporary )
+                UINT n, LPWSTR *name, UINT *type, BOOL *temporary,
+                LPWSTR *table_name)
 {
     MSIALTERVIEW *av = (MSIALTERVIEW*)view;
 
-    TRACE("%p %d %p %p %p\n", av, n, name, type, temporary );
+    TRACE("%p %d %p %p %p %p\n", av, n, name, type, temporary, table_name );
 
     return ERROR_FUNCTION_FAILED;
 }

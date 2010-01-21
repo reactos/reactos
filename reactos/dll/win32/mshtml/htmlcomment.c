@@ -193,8 +193,10 @@ HTMLElement *HTMLCommentElement_Create(HTMLDocumentNode *doc, nsIDOMNode *nsnode
     ret->element.node.vtbl = &HTMLCommentElementImplVtbl;
     ret->lpIHTMLCommentElementVtbl = &HTMLCommentElementVtbl;
 
-    HTMLElement_Init(&ret->element, &HTMLCommentElement_dispex);
-    HTMLDOMNode_Init(doc, &ret->element.node, nsnode);
+    HTMLElement_Init(&ret->element, doc, NULL, &HTMLCommentElement_dispex);
+
+    nsIDOMNode_AddRef(nsnode);
+    ret->element.node.nsnode = nsnode;
 
     return &ret->element;
 }

@@ -873,9 +873,18 @@ static BOOL CRYPT_RemoveStringFromMultiString(LPWSTR multi, LPCWSTR toRemove)
     {
         DWORD len = CRYPT_GetMultiStringCharacterLen(multi);
 
-        /* Copy remainder of string "left" */
-        memmove(spotToRemove, spotToRemove + lstrlenW(toRemove) + 1,
-         (len - (spotToRemove - multi)) * sizeof(WCHAR));
+        if (spotToRemove + lstrlenW(toRemove) + 2 >= multi + len)
+        {
+            /* Removing last string in list, terminate multi string directly */
+            *spotToRemove = 0;
+            *(spotToRemove + 1) = 0;
+        }
+        else
+        {
+            /* Copy remainder of string "left" */
+            memmove(spotToRemove, spotToRemove + lstrlenW(toRemove) + 1,
+             (len - (spotToRemove - multi)) * sizeof(WCHAR));
+        }
         ret = TRUE;
     }
     else

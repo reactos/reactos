@@ -104,7 +104,7 @@ static HDDEDATA CALLBACK DdeCallback(
     case XTYP_WILDCONNECT:
         return (HDDEDATA)(DWORD_PTR)Dde_OnWildConnect(hsz1, hsz2);
     case XTYP_REQUEST:
-        return (HDDEDATA)Dde_OnRequest(uFmt, hconv, hsz1, hsz2);
+        return Dde_OnRequest(uFmt, hconv, hsz1, hsz2);
     case XTYP_EXECUTE:
         return (HDDEDATA)(DWORD_PTR)Dde_OnExecute(hconv, hsz1, hdata);
     case XTYP_DISCONNECT:

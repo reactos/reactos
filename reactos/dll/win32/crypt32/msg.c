@@ -719,27 +719,22 @@ static BOOL CRYPT_ConstructBlob(CRYPT_DATA_BLOB *out, const CRYPT_DATA_BLOB *in)
     return ret;
 }
 
-typedef struct _BlobArray
-{
-    DWORD            cBlobs;
-    PCRYPT_DATA_BLOB blobs;
-} BlobArray;
-
-static BOOL CRYPT_ConstructBlobArray(BlobArray *out, const BlobArray *in)
+static BOOL CRYPT_ConstructBlobArray(DWORD *outCBlobs,
+ PCRYPT_DATA_BLOB *outPBlobs, DWORD cBlobs, const PCRYPT_DATA_BLOB pBlobs)
 {
     BOOL ret = TRUE;
 
-    out->cBlobs = in->cBlobs;
-    if (out->cBlobs)
+    *outCBlobs = cBlobs;
+    if (cBlobs)
     {
-        out->blobs = CryptMemAlloc(out->cBlobs * sizeof(CRYPT_DATA_BLOB));
-        if (out->blobs)
+        *outPBlobs = CryptMemAlloc(cBlobs * sizeof(CRYPT_DATA_BLOB));
+        if (*outPBlobs)
         {
             DWORD i;
 
-            memset(out->blobs, 0, out->cBlobs * sizeof(CRYPT_DATA_BLOB));
-            for (i = 0; ret && i < out->cBlobs; i++)
-                ret = CRYPT_ConstructBlob(&out->blobs[i], &in->blobs[i]);
+            memset(*outPBlobs, 0, cBlobs * sizeof(CRYPT_DATA_BLOB));
+            for (i = 0; ret && i < cBlobs; i++)
+                ret = CRYPT_ConstructBlob(&(*outPBlobs)[i], &pBlobs[i]);
         }
         else
             ret = FALSE;
@@ -747,13 +742,13 @@ static BOOL CRYPT_ConstructBlobArray(BlobArray *out, const BlobArray *in)
     return ret;
 }
 
-static void CRYPT_FreeBlobArray(BlobArray *array)
+static void CRYPT_FreeBlobArray(DWORD cBlobs, PCRYPT_DATA_BLOB blobs)
 {
     DWORD i;
 
-    for (i = 0; i < array->cBlobs; i++)
-        CryptMemFree(array->blobs[i].pbData);
-    CryptMemFree(array->blobs);
+    for (i = 0; i < cBlobs; i++)
+        CryptMemFree(blobs[i].pbData);
+    CryptMemFree(blobs);
 }
 
 static BOOL CRYPT_ConstructAttribute(CRYPT_ATTRIBUTE *out,
@@ -765,8 +760,8 @@ static BOOL CRYPT_ConstructAttribute(CRYPT_ATTRIBUTE *out,
     if (out->pszObjId)
     {
         strcpy(out->pszObjId, in->pszObjId);
-        ret = CRYPT_ConstructBlobArray((BlobArray *)&out->cValue,
-         (const BlobArray *)&in->cValue);
+        ret = CRYPT_ConstructBlobArray(&out->cValue, &out->rgValue,
+         in->cValue, in->rgValue);
     }
     else
         ret = FALSE;
@@ -1179,8 +1174,10 @@ static void CSignedEncodeMsg_Close(HCRYPTMSG hCryptMsg)
 
     CryptMemFree(msg->innerOID);
     CryptMemFree(msg->data.pbData);
-    CRYPT_FreeBlobArray((BlobArray *)&msg->msg_data.info->cCertEncoded);
-    CRYPT_FreeBlobArray((BlobArray *)&msg->msg_data.info->cCrlEncoded);
+    CRYPT_FreeBlobArray(msg->msg_data.info->cCertEncoded,
+     msg->msg_data.info->rgCertEncoded);
+    CRYPT_FreeBlobArray(msg->msg_data.info->cCrlEncoded,
+     msg->msg_data.info->rgCrlEncoded);
     for (i = 0; i < msg->msg_data.info->cSignerInfo; i++)
         CSignerInfo_Free(&msg->msg_data.info->rgSignerInfo[i]);
     CSignedMsgData_CloseHandles(&msg->msg_data);
@@ -1435,13 +1432,13 @@ static HCRYPTMSG CSignedEncodeMsg_Open(DWORD dwFlags,
             }
         }
         if (ret)
-            ret = CRYPT_ConstructBlobArray(
-             (BlobArray *)&msg->msg_data.info->cCertEncoded,
-             (const BlobArray *)&info->cCertEncoded);
+            ret = CRYPT_ConstructBlobArray(&msg->msg_data.info->cCertEncoded,
+             &msg->msg_data.info->rgCertEncoded, info->cCertEncoded,
+             info->rgCertEncoded);
         if (ret)
-            ret = CRYPT_ConstructBlobArray(
-             (BlobArray *)&msg->msg_data.info->cCrlEncoded,
-             (const BlobArray *)&info->cCrlEncoded);
+            ret = CRYPT_ConstructBlobArray(&msg->msg_data.info->cCrlEncoded,
+             &msg->msg_data.info->rgCrlEncoded, info->cCrlEncoded,
+             info->rgCrlEncoded);
         if (!ret)
         {
             CSignedEncodeMsg_Close(msg);

@@ -408,7 +408,7 @@ EnumAudioDeviceInterfaces(
     }
 
     /* sanity check */
-    ASSERT(OutRootInfo);
+    ASSERT(*OutRootInfo);
 
     CurInfo = *OutRootInfo;
 

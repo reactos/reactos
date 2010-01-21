@@ -3,7 +3,6 @@
 <module name="intl" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_INTL}" installbase="system32" installname="intl.cpl" unicode="yes" crt="msvcrt">
 	<importlibrary definition="intl.spec" />
 	<include base="intl">.</include>
-	<library>kernel32</library>
 	<library>user32</library>
 	<library>comctl32</library>
 	<library>advapi32</library>

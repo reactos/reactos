@@ -84,6 +84,11 @@ typedef struct _SLEEPING_THREAD {
 #define SRF_FIN   TCP_FIN
 
 extern LONG TCP_IPIdentification;
+extern LIST_ENTRY SignalledConnectionsList;
+extern KSPIN_LOCK SignalledConnectionsLock;
+extern LIST_ENTRY SleepingThreadsList;
+extern FAST_MUTEX SleepingThreadsLock;
+extern RECURSIVE_MUTEX TCPLock;
 
 /* accept.c */
 NTSTATUS TCPServiceListeningSocket( PCONNECTION_ENDPOINT Listener,

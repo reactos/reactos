@@ -4,7 +4,6 @@
 	<include base="ReactOS">include/reactos/winsock</include>
 	<library>advapi32</library>
 	<library>ntdll</library>
-	<library>kernel32</library>
 	<library>ws2_32</library>
 	<file>apc.c</file>
 	<file>context.c</file>

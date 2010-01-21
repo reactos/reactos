@@ -8968,6 +8968,19 @@ MmAllocatePagesForMdl(
   IN PHYSICAL_ADDRESS  SkipBytes,
   IN SIZE_T  TotalBytes);
 
+#if (NTDDI_VERSION >= NTDDI_WS03SP1)
+NTKERNELAPI
+PMDL
+NTAPI
+MmAllocatePagesForMdlEx(
+  IN PHYSICAL_ADDRESS LowAddress,
+  IN PHYSICAL_ADDRESS HighAddress,
+  IN PHYSICAL_ADDRESS SkipBytes,
+  IN SIZE_T TotalBytes,
+  IN MEMORY_CACHING_TYPE CacheType,
+  IN ULONG Flags);
+#endif
+
 NTKERNELAPI
 VOID
 NTAPI

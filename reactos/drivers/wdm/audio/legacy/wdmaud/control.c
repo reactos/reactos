@@ -318,6 +318,38 @@ WdmAudGetDeviceInterface(
 
 NTSTATUS
 NTAPI
+WdmAudResetStream(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp,
+    IN  PWDMAUD_DEVICE_INFO DeviceInfo)
+{
+    KSRESET ResetStream;
+    NTSTATUS Status;
+    ULONG BytesReturned;
+    PFILE_OBJECT FileObject;
+
+    DPRINT("WdmAudResetStream\n");
+
+    Status = ObReferenceObjectByHandle(DeviceInfo->hDevice, GENERIC_READ | GENERIC_WRITE, IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Error: invalid device handle provided %p Type %x\n", DeviceInfo->hDevice, DeviceInfo->DeviceType);
+        return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
+    }
+
+    ResetStream = DeviceInfo->u.ResetStream;
+    ASSERT(ResetStream == KSRESET_BEGIN || ResetStream == KSRESET_END);
+
+    Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_RESET_STATE, (PVOID)&ResetStream, sizeof(KSRESET), NULL, 0, &BytesReturned);
+
+    ObDereferenceObject(FileObject);
+
+    DPRINT("WdmAudResetStream Status %x\n", Status);
+    return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
+}
+
+NTSTATUS
+NTAPI
 WdmAudDeviceControl(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
@@ -382,6 +414,8 @@ WdmAudDeviceControl(
             return WdmAudGetDeviceInterface(DeviceObject, Irp, DeviceInfo);
         case IOCTL_GET_MIXER_EVENT:
             return WdmAudGetMixerEvent(DeviceObject, Irp, DeviceInfo, ClientInfo);
+        case IOCTL_RESET_STREAM:
+            return WdmAudResetStream(DeviceObject, Irp, DeviceInfo);
         case IOCTL_GETPOS:
         case IOCTL_GETDEVID:
         case IOCTL_GETVOLUME:

@@ -6,7 +6,6 @@
 	<define name="WIN32" />
 	<define name="__WINDRES__" />
 	<library>advapi32</library>
-	<library>kernel32</library>
 	<library>gdi32</library>
 	<library>user32</library>
 	<library>ws2_32</library>

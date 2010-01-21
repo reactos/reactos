@@ -116,9 +116,8 @@
 @ stdcall NDRSContextUnmarshallEx(ptr ptr ptr)
 @ stub NDRcopy
 @ stdcall NdrAllocate(ptr long)
-@ varargs NdrAsyncClientCall(ptr ptr)
+@ stub NdrAsyncClientCall
 @ stub NdrAsyncServerCall
-@ stdcall NdrAsyncStubCall(ptr ptr ptr ptr)
 @ stdcall NdrByteCountPointerBufferSize(ptr ptr ptr)
 @ stdcall NdrByteCountPointerFree(ptr ptr ptr)
 @ stdcall NdrByteCountPointerMarshall(ptr ptr ptr)
@@ -371,7 +370,7 @@
 @ stdcall RpcEpRegisterA(ptr ptr ptr str)
 @ stub RpcEpRegisterNoReplaceA
 @ stub RpcEpRegisterNoReplaceW
-@ stdcall RpcEpRegisterW(ptr ptr ptr wstr)
+@ stub RpcEpRegisterW
 @ stdcall RpcEpResolveBinding(ptr ptr)
 @ stdcall RpcEpUnregister(ptr ptr ptr)
 @ stub RpcErrorAddRecord # wxp

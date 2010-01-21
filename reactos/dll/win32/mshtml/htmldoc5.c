@@ -131,13 +131,13 @@ static HRESULT WINAPI HTMLDocument5_createComment(IHTMLDocument5 *iface, BSTR bs
 
     TRACE("(%p)->(%s %p)\n", This, debugstr_w(bstrdata), ppRetNode);
 
-    if(!This->nsdoc) {
+    if(!This->doc_node->nsdoc) {
         WARN("NULL nsdoc\n");
         return E_UNEXPECTED;
     }
 
     nsAString_Init(&str, bstrdata);
-    nsres = nsIDOMHTMLDocument_CreateComment(This->nsdoc, &str, &nscomment);
+    nsres = nsIDOMHTMLDocument_CreateComment(This->doc_node->nsdoc, &str, &nscomment);
     nsAString_Finish(&str);
     if(NS_FAILED(nsres)) {
         ERR("CreateTextNode failed: %08x\n", nsres);
@@ -246,12 +246,12 @@ static HRESULT WINAPI HTMLDocument5_get_compatMode(IHTMLDocument5 *iface, BSTR *
 
     TRACE("(%p)->(%p)\n", This, p);
 
-    if(!This->nsdoc) {
+    if(!This->doc_node->nsdoc) {
         WARN("NULL nsdoc\n");
         return E_UNEXPECTED;
     }
 
-    nsres = nsIDOMHTMLDocument_QueryInterface(This->nsdoc, &IID_nsIDOMNSHTMLDocument, (void**)&nshtmldoc);
+    nsres = nsIDOMHTMLDocument_QueryInterface(This->doc_node->nsdoc, &IID_nsIDOMNSHTMLDocument, (void**)&nshtmldoc);
     if(NS_FAILED(nsres)) {
         ERR("Could not get nsIDOMNSHTMLDocument: %08x\n", nsres);
         return S_OK;
@@ -299,7 +299,141 @@ static const IHTMLDocument5Vtbl HTMLDocument5Vtbl = {
     HTMLDocument5_get_compatMode
 };
 
+#define HTMLDOC6_THIS(iface) DEFINE_THIS(HTMLDocument, HTMLDocument6, iface)
+
+static HRESULT WINAPI HTMLDocument6_QueryInterface(IHTMLDocument6 *iface,
+        REFIID riid, void **ppv)
+{
+    HTMLDocument *This = HTMLDOC6_THIS(iface);
+    return IHTMLDocument2_QueryInterface(HTMLDOC(This), riid, ppv);
+}
+
+static ULONG WINAPI HTMLDocument6_AddRef(IHTMLDocument6 *iface)
+{
+    HTMLDocument *This = HTMLDOC6_THIS(iface);
+    return IHTMLDocument2_AddRef(HTMLDOC(This));
+}
+
+static ULONG WINAPI HTMLDocument6_Release(IHTMLDocument6 *iface)
+{
+    HTMLDocument *This = HTMLDOC6_THIS(iface);
+    return IHTMLDocument2_Release(HTMLDOC(This));
+}
+
+static HRESULT WINAPI HTMLDocument6_GetTypeInfoCount(IHTMLDocument6 *iface, UINT *pctinfo)
+{
+    HTMLDocument *This = HTMLDOC6_THIS(iface);
+    return IDispatchEx_GetTypeInfoCount(DISPATCHEX(This), pctinfo);
+}
+
+static HRESULT WINAPI HTMLDocument6_GetTypeInfo(IHTMLDocument6 *iface, UINT iTInfo,
+        LCID lcid, ITypeInfo **ppTInfo)
+{
+    HTMLDocument *This = HTMLDOC6_THIS(iface);
+    return IDispatchEx_GetTypeInfo(DISPATCHEX(This), iTInfo, lcid, ppTInfo);
+}
+
+static HRESULT WINAPI HTMLDocument6_GetIDsOfNames(IHTMLDocument6 *iface, REFIID riid,
+        LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
+{
+    HTMLDocument *This = HTMLDOC6_THIS(iface);
+    return IDispatchEx_GetIDsOfNames(DISPATCHEX(This), riid, rgszNames, cNames, lcid, rgDispId);
+}
+
+static HRESULT WINAPI HTMLDocument6_Invoke(IHTMLDocument6 *iface, DISPID dispIdMember,
+                            REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams,
+                            VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
+{
+    HTMLDocument *This = HTMLDOC6_THIS(iface);
+    return IDispatchEx_Invoke(DISPATCHEX(This), dispIdMember, riid, lcid, wFlags, pDispParams,
+            pVarResult, pExcepInfo, puArgErr);
+}
+
+static HRESULT WINAPI HTMLDocument6_get_compatible(IHTMLDocument6 *iface,
+        IHTMLDocumentCompatibleInfoCollection **p)
+{
+    HTMLDocument *This = HTMLDOC6_THIS(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLDocument6_get_documentMode(IHTMLDocument6 *iface,
+        VARIANT *p)
+{
+    HTMLDocument *This = HTMLDOC6_THIS(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLDocument6_get_onstorage(IHTMLDocument6 *iface,
+        VARIANT *p)
+{
+    HTMLDocument *This = HTMLDOC6_THIS(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLDocument6_put_onstorage(IHTMLDocument6 *iface,
+        VARIANT p)
+{
+    HTMLDocument *This = HTMLDOC6_THIS(iface);
+    FIXME("(%p)->(v)\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLDocument6_get_onstoragecommit(IHTMLDocument6 *iface,
+        VARIANT *p)
+{
+    HTMLDocument *This = HTMLDOC6_THIS(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLDocument6_put_onstoragecommit(IHTMLDocument6 *iface,
+        VARIANT p)
+{
+    HTMLDocument *This = HTMLDOC6_THIS(iface);
+    FIXME("(%p)->(v)\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLDocument6_getElementById(IHTMLDocument6 *iface,
+        BSTR bstrId, IHTMLElement2 **p)
+{
+    HTMLDocument *This = HTMLDOC6_THIS(iface);
+    FIXME("(%p)->(%s %p)\n", This, debugstr_w(bstrId), p);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLDocument6_updateSettings(IHTMLDocument6 *iface)
+{
+    HTMLDocument *This = HTMLDOC6_THIS(iface);
+    FIXME("(%p)->()\n", This);
+    return E_NOTIMPL;
+}
+
+#undef HTMLDOC6_THIS
+
+static const IHTMLDocument6Vtbl HTMLDocument6Vtbl = {
+    HTMLDocument6_QueryInterface,
+    HTMLDocument6_AddRef,
+    HTMLDocument6_Release,
+    HTMLDocument6_GetTypeInfoCount,
+    HTMLDocument6_GetTypeInfo,
+    HTMLDocument6_GetIDsOfNames,
+    HTMLDocument6_Invoke,
+    HTMLDocument6_get_compatible,
+    HTMLDocument6_get_documentMode,
+    HTMLDocument6_put_onstorage,
+    HTMLDocument6_get_onstorage,
+    HTMLDocument6_put_onstoragecommit,
+    HTMLDocument6_get_onstoragecommit,
+    HTMLDocument6_getElementById,
+    HTMLDocument6_updateSettings
+};
+
 void HTMLDocument_HTMLDocument5_Init(HTMLDocument *This)
 {
     This->lpHTMLDocument5Vtbl = &HTMLDocument5Vtbl;
+    This->lpHTMLDocument6Vtbl = &HTMLDocument6Vtbl;
 }

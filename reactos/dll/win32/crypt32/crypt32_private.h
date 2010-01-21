@@ -113,6 +113,10 @@ BOOL CRYPT_AsnDecodePKCSDigestedData(const BYTE *pbEncoded, DWORD cbEncoded,
  DWORD dwFlags, PCRYPT_DECODE_PARA pDecodePara,
  CRYPT_DIGESTED_DATA *digestedData, DWORD *pcbDigestedData);
 
+BOOL WINAPI CRYPT_AsnEncodePubKeyInfoNoNull(DWORD dwCertEncodingType,
+ LPCSTR lpszStructType, const void *pvStructInfo, DWORD dwFlags,
+ PCRYPT_ENCODE_PARA pEncodePara, BYTE *pbEncoded, DWORD *pcbEncoded);
+
 /* The following aren't defined in wincrypt.h, as they're "reserved" */
 #define CERT_CERT_PROP_ID 32
 #define CERT_CRL_PROP_ID  33
@@ -278,6 +282,12 @@ const void *CRYPT_ReadSerializedElement(const BYTE *pbElement,
  */
 BOOL CRYPT_ReadSerializedStoreFromFile(HANDLE file, HCERTSTORE store);
 
+/* Reads contexts serialized in the blob into the memory store.  Returns FALSE
+ * if the file is not of the expected format.
+ */
+BOOL CRYPT_ReadSerializedStoreFromBlob(const CRYPT_DATA_BLOB *blob,
+ HCERTSTORE store);
+
 /* Fixes up the pointers in info, where info is assumed to be a
  * CRYPT_KEY_PROV_INFO, followed by its container name, provider name, and any
  * provider parameters, in a contiguous buffer, but where info's pointers are
@@ -291,7 +301,7 @@ void CRYPT_FixKeyProvInfoPointers(PCRYPT_KEY_PROV_INFO info);
  */
 
 DWORD cert_name_to_str_with_indent(DWORD dwCertEncodingType, DWORD indent,
- PCERT_NAME_BLOB pName, DWORD dwStrType, LPWSTR psz, DWORD csz);
+ const CERT_NAME_BLOB *pName, DWORD dwStrType, LPWSTR psz, DWORD csz);
 
 /**
  *  Context functions
@@ -336,8 +346,9 @@ typedef void (*ContextFreeFunc)(void *context);
 /* Decrements context's ref count.  If context is a link context, releases its
  * linked context as well.
  * If a data context has its ref count reach 0, calls dataContextFree on it.
+ * Returns FALSE if the reference count is <= 0 when called.
  */
-void Context_Release(void *context, size_t contextSize,
+BOOL Context_Release(void *context, size_t contextSize,
  ContextFreeFunc dataContextFree);
 
 /**
@@ -377,7 +388,11 @@ void *ContextList_Add(struct ContextList *list, void *toLink, void *toReplace);
 
 void *ContextList_Enum(struct ContextList *list, void *pPrev);
 
-void ContextList_Delete(struct ContextList *list, void *context);
+/* Removes a context from the list.  Returns TRUE if the context was removed,
+ * or FALSE if not.  (The context may have been duplicated, so subsequent
+ * removes have no effect.)
+ */
+BOOL ContextList_Remove(struct ContextList *list, void *context);
 
 void ContextList_Free(struct ContextList *list);
 

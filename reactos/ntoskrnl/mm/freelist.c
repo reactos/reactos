@@ -594,7 +594,7 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
         //
         // Check if we've reached the end
         //
-        Page = *MdlPage;
+        Page = *MdlPage++;
         if (Page == (PFN_NUMBER)-1) break;
         
         //
