@@ -16,25 +16,6 @@
 
 /* GLOBALS *******************************************************************/
 
-PICInitTable:
-
-    /* Master PIC */
-    .short 0x20                         /* Port */
-    .byte 0x11                          /* Edge, cascade, CAI 8, ICW4 */
-    .byte PRIMARY_VECTOR_BASE           /* Base */
-    .byte 4                             /* IRQ 4 connected to slave */
-    .byte 1                             /* Non buffered, not nested, 8086 */
-
-    /* Slave PIC */
-    .short 0xA0                         /* Port */
-    .byte 0x11                          /* Edge, cascade, CAI 8, ICW4 */
-    .byte PRIMARY_VECTOR_BASE + 8       /* Base */
-    .byte 2                             /* Slave ID: Slave 2 */
-    .byte 1                             /* Non buffered, not nested, 8086 */
-
-    /* End of initialization table */
-    .short 0
-
 KiI8259MaskTable:
     .long 0                             /* IRQL 0 */
     .long 0                             /* IRQL 1 */
@@ -190,66 +171,6 @@ _HalpHardwareInterruptLevel:
     call SWInterruptHandlerTable[ecx*4]
 
 NothingHardware:
-    ret
-.endfunc
-
-.globl _HalpInitPICs@0
-.func HalpInitPICs@0
-_HalpInitPICs@0:
-
-    /* Save ESI and disable interrupts */
-    push esi
-    pushf
-    cli
-
-    /* Read the init table */
-    lea esi, PICInitTable
-    lodsw
-
-InitLoop:
-
-    /* Put the port in EDX */
-    movzx edx, ax
-
-    /* Initialize the PIC, using a delay for each command */
-    outsb
-    jmp $+2
-    inc edx
-    outsb
-    jmp $+2
-    outsb
-    jmp $+2
-    outsb
-    jmp $+2
-
-    /* Mask all interrupts */
-    mov al, 0xFF
-    out dx, al
-
-    /* Check if we're done, otherwise initialize next PIC */
-    lodsw
-    cmp ax, 0
-    jnz InitLoop
-
-    /* Read EISA Edge/Level Register */
-    mov edx, 0x4D1
-    in al, dx
-    mov ah, al
-    dec edx
-    in al, dx
-
-    /* Clear reserved bits and see if there's anything there */
-    and eax, 0xDEF8
-    cmp eax, 0xDEF8
-    jz NoEisa
-
-    /* FIXME */
-    //UNHANDLED_PATH
-
-/* Restore interrupts and return */
-NoEisa:
-    popf
-    pop esi
     ret
 .endfunc
 
