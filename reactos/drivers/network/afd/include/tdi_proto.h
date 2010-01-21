@@ -3,7 +3,8 @@
 
 NTSTATUS TdiConnect( PIRP *PendingIrp,
 		     PFILE_OBJECT ConnectionObject,
-		     PTDI_CONNECTION_INFORMATION RemoteAddress,
+		     PTDI_CONNECTION_INFORMATION ConnectionCallInfo,
+		     PTDI_CONNECTION_INFORMATION ConnectionReturnInfo,
 		     PIO_STATUS_BLOCK Iosb,
 		     PIO_COMPLETION_ROUTINE CompletionRoutine,
 		     PVOID CompletionContext );

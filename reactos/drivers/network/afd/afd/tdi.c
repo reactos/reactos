@@ -206,6 +206,56 @@ NTSTATUS TdiOpenAddressFile(
 	return Status;
 }
 
+NTSTATUS TdiQueryMaxDatagramLength(
+        PFILE_OBJECT FileObject,
+        PUINT MaxDatagramLength)
+{
+    PMDL Mdl;
+    PTDI_MAX_DATAGRAM_INFO Buffer;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    Buffer = ExAllocatePool(NonPagedPool, sizeof(TDI_MAX_DATAGRAM_INFO));
+    if (!Buffer) return STATUS_NO_MEMORY;
+
+    Mdl = IoAllocateMdl(Buffer, sizeof(TDI_MAX_DATAGRAM_INFO), FALSE, FALSE, NULL);
+    if (!Mdl)
+    {
+        ExFreePool(Buffer);
+        return STATUS_NO_MEMORY;
+    }
+
+    _SEH2_TRY
+    {
+         MmProbeAndLockPages(Mdl, KernelMode, IoModifyAccess);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+         Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    if (!NT_SUCCESS(Status))
+    {
+        IoFreeMdl(Mdl);
+        ExFreePool(Buffer);
+        return Status;
+    }
+
+    Status = TdiQueryInformation(FileObject,
+                                 TDI_QUERY_MAX_DATAGRAM_INFO,
+                                 Mdl);
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePool(Buffer);
+        return Status;
+    }
+
+    *MaxDatagramLength = Buffer->MaxDatagramSize;
+
+    ExFreePool(Buffer);
+
+    return STATUS_SUCCESS;
+}
 
 NTSTATUS TdiOpenConnectionEndpointFile(
 	PUNICODE_STRING DeviceName,
@@ -260,7 +310,8 @@ NTSTATUS TdiOpenConnectionEndpointFile(
 NTSTATUS TdiConnect(
     PIRP *Irp,
     PFILE_OBJECT ConnectionObject,
-    PTDI_CONNECTION_INFORMATION RemoteAddress,
+    PTDI_CONNECTION_INFORMATION ConnectionCallInfo,
+    PTDI_CONNECTION_INFORMATION ConnectionReturnInfo,
     PIO_STATUS_BLOCK Iosb,
     PIO_COMPLETION_ROUTINE CompletionRoutine,
     PVOID CompletionContext)
@@ -306,8 +357,8 @@ NTSTATUS TdiConnect(
 					CompletionRoutine,      /* Completion routine */
 					CompletionContext,      /* Completion routine context */
 					NULL,                   /* Time */
-					RemoteAddress,          /* Request connection information */
-					RemoteAddress);         /* Return connection information */
+					ConnectionCallInfo,     /* Request connection information */
+					ConnectionReturnInfo);  /* Return connection information */
 
 	Status = TdiCall(*Irp, DeviceObject, NULL, Iosb);
 

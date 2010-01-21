@@ -37,6 +37,8 @@
 #include "ddk/tdiinfo.h"
 #include "tcpioctl.h"
 
+#include "tdilib.h"
+
 #ifndef ETH_ALEN
 #define ETH_ALEN 6
 #endif
@@ -120,20 +122,9 @@ typedef enum _IPHLPAddrType {
 } IPHLPAddrType;
 
 /** Prototypes **/
-NTSTATUS openTcpFile(PHANDLE tcpFile);
-VOID closeTcpFile(HANDLE tcpFile);
-NTSTATUS tdiGetEntityIDSet( HANDLE tcpFile, TDIEntityID **entitySet,
-			    PDWORD numEntities );
-NTSTATUS tdiGetSetOfThings( HANDLE tcpFile, DWORD toiClass, DWORD toiType,
-			    DWORD toiId, DWORD teiEntity, DWORD teiInstance,
-			    DWORD fixedPart,
-			    DWORD entrySize, PVOID *tdiEntitySet,
-			    PDWORD numEntries );
-VOID tdiFreeThingSet( PVOID things );
 NTSTATUS getNthIpEntity( HANDLE tcpFile, DWORD index, TDIEntityID *ent );
 NTSTATUS tdiGetIpAddrsForIpEntity( HANDLE tcpFile, TDIEntityID *ent,
 				   IPAddrEntry **addrs, PDWORD numAddrs );
-
 int GetLongestChildKeyName( HANDLE RegHandle );
 LONG OpenChildKeyRead( HANDLE RegHandle,
 		       PWCHAR ChildKeyName,

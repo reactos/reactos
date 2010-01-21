@@ -17,32 +17,36 @@ NTSTATUS PortsStartup( PPORT_SET PortSet,
     PortSet->PortsToOversee = PortsToManage;
 
     PortSet->ProtoBitBuffer =
-	exAllocatePool( NonPagedPool, (PortSet->PortsToOversee + 7) / 8 );
+	ExAllocatePoolWithTag( NonPagedPool, (PortSet->PortsToOversee + 7) / 8,
+                               PORT_SET_TAG );
     if(!PortSet->ProtoBitBuffer) return STATUS_INSUFFICIENT_RESOURCES;
     RtlInitializeBitMap( &PortSet->ProtoBitmap,
 			 PortSet->ProtoBitBuffer,
 			 PortSet->PortsToOversee );
     RtlClearAllBits( &PortSet->ProtoBitmap );
-    ExInitializeFastMutex( &PortSet->Mutex );
+    KeInitializeSpinLock( &PortSet->Lock );
     return STATUS_SUCCESS;
 }
 
 VOID PortsShutdown( PPORT_SET PortSet ) {
-    exFreePool( PortSet->ProtoBitBuffer );
+    ExFreePoolWithTag( PortSet->ProtoBitBuffer, PORT_SET_TAG );
 }
 
 VOID DeallocatePort( PPORT_SET PortSet, ULONG Port ) {
+    KIRQL OldIrql;
+
     Port = htons(Port);
     ASSERT(Port >= PortSet->StartingPort);
     ASSERT(Port < PortSet->StartingPort + PortSet->PortsToOversee);
 
-    ExAcquireFastMutex( &PortSet->Mutex );
+    KeAcquireSpinLock( &PortSet->Lock, &OldIrql );
     RtlClearBits( &PortSet->ProtoBitmap, Port - PortSet->StartingPort, 1 );
-    ExReleaseFastMutex( &PortSet->Mutex );
+    KeReleaseSpinLock( &PortSet->Lock, OldIrql );
 }
 
 BOOLEAN AllocatePort( PPORT_SET PortSet, ULONG Port ) {
     BOOLEAN Clear;
+    KIRQL OldIrql;
 
     Port = htons(Port);
 
@@ -54,32 +58,34 @@ BOOLEAN AllocatePort( PPORT_SET PortSet, ULONG Port ) {
 
     Port -= PortSet->StartingPort;
 
-    ExAcquireFastMutex( &PortSet->Mutex );
+    KeAcquireSpinLock( &PortSet->Lock, &OldIrql );
     Clear = RtlAreBitsClear( &PortSet->ProtoBitmap, Port, 1 );
     if( Clear ) RtlSetBits( &PortSet->ProtoBitmap, Port, 1 );
-    ExReleaseFastMutex( &PortSet->Mutex );
+    KeReleaseSpinLock( &PortSet->Lock, OldIrql );
 
     return Clear;
 }
 
 ULONG AllocateAnyPort( PPORT_SET PortSet ) {
     ULONG AllocatedPort;
+    KIRQL OldIrql;
 
-    ExAcquireFastMutex( &PortSet->Mutex );
+    KeAcquireSpinLock( &PortSet->Lock, &OldIrql );
     AllocatedPort = RtlFindClearBits( &PortSet->ProtoBitmap, 1, 0 );
     if( AllocatedPort != (ULONG)-1 ) {
 	RtlSetBit( &PortSet->ProtoBitmap, AllocatedPort );
 	AllocatedPort += PortSet->StartingPort;
-	ExReleaseFastMutex( &PortSet->Mutex );
+	KeReleaseSpinLock( &PortSet->Lock, OldIrql );
 	return htons(AllocatedPort);
     }
-    ExReleaseFastMutex( &PortSet->Mutex );
+    KeReleaseSpinLock( &PortSet->Lock, OldIrql );
 
     return -1;
 }
 
 ULONG AllocatePortFromRange( PPORT_SET PortSet, ULONG Lowest, ULONG Highest ) {
     ULONG AllocatedPort;
+    KIRQL OldIrql;
 
     if ((Lowest < PortSet->StartingPort) ||
         (Highest >= PortSet->StartingPort + PortSet->PortsToOversee))
@@ -90,15 +96,15 @@ ULONG AllocatePortFromRange( PPORT_SET PortSet, ULONG Lowest, ULONG Highest ) {
     Lowest -= PortSet->StartingPort;
     Highest -= PortSet->StartingPort;
 
-    ExAcquireFastMutex( &PortSet->Mutex );
+    KeAcquireSpinLock( &PortSet->Lock, &OldIrql );
     AllocatedPort = RtlFindClearBits( &PortSet->ProtoBitmap, 1, Lowest );
     if( AllocatedPort != (ULONG)-1 && AllocatedPort <= Highest) {
 	RtlSetBit( &PortSet->ProtoBitmap, AllocatedPort );
 	AllocatedPort += PortSet->StartingPort;
-	ExReleaseFastMutex( &PortSet->Mutex );
+	KeReleaseSpinLock( &PortSet->Lock, OldIrql );
 	return htons(AllocatedPort);
     }
-    ExReleaseFastMutex( &PortSet->Mutex );
+    KeReleaseSpinLock( &PortSet->Lock, OldIrql );
 
     return -1;
 }
