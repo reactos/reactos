@@ -37,18 +37,6 @@ _HalEnableInterrupt:
     UNIMPLEMENTED "HalEnableInterrupt"
 .endfunc
 
-.global _HalDisableSystemInterrupt
-.func _HalDisableSystemInterrupt
-_HalDisableSystemInterrupt:
-    UNIMPLEMENTED "HalDisableSystemInterrupt"
-.endfunc
-
-.global _HalEnableSystemInterrupt
-.func _HalEnableSystemInterrupt
-_HalEnableSystemInterrupt:
-    UNIMPLEMENTED "HalEnableSystemInterrupt"
-.endfunc
-
 .global _HalDisableInterrupt
 .func _HalDisableInterrupt
 _HalDisableInterrupt:
