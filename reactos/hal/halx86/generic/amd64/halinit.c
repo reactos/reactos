@@ -94,7 +94,7 @@ HalInitSystem(IN ULONG BootPhase,
         DPRINT1("HalInitSystem 1\n");
 
         /* Initialize the PICs */
-        HalpInitPICs();
+        HalpInitializePICs(FALSE);
 
         DPRINT1("HalInitSystem 2\n");
 

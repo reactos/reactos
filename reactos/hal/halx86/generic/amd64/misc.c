@@ -169,3 +169,23 @@ KeQueryPerformanceCounter(
     return Result;
 }
 
+VOID
+NTAPI
+HalDisableSystemInterrupt(
+    ULONG Vector,
+    KIRQL Irql)
+{
+    UNIMPLEMENTED;
+}
+
+BOOLEAN
+NTAPI
+HalEnableSystemInterrupt(
+    ULONG Vector,
+    KIRQL Irql,
+    KINTERRUPT_MODE InterruptMode)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
