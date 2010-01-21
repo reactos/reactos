@@ -1,7 +1,7 @@
 ;
 ; COPYRIGHT:       See COPYING in the top level directory
 ; PROJECT:         ReactOS kernel
-; FILE:            ntoskrnl/hal/x86/mpsboot.c
+; FILE:            hal/halx86/mp/mpsboot.c
 ; PURPOSE:         Bootstrap code for application processors
 ; PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
 ; UPDATE HISTORY:
