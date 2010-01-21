@@ -588,12 +588,11 @@ KiGpfFatal:
     /* Bugcheck */
     mov ecx, UNEXPECTED_KERNEL_MODE_TRAP
     mov rdx, 0x0000D // EXCEPTION_GP_FAULT
-    xor rdx, rdx
     xor r8, r8
-    xor r9, r9 // Reserved
-    mov [rbp + KTRAP_FRAME_P5], rbp // trap frame
+    mov r9, [rbp + KTRAP_FRAME_ErrorCode] // error code
+    sub rsp, 8
+    mov [rsp + KTRAP_FRAME_P5+8], rbp // trap frame
     call _KeBugCheckWithTf
-
 
 
 KiGpfPopSegDs:

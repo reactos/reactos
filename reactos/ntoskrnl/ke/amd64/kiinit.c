@@ -179,6 +179,11 @@ KiInitializeCpuFeatures(ULONG Cpu)
 
     /* Disable fpu monitoring */
     __writecr0(__readcr0() & ~CR0_MP);
+
+    /* Disable x87 fpu exceptions */
+    __writecr0(__readcr0() & ~CR0_NE);
+    
+    asm volatile ("fninit\n");
 }
 
 VOID
