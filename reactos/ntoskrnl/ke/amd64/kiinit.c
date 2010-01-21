@@ -30,6 +30,12 @@ extern ADDRESS_RANGE KeMemoryMap[64];
 
 KIPCR KiInitialPcr;
 
+/* Boot and double-fault/NMI/DPC stack */
+UCHAR P0BootStackData[KERNEL_STACK_SIZE] __attribute__((aligned (16))) = {0};
+UCHAR KiDoubleFaultStackData[KERNEL_STACK_SIZE] __attribute__((aligned (16))) = {0};
+ULONG_PTR P0BootStack = (ULONG_PTR)&P0BootStackData[KERNEL_STACK_SIZE];
+ULONG_PTR KiDoubleFaultStack = (ULONG_PTR)&KiDoubleFaultStackData[KERNEL_STACK_SIZE];
+
 /* FUNCTIONS *****************************************************************/
 
 VOID
@@ -344,29 +350,19 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
 
 VOID
 NTAPI
-KiSystemStartup(IN ULONG_PTR Dummy,
-                IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
-{
-    FrLdrDbgPrint = ((PLOADER_PARAMETER_BLOCK)Dummy)->u.I386.CommonDataArea;
-    FrLdrDbgPrint("Hello from KiSystemStartup!!!\n");
-
-    /* HACK, because freeldr maps page 0 */
-    MiAddressToPte((PVOID)0)->u.Hard.Valid = 0;
-
-    KiSystemStartupReal((PLOADER_PARAMETER_BLOCK)Dummy);
-
-//    KiRosPrepareForSystemStartup(Dummy, LoaderBlock);
-}
-
-
-VOID
-NTAPI
-KiSystemStartupReal(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     ULONG Cpu;
     PKTHREAD InitialThread;
     ULONG64 InitialStack;
     PKIPCR Pcr;
+
+    /* HACK */
+    FrLdrDbgPrint = LoaderBlock->u.I386.CommonDataArea;
+    FrLdrDbgPrint("Hello from KiSystemStartup!!!\n");
+
+    /* HACK, because freeldr maps page 0 */
+    MiAddressToPte((PVOID)0)->u.Hard.Valid = 0;
 
     /* Save the loader block */
     KeLoaderBlock = LoaderBlock;
@@ -416,7 +412,7 @@ KiSystemStartupReal(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     InitialThread->ApcState.Process = (PVOID)LoaderBlock->Process;
 
     /* Initialize the PCR */
-    KiInitializePcr(Pcr, Cpu, InitialThread, KiDoubleFaultStack);
+    KiInitializePcr(Pcr, Cpu, InitialThread, (PVOID)KiDoubleFaultStack);
 
     /* Initialize the CPU features */
     KiInitializeCpuFeatures(Cpu);

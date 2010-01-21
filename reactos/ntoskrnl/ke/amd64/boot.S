@@ -14,18 +14,6 @@
 
 /* GLOBALS *******************************************************************/
 
-.bss
-.align 16
-
-/* Kernel Boot Stack */
-.globl _P0BootStack
-.space KERNEL_STACK_SIZE
-_P0BootStack:
-
-/* Kernel Double-Fault and Temporary DPC Stack */
-.globl _KiDoubleFaultStack
-.space KERNEL_STACK_SIZE
-_KiDoubleFaultStack:
 
 /* FUNCTIONS *****************************************************************/
 

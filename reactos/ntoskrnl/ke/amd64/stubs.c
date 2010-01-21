@@ -41,14 +41,6 @@ KeSynchronizeExecution(
 
 VOID
 NTAPI
-KeUpdateRunTime(IN PKTRAP_FRAME TrapFrame,
-                IN KIRQL Irql)
-{
-    UNIMPLEMENTED;
-}
-
-VOID
-NTAPI
 KeUpdateSystemTime(IN PKTRAP_FRAME TrapFrame,
                    IN KIRQL Irql,
                    IN ULONG Increment)
@@ -67,14 +59,6 @@ KeUserModeCallback(IN ULONG RoutineIndex,
 {
     UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
-}
-
-ULONG
-NTAPI
-KiComputeTimerTableIndex(LONGLONG Timer)
-{
-    UNIMPLEMENTED;
-    return 0;
 }
 
 VOID
