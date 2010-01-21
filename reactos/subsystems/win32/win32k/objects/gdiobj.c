@@ -753,7 +753,8 @@ GreDeleteObject(HGDIOBJ hObject)
              if (pAttr)
              {
                 KeEnterCriticalRegion();
-                FreeObjectAttr(pAttr);
+                if (pAttr) FreeObjectAttr(pAttr);
+                Entry->UserData = NULL;
                 KeLeaveCriticalRegion();
              }
              break;

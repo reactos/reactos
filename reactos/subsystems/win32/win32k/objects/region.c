@@ -2085,6 +2085,7 @@ RGNOBJAPI_Lock(HRGN hRgn, PRGN_ATTR *ppRgn_Attr)
   PGDI_TABLE_ENTRY Entry;
   PROSRGNDATA pRgn;
   PRGN_ATTR pRgn_Attr;
+  HANDLE pid;
 
   pRgn = REGION_LockRgn(hRgn);
 
@@ -2094,9 +2095,11 @@ RGNOBJAPI_Lock(HRGN hRgn, PRGN_ATTR *ppRgn_Attr)
      Index = GDI_HANDLE_GET_INDEX(hRgn);
      Entry = &GdiHandleTable->Entries[Index];
      pRgn_Attr = Entry->UserData;
+     pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
      KeLeaveCriticalRegion();
 
-     if (pRgn_Attr)
+     if ( pid == NtCurrentTeb()->ClientId.UniqueProcess &&
+          pRgn_Attr )
      {
         _SEH2_TRY
         {
@@ -2144,6 +2147,7 @@ RGNOBJAPI_Unlock(PROSRGNDATA pRgn)
   INT Index;
   PGDI_TABLE_ENTRY Entry;
   PRGN_ATTR pRgn_Attr;
+  HANDLE pid;
 
   if (pRgn)
   {
@@ -2151,9 +2155,11 @@ RGNOBJAPI_Unlock(PROSRGNDATA pRgn)
      Index = GDI_HANDLE_GET_INDEX(pRgn->BaseObject.hHmgr);
      Entry = &GdiHandleTable->Entries[Index];
      pRgn_Attr = Entry->UserData;
+     pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
      KeLeaveCriticalRegion();
 
-     if ( pRgn_Attr )
+     if ( pid == NtCurrentTeb()->ClientId.UniqueProcess &&
+          pRgn_Attr )
      {
         _SEH2_TRY
         {
@@ -2175,6 +2181,12 @@ RGNOBJAPI_Unlock(PROSRGNDATA pRgn)
   REGION_UnlockRgn(pRgn);
 }
 
+/*
+  System Regions:
+    These regions do not use attribute sections and when allocated, use gdiobj
+    level functions.
+*/
+
 BOOL INTERNAL_CALL
 REGION_Cleanup(PVOID ObjectBody)
 {
@@ -2191,7 +2203,6 @@ REGION_Delete(PROSRGNDATA pRgn)
   REGION_FreeRgn(pRgn);
 }
 
-
 VOID FASTCALL
 IntGdiReleaseRaoRgn(PDC pDC)
 {
@@ -2201,7 +2212,6 @@ IntGdiReleaseRaoRgn(PDC pDC)
   Entry->Flags |= GDI_ENTRY_VALIDATE_VIS;
   RECTL_vSetEmptyRect(&pDC->erclClip);
 }
-
 
 VOID FASTCALL
 IntGdiReleaseVisRgn(PDC pDC)
