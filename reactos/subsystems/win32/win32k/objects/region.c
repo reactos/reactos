@@ -2186,6 +2186,40 @@ RGNOBJAPI_Unlock(PROSRGNDATA pRgn)
     These regions do not use attribute sections and when allocated, use gdiobj
     level functions.
 */
+//
+// System Region Functions
+//
+INT
+FASTCALL
+IntSysRegComplexity(HRGN hRgn)
+{
+  PROSRGNDATA pRgn;
+  INT Ret;
+
+  pRgn = REGION_LockRgn(hRgn);   
+  Ret = REGION_Complexity( pRgn );
+  REGION_UnlockRgn(pRgn);
+  return Ret;
+}
+
+HRGN
+FASTCALL
+IntSysCreateRectRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
+{
+  PROSRGNDATA pRgn;
+  HRGN hRgn;
+
+  pRgn = (PROSRGNDATA)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_REGION);
+  if (!pRgn)
+  {
+     return NULL;
+  }
+  hRgn = pRgn->BaseObject.hHmgr;
+  pRgn->Buffer = &pRgn->rdh.rcBound;
+  REGION_SetRectRgn(pRgn, LeftRect, TopRect, RightRect, BottomRect);
+  REGION_UnlockRgn(pRgn);
+  return hRgn;
+}
 
 BOOL INTERNAL_CALL
 REGION_Cleanup(PVOID ObjectBody)
@@ -2196,6 +2230,7 @@ REGION_Cleanup(PVOID ObjectBody)
     return TRUE;
 }
 
+// use REGION_FreeRgnByHandle(hRgn); for systems regions.
 VOID FASTCALL
 REGION_Delete(PROSRGNDATA pRgn)
 {
