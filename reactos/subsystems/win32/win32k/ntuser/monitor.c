@@ -195,8 +195,7 @@ IntAttachMonitor(IN PDEVOBJ *pGdiDevice,
                                              Monitor->rcMonitor.right,
                                              Monitor->rcMonitor.bottom );
 
-   // Replace with IntGdiSetRegeionOwner(Monitor->hrgnMonitor, GDI_OBJ_HMGR_PUBLIC);
-   GDIOBJ_SetOwnership(Monitor->hrgnMonitor, NULL);
+   IntGdiSetRegeionOwner(Monitor->hrgnMonitor, GDI_OBJ_HMGR_PUBLIC);
 
    if (gMonitorList == NULL)
    {
