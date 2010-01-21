@@ -179,7 +179,7 @@ KdEnterDebugger(
 VOID
 NTAPI
 KdExitDebugger(
-    IN BOOLEAN Entered
+    IN BOOLEAN Enable
 );
 
 NTSTATUS
@@ -207,7 +207,7 @@ KdpPrint(
     IN KPROCESSOR_MODE PreviousMode,
     IN PKTRAP_FRAME TrapFrame,
     IN PKEXCEPTION_FRAME ExceptionFrame,
-    OUT PBOOLEAN Status
+    OUT PBOOLEAN Handled
 );
 
 USHORT
@@ -310,6 +310,15 @@ KdpRestoreAllBreakpoints(
 VOID
 NTAPI
 KdpSuspendAllBreakPoints(
+    VOID
+);
+
+//
+// Routine to determine if it is safe to disable the debugger
+//
+NTSTATUS
+NTAPI
+KdpAllowDisable(
     VOID
 );
 

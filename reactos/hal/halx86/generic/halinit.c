@@ -139,8 +139,8 @@ HalInitSystem(IN ULONG BootPhase,
     }
     else if (BootPhase == 1)
     {
-        /* Initialize the default HAL stubs for bus handling functions */
-        HalpInitNonBusHandler();
+        /* Initialize bus handlers */
+        HalpInitBusHandler();
 
         /* Enable IRQ 0 */
         HalpEnableInterruptHandler(IDT_DEVICE,

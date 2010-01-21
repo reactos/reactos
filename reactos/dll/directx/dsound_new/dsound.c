@@ -124,8 +124,7 @@ WINAPI
 DllGetClassObject(
   REFCLSID rclsid,
   REFIID riid,
-  LPVOID* ppv 
-)
+  LPVOID* ppv)
 {
     LPOLESTR pStr, pStr2;
     UINT i;
@@ -153,7 +152,7 @@ DllGetClassObject(
         DPRINT("No Class Available for %ws IID %ws\n", pStr, pStr2);
         CoTaskMemFree(pStr);
         CoTaskMemFree(pStr2);
-        ASSERT(0);
+        //ASSERT(0);
         return CLASS_E_CLASSNOTAVAILABLE;
     }
 

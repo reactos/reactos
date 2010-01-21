@@ -432,7 +432,7 @@ LoadAndBootWindows(PCSTR OperatingSystemName,
 
 	UiDrawBackdrop();
 	UiDrawStatusText("Detecting Hardware...");
-	UiDrawProgressBarCenter(1, 100, "Loading Windows...");
+	UiDrawProgressBarCenter(1, 100, "Loading NT...");
 
 	/* Read the system path is set in the .ini file */
 	if (!HasSection || !IniReadSettingByName(SectionId, "SystemPath", FullPath, sizeof(FullPath)))

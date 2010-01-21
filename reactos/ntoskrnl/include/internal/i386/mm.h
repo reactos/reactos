@@ -45,10 +45,18 @@ PULONG MmGetPageDirectory(VOID);
 #define MI_PAGE_DISABLE_CACHE(x)   ((x)->u.Hard.CacheDisable = 1)
 #define MI_PAGE_WRITE_THROUGH(x)   ((x)->u.Hard.WriteThrough = 1)
 #define MI_PAGE_WRITE_COMBINED(x)  ((x)->u.Hard.WriteThrough = 0)
+#if !defined(CONFIG_SMP)
 #define MI_IS_PAGE_WRITEABLE(x)    ((x)->u.Hard.Write == 1)
+#else
+#define MI_IS_PAGE_WRITEABLE(x)    ((x)->u.Hard.Writable == 1)
+#endif
 #define MI_IS_PAGE_COPY_ON_WRITE(x)((x)->u.Hard.CopyOnWrite == 1)
 #define MI_IS_PAGE_DIRTY(x)        ((x)->u.Hard.Dirty == 1)
 #define MI_MAKE_OWNER_PAGE(x)      ((x)->u.Hard.Owner = 1)
+#if !defined(CONFIG_SMP)
 #define MI_MAKE_WRITE_PAGE(x)      ((x)->u.Hard.Write = 1)
+#else
+#define MI_MAKE_WRITE_PAGE(x)      ((x)->u.Hard.Writable = 1)
+#endif
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_I386_MM_H */

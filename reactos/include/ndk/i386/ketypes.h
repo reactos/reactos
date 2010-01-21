@@ -202,6 +202,23 @@ typedef struct _KTRAP_FRAME
 } KTRAP_FRAME, *PKTRAP_FRAME;
 
 //
+// Defines the Callback Stack Layout for User Mode Callbacks
+//
+typedef struct _KCALLOUT_FRAME
+{
+    ULONG InitialStack;
+    ULONG TrapFrame;
+    ULONG CallbackStack;
+    ULONG Edi;
+    ULONG Esi;
+    ULONG Ebx;
+    ULONG Ebp;
+    ULONG ReturnAddress;
+    ULONG Result;
+    ULONG ResultLength;
+} KCALLOUT_FRAME, *PKCALLOUT_FRAME;
+
+//
 // LDT Entry Definition
 //
 #ifndef _LDT_ENTRY_DEFINED

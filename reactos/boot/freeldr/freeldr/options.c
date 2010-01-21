@@ -113,6 +113,7 @@ VOID DoOptionsMenu(VOID)
 	case REBOOT:
 		OptionMenuReboot();
 		break;
-	}
 #endif
+	}
 }
+

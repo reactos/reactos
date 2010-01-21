@@ -538,6 +538,12 @@ typedef enum {
     KSEVENT_LOOPEDSTREAMING_POSITION,
 } KSEVENT_LOOPEDSTREAMING;
 
+#define STATIC_KSEVENTSETID_Connection\
+    0x7f4bcbe0L, 0x9ea5, 0x11cf, 0xa5, 0xd6, 0x28, 0xdb, 0x04, 0xc1, 0x00, 0x00
+DEFINE_GUIDSTRUCT("7f4bcbe0-9ea5-11cf-a5d6-28db04c10000", KSEVENTSETID_Connection);
+#define KSEVENTSETID_Connection DEFINE_GUIDNAMED(KSEVENTSETID_Connection)
+
+
 typedef struct {
     KSEVENTDATA KsEventData;
 #if defined(_NTDDK_)

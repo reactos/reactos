@@ -232,6 +232,23 @@ typedef struct _KTRAP_FRAME
 } KTRAP_FRAME, *PKTRAP_FRAME;
 
 //
+// Defines the Callback Stack Layout for User Mode Callbacks
+//
+typedef struct _KCALLOUT_FRAME
+{
+    ULONG64 InitialStack;
+    ULONG64 TrapFrame;
+    ULONG64 CallbackStack;
+    ULONG64 Rdi;
+    ULONG64 Rsi;
+    ULONG64 Rbx;
+    ULONG64 Rbp;
+    ULONG64 ReturnAddress;
+    ULONG64 Result;
+    ULONG64 ResultLength;
+} KCALLOUT_FRAME, *PKCALLOUT_FRAME;
+
+//
 // Dummy LDT_ENTRY
 //
 typedef ULONG LDT_ENTRY;

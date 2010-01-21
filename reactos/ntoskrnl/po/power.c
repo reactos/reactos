@@ -15,8 +15,6 @@
 
 /* GLOBALS *******************************************************************/
 
-extern ULONG ExpInitialiationPhase;
-
 typedef struct _REQUEST_POWER_ITEM
 {
     PREQUEST_POWER_COMPLETE CompletionRoutine;
@@ -126,8 +124,7 @@ PopSetSystemPowerState(SYSTEM_POWER_STATE PowerState)
 
 BOOLEAN
 NTAPI
-PoInitSystem(IN ULONG BootPhase,
-             IN BOOLEAN HaveAcpiTable)
+PoInitSystem(IN ULONG BootPhase)
 {
     PVOID NotificationEntry;
     PCHAR CommandLine;
@@ -164,8 +161,8 @@ PoInitSystem(IN ULONG BootPhase,
     }
     else
     {
-        /* Otherwise check the LoaderBlock's Flag */
-        PopAcpiPresent = HaveAcpiTable;
+        /* Otherwise check if the LoaderBlock has a ACPI Table  */
+        PopAcpiPresent = KeLoaderBlock->Extension->AcpiTable != NULL ? TRUE : FALSE;
     }
 
     return TRUE;

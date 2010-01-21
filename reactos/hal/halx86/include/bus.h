@@ -157,6 +157,19 @@ typedef struct _PCI_REGISTRY_INFO_INTERNAL
     PCI_CARD_DESCRIPTOR CardList[ANYSIZE_ARRAY];
 } PCI_REGISTRY_INFO_INTERNAL, *PPCI_REGISTRY_INFO_INTERNAL;
 
+typedef struct _ARRAY
+{
+    ULONG ArraySize;
+    PVOID Element[ANYSIZE_ARRAY];
+} ARRAY, *PARRAY;
+
+typedef struct _HAL_BUS_HANDLER
+{
+    LIST_ENTRY AllHandlers;
+    ULONG ReferenceCount;
+    BUS_HANDLER Handler;
+} HAL_BUS_HANDLER, *PHAL_BUS_HANDLER;
+
 /* FUNCTIONS *****************************************************************/
 
 VOID
@@ -304,6 +317,45 @@ VOID
 NTAPI
 HalpInitializePciStubs(
     VOID
+);
+
+VOID
+NTAPI
+HalpInitBusHandler(
+    VOID
+);
+
+BOOLEAN
+NTAPI
+HalpTranslateBusAddress(
+    IN INTERFACE_TYPE InterfaceType,
+    IN ULONG BusNumber,
+    IN PHYSICAL_ADDRESS BusAddress,
+    IN OUT PULONG AddressSpace,
+    OUT PPHYSICAL_ADDRESS TranslatedAddress
+);
+
+NTSTATUS
+NTAPI
+HalpAssignSlotResources(
+    IN PUNICODE_STRING RegistryPath,
+    IN PUNICODE_STRING DriverClassName,
+    IN PDRIVER_OBJECT DriverObject,
+    IN PDEVICE_OBJECT DeviceObject,
+    IN INTERFACE_TYPE BusType,
+    IN ULONG BusNumber,
+    IN ULONG SlotNumber,
+    IN OUT PCM_RESOURCE_LIST *AllocatedResources
+);
+
+BOOLEAN
+NTAPI
+HalpFindBusAddressTranslation(
+    IN PHYSICAL_ADDRESS BusAddress,
+    IN OUT PULONG AddressSpace,
+    OUT PPHYSICAL_ADDRESS TranslatedAddress,
+    IN OUT PULONG_PTR Context,
+    IN BOOLEAN NextBus
 );
 
 extern ULONG HalpBusType;

@@ -1395,7 +1395,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     InbvDisplayString(EndBuffer);
 
     /* Initialize Power Subsystem in Phase 0 */
-    if (!PoInitSystem(0, AcpiTableDetected)) KeBugCheck(INTERNAL_POWER_ERROR);
+    if (!PoInitSystem(0)) KeBugCheck(INTERNAL_POWER_ERROR);
 
     /* Check for Y2K hack */
     Y2KHackRequired = strstr(CommandLine, "YEAR");
@@ -1833,7 +1833,7 @@ Phase1InitializationDiscard(IN PVOID Context)
 #endif
 
     /* Initialize Power Subsystem in Phase 1*/
-    if (!PoInitSystem(1, AcpiTableDetected)) KeBugCheck(INTERNAL_POWER_ERROR);
+    if (!PoInitSystem(1)) KeBugCheck(INTERNAL_POWER_ERROR);
 
     /* Initialize the Process Manager at Phase 1 */
     if (!PsInitSystem(LoaderBlock)) KeBugCheck(PROCESS1_INITIALIZATION_FAILED);

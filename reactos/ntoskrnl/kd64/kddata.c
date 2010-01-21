@@ -30,6 +30,7 @@ VOID NTAPI RtlpBreakWithStatusInstruction(VOID);
 #define KPCR_INITIAL_STACK_OFFSET      0
 #define KPCR_STACK_LIMIT_OFFSET        0
 #define KPRCB_PCR_PAGE_OFFSET          0
+#define CBSTACK_FRAME_POINTER          Ebp
 
 #elif defined(_AMD64_)
 
@@ -39,6 +40,7 @@ VOID NTAPI RtlpBreakWithStatusInstruction(VOID);
 #define KPCR_INITIAL_STACK_OFFSET      0
 #define KPCR_STACK_LIMIT_OFFSET        0
 #define KPRCB_PCR_PAGE_OFFSET          0
+#define CBSTACK_FRAME_POINTER          Rbp
 
 #elif defined(_ARM_)
 
@@ -48,6 +50,7 @@ VOID NTAPI RtlpBreakWithStatusInstruction(VOID);
 #define KPCR_INITIAL_STACK_OFFSET      FIELD_OFFSET(KPCR, InitialStack)
 #define KPCR_STACK_LIMIT_OFFSET        FIELD_OFFSET(KPCR, StackLimit)
 #define KPRCB_PCR_PAGE_OFFSET          FIELD_OFFSET(KPRCB, PcrPage)
+#define CBSTACK_FRAME_POINTER          DummyFramePointer
 
 #else
 #error Unsupported Architecture
@@ -392,8 +395,8 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
     {(ULONG_PTR)RtlpBreakWithStatusInstruction},
     0,
     FIELD_OFFSET(KTHREAD, CallbackStack),
-    CBSTACK_CALLBACK_STACK,
-    CBSTACK_FRAME_POINTER,
+    FIELD_OFFSET(KCALLOUT_FRAME, CallbackStack),
+    FIELD_OFFSET(KCALLOUT_FRAME, CBSTACK_FRAME_POINTER),
     FALSE,
     {(ULONG_PTR)KiCallUserMode},
     0,
@@ -505,7 +508,7 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
     KPCR_STACK_LIMIT_OFFSET,
     KPRCB_PCR_PAGE_OFFSET,
     FIELD_OFFSET(KPRCB, ProcessorState.SpecialRegisters),
-#if defined(_M_IX86)
+#if defined(_X86_)
     //
     // x86 GDT/LDT/TSS constants
     //
@@ -519,7 +522,7 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
     KGDT_TSS,
     0,
     0,
-#elif defined(_M_AMD64)
+#elif defined(_AMD64_)
     //
     // AMD64 GDT/LDT/TSS constants
     //

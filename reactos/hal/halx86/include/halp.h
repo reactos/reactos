@@ -61,9 +61,6 @@ typedef struct _HalAddressUsage
 /* adapter.c */
 PADAPTER_OBJECT NTAPI HalpAllocateAdapterEx(ULONG NumberOfMapRegisters,BOOLEAN IsMaster, BOOLEAN Dma32BitAddresses);
 
-/* bus.c */
-VOID NTAPI HalpInitNonBusHandler (VOID);
-
 /* sysinfo.c */
 VOID
 NTAPI

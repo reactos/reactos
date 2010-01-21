@@ -96,6 +96,7 @@
 		<file>eventobj.c</file>
 		<file>except.c</file>
 		<file>freeldr.c</file>
+		<file>freeze.c</file>
 		<file>gate.c</file>
 		<file>gmutex.c</file>
 		<file>ipi.c</file>
@@ -271,7 +272,7 @@
 			<file>pnproot.c</file>
 		</directory>
 	</directory>
-	<if property="KDBG" value="1">
+	<if property="_WINKD_" value="0">
 		<directory name="kd">
 			<if property="ARCH" value="i386">
 				<directory name="i386">
@@ -325,17 +326,17 @@
 		<directory name="kd64">
 			<if property="ARCH" value="i386">
 				<directory name="i386">
-					<file>kdsup.c</file>
+					<file>kdx86.c</file>
 				</directory>
 			</if>
 			<if property="ARCH" value="amd64">
 				<directory name="amd64">
-					<file>kdsup.c</file>
+					<file>kdx64.c</file>
 				</directory>
 			</if>
 			<if property="ARCH" value="arm">
 				<directory name="arm">
-					<file>kdsup.c</file>
+					<file>kdarm.c</file>
 				</directory>
 			</if>
 			<file>kdapi.c</file>

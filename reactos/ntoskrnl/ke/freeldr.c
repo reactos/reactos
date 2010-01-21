@@ -9,10 +9,10 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
-#ifdef _M_PPC
+#if defined(_PPC_)
 #include <ppcmmu/mmu.h>
 #define KERNEL_RVA(x) RVA(x,0x80800000)
 #define KERNEL_DESCRIPTOR_PAGE(x) (((ULONG_PTR)x + KernelBase) >> PAGE_SHIFT)
@@ -31,7 +31,6 @@ typedef struct _BIOS_MEMORY_DESCRIPTOR
 
 /* FreeLDR Loader Data */
 PROS_LOADER_PARAMETER_BLOCK KeRosLoaderBlock;
-BOOLEAN AcpiTableDetected = FALSE;
 ADDRESS_RANGE KeMemoryMap[64];
 ULONG KeMemoryMapRangeCount;
 
@@ -66,8 +65,35 @@ PBIOS_MEMORY_DESCRIPTOR BiosMemoryDescriptorList = BiosMemoryDescriptors;
 ULONG NumberDescriptors = 0;
 MEMORY_DESCRIPTOR MDArray[60] = { { 0, 0, 0 }, };
 
+#if defined(_X86_)
+
+/* The Boot TSS */
+KTSS KiBootTss;
+
 /* Old boot style IDT */
-KIDTENTRY KiHackIdt[256];
+KIDTENTRY KiBootIdt[256];
+
+/* The Boot GDT */
+KGDTENTRY KiBootGdt[256] =
+{
+    {0x0000, 0x0000, {{0x00, 0x00, 0x00, 0x00}}},       /* KGDT_NULL */
+    {0xffff, 0x0000, {{0x00, 0x9b, 0xcf, 0x00}}},       /* KGDT_R0_CODE */
+    {0xffff, 0x0000, {{0x00, 0x93, 0xcf, 0x00}}},       /* KGDT_R0_DATA */
+    {0xffff, 0x0000, {{0x00, 0xfb, 0xcf, 0x00}}},       /* KGDT_R3_CODE */
+    {0xffff, 0x0000, {{0x00, 0xf3, 0xcf, 0x00}}},       /* KGDT_R3_DATA*/
+    {0x0000, 0x0000, {{0x00, 0x00, 0x00, 0x00}}},       /* KGDT_TSS */
+    {0x0001, 0xf000, {{0xdf, 0x93, 0xc0, 0xff}}},       /* KGDT_R0_PCR */
+    {0x0fff, 0x0000, {{0x00, 0xf3, 0x40, 0x00}}},       /* KGDT_R3_TEB */
+    {0x0000, 0x0000, {{0x00, 0x00, 0x00, 0x00}}},       /* KGDT_UNUSED */
+    {0x0000, 0x0000, {{0x00, 0x00, 0x00, 0x00}}},       /* KGDT_LDT */
+    {0x0000, 0x0000, {{0x00, 0x00, 0x00, 0x00}}},       /* KGDT_DF_TSS */
+    {0x0000, 0x0000, {{0x00, 0x00, 0x00, 0x00}}}        /* KGDT_NMI_TSS */
+};
+
+/* GDT Descriptor */
+KDESCRIPTOR KiGdtDescriptor = {0, sizeof(KiBootGdt) - 1, (ULONG)KiBootGdt};
+
+#endif
 
 /* FUNCTIONS *****************************************************************/
 
@@ -465,7 +491,7 @@ KiRosBuildOsMemoryMap(VOID)
     /* If anything failed until now, return error code */
     if (Status != STATUS_SUCCESS) return Status;
 
-#ifdef _M_IX86
+#if defined(_X86_)
     /* Set the top 16MB region as reserved */
     Status = KiRosConfigureArcDescriptor(0xFC0, 0x1000, MemorySpecialMemory);
     if (Status != STATUS_SUCCESS) return Status;
@@ -492,6 +518,7 @@ KiRosBuildOsMemoryMap(VOID)
     return Status;
 }
 
+#if defined(_X86_)
 VOID
 NTAPI
 KiRosBuildReservedMemoryMap(VOID)
@@ -560,6 +587,7 @@ KiRosBuildReservedMemoryMap(VOID)
         }
     }
 }
+#endif
 
 VOID
 NTAPI
@@ -917,12 +945,9 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
     WCHAR PathSetup[] = L"\\SystemRoot\\";
     CHAR DriverNameLow[256];
     ULONG Base;
-#ifdef _M_PPC
+#if defined(_PPC_)
     ULONG KernelBase = RosLoaderBlock->ModsAddr[0].ModStart;
 #endif
-
-    /* First get some kernel-loader globals */
-    AcpiTableDetected = (RosLoaderBlock->Flags & MB_FLAGS_ACPI_TABLE) ? TRUE : FALSE;
 
     /* Set the NT Loader block and initialize it */
     *NtLoaderBlock = KeLoaderBlock = LoaderBlock = &BldrLoaderBlock;
@@ -949,7 +974,7 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
     /* Build entries for ReactOS memory ranges, which uses ARC Descriptors */
     KiRosBuildOsMemoryMap();
 
-#ifdef _M_IX86
+#if defined(_X86_)
     /* Build entries for the reserved map, which uses ARC Descriptors */
     KiRosBuildReservedMemoryMap();
 #endif
@@ -966,7 +991,7 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
         ModStart = (PVOID)RosEntry->ModStart;
         ModSize = RosEntry->ModEnd - (ULONG_PTR)ModStart;
 
-#ifdef _M_PPC
+#if defined(_PPC_)
         ModStart -= KernelBase;
 #endif
 
@@ -1073,7 +1098,7 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
                                       &Base);
         }
 
-#ifdef _M_PPC
+#if defined(_PPC_)
         ModStart += 0x80800000;
 #endif
 
@@ -1139,6 +1164,33 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
                           LDRP_ENTRY_PROCESSED;
         if (RosEntry->Reserved) LdrEntry->Flags |= LDRP_ENTRY_INSERTED;
 
+        /* Check if this is HAL */
+        if (!(_stricmp(DriverName, "hal.dll")))
+        {
+            /* Check if there is a second entry already */
+            if (LoaderBlock->LoadOrderListHead.Flink->Flink !=
+                &LoaderBlock->LoadOrderListHead)
+            {
+                PLIST_ENTRY OldSecondEntry;
+
+                /* Get the second entry */
+                OldSecondEntry =
+                    LoaderBlock->LoadOrderListHead.Flink->Flink;
+
+                /* Set up our entry correctly */
+                LdrEntry->InLoadOrderLinks.Flink = OldSecondEntry;
+                LdrEntry->InLoadOrderLinks.Blink = OldSecondEntry->Blink;
+
+                /* Make the first entry (always the kernel) point to us */
+                LoaderBlock->LoadOrderListHead.Flink->Flink =
+                    &LdrEntry->InLoadOrderLinks;
+
+                /* Make the old entry point back to us and continue looping */
+                OldSecondEntry->Blink = &LdrEntry->InLoadOrderLinks;
+                continue;
+            }
+        }
+
         /* Insert it into the loader block */
         InsertTailList(&LoaderBlock->LoadOrderListHead,
                        &LdrEntry->InLoadOrderLinks);
@@ -1185,6 +1237,13 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
 
     /* Now convert to pages */
     LoaderBlock->Extension->LoaderPagesSpanned /= PAGE_SIZE;
+
+    /* Check if FreeLdr detected a ACPI table */
+    if (RosLoaderBlock->Flags & MB_FLAGS_ACPI_TABLE)
+    {
+        /* Set the pointer to something for compatibility */
+        LoaderBlock->Extension->AcpiTable = (PVOID)1;
+    }
 
     /* Now setup the setup block if we have one */
     if (LoaderBlock->SetupLdrBlock)
@@ -1266,15 +1325,15 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
 {
     PLOADER_PARAMETER_BLOCK NtLoaderBlock;
     ULONG size, i = 0, *ent;
-#if defined(_M_IX86)
+#if defined(_X86_)
     PKTSS Tss;
     PKGDTENTRY TssEntry;
     KDESCRIPTOR IdtDescriptor;
 
     __sidt(&IdtDescriptor.Limit);
-    RtlCopyMemory(KiHackIdt, (PVOID)IdtDescriptor.Base, IdtDescriptor.Limit + 1);
-    IdtDescriptor.Base = (ULONG)&KiHackIdt;
-    IdtDescriptor.Limit = sizeof(KiHackIdt) - 1;
+    RtlCopyMemory(KiBootIdt, (PVOID)IdtDescriptor.Base, IdtDescriptor.Limit + 1);
+    IdtDescriptor.Base = (ULONG)&KiBootIdt;
+    IdtDescriptor.Limit = sizeof(KiBootIdt) - 1;
 
     /* Load the GDT and IDT */
     Ke386SetGlobalDescriptorTable(&KiGdtDescriptor.Limit);

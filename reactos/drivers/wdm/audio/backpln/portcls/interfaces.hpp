@@ -209,6 +209,11 @@ typedef struct
     ULONG FilterPropertySetCount;
     PKSPROPERTY_SET FilterPropertySet;
 
+    ULONG EventSetCount;
+    PKSEVENT_SET EventSet;
+    PLIST_ENTRY EventList;
+    PKSPIN_LOCK EventListLock;
+
     PPCFILTER_DESCRIPTOR DeviceDescriptor;
     KSTOPOLOGY*  Topology;
     LIST_ENTRY SymbolicLinkList;

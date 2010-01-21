@@ -1,9 +1,9 @@
 /*
  * PROJECT:         ReactOS Kernel
- * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            ntoskrnl/kd64/arm/kdsup.c
- * PURPOSE:         KD support routines for ARM
- * PROGRAMMERS:     ReactOS Portable Systems Group
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            ntoskrnl/kd64/amd64/kdx64.c
+ * PURPOSE:         KD support routines for AMD64
+ * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -148,4 +148,13 @@ KdpSysCheckLowMemory(IN ULONG Flags)
     UNIMPLEMENTED;
     while (TRUE);
     return STATUS_UNSUCCESSFUL;
+}
+
+NTSTATUS
+NTAPI
+KdpAllowDisable(VOID)
+{
+    UNIMPLEMENTED;
+    while (TRUE);
+    return STATUS_ACCESS_DENIED;
 }

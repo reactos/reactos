@@ -19,14 +19,14 @@ NTSTATUS TCPServiceListeningSocket( PCONNECTION_ENDPOINT Listener,
     PTA_IP_ADDRESS RequestAddressReturn;
     PTDI_CONNECTION_INFORMATION WhoIsConnecting;
 
-    ASSERT_LOCKED(&TCPLock);
-
     /* Unpack TDI info -- We need the return connection information
      * struct to return the address so it can be filtered if needed
      * by WSAAccept -- The returned address will be passed on to
      * userland after we complete this irp */
     WhoIsConnecting = (PTDI_CONNECTION_INFORMATION)
     Request->ReturnConnectionInformation;
+
+    TcpipRecursiveMutexEnter(&TCPLock);
 
     Status = TCPTranslateError
     ( OskitTCPAccept( Listener->SocketContext,
@@ -35,6 +35,8 @@ NTSTATUS TCPServiceListeningSocket( PCONNECTION_ENDPOINT Listener,
               sizeof(OutAddr),
               &OutAddrLen,
               Request->RequestFlags & TDI_QUERY_ACCEPT ? 0 : 1 ) );
+
+    TcpipRecursiveMutexLeave(&TCPLock);
 
     TI_DbgPrint(DEBUG_TCP,("Status %x\n", Status));
 
@@ -70,8 +72,6 @@ NTSTATUS TCPListen( PCONNECTION_ENDPOINT Connection, UINT Backlog ) {
     NTSTATUS Status = STATUS_SUCCESS;
     SOCKADDR_IN AddressToBind;
 
-    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
-
     ASSERT(Connection);
     ASSERT_KM_POINTER(Connection->SocketContext);
     ASSERT_KM_POINTER(Connection->AddressFile);
@@ -88,6 +88,8 @@ NTSTATUS TCPListen( PCONNECTION_ENDPOINT Connection, UINT Backlog ) {
     AddressToBind.sin_port = Connection->AddressFile->Port;
 
     TI_DbgPrint(DEBUG_TCP,("AddressToBind - %x:%x\n", AddressToBind.sin_addr, AddressToBind.sin_port));
+
+    TcpipRecursiveMutexEnter( &TCPLock );
 
     Status = TCPTranslateError( OskitTCPBind( Connection->SocketContext,
                         &AddressToBind,
@@ -138,12 +140,8 @@ NTSTATUS TCPAccept ( PTDI_REQUEST Request,
 
     TI_DbgPrint(DEBUG_TCP,("TCPAccept started\n"));
 
-    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
-
     Status = TCPServiceListeningSocket( Listener, Connection,
                        (PTDI_REQUEST_KERNEL)Request );
-
-    TcpipRecursiveMutexLeave( &TCPLock );
 
     if( Status == STATUS_PENDING ) {
         Bucket = exAllocatePool( NonPagedPool, sizeof(*Bucket) );

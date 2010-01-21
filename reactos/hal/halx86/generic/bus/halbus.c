@@ -115,16 +115,6 @@ HalpFindBusAddressTranslation(IN PHYSICAL_ADDRESS BusAddress,
     return TRUE;
 }
 
-VOID
-NTAPI
-HalpInitNonBusHandler(VOID)
-{
-    /* These should be written by the PCI driver later, but we give defaults */
-    HalPciTranslateBusAddress = HalpTranslateBusAddress;
-    HalPciAssignSlotResources = HalpAssignSlotResources;
-    HalFindBusAddressTranslation = HalpFindBusAddressTranslation;
-}
-
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*

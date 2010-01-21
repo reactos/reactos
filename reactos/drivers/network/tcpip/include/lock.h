@@ -13,8 +13,7 @@ extern VOID TcpipInterlockedInsertTailList( PLIST_ENTRY ListHead,
 extern VOID TcpipAcquireFastMutex( PFAST_MUTEX Mutex );
 extern VOID TcpipReleaseFastMutex( PFAST_MUTEX Mutex );
 extern VOID TcpipRecursiveMutexInit( PRECURSIVE_MUTEX RecMutex );
-extern VOID TcpipRecursiveMutexEnter( PRECURSIVE_MUTEX RecMutex,
-				      BOOLEAN ToWrite );
+extern VOID TcpipRecursiveMutexEnter( PRECURSIVE_MUTEX RecMutex );
 extern VOID TcpipRecursiveMutexLeave( PRECURSIVE_MUTEX RecMutex );
 
 #endif/*_LOCK_H*/

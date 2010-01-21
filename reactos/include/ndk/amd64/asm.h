@@ -255,7 +255,6 @@ Author:
 #define CBSTACK_RBP                             0x18
 #define CBSTACK_RESULT                          0x20
 #define CBSTACK_RESULT_LENGTH                   0x28
-#define CBSTACK_FRAME_POINTER                   CBSTACK_RBP
 
 
 /* Following ones are ASM only! ***********************************************/

@@ -45,6 +45,24 @@ HKLM,"SYSTEM\CurrentControlSet\Control\ComputerName\ComputerName","ComputerName"
 ; Device classes key
 HKLM,"SYSTEM\CurrentControlSet\Control\DeviceClasses",,0x00000012
 
+; HAL Chipset Hacks
+HKLM,"SYSTEM\CurrentControlSet\Control\HAL","10390530",0x00010001,0x1
+HKLM,"SYSTEM\CurrentControlSet\Control\HAL","10390620",0x00010001,0x1
+HKLM,"SYSTEM\CurrentControlSet\Control\HAL","10B90533",0x00010001,0x1
+HKLM,"SYSTEM\CurrentControlSet\Control\HAL","10B91533",0x00010001,0x1
+HKLM,"SYSTEM\CurrentControlSet\Control\HAL","11060596",0x00010001,0x1
+HKLM,"SYSTEM\CurrentControlSet\Control\HAL","11060686",0x00010001,0x5
+HKLM,"SYSTEM\CurrentControlSet\Control\HAL","1166004F",0x00010001,0x1
+HKLM,"SYSTEM\CurrentControlSet\Control\HAL","11660050",0x00010001,0x1
+HKLM,"SYSTEM\CurrentControlSet\Control\HAL","11660200",0x00010001,0x1
+HKLM,"SYSTEM\CurrentControlSet\Control\HAL","80862410",0x00010001,0x8
+HKLM,"SYSTEM\CurrentControlSet\Control\HAL","80862420",0x00010001,0x8
+HKLM,"SYSTEM\CurrentControlSet\Control\HAL","80862440",0x00010001,0x8
+HKLM,"SYSTEM\CurrentControlSet\Control\HAL","8086244C",0x00010001,0x8
+HKLM,"SYSTEM\CurrentControlSet\Control\HAL","80862480",0x00010001,0x8
+HKLM,"SYSTEM\CurrentControlSet\Control\HAL","8086248C",0x00010001,0x8
+HKLM,"SYSTEM\CurrentControlSet\Control\HAL","80867110",0x00010001,0x1
+
 ; Hardware profile settings
 HKLM,"SYSTEM\CurrentControlSet\Control\IDConfigDB",,0x00000012
 HKLM,"SYSTEM\CurrentControlSet\Control\IDConfigDB","CurrentConfig",0x00010001,0x00000000
