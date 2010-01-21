@@ -190,12 +190,9 @@ IntAttachMonitor(IN PDEVOBJ *pGdiDevice,
    Monitor->rcWork = Monitor->rcMonitor;
    Monitor->cWndStack = 0;
 
-   Monitor->hrgnMonitor= NtGdiCreateRectRgn( Monitor->rcMonitor.left,
-                                             Monitor->rcMonitor.top, 
-                                             Monitor->rcMonitor.right,
-                                             Monitor->rcMonitor.bottom );
+   Monitor->hrgnMonitor= IntSysCreateRectRgnIndirect( &Monitor->rcMonitor );
 
-   IntGdiSetRegeionOwner(Monitor->hrgnMonitor, GDI_OBJ_HMGR_PUBLIC);
+   IntGdiSetRegionOwner(Monitor->hrgnMonitor, GDI_OBJ_HMGR_PUBLIC);
 
    if (gMonitorList == NULL)
    {

@@ -27,8 +27,13 @@ CLIPPING_UpdateGCRegion(DC* Dc)
 {
    PROSRGNDATA CombinedRegion;
 
+   if (!Dc->rosdc.hVisRgn)
+   {
+      DPRINT1("Warning, hVisRgn is NULL!\n");
+   }
+
    if (Dc->rosdc.hGCClipRgn == NULL)
-      Dc->rosdc.hGCClipRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
+      Dc->rosdc.hGCClipRgn = IntSysCreateRectRgn(0, 0, 0, 0);
 
    if (Dc->rosdc.hClipRgn == NULL)
       NtGdiCombineRgn(Dc->rosdc.hGCClipRgn, Dc->rosdc.hVisRgn, 0, RGN_COPY);
@@ -79,7 +84,7 @@ GdiSelectVisRgn(HDC hdc, HRGN hrgn)
   
   if (dc->rosdc.hVisRgn == NULL)
   {
-    dc->rosdc.hVisRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
+    dc->rosdc.hVisRgn = IntSysCreateRectRgn(0, 0, 0, 0);
     GDIOBJ_CopyOwnership(hdc, dc->rosdc.hVisRgn);
   }
 
@@ -107,7 +112,7 @@ int FASTCALL GdiExtSelectClipRgn(PDC dc,
     {
       if (dc->rosdc.hClipRgn != NULL)
       {
-        GreDeleteObject(dc->rosdc.hClipRgn);
+        REGION_FreeRgnByHandle(dc->rosdc.hClipRgn);
         dc->rosdc.hClipRgn = NULL;
       }
     }
@@ -127,11 +132,11 @@ int FASTCALL GdiExtSelectClipRgn(PDC dc,
       {
         REGION_GetRgnBox(Rgn, &rect);
         RGNOBJAPI_Unlock(Rgn);
-        dc->rosdc.hClipRgn = UnsafeIntCreateRectRgnIndirect(&rect);
+        dc->rosdc.hClipRgn = IntSysCreateRectRgnIndirect(&rect);
       }
       else
       {
-        dc->rosdc.hClipRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
+        dc->rosdc.hClipRgn = IntSysCreateRectRgn(0, 0, 0, 0);
       }
     }
     if(fnMode == RGN_COPY)
@@ -245,7 +250,7 @@ int APIENTRY NtGdiExcludeClipRect(HDC  hDC,
 
    IntLPtoDP(dc, (LPPOINT)&Rect, 2);
 
-   NewRgn = UnsafeIntCreateRectRgnIndirect(&Rect);
+   NewRgn = IntSysCreateRectRgnIndirect(&Rect);
    if (!NewRgn)
    {
       Result = ERROR;
@@ -254,7 +259,7 @@ int APIENTRY NtGdiExcludeClipRect(HDC  hDC,
    {
       if (!dc->rosdc.hClipRgn)
       {
-         dc->rosdc.hClipRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
+         dc->rosdc.hClipRgn = IntSysCreateRectRgn(0, 0, 0, 0);
          NtGdiCombineRgn(dc->rosdc.hClipRgn, dc->rosdc.hVisRgn, NewRgn, RGN_DIFF);
          Result = SIMPLEREGION;
       }
@@ -262,7 +267,7 @@ int APIENTRY NtGdiExcludeClipRect(HDC  hDC,
       {
          Result = NtGdiCombineRgn(dc->rosdc.hClipRgn, dc->rosdc.hClipRgn, NewRgn, RGN_DIFF);
       }
-      GreDeleteObject(NewRgn);
+      REGION_FreeRgnByHandle(NewRgn);
    }
    if (Result != ERROR)
       CLIPPING_UpdateGCRegion(dc);
@@ -299,7 +304,7 @@ int APIENTRY NtGdiIntersectClipRect(HDC  hDC,
 
    IntLPtoDP(dc, (LPPOINT)&Rect, 2);
 
-   NewRgn = UnsafeIntCreateRectRgnIndirect(&Rect);
+   NewRgn = IntSysCreateRectRgnIndirect(&Rect);
    if (!NewRgn)
    {
       Result = ERROR;
@@ -312,7 +317,7 @@ int APIENTRY NtGdiIntersectClipRect(HDC  hDC,
    else
    {
       Result = NtGdiCombineRgn(dc->rosdc.hClipRgn, dc->rosdc.hClipRgn, NewRgn, RGN_AND);
-      GreDeleteObject(NewRgn);
+      REGION_FreeRgnByHandle(NewRgn);
    }
    if (Result != ERROR)
       CLIPPING_UpdateGCRegion(dc);
@@ -430,7 +435,7 @@ IntGdiSetMetaRgn(PDC pDC)
   {
      if ( pDC->dclevel.prgnClip )
      {
-        TempRgn = IntGdiCreateRectRgn(0,0,0,0);
+        TempRgn = IntSysCreateRectRgn(0,0,0,0);
         if (TempRgn)
         {        
            Ret = IntGdiCombineRgn( TempRgn,
@@ -501,13 +506,13 @@ NEW_CLIPPING_UpdateGCRegion(PDC pDC)
   if (pDC->prgnAPI)
   {
      REGION_Delete(pDC->prgnAPI);
-     pDC->prgnAPI = IntGdiCreateRectRgn(0,0,0,0);
+     pDC->prgnAPI = IntSysCreateRectRgn(0,0,0,0);
   }
 
   if (pDC->prgnRao)
   {
      REGION_Delete(pDC->prgnRao);
-     pDC->prgnRao = IntGdiCreateRectRgn(0,0,0,0);
+     pDC->prgnRao = IntSysCreateRectRgn(0,0,0,0);
   }
   
   if (pDC->dclevel.prgnMeta && pDC->dclevel.prgnClip)

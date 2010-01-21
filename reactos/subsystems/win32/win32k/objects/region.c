@@ -2189,19 +2189,6 @@ RGNOBJAPI_Unlock(PROSRGNDATA pRgn)
 //
 // System Region Functions
 //
-INT
-FASTCALL
-IntSysRegComplexity(HRGN hRgn)
-{
-  PROSRGNDATA pRgn;
-  INT Ret;
-
-  pRgn = REGION_LockRgn(hRgn);   
-  Ret = REGION_Complexity( pRgn );
-  REGION_UnlockRgn(pRgn);
-  return Ret;
-}
-
 HRGN
 FASTCALL
 IntSysCreateRectRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
@@ -2430,13 +2417,13 @@ IntGdiPaintRgn(
 
     ASSERT(!(pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY)));
 
-    if (!(tmpVisRgn = NtGdiCreateRectRgn(0, 0, 0, 0))) return FALSE;
+    if (!(tmpVisRgn = IntSysCreateRectRgn(0, 0, 0, 0))) return FALSE;
 
     // Transform region into device co-ords
     if (!REGION_LPTODP(dc, tmpVisRgn, hRgn) || 
          NtGdiOffsetRgn(tmpVisRgn, dc->ptlDCOrig.x, dc->ptlDCOrig.y) == ERROR)
     {
-        GreDeleteObject(tmpVisRgn);
+        REGION_FreeRgnByHandle(tmpVisRgn);
         return FALSE;
     }
 
@@ -2445,7 +2432,7 @@ IntGdiPaintRgn(
     visrgn = RGNOBJAPI_Lock(tmpVisRgn, NULL);
     if (visrgn == NULL)
     {
-        GreDeleteObject(tmpVisRgn);
+        REGION_FreeRgnByHandle(tmpVisRgn);
         return FALSE;
     }
 
@@ -2466,7 +2453,7 @@ IntGdiPaintRgn(
                        0xFFFF);//FIXME:don't know what to put here
 
     RGNOBJAPI_Unlock(visrgn);
-    GreDeleteObject(tmpVisRgn);
+    REGION_FreeRgnByHandle(tmpVisRgn);
 
     // Fill the region
     return TRUE;
@@ -3598,19 +3585,19 @@ NtGdiFrameRgn(
     HRGN FrameRgn;
     BOOL Ret;
 
-    if (!(FrameRgn = NtGdiCreateRectRgn(0, 0, 0, 0)))
+    if (!(FrameRgn = IntSysCreateRectRgn(0, 0, 0, 0)))
     {
         return FALSE;
     }
     if (!REGION_CreateFrameRgn(FrameRgn, hRgn, Width, Height))
     {
-        GreDeleteObject(FrameRgn);
+        REGION_FreeRgnByHandle(FrameRgn);
         return FALSE;
     }
 
     Ret = NtGdiFillRgn(hDC, FrameRgn, hBrush);
 
-    GreDeleteObject(FrameRgn);
+    REGION_FreeRgnByHandle(FrameRgn);
     return Ret;
 }
 

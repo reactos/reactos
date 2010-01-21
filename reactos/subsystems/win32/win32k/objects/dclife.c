@@ -332,7 +332,7 @@ IntGdiCreateDC(
 
     pdcattr->iCS_CP = ftGdiGetTextCharsetInfo(pdc,NULL,0);
 
-    hVisRgn = NtGdiCreateRectRgn(0, 0, pdc->ppdev->gdiinfo.ulHorzRes,
+    hVisRgn = IntSysCreateRectRgn(0, 0, pdc->ppdev->gdiinfo.ulHorzRes,
                                  pdc->ppdev->gdiinfo.ulVertRes);
 
     if (!CreateAsIC)
@@ -365,7 +365,7 @@ IntGdiCreateDC(
     if (hVisRgn)
     {
         GdiSelectVisRgn(hdc, hVisRgn);
-        GreDeleteObject(hVisRgn);
+        REGION_FreeRgnByHandle(hVisRgn);
     }
 
     IntGdiSetTextAlign(hdc, TA_TOP);
@@ -686,11 +686,11 @@ NtGdiCreateCompatibleDC(HDC hDC)
         NtGdiDeleteObjectApp(DisplayDC);
     }
 
-    hVisRgn = NtGdiCreateRectRgn(0, 0, 1, 1);
+    hVisRgn = IntSysCreateRectRgn(0, 0, 1, 1);
     if (hVisRgn)
     {
         GdiSelectVisRgn(hdcNew, hVisRgn);
-        GreDeleteObject(hVisRgn);
+        REGION_FreeRgnByHandle(hVisRgn);
     }
     if (Layout) NtGdiSetLayout(hdcNew, -1, Layout);
 

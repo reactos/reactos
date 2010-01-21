@@ -695,7 +695,7 @@ bPEBCacheHandle(HGDIOBJ Handle, int oType, PVOID pAttr)
 
      hPtr = GdiHandleCache->Handle + Offset;
 
-     if ( oType == hctRegionHandle)
+     if ( pAttr && oType == hctRegionHandle)
      {
         if ( Number < CACHE_REGION_ENTRIES )
         {
@@ -746,14 +746,17 @@ GreDeleteObject(HGDIOBJ hObject)
              break;
 
           case GDI_OBJECT_TYPE_REGION:
-             if (bPEBCacheHandle(hObject, hctRegionHandle, pAttr))
+             /* If pAttr NULL, the probability is high for System Region. */
+             if ( pAttr &&
+                  bPEBCacheHandle(hObject, hctRegionHandle, pAttr))
              {
+                /* User space handle only! */
                 return TRUE;
              }
              if (pAttr)
              {
                 KeEnterCriticalRegion();
-                if (pAttr) FreeObjectAttr(pAttr);
+                FreeObjectAttr(pAttr);
                 Entry->UserData = NULL;
                 KeLeaveCriticalRegion();
              }
@@ -1562,7 +1565,7 @@ GDI_MapHandleTable(PSECTION_OBJECT SectionObject, PEPROCESS Process)
 
 BOOL
 FASTCALL
-IntGdiSetRegeionOwner(HRGN hRgn, DWORD OwnerMask)
+IntGdiSetRegionOwner(HRGN hRgn, DWORD OwnerMask)
 {
   INT Index;
   PGDI_TABLE_ENTRY Entry;

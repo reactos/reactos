@@ -26,7 +26,7 @@ typedef struct _DC *PDC;
 typedef struct _ROS_DC_INFO
 {
   HRGN     hClipRgn;     /* Clip region (may be 0) */
-  HRGN     hVisRgn;      /* Should me to DC. Visible region (must never be 0) */
+  HRGN     hVisRgn;      /* Visible region (must never be 0) */
   HRGN     hGCClipRgn;   /* GC clip region (ClipRgn AND VisRgn) */
 
   BYTE   bitsPerPixel;

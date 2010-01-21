@@ -4553,7 +4553,7 @@ IntGetWindowRgn(PWINDOW_OBJECT Window, HRGN hRgn)
    Wnd = Window->Wnd;
 
    /* Create a new window region using the window rectangle */
-   VisRgn = UnsafeIntCreateRectRgnIndirect(&Window->Wnd->rcWindow);
+   VisRgn = IntSysCreateRectRgnIndirect(&Window->Wnd->rcWindow);
    NtGdiOffsetRgn(VisRgn, -Window->Wnd->rcWindow.left, -Window->Wnd->rcWindow.top);
    /* if there's a region assigned to the window, combine them both */
    if(Window->hrgnClip && !(Wnd->style & WS_MINIMIZE))
@@ -4569,7 +4569,7 @@ IntGetWindowRgn(PWINDOW_OBJECT Window, HRGN hRgn)
    else
       Ret = ERROR;
 
-   GreDeleteObject(VisRgn);
+   REGION_FreeRgnByHandle(VisRgn);
 
    return Ret;
 }
@@ -4594,7 +4594,7 @@ IntGetWindowRgnBox(PWINDOW_OBJECT Window, RECTL *Rect)
    Wnd = Window->Wnd;
 
    /* Create a new window region using the window rectangle */
-   VisRgn = UnsafeIntCreateRectRgnIndirect(&Window->Wnd->rcWindow);
+   VisRgn = IntSysCreateRectRgnIndirect(&Window->Wnd->rcWindow);
    NtGdiOffsetRgn(VisRgn, -Window->Wnd->rcWindow.left, -Window->Wnd->rcWindow.top);
    /* if there's a region assigned to the window, combine them both */
    if(Window->hrgnClip && !(Wnd->style & WS_MINIMIZE))
@@ -4609,7 +4609,7 @@ IntGetWindowRgnBox(PWINDOW_OBJECT Window, RECTL *Rect)
    else
       Ret = ERROR;
 
-   GreDeleteObject(VisRgn);
+   REGION_FreeRgnByHandle(VisRgn);
 
    return Ret;
 }
