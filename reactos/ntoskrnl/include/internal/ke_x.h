@@ -102,27 +102,6 @@ KeGetPreviousMode(VOID)
 }
 
 #ifndef CONFIG_SMP
-//
-// Spinlock Acquire at IRQL >= DISPATCH_LEVEL
-//
-FORCEINLINE
-VOID
-KxAcquireSpinLock(IN PKSPIN_LOCK SpinLock)
-{
-    /* On UP builds, spinlocks don't exist at IRQL >= DISPATCH */
-    UNREFERENCED_PARAMETER(SpinLock);
-}
-
-//
-// Spinlock Release at IRQL >= DISPATCH_LEVEL
-//
-FORCEINLINE
-VOID
-KxReleaseSpinLock(IN PKSPIN_LOCK SpinLock)
-{
-    /* On UP builds, spinlocks don't exist at IRQL >= DISPATCH */
-    UNREFERENCED_PARAMETER(SpinLock);
-}
 
 //
 // This routine protects against multiple CPU acquires, it's meaningless on UP.
@@ -302,72 +281,6 @@ KiReleaseTimerLock(IN PKSPIN_LOCK_QUEUE LockQueue)
 }
 
 #else
-
-//
-// Spinlock Acquisition at IRQL >= DISPATCH_LEVEL
-//
-FORCEINLINE
-VOID
-KxAcquireSpinLock(IN PKSPIN_LOCK SpinLock)
-{
-    /* Make sure that we don't own the lock already */
-    if (((KSPIN_LOCK)KeGetCurrentThread() | 1) == *SpinLock)
-    {
-        /* We do, bugcheck! */
-        KeBugCheckEx(SPIN_LOCK_ALREADY_OWNED, (ULONG_PTR)SpinLock, 0, 0, 0);
-    }
-
-    /* Start acquire loop */
-    for (;;)
-    {
-        /* Try to acquire it */
-        if (InterlockedBitTestAndSet((PLONG)SpinLock, 0))
-        {
-            /* Value changed... wait until it's unlocked */
-            while (*(volatile KSPIN_LOCK *)SpinLock == 1)
-            {
-#if DBG
-                /* On debug builds, we use a much slower but useful routine */
-                //Kii386SpinOnSpinLock(SpinLock, 5);
-
-                /* FIXME: Do normal yield for now */
-                YieldProcessor();
-#else
-                /* Otherwise, just yield and keep looping */
-                YieldProcessor();
-#endif
-            }
-        }
-        else
-        {
-#if DBG
-            /* On debug builds, we OR in the KTHREAD */
-            *SpinLock = (KSPIN_LOCK)KeGetCurrentThread() | 1;
-#endif
-            /* All is well, break out */
-            break;
-        }
-    }
-}
-
-//
-// Spinlock Release at IRQL >= DISPATCH_LEVEL
-//
-FORCEINLINE
-VOID
-KxReleaseSpinLock(IN PKSPIN_LOCK SpinLock)
-{
-#if DBG
-    /* Make sure that the threads match */
-    if (((KSPIN_LOCK)KeGetCurrentThread() | 1) != *SpinLock)
-    {
-        /* They don't, bugcheck */
-        KeBugCheckEx(SPIN_LOCK_NOT_OWNED, (ULONG_PTR)SpinLock, 0, 0, 0);
-    }
-#endif
-    /* Clear the lock */
-    InterlockedAnd((PLONG)SpinLock, 0);
-}
 
 FORCEINLINE
 VOID
