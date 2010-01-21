@@ -155,7 +155,7 @@ static UINT copy_install_file(MSIPACKAGE *package, MSIFILE *file, LPWSTR source)
         gle = copy_file(file, source);
         TRACE("Overwriting existing file: %d\n", gle);
     }
-    if ((gle == ERROR_SHARING_VIOLATION) || (gle == ERROR_USER_MAPPED_FILE))
+    if (gle == ERROR_SHARING_VIOLATION || gle == ERROR_USER_MAPPED_FILE)
     {
         WCHAR tmpfileW[MAX_PATH], *pathW, *p;
         DWORD len;

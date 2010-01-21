@@ -14,7 +14,7 @@ BEGIN
 		MENUITEM "&Махане",ID_UNINSTALL
 		MENUITEM "&Промяна",   ID_MODIFY
 		MENUITEM SEPARATOR
-		MENUITEM "&Remove from Registry", ID_REGREMOVE
+		MENUITEM "Пре&махване от регистъра", ID_REGREMOVE
 		MENUITEM SEPARATOR
 		MENUITEM "О&пресняване",  ID_REFRESH
 	END
@@ -42,45 +42,45 @@ BEGIN
 		MENUITEM "&Махане", ID_UNINSTALL
 		MENUITEM "&Промяна",    ID_MODIFY
 		MENUITEM SEPARATOR
-		MENUITEM "&Remove from Registry", ID_REGREMOVE
+		MENUITEM "Пре&махване от регистъра", ID_REGREMOVE
 		MENUITEM SEPARATOR
 		MENUITEM "О&пресняване",   ID_REFRESH
 	END
 END
 
-IDD_SETTINGS_DIALOG DIALOGEX DISCARDABLE  0, 0, 250, 144
+IDD_SETTINGS_DIALOG DIALOGEX DISCARDABLE  0, 0, 254, 144
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Settings"
+CAPTION "Настройки"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	GROUPBOX "General", -1, 4, 2, 240, 61
-	AUTOCHECKBOX "&Save window position", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-	AUTOCHECKBOX "&Update the list of accessible programs at start", IDC_UPDATE_AVLIST, 15, 29, 219, 12
-	AUTOCHECKBOX "&Log of installation and removal of programs", IDC_LOG_ENABLED, 15, 46, 219, 12
+	GROUPBOX "Общи", -1, 4, 2, 244, 61
+	AUTOCHECKBOX "&Съхраняване разположението на прозореца", IDC_SAVE_WINDOW_POS, 15, 12, 223, 12
+	AUTOCHECKBOX "Об&новяване на списъка с достъпните приложения при пускане", IDC_UPDATE_AVLIST, 15, 29, 227, 12
+	AUTOCHECKBOX "&Вписване на слаганията и маханията на приложения", IDC_LOG_ENABLED, 15, 46, 223, 12
 
-	GROUPBOX "Downloading", -1, 4, 65, 240, 51
-	LTEXT "Folder for downloadings:", -1, 16, 75, 100, 9
+	GROUPBOX "Сваляне", -1, 4, 65, 244, 51
+	LTEXT "Папка за свалените файлове", -1, 16, 75, 100, 9
 	EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP
-	PUSHBUTTON "&Choose", IDC_CHOOSE, 187, 85, 50, 14
-	AUTOCHECKBOX "&Delete installers of programs after installation", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+	PUSHBUTTON "Из&бор", IDC_CHOOSE, 187, 85, 50, 14
+	AUTOCHECKBOX "След слагане, използваните файлове да се изтриват", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
 
-	PUSHBUTTON "Default", IDC_DEFAULT_SETTINGS, 8, 124, 60, 14
-	PUSHBUTTON "OK", IDOK, 116, 124, 60, 14
-	PUSHBUTTON "Cancel", IDCANCEL, 181, 124, 60, 14
+	PUSHBUTTON "Подразбирано", IDC_DEFAULT_SETTINGS, 8, 124, 60, 14
+	PUSHBUTTON "Добре", IDOK, 116, 124, 60, 14
+	PUSHBUTTON "Отказ", IDCANCEL, 181, 124, 60, 14
 END
 
 IDD_INSTALL_DIALOG DIALOGEX DISCARDABLE  0, 0, 216, 97
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Program installation"
+CAPTION "Слагане на приложение"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
 
-	AUTORADIOBUTTON "&Install from a disk (CD or DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
-	AUTORADIOBUTTON "&Download and install", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
+	AUTORADIOBUTTON "Слагане от оптичен носител", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+	AUTORADIOBUTTON "&Сваляне и слагане", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
 
-	PUSHBUTTON "OK", IDOK, 86, 78, 60, 14
-	PUSHBUTTON "Cancel", IDCANCEL, 150, 78, 60, 14
+	PUSHBUTTON "Добре", IDOK, 86, 78, 60, 14
+	PUSHBUTTON "Отказ", IDCANCEL, 150, 78, 60, 14
 END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX LOADONCALL MOVEABLE DISCARDABLE  0, 0, 220, 76
@@ -98,7 +98,7 @@ STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 CAPTION "За"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Управителят за приложения на РеактОС\nВъзпроизводствени права (C) 2009\nДмитрий Чапъйшев (dmitry@reactos.org)", IDC_STATIC, 48, 7, 150, 39
+	LTEXT "Управителят за приложожения на РеактОС\nВъзпроизводствени права (C) 2009\nДмитрий Чапъйшев (dmitry@reactos.org)", IDC_STATIC, 48, 7, 150, 39
 	PUSHBUTTON "Затваряне", IDOK, 133, 46, 50, 14
 	ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
 END
@@ -159,7 +159,7 @@ BEGIN
 	IDS_CAT_ENGINEER "Инженерство"
 	IDS_CAT_FINANCE "Финанси"
 	IDS_CAT_GAMES "Игри и забавления"
-	IDS_CAT_GRAPHICS "Графика"
+	IDS_CAT_GRAPHICS "графика"
 	IDS_CAT_INTERNET "Интернет и мрежа"
 	IDS_CAT_LIBS "Библиотеки"
 	IDS_CAT_OFFICE "Служебни"
@@ -177,17 +177,17 @@ BEGIN
 	IDS_UNINSTALL "Махане"
 	IDS_MODIFY "Промяна"
 	IDS_APPS_COUNT "Брой приложения: %d"
-	IDS_WELCOME_TITLE "Управителят за приложения на РеактОС ви приветства!\n\n"
+	IDS_WELCOME_TITLE "Управителят на приложенията на РеактОС ви приветства"
 	IDS_WELCOME_TEXT "Изберете раздел от лявата страна, след което изберете приложение за слагане или премахване.\nСтраницата на РеактОС: "
 	IDS_WELCOME_URL "http://www.reactos.org"
-	IDS_INSTALLED "Сложени"
+	IDS_INSTALLED "Сложено"
 	IDS_AVAILABLEFORINST "Налично за слагане"
 	IDS_UPDATES "Обновления"
 	IDS_APPLICATIONS "Приложения"
-	IDS_CHOOSE_FOLDER_TEXT "Choose a folder which will be used for downloading of programs:"
-	IDS_CHOOSE_FOLDER_ERROR "You have specified a nonexistent folder!"
-	IDS_USER_NOT_ADMIN "You should be administrator for start ""ReactOS Applications Manager""!"
-	IDS_APP_REG_REMOVE "Are you sure you want to delete the data on the installed program from the registry?"
-	IDS_INFORMATION "Information"
-	IDS_UNABLE_TO_REMOVE "Unable to remove data on the program from the registry!"
+	IDS_CHOOSE_FOLDER_TEXT "Изберете папка, в която да се свалят приложенията:"
+	IDS_CHOOSE_FOLDER_ERROR "Указали сте несъсшествуваща папка!"
+	IDS_USER_NOT_ADMIN "You should be administrator for start ""Управителят за приложения на РеактОС""!"
+	IDS_APP_REG_REMOVE "Уверен ли сте, че искате да изтриете данните за сложеното приложение от регистъра?"
+	IDS_INFORMATION "Сведения"
+	IDS_UNABLE_TO_REMOVE "Премахването на данните за приложението от регистъра е невъзможно!"
 END

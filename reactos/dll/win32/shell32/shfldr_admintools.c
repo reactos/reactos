@@ -61,7 +61,7 @@ static const shvheader AdminToolsSFHeader[] = {
 #define AdminToolsHELLVIEWCOLUMNS (4)
 
 
-#define _IPersistFolder2_Offset ((int)(&(((IGenericSFImpl*)0)->lpVtblPersistFolder2)))
+#define _IPersistFolder2_Offset ((INT_PTR)(&(((IGenericSFImpl*)0)->lpVtblPersistFolder2)))
 #define _ICOM_THIS_From_IPersistFolder2(class, name) class* This = (class*)(((char*)name)-_IPersistFolder2_Offset);
 
 #define _IUnknown_(This)    (IShellFolder*)&(This->lpVtbl)

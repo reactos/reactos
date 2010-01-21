@@ -75,8 +75,8 @@ PVOID MmAllocateMemoryWithType(ULONG MemorySize, TYPE_OF_MEMORY MemoryType)
 #endif // DBG
 
 	// Update LoaderPagesSpanned count
-	if ((((ULONG_PTR)MemPointer + MemorySize) >> PAGE_SHIFT) > LoaderPagesSpanned)
-		LoaderPagesSpanned = (((ULONG_PTR)MemPointer + MemorySize) >> PAGE_SHIFT);
+	if ((((ULONG_PTR)MemPointer + MemorySize + PAGE_SIZE - 1) >> PAGE_SHIFT) > LoaderPagesSpanned)
+		LoaderPagesSpanned = (((ULONG_PTR)MemPointer + MemorySize + PAGE_SIZE - 1) >> PAGE_SHIFT);
 
 	// Now return the pointer
 	return MemPointer;
@@ -175,8 +175,8 @@ PVOID MmAllocateMemoryAtAddress(ULONG MemorySize, PVOID DesiredAddress, TYPE_OF_
 #endif // DBG
 
 	// Update LoaderPagesSpanned count
-	if ((((ULONG_PTR)MemPointer + MemorySize) >> PAGE_SHIFT) > LoaderPagesSpanned)
-		LoaderPagesSpanned = (((ULONG_PTR)MemPointer + MemorySize) >> PAGE_SHIFT);
+	if ((((ULONG_PTR)MemPointer + MemorySize + PAGE_SIZE - 1) >> PAGE_SHIFT) > LoaderPagesSpanned)
+		LoaderPagesSpanned = (((ULONG_PTR)MemPointer + MemorySize + PAGE_SIZE - 1) >> PAGE_SHIFT);
 
 	// Now return the pointer
 	return MemPointer;
@@ -336,11 +336,6 @@ VOID DumpMemoryAllocMap(VOID)
 	DPRINTM(DPRINT_MEMORY, "\n");
 }
 #endif // DBG
-
-ULONG GetSystemMemorySize(VOID)
-{
-	return (TotalPagesInLookupTable * MM_PAGE_SIZE);
-}
 
 PPAGE_LOOKUP_TABLE_ITEM MmGetMemoryMap(ULONG *NoEntries)
 {

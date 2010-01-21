@@ -40,12 +40,10 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msidb);
 
-#define HASH_SIZE 0x101
 #define LONG_STR_BYTES 3
 
 typedef struct _msistring
 {
-    int hash_next;
     UINT persistent_refcount;
     UINT nonpersistent_refcount;
     LPWSTR str;
@@ -56,30 +54,14 @@ struct string_table
     UINT maxcount;         /* the number of strings */
     UINT freeslot;
     UINT codepage;
-    int hash[HASH_SIZE];
-    msistring *strings; /* an array of strings (in the tree) */
+    UINT sortcount;
+    msistring *strings; /* an array of strings */
+    UINT *sorted;       /* index */
 };
-
-static UINT msistring_makehash( const WCHAR *str )
-{
-    UINT hash = 0;
-
-    if (str==NULL)
-        return hash;
-
-    while( *str )
-    {
-        hash ^= *str++;
-        hash *= 53;
-        hash = (hash<<5) | (hash>>27);
-    }
-    return hash % HASH_SIZE;
-}
 
 static string_table *init_stringtable( int entries, UINT codepage )
 {
     string_table *st;
-    int i;
 
     if (codepage != CP_ACP && !IsValidCodePage(codepage))
     {
@@ -92,18 +74,26 @@ static string_table *init_stringtable( int entries, UINT codepage )
         return NULL;    
     if( entries < 1 )
         entries = 1;
+
     st->strings = msi_alloc_zero( sizeof (msistring) * entries );
     if( !st->strings )
     {
         msi_free( st );
         return NULL;    
     }
+
+    st->sorted = msi_alloc( sizeof (UINT) * entries );
+    if( !st->sorted )
+    {
+        msi_free( st->strings );
+        msi_free( st );
+        return NULL;
+    }
+
     st->maxcount = entries;
     st->freeslot = 1;
     st->codepage = codepage;
-
-    for( i=0; i<HASH_SIZE; i++ )
-        st->hash[i] = -1;
+    st->sortcount = 0;
 
     return st;
 }
@@ -119,12 +109,13 @@ VOID msi_destroy_stringtable( string_table *st )
             msi_free( st->strings[i].str );
     }
     msi_free( st->strings );
+    msi_free( st->sorted );
     msi_free( st );
 }
 
 static int st_find_free_entry( string_table *st )
 {
-    UINT i, sz;
+    UINT i, sz, *s;
     msistring *p;
 
     TRACE("%p\n", st);
@@ -146,7 +137,17 @@ static int st_find_free_entry( string_table *st )
     p = msi_realloc_zero( st->strings, sz*sizeof(msistring) );
     if( !p )
         return -1;
+
+    s = msi_realloc( st->sorted, sz*sizeof(UINT) );
+    if( !s )
+    {
+        msi_free( p );
+        return -1;
+    }
+
     st->strings = p;
+    st->sorted = s;
+
     st->freeslot = st->maxcount;
     st->maxcount = sz;
     if( st->strings[st->freeslot].persistent_refcount ||
@@ -155,10 +156,40 @@ static int st_find_free_entry( string_table *st )
     return st->freeslot;
 }
 
+static int find_insert_index( const string_table *st, UINT string_id )
+{
+    int i, c, low = 0, high = st->sortcount - 1;
+
+    while (low <= high)
+    {
+        i = (low + high) / 2;
+        c = lstrcmpW( st->strings[string_id].str, st->strings[st->sorted[i]].str );
+
+        if (c < 0)
+            high = i - 1;
+        else if (c > 0)
+            low = i + 1;
+        else
+            return -1; /* already exists */
+    }
+    return high + 1;
+}
+
+static void insert_string_sorted( string_table *st, UINT string_id )
+{
+    int i;
+
+    i = find_insert_index( st, string_id );
+    if (i == -1)
+        return;
+
+    memmove( &st->sorted[i] + 1, &st->sorted[i], (st->sortcount - i) * sizeof(UINT) );
+    st->sorted[i] = string_id;
+    st->sortcount++;
+}
+
 static void set_st_entry( string_table *st, UINT n, LPWSTR str, UINT refcount, enum StringPersistence persistence )
 {
-    UINT hash = msistring_makehash( str );
-
     if (persistence == StringPersistent)
     {
         st->strings[n].persistent_refcount = refcount;
@@ -172,8 +203,7 @@ static void set_st_entry( string_table *st, UINT n, LPWSTR str, UINT refcount, e
 
     st->strings[n].str = str;
 
-    st->strings[n].hash_next = st->hash[hash];
-    st->hash[hash] = n;
+    insert_string_sorted( st, n );
 
     if( n < st->maxcount )
         st->freeslot = n + 1;
@@ -382,14 +412,20 @@ static UINT msi_id2stringA( const string_table *st, UINT id, LPSTR buffer, UINT 
  */
 UINT msi_string2idW( const string_table *st, LPCWSTR str, UINT *id )
 {
-    UINT n, hash = msistring_makehash( str );
-    msistring *se = st->strings;
+    int i, c, low = 0, high = st->sortcount - 1;
 
-    for (n = st->hash[hash]; n != -1; n = st->strings[n].hash_next )
+    while (low <= high)
     {
-        if ((str == se[n].str) || !lstrcmpW(str, se[n].str))
+        i = (low + high) / 2;
+        c = lstrcmpW( str, st->strings[st->sorted[i]].str );
+
+        if (c < 0)
+            high = i - 1;
+        else if (c > 0)
+            low = i + 1;
+        else
         {
-            *id = n;
+            *id = st->sorted[i];
             return ERROR_SUCCESS;
         }
     }

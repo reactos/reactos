@@ -27,40 +27,33 @@
 #define SPECIAL	32		/* 0x */
 #define LARGE	64		/* use 'ABCDEF' instead of 'abcdef' */
 #define REMOVEHEX	256		/* use 256 as remve 0x frim BASE 16  */
-typedef struct {
-    unsigned int mantissal:32;
-    unsigned int mantissah:20;
-    unsigned int exponent:11;
-    unsigned int sign:1;
+typedef union {
+    struct {
+        unsigned int mantissal:32;
+        unsigned int mantissah:20;
+        unsigned int exponent:11;
+        unsigned int sign:1;
+    };
+    long long AsLongLong;
 } double_t;
+
+/* We depend on this being true */
+C_ASSERT(sizeof(double_t) == sizeof(double));
 
 static
 __inline
 int
-_isinf(double __x)
+_isinf(double_t x)
 {
-	union
-	{
-		double*   __x;
-		double_t*   x;
-	} x;
-
-	x.__x = &__x;
-	return ( x.x->exponent == 0x7ff  && ( x.x->mantissah == 0 && x.x->mantissal == 0 ));
+	return ( x.exponent == 0x7ff  && ( x.mantissah == 0 && x.mantissal == 0 ));
 }
 
 static
 __inline
 int
-_isnan(double __x)
+_isnan(double_t x)
 {
-	union
-	{
-		double*   __x;
-		double_t*   x;
-	} x;
-    	x.__x = &__x;
-	return ( x.x->exponent == 0x7ff  && ( x.x->mantissah != 0 || x.x->mantissal != 0 ));
+	return ( x.exponent == 0x7ff  && ( x.mantissah != 0 || x.mantissal != 0 ));
 }
 
 
@@ -179,14 +172,13 @@ number(wchar_t * buf, wchar_t * end, long long num, int base, int size, int prec
 }
 
 static wchar_t *
-numberf(wchar_t * buf, wchar_t * end, double num, int base, int size, int precision, int type)
+numberf(wchar_t * buf, wchar_t * end, double_t num, int base, int size, int precision, int type)
 {
 	wchar_t c, sign, tmp[66];
 	const wchar_t *digits;
 	const wchar_t *small_digits = L"0123456789abcdefghijklmnopqrstuvwxyz";
 	const wchar_t *large_digits = L"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	int i;
-	long long x;
 
     /* FIXME
        the float version of number is direcly copy of number
@@ -201,9 +193,9 @@ numberf(wchar_t * buf, wchar_t * end, double num, int base, int size, int precis
 	c = (type & ZEROPAD) ? L'0' : L' ';
 	sign = 0;
 	if (type & SIGN) {
-		if (num < 0) {
+		if (num.sign) {
 			sign = L'-';
-			num = -num;
+			num.sign = 0;
 			size--;
 		} else if (type & PLUS) {
 			sign = L'+';
@@ -220,15 +212,11 @@ numberf(wchar_t * buf, wchar_t * end, double num, int base, int size, int precis
 			size--;
 	}
 	i = 0;
-	if (num == 0)
+	if (num.AsLongLong == 0)
 		tmp[i++] = L'0';
-	else while (num != 0)
+	else while (num.AsLongLong != 0)
 	{
-        x = num;
-		tmp[i++] = digits[do_div(&x,base)];
-#ifndef _M_ARM // Missing __floatdidf in CeGCC 0.55 -- GCC 4.4
-		num = x;
-#endif
+		tmp[i++] = digits[do_div(&num.AsLongLong,base)];
     }
 	if (i > precision)
 		precision = i;
@@ -394,7 +382,7 @@ int __cdecl _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list ar
 	const char *s;
 	const wchar_t *sw;
 	const wchar_t *ss;
-	double _double;
+	double_t _double;
 
 	int flags;		/* flags to number() */
 
@@ -597,7 +585,7 @@ int __cdecl _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list ar
 		case 'f':
 		case 'g':
 		case 'G':
-          _double = (double)va_arg(args, double);
+          _double = va_arg(args, double_t);
 
          if ( _isnan(_double) ) {
             ss = L"Nan";

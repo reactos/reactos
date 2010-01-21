@@ -230,6 +230,7 @@ BEGIN
     IDS_SYS_ENTERTAINMENT       "Zábava"
     IDS_CMT_MPLAY32             "Spustit Pøehrávaè multimédií"
     IDS_CMT_SNDVOL32            "Spustit Ovládání hlasitosti"
+    IDS_CMT_SNDREC32            "Launch Sound Recorder"
 END
 
 STRINGTABLE
@@ -266,6 +267,7 @@ BEGIN
     IDS_SHORT_SERVICE    "Správce služeb.lnk"
     IDS_SHORT_SNAP       "Sejmout obrazovku.lnk"
     IDS_SHORT_SNDVOL32   "Ovládání hlasitosti.lnk"
+    IDS_SHORT_SNDREC32   "Audiorecorder.lnk"
     IDS_SHORT_SOLITAIRE  "Solitaire.lnk"
     IDS_SHORT_WINEMINE   "WineMine.lnk"
     IDS_SHORT_WORDPAD    "WordPad.lnk"

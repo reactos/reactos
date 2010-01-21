@@ -417,7 +417,7 @@ LoadAndBootWindows(PCSTR OperatingSystemName,
 	PCHAR PathSeparator;
 	PVOID NtosBase = NULL, HalBase = NULL, KdComBase = NULL;
 	BOOLEAN Status;
-	ULONG SectionId;
+	ULONG_PTR SectionId;
 	PLOADER_PARAMETER_BLOCK LoaderBlock, LoaderBlockVA;
 	KERNEL_ENTRY_POINT KiSystemStartup;
 	PLDR_DATA_TABLE_ENTRY KernelDTE, HalDTE, KdComDTE = NULL;

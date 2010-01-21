@@ -451,9 +451,14 @@ PinWaveCyclicState(
                 // complete with successful state
                 Pin->m_IrpQueue->CancelBuffers();
             }
+            else if (Pin->m_State == KSSTATE_STOP)
+            {
+                Pin->m_IrpQueue->CancelBuffers();
+            }
             // store result
             Irp->IoStatus.Information = sizeof(KSSTATE);
         }
+        return Status;
     }
     else if (Request->Flags & KSPROPERTY_TYPE_GET)
     {
@@ -848,7 +853,6 @@ CPortPinWaveCyclic::DeviceIoControl(
     }
     else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_RESET_STATE)
     {
-        /// FIXME
         Status = KsAcquireResetValue(Irp, &ResetValue);
         DPRINT("Status %x Value %u\n", Status, ResetValue);
         /* check for success */

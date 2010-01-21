@@ -101,19 +101,38 @@ extern "C" {
 #define DN_STARTED          0x00000008	/* Is currently configured */
 #define DN_MANUAL           0x00000010	/* Manually installed */
 #define DN_NEED_TO_ENUM     0x00000020	/* May need reenumeration */
-#define DN_NOT_FIRST_TIME   0x00000040	/* Has received a config */
+#define DN_NOT_FIRST_TIME   0x00000040	/* Has received a config (Win9x only) */
 #define DN_HARDWARE_ENUM    0x00000080	/* Enum generates hardware ID */
-#define DN_LIAR             0x00000100	/* Lied about can reconfig once */
-#define DN_HAS_MARK         0x00000200	/* Not CM_Create_DevNode lately */
+#define DN_LIAR             0x00000100	/* Lied about can reconfig once (Win9x only) */
+#define DN_HAS_MARK         0x00000200	/* Not CM_Create_DevNode lately (Win9x only) */
 #define DN_HAS_PROBLEM      0x00000400	/* Need device installer */
 #define DN_FILTERED         0x00000800	/* Is filtered */
-#define DN_MOVED            0x00001000	/* Has been moved */
+#define DN_MOVED            0x00001000	/* Has been moved (Win9x only) */
 #define DN_DISABLEABLE      0x00002000	/* Can be rebalanced */
 #define DN_REMOVABLE        0x00004000	/* Can be removed */
 #define DN_PRIVATE_PROBLEM  0x00008000	/* Has a private problem */
 #define DN_MF_PARENT        0x00010000	/* Multi function parent */
 #define DN_MF_CHILD         0x00020000	/* Multi function child */
-#define DN_WILL_BE_REMOVED  0x00040000	/* Devnode is being removed */
+#define DN_WILL_BE_REMOVED  0x00040000
+#define DN_NOT_FIRST_TIMEE  0x00080000
+#define DN_STOP_FREE_RES    0x00100000
+#define DN_REBAL_CANDIDATE  0x00200000
+#define DN_BAD_PARTIAL      0x00400000
+#define DN_NT_ENUMERATOR    0x00800000
+#define DN_NT_DRIVER        0x01000000
+#define DN_NEEDS_LOCKING    0x02000000
+#define DN_ARM_WAKEUP       0x04000000
+#define DN_APM_ENUMERATOR   0x08000000
+#define DN_APM_DRIVER       0x10000000
+#define DN_SILENT_INSTALL   0x20000000
+#define DN_NO_SHOW_IN_DM    0x40000000
+#define DN_BOOT_LOG_PROB    0x80000000
+
+#define DN_NEED_RESTART          DN_LIAR
+#define DN_DRIVER_BLOCKED        DN_NOT_FIRST_TIME
+#define DN_LEGACY_DRIVER         DN_MOVED
+#define DN_CHILD_WITH_INVALID_ID DN_HAS_MARK
+
 
 typedef enum _PNP_VETO_TYPE {
   PNP_VetoTypeUnknown,

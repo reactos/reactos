@@ -1,25 +1,30 @@
 /*
- * PROJECT:         ReactOS HAL
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            hal/halx86/generic/misc.c
- * PURPOSE:         Miscellanous Routines
- * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
- *                  Eric Kohl (ekohl@abo.rhein-zeitung.de)
+ * PROJECT:         ReactOS Hardware Abstraction Layer (HAL)
+ * LICENSE:         BSD - See COPYING.ARM in the top level directory
+ * FILE:            halx86/generic/misc.c
+ * PURPOSE:         NMI, I/O Mapping and x86 Subs
+ * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include <hal.h>
 #define NDEBUG
 #include <debug.h>
 
-/* PRIVATE FUNCTIONS *********************************************************/
+/* GLOBALS  *******************************************************************/
+
+BOOLEAN HalpNMIInProgress;
+
+/* PRIVATE FUNCTIONS **********************************************************/
 
 VOID
 NTAPI
 HalpCheckPowerButton(VOID)
 {
-    /* Nothing to do on non-ACPI */
+    //
+    // Nothing to do on non-ACPI
+    //
     return;
 }
 
@@ -28,7 +33,9 @@ NTAPI
 HalpMapPhysicalMemory64(IN PHYSICAL_ADDRESS PhysicalAddress,
                         IN ULONG NumberPage)
 {
-    /* Use kernel memory manager I/O map facilities */
+    //
+    // Use kernel memory manager I/O map facilities
+    //
     return MmMapIoSpace(PhysicalAddress,
                         NumberPage << PAGE_SHIFT,
                         MmNonCached);
@@ -39,8 +46,70 @@ NTAPI
 HalpUnmapVirtualAddress(IN PVOID VirtualAddress,
                         IN ULONG NumberPages)
 {
-    /* Use kernel memory manager I/O map facilities */
+    //
+    // Use kernel memory manager I/O map facilities
+    //
     MmUnmapIoSpace(VirtualAddress, NumberPages << PAGE_SHIFT);
+}
+
+VOID
+NTAPI
+HalpFlushTLB(VOID)
+{
+    ULONG Flags, Cr4;
+    INT CpuInfo[4];
+    ULONG_PTR PageDirectory;
+
+    //
+    // Disable interrupts
+    //
+    Flags = __readeflags();
+    _disable();
+
+    //
+    // Get page table directory base
+    //
+    PageDirectory = __readcr3();
+
+    //
+    // Check for CPUID support
+    //
+    if (KeGetCurrentPrcb()->CpuID)
+    {
+        //
+        // Check for global bit in CPU features
+        //
+        __cpuid(CpuInfo, 1);
+        if (CpuInfo[3] & 0x2000)
+        {
+            //
+            // Get current CR4 value
+            //
+            Cr4 = __readcr4();
+
+            //
+            // Disable global bit
+            //
+            __writecr4(Cr4 & ~CR4_PGE);
+
+            //
+            // Flush TLB and re-enable global bit
+            //
+            __writecr3(PageDirectory);
+            __writecr4(Cr4);
+
+            //
+            // Restore interrupts
+            //
+            __writeeflags(Flags);
+        }
+    }
+
+    //
+    // Legacy: just flush TLB
+    //
+    __writecr3(PageDirectory);
+    __writeeflags(Flags);
 }
 
 /* FUNCTIONS *****************************************************************/
@@ -52,32 +121,96 @@ VOID
 NTAPI
 HalHandleNMI(IN PVOID NmiInfo)
 {
-    UCHAR ucStatus;
+    SYSTEM_CONTROL_PORT_B_REGISTER SystemControl;
 
-    /* Get the NMI Flag */
-    ucStatus = READ_PORT_UCHAR((PUCHAR)0x61);
+    //
+    // Don't recurse
+    //
+    if (HalpNMIInProgress++) while (TRUE);
 
-    /* Display NMI failure string */
-    HalDisplayString ("\n*** Hardware Malfunction\n\n");
-    HalDisplayString ("Call your hardware vendor for support\n\n");
+    //
+    // Read the system control register B
+    //
+    SystemControl.Bits = __inbyte(SYSTEM_CONTROL_PORT_B);
 
-    /* Check for parity error */
-    if (ucStatus & 0x80)
+    //
+    // Switch to boot vieo
+    //
+    if (InbvIsBootDriverInstalled())
     {
-        /* Display message */
-        HalDisplayString ("NMI: Parity Check / Memory Parity Error\n");
+        //
+        // Acquire ownership
+        //
+        InbvAcquireDisplayOwnership();
+        InbvResetDisplay();
+
+        //
+        // Fill the screen
+        //
+        InbvSolidColorFill(0, 0, 639, 479, 1);       
+        InbvSetScrollRegion(0, 0, 639, 479);
+
+        //
+        // Enable text
+        //
+        InbvSetTextColor(15);
+        InbvInstallDisplayStringFilter(NULL);
+        InbvEnableDisplayString(TRUE);
     }
 
-    /* Check for I/O failure */
-    if (ucStatus & 0x40)
+    //
+    // Display NMI failure string
+    //
+    InbvDisplayString("\n*** Hardware Malfunction\n\n");
+    InbvDisplayString("Call your hardware vendor for support\n\n");
+
+    //
+    // Check for parity error
+    //
+    if (SystemControl.ParityCheck)
     {
-        /* Display message */
-        HalDisplayString ("NMI: Channel Check / IOCHK\n");
+        //
+        // Display message
+        //
+        InbvDisplayString("NMI: Parity Check / Memory Parity Error\n");
     }
 
-    /* Halt the system */
-    HalDisplayString("\n*** The system has halted ***\n");
-    //KeEnterKernelDebugger();
+    //
+    // Check for I/O failure
+    //
+    if (SystemControl.ChannelCheck)
+    {
+        //
+        // Display message
+        //
+        InbvDisplayString("NMI: Channel Check / IOCHK\n");
+    }
+
+    //
+    // Check for EISA systems
+    //
+    if (HalpBusType == MACHINE_TYPE_EISA)
+    {
+        //
+        // FIXME: Not supported
+        //
+        UNIMPLEMENTED;
+    }
+
+    //
+    // Halt the system
+    //
+    InbvDisplayString("\n*** The system has halted ***\n");
+
+    //
+    // Enter the debugger if possible
+    //
+    //if (!(KdDebuggerNotPresent) && (KdDebuggerEnabled)) KeEnterKernelDebugger();
+
+    //
+    // Freeze the system
+    //
+    while (TRUE);
 }
 
 /*
@@ -89,7 +222,9 @@ HalSystemVectorDispatchEntry(IN ULONG Vector,
                              OUT PKINTERRUPT_ROUTINE **FlatDispatch,
                              OUT PKINTERRUPT_ROUTINE *NoConnection)
 {
-    /* Not implemented on x86 */
+    //
+    // Not implemented on x86
+    //
     return 0;
 }
 
@@ -100,6 +235,8 @@ VOID
 NTAPI
 KeFlushWriteBuffer(VOID)
 {
-    /* Not implemented on x86 */
+    //
+    // Not implemented on x86
+    //
     return;
 }

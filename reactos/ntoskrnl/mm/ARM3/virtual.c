@@ -635,7 +635,7 @@ MmSecureVirtualMemory(IN PVOID Address,
                       IN ULONG Mode)
 {
     UNIMPLEMENTED;
-    return NULL;
+    return Address;
 }
 
 /*

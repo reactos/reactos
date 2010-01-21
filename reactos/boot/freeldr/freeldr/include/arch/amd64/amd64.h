@@ -21,6 +21,10 @@
 #ifndef __AMD64_AMD64_H_
 #define __AMD64_AMD64_H_
 
+// This is needed because headers define wrong one for ReactOS
+#undef KIP0PCRADDRESS
+#define KIP0PCRADDRESS                      0xFFFFF78000001000ULL /* FIXME!!! */
+
 #define STACK64ADDR	0x74000	/* The 64-bit stack top will be at 0x74000 */
 
 /* Long mode selectors */
@@ -28,6 +32,7 @@
 #define LMODE_DS	0x18
 #define RMODE_CS	0x20	/* RMode code selector, base 0 limit 64k */
 #define RMODE_DS	0x28	/* RMode data selector, base 0 limit 64k */
+#define CMODE_CS    0x30
 
 #define VA_MASK 0x0000FFFFFFFFFFFFUL
 
@@ -53,35 +58,6 @@ typedef struct _PAGE_DIRECTORY_AMD64
     HARDWARE_PTE Pde[512];
 } PAGE_DIRECTORY_AMD64, *PPAGE_DIRECTORY_AMD64;
 
-VOID
-FORCEINLINE
-__lgdt(void *gdt)
-{
-    asm volatile ("lgdt %0\n" : : "m"(*(short*)gdt));
-}
-
-PKGDTENTRY64
-FORCEINLINE
-KiGetGdtEntry(PVOID pGdt, USHORT Index)
-{
-    return (PKGDTENTRY64)((ULONG64)pGdt + (Index & ~RPL_MASK));
-}
-
-VOID
-FORCEINLINE
-KiInitGdtEntry(PKGDTENTRY64 Entry, ULONG64 Base, ULONG Limit, UCHAR Type, UCHAR Dpl)
-{
-    Entry->Bits.Type = Type;
-    Entry->Bits.Present = 1;
-    Entry->Bits.Dpl = Dpl;
-    Entry->BaseLow = (USHORT)(Base & 0xFFFF);
-    Entry->Bytes.BaseMiddle = (UCHAR)(Base >> 16);
-    Entry->Bytes.BaseHigh = (UCHAR)(Base >> 24);
-    Entry->BaseUpper = (ULONG)(Base >> 32);
-    Entry->LimitLow = (USHORT)(Limit & 0xFFFF);
-    Entry->Bits.LimitHigh = (ULONG)((Limit >> 16) & 0xf);
-    Entry->MustBeZero = 0;
-}
 
 VOID FrLdrSetupGdtIdt();
 

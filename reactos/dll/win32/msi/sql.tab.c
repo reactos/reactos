@@ -126,7 +126,10 @@ typedef struct tag_SQL_input
     LPCWSTR command;
     DWORD n, len;
     UINT r;
-    MSIVIEW **view;  /* view structure for the resulting query */
+    MSIVIEW **view;  /* View structure for the resulting query.  This value
+                      * tracks the view currently being created so we can free
+                      * this view on syntax error.
+                      */
     struct list *mem;
 } SQL_input;
 
@@ -147,10 +150,14 @@ static struct expr * EXPR_ival( void *info, int val );
 static struct expr * EXPR_sval( void *info, const struct sql_str *str );
 static struct expr * EXPR_wildcard( void *info );
 
+#define PARSER_BUBBLE_UP_VIEW( sql, result, current_view ) \
+    *sql->view = current_view; \
+    result = current_view
+
 
 
 /* Line 189 of yacc.c  */
-#line 154 "sql.tab.c"
+#line 161 "sql.tab.c"
 
 /* Enabling traces.  */
 #ifndef YYDEBUG
@@ -248,7 +255,7 @@ typedef union YYSTYPE
 {
 
 /* Line 214 of yacc.c  */
-#line 76 "sql.y"
+#line 83 "sql.y"
 
     struct sql_str str;
     LPWSTR string;
@@ -261,7 +268,7 @@ typedef union YYSTYPE
 
 
 /* Line 214 of yacc.c  */
-#line 265 "sql.tab.c"
+#line 272 "sql.tab.c"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -273,7 +280,7 @@ typedef union YYSTYPE
 
 
 /* Line 264 of yacc.c  */
-#line 277 "sql.tab.c"
+#line 284 "sql.tab.c"
 
 #ifdef short
 # undef short
@@ -595,15 +602,15 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   126,   126,   134,   135,   136,   137,   138,   139,   140,
-     144,   154,   167,   183,   198,   208,   221,   234,   244,   254,
-     267,   271,   278,   291,   301,   311,   318,   327,   331,   335,
-     342,   346,   353,   357,   361,   365,   369,   373,   377,   384,
-     393,   406,   410,   414,   430,   451,   452,   456,   463,   464,
-     480,   490,   502,   507,   516,   522,   528,   534,   540,   546,
-     552,   558,   564,   570,   576,   585,   586,   590,   597,   608,
-     609,   617,   625,   631,   637,   643,   652,   661,   667,   676,
-     683,   691
+       0,   133,   133,   141,   142,   143,   144,   145,   146,   147,
+     151,   162,   176,   193,   209,   220,   234,   248,   259,   270,
+     284,   288,   295,   310,   320,   330,   337,   346,   350,   354,
+     361,   365,   372,   376,   380,   384,   388,   392,   396,   403,
+     412,   425,   429,   433,   448,   468,   469,   473,   480,   481,
+     496,   508,   523,   528,   537,   543,   549,   555,   561,   567,
+     573,   579,   585,   591,   597,   606,   607,   611,   618,   629,
+     630,   638,   646,   652,   658,   664,   673,   682,   688,   697,
+     704,   712
 };
 #endif
 
@@ -1612,7 +1619,7 @@ yyreduce:
         case 2:
 
 /* Line 1455 of yacc.c  */
-#line 127 "sql.y"
+#line 134 "sql.y"
     {
         SQL_input* sql = (SQL_input*) info;
         *sql->view = (yyvsp[(1) - (1)].query);
@@ -1622,7 +1629,7 @@ yyreduce:
   case 10:
 
 /* Line 1455 of yacc.c  */
-#line 145 "sql.y"
+#line 152 "sql.y"
     {
             SQL_input *sql = (SQL_input*) info;
             MSIVIEW *insert = NULL;
@@ -1630,14 +1637,15 @@ yyreduce:
             INSERT_CreateView( sql->db, &insert, (yyvsp[(3) - (10)].string), (yyvsp[(5) - (10)].column_list), (yyvsp[(9) - (10)].column_list), FALSE );
             if( !insert )
                 YYABORT;
-            (yyval.query) = insert;
+
+            PARSER_BUBBLE_UP_VIEW( sql, (yyval.query),  insert );
         ;}
     break;
 
   case 11:
 
 /* Line 1455 of yacc.c  */
-#line 155 "sql.y"
+#line 163 "sql.y"
     {
             SQL_input *sql = (SQL_input*) info;
             MSIVIEW *insert = NULL;
@@ -1645,14 +1653,15 @@ yyreduce:
             INSERT_CreateView( sql->db, &insert, (yyvsp[(3) - (11)].string), (yyvsp[(5) - (11)].column_list), (yyvsp[(9) - (11)].column_list), TRUE );
             if( !insert )
                 YYABORT;
-            (yyval.query) = insert;
+
+            PARSER_BUBBLE_UP_VIEW( sql, (yyval.query),  insert );
         ;}
     break;
 
   case 12:
 
 /* Line 1455 of yacc.c  */
-#line 168 "sql.y"
+#line 177 "sql.y"
     {
             SQL_input* sql = (SQL_input*) info;
             MSIVIEW *create = NULL;
@@ -1666,14 +1675,15 @@ yyreduce:
                 sql->r = r;
                 YYABORT;
             }
-            (yyval.query) = create;
+
+            PARSER_BUBBLE_UP_VIEW( sql, (yyval.query),  create );
         ;}
     break;
 
   case 13:
 
 /* Line 1455 of yacc.c  */
-#line 184 "sql.y"
+#line 194 "sql.y"
     {
             SQL_input* sql = (SQL_input*) info;
             MSIVIEW *create = NULL;
@@ -1683,14 +1693,15 @@ yyreduce:
             CREATE_CreateView( sql->db, &create, (yyvsp[(3) - (7)].string), (yyvsp[(5) - (7)].column_list), TRUE );
             if( !create )
                 YYABORT;
-            (yyval.query) = create;
+
+            PARSER_BUBBLE_UP_VIEW( sql, (yyval.query),  create );
         ;}
     break;
 
   case 14:
 
 /* Line 1455 of yacc.c  */
-#line 199 "sql.y"
+#line 210 "sql.y"
     {
             SQL_input* sql = (SQL_input*) info;
             MSIVIEW *update = NULL;
@@ -1698,14 +1709,15 @@ yyreduce:
             UPDATE_CreateView( sql->db, &update, (yyvsp[(2) - (6)].string), (yyvsp[(4) - (6)].column_list), (yyvsp[(6) - (6)].expr) );
             if( !update )
                 YYABORT;
-            (yyval.query) = update;
+
+            PARSER_BUBBLE_UP_VIEW( sql, (yyval.query),  update );
         ;}
     break;
 
   case 15:
 
 /* Line 1455 of yacc.c  */
-#line 209 "sql.y"
+#line 221 "sql.y"
     {
             SQL_input* sql = (SQL_input*) info;
             MSIVIEW *update = NULL;
@@ -1713,14 +1725,15 @@ yyreduce:
             UPDATE_CreateView( sql->db, &update, (yyvsp[(2) - (4)].string), (yyvsp[(4) - (4)].column_list), NULL );
             if( !update )
                 YYABORT;
-            (yyval.query) = update;
+
+            PARSER_BUBBLE_UP_VIEW( sql, (yyval.query),  update );
         ;}
     break;
 
   case 16:
 
 /* Line 1455 of yacc.c  */
-#line 222 "sql.y"
+#line 235 "sql.y"
     {
             SQL_input* sql = (SQL_input*) info;
             MSIVIEW *delete = NULL;
@@ -1728,14 +1741,15 @@ yyreduce:
             DELETE_CreateView( sql->db, &delete, (yyvsp[(2) - (2)].query) );
             if( !delete )
                 YYABORT;
-            (yyval.query) = delete;
+
+            PARSER_BUBBLE_UP_VIEW( sql, (yyval.query), delete );
         ;}
     break;
 
   case 17:
 
 /* Line 1455 of yacc.c  */
-#line 235 "sql.y"
+#line 249 "sql.y"
     {
             SQL_input* sql = (SQL_input*) info;
             MSIVIEW *alter = NULL;
@@ -1743,14 +1757,15 @@ yyreduce:
             ALTER_CreateView( sql->db, &alter, (yyvsp[(3) - (4)].string), NULL, (yyvsp[(4) - (4)].integer) );
             if( !alter )
                 YYABORT;
-            (yyval.query) = alter;
+
+            PARSER_BUBBLE_UP_VIEW( sql, (yyval.query), alter );
         ;}
     break;
 
   case 18:
 
 /* Line 1455 of yacc.c  */
-#line 245 "sql.y"
+#line 260 "sql.y"
     {
             SQL_input *sql = (SQL_input *)info;
             MSIVIEW *alter = NULL;
@@ -1758,14 +1773,15 @@ yyreduce:
             ALTER_CreateView( sql->db, &alter, (yyvsp[(3) - (5)].string), (yyvsp[(5) - (5)].column_list), 0 );
             if (!alter)
                 YYABORT;
-            (yyval.query) = alter;
+
+            PARSER_BUBBLE_UP_VIEW( sql, (yyval.query), alter );
         ;}
     break;
 
   case 19:
 
 /* Line 1455 of yacc.c  */
-#line 255 "sql.y"
+#line 271 "sql.y"
     {
             SQL_input *sql = (SQL_input *)info;
             MSIVIEW *alter = NULL;
@@ -1773,14 +1789,15 @@ yyreduce:
             ALTER_CreateView( sql->db, &alter, (yyvsp[(3) - (6)].string), (yyvsp[(5) - (6)].column_list), 1 );
             if (!alter)
                 YYABORT;
-            (yyval.query) = alter;
+
+            PARSER_BUBBLE_UP_VIEW( sql, (yyval.query), alter );
         ;}
     break;
 
   case 20:
 
 /* Line 1455 of yacc.c  */
-#line 268 "sql.y"
+#line 285 "sql.y"
     {
             (yyval.integer) = 1;
         ;}
@@ -1789,7 +1806,7 @@ yyreduce:
   case 21:
 
 /* Line 1455 of yacc.c  */
-#line 272 "sql.y"
+#line 289 "sql.y"
     {
             (yyval.integer) = -1;
         ;}
@@ -1798,22 +1815,24 @@ yyreduce:
   case 22:
 
 /* Line 1455 of yacc.c  */
-#line 279 "sql.y"
+#line 296 "sql.y"
     {
             SQL_input* sql = (SQL_input*) info;
+            MSIVIEW* drop = NULL;
             UINT r;
 
-            (yyval.query) = NULL;
-            r = DROP_CreateView( sql->db, &(yyval.query), (yyvsp[(3) - (3)].string) );
+            r = DROP_CreateView( sql->db, &drop, (yyvsp[(3) - (3)].string) );
             if( r != ERROR_SUCCESS || !(yyval.query) )
                 YYABORT;
+
+            PARSER_BUBBLE_UP_VIEW( sql, (yyval.query), drop );
         ;}
     break;
 
   case 23:
 
 /* Line 1455 of yacc.c  */
-#line 292 "sql.y"
+#line 311 "sql.y"
     {
             if( SQL_MarkPrimaryKeys( &(yyvsp[(1) - (4)].column_list), (yyvsp[(4) - (4)].column_list) ) )
                 (yyval.column_list) = (yyvsp[(1) - (4)].column_list);
@@ -1825,7 +1844,7 @@ yyreduce:
   case 24:
 
 /* Line 1455 of yacc.c  */
-#line 302 "sql.y"
+#line 321 "sql.y"
     {
             column_info *ci;
 
@@ -1840,7 +1859,7 @@ yyreduce:
   case 25:
 
 /* Line 1455 of yacc.c  */
-#line 312 "sql.y"
+#line 331 "sql.y"
     {
             (yyval.column_list) = (yyvsp[(1) - (1)].column_list);
         ;}
@@ -1849,7 +1868,7 @@ yyreduce:
   case 26:
 
 /* Line 1455 of yacc.c  */
-#line 319 "sql.y"
+#line 338 "sql.y"
     {
             (yyval.column_list) = (yyvsp[(1) - (2)].column_list);
             (yyval.column_list)->type = ((yyvsp[(2) - (2)].column_type) | MSITYPE_VALID);
@@ -1860,7 +1879,7 @@ yyreduce:
   case 27:
 
 /* Line 1455 of yacc.c  */
-#line 328 "sql.y"
+#line 347 "sql.y"
     {
             (yyval.column_type) = (yyvsp[(1) - (1)].column_type);
         ;}
@@ -1869,7 +1888,7 @@ yyreduce:
   case 28:
 
 /* Line 1455 of yacc.c  */
-#line 332 "sql.y"
+#line 351 "sql.y"
     {
             (yyval.column_type) = (yyvsp[(1) - (2)].column_type) | MSITYPE_LOCALIZABLE;
         ;}
@@ -1878,7 +1897,7 @@ yyreduce:
   case 29:
 
 /* Line 1455 of yacc.c  */
-#line 336 "sql.y"
+#line 355 "sql.y"
     {
             (yyval.column_type) = (yyvsp[(1) - (2)].column_type) | MSITYPE_TEMPORARY;
         ;}
@@ -1887,7 +1906,7 @@ yyreduce:
   case 30:
 
 /* Line 1455 of yacc.c  */
-#line 343 "sql.y"
+#line 362 "sql.y"
     {
             (yyval.column_type) |= MSITYPE_NULLABLE;
         ;}
@@ -1896,7 +1915,7 @@ yyreduce:
   case 31:
 
 /* Line 1455 of yacc.c  */
-#line 347 "sql.y"
+#line 366 "sql.y"
     {
             (yyval.column_type) = (yyvsp[(1) - (3)].column_type);
         ;}
@@ -1905,7 +1924,7 @@ yyreduce:
   case 32:
 
 /* Line 1455 of yacc.c  */
-#line 354 "sql.y"
+#line 373 "sql.y"
     {
             (yyval.column_type) = MSITYPE_STRING | 1;
         ;}
@@ -1914,7 +1933,7 @@ yyreduce:
   case 33:
 
 /* Line 1455 of yacc.c  */
-#line 358 "sql.y"
+#line 377 "sql.y"
     {
             (yyval.column_type) = MSITYPE_STRING | 0x400 | (yyvsp[(3) - (4)].column_type);
         ;}
@@ -1923,7 +1942,7 @@ yyreduce:
   case 34:
 
 /* Line 1455 of yacc.c  */
-#line 362 "sql.y"
+#line 381 "sql.y"
     {
             (yyval.column_type) = MSITYPE_STRING | 0x400;
         ;}
@@ -1932,7 +1951,7 @@ yyreduce:
   case 35:
 
 /* Line 1455 of yacc.c  */
-#line 366 "sql.y"
+#line 385 "sql.y"
     {
             (yyval.column_type) = 2 | 0x400;
         ;}
@@ -1941,7 +1960,7 @@ yyreduce:
   case 36:
 
 /* Line 1455 of yacc.c  */
-#line 370 "sql.y"
+#line 389 "sql.y"
     {
             (yyval.column_type) = 2 | 0x400;
         ;}
@@ -1950,7 +1969,7 @@ yyreduce:
   case 37:
 
 /* Line 1455 of yacc.c  */
-#line 374 "sql.y"
+#line 393 "sql.y"
     {
             (yyval.column_type) = 4;
         ;}
@@ -1959,7 +1978,7 @@ yyreduce:
   case 38:
 
 /* Line 1455 of yacc.c  */
-#line 378 "sql.y"
+#line 397 "sql.y"
     {
             (yyval.column_type) = MSITYPE_STRING | MSITYPE_VALID;
         ;}
@@ -1968,7 +1987,7 @@ yyreduce:
   case 39:
 
 /* Line 1455 of yacc.c  */
-#line 385 "sql.y"
+#line 404 "sql.y"
     {
             if( ( (yyvsp[(1) - (1)].integer) > 255 ) || ( (yyvsp[(1) - (1)].integer) < 0 ) )
                 YYABORT;
@@ -1979,7 +1998,7 @@ yyreduce:
   case 40:
 
 /* Line 1455 of yacc.c  */
-#line 394 "sql.y"
+#line 413 "sql.y"
     {
             UINT r;
 
@@ -1997,7 +2016,7 @@ yyreduce:
   case 42:
 
 /* Line 1455 of yacc.c  */
-#line 411 "sql.y"
+#line 430 "sql.y"
     {
             (yyval.query) = (yyvsp[(2) - (2)].query);
         ;}
@@ -2006,38 +2025,36 @@ yyreduce:
   case 43:
 
 /* Line 1455 of yacc.c  */
-#line 415 "sql.y"
+#line 434 "sql.y"
     {
             SQL_input* sql = (SQL_input*) info;
+            MSIVIEW* distinct = NULL;
             UINT r;
 
-            (yyval.query) = NULL;
-            r = DISTINCT_CreateView( sql->db, &(yyval.query), (yyvsp[(3) - (3)].query) );
+            r = DISTINCT_CreateView( sql->db, &distinct, (yyvsp[(3) - (3)].query) );
             if (r != ERROR_SUCCESS)
-            {
-                (yyvsp[(3) - (3)].query)->ops->delete((yyvsp[(3) - (3)].query));
                 YYABORT;
-            }
+
+            PARSER_BUBBLE_UP_VIEW( sql, (yyval.query), distinct );
         ;}
     break;
 
   case 44:
 
 /* Line 1455 of yacc.c  */
-#line 431 "sql.y"
+#line 449 "sql.y"
     {
             SQL_input* sql = (SQL_input*) info;
+            MSIVIEW* select = NULL;
             UINT r;
 
-            (yyval.query) = NULL;
             if( (yyvsp[(1) - (2)].column_list) )
             {
-                r = SELECT_CreateView( sql->db, &(yyval.query), (yyvsp[(2) - (2)].query), (yyvsp[(1) - (2)].column_list) );
+                r = SELECT_CreateView( sql->db, &select, (yyvsp[(2) - (2)].query), (yyvsp[(1) - (2)].column_list) );
                 if (r != ERROR_SUCCESS)
-                {
-                    (yyvsp[(2) - (2)].query)->ops->delete((yyvsp[(2) - (2)].query));
                     YYABORT;
-                }
+
+                PARSER_BUBBLE_UP_VIEW( sql, (yyval.query), select );
             }
             else
                 (yyval.query) = (yyvsp[(2) - (2)].query);
@@ -2047,7 +2064,7 @@ yyreduce:
   case 46:
 
 /* Line 1455 of yacc.c  */
-#line 453 "sql.y"
+#line 470 "sql.y"
     {
             (yyvsp[(1) - (3)].column_list)->next = (yyvsp[(3) - (3)].column_list);
         ;}
@@ -2056,7 +2073,7 @@ yyreduce:
   case 47:
 
 /* Line 1455 of yacc.c  */
-#line 457 "sql.y"
+#line 474 "sql.y"
     {
             (yyval.column_list) = NULL;
         ;}
@@ -2065,54 +2082,58 @@ yyreduce:
   case 49:
 
 /* Line 1455 of yacc.c  */
-#line 465 "sql.y"
+#line 482 "sql.y"
     {
             SQL_input* sql = (SQL_input*) info;
+            MSIVIEW* where = NULL;
             UINT r;
 
-            (yyval.query) = NULL;
-            r = WHERE_CreateView( sql->db, &(yyval.query), (yyvsp[(1) - (3)].query), (yyvsp[(3) - (3)].expr) );
+            r = WHERE_CreateView( sql->db, &where, (yyvsp[(1) - (3)].query), (yyvsp[(3) - (3)].expr) );
             if( r != ERROR_SUCCESS )
-            {
-                (yyvsp[(1) - (3)].query)->ops->delete( (yyvsp[(1) - (3)].query) );
                 YYABORT;
-            }
+
+            PARSER_BUBBLE_UP_VIEW( sql, (yyval.query), where );
         ;}
     break;
 
   case 50:
 
 /* Line 1455 of yacc.c  */
-#line 481 "sql.y"
+#line 497 "sql.y"
     {
             SQL_input* sql = (SQL_input*) info;
+            MSIVIEW* table = NULL;
             UINT r;
 
-            (yyval.query) = NULL;
-            r = TABLE_CreateView( sql->db, (yyvsp[(2) - (2)].string), &(yyval.query) );
+            r = TABLE_CreateView( sql->db, (yyvsp[(2) - (2)].string), &table );
             if( r != ERROR_SUCCESS || !(yyval.query) )
                 YYABORT;
+
+            PARSER_BUBBLE_UP_VIEW( sql, (yyval.query), table );
         ;}
     break;
 
   case 51:
 
 /* Line 1455 of yacc.c  */
-#line 491 "sql.y"
+#line 509 "sql.y"
     {
             SQL_input* sql = (SQL_input*) info;
+            MSIVIEW* join = NULL;
             UINT r;
 
-            r = JOIN_CreateView( sql->db, &(yyval.query), (yyvsp[(2) - (2)].string) );
+            r = JOIN_CreateView( sql->db, &join, (yyvsp[(2) - (2)].string) );
             if( r != ERROR_SUCCESS )
                 YYABORT;
+
+            PARSER_BUBBLE_UP_VIEW( sql, (yyval.query), join );
         ;}
     break;
 
   case 52:
 
 /* Line 1455 of yacc.c  */
-#line 503 "sql.y"
+#line 524 "sql.y"
     {
             (yyval.string) = (yyvsp[(1) - (1)].string);
         ;}
@@ -2121,7 +2142,7 @@ yyreduce:
   case 53:
 
 /* Line 1455 of yacc.c  */
-#line 508 "sql.y"
+#line 529 "sql.y"
     {
             (yyval.string) = parser_add_table( info, (yyvsp[(3) - (3)].string), (yyvsp[(1) - (3)].string) );
             if (!(yyval.string))
@@ -2132,7 +2153,7 @@ yyreduce:
   case 54:
 
 /* Line 1455 of yacc.c  */
-#line 517 "sql.y"
+#line 538 "sql.y"
     {
             (yyval.expr) = (yyvsp[(2) - (3)].expr);
             if( !(yyval.expr) )
@@ -2143,7 +2164,7 @@ yyreduce:
   case 55:
 
 /* Line 1455 of yacc.c  */
-#line 523 "sql.y"
+#line 544 "sql.y"
     {
             (yyval.expr) = EXPR_complex( info, (yyvsp[(1) - (3)].expr), OP_AND, (yyvsp[(3) - (3)].expr) );
             if( !(yyval.expr) )
@@ -2154,7 +2175,7 @@ yyreduce:
   case 56:
 
 /* Line 1455 of yacc.c  */
-#line 529 "sql.y"
+#line 550 "sql.y"
     {
             (yyval.expr) = EXPR_complex( info, (yyvsp[(1) - (3)].expr), OP_OR, (yyvsp[(3) - (3)].expr) );
             if( !(yyval.expr) )
@@ -2165,7 +2186,7 @@ yyreduce:
   case 57:
 
 /* Line 1455 of yacc.c  */
-#line 535 "sql.y"
+#line 556 "sql.y"
     {
             (yyval.expr) = EXPR_complex( info, (yyvsp[(1) - (3)].expr), OP_EQ, (yyvsp[(3) - (3)].expr) );
             if( !(yyval.expr) )
@@ -2176,7 +2197,7 @@ yyreduce:
   case 58:
 
 /* Line 1455 of yacc.c  */
-#line 541 "sql.y"
+#line 562 "sql.y"
     {
             (yyval.expr) = EXPR_complex( info, (yyvsp[(1) - (3)].expr), OP_GT, (yyvsp[(3) - (3)].expr) );
             if( !(yyval.expr) )
@@ -2187,7 +2208,7 @@ yyreduce:
   case 59:
 
 /* Line 1455 of yacc.c  */
-#line 547 "sql.y"
+#line 568 "sql.y"
     {
             (yyval.expr) = EXPR_complex( info, (yyvsp[(1) - (3)].expr), OP_LT, (yyvsp[(3) - (3)].expr) );
             if( !(yyval.expr) )
@@ -2198,7 +2219,7 @@ yyreduce:
   case 60:
 
 /* Line 1455 of yacc.c  */
-#line 553 "sql.y"
+#line 574 "sql.y"
     {
             (yyval.expr) = EXPR_complex( info, (yyvsp[(1) - (3)].expr), OP_LE, (yyvsp[(3) - (3)].expr) );
             if( !(yyval.expr) )
@@ -2209,7 +2230,7 @@ yyreduce:
   case 61:
 
 /* Line 1455 of yacc.c  */
-#line 559 "sql.y"
+#line 580 "sql.y"
     {
             (yyval.expr) = EXPR_complex( info, (yyvsp[(1) - (3)].expr), OP_GE, (yyvsp[(3) - (3)].expr) );
             if( !(yyval.expr) )
@@ -2220,7 +2241,7 @@ yyreduce:
   case 62:
 
 /* Line 1455 of yacc.c  */
-#line 565 "sql.y"
+#line 586 "sql.y"
     {
             (yyval.expr) = EXPR_complex( info, (yyvsp[(1) - (3)].expr), OP_NE, (yyvsp[(3) - (3)].expr) );
             if( !(yyval.expr) )
@@ -2231,7 +2252,7 @@ yyreduce:
   case 63:
 
 /* Line 1455 of yacc.c  */
-#line 571 "sql.y"
+#line 592 "sql.y"
     {
             (yyval.expr) = EXPR_unary( info, (yyvsp[(1) - (3)].expr), OP_ISNULL );
             if( !(yyval.expr) )
@@ -2242,7 +2263,7 @@ yyreduce:
   case 64:
 
 /* Line 1455 of yacc.c  */
-#line 577 "sql.y"
+#line 598 "sql.y"
     {
             (yyval.expr) = EXPR_unary( info, (yyvsp[(1) - (4)].expr), OP_NOTNULL );
             if( !(yyval.expr) )
@@ -2253,7 +2274,7 @@ yyreduce:
   case 67:
 
 /* Line 1455 of yacc.c  */
-#line 591 "sql.y"
+#line 612 "sql.y"
     {
             (yyval.column_list) = parser_alloc_column( info, NULL, NULL );
             if( !(yyval.column_list) )
@@ -2265,7 +2286,7 @@ yyreduce:
   case 68:
 
 /* Line 1455 of yacc.c  */
-#line 598 "sql.y"
+#line 619 "sql.y"
     {
             (yyval.column_list) = parser_alloc_column( info, NULL, NULL );
             if( !(yyval.column_list) )
@@ -2278,7 +2299,7 @@ yyreduce:
   case 70:
 
 /* Line 1455 of yacc.c  */
-#line 610 "sql.y"
+#line 631 "sql.y"
     {
             (yyval.column_list) = (yyvsp[(1) - (3)].column_list);
             (yyval.column_list)->next = (yyvsp[(3) - (3)].column_list);
@@ -2288,7 +2309,7 @@ yyreduce:
   case 71:
 
 /* Line 1455 of yacc.c  */
-#line 618 "sql.y"
+#line 639 "sql.y"
     {
             (yyval.column_list) = (yyvsp[(1) - (3)].column_list);
             (yyval.column_list)->val = (yyvsp[(3) - (3)].expr);
@@ -2298,7 +2319,7 @@ yyreduce:
   case 72:
 
 /* Line 1455 of yacc.c  */
-#line 626 "sql.y"
+#line 647 "sql.y"
     {
             (yyval.expr) = EXPR_ival( info, (yyvsp[(1) - (1)].integer) );
             if( !(yyval.expr) )
@@ -2309,7 +2330,7 @@ yyreduce:
   case 73:
 
 /* Line 1455 of yacc.c  */
-#line 632 "sql.y"
+#line 653 "sql.y"
     {
             (yyval.expr) = EXPR_ival( info, -(yyvsp[(2) - (2)].integer) );
             if( !(yyval.expr) )
@@ -2320,7 +2341,7 @@ yyreduce:
   case 74:
 
 /* Line 1455 of yacc.c  */
-#line 638 "sql.y"
+#line 659 "sql.y"
     {
             (yyval.expr) = EXPR_sval( info, &(yyvsp[(1) - (1)].str) );
             if( !(yyval.expr) )
@@ -2331,7 +2352,7 @@ yyreduce:
   case 75:
 
 /* Line 1455 of yacc.c  */
-#line 644 "sql.y"
+#line 665 "sql.y"
     {
             (yyval.expr) = EXPR_wildcard( info );
             if( !(yyval.expr) )
@@ -2342,7 +2363,7 @@ yyreduce:
   case 76:
 
 /* Line 1455 of yacc.c  */
-#line 653 "sql.y"
+#line 674 "sql.y"
     {
             (yyval.expr) = EXPR_column( info, (yyvsp[(1) - (1)].column_list) );
             if( !(yyval.expr) )
@@ -2353,7 +2374,7 @@ yyreduce:
   case 77:
 
 /* Line 1455 of yacc.c  */
-#line 662 "sql.y"
+#line 683 "sql.y"
     {
             (yyval.column_list) = parser_alloc_column( info, (yyvsp[(1) - (3)].string), (yyvsp[(3) - (3)].string) );
             if( !(yyval.column_list) )
@@ -2364,7 +2385,7 @@ yyreduce:
   case 78:
 
 /* Line 1455 of yacc.c  */
-#line 668 "sql.y"
+#line 689 "sql.y"
     {
             (yyval.column_list) = parser_alloc_column( info, NULL, (yyvsp[(1) - (1)].string) );
             if( !(yyval.column_list) )
@@ -2375,7 +2396,7 @@ yyreduce:
   case 79:
 
 /* Line 1455 of yacc.c  */
-#line 677 "sql.y"
+#line 698 "sql.y"
     {
             (yyval.string) = (yyvsp[(1) - (1)].string);
         ;}
@@ -2384,7 +2405,7 @@ yyreduce:
   case 80:
 
 /* Line 1455 of yacc.c  */
-#line 684 "sql.y"
+#line 705 "sql.y"
     {
             if ( SQL_getstring( info, &(yyvsp[(1) - (1)].str), &(yyval.string) ) != ERROR_SUCCESS || !(yyval.string) )
                 YYABORT;
@@ -2394,7 +2415,7 @@ yyreduce:
   case 81:
 
 /* Line 1455 of yacc.c  */
-#line 692 "sql.y"
+#line 713 "sql.y"
     {
             (yyval.integer) = SQL_getint( info );
         ;}
@@ -2403,7 +2424,7 @@ yyreduce:
 
 
 /* Line 1455 of yacc.c  */
-#line 2407 "sql.tab.c"
+#line 2428 "sql.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -2615,7 +2636,7 @@ yyreturn:
 
 
 /* Line 1675 of yacc.c  */
-#line 697 "sql.y"
+#line 718 "sql.y"
 
 
 static LPWSTR parser_add_table( void *info, LPCWSTR list, LPCWSTR table )

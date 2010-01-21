@@ -173,7 +173,7 @@ INT
 WSPAPI
 WPUQueueApc(IN LPWSATHREADID lpThreadId,
             IN LPWSAUSERAPC lpfnUserApc,
-            IN DWORD dwContext,
+            IN DWORD_PTR dwContext,
             OUT LPINT lpErrno)
 {
     UNIMPLEMENTED;

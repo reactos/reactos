@@ -367,7 +367,7 @@ HRESULT WINAPI
 DirectDrawEnumerateA(LPDDENUMCALLBACKA Callback,
                      LPVOID Context)
 {
-    BOOL stop = FALSE;
+    TRACE("(%p, %p)\n", Callback, Context);
 
     TRACE(" Enumerating default DirectDraw HAL interface\n");
     /* We only have one driver */
@@ -376,11 +376,11 @@ DirectDrawEnumerateA(LPDDENUMCALLBACKA Callback,
         static CHAR driver_desc[] = "DirectDraw HAL",
         driver_name[] = "display";
 
-        stop = !Callback(NULL, driver_desc, driver_name, Context);
+        Callback(NULL, driver_desc, driver_name, Context);
     }
     __EXCEPT_PAGE_FAULT
     {
-        return E_INVALIDARG;
+        return DDERR_INVALIDPARAMS;
     }
     __ENDTRY
 
@@ -402,7 +402,16 @@ DirectDrawEnumerateExA(LPDDENUMCALLBACKEXA Callback,
                        LPVOID Context,
                        DWORD Flags)
 {
-    BOOL stop = FALSE;
+    TRACE("(%p, %p, 0x%08x)\n", Callback, Context, Flags);
+
+    if (Flags & ~(DDENUM_ATTACHEDSECONDARYDEVICES |
+                  DDENUM_DETACHEDSECONDARYDEVICES |
+                  DDENUM_NONDISPLAYDEVICES))
+        return DDERR_INVALIDPARAMS;
+
+    if (Flags)
+        FIXME("flags 0x%08x not handled\n", Flags);
+
     TRACE("Enumerating default DirectDraw HAL interface\n");
 
     /* We only have one driver by now */
@@ -412,11 +421,11 @@ DirectDrawEnumerateExA(LPDDENUMCALLBACKEXA Callback,
         driver_name[] = "display";
 
         /* QuickTime expects the description "DirectDraw HAL" */
-        stop = !Callback(NULL, driver_desc, driver_name, Context, 0);
+        Callback(NULL, driver_desc, driver_name, Context, 0);
     }
     __EXCEPT_PAGE_FAULT
     {
-        return E_INVALIDARG;
+        return DDERR_INVALIDPARAMS;
     }
     __ENDTRY;
 
@@ -427,22 +436,38 @@ DirectDrawEnumerateExA(LPDDENUMCALLBACKEXA Callback,
 /***********************************************************************
  * DirectDrawEnumerateW (DDRAW.@)
  *
- * Enumerates legacy drivers, unicode version. See
- * the comments above DirectDrawEnumerateA for more details.
- *
- * The Flag member is not supported right now.
+ * Enumerates legacy drivers, unicode version.
+ * This function is not implemented on Windows.
  *
  ***********************************************************************/
+HRESULT WINAPI
+DirectDrawEnumerateW(LPDDENUMCALLBACKW Callback,
+                     LPVOID Context)
+{
+    TRACE("(%p, %p)\n", Callback, Context);
+
+    if (!Callback)
+        return DDERR_INVALIDPARAMS;
+    else
+        return DDERR_UNSUPPORTED;
+}
 
 /***********************************************************************
  * DirectDrawEnumerateExW (DDRAW.@)
  *
- * Enumerates DirectDraw7 drivers, unicode version. See
- * the comments above DirectDrawEnumerateA for more details.
- *
- * The Flag member is not supported right now.
+ * Enumerates DirectDraw7 drivers, unicode version.
+ * This function is not implemented on Windows.
  *
  ***********************************************************************/
+HRESULT WINAPI
+DirectDrawEnumerateExW(LPDDENUMCALLBACKEXW Callback,
+                       LPVOID Context,
+                       DWORD Flags)
+{
+    TRACE("(%p, %p, 0x%x)\n", Callback, Context, Flags);
+
+    return DDERR_UNSUPPORTED;
+}
 
 /***********************************************************************
  * Classfactory implementation.

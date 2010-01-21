@@ -8,7 +8,6 @@
 #define MINGW_HAS_SECURE_API 1
 
 #include <tchar.h>
-#define __STDC_WANT_SECURE_LIB__
 #include <time.h>
 #include "bitsfixup.h"
 

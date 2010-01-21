@@ -42,33 +42,6 @@ DWORD WINAPI suErrorToIds16( WORD w1, WORD w2 )
 }
 
 /***********************************************************************
- *		SetupInitializeFileLogW(SETUPAPI.@)
- */
-HSPFILELOG WINAPI SetupInitializeFileLogW(LPCWSTR LogFileName, DWORD Flags)
-{
-    FIXME("Stub %s, 0x%x\n",debugstr_w(LogFileName),Flags);
-    return INVALID_HANDLE_VALUE;
-}
-
-/***********************************************************************
- *		SetupInitializeFileLogA(SETUPAPI.@)
- */
-HSPFILELOG WINAPI SetupInitializeFileLogA(LPCSTR LogFileName, DWORD Flags)
-{
-    FIXME("Stub %s, 0x%x\n",debugstr_a(LogFileName),Flags);
-    return INVALID_HANDLE_VALUE;
-}
-
-/***********************************************************************
- *		SetupTerminateFileLog(SETUPAPI.@)
- */
-BOOL WINAPI SetupTerminateFileLog(HANDLE FileLogHandle)
-{
-    FIXME ("Stub %p\n",FileLogHandle);
-    return TRUE;
-}
-
-/***********************************************************************
  *		RegistryDelnode(SETUPAPI.@)
  */
 BOOL WINAPI RegistryDelnode(DWORD x, DWORD y)
@@ -241,8 +214,10 @@ WINSETUPAPI BOOL WINAPI SetupDiGetDeviceInterfaceAlias(IN HDEVINFO  DeviceInfoSe
     return FALSE;
 }
 
-HKEY WINAPI SetupDiOpenDeviceInterfaceRegKey(IN HDEVINFO  DeviceInfoSet, IN PSP_DEVICE_INTERFACE_DATA  DeviceInterfaceData, IN DWORD  Reserved, IN REGSAM  samDesired)
+WINSETUPAPI BOOL WINAPI SetupSetNonInteractiveMode(BOOL NonInteractiveFlag)
 {
-    FIXME("%p %p %p 0x%08x 0x%08x: stub\n", DeviceInfoSet, DeviceInterfaceData, Reserved, samDesired);
-    return INVALID_HANDLE_VALUE;
+    FIXME("(%d) stub\n", NonInteractiveFlag);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
 }
+

@@ -154,8 +154,8 @@ MainFrameBase::MainFrameBase(HWND hwnd)
 {
     HDC hDC = GetDC(NULL);
 #ifndef _NO_REBAR
-    //static WCHAR Title1[] = TEXT("Toolbar");
-    static WCHAR Title2[] = TEXT("Address :");
+	//static TCHAR Title1[] = TEXT("Toolbar");
+	static TCHAR Title2[] = TEXT("Address :");
 #endif
 
     if (hDC)

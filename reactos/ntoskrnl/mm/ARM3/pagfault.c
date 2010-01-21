@@ -140,8 +140,8 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
     KIRQL OldIrql;
     NTSTATUS Status;
     DPRINT("ARM3 Page Fault Dispatcher for address: %p in process: %p\n",
-            Address,
-            Process);
+             Address,
+             Process);
     
     //
     // Make sure APCs are off and we're not at dispatch
@@ -297,14 +297,27 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         
         //
         // Check for a fault on the page table or hyperspace itself
-        // FIXME: Use MmHyperSpaceEnd
         //
-        if ((Address >= (PVOID)PTE_BASE) && (Address <= (PVOID)0xC0800000))
+        if ((Address >= (PVOID)PTE_BASE) && (Address <= MmHyperSpaceEnd))
         {
             //
             // This might happen...not sure yet
             //
             DPRINT1("FAULT ON PAGE TABLES!\n");
+            
+            //
+            // Map in the page table
+            //
+            if (MiCheckPdeForPagedPool(Address) == STATUS_WAIT_1)
+            {
+                DPRINT1("PAGE TABLES FAULTED IN!\n");
+                return STATUS_SUCCESS;
+            }
+            
+            //
+            // Otherwise the page table doesn't actually exist
+            //
+            DPRINT1("FAILING\n");
             return STATUS_ACCESS_VIOLATION;
         }
         

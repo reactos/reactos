@@ -2429,31 +2429,37 @@ IDirectDrawSurfaceImpl_SetColorKey(IDirectDrawSurface7 *iface,
                                    DDCOLORKEY *CKey)
 {
     IDirectDrawSurfaceImpl *This = (IDirectDrawSurfaceImpl *)iface;
-    struct SCKContext ctx = { DD_OK, (WINEDDCOLORKEY *) CKey, Flags };
+    DDCOLORKEY FixedCKey;
+    struct SCKContext ctx = { DD_OK, (WINEDDCOLORKEY *) (CKey ? &FixedCKey : NULL), Flags };
     TRACE("(%p)->(%x,%p)\n", This, Flags, CKey);
 
     EnterCriticalSection(&ddraw_cs);
     if (CKey)
     {
+        FixedCKey = *CKey;
+        /* Handle case where dwColorSpaceHighValue < dwColorSpaceLowValue */
+        if (FixedCKey.dwColorSpaceHighValue < FixedCKey.dwColorSpaceLowValue)
+            FixedCKey.dwColorSpaceHighValue = FixedCKey.dwColorSpaceLowValue;
+
         switch (Flags & ~DDCKEY_COLORSPACE)
         {
         case DDCKEY_DESTBLT:
-            This->surface_desc.ddckCKDestBlt = *CKey;
+            This->surface_desc.ddckCKDestBlt = FixedCKey;
             This->surface_desc.dwFlags |= DDSD_CKDESTBLT;
             break;
 
         case DDCKEY_DESTOVERLAY:
-            This->surface_desc.u3.ddckCKDestOverlay = *CKey;
+            This->surface_desc.u3.ddckCKDestOverlay = FixedCKey;
             This->surface_desc.dwFlags |= DDSD_CKDESTOVERLAY;
             break;
 
         case DDCKEY_SRCOVERLAY:
-            This->surface_desc.ddckCKSrcOverlay = *CKey;
+            This->surface_desc.ddckCKSrcOverlay = FixedCKey;
             This->surface_desc.dwFlags |= DDSD_CKSRCOVERLAY;
             break;
 
         case DDCKEY_SRCBLT:
-            This->surface_desc.ddckCKSrcBlt = *CKey;
+            This->surface_desc.ddckCKSrcBlt = FixedCKey;
             This->surface_desc.dwFlags |= DDSD_CKSRCBLT;
             break;
 

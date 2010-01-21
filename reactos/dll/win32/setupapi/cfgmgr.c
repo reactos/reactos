@@ -745,7 +745,7 @@ CONFIGRET WINAPI CM_Disable_DevNode_Ex(
     RpcTryExcept
     {
         ret = PNP_DeviceInstanceAction(BindingHandle,
-                                       5,
+                                       PNP_DEVINST_DISABLE,
                                        ulFlags,
                                        lpDevInst,
                                        NULL);
@@ -844,7 +844,7 @@ CONFIGRET WINAPI CM_Enable_DevNode_Ex(
     RpcTryExcept
     {
         ret = PNP_DeviceInstanceAction(BindingHandle,
-                                       4,
+                                       PNP_DEVINST_ENABLE,
                                        ulFlags,
                                        lpDevInst,
                                        NULL);
@@ -3044,7 +3044,7 @@ CONFIGRET WINAPI CM_Move_DevNode_Ex(
     RpcTryExcept
     {
         ret = PNP_DeviceInstanceAction(BindingHandle,
-                                       2,
+                                       PNP_DEVINST_MOVE,
                                        ulFlags,
                                        lpFromDevInst,
                                        lpToDevInst);
@@ -3301,7 +3301,7 @@ CM_Reenumerate_DevNode_Ex(
     RpcTryExcept
     {
         ret = PNP_DeviceInstanceAction(BindingHandle,
-                                       7,
+                                       PNP_DEVINST_REENUMERATE,
                                        ulFlags,
                                        lpDevInst,
                                        NULL);
@@ -3935,7 +3935,7 @@ CONFIGRET WINAPI CM_Setup_DevNode_Ex(
     RpcTryExcept
     {
         ret = PNP_DeviceInstanceAction(BindingHandle,
-                                       3,
+                                       PNP_DEVINST_SETUP,
                                        ulFlags,
                                        lpDevInst,
                                        NULL);

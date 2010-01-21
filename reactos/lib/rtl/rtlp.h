@@ -32,10 +32,12 @@ extern VOID FASTCALL CHECK_PAGED_CODE_RTL(char *file, int line);
 #define ROUND_UP(n, align) \
     ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
 
+#define RVA(m, b) ((PVOID)((ULONG_PTR)(b) + (ULONG_PTR)(m)))
+
 VOID
 NTAPI
-RtlpGetStackLimits(PULONG_PTR StackBase,
-                   PULONG_PTR StackLimit);
+RtlpGetStackLimits(PULONG_PTR LowLimit,
+                   PULONG_PTR HighLimit);
 
 PEXCEPTION_REGISTRATION_RECORD
 NTAPI

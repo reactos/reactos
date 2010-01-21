@@ -141,6 +141,10 @@ PortClsPnp(
             DPRINT("IRP_MN_QUERY_RESOURCE_REQUIREMENTS\n");
             Status = PcForwardIrpSynchronous(DeviceObject, Irp);
             return PcCompleteIrp(DeviceObject, Irp, Status);
+       case IRP_MN_READ_CONFIG:
+            DPRINT("IRP_MN_READ_CONFIG\n");
+            Status = PcForwardIrpSynchronous(DeviceObject, Irp);
+            return PcCompleteIrp(DeviceObject, Irp, Status);
     }
 
     DPRINT("unhandled function %u\n", IoStack->MinorFunction);

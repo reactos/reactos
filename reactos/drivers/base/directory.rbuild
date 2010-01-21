@@ -20,4 +20,7 @@
 <directory name="null">
 	<xi:include href="null/null.rbuild" />
 </directory>
+<directory name="nmidebug">
+	<xi:include href="nmidebug/nmidebug.rbuild" />
+</directory>
 </group>

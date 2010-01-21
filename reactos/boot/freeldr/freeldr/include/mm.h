@@ -104,7 +104,6 @@ VOID	MmUpdateLastFreePageHint(PVOID PageLookupTable, ULONG TotalPageCount);	// S
 BOOLEAN	MmAreMemoryPagesAvailable(PVOID PageLookupTable, ULONG TotalPageCount, PVOID PageAddress, ULONG PageCount);	// Returns TRUE if the specified pages of memory are available, otherwise FALSE
 VOID	MmSetMemoryType(PVOID MemoryAddress, ULONG MemorySize, TYPE_OF_MEMORY NewType); // Use with EXTREME caution!
 
-ULONG		GetSystemMemorySize(VOID);								// Returns the amount of total memory in the system
 PPAGE_LOOKUP_TABLE_ITEM MmGetMemoryMap(ULONG *NoEntries);			// Returns a pointer to the memory mapping table and a number of entries in it
 
 

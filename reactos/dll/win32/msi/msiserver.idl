@@ -153,21 +153,48 @@ library WindowsInstaller
             Session* OpenPackage(
                 [in] VARIANT PackagePath,
                 [in, optional, defaultvalue(0)] long Options);
+        [id(DISPID_INSTALLER_OPENPRODUCT)]
+            Session* OpenProduct(
+                [in] BSTR ProductCode);
+        [id(DISPID_INSTALLER_SUMMARYINFORMATION)]
+            SummaryInfo* SummaryInformation(
+                [in] BSTR PackagePath,
+                [in, optional, defaultvalue(0)] long UpdateCount);
         [id(DISPID_INSTALLER_OPENDATABASE)]
             Database *OpenDatabase(
                     [in] BSTR DatabasePath,
                     [in] VARIANT OpenMode);
+        [id(DISPID_INSTALLER_ENABLELOG)]
+            void EnableLog(
+                    [in] BSTR LogMode,
+                    [in] BSTR LogFile);
         [id(DISPID_INSTALLER_INSTALLPRODUCT)]
             void InstallProduct(
                 [in] BSTR PackagePath,
                 [in, optional, defaultvalue("0")] BSTR PropertyValues);
         [id(DISPID_INSTALLER_VERSION)]
             BSTR Version();
+        [id(DISPID_INSTALLER_LASTERRORRECORD)]
+            Record* LastErrorRecord();
         [id(DISPID_INSTALLER_REGISTRYVALUE), propget]
             BSTR RegistryValue(
                 [in] VARIANT Root,
                 [in] BSTR Key,
                 [in, optional] VARIANT Value);
+        [id(DISPID_INSTALLER_ENVIRONMENT), propget]
+            BSTR Environment([in] BSTR Variable);
+        [id(DISPID_INSTALLER_ENVIRONMENT), propput]
+            void Environment(
+                [in] BSTR Variable,
+                [in] BSTR rhs);
+        [id(DISPID_INSTALLER_FILEATTRIBUTES)]
+            long FileAttributes([in] BSTR FilePath);
+        [id(DISPID_INSTALLER_FILESIZE)]
+            long FileSize([in] BSTR FilePath);
+        [id(DISPID_INSTALLER_FILEVERSION)]
+            BSTR FileVersion(
+                [in] BSTR FilePath,
+                [in, optional] VARIANT Language);
         [id(DISPID_INSTALLER_PRODUCTSTATE), propget]
             MsiInstallState ProductState(
                 [in] BSTR Product);

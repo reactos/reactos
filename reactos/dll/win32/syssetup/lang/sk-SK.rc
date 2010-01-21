@@ -230,6 +230,7 @@ BEGIN
     IDS_SYS_ENTERTAINMENT       "Z·bava" //Entertainment
     IDS_CMT_MPLAY32             "Spustiù Multimedi·lny prehr·vaË"
     IDS_CMT_SNDVOL32            "Spustiù Ovl·danie hlasitosti"
+    IDS_CMT_SNDREC32            "Launch Sound Recorder"
 END
 
 STRINGTABLE
@@ -267,6 +268,7 @@ BEGIN
     IDS_SHORT_EVENTVIEW  "ZobrazovaË udalostÌ.lnk"
     IDS_SHORT_MSCONFIG   "Program na konfigur·ciu systÈmu.lnk"
     IDS_SHORT_SNDVOL32   "Ovl·danie hlasitosti.lnk" //Volume Control
+    IDS_SHORT_SNDREC32   "Audiorecorder.lnk"
     IDS_SHORT_DXDIAG     "Diagnostika ReactX.lnk"
     IDS_SHORT_PAINT      "Skic·r.lnk"
     IDS_SHORT_SPIDER     "Pav˙ËÌ solitÈr.lnk"

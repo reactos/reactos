@@ -108,6 +108,13 @@
 		<if property="ARCH" value="i386">
 			<directory name="i386">
 				<file>ntsetup.c</file>
+				<file>wlmemory.c</file>
+			</directory>
+		</if>
+		<if property="ARCH" value="amd64">
+			<directory name="amd64">
+				<file>ntsetup.c</file>
+				<file>wlmemory.c</file>
 			</directory>
 		</if>
 	</directory>

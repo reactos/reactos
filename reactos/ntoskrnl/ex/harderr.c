@@ -234,7 +234,8 @@ ExpRaiseHardError(IN NTSTATUS ErrorStatus,
         /* Setup the LPC Message */
         Message->h.u1.Length = (sizeof(HARDERROR_MSG) << 16) |
                                (sizeof(HARDERROR_MSG) - sizeof(PORT_MESSAGE));
-        Message->h.u2.ZeroInit = LPC_ERROR_EVENT;
+        Message->h.u2.ZeroInit = 0;
+        Message->h.u2.s2.Type = LPC_ERROR_EVENT;
         Message->Status = ErrorStatus &~ 0x10000000;
         Message->ValidResponseOptions = ValidResponseOptions;
         Message->UnicodeStringParameterMask = UnicodeStringParameterMask;

@@ -237,6 +237,7 @@ BEGIN
     IDS_SYS_ENTERTAINMENT       "Rozrywka"
     IDS_CMT_MPLAY32             "Uruchom Odtwarzacz multimedialny"
     IDS_CMT_SNDVOL32            "Uruchom regulacjê g³oœnoœci"
+    IDS_CMT_SNDREC32            "Launch Sound Recorder"
 END
 
 STRINGTABLE
@@ -289,6 +290,7 @@ BEGIN
     IDS_SHORT_EVENTVIEW  "Podgl¹d zdarzeñ.lnk"
     IDS_SHORT_MSCONFIG   "Konfiguracja systemowa.lnk"
     IDS_SHORT_SNDVOL32   "Regulacja g³oœnoœci.lnk"
+    IDS_SHORT_SNDREC32   "Audiorecorder.lnk"
     IDS_SHORT_DXDIAG     "Program diagnostyczny ReactX.lnk"
     IDS_SHORT_PAINT      "Paint.lnk"
 	IDS_SHORT_SPIDER     "Spider Solitaire.lnk"

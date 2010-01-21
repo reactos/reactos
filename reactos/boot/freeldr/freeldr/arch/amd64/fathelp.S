@@ -155,7 +155,7 @@ GetFatEntry16:
 		add   bx,dx
         mov   es,bx
 		mov   bx,ax						// Restore FAT entry offset
-		mov   ax, [es:bx]	    	// Get FAT entry
+		mov   ax, es:[bx]	    	// Get FAT entry
 
 		ret
 
@@ -173,7 +173,7 @@ GetFatEntry12:
         mov   bx,0x7000
         mov   es,bx
 		mov   bx,ax						// Put FAT entry offset into BX
-		mov   ax, [es:bx]	    	// Get FAT entry
+		mov   ax, es:[bx]	    	// Get FAT entry
 		pop   cx						// Get cluster number from stack
 		and   cx,1
 		jz    UseLow12Bits

@@ -77,6 +77,15 @@
 			<file>wlregistry.c</file>
 		</directory>
 	</if>
+	<if property="ARCH" value="amd64">
+		<directory name="windows">
+			<file>conversion.c</file>
+			<file>peloader.c</file>
+			<file>winldr.c</file>
+			<file>wlmemory.c</file>
+			<file>wlregistry.c</file>
+		</directory>
+	</if>
 	<file>freeldr.c</file>
 	<file>debug.c</file>
 	<file>version.c</file>

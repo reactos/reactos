@@ -237,7 +237,7 @@ ScConnectControlPipe(HANDLE *hPipe)
                          NULL);
     if (*hPipe == INVALID_HANDLE_VALUE)
     {
-        ERR("CreateFileW() failed (Error %lu)\n", GetLastError());
+        ERR("CreateFileW() failed for pipe %S (Error %lu)\n", NtControlPipeName, GetLastError());
         return ERROR_FAILED_SERVICE_CONTROLLER_CONNECT;
     }
 
@@ -395,7 +395,8 @@ ScServiceDispatcher(HANDLE hPipe,
                 break;
 
             default:
-                TRACE("Unknown command %lu", ControlPacket->dwControl);
+                TRACE("Command %lu received", ControlPacket->dwControl);
+                ScControlService(ControlPacket);
                 continue;
         }
 
@@ -519,7 +520,7 @@ RegisterServiceCtrlHandlerExW(LPCWSTR lpServiceName,
     Service->HandlerFunctionEx = lpHandlerProc;
     Service->HandlerContext = lpContext;
 
-    TRACE("RegisterServiceCtrlHandlerEx returning %lu", Service->hService);
+    TRACE("RegisterServiceCtrlHandlerEx returning %lu\n", Service->hService);
 
     return (SERVICE_STATUS_HANDLE)Service->hService;
 }

@@ -17,6 +17,7 @@
 
 /* FIXME: NDK */
 #define HIGH_PRIORITY 31
+#define SXS_SUPPORT_FIXME
 
 /* FUNCTIONS *****************************************************************/
 static
@@ -164,8 +165,10 @@ CreateRemoteThread(HANDLE hProcess,
         PTEB Teb;
         PVOID ActivationContextStack;
         THREAD_BASIC_INFORMATION ThreadBasicInfo;
+#ifndef SXS_SUPPORT_FIXME
         ACTIVATION_CONTEXT_BASIC_INFORMATION ActivationCtxInfo;
         ULONG_PTR Cookie;
+#endif
         ULONG retLen;
 
         /* Get the TEB */
@@ -186,7 +189,7 @@ CreateRemoteThread(HANDLE hProcess,
 
             /* Save it */
             Teb->ActivationContextStackPointer = ActivationContextStack;
-
+#ifndef SXS_SUPPORT_FIXME
             /* Query the Context */
             Status = RtlQueryInformationActivationContext(1,
                                                           0,
@@ -210,6 +213,7 @@ CreateRemoteThread(HANDLE hProcess,
             }
             else
                 DPRINT1("RtlQueryInformationActivationContext failed %x\n", Status);
+#endif
         }
         else
             DPRINT1("RtlAllocateActivationContextStack failed %x\n", Status);
@@ -238,7 +242,7 @@ WINAPI
 ExitThread(DWORD uExitCode)
 {
     NTSTATUS Status;
-    BOOLEAN LastThread;
+    ULONG LastThread;
 
     /*
      * Terminate process if this is the last thread
@@ -247,7 +251,7 @@ ExitThread(DWORD uExitCode)
     Status = NtQueryInformationThread(NtCurrentThread(),
                                       ThreadAmILastThread,
                                       &LastThread,
-                                      sizeof(BOOLEAN),
+                                      sizeof(LastThread),
                                       NULL);
     if (NT_SUCCESS(Status) && LastThread)
     {
@@ -262,8 +266,9 @@ ExitThread(DWORD uExitCode)
     NtCurrentTeb()->FreeStackOnTermination = TRUE;
     NtTerminateThread(NULL, uExitCode);
 
-    /* We will never reach this place. This silences the compiler */
-    ExitThread(uExitCode);
+    /* We should never reach this place */
+    DPRINT1("It should not happen\n");
+    while (TRUE) ;
 }
 
 /*

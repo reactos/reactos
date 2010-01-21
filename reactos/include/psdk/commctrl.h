@@ -2809,7 +2809,7 @@ typedef struct tagTVKEYDOWN
 (LPARAM)(HTREEITEM)(hitem))
 
 #define TreeView_EnsureVisible(hwnd, hitem) \
-    (BOOL)SNDMSG((hwnd), TVM_ENSUREVISIBLE, 0, (LPARAM)(UINT)(hitem))
+    (BOOL)SNDMSG((hwnd), TVM_ENSUREVISIBLE, 0, (LPARAM)(hitem))
 
 #define TreeView_SortChildrenCB(hwnd, psort, recurse) \
     (BOOL)SNDMSG((hwnd), TVM_SORTCHILDRENCB, (WPARAM)recurse, \

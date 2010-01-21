@@ -460,7 +460,7 @@ CmpDoCreate(IN PHHIVE Hive,
         !(ParseContext->CreateOptions & REG_OPTION_VOLATILE))
     {
         /* Children of volatile parents must also be volatile */
-        ASSERT(FALSE);
+        //ASSERT(FALSE);
         Status = STATUS_CHILD_MUST_BE_VOLATILE;
         goto Exit;
     }

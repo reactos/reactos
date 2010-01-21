@@ -217,7 +217,7 @@ PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat,
             DDPixelFormat->u5.dwRGBAlphaBitMask = 0x0;
             break;
 
-        case WINED3DFMT_S8_UINT_D24_UNORM:
+        case WINED3DFMT_D24_UNORM_S8_UINT:
             DDPixelFormat->dwFlags = DDPF_ZBUFFER | DDPF_STENCILBUFFER;
             DDPixelFormat->dwFourCC = 0;
             /* Should I set dwZBufferBitDepth to 32 here? */
@@ -529,11 +529,11 @@ PixelFormat_DD2WineD3D(const DDPIXELFORMAT *DDPixelFormat)
 
                 case 24:
                     FIXME("Don't know how to handle a 24 bit depth buffer with stencil bits\n");
-                    return WINED3DFMT_S8_UINT_D24_UNORM;
+                    return WINED3DFMT_D24_UNORM_S8_UINT;
 
                 case 32:
                     if(DDPixelFormat->u2.dwStencilBitDepth == 8)
-                        return WINED3DFMT_S8_UINT_D24_UNORM;
+                        return WINED3DFMT_D24_UNORM_S8_UINT;
                     else
                         return WINED3DFMT_S4X4_UINT_D24_UNORM;
 
@@ -1221,8 +1221,6 @@ void multiply_matrix_D3D_way(D3DMATRIX* result, const D3DMATRIX *m1, const D3DMA
     temp._44 = m1->_41 * m2->_14 + m1->_42 * m2->_24 + m1->_43 * m2->_34 + m1->_44 * m2->_44;
 
     *result = temp;
-
-    return;
 }
 
 HRESULT

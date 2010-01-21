@@ -16,9 +16,11 @@
 
 #define _GNU_H_WINDOWS32_SOCKETS
 
+#ifndef _M_AMD64
 #if !defined(__ROS_LONG64__)
 #ifdef __WINESRC__
 #define __ROS_LONG64__
+#endif
 #endif
 #endif
 

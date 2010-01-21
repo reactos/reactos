@@ -158,16 +158,6 @@ typedef struct IDirect3D9Impl
 
 void filter_caps(D3DCAPS9* pCaps) DECLSPEC_HIDDEN;
 
-/* ---------------- */
-/* IDirect3DDevice9 */
-/* ---------------- */
-
-/*****************************************************************************
- * Predeclare the interface implementation structures
- */
-extern const IDirect3DDevice9ExVtbl Direct3DDevice9_Vtbl DECLSPEC_HIDDEN;
-extern const IWineD3DDeviceParentVtbl d3d9_wined3d_device_parent_vtbl DECLSPEC_HIDDEN;
-
 /*****************************************************************************
  * IDirect3DDevice9 implementation structure
  */
@@ -190,10 +180,10 @@ typedef struct IDirect3DDevice9Impl
     BOOL                          notreset;
 } IDirect3DDevice9Impl;
 
+HRESULT device_init(IDirect3DDevice9Impl *device, IWineD3D *wined3d, UINT adapter, D3DDEVTYPE device_type,
+        HWND focus_window, DWORD flags, D3DPRESENT_PARAMETERS *parameters) DECLSPEC_HIDDEN;
 
 /* IDirect3DDevice9: */
-extern HRESULT WINAPI IDirect3DDevice9Impl_CreateAdditionalSwapChain(IDirect3DDevice9Ex *iface,
-        D3DPRESENT_PARAMETERS *pPresentationParameters, IDirect3DSwapChain9 **pSwapChain) DECLSPEC_HIDDEN;
 extern HRESULT WINAPI IDirect3DDevice9Impl_GetSwapChain(IDirect3DDevice9Ex *iface,
         UINT iSwapChain, IDirect3DSwapChain9 **pSwapChain) DECLSPEC_HIDDEN;
 extern UINT WINAPI IDirect3DDevice9Impl_GetNumberOfSwapChains(IDirect3DDevice9Ex *iface) DECLSPEC_HIDDEN;
@@ -290,6 +280,9 @@ typedef struct IDirect3DSwapChain9Impl
     /* Flags an implicit swap chain */
     BOOL                        isImplicit;
 } IDirect3DSwapChain9Impl;
+
+HRESULT swapchain_init(IDirect3DSwapChain9Impl *swapchain, IDirect3DDevice9Impl *device,
+        D3DPRESENT_PARAMETERS *present_parameters) DECLSPEC_HIDDEN;
 
 /* ----------------- */
 /* IDirect3DSurface9 */
@@ -570,9 +563,5 @@ typedef struct IDirect3DQuery9Impl {
     /* Parent reference */
     LPDIRECT3DDEVICE9EX    parentDevice;
 } IDirect3DQuery9Impl;
-
-
-/* Callbacks */
-extern ULONG WINAPI D3D9CB_DestroySwapChain (IWineD3DSwapChain *pSwapChain) DECLSPEC_HIDDEN;
 
 #endif /* __WINE_D3D9_PRIVATE_H */

@@ -830,18 +830,6 @@ DEFINE_GUIDSTRUCT("97E99BA0-BDEA-11CF-A5D6-28DB04C10000", KSPROPTYPESETID_Genera
 */
 
 
-
-
-/* ===============================================================
-    Event Sets for audio drivers - TODO
-*/
-#define KSEVENTSETID_AudioControlChange
-/*
-    KSEVENT_CONTROL_CHANGE
-*/
-
-
-
 /* ===============================================================
     Node Types
 */

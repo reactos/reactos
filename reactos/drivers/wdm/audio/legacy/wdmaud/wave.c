@@ -706,7 +706,7 @@ WdmAudControlOpenWave(
     if (!NT_SUCCESS(Status))
     {
         /* failed to open the pin */
-        return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
+        return SetIrpIoStatus(Irp, STATUS_NOT_SUPPORTED, 0);
     }
 
     /* store the handle */

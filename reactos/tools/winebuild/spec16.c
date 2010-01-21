@@ -28,9 +28,23 @@
 #include <assert.h>
 #include <ctype.h>
 
-#include "wine/winbase16.h"
-
 #include "build.h"
+
+#define NE_FFLAGS_SINGLEDATA 0x0001
+#define NE_FFLAGS_LIBMODULE  0x8000
+
+/* argument type flags for relay debugging */
+enum arg_types
+{
+    ARG_NONE = 0, /* indicates end of arg list */
+    ARG_WORD,     /* unsigned word */
+    ARG_SWORD,    /* signed word */
+    ARG_LONG,     /* long or segmented pointer */
+    ARG_PTR,      /* linear pointer */
+    ARG_STR,      /* linear pointer to null-terminated string */
+    ARG_SEGSTR,   /* segmented pointer to null-terminated string */
+    ARG_VARARG    /* start of varargs */
+};
 
 /* sequences of nops to fill a certain number of words */
 static const char * const nop_sequence[4] =
@@ -47,6 +61,22 @@ static inline int is_function( const ORDDEF *odp )
             odp->type == TYPE_PASCAL ||
             odp->type == TYPE_VARARGS ||
             odp->type == TYPE_STUB);
+}
+
+static void init_dll_name( DLLSPEC *spec )
+{
+    if (!spec->file_name)
+    {
+        char *p;
+        spec->file_name = xstrdup( output_file_name );
+        if ((p = strrchr( spec->file_name, '.' ))) *p = 0;
+    }
+    if (!spec->dll_name)  /* set default name from file name */
+    {
+        char *p;
+        spec->dll_name = xstrdup( spec->file_name );
+        if ((p = strrchr( spec->dll_name, '.' ))) *p = 0;
+    }
 }
 
 /*******************************************************************
@@ -451,7 +481,7 @@ static int sort_func_list( ORDDEF **list, int count,
  *
  * Output the dll initialization code.
  */
-static void output_init_code( const DLLSPEC *spec, const char *header_name )
+static void output_init_code( const DLLSPEC *spec )
 {
     char name[80];
 
@@ -468,13 +498,13 @@ static void output_init_code( const DLLSPEC *spec, const char *header_name )
         output( "\tcall %s\n", asm_name("__wine_spec_get_pc_thunk_eax") );
         output( "1:\tleal .L__wine_spec_file_name-1b(%%eax),%%ecx\n" );
         output( "\tpushl %%ecx\n" );
-        output( "\tleal %s-1b(%%eax),%%ecx\n", header_name );
+        output( "\tleal .L__wine_spec_dos_header-1b(%%eax),%%ecx\n" );
         output( "\tpushl %%ecx\n" );
     }
     else
     {
         output( "\tpushl $.L__wine_spec_file_name\n" );
-        output( "\tpushl $%s\n", header_name );
+        output( "\tpushl $.L__wine_spec_dos_header\n" );
     }
     output( "\tcall %s\n", asm_name("__wine_dll_register_16") );
     output( "\taddl $12,%%esp\n" );
@@ -490,12 +520,12 @@ static void output_init_code( const DLLSPEC *spec, const char *header_name )
     if (UsePIC)
     {
         output( "\tcall %s\n", asm_name("__wine_spec_get_pc_thunk_eax") );
-        output( "1:\tleal %s-1b(%%eax),%%ecx\n", header_name );
+        output( "1:\tleal .L__wine_spec_dos_header-1b(%%eax),%%ecx\n" );
         output( "\tpushl %%ecx\n" );
     }
     else
     {
-        output( "\tpushl $%s\n", header_name );
+        output( "\tpushl $.L__wine_spec_dos_header\n" );
     }
     output( "\tcall %s\n", asm_name("__wine_dll_unregister_16") );
     output( "\taddl $12,%%esp\n" );
@@ -522,38 +552,21 @@ static void output_init_code( const DLLSPEC *spec, const char *header_name )
 
 
 /*******************************************************************
- *         BuildSpec16File
+ *         output_module16
  *
- * Build a Win16 assembly file from a spec file.
+ * Output code for a 16-bit module.
  */
-void BuildSpec16File( DLLSPEC *spec )
+static void output_module16( DLLSPEC *spec )
 {
     ORDDEF **typelist;
     ORDDEF *entry_point = NULL;
     int i, j, nb_funcs;
-    char header_name[256];
-
-    /* File header */
-
-    output_standard_file_header();
-
-    if (!spec->file_name)
-    {
-        char *p;
-        spec->file_name = xstrdup( output_file_name );
-        if ((p = strrchr( spec->file_name, '.' ))) *p = 0;
-    }
-    if (!spec->dll_name)  /* set default name from file name */
-    {
-        char *p;
-        spec->dll_name = xstrdup( spec->file_name );
-        if ((p = strrchr( spec->dll_name, '.' ))) *p = 0;
-    }
 
     /* store the main entry point as ordinal 0 */
 
     if (!spec->ordinals)
     {
+        assert(spec->limit == 0);
         spec->ordinals = xmalloc( sizeof(spec->ordinals[0]) );
         spec->ordinals[0] = NULL;
     }
@@ -587,13 +600,11 @@ void BuildSpec16File( DLLSPEC *spec )
 
     /* Output the module structure */
 
-    sprintf( header_name, "__wine_spec_%s_dos_header", make_c_identifier(spec->dll_name) );
     output( "\n/* module data */\n\n" );
     output( "\t.data\n" );
     output( "\t.align %d\n", get_alignment(4) );
-    output( "%s:\n", header_name );
-    output( "\t%s 0x%04x\n", get_asm_short_keyword(),                      /* e_magic */
-             IMAGE_DOS_SIGNATURE );
+    output( ".L__wine_spec_dos_header:\n" );
+    output( "\t%s 0x5a4d\n", get_asm_short_keyword() );                    /* e_magic */
     output( "\t%s 0\n", get_asm_short_keyword() );                         /* e_cblp */
     output( "\t%s 0\n", get_asm_short_keyword() );                         /* e_cp */
     output( "\t%s 0\n", get_asm_short_keyword() );                         /* e_crlc */
@@ -611,11 +622,10 @@ void BuildSpec16File( DLLSPEC *spec )
     output( "\t%s 0\n", get_asm_short_keyword() );                         /* e_oemid */
     output( "\t%s 0\n", get_asm_short_keyword() );                         /* e_oeminfo */
     output( "\t%s 0,0,0,0,0,0,0,0,0,0\n", get_asm_short_keyword() );       /* e_res2 */
-    output( "\t.long .L__wine_spec_ne_header-%s\n", header_name );         /* e_lfanew */
+    output( "\t.long .L__wine_spec_ne_header-.L__wine_spec_dos_header\n" );/* e_lfanew */
 
     output( ".L__wine_spec_ne_header:\n" );
-    output( "\t%s 0x%04x\n", get_asm_short_keyword(),                      /* ne_magic */
-             IMAGE_OS2_SIGNATURE );
+    output( "\t%s 0x454e\n", get_asm_short_keyword() );                    /* ne_magic */
     output( "\t.byte 0\n" );                                               /* ne_ver */
     output( "\t.byte 0\n" );                                               /* ne_rev */
     output( "\t%s .L__wine_spec_ne_enttab-.L__wine_spec_ne_header\n",      /* ne_enttab */
@@ -650,8 +660,8 @@ void BuildSpec16File( DLLSPEC *spec )
     output( "\t%s 0\n", get_asm_short_keyword() );             /* ne_cmovent */
     output( "\t%s 0\n", get_asm_short_keyword() );             /* ne_align */
     output( "\t%s 0\n", get_asm_short_keyword() );             /* ne_cres */
-    output( "\t.byte 0x%02x\n", NE_OSFLAGS_WINDOWS );          /* ne_exetyp */
-    output( "\t.byte 0x%02x\n", NE_AFLAGS_FASTLOAD );          /* ne_flagsothers */
+    output( "\t.byte 0x02\n" );                                /* ne_exetyp = NE_OSFLAGS_WINDOWS */
+    output( "\t.byte 0x08\n" );                                /* ne_flagsothers = NE_AFLAGS_FASTLOAD */
     output( "\t%s 0\n", get_asm_short_keyword() );             /* ne_pretthunks */
     output( "\t%s 0\n", get_asm_short_keyword() );             /* ne_psegrefbytes */
     output( "\t%s 0\n", get_asm_short_keyword() );             /* ne_swaparea */
@@ -663,27 +673,27 @@ void BuildSpec16File( DLLSPEC *spec )
 
     /* code segment entry */
 
-    output( "\t%s .L__wine_spec_code_segment-%s\n",  /* filepos */
-             get_asm_short_keyword(), header_name );
+    output( "\t%s .L__wine_spec_code_segment-.L__wine_spec_dos_header\n",  /* filepos */
+             get_asm_short_keyword() );
     output( "\t%s .L__wine_spec_code_segment_end-.L__wine_spec_code_segment\n", /* size */
              get_asm_short_keyword() );
-    output( "\t%s 0x%04x\n", get_asm_short_keyword(), NE_SEGFLAGS_32BIT );      /* flags */
+    output( "\t%s 0x2000\n", get_asm_short_keyword() ); /* flags = NE_SEGFLAGS_32BIT */
     output( "\t%s .L__wine_spec_code_segment_end-.L__wine_spec_code_segment\n", /* minsize */
              get_asm_short_keyword() );
 
     /* data segment entry */
 
-    output( "\t%s .L__wine_spec_data_segment-%s\n",  /* filepos */
-             get_asm_short_keyword(), header_name );
+    output( "\t%s .L__wine_spec_data_segment-.L__wine_spec_dos_header\n",  /* filepos */
+             get_asm_short_keyword() );
     output( "\t%s .L__wine_spec_data_segment_end-.L__wine_spec_data_segment\n", /* size */
              get_asm_short_keyword() );
-    output( "\t%s 0x%04x\n", get_asm_short_keyword(), NE_SEGFLAGS_DATA );      /* flags */
+    output( "\t%s 0x0001\n", get_asm_short_keyword() ); /* flags = NE_SEGFLAGS_DATA */
     output( "\t%s .L__wine_spec_data_segment_end-.L__wine_spec_data_segment\n", /* minsize */
              get_asm_short_keyword() );
 
     /* resource directory */
 
-    output_res16_directory( spec, header_name );
+    output_res16_directory( spec );
 
     /* resident names table */
 
@@ -829,14 +839,209 @@ void BuildSpec16File( DLLSPEC *spec )
         output( "\t.long %s\n", asm_name("wine_ldt_copy") );
     }
 
+    free( typelist );
+}
+
+
+/*******************************************************************
+ *         BuildSpec16File
+ *
+ * Build a Win16 assembly file from a spec file.
+ */
+void BuildSpec16File( DLLSPEC *spec )
+{
+    init_dll_name( spec );
+    output_standard_file_header();
+    output_module16( spec );
+    output_init_code( spec );
+
     output( "\n\t%s\n", get_asm_string_section() );
     output( ".L__wine_spec_file_name:\n" );
     output( "\t%s \"%s\"\n", get_asm_string_keyword(), spec->file_name );
 
     output_stubs( spec );
     output_get_pc_thunk();
-    output_init_code( spec, header_name );
     output_gnu_stack_note();
+}
 
-    free( typelist );
+
+/*******************************************************************
+ *         output_spec16_file
+ *
+ * Output the complete data for a spec 16-bit file.
+ */
+void output_spec16_file( DLLSPEC *spec16 )
+{
+    DLLSPEC *spec32 = alloc_dll_spec();
+
+    init_dll_name( spec16 );
+    spec32->file_name = xstrdup( spec16->file_name );
+
+    if (spec16->characteristics & IMAGE_FILE_DLL)
+    {
+        spec32->characteristics = IMAGE_FILE_DLL;
+        spec32->init_func = xstrdup( "__wine_spec_dll_entry" );
+    }
+
+    resolve_imports( spec16 );
+    add_16bit_exports( spec32, spec16 );
+
+    output_standard_file_header();
+    output_module( spec32 );
+    output_module16( spec16 );
+    output_stubs( spec16 );
+    output_exports( spec32 );
+    output_imports( spec16 );
+    if (spec16->main_module)
+    {
+        output( "\n\t%s\n", get_asm_string_section() );
+        output( ".L__wine_spec_main_module:\n" );
+        output( "\t%s \"%s\"\n", get_asm_string_keyword(), spec16->main_module );
+    }
+    output_gnu_stack_note();
+    free_dll_spec( spec32 );
+}
+
+/*******************************************************************
+ *         output_fake_module16
+ *
+ * Create a fake 16-bit binary module.
+ */
+void output_fake_module16( DLLSPEC *spec )
+{
+    static const unsigned char code_segment[] = { 0x90, 0xc3 };
+    static const unsigned char data_segment[16] = { 0 };
+    static const char fakedll_signature[] = "Wine placeholder DLL";
+    const unsigned int cseg = 2;
+    const unsigned int lfanew = (0x40 + sizeof(fakedll_signature) + 15) & ~15;
+    const unsigned int segtab = lfanew + 0x40;
+
+    unsigned int i, rsrctab, restab, namelen, modtab, imptab, enttab, cbenttab, codeseg, dataseg, rsrcdata;
+
+    init_dll_name( spec );
+    init_output_buffer();
+
+    rsrctab = lfanew;
+    restab = segtab + 8 * cseg;
+    if (spec->nb_resources)
+    {
+        output_bin_res16_directory( spec, 0 );
+        align_output( 2 );
+        rsrctab = restab;
+        restab += output_buffer_pos;
+        free( output_buffer );
+        init_output_buffer();
+    }
+
+    namelen  = strlen( spec->dll_name );
+    modtab   = restab + ((namelen + 3) & ~1);
+    imptab   = modtab;
+    enttab   = modtab + 2;
+    cbenttab = 1;
+    codeseg  = (enttab + cbenttab + 1) & ~1;
+    dataseg  = codeseg + sizeof(code_segment);
+    rsrcdata = dataseg + sizeof(data_segment);
+
+    init_output_buffer();
+
+    put_word( 0x5a4d );       /* e_magic */
+    put_word( 0x40 );         /* e_cblp */
+    put_word( 0x01 );         /* e_cp */
+    put_word( 0 );            /* e_crlc */
+    put_word( lfanew / 16 );  /* e_cparhdr */
+    put_word( 0x0000 );       /* e_minalloc */
+    put_word( 0xffff );       /* e_maxalloc */
+    put_word( 0x0000 );       /* e_ss */
+    put_word( 0x00b8 );       /* e_sp */
+    put_word( 0 );            /* e_csum */
+    put_word( 0 );            /* e_ip */
+    put_word( 0 );            /* e_cs */
+    put_word( lfanew );       /* e_lfarlc */
+    put_word( 0 );            /* e_ovno */
+    put_dword( 0 );           /* e_res */
+    put_dword( 0 );
+    put_word( 0 );            /* e_oemid */
+    put_word( 0 );            /* e_oeminfo */
+    put_dword( 0 );           /* e_res2 */
+    put_dword( 0 );
+    put_dword( 0 );
+    put_dword( 0 );
+    put_dword( 0 );
+    put_dword( lfanew );
+
+    put_data( fakedll_signature, sizeof(fakedll_signature) );
+    align_output( 16 );
+
+    put_word( 0x454e );                    /* ne_magic */
+    put_byte( 0 );                         /* ne_ver */
+    put_byte( 0 );                         /* ne_rev */
+    put_word( enttab - lfanew );           /* ne_enttab */
+    put_word( cbenttab );                  /* ne_cbenttab */
+    put_dword( 0 );                        /* ne_crc */
+    put_word( NE_FFLAGS_SINGLEDATA |       /* ne_flags */
+              ((spec->characteristics & IMAGE_FILE_DLL) ? NE_FFLAGS_LIBMODULE : 0) );
+    put_word( 2 );                         /* ne_autodata */
+    put_word( spec->heap_size );           /* ne_heap */
+    put_word( 0 );                         /* ne_stack */
+    put_word( 0 ); put_word( 0 );          /* ne_csip */
+    put_word( 0 ); put_word( 2 );          /* ne_sssp */
+    put_word( cseg );                      /* ne_cseg */
+    put_word( 0 );                         /* ne_cmod */
+    put_word( 0 );                         /* ne_cbnrestab */
+    put_word( segtab - lfanew );           /* ne_segtab */
+    put_word( rsrctab - lfanew );          /* ne_rsrctab */
+    put_word( restab - lfanew );           /* ne_restab */
+    put_word( modtab - lfanew );           /* ne_modtab */
+    put_word( imptab - lfanew );           /* ne_imptab */
+    put_dword( 0 );                        /* ne_nrestab */
+    put_word( 0 );                         /* ne_cmovent */
+    put_word( 0 );                         /* ne_align */
+    put_word( 0 );                         /* ne_cres */
+    put_byte( 2 /*NE_OSFLAGS_WINDOWS*/ );  /* ne_exetyp */
+    put_byte( 8 /*NE_AFLAGS_FASTLOAD*/ );  /* ne_flagsothers */
+    put_word( 0 );                         /* ne_pretthunks */
+    put_word( 0 );                         /* ne_psegrefbytes */
+    put_word( 0 );                         /* ne_swaparea */
+    put_word( 0 );                         /* ne_expver */
+
+    /* segment table */
+    put_word( codeseg );
+    put_word( sizeof(code_segment) );
+    put_word( 0x2000 /* NE_SEGFLAGS_32BIT */ );
+    put_word( sizeof(code_segment) );
+    put_word( dataseg );
+    put_word( sizeof(data_segment) );
+    put_word( 0x0001 /* NE_SEGFLAGS_DATA */ );
+    put_word( sizeof(data_segment) );
+
+    /* resource directory */
+    if (spec->nb_resources)
+    {
+        output_bin_res16_directory( spec, rsrcdata );
+        align_output( 2 );
+    }
+
+    /* resident names table */
+    put_byte( namelen );
+    for (i = 0; i < namelen; i++) put_byte( toupper(spec->dll_name[i]) );
+    put_byte( 0 );
+    align_output( 2 );
+
+    /* imported names table */
+    put_word( 0 );
+
+    /* entry table */
+    put_byte( 0 );
+    align_output( 2 );
+
+    /* code segment */
+    put_data( code_segment, sizeof(code_segment) );
+
+    /* data segment */
+    put_data( data_segment, sizeof(data_segment) );
+
+    /* resource data */
+    output_bin_res16_data( spec );
+
+    flush_output_buffer();
 }

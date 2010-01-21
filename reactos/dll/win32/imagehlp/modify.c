@@ -882,7 +882,7 @@ BOOL IMAGEAPI BindImageEx(
     LOADED_IMAGE FileData;
     PLOADED_IMAGE File;
     PIMAGE_FILE_HEADER FileHeader;
-    PIMAGE_OPTIONAL_HEADER32 OptionalHeader;
+    PIMAGE_OPTIONAL_HEADER OptionalHeader;
     ULONG CheckSum, HeaderCheckSum, OldChecksum;
     SYSTEMTIME SystemTime;
     FILETIME LastWriteTime;

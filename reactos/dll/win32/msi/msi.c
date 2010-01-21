@@ -901,7 +901,7 @@ static UINT MSI_GetProductInfo(LPCWSTR szProduct, LPCWSTR szAttribute,
     WCHAR packagecode[GUID_SIZE];
     BOOL badconfig = FALSE;
     LONG res;
-    DWORD save, type = REG_NONE;
+    DWORD type = REG_NONE;
 
     static WCHAR empty[] = {0};
     static const WCHAR sourcelist[] = {
@@ -1036,22 +1036,26 @@ static UINT MSI_GetProductInfo(LPCWSTR szProduct, LPCWSTR szAttribute,
 
     if (pcchValueBuf)
     {
-        save = *pcchValueBuf;
-
-        if (strlenW(val) < *pcchValueBuf)
-            r = msi_strcpy_to_awstring(val, szValue, pcchValueBuf);
-        else if (szValue->str.a || szValue->str.w)
-            r = ERROR_MORE_DATA;
+        /* If szBuffer (szValue->str) is NULL, there's no need to copy the value
+         * out.  Also, *pcchValueBuf may be uninitialized in this case, so we
+         * can't rely on its value.
+         */
+        if (szValue->str.a || szValue->str.w)
+        {
+            DWORD size = *pcchValueBuf;
+            if (strlenW(val) < size)
+                r = msi_strcpy_to_awstring(val, szValue, &size);
+            else
+            {
+                r = ERROR_MORE_DATA;
+            }
+        }
 
         if (!badconfig)
             *pcchValueBuf = lstrlenW(val);
-        else if (r == ERROR_SUCCESS)
-        {
-            *pcchValueBuf = save;
-            r = ERROR_BAD_CONFIGURATION;
-        }
     }
-    else if (badconfig)
+
+    if (badconfig)
         r = ERROR_BAD_CONFIGURATION;
 
     if (val != empty)

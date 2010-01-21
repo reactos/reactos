@@ -353,6 +353,7 @@ ifeq ($(HOST),mingw32-linux)
 	endif
 	export SEP = /
 	mkdir = -$(Q)mkdir -p
+	checkpoint = $(Q)touch
 	rm = $(Q)rm -f
 	cp = $(Q)cp
 	NUL = /dev/null
@@ -361,6 +362,7 @@ else # mingw32-windows
 	ROS_EMPTY =
 	export SEP = \$(ROS_EMPTY)
 	mkdir = -$(Q)mkdir
+	checkpoint = $(Q)copy /y NUL
 	rm = $(Q)del /f /q
 	cp = $(Q)copy /y
 	NUL = NUL

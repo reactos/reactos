@@ -1,13 +1,16 @@
-#ifndef _SQLTYPES_H
-#define _SQLTYPES_H
+#ifndef __SQLTYPES
+#define __SQLTYPES
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 #define SQL_API __stdcall
+
 #ifndef RC_INVOKED
 #define __need_wchar_t
 #include <stddef.h>
+
 typedef signed char SCHAR;
 typedef long SDWORD;
 typedef short SWORD;
@@ -24,63 +27,38 @@ typedef PVOID HDBC;
 typedef PVOID HSTMT;
 typedef short RETCODE;
 typedef UCHAR SQLCHAR;
-typedef SCHAR SQLSCHAR;
 typedef SDWORD SQLINTEGER;
 typedef SWORD SQLSMALLINT;
-#ifndef __WIN64
 typedef UDWORD SQLUINTEGER;
-#endif
 typedef UWORD SQLUSMALLINT;
 typedef PVOID SQLPOINTER;
-#if (ODBCVER >= 0x0300)
-typedef void* SQLHANDLE;
-typedef SQLHANDLE SQLHENV;
-typedef SQLHANDLE SQLHDBC;
-typedef SQLHANDLE SQLHSTMT;
-typedef SQLHANDLE SQLHDESC;
-#else
 typedef void* SQLHENV;
 typedef void* SQLHDBC;
 typedef void* SQLHSTMT;
-#endif
 typedef SQLSMALLINT SQLRETURN;
 typedef HWND SQLHWND;
-typedef ULONG BOOKMARK;
+
 #ifdef _WIN64
 typedef INT64 SQLLEN;
-typedef INT64 SQLROWOFFSET;
-typedef UINT64 SQLROWCOUNT;
 typedef UINT64 SQLULEN;
-typedef UINT64 SQLTRANSID;
-typedef unsigned long SQLSETPOSIROW;
+typedef UINT64 SQLSETPOSIROW;
 #else
 #define SQLLEN SQLINTEGER
-#define SQLROWOFFSET SQLINTEGER
-#define SQLROWCOUNT SQLUINTEGER
 #define SQLULEN SQLUINTEGER
-#define SQLTRANSID DWORD
 #define SQLSETPOSIROW SQLUSMALLINT
-#endif
+#endif /* _WIN64 */
+
+typedef SQLULEN BOOKMARK;
+typedef SQLLEN SQLROWOFFSET;
+typedef SQLULEN SQLROWCOUNT;
+typedef SQLULEN SQLTRANSID;
+
 typedef wchar_t SQLWCHAR;
 #ifdef UNICODE
 typedef SQLWCHAR        SQLTCHAR;
 #else
 typedef SQLCHAR         SQLTCHAR;
 #endif  /* UNICODE */
-#if (ODBCVER >= 0x0300)
-typedef unsigned char   SQLDATE;
-typedef unsigned char   SQLDECIMAL;
-typedef double          SQLDOUBLE;
-typedef double          SQLFLOAT;
-typedef unsigned char   SQLNUMERIC;
-typedef float           SQLREAL;
-typedef unsigned char   SQLTIME;
-typedef unsigned char   SQLTIMESTAMP;
-typedef unsigned char   SQLVARCHAR;
-#define ODBCINT64	__int64
-typedef __int64 SQLBIGINT;
-typedef unsigned __int64 SQLUBIGINT;
-#endif
 
 typedef struct tagDATE_STRUCT {
 	SQLSMALLINT year;
@@ -101,7 +79,23 @@ typedef struct tagTIMESTAMP_STRUCT {
 	SQLUSMALLINT second;
 	SQLUINTEGER fraction;
 } TIMESTAMP_STRUCT;
+
 #if (ODBCVER >= 0x0300)
+typedef SCHAR SQLSCHAR;
+typedef void* SQLHANDLE;
+typedef void* SQLHDESC;
+typedef unsigned char   SQLDATE;
+typedef unsigned char   SQLDECIMAL;
+typedef double          SQLDOUBLE;
+typedef double          SQLFLOAT;
+typedef unsigned char   SQLNUMERIC;
+typedef float           SQLREAL;
+typedef unsigned char   SQLTIME;
+typedef unsigned char   SQLTIMESTAMP;
+typedef unsigned char   SQLVARCHAR;
+#define ODBCINT64	__int64
+typedef __int64 SQLBIGINT;
+typedef unsigned __int64 SQLUBIGINT;
 typedef DATE_STRUCT	SQL_DATE_STRUCT;
 typedef TIME_STRUCT	SQL_TIME_STRUCT;
 typedef TIMESTAMP_STRUCT SQL_TIMESTAMP_STRUCT;
@@ -138,6 +132,7 @@ typedef struct tagSQL_NUMERIC_STRUCT {
 	SQLCHAR val[SQL_MAX_NUMERIC_LEN];
 } SQL_NUMERIC_STRUCT;
 #endif  /* ODBCVER >= 0x0300 */
+
 #if (ODBCVER >= 0x0350)
 
 #ifdef _GUID_DEFINED
@@ -156,7 +151,9 @@ typedef struct tagSQLGUID{
 #endif  /* GUID_DEFINED */
 #endif  /* ODBCVER >= 0x0350 */
 #endif     /* RC_INVOKED */
+
 #ifdef __cplusplus
 }
 #endif
-#endif
+
+#endif /* __SQLTYPES */

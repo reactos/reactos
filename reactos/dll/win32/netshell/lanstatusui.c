@@ -1198,7 +1198,7 @@ HRESULT WINAPI LanConnectStatusUI_Constructor (IUnknown * pUnkOuter, REFIID riid
     This->lpNetMan = NULL;
     This->pHead = NULL;
 
-    if (InterlockedCompareExchangePointer((volatile void **)&cached_This, This, NULL) != NULL)
+    if (InterlockedCompareExchangePointer((void **)&cached_This, This, NULL) != NULL)
     {
         CoTaskMemFree(This);
     }

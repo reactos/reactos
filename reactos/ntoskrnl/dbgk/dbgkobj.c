@@ -331,7 +331,8 @@ DbgkForwardException(IN PEXCEPTION_RECORD ExceptionRecord,
     /* Setup the API Message */
     ApiMessage.h.u1.Length = sizeof(DBGKM_MSG) << 16 |
                              (8 + sizeof(DBGKM_EXCEPTION));
-    ApiMessage.h.u2.ZeroInit = LPC_DEBUG_EVENT;
+    ApiMessage.h.u2.ZeroInit = 0;
+    ApiMessage.h.u2.s2.Type = LPC_DEBUG_EVENT;
     ApiMessage.ApiNumber = DbgKmExceptionApi;
 
     /* Check if this is to be sent on the debug port */
@@ -345,7 +346,8 @@ DbgkForwardException(IN PEXCEPTION_RECORD ExceptionRecord,
     {
         /* Otherwise, use the exception port */
         Port = Process->ExceptionPort;
-        ApiMessage.h.u2.ZeroInit = LPC_EXCEPTION;
+        ApiMessage.h.u2.ZeroInit = 0;
+        ApiMessage.h.u2.s2.Type = LPC_EXCEPTION;
         UseLpc = TRUE;
     }
 

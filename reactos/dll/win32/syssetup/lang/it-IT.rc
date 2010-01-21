@@ -235,6 +235,7 @@ BEGIN
     IDS_SYS_ENTERTAINMENT       "Divertimento"
     IDS_CMT_MPLAY32             "Esegui Multimedia Player"
     IDS_CMT_SNDVOL32            "Esegui Controllo Volume"
+    IDS_CMT_SNDREC32            "Launch Sound Recorder"
 END
 
 STRINGTABLE
@@ -272,9 +273,10 @@ BEGIN
     IDS_SHORT_EVENTVIEW  "Visualizzatore Eventi.lnk"
     IDS_SHORT_MSCONFIG   "Configuratione del sistema.lnk"
     IDS_SHORT_SNDVOL32   "Controllo Volume.lnk"
+    IDS_SHORT_SNDREC32   "Audiorecorder.lnk"
     IDS_SHORT_DXDIAG     "ReactX Diagnostica.lnk"
     IDS_SHORT_PAINT      "Paint.lnk"
-	IDS_SHORT_SPIDER     "Spider Solitaire.lnk"
+    IDS_SHORT_SPIDER     "Spider Solitaire.lnk"
 END
 
 STRINGTABLE

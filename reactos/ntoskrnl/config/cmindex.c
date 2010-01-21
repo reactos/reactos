@@ -1294,8 +1294,8 @@ CmpSplitLeaf(IN PHHIVE Hive,
     {
         RtlMoveMemory(&IndexKey->List[RootSelect + 2],
                       &IndexKey->List[RootSelect + 1],
-                      IndexKey->Count -
-                      (RootSelect + 1) * sizeof(HCELL_INDEX));
+                      (IndexKey->Count -
+                      (RootSelect + 1)) * sizeof(HCELL_INDEX));
     }
 
     /* Make sure both old and new computed counts are valid */

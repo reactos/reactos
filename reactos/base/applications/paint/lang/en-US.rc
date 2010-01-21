@@ -65,7 +65,7 @@ BEGIN
         END
         MENUITEM "Full screen\tCtrl+F", IDM_VIEWFULLSCREEN
     END
-    
+
     POPUP "&Image"
     BEGIN
         MENUITEM "Rotate/Mirror...\tCtrl+R", IDM_IMAGEROTATEMIRROR
@@ -76,12 +76,12 @@ BEGIN
         MENUITEM "Delete image\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
         MENUITEM "Draw opaque", IDM_IMAGEDRAWOPAQUE
     END
-    
+
     POPUP "&Colors"
     BEGIN
         MENUITEM "Edit palette...", IDM_COLORSEDITPALETTE
     END
-    
+
     POPUP "&?"
     BEGIN
         MENUITEM "Help topics", IDM_HELPHELPTOPICS

@@ -29,7 +29,7 @@ KiGetVectorDispatch(IN ULONG Vector,
                     IN PDISPATCH_INFO Dispatch)
 {
     PKINTERRUPT_ROUTINE Handler;
-    ULONG Current;
+    PVOID Current;
     UCHAR Type;
     UCHAR Entry;
 
@@ -54,9 +54,7 @@ KiGetVectorDispatch(IN ULONG Vector,
     Dispatch->FlatDispatch = NULL;
 
     /* Get the current handler */
-    Current = ((((PKIPCR)KeGetPcr())->IDT[Entry].ExtendedOffset << 16)
-               & 0xFFFF0000) |
-              (((PKIPCR)KeGetPcr())->IDT[Entry].Offset & 0xFFFF);
+    Current = KeQueryInterruptHandler(Vector);
 
     /* Set the interrupt */
     Dispatch->Interrupt = CONTAINING_RECORD(Current,
@@ -100,7 +98,6 @@ KiConnectVectorToInterrupt(IN PKINTERRUPT Interrupt,
     DISPATCH_INFO Dispatch;
     PKINTERRUPT_ROUTINE Handler;
     PULONG Patch = &Interrupt->DispatchCode[0];
-    UCHAR Entry;
 
     /* Get vector data */
     KiGetVectorDispatch(Interrupt->Vector, &Dispatch);
@@ -135,14 +132,8 @@ KiConnectVectorToInterrupt(IN PKINTERRUPT Interrupt,
         Handler = (PVOID)&Interrupt->DispatchCode;
     }
 
-    /* Get the IDT entry for this vector */
-    Entry = HalVectorToIDTEntry(Interrupt->Vector);
-
-    /* Set the pointer in the IDT */
-    ((PKIPCR)KeGetPcr())->IDT[Entry].ExtendedOffset =
-        (USHORT)(((ULONG_PTR)Handler >> 16) & 0xFFFF);
-    ((PKIPCR)KeGetPcr())->IDT[Entry].Offset =
-        (USHORT)PtrToUlong(Handler);
+    /* Register the interrupt */
+    KeRegisterInterruptHandler(Interrupt->Vector, Handler);
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/

@@ -109,7 +109,7 @@ BOOL NLS_isSystemLocale(LCID lcid)
 }
 
 /**************************************************************************
- * NLS_isSystemLocale <internal>
+ * NLS_getDefaultLocale <internal>
  *
  * Return default system or user locale
  */
@@ -1023,7 +1023,7 @@ INT WINAPI GetNumberFormatW(LCID lcid, DWORD dwFlags,
   {
       lcid = NLS_getDefaultLocale(lcid);
   }
-  else if(!IsValidLocale(lcid, 0))
+  else if(!IsValidLocale(lcid, LCID_INSTALLED))
   {
       SetLastError(ERROR_INVALID_PARAMETER);
       return 0;
@@ -1403,8 +1403,17 @@ INT WINAPI GetCurrencyFormatW(LCID lcid, DWORD dwFlags,
           lpCurrencyStr,
           cchOut);
 
+  if(NLS_isSystemLocale(lcid))
+  {
+    lcid = NLS_getDefaultLocale(lcid);
+  }
+  else if(!IsValidLocale(lcid, LCID_INSTALLED))
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return 0;
+  }
+
   if (!lpszValue || cchOut < 0 || (cchOut > 0 && !lpCurrencyStr) ||
-      !IsValidLocale(lcid, 0) ||
       (lpFormat && (dwFlags || !lpFormat->lpDecimalSep || !lpFormat->lpThousandSep ||
       !lpFormat->lpCurrencySymbol || lpFormat->NegativeOrder > 15 ||
       lpFormat->PositiveOrder > 3)))

@@ -768,15 +768,10 @@ static BOOL
 HEXEDIT_WM_KEYDOWN(PHEXEDIT_DATA hed, INT VkCode)
 {
   size_t bufsize;
-  BOOL shift, control;
-
   if(GetKeyState(VK_MENU) & 0x8000)
   {
     return FALSE;
   }
-
-  shift = GetKeyState(VK_SHIFT) & 0x8000;
-  control = GetKeyState(VK_CONTROL) & 0x8000;
 
   bufsize = (hed->hBuffer ? LocalSize(hed->hBuffer) : 0);
 

@@ -85,7 +85,7 @@ SetUserEnvironmentVariable (LPVOID *Environment,
    {
       if (!GetShortPathNameW(DstValue.Buffer, ShortName, MAX_PATH))
       {
-         DPRINT1("GetShortPathNameW() failed (Error %lu)\n", GetLastError());
+         DPRINT1("GetShortPathNameW() failed for %S (Error %lu)\n", DstValue.Buffer, GetLastError());
          if (Buffer) LocalFree(Buffer);
          return FALSE;
       }
