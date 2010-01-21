@@ -22,7 +22,7 @@ ULONG_PTR KernelBase;
 
 /***************************************************************************/
 
-VOID NTAPI HalpInitPICs(VOID)
+VOID NTAPI HalpInitializePICs(IN BOOLEAN EnableInterrupts)
 {
     UNIMPLEMENTED;
 }
