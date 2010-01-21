@@ -4,17 +4,8 @@
 	<directory name="amstream">
 		<xi:include href="amstream/amstream.rbuild" />
 	</directory>
-	<directory name="d3d8">
-		<xi:include href="d3d8/d3d8.rbuild" />
-	</directory>
 	<directory name="d3d8thk">
 		<xi:include href="d3d8thk/d3d8thk.rbuild" />
-	</directory>
-	<directory name="d3d9">
-		<xi:include href="d3d9/d3d9.rbuild" />
-	</directory>
-	<directory name="ddraw">
-		<xi:include href="ddraw/ddraw.rbuild" />
 	</directory>
 	<directory name="devenum">
 		<xi:include href="devenum/devenum.rbuild" />
@@ -56,4 +47,7 @@
 		<xi:include href="quartz/quartz.rbuild" />
 	</directory>
 
+	<directory name="wine">
+		<xi:include href="wine/wine.rbuild" />
+	</directory>
 </group>
