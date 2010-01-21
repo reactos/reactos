@@ -105,6 +105,7 @@ NTSTATUS TCPAccept
   PVOID Context );
 
 /* tcp.c */
+ULONG HandleSignalledConnection( PCONNECTION_ENDPOINT Connection );
 PCONNECTION_ENDPOINT TCPAllocateConnectionEndpoint( PVOID ClientContext );
 VOID TCPFreeConnectionEndpoint( PCONNECTION_ENDPOINT Connection );
 

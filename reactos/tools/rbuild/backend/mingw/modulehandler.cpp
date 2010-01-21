@@ -63,7 +63,6 @@ string
 GetTargetMacro ( const Module& module, bool with_dollar )
 {
 	string s ( module.name );
-	strupr ( &s[0] );
 	s += "_TARGET";
 	if ( with_dollar )
 		return ssprintf ( "$(%s)", s.c_str() );
@@ -1157,9 +1156,9 @@ Rule nasmRule ( "$(eval $(call RBUILD_NASM,$(module_name),$(source),$(dependenci
                 "$(intermediate_dir)$(SEP)", NULL );
 
 /* TODO: move these to rules.mak */
-Rule wmcRule ( "$(intermediate_path_noext).rc $(INTERMEDIATE)$(SEP)include$(SEP)reactos$(SEP)$(source_name_noext).h: $(WMC_TARGET) $(source) | $(intermediate_dir)\n"
+Rule wmcRule ( "$(intermediate_path_noext).rc $(INTERMEDIATE)$(SEP)include$(SEP)reactos$(SEP)$(source_name_noext).h: $(wmc_TARGET) $(source) | $(intermediate_dir)\n"
                "\t$(ECHO_WMC)\n"
-               "\t$(Q)$(WMC_TARGET) -i -H $(INTERMEDIATE)$(SEP)include$(SEP)reactos$(SEP)$(source_name_noext).h -o $(intermediate_path_noext).rc $(source)\n",
+               "\t$(Q)$(wmc_TARGET) -i -H $(INTERMEDIATE)$(SEP)include$(SEP)reactos$(SEP)$(source_name_noext).h -o $(intermediate_path_noext).rc $(source)\n",
                "$(intermediate_path_noext).rc",
                "$(INTERMEDIATE)$(SEP)include$(SEP)reactos$(SEP)$(source_name_noext).h",
                "$(intermediate_dir)$(SEP)", NULL );
@@ -1485,8 +1484,8 @@ MingwModuleHandler::GenerateLinkerCommand (
 
 	string linkerScriptArgument;
 	if ( module.linkerScript != NULL )
-		linkerScriptArgument = ssprintf ( " -T %s", backend->GetFullName ( *module.linkerScript->file ).c_str () );
-	else
+			linkerScriptArgument = ssprintf ( " -T %s", backend->GetFullName ( *module.linkerScript->file ).c_str () );
+		else
 		linkerScriptArgument = "";
 
 	/* check if we need to add default C++ libraries, ie if we have
@@ -1944,7 +1943,7 @@ MingwModuleHandler::GenerateRules ()
 		module.name.c_str () );
 	string dependencies = GetTargetMacro ( module );
 	if ( module.type == Test )
-		dependencies += " $(REGTESTS_RUN_TARGET)";
+		dependencies += " $(regtests_run_TARGET)";
 	fprintf ( fMakefile, "%s: %s\n\n",
 		module.name.c_str (),
 		dependencies.c_str () );
@@ -2064,17 +2063,17 @@ MingwModuleHandler::GetDefaultDependencies (
 	if (module.name != "psdk" &&
 		module.name != "dxsdk")
 	{
-		dependencies.push_back ( "$(PSDK_TARGET) $(psdk_HEADERS)" );
-		dependencies.push_back ( "$(DXSDK_TARGET) $(dxsdk_HEADERS)" );
+		dependencies.push_back ( "$(psdk_TARGET) $(psdk_HEADERS)" );
+		dependencies.push_back ( "$(dxsdk_TARGET) $(dxsdk_HEADERS)" );
 	}
 
 	if (module.name != "errcodes" &&
 		module.name != "bugcodes" &&
 		module.name != "ntstatus")
 	{
-		dependencies.push_back ( "$(ERRCODES_TARGET) $(ERRCODES_MCHEADERS)" );
-		dependencies.push_back ( "$(BUGCODES_TARGET) $(BUGCODES_MCHEADERS)" );
-		dependencies.push_back ( "$(NTSTATUS_TARGET) $(NTSTATUS_MCHEADERS)" );
+		dependencies.push_back ( "$(errcodes_TARGET) $(ERRCODES_MCHEADERS)" );
+		dependencies.push_back ( "$(bugcodes_TARGET) $(BUGCODES_MCHEADERS)" );
+		dependencies.push_back ( "$(ntstatus_TARGET) $(NTSTATUS_MCHEADERS)" );
 	}
 
 	///* Check if any dependent library relies on the generated headers */
@@ -3138,16 +3137,16 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 
 	fprintf ( fMakefile, ".PHONY: %s_CABINET\n\n",
 	          module.name.c_str () );
-	fprintf ( fMakefile, "%s_CABINET: all $(CABMAN_TARGET) %s | %s\n",
+	fprintf ( fMakefile, "%s_CABINET: all $(cabman_TARGET) %s | %s\n",
 	          module.name.c_str (),
 	          backend->GetFullName ( reactosDff ).c_str (),
 	          backend->GetFullPath ( bootcdReactos ).c_str () );
 	fprintf ( fMakefile,
-	          "\t$(Q)$(CABMAN_TARGET) -C %s -L %s -I -P $(OUTPUT)\n",
+	          "\t$(Q)$(cabman_TARGET) -C %s -L %s -I -P $(OUTPUT)\n",
 	          backend->GetFullName ( reactosDff ).c_str (),
 	          backend->GetFullPath ( bootcdReactos ).c_str () );
 	fprintf ( fMakefile,
-	          "\t$(Q)$(CABMAN_TARGET) -C %s -RC %s -L %s -N -P $(OUTPUT)\n",
+	          "\t$(Q)$(cabman_TARGET) -C %s -RC %s -L %s -N -P $(OUTPUT)\n",
 	          backend->GetFullName ( reactosDff ).c_str (),
 	          backend->GetFullName ( reactosInf ).c_str (),
 	          backend->GetFullPath ( bootcdReactos ).c_str ());
@@ -3167,7 +3166,7 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 	fprintf ( fMakefile, ".PHONY: %s\n\n",
 	          module.name.c_str ());
 	fprintf ( fMakefile,
-	          "%s: $(%s_OBJS) %s_CABINET %s $(CDMAKE_TARGET) | %s\n",
+	          "%s: $(%s_OBJS) %s_CABINET %s $(cdmake_TARGET) | %s\n",
 	          module.name.c_str (),
 	          module.name.c_str (),
 	          module.name.c_str (),
@@ -3178,7 +3177,7 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 
 	fprintf ( fMakefile, "\t$(ECHO_CDMAKE)\n" );
 	fprintf ( fMakefile,
-	          "\t$(Q)$(CDMAKE_TARGET) -v -j -m -b %s %s REACTOS %s\n",
+	          "\t$(Q)$(cdmake_TARGET) -v -j -m -b %s %s REACTOS %s\n",
 	          backend->GetFullName ( *isoboot ).c_str (),
 	          backend->GetFullPath ( bootcd ).c_str (),
 	          IsoName.c_str() );
@@ -3299,7 +3298,7 @@ MingwLiveIsoModuleHandler::OutputRegistryCommands ( string& livecdDirectory )
 	fprintf ( fMakefile,
 	          "\t$(ECHO_MKHIVE)\n" );
 	fprintf ( fMakefile,
-	          "\t$(MKHIVE_TARGET) boot%cbootdata %s $(ARCH) boot%cbootdata%clivecd.inf boot%cbootdata%chiveinst_$(ARCH).inf\n",
+	          "\t$(mkhive_TARGET) boot%cbootdata %s $(ARCH) boot%cbootdata%clivecd.inf boot%cbootdata%chiveinst_$(ARCH).inf\n",
 	          cSep, backend->GetFullPath ( reactosSystem32ConfigDirectory ).c_str (),
 	          cSep, cSep, cSep, cSep );
 }
@@ -3357,7 +3356,7 @@ MingwLiveIsoModuleHandler::GenerateLiveIsoModuleTarget ()
 	fprintf ( fMakefile, ".PHONY: %s\n\n",
 	          module.name.c_str ());
 	fprintf ( fMakefile,
-	          "%s : $(%s_OBJS) %s %s $(MKHIVE_TARGET) $(CDMAKE_TARGET)\n",
+	          "%s : $(%s_OBJS) %s %s $(mkhive_TARGET) $(cdmake_TARGET)\n",
 	          module.name.c_str (),
 	          module.name.c_str (),
 	          backend->GetFullName ( *isoboot) .c_str (),
@@ -3367,7 +3366,7 @@ MingwLiveIsoModuleHandler::GenerateLiveIsoModuleTarget ()
 	OutputRegistryCommands ( livecdDirectory );
 	fprintf ( fMakefile, "\t$(ECHO_CDMAKE)\n" );
 	fprintf ( fMakefile,
-	          "\t$(Q)$(CDMAKE_TARGET) -v -m -j -b %s %s REACTOS %s\n",
+	          "\t$(Q)$(cdmake_TARGET) -v -m -j -b %s %s REACTOS %s\n",
 	          backend->GetFullName( *isoboot ).c_str (),
 	          backend->GetFullPath ( livecd ).c_str (),
 	          IsoName.c_str() );
@@ -3456,13 +3455,13 @@ MingwCabinetModuleHandler::Process ()
 	GenerateRules ();
 
 	const FileLocation *target_file = GetTargetFilename ( module, NULL );
-	fprintf ( fMakefile, "%s: $(CABMAN_TARGET) | %s\n",
+	fprintf ( fMakefile, "%s: $(cabman_TARGET) | %s\n",
 	          targetMacro.c_str (),
 	          backend->GetFullPath ( *target_file ).c_str () );
 
 	fprintf ( fMakefile, "\t$(ECHO_CABMAN)\n" );
 	fprintf ( fMakefile,
-	          "\t$(Q)$(CABMAN_TARGET) -M raw -S %s $(%s_SOURCES)\n",      // Escape the asterisk for Make
+	          "\t$(Q)$(cabman_TARGET) -M raw -S %s $(%s_SOURCES)\n",      // Escape the asterisk for Make
 	          targetMacro.c_str (),
 			  module.name.c_str());
 }

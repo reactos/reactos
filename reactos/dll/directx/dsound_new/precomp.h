@@ -15,7 +15,7 @@
 #include <dsconf.h>
 #include <vfwmsgs.h>
 #include <setupapi.h>
-#define YDEBUG
+#define NDEBUG
 #include <debug.h>
 #include <ks.h>
 #include <ksmedia.h>
@@ -98,8 +98,44 @@ GetPinIdFromFilter(
     BOOL bCapture,
     ULONG Offset);
 
+/* directsound.c */
+
+HRESULT
+CALLBACK
+NewDirectSound(
+    IUnknown* pUnkOuter,
+    REFIID riid,
+    LPVOID* ppvObject);
+
 
 /* misc.c */
+
+VOID
+PerformChannelConversion(
+    PUCHAR Buffer,
+    ULONG BufferLength,
+    PULONG BytesRead,
+    ULONG OldChannels,
+    ULONG NewChannels,
+    ULONG BitsPerSample,
+    PUCHAR Result,
+    ULONG ResultLength,
+    PULONG BytesWritten);
+
+BOOL
+SetPinFormat(
+    IN HANDLE hPin,
+    IN LPWAVEFORMATEX WaveFormatEx);
+
+BOOL
+CreateCompatiblePin(
+    IN HANDLE hFilter,
+    IN DWORD PinId,
+    IN BOOL bLoop,
+    IN LPWAVEFORMATEX WaveFormatEx,
+    OUT LPWAVEFORMATEX WaveFormatOut,
+    OUT PHANDLE hPin);
+
 
 DWORD
 SyncOverlappedDeviceIoControl(
@@ -199,11 +235,36 @@ NewKsPropertySet(
     REFIID riid,
     LPVOID* ppvObject);
 
+/* capture.c */
+
+HRESULT
+CALLBACK
+NewDirectSoundCapture(
+    IUnknown* pUnkOuter,
+    REFIID riid,
+    LPVOID* ppvObject);
+
+
 /* capturebuffer.c */
 HRESULT
 NewDirectSoundCaptureBuffer(
     LPDIRECTSOUNDCAPTUREBUFFER8 *OutBuffer,
     LPFILTERINFO Filter,
     LPCDSCBUFFERDESC lpcDSBufferDesc);
+
+/* notify.c */
+VOID
+DoNotifyPositionEvents(
+    LPDIRECTSOUNDNOTIFY iface,
+    DWORD OldPosition,
+    DWORD NewPosition);
+
+HRESULT
+NewDirectSoundNotify(
+    LPDIRECTSOUNDNOTIFY * Notify,
+    BOOL bLoop,
+    BOOL bMix,
+    HANDLE hPin,
+    DWORD BufferSize);
 
 #endif

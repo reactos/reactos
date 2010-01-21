@@ -309,7 +309,6 @@ typedef struct _CONNECTION_ENDPOINT {
     LIST_ENTRY SignalList;     /* Entry in the list of sockets waiting for
 				* notification service to the client */
     UINT    SignalState;       /* Active signals from oskit */
-    BOOLEAN Signalled;         /* Are we a member of the signal list */
 } CONNECTION_ENDPOINT, *PCONNECTION_ENDPOINT;
 
 

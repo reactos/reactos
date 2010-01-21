@@ -114,7 +114,7 @@ _KeUpdateRunTime@8:
 
     /* Check if the debugger is enabled */
     cmp byte ptr __KdDebuggerEnabled, 0
-    je ResetDpcTime
+    jz ResetDpcTime
 
     /* Breakpoint */
     call _DbgBreakPoint@0
@@ -338,7 +338,7 @@ TimerExpired:
 
 DebugCheck:
     /* Check if the debugger is enabled */
-    cmp dword ptr __KdDebuggerEnabled, 0
+    cmp byte ptr __KdDebuggerEnabled, 0
     jnz DebuggerEnabled
 
     /* Check if this was a full tick */

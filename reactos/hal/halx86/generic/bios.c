@@ -109,7 +109,11 @@ HalpSwitchToRealModeTrapHandlers(VOID)
     ULONG Handler;
     PHARDWARE_PTE IdtPte;
 
-    /* On i586, the first 7 entries of IDT are write-protected, unprotect them. */ // Nasty hto hack
+    /* 
+     * On P5, the first 7 entries of the IDT are write protected to work around
+     * the cmpxchg8b lock errata. Unprotect them here so we can set our custom
+     * invalid op-code handler.
+     */
     if (KeGetCurrentPrcb()->CpuType == 5)
     {
         IdtPte = GetPteAddress(((PKIPCR)KeGetPcr())->IDT);
@@ -160,6 +164,8 @@ VOID
 NTAPI
 HalpRestoreTrapHandlers(VOID)
 {
+    PHARDWARE_PTE IdtPte;
+
     /* We're back, restore the handlers we over-wrote */
     ((PKIPCR)KeGetPcr())->IDT[13].ExtendedOffset =
     (USHORT)((HalpGpfHandler >> 16) & 0xFFFF);
@@ -167,6 +173,16 @@ HalpRestoreTrapHandlers(VOID)
     ((PKIPCR)KeGetPcr())->IDT[6].ExtendedOffset =
         (USHORT)((HalpBopHandler >> 16) & 0xFFFF);
     ((PKIPCR)KeGetPcr())->IDT[6].Offset = (USHORT)HalpBopHandler;
+
+    /* On P5, restore the write protection for the first 7 IDT entries */
+    if (KeGetCurrentPrcb()->CpuType == 5)
+    {
+        IdtPte = GetPteAddress(((PKIPCR)KeGetPcr())->IDT);
+        IdtPte->Write = 0;
+
+        /* Flush the TLB by resetting CR3 */
+        __writecr3(__readcr3());
+    }
 }
 
 VOID
@@ -197,7 +213,7 @@ HalpUnmapRealModeMemory(VOID)
         Pte = GetPteAddress((PVOID)i);
         Pte->Valid = 0;
         Pte->Write = 0;
-        //Pte->Owner = 0; // Missing this?
+        Pte->Owner = 0;
         Pte->PageFrameNumber = 0;
     }
     

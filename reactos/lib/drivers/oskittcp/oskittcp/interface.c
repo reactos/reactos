@@ -566,7 +566,7 @@ struct ifaddr *ifa_iffind(struct sockaddr *addr, int type)
 
 void oskittcp_die( const char *file, int line ) {
     DbgPrint("\n\n*** OSKITTCP: Panic Called at %s:%d ***\n", file, line);
-    *((int *)0) = 0;
+    ASSERT(FALSE);
 }
 
 /* Stuff supporting the BSD network-interface interface */

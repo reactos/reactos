@@ -389,7 +389,7 @@ EnumAudioDeviceInterfaces(
     HRESULT hResult;
     ULONG WaveOutCount, WaveInCount;
     GUID AudioDeviceGuid = {STATIC_KSCATEGORY_AUDIO};
-    LPFILTERINFO RootInfo = NULL, CurInfo;
+    LPFILTERINFO CurInfo;
 
     /* try open the device list */
     Status = OpenDeviceList(&AudioDeviceGuid, &hList);
@@ -400,7 +400,7 @@ EnumAudioDeviceInterfaces(
         return E_FAIL;
     }
 
-    if (!GetDeviceListInterfaces(hList, &AudioDeviceGuid, &RootInfo))
+    if (!GetDeviceListInterfaces(hList, &AudioDeviceGuid, OutRootInfo))
     {
         DPRINT1("No devices found\n");
         CloseDeviceList(hList);
@@ -408,9 +408,9 @@ EnumAudioDeviceInterfaces(
     }
 
     /* sanity check */
-    ASSERT(RootInfo);
+    ASSERT(OutRootInfo);
 
-    CurInfo = RootInfo;
+    CurInfo = *OutRootInfo;
 
     WaveOutCount = 0;
     WaveInCount = 0;
@@ -433,9 +433,6 @@ EnumAudioDeviceInterfaces(
 
     /* close device list */
     CloseDeviceList(hList);
-
-    /* store result */
-    *OutRootInfo = RootInfo;
 
     /* done */
     return hResult;

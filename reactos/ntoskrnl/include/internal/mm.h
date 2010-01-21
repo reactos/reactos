@@ -45,6 +45,8 @@ extern SIZE_T MmPagedPoolCommit;
 extern SIZE_T MmPeakCommitment;
 extern SIZE_T MmtotalCommitLimitMaximum;
 
+extern BOOLEAN MiDbgReadyForPhysical;
+
 struct _KTRAP_FRAME;
 struct _EPROCESS;
 struct _MM_RMAP_ENTRY;
@@ -67,8 +69,11 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
 //
 #define MMDBG_COPY_MAX_SIZE         0x8
 
-
-#define MI_STATIC_MEMORY_AREAS              (12)
+#if defined(_X86_)
+#define MI_STATIC_MEMORY_AREAS              (14)
+#else
+#define MI_STATIC_MEMORY_AREAS              (13)
+#endif
 
 #define MEMORY_AREA_INVALID                 (0)
 #define MEMORY_AREA_SECTION_VIEW            (1)

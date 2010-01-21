@@ -18,7 +18,6 @@ typedef struct
     LPFILTERINFO Filter;
 }CDirectSoundCaptureImpl, *LPCDirectSoundCaptureImpl;
 
-
 HRESULT
 WINAPI
 CDirectSoundCapture_fnQueryInterface(
@@ -100,25 +99,20 @@ CDirectSoundCapture_fnCreateCaptureBuffer(
 
     if (!lpcDSBufferDesc  || !ppDSCBuffer || pUnkOuter != NULL)
     {
-        DPRINT("Invalid parameter %p %p %p\n", lpcDSBufferDesc, ppDSCBuffer, pUnkOuter);
+        /* invalid param */
         return DSERR_INVALIDPARAM;
     }
 
     /* check buffer description */
-    if ((lpcDSBufferDesc->dwSize != sizeof(DSBUFFERDESC) && lpcDSBufferDesc->dwSize != sizeof(DSBUFFERDESC1)) || lpcDSBufferDesc->dwReserved != 0)
+    if ((lpcDSBufferDesc->dwSize != sizeof(DSCBUFFERDESC) && lpcDSBufferDesc->dwSize != sizeof(DSCBUFFERDESC1)) || 
+        lpcDSBufferDesc->dwReserved != 0 || lpcDSBufferDesc->dwBufferBytes == 0 || lpcDSBufferDesc->lpwfxFormat == NULL)
     {
-        DPRINT("Invalid buffer description size %u expected %u dwReserved %u\n", lpcDSBufferDesc->dwSize, sizeof(DSBUFFERDESC1), lpcDSBufferDesc->dwReserved);
+        /* invalid buffer description */
         return DSERR_INVALIDPARAM;
     }
 
-    /* sanity check */
-    ASSERT(lpcDSBufferDesc->lpwfxFormat);
-
-    if (lpcDSBufferDesc->lpwfxFormat)
-    {
-        DPRINT("This %p wFormatTag %x nChannels %u nSamplesPerSec %u nAvgBytesPerSec %u NBlockAlign %u wBitsPerSample %u cbSize %u\n",
-               This, lpcDSBufferDesc->lpwfxFormat->wFormatTag, lpcDSBufferDesc->lpwfxFormat->nChannels, lpcDSBufferDesc->lpwfxFormat->nSamplesPerSec, lpcDSBufferDesc->lpwfxFormat->nAvgBytesPerSec, lpcDSBufferDesc->lpwfxFormat->nBlockAlign, lpcDSBufferDesc->lpwfxFormat->wBitsPerSample, lpcDSBufferDesc->lpwfxFormat->cbSize);
-    }
+    DPRINT("This %p wFormatTag %x nChannels %u nSamplesPerSec %u nAvgBytesPerSec %u NBlockAlign %u wBitsPerSample %u cbSize %u\n",
+           This, lpcDSBufferDesc->lpwfxFormat->wFormatTag, lpcDSBufferDesc->lpwfxFormat->nChannels, lpcDSBufferDesc->lpwfxFormat->nSamplesPerSec, lpcDSBufferDesc->lpwfxFormat->nAvgBytesPerSec, lpcDSBufferDesc->lpwfxFormat->nBlockAlign, lpcDSBufferDesc->lpwfxFormat->wBitsPerSample, lpcDSBufferDesc->lpwfxFormat->cbSize);
 
     hResult = NewDirectSoundCaptureBuffer((LPDIRECTSOUNDCAPTUREBUFFER8*)ppDSCBuffer, This->Filter, lpcDSBufferDesc);
     return hResult;
@@ -141,14 +135,23 @@ CDirectSoundCapture_fnGetCaps(
         return DSERR_UNINITIALIZED;
     }
 
-    if (!pDSCCaps || pDSCCaps->dwSize != sizeof(DSCCAPS))
+    if (!pDSCCaps)
     {
         /* invalid param */
         return DSERR_INVALIDPARAM;
     }
 
+    if (pDSCCaps->dwSize != sizeof(DSCCAPS))
+    {
+        /* invalid param */
+        return DSERR_INVALIDPARAM;
+    }
+
+
     /* We are certified ;) */
     pDSCCaps->dwFlags = DSCCAPS_CERTIFIED;
+
+    ASSERT(This->Filter);
 
     Result = waveInGetDevCapsW(This->Filter->MappedId[0], &Caps, sizeof(WAVEINCAPSW));
     if (Result != MMSYSERR_NOERROR)
@@ -173,7 +176,6 @@ CDirectSoundCapture_fnInitialize(
 {
     GUID DeviceGuid;
     LPOLESTR pGuidStr;
-    HRESULT hr;
     LPCDirectSoundCaptureImpl This = (LPCDirectSoundCaptureImpl)CONTAINING_RECORD(iface, CDirectSoundCaptureImpl, lpVtbl);
 
     /* sanity check */
@@ -193,6 +195,12 @@ CDirectSoundCapture_fnInitialize(
         pcGuidDevice = &DSDEVID_DefaultCapture;
     }
 
+    if (IsEqualIID(pcGuidDevice, &DSDEVID_DefaultVoicePlayback) || IsEqualIID(pcGuidDevice, &DSDEVID_DefaultPlayback))
+    {
+        /* this has to be a winetest */
+        return DSERR_NODRIVER;
+    }
+
     /* now verify the guid */
     if (GetDeviceID(pcGuidDevice, &DeviceGuid) != DS_OK)
     {
@@ -204,9 +212,7 @@ CDirectSoundCapture_fnInitialize(
         return DSERR_INVALIDPARAM;
     }
 
-    hr = FindDeviceByGuid(&DeviceGuid, &This->Filter);
-
-    if (SUCCEEDED(hr))
+    if (FindDeviceByGuid(&DeviceGuid, &This->Filter))
     {
         This->bInitialized = TRUE;
         return DS_OK;
@@ -273,6 +279,42 @@ InternalDirectSoundCaptureCreate(
     return DS_OK;
 }
 
+HRESULT
+CALLBACK
+NewDirectSoundCapture(
+    IUnknown* pUnkOuter,
+    REFIID riid,
+    LPVOID* ppvObject)
+{
+    LPOLESTR pStr;
+    LPCDirectSoundCaptureImpl This;
+
+    /* check requested interface */
+    if (!IsEqualIID(riid, &IID_IUnknown) && !IsEqualIID(riid, &IID_IDirectSoundCapture) && !IsEqualIID(riid, &IID_IDirectSoundCapture8))
+    {
+        *ppvObject = 0;
+        StringFromIID(riid, &pStr);
+        DPRINT("NewDirectSoundCapture does not support Interface %ws\n", pStr);
+        CoTaskMemFree(pStr);
+        return E_NOINTERFACE;
+    }
+
+    /* allocate CDirectSoundCaptureImpl struct */
+    This = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(CDirectSoundCaptureImpl));
+    if (!This)
+    {
+        /* not enough memory */
+        return DSERR_OUTOFMEMORY;
+    }
+
+    /* initialize object */
+    This->ref = 1;
+    This->lpVtbl = &vt_DirectSoundCapture;
+    This->bInitialized = FALSE;
+    *ppvObject = (LPVOID)&This->lpVtbl;
+
+    return S_OK;
+}
 
 
 HRESULT

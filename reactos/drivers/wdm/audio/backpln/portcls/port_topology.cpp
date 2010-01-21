@@ -55,13 +55,6 @@ protected:
 
 };
 
-typedef struct
-{
-    PIRP Irp;
-    IIrpTarget *Filter;
-    PIO_WORKITEM WorkItem;
-}PIN_WORKER_CONTEXT, *PPIN_WORKER_CONTEXT;
-
 static GUID InterfaceGuids[2] = 
 {
     {
@@ -448,57 +441,16 @@ CPortTopology::PinCount(
 }
 
 
-VOID
-NTAPI
-CreatePinWorkerRoutine(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PVOID  Context)
-{
-    NTSTATUS Status;
-    IIrpTarget *Pin;
-    PPIN_WORKER_CONTEXT WorkerContext = (PPIN_WORKER_CONTEXT)Context;
-
-    DPRINT("CreatePinWorkerRoutine called\n");
-    // create the pin
-    Status = WorkerContext->Filter->NewIrpTarget(&Pin,
-                                                 KSSTRING_Pin,
-                                                 NULL,
-                                                 NonPagedPool,
-                                                 DeviceObject,
-                                                 WorkerContext->Irp,
-                                                 NULL);
-
-    DPRINT("CreatePinWorkerRoutine Status %x\n", Status);
-
-    if (NT_SUCCESS(Status))
-    {
-        // create the dispatch object
-        // FIXME need create item for clock
-        Status = NewDispatchObject(WorkerContext->Irp, Pin, 0, NULL);
-        DPRINT("Pin %p\n", Pin);
-    }
-
-    DPRINT("CreatePinWorkerRoutine completing irp %p\n", WorkerContext->Irp);
-    // save status in irp
-    WorkerContext->Irp->IoStatus.Status = Status;
-    WorkerContext->Irp->IoStatus.Information = 0;
-    // complete the request
-    IoCompleteRequest(WorkerContext->Irp, IO_SOUND_INCREMENT);
-    // free allocated work item
-    IoFreeWorkItem(WorkerContext->WorkItem);
-    // free context
-    FreeItem(WorkerContext, TAG_PORTCLASS);
-}
-
 NTSTATUS
 NTAPI
 PcCreatePinDispatch(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
+    NTSTATUS Status;
     IIrpTarget *Filter;
+    IIrpTarget *Pin;
     PKSOBJECT_CREATE_ITEM CreateItem;
-    PPIN_WORKER_CONTEXT Context;
 
     // access the create item
     CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
@@ -511,6 +463,7 @@ PcCreatePinDispatch(
 
     // sanity checks
     PC_ASSERT(Filter != NULL);
+    PC_ASSERT_IRQL(PASSIVE_LEVEL);
 
 
 #if KS_IMPLEMENTED
@@ -524,44 +477,32 @@ PcCreatePinDispatch(
     }
 #endif
 
-     // new pins are instantiated at passive level,
-     // so allocate a work item and context for it 
-     
+    Status = Filter->NewIrpTarget(&Pin,
+                                  KSSTRING_Pin,
+                                  NULL,
+                                  NonPagedPool,
+                                  DeviceObject,
+                                  Irp,
+                                  NULL);
 
-	Context = (PPIN_WORKER_CONTEXT)AllocateItem(NonPagedPool, sizeof(PIN_WORKER_CONTEXT), TAG_PORTCLASS);
-     if (!Context)
-     {
-         DPRINT("Failed to allocate worker context\n");
-         Irp->IoStatus.Information = 0;
-         Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
-         IoCompleteRequest(Irp, IO_NO_INCREMENT);
-         return STATUS_INSUFFICIENT_RESOURCES;
-    }
+    DPRINT("PcCreatePinDispatch Status %x\n", Status);
 
-    // allocate work item
-    Context->WorkItem = IoAllocateWorkItem(DeviceObject);
-    if (!Context->WorkItem)
+    if (NT_SUCCESS(Status))
     {
-        DPRINT("Failed to allocate workitem\n");
-        FreeItem(Context, TAG_PORTCLASS);
-        Irp->IoStatus.Information = 0;
-        Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        return STATUS_INSUFFICIENT_RESOURCES;
+        // create the dispatch object
+        // FIXME need create item for clock
+        Status = NewDispatchObject(Irp, Pin, 0, NULL);
+        DPRINT("Pin %p\n", Pin);
     }
 
-    Context->Filter = Filter;
-    Context->Irp = Irp;
-
-    DPRINT("Queueing IRP %p Irql %u\n", Irp, KeGetCurrentIrql());
+    DPRINT("CreatePinWorkerRoutine completing irp %p\n", Irp);
+    // save status in irp
+    Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = 0;
-    Irp->IoStatus.Status = STATUS_PENDING;
-    IoMarkIrpPending(Irp);
-    IoQueueWorkItem(Context->WorkItem, CreatePinWorkerRoutine, DelayedWorkQueue, (PVOID)Context);
-    return STATUS_PENDING;
+    // complete the request
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return Status;
 }
-
-
 
 NTSTATUS
 NTAPI
@@ -584,6 +525,7 @@ PcCreateItemDispatch(
 
     // sanity checks
     PC_ASSERT(SubDevice != NULL);
+
 
 #if KS_IMPLEMENTED
     Status = KsReferenceSoftwareBusObject(DeviceExt->KsDeviceHeader);

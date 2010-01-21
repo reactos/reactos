@@ -529,6 +529,24 @@ typedef enum {
 
 } KSPROPERTY_AUDIO;
 
+#define STATIC_KSEVENTSETID_LoopedStreaming\
+    0x4682B940L, 0xC6EF, 0x11D0, 0x96, 0xD8, 0x00, 0xAA, 0x00, 0x51, 0xE5, 0x1D
+DEFINE_GUIDSTRUCT("4682B940-C6EF-11D0-96D8-00AA0051E51D", KSEVENTSETID_LoopedStreaming);
+#define KSEVENTSETID_LoopedStreaming DEFINE_GUIDNAMED(KSEVENTSETID_LoopedStreaming)
+
+typedef enum {
+    KSEVENT_LOOPEDSTREAMING_POSITION,
+} KSEVENT_LOOPEDSTREAMING;
+
+typedef struct {
+    KSEVENTDATA KsEventData;
+#if defined(_NTDDK_)
+    ULONGLONG   Position;
+#else // !_NTDDK_
+    DWORDLONG   Position;
+#endif // !_NTDDK_
+} LOOPEDSTREAMING_POSITION_EVENT_DATA, *PLOOPEDSTREAMING_POSITION_EVENT_DATA ;
+
 
 /*
     SysAudio Properties

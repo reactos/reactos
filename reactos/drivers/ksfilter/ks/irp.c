@@ -1240,6 +1240,7 @@ KsCancelIo(
     PDRIVER_CANCEL OldDriverCancel;
     PIO_STACK_LOCATION IoStack;
     PLIST_ENTRY Entry;
+    PLIST_ENTRY NextEntry;
     PIRP Irp;
     KIRQL OldLevel;
 
@@ -1252,6 +1253,9 @@ KsCancelIo(
     {
         /* get irp offset */
         Irp = (PIRP)CONTAINING_RECORD(Entry, IRP, Tail.Overlay.ListEntry);
+
+        /* get next entry */
+        NextEntry = Entry->Flink;
 
         /* set cancelled bit */
         Irp->Cancel = TRUE;
@@ -1275,8 +1279,9 @@ KsCancelIo(
             /* re-acquire spinlock */
             KeAcquireSpinLock(SpinLock, &OldLevel);
         }
+
         /* move on to next entry */
-        Entry = Entry->Flink;
+        Entry = NextEntry;
     }
 
     /* the irp has already been canceled */
@@ -1785,7 +1790,7 @@ KspCreate(
     PKSIOBJECT_HEADER ObjectHeader;
     NTSTATUS Status;
 
-    DPRINT("KS / CREATE\n");
+    DPRINT1("KS / CREATE\n");
     /* get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     /* get device extension */
@@ -1837,7 +1842,6 @@ KspCreate(
         }
         return Status;
     }
-
 
     Irp->IoStatus.Information = 0;
     /* set return status */
