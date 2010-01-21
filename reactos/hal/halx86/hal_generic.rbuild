@@ -10,6 +10,7 @@
 				<file>bushndlr.c</file>
 				<file>isabus.c</file>
 				<file>halbus.c</file>
+				<file>pcibus.c</file>
 				<file>pcidata.c</file>
 				<file>sysbus.c</file>
 			</directory>
