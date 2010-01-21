@@ -27,6 +27,8 @@ placeSelWin()
 
 POINT pointStack[256];
 short pointSP;
+POINT *ptStack = NULL;
+int ptSP = 0;
 
 void
 startPaintingL(HDC hdc, short x, short y, int fg, int bg)
@@ -38,15 +40,25 @@ startPaintingL(HDC hdc, short x, short y, int fg, int bg)
     switch (activeTool)
     {
         case 1:
+            ShowWindow(hSelection, SW_HIDE);
+            if (ptStack != NULL)
+                HeapFree(GetProcessHeap(), 0, ptStack);
+            ptStack = HeapAlloc(GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS, sizeof(POINT) * 1024);
+            ptSP = 0;
+            ptStack[0].x = x;
+            ptStack[0].y = y;
+            break;
         case 10:
         case 11:
         case 13:
         case 15:
         case 16:
             newReversible();
+            break;
         case 2:
             newReversible();
             ShowWindow(hSelection, SW_HIDE);
+            rectSel_src[2] = rectSel_src[3] = 0;
             break;
         case 3:
             newReversible();
@@ -96,6 +108,17 @@ whilePaintingL(HDC hdc, short x, short y, int fg, int bg)
 {
     switch (activeTool)
     {
+        case 1:
+            if (ptSP == 0)
+                newReversible();
+            ptSP++;
+            if (ptSP % 1024 == 0)
+                ptStack = HeapReAlloc(GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS, ptStack, sizeof(POINT) * (ptSP + 1024));
+            ptStack[ptSP].x = max(0, min(x, imgXRes));
+            ptStack[ptSP].y = max(0, min(y, imgYRes));
+            resetToU1();
+            Poly(hdc, ptStack, ptSP + 1, 0, 0, 2, 0, FALSE);
+            break;
         case 2:
         {
             short tempX;
@@ -174,6 +197,56 @@ endPaintingL(HDC hdc, short x, short y, int fg, int bg)
 {
     switch (activeTool)
     {
+        case 1:
+        {
+            POINT *ptStackCopy;
+            int i;
+            rectSel_src[0] = rectSel_src[1] = 0x7fffffff;
+            rectSel_src[2] = rectSel_src[3] = 0;
+            for (i = 0; i <= ptSP; i++)
+            {
+                if (ptStack[i].x < rectSel_src[0])
+                    rectSel_src[0] = ptStack[i].x;
+                if (ptStack[i].y < rectSel_src[1])
+                    rectSel_src[1] = ptStack[i].y;
+                if (ptStack[i].x > rectSel_src[2])
+                    rectSel_src[2] = ptStack[i].x;
+                if (ptStack[i].y > rectSel_src[3])
+                    rectSel_src[3] = ptStack[i].y;
+            }
+            rectSel_src[2] += 1 - rectSel_src[0];
+            rectSel_src[3] += 1 - rectSel_src[1];
+            rectSel_dest[0] = rectSel_src[0];
+            rectSel_dest[1] = rectSel_src[1];
+            rectSel_dest[2] = rectSel_src[2];
+            rectSel_dest[3] = rectSel_src[3];
+            if (ptSP != 0)
+            {
+                DeleteObject(hSelMask);
+                hSelMask = CreateBitmap(rectSel_src[2], rectSel_src[3], 1, 1, NULL);
+                DeleteObject(SelectObject(hSelDC, hSelMask));
+                ptStackCopy = HeapAlloc(GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS, sizeof(POINT) * (ptSP + 1));
+                for (i = 0; i <= ptSP; i++)
+                {
+                    ptStackCopy[i].x = ptStack[i].x - rectSel_src[0];
+                    ptStackCopy[i].y = ptStack[i].y - rectSel_src[1];
+                }
+                Poly(hSelDC, ptStackCopy, ptSP + 1, 0x00ffffff, 0x00ffffff, 1, 2, TRUE);
+                HeapFree(GetProcessHeap(), 0, ptStackCopy);
+                SelectObject(hSelDC, hSelBm = CreateDIBWithProperties(rectSel_src[2], rectSel_src[3]));
+                resetToU1();
+                MaskBlt(hSelDC, 0, 0, rectSel_src[2], rectSel_src[3], hDrawingDC, rectSel_src[0],
+                        rectSel_src[1], hSelMask, 0, 0, MAKEROP4(SRCCOPY, WHITENESS));
+                Poly(hdc, ptStack, ptSP + 1, bg, bg, 1, 2, TRUE);
+                newReversible();
+
+                placeSelWin();
+                ShowWindow(hSelection, SW_SHOW);
+            }
+            HeapFree(GetProcessHeap(), 0, ptStack);
+            ptStack = NULL;
+            break;
+        }
         case 2:
             resetToU1();
             if ((rectSel_src[2] != 0) && (rectSel_src[3] != 0))
@@ -181,8 +254,12 @@ endPaintingL(HDC hdc, short x, short y, int fg, int bg)
                 DeleteObject(SelectObject
                              (hSelDC, hSelBm =
                               (HBITMAP) CreateDIBWithProperties(rectSel_src[2], rectSel_src[3])));
+                DeleteObject(hSelMask);
                 BitBlt(hSelDC, 0, 0, rectSel_src[2], rectSel_src[3], hDrawingDC, rectSel_src[0],
                        rectSel_src[1], SRCCOPY);
+                Rect(hdc, rectSel_src[0], rectSel_src[1], rectSel_src[0] + rectSel_src[2],
+                     rectSel_src[1] + rectSel_src[3], bgColor, bgColor, 0, TRUE);
+                newReversible();
                 placeSelWin();
                 ShowWindow(hSelection, SW_SHOW);
             }
@@ -255,6 +332,7 @@ startPaintingR(HDC hdc, short x, short y, int fg, int bg)
         case 15:
         case 16:
             newReversible();
+            break;
         case 3:
             newReversible();
             Replace(hdc, x, y, x, y, fg, bg, rubberRadius);

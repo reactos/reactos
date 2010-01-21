@@ -2085,6 +2085,7 @@ RGNOBJAPI_Lock(HRGN hRgn, PRGN_ATTR *ppRgn_Attr)
   PGDI_TABLE_ENTRY Entry;
   PROSRGNDATA pRgn;
   PRGN_ATTR pRgn_Attr;
+  HANDLE pid;
 
   pRgn = REGION_LockRgn(hRgn);
 
@@ -2094,9 +2095,11 @@ RGNOBJAPI_Lock(HRGN hRgn, PRGN_ATTR *ppRgn_Attr)
      Index = GDI_HANDLE_GET_INDEX(hRgn);
      Entry = &GdiHandleTable->Entries[Index];
      pRgn_Attr = Entry->UserData;
+     pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
      KeLeaveCriticalRegion();
 
-     if (pRgn_Attr)
+     if ( pid == NtCurrentTeb()->ClientId.UniqueProcess &&
+          pRgn_Attr )
      {
         _SEH2_TRY
         {
@@ -2144,6 +2147,7 @@ RGNOBJAPI_Unlock(PROSRGNDATA pRgn)
   INT Index;
   PGDI_TABLE_ENTRY Entry;
   PRGN_ATTR pRgn_Attr;
+  HANDLE pid;
 
   if (pRgn)
   {
@@ -2151,9 +2155,11 @@ RGNOBJAPI_Unlock(PROSRGNDATA pRgn)
      Index = GDI_HANDLE_GET_INDEX(pRgn->BaseObject.hHmgr);
      Entry = &GdiHandleTable->Entries[Index];
      pRgn_Attr = Entry->UserData;
+     pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
      KeLeaveCriticalRegion();
 
-     if ( pRgn_Attr )
+     if ( pid == NtCurrentTeb()->ClientId.UniqueProcess &&
+          pRgn_Attr )
      {
         _SEH2_TRY
         {
@@ -2175,6 +2181,33 @@ RGNOBJAPI_Unlock(PROSRGNDATA pRgn)
   REGION_UnlockRgn(pRgn);
 }
 
+/*
+  System Regions:
+    These regions do not use attribute sections and when allocated, use gdiobj
+    level functions.
+*/
+//
+// System Region Functions
+//
+HRGN
+FASTCALL
+IntSysCreateRectRgn(INT LeftRect, INT TopRect, INT RightRect, INT BottomRect)
+{
+  PROSRGNDATA pRgn;
+  HRGN hRgn;
+
+  pRgn = (PROSRGNDATA)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_REGION);
+  if (!pRgn)
+  {
+     return NULL;
+  }
+  hRgn = pRgn->BaseObject.hHmgr;
+  pRgn->Buffer = &pRgn->rdh.rcBound;
+  REGION_SetRectRgn(pRgn, LeftRect, TopRect, RightRect, BottomRect);
+  REGION_UnlockRgn(pRgn);
+  return hRgn;
+}
+
 BOOL INTERNAL_CALL
 REGION_Cleanup(PVOID ObjectBody)
 {
@@ -2184,13 +2217,13 @@ REGION_Cleanup(PVOID ObjectBody)
     return TRUE;
 }
 
+// use REGION_FreeRgnByHandle(hRgn); for systems regions.
 VOID FASTCALL
 REGION_Delete(PROSRGNDATA pRgn)
 {
   if ( pRgn == prgnDefault) return;
   REGION_FreeRgn(pRgn);
 }
-
 
 VOID FASTCALL
 IntGdiReleaseRaoRgn(PDC pDC)
@@ -2201,7 +2234,6 @@ IntGdiReleaseRaoRgn(PDC pDC)
   Entry->Flags |= GDI_ENTRY_VALIDATE_VIS;
   RECTL_vSetEmptyRect(&pDC->erclClip);
 }
-
 
 VOID FASTCALL
 IntGdiReleaseVisRgn(PDC pDC)
@@ -2385,13 +2417,13 @@ IntGdiPaintRgn(
 
     ASSERT(!(pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY)));
 
-    if (!(tmpVisRgn = NtGdiCreateRectRgn(0, 0, 0, 0))) return FALSE;
+    if (!(tmpVisRgn = IntSysCreateRectRgn(0, 0, 0, 0))) return FALSE;
 
     // Transform region into device co-ords
     if (!REGION_LPTODP(dc, tmpVisRgn, hRgn) || 
          NtGdiOffsetRgn(tmpVisRgn, dc->ptlDCOrig.x, dc->ptlDCOrig.y) == ERROR)
     {
-        GreDeleteObject(tmpVisRgn);
+        REGION_FreeRgnByHandle(tmpVisRgn);
         return FALSE;
     }
 
@@ -2400,7 +2432,7 @@ IntGdiPaintRgn(
     visrgn = RGNOBJAPI_Lock(tmpVisRgn, NULL);
     if (visrgn == NULL)
     {
-        GreDeleteObject(tmpVisRgn);
+        REGION_FreeRgnByHandle(tmpVisRgn);
         return FALSE;
     }
 
@@ -2421,7 +2453,7 @@ IntGdiPaintRgn(
                        0xFFFF);//FIXME:don't know what to put here
 
     RGNOBJAPI_Unlock(visrgn);
-    GreDeleteObject(tmpVisRgn);
+    REGION_FreeRgnByHandle(tmpVisRgn);
 
     // Fill the region
     return TRUE;
@@ -3553,19 +3585,19 @@ NtGdiFrameRgn(
     HRGN FrameRgn;
     BOOL Ret;
 
-    if (!(FrameRgn = NtGdiCreateRectRgn(0, 0, 0, 0)))
+    if (!(FrameRgn = IntSysCreateRectRgn(0, 0, 0, 0)))
     {
         return FALSE;
     }
     if (!REGION_CreateFrameRgn(FrameRgn, hRgn, Width, Height))
     {
-        GreDeleteObject(FrameRgn);
+        REGION_FreeRgnByHandle(FrameRgn);
         return FALSE;
     }
 
     Ret = NtGdiFillRgn(hDC, FrameRgn, hBrush);
 
-    GreDeleteObject(FrameRgn);
+    REGION_FreeRgnByHandle(FrameRgn);
     return Ret;
 }
 

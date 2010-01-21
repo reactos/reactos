@@ -1,8 +1,8 @@
-@ stub D3DXAssembleShader
-@ stub D3DXAssembleShaderFromFileA
-@ stub D3DXAssembleShaderFromFileW
-@ stub D3DXAssembleShaderFromResourceA
-@ stub D3DXAssembleShaderFromResourceW
+@ stdcall D3DXAssembleShader(ptr long ptr ptr long ptr ptr)
+@ stdcall D3DXAssembleShaderFromFileA(str ptr ptr long ptr ptr)
+@ stdcall D3DXAssembleShaderFromFileW(wstr ptr ptr long ptr ptr)
+@ stdcall D3DXAssembleShaderFromResourceA(long str ptr ptr long ptr ptr)
+@ stdcall D3DXAssembleShaderFromResourceW(long wstr ptr ptr long ptr ptr)
 @ stdcall D3DXBoxBoundProbe(ptr ptr ptr ptr)
 @ stub D3DXCheckCubeTextureRequirements
 @ stub D3DXCheckTextureRequirements

@@ -12,6 +12,17 @@
 
 PIP_INTERFACE Loopback = NULL;
 
+VOID LoopPassiveWorker(
+  PVOID Context)
+{
+  PIP_PACKET IPPacket = Context;
+
+  IPReceive(Loopback, IPPacket);
+  FreeNdisPacket(IPPacket->NdisPacket);
+
+  ExFreePool(Context);
+}
+
 VOID LoopTransmit(
   PVOID Context,
   PNDIS_PACKET NdisPacket,
@@ -34,6 +45,7 @@ VOID LoopTransmit(
     NDIS_STATUS NdisStatus;
     IP_PACKET IPPacket;
     PNDIS_BUFFER NdisBuffer;
+    PVOID WorkerBuffer;
 
     ASSERT_KM_POINTER(NdisPacket);
     ASSERT_KM_POINTER(PC(NdisPacket));
@@ -46,9 +58,6 @@ VOID LoopTransmit(
     NdisStatus = AllocatePacketWithBuffer
         ( &XmitPacket, PacketBuffer, PacketLength );
 
-    (PC(NdisPacket)->DLComplete)
-        ( PC(NdisPacket)->Context, NdisPacket, NdisStatus );
-
     if( NT_SUCCESS(NdisStatus) ) {
         IPInitializePacket(&IPPacket, 0);
 		
@@ -60,12 +69,23 @@ VOID LoopTransmit(
                                      &IPPacket.ContigSize,
                                      &IPPacket.TotalSize);
 
-        IPReceive(Loopback, &IPPacket);
-
-        FreeNdisPacket(XmitPacket);
+        
+        WorkerBuffer = ExAllocatePool(NonPagedPool, sizeof(IPPacket));
+        if (WorkerBuffer)
+        {
+            RtlCopyMemory(WorkerBuffer, &IPPacket, sizeof(IPPacket));
+            if (!ChewCreate(LoopPassiveWorker, WorkerBuffer))
+            {
+                ExFreePool(WorkerBuffer);
+                NdisStatus = NDIS_STATUS_RESOURCES;
+            }
+        }
+        else
+            NdisStatus = NDIS_STATUS_RESOURCES;
     }
 
-    TI_DbgPrint(MAX_TRACE, ("Done\n"));
+    (PC(NdisPacket)->DLComplete)
+        ( PC(NdisPacket)->Context, NdisPacket, NdisStatus );
 }
 
 NDIS_STATUS LoopRegisterAdapter(

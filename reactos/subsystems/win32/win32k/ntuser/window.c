@@ -93,9 +93,9 @@ PWINDOW_OBJECT FASTCALL IntGetWindowObject(HWND hWnd)
    Window = UserGetWindowObject(hWnd);
    if (Window)
    {
-      ASSERT(USER_BODY_TO_HEADER(Window)->RefCount >= 0);
+      ASSERT(Window->head.cLockObj >= 0);
 
-      USER_BODY_TO_HEADER(Window)->RefCount++;
+      Window->head.cLockObj++;
    }
    return Window;
 }
@@ -129,7 +129,7 @@ PWINDOW_OBJECT FASTCALL UserGetWindowObject(HWND hWnd)
       return NULL;
    }
 
-   ASSERT(USER_BODY_TO_HEADER(Window)->RefCount >= 0);
+   ASSERT(Window->head.cLockObj >= 0);
    return Window;
 }
 
@@ -1806,6 +1806,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
 
    /* Create the window object. */
    Window = (PWINDOW_OBJECT) UserCreateObject( gHandleTable,
+                                               pti->rpdesk,
                                                (PHANDLE)&hWnd,
                                                otWindow,
                                                sizeof(WINDOW_OBJECT));
@@ -4552,7 +4553,7 @@ IntGetWindowRgn(PWINDOW_OBJECT Window, HRGN hRgn)
    Wnd = Window->Wnd;
 
    /* Create a new window region using the window rectangle */
-   VisRgn = UnsafeIntCreateRectRgnIndirect(&Window->Wnd->rcWindow);
+   VisRgn = IntSysCreateRectRgnIndirect(&Window->Wnd->rcWindow);
    NtGdiOffsetRgn(VisRgn, -Window->Wnd->rcWindow.left, -Window->Wnd->rcWindow.top);
    /* if there's a region assigned to the window, combine them both */
    if(Window->hrgnClip && !(Wnd->style & WS_MINIMIZE))
@@ -4568,7 +4569,7 @@ IntGetWindowRgn(PWINDOW_OBJECT Window, HRGN hRgn)
    else
       Ret = ERROR;
 
-   GreDeleteObject(VisRgn);
+   REGION_FreeRgnByHandle(VisRgn);
 
    return Ret;
 }
@@ -4593,7 +4594,7 @@ IntGetWindowRgnBox(PWINDOW_OBJECT Window, RECTL *Rect)
    Wnd = Window->Wnd;
 
    /* Create a new window region using the window rectangle */
-   VisRgn = UnsafeIntCreateRectRgnIndirect(&Window->Wnd->rcWindow);
+   VisRgn = IntSysCreateRectRgnIndirect(&Window->Wnd->rcWindow);
    NtGdiOffsetRgn(VisRgn, -Window->Wnd->rcWindow.left, -Window->Wnd->rcWindow.top);
    /* if there's a region assigned to the window, combine them both */
    if(Window->hrgnClip && !(Wnd->style & WS_MINIMIZE))
@@ -4608,7 +4609,7 @@ IntGetWindowRgnBox(PWINDOW_OBJECT Window, RECTL *Rect)
    else
       Ret = ERROR;
 
-   GreDeleteObject(VisRgn);
+   REGION_FreeRgnByHandle(VisRgn);
 
    return Ret;
 }

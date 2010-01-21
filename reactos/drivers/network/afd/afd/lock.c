@@ -40,6 +40,7 @@ PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
 	    MmGetSystemAddressForMdlSafe( Irp->MdlAddress, NormalPagePriority );
 
 	if( !IrpSp->Parameters.DeviceIoControl.Type3InputBuffer ) {
+            MmUnlockPages( Irp->MdlAddress );
 	    IoFreeMdl( Irp->MdlAddress );
 	    Irp->MdlAddress = NULL;
 	    return NULL;
@@ -49,14 +50,10 @@ PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
     } else return NULL;
 }
 
-VOID UnlockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
-    PVOID Buffer = MmGetSystemAddressForMdlSafe( Irp->MdlAddress, NormalPagePriority );
-    if( IrpSp->Parameters.DeviceIoControl.Type3InputBuffer == Buffer || Buffer == NULL ) {
-	MmUnmapLockedPages( IrpSp->Parameters.DeviceIoControl.Type3InputBuffer, Irp->MdlAddress );
-        MmUnlockPages( Irp->MdlAddress );
-        IoFreeMdl( Irp->MdlAddress );
-    }
-
+VOID UnlockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp )
+{
+    MmUnlockPages( Irp->MdlAddress );
+    IoFreeMdl( Irp->MdlAddress );
     Irp->MdlAddress = NULL;
 }
 
@@ -213,78 +210,18 @@ VOID UnlockHandles( PAFD_HANDLE HandleArray, UINT HandleCount ) {
     HandleArray = NULL;
 }
 
-/* Returns transitioned state or SOCKET_STATE_INVALID_TRANSITION */
-UINT SocketAcquireStateLock( PAFD_FCB FCB ) {
-    NTSTATUS Status = STATUS_SUCCESS;
-    PVOID CurrentThread = KeGetCurrentThread();
-
-    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
-
-    AFD_DbgPrint(MAX_TRACE,("Called on %x, attempting to lock\n", FCB));
-
-    /* Wait for the previous user to unlock the FCB state.  There might be
-     * multiple waiters waiting to change the state.  We need to check each
-     * time we get the event whether somebody still has the state locked */
-
+BOOLEAN SocketAcquireStateLock( PAFD_FCB FCB ) {
     if( !FCB ) return FALSE;
 
-    if( CurrentThread == FCB->CurrentThread ) {
-	FCB->LockCount++;
-	AFD_DbgPrint(MID_TRACE,
-		     ("Same thread, lock count %d\n", FCB->LockCount));
-	return TRUE;
-    } else {
-	AFD_DbgPrint(MID_TRACE,
-		     ("Thread %x opposes lock thread %x\n",
-		      CurrentThread, FCB->CurrentThread));
-    }
-
-
-    ExAcquireFastMutex( &FCB->Mutex );
-
-    while( FCB->Locked ) {
-	AFD_DbgPrint
-	    (MID_TRACE,("FCB %x is locked, waiting for notification\n",
-			FCB));
-	ExReleaseFastMutex( &FCB->Mutex );
-	Status = KeWaitForSingleObject( &FCB->StateLockedEvent,
-					UserRequest,
-					KernelMode,
-					FALSE,
-					NULL );
-	ExAcquireFastMutex( &FCB->Mutex );
-    }
-    FCB->Locked = TRUE;
-    FCB->CurrentThread = CurrentThread;
-    FCB->LockCount++;
-    ExReleaseFastMutex( &FCB->Mutex );
-
-    AFD_DbgPrint(MAX_TRACE,("Got lock (%d).\n", FCB->LockCount));
-
-    return TRUE;
+    return !KeWaitForMutexObject(&FCB->Mutex,
+                                 Executive,
+                                 KernelMode,
+                                 FALSE,
+                                 NULL);
 }
 
 VOID SocketStateUnlock( PAFD_FCB FCB ) {
-#if DBG
-    PVOID CurrentThread = KeGetCurrentThread();
-#endif
-    ASSERT(FCB->LockCount > 0);
-    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
-
-    ExAcquireFastMutex( &FCB->Mutex );
-    FCB->LockCount--;
-
-    if( !FCB->LockCount ) {
-	FCB->CurrentThread = NULL;
-	FCB->Locked = FALSE;
-
-	AFD_DbgPrint(MAX_TRACE,("Unlocked.\n"));
-	KePulseEvent( &FCB->StateLockedEvent, IO_NETWORK_INCREMENT, FALSE );
-    } else {
-	AFD_DbgPrint(MAX_TRACE,("New lock count: %d (Thr: %x)\n",
-				FCB->LockCount, CurrentThread));
-    }
-    ExReleaseFastMutex( &FCB->Mutex );
+    KeReleaseMutex(&FCB->Mutex, FALSE);
 }
 
 NTSTATUS NTAPI UnlockAndMaybeComplete

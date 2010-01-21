@@ -6,8 +6,6 @@
 #include "intrin_i.h"
 #include "v86m.h"
 
-extern ULONG Ke386CacheAlignment;
-
 //
 // Thread Dispatcher Header DebugActive Mask
 //
@@ -288,15 +286,9 @@ ULONG
 NTAPI
 KiGetFeatureBits(VOID);
 
-#ifdef _NTOSKRNL_ /* FIXME: Move flags above to NDK instead of here */
 VOID
 NTAPI
-KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
-                PKSTART_ROUTINE StartRoutine,
-                PVOID StartContext,
-                BOOLEAN UserThread,
-                KTRAP_FRAME TrapFrame);
-#endif
+KiThreadStartup(VOID);
 
 NTSTATUS
 NTAPI
@@ -438,6 +430,8 @@ extern ULONG KeI386FxsrPresent;
 extern ULONG KiMXCsrMask;
 extern ULONG KeI386CpuType;
 extern ULONG KeI386CpuStep;
+extern ULONG Ke386CacheAlignment;
+extern ULONG KiFastSystemCallDisable;
 extern UCHAR KiDebugRegisterTrapOffsets[9];
 extern UCHAR KiDebugRegisterContextOffsets[9];
 extern VOID __cdecl KiTrap02(VOID);

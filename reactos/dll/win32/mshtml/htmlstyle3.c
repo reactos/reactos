@@ -103,7 +103,15 @@ static HRESULT WINAPI HTMLStyle3_get_layoutFlow(IHTMLStyle3 *iface, BSTR *p)
 static HRESULT WINAPI HTMLStyle3_put_zoom(IHTMLStyle3 *iface, VARIANT v)
 {
     HTMLStyle *This = HTMLSTYLE3_THIS(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
+
+    TRACE("(%p)->(%s)\n", This, debugstr_variant(&v));
+
+    /* zoom property is IE CSS extension that is mostly used as a hack to workaround IE bugs.
+     * The value is set to 1 then. We can safely ignore setting zoom to 1. */
+    if(V_VT(&v) == VT_I4 && V_I4(&v) == 1)
+        return S_OK;
+
+    FIXME("stub for %s\n", debugstr_variant(&v));
     return E_NOTIMPL;
 }
 

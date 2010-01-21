@@ -104,7 +104,6 @@ static int wineXmlFileCloseCallback (void * context)
 
 HRESULT WINAPI DllCanUnloadNow(void)
 {
-    FIXME("\n");
     return S_FALSE;
 }
 

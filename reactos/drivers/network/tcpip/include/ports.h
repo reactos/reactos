@@ -16,7 +16,7 @@ typedef struct _PORT_SET {
     PVOID ProtoBitBuffer;
     UINT StartingPort;
     UINT PortsToOversee;
-    FAST_MUTEX Mutex;
+    KSPIN_LOCK Lock;
 } PORT_SET, *PPORT_SET;
 
 NTSTATUS PortsStartup( PPORT_SET PortSet,

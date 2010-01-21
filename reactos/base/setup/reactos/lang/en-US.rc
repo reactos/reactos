@@ -48,7 +48,7 @@ BEGIN
     CONTROL "", IDC_DISPLAY, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST , 100, 35, 180, 80
     LTEXT "Keyboard:", IDC_STATIC, 20,55, 80, 10
     CONTROL "", IDC_KEYBOARD, "ComboBox", WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST , 100, 55, 180, 80
-    LTEXT "Click Next setup of the installation device.", IDC_STATIC, 10, 180 ,277, 20
+    LTEXT "Click Next to setup of the installation device.", IDC_STATIC, 10, 180 ,277, 20
 END
 
 IDD_DRIVEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
@@ -141,7 +141,7 @@ BEGIN
     IDS_DEVICESUBTITLE  "Set the settings of display and keyboard."
     IDS_DRIVETITLE      "Setup the installation partition and system folder"
     IDS_DRIVESUBTITLE   "Prepare installation partition, system folder and boot loader."
-    IDS_PROCESSTITLE    "Prepare partition, copy files and setup system"
+    IDS_PROCESSTITLE    "Setup partition, copy files and setup system"
     IDS_PROCESSSUBTITLE "Create and format partition, copy files, install and setup boot loader"
     IDS_RESTARTTITLE    "First stage of setup finished"
     IDS_RESTARTSUBTITLE "The first stage of setup has been completed, restart to continue with second stage"

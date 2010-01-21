@@ -16,25 +16,6 @@
 
 /* GLOBALS *******************************************************************/
 
-PICInitTable:
-
-    /* Master PIC */
-    .short 0x20                         /* Port */
-    .byte 0x11                          /* Edge, cascade, CAI 8, ICW4 */
-    .byte PRIMARY_VECTOR_BASE           /* Base */
-    .byte 4                             /* IRQ 4 connected to slave */
-    .byte 1                             /* Non buffered, not nested, 8086 */
-
-    /* Slave PIC */
-    .short 0xA0                         /* Port */
-    .byte 0x11                          /* Edge, cascade, CAI 8, ICW4 */
-    .byte PRIMARY_VECTOR_BASE + 8       /* Base */
-    .byte 2                             /* Slave ID: Slave 2 */
-    .byte 1                             /* Non buffered, not nested, 8086 */
-
-    /* End of initialization table */
-    .short 0
-
 KiI8259MaskTable:
     .long 0                             /* IRQL 0 */
     .long 0                             /* IRQL 1 */
@@ -104,19 +85,19 @@ FindHigherIrqlMask:
     .long 0                             /* IRQL 31 */
 
 HalpSpecialDismissTable:
-.rept 7
+    .rept 7
     .long GenericIRQ                    /* IRQ 0-7 */
-.endr
+    .endr
     .long IRQ7                          /* IRQ 7 */
     .rept 5
     .long GenericIRQ                    /* IRQ 8-12 */
-.endr
+    .endr
     .long IRQ13                         /* IRQ 13 */
     .long GenericIRQ                    /* IRQ 14 */
     .long IRQ15                         /* IRQ 15 */
-.rept 20
+    .rept 20
     .long GenericIRQ                    /* IRQ 16-35 */
-.endr
+    .endr
 #if DBG
 .rept 172
     .long InvalidIRQ                    /* IRQ 36-207 */
@@ -190,66 +171,6 @@ _HalpHardwareInterruptLevel:
     call SWInterruptHandlerTable[ecx*4]
 
 NothingHardware:
-    ret
-.endfunc
-
-.globl _HalpInitPICs@0
-.func HalpInitPICs@0
-_HalpInitPICs@0:
-
-    /* Save ESI and disable interrupts */
-    push esi
-    pushf
-    cli
-
-    /* Read the init table */
-    lea esi, PICInitTable
-    lodsw
-
-InitLoop:
-
-    /* Put the port in EDX */
-    movzx edx, ax
-
-    /* Initialize the PIC, using a delay for each command */
-    outsb
-    jmp $+2
-    inc edx
-    outsb
-    jmp $+2
-    outsb
-    jmp $+2
-    outsb
-    jmp $+2
-
-    /* Mask all interrupts */
-    mov al, 0xFF
-    out dx, al
-
-    /* Check if we're done, otherwise initialize next PIC */
-    lodsw
-    cmp ax, 0
-    jnz InitLoop
-
-    /* Read EISA Edge/Level Register */
-    mov edx, 0x4D1
-    in al, dx
-    mov ah, al
-    dec edx
-    in al, dx
-
-    /* Clear reserved bits and see if there's anything there */
-    and eax, 0xDEF8
-    cmp eax, 0xDEF8
-    jz NoEisa
-
-    /* FIXME */
-    //UNHANDLED_PATH
-
-    /* Restore interrupts and return */
-NoEisa:
-    popf
-    pop esi
     ret
 .endfunc
 
@@ -660,10 +581,10 @@ _@KfLowerIrql@4:
     and ecx, 0xFF
 
     /* Validate IRQL */
-#if DBG
+    #if DBG
     cmp cl, PCR[KPCR_IRQL]
     ja InvalidIrql
-#endif
+    #endif
 
     /* Save flags since we'll disable interrupts */
     pushf
@@ -722,7 +643,7 @@ DoCall3:
 _@KfRaiseIrql@4:
 @KfRaiseIrql@4:
 
-    /* Get the IRQL  */
+    /* Get the IRQL */
     movzx ecx, cl
     mov eax, PCR[KPCR_IRQL]
 

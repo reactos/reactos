@@ -3,11 +3,13 @@
 	<include base="iphlpapi">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
         <include base="dhcp">include</include>
+	<include base="tdilib">.</include>
 	<library>wine</library>
 	<library>ntdll</library>
 	<library>advapi32</library>
 	<library>ws2_32</library>
 	<library>dhcpcsvc</library>
+	<library>tdilib</library>
 	<file>dhcp_reactos.c</file>
 	<file>ifenum_reactos.c</file>
 	<file>ipstats_reactos.c</file>

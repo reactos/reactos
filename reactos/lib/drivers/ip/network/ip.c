@@ -39,7 +39,7 @@ VOID FreeIF(
  *     Object = Pointer to an interface structure
  */
 {
-    exFreePool(Object);
+    ExFreePoolWithTag(Object, IP_INTERFACE_TAG);
 }
 
 PIP_PACKET IPInitializePacket(
@@ -56,8 +56,6 @@ PIP_PACKET IPInitializePacket(
     /* FIXME: Is this needed? */
     RtlZeroMemory(IPPacket, sizeof(IP_PACKET));
 
-    INIT_TAG(IPPacket, 'TKPI');
-
     IPPacket->Free     = DontFreePacket;
     IPPacket->Type     = Type;
 
@@ -73,9 +71,6 @@ void NTAPI IPTimeout( PVOID Context ) {
 
     /* Clean possible outdated cached neighbor addresses */
     NBTimeout();
-
-    /* Call upper layer timeout routines */
-    TCPTimeout();
 }
 
 
@@ -142,13 +137,12 @@ PIP_INTERFACE IPCreateInterface(
     }
 #endif
 
-    IF = exAllocatePool(NonPagedPool, sizeof(IP_INTERFACE));
+    IF = ExAllocatePoolWithTag(NonPagedPool, sizeof(IP_INTERFACE),
+                               IP_INTERFACE_TAG);
     if (!IF) {
         TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         return NULL;
     }
-
-    INIT_TAG(IF, 'ECAF');
 
 	RtlZeroMemory(IF, sizeof(IP_INTERFACE));
 
@@ -168,10 +162,11 @@ PIP_INTERFACE IPCreateInterface(
 
     TcpipInitializeSpinLock(&IF->Lock);
 
-    IF->TCPContext = exAllocatePool
-	( NonPagedPool, sizeof(OSK_IFADDR) + 2 * sizeof( struct sockaddr_in ) );
+    IF->TCPContext = ExAllocatePoolWithTag
+	( NonPagedPool, sizeof(OSK_IFADDR) + 2 * sizeof( struct sockaddr_in ),
+          OSKITTCP_CONTEXT_TAG );
     if (!IF->TCPContext) {
-        exFreePool(IF);
+        ExFreePoolWithTag(IF, IP_INTERFACE_TAG);
         return NULL;
     }
 
@@ -197,8 +192,8 @@ VOID IPDestroyInterface(
     RemoveTDIInterfaceEntity( IF );
 #endif
 
-    exFreePool(IF->TCPContext);
-    exFreePool(IF);
+    ExFreePoolWithTag(IF->TCPContext, OSKITTCP_CONTEXT_TAG);
+    ExFreePoolWithTag(IF, IP_INTERFACE_TAG);
 }
 
 VOID IPAddInterfaceRoute( PIP_INTERFACE IF ) {
@@ -364,7 +359,7 @@ NTSTATUS IPStartup(PUNICODE_STRING RegistryPath)
 	    NULL,                           /* Free routine */
 	    0,                              /* Flags */
 	    sizeof(IPDATAGRAM_REASSEMBLY),  /* Size of each entry */
-	    'RDPI',                         /* Tag */
+	    DATAGRAM_REASSEMBLY_TAG,        /* Tag */
 	    0);                             /* Depth */
 
     ExInitializeNPagedLookasideList(
@@ -373,7 +368,7 @@ NTSTATUS IPStartup(PUNICODE_STRING RegistryPath)
 	    NULL,                           /* Free routine */
 	    0,                              /* Flags */
 	    sizeof(IP_FRAGMENT),            /* Size of each entry */
-	    'GFPI',                         /* Tag */
+	    DATAGRAM_FRAGMENT_TAG,          /* Tag */
 	    0);                             /* Depth */
 
     ExInitializeNPagedLookasideList(
@@ -382,7 +377,7 @@ NTSTATUS IPStartup(PUNICODE_STRING RegistryPath)
 	    NULL,                           /* Free routine */
 	    0,                              /* Flags */
 	    sizeof(IPDATAGRAM_HOLE),        /* Size of each entry */
-	    'LHPI',                         /* Tag */
+	    DATAGRAM_HOLE_TAG,              /* Tag */
 	    0);                             /* Depth */
 
     /* Start routing subsystem */

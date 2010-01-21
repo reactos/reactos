@@ -91,7 +91,7 @@ WSHGetSocketInformation(
     IN  INT Level,
     IN  INT OptionName,
     OUT PCHAR OptionValue,
-    OUT INT OptionLength)
+    OUT LPINT OptionLength)
 {
     UNIMPLEMENTED
 

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/hal/x86/mpsirql.c
+ * FILE:            hal/halx86/mp/mpsirql.c
  * PURPOSE:         Implements IRQLs for multiprocessor systems
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  *                  Casper S. Hornstrup (chorns@users.sourceforge.net)

@@ -128,6 +128,161 @@ typedef union _SYSTEM_CONTROL_PORT_B_REGISTER
 } SYSTEM_CONTROL_PORT_B_REGISTER, *PSYSTEM_CONTROL_PORT_B_REGISTER;
 
 //
+// See ISA System Architecture 3rd Edition (Tom Shanley, Don Anderson, John Swindle)
+// P. 396, 397
+//
+// These ports are controlled by the i8259 Programmable Interrupt Controller (PIC)
+//
+#define PIC1_CONTROL_PORT      0x20
+#define PIC1_DATA_PORT         0x21
+#define PIC2_CONTROL_PORT      0xA0
+#define PIC2_DATA_PORT         0xA1
+
+//
+// Definitions for ICW/OCW Bits
+//
+typedef enum _I8259_ICW1_OPERATING_MODE
+{
+    Cascade,
+    Single
+} I8259_ICW1_OPERATING_MODE;
+
+typedef enum _I8259_ICW1_INTERRUPT_MODE
+{
+    EdgeTriggered,
+    LevelTriggered
+} I8259_ICW1_INTERRUPT_MODE;
+
+typedef enum _I8259_ICW1_INTERVAL
+{
+    Interval8,
+    Interval4
+} I8259_ICW1_INTERVAL;
+
+typedef enum _I8259_ICW4_SYSTEM_MODE
+{
+    Mcs8085Mode,
+    New8086Mode
+} I8259_ICW4_SYSTEM_MODE;
+
+typedef enum _I8259_ICW4_EOI_MODE
+{
+    NormalEoi,
+    AutomaticEoi
+} I8259_ICW4_EOI_MODE;
+
+typedef enum _I8259_ICW4_BUFFERED_MODE
+{
+    NonBuffered,
+    NonBuffered2,
+    BufferedSlave,
+    BufferedMaster
+} I8259_ICW4_BUFFERED_MODE;
+
+//
+// Definitions for ICW Registers
+//
+typedef union _I8259_ICW1
+{
+    struct 
+    {
+        UCHAR NeedIcw4:1;
+        I8259_ICW1_OPERATING_MODE OperatingMode:1;
+        I8259_ICW1_INTERVAL Interval:1;
+        I8259_ICW1_INTERRUPT_MODE InterruptMode:1;
+        UCHAR Init:1;
+        UCHAR InterruptVectorAddress:3;
+    };
+    UCHAR Bits;
+} I8259_ICW1, *PI8259_ICW1;
+
+typedef union _I8259_ICW2
+{
+    struct 
+    {
+        UCHAR Sbz:3;
+        UCHAR InterruptVector:5;
+    };
+    UCHAR Bits;
+} I8259_ICW2, *PI8259_ICW2;
+
+typedef union _I8259_ICW3
+{
+    union
+    {
+        struct 
+        {
+            UCHAR SlaveIrq0:1;
+            UCHAR SlaveIrq1:1;
+            UCHAR SlaveIrq2:1;
+            UCHAR SlaveIrq3:1;
+            UCHAR SlaveIrq4:1;
+            UCHAR SlaveIrq5:1;
+            UCHAR SlaveIrq6:1;
+            UCHAR SlaveIrq7:1;
+        };
+        struct 
+        {
+            UCHAR SlaveId:3;
+            UCHAR Reserved:5;
+        };
+    };
+    UCHAR Bits;
+} I8259_ICW3, *PI8259_ICW3;
+
+typedef union _I8259_ICW4
+{
+    struct 
+    {
+        I8259_ICW4_SYSTEM_MODE SystemMode:1;
+        I8259_ICW4_EOI_MODE EoiMode:1;
+        I8259_ICW4_BUFFERED_MODE BufferedMode:2;
+        UCHAR SpecialFullyNestedMode:1;
+        UCHAR Reserved:3;
+    };
+    UCHAR Bits;
+} I8259_ICW4, *PI8259_ICW4;
+
+//
+// See EISA System Architecture 2nd Edition (Tom Shanley, Don Anderson, John Swindle)
+// P. 34, 35
+//
+// These ports are controlled by the i8259A Programmable Interrupt Controller (PIC)
+//
+#define EISA_ELCR_MASTER       0x4D0
+#define EISA_ELCR_SLAVE        0x4D1
+
+typedef union _EISA_ELCR
+{
+    struct
+    {
+        struct
+        {
+            UCHAR Irq0Level:1;
+            UCHAR Irq1Level:1;
+            UCHAR Irq2Level:1;
+            UCHAR Irq3Level:1;
+            UCHAR Irq4Level:1;
+            UCHAR Irq5Level:1;
+            UCHAR Irq6Level:1;
+            UCHAR Irq7Level:1;
+        } Master;
+        struct
+        {
+            UCHAR Irq8Level:1;
+            UCHAR Irq9Level:1;
+            UCHAR Irq10Level:1;
+            UCHAR Irq11Level:1;
+            UCHAR Irq12Level:1;
+            UCHAR Irq13Level:1;
+            UCHAR Irq14Level:1;
+            UCHAR Irq15Level:1;
+        } Slave;
+    };
+    USHORT Bits;
+} EISA_ELCR, *PEISA_ELCR;
+
+//
 // Mm PTE/PDE to Hal PTE/PDE
 //
 #define HalAddressToPde(x) (PHARDWARE_PTE)MiAddressToPde(x)
@@ -176,8 +331,8 @@ HalpEnableInterruptHandler(IN UCHAR Flags,
                            IN PVOID Handler,
                            IN KINTERRUPT_MODE Mode);
 
-/* irql.c */
-VOID NTAPI HalpInitPICs(VOID);
+/* pic.c */
+VOID NTAPI HalpInitializePICs(IN BOOLEAN EnableInterrupts);
 
 /* udelay.c */
 VOID NTAPI HalpInitializeClock(VOID);

@@ -50,8 +50,9 @@ INT FASTCALL REGION_Complexity(PROSRGNDATA);
 PROSRGNDATA FASTCALL IntGdiCreateRectRgn(INT, INT, INT, INT);
 PROSRGNDATA FASTCALL RGNOBJAPI_Lock(HRGN,PRGN_ATTR *);
 VOID FASTCALL RGNOBJAPI_Unlock(PROSRGNDATA);
+HRGN FASTCALL IntSysCreateRectRgn(INT,INT,INT,INT);
 
-#define UnsafeIntCreateRectRgnIndirect(prc) \
-  NtGdiCreateRectRgn((prc)->left, (prc)->top, (prc)->right, (prc)->bottom)
+#define IntSysCreateRectRgnIndirect(prc) \
+  IntSysCreateRectRgn((prc)->left, (prc)->top, (prc)->right, (prc)->bottom)
 
 #endif /* not __WIN32K_REGION_H */

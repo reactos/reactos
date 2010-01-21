@@ -40,7 +40,6 @@
 					<file>halinit.c</file>
 					<file>irq.S</file>
 					<file>misc.c</file>
-					<file>pic.c</file>
 					<file>systimer.S</file>
 					<file>usage.c</file>
 					<file>x86bios.c</file>

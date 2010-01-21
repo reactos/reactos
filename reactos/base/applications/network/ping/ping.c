@@ -7,6 +7,7 @@
  */
 
 #include <winsock2.h>
+#include <ws2tcpip.h>
 #include <tchar.h>
 #include <stdarg.h>
 #include <string.h>
@@ -53,7 +54,6 @@ typedef struct _ICMP_HEADER
 typedef struct _ICMP_ECHO_PACKET
 {
     ICMP_HEADER Icmp;
-    LARGE_INTEGER Timestamp;
 } ICMP_ECHO_PACKET, *PICMP_ECHO_PACKET;
 
 #pragma pack(1)
@@ -83,6 +83,7 @@ LARGE_INTEGER       SumRTT;
 LARGE_INTEGER       AvgRTT;
 LARGE_INTEGER       TicksPerMs; /* Ticks per millisecond */
 LARGE_INTEGER       TicksPerUs; /* Ticks per microsecond */
+LARGE_INTEGER       SentTime;
 BOOL                UsePerformanceCounter;
 
 #ifndef NDEBUG
@@ -218,10 +219,10 @@ static BOOL ParseCmdline(int argc, char* argv[])
                 case 'n': PingCount = GetULONG2(&argv[i][2], argv[i + 1], &i); break;
                 case 'l':
                     DataSize = GetULONG2(&argv[i][2], argv[i + 1], &i);
-                    if (DataSize > ICMP_MAXSIZE - sizeof(ICMP_ECHO_PACKET))
+                    if (DataSize > ICMP_MAXSIZE - sizeof(ICMP_ECHO_PACKET) - sizeof(IPv4_HEADER))
                     {
                         printf("Bad value for option -l, valid range is from 0 to %d.\n",
-                            ICMP_MAXSIZE - (int)sizeof(ICMP_ECHO_PACKET));
+                            ICMP_MAXSIZE - (int)sizeof(ICMP_ECHO_PACKET) - (int)sizeof(IPv4_HEADER));
                         return FALSE;
                    }
                     break;
@@ -313,6 +314,27 @@ static BOOL Setup(VOID)
         printf("Could not create socket (#%d).\n", WSAGetLastError());
         return FALSE;
     }
+
+    if (setsockopt(IcmpSock,
+                   IPPROTO_IP,
+                   IP_DONTFRAGMENT,
+                   (const char *)&DontFragment,
+                   sizeof(DontFragment)) == SOCKET_ERROR)
+    {
+         printf("setsockopt failed (%d).\n", WSAGetLastError());
+         return FALSE;
+    }
+
+    if (setsockopt(IcmpSock,
+                   IPPROTO_IP,
+                   IP_TTL,
+                   (const char *)&TTLValue,
+                   sizeof(TTLValue)) == SOCKET_ERROR)
+    {
+         printf("setsockopt failed (%d).\n", WSAGetLastError());
+         return FALSE;
+    }
+
 
     ZeroMemory(&Target, sizeof(Target));
     phe = NULL;
@@ -447,7 +469,7 @@ static BOOL DecodeResponse(PCHAR buffer, UINT size, PSOCKADDR_IN from)
 
     QueryTime(&LargeTime);
 
-    RelativeTime.QuadPart = (LargeTime.QuadPart - Icmp->Timestamp.QuadPart);
+    RelativeTime.QuadPart = (LargeTime.QuadPart - SentTime.QuadPart);
 
     if ((RelativeTime.QuadPart / TicksPerMs.QuadPart) < 1)
     {
@@ -505,10 +527,6 @@ static BOOL Ping(VOID)
     Packet->Icmp.SeqNum   = htons((USHORT)CurrentSeqNum);
     Packet->Icmp.Checksum = 0;
 
-    /* Timestamp is part of data area */
-    QueryTime(&Packet->Timestamp);
-
-    CopyMemory(Buffer, &Packet->Icmp, sizeof(ICMP_ECHO_PACKET) + DataSize);
     /* Calculate checksum for ICMP header and data area */
     Packet->Icmp.Checksum = Checksum((PUSHORT)&Packet->Icmp, sizeof(ICMP_ECHO_PACKET) + DataSize);
 
@@ -532,6 +550,7 @@ static BOOL Ping(VOID)
 
         Status = sendto(IcmpSock, Buffer, sizeof(ICMP_ECHO_PACKET) + DataSize,
             0, (SOCKADDR*)&Target, sizeof(Target));
+        QueryTime(&SentTime);
         SentCount++;
     }
     if (Status == SOCKET_ERROR)

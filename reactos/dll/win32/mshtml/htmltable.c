@@ -584,7 +584,7 @@ HTMLElement *HTMLTable_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem)
 
     HTMLElement_Init(&ret->element, doc, nselem, &HTMLTable_dispex);
 
-    ConnectionPoint_Init(&ret->cp, &ret->element.cp_container, &DIID_HTMLTableEvents);
+    ConnectionPoint_Init(&ret->cp, &ret->element.cp_container, &DIID_HTMLTableEvents, NULL);
 
     nsres = nsIDOMHTMLElement_QueryInterface(nselem, &IID_nsIDOMHTMLTableElement, (void**)&ret->nstable);
     if(NS_FAILED(nsres))

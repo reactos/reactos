@@ -20,6 +20,37 @@
 #include "wine/debug.h"
 #include "d3dx9_36_private.h"
 
+
+/************************************************************
+ * pixel format table providing info about number of bytes per pixel,
+ * number of bits per channel and format type.
+ *
+ * Call get_format_info to request information about a specific format.
+ */
+static const PixelFormatDesc formats[] =
+{
+   /* format                    bits per channel        shifts per channel   bpp   type        */
+    { D3DFMT_R8G8B8,          {  0,   8,   8,   8 },  {  0,  16,   8,   0 },   3,  FORMAT_ARGB },
+    { D3DFMT_A8R8G8B8,        {  8,   8,   8,   8 },  { 24,  16,   8,   0 },   4,  FORMAT_ARGB },
+    { D3DFMT_X8R8G8B8,        {  0,   8,   8,   8 },  {  0,  16,   8,   0 },   4,  FORMAT_ARGB },
+    { D3DFMT_A8B8G8R8,        {  8,   8,   8,   8 },  { 24,   0,   8,  16 },   4,  FORMAT_ARGB },
+    { D3DFMT_X8B8G8R8,        {  0,   8,   8,   8 },  {  0,   0,   8,  16 },   4,  FORMAT_ARGB },
+    { D3DFMT_R5G6B5,          {  0,   5,   6,   5 },  {  0,  11,   5,   0 },   2,  FORMAT_ARGB },
+    { D3DFMT_X1R5G5B5,        {  0,   5,   5,   5 },  {  0,  10,   5,   0 },   2,  FORMAT_ARGB },
+    { D3DFMT_A1R5G5B5,        {  1,   5,   5,   5 },  { 15,  10,   5,   0 },   2,  FORMAT_ARGB },
+    { D3DFMT_R3G3B2,          {  0,   3,   3,   2 },  {  0,   5,   2,   0 },   1,  FORMAT_ARGB },
+    { D3DFMT_A8R3G3B2,        {  8,   3,   3,   2 },  {  8,   5,   2,   0 },   2,  FORMAT_ARGB },
+    { D3DFMT_A4R4G4B4,        {  4,   4,   4,   4 },  { 12,   8,   4,   0 },   2,  FORMAT_ARGB },
+    { D3DFMT_X4R4G4B4,        {  0,   4,   4,   4 },  {  0,   8,   4,   0 },   2,  FORMAT_ARGB },
+    { D3DFMT_A2R10G10B10,     {  2,  10,  10,  10 },  { 30,  20,  10,   0 },   4,  FORMAT_ARGB },
+    { D3DFMT_A2B10G10R10,     {  2,  10,  10,  10 },  { 30,   0,  10,  20 },   4,  FORMAT_ARGB },
+    { D3DFMT_G16R16,          {  0,  16,  16,   0 },  {  0,   0,  16,   0 },   4,  FORMAT_ARGB },
+    { D3DFMT_A8,              {  8,   0,   0,   0 },  {  0,   0,   0,   0 },   1,  FORMAT_ARGB },
+
+    { D3DFMT_UNKNOWN,         {  0,   0,   0,   0 },  {  0,   0,   0,   0 },   0,  FORMAT_UNKNOWN }, /* marks last element */
+};
+
+
 /************************************************************
  * map_view_of_file
  *
@@ -101,4 +132,23 @@ HRESULT load_resource_into_memory(HMODULE module, HRSRC resinfo, LPVOID *buffer,
     if(*buffer == NULL) return HRESULT_FROM_WIN32(GetLastError());
 
     return S_OK;
+}
+
+
+/************************************************************
+ * get_format_info
+ *
+ * Returns information about the specified format.
+ * If the format is unsupported, it's filled with the D3DFMT_UNKNOWN desc.
+ *
+ * PARAMS
+ *   format [I] format whose description is queried
+ *   desc   [O] pointer to a StaticPixelFormatDesc structure
+ *
+ */
+const PixelFormatDesc *get_format_info(D3DFORMAT format)
+{
+    unsigned int i = 0;
+    while(formats[i].format != format && formats[i].format != D3DFMT_UNKNOWN) i++;
+    return &formats[i];
 }

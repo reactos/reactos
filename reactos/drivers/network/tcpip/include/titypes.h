@@ -7,86 +7,63 @@
 #ifndef __TITYPES_H
 #define __TITYPES_H
 
-
-#if DBG
-
-#define DEFINE_TAG ULONG Tag;
-#define INIT_TAG(_Object, _Tag) \
-  ((_Object)->Tag = (_Tag))
-
-#define DEBUG_REFCHECK(Object) {        \
-   if ((Object)->RefCount <= 0) {       \
-      TI_DbgPrint(MIN_TRACE, ("Object at (0x%X) has invalid reference count (%d).\n", \
-        (Object), (Object)->RefCount)); \
-    }                                   \
-}
-
 /*
  * VOID ReferenceObject(
  *     PVOID Object)
  */
-#define ReferenceObject(Object)      \
-{                                    \
-  CHAR c1, c2, c3, c4;               \
-                                     \
-  c1 = ((Object)->Tag >> 24) & 0xFF; \
-  c2 = ((Object)->Tag >> 16) & 0xFF; \
-  c3 = ((Object)->Tag >> 8) & 0xFF;  \
-  c4 = ((Object)->Tag & 0xFF);       \
-                                     \
-  DEBUG_REFCHECK(Object);            \
-  TI_DbgPrint(DEBUG_REFCOUNT, ("Referencing object of type (%c%c%c%c) at (0x%X). RefCount (%d).\n", \
-    c4, c3, c2, c1, (Object), (Object)->RefCount)); \
-                                                    \
-  InterlockedIncrement(&((Object)->RefCount));      \
-}
-
-  /*
- * VOID DereferenceObject(
- *     PVOID Object)
- */
-#define DereferenceObject(Object)    \
-{                                    \
-  CHAR c1, c2, c3, c4;               \
-                                     \
-  c1 = ((Object)->Tag >> 24) & 0xFF; \
-  c2 = ((Object)->Tag >> 16) & 0xFF; \
-  c3 = ((Object)->Tag >> 8) & 0xFF;  \
-  c4 = ((Object)->Tag & 0xFF);       \
-                                     \
-  DEBUG_REFCHECK(Object);            \
-  TI_DbgPrint(DEBUG_REFCOUNT, ("Dereferencing object of type (%c%c%c%c) at (0x%X). RefCount (%d).\n", \
-    c4, c3, c2, c1, (Object), (Object)->RefCount));     \
-                                                        \
-  if (InterlockedDecrement(&((Object)->RefCount)) == 0) \
-    (((Object)->Free)(Object));                         \
-}
-
-#else /* DBG */
-
-#define DEFINE_TAG
-#define INIT_TAG(Object, Tag)
-
-/*
- * VOID ReferenceObject(
- *     PVOID Object)
- */
-#define ReferenceObject(Object)                  \
-{                                                \
-    InterlockedIncrement(&((Object)->RefCount)); \
+#define ReferenceObject(Object)                            \
+{                                                          \
+    InterlockedIncrement(&((Object)->RefCount));           \
 }
 
 /*
  * VOID DereferenceObject(
  *     PVOID Object)
  */
-#define DereferenceObject(Object)                         \
-{                                                         \
-    if (InterlockedDecrement(&((Object)->RefCount)) == 0) \
-        (((Object)->Free)(Object));                       \
+#define DereferenceObject(Object)                           \
+{                                                           \
+    if (InterlockedDecrement(&((Object)->RefCount)) == 0)   \
+        (((Object)->Free)(Object));                         \
 }
 
-#endif /* DBG */
+/*
+ * VOID LockObject(PVOID Object, PKIRQL OldIrql)
+ */
+#define LockObject(Object, Irql)                         \
+{                                                        \
+    ReferenceObject(Object);                             \
+    KeAcquireSpinLock(&((Object)->Lock), Irql);          \
+    memcpy(&(Object)->OldIrql, Irql, sizeof(KIRQL));     \
+}
+
+/*
+ * VOID LockObjectAtDpcLevel(PVOID Object)
+ */
+#define LockObjectAtDpcLevel(Object)                     \
+{                                                        \
+    ReferenceObject(Object);                             \
+    KeAcquireSpinLockAtDpcLevel(&((Object)->Lock));      \
+    (Object)->OldIrql = DISPATCH_LEVEL;                  \
+}
+
+/*
+ * VOID UnlockObject(PVOID Object, KIRQL OldIrql)
+ */
+#define UnlockObject(Object, OldIrql)                       \
+{                                                           \
+    KeReleaseSpinLock(&((Object)->Lock), OldIrql);          \
+    DereferenceObject(Object);                              \
+}
+
+/*
+ * VOID UnlockObjectFromDpcLevel(PVOID Object)
+ */
+#define UnlockObjectFromDpcLevel(Object)                    \
+{                                                           \
+    KeReleaseSpinLockFromDpcLevel(&((Object)->Lock));       \
+    DereferenceObject(Object);                              \
+}
+
 
 
 #include <ip.h>
@@ -149,16 +126,19 @@ typedef struct _DATAGRAM_SEND_REQUEST {
 /* Transport address file context structure. The FileObject->FsContext2
    field holds a pointer to this structure */
 typedef struct _ADDRESS_FILE {
-    DEFINE_TAG
     LIST_ENTRY ListEntry;                 /* Entry on list */
-    KSPIN_LOCK Lock;                      /* Spin lock to manipulate this structure */
+    LONG RefCount;                        /* Reference count */
     OBJECT_FREE_ROUTINE Free;             /* Routine to use to free resources for the object */
-    USHORT Flags;                         /* Flags for address file (see below) */
+    KSPIN_LOCK Lock;                      /* Spin lock to manipulate this structure */
+    KIRQL OldIrql;                        /* Currently not used */
     IP_ADDRESS Address;                   /* Address of this address file */
     USHORT Family;                        /* Address family */
     USHORT Protocol;                      /* Protocol number */
     USHORT Port;                          /* Network port (network byte order) */
     UCHAR TTL;                            /* Time to live stored in packets sent from this address file */
+    UINT DF;                              /* Don't fragment */
+    UINT BCast;                           /* Receive broadcast packets */
+    UINT HeaderIncl;                      /* Include header in RawIP packets */
     WORK_QUEUE_ITEM WorkItem;             /* Work queue item handle */
     DATAGRAM_COMPLETION_ROUTINE Complete; /* Completion routine for delete request */
     PVOID Context;                        /* Delete request context */
@@ -213,29 +193,6 @@ typedef struct _ADDRESS_FILE {
     BOOLEAN RegisteredChainedReceiveExpeditedHandler;
 } ADDRESS_FILE, *PADDRESS_FILE;
 
-/* Address File Flag constants */
-#define AFF_VALID    0x0001 /* Address file object is valid for use */
-#define AFF_BUSY     0x0002 /* Address file object is exclusive to someone */
-#define AFF_DELETE   0x0004 /* Address file object is sheduled to be deleted */
-#define AFF_SEND     0x0008 /* A send request is pending */
-#define AFF_RECEIVE  0x0010 /* A receive request is pending */
-#define AFF_PENDING  0x001C /* A request is pending */
-
-/* Macros for manipulating address file object flags */
-
-#define AF_IS_VALID(ADF)  ((ADF)->Flags & AFF_VALID)
-#define AF_SET_VALID(ADF) ((ADF)->Flags |= AFF_VALID)
-#define AF_CLR_VALID(ADF) ((ADF)->Flags &= ~AFF_VALID)
-
-#define AF_IS_BUSY(ADF)  ((ADF)->Flags & AFF_BUSY)
-#define AF_SET_BUSY(ADF) ((ADF)->Flags |= AFF_BUSY)
-#define AF_CLR_BUSY(ADF) ((ADF)->Flags &= ~AFF_BUSY)
-
-#define AF_IS_PENDING(ADF, X)  (ADF->Flags & X)
-#define AF_SET_PENDING(ADF, X) (ADF->Flags |= X)
-#define AF_CLR_PENDING(ADF, X) (ADF->Flags &= ~X)
-
-
 /* Structure used to search through Address Files */
 typedef struct _AF_SEARCH {
     PLIST_ENTRY Next;       /* Next address file to check */
@@ -287,6 +244,8 @@ typedef struct _TDI_BUCKET {
     LIST_ENTRY Entry;
     struct _CONNECTION_ENDPOINT *AssociatedEndpoint;
     TDI_REQUEST Request;
+    NTSTATUS Status;
+    ULONG Information;
 } TDI_BUCKET, *PTDI_BUCKET;
 
 /* Transport connection context structure A.K.A. Transmission Control Block
@@ -294,24 +253,23 @@ typedef struct _TDI_BUCKET {
    to this structure */
 typedef struct _CONNECTION_ENDPOINT {
     LIST_ENTRY ListEntry;       /* Entry on list */
+    LONG RefCount;              /* Reference count */
+    OBJECT_FREE_ROUTINE Free;   /* Routine to use to free resources for the object */
     KSPIN_LOCK Lock;            /* Spin lock to protect this structure */
+    KIRQL OldIrql;              /* The old irql is stored here for use in HandleSignalledConnection */
     PVOID ClientContext;        /* Pointer to client context information */
     PADDRESS_FILE AddressFile;  /* Associated address file object (NULL if none) */
     PVOID SocketContext;        /* Context for lower layer */
-
-    UINT State;                 /* Socket state W.R.T. oskit */
 
     /* Requests */
     LIST_ENTRY ConnectRequest; /* Queued connect rqueusts */
     LIST_ENTRY ListenRequest;  /* Queued listen requests */
     LIST_ENTRY ReceiveRequest; /* Queued receive requests */
     LIST_ENTRY SendRequest;    /* Queued send requests */
+    LIST_ENTRY CompletionQueue;/* Completed requests to finish */
 
     /* Signals */
-    LIST_ENTRY SignalList;     /* Entry in the list of sockets waiting for
-				* notification service to the client */
     UINT    SignalState;       /* Active signals from oskit */
-    BOOLEAN Signalled;         /* Are we a member of the signal list */
 } CONNECTION_ENDPOINT, *PCONNECTION_ENDPOINT;
 
 
@@ -324,6 +282,8 @@ typedef struct _CONNECTION_ENDPOINT {
    field holds a pointer to this structure */
 typedef struct _CONTROL_CHANNEL {
     LIST_ENTRY ListEntry;       /* Entry on list */
+    LONG RefCount;              /* Reference count */
+    OBJECT_FREE_ROUTINE Free;   /* Routine to use to free resources for the object */
     KSPIN_LOCK Lock;            /* Spin lock to protect this structure */
 } CONTROL_CHANNEL, *PCONTROL_CHANNEL;
 

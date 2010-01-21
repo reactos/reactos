@@ -695,7 +695,7 @@ bPEBCacheHandle(HGDIOBJ Handle, int oType, PVOID pAttr)
 
      hPtr = GdiHandleCache->Handle + Offset;
 
-     if ( oType == hctRegionHandle)
+     if ( pAttr && oType == hctRegionHandle)
      {
         if ( Number < CACHE_REGION_ENTRIES )
         {
@@ -746,14 +746,18 @@ GreDeleteObject(HGDIOBJ hObject)
              break;
 
           case GDI_OBJECT_TYPE_REGION:
-             if (bPEBCacheHandle(hObject, hctRegionHandle, pAttr))
+             /* If pAttr NULL, the probability is high for System Region. */
+             if ( pAttr &&
+                  bPEBCacheHandle(hObject, hctRegionHandle, pAttr))
              {
+                /* User space handle only! */
                 return TRUE;
              }
              if (pAttr)
              {
                 KeEnterCriticalRegion();
                 FreeObjectAttr(pAttr);
+                Entry->UserData = NULL;
                 KeLeaveCriticalRegion();
              }
              break;
@@ -1561,6 +1565,36 @@ GDI_MapHandleTable(PSECTION_OBJECT SectionObject, PEPROCESS Process)
 
 BOOL
 FASTCALL
+IntGdiSetRegionOwner(HRGN hRgn, DWORD OwnerMask)
+{
+  INT Index;
+  PGDI_TABLE_ENTRY Entry;
+/*
+  System Regions:
+     These regions do not use attribute sections and when allocated, use gdiobj
+     level functions.
+ */
+  // FIXME! HAX!!! Remove this once we get everything right!
+  KeEnterCriticalRegion();
+  Index = GDI_HANDLE_GET_INDEX(hRgn);
+  Entry = &GdiHandleTable->Entries[Index];
+  if (Entry->UserData) FreeObjectAttr(Entry->UserData);
+  Entry->UserData = NULL;
+  KeLeaveCriticalRegion();
+  //
+  if ((OwnerMask == GDI_OBJ_HMGR_PUBLIC) || OwnerMask == GDI_OBJ_HMGR_NONE)
+  {
+     return GDIOBJ_SetOwnership(hRgn, NULL);
+  }
+  if (OwnerMask == GDI_OBJ_HMGR_POWNED)
+  {
+     return GDIOBJ_SetOwnership((HGDIOBJ) hRgn, PsGetCurrentProcess() );
+  }
+  return FALSE;
+}
+
+BOOL
+FASTCALL
 IntGdiSetBrushOwner(PBRUSH pbr, DWORD OwnerMask)
 {
   HBRUSH hBR;
@@ -1607,7 +1641,6 @@ IntGdiSetBrushOwner(PBRUSH pbr, DWORD OwnerMask)
   }
   return TRUE;
 }
-
 
 BOOL
 FASTCALL
@@ -1671,7 +1704,6 @@ GreGetObjectOwner(HGDIOBJ Handle, GDIOBJTYPE ObjType)
   }
   return Ret;
 }
-
 
 W32KAPI
 HANDLE

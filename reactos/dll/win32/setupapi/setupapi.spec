@@ -192,8 +192,8 @@
 @ stdcall CM_Set_DevNode_Registry_PropertyW(long long ptr long long)
 @ stdcall CM_Set_DevNode_Registry_Property_ExA(long long ptr long long long)
 @ stdcall CM_Set_DevNode_Registry_Property_ExW(long long ptr long long long)
-@ stub CM_Set_HW_Prof
-@ stub CM_Set_HW_Prof_Ex
+@ stdcall CM_Set_HW_Prof(long long)
+@ stdcall CM_Set_HW_Prof_Ex(long long long)
 @ stdcall CM_Set_HW_Prof_FlagsA(str long long long)
 @ stdcall CM_Set_HW_Prof_FlagsW(wstr long long long)
 @ stdcall CM_Set_HW_Prof_Flags_ExA(str long long long long)

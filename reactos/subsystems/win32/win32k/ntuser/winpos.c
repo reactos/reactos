@@ -1135,7 +1135,7 @@ co_WinPosSetWindowPos(
           ((WinPos.flags & SWP_NOSIZE) || !(WvrFlags & WVR_REDRAW)) &&
           !(Window->Wnd->ExStyle & WS_EX_TRANSPARENT))
       {
-         CopyRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
+         CopyRgn = IntSysCreateRectRgn(0, 0, 0, 0);
          RgnType = NtGdiCombineRgn(CopyRgn, VisAfter, VisBefore, RGN_AND);
 
          /*
@@ -1178,7 +1178,7 @@ co_WinPosSetWindowPos(
          {
             /* Nothing to copy, clean up */
             RGNOBJAPI_Unlock(VisRgn);
-            GreDeleteObject(CopyRgn);
+            REGION_FreeRgnByHandle(CopyRgn);
             CopyRgn = NULL;
          }
          else if (OldWindowRect.left != NewWindowRect.left ||
@@ -1224,7 +1224,7 @@ co_WinPosSetWindowPos(
       /* We need to redraw what wasn't visible before */
       if (VisAfter != NULL)
       {
-         DirtyRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
+         DirtyRgn = IntSysCreateRectRgn(0, 0, 0, 0);
          if (CopyRgn != NULL)
          {
             RgnType = NtGdiCombineRgn(DirtyRgn, VisAfter, CopyRgn, RGN_DIFF);
@@ -1262,18 +1262,18 @@ co_WinPosSetWindowPos(
                 RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
             }
          }
-         GreDeleteObject(DirtyRgn);
+         REGION_FreeRgnByHandle(DirtyRgn);
       }
 
       if (CopyRgn != NULL)
       {
-         GreDeleteObject(CopyRgn);
+         REGION_FreeRgnByHandle(CopyRgn);
       }
 
       /* Expose what was covered before but not covered anymore */
       if (VisBefore != NULL)
       {
-         ExposedRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
+         ExposedRgn = IntSysCreateRectRgn(0, 0, 0, 0);
          NtGdiCombineRgn(ExposedRgn, VisBefore, NULL, RGN_COPY);
          NtGdiOffsetRgn(ExposedRgn, OldWindowRect.left - NewWindowRect.left,
                         OldWindowRect.top - NewWindowRect.top);
@@ -1286,13 +1286,13 @@ co_WinPosSetWindowPos(
          {
             co_VIS_WindowLayoutChanged(Window, ExposedRgn);
          }
-         GreDeleteObject(ExposedRgn);
-         GreDeleteObject(VisBefore);
+         REGION_FreeRgnByHandle(ExposedRgn);
+         REGION_FreeRgnByHandle(VisBefore);
       }
 
       if (VisAfter != NULL)
       {
-         GreDeleteObject(VisAfter);
+         REGION_FreeRgnByHandle(VisAfter);
       }
 
       if (!(WinPos.flags & SWP_NOACTIVATE))

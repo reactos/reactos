@@ -63,7 +63,7 @@ DceGetVisRgn(PWINDOW_OBJECT Window, ULONG Flags, HWND hWndChild, ULONG CFlags)
             0 != (Flags & DCX_CLIPSIBLINGS));
 
   if (VisRgn == NULL)
-      VisRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
+      VisRgn = IntSysCreateRectRgn(0, 0, 0, 0);
 
   return VisRgn;
 }
@@ -182,7 +182,7 @@ DceDeleteClipRgn(DCE* Dce)
    }
    else if (Dce->hrgnClip != NULL)
    {
-      GreDeleteObject(Dce->hrgnClip);
+      REGION_FreeRgnByHandle(Dce->hrgnClip);
    }
 
    Dce->hrgnClip = NULL;
@@ -274,7 +274,7 @@ DceUpdateVisRgn(DCE *Dce, PWINDOW_OBJECT Window, ULONG Flags)
       DesktopWindow = UserGetWindowObject(IntGetDesktopWindow());
       if (NULL != DesktopWindow)
       {
-         hRgnVisible = UnsafeIntCreateRectRgnIndirect(&DesktopWindow->Wnd->rcWindow);
+         hRgnVisible = IntSysCreateRectRgnIndirect(&DesktopWindow->Wnd->rcWindow);
       }
       else
       {
@@ -297,9 +297,9 @@ noparent:
       {
          if(hRgnVisible != NULL)
          {
-            GreDeleteObject(hRgnVisible);
+            REGION_FreeRgnByHandle(hRgnVisible);
          }
-         hRgnVisible = NtGdiCreateRectRgn(0, 0, 0, 0);
+         hRgnVisible = IntSysCreateRectRgn(0, 0, 0, 0);
       }
    }
 
@@ -318,7 +318,7 @@ noparent:
 
    if (hRgnVisible != NULL)
    {
-      GreDeleteObject(hRgnVisible);
+      REGION_FreeRgnByHandle(hRgnVisible);
    }
 }
 
@@ -526,7 +526,7 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
    if (!(Flags & (DCX_EXCLUDERGN | DCX_INTERSECTRGN)) && ClipRegion)
    {
       if (!(Flags & DCX_KEEPCLIPRGN))
-         GreDeleteObject(ClipRegion);
+         REGION_FreeRgnByHandle(ClipRegion);
       ClipRegion = NULL;
    }
 
@@ -550,11 +550,11 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
    {
       if (!(Flags & DCX_WINDOW))
       {
-         Dce->hrgnClip = UnsafeIntCreateRectRgnIndirect(&Window->Wnd->rcClient);
+         Dce->hrgnClip = IntSysCreateRectRgnIndirect(&Window->Wnd->rcClient);
       }
       else
       {
-         Dce->hrgnClip = UnsafeIntCreateRectRgnIndirect(&Window->Wnd->rcWindow);
+         Dce->hrgnClip = IntSysCreateRectRgnIndirect(&Window->Wnd->rcWindow);
       }
       Dce->DCXFlags &= ~DCX_KEEPCLIPRGN;
    }
@@ -617,7 +617,7 @@ DceFreeDCE(PDCE pdce, BOOLEAN Force)
 
   if (pdce->hrgnClip && ! (pdce->DCXFlags & DCX_KEEPCLIPRGN))
   {
-      GreDeleteObject(pdce->hrgnClip);
+      REGION_FreeRgnByHandle(pdce->hrgnClip);
   }
 
   RemoveEntryList(&pdce->List);

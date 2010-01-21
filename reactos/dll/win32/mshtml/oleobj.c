@@ -250,6 +250,9 @@ static HRESULT WINAPI OleObject_Close(IOleObject *iface, DWORD dwSaveOption)
         IOleInPlaceObjectWindowless_InPlaceDeactivate(INPLACEWIN(This));
 
     HTMLDocument_LockContainer(This->doc_obj, FALSE);
+
+    if(This->advise_holder)
+        IOleAdviseHolder_SendOnClose(This->advise_holder);
     
     return S_OK;
 }
@@ -380,22 +383,46 @@ static HRESULT WINAPI OleObject_GetExtent(IOleObject *iface, DWORD dwDrawAspect,
 static HRESULT WINAPI OleObject_Advise(IOleObject *iface, IAdviseSink *pAdvSink, DWORD *pdwConnection)
 {
     HTMLDocument *This = OLEOBJ_THIS(iface);
-    FIXME("(%p)->(%p %p)\n", This, pAdvSink, pdwConnection);
-    return E_NOTIMPL;
+    TRACE("(%p)->(%p %p)\n", This, pAdvSink, pdwConnection);
+
+    if(!pdwConnection)
+        return E_INVALIDARG;
+
+    if(!pAdvSink) {
+        *pdwConnection = 0;
+        return E_INVALIDARG;
+    }
+
+    if(!This->advise_holder) {
+        CreateOleAdviseHolder(&This->advise_holder);
+        if(!This->advise_holder)
+            return E_OUTOFMEMORY;
+    }
+
+    return IOleAdviseHolder_Advise(This->advise_holder, pAdvSink, pdwConnection);
 }
 
 static HRESULT WINAPI OleObject_Unadvise(IOleObject *iface, DWORD dwConnection)
 {
     HTMLDocument *This = OLEOBJ_THIS(iface);
-    FIXME("(%p)->(%d)\n", This, dwConnection);
-    return E_NOTIMPL;
+    TRACE("(%p)->(%d)\n", This, dwConnection);
+
+    if(!This->advise_holder)
+        return OLE_E_NOCONNECTION;
+
+    return IOleAdviseHolder_Unadvise(This->advise_holder, dwConnection);
 }
 
 static HRESULT WINAPI OleObject_EnumAdvise(IOleObject *iface, IEnumSTATDATA **ppenumAdvise)
 {
     HTMLDocument *This = OLEOBJ_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, ppenumAdvise);
-    return E_NOTIMPL;
+
+    if(!This->advise_holder) {
+        *ppenumAdvise = NULL;
+        return S_OK;
+    }
+
+    return IOleAdviseHolder_EnumAdvise(This->advise_holder, ppenumAdvise);
 }
 
 static HRESULT WINAPI OleObject_GetMiscStatus(IOleObject *iface, DWORD dwAspect, DWORD *pdwStatus)
@@ -705,6 +732,54 @@ static const IOleControlVtbl OleControlVtbl = {
     OleControl_FreezeEvents
 };
 
+/**********************************************************
+ * IObjectWithSite implementation
+ */
+
+#define OBJSITE_THIS(iface) DEFINE_THIS(HTMLDocument, ObjectWithSite, iface)
+
+static HRESULT WINAPI ObjectWithSite_QueryInterface(IObjectWithSite *iface, REFIID riid, void **ppvObject)
+{
+    HTMLDocument *This = OBJSITE_THIS(iface);
+    return IHTMLDocument2_QueryInterface(HTMLDOC(This), riid, ppvObject);
+}
+
+static ULONG WINAPI ObjectWithSite_AddRef(IObjectWithSite *iface)
+{
+    HTMLDocument *This = OBJSITE_THIS(iface);
+    return IHTMLDocument2_AddRef(HTMLDOC(This));
+}
+
+static ULONG WINAPI ObjectWithSite_Release(IObjectWithSite *iface)
+{
+    HTMLDocument *This = OBJSITE_THIS(iface);
+    return IHTMLDocument2_Release(HTMLDOC(This));
+}
+
+static HRESULT WINAPI ObjectWithSite_SetSite(IObjectWithSite *iface, IUnknown *pUnkSite)
+{
+    HTMLDocument *This = OBJSITE_THIS(iface);
+    FIXME("(%p)->(%p)\n", This, pUnkSite);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ObjectWithSite_GetSite(IObjectWithSite* iface, REFIID riid, PVOID *ppvSite)
+{
+    HTMLDocument *This = OBJSITE_THIS(iface);
+    FIXME("(%p)->(%p)\n", This, ppvSite);
+    return E_NOTIMPL;
+}
+
+#undef OBJSITE_THIS
+
+static const IObjectWithSiteVtbl ObjectWithSiteVtbl = {
+    ObjectWithSite_QueryInterface,
+    ObjectWithSite_AddRef,
+    ObjectWithSite_Release,
+    ObjectWithSite_SetSite,
+    ObjectWithSite_GetSite
+};
+
 void HTMLDocument_LockContainer(HTMLDocumentObj *This, BOOL fLock)
 {
     IOleContainer *container;
@@ -726,4 +801,5 @@ void HTMLDocument_OleObj_Init(HTMLDocument *This)
     This->lpOleObjectVtbl = &OleObjectVtbl;
     This->lpOleDocumentVtbl = &OleDocumentVtbl;
     This->lpOleControlVtbl = &OleControlVtbl;
+    This->lpObjectWithSiteVtbl = &ObjectWithSiteVtbl;
 }
