@@ -14,6 +14,7 @@
 	<library>user32</library>
 	<library>advapi32</library>
 	<library>secur32</library>
+	<!--library>wininet</library-->
 	<library>iphlpapi</library>
 	<library>ws2_32</library>
 	<library>ntdll</library>

@@ -153,7 +153,6 @@ typedef struct _ADDRESS_FILE {
     LIST_ENTRY ListEntry;                 /* Entry on list */
     KSPIN_LOCK Lock;                      /* Spin lock to manipulate this structure */
     OBJECT_FREE_ROUTINE Free;             /* Routine to use to free resources for the object */
-    USHORT Flags;                         /* Flags for address file (see below) */
     IP_ADDRESS Address;                   /* Address of this address file */
     USHORT Family;                        /* Address family */
     USHORT Protocol;                      /* Protocol number */
@@ -212,29 +211,6 @@ typedef struct _ADDRESS_FILE {
     PVOID ChainedReceiveExpeditedHandlerContext;
     BOOLEAN RegisteredChainedReceiveExpeditedHandler;
 } ADDRESS_FILE, *PADDRESS_FILE;
-
-/* Address File Flag constants */
-#define AFF_VALID    0x0001 /* Address file object is valid for use */
-#define AFF_BUSY     0x0002 /* Address file object is exclusive to someone */
-#define AFF_DELETE   0x0004 /* Address file object is sheduled to be deleted */
-#define AFF_SEND     0x0008 /* A send request is pending */
-#define AFF_RECEIVE  0x0010 /* A receive request is pending */
-#define AFF_PENDING  0x001C /* A request is pending */
-
-/* Macros for manipulating address file object flags */
-
-#define AF_IS_VALID(ADF)  ((ADF)->Flags & AFF_VALID)
-#define AF_SET_VALID(ADF) ((ADF)->Flags |= AFF_VALID)
-#define AF_CLR_VALID(ADF) ((ADF)->Flags &= ~AFF_VALID)
-
-#define AF_IS_BUSY(ADF)  ((ADF)->Flags & AFF_BUSY)
-#define AF_SET_BUSY(ADF) ((ADF)->Flags |= AFF_BUSY)
-#define AF_CLR_BUSY(ADF) ((ADF)->Flags &= ~AFF_BUSY)
-
-#define AF_IS_PENDING(ADF, X)  (ADF->Flags & X)
-#define AF_SET_PENDING(ADF, X) (ADF->Flags |= X)
-#define AF_CLR_PENDING(ADF, X) (ADF->Flags &= ~X)
-
 
 /* Structure used to search through Address Files */
 typedef struct _AF_SEARCH {
@@ -306,8 +282,6 @@ typedef struct _CONNECTION_ENDPOINT {
     LIST_ENTRY SendRequest;    /* Queued send requests */
 
     /* Signals */
-    LIST_ENTRY SignalList;     /* Entry in the list of sockets waiting for
-				* notification service to the client */
     UINT    SignalState;       /* Active signals from oskit */
 } CONNECTION_ENDPOINT, *PCONNECTION_ENDPOINT;
 

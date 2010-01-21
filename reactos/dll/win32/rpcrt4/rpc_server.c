@@ -367,7 +367,7 @@ static DWORD CALLBACK RPCRT4_worker_thread(LPVOID the_arg)
 
 static DWORD CALLBACK RPCRT4_io_thread(LPVOID the_arg)
 {
-  RpcConnection* conn = (RpcConnection*)the_arg;
+  RpcConnection* conn = the_arg;
   RpcPktHdr *hdr;
   RPC_MESSAGE *msg;
   RPC_STATUS status;
@@ -449,27 +449,23 @@ static DWORD CALLBACK RPCRT4_server_thread(LPVOID the_arg)
 
     /* start waiting */
     res = cps->ops->wait_for_new_connection(cps, count, objs);
-    if (res == -1)
-      break;
-    else if (res == 0)
+
+    if (res == -1 || (res == 0 && !std_listen))
     {
-      if (!std_listen)
-      {
+      /* cleanup */
+      cps->ops->free_wait_array(cps, objs);
+      EnterCriticalSection(&cps->cs);
+      for (conn = cps->conn; conn; conn = conn->Next)
+        RPCRT4_CloseConnection(conn);
+      LeaveCriticalSection(&cps->cs);
+
+      if (res == 0 && !std_listen)
         SetEvent(cps->server_ready_event);
-        break;
-      }
-      set_ready_event = TRUE;
+      break;
     }
+    else if (res == 0)
+      set_ready_event = TRUE;
   }
-  cps->ops->free_wait_array(cps, objs);
-  EnterCriticalSection(&cps->cs);
-  /* close connections */
-  conn = cps->conn;
-  while (conn) {
-    RPCRT4_CloseConnection(conn);
-    conn = conn->Next;
-  }
-  LeaveCriticalSection(&cps->cs);
   return 0;
 }
 
@@ -570,11 +566,32 @@ static void RPCRT4_stop_listen(BOOL auto_listen)
   LeaveCriticalSection(&listen_cs);
 }
 
-static RPC_STATUS RPCRT4_use_protseq(RpcServerProtseq* ps, LPSTR endpoint)
+static BOOL RPCRT4_protseq_is_endpoint_registered(RpcServerProtseq *protseq, const char *endpoint)
+{
+  RpcConnection *conn;
+  EnterCriticalSection(&protseq->cs);
+  for (conn = protseq->conn; conn; conn = conn->Next)
+  {
+    if (!endpoint || !strcmp(endpoint, conn->Endpoint))
+      break;
+  }
+  LeaveCriticalSection(&protseq->cs);
+  return (conn != NULL);
+}
+
+static RPC_STATUS RPCRT4_use_protseq(RpcServerProtseq* ps, const char *endpoint)
 {
   RPC_STATUS status;
 
-  status = ps->ops->open_endpoint(ps, endpoint);
+  EnterCriticalSection(&ps->cs);
+
+  if (RPCRT4_protseq_is_endpoint_registered(ps, endpoint))
+    status = RPC_S_OK;
+  else
+    status = ps->ops->open_endpoint(ps, endpoint);
+
+  LeaveCriticalSection(&ps->cs);
+
   if (status != RPC_S_OK)
     return status;
 
@@ -608,11 +625,8 @@ RPC_STATUS WINAPI RpcServerInqBindings( RPC_BINDING_VECTOR** BindingVector )
   count = 0;
   LIST_FOR_EACH_ENTRY(ps, &protseqs, RpcServerProtseq, entry) {
     EnterCriticalSection(&ps->cs);
-    conn = ps->conn;
-    while (conn) {
+    for (conn = ps->conn; conn; conn = conn->Next)
       count++;
-      conn = conn->Next;
-    }
     LeaveCriticalSection(&ps->cs);
   }
   if (count) {
@@ -624,12 +638,10 @@ RPC_STATUS WINAPI RpcServerInqBindings( RPC_BINDING_VECTOR** BindingVector )
     count = 0;
     LIST_FOR_EACH_ENTRY(ps, &protseqs, RpcServerProtseq, entry) {
       EnterCriticalSection(&ps->cs);
-      conn = ps->conn;
-      while (conn) {
+      for (conn = ps->conn; conn; conn = conn->Next) {
        RPCRT4_MakeBinding((RpcBinding**)&(*BindingVector)->BindingH[count],
                           conn);
        count++;
-       conn = conn->Next;
       }
       LeaveCriticalSection(&ps->cs);
     }
@@ -681,7 +693,7 @@ RPC_STATUS WINAPI RpcServerUseProtseqEpW( RPC_WSTR Protseq, UINT MaxCalls, RPC_W
  *
  * Must be called with server_cs held.
  */
-static RPC_STATUS alloc_serverprotoseq(UINT MaxCalls, char *Protseq, RpcServerProtseq **ps)
+static RPC_STATUS alloc_serverprotoseq(UINT MaxCalls, const char *Protseq, RpcServerProtseq **ps)
 {
   const struct protseq_ops *ops = rpcrt4_get_protseq_ops(Protseq);
 
@@ -695,7 +707,7 @@ static RPC_STATUS alloc_serverprotoseq(UINT MaxCalls, char *Protseq, RpcServerPr
   if (!*ps)
     return RPC_S_OUT_OF_RESOURCES;
   (*ps)->MaxCalls = MaxCalls;
-  (*ps)->Protseq = Protseq;
+  (*ps)->Protseq = RPCRT4_strdupA(Protseq);
   (*ps)->ops = ops;
   (*ps)->MaxCalls = 0;
   (*ps)->conn = NULL;
@@ -711,8 +723,19 @@ static RPC_STATUS alloc_serverprotoseq(UINT MaxCalls, char *Protseq, RpcServerPr
   return RPC_S_OK;
 }
 
+/* must be called with server_cs held */
+static void destroy_serverprotoseq(RpcServerProtseq *ps)
+{
+    RPCRT4_strfree(ps->Protseq);
+    DeleteCriticalSection(&ps->cs);
+    CloseHandle(ps->mgr_mutex);
+    CloseHandle(ps->server_ready_event);
+    list_remove(&ps->entry);
+    HeapFree(GetProcessHeap(), 0, ps);
+}
+
 /* Finds a given protseq or creates a new one if one doesn't already exist */
-static RPC_STATUS RPCRT4_get_or_create_serverprotseq(UINT MaxCalls, char *Protseq, RpcServerProtseq **ps)
+static RPC_STATUS RPCRT4_get_or_create_serverprotseq(UINT MaxCalls, const char *Protseq, RpcServerProtseq **ps)
 {
     RPC_STATUS status;
     RpcServerProtseq *cps;
@@ -741,19 +764,18 @@ static RPC_STATUS RPCRT4_get_or_create_serverprotseq(UINT MaxCalls, char *Protse
 RPC_STATUS WINAPI RpcServerUseProtseqEpExA( RPC_CSTR Protseq, UINT MaxCalls, RPC_CSTR Endpoint, LPVOID SecurityDescriptor,
                                             PRPC_POLICY lpPolicy )
 {
-  char *szps = (char*)Protseq, *szep = (char*)Endpoint;
   RpcServerProtseq* ps;
   RPC_STATUS status;
 
-  TRACE("(%s,%u,%s,%p,{%u,%u,%u})\n", debugstr_a(szps), MaxCalls,
-       debugstr_a(szep), SecurityDescriptor,
+  TRACE("(%s,%u,%s,%p,{%u,%u,%u})\n", debugstr_a((const char *)Protseq),
+       MaxCalls, debugstr_a((const char *)Endpoint), SecurityDescriptor,
        lpPolicy->Length, lpPolicy->EndpointFlags, lpPolicy->NICFlags );
 
-  status = RPCRT4_get_or_create_serverprotseq(MaxCalls, RPCRT4_strdupA(szps), &ps);
+  status = RPCRT4_get_or_create_serverprotseq(MaxCalls, (const char *)Protseq, &ps);
   if (status != RPC_S_OK)
     return status;
 
-  return RPCRT4_use_protseq(ps, szep);
+  return RPCRT4_use_protseq(ps, (const char *)Endpoint);
 }
 
 /***********************************************************************
@@ -764,13 +786,16 @@ RPC_STATUS WINAPI RpcServerUseProtseqEpExW( RPC_WSTR Protseq, UINT MaxCalls, RPC
 {
   RpcServerProtseq* ps;
   RPC_STATUS status;
+  LPSTR ProtseqA;
   LPSTR EndpointA;
 
   TRACE("(%s,%u,%s,%p,{%u,%u,%u})\n", debugstr_w( Protseq ), MaxCalls,
        debugstr_w( Endpoint ), SecurityDescriptor,
        lpPolicy->Length, lpPolicy->EndpointFlags, lpPolicy->NICFlags );
 
-  status = RPCRT4_get_or_create_serverprotseq(MaxCalls, RPCRT4_strdupWtoA(Protseq), &ps);
+  ProtseqA = RPCRT4_strdupWtoA(Protseq);
+  status = RPCRT4_get_or_create_serverprotseq(MaxCalls, ProtseqA, &ps);
+  RPCRT4_strfree(ProtseqA);
   if (status != RPC_S_OK)
     return status;
 
@@ -785,8 +810,16 @@ RPC_STATUS WINAPI RpcServerUseProtseqEpExW( RPC_WSTR Protseq, UINT MaxCalls, RPC
  */
 RPC_STATUS WINAPI RpcServerUseProtseqA(RPC_CSTR Protseq, unsigned int MaxCalls, void *SecurityDescriptor)
 {
+  RPC_STATUS status;
+  RpcServerProtseq* ps;
+
   TRACE("(Protseq == %s, MaxCalls == %d, SecurityDescriptor == ^%p)\n", debugstr_a((char*)Protseq), MaxCalls, SecurityDescriptor);
-  return RpcServerUseProtseqEpA(Protseq, MaxCalls, NULL, SecurityDescriptor);
+
+  status = RPCRT4_get_or_create_serverprotseq(MaxCalls, (const char *)Protseq, &ps);
+  if (status != RPC_S_OK)
+    return status;
+
+  return RPCRT4_use_protseq(ps, NULL);
 }
 
 /***********************************************************************
@@ -794,8 +827,36 @@ RPC_STATUS WINAPI RpcServerUseProtseqA(RPC_CSTR Protseq, unsigned int MaxCalls, 
  */
 RPC_STATUS WINAPI RpcServerUseProtseqW(RPC_WSTR Protseq, unsigned int MaxCalls, void *SecurityDescriptor)
 {
+  RPC_STATUS status;
+  RpcServerProtseq* ps;
+  LPSTR ProtseqA;
+
   TRACE("Protseq == %s, MaxCalls == %d, SecurityDescriptor == ^%p)\n", debugstr_w(Protseq), MaxCalls, SecurityDescriptor);
-  return RpcServerUseProtseqEpW(Protseq, MaxCalls, NULL, SecurityDescriptor);
+
+  ProtseqA = RPCRT4_strdupWtoA(Protseq);
+  status = RPCRT4_get_or_create_serverprotseq(MaxCalls, ProtseqA, &ps);
+  RPCRT4_strfree(ProtseqA);
+  if (status != RPC_S_OK)
+    return status;
+
+  return RPCRT4_use_protseq(ps, NULL);
+}
+
+void RPCRT4_destroy_all_protseqs(void)
+{
+    RpcServerProtseq *cps, *cursor2;
+
+    if (listen_count != 0)
+        std_listen = FALSE;
+
+    EnterCriticalSection(&server_cs);
+    LIST_FOR_EACH_ENTRY_SAFE(cps, cursor2, &protseqs, RpcServerProtseq, entry)
+    {
+        if (listen_count != 0)
+            RPCRT4_sync_with_server_thread(cps);
+        destroy_serverprotoseq(cps);
+    }
+    LeaveCriticalSection(&server_cs);
 }
 
 /***********************************************************************
@@ -823,7 +884,7 @@ RPC_STATUS WINAPI RpcServerRegisterIfEx( RPC_IF_HANDLE IfSpec, UUID* MgrTypeUuid
 RPC_STATUS WINAPI RpcServerRegisterIf2( RPC_IF_HANDLE IfSpec, UUID* MgrTypeUuid, RPC_MGR_EPV* MgrEpv,
                       UINT Flags, UINT MaxCalls, UINT MaxRpcSize, RPC_IF_CALLBACK_FN* IfCallbackFn )
 {
-  PRPC_SERVER_INTERFACE If = (PRPC_SERVER_INTERFACE)IfSpec;
+  PRPC_SERVER_INTERFACE If = IfSpec;
   RpcServerInterface* sif;
   unsigned int i;
 
@@ -876,7 +937,7 @@ RPC_STATUS WINAPI RpcServerRegisterIf2( RPC_IF_HANDLE IfSpec, UUID* MgrTypeUuid,
  */
 RPC_STATUS WINAPI RpcServerUnregisterIf( RPC_IF_HANDLE IfSpec, UUID* MgrTypeUuid, UINT WaitForCallsToComplete )
 {
-  PRPC_SERVER_INTERFACE If = (PRPC_SERVER_INTERFACE)IfSpec;
+  PRPC_SERVER_INTERFACE If = IfSpec;
   HANDLE event = NULL;
   BOOL found = FALSE;
   BOOL completed = TRUE;

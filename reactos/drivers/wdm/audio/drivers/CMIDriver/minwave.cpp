@@ -469,6 +469,9 @@ NTSTATUS CMiniportWaveCMI::validateFormat(PKSDATAFORMAT format, ULONG PinID, BOO
 STDMETHODIMP CMiniportWaveCMI::DataRangeIntersection(ULONG PinId, PKSDATARANGE ClientDataRange, PKSDATARANGE MyDataRange, ULONG OutputBufferLength, PVOID ResultantFormat, PULONG ResultantFormatLength)
 {
 	//PAGED_CODE();
+	static const GUID KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF = {0x00000092L, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71}};
+
+
 	DBGPRINT(("CMiniportWaveCMI[%p]::DataRangeIntersection(%d, %p, %p, %d, %p, %p)", this, PinId, ClientDataRange, MyDataRange, OutputBufferLength, ResultantFormat, ResultantFormatLength));
 
 	if (PinId == PIN_WAVE_AC3_RENDER_SINK) {
@@ -482,7 +485,7 @@ STDMETHODIMP CMiniportWaveCMI::DataRangeIntersection(ULONG PinId, PKSDATARANGE C
 		}
 
 
-		if (!IsEqualGUIDAligned(ClientDataRange->SubFormat, GUID_NULL)//KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF) //HACK
+		if (!IsEqualGUIDAligned(ClientDataRange->SubFormat, KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF)
 		  && !IsEqualGUIDAligned(ClientDataRange->SubFormat, KSDATAFORMAT_SUBTYPE_WILDCARD)) {
 			// check for Vista
 			isAC3Pin = false;

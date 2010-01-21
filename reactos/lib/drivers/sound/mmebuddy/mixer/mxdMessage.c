@@ -30,7 +30,7 @@ MmeGetLineInfo(
     PSOUND_DEVICE SoundDevice;
     PMMFUNCTION_TABLE FunctionTable;
 
-    SND_TRACE(L"Getting mixer info %u\n", Message);
+    //SND_TRACE(L"Getting mixer info %u\n", Message);
 
     VALIDATE_MMSYS_PARAMETER( PrivateHandle );
     SoundDeviceInstance = (PSOUND_DEVICE_INSTANCE) PrivateHandle;

@@ -1011,7 +1011,9 @@ static HRESULT _SHGetUserShellFolderPath(HKEY rootKey, LPCWSTR userPrefix,
  */
 static HRESULT _SHGetDefaultValue(BYTE folder, LPWSTR pszPath)
 {
+    DWORD dwSize;
     HRESULT hr;
+    HKEY hKey;
     WCHAR resourcePath[MAX_PATH];
     LPCWSTR pDefaultPath = NULL;
 
@@ -1021,6 +1023,18 @@ static HRESULT _SHGetDefaultValue(BYTE folder, LPWSTR pszPath)
         return E_INVALIDARG;
     if (!pszPath)
         return E_INVALIDARG;
+
+    if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+    {
+        /* FIXME assume MAX_PATH size */
+        dwSize = MAX_PATH * sizeof(WCHAR);
+        if (RegQueryValueExW(hKey, CSIDL_Data[folder].szValueName, NULL, NULL, (LPBYTE)pszPath, &dwSize) == ERROR_SUCCESS)
+        {
+            RegCloseKey(hKey);
+            return S_OK;
+        }
+        RegCloseKey(hKey);
+    }
 
     if (CSIDL_Data[folder].szDefaultPath &&
      IS_INTRESOURCE(CSIDL_Data[folder].szDefaultPath))

@@ -22,7 +22,7 @@ WdmAudInstallDevice(
     NTSTATUS Status;
     PWDMAUD_DEVICE_EXTENSION DeviceExtension;
 
-    DPRINT1("WdmAudInstallDevice called\n");
+    DPRINT("WdmAudInstallDevice called\n");
 
     Status = IoCreateDevice(DriverObject,
                             sizeof(WDMAUD_DEVICE_EXTENSION),
@@ -95,7 +95,7 @@ NTAPI
 WdmAudUnload(
     IN PDRIVER_OBJECT driver)
 {
-    DPRINT1("WdmAudUnload called\n");
+    DPRINT("WdmAudUnload called\n");
 }
 
 NTSTATUS
@@ -266,7 +266,7 @@ DriverEntry(
     IN PUNICODE_STRING Registry_path
 )
 {
-    DPRINT1("Wdmaud.sys loaded\n");
+    DPRINT("Wdmaud.sys loaded\n");
 
     Driver->DriverUnload = WdmAudUnload;
 

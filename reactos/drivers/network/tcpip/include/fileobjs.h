@@ -13,7 +13,6 @@ extern KSPIN_LOCK AddressFileListLock;
 extern LIST_ENTRY ConnectionEndpointListHead;
 extern KSPIN_LOCK ConnectionEndpointListLock;
 
-
 NTSTATUS FileOpenAddress(
   PTDI_REQUEST Request,
   PTA_IP_ADDRESS AddrList,
@@ -26,8 +25,6 @@ NTSTATUS FileCloseAddress(
 NTSTATUS FileOpenConnection(
   PTDI_REQUEST Request,
   PVOID ClientContext);
-
-PCONNECTION_ENDPOINT FileFindConnectionByContext( PVOID Context );
 
 NTSTATUS FileCloseConnection(
   PTDI_REQUEST Request);

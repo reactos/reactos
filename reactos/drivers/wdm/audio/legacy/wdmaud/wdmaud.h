@@ -31,7 +31,7 @@ typedef struct
     SOUND_DEVICE_TYPE Type;
     ULONG FilterId;
     ULONG PinId;
-    HANDLE hNotifyEvent;
+    PRKEVENT NotifyEvent;
 }WDMAUD_HANDLE, *PWDMAUD_HANDLE;
 
 typedef struct

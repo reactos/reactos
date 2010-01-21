@@ -1752,11 +1752,12 @@ WdmAudControlOpenMixer(
     ULONG Index;
     PWDMAUD_HANDLE Handels;
     PWDMAUD_DEVICE_EXTENSION DeviceExtension;
+    NTSTATUS Status;
+    PKEVENT EventObject = NULL;
 
     DPRINT("WdmAudControlOpenMixer\n");
 
     DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-
 
     if (DeviceInfo->DeviceIndex >= DeviceExtension->MixerInfoCount)
     {
@@ -1764,13 +1765,26 @@ WdmAudControlOpenMixer(
         return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
     }
 
+    if (DeviceInfo->u.hNotifyEvent)
+    {
+        Status = ObReferenceObjectByHandle(DeviceInfo->u.hNotifyEvent, EVENT_MODIFY_STATE, ExEventObjectType, UserMode, (LPVOID*)&EventObject, NULL);
+
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Invalid notify event passed %p from client %p\n", DeviceInfo->u.hNotifyEvent, ClientInfo);
+            DbgBreakPoint();
+            return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
+        }
+    }
+
+
     for(Index = 0; Index < ClientInfo->NumPins; Index++)
     {
         if (ClientInfo->hPins[Index].Handle == (HANDLE)DeviceInfo->DeviceIndex && ClientInfo->hPins[Index].Type == MIXER_DEVICE_TYPE)
         {
             /* re-use pseudo handle */
             DeviceInfo->hDevice = (HANDLE)DeviceInfo->DeviceIndex;
-            ClientInfo->hPins[Index].hNotifyEvent = DeviceInfo->u.hNotifyEvent;
+            ClientInfo->hPins[Index].NotifyEvent = EventObject;
             return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
         }
     }
@@ -1788,7 +1802,7 @@ WdmAudControlOpenMixer(
         ClientInfo->hPins = Handels;
         ClientInfo->hPins[ClientInfo->NumPins].Handle = (HANDLE)DeviceInfo->DeviceIndex;
         ClientInfo->hPins[ClientInfo->NumPins].Type = MIXER_DEVICE_TYPE;
-        ClientInfo->hPins[ClientInfo->NumPins].hNotifyEvent = DeviceInfo->u.hNotifyEvent;
+        ClientInfo->hPins[ClientInfo->NumPins].NotifyEvent = EventObject;
         ClientInfo->NumPins++;
     }
     else
@@ -1849,7 +1863,7 @@ WdmAudGetLineInfo(
 
         if (DeviceInfo->u.MixLine.dwSource >= MixerLineSrc->Line.cConnections)
         {
-            DPRINT1("dwSource %u Destinations %u\n", DeviceInfo->u.MixLine.dwSource, MixerLineSrc->Line.cConnections);
+            DPRINT1("dwSource %u > Destinations %u\n", DeviceInfo->u.MixLine.dwSource, MixerLineSrc->Line.cConnections);
             /* invalid parameter */
             return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
         }
@@ -1903,7 +1917,7 @@ WdmAudGetLineInfo(
         return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
     }
 
-    DPRINT1("Flags %x\n", DeviceInfo->Flags);
+    DPRINT("Flags %x\n", DeviceInfo->Flags);
     UNIMPLEMENTED;
 
     //DbgBreakPoint();
@@ -1960,14 +1974,14 @@ WdmAudGetLineControls(
         Index = 0;
         for(Index = 0; Index < MixerLineSrc->Line.cControls; Index++)
         {
-            DPRINT1("dwControlType %x\n", MixerLineSrc->LineControls[Index].dwControlType);
+            DPRINT("dwControlType %x\n", MixerLineSrc->LineControls[Index].dwControlType);
             if (DeviceInfo->u.MixControls.dwControlType == MixerLineSrc->LineControls[Index].dwControlType)
             {
                 RtlMoveMemory(DeviceInfo->u.MixControls.pamxctrl, &MixerLineSrc->LineControls[Index], sizeof(MIXERCONTROLW));
                 return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
             }
         }
-        DPRINT1("DeviceInfo->u.MixControls.dwControlType %x not found in Line %x cControls %u \n", DeviceInfo->u.MixControls.dwControlType, DeviceInfo->u.MixControls.dwLineID, MixerLineSrc->Line.cControls);
+        DPRINT("DeviceInfo->u.MixControls.dwControlType %x not found in Line %x cControls %u \n", DeviceInfo->u.MixControls.dwControlType, DeviceInfo->u.MixControls.dwLineID, MixerLineSrc->Line.cControls);
         return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, sizeof(WDMAUD_DEVICE_INFO));
     }
     else if (DeviceInfo->Flags == MIXER_GETLINECONTROLSF_ONEBYID)
@@ -1977,7 +1991,7 @@ WdmAudGetLineControls(
             /* invalid parameter */
             return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
         }
-        DPRINT1("MixerId %u ControlId %u\n",(ULONG_PTR)DeviceInfo->hDevice,  DeviceInfo->u.MixControls.dwControlID);
+        DPRINT("MixerId %u ControlId %u\n",(ULONG_PTR)DeviceInfo->hDevice,  DeviceInfo->u.MixControls.dwControlID);
         Status = GetMixerControlById(&DeviceExtension->MixerInfo[(ULONG_PTR)DeviceInfo->hDevice], DeviceInfo->u.MixControls.dwControlID, NULL, &MixerControl, NULL);
         if (NT_SUCCESS(Status))
         {
@@ -2047,7 +2061,7 @@ SetGetControlDetails(
         *InputValue = Value;
     }
 
-    DPRINT1("Status %x bSet %u NodeId %u Value %d PropertyId %u\n", Status, bSet, NodeId, Value, PropertyId);
+    DPRINT("Status %x bSet %u NodeId %u Value %d PropertyId %u\n", Status, bSet, NodeId, Value, PropertyId);
     return Status;
 }
 
@@ -2061,11 +2075,9 @@ NotifyWdmAudClients(
     PWDMAUD_DEVICE_EXTENSION DeviceExtension;
     PLIST_ENTRY Entry;
     PWDMAUD_CLIENT CurClient;
-    PKEVENT EventObject;
     PMIXER_EVENT Event;
     KIRQL OldIrql;
     ULONG Index;
-    NTSTATUS Status;
 
     /* get device extension */
     DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -2085,22 +2097,13 @@ NotifyWdmAudClients(
         /* now iterate through all pins and try to find an matching handle */
         for(Index = 0; Index < CurClient->NumPins; Index++)
         {
-            if (CurClient->hPins[Index].Handle == hMixer && CurClient->hPins[Index].Type == MIXER_DEVICE_TYPE && CurClient->hPins[Index].hNotifyEvent)
+            if (CurClient->hPins[Index].Handle == hMixer && CurClient->hPins[Index].Type == MIXER_DEVICE_TYPE && CurClient->hPins[Index].NotifyEvent)
             {
-                /* found a matching mixer handle and a valid notify event */
-                Status = ObReferenceObjectByHandle(CurClient->hPins[Index].hNotifyEvent, EVENT_MODIFY_STATE, ExEventObjectType, UserMode, (LPVOID*)&EventObject, NULL);
-                if (!NT_SUCCESS(Status))
-                {
-                    DPRINT1("Invalid notify event passed %p from client %p\n", CurClient->hPins[Index].hNotifyEvent, CurClient);
-                    break;
-                }
-
                 /* allocate event entry */
                 Event = (PMIXER_EVENT)ExAllocatePool(NonPagedPool, sizeof(MIXER_EVENT));
                 if (!Event)
                 {
                     /* no memory */
-                    ObDereferenceObject(EventObject);
                     return STATUS_INSUFFICIENT_RESOURCES;
                 }
 
@@ -2112,11 +2115,12 @@ NotifyWdmAudClients(
                 /* insert event entry */
                 InsertTailList(&CurClient->MixerEventList, &Event->Entry);
 
-                /* now signal the event */
-                KeSetEvent(EventObject, 0, FALSE);
+                DPRINT("Notifying %p hMixer %p Value %x NotificationType %u\n", CurClient->hPins[Index].NotifyEvent, hMixer, Value, NotificationType);
 
-                /* dereference event */
-                ObDereferenceObject(EventObject);
+                /* now signal the event */
+                KeSetEvent(CurClient->hPins[Index].NotifyEvent, 0, FALSE);
+
+
 
                 /* search next client */
                 break;
@@ -2179,6 +2183,24 @@ SetGetMuteControlDetails(
     return Status;
 }
 
+ULONG
+GetVolumeControlIndex(
+    LPMIXERVOLUME_DATA VolumeData,
+    LONG Value)
+{
+    ULONG Index;
+
+    for(Index = 0; Index < VolumeData->ValuesCount; Index++)
+    {
+        if (VolumeData->Values[Index] > Value)
+        {
+            return VolumeData->InputSteppingDelta * Index;
+        }
+    }
+    return VolumeData->InputSteppingDelta * (VolumeData->ValuesCount-1);
+}
+
+
 NTSTATUS
 SetGetVolumeControlDetails(
     IN PDEVICE_OBJECT DeviceObject,
@@ -2191,6 +2213,7 @@ SetGetVolumeControlDetails(
 {
     LPMIXERCONTROLDETAILS_UNSIGNED Input;
     LONG Value, Index, Channel = 0;
+    ULONG dwValue;
     NTSTATUS Status;
     LPMIXERVOLUME_DATA VolumeData;
 
@@ -2234,16 +2257,9 @@ SetGetVolumeControlDetails(
 
     if (!bSet)
     {
-        for(Index = 0; Index < VolumeData->ValuesCount; Index++)
-        {
-            if (VolumeData->Values[Index] > Value)
-            {
-                /* FIXME SEH */
-                Input->dwValue = VolumeData->InputSteppingDelta * Index;
-                return Status;
-            }
-        }
-        Input->dwValue = VolumeData->InputSteppingDelta * (VolumeData->ValuesCount-1);
+        dwValue = GetVolumeControlIndex(VolumeData, (LONG)Value);
+        /* FIXME SEH */
+        Input->dwValue = dwValue;
     }
     else
     {
@@ -2283,6 +2299,7 @@ WdmAudGetMixerEvent(
         if (Event->hMixer == DeviceInfo->hDevice)
         {
             /* found an event for that particular device */
+            RemoveEntryList(&Event->Entry);
             break;
         }
 
@@ -2292,7 +2309,6 @@ WdmAudGetMixerEvent(
         /* move to next entry */
         Entry = Entry->Flink;
     }
-
 
     /* release client context lock */
     KeReleaseSpinLock(&DeviceExtension->Lock, OldIrql);
