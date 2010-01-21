@@ -8,6 +8,10 @@
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
 	<define name="_WINE" />
+
+	<!-- FIXME: workarounds until we have a proper oldnames library -->
+	<define name="close">_close</define>
+
 	<library>wine</library>
 	<library>mpr</library>
 	<library>shlwapi</library>

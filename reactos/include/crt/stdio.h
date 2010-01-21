@@ -390,16 +390,16 @@ extern "C" {
 #define P_tmpdir _P_tmpdir
 #define SYS_OPEN _SYS_OPEN
 
-  char *__cdecl tempnam(const char *_Directory,const char *_FilePrefix);
-  int __cdecl fcloseall(void);
-  FILE *__cdecl fdopen(int _FileHandle,const char *_Format);
-  int __cdecl fgetchar(void);
-  int __cdecl fileno(FILE *_File);
-  int __cdecl flushall(void);
-  int __cdecl fputchar(int _Ch);
-  int __cdecl getw(FILE *_File);
-  int __cdecl putw(int _Ch,FILE *_File);
-  int __cdecl rmtmp(void);
+  _CRTIMP char *__cdecl tempnam(const char *_Directory,const char *_FilePrefix);
+  _CRTIMP int __cdecl fcloseall(void);
+  _CRTIMP FILE *__cdecl fdopen(int _FileHandle,const char *_Format);
+  _CRTIMP int __cdecl fgetchar(void);
+  _CRTIMP int __cdecl fileno(FILE *_File);
+  _CRTIMP int __cdecl flushall(void);
+  _CRTIMP int __cdecl fputchar(int _Ch);
+  _CRTIMP int __cdecl getw(FILE *_File);
+  _CRTIMP int __cdecl putw(int _Ch,FILE *_File);
+  _CRTIMP int __cdecl rmtmp(void);
 #endif
 
 #ifdef __cplusplus

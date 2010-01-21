@@ -3,6 +3,13 @@
 <module name="dhcp" type="win32cui" installbase="system32" installname="dhcp.exe">
 	<include base="dhcp">.</include>
 	<include base="dhcp">include</include>
+
+	<!-- FIXME: workarounds until we have a proper oldnames library -->
+	<define name="tzset">_tzset</define>
+	<define name="close">_close</define>
+	<define name="read">_read</define>
+	<define name="write">_write</define>
+
 	<library>ntdll</library>
 	<library>kernel32</library>
 	<library>ws2_32</library>

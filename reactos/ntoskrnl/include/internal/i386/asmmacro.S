@@ -192,6 +192,40 @@ _KiUnexpectedInterrupt&Number:
 .endm
 
 //
+// @name GENERATE_HAL_INT_HANDLER
+//
+// This macro creates a HAL hardware interrupt handler.
+//
+// @param None.
+//
+// @remark None.
+//
+.macro GENERATE_HAL_INT_HANDLER Number
+.func HalpHardwareInterrupt&Number
+_HalpHardwareInterrupt&Number:
+    int PRIMARY_VECTOR_BASE + Number
+    ret
+.endfunc
+.endm
+
+//
+// @name GENERATE_HAL_INT_HANDLERS
+//
+// This macro creates the unexpected interrupt handlers.
+//
+// @param None.
+//
+// @remark None.
+//
+.macro GENERATE_HAL_INT_HANDLERS
+.set i, 0
+.rept 16
+    GENERATE_HAL_INT_HANDLER %i
+    .set i, i + 1
+.endr
+.endm
+
+//
 // @name INVALID_V86_OPCODE
 //
 // This macro creates one or more entries for unhandled V86 Opcodes

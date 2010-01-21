@@ -144,7 +144,7 @@ HalClearSoftwareInterrupt(
 );
 
 NTHALAPI
-BOOLEAN
+VOID
 NTAPI
 HalDisableSystemInterrupt(
     ULONG Vector,

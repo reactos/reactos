@@ -372,6 +372,8 @@ WdmAudDeviceControl(
             return WdmAudGetControlDetails(DeviceObject, Irp, DeviceInfo, ClientInfo);
         case IOCTL_QUERYDEVICEINTERFACESTRING:
             return WdmAudGetDeviceInterface(DeviceObject, Irp, DeviceInfo);
+        case IOCTL_GET_MIXER_EVENT:
+            return WdmAudGetMixerEvent(DeviceObject, Irp, DeviceInfo, ClientInfo);
         case IOCTL_GETPOS:
         case IOCTL_GETDEVID:
         case IOCTL_GETVOLUME:

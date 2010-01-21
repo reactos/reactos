@@ -22,8 +22,8 @@ extern "C" {
   _CRTIMP void *__cdecl _lsearch(const void *_Key,void *_Base,unsigned int *_NumOfElements,unsigned int _SizeOfElements,int (__cdecl *_PtFuncCompare)(const void *,const void *));
 
 #ifndef	NO_OLDNAMES
-  void *__cdecl lfind(const void *_Key,const void *_Base,unsigned int *_NumOfElements,unsigned int _SizeOfElements,int (__cdecl *_PtFuncCompare)(const void *,const void *));
-  void *__cdecl lsearch(const void *_Key,void *_Base,unsigned int *_NumOfElements,unsigned int _SizeOfElements,int (__cdecl *_PtFuncCompare)(const void *,const void *));
+  _CRTIMP void *__cdecl lfind(const void *_Key,const void *_Base,unsigned int *_NumOfElements,unsigned int _SizeOfElements,int (__cdecl *_PtFuncCompare)(const void *,const void *));
+  _CRTIMP void *__cdecl lsearch(const void *_Key,void *_Base,unsigned int *_NumOfElements,unsigned int _SizeOfElements,int (__cdecl *_PtFuncCompare)(const void *,const void *));
 #endif
 
 #ifdef __cplusplus

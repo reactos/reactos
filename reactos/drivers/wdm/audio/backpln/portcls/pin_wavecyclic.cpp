@@ -41,7 +41,7 @@ protected:
 
     VOID UpdateCommonBuffer(ULONG Position, ULONG MaxTransferCount);
     VOID UpdateCommonBufferOverlap(ULONG Position, ULONG MaxTransferCount);
-    VOID GeneratePositionEvents(IN ULONG OldCommonBufferOffset, IN ULONG NewCommonBufferOffset);
+    VOID GeneratePositionEvents(IN ULONGLONG OldOffset, IN ULONGLONG NewOffset);
     NTSTATUS NTAPI HandleKsStream(IN PIRP Irp);
     NTSTATUS NTAPI HandleKsProperty(IN PIRP Irp);
 
@@ -261,6 +261,8 @@ PinWaveCyclicAddLoopedStreamEvent(
     Entry->bLoopedStreaming = TRUE;
     Entry->Position = Data->Position;
 
+    DPRINT1("Added event\n");
+
     // insert item
     (void)ExInterlockedInsertTailList(&Pin->m_EventList, &EventEntry->ListEntry, &Pin->m_EventListLock);
 
@@ -342,7 +344,7 @@ PinWaveCyclicAudioPosition(
         }
         else if (Pin->m_ConnectDetails->Interface.Id == KSINTERFACE_STANDARD_LOOPED_STREAMING)
         {
-            Position->PlayOffset = Pin->m_Position.PlayOffset % Pin->m_Position.WriteOffset;
+            Position->PlayOffset = Pin->m_Position.PlayOffset;
             Position->WriteOffset = (ULONGLONG)Pin->m_IrpQueue->GetCurrentIrpOffset();
             DPRINT("Play %lu Write %lu\n", Position->PlayOffset, Position->WriteOffset);
         }
@@ -540,8 +542,8 @@ PinWaveCyclicDataFormat(
 
 VOID
 CPortPinWaveCyclic::GeneratePositionEvents(
-    IN ULONG OldCommonBufferOffset,
-    IN ULONG NewCommonBufferOffset)
+    IN ULONGLONG OldOffset,
+    IN ULONGLONG NewOffset)
 {
     PLIST_ENTRY Entry;
     PKSEVENT_ENTRY EventEntry;
@@ -563,11 +565,15 @@ CPortPinWaveCyclic::GeneratePositionEvents(
 
         if (Context->bLoopedStreaming == TRUE)
         {
-            if (NewCommonBufferOffset > OldCommonBufferOffset)
+            if (NewOffset > OldOffset)
             {
                 /* buffer progress no overlap */
-                if (OldCommonBufferOffset < Context->Position && Context->Position <= NewCommonBufferOffset)
+                if (OldOffset < Context->Position && Context->Position <= NewOffset)
                 {
+                    /* when someone eventually fixes sprintf... */
+                    DPRINT("Generating event at OldOffset %I64u\n", OldOffset);
+                    DPRINT("Context->Position %I64u\n", Context->Position);
+                    DPRINT("NewOffset %I64u\n", NewOffset);
                     /* generate event */
                     KsGenerateEvent(EventEntry);
                 }
@@ -575,8 +581,12 @@ CPortPinWaveCyclic::GeneratePositionEvents(
             else
             {
                 /* buffer wrap-arround */
-                if (OldCommonBufferOffset < Context->Position || NewCommonBufferOffset > Context->Position)
+                if (OldOffset < Context->Position || NewOffset > Context->Position)
                 {
+                    /* when someone eventually fixes sprintf... */
+                    DPRINT("Generating event at OldOffset %I64u\n", OldOffset);
+                    DPRINT("Context->Position %I64u\n", Context->Position);
+                    DPRINT("NewOffset %I64u\n", NewOffset);
                     /* generate event */
                     KsGenerateEvent(EventEntry);
                 }
@@ -627,6 +637,12 @@ CPortPinWaveCyclic::UpdateCommonBuffer(
 
         BufferLength = Position - m_CommonBufferOffset;
         m_Position.PlayOffset += BytesToCopy;
+
+        if (m_ConnectDetails->Interface.Id == KSINTERFACE_STANDARD_LOOPED_STREAMING)
+        {
+            // normalize position
+            m_Position.PlayOffset = m_Position.PlayOffset % m_Position.WriteOffset;
+        }
     }
 }
 
@@ -670,6 +686,13 @@ CPortPinWaveCyclic::UpdateCommonBufferOverlap(
         m_Position.PlayOffset += BytesToCopy;
 
         BufferLength = m_CommonBufferSize - m_CommonBufferOffset;
+
+        if (m_ConnectDetails->Interface.Id == KSINTERFACE_STANDARD_LOOPED_STREAMING)
+        {
+            // normalize position
+            m_Position.PlayOffset = m_Position.PlayOffset % m_Position.WriteOffset;
+        }
+
     }
 
     if (Gap == Length)
@@ -693,7 +716,7 @@ CPortPinWaveCyclic::RequestService()
     NTSTATUS Status;
     PUCHAR Buffer;
     ULONG BufferSize;
-    ULONG OldCommonBufferOffset;
+    ULONGLONG OldOffset, NewOffset;
 
     PC_ASSERT_IRQL(DISPATCH_LEVEL);
 
@@ -706,7 +729,7 @@ CPortPinWaveCyclic::RequestService()
     Status = m_Stream->GetPosition(&Position);
     DPRINT("Position %u Buffer %p BufferSize %u ActiveIrpOffset %u Capture %u\n", Position, Buffer, m_CommonBufferSize, BufferSize, m_Capture);
 
-    OldCommonBufferOffset = m_CommonBufferOffset;
+    OldOffset = m_Position.PlayOffset;
 
     if (Position < m_CommonBufferOffset)
     {
@@ -717,7 +740,9 @@ CPortPinWaveCyclic::RequestService()
         UpdateCommonBuffer(Position, m_FrameSize);
     }
 
-    GeneratePositionEvents(OldCommonBufferOffset, m_CommonBufferOffset);
+    NewOffset = m_Position.PlayOffset;
+
+    GeneratePositionEvents(OldOffset, NewOffset);
 }
 
 NTSTATUS

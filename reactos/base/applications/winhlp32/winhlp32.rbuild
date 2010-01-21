@@ -5,6 +5,11 @@
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__ROS_LONG64__" />
     <define name="_CRT_NONSTDC_NO_DEPRECATE" />
+
+	<!-- FIXME: workarounds until we have a proper oldnames library -->
+	<define name="fileno">_fileno</define>
+	<define name="isatty">_isatty</define>
+
 	<library>wine</library>
 	<library>user32</library>
 	<library>gdi32</library>

@@ -205,7 +205,7 @@ __CRT_INLINE time_t __cdecl time(time_t *_Time) { return _time64(_Time); }
   _CRTIMP extern int daylight;
   _CRTIMP extern long timezone;
   _CRTIMP extern char *tzname[2];
-  void __cdecl tzset(void);
+  _CRTIMP void __cdecl tzset(void);
 #endif
 
 #ifdef __cplusplus

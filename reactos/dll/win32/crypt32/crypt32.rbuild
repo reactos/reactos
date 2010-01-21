@@ -4,6 +4,12 @@
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
 	<redefine name="_WIN32_WINNT">0x600</redefine>
+
+	<!-- FIXME: workarounds until we have a proper oldnames library -->
+	<define name="fdopen">_fdopen</define>
+	<define name="open">_open</define>
+	<define name="close">_close</define>
+
 	<library>wine</library>
 	<library>user32</library>
 	<library>advapi32</library>

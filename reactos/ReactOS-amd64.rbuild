@@ -20,7 +20,6 @@
 	<property name="PLATFORM" value="PC"/>
 	<property name="usewrc" value="false"/>
 	<property name="WINEBUILD_FLAGS" value="--kill-at"/>
-	<property name="NTOSKRNL_SHARED" value="-shared"/>
 
 	<if property="OPTIMIZE" value="1">
 		<compilerflag>-Os</compilerflag>
@@ -48,9 +47,14 @@
 	<compilerflag>-Wno-multichar</compilerflag>
 	<compilerflag>-Wno-format</compilerflag>
 	<!-- compilerflag>-H</compilerflag>    enable this for header traces -->
-	<linkerflag>-disable-stdcall-fixup</linkerflag>
-	<linkerflag>-static</linkerflag>
-	<linkerflag>--unique=.eh_frame</linkerflag>
+
+	<group linkerset="ld">
+		<linkerflag>-disable-stdcall-fixup</linkerflag>
+		<linkerflag>-static</linkerflag>
+		<linkerflag>--unique=.eh_frame</linkerflag>
+		<linkerflag>-file-alignment=0x1000</linkerflag>
+		<linkerflag>-section-alignment=0x1000</linkerflag>
+	</group>
 
 <!-- Here starts <xi:include href="ReactOS-generic.rbuild" /> -->
 
@@ -191,7 +195,7 @@
 		<directory name="storage">
             <xi:include href="drivers/storage/directory.rbuild" />
 		</directory>
-		<directory name="usb">	
+		<directory name="usb">
 			<xi:include href="drivers/usb/directory.rbuild" />
 		</directory>
 		<directory name="video">
