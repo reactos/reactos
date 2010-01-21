@@ -20,6 +20,7 @@
 			<file>dma.c</file>
 			<file>drive.c</file>
 			<file>display.c</file>
+			<file>pic.c</file>
 			<file>profil.c</file>
 			<file>reboot.c</file>
 			<file>sysinfo.c</file>
