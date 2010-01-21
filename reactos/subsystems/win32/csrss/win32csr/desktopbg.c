@@ -37,8 +37,13 @@ typedef struct tagPRIVATE_NOTIFY_DESKTOP
 static BOOL BgInitialized = FALSE;
 static HWND VisibleDesktopWindow = NULL;
 
-LRESULT CALLBACK
-DtbgWindowProc(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+static
+LRESULT
+CALLBACK
+DtbgWindowProc(HWND Wnd,
+               UINT Msg,
+               WPARAM wParam,
+               LPARAM lParam)
 {
     PAINTSTRUCT PS;
 
@@ -124,23 +129,24 @@ DtbgInit(VOID)
     static const WCHAR WinSta0[] = {'W','i','n','S','t','a','0',0};
     HANDLE handle;
 
-  /*
-   * Create the desktop window class
-   */
+    /*
+     * Create the desktop window class
+     */
 #if 0
-  Class.cbSize = sizeof(WNDCLASSEXW);
-  Class.style = CS_GLOBALCLASS;
-  Class.lpfnWndProc = DtbgWindowProc;
-  Class.cbClsExtra = 0;
-  Class.cbWndExtra = 0;
-  Class.hInstance = (HINSTANCE) GetModuleHandleW(NULL);
-  Class.hIcon = NULL;
-  Class.hCursor = NULL;
-  Class.hbrBackground = GetSysColorBrush(COLOR_BACKGROUND);
-  Class.lpszMenuName = NULL;
-  Class.lpszClassName = (LPCWSTR) DESKTOP_WINDOW_ATOM;
-  ClassAtom = RegisterClassExW(&Class);
-  if ((ATOM) 0 == ClassAtom)
+    Class.cbSize = sizeof(WNDCLASSEXW);
+    Class.style = CS_GLOBALCLASS;
+    Class.lpfnWndProc = DtbgWindowProc;
+    Class.cbClsExtra = 0;
+    Class.cbWndExtra = 0;
+    Class.hInstance = (HINSTANCE)GetModuleHandleW(NULL);
+    Class.hIcon = NULL;
+    Class.hCursor = NULL;
+    Class.hbrBackground = GetSysColorBrush(COLOR_BACKGROUND);
+    Class.lpszMenuName = NULL;
+    Class.lpszClassName = (LPCWSTR)DESKTOP_WINDOW_ATOM;
+    ClassAtom = RegisterClassExW(&Class);
+
+    if (ClassAtom == INVALID_ATOM)
     {
         DPRINT1("Unable to register desktop background class (error %d)\n",
                 GetLastError());
@@ -148,26 +154,27 @@ DtbgInit(VOID)
         return FALSE;
     }
 #endif
+    VisibleDesktopWindow = NULL;
 
     /* set winstation if we don't have one yet */
     if (!GetProcessWindowStation())
     {
-        handle = OpenWindowStationW( WinSta0, FALSE, WINSTA_ALL_ACCESS );
-        if (handle) SetProcessWindowStation( handle );
+        handle = OpenWindowStationW(WinSta0, FALSE, WINSTA_ALL_ACCESS);
+        if (handle) SetProcessWindowStation(handle);
     }
-
-    VisibleDesktopWindow = NULL;
 
     return TRUE;
 }
 
-HWND BackgroundWnd;
+HWND BackgroundWnd; // Arwinss hack
 
-static DWORD WINAPI
+static
+DWORD
+WINAPI
 DtbgDesktopThread(PVOID Data)
 {
-  MSG msg;
-  PDTBG_THREAD_DATA ThreadData = (PDTBG_THREAD_DATA) Data;
+    MSG msg;
+    PDTBG_THREAD_DATA ThreadData = (PDTBG_THREAD_DATA)Data;
 
     if (!SetThreadDesktop(ThreadData->Desktop))
     {
@@ -176,18 +183,16 @@ DtbgDesktopThread(PVOID Data)
         SetEvent(ThreadData->Event);
         return 1;
     }
-  BackgroundWnd = CreateWindowW((LPCWSTR) DESKTOP_WINDOW_ATOM,
-                                L"",
-                                WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
-                                0,
-                                0,
-                                0,
-                                0,
-                                NULL,
-                                NULL,
-                                (HINSTANCE) GetModuleHandleW(NULL),
-                                NULL);
-  if (NULL == BackgroundWnd)
+
+    BackgroundWnd = CreateWindowW((LPCWSTR)DESKTOP_WINDOW_ATOM,
+                                  L"",
+                                  WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
+                                  0, 0, 0, 0,
+                                  NULL, NULL,
+                                  (HINSTANCE)GetModuleHandleW(NULL),
+                                  NULL);
+
+    if (NULL == BackgroundWnd)
     {
         DPRINT1("Failed to create desktop background window\n");
         ThreadData->Status = STATUS_UNSUCCESSFUL;
@@ -195,11 +200,11 @@ DtbgDesktopThread(PVOID Data)
         return 1;
     }
 
-  /* Set window proc */
-  SetWindowLongPtrW( BackgroundWnd, GWLP_WNDPROC, (LONG_PTR)DtbgWindowProc );
+    /* Set window proc */
+    SetWindowLongPtrW( BackgroundWnd, GWLP_WNDPROC, (LONG_PTR)DtbgWindowProc );
 
-  ThreadData->Status = STATUS_SUCCESS;
-  SetEvent(ThreadData->Event);
+    ThreadData->Status = STATUS_SUCCESS;
+    SetEvent(ThreadData->Event);
 
     while (GetMessageW(&msg, NULL, 0, 0))
     {
@@ -258,27 +263,30 @@ CSR_API(CsrCreateDesktop)
 
     CloseHandle(ThreadHandle);
 
-  /* Show the desktop immediately */
-  {
-  PRIVATE_NOTIFY_DESKTOP nmh;
+    WaitForSingleObject(ThreadData.Event, INFINITE);
+    CloseHandle(ThreadData.Event);
 
-  nmh.hdr.hwndFrom = BackgroundWnd;
-  nmh.hdr.idFrom = 0;
-  nmh.hdr.code = PM_SHOW_DESKTOP;
+    /* Show the desktop immediately */
+    {
+        PRIVATE_NOTIFY_DESKTOP nmh;
 
-  nmh.ShowDesktop.Width = 800;
-  nmh.ShowDesktop.Height = 600;
+        nmh.hdr.hwndFrom = BackgroundWnd;
+        nmh.hdr.idFrom = 0;
+        nmh.hdr.code = PM_SHOW_DESKTOP;
 
-  SendMessageW(BackgroundWnd,
-                      WM_NOTIFY,
-                      (WPARAM)nmh.hdr.hwndFrom,
-                      (LPARAM)&nmh)
-         ? STATUS_UNSUCCESSFUL : STATUS_SUCCESS;
+        nmh.ShowDesktop.Width = 800;
+        nmh.ShowDesktop.Height = 600;
 
-  RedrawWindow(BackgroundWnd, NULL, 0, RDW_INVALIDATE | RDW_FRAME | RDW_ERASENOW | RDW_ALLCHILDREN);
-  }
+        SendMessageW(BackgroundWnd,
+                     WM_NOTIFY,
+                     (WPARAM)nmh.hdr.hwndFrom,
+                     (LPARAM)&nmh)
+            ? STATUS_UNSUCCESSFUL : STATUS_SUCCESS;
 
-  return ThreadData.Status;
+        RedrawWindow(BackgroundWnd, NULL, 0, RDW_INVALIDATE | RDW_FRAME | RDW_ERASENOW | RDW_ALLCHILDREN);
+    }
+
+    return ThreadData.Status;
 }
 
 CSR_API(CsrShowDesktop)
