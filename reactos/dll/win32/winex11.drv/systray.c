@@ -344,7 +344,7 @@ static BOOL modify_icon( struct tray_icon *icon, NOTIFYICONDATAW *nid )
         if (icon->window)
         {
             struct x11drv_win_data *data = X11DRV_get_win_data( icon->window );
-            if (data) XClearArea( gdi_display, data->client_window, 0, 0, 0, 0, True );
+            if (data) XClearArea( thread_display(), data->client_window, 0, 0, 0, 0, True );
         }
     }
 

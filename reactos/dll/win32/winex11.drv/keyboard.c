@@ -1141,6 +1141,11 @@ static WORD EVENT_event_to_vkey( XIC xic, XKeyEvent *e)
          * depending on the NumLock state */
         return nonchar_key_vkey[keysym & 0xFF];
 
+    /* Pressing the Pause/Break key alone produces VK_PAUSE vkey, while
+     * pressing Ctrl+Pause/Break produces VK_CANCEL. */
+    if ((e->state & ControlMask) && (keysym == XK_Break))
+        return VK_CANCEL;
+
     TRACE_(key)("e->keycode = %x\n", e->keycode);
 
     return keyc2vkey[e->keycode];

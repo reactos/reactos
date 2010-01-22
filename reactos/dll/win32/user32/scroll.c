@@ -317,6 +317,7 @@ static UINT SCROLL_GetThumbVal( SCROLLBAR_INFO *infoPtr, RECT *rect,
 {
     INT thumbSize;
     INT pixels = vertical ? rect->bottom-rect->top : rect->right-rect->left;
+    INT range;
 
     if ((pixels -= 2*(GetSystemMetrics(SM_CXVSCROLL) - SCROLL_ARROW_THUMB_OVERLAP)) <= 0)
         return infoPtr->minVal;
@@ -333,9 +334,12 @@ static UINT SCROLL_GetThumbVal( SCROLLBAR_INFO *infoPtr, RECT *rect,
     pos = max( 0, pos - (GetSystemMetrics(SM_CXVSCROLL) - SCROLL_ARROW_THUMB_OVERLAP) );
     if (pos > pixels) pos = pixels;
 
-    if (!infoPtr->page) pos *= infoPtr->maxVal - infoPtr->minVal;
-    else pos *= infoPtr->maxVal - infoPtr->minVal - infoPtr->page + 1;
-    return infoPtr->minVal + ((pos + pixels / 2) / pixels);
+    if (!infoPtr->page)
+        range = infoPtr->maxVal - infoPtr->minVal;
+    else
+        range = infoPtr->maxVal - infoPtr->minVal - infoPtr->page + 1;
+
+    return infoPtr->minVal + MulDiv(pos, range, pixels);
 }
 
 /***********************************************************************

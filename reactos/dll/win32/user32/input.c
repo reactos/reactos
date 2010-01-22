@@ -101,12 +101,15 @@ BOOL set_capture_window( HWND hwnd, UINT gui_flags, HWND *prev_ret )
     }
     SERVER_END_REQ;
 
-    USER_Driver->pSetCapture( hwnd, gui_flags );
+    if (ret)
+    {
+        USER_Driver->pSetCapture( hwnd, gui_flags );
 
-    if (previous && previous != hwnd)
-        SendMessageW( previous, WM_CAPTURECHANGED, 0, (LPARAM)hwnd );
+        if (previous && previous != hwnd)
+            SendMessageW( previous, WM_CAPTURECHANGED, 0, (LPARAM)hwnd );
 
-    if (prev_ret) *prev_ret = previous;
+        if (prev_ret) *prev_ret = previous;
+    }
     return ret;
 }
 
@@ -226,7 +229,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH SetCursorPos( INT x, INT y )
  */
 HWND WINAPI DECLSPEC_HOTPATCH SetCapture( HWND hwnd )
 {
-    HWND previous;
+    HWND previous = 0;
 
     set_capture_window( hwnd, 0, &previous );
     return previous;
@@ -241,7 +244,7 @@ BOOL WINAPI DECLSPEC_HOTPATCH ReleaseCapture(void)
     BOOL ret = set_capture_window( 0, 0, NULL );
 
     /* Somebody may have missed some mouse movements */
-    mouse_event( MOUSEEVENTF_MOVE, 0, 0, 0, 0 );
+    if (ret) mouse_event( MOUSEEVENTF_MOVE, 0, 0, 0, 0 );
 
     return ret;
 }

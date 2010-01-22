@@ -2285,6 +2285,12 @@ DECL_HANDLER(set_capture_window)
     {
         struct thread_input *input = queue->input;
 
+        /* if in menu mode, reject all requests to change focus, except if the menu bit is set */
+        if (input->menu_owner && !(req->flags & CAPTURE_MENU))
+        {
+            set_error(STATUS_ACCESS_DENIED);
+            return;
+        }
         reply->previous = input->capture;
         input->capture = get_user_full_handle( req->handle );
         input->menu_owner = (req->flags & CAPTURE_MENU) ? input->capture : 0;

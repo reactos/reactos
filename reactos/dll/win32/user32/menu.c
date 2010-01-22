@@ -3120,6 +3120,7 @@ static BOOL MENU_TrackMenu( HMENU hmenu, UINT wFlags, INT x, INT y,
 		switch(msg.wParam)
 		{
 		case VK_MENU:
+		case VK_F10:
 		    fEndMenu = TRUE;
 		    break;
 

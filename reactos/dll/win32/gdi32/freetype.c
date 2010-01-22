@@ -2246,7 +2246,7 @@ HANDLE WineEngAddFontMemResourceEx(PVOID pbFont, DWORD cbFont, PVOID pdv, DWORD 
 BOOL WineEngRemoveFontResourceEx(LPCWSTR file, DWORD flags, PVOID pdv)
 {
     GDI_CheckNotLock();
-    FIXME(":stub\n");
+    FIXME("(%s, %x, %p): stub\n", debugstr_w(file), flags, pdv);
     return TRUE;
 }
 
@@ -6761,25 +6761,25 @@ INT WineEngGetTextFace(GdiFont *font, INT count, LPWSTR str)
 
 INT WineEngAddFontResourceEx(LPCWSTR file, DWORD flags, PVOID pdv)
 {
-    FIXME(":stub\n");
+    FIXME("(%s, %x, %p): stub\n", debugstr_w(file), flags, pdv);
     return 1;
 }
 
 INT WineEngRemoveFontResourceEx(LPCWSTR file, DWORD flags, PVOID pdv)
 {
-    FIXME(":stub\n");
+    FIXME("(%s, %x, %p): stub\n", debugstr_w(file), flags, pdv);
     return TRUE;
 }
 
 HANDLE WineEngAddFontMemResourceEx(PVOID pbFont, DWORD cbFont, PVOID pdv, DWORD *pcFonts)
 {
-    FIXME(":stub\n");
+    FIXME("(%p, %u, %p, %p): stub\n", pbFont, cbFont, pdv, pcFonts);
     return NULL;
 }
 
 UINT WineEngGetTextCharsetInfo(GdiFont *font, LPFONTSIGNATURE fs, DWORD flags)
 {
-    FIXME(":stub\n");
+    FIXME("(%p, %p, %u): stub\n", font, fs, flags);
     return DEFAULT_CHARSET;
 }
 
