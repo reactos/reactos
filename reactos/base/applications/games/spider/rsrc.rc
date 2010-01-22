@@ -16,4 +16,5 @@ IDI_SPIDER ICON DISCARDABLE "spider.ico"
 #include "lang/pl-PL.rc"
 #include "lang/ru-RU.rc"
 #include "lang/sk-SK.rc"
+#include "lang/uk-UA.rc"
 

@@ -1,20 +1,22 @@
 /*
- * PROJECT:      Spider Solitaire
- * LICENSE:      See COPYING in top level directory
- * FILE:         base/applications/games/spider/lang/ru-RU.rc
- * PURPOSE:      Russian Language File for Spider Solitaire
- * TRANSLATOR:   Dmitry Chapyshev
+ * PROJECT:    ReactOS Spider
+ * LICENSE:    GPL - See COPYING in the top level directory
+ * FILE:    base/applications/games/spider/lang/uk-UA.rc
+ * PURPOSE:    Ukraianian Language File for ReactOS  Spider
+ * TRANSLATOR:    Sakara Yevhen
  */
+
  
 #include "resource.h"
 
-LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
 
 
 /* Dialogs */
 
 IDD_CARDBACK DIALOGEX 6, 6, 186, 104
-CAPTION "Выбор оформления"
+CAPTION "Вибір оформлення"
 FONT 8, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
@@ -31,31 +33,31 @@ BEGIN
     CONTROL       "", IDC_CARDBACK11, "Static", SS_NOTIFY, 124, 46, 26, 32
     CONTROL       "", IDC_CARDBACK12, "Static", SS_NOTIFY, 154, 46, 26, 32
     DEFPUSHBUTTON "OK", IDOK, 66, 84, 54, 13
-    PUSHBUTTON    "Отмена", IDCANCEL, 126, 84, 54, 13
+    PUSHBUTTON    "Скасувати", IDCANCEL, 126, 84, 54, 13
 END
 
-IDD_DIFFICULTY DIALOGEX DISCARDABLE 100, 100, 112, 80
+IDD_DIFFICULTY DIALOGEX DISCARDABLE 100, 100, 106, 80
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
-CAPTION "Уровень"
+CAPTION "Рівень"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "Простой: &один цвет", IDC_DIF_ONECOLOR,   8, 10, 102, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Средний: &два цвета", IDC_DIF_TWOCOLORS,  8, 23, 102, 10
-    AUTORADIOBUTTON "Сложный: &четыре цвета", IDC_DIF_FOURCOLORS, 8, 36, 102, 10
+    AUTORADIOBUTTON "Простий: &Один колір",    IDC_DIF_ONECOLOR,   8, 10, 80, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Середній: &Два кольори", IDC_DIF_TWOCOLORS,  8, 23, 80, 10
+    AUTORADIOBUTTON "Складний: &Чотири кольори",  IDC_DIF_FOURCOLORS, 8, 36, 80, 10
 
     DEFPUSHBUTTON   "OK", IDOK, 8, 58, 40, 14
-    PUSHBUTTON      "Отмена", IDCANCEL, 63, 58, 40, 14
+    PUSHBUTTON      "Скасувати", IDCANCEL, 58, 58, 40, 14
 END
 
 /* Strings */
 
 STRINGTABLE
 BEGIN
-    IDS_SPI_NAME    "Пасьянс ""Паук"""
-    IDS_SPI_ABOUT   "Пасьянс ""Паук"", Gregor Schneider\n\nCardLib версии 1.0"
-    IDS_SPI_QUIT    "Выйти из текущей игры?"
-    IDS_SPI_WIN     "Поздравляем, вы выйграли!"
-    IDS_SPI_DEAL    "Попробовать снова?"
+    IDS_SPI_NAME    "Пас’янс Паук"
+    IDS_SPI_ABOUT   "Пас’янс Паук, Gregor Schneider\n\nCardLib версії 1.0"
+    IDS_SPI_QUIT    "Вийти з поточної гри?"
+    IDS_SPI_WIN     "Вітаємо, ви виграти!"
+    IDS_SPI_DEAL    "Спробувати знову?"
 END
 
 
@@ -63,18 +65,18 @@ END
 
 IDR_MENU1 MENU DISCARDABLE
 BEGIN
-    POPUP "&Игра"
+    POPUP "&Гра"
     BEGIN
-        MENUITEM "&Новая игра\tF2", IDM_GAME_NEW
+        MENUITEM "&Нова гра\tF2",               IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Оформление...", IDM_GAME_DECK
+        MENUITEM "&Оформлення...",                    IDM_GAME_DECK
         MENUITEM SEPARATOR
-        MENUITEM "&Выход", IDM_GAME_EXIT
+        MENUITEM "&Вихід",                       IDM_GAME_EXIT
     END
-    POPUP "&Справка"
+    POPUP "&Довідка"
     BEGIN
-        MENUITEM "&Просмотр справки\tF1", IDM_HELP_CONTENTS
-        MENUITEM "&О программе", IDM_HELP_ABOUT
+        MENUITEM "Пе&регляд довідки\tF1",               IDM_HELP_CONTENTS
+        MENUITEM "&Про програму...",                      IDM_HELP_ABOUT
     END
 END
 

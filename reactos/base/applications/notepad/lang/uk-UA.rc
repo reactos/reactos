@@ -44,7 +44,7 @@ BEGIN
     BEGIN
         MENUITEM "&Створити\tCtrl+N",      CMD_NEW
         MENUITEM "&Відкрити...\tCtrl+O",   CMD_OPEN
-        MENUITEM "&З&берегти\tCtrl+S",     CMD_SAVE
+        MENUITEM "&Зберегти\tCtrl+S",     CMD_SAVE
         MENUITEM "Зберегти &як...",        CMD_SAVE_AS
         MENUITEM SEPARATOR
         MENUITEM "Пара&метри сторінки...", CMD_PAGE_SETUP
@@ -53,40 +53,40 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "В&ихід",                 CMD_EXIT
     END
-    POPUP "&Правка"
+    POPUP "Пр&авка"
     BEGIN
-        MENUITEM "&Скасувати\tCtrl+Z",    CMD_UNDO
+        MENUITEM "С&касувати\tCtrl+Z",    CMD_UNDO
         MENUITEM SEPARATOR
-        MENUITEM "&Вирізати\tCtrl+X",     CMD_CUT
-        MENUITEM "&Копіювати\tCtrl+C",    CMD_COPY
-        MENUITEM "Вст&авити\tCtrl+V",     CMD_PASTE
-        MENUITEM "В&идалити\tDel",        CMD_DELETE
+        MENUITEM "Вир&ізати\tCtrl+X",     CMD_CUT
+        MENUITEM "Копі&ювати\tCtrl+C",    CMD_COPY
+        MENUITEM "Вс&тавити\tCtrl+V",     CMD_PASTE
+        MENUITEM "Ви&далити\tDel",        CMD_DELETE
         MENUITEM SEPARATOR
         MENUITEM "З&найти...\tCtrl+F",    CMD_SEARCH
         MENUITEM "Зна&йти далі\tF3",      CMD_SEARCH_NEXT
-        MENUITEM "&Замінити\tCtrl+H",     CMD_REPLACE
-        MENUITEM "Перей&ти...\tCtrl+G",   CMD_GOTO
+        MENUITEM "Зам&інити\tCtrl+H",     CMD_REPLACE
+        MENUITEM "П&ерейти...\tCtrl+G",   CMD_GOTO
         MENUITEM SEPARATOR
         MENUITEM "Виді&лити все\tCtrl+A", CMD_SELECT_ALL
-        MENUITEM "&Дата й час\tF5",       CMD_TIME_DATE
+        MENUITEM "Дата й &час\tF5",       CMD_TIME_DATE
     END
-    POPUP "Фор&мат"
+    POPUP "Ф&ормат"
     BEGIN
-        MENUITEM "&Перенос по словах", CMD_WRAP
+        MENUITEM "Перенос по слова&х", CMD_WRAP
         MENUITEM "&Шрифт...",          CMD_FONT
     END
-    POPUP "&Вигляд"
+    POPUP "Ви&гляд"
     BEGIN
-        MENUITEM "&Рядок стану", CMD_STATUSBAR
+        MENUITEM "Ряд&ок стан&у", CMD_STATUSBAR
     END
-    POPUP "&Довідка"
+    POPUP "Дов&ідка"
     BEGIN
-        MENUITEM "&Зміст",        CMD_HELP_CONTENTS
-        MENUITEM "&Пошук...",     CMD_HELP_SEARCH
-        MENUITEM "&Help on help", CMD_HELP_ON_HELP
+        MENUITEM "Змі&ст",        CMD_HELP_CONTENTS
+        MENUITEM "Пош&ук...",     CMD_HELP_SEARCH
+        MENUITEM "Використ&ання довідки", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
         MENUITEM "&Про"           CMD_ABOUT
-        MENUITEM "&Про програму", CMD_ABOUT_WINE
+        MENUITEM "Про програм&у", CMD_ABOUT_WINE
     END
 END
 
@@ -112,8 +112,8 @@ EDITTEXT /*STRING_PAGESETUP_RIGHTVALUE,*/  0x14D,     130, 55, 35, 11, WS_CHILD 
 LTEXT    "&Нижнє:",      0x14E,100, 73, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150,    130, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
 
-DEFPUSHBUTTON "OK",         IDOK,                   180,  3, 40, 15, WS_TABSTOP
-PUSHBUTTON    "Скасувати",     IDCANCEL,               180, 21, 40, 15, WS_TABSTOP
+DEFPUSHBUTTON "Так",         IDOK,                   180,  3, 40, 15, WS_TABSTOP
+PUSHBUTTON    "Ні",   		  IDCANCEL,               180, 21, 40, 15, WS_TABSTOP
 PUSHBUTTON    "&Довідка",       IDHELP,                180, 39, 40, 15, WS_TABSTOP
 END
 
@@ -159,7 +159,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  STRING_LICENSE, "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+  STRING_LICENSE, "Це вільне програмне забезпечення; Ви можете розповсюджувати її та змінювати, дотримуючись умови Відкритої ліцензійної угоди GNU, опублікованої Фондом вільного програмного забезпечення; або редакції 2 Угоди, або будь-якої редакції, випущеної пізніше.\r\n\r\nЦя програма розповсюджується в надії на те, що вона виявиться корисною, але БЕЗ БУДЬ-ЯКИХ ГАРАНТІЙ, включаючи УЯВНОЮ ГАРАНТІЄЮ ЯКОСТІ або ПРИДАТНОСТІ для певних цілей. Подробиці містяться у Відкритій ліцензійній угоді GNU.\r\n\r\nРазом з цією програмою повинен поширюватися примірник Відкритої ліцензійної угоди GNU. Якщо він відсутній, повідомте про це в Фонд вільного програмного забезпечення (Free Software Foundation, Inc.), 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 STRINGTABLE DISCARDABLE
@@ -200,5 +200,5 @@ STRING_UTF8,                                    "UTF-8"
 STRING_CRLF,                                    "Windows"
 STRING_LF,                                      "Unix"
 STRING_CR,                                      "Mac"
-STRING_LINE_COLUMN,                             "Line %d, column %d"
+STRING_LINE_COLUMN,                             "Рядок %d, стовпчик %d"
 END

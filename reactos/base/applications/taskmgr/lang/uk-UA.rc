@@ -151,7 +151,7 @@ BEGIN
 
         END
         MENUITEM "У&становити відповідність...",    ID_PROCESS_PAGE_SETAFFINITY
-	MENUITEM "Edit Debug &Channels...",	    ID_PROCESS_PAGE_DEBUGCHANNELS
+	MENUITEM "Редагувати налагодження &потоків...",	ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
 
@@ -192,7 +192,7 @@ BEGIN
                     WS_BORDER | WS_TABSTOP,7,7,233,177
     PUSHBUTTON      "Зн&яти завдання",IDC_ENDPROCESS,171,189,69,14
     CONTROL         "&Відображати процеси всіх користувачів",IDC_SHOWALLPROCESSES,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,191,111,10
+                    "Кнопка",BS_AUTOCHECKBOX | WS_TABSTOP,7,191,111,10
 END
 
 //IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210
@@ -270,8 +270,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Відповідність процесорів"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,120,133,50,14
-    PUSHBUTTON      "Скасувати",IDCANCEL,174,133,50,14
+    DEFPUSHBUTTON   "Так",IDOK,120,133,50,14
+    PUSHBUTTON      "Ні",IDCANCEL,174,133,50,14
     LTEXT           "Параметр відповідності процесорів визначає, на якому ЦП буде дозволено виконувати процес.",
                     IDC_STATIC,5,5,220,16
     CONTROL         "ЦП 0",IDC_CPU0,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
@@ -345,8 +345,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Вибір стовпців"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,84,178,50,14
-    PUSHBUTTON      "Скасувати",IDCANCEL,138,178,50,14
+    DEFPUSHBUTTON   "Так",IDOK,84,178,50,14
+    PUSHBUTTON      "Ні",IDCANCEL,138,178,50,14
     LTEXT           "Виберіть стовпці, які слід відображати на вкладці Процес диспетчера завдань.",
                     IDC_STATIC,7,7,181,17
     CONTROL         "&Ім'я образу",IDC_IMAGENAME,"Button",BS_AUTOCHECKBOX |
