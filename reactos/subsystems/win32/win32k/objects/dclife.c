@@ -182,34 +182,28 @@ DC_SetOwnership(HDC hDC, PEPROCESS Owner)
     */
         if (pDC->rosdc.hClipRgn)
         {   // FIXME! HAX!!!
-            KeEnterCriticalRegion();
             Index = GDI_HANDLE_GET_INDEX(pDC->rosdc.hClipRgn);
             Entry = &GdiHandleTable->Entries[Index];
             if (Entry->UserData) FreeObjectAttr(Entry->UserData);
             Entry->UserData = NULL;
-            KeLeaveCriticalRegion();
             //
             if (!GDIOBJ_SetOwnership(pDC->rosdc.hClipRgn, Owner)) return FALSE;
         }
         if (pDC->rosdc.hVisRgn)
         {   // FIXME! HAX!!!
-            KeEnterCriticalRegion();
             Index = GDI_HANDLE_GET_INDEX(pDC->rosdc.hVisRgn);
             Entry = &GdiHandleTable->Entries[Index];
             if (Entry->UserData) FreeObjectAttr(Entry->UserData);
             Entry->UserData = NULL;
-            KeLeaveCriticalRegion();
             //
             if (!GDIOBJ_SetOwnership(pDC->rosdc.hVisRgn, Owner)) return FALSE;
         }
         if (pDC->rosdc.hGCClipRgn)
         {   // FIXME! HAX!!!
-            KeEnterCriticalRegion();
             Index = GDI_HANDLE_GET_INDEX(pDC->rosdc.hGCClipRgn);
             Entry = &GdiHandleTable->Entries[Index];
             if (Entry->UserData) FreeObjectAttr(Entry->UserData);
             Entry->UserData = NULL;
-            KeLeaveCriticalRegion();
             //
             if (!GDIOBJ_SetOwnership(pDC->rosdc.hGCClipRgn, Owner)) return FALSE;
         }
