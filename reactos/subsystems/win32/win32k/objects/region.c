@@ -2063,11 +2063,9 @@ REGION_AllocRgnWithHandle(INT nReg)
         }
     }
 
-    KeEnterCriticalRegion();
     Index = GDI_HANDLE_GET_INDEX(hReg);
     Entry = &GdiHandleTable->Entries[Index];
     Entry->UserData = AllocateObjectAttr();
-    KeLeaveCriticalRegion();
 
     EMPTY_REGION(pReg);
     pReg->rdh.dwSize = sizeof(RGNDATAHEADER);
@@ -2091,12 +2089,10 @@ RGNOBJAPI_Lock(HRGN hRgn, PRGN_ATTR *ppRgn_Attr)
 
   if (pRgn)
   {
-     KeEnterCriticalRegion();
      Index = GDI_HANDLE_GET_INDEX(hRgn);
      Entry = &GdiHandleTable->Entries[Index];
      pRgn_Attr = Entry->UserData;
      pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
-     KeLeaveCriticalRegion();
 
      if ( pid == NtCurrentTeb()->ClientId.UniqueProcess &&
           pRgn_Attr )
@@ -2151,12 +2147,10 @@ RGNOBJAPI_Unlock(PROSRGNDATA pRgn)
 
   if (pRgn)
   {
-     KeEnterCriticalRegion();
      Index = GDI_HANDLE_GET_INDEX(pRgn->BaseObject.hHmgr);
      Entry = &GdiHandleTable->Entries[Index];
      pRgn_Attr = Entry->UserData;
      pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
-     KeLeaveCriticalRegion();
 
      if ( pid == NtCurrentTeb()->ClientId.UniqueProcess &&
           pRgn_Attr )

@@ -755,10 +755,8 @@ GreDeleteObject(HGDIOBJ hObject)
              }
              if (pAttr)
              {
-                KeEnterCriticalRegion();
                 FreeObjectAttr(pAttr);
                 Entry->UserData = NULL;
-                KeLeaveCriticalRegion();
              }
              break;
 
@@ -1575,12 +1573,10 @@ IntGdiSetRegionOwner(HRGN hRgn, DWORD OwnerMask)
      level functions.
  */
   // FIXME! HAX!!! Remove this once we get everything right!
-  KeEnterCriticalRegion();
   Index = GDI_HANDLE_GET_INDEX(hRgn);
   Entry = &GdiHandleTable->Entries[Index];
   if (Entry->UserData) FreeObjectAttr(Entry->UserData);
   Entry->UserData = NULL;
-  KeLeaveCriticalRegion();
   //
   if ((OwnerMask == GDI_OBJ_HMGR_PUBLIC) || OwnerMask == GDI_OBJ_HMGR_NONE)
   {
