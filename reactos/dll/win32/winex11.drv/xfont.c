@@ -48,6 +48,16 @@
 #include "wine/unicode.h"
 #include "wine/debug.h"
 
+#ifdef __REACTOS__
+// CRT compat HACKS
+#define open _open
+#define close _close
+#define read _read
+#define write _write
+#define lseek _lseek
+#define hypot _hypot
+#endif
+
 WINE_DEFAULT_DEBUG_CHANNEL(font);
 
 #define X_PFONT_MAGIC		(0xFADE0000)

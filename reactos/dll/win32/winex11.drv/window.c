@@ -946,7 +946,7 @@ static void set_initial_wm_hints( Display *display, struct x11drv_win_data *data
     /* set the WM_CLIENT_MACHINE and WM_LOCALE_NAME properties */
     XSetWMProperties(display, data->whole_window, NULL, NULL, NULL, 0, NULL, NULL, NULL);
     /* set the pid. together, these properties are needed so the window manager can kill us if we freeze */
-    i = getpid();
+    i = _getpid();
     XChangeProperty(display, data->whole_window, x11drv_atom(_NET_WM_PID),
                     XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&i, 1);
 
