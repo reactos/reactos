@@ -425,8 +425,8 @@ endif
 
 BUILDNO_H = $(INTERMEDIATE_)include$(SEP)reactos$(SEP)buildno.h
 
-include lib/lib.mak
-include tools/tools.mak
+include sdk/libs/lib.mak
+include sdk/tools/tools.mak
 -include $(ROS_AUTOMAKE)
 
 PREAUTO := \

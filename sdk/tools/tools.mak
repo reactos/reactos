@@ -1,4 +1,4 @@
-TOOLS_BASE = tools
+TOOLS_BASE = sdk\tools
 TOOLS_BASE_ = $(TOOLS_BASE)$(SEP)
 TOOLS_INT = $(INTERMEDIATE_)$(TOOLS_BASE)
 TOOLS_INT_ = $(TOOLS_INT)$(SEP)
@@ -40,15 +40,15 @@ $(TOOLS_INT_)xml.o: $(TOOLS_BASE_)xml.cpp $(XML_SSPRINTF_HEADERS) | $(TOOLS_INT)
 	$(ECHO_HOSTCC)
 	${host_gpp} $(TOOLS_CPPFLAGS) -c $< -o $@
 
-include tools/bin2c.mak
-include tools/buildno/buildno.mak
-include tools/gendib/gendib.mak
-include tools/rsym/log2lines.mak
-include tools/nci/nci.mak
+include sdk/tools/bin2c.mak
+include sdk/tools/buildno/buildno.mak
+include sdk/tools/gendib/gendib.mak
+include sdk/tools/rsym/log2lines.mak
+include sdk/tools/nci/nci.mak
 ifeq ($(ARCH),powerpc)
-include tools/ofw_interface/ofw_interface.mak
+include sdk/tools/ofw_interface/ofw_interface.mak
 endif
-include tools/pefixup.mak
-include tools/rsym/raddr2line.mak
-include tools/rbuild/rbuild.mak
-include tools/rsym/rsym.mak
+include sdk/tools/pefixup.mak
+include sdk/tools/rsym/raddr2line.mak
+include sdk/tools/rbuild/rbuild.mak
+include sdk/tools/rsym/rsym.mak
