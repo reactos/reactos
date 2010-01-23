@@ -193,8 +193,16 @@ typedef unsigned long POINTER_64; // FIXME! HACK!!!
 
 // Done the same way as in windef.h for now
 #define DECLSPEC_IMPORT __declspec(dllimport)
-#define DECLSPEC_NORETURN __declspec(noreturn)
 
+#ifndef DECLSPEC_NORETURN
+#if (_MSC_VER >= 1200) && !defined(MIDL_PASS)
+#define DECLSPEC_NORETURN   __declspec(noreturn)
+#else
+/* On 4.5 we can use __builtin_unreachable instead of this hack */
+__attribute__ ((noreturn)) void exit(int s) {exit(s);}
+#define DECLSPEC_NORETURN   __attribute__((noreturn))
+#endif
+#endif
 
 #ifndef DECLSPEC_ADDRSAFE
 #if (_MSC_VER >= 1200) && (defined(_M_ALPHA) || defined(_M_AXP64))
