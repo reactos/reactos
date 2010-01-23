@@ -466,7 +466,7 @@ KiDispatchExceptionFromTrapFrame(IN NTSTATUS Code,
                         NULL,
                         TrapFrame,
                         TrapFrame->EFlags & EFLAGS_V86_MASK ?
-                        -1 : TrapFrame->SegCs & MODE_MASK,
+                        -1 : KiUserTrap(TrapFrame),
                         TRUE);
 
     /* Return from this trap */

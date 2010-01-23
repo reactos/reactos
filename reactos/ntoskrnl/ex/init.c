@@ -303,7 +303,7 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                        KernelMode,
                                        &ExpNlsSectionPointer,
                                        NULL);
-    ZwClose(NlsSection);
+    ObCloseHandle(NlsSection, KernelMode);
     if (!NT_SUCCESS(Status))
     {
         /* Failed */

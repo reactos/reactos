@@ -165,7 +165,7 @@ FORCEINLINE
 KiUserTrap(IN PKTRAP_FRAME TrapFrame)
 {
     /* Anything else but Ring 0 is Ring 3 */
-    return (TrapFrame->SegCs != KGDT_R0_CODE);
+    return (TrapFrame->SegCs & MODE_MASK);
 }
 
 BOOLEAN
