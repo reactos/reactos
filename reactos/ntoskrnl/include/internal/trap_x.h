@@ -214,6 +214,7 @@ KiCheckForApcDelivery(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FORCEINLINE
+DECLSPEC_NORETURN
 KiDispatchException0Args(IN NTSTATUS Code,
                          IN ULONG_PTR Address,
                          IN PKTRAP_FRAME TrapFrame)
@@ -224,6 +225,7 @@ KiDispatchException0Args(IN NTSTATUS Code,
 
 VOID
 FORCEINLINE
+DECLSPEC_NORETURN
 KiDispatchException1Args(IN NTSTATUS Code,
                          IN ULONG_PTR Address,
                          IN ULONG P1,
@@ -235,6 +237,7 @@ KiDispatchException1Args(IN NTSTATUS Code,
 
 VOID
 FORCEINLINE
+DECLSPEC_NORETURN
 KiDispatchException2Args(IN NTSTATUS Code,
                          IN ULONG_PTR Address,
                          IN ULONG P1,
@@ -247,6 +250,7 @@ KiDispatchException2Args(IN NTSTATUS Code,
 
 FORCEINLINE
 VOID
+DECLSPEC_NORETURN
 KiSystemCallReturn(IN PKTRAP_FRAME TrapFrame)
 {
     /* Restore nonvolatiles, EAX, and do a "jump" back to the kernel caller */
@@ -272,10 +276,12 @@ KiSystemCallReturn(IN PKTRAP_FRAME TrapFrame)
           [v] "i"(KTRAP_FRAME_ESP)
         : "%esp"
     );
+    exit(0);
 }
 
 FORCEINLINE
 VOID
+DECLSPEC_NORETURN
 KiSystemCallTrapReturn(IN PKTRAP_FRAME TrapFrame)
 {
     /* Regular interrupt exit, but we only restore EAX as a volatile */
@@ -299,10 +305,12 @@ KiSystemCallTrapReturn(IN PKTRAP_FRAME TrapFrame)
           [e] "i"(KTRAP_FRAME_EIP)
         : "%esp"
     );
+    exit(0);
 }
 
 FORCEINLINE
 VOID
+DECLSPEC_NORETURN
 KiSystemCallSysExitReturn(IN PKTRAP_FRAME TrapFrame)
 {
     /* Restore nonvolatiles, EAX, and do a SYSEXIT back to the user caller */
@@ -330,10 +338,12 @@ KiSystemCallSysExitReturn(IN PKTRAP_FRAME TrapFrame)
           [v] "i"(KTRAP_FRAME_V86_ES)
         : "%esp"
     );
+    exit(0);
 }
 
 FORCEINLINE
 VOID
+DECLSPEC_NORETURN
 KiTrapReturn(IN PKTRAP_FRAME TrapFrame)
 {
     /* Regular interrupt exit */
@@ -361,10 +371,12 @@ KiTrapReturn(IN PKTRAP_FRAME TrapFrame)
           [e] "i"(KTRAP_FRAME_EIP)
         : "%esp"
     );
+    exit(0);
 }
 
 FORCEINLINE
 VOID
+DECLSPEC_NORETURN
 KiEditedTrapReturn(IN PKTRAP_FRAME TrapFrame)
 {
     /* Regular interrupt exit */
@@ -393,6 +405,7 @@ KiEditedTrapReturn(IN PKTRAP_FRAME TrapFrame)
           [e] "i"(KTRAP_FRAME_ERROR_CODE) /* We *WANT* the error code since ESP is there! */
         : "%esp"
     );
+    exit(0);
 }
 
 NTSTATUS
