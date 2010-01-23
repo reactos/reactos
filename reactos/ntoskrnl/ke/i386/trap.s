@@ -320,6 +320,9 @@ _KeUpdateSystemTime@0:
 .func KiDispatchInterrupt@0
 _KiDispatchInterrupt@0:
 
+    /* Preserve EBX */
+    push ebx
+
     /* Get the PCR  and disable interrupts */
     mov ebx, PCR[KPCR_SELF]
     cli
@@ -418,12 +421,14 @@ GetNext:
 
 Return:
     /* All done */
+    pop ebx
     ret
 
 QuantumEnd:
     /* Disable quantum end and process it */
     mov byte ptr [ebx+KPCR_PRCB_QUANTUM_END], 0
     call _KiQuantumEnd@0
+    pop ebx
     ret
 .endfunc
 
