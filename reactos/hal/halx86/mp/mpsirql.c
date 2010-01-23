@@ -292,7 +292,7 @@ KeRaiseIrqlToSynchLevel (VOID)
 
 BOOLEAN NTAPI
 HalBeginSystemInterrupt (KIRQL Irql,
-			 ULONG Vector,
+			 UCHAR Vector,
 			 PKIRQL OldIrql)
 {
   ULONG Flags;
@@ -319,7 +319,7 @@ HalBeginSystemInterrupt (KIRQL Irql,
 
 VOID NTAPI
 HalEndSystemInterrupt (KIRQL Irql,
-		       ULONG Unknown2)
+		       UCHAR Vector)
 /*
  * FUNCTION: Finish a system interrupt and restore the specified irq level.
  */
@@ -338,8 +338,8 @@ HalEndSystemInterrupt (KIRQL Irql,
   
 VOID
 NTAPI
-HalDisableSystemInterrupt(ULONG Vector,
-			              KIRQL Irql)
+HalDisableSystemInterrupt(UCHAR Vector,
+			  KIRQL Irql)
 {
   ULONG irq;
 
@@ -361,7 +361,7 @@ HalDisableSystemInterrupt(ULONG Vector,
 
 
 BOOLEAN NTAPI
-HalEnableSystemInterrupt (ULONG Vector,
+HalEnableSystemInterrupt (UCHAR Vector,
 			  KIRQL Irql,
 			  KINTERRUPT_MODE InterruptMode)
 {
