@@ -36,6 +36,7 @@ HalpInitializePICs(IN BOOLEAN EnableInterrupts)
     
     /* Initialize ICW1 for master, interval 8, edge-triggered mode with ICW4 */
     Icw1.NeedIcw4 = TRUE;
+    Icw1.InterruptMode = EdgeTriggered;
     Icw1.OperatingMode = Cascade;
     Icw1.Interval = Interval8;
     Icw1.Init = TRUE;
@@ -64,6 +65,7 @@ HalpInitializePICs(IN BOOLEAN EnableInterrupts)
     
     /* Initialize ICW1 for master, interval 8, edge-triggered mode with ICW4 */
     Icw1.NeedIcw4 = TRUE;
+    Icw1.InterruptMode = EdgeTriggered;
     Icw1.OperatingMode = Cascade;
     Icw1.Interval = Interval8;
     Icw1.Init = TRUE;
