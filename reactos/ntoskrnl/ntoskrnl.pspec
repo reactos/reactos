@@ -701,6 +701,7 @@
 @ fastcall KefReleaseSpinLockFromDpcLevel(ptr)
 #ifdef _M_IX86
 @ stdcall Kei386EoiHelper()
+@ fastcall KiEoiHelper(ptr) /* FIXME: Evaluate decision */
 #endif
 @ fastcall KiAcquireSpinLock(ptr)
 @ extern KiBugCheckData
