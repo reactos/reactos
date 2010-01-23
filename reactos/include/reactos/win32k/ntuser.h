@@ -775,6 +775,8 @@ typedef struct _USERCONNECT
 //
 #define DCX_USESTYLE     0x00010000
 #define DCX_KEEPCLIPRGN  0x00040000
+#define DCX_KEEPLAYOUT   0x40000000
+#define DCX_PROCESSOWNED 0x80000000
 
 //
 // Non SDK Queue message types.

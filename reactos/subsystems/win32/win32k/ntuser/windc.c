@@ -14,6 +14,8 @@
 #define NDEBUG
 #include <debug.h>
 
+int FASTCALL CLIPPING_UpdateGCRegion(DC* Dc);
+
 /* GLOBALS *******************************************************************/
 
 /* NOTE - I think we should store this per window station (including gdi objects) */
@@ -22,7 +24,9 @@ static PDCE FirstDce = NULL;
 //static INT DCECount = 0; // Count of DCE in system.
 
 #define DCX_CACHECOMPAREMASK (DCX_CLIPSIBLINGS | DCX_CLIPCHILDREN | \
-                              DCX_CACHE | DCX_WINDOW | DCX_PARENTCLIP)
+                              DCX_NORESETATTRS | DCX_LOCKWINDOWUPDATE | \
+                              DCX_LAYEREDWIN | DCX_CACHE | DCX_WINDOW | \
+                              DCX_PARENTCLIP)
 
 /* FUNCTIONS *****************************************************************/
 
@@ -58,16 +62,15 @@ DceGetVisRgn(PWINDOW_OBJECT Window, ULONG Flags, HWND hWndChild, ULONG CFlags)
   HRGN VisRgn;
 
   VisRgn = VIS_ComputeVisibleRegion( Window,
-                  0 == (Flags & DCX_WINDOW),
-            0 != (Flags & DCX_CLIPCHILDREN),
-            0 != (Flags & DCX_CLIPSIBLINGS));
+                                     0 == (Flags & DCX_WINDOW),
+                                     0 != (Flags & DCX_CLIPCHILDREN),
+                                     0 != (Flags & DCX_CLIPSIBLINGS));
 
   if (VisRgn == NULL)
       VisRgn = IntSysCreateRectRgn(0, 0, 0, 0);
 
   return VisRgn;
 }
-
 
 PDCE FASTCALL
 DceAllocDCE(PWINDOW_OBJECT Window OPTIONAL, DCE_TYPE Type)
@@ -94,7 +97,6 @@ DceAllocDCE(PWINDOW_OBJECT Window OPTIONAL, DCE_TYPE Type)
   pDce->hrgnClip = NULL;
   pDce->hrgnClipPublic = NULL;
   pDce->hrgnSavedVis = NULL;
-  pDce->ptiOwner = NULL;
   pDce->ppiOwner = NULL;
 
   KeEnterCriticalRegion();
@@ -111,13 +113,13 @@ DceAllocDCE(PWINDOW_OBJECT Window OPTIONAL, DCE_TYPE Type)
 
   if (Type == DCE_WINDOW_DC || Type == DCE_CLASS_DC) //Window DCE have ownership.
   {
-    pDce->ptiOwner = GetW32ThreadInfo();
-    pDce->ppiOwner = pDce->ptiOwner->ppi;
+     pDce->ptiOwner = GetW32ThreadInfo();
   }
   else
   {
      DPRINT("FREE DCATTR!!!! NOT DCE_WINDOW_DC!!!!! hDC-> %x\n", pDce->hDC);
      IntGdiSetDCOwnerEx( pDce->hDC, GDI_OBJ_HMGR_NONE, FALSE);
+     pDce->ptiOwner = NULL;
   }
 
   if (Type == DCE_CACHE_DC)
@@ -140,8 +142,10 @@ DceAllocDCE(PWINDOW_OBJECT Window OPTIONAL, DCE_TYPE Type)
 }
 
 static VOID APIENTRY
-DceSetDrawable(PWINDOW_OBJECT Window OPTIONAL, HDC hDC, ULONG Flags,
-               BOOL SetClipOrigin)
+DceSetDrawable( PWINDOW_OBJECT Window OPTIONAL,
+                HDC hDC,
+                ULONG Flags,
+                BOOL SetClipOrigin)
 {
   PWND Wnd;
   DC *dc = DC_LockDc(hDC);
@@ -302,8 +306,7 @@ noparent:
          hRgnVisible = IntSysCreateRectRgn(0, 0, 0, 0);
       }
    }
-
-   if (Flags & DCX_EXCLUDERGN && Dce->hrgnClip != NULL)
+   else if (Flags & DCX_EXCLUDERGN && Dce->hrgnClip != NULL)
    {
       NtGdiCombineRgn(hRgnVisible, hRgnVisible, Dce->hrgnClip, RGN_DIFF);
    }
@@ -328,10 +331,10 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
    PWINDOW_OBJECT Parent;
    ULONG DcxFlags;
    DCE* Dce = NULL;
-   BOOL UpdateVisRgn = TRUE;
    BOOL UpdateClipOrigin = FALSE;
    PWND Wnd = NULL;
-   HDC hDC = NULL;   
+   HDC hDC = NULL;
+   PPROCESSINFO ppi;
 
    if (NULL == Window)
    {
@@ -381,6 +384,12 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
              !(Wnd->style & WS_MINIMIZE))
          {
             Flags |= DCX_CLIPCHILDREN;
+         }
+         /* If minized with icon in the set, we are forced to be cheap! */
+         if (Wnd->style & WS_MINIMIZE &&
+             Wnd->pcls->hIcon)
+         {
+            Flags |= DCX_CACHE;
          }
       }
       else
@@ -458,9 +467,6 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
             else if (Dce->hwndCurrent == (Window ? Window->hSelf : NULL) &&
                      ((Dce->DCXFlags & DCX_CACHECOMPAREMASK) == DcxFlags))
             {
-#if 0 /* FIXME */
-               UpdateVisRgn = FALSE;
-#endif
                UpdateClipOrigin = TRUE;
                break;
             }
@@ -485,31 +491,19 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
       Dce = FirstDce;
       do
       {   // Check for Window handle than HDC match for CLASS.
-          if ((Dce->hwndCurrent == Window->hSelf) || (Dce->hDC == hDC)) break;
+          if ((Dce->hwndCurrent == Window->hSelf) ||
+              (Dce->hDC == hDC))
+             break;
           Dce = (PDCE)Dce->List.Flink;
       } while (Dce != FirstDce);
       KeLeaveCriticalRegion();
 
-      DPRINT("DCX:Flags -> %x:%x\n",Dce->DCXFlags & DCX_CACHE, Flags & DCX_CACHE);
-
-      if (Dce->hwndCurrent == Window->hSelf)
+      if ( (Flags & (DCX_INTERSECTRGN|DCX_EXCLUDERGN)) &&
+           (Dce->DCXFlags & (DCX_INTERSECTRGN|DCX_EXCLUDERGN)) )          
       {
-          DPRINT("Owned DCE!\n");
-          UpdateVisRgn = FALSE; /* updated automatically, via DCHook() */
+          DceDeleteClipRgn(Dce);
       }
-      else
-      {
-          DPRINT("Owned/Class DCE\n");
-      /* we should free dce->clip_rgn here, but Windows apparently doesn't */
-          Dce->DCXFlags &= ~(DCX_EXCLUDERGN | DCX_INTERSECTRGN);
-          Dce->hrgnClip = NULL;
-      }
-
-#if 1 /* FIXME */
-      UpdateVisRgn = TRUE;
-#endif
    }
-
 // First time use hax, need to use DceAllocDCE during window display init.
    if (NULL == Dce)
    {
@@ -523,23 +517,24 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
       /* FIXME: Handle error */
    }
 
-   if (!(Flags & (DCX_EXCLUDERGN | DCX_INTERSECTRGN)) && ClipRegion)
-   {
-      if (!(Flags & DCX_KEEPCLIPRGN))
-         REGION_FreeRgnByHandle(ClipRegion);
-      ClipRegion = NULL;
-   }
-
-#if 0
-   if (NULL != Dce->hrgnClip)
-   {
-      DceDeleteClipRgn(Dce);
-   }
-#endif
-
    Dce->DCXFlags = Flags | DCX_DCEBUSY;
 
-   if (0 != (Flags & DCX_INTERSECTUPDATE) && NULL == ClipRegion)
+   /*
+      Bump it up! This prevents the random errors in wine dce tests and with
+      proper bits set in DCX_CACHECOMPAREMASK.
+      Reference:
+        http://www.reactos.org/archives/public/ros-dev/2008-July/010498.html
+        http://www.reactos.org/archives/public/ros-dev/2008-July/010499.html
+    */
+   if ((Dce != FirstDce))
+   {
+      RemoveEntryList(&Dce->List);
+      InsertHeadList(&FirstDce->List, &Dce->List);
+      FirstDce = Dce;
+   }
+
+   /* Introduced in rev 6691 and modified later. */
+   if ( (Flags & DCX_INTERSECTUPDATE) && !ClipRegion )
    {
       Flags |= DCX_INTERSECTRGN | DCX_KEEPCLIPRGN;
       Dce->DCXFlags |= DCX_INTERSECTRGN | DCX_KEEPCLIPRGN;
@@ -565,10 +560,7 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
 
    DceSetDrawable(Window, Dce->hDC, Flags, UpdateClipOrigin);
 
-   //  if (UpdateVisRgn)
-   {
-      DceUpdateVisRgn(Dce, Window, Flags);
-   }
+   DceUpdateVisRgn(Dce, Window, Flags);
 
    if (Dce->DCXFlags & DCX_CACHE)
    {
@@ -576,8 +568,23 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
       // Need to set ownership so Sync dcattr will work.
       IntGdiSetDCOwnerEx( Dce->hDC, GDI_OBJ_HMGR_POWNED, FALSE);
       Dce->ptiOwner = GetW32ThreadInfo(); // Set the temp owning
-      Dce->ppiOwner = Dce->ptiOwner->ppi;
    }
+
+   if ( Wnd &&
+        Wnd->ExStyle & WS_EX_LAYOUTRTL &&
+       !(Flags & DCX_KEEPLAYOUT) )
+   {
+      NtGdiSetLayout(Dce->hDC, -1, LAYOUT_RTL);
+   }
+
+   if (Dce->DCXFlags & DCX_PROCESSOWNED) 
+   {
+      ppi = PsGetCurrentProcessWin32Process();
+      ppi->W32PF_flags |= W32PF_OWNDCCLEANUP;
+      Dce->ptiOwner = NULL;
+      Dce->ppiOwner = ppi;
+   }
+
    return(Dce->hDC);
 }
 
@@ -726,7 +733,6 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window)
             }
             if (NULL != dc->rosdc.hClipRgn)
             {
-               int FASTCALL CLIPPING_UpdateGCRegion(DC* Dc);
                NtGdiOffsetRgn(dc->rosdc.hClipRgn, DeltaX, DeltaY);
                CLIPPING_UpdateGCRegion(dc);
             }
