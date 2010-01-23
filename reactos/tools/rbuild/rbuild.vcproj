@@ -137,6 +137,7 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				DefaultCharIsUnsigned="true"
+				OpenMP="true"
 				UsePrecompiledHeader="0"
 				PrecompiledHeaderFile=".\Debug/rbuild.pch"
 				AssemblerListingLocation=".\Debug/"

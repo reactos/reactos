@@ -106,40 +106,40 @@ extern "C" {
   float __cdecl _hypotf(float _X,float _Y);
 #endif
 
-  float frexpf(float _X,int *_Y);
-  float __cdecl ldexpf(float _X,int _Y);
-  long double __cdecl ldexpl(long double _X,int _Y);
-  float __cdecl acosf(float _X);
-  float __cdecl asinf(float _X);
-   float __cdecl atanf(float _X);
-   float __cdecl atan2f(float _X,float _Y);
-   float __cdecl cosf(float _X);
-   float __cdecl sinf(float _X);
-   float __cdecl tanf(float _X);
-   float __cdecl coshf(float _X);
-   float __cdecl sinhf(float _X);
-   float __cdecl tanhf(float _X);
-   float __cdecl expf(float _X);
-   float expm1f(float _X);
-   float __cdecl logf(float _X);
-   float __cdecl log10f(float _X);
-   float __cdecl modff(float _X,float *_Y);
-   float __cdecl powf(float _X,float _Y);
-   float __cdecl sqrtf(float _X);
-   float __cdecl ceilf(float _X);
-   float __cdecl floorf(float _X);
-  float __cdecl fmodf(float _X,float _Y);
-   float __cdecl _hypotf(float _X,float _Y);
-  float __cdecl fabsf(float _X);
+  extern float frexpf(float _X,int *_Y);
+  extern float __cdecl ldexpf(float _X,int _Y);
+  extern long double __cdecl ldexpl(long double _X,int _Y);
+  extern float __cdecl acosf(float _X);
+  extern float __cdecl asinf(float _X);
+  extern float __cdecl atanf(float _X);
+  extern float __cdecl atan2f(float _X,float _Y);
+  extern float __cdecl cosf(float _X);
+  extern float __cdecl sinf(float _X);
+  extern float __cdecl tanf(float _X);
+  extern float __cdecl coshf(float _X);
+  extern float __cdecl sinhf(float _X);
+  extern float __cdecl tanhf(float _X);
+  extern float __cdecl expf(float _X);
+  extern float expm1f(float _X);
+  extern float __cdecl logf(float _X);
+  extern float __cdecl log10f(float _X);
+  extern float __cdecl modff(float _X,float *_Y);
+  extern float __cdecl powf(float _X,float _Y);
+  extern float __cdecl sqrtf(float _X);
+  extern float __cdecl ceilf(float _X);
+  extern float __cdecl floorf(float _X);
+  extern float __cdecl fmodf(float _X,float _Y);
+  extern float __cdecl _hypotf(float _X,float _Y);
+  extern float __cdecl fabsf(float _X);
 #if !defined(__ia64__) && !defined(_M_IA64)
    /* from libmingwex */
-   float __cdecl _copysignf (float _Number,float _Sign);
-   float __cdecl _chgsignf (float _X);
-   float __cdecl _logbf(float _X);
-   float __cdecl _nextafterf(float _X,float _Y);
-   int __cdecl _finitef(float _X);
-   int __cdecl _isnanf(float _X);
-   int __cdecl _fpclassf(float _X);
+  extern float __cdecl _copysignf (float _Number,float _Sign);
+  extern float __cdecl _chgsignf (float _X);
+  extern float __cdecl _logbf(float _X);
+  extern float __cdecl _nextafterf(float _X,float _Y);
+  extern int __cdecl _finitef(float _X);
+  extern int __cdecl _isnanf(float _X);
+  extern int __cdecl _fpclassf(float _X);
 #endif
 
 #if defined(__GNUC__)
@@ -237,14 +237,22 @@ extern "C" {
 
 #ifndef __NO_ISOCEXT
 #if (defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L) \
-  || !defined __STRICT_ANSI__ || defined __GLIBCPP__
+  || !defined __STRICT_ANSI__ || defined __cplusplus
 
-#if !defined(_MSC_VER)
-#define NAN (0.0F/0.0F)
-#define HUGE_VALF (1.0F/0.0F)
-#define HUGE_VALL (1.0L/0.0L)
-#define INFINITY (1.0F/0.0F)
-#endif
+#if __MINGW_GNUC_PREREQ(3, 3)
+#define HUGE_VALF	__builtin_huge_valf()
+#define HUGE_VALL	__builtin_huge_vall()
+#define INFINITY	__builtin_inf()
+#define NAN		__builtin_nan("")
+#elif !defined(_MSC_VER)
+extern const float __INFF;
+#define HUGE_VALF __INFF
+extern const long double  __INFL;
+#define HUGE_VALL __INFL
+#define INFINITY HUGE_VALF
+extern const double __QNAN;
+#define NAN __QNAN
+#endif /* __MINGW_GNUC_PREREQ(3, 3) */
 
 
 #define FP_NAN		0x0100
@@ -320,6 +328,9 @@ __CRT_INLINE int isinf (double d) {
   /* 7.12.3.4 */
   /* We don't need to worry about truncation here:
   A NaN stays a NaN. */
+  extern int __cdecl __isnan (double) __MINGW_ATTRIB_PURE;
+  extern int __cdecl __isnanf (float) __MINGW_ATTRIB_PURE;
+  extern int __cdecl __isnanl (long double) __MINGW_ATTRIB_PURE;
 
   __CRT_INLINE int __cdecl __isnan (double _x)
   {
@@ -354,6 +365,9 @@ __CRT_INLINE int isinf (double d) {
 #define isnormal(x) (fpclassify(x) == FP_NORMAL)
 
   /* 7.12.3.6 The signbit macro */
+  extern int __cdecl __signbit (double) __MINGW_ATTRIB_PURE;
+  extern int __cdecl __signbitf (float) __MINGW_ATTRIB_PURE;
+  extern int __cdecl __signbitl (long double) __MINGW_ATTRIB_PURE;
   __CRT_INLINE int __cdecl __signbit (double x) {
     unsigned short stw;
     __fxam(x, stw);
