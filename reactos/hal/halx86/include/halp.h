@@ -179,6 +179,26 @@ typedef enum _I8259_ICW4_BUFFERED_MODE
     BufferedMaster
 } I8259_ICW4_BUFFERED_MODE;
 
+typedef enum _I8259_READ_REQUEST
+{
+    InvalidRequest,
+    InvalidRequest2,
+    ReadIdr,
+    ReadIsr
+} I8259_READ_REQUEST;
+
+typedef enum _I8259_EOI_MODE
+{
+    RotateAutoEoiClear,
+    NonSpecificEoi,
+    InvalidEoiMode,
+    SpecificEoi,
+    RotateAutoEoiSet,
+    RotateNonSpecific,
+    SetPriority,
+    RotateSpecific
+} I8259_EOI_MODE;
+
 //
 // Definitions for ICW Registers
 //
@@ -243,6 +263,52 @@ typedef union _I8259_ICW4
     UCHAR Bits;
 } I8259_ICW4, *PI8259_ICW4;
 
+typedef union _I8259_OCW2
+{
+    struct
+    {
+        UCHAR IrqNumber:3;
+        UCHAR Sbz:2;
+        I8259_EOI_MODE EoiMode:3;
+    };
+    UCHAR Bits;
+} I8259_OCW2, *PI8259_OCW2;
+
+typedef union _I8259_OCW3
+{
+    struct
+    {
+        I8259_READ_REQUEST ReadRequest:2;
+        UCHAR PollCommand:1;
+        UCHAR Sbo:1;
+        UCHAR Sbz:1;
+        UCHAR SpecialMaskMode:2;
+        UCHAR Reserved:1;
+    };
+    UCHAR Bits;
+} I8259_OCW3, *PI8259_OCW3;
+
+typedef union _I8259_ISR
+{
+    union
+    {
+        struct
+        {
+            UCHAR Irq0:1;
+            UCHAR Irq1:1;
+            UCHAR Irq2:1;
+            UCHAR Irq3:1;
+            UCHAR Irq4:1;
+            UCHAR Irq5:1;
+            UCHAR Irq6:1;
+            UCHAR Irq7:1;
+        };
+    };
+    UCHAR Bits;
+} I8259_ISR, *PI8259_ISR;
+
+typedef I8259_ISR I8259_IDR, *PI8259_IDR;
+
 //
 // See EISA System Architecture 2nd Edition (Tom Shanley, Don Anderson, John Swindle)
 // P. 34, 35
@@ -294,6 +360,53 @@ typedef struct _PIC_MASK
         USHORT Both;
     };    
 } PIC_MASK, *PPIC_MASK;
+
+typedef
+VOID
+(*PHAL_SW_INTERRUPT_HANDLER)(
+    VOID
+);
+
+typedef
+BOOLEAN
+__attribute__((regparm(3)))
+(*PHAL_DISMISS_INTERRUPT)(
+    IN KIRQL Irql,
+    IN ULONG Irq,
+    OUT PKIRQL OldIrql
+);
+
+BOOLEAN
+__attribute__((regparm(3)))
+HalpDismissIrqGeneric(
+    IN KIRQL Irql,
+    IN ULONG Irq,
+    OUT PKIRQL OldIrql
+);
+
+BOOLEAN
+__attribute__((regparm(3)))
+HalpDismissIrq15(
+    IN KIRQL Irql,
+    IN ULONG Irq,
+    OUT PKIRQL OldIrql
+);
+
+BOOLEAN
+__attribute__((regparm(3)))
+HalpDismissIrq13(
+    IN KIRQL Irql,
+    IN ULONG Irq,
+    OUT PKIRQL OldIrql
+);
+
+BOOLEAN
+__attribute__((regparm(3)))
+HalpDismissIrq07(
+    IN KIRQL Irql,
+    IN ULONG Irq,
+    OUT PKIRQL OldIrql
+);
 
 //
 // Mm PTE/PDE to Hal PTE/PDE
