@@ -341,3 +341,82 @@ HalClearSoftwareInterrupt(IN KIRQL Irql)
     /* Mask out the requested bit */
     KeGetPcr()->IRR &= ~(1 << Irql);
 }
+
+/* SYSTEM INTERRUPTS **********************************************************/
+
+/*
+ * @implemented
+ */
+BOOLEAN
+NTAPI
+HalEnableSystemInterrupt(IN UCHAR Vector,
+                         IN KIRQL Irql,
+                         IN KINTERRUPT_MODE InterruptMode)
+{
+    ULONG Irq;
+    PKPCR Pcr = KeGetPcr();
+    PIC_MASK PicMask;
+    
+    /* Validate the IRQ */
+    Irq = Vector - PRIMARY_VECTOR_BASE;
+    if (Irq >= CLOCK2_LEVEL) return FALSE;
+    
+#ifdef PCI_IRQ_MP
+    /* Check if there is a PCI IRQ Routing Miniport Driver */
+    if (HalpIrqMiniportInitialized)
+    {
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+#endif
+    
+    /* Disable interrupts */
+    _disable();
+    
+    /* Update software IDR */
+    Pcr->IDR &= ~(1 << Irq);
+
+    /* Set new PIC mask */
+    PicMask.Both = KiI8259MaskTable[Pcr->Irql] | Pcr->IDR;
+    __outbyte(PIC1_DATA_PORT, PicMask.Master);
+    __outbyte(PIC2_DATA_PORT, PicMask.Slave);
+    
+    /* Enable interrupts and exit */
+    _enable();
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+HalDisableSystemInterrupt(IN UCHAR Vector,
+                          IN KIRQL Irql)
+{
+    ULONG IrqMask;
+    PIC_MASK PicMask;
+
+    /* Compute new combined IRQ mask */
+    IrqMask = 1 << (Vector - PRIMARY_VECTOR_BASE);
+    
+    /* Disable interrupts */
+    _disable();
+    
+    /* Update software IDR */
+    KeGetPcr()->IDR |= IrqMask;
+    
+    /* Read current interrupt mask */
+    PicMask.Master = __inbyte(PIC1_DATA_PORT);
+    PicMask.Slave = __inbyte(PIC2_DATA_PORT);
+    
+    /* Add the new disabled interrupt */
+    PicMask.Both |= IrqMask;
+    
+    /* Write new interrupt mask */
+    __outbyte(PIC1_DATA_PORT, PicMask.Master);
+    __outbyte(PIC2_DATA_PORT, PicMask.Slave);
+    
+    /* Bring interrupts back */
+    _enable();
+}
