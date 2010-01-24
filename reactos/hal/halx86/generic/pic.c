@@ -14,6 +14,87 @@
 
 /* GLOBALS ********************************************************************/
 
+/* This table contains the static x86 PIC mapping between IRQLs and IRQs */
+ULONG KiI8259MaskTable[32] =
+{
+    /*
+     * It Device IRQLs only start at 4 or higher, so these are just software
+     * IRQLs that don't really change anything on the hardware
+     */
+    0b00000000000000000000000000000000, /* IRQL 0 */
+    0b00000000000000000000000000000000, /* IRQL 1 */
+    0b00000000000000000000000000000000, /* IRQL 2 */
+    0b00000000000000000000000000000000, /* IRQL 3 */
+    
+    /*
+     * These next IRQLs are actually useless from the PIC perspective, because
+     * with only 2 PICs, the mask you can send them is only 8 bits each, for 16
+     * bits total, so these IRQLs are masking off a phantom PIC.
+     */
+    0b11111111100000000000000000000000, /* IRQL 4 */
+    0b11111111110000000000000000000000, /* IRQL 5 */
+    0b11111111111000000000000000000000, /* IRQL 6 */
+    0b11111111111100000000000000000000, /* IRQL 7 */
+    0b11111111111110000000000000000000, /* IRQL 8 */
+    0b11111111111111000000000000000000, /* IRQL 9 */
+    0b11111111111111100000000000000000, /* IRQL 10 */
+    0b11111111111111110000000000000000, /* IRQL 11 */
+    
+    /*
+     * Okay, now we're finally starting to mask off IRQs on the slave PIC, from
+     * IRQ15 to IRQ8. This means the higher-level IRQs get less priority in the
+     * IRQL sense.
+     */
+    0b11111111111111111000000000000000, /* IRQL 12 */
+    0b11111111111111111100000000000000, /* IRQL 13 */
+    0b11111111111111111110000000000000, /* IRQL 14 */
+    0b11111111111111111111000000000000, /* IRQL 15 */
+    0b11111111111111111111100000000000, /* IRQL 16 */
+    0b11111111111111111111110000000000, /* IRQL 17 */
+    0b11111111111111111111111000000000, /* IRQL 18 */
+    0b11111111111111111111111000000000, /* IRQL 19 */
+    
+    /*
+     * Now we mask off the IRQs on the master. Notice the 0 "droplet"? You might
+     * have also seen that IRQL 18 and 19 are essentially equal as far as the
+     * PIC is concerned. That bit is actually IRQ8, which happens to be the RTC.
+     * The RTC will keep firing as long as we don't reach PROFILE_LEVEL which
+     * actually kills it. The RTC clock (unlike the system clock) is used by the
+     * profiling APIs in the HAL, so that explains the logic.
+     */
+    0b11111111111111111111111010000000, /* IRQL 20 */
+    0b11111111111111111111111011000000, /* IRQL 21 */
+    0b11111111111111111111111011100000, /* IRQL 22 */
+    0b11111111111111111111111011110000, /* IRQL 23 */
+    0b11111111111111111111111011111000, /* IRQL 24 */
+    0b11111111111111111111111011111000, /* IRQL 25 */
+    0b11111111111111111111111011111010, /* IRQL 26 */
+    0b11111111111111111111111111111010, /* IRQL 27 */
+    
+    /*
+     * IRQL 24 and 25 are actually identical, so IRQL 28 is actually the last
+     * IRQL to modify a bit on the master PIC. It happens to modify the very
+     * last of the IRQs, IRQ0, which corresponds to the system clock interval
+     * timer that keeps track of time (the Windows heartbeat). We only want to
+     * turn this off at a high-enough IRQL, which is why IRQLs 24 and 25 are the
+     * same to give this guy a chance to come up higher. Note that IRQL 28 is
+     * called CLOCK2_LEVEL, which explains the usage we just explained.
+     */
+    0b11111111111111111111111111111011, /* IRQL 28 */
+    
+    /*
+     * We have finished off with the PIC so there's nothing left to mask at the
+     * level of these IRQLs, making them only logical IRQLs on x86 machines.
+     * Note that we have another 0 "droplet" you might've caught since IRQL 26.
+     * In this case, it's the 2nd bit that never gets turned off, which is IRQ2,
+     * the cascade IRQ that we use to bridge the slave PIC with the master PIC.
+     * We never want to turn it off, so no matter the IRQL, it will be set to 0.
+     */
+    0b11111111111111111111111111111011, /* IRQL 29 */
+    0b11111111111111111111111111111011, /* IRQL 30 */
+    0b11111111111111111111111111111011  /* IRQL 31 */
+};
+
 USHORT HalpEisaELCR;
 
 /* FUNCTIONS ******************************************************************/
@@ -191,6 +272,62 @@ KeRaiseIrqlToSynchLevel(VOID)
     return CurrentIrql;
 }
 
+/*
+ * @implemented
+ */
+KIRQL
+FASTCALL
+KfRaiseIrql(IN KIRQL NewIrql)
+{
+    PKPCR Pcr = KeGetPcr();
+    ULONG EFlags;
+    KIRQL CurrentIrql;
+    PIC_MASK Mask;
+
+    /* Read current IRQL */
+    CurrentIrql = Pcr->Irql;
+    
+#ifdef IRQL_DEBUG
+    /* Validate correct raise */
+    if (CurrentIrql > NewIrql)
+    {
+        /* Crash system */
+        Pcr->Irql = PASSIVE_LEVEL;
+        KeBugCheckEx(IRQL_NOT_GREATER_OR_EQUAL,
+                     CurrentIrql,
+                     NewIrql,
+                     0,
+                     9);
+    }
+#endif
+    
+    /* Check if new IRQL affects hardware state */
+    if (NewIrql > DISPATCH_LEVEL)
+    {
+        /* Save current interrupt state and disable interrupts */
+        EFlags = __readeflags();
+        _disable();
+        
+        /* Update the IRQL */
+        Pcr->Irql = NewIrql;
+        
+        /* Set new PIC mask */
+        Mask.Both = KiI8259MaskTable[NewIrql] | Pcr->IDR;
+        __outbyte(PIC1_DATA_PORT, Mask.Master);
+        __outbyte(PIC2_DATA_PORT, Mask.Slave);
+        
+        /* Restore interrupt state */
+        __writeeflags(EFlags);
+    }
+    else
+    {
+        /* Set new IRQL */
+        Pcr->Irql = NewIrql;
+    }
+    
+    /* Return old IRQL */
+    return CurrentIrql;
+}
 
 /* SOFTWARE INTERRUPTS ********************************************************/
 

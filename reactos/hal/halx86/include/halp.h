@@ -282,6 +282,19 @@ typedef union _EISA_ELCR
     USHORT Bits;
 } EISA_ELCR, *PEISA_ELCR;
 
+typedef struct _PIC_MASK
+{
+    union
+    {
+        struct
+        {
+            UCHAR Master;
+            UCHAR Slave;
+        };
+        USHORT Both;
+    };    
+} PIC_MASK, *PPIC_MASK;
+
 //
 // Mm PTE/PDE to Hal PTE/PDE
 //

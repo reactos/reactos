@@ -624,67 +624,6 @@ DoCall3:
     ret
 .endfunc
 
-.globl @KfRaiseIrql@4
-.func @KfRaiseIrql@4
-_@KfRaiseIrql@4:
-@KfRaiseIrql@4:
-
-    /* Get the IRQL */
-    movzx ecx, cl
-    mov eax, PCR[KPCR_IRQL]
-
-#if DBG
-    /* Validate it */
-    cmp eax, ecx
-    ja InvalidKfRaise
-#endif
-
-    /* Check if it's in the software level */
-    cmp cl, DISPATCH_LEVEL
-    jbe SetIrql
-
-    /* Save the current IRQL */
-    mov edx, eax
-
-    /* It's a hardware IRQL, so disable interrupts */
-    pushf
-    cli
-
-    /* Set the new IRQL */
-    mov PCR[KPCR_IRQL], ecx
-
-    /* Mask the interrupts in the PIC */
-    mov eax, KiI8259MaskTable[ecx*4]
-    or eax, PCR[KPCR_IDR]
-    out 0x21, al
-    shr eax, 8
-    out 0xA1, al
-
-    /* Restore interrupts and return old IRQL */
-    popf
-    mov eax, edx
-    ret
-
-SetIrql:
-    /* Set the IRQL and return */
-    mov PCR[KPCR_IRQL], ecx
-    ret
-
-#if DBG
-InvalidKfRaise:
-    /* Set to passive */
-    mov dword ptr PCR[KPCR_IRQL], PASSIVE_LEVEL
-
-    /* Bugcheck the system */
-    push 9
-    push 0
-    push ecx
-    push eax
-    push IRQL_NOT_GREATER_OR_EQUAL
-    call _KeBugCheckEx@20
-#endif
-.endfunc
-
 .globl _HalpApcInterrupt
 .func HalpApcInterrupt
 TRAP_FIXUPS hapc_a, hapc_t, DoFixupV86, DoFixupAbios
