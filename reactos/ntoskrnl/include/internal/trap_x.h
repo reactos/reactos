@@ -6,6 +6,8 @@
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
+#if 0
+
 #ifdef __GNUC__
 #if __GNUC__ * 100 + __GNUC_MINOR__ >= 405
 #define UNREACHABLE __builtin_unreachable()
@@ -16,6 +18,12 @@ DECLSPEC_NORETURN void exit(int s) {exit(s);}
 #else /* not __GNUC__ */
 DECLSPEC_NORETURN void exit(int s) {exit(s);}
 #define UNREACHABLE exit(0)
+#endif
+
+#else
+
+#define UNREACHABLE
+
 #endif
 
 //
@@ -226,7 +234,7 @@ KiCheckForApcDelivery(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FORCEINLINE
-DECLSPEC_NORETURN
+//DECLSPEC_NORETURN
 KiDispatchException0Args(IN NTSTATUS Code,
                          IN ULONG_PTR Address,
                          IN PKTRAP_FRAME TrapFrame)
@@ -237,7 +245,7 @@ KiDispatchException0Args(IN NTSTATUS Code,
 
 VOID
 FORCEINLINE
-DECLSPEC_NORETURN
+//DECLSPEC_NORETURN
 KiDispatchException1Args(IN NTSTATUS Code,
                          IN ULONG_PTR Address,
                          IN ULONG P1,
@@ -249,7 +257,7 @@ KiDispatchException1Args(IN NTSTATUS Code,
 
 VOID
 FORCEINLINE
-DECLSPEC_NORETURN
+//DECLSPEC_NORETURN
 KiDispatchException2Args(IN NTSTATUS Code,
                          IN ULONG_PTR Address,
                          IN ULONG P1,
@@ -262,7 +270,7 @@ KiDispatchException2Args(IN NTSTATUS Code,
 
 FORCEINLINE
 VOID
-DECLSPEC_NORETURN
+//DECLSPEC_NORETURN
 KiSystemCallReturn(IN PKTRAP_FRAME TrapFrame)
 {
     /* Restore nonvolatiles, EAX, and do a "jump" back to the kernel caller */
@@ -293,7 +301,7 @@ KiSystemCallReturn(IN PKTRAP_FRAME TrapFrame)
 
 FORCEINLINE
 VOID
-DECLSPEC_NORETURN
+//DECLSPEC_NORETURN
 KiSystemCallTrapReturn(IN PKTRAP_FRAME TrapFrame)
 {
     /* Regular interrupt exit, but we only restore EAX as a volatile */
@@ -322,7 +330,7 @@ KiSystemCallTrapReturn(IN PKTRAP_FRAME TrapFrame)
 
 FORCEINLINE
 VOID
-DECLSPEC_NORETURN
+//DECLSPEC_NORETURN
 KiSystemCallSysExitReturn(IN PKTRAP_FRAME TrapFrame)
 {
     /* Restore nonvolatiles, EAX, and do a SYSEXIT back to the user caller */
@@ -355,7 +363,7 @@ KiSystemCallSysExitReturn(IN PKTRAP_FRAME TrapFrame)
 
 FORCEINLINE
 VOID
-DECLSPEC_NORETURN
+//DECLSPEC_NORETURN
 KiTrapReturn(IN PKTRAP_FRAME TrapFrame)
 {
     /* Regular interrupt exit */
@@ -388,7 +396,7 @@ KiTrapReturn(IN PKTRAP_FRAME TrapFrame)
 
 FORCEINLINE
 VOID
-DECLSPEC_NORETURN
+//DECLSPEC_NORETURN
 KiEditedTrapReturn(IN PKTRAP_FRAME TrapFrame)
 {
     /* Regular interrupt exit */
