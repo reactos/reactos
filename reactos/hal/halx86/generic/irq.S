@@ -174,20 +174,6 @@ NothingHardware:
     ret
 .endfunc
 
-.globl @HalClearSoftwareInterrupt@4
-.func @HalClearSoftwareInterrupt@4, @HalClearSoftwareInterrupt@4
-@HalClearSoftwareInterrupt@4:
-
-    /* Get IRR mask */
-    mov eax, 1
-    shl eax, cl
-    not eax
-
-    /* Set IRR */
-    and PCR[KPCR_IRR], eax
-    ret
-.endfunc
-
 .globl @HalRequestSoftwareInterrupt@4
 .func @HalRequestSoftwareInterrupt@4, @HalRequestSoftwareInterrupt@4
 @HalRequestSoftwareInterrupt@4:
@@ -693,73 +679,6 @@ InvalidKfRaise:
     push 9
     push 0
     push ecx
-    push eax
-    push IRQL_NOT_GREATER_OR_EQUAL
-    call _KeBugCheckEx@20
-#endif
-.endfunc
-
-.globl _KeGetCurrentIrql@0
-.func KeGetCurrentIrql@0
-_KeGetCurrentIrql@0:
-
-    /* Return the IRQL */
-    mov eax, PCR[KPCR_IRQL]
-    ret
-.endfunc
-
-.globl _KeRaiseIrqlToDpcLevel@0
-.func KeRaiseIrqlToDpcLevel@0
-_KeRaiseIrqlToDpcLevel@0:
-
-    /* Get the current IRQL */
-    mov eax, PCR[KPCR_IRQL]
-
-    /* Set DISPATCH_LEVEL */
-    mov dword ptr PCR[KPCR_IRQL], DISPATCH_LEVEL
-
-#if DBG
-    /* Make sure we were not higher then synch */
-    cmp eax, DISPATCH_LEVEL
-    ja InvalidRaise
-#endif
-    ret
-
-#if DBG
-InvalidRaise:
-    /* Bugcheck the system */
-    push 1
-    push 0
-    push DISPATCH_LEVEL
-    push eax
-    push IRQL_NOT_GREATER_OR_EQUAL
-    call _KeBugCheckEx@20
-#endif
-.endfunc
-
-.globl _KeRaiseIrqlToSynchLevel@0
-.func KeRaiseIrqlToSynchLevel@0
-_KeRaiseIrqlToSynchLevel@0:
-
-    /* Get the current IRQL */
-    mov eax, PCR[KPCR_IRQL]
-
-    /* Set SYNCH_LEVEL */
-    mov dword ptr PCR[KPCR_IRQL], SYNCH_LEVEL
-
-#if DBG
-    /* Make sure we were not higher then dispatch */
-    cmp eax, SYNCH_LEVEL
-    ja InvalidSyRaise
-#endif
-    ret
-
-#if DBG
-InvalidSyRaise:
-    /* Bugcheck the system */
-    push 2
-    push 0
-    push SYNCH_LEVEL
     push eax
     push IRQL_NOT_GREATER_OR_EQUAL
     call _KeBugCheckEx@20

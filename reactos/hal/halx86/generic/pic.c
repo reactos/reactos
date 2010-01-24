@@ -116,3 +116,91 @@ HalpInitializePICs(IN BOOLEAN EnableInterrupts)
     __writeeflags(EFlags);
 }
 
+/* IRQL MANAGEMENT ************************************************************/
+
+/*
+ * @implemented
+ */
+KIRQL
+NTAPI
+KeGetCurrentIrql(VOID)
+{
+    /* Return the IRQL */
+    return KeGetPcr()->Irql;
+}
+
+/*
+ * @implemented
+ */
+KIRQL
+NTAPI
+KeRaiseIrqlToDpcLevel(VOID)
+{
+    PKPCR Pcr = KeGetPcr();
+    KIRQL CurrentIrql;
+    
+    /* Save and update IRQL */
+    CurrentIrql = Pcr->Irql;
+    Pcr->Irql = DISPATCH_LEVEL;
+    
+#ifdef IRQL_DEBUG
+    /* Validate correct raise */
+    if (CurrentIrql > DISPATCH_LEVEL)
+    {
+        /* Crash system */
+        KeBugCheckEx(IRQL_NOT_GREATER_OR_EQUAL,
+                     CurrentIrql,
+                     DISPATCH_LEVEL,
+                     0,
+                     1);
+    }
+#endif
+
+    /* Return the previous value */
+    return CurrentIrql;
+}
+
+/*
+ * @implemented
+ */
+KIRQL
+NTAPI
+KeRaiseIrqlToSynchLevel(VOID)
+{
+    PKPCR Pcr = KeGetPcr();
+    KIRQL CurrentIrql;
+    
+    /* Save and update IRQL */
+    CurrentIrql = Pcr->Irql;
+    Pcr->Irql = SYNCH_LEVEL;
+    
+#ifdef IRQL_DEBUG
+    /* Validate correct raise */
+    if (CurrentIrql > SYNCH_LEVEL)
+    {
+        /* Crash system */
+        KeBugCheckEx(IRQL_NOT_GREATER_OR_EQUAL,
+                     CurrentIrql,
+                     SYNCH_LEVEL,
+                     0,
+                     1);
+    }
+#endif
+
+    /* Return the previous value */
+    return CurrentIrql;
+}
+
+
+/* SOFTWARE INTERRUPTS ********************************************************/
+
+/*
+ * @implemented
+ */
+VOID
+FASTCALL
+HalClearSoftwareInterrupt(IN KIRQL Irql)
+{
+    /* Mask out the requested bit */
+    KeGetPcr()->IRR &= ~(1 << Irql);
+}
