@@ -9,12 +9,14 @@
 #define _TRAP_X_
 
 //
-// Unreachable code hint for GCC 4.5.x, 4.4.x, and MSVC
+// Unreachable code hint for GCC 4.5.x, older GCC versions, and MSVC
 //
+#ifdef __GNUC__
 #if __GNUC__ * 100 + __GNUC_MINOR__ >= 405
 #define UNREACHABLE __builtin_unreachable()
-#elif __GNUC__ * 100 + __GNUC_MINOR__ >= 404
+#else
 #define UNREACHABLE __builtin_trap()
+#endif
 #elif _MSC_VER
 #define UNREACHABLE __assume(0)
 #else
@@ -188,7 +190,7 @@ KiUserTrap(IN PKTRAP_FRAME TrapFrame)
 //
 VOID
 FORCEINLINE
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiSystemCallReturn(IN PKTRAP_FRAME TrapFrame)
 {
     /* Restore nonvolatiles, EAX, and do a "jump" back to the kernel caller */
@@ -219,7 +221,7 @@ KiSystemCallReturn(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FORCEINLINE
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiSystemCallTrapReturn(IN PKTRAP_FRAME TrapFrame)
 {
     /* Regular interrupt exit, but we only restore EAX as a volatile */
@@ -248,7 +250,7 @@ KiSystemCallTrapReturn(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FORCEINLINE
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiSystemCallSysExitReturn(IN PKTRAP_FRAME TrapFrame)
 {
     /* Restore nonvolatiles, EAX, and do a SYSEXIT back to the user caller */
@@ -281,7 +283,7 @@ KiSystemCallSysExitReturn(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FORCEINLINE
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiTrapReturn(IN PKTRAP_FRAME TrapFrame)
 {
     /* Regular interrupt exit */
@@ -314,7 +316,7 @@ KiTrapReturn(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FORCEINLINE
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiEditedTrapReturn(IN PKTRAP_FRAME TrapFrame)
 {
     /* Regular interrupt exit */
@@ -351,7 +353,7 @@ KiEditedTrapReturn(IN PKTRAP_FRAME TrapFrame)
 //
 VOID
 FORCEINLINE
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiExitTrap(IN PKTRAP_FRAME TrapFrame,
            IN UCHAR Skip)
 {

@@ -1107,7 +1107,7 @@ Handled:
 
 VOID
 NTAPI
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiDispatchExceptionFromTrapFrame(IN NTSTATUS Code,
                                  IN ULONG_PTR Address,
                                  IN ULONG ParameterCount,
@@ -1146,7 +1146,7 @@ KiDispatchExceptionFromTrapFrame(IN NTSTATUS Code,
 
 VOID
 FASTCALL
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiSystemFatalException(IN ULONG ExceptionCode,
                        IN PKTRAP_FRAME TrapFrame)
 {

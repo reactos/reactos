@@ -397,6 +397,7 @@ Ki386HandleOpcodeV86(
 
 VOID
 FASTCALL
+DECLSPEC_NORETURN
 KiEoiHelper(
     IN PKTRAP_FRAME TrapFrame
 );
@@ -415,6 +416,7 @@ KiExitV86Mode(
 
 VOID
 NTAPI
+DECLSPEC_NORETURN
 KiDispatchExceptionFromTrapFrame(
     IN NTSTATUS Code,
     IN ULONG_PTR Address,
@@ -548,7 +550,7 @@ Ke386SanitizeDr(IN PVOID DrAddress,
 //
 VOID
 FORCEINLINE
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiDispatchException0Args(IN NTSTATUS Code,
                          IN ULONG_PTR Address,
                          IN PKTRAP_FRAME TrapFrame)
@@ -562,7 +564,7 @@ KiDispatchException0Args(IN NTSTATUS Code,
 //
 VOID
 FORCEINLINE
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiDispatchException1Args(IN NTSTATUS Code,
                          IN ULONG_PTR Address,
                          IN ULONG P1,
@@ -577,7 +579,7 @@ KiDispatchException1Args(IN NTSTATUS Code,
 //
 VOID
 FORCEINLINE
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiDispatchException2Args(IN NTSTATUS Code,
                          IN ULONG_PTR Address,
                          IN ULONG P1,

@@ -58,7 +58,7 @@ KiVdmTrap(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiEoiHelper(IN PKTRAP_FRAME TrapFrame)
 {
     /* Disable interrupts until we return */
@@ -73,7 +73,7 @@ KiEoiHelper(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiServiceExit(IN PKTRAP_FRAME TrapFrame,
               IN NTSTATUS Status)
 {
@@ -92,7 +92,7 @@ KiServiceExit(IN PKTRAP_FRAME TrapFrame,
 
 VOID
 FASTCALL
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiServiceExit2(IN PKTRAP_FRAME TrapFrame)
 {
     /* Disable interrupts until we return */
@@ -109,7 +109,7 @@ KiServiceExit2(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiDebugHandler(IN PKTRAP_FRAME TrapFrame,
                IN ULONG Parameter1,
                IN ULONG Parameter2,
@@ -133,7 +133,7 @@ KiDebugHandler(IN PKTRAP_FRAME TrapFrame,
 
 VOID
 FASTCALL
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiNpxHandler(IN PKTRAP_FRAME TrapFrame,
              IN PKTHREAD Thread,
              IN PFX_SAVE_AREA SaveArea)
@@ -290,7 +290,7 @@ KiNpxHandler(IN PKTRAP_FRAME TrapFrame,
 
 VOID
 FASTCALL
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiTrap00Handler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
@@ -310,7 +310,7 @@ KiTrap00Handler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiTrap01Handler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
@@ -330,7 +330,7 @@ KiTrap01Handler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiTrap02(VOID)
 {
     PKTSS Tss, NmiTss;
@@ -477,7 +477,7 @@ KiTrap02(VOID)
 
 VOID
 FASTCALL
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiTrap03Handler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
@@ -489,7 +489,7 @@ KiTrap03Handler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiTrap04Handler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
@@ -509,7 +509,7 @@ KiTrap04Handler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiTrap05Handler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
@@ -532,7 +532,7 @@ KiTrap05Handler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiTrap06Handler(IN PKTRAP_FRAME TrapFrame)
 {
     PUCHAR Instruction;
@@ -578,7 +578,7 @@ KiTrap06Handler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiTrap07Handler(IN PKTRAP_FRAME TrapFrame)
 {
     PKTHREAD Thread, NpxThread;
@@ -688,7 +688,7 @@ KiTrap07Handler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiTrap08Handler(IN PKTRAP_FRAME TrapFrame)
 {
     /* FIXME: Not handled */
@@ -697,7 +697,7 @@ KiTrap08Handler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiTrap09Handler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
@@ -710,7 +710,7 @@ KiTrap09Handler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiTrap0AHandler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
@@ -725,7 +725,7 @@ KiTrap0AHandler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiTrap0BHandler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
@@ -738,7 +738,7 @@ KiTrap0BHandler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiTrap0CHandler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
@@ -751,7 +751,7 @@ KiTrap0CHandler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame,
                 IN ULONG EFlags)
 {
@@ -1036,7 +1036,7 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame,
 
 VOID
 FASTCALL
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
 {
     PKTHREAD Thread;
@@ -1159,7 +1159,7 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiTrap0FHandler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
@@ -1172,7 +1172,7 @@ KiTrap0FHandler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiTrap10Handler(IN PKTRAP_FRAME TrapFrame)
 {
     PKTHREAD Thread;
@@ -1200,7 +1200,7 @@ KiTrap10Handler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiTrap11Handler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
@@ -1213,7 +1213,7 @@ KiTrap11Handler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiTrap13Handler(IN PKTRAP_FRAME TrapFrame)
 {
     PKTHREAD Thread;
@@ -1316,7 +1316,7 @@ KiCallbackReturnHandler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiRaiseAssertionHandler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
@@ -1333,7 +1333,7 @@ KiRaiseAssertionHandler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiDebugServiceHandler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
@@ -1348,7 +1348,7 @@ KiDebugServiceHandler(IN PKTRAP_FRAME TrapFrame)
 
 VOID
 FASTCALL
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiSystemCall(IN ULONG SystemCallNumber,
              IN PVOID Arguments)
 {
@@ -1439,7 +1439,7 @@ ExitCall:
 
 VOID
 FORCEINLINE
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiSystemCallHandler(IN PKTRAP_FRAME TrapFrame,
                     IN ULONG ServiceNumber,
                     IN PVOID Arguments,
@@ -1481,7 +1481,7 @@ KiSystemCallHandler(IN PKTRAP_FRAME TrapFrame,
 
 VOID
 __attribute__((regparm(3)))
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiFastCallEntryHandler(IN ULONG ServiceNumber,
                        IN PVOID Arguments,
                        IN PKTRAP_FRAME TrapFrame)
@@ -1515,7 +1515,7 @@ KiFastCallEntryHandler(IN ULONG ServiceNumber,
 
 VOID
 __attribute__((regparm(3)))
-//DECLSPEC_NORETURN
+DECLSPEC_NORETURN
 KiSystemServiceHandler(IN ULONG ServiceNumber,
                        IN PVOID Arguments,
                        IN PKTRAP_FRAME TrapFrame)
