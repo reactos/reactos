@@ -9,8 +9,11 @@
 #ifdef __GNUC__
 #if __GNUC__ * 100 + __GNUC_MINOR__ >= 405
 #define UNREACHABLE __builtin_unreachable()
-#endif
 #else
+DECLSPEC_NORETURN void exit(int s) {exit(s);}
+#define UNREACHABLE exit(0)
+#endif
+#else /* not __GNUC__ */
 DECLSPEC_NORETURN void exit(int s) {exit(s);}
 #define UNREACHABLE exit(0)
 #endif
