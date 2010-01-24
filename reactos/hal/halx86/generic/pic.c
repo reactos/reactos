@@ -69,6 +69,8 @@ PHAL_DISMISS_INTERRUPT HalpSpecialDismissTable[16] =
 /* This table contains the static x86 PIC mapping between IRQLs and IRQs */
 ULONG KiI8259MaskTable[32] =
 {
+#ifdef __GNUC__
+#if __GNUC__ * 100 + __GNUC_MINOR__ >= 404
     /*
      * It Device IRQLs only start at 4 or higher, so these are just software
      * IRQLs that don't really change anything on the hardware
@@ -145,6 +147,41 @@ ULONG KiI8259MaskTable[32] =
     0b11111111111111111111111111111011, /* IRQL 29 */
     0b11111111111111111111111111111011, /* IRQL 30 */
     0b11111111111111111111111111111011  /* IRQL 31 */
+#else
+    0,                             /* IRQL 0 */
+    0,                             /* IRQL 1 */
+    0,                             /* IRQL 2 */
+    0,                             /* IRQL 3 */
+    0xFF800000,                    /* IRQL 4 */
+    0xFFC00000,                    /* IRQL 5 */
+    0xFFE00000,                    /* IRQL 6 */
+    0xFFF00000,                    /* IRQL 7 */
+    0xFFF80000,                    /* IRQL 8 */
+    0xFFFC0000,                    /* IRQL 9 */
+    0xFFFE0000,                    /* IRQL 10 */
+    0xFFFF0000,                    /* IRQL 11 */
+    0xFFFF8000,                    /* IRQL 12 */
+    0xFFFFC000,                    /* IRQL 13 */
+    0xFFFFE000,                    /* IRQL 14 */
+    0xFFFFF000,                    /* IRQL 15 */
+    0xFFFFF800,                    /* IRQL 16 */
+    0xFFFFFC00,                    /* IRQL 17 */
+    0xFFFFFE00,                    /* IRQL 18 */
+    0xFFFFFE00,                    /* IRQL 19 */
+    0xFFFFFE80,                    /* IRQL 20 */
+    0xFFFFFEC0,                    /* IRQL 21 */
+    0xFFFFFEE0,                    /* IRQL 22 */
+    0xFFFFFEF0,                    /* IRQL 23 */
+    0xFFFFFEF8,                    /* IRQL 24 */
+    0xFFFFFEF8,                    /* IRQL 25 */
+    0xFFFFFEFA,                    /* IRQL 26 */
+    0xFFFFFFFA,                    /* IRQL 27 */
+    0xFFFFFFFB,                    /* IRQL 28 */
+    0xFFFFFFFB,                    /* IRQL 29 */
+    0xFFFFFFFB,                    /* IRQL 30 */
+    0xFFFFFFFB                     /* IRQL 31 */
+#endif
+#endif
 };
 
 USHORT HalpEisaELCR;
