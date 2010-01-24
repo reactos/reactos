@@ -11,9 +11,9 @@
 #define UNREACHABLE __builtin_unreachable()
 #else
 #define UNREACHABLE __builtin_trap()
+#endif
 #else /* not __GNUC__ */
 #define UNREACHABLE
-#endif
 #endif
 
 //
