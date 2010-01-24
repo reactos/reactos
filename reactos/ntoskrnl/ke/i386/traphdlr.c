@@ -1258,7 +1258,7 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame,
             {
                 /* Get the IOPL and compare with the RPL mask */
                 Iopl = (TrapFrame->EFlags & EFLAGS_IOPL) >> 12;
-                if ((TrapFrame->SegCs & RPL_MASK) == Iopl)
+                if ((TrapFrame->SegCs & RPL_MASK) > Iopl)
                 {
                     /* I/O privilege error -- check for known instructions */
                     if ((Instruction == 0xFA) || (Instruction == 0xFB)) // CLI or STI
