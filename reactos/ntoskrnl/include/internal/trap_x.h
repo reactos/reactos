@@ -6,6 +6,16 @@
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
+#ifdef __GNUC__
+#if __GNUC__ * 100 + __GNUC_MINOR__ >= 405
+#define UNREACHABLE __builtin_unreachable()
+#else
+#define UNREACHABLE __builtin_trap()
+#else /* not __GNUC__ */
+#define UNREACHABLE
+#endif
+#endif
+
 //
 // Debug Macros
 //
@@ -276,7 +286,7 @@ KiSystemCallReturn(IN PKTRAP_FRAME TrapFrame)
           [v] "i"(KTRAP_FRAME_ESP)
         : "%esp"
     );
-    exit(0);
+    UNREACHABLE;
 }
 
 FORCEINLINE
@@ -305,7 +315,7 @@ KiSystemCallTrapReturn(IN PKTRAP_FRAME TrapFrame)
           [e] "i"(KTRAP_FRAME_EIP)
         : "%esp"
     );
-    exit(0);
+    UNREACHABLE;
 }
 
 FORCEINLINE
@@ -338,7 +348,7 @@ KiSystemCallSysExitReturn(IN PKTRAP_FRAME TrapFrame)
           [v] "i"(KTRAP_FRAME_V86_ES)
         : "%esp"
     );
-    exit(0);
+    UNREACHABLE;
 }
 
 FORCEINLINE
@@ -371,7 +381,7 @@ KiTrapReturn(IN PKTRAP_FRAME TrapFrame)
           [e] "i"(KTRAP_FRAME_EIP)
         : "%esp"
     );
-    exit(0);
+    UNREACHABLE;
 }
 
 FORCEINLINE
@@ -405,7 +415,7 @@ KiEditedTrapReturn(IN PKTRAP_FRAME TrapFrame)
           [e] "i"(KTRAP_FRAME_ERROR_CODE) /* We *WANT* the error code since ESP is there! */
         : "%esp"
     );
-    exit(0);
+    UNREACHABLE;
 }
 
 NTSTATUS
