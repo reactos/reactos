@@ -13,8 +13,10 @@
 
 /* GLOBALS *******************************************************************/
 
+.globl _HalpPerfCounter
 _HalpLastPerfCounterLow:    .long 0
 _HalpLastPerfCounterHigh:   .long 0
+_HalpPerfCounter:
 _HalpPerfCounterLow:        .long 0
 _HalpPerfCounterHigh:       .long 0
 _HalpSystemHardwareFlags:   .long 0
@@ -23,76 +25,6 @@ _UnhandledMsg:
     .asciz "\n\x7\x7!!! Unhandled or Unexpected Code at line: %lx!!!\n"
 
 /* FUNCTIONS *****************************************************************/
-
-.global _HalpReleaseCmosSpinLock@0
-.func HalpReleaseCmosSpinLock@0
-_HalpReleaseCmosSpinLock@0:
-
-#ifdef CONFIG_SMP
-    /* Save clobbered register */
-    push eax
-    
-    /* Push saved EFLAGS */
-    push _HalpSystemHardwareFlags
-    
-    /* Release the lock */
-    lea eax, _HalpSystemHardwareLock
-    RELEASE_SPINLOCK(eax)
-    
-    /* Restore EFLAGS */
-    popf
-    
-    /* Return */
-    pop eax
-    ret
-#else
-    /* Restore EFLAGS and return */
-    push _HalpSystemHardwareFlags
-    popf
-    ret
-#endif
-
-.endfunc
-
-.global _HalpAcquireSystemHardwareSpinLock@0
-.func HalpAcquireSystemHardwareSpinLock@0
-_HalpAcquireSystemHardwareSpinLock@0:
-
-#ifdef CONFIG_SMP
-    /* Save clobbered register */
-    push eax
-    
-HardwareLock:
-    /* Save EFLAGS and disable interrupts */
-    pushf
-    cli
-    
-    /* This is the CMOS lock, acquire it */
-    lea eax, _HalpSystemHardwareLock
-    ACQUIRE_SPINLOCK(eax, CmosSpin)
-    
-    /* We have it, return the flags */
-    pop _HalpSystemHardwareFlags
-    pop eax
-    ret
-    
-CmosSpin:
-
-    /* Restore EFLAGS */
-    pushf _HalpSystemHardwareLock
-    popf 
-
-    /* Spin */
-    SPIN_ON_LOCK(eax, HardwareLock)
-#else
-    /* Save EFLAGS, disable interrupts and return */
-    pushf
-    cli
-    pop _HalpSystemHardwareFlags
-    ret
-#endif
-
-.endfunc
 
 .global _HalpCalibrateStallExecution@0
 .func HalpCalibrateStallExecution@0

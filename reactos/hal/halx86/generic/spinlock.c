@@ -113,6 +113,46 @@ KxReleaseSpinLock(IN PKSPIN_LOCK SpinLock)
 
 #endif
 
+/* GLOBALS ********************************************************************/
+
+ULONG HalpSystemHardwareFlags;
+KSPIN_LOCK HalpSystemHardwareLock;
+
+/* PRIVATE FUNCTIONS **********************************************************/
+
+VOID
+NTAPI
+HalpAcquireSystemHardwareSpinLock(VOID)
+{
+    ULONG Flags;
+
+    /* Get flags and disable interrupts */
+    Flags = __readeflags();
+    _disable();
+
+    /* Acquire the lock */
+    KxAcquireSpinLock(&HalpSystemHardwareLock);
+
+    /* We have the lock, save the flags now */
+    HalpSystemHardwareFlags = Flags;
+}
+
+VOID
+NTAPI
+HalpReleaseCmosSpinLock(VOID)
+{
+    ULONG Flags;
+
+    /* Get the flags */
+    Flags = HalpSystemHardwareFlags;
+
+    /* Release the lock */
+    KxReleaseSpinLock(&HalpSystemHardwareLock);
+
+    /* Restore the flags */
+    __writeeflags(Flags);
+}
+
 /* FUNCTIONS *****************************************************************/
 
 /*
