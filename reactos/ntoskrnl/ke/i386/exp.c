@@ -1105,6 +1105,62 @@ Handled:
     return;
 }
 
+VOID
+NTAPI
+//DECLSPEC_NORETURN
+KiDispatchExceptionFromTrapFrame(IN NTSTATUS Code,
+                                 IN ULONG_PTR Address,
+                                 IN ULONG ParameterCount,
+                                 IN ULONG_PTR Parameter1,
+                                 IN ULONG_PTR Parameter2,
+                                 IN ULONG_PTR Parameter3,
+                                 IN PKTRAP_FRAME TrapFrame)
+{
+    EXCEPTION_RECORD ExceptionRecord;
+
+    /* Build the exception record */
+    ExceptionRecord.ExceptionCode = Code;
+    ExceptionRecord.ExceptionFlags = 0;
+    ExceptionRecord.ExceptionRecord = NULL;
+    ExceptionRecord.ExceptionAddress = (PVOID)Address;
+    ExceptionRecord.NumberParameters = ParameterCount;
+    if (ParameterCount)
+    {
+        /* Copy extra parameters */
+        ExceptionRecord.ExceptionInformation[0] = Parameter1;
+        ExceptionRecord.ExceptionInformation[1] = Parameter2;
+        ExceptionRecord.ExceptionInformation[2] = Parameter3;
+    }
+    
+    /* Now go dispatch the exception */
+    KiDispatchException(&ExceptionRecord,
+                        NULL,
+                        TrapFrame,
+                        TrapFrame->EFlags & EFLAGS_V86_MASK ?
+                        -1 : KiUserTrap(TrapFrame),
+                        TRUE);
+
+    /* Return from this trap */
+    KiEoiHelper(TrapFrame);
+}
+
+VOID
+FASTCALL
+//DECLSPEC_NORETURN
+KiSystemFatalException(IN ULONG ExceptionCode,
+                       IN PKTRAP_FRAME TrapFrame)
+{
+    /* Bugcheck the system */
+    KeBugCheckWithTf(UNEXPECTED_KERNEL_MODE_TRAP,
+                     ExceptionCode,
+                     0,
+                     0,
+                     0,
+                     TrapFrame);
+}
+
+/* PUBLIC FUNCTIONS ***********************************************************/
+
 /*
  * @implemented
  */

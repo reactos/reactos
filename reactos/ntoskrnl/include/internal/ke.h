@@ -863,19 +863,7 @@ KeBugCheckWithTf(
     ULONG_PTR BugCheckParameter4,
     PKTRAP_FRAME Tf
 );
-
-VOID
-NTAPI
-KiDispatchExceptionFromTrapFrame(
-    IN NTSTATUS Code,
-    IN ULONG_PTR Address,
-    IN ULONG ParameterCount,
-    IN ULONG_PTR Parameter1,
-    IN ULONG_PTR Parameter2,
-    IN ULONG_PTR Parameter3,
-    IN PKTRAP_FRAME TrapFrame
-);
-                                  
+                              
 BOOLEAN
 NTAPI
 KiHandleNmi(VOID);
@@ -1122,6 +1110,14 @@ VOID
 FASTCALL
 KiIdleLoop(
     VOID
+);
+
+VOID
+FASTCALL
+//DECLSPEC_NORETURN
+KiSystemFatalException(
+    IN ULONG ExceptionCode,
+    IN PKTRAP_FRAME TrapFrame
 );
 
 #include "ke_x.h"
