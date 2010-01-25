@@ -10,9 +10,6 @@
 <directory name="kbdtool">
 	<xi:include href="kbdtool/kbdtool.rbuild" />
 </directory>
-<directory name="mkhive">
-	<xi:include href="mkhive/mkhive.rbuild" />
-</directory>
 <directory name="rgenstat">
 	<xi:include href="rgenstat/rgenstat.rbuild" />
 </directory>
