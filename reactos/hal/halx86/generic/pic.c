@@ -813,3 +813,76 @@ HalEndSystemInterrupt(IN KIRQL OldIrql,
     PendingIrql = SWInterruptLookUpTable[Pcr->IRR];
     if (PendingIrql > OldIrql) SWInterruptHandlerTable[PendingIrql]();
 }
+
+/* SOFTWARE INTERRUPT TRAPS ***************************************************/
+
+VOID
+FASTCALL
+HalpApcInterruptHandler(IN PKTRAP_FRAME TrapFrame)
+{
+    KIRQL CurrentIrql;
+    PKPCR Pcr = KeGetPcr();
+    
+    /* Set up a fake INT Stack */
+    TrapFrame->EFlags = __readeflags();
+    TrapFrame->SegCs = KGDT_R0_CODE;
+    TrapFrame->Eip = TrapFrame->Eax;
+    
+    /* Build the trap frame */
+    KiEnterInterruptTrap(TrapFrame);
+    
+    /* Save the current IRQL and update it */
+    CurrentIrql = Pcr->Irql;
+    Pcr->Irql = APC_LEVEL;
+    
+    /* Remove DPC from IRR */
+    Pcr->IRR &= ~(1 << APC_LEVEL);
+    
+    /* Enable interrupts and call the kernel's APC interrupt handler */
+    _enable();
+    KiDeliverApc(((KiUserTrap(TrapFrame)) || (TrapFrame->EFlags & EFLAGS_V86_MASK)) ?
+                 UserMode : KernelMode,
+                 NULL,
+                 TrapFrame);
+
+    /* Disable interrupts and end the interrupt */
+    _disable();
+    HalpEndSoftwareInterrupt(CurrentIrql);
+    
+    /* Exit the interrupt */
+    KiEoiHelper(TrapFrame);
+}
+
+VOID
+FASTCALL
+HalpDispatchInterruptHandler(IN PKTRAP_FRAME TrapFrame)
+{
+    KIRQL CurrentIrql;
+    PKPCR Pcr = KeGetPcr();
+    
+    /* Set up a fake INT Stack */
+    TrapFrame->EFlags = __readeflags();
+    TrapFrame->SegCs = KGDT_R0_CODE;
+    TrapFrame->Eip = TrapFrame->Eax;
+    
+    /* Build the trap frame */
+    KiEnterInterruptTrap(TrapFrame);
+    
+    /* Save the current IRQL and update it */
+    CurrentIrql = Pcr->Irql;
+    Pcr->Irql = DISPATCH_LEVEL;
+    
+    /* Remove DPC from IRR */
+    Pcr->IRR &= ~(1 << DISPATCH_LEVEL);
+    
+    /* Enable interrupts and call the kernel's DPC interrupt handler */
+    _enable();
+    KiDispatchInterrupt();
+    
+    /* Disable interrupts and end the interrupt */
+    _disable();
+    HalpEndSoftwareInterrupt(CurrentIrql);
+    
+    /* Exit the interrupt */
+    KiEoiHelper(TrapFrame);
+}

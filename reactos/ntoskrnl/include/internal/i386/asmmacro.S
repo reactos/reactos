@@ -221,7 +221,7 @@ _KiUnexpectedInterrupt&Number:
 .endm
 
 //
-// @name GENERATE_TRAP_HANDLER
+// @name TRAP_HANDLER_PROLOG
 //
 // This macro creates a kernel trap handler.
 //
@@ -229,16 +229,21 @@ _KiUnexpectedInterrupt&Number:
 //
 // @remark None.
 //
-.macro GENERATE_TRAP_HANDLER Name, ErrorCode=1, FastV86=0
-.func Name
-_&Name:
-    /* Some traps generate an error code, some don't (thanks, Intel!) */
-    .if \ErrorCode
-        push 0
+.macro TRAP_HANDLER_PROLOG ErrorCode=1, Software=0
+
+    /* What kind of trap is it */
+    .if \Software
+        /* Software traps need a fake interrupt stack */
+        pop eax
+        sub esp, KTRAP_FRAME_ESP
+    .elseif \ErrorCode
+        /* Some traps generate an error code, some don't (thanks, Intel!) */
+        sub esp, KTRAP_FRAME_EIP
+    .else
+        sub esp, KTRAP_FRAME_ERROR_CODE
     .endif
-    
+
     /* Make space for trap frame and save registers before we enter C code */
-    sub esp, KTRAP_FRAME_ERROR_CODE
     mov [esp+KTRAP_FRAME_EAX], eax
     mov [esp+KTRAP_FRAME_EBX], ebx
     mov [esp+KTRAP_FRAME_ECX], ecx
@@ -247,7 +252,22 @@ _&Name:
     mov [esp+KTRAP_FRAME_EDI], edi
     mov [esp+KTRAP_FRAME_EBP], ebp
     mov ecx, esp
-        
+.endm
+
+//
+// @name GENERATE_TRAP_HANDLER
+//
+// This macro creates a kernel trap handler.
+//
+// @param None.
+//
+// @remark None.
+//
+.macro GENERATE_TRAP_HANDLER Name, ErrorCode=1, FastV86=0, Software=0
+.globl _&Name
+.func Name
+_&Name:
+    TRAP_HANDLER_PROLOG ErrorCode, Software
     /*
      * The GPF and Invalid Opcode handlers are performance critical when talking
      * about V8086 traps, because they control the main flow of execution during
