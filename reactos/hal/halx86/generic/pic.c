@@ -184,6 +184,27 @@ ULONG KiI8259MaskTable[32] =
 #endif
 };
 
+/* Denotes minimum required IRQL before we can process pending SW interrupts */
+KIRQL SWInterruptLookUpTable[8] =
+{
+    PASSIVE_LEVEL,                 /* IRR 0 */
+    PASSIVE_LEVEL,                 /* IRR 1 */
+    APC_LEVEL,                     /* IRR 2 */
+    APC_LEVEL,                     /* IRR 3 */
+    DISPATCH_LEVEL,                /* IRR 4 */
+    DISPATCH_LEVEL,                /* IRR 5 */
+    DISPATCH_LEVEL,                /* IRR 6 */
+    DISPATCH_LEVEL                 /* IRR 7 */
+};
+
+/* Handlers for pending software interrupts */
+PHAL_SW_INTERRUPT_HANDLER SWInterruptHandlerTable[3] =
+{
+    KiUnexpectedInterrupt,
+    HalpApcInterrupt,
+    HalpDispatchInterrupt
+};
+
 USHORT HalpEisaELCR;
 
 /* FUNCTIONS ******************************************************************/
@@ -416,6 +437,58 @@ KfRaiseIrql(IN KIRQL NewIrql)
     
     /* Return old IRQL */
     return CurrentIrql;
+}
+
+
+/*
+ * @implemented
+ */
+VOID
+FASTCALL
+KfLowerIrql(IN KIRQL OldIrql)
+{
+    ULONG EFlags;
+    KIRQL PendingIrql;
+    PKPCR Pcr = KeGetPcr();
+    PIC_MASK Mask;
+    
+#ifdef IRQL_DEBUG
+    /* Validate correct lower */
+    if (OldIrql > Pcr->Irql)
+    {
+        /* Crash system */
+        KIRQL CurrentIrql = Pcr->Irql;
+        Pcr->Irql = HIGH_LEVEL;
+        KeBugCheckEx(IRQL_NOT_LESS_OR_EQUAL,
+                     CurrentIrql,
+                     OldIrql,
+                     0,
+                     3);
+    }
+#endif
+    
+    /* Save EFlags and disable interrupts */
+    EFlags = __readeflags();
+    _disable();
+
+    /* Check if currentl IRQL affects hardware state */
+    if (Pcr->Irql > DISPATCH_LEVEL)
+    {        
+        /* Set new PIC mask */
+        Mask.Both = KiI8259MaskTable[OldIrql] | Pcr->IDR;
+        __outbyte(PIC1_DATA_PORT, Mask.Master);
+        __outbyte(PIC2_DATA_PORT, Mask.Slave);
+    }
+
+    /* Set old IRQL */
+    Pcr->Irql = OldIrql;
+    
+    /* Check for pending software interrupts and compare with current IRQL */
+    PendingIrql = SWInterruptLookUpTable[Pcr->IRR];
+    if (PendingIrql > OldIrql) SWInterruptHandlerTable[PendingIrql]();
+
+    /* Restore interrupt state */
+    __writeeflags(EFlags);
 }
 
 /* SOFTWARE INTERRUPTS ********************************************************/

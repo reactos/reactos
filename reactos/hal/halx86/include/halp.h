@@ -459,6 +459,8 @@ HalpEnableInterruptHandler(IN UCHAR Flags,
 
 /* pic.c */
 VOID NTAPI HalpInitializePICs(IN BOOLEAN EnableInterrupts);
+VOID HalpApcInterrupt(VOID);
+VOID HalpDispatchInterrupt(VOID);
 
 /* udelay.c */
 VOID NTAPI HalpInitializeClock(VOID);
