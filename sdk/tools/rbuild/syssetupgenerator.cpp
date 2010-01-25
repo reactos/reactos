@@ -38,8 +38,8 @@ SysSetupGenerator::Generate ()
 	HINF inf;
 	ULONG errorLine;
 
-	string syssetupTemplate = "media" + sSep + "inf" + sSep + "syssetup.inf.tpl";
-	string syssetup = Environment::GetOutputPath() + sSep + "media" + sSep + "inf" + sSep + "syssetup.inf";
+	string syssetupTemplate = "sdk" + sSep + "tools" + sSep + "syssetup.inf.tpl";
+	string syssetup = Environment::GetOutputPath() + sSep + "sdk" + sSep + "tools" + sSep + "syssetup.inf";
 
 	if ( 0 != InfHostOpenFile ( &inf, syssetupTemplate.c_str (), &errorLine ) )
 		throw new FileNotFoundException ( syssetupTemplate );
