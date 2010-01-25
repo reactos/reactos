@@ -6,6 +6,7 @@
 	<define name="NO_RTL_INLINES" />
 	<define name="_NTSYSTEM_" />
 	<define name="_NTDLLBUILD_" />
+	<define name="_CRTBLD" />
 	<define name="_LIBCNT_" />
 	<if property="ARCH" value="i386">
 		<define name="__MINGW_IMPORT">"extern __attribute__ ((dllexport))"</define>
@@ -40,48 +41,42 @@
 				<file>allrem_asm.s</file>
 				<file>allshl_asm.s</file>
 				<file>allshr_asm.s</file>
-				<file>atan_asm.s</file>
 				<file>aulldiv_asm.s</file>
 				<file>aulldvrm_asm.s</file>
 				<file>aullrem_asm.s</file>
 				<file>aullshr_asm.s</file>
 				<file>ci.c</file>
-				<file>ceil_asm.s</file>
-				<file>cos_asm.s</file>
-				<file>fabs_asm.s</file>
 				<file>floor_asm.s</file>
 				<file>ftol_asm.s</file>
-				<file>log_asm.s</file>
 				<file>pow_asm.s</file>
-				<file>sin_asm.s</file>
-				<file>sqrt_asm.s</file>
-				<file>tan_asm.s</file>
-			</directory>
-		</if>
-		<if property="ARCH" value="amd64">
-			<directory name="amd64">
-				<file>alldiv.S</file>
-				<file>atan.S</file>
-				<file>atan2.S</file>
 				<file>ceil.S</file>
 				<file>cos.S</file>
-				<file>exp.S</file>
-				<file>fabs.S</file>
-				<file>floor.S</file>
-				<file>fmod.S</file>
-				<file>ldexp.S</file>
 				<file>log.S</file>
 				<file>log10.S</file>
-				<file>pow.S</file>
 				<file>sin.S</file>
-				<file>sqrt.S</file>
 				<file>tan.S</file>
 			</directory>
 		</if>
+		<if property="ARCH" value="amd64">
+			<directory name="i386">
+				<file>ceil.S</file>
+				<file>cos.S</file>
+				<file>log.S</file>
+				<file>log10.S</file>
+				<file>sin.S</file>
+				<file>tan.S</file>
+			</directory>
+			<directory name="amd64">
+				<file>alldiv.S</file>
+			</directory>
+		</if>
 		<file>abs.c</file>
+		<file>atan.c</file>
+		<file>fabs.c</file>
 		<file>div.c</file>
 		<file>labs.c</file>
 		<file>rand_nt.c</file>
+		<file>sqrt.c</file>
 	</directory>
 
 	<directory name="mem">

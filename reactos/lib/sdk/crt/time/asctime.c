@@ -5,6 +5,7 @@
  * PURPOSE:     Implementation of asctime(), _asctime_s()
  * PROGRAMERS:  Timo Kreuzer
  */
+#define MINGW_HAS_SECURE_API
 #include <precomp.h>
 #include <tchar.h>
 #include <time.h>

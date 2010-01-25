@@ -117,11 +117,6 @@ static CRITICAL_SECTION FILE_cs;
 #define LOCK_FILES()    do { EnterCriticalSection(&FILE_cs); } while (0)
 #define UNLOCK_FILES()  do { LeaveCriticalSection(&FILE_cs); } while (0)
 
-FILE *__cdecl __iob_func()
-{
-  return _iob;
-}
-
 static inline BOOL is_valid_fd(int fd)
 {
   return fd >= 0 && fd < fdend && (fdesc[fd].wxflag & WX_OPEN);
@@ -452,11 +447,11 @@ static void int_to_base32(int num, char *str)
 }
 
 /*********************************************************************
- *		__p__iob(MSVCRT.@)
+ *              __iob_func(MSVCRT.@)
  */
-FILE * CDECL __p__iob(void)
+FILE * CDECL __iob_func(void)
 {
- return _iob;
+  return &_iob[0];
 }
 
 /*********************************************************************

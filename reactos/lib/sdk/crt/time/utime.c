@@ -10,7 +10,7 @@
 #include <sys/utime.h>
 #include "bitsfixup.h"
 
-int 
+int __cdecl
 _tutime(const _TCHAR* path, struct _utimbuf *t)
 {
     int fd = _topen(path, _O_WRONLY | _O_BINARY);

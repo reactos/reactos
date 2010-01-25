@@ -491,3 +491,11 @@ unsigned int CDECL __CxxQueryExceptionSize(void)
 {
   return sizeof(cxx_exception_type);
 }
+
+/******************************************************************
+ *		MSVCRT___uncaught_exception
+ */
+BOOL CDECL __uncaught_exception(void)
+{
+    return FALSE;
+}
