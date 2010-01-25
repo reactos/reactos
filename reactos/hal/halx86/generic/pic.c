@@ -498,6 +498,32 @@ KfLowerIrql(IN KIRQL OldIrql)
  */
 VOID
 FASTCALL
+HalRequestSoftwareInterrupt(IN KIRQL Irql)
+{
+    ULONG EFlags;
+    PKPCR Pcr = KeGetPcr();
+    KIRQL PendingIrql;
+    
+    /* Save EFlags and disable interrupts */
+    EFlags = __readeflags();
+    _disable();
+    
+    /* Mask out the requested bit */
+    Pcr->IRR |= (1 << Irql);
+
+    /* Check for pending software interrupts and compare with current IRQL */
+    PendingIrql = SWInterruptLookUpTable[Pcr->IRR & 3];
+    if (PendingIrql > Pcr->Irql) SWInterruptHandlerTable[PendingIrql]();
+    
+    /* Restore interrupt state */
+    __writeeflags(EFlags);
+}
+
+/*
+ * @implemented
+ */
+VOID
+FASTCALL
 HalClearSoftwareInterrupt(IN KIRQL Irql)
 {
     /* Mask out the requested bit */

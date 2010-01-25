@@ -50,40 +50,6 @@ KiI8259MaskTable:
     .long 0xFFFFFFFB                    /* IRQL 30 */
     .long 0xFFFFFFFB                    /* IRQL 31 */
 
-FindHigherIrqlMask:
-    .long 0xFFFFFFFE                    /* IRQL  0 */
-    .long 0xFFFFFFFC                    /* IRQL 1 */
-    .long 0xFFFFFFF8                    /* IRQL 2 */
-    .long 0xFFFFFFF0                    /* IRQL 3 */
-    .long 0x7FFFFF0                     /* IRQL 4 */
-    .long 0x3FFFFF0                     /* IRQL 5 */
-    .long 0x1FFFFF0                     /* IRQL 6 */
-    .long 0x0FFFFF0                     /* IRQL 7 */
-    .long 0x7FFFF0                      /* IRQL 8 */
-    .long 0x3FFFF0                      /* IRQL 9 */
-    .long 0x1FFFF0                      /* IRQL 10 */
-    .long 0x0FFFF0                      /* IRQL 11 */
-    .long 0x7FFF0                       /* IRQL 12 */
-    .long 0x3FFF0                       /* IRQL 13 */
-    .long 0x1FFF0                       /* IRQL 14 */
-    .long 0x0FFF0                       /* IRQL 15 */
-    .long 0x7FF0                        /* IRQL 16 */
-    .long 0x3FF0                        /* IRQL 17 */
-    .long 0x1FF0                        /* IRQL 18 */
-    .long 0x1FF0                        /* IRQL 19 */
-    .long 0x17F0                        /* IRQL 20 */
-    .long 0x13F0                        /* IRQL 21 */
-    .long 0x11F0                        /* IRQL 22 */
-    .long 0x10F0                        /* IRQL 23 */
-    .long 0x1070                        /* IRQL 24 */
-    .long 0x1030                        /* IRQL 25 */
-    .long 0x1010                        /* IRQL 26 */
-    .long 0x10                          /* IRQL 27 */
-    .long 0                             /* IRQL 28 */
-    .long 0                             /* IRQL 29 */
-    .long 0                             /* IRQL 30 */
-    .long 0                             /* IRQL 31 */
-
 SWInterruptLookUpTable:
     .byte PASSIVE_LEVEL                 /* IRR 0 */
     .byte PASSIVE_LEVEL                 /* IRR 1 */
@@ -108,75 +74,6 @@ _UnhandledMsg:
     .asciz "\n\x7\x7!!! Unhandled or Unexpected Code at line: %lx!!!\n"
 
 /* FUNCTIONS *****************************************************************/
-
-/* HAL interrupt handlers */
-GENERATE_HAL_INT_HANDLERS
-
-.globl _HalpHardwareInterruptLevel
-.func HalpHardwareInterruptLevel
-_HalpHardwareInterruptLevel:
-
-    /* Get IRQL and check for pending interrupts */
-    mov eax, PCR[KPCR_IRQL]
-    mov ecx, PCR[KPCR_IRR]
-    and ecx, FindHigherIrqlMask[eax*4]
-    jz NothingHardware
-
-    /* Check the active IRR */
-    test dword ptr PCR[KPCR_IRR_ACTIVE], 0xFFFFFFF0
-    jnz NothingHardware
-
-    /* Check for pending software interrupts */
-    mov eax, ecx
-    bsr ecx, eax
-    mov eax, 1
-    shl eax, cl
-
-    /* Clear IRR */
-    xor PCR[KPCR_IRR], eax
-
-    /* Now dispatch the interrupt */
-    call SWInterruptHandlerTable[ecx*4]
-
-NothingHardware:
-    ret
-.endfunc
-
-.globl @HalRequestSoftwareInterrupt@4
-.func @HalRequestSoftwareInterrupt@4, @HalRequestSoftwareInterrupt@4
-@HalRequestSoftwareInterrupt@4:
-
-    /* Get IRR mask */
-    mov eax, 1
-    shl eax, cl
-
-    /* Disable interrupts */
-    pushf
-    cli
-
-    /* Set IRR and get IRQL */
-    or PCR[KPCR_IRR], eax
-    mov ecx, PCR[KPCR_IRQL]
-
-    /* Get software IRR mask */
-    mov eax, PCR[KPCR_IRR]
-    and eax, 3
-
-    /* Get highest pending software interrupt and check if it's higher */
-    xor edx, edx
-    mov dl, SWInterruptLookUpTable[eax]
-    cmp dl, cl
-    jbe AfterCall
-
-    /* Call the pending interrupt */
-    call SWInterruptHandlerTable[edx*4]
-
-AfterCall:
-
-    /* Retore interrupts and return */
-    popf
-    ret
-.endfunc
 
 .globl _HalEndSystemInterrupt@8
 .func HalEndSystemInterrupt@8
