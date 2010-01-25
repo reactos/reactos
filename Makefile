@@ -432,7 +432,7 @@ include sdk/tools/tools.mak
 PREAUTO := \
 	$(BIN2C_TARGET) \
 	$(BIN2RES_TARGET) \
-	$(BUILDNO_H) \
+#	$(BUILDNO_H) \
 	$(GENDIB_DIB_FILES) \
 	$(NCI_SERVICE_FILES)
 

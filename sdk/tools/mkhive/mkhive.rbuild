@@ -4,7 +4,7 @@
 	<include base="inflibhost">.</include>
 	<include base="cmlibhost">.</include>
 	<include base="zlibhost">.</include>
-	<include base="rtl">.</include>
+	<!-- include base="rtl">.</include -->
 	<define name="MKHIVE_HOST" />
 	<compilerflag compilerset="gcc">-fshort-wchar</compilerflag>
 	<library>inflibhost</library>
