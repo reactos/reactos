@@ -49,7 +49,7 @@ DceCreateDisplayDC(VOID)
       defaultDCstate = ExAllocatePoolWithTag(PagedPool, sizeof(DC), TAG_DC);
       RtlZeroMemory(defaultDCstate, sizeof(DC));
       defaultDCstate->pdcattr = &defaultDCstate->dcattr;
-      DC_vCopyState(dc, defaultDCstate);
+      DC_vCopyState(dc, defaultDCstate, TRUE);
       DC_UnlockDc( dc );
   }
   return hDC;

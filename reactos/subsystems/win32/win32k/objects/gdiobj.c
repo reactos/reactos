@@ -84,6 +84,59 @@ static LARGE_INTEGER ShortDelay;
 
 /** INTERNAL FUNCTIONS ********************************************************/
 
+// Audit Functions
+int tDC = 0;
+int tBRUSH = 0;
+int tBITMAP = 0;
+int tFONT = 0;
+int tRGN = 0;
+
+VOID
+AllocTypeDataDump(INT TypeInfo)
+{
+    switch( TypeInfo & GDI_HANDLE_TYPE_MASK )
+    {
+       case GDILoObjType_LO_BRUSH_TYPE:
+          tBRUSH++;
+          break;
+       case GDILoObjType_LO_DC_TYPE:
+          tDC++;
+          break;
+       case GDILoObjType_LO_BITMAP_TYPE:
+          tBITMAP++;
+          break;
+       case GDILoObjType_LO_FONT_TYPE:
+          tFONT++;
+          break;
+       case GDILoObjType_LO_REGION_TYPE:
+          tRGN++;
+          break;
+    }
+}
+
+VOID
+DeAllocTypeDataDump(INT TypeInfo)
+{
+    switch( TypeInfo & GDI_HANDLE_TYPE_MASK )
+    {
+       case GDILoObjType_LO_BRUSH_TYPE:
+          tBRUSH--;
+          break;
+       case GDILoObjType_LO_DC_TYPE:
+          tDC--;
+          break;
+       case GDILoObjType_LO_BITMAP_TYPE:
+          tBITMAP--;
+          break;
+       case GDILoObjType_LO_FONT_TYPE:
+          tFONT--;
+          break;
+       case GDILoObjType_LO_REGION_TYPE:
+          tRGN--;
+          break;
+    }
+}
+
 /*
  * Dummy GDI Cleanup Callback
  */
@@ -361,6 +414,7 @@ GDIOBJ_AllocObjWithHandle(ULONG ObjectType)
     if (W32Process && W32Process->GDIHandleCount >= 0x2710)
     {
         DPRINT1("Too many objects for process!!!\n");
+        DPRINT1("DC %d BRUSH %d BITMAP %d FONT %d RGN %d\n",tDC,tBRUSH,tBITMAP,tFONT,tRGN);
         GDIDBG_DUMPHANDLETABLE();
         return NULL;
     }
@@ -417,6 +471,8 @@ LockHandle:
             newObject->ulShareCount = 0;
             newObject->cExclusiveLock = 1;
             newObject->Tid = Thread;
+
+            AllocTypeDataDump(TypeInfo);
 
             /* unlock the entry */
             (void)InterlockedExchangePointer((PVOID*)&Entry->ProcessId, CurrentProcessId);
@@ -565,6 +621,8 @@ LockHandle:
                 TypeIndex = GDI_OBJECT_GET_TYPE_INDEX(HandleType);
                 Ret = ObjTypeInfo[TypeIndex].CleanupProc(Object);
 
+                DeAllocTypeDataDump(HandleType);
+
                 /* Now it's time to free the memory */
                 GDIOBJ_FreeObj(Object, TypeIndex);
 
@@ -702,7 +760,7 @@ bPEBCacheHandle(HGDIOBJ Handle, int oType, PVOID pAttr)
            ((PRGN_ATTR)pAttr)->AttrFlags |= ATTR_CACHED;
            hPtr[Number] = Handle;
            GdiHandleCache->ulNumHandles[oType]++;
-           DPRINT("Put Handle Count %d\n", GdiHandleCache->ulNumHandles[oType]);
+           DPRINT1("Put Handle Count %d PEB 0x%x\n", GdiHandleCache->ulNumHandles[oType], NtCurrentTeb()->ProcessEnvironmentBlock);
            Ret = TRUE;
         }
      }

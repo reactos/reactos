@@ -468,7 +468,7 @@ IntGdiCreateDisplayDC(HDEV hDev, ULONG DcType, BOOL EmptyDC)
         defaultDCstate->pdcattr = &defaultDCstate->dcattr;
         hsurf = (HSURF)PrimarySurface.pSurface; // HAX²
         defaultDCstate->dclevel.pSurface = SURFACE_ShareLockSurface(hsurf);
-        DC_vCopyState(dc, defaultDCstate);
+        DC_vCopyState(dc, defaultDCstate, TRUE);
         DC_UnlockDc(dc);
     }
     return hDC;
@@ -538,6 +538,14 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
     if (DCToDelete->rosdc.hGCClipRgn)
     {
         GreDeleteObject(DCToDelete->rosdc.hGCClipRgn);
+    }
+    if (DCToDelete->dclevel.prgnMeta)
+    {
+       GreDeleteObject(((PROSRGNDATA)DCToDelete->dclevel.prgnMeta)->BaseObject.hHmgr);
+    }
+    if (DCToDelete->prgnAPI)
+    {
+       GreDeleteObject(((PROSRGNDATA)DCToDelete->prgnAPI)->BaseObject.hHmgr);
     }
     PATH_Delete(DCToDelete->dclevel.hPath);
 
