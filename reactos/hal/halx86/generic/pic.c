@@ -530,6 +530,33 @@ HalClearSoftwareInterrupt(IN KIRQL Irql)
     KeGetPcr()->IRR &= ~(1 << Irql);
 }
 
+VOID
+NTAPI
+HalpEndSoftwareInterrupt(IN KIRQL OldIrql)
+{
+    KIRQL PendingIrql;
+    PKPCR Pcr = KeGetPcr();
+    PIC_MASK Mask;
+
+    /* Check if currentl IRQL affects hardware state */
+    if (Pcr->Irql > DISPATCH_LEVEL)
+    {        
+        /* Set new PIC mask */
+        Mask.Both = KiI8259MaskTable[OldIrql] | Pcr->IDR;
+        __outbyte(PIC1_DATA_PORT, Mask.Master);
+        __outbyte(PIC2_DATA_PORT, Mask.Slave);
+    }
+
+    /* Set old IRQL */
+    Pcr->Irql = OldIrql;
+    
+    /* Check for pending software interrupts and compare with current IRQL */
+    PendingIrql = SWInterruptLookUpTable[Pcr->IRR];
+
+    /* NOTE: We can do better! We need to support "jumping" a frame for nested cases! */
+    if (PendingIrql > OldIrql) SWInterruptHandlerTable[PendingIrql]();
+}
+
 /* INTERRUPT DISMISSAL FUNCTIONS **********************************************/
 
 BOOLEAN
@@ -756,4 +783,33 @@ HalBeginSystemInterrupt(IN KIRQL Irql,
     /* Get the IRQ and call the proper routine to handle it */
     Irq = Vector - PRIMARY_VECTOR_BASE;
     return HalpSpecialDismissTable[Irq](Irql, Irq, OldIrql);
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+HalEndSystemInterrupt(IN KIRQL OldIrql,
+                      IN UCHAR Vector)
+{
+    KIRQL PendingIrql;
+    PKPCR Pcr = KeGetPcr();
+    PIC_MASK Mask;
+
+    /* Check if currentl IRQL affects hardware state */
+    if (Pcr->Irql > DISPATCH_LEVEL)
+    {        
+        /* Set new PIC mask */
+        Mask.Both = KiI8259MaskTable[OldIrql] | Pcr->IDR;
+        __outbyte(PIC1_DATA_PORT, Mask.Master);
+        __outbyte(PIC2_DATA_PORT, Mask.Slave);
+    }
+
+    /* Set old IRQL */
+    Pcr->Irql = OldIrql;
+    
+    /* Check for pending software interrupts and compare with current IRQL */
+    PendingIrql = SWInterruptLookUpTable[Pcr->IRR];
+    if (PendingIrql > OldIrql) SWInterruptHandlerTable[PendingIrql]();
 }

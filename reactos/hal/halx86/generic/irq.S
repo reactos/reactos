@@ -16,100 +16,10 @@
 
 /* GLOBALS *******************************************************************/
 
-KiI8259MaskTable:
-    .long 0                             /* IRQL 0 */
-    .long 0                             /* IRQL 1 */
-    .long 0                             /* IRQL 2 */
-    .long 0                             /* IRQL 3 */
-    .long 0xFF800000                    /* IRQL 4 */
-    .long 0xFFC00000                    /* IRQL 5 */
-    .long 0xFFE00000                    /* IRQL 6 */
-    .long 0xFFF00000                    /* IRQL 7 */
-    .long 0xFFF80000                    /* IRQL 8 */
-    .long 0xFFFC0000                    /* IRQL 9 */
-    .long 0xFFFE0000                    /* IRQL 10 */
-    .long 0xFFFF0000                    /* IRQL 11 */
-    .long 0xFFFF8000                    /* IRQL 12 */
-    .long 0xFFFFC000                    /* IRQL 13 */
-    .long 0xFFFFE000                    /* IRQL 14 */
-    .long 0xFFFFF000                    /* IRQL 15 */
-    .long 0xFFFFF800                    /* IRQL 16 */
-    .long 0xFFFFFC00                    /* IRQL 17 */
-    .long 0xFFFFFE00                    /* IRQL 18 */
-    .long 0xFFFFFE00                    /* IRQL 19 */
-    .long 0xFFFFFE80                    /* IRQL 20 */
-    .long 0xFFFFFEC0                    /* IRQL 21 */
-    .long 0xFFFFFEE0                    /* IRQL 22 */
-    .long 0xFFFFFEF0                    /* IRQL 23 */
-    .long 0xFFFFFEF8                    /* IRQL 24 */
-    .long 0xFFFFFEF8                    /* IRQL 25 */
-    .long 0xFFFFFEFA                    /* IRQL 26 */
-    .long 0xFFFFFFFA                    /* IRQL 27 */
-    .long 0xFFFFFFFB                    /* IRQL 28 */
-    .long 0xFFFFFFFB                    /* IRQL 29 */
-    .long 0xFFFFFFFB                    /* IRQL 30 */
-    .long 0xFFFFFFFB                    /* IRQL 31 */
-
-SWInterruptLookUpTable:
-    .byte PASSIVE_LEVEL                 /* IRR 0 */
-    .byte PASSIVE_LEVEL                 /* IRR 1 */
-    .byte APC_LEVEL                     /* IRR 2 */
-    .byte APC_LEVEL                     /* IRR 3 */
-    .byte DISPATCH_LEVEL                /* IRR 4 */
-    .byte DISPATCH_LEVEL                /* IRR 5 */
-    .byte DISPATCH_LEVEL                /* IRR 6 */
-    .byte DISPATCH_LEVEL                /* IRR 7 */
-
-SWInterruptHandlerTable:
-    .long _KiUnexpectedInterrupt        /* PASSIVE_LEVEL */
-    .long _HalpApcInterrupt             /* APC_LEVEL */
-    .long _HalpDispatchInterrupt        /* DISPATCH_LEVEL */
-
-SWInterruptHandlerTable2:
-    .long _KiUnexpectedInterrupt        /* PASSIVE_LEVEL */
-    .long _HalpApcInterrupt2ndEntry     /* APC_LEVEL */
-    .long _HalpDispatchInterrupt2ndEntry /* DISPATCH_LEVEL */
-
 _UnhandledMsg:
     .asciz "\n\x7\x7!!! Unhandled or Unexpected Code at line: %lx!!!\n"
 
 /* FUNCTIONS *****************************************************************/
-
-.globl _HalEndSystemInterrupt@8
-.func HalEndSystemInterrupt@8
-_HalEndSystemInterrupt@8:
-
-    /* Read IRQL */
-    xor ecx, ecx
-    mov cl, [esp+4]
-
-    /* Check if it's a software interrupt */
-    cmp dword ptr PCR[KPCR_IRQL], DISPATCH_LEVEL
-    jbe SkipMask2
-
-    /* Hardware interrupt, mask the appropriate IRQs in the PIC */
-    mov eax, KiI8259MaskTable[ecx*4]
-    or eax, PCR[KPCR_IDR]
-    out 0x21, al
-    shr eax, 8
-    out 0xA1, al
-
-SkipMask2:
-
-    /* Set IRQL and check if there are pending software interrupts */
-    mov PCR[KPCR_IRQL], ecx
-    mov eax, PCR[KPCR_IRR]
-    mov al, SWInterruptLookUpTable[eax]
-    cmp al, cl
-    ja DoCall
-    ret 8
-
-DoCall:
-
-    /* There are pending software interrupts, call their handlers */
-    add esp, 12
-    jmp SWInterruptHandlerTable2[eax*4]
-.endfunc
 
 .globl _HalpApcInterrupt
 .func HalpApcInterrupt
@@ -191,35 +101,4 @@ _HalpDispatchInterrupt2ndEntry:
     cli
     call _HalpEndSoftwareInterrupt@4
     jmp _Kei386EoiHelper@0
-.endfunc
-
-.globl _HalpEndSoftwareInterrupt@4
-.func HalpEndSoftwareInterrupt@4
-_HalpEndSoftwareInterrupt@4:
-
-    /* Get the IRQL and check if we're in the software region */
-    movzx ecx, byte ptr [esp+4]
-    cmp dword ptr PCR[KPCR_IRQL], DISPATCH_LEVEL
-    jbe SoftwareInt
-
-    /* Set the right mask in the PIC for the hardware IRQ */
-    mov eax, KiI8259MaskTable[ecx*4]
-    or eax, PCR[KPCR_IDR]
-    out 0x21, al
-    shr eax, 8
-    out 0xA1, al
-
-SoftwareInt:
-    /* Check if there are pending software interrupts */
-    mov PCR[KPCR_IRQL], ecx
-    mov eax, PCR[KPCR_IRR]
-    mov al, SWInterruptLookUpTable[eax]
-    cmp al, cl
-    ja DoCall2
-    ret 4
-
-DoCall2:
-    /* There are pending softwate interrupts, call their handlers */
-    add esp, 8
-    jmp SWInterruptHandlerTable2[eax*4]
 .endfunc
