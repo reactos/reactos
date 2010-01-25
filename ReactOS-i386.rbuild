@@ -35,7 +35,7 @@
 		<linkerflag>-file-alignment=0x1000</linkerflag>
 		<linkerflag>-section-alignment=0x1000</linkerflag>
 	</group>
-
+<!--
 	<directory name="base">
 		<xi:include href="base/base.rbuild" />
 	</directory>
@@ -72,7 +72,8 @@
 	<directory name="subsystems">
 		<xi:include href="subsystems/subsystems.rbuild" />
 	</directory>
-	<directory name="tools">
-		<xi:include href="tools/tools.rbuild" />
+	-->
+	<directory name="sdk">
+		<xi:include href="sdk/sdk.rbuild" />
 	</directory>
 </project>
