@@ -187,8 +187,31 @@ extern "C" {
     return (_Df);
   }
 
-  //missing in msvcrt but needed by gdiplus
+#if !defined(__x86_64) && !defined(_M_AMD64)
+  __CRT_INLINE float acosf(float _X) { return ((float)acos((double)_X)); }
+  __CRT_INLINE float asinf(float _X) { return ((float)asin((double)_X)); }
+  __CRT_INLINE float atanf(float _X) { return ((float)atan((double)_X)); }
+  __CRT_INLINE float atan2f(float _X,float _Y) { return ((float)atan2((double)_X,(double)_Y)); }
+  __CRT_INLINE float ceilf(float _X) { return ((float)ceil((double)_X)); }
+  __CRT_INLINE float cosf(float _X) { return ((float)cos((double)_X)); }
+  __CRT_INLINE float coshf(float _X) { return ((float)cosh((double)_X)); }
+  __CRT_INLINE float expf(float _X) { return ((float)exp((double)_X)); }
   __CRT_INLINE float floorf(float _X) { return ((float)floor((double)_X)); }
+  __CRT_INLINE float fmodf(float _X,float _Y) { return ((float)fmod((double)_X,(double)_Y)); }
+  __CRT_INLINE float logf(float _X) { return ((float)log((double)_X)); }
+  __CRT_INLINE float log10f(float _X) { return ((float)log10((double)_X)); }
+  __CRT_INLINE float modff(float _X,float *_Y) {
+    double _Di,_Df = modf((double)_X,&_Di);
+    *_Y = (float)_Di;
+    return ((float)_Df);
+  }
+  __CRT_INLINE float powf(float _X,float _Y) { return ((float)pow((double)_X,(double)_Y)); }
+  __CRT_INLINE float sinf(float _X) { return ((float)sin((double)_X)); }
+  __CRT_INLINE float sinhf(float _X) { return ((float)sinh((double)_X)); }
+  __CRT_INLINE float sqrtf(float _X) { return ((float)sqrt((double)_X)); }
+  __CRT_INLINE float tanf(float _X) { return ((float)tan((double)_X)); }
+  __CRT_INLINE float tanhf(float _X) { return ((float)tanh((double)_X)); }
+#endif
 
 #ifndef	NO_OLDNAMES
 #define DOMAIN _DOMAIN

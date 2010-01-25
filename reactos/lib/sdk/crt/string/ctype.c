@@ -292,12 +292,12 @@ const unsigned short _ctype[] = {
 const unsigned short *_pctype = _ctype + 1;
 const unsigned short *_pwctype = _ctype + 1;
 
-/*********************************************************************
- *              __pctype_func (MSVCRT.@)
+/*
+ * @implemented
  */
-const unsigned short* __cdecl __pctype_func(void)
+const unsigned short **__p__pctype(void)
 {
-   return _pctype;
+   return &_pctype;
 }
 
 /*

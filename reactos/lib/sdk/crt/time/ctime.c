@@ -5,7 +5,7 @@
  * PURPOSE:     Implementation of ctime, _ctime_s
  * PROGRAMERS:  Timo Kreuzer
  */
-#define MINGW_HAS_SECURE_API
+#define MINGW_HAS_SECURE_API 1
 
 #include <tchar.h>
 #include <time.h>

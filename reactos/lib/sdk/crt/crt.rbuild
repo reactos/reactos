@@ -22,7 +22,6 @@
 	<define name="__MINGW_IMPORT">extern</define>
 	<define name="USE_MSVCRT_PREFIX" />
 	<define name="_MSVCRT_LIB_" />
-	<define name="_CRTBLD" />
 	<define name="_MSVCRT_" />
 	<define name="_MT" />
 	<directory name="conio">
@@ -107,84 +106,87 @@
 		<file>locale.c</file>
 	</directory>
 	<directory name="math">
-		<file>abs.c</file>
 		<file>acos.c</file>
-		<file>acosf.c</file>
 		<file>adjust.c</file>
 		<file>asin.c</file>
-		<file>asinf.c</file>
-		<file>atan.c</file>
-		<file>atan2.c</file>
-		<file>atan2f.c</file>
-		<file>atanf.c</file>
 		<file>cabs.c</file>
-		<file>copysign.c</file>
-		<file>copysignf.c</file>
-		<file>cosf.c</file>
 		<file>cosh.c</file>
 		<file>div.c</file>
-		<file>exp.c</file>
-		<file>expf.c</file>
-		<file>fabs.c</file>
 		<file>fdivbug.c</file>
-		<file>fmod.c</file>
-		<file>fmodf.c</file>
 		<file>frexp.c</file>
 		<file>huge_val.c</file>
 		<file>hypot.c</file>
-		<file>hypotf.c</file>
-		<file>ldexp.c</file>
 		<file>ldiv.c</file>
-		<file>log10f.c</file>
-		<file>logb.c</file>
-		<file>logbf.c</file>
-		<file>logf.c</file>
 		<file>modf.c</file>
-		<file>modff.c</file>
-		<file>nextafter.c</file>
-		<file>nextafterf.c</file>
-		<file>powf.c</file>
 		<file>rand.c</file>
 		<file>s_modf.c</file>
-		<file>sinf.c</file>
 		<file>sinh.c</file>
-		<file>sinhf.c</file>
-		<file>sqrt.c</file>
-		<file>sqrtf.c</file>
-		<file>tanf.c</file>
 		<file>tanh.c</file>
-		<file>tanhf.c</file>
+		<file>pow_asm.c</file>
+
 		<if property="ARCH" value="i386">
 			<directory name="i386">
-				<file>ceil.S</file>
-				<file>ceilf.S</file>
-				<file>cos.S</file>
-				<file>floor.S</file>
-				<file>floorf.S</file>
-				<file>log.S</file>
-				<file>log10.S</file>
-				<file>sin.S</file>
-				<file>tan.S</file>
-				<file>ci.c</file>
+				<file>alldiv_asm.s</file>
+				<file>alldvrm_asm.s</file>
+				<file>allmul_asm.s</file>
+				<file>allrem_asm.s</file>
+				<file>allshl_asm.s</file>
+				<file>allshr_asm.s</file>
+				<file>atan_asm.s</file>
+				<file>aulldiv_asm.s</file>
+				<file>aulldvrm_asm.s</file>
+				<file>aullrem_asm.s</file>
+				<file>aullshr_asm.s</file>
+				<file>ceil_asm.s</file>
+				<file>cos_asm.s</file>
+				<file>fabs_asm.s</file>
+				<file>floor_asm.s</file>
+				<file>ftol_asm.s</file>
+				<file>log_asm.s</file>
+				<file>log10_asm.s</file>
 				<file>pow_asm.s</file>
+				<file>sin_asm.s</file>
+				<file>sqrt_asm.s</file>
+				<file>tan_asm.s</file>
+
+				<file>atan2.c</file>
+				<file>ci.c</file>
+				<file>exp.c</file>
+				<file>fmod.c</file>
+				<file>ldexp.c</file>
 			</directory>
+			<!-- FIXME: we don't actually implement these... they recursively call themselves through an alias -->
+			<!--<file>j0_y0.c</file>
+			<file>j1_y1.c</file>
+			<file>jn_yn.c</file>-->
 		</if>
 		<if property="ARCH" value="amd64">
-			<directory name="i386">
+			<directory name="amd64">
+				<file>alldiv.S</file>
+				<file>atan.S</file>
+				<file>atan2.S</file>
 				<file>ceil.S</file>
 				<file>ceilf.S</file>
 				<file>cos.S</file>
+				<file>exp.S</file>
+				<file>fabs.S</file>
 				<file>floor.S</file>
 				<file>floorf.S</file>
+				<file>fmod.S</file>
+				<file>fmodf.S</file>
+				<file>ldexp.S</file>
 				<file>log.S</file>
 				<file>log10.S</file>
-				<file>sin.S</file>
-				<file>tan.S</file>
-				<file>ci.c</file>
-			</directory>
-			<directory name="amd64">
 				<file>pow.S</file>
+				<file>sin.S</file>
+				<file>sqrt.S</file>
+				<file>sqrtf.S</file>
+				<file>tan.S</file>
 			</directory>
+			<!-- FIXME: we don't actually implement these... they recursively call themselves through an alias -->
+			<!--<file>j0_y0.c</file>
+			<file>j1_y1.c</file>
+			<file>jn_yn.c</file>-->
 		</if>
 		<ifnot property="ARCH" value="i386">
 			<file>stubs.c</file>

@@ -19,7 +19,7 @@
  * $Date$
  *
  */
-#define _CRTBLD
+
 #include <precomp.h>
 #include <internal/wine/msvcrt.h>
 #include <locale.h>
