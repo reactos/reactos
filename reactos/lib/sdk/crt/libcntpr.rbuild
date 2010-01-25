@@ -61,6 +61,7 @@
 			<directory name="i386">
 				<file>ceil.S</file>
 				<file>cos.S</file>
+				<file>floor.S</file>
 				<file>log.S</file>
 				<file>log10.S</file>
 				<file>sin.S</file>
@@ -68,6 +69,7 @@
 			</directory>
 			<directory name="amd64">
 				<file>alldiv.S</file>
+				<file>pow.S</file>
 			</directory>
 		</if>
 		<file>abs.c</file>

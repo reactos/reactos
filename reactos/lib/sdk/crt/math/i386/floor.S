@@ -11,9 +11,9 @@
 #else
 	.align 4
 #endif
-.globl floor
-	.def	floor;	.scl	2;	.type	32;	.endef
-floor:
+.globl _floor
+	.def	_floor;	.scl	2;	.type	32;	.endef
+_floor:
 #ifdef _WIN64
 	fldt	(%rdx)
 	subq	$24,%rsp
