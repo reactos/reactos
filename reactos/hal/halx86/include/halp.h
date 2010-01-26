@@ -5,6 +5,23 @@
 #ifndef __INTERNAL_HAL_HAL_H
 #define __INTERNAL_HAL_HAL_H
 
+typedef struct _HAL_BIOS_FRAME
+{
+    ULONG SegSs;
+    ULONG Esp;
+    ULONG EFlags;
+    ULONG SegCs;
+    ULONG Eip;
+    PKTRAP_FRAME TrapFrame;
+    ULONG CsLimit;
+    ULONG CsBase;
+    ULONG CsFlags;
+    ULONG SsLimit;
+    ULONG SsBase;
+    ULONG SsFlags;
+    ULONG Prefix;
+} HAL_BIOS_FRAME, *PHAL_BIOS_FRAME;
+
 #define HAL_APC_REQUEST         0
 #define HAL_DPC_REQUEST         1
 
@@ -27,6 +44,59 @@
     (((bcd & 0xF0) >> 4) * 10 + (bcd & 0x0F))
 #define INT_BCD(int)            \
     (UCHAR)(((int / 10) << 4) + (int % 10))
+
+//
+// BIOS Interrupts
+//
+#define VIDEO_SERVICES   0x10
+
+//
+// Operations for INT 10h (in AH)
+//
+#define SET_VIDEO_MODE   0x00
+
+//
+// Video Modes for INT10h AH=00 (in AL)
+//
+#define GRAPHICS_MODE_12 0x12           /* 80x30	 8x16  640x480	 16/256K */
+
+//
+// Generates a 16-bit (real-mode or Virtual 8086) BIOS interrupt with a given AX */
+//
+VOID
+FORCEINLINE
+HalpCallBiosInterrupt(IN ULONG Interrupt,
+                      IN ULONG Ax)
+{
+    __asm__ __volatile__
+    (
+        ".byte 0x66\n"
+        "movl $%c[v], %%eax\n"
+        "int $%c[i]\n"
+        :
+        : [v] "i"(Ax),
+          [i] "i"(Interrupt)
+    );
+}
+
+//
+// Constructs a stack of the given size and alignment in the real-mode .text region */
+//
+VOID
+FORCEINLINE
+HalpRealModeStack(IN ULONG Alignment,
+                  IN ULONG Size)
+{
+    __asm__ __volatile__
+    (
+        ".align %c[v]\n"
+        ".space %c[i]\n"
+        ".globl _HalpRealModeEnd\n_HalpRealModeEnd:\n"
+        :
+        : [v] "i"(Alignment),
+          [i] "i"(Size)
+    );
+}
 
 //
 // Commonly stated as being 1.19318MHz
@@ -557,24 +627,6 @@ HalpBiosDisplayReset(
     VOID
 );
 
-VOID
-NTAPI
-HalpBiosCall(
-    VOID
-);
-
-VOID
-NTAPI
-HalpTrap0D(
-    VOID
-);
-
-VOID
-NTAPI
-HalpTrap06(
-    VOID
-);
-
 //
 // Processor Halt Routine
 //
@@ -715,9 +767,6 @@ KxReleaseSpinLock(IN PKSPIN_LOCK SpinLock)
 #endif // _M_AMD64
 
 extern BOOLEAN HalpNMIInProgress;
-
-extern PVOID HalpRealModeStart;
-extern PVOID HalpRealModeEnd;
 
 extern ADDRESS_USAGE HalpDefaultIoSpace;
 
