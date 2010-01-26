@@ -1,0 +1,232 @@
+/*
+ * Copyright 2002 John K. Hohm
+ * Copyright 2003 Alexandre Julliard
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#ifndef DO_NO_IMPORTS
+import "unknwn.idl";
+#endif
+
+/*****************************************************************************
+ * Types
+ */
+typedef GUID CATID;
+typedef REFGUID REFCATID;
+cpp_quote("#define CATID_NULL GUID_NULL")
+cpp_quote("#define IsEqualCATID(rcatid1, rcatid2) IsEqualGUID(rcatid1, rcatid2)")
+
+/*****************************************************************************
+ * Aliases for EnumGUID
+ */
+#define IEnumCATID IEnumGUID
+cpp_quote("#define IEnumCATID IEnumGUID")
+cpp_quote("#define IID_IEnumCATID IID_IEnumGUID")
+cpp_quote("#define LPENUMCATID LPENUMGUID")
+#define IEnumCLSID IEnumGUID
+cpp_quote("#define IEnumCLSID IEnumGUID")
+cpp_quote("#define IID_IEnumCLSID IID_IEnumGUID")
+cpp_quote("#define LPENUMCLSID LPENUMGUID")
+
+
+/*****************************************************************************
+ * IEnumGUID
+ */
+[
+    object,
+    uuid(0002e000-0000-0000-c000-000000000046),
+    pointer_default(unique)
+]
+interface IEnumGUID : IUnknown
+{
+    typedef [unique] IEnumGUID *LPENUMGUID;
+
+    HRESULT Next(
+        [in] ULONG celt,
+        [out, size_is(celt), length_is(*pceltFetched)] GUID *rgelt,
+        [out] ULONG *pceltFetched);
+
+    HRESULT Skip(
+        [in] ULONG celt);
+
+    HRESULT Reset();
+
+    HRESULT Clone(
+        [out] IEnumGUID **ppenum);
+}
+
+
+/*****************************************************************************
+ * IEnumCATEGORYINFO
+ */
+[
+    object,
+    uuid(0002e011-0000-0000-c000-000000000046),
+    pointer_default(unique)
+]
+interface IEnumCATEGORYINFO : IUnknown
+{
+    typedef [unique] IEnumCATEGORYINFO *LPENUMCATEGORYINFO;
+
+    typedef struct tagCATEGORYINFO
+    {
+        CATID   catid;              /* category identifier for component */
+        LCID    lcid;               /* locale identifier */
+        OLECHAR szDescription[128]; /* description of the category */
+    } CATEGORYINFO, *LPCATEGORYINFO;
+
+    HRESULT Next(
+        [in] ULONG celt,
+        [out, size_is(celt), length_is(*pceltFetched)] CATEGORYINFO* rgelt,
+        [out] ULONG* pceltFetched);
+
+    HRESULT Skip(
+        [in] ULONG celt);
+
+    HRESULT Reset();
+
+    HRESULT Clone(
+        [out] IEnumCATEGORYINFO** ppenum);
+}
+
+
+/*****************************************************************************
+ * ICatInformation
+ */
+[
+    object,
+    uuid(0002e013-0000-0000-c000-000000000046),
+    pointer_default(unique)
+]
+interface ICatInformation : IUnknown
+{
+    typedef [unique] ICatInformation* LPCATINFORMATION;
+
+    HRESULT EnumCategories(
+        [in] LCID lcid,
+        [out] IEnumCATEGORYINFO** ppenumCategoryInfo);
+
+    HRESULT GetCategoryDesc(
+        [in] REFCATID rcatid,
+        [in] LCID lcid,
+        [out] LPWSTR* pszDesc);
+
+    [local]
+    HRESULT EnumClassesOfCategories(
+        [in] ULONG cImplemented,
+        [in,size_is(cImplemented)] CATID rgcatidImpl[],
+        [in] ULONG cRequired,
+        [in,size_is(cRequired)] CATID rgcatidReq[],
+        [out] IEnumCLSID** ppenumClsid);
+
+    [call_as(EnumClassesOfCategories)]
+    HRESULT RemoteEnumClassesOfCategories(
+        [in] ULONG cImplemented,
+        [in,unique,size_is(cImplemented)] CATID rgcatidImpl[],
+        [in] ULONG cRequired,
+        [in,unique,size_is(cRequired)] CATID rgcatidReq[],
+        [out] IEnumCLSID** ppenumClsid);
+
+    [local]
+    HRESULT IsClassOfCategories(
+        [in] REFCLSID rclsid,
+        [in] ULONG cImplemented,
+        [in,size_is(cImplemented)] CATID rgcatidImpl[],
+        [in] ULONG cRequired,
+        [in,size_is(cRequired)] CATID rgcatidReq[]);
+
+    [call_as(IsClassOfCategories)]
+    HRESULT RemoteIsClassOfCategories(
+        [in] REFCLSID rclsid,
+        [in] ULONG cImplemented,
+        [in,unique,size_is(cImplemented)] CATID rgcatidImpl[],
+        [in] ULONG cRequired,
+        [in,unique,size_is(cRequired)] CATID rgcatidReq[] );
+
+    HRESULT EnumImplCategoriesOfClass(
+        [in] REFCLSID rclsid,
+        [out] IEnumCATID** ppenumCatid);
+
+    HRESULT EnumReqCategoriesOfClass(
+        [in] REFCLSID rclsid,
+        [out] IEnumCATID** ppenumCatid);
+}
+
+
+/*****************************************************************************
+ * ICatRegister
+ */
+[
+    object,
+    uuid(0002e012-0000-0000-c000-000000000046),
+    pointer_default(unique)
+]
+interface ICatRegister : IUnknown
+{
+    typedef [unique] ICatRegister* LPCATREGISTER;
+
+    HRESULT RegisterCategories(
+        [in] ULONG cCategories,
+        [in, size_is(cCategories)] CATEGORYINFO rgCategoryInfo[]);
+
+    HRESULT UnRegisterCategories(
+        [in] ULONG cCategories,
+        [in, size_is(cCategories)] CATID rgcatid[]);
+
+    HRESULT RegisterClassImplCategories(
+        [in] REFCLSID rclsid,
+        [in] ULONG cCategories,
+        [in, size_is(cCategories)] CATID rgcatid[]);
+
+    HRESULT UnRegisterClassImplCategories(
+        [in] REFCLSID rclsid,
+        [in] ULONG cCategories,
+        [in, size_is(cCategories)] CATID rgcatid[]);
+
+    HRESULT RegisterClassReqCategories(
+        [in] REFCLSID rclsid,
+        [in] ULONG cCategories,
+        [in, size_is(cCategories)] CATID rgcatid[]);
+
+    HRESULT UnRegisterClassReqCategories(
+        [in] REFCLSID rclsid,
+        [in] ULONG cCategories,
+        [in, size_is(cCategories)] CATID rgcatid[]);
+}
+
+
+/*****************************************************************************
+ * Category IDs
+ */
+cpp_quote("DEFINE_GUID( CATID_Insertable, 0x40fc6ed3, 0x2438, 0x11cf, 0xa3, 0xdb, 0x08, 0x00, 0x36, 0xf1, 0x25, 0x02);")
+cpp_quote("DEFINE_GUID( CATID_Control, 0x40fc6ed4, 0x2438, 0x11cf, 0xa3, 0xdb, 0x08, 0x00, 0x36, 0xf1, 0x25, 0x02);")
+cpp_quote("DEFINE_GUID( CATID_Programmable, 0x40fc6ed5, 0x2438, 0x11cf, 0xa3, 0xdb, 0x08, 0x00, 0x36, 0xf1, 0x25, 0x02);")
+cpp_quote("DEFINE_GUID( CATID_IsShortcut, 0x40fc6ed6, 0x2438, 0x11cf, 0xa3, 0xdb, 0x08, 0x00, 0x36, 0xf1, 0x25, 0x02);")
+cpp_quote("DEFINE_GUID( CATID_NeverShowExt, 0x40fc6ed7, 0x2438, 0x11cf, 0xa3, 0xdb, 0x08, 0x00, 0x36, 0xf1, 0x25, 0x02);")
+cpp_quote("DEFINE_GUID( CATID_DocObject, 0x40fc6ed8, 0x2438, 0x11cf, 0xa3, 0xdb, 0x08, 0x00, 0x36, 0xf1, 0x25, 0x02);")
+cpp_quote("DEFINE_GUID( CATID_Printable, 0x40fc6ed9, 0x2438, 0x11cf, 0xa3, 0xdb, 0x08, 0x00, 0x36, 0xf1, 0x25, 0x02);")
+cpp_quote("DEFINE_GUID( CATID_RequiresDataPathHost, 0x0de86a50, 0x2baa, 0x11cf, 0xa2, 0x29, 0x00, 0xaa, 0x00, 0x3d, 0x73, 0x52);")
+cpp_quote("DEFINE_GUID( CATID_PersistsToMoniker, 0x0de86a51, 0x2baa, 0x11cf, 0xa2, 0x29, 0x00, 0xaa, 0x00, 0x3d, 0x73, 0x52);")
+cpp_quote("DEFINE_GUID( CATID_PersistsToStorage, 0x0de86a52, 0x2baa, 0x11cf, 0xa2, 0x29, 0x00, 0xaa, 0x00, 0x3d, 0x73, 0x52);")
+cpp_quote("DEFINE_GUID( CATID_PersistsToStreamInit, 0x0de86a53, 0x2baa, 0x11cf, 0xa2, 0x29, 0x00, 0xaa, 0x00, 0x3d, 0x73, 0x52);")
+cpp_quote("DEFINE_GUID( CATID_PersistsToStream, 0x0de86a54, 0x2baa, 0x11cf, 0xa2, 0x29, 0x00, 0xaa, 0x00, 0x3d, 0x73, 0x52);")
+cpp_quote("DEFINE_GUID( CATID_PersistsToMemory, 0x0de86a55, 0x2baa, 0x11cf, 0xa2, 0x29, 0x00, 0xaa, 0x00, 0x3d, 0x73, 0x52);")
+cpp_quote("DEFINE_GUID( CATID_PersistsToFile, 0x0de86a56, 0x2baa, 0x11cf, 0xa2, 0x29, 0x00, 0xaa, 0x00, 0x3d, 0x73, 0x52);")
+cpp_quote("DEFINE_GUID( CATID_PersistsToPropertyBag, 0x0de86a57, 0x2baa, 0x11cf, 0xa2, 0x29, 0x00, 0xaa, 0x00, 0x3d, 0x73, 0x52);")
+cpp_quote("DEFINE_GUID( CATID_InternetAware, 0x0de86a58, 0x2baa, 0x11cf, 0xa2, 0x29, 0x00, 0xaa, 0x00, 0x3d, 0x73, 0x52);")
+cpp_quote("DEFINE_GUID( CATID_DesignTimeUIActivatableControl, 0xf2bb56d1, 0xdb07, 0x11d1, 0xaa, 0x6b, 0x00, 0x60, 0x97, 0xdb, 0x95, 0x39);")
+/* The Component Category Manager */
+cpp_quote("DEFINE_GUID(CLSID_StdComponentCategoriesMgr, 0x0002e005, 0x00, 0x00, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46);")

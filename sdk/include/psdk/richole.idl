@@ -1,0 +1,133 @@
+/*
+ * Copyright (C) 2002 Andriy Palamarchuk
+ * Copyright (C) 2004 Mike McCormack
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+cpp_quote("#if 0")  /* not included on Windows */
+import "oleidl.idl";
+cpp_quote("#endif")
+
+/* REOBJECT structure flags */
+cpp_quote("#define REO_GETOBJ_NO_INTERFACES        0x00000000")
+cpp_quote("#define REO_GETOBJ_POLEOBJ              0x00000001")
+cpp_quote("#define REO_GETOBJ_PSTG                 0x00000002")
+cpp_quote("#define REO_GETOBJ_POLESITE             0x00000004")
+cpp_quote("#define REO_GETOBJ_ALL_INTERFACES       0x00000007")
+cpp_quote("#define REO_CP_SELECTION                0xFFFFFFFF")
+cpp_quote("#define REO_IOB_SELECTION               0xFFFFFFFF")
+cpp_quote("#define REO_IOB_USE_CP                  0xFFFFFFFE")
+cpp_quote("#define REO_NULL                        0x00000000")
+cpp_quote("#define REO_READWRITEMASK               0x0000003F")
+cpp_quote("#define REO_DONTNEEDPALETTE             0x00000020")
+cpp_quote("#define REO_BLANK                       0x00000010")
+cpp_quote("#define REO_DYNAMICSIZE                 0x00000008")
+cpp_quote("#define REO_INVERTEDSELECT              0x00000004")
+cpp_quote("#define REO_BELOWBASELINE               0x00000002")
+cpp_quote("#define REO_RESIZABLE                   0x00000001")
+cpp_quote("#define REO_LINK                        0x80000000")
+cpp_quote("#define REO_STATIC                      0x40000000")
+cpp_quote("#define REO_SELECTED                    0x08000000")
+cpp_quote("#define REO_OPEN                        0x04000000")
+cpp_quote("#define REO_INPLACEACTIVE               0x02000000")
+cpp_quote("#define REO_HILITED                     0x01000000")
+cpp_quote("#define REO_LINKAVAILABLE               0x00800000")
+cpp_quote("#define REO_GETMETAFILE                 0x00400000")
+
+/* clipboard operation flags */
+cpp_quote("#define RECO_PASTE            0x00000000")
+cpp_quote("#define RECO_DROP             0x00000001")
+cpp_quote("#define RECO_COPY             0x00000002")
+cpp_quote("#define RECO_CUT              0x00000003")
+cpp_quote("#define RECO_DRAG             0x00000004")
+
+typedef struct _reobject {
+    DWORD cbStruct;
+    LONG cp;
+    CLSID clsid;
+    LPOLEOBJECT poleobj;
+    LPSTORAGE pstg;
+    LPOLECLIENTSITE polesite;
+    SIZEL sizel;
+    DWORD dvaspect;
+    DWORD dwFlags;
+    DWORD dwUser;
+} REOBJECT;
+
+cpp_quote("#ifndef __RICHEDIT_CHARRANGE_DEFINED")
+cpp_quote("#define __RICHEDIT_CHARRANGE_DEFINED")
+
+typedef struct _charrange
+{
+    LONG cpMin;
+    LONG cpMax;
+} CHARRANGE;
+
+cpp_quote("#endif /* __RICHEDIT_CHARRANGE_DEFINED */")
+
+/*****************************************************************************
+ * IRichEditOle
+ */
+[
+  object,
+  uuid(00020d00-0000-0000-c000-000000000046),
+  pointer_default(unique)
+]
+interface IRichEditOle : IUnknown
+{
+    typedef [unique] IRichEditOle *LPRICHEDITOLE;
+
+    HRESULT GetClientSite(LPOLECLIENTSITE *lplpolesite);
+    HRESULT GetObjectCount();
+    HRESULT GetLinkCount();
+    HRESULT GetObject(LONG iob, REOBJECT *lpreobject, DWORD dwFlags);
+    HRESULT InsertObject(REOBJECT *lpreobject);
+    HRESULT ConvertObject(LONG iob, REFCLSID rclsidNew, LPCSTR lpstrUserTypeNew);
+    HRESULT ActivateAs(REFCLSID rclsid, REFCLSID rclsidAs);
+    HRESULT SetHostNames(LPCSTR lpstrContainerApp, LPCSTR lpstrContainerObj);
+    HRESULT SetLinkAvailable(LONG iob, BOOL fAvailable);
+    HRESULT SetDvaspect(LONG iob, DWORD dvaspect);
+    HRESULT HandsOffStorage(LONG iob);
+    HRESULT SaveCompleted(LONG iob, LPSTORAGE lpstg);
+    HRESULT InPlaceDeactivate();
+    HRESULT ContextSensitiveHelp(BOOL fEnterMode);
+    HRESULT GetClipboardData(CHARRANGE* lpchrg, DWORD reco, LPDATAOBJECT *lplpdataobj);
+    HRESULT ImportDataObject(LPDATAOBJECT lpdataobj, CLIPFORMAT cf, HGLOBAL hMetaPict);
+}
+
+/*****************************************************************************
+ * IRichEditOleCallback
+ */
+[
+  object,
+  uuid(00020d03-0000-0000-c000-000000000046),
+  pointer_default(unique)
+]
+interface IRichEditOleCallback : IUnknown
+{
+    typedef [unique] IRichEditOleCallback *LPRICHEDITOLECALLBACK;
+
+    HRESULT GetNewStorage(LPSTORAGE *lplpstg);
+    HRESULT GetInPlaceContext(LPOLEINPLACEFRAME *lplpFrame, LPOLEINPLACEUIWINDOW *lplpDoc, LPOLEINPLACEFRAMEINFO lpFrameInfo);
+    HRESULT ShowContainerUI(BOOL fShow);
+    HRESULT QueryInsertObject(LPCLSID lpclsid, LPSTORAGE lpstg, LONG cp);
+    HRESULT DeleteObject(LPOLEOBJECT lpoleobj);
+    HRESULT QueryAcceptData(LPDATAOBJECT lpdataobj, CLIPFORMAT *lpcfFormat, DWORD reco, BOOL fReally, HGLOBAL hMetaPict);
+    HRESULT ContextSensitiveHelp(BOOL fEnterMode);
+    HRESULT GetClipboardData(CHARRANGE *lpchrg, DWORD reco, LPDATAOBJECT *lplpdataobj);
+    HRESULT GetDragDropEffect(BOOL fDrag, DWORD grfKeyState, LPDWORD pdwEffect);
+    HRESULT GetContextMenu(WORD seltype, LPOLEOBJECT lpoleobj, CHARRANGE *lpchrg, HMENU *lphmenu);
+}

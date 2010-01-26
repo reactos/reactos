@@ -1,0 +1,101 @@
+/*
+ * Copyright (C) 2006 Mike McCormack
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+typedef DWORD DBKIND;
+
+enum DBKINDENUM {
+    DBKIND_GUID_NAME,
+    DBKIND_GUID_PROPID,
+    DBKIND_NAME,
+    DBKIND_PGUID_NAME,
+    DBKIND_PGUID_PROPID,
+    DBKIND_PROPID,
+    DBKIND_GUID,
+};
+
+typedef struct tagDBID {
+    [switch_type(DBKIND), switch_is(eKind)] union
+    {
+    [case(DBKIND_GUID_NAME, DBKIND_GUID_PROPID, DBKIND_GUID, DBKIND_NAME, DBKIND_PROPID)]
+        GUID guid;
+    [case(DBKIND_PGUID_NAME, DBKIND_PGUID_PROPID)]
+        GUID *pguid;
+    [default]
+        ;
+    } uGuid;
+    DBKIND eKind;
+    [switch_type(DBKIND), switch_is(eKind)] union
+    {
+    [case(DBKIND_GUID_NAME, DBKIND_NAME, DBKIND_PGUID_NAME)]
+        LPOLESTR pwszName;
+    [case(DBKIND_GUID_PROPID, DBKIND_GUID, DBKIND_PGUID_PROPID, DBKIND_PROPID)]
+        ULONG ulPropid;
+    [default]
+        ;
+    } uName;
+} DBID;
+
+typedef DWORD DBPROPID;
+
+typedef struct tagDBPROPIDSET {
+    [size_is(cPropertyIDs)] DBPROPID *rgPropertyIDs;
+    ULONG cPropertyIDs;
+    GUID guidPropertySet;
+} DBPROPIDSET;
+
+typedef DWORD DBPROPOPTIONS;
+
+enum DBPROPOPTIONENUM {
+    DBPROPOPTIONS_REQUIRED = 0,
+    DBPROPOPTIONS_SETIFCHEAP = 1,
+    DBPROPOPTIONS_OPTIONAL = 1,
+};
+
+typedef DWORD DBPROPSTATUS;
+
+typedef struct tagDBPROP {
+    DBPROPID dwPropertyID;
+    DBPROPOPTIONS dwOptions;
+    DBPROPSTATUS dwStatus;
+    DBID colid;
+    VARIANT vValue;
+} DBPROP;
+
+typedef struct tagDBPROPSET {
+    [size_is(cProperties)] DBPROP *rgProperties;
+    ULONG cProperties;
+    GUID guidPropertySet;
+} DBPROPSET;
+
+typedef DWORD DBPROPFLAGS;
+
+typedef struct tagDBPROPINFO {
+    LPOLESTR pwszDescription;
+    DBPROPID dwPropertyID;
+    DBPROPFLAGS dwFlags;
+    VARTYPE vtType;
+    VARIANT vValues;
+} DBPROPINFO;
+
+typedef DBPROPINFO *PDBPROPINFO;
+
+typedef struct tagDBPROPINFOSET {
+    [size_is(cPropertyInfos)] PDBPROPINFO rgPropertyInfos;
+    ULONG cPropertyInfos;
+    GUID guidPropertySet;
+} DBPROPINFOSET;
