@@ -7,7 +7,6 @@
 		<define name="_NTHAL_" />
 		<directory name="generic">
 			<file>pic.c</file>
-			<file>irq.S</file>
 			<file>processor.c</file>
 			<file>spinlock.c</file>
 		</directory>

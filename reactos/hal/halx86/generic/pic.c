@@ -886,3 +886,6 @@ HalpDispatchInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     /* Exit the interrupt */
     KiEoiHelper(TrapFrame);
 }
+
+KiTrap(HalpApcInterrupt,      KI_SOFTWARE_TRAP);
+KiTrap(HalpDispatchInterrupt, KI_SOFTWARE_TRAP);
