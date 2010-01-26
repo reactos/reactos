@@ -23,6 +23,7 @@ platform dependent basic types and macros
 #define _LOADDS _ERR_UNSUPPORTED
 #define _DLLEXPORT __declspec(dllexport)
 #define _DLLIMPORT __declspec(dllimport)
+#define _NORETURN __declspec(noreturn)
 #define _ALIGN(x) __declspec(aligned(x))
 
 #define _PACK(x) __pragma(pack(push, x))
@@ -41,6 +42,7 @@ platform dependent basic types and macros
 #define _NOWARN_POP
 #define _NOWARN_MSC(x)
 #define _NOWARN_GNUC(x)
+#define _ASSUME(x)
 
 #define _SECTION(x) __declspec((section(sectn)))
 #define _SECTION_FN(sectn, fn) __declspec((section(sectn)))
@@ -185,15 +187,22 @@ typedef struct {i64u l; i64u h;} f128, *pf128, _NEAR *npf128, _FAR *lpf128, _FAR
 #define SIZTMAX 0xFFFFFFFF
 typedef i32u sizt, *psizt, _NEAR *npsizt, _FAR *npsizt, _FARH *hpsizt;
 
-/*************************************************************************
-
-*************************************************************************/
 // debug 
 #if _DEBUG
 #define dbgref TX("(") TX(__FILE__) TX(":") TX(sfy(__LINE__)) TX(":") TX(__FUNCTION__) TX(")")
 #else
 #define dbgref 0
 #endif
+
+//
+#ifdef __GNUC__
+#if __GNUC__ * 100 + __GNUC_MINOR__ >= 405
+#define _UNREACHABLE __builtin_unreachable()
+#else
+#define _UNREACHABLE __builtin_trap()
+#endif
+#define UNREACHABLE _UNREACHABLE
+#define _noreturn() _UNREACHABLE
 
 #define _ReturnAddress() (__builtin_return_address(0))
 #define ReturnAddress _ReturnAddress

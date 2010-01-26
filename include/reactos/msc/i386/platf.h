@@ -22,6 +22,7 @@ platform dependent basic types and macros
 #define _LOADDS _ERR_UNSUPPORTED
 #define _DLLEXPORT __declspec(dllexport)
 #define _DLLIMPORT __declspec(dllimport)
+#define _NORETURN __declspec(noreturn)
 #define _ALIGN(x) __declspec(align(x))
 
 #define _PACKN(x) __pragma(pack(push, x))
@@ -38,6 +39,7 @@ platform dependent basic types and macros
 #define _NOWARN_POP __pragma(warning(pop))
 #define _NOWARN_MSC(x) __pragma(warning(disable: x))
 #define _NOWARN_GNUC(x)
+#define _ASSUME(x) __assume(x)
 
 #define _SECTION(x) __declspec(allocate(x))
 #define _SECTION_FN(sectn, fn) __pragma(alloc_text(sectn, fn))
@@ -182,15 +184,17 @@ typedef struct {i64u l; i64u h;} f128, *pf128, _NEAR *npf128, _FAR *lpf128, _FAR
 #define SIZTMAX 0xFFFFFFFF
 typedef i32u sizt, *psizt, _NEAR *npsizt, _FAR *lpsizt, _FARH *hpsizt;
 
-/*************************************************************************
-
-*************************************************************************/
 // debug 
 #if _DEBUG
 #define dbgref TX("(") TX(__FILE__) TX(":") TX(sfy(__LINE__)) TX(":") TX(__FUNCTION__) TX(")")
 #else
 #define dbgref 0
 #endif
+
+//
+_NORETURN _INLINEF void _noreturn(void) {_ASSUME(0);};
+#define _UNREACHABLE _ASSUME(0); _noreturn()
+#define UNREACHABLE _UNREACHABLE
 
 pvoid _ReturnAddress(void);
 #pragma intrinsic(_ReturnAddress)
@@ -199,5 +203,5 @@ pvoid _ReturnAddress(void);
 #define ReturnAddressn _ReturnAddressn
 #define __builtin_expect(x, v) (x)
 
-#include <msc.h>	// additional compatibility defs that would not be needed if code uses macros defined here instead of compiler specific directives
+#include <msc.h>	// should not be needed if code uses above macros instead of compiler dependent directives
 

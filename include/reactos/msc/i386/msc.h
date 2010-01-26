@@ -14,6 +14,8 @@
 
 #define __inline__ _INLINE
 #define FORCEINLINE _INLINEF
+#define DECLSPEC_NORETURN _NORETURN
+#define FASTCALL _FASTCALL
 #define __attribute__(packed)
 
 #endif

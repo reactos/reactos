@@ -8,12 +8,11 @@
 // #define CONFIG_SMP
 
 #define __REACTOS__
+#define _X86_
 
-#if defined(_M_IX86)
 #define KERNEL_STACK_SIZE 0x6000
 #define KERNEL_LARGE_STACK_SIZE 0xf000
 #define KERNEL_LARGE_STACK_COMMIT 0x6000
-#endif
 
 #include <osver.h>
 #include <platf.h>
