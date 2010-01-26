@@ -416,9 +416,9 @@ IntDispatchMessage(PMSG pMsg)
   if (pMsg->message == WM_PAINT)
   {
   /* send a WM_NCPAINT and WM_ERASEBKGND if the non-client area is still invalid */
-     HRGN hrgn = NtGdiCreateRectRgn( 0, 0, 0, 0 );
+     HRGN hrgn = IntSysCreateRectRgn( 0, 0, 0, 0 );
      co_UserGetUpdateRgn( Window, hrgn, TRUE );
-     GreDeleteObject( hrgn );
+     REGION_FreeRgnByHandle( hrgn );
   }
   return retval;
 }

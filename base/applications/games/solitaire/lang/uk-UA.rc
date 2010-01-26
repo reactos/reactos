@@ -18,8 +18,8 @@ CAPTION "Параметри"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "Карти", -1, 7, 7, 65, 40
-    AUTORADIOBUTTON "&По одній", IDC_OPT_DRAWONE, 14, 19, 52, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "П&о три", IDC_OPT_DRAWTHREE, 14, 32, 52, 10
+    AUTORADIOBUTTON "По &одній", IDC_OPT_DRAWONE, 14, 19, 52, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "По &три", IDC_OPT_DRAWTHREE, 14, 32, 52, 10
 
     AUTOCHECKBOX    "&Гра за часом", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
     AUTOCHECKBOX    "&Рядок стану", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
@@ -58,7 +58,7 @@ BEGIN
     IDS_SOL_ABOUT   "Косинка від J Brown\n\nCardLib версії 1.0."
     IDS_SOL_QUIT    "Вийти з поточної гри?"
     IDS_SOL_WIN     "Вітання, Ви виграли!!"
-    IDS_SOL_DEAL    "Deal again?"
+    IDS_SOL_DEAL    "Роздати знову?"
 END
 
 
@@ -71,14 +71,14 @@ BEGIN
         MENUITEM "&Роздати карти\tF2",          IDM_GAME_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Колода...",                  IDM_GAME_DECK
-        MENUITEM "&Параметри...",               IDM_GAME_OPTIONS
+        MENUITEM "Па&раметри...",               IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
         MENUITEM "В&ихід",                      IDM_GAME_EXIT
     END
     POPUP "&Довідка"
     BEGIN
         MENUITEM "&Зміст\tF1",                  IDM_HELP_CONTENTS
-        MENUITEM "&Про",                        IDM_HELP_ABOUT
+        MENUITEM "&Про програму...",                        IDM_HELP_ABOUT
     END
 END
 

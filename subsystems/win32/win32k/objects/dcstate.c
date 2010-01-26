@@ -13,16 +13,13 @@
 
 VOID
 FASTCALL
-DC_vCopyState(PDC pdcSrc, PDC pdcDst)
+DC_vCopyState(PDC pdcSrc, PDC pdcDst, BOOL To)
 {
     /* Copy full DC attribute */
     *pdcDst->pdcattr = *pdcSrc->pdcattr;
-
-    /* Get/SetDCState() don't change hVisRgn field ("Undoc. Windows" p.559). */
-    /* The VisRectRegion field needs to be set to a valid state */
-
+    
     /* Mark some fields as dirty */
-    pdcDst->pdcattr->ulDirty_ |= 0x0012001f;
+    pdcDst->pdcattr->ulDirty_ |= 0x0012001f; // Note: Use if, To is FALSE....
 
     /* Copy DC level */
     pdcDst->dclevel.pColorSpace     = pdcSrc->dclevel.pColorSpace;
@@ -53,8 +50,20 @@ DC_vCopyState(PDC pdcSrc, PDC pdcDst)
         pdcDst->rosdc.bitsPerPixel = pdcSrc->rosdc.bitsPerPixel;
     }
 
-    GdiExtSelectClipRgn(pdcDst, pdcSrc->rosdc.hClipRgn, RGN_COPY);
-
+    /* Get/SetDCState() don't change hVisRgn field ("Undoc. Windows" p.559). */
+    if (To) // Copy "To" SaveDC state.
+    {
+        if (pdcSrc->rosdc.hClipRgn)
+        {
+           pdcDst->rosdc.hClipRgn = IntSysCreateRectRgn(0, 0, 0, 0);
+           NtGdiCombineRgn(pdcDst->rosdc.hClipRgn, pdcSrc->rosdc.hClipRgn, 0, RGN_COPY);
+        }
+        // FIXME! Handle prgnMeta!
+    }
+    else // Copy "!To" RestoreDC state.
+    {  /* The VisRectRegion field needs to be set to a valid state */
+       GdiExtSelectClipRgn(pdcDst, pdcSrc->rosdc.hClipRgn, RGN_COPY);
+    }
 }
 
 
@@ -66,7 +75,7 @@ IntGdiCleanDC(HDC hDC)
     dc = DC_LockDc(hDC);
     if (!dc) return FALSE;
     // Clean the DC
-    if (defaultDCstate) DC_vCopyState(defaultDCstate, dc);
+    if (defaultDCstate) DC_vCopyState(defaultDCstate, dc, FALSE);
 
     if (dc->dctype != DC_TYPE_MEMORY)
     {
@@ -101,7 +110,6 @@ NtGdiRestoreDC(
 {
     PDC pdc, pdcSave;
     HDC hdcSave;
-    PEPROCESS pepCurrentProcess;
 
     DPRINT("NtGdiRestoreDC(%lx, %d)\n", hdc, iSaveLevel);
 
@@ -129,16 +137,13 @@ NtGdiRestoreDC(
         return FALSE;
     }
 
-    /* Get current process */
-    pepCurrentProcess = PsGetCurrentProcess();
-
     /* Loop the save levels */
     while (pdc->dclevel.lSaveDepth > iSaveLevel)
     {
         hdcSave = pdc->dclevel.hdcSave;
 
         /* Set us as the owner */
-        if (!GDIOBJ_SetOwnership(hdcSave, pepCurrentProcess))
+        if (!IntGdiSetDCOwnerEx(hdcSave, GDI_OBJ_HMGR_POWNED, FALSE ))
         {
             /* Could not get ownership. That's bad! */
             DPRINT1("Could not get ownership of saved DC (%p) for dc %p!\n",
@@ -167,7 +172,7 @@ NtGdiRestoreDC(
         if (pdc->dclevel.lSaveDepth == iSaveLevel)
         {
             /* Copy the state back */
-            DC_vCopyState(pdcSave, pdc);
+            DC_vCopyState(pdcSave, pdc, FALSE);
 
             // Restore Path by removing it, if the Save flag is set.
             // BeginPath will takecare of the rest.
@@ -177,6 +182,13 @@ NtGdiRestoreDC(
                 pdc->dclevel.hPath = 0;
                 pdc->dclevel.flPath &= ~DCPATH_SAVE;
             }
+            // Attempt to plug the leak!
+            if (pdcSave->rosdc.hClipRgn)
+            {
+               DPRINT("Have hClipRgn!\n");
+               REGION_FreeRgnByHandle(pdcSave->rosdc.hClipRgn);
+            }
+            // FIXME! Handle prgnMeta!
         }
 
         /* Delete the saved dc */
@@ -220,12 +232,12 @@ NtGdiSaveDC(
     }
     hdcSave = pdcSave->BaseObject.hHmgr;
 
+    /* Copy the current state */
+    DC_vCopyState(pdc, pdcSave, TRUE);
+
     /* Make it a kernel handle
        (FIXME: windows handles this different, see wiki)*/
-    GDIOBJ_SetOwnership(hdcSave, NULL);
-
-    /* Copy the current state */
-    DC_vCopyState(pdc, pdcSave);
+    IntGdiSetDCOwnerEx(hdcSave, GDI_OBJ_HMGR_NONE, FALSE);
 
     /* Copy path. FIXME: why this way? */
     pdcSave->dclevel.hPath = pdc->dclevel.hPath;

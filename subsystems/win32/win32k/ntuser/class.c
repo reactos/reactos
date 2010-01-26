@@ -1265,7 +1265,7 @@ UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
                            MenuName,
                            fnID,
                            dwFlags,
-                           pti->Desktop,
+                           pti->rpdesk,
                            pi);
 
     if (Class != NULL)

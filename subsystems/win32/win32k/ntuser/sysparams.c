@@ -898,7 +898,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
         case SPI_GETWORKAREA: // FIXME: the workarea should be part of the MONITOR
         {
             PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-            PDESKTOP pdesktop = pti->Desktop;
+            PDESKTOP pdesktop = pti->rpdesk;
             RECTL rclWorkarea;
 
             if(!pdesktop)
@@ -911,7 +911,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
         case SPI_SETWORKAREA: // FIXME: the workarea should be part of the MONITOR
         {
             PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-            PDESKTOP pdesktop = pti->Desktop;
+            PDESKTOP pdesktop = pti->rpdesk;
             RECT rcWorkArea;
 
             if(!pdesktop)

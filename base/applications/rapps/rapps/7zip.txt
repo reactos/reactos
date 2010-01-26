@@ -16,4 +16,3 @@ Description = Tool zum Erstellen und Öffnen von 7zip, zip, tar, rar und andrern
 
 [Section.040a]
 Description = Utilidad para crear y abrir 7zip, zip, tar, rar y otros archivos comprimidos.
-

@@ -103,8 +103,7 @@ extern PULONG KiInterruptTemplateObject;
 extern PULONG KiInterruptTemplateDispatch;
 extern PULONG KiInterruptTemplate2ndDispatch;
 extern ULONG KiUnexpectedEntrySize;
-extern UCHAR P0BootStack[];
-extern UCHAR KiDoubleFaultStack[];
+extern ULONG_PTR KiDoubleFaultStack;
 extern EX_PUSH_LOCK KernelAddressSpaceLock;
 extern ULONG KiMaximumDpcQueueDepth;
 extern ULONG KiMinimumDpcRate;
@@ -135,9 +134,11 @@ extern PVOID KeUserExceptionDispatcher;
 extern PVOID KeRaiseUserExceptionDispatcher;
 extern ULONG KeTimeIncrement;
 extern ULONG KeTimeAdjustment;
+extern LONG KiTickOffset;
 extern ULONG_PTR KiBugCheckData[5];
 extern ULONG KiFreezeFlag;
 extern ULONG KiDPCTimeout;
+extern PGDI_BATCHFLUSH_ROUTINE KeGdiFlushUserBatch;
 
 /* MACROS *************************************************************************/
 
@@ -257,7 +258,7 @@ WRMSR(
 );
 
 /* Finds a new thread to run */
-NTSTATUS
+LONG_PTR
 FASTCALL
 KiSwapThread(
     IN PKTHREAD Thread,
@@ -641,7 +642,7 @@ VOID
 FASTCALL
 KiUnwaitThread(
     IN PKTHREAD Thread,
-    IN NTSTATUS WaitStatus,
+    IN LONG_PTR WaitStatus,
     IN KPRIORITY Increment
 );
 
@@ -730,12 +731,6 @@ KiTimerExpiration(
 
 ULONG
 NTAPI
-KiComputeTimerTableIndex(
-    IN LONGLONG TimeValue
-);
-
-ULONG
-NTAPI
 KeSetProcess(
     struct _KPROCESS* Process,
     KPRIORITY Increment,
@@ -817,7 +812,7 @@ KiInitializeBugCheck(VOID);
 
 VOID
 NTAPI
-KiSystemStartupReal(
+KiSystemStartup(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
@@ -868,19 +863,7 @@ KeBugCheckWithTf(
     ULONG_PTR BugCheckParameter4,
     PKTRAP_FRAME Tf
 );
-
-VOID
-NTAPI
-KiDispatchExceptionFromTrapFrame(
-    IN NTSTATUS Code,
-    IN ULONG_PTR Address,
-    IN ULONG ParameterCount,
-    IN ULONG_PTR Parameter1,
-    IN ULONG_PTR Parameter2,
-    IN ULONG_PTR Parameter3,
-    IN PKTRAP_FRAME TrapFrame
-);
-                                  
+                              
 BOOLEAN
 NTAPI
 KiHandleNmi(VOID);
@@ -936,6 +919,37 @@ VOID
 NTAPI
 KiEndUnexpectedRange(
     VOID
+);
+
+NTSTATUS
+NTAPI
+KiRaiseException(
+    IN PEXCEPTION_RECORD ExceptionRecord,
+    IN PCONTEXT Context,
+    IN PKEXCEPTION_FRAME ExceptionFrame,
+    IN PKTRAP_FRAME TrapFrame,
+    IN BOOLEAN SearchFrames
+);
+
+NTSTATUS
+NTAPI
+KiContinue(
+    IN PCONTEXT Context,
+    IN PKEXCEPTION_FRAME ExceptionFrame,
+    IN PKTRAP_FRAME TrapFrame
+);
+
+VOID
+FASTCALL
+KiServiceExit(
+    IN PKTRAP_FRAME TrapFrame,
+    IN NTSTATUS Status
+);
+
+VOID
+FASTCALL
+KiServiceExit2(
+    IN PKTRAP_FRAME TrapFrame
 );
 
 #ifndef HAL_INTERRUPT_SUPPORT_IN_C
@@ -1093,8 +1107,17 @@ KiSystemService(
 );
 
 VOID
+FASTCALL
 KiIdleLoop(
     VOID
+);
+
+VOID
+FASTCALL
+DECLSPEC_NORETURN
+KiSystemFatalException(
+    IN ULONG ExceptionCode,
+    IN PKTRAP_FRAME TrapFrame
 );
 
 #include "ke_x.h"

@@ -895,7 +895,7 @@ BOOL find_global_prop(HTMLWindow *window, BSTR name, DWORD flags, ScriptHost **r
 
         hres = IDispatch_QueryInterface(disp, &IID_IDispatchEx, (void**)&dispex);
         if(SUCCEEDED(hres)) {
-            hres = IDispatchEx_GetDispID(dispex, name, flags, ret_id);
+            hres = IDispatchEx_GetDispID(dispex, name, flags & (~fdexNameEnsure), ret_id);
             IDispatchEx_Release(dispex);
         }else {
             FIXME("No IDispatchEx\n");

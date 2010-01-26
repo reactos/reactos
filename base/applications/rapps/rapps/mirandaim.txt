@@ -2,13 +2,13 @@
 
 [Section]
 Name = Miranda IM
-Version = 0.8.10
+Version = 0.8.12
 Licence = GPL
 Description = Open source multiprotocol instant messaging application - May not work completely.
 Size = 1.6MB
 Category = 5
 URLSite = http://www.miranda-im.org/
-URLDownload = http://miranda.googlecode.com/files/miranda-im-v0.8.10-unicode.exe
+URLDownload = http://miranda.googlecode.com/files/miranda-im-v0.8.12-unicode.exe
 CDPath = none
 
 [Section.0407]
@@ -19,4 +19,3 @@ Description = Aplicación de mensajería instantánea multiprotocolo de código 
 
 [Section.0415]
 Description = Otwarty komunikator internetowy, obsługujący wiele różnych protokołów (m.in. GG, Tlen, Jabber, ICQ, IRC) - może nie działać prawidłowo.
-

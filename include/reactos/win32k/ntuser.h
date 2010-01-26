@@ -40,13 +40,13 @@ typedef struct _DESKTOPINFO
 {
     PVOID pvDesktopBase;
     PVOID pvDesktopLimit;
+    struct _WND *spwnd;
+    DWORD fsHooks;
+    struct tagHOOK * aphkStart[16];
 
-    HANDLE hKernelHeap;
-    ULONG_PTR HeapLimit;
     HWND hTaskManWindow;
     HWND hProgmanWindow;
     HWND hShellWindow;
-    struct _WND *Wnd;
 
     union
     {
@@ -94,12 +94,18 @@ typedef struct _THRDESKHEAD
 
 typedef struct _PROCDESKHEAD
 {
-  HANDLE h;
-  DWORD  cLockObj;  
+  HEAD;
   DWORD hTaskWow;
   struct _DESKTOP *rpdesk;
   PVOID       pSelf;
 } PROCDESKHEAD, *PPROCDESKHEAD;
+
+typedef struct _PROCMARKHEAD
+{
+  HEAD;
+  ULONG hTaskWow;
+  PPROCESSINFO ppi;
+} PROCMARKHEAD, *PPROCMARKHEAD;
 
 #define UserHMGetHandle(obj) ((obj)->head.h)
 
@@ -769,6 +775,8 @@ typedef struct _USERCONNECT
 //
 #define DCX_USESTYLE     0x00010000
 #define DCX_KEEPCLIPRGN  0x00040000
+#define DCX_KEEPLAYOUT   0x40000000
+#define DCX_PROCESSOWNED 0x80000000
 
 //
 // Non SDK Queue message types.

@@ -451,7 +451,10 @@ int __cdecl _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 
 		/* get the conversion qualifier */
 		qualifier = -1;
-		if (*fmt == 'h' || *fmt == 'l' || *fmt == 'L' || *fmt == 'w') {
+        if (*fmt == 'l' && *(fmt+1) == 'l') {
+            qualifier = 'I';
+            fmt += 2;
+		} else if (*fmt == 'h' || *fmt == 'l' || *fmt == 'L' || *fmt == 'w') {
 			qualifier = *fmt;
 			++fmt;
 		} else if (*fmt == 'I' && *(fmt+1) == '6' && *(fmt+2) == '4') {

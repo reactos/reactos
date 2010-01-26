@@ -178,7 +178,6 @@ KiCoprocessorError(
 );
 
 VOID
-NTAPI
 KiUnexpectedInterrupt(
     VOID
 );

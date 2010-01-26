@@ -34,6 +34,22 @@
 #include "mshtml_private.h"
 #include "htmlevent.h"
 
+typedef struct
+{
+    DispatchEx dispex;
+    const IHTMLFiltersCollectionVtbl *lpHTMLFiltersCollectionVtbl;
+
+    LONG ref;
+} HTMLFiltersCollection;
+
+#define HTMLFILTERSCOLLECTION(x)     ((IHTMLFiltersCollection*)  &(x)->lpHTMLFiltersCollectionVtbl)
+
+#define HTMLFILTERSCOLLECTION_THIS(iface) \
+    DEFINE_THIS(HTMLFiltersCollection, HTMLFiltersCollection, iface)
+
+IHTMLFiltersCollection *HTMLFiltersCollection_Create(void);
+
+
 WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 #define HTMLELEM_THIS(iface) DEFINE_THIS(HTMLElement, HTMLElement, iface)
@@ -569,9 +585,11 @@ static HRESULT WINAPI HTMLElement_get_document(IHTMLElement *iface, IDispatch **
     if(!p)
         return E_POINTER;
 
+    if(This->node.vtbl->get_document)
+        return This->node.vtbl->get_document(&This->node, p);
+
     *p = (IDispatch*)HTMLDOC(&This->node.doc->basedoc);
     IDispatch_AddRef(*p);
-
     return S_OK;
 }
 
@@ -908,8 +926,63 @@ static HRESULT WINAPI HTMLElement_get_innerText(IHTMLElement *iface, BSTR *p)
 static HRESULT WINAPI HTMLElement_put_outerHTML(IHTMLElement *iface, BSTR v)
 {
     HTMLElement *This = HTMLELEM_THIS(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(v));
-    return E_NOTIMPL;
+    nsIDOMDocumentFragment *nsfragment;
+    nsIDOMDocumentRange *nsdocrange;
+    nsIDOMNSRange *nsrange;
+    nsIDOMNode *nsparent;
+    nsIDOMRange *range;
+    nsAString html_str;
+    nsresult nsres;
+    HRESULT hres = S_OK;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(v));
+
+    nsres = nsIDOMHTMLDocument_QueryInterface(This->node.doc->nsdoc, &IID_nsIDOMDocumentRange, (void**)&nsdocrange);
+    if(NS_FAILED(nsres))
+        return E_FAIL;
+
+    nsres = nsIDOMDocumentRange_CreateRange(nsdocrange, &range);
+    nsIDOMDocumentRange_Release(nsdocrange);
+    if(NS_FAILED(nsres)) {
+        ERR("CreateRange failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    nsres = nsIDOMRange_QueryInterface(range, &IID_nsIDOMNSRange, (void**)&nsrange);
+    nsIDOMRange_Release(range);
+    if(NS_FAILED(nsres)) {
+        ERR("Could not get nsIDOMNSRange: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    nsAString_Init(&html_str, v);
+    nsIDOMNSRange_CreateContextualFragment(nsrange, &html_str, &nsfragment);
+    nsIDOMNSRange_Release(nsrange);
+    nsAString_Finish(&html_str);
+    if(NS_FAILED(nsres)) {
+        ERR("CreateContextualFragment failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    nsres = nsIDOMNode_GetParentNode(This->node.nsnode, &nsparent);
+    if(NS_SUCCEEDED(nsres) && nsparent) {
+        nsIDOMNode *nstmp;
+
+        nsres = nsIDOMNode_ReplaceChild(nsparent, (nsIDOMNode*)nsfragment, This->node.nsnode, &nstmp);
+        nsIDOMNode_Release(nsparent);
+        if(NS_FAILED(nsres)) {
+            ERR("ReplaceChild failed: %08x\n", nsres);
+            hres = E_FAIL;
+        }else if(nstmp) {
+            nsIDOMNode_Release(nstmp);
+        }
+    }else {
+        ERR("GetParentNode failed: %08x\n", nsres);
+        hres = E_FAIL;
+    }
+
+    nsIDOMDocumentFragment_Release(nsfragment);
+    return hres;
 }
 
 static HRESULT WINAPI HTMLElement_get_outerHTML(IHTMLElement *iface, BSTR *p)
@@ -959,19 +1032,13 @@ static HRESULT HTMLElement_InsertAdjacentNode(HTMLElement *This, BSTR where, nsI
     static const WCHAR wszAfterEnd[] = {'a','f','t','e','r','E','n','d',0};
     nsresult nsres;
 
-    if(!This->nselem) {
-        FIXME("NULL nselem\n");
-        return E_NOTIMPL;
-    }
-
     if (!strcmpiW(where, wszBeforeBegin))
     {
         nsIDOMNode *unused;
         nsIDOMNode *parent;
-        nsres = nsIDOMNode_GetParentNode(This->nselem, &parent);
+        nsres = nsIDOMNode_GetParentNode(This->node.nsnode, &parent);
         if (!parent) return E_INVALIDARG;
-        nsres = nsIDOMNode_InsertBefore(parent, nsnode,
-                                        (nsIDOMNode *)This->nselem, &unused);
+        nsres = nsIDOMNode_InsertBefore(parent, nsnode, This->node.nsnode, &unused);
         if (unused) nsIDOMNode_Release(unused);
         nsIDOMNode_Release(parent);
     }
@@ -979,15 +1046,15 @@ static HRESULT HTMLElement_InsertAdjacentNode(HTMLElement *This, BSTR where, nsI
     {
         nsIDOMNode *unused;
         nsIDOMNode *first_child;
-        nsIDOMNode_GetFirstChild(This->nselem, &first_child);
-        nsres = nsIDOMNode_InsertBefore(This->nselem, nsnode, first_child, &unused);
+        nsIDOMNode_GetFirstChild(This->node.nsnode, &first_child);
+        nsres = nsIDOMNode_InsertBefore(This->node.nsnode, nsnode, first_child, &unused);
         if (unused) nsIDOMNode_Release(unused);
         if (first_child) nsIDOMNode_Release(first_child);
     }
     else if (!strcmpiW(where, wszBeforeEnd))
     {
         nsIDOMNode *unused;
-        nsres = nsIDOMNode_AppendChild(This->nselem, nsnode, &unused);
+        nsres = nsIDOMNode_AppendChild(This->node.nsnode, nsnode, &unused);
         if (unused) nsIDOMNode_Release(unused);
     }
     else if (!strcmpiW(where, wszAfterEnd))
@@ -995,10 +1062,10 @@ static HRESULT HTMLElement_InsertAdjacentNode(HTMLElement *This, BSTR where, nsI
         nsIDOMNode *unused;
         nsIDOMNode *next_sibling;
         nsIDOMNode *parent;
-        nsIDOMNode_GetParentNode(This->nselem, &parent);
+        nsIDOMNode_GetParentNode(This->node.nsnode, &parent);
         if (!parent) return E_INVALIDARG;
 
-        nsIDOMNode_GetNextSibling(This->nselem, &next_sibling);
+        nsIDOMNode_GetNextSibling(This->node.nsnode, &next_sibling);
         if (next_sibling)
         {
             nsres = nsIDOMNode_InsertBefore(parent, nsnode, next_sibling, &unused);
@@ -1054,7 +1121,7 @@ static HRESULT WINAPI HTMLElement_insertAdjacentHTML(IHTMLElement *iface, BSTR w
         return E_FAIL;
     }
 
-    nsIDOMRange_SetStartBefore(range, (nsIDOMNode *)This->nselem);
+    nsIDOMRange_SetStartBefore(range, This->node.nsnode);
 
     nsIDOMRange_QueryInterface(range, &IID_nsIDOMNSRange, (void **)&nsrange);
     nsIDOMRange_Release(range);
@@ -1142,8 +1209,14 @@ static HRESULT WINAPI HTMLElement_get_filters(IHTMLElement *iface,
                                               IHTMLFiltersCollection **p)
 {
     HTMLElement *This = HTMLELEM_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    TRACE("(%p)->(%p)\n", This, p);
+
+    if(!p)
+        return E_POINTER;
+
+    *p = HTMLFiltersCollection_Create();
+
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLElement_put_ondragstart(IHTMLElement *iface, VARIANT v)
@@ -1323,6 +1396,31 @@ static HRESULT WINAPI HTMLElement_get_all(IHTMLElement *iface, IDispatch **p)
     return S_OK;
 }
 
+static HRESULT HTMLElement_get_dispid(IUnknown *iface, BSTR name,
+        DWORD grfdex, DISPID *pid)
+{
+    HTMLElement *This = HTMLELEM_THIS(iface);
+
+    if(This->node.vtbl->get_dispid)
+        return This->node.vtbl->get_dispid(&This->node, name, grfdex, pid);
+
+    return DISP_E_UNKNOWNNAME;
+}
+
+static HRESULT HTMLElement_invoke(IUnknown *iface, DISPID id, LCID lcid,
+        WORD flags, DISPPARAMS *params, VARIANT *res, EXCEPINFO *ei,
+        IServiceProvider *caller)
+{
+    HTMLElement *This = HTMLELEM_THIS(iface);
+
+    if(This->node.vtbl->invoke)
+        return This->node.vtbl->invoke(&This->node, id, lcid, flags,
+                params, res, ei, caller);
+
+    ERR("(%p): element has no invoke method\n", This);
+    return E_NOTIMPL;
+}
+
 #undef HTMLELEM_THIS
 
 static const IHTMLElementVtbl HTMLElementVtbl = {
@@ -1482,8 +1580,14 @@ static const tid_t HTMLElement_iface_tids[] = {
     0
 };
 
-static dispex_static_data_t HTMLElement_dispex = {
+static dispex_static_data_vtbl_t HTMLElement_dispex_vtbl = {
     NULL,
+    HTMLElement_get_dispid,
+    HTMLElement_invoke
+};
+
+static dispex_static_data_t HTMLElement_dispex = {
+    &HTMLElement_dispex_vtbl,
     DispHTMLUnknownElement_tid,
     NULL,
     HTMLElement_iface_tids
@@ -1496,6 +1600,8 @@ void HTMLElement_Init(HTMLElement *This, HTMLDocumentNode *doc, nsIDOMHTMLElemen
     HTMLElement2_Init(This);
     HTMLElement3_Init(This);
 
+    if(dispex_data && !dispex_data->vtbl)
+        dispex_data->vtbl = &HTMLElement_dispex_vtbl;
     init_dispex(&This->node.dispex, (IUnknown*)HTMLELEM(This), dispex_data ? dispex_data : &HTMLElement_dispex);
 
     if(nselem)
@@ -1517,6 +1623,8 @@ HTMLElement *HTMLElement_Create(HTMLDocumentNode *doc, nsIDOMNode *nsnode, BOOL 
 
     static const WCHAR wszA[]        = {'A',0};
     static const WCHAR wszBODY[]     = {'B','O','D','Y',0};
+    static const WCHAR wszFORM[]     = {'F','O','R','M',0};
+    static const WCHAR wszFRAME[]    = {'F','R','A','M','E',0};
     static const WCHAR wszIFRAME[]   = {'I','F','R','A','M','E',0};
     static const WCHAR wszIMG[]      = {'I','M','G',0};
     static const WCHAR wszINPUT[]    = {'I','N','P','U','T',0};
@@ -1540,8 +1648,12 @@ HTMLElement *HTMLElement_Create(HTMLDocumentNode *doc, nsIDOMNode *nsnode, BOOL 
         ret = HTMLAnchorElement_Create(doc, nselem);
     else if(!strcmpW(class_name, wszBODY))
         ret = HTMLBodyElement_Create(doc, nselem);
+    else if(!strcmpW(class_name, wszFORM))
+        ret = HTMLFormElement_Create(doc, nselem);
+    else if(!strcmpW(class_name, wszFRAME))
+        ret = HTMLFrameElement_Create(doc, nselem);
     else if(!strcmpW(class_name, wszIFRAME))
-        ret = HTMLIFrame_Create(doc, nselem, NULL);
+        ret = HTMLIFrame_Create(doc, nselem);
     else if(!strcmpW(class_name, wszIMG))
         ret = HTMLImgElement_Create(doc, nselem);
     else if(!strcmpW(class_name, wszINPUT))
@@ -1573,4 +1685,186 @@ HTMLElement *HTMLElement_Create(HTMLDocumentNode *doc, nsIDOMNode *nsnode, BOOL 
     nsAString_Finish(&class_name_str);
 
     return ret;
+}
+
+/* interaface IHTMLFiltersCollection */
+static HRESULT WINAPI HTMLFiltersCollection_QueryInterface(IHTMLFiltersCollection *iface, REFIID riid, void **ppv)
+{
+    HTMLFiltersCollection *This = HTMLFILTERSCOLLECTION_THIS(iface);
+
+    TRACE("%p %s %p\n", This, debugstr_guid( riid ), ppv );
+
+    if(IsEqualGUID(&IID_IUnknown, riid)) {
+        TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
+        *ppv = HTMLFILTERSCOLLECTION(This);
+    }else if(IsEqualGUID(&IID_IHTMLFiltersCollection, riid)) {
+        TRACE("(%p)->(IID_IHTMLFiltersCollection %p)\n", This, ppv);
+        *ppv = HTMLFILTERSCOLLECTION(This);
+    }else if(dispex_query_interface(&This->dispex, riid, ppv)) {
+        return *ppv ? S_OK : E_NOINTERFACE;
+    }
+
+    if(*ppv) {
+        IUnknown_AddRef((IUnknown*)*ppv);
+        return S_OK;
+    }
+
+    FIXME("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppv);
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI HTMLFiltersCollection_AddRef(IHTMLFiltersCollection *iface)
+{
+    HTMLFiltersCollection *This = HTMLFILTERSCOLLECTION_THIS(iface);
+    LONG ref = InterlockedIncrement(&This->ref);
+
+    TRACE("(%p) ref=%d\n", This, ref);
+
+    return ref;
+}
+
+static ULONG WINAPI HTMLFiltersCollection_Release(IHTMLFiltersCollection *iface)
+{
+    HTMLFiltersCollection *This = HTMLFILTERSCOLLECTION_THIS(iface);
+    LONG ref = InterlockedDecrement(&This->ref);
+
+    TRACE("(%p) ref=%d\n", This, ref);
+
+    if(!ref)
+    {
+        heap_free(This);
+    }
+
+    return ref;
+}
+
+static HRESULT WINAPI HTMLFiltersCollection_GetTypeInfoCount(IHTMLFiltersCollection *iface, UINT *pctinfo)
+{
+    HTMLFiltersCollection *This = HTMLFILTERSCOLLECTION_THIS(iface);
+    return IDispatchEx_GetTypeInfoCount(DISPATCHEX(&This->dispex), pctinfo);
+}
+
+static HRESULT WINAPI HTMLFiltersCollection_GetTypeInfo(IHTMLFiltersCollection *iface,
+                                    UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo)
+{
+    HTMLFiltersCollection *This = HTMLFILTERSCOLLECTION_THIS(iface);
+    return IDispatchEx_GetTypeInfo(DISPATCHEX(&This->dispex), iTInfo, lcid, ppTInfo);
+}
+
+static HRESULT WINAPI HTMLFiltersCollection_GetIDsOfNames(IHTMLFiltersCollection *iface,
+                                    REFIID riid, LPOLESTR *rgszNames, UINT cNames,
+                                    LCID lcid, DISPID *rgDispId)
+{
+    HTMLFiltersCollection *This = HTMLFILTERSCOLLECTION_THIS(iface);
+    return IDispatchEx_GetIDsOfNames(DISPATCHEX(&This->dispex), riid, rgszNames, cNames, lcid, rgDispId);
+}
+
+static HRESULT WINAPI HTMLFiltersCollection_Invoke(IHTMLFiltersCollection *iface, DISPID dispIdMember, REFIID riid,
+                                    LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult,
+                                    EXCEPINFO *pExcepInfo, UINT *puArgErr)
+{
+    HTMLFiltersCollection *This = HTMLFILTERSCOLLECTION_THIS(iface);
+    return IDispatchEx_Invoke(DISPATCHEX(&This->dispex), dispIdMember, riid, lcid,
+            wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
+}
+
+static HRESULT WINAPI HTMLFiltersCollection_get_length(IHTMLFiltersCollection *iface, LONG *p)
+{
+    HTMLFiltersCollection *This = HTMLFILTERSCOLLECTION_THIS(iface);
+
+    FIXME("(%p)->(%p) Always returning 0\n", This, p);
+
+	if(!p)
+		return E_POINTER;
+
+    if(p)
+        *p = 0;
+
+    return S_OK;
+}
+
+static HRESULT WINAPI HTMLFiltersCollection_get__newEnum(IHTMLFiltersCollection *iface, IUnknown **p)
+{
+    HTMLFiltersCollection *This = HTMLFILTERSCOLLECTION_THIS(iface);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLFiltersCollection_item(IHTMLFiltersCollection *iface, VARIANT *pvarIndex, VARIANT *pvarResult)
+{
+    HTMLFiltersCollection *This = HTMLFILTERSCOLLECTION_THIS(iface);
+    FIXME("(%p)->(%p, %p)\n", This, pvarIndex, pvarResult);
+    return E_NOTIMPL;
+}
+
+static const IHTMLFiltersCollectionVtbl HTMLFiltersCollectionVtbl = {
+    HTMLFiltersCollection_QueryInterface,
+    HTMLFiltersCollection_AddRef,
+    HTMLFiltersCollection_Release,
+    HTMLFiltersCollection_GetTypeInfoCount,
+    HTMLFiltersCollection_GetTypeInfo,
+    HTMLFiltersCollection_GetIDsOfNames,
+    HTMLFiltersCollection_Invoke,
+    HTMLFiltersCollection_get_length,
+    HTMLFiltersCollection_get__newEnum,
+    HTMLFiltersCollection_item
+};
+
+static HRESULT HTMLFiltersCollection_get_dispid(IUnknown *iface, BSTR name, DWORD flags, DISPID *dispid)
+{
+    WCHAR *ptr;
+    int idx = 0;
+
+    for(ptr = name; *ptr && isdigitW(*ptr); ptr++)
+        idx = idx*10 + (*ptr-'0');
+    if(*ptr)
+        return DISP_E_UNKNOWNNAME;
+
+    *dispid = MSHTML_DISPID_CUSTOM_MIN + idx;
+    TRACE("ret %x\n", *dispid);
+    return S_OK;
+}
+
+static HRESULT HTMLFiltersCollection_invoke(IUnknown *iface, DISPID id, LCID lcid, WORD flags, DISPPARAMS *params,
+        VARIANT *res, EXCEPINFO *ei, IServiceProvider *caller)
+{
+    HTMLFiltersCollection *This = HTMLFILTERSCOLLECTION_THIS(iface);
+
+    TRACE("(%p)->(%x %x %x %p %p %p)\n", This, id, lcid, flags, params, res, ei);
+
+    V_VT(res) = VT_DISPATCH;
+    V_DISPATCH(res) = NULL;
+
+    FIXME("always returning NULL\n");
+
+    return S_OK;
+}
+
+static const dispex_static_data_vtbl_t HTMLFiltersCollection_dispex_vtbl = {
+    NULL,
+    HTMLFiltersCollection_get_dispid,
+    HTMLFiltersCollection_invoke
+};
+
+static const tid_t HTMLFiltersCollection_iface_tids[] = {
+    IHTMLFiltersCollection_tid,
+    0
+};
+static dispex_static_data_t HTMLFiltersCollection_dispex = {
+    &HTMLFiltersCollection_dispex_vtbl,
+    IHTMLFiltersCollection_tid,
+    NULL,
+    HTMLFiltersCollection_iface_tids
+};
+
+IHTMLFiltersCollection *HTMLFiltersCollection_Create()
+{
+    HTMLFiltersCollection *ret = heap_alloc(sizeof(HTMLFiltersCollection));
+
+    ret->lpHTMLFiltersCollectionVtbl = &HTMLFiltersCollectionVtbl;
+    ret->ref = 1;
+
+    init_dispex(&ret->dispex, (IUnknown*)HTMLFILTERSCOLLECTION(ret),  &HTMLFiltersCollection_dispex);
+
+    return HTMLFILTERSCOLLECTION(ret);
 }

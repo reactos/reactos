@@ -221,6 +221,40 @@ _KiUnexpectedInterrupt&Number:
 .endm
 
 //
+// @name TRAP_HANDLER_PROLOG
+//
+// This macro creates a kernel trap handler.
+//
+// @param None.
+//
+// @remark None.
+//
+.macro TRAP_HANDLER_PROLOG ErrorCode=1, Software=0
+
+    /* What kind of trap is it */
+    .if \Software
+        /* Software traps need a fake interrupt stack */
+        pop eax
+        sub esp, KTRAP_FRAME_ESP
+    .elseif \ErrorCode
+        /* Some traps generate an error code, some don't (thanks, Intel!) */
+        sub esp, KTRAP_FRAME_EIP
+    .else
+        sub esp, KTRAP_FRAME_ERROR_CODE
+    .endif
+
+    /* Make space for trap frame and save registers before we enter C code */
+    mov [esp+KTRAP_FRAME_EAX], eax
+    mov [esp+KTRAP_FRAME_EBX], ebx
+    mov [esp+KTRAP_FRAME_ECX], ecx
+    mov [esp+KTRAP_FRAME_EDX], edx
+    mov [esp+KTRAP_FRAME_ESI], esi
+    mov [esp+KTRAP_FRAME_EDI], edi
+    mov [esp+KTRAP_FRAME_EBP], ebp
+    mov ecx, esp
+.endm
+
+//
 // @name GENERATE_TRAP_HANDLER
 //
 // This macro creates a kernel trap handler.
@@ -229,17 +263,11 @@ _KiUnexpectedInterrupt&Number:
 //
 // @remark None.
 //
-.macro GENERATE_TRAP_HANDLER Name, ErrorCode=1, FastV86=0
+.macro GENERATE_TRAP_HANDLER Name, ErrorCode=1, FastV86=0, Software=0
+.globl _&Name
 .func Name
 _&Name:
-    /* Some traps generate an error code, some don't (thanks, Intel!) */
-    .if \ErrorCode
-        push 0
-    .endif
-    
-    /* Save all register state before we touch it */
-    pushad
-    
+    TRAP_HANDLER_PROLOG ErrorCode, Software
     /*
      * The GPF and Invalid Opcode handlers are performance critical when talking
      * about V8086 traps, because they control the main flow of execution during
@@ -270,14 +298,9 @@ _&Name:
      * up DS/ES and lets us go on our merry way...
      */
     .if \FastV86
-        /* ESP+12 is EFLAGS on interrupt frame, add 8*4 for the PUSHAD frame */
-        mov edx, [esp+12+8*4]
+        mov edx, [esp+KTRAP_FRAME_EFLAGS]
     .endif
-    
-    /* Now make space for the trap frame and store the pointer as first arg */
-    sub esp, KTRAP_FRAME_LENGTH - KTRAP_FRAME_PREVIOUS_MODE
-    mov ecx, esp
-    
+
     /* Normally we just have one parameter, but fast V86 handlers need two */
     .if \FastV86
         jmp @&Name&Handler@8

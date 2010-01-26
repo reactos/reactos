@@ -160,6 +160,7 @@ ip_output(m0, opt, ro, flags, imo)
 	 */
 #define ifatoia(ifa)	((struct in_ifaddr *)(ifa))
 #define sintosa(sin)	((struct sockaddr *)(sin))
+#ifndef __REACTOS__
 	if (flags & IP_ROUTETOIF) {
 		if ((ia = ifatoia(ifa_ifwithdstaddr(sintosa(dst)))) == 0 &&
 		    (ia = ifatoia(ifa_ifwithnet(sintosa(dst)))) == 0) {
@@ -167,9 +168,8 @@ ip_output(m0, opt, ro, flags, imo)
 			error = ENETUNREACH;
 			goto bad;
 		}
-#ifndef __REACTOS__
+
 		ifp = ia->ia_ifp;
-#endif
 		ip->ip_ttl = 1;
 	} else {
 		/*
@@ -181,7 +181,7 @@ ip_output(m0, opt, ro, flags, imo)
 		 * the link layer, as this is probably required in all cases
 		 * for correct operation (as it is for ARP).
 		 */
-#ifndef __REACTOS__
+
 		if (ro->ro_rt == 0)
 			rtalloc_ign(ro, RTF_PRCLONING);
 		if (ro->ro_rt == 0) {
@@ -195,8 +195,17 @@ ip_output(m0, opt, ro, flags, imo)
 		ro->ro_rt->rt_use++;
 		if (ro->ro_rt->rt_flags & RTF_GATEWAY)
 			dst = (struct sockaddr_in *)ro->ro_rt->rt_gateway;
-#endif
 	}
+
+#else
+	if ((ia = ifatoia(ifa_ifwithdstaddr(sintosa(dst)))) == 0 &&
+	    (ia = ifatoia(ifa_ifwithnet(sintosa(dst)))) == 0) {
+		ipstat.ips_noroute++;
+		error = ENETUNREACH;
+		goto bad;
+	}
+#endif
+
 #ifndef __REACTOS__
 	if (IN_MULTICAST(ntohl(ip->ip_dst.s_addr))) {
 		struct in_multi *inm;
@@ -358,7 +367,9 @@ sendit:
 	/*
 	 * If small enough for interface, can just send directly.
 	 */
-	if ((u_short)ip->ip_len <= 1400 /* XXX Get MTU from Interface */) {
+
+	/* FIXME: This was ROS-modified code. Where is the original? */
+	if ((u_short)ip->ip_len <= ((struct ifaddr *)ia)->ifa_mtu) {
 	    ip->ip_len = htons((u_short)ip->ip_len);
 	    ip->ip_off = htons((u_short)ip->ip_off);
 	    ip->ip_sum = 0;
@@ -421,8 +432,7 @@ sendit:
 		goto bad;
 	}
 #else
-	OS_DbgPrint(OSK_MID_TRACE,("Using default mtu of 1500\n"));
-	len = (1500 - hlen) & ~7;
+	len = (((struct ifaddr *)ia)->ifa_mtu - hlen) & ~7;
 #endif
 
     {

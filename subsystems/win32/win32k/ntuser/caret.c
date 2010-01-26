@@ -62,7 +62,7 @@ IntSetCaretBlinkTime(UINT uMSeconds)
 {
    /* Don't save the new value to the registry! */
    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-   PWINSTATION_OBJECT WinStaObject = pti->Desktop->WindowStation;
+   PWINSTATION_OBJECT WinStaObject = pti->rpdesk->rpwinstaParent;
 
    /* windows doesn't do this check */
    if((uMSeconds < MIN_CARETBLINKRATE) || (uMSeconds > MAX_CARETBLINKRATE))
@@ -152,7 +152,7 @@ IntGetCaretBlinkTime(VOID)
    UINT Ret;
 
    pti = PsGetCurrentThreadWin32Thread();
-   WinStaObject = pti->Desktop->WindowStation;
+   WinStaObject = pti->rpdesk->rpwinstaParent;
 
    Ret = WinStaObject->CaretBlinkRate;
    if(!Ret)

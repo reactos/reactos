@@ -456,15 +456,20 @@ KeTestSpinLock(IN PKSPIN_LOCK SpinLock)
 }
 
 #ifdef _M_IX86
-/*
- * @unimplemented
- */
 VOID
 NTAPI
-Kii386SpinOnSpinLock(IN PKSPIN_LOCK SpinLock,
-                     IN ULONG Flags)
+Kii386SpinOnSpinLock(PKSPIN_LOCK SpinLock, ULONG Flags)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    // FIXME: Handle flags
+    UNREFERENCED_PARAMETER(Flags);
+
+    /* Spin until it's unlocked */
+    while (*(volatile KSPIN_LOCK *)SpinLock & 1)
+    {
+        // FIXME: Check for timeout
+
+        /* Yield and keep looping */
+        YieldProcessor();
+    }
 }
 #endif

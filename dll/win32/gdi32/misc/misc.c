@@ -314,7 +314,7 @@ hGetPEBHandle(HANDLECACHETYPE Type, COLORREF cr)
          {
             if (pRgn_Attr->AttrFlags & ATTR_CACHED)
             {
-               DPRINT("Get Handle! Count %d\n", GdiHandleCache->ulNumHandles[Type]);
+               DPRINT1("Get Handle! Count %d PEB 0x%x\n", GdiHandleCache->ulNumHandles[Type], NtCurrentTeb()->ProcessEnvironmentBlock);
                pRgn_Attr->AttrFlags &= ~ATTR_CACHED;
                hPtr[Number - 1] = NULL;
                GdiHandleCache->ulNumHandles[Type]--;

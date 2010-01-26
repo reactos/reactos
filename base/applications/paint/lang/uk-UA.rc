@@ -200,6 +200,6 @@ BEGIN
     IDS_TOOLTIP16, "Прямокутник з округленими кутами"
     IDS_OPENFILTER, "Точкові рисунки (*.bmp;*.dib)\1*.bmp;*.dib\1Усі файли (*.*)\1*.*\1"
     IDS_SAVEFILTER, "24-розрядний рисунок (*.bmp;*.dib)\1*.bmp;*.dib\1"
-    IDS_FILESIZE, "%d bytes"
-    IDS_PRINTRES, "%d x %d pixels per meter"
+    IDS_FILESIZE, "%d байт"
+    IDS_PRINTRES, "%d x %d пікселів на метр"
 END

@@ -600,7 +600,7 @@ RtlFindNextForwardRunSet(
 
     /* Assume a clear run first, count it's length */
     Length = RtlpGetLengthOfRunClear(BitMapHeader, FromIndex, MAXULONG);
-    *StartingRunIndex = FromIndex;
+    *StartingRunIndex = FromIndex + Length;
 
     /* Now return the length of the run */
     return RtlpGetLengthOfRunSet(BitMapHeader, FromIndex, MAXULONG);

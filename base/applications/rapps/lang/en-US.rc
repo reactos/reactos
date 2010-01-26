@@ -59,10 +59,10 @@ BEGIN
 	AUTOCHECKBOX "&Log of installation and removal of programs", IDC_LOG_ENABLED, 15, 46, 219, 12
 
 	GROUPBOX "Downloading", -1, 4, 65, 240, 51
-	LTEXT "Folder for downloadings:", -1, 16, 75, 100, 9
+	LTEXT "Downloads folder:", -1, 16, 75, 100, 9
 	EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP
 	PUSHBUTTON "&Choose", IDC_CHOOSE, 187, 85, 50, 14
-	AUTOCHECKBOX "&Delete installers of programs after installation", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+	AUTOCHECKBOX "&Delete program installer after installation", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
 
 	PUSHBUTTON "Default", IDC_DEFAULT_SETTINGS, 8, 124, 60, 14
 	PUSHBUTTON "OK", IDOK, 116, 124, 60, 14
@@ -184,9 +184,9 @@ BEGIN
 	IDS_AVAILABLEFORINST "Available for installation"
 	IDS_UPDATES "Updates"
 	IDS_APPLICATIONS "Applications"
-	IDS_CHOOSE_FOLDER_TEXT "Choose a folder which will be used for downloading of programs:"
-	IDS_CHOOSE_FOLDER_ERROR "You have specified a nonexistent folder!"
-	IDS_USER_NOT_ADMIN "You should be administrator for start ""ReactOS Applications Manager""!"
+	IDS_CHOOSE_FOLDER_TEXT "Choose a folder which will store Downloads:"
+	IDS_CHOOSE_FOLDER_ERROR "The folder you have specified does not exist."
+	IDS_USER_NOT_ADMIN "You must be an administrator to start ""ReactOS Applications Manager""!"
 	IDS_APP_REG_REMOVE "Are you sure you want to delete the data on the installed program from the registry?"
 	IDS_INFORMATION "Information"
 	IDS_UNABLE_TO_REMOVE "Unable to remove data on the program from the registry!"

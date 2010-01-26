@@ -1,3 +1,8 @@
+/*
+ *      translated by Artem Reznikov, Igor Paliychuk, 2010
+ *      http://www.reactos.org/uk/
+ */ 
+
 #ifndef LANG_UK_UA_H__
 #define LANG_UK_UA_H__
 
@@ -13,38 +18,38 @@ static MUI_ENTRY ukUALanguagePageEntries[] =
     {
         4,
         3,
-        " “áâ ­®¢ª  ReactOS " KERNEL_VERSION_STR " ",
+        " ìãå ÔÖëÐ¨ÔÔÞ ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "‚¨¡ià ¬®¢¨",
+        "ì·¢Šá ÒÖë·",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Please choose the language used for the installation process.",
+        "\x07  £ç¦í-Ð ãÆ , ë·¢¨áŠåí ÒÖëç, ÞÆ  ¢ç¦¨ ë·ÆÖá·ãå Ô  ØŠ¦ û ã ëãå ÔÖëÐ¨ÔÔÞ.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Then press ENTER.",
+        "   Š Ô å·ãÔŠåí ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  This Language will be the default language for the final system.",
+        "\x07  ¥Þ ÒÖë  ¢ç¦¨ ë·ÆÖá·ãåÖëçë å·ãí ØÖ ó ÒÖëûçë ÔÔœ ç ëãå ÔÖëÐ¨ÔŠ½ ã·ãå¨ÒŠ.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ENTER=à®¤®¢¦¨â¨  F3=‚¨åi¤",
-        TEXT_TYPE_STATUS
+        "ENTER = ÝáÖ¦Öëé·å·  F3 = ì·½å·",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -59,55 +64,55 @@ static MUI_ENTRY ukUAWelcomePageEntries[] =
     {
         4,
         3,
-        " “áâ ­®¢ª  ReactOS " KERNEL_VERSION_STR " ",
+        " ìãå ÔÖëÐ¨ÔÔÞ ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "‹ áª ¢® ¯à®á¨¬® ¤® ¯à®£à ¬¨ ãáâ ­®¢ª¨ ReactOS",
+        "Ñ ãÆ ëÖ ØáÖã·ÒÖ ¦Ö ØáÖ¬á Ò· ëãå ÔÖëÐ¨ÔÔÞ ReactOS",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
         11,
-        "–ï ç áâ¨­  ãáâ ­®¢ª¨ ª®¯iîó ®¯¥à æi©­ã á¨áâ¥¬ã ReactOS ã ‚ è",
+        "Õ  ¤íÖÒç ¨å ØŠ ëãå ÔÖëÐ¨ÔÔÞ ëŠ¦¢ç¦¨åíãÞ ÆÖØŠœë ÔÔÞ ReactOS Ô  ì õ",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "ª®¬¯'îâ¥à i £®âãó ¤àã£ã ç áâ¨­ã ãáâ ­®¢ª¨.",
+        "ÆÖÒØ'œå¨á Š ØŠ¦¬ÖåÖëÆ  ¦Ö ¦áç¬Ö¬Ö ¨å Øç ëãå ÔÖëÐ¨ÔÔÞ.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07   â¨á­iâì <ENTER> é®¡ ãáâ ­¨â¨ ReactOS.",
+        "\x07  Õ å·ãÔŠåí ENTER ùÖ¢ ëãå ÔÖë·å· ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07   â¨á­iâì <R> é®¡ ¢i¤­®¢¨â¨ ReactOS.",
+        "\x07  Õ å·ãÔŠåí R ¦ÐÞ ÖÔÖëÐ¨ÔÔÞ ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07   â¨á­iâì <L> é®¡ ¯¥à¥£«ï­ãâ¨ «iæ¥­§i©­i ã¬®¢¨ ReactOS",
+        "\x07  Ô å·ãÔŠåí L ¦ÐÞ Ø¨á¨¬ÐÞ¦ç ÐŠ¤¨ÔóŠ½Ô·µ çÒÖë ReactOS",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07   â¨á­iâì <F3> é®¡ ¢¨©â¨, ­¥ ¢áâ ­®¢«îîç¨ ReactOS.",
+        "\x07  Õ å·ãÔŠåí F3 ùÖ¢ ë·½å·. Ô¨ ëãå ÔÖëÐœœû· ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
-        "„«ï ¡i«ìè ª®­ªà¥â­®õ i­ä®à¬ æiõ ¯à® ReactOS, ¡ã¤ì « áª  ¢i¤¢i¤ ©â¥:",
+        "§ÐÞ Öåá·Ò ÔÔÞ ¦¨å ÐíÔŠõÖŒ ŠÔªÖáÒ ¤ŠŒ ØáÖ ReactOS, ¢ç¦í-Ð ãÆ  ëŠ¦ëŠ¦ ½å¨:",
         TEXT_STYLE_NORMAL
     },
     {
@@ -119,8 +124,8 @@ static MUI_ENTRY ukUAWelcomePageEntries[] =
     {
         0,
         0,
-        "   ENTER=à®¤®¢¦¨â¨  R=‚i¤­®¢¨â¨ F3=‚¨åi¤",
-        TEXT_TYPE_STATUS
+        "ENTER = ÝáÖ¦Öëé·å·  R = ìŠ¦ÔÖë·å·  L = ÑŠ¤¨ÔóŠÞ  F3 = ì·½å·",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -135,86 +140,86 @@ static MUI_ENTRY ukUAIntroPageEntries[] =
     {
         4,
         3,
-        " “áâ ­®¢ª  ReactOS " KERNEL_VERSION_STR " ",
+        " ìãå ÔÖëÐ¨ÔÔÞ ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "ReactOS §­ å®¤¨âìáï ¢ à ­­i© áâ ¤iõ à®§à®¡ª¨ i ­¥ ¯i¤âà¨¬ãó ¢ái",
+        "ìãå ÔÖëÐœë û ReactOS óÔ µÖ¦·åíãÞ ë á ÔÔŠ½ ãå ¦ŠŒ áÖóáÖ¢Æ· Š ù¨ Ô¨",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "¯i¤âà¨¬ã©â¥ ¢ái äã­ªæiõ ¯®¢­®æi­­®£® ¤®¤ âªã ãáâ ­®¢ª¨.",
+        "ØŠ¦åá·Òç† ëãŠ ªçÔÆ¤ŠŒ ØÖëÔÖ¤ŠÔÔÖŒ ØáÖ¬á Ò· ëãå ÔÖëÐ¨ÔÔÞ.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "ò ­ áâã¯­i ®¡¬¥¦¥­­ï:",
+        "Ýá·ãçåÔŠ Ô ãåçØÔŠ Ö¢Ò¨é¨ÔÔÞ:",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "- “áâ ­®¢ª  ¬®¦«¨¢  âi«ìª¨ ­  ¯¥à¢¨­­¨© à®§¤i« ¤¨áª .",
+        "- ìãå ÔÖëÐœë û Ô¨ ØŠ¦åá·Òç† ¢ŠÐíõ¨ ÔŠé Ö¦·Ô Ø¨áë·ÔÔ·½ áÖó¦ŠÐ Ô  ¦·ãÆ.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "- à¨ ãáâ ­®¢æi ­¥ ¬®¦­  ¢¨¤ «¨â¨ ¯¥à¢¨­­¨© à®§¤i« ¤¨áª ",
+        "- ìãå ÔÖëÐœë û Ô¨ ÒÖé¨ ë·¦ Ð·å· Ø¨áë·ÔÔ·½ áÖó¦ŠÐ ó ¦·ãÆç",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "  ¯®ª¨ ­  ¤¨áªã ó à®§è¨à¥­¨© à®§¤i«.",
+        "  ØÖÆ· Ô  ¦·ãÆç Ô ÞëÔ·½ áÖóõ·á¨Ô·½ áÖó¦ŠÐ.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         16,
-        "- à¨ ãáâ ­®¢æi ­¥ ¬®¦­  ¢¨¤ «¨â¨ ¯¥àè¨© à®§è¨à¥­¨© à®§¤i« § ¤¨áª ",
+        "- ìãå ÔÖëÐœë û Ô¨ ÒÖé¨ ë·¦ Ð·å· Ø¨áõ·½ áÖóõ·á¨Ô·½ áÖó¦ŠÐ ó ¦·ãÆç",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "  ¯®ª¨ ­  ¤¨áªã iá­ãîâì i­èi à®§è¨à¥­i à®§¤i«¨.",
+        "  ØÖÆ· Ô  ¦·ãÆç ŠãÔçœåí ŠÔõŠ áÖóõ·á¨ÔŠ áÖó¦ŠÐ·.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
-        "- à¨ ãáâ ­®¢æi ¯i¤âà¨¬ãóâìáï âi«ìª¨ ä ©«®¢  á¨áâ¥¬  FAT.",
+        "- ìãå ÔÖëÐœë û ØŠ¦åá·Òç† Ð·õ¨ ª ½ÐÖëç ã·ãå¨Òç FAT.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "- ¥à¥¢iàª  ä ©«®¢®õ á¨áâ¥¬¨ ­¥ §¤i©á­îóâìáï.",
+        "- Ý¨á¨ëŠáÆ  ª ½ÐÖëÖŒ ã·ãå¨Ò· ù¨ Ô¨ ëØáÖë ¦é¨Ô .",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         23,
-        "\x07   â¨á­iâì <ENTER> ¤«ï ãáâ ­®¢ª¨ ReactOS.",
+        "\x07  Õ å·ãÔŠåí ENTER ùÖ¢ ëãå ÔÖë·å· ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
-        "\x07   â¨á­iâì <F3> ¤«ï ¢¨å®¤ã § ãáâ ­®¢ª¨ ReactOS.",
+        "\x07  Õ å·ãÔŠåí F3 ùÖ¢ ë·½å·, Ô¨ ëãå ÔÖëÐœœû· ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ENTER=à®¤®¢¦¨â¨  F3=‚¨åi¤",
-        TEXT_TYPE_STATUS
+        "ENTER = ÝáÖ¦Öëé·å·   F3 = ì·½å·",
+        TEXT_TYPE_STATUS| TEXT_PADDING_BIG
     },
     {
         0,
@@ -229,79 +234,79 @@ static MUI_ENTRY ukUALicensePageEntries[] =
     {
         4,
         3,
-        " “áâ ­®¢ª  ReactOS " KERNEL_VERSION_STR " ",
+        " ìãå ÔÖëÐ¨ÔÔÞ ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         6,
-        "‹iæ¥­§iï:",
+        "ÑŠ¤¨ÔóŠÞ:",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         8,
-        "ReactOS «iæ¥­§®¢ ­  ¢i¤¯®¢i¤­® ¤® ‚i¤ªà¨â®õ «iæ¥­§i©­®õ",
+        "ReactOS ÐŠ¤¨ÔóÖë ÔÖ ëŠ¦ØÖëŠ¦ÔÖ ¦Ö çÒÖë",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         9,
-        "ã£®¤¨ GNU GPL i ¬iáâ¨âì ª®¬¯®­¥­â¨, ïªi ¯®è¨àîîâìáï",
+        "GNU GPL. æ ÆÖé ReactOS ÒŠãå·åí ÆÖÒØÖÔ¨Ôå·, ÞÆŠ ÐŠ¤¨ÔóÖë ÔÖ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "§  áã¬iá­¨¬¨ «iæ¥­§iï¬¨: X11, BSD i GNU LGPL.",
+        "ó  ãçÒŠãÔ·Ò· ÐŠ¤¨ÔóŠÞÒ·: X11, BSD, GNU LGPL.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "‚á¥ ¯à®£à ¬­¥ § ¡¥§¯¥ç¥­­ï, ïª¥ ¢å®¤¨âì ¢ á¨áâ¥¬ã ReactOS, ¢¨¯ãé¥­®",
+        "ìã¨ ØáÖ¬á ÒÔ¨ ó ¢¨óØ¨û¨ÔÔÞ, ÞÆ¨ ëµÖ¦·åí ë ã·ãå¨Òç ReactOS, ë·Øçù¨ÔÖ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
-        "¯i¤ ‚i¤ªà¨â®î «iæ¥­§i©­®î ã£®¤®î GNU GPL i§ §¡¥à¥¦¥­­ï¬",
+        "Øi¦ ìi¦Æá·åÖœ Ði¤¨Ôói½ÔÖœ ç¬Ö¦Öœ GNU GPL ió ó¢¨á¨é¨ÔÔÞÒ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "¯¥à¢¨­­i© «iæ¥­§iõ.",
+        "Ø¨áë·ÔÔ·µ Ði¤¨ÔóiŒ.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "„ ­¥ ¯à®£à ¬­¥ § ¡¥§¯¥ç¥­­ï ¯®áâ ¢«ïóâìáï …‡ ƒ€€’iô i ¡¥§ ®¡¬¥¦¥­ì",
+        "§ Ô¨ ØáÖ¬á ÒÔ¨ ó ¢¨óØ¨û¨ÔÔÞ ØÖãå ëÐÞ†åíãÞ £©ô ­¡â¡Õæi i ¢¨ó Ö¢Ò¨é¨Ôí",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         16,
-        "ã ¢¨ª®à¨áâ ­­i, ïª ¢ ¬iáæ¥¢®¬ã, â ª i ¬i¦­ à®¤­®¬ã ¯à ¢i",
+        "ç ë·ÆÖá·ãå ÔÔi, ÞÆ ó  Òiã¤¨ë·Ò, å Æ i ÒiéÔ áÖ¦Ô·Ò Øá ëÖÒ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "‹iæ¥­§iï ReactOS ¤®§¢®«ïó ¯¥à¥¤ çã ¯à®¤ãªâã âà¥âi¬ ®á®¡ ¬.",
+        "Ñi¤¨ÔóiÞ ReactOS ¦ÖóëÖÐÞ† Ø¨á¨¦ ûç ØáÖ¦çÆåç åá¨åiÒ ÖãÖ¢ Ò.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
-        "Ÿªé® ç¥à¥§ ¡ã¤ì-ïªi ¯à¨ç¨­¨ ‚¨ ­¥ ®âà¨¬ «¨ ª®¯iî ‚i¤ªà¨â®õ",
+        "àÆùÖ û¨á¨ó ¢ç¦í-ÞÆi Øá·û·Ô· ì· Ô¨ Öåá·Ò Ð· ÆÖØiœ ìi¦Æá·åÖŒ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "«iæ¥­§i©­®õ ã£®¤¨ GNU à §®¬ § ReactOS, ¢i¤¢i¤ óâ¥",
+        "Ði¤¨Ôói½ÔÖŒ ç¬Ö¦· GNU á óÖÒ ó ReactOS, ëi¦ëi¦ †å¨",
         TEXT_STYLE_NORMAL
     },
     {
@@ -313,32 +318,32 @@ static MUI_ENTRY ukUALicensePageEntries[] =
     {
         8,
         22,
-        "ƒ à ­âiõ:",
+        "­ á ÔåŠŒ:",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         8,
         24,
-        "–¥ ¢i«ì­¥ ¯à®£à ¬­¥ § ¡¥§¯¥ç¥­­ï; ¤¨¢. ¤¦¥à¥«® ¤«ï ¯¥à¥£«ï¤ã ¯à ¢.",
+        "¥¨ † ëiÐíÔ¨ ØáÖ¬á ÒÔ¨ ó ¢¨óØ¨û¨ÔÔÞ; ¦·ë. ¦é¨á¨ÐÖ ¦ÐÞ Ø¨á¨¬ÐÞ¦ç Øá ë.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
-        "…Œ€ò iŸŠˆ• ƒ€€’i‰; ­¥¬ ó £ à ­âiõ ’Ž‚€ŽƒŽ ‘’€“  ¡®",
+        "Õ¨ ¦ œåíãÞ Õ‹àÇ‹ ¬ á ÔåŠŒ; ÔŠ ¬ á ÔåiŒ æ×ì¡âÕ×­× äæ¡Õè, ÔŠ ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         26,
-        "ˆ„€’Ž‘’i „‹Ÿ ŠŽŠ…’ˆ• –i‹…‰",
+        "Ýâ¸§¡æÕ×äæi §Ñà Ç×ÕÇâ©æÕ¸¶ ¥iÑ©¾",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ENTER=®¢¥à­ãâ¨áï",
-        TEXT_TYPE_STATUS
+        "ENTER = ÝÖë¨áÔçå·ãí",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -353,85 +358,85 @@ static MUI_ENTRY ukUADevicePageEntries[] =
     {
         4,
         3,
-        " “áâ ­®¢ª  ReactOS " KERNEL_VERSION_STR " ",
+        " ìãå ÔÖëÐ¨ÔÔÞ ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "“ á¯¨áªã ­¨¦ç¥ ¯à¨¢¥¤¥­i ¯à¨áâà®õ i õå ¯ à ¬¥âà¨.",
+        "è ãØ·ãÆç Ô·éû¨ Øá·ë¨¦¨Ôi ØÖåÖûÔŠ Ø á Ò¨åá· Øá·ãåáÖŒë.",
         TEXT_STYLE_NORMAL
     },
     {
-        8,
+        24,
         11,
-        "      Š®¬¯'îâ¥à:",
-        TEXT_STYLE_NORMAL
+        "ÇÖÒØ'œå¨á:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
-        8,
+        24,
         12,
-        "          …ªà ­:",
-        TEXT_STYLE_NORMAL,
+        "©Æá Ô:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
-        8,
+        24,
         13,
-        "     Š« ¢i âãà :",
-        TEXT_STYLE_NORMAL
+        "ÇÐ ëi åçá :",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
-        8,
+        24,
         14,
-        "Š« ¢. à®§ª« ¤ª :",
-        TEXT_STYLE_NORMAL
+        "ÇÐ ë. áÖóÆÐ ¦Æ :",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
-        8,
+        24,
         16,
-        "    ‡ áâ®áã¢ â¨:",
-        TEXT_STYLE_NORMAL
+        "Ýá·½ÔÞå·:",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
     },
     {
         25,
-        16, "‡ áâ®áã¢ â¨ ¤ ­i ¯ à ¬¥âà¨ ¯à¨áâà®õ¢",
+        16, "ô ãåÖãçë å· ¦ Ôi Ø á Ò¨åá· Øá·ãåáÖŒë",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         19,
-        "‚¨ ¬®¦¥â¥ §¬i­¨â¨ ¯ à ¬¥âà¨ ¯à¨áâà®õ¢ ­ â¨áª îç¨ ª« ¢ièi <‚ƒŽ“> i <‚ˆ‡>",
+        "ì· ÒÖé¨å¨ óÒiÔ·å· Ø á Ò¨åá· Øá·ãåáÖŒë Ô å·ãÆ œû· ÆÐ ëiõi ì­×âè i ìÕ¸ô",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         20,
-        "¤«ï ¢¨¤i«¥­­ï ¥«¥¬¥­âã i ª« ¢ièã <ENTER> ¤«ï ¢¨¡®àã i­è¨å ¢ ài ­âi¢",
+        "¦ÐÞ ë·¦iÐ¨ÔÔÞ ¨Ð¨Ò¨Ôåç i ÆÐ ëiõç ENTER ¦ÐÞ ë·¢Öáç iÔõ·µ ë ái Ôåië",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         21,
-        "¯ à ¬¥âài¢.",
+        "Ø á Ò¨åáië.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
-        "Š®«¨ ¢ái ¯ à ¬¥âà¨ ¢¨§­ ç¥­i, ¢¨¡¥àiâì \"‡ áâ®áã¢ â¨ ¤ ­i ¯ à ¬¥âà¨ ¯à¨áâà®õ¢\"",
+        "ÇÖÐ· ëãi Ø á Ò¨åá· ¢ç¦çåí ë·óÔ û¨Ôi, ë·¢¨áiåí \"ô ãåÖãçë å· ¦ Ôi Ø á Ò¨åá· Øá·ãåáÖŒë\"",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         24,
-        "i ­ â¨á­iâì <ENTER>.",
+        "i Ô å·ãÔiåí ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ENTER=à®¤®¢¦¨â¨  F3=‚¨åi¤",
-        TEXT_TYPE_STATUS
+        "ENTER = ÝáÖ¦Öëé·å·   F3 = ì·½å·",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -446,56 +451,56 @@ static MUI_ENTRY ukUARepairPageEntries[] =
     {
         4,
         3,
-        " “áâ ­®¢ª  ReactOS " KERNEL_VERSION_STR " ",
+        " ìãå ÔÖëÐ¨ÔÔÞ ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "ReactOS Setup is in an early development phase. It does not yet",
+        "ìãå ÔÖëÐœë û ReactOS óÔ µÖ¦·åíãÞ ë á ÔÔŠ½ ãå ¦ŠŒ áÖóáÖ¢Æ· Š ù¨ Ô¨",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "support all the functions of a fully usable setup application.",
+        "ØŠ¦åá·Òç† ëãŠ ªçÔÆ¤ŠŒ ØÖëÔÖ¤ŠÔÔÖŒ ØáÖ¬á Ò· ëãå ÔÖëÐ¨ÔÔÞ.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "The repair functions are not implemented yet.",
+        "«çÔÆ¤ŠŒ ëŠ¦ÔÖëÐ¨ÔÔÞ ù¨ Ô¨ ëØáÖë ¦é¨ÔŠ.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07  Press U for Updating OS.",
+        "\x07  Õ å·ãÔŠåí U ùÖ¢ ÖÔÖë·å· OS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Press R for the Recovery Console.",
+        "\x07  Õ å·ãÔŠåí R ¦ÐÞ ó ØçãÆç ÇÖÔãÖÐŠ ìŠ¦ÔÖëÐ¨ÔÔÞ.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Press ESC to return to the main page.",
+        "\x07  Õ å·ãÔŠåí ESC ¦ÐÞ ØÖë¨áÔ¨ÔÔÞ ¦Ö ¬ÖÐÖëÔÖŒ ãåÖáŠÔÆ·.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Press ENTER to reboot your computer.",
+        "\x07  Õ å·ãÔŠåí ENTER ùÖ¢ Ø¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ESC = Main page  ENTER = Reboot",
-        TEXT_TYPE_STATUS
+        "ESC = ­ÖÐÖëÔ  äåÖáŠÔÆ   U = ×ÔÖë·å·  R = ìŠ¦ÔÖë·å·  ENTER = Ý¨á¨ó ë Ôå é·å·",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -509,44 +514,44 @@ static MUI_ENTRY ukUAComputerPageEntries[] =
     {
         4,
         3,
-        " “áâ ­®¢ª  ReactOS " KERNEL_VERSION_STR " ",
+        " ìãå ÔÖëÐ¨ÔÔÞ ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "You want to change the type of computer to be installed.",
+        "æçå ì· ÒÖé¨å¨ óÒŠÔ·å· å·Ø ì õÖ¬Ö ÆÖÒØ'œå¨á .",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Press the UP or DOWN key to select the desired computer type.",
+        "\x07  Õ å·ãÆ ½å¨ ÆÐ ëŠõŠ ìì©â¶ å  ìÕ¸ô ¦ÐÞ ë·¢Öáç å·Øç ì õÖ¬Ö ÆÖÒØ'œå¨á .",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Then press ENTER.",
+        "   Š Ô å·ãÔŠåí ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Press the ESC key to return to the previous page without changing",
+        "\x07  Õ å·ãÔŠåí ESC ¦ÐÞ ØÖë¨áÔ¨ÔÔÞ ¦Ö ØÖØ¨á¨¦ÔíÖŒ ãåÖáŠÔÆ· ¢¨ó óÒŠÔ·",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   the computer type.",
+        "   å·Øç ÆÖÒØ'œå¨á .",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continue   ESC = Cancel   F3 = Quit",
-        TEXT_TYPE_STATUS
+        "ENTER = ØáÖ¦Öëé·å·   ESC = ìŠ¦ÒŠÔ·å·   F3 = ì·½å·",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -561,32 +566,32 @@ static MUI_ENTRY ukUAFlushPageEntries[] =
     {
         4,
         3,
-        " “áâ ­®¢ª  ReactOS " KERNEL_VERSION_STR " ",
+        " ìãå ÔÖëÐ¨ÔÔÞ ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         10,
         6,
-        "The system is now making sure all data is stored on your disk",
+        "ä·ãå¨Ò  Ø¨á¨ëŠáÞ† û· ëãŠ ¦ ÔŠ ó¢¨á¨é¨ÔÖ Ô  ¦·ãÆ",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "This may take a minute",
+        "¥¨ ÒÖé¨ ó ½ÔÞå· ¦¨ÆŠÐíÆ  µë·Ð·Ô",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "When finished, your computer will reboot automatically",
+        "ÝŠãÐÞ ó ë¨áõ¨ÔÔÞ ÆÖÒØ'œå¨á ¢ç¦¨  ëåÖÒ å·ûÔÖ Ø¨á¨ó ë Ôå é¨ÔÖ",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   Flushing cache",
-        TEXT_TYPE_STATUS
+        "×û·ùçœ Æ¨õ",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -601,38 +606,38 @@ static MUI_ENTRY ukUAQuitPageEntries[] =
     {
         4,
         3,
-        " “áâ ­®¢ª  ReactOS " KERNEL_VERSION_STR " ",
+        " ìãå ÔÖëÐ¨ÔÔÞ ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         10,
         6,
-        "ReactOS is not completely installed",
+        "ReactOS Ô¨ ëãå ÔÖëÐ¨ÔÖ ØÖëÔŠãåœ",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "Remove floppy disk from Drive A: and",
+        "ì·åÞ¬ÔŠåí ¦·ãÆçåç ó ¦·ãÆÖëÖ¦ç A: å ",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "all CD-ROMs from CD-Drives.",
+        "ëãŠ CD-ROM ó CD-Øá·ëÖ¦Šë.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         11,
-        "Press ENTER to reboot your computer.",
+        "Õ å·ãÔŠåí ENTER ùÖ¢ Ø¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   Please wait ...",
-        TEXT_TYPE_STATUS,
+        "£ç¦í-Ð ãÆ  ó û¨Æ ½å¨ ...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
     },
     {
         0,
@@ -647,43 +652,43 @@ static MUI_ENTRY ukUADisplayPageEntries[] =
     {
         4,
         3,
-        " “áâ ­®¢ª  ReactOS " KERNEL_VERSION_STR " ",
+        " ìãå ÔÖëÐ¨ÔÔÞ ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "You want to change the type of display to be installed.",
+        "æçå ë· ÒÖé¨å¨ óÒŠÔ·å· å·Ø ¨Æá Ôç.",
         TEXT_STYLE_NORMAL
     },
     {   8,
         10,
-         "\x07  Press the UP or DOWN key to select the desired display type.",
+         "\x07  Õ å·ãÆ ½å¨ ÆÐ ëŠõŠ ìì©â¶ å  ìÕ¸ô ¦ÐÞ ë·¢Öáç ØÖåáŠ¢ÔÖ¬Ö å·Øç ÒÖÔŠåÖáç.",
          TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Then press ENTER.",
+        "   Š Ô å·ãÔŠåí ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Press the ESC key to return to the previous page without changing",
+        "\x07  Õ å·ãÔŠåí ESC ¦ÐÞ ØÖë¨áÔ¨ÔÔÞ ¦Ö ØÖØ¨á¨¦ÔíÖŒ ãåÖáŠÔÆ· ¢¨ó óÒŠÔ·",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   the display type.",
+        "   å·Øç ÒÖÔŠåÖá .",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continue   ESC = Cancel   F3 = Quit",
-        TEXT_TYPE_STATUS
+        "ENTER = ÝáÖ¦Öëé·å·   ESC = ìŠ¦ÒŠÔ·å·   F3 = ì·½å·",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -698,38 +703,38 @@ static MUI_ENTRY ukUASuccessPageEntries[] =
     {
         4,
         3,
-        " “áâ ­®¢ª  ReactOS " KERNEL_VERSION_STR " ",
+        " ìãå ÔÖëÐ¨ÔÔÞ ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         10,
         6,
-        "The basic components of ReactOS have been installed successfully.",
+        "×ãÔÖëÔŠ ÆÖÒØÖÔ¨Ôå· ReactOS ¢çÐ· çãØŠõÔÖ ëãå ÔÖëÐ¨ÔŠ.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "Remove floppy disk from Drive A: and",
+        "ì·åÞ¬ÔŠåí ¦·ãÆ¨åç ó ¦·ãÆÖëÖ¦ç A: å ",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "all CD-ROMs from CD-Drive.",
+        "ëãŠµ CD-ROM ó CD-Øá·ëÖ¦Šë.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         11,
-        "Press ENTER to reboot your computer.",
+        "Õ å·ãÔŠåí ENTER ùÖ¢ Ø¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Reboot computer",
-        TEXT_TYPE_STATUS
+        "ENTER = Ý¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -744,38 +749,38 @@ static MUI_ENTRY ukUABootPageEntries[] =
     {
         4,
         3,
-        " “áâ ­®¢ª  ReactOS " KERNEL_VERSION_STR " ",
+        " ìãå ÔÖëÐ¨ÔÔÞ ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Setup cannot install the bootloader on your computers",
+        "ìãå ÔÖëÐœë û Ô¨ ÒÖé¨ ëãå ÔÖë·å· bootloader Ô  éÖáãåÆ·½ ¦·ãÆ",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "hardisk",
+        "ì õÖ¬Ö ÆÖÒØ'œå¨á ",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         13,
-        "Please insert a formatted floppy disk in drive A: and",
+        "£ç¦í-Ð ãÆ  ëãå ëå¨ ëŠ¦ªÖáÒ åÖë Ôç ¦·ãÆ¨åç ë ¦·ëÆÖëÖ¦ A: å ",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "press ENTER.",
+        "Ô å·ãÔŠåí ENTER.",
         TEXT_STYLE_NORMAL,
     },
     {
         0,
         0,
-        "   ENTER=à®¤®¢¦¨â¨  F3=‚¨åi¤",
-        TEXT_TYPE_STATUS
+        "ENTER = ÝáÖ¦Öëé·å·   F3 = ì·½å·",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -791,50 +796,50 @@ static MUI_ENTRY ukUASelectPartitionEntries[] =
     {
         4,
         3,
-        " “áâ ­®¢ª  ReactOS " KERNEL_VERSION_STR " ",
+        " ìãå ÔÖëÐ¨ÔÔÞ ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "The list below shows existing partitions and unused disk",
+        "Õ·éû¨ Øá·ë¨¦¨Ô·½ ãØ·ãÖÆ ŠãÔçœû·µ áÖó¦ŠÐŠë å  Ô¨ó ½ÔÞåÖ¬Ö ÒŠã¤Þ, ¦¨ ÒÖéÔ ",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "space for new partitions.",
+        "ãåëÖá·å· ÔÖëŠ áÖó¦ŠÐ·.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "\x07  Press UP or DOWN to select a list entry.",
+        "\x07  Õ å·ãÆ ½å¨ ÆÐ ëŠõŠ ìì©â¶ å  ìÕ¸ô ¦ÐÞ ë·¢Öáç ØçÔÆåç.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Press ENTER to install ReactOS onto the selected partition.",
+        "\x07  Õ å·ãÔŠåí ENTER ùÖ¢ ëãå ÔÖë·å· ReactOS Ô  ë·¢á Ô·½ áÖó¦ŠÐ.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07  Press C to create a new partition.",
+        "\x07  Õ å·ãÔŠåí C ùÖ¢ ãåëÖá·å· ÔÖë·½ áÖó¦ŠÐ.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Press D to delete an existing partition.",
+        "\x07  Õ å·ãÔŠåí D ùÖ¢ ë·¦ Ð·å· ŠãÔçœû·½ áÖó¦ŠÐ.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   Please wait...",
-        TEXT_TYPE_STATUS
+        "£ç¦í-Ð ãÆ  ó û¨Æ ½å¨...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -849,26 +854,26 @@ static MUI_ENTRY ukUAFormatPartitionEntries[] =
     {
         4,
         3,
-        " “áâ ­®¢ª  ReactOS " KERNEL_VERSION_STR " ",
+        " ìãå ÔÖëÐ¨ÔÔÞ ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Format partition",
+        "«ÖáÒ åçë ÔÔÞ áÖó¦ŠÐç",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
-        "Setup will now format the partition. Press ENTER to continue.",
+        "ô á ó ëãå ÔÖëÐœë û ëŠ¦ªÖáÒ åç† áÖó¦ŠÐ. Õ å·ãÔŠåí ENTER ¦ÐÞ ØáÖ¦Öëé¨ÔÔÞ.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ENTER=à®¤®¢¦¨â¨  F3=‚¨åi¤",
-        TEXT_TYPE_STATUS
+        "ENTER = ÝáÖ¦Öëé·å·   F3 = ì·½å·",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -883,44 +888,44 @@ static MUI_ENTRY ukUAInstallDirectoryEntries[] =
     {
         4,
         3,
-        " “áâ ­®¢ª  ReactOS " KERNEL_VERSION_STR " ",
+        " ìãå ÔÖëÐ¨ÔÔÞ ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Setup installs ReactOS files onto the selected partition. Choose a",
+        "ìãå ÔÖëÐœë û ëãå ÔÖë·åí ª ½Ð· ReactOS Ô  ë·¢á Ô·½ áÖó¦ŠÐ. ì·¢¨áŠåí",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "directory where you want ReactOS to be installed:",
+        "¦·á¨ÆåÖáŠœ, ë ÞÆç ì· µÖû¨å¨ ëãå ÔÖë·å· ReactOS:",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "To change the suggested directory, press BACKSPACE to delete",
+        "úÖ¢ óÒŠÔ·å· ¦·á¨ÆåÖáŠœ Ô å·ãÔŠåí BACKSPACE ¦ÐÞ ë·¦ Ð¨ÔÔÞ",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "characters and then type the directory where you want ReactOS to",
+        "ã·ÒëÖÐŠë ØŠãÐÞ ûÖ¬Ö ëë¨¦Šåí Ô óëç ¦·á¨ÆåÖáŠŒ ¦ÐÞ",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "be installed.",
+        "ëãå ÔÖëÐ¨ÔÔÞ ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ENTER=à®¤®¢¦¨â¨  F3=‚¨åi¤",
-        TEXT_TYPE_STATUS
+        "ENTER = ÝáÖ¦Öëé·å·   F3 = ì·½å·",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -935,31 +940,31 @@ static MUI_ENTRY ukUAFileCopyEntries[] =
     {
         4,
         3,
-        " “áâ ­®¢ª  ReactOS " KERNEL_VERSION_STR " ",
+        " ìãå ÔÖëÐ¨ÔÔÞ ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
-        11,
+        0,
         12,
-        "Please wait while ReactOS Setup copies files to your ReactOS",
-        TEXT_STYLE_NORMAL
+        "£ç¦í-Ð ãÆ , ó û¨Æ ½å¨ ØÖÆ· ëãå ÔÖëÐœë û ReactOS ÆÖØŠœ† ª ½Ð· ¦Ö",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
-        30,
+        0,
         13,
-        "installation folder.",
-        TEXT_STYLE_NORMAL
+        "Ø ØÆ· Øá·óÔ û¨ÔÔÞ.",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
-        20,
+        0,
         14,
-        "This may take several minutes to complete.",
-        TEXT_STYLE_NORMAL
+        "¥¨ ÒÖé¨ ó ½ÔÞå· ¦¨ÆŠÐíÆ  µë·Ð·Ô.",
+        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
+        50,
         0,
-        0,
-        "                                                           \xB3 Please wait...    ",
+        "\xB3 £ç¦í-Ð ãÆ  ó û¨Æ ½å¨...    ",
         TEXT_TYPE_STATUS
     },
     {
@@ -975,38 +980,38 @@ static MUI_ENTRY ukUABootLoaderEntries[] =
     {
         4,
         3,
-        " “áâ ­®¢ª  ReactOS " KERNEL_VERSION_STR " ",
+        " ìãå ÔÖëÐ¨ÔÔÞ ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Setup is installing the boot loader",
+        "ìãå ÔÖëÐœë û ëãå ÔÖëÐœ† boot loader",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
-        "Install bootloader on the harddisk (MBR).",
+        "ìãå ÔÖë·å· bootloader Ô  éÖáãåÆ·½ ¦·ãÆ (bootsector).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Install bootloader on a floppy disk.",
+        "ìãå ÔÖë·å· bootloader Ô  ¦·ãÆ¨åç.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "Skip install bootloader.",
+        "Õ¨ ëãå ÔÖëÐœë å· bootloader.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ENTER=à®¤®¢¦¨â¨  F3=‚¨åi¤",
-        TEXT_TYPE_STATUS
+        "ENTER = ÝáÖ¦Öëé·å·   F3 = ì·½å·",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1021,44 +1026,44 @@ static MUI_ENTRY ukUAKeyboardSettingsEntries[] =
     {
         4,
         3,
-        " “áâ ­®¢ª  ReactOS " KERNEL_VERSION_STR " ",
+        " ìãå ÔÖëÐ¨ÔÔÞ ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "You want to change the type of keyboard to be installed.",
+        "æçå ì· ÒÖé¨å¨ óÒŠÔ·å· å·Ø ÆÐ ëŠ åçá·.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Press the UP or DOWN key to select the desired keyboard type.",
+        "\x07  Õ å·ãÆ ½å¨ ÆÐ ëŠõŠ ìì©â¶ å  ìÕ¸ô ¦ÐÞ ë·¢Öáç ØÖåáŠ¢ÔÖ¬Ö å·Øç ÆÐ ëŠ åçá·.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Then press ENTER.",
+        "   Š Ô å·ãÔŠåí ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Press the ESC key to return to the previous page without changing",
+        "\x07  Õ å·ãÔŠåí ESC ¦ÐÞ ØÖë¨áÔ¨ÔÔÞ Ô  ØÖØ¨á¨¦Ôœ ãåÖáŠÔÆç ¢¨ó óÒŠÔ·",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   the keyboard type.",
+        "   å·Øç ÆÐ ëŠ åçá·.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continue   ESC = Cancel   F3 = Quit",
-        TEXT_TYPE_STATUS
+        "ENTER = ÝáÖ¦Öëé·å·   ESC = ìŠ¦ÒŠÔ·å·   F3 = ì·½å·",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1073,44 +1078,44 @@ static MUI_ENTRY ukUALayoutSettingsEntries[] =
     {
         4,
         3,
-        " “áâ ­®¢ª  ReactOS " KERNEL_VERSION_STR " ",
+        " ìãå ÔÖëÐ¨ÔÔÞ ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "You want to change the keyboard layout to be installed.",
+        "ì·¢¨áŠåí áÖóÆÐ ¦Æç, ÞÆ  ¢ç¦¨ ëãå ÔÖëÐ¨Ô  ÞÆ  ãå Ô¦ áåÔ .",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Press the UP or DOWN key to select the desired keyboard",
+        "\x07  Õ å·ãÆ ½å¨ ÆÐ ëŠõŠ ìì©â¶ å  ìÕ¸ô ¦ÐÞ ë·¢Öáç ØÖåáŠ¢ÔÖŒ áÖóÆÐ ¦Æ·",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "    layout. Then press ENTER.",
+        "    ÆÐ ëŠ åçá· Š Ô å·ãÔŠåí ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Press the ESC key to return to the previous page without changing",
+        "\x07  Õ å·ãÔŠåí ESC ¦ÐÞ ØÖë¨áÔ¨ÔÔÞ Ô  ØÖØ¨á¨¦Ôœ ãåÖáŠÔÆç ¢¨ó óÒŠÔ·",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   the keyboard layout.",
+        "   áÖóÆÐ ¦Æ· ÆÐ ëŠ åçá·.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continue   ESC = Cancel   F3 = Quit",
-        TEXT_TYPE_STATUS
+        "ENTER = ÝáÖ¦Öëé·å·   ESC = ìŠ¦ÒŠÔ·å·   F3 = ì·½å·",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1126,20 +1131,20 @@ static MUI_ENTRY ukUAPrepareCopyEntries[] =
     {
         4,
         3,
-        " “áâ ­®¢ª  ReactOS " KERNEL_VERSION_STR " ",
+        " ìãå ÔÖëÐ¨ÔÔÞ ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Setup prepares your computer for copying the ReactOS files. ",
+        "ìãå ÔÖëÐœë û ¬Öåç† ì õ ÆÖÒØ'œå¨á ¦ÐÞ ÆÖØŠœë ÔÔÞ ª ½ÐŠë ReactOS. ",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   Building the file copy list...",
-        TEXT_TYPE_STATUS
+        "­¨Ô¨áçœ ãØ·ãÖÆ ª ½ÐŠë...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1155,38 +1160,38 @@ static MUI_ENTRY ukUASelectFSEntries[] =
     {
         4,
         3,
-        " “áâ ­®¢ª  ReactOS " KERNEL_VERSION_STR " ",
+        " ìãå ÔÖëÐ¨ÔÔÞ ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         17,
-        "Select a file system from the list below.",
+        "ì·¢¨áŠåí ª ½ÐÖëç ã·ãå¨Òç óŠ ãØ·ãÆç Ô·éû¨.",
         0
     },
     {
         8,
         19,
-        "\x07  Press UP or DOWN to select a file system.",
+        "\x07  Õ å·ãÆ ½å¨ ÆÐ ëŠõŠ ìì©â¶ å  ìÕ¸ô ¦ÐÞ ë·¢Öáç ª ½ÐÖëÖŒ ã·ãå¨Ò·.",
         0
     },
     {
         8,
         21,
-        "\x07  Press ENTER to format the partition.",
+        "\x07  Õ å·ãÔŠåí ENTER ùÖ¢ ëŠ¦ªÖáÒ åçë å· áÖó¦ŠÐ.",
         0
     },
     {
         8,
         23,
-        "\x07  Press ESC to select another partition.",
+        "\x07  Õ å·ãÔŠåí ESC ¦ÐÞ ë·¢Öáç ŠÔõÖ¬Ö áÖó¦ŠÐç.",
         0
     },
     {
         0,
         0,
-        "   ENTER = Continue   ESC = Cancel   F3 = Quit",
-        TEXT_TYPE_STATUS
+        "ENTER = ÝáÖ¦Öëé·å·   ESC = ìŠ¦ÒŠÔ·å·   F3 = ì·½å·",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
 
     {
@@ -1202,38 +1207,38 @@ static MUI_ENTRY ukUADeletePartitionEntries[] =
     {
         4,
         3,
-        " “áâ ­®¢ª  ReactOS " KERNEL_VERSION_STR " ",
+        " ìãå ÔÖëÐ¨ÔÔÞ ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "You have chosen to delete the partition",
+        "ì· ë·¢á Ð· ë·¦ Ð¨ÔÔÞ áÖó¦ŠÐç",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
-        "\x07  Press D to delete the partition.",
+        "\x07  Õ å·ãÔŠåí D ¦ÐÞ ë·¦ Ð¨ÔÔÞ áÖó¦ŠÐç.",
         TEXT_STYLE_NORMAL
     },
     {
         11,
         19,
-        "WARNING: All data on this partition will be lost!",
+        "èì¡­¡: ìãŠ ¦ ÔŠ Ô  ¤íÖÒç áÖó¦ŠÐŠ ¢ç¦çåí ëåá û¨ÔŠ!",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Press ESC to cancel.",
+        "\x07  Õ å·ãÔŠåí ESC ¦ÐÞ ëŠ¦ŠÒÔ·.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   D = Delete Partition   ESC = Cancel   F3 = Quit",
-        TEXT_TYPE_STATUS
+        "D = ì·¦ Ð·å· âÖó¦ŠÐ   ESC = ìŠ¦ÒŠÔ·å·   F3 = ì·½å·",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1248,20 +1253,20 @@ static MUI_ENTRY ukUARegistryEntries[] =
     {
         4,
         3,
-        " “áâ ­®¢ª  ReactOS " KERNEL_VERSION_STR " ",
+        " ìãå ÔÖëÐ¨ÔÔÞ ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Setup is updating the system configuration. ",
+        "ìãå ÔÖëÐœë û ÖÔÖëÐœ† ÆÖÔªŠ¬çá ¤Šœ ã·ãå¨Ò·. ",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "   Creating registry hives...",
-        TEXT_TYPE_STATUS
+        "äåëÖáœœ ãåáçÆåçáç á¨†ãåáç...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
@@ -1276,214 +1281,214 @@ MUI_ERROR ukUAErrorEntries[] =
 {
     {
         //ERROR_NOT_INSTALLED
-        "ReactOS is not completely installed on your\n"
-        "computer. If you quit Setup now, you will need to\n"
-        "run Setup again to install ReactOS.\n"
+        "ReactOS Ô¨ ¢çë ØÖëÔŠãåœ ëãå ÔÖëÐ¨Ô·½ Ô  ì õ\n"
+        "ÆÖÒØ'œå¨á. àÆùÖ ë· ë·½¦¨å¨ ó ëãå ÔÖëÐœë û  ó á ó,\n"
+        "åÖ ì Ò ¢ç¦¨ Ô¨Ö¢µŠ¦ÔÖ ó Øçãå·å· ØáÖ¬á Òç ëãå ÔÖëÐ¨ÔÔÞ\n"
+        "óÔÖëç, ÞÆùÖ ì· µÖû¨å¨ ëãå ÔÖë·å· ReactOS,\n"
         "\n"
-        "  \x07  Press ENTER to continue Setup.\n"
-        "  \x07  Press F3 to quit Setup.",
-        "F3 = Quit  ENTER = Continue"
+        "  \x07  Õ å·ãÔŠåí ENTER ùÖ¢ ØáÖ¦Öëé·å· ëãå ÔÖëÐ¨ÔÔÞ.\n"
+        "  \x07  Õ å·ãÔŠåí F3 ¦ÐÞ ë·µÖ¦ç ó ëãå ÔÖëÐœë û .",
+        "F3 = ì·½å·  ENTER = ÝáÖ¦Öëé·å·"
     },
     {
         //ERROR_NO_HDD
-        "Setup could not find a harddisk.\n",
-        "ENTER = Reboot computer"
+        "Õ¨ ë¦ ÐÖãí óÔ ½å· éÖáãåÆ·½ ¦·ãÆ.\n",
+        "ENTER = Ý¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á"
     },
     {
         //ERROR_NO_SOURCE_DRIVE
-        "Setup could not find its source drive.\n",
-        "ENTER = Reboot computer"
+        "Õ¨ ë¦ ÐÖãí óÔ ½å· çãå ÔÖëÖûÔ·½ ¦·ãÆ.\n",
+        "ENTER = Ý¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á"
     },
     {
         //ERROR_LOAD_TXTSETUPSIF
-        "Setup failed to load the file TXTSETUP.SIF.\n",
-        "ENTER = Reboot computer"
+        "Õ¨ ë¦ ÐÖãí ó ë Ôå é·å· ª ½Ð TXTSETUP.SIF.\n",
+        "ENTER = Ý¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á"
     },
     {
         //ERROR_CORRUPT_TXTSETUPSIF
-        "Setup found a corrupt TXTSETUP.SIF.\n",
-        "ENTER = Reboot computer"
+        "« ½Ð TXTSETUP.SIF ØÖõÆÖ¦é¨Ô·½.\n",
+        "ENTER = Ý¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á"
     },
     {
         //ERROR_SIGNATURE_TXTSETUPSIF,
-        "Setup found an invalid signature in TXTSETUP.SIF.\n",
-        "ENTER = Reboot computer"
+        "ì·ÞëÐ¨ÔÖ Ô¨ÆÖá¨ÆåÔ·½ ØŠ¦Ø·ã ë TXTSETUP.SIF.\n",
+        "ENTER = Ý¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á"
     },
     {
         //ERROR_DRIVE_INFORMATION
-        "Setup could not retrieve system drive information.\n",
-        "ENTER = Reboot computer"
+        "Õ¨ ë¦ ÐÖãí Öåá·Ò å· ¦ ÔŠ ØáÖ ã·ãå¨ÒÔ·½ ¦·ãÆ.\n",
+        "ENTER = Ý¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á"
     },
     {
         //ERROR_WRITE_BOOT,
-        "Setup failed to install FAT bootcode on the system partition.",
-        "ENTER = Reboot computer"
+        "Õ¨ ë¦ ÐÖãí ëãå ÔÖë·å· ó ë Ôå éçë ÐíÔ·½ ÆÖ¦ FAT Ô  ã·å¨ÒÔ·½ áÖó¦ŠÐ.",
+        "ENTER = Ý¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á"
     },
     {
         //ERROR_LOAD_COMPUTER,
-        "Setup failed to load the computer type list.\n",
-        "ENTER = Reboot computer"
+        "Õ¨ ë¦ ÐÖãí ó ë Ôå é·å· ãØ·ãÖÆ å·ØŠë ÆÖÒØ'œå¨á .\n",
+        "ENTER = Ý¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á"
     },
     {
         //ERROR_LOAD_DISPLAY,
-        "Setup failed to load the display settings list.\n",
-        "ENTER = Reboot computer"
+        "Õ¨ ë¦ ÐÖãí ó ë Ôå é·å· ãØ·ãÖÆ á¨é·ÒŠë ¨Æá Ôç.\n",
+        "ENTER = Ý¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á"
     },
     {
         //ERROR_LOAD_KEYBOARD,
-        "Setup failed to load the keyboard type list.\n",
-        "ENTER = Reboot computer"
+        "Õ¨ ë¦ ÐÖãí ó ë Ôå é·å· ãØ·ãÖÆ å·ØŠë ÆÐ ëŠ åçá·.\n",
+        "ENTER = Ý¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á"
     },
     {
         //ERROR_LOAD_KBLAYOUT,
-        "Setup failed to load the keyboard layout list.\n",
-        "ENTER = Reboot computer"
+        "Õ¨ ë¦ ÐÖãí ó ë Ôå é·å· ãØ·ãÖÆ áÖóÆÐ ¦ÖÆ ÆÐ ëŠ åçá·.\n",
+        "ENTER = Ý¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á"
     },
     {
         //ERROR_WARN_PARTITION,
-          "Setup found that at least one harddisk contains an incompatible\n"
-          "partition table that can not be handled properly!\n"
+          "ôÔ ½¦¨ÔÖ ÞÆ ÒŠÔŠÒçÒ Ö¦·Ô éÖáãåÆ·½ ¦·ãÆ, ùÖ ÒŠãå·åí áÖó¦ŠÐ,\n"
+          "ÞÆ·½ Ô¨ ØŠ¦åá·Òç†åíãÞ ReactOS!\n"
           "\n"
-          "Creating or deleting partitions can destroy the partition table.\n"
+          "äåëÖá¨ÔÔÞ û· ë·¦ Ð¨ÔÔÞ áÖó¦ŠÐŠë ÒÖé¨ óáç½Ôçë å· å ¢Ð·¤œ áÖó¦ŠÐŠë.\n"
           "\n"
-          "  \x07  Press F3 to quit Setup."
-          "  \x07  Press ENTER to continue.",
-          "F3= Quit  ENTER = Continue"
+          "  \x07  Õ å·ãÔŠåí F3 ¦ÐÞ ë·µÖ¦ç ó ëãå ÔÖëÐœë û .\n"
+          "  \x07  Õ å·ãÔŠåí ENTER ùÖ¢ ØáÖ¦Öëé·å·.",
+          "F3= ì·½å·  ENTER = ÝáÖ¦Öëé·å·"
     },
     {
         //ERROR_NEW_PARTITION,
-        "You can not create a new Partition inside\n"
-        "of an already existing Partition!\n"
+        "ì· Ô¨ ÒÖé¨å¨ ãåëÖá·å· ÔÖë·½ áÖó¦ŠÐ Ô \n"
+        "ëé¨ ŠãÔçœûÖÒç áÖó¦ŠÐŠ!\n"
         "\n"
-        "  * Press any key to continue.",
+        "  * Õ å·ãÔŠåí ¢ç¦í-ÞÆç ÆÐ ëŠõç ùÖ¢ ØáÖ¦Öëé·å·.",
         NULL
     },
     {
         //ERROR_DELETE_SPACE,
-        "You can not delete unpartitioned disk space!\n"
+        "Õ¨ ÒÖéÔ  ë·¦ Ð·å· Ô¨áÖóÒŠû¨Ôç Ö¢Ð ãåí Ô  ¦·ãÆç!\n"
         "\n"
-        "  * Press any key to continue.",
+        "  * Õ å·ãÔŠåí ¢ç¦í-ÞÆç ÆÐ ëŠõç ùÖ¢ ØáÖ¦Öëé·å·.",
         NULL
     },
     {
         //ERROR_INSTALL_BOOTCODE,
-        "Setup failed to install the FAT bootcode on the system partition.",
-        "ENTER = Reboot computer"
+        "Õ¨ ë¦ ÐÖãí ëãå ÔÖë·å· ó ë Ôå éçë ÐíÔ·½ ÆÖ¦ FAT Ô  ã·å¨ÒÔ·½ áÖó¦ŠÐ.",
+        "ENTER = Ý¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á"
     },
     {
         //ERROR_NO_FLOPPY,
-        "No disk in drive A:.",
-        "ENTER = Continue"
+        "ìŠ¦ãçåÔÞ ¦·ãÆ¨å  ë ¦·ãÆÖëÖ¦Š A:.",
+        "ENTER = ÝáÖ¦Öëé·å·"
     },
     {
         //ERROR_UPDATE_KBSETTINGS,
-        "Setup failed to update keyboard layout settings.",
-        "ENTER = Reboot computer"
+        "Õ¨ ë¦ ÐÖãí ÖÔÖë·å· Ø á Ò¨åá· áÖóÆÐ ¦Æ· ÆÐ ëŠ åçá·.",
+        "ENTER = Ý¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á"
     },
     {
         //ERROR_UPDATE_DISPLAY_SETTINGS,
-        "Setup failed to update display registry settings.",
-        "ENTER = Reboot computer"
+        "Õ¨ ë¦ ÐÖãí ÖÔÖë·å· Ø á Ò¨åá· ¨Æá Ôç ë á¨†ãåáŠ.",
+        "ENTER = Ý¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á"
     },
     {
         //ERROR_IMPORT_HIVE,
-        "Setup failed to import a hive file.",
-        "ENTER = Reboot computer"
+        "Õ¨ ë¦ ÐÖãí ŠÒØÖáåçë å· ª ½Ð ÆçùŠë á¨†ãåáç.",
+        "ENTER = Ý¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á"
     },
     {
         //ERROR_FIND_REGISTRY
-        "Setup failed to find the registry data files.",
-        "ENTER = Reboot computer"
+        "Õ¨ ë¦ ÐÖãí óÔ ½å· ª ½Ð· ¦ Ô·µ á¨†ãåáç.",
+        "ENTER = Ý¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á"
     },
     {
         //ERROR_CREATE_HIVE,
-        "Setup failed to create the registry hives.",
-        "ENTER = Reboot computer"
+        "Õ¨ ë¦ ÐÖãí ãåëÖá·å· ÆçùŠ á¨†ãåáç.",
+        "ENTER = Ý¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á"
     },
     {
         //ERROR_INITIALIZE_REGISTRY,
-        "Setup failed to set the initialize the registry.",
-        "ENTER = Reboot computer"
+        "Õ¨ ë¦ ÐÖãí ŠÔŠ¤Š ÐŠóçë å· á¨†ãåá.",
+        "ENTER = Ý¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á"
     },
     {
         //ERROR_INVALID_CABINET_INF,
-        "Cabinet has no valid inf file.\n",
-        "ENTER = Reboot computer"
+        "Cabinet Ò † Ô¨ÆÖá¨ÆåÔ·½ inf-ª ½Ð.\n",
+        "ENTER = Ý¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á"
     },
     {
         //ERROR_CABINET_MISSING,
-        "Cabinet not found.\n",
-        "ENTER = Reboot computer"
+        "Cabinet Ô¨ óÔ ½¦¨ÔÖ.\n",
+        "ENTER = Ý¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á"
     },
     {
         //ERROR_CABINET_SCRIPT,
-        "Cabinet has no setup script.\n",
-        "ENTER = Reboot computer"
+        "Cabinet Ô¨ Ò † çãå ÔÖëÖûÔÖ¬Ö ã¤¨Ô áŠœ.\n",
+        "ENTER = Ý¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á"
     },
     {
         //ERROR_COPY_QUEUE,
-        "Setup failed to open the copy file queue.\n",
-        "ENTER = Reboot computer"
+        "Õ¨ ë¦ ÐÖãí ëŠ¦Æá·å· û¨á¬ç ÆÖØŠœë ÔÔÞ ª ½ÐŠë.\n",
+        "ENTER = Ý¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á"
     },
     {
         //ERROR_CREATE_DIR,
-        "Setup could not create install directories.",
-        "ENTER = Reboot computer"
+        "Õ¨ ë¦ ÐÖãí ãåëÖá·å· ¦·á¨ÆåÖáŠŒ ¦ÐÞ ëãå ÔÖëÐ¨ÔÔÞ.",
+        "ENTER = Ý¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á"
     },
     {
         //ERROR_TXTSETUP_SECTION,
-        "Setup failed to find the 'Directories' section\n"
-        "in TXTSETUP.SIF.\n",
-        "ENTER = Reboot computer"
+        "Õ¨ ë¦ ÐÖãí óÔ ½å· ã¨Æ¤Šœ 'Directories'\n"
+        "ë ª ½ÐŠ TXTSETUP.SIF.\n",
+        "ENTER = Ý¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á"
     },
     {
         //ERROR_CABINET_SECTION,
-        "Setup failed to find the 'Directories' section\n"
-        "in the cabinet.\n",
-        "ENTER = Reboot computer"
+        "Õ¨ ë¦ ÐÖãí óÔ ½å· ã¨Æ¤Šœ 'Directories'\n"
+        "ë cabinet.\n",
+        "ENTER = Ý¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á"
     },
     {
         //ERROR_CREATE_INSTALL_DIR
-        "Setup could not create the install directory.",
-        "ENTER = Reboot computer"
+        "Õ¨ ë¦ ÐÖãí ãåëÖá·å· ¦·á¨ÆåÖáŠœ ¦ÐÞ ëãå ÔÖëÐÔÔÞ.",
+        "ENTER = Ý¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á"
     },
     {
         //ERROR_FIND_SETUPDATA,
-        "Setup failed to find the 'SetupData' section\n"
-        "in TXTSETUP.SIF.\n",
-        "ENTER = Reboot computer"
+        "Õ¨ ë¦ ÐÖãí óÔ ½å· ã¨Æ¤Šœ 'SetupData'\n"
+        "ë ª ½ÐŠ TXTSETUP.SIF.\n",
+        "ENTER = Ý¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á"
     },
     {
         //ERROR_WRITE_PTABLE,
-        "Setup failed to write partition tables.\n"
-        "ENTER = Reboot computer"
+        "Õ¨ ë¦ ÐÖãí ó Ø·ã å· å ¢Ð·¤Š áÖó¦ŠÐŠë.\n"
+        "ENTER = Ý¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á"
     },
     {
         //ERROR_ADDING_CODEPAGE,
-        "Setup failed to add codepage to registry.\n"
-        "ENTER = Reboot computer"
+        "Õ¨ ë¦ ÐÖãí ¦Ö¦ å· Ø á Ò¨åá· ÆÖ¦çë ÔÔÞ ë á¨†ãåá.\n"
+        "ENTER = Ý¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á"
     },
     {
         //ERROR_UPDATE_LOCALESETTINGS,
-        "Setup could not set the system locale.\n"
-        "ENTER = Reboot computer"
+        "Õ¨ ë¦ ÐÖãí ëãå ÔÖë·å· ÐÖÆ Ðí ã·ãå¨Ò·.\n"
+        "ENTER = Ý¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á"
     },
     {
         //ERROR_ADDING_KBLAYOUTS,
-        "Setup failed to add keyboard layouts to registry.\n"
-        "ENTER = Reboot computer"
+        "Õ¨ ë¦ ÐÖãí ¦Ö¦ å· áÖóÆÐ ¦Æ· ÆÐ ëŠ åçá· ¦Ö á¨†ãåáç.\n"
+        "ENTER = Ý¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á"
     },
     {
         //ERROR_UPDATE_GEOID,
-        "Setup could not set the geo id.\n"
-        "ENTER = Reboot computer"
+        "Õ¨ ë¦ ÐÖãí ëãå ÔÖë·å· geo id.\n"
+        "ENTER = Ý¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á"
     },
     {
         NULL,
         NULL
     }
 };
-
 
 MUI_PAGE ukUAPages[] =
 {
@@ -1588,103 +1593,103 @@ MUI_PAGE ukUAPages[] =
 MUI_STRING ukUAStrings[] =
 {
     {STRING_PLEASEWAIT,
-     "   Please wait..."},
+     "   £ç¦í-Ð ãÆ , ó û¨Æ ½å¨..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Install   C = Create Partition   F3 = Quit"},
+     "   ENTER = ìãå ÔÖë·å·   C = äåëÖá·å· âÖó¦ŠÐ   F3 = ì·½å·"},
     {STRING_INSTALLDELETEPARTITION,
-     "   ENTER = Install   D = Delete Partition   F3 = Quit"},
+     "   ENTER = ìãå ÔÖë·å·   D = ì·¦ Ð·å· âÖó¦ŠÐ   F3 = ì·½å·"},
     {STRING_PARTITIONSIZE,
-     "Size of new partition:"},
+     "âÖóÒŠá ÔÖëÖ¬Ö áÖó¦ŠÐç:"},
     {STRING_CHOOSENEWPARTITION,
-     "You have chosen to create a new partition on"},
+     "ì· µÖû¨å¨ ãåëÖá·å· ÔÖë·½ áÖó¦ŠÐ Ô "},
     {STRING_HDDSIZE,
-    "Please enter the size of the new partition in megabytes."},
+    "£ç¦í-Ð ãÆ , ëë¨¦Šåí áÖóÒŠá ÔÖëÖ¬Ö áÖó¦ŠÐç ë Ò¨¬ ¢ ½å µ."},
     {STRING_CREATEPARTITION,
-     "   ENTER = Create Partition   ESC = Cancel   F3 = Quit"},
+     "   ENTER = äåëÖá·å· âÖó¦ŠÐ   ESC = ìŠ¦ÒŠÔ·å·   F3 = ì·½å·"},
     {STRING_PARTFORMAT,
-    "This Partition will be formatted next."},
+    "¥¨½ áÖó¦ŠÐ ¢ç¦¨ ëŠ¦ªÖáÒ åÖë ÔÖ."},
     {STRING_NONFORMATTEDPART,
-    "You chose to install ReactOS on a new or unformatted Partition."},
+    "ì· ë·¢á Ð· ëãå ÔÖëÐ¨ÔÔÞ ReactOS Ô  ÔÖë·½  ¢Ö Ô¨ªÖáÒ åÖë Ô·½ áÖó¦ŠÐ."},
     {STRING_INSTALLONPART,
-    "Setup install ReactOS onto Partition"},
+    "ReactOS ëãå ÔÖëÐœ†åíãÞ Ô  áÖó¦ŠÐ"},
     {STRING_CHECKINGPART,
-    "Setup is now checking the selected partition."},
+    "ìãå ÔÖëÐœë û Ø¨á¨ëŠáÞ† ë·¢á Ô·½ áÖó¦ŠÐ."},
     {STRING_QUITCONTINUE,
-    "F3= Quit  ENTER = Continue"},
+    "F3= ì·½å·  ENTER = ÝáÖ¦Öëé·å·"},
     {STRING_REBOOTCOMPUTER,
-    "ENTER = Reboot computer"},
+    "ENTER = Ý¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á"},
     {STRING_TXTSETUPFAILED,
-    "Setup failed to find the '%S' section\nin TXTSETUP.SIF.\n"},
+    "ìãå ÔÖëÐœë û Ô¨ óÒŠ¬ óÔ ½å· ã¨Æ¤Šœ '%S' \në ª ½ÐŠ TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "\xB3 Copying file: %S"},
+     "\xB3 ÇÖØŠœë ÔÔÞ: %S"},
     {STRING_SETUPCOPYINGFILES,
-     "Setup is copying files..."},
+     "ìãå ÔÖëÐœë û ÆÖØŠœ† ª ½Ð·..."},
     {STRING_REGHIVEUPDATE,
-    "   Updating registry hives..."},
+    "   ×ÔÖëÐ¨ÔÔÞ ÆçùŠë á¨†ãåáç..."},
     {STRING_IMPORTFILE,
-    "   Importing %S..."},
+    "   ‹ÒØÖáåçë ÔÔÞ %S..."},
     {STRING_DISPLAYETTINGSUPDATE,
-    "   Updating display registry settings..."},
+    "   ×ÔÖëÐ¨ÔÔÞ Ø á Ò¨åáŠë ¨Æá Ôç ë á¨†ãåáŠ..."},
     {STRING_LOCALESETTINGSUPDATE,
-    "   Updating locale settings..."},
+    "   ×ÔÖëÐ¨ÔÔÞ Ø á Ò¨åáŠë ÐÖÆ ÐŠ..."},
     {STRING_KEYBOARDSETTINGSUPDATE,
-    "   Updating keyboard layout settings..."},
+    "   ×ÔÖëÐ¨ÔÔÞ Ø á Ò¨åáŠë áÖóÆÐ ¦Æ· ÆÐ ëŠ åçá·..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Adding codepage information to registry..."},
+    "   §Ö¦ ë ÔÔÞ ¦ Ô·µ ØáÖ ÆÖ¦Öëç ãåÖáŠÔÆç ë á¨†ãåá..."},
     {STRING_DONE,
-    "   Done..."},
+    "   ­ÖåÖëÖ..."},
     {STRING_REBOOTCOMPUTER2,
-    "   ENTER = Reboot computer"},
+    "   ENTER = Ý¨á¨ó ë Ôå é·å· ÆÖÒØ'œå¨á"},
     {STRING_CONSOLEFAIL1,
-    "Unable to open the console\n\n"},
+    "Õ¨ ë¦ ÐÖãí ëŠ¦Æá·å· ÆÖÔãÖÐí\n\n"},
     {STRING_CONSOLEFAIL2,
-    "The most common cause of this is using an USB keyboard\n"},
+    "Õ ½¢ŠÐíõ ½ÒÖëŠáÔ  Øá·û·Ô  ¤íÖ¬Ö -  ë·ÆÖá·ãå ÔÔÞ USB ÆÐ ëŠ åçá·\n"},
     {STRING_CONSOLEFAIL3,
-    "USB keyboards are not fully supported yet\n"},
+    "USB ÆÐ ëŠ åçá· ù¨ Ô¨ ØŠ¦åá·ÒçœåíãÞ ØÖëÔŠãåœ\n"},
     {STRING_FORMATTINGDISK,
-    "Setup is formatting your disk"},
+    "ìãå ÔÖëÐœë û ªÖáÒ åç† ë õ ¦·ãÆ"},
     {STRING_CHECKINGDISK,
-    "Setup is checking your disk"},
+    "ìãå ÔÖëÐœë û Ø¨á¨ëŠáÞ† ë õ ¦·ãÆ"},
     {STRING_FORMATDISK1,
-    " Format partition as %S file system (quick format) "},
+    " «ÖáÒ åçë å· áÖó¦ŠÐ ë ª ½ÐÖëŠ½ ã·ãå¨ÒŠ %S (õë·¦Æ¨ ªÖáÒ åçë ÔÔÞ) "},
     {STRING_FORMATDISK2,
-    " Format partition as %S file system "},
+    " «ÖáÒ åçë å· áÖó¦ŠÐ ë ª ½ÐÖëŠ½ ã·ãå¨ÒŠ %S  "},
     {STRING_KEEPFORMAT,
-    " Keep current file system (no changes) "},
+    " ô Ð·õ·å· ŠãÔçœûç ª ½ÐÖëç ã·ãå¨Òç (¢¨ó óÒŠÔ) "},
     {STRING_HDINFOPARTCREATE,
-    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ."},
+    "%I64u %s  êÖáãåÆ·½ ¦·ãÆ %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ."},
     {STRING_HDDINFOUNK1,
-    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    "%I64u %s  êÖáãåÆ·½ ¦·ãÆ %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
     {STRING_HDDINFOUNK2,
     "   %c%c  Type %lu    %I64u %s"},
     {STRING_HDINFOPARTDELETE,
-    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ."},
+    "Ô  %I64u %s  êÖáãåÆ·½ ¦·ãÆ %lu  (ÝÖáå=%hu, ö·Ô =%hu, Id=%hu) on %wZ."},
     {STRING_HDDINFOUNK3,
-    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
+    "Ô  %I64u %s  êÖáãåÆ·½ ¦·ãÆ %lu  (ÝÖáå=%hu, ö·Ô =%hu, Id=%hu)."},
     {STRING_HDINFOPARTZEROED,
-    "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    "êÖáãåÆ·½ ¦·ãÆ %lu (%I64u %s), ÝÖáå=%hu, ö·Ô =%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK4,
     "%c%c  Type %lu    %I64u %s"},
     {STRING_HDINFOPARTEXISTS,
-    "on Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
+    "Ô  êÖáãåÆÖÒç ¦·ãÆç %lu (%I64u %s), ÝÖáå=%hu, ö·Ô =%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
     "%c%c  Type %-3u                         %6lu %s"},
     {STRING_HDINFOPARTSELECT,
-    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %S"},
+    "%6lu %s  êÖáãåÆ·½ ¦·ãÆ %lu  (Port=%hu, Bus=%hu, Id=%hu) on %S"},
     {STRING_HDDINFOUNK6,
-    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
+    "%6lu %s  êÖáãåÆ·½ ¦·ãÆ %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
     {STRING_NEWPARTITION,
-    "Setup created a new partition on"},
+    "ìãå ÔÖëÐœë û ãåëÖá·ë ÔÖë·½ áÖó¦ŠÐ Ô "},
     {STRING_UNPSPACE,
-    "    Unpartitioned space              %6lu %s"},
+    "    Õ¨áÖóÒŠû¨Ô  Ö¢Ð ãåí              %6lu %s"},
     {STRING_MAXSIZE,
-    "MB (max. %lu MB)"},
+    "MB (Ò Æã. %lu MB)"},
     {STRING_UNFORMATTED,
-    "New (Unformatted)"},
+    "ÕÖë·½ (Õ¨ªÖáÒ åÖë Ô·½)"},
     {STRING_FORMATUNUSED,
-    "Unused"},
+    "Õ¨ ë·ÆÖá·ãå ÔÖ"},
     {STRING_FORMATUNKNOWN,
-    "Unknown"},
+    "Õ¨ëŠ¦ÖÒÖ"},
     {STRING_KB,
     "KB"},
     {STRING_MB,
@@ -1692,7 +1697,7 @@ MUI_STRING ukUAStrings[] =
     {STRING_GB,
     "GB"},
     {STRING_ADDKBLAYOUTS,
-    "Adding keyboard layouts"},
+    "§Ö¦ ë ÔÔÞ áÖóÆÐ ¦ÖÆ ÆÐ ëŠ åçá·"},
     {0, 0}
 };
 

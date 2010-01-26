@@ -38,9 +38,9 @@
 	<directory name="ke">
 		<if property="ARCH" value="i386">
 			<directory name="i386">
-				<file first="true">boot.S</file>
 				<file>abios.c</file>
 				<file>cpu.c</file>
+				<file>context.c</file>
 				<file>ctxswitch.S</file>
 				<file>exp.c</file>
 				<file>irqobj.c</file>
@@ -48,7 +48,6 @@
 				<file>ldt.c</file>
 				<file>mtrr.c</file>
 				<file>patpge.c</file>
-				<file>systimer.S</file>
 				<file>thrdini.c</file>
 				<file>trap.s</file>
 				<file>traphdlr.c</file>
@@ -66,7 +65,6 @@
 				<file>kiinit.c</file>
 				<file>stubs_asm.s</file>
 				<file>thrdini.c</file>
-				<file>time.c</file>
 				<file>trap.s</file>
 				<file>trapc.c</file>
 				<file>usercall.c</file>
@@ -107,6 +105,7 @@
 		<file>queue.c</file>
 		<file>semphobj.c</file>
 		<file>spinlock.c</file>
+		<file>time.c</file>
 		<file>thrdschd.c</file>
 		<file>thrdobj.c</file>
 		<file>timerobj.c</file>

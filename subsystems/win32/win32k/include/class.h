@@ -28,11 +28,11 @@ DestroyCallProc(IN PDESKTOPINFO Desktop,
                 IN OUT PCALLPROCDATA CallProc);
 
 PCALLPROCDATA
-CloneCallProc(IN PDESKTOPINFO Desktop,
+CloneCallProc(IN PDESKTOP Desktop,
               IN PCALLPROCDATA CallProc);
 
 PCALLPROCDATA
-CreateCallProc(IN PDESKTOPINFO Desktop,
+CreateCallProc(IN PDESKTOP Desktop,
                IN WNDPROC WndProc,
                IN BOOL Unicode,
                IN PPROCESSINFO pi);

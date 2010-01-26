@@ -990,7 +990,7 @@ IntBlockInput(PTHREADINFO W32Thread, BOOL BlockIt)
    PTHREADINFO OldBlock;
    ASSERT(W32Thread);
 
-   if(!W32Thread->Desktop || ((W32Thread->TIF_flags & TIF_INCLEANUP) && BlockIt))
+   if(!W32Thread->rpdesk || ((W32Thread->TIF_flags & TIF_INCLEANUP) && BlockIt))
    {
       /*
        * fail blocking if exiting the thread
@@ -1004,14 +1004,14 @@ IntBlockInput(PTHREADINFO W32Thread, BOOL BlockIt)
     *         e.g. services running in the service window station cannot block input
     */
    if(!ThreadHasInputAccess(W32Thread) ||
-         !IntIsActiveDesktop(W32Thread->Desktop))
+         !IntIsActiveDesktop(W32Thread->rpdesk))
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       return FALSE;
    }
 
-   ASSERT(W32Thread->Desktop);
-   OldBlock = W32Thread->Desktop->BlockInputThread;
+   ASSERT(W32Thread->rpdesk);
+   OldBlock = W32Thread->rpdesk->BlockInputThread;
    if(OldBlock)
    {
       if(OldBlock != W32Thread)
@@ -1019,11 +1019,11 @@ IntBlockInput(PTHREADINFO W32Thread, BOOL BlockIt)
          SetLastWin32Error(ERROR_ACCESS_DENIED);
          return FALSE;
       }
-      W32Thread->Desktop->BlockInputThread = (BlockIt ? W32Thread : NULL);
+      W32Thread->rpdesk->BlockInputThread = (BlockIt ? W32Thread : NULL);
       return OldBlock == NULL;
    }
 
-   W32Thread->Desktop->BlockInputThread = (BlockIt ? W32Thread : NULL);
+   W32Thread->rpdesk->BlockInputThread = (BlockIt ? W32Thread : NULL);
    return OldBlock == NULL;
 }
 
@@ -1394,7 +1394,7 @@ UserAttachThreadInput( PTHREADINFO pti, PTHREADINFO ptiTo, BOOL fAttach)
    /* Do not attach to system threads or between different desktops. */
    if ( pti->TIF_flags & TIF_DONTATTACHQUEUE ||
         ptiTo->TIF_flags & TIF_DONTATTACHQUEUE ||
-        pti->Desktop != ptiTo->Desktop )
+        pti->rpdesk != ptiTo->rpdesk )
       return FALSE;
 
    /* If Attach set, allocate and link. */
@@ -1451,7 +1451,7 @@ NtUserSendInput(
    W32Thread = PsGetCurrentThreadWin32Thread();
    ASSERT(W32Thread);
 
-   if(!W32Thread->Desktop)
+   if(!W32Thread->rpdesk)
    {
       RETURN( 0);
    }
@@ -1467,7 +1467,7 @@ NtUserSendInput(
     *         e.g. services running in the service window station cannot block input
     */
    if(!ThreadHasInputAccess(W32Thread) ||
-         !IntIsActiveDesktop(W32Thread->Desktop))
+         !IntIsActiveDesktop(W32Thread->rpdesk))
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       RETURN( 0);

@@ -431,6 +431,8 @@ static HRESULT WINAPI HTMLDocument3_getElementById(IHTMLDocument3 *iface, BSTR v
     HTMLDocument *This = HTMLDOC3_THIS(iface);
     nsIDOMElement *nselem;
     HTMLDOMNode *node;
+    nsIDOMNode *nsnode, *nsnode_by_id, *nsnode_by_name;
+    nsIDOMNodeList *nsnode_list;
     nsAString id_str;
     nsresult nsres;
 
@@ -442,16 +444,64 @@ static HRESULT WINAPI HTMLDocument3_getElementById(IHTMLDocument3 *iface, BSTR v
     }
 
     nsAString_Init(&id_str, v);
+    /* get element by id attribute */
     nsres = nsIDOMHTMLDocument_GetElementById(This->doc_node->nsdoc, &id_str, &nselem);
-    nsAString_Finish(&id_str);
     if(FAILED(nsres)) {
         ERR("GetElementById failed: %08x\n", nsres);
+        nsAString_Finish(&id_str);
         return E_FAIL;
     }
+    nsnode_by_id = (nsIDOMNode*)nselem;
 
-    if(nselem) {
-        node = get_node(This->doc_node, (nsIDOMNode*)nselem, TRUE);
-        nsIDOMElement_Release(nselem);
+    /* get first element by name attribute */
+    nsres = nsIDOMHTMLDocument_GetElementsByName(This->doc_node->nsdoc, &id_str, &nsnode_list);
+    if(FAILED(nsres)) {
+        ERR("getElementsByName failed: %08x\n", nsres);
+        nsAString_Finish(&id_str);
+        if(nsnode_by_id)
+            nsIDOMNode_Release(nsnode_by_id);
+        return E_FAIL;
+    }
+    nsIDOMNodeList_Item(nsnode_list, 0, &nsnode_by_name);
+    nsIDOMNodeList_Release(nsnode_list);
+
+    nsAString_Finish(&id_str);
+
+    if(nsnode_by_name && nsnode_by_id) {
+        nsIDOM3Node *node3;
+        PRUint16 pos;
+
+        nsres = nsIDOMNode_QueryInterface(nsnode_by_name, &IID_nsIDOM3Node, (void**)&node3);
+        if(NS_FAILED(nsres)) {
+            FIXME("failed to get nsIDOM3Node interface: 0x%08x\n", nsres);
+            nsIDOMNode_Release(nsnode_by_name);
+            nsIDOMNode_Release(nsnode_by_id);
+            return E_FAIL;
+        }
+
+        nsres = nsIDOM3Node_CompareDocumentPosition(node3, nsnode_by_id, &pos);
+        nsIDOM3Node_Release(node3);
+        if(NS_FAILED(nsres)) {
+            FIXME("nsIDOM3Node_CompareDocumentPosition failed: 0x%08x\n", nsres);
+            nsIDOMNode_Release(nsnode_by_name);
+            nsIDOMNode_Release(nsnode_by_id);
+            return E_FAIL;
+        }
+
+        TRACE("CompareDocumentPosition gave: 0x%x\n", pos);
+        if(pos & PRECEDING || pos & CONTAINS) {
+            nsnode = nsnode_by_id;
+            nsIDOMNode_Release(nsnode_by_name);
+        }else {
+            nsnode = nsnode_by_name;
+            nsIDOMNode_Release(nsnode_by_id);
+        }
+    }else
+        nsnode = nsnode_by_name ? nsnode_by_name : nsnode_by_id;
+
+    if(nsnode) {
+        node = get_node(This->doc_node, nsnode, TRUE);
+        nsIDOMNode_Release(nsnode);
 
         IHTMLDOMNode_QueryInterface(HTMLDOMNODE(node), &IID_IHTMLElement, (void**)pel);
     }else {
@@ -620,7 +670,7 @@ static HRESULT WINAPI HTMLDocument4_focus(IHTMLDocument4 *iface)
         return E_FAIL;
     }
 
-    nsres = nsIDOMNSHTMLElement_focus(nselem);
+    nsres = nsIDOMNSHTMLElement_Focus(nselem);
     nsIDOMNSHTMLElement_Release(nselem);
     if(NS_FAILED(nsres)) {
         ERR("Focus failed: %08x\n", nsres);

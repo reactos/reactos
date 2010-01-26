@@ -1054,7 +1054,7 @@ EnlistKeyBodyWithKCB(IN PCM_KEY_BODY KeyBody,
     for (i = 0; i < 4; i++)
     {
         /* Add it into the list */
-        if (!InterlockedCompareExchangePointer(&KeyBody->KeyControlBlock->
+        if (!InterlockedCompareExchangePointer((PVOID*)&KeyBody->KeyControlBlock->
                                                KeyBodyArray[i],
                                                KeyBody,
                                                NULL))
@@ -1110,7 +1110,7 @@ DelistKeyBodyFromKCB(IN PCM_KEY_BODY KeyBody,
     for (i = 0; i < 4; i++)
     {
         /* Add it into the list */
-        if (InterlockedCompareExchangePointer(&KeyBody->KeyControlBlock->
+        if (InterlockedCompareExchangePointer((VOID*)&KeyBody->KeyControlBlock->
                                               KeyBodyArray[i],
                                               NULL,
                                               KeyBody) == KeyBody)

@@ -180,6 +180,8 @@ extern int SPY_Init(void);
 #define USER_BODY_TO_HEADER(ObjectBody) \
   ((PUSER_OBJECT_HEADER)(((PUSER_OBJECT_HEADER)ObjectBody) - 1))
 
+#define HANDLEENTRY_INDESTROY 1
+
 typedef struct _USER_HANDLE_ENTRY
 {
     void          *ptr;          /* pointer to object */
@@ -189,7 +191,8 @@ typedef struct _USER_HANDLE_ENTRY
         PTHREADINFO pti;          // pointer to Win32ThreadInfo
         PPROCESSINFO ppi;         // pointer to W32ProcessInfo
     };
-    unsigned short type;         /* object type (0 if free) */
+    unsigned char  type;         /* object type (0 if free) */
+    unsigned char  flags;
     unsigned short generation;   /* generation counter */
 } USER_HANDLE_ENTRY, * PUSER_HANDLE_ENTRY;
 

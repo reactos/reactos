@@ -45,24 +45,34 @@ static void *libpng_handle;
 #define MAKE_FUNCPTR(f) static typeof(f) * p##f
 MAKE_FUNCPTR(png_create_read_struct);
 MAKE_FUNCPTR(png_create_info_struct);
+MAKE_FUNCPTR(png_create_write_struct);
 MAKE_FUNCPTR(png_destroy_read_struct);
+MAKE_FUNCPTR(png_destroy_write_struct);
 MAKE_FUNCPTR(png_error);
 MAKE_FUNCPTR(png_get_bit_depth);
 MAKE_FUNCPTR(png_get_color_type);
 MAKE_FUNCPTR(png_get_image_height);
 MAKE_FUNCPTR(png_get_image_width);
 MAKE_FUNCPTR(png_get_io_ptr);
+MAKE_FUNCPTR(png_get_pHYs);
 MAKE_FUNCPTR(png_get_PLTE);
 MAKE_FUNCPTR(png_get_tRNS);
 MAKE_FUNCPTR(png_set_bgr);
+MAKE_FUNCPTR(png_set_filler);
 MAKE_FUNCPTR(png_set_gray_1_2_4_to_8);
 MAKE_FUNCPTR(png_set_gray_to_rgb);
+MAKE_FUNCPTR(png_set_IHDR);
+MAKE_FUNCPTR(png_set_pHYs);
 MAKE_FUNCPTR(png_set_read_fn);
 MAKE_FUNCPTR(png_set_strip_16);
 MAKE_FUNCPTR(png_set_tRNS_to_alpha);
+MAKE_FUNCPTR(png_set_write_fn);
 MAKE_FUNCPTR(png_read_end);
 MAKE_FUNCPTR(png_read_image);
 MAKE_FUNCPTR(png_read_info);
+MAKE_FUNCPTR(png_write_end);
+MAKE_FUNCPTR(png_write_info);
+MAKE_FUNCPTR(png_write_rows);
 #undef MAKE_FUNCPTR
 
 static void *load_libpng(void)
@@ -76,24 +86,34 @@ static void *load_libpng(void)
     }
         LOAD_FUNCPTR(png_create_read_struct);
         LOAD_FUNCPTR(png_create_info_struct);
+        LOAD_FUNCPTR(png_create_write_struct);
         LOAD_FUNCPTR(png_destroy_read_struct);
+        LOAD_FUNCPTR(png_destroy_write_struct);
         LOAD_FUNCPTR(png_error);
         LOAD_FUNCPTR(png_get_bit_depth);
         LOAD_FUNCPTR(png_get_color_type);
         LOAD_FUNCPTR(png_get_image_height);
         LOAD_FUNCPTR(png_get_image_width);
         LOAD_FUNCPTR(png_get_io_ptr);
+        LOAD_FUNCPTR(png_get_pHYs);
         LOAD_FUNCPTR(png_get_PLTE);
         LOAD_FUNCPTR(png_get_tRNS);
         LOAD_FUNCPTR(png_set_bgr);
+        LOAD_FUNCPTR(png_set_filler);
         LOAD_FUNCPTR(png_set_gray_1_2_4_to_8);
         LOAD_FUNCPTR(png_set_gray_to_rgb);
+        LOAD_FUNCPTR(png_set_IHDR);
+        LOAD_FUNCPTR(png_set_pHYs);
         LOAD_FUNCPTR(png_set_read_fn);
         LOAD_FUNCPTR(png_set_strip_16);
         LOAD_FUNCPTR(png_set_tRNS_to_alpha);
+        LOAD_FUNCPTR(png_set_write_fn);
         LOAD_FUNCPTR(png_read_end);
         LOAD_FUNCPTR(png_read_image);
         LOAD_FUNCPTR(png_read_info);
+        LOAD_FUNCPTR(png_write_end);
+        LOAD_FUNCPTR(png_write_info);
+        LOAD_FUNCPTR(png_write_rows);
 
 #undef LOAD_FUNCPTR
     }
@@ -215,7 +235,7 @@ static HRESULT WINAPI PngDecoder_Initialize(IWICBitmapDecoder *iface, IStream *p
     This->info_ptr = ppng_create_info_struct(This->png_ptr);
     if (!This->info_ptr)
     {
-        ppng_destroy_read_struct(&This->png_ptr, (png_infopp)NULL, (png_infopp)NULL);
+        ppng_destroy_read_struct(&This->png_ptr, NULL, NULL);
         This->png_ptr = NULL;
         return E_FAIL;
     }
@@ -223,7 +243,7 @@ static HRESULT WINAPI PngDecoder_Initialize(IWICBitmapDecoder *iface, IStream *p
     This->end_info = ppng_create_info_struct(This->png_ptr);
     if (!This->info_ptr)
     {
-        ppng_destroy_read_struct(&This->png_ptr, &This->info_ptr, (png_infopp)NULL);
+        ppng_destroy_read_struct(&This->png_ptr, &This->info_ptr, NULL);
         This->png_ptr = NULL;
         return E_FAIL;
     }
@@ -510,8 +530,26 @@ static HRESULT WINAPI PngDecoder_Frame_GetPixelFormat(IWICBitmapFrameDecode *ifa
 static HRESULT WINAPI PngDecoder_Frame_GetResolution(IWICBitmapFrameDecode *iface,
     double *pDpiX, double *pDpiY)
 {
-    FIXME("(%p,%p,%p): stub\n", iface, pDpiX, pDpiY);
-    return E_NOTIMPL;
+    PngDecoder *This = impl_from_frame(iface);
+    png_uint_32 ret, xres, yres;
+    int unit_type;
+
+    ret = ppng_get_pHYs(This->png_ptr, This->info_ptr, &xres, &yres, &unit_type);
+
+    if (ret && unit_type == PNG_RESOLUTION_METER)
+    {
+        *pDpiX = xres * 0.0254;
+        *pDpiY = yres * 0.0254;
+    }
+    else
+    {
+        WARN("no pHYs block present\n");
+        *pDpiX = *pDpiY = 96.0;
+    }
+
+    TRACE("(%p)->(%0.2f,%0.2f)\n", iface, *pDpiX, *pDpiY);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI PngDecoder_Frame_CopyPalette(IWICBitmapFrameDecode *iface,
@@ -639,11 +677,614 @@ HRESULT PngDecoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
     return ret;
 }
 
+struct png_pixelformat {
+    const WICPixelFormatGUID *guid;
+    UINT bpp;
+    int bit_depth;
+    int color_type;
+    BOOL remove_filler;
+    BOOL swap_rgb;
+};
+
+static const struct png_pixelformat formats[] = {
+    {&GUID_WICPixelFormat24bppBGR, 24, 8, PNG_COLOR_TYPE_RGB, 0, 1},
+    {&GUID_WICPixelFormatBlackWhite, 1, 1, PNG_COLOR_TYPE_GRAY, 0, 0},
+    {&GUID_WICPixelFormat2bppGray, 2, 2, PNG_COLOR_TYPE_GRAY, 0, 0},
+    {&GUID_WICPixelFormat4bppGray, 4, 4, PNG_COLOR_TYPE_GRAY, 0, 0},
+    {&GUID_WICPixelFormat8bppGray, 8, 8, PNG_COLOR_TYPE_GRAY, 0, 0},
+    {&GUID_WICPixelFormat16bppGray, 16, 16, PNG_COLOR_TYPE_GRAY, 0, 0},
+    {&GUID_WICPixelFormat32bppBGR, 32, 8, PNG_COLOR_TYPE_RGB, 1, 1},
+    {&GUID_WICPixelFormat32bppBGRA, 32, 8, PNG_COLOR_TYPE_RGB_ALPHA, 0, 1},
+    {&GUID_WICPixelFormat48bppRGB, 48, 16, PNG_COLOR_TYPE_RGB, 0, 0},
+    {&GUID_WICPixelFormat64bppRGBA, 64, 16, PNG_COLOR_TYPE_RGB_ALPHA, 0, 0},
+    {NULL},
+};
+
+typedef struct PngEncoder {
+    const IWICBitmapEncoderVtbl *lpVtbl;
+    const IWICBitmapFrameEncodeVtbl *lpFrameVtbl;
+    LONG ref;
+    IStream *stream;
+    png_structp png_ptr;
+    png_infop info_ptr;
+    UINT frame_count;
+    BOOL frame_initialized;
+    const struct png_pixelformat *format;
+    BOOL info_written;
+    UINT width, height;
+    double xres, yres;
+    UINT lines_written;
+    BOOL frame_committed;
+    BOOL committed;
+} PngEncoder;
+
+static inline PngEncoder *encoder_from_frame(IWICBitmapFrameEncode *iface)
+{
+    return CONTAINING_RECORD(iface, PngEncoder, lpFrameVtbl);
+}
+
+static HRESULT WINAPI PngFrameEncode_QueryInterface(IWICBitmapFrameEncode *iface, REFIID iid,
+    void **ppv)
+{
+    PngEncoder *This = encoder_from_frame(iface);
+    TRACE("(%p,%s,%p)\n", iface, debugstr_guid(iid), ppv);
+
+    if (!ppv) return E_INVALIDARG;
+
+    if (IsEqualIID(&IID_IUnknown, iid) ||
+        IsEqualIID(&IID_IWICBitmapFrameEncode, iid))
+    {
+        *ppv = &This->lpFrameVtbl;
+    }
+    else
+    {
+        *ppv = NULL;
+        return E_NOINTERFACE;
+    }
+
+    IUnknown_AddRef((IUnknown*)*ppv);
+    return S_OK;
+}
+
+static ULONG WINAPI PngFrameEncode_AddRef(IWICBitmapFrameEncode *iface)
+{
+    PngEncoder *This = encoder_from_frame(iface);
+    return IUnknown_AddRef((IUnknown*)This);
+}
+
+static ULONG WINAPI PngFrameEncode_Release(IWICBitmapFrameEncode *iface)
+{
+    PngEncoder *This = encoder_from_frame(iface);
+    return IUnknown_Release((IUnknown*)This);
+}
+
+static HRESULT WINAPI PngFrameEncode_Initialize(IWICBitmapFrameEncode *iface,
+    IPropertyBag2 *pIEncoderOptions)
+{
+    PngEncoder *This = encoder_from_frame(iface);
+    TRACE("(%p,%p)\n", iface, pIEncoderOptions);
+
+    if (This->frame_initialized) return WINCODEC_ERR_WRONGSTATE;
+
+    This->frame_initialized = TRUE;
+
+    return S_OK;
+}
+
+static HRESULT WINAPI PngFrameEncode_SetSize(IWICBitmapFrameEncode *iface,
+    UINT uiWidth, UINT uiHeight)
+{
+    PngEncoder *This = encoder_from_frame(iface);
+    TRACE("(%p,%u,%u)\n", iface, uiWidth, uiHeight);
+
+    if (!This->frame_initialized || This->info_written) return WINCODEC_ERR_WRONGSTATE;
+
+    This->width = uiWidth;
+    This->height = uiHeight;
+
+    return S_OK;
+}
+
+static HRESULT WINAPI PngFrameEncode_SetResolution(IWICBitmapFrameEncode *iface,
+    double dpiX, double dpiY)
+{
+    PngEncoder *This = encoder_from_frame(iface);
+    TRACE("(%p,%0.2f,%0.2f)\n", iface, dpiX, dpiY);
+
+    if (!This->frame_initialized || This->info_written) return WINCODEC_ERR_WRONGSTATE;
+
+    This->xres = dpiX;
+    This->yres = dpiY;
+
+    return S_OK;
+}
+
+static HRESULT WINAPI PngFrameEncode_SetPixelFormat(IWICBitmapFrameEncode *iface,
+    WICPixelFormatGUID *pPixelFormat)
+{
+    PngEncoder *This = encoder_from_frame(iface);
+    int i;
+    TRACE("(%p,%s)\n", iface, debugstr_guid(pPixelFormat));
+
+    if (!This->frame_initialized || This->info_written) return WINCODEC_ERR_WRONGSTATE;
+
+    for (i=0; formats[i].guid; i++)
+    {
+        if (memcmp(formats[i].guid, pPixelFormat, sizeof(GUID)) == 0)
+            break;
+    }
+
+    if (!formats[i].guid) i = 0;
+
+    This->format = &formats[i];
+    memcpy(pPixelFormat, This->format->guid, sizeof(GUID));
+
+    return S_OK;
+}
+
+static HRESULT WINAPI PngFrameEncode_SetColorContexts(IWICBitmapFrameEncode *iface,
+    UINT cCount, IWICColorContext **ppIColorContext)
+{
+    FIXME("(%p,%u,%p): stub\n", iface, cCount, ppIColorContext);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI PngFrameEncode_SetPalette(IWICBitmapFrameEncode *iface,
+    IWICPalette *pIPalette)
+{
+    FIXME("(%p,%p): stub\n", iface, pIPalette);
+    return WINCODEC_ERR_UNSUPPORTEDOPERATION;
+}
+
+static HRESULT WINAPI PngFrameEncode_SetThumbnail(IWICBitmapFrameEncode *iface,
+    IWICBitmapSource *pIThumbnail)
+{
+    FIXME("(%p,%p): stub\n", iface, pIThumbnail);
+    return WINCODEC_ERR_UNSUPPORTEDOPERATION;
+}
+
+static HRESULT WINAPI PngFrameEncode_WritePixels(IWICBitmapFrameEncode *iface,
+    UINT lineCount, UINT cbStride, UINT cbBufferSize, BYTE *pbPixels)
+{
+    PngEncoder *This = encoder_from_frame(iface);
+    png_byte **row_pointers=NULL;
+    UINT i;
+    TRACE("(%p,%u,%u,%u,%p)\n", iface, lineCount, cbStride, cbBufferSize, pbPixels);
+
+    if (!This->frame_initialized || !This->width || !This->height || !This->format)
+        return WINCODEC_ERR_WRONGSTATE;
+
+    if (lineCount == 0 || lineCount + This->lines_written > This->height)
+        return E_INVALIDARG;
+
+    /* set up setjmp/longjmp error handling */
+    if (setjmp(png_jmpbuf(This->png_ptr)))
+    {
+        HeapFree(GetProcessHeap(), 0, row_pointers);
+        return E_FAIL;
+    }
+
+    if (!This->info_written)
+    {
+        ppng_set_IHDR(This->png_ptr, This->info_ptr, This->width, This->height,
+            This->format->bit_depth, This->format->color_type, PNG_INTERLACE_NONE,
+            PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+
+        if (This->xres != 0.0 && This->yres != 0.0)
+        {
+            ppng_set_pHYs(This->png_ptr, This->info_ptr, (This->xres+0.0127) / 0.0254,
+                (This->yres+0.0127) / 0.0254, PNG_RESOLUTION_METER);
+        }
+
+        ppng_write_info(This->png_ptr, This->info_ptr);
+
+        if (This->format->remove_filler)
+            ppng_set_filler(This->png_ptr, 0, PNG_FILLER_AFTER);
+
+        if (This->format->swap_rgb)
+            ppng_set_bgr(This->png_ptr);
+
+        This->info_written = TRUE;
+    }
+
+    row_pointers = HeapAlloc(GetProcessHeap(), 0, lineCount * sizeof(png_byte*));
+    if (!row_pointers)
+        return E_OUTOFMEMORY;
+
+    for (i=0; i<lineCount; i++)
+        row_pointers[i] = pbPixels + cbStride * i;
+
+    ppng_write_rows(This->png_ptr, row_pointers, lineCount);
+    This->lines_written += lineCount;
+
+    HeapFree(GetProcessHeap(), 0, row_pointers);
+
+    return S_OK;
+}
+
+static HRESULT WINAPI PngFrameEncode_WriteSource(IWICBitmapFrameEncode *iface,
+    IWICBitmapSource *pIBitmapSource, WICRect *prc)
+{
+    PngEncoder *This = encoder_from_frame(iface);
+    HRESULT hr;
+    WICRect rc;
+    WICPixelFormatGUID guid;
+    UINT stride;
+    BYTE *pixeldata;
+    TRACE("(%p,%p,%p)\n", iface, pIBitmapSource, prc);
+
+    if (!This->frame_initialized || !This->width || !This->height)
+        return WINCODEC_ERR_WRONGSTATE;
+
+    if (!This->format)
+    {
+        hr = IWICBitmapSource_GetPixelFormat(pIBitmapSource, &guid);
+        if (FAILED(hr)) return hr;
+        hr = IWICBitmapFrameEncode_SetPixelFormat(iface, &guid);
+        if (FAILED(hr)) return hr;
+    }
+
+    hr = IWICBitmapSource_GetPixelFormat(pIBitmapSource, &guid);
+    if (FAILED(hr)) return hr;
+    if (memcmp(&guid, This->format->guid, sizeof(GUID)) != 0)
+    {
+        /* FIXME: should use WICConvertBitmapSource to convert */
+        ERR("format %s unsupported\n", debugstr_guid(&guid));
+        return E_FAIL;
+    }
+
+    if (This->xres == 0.0 || This->yres == 0.0)
+    {
+        double xres, yres;
+        hr = IWICBitmapSource_GetResolution(pIBitmapSource, &xres, &yres);
+        if (FAILED(hr)) return hr;
+        hr = IWICBitmapFrameEncode_SetResolution(iface, xres, yres);
+        if (FAILED(hr)) return hr;
+    }
+
+    if (!prc)
+    {
+        UINT width, height;
+        hr = IWICBitmapSource_GetSize(pIBitmapSource, &width, &height);
+        if (FAILED(hr)) return hr;
+        rc.X = 0;
+        rc.Y = 0;
+        rc.Width = width;
+        rc.Height = height;
+        prc = &rc;
+    }
+
+    if (prc->Width != This->width) return E_INVALIDARG;
+
+    stride = (This->format->bpp * This->width + 7)/8;
+
+    pixeldata = HeapAlloc(GetProcessHeap(), 0, stride * prc->Height);
+    if (!pixeldata) return E_OUTOFMEMORY;
+
+    hr = IWICBitmapSource_CopyPixels(pIBitmapSource, prc, stride,
+        stride*prc->Height, pixeldata);
+
+    if (SUCCEEDED(hr))
+    {
+        hr = IWICBitmapFrameEncode_WritePixels(iface, prc->Height, stride,
+            stride*prc->Height, pixeldata);
+    }
+
+    HeapFree(GetProcessHeap(), 0, pixeldata);
+
+    return hr;
+}
+
+static HRESULT WINAPI PngFrameEncode_Commit(IWICBitmapFrameEncode *iface)
+{
+    PngEncoder *This = encoder_from_frame(iface);
+    TRACE("(%p)\n", iface);
+
+    if (!This->info_written || This->lines_written != This->height || This->frame_committed)
+        return WINCODEC_ERR_WRONGSTATE;
+
+    /* set up setjmp/longjmp error handling */
+    if (setjmp(png_jmpbuf(This->png_ptr)))
+    {
+        return E_FAIL;
+    }
+
+    ppng_write_end(This->png_ptr, This->info_ptr);
+
+    This->frame_committed = TRUE;
+
+    return S_OK;
+}
+
+static HRESULT WINAPI PngFrameEncode_GetMetadataQueryWriter(IWICBitmapFrameEncode *iface,
+    IWICMetadataQueryWriter **ppIMetadataQueryWriter)
+{
+    FIXME("(%p, %p): stub\n", iface, ppIMetadataQueryWriter);
+    return E_NOTIMPL;
+}
+
+static const IWICBitmapFrameEncodeVtbl PngEncoder_FrameVtbl = {
+    PngFrameEncode_QueryInterface,
+    PngFrameEncode_AddRef,
+    PngFrameEncode_Release,
+    PngFrameEncode_Initialize,
+    PngFrameEncode_SetSize,
+    PngFrameEncode_SetResolution,
+    PngFrameEncode_SetPixelFormat,
+    PngFrameEncode_SetColorContexts,
+    PngFrameEncode_SetPalette,
+    PngFrameEncode_SetThumbnail,
+    PngFrameEncode_WritePixels,
+    PngFrameEncode_WriteSource,
+    PngFrameEncode_Commit,
+    PngFrameEncode_GetMetadataQueryWriter
+};
+
+static HRESULT WINAPI PngEncoder_QueryInterface(IWICBitmapEncoder *iface, REFIID iid,
+    void **ppv)
+{
+    PngEncoder *This = (PngEncoder*)iface;
+    TRACE("(%p,%s,%p)\n", iface, debugstr_guid(iid), ppv);
+
+    if (!ppv) return E_INVALIDARG;
+
+    if (IsEqualIID(&IID_IUnknown, iid) ||
+        IsEqualIID(&IID_IWICBitmapEncoder, iid))
+    {
+        *ppv = This;
+    }
+    else
+    {
+        *ppv = NULL;
+        return E_NOINTERFACE;
+    }
+
+    IUnknown_AddRef((IUnknown*)*ppv);
+    return S_OK;
+}
+
+static ULONG WINAPI PngEncoder_AddRef(IWICBitmapEncoder *iface)
+{
+    PngEncoder *This = (PngEncoder*)iface;
+    ULONG ref = InterlockedIncrement(&This->ref);
+
+    TRACE("(%p) refcount=%u\n", iface, ref);
+
+    return ref;
+}
+
+static ULONG WINAPI PngEncoder_Release(IWICBitmapEncoder *iface)
+{
+    PngEncoder *This = (PngEncoder*)iface;
+    ULONG ref = InterlockedDecrement(&This->ref);
+
+    TRACE("(%p) refcount=%u\n", iface, ref);
+
+    if (ref == 0)
+    {
+        if (This->png_ptr)
+            ppng_destroy_write_struct(&This->png_ptr, &This->info_ptr);
+        if (This->stream)
+            IStream_Release(This->stream);
+        HeapFree(GetProcessHeap(), 0, This);
+    }
+
+    return ref;
+}
+
+static void user_write_data(png_structp png_ptr, png_bytep data, png_size_t length)
+{
+    PngEncoder *This = ppng_get_io_ptr(png_ptr);
+    HRESULT hr;
+    ULONG byteswritten;
+
+    hr = IStream_Write(This->stream, data, length, &byteswritten);
+    if (FAILED(hr) || byteswritten != length)
+    {
+        ppng_error(png_ptr, "failed writing data");
+    }
+}
+
+static void user_flush(png_structp png_ptr)
+{
+}
+
+static HRESULT WINAPI PngEncoder_Initialize(IWICBitmapEncoder *iface,
+    IStream *pIStream, WICBitmapEncoderCacheOption cacheOption)
+{
+    PngEncoder *This = (PngEncoder*)iface;
+
+    TRACE("(%p,%p,%u)\n", iface, pIStream, cacheOption);
+
+    if (This->png_ptr)
+        return WINCODEC_ERR_WRONGSTATE;
+
+    /* initialize libpng */
+    This->png_ptr = ppng_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if (!This->png_ptr)
+        return E_FAIL;
+
+    This->info_ptr = ppng_create_info_struct(This->png_ptr);
+    if (!This->info_ptr)
+    {
+        ppng_destroy_write_struct(&This->png_ptr, NULL);
+        This->png_ptr = NULL;
+        return E_FAIL;
+    }
+
+    IStream_AddRef(pIStream);
+    This->stream = pIStream;
+
+    /* set up setjmp/longjmp error handling */
+    if (setjmp(png_jmpbuf(This->png_ptr)))
+    {
+        ppng_destroy_write_struct(&This->png_ptr, &This->info_ptr);
+        This->png_ptr = NULL;
+        IStream_Release(This->stream);
+        This->stream = NULL;
+        return E_FAIL;
+    }
+
+    /* set up custom i/o handling */
+    ppng_set_write_fn(This->png_ptr, This, user_write_data, user_flush);
+
+    return S_OK;
+}
+
+static HRESULT WINAPI PngEncoder_GetContainerFormat(IWICBitmapEncoder *iface,
+    GUID *pguidContainerFormat)
+{
+    FIXME("(%p,%s): stub\n", iface, debugstr_guid(pguidContainerFormat));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI PngEncoder_GetEncoderInfo(IWICBitmapEncoder *iface,
+    IWICBitmapEncoderInfo **ppIEncoderInfo)
+{
+    FIXME("(%p,%p): stub\n", iface, ppIEncoderInfo);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI PngEncoder_SetColorContexts(IWICBitmapEncoder *iface,
+    UINT cCount, IWICColorContext **ppIColorContext)
+{
+    FIXME("(%p,%u,%p): stub\n", iface, cCount, ppIColorContext);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI PngEncoder_SetPalette(IWICBitmapEncoder *iface, IWICPalette *pIPalette)
+{
+    TRACE("(%p,%p)\n", iface, pIPalette);
+    return WINCODEC_ERR_UNSUPPORTEDOPERATION;
+}
+
+static HRESULT WINAPI PngEncoder_SetThumbnail(IWICBitmapEncoder *iface, IWICBitmapSource *pIThumbnail)
+{
+    TRACE("(%p,%p)\n", iface, pIThumbnail);
+    return WINCODEC_ERR_UNSUPPORTEDOPERATION;
+}
+
+static HRESULT WINAPI PngEncoder_SetPreview(IWICBitmapEncoder *iface, IWICBitmapSource *pIPreview)
+{
+    TRACE("(%p,%p)\n", iface, pIPreview);
+    return WINCODEC_ERR_UNSUPPORTEDOPERATION;
+}
+
+static HRESULT WINAPI PngEncoder_CreateNewFrame(IWICBitmapEncoder *iface,
+    IWICBitmapFrameEncode **ppIFrameEncode, IPropertyBag2 **ppIEncoderOptions)
+{
+    PngEncoder *This = (PngEncoder*)iface;
+    HRESULT hr;
+    TRACE("(%p,%p,%p)\n", iface, ppIFrameEncode, ppIEncoderOptions);
+
+    if (This->frame_count != 0)
+        return WINCODEC_ERR_UNSUPPORTEDOPERATION;
+
+    if (!This->stream)
+        return WINCODEC_ERR_NOTINITIALIZED;
+
+    hr = CreatePropertyBag2(ppIEncoderOptions);
+    if (FAILED(hr)) return hr;
+
+    This->frame_count = 1;
+
+    IWICBitmapEncoder_AddRef(iface);
+    *ppIFrameEncode = (IWICBitmapFrameEncode*)&This->lpFrameVtbl;
+
+    return S_OK;
+}
+
+static HRESULT WINAPI PngEncoder_Commit(IWICBitmapEncoder *iface)
+{
+    PngEncoder *This = (PngEncoder*)iface;
+    TRACE("(%p)\n", iface);
+
+    if (!This->frame_committed || This->committed)
+        return WINCODEC_ERR_WRONGSTATE;
+
+    This->committed = TRUE;
+
+    return S_OK;
+}
+
+static HRESULT WINAPI PngEncoder_GetMetadataQueryWriter(IWICBitmapEncoder *iface,
+    IWICMetadataQueryWriter **ppIMetadataQueryWriter)
+{
+    FIXME("(%p,%p): stub\n", iface, ppIMetadataQueryWriter);
+    return E_NOTIMPL;
+}
+
+static const IWICBitmapEncoderVtbl PngEncoder_Vtbl = {
+    PngEncoder_QueryInterface,
+    PngEncoder_AddRef,
+    PngEncoder_Release,
+    PngEncoder_Initialize,
+    PngEncoder_GetContainerFormat,
+    PngEncoder_GetEncoderInfo,
+    PngEncoder_SetColorContexts,
+    PngEncoder_SetPalette,
+    PngEncoder_SetThumbnail,
+    PngEncoder_SetPreview,
+    PngEncoder_CreateNewFrame,
+    PngEncoder_Commit,
+    PngEncoder_GetMetadataQueryWriter
+};
+
+HRESULT PngEncoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
+{
+    PngEncoder *This;
+    HRESULT ret;
+
+    TRACE("(%p,%s,%p)\n", pUnkOuter, debugstr_guid(iid), ppv);
+
+    *ppv = NULL;
+
+    if (pUnkOuter) return CLASS_E_NOAGGREGATION;
+
+    if (!libpng_handle && !load_libpng())
+    {
+        ERR("Failed writing PNG because unable to find %s\n",SONAME_LIBPNG);
+        return E_FAIL;
+    }
+
+    This = HeapAlloc(GetProcessHeap(), 0, sizeof(PngEncoder));
+    if (!This) return E_OUTOFMEMORY;
+
+    This->lpVtbl = &PngEncoder_Vtbl;
+    This->lpFrameVtbl = &PngEncoder_FrameVtbl;
+    This->ref = 1;
+    This->png_ptr = NULL;
+    This->info_ptr = NULL;
+    This->stream = NULL;
+    This->frame_count = 0;
+    This->frame_initialized = FALSE;
+    This->format = NULL;
+    This->info_written = FALSE;
+    This->width = 0;
+    This->height = 0;
+    This->xres = 0.0;
+    This->yres = 0.0;
+    This->lines_written = 0;
+    This->frame_committed = FALSE;
+    This->committed = FALSE;
+
+    ret = IUnknown_QueryInterface((IUnknown*)This, iid, ppv);
+    IUnknown_Release((IUnknown*)This);
+
+    return ret;
+}
+
 #else /* !HAVE_PNG_H */
 
 HRESULT PngDecoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
 {
     ERR("Trying to load PNG picture, but PNG supported not compiled in.\n");
+    return E_FAIL;
+}
+
+HRESULT PngEncoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
+{
+    ERR("Trying to save PNG picture, but PNG supported not compiled in.\n");
     return E_FAIL;
 }
 

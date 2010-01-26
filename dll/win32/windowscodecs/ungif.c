@@ -320,7 +320,10 @@ DGifGetRecordType(GifFileType * GifFile,
     GifByteType Buf;
 
     if (READ(GifFile, &Buf, 1) != 1) {
-        return GIF_ERROR;
+        /* Wine-specific behavior: Native accepts broken GIF files that have no
+         * terminator, so we match this by treating EOF as a terminator. */
+        *Type = TERMINATE_RECORD_TYPE;
+        return GIF_OK;
     }
 
     switch (Buf) {

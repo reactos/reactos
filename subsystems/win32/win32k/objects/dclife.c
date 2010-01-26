@@ -167,22 +167,44 @@ BOOL
 FASTCALL
 DC_SetOwnership(HDC hDC, PEPROCESS Owner)
 {
+    INT Index;
+    PGDI_TABLE_ENTRY Entry;
     PDC pDC;
 
     if (!GDIOBJ_SetOwnership(hDC, Owner)) return FALSE;
     pDC = DC_LockDc(hDC);
     if (pDC)
     {
+    /*
+       System Regions:
+          These regions do not use attribute sections and when allocated, use
+          gdiobj level functions.
+    */
         if (pDC->rosdc.hClipRgn)
-        {
+        {   // FIXME! HAX!!!
+            Index = GDI_HANDLE_GET_INDEX(pDC->rosdc.hClipRgn);
+            Entry = &GdiHandleTable->Entries[Index];
+            if (Entry->UserData) FreeObjectAttr(Entry->UserData);
+            Entry->UserData = NULL;
+            //
             if (!GDIOBJ_SetOwnership(pDC->rosdc.hClipRgn, Owner)) return FALSE;
         }
         if (pDC->rosdc.hVisRgn)
-        {
+        {   // FIXME! HAX!!!
+            Index = GDI_HANDLE_GET_INDEX(pDC->rosdc.hVisRgn);
+            Entry = &GdiHandleTable->Entries[Index];
+            if (Entry->UserData) FreeObjectAttr(Entry->UserData);
+            Entry->UserData = NULL;
+            //
             if (!GDIOBJ_SetOwnership(pDC->rosdc.hVisRgn, Owner)) return FALSE;
         }
         if (pDC->rosdc.hGCClipRgn)
-        {
+        {   // FIXME! HAX!!!
+            Index = GDI_HANDLE_GET_INDEX(pDC->rosdc.hGCClipRgn);
+            Entry = &GdiHandleTable->Entries[Index];
+            if (Entry->UserData) FreeObjectAttr(Entry->UserData);
+            Entry->UserData = NULL;
+            //
             if (!GDIOBJ_SetOwnership(pDC->rosdc.hGCClipRgn, Owner)) return FALSE;
         }
         if (pDC->dclevel.hPath)
@@ -304,7 +326,7 @@ IntGdiCreateDC(
 
     pdcattr->iCS_CP = ftGdiGetTextCharsetInfo(pdc,NULL,0);
 
-    hVisRgn = NtGdiCreateRectRgn(0, 0, pdc->ppdev->gdiinfo.ulHorzRes,
+    hVisRgn = IntSysCreateRectRgn(0, 0, pdc->ppdev->gdiinfo.ulHorzRes,
                                  pdc->ppdev->gdiinfo.ulVertRes);
 
     if (!CreateAsIC)
@@ -337,7 +359,7 @@ IntGdiCreateDC(
     if (hVisRgn)
     {
         GdiSelectVisRgn(hdc, hVisRgn);
-        GreDeleteObject(hVisRgn);
+        REGION_FreeRgnByHandle(hVisRgn);
     }
 
     IntGdiSetTextAlign(hdc, TA_TOP);
@@ -446,7 +468,7 @@ IntGdiCreateDisplayDC(HDEV hDev, ULONG DcType, BOOL EmptyDC)
         defaultDCstate->pdcattr = &defaultDCstate->dcattr;
         hsurf = (HSURF)PrimarySurface.pSurface; // HAX²
         defaultDCstate->dclevel.pSurface = SURFACE_ShareLockSurface(hsurf);
-        DC_vCopyState(dc, defaultDCstate);
+        DC_vCopyState(dc, defaultDCstate, TRUE);
         DC_UnlockDc(dc);
     }
     return hDC;
@@ -516,6 +538,14 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
     if (DCToDelete->rosdc.hGCClipRgn)
     {
         GreDeleteObject(DCToDelete->rosdc.hGCClipRgn);
+    }
+    if (DCToDelete->dclevel.prgnMeta)
+    {
+       GreDeleteObject(((PROSRGNDATA)DCToDelete->dclevel.prgnMeta)->BaseObject.hHmgr);
+    }
+    if (DCToDelete->prgnAPI)
+    {
+       GreDeleteObject(((PROSRGNDATA)DCToDelete->prgnAPI)->BaseObject.hHmgr);
     }
     PATH_Delete(DCToDelete->dclevel.hPath);
 
@@ -658,11 +688,11 @@ NtGdiCreateCompatibleDC(HDC hDC)
         NtGdiDeleteObjectApp(DisplayDC);
     }
 
-    hVisRgn = NtGdiCreateRectRgn(0, 0, 1, 1);
+    hVisRgn = IntSysCreateRectRgn(0, 0, 1, 1);
     if (hVisRgn)
     {
         GdiSelectVisRgn(hdcNew, hVisRgn);
-        GreDeleteObject(hVisRgn);
+        REGION_FreeRgnByHandle(hVisRgn);
     }
     if (Layout) NtGdiSetLayout(hdcNew, -1, Layout);
 

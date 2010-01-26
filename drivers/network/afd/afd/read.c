@@ -189,8 +189,6 @@ NTSTATUS NTAPI ReceiveComplete
 
     AFD_DbgPrint(MID_TRACE,("Called\n"));
 
-    ASSERT_IRQL(APC_LEVEL);
-
     if( !SocketAcquireStateLock( FCB ) )
         return STATUS_FILE_CLOSED;
 

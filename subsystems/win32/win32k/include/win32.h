@@ -70,7 +70,7 @@ typedef struct _THREADINFO
     struct _USER_MESSAGE_QUEUE* MessageQueue;
     struct _KBL*        KeyboardLayout;
     PCLIENTTHREADINFO   pcti;
-    struct _DESKTOP*    Desktop;
+    struct _DESKTOP*    rpdesk;
     PDESKTOPINFO        pDeskInfo;
     PCLIENTINFO         pClientInfo;
     FLONG               TIF_flags;
@@ -78,7 +78,7 @@ typedef struct _THREADINFO
     LONG                timeLast;
     ULONG_PTR           idLast;
     INT                 exitCode;
-    HANDLE              hDesktop;
+    HDESK               hdesk;
     UINT                cPaintsReady; /* Count of paints pending. */
     UINT                cTimersReady; /* Count of timers pending. */
     DWORD               dwExpWinVer;

@@ -7,8 +7,8 @@ Licence = Shareware
 Description = Diablo 2 Shareware. zeckensack's glide wrapper is required to run it.
 Size = 132MB
 Category = 4
-URLSite = http://www.blizzard.com/diablo2
-URLDownload = http://ftp.freenet.de./pub/filepilot/windows/spiele/diabloiidemo.exe
+URLSite = http://www.blizzard.com/diablo2/
+URLDownload = http://ftp.freenet.de/pub/filepilot/windows/spiele/diabloiidemo.exe
 CDPath = none
 
 [Section.0407]
@@ -19,4 +19,3 @@ Description = Diablo 2 Shareware. zeckensack's glide wrapper es necesario para s
 
 [Section.0415]
 Description = Diablo 2 Shareware. Do poprawnego działania wymagany jest zainstalowany zeckensacks glide wrapper.
-

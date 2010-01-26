@@ -189,5 +189,5 @@ void HTMLTextContainer_Init(HTMLTextContainer *This, HTMLDocumentNode *doc, nsID
 
     HTMLElement_Init(&This->element, doc, nselem, dispex_data);
 
-    ConnectionPoint_Init(&This->cp, &This->element.cp_container, &DIID_HTMLTextContainerEvents);
+    ConnectionPoint_Init(&This->cp, &This->element.cp_container, &DIID_HTMLTextContainerEvents, NULL);
 }

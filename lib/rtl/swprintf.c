@@ -449,7 +449,10 @@ int __cdecl _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list ar
 
 		/* get the conversion qualifier */
 		qualifier = -1;
-		if (*fmt == L'h' || *fmt == L'l' || *fmt == L'L' || *fmt == L'w') {
+        if (*fmt == L'l' && *(fmt+1) == L'l') {
+            qualifier = L'I';
+            fmt += 2;
+		} else if (*fmt == L'h' || *fmt == L'l' || *fmt == L'L' || *fmt == L'w') {
 			qualifier = *fmt;
 			++fmt;
 		} else if (*fmt == L'I' && *(fmt+1) == L'6' && *(fmt+2) == L'4') {

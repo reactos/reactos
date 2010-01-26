@@ -18,12 +18,11 @@
 size_t _mbscspn (const unsigned char *str1, const unsigned char *str2)
 {
     int c;
-    unsigned char *ptr;
     const unsigned char *save = str1;
 
     while ((c = _mbsnextc (str1))) {
 
-	if ((ptr = _mbschr (str2, c)))
+	if (_mbschr (str2, c))
 	    break;
 
 	str1 = _mbsinc ((unsigned char *) str1);

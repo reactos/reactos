@@ -19,17 +19,17 @@ BEGIN
 	POPUP "&Програми"
 	BEGIN
 		MENUITEM "&Встановити",  ID_INSTALL
-		MENUITEM "&Видалити",ID_UNINSTALL
+		MENUITEM "Вид&алити",ID_UNINSTALL
 		MENUITEM "&Змінити",   ID_MODIFY
 		MENUITEM SEPARATOR
-		MENUITEM "&Remove from Registry", ID_REGREMOVE
+		MENUITEM "Вида&лити з реєстру", ID_REGREMOVE
 		MENUITEM SEPARATOR
 		MENUITEM "&Оновити",  ID_REFRESH
 	END
-	POPUP "Довідка"
+	POPUP "&Довідка"
 	BEGIN
-		MENUITEM "Довідка",      ID_HELP, GRAYED
-		MENUITEM "Про програму...",     ID_ABOUT
+		MENUITEM "Дов&ідка",      ID_HELP, GRAYED
+		MENUITEM "Про про&граму...",     ID_ABOUT
 	END
 END
 
@@ -47,10 +47,10 @@ BEGIN
 	POPUP "popup"
 	BEGIN
 		MENUITEM "&Встановити",   ID_INSTALL
-		MENUITEM "&Видалити", ID_UNINSTALL
+		MENUITEM "В&идалити", ID_UNINSTALL
 		MENUITEM "&Змінити",    ID_MODIFY
 		MENUITEM SEPARATOR
-		MENUITEM "&Remove from Registry", ID_REGREMOVE
+		MENUITEM "Вид&алити з реєстру", ID_REGREMOVE
 		MENUITEM SEPARATOR
 		MENUITEM "&Оновити",   ID_REFRESH
 	END
@@ -58,37 +58,37 @@ END
 
 IDD_SETTINGS_DIALOG DIALOGEX DISCARDABLE  0, 0, 250, 144
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Settings"
+CAPTION "Налаштування"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	GROUPBOX "General", -1, 4, 2, 240, 61
-	AUTOCHECKBOX "&Save window position", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-	AUTOCHECKBOX "&Update the list of accessible programs at start", IDC_UPDATE_AVLIST, 15, 29, 219, 12
-	AUTOCHECKBOX "&Log of installation and removal of programs", IDC_LOG_ENABLED, 15, 46, 219, 12
+	GROUPBOX "Загальні", -1, 4, 2, 240, 61
+	AUTOCHECKBOX "&Зберігати положення вікна", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
+	AUTOCHECKBOX "&Оновлювати список наявних програм при запуску", IDC_UPDATE_AVLIST, 15, 29, 219, 12
+	AUTOCHECKBOX "&Вести лог встановлення/видалення програм", IDC_LOG_ENABLED, 15, 46, 219, 12
 
-	GROUPBOX "Downloading", -1, 4, 65, 240, 51
-	LTEXT "Folder for downloadings:", -1, 16, 75, 100, 9
+	GROUPBOX "Завантаження", -1, 4, 65, 240, 51
+	LTEXT "Тека для завантажень:", -1, 16, 75, 100, 9
 	EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP
-	PUSHBUTTON "&Choose", IDC_CHOOSE, 187, 85, 50, 14
-	AUTOCHECKBOX "&Delete installers of programs after installation", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+	PUSHBUTTON "&Обрати", IDC_CHOOSE, 187, 85, 50, 14
+	AUTOCHECKBOX "&Видаляти інсталятори програм після встановлення", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
 
-	PUSHBUTTON "Default", IDC_DEFAULT_SETTINGS, 8, 124, 60, 14
+	PUSHBUTTON "За замовчуванням", IDC_DEFAULT_SETTINGS, 8, 124, 60, 14
 	PUSHBUTTON "OK", IDOK, 116, 124, 60, 14
-	PUSHBUTTON "Cancel", IDCANCEL, 181, 124, 60, 14
+	PUSHBUTTON "Скасувати", IDCANCEL, 181, 124, 60, 14
 END
 
 IDD_INSTALL_DIALOG DIALOGEX DISCARDABLE  0, 0, 216, 97
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Program installation"
+CAPTION "Встановлення програми"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
 
-	AUTORADIOBUTTON "&Install from a disk (CD or DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
-	AUTORADIOBUTTON "&Download and install", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
+	AUTORADIOBUTTON "&Встановити з диску", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+	AUTORADIOBUTTON "&Завантажити та встановити", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
 
 	PUSHBUTTON "OK", IDOK, 86, 78, 60, 14
-	PUSHBUTTON "Cancel", IDCANCEL, 150, 78, 60, 14
+	PUSHBUTTON "Скасувати", IDCANCEL, 150, 78, 60, 14
 END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX LOADONCALL MOVEABLE DISCARDABLE  0, 0, 220, 76
@@ -192,10 +192,10 @@ BEGIN
 	IDS_AVAILABLEFORINST "Доступні для встановлення"
 	IDS_UPDATES "Оновлення"
 	IDS_APPLICATIONS "Додатки"
-	IDS_CHOOSE_FOLDER_TEXT "Choose a folder which will be used for downloading of programs:"
-	IDS_CHOOSE_FOLDER_ERROR "You have specified a nonexistent folder!"
-	IDS_USER_NOT_ADMIN "You should be administrator for start ""ReactOS Applications Manager""!"
-	IDS_APP_REG_REMOVE "Are you sure you want to delete the data on the installed program from the registry?"
-	IDS_INFORMATION "Information"
-	IDS_UNABLE_TO_REMOVE "Unable to remove data on the program from the registry!"
+	IDS_CHOOSE_FOLDER_TEXT "Оберіть теку, яка буде використовуватися для завантаження програм:"
+	IDS_CHOOSE_FOLDER_ERROR "Ви вказали неіснуючу теку!"
+	IDS_USER_NOT_ADMIN "Ви повинні бути адміністратором для запуску ""Менеджера програм ReactOS""!"
+	IDS_APP_REG_REMOVE "Ви дійсно хочете видалити дані про встановлену програму з реєстру?"
+	IDS_INFORMATION "Інформація"
+	IDS_UNABLE_TO_REMOVE "Не вдалося видалити дані про програму з реєстру!"
 END

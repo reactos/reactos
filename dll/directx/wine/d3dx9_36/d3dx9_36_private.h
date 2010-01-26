@@ -31,8 +31,24 @@
 #include "d3dx9.h"
 
 /* for internal use */
+typedef enum _FormatType {
+    FORMAT_ARGB,   /* unsigned */
+    FORMAT_UNKNOWN
+} FormatType;
+
+typedef struct _PixelFormatDesc {
+    D3DFORMAT format;
+    BYTE bits[4];
+    BYTE shift[4];
+    UINT bytes_per_pixel;
+    FormatType type;
+} PixelFormatDesc;
+
 HRESULT map_view_of_file(LPCWSTR filename, LPVOID *buffer, DWORD *length);
 HRESULT load_resource_into_memory(HMODULE module, HRSRC resinfo, LPVOID *buffer, DWORD *length);
+
+const PixelFormatDesc *get_format_info(D3DFORMAT format);
+
 
 extern const ID3DXBufferVtbl D3DXBuffer_Vtbl;
 

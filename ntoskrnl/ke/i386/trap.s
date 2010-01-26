@@ -66,8 +66,6 @@ GENERATE_IDT_STUBS                  /* INT 30-FF: UNEXPECTED INTERRUPTS     */
 .globl _KiSystemService
 
 /* And special system-defined software traps:                               */
-.globl _NtRaiseException@12
-.globl _NtContinue@8
 .globl _KiDispatchInterrupt@0
 
 /* Interrupt template entrypoints                                           */
@@ -83,10 +81,7 @@ GENERATE_IDT_STUBS                  /* INT 30-FF: UNEXPECTED INTERRUPTS     */
 #endif
 
 /* We implement the following trap exit points:                             */
-.globl _KiServiceExit               /* Exit from syscall                    */
-.globl _KiServiceExit2              /* Exit from syscall with complete frame*/
 .globl _Kei386EoiHelper@0           /* Exit from interrupt or H/W trap      */
-.globl _Kei386EoiHelper2ndEntry     /* Exit from unexpected interrupt       */
 
 .globl _KiIdtDescriptor
 _KiIdtDescriptor:
@@ -113,322 +108,50 @@ _IsrTimeoutMsg:
 _IsrOverflowMsg:
     .asciz "\n*** ISR at %lx appears to have an interrupt storm\n"
 
-_KiTrapPrefixTable:
-    .byte 0xF2                      /* REP                                  */
-    .byte 0xF3                      /* REP INS/OUTS                         */
-    .byte 0x67                      /* ADDR                                 */
-    .byte 0xF0                      /* LOCK                                 */
-    .byte 0x66                      /* OP                                   */
-    .byte 0x2E                      /* SEG                                  */
-    .byte 0x3E                      /* DS                                   */
-    .byte 0x26                      /* ES                                   */
-    .byte 0x64                      /* FS                                   */
-    .byte 0x65                      /* GS                                   */
-    .byte 0x36                      /* SS                                   */
-
-_KiTrapIoTable:
-    .byte 0xE4                      /* IN                                   */
-    .byte 0xE5                      /* IN                                   */
-    .byte 0xEC                      /* IN                                   */
-    .byte 0xED                      /* IN                                   */
-    .byte 0x6C                      /* INS                                  */
-    .byte 0x6D                      /* INS                                  */
-    .byte 0xE6                      /* OUT                                  */
-    .byte 0xE7                      /* OUT                                  */
-    .byte 0xEE                      /* OUT                                  */
-    .byte 0xEF                      /* OUT                                  */
-    .byte 0x6E                      /* OUTS                                 */
-    .byte 0x6F                      /* OUTS                                 */
-
 /* SOFTWARE INTERRUPT SERVICES ***********************************************/
 .text
 
-
 .func KiSystemService
-TRAP_FIXUPS kss_a, kss_t, DoNotFixupV86, DoNotFixupAbios
 _KiSystemService:
 
-    /* Enter the shared system call prolog */
-    SYSCALL_PROLOG kss_a, kss_t
+    /* Make space for trap frame on the stack */
+    sub esp, KTRAP_FRAME_EIP
 
-    /* Jump to the actual handler */
-    jmp SharedCode
+    /* Save EBP, EBX, ESI, EDI only! */
+    mov [esp+KTRAP_FRAME_EBX], ebx
+    mov [esp+KTRAP_FRAME_ESI], esi
+    mov [esp+KTRAP_FRAME_EDI], edi
+    mov [esp+KTRAP_FRAME_EBP], ebp
+
+    /* Call C handler -- note that EDX is the caller stack, EAX is the ID */
+    mov ecx, esp
+    jmp _KiSystemServiceHandler
 .endfunc
 
 .func KiFastCallEntry
-TRAP_FIXUPS FastCallDrSave, FastCallDrReturn, DoNotFixupV86, DoNotFixupAbios
 _KiFastCallEntry:
 
-    /* Enter the fast system call prolog */
-    FASTCALL_PROLOG FastCallDrSave, FastCallDrReturn
-
-SharedCode:
-
-    /*
-     * Find out which table offset to use. Converts 0x1124 into 0x10.
-     * The offset is related to the Table Index as such: Offset = TableIndex x 10
-     */
-    mov edi, eax
-    shr edi, SERVICE_TABLE_SHIFT
-    and edi, SERVICE_TABLE_MASK
-    mov ecx, edi
-
-    /* Now add the thread's base system table to the offset */
-    add edi, [esi+KTHREAD_SERVICE_TABLE]
-
-    /* Get the true syscall ID and check it */
-    mov ebx, eax
-    and eax, SERVICE_NUMBER_MASK
-    cmp eax, [edi+SERVICE_DESCRIPTOR_LIMIT]
-
-    /* Invalid ID, try to load Win32K Table */
-    jnb KiBBTUnexpectedRange
-
-    /* Check if this was Win32K */
-    cmp ecx, SERVICE_TABLE_TEST
-    jnz NotWin32K
-
-    /* Get the TEB */
-    mov ecx, PCR[KPCR_TEB]
-
-    /* Check if we should flush the User Batch */
-    xor ebx, ebx
-_ReadBatch:
-    or ebx, [ecx+TEB_GDI_BATCH_COUNT]
-    jz NotWin32K
-
-    /* Flush it */
-    push edx
-    push eax
-    call [_KeGdiFlushUserBatch]
-    pop eax
-    pop edx
-
-NotWin32K:
-    /* Increase total syscall count */
-    inc dword ptr PCR[KPCR_SYSTEM_CALLS]
-
-#if DBG
-    /* Increase per-syscall count */
-    mov ecx, [edi+SERVICE_DESCRIPTOR_COUNT]
-    jecxz NoCountTable
-    inc dword ptr [ecx+eax*4]
-#endif
-
-    /* Users's current stack frame pointer is source */
-NoCountTable:
-    mov esi, edx
-
-    /* Allocate room for argument list from kernel stack */
-    mov ebx, [edi+SERVICE_DESCRIPTOR_NUMBER]
-    xor ecx, ecx
-    mov cl, [eax+ebx]
-
-    /* Get pointer to function */
-    mov edi, [edi+SERVICE_DESCRIPTOR_BASE]
-    mov ebx, [edi+eax*4]
-
-    /* Allocate space on our stack */
-    sub esp, ecx
-
-    /* Set the size of the arguments and the destination */
-    shr ecx, 2
-    mov edi, esp
-
-    /* Make sure we're within the User Probe Address */
-    cmp esi, _MmUserProbeAddress
-    jnb AccessViolation
-
-_CopyParams:
-    /* Copy the parameters */
-    rep movsd
-
-    /* Do the System Call */
-    call ebx
-
-AfterSysCall:
-#if DBG
-    /* Make sure the user-mode call didn't return at elevated IRQL */
-    test byte ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
-    jz SkipCheck
-    mov esi, eax                /* We need to save the syscall's return val */
-    call _KeGetCurrentIrql@0
-    or al, al
-    jnz InvalidIrql
-    mov eax, esi                /* Restore it */
-
-    /* Get our temporary current thread pointer for sanity check */
-    mov ecx, PCR[KPCR_CURRENT_THREAD]
-
-    /* Make sure that we are not attached and that APCs are not disabled */
-    mov dl, [ecx+KTHREAD_APC_STATE_INDEX]
-    or dl, dl
-    jnz InvalidIndex
-    mov edx, [ecx+KTHREAD_COMBINED_APC_DISABLE]
-    or edx, edx
-    jnz InvalidIndex
-#endif
-
-SkipCheck:
-
-    /* Deallocate the kernel stack frame  */
-    mov esp, ebp
-
-KeReturnFromSystemCall:
-
-    /* Get the Current Thread */
-    mov ecx, PCR[KPCR_CURRENT_THREAD]
-
-    /* Restore the old trap frame pointer */
-    mov edx, [ebp+KTRAP_FRAME_EDX]
-    mov [ecx+KTHREAD_TRAP_FRAME], edx
-.endfunc
-
-.func KiServiceExit
-_KiServiceExit:
-    /* Disable interrupts */
-    cli
-
-    /* Check for, and deliver, User-Mode APCs if needed */
-    CHECK_FOR_APC_DELIVER 1
-
-    /* Exit and cleanup */
-    TRAP_EPILOG FromSystemCall, DoRestorePreviousMode, DoNotRestoreSegments, DoNotRestoreVolatiles, DoRestoreEverything
-.endfunc
-
-KiBBTUnexpectedRange:
-
-    /* If this isn't a Win32K call, fail */
-    cmp ecx, SERVICE_TABLE_TEST
-    jne InvalidCall
-
-    /* Set up Win32K Table */
-    push edx
-    push ebx
-    call _PsConvertToGuiThread@0
-
-    /* Check return code */
-    or eax, eax
-
-    /* Restore registers */
-    pop eax
-    pop edx
-
-    /* Reset trap frame address */
-    mov ebp, esp
-    mov [esi+KTHREAD_TRAP_FRAME], ebp
-
-    /* Try the Call again, if we suceeded */
-    jz SharedCode
-
-    /*
-     * The Shadow Table should have a special byte table which tells us
-     * whether we should return FALSE, -1 or STATUS_INVALID_SYSTEM_SERVICE.
-     */
-
-    /* Get the table limit and base */
-    lea edx, _KeServiceDescriptorTableShadow + SERVICE_TABLE_TEST
-    mov ecx, [edx+SERVICE_DESCRIPTOR_LIMIT]
-    mov edx, [edx+SERVICE_DESCRIPTOR_BASE]
-
-    /* Get the table address and add our index into the array */
-    lea edx, [edx+ecx*4]
-    and eax, SERVICE_NUMBER_MASK
-    add edx, eax
-
-    /* Find out what we should return */
-    movsx eax, byte ptr [edx]
-    or eax, eax
-
-    /* Return either 0 or -1, we've set it in EAX */
-    jle KeReturnFromSystemCall
-
-    /* Set STATUS_INVALID_SYSTEM_SERVICE */
-    mov eax, STATUS_INVALID_SYSTEM_SERVICE
-    jmp KeReturnFromSystemCall
-
-InvalidCall:
-
-    /* Invalid System Call */
-    mov eax, STATUS_INVALID_SYSTEM_SERVICE
-    jmp KeReturnFromSystemCall
-
-AccessViolation:
-
-    /* Check if this came from kernel-mode */
-    test byte ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
-
-    /* It's fine, go ahead with it */
-    jz _CopyParams
-
-    /* Caller sent invalid parameters, fail here */
-    mov eax, STATUS_ACCESS_VIOLATION
-    jmp AfterSysCall
-
-BadStack:
-
-    /* Restore ESP0 stack */
-    mov ecx, PCR[KPCR_TSS]
-    mov esp, ss:[ecx+KTSS_ESP0]
-
-    /* Generate V86M Stack for Trap 6 */
-    push 0
-    push 0
-    push 0
-    push 0
-
-    /* Generate interrupt stack for Trap 6 */
-    push KGDT_R3_DATA + RPL_MASK
-    push 0
-    push 0x20202
-    push KGDT_R3_CODE + RPL_MASK
-    push 0
-    jmp _KiTrap06
-
-#if DBG
-InvalidIrql:
-    /* Save current IRQL */
-    push PCR[KPCR_IRQL]
-
-    /* Set us at passive */
-    mov dword ptr PCR[KPCR_IRQL], 0
-    cli
-
-    /* Bugcheck */
-    push 0
-    push 0
-    push eax
-    push ebx
-    push IRQL_GT_ZERO_AT_SYSTEM_SERVICE
-    call _KeBugCheckEx@20
-
-InvalidIndex:
-
-    /* Get the index and APC state */
-    movzx eax, byte ptr [ecx+KTHREAD_APC_STATE_INDEX]
-    mov edx, [ecx+KTHREAD_COMBINED_APC_DISABLE]
-
-    /* Bugcheck */
-    push 0
-    push edx
-    push eax
-    push ebx
-    push APC_INDEX_MISMATCH
-    call _KeBugCheckEx@20
-    ret
-#endif
-
-.func KiServiceExit2
-_KiServiceExit2:
-
-    /* Disable interrupts */
-    cli
-
-    /* Check for, and deliver, User-Mode APCs if needed */
-    CHECK_FOR_APC_DELIVER 0
-
-    /* Exit and cleanup */
-    TRAP_EPILOG NotFromSystemCall, DoRestorePreviousMode, DoRestoreSegments, DoRestoreVolatiles, DoNotRestoreEverything
+    /* Sane FS segment */
+    mov ecx, KGDT_R0_PCR
+    mov fs, cx
+    
+    /* Sane stack and frame */
+    mov esp, PCR[KPCR_TSS]
+    mov esp, [esp+KTSS_ESP0]
+    
+    /* Make space for trap frame on the stack */
+    sub esp, KTRAP_FRAME_V86_ES
+    
+    /* Save EBP, EBX, ESI, EDI only! */
+    mov [esp+KTRAP_FRAME_EBX], ebx
+    mov [esp+KTRAP_FRAME_ESI], esi
+    mov [esp+KTRAP_FRAME_EDI], edi
+    mov [esp+KTRAP_FRAME_EBP], ebp
+    
+    /* Call C handler -- note that EDX is the user stack, and EAX the syscall */
+    mov ecx, esp
+    add edx, 8
+    jmp _KiFastCallEntryHandler
 .endfunc
 
 .func Kei386EoiHelper@0
@@ -467,109 +190,12 @@ V86_Exit:
 
 AbiosExit:
     /* FIXME: TODO */
-    UNHANDLED_PATH "ABIOS Exit"
+    UNHANDLED_PATH
 
 GENERATE_TRAP_HANDLER KiGetTickCount, 1
 GENERATE_TRAP_HANDLER KiCallbackReturn, 1        
 GENERATE_TRAP_HANDLER KiRaiseAssertion, 1
 GENERATE_TRAP_HANDLER KiDebugService, 1
-
-.func NtRaiseException@12
-_NtRaiseException@12:
-
-    /* NOTE: We -must- be called by Zw* to have the right frame! */
-    /* Push the stack frame */
-    push ebp
-
-    /* Get the current thread and restore its trap frame */
-    mov ebx, PCR[KPCR_CURRENT_THREAD]
-    mov edx, [ebp+KTRAP_FRAME_EDX]
-    mov [ebx+KTHREAD_TRAP_FRAME], edx
-
-    /* Set up stack frame */
-    mov ebp, esp
-
-    /* Get the Trap Frame in EBX */
-    mov ebx, [ebp+0]
-
-    /* Get the exception list and restore */
-    mov eax, [ebx+KTRAP_FRAME_EXCEPTION_LIST]
-    mov PCR[KPCR_EXCEPTION_LIST], eax
-
-    /* Get the parameters */
-    mov edx, [ebp+16] /* Search frames */
-    mov ecx, [ebp+12] /* Context */
-    mov eax, [ebp+8]  /* Exception Record */
-
-    /* Raise the exception */
-    push edx
-    push ebx
-    push 0
-    push ecx
-    push eax
-    call _KiRaiseException@20
-
-    /* Restore trap frame in EBP */
-    pop ebp
-    mov esp, ebp
-
-    /* Check the result */
-    or eax, eax
-    jz _KiServiceExit2
-
-    /* Restore debug registers too */
-    jmp _KiServiceExit
-.endfunc
-
-.func NtContinue@8
-_NtContinue@8:
-
-    /* NOTE: We -must- be called by Zw* to have the right frame! */
-    /* Push the stack frame */
-    push ebp
-
-    /* Get the current thread and restore its trap frame */
-    mov ebx, PCR[KPCR_CURRENT_THREAD]
-    mov edx, [ebp+KTRAP_FRAME_EDX]
-    mov [ebx+KTHREAD_TRAP_FRAME], edx
-
-    /* Set up stack frame */
-    mov ebp, esp
-
-    /* Save the parameters */
-    mov eax, [ebp+0]
-    mov ecx, [ebp+8]
-
-    /* Call KiContinue */
-    push eax
-    push 0
-    push ecx
-    call _KiContinue@12
-
-    /* Check if we failed (bad context record) */
-    or eax, eax
-    jnz Error
-
-    /* Check if test alert was requested */
-    cmp dword ptr [ebp+12], 0
-    je DontTest
-
-    /* Test alert for the thread */
-    mov al, [ebx+KTHREAD_PREVIOUS_MODE]
-    push eax
-    call _KeTestAlertThread@4
-
-DontTest:
-    /* Return to previous context */
-    pop ebp
-    mov esp, ebp
-    jmp _KiServiceExit2
-
-Error:
-    pop ebp
-    mov esp, ebp
-    jmp _KiServiceExit
-.endfunc
 
 /* HARDWARE TRAP HANDLERS ****************************************************/
 
@@ -629,7 +255,7 @@ _KiUnexpectedInterruptTail:
 
     /* Spurious, ignore it */
     add esp, 8
-    jmp _Kei386EoiHelper2ndEntry
+    jmp _Kei386EoiHelper@0
 
 Handled:
     /* Unexpected interrupt, print a message on debug builds */
@@ -656,8 +282,46 @@ _KiUnexpectedInterrupt:
 
 /* INTERRUPT HANDLERS ********************************************************/
 
+.globl _KeUpdateSystemTime@0
+.func KeUpdateSystemTime@0
+_KeUpdateSystemTime@0:
+
+    /*
+     * When we enter here, the ASM HAL has:
+     *   - Entered here with a JMP, not a CALL
+     *   - Put increment in EAX
+     *   - Pushed OldIRQL on the stack earlier [ESP]
+     *   - Pushed Vector on the stack earlier [ESP + 4]
+     *   - The trap frame at ESP + 8
+     *
+     * When the HAL moves to C, this shit needs to die!!!
+     *
+     */
+     
+     /* Call the regparm with Increment, OldIrql, TrapFrame */
+     mov edx, [esp]
+     mov ecx, ebp
+     call _KeUpdateSystemTimeHandler
+     
+     /*
+      * The code below cannot be done in C because HalEndSystemInterrupt will
+      * fuck with your stack sideways when it decides to handle a pending APC or
+      * DPC!
+      */
+
+     /* Stack is back where it was, HalEndSystemInterrupt will clean it up */
+     cli
+     call _HalEndSystemInterrupt@8
+     
+     /* Now the stack has become the trap frame */
+     jmp _Kei386EoiHelper@0
+.endfunc
+
 .func KiDispatchInterrupt@0
 _KiDispatchInterrupt@0:
+
+    /* Preserve EBX */
+    push ebx
 
     /* Get the PCR  and disable interrupts */
     mov ebx, PCR[KPCR_SELF]
@@ -757,12 +421,14 @@ GetNext:
 
 Return:
     /* All done */
+    pop ebx
     ret
 
 QuantumEnd:
     /* Disable quantum end and process it */
     mov byte ptr [ebx+KPCR_PRCB_QUANTUM_END], 0
     call _KiQuantumEnd@0
+    pop ebx
     ret
 .endfunc
 

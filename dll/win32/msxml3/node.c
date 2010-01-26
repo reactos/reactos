@@ -1118,7 +1118,8 @@ static inline HRESULT VARIANT_from_xmlChar(xmlChar *str, VARIANT *v, BSTR type)
         if(!V_BSTR(&src))
             return E_OUTOFMEMORY;
 
-        hres = VariantChangeType(v, &src, 0, V_VT(v));
+        hres = VariantChangeTypeEx(v, &src, MAKELCID(MAKELANGID(
+                        LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT),0, V_VT(v));
         VariantClear(&src);
         return hres;
     }

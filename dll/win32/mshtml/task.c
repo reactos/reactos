@@ -199,12 +199,6 @@ HRESULT clear_task_timer(HTMLDocument *doc, BOOL interval, DWORD id)
     return S_OK;
 }
 
-void parse_complete(HTMLDocumentObj *doc)
-{
-    TRACE("(%p)\n", doc);
-
-}
-
 static void call_timer_disp(IDispatch *disp)
 {
     DISPPARAMS dp = {NULL, NULL, 0, 0};

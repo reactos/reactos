@@ -53,13 +53,10 @@ extern DWORD DebugTraceLevel;
 #define ASSERT(x) if (!(x)) { AFD_DbgPrint(MIN_TRACE, ("Assertion "#x" failed at %s:%d\n", __FILE__, __LINE__)); DbgBreakPoint(); }
 #endif /* NASSERT */
 
-#define ASSERT_IRQL(x) ASSERT(KeGetCurrentIrql() <= (x))
-
 #else /* DBG */
 
 #define AFD_DbgPrint(_t_, _x_)
 
-#define ASSERT_IRQL(x)
 #define ASSERTKM(x)
 #ifndef ASSERT
 #define ASSERT(x)
@@ -70,7 +67,6 @@ extern DWORD DebugTraceLevel;
 
 #undef assert
 #define assert(x) ASSERT(x)
-#define assert_irql(x) ASSERT_IRQL(x)
 
 
 #ifdef _MSC_VER

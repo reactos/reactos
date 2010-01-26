@@ -84,6 +84,59 @@ static LARGE_INTEGER ShortDelay;
 
 /** INTERNAL FUNCTIONS ********************************************************/
 
+// Audit Functions
+int tDC = 0;
+int tBRUSH = 0;
+int tBITMAP = 0;
+int tFONT = 0;
+int tRGN = 0;
+
+VOID
+AllocTypeDataDump(INT TypeInfo)
+{
+    switch( TypeInfo & GDI_HANDLE_TYPE_MASK )
+    {
+       case GDILoObjType_LO_BRUSH_TYPE:
+          tBRUSH++;
+          break;
+       case GDILoObjType_LO_DC_TYPE:
+          tDC++;
+          break;
+       case GDILoObjType_LO_BITMAP_TYPE:
+          tBITMAP++;
+          break;
+       case GDILoObjType_LO_FONT_TYPE:
+          tFONT++;
+          break;
+       case GDILoObjType_LO_REGION_TYPE:
+          tRGN++;
+          break;
+    }
+}
+
+VOID
+DeAllocTypeDataDump(INT TypeInfo)
+{
+    switch( TypeInfo & GDI_HANDLE_TYPE_MASK )
+    {
+       case GDILoObjType_LO_BRUSH_TYPE:
+          tBRUSH--;
+          break;
+       case GDILoObjType_LO_DC_TYPE:
+          tDC--;
+          break;
+       case GDILoObjType_LO_BITMAP_TYPE:
+          tBITMAP--;
+          break;
+       case GDILoObjType_LO_FONT_TYPE:
+          tFONT--;
+          break;
+       case GDILoObjType_LO_REGION_TYPE:
+          tRGN--;
+          break;
+    }
+}
+
 /*
  * Dummy GDI Cleanup Callback
  */
@@ -361,6 +414,7 @@ GDIOBJ_AllocObjWithHandle(ULONG ObjectType)
     if (W32Process && W32Process->GDIHandleCount >= 0x2710)
     {
         DPRINT1("Too many objects for process!!!\n");
+        DPRINT1("DC %d BRUSH %d BITMAP %d FONT %d RGN %d\n",tDC,tBRUSH,tBITMAP,tFONT,tRGN);
         GDIDBG_DUMPHANDLETABLE();
         return NULL;
     }
@@ -417,6 +471,8 @@ LockHandle:
             newObject->ulShareCount = 0;
             newObject->cExclusiveLock = 1;
             newObject->Tid = Thread;
+
+            AllocTypeDataDump(TypeInfo);
 
             /* unlock the entry */
             (void)InterlockedExchangePointer((PVOID*)&Entry->ProcessId, CurrentProcessId);
@@ -565,6 +621,8 @@ LockHandle:
                 TypeIndex = GDI_OBJECT_GET_TYPE_INDEX(HandleType);
                 Ret = ObjTypeInfo[TypeIndex].CleanupProc(Object);
 
+                DeAllocTypeDataDump(HandleType);
+
                 /* Now it's time to free the memory */
                 GDIOBJ_FreeObj(Object, TypeIndex);
 
@@ -695,14 +753,14 @@ bPEBCacheHandle(HGDIOBJ Handle, int oType, PVOID pAttr)
 
      hPtr = GdiHandleCache->Handle + Offset;
 
-     if ( oType == hctRegionHandle)
+     if ( pAttr && oType == hctRegionHandle)
      {
         if ( Number < CACHE_REGION_ENTRIES )
         {
            ((PRGN_ATTR)pAttr)->AttrFlags |= ATTR_CACHED;
            hPtr[Number] = Handle;
            GdiHandleCache->ulNumHandles[oType]++;
-           DPRINT("Put Handle Count %d\n", GdiHandleCache->ulNumHandles[oType]);
+           DPRINT1("Put Handle Count %d PEB 0x%x\n", GdiHandleCache->ulNumHandles[oType], NtCurrentTeb()->ProcessEnvironmentBlock);
            Ret = TRUE;
         }
      }
@@ -746,15 +804,17 @@ GreDeleteObject(HGDIOBJ hObject)
              break;
 
           case GDI_OBJECT_TYPE_REGION:
-             if (bPEBCacheHandle(hObject, hctRegionHandle, pAttr))
+             /* If pAttr NULL, the probability is high for System Region. */
+             if ( pAttr &&
+                  bPEBCacheHandle(hObject, hctRegionHandle, pAttr))
              {
+                /* User space handle only! */
                 return TRUE;
              }
              if (pAttr)
              {
-                KeEnterCriticalRegion();
                 FreeObjectAttr(pAttr);
-                KeLeaveCriticalRegion();
+                Entry->UserData = NULL;
              }
              break;
 
@@ -1561,6 +1621,34 @@ GDI_MapHandleTable(PSECTION_OBJECT SectionObject, PEPROCESS Process)
 
 BOOL
 FASTCALL
+IntGdiSetRegionOwner(HRGN hRgn, DWORD OwnerMask)
+{
+  INT Index;
+  PGDI_TABLE_ENTRY Entry;
+/*
+  System Regions:
+     These regions do not use attribute sections and when allocated, use gdiobj
+     level functions.
+ */
+  // FIXME! HAX!!! Remove this once we get everything right!
+  Index = GDI_HANDLE_GET_INDEX(hRgn);
+  Entry = &GdiHandleTable->Entries[Index];
+  if (Entry->UserData) FreeObjectAttr(Entry->UserData);
+  Entry->UserData = NULL;
+  //
+  if ((OwnerMask == GDI_OBJ_HMGR_PUBLIC) || OwnerMask == GDI_OBJ_HMGR_NONE)
+  {
+     return GDIOBJ_SetOwnership(hRgn, NULL);
+  }
+  if (OwnerMask == GDI_OBJ_HMGR_POWNED)
+  {
+     return GDIOBJ_SetOwnership((HGDIOBJ) hRgn, PsGetCurrentProcess() );
+  }
+  return FALSE;
+}
+
+BOOL
+FASTCALL
 IntGdiSetBrushOwner(PBRUSH pbr, DWORD OwnerMask)
 {
   HBRUSH hBR;
@@ -1607,7 +1695,6 @@ IntGdiSetBrushOwner(PBRUSH pbr, DWORD OwnerMask)
   }
   return TRUE;
 }
-
 
 BOOL
 FASTCALL
@@ -1671,7 +1758,6 @@ GreGetObjectOwner(HGDIOBJ Handle, GDIOBJTYPE ObjType)
   }
   return Ret;
 }
-
 
 W32KAPI
 HANDLE

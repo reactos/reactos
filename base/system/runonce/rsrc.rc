@@ -3,4 +3,5 @@
 #include "lang/ja-JP.rc"
 #include "lang/ru-RU.rc"
 #include "lang/sk-SK.rc"
+#include "lang/uk-UA.rc"
 
