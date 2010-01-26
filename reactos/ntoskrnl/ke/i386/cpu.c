@@ -27,7 +27,7 @@ ULONG KeProcessorArchitecture;
 ULONG KeProcessorLevel;
 ULONG KeProcessorRevision;
 ULONG KeFeatureBits;
-ULONG KiFastSystemCallDisable = 1;
+ULONG KiFastSystemCallDisable;
 ULONG KeI386NpxPresent = 0;
 ULONG KiMXCsrMask = 0;
 ULONG MxcsrFeatureMask = 0;
