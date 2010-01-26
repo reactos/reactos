@@ -48,8 +48,6 @@ void fbsd_free( void *data, char *file, unsigned line, ... ) {
 void InitOskitTCP() {
     OS_DbgPrint(OSK_MID_TRACE,("Init Called\n"));
     KeInitializeSpinLock(&OSKLock);
-    OS_DbgPrint(OSK_MID_TRACE,("MB Init\n"));
-    mbinit();
     OS_DbgPrint(OSK_MID_TRACE,("Rawip Init\n"));
     rip_init();
     raw_init();
