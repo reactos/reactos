@@ -4,6 +4,9 @@
 <directory name="libs">
 	<xi:include href="libs/libs.rbuild" />
 </directory>
+<directory name="include">
+  <xi:include href="include/include.rbuild" />
+</directory>
 <directory name="tools">
 	<xi:include href="tools/tools.rbuild" />
 </directory>
