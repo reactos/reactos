@@ -317,6 +317,52 @@ KiTrapReturn(IN PKTRAP_FRAME TrapFrame)
 VOID
 FORCEINLINE
 DECLSPEC_NORETURN
+KiDirectTrapReturn(IN PKTRAP_FRAME TrapFrame)
+{
+    /* Regular interrupt exit but we're not restoring any registers */
+    __asm__ __volatile__
+    (
+        "movl %0, %%esp\n"
+        "addl $%c[e],%%esp\n"
+        "iret\n"
+        :
+        : "r"(TrapFrame),
+          [e] "i"(KTRAP_FRAME_EIP)
+        : "%esp"
+    );
+    UNREACHABLE;  
+}
+
+VOID
+FORCEINLINE
+DECLSPEC_NORETURN
+KiCallReturn(IN PKTRAP_FRAME TrapFrame)
+{
+    /* Pops a trap frame out of the stack but returns with RET instead of IRET */
+    __asm__ __volatile__
+    (
+        "movl %0, %%esp\n"
+        "movl %c[b](%%esp), %%ebx\n"
+        "movl %c[s](%%esp), %%esi\n"
+        "movl %c[i](%%esp), %%edi\n"
+        "movl %c[p](%%esp), %%ebp\n"
+        "addl $%c[e],%%esp\n"
+        "ret\n"
+        :
+        : "r"(TrapFrame),
+          [b] "i"(KTRAP_FRAME_EBX),
+          [s] "i"(KTRAP_FRAME_ESI),
+          [i] "i"(KTRAP_FRAME_EDI),
+          [p] "i"(KTRAP_FRAME_EBP),
+          [e] "i"(KTRAP_FRAME_EIP)
+        : "%esp"
+    );
+    UNREACHABLE;
+}
+
+VOID
+FORCEINLINE
+DECLSPEC_NORETURN
 KiEditedTrapReturn(IN PKTRAP_FRAME TrapFrame)
 {
     /* Regular interrupt exit */
@@ -346,6 +392,17 @@ KiEditedTrapReturn(IN PKTRAP_FRAME TrapFrame)
         : "%esp"
     );
     UNREACHABLE;
+}
+
+//
+// "BOP" code used by VDM and V8086 Mode
+//
+VOID
+FORCEINLINE
+KiIssueBop(VOID)
+{
+    /* Invalid instruction that an invalid opcode handler must trap and handle */
+    asm volatile(".byte 0xC4\n.byte 0xC4\n");
 }
 
 //
@@ -679,13 +736,13 @@ KiEnterTrap(IN PKTRAP_FRAME TrapFrame)
 #define KI_NONVOLATILES_ONLY    0x4
 #define KI_FAST_SYSTEM_CALL     0x8
 #define KI_SOFTWARE_TRAP        0x10
-#define KiTrap(x, y) VOID DECLSPEC_NORETURN x(VOID) { KiTrapStub(y, x##Handler); }
+#define KiTrap(x, y)            VOID DECLSPEC_NORETURN x(VOID) { KiTrapStub(y, x##Handler); UNREACHABLE; }
+#define KiTrampoline(x, y)      VOID DECLSPEC_NOINLINE x(VOID) { KiTrapStub(y, x##Handler); }
 
 //
 // Trap Prolog Stub
 //
 VOID
-DECLSPEC_NORETURN
 FORCEINLINE
 KiTrapStub(IN ULONG Flags,
            IN PVOID Handler)
@@ -783,7 +840,6 @@ KiTrapStub(IN ULONG Flags,
     
     /* Now jump to the C handler */
     __asm__ __volatile__ ("jmp %c[x]\n":: [x] "i"(Handler));
-    UNREACHABLE;
 }
 
 #endif
