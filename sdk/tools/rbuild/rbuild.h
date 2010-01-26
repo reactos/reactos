@@ -68,6 +68,10 @@ extern char cBadSep;
 #define DEF_SBAD_SEP "\\"
 #endif
 
+#define SSEP DEF_SSEP
+#define TOOLS_BASE "sdk" SSEP "tools" SSEP
+#define RBUILD_BASE TOOLS_BASE "rbuild" SSEP
+
 #define MS_VS_DEF_VERSION "9.00"
 
 class XmlNode;

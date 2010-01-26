@@ -132,7 +132,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..,../../lib/inflib,../../include/reactos;../../include"
+				AdditionalIncludeDirectories="..;../../libs/inflib;../../include/reactos;../../include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;INFLIB_HOST;_CRT_SECURE_NO_WARNINGS;_CRT_NO_DEPRECATE;_CRT_SECURE_NO_DEPRECATE"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -1064,39 +1064,15 @@
 			Name="inflib"
 			>
 			<File
-				RelativePath="..\..\lib\inflib\builddep.h"
+				RelativePath="..\..\libs\inflib\builddep.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\lib\inflib\infcommon.h"
+				RelativePath="..\..\libs\inflib\infcommon.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\lib\inflib\infcore.c"
-				>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\..\lib\inflib\infget.c"
+				RelativePath="..\..\libs\inflib\infcore.c"
 				>
 				<FileConfiguration
 					Name="Release|Win32"
@@ -1120,11 +1096,7 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\lib\inflib\infhost.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\lib\inflib\infhostgen.c"
+				RelativePath="..\..\libs\inflib\infget.c"
 				>
 				<FileConfiguration
 					Name="Release|Win32"
@@ -1148,7 +1120,11 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\lib\inflib\infhostget.c"
+				RelativePath="..\..\libs\inflib\infhost.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\libs\inflib\infhostgen.c"
 				>
 				<FileConfiguration
 					Name="Release|Win32"
@@ -1172,7 +1148,7 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\lib\inflib\infhostput.c"
+				RelativePath="..\..\libs\inflib\infhostget.c"
 				>
 				<FileConfiguration
 					Name="Release|Win32"
@@ -1196,15 +1172,39 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\lib\inflib\inflib.h"
+				RelativePath="..\..\libs\inflib\infhostput.c"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BasicRuntimeChecks="3"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\libs\inflib\inflib.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\lib\inflib\infpriv.h"
+				RelativePath="..\..\libs\inflib\infpriv.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\lib\inflib\infput.c"
+				RelativePath="..\..\libs\inflib\infput.c"
 				>
 				<FileConfiguration
 					Name="Release|Win32"

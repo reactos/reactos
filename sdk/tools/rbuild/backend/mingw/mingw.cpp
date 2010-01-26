@@ -429,9 +429,9 @@ MingwBackend::GenerateProjectLDFLAGS () const
 void
 MingwBackend::GenerateGlobalVariables () const
 {
-	fputs ( "include tools$(SEP)rbuild$(SEP)backend$(SEP)mingw$(SEP)rules.mak\n", fMakefile );
-	fprintf ( fMakefile, "include tools$(SEP)rbuild$(SEP)backend$(SEP)mingw$(SEP)linkers$(SEP)%s.mak\n", ProjectNode.GetLinkerSet ().c_str () );
-	fprintf ( fMakefile, "include tools$(SEP)rbuild$(SEP)backend$(SEP)mingw$(SEP)compilers$(SEP)%s.mak\n", ProjectNode.GetCompilerSet ().c_str () );
+	fprintf ( fMakefile, "include %sbackend$(SEP)mingw$(SEP)rules.mak\n", RBUILD_BASE );
+	fprintf ( fMakefile, "include %sbackend$(SEP)mingw$(SEP)linkers$(SEP)%s.mak\n", RBUILD_BASE, ProjectNode.GetLinkerSet ().c_str () );
+	fprintf ( fMakefile, "include %sbackend$(SEP)mingw$(SEP)compilers$(SEP)%s.mak\n", RBUILD_BASE, ProjectNode.GetCompilerSet ().c_str () );
 
 	if ( mscPath.length() )
 		fprintf ( fMakefile, "export RBUILD_CL_PATH=%s\n", mscPath.c_str () );
@@ -1089,7 +1089,8 @@ MingwBackend::DetectPipeSupport ()
 	{
 		printf ( "Detecting compiler -pipe support..." );
 
-		string pipe_detection = "tools" + sSep + "rbuild" + sSep + "backend" + sSep + "mingw" + sSep + "pipe_detection.c";
+		string rbuild_base = RBUILD_BASE;
+		string pipe_detection = rbuild_base + "backend" + sSep + "mingw" + sSep + "pipe_detection.c";
 		string pipe_detectionObjectFilename = ReplaceExtension ( pipe_detection,
 																 ".o" );
 		string command = ssprintf (
@@ -1126,7 +1127,7 @@ MingwBackend::DetectPCHSupport ()
 
 	if ( configuration.PrecompiledHeadersEnabled && ProjectNode.configuration.Compiler == GnuGcc )
 	{
-		string path = "tools" + sSep + "rbuild" + sSep + "backend" + sSep + "mingw" + sSep + "pch_detection.h";
+		string path = "sdk" + sSep + "tools" + sSep + "rbuild" + sSep + "backend" + sSep + "mingw" + sSep + "pch_detection.h";
 		string cmd = ssprintf (
 			"%s -c %s 1>%s 2>%s",
 			FixSeparatorForSystemCommand(compilerCommand).c_str (),

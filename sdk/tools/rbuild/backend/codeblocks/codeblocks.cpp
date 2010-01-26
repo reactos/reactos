@@ -682,9 +682,9 @@ CBBackend::_generate_cbproj ( const Module& module )
 		if ( dll )
 		{
 			if (IsSpecDefinitionFile( module ))
-				fprintf ( OUT, "\t\t\t\t\t<Add before=\"%s%stools%swinebuild%swinebuild.exe -o %s --def -E %s.spec\" />\r\n", outdir.c_str(), sSep, sSep, sSep, module.importLibrary->definition.c_str(),  module.name.c_str());
+				fprintf ( OUT, "\t\t\t\t\t<Add before=\"%s%s%swinebuild%swinebuild.exe -o %s --def -E %s.spec\" />\r\n", outdir.c_str(), sSep, TOOLS_BASE, sSep, module.importLibrary->definition.c_str(),  module.name.c_str());
 			fprintf ( OUT, "\t\t\t\t\t<Add before=\"dlltool --dllname %s --def %s --output-exp %s.temp.exp %s\" />\r\n", module.GetTargetName ().c_str(), module.importLibrary->definition.c_str(), module.name.c_str(), module.mangledSymbols ? "" : "--kill-at" );
-			fprintf ( OUT, "\t\t\t\t\t<Add after=\"%s%stools%spefixup $exe_output -exports\" />\r\n", outdir.c_str(), sSep, sSep );
+			fprintf ( OUT, "\t\t\t\t\t<Add after=\"%s%s%spefixup $exe_output -exports\" />\r\n", outdir.c_str(), sSep, TOOLS_BASE);
 #ifdef WIN32
 			fprintf ( OUT, "\t\t\t\t\t<Add after=\"cmd /c del %s.temp.exp 2&gt;NUL\" />\r\n", module.name.c_str() );
 #else
@@ -760,13 +760,13 @@ CBBackend::_generate_cbproj ( const Module& module )
 		else if ( extension == ".idl" || extension == ".IDL" )
 		{
 			fprintf ( OUT, "\t\t\t<Option compile=\"1\" />\r\n" );
-			fprintf ( OUT, "\t\t\t<Option compiler=\"gcc\" use=\"1\" buildCommand=\"%s%stools%swidl%swidl.exe %s %s -h -H &quot;$(TARGET_OUTPUT_DIR)$filetitle_c.h&quot; -c -C &quot;$(TARGET_OUTPUT_DIR)$filetitle_c.c&quot; $file%sngcc %s -c &quot;$(TARGET_OUTPUT_DIR)$filetitle_c.c&quot; -o &quot;$(TARGET_OUTPUT_DIR)$file_c.o&quot;\" />\r\n", outdir.c_str(), sSep.c_str(), sSep.c_str(), sSep.c_str(), widl_options.c_str(), windres_defines.c_str(), sSep.c_str(), widl_options.c_str() );
+			fprintf ( OUT, "\t\t\t<Option compiler=\"gcc\" use=\"1\" buildCommand=\"%s%s%swidl%swidl.exe %s %s -h -H &quot;$(TARGET_OUTPUT_DIR)$filetitle_c.h&quot; -c -C &quot;$(TARGET_OUTPUT_DIR)$filetitle_c.c&quot; $file%sngcc %s -c &quot;$(TARGET_OUTPUT_DIR)$filetitle_c.c&quot; -o &quot;$(TARGET_OUTPUT_DIR)$file_c.o&quot;\" />\r\n", outdir.c_str(), sSep.c_str(), TOOLS_BASE, sSep.c_str(), widl_options.c_str(), windres_defines.c_str(), sSep.c_str(), widl_options.c_str() );
 		}
 		else if ( extension == ".spec" || extension == ".SPEC" )
 		{
 			fprintf ( OUT, "\t\t\t<Option compile=\"1\" />\r\n" );
 			fprintf ( OUT, "\t\t\t<Option link=\"1\" />\r\n" );
-			fprintf ( OUT, "\t\t\t<Option compiler=\"gcc\" use=\"1\" buildCommand=\"%s%stools%swinebuild%swinebuild.exe -o $file.stubs.c --pedll $file\\n$compiler -c $options $includes $file.stubs.c -o $(TARGET_OBJECT_DIR)%s$file.o\" />\r\n", outdir.c_str(), sSep.c_str(), sSep.c_str(), sSep.c_str(), sSep.c_str() );
+			fprintf ( OUT, "\t\t\t<Option compiler=\"gcc\" use=\"1\" buildCommand=\"%s%s%swinebuild%swinebuild.exe -o $file.stubs.c --pedll $file\\n$compiler -c $options $includes $file.stubs.c -o $(TARGET_OBJECT_DIR)%s$file.o\" />\r\n", outdir.c_str(), sSep.c_str(), TOOLS_BASE, sSep.c_str(), sSep.c_str() );
 		}
 
 		for ( size_t icfg = 0; icfg < m_configurations.size(); icfg++ )
@@ -784,7 +784,9 @@ CBBackend::_generate_cbproj ( const Module& module )
 		fprintf ( OUT, "\t\t<Unit filename=\"%s\">\r\n", resource_file.c_str() );
 		fprintf ( OUT, "\t\t\t<Option compilerVar=\"WINDRES\" />\r\n" );
 		string extension = GetExtension ( resource_file );
-		fprintf ( OUT, "\t\t\t<Option compiler=\"gcc\" use=\"1\" buildCommand=\"gcc -xc -E -DRC_INVOKED $includes %s $file -o $(TARGET_OBJECT_DIR)%s$file.rci.tmp\\n%s%stools%swrc%swrc.exe $includes %s $(TARGET_OBJECT_DIR)%s$file.rci.tmp $(TARGET_OBJECT_DIR)%s$file.res.tmp\\n$rescomp --output-format=coff $(TARGET_OBJECT_DIR)%s$file.res.tmp -o $resource_output\" />\r\n" , windres_defines.c_str(), sSep.c_str(), outdir.c_str(), sSep.c_str(), sSep.c_str(), sSep.c_str(), windres_defines.c_str(), sSep.c_str(), sSep.c_str(), sSep.c_str() );
+		// FIXME: Sort out this param mess. This backend is probably gonna be deleted, so I couldn't be arsed ... Ged.
+        //fprintf ( OUT, "\t\t\t<Option compiler=\"gcc\" use=\"1\" buildCommand=\"gcc -xc -E -DRC_INVOKED $includes %s $file -o $(TARGET_OBJECT_DIR)%s$file.rci.tmp\\n%swrc%swrc.exe $includes %s $(TARGET_OBJECT_DIR)%s$file.rci.tmp $(TARGET_OBJECT_DIR)%s$file.res.tmp\\n$rescomp --output-format=coff $(TARGET_OBJECT_DIR)%s$file.res.tmp -o $resource_output\" />\r\n" ,
+        //                                                                                                        windres_defines.c_str(),          sSep.c_str(),      TOOLS_BASE, sSep.c_str(), outdir.c_str(),      sSep.c_str(),                       sSep.c_str(),                                                        sSep.c_str(), windres_defines.c_str(), sSep.c_str(), sSep.c_str() );
 		for ( size_t icfg = 0; icfg < m_configurations.size(); icfg++ )
 		{
 			const CBConfiguration& cfg = *m_configurations[icfg];
