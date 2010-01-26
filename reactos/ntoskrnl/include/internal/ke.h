@@ -1100,13 +1100,6 @@ KiQuantumEnd(
 );
 
 VOID
-KiSystemService(
-    IN PKTHREAD Thread,
-    IN PKTRAP_FRAME TrapFrame,
-    IN ULONG Instruction
-);
-
-VOID
 FASTCALL
 KiIdleLoop(
     VOID

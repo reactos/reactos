@@ -670,4 +670,120 @@ KiEnterTrap(IN PKTRAP_FRAME TrapFrame)
     /* Set debug header */
     KiFillTrapFrameDebug(TrapFrame);
 }
+
+//
+// Generates a Trap Prolog Stub for the given name
+//
+#define KI_PUSH_FAKE_ERROR_CODE 0x1
+#define KI_FAST_V86_TRAP        0x2
+#define KI_NONVOLATILES_ONLY    0x4
+#define KI_FAST_SYSTEM_CALL     0x8
+#define KI_SOFTWARE_TRAP        0x10
+#define KiTrap(x, y) VOID DECLSPEC_NORETURN x(VOID) { KiTrapStub(y, x##Handler); }
+
+//
+// Trap Prolog Stub
+//
+VOID
+DECLSPEC_NORETURN
+FORCEINLINE
+KiTrapStub(IN ULONG Flags,
+           IN PVOID Handler)
+{
+    ULONG FrameSize;
+    
+    /* Is this a fast system call? They don't have a stack! */
+    if (Flags & KI_FAST_SYSTEM_CALL) __asm__ __volatile__
+    (
+        "movl %%ss:%c[t], %%esp\n"
+        "movl %c[e](%%esp), %%esp\n"
+        :
+        : [e] "i"(FIELD_OFFSET(KTSS, Esp0)),
+          [t] "i"(&PCR->TSS)
+        : "%esp"
+    );
+    
+    /* Check what kind of trap frame this trap requires */
+    if (Flags & KI_SOFTWARE_TRAP)
+    {
+        /* Software traps need a complete non-ring transition trap frame */
+        FrameSize = FIELD_OFFSET(KTRAP_FRAME, HardwareEsp);
+    }
+    else if (Flags & KI_FAST_SYSTEM_CALL)
+    {
+        /* SYSENTER requires us to build a complete ring transition trap frame */
+        FrameSize = FIELD_OFFSET(KTRAP_FRAME, V86Es);
+        
+        /* And it only preserves nonvolatile registers */
+        Flags |= KI_NONVOLATILES_ONLY;
+    }
+    else if (Flags & KI_PUSH_FAKE_ERROR_CODE)
+    {
+        /* If the trap doesn't have an error code, we'll make space for it */
+        FrameSize = FIELD_OFFSET(KTRAP_FRAME, Eip);
+    }
+    else
+    {
+        /* The trap already has an error code, so just make space for the rest */
+        FrameSize = FIELD_OFFSET(KTRAP_FRAME, ErrCode);
+    }
+    
+    /* Software traps need to get their EIP from the caller's frame */
+    if (Flags & KI_SOFTWARE_TRAP) __asm__ __volatile__ ("popl %%eax\n":::"%esp");
+    
+    /* Now go ahead and make space for this frame */
+    __asm__ __volatile__ ("subl $%c[e],%%esp\n":: [e] "i"(FrameSize) : "%esp");
+        
+    /* Does the caller want volatiles only? */
+    if (Flags & KI_NONVOLATILES_ONLY) __asm__ __volatile__
+    (
+        /* Then only EBX, ESI, EDI and EBP are saved */
+        "movl %%ebx, %c[b](%%esp)\n"
+        "movl %%esi, %c[s](%%esp)\n"
+        "movl %%edi, %c[i](%%esp)\n"
+        "movl %%ebp, %c[p](%%esp)\n"
+        :
+        : [b] "i"(FIELD_OFFSET(KTRAP_FRAME, Ebx)),
+          [s] "i"(FIELD_OFFSET(KTRAP_FRAME, Esi)),
+          [i] "i"(FIELD_OFFSET(KTRAP_FRAME, Edi)),
+          [p] "i"(FIELD_OFFSET(KTRAP_FRAME, Ebp))
+        : "%esp"
+    );
+    else __asm__ __volatile__
+    (
+        /* Otherwise, we save all the registers (except ESP) */
+        "movl %%eax, %c[a](%%esp)\n"
+        "movl %%ebx, %c[b](%%esp)\n"
+        "movl %%ecx, %c[c](%%esp)\n"
+        "movl %%edx, %c[d](%%esp)\n"
+        "movl %%esi, %c[s](%%esp)\n"
+        "movl %%edi, %c[i](%%esp)\n"
+        "movl %%ebp, %c[p](%%esp)\n"
+        :
+        : [a] "i"(FIELD_OFFSET(KTRAP_FRAME, Eax)),
+          [b] "i"(FIELD_OFFSET(KTRAP_FRAME, Ebx)),
+          [c] "i"(FIELD_OFFSET(KTRAP_FRAME, Ecx)),
+          [d] "i"(FIELD_OFFSET(KTRAP_FRAME, Edx)),
+          [s] "i"(FIELD_OFFSET(KTRAP_FRAME, Esi)),
+          [i] "i"(FIELD_OFFSET(KTRAP_FRAME, Edi)),
+          [p] "i"(FIELD_OFFSET(KTRAP_FRAME, Ebp))
+        : "%esp"
+    );
+
+    /* Now set parameter 1 (ECX) to point to the frame */
+    __asm__ __volatile__ ("movl %%esp, %%ecx\n":::"%esp");
+       
+    /* For Fast-V86 traps, move set parameter 2 (EDX) to hold EFlags */   
+    if (Flags & KI_FAST_V86_TRAP) __asm__ __volatile__
+    (
+        "movl %c[f](%%esp), %%edx\n"
+        :
+        : [f] "i"(FIELD_OFFSET(KTRAP_FRAME, EFlags))
+    );
+    
+    /* Now jump to the C handler */
+    __asm__ __volatile__ ("jmp %c[x]\n":: [x] "i"(Handler));
+    UNREACHABLE;
+}
+
 #endif

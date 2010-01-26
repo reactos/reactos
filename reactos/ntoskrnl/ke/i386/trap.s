@@ -53,14 +53,6 @@ idt _KiSystemService,  INT_32_DPL3  /* INT 2E: System Call Service Handler  */
 idt _KiTrap0F,         INT_32_DPL0  /* INT 2F: RESERVED                     */
 GENERATE_IDT_STUBS                  /* INT 30-FF: UNEXPECTED INTERRUPTS     */
 
-/* Trap handlers referenced from C code                                     */
-.globl _KiTrap08
-.globl _KiTrap13
-
-/* System call code referenced from C code                                  */
-.globl _CopyParams
-.globl _ReadBatch
-
 /* System call entrypoints:                                                 */
 .globl _KiFastCallEntry
 .globl _KiSystemService
@@ -111,49 +103,6 @@ _IsrOverflowMsg:
 /* SOFTWARE INTERRUPT SERVICES ***********************************************/
 .text
 
-.func KiSystemService
-_KiSystemService:
-
-    /* Make space for trap frame on the stack */
-    sub esp, KTRAP_FRAME_EIP
-
-    /* Save EBP, EBX, ESI, EDI only! */
-    mov [esp+KTRAP_FRAME_EBX], ebx
-    mov [esp+KTRAP_FRAME_ESI], esi
-    mov [esp+KTRAP_FRAME_EDI], edi
-    mov [esp+KTRAP_FRAME_EBP], ebp
-
-    /* Call C handler -- note that EDX is the caller stack, EAX is the ID */
-    mov ecx, esp
-    jmp _KiSystemServiceHandler
-.endfunc
-
-.func KiFastCallEntry
-_KiFastCallEntry:
-
-    /* Sane FS segment */
-    mov ecx, KGDT_R0_PCR
-    mov fs, cx
-    
-    /* Sane stack and frame */
-    mov esp, PCR[KPCR_TSS]
-    mov esp, [esp+KTSS_ESP0]
-    
-    /* Make space for trap frame on the stack */
-    sub esp, KTRAP_FRAME_V86_ES
-    
-    /* Save EBP, EBX, ESI, EDI only! */
-    mov [esp+KTRAP_FRAME_EBX], ebx
-    mov [esp+KTRAP_FRAME_ESI], esi
-    mov [esp+KTRAP_FRAME_EDI], edi
-    mov [esp+KTRAP_FRAME_EBP], ebp
-    
-    /* Call C handler -- note that EDX is the user stack, and EAX the syscall */
-    mov ecx, esp
-    add edx, 8
-    jmp _KiFastCallEntryHandler
-.endfunc
-
 .func Kei386EoiHelper@0
 _Kei386EoiHelper@0:
 
@@ -191,32 +140,6 @@ V86_Exit:
 AbiosExit:
     /* FIXME: TODO */
     UNHANDLED_PATH
-
-GENERATE_TRAP_HANDLER KiGetTickCount, 1
-GENERATE_TRAP_HANDLER KiCallbackReturn, 1        
-GENERATE_TRAP_HANDLER KiRaiseAssertion, 1
-GENERATE_TRAP_HANDLER KiDebugService, 1
-
-/* HARDWARE TRAP HANDLERS ****************************************************/
-
-GENERATE_TRAP_HANDLER KiTrap00
-GENERATE_TRAP_HANDLER KiTrap01
-GENERATE_TRAP_HANDLER KiTrap03
-GENERATE_TRAP_HANDLER KiTrap04
-GENERATE_TRAP_HANDLER KiTrap05
-GENERATE_TRAP_HANDLER KiTrap06
-GENERATE_TRAP_HANDLER KiTrap07
-GENERATE_TRAP_HANDLER KiTrap08, 0
-GENERATE_TRAP_HANDLER KiTrap09
-GENERATE_TRAP_HANDLER KiTrap0A, 0
-GENERATE_TRAP_HANDLER KiTrap0B, 0
-GENERATE_TRAP_HANDLER KiTrap0C, 0
-GENERATE_TRAP_HANDLER KiTrap0D, 0, 1
-GENERATE_TRAP_HANDLER KiTrap0E, 0
-GENERATE_TRAP_HANDLER KiTrap0F
-GENERATE_TRAP_HANDLER KiTrap10
-GENERATE_TRAP_HANDLER KiTrap11
-GENERATE_TRAP_HANDLER KiTrap13
 
 /* UNEXPECTED INTERRUPT HANDLERS **********************************************/
 

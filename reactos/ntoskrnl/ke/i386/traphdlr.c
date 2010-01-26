@@ -1489,12 +1489,13 @@ KiFastCallEntryHandler(IN ULONG ServiceNumber,
     PKTHREAD Thread;
         
     /* Fixup segments */
+    Ke386SetFs(KGDT_R0_PCR);
     Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
     Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
     
     /* Set up a fake INT Stack and enable interrupts */
     TrapFrame->HardwareSegSs = KGDT_R3_DATA | RPL_MASK;
-    TrapFrame->HardwareEsp = (ULONG_PTR)Arguments - 8; // Stack is 2 frames down
+    TrapFrame->HardwareEsp = (ULONG_PTR)Arguments;
     TrapFrame->EFlags = __readeflags() | EFLAGS_INTERRUPT_MASK;
     TrapFrame->SegCs = KGDT_R3_CODE | RPL_MASK;
     TrapFrame->Eip = SharedUserData->SystemCallReturn;
@@ -1502,6 +1503,9 @@ KiFastCallEntryHandler(IN ULONG ServiceNumber,
     
     /* Get the current thread */
     Thread = KeGetCurrentThread();
+    
+    /* Arguments are actually 2 frames down (because of the double indirection) */
+    Arguments = (PVOID)(TrapFrame->HardwareEsp + 8);
 
     /* Call the shared handler (inline) */
     KiSystemCallHandler(TrapFrame,
@@ -1545,6 +1549,33 @@ KiSystemServiceHandler(IN ULONG ServiceNumber,
                         Thread->PreviousMode,
                         SegFs);
 }
+
+/* CPU AND SOFTWARE TRAPS *****************************************************/
+
+KiTrap(KiTrap00,         KI_PUSH_FAKE_ERROR_CODE);
+KiTrap(KiTrap01,         KI_PUSH_FAKE_ERROR_CODE);
+KiTrap(KiTrap03,         KI_PUSH_FAKE_ERROR_CODE);
+KiTrap(KiTrap04,         KI_PUSH_FAKE_ERROR_CODE);
+KiTrap(KiTrap05,         KI_PUSH_FAKE_ERROR_CODE);
+KiTrap(KiTrap06,         KI_PUSH_FAKE_ERROR_CODE);
+KiTrap(KiTrap07,         KI_PUSH_FAKE_ERROR_CODE);
+KiTrap(KiTrap08,         0);
+KiTrap(KiTrap09,         KI_PUSH_FAKE_ERROR_CODE);
+KiTrap(KiTrap0A,         0);
+KiTrap(KiTrap0B,         0);
+KiTrap(KiTrap0C,         0);
+KiTrap(KiTrap0D,         KI_FAST_V86_TRAP);
+KiTrap(KiTrap0E,         0);
+KiTrap(KiTrap0F,         KI_PUSH_FAKE_ERROR_CODE);
+KiTrap(KiTrap10,         KI_PUSH_FAKE_ERROR_CODE);
+KiTrap(KiTrap11,         KI_PUSH_FAKE_ERROR_CODE);
+KiTrap(KiTrap13,         KI_PUSH_FAKE_ERROR_CODE);
+KiTrap(KiGetTickCount,   KI_PUSH_FAKE_ERROR_CODE);
+KiTrap(KiCallbackReturn, KI_PUSH_FAKE_ERROR_CODE);       
+KiTrap(KiRaiseAssertion, KI_PUSH_FAKE_ERROR_CODE);
+KiTrap(KiDebugService,   KI_PUSH_FAKE_ERROR_CODE);
+KiTrap(KiSystemService,  KI_PUSH_FAKE_ERROR_CODE | KI_NONVOLATILES_ONLY);
+KiTrap(KiFastCallEntry,  KI_FAST_SYSTEM_CALL);
 
 /* HARDWARE INTERRUPTS ********************************************************/
 
