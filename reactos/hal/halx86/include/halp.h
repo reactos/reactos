@@ -532,8 +532,10 @@ VOID NTAPI HalpInitializePICs(IN BOOLEAN EnableInterrupts);
 VOID HalpApcInterrupt(VOID);
 VOID HalpDispatchInterrupt(VOID);
 
-/* udelay.c */
+/* timer.c */
 VOID NTAPI HalpInitializeClock(VOID);
+VOID HalpClockInterrupt(VOID);
+VOID HalpProfileInterrupt(VOID);
 
 VOID
 NTAPI
@@ -548,8 +550,6 @@ VOID HalpInitDma (VOID);
 /* Non-generic initialization */
 VOID HalpInitPhase0 (PLOADER_PARAMETER_BLOCK LoaderBlock);
 VOID HalpInitPhase1(VOID);
-VOID NTAPI HalpClockInterrupt(VOID);
-VOID NTAPI HalpProfileInterrupt(VOID);
 
 VOID
 NTAPI
@@ -755,6 +755,14 @@ KxReleaseSpinLock(IN PKSPIN_LOCK SpinLock)
 
 #endif
 
+VOID
+FASTCALL
+KeUpdateSystemTime(
+    IN PKTRAP_FRAME TrapFrame,
+    IN ULONG Increment,
+    IN KIRQL OldIrql
+);
+
 #ifdef _M_AMD64
 #define KfLowerIrql KeLowerIrql
 #ifndef CONFIG_SMP
@@ -773,5 +781,7 @@ extern ADDRESS_USAGE HalpDefaultIoSpace;
 extern KSPIN_LOCK HalpSystemHardwareLock;
 
 extern PADDRESS_USAGE HalpAddressUsageList;
+
+extern LARGE_INTEGER HalpPerfCounter;
 
 #endif /* __INTERNAL_HAL_HAL_H */

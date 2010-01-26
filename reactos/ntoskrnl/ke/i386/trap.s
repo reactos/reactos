@@ -205,41 +205,6 @@ _KiUnexpectedInterrupt:
 
 /* INTERRUPT HANDLERS ********************************************************/
 
-.globl _KeUpdateSystemTime@0
-.func KeUpdateSystemTime@0
-_KeUpdateSystemTime@0:
-
-    /*
-     * When we enter here, the ASM HAL has:
-     *   - Entered here with a JMP, not a CALL
-     *   - Put increment in EAX
-     *   - Pushed OldIRQL on the stack earlier [ESP]
-     *   - Pushed Vector on the stack earlier [ESP + 4]
-     *   - The trap frame at ESP + 8
-     *
-     * When the HAL moves to C, this shit needs to die!!!
-     *
-     */
-     
-     /* Call the regparm with Increment, OldIrql, TrapFrame */
-     mov edx, [esp]
-     mov ecx, ebp
-     call _KeUpdateSystemTimeHandler
-     
-     /*
-      * The code below cannot be done in C because HalEndSystemInterrupt will
-      * fuck with your stack sideways when it decides to handle a pending APC or
-      * DPC!
-      */
-
-     /* Stack is back where it was, HalEndSystemInterrupt will clean it up */
-     cli
-     call _HalEndSystemInterrupt@8
-     
-     /* Now the stack has become the trap frame */
-     jmp _Kei386EoiHelper@0
-.endfunc
-
 .func KiDispatchInterrupt@0
 _KiDispatchInterrupt@0:
 

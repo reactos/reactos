@@ -629,8 +629,11 @@ KiEnterInterruptTrap(IN PKTRAP_FRAME TrapFrame)
     /* Check for V86 mode */
     if (__builtin_expect(TrapFrame->EFlags & EFLAGS_V86_MASK, 0))
     {
-        DbgPrint("Need V8086 Interrupt Support!\n");
-        while (TRUE);
+        /* Restore V8086 segments into Protected Mode segments */
+        TrapFrame->SegFs = TrapFrame->V86Fs;
+        TrapFrame->SegGs = TrapFrame->V86Gs;
+        TrapFrame->SegDs = TrapFrame->V86Ds;
+        TrapFrame->SegEs = TrapFrame->V86Es;
     }
     
     /* Check if this wasn't kernel code */
