@@ -111,7 +111,6 @@ InbvDriverInitialize(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     PCHAR CommandLine;
     BOOLEAN CustomLogo = FALSE;
     ULONG i;
-    extern BOOLEAN ExpInTextModeSetup;
 
     /* Quit if we're already installed */
     if (InbvBootDriverInstalled) return TRUE;
@@ -125,13 +124,13 @@ InbvDriverInitialize(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         CustomLogo = strstr(CommandLine, "BOOTLOGO") ? TRUE: FALSE;
     }
 
-    /* For SetupLDR, don't reset the BIOS Display -- FIXME! */
-    if (ExpInTextModeSetup) CustomLogo = TRUE;
-
     /* Initialize the video */
-    InbvBootDriverInstalled = VidInitialize(!CustomLogo);
+    InbvBootDriverInstalled = VidInitialize(FALSE);
     if (InbvBootDriverInstalled)
     {
+        /* Now reset the display, but only if there's a custom boot logo */
+        VidResetDisplay(CustomLogo);
+        
         /* Find bitmap resources in the kernel */
         ResourceCount = Count;
         for (i = 0; i < Count; i++)
