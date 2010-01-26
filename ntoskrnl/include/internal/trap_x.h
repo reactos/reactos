@@ -9,21 +9,6 @@
 #define _TRAP_X_
 
 //
-// Unreachable code hint for GCC 4.5.x, older GCC versions, and MSVC
-//
-#ifdef __GNUC__
-#if __GNUC__ * 100 + __GNUC_MINOR__ >= 405
-#define UNREACHABLE __builtin_unreachable()
-#else
-#define UNREACHABLE __builtin_trap()
-#endif
-#elif _MSC_VER
-#define UNREACHABLE __assume(0)
-#else
-#define UNREACHABLE
-#endif
-
-//
 // Debug Macros
 //
 VOID
@@ -194,7 +179,20 @@ DECLSPEC_NORETURN
 KiSystemCallReturn(IN PKTRAP_FRAME TrapFrame)
 {
     /* Restore nonvolatiles, EAX, and do a "jump" back to the kernel caller */
-    __asm__ __volatile__
+#if defined(_MSC_VER)
+	_ASM_BEGIN
+	mov esp, TrapFrame
+	mov ebx, [esp+KTRAP_FRAME_EBX]
+	mov esi, [esp+KTRAP_FRAME_ESI]
+	mov edi, [esp+KTRAP_FRAME_EDI]
+	mov ebp, [esp+KTRAP_FRAME_EBP]
+	mov eax, [esp+KTRAP_FRAME_EAX]
+	mov edx, [esp+KTRAP_FRAME_EIP]
+	add esp, KTRAP_FRAME_ESP
+	jmp edx
+	_ASM_END
+#elif defined(__GNUC__)
+	__asm__ __volatile__
     (
         "movl %0, %%esp\n"
         "movl %c[b](%%esp), %%ebx\n"
@@ -216,6 +214,9 @@ KiSystemCallReturn(IN PKTRAP_FRAME TrapFrame)
           [v] "i"(KTRAP_FRAME_ESP)
         : "%esp"
     );
+#elif
+#error unsupported compiler
+#endif
     UNREACHABLE;
 }
 
@@ -225,6 +226,18 @@ DECLSPEC_NORETURN
 KiSystemCallTrapReturn(IN PKTRAP_FRAME TrapFrame)
 {
     /* Regular interrupt exit, but we only restore EAX as a volatile */
+#if defined(_MSC_VER)
+	_ASM_BEGIN
+	mov esp, TrapFrame
+	mov ebx, [esp+KTRAP_FRAME_EBX]
+	mov esi, [esp+KTRAP_FRAME_ESI]
+	mov edi, [esp+KTRAP_FRAME_EDI]
+	mov ebp, [esp+KTRAP_FRAME_EBP]
+	mov eax, [esp+KTRAP_FRAME_EAX]
+	add esp, KTRAP_FRAME_EIP
+	iret
+	_ASM_END
+#elif defined(__GNUC__)
     __asm__ __volatile__
     (
         "movl %0, %%esp\n"
@@ -245,6 +258,9 @@ KiSystemCallTrapReturn(IN PKTRAP_FRAME TrapFrame)
           [e] "i"(KTRAP_FRAME_EIP)
         : "%esp"
     );
+#elif
+#error unsupported compiler
+#endif
     UNREACHABLE;
 }
 
@@ -254,7 +270,22 @@ DECLSPEC_NORETURN
 KiSystemCallSysExitReturn(IN PKTRAP_FRAME TrapFrame)
 {
     /* Restore nonvolatiles, EAX, and do a SYSEXIT back to the user caller */
-    __asm__ __volatile__
+#if defined(_MSC_VER)
+	_ASM_BEGIN
+	mov esp, TrapFrame
+	mov ebx, [esp+KTRAP_FRAME_EBX]
+	mov esi, [esp+KTRAP_FRAME_ESI]
+	mov edi, [esp+KTRAP_FRAME_EDI]
+	mov ebp, [esp+KTRAP_FRAME_EBP]
+	mov eax, [esp+KTRAP_FRAME_EAX]
+	mov edx, [edx+KTRAP_FRAME_EIP]
+	mov ecx, [esp+KTRAP_FRAME_ESP]
+	add esp, KTRAP_FRAME_V86_ES
+	sti
+	sysexit
+	_ASM_END
+#elif defined(__GNUC__)
+	__asm__ __volatile__
     (
         "movl %0, %%esp\n"
         "movl %c[s](%%esp), %%esi\n"
@@ -278,6 +309,9 @@ KiSystemCallSysExitReturn(IN PKTRAP_FRAME TrapFrame)
           [v] "i"(KTRAP_FRAME_V86_ES)
         : "%esp"
     );
+#elif
+#error unsupported compiler
+#endif
     UNREACHABLE;
 }
 
@@ -287,7 +321,21 @@ DECLSPEC_NORETURN
 KiTrapReturn(IN PKTRAP_FRAME TrapFrame)
 {
     /* Regular interrupt exit */
-    __asm__ __volatile__
+#if defined(_MSC_VER)
+	_ASM_BEGIN
+	mov esp, TrapFrame
+	mov eax, [esp+KTRAP_FRAME_EAX]
+	mov ebx, [esp+KTRAP_FRAME_EBX]
+	mov ecx, [esp+KTRAP_FRAME_ECX]
+	mov edx, [esp+KTRAP_FRAME_EDX]
+	mov esi, [esp+KTRAP_FRAME_ESI]
+	mov edi, [esp+KTRAP_FRAME_EDI]
+	mov ebp, [esp+KTRAP_FRAME_EBP]
+	add esp, KTRAP_FRAME_EIP
+	iret
+	_ASM_END
+#elif defined(__GNUC__)
+	__asm__ __volatile__
     (
         "movl %0, %%esp\n"
         "movl %c[a](%%esp), %%eax\n"
@@ -311,6 +359,9 @@ KiTrapReturn(IN PKTRAP_FRAME TrapFrame)
           [e] "i"(KTRAP_FRAME_EIP)
         : "%esp"
     );
+#elif
+#error unsupported compiler
+#endif
     UNREACHABLE;
 }
 
@@ -320,6 +371,20 @@ DECLSPEC_NORETURN
 KiEditedTrapReturn(IN PKTRAP_FRAME TrapFrame)
 {
     /* Regular interrupt exit */
+#if defined(_MSC_VER)
+	_ASM_BEGIN
+	mov esp, TrapFrame
+	mov eax, [esp+KTRAP_FRAME_EAX]
+	mov ebx, [esp+KTRAP_FRAME_EBX]
+	mov ecx, [esp+KTRAP_FRAME_ECX]
+	mov edx, [esp+KTRAP_FRAME_EDX]
+	mov esi, [esp+KTRAP_FRAME_ESI]
+	mov edi, [esp+KTRAP_FRAME_EDI]
+	mov ebp, [esp+KTRAP_FRAME_EBP]
+	add esp, KTRAP_FRAME_ERROR_CODE /* We *WANT* the error code since ESP is there! */
+	iret
+	_ASM_END
+#elif defined(__GNUC__)
     __asm__ __volatile__
     (
         "movl %0, %%esp\n"
@@ -345,6 +410,9 @@ KiEditedTrapReturn(IN PKTRAP_FRAME TrapFrame)
           [e] "i"(KTRAP_FRAME_ERROR_CODE) /* We *WANT* the error code since ESP is there! */
         : "%esp"
     );
+#elif
+#error unsupported compiler
+#endif
     UNREACHABLE;
 }
 
@@ -357,9 +425,11 @@ DECLSPEC_NORETURN
 KiExitTrap(IN PKTRAP_FRAME TrapFrame,
            IN UCHAR Skip)
 {
-    KTRAP_EXIT_SKIP_BITS SkipBits = { .Bits = Skip };
+    KTRAP_EXIT_SKIP_BITS SkipBits;
     PULONG ReturnStack;
     
+	SkipBits.Bits = Skip;
+
     /* Debugging checks */
     KiExitTrapDebugChecks(TrapFrame, SkipBits);
 
