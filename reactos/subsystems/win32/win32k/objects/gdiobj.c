@@ -760,7 +760,7 @@ bPEBCacheHandle(HGDIOBJ Handle, int oType, PVOID pAttr)
            ((PRGN_ATTR)pAttr)->AttrFlags |= ATTR_CACHED;
            hPtr[Number] = Handle;
            GdiHandleCache->ulNumHandles[oType]++;
-           DPRINT1("Put Handle Count %d PEB 0x%x\n", GdiHandleCache->ulNumHandles[oType], NtCurrentTeb()->ProcessEnvironmentBlock);
+           DPRINT("Put Handle Count %d PEB 0x%x\n", GdiHandleCache->ulNumHandles[oType], NtCurrentTeb()->ProcessEnvironmentBlock);
            Ret = TRUE;
         }
      }
