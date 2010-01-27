@@ -533,16 +533,56 @@ KiTrap05Handler(IN PKTRAP_FRAME TrapFrame)
 VOID
 FASTCALL
 DECLSPEC_NORETURN
-KiTrap06Handler(IN PKTRAP_FRAME TrapFrame)
+KiTrap06Handler(IN PKTRAP_FRAME TrapFrame,
+                IN ULONG EFlags)
 {
     PUCHAR Instruction;
     ULONG i;
+    KIRQL OldIrql;
     
+    /* Check for V86 GPF */
+    if (__builtin_expect(EFlags & EFLAGS_V86_MASK, 1))
+    {
+        /* Enter V86 trap */
+        KiEnterV86Trap(TrapFrame);
+        
+        /* Must be a VDM process */
+        if (__builtin_expect(!PsGetCurrentProcess()->VdmObjects, 0))
+        {
+            /* Enable interrupts */
+            _enable();
+            
+            /* Setup illegal instruction fault */
+            KiDispatchException0Args(STATUS_ILLEGAL_INSTRUCTION,
+                                     TrapFrame->Eip,
+                                     TrapFrame);
+        }
+        
+        /* Go to APC level */
+        OldIrql = KfRaiseIrql(APC_LEVEL);
+        _enable();
+        
+        /* Check for BOP */
+        if (!VdmDispatchBop(TrapFrame))
+        {
+            /* Should only happen in VDM mode */
+            UNIMPLEMENTED;
+            while (TRUE);   
+        }
+        
+        /* Bring IRQL back */
+        KfLowerIrql(OldIrql);
+        _disable();
+        
+        /* Do a quick V86 exit if possible */
+        if (__builtin_expect(TrapFrame->EFlags & EFLAGS_V86_MASK, 1)) KiExitV86Trap(TrapFrame);
+        
+        /* Exit trap the slow way */
+        KiEoiHelper(TrapFrame);
+    }
+
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
-    
-    /* Check for VDM trap */
-    ASSERT((KiVdmTrap(TrapFrame)) == FALSE);
     
     /* Enable interrupts */
     Instruction = (PUCHAR)TrapFrame->Eip;
@@ -1557,7 +1597,7 @@ KiTrap(KiTrap01,         KI_PUSH_FAKE_ERROR_CODE);
 KiTrap(KiTrap03,         KI_PUSH_FAKE_ERROR_CODE);
 KiTrap(KiTrap04,         KI_PUSH_FAKE_ERROR_CODE);
 KiTrap(KiTrap05,         KI_PUSH_FAKE_ERROR_CODE);
-KiTrap(KiTrap06,         KI_PUSH_FAKE_ERROR_CODE);
+KiTrap(KiTrap06,         KI_PUSH_FAKE_ERROR_CODE | KI_FAST_V86_TRAP);
 KiTrap(KiTrap07,         KI_PUSH_FAKE_ERROR_CODE);
 KiTrap(KiTrap08,         0);
 KiTrap(KiTrap09,         KI_PUSH_FAKE_ERROR_CODE);
