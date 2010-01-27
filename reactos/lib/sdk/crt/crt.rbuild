@@ -161,13 +161,13 @@
 			<file>jn_yn.c</file>-->
 		</if>
 		<if property="ARCH" value="amd64">
+			<file>cos.c</file>
 			<directory name="amd64">
 				<file>alldiv.S</file>
 				<file>atan.S</file>
 				<file>atan2.S</file>
 				<file>ceil.S</file>
 				<file>ceilf.S</file>
-				<file>cos.S</file>
 				<file>exp.S</file>
 				<file>fabs.S</file>
 				<file>floor.S</file>

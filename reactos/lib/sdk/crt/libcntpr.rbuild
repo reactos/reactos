@@ -64,7 +64,6 @@
 				<file>atan.S</file>
 				<file>atan2.S</file>
 				<file>ceil.S</file>
-				<file>cos.S</file>
 				<file>exp.S</file>
 				<file>fabs.S</file>
 				<file>floor.S</file>
