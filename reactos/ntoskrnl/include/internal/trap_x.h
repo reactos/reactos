@@ -190,7 +190,7 @@ KiUserTrap(IN PKTRAP_FRAME TrapFrame)
 //
 VOID
 FORCEINLINE
-DECLSPEC_NORETURN
+/* Do not mark this as DECLSPEC_NORETURN because possibly executing code follows it! */
 KiSystemCallReturn(IN PKTRAP_FRAME TrapFrame)
 {
     /* Restore nonvolatiles, EAX, and do a "jump" back to the kernel caller */
@@ -205,6 +205,7 @@ KiSystemCallReturn(IN PKTRAP_FRAME TrapFrame)
         "movl %c[e](%%esp), %%edx\n"
         "addl $%c[v],%%esp\n" /* A WHOLE *KERNEL* frame since we're not IRET'ing */
         "jmp *%%edx\n"
+        ".globl _KiSystemCallExit2\n_KiSystemCallExit2:\n"
         :
         : "r"(TrapFrame),
           [b] "i"(KTRAP_FRAME_EBX),
@@ -216,7 +217,6 @@ KiSystemCallReturn(IN PKTRAP_FRAME TrapFrame)
           [v] "i"(KTRAP_FRAME_ESP)
         : "%esp"
     );
-    UNREACHABLE;
 }
 
 VOID
@@ -227,6 +227,7 @@ KiSystemCallTrapReturn(IN PKTRAP_FRAME TrapFrame)
     /* Regular interrupt exit, but we only restore EAX as a volatile */
     __asm__ __volatile__
     (
+        ".globl _KiSystemCallExit\n_KiSystemCallExit:\n"
         "movl %0, %%esp\n"
         "movl %c[b](%%esp), %%ebx\n"
         "movl %c[s](%%esp), %%esi\n"
@@ -405,6 +406,29 @@ KiIssueBop(VOID)
     asm volatile(".byte 0xC4\n.byte 0xC4\n");
 }
 
+VOID
+FORCEINLINE
+KiUserSystemCall(IN PKTRAP_FRAME TrapFrame)
+{
+    /*
+     * Kernel call or user call?
+     *
+     * This decision is made in inlined assembly because we need to patch
+     * the relative offset of the user-mode jump to point to the SYSEXIT
+     * routine if the CPU supports it. The only way to guarantee that a
+     * relative jnz/jz instruction is generated is to force it with the
+     * inline assembler.
+     */
+    asm volatile
+    (
+        "test $1, %0\n" /* MODE_MASK */
+        ".globl _KiSystemCallExitBranch\n_KiSystemCallExitBranch:\n"
+        "jnz _KiSystemCallExit\n"
+        :
+        : "r"(TrapFrame->SegCs)
+    );
+}
+        
 //
 // Generic Exit Routine
 //
@@ -502,43 +526,35 @@ KiExitTrap(IN PKTRAP_FRAME TrapFrame,
     /* Check for system call -- a system call skips volatiles! */
     if (__builtin_expect(SkipBits.SkipVolatiles, 0)) /* More INTs than SYSCALLs */
     {
-        /* Kernel call or user call? */
-        if (__builtin_expect(KiUserTrap(TrapFrame), 1)) /* More Ring 3 than 0 */
-        {
-            /* Is SYSENTER supported and/or enabled, or are we stepping code? */
-            if (__builtin_expect((KiFastSystemCallDisable) ||
-                                 (TrapFrame->EFlags & EFLAGS_TF), 0))
-            {
-                /* Exit normally */
-                KiSystemCallTrapReturn(TrapFrame);
-            }
-            else
-            {
-                /* Restore user FS */
-                Ke386SetFs(KGDT_R3_TEB | RPL_MASK);
-                
-                /* Remove interrupt flag */
-                TrapFrame->EFlags &= ~EFLAGS_INTERRUPT_MASK;
-                __writeeflags(TrapFrame->EFlags);
-                
-                /* Exit through SYSEXIT */
-                KiSystemCallSysExitReturn(TrapFrame);
-            }
-        }
-        else
-        {
-            /* Restore EFLags */
-            __writeeflags(TrapFrame->EFlags);
+        /* User or kernel call? */
+        KiUserSystemCall(TrapFrame);
+        
+        /* Restore EFLags */
+        __writeeflags(TrapFrame->EFlags);
             
-            /* Call is kernel, so do a jump back since this wasn't a real INT */
-            KiSystemCallReturn(TrapFrame);
-        }  
+        /* Call is kernel, so do a jump back since this wasn't a real INT */
+        KiSystemCallReturn(TrapFrame);
+
+        /* If we got here, this is SYSEXIT: are we stepping code? */
+        if (!(TrapFrame->EFlags & EFLAGS_TF))
+        {
+            /* Restore user FS */
+            Ke386SetFs(KGDT_R3_TEB | RPL_MASK);
+
+            /* Remove interrupt flag */
+            TrapFrame->EFlags &= ~EFLAGS_INTERRUPT_MASK;
+            __writeeflags(TrapFrame->EFlags);
+
+            /* Exit through SYSEXIT */
+            KiSystemCallSysExitReturn(TrapFrame);
+        }
+        
+        /* Exit through IRETD, either due to debugging or due to lack of SYSEXIT */
+        KiSystemCallTrapReturn(TrapFrame);
     }
-    else
-    {
-        /* Return from interrupt */
-        KiTrapReturn(TrapFrame);
-    }
+    
+    /* Return from interrupt */
+    KiTrapReturn(TrapFrame);
 }
 
 //

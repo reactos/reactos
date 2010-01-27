@@ -45,6 +45,15 @@ KAFFINITY KeActiveProcessors = 1;
 BOOLEAN KiI386PentiumLockErrataPresent;
 BOOLEAN KiSMTProcessorsPresent;
 
+/* The distance between SYSEXIT and IRETD return modes */
+UCHAR KiSystemCallExitAdjust;
+
+/* The offset that was applied -- either 0 or the value above */
+UCHAR KiSystemCallExitAdjusted;
+
+/* Whether the adjustment was already done once */
+BOOLEAN KiFastCallCopyDoneOnce;
+
 /* Flush data */
 volatile LONG KiTbFlushTimeStamp;
 
@@ -801,16 +810,92 @@ KiLoadFastSyscallMachineSpecificRegisters(IN ULONG_PTR Context)
 
 VOID
 NTAPI
+KiDisableFastSyscallReturn(VOID)
+{
+    /* Was it applied? */
+    if (KiSystemCallExitAdjusted)
+    {        
+        /* Restore the original value */
+        KiSystemCallExitBranch[1] = KiSystemCallExitBranch[1] - KiSystemCallExitAdjusted;
+                
+        /* It's not adjusted anymore */
+        KiSystemCallExitAdjusted = FALSE;
+    }
+}
+
+VOID
+NTAPI
+KiEnableFastSyscallReturn(VOID)
+{
+    /* Check if the patch has already been done */
+    if ((KiSystemCallExitAdjusted == KiSystemCallExitAdjust) &&
+        (KiFastCallCopyDoneOnce))
+    {
+        DPRINT1("SYSEXIT Code Patch was already done!\n");
+        return;
+    }
+    
+    /* Make sure the offset is within the distance of a Jxx SHORT */
+    if ((KiSystemCallExitBranch[1] - KiSystemCallExitAdjust) < 0x80)
+    {
+        /* Remove any existing code patch */
+        DPRINT1("Correct SHORT size found\n");
+        KiDisableFastSyscallReturn();
+        
+        /* We should have a JNZ there */
+        ASSERT(KiSystemCallExitBranch[0] == 0x75);
+
+        /* Do the patch */        
+        DPRINT1("Current jump offset: %lx\n", KiSystemCallExitBranch[1]);
+        KiSystemCallExitAdjusted = KiSystemCallExitAdjust;
+        KiSystemCallExitBranch[1] -= KiSystemCallExitAdjusted;
+        DPRINT1("New jump offset: %lx\n", KiSystemCallExitBranch[1]);
+        
+        /* Remember that we've done it */
+        KiFastCallCopyDoneOnce = TRUE;
+    }
+    else
+    {
+        /* This shouldn't happen unless we've messed the macros up */
+        DPRINT1("Your compiled kernel is broken!\n");
+        DbgBreakPoint();
+    }
+}
+
+VOID
+NTAPI
 KiRestoreFastSyscallReturnState(VOID)
 {
-    /* FIXME: NT has support for SYSCALL, IA64-SYSENTER, etc. */
-
     /* Check if the CPU Supports fast system call */
+    if (KeFeatureBits & KF_FAST_SYSCALL)
+    {
+        /* Check if it has been disabled */
+        if (!KiFastSystemCallDisable)
+        {
+            /* KiSystemCallExit2 should come BEFORE KiSystemCallExit */
+            DPRINT1("Exit2: %p Exit1: %p\n", KiSystemCallExit2, KiSystemCallExit);
+            ASSERT(KiSystemCallExit2 < KiSystemCallExit);
+            
+            /* It's enabled, so we'll have to do a code patch */
+            KiSystemCallExitAdjust = KiSystemCallExit - KiSystemCallExit2;
+            DPRINT1("SYSENTER Capable Machine. Jump Offset Delta: %lx\n", KiSystemCallExitAdjust);
+        }
+        else
+        {
+            /* Disable fast system call */
+            KeFeatureBits &= ~KF_FAST_SYSCALL;
+        }
+    }
+    
+    /* Now check if all CPUs support fast system call, and the registry allows it */
     if (KeFeatureBits & KF_FAST_SYSCALL)
     {
         /* Do an IPI to enable it */
         KeIpiGenericCall(KiLoadFastSyscallMachineSpecificRegisters, 0);
     }
+    
+    /* Perform the code patch that is required */
+    KiEnableFastSyscallReturn();
 }
 
 ULONG_PTR

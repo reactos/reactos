@@ -456,6 +456,9 @@ extern VOID NTAPI ExpInterlockedPopEntrySListFault(VOID);
 extern VOID __cdecl CopyParams(VOID);
 extern VOID __cdecl ReadBatch(VOID);
 extern VOID __cdecl FrRestore(VOID);
+extern CHAR KiSystemCallExitBranch[];
+extern CHAR KiSystemCallExit[];
+extern CHAR KiSystemCallExit2[];
 
 //
 // Trap Macros
