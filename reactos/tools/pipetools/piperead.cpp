@@ -8,9 +8,12 @@
  
 
 #define	WIN32_LEAN_AND_MEAN
+#include <errno.h>
 #include <windows.h>
 #include <stdio.h>
 
+#define PIPEREAD_VERSION   "0.3"
+#define PIPEREAD_NOPIPE		(-101)
 
  // This definition currently missing in MinGW.
 #ifndef	FILE_FLAG_FIRST_PIPE_INSTANCE
@@ -42,7 +45,6 @@ static int pipeServer(char *path)
 			DWORD error = GetLastError();
 
 			if (error == ERROR_PIPE_LISTENING) {
-				fprintf(stderr,"INVALID_HANDLE_VALUE\n");
 				Sleep(1000);
 			} else if (error == ERROR_BROKEN_PIPE) {
 				CloseHandle(hPipe);
@@ -71,6 +73,7 @@ static int pipeServer(char *path)
 	return 0;
 }
 
+
 static int pipeClient(char *path)
 {
    HANDLE hPipe=INVALID_HANDLE_VALUE; 
@@ -96,9 +99,18 @@ static int pipeClient(char *path)
          break; 
  
       // Exit if an error other than ERROR_PIPE_BUSY occurs. 
-      if (GetLastError() != ERROR_PIPE_BUSY) {
-         fprintf(stderr,"Could not open pipe. Error=%lu\n", GetLastError() ); 
-         res = -1;
+	  Err = GetLastError();
+      if (Err != ERROR_PIPE_BUSY) {
+		 if (ERROR_FILE_NOT_FOUND == Err) 
+		 {
+			 res = PIPEREAD_NOPIPE;
+			 return res;
+		 }
+		 else
+		 {
+			fprintf(stderr,"Could not open pipe %s. Error=%lu\n", path, Err ); 
+			res = -1;
+		 }
          break; 
       }
  
@@ -134,7 +146,6 @@ static int pipeClient(char *path)
 
    if ( ! fSuccess) {
       fprintf(stderr, "ReadFile from pipe failed. Error=%lu\n", GetLastError() );
-      res = -5;
    }
 
    if (hPipe != INVALID_HANDLE_VALUE)
@@ -144,8 +155,29 @@ static int pipeClient(char *path)
  
 }
 
+static int fileClient(const char *path)
+{
+   int res = 0;
+   FILE *fin;
+   int c;
+
+   setvbuf(stdout, NULL, _IONBF, 0);
+   if (!(fin = fopen(path, "r"))) {
+         fprintf(stderr,"Could not fopen %s (%s)\n", path, strerror(errno) ); 
+		 return -1;
+   }
+
+   while ((c = fgetc(fin)) != EOF) {
+	   fputc(c, stdout);
+   }
+
+   fclose(fin);
+   return res;
+}
+
 void usage(void)
 {
+    fprintf(stderr, "piperead " PIPEREAD_VERSION "\n\n");
 	fprintf(stderr, "Usage: piperead [-c] <named pipe>\n");
 	fprintf(stderr, "-c means Client mode\n");
 	fprintf(stderr, "Example: piperead -c \\\\.\\pipe\\kdbg | log2lines -c\n\n");
@@ -193,6 +225,9 @@ int main(int argc, char** argv)
 
 	if ( clientMode ) {
 		res = pipeClient(path);
+		if (res == PIPEREAD_NOPIPE) {
+			res = fileClient(pipe_name);
+		}
 	} else {
 		res = pipeServer(path);
 	}
