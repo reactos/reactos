@@ -831,7 +831,6 @@ KiEnableFastSyscallReturn(VOID)
     if ((KiSystemCallExitAdjusted == KiSystemCallExitAdjust) &&
         (KiFastCallCopyDoneOnce))
     {
-        DPRINT1("SYSEXIT Code Patch was already done!\n");
         return;
     }
     
@@ -839,17 +838,14 @@ KiEnableFastSyscallReturn(VOID)
     if ((KiSystemCallExitBranch[1] - KiSystemCallExitAdjust) < 0x80)
     {
         /* Remove any existing code patch */
-        DPRINT1("Correct SHORT size found\n");
         KiDisableFastSyscallReturn();
         
         /* We should have a JNZ there */
         ASSERT(KiSystemCallExitBranch[0] == 0x75);
 
         /* Do the patch */        
-        DPRINT1("Current jump offset: %lx\n", KiSystemCallExitBranch[1]);
         KiSystemCallExitAdjusted = KiSystemCallExitAdjust;
         KiSystemCallExitBranch[1] -= KiSystemCallExitAdjusted;
-        DPRINT1("New jump offset: %lx\n", KiSystemCallExitBranch[1]);
         
         /* Remember that we've done it */
         KiFastCallCopyDoneOnce = TRUE;
@@ -873,12 +869,10 @@ KiRestoreFastSyscallReturnState(VOID)
         if (!KiFastSystemCallDisable)
         {
             /* KiSystemCallExit2 should come BEFORE KiSystemCallExit */
-            DPRINT1("Exit2: %p Exit1: %p\n", KiSystemCallExit2, KiSystemCallExit);
             ASSERT(KiSystemCallExit2 < KiSystemCallExit);
             
             /* It's enabled, so we'll have to do a code patch */
             KiSystemCallExitAdjust = KiSystemCallExit - KiSystemCallExit2;
-            DPRINT1("SYSENTER Capable Machine. Jump Offset Delta: %lx\n", KiSystemCallExitAdjust);
         }
         else
         {
