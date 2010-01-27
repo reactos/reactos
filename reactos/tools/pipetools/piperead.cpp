@@ -2,13 +2,10 @@
 // piperead.cpp
 //
 // Martin Fuchs, 30.11.2003
-//
-
-//
-// Invoke as:	"piperead [pipe_name]",
-// for example:	"piperead com_1"
-//
-
+// 
+// Jan Roeloffzen, 26.1.2010
+// Pipe client, based on msdn example
+ 
 
 #define	WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -21,24 +18,15 @@
 #endif
 
 
+#define	BUFSIZE 1024
+
 static void print_error(DWORD win32_error)
 {
 	fprintf(stderr, "WIN32 error %lu\n", win32_error);
 }
 
-
-int main(int argc, char** argv)
+static int pipeServer(char *path)
 {
-	char path[MAX_PATH];
-	const char* pipe_name;
-
-	if (argc > 1)
-		pipe_name = *++argv;
-	else
-		pipe_name = "com_1";
-
-	sprintf(path, "\\\\.\\pipe\\%s", pipe_name);
-
 	HANDLE hPipe = CreateNamedPipe(path, PIPE_ACCESS_DUPLEX|FILE_FLAG_FIRST_PIPE_INSTANCE, PIPE_WAIT|PIPE_TYPE_BYTE, 1, 4096, 4096, 30000, NULL);
 
 	if (hPipe == INVALID_HANDLE_VALUE) {
@@ -48,23 +36,26 @@ int main(int argc, char** argv)
 
 	for(;;) {
 		DWORD read;
-		BYTE buffer[1024];
+		BYTE buffer[BUFSIZE];
 
 		if (!ReadFile(hPipe, buffer, sizeof(buffer), &read, NULL)) {
 			DWORD error = GetLastError();
 
-			if (error == ERROR_PIPE_LISTENING)
+			if (error == ERROR_PIPE_LISTENING) {
+				fprintf(stderr,"INVALID_HANDLE_VALUE\n");
 				Sleep(1000);
-			else if (error == ERROR_BROKEN_PIPE) {
+			} else if (error == ERROR_BROKEN_PIPE) {
 				CloseHandle(hPipe);
 
 				hPipe = CreateNamedPipe(path, PIPE_ACCESS_DUPLEX|FILE_FLAG_FIRST_PIPE_INSTANCE, PIPE_WAIT|PIPE_TYPE_BYTE, 1, 4096, 4096, 30000, NULL);
 
 				if (hPipe == INVALID_HANDLE_VALUE) {
+					fprintf(stderr,"INVALID_HANDLE_VALUE\n");
 					print_error(GetLastError());
 					return 1;
 				}
 			} else {
+				fprintf(stderr,"error %lu\n",error);
 				print_error(error);
 				break;
 			}
@@ -78,4 +69,133 @@ int main(int argc, char** argv)
 		print_error(GetLastError());
 
 	return 0;
+}
+
+static int pipeClient(char *path)
+{
+   HANDLE hPipe=INVALID_HANDLE_VALUE; 
+   TCHAR  chBuf[BUFSIZE]; 
+   BOOL   fSuccess = FALSE; 
+   DWORD  cbRead; 
+   DWORD  Err; 
+   int res = 0;
+
+   setvbuf(stdout, NULL, _IONBF, 0);
+   while (1) { 
+      hPipe = CreateFile( 
+         path,			// pipe name 
+         GENERIC_READ, 
+         0,              // no sharing 
+         NULL,           // default security attributes
+         OPEN_EXISTING,  // opens existing pipe 
+         0,              // default attributes 
+         NULL);          // no template file 
+ 
+	  // Break if the pipe handle is valid. 
+      if (hPipe != INVALID_HANDLE_VALUE) 
+         break; 
+ 
+      // Exit if an error other than ERROR_PIPE_BUSY occurs. 
+      if (GetLastError() != ERROR_PIPE_BUSY) {
+         fprintf(stderr,"Could not open pipe. Error=%lu\n", GetLastError() ); 
+         res = -1;
+         break; 
+      }
+ 
+      // All pipe instances are busy, so wait for 20 seconds. 
+      if ( ! WaitNamedPipe(path, 20000)) { 
+         fprintf(stderr,"Could not open pipe: 20 second wait timed out."); 
+         res = -2;
+         break; 
+     } 
+   } 
+ 
+   if (!res) do { 
+      fSuccess = ReadFile( 
+         hPipe,    // pipe handle 
+         chBuf,    // buffer to receive reply 
+         BUFSIZE,  // size of buffer 
+         &cbRead,  // number of bytes read 
+         NULL);    // not overlapped 
+ 
+	  if ( ! fSuccess ) {
+		  Err = GetLastError();
+		  if ( Err == ERROR_MORE_DATA ) {
+			fSuccess = TRUE;
+		  } else {
+			fprintf(stderr, "ReadFile: Error %lu \n", Err );
+			res = -9;
+			break;
+		  }
+	  }
+ 
+      fwrite(chBuf,1,cbRead,stdout); 
+   } while ( fSuccess); 
+
+   if ( ! fSuccess) {
+      fprintf(stderr, "ReadFile from pipe failed. Error=%lu\n", GetLastError() );
+      res = -5;
+   }
+
+   if (hPipe != INVALID_HANDLE_VALUE)
+	   CloseHandle(hPipe); 
+
+   return res;
+ 
+}
+
+void usage(void)
+{
+	fprintf(stderr, "Usage: piperead [-c] <named pipe>\n");
+	fprintf(stderr, "-c means Client mode\n");
+	fprintf(stderr, "Example: piperead -c \\\\.\\pipe\\kdbg | log2lines -c\n\n");
+}
+
+int main(int argc, char** argv)
+{
+	char path[MAX_PATH];
+	const char* pipe_name;
+	const char* clientMode;
+	int res = 0;
+
+	pipe_name = "com_1";
+	clientMode = NULL;
+	switch (argc) {
+	case 3:
+		clientMode = *++argv;
+		if (strcmp(clientMode,"-c") != 0) {
+			clientMode = NULL;
+			fprintf(stderr,"Invalid option: %s\n", clientMode);
+			res = -6;
+		}
+		//fall through
+	case 2:
+		pipe_name = *++argv;
+		if (strcmp(pipe_name,"-h") == 0) {
+			res = -7;
+		}
+		break;
+	default:
+		res = -8;
+		break;
+	}
+	if (res) {
+		usage();
+		return res;
+	}
+
+	if ( pipe_name[0] == '\\' ) {
+		//assume caller specified full path
+		sprintf(path, "%s", pipe_name);
+	} else {
+		sprintf(path, "\\\\.\\pipe\\%s", pipe_name);
+	}
+
+	if ( clientMode ) {
+		res = pipeClient(path);
+	} else {
+		res = pipeServer(path);
+	}
+
+	return res;
 }

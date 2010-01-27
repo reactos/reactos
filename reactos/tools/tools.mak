@@ -44,6 +44,7 @@ include tools/bin2c.mak
 include tools/buildno/buildno.mak
 include tools/gendib/gendib.mak
 include tools/rsym/log2lines.mak
+include tools/pipetools/pipetools.mak
 include tools/nci/nci.mak
 ifeq ($(ARCH),powerpc)
 include tools/ofw_interface/ofw_interface.mak
