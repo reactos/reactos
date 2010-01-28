@@ -967,14 +967,6 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame,
                                  TrapFrame);
     }
 
-    /* Check for custom VDM trap handler */
-    if (KeGetPcr()->VdmAlert)
-    {
-        /* Not implemented */
-        UNIMPLEMENTED;
-        while (TRUE);
-    }
-    
     /* 
      * Check for a fault during checking of the user instruction.
      *
@@ -1085,14 +1077,6 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
 
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
-
-    /* Check for custom VDM trap handler */
-    if (KeGetPcr()->VdmAlert)
-    {
-        /* Not implemented */
-        UNIMPLEMENTED;
-        while (TRUE);
-    }
 
     /* Check if this is the base frame */
     Thread = KeGetCurrentThread();
