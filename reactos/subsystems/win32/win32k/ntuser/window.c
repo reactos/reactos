@@ -478,6 +478,7 @@ static LRESULT co_UserFreeWindow(PWINDOW_OBJECT Window,
       Window->SystemMenu = (HMENU)0;
    }
 
+   DceFreeWindowDCE(Window);    /* Always do this to catch orphaned DCs */
 #if 0 /* FIXME */
 
    WINPROC_FreeProc(Window->winproc, WIN_PROC_WINDOW);

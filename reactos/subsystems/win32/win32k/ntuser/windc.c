@@ -19,9 +19,10 @@ int FASTCALL CLIPPING_UpdateGCRegion(DC* Dc);
 /* GLOBALS *******************************************************************/
 
 /* NOTE - I think we should store this per window station (including gdi objects) */
+/* Answer: No, use the DCE pMonitor to compare with! */
 
-static PDCE FirstDce = NULL;
-//static INT DCECount = 0; // Count of DCE in system.
+static LIST_ENTRY LEDce;
+static INT DCECount = 0; // Count of DCE in system.
 
 #define DCX_CACHECOMPAREMASK (DCX_CLIPSIBLINGS | DCX_CLIPCHILDREN | \
                               DCX_NORESETATTRS | DCX_LOCKWINDOWUPDATE | \
@@ -51,6 +52,7 @@ DceCreateDisplayDC(VOID)
       defaultDCstate->pdcattr = &defaultDCstate->dcattr;
       DC_vCopyState(dc, defaultDCstate, TRUE);
       DC_UnlockDc( dc );
+      InitializeListHead(&LEDce);
   }
   return hDC;
 }
@@ -90,7 +92,8 @@ DceAllocDCE(PWINDOW_OBJECT Window OPTIONAL, DCE_TYPE Type)
       ExFreePoolWithTag(pDce, TAG_PDCE);
       return NULL;
   }
-
+  DCECount++;
+  DPRINT("Alloc DCE's! %d\n",DCECount);
   pDce->hwndCurrent = (Window ? Window->hSelf : NULL);
   pDce->pwndOrg  = Wnd;
   pDce->pwndClip = Wnd;
@@ -99,15 +102,7 @@ DceAllocDCE(PWINDOW_OBJECT Window OPTIONAL, DCE_TYPE Type)
   pDce->hrgnSavedVis = NULL;
   pDce->ppiOwner = NULL;
 
-  KeEnterCriticalRegion();
-  if (FirstDce == NULL)
-  {
-     FirstDce = pDce;
-     InitializeListHead(&FirstDce->List);
-  }
-  else
-     InsertTailList(&FirstDce->List, &pDce->List);
-  KeLeaveCriticalRegion();
+  InsertTailList(&LEDce, &pDce->List);
 
   DCU_SetDcUndeletable(pDce->hDC);
 
@@ -204,7 +199,6 @@ DceReleaseDC(DCE* dce, BOOL EndPaint)
    }
 
    /* restore previous visible region */
-
    if ((dce->DCXFlags & (DCX_INTERSECTRGN | DCX_EXCLUDERGN)) &&
          ((dce->DCXFlags & DCX_CACHE) || EndPaint))
    {
@@ -213,30 +207,48 @@ DceReleaseDC(DCE* dce, BOOL EndPaint)
 
    if (dce->DCXFlags & DCX_CACHE)
    {
-     if (!(dce->DCXFlags & DCX_NORESETATTRS))
-     {
-       /* make the DC clean so that SetDCState doesn't try to update the vis rgn */
-       IntGdiSetHookFlags(dce->hDC, DCHF_VALIDATEVISRGN);
+      if (!(dce->DCXFlags & DCX_NORESETATTRS))
+      {
+         /* make the DC clean so that SetDCState doesn't try to update the vis rgn */
+         IntGdiSetHookFlags(dce->hDC, DCHF_VALIDATEVISRGN);
 
-       // Clean the DC
-       if (!IntGdiCleanDC(dce->hDC)) return 0;
+         // Clean the DC
+         if (!IntGdiCleanDC(dce->hDC)) return 0;
 
-       if (dce->DCXFlags & DCX_DCEDIRTY)
-       {
-         /* don't keep around invalidated entries
-          * because SetDCState() disables hVisRgn updates
-          * by removing dirty bit. */
-         dce->hwndCurrent = 0;
-         dce->DCXFlags &= DCX_CACHE;
-         dce->DCXFlags |= DCX_DCEEMPTY;
-       }
-     }
-     dce->DCXFlags &= ~DCX_DCEBUSY;
-     DPRINT("Exit!!!!! DCX_CACHE!!!!!!   hDC-> %x \n", dce->hDC);
-     if (!IntGdiSetDCOwnerEx( dce->hDC, GDI_OBJ_HMGR_NONE, FALSE))
-        return 0;
-     dce->ptiOwner = NULL; // Reset ownership.
-     dce->ppiOwner = NULL;
+         if (dce->DCXFlags & DCX_DCEDIRTY)
+         {
+           /* don't keep around invalidated entries
+            * because SetDCState() disables hVisRgn updates
+            * by removing dirty bit. */
+           dce->hwndCurrent = 0;
+           dce->DCXFlags &= DCX_CACHE;
+           dce->DCXFlags |= DCX_DCEEMPTY;
+         }
+      }
+      dce->DCXFlags &= ~DCX_DCEBUSY;
+      DPRINT("Exit!!!!! DCX_CACHE!!!!!!   hDC-> %x \n", dce->hDC);
+      if (!IntGdiSetDCOwnerEx( dce->hDC, GDI_OBJ_HMGR_NONE, FALSE))
+         return 0;
+      dce->ptiOwner = NULL; // Reset ownership.
+      dce->ppiOwner = NULL;
+
+#if 0 // Need to research and fix before this is a "growing" issue.
+      if (++DCECache > 32)
+      {
+         pLE = LEDce.Flink;
+         pDCE = CONTAINING_RECORD(pLE, DCE, List);
+         do
+         {
+            if (!(pDCE->DCXFlags & DCX_DCEBUSY))
+            {  /* Free the unused cache DCEs. */
+               pDCE = DceFreeDCE(pDCE, TRUE);
+               if (!pDCE) break;
+               continue;
+            }
+         }
+         while (pLE != &LEDce );
+      }
+#endif      
    }
    return 1; // Released!
 }
@@ -335,6 +347,7 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
    PWND Wnd = NULL;
    HDC hDC = NULL;
    PPROCESSINFO ppi;
+   PLIST_ENTRY pLE;
 
    if (NULL == Window)
    {
@@ -445,7 +458,8 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
       DCE* DceEmpty = NULL;
       DCE* DceUnused = NULL;
       KeEnterCriticalRegion();
-      Dce = FirstDce;
+      pLE = LEDce.Flink;
+      Dce = CONTAINING_RECORD(pLE, DCE, List);
       do
       {
 // The reason for this you may ask?
@@ -471,8 +485,10 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
                break;
             }
          }
-        Dce = (PDCE)Dce->List.Flink;
-      } while (Dce != FirstDce);
+         pLE = Dce->List.Flink;
+         Dce = CONTAINING_RECORD(pLE, DCE, List);
+      }
+      while (pLE != &LEDce);
       KeLeaveCriticalRegion();
 
       Dce = (DceEmpty == NULL) ? DceUnused : DceEmpty;
@@ -488,14 +504,17 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
    else // If we are here, we are POWNED or having CLASS.
    {
       KeEnterCriticalRegion();
-      Dce = FirstDce;
+      pLE = LEDce.Flink;
+      Dce = CONTAINING_RECORD(pLE, DCE, List);
       do
       {   // Check for Window handle than HDC match for CLASS.
           if ((Dce->hwndCurrent == Window->hSelf) ||
               (Dce->hDC == hDC))
              break;
-          Dce = (PDCE)Dce->List.Flink;
-      } while (Dce != FirstDce);
+          pLE = Dce->List.Flink;
+          Dce = CONTAINING_RECORD(pLE, DCE, List);
+      }
+      while (pLE != &LEDce);
       KeLeaveCriticalRegion();
 
       if ( (Flags & (DCX_INTERSECTRGN|DCX_EXCLUDERGN)) &&
@@ -526,11 +545,10 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
         http://www.reactos.org/archives/public/ros-dev/2008-July/010498.html
         http://www.reactos.org/archives/public/ros-dev/2008-July/010499.html
     */
-   if ((Dce != FirstDce))
+   if (pLE != &LEDce)
    {
       RemoveEntryList(&Dce->List);
-      InsertHeadList(&FirstDce->List, &Dce->List);
-      FirstDce = Dce;
+      InsertHeadList(&LEDce, &Dce->List);
    }
 
    /* Introduced in rev 6691 and modified later. */
@@ -595,15 +613,13 @@ PDCE FASTCALL
 DceFreeDCE(PDCE pdce, BOOLEAN Force)
 {
   DCE *ret;
+  PLIST_ENTRY pLE;
   BOOL Hit = FALSE;
 
   if (NULL == pdce) return NULL;
 
-  ret = (PDCE) pdce->List.Flink;
-
-#if 0 /* FIXME */
-  SetDCHook(pdce->hDC, NULL, 0L);
-#endif
+  pLE = pdce->List.Flink;
+  ret = CONTAINING_RECORD(pLE, DCE, List);
 
   if (Force && !GDIOBJ_OwnedByCurrentProcess(pdce->hDC))
   {
@@ -625,6 +641,7 @@ DceFreeDCE(PDCE pdce, BOOLEAN Force)
   if (pdce->hrgnClip && ! (pdce->DCXFlags & DCX_KEEPCLIPRGN))
   {
       REGION_FreeRgnByHandle(pdce->hrgnClip);
+      pdce->hrgnClip = NULL;
   }
 
   RemoveEntryList(&pdce->List);
@@ -632,47 +649,158 @@ DceFreeDCE(PDCE pdce, BOOLEAN Force)
   if (IsListEmpty(&pdce->List))
   {
       DPRINT1("List is Empty! DCE! -> %x\n" , pdce);
-      FirstDce = NULL;
-      ret = NULL;
+      return NULL;
   }
 
   ExFreePoolWithTag(pdce, TAG_PDCE);
 
+  DCECount--;
+  DPRINT("Freed DCE's! %d \n", DCECount);
+
   return ret;
+}
+
+/***********************************************************************
+ *           DceFreeWindowDCE
+ *
+ * Remove owned DCE and reset unreleased cache DCEs.
+ */
+void FASTCALL
+DceFreeWindowDCE(PWINDOW_OBJECT Window)
+{
+  PDCE pDCE;
+  PLIST_ENTRY pLE;
+
+  if (DCECount <= 0)
+  {
+     DPRINT1("No Entry!\n");
+     return;
+  }
+
+  pLE = LEDce.Flink;
+  pDCE = CONTAINING_RECORD(pLE, DCE, List);
+  do
+  {
+     if (!pDCE) break;
+     if (IsListEmpty(&pDCE->List)) break;
+     if (pDCE->hwndCurrent == Window->hSelf)
+     {
+        if (!(pDCE->DCXFlags & DCX_CACHE)) /* owned or Class DCE*/
+        {
+           if (Window->Wnd->pcls->style & CS_CLASSDC) /* Test Class first */
+           {
+              if (pDCE->DCXFlags & (DCX_INTERSECTRGN | DCX_EXCLUDERGN)) /* Class DCE*/
+                 DceDeleteClipRgn(pDCE);
+              // Update and reset Vis Rgn and clear the dirty bit.
+              // Should release VisRgn than reset it to default.
+              DceUpdateVisRgn(pDCE, Window, pDCE->DCXFlags);
+              pDCE->DCXFlags = DCX_DCEEMPTY|DCX_CACHE;
+              pDCE->hwndCurrent = 0;
+
+              DPRINT("POWNED DCE going Cheap!! DCX_CACHE!! hDC-> %x \n", pDCE->hDC);
+              if (!IntGdiSetDCOwnerEx( pDCE->hDC, GDI_OBJ_HMGR_NONE, FALSE))
+                  return;
+              /* Do not change owner so thread can clean up! */
+           }
+           else if (Window->Wnd->pcls->style & CS_OWNDC) /* owned DCE*/
+           {
+              pDCE = DceFreeDCE(pDCE, FALSE);
+              if (!pDCE) break;
+              continue;
+           }
+           else
+           {
+              ASSERT(FALSE);
+           }
+        }
+        else
+        {
+           if (pDCE->DCXFlags & DCX_DCEBUSY) /* shared cache DCE */
+           {
+              /* FIXME: AFAICS we are doing the right thing here so
+               * this should be a DPRINT. But this is best left as an ERR
+               * because the 'application error' is likely to come from
+               * another part of Wine (i.e. it's our fault after all).
+               * We should change this to DPRINT when ReactOS is more stable
+               * (for 1.0?).
+               */
+              DPRINT1("[%p] GetDC() without ReleaseDC()!\n", Window->hSelf);
+              DceReleaseDC(pDCE, FALSE);
+           }
+           pDCE->DCXFlags |= DCX_DCEEMPTY;
+           pDCE->hwndCurrent = 0;
+        }
+     }
+     pLE = pDCE->List.Flink;
+     pDCE = CONTAINING_RECORD(pLE, DCE, List);
+  }
+  while (pLE != &LEDce);
 }
 
 void FASTCALL
 DceFreeClassDCE(HDC hDC)
 {
-   PDCE pDCE = FirstDce;
-   KeEnterCriticalRegion();
+   PDCE pDCE;
+   PLIST_ENTRY pLE;
+   pLE = LEDce.Flink;
+   pDCE = CONTAINING_RECORD(pLE, DCE, List);
+
    do
    {
        if(!pDCE) break;
        if (pDCE->hDC == hDC)
        {
-          pDCE = DceFreeDCE(pDCE, FALSE);
-          if(!pDCE) break;
+          pDCE = DceFreeDCE(pDCE, TRUE); // Might have gone cheap!
+          if (!pDCE) break;
           continue;
        }
-       pDCE = (PDCE)pDCE->List.Flink;
-   } while (pDCE != FirstDce);
-   KeLeaveCriticalRegion();
+       pLE = pDCE->List.Flink;
+       pDCE = CONTAINING_RECORD(pLE, DCE, List);
+   }
+   while (pLE != &LEDce);
+}
+
+void FASTCALL
+DceFreeThreadDCE(PTHREADINFO pti)
+{
+   PDCE pDCE;
+   PLIST_ENTRY pLE;
+   pLE = LEDce.Flink;
+   pDCE = CONTAINING_RECORD(pLE, DCE, List);
+
+   do
+   {
+       if(!pDCE) break;
+       if (pDCE->ptiOwner == pti)
+       {
+          if (pDCE->DCXFlags & DCX_CACHE)
+          {
+             pDCE = DceFreeDCE(pDCE, TRUE);
+             if (!pDCE) break;
+             continue;
+          }
+       }
+       pLE = pDCE->List.Flink;
+       pDCE = CONTAINING_RECORD(pLE, DCE, List);
+   }
+   while (pLE != &LEDce);
 }
 
 VOID FASTCALL
 DceEmptyCache(VOID)
 {
-   PDCE pDCE = FirstDce;
-   KeEnterCriticalRegion();
+   PDCE pDCE;
+   PLIST_ENTRY pLE;
+   pLE = LEDce.Flink;
+   pDCE = CONTAINING_RECORD(pLE, DCE, List);
+
    do
    {
       if(!pDCE) break;
       pDCE = DceFreeDCE(pDCE, TRUE);
       if(!pDCE) break;
-   } while (pDCE != FirstDce);
-   KeLeaveCriticalRegion();
-   FirstDce = NULL;
+   }
+   while (pLE != &LEDce);
 }
 
 VOID FASTCALL
@@ -683,16 +811,19 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window)
    PWINDOW_OBJECT CurrentWindow;
    INT DeltaX;
    INT DeltaY;
+   PLIST_ENTRY pLE;
 
    if (NULL == Window)
    {
       return;
    }
-   pDCE = FirstDce;
+   pLE = LEDce.Flink;
+   pDCE = CONTAINING_RECORD(pLE, DCE, List);
    if(!pDCE) return; // Another null test!
    do
    {
       if(!pDCE) break;
+      if(pLE == &LEDce) break;
       if (0 == (pDCE->DCXFlags & DCX_DCEEMPTY))
       {
          if (Window->hSelf == pDCE->hwndCurrent)
@@ -704,7 +835,8 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window)
             CurrentWindow = UserGetWindowObject(pDCE->hwndCurrent);
             if (NULL == CurrentWindow)
             {
-               pDCE = (PDCE) pDCE->List.Flink;
+               pLE = pDCE->List.Flink;
+               pDCE = CONTAINING_RECORD(pLE, DCE, List);
                continue;
             }
          }
@@ -712,7 +844,8 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window)
          if (!GDIOBJ_ValidateHandle(pDCE->hDC, GDI_OBJECT_TYPE_DC) ||
              (dc = DC_LockDc(pDCE->hDC)) == NULL)
          {
-            pDCE = (PDCE) pDCE->List.Flink;
+            pLE = pDCE->List.Flink;
+            pDCE = CONTAINING_RECORD(pLE, DCE, List);
             continue;
          }
          if (Window == CurrentWindow || IntIsChildWindow(Window, CurrentWindow))
@@ -751,17 +884,21 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window)
 //            UserDerefObject(CurrentWindow);
          }
       }
-      pDCE =(PDCE) pDCE->List.Flink;
-   } while (pDCE != FirstDce);
+      pLE = pDCE->List.Flink;
+      pDCE = CONTAINING_RECORD(pLE, DCE, List);
+   }
+   while (pLE != &LEDce);
 }
 
 HWND FASTCALL
 IntWindowFromDC(HDC hDc)
 {
   DCE *Dce;
+  PLIST_ENTRY pLE;
   HWND Ret = NULL;
-  KeEnterCriticalRegion();
-  Dce = FirstDce;
+
+  pLE = LEDce.Flink;
+  Dce = CONTAINING_RECORD(pLE, DCE, List);
   do
   {
       if(Dce->hDC == hDc)
@@ -769,9 +906,10 @@ IntWindowFromDC(HDC hDc)
          Ret = Dce->hwndCurrent;
          break;
       }
-      Dce = (PDCE)Dce->List.Flink;
-  } while (Dce != FirstDce);
-  KeLeaveCriticalRegion();
+      pLE = Dce->List.Flink;
+      Dce = CONTAINING_RECORD(pLE, DCE, List);
+  }
+  while (pLE != &LEDce);
   return Ret;
 }
 
@@ -779,12 +917,13 @@ INT FASTCALL
 UserReleaseDC(PWINDOW_OBJECT Window, HDC hDc, BOOL EndPaint)
 {
   PDCE dce;
+  PLIST_ENTRY pLE;
   INT nRet = 0;
   BOOL Hit = FALSE;
 
   DPRINT("%p %p\n", Window, hDc);
-  dce = FirstDce;
-  KeEnterCriticalRegion();
+  pLE = LEDce.Flink;
+  dce = CONTAINING_RECORD(pLE, DCE, List);
   do
   {
      if(!dce) break;
@@ -793,11 +932,10 @@ UserReleaseDC(PWINDOW_OBJECT Window, HDC hDc, BOOL EndPaint)
         Hit = TRUE;
         break;
      }
-
-     dce = (PDCE) dce->List.Flink;
+     pLE = dce->List.Flink;
+     dce = CONTAINING_RECORD(pLE, DCE, List);
   }
-  while (dce != FirstDce );
-  KeLeaveCriticalRegion();
+  while (pLE != &LEDce );
 
   if ( Hit && (dce->DCXFlags & DCX_DCEBUSY))
   {

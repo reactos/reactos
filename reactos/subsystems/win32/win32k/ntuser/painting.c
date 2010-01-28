@@ -1111,8 +1111,6 @@ CLEANUP:
    END_CLEANUP;
 }
 
-
-
 static
 INT FASTCALL
 UserScrollDC(HDC hDC, INT dx, INT dy, const RECTL *prcScroll,
@@ -1208,19 +1206,21 @@ UserScrollDC(HDC hDC, INT dx, INT dy, const RECTL *prcScroll,
    return Result;
 }
 
-
-
-
 /*
  * NtUserScrollDC
  *
  * Status
  *    @implemented
  */
-
 BOOL APIENTRY
-NtUserScrollDC(HDC hDC, INT dx, INT dy, const RECT *prcUnsafeScroll,
-               const RECT *prcUnsafeClip, HRGN hrgnUpdate, LPRECT prcUnsafeUpdate)
+NtUserScrollDC(
+   HDC hDC,
+   INT dx,
+   INT dy,
+   const RECT *prcUnsafeScroll,
+   const RECT *prcUnsafeClip,
+   HRGN hrgnUpdate,
+   LPRECT prcUnsafeUpdate)
 {
    DECLARE_RETURN(DWORD);
    RECTL rcScroll, rcClip, rcUpdate;
@@ -1258,10 +1258,13 @@ NtUserScrollDC(HDC hDC, INT dx, INT dy, const RECT *prcUnsafeScroll,
       RETURN(FALSE);
    }
 
-   Result = UserScrollDC(hDC, dx, dy,
-                         prcUnsafeScroll? &rcScroll : 0,
-                         prcUnsafeClip? &rcClip : 0, hrgnUpdate,
-                         prcUnsafeUpdate? &rcUpdate : NULL);
+   Result = UserScrollDC( hDC,
+                          dx,
+                          dy,
+                          prcUnsafeScroll? &rcScroll : 0,
+                          prcUnsafeClip? &rcClip : 0,
+                          hrgnUpdate,
+                          prcUnsafeUpdate? &rcUpdate : NULL);
    if(Result == ERROR)
    {
    	  /* FIXME: Only if hRgnUpdate is invalid we should SetLastError(ERROR_INVALID_HANDLE) */
@@ -1303,8 +1306,15 @@ CLEANUP:
  */
 
 DWORD APIENTRY
-NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *prcUnsafeScroll,
-                     const RECT *prcUnsafeClip, HRGN hrgnUpdate, LPRECT prcUnsafeUpdate, UINT flags)
+NtUserScrollWindowEx(
+   HWND hWnd,
+   INT dx,
+   INT dy,
+   const RECT *prcUnsafeScroll,
+   const RECT *prcUnsafeClip,
+   HRGN hrgnUpdate,
+   LPRECT prcUnsafeUpdate,
+   UINT flags)
 {
    RECTL rcScroll, rcClip, rcCaret, rcUpdate;
    INT Result;
@@ -1378,7 +1388,14 @@ NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *prcUnsafeScroll,
    rcCaret = rcScroll;
    hwndCaret = co_IntFixCaret(Window, &rcCaret, flags);
 
-   Result = UserScrollDC(hDC, dx, dy, &rcScroll, &rcClip, hrgnOwn, prcUnsafeUpdate? &rcUpdate : NULL);
+   Result = UserScrollDC( hDC,
+                          dx,
+                          dy,
+                         &rcScroll,
+                         &rcClip,
+                          hrgnOwn,
+                          prcUnsafeUpdate? &rcUpdate : NULL);
+
    UserReleaseDC(Window, hDC, FALSE);
 
    /*
