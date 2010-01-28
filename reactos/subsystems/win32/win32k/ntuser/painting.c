@@ -330,7 +330,7 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
    BOOL HasPaintMessage, HasNCPaintMessage;
 
    Wnd = Window->Wnd;
-   DPRINT1("IntInvalidateWindows start\n");
+   DPRINT("IntInvalidateWindows start\n");
    /*
     * If the nonclient is not to be redrawn, clip the region to the client
     * rect
@@ -482,7 +482,7 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
       else
          MsqIncPaintCountQueue(Window->pti->MessageQueue);
    }
-   DPRINT1("IntInvalidateWindows exit\n");
+   DPRINT("IntInvalidateWindows exit\n");
 }
 
 /*
@@ -527,7 +527,7 @@ co_UserRedrawWindow(
    ULONG Flags)
 {
    HRGN hRgn = NULL;
-   DPRINT1("co_UserRedrawWindow start\n");
+   DPRINT("co_UserRedrawWindow start\n");
 
    /*
     * Step 1.
@@ -609,7 +609,7 @@ co_UserRedrawWindow(
    {
       REGION_FreeRgnByHandle(hRgn);
    }
-   DPRINT1("co_UserRedrawWindow exit\n");
+   DPRINT("co_UserRedrawWindow exit\n");
 
    return TRUE;
 }
@@ -1088,7 +1088,7 @@ NtUserRedrawWindow(
    NTSTATUS Status = STATUS_SUCCESS;
    DECLARE_RETURN(BOOL);
 
-   DPRINT1("Enter NtUserRedrawWindow\n");
+   DPRINT("Enter NtUserRedrawWindow\n");
    UserEnterExclusive();
 
    if (!(Wnd = UserGetWindowObject(hWnd ? hWnd : IntGetDesktopWindow())))
@@ -1136,7 +1136,7 @@ NtUserRedrawWindow(
    RETURN( Ret);
 
 CLEANUP:
-   DPRINT1("Leave NtUserRedrawWindow, ret=%i\n",_ret_);
+   DPRINT("Leave NtUserRedrawWindow, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
