@@ -72,7 +72,6 @@
 				<file>log.S</file>
 				<file>log10.S</file>
 				<file>pow.S</file>
-				<file>sin.S</file>
 				<file>sqrt.S</file>
 				<file>tan.S</file>
 			</directory>

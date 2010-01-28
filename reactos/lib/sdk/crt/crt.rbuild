@@ -162,6 +162,7 @@
 		</if>
 		<if property="ARCH" value="amd64">
 			<file>cos.c</file>
+			<file>sin.c</file>
 			<directory name="amd64">
 				<file>alldiv.S</file>
 				<file>atan.S</file>
@@ -178,7 +179,6 @@
 				<file>log.S</file>
 				<file>log10.S</file>
 				<file>pow.S</file>
-				<file>sin.S</file>
 				<file>sqrt.S</file>
 				<file>sqrtf.S</file>
 				<file>tan.S</file>
