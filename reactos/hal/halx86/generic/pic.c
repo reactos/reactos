@@ -205,6 +205,15 @@ PHAL_SW_INTERRUPT_HANDLER SWInterruptHandlerTable[3] =
     HalpDispatchInterrupt
 };
 
+/* Handlers for pending software interrupts when we already have a trap frame*/
+PHAL_SW_INTERRUPT_HANDLER_2ND_ENTRY SWInterruptHandlerTable2[3] =
+{
+    (PHAL_SW_INTERRUPT_HANDLER_2ND_ENTRY)KiUnexpectedInterrupt,
+    HalpApcInterrupt2ndEntry,
+    HalpDispatchInterrupt2ndEntry
+};
+
+
 USHORT HalpEisaELCR;
 
 /* FUNCTIONS ******************************************************************/
@@ -552,9 +561,7 @@ HalpEndSoftwareInterrupt(IN KIRQL OldIrql)
     
     /* Check for pending software interrupts and compare with current IRQL */
     PendingIrql = SWInterruptLookUpTable[Pcr->IRR];
-
-    /* NOTE: We can do better! We need to support "jumping" a frame for nested cases! */
-    if (PendingIrql > OldIrql) SWInterruptHandlerTable[PendingIrql]();
+    if (PendingIrql > OldIrql) HalpNestedTrap(PendingIrql);
 }
 
 /* INTERRUPT DISMISSAL FUNCTIONS **********************************************/
@@ -811,55 +818,56 @@ HalEndSystemInterrupt(IN KIRQL OldIrql,
     
     /* Check for pending software interrupts and compare with current IRQL */
     PendingIrql = SWInterruptLookUpTable[Pcr->IRR];
-    if (PendingIrql > OldIrql) SWInterruptHandlerTable[PendingIrql]();
+    if (PendingIrql > OldIrql) HalpNestedTrap(PendingIrql);
 }
 
 /* SOFTWARE INTERRUPT TRAPS ***************************************************/
 
 VOID
-FASTCALL
-HalpApcInterruptHandler(IN PKTRAP_FRAME TrapFrame)
+FORCEINLINE
+DECLSPEC_NORETURN
+_HalpApcInterruptHandler(IN PKTRAP_FRAME TrapFrame)
 {
     KIRQL CurrentIrql;
     PKPCR Pcr = KeGetPcr();
-    
-    /* Set up a fake INT Stack */
-    TrapFrame->EFlags = __readeflags();
-    TrapFrame->SegCs = KGDT_R0_CODE;
-    TrapFrame->Eip = TrapFrame->Eax;
-    
-    /* Build the trap frame */
-    KiEnterInterruptTrap(TrapFrame);
     
     /* Save the current IRQL and update it */
     CurrentIrql = Pcr->Irql;
     Pcr->Irql = APC_LEVEL;
-    
+
     /* Remove DPC from IRR */
     Pcr->IRR &= ~(1 << APC_LEVEL);
-    
+
     /* Enable interrupts and call the kernel's APC interrupt handler */
     _enable();
     KiDeliverApc(((KiUserTrap(TrapFrame)) || (TrapFrame->EFlags & EFLAGS_V86_MASK)) ?
-                 UserMode : KernelMode,
-                 NULL,
-                 TrapFrame);
+                UserMode : KernelMode,
+                NULL,
+                TrapFrame);
 
     /* Disable interrupts and end the interrupt */
     _disable();
+    Pcr->VdmAlert = (ULONG_PTR)TrapFrame;
     HalpEndSoftwareInterrupt(CurrentIrql);
-    
+
     /* Exit the interrupt */
-    KiEoiHelper(TrapFrame);
+    KiEoiHelper(TrapFrame); 
 }
 
 VOID
 FASTCALL
-HalpDispatchInterruptHandler(IN PKTRAP_FRAME TrapFrame)
+DECLSPEC_NORETURN
+HalpApcInterrupt2ndEntry(IN PKTRAP_FRAME TrapFrame)
 {
-    KIRQL CurrentIrql;
-    PKPCR Pcr = KeGetPcr();
-    
+    /* Do the work */
+    _HalpApcInterruptHandler(TrapFrame);
+}
+
+VOID
+FASTCALL
+DECLSPEC_NORETURN
+HalpApcInterruptHandler(IN PKTRAP_FRAME TrapFrame)
+{
     /* Set up a fake INT Stack */
     TrapFrame->EFlags = __readeflags();
     TrapFrame->SegCs = KGDT_R0_CODE;
@@ -867,6 +875,18 @@ HalpDispatchInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     
     /* Build the trap frame */
     KiEnterInterruptTrap(TrapFrame);
+    
+    /* Do the work */
+    _HalpApcInterruptHandler(TrapFrame);
+}
+
+VOID
+FORCEINLINE
+DECLSPEC_NORETURN
+_HalpDispatchInterruptHandler(IN PKTRAP_FRAME TrapFrame)
+{
+    KIRQL CurrentIrql;
+    PKPCR Pcr = KeGetPcr();
     
     /* Save the current IRQL and update it */
     CurrentIrql = Pcr->Irql;
@@ -881,10 +901,37 @@ HalpDispatchInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     
     /* Disable interrupts and end the interrupt */
     _disable();
+    Pcr->VdmAlert = (ULONG_PTR)TrapFrame;
     HalpEndSoftwareInterrupt(CurrentIrql);
     
     /* Exit the interrupt */
-    KiEoiHelper(TrapFrame);
+    KiEoiHelper(TrapFrame);   
+}
+
+VOID
+FASTCALL
+DECLSPEC_NORETURN
+HalpDispatchInterrupt2ndEntry(IN PKTRAP_FRAME TrapFrame)
+{
+    /* Do the work */
+    _HalpDispatchInterruptHandler(TrapFrame);
+}
+
+VOID
+FASTCALL
+DECLSPEC_NORETURN
+HalpDispatchInterruptHandler(IN PKTRAP_FRAME TrapFrame)
+{  
+    /* Set up a fake INT Stack */
+    TrapFrame->EFlags = __readeflags();
+    TrapFrame->SegCs = KGDT_R0_CODE;
+    TrapFrame->Eip = TrapFrame->Eax;
+    
+    /* Build the trap frame */
+    KiEnterInterruptTrap(TrapFrame);
+    
+    /* Do the work */
+    _HalpDispatchInterruptHandler(TrapFrame);
 }
 
 KiTrap(HalpApcInterrupt,      KI_SOFTWARE_TRAP);

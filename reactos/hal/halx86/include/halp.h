@@ -22,6 +22,19 @@ typedef struct _HAL_BIOS_FRAME
     ULONG Prefix;
 } HAL_BIOS_FRAME, *PHAL_BIOS_FRAME;
 
+typedef
+VOID
+(*PHAL_SW_INTERRUPT_HANDLER)(
+    VOID
+);
+
+typedef
+FASTCALL
+VOID
+(*PHAL_SW_INTERRUPT_HANDLER_2ND_ENTRY)(
+    IN PKTRAP_FRAME TrapFrame
+);
+
 #define HAL_APC_REQUEST         0
 #define HAL_DPC_REQUEST         1
 
@@ -96,6 +109,28 @@ HalpRealModeStack(IN ULONG Alignment,
         : [v] "i"(Alignment),
           [i] "i"(Size)
     );
+}
+
+//
+// Nested Trap Trampoline
+//
+VOID
+DECLSPEC_NORETURN
+FORCEINLINE
+HalpNestedTrap(IN KIRQL PendingIrql)
+{
+    /* Use the second interrupt handler table */
+    extern PHAL_SW_INTERRUPT_HANDLER_2ND_ENTRY SWInterruptHandlerTable2[3];
+    __asm__ __volatile__
+    (
+        "movl %c[t], %%ecx\n"
+        "jmp *%0\n"
+        :
+        : "im"(SWInterruptHandlerTable2[PendingIrql]),
+          [t] "i"(&PCR->VdmAlert)
+        : "%esp"
+    );
+    UNREACHABLE;
 }
 
 //
@@ -432,12 +467,6 @@ typedef struct _PIC_MASK
 } PIC_MASK, *PPIC_MASK;
 
 typedef
-VOID
-(*PHAL_SW_INTERRUPT_HANDLER)(
-    VOID
-);
-
-typedef
 BOOLEAN
 __attribute__((regparm(3)))
 (*PHAL_DISMISS_INTERRUPT)(
@@ -531,6 +560,8 @@ HalpEnableInterruptHandler(IN UCHAR Flags,
 VOID NTAPI HalpInitializePICs(IN BOOLEAN EnableInterrupts);
 VOID HalpApcInterrupt(VOID);
 VOID HalpDispatchInterrupt(VOID);
+VOID FASTCALL HalpApcInterrupt2ndEntry(IN PKTRAP_FRAME TrapFrame);
+VOID FASTCALL HalpDispatchInterrupt2ndEntry(IN PKTRAP_FRAME TrapFrame);
 
 /* timer.c */
 VOID NTAPI HalpInitializeClock(VOID);

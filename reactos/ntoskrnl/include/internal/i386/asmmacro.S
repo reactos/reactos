@@ -1452,6 +1452,8 @@ FastExit:
     cli
 
     /* End the interrupt and do EOI */
+    lea eax, [esp+8]
+    mov PCR[KPCR_VDM_ALERT], eax
     call _HalEndSystemInterrupt@8
     jmp _Kei386EoiHelper@0
 .endif

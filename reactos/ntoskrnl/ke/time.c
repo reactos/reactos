@@ -112,6 +112,9 @@ KeUpdateSystemTime(IN PKTRAP_FRAME TrapFrame,
         Prcb->InterruptCount++;
     }
     
+    /* Save the nested trap frame address */
+    KeGetPcr()->VdmAlert = (ULONG_PTR)TrapFrame;
+    
     /* Disable interrupts and end the interrupt */
     _disable();
     HalEndSystemInterrupt(Irql, CLOCK2_LEVEL);
