@@ -25,6 +25,10 @@ ULONG_PTR KiDoubleFaultStack = (ULONG_PTR)&KiDoubleFaultStackData[KERNEL_STACK_S
 KSPIN_LOCK KiFreezeExecutionLock;
 KSPIN_LOCK Ki486CompatibilityLock;
 
+/* Perf */
+ULONG ProcessCount;
+ULONGLONG BootCycles, BootCyclesEnd;
+
 /* FUNCTIONS *****************************************************************/
 
 VOID
@@ -682,6 +686,9 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     KIDTENTRY NmiEntry, DoubleFaultEntry;
     PKTSS Tss;
     PKIPCR Pcr;
+    
+    /* Boot cycles timestamp */
+    BootCycles = __rdtsc();
     
     /* Check if we are being booted from FreeLDR */
     if (!((ULONG_PTR)LoaderBlock & 0x80000000)) KiRosPrepareForSystemStartup((PROS_LOADER_PARAMETER_BLOCK)LoaderBlock);
