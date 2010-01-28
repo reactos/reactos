@@ -97,9 +97,6 @@ KiConnectVectorToInterrupt(IN PKINTERRUPT Interrupt,
 {
     DISPATCH_INFO Dispatch;
     PKINTERRUPT_ROUTINE Handler;
-#ifndef HAL_INTERRUPT_SUPPORT_IN_C
-    PULONG Patch = &Interrupt->DispatchCode[0];
-#endif
 
     /* Get vector data */
     KiGetVectorDispatch(Interrupt->Vector, &Dispatch);
@@ -122,15 +119,6 @@ KiConnectVectorToInterrupt(IN PKINTERRUPT Interrupt,
         Interrupt->DispatchAddress = Handler;
 
         /* Read note in trap.s -- patching not needed since JMP is static */
-#ifndef HAL_INTERRUPT_SUPPORT_IN_C
-        /* Jump to the last 4 bytes */
-        Patch = (PULONG)((ULONG_PTR)Patch +
-                         ((ULONG_PTR)&KiInterruptTemplateDispatch -
-                          (ULONG_PTR)KiInterruptTemplate) - 4);
-
-        /* Apply the patch */
-        *Patch = (ULONG)((ULONG_PTR)Handler - ((ULONG_PTR)Patch + 4));
-#endif
 
         /* Now set the final handler address */
         ASSERT(Dispatch.FlatDispatch == NULL);
@@ -140,6 +128,130 @@ KiConnectVectorToInterrupt(IN PKINTERRUPT Interrupt,
     /* Register the interrupt */
     KeRegisterInterruptHandler(Interrupt->Vector, Handler);
 }
+
+VOID
+FORCEINLINE
+DECLSPEC_NORETURN
+KiExitInterrupt(IN PKTRAP_FRAME TrapFrame,
+                IN KIRQL OldIrql,
+                IN BOOLEAN Spurious)
+{
+    /* Check if this was a real interrupt */
+    if (!Spurious)
+    {
+        /* Set nested trap frame */
+        KeGetPcr()->VdmAlert = (ULONG_PTR)TrapFrame;
+        
+        /* It was, disable interrupts and restore the IRQL */
+        _disable();
+        HalEndSystemInterrupt(OldIrql, 0);
+    }
+    
+    /* Now exit the trap */
+    KiEoiHelper(TrapFrame);
+}
+
+VOID
+KiUnexpectedInterrupt(VOID)
+{
+    /* Crash the machine */
+    KeBugCheck(TRAP_CAUSE_UNKNOWN);
+}
+    
+VOID
+FASTCALL
+KiUnexpectedInterruptTailHandler(IN PKTRAP_FRAME TrapFrame)
+{
+    KIRQL OldIrql;
+    
+    /* Enter trap */
+    KiEnterInterruptTrap(TrapFrame);
+    
+    /* Increase interrupt count */
+    KeGetCurrentPrcb()->InterruptCount++;
+    
+    /* Start the interrupt */
+    if (HalBeginSystemInterrupt(HIGH_LEVEL, TrapFrame->Eax, &OldIrql))
+    {
+        /* Warn user */
+        DPRINT1("\n\x7\x7!!! Unexpected Interrupt %02lx !!!\n");
+        
+        /* Now call the epilogue code */
+        KiExitInterrupt(TrapFrame, OldIrql, FALSE);
+    }
+    else
+    {
+        /* Now call the epilogue code */
+        KiExitInterrupt(TrapFrame, OldIrql, TRUE);
+    }
+}
+
+typedef
+FASTCALL
+VOID
+(PKI_INTERRUPT_DISPATCH)(
+    IN PKTRAP_FRAME TrapFrame,
+    IN PKINTERRUPT Interrupt
+);
+
+VOID
+FASTCALL
+KiInterruptDispatch(IN PKTRAP_FRAME TrapFrame,
+                    IN PKINTERRUPT Interrupt)
+{       
+    KIRQL OldIrql;
+
+    /* Increase interrupt count */
+    KeGetCurrentPrcb()->InterruptCount++;
+    
+    /* Begin the interrupt, making sure it's not spurious */
+    if (HalBeginSystemInterrupt(Interrupt->SynchronizeIrql,
+                                Interrupt->Vector,
+                                &OldIrql))
+    {
+        /* Acquire interrupt lock */
+        KxAcquireSpinLock(Interrupt->ActualLock);
+        
+        /* Call the ISR */
+        Interrupt->ServiceRoutine(Interrupt, Interrupt->ServiceContext);
+        
+        /* Release interrupt lock */
+        KxReleaseSpinLock(Interrupt->ActualLock);
+        
+        /* Now call the epilogue code */
+        KiExitInterrupt(TrapFrame, OldIrql, FALSE);
+    }
+    else
+    {
+        /* Now call the epilogue code */
+        KiExitInterrupt(TrapFrame, OldIrql, TRUE);
+    }
+}
+
+VOID
+FASTCALL
+KiChainedDispatch(IN PKTRAP_FRAME TrapFrame,
+                  IN PKINTERRUPT Interrupt)
+{   
+    /* Increase interrupt count */
+    KeGetCurrentPrcb()->InterruptCount++;
+    UNIMPLEMENTED;
+    while (TRUE);
+}
+
+VOID
+FASTCALL
+KiInterruptHandler(IN PKTRAP_FRAME TrapFrame,
+                   IN PKINTERRUPT Interrupt)
+{   
+    /* Enter interrupt frame */
+    KiEnterInterruptTrap(TrapFrame);
+
+    /* Call the correct dispatcher */
+    ((PKI_INTERRUPT_DISPATCH*)Interrupt->DispatchAddress)(TrapFrame, Interrupt);
+}
+
+KiTrap(KiUnexpectedInterruptTail,   KI_PUSH_FAKE_ERROR_CODE);
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
@@ -198,12 +310,6 @@ KeInitializeInterrupt(IN PKINTERRUPT Interrupt,
         /* Copy the dispatch code */
         *DispatchCode++ = KiInterruptTemplate[i];
     }
-
-    /* Sanity check */
-#ifndef HAL_INTERRUPT_SUPPORT_IN_C
-    ASSERT((ULONG_PTR)&KiChainedDispatch2ndLvl -
-           (ULONG_PTR)KiInterruptTemplate <= (KINTERRUPT_DISPATCH_CODES * 4));
-#endif
 
     /* Jump to the last 4 bytes */
     Patch = (PULONG)((ULONG_PTR)Patch +

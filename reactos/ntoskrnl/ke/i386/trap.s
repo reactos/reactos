@@ -152,58 +152,8 @@ GENERATE_INT_HANDLERS
 _KiEndUnexpectedRange@0:
     jmp _KiUnexpectedInterruptTail
 
-.func KiUnexpectedInterruptTail
-TRAP_FIXUPS kui_a, kui_t, DoFixupV86, DoFixupAbios
-_KiUnexpectedInterruptTail:
 
-    /* Enter interrupt trap */
-    INT_PROLOG kui_a, kui_t, DoNotPushFakeErrorCode
-
-    /* Increase interrupt count */
-    inc dword ptr PCR[KPCR_PRCB_INTERRUPT_COUNT]
-
-    /* Put vector in EBX and make space for KIRQL */
-    mov ebx, [esp]
-    sub esp, 4
-
-    /* Begin interrupt */
-    push esp
-    push ebx
-    push HIGH_LEVEL
-    call _HalBeginSystemInterrupt@12
-
-    /* Check if it was spurious or not */
-    or al, al
-    jnz Handled
-
-    /* Spurious, ignore it */
-    add esp, 8
-    jmp _Kei386EoiHelper@0
-
-Handled:
-    /* Unexpected interrupt, print a message on debug builds */
-#if DBG
-    push [esp+4]
-    push offset _UnexpectedMsg
-    call _DbgPrint
-    add esp, 8
-#endif
-
-    /* Exit the interrupt */
-    mov esi, $
-    cli
-    call _HalEndSystemInterrupt@8
-    jmp _Kei386EoiHelper@0
-.endfunc
-
-.globl _KiUnexpectedInterrupt
-_KiUnexpectedInterrupt:
-
-    /* Bugcheck with invalid interrupt code */
-    push TRAP_CAUSE_UNKNOWN
-    call _KeBugCheck@4
-
-/* INTERRUPT HANDLERS ********************************************************/
+/* DPC INTERRUPT HANDLER ******************************************************/
 
 .func KiDispatchInterrupt@0
 _KiDispatchInterrupt@0:
@@ -321,10 +271,8 @@ QuantumEnd:
 .endfunc
 
 /*
- * This is how the new-style interrupt template will look like.
- *
  * We setup the stack for a trap frame in the KINTERRUPT DispatchCode itself and
- * then mov the stack address in ECX, since the handlers are FASTCALL. We also
+ * then move the stack address in ECX, since the handlers are FASTCALL. We also
  * need to know the address of the KINTERRUPT. To do this, we maintain the old
  * dynamic patching technique (EDX instead of EDI, however) and let the C API
  * up in KeInitializeInterrupt replace the 0 with the address. Since this is in
@@ -343,13 +291,9 @@ QuantumEnd:
  * use EDI to store the absolute offset, and jump to that instead.
  *
  */
-#ifdef HAL_INTERRUPT_SUPPORT_IN_C
 .func KiInterruptTemplate
 _KiInterruptTemplate:
-    push 0
-    pushad
-    sub esp, KTRAP_FRAME_LENGTH - KTRAP_FRAME_PREVIOUS_MODE
-    mov ecx, esp
+    TRAP_HANDLER_PROLOG 1, 0
 
 _KiInterruptTemplate2ndDispatch:
     /* Dummy code, will be replaced by the address of the KINTERRUPT */
@@ -363,221 +307,3 @@ _KiInterruptTemplateObject:
 _KiInterruptTemplateDispatch:
     /* Marks the end of the template so that the jump above can be edited */
 .endfunc
-
-#else
-
-.func KiInterruptTemplate
-_KiInterruptTemplate:
-
-    /* Enter interrupt trap */
-    INT_PROLOG kit_a, kit_t, DoPushFakeErrorCode
-
-_KiInterruptTemplate2ndDispatch:
-    /* Dummy code, will be replaced by the address of the KINTERRUPT */
-    mov edi, 0
-
-_KiInterruptTemplateObject:
-    /* Dummy jump, will be replaced by the actual jump */
-    jmp _KeSynchronizeExecution@12
-
-_KiInterruptTemplateDispatch:
-    /* Marks the end of the template so that the jump above can be edited */
-
-TRAP_FIXUPS kit_a, kit_t, DoFixupV86, DoFixupAbios
-.endfunc
-
-.func KiChainedDispatch2ndLvl@0
-_KiChainedDispatch2ndLvl@0:
-
-NextSharedInt:
-    /* Raise IRQL if necessary */
-    mov cl, [edi+KINTERRUPT_SYNCHRONIZE_IRQL]
-    cmp cl, [edi+KINTERRUPT_IRQL]
-    je 1f
-    call @KfRaiseIrql@4
-
-1:
-    /* Acquire the lock */
-    mov esi, [edi+KINTERRUPT_ACTUAL_LOCK]
-GetIntLock2:
-    ACQUIRE_SPINLOCK(esi, IntSpin2)
-
-    /* Make sure that this interrupt isn't storming */
-    VERIFY_INT kid2
-
-    /* Save the tick count */
-    mov esi, _KeTickCount
-
-    /* Call the ISR */
-    mov eax, [edi+KINTERRUPT_SERVICE_CONTEXT]
-    push eax
-    push edi
-    call [edi+KINTERRUPT_SERVICE_ROUTINE]
-
-    /* Save the ISR result */
-    mov bl, al
-
-    /* Check if the ISR timed out */
-    add esi, _KiISRTimeout
-    cmp _KeTickCount, esi
-    jnc ChainedIsrTimeout
-
-ReleaseLock2:
-    /* Release the lock */
-    mov esi, [edi+KINTERRUPT_ACTUAL_LOCK]
-    RELEASE_SPINLOCK(esi)
-
-    /* Lower IRQL if necessary */
-    mov cl, [edi+KINTERRUPT_IRQL]
-    cmp cl, [edi+KINTERRUPT_SYNCHRONIZE_IRQL]
-    je 1f
-    call @KfLowerIrql@4
-
-1:
-    /* Check if the interrupt is handled */
-    or bl, bl
-    jnz 1f
-
-    /* Try the next shared interrupt handler */
-    mov eax, [edi+KINTERRUPT_INTERRUPT_LIST_HEAD]
-    lea edi, [eax-KINTERRUPT_INTERRUPT_LIST_HEAD]
-    jmp NextSharedInt
-
-1:
-    ret
-
-#ifdef CONFIG_SMP
-IntSpin2:
-    SPIN_ON_LOCK(esi, GetIntLock2)
-#endif
-
-ChainedIsrTimeout:
-    /* Print warning message */
-    push [edi+KINTERRUPT_SERVICE_ROUTINE]
-    push offset _IsrTimeoutMsg
-    call _DbgPrint
-    add esp,8
-
-    /* Break into debugger, then continue */
-    int 3
-    jmp ReleaseLock2
-
-    /* Cleanup verification */
-    VERIFY_INT_END kid2, 0
-.endfunc
-
-.func KiChainedDispatch@0
-_KiChainedDispatch@0:
-
-    /* Increase interrupt count */
-    inc dword ptr PCR[KPCR_PRCB_INTERRUPT_COUNT]
-
-    /* Save trap frame */
-    mov ebp, esp
-
-    /* Save vector and IRQL */
-    mov eax, [edi+KINTERRUPT_VECTOR]
-    mov ecx, [edi+KINTERRUPT_IRQL]
-
-    /* Save old irql */
-    push eax
-    sub esp, 4
-
-    /* Begin interrupt */
-    push esp
-    push eax
-    push ecx
-    call _HalBeginSystemInterrupt@12
-
-    /* Check if it was handled */
-    or al, al
-    jz SpuriousInt
-
-    /* Call the 2nd-level handler */
-    call _KiChainedDispatch2ndLvl@0
-
-    /* Exit the interrupt */
-    INT_EPILOG 0
-.endfunc
-
-.func KiInterruptDispatch@0
-_KiInterruptDispatch@0:
-
-    /* Increase interrupt count */
-    inc dword ptr PCR[KPCR_PRCB_INTERRUPT_COUNT]
-
-    /* Save trap frame */
-    mov ebp, esp
-
-    /* Save vector and IRQL */
-    mov eax, [edi+KINTERRUPT_VECTOR]
-    mov ecx, [edi+KINTERRUPT_SYNCHRONIZE_IRQL]
-
-    /* Save old irql */
-    push eax
-    sub esp, 4
-
-    /* Begin interrupt */
-    push esp
-    push eax
-    push ecx
-    call _HalBeginSystemInterrupt@12
-
-    /* Check if it was handled */
-    or al, al
-    jz SpuriousInt
-
-    /* Acquire the lock */
-    mov esi, [edi+KINTERRUPT_ACTUAL_LOCK]
-GetIntLock:
-    ACQUIRE_SPINLOCK(esi, IntSpin)
-
-    /* Make sure that this interrupt isn't storming */
-    VERIFY_INT kid
-
-    /* Save the tick count */
-    mov ebx, _KeTickCount
-
-    /* Call the ISR */
-    mov eax, [edi+KINTERRUPT_SERVICE_CONTEXT]
-    push eax
-    push edi
-    call [edi+KINTERRUPT_SERVICE_ROUTINE]
-
-    /* Check if the ISR timed out */
-    add ebx, _KiISRTimeout
-    cmp _KeTickCount, ebx
-    jnc IsrTimeout
-
-ReleaseLock:
-    /* Release the lock */
-    RELEASE_SPINLOCK(esi)
-
-    /* Exit the interrupt */
-    INT_EPILOG 0
-
-SpuriousInt:
-    /* Exit the interrupt */
-    add esp, 8
-    INT_EPILOG 1
-
-#ifdef CONFIG_SMP
-IntSpin:
-    SPIN_ON_LOCK(esi, GetIntLock)
-#endif
-
-IsrTimeout:
-    /* Print warning message */
-    push [edi+KINTERRUPT_SERVICE_ROUTINE]
-    push offset _IsrTimeoutMsg
-    call _DbgPrint
-    add esp,8
-
-    /* Break into debugger, then continue */
-    int 3
-    jmp ReleaseLock
-
-    /* Cleanup verification */
-    VERIFY_INT_END kid, 0
-.endfunc
-#endif

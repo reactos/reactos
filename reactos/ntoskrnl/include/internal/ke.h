@@ -954,19 +954,6 @@ KiServiceExit2(
     IN PKTRAP_FRAME TrapFrame
 );
 
-#ifndef HAL_INTERRUPT_SUPPORT_IN_C
-VOID
-NTAPI
-KiInterruptDispatch(
-    VOID
-);
-
-VOID
-NTAPI
-KiChainedDispatch(
-    VOID
-);
-#else
 VOID
 FASTCALL
 KiInterruptDispatch(
@@ -980,7 +967,6 @@ KiChainedDispatch(
     IN PKTRAP_FRAME TrapFrame,
     IN PKINTERRUPT Interrupt
 );
-#endif
 
 VOID
 NTAPI
