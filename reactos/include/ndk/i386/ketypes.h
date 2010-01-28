@@ -705,8 +705,8 @@ typedef struct _KIPCR
     ULONG StallScaleFactor;
     UCHAR SpareUnused;
     UCHAR Number;
-    UCHAR Reserved;
-    UCHAR L2CacheAssociativity;
+    UCHAR Spare0;
+    UCHAR SecondLevelCacheAssociativity;
     ULONG VdmAlert;
     ULONG KernelReserved[14];
     ULONG SecondLevelCacheSize;
