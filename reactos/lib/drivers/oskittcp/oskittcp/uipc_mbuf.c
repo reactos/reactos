@@ -663,7 +663,7 @@ extpacket:
 	return (n);
 }
 
-#ifndef OSKIT
+#if !defined(OSKIT) || defined(__REACTOS__)
 /* currently not OS Kit approved, and shouldn't be needed in the first place */
 
 /*
