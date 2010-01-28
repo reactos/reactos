@@ -156,5 +156,6 @@
 #define RC_LICENSE                      1502
 #define RTDATA                          1503
 
+#define IDS_DEVS                        2000
 
 #endif /* __CPL_RESOURCE_H */
