@@ -177,9 +177,7 @@ Ke386Wrmsr(IN ULONG Register,
            IN ULONG Var1,
            IN ULONG Var2)
 {
-    __asm mov eax, Var1;
-    __asm mov edx, Var2;
-    __asm wrmsr;
+    __writemsr(Register, (ULONG64)Var1 <<32 | Var2);
 }
 
 ULONGLONG
@@ -188,10 +186,10 @@ Ke386Rdmsr(IN ULONG Register,
            IN ULONG Var1,
            IN ULONG Var2)
 {
-    __asm mov eax, Var1;
-    __asm mov edx, Var2;
-    __asm rdmsr;
+    return __readmsr(Register);
 }
+
+#define UNIMPLEMENTED DbgPrint("unimplemented!!!\n");
 
 VOID
 FORCEINLINE
@@ -201,98 +199,91 @@ Ki386Cpuid(IN ULONG Operation,
            OUT PULONG Var3,
            OUT PULONG Var4)
 {
-    __asm mov eax, Operation;
-    __asm cpuid;
-    __asm mov [Var1], eax;
-    __asm mov [Var2], ebx;
-    __asm mov [Var3], ecx;
-    __asm mov [Var4], edx;
+    UNIMPLEMENTED;
 }
 
 VOID
 FORCEINLINE
 Ke386FnInit(VOID)
 {
-    __asm fninit;
+    UNIMPLEMENTED;
 }
 
 VOID
 FORCEINLINE
 Ke386HaltProcessor(VOID)
 {
-    __asm hlt;
+    UNIMPLEMENTED;
 }
 
 VOID
 FORCEINLINE
 Ke386GetInterruptDescriptorTable(OUT KDESCRIPTOR Descriptor)
 {
-    __asm sidt Descriptor;
+    UNIMPLEMENTED;
 }
 
 VOID
 FORCEINLINE
 Ke386SetInterruptDescriptorTable(IN KDESCRIPTOR Descriptor)
 {
-    __asm lidt Descriptor;
+    UNIMPLEMENTED;
 }
 
 VOID
 FORCEINLINE
 Ke386GetGlobalDescriptorTable(OUT KDESCRIPTOR Descriptor)
 {
-    __asm sgdt Descriptor;
+    UNIMPLEMENTED;
 }
 
 VOID
 FORCEINLINE
 Ke386SetGlobalDescriptorTable(IN KDESCRIPTOR Descriptor)
 {
-    __asm lgdt Descriptor;
+    UNIMPLEMENTED;
 }
 
 VOID
 FORCEINLINE
 Ke386GetLocalDescriptorTable(OUT USHORT Descriptor)
 {
-    __asm sldt Descriptor;
+    UNIMPLEMENTED;
 }
 
 VOID
 FORCEINLINE
 Ke386SetLocalDescriptorTable(IN USHORT Descriptor)
 {
-    __asm lldt Descriptor;
+    UNIMPLEMENTED;
 }
 
 VOID
 FORCEINLINE
 Ke386SaveFlags(IN ULONG Flags)
 {
-    __asm pushf;
-    __asm pop Flags;
+    UNIMPLEMENTED;
 }
 
 VOID
 FORCEINLINE
 Ke386RestoreFlags(IN ULONG Flags)
 {
-    __asm push Flags;
-    __asm popf;
+    UNIMPLEMENTED;
 }
 
 VOID
 FORCEINLINE
 Ke386SetTr(IN USHORT Tr)
 {
-    __asm ltr Tr;
+    UNIMPLEMENTED;
 }
 
 USHORT
 FORCEINLINE
 Ke386GetTr(IN USHORT Tr)
 {
-    __asm str Tr;
+    UNIMPLEMENTED;
 }
 
 //
@@ -302,8 +293,7 @@ VOID
 FORCEINLINE
 Ke386SetCr2(IN ULONG Value)
 {
-    __asm mov eax, Value;
-    __asm mov cr2, eax;
+    UNIMPLEMENTED;
 }
 
 //
@@ -313,90 +303,84 @@ ULONG
 FORCEINLINE
 Ke386GetDr0(VOID)
 {
-    __asm mov eax, dr0;
+    UNIMPLEMENTED;
 }
 
 ULONG
 FORCEINLINE
 Ke386GetDr1(VOID)
 {
-    __asm mov eax, dr1;
+    UNIMPLEMENTED;
 }
 
 ULONG
 FORCEINLINE
 Ke386GetDr2(VOID)
 {
-    __asm mov eax, dr2;
+    UNIMPLEMENTED;
 }
 
 ULONG
 FORCEINLINE
 Ke386GetDr3(VOID)
 {
-    __asm mov eax, dr3;
+    UNIMPLEMENTED;
 }
 
 ULONG
 FORCEINLINE
 Ke386GetDr6(VOID)
 {
-    __asm mov eax, dr6;
+    UNIMPLEMENTED;
 }
 
 ULONG
 FORCEINLINE
 Ke386GetDr7(VOID)
 {
-    __asm mov eax, dr7;
+    UNIMPLEMENTED;
 }
 
 VOID
 FORCEINLINE
 Ke386SetDr0(IN ULONG Value)
 {
-    __asm mov eax, Value;
-    __asm mov dr0, eax;
+    UNIMPLEMENTED;
 }
 
 VOID
 FORCEINLINE
 Ke386SetDr1(IN ULONG Value)
 {
-    __asm mov eax, Value;
-    __asm mov dr1, eax;
+    UNIMPLEMENTED;
 }
 
 VOID
 FORCEINLINE
 Ke386SetDr2(IN ULONG Value)
 {
-    __asm mov eax, Value;
-    __asm mov dr2, eax;
+    UNIMPLEMENTED;
 }
 
 VOID
 FORCEINLINE
 Ke386SetDr3(IN ULONG Value)
 {
-    __asm mov eax, Value;
-    __asm mov dr3, eax;
+    UNIMPLEMENTED;
 }
 
 VOID
 FORCEINLINE
 Ke386SetDr6(IN ULONG Value)
 {
-    __asm mov eax, Value;
-    __asm mov dr6, eax;
+    UNIMPLEMENTED;
 }
 
 VOID
 FORCEINLINE
 Ke386SetDr7(IN ULONG Value)
 {
-    __asm mov eax, Value;
-    __asm mov dr7, eax;
+    UNIMPLEMENTED;
 }
 
 //
@@ -406,60 +390,56 @@ USHORT
 FORCEINLINE
 Ke386GetSs(VOID)
 {
-    __asm mov ax, ss;
+    UNIMPLEMENTED;
 }
 
 USHORT
 FORCEINLINE
 Ke386GetFs(VOID)
 {
-    __asm mov ax, fs;
+    UNIMPLEMENTED;
 }
 
 USHORT
 FORCEINLINE
 Ke386GetDs(VOID)
 {
-    __asm mov ax, ds;
+    UNIMPLEMENTED;
 }
 
 USHORT
 FORCEINLINE
 Ke386GetEs(VOID)
 {
-    __asm mov ax, es;
+    UNIMPLEMENTED;
 }
 
 VOID
 FORCEINLINE
 Ke386SetSs(IN USHORT Value)
 {
-    __asm mov ax, Value;
-    __asm mov ss, ax;
+    UNIMPLEMENTED;
 }
 
 VOID
 FORCEINLINE
 Ke386SetFs(IN USHORT Value)
 {
-    __asm mov ax, Value;
-    __asm mov fs, ax;
+    UNIMPLEMENTED;
 }
 
 VOID
 FORCEINLINE
 Ke386SetDs(IN USHORT Value)
 {
-    __asm mov ax, Value;
-    __asm mov ds, ax;
+    UNIMPLEMENTED;
 }
 
 VOID
 FORCEINLINE
 Ke386SetEs(IN USHORT Value)
 {
-    __asm mov ax, Value;
-    __asm mov es, ax;
+    UNIMPLEMENTED;
 }
 
 #else
