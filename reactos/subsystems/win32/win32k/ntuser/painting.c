@@ -196,7 +196,7 @@ IntGetNCUpdateRgn(PWINDOW_OBJECT Window, BOOL Validate)
             IntGdiSetRegionOwner(Window->hrgnUpdate, GDI_OBJ_HMGR_POWNED);
             REGION_FreeRgnByHandle(Window->hrgnUpdate);
             Window->hrgnUpdate = NULL;
-            if (!(Window->state & WINDOWOBJECT_NEED_INTERNALPAINT))
+            if (!(Window->Wnd->state & WNDS_INTERNALPAINT))
                MsqDecPaintCountQueue(Window->pti->MessageQueue);
          }
       }
@@ -238,7 +238,7 @@ co_IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags, BOOL Recurse)
       if (Flags & RDW_UPDATENOW)
       {
          if (Window->hrgnUpdate != NULL ||
-             Window->state & WINDOWOBJECT_NEED_INTERNALPAINT)
+             Wnd->state & WNDS_INTERNALPAINT)
          {
             co_IntSendMessage(hWnd, WM_PAINT, 0, 0);
          }
@@ -372,7 +372,7 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
     */
 
    HadPaintMessage = Window->hrgnUpdate != NULL ||
-                     Window->state & WINDOWOBJECT_NEED_INTERNALPAINT;
+                     Wnd->state & WNDS_INTERNALPAINT;
    HadNCPaintMessage = Window->state & WINDOWOBJECT_NEED_NCPAINT;
 
    /*
@@ -426,12 +426,12 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
 
    if (Flags & RDW_INTERNALPAINT)
    {
-      Window->state |= WINDOWOBJECT_NEED_INTERNALPAINT;
+      Wnd->state |= WNDS_INTERNALPAINT;
    }
 
    if (Flags & RDW_NOINTERNALPAINT)
    {
-      Window->state &= ~WINDOWOBJECT_NEED_INTERNALPAINT;
+      Wnd->state &= ~WNDS_INTERNALPAINT;
    }
 
    /*
@@ -464,7 +464,7 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
     */
 
    HasPaintMessage = Window->hrgnUpdate != NULL ||
-                     Window->state & WINDOWOBJECT_NEED_INTERNALPAINT;
+                     Wnd->state & WNDS_INTERNALPAINT;
    HasNCPaintMessage = Window->state & WINDOWOBJECT_NEED_NCPAINT;
 
    if (HasPaintMessage != HadPaintMessage)
@@ -620,7 +620,7 @@ IntIsWindowDirty(PWINDOW_OBJECT Window)
    PWND Wnd = Window->Wnd;
    return (Wnd->style & WS_VISIBLE) &&
           ((Window->hrgnUpdate != NULL) ||
-           (Window->state & WINDOWOBJECT_NEED_INTERNALPAINT) ||
+           (Wnd->state & WNDS_INTERNALPAINT) ||
            (Window->state & WINDOWOBJECT_NEED_NCPAINT));
 }
 
@@ -818,13 +818,13 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
    }
    else
    {
-      if (Window->state & WINDOWOBJECT_NEED_INTERNALPAINT)
+      if (Wnd->state & WNDS_INTERNALPAINT)
          MsqDecPaintCountQueue(Window->pti->MessageQueue);
 
       IntGetClientRect(Window, &Ps.rcPaint);
    }
 
-   Window->state &= ~WINDOWOBJECT_NEED_INTERNALPAINT;
+   Wnd->state &= ~WNDS_INTERNALPAINT;
 
    if (Window->state & WINDOWOBJECT_NEED_ERASEBKGND)
    {
