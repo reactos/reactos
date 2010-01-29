@@ -279,37 +279,37 @@ ULONG FindHigherIrqlMask[32] =
     0b00000000000000000000000000000000, /* IRQL 30 */
     0b00000000000000000000000000000000, /* IRQL 31 */
 #else
-    0xFFFFFFFE                    /* IRQL  0 */
-    0xFFFFFFFC                    /* IRQL 1 */
-    0xFFFFFFF8                    /* IRQL 2 */
-    0xFFFFFFF0                    /* IRQL 3 */
-    0x7FFFFF0                     /* IRQL 4 */
-    0x3FFFFF0                     /* IRQL 5 */
-    0x1FFFFF0                     /* IRQL 6 */
-    0x0FFFFF0                     /* IRQL 7 */
-    0x7FFFF0                      /* IRQL 8 */
-    0x3FFFF0                      /* IRQL 9 */
-    0x1FFFF0                      /* IRQL 10 */
-    0x0FFFF0                      /* IRQL 11 */
-    0x7FFF0                       /* IRQL 12 */
-    0x3FFF0                       /* IRQL 13 */
-    0x1FFF0                       /* IRQL 14 */
-    0x0FFF0                       /* IRQL 15 */
-    0x7FF0                        /* IRQL 16 */
-    0x3FF0                        /* IRQL 17 */
-    0x1FF0                        /* IRQL 18 */
-    0x1FF0                        /* IRQL 19 */
-    0x17F0                        /* IRQL 20 */
-    0x13F0                        /* IRQL 21 */
-    0x11F0                        /* IRQL 22 */
-    0x10F0                        /* IRQL 23 */
-    0x1070                        /* IRQL 24 */
-    0x1030                        /* IRQL 25 */
-    0x1010                        /* IRQL 26 */
-    0x10                          /* IRQL 27 */
-    0                             /* IRQL 28 */
-    0                             /* IRQL 29 */
-    0                             /* IRQL 30 */
+    0xFFFFFFFE,                   /* IRQL  0 */
+    0xFFFFFFFC,                   /* IRQL 1 */
+    0xFFFFFFF8,                   /* IRQL 2 */
+    0xFFFFFFF0,                   /* IRQL 3 */
+    0x7FFFFF0,                    /* IRQL 4 */
+    0x3FFFFF0,                    /* IRQL 5 */
+    0x1FFFFF0,                    /* IRQL 6 */
+    0x0FFFFF0,                    /* IRQL 7 */
+    0x7FFFF0,                     /* IRQL 8 */
+    0x3FFFF0,                     /* IRQL 9 */
+    0x1FFFF0,                     /* IRQL 10 */
+    0x0FFFF0,                     /* IRQL 11 */
+    0x7FFF0,                      /* IRQL 12 */
+    0x3FFF0,                      /* IRQL 13 */
+    0x1FFF0,                      /* IRQL 14 */
+    0x0FFF0,                      /* IRQL 15 */
+    0x7FF0,                       /* IRQL 16 */
+    0x3FF0,                       /* IRQL 17 */
+    0x1FF0,                       /* IRQL 18 */
+    0x1FF0,                       /* IRQL 19 */
+    0x17F0,                       /* IRQL 20 */
+    0x13F0,                       /* IRQL 21 */
+    0x11F0,                       /* IRQL 22 */
+    0x10F0,                       /* IRQL 23 */
+    0x1070,                       /* IRQL 24 */
+    0x1030,                       /* IRQL 25 */
+    0x1010,                       /* IRQL 26 */
+    0x10,                         /* IRQL 27 */
+    0,                            /* IRQL 28 */
+    0,                            /* IRQL 29 */
+    0,                            /* IRQL 30 */
     0                             /* IRQL 31 */
 #endif
 #endif
