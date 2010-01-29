@@ -274,27 +274,24 @@ KiChainedDispatch(IN PKTRAP_FRAME TrapFrame,
                 KfLowerIrql(OldIrql);
             }
         
-            /* Check if the interrupt got handled */
-            if (Handled)
+            /* Check if the interrupt got handled and it's level */
+            if ((Handled) && (Interrupt->Mode == LevelSensitive)) break;
+            
+            /* What's next? */
+            NextEntry = NextEntry->Flink;
+                
+            /* Is this the last one? */
+            if (NextEntry == ListHead)
             {
-                /* Edge shared interrupts are not handled (they never were) */
-                ASSERT(Interrupt->Mode == LevelSensitive);
-                break;
+                /* Level should not have gotten here */
+                if (Interrupt->Mode == LevelSensitive) break;
+                
+                /* As for edge, we can only exit once nobody can handle the interrupt */
+                if (!Handled) break;
             }
-            else
-            {
-                /* This code path was never tested, and shouldn't be reached */
-                DPRINT1("Edge shared interrupt. ReactOS cannot handle these\n");
-                
-                /* What's next? */
-                NextEntry = NextEntry->Flink;
-                
-                /* Is this the last one? */
-                if (NextEntry == ListHead) break;
-                
-                /* Get the actual interrupt object */
-                Interrupt = CONTAINING_RECORD(NextEntry, KINTERRUPT, InterruptListEntry);
-            }
+            
+            /* Get the interrupt object for the next pass */
+            Interrupt = CONTAINING_RECORD(NextEntry, KINTERRUPT, InterruptListEntry);
         }
 
         /* Now call the epilogue code */
@@ -431,6 +428,7 @@ KeConnectInterrupt(IN PKINTERRUPT Interrupt)
     if (!Interrupt->Connected)
     {
         /* Get vector dispatching information */
+        DPRINT1("Interrupt Connect: %lx %lx %d %d\n", Vector, Irql, Interrupt->ShareVector, Interrupt->Mode);
         KiGetVectorDispatch(Vector, &Dispatch);
 
         /* Check if the vector is already connected */
@@ -469,6 +467,7 @@ KeConnectInterrupt(IN PKINTERRUPT Interrupt)
             }
 
             /* Insert into the interrupt list */
+            DPRINT1("Inserting shared interrupt %p into %p with mode: %lx\n", Interrupt, &Dispatch.Interrupt, Interrupt->Mode);
             InsertTailList(&Dispatch.Interrupt->InterruptListEntry,
                            &Interrupt->InterruptListEntry);
         }
@@ -487,6 +486,7 @@ KeConnectInterrupt(IN PKINTERRUPT Interrupt)
     }
 
     /* Return to caller */
+    DPRINT1("Interrupt was registered: %lx\n", Connected);
     return Connected;
 }
 
