@@ -683,7 +683,8 @@ DceFreeWindowDCE(PWINDOW_OBJECT Window)
   {
      if (!pDCE) break;
      if (IsListEmpty(&pDCE->List)) break;
-     if (pDCE->hwndCurrent == Window->hSelf)
+     if ( pDCE->hwndCurrent == Window->hSelf &&
+          !(pDCE->DCXFlags & DCX_DCEEMPTY) )
      {
         if (!(pDCE->DCXFlags & DCX_CACHE)) /* owned or Class DCE*/
         {
