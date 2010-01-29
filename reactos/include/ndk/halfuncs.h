@@ -165,7 +165,7 @@ VOID
 NTAPI
 HalEndSystemInterrupt(
     KIRQL Irql,
-    UCHAR Vector
+    IN PKTRAP_FRAME TrapFrame
 );
 
 #ifdef _ARM_ // FIXME: ndk/arm? armddk.h?

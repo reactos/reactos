@@ -139,12 +139,9 @@ KiExitInterrupt(IN PKTRAP_FRAME TrapFrame,
     /* Check if this was a real interrupt */
     if (!Spurious)
     {
-        /* Set nested trap frame */
-        KeGetPcr()->VdmAlert = (ULONG_PTR)TrapFrame;
-        
         /* It was, disable interrupts and restore the IRQL */
         _disable();
-        HalEndSystemInterrupt(OldIrql, 0);
+        HalEndSystemInterrupt(OldIrql, TrapFrame);
     }
     
     /* Now exit the trap */
@@ -428,7 +425,6 @@ KeConnectInterrupt(IN PKINTERRUPT Interrupt)
     if (!Interrupt->Connected)
     {
         /* Get vector dispatching information */
-        DPRINT1("Interrupt Connect: %lx %lx %d %d\n", Vector, Irql, Interrupt->ShareVector, Interrupt->Mode);
         KiGetVectorDispatch(Vector, &Dispatch);
 
         /* Check if the vector is already connected */
@@ -467,7 +463,6 @@ KeConnectInterrupt(IN PKINTERRUPT Interrupt)
             }
 
             /* Insert into the interrupt list */
-            DPRINT1("Inserting shared interrupt %p into %p with mode: %lx\n", Interrupt, &Dispatch.Interrupt, Interrupt->Mode);
             InsertTailList(&Dispatch.Interrupt->InterruptListEntry,
                            &Interrupt->InterruptListEntry);
         }
@@ -486,7 +481,6 @@ KeConnectInterrupt(IN PKINTERRUPT Interrupt)
     }
 
     /* Return to caller */
-    DPRINT1("Interrupt was registered: %lx\n", Connected);
     return Connected;
 }
 

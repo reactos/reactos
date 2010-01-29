@@ -31,6 +31,7 @@ VOID
 typedef
 FASTCALL
 VOID
+DECLSPEC_NORETURN
 (*PHAL_SW_INTERRUPT_HANDLER_2ND_ENTRY)(
     IN PKTRAP_FRAME TrapFrame
 );
@@ -109,28 +110,6 @@ HalpRealModeStack(IN ULONG Alignment,
         : [v] "i"(Alignment),
           [i] "i"(Size)
     );
-}
-
-//
-// Nested Trap Trampoline
-//
-VOID
-DECLSPEC_NORETURN
-FORCEINLINE
-HalpNestedTrap(IN KIRQL PendingIrql)
-{
-    /* Use the second interrupt handler table */
-    extern PHAL_SW_INTERRUPT_HANDLER_2ND_ENTRY SWInterruptHandlerTable2[3];
-    __asm__ __volatile__
-    (
-        "movl %c[t], %%ecx\n"
-        "jmp *%0\n"
-        :
-        : "im"(SWInterruptHandlerTable2[PendingIrql]),
-          [t] "i"(&PCR->VdmAlert)
-        : "%esp","%ecx"
-    );
-    UNREACHABLE;
 }
 
 //
@@ -507,6 +486,43 @@ HalpDismissIrq07(
     OUT PKIRQL OldIrql
 );
 
+BOOLEAN
+__attribute__((regparm(3)))
+HalpDismissIrqLevel(
+    IN KIRQL Irql,
+    IN ULONG Irq,
+    OUT PKIRQL OldIrql
+);
+
+BOOLEAN
+__attribute__((regparm(3)))
+HalpDismissIrq15Level(
+    IN KIRQL Irql,
+    IN ULONG Irq,
+    OUT PKIRQL OldIrql
+);
+
+BOOLEAN
+__attribute__((regparm(3)))
+HalpDismissIrq13Level(
+    IN KIRQL Irql,
+    IN ULONG Irq,
+    OUT PKIRQL OldIrql
+);
+
+BOOLEAN
+__attribute__((regparm(3)))
+HalpDismissIrq07Level(
+    IN KIRQL Irql,
+    IN ULONG Irq,
+    OUT PKIRQL OldIrql
+);
+
+VOID
+HalpHardwareInterruptLevel(
+    VOID
+);
+
 //
 // Mm PTE/PDE to Hal PTE/PDE
 //
@@ -561,8 +577,8 @@ VOID NTAPI HalpInitializePICs(IN BOOLEAN EnableInterrupts);
 VOID HalpApcInterrupt(VOID);
 VOID HalpDispatchInterrupt(VOID);
 VOID HalpDispatchInterrupt2(VOID);
-VOID FASTCALL HalpApcInterrupt2ndEntry(IN PKTRAP_FRAME TrapFrame);
-VOID FASTCALL HalpDispatchInterrupt2ndEntry(IN PKTRAP_FRAME TrapFrame);
+VOID FASTCALL DECLSPEC_NORETURN HalpApcInterrupt2ndEntry(IN PKTRAP_FRAME TrapFrame);
+VOID FASTCALL DECLSPEC_NORETURN HalpDispatchInterrupt2ndEntry(IN PKTRAP_FRAME TrapFrame);
 
 /* timer.c */
 VOID NTAPI HalpInitializeClock(VOID);
