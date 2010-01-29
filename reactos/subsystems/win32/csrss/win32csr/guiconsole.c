@@ -685,6 +685,7 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
   HDC Dc;
   HFONT OldFont;
   TEXTMETRICW Metrics;
+  SIZE CharSize;
   PCSRSS_PROCESS_DATA ProcessData;
   HKEY hKey;
 
@@ -762,6 +763,11 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
     }
   GuiData->CharWidth = Metrics.tmMaxCharWidth;
   GuiData->CharHeight = Metrics.tmHeight + Metrics.tmExternalLeading;
+
+  /* Measure real char width more precisely if possible. */
+  if (GetTextExtentPoint32W(Dc, L"R", 1, &CharSize))
+      GuiData->CharWidth = CharSize.cx;
+
   SelectObject(Dc, OldFont);
 
   ReleaseDC(hWnd, Dc);
