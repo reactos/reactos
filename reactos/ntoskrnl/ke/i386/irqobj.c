@@ -233,11 +233,79 @@ FASTCALL
 KiChainedDispatch(IN PKTRAP_FRAME TrapFrame,
                   IN PKINTERRUPT Interrupt)
 {   
+    KIRQL OldIrql;
+    BOOLEAN Handled;
+    PLIST_ENTRY NextEntry, ListHead;
+    
     /* Increase interrupt count */
     KeGetCurrentPrcb()->InterruptCount++;
-    UNIMPLEMENTED;
-    while (TRUE);
-}
+
+    /* Begin the interrupt, making sure it's not spurious */
+    if (HalBeginSystemInterrupt(Interrupt->Irql,
+                                Interrupt->Vector,
+                                &OldIrql))
+    {
+        /* Get list pointers */
+        ListHead = &Interrupt->InterruptListEntry;
+        NextEntry = ListHead; /* The head is an entry! */
+        while (TRUE)
+        {            
+            /* Check if this interrupt's IRQL is higher than the current one */
+            if (Interrupt->SynchronizeIrql > Interrupt->Irql)
+            {
+                /* Raise to higher IRQL */
+                OldIrql = KfRaiseIrql(Interrupt->Irql);
+            }
+        
+            /* Acquire interrupt lock */
+            KxAcquireSpinLock(Interrupt->ActualLock);
+
+            /* Call the ISR */
+            Handled = Interrupt->ServiceRoutine(Interrupt,
+                                                Interrupt->ServiceContext);
+
+            /* Release interrupt lock */
+            KxReleaseSpinLock(Interrupt->ActualLock);
+        
+            /* Check if this interrupt's IRQL is higher than the current one */
+            if (Interrupt->SynchronizeIrql > Interrupt->Irql)
+            {
+                /* Lower the IRQL back */
+                KfLowerIrql(OldIrql);
+            }
+        
+            /* Check if the interrupt got handled */
+            if (Handled)
+            {
+                /* Edge shared interrupts are not handled (they never were) */
+                ASSERT(Interrupt->Mode == LevelSensitive);
+                break;
+            }
+            else
+            {
+                /* This code path was never tested, and shouldn't be reached */
+                DPRINT1("Edge shared interrupt. ReactOS cannot handle these\n");
+                
+                /* What's next? */
+                NextEntry = NextEntry->Flink;
+                
+                /* Is this the last one? */
+                if (NextEntry == ListHead) break;
+                
+                /* Get the actual interrupt object */
+                Interrupt = CONTAINING_RECORD(NextEntry, KINTERRUPT, InterruptListEntry);
+            }
+        }
+
+        /* Now call the epilogue code */
+        KiExitInterrupt(TrapFrame, OldIrql, FALSE);
+    }
+    else
+    {
+        /* Now call the epilogue code */
+        KiExitInterrupt(TrapFrame, OldIrql, TRUE);
+    }
+ }
 
 VOID
 FASTCALL
