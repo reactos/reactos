@@ -128,7 +128,7 @@ HalpNestedTrap(IN KIRQL PendingIrql)
         :
         : "im"(SWInterruptHandlerTable2[PendingIrql]),
           [t] "i"(&PCR->VdmAlert)
-        : "%esp"
+        : "%esp","%ecx"
     );
     UNREACHABLE;
 }
@@ -560,6 +560,7 @@ HalpEnableInterruptHandler(IN UCHAR Flags,
 VOID NTAPI HalpInitializePICs(IN BOOLEAN EnableInterrupts);
 VOID HalpApcInterrupt(VOID);
 VOID HalpDispatchInterrupt(VOID);
+VOID HalpDispatchInterrupt2(VOID);
 VOID FASTCALL HalpApcInterrupt2ndEntry(IN PKTRAP_FRAME TrapFrame);
 VOID FASTCALL HalpDispatchInterrupt2ndEntry(IN PKTRAP_FRAME TrapFrame);
 
