@@ -319,7 +319,7 @@ HalBeginSystemInterrupt (KIRQL Irql,
 
 VOID NTAPI
 HalEndSystemInterrupt (KIRQL Irql,
-		       UCHAR Vector)
+                       IN PKTRAP_FRAME TrapFrame)
 /*
  * FUNCTION: Finish a system interrupt and restore the specified irq level.
  */
