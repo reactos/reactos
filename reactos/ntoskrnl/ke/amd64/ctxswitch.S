@@ -9,23 +9,8 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ndk/asm.h>
-
-.intel_syntax noprefix
-
-.altmacro
-.macro UNIMPLEMENTED func
-    jmp 2f
-1:
-    .ascii "Sorry, asm function "
-    .ascii func
-    .ascii " is unimplemented!\n\0"
-2:
-    movabs rcx, offset 1b
-    call _DbgPrint
-    ret
-.endm
-
+#include <reactos/asm.h>
+#include <ndk/amd64/asm.h>
 
 /* FUNCTIONS ****************************************************************/
 

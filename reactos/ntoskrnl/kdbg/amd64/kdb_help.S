@@ -1,5 +1,5 @@
+#include <reactos/asm.h>
 #include <ndk/amd64/asm.h>
-#include <ndk/amd64/asmmacro.S>
 
 .globl _KdbEnter
 _KdbEnter:
