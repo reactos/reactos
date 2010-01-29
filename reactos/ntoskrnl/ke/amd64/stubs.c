@@ -39,16 +39,6 @@ KeSynchronizeExecution(
     return FALSE;
 }
 
-VOID
-NTAPI
-KeUpdateSystemTime(IN PKTRAP_FRAME TrapFrame,
-                   IN KIRQL Irql,
-                   IN ULONG Increment)
-{
-    UNIMPLEMENTED;
-}
-
-
 NTSTATUS
 NTAPI
 KeUserModeCallback(IN ULONG RoutineIndex,
@@ -161,3 +151,36 @@ ExQueryDepthSList(IN PSLIST_HEADER ListHead)
 {
     return (USHORT)(ListHead->Alignment & 0xffff);
 }
+
+#ifdef _MSC_VER
+void
+__GSHandlerCheck()
+{
+}
+
+int __security_cookie;
+
+void
+__security_check_cookie()
+{
+}
+
+
+NTKERNELAPI
+PSLIST_ENTRY
+ExpInterlockedPopEntrySList(
+     PSLIST_HEADER ListHead)
+{
+    return 0;
+}
+
+NTKERNELAPI
+PSLIST_ENTRY
+ExpInterlockedPushEntrySList(
+    PSLIST_HEADER ListHead,
+    PSLIST_ENTRY ListEntry)
+{
+    return 0;
+}
+
+#endif
