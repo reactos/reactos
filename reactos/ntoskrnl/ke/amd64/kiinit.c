@@ -31,8 +31,8 @@ extern ADDRESS_RANGE KeMemoryMap[64];
 KIPCR KiInitialPcr;
 
 /* Boot and double-fault/NMI/DPC stack */
-UCHAR P0BootStackData[KERNEL_STACK_SIZE] __attribute__((aligned (16))) = {0};
-UCHAR KiDoubleFaultStackData[KERNEL_STACK_SIZE] __attribute__((aligned (16))) = {0};
+UCHAR P0BootStackData[KERNEL_STACK_SIZE] DECLSPEC_ALIGN(16) = {0};
+UCHAR KiDoubleFaultStackData[KERNEL_STACK_SIZE] DECLSPEC_ALIGN(16) = {0};
 ULONG_PTR P0BootStack = (ULONG_PTR)&P0BootStackData[KERNEL_STACK_SIZE];
 ULONG_PTR KiDoubleFaultStack = (ULONG_PTR)&KiDoubleFaultStackData[KERNEL_STACK_SIZE];
 
@@ -189,7 +189,6 @@ KiInitializeCpuFeatures(ULONG Cpu)
     /* Disable x87 fpu exceptions */
     __writecr0(__readcr0() & ~CR0_NE);
     
-    asm volatile ("fninit\n");
 }
 
 VOID
