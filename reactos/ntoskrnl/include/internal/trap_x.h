@@ -755,6 +755,7 @@ KiEnterTrap(IN PKTRAP_FRAME TrapFrame)
 #define KI_NONVOLATILES_ONLY    0x4
 #define KI_FAST_SYSTEM_CALL     0x8
 #define KI_SOFTWARE_TRAP        0x10
+#define KI_HARDWARE_INT         0x20
 #define KiTrap(x, y)            VOID DECLSPEC_NORETURN x(VOID) { KiTrapStub(y, x##Handler); UNREACHABLE; }
 #define KiTrampoline(x, y)      VOID DECLSPEC_NOINLINE x(VOID) { KiTrapStub(y, x##Handler); }
 
@@ -849,16 +850,39 @@ KiTrapStub(IN ULONG Flags,
     /* Now set parameter 1 (ECX) to point to the frame */
     __asm__ __volatile__ ("movl %%esp, %%ecx\n":::"%esp");
        
-    /* For Fast-V86 traps, move set parameter 2 (EDX) to hold EFlags */   
+    /* For Fast-V86 traps, set parameter 2 (EDX) to hold EFlags */   
     if (Flags & KI_FAST_V86_TRAP) __asm__ __volatile__
     (
         "movl %c[f](%%esp), %%edx\n"
         :
         : [f] "i"(FIELD_OFFSET(KTRAP_FRAME, EFlags))
     );
+    else if (Flags & KI_HARDWARE_INT) __asm__ __volatile__
+    (
+        /*
+         * For hardware interrupts, set parameter 2 (EDX) to hold KINTERRUPT.
+         * This code will be dynamically patched when an interrupt is registered!
+         */
+        ".globl _KiInterruptTemplate2ndDispatch\n_KiInterruptTemplate2ndDispatch:\n"
+        "movl $0, %%edx\n"
+        ".globl _KiInterruptTemplateObject\n_KiInterruptTemplateObject:\n"
+        ::: "%edx"
+    );
     
     /* Now jump to the C handler */
-    __asm__ __volatile__ ("jmp %c[x]\n":: [x] "i"(Handler));
+    if (Flags & KI_HARDWARE_INT)__asm__ __volatile__
+    (
+        /*
+         * For hardware interrupts, use an absolute JMP instead of a relative JMP
+         * since the position of this code is arbitrary in memory, and therefore
+         * the compiler-generated offset will not be correct.
+         */
+        "jmp *%0\n"
+        ".globl _KiInterruptTemplateDispatch\n_KiInterruptTemplateDispatch:\n"
+        :
+        : "a"(Handler)
+    );
+    else __asm__ __volatile__ ("jmp %c[x]\n":: [x] "i"(Handler));
 }
 
 #endif

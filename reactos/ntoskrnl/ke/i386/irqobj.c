@@ -241,8 +241,8 @@ KiChainedDispatch(IN PKTRAP_FRAME TrapFrame,
 
 VOID
 FASTCALL
-KiInterruptHandler(IN PKTRAP_FRAME TrapFrame,
-                   IN PKINTERRUPT Interrupt)
+KiInterruptTemplateHandler(IN PKTRAP_FRAME TrapFrame,
+                           IN PKINTERRUPT Interrupt)
 {   
     /* Enter interrupt frame */
     KiEnterInterruptTrap(TrapFrame);
@@ -251,6 +251,7 @@ KiInterruptHandler(IN PKTRAP_FRAME TrapFrame,
     ((PKI_INTERRUPT_DISPATCH*)Interrupt->DispatchAddress)(TrapFrame, Interrupt);
 }
 
+KiTrap(KiInterruptTemplate,         KI_PUSH_FAKE_ERROR_CODE | KI_HARDWARE_INT);
 KiTrap(KiUnexpectedInterruptTail,   KI_PUSH_FAKE_ERROR_CODE);
 
 /* PUBLIC FUNCTIONS **********************************************************/
@@ -308,7 +309,7 @@ KeInitializeInterrupt(IN PKINTERRUPT Interrupt,
     for (i = 0; i < KINTERRUPT_DISPATCH_CODES; i++)
     {
         /* Copy the dispatch code */
-        *DispatchCode++ = KiInterruptTemplate[i];
+        *DispatchCode++ = ((PULONG)KiInterruptTemplate)[i];
     }
 
     /* Jump to the last 4 bytes */

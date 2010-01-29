@@ -98,7 +98,6 @@ extern UCHAR KeNumberNodes;
 extern UCHAR KeProcessNodeSeed;
 extern ETHREAD KiInitialThread;
 extern EPROCESS KiInitialProcess;
-extern ULONG KiInterruptTemplate[KINTERRUPT_DISPATCH_CODES];
 extern PULONG KiInterruptTemplateObject;
 extern PULONG KiInterruptTemplateDispatch;
 extern PULONG KiInterruptTemplate2ndDispatch;

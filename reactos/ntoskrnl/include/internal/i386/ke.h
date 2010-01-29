@@ -451,6 +451,7 @@ extern UCHAR KiDebugRegisterContextOffsets[9];
 extern VOID __cdecl KiTrap02(VOID);
 extern VOID __cdecl KiTrap08(VOID);
 extern VOID __cdecl KiTrap13(VOID);
+extern VOID __cdecl KiInterruptTemplate(VOID);
 extern VOID __cdecl KiFastCallEntry(VOID);
 extern VOID NTAPI ExpInterlockedPopEntrySListFault(VOID);
 extern VOID __cdecl CopyParams(VOID);

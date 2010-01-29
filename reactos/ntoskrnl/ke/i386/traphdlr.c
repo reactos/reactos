@@ -1601,4 +1601,16 @@ KiTrap(KiDebugService,   KI_PUSH_FAKE_ERROR_CODE);
 KiTrap(KiSystemService,  KI_PUSH_FAKE_ERROR_CODE | KI_NONVOLATILES_ONLY);
 KiTrap(KiFastCallEntry,  KI_FAST_SYSTEM_CALL);
 
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+Kei386EoiHelper(VOID)
+{
+    /* We should never see this call happening */
+    DPRINT1("Mismatched NT/HAL version");
+    while (TRUE);
+}
+
 /* EOF */
