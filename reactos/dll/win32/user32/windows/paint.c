@@ -16,10 +16,9 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * PROJECT:         ReactOS user32.dll
- * FILE:            lib/user32/windows/paint.c
+ * FILE:            dll/win32/user32/windows/paint.c
  * PURPOSE:         Input
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:
@@ -114,8 +113,14 @@ GetUpdateRgn(
  * @implemented
  */
 BOOL WINAPI
-ScrollDC(HDC hDC, int dx, int dy, CONST RECT *lprcScroll, CONST RECT *lprcClip,
-   HRGN hrgnUpdate, LPRECT lprcUpdate)
+ScrollDC(
+   HDC hDC,
+   int dx,
+   int dy,
+   CONST RECT *lprcScroll,
+   CONST RECT *lprcClip,
+   HRGN hrgnUpdate,
+   LPRECT lprcUpdate)
 {
    if (hDC == NULL) return FALSE;
 
@@ -127,8 +132,13 @@ ScrollDC(HDC hDC, int dx, int dy, CONST RECT *lprcScroll, CONST RECT *lprcClip,
       return TRUE;
    }
 
-   return NtUserScrollDC(hDC, dx, dy, lprcScroll, lprcClip, hrgnUpdate,
-      lprcUpdate);
+   return NtUserScrollDC( hDC,
+                          dx,
+                          dy,
+                          lprcScroll,
+                          lprcClip,
+                          hrgnUpdate,
+                          lprcUpdate);
 }
 
 /*
@@ -179,24 +189,20 @@ WINAPI
 UpdateWindow(
   HWND hWnd)
 {
-  return RedrawWindow( hWnd, NULL, 0, RDW_UPDATENOW | RDW_ALLCHILDREN );
-}
+  PWND pWnd = ValidateHwnd(hWnd);
 
-
+  if (!pWnd)
+     return FALSE;
 /*
- * @implemented
- */
-BOOL
-WINAPI
-ValidateRect(
-  HWND hWnd,
-  CONST RECT *lpRect)
-{
-  /* FIXME: should RDW_NOCHILDREN be included too? Ros used to,
-     but Wine dont so i removed it... */
-  return RedrawWindow(hWnd, lpRect, 0, RDW_VALIDATE);
+  if ( pWnd->hrgnUpdate ||
+       pWnd->state & WNDS_INTERNALPAINT ||
+       pWnd->spwndChild )
+  {*/
+     return RedrawWindow( hWnd, NULL, 0, RDW_UPDATENOW | RDW_ALLCHILDREN );
+//     return NtUserCallHwndLock(hWnd, HWNDLOCK_ROUTINE_UPDATEWINDOW);
+/*  }
+  return TRUE;*/
 }
-
 
 /*
  * @implemented
@@ -210,8 +216,8 @@ ValidateRgn(
   /* FIXME: should RDW_NOCHILDREN be included too? Ros used to,
      but Wine dont so i removed it... */
   return RedrawWindow( hWnd, NULL, hRgn, RDW_VALIDATE );
+//  return NtUserCallHwndParamLock(hWnd, (DWORD)hRgn, TWOPARAM_ROUTINE_VALIDATERGN);
 }
-
 
 /*
  * @implemented
@@ -224,7 +230,6 @@ GetWindowRgn(
 {
   return (int)NtUserCallTwoParam((DWORD_PTR)hWnd, (DWORD_PTR)hRgn, TWOPARAM_ROUTINE_GETWINDOWRGN);
 }
-
 
 /*
  * @implemented
