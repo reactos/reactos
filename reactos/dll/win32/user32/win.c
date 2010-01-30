@@ -3315,7 +3315,7 @@ BOOL WINAPI SwitchDesktop( HDESK hDesktop)
     hWnd = GetDesktopWindow(/*hDesktop*/);
 
     FIXME("SwitchDesktop(hDesktop %p, desk window %x) stub!\n", hDesktop, hWnd);
-
+#if 0
     /* Set foreground window */
     SetForegroundWindow(hWnd);
 
@@ -3328,7 +3328,7 @@ BOOL WINAPI SwitchDesktop( HDESK hDesktop)
     UpdateWindow(hWnd);
 
     RedrawWindow(NULL, NULL, 0, RDW_INVALIDATE | RDW_FRAME | RDW_ERASENOW | RDW_ALLCHILDREN);
-
+#endif
     return TRUE;
 }
 
