@@ -2,11 +2,17 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel
  * FILE:            ntoskrnl/include/amd64/asmmacro.S
- * PURPOSE:         ASM macros for for GAS and ML64
+ * PURPOSE:         ASM macros for for GAS and MASM/ML64
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
 #ifdef _MSC_VER
+
+/* Allow ".name" identifiers */
+OPTION DOTNAME
+
+/* Hex numbers need to be in 01ABh format */
+#define HEX(x) 0##x##h
 
 /* MASM/ML doesn't want explicit [rip] addressing */
 #define RIP(address) address
@@ -24,12 +30,22 @@ ENDM
     name ENDP
 ENDM
 
+/* MASM doesn't have an ASCIIZ macro */
+.ASCIIZ MACRO text
+    DB text, 0
+ENDM
+
+/* We need this to distinguish repeat from macros */
+#define ENDR ENDM
 
 #else /***********************************************************************/
 
 /* Force intel syntax */
 .intel_syntax noprefix
 .code64
+
+/* Hex numbers need to be in 0x1AB format */
+#define HEX(x) 0x##x
 
 /* GAS needs explicit [rip] addressing */
 #define RIP(address) address##[rip]
@@ -46,13 +62,21 @@ ENDM
 .endm
 
 /* ... and .ENDP, replacing ENDP */
-.macro .ENDP
+.macro .ENDP name
     .cfi_endproc
     .endfunc
 .endm
 
 /* MASM compatible PUBLIC */
 #define PUBLIC .global
+
+/* MASM compatible ALIGN */
+#define ALIGN .align
+
+/* MASM compatible REPEAT, additional ENDR */
+#define REPEAT .rept
+#define ENDR .endr
+
 
 /* Macros for x64 stack unwind OPs */
 
