@@ -159,5 +159,6 @@ code = 1
    conditionals. We therefore use "if", too. .if shouldn't be used at all */
 #define if .if
 #define endif .endif
+#define else .else
 
 #endif
