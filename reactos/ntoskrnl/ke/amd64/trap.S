@@ -16,7 +16,7 @@
 
 .global _MsgUnimplemented
 _MsgUnimplemented:
-.asciz "WARNING:  %s at %s:%d is UNIMPLEMENTED!\n"
+.ascii "WARNING:  %s at %s:%d is UNIMPLEMENTED!\n\0"
 
 _MsgPageFault:
 .ascii "Page fault! Code = 0x%x, RIP = %p, FaultingAddress = %p\n\0"
@@ -81,10 +81,9 @@ _MsgTrapInfo:
  * ENTER_TRAP_FRAME - Allocate SIZE_KTRAP_FRAME and save registers to it
  */
 .macro ENTER_TRAP_FRAME Flags
-.set SIZE_INITIAL_FRAME, 7 * 8
-//.set SIZE_LOCAL_DATA, SIZE_EXCEPTION_RECORD + 0x28
-.set SIZE_TRAP_FRAME_ALLOC, SIZE_KTRAP_FRAME - SIZE_INITIAL_FRAME
-.set TRAPFLAGS, \Flags
+    SIZE_INITIAL_FRAME = 7 * 8
+    SIZE_TRAP_FRAME_ALLOC = SIZE_KTRAP_FRAME - SIZE_INITIAL_FRAME
+    TRAPFLAGS = \Flags
 
     /* Save rbp */
     push rbp
@@ -97,14 +96,14 @@ _MsgTrapInfo:
     /* Point rbp to the KTRAP_FRAME */
     lea rbp, [rsp]
 
-if (TRAPFLAGS & TRAPFLAG_NONVOLATILES)
+if (TRAPFLAGS AND TRAPFLAG_NONVOLATILES)
     /* Save non-volatile registers */
     mov [rbp + KTRAP_FRAME_Rbx], rbx
     mov [rbp + KTRAP_FRAME_Rdi], rdi
     mov [rbp + KTRAP_FRAME_Rsi], rsi
 endif
 
-if (TRAPFLAGS & TRAPFLAG_VOLATILES)
+if (TRAPFLAGS AND TRAPFLAG_VOLATILES)
     /* Save volatile registers */
     mov [rbp + KTRAP_FRAME_Rax], rax
     mov [rbp + KTRAP_FRAME_Rcx], rcx
@@ -115,7 +114,7 @@ if (TRAPFLAGS & TRAPFLAG_VOLATILES)
     mov [rbp + KTRAP_FRAME_R11], r11
 endif
 
-if (TRAPFLAGS & TRAPFLAG_XMM)
+if (TRAPFLAGS AND TRAPFLAG_XMM)
     /* Save xmm registers */
     movdqa [rbp + KTRAP_FRAME_Xmm0], xmm0
     movdqa [rbp + KTRAP_FRAME_Xmm1], xmm1
@@ -125,7 +124,7 @@ if (TRAPFLAGS & TRAPFLAG_XMM)
     movdqa [rbp + KTRAP_FRAME_Xmm5], xmm5
 endif
 
-if (TRAPFLAGS & TRAPFLAG_SEGMENTS)
+if (TRAPFLAGS AND TRAPFLAG_SEGMENTS)
     /* Save segment selectors */
     mov ax, ds
     mov [rbp + KTRAP_FRAME_SegDs], ax
@@ -153,7 +152,7 @@ endif
 // KTRAP_FRAME_ExceptionActive
 // KTRAP_FRAME_MxCsr
 
-if (TRAPFLAGS & TRAPFLAG_DEBUG)
+if (TRAPFLAGS AND TRAPFLAG_DEBUG)
     /* Save debug registers */
     mov rax, dr0
     mov [rbp + KTRAP_FRAME_Dr0], rax
@@ -186,7 +185,7 @@ endif
  */
 .macro LEAVE_TRAP_FRAME
 
-if (TRAPFLAGS & TRAPFLAG_SEGMENTS)
+if (TRAPFLAGS AND TRAPFLAG_SEGMENTS)
     /* Restore segment selectors */
     mov ax, [rbp + KTRAP_FRAME_SegDs]
     mov ds, ax
@@ -201,14 +200,14 @@ endif
     swapgs
 1:
 
-if (TRAPFLAGS & TRAPFLAG_NONVOLATILES)
+if (TRAPFLAGS AND TRAPFLAG_NONVOLATILES)
     /* Restore non-volatile registers */
     mov rbx, [rbp + KTRAP_FRAME_Rbx]
     mov rdi, [rbp + KTRAP_FRAME_Rdi]
     mov rsi, [rbp + KTRAP_FRAME_Rsi]
 endif
 
-if (TRAPFLAGS & TRAPFLAG_VOLATILES)
+if (TRAPFLAGS AND TRAPFLAG_VOLATILES)
     /* Restore volatile registers */
     mov rax, [rbp + KTRAP_FRAME_Rax]
     mov rcx, [rbp + KTRAP_FRAME_Rcx]
@@ -219,7 +218,7 @@ if (TRAPFLAGS & TRAPFLAG_VOLATILES)
     mov r11, [rbp + KTRAP_FRAME_R11]
 endif
 
-if (TRAPFLAGS & TRAPFLAG_XMM)
+if (TRAPFLAGS AND TRAPFLAG_XMM)
     /* Restore xmm registers */
     movdqa xmm0, [rbp + KTRAP_FRAME_Xmm0]
     movdqa xmm1, [rbp + KTRAP_FRAME_Xmm1]
@@ -242,16 +241,16 @@ endif
 .text
 .code64
 
-.align 8
-.global _InterruptDispatchTable
+ALIGN 8
+PUBLIC _InterruptDispatchTable
 _InterruptDispatchTable:
-.set Vector, 0
-.rept 256
+Vector = 0
+REPEAT 256
     push Vector
     jmp _KiUnexpectedInterrupt
-    .align 8
-    .set Vector, Vector+1
-.endr
+    ALIGN 8
+    Vector = Vector + 1
+ENDR
 
 // rbp = TrapFrame, eax = ExceptionCode, edx = NumParams, r9,r10,r11 = params
 _InternalDispatchException:
@@ -333,7 +332,7 @@ PUBLIC _KiDivideErrorFault
     UNIMPLEMENTED KiDivideErrorFault
 
     jmp $
-.ENDP
+.ENDP _KiDivideErrorFault
 
 PUBLIC _KiDebugTrapOrFault
 .PROC _KiDebugTrapOrFault
@@ -366,7 +365,7 @@ KiDebugTrapOrFaultKMode:
     /* Return */
     LEAVE_TRAP_FRAME
     iretq
-.ENDP
+.ENDP _KiDebugTrapOrFault
 
 PUBLIC _KiNmiInterrupt
 .PROC _KiNmiInterrupt
@@ -378,7 +377,7 @@ PUBLIC _KiNmiInterrupt
     UNIMPLEMENTED KiNmiInterrupt
 
     jmp $
-.ENDP
+.ENDP _KiNmiInterrupt
 
 PUBLIC _KiBreakpointTrap
 .PROC _KiBreakpointTrap
@@ -406,7 +405,7 @@ PUBLIC _KiBreakpointTrap
     /* Return */
     LEAVE_TRAP_FRAME
     iretq
-.ENDP
+.ENDP _KiBreakpointTrap
 
 PUBLIC _KiOverflowTrap
 .PROC _KiOverflowTrap
@@ -417,7 +416,7 @@ PUBLIC _KiOverflowTrap
 
     UNIMPLEMENTED KiOverflowTrap
     jmp $
-.ENDP
+.ENDP _KiOverflowTrap
 
 PUBLIC _KiBoundFault
 .PROC _KiBoundFault
@@ -435,7 +434,7 @@ PUBLIC _KiBoundFault
     UNIMPLEMENTED KiBoundFault
 
     jmp $
-.ENDP
+.ENDP _KiBoundFault
 
 PUBLIC _KiInvalidOpcodeFault
 .PROC _KiInvalidOpcodeFault
@@ -458,7 +457,7 @@ PUBLIC _KiInvalidOpcodeFault
     /* Return */
     LEAVE_TRAP_FRAME
     iretq
-.ENDP
+.ENDP _KiInvalidOpcodeFault
 
 PUBLIC _KiNpxNotAvailableFault
 .PROC _KiNpxNotAvailableFault
@@ -470,7 +469,7 @@ PUBLIC _KiNpxNotAvailableFault
     UNIMPLEMENTED KiNpxNotAvailableFault
 
     jmp $
-.ENDP
+.ENDP _KiNpxNotAvailableFault
 
 PUBLIC _KiDoubleFaultAbort
 .PROC _KiDoubleFaultAbort
@@ -498,7 +497,7 @@ PUBLIC _KiDoubleFaultAbort
     call _KeBugCheckWithTf
 
     jmp $
-.ENDP
+.ENDP _KiDoubleFaultAbort
 
 PUBLIC _KiNpxSegmentOverrunAbort
 .PROC _KiNpxSegmentOverrunAbort
@@ -510,7 +509,7 @@ PUBLIC _KiNpxSegmentOverrunAbort
     UNIMPLEMENTED KiNpxSegmentOverrunAbort
 
     jmp $
-.ENDP
+.ENDP _KiNpxSegmentOverrunAbort
 
 PUBLIC _KiInvalidTssFault
 .PROC _KiInvalidTssFault
@@ -520,7 +519,7 @@ PUBLIC _KiInvalidTssFault
     UNIMPLEMENTED KiInvalidTssFault
 
     jmp $
-.ENDP
+.ENDP _KiInvalidTssFault
 
 PUBLIC _KiSegmentNotPresentFault
 .PROC _KiSegmentNotPresentFault
@@ -530,7 +529,7 @@ PUBLIC _KiSegmentNotPresentFault
     UNIMPLEMENTED KiSegmentNotPresentFault
 
     jmp $
-.ENDP
+.ENDP _KiSegmentNotPresentFault
 
 PUBLIC _KiStackFault
 .PROC _KiStackFault
@@ -540,7 +539,7 @@ PUBLIC _KiStackFault
     UNIMPLEMENTED KiStackFault
 
     jmp $
-.ENDP
+.ENDP _KiStackFault
 
 PUBLIC _KiGeneralProtectionFault
 .PROC _KiGeneralProtectionFault
@@ -652,7 +651,7 @@ KiGpfExit:
     LEAVE_TRAP_FRAME
     iretq
 
-.ENDP
+.ENDP _KiGeneralProtectionFault
 
 PUBLIC _KiPageFault
 .PROC _KiPageFault
@@ -721,7 +720,7 @@ SpecialCode:
 PageFaultReturn:
     LEAVE_TRAP_FRAME;
     iretq
-.ENDP
+.ENDP _KiPageFault
 
 PUBLIC _KiFloatingErrorFault
 .PROC _KiFloatingErrorFault
@@ -733,7 +732,7 @@ PUBLIC _KiFloatingErrorFault
     UNIMPLEMENTED KiFloatingErrorFault
 
     jmp $
-.ENDP
+.ENDP _KiFloatingErrorFault
 
 PUBLIC _KiAlignmentFault
 .PROC _KiAlignmentFault
@@ -743,7 +742,7 @@ PUBLIC _KiAlignmentFault
     UNIMPLEMENTED KiAlignmentFault
 
     jmp $
-.ENDP
+.ENDP _KiAlignmentFault
 
 PUBLIC _KiMcheckAbort
 .PROC _KiMcheckAbort
@@ -755,7 +754,7 @@ PUBLIC _KiMcheckAbort
     UNIMPLEMENTED KiMcheckAbort
 
     jmp $
-.ENDP
+.ENDP _KiMcheckAbort
 
 PUBLIC _KiXmmException
 .PROC _KiXmmException
@@ -767,7 +766,7 @@ PUBLIC _KiXmmException
     UNIMPLEMENTED KiXmmException
 
     jmp $
-.ENDP
+.ENDP _KiXmmException
 
 PUBLIC _KiApcInterrupt
 .PROC _KiApcInterrupt
@@ -776,16 +775,16 @@ PUBLIC _KiApcInterrupt
     UNIMPLEMENTED KiApcInterrupt
 
     jmp $
-.ENDP
+.ENDP _KiApcInterrupt
 
 PUBLIC _KiRaiseAssertion
 .PROC _KiRaiseAssertion
     .pushframe 1
 
     UNIMPLEMENTED KiRaiseAssertion
- 
+
     jmp $
-.ENDP
+.ENDP _KiRaiseAssertion
 
 PUBLIC _KiDebugServiceTrap
 .PROC _KiDebugServiceTrap
@@ -811,7 +810,7 @@ PUBLIC _KiDebugServiceTrap
 
     LEAVE_TRAP_FRAME;
     iretq
-.ENDP
+.ENDP _KiDebugServiceTrap
 
 PUBLIC _KiDpcInterrupt
 .PROC _KiDpcInterrupt
@@ -820,7 +819,7 @@ PUBLIC _KiDpcInterrupt
     UNIMPLEMENTED KiDpcInterrupt
 
     jmp $
-.ENDP
+.ENDP _KiDpcInterrupt
 
 PUBLIC _KiIpiInterrupt
 .PROC _KiIpiInterrupt
@@ -829,7 +828,7 @@ PUBLIC _KiIpiInterrupt
     UNIMPLEMENTED KiIpiInterrupt
 
     jmp $
-.ENDP
+.ENDP _KiIpiInterrupt
 
 PUBLIC _KiUnexpectedInterrupt
 .PROC _KiUnexpectedInterrupt
@@ -850,10 +849,10 @@ PUBLIC _KiUnexpectedInterrupt
     mov [rbp + KTRAP_FRAME_P5 + 8], rbp // trap frame
     call _KeBugCheckWithTf
 
-.ENDP
+.ENDP _KiUnexpectedInterrupt
 
 PUBLIC _KiSystemFatalException
 .PROC _KiSystemFatalException
 
-.ENDP
+.ENDP _KiSystemFatalException
 
