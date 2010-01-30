@@ -37,9 +37,20 @@ static HBRUSH FrameBrushes[13];
 static HBITMAP hHatch;
 const DWORD HatchBitmap[4] = {0x5555AAAA, 0x5555AAAA, 0x5555AAAA, 0x5555AAAA};
 
+BOOL WINAPI MirrorRgn(HWND hwnd, HRGN hrgn);
 BOOL WINAPI PolyPatBlt(HDC,DWORD,PPATRECT,INT,ULONG);
 
 /* FUNCTIONS *****************************************************************/
+
+INT
+WINAPI
+MirrorWindowRect( PWND pWnd, LPRECT lprc)
+{
+  INT Ret = pWnd->rcWindow.right - pWnd->rcWindow.left - lprc->left;
+  lprc->left = pWnd->rcWindow.right - pWnd->rcWindow.left - lprc->right;
+  lprc->right = Ret;
+  return Ret;
+}
 
 VOID
 CreateFrameBrushes(VOID)
@@ -91,7 +102,24 @@ GetUpdateRect(
   LPRECT Rect,
   BOOL Erase)
 {
-  return NtUserGetUpdateRect(Wnd, Rect, Erase);
+  PWND pWnd;
+
+  pWnd = ValidateHwnd(Wnd);
+  if (!pWnd)
+     return FALSE;
+/*
+  if ( pWnd->hrgnUpdate ||
+       pWnd->state & (WNDS_SENDERASEBACKGROUND|WNDS_SENDNCPAINT|WNDS_UPDATEDIRTY|WNDS_PAINTNOTPROCESSED))
+  {*/
+     return NtUserGetUpdateRect(Wnd, Rect, Erase);
+/*  }
+
+  if (Rect)
+  { // Did the Rgn update? No! Back set and shutup!
+     Rect->left = Rect->right = Rect->top = Rect->bottom = 0;
+  }
+  return FALSE;  // msdn: "If there is no update region, the return value is zero."
+*/
 }
 
 
@@ -105,7 +133,25 @@ GetUpdateRgn(
   HRGN hRgn,
   BOOL bErase)
 {
-  return NtUserGetUpdateRgn(hWnd, hRgn, bErase);
+  PWND pWnd;
+
+  if (!hRgn)
+  {
+     SetLastError(ERROR_INVALID_HANDLE);
+     return ERROR;
+  }
+
+  pWnd = ValidateHwnd(hWnd);
+  if (!pWnd)
+     return ERROR;
+/*
+  if ( pWnd->hrgnUpdate ||
+       pWnd->state & (WNDS_SENDERASEBACKGROUND|WNDS_SENDNCPAINT|WNDS_UPDATEDIRTY|WNDS_PAINTNOTPROCESSED))
+  {*/
+     return NtUserGetUpdateRgn(hWnd, hRgn, bErase);
+/*  }
+  SetRectRgn(hRgn, 0, 0, 0, 0);
+  return NULLREGION;*/
 }
 
 
@@ -224,7 +270,31 @@ GetWindowRgn(
   HWND hWnd,
   HRGN hRgn)
 {
-  return (int)NtUserCallTwoParam((DWORD_PTR)hWnd, (DWORD_PTR)hRgn, TWOPARAM_ROUTINE_GETWINDOWRGN);
+  PWND pWnd;
+  int Ret;
+
+  if (!hRgn)
+     return ERROR;
+
+  pWnd = ValidateHwnd(hWnd);
+
+  if (!pWnd) // || !pwnd->hrgnClip || pwnd->state2 & WNDS2_MAXIMIZEDMONITORREGION)
+     return ERROR;
+/*
+  Ret = CombineRgn(hRgn, pWnd->hrgnClip, NULL, RGN_COPY);
+
+  if (!Ret)
+     return ERROR;
+
+  if (pWnd->fnid != FNID_DESKTOP)
+     Ret = OffsetRgn(hRgn, -pWnd->rcWindow.left, -pWnd->rcWindow.top);
+
+  if (pWnd->ExStyle & WS_EX_LAYOUTRTL)
+     MirrorRgn(hWnd, hRgn);
+*/
+  Ret = (int)NtUserCallTwoParam((DWORD_PTR)hWnd, (DWORD_PTR)hRgn, TWOPARAM_ROUTINE_GETWINDOWRGN);
+
+  return Ret;
 }
 
 /*
@@ -236,7 +306,31 @@ GetWindowRgnBox(
     HWND hWnd,
     LPRECT lprc)
 {
-  return (int)NtUserCallTwoParam((DWORD_PTR)hWnd, (DWORD_PTR)lprc, TWOPARAM_ROUTINE_GETWINDOWRGNBOX);
+  PWND pWnd;
+  int Ret;
+
+  if (!lprc)
+     return ERROR;
+
+  pWnd = ValidateHwnd(hWnd);
+
+  if (!pWnd) // || !pwnd->hrgnClip || pwnd->state2 & WNDS2_MAXIMIZEDMONITORREGION)
+     return ERROR;
+/*
+  Ret = GetRgnBox(pWnd->hrgnClip, lprc);
+
+  if (!Ret)
+     return ERROR;
+
+  if (pWnd->fnid != FNID_DESKTOP)
+     Ret = OffsetRect(lprc, -pWnd->rcWindow.left, -pWnd->rcWindow.top);
+
+  if (pWnd->ExStyle & WS_EX_LAYOUTRTL)
+     MirrorWindowRect(pWnd, lprc);
+*/
+  Ret = (int)NtUserCallTwoParam((DWORD_PTR)hWnd, (DWORD_PTR)lprc, TWOPARAM_ROUTINE_GETWINDOWRGNBOX);
+
+  return Ret;
 }
 
 
