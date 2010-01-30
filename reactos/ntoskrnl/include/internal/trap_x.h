@@ -616,8 +616,7 @@ KiEnterV86Trap(IN PKTRAP_FRAME TrapFrame)
     Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
     Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
 
-    /* Save exception list and bogus previous mode */
-    TrapFrame->PreviousPreviousMode = -1;
+    /* Save exception list */
     TrapFrame->ExceptionList = KeGetPcr()->Tib.ExceptionList;
 
     /* Clear direction flag */
@@ -639,10 +638,7 @@ VOID
 FORCEINLINE
 KiEnterInterruptTrap(IN PKTRAP_FRAME TrapFrame)
 {
-    /* Set bogus previous mode */
-    TrapFrame->PreviousPreviousMode = -1;
-    
-    /* Check for V86 mode */
+    /* Check for V86 mode, otherwise check for ring 3 code */
     if (__builtin_expect(TrapFrame->EFlags & EFLAGS_V86_MASK, 0))
     {
         /* Restore V8086 segments into Protected Mode segments */
@@ -651,9 +647,7 @@ KiEnterInterruptTrap(IN PKTRAP_FRAME TrapFrame)
         TrapFrame->SegDs = TrapFrame->V86Ds;
         TrapFrame->SegEs = TrapFrame->V86Es;
     }
-    
-    /* Check if this wasn't kernel code */
-    if (__builtin_expect(TrapFrame->SegCs != KGDT_R0_CODE, 1)) /* Ring 3 is more common */
+    else if (__builtin_expect(TrapFrame->SegCs != KGDT_R0_CODE, 1)) /* Ring 3 is more common */
     {
         /* Save segments and then switch to correct ones */
         TrapFrame->SegFs = Ke386GetFs();
@@ -668,10 +662,7 @@ KiEnterInterruptTrap(IN PKTRAP_FRAME TrapFrame)
     /* Save exception list and terminate it */
     TrapFrame->ExceptionList = KeGetPcr()->Tib.ExceptionList;
     KeGetPcr()->Tib.ExceptionList = EXCEPTION_CHAIN_END;
-    
-    /* No error code */
-    TrapFrame->ErrCode = 0;
-    
+
     /* Clear direction flag */
     Ke386ClearDirectionFlag();
     
@@ -718,8 +709,7 @@ KiEnterTrap(IN PKTRAP_FRAME TrapFrame)
     TrapFrame->SegGs = Ke386GetGs();
     Ke386SetFs(KGDT_R0_PCR);
 
-    /* Save exception list and bogus previous mode */
-    TrapFrame->PreviousPreviousMode = -1;
+    /* Save exception list */
     TrapFrame->ExceptionList = KeGetPcr()->Tib.ExceptionList;
     
     /* Check for V86 mode */
