@@ -18,7 +18,7 @@ OPTION DOTNAME
 #define VAL(x) x
 
 /* MASM/ML doesn't want explicit [rip] addressing */
-#define RIP(address) address
+#define RIP(address) [address]
 
 /* Due to MASM's reverse syntax, we are forced to use a precompiler macro */
 #define MACRO(name, ...) name MACRO __VA_ARGS__
@@ -33,8 +33,13 @@ ENDM
     name ENDP
 ENDM
 
-/* MASM doesn't have an ASCIIZ macro */
-.ASCIIZ MACRO text
+/* MASM doesn't have an ASCII macro */
+.ASCII MACRO text
+    DB text
+ENDM
+
+/* MASM doesn't have an ASCIZ macro */
+.ASCIZ MACRO text
     DB text, 0
 ENDM
 
@@ -98,13 +103,14 @@ ENDM
     .set cfa_current_offset, cfa_current_offset - \size
 .endm
 
-.macro .pushframe code
-    .if (\code == 0)
-        .cfi_adjust_cfa_offset 0x28
-        .set cfa_current_offset, cfa_current_offset - 0x28
-    .else
+code = 1
+.macro .pushframe param=0
+    .if (\param)
         .cfi_adjust_cfa_offset 0x30
         .set cfa_current_offset, cfa_current_offset - 0x30
+    .else
+        .cfi_adjust_cfa_offset 0x28
+        .set cfa_current_offset, cfa_current_offset - 0x28
     .endif
 .endm
 
