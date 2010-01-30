@@ -8,25 +8,53 @@
 
 #ifdef _MSC_VER
 
-#else
+/* MASM/ML doesn't want explicit [rip] addressing */
+#define RIP(address) address
 
+/* Due to MASM's reverse syntax, we are forced to use a precompiler macro */
+#define MACRO(name, ...) name MACRO __VA_ARGS__
+
+/* To avoid reverse syntax we provide a new macro .PROC, replacing PROC... */
+.PROC MACRO namex
+    namex PROC FRAME
+ENDM
+
+/* ... and .ENDP, replacing ENDP */
+.ENDP MACRO name
+    name ENDP
+ENDM
+
+
+#else /***********************************************************************/
+
+/* Force intel syntax */
 .intel_syntax noprefix
 .code64
 
-/* Macros for x64 stack unwind OPs */
+/* GAS needs explicit [rip] addressing */
+#define RIP(address) address##[rip]
 
-.macro .proc name
-    .func name
-    .global _\name
-    _\name:
+/* Due to MASM's reverse syntax, we are forced to use a precompiler macro */
+#define MACRO(name, ...) .MACRO name, __VA_ARGS__
+
+/* To avoid reverse syntax we provide a new macro .PROC, replacing PROC... */
+.macro .PROC name
+    .func \name
+    \name:
     .cfi_startproc
     .equ cfa_current_offset, -8
 .endm
 
-.macro .endproc
+/* ... and .ENDP, replacing ENDP */
+.macro .ENDP
     .cfi_endproc
     .endfunc
 .endm
+
+/* MASM compatible PUBLIC */
+#define PUBLIC .global
+
+/* Macros for x64 stack unwind OPs */
 
 .macro .allocstack size
     .cfi_adjust_cfa_offset \size
@@ -82,5 +110,10 @@
     add rsp, 0x20
 .endm
 #define UNIMPLEMENTED UNIMPLEMENTED2 __FILE__, __LINE__,
+
+/* MASM/ML uses ".if" for runtime conditionals, and "if" for compile time
+   conditionals. We therefore use "if", too. .if shouldn't be used at all */
+#define if .if
+#define endif .endif
 
 #endif
