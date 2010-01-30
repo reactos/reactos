@@ -309,7 +309,27 @@ Author:
 #define EFLAGS_USER_SANITIZE                    0x3F4DD7
 
 //
-// NTSTATUS and Bugcheck Codes
+// Exception codes
+//
+#define EXCEPTION_DIVIDED_BY_ZERO     0x00000
+#define EXCEPTION_DEBUG               0x00001
+#define EXCEPTION_NMI                 0x00002
+#define EXCEPTION_INT3                0x00003
+#define EXCEPTION_BOUND_CHECK         0x00005
+#define EXCEPTION_INVALID_OPCODE      0x00006
+#define EXCEPTION_NPX_NOT_AVAILABLE   0x00007
+#define EXCEPTION_DOUBLE_FAULT        0x00008
+#define EXCEPTION_NPX_OVERRUN         0x00009
+#define EXCEPTION_INVALID_TSS         0x0000A
+#define EXCEPTION_SEGMENT_NOT_PRESENT 0x0000B
+#define EXCEPTION_STACK_FAULT         0x0000C
+#define EXCEPTION_GP_FAULT            0x0000D
+#define EXCEPTION_RESERVED_TRAP       0x0000F
+#define EXCEPTION_NPX_ERROR           0x00010
+#define EXCEPTION_ALIGNMENT_CHECK     0x00011
+
+//
+// NTSTATUS values
 //
 #define STATUS_ACCESS_VIOLATION                 0xC0000005
 #define STATUS_IN_PAGE_ERROR                    0xC0000006
@@ -336,6 +356,11 @@ Author:
 #define STATUS_FLOAT_UNDERFLOW                  0xC0000093
 #define STATUS_FLOAT_MULTIPLE_FAULTS            0xC00002B4
 #define STATUS_FLOAT_MULTIPLE_TRAPS             0xC00002B5
+#define STATUS_ASSERTION_FAILURE                0xC0000420
+
+//
+// Bugcheck Codes
+//
 #define APC_INDEX_MISMATCH                      0x01
 #define IRQL_NOT_GREATER_OR_EQUAL               0x09
 #define IRQL_NOT_LESS_OR_EQUAL                  0x0A
