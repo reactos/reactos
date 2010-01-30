@@ -66,6 +66,7 @@ ENDM
 #define TRAPFLAG_XMM HEX(04)
 #define TRAPFLAG_SEGMENTS HEX(08)
 #define TRAPFLAG_DEBUG HEX(10)
+#define TRAPFLAG_HAS_ERRORCODE HEX(100)
 
 #define TRAPFLAG_SYSTEMSERVICE (TRAPFLAG_VOLATILES|TRAPFLAG_DEBUG)
 #define TRAPFLAG_ALL HEX(ff)
@@ -87,17 +88,26 @@ ENDM
  */
 MACRO(ENTER_TRAP_FRAME, Flags)
 LOCAL dont_swap
-    SIZE_INITIAL_FRAME = 7 * 8
-    SIZE_TRAP_FRAME_ALLOC = SIZE_KTRAP_FRAME - SIZE_INITIAL_FRAME
+
+    /* Save the trap flags for this trap */
     TRAPFLAGS = VAL(Flags)
 
-    /* Save rbp */
-    push rbp
-    .pushreg rbp
+    /* Size of hardware trap frame */
+if (TRAPFLAGS AND TRAPFLAG_HAS_ERRORCODE)
+    .pushframe code
+    SIZE_INITIAL_FRAME = 6 * 8
+else
+    .pushframe
+    SIZE_INITIAL_FRAME = 5 * 8
+endif
 
-    /* Make room for a KTRAP_FRAME and function parameters */
-    sub rsp, SIZE_TRAP_FRAME_ALLOC
-    .allocstack SIZE_TRAP_FRAME_ALLOC
+    /* Make room for a KTRAP_FRAME */
+    sub rsp, (SIZE_KTRAP_FRAME - SIZE_INITIAL_FRAME)
+    .allocstack (SIZE_KTRAP_FRAME - SIZE_INITIAL_FRAME)
+    .endprolog
+
+    /* Save rbp */
+    mov [rsp + KTRAP_FRAME_Rbp], rbp
 
     /* Point rbp to the KTRAP_FRAME */
     lea rbp, [rsp]
@@ -237,8 +247,8 @@ endif
     /* Restore rbp */
     mov rbp, [rbp + KTRAP_FRAME_Rbp]
 
-    /* Adjust stack pointer (plus one qword for rbp, one for error code) */
-    add rsp, SIZE_TRAP_FRAME_ALLOC + HEX(10)
+    /* Adjust stack pointer */
+    add rsp, KTRAP_FRAME_Rip
 ENDM
 
 
@@ -260,7 +270,7 @@ REPEAT 256
 ENDR
 
 // rbp = TrapFrame, eax = ExceptionCode, edx = NumParams, r9,r10,r11 = params
-_InternalDispatchException:
+.PROC _InternalDispatchException
 
     /* Allocate stack space for EXCEPTION_RECORD and KEXCEPTION_FRAME */
     sub rsp, SIZE_EXCEPTION_RECORD + SIZE_KEXCEPTION_FRAME
@@ -326,30 +336,36 @@ _InternalDispatchException:
 
     add rsp, SIZE_EXCEPTION_RECORD + SIZE_KEXCEPTION_FRAME
     ret
+.ENDP _InternalDispatchException
+
 
 /* SOFTWARE INTERRUPT SERVICES ***********************************************/
 
 PUBLIC _KiDivideErrorFault
 .PROC _KiDivideErrorFault
-    .pushframe
     /* Push pseudo error code */
-    push 0
-    .allocstack 8
-    .endprolog
+    ENTER_TRAP_FRAME TRAPFLAG_ALL
 
-    UNIMPLEMENTED KiDivideErrorFault
+    /* Enable interrupts */
+    sti
 
-    jmp $
+    /* Dispatch the exception */
+    mov eax, STATUS_INTEGER_DIVIDE_BY_ZERO
+    mov edx, 0
+    mov r9, 0
+    mov r10, 0
+    mov r11, 0
+    call _InternalDispatchException
+
+    /* Return */
+    LEAVE_TRAP_FRAME
+    iretq
 .ENDP _KiDivideErrorFault
+
 
 PUBLIC _KiDebugTrapOrFault
 .PROC _KiDebugTrapOrFault
-    .pushframe
     /* Push pseudo error code */
-    push 0
-    .allocstack 8
-    .endprolog
-
     ENTER_TRAP_FRAME TRAPFLAG_ALL
 
     TRAPINFO KiDebugTrapOrFault
@@ -376,27 +392,25 @@ KiDebugTrapOrFaultKMode:
     iretq
 .ENDP _KiDebugTrapOrFault
 
+
 PUBLIC _KiNmiInterrupt
 .PROC _KiNmiInterrupt
-    .pushframe
     /* Push pseudo error code */
-    push 0
-    .allocstack 8
-    .endprolog
+    ENTER_TRAP_FRAME TRAPFLAG_ALL
 
     UNIMPLEMENTED KiNmiInterrupt
 
     jmp $
+
+    /* Return */
+    LEAVE_TRAP_FRAME
+    iretq
 .ENDP _KiNmiInterrupt
+
 
 PUBLIC _KiBreakpointTrap
 .PROC _KiBreakpointTrap
-    .pushframe
     /* Push pseudo error code */
-    push 0
-    .allocstack 8
-    .endprolog
-
     ENTER_TRAP_FRAME TRAPFLAG_ALL
 
     TRAPINFO KiBreakpointTrap
@@ -418,82 +432,128 @@ PUBLIC _KiBreakpointTrap
     iretq
 .ENDP _KiBreakpointTrap
 
+
 PUBLIC _KiOverflowTrap
 .PROC _KiOverflowTrap
-    .pushframe
     /* Push pseudo error code */
-    push 0
-    .allocstack 8
-    .endprolog
+    ENTER_TRAP_FRAME TRAPFLAG_ALL
 
-    UNIMPLEMENTED KiOverflowTrap
-    jmp $
+    /* Enable interrupts */
+    sti
+
+    /* Dispatch the exception */
+    mov eax, STATUS_INTEGER_OVERFLOW
+    mov edx, 3
+    mov r9, 0
+    mov r10, 0
+    mov r11, 0
+    call _InternalDispatchException
+
+    /* Return */
+    LEAVE_TRAP_FRAME
+    iretq
 .ENDP _KiOverflowTrap
+
 
 PUBLIC _KiBoundFault
 .PROC _KiBoundFault
-    .pushframe
     /* Push pseudo error code */
-    push 0
-    .allocstack 8
+    ENTER_TRAP_FRAME TRAPFLAG_ALL
 
-    sub rsp, 32
-    .allocstack 32
+    /* Check if the frame was from kernelmode */
+    test word ptr [rbp + KTRAP_FRAME_SegCs], 3
+    jnz KiBoundFaltUserMode
 
-    mov [rsp + 8], rbx
-    .savereg rbx, 8
-    .endprolog
+    /* Bugcheck */
+    mov ecx, EXCEPTION_BOUND_CHECK
+    mov rdx, rbp
+    call _KiSystemFatalException
 
-    UNIMPLEMENTED KiBoundFault
+KiBoundFaltUserMode:
+    /* Enable interrupts for user-mode */
+    sti
 
-    jmp $
+    /* Dispatch the exception */
+    mov eax, STATUS_INTEGER_OVERFLOW
+    mov edx, 3
+    mov r9, 0
+    mov r10, 0
+    mov r11, 0
+    call _InternalDispatchException
+
+    /* Return */
+    LEAVE_TRAP_FRAME
+    iretq
 .ENDP _KiBoundFault
+
 
 PUBLIC _KiInvalidOpcodeFault
 .PROC _KiInvalidOpcodeFault
-    .pushframe
     /* Push pseudo error code */
-    push 0
-    .allocstack 8
-    .endprolog
-
     ENTER_TRAP_FRAME TRAPFLAG_ALL
 
     TRAPINFO KiInvalidOpcodeFault
 
-//    DISPATCH_EXCEPTION STATUS_BREAKPOINT, 3, 0, 0, 0
-
     mov rdx, [rbp + KTRAP_FRAME_Rip]
     lea rcx, _MsgInvalidOpcodeFault[rip]
     call qword ptr _FrLdrDbgPrint[rip]
-    jmp $
+
+    /* Enable interrupts */
+    sti
+
+    /* Check if the frame was from kernelmode */
+    test word ptr [rbp + KTRAP_FRAME_SegCs], 3
+    jz KiInvalidOpcodeKernel
+
+    // FIXME: handle STATUS_INVALID_LOCK_SEQUENCE
+
+KiInvalidOpcodeKernel:
+    /* Kernel mode fault */
+    
+    /* Dispatch the exception */
+    mov eax, STATUS_ILLEGAL_INSTRUCTION
+    mov edx, 3
+    mov r9, 0
+    mov r10, 0
+    mov r11, 0
+    call _InternalDispatchException
 
     /* Return */
     LEAVE_TRAP_FRAME
     iretq
 .ENDP _KiInvalidOpcodeFault
 
+
 PUBLIC _KiNpxNotAvailableFault
 .PROC _KiNpxNotAvailableFault
-    .pushframe
     /* Push pseudo error code */
-    push 0
-    .allocstack 8
-    .endprolog
+    ENTER_TRAP_FRAME TRAPFLAG_ALL
 
-    UNIMPLEMENTED KiNpxNotAvailableFault
+    /* Call the C handler */
+    mov rcx, rbp
+    call _KiNpxNotAvailableFaultHandler
 
-    jmp $
+    /* Check the return status code */
+    test eax, eax
+    jz KiNpxNotAvailableFaultExit
+
+    /* Dispatch the exception */
+    mov edx, 3
+    mov r9, 0
+    mov r10, 0
+    mov r11, 0
+    call _InternalDispatchException
+
+KiNpxNotAvailableFaultExit:
+    /* Return */
+    LEAVE_TRAP_FRAME
+    iretq
 .ENDP _KiNpxNotAvailableFault
+
 
 PUBLIC _KiDoubleFaultAbort
 .PROC _KiDoubleFaultAbort
-    .pushframe
     /* Push pseudo error code */
-    push 0
-    .allocstack 8
-    .endprolog
-
     ENTER_TRAP_FRAME TRAPFLAG_ALL
 
     lea rcx, _MsgDoubleFault[rip]
@@ -501,119 +561,94 @@ PUBLIC _KiDoubleFaultAbort
     mov r8, rbp
     call qword ptr _FrLdrDbgPrint[rip]
 
-    /* Bugcheck code UNEXPECTED_KERNEL_MODE_TRAP */
-    mov rcx, HEX(0000007F)
-    
-    /* Set double fault parameters */
-    mov rdx, 8 // EXCEPTION_DOUBLE_FAULT
-    mov r8, 0
-    mov r9, 0
-    mov [rbp + KTRAP_FRAME_P5], rbp // trap frame (HACKY)
-    push 0
-    call _KeBugCheckWithTf
+    /* Bugcheck */
+    mov ecx, 8 // EXCEPTION_DOUBLE_FAULT
+    mov rdx, rbp
+    call _KiSystemFatalException
 
     jmp $
 .ENDP _KiDoubleFaultAbort
 
+
 PUBLIC _KiNpxSegmentOverrunAbort
 .PROC _KiNpxSegmentOverrunAbort
-    .pushframe
     /* Push pseudo error code */
-    push 0
-    .allocstack 8
-    .endprolog
+    ENTER_TRAP_FRAME TRAPFLAG_ALL
 
-    UNIMPLEMENTED KiNpxSegmentOverrunAbort
+    /* Bugcheck */
+    mov ecx, EXCEPTION_NPX_OVERRUN
+    mov rdx, rbp
+    call _KiSystemFatalException
 
     jmp $
 .ENDP _KiNpxSegmentOverrunAbort
 
+
 PUBLIC _KiInvalidTssFault
 .PROC _KiInvalidTssFault
-    .pushframe code
     /* We have an error code */
-    .endprolog
+    ENTER_TRAP_FRAME (TRAPFLAG_HAS_ERRORCODE | TRAPFLAG_ALL)
 
-    UNIMPLEMENTED KiInvalidTssFault
+    /* Bugcheck */
+    mov ecx, EXCEPTION_INVALID_TSS
+    mov rdx, rbp
+    call _KiSystemFatalException
 
     jmp $
 .ENDP _KiInvalidTssFault
 
+
 PUBLIC _KiSegmentNotPresentFault
 .PROC _KiSegmentNotPresentFault
-    .pushframe
     /* We have an error code */
-    .endprolog
+    ENTER_TRAP_FRAME (TRAPFLAG_HAS_ERRORCODE | TRAPFLAG_ALL)
 
-    UNIMPLEMENTED KiSegmentNotPresentFault
+    /* Bugcheck */
+    mov ecx, EXCEPTION_SEGMENT_NOT_PRESENT
+    mov rdx, rbp
+    call _KiSystemFatalException
 
     jmp $
 .ENDP _KiSegmentNotPresentFault
 
+
 PUBLIC _KiStackFault
 .PROC _KiStackFault
-    .pushframe code
     /* We have an error code */
-    .endprolog
+    ENTER_TRAP_FRAME (TRAPFLAG_HAS_ERRORCODE | TRAPFLAG_ALL)
 
-    UNIMPLEMENTED KiStackFault
+    /* Bugcheck */
+    mov ecx, EXCEPTION_STACK_FAULT
+    mov rdx, rbp
+    call _KiSystemFatalException
 
     jmp $
 .ENDP _KiStackFault
 
+
 PUBLIC _KiGeneralProtectionFault
 .PROC _KiGeneralProtectionFault
-    .pushframe code
     /* We have an error code */
-    .endprolog
-
-    cli
-    ENTER_TRAP_FRAME TRAPFLAG_ALL
+    ENTER_TRAP_FRAME (TRAPFLAG_HAS_ERRORCODE | TRAPFLAG_ALL)
 
     TRAPINFO KiGeneralProtectionFault
-
     mov rdx, [rbp + KTRAP_FRAME_Rip]
     lea rcx, _MsgGeneralProtFault[rip]
     call qword ptr _FrLdrDbgPrint[rip]
 
-    /* Check if this was from user-mode */
-    cmp byte ptr [rbp + KTRAP_FRAME_PreviousMode], KernelMode
-    jnz KiGpfUserMode
+    /* Call the C handler */
+    call _KiGeneralProtectionFaultHandler
 
-    /* Get instruction */
-    mov rax, [rbp + KTRAP_FRAME_Rip]
-    mov rax, [rax]
+    /* Check for success */
+    test eax, eax
+    jge KiGpfExit
 
-    /* Check for MSR failure */
-    cmp al, HEX(0F)
-    jz KiGpfMsr
-
-    /* Check for IRET */
-    cmp ax, HEX(0CF48)
-    je KiGpfIret
-
-    /* Check for pop ds/es/fs/gs */
-    xor edx, edx
-    cmp al, HEX(1F)
-    jz KiGpfPopSegDs
-    cmp al, HEX(07)
-    jz KiGpfPopSegEs
-    cmp ax, HEX(0A10F)
-    jz KiGpfPopSegFs
-    cmp ax, HEX(0A90F)
-    jz KiGpfPopSegGs
-
-
-    mov dx, HEX(002B) // KGDT64_R3_DATA | RPL_MASK
-    cmp [rbp + KTRAP_FRAME_SegDs], dx
-    jne KiGpfPopSegDs
-    cmp [rbp + KTRAP_FRAME_SegEs], dx
-    jne KiGpfPopSegEs
-    cmp [rbp + KTRAP_FRAME_SegGs], dx
-    jne KiGpfPopSegGs
-    mov dx, HEX(0053) // KGDT64_R3_CMTEB | RPL_MASK
-    cmp [rbp + KTRAP_FRAME_SegFs], dx
-    jne KiGpfPopSegFs
+    /* Dispatch the exception */
+    mov edx, 3
+    mov r9, 0
+    mov r10, 0
+    mov r11, 0
+    call _InternalDispatchException
 
 KiGpfFatal:
 
@@ -626,61 +661,17 @@ KiGpfFatal:
     mov [rsp + KTRAP_FRAME_P5+8], rbp // trap frame
     call _KeBugCheckWithTf
 
-
-KiGpfPopSegDs:
-    mov [rbp + KTRAP_FRAME_SegDs], dx
-    jmp KiGpfPopSeg
-
-KiGpfPopSegEs:
-    mov [rbp + KTRAP_FRAME_SegEs], dx
-    jmp KiGpfPopSeg
-
-KiGpfPopSegFs:
-    mov [rbp + KTRAP_FRAME_SegFs], dx
-    jmp KiGpfPopSeg
-
-KiGpfPopSegGs:
-    mov [rbp + KTRAP_FRAME_SegGs], dx
-    jmp KiGpfPopSeg
-
-KiGpfPopSeg:
-    jmp KiGpfExit
-
-KiGpfIret:
-    /* Get error code */
-    mov ax, [rbp + KTRAP_FRAME_ErrorCode]
-//    and ax, ~RPL_MASK
-
-KiGpfMsr:
-
-    jmp KiGpfFatal
-    
-
-KiGpfUserMode:
-
-    /* Dispatch the exception */
-    mov eax, STATUS_ACCESS_VIOLATION
-    mov edx, 2
-    mov r9, [rbp + KTRAP_FRAME_ErrorCode]
-    mov r10, 0
-    mov r11, 0
-    call _InternalDispatchException
-
 KiGpfExit:
-
     /* Return */
     LEAVE_TRAP_FRAME
     iretq
-
 .ENDP _KiGeneralProtectionFault
+
 
 PUBLIC _KiPageFault
 .PROC _KiPageFault
-    .pushframe code
     /* We have an error code */
-    .endprolog
-
-    ENTER_TRAP_FRAME TRAPFLAG_ALL
+    ENTER_TRAP_FRAME (TRAPFLAG_HAS_ERRORCODE | TRAPFLAG_ALL)
 
     TRAPINFO KiPageFault
 
@@ -740,88 +731,114 @@ SpecialCode:
     call _InternalDispatchException
 
 PageFaultReturn:
-    LEAVE_TRAP_FRAME;
+    LEAVE_TRAP_FRAME
     iretq
 .ENDP _KiPageFault
 
+
 PUBLIC _KiFloatingErrorFault
 .PROC _KiFloatingErrorFault
-    .pushframe
     /* Push pseudo error code */
-    push 0
-    .allocstack 8
-    .endprolog
+    ENTER_TRAP_FRAME TRAPFLAG_ALL
 
     UNIMPLEMENTED KiFloatingErrorFault
 
     jmp $
 .ENDP _KiFloatingErrorFault
 
+
 PUBLIC _KiAlignmentFault
 .PROC _KiAlignmentFault
-    .pushframe code
     /* We have an error code */
-    .endprolog
+    ENTER_TRAP_FRAME (TRAPFLAG_HAS_ERRORCODE | TRAPFLAG_ALL)
 
-    UNIMPLEMENTED KiAlignmentFault
+    /* Enable interrupts */
+    sti
+
+    /* Bugcheck */
+    mov ecx, EXCEPTION_ALIGNMENT_CHECK
+    mov rdx, rbp
+    call _KiSystemFatalException
 
     jmp $
 .ENDP _KiAlignmentFault
 
+
 PUBLIC _KiMcheckAbort
 .PROC _KiMcheckAbort
-    .pushframe
     /* Push pseudo error code */
-    push 0
-    .allocstack 8
-    .endprolog
+    ENTER_TRAP_FRAME TRAPFLAG_ALL
 
-    UNIMPLEMENTED KiMcheckAbort
+    /* Bugcheck */
+    mov ecx, HEX(12)
+    mov rdx, rbp
+    call _KiSystemFatalException
 
     jmp $
 .ENDP _KiMcheckAbort
 
+
 PUBLIC _KiXmmException
 .PROC _KiXmmException
-    .pushframe
     /* Push pseudo error code */
-    push 0
-    .allocstack 8
-    .endprolog
+    ENTER_TRAP_FRAME TRAPFLAG_ALL
 
-    UNIMPLEMENTED KiXmmException
+    /* Call the C handler */
+    mov rcx, rbp
+    call _KiXmmExceptionHandler
 
-    jmp $
+    /* Check for success */
+    test eax, eax
+    jge KiXmmExit
+
+    /* Dispatch the exception */
+    mov edx, 3
+    mov r9, 0
+    mov r10, 0
+    mov r11, 0
+    call _InternalDispatchException
+
+KiXmmExit:
+    LEAVE_TRAP_FRAME
+    iretq
 .ENDP _KiXmmException
+
 
 PUBLIC _KiApcInterrupt
 .PROC _KiApcInterrupt
-    .pushframe code
-    .endprolog
+    /* We have an error code */
+    ENTER_TRAP_FRAME (TRAPFLAG_HAS_ERRORCODE | TRAPFLAG_ALL)
 
     UNIMPLEMENTED KiApcInterrupt
 
     jmp $
 .ENDP _KiApcInterrupt
 
+
 PUBLIC _KiRaiseAssertion
 .PROC _KiRaiseAssertion
-    .pushframe code
-    .endprolog
+    /* We have an error code */
+    ENTER_TRAP_FRAME (TRAPFLAG_HAS_ERRORCODE | TRAPFLAG_ALL)
 
-    UNIMPLEMENTED KiRaiseAssertion
+    /* Decrement RIP to point to the INT2C instruction (2 bytes, not 1 like INT3) */
+    sub qword ptr [rbp + KTRAP_FRAME_Rip], 2
+
+    /* Dispatch the exception */
+    mov eax, STATUS_ASSERTION_FAILURE
+    mov edx, 0
+    mov r9, 0
+    mov r10, 0
+    mov r11, 0
+    call _InternalDispatchException
  
-    jmp $
+    LEAVE_TRAP_FRAME
+    iretq
 .ENDP _KiRaiseAssertion
+
 
 PUBLIC _KiDebugServiceTrap
 .PROC _KiDebugServiceTrap
-    .pushframe
     /* Push pseudo error code */
-    push 0
-    .allocstack 8
-    .endprolog
-
     ENTER_TRAP_FRAME TRAPFLAG_ALL
 
     TRAPINFO KiDebugServiceTrap
@@ -841,36 +858,34 @@ PUBLIC _KiDebugServiceTrap
     iretq
 .ENDP _KiDebugServiceTrap
 
+
 PUBLIC _KiDpcInterrupt
 .PROC _KiDpcInterrupt
-    .pushframe code
-    .endprolog
+    /* We have an error code */
+    ENTER_TRAP_FRAME (TRAPFLAG_HAS_ERRORCODE | TRAPFLAG_ALL)
 
     UNIMPLEMENTED KiDpcInterrupt
 
     jmp $
 .ENDP _KiDpcInterrupt
 
+
 PUBLIC _KiIpiInterrupt
 .PROC _KiIpiInterrupt
-    .pushframe code
-    .endprolog
+    /* We have an error code */
+    ENTER_TRAP_FRAME (TRAPFLAG_HAS_ERRORCODE | TRAPFLAG_ALL)
 
     UNIMPLEMENTED KiIpiInterrupt
 
     jmp $
 .ENDP _KiIpiInterrupt
 
+
 PUBLIC _KiUnexpectedInterrupt
 .PROC _KiUnexpectedInterrupt
-    .pushframe
-    .endprolog
-
     /* The error code is the vector */
-
     cli
-
-    ENTER_TRAP_FRAME TRAPFLAG_ALL
+    ENTER_TRAP_FRAME (TRAPFLAG_HAS_ERRORCODE | TRAPFLAG_ALL)
 
     /* Set bugcheck parameters */
     mov ecx, TRAP_CAUSE_UNKNOWN
@@ -881,13 +896,8 @@ PUBLIC _KiUnexpectedInterrupt
     mov [rbp + KTRAP_FRAME_P5 + 8], rbp // trap frame
     call _KeBugCheckWithTf
 
+    jmp $
 .ENDP _KiUnexpectedInterrupt
-
-PUBLIC _KiSystemFatalException
-.PROC _KiSystemFatalException
-    .endprolog
-
-.ENDP _KiSystemFatalException
 
 
 

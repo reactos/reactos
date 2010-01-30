@@ -202,3 +202,99 @@ KeRaiseUserException(IN NTSTATUS ExceptionCode)
     return STATUS_UNSUCCESSFUL;
 }
 
+
+VOID
+DECLSPEC_NORETURN
+KiSystemFatalException(IN ULONG ExceptionCode,
+                       IN PKTRAP_FRAME TrapFrame)
+{
+    /* Bugcheck the system */
+    KeBugCheckWithTf(UNEXPECTED_KERNEL_MODE_TRAP,
+                     ExceptionCode,
+                     0,
+                     0,
+                     0,
+                     TrapFrame);
+}
+
+NTSTATUS
+NTAPI
+KiNpxNotAvailableFaultHandler(
+    IN PKTRAP_FRAME TrapFrame)
+{
+    UNIMPLEMENTED;
+    KeBugCheckWithTf(TRAP_CAUSE_UNKNOWN, 13, 0, 0, 1, TrapFrame);
+    return -1;
+}
+
+
+NTSTATUS
+NTAPI
+KiGeneralProtectionFaultHandler(
+    IN PKTRAP_FRAME TrapFrame)
+{
+    PUCHAR Instructions;
+
+    /* Check for user-mode GPF */
+    if (TrapFrame->SegCs & 3)
+    {
+        UNIMPLEMENTED;
+        ASSERT(FALSE);
+    }
+
+    /* Check for nested exception */
+    if ((TrapFrame->Rip >= (ULONG64)KiGeneralProtectionFaultHandler) &&
+        (TrapFrame->Rip < (ULONG64)KiGeneralProtectionFaultHandler))
+    {
+        /* Not implemented */
+        UNIMPLEMENTED;
+        ASSERT(FALSE);
+    }
+
+    /* Get Instruction Pointer */
+    Instructions = (PUCHAR)TrapFrame->Rip;
+
+    /* Check for IRET */
+    if (Instructions[0] == 0x48 && Instructions[1] == 0xCF)
+    {
+        /* Not implemented */
+        UNIMPLEMENTED;
+        ASSERT(FALSE);
+    }
+
+    /* Check for RDMSR/WRMSR */
+    if ((Instructions[0] == 0xF) &&            // 2-byte opcode
+        (((Instructions[1] >> 8) == 0x30) ||        // RDMSR
+         ((Instructions[2] >> 8) == 0x32)))         // WRMSR
+    {
+        /* Unknown CPU MSR, so raise an access violation */
+        return STATUS_ACCESS_VIOLATION;
+    }
+
+    /* Check for lazy segment load */
+    if (TrapFrame->SegDs != (KGDT64_R0_DATA | RPL_MASK))
+    {
+        /* Fix it */
+        TrapFrame->SegDs = (KGDT64_R0_DATA | RPL_MASK);
+        return STATUS_SUCCESS;
+    }
+    else if (TrapFrame->SegEs != (KGDT64_R0_DATA | RPL_MASK))
+    {
+        /* Fix it */
+        TrapFrame->SegEs = (KGDT64_R0_DATA | RPL_MASK);
+        return STATUS_SUCCESS;
+    }
+
+    ASSERT(FALSE);
+    return STATUS_UNSUCCESSFUL;
+}
+
+NTSTATUS
+NTAPI
+KiXmmExceptionHandler(
+    IN PKTRAP_FRAME TrapFrame)
+{
+    UNIMPLEMENTED;
+    KeBugCheckWithTf(TRAP_CAUSE_UNKNOWN, 13, 0, 0, 1, TrapFrame);
+    return -1;
+}
