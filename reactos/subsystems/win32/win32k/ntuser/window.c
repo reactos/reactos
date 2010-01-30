@@ -4625,6 +4625,7 @@ NtUserSetWindowRgn(
    HRGN hRgn,
    BOOL bRedraw)
 {
+   HRGN hrgnCopy;
    PWINDOW_OBJECT Window;
    DECLARE_RETURN(INT);
 
@@ -4636,15 +4637,25 @@ NtUserSetWindowRgn(
       RETURN( 0);
    }
 
-   /* FIXME - Verify if hRgn is a valid handle!!!!
-              Propably make this operation thread-safe, but maybe it's not necessary */
+   if (hRgn) // The region will be deleted in user32.
+   {
+      if (GDIOBJ_ValidateHandle(hRgn, GDI_OBJECT_TYPE_REGION))
+      {
+         hrgnCopy = IntSysCreateRectRgn(0, 0, 0, 0);
+         NtGdiCombineRgn(hrgnCopy, hRgn, 0, RGN_COPY);
+      }
+      else
+         RETURN( 0);
+   }
+   else
+      hrgnCopy = (HRGN) 1;
 
-   if(Window->hrgnClip)
+   if (Window->hrgnClip)
    {
       /* Delete no longer needed region handle */
       GreDeleteObject(Window->hrgnClip);
    }
-   Window->hrgnClip = hRgn;
+   Window->hrgnClip = hrgnCopy;
 
    /* FIXME - send WM_WINDOWPOSCHANGING and WM_WINDOWPOSCHANGED messages to the window */
 

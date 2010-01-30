@@ -198,8 +198,7 @@ UpdateWindow(
        pWnd->state & WNDS_INTERNALPAINT ||
        pWnd->spwndChild )
   {*/
-     return RedrawWindow( hWnd, NULL, 0, RDW_UPDATENOW | RDW_ALLCHILDREN );
-//     return NtUserCallHwndLock(hWnd, HWNDLOCK_ROUTINE_UPDATEWINDOW);
+     return NtUserCallHwndLock(hWnd, HWNDLOCK_ROUTINE_UPDATEWINDOW);
 /*  }
   return TRUE;*/
 }
@@ -213,10 +212,7 @@ ValidateRgn(
   HWND hWnd,
   HRGN hRgn)
 {
-  /* FIXME: should RDW_NOCHILDREN be included too? Ros used to,
-     but Wine dont so i removed it... */
-  return RedrawWindow( hWnd, NULL, hRgn, RDW_VALIDATE );
-//  return NtUserCallHwndParamLock(hWnd, (DWORD)hRgn, TWOPARAM_ROUTINE_VALIDATERGN);
+  return NtUserCallHwndParamLock(hWnd, (DWORD)hRgn, TWOPARAM_ROUTINE_VALIDATERGN);
 }
 
 /*

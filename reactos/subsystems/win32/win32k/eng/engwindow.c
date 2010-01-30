@@ -84,6 +84,8 @@ IntEngWndUpdateClipObj(
   CLIPOBJ *ClipObj = NULL;
   CLIPOBJ *OldClipObj;
 
+  DPRINT("IntEngWndUpdateClipObj\n");
+
   hVisRgn = VIS_ComputeVisibleRegion(Window, TRUE, TRUE, TRUE);
   if (hVisRgn != NULL)
   {
@@ -115,6 +117,7 @@ IntEngWndUpdateClipObj(
     {
       DPRINT1("Warning: Couldn't lock visible region of window DC\n");
     }
+    REGION_FreeRgnByHandle(hVisRgn);
   }
   else
   {
