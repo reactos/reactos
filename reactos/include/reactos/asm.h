@@ -14,6 +14,9 @@ OPTION DOTNAME
 /* Hex numbers need to be in 01ABh format */
 #define HEX(x) 0##x##h
 
+/* Macro values need to be marked */
+#define VAL(x) x
+
 /* MASM/ML doesn't want explicit [rip] addressing */
 #define RIP(address) address
 
@@ -47,11 +50,15 @@ ENDM
 /* Hex numbers need to be in 0x1AB format */
 #define HEX(x) 0x##x
 
+/* Macro values need to be marked */
+#define VAL(x) \x
+
 /* GAS needs explicit [rip] addressing */
 #define RIP(address) address##[rip]
 
 /* Due to MASM's reverse syntax, we are forced to use a precompiler macro */
-#define MACRO(name, ...) .MACRO name, __VA_ARGS__
+#define MACRO(...) .macro __VA_ARGS__
+#define ENDM .endm
 
 /* To avoid reverse syntax we provide a new macro .PROC, replacing PROC... */
 .macro .PROC name
@@ -77,6 +84,12 @@ ENDM
 #define REPEAT .rept
 #define ENDR .endr
 
+/* MASM compatible EXTERN */
+.macro EXTERN name
+.endm
+
+/* MASM needs an END tag */
+#define END
 
 /* Macros for x64 stack unwind OPs */
 
