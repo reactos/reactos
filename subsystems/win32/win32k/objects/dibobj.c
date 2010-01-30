@@ -1258,7 +1258,7 @@ NtGdiCreateDIBitmapInternal(
         else
         {
             if (Dc->dctype != DC_TYPE_MEMORY)
-                bpp = IntGdiGetDeviceCaps(Dc, BITSPIXEL);
+                bpp = Dc->ppdev->gdiinfo.cBitsPixel;
             else
             {
                 DIBSECTION dibs;

@@ -69,6 +69,15 @@ EngReleaseSemaphore ( IN HSEMAPHORE hsem )
   IntGdiReleaseSemaphore ( hsem );
 }
 
+VOID
+NTAPI
+EngAcquireSemaphoreShared(
+    IN HSEMAPHORE hsem)
+{
+    ASSERT(hsem);
+    ExEnterCriticalRegionAndAcquireResourceShared((PERESOURCE)hsem);
+}
+
 /*
  * @implemented
  */

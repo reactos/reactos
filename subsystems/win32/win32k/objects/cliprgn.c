@@ -27,6 +27,9 @@ CLIPPING_UpdateGCRegion(DC* Dc)
 {
    PROSRGNDATA CombinedRegion;
 
+    // would prefer this, but the rest of the code sucks
+//    ASSERT(Dc->rosdc.hGCClipRgn);
+//    ASSERT(Dc->rosdc.hClipRgn);
    if (!Dc->rosdc.hVisRgn)
    {
       DPRINT1("Warning, hVisRgn is NULL!\n");

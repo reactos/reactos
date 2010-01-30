@@ -2226,7 +2226,7 @@ TextIntGetTextExtentPoint(PDC dc,
 
     Size->cx = (TotalWidth + 32) >> 6;
     Size->cy = (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ? - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight);
-    Size->cy = EngMulDiv(Size->cy, IntGdiGetDeviceCaps(dc, LOGPIXELSY), 72);
+    Size->cy = EngMulDiv(Size->cy, dc->ppdev->gdiinfo.ulLogPixelsY, 72);
 
     return TRUE;
 }
@@ -3425,7 +3425,9 @@ GreExtTextOutW(
     /* Create the xlateobj */
     hDestPalette = psurf->hDIBPalette;
     if (!hDestPalette) hDestPalette = pPrimarySurface->devinfo.hpalDefault;
+    //if (!hDestPalette) hDestPalette = StockObjects[DEFAULT_PALETTE];//pPrimarySurface->devinfo.hpalDefault;
     ppalDst = PALETTE_LockPalette(hDestPalette);
+    ASSERT(ppalDst);
     EXLATEOBJ_vInitialize(&exloRGB2Dst, &gpalRGB, ppalDst, 0, 0, 0);
     EXLATEOBJ_vInitialize(&exloDst2RGB, ppalDst, &gpalRGB, 0, 0, 0);
     PALETTE_UnlockPalette(ppalDst);

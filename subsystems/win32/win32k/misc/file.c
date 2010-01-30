@@ -302,22 +302,30 @@ UserLoadImage(PCWSTR pwszName)
     HBITMAP hbmp = 0;
     BITMAPV5INFO bmiLocal;
 
+    DPRINT("Enter UserLoadImage(%ls)\n", pwszName);
+
     /* Open the file */
     hFile = W32kOpenFile(pwszName, FILE_READ_DATA);
-    if (hFile == INVALID_HANDLE_VALUE)
-          return NULL;
+    if (!hFile)
+    {
+        return NULL;
+    }
 
     /* Create a section */
     hSection = W32kCreateFileSection(hFile, SEC_COMMIT, PAGE_READONLY, 0);
     ZwClose(hFile);
     if (!hSection)
-          return NULL;
+    {
+        return NULL;
+    }
 
     /* Map the section */
     pbmfh = W32kMapViewOfSection(hSection, PAGE_READONLY, 0);
     ZwClose(hSection);
     if (!pbmfh)
-          return NULL;
+    {
+        return NULL;
+    }
 
     /* Get a pointer to the BITMAPINFO */
     pbmi = (LPBITMAPINFO)(pbmfh + 1);

@@ -1,198 +1,890 @@
 /*
- * PROJECT:         ReactOS Kernel
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            subsystems/win32/win32k/ntuser/display.c
- * PURPOSE:         display settings
- * COPYRIGHT:       Copyright 2007 ReactOS
- *
+ * COPYRIGHT:        See COPYING in the top level directory
+ * PROJECT:          ReactOS kernel
+ * PURPOSE:          Video initialization and display settings
+ * FILE:             subsystems/win32/win32k/ntuser/display.c
+ * PROGRAMER:        Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
-/* INCLUDES ******************************************************************/
-
 #include <w32k.h>
+
+#include <intrin.h>
 
 #define NDEBUG
 #include <debug.h>
 
-#define SIZEOF_DEVMODEW_300 188
-#define SIZEOF_DEVMODEW_400 212
-#define SIZEOF_DEVMODEW_500 220
+PDEVOBJ *gpdevPrimary;
 
-/* PUBLIC FUNCTIONS ***********************************************************/
+const PWCHAR KEY_ROOT = L"";
+const PWCHAR KEY_VIDEO = L"\\Registry\\Machine\\HARDWARE\\DEVICEMAP\\VIDEO";
 
 NTSTATUS
-APIENTRY
-NtUserEnumDisplaySettings(
-   PUNICODE_STRING pusDeviceName,
-   DWORD iModeNum,
-   LPDEVMODEW lpDevMode, /* FIXME is this correct? */
-   DWORD dwFlags )
+NTAPI
+UserEnumDisplayDevices(
+    PUNICODE_STRING pustrDevice,
+    DWORD iDevNum,
+    PDISPLAY_DEVICEW pdispdev,
+    DWORD dwFlags);
+
+VOID
+RegWriteSZ(HKEY hkey, PWSTR pwszValue, PWSTR pwszData)
 {
-    NTSTATUS Status;
-    LPDEVMODEW pSafeDevMode;
-    PUNICODE_STRING pusSafeDeviceName = NULL;
-    UNICODE_STRING usSafeDeviceName;
-    USHORT Size = 0, ExtraSize = 0;
+    UNICODE_STRING ustrValue;
+    UNICODE_STRING ustrData;
 
-    /* Copy the devmode */
-    _SEH2_TRY
-    {
-        ProbeForRead(lpDevMode, sizeof(DEVMODEW), 1);
-        Size = lpDevMode->dmSize;
-        ExtraSize = lpDevMode->dmDriverExtra;
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        DPRINT("FIXME ? : Out of range of DEVMODEW size \n");
-        _SEH2_YIELD(return _SEH2_GetExceptionCode());
-    }
-    _SEH2_END;
+    RtlInitUnicodeString(&ustrValue, pwszValue);
+    RtlInitUnicodeString(&ustrData, pwszData);
+    ZwSetValueKey(hkey, &ustrValue, 0, REG_SZ, &ustrData, ustrData.Length + sizeof(WCHAR));
+}
 
-    if (Size != sizeof(DEVMODEW))
-    {
-        return STATUS_BUFFER_TOO_SMALL;
-    }
+VOID
+RegWriteDWORD(HKEY hkey, PWSTR pwszValue, DWORD dwData)
+{
+    UNICODE_STRING ustrValue;
 
-    pSafeDevMode = ExAllocatePool(PagedPool, Size + ExtraSize);
-    if (pSafeDevMode == NULL)
-    {
-        return STATUS_NO_MEMORY;
-    }
-    pSafeDevMode->dmSize = Size;
-    pSafeDevMode->dmDriverExtra = ExtraSize;
-
-    /* Copy the device name */
-    if (pusDeviceName != NULL)
-    {
-        Status = IntSafeCopyUnicodeString(&usSafeDeviceName, pusDeviceName);
-        if (!NT_SUCCESS(Status))
-        {
-            ExFreePool(pSafeDevMode);
-            return Status;
-        }
-        pusSafeDeviceName = &usSafeDeviceName;
-    }
-
-    /* Call internal function */
-    Status = IntEnumDisplaySettings(pusSafeDeviceName, iModeNum, pSafeDevMode, dwFlags);
-
-    if (pusSafeDeviceName != NULL)
-        RtlFreeUnicodeString(pusSafeDeviceName);
-
-    if (!NT_SUCCESS(Status))
-    {
-        ExFreePool(pSafeDevMode);
-        return Status;
-    }
-
-    /* Copy some information back */
-    _SEH2_TRY
-    {
-        ProbeForWrite(lpDevMode,Size + ExtraSize, 1);
-        lpDevMode->dmPelsWidth = pSafeDevMode->dmPelsWidth;
-        lpDevMode->dmPelsHeight = pSafeDevMode->dmPelsHeight;
-        lpDevMode->dmBitsPerPel = pSafeDevMode->dmBitsPerPel;
-        lpDevMode->dmDisplayFrequency = pSafeDevMode->dmDisplayFrequency;
-        lpDevMode->dmDisplayFlags = pSafeDevMode->dmDisplayFlags;
-
-        /* output private/extra driver data */
-        if (ExtraSize > 0)
-        {
-            memcpy((PCHAR)lpDevMode + Size, (PCHAR)pSafeDevMode + Size, ExtraSize);
-        }
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        Status = _SEH2_GetExceptionCode();
-    }
-    _SEH2_END;
-
-    ExFreePool(pSafeDevMode);
-    return Status;
+    RtlInitUnicodeString(&ustrValue, pwszValue);
+    ZwSetValueKey(hkey, &ustrValue, 0, REG_DWORD, &dwData, sizeof(DWORD));
 }
 
 
-LONG
-APIENTRY
-NtUserChangeDisplaySettings(
-   PUNICODE_STRING lpszDeviceName,
-   LPDEVMODEW lpDevMode,
-   HWND hwnd,
-   DWORD dwflags,
-   LPVOID lParam)
+BOOL
+RegReadDWORD(HKEY hkey, PWSTR pwszValue, PDWORD pdwData)
 {
-   NTSTATUS Status = STATUS_SUCCESS;
-   LPDEVMODEW lpSafeDevMode = NULL;
-   DEVMODEW DevMode;
-   PUNICODE_STRING pSafeDeviceName = NULL;
-   UNICODE_STRING SafeDeviceName;
-   LONG Ret;
+    NTSTATUS Status;
+    ULONG cbSize = sizeof(DWORD);
+    Status = RegQueryValue(hkey, pwszValue, REG_DWORD, pdwData, &cbSize);
+    return NT_SUCCESS(Status);
+}
 
-   /* Check arguments */
-#ifdef CDS_VIDEOPARAMETERS
-    if (dwflags != CDS_VIDEOPARAMETERS && lParam != NULL)
-#else
-    if (lParam != NULL)
+VOID
+RegWriteDisplaySettings(HKEY hkey, PDEVMODEW pdm)
+{
+    RegWriteDWORD(hkey, L"DefaultSettings.BitsPerPel", pdm->dmBitsPerPel);
+    RegWriteDWORD(hkey, L"DefaultSettings.XResolution", pdm->dmPelsWidth);
+    RegWriteDWORD(hkey, L"DefaultSettings.YResolution", pdm->dmPelsHeight);
+    RegWriteDWORD(hkey, L"DefaultSettings.Flags", pdm->dmDisplayFlags);
+    RegWriteDWORD(hkey, L"DefaultSettings.VRefresh", pdm->dmDisplayFrequency);
+    RegWriteDWORD(hkey, L"DefaultSettings.XPanning", pdm->dmPanningWidth);
+    RegWriteDWORD(hkey, L"DefaultSettings.YPanning", pdm->dmPanningHeight);
+    RegWriteDWORD(hkey, L"DefaultSettings.Orientation", pdm->dmDisplayOrientation);
+    RegWriteDWORD(hkey, L"DefaultSettings.FixedOutput", pdm->dmDisplayFixedOutput);
+    RegWriteDWORD(hkey, L"Attach.RelativeX", pdm->dmPosition.x);
+    RegWriteDWORD(hkey, L"Attach.RelativeY", pdm->dmPosition.y);
+//    RegWriteDWORD(hkey, L"Attach.ToDesktop, pdm->dmBitsPerPel", pdm->);
+}
+
+VOID
+RegReadDisplaySettings(HKEY hkey, PDEVMODEW pdm)
+{
+    DWORD dwValue;
+
+    RtlZeroMemory(pdm, sizeof(DEVMODEW));
+
+    if (RegReadDWORD(hkey, L"DefaultSettings.BitsPerPel", &dwValue))
+    {
+        pdm->dmBitsPerPel = dwValue;
+        pdm->dmFields |= DM_BITSPERPEL;
+    }
+    if (RegReadDWORD(hkey, L"DefaultSettings.XResolution", &dwValue))
+    {
+        pdm->dmPelsWidth = dwValue;
+//        pdm->dmFields |= DM_XRESOLUTION;
+    }
+    if (RegReadDWORD(hkey, L"DefaultSettings.YResolution", &dwValue))
+    {
+        pdm->dmPelsHeight = dwValue;
+        pdm->dmFields |= DM_YRESOLUTION;
+    }
+    if (RegReadDWORD(hkey, L"DefaultSettings.Flags", &dwValue))
+    {
+        pdm->dmDisplayFlags = dwValue;
+        pdm->dmFields |= DM_BITSPERPEL;
+    }
+    if (RegReadDWORD(hkey, L"DefaultSettings.VRefresh", &dwValue))
+    {
+        pdm->dmDisplayFrequency = dwValue;
+        pdm->dmFields |= DM_DISPLAYFREQUENCY;
+    }
+    if (RegReadDWORD(hkey, L"DefaultSettings.XPanning", &dwValue))
+    {
+        pdm->dmPanningWidth = dwValue;
+        pdm->dmFields |= DM_PANNINGWIDTH;
+    }
+    if (RegReadDWORD(hkey, L"DefaultSettings.YPanning", &dwValue))
+    {
+        pdm->dmPanningHeight = dwValue;
+        pdm->dmFields |= DM_PANNINGHEIGHT;
+    }
+    if (RegReadDWORD(hkey, L"DefaultSettings.Orientation", &dwValue))
+    {
+        pdm->dmDisplayOrientation = dwValue;
+        pdm->dmFields |= DM_DISPLAYORIENTATION;
+    }
+    if (RegReadDWORD(hkey, L"DefaultSettings.FixedOutput", &dwValue))
+    {
+        pdm->dmDisplayFixedOutput = dwValue;
+        pdm->dmFields |= DM_BITSPERPEL;
+    }
+    if (RegReadDWORD(hkey, L"Attach.RelativeX", &dwValue))
+    {
+        pdm->dmPosition.x = dwValue;
+        pdm->dmFields |= DM_POSITION;
+    }
+    if (RegReadDWORD(hkey, L"Attach.RelativeY", &dwValue))
+    {
+        pdm->dmPosition.y = dwValue;
+        pdm->dmFields |= DM_POSITION;
+    }
+//    RegReadDWORD(hkey, L"Attach.ToDesktop, pdm->dmBitsPerPel", &pdm->);
+
+}
+
+
+
+
+enum
+{
+    VF_USEVGA = 0x1,
+};
+
+BOOL
+InitDisplayDriver(
+    PUNICODE_STRING pustrRegPath,
+    FLONG flags)
+{
+//    PWSTR pwszDriverName;
+    RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+    NTSTATUS Status;
+
+    /* Setup QueryTable for direct registry query */
+    RtlZeroMemory(QueryTable, sizeof(QueryTable));
+    QueryTable[0].Flags = RTL_QUERY_REGISTRY_REQUIRED|RTL_QUERY_REGISTRY_DIRECT;
+
+
+    /* Check if vga mode is requested */
+    if (flags & VF_USEVGA)
+    {
+        DWORD dwVgaCompatible;
+
+        /*  */
+        QueryTable[0].Name = L"VgaCompatible";
+        QueryTable[0].EntryContext = &dwVgaCompatible;
+
+        /* Check if the driver is vga */
+        Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
+                                        pustrRegPath->Buffer,
+                                        QueryTable,
+                                        NULL,
+                                        NULL);
+        
+        if (!dwVgaCompatible)
+        {
+            /* This driver is not a vga driver */
+            return FALSE;
+        }
+    }
+
+#if 0
+
+    /* Query the adapter's registry path */
+    swprintf(awcBuffer, L"\\Device\\Video%lu", iDevNum);
+    QueryTable[0].Name = pGraphicsDevice->szNtDeviceName;
+
+    /* Set string for the registry key */
+    ustrRegistryPath.Buffer = pdispdev->DeviceKey;
+    ustrRegistryPath.Length = 128;
+    ustrRegistryPath.MaximumLength = 128;
+    QueryTable[0].EntryContext = &ustrRegistryPath;
+
+    /* Query the registry */
+    Status = RtlQueryRegistryValues(RTL_REGISTRY_DEVICEMAP,
+                                    L"VIDEO",
+                                    QueryTable,
+                                    NULL,
+                                    NULL);
+
+    RegQueryValue(KEY_VIDEO, awcBuffer, REG_SZ, pdispdev->DeviceKey, 256);
+
+    {
+        HANDLE hmod;
+
+        hmod = EngLoadImage(pwszDriverName);
+
+        /* Jump to next name */
+        pwszDriverName += wcslen(pwszDriverName) + 1;
+    }
+    while (pwszDriverName < 0);
 #endif
+
+    return 0;
+}
+
+
+NTSTATUS
+NTAPI
+DisplayDriverQueryRoutine(
+    IN PWSTR ValueName,
+    IN ULONG ValueType,
+    IN PVOID ValueData,
+    IN ULONG ValueLength,
+    IN PVOID Context,
+    IN PVOID EntryContext)
+{
+    PWSTR pwszRegKey = ValueData;
+    PGRAPHICS_DEVICE pGraphicsDevice;
+    UNICODE_STRING ustrDeviceName, ustrDisplayDrivers, ustrDescription;
+    NTSTATUS Status;
+    WCHAR awcBuffer[128];
+    ULONG cbSize;
+    HKEY hkey;
+    DEVMODEW dmDefault;
+
+    UNREFERENCED_PARAMETER(ValueLength);
+    UNREFERENCED_PARAMETER(Context);
+    UNREFERENCED_PARAMETER(EntryContext);
+
+    DPRINT1("DisplayDriverQueryRoutine(%S, %S);\n", 
+            ValueName, pwszRegKey);
+
+    /* Check if we have a correct entry */
+    if (ValueType != REG_SZ || ValueName[0] != '\\')
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
-        return DISP_CHANGE_BADPARAM;
+        /* Something else, just skip it */
+        return STATUS_SUCCESS;
     }
 
-    if (hwnd != NULL)
+    /* Open the driver's registry key */
+    Status = RegOpenKey(pwszRegKey, &hkey);
+    if (!NT_SUCCESS(Status))
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
-        return DISP_CHANGE_BADPARAM;
+        DPRINT1("Failed to open registry key\n");
+        return STATUS_SUCCESS;
     }
 
-    /* Copy devmode */
-    if (lpDevMode != NULL)
+// HACK: only use 1st adapter
+//if (ValueName[13] != '0')
+//    return STATUS_SUCCESS;
+
+    /* Query the diplay drivers */
+    cbSize = sizeof(awcBuffer) - 10;
+    Status = RegQueryValue(hkey,
+                           L"InstalledDisplayDrivers",
+                           REG_MULTI_SZ,
+                           awcBuffer,
+                           &cbSize);
+    if (!NT_SUCCESS(Status))
     {
+        DPRINT1("Didn't find 'InstalledDisplayDrivers', status = 0x%lx\n", Status);
+        ZwClose(hkey);
+        return STATUS_SUCCESS;
+    }
+
+    /* Initialize the UNICODE_STRING */
+    ustrDisplayDrivers.Buffer = awcBuffer;
+    ustrDisplayDrivers.MaximumLength = cbSize;
+    ustrDisplayDrivers.Length = cbSize;
+
+    /* Set Buffer for description and size of remaining buffer */
+    ustrDescription.Buffer = awcBuffer + (cbSize / sizeof(WCHAR));
+    cbSize = sizeof(awcBuffer) - cbSize;
+
+    /* Query the device string */
+    Status = RegQueryValue(hkey,
+                           L"Device Description",
+                           REG_SZ,
+                           ustrDescription.Buffer,
+                           &cbSize);
+    if (NT_SUCCESS(Status))
+    {
+        ustrDescription.MaximumLength = cbSize;
+        ustrDescription.Length = cbSize;
+    }
+    else
+    {
+        RtlInitUnicodeString(&ustrDescription, L"<unknown>");
+    }
+
+    /* Query the default settings */
+    RegReadDisplaySettings(hkey, &dmDefault);
+
+    /* Close the registry key */
+    ZwClose(hkey);
+
+    /* Register the device with GDI */
+    RtlInitUnicodeString(&ustrDeviceName, ValueName);
+    pGraphicsDevice = EngpRegisterGraphicsDevice(&ustrDeviceName,
+                                                 &ustrDisplayDrivers,
+                                                 &ustrDescription,
+                                                 &dmDefault);
+
+    // FIXME: what to do with pGraphicsDevice?
+
+    return STATUS_SUCCESS;
+}
+
+BOOL InitSysParams();
+
+BOOL
+InitVideo(FLONG flags)
+{
+    RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+    NTSTATUS Status;
+
+    DPRINT1("----------------------------- InitVideo() -------------------------------\n");
+
+    /* Setup QueryTable for registry query */
+    RtlZeroMemory(QueryTable, sizeof(QueryTable));
+    QueryTable[0].QueryRoutine = DisplayDriverQueryRoutine;
+
+    /* Query the registry */
+    Status = RtlQueryRegistryValues(RTL_REGISTRY_DEVICEMAP,
+                                    L"VIDEO",
+                                    QueryTable,
+                                    NULL,
+                                    NULL);
+
+    InitSysParams();
+
+    return 0;
+}
+
+
+NTSTATUS
+NTAPI
+UserEnumDisplayDevices(
+    PUNICODE_STRING pustrDevice,
+    DWORD iDevNum,
+    PDISPLAY_DEVICEW pdispdev,
+    DWORD dwFlags)
+{
+    PGRAPHICS_DEVICE pGraphicsDevice;
+    ULONG cbSize;
+    HKEY hkey;
+    NTSTATUS Status;
+
+    /* Ask gdi for the GRAPHICS_DEVICE */
+    pGraphicsDevice = EngpFindGraphicsDevice(pustrDevice, iDevNum, 0);
+    if (!pGraphicsDevice)
+    {
+        /* No device found */
+        DPRINT1("No GRAPHICS_DEVICE found\n");
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* Open thhe device map registry key */
+    Status = RegOpenKey(KEY_VIDEO, &hkey);
+    if (!NT_SUCCESS(Status))
+    {
+        /* No device found */
+        DPRINT1("Could not open reg key\n");
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* Query the registry path */
+    cbSize = sizeof(pdispdev->DeviceKey);
+    RegQueryValue(hkey,
+                  pGraphicsDevice->szNtDeviceName,
+                  REG_SZ,
+                  pdispdev->DeviceKey,
+                  &cbSize);
+
+    /* Close registry key */
+    ZwClose(hkey);
+
+    /* Copy device name, device string and StateFlags */
+    wcsncpy(pdispdev->DeviceName, pGraphicsDevice->szWinDeviceName, 32);
+    wcsncpy(pdispdev->DeviceString, pGraphicsDevice->pwszDescription, 128);
+    pdispdev->StateFlags = pGraphicsDevice->StateFlags;
+
+    // FIXME: fill in DEVICE ID
+
+    return STATUS_SUCCESS;
+}
+
+//NTSTATUS
+BOOL
+NTAPI
+NtUserEnumDisplayDevices(
+    PUNICODE_STRING pustrDevice,
+    DWORD iDevNum,
+    PDISPLAY_DEVICEW pDisplayDevice,
+    DWORD dwFlags) 		
+{
+    UNICODE_STRING ustrDevice;
+    WCHAR awcDevice[CCHDEVICENAME];
+    DISPLAY_DEVICEW dispdev;
+    NTSTATUS Status;
+
+    DPRINT1("Enter NtUserEnumDisplayDevices(%p, %ls, %ld)\n",
+            pustrDevice, pustrDevice ? pustrDevice->Buffer : 0, iDevNum);
+
+    // FIXME: HACK, desk.cpl passes broken crap
+    if (pustrDevice && iDevNum != 0)
+        return FALSE;
+
+    dispdev.cb = sizeof(DISPLAY_DEVICEW);
+
+    if (pustrDevice)
+    {
+        /* Initialize destination string */
+        RtlInitEmptyUnicodeString(&ustrDevice, awcDevice, sizeof(awcDevice));
+
         _SEH2_TRY
         {
-            ProbeForRead(lpDevMode, sizeof(DevMode.dmSize), 1);
-            DevMode.dmSize = lpDevMode->dmSize;
-            DevMode.dmSize = min(sizeof(DevMode), DevMode.dmSize);
-            ProbeForRead(lpDevMode, DevMode.dmSize, 1);
-            RtlCopyMemory(&DevMode, lpDevMode, DevMode.dmSize);
+            /* Probe the UNICODE_STRING and the buffer */
+            ProbeForRead(pustrDevice, sizeof(UNICODE_STRING), 1);
+            ProbeForRead(pustrDevice->Buffer, pustrDevice->Length, 1);
+
+            /* Copy the string */
+            RtlCopyUnicodeString(&ustrDevice, pustrDevice);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+//            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+            _SEH2_YIELD(return NT_SUCCESS(_SEH2_GetExceptionCode()));
+        }
+        _SEH2_END
+
+        if (ustrDevice.Length > 0)
+            pustrDevice = &ustrDevice;
+        else
+            pustrDevice = NULL;
+   }
+
+    /* Acquire global USER lock */
+    UserEnterExclusive();
+
+    /* Call the internal function */
+    Status = UserEnumDisplayDevices(pustrDevice, iDevNum, &dispdev, dwFlags);
+
+    /* Release lock */
+    UserLeave();
+
+    /* On success copy data to caller */
+    if (NT_SUCCESS(Status))
+    {
+        /* Enter SEH */
+        _SEH2_TRY
+        {
+            /* First probe the cb field */
+            ProbeForWrite(&pDisplayDevice->cb, sizeof(DWORD), 1);
+
+            /* Check the buffer size */
+            if (pDisplayDevice->cb)
+            {
+                /* Probe the output buffer */
+                pDisplayDevice->cb = min(pDisplayDevice->cb, sizeof(dispdev));
+                ProbeForWrite(pDisplayDevice, pDisplayDevice->cb, 1);
+
+                /* Copy as much as the given buffer allows */
+                RtlCopyMemory(pDisplayDevice, &dispdev, pDisplayDevice->cb);
+            }
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             Status = _SEH2_GetExceptionCode();
         }
         _SEH2_END
+    }
 
+    DPRINT1("Leave NtUserEnumDisplayDevices, Status = 0x%lx\n", Status);
+    /* Return the result */
+//    return Status;
+    return NT_SUCCESS(Status); // FIXME
+}
+
+NTSTATUS
+NTAPI
+UserEnumCurrentDisplaySettings(
+    PUNICODE_STRING pustrDevice,
+    PDEVMODEW *ppdm)
+{
+    PPDEVOBJ ppdev;
+
+    /* Get the PDEV for the device */
+    ppdev = EngpGetPDEV(pustrDevice);
+    if (!ppdev)
+    {
+        /* No device found */
+        DPRINT1("No PDEV found!\n");
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    *ppdm = ppdev->pdmwDev;
+    
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+UserEnumDisplaySettings(
+   PUNICODE_STRING pustrDevice,
+   DWORD iModeNum,
+   LPDEVMODEW *ppdm,
+   DWORD dwFlags)
+{
+    PGRAPHICS_DEVICE pGraphicsDevice;
+    PDEVMODEENTRY pdmentry;
+    ULONG i, iFoundMode;
+
+    DPRINT1("Enter UserEnumDisplaySettings('%ls', %ld)\n",
+            pustrDevice ? pustrDevice->Buffer : NULL, iModeNum);
+
+    /* Ask gdi for the GRAPHICS_DEVICE */
+    pGraphicsDevice = EngpFindGraphicsDevice(pustrDevice, 0, 0);
+    if (!pGraphicsDevice)
+    {
+        /* No device found */
+        DPRINT1("No device found!\n");
+        return FALSE;
+    }
+
+    if (iModeNum == 0)
+    {
+        DPRINT1("Should initialize modes somehow\n");
+        // Update DISPLAY_DEVICEs?
+    }
+
+    iFoundMode = 0;
+    for (i = 0; i < pGraphicsDevice->cDevModes; i++)
+    {
+        pdmentry = &pGraphicsDevice->pDevModeList[i];
+
+//        if ((!(dwFlags & EDS_RAWMODE) && (pdmentry->dwFlags & 1)) || // FIXME!
+//            (dwFlags & EDS_RAWMODE))
+        {
+            /* Is this the one we want? */
+            if (iFoundMode == iModeNum)
+            {
+                *ppdm = pdmentry->pdm;
+                return STATUS_SUCCESS;
+            }
+
+            /* Increment number of found modes */
+            iFoundMode++;
+        }
+    }
+
+    /* Nothing was found */
+    return STATUS_INVALID_PARAMETER;
+}
+
+NTSTATUS
+NTAPI
+UserOpenDisplaySettingsKey(
+    OUT PHKEY phkey,
+    IN PUNICODE_STRING pustrDevice,
+    IN BOOL bGlobal)
+{
+    HKEY hkey;
+    DISPLAY_DEVICEW dispdev;
+    NTSTATUS Status;
+
+    /* Get device info */
+    Status = UserEnumDisplayDevices(pustrDevice, 0, &dispdev, 0);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    if (bGlobal)
+    {
+        // FIXME: need to fix the registry key somehow
+    }
+
+    /* Open the registry key */
+    Status = RegOpenKey(dispdev.DeviceKey, &hkey);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    *phkey = hkey;
+
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+UserEnumRegistryDisplaySettings(
+    IN PUNICODE_STRING pustrDevice,
+    OUT LPDEVMODEW pdm)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+NTSTATUS
+APIENTRY
+NtUserEnumDisplaySettings(
+    IN PUNICODE_STRING pustrDevice,
+    IN DWORD iModeNum,
+    OUT LPDEVMODEW lpDevMode,
+    IN DWORD dwFlags)
+{
+    UNICODE_STRING ustrDevice;
+    WCHAR awcDevice[CCHDEVICENAME];
+    NTSTATUS Status;
+    ULONG cbSize, cbExtra;
+    DEVMODEW dmReg, *pdm;
+
+    DPRINT1("Enter NtUserEnumDisplaySettings(%ls, %ld)\n",
+            pustrDevice ? pustrDevice->Buffer:0, iModeNum);
+
+    if (pustrDevice)
+    {
+        /* Initialize destination string */
+        RtlInitEmptyUnicodeString(&ustrDevice, awcDevice, sizeof(awcDevice));
+
+        _SEH2_TRY
+        {
+            /* Probe the UNICODE_STRING and the buffer */
+            ProbeForRead(pustrDevice, sizeof(UNICODE_STRING), 1);
+            ProbeForRead(pustrDevice->Buffer, pustrDevice->Length, 1);
+
+            /* Copy the string */
+            RtlCopyUnicodeString(&ustrDevice, pustrDevice);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END
+
+        pustrDevice = &ustrDevice;
+   }
+
+    /* Acquire global USER lock */
+    UserEnterExclusive();
+
+    if (iModeNum == ENUM_REGISTRY_SETTINGS)
+    {
+        /* Get the registry settings */
+        Status = UserEnumRegistryDisplaySettings(pustrDevice, &dmReg);
+        pdm = &dmReg;
+    }
+    else if (iModeNum == ENUM_CURRENT_SETTINGS)
+    {
+        /* Get the current settings */
+        Status = UserEnumCurrentDisplaySettings(pustrDevice, &pdm);
+    }
+    else
+    {
+        /* Get specified settings */
+        Status = UserEnumDisplaySettings(pustrDevice, iModeNum, &pdm, dwFlags);
+    }
+
+    /* Release lock */
+    UserLeave();
+
+    /* Did we succeed? */
+    if (NT_SUCCESS(Status))
+    {
+        /* Copy some information back */
+        _SEH2_TRY
+        {
+            ProbeForRead(lpDevMode, sizeof(DEVMODEW), 1);
+            cbSize = lpDevMode->dmSize;
+            cbExtra = lpDevMode->dmDriverExtra;
+
+            ProbeForWrite(lpDevMode, cbSize + cbExtra, 1);
+            lpDevMode->dmPelsWidth = pdm->dmPelsWidth;
+            lpDevMode->dmPelsHeight = pdm->dmPelsHeight;
+            lpDevMode->dmBitsPerPel = pdm->dmBitsPerPel;
+            lpDevMode->dmDisplayFrequency = pdm->dmDisplayFrequency;
+            lpDevMode->dmDisplayFlags = pdm->dmDisplayFlags;
+
+            /* output private/extra driver data */
+            if (cbExtra > 0 && pdm->dmDriverExtra > 0)
+            {
+                RtlCopyMemory((PCHAR)lpDevMode + cbSize,
+                              (PCHAR)pdm + pdm->dmSize,
+                              min(cbExtra, pdm->dmDriverExtra));
+            }
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+    }
+
+    return Status;
+}
+
+
+LONG
+APIENTRY
+UserChangeDisplaySettings(
+   PUNICODE_STRING pustrDevice,
+   LPDEVMODEW pdm,
+   HWND hwnd,
+   DWORD flags,
+   LPVOID lParam)
+{
+    DEVMODEW dmReg;
+    LONG lResult = DISP_CHANGE_SUCCESSFUL;
+    HKEY hkey;
+    NTSTATUS Status;
+    PPDEVOBJ ppdev;
+
+    /* If no DEVMODE is given, use registry settings */
+    if (!pdm)
+    {
+        /* Get the registry settings */
+        Status = UserEnumRegistryDisplaySettings(pustrDevice, &dmReg);
         if (!NT_SUCCESS(Status))
         {
-            SetLastNtError(Status);
+            DPRINT1("Could not load registry settings\n");
             return DISP_CHANGE_BADPARAM;
         }
+        pdm = &dmReg;
+    }
 
-        if (DevMode.dmDriverExtra > 0)
+    /* Get the PDEV */
+    ppdev = EngpGetPDEV(pustrDevice);
+    if (!ppdev)
+    {
+        DPRINT1("failed to get PDEV\n");
+        return DISP_CHANGE_BADPARAM;
+    }
+
+    /* Look for the requested DEVMODE */
+    pdm = PDEVOBJ_pdmMatchDevMode(ppdev, pdm);
+    if (!pdm)
+    {
+        DPRINT1("Could not find a matching DEVMODE\n");
+        lResult = DISP_CHANGE_BADMODE;
+        goto leave;
+    }
+
+    /* Shall we update the registry? */
+    if (flags & CDS_UPDATEREGISTRY)
+    {
+        /* Open the local or global settings key */
+        Status = UserOpenDisplaySettingsKey(&hkey, pustrDevice, flags & CDS_GLOBAL);
+        if (NT_SUCCESS(Status))
         {
-            DPRINT1("lpDevMode->dmDriverExtra is IGNORED!\n");
-            DevMode.dmDriverExtra = 0;
+            /* Store the settings */
+            RegWriteDisplaySettings(hkey, pdm);
+
+            /* Close the registry key */
+            ZwClose(hkey);
         }
-        lpSafeDevMode = &DevMode;
+        else
+        {
+            DPRINT1("Could not open registry key\n");
+            lResult = DISP_CHANGE_NOTUPDATED;
+        }       
+    }
+
+    /* Check if DEVMODE matches the current mode */
+    if (pdm == ppdev->pdmwDev && !(flags & CDS_RESET))
+    {
+        DPRINT1("DEVMODE matches, nothing to do\n");
+        goto leave;
+    }
+
+    /* Shall we apply the settings? */
+    if (!(flags & CDS_NORESET))
+    {
+        if (!PDEVOBJ_bSwitchMode(ppdev, pdm))
+        {
+            DPRINT1("failed to set mode\n");
+            lResult = (lResult == DISP_CHANGE_NOTUPDATED) ? 
+                DISP_CHANGE_FAILED : DISP_CHANGE_RESTART;
+        }
+        
+        /* Send message */
+        
+    }
+
+leave:
+//    PDEVOBJ_vReleasePdev(ppdev);
+
+    return lResult;
+}
+
+LONG
+APIENTRY
+NtUserChangeDisplaySettings(
+    PUNICODE_STRING pustrDevice,
+    LPDEVMODEW lpDevMode,
+    HWND hwnd,
+    DWORD dwflags,
+    LPVOID lParam)
+{
+    WCHAR awcDevice[CCHDEVICENAME];
+    UNICODE_STRING ustrDevice;
+    DEVMODEW dmLocal;
+    LONG Ret;
+
+    /* Check arguments */
+    if ((dwflags != CDS_VIDEOPARAMETERS && lParam != NULL) ||
+        (hwnd != NULL))
+    {
+        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        return DISP_CHANGE_BADPARAM;
+    }
+
+    /* Check flags */
+    if ((dwflags & (CDS_GLOBAL|CDS_NORESET)) && !(dwflags & CDS_UPDATEREGISTRY))
+    {
+        return DISP_CHANGE_BADFLAGS;
     }
 
     /* Copy the device name */
-    if (lpszDeviceName != NULL)
+    if (pustrDevice)
     {
-        Status = IntSafeCopyUnicodeString(&SafeDeviceName, lpszDeviceName);
-        if (!NT_SUCCESS(Status))
+        /* Initialize destination string */
+        RtlInitEmptyUnicodeString(&ustrDevice, awcDevice, sizeof(awcDevice));
+
+        _SEH2_TRY
         {
-            SetLastNtError(Status);
-            return DISP_CHANGE_BADPARAM;
+            /* Probe the UNICODE_STRING and the buffer */
+            ProbeForRead(pustrDevice, sizeof(UNICODE_STRING), 1);
+            ProbeForRead(pustrDevice->Buffer, pustrDevice->Length, 1);
+
+            /* Copy the string */
+            RtlCopyUnicodeString(&ustrDevice, pustrDevice);
         }
-        pSafeDeviceName = &SafeDeviceName;
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            SetLastNtError(_SEH2_GetExceptionCode());
+            _SEH2_YIELD(return DISP_CHANGE_BADPARAM);
+        }
+        _SEH2_END
+
+        pustrDevice = &ustrDevice;
+   }
+
+    /* Copy devmode */
+    if (lpDevMode)
+    {
+        _SEH2_TRY
+        {
+            ProbeForRead(lpDevMode, sizeof(dmLocal.dmSize), 1);
+            dmLocal.dmSize = min(sizeof(dmLocal), lpDevMode->dmSize);
+            ProbeForRead(lpDevMode, dmLocal.dmSize, 1);
+            RtlCopyMemory(&dmLocal, lpDevMode, dmLocal.dmSize);
+            dmLocal.dmSize = sizeof(dmLocal);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            SetLastNtError(_SEH2_GetExceptionCode());
+            _SEH2_YIELD(return DISP_CHANGE_BADPARAM);
+        }
+        _SEH2_END
+
+        if (dmLocal.dmDriverExtra > 0)
+        {
+            DPRINT1("lpDevMode->dmDriverExtra is IGNORED!\n");
+            dmLocal.dmDriverExtra = 0;
+        }
+        lpDevMode = &dmLocal;
     }
 
-    /* Call internal function */
-    Ret = IntChangeDisplaySettings(pSafeDeviceName, lpSafeDevMode, dwflags, lParam);
+    // FIXME: Copy videoparameters
 
-    if (pSafeDeviceName != NULL)
-        RtlFreeUnicodeString(pSafeDeviceName);
+    /* Call internal function */
+    Ret = UserChangeDisplaySettings(pustrDevice, lpDevMode, hwnd, dwflags, NULL);
 
     return Ret;
 }

@@ -78,6 +78,8 @@
 #include <include/gdifloat.h>
 #include <include/engobjects.h>
 #include <include/engevent.h>
+#include <include/ldevobj.h>
+#include <include/device.h>
 #include <dib/dib.h>
 
 #endif /* __WIN32K_H */

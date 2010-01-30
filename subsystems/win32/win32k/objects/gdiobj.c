@@ -8,7 +8,7 @@
 
 /** INCLUDES ******************************************************************/
 
-//#define GDI_DEBUG
+#define GDI_DEBUG
 
 #include <w32k.h>
 #define NDEBUG
@@ -761,7 +761,7 @@ GreDeleteObject(HGDIOBJ hObject)
              break;
 
           case GDI_OBJECT_TYPE_DC:
-             DC_FreeDcAttr(hObject);
+//             DC_FreeDcAttr(hObject);
              break;
        }
 
@@ -894,6 +894,8 @@ GDIOBJ_LockObj(HGDIOBJ hObj, DWORD ExpectedType)
     POBJ Object = NULL;
     ULONG HandleType, HandleUpper;
 
+    GDIDBG_INITLOOPTRACE();
+
     HandleIndex = GDI_HANDLE_GET_INDEX(hObj);
     HandleType = GDI_HANDLE_GET_TYPE(hObj);
     HandleUpper = GDI_HANDLE_GET_UPPER(hObj);
@@ -973,6 +975,11 @@ GDIOBJ_LockObj(HGDIOBJ hObj, DWORD ExpectedType)
                 {
                     if (Object->Tid != Thread)
                     {
+                        GDIDBG_TRACELOOP(hObj, Object->Tid, Thread);
+                        GDIDBG_TRACECALLER();
+                        GDIDBG_TRACELOCKER(GDI_HANDLE_GET_INDEX(hObj));
+                        GDIDBG_TRACEALLOCATOR(GDI_HANDLE_GET_INDEX(hObj));
+
                         /* Unlock the handle table entry. */
                         (void)InterlockedExchangePointer((PVOID*)&Entry->ProcessId, PrevProcId);
 
@@ -1001,6 +1008,7 @@ GDIOBJ_LockObj(HGDIOBJ hObj, DWORD ExpectedType)
             /*
              * The handle is currently locked, wait some time and try again.
              */
+            GDIDBG_TRACELOOP(hObj, PrevProcId, NULL);
 
             DelayExecution();
             continue;
@@ -1651,9 +1659,8 @@ IntGdiSetDCOwnerEx( HDC hDC, DWORD OwnerMask, BOOL NoSetBrush)
   {
      pDC = DC_LockDc ( hDC );
      MmCopyFromCaller(&pDC->dcattr, pDC->pdcattr, sizeof(DC_ATTR));
+     DC_vFreeDcAttr(pDC);
      DC_UnlockDc( pDC );
-
-     DC_FreeDcAttr( hDC );         // Free the dcattr!
 
      if (!DC_SetOwnership( hDC, NULL )) // This hDC is inaccessible!
         return Ret;

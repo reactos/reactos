@@ -145,8 +145,8 @@ IntCreateCompatibleBitmap(
         {
             Bmp = IntGdiCreateBitmap(abs(Width),
                                      abs(Height),
-                                     IntGdiGetDeviceCaps(Dc,PLANES),
-                                     IntGdiGetDeviceCaps(Dc,BITSPIXEL),
+                                     Dc->ppdev->gdiinfo.cPlanes,
+                                     Dc->ppdev->gdiinfo.cBitsPixel,
                                      NULL);
         }
         else
@@ -176,7 +176,7 @@ IntCreateCompatibleBitmap(
                     Bmp = IntGdiCreateBitmap(abs(Width),
                                              abs(Height),
                                              dibs.dsBm.bmPlanes,
-                                             IntGdiGetDeviceCaps(Dc,BITSPIXEL),//<-- HACK! dibs.dsBm.bmBitsPixel, // <-- Correct!
+                                             Dc->ppdev->gdiinfo.cBitsPixel,//<-- HACK! dibs.dsBm.bmBitsPixel, // <-- Correct!
                                              NULL);
                 }
                 else

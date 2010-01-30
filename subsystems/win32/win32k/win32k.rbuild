@@ -71,12 +71,14 @@
 			</directory>
 		</if>
 		<file>gradient.c</file>
+		<file>ldevobj.c</file>
 		<file>lineto.c</file>
 		<file>mapping.c</file>
 		<file>mem.c</file>
 		<file>engmisc.c</file>
 		<file>mouse.c</file>
 		<file>paint.c</file>
+		<file>pdevobj.c</file>
 		<file>perfcnt.c</file>
 		<file>semaphor.c</file>
 		<file>sort.c</file>
