@@ -18,7 +18,7 @@ OPTION DOTNAME
 #define VAL(x) x
 
 /* MASM/ML doesn't want explicit [rip] addressing */
-#define RIP(address) [address]
+rip = 0
 
 /* Due to MASM's reverse syntax, we are forced to use a precompiler macro */
 #define MACRO(name, ...) name MACRO __VA_ARGS__
@@ -59,9 +59,6 @@ ENDM
 
 /* Macro values need to be marked */
 #define VAL(x) \x
-
-/* GAS needs explicit [rip] addressing */
-#define RIP(address) address##[rip]
 
 /* Due to MASM's reverse syntax, we are forced to use a precompiler macro */
 #define MACRO(...) .macro __VA_ARGS__
