@@ -226,6 +226,7 @@ HalpTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
     
     /* Strange, it isn't! This can happen during NMI */
     DPRINT1("HAL: Trap0D while not in V86 mode\n");
+    KiDumpTrapFrame(TrapFrame);
     while (TRUE);
 }
 
