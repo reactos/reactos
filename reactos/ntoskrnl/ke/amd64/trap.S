@@ -51,10 +51,10 @@ LOCAL label1, label2
 label1:  .asciz "\func"
 label2:
     sub rsp, 32
-    lea rcx, RIP(_MsgTrapInfo)
+    lea rcx, _MsgTrapInfo[rip]
     lea rdx, 1b[rip]
     mov r8, [rbp + KTRAP_FRAME_Rip]
-    call qword ptr RIP(_FrLdrDbgPrint)
+    call qword ptr _FrLdrDbgPrint[rip]
     add rsp, 32
 #endif
 ENDM
@@ -401,9 +401,9 @@ PUBLIC _KiBreakpointTrap
 
     TRAPINFO KiBreakpointTrap
 
-//    lea rcx, RIP(_MsgBreakpointTrap)
+//    lea rcx, _MsgBreakpointTrap[rip]
 //    mov rdx, rsp
-//    call qword ptr RIP(_FrLdrDbgPrint)
+//    call qword ptr _FrLdrDbgPrint[rip]
 
     /* Dispatch the exception */
     mov eax, STATUS_BREAKPOINT
@@ -464,8 +464,8 @@ PUBLIC _KiInvalidOpcodeFault
 //    DISPATCH_EXCEPTION STATUS_BREAKPOINT, 3, 0, 0, 0
 
     mov rdx, [rbp + KTRAP_FRAME_Rip]
-    lea rcx, RIP(_MsgInvalidOpcodeFault)
-    call qword ptr RIP(_FrLdrDbgPrint)
+    lea rcx, _MsgInvalidOpcodeFault[rip]
+    call qword ptr _FrLdrDbgPrint[rip]
     jmp $
 
     /* Return */
@@ -496,10 +496,10 @@ PUBLIC _KiDoubleFaultAbort
 
     ENTER_TRAP_FRAME TRAPFLAG_ALL
 
-    lea rcx, RIP(_MsgDoubleFault)
+    lea rcx, _MsgDoubleFault[rip]
     mov rdx, [rbp + KTRAP_FRAME_FaultAddress]
     mov r8, rbp
-    call qword ptr RIP(_FrLdrDbgPrint)
+    call qword ptr _FrLdrDbgPrint[rip]
 
     /* Bugcheck code UNEXPECTED_KERNEL_MODE_TRAP */
     mov rcx, HEX(0000007F)
@@ -573,8 +573,8 @@ PUBLIC _KiGeneralProtectionFault
     TRAPINFO KiGeneralProtectionFault
 
     mov rdx, [rbp + KTRAP_FRAME_Rip]
-    lea rcx, RIP(_MsgGeneralProtFault)
-    call qword ptr RIP(_FrLdrDbgPrint)
+    lea rcx, _MsgGeneralProtFault[rip]
+    call qword ptr _FrLdrDbgPrint[rip]
 
     /* Check if this was from user-mode */
     cmp byte ptr [rbp + KTRAP_FRAME_PreviousMode], KernelMode
@@ -685,11 +685,11 @@ PUBLIC _KiPageFault
     TRAPINFO KiPageFault
 
 #if 0
-    lea rcx, RIP(_MsgPageFault)
+    lea rcx, _MsgPageFault[rip]
     mov rdx, [rbp + KTRAP_FRAME_ErrorCode]
     mov r8, [rbp + KTRAP_FRAME_Rip]
     mov r9, [rbp + KTRAP_FRAME_FaultAddress]
-    call qword ptr RIP(_FrLdrDbgPrint)
+    call qword ptr _FrLdrDbgPrint[rip]
 #endif
 
     /* Save page fault address */
