@@ -654,10 +654,12 @@ KiEnterInterruptTrap(IN PKTRAP_FRAME TrapFrame)
         TrapFrame->SegGs = Ke386GetGs();
         TrapFrame->SegDs = Ke386GetDs();
         TrapFrame->SegEs = Ke386GetEs();
-        Ke386SetFs(KGDT_R0_PCR);
-        Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
-        Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
     }
+    
+    /* Set correct segments */
+    Ke386SetFs(KGDT_R0_PCR);
+    Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
+    Ke386SetEs(KGDT_R3_DATA | RPL_MASK);        
     
     /* Save exception list and terminate it */
     TrapFrame->ExceptionList = KeGetPcr()->Tib.ExceptionList;
