@@ -37,43 +37,42 @@
 #include <debug.h>
 
 INT WINAPI
-wWinMain(
-	IN HINSTANCE hInstance,
-	IN HINSTANCE hPrevInstance,
-	IN LPWSTR lpCmdLine,
-	IN INT nShowCmd)
+wWinMain(IN HINSTANCE hInstance,
+         IN HINSTANCE hPrevInstance,
+         IN LPWSTR lpCmdLine,
+         IN INT nShowCmd)
 {
-	NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status = STATUS_SUCCESS;
 
-	DPRINT("Local Security Authority Subsystem\n");
-	DPRINT("  Initializing...\n");
+    DPRINT("Local Security Authority Subsystem\n");
+    DPRINT("  Initializing...\n");
 
-	/* Initialize the LSA server DLL. */
-	Status = LsapInitLsa();
-	if (!NT_SUCCESS(Status))
-	{
-		DPRINT1("LsapInitLsa() failed (Status 0x%08lX)\n", Status);
-		goto ByeBye;
-	}
+    /* Initialize the LSA server DLL. */
+    Status = LsapInitLsa();
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("LsapInitLsa() failed (Status 0x%08lX)\n", Status);
+        goto ByeBye;
+    }
 
 #if 0
-	/* Initialize the SAM server DLL. */
-	Status = SamIInitialize();
-	if (!NT_SUCCESS(Status))
-	{
-		DPRINT1("SamIInitialize() failed (Status 0x%08lX)\n", Status);
-		goto ByeBye;
-	}
+    /* Initialize the SAM server DLL. */
+    Status = SamIInitialize();
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SamIInitialize() failed (Status 0x%08lX)\n", Status);
+        goto ByeBye;
+    }
 #endif
 
-	/* FIXME: More initialization */
+    /* FIXME: More initialization */
 
-	DPRINT("  Done...\n");
+    DPRINT("  Done...\n");
 
 ByeBye:
-	NtTerminateThread(NtCurrentThread(), Status);
+    NtTerminateThread(NtCurrentThread(), Status);
 
-	return 0;
+    return 0;
 }
 
 /* EOF */
