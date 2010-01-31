@@ -623,8 +623,10 @@ WSHSetSocketInformation(
     /* FIXME: We only handle address file object here */
 
     RealOptionName = GetAddressOption(Level, OptionName);
+
+    /* FIXME: Support all options */
     if (!RealOptionName)
-        return WSAEINVAL;
+        return 0; /* return WSAEINVAL; */
 
     Info = HeapAlloc(GetProcessHeap(), 0, sizeof(*Info) + OptionLength);
     if (!Info)

@@ -365,9 +365,7 @@ m_copym(m, off0, len, wait)
 #ifdef OSKIT
 			oskit_bufio_addref(m->m_ext.ext_bufio);
 #else
-#ifndef __REACTOS__
 			mclrefcnt[mtocl(m->m_ext.ext_buf)]++;
-#endif
 #endif /* OSKIT */
 			n->m_ext = m->m_ext;
 			n->m_flags |= M_EXT;
@@ -729,11 +727,7 @@ m_devget(buf, totlen, off0, ifp, copy)
 		if (copy)
 			copy(cp, mtod(m, caddr_t), (unsigned)len);
 		else
-#ifdef __REACTOS__
-		    memcpy(mtod(m, caddr_t), cp, len);
-#else
 			bcopy(cp, mtod(m, caddr_t), (unsigned)len);
-#endif
 		cp += len;
 		*mp = m;
 		mp = &m->m_next;
