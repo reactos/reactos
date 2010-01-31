@@ -1289,6 +1289,8 @@ GetServiceDisplayNameA(SC_HANDLE hSCManager,
                        LPDWORD lpcchBuffer)
 {
     DWORD dwError;
+    LPSTR lpNameBuffer;
+    CHAR szEmptyName[] = "";
 
     TRACE("GetServiceDisplayNameA() called\n");
     TRACE("%p %s %p %p\n", hSCManager,
@@ -1300,14 +1302,21 @@ GetServiceDisplayNameA(SC_HANDLE hSCManager,
         return FALSE;
     }
 
-    if (!lpDisplayName)
-        *lpcchBuffer = 0;
+    if (!lpDisplayName || *lpcchBuffer < sizeof(CHAR))
+    {
+        lpNameBuffer = szEmptyName;
+        *lpcchBuffer = sizeof(CHAR);
+    }
+    else
+    {
+        lpNameBuffer = lpDisplayName;
+    }
 
     RpcTryExcept
     {
         dwError = RGetServiceDisplayNameA((SC_RPC_HANDLE)hSCManager,
                                           lpServiceName,
-                                          lpDisplayName,
+                                          lpNameBuffer,
                                           lpcchBuffer);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -1315,8 +1324,6 @@ GetServiceDisplayNameA(SC_HANDLE hSCManager,
         /* HACK: because of a problem with rpcrt4, rpcserver is hacked to return 6 for ERROR_SERVICE_DOES_NOT_EXIST */
         dwError = ScmRpcStatusToWinError(RpcExceptionCode());
     }
-
-
     RpcEndExcept;
 
     if (dwError != ERROR_SUCCESS)
@@ -1342,6 +1349,8 @@ GetServiceDisplayNameW(SC_HANDLE hSCManager,
                        LPDWORD lpcchBuffer)
 {
     DWORD dwError;
+    LPWSTR lpNameBuffer;
+    WCHAR szEmptyName[] = L"";
 
     TRACE("GetServiceDisplayNameW() called\n");
 
@@ -1351,14 +1360,21 @@ GetServiceDisplayNameW(SC_HANDLE hSCManager,
         return FALSE;
     }
 
-    if (!lpDisplayName)
-        *lpcchBuffer = 0;
+    if (!lpDisplayName || *lpcchBuffer < sizeof(WCHAR))
+    {
+        lpNameBuffer = szEmptyName;
+        *lpcchBuffer = sizeof(WCHAR);
+    }
+    else
+    {
+        lpNameBuffer = lpDisplayName;
+    }
 
     RpcTryExcept
     {
         dwError = RGetServiceDisplayNameW((SC_RPC_HANDLE)hSCManager,
                                           lpServiceName,
-                                          lpDisplayName,
+                                          lpNameBuffer,
                                           lpcchBuffer);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -1390,6 +1406,8 @@ GetServiceKeyNameA(SC_HANDLE hSCManager,
                    LPDWORD lpcchBuffer)
 {
     DWORD dwError;
+    LPSTR lpNameBuffer;
+    CHAR szEmptyName[] = "";
 
     TRACE("GetServiceKeyNameA() called\n");
 
@@ -1399,23 +1417,21 @@ GetServiceKeyNameA(SC_HANDLE hSCManager,
         return FALSE;
     }
 
-    if (!lpDisplayName)
+    if (!lpServiceName || *lpcchBuffer < sizeof(CHAR))
     {
-        SetLastError(ERROR_INVALID_ADDRESS);
-
-        if (!lpServiceName)
-            *lpcchBuffer = 1;
-        return FALSE;
+        lpNameBuffer = szEmptyName;
+        *lpcchBuffer = sizeof(CHAR);
     }
-
-    if (!lpServiceName)
-        *lpcchBuffer = 0;
+    else
+    {
+        lpNameBuffer = lpServiceName;
+    }
 
     RpcTryExcept
     {
         dwError = RGetServiceKeyNameA((SC_RPC_HANDLE)hSCManager,
                                       lpDisplayName,
-                                      lpServiceName,
+                                      lpNameBuffer,
                                       lpcchBuffer);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -1447,6 +1463,8 @@ GetServiceKeyNameW(SC_HANDLE hSCManager,
                    LPDWORD lpcchBuffer)
 {
     DWORD dwError;
+    LPWSTR lpNameBuffer;
+    WCHAR szEmptyName[] = L"";
 
     TRACE("GetServiceKeyNameW() called\n");
 
@@ -1456,23 +1474,21 @@ GetServiceKeyNameW(SC_HANDLE hSCManager,
         return FALSE;
     }
 
-    if (!lpDisplayName)
+    if (!lpServiceName || *lpcchBuffer < sizeof(WCHAR))
     {
-        SetLastError(ERROR_INVALID_ADDRESS);
-
-        if (!lpServiceName)
-            *lpcchBuffer = 1;
-        return FALSE;
+        lpNameBuffer = szEmptyName;
+        *lpcchBuffer = sizeof(WCHAR);
     }
-
-    if (!lpServiceName)
-        *lpcchBuffer = 0;
+    else
+    {
+        lpNameBuffer = lpServiceName;
+    }
 
     RpcTryExcept
     {
         dwError = RGetServiceKeyNameW((SC_RPC_HANDLE)hSCManager,
                                       lpDisplayName,
-                                      lpServiceName,
+                                      lpNameBuffer,
                                       lpcchBuffer);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
