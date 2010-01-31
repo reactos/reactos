@@ -831,8 +831,24 @@ DWORD PNP_CreateKey(
     DWORD samDesired,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    HKEY hKey = 0;
+
+    if (RegCreateKeyExW(HKEY_LOCAL_MACHINE,
+                        pszSubKey,
+                        0,
+                        NULL,
+                        0,
+                        KEY_ALL_ACCESS,
+                        NULL,
+                        &hKey,
+                        NULL))
+        return CR_REGISTRY_ERROR;
+
+    /* FIXME: Set security key */
+
+    RegCloseKey(hKey);
+
+    return CR_SUCCESS;
 }
 
 
