@@ -1548,6 +1548,15 @@ NtUserDrawCaptionTemp(
   const PUNICODE_STRING str,
   UINT uFlags);
 
+// Used with NtUserDrawIconEx, last parameter.
+typedef struct _DRAWICONEXDATA
+{
+  HBITMAP hbmMask;
+  HBITMAP hbmColor;
+  int cx;
+  int cy;
+} DRAWICONEXDATA, *PDRAWICONEXDATA;
+
 BOOL
 NTAPI
 NtUserDrawIconEx(
@@ -1560,8 +1569,8 @@ NtUserDrawIconEx(
   UINT istepIfAniCur,
   HBRUSH hbrFlickerFreeDraw,
   UINT diFlags,
-  DWORD Unknown0,
-  DWORD Unknown1);
+  BOOL bMetaHDC,
+  PVOID pDIXData);
 
 DWORD
 NTAPI
