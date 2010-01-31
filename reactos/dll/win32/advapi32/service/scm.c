@@ -287,10 +287,8 @@ ChangeServiceConfig2W(SC_HANDLE hService,
     switch (dwInfoLevel)
     {
         case SERVICE_CONFIG_DESCRIPTION:
-        {
             Info.psd = (LPSERVICE_DESCRIPTIONW)&lpInfo;
             break;
-        }
 
         case SERVICE_CONFIG_FAILURE_ACTIONS:
             Info.psfa = (LPSERVICE_FAILURE_ACTIONSW)&lpInfo;
@@ -596,18 +594,15 @@ CreateServiceA(SC_HANDLE hSCManager,
                LPCSTR lpServiceStartName,
                LPCSTR lpPassword)
 {
-    SC_HANDLE RetVal = NULL;
-    LPWSTR lpServiceNameW = NULL;
-    LPWSTR lpDisplayNameW = NULL;
-    LPWSTR lpBinaryPathNameW = NULL;
-    LPWSTR lpLoadOrderGroupW = NULL;
-    LPWSTR lpDependenciesW = NULL;
-    LPWSTR lpServiceStartNameW = NULL;
-    LPWSTR lpPasswordW = NULL;
+    SC_HANDLE hService = NULL;
     DWORD dwDependenciesLength = 0;
+    DWORD dwError;
     DWORD dwLength;
-    int len;
     LPSTR lpStr;
+
+    TRACE("CreateServiceA() called\n");
+    TRACE("%p %s %s\n", hSCManager, 
+          lpServiceName, lpDisplayName);
 
     if (!hSCManager)
     {
@@ -615,55 +610,8 @@ CreateServiceA(SC_HANDLE hSCManager,
         return NULL;
     }
 
-    if (lpServiceName)
-    {
-        len = MultiByteToWideChar(CP_ACP, 0, lpServiceName, -1, NULL, 0);
-        lpServiceNameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-        if (!lpServiceNameW)
-        {
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            goto cleanup;
-        }
-        MultiByteToWideChar(CP_ACP, 0, lpServiceName, -1, lpServiceNameW, len);
-    }
-
-    if (lpDisplayName)
-    {
-        len = MultiByteToWideChar(CP_ACP, 0, lpDisplayName, -1, NULL, 0);
-        lpDisplayNameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-        if (!lpDisplayNameW)
-        {
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            goto cleanup;
-        }
-        MultiByteToWideChar(CP_ACP, 0, lpDisplayName, -1, lpDisplayNameW, len);
-    }
-
-    if (lpBinaryPathName)
-    {
-        len = MultiByteToWideChar(CP_ACP, 0, lpBinaryPathName, -1, NULL, 0);
-        lpBinaryPathNameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-        if (!lpBinaryPathNameW)
-        {
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            goto cleanup;
-        }
-        MultiByteToWideChar(CP_ACP, 0, lpBinaryPathName, -1, lpBinaryPathNameW, len);
-    }
-
-    if (lpLoadOrderGroup)
-    {
-        len = MultiByteToWideChar(CP_ACP, 0, lpLoadOrderGroup, -1, NULL, 0);
-        lpLoadOrderGroupW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-        if (!lpLoadOrderGroupW)
-        {
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            goto cleanup;
-        }
-        MultiByteToWideChar(CP_ACP, 0, lpLoadOrderGroup, -1, lpLoadOrderGroupW, len);
-    }
-
-    if (lpDependencies)
+    /* Calculate the Dependencies length*/
+    if (lpDependencies != NULL)
     {
         lpStr = (LPSTR)lpDependencies;
         while (*lpStr)
@@ -673,77 +621,44 @@ CreateServiceA(SC_HANDLE hSCManager,
             lpStr = lpStr + dwLength;
         }
         dwDependenciesLength++;
-
-        lpDependenciesW = HeapAlloc(GetProcessHeap(), 0, dwDependenciesLength * sizeof(WCHAR));
-        if (!lpDependenciesW)
-        {
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            goto cleanup;
-        }
-        MultiByteToWideChar(CP_ACP, 0, lpDependencies, dwDependenciesLength, lpDependenciesW, dwDependenciesLength);
     }
 
-    if (lpServiceStartName)
+    /* FIXME: Encrypt the password */
+
+    RpcTryExcept
     {
-        len = MultiByteToWideChar(CP_ACP, 0, lpServiceStartName, -1, NULL, 0);
-        lpServiceStartNameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-        if (!lpServiceStartNameW)
-        {
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            goto cleanup;
-        }
-        MultiByteToWideChar(CP_ACP, 0, lpServiceStartName, -1, lpServiceStartNameW, len);
+        /* Call to services.exe using RPC */
+        dwError = RCreateServiceA((SC_RPC_HANDLE)hSCManager,
+                                  (LPSTR)lpServiceName,
+                                  (LPSTR)lpDisplayName,
+                                  dwDesiredAccess,
+                                  dwServiceType,
+                                  dwStartType,
+                                  dwErrorControl,
+                                  (LPSTR)lpBinaryPathName,
+                                  (LPSTR)lpLoadOrderGroup,
+                                  lpdwTagId,
+                                  (LPBYTE)lpDependencies,
+                                  dwDependenciesLength,
+                                  (LPSTR)lpServiceStartName,
+                                  NULL,              /* FIXME: lpPassword */
+                                  0,                 /* FIXME: dwPasswordLength */
+                                  (SC_RPC_HANDLE *)&hService);
     }
-
-    if (lpPassword)
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
-        len = MultiByteToWideChar(CP_ACP, 0, lpPassword, -1, NULL, 0);
-        lpPasswordW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-        if (!lpPasswordW)
-        {
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            goto cleanup;
-        }
-        MultiByteToWideChar(CP_ACP, 0, lpPassword, -1, lpPasswordW, len);
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    if (dwError != ERROR_SUCCESS)
+    {
+        ERR("RCreateServiceA() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return NULL;
     }
 
-    RetVal = CreateServiceW(hSCManager,
-                            lpServiceNameW,
-                            lpDisplayNameW,
-                            dwDesiredAccess,
-                            dwServiceType,
-                            dwStartType,
-                            dwErrorControl,
-                            lpBinaryPathNameW,
-                            lpLoadOrderGroupW,
-                            lpdwTagId,
-                            lpDependenciesW,
-                            lpServiceStartNameW,
-                            lpPasswordW);
-
-cleanup:
-    if (lpServiceNameW !=NULL)
-        HeapFree(GetProcessHeap(), 0, lpServiceNameW);
-
-    if (lpDisplayNameW != NULL)
-        HeapFree(GetProcessHeap(), 0, lpDisplayNameW);
-
-    if (lpBinaryPathNameW != NULL)
-        HeapFree(GetProcessHeap(), 0, lpBinaryPathNameW);
-
-    if (lpLoadOrderGroupW != NULL)
-        HeapFree(GetProcessHeap(), 0, lpLoadOrderGroupW);
-
-    if (lpDependenciesW != NULL)
-        HeapFree(GetProcessHeap(), 0, lpDependenciesW);
-
-    if (lpServiceStartNameW != NULL)
-        HeapFree(GetProcessHeap(), 0, lpServiceStartNameW);
-
-    if (lpPasswordW != NULL)
-        HeapFree(GetProcessHeap(), 0, lpPasswordW);
-
-    return RetVal;
+    return hService;
 }
 
 
