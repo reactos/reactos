@@ -33,6 +33,9 @@
 #define KeGetTrapFramePc(TrapFrame) \
     ((TrapFrame)->Eip)
 
+#define KiGetLinkedTrapFrame(x) \
+    (PKTRAP_FRAME)((x)->Edx)
+    
 #define KeGetContextReturnRegister(Context) \
     ((Context)->Eax)
 
@@ -456,6 +459,9 @@ extern VOID NTAPI ExpInterlockedPopEntrySListFault(VOID);
 extern VOID __cdecl CopyParams(VOID);
 extern VOID __cdecl ReadBatch(VOID);
 extern VOID __cdecl FrRestore(VOID);
+extern CHAR KiSystemCallExitBranch[];
+extern CHAR KiSystemCallExit[];
+extern CHAR KiSystemCallExit2[];
 
 //
 // Trap Macros
@@ -734,6 +740,39 @@ KiSwitchToBootStack(IN ULONG_PTR InitialStack)
           "i"(CR0_EM | CR0_TS | CR0_MP)
         : "%esp"
     );
+}
+
+//
+// Normally this is done by the HAL, but on x86 as an optimization, the kernel
+// initiates the end by calling back into the HAL and exiting the trap here.
+//
+VOID
+FORCEINLINE
+KiEndInterrupt(IN KIRQL Irql,
+               IN PKTRAP_FRAME TrapFrame)
+{
+    /* Disable interrupts and end the interrupt */
+    _disable();
+    HalEndSystemInterrupt(Irql, TrapFrame);
+    
+    /* Exit the interrupt */
+    KiEoiHelper(TrapFrame);
+}
+
+//
+// PERF Code
+//
+VOID
+FORCEINLINE
+Ki386PerfEnd(VOID)
+{
+    extern ULONGLONG BootCyclesEnd, BootCycles;
+    BootCyclesEnd = __rdtsc();
+    DbgPrint("Boot took %I64d cycles!\n", BootCyclesEnd - BootCycles);
+    DbgPrint("Interrupts: %d System Calls: %d Context Switches: %d\n",
+             KeGetCurrentPrcb()->InterruptCount,
+             KeGetCurrentPrcb()->KeSystemCalls,
+             KeGetContextSwitches(KeGetCurrentPrcb()));
 }
 
 #endif

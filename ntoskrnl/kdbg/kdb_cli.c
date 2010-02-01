@@ -1788,7 +1788,7 @@ KdbpCmdPcr(
               Pcr->NtTib.Self, Pcr->Self, Pcr->Prcb, Pcr->Irql, Pcr->IRR, Pcr->IrrActive,
               Pcr->IDR, Pcr->KdVersionBlock, Pcr->IDT, Pcr->GDT, Pcr->TSS,
               Pcr->MajorVersion, Pcr->MinorVersion, Pcr->SetMember, Pcr->StallScaleFactor,
-              Pcr->Number, Pcr->L2CacheAssociativity,
+              Pcr->Number, Pcr->SecondLevelCacheAssociativity,
               Pcr->VdmAlert, Pcr->SecondLevelCacheSize, Pcr->InterruptMode);
 
     return TRUE;

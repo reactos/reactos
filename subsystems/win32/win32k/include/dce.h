@@ -61,5 +61,7 @@ void FASTCALL DceEmptyCache(void);
 VOID FASTCALL DceResetActiveDCEs(PWINDOW_OBJECT Window);
 void FASTCALL DceFreeClassDCE(HDC);
 HWND FASTCALL UserGethWnd(HDC,PWNDOBJ*);
+void FASTCALL DceFreeWindowDCE(PWINDOW_OBJECT);
+void FASTCALL DceFreeThreadDCE(PTHREADINFO);
 
 #endif /* _WIN32K_DCE_H */

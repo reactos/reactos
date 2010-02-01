@@ -24,6 +24,14 @@
 #define READ_REGISTER_ULONG(r) (*((volatile ULONG * const)(r)))
 #define WRITE_REGISTER_ULONG(r, v) (*((volatile ULONG *)(r)) = (v))
 
+VOID
+FASTCALL
+KeUpdateSystemTime(
+    IN PKTRAP_FRAME TrapFrame,
+    IN ULONG Increment,
+    IN KIRQL OldIrql
+);
+
 /* DATA **********************************************************************/
 
 ULONG HalpCurrentTimeIncrement, HalpNextTimeIncrement, HalpNextIntervalCount;
@@ -256,9 +264,9 @@ HalAssignSlotResources(
 
 BOOLEAN
 NTAPI
-HalBeginSystemInterrupt (KIRQL Irql,
-			 ULONG Vector,
-			 PKIRQL OldIrql)
+HalBeginSystemInterrupt(IN KIRQL Irql,
+                        IN UCHAR Vector,
+                        OUT PKIRQL OldIrql)
 {
   UNIMPLEMENTED;
 
@@ -278,8 +286,8 @@ HalCalibratePerformanceCounter(
 
 VOID
 NTAPI
-HalDisableSystemInterrupt(ULONG Vector,
-                          KIRQL Irql)
+HalDisableSystemInterrupt(IN UCHAR Vector,
+                          IN KIRQL Irql)
 {
     UNIMPLEMENTED;
 }
@@ -330,10 +338,9 @@ HalSetDisplayParameters(IN ULONG CursorPosX,
 
 BOOLEAN
 NTAPI
-HalEnableSystemInterrupt(
-  ULONG Vector,
-  KIRQL Irql,
-  KINTERRUPT_MODE InterruptMode)
+HalEnableSystemInterrupt(IN UCHAR Vector,
+                         IN KIRQL Irql,
+                         IN KINTERRUPT_MODE InterruptMode)
 {
   UNIMPLEMENTED;
 
@@ -343,9 +350,8 @@ HalEnableSystemInterrupt(
 
 VOID
 NTAPI
-HalEndSystemInterrupt(
-  KIRQL Irql,
-  ULONG Unknown2)
+HalEndSystemInterrupt(IN KIRQL OldIrql,
+                      IN PKTRAP_FRAME TrapFrame)
 {
   UNIMPLEMENTED;
 }

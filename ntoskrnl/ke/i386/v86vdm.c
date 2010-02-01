@@ -53,14 +53,17 @@ KiVdmOpcodePUSHF(IN PKTRAP_FRAME TrapFrame,
 {
     ULONG Esp, V86EFlags, TrapEFlags;
     
+    /* Check for VME support */
+    ASSERT(KeI386VirtualIntExtensions == FALSE);
+
     /* Get current V8086 flags and mask out interrupt flag */
     V86EFlags = *KiNtVdmState;
     V86EFlags &= ~EFLAGS_INTERRUPT_MASK;
-    
+
     /* Get trap frame EFLags and leave only align, nested task and interrupt */
     TrapEFlags = TrapFrame->EFlags;
-    TrapEFlags &= (EFLAGS_ALIGN_CHECK | EFLAGS_NESTED_TASK | EFLAGS_INTERRUPT_MASK);
-    
+    V86EFlags &= (EFLAGS_ALIGN_CHECK | EFLAGS_NESTED_TASK | EFLAGS_INTERRUPT_MASK);
+
     /* Add in those flags if they exist, and add in the IOPL flag */
     V86EFlags |= TrapEFlags;
     V86EFlags |= EFLAGS_IOPL;
@@ -124,15 +127,18 @@ KiVdmOpcodePOPF(IN PKTRAP_FRAME TrapFrame,
     /* Now leave only alignment, nested task and interrupt flag */
     EFlags &= (EFLAGS_ALIGN_CHECK | EFLAGS_NESTED_TASK | EFLAGS_INTERRUPT_MASK);
     
-    /* FIXME: Check for VME support */
-    
+    /* Get trap EFlags */
+    TrapEFlags = TrapFrame->EFlags;
+                
+    /* Check for VME support */
+    ASSERT(KeI386VirtualIntExtensions == FALSE);
+
     /* Add V86 and Interrupt flag */
     V86EFlags |= EFLAGS_V86_MASK | EFLAGS_INTERRUPT_MASK;
-    
+
     /* Update EFlags in trap frame */
-    TrapEFlags = TrapFrame->EFlags;
-    TrapFrame->EFlags = (TrapFrame->EFlags & EFLAGS_VIP) | V86EFlags;
-    
+    TrapFrame->EFlags |= V86EFlags;
+
     /* Check if ESP0 needs to be fixed up */
     if (TrapEFlags & EFLAGS_V86_MASK) Ki386AdjustEsp0(TrapFrame);
     
@@ -166,7 +172,8 @@ KiVdmOpcodeINTnn(IN PKTRAP_FRAME TrapFrame,
     /* Keep only alignment and interrupt flag from the V8086 state */
     V86EFlags &= (EFLAGS_ALIGN_CHECK | EFLAGS_INTERRUPT_MASK);
     
-    /* FIXME: Support VME */
+    /* Check for VME support */
+    ASSERT(KeI386VirtualIntExtensions == FALSE);
     
     /* Mask in the relevant V86 EFlags into the trap flags */
     V86EFlags |= (TrapEFlags & ~EFLAGS_INTERRUPT_MASK);
@@ -277,7 +284,8 @@ KiVdmOpcodeIRET(IN PKTRAP_FRAME TrapFrame,
     EFlags &= ~(EFLAGS_IOPL + EFLAGS_VIF + EFLAGS_NESTED_TASK + EFLAGS_VIP);
     V86EFlags = EFlags;
     
-    /* FIXME: Check for VME support */
+    /* Check for VME support */
+    ASSERT(KeI386VirtualIntExtensions == FALSE);
     
     /* Add V86 and Interrupt flag */
     EFlags |= EFLAGS_V86_MASK | EFLAGS_INTERRUPT_MASK;
@@ -314,7 +322,8 @@ FASTCALL
 KiVdmOpcodeCLI(IN PKTRAP_FRAME TrapFrame,
                IN ULONG Flags)
 {       
-    /* FIXME: Support VME */
+    /* Check for VME support */
+    ASSERT(KeI386VirtualIntExtensions == FALSE);
 
     /* Disable interrupts */
     KiVdmClearVdmEFlags(EFLAGS_INTERRUPT_MASK);
@@ -331,7 +340,8 @@ FASTCALL
 KiVdmOpcodeSTI(IN PKTRAP_FRAME TrapFrame,
                IN ULONG Flags)
 {
-    /* FIXME: Support VME */
+    /* Check for VME support */
+    ASSERT(KeI386VirtualIntExtensions == FALSE);
 
     /* Enable interrupts */
     KiVdmSetVdmEFlags(EFLAGS_INTERRUPT_MASK);

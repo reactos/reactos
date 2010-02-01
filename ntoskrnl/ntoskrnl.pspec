@@ -688,11 +688,7 @@
 @ fastcall KeTryToAcquireSpinLockAtDpcLevel(ptr)
 @ stdcall KeUnstackDetachProcess(ptr)
 @ stdcall KeUpdateRunTime(ptr long)
-#ifdef _M_IX86
-@ stdcall KeUpdateSystemTime()
-#else
-@ stdcall KeUpdateSystemTime(ptr long long)
-#endif
+@ fastcall KeUpdateSystemTime(ptr long long)
 @ stdcall KeUserModeCallback(long ptr long ptr ptr)
 @ stdcall KeWaitForMultipleObjects(long ptr long long long long ptr ptr)
 @ stdcall KeWaitForMutexObject(ptr long long long ptr) KeWaitForSingleObject

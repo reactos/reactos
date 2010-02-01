@@ -712,9 +712,39 @@ NtUserCallHwndParamLock(
    DWORD Param,
    DWORD Routine)
 {
-   UNIMPLEMENTED;
+   DWORD Ret = 0;
+   PWINDOW_OBJECT Window;
+   PWND Wnd;
+   USER_REFERENCE_ENTRY Ref;
+   DECLARE_RETURN(DWORD);
 
-   return 0;
+   DPRINT1("Enter NtUserCallHwndParamLock\n");
+   UserEnterExclusive();
+
+   if (!(Window = UserGetWindowObject(hWnd)) || !Window->Wnd)
+   {
+      RETURN( FALSE);
+   }
+   UserRefObjectCo(Window, &Ref);
+
+   Wnd = Window->Wnd;
+
+   switch (Routine)
+   {
+      case TWOPARAM_ROUTINE_VALIDATERGN:
+         Ret = (DWORD)co_UserRedrawWindow( Window, NULL, (HRGN)Param, RDW_VALIDATE);
+         break;
+   }
+
+   UserDerefObjectCo(Window);
+
+   RETURN( Ret);
+
+CLEANUP:
+   DPRINT1("Leave NtUserCallHwndParamLock, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;
+
 }
 
 /* EOF */

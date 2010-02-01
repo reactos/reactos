@@ -29,7 +29,6 @@
 			<file>systimer.S</file>
 			<file>timer.c</file>
 			<file>usage.c</file>
-			<file>v86.s</file>
 		</directory>
 		<directory name="include">
 			<pch>hal.h</pch>

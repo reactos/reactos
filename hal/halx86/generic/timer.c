@@ -109,6 +109,61 @@ HalpInitializeClock(VOID)
     HalpCurrentRollOver = RollOver;
 }
 
+VOID
+FASTCALL
+HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)
+{
+    KIRQL Irql;
+    
+    /* Enter trap */
+    KiEnterInterruptTrap(TrapFrame);
+    
+    /* Start the interrupt */
+    if (HalBeginSystemInterrupt(CLOCK2_LEVEL, PRIMARY_VECTOR_BASE, &Irql))
+    {
+        /* Update the performance counter */
+        HalpPerfCounter.QuadPart += HalpCurrentRollOver;
+        
+        /* Check if someone changed the time rate */
+        if (HalpClockSetMSRate)
+        {
+            /* Not yet supported */
+            UNIMPLEMENTED;
+            while (TRUE);
+        }
+        
+        /* Update the system time -- the kernel will exit this trap  */
+        KeUpdateSystemTime(TrapFrame, HalpCurrentTimeIncrement, Irql);
+    }
+    
+    /* Spurious, just end the interrupt */
+    KiEoiHelper(TrapFrame);
+}
+
+VOID
+FASTCALL
+HalpProfileInterruptHandler(IN PKTRAP_FRAME TrapFrame)
+{
+    KIRQL Irql;
+    
+    /* Enter trap */
+    KiEnterInterruptTrap(TrapFrame);
+    
+    /* Start the interrupt */
+    if (HalBeginSystemInterrupt(PROFILE_LEVEL, PRIMARY_VECTOR_BASE + 8, &Irql))
+    {
+        /* Profiling isn't yet enabled */
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+    
+    /* Spurious, just end the interrupt */
+    KiEoiHelper(TrapFrame);
+}
+
+KiTrap(HalpClockInterrupt,   KI_PUSH_FAKE_ERROR_CODE);
+KiTrap(HalpProfileInterrupt, KI_PUSH_FAKE_ERROR_CODE);
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*

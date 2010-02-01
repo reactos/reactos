@@ -102,6 +102,7 @@ HalpFlushTLB(VOID)
             // Restore interrupts
             //
             __writeeflags(Flags);
+            return;
         }
     }
 

@@ -47,6 +47,8 @@ VIS_ComputeVisibleRegion(
       return NULL;
    }
 
+   VisRgn = NULL;
+
    if (ClientArea)
    {
       VisRgn = IntSysCreateRectRgnIndirect(&Window->Wnd->rcClient);
@@ -71,13 +73,14 @@ VIS_ComputeVisibleRegion(
            CurrentWindow->state & WINDOWSTATUS_DESTROYED )
       {
          DPRINT1("ATM the Current Window or Parent is dead!\n");
+         if (VisRgn) REGION_FreeRgnByHandle(VisRgn);
          return NULL;
       }
 
       CurrentWnd = CurrentWindow->Wnd;
       if (!CurrentWnd || !(CurrentWnd->style & WS_VISIBLE))
       {
-         REGION_FreeRgnByHandle(VisRgn);
+         if (VisRgn) REGION_FreeRgnByHandle(VisRgn);
          return NULL;
       }
 

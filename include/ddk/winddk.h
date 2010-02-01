@@ -5149,23 +5149,7 @@ FORCEINLINE
 ULONG
 KeGetCurrentProcessorNumber(VOID)
 {
-#if defined(__GNUC__)
-  ULONG ret;
-  __asm__ __volatile__ (
-    "movl %%fs:%c1, %0\n"
-    : "=r" (ret)
-    : "i" (FIELD_OFFSET(KPCR, Number))
-  );
-  return ret;
-#elif defined(_MSC_VER)
-#if _MSC_FULL_VER >= 13012035
-  return (ULONG)__readfsbyte(FIELD_OFFSET(KPCR, Number));
-#else
-  __asm { movzx eax, fs:[0] KPCR.Number }
-#endif
-#else
-#error Unknown compiler
-#endif
+    return (ULONG)__readfsbyte(FIELD_OFFSET(KPCR, Number));
 }
 
 NTHALAPI

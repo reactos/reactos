@@ -1116,18 +1116,6 @@ NtUserGetLayeredWindowAttributes(
     return 0;
 }
 
-/* ValidateRect gets redirected to NtUserValidateRect:
-   http://blog.csdn.net/ntdll/archive/2005/10/19/509299.aspx */
-BOOL
-APIENTRY
-NtUserValidateRect(
-    HWND hWnd,
-    const RECT *lpRect)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
 BOOL
 APIENTRY
 NtUserValidateTimerCallback(

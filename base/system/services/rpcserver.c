@@ -3241,8 +3241,135 @@ DWORD RCreateServiceA(
     DWORD dwPwSize,
     LPSC_RPC_HANDLE lpServiceHandle)
 {
-    UNIMPLEMENTED;
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    DWORD dwError = ERROR_SUCCESS;
+    LPWSTR lpServiceNameW = NULL;
+    LPWSTR lpDisplayNameW = NULL;
+    LPWSTR lpBinaryPathNameW = NULL;
+    LPWSTR lpLoadOrderGroupW = NULL;
+    LPWSTR lpDependenciesW = NULL;
+    LPWSTR lpServiceStartNameW = NULL;
+    DWORD dwDependenciesLength = 0;
+    DWORD dwLength;
+    int len;
+    LPSTR lpStr;
+
+    if (lpServiceName)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, lpServiceName, -1, NULL, 0);
+        lpServiceNameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (!lpServiceNameW)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        MultiByteToWideChar(CP_ACP, 0, lpServiceName, -1, lpServiceNameW, len);
+    }
+
+    if (lpDisplayName)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, lpDisplayName, -1, NULL, 0);
+        lpDisplayNameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (!lpDisplayNameW)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        MultiByteToWideChar(CP_ACP, 0, lpDisplayName, -1, lpDisplayNameW, len);
+    }
+
+    if (lpBinaryPathName)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, lpBinaryPathName, -1, NULL, 0);
+        lpBinaryPathNameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (!lpBinaryPathNameW)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        MultiByteToWideChar(CP_ACP, 0, lpBinaryPathName, -1, lpBinaryPathNameW, len);
+    }
+
+    if (lpLoadOrderGroup)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, lpLoadOrderGroup, -1, NULL, 0);
+        lpLoadOrderGroupW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (!lpLoadOrderGroupW)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        MultiByteToWideChar(CP_ACP, 0, lpLoadOrderGroup, -1, lpLoadOrderGroupW, len);
+    }
+
+    if (lpDependencies)
+    {
+        lpStr = (LPSTR)lpDependencies;
+        while (*lpStr)
+        {
+            dwLength = strlen(lpStr) + 1;
+            dwDependenciesLength += dwLength;
+            lpStr = lpStr + dwLength;
+        }
+        dwDependenciesLength++;
+
+        lpDependenciesW = HeapAlloc(GetProcessHeap(), 0, dwDependenciesLength * sizeof(WCHAR));
+        if (!lpDependenciesW)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        MultiByteToWideChar(CP_ACP, 0, (LPSTR)lpDependencies, dwDependenciesLength, lpDependenciesW, dwDependenciesLength);
+    }
+
+    if (lpServiceStartName)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, lpServiceStartName, -1, NULL, 0);
+        lpServiceStartNameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (!lpServiceStartNameW)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        MultiByteToWideChar(CP_ACP, 0, lpServiceStartName, -1, lpServiceStartNameW, len);
+    }
+
+    dwError = RCreateServiceW(hSCManager,
+                              lpServiceNameW,
+                              lpDisplayNameW,
+                              dwDesiredAccess,
+                              dwServiceType,
+                              dwStartType,
+                              dwErrorControl,
+                              lpBinaryPathNameW,
+                              lpLoadOrderGroupW,
+                              lpdwTagId,
+                              (LPBYTE)lpDependenciesW,
+                              dwDependenciesLength,
+                              lpServiceStartNameW,
+                              lpPassword,
+                              dwPwSize,
+                              lpServiceHandle);
+
+cleanup:
+    if (lpServiceNameW !=NULL)
+        HeapFree(GetProcessHeap(), 0, lpServiceNameW);
+
+    if (lpDisplayNameW != NULL)
+        HeapFree(GetProcessHeap(), 0, lpDisplayNameW);
+
+    if (lpBinaryPathNameW != NULL)
+        HeapFree(GetProcessHeap(), 0, lpBinaryPathNameW);
+
+    if (lpLoadOrderGroupW != NULL)
+        HeapFree(GetProcessHeap(), 0, lpLoadOrderGroupW);
+
+    if (lpDependenciesW != NULL)
+        HeapFree(GetProcessHeap(), 0, lpDependenciesW);
+
+    if (lpServiceStartNameW != NULL)
+        HeapFree(GetProcessHeap(), 0, lpServiceStartNameW);
+
+    return dwError;
 }
 
 
