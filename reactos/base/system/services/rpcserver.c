@@ -644,6 +644,14 @@ DWORD RControlService(
     if ((dwError == ERROR_SUCCESS) && (pcbBytesNeeded))
         dwError = ERROR_DEPENDENT_SERVICES_RUNNING;
 
+    if (dwError == ERROR_SUCCESS &&
+        dwControl == SERVICE_CONTROL_STOP && 
+        lpServiceStatus->dwCurrentState == SERVICE_STOPPED)
+    {
+        lpService->ProcessId = 0; /* FIXME */
+        lpService->ThreadId = 0;
+    }
+
     /* Return service status information */
     RtlCopyMemory(lpServiceStatus,
                   &lpService->Status,
