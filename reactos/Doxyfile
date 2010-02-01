@@ -1516,3 +1516,5 @@ DOT_CLEANUP            = YES
 # used. If set to NO the values of all tags below this one will be ignored.
 
 SEARCHENGINE           = YES
+
+SERVER_BASED_SEARCH    = YES
