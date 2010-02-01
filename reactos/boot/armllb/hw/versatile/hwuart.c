@@ -45,6 +45,7 @@ static const ULONG LlbHwVersaUartBase = 0x101F1000;
 /* FUNCTIONS ******************************************************************/
 
 VOID
+NTAPI
 LlbHwVersaUartInitialize(VOID)
 {
     ULONG Divider, Remainder, Fraction, ClockRate, Baudrate;
@@ -92,7 +93,7 @@ NTAPI
 LlbHwUartTxReady(VOID)
 {
     /* TX output buffer is ready? */
-    return (READ_REGISTER_ULONG(UART_PL01x_FR) & UART_PL01x_FR_TXFF);    
+    return ((READ_REGISTER_ULONG(UART_PL01x_FR) & UART_PL01x_FR_TXFF) == 0);
 }
 
 ULONG

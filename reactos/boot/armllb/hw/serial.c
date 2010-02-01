@@ -13,7 +13,7 @@ NTAPI
 LlbSerialPutChar(IN CHAR c)
 {
     /* Properly support new-lines */
-    if (c == '\n') LlbSerialPutChar('\r');
+ //   if (c == '\n') LlbSerialPutChar('\r');
  
     /* Wait for ready */
     while (!LlbHwUartTxReady());

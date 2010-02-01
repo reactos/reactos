@@ -18,7 +18,7 @@ LlbStartup(VOID)
     LlbVideoClearScreen();
 
     /* Print header */
-    printf("ReactOS ARM Low-Level Boot Loader [" __DATE__ " "__TIME__ "]\n\n");
+    printf("ReactOS ARM Low-Level Boot Loader [" __DATE__ " "__TIME__ "]\n");
     while (TRUE);
 }
 

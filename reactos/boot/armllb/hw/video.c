@@ -281,7 +281,8 @@ LlbVideoDrawChar(IN CHAR c,
     PUSHORT Buffer;
     PCHAR Pixels;
     CHAR Line;
-    ULONG x, y, ScreenWidth;
+    ULONG y, ScreenWidth;
+    LONG x;
     PUSHORT VideoBuffer;
     
     /* Get screen width and frame buffer */
@@ -289,8 +290,8 @@ LlbVideoDrawChar(IN CHAR c,
     VideoBuffer = LlbHwGetFrameBuffer();
 
     /* Compute starting address on-screen and in the character-array */
-    buffer = VideoBuffer + ScreenWidth * cy + cx;
-    pixels = LlbHwBootFont + c * 8;
+    Buffer = VideoBuffer + ScreenWidth * cy + cx;
+    Pixels = LlbHwBootFont + c * 8;
 
     /* Loop y pixels */
     for (y = 0; y < 8; y++)

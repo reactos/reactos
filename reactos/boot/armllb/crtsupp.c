@@ -12,7 +12,7 @@ int
 putchar(int c)
 {
     /* Write to the serial port */
-//    LlbSerialPutChar(c);
+    LlbSerialPutChar(c);
     
     /* Write to the screen too */
     LlbVideoPutChar(c);
