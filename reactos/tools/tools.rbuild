@@ -10,6 +10,9 @@
 <directory name="kbdtool">
 	<xi:include href="kbdtool/kbdtool.rbuild" />
 </directory>
+<directory name="nandflash">
+	<xi:include href="nandflash/nandflash.rbuild" />
+</directory>
 <directory name="mkhive">
 	<xi:include href="mkhive/mkhive.rbuild" />
 </directory>
