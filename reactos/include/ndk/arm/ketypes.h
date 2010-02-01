@@ -343,6 +343,7 @@ typedef struct _KPRCB
     ULONG KeDcacheFlushCount;
     ULONG KeExceptionDispatchCount;
     ULONG KeFirstLevelTbFills;
+    ULONG KeFloatingEmulationCount;
     ULONG KeIcacheFlushCount;
     ULONG KeSecondLevelTbFills;
     ULONG KeSystemCalls;

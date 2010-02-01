@@ -113,11 +113,7 @@ KeUpdateSystemTime(IN PKTRAP_FRAME TrapFrame,
     }
     
     /* Disable interrupts and end the interrupt */
-    _disable();
-    HalEndSystemInterrupt(Irql, TrapFrame);
-    
-    /* Exit the interrupt */
-    KiEoiHelper(TrapFrame);
+    KiEndInterrupt(Irql, TrapFrame);
 }
 
 VOID

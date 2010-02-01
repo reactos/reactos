@@ -3,6 +3,8 @@
 
 #include "intrin_i.h"
 
+#define KiServiceExit2 KiExceptionExit
+
 //
 //Lockdown TLB entries
 //
@@ -91,8 +93,12 @@ KiRundownThread(IN PKTHREAD Thread)
 VOID
 KiPassiveRelease(
     VOID
-
 );
+
+VOID
+KiSystemService(IN PKTHREAD Thread,
+                IN PKTRAP_FRAME TrapFrame,
+                IN ULONG Instruction);
 
 VOID
 KiApcInterrupt(
@@ -113,7 +119,11 @@ KeFlushTb(
     VOID
 );
 
-#define KiSystemStartupReal KiSystemStartup
+#define Ki386PerfEnd()
+#define KiEndInterrupt(x,y)
+
+#define KiGetLinkedTrapFrame(x) \
+    (PKTRAP_FRAME)((x)->PreviousTrapFrame)
 
 #define KiGetPreviousMode(tf) \
     ((tf->Spsr & CPSR_MODES) == CPSR_USER_MODE) ? UserMode: KernelMode

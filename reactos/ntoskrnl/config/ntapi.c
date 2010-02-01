@@ -891,12 +891,7 @@ NtInitializeRegistry(IN USHORT Flag)
     if (KeGetPreviousMode() == UserMode) return ZwInitializeRegistry(Flag);
 
     /* Enough of the system has booted by now */
-    BootCyclesEnd = __rdtsc();
-    DPRINT1("Boot took %I64d cycles!\n", BootCyclesEnd - BootCycles);
-    DPRINT1("Interrupts: %d System Calls: %d Context Switches: %d\n",
-            KeGetCurrentPrcb()->InterruptCount,
-            KeGetCurrentPrcb()->KeSystemCalls,
-            KeGetContextSwitches(KeGetCurrentPrcb()));
+    Ki386PerfEnd();
             
     /* Validate flag */
     if (Flag > CM_BOOT_FLAG_MAX) return STATUS_INVALID_PARAMETER;

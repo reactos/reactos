@@ -1016,7 +1016,7 @@ ArmSetupPagingAndJump(IN ULONG Magic)
     //
     // Jump to Kernel
     //
-    (*KernelEntryPoint)(Magic, (PVOID)((ULONG_PTR)ArmLoaderBlock | KSEG0_BASE));
+    (*KernelEntryPoint)((PVOID)((ULONG_PTR)ArmLoaderBlock | KSEG0_BASE));
 }
 
 VOID

@@ -180,10 +180,12 @@ NtRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
     /* Get trap frame and link previous one*/
     Thread = KeGetCurrentThread();
     TrapFrame = Thread->TrapFrame;
-    Thread->TrapFrame = (PKTRAP_FRAME)TrapFrame->Edx;
+    Thread->TrapFrame = KiGetLinkedTrapFrame(TrapFrame);
     
     /* Set exception list */
+#ifdef _M_IX86
     KeGetPcr()->Tib.ExceptionList = TrapFrame->ExceptionList;
+#endif
     
     /* Raise the exception */
     Status = KiRaiseException(ExceptionRecord,
@@ -218,7 +220,7 @@ NtContinue(IN PCONTEXT Context,
     /* Get trap frame and link previous one*/
     Thread = KeGetCurrentThread();
     TrapFrame = Thread->TrapFrame;
-    Thread->TrapFrame = (PKTRAP_FRAME)TrapFrame->Edx;
+    Thread->TrapFrame = KiGetLinkedTrapFrame(TrapFrame);
     
     /* Continue from this point on */
     Status = KiContinue(Context, NULL, TrapFrame);

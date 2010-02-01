@@ -845,16 +845,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     PspRunCreateProcessNotifyRoutines(Process, TRUE);
     
     /* If 12 processes have been created, enough of user-mode is ready */
-    if (++ProcessCount == 12)
-    {
-        /* Enough of the system has booted by now */
-        BootCyclesEnd = __rdtsc();
-        DPRINT1("User Boot took %I64d cycles!\n", BootCyclesEnd - BootCycles);
-        DPRINT1("Interrupts: %d System Calls: %d Context Switches: %d\n",
-                KeGetCurrentPrcb()->InterruptCount,
-                KeGetCurrentPrcb()->KeSystemCalls,
-                KeGetContextSwitches(KeGetCurrentPrcb()));
-    }
+    if (++ProcessCount == 12) Ki386PerfEnd();
 
 CleanupWithRef:
     /*
