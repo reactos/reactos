@@ -533,15 +533,14 @@ KiTrap05Handler(IN PKTRAP_FRAME TrapFrame)
 VOID
 FASTCALL
 DECLSPEC_NORETURN
-KiTrap06Handler(IN PKTRAP_FRAME TrapFrame,
-                IN ULONG EFlags)
+KiTrap06Handler(IN PKTRAP_FRAME TrapFrame)
 {
     PUCHAR Instruction;
     ULONG i;
     KIRQL OldIrql;
     
     /* Check for V86 GPF */
-    if (__builtin_expect(EFlags & EFLAGS_V86_MASK, 1))
+    if (__builtin_expect(KiIsV8086TrapSafe(TrapFrame), 1))
     {
         /* Enter V86 trap */
         KiEnterV86Trap(TrapFrame);
@@ -792,8 +791,7 @@ KiTrap0CHandler(IN PKTRAP_FRAME TrapFrame)
 VOID
 FASTCALL
 DECLSPEC_NORETURN
-KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame,
-                IN ULONG EFlags)
+KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
 {
     ULONG i, j, Iopl;
     BOOLEAN Privileged = FALSE;
@@ -802,7 +800,7 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame,
     KIRQL OldIrql;
     
     /* Check for V86 GPF */
-    if (__builtin_expect(EFlags & EFLAGS_V86_MASK, 1))
+    if (__builtin_expect(KiIsV8086TrapSafe(TrapFrame), 1))
     {
         /* Enter V86 trap */
         KiEnterV86Trap(TrapFrame);
@@ -1581,14 +1579,14 @@ KiTrap(KiTrap01,         KI_PUSH_FAKE_ERROR_CODE);
 KiTrap(KiTrap03,         KI_PUSH_FAKE_ERROR_CODE);
 KiTrap(KiTrap04,         KI_PUSH_FAKE_ERROR_CODE);
 KiTrap(KiTrap05,         KI_PUSH_FAKE_ERROR_CODE);
-KiTrap(KiTrap06,         KI_PUSH_FAKE_ERROR_CODE | KI_FAST_V86_TRAP);
+KiTrap(KiTrap06,         KI_PUSH_FAKE_ERROR_CODE);
 KiTrap(KiTrap07,         KI_PUSH_FAKE_ERROR_CODE);
 KiTrap(KiTrap08,         0);
 KiTrap(KiTrap09,         KI_PUSH_FAKE_ERROR_CODE);
 KiTrap(KiTrap0A,         0);
 KiTrap(KiTrap0B,         0);
 KiTrap(KiTrap0C,         0);
-KiTrap(KiTrap0D,         KI_FAST_V86_TRAP);
+KiTrap(KiTrap0D,         0);
 KiTrap(KiTrap0E,         0);
 KiTrap(KiTrap0F,         KI_PUSH_FAKE_ERROR_CODE);
 KiTrap(KiTrap10,         KI_PUSH_FAKE_ERROR_CODE);

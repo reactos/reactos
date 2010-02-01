@@ -406,6 +406,68 @@ KiIssueBop(VOID)
     asm volatile(".byte 0xC4\n.byte 0xC4\n");
 }
 
+//
+// Returns whether or not this is a V86 trap by checking the EFLAGS field.
+//
+// FIXME: GCC 4.5 Can Improve this with "goto labels"
+//
+BOOLEAN
+FORCEINLINE
+KiIsV8086TrapSafe(IN PKTRAP_FRAME TrapFrame)
+{
+    BOOLEAN Result;
+    
+    /*
+     * The check MUST be done this way, as we guarantee that no DS/ES/FS segment
+     * is used (since it might be garbage).
+     *
+     * Instead, we use the SS segment which is guaranteed to be correct. Because
+     * operate in 32-bit flat mode, this works just fine.
+     */
+     asm volatile
+     (
+        "testl $%c[f], %%ss:%1\n"
+        "setnz %0\n"
+        : "=a"(Result)
+        : "m"(TrapFrame->EFlags),
+          [f] "i"(EFLAGS_V86_MASK)
+     );
+    
+    /* If V86 flag was set */ 
+    return Result;
+}
+
+//
+// Returns whether or not this is a user-mode trap by checking the SegCs field.
+//
+// FIXME: GCC 4.5 Can Improve this with "goto labels"
+//
+BOOLEAN
+FORCEINLINE
+KiIsUserTrapSafe(IN PKTRAP_FRAME TrapFrame)
+{
+    BOOLEAN Result;
+    
+    /*
+     * The check MUST be done this way, as we guarantee that no DS/ES/FS segment
+     * is used (since it might be garbage).
+     *
+     * Instead, we use the SS segment which is guaranteed to be correct. Because
+     * operate in 32-bit flat mode, this works just fine.
+     */
+     asm volatile
+     (
+        "cmp $%c[f], %%ss:%1\n"
+        "setnz %0\n"
+        : "=a"(Result)
+        : "m"(TrapFrame->SegCs),
+          [f] "i"(KGDT_R0_CODE)
+     );
+    
+    /* If V86 flag was set */ 
+    return Result;
+}
+
 VOID
 FORCEINLINE
 KiUserSystemCall(IN PKTRAP_FRAME TrapFrame)
@@ -638,28 +700,39 @@ VOID
 FORCEINLINE
 KiEnterInterruptTrap(IN PKTRAP_FRAME TrapFrame)
 {
+    ULONG Ds, Es;
+    
     /* Check for V86 mode, otherwise check for ring 3 code */
-    if (__builtin_expect(TrapFrame->EFlags & EFLAGS_V86_MASK, 0))
+    if (__builtin_expect(KiIsV8086TrapSafe(TrapFrame), 0))
     {
+        /* Set correct segments */
+        Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
+        Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
+        Ke386SetFs(KGDT_R0_PCR);
+
         /* Restore V8086 segments into Protected Mode segments */
         TrapFrame->SegFs = TrapFrame->V86Fs;
         TrapFrame->SegGs = TrapFrame->V86Gs;
         TrapFrame->SegDs = TrapFrame->V86Ds;
         TrapFrame->SegEs = TrapFrame->V86Es;
     }
-    else if (__builtin_expect(TrapFrame->SegCs != KGDT_R0_CODE, 1)) /* Ring 3 is more common */
+    else if (__builtin_expect(KiIsUserTrapSafe(TrapFrame), 1)) /* Ring 3 is more common */
     {
-        /* Save segments and then switch to correct ones */
+        /* Save DS/ES and load correct values */
+        Es = Ke386GetEs();
+        Ds = Ke386GetDs();
+        TrapFrame->SegDs = Ds;
+        TrapFrame->SegEs = Es;
+        Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
+        Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
+        
+        /* Save FS/GS */
         TrapFrame->SegFs = Ke386GetFs();
         TrapFrame->SegGs = Ke386GetGs();
-        TrapFrame->SegDs = Ke386GetDs();
-        TrapFrame->SegEs = Ke386GetEs();
-    }
-    
-    /* Set correct segments */
-    Ke386SetFs(KGDT_R0_PCR);
-    Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
-    Ke386SetEs(KGDT_R3_DATA | RPL_MASK);        
+        
+        /* Set correct FS */
+        Ke386SetFs(KGDT_R0_PCR);
+    }       
     
     /* Save exception list and terminate it */
     TrapFrame->ExceptionList = KeGetPcr()->Tib.ExceptionList;
@@ -743,7 +816,7 @@ KiEnterTrap(IN PKTRAP_FRAME TrapFrame)
 // Generates a Trap Prolog Stub for the given name
 //
 #define KI_PUSH_FAKE_ERROR_CODE 0x1
-#define KI_FAST_V86_TRAP        0x2
+#define KI_UNUSED               0x2
 #define KI_NONVOLATILES_ONLY    0x4
 #define KI_FAST_SYSTEM_CALL     0x8
 #define KI_SOFTWARE_TRAP        0x10
@@ -836,20 +909,13 @@ KiTrapStub(IN ULONG Flags,
     /* Now go ahead and make space for this frame */
     __asm__ __volatile__ ("subl $%c[e],%%esp\n":: [e] "i"(FrameSize) : "%esp");
     __asm__ __volatile__ ("subl $%c[e],%%ecx\n":: [e] "i"(FrameSize) : "%ecx");
-       
-    /* For Fast-V86 traps, set parameter 2 (EDX) to hold EFlags */   
-    if (Flags & KI_FAST_V86_TRAP) __asm__ __volatile__
+
+    /*
+     * For hardware interrupts, set parameter 2 (EDX) to hold KINTERRUPT.
+     * This code will be dynamically patched when an interrupt is registered!
+     */  
+    if (Flags & KI_HARDWARE_INT) __asm__ __volatile__
     (
-        "movl %c[f](%%esp), %%edx\n"
-        :
-        : [f] "i"(FIELD_OFFSET(KTRAP_FRAME, EFlags))
-    );
-    else if (Flags & KI_HARDWARE_INT) __asm__ __volatile__
-    (
-        /*
-         * For hardware interrupts, set parameter 2 (EDX) to hold KINTERRUPT.
-         * This code will be dynamically patched when an interrupt is registered!
-         */
         ".globl _KiInterruptTemplate2ndDispatch\n_KiInterruptTemplate2ndDispatch:\n"
         "movl $0, %%edx\n"
         ".globl _KiInterruptTemplateObject\n_KiInterruptTemplateObject:\n"
