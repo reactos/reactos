@@ -490,7 +490,31 @@ KiUserSystemCall(IN PKTRAP_FRAME TrapFrame)
         : "r"(TrapFrame->SegCs)
     );
 }
-        
+
+VOID
+FORCEINLINE
+KiSetSaneSegments(IN PKTRAP_FRAME TrapFrame)
+{
+    ULONG Ds, Es;
+    
+    /*
+     * We really have to get a good DS/ES first before touching any data.
+     *
+     * These two reads will either go in a register (with optimizations ON) or
+     * a stack variable (which is on SS:ESP, guaranteed to be good/valid).
+     *
+     * Because the assembly is marked volatile, the order of instructions is
+     * as-is, otherwise the optimizer could simply get rid of our DS/ES.
+     *
+     */
+    Ds = Ke386GetDs();
+    Es = Ke386GetEs();
+    Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
+    Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
+    TrapFrame->SegDs = Ds;
+    TrapFrame->SegEs = Es;
+}
+
 //
 // Generic Exit Routine
 //
@@ -700,8 +724,6 @@ VOID
 FORCEINLINE
 KiEnterInterruptTrap(IN PKTRAP_FRAME TrapFrame)
 {
-    ULONG Ds, Es;
-    
     /* Check for V86 mode, otherwise check for ring 3 code */
     if (__builtin_expect(KiIsV8086TrapSafe(TrapFrame), 0))
     {
@@ -718,14 +740,9 @@ KiEnterInterruptTrap(IN PKTRAP_FRAME TrapFrame)
     }
     else if (__builtin_expect(KiIsUserTrapSafe(TrapFrame), 1)) /* Ring 3 is more common */
     {
-        /* Save DS/ES and load correct values */
-        Es = Ke386GetEs();
-        Ds = Ke386GetDs();
-        TrapFrame->SegDs = Ds;
-        TrapFrame->SegEs = Es;
-        Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
-        Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
-        
+        /* Switch to sane segments */
+        KiSetSaneSegments(TrapFrame);
+
         /* Save FS/GS */
         TrapFrame->SegFs = Ke386GetFs();
         TrapFrame->SegGs = Ke386GetGs();
@@ -760,24 +777,8 @@ VOID
 FORCEINLINE
 KiEnterTrap(IN PKTRAP_FRAME TrapFrame)
 {
-    ULONG Ds, Es;
-    
-    /*
-     * We really have to get a good DS/ES first before touching any data.
-     *
-     * These two reads will either go in a register (with optimizations ON) or
-     * a stack variable (which is on SS:ESP, guaranteed to be good/valid).
-     *
-     * Because the assembly is marked volatile, the order of instructions is
-     * as-is, otherwise the optimizer could simply get rid of our DS/ES.
-     *
-     */
-    Ds = Ke386GetDs();
-    Es = Ke386GetEs();
-    Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
-    Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
-    TrapFrame->SegDs = Ds;
-    TrapFrame->SegEs = Es;
+    /* Switch to sane segments */
+    KiSetSaneSegments(TrapFrame);
         
     /* Now we can save the other segments and then switch to the correct FS */
     TrapFrame->SegFs = Ke386GetFs();
