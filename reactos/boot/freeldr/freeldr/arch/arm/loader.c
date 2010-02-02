@@ -1597,7 +1597,7 @@ VOID
 FrLdrStartup(IN ULONG Magic)
 {
     //
-    // Disable interrupts (aleady done)
+    // Disable interrupts (already done)
     //
 
     //
