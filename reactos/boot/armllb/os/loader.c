@@ -10,12 +10,13 @@
 
 BIOS_MEMORY_MAP MemoryMap[32];
 ARM_BOARD_CONFIGURATION_BLOCK ArmBlock;
-
+POSLOADER_INIT LoaderInit;
+    
 VOID
 NTAPI
-AllocateMemoryEntry(IN BIOS_MEMORY_TYPE Type,
-                    IN ULONG BaseAddress,
-                    IN ULONG Length)
+LlbAllocateMemoryEntry(IN BIOS_MEMORY_TYPE Type,
+                      IN ULONG BaseAddress,
+                      IN ULONG Length)
 {
     PBIOS_MEMORY_MAP Entry;
     
@@ -37,6 +38,7 @@ NTAPI
 LlbSetCommandLine(IN PCHAR CommandLine)
 {
     /* Copy the command line in the ARM block */
+    printf("Command Line %s\n", CommandLine);
     strcpy(ArmBlock.CommandLine, CommandLine);
 }
 
@@ -58,8 +60,76 @@ LlbBuildArmBlock(VOID)
     ArmBlock.TimerRegisterBase = LlbHwGetTmr0Base();
     ArmBlock.UartRegisterBase = LlbHwGetUartBase(LlbHwGetSerialUart());
     
+    /* Debug */
+    printf("Machine Identifier: %lx\nPCLK: %d\nTIMER 0: %p\nSERIAL UART: %p\n",
+            ArmBlock.BoardType,
+            ArmBlock.ClockRate,
+            ArmBlock.TimerRegisterBase,
+            ArmBlock.UartRegisterBase);
+    
     /* Now load the memory map */
     ArmBlock.MemoryMap = MemoryMap;
+}
+
+VOID
+NTAPI
+LlbBuildMemoryMap(VOID)
+{
+    /* Zero out the memory map */
+    memset(MemoryMap, 0, sizeof(MemoryMap));
+
+    /* Call the hardware-specific function */
+    LlbHwBuildMemoryMap(MemoryMap);
+}
+
+VOID
+NTAPI
+LlbLoadOsLoader(VOID)
+{
+    PCHAR BootDevice;
+    
+    /* Read the current boot device */
+    BootDevice = LlbHwEnvRead("boot-device");
+    printf("Loading OS Loader from: %s...\n", BootDevice);
+    if (!strcmp(BootDevice, "NAND"))
+    {
+        // todo
+    }
+    else if (!strcmp(BootDevice, "RAMDISK"))
+    {
+        /* Call the hardware-specific function */
+        LoaderInit = LlbHwLoadOsLoaderFromRam();
+    }
+    else if (!strcmp(BootDevice, "MMC") ||
+             !strcmp(BootDevice, "SD"))
+    {
+        //todo
+    }
+    else if (!strcmp(BootDevice, "HDD"))
+    {
+        //todo
+    }
+    printf("OS Loader loaded at 0x%p...JUMP!\n", LoaderInit);
+}
+
+VOID
+NTAPI
+LlbBoot(IN PCHAR CommandLine)
+{
+    /* Setup the ARM block */
+    LlbBuildArmBlock();
+    
+    /* Build the memory map */
+    LlbBuildMemoryMap();
+    
+    /* Set the command-line */
+    LlbSetCommandLine(CommandLine);
+    
+    /* Load the OS loader */
+    LlbLoadOsLoader();
+    
+    /* Jump to the OS Loader (FreeLDR in this case) */
+    LoaderInit(&ArmBlock);
 }
 
 /* EOF */

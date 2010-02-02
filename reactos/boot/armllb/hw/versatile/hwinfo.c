@@ -19,7 +19,7 @@ ULONG
 NTAPI
 LlbHwGetPClk(VOID)
 {
-    return 0x24000000;
+    return 24000000;
 }
 
 ULONG
@@ -35,5 +35,27 @@ LlbHwGetSerialUart(VOID)
 {
     return 0;
 }     
+
+VOID
+NTAPI
+LlbHwBuildMemoryMap(IN PBIOS_MEMORY_MAP MemoryMap)
+{
+    /* For now, hard-code 128MB of RAM starting at 0x00000000 */
+    LlbAllocateMemoryEntry(BiosMemoryUsable, 0x00000000, 128 * 1024 * 1024);
+    
+    /* Mark MMIO space as reserved */
+    LlbAllocateMemoryEntry(BiosMemoryReserved, 0x10000000, 128 * 1024 * 1024);
+}
+
+//
+// hwenv.c? or environment.c? or both?
+//
+PCHAR
+NTAPI
+LlbHwEnvRead(IN PCHAR Option)
+{
+    /* HACKFIX */
+    return "RAMDISK";
+}
 
 /* EOF */

@@ -19,6 +19,9 @@ LlbStartup(VOID)
 
     /* Print header */
     printf("ReactOS ARM Low-Level Boot Loader [" __DATE__ " "__TIME__ "]\n");
+    
+    /* Boot the OS Loader */
+    LlbBoot("");
     while (TRUE);
 }
 

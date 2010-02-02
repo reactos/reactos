@@ -80,6 +80,24 @@ LlbHwUartTxReady(
     VOID
 );
 
+VOID
+NTAPI
+LlbHwBuildMemoryMap(
+    IN PBIOS_MEMORY_MAP MemoryMap
+);
+
+POSLOADER_INIT
+NTAPI
+LlbHwLoadOsLoaderFromRam(
+    VOID
+);
+
+PCHAR
+NTAPI
+LlbHwEnvRead(
+    IN PCHAR Option
+);
+
 #ifdef _VERSATILE_
 #include "versa.h"
 #elif _OMAP3_

@@ -10,7 +10,7 @@
 // OS Loader Main Routine
 // 
 typedef
-VOID (*OSLOADER_INIT)(
+VOID (*POSLOADER_INIT)(
     IN PVOID BoardInit
 );
 
@@ -53,5 +53,43 @@ typedef struct _ARM_BOARD_CONFIGURATION_BLOCK
     PBIOS_MEMORY_MAP MemoryMap;
     CHAR CommandLine[256];
 } ARM_BOARD_CONFIGURATION_BLOCK, *PARM_BOARD_CONFIGURATION_BLOCK;
+
+VOID
+NTAPI
+LlbAllocateMemoryEntry(
+    IN BIOS_MEMORY_TYPE Type,
+    IN ULONG BaseAddress,
+    IN ULONG Length
+);
+
+VOID
+NTAPI
+LlbSetCommandLine(
+    IN PCHAR CommandLine
+);
+
+VOID
+NTAPI
+LlbBuildArmBlock(
+    VOID
+);
+
+VOID
+NTAPI
+LlbBuildMemoryMap(
+    VOID
+);
+
+VOID
+NTAPI
+LlbLoadOsLoader(
+    VOID
+);
+
+VOID
+NTAPI
+LlbBoot(
+    IN PCHAR CommandLine
+);
 
 /* EOF */
