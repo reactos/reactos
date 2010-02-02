@@ -137,13 +137,11 @@ code = 1
 .macro .endprolog
 .endm
 
-// Note the file1. This is a hack, as "\file" doesn't work with __FILE__, when
-// .altmacro is specified.
-.macro UNIMPLEMENTED2 file1, line, func
+.macro UNIMPLEMENTED2 file, line, func
 
     jmp 3f
-1:  .asciz "\func"
-2:  .asciz "\file"
+1:  .asciz \func
+2:  .asciz \file
 3:
     sub rsp, 0x20
     lea rcx, _MsgUnimplemented[rip]
