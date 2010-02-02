@@ -12,6 +12,7 @@
 #include "machtype.h"
 #include "osloader.h"
 #include "hw.h"
+#include "fw.h"
 #include "serial.h"
 #include "video.h"
 

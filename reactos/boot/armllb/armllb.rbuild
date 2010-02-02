@@ -21,6 +21,8 @@
             <file first="true">boot.s</file>
             <file>main.c</file>
             <file>crtsupp.c</file>
+	    <file>envir.c</file>
+	    <file>fw.c</file>
             <directory name="hw">
                 <file>serial.c</file>
                 <file>video.c</file>

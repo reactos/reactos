@@ -268,6 +268,28 @@ CHAR LlbHwBootFont[] =
     0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
 };
 
+#if 0
+USHORT ColorPalette[16] =
+{
+    RGB565(0x00, 0x00, 0x00),
+    RGB565(0x00, 0x00, 0xAA),
+    RGB565(0x00, 0xAA, 0x00),
+    RGB565(0x00, 0xAA, 0xAA),
+    RGB565(0xAA, 0x00, 0x00),
+    RGB565(0xAA, 0x00, 0xAA),
+    RGB565(0xAA, 0x55, 0x00),
+    RGB565(0xAA, 0xAA, 0xAA),
+    RGB565(0x55, 0x55, 0x55),
+    RGB565(0x55, 0x55, 0xFF),
+    RGB565(0x55, 0xFF, 0x55),
+    RGB565(0x55, 0xFF, 0xFF),
+    RGB565(0xFF, 0x55, 0x55),
+    RGB565(0xFF, 0x55, 0xFF),
+    RGB565(0xFF, 0xFF, 0x55),
+    RGB565(0xFF, 0xFF, 0xFF),
+};
+#endif
+
 ULONG ScreenCursor;
 
 VOID
@@ -312,7 +334,7 @@ LlbVideoDrawChar(IN CHAR c,
 
 VOID
 NTAPI
-LlbVideoClearScreen(VOID)
+LlbVideoClearScreen(IN BOOLEAN OsLoader)
 {
     ULONG ScreenSize, p;
     ULONG BackColor;
@@ -323,8 +345,17 @@ LlbVideoClearScreen(VOID)
     ScreenCursor = 0;
     
     /* Backcolor on this machine */
-    BackColor = LlbHwVideoCreateColor(14, 0, 82);
-    BackColor = (BackColor << 16) | BackColor;
+    if (OsLoader)
+    {
+        /* Black */
+        BackColor = 0;
+    }
+    else
+    {
+        /* Deep blue */
+        BackColor = LlbHwVideoCreateColor(14, 0, 82);
+        BackColor = (BackColor << 16) | BackColor;
+    }
     
     /* Screen size on this machine */
     ScreenSize = LlbHwGetScreenWidth() * LlbHwGetScreenHeight();
@@ -369,3 +400,4 @@ LlbVideoPutChar(IN CHAR c)
 }
 
 /* EOF */
+

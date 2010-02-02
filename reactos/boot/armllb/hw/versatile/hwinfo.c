@@ -47,15 +47,4 @@ LlbHwBuildMemoryMap(IN PBIOS_MEMORY_MAP MemoryMap)
     LlbAllocateMemoryEntry(BiosMemoryReserved, 0x10000000, 128 * 1024 * 1024);
 }
 
-//
-// hwenv.c? or environment.c? or both?
-//
-PCHAR
-NTAPI
-LlbHwEnvRead(IN PCHAR Option)
-{
-    /* HACKFIX */
-    return "RAMDISK";
-}
-
 /* EOF */

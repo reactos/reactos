@@ -11,11 +11,11 @@
 int
 putchar(int c)
 {
-    /* Write to the serial port */
-    LlbSerialPutChar(c);
-    
-    /* Write to the screen too */
+    /* Write to the screen */
     LlbVideoPutChar(c);
+
+    /* For DEBUGGING ONLY */
+    LlbSerialPutChar(c);
     return 0;
 }
 
@@ -32,13 +32,9 @@ int printf(const char *fmt, ...)
     unsigned int i;
     char printbuffer[1024];
 
-    va_start (args, fmt);
-
-    /* For this to work, printbuffer must be larger than
-     * anything we ever want to print.
-     */
-    i = vsprintf (printbuffer, fmt, args);
-    va_end (args);
+    va_start(args, fmt);
+    i = vsprintf(printbuffer, fmt, args);
+    va_end(args);
 
     /* Print the string */
     return puts(printbuffer);

@@ -32,8 +32,14 @@
 			<library>rtl</library>
 			<library>libcntpr</library>
 			<group linkerset="ld">
+			    <linkerflag>-static</linkerflag>
 				<linkerflag>-lgcc</linkerflag>
-				<linkerflag>-Wl,--image-base=0x80FFF000</linkerflag>
+			    <if property="SARCH" value="omap3">
+			        <linkerflag>-Wl,--image-base=0x80FFF000</linkerflag>
+			    </if>
+                <if property="SARCH" value="versatile">
+			        <linkerflag>-Wl,--image-base=0x007FF000</linkerflag>
+			    </if>				
 			</group>
 		</module>
 	</if>

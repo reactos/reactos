@@ -14,6 +14,7 @@ VOID (*POSLOADER_INIT)(
     IN PVOID BoardInit
 );
 
+#ifndef __REGISTRY_H
 //
 // Type of memory detected by LLB
 //
@@ -35,12 +36,13 @@ typedef struct
     ULONG Type;
     ULONG Reserved;
 } BIOS_MEMORY_MAP, *PBIOS_MEMORY_MAP;
+#endif
 
 //
 // Information sent from LLB to OS Loader
 //
 #define ARM_BOARD_CONFIGURATION_MAJOR_VERSION 1
-#define ARM_BOARD_CONFIGURATION_MINOR_VERSION 1
+#define ARM_BOARD_CONFIGURATION_MINOR_VERSION 2
 typedef struct _ARM_BOARD_CONFIGURATION_BLOCK
 {
     ULONG MajorVersion;
@@ -52,6 +54,9 @@ typedef struct _ARM_BOARD_CONFIGURATION_BLOCK
     ULONG MemoryMapEntryCount;
     PBIOS_MEMORY_MAP MemoryMap;
     CHAR CommandLine[256];
+    PVOID ConsPutChar;
+    PVOID ConsKbHit;
+    PVOID ConsGetCh;
 } ARM_BOARD_CONFIGURATION_BLOCK, *PARM_BOARD_CONFIGURATION_BLOCK;
 
 VOID
@@ -90,6 +95,12 @@ VOID
 NTAPI
 LlbBoot(
     IN PCHAR CommandLine
+);
+
+PCHAR
+NTAPI
+LlbEnvRead(
+    IN PCHAR Option
 );
 
 /* EOF */

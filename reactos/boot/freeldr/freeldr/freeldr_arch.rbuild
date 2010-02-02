@@ -73,11 +73,8 @@
 		<directory name="arm">
 			<if property="ARCH" value="arm">
 				<file first="true">boot.s</file>
-				<file>ferouart.c</file>
 				<file>loader.c</file>
 				<file>macharm.c</file>
-				<file>omapuart.c</file>
-				<file>versuart.c</file>
 			</if>
 		</directory>
 

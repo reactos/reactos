@@ -69,6 +69,11 @@ LlbBuildArmBlock(VOID)
     
     /* Now load the memory map */
     ArmBlock.MemoryMap = MemoryMap;
+    
+    /* Write firmware callbacks */
+    ArmBlock.ConsPutChar = LlbFwPutChar;
+    ArmBlock.ConsKbHit = LlbFwKbHit;
+    ArmBlock.ConsGetCh = LlbFwGetCh;
 }
 
 VOID
@@ -89,7 +94,7 @@ LlbLoadOsLoader(VOID)
     PCHAR BootDevice;
     
     /* Read the current boot device */
-    BootDevice = LlbHwEnvRead("boot-device");
+    BootDevice = LlbEnvRead("boot-device");
     printf("Loading OS Loader from: %s...\n", BootDevice);
     if (!strcmp(BootDevice, "NAND"))
     {
@@ -109,7 +114,7 @@ LlbLoadOsLoader(VOID)
     {
         //todo
     }
-    printf("OS Loader loaded at 0x%p...JUMP!\n", LoaderInit);
+    printf("OS Loader loaded at 0x%p...JUMP!\n\n\n\n\n", LoaderInit);
 }
 
 VOID

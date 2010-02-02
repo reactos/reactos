@@ -9,6 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <freeldr.h>
+#define RGB565(r, g, b) (((r >> 3) << 11)| ((g >> 2) << 5)| ((b >> 3) << 0))
 
 /* GLOBALS ********************************************************************/
 
@@ -33,7 +34,7 @@ ArmInit(IN PARM_BOARD_CONFIGURATION_BLOCK BootContext)
     ArmBoardBlock = BootContext;
     
     //
-    // Let's make sure we understand the boot-loader
+    // Let's make sure we understand the LLB
     //
     ASSERT(ArmBoardBlock->MajorVersion == ARM_BOARD_CONFIGURATION_MAJOR_VERSION);
     ASSERT(ArmBoardBlock->MinorVersion == ARM_BOARD_CONFIGURATION_MINOR_VERSION);
@@ -133,32 +134,21 @@ MachInit(IN PCCH CommandLine)
     //
     switch (ArmBoardBlock->BoardType)
     {
-            //
-            // Check for Feroceon-base boards
-            //
+        //
+        // Check for Feroceon-base boards
+        //
         case MACH_TYPE_FEROCEON:
-            
-            //
-            // These boards use a UART16550. Set us up for 115200 bps
-            //
-            ArmFeroSerialInit(115200);
-            MachVtbl.ConsPutChar = ArmFeroPutChar;
-            MachVtbl.ConsKbHit = ArmFeroKbHit;
-            MachVtbl.ConsGetCh = ArmFeroGetCh;
             break;
             
-            //
-            // Check for ARM Versatile PB boards
-            //
+        //
+        // Check for ARM Versatile PB boards
+        //
         case MACH_TYPE_VERSATILE_PB:
             
-            //
-            // These boards use a PrimeCell UART (PL011)
-            //
-            ArmVersaSerialInit(115200);
-            MachVtbl.ConsPutChar = ArmVersaPutChar;
-            MachVtbl.ConsKbHit = ArmVersaKbHit;
-            MachVtbl.ConsGetCh = ArmVersaGetCh;
+            /* Copy Machine Routines from Firmware Table */
+            MachVtbl.ConsPutChar = ArmBoardBlock->ConsPutChar;
+            MachVtbl.ConsKbHit = ArmBoardBlock->ConsKbHit;
+            MachVtbl.ConsGetCh = ArmBoardBlock->ConsGetCh;
             break;
             
         //
@@ -166,14 +156,6 @@ MachInit(IN PCCH CommandLine)
         // For now that means only Beagle, but ZOOM and others should be ok too
         //
         case MACH_TYPE_OMAP3_BEAGLE:
-            
-            //
-            // These boards use a UART16550
-            //
-            ArmOmap3SerialInit(115200);
-            MachVtbl.ConsPutChar = ArmOmap3PutChar;
-            MachVtbl.ConsKbHit = ArmOmap3KbHit;
-            MachVtbl.ConsGetCh = ArmOmap3GetCh;
             break;
             
         default:
@@ -204,5 +186,5 @@ MachInit(IN PCCH CommandLine)
     // We can now print to the console
     //
     TuiPrintf("%s for ARM\n", GetFreeLoaderVersionString());
-    TuiPrintf("Bootargs: %s\n", CommandLine);
+    TuiPrintf("Bootargs: %s\n\n", CommandLine);
 }

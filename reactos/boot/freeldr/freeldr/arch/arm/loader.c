@@ -1607,6 +1607,7 @@ FrLdrStartup(IN ULONG Magic)
     //
     // Initialize the page directory
     //
+    while (TRUE);
     ArmSetupPageDirectory();
 
     //

@@ -1,21 +1,24 @@
 /*
  * PROJECT:         ReactOS Boot Loader
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            boot/armllb/inc/video.h
- * PURPOSE:         LLB Videl Output Functions
+ * FILE:            boot/armllb/inc/fw.h
+ * PURPOSE:         LLB Firmware Functions
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
 VOID
-NTAPI
-LlbVideoClearScreen(
-    IN BOOLEAN OsLoader
+LlbFwPutChar(
+    INT Ch
 );
 
-VOID
-NTAPI
-LlbVideoPutChar(
-    IN CHAR c
+BOOLEAN
+LlbFwKbHit(
+    VOID
+);
+
+INT
+LlbFwGetCh(
+    VOID
 );
 
 /* EOF */

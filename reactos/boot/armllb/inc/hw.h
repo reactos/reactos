@@ -92,12 +92,6 @@ LlbHwLoadOsLoaderFromRam(
     VOID
 );
 
-PCHAR
-NTAPI
-LlbHwEnvRead(
-    IN PCHAR Option
-);
-
 #ifdef _VERSATILE_
 #include "versa.h"
 #elif _OMAP3_
