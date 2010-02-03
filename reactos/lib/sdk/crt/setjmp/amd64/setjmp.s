@@ -8,10 +8,8 @@
 
 /* INCLUDES ******************************************************************/
 
+#include <reactos/asm.h>
 #include <ndk/amd64/asm.h>
-#include <ndk/amd64/asmmacro.S>
-
-.intel_syntax noprefix
 
 #define JUMP_BUFFER_Frame 0x00
 #define JUMP_BUFFER_Rbx   0x08
@@ -46,7 +44,8 @@
  * Returns:    0
  * Notes:      Sets up the jmp_buf
  */
-.proc _setjmp
+PUBLIC __setjmp
+.proc __setjmp
     /* Load rsp as it was before the call into rax */
     lea rax, [rsp + 8]
     /* Load return address into r8 */
@@ -74,7 +73,7 @@
     movdqa [rcx + JUMP_BUFFER_Xmm15], xmm15
     xor rax, rax
     ret
-.endproc
+.endp
 
 /*
  * int _setjmpex(jmp_buf _Buf,void *_Ctx);
@@ -84,7 +83,8 @@
  * Returns:    0
  * Notes:      Sets up the jmp_buf
  */
-.proc _setjmpex
+PUBLIC __setjmpex
+.proc __setjmpex
     /* Load rsp as it was before the call into rax */
     lea rax, [rsp + 8]
     /* Load return address into r8 */
@@ -112,7 +112,7 @@
     movdqa [rcx + JUMP_BUFFER_Xmm15], xmm15
     xor rax, rax
     ret
-.endproc
+.endp
 
 
 /*
@@ -123,7 +123,8 @@
  * Returns:    Doesn't return
  * Notes:      Non-local goto
  */
-.proc longjmp
+PUBLIC _longjmp
+.proc _longjmp
 
     // FIXME: handle frame
 
@@ -154,4 +155,4 @@
     jnz 2f
     inc rax
 2:  jmp r8
-.endproc
+.endp
