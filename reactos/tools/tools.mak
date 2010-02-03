@@ -43,7 +43,7 @@ $(TOOLS_INT_)xml.o: $(TOOLS_BASE_)xml.cpp $(XML_SSPRINTF_HEADERS) | $(TOOLS_INT)
 include tools/bin2c.mak
 include tools/buildno/buildno.mak
 include tools/gendib/gendib.mak
-include tools/rsym/log2lines.mak
+include tools/log2lines/log2lines.mak
 include tools/pipetools/pipetools.mak
 include tools/nci/nci.mak
 ifeq ($(ARCH),powerpc)
