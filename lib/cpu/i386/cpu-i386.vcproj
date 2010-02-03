@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="i32"
+	Name="cpu-i386"
 	ProjectGUID="{3D9AC5B7-C29C-46F5-B3D8-C4388F37DB5C}"
 	RootNamespace="i32"
 	TargetFrameworkVersion="196613"
@@ -19,7 +19,7 @@
 			Name="d|Win32"
 			OutputDirectory="$(lib)"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(ros)\cfg\ntoskrnl.vsprops"
+			InheritedPropertySheets="..\..\..\ntoskrnl\ntoskrnl.vsprops"
 			CharacterSet="2"
 			>
 			<Tool
@@ -39,7 +39,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				ForcedIncludeFiles="i32_bld.h"
+				ForcedIncludeFiles="cpu-i386_bld.h"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -73,7 +73,7 @@
 			Name="r|Win32"
 			OutputDirectory="$(lib)"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(ros)\cfg\ntoskrnl.vsprops"
+			InheritedPropertySheets="..\..\..\ntoskrnl\ntoskrnl.vsprops"
 			CharacterSet="2"
 			WholeProgramOptimization="1"
 			>
@@ -95,7 +95,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				WarningLevel="3"
-				ForcedIncludeFiles="i32_bld.h"
+				ForcedIncludeFiles="cpu-i386_bld.h"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -145,15 +145,11 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\..\..\inc\_dft\i32\_platf.h"
+				RelativePath="..\..\..\include\reactos\i386\cpu.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\inc\_dft\i32\i32.h"
-				>
-			</File>
-			<File
-				RelativePath="i32_bld.h"
+				RelativePath="..\..\..\include\reactos\msc\i386\cpu_c.h"
 				>
 			</File>
 		</Filter>

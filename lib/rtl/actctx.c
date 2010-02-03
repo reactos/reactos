@@ -1513,6 +1513,7 @@ static NTSTATUS parse_manifest( struct actctx_loader* acl, struct assembly_ident
     {
         /* let's assume utf-8 for now */
         int len;
+        WCHAR *new_buff;
 
         _SEH2_TRY
         {
@@ -1526,7 +1527,6 @@ static NTSTATUS parse_manifest( struct actctx_loader* acl, struct assembly_ident
         _SEH2_END;
 
         DPRINT("len = %x\n", len);
-        WCHAR *new_buff;
 
         if (len == -1)
         {

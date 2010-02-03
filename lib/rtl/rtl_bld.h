@@ -47,7 +47,7 @@
 
 #include <wchar.h>
 
-_INTRINSIC(_BitScanReverse, _BitScanReverse)
-_INTRINSIC(_BitScanForward, _BitScanForward)
+_INTRINSIC(_BitScanReverse)
+_INTRINSIC(_BitScanForward)
 
-#include <dbg.h>
+#include <dbgp.h>

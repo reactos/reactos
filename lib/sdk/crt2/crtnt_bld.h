@@ -31,7 +31,6 @@
 // ndk
 #include <ntndk.h>
 
-
 // crt
 // #include <errno.h>
 

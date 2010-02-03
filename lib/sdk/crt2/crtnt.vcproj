@@ -14,7 +14,7 @@
 	</Platforms>
 	<ToolFiles>
 		<ToolFile
-			RelativePath="..\..\tools\msc\s_as_mscpp.rules"
+			RelativePath="..\..\..\tools\msc\s_as_mscpp.rules"
 		/>
 	</ToolFiles>
 	<Configurations>
@@ -22,7 +22,7 @@
 			Name="d|Win32"
 			OutputDirectory="$(lib)"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\..\ntoskrnl\ntoskrnl.vsprops"
+			InheritedPropertySheets="..\..\..\ntoskrnl\ntoskrnl.vsprops"
 			CharacterSet="2"
 			WholeProgramOptimization="0"
 			>
@@ -34,7 +34,7 @@
 			/>
 			<Tool
 				Name="s_as_mscpp"
-				sIncPaths="$(inc)\dft\i32;$(inc)\sdk\ndk\i32"
+				sIncPaths="$(inc);$(inc)\ndk;$(inc)\ndk\i386;$(s)\ntoskrnl\include"
 				sPPDefs="__ASM__"
 			/>
 			<Tool
@@ -83,7 +83,7 @@
 			Name="r|Win32"
 			OutputDirectory="$(lib)"
 			ConfigurationType="4"
-			InheritedPropertySheets="..\..\ntoskrnl\ntoskrnl.vsprops"
+			InheritedPropertySheets="..\..\..\ntoskrnl\ntoskrnl.vsprops"
 			CharacterSet="2"
 			WholeProgramOptimization="0"
 			>
@@ -95,7 +95,7 @@
 			/>
 			<Tool
 				Name="s_as_mscpp"
-				sIncPaths="$(inc)\dft\i32;$(inc)\sdk\ndk\i32"
+				sIncPaths="$(inc);$(inc)\ndk;$(inc)\ndk\i386;$(s)\ntoskrnl\include"
 				sPPDefs="__ASM__"
 			/>
 			<Tool

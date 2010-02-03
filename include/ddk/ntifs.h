@@ -24,7 +24,9 @@
 #define _NTIFS_
 #define _GNU_NTIFS_
 
+#ifndef NTKERNELAPI
 #define NTKERNELAPI DECLSPEC_IMPORT
+#endif
 
 #include <ntddk.h>
 

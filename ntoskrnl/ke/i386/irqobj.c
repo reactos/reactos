@@ -183,13 +183,7 @@ KiUnexpectedInterruptTailHandler(IN PKTRAP_FRAME TrapFrame)
     }
 }
 
-typedef
-FASTCALL
-VOID
-(PKI_INTERRUPT_DISPATCH)(
-    IN PKTRAP_FRAME TrapFrame,
-    IN PKINTERRUPT Interrupt
-);
+typedef void (FASTCALL PKI_INTERRUPT_DISPATCH)(IN PKTRAP_FRAME TrapFrame, IN PKINTERRUPT Interrupt);
 
 VOID
 FASTCALL

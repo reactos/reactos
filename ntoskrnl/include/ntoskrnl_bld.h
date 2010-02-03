@@ -1,8 +1,9 @@
 #pragma once
 
-// #define CONFIG_SMP
-
 #define DBG 1
+#define TRAP_DEBUG
+
+// #define CONFIG_SMP
 
 // #define KDBG
 #define _WINKD_
@@ -16,6 +17,10 @@
 #define _CRTIMP
 #define _LIBCNT_
 #define _IN_KERNEL_
+
+// #define DECLSPEC_IMPORT
+// #define DECLSPEC_EXPORT
+#define NTKERNELAPI
 
 #define _SETUPAPI_VER 0x502
 
@@ -92,13 +97,14 @@
 #include <internal\ntoskrnl.h>
 #include "config.h"
 
+#include <rtlp.h>
 #include <internal\dbgp.h>
 #include <kd64.h>
 
-_INTRINSIC(_enable, _enable)
-_INTRINSIC(_disable, _disable)
-_INTRINSIC(_BitScanReverse, _BitScanReverse)
-_INTRINSIC(_BitScanReverse, _BitScanReverse)
+// _INTRINSIC(_enable)
+// _INTRINSIC(_disable)
+// _INTRINSIC(_BitScanReverse)
+// _INTRINSIC(_BitScanReverse)
 
 //
 // Define the internal versions of external and public global data
@@ -128,3 +134,4 @@ extern PUSHORT _NlsOemLeadByteInfo;
 #define HALDISPATCH                     (&HalDispatchTable)
 #define ExRaiseStatus RtlRaiseStatus
 
+void __test(void);

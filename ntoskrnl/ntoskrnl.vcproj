@@ -33,7 +33,7 @@
 			/>
 			<Tool
 				Name="s_as_mscpp"
-				sIncPaths="$(inc)\_dft\i32;$(inc)\_dft;$(inc)\sdk;$(inc)\sdk\ndk;$(inc)\ntoskrnl"
+				sIncPaths="$(inc);$(inc)\ndk;$(inc)\ndk\i386;$(s)\ntoskrnl\include"
 				sPPDefs="__ASM__"
 			/>
 			<Tool
@@ -63,13 +63,13 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="mm.lib ke.lib ex.lib se.lib ob.lib ps.lib cm.lib io.lib pnp.lib cc.lib i32.lib dbg.lib csq.lib pseh.lib cmlib.lib fs.lib rossym.lib wdmguid.lib rt.lib rtl.lib crtnt.lib kd.lib hal.lib bootvid.lib kdcom.lib"
+				AdditionalDependencies="mma3.lib mm.lib ke.lib ex.lib se.lib ob.lib ps.lib cm.lib io.lib pnp.lib cc.lib csq.lib pseh.lib cmlib.lib fs.lib rossym.lib wdmguid.lib rt.lib rtl.lib crtnt.lib cpu-i386.lib dbgp.lib kdw.lib hal.lib bootvid.lib kdcom.lib"
 				OutputFile="$(OutDir)/ntoskrnl.exe"
 				AdditionalLibraryDirectories=""
 				IgnoreAllDefaultLibraries="true"
 				ModuleDefinitionFile="ntoskrnl.def"
 				GenerateMapFile="true"
-				MapFileName="$(int)\_ntoskrnl.map"
+				MapFileName="$(IntDir)\_ntoskrnl.map"
 				EntryPointSymbol="KiSystemStartup"
 				BaseAddress="0x80800000"
 			/>
@@ -109,7 +109,7 @@
 			/>
 			<Tool
 				Name="s_as_mscpp"
-				sIncPaths="$(inc)\_dft\i32;$(inc)\_dft;$(inc)\sdk;$(inc)\sdk\ndk;$(inc)\ntoskrnl"
+				sIncPaths="$(inc);$(inc)\ndk;$(inc)\ndk\i386;$(s)\ntoskrnl\include"
 				sPPDefs="__ASM__"
 			/>
 			<Tool
@@ -139,12 +139,13 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="mm.lib ke.lib ex.lib se.lib ob.lib ps.lib cm.lib io.lib pnp.lib cc.lib i32.lib dbg.lib csq.lib pseh.lib cmlib.lib rossym.lib wdmguid.lib rt.lib rtl.lib crtnt.lib kd.lib hal.lib bootvid.lib kdcom.lib"
+				AdditionalDependencies="mma3.lib mm.lib ke.lib ex.lib se.lib ob.lib ps.lib cm.lib io.lib pnp.lib cc.lib csq.lib pseh.lib cmlib.lib fs.lib rossym.lib wdmguid.lib rt.lib rtl.lib crtnt.lib cpu-i386.lib dbgp.lib kdw.lib hal.lib bootvid.lib kdcom.lib"
 				OutputFile="$(OutDir)/ntoskrnl.exe"
 				AdditionalLibraryDirectories=""
 				IgnoreAllDefaultLibraries="true"
 				ModuleDefinitionFile="ntoskrnl.def"
 				GenerateMapFile="true"
+				MapFileName="$(IntDir)\_ntoskrnl.map"
 				LinkTimeCodeGeneration="1"
 				EntryPointSymbol="KiSystemStartup"
 				BaseAddress="0x80800000"
@@ -318,15 +319,19 @@
 			Filter="h;hpp;hxx;hm;inl"
 			>
 			<File
-				RelativePath="..\..\inc\ntoskrnl\ntoskrnl_bld.h"
+				RelativePath=".\include\internal\ntoskrnl.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\inc\_dft\osver.h"
+				RelativePath=".\include\ntoskrnl_bld.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\inc\dft\msc\i32\platf.h"
+				RelativePath="..\include\reactos\msc\i386\platf.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\precomp.h"
 				>
 			</File>
 		</Filter>
@@ -335,7 +340,7 @@
 			Filter="ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 			>
 			<File
-				RelativePath="ntoskrnl.res"
+				RelativePath="$(objrbe)\ntoskrnl\ntoskrnl_ntoskrnl.res"
 				>
 			</File>
 		</Filter>

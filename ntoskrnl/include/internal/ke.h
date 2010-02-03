@@ -228,11 +228,13 @@ extern VOID __cdecl KiInterruptTemplate(VOID);
 
 #endif
 
-#define KTS_SYSCALL_BIT (((KTRAP_STATE_BITS) { { .SystemCall   = TRUE } }).Bits)
-#define KTS_PM_BIT      (((KTRAP_STATE_BITS) { { .PreviousMode   = TRUE } }).Bits)
-#define KTS_SEG_BIT     (((KTRAP_STATE_BITS) { { .Segments  = TRUE } }).Bits)
-#define KTS_VOL_BIT     (((KTRAP_STATE_BITS) { { .Volatiles = TRUE } }).Bits)
-#define KTS_FULL_BIT    (((KTRAP_STATE_BITS) { { .Full = TRUE } }).Bits)
+#if 0 // moved to trap_x.h
+#define KTS_SYSCALL_BIT (((KTRAP_EXIT_SKIP_BITS) { { .SystemCall   = TRUE } }).Bits)
+#define KTS_PM_BIT      (((KTRAP_EXIT_SKIP_BITS) { { .PreviousMode   = TRUE } }).Bits)
+#define KTS_SEG_BIT     (((KTRAP_EXIT_SKIP_BITS) { { .Segments  = TRUE } }).Bits)
+#define KTS_VOL_BIT     (((KTRAP_EXIT_SKIP_BITS) { { .Volatiles = TRUE } }).Bits)
+#define KTS_FULL_BIT    (((KTRAP_EXIT_SKIP_BITS) { { .Full = TRUE } }).Bits)
+#endif // moved to trap_x.h
 
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
 
@@ -943,19 +945,6 @@ KiContinue(
 
 VOID
 FASTCALL
-KiServiceExit(
-    IN PKTRAP_FRAME TrapFrame,
-    IN NTSTATUS Status
-);
-
-VOID
-FASTCALL
-KiServiceExit2(
-    IN PKTRAP_FRAME TrapFrame
-);
-
-VOID
-FASTCALL
 KiInterruptDispatch(
     IN PKTRAP_FRAME TrapFrame,
     IN PKINTERRUPT Interrupt
@@ -1094,8 +1083,8 @@ KiIdleLoop(
 );
 
 VOID
-FASTCALL
 DECLSPEC_NORETURN
+FASTCALL
 KiSystemFatalException(
     IN ULONG ExceptionCode,
     IN PKTRAP_FRAME TrapFrame

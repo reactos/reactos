@@ -40,7 +40,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				ForcedIncludeFiles="ntoskrnl_bld.h"
+				ForcedIncludeFiles="ntoskrnl_bld.h;precomp.h"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -97,7 +97,7 @@
 				Name="VCCLCompilerTool"
 				EnableIntrinsicFunctions="true"
 				EnableFunctionLevelLinking="true"
-				ForcedIncludeFiles="ntoskrnl_bld.h"
+				ForcedIncludeFiles="ntoskrnl_bld.h;precomp.h"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"

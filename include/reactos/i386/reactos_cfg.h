@@ -9,6 +9,7 @@
 
 #define __REACTOS__
 #define _X86_
+#define __i386__
 
 #define KERNEL_STACK_SIZE 0x6000
 #define KERNEL_LARGE_STACK_SIZE 0xf000

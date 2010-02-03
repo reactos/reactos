@@ -70,10 +70,16 @@
 //
 // Flags for exiting a trap
 //
+#if 0
 #define KTE_SKIP_PM_BIT  (((KTRAP_EXIT_SKIP_BITS) { { .SkipPreviousMode = TRUE } }).Bits)
 #define KTE_SKIP_SEG_BIT (((KTRAP_EXIT_SKIP_BITS) { { .SkipSegments  = TRUE } }).Bits)
 #define KTE_SKIP_VOL_BIT (((KTRAP_EXIT_SKIP_BITS) { { .SkipVolatiles = TRUE } }).Bits)
- 
+#else
+#define KTE_SKIP_PM_BIT		1
+#define KTE_SKIP_SEG_BIT	2
+#define KTE_SKIP_VOL_BIT	4
+#endif
+
 typedef union _KTRAP_EXIT_SKIP_BITS
 {
     struct
@@ -399,8 +405,8 @@ Ki386HandleOpcodeV86(
 );
 
 VOID
-FASTCALL
 DECLSPEC_NORETURN
+FASTCALL
 KiEoiHelper(
     IN PKTRAP_FRAME TrapFrame
 );
@@ -418,8 +424,8 @@ KiExitV86Mode(
 );
 
 VOID
-NTAPI
 DECLSPEC_NORETURN
+NTAPI
 KiDispatchExceptionFromTrapFrame(
     IN NTSTATUS Code,
     IN ULONG_PTR Address,
@@ -451,7 +457,10 @@ extern ULONG Ke386CacheAlignment;
 extern ULONG KiFastSystemCallDisable;
 extern UCHAR KiDebugRegisterTrapOffsets[9];
 extern UCHAR KiDebugRegisterContextOffsets[9];
-extern VOID __cdecl KiTrap02(VOID);
+
+// extern VOID __cdecl KiTrap02(VOID);
+VOID DECLSPEC_NORETURN KiTrap02(VOID);
+
 extern VOID __cdecl KiTrap08(VOID);
 extern VOID __cdecl KiTrap13(VOID);
 extern VOID __cdecl KiFastCallEntry(VOID);
@@ -466,7 +475,7 @@ extern CHAR KiSystemCallExit2[];
 //
 // Trap Macros
 //
-#include "../trap_x.h"
+// #include "trap_x.h"
 
 //
 // Returns a thread's FPU save area
@@ -622,7 +631,20 @@ KiSystemCallTrampoline(IN PVOID Handler,
      * later to function like this as well.
      *
      */
-    __asm__ __volatile__
+#if defined(_MSC_VER)
+	_ASM_BEGIN
+	mov ecx, StackBytes
+	mov esi, Arguments
+	mov eax, Handler
+	sub esp, ecx
+	shr ecx, 2
+	mov edi, esp
+	rep movsd
+	call eax
+	mov Result, eax
+	_ASM_END
+#elif defined(__GNUC__)
+	__asm__ __volatile__
     (
         "subl %1, %%esp\n"
         "movl %%esp, %%edi\n"
@@ -637,46 +659,14 @@ KiSystemCallTrampoline(IN PVOID Handler,
           "r"(Handler)
         : "%esp", "%esi", "%edi"
     );
+#elif
+#error unsupported compiler
+#endif
     
     return Result;
 }
 
-//
-// Checks for pending APCs
-//
-VOID
-FORCEINLINE
-KiCheckForApcDelivery(IN PKTRAP_FRAME TrapFrame)
-{
-    PKTHREAD Thread;
-    KIRQL OldIrql;
-
-    /* Check for V8086 or user-mode trap */
-    if ((TrapFrame->EFlags & EFLAGS_V86_MASK) || (KiUserTrap(TrapFrame)))
-    {
-        /* Get the thread */
-        Thread = KeGetCurrentThread();
-        while (TRUE)
-        {
-            /* Turn off the alerted state for kernel mode */
-            Thread->Alerted[KernelMode] = FALSE;
-
-            /* Are there pending user APCs? */
-            if (!Thread->ApcState.UserApcPending) break;
-
-            /* Raise to APC level and enable interrupts */
-            OldIrql = KfRaiseIrql(APC_LEVEL);
-            _enable();
-
-            /* Deliver APCs */
-            KiDeliverApc(UserMode, NULL, TrapFrame);
-
-            /* Restore IRQL and disable interrupts once again */
-            KfLowerIrql(OldIrql);
-            _disable();
-        }
-    }
-}
+NTSTATUS NTAPI PsConvertToGuiThread(VOID);
 
 //
 // Converts a base thread to a GUI thread
@@ -686,7 +676,6 @@ FORCEINLINE
 KiConvertToGuiThread(VOID)
 {
     NTSTATUS Result;  
-    PVOID StackFrame;
 
     /*
      * Converting to a GUI thread safely updates ESP in-place as well as the
@@ -704,6 +693,33 @@ KiConvertToGuiThread(VOID)
      * on its merry way.
      *
      */
+
+#if defined(_MSC_VER)
+	_ASM_BEGIN
+		mov esi, ebp
+		sub esi, esp
+		call PsConvertToGuiThread
+		add esi, esp
+		mov ebp, esi
+		mov Result, eax
+	_ASM_END
+#elif defined(__GNUC__)
+	// !!! FIXME: are we accessing StackFrame with bad ebp after the call?
+	// as is it will only work if compiler allocates StackFrame to register ("=r"), can that be warranteed?
+#if 1	// fixed
+	__asm__ __volatile__
+    (
+        "movl %%ebp, %%esi\n"
+        "subl %%esp, %%esi\n"
+        "call _PsConvertToGuiThread@0\n"
+		"addl %%esp, %%esi\n"
+        "movl %%esi, %%ebp\n"
+        "movl %%eax, %0\n"
+        : "=r"(Result)
+        :
+        : "%esp", "%ecx", "%edx", "%esi"
+    );
+#else	// previous 
     __asm__ __volatile__
     (
         "movl %%ebp, %1\n"
@@ -716,10 +732,16 @@ KiConvertToGuiThread(VOID)
         :
         : "%esp", "%ecx", "%edx"
     );
-        
+#endif // #if 1	// fixed
+
+#elif
+#error unsupported compiler
+#endif
+
     return Result;
 }
 
+VOID NTAPI KiSystemStartupBootStack(VOID);
 //
 // Switches from boot loader to initial kernel stack
 //
@@ -728,6 +750,14 @@ FORCEINLINE
 KiSwitchToBootStack(IN ULONG_PTR InitialStack)
 {
     /* We have to switch to a new stack before continuing kernel initialization */
+#if defined(_MSC_VER)
+	_ASM_BEGIN
+		mov esp, InitialStack
+		sub esp, NPX_FRAME_LENGTH + KTRAP_FRAME_ALIGN + KTRAP_FRAME_LENGTH
+		push CR0_EM | CR0_TS | CR0_MP
+		jmp KiSystemStartupBootStack
+	_ASM_END
+#elif defined(__GNUC__)
     __asm__ __volatile__
     (
         "movl %0, %%esp\n"
@@ -740,6 +770,9 @@ KiSwitchToBootStack(IN ULONG_PTR InitialStack)
           "i"(CR0_EM | CR0_TS | CR0_MP)
         : "%esp"
     );
+#elif
+#error unsupported compiler
+#endif
 }
 
 //

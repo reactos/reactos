@@ -8,7 +8,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ntasm.h>
+#include <asm.h>
 .intel_syntax noprefix
 
 #define DISPOSITION_DISMISS         0

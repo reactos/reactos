@@ -57,8 +57,8 @@ KiVdmTrap(IN PKTRAP_FRAME TrapFrame)
 /* TRAP EXIT CODE *************************************************************/
 
 VOID
-FASTCALL
 DECLSPEC_NORETURN
+FASTCALL
 KiEoiHelper(IN PKTRAP_FRAME TrapFrame)
 {
     /* Disable interrupts until we return */
@@ -72,8 +72,8 @@ KiEoiHelper(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-FASTCALL
 DECLSPEC_NORETURN
+FASTCALL
 KiServiceExit(IN PKTRAP_FRAME TrapFrame,
               IN NTSTATUS Status)
 {
@@ -91,8 +91,8 @@ KiServiceExit(IN PKTRAP_FRAME TrapFrame,
 }
 
 VOID
-FASTCALL
 DECLSPEC_NORETURN
+FASTCALL
 KiServiceExit2(IN PKTRAP_FRAME TrapFrame)
 {
     /* Disable interrupts until we return */
@@ -108,8 +108,8 @@ KiServiceExit2(IN PKTRAP_FRAME TrapFrame)
 /* TRAP HANDLERS **************************************************************/
 
 VOID
-FASTCALL
 DECLSPEC_NORETURN
+FASTCALL
 KiDebugHandler(IN PKTRAP_FRAME TrapFrame,
                IN ULONG Parameter1,
                IN ULONG Parameter2,
@@ -132,8 +132,8 @@ KiDebugHandler(IN PKTRAP_FRAME TrapFrame,
 }
 
 VOID
-FASTCALL
 DECLSPEC_NORETURN
+FASTCALL
 KiNpxHandler(IN PKTRAP_FRAME TrapFrame,
              IN PKTHREAD Thread,
              IN PFX_SAVE_AREA SaveArea)
@@ -289,8 +289,8 @@ KiNpxHandler(IN PKTRAP_FRAME TrapFrame,
 }
 
 VOID
-FASTCALL
 DECLSPEC_NORETURN
+FASTCALL
 KiTrap00Handler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
@@ -309,8 +309,8 @@ KiTrap00Handler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-FASTCALL
 DECLSPEC_NORETURN
+FASTCALL
 KiTrap01Handler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
@@ -466,7 +466,7 @@ KiTrap02(VOID)
         //
         // Handled, return from interrupt
         //
-        __asm__ __volatile__ ("iret\n");
+		CpuIret();
     }
     
     //
@@ -476,8 +476,8 @@ KiTrap02(VOID)
 }
 
 VOID
-FASTCALL
 DECLSPEC_NORETURN
+FASTCALL
 KiTrap03Handler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
@@ -488,8 +488,8 @@ KiTrap03Handler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-FASTCALL
 DECLSPEC_NORETURN
+FASTCALL
 KiTrap04Handler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
@@ -508,8 +508,8 @@ KiTrap04Handler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-FASTCALL
 DECLSPEC_NORETURN
+FASTCALL
 KiTrap05Handler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
@@ -531,8 +531,8 @@ KiTrap05Handler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-FASTCALL
 DECLSPEC_NORETURN
+FASTCALL
 KiTrap06Handler(IN PKTRAP_FRAME TrapFrame)
 {
     PUCHAR Instruction;
@@ -616,8 +616,8 @@ KiTrap06Handler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-FASTCALL
 DECLSPEC_NORETURN
+FASTCALL
 KiTrap07Handler(IN PKTRAP_FRAME TrapFrame)
 {
     PKTHREAD Thread, NpxThread;
@@ -726,8 +726,8 @@ KiTrap07Handler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-FASTCALL
 DECLSPEC_NORETURN
+FASTCALL
 KiTrap08Handler(IN PKTRAP_FRAME TrapFrame)
 {
     /* FIXME: Not handled */
@@ -735,8 +735,8 @@ KiTrap08Handler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-FASTCALL
 DECLSPEC_NORETURN
+FASTCALL
 KiTrap09Handler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
@@ -748,8 +748,8 @@ KiTrap09Handler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-FASTCALL
 DECLSPEC_NORETURN
+FASTCALL
 KiTrap0AHandler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
@@ -763,8 +763,8 @@ KiTrap0AHandler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-FASTCALL
 DECLSPEC_NORETURN
+FASTCALL
 KiTrap0BHandler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
@@ -776,8 +776,8 @@ KiTrap0BHandler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-FASTCALL
 DECLSPEC_NORETURN
+FASTCALL
 KiTrap0CHandler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
@@ -789,8 +789,8 @@ KiTrap0CHandler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-FASTCALL
 DECLSPEC_NORETURN
+FASTCALL
 KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
 {
     ULONG i, j, Iopl;
@@ -1065,8 +1065,8 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-FASTCALL
 DECLSPEC_NORETURN
+FASTCALL
 KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
 {
     PKTHREAD Thread;
@@ -1180,8 +1180,8 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-FASTCALL
 DECLSPEC_NORETURN
+FASTCALL
 KiTrap0FHandler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
@@ -1193,8 +1193,8 @@ KiTrap0FHandler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-FASTCALL
 DECLSPEC_NORETURN
+FASTCALL
 KiTrap10Handler(IN PKTRAP_FRAME TrapFrame)
 {
     PKTHREAD Thread;
@@ -1221,8 +1221,8 @@ KiTrap10Handler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-FASTCALL
 DECLSPEC_NORETURN
+FASTCALL
 KiTrap11Handler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
@@ -1234,8 +1234,8 @@ KiTrap11Handler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-FASTCALL
 DECLSPEC_NORETURN
+FASTCALL
 KiTrap13Handler(IN PKTRAP_FRAME TrapFrame)
 {
     PKTHREAD Thread;
@@ -1337,8 +1337,8 @@ KiCallbackReturnHandler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-FASTCALL
 DECLSPEC_NORETURN
+FASTCALL
 KiRaiseAssertionHandler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
@@ -1354,8 +1354,8 @@ KiRaiseAssertionHandler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-FASTCALL
 DECLSPEC_NORETURN
+FASTCALL
 KiDebugServiceHandler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save trap frame */
@@ -1369,8 +1369,8 @@ KiDebugServiceHandler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-FASTCALL
 DECLSPEC_NORETURN
+FASTCALL
 KiSystemCall(IN ULONG SystemCallNumber,
              IN PVOID Arguments)
 {
@@ -1459,8 +1459,8 @@ ExitCall:
     KiServiceExit(TrapFrame, Result);
 }
 
-VOID
 FORCEINLINE
+VOID
 DECLSPEC_NORETURN
 KiSystemCallHandler(IN PKTRAP_FRAME TrapFrame,
                     IN ULONG ServiceNumber,
@@ -1501,13 +1501,15 @@ KiSystemCallHandler(IN PKTRAP_FRAME TrapFrame,
     KiSystemCall(ServiceNumber, Arguments);   
 }
 
+#if 0
+// was __attribute__((regparm(3)))
 VOID
-__attribute__((regparm(3)))
-DECLSPEC_NORETURN
-KiFastCallEntryHandler(IN ULONG ServiceNumber,
-                       IN PVOID Arguments,
-                       IN PKTRAP_FRAME TrapFrame)
+_NORETURN
+_FASTCALL
+KiFastCallEntryHandler(IN PKTRAP_FRAME TrapFrame)
 {
+	PVOID Arguments = (PVOID)TrapFrame->Edx;
+	ULONG ServiceNumber = TrapFrame->Eax;
     PKTHREAD Thread;
         
     /* Fixup segments */
@@ -1538,14 +1540,17 @@ KiFastCallEntryHandler(IN ULONG ServiceNumber,
                         Thread->PreviousMode,
                         KGDT_R3_TEB | RPL_MASK);
 }
+#endif
 
+#if 0
+// was __attribute__((regparm(3)))
 VOID
-__attribute__((regparm(3)))
-DECLSPEC_NORETURN
-KiSystemServiceHandler(IN ULONG ServiceNumber,
-                       IN PVOID Arguments,
-                       IN PKTRAP_FRAME TrapFrame)
+_NORETURN
+_FASTCALL
+KiSystemServiceHandler(IN PKTRAP_FRAME TrapFrame)
 {
+	PVOID Arguments = (PVOID)TrapFrame->Edx;
+    ULONG ServiceNumber = TrapFrame->Eax;
     USHORT SegFs;
     PKTHREAD Thread;
 
@@ -1571,6 +1576,7 @@ KiSystemServiceHandler(IN ULONG ServiceNumber,
                         Thread->PreviousMode,
                         SegFs);
 }
+#endif
 
 /* CPU AND SOFTWARE TRAPS *****************************************************/
 

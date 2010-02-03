@@ -1,3 +1,5 @@
+_ONCE
+
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS System Libraries
@@ -26,11 +28,12 @@ extern VOID FASTCALL CHECK_PAGED_CODE_RTL(char *file, int line);
 #define SWAPQ(x) (x)
 #endif
 
+#ifndef ROUND_DOWN
 #define ROUND_DOWN(n, align) \
-    (((ULONG)n) & ~((align) - 1l))
-
+	(n & ~(align-1))
 #define ROUND_UP(n, align) \
-    ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
+	((n + (align-1)) & ~(align-1))
+#endif
 
 #define RVA(m, b) ((PVOID)((ULONG_PTR)(b) + (ULONG_PTR)(m)))
 
@@ -114,17 +117,10 @@ RtlpHandleDpcStackException(IN PEXCEPTION_REGISTRATION_RECORD RegistrationFrame,
 #define RtlpAllocateStringMemory RtlpAllocateMemory
 #define RtlpFreeStringMemory     RtlpFreeMemory
 
-BOOLEAN
-NTAPI
-RtlpSetInDbgPrint(
-    VOID
-);
-
-VOID
-NTAPI
-RtlpClearInDbgPrint(
-    VOID
-);
+#if 0	// macros in dbgp.h
+BOOLEAN NTAPI RtlpSetInDbgPrint(VOID);
+VOID NTAPI RtlpClearInDbgPrint(VOID);
+#endif
 
 /* i386/except.S */
 
@@ -188,4 +184,5 @@ extern HANDLE TimerThreadHandle;
 NTSTATUS
 RtlpInitializeTimerThread(VOID);
 
+_ONCE_END
 /* EOF */

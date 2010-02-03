@@ -6,7 +6,7 @@ void _NAKED _CDECL CpuRegSave(CPUR_ALL *p, i32 flags)
 	mov ebx, [esp+8]
 
 	pushfd
-	pop CPUR_ALL.f.f[ebx]
+	pop CPUR_ALL.f.x[ebx]
 
 	mov CPUR_ALL.gp.eax[ebx], eax
 	mov CPUR_ALL.gp.ecx[ebx], ecx
@@ -26,7 +26,7 @@ void _NAKED _CDECL CpuRegSave(CPUR_ALL *p, i32 flags)
 	mov CPUR_ALL.seg.es[ebx], es
 	mov CPUR_ALL.seg.fs[ebx], fs
 	mov CPUR_ALL.seg.gs[ebx], gs
-noseg:
+// noseg:
 
 	test dword ptr [esp+12], CPUREGSAVE_C
 	jz noc

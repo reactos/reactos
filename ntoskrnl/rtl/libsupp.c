@@ -50,6 +50,7 @@ RtlpCheckForActiveDebugger(VOID)
     return FALSE;
 }
 
+#undef RtlpSetInDbgPrint
 BOOLEAN
 NTAPI
 RtlpSetInDbgPrint(VOID)
@@ -58,6 +59,7 @@ RtlpSetInDbgPrint(VOID)
     return FALSE;
 }
 
+#undef RtlpClearInDbgPrint
 VOID
 NTAPI
 RtlpClearInDbgPrint(VOID)

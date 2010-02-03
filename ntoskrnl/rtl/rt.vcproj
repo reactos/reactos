@@ -13,6 +13,9 @@
 		/>
 	</Platforms>
 	<ToolFiles>
+		<ToolFile
+			RelativePath="..\..\..\..\..\_sdk\vscfg\rules\s_as_mscpp.rules"
+		/>
 	</ToolFiles>
 	<Configurations>
 		<Configuration
@@ -28,6 +31,11 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="s_as_mscpp"
+				sIncPaths="$(inc);$(inc)\ndk;$(inc)\ndk\i386;$(s)\ntoskrnl\include"
+				sPPDefs="__ASM__"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -83,6 +91,11 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="s_as_mscpp"
+				sIncPaths="$(inc);$(inc)\ndk;$(inc)\ndk\i386;$(s)\ntoskrnl\include"
+				sPPDefs="__ASM__"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -144,6 +157,28 @@
 				RelativePath=".\misc.c"
 				>
 			</File>
+			<Filter
+				Name="i386"
+				>
+				<File
+					RelativePath=".\i386\stack.S"
+					>
+					<FileConfiguration
+						Name="d|Win32"
+						>
+						<Tool
+							Name="s_as_mscpp"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="r|Win32"
+						>
+						<Tool
+							Name="s_as_mscpp"
+						/>
+					</FileConfiguration>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"

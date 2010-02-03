@@ -127,6 +127,8 @@ Ke386GetTr(VOID)
 #define Ke386SetGs(X)               _Ke386SetSeg(gs, X)
 
 #elif defined(_MSC_VER)
+#include <cpu.h>
+#if 0
 
 FORCEINLINE
 VOID
@@ -258,6 +260,7 @@ Ke386SetGs(IN USHORT Value)
     __asm mov ax, Value;
     __asm mov gs, ax;
 }
+#endif	// if 0
 
 #else
 #error Unknown compiler for inline assembler

@@ -1,4 +1,6 @@
 #pragma once
+#ifndef _PLATF_INC
+#define _PLATF_INC
 
 /* platf.h msvc i32
 platform dependent basic types and macros
@@ -29,17 +31,21 @@ platform dependent basic types and macros
 #define _PACK_POP __pragma(pack(pop))
 #define _RESTRICT __restrict
 #define _ONCE __pragma(once)
+#define _ONCE_END
 #define _OPTIMIZE_DFT __pragma(optimize("", on))
 #define _OPTIMIZE_OFF_ALL __pragma(optimize("", off))
 #define _OPTIMIZE_OFF_GLOBAL __pragma(optimize("g", off))
 #define _OPTIMIZE_OFF_STKF __pragma(optimize("y", off))
-#define _INTRINSIC(x, subst) __pragma(intrinsic(x))
+#define _OPTIMIZE_ON_STKF __pragma(optimize("y", on))
+#define _INTRINSIC(x) __pragma(intrinsic(x))
+#define _INTRINSIC1(x, subst) __pragma(intrinsic(x))
 #define _NOINTRINSIC(x) __pragma(function(x))
 #define _NOWARN_PUSH __pragma(warning(push))
 #define _NOWARN_POP __pragma(warning(pop))
 #define _NOWARN_MSC(x) __pragma(warning(disable: x))
 #define _NOWARN_GNUC(x)
 #define _ASSUME(x) __assume(x)
+#define _EXPECT(x, y) (x)
 
 #define _SECTION(x) __declspec(allocate(x))
 #define _SECTION_FN(sectn, fn) __pragma(alloc_text(sectn, fn))
@@ -201,7 +207,9 @@ pvoid _ReturnAddress(void);
 #define ReturnAddress _ReturnAddress
 #define _ReturnAddressn(x) _ReturnAddress()
 #define ReturnAddressn _ReturnAddressn
-#define __builtin_expect(x, v) (x)
 
-#include <msc.h>	// should not be needed if code uses above macros instead of compiler dependent directives
+_NOWARN_MSC(4146)	// unary minus applied to unsigned
 
+#include <platf2.h>	// should not be needed if code uses above macros instead of compiler dependent directives
+
+#endif // #ifndef _PLATF_INC

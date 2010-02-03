@@ -15,7 +15,7 @@ void _CDECL DbgDumpCpu(int flags)
 
 	if(flags & DBG_DUMPCPU_GP)
 	{
-		DbgPrintf("eflags=%08x, ", psts->f.f);
+		DbgPrintf("eflags=%08x, ", psts->f.x);
 		DbgPrintf("eax=%08x, ebx=%08x, ecx=%08x, edx=%08x, esi=%08x, edi=%08x, ebp=%08x, esp=%08x\n",
 			psts->gp.eax, psts->gp.ebx, psts->gp.ecx, psts->gp.edx, psts->gp.esi, psts->gp.edi, psts->gp.ebp, psts->gp.esp);
 	}

@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="kd"
-	ProjectGUID="{97021AF5-ED87-4AA8-B116-2D53E5D6D528}"
-	RootNamespace="kd"
+	Name="trap"
+	ProjectGUID="{E2A7291E-515F-4BAD-8E82-F77AA0815B47}"
+	RootNamespace="trap"
 	TargetFrameworkVersion="196613"
 	>
 	<Platforms>
@@ -24,6 +24,7 @@
 			ConfigurationType="4"
 			InheritedPropertySheets="..\ntoskrnl.vsprops"
 			CharacterSet="2"
+			WholeProgramOptimization="0"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -33,7 +34,7 @@
 			/>
 			<Tool
 				Name="s_as_mscpp"
-				sIncPaths="$(inc)\sdk;$(inc)\sdk\ndk;$(inc)\ntoskrnl"
+				sIncPaths=".;$(inc);$(inc)\ndk;$(inc)\ndk\i386;$(s)\ntoskrnl\trap2\i386;$(s)\ntoskrnl\include"
 				sPPDefs="__ASM__"
 			/>
 			<Tool
@@ -47,7 +48,11 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				Optimization="3"
+				AdditionalIncludeDirectories=""
+				AssemblerOutput="2"
 				ForcedIncludeFiles="ntoskrnl_bld.h"
+				ShowIncludes="true"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -83,7 +88,7 @@
 			ConfigurationType="4"
 			InheritedPropertySheets="..\ntoskrnl.vsprops"
 			CharacterSet="2"
-			WholeProgramOptimization="1"
+			WholeProgramOptimization="0"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -93,7 +98,7 @@
 			/>
 			<Tool
 				Name="s_as_mscpp"
-				sIncPaths="$(inc)\sdk;$(inc)\sdk\ndk;$(inc)\ntoskrnl"
+				sIncPaths=".;$(inc);$(inc)\ndk;$(inc)\ndk\i386;$(s)\ntoskrnl\trap2\i386;$(s)\ntoskrnl\include"
 				sPPDefs="__ASM__"
 			/>
 			<Tool
@@ -108,9 +113,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				EnableIntrinsicFunctions="true"
-				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
-				WarningLevel="3"
 				ForcedIncludeFiles="ntoskrnl_bld.h"
 			/>
 			<Tool
@@ -151,48 +154,12 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="kdapi.c"
-				>
-			</File>
-			<File
-				RelativePath="kdbreak.c"
-				>
-			</File>
-			<File
-				RelativePath="kddata.c"
-				>
-			</File>
-			<File
-				RelativePath="kdinit.c"
-				>
-			</File>
-			<File
-				RelativePath="kdlock.c"
-				>
-			</File>
-			<File
-				RelativePath="kdprint.c"
-				>
-			</File>
-			<File
-				RelativePath="kdtrap.c"
-				>
-			</File>
-			<File
-				RelativePath="mmdbg.c"
+				RelativePath=".\trap.c"
 				>
 			</File>
 			<Filter
 				Name="i386"
 				>
-				<File
-					RelativePath=".\i386\debug_asm.s"
-					>
-				</File>
-				<File
-					RelativePath=".\i386\kdx86.c"
-					>
-				</File>
 			</Filter>
 		</Filter>
 		<Filter
@@ -201,15 +168,15 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="kd_bld.h"
+				RelativePath=".\trap.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\inc\ntoskrnl\ntoskrnl_bld.h"
+				RelativePath=".\i386\trap_asm.h"
 				>
 			</File>
 			<File
-				RelativePath="precomp.h"
+				RelativePath=".\i386\TrapStub.h"
 				>
 			</File>
 		</Filter>
@@ -218,6 +185,14 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
+		</Filter>
+		<Filter
+			Name="doc"
+			>
+			<File
+				RelativePath="..\..\..\out\msc\obj\Win32-d\trap\trap.cod"
+				>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>

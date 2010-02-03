@@ -6,6 +6,6 @@
 
 #include <reactos_cfg.h>
 #include <cpu.h>
-#include <utl.h>
+// #include <utl.h>
 // #include <msc.h>
 

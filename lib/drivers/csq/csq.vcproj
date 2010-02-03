@@ -20,7 +20,7 @@
 			Name="d|Win32"
 			OutputDirectory="$(lib)"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(ros)\cfg\ntoskrnl.vsprops"
+			InheritedPropertySheets="..\..\..\ntoskrnl\ntoskrnl.vsprops"
 			CharacterSet="2"
 			>
 			<Tool
@@ -77,7 +77,7 @@
 			Name="r|Win32"
 			OutputDirectory="$(lib)"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(ros)\cfg\ntoskrnl.vsprops"
+			InheritedPropertySheets="..\..\..\ntoskrnl\ntoskrnl.vsprops"
 			CharacterSet="2"
 			>
 			<Tool

@@ -13,9 +13,14 @@
 	/>
 	<Tool
 		Name="VCCLCompilerTool"
+		Optimization="3"
+		InlineFunctionExpansion="1"
+		EnableIntrinsicFunctions="true"
+		FavorSizeOrSpeed="1"
 		AdditionalIncludeDirectories=""
 		IgnoreStandardIncludePath="true"
-		RuntimeLibrary="1"
+		StringPooling="true"
+		RuntimeLibrary="0"
 		BufferSecurityCheck="false"
 		FloatingPointModel="2"
 		BrowseInformation="1"
@@ -81,13 +86,18 @@
 		PerformEnvironmentSet="true"
 	/>
 	<UserMacro
-		Name="src"
+		Name="s"
 		Value="$(ros)\src"
 		PerformEnvironmentSet="true"
 	/>
 	<UserMacro
+		Name="objrbe"
+		Value="$(s)\obj_rosbe"
+		PerformEnvironmentSet="true"
+	/>
+	<UserMacro
 		Name="inc"
-		Value="$(ros)\src\include"
+		Value="$(s)\include"
 		PerformEnvironmentSet="true"
 	/>
 	<UserMacro
@@ -112,7 +122,7 @@
 	/>
 	<UserMacro
 		Name="libs"
-		Value="$(lib);$(src)\libobj\ros;$(src)\libobj\ms\wxp;$(src)\libobj\ms\crt"
+		Value="$(lib);$(s)\libobj\ros;$(s)\libobj\ms\wxp;$(s)\libobj\ms\crt"
 		PerformEnvironmentSet="true"
 	/>
 </VisualStudioPropertySheet>

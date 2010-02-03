@@ -13,14 +13,14 @@
 	/>
 	<Tool
 		Name="VCCLCompilerTool"
-		Optimization="3"
+		Optimization="0"
 		InlineFunctionExpansion="1"
 		EnableIntrinsicFunctions="true"
 		FavorSizeOrSpeed="1"
 		OmitFramePointers="false"
 		EnableFiberSafeOptimizations="false"
 		WholeProgramOptimization="false"
-		AdditionalIncludeDirectories="&quot;$(inc)\reactos\msc\i386&quot;;&quot;$(inc)\reactos\msc&quot;;&quot;$(inc)\reactos\i386&quot;;&quot;$(inc)\reactos&quot;;&quot;$(src)\ntoskrnl\include&quot;;&quot;$(src)\ntoskrnl\include\internal\i386&quot;;&quot;$(src)\ntoskrnl\include\internal&quot;;&quot;$(inc)\generated\psdk&quot;;&quot;$(inc)\psdk&quot;;&quot;$(inc)\ddk&quot;;&quot;$(inc)\\i386&quot;;&quot;$(inc)\ndk&quot;;&quot;$(inc)\ndk\i386&quot;;&quot;$(inc)\crt\msc&quot;;&quot;$(inc)\crt&quot;;&quot;$(inc)\generated&quot;;&quot;$(inc)\reactos\drivers&quot;;&quot;$(inc)\reactos\libs&quot;;&quot;$(inc)&quot;;&quot;$(src)\lib\cmlib&quot;;.;.\inc"
+		AdditionalIncludeDirectories=".;.\include;&quot;$(inc)\reactos\msc\i386&quot;;&quot;$(inc)\reactos\msc&quot;;&quot;$(inc)\reactos\i386&quot;;&quot;$(inc)\reactos&quot;;&quot;$(s)\ntoskrnl\$(trapx)\i386&quot;;&quot;$(s)\ntoskrnl\$(trapx)&quot;;&quot;$(s)\ntoskrnl\include&quot;;&quot;$(s)\ntoskrnl\include\internal\i386&quot;;&quot;$(s)\ntoskrnl\include\internal&quot;;&quot;$(objrbe)\ntoskrnl\include&quot;;&quot;$(s)\lib\rtl&quot;;&quot;$(objrbe)\include\psdk&quot;;&quot;$(inc)\psdk&quot;;&quot;$(inc)\ddk&quot;;&quot;$(inc)\\i386&quot;;&quot;$(inc)\ndk&quot;;&quot;$(inc)\ndk\i386&quot;;&quot;$(inc)\crt\msc&quot;;&quot;$(inc)\crt&quot;;&quot;$(objrbe)\include&quot;;&quot;$(inc)\reactos\drivers&quot;;&quot;$(inc)\reactos\libs&quot;;&quot;$(inc)&quot;;&quot;$(s)\lib\cmlib&quot;"
 		IgnoreStandardIncludePath="true"
 		StringPooling="true"
 		ExceptionHandling="1"
@@ -64,5 +64,9 @@
 		Name="VCResourceCompilerTool"
 		AdditionalIncludeDirectories="$(ProjectDir);$(ProjectDir)\inc"
 		IgnoreStandardIncludePath="true"
+	/>
+	<UserMacro
+		Name="trapx"
+		Value="trap"
 	/>
 </VisualStudioPropertySheet>

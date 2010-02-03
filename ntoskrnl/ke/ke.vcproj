@@ -34,6 +34,7 @@
 			/>
 			<Tool
 				Name="s_as_mscpp"
+				sIncPaths="$(inc);$(inc)\ndk;$(inc)\ndk\i386;$(s)\ntoskrnl\include"
 				sPPDefs="__ASM__"
 			/>
 			<Tool
@@ -47,6 +48,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AssemblerOutput="4"
 				ForcedIncludeFiles="ntoskrnl_bld.h"
 			/>
 			<Tool
@@ -93,6 +95,7 @@
 			/>
 			<Tool
 				Name="s_as_mscpp"
+				sIncPaths="$(inc);$(inc)\ndk;$(inc)\ndk\i386;$(s)\ntoskrnl\include"
 				sPPDefs="__ASM__"
 			/>
 			<Tool
@@ -148,6 +151,18 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath="..\__test.c"
+				>
+				<FileConfiguration
+					Name="d|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AssemblerOutput="4"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath="apc.c"
 				>
 			</File>
@@ -168,10 +183,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\i32\context.c"
-				>
-			</File>
-			<File
 				RelativePath="devqueue.c"
 				>
 			</File>
@@ -181,10 +192,6 @@
 			</File>
 			<File
 				RelativePath="eventobj.c"
-				>
-			</File>
-			<File
-				RelativePath="except.c"
 				>
 			</File>
 			<File
@@ -244,10 +251,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\time.c"
-				>
-			</File>
-			<File
 				RelativePath="timerobj.c"
 				>
 			</File>
@@ -256,66 +259,50 @@
 				>
 			</File>
 			<Filter
-				Name="i32"
+				Name="i386"
 				>
 				<File
-					RelativePath="i32\abios.c"
+					RelativePath=".\i386\abios.c"
 					>
 				</File>
 				<File
-					RelativePath="i32\cpu.c"
+					RelativePath=".\i386\context.c"
 					>
 				</File>
 				<File
-					RelativePath="i32\ctxswitch.s"
+					RelativePath=".\i386\cpu.c"
 					>
 				</File>
 				<File
-					RelativePath="i32\exp.c"
+					RelativePath=".\i386\ctxswitch.s"
 					>
 				</File>
 				<File
-					RelativePath="i32\irqobj.c"
+					RelativePath=".\i386\irqobj.c"
 					>
 				</File>
 				<File
-					RelativePath="i32\kiinit.c"
+					RelativePath=".\i386\kiinit.c"
 					>
 				</File>
 				<File
-					RelativePath="i32\ldt.c"
+					RelativePath=".\i386\ldt.c"
 					>
 				</File>
 				<File
-					RelativePath="i32\mtrr.c"
+					RelativePath=".\i386\mtrr.c"
 					>
 				</File>
 				<File
-					RelativePath="i32\patpge.c"
+					RelativePath=".\i386\patpge.c"
 					>
 				</File>
 				<File
-					RelativePath="i32\thrdini.c"
+					RelativePath=".\i386\thrdini.c"
 					>
 				</File>
 				<File
-					RelativePath="i32\trap.s"
-					>
-				</File>
-				<File
-					RelativePath=".\i32\traphdlr.c"
-					>
-				</File>
-				<File
-					RelativePath="i32\usercall.c"
-					>
-				</File>
-				<File
-					RelativePath="i32\usercall_asm.s"
-					>
-				</File>
-				<File
-					RelativePath="i32\v86vdm.c"
+					RelativePath=".\i386\usercall.c"
 					>
 				</File>
 			</Filter>
