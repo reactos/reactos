@@ -10,6 +10,10 @@ void * _ReturnAddress(void);
 void * _AddressOfReturnAddress(void);
 unsigned int __getcallerseflags(void);
 
+#define ReturnAddress _ReturnAddress
+#define _ReturnAddressn(x) _ReturnAddress()
+#define ReturnAddressn _ReturnAddressn
+
 /*** Atomic operations ***/
 void _ReadWriteBarrier(void);
 void _ReadBarrier(void);

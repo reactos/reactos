@@ -66,6 +66,30 @@ platform dependent basic types and macros
 #define IN
 #define OUT
 
+/*************************************************************************
+utility macros
+*************************************************************************/
+// token paste
+#define tokenpaste_(a1, a2) a1##a2
+#define tokenpaste(a1, a2) tokenpaste_(a1, a2)
+
+// stringfy
+#define sfy_(x) #x
+#define sfy(x) sfy_(x)
+
+// string literal macros 
+// double definitions here are necessary because preprocessor behavior
+#define T16(x) tokenpaste(L, x)
+#define T8(x) x
+#ifdef _UNICODE
+#define TX(x) _T16(x)
+#else
+#define TX(x) _T8(x)
+#endif
+
+/*************************************************************************
+basic types
+*************************************************************************/
 /* ptr size */
 #define PTRSIZ 4
 #define PTRSIZMIN 4
@@ -78,9 +102,6 @@ platform dependent basic types and macros
 #define _SEGMENT _UNSUPPORTED
 #define _SEGNAME _UNSUPPORTED
 
-/*************************************************************************
-basic types
-*************************************************************************/
 typedef void *pvoid, _NEAR *npvoid, _FAR *lpvoid, _FARH *hpvoid;
 
 /* chars */
@@ -124,21 +145,6 @@ typedef chr8u chru;
 typedef chr *pchr, _NEAR *npchr, _FAR *lpchr, _FARH hpchr;
 typedef chrs *pchrs, _NEAR *npchrs, _FAR *lpchrs, _FARH hpchrs;
 typedef chru *pchru, _NEAR *npchru, _FAR *lpchru, _FARH hpchru;
-
-// string literal macros 
-// double definitions here are necessary because preprocessor behavior
-#define _T16(x) L ## x
-#define T16(x) _T16(x)
-#define _T8(x) x
-#define T8(x) _T8(x)
-#ifdef _UNICODE
-#define TX(x) _T16(x)
-#else
-#define TX(x) _T8(x)
-#endif
-// stringfy
-#define _sfy(x) #x
-#define sfy(x) _sfy(x)
 
 /* integers */
 #define INTSIZMIN   1
@@ -201,12 +207,6 @@ typedef i32u sizt, *psizt, _NEAR *npsizt, _FAR *lpsizt, _FARH *hpsizt;
 _NORETURN _INLINEF void _noreturn(void) {_ASSUME(0);};
 #define _UNREACHABLE _ASSUME(0); _noreturn()
 #define UNREACHABLE _UNREACHABLE
-
-pvoid _ReturnAddress(void);
-#pragma intrinsic(_ReturnAddress)
-#define ReturnAddress _ReturnAddress
-#define _ReturnAddressn(x) _ReturnAddress()
-#define ReturnAddressn _ReturnAddressn
 
 _NOWARN_MSC(4146)	// unary minus applied to unsigned
 
