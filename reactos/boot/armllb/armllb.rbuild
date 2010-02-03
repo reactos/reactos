@@ -24,6 +24,7 @@
 	    <file>envir.c</file>
 	    <file>fw.c</file>
             <directory name="hw">
+                <file>keyboard.c</file>
                 <file>serial.c</file>
                 <file>video.c</file>
                 <if property="SARCH" value="omap3">
@@ -38,6 +39,7 @@
                 <if property="SARCH" value="versatile">
                     <directory name="versatile">
                         <file>hwclcd.c</file>
+                        <file>hwkmi.c</file>
                         <file>hwuart.c</file>
                         <file>hwinfo.c</file>
                         <file>hwinit.c</file>

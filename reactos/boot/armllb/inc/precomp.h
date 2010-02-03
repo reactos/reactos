@@ -15,5 +15,12 @@
 #include "fw.h"
 #include "serial.h"
 #include "video.h"
+#include "keyboard.h"
+
+VOID
+DbgPrint(
+    const char *fmt,
+    ...
+);
 
 /* EOF */

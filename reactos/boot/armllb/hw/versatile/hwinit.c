@@ -17,6 +17,9 @@ LlbHwInitialize(VOID)
     
     /* Setup the UART (PL011) */
     LlbHwVersaUartInitialize();
+    
+    /* Setup the KMI (PL050) */
+    LlbHwVersaKmiInitialize();
 }
 
 //

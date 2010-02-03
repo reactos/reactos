@@ -18,4 +18,10 @@ LlbHwVersaClcdInitialize(
     VOID
 );
 
+VOID
+NTAPI
+LlbHwVersaKmiInitialize(
+    VOID
+);
+
 /* EOF */

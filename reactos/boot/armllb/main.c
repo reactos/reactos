@@ -25,18 +25,4 @@ LlbStartup(VOID)
     while (TRUE);
 }
 
-VOID
-DbgPrint(const char *fmt, ...)
-{
-    va_list args;
-    unsigned int i;
-    char Buffer[1024];
-
-    va_start(args, fmt);
-    i = vsprintf(Buffer, fmt, args);
-    va_end(args);
-    
-    while (*Buffer) LlbSerialPutChar(*Buffer);
-}
-
 /* EOF */

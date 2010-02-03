@@ -86,6 +86,18 @@ LlbHwBuildMemoryMap(
     IN PBIOS_MEMORY_MAP MemoryMap
 );
 
+VOID
+NTAPI
+LlbHwKbdSend(
+    IN ULONG Value
+);
+
+INT
+NTAPI
+LlbHwKbdRead(
+    VOID
+);
+
 POSLOADER_INIT
 NTAPI
 LlbHwLoadOsLoaderFromRam(

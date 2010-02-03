@@ -28,9 +28,8 @@ LlbFwKbHit(VOID)
 INT
 LlbFwGetCh(VOID)
 {
-    /* Not yet implemented */
-    while (TRUE);
-    return 0;
+    /* Return the key pressed */
+    return LlbKeyboardGetChar();
 }
 
 /* EOF */
