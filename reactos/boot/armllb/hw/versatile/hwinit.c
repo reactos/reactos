@@ -29,10 +29,23 @@ POSLOADER_INIT
 NTAPI
 LlbHwLoadOsLoaderFromRam(VOID)
 {
-    ULONG Base, Dummy;
+    ULONG Base, RootFs, Size;
+    CHAR CommandLine[64];
     
-    /* On versatile, the loader is loaded with the RAMDISK. Just get the address */
-    LlbEnvGetRamDiskInformation(&Base, &Dummy);
+    /* On versatile, the NAND image is loaded as the RAMDISK */
+    LlbEnvGetRamDiskInformation(&Base, &Size);
+    
+    /* The LLB is first, which we already have, so skip it */
+    Base += 0x10000; // 64 KB (see nandflash)
+    
+    /* The OS loader is next, followed by the root file system */
+    RootFs = Base + 0x80000; // 512 KB (see nandflash)
+    
+    /* Set parameters for the OS loader */
+    sprintf(CommandLine, "rdbase=0x%x rdsize=0x%x", RootFs, Size);
+    LlbSetCommandLine(CommandLine);
+    
+    /* Return the OS loader base address */
     return (POSLOADER_INIT)Base;
 }
 

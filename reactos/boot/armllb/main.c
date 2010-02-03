@@ -29,7 +29,7 @@ LlbStartup(IN ULONG Reserved,
     printf("ReactOS ARM Low-Level Boot Loader [" __DATE__ " "__TIME__ "]\n");
     
     /* Boot the OS Loader */
-    LlbBoot("");
+    LlbBoot();
     while (TRUE);
 }
 

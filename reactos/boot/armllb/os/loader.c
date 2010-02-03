@@ -124,16 +124,13 @@ LlbLoadOsLoader(VOID)
 
 VOID
 NTAPI
-LlbBoot(IN PCHAR CommandLine)
+LlbBoot(VOID)
 {
     /* Setup the ARM block */
     LlbBuildArmBlock();
     
     /* Build the memory map */
     LlbBuildMemoryMap();
-    
-    /* Set the command-line */
-    LlbSetCommandLine(CommandLine);
     
     /* Load the OS loader */
     LlbLoadOsLoader();

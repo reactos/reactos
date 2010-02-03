@@ -94,7 +94,7 @@ LlbLoadOsLoader(
 VOID
 NTAPI
 LlbBoot(
-    IN PCHAR CommandLine
+    VOID
 );
 
 /* EOF */
