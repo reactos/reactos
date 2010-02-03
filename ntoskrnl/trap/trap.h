@@ -1,5 +1,7 @@
 _ONCE
 
+#define DBGTRAPENTRY
+
 // TRAP_STUB_FLAGS TrapStub x-macro flags
 // trap type
 #define TRAPF_ERRORCODE		1

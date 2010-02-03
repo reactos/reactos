@@ -1,9 +1,5 @@
-#include <trap.h>
-
-KPCR const *TrapPcr = PCR;
 
 // create stubs
-
 _NOWARN_PUSH
 _NOWARN_MSC(4005)
 
