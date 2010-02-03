@@ -14,6 +14,10 @@ EXTERN _KiDispatchException:PROC
 EXTERN _FrLdrDbgPrint:DWORD
 EXTERN _KeBugCheckWithTf:PROC
 EXTERN _MmAccessFault:PROC
+EXTERN _KiSystemFatalException:PROC
+EXTERN _KiNpxNotAvailableFaultHandler:PROC
+EXTERN _KiGeneralProtectionFaultHandler:PROC
+EXTERN _KiXmmExceptionHandler:PROC
 
 /* GLOBALS *******************************************************************/
 
@@ -275,6 +279,7 @@ ENDR
     /* Allocate stack space for EXCEPTION_RECORD and KEXCEPTION_FRAME */
     sub rsp, SIZE_EXCEPTION_RECORD + SIZE_KEXCEPTION_FRAME
     .allocstack (SIZE_EXCEPTION_RECORD + SIZE_KEXCEPTION_FRAME)
+    .endprolog
 
     /* Set up EXCEPTION_RECORD */
     lea rcx, [rsp + SIZE_KEXCEPTION_FRAME]
@@ -588,7 +593,7 @@ PUBLIC _KiNpxSegmentOverrunAbort
 PUBLIC _KiInvalidTssFault
 .PROC _KiInvalidTssFault
     /* We have an error code */
-    ENTER_TRAP_FRAME (TRAPFLAG_HAS_ERRORCODE | TRAPFLAG_ALL)
+    ENTER_TRAP_FRAME (TRAPFLAG_HAS_ERRORCODE OR TRAPFLAG_ALL)
 
     /* Bugcheck */
     mov ecx, EXCEPTION_INVALID_TSS
@@ -602,7 +607,7 @@ PUBLIC _KiInvalidTssFault
 PUBLIC _KiSegmentNotPresentFault
 .PROC _KiSegmentNotPresentFault
     /* We have an error code */
-    ENTER_TRAP_FRAME (TRAPFLAG_HAS_ERRORCODE | TRAPFLAG_ALL)
+    ENTER_TRAP_FRAME (TRAPFLAG_HAS_ERRORCODE OR TRAPFLAG_ALL)
 
     /* Bugcheck */
     mov ecx, EXCEPTION_SEGMENT_NOT_PRESENT
@@ -616,7 +621,7 @@ PUBLIC _KiSegmentNotPresentFault
 PUBLIC _KiStackFault
 .PROC _KiStackFault
     /* We have an error code */
-    ENTER_TRAP_FRAME (TRAPFLAG_HAS_ERRORCODE | TRAPFLAG_ALL)
+    ENTER_TRAP_FRAME (TRAPFLAG_HAS_ERRORCODE OR TRAPFLAG_ALL)
 
     /* Bugcheck */
     mov ecx, EXCEPTION_STACK_FAULT
@@ -630,7 +635,7 @@ PUBLIC _KiStackFault
 PUBLIC _KiGeneralProtectionFault
 .PROC _KiGeneralProtectionFault
     /* We have an error code */
-    ENTER_TRAP_FRAME (TRAPFLAG_HAS_ERRORCODE | TRAPFLAG_ALL)
+    ENTER_TRAP_FRAME (TRAPFLAG_HAS_ERRORCODE OR TRAPFLAG_ALL)
 
     TRAPINFO KiGeneralProtectionFault
     mov rdx, [rbp + KTRAP_FRAME_Rip]
@@ -672,7 +677,7 @@ KiGpfExit:
 PUBLIC _KiPageFault
 .PROC _KiPageFault
     /* We have an error code */
-    ENTER_TRAP_FRAME (TRAPFLAG_HAS_ERRORCODE | TRAPFLAG_ALL)
+    ENTER_TRAP_FRAME (TRAPFLAG_HAS_ERRORCODE OR TRAPFLAG_ALL)
 
     TRAPINFO KiPageFault
 
@@ -751,7 +756,7 @@ PUBLIC _KiFloatingErrorFault
 PUBLIC _KiAlignmentFault
 .PROC _KiAlignmentFault
     /* We have an error code */
-    ENTER_TRAP_FRAME (TRAPFLAG_HAS_ERRORCODE | TRAPFLAG_ALL)
+    ENTER_TRAP_FRAME (TRAPFLAG_HAS_ERRORCODE OR TRAPFLAG_ALL)
 
     /* Enable interrupts */
     sti
@@ -808,7 +813,7 @@ KiXmmExit:
 PUBLIC _KiApcInterrupt
 .PROC _KiApcInterrupt
     /* We have an error code */
-    ENTER_TRAP_FRAME (TRAPFLAG_HAS_ERRORCODE | TRAPFLAG_ALL)
+    ENTER_TRAP_FRAME (TRAPFLAG_HAS_ERRORCODE OR TRAPFLAG_ALL)
 
     UNIMPLEMENTED KiApcInterrupt
 
@@ -819,7 +824,7 @@ PUBLIC _KiApcInterrupt
 PUBLIC _KiRaiseAssertion
 .PROC _KiRaiseAssertion
     /* We have an error code */
-    ENTER_TRAP_FRAME (TRAPFLAG_HAS_ERRORCODE | TRAPFLAG_ALL)
+    ENTER_TRAP_FRAME (TRAPFLAG_HAS_ERRORCODE OR TRAPFLAG_ALL)
 
     /* Decrement RIP to point to the INT2C instruction (2 bytes, not 1 like INT3) */
     sub qword ptr [rbp + KTRAP_FRAME_Rip], 2
@@ -863,7 +868,7 @@ PUBLIC _KiDebugServiceTrap
 PUBLIC _KiDpcInterrupt
 .PROC _KiDpcInterrupt
     /* We have an error code */
-    ENTER_TRAP_FRAME (TRAPFLAG_HAS_ERRORCODE | TRAPFLAG_ALL)
+    ENTER_TRAP_FRAME (TRAPFLAG_HAS_ERRORCODE OR TRAPFLAG_ALL)
 
     UNIMPLEMENTED KiDpcInterrupt
 
@@ -874,7 +879,7 @@ PUBLIC _KiDpcInterrupt
 PUBLIC _KiIpiInterrupt
 .PROC _KiIpiInterrupt
     /* We have an error code */
-    ENTER_TRAP_FRAME (TRAPFLAG_HAS_ERRORCODE | TRAPFLAG_ALL)
+    ENTER_TRAP_FRAME (TRAPFLAG_HAS_ERRORCODE OR TRAPFLAG_ALL)
 
     UNIMPLEMENTED KiIpiInterrupt
 
@@ -886,7 +891,7 @@ PUBLIC _KiUnexpectedInterrupt
 .PROC _KiUnexpectedInterrupt
     /* The error code is the vector */
     cli
-    ENTER_TRAP_FRAME (TRAPFLAG_HAS_ERRORCODE | TRAPFLAG_ALL)
+    ENTER_TRAP_FRAME (TRAPFLAG_HAS_ERRORCODE OR TRAPFLAG_ALL)
 
     /* Set bugcheck parameters */
     mov ecx, TRAP_CAUSE_UNKNOWN
