@@ -498,7 +498,7 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	       ( &ConnectionReturnInfo, FCB->RemoteAddress->Address[0].AddressType );
 
         if( !NT_SUCCESS(Status) )
-	    return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
+	    return UnlockAndMaybeComplete( FCB, Status,
 				           Irp, 0 );
 
         if( DisReq->DisconnectType & AFD_DISCONNECT_SEND )

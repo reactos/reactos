@@ -423,16 +423,17 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	if( !NT_SUCCESS(Status) )
 	    break;
 
-	TdiBuildConnectionInfo
+	Status = TdiBuildConnectionInfo
 	    ( &FCB->ConnectInfo,
 	      &ConnectReq->RemoteAddress );
 
-        if( FCB->ConnectInfo )
-            TdiBuildConnectionInfo(&TargetAddress,
-                                   &ConnectReq->RemoteAddress);
+        if( NT_SUCCESS(Status) )
+            Status = TdiBuildConnectionInfo(&TargetAddress,
+                                  	    &ConnectReq->RemoteAddress);
+        else break;
 
 
-	if( TargetAddress ) {
+	if( NT_SUCCESS(Status) ) {
             TargetAddress->UserData = FCB->ConnectData;
             TargetAddress->UserDataLength = FCB->ConnectDataSize;
             TargetAddress->Options = FCB->ConnectOptions;
@@ -454,7 +455,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                 FCB->State = SOCKET_STATE_CONNECTING;
 		return LeaveIrpUntilLater( FCB, Irp, FUNCTION_CONNECT );
             }
-	} else Status = STATUS_NO_MEMORY;
+	}
 	break;
 
     default:

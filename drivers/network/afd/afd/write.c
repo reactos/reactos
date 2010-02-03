@@ -247,9 +247,9 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                                            Irp, 0 );
 		}
 
-        TdiBuildConnectionInfo( &TargetAddress, FCB->RemoteAddress );
+        Status = TdiBuildConnectionInfo( &TargetAddress, FCB->RemoteAddress );
 
-		if( TargetAddress ) {
+		if( NT_SUCCESS(Status) ) {
             Status = TdiSendDatagram
                 ( &FCB->SendIrp.InFlightRequest,
                   FCB->AddressFile.Object,
@@ -261,7 +261,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                   FCB );
 
 			ExFreePool( TargetAddress );
-		} else Status = STATUS_NO_MEMORY;
+		}
 
         if( Status == STATUS_PENDING ) Status = STATUS_SUCCESS;
 
@@ -419,12 +419,12 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 					((PTRANSPORT_ADDRESS)SendReq->TdiConnection.RemoteAddress)->
 					Address[0].AddressType));
 
-    TdiBuildConnectionInfo( &TargetAddress,
+    Status = TdiBuildConnectionInfo( &TargetAddress,
 							((PTRANSPORT_ADDRESS)SendReq->TdiConnection.RemoteAddress) );
 
     /* Check the size of the Address given ... */
 
-    if( TargetAddress ) {
+    if( NT_SUCCESS(Status) ) {
 		Status = TdiSendDatagram
 			( &FCB->SendIrp.InFlightRequest,
 			  FCB->AddressFile.Object,
@@ -436,7 +436,7 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			  FCB );
 
 		ExFreePool( TargetAddress );
-    } else Status = STATUS_NO_MEMORY;
+    }
 
     if( Status == STATUS_PENDING ) Status = STATUS_SUCCESS;
 
