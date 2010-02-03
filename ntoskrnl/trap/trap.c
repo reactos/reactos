@@ -129,7 +129,7 @@ _NOWARN_MSC(4005)
 
 // 
 #define TRAP_STUB_NAME KiFastCallEntry
-#define TRAP_STUB_FLAGS TRAPF_SYSENTER
+#define TRAP_STUB_FLAGS TRAPF_FASTSYSCALL
 #include <TrapStub.h>
 
 #define TRAP_STUB_NAME KiInterruptTemplate
@@ -140,6 +140,5 @@ _NOWARN_POP
 
 VOID _FASTCALL init(void)
 {
-	void *t = scadr;
 }
 

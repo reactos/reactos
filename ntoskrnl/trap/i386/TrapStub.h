@@ -6,17 +6,20 @@
 #error
 #endif
 
-#define TRAP_STUB_NAMEH0(x) x##Handler
-#define TRAP_STUB_NAMEH1(x) TRAP_STUB_NAMEH0(x)
-#define TRAP_STUB_NAMEH TRAP_STUB_NAMEH1(TRAP_STUB_NAME)
+#define TRAP_STUB_NAMEH tokenpaste(TRAP_STUB_NAME, Handler)
 
+#if (TRAP_STUB_FLAGS & TRAPF_INTERRUPT)
+#define TRAP_STUB_PARAM2 tokenpaste(TRAP_STUB_NAME, Interrupt)
+PKINTERRUPT TRAP_STUB_PARAM2;
+#else
 VOID _FASTCALL TRAP_STUB_NAMEH(KTRAP_FRAME *TrapFrame);
+#endif
 
 _NAKED VOID TRAP_STUB_NAME(VOID)
 {
 	_ASM_BEGIN
 		// setup frame
-#if (TRAP_STUB_FLAGS & TRAPF_SYSENTER)
+#if (TRAP_STUB_FLAGS & TRAPF_FASTSYSCALL)
 		mov esp, ss:[KIP0PCRADDRESS + offset KPCR.TSS]
 		mov esp, KTSS.Esp0[esp]
 		// sub esp, dword ptr offset KTRAP_FRAME.V86Es
@@ -37,7 +40,7 @@ _NAKED VOID TRAP_STUB_NAME(VOID)
 #if !(TRAP_STUB_FLAGS & TRAPF_NOSAVESEG)
 		mov KTRAP_FRAME.SegDs[esp], ds
 		mov KTRAP_FRAME.SegEs[esp], es
-#if !(TRAP_STUB_FLAGS & TRAPF_NOSAVEFS)
+#if (TRAP_STUB_FLAGS & TRAPF_SAVEFS)
 		mov KTRAP_FRAME.SegFs[esp], fs
 #endif
 #if !(TRAP_STUB_FLAGS & TRAPF_NOLOADDS)
@@ -57,23 +60,16 @@ _NAKED VOID TRAP_STUB_NAME(VOID)
 		mov KTRAP_FRAME.Edi[esp], edi
 #endif
 
-#if (TRAP_STUB_FLAGS & TRAPF_VECTOR)
-:scadr:
-		mov edx, 0
-		call edx
-#endif
 		// call handler
 		mov ecx, esp
+#if (TRAP_STUB_FLAGS & TRAPF_INTERRUPT)
+		mov edx, TRAP_STUB_PARAM2
+		call PKINTERRUPT.DispatchAddress[edx]
+#else
 		call TRAP_STUB_NAMEH
+#endif
 
-	_ASM_END
-
-		// asmcall(TRAP_STUB_NAMEH);
-		// call TRAP_STUB_NAMEH
-		// call HandlerName
-
-	_ASM_BEGIN
-		// return
+		// restore regs
 #if (TRAP_STUB_FLAGS & TRAPF_SAVENOVOL)
 		mov ebp, KTRAP_FRAME.Ebp[esp]
 		mov ebx, KTRAP_FRAME.Ebx[esp]
@@ -84,12 +80,21 @@ _NAKED VOID TRAP_STUB_NAME(VOID)
 #if !(TRAP_STUB_FLAGS & TRAPF_NOSAVESEG)
 		mov ds, KTRAP_FRAME.SegDs[esp]
 		mov es, KTRAP_FRAME.SegEs[esp]
-#if !(TRAP_STUB_FLAGS & TRAPF_NOSAVEFS)
+#if (TRAP_STUB_FLAGS & TRAPF_SAVEFS)
 		mov fs, KTRAP_FRAME.SegFs[esp]
 #endif
 #endif
 
+		// restore volatle regs and return
 		mov eax, KTRAP_FRAME.Eax[esp]
+
+#if (TRAP_STUB_FLAGS & TRAPF_FASTSYSCALL)
+		mov ecx, KTRAP_FRAME.HardwareEsp[esp]
+		mov edx, KTRAP_FRAME.Eip[esp]
+		add esp, dword ptr offset KTRAP_FRAME.V86Es
+		sti
+		sysexit
+#endif
 		mov ecx, KTRAP_FRAME.Ecx[esp]
 		mov edx, KTRAP_FRAME.Edx[esp]
 		iretd
