@@ -140,7 +140,7 @@ code = 1
 .macro UNIMPLEMENTED2 file, line, func
 
     jmp 3f
-1:  .asciz \func
+1:  .asciz "\func"
 2:  .asciz \file
 3:
     sub rsp, 0x20
