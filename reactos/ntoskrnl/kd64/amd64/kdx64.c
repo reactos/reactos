@@ -85,7 +85,7 @@ KdpSetContextState(IN PDBGKD_ANY_WAIT_STATE_CHANGE WaitStateChange,
 
     /* Set Report Flags */
     WaitStateChange->ControlReport.ReportFlags = REPORT_INCLUDES_SEGS;
-    if (WaitStateChange->ControlReport.SegCs == KGDT_64_R0_CODE)
+    if (WaitStateChange->ControlReport.SegCs == KGDT64_R0_CODE)
     {
         WaitStateChange->ControlReport.ReportFlags |= REPORT_STANDARD_CS;
     }

@@ -50,9 +50,8 @@ KIDT_INIT KiInterruptInitTable[] =
 KIDTENTRY64 KiIdt[256];
 KDESCRIPTOR KiIdtDescriptor = {{0}, sizeof(KiIdt) - 1, KiIdt};
 
+
 /* FUNCTIONS *****************************************************************/
-
-
 
 VOID
 INIT_FUNCTION
@@ -80,7 +79,7 @@ KeInitExceptions(VOID)
             KiIdt[i].IstIndex = 0;
         }
         KiIdt[i].OffsetLow = Offset & 0xffff;
-        KiIdt[i].Selector = KGDT_64_R0_CODE;
+        KiIdt[i].Selector = KGDT64_R0_CODE;
         KiIdt[i].Type = 0x0e;
         KiIdt[i].Reserved0 = 0;
         KiIdt[i].Present = 1;
@@ -242,6 +241,20 @@ KiGeneralProtectionFaultHandler(
         ASSERT(FALSE);
     }
 
+    /* Check for lazy segment load */
+    if (TrapFrame->SegDs != (KGDT64_R3_DATA | RPL_MASK))
+    {
+        /* Fix it */
+        TrapFrame->SegDs = (KGDT64_R3_DATA | RPL_MASK);
+        return STATUS_SUCCESS;
+    }
+    else if (TrapFrame->SegEs != (KGDT64_R3_DATA | RPL_MASK))
+    {
+        /* Fix it */
+        TrapFrame->SegEs = (KGDT64_R3_DATA | RPL_MASK);
+        return STATUS_SUCCESS;
+    }
+
     /* Check for nested exception */
     if ((TrapFrame->Rip >= (ULONG64)KiGeneralProtectionFaultHandler) &&
         (TrapFrame->Rip < (ULONG64)KiGeneralProtectionFaultHandler))
@@ -269,20 +282,6 @@ KiGeneralProtectionFaultHandler(
     {
         /* Unknown CPU MSR, so raise an access violation */
         return STATUS_ACCESS_VIOLATION;
-    }
-
-    /* Check for lazy segment load */
-    if (TrapFrame->SegDs != (KGDT64_R0_DATA | RPL_MASK))
-    {
-        /* Fix it */
-        TrapFrame->SegDs = (KGDT64_R0_DATA | RPL_MASK);
-        return STATUS_SUCCESS;
-    }
-    else if (TrapFrame->SegEs != (KGDT64_R0_DATA | RPL_MASK))
-    {
-        /* Fix it */
-        TrapFrame->SegEs = (KGDT64_R0_DATA | RPL_MASK);
-        return STATUS_SUCCESS;
     }
 
     ASSERT(FALSE);

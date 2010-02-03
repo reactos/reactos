@@ -74,11 +74,11 @@ KeContextToTrapFrame(IN PCONTEXT Context,
     if ((Context->ContextFlags & CONTEXT_CONTROL) == CONTEXT_CONTROL)
     {
         /* Check if this was a Kernel Trap */
-        if (Context->SegCs == KGDT_64_R0_CODE)
+        if (Context->SegCs == KGDT64_R0_CODE)
         {
             /* Set valid selectors */
-            TrapFrame->SegCs = KGDT_64_R0_CODE;
-            TrapFrame->SegSs = KGDT_64_R0_SS;
+            TrapFrame->SegCs = KGDT64_R0_CODE;
+            TrapFrame->SegSs = KGDT64_R0_DATA;
         }
         else
         {
@@ -97,13 +97,13 @@ KeContextToTrapFrame(IN PCONTEXT Context,
     if ((Context->ContextFlags & CONTEXT_SEGMENTS) == CONTEXT_SEGMENTS)
     {
         /* Check if this was a Kernel Trap */
-        if (Context->SegCs == KGDT_64_R0_CODE)
+        if (Context->SegCs == KGDT64_R0_CODE)
         {
             /* Set valid selectors */
-            TrapFrame->SegDs = KGDT_64_DATA | RPL_MASK;
-            TrapFrame->SegEs = KGDT_64_DATA | RPL_MASK;
-            TrapFrame->SegFs = KGDT_32_R3_TEB | RPL_MASK;
-            TrapFrame->SegGs = KGDT_64_DATA | RPL_MASK;
+            TrapFrame->SegDs = KGDT64_R3_DATA | RPL_MASK;
+            TrapFrame->SegEs = KGDT64_R3_DATA | RPL_MASK;
+            TrapFrame->SegFs = KGDT64_R3_CMTEB | RPL_MASK;
+            TrapFrame->SegGs = KGDT64_R3_DATA | RPL_MASK;
         }
         else
         {
@@ -190,11 +190,11 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
     if ((Context->ContextFlags & CONTEXT_CONTROL) == CONTEXT_CONTROL)
     {
         /* Check if this was a Kernel Trap */
-        if (TrapFrame->SegCs == KGDT_64_R0_CODE)
+        if (TrapFrame->SegCs == KGDT64_R0_CODE)
         {
             /* Set valid selectors */
-            Context->SegCs = KGDT_64_R0_CODE;
-            Context->SegSs = KGDT_64_R0_SS;
+            Context->SegCs = KGDT64_R0_CODE;
+            Context->SegSs = KGDT64_R0_DATA;
         }
         else
         {
@@ -213,13 +213,13 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
     if ((Context->ContextFlags & CONTEXT_SEGMENTS) == CONTEXT_SEGMENTS)
     {
         /* Check if this was a Kernel Trap */
-        if (TrapFrame->SegCs == KGDT_64_R0_CODE)
+        if (TrapFrame->SegCs == KGDT64_R0_CODE)
         {
             /* Set valid selectors */
-            Context->SegDs = KGDT_64_DATA | RPL_MASK;
-            Context->SegEs = KGDT_64_DATA | RPL_MASK;
-            Context->SegFs = KGDT_32_R3_TEB | RPL_MASK;
-            Context->SegGs = KGDT_64_DATA | RPL_MASK;
+            Context->SegDs = KGDT64_R3_DATA | RPL_MASK;
+            Context->SegEs = KGDT64_R3_DATA | RPL_MASK;
+            Context->SegFs = KGDT64_R3_CMTEB | RPL_MASK;
+            Context->SegGs = KGDT64_R3_DATA | RPL_MASK;
         }
         else
         {

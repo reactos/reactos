@@ -120,7 +120,7 @@ KiInitializePcr(IN PKIPCR Pcr,
 
     /* Get TSS Selector */
     __str(&Tr);
-    ASSERT(Tr == KGDT_TSS);
+    ASSERT(Tr == KGDT64_SYS_TSS);
 
     /* Get TSS Entry */
     TssEntry = KiGetGdtEntry(Pcr->GdtBase, Tr);
@@ -390,9 +390,9 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     __writemsr(X86_MSR_KERNEL_GSBASE, (ULONG64)Pcr);
 
     /* Load Ring 3 selectors for DS/ES/FS */
-    Ke386SetDs(KGDT_64_DATA | RPL_MASK);
-    Ke386SetEs(KGDT_64_DATA | RPL_MASK);
-    Ke386SetFs(KGDT_32_R3_TEB | RPL_MASK);
+    Ke386SetDs(KGDT64_R3_DATA | RPL_MASK);
+    Ke386SetEs(KGDT64_R3_DATA | RPL_MASK);
+    Ke386SetFs(KGDT64_R3_CMTEB | RPL_MASK);
 
     /* LDT is unused */
     __lldt(0);
