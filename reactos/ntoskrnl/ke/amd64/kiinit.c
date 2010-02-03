@@ -389,11 +389,6 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     __writemsr(X86_MSR_GSBASE, (ULONG64)Pcr);
     __writemsr(X86_MSR_KERNEL_GSBASE, (ULONG64)Pcr);
 
-    /* Load Ring 3 selectors for DS/ES/FS */
-    Ke386SetDs(KGDT64_R3_DATA | RPL_MASK);
-    Ke386SetEs(KGDT64_R3_DATA | RPL_MASK);
-    Ke386SetFs(KGDT64_R3_CMTEB | RPL_MASK);
-
     /* LDT is unused */
     __lldt(0);
 
