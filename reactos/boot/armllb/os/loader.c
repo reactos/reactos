@@ -38,7 +38,6 @@ NTAPI
 LlbSetCommandLine(IN PCHAR CommandLine)
 {
     /* Copy the command line in the ARM block */
-    printf("Command Line %s\n", CommandLine);
     strcpy(ArmBlock.CommandLine, CommandLine);
 }
 
@@ -61,11 +60,11 @@ LlbBuildArmBlock(VOID)
     ArmBlock.UartRegisterBase = LlbHwGetUartBase(LlbHwGetSerialUart());
     
     /* Debug */
-    printf("Machine Identifier: %lx\nPCLK: %d\nTIMER 0: %p\nSERIAL UART: %p\n",
-            ArmBlock.BoardType,
-            ArmBlock.ClockRate,
-            ArmBlock.TimerRegisterBase,
-            ArmBlock.UartRegisterBase);
+    DbgPrint("Machine Identifier: %lx\nPCLK: %d\nTIMER 0: %p\nSERIAL UART: %p\n",
+             ArmBlock.BoardType,
+             ArmBlock.ClockRate,
+             ArmBlock.TimerRegisterBase,
+             ArmBlock.UartRegisterBase);
     
     /* Now load the memory map */
     ArmBlock.MemoryMap = MemoryMap;
@@ -80,10 +79,16 @@ VOID
 NTAPI
 LlbBuildMemoryMap(VOID)
 {
+    ULONG Base, Size;
+    
     /* Zero out the memory map */
     memset(MemoryMap, 0, sizeof(MemoryMap));
+        
+    /* Query memory information */
+    LlbEnvGetMemoryInformation(&Base, &Size);
+    LlbAllocateMemoryEntry(BiosMemoryUsable, Base, Size);
 
-    /* Call the hardware-specific function */
+    /* Call the hardware-specific function for hardware-defined regions */
     LlbHwBuildMemoryMap(MemoryMap);
 }
 

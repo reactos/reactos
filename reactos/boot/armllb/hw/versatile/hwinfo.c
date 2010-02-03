@@ -40,9 +40,6 @@ VOID
 NTAPI
 LlbHwBuildMemoryMap(IN PBIOS_MEMORY_MAP MemoryMap)
 {
-    /* For now, hard-code 128MB of RAM starting at 0x00000000 */
-    LlbAllocateMemoryEntry(BiosMemoryUsable, 0x00000000, 128 * 1024 * 1024);
-    
     /* Mark MMIO space as reserved */
     LlbAllocateMemoryEntry(BiosMemoryReserved, 0x10000000, 128 * 1024 * 1024);
 }

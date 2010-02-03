@@ -9,8 +9,16 @@
 #include "precomp.h"
 
 VOID
-LlbStartup(VOID)
+LlbStartup(IN ULONG Reserved,
+           IN ULONG BoardInfo,
+           IN PATAG Arguments)
 {
+    /* Make sure we are booting on the correct kind of machine */
+    if (BoardInfo != LlbHwGetBoardType()) while (TRUE);
+
+    /* Either QEMU or U-Boot itself should send this information */
+    LlbEnvParseArguments(Arguments);
+    
     /* Initialize hardware components */
     LlbHwInitialize();
 

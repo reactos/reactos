@@ -29,8 +29,11 @@ POSLOADER_INIT
 NTAPI
 LlbHwLoadOsLoaderFromRam(VOID)
 {
-    /* The OS Loader should have already been loaded by QEMU at the right place */
-    return (POSLOADER_INIT)0x800000;
+    ULONG Base, Dummy;
+    
+    /* On versatile, the loader is loaded with the RAMDISK. Just get the address */
+    LlbEnvGetRamDiskInformation(&Base, &Dummy);
+    return (POSLOADER_INIT)Base;
 }
 
 

@@ -97,10 +97,4 @@ LlbBoot(
     IN PCHAR CommandLine
 );
 
-PCHAR
-NTAPI
-LlbEnvRead(
-    IN PCHAR Option
-);
-
 /* EOF */

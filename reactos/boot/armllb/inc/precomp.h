@@ -16,6 +16,7 @@
 #include "serial.h"
 #include "video.h"
 #include "keyboard.h"
+#include "envir.h"
 
 VOID
 DbgPrint(
