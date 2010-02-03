@@ -15,30 +15,33 @@
 /* File Names */
 PCHAR NandImageName       = "reactos.bin";
 PCHAR LlbImageName        = "./output-arm/boot/armllb/armllb.bin";
-PCHAR BootLdrImageName    = "./output-arm/boot/freeldr/freeldr.sys";
+PCHAR BootLdrImageName    = "./output-arm/boot/freeldr/freeldr/freeldr.sys";
 PCHAR FsImageName         = "ReactOS.img";
 
 /* NAND On-Disk Memory Map */
-ULONG LlbStart     = 0x00000000,     LlbEnd = 0x00080000;
-ULONG BootLdrStart = 0x00280000, BootLdrEnd = 0x00680000;
-ULONG FsStart      = 0x00300000,      FsEnd = 0x10000000;
+ULONG LlbStart     = 0x00000000,     LlbEnd = 0x00010000;   // 64  KB
+ULONG BootLdrStart = 0x00010000, BootLdrEnd = 0x00090000;   // 512 KB
+ULONG FsStart      = 0x00090000,      FsEnd = 0x10000000;   // 255 MB
+
+/* Should we write OOB data? */
+ULONG NeedsOob = TRUE;
 
 /* FUNCTIONS ******************************************************************/
 
-ULONG
+INT
 NTAPI
 CreateFlashFile(VOID)
 {
-    ULONG FileDescriptor, i;
+    INT FileDescriptor, i;
     CHAR Buffer[NAND_PAGE_SIZE + NAND_OOB_SIZE];
 
     /* Try open NAND image */
     FileDescriptor = open(NandImageName, O_RDWR);
-    if (!FileDescriptor)
+    if (FileDescriptor)
     {
         /* Create NAND image */
         FileDescriptor = open(NandImageName, O_RDWR | O_CREAT);
-        if (!FileDescriptor) return (-1);
+        if (FileDescriptor) return FileDescriptor;
 
         /* Create zero buffer */
         memset(Buffer, 0xff, sizeof(Buffer));
@@ -53,21 +56,22 @@ CreateFlashFile(VOID)
 
 VOID
 NTAPI
-WriteToFlash(IN ULONG NandImageFile,
-             IN ULONG ImageFile,
+WriteToFlash(IN INT NandImageFile,
+             IN INT ImageFile,
              IN ULONG ImageStart,
              IN ULONG ImageEnd)
 {
     CHAR Data[NAND_PAGE_SIZE], Oob[NAND_OOB_SIZE];
-    ULONG StartPage, EndPage, i;
+    ULONG StartPage, EndPage, i, OobSize = 0;
     BOOLEAN KeepGoing = TRUE;
 
     /* Offset to NAND Page convert */
     StartPage = ImageStart / NAND_PAGE_SIZE;
     EndPage = ImageEnd / NAND_PAGE_SIZE;
-
+    
     /* Jump to NAND offset */
-    lseek(NandImageFile, StartPage * (NAND_PAGE_SIZE + NAND_OOB_SIZE), SEEK_SET);
+    if (NeedsOob) OobSize = NAND_OOB_SIZE;
+    lseek(NandImageFile, StartPage * (NAND_PAGE_SIZE + OobSize), SEEK_SET);
 
     /* Set input image offset */
     lseek(ImageFile, 0, SEEK_SET);
@@ -88,7 +92,7 @@ WriteToFlash(IN ULONG NandImageFile,
 
         /* Write OOB and NAND Data */
         write(NandImageFile, Data, NAND_PAGE_SIZE);
-        write(NandImageFile, Oob, NAND_OOB_SIZE);
+        if (NeedsOob) write(NandImageFile, Oob, NAND_OOB_SIZE);
 
         /* Next page if data continues */
         if (!KeepGoing) break;
@@ -97,9 +101,9 @@ WriteToFlash(IN ULONG NandImageFile,
 
 VOID
 NTAPI
-WriteLlb(IN ULONG NandImageFile)
+WriteLlb(IN INT NandImageFile)
 {
-    ULONG FileDescriptor;
+    INT FileDescriptor;
 
     /* Open LLB and write it */
     FileDescriptor = open(LlbImageName, O_RDWR);
@@ -109,9 +113,9 @@ WriteLlb(IN ULONG NandImageFile)
 
 VOID
 NTAPI
-WriteBootLdr(IN ULONG NandImageFile)
+WriteBootLdr(IN INT NandImageFile)
 {
-    ULONG FileDescriptor;
+    INT FileDescriptor;
 
     /* Open FreeLDR and write it */
     FileDescriptor = open(BootLdrImageName, O_RDWR);
@@ -121,9 +125,9 @@ WriteBootLdr(IN ULONG NandImageFile)
 
 VOID
 NTAPI
-WriteFileSystem(IN ULONG NandImageFile)
+WriteFileSystem(IN INT NandImageFile)
 {
-    ULONG FileDescriptor;
+    INT FileDescriptor;
 
     /* Open FS image and write it */
     FileDescriptor = open(FsImageName, O_RDWR);
@@ -135,7 +139,10 @@ int
 main(ULONG argc,
      char **argv)
 {
-    ULONG NandImageFile;
+    INT NandImageFile;
+    
+    /* Flat NAND, no OOB */
+    if (argc == 2) NeedsOob = FALSE;
 
     /* Open or create NAND Image File */
     NandImageFile = CreateFlashFile();
