@@ -351,7 +351,7 @@ LlbVideoPutChar(IN CHAR c)
     
     /* Amount of characters in a line */
     ScreenWidth = LlbHwGetScreenWidth();
-    CharsPerLine = ScreenWidth / FONT_HEIGHT;
+    CharsPerLine = ScreenWidth / 8;
 
     /* Handle new line and scrolling */
     if (c == '\n')

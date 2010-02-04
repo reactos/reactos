@@ -30,6 +30,7 @@ NTAPI
 LlbHwLoadOsLoaderFromRam(VOID)
 {
     ULONG Base, RootFs, Size;
+    PCHAR Offset;
     CHAR CommandLine[64];
     
     /* On versatile, the NAND image is loaded as the RAMDISK */
@@ -40,9 +41,12 @@ LlbHwLoadOsLoaderFromRam(VOID)
     
     /* The OS loader is next, followed by the root file system */
     RootFs = Base + 0x80000; // 512 KB (see nandflash)
-        
+    
+    /* Read image offset */
+    Offset = LlbEnvRead("rdoffset");
+    
     /* Set parameters for the OS loader */
-    sprintf(CommandLine, "rdbase=0x%x rdsize=0x%x rdoffset=%d", RootFs, Size, 32256);
+    sprintf(CommandLine, "rdbase=0x%x rdsize=0x%x rdoffset=%s", RootFs, Size, Offset);
     LlbSetCommandLine(CommandLine);
     
     /* Return the OS loader base address */

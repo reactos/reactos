@@ -14,7 +14,8 @@ ULONG LlbEnvHwMemSize;
 ULONG LlbEnvRamDiskStart;
 ULONG LlbEnvRamDiskSize;
 CHAR LlbEnvCmdLine[256];
-
+CHAR LlbValueData[32];
+    
 VOID
 NTAPI
 LlbEnvParseArguments(IN PATAG Arguments)
@@ -105,14 +106,35 @@ PCHAR
 NTAPI
 LlbEnvRead(IN PCHAR ValueName)
 {
-    PCHAR ValueData;
+    PCHAR ValuePointer;
+    ULONG Length = 0;
     
     /* Search for the value name */
-    ValueData = strstr(LlbEnvCmdLine, ValueName);
-    if (ValueData) ValueData += strlen(ValueName) + 1;
+    ValuePointer = strstr(LlbEnvCmdLine, ValueName);
+    if (ValuePointer)
+    {
+        /* Get the value data and its length */
+        ValuePointer += strlen(ValueName) + 1;
+        if (strchr(ValuePointer, ','))
+        {
+            /* Stop before next parameter */
+            Length = strchr(ValuePointer, ',') - ValuePointer;
+        }
+        else
+        {
+            /* Stop before the string ends */
+            Length = strlen(ValuePointer);
+        }
+        
+        /* Copy it */
+        strncpy(LlbValueData, ValuePointer, Length);
+    }
+    
+    /* Terminate the data */
+    LlbValueData[Length] = ANSI_NULL;
 
     /* Return the data */
-    return ValueData;
+    return LlbValueData;
 }
 
 /* EOF */
