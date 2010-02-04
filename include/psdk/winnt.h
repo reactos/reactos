@@ -5007,23 +5007,7 @@ InterlockedBitTestAndReset(IN LONG volatile *Base,
 
 /* TODO: Other architectures than X86 */
 #if defined(_M_IX86)
-#if defined(_MSC_VER)
-FORCEINLINE
-VOID
-MemoryBarrier (VOID)
-{
-    LONG Barrier;
-    __asm { xchg Barrier, eax }
-}
-#else
-FORCEINLINE
-VOID
-MemoryBarrier(VOID)
-{
-    LONG Barrier;
-    __asm__ __volatile__("xchgl %%eax, %[Barrier]" : : [Barrier] "m" (Barrier) : "memory");
-}
-#endif
+#define MemoryBarrier _MemoryBarrier
 #elif defined (_M_AMD64)
 #define MemoryBarrier __faststorefence
 #elif defined(_M_PPC)

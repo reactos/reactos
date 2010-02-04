@@ -63,7 +63,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="mma3.lib mm.lib ke.lib ex.lib se.lib ob.lib ps.lib cm.lib io.lib pnp.lib cc.lib csq.lib pseh.lib cmlib.lib fs.lib rossym.lib wdmguid.lib rt.lib rtl.lib crtnt.lib cpu-i386.lib dbgp.lib kdw.lib hal.lib bootvid.lib kdcom.lib"
+				AdditionalDependencies="mma3.lib mm.lib ke.lib ex.lib se.lib ob.lib ps.lib cm.lib io.lib pnp.lib cc.lib csq.lib cmlib.lib fs.lib rossym.lib wdmguid.lib rt.lib rtl.lib crtnt.lib cpu-i386.lib dbgp.lib kdw.lib hal.lib bootvid.lib kdcom.lib"
 				OutputFile="$(OutDir)/ntoskrnl.exe"
 				AdditionalLibraryDirectories=""
 				IgnoreAllDefaultLibraries="true"
@@ -139,7 +139,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="mma3.lib mm.lib ke.lib ex.lib se.lib ob.lib ps.lib cm.lib io.lib pnp.lib cc.lib csq.lib pseh.lib cmlib.lib fs.lib rossym.lib wdmguid.lib rt.lib rtl.lib crtnt.lib cpu-i386.lib dbgp.lib kdw.lib hal.lib bootvid.lib kdcom.lib"
+				AdditionalDependencies="mma3.lib mm.lib ke.lib ex.lib se.lib ob.lib ps.lib cm.lib io.lib pnp.lib cc.lib csq.lib cmlib.lib fs.lib rossym.lib wdmguid.lib rt.lib rtl.lib crtnt.lib cpu-i386.lib dbgp.lib kdw.lib hal.lib bootvid.lib kdcom.lib"
 				OutputFile="$(OutDir)/ntoskrnl.exe"
 				AdditionalLibraryDirectories=""
 				IgnoreAllDefaultLibraries="true"
@@ -318,6 +318,10 @@
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl"
 			>
+			<File
+				RelativePath="..\include\reactos\msc\intrin2.h"
+				>
+			</File>
 			<File
 				RelativePath=".\include\internal\ntoskrnl.h"
 				>

@@ -11,7 +11,7 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
-#include "trap_x.h"
+// #include "trap_x.h"
 
 /* GLOBALS *******************************************************************/
 
@@ -271,12 +271,9 @@ KiInitMachineDependent(VOID)
                 FxSaveArea->U.FxArea.MXCsrMask = 0;
 
                 /* Save the current NPX State */
-#ifdef __GNUC__
-                asm volatile("fxsave %0\n\t" : "=m" (*FxSaveArea));
-#else
-                __asm fxsave [FxSaveArea]
-#endif
-                /* Check if the current mask doesn't match the reserved bits */
+				CpuFxsave(FxSaveArea);
+
+				/* Check if the current mask doesn't match the reserved bits */
                 if (FxSaveArea->U.FxArea.MXCsrMask != 0)
                 {
                     /* Then use whatever it's holding */

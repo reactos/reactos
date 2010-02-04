@@ -37,7 +37,7 @@ void _NAKED _CDECL CpuRegSave(CPUR_ALL *p, i32 flags)
 	mov eax, cr3
 	mov CPUR_ALL.c.cr3[ebx], eax
 	// mov eax, cr4							// legal instruction not recognized, msc bug
-	mov_eax_cr4
+	CpuMovEaxCr4
 	mov CPUR_ALL.c.cr4[ebx], eax
 	sgdt CPUR_ALL.c.gdtr.limit[ebx]
 	sidt CPUR_ALL.c.idtr.limit[ebx]

@@ -368,13 +368,16 @@ KeInitializeInterrupt(IN PKINTERRUPT Interrupt,
         *DispatchCode++ = ((PULONG)KiInterruptTemplate)[i];
     }
 
-    /* Jump to the last 4 bytes */
+#if 0
+	/* Jump to the last 4 bytes */
     Patch = (PULONG)((ULONG_PTR)Patch +
                      ((ULONG_PTR)&KiInterruptTemplateObject -
                       (ULONG_PTR)KiInterruptTemplate) - 4);
 
     /* Apply the patch */
     *Patch = PtrToUlong(Interrupt);
+#endif
+	TrapStubInterrupt = Interrupt;
 
     /* Disconnect it at first */
     Interrupt->Connected = FALSE;

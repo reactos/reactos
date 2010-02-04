@@ -1849,11 +1849,12 @@ VOID WINAPI InitializeSRWLock(PSRWLOCK);
 
 #else // !(defined (_M_AMD64) || defined (_M_IA64))
 
+#define InterlockedExchange _InterlockedExchange
+#define InterlockedCompareExchange _InterlockedCompareExchange
+
 LONG WINAPI InterlockedOr(IN OUT LONG volatile *,LONG);
 LONG WINAPI InterlockedAnd(IN OUT LONG volatile *,LONG);
-LONG WINAPI InterlockedCompareExchange(IN OUT LONG volatile *,LONG,LONG);
 LONG WINAPI InterlockedDecrement(IN OUT LONG volatile *);
-LONG WINAPI InterlockedExchange(IN OUT LONG volatile *,LONG);
 #if defined(_WIN64)
  /* PVOID WINAPI InterlockedExchangePointer(PVOID*,PVOID); */
  #define InterlockedExchangePointer(t,v) \
@@ -1866,7 +1867,7 @@ LONG WINAPI InterlockedExchange(IN OUT LONG volatile *,LONG);
  #define InterlockedExchangePointer(t,v) \
     (PVOID)InterlockedExchange((LPLONG)(t),(LONG)(v))
  /* PVOID WINAPI InterlockedCompareExchangePointer(PVOID*,PVOID,PVOID); */
- #define InterlockedCompareExchangePointer(d,e,c) \
+#define InterlockedCompareExchangePointer(d,e,c) \
     (PVOID)InterlockedCompareExchange((LPLONG)(d),(LONG)(e),(LONG)(c))
 #endif
 LONG WINAPI InterlockedExchangeAdd(IN OUT LONG volatile *,LONG);

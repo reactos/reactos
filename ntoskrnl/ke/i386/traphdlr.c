@@ -14,6 +14,9 @@
 
 /* GLOBALS ********************************************************************/
 
+// !!! temp for testing
+KINTERRUPT *TrapStubInterrupt;
+
 UCHAR KiTrapPrefixTable[] =
 {
     0xF2,                      /* REP                                  */
@@ -57,7 +60,7 @@ KiVdmTrap(IN PKTRAP_FRAME TrapFrame)
 /* TRAP EXIT CODE *************************************************************/
 
 VOID
-DECLSPEC_NORETURN
+// DECLSPEC_NORETURN
 FASTCALL
 KiEoiHelper(IN PKTRAP_FRAME TrapFrame)
 {
@@ -72,10 +75,9 @@ KiEoiHelper(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-DECLSPEC_NORETURN
+// DECLSPEC_NORETURN7
 FASTCALL
-KiServiceExit(IN PKTRAP_FRAME TrapFrame,
-              IN NTSTATUS Status)
+KiServiceExit(IN PKTRAP_FRAME TrapFrame, IN NTSTATUS Status)
 {
     /* Disable interrupts until we return */
     _disable();
@@ -91,7 +93,7 @@ KiServiceExit(IN PKTRAP_FRAME TrapFrame,
 }
 
 VOID
-DECLSPEC_NORETURN
+// DECLSPEC_NORETURN
 FASTCALL
 KiServiceExit2(IN PKTRAP_FRAME TrapFrame)
 {
@@ -1039,8 +1041,8 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
      
      /* So since we're not dealing with the above case, check for RDMSR/WRMSR */
      if ((Instructions[0] == 0xF) &&            // 2-byte opcode
-        (((Instructions[1] >> 8) == 0x30) ||        // RDMSR
-         ((Instructions[2] >> 8) == 0x32)))         // WRMSR
+        (((Instructions[1]) == 0x30) ||        // RDMSR
+         ((Instructions[2]) == 0x32)))         // WRMSR
      {
         /* Unknown CPU MSR, so raise an access violation */
         KiDispatchException0Args(STATUS_ACCESS_VIOLATION,
@@ -1501,7 +1503,6 @@ KiSystemCallHandler(IN PKTRAP_FRAME TrapFrame,
     KiSystemCall(ServiceNumber, Arguments);   
 }
 
-#if 0
 // was __attribute__((regparm(3)))
 VOID
 _NORETURN
@@ -1540,9 +1541,7 @@ KiFastCallEntryHandler(IN PKTRAP_FRAME TrapFrame)
                         Thread->PreviousMode,
                         KGDT_R3_TEB | RPL_MASK);
 }
-#endif
 
-#if 0
 // was __attribute__((regparm(3)))
 VOID
 _NORETURN
@@ -1576,7 +1575,6 @@ KiSystemServiceHandler(IN PKTRAP_FRAME TrapFrame)
                         Thread->PreviousMode,
                         SegFs);
 }
-#endif
 
 /* CPU AND SOFTWARE TRAPS *****************************************************/
 

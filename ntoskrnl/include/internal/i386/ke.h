@@ -461,9 +461,9 @@ extern UCHAR KiDebugRegisterContextOffsets[9];
 // extern VOID __cdecl KiTrap02(VOID);
 VOID DECLSPEC_NORETURN KiTrap02(VOID);
 
-extern VOID __cdecl KiTrap08(VOID);
-extern VOID __cdecl KiTrap13(VOID);
-extern VOID __cdecl KiFastCallEntry(VOID);
+// extern VOID __cdecl KiTrap08(VOID);
+// extern VOID __cdecl KiTrap13(VOID);
+// extern VOID __cdecl KiFastCallEntry(VOID);
 extern VOID NTAPI ExpInterlockedPopEntrySListFault(VOID);
 extern VOID __cdecl CopyParams(VOID);
 extern VOID __cdecl ReadBatch(VOID);
@@ -475,7 +475,7 @@ extern CHAR KiSystemCallExit2[];
 //
 // Trap Macros
 //
-// #include "trap_x.h"
+#include "trap_x.h"
 
 //
 // Returns a thread's FPU save area
@@ -664,6 +664,40 @@ KiSystemCallTrampoline(IN PVOID Handler,
 #endif
     
     return Result;
+}
+
+VOID
+FORCEINLINE
+KiCheckForApcDelivery(IN PKTRAP_FRAME TrapFrame)
+{
+    PKTHREAD Thread;
+    KIRQL OldIrql;
+
+    /* Check for V8086 or user-mode trap */
+    if ((TrapFrame->EFlags & EFLAGS_V86_MASK) || (KiUserTrap(TrapFrame)))
+    {
+        /* Get the thread */
+        Thread = KeGetCurrentThread();
+        while (TRUE)
+        {
+            /* Turn off the alerted state for kernel mode */
+            Thread->Alerted[KernelMode] = FALSE;
+
+            /* Are there pending user APCs? */
+            if (!Thread->ApcState.UserApcPending) break;
+
+            /* Raise to APC level and enable interrupts */
+            OldIrql = KfRaiseIrql(APC_LEVEL);
+            _enable();
+
+            /* Deliver APCs */
+            KiDeliverApc(UserMode, NULL, TrapFrame);
+
+            /* Restore IRQL and disable interrupts once again */
+            KfLowerIrql(OldIrql);
+            _disable();
+        }
+    }
 }
 
 NTSTATUS NTAPI PsConvertToGuiThread(VOID);

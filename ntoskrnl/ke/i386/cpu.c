@@ -999,6 +999,7 @@ VOID
 NTAPI
 KiDisableFastSyscallReturn(VOID)
 {
+#if 0
     /* Was it applied? */
     if (KiSystemCallExitAdjusted)
     {        
@@ -1008,13 +1009,15 @@ KiDisableFastSyscallReturn(VOID)
         /* It's not adjusted anymore */
         KiSystemCallExitAdjusted = FALSE;
     }
+#endif
 }
 
 VOID
 NTAPI
 KiEnableFastSyscallReturn(VOID)
 {
-    /* Check if the patch has already been done */
+#if 0
+	/* Check if the patch has already been done */
     if ((KiSystemCallExitAdjusted == KiSystemCallExitAdjust) &&
         (KiFastCallCopyDoneOnce))
     {
@@ -1043,13 +1046,15 @@ KiEnableFastSyscallReturn(VOID)
         DPRINT1("Your compiled kernel is broken!\n");
         DbgBreakPoint();
     }
+#endif
 }
 
 VOID
 NTAPI
 KiRestoreFastSyscallReturnState(VOID)
 {
-    /* Check if the CPU Supports fast system call */
+#if 0
+	/* Check if the CPU Supports fast system call */
     if (KeFeatureBits & KF_FAST_SYSCALL)
     {
         /* Check if it has been disabled */
@@ -1077,6 +1082,7 @@ KiRestoreFastSyscallReturnState(VOID)
     
     /* Perform the code patch that is required */
     KiEnableFastSyscallReturn();
+#endif
 }
 
 ULONG_PTR
@@ -1224,8 +1230,9 @@ KiIsNpxPresent(VOID)
     Cr0 = __readcr0() & ~(CR0_MP | CR0_TS | CR0_EM | CR0_ET);
     
     /* Store on FPU stack */
-    asm volatile ("fninit;" "fnstsw %0" : "+m"(Magic));
-    
+	CpuFninit();
+	CpuFnGetSw_m(Magic);
+
     /* Magic should now be cleared */
     if (Magic & 0xFF)
     {
@@ -1261,7 +1268,7 @@ KiIsNpxErrataPresent(VOID)
     __writecr0(Cr0 & ~(CR0_MP | CR0_TS | CR0_EM));
     
     /* Initialize FPU state */
-    asm volatile ("fninit");
+	CpuFninit();
     
     /* Multiply the magic values and divide, we should get the result back */
     Value1 = 4195835.0;
@@ -1278,8 +1285,8 @@ KiIsNpxErrataPresent(VOID)
     return ErrataPresent;
 }
 
-NTAPI
 VOID
+NTAPI
 KiFlushNPXState(IN PFLOATING_SAVE_AREA SaveArea)
 {
     ULONG EFlags, Cr0;
@@ -1396,14 +1403,7 @@ KeSaveFloatingPointState(OUT PKFLOATING_SAVE Save)
     if (!FpState) return STATUS_INSUFFICIENT_RESOURCES;
 
     *((PVOID *) Save) = FpState;
-#ifdef __GNUC__
-    asm volatile("fnsave %0\n\t" : "=m" (*FpState));
-#else
-    __asm
-    {
-        fnsave [FpState]
-    };
-#endif
+	CpuFnsave(FpState);
 
     KeGetCurrentThread()->DispatcherHeader.NpxIrql = KeGetCurrentIrql();
     return STATUS_SUCCESS;
@@ -1420,16 +1420,8 @@ KeRestoreFloatingPointState(IN PKFLOATING_SAVE Save)
     ASSERT(KeGetCurrentThread()->DispatcherHeader.NpxIrql == KeGetCurrentIrql());
     DPRINT1("%s is not really implemented\n", __FUNCTION__);
 
-#ifdef __GNUC__
-    asm volatile("fnclex\n\t");
-    asm volatile("frstor %0\n\t" : "=m" (*FpState));
-#else
-    __asm
-    {
-        fnclex
-        frstor [FpState]
-    };
-#endif
+	CpuFnclex();
+	CpuFrstor(FpState);
 
     ExFreePool(FpState);
     return STATUS_SUCCESS;

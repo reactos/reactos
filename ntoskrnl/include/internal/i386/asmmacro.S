@@ -67,7 +67,7 @@
 .macro idt Handler, Bits
     .long \Handler
     .short \Bits
-    .short KGDT_R0_CODE
+//  .short KGDT_R0_CODE
 .endm
 
 //

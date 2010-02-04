@@ -59,9 +59,9 @@ platform dependent basic types and macros
 #define _SECTION_CONST(x) __pragma(const_seg(push, x))
 #define _SECTION_CONST_END __pragma(const_seg(pop))
 
+#define _ASM __asm
 #define _ASM_BEGIN __asm {
 #define _ASM_END }
-#define _ASM __asm
 
 #define IN
 #define OUT
@@ -69,6 +69,9 @@ platform dependent basic types and macros
 /*************************************************************************
 utility macros
 *************************************************************************/
+
+// note: double definitions necessary because preprocessor behavior
+
 // token paste
 #define tokenpaste_(a1, a2) a1##a2
 #define tokenpaste(a1, a2) tokenpaste_(a1, a2)
@@ -78,7 +81,6 @@ utility macros
 #define sfy(x) sfy_(x)
 
 // string literal macros 
-// double definitions here are necessary because preprocessor behavior
 #define T16(x) tokenpaste(L, x)
 #define T8(x) x
 #ifdef _UNICODE

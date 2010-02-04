@@ -21,7 +21,7 @@ void _WriteBarrier(void);
 _INLINEF void _MemoryBarrier(void)
 {
     i32 Barrier;
-    __asm xchg Barrier, eax
+    _ASM xchg Barrier, eax
 }
 
 i8u _interlockedbittestandset(long volatile *dest, long bit);
@@ -52,7 +52,6 @@ _INLINEF void *_InterlockedCompareExchangePointer(void * volatile *dest, void *e
 	return (void *)_InterlockedCompareExchange((long volatile *)dest, (long)exch, (long)comperand);
 }
 #endif
-#define InterlockedCompareExchangePointer _InterlockedCompareExchange
 
 long _InterlockedExchange(volatile long * const Target, const long Value);
 void * _InterlockedExchangePointer(void * volatile * const Target, void * const Value);

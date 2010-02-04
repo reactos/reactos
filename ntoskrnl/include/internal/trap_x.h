@@ -4,9 +4,48 @@
  * FILE:            ntoskrnl/include/trap_x.h
  * PURPOSE:         Internal Inlined Functions for the Trap Handling Code
  * PROGRAMMERS:     ReactOS Portable Systems Group
+	!!! this is horrible. Portable? LOL
+	TODO:
+	- use macros whenever possible instead of inline assembly
+	- create needed asm macros in <arch>\<include>, not here
+	- avoid unnecessary conditional jumps by generating the right prolog
+		and epilogs for each trap type
+	- fix dependency of stack frame optimization
  */
+
 #ifndef _TRAP_X_
 #define _TRAP_X_
+
+#include <debug.h>
+
+// !!! temp for testing
+extern KINTERRUPT *TrapStubInterrupt;
+
+VOID KiFastCallEntry(VOID);
+VOID KiTrap08(VOID);
+VOID KiTrap13(VOID);
+
+
+VOID
+// DECLSPEC_NORETURN
+FASTCALL
+KiServiceExit(IN PKTRAP_FRAME TrapFrame,
+              IN NTSTATUS Status);
+
+VOID
+// DECLSPEC_NORETURN
+FASTCALL
+KiServiceExit2(IN PKTRAP_FRAME TrapFrame);
+
+VOID
+_NORETURN
+_FASTCALL
+KiSystemServiceHandler(IN PKTRAP_FRAME TrapFrame);
+
+VOID
+_NORETURN
+_FASTCALL
+KiFastCallEntryHandler(IN PKTRAP_FRAME TrapFrame);
 
 //
 // Debug Macros
@@ -68,7 +107,7 @@ KiFillTrapFrameDebug(IN PKTRAP_FRAME TrapFrame)
 VOID
 FORCEINLINE
 KiExitTrapDebugChecks(IN PKTRAP_FRAME TrapFrame,
-                      IN KTRAP_STATE_BITS SkipBits)
+                      IN KTRAP_EXIT_SKIP_BITS SkipBits)
 {
     /* Make sure interrupts are disabled */
     if (__readeflags() & EFLAGS_INTERRUPT_MASK)
@@ -122,14 +161,14 @@ KiExitSystemCallDebugChecks(IN ULONG SystemCall,
     KIRQL OldIrql;
     
     /* Check if this was a user call */
-    if (KiUserMode(TrapFrame))
+    if (TrapFrame->SegCs & MODE_MASK)
     {
         /* Make sure we are not returning with elevated IRQL */
         OldIrql = KeGetCurrentIrql();
         if (OldIrql != PASSIVE_LEVEL)
         {
             /* Forcibly put us in a sane state */
-            KeGetPcr()->CurrentIrql = PASSIVE_LEVEL;
+            KeGetPcr()->Irql = PASSIVE_LEVEL;
             _disable();
             
             /* Fail */
@@ -175,7 +214,7 @@ KiUserTrap(IN PKTRAP_FRAME TrapFrame)
 //
 VOID
 FORCEINLINE
-DECLSPEC_NORETURN
+// DECLSPEC_NORETURN /* Do not mark this as DECLSPEC_NORETURN because possibly executing code follows it! */
 KiSystemCallReturn(IN PKTRAP_FRAME TrapFrame)
 {
     /* Restore nonvolatiles, EAX, and do a "jump" back to the kernel caller */
@@ -203,6 +242,7 @@ KiSystemCallReturn(IN PKTRAP_FRAME TrapFrame)
         "movl %c[e](%%esp), %%edx\n"
         "addl $%c[v],%%esp\n" /* A WHOLE *KERNEL* frame since we're not IRET'ing */
         "jmp *%%edx\n"
+        ".globl _KiSystemCallExit2\n_KiSystemCallExit2:\n"
         :
         : "r"(TrapFrame),
           [b] "i"(KTRAP_FRAME_EBX),
@@ -221,8 +261,8 @@ KiSystemCallReturn(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-FORCEINLINE
 DECLSPEC_NORETURN
+FORCEINLINE
 KiSystemCallTrapReturn(IN PKTRAP_FRAME TrapFrame)
 {
     /* Regular interrupt exit, but we only restore EAX as a volatile */
@@ -235,12 +275,13 @@ KiSystemCallTrapReturn(IN PKTRAP_FRAME TrapFrame)
 	mov ebp, [esp+KTRAP_FRAME_EBP]
 	mov eax, [esp+KTRAP_FRAME_EAX]
 	add esp, KTRAP_FRAME_EIP
-	iret
+	iretd
 	_ASM_END
 #elif defined(__GNUC__)
     __asm__ __volatile__
     (
-        "movl %0, %%esp\n"
+        ".globl _KiSystemCallExit\n_KiSystemCallExit:\n"
+		"movl %0, %%esp\n"
         "movl %c[b](%%esp), %%ebx\n"
         "movl %c[s](%%esp), %%esi\n"
         "movl %c[i](%%esp), %%edi\n"
@@ -282,7 +323,7 @@ KiSystemCallSysExitReturn(IN PKTRAP_FRAME TrapFrame)
 	mov ecx, [esp+KTRAP_FRAME_ESP]
 	add esp, KTRAP_FRAME_V86_ES
 	sti
-	sysexit
+	CpuSysExit
 	_ASM_END
 #elif defined(__GNUC__)
 	__asm__ __volatile__
@@ -332,7 +373,7 @@ KiTrapReturn(IN PKTRAP_FRAME TrapFrame)
 	mov edi, [esp+KTRAP_FRAME_EDI]
 	mov ebp, [esp+KTRAP_FRAME_EBP]
 	add esp, KTRAP_FRAME_EIP
-	iret
+	iretd
 	_ASM_END
 #elif defined(__GNUC__)
 	__asm__ __volatile__
@@ -368,6 +409,76 @@ KiTrapReturn(IN PKTRAP_FRAME TrapFrame)
 VOID
 FORCEINLINE
 DECLSPEC_NORETURN
+KiDirectTrapReturn(IN PKTRAP_FRAME TrapFrame)
+{
+#if defined(_MSC_VER)
+	_ASM_BEGIN
+		mov esp, TrapFrame
+		add esp, KTRAP_FRAME_EIP
+		iretd
+	_ASM_END
+#elif defined(__GNUC__)
+    /* Regular interrupt exit but we're not restoring any registers */
+    __asm__ __volatile__
+    (
+        "movl %0, %%esp\n"
+        "addl $%c[e],%%esp\n"
+        "iret\n"
+        :
+        : "r"(TrapFrame),
+          [e] "i"(KTRAP_FRAME_EIP)
+        : "%esp"
+    );
+#elif
+#error unsupported compiler
+#endif
+    UNREACHABLE;  
+}
+
+VOID
+FORCEINLINE
+DECLSPEC_NORETURN
+KiCallReturn(IN PKTRAP_FRAME TrapFrame)
+{
+    /* Pops a trap frame out of the stack but returns with RET instead of IRET */
+#if defined(_MSC_VER)
+	_ASM_BEGIN
+		mov esp, TrapFrame
+		mov ebx, [esp+KTRAP_FRAME_EBX]
+		mov esi, [esp+KTRAP_FRAME_ESI]
+		mov edi, [esp+KTRAP_FRAME_EDI]
+		mov ebp, [esp+KTRAP_FRAME_EBP]
+		add esp, KTRAP_FRAME_EIP
+		ret
+	_ASM_END
+#elif defined(__GNUC__)
+    __asm__ __volatile__
+    (
+        "movl %0, %%esp\n"
+        "movl %c[b](%%esp), %%ebx\n"
+        "movl %c[s](%%esp), %%esi\n"
+        "movl %c[i](%%esp), %%edi\n"
+        "movl %c[p](%%esp), %%ebp\n"
+        "addl $%c[e],%%esp\n"
+        "ret\n"
+        :
+        : "r"(TrapFrame),
+          [b] "i"(KTRAP_FRAME_EBX),
+          [s] "i"(KTRAP_FRAME_ESI),
+          [i] "i"(KTRAP_FRAME_EDI),
+          [p] "i"(KTRAP_FRAME_EBP),
+          [e] "i"(KTRAP_FRAME_EIP)
+        : "%esp"
+    );
+#elif
+#error unsupported compiler
+#endif
+    UNREACHABLE;
+}
+
+VOID
+FORCEINLINE
+DECLSPEC_NORETURN
 KiEditedTrapReturn(IN PKTRAP_FRAME TrapFrame)
 {
     /* Regular interrupt exit */
@@ -382,7 +493,7 @@ KiEditedTrapReturn(IN PKTRAP_FRAME TrapFrame)
 	mov edi, [esp+KTRAP_FRAME_EDI]
 	mov ebp, [esp+KTRAP_FRAME_EBP]
 	add esp, KTRAP_FRAME_ERROR_CODE /* We *WANT* the error code since ESP is there! */
-	iret
+	iretd
 	_ASM_END
 #elif defined(__GNUC__)
     __asm__ __volatile__
@@ -417,14 +528,135 @@ KiEditedTrapReturn(IN PKTRAP_FRAME TrapFrame)
 }
 
 //
+// "BOP" code used by VDM and V8086 Mode
+//
+VOID
+FORCEINLINE
+KiIssueBop(VOID)
+{
+#if defined(_MSC_VER)
+	_ASM_BEGIN
+		_emit 0xc4
+		_emit 0xc4
+	_ASM_END
+#elif defined(__GNUC__)
+	/* Invalid instruction that an invalid opcode handler must trap and handle */
+    asm volatile(".byte 0xC4\n.byte 0xC4\n");
+#elif
+#error unsupported compiler
+#endif
+}
+
+//
+// Returns whether or not this is a V86 trap by checking the EFLAGS field.
+//
+// FIXME: GCC 4.5 Can Improve this with "goto labels"
+//
+BOOLEAN
+FORCEINLINE
+KiIsV8086TrapSafe(IN PKTRAP_FRAME TrapFrame)
+{
+    BOOLEAN Result;
+    
+    /*
+     * The check MUST be done this way, as we guarantee that no DS/ES/FS segment
+     * is used (since it might be garbage).
+     *
+     * Instead, we use the SS segment which is guaranteed to be correct. Because
+     * operate in 32-bit flat mode, this works just fine.
+     */
+#if defined(_MSC_VER)
+	_ASM_BEGIN
+		test ss:[TrapFrame+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
+		setnz Result
+	_ASM_END
+#elif defined(__GNUC__)
+	asm volatile
+     (
+        "testl $%c[f], %%ss:%1\n"
+        "setnz %0\n"
+        : "=a"(Result)
+        : "m"(TrapFrame->EFlags),
+          [f] "i"(EFLAGS_V86_MASK)
+     );
+#elif
+#error unsupported compiler
+#endif
+
+    /* If V86 flag was set */ 
+    return Result;
+}
+
+//
+// Returns whether or not this is a user-mode trap by checking the SegCs field.
+//
+// FIXME: GCC 4.5 Can Improve this with "goto labels"
+//
+BOOLEAN
+FORCEINLINE
+KiIsUserTrapSafe(IN PKTRAP_FRAME TrapFrame)
+{
+    BOOLEAN Result;
+    
+    /*
+     * The check MUST be done this way, as we guarantee that no DS/ES/FS segment
+     * is used (since it might be garbage).
+     *
+     * Instead, we use the SS segment which is guaranteed to be correct. Because
+     * operate in 32-bit flat mode, this works just fine.
+     */
+#if defined(_MSC_VER)
+	_ASM_BEGIN
+		cmp ss:[TrapFrame+KTRAP_FRAME_CS], KGDT_R0_CODE
+		setnz Result
+	_ASM_END
+#elif defined(__GNUC__)
+     asm volatile
+     (
+        "cmp $%c[f], %%ss:%1\n"
+        "setnz %0\n"
+        : "=a"(Result)
+        : "m"(TrapFrame->SegCs),
+          [f] "i"(KGDT_R0_CODE)
+     );
+#elif
+#error unsupported compiler
+#endif
+    
+    /* If V86 flag was set */ 
+    return Result;
+}
+
+VOID
+FORCEINLINE
+KiUserSystemCall(IN PKTRAP_FRAME TrapFrame)
+{
+    /*
+     * Kernel call or user call?
+     *
+     * This decision is made in inlined assembly because we need to patch
+     * the relative offset of the user-mode jump to point to the SYSEXIT
+     * routine if the CPU supports it. The only way to guarantee that a
+     * relative jnz/jz instruction is generated is to force it with the
+     * inline assembler.
+     */
+	// !!!
+	DPRINT1("!!!FIX\n");
+#if 0
+	if (TrapFrame->SegCs & 1)
+		KiSystemCallExit(TrapFrame);
+#endif
+}
+  
+//
 // Generic Exit Routine
 //
 VOID
 FORCEINLINE
-DECLSPEC_NORETURN
 KiExitTrap(IN PKTRAP_FRAME TrapFrame,
            IN UCHAR Skip)
 {
+    // KTRAP_EXIT_SKIP_BITS SkipBits = { .Bits = Skip };
     KTRAP_EXIT_SKIP_BITS SkipBits;
     PULONG ReturnStack;
     
@@ -440,7 +672,7 @@ KiExitTrap(IN PKTRAP_FRAME TrapFrame,
     if (__builtin_expect(!SkipBits.SkipPreviousMode, 0)) /* More INTS than SYSCALLs */
     {
         /* Restore it */
-        KeGetCurrentThread()->PreviousMode = TrapFrame->PreviousPreviousMode;
+        KeGetCurrentThread()->PreviousMode = (CCHAR)TrapFrame->PreviousPreviousMode;
     }
 
     /* Check if there are active debug registers */
@@ -515,19 +747,19 @@ KiExitTrap(IN PKTRAP_FRAME TrapFrame,
     /* Check for system call -- a system call skips volatiles! */
     if (__builtin_expect(SkipBits.SkipVolatiles, 0)) /* More INTs than SYSCALLs */
     {
-        /* Kernel call or user call? */
-        if (__builtin_expect(KiUserTrap(TrapFrame), 1)) /* More Ring 3 than 0 */
+        /* User or kernel call? */
+        KiUserSystemCall(TrapFrame);
+        
+        /* Restore EFLags */
+        __writeeflags(TrapFrame->EFlags);
+            
+        /* Call is kernel, so do a jump back since this wasn't a real INT */
+        KiSystemCallReturn(TrapFrame);
+
+        /* If we got here, this is SYSEXIT: are we stepping code? */
+        if (!(TrapFrame->EFlags & EFLAGS_TF))
         {
-            /* Is SYSENTER supported and/or enabled, or are we stepping code? */
-            if (__builtin_expect((KiFastSystemCallDisable) ||
-                                 (TrapFrame->EFlags & EFLAGS_TF), 0))
-            {
-                /* Exit normally */
-                KiSystemCallTrapReturn(TrapFrame);
-            }
-            else
-            {
-                /* Restore user FS */
+                 /* Restore user FS */
                 Ke386SetFs(KGDT_R3_TEB | RPL_MASK);
                 
                 /* Remove interrupt flag */
@@ -537,21 +769,13 @@ KiExitTrap(IN PKTRAP_FRAME TrapFrame,
                 /* Exit through SYSEXIT */
                 KiSystemCallSysExitReturn(TrapFrame);
             }
-        }
-        else
-        {
-            /* Restore EFLags */
-            __writeeflags(TrapFrame->EFlags);
             
-            /* Call is kernel, so do a jump back since this wasn't a real INT */
-            KiSystemCallReturn(TrapFrame);
-        }  
+        /* Exit through IRETD, either due to debugging or due to lack of SYSEXIT */
+        KiSystemCallTrapReturn(TrapFrame);
     }
-    else
-    {
-        /* Return from interrupt */
-        KiTrapReturn(TrapFrame);
-    }
+  
+	/* Return from interrupt */
+    KiTrapReturn(TrapFrame);
 }
 
 //
@@ -613,8 +837,7 @@ KiEnterV86Trap(IN PKTRAP_FRAME TrapFrame)
     Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
     Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
 
-    /* Save exception list and bogus previous mode */
-    TrapFrame->PreviousPreviousMode = -1;
+	/* Save exception list */
     TrapFrame->ExceptionList = KeGetPcr()->Tib.ExceptionList;
 
     /* Clear direction flag */
@@ -636,36 +859,44 @@ VOID
 FORCEINLINE
 KiEnterInterruptTrap(IN PKTRAP_FRAME TrapFrame)
 {
-    /* Set bogus previous mode */
-    TrapFrame->PreviousPreviousMode = -1;
+    ULONG Ds, Es;
     
-    /* Check for V86 mode */
-    if (__builtin_expect(TrapFrame->EFlags & EFLAGS_V86_MASK, 0))
+    /* Check for V86 mode, otherwise check for ring 3 code */
+    if (__builtin_expect(KiIsV8086TrapSafe(TrapFrame), 0))
     {
-        DbgPrint("Need V8086 Interrupt Support!\n");
-        while (TRUE);
-    }
-    
-    /* Check if this wasn't kernel code */
-    if (__builtin_expect(TrapFrame->SegCs != KGDT_R0_CODE, 1)) /* Ring 3 is more common */
-    {
-        /* Save segments and then switch to correct ones */
-        TrapFrame->SegFs = Ke386GetFs();
-        TrapFrame->SegGs = Ke386GetGs();
-        TrapFrame->SegDs = Ke386GetDs();
-        TrapFrame->SegEs = Ke386GetEs();
-        Ke386SetFs(KGDT_R0_PCR);
+        /* Set correct segments */
         Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
         Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
+        Ke386SetFs(KGDT_R0_PCR);
+
+        /* Restore V8086 segments into Protected Mode segments */
+        TrapFrame->SegFs = TrapFrame->V86Fs;
+        TrapFrame->SegGs = TrapFrame->V86Gs;
+        TrapFrame->SegDs = TrapFrame->V86Ds;
+        TrapFrame->SegEs = TrapFrame->V86Es;
     }
+    else if (__builtin_expect(KiIsUserTrapSafe(TrapFrame), 1)) /* Ring 3 is more common */
+    {
+        /* Save DS/ES and load correct values */
+        Es = Ke386GetEs();
+        Ds = Ke386GetDs();
+        TrapFrame->SegDs = Ds;
+        TrapFrame->SegEs = Es;
+        Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
+        Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
+        
+        /* Save FS/GS */
+        TrapFrame->SegFs = Ke386GetFs();
+        TrapFrame->SegGs = Ke386GetGs();
+        
+        /* Set correct FS */
+        Ke386SetFs(KGDT_R0_PCR);
+    }       
     
     /* Save exception list and terminate it */
     TrapFrame->ExceptionList = KeGetPcr()->Tib.ExceptionList;
     KeGetPcr()->Tib.ExceptionList = EXCEPTION_CHAIN_END;
-    
-    /* No error code */
-    TrapFrame->ErrCode = 0;
-    
+
     /* Clear direction flag */
     Ke386ClearDirectionFlag();
     
@@ -688,7 +919,7 @@ VOID
 FORCEINLINE
 KiEnterTrap(IN PKTRAP_FRAME TrapFrame)
 {
-    ULONG Ds, Es;
+    USHORT Ds, Es;
     
     /*
      * We really have to get a good DS/ES first before touching any data.
@@ -700,7 +931,8 @@ KiEnterTrap(IN PKTRAP_FRAME TrapFrame)
      * as-is, otherwise the optimizer could simply get rid of our DS/ES.
      *
      */
-    Ds = Ke386GetDs();
+    // !!! 
+	Ds = Ke386GetDs();
     Es = Ke386GetEs();
     Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
     Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
@@ -712,8 +944,7 @@ KiEnterTrap(IN PKTRAP_FRAME TrapFrame)
     TrapFrame->SegGs = Ke386GetGs();
     Ke386SetFs(KGDT_R0_PCR);
 
-    /* Save exception list and bogus previous mode */
-    TrapFrame->PreviousPreviousMode = -1;
+    /* Save exception list */
     TrapFrame->ExceptionList = KeGetPcr()->Tib.ExceptionList;
     
     /* Check for V86 mode */
@@ -740,4 +971,198 @@ KiEnterTrap(IN PKTRAP_FRAME TrapFrame)
     /* Set debug header */
     KiFillTrapFrameDebug(TrapFrame);
 }
+
+//
+// Generates a Trap Prolog Stub for the given name
+//
+#define KI_PUSH_FAKE_ERROR_CODE 0x1
+#define KI_UNUSED               0x2
+#define KI_NONVOLATILES_ONLY    0x4
+#define KI_FAST_SYSTEM_CALL     0x8
+#define KI_SOFTWARE_TRAP        0x10
+#define KI_HARDWARE_INT         0x20
+#define KiTrap(x, y)            VOID x(VOID) { KiTrapStub(y, (PVOID)x##Handler); UNREACHABLE; }
+#define KiTrampoline(x, y)      VOID x(VOID) { KiTrapStub(y, x##Handler); }
+
+//
+// Trap Prolog Stub
+// !!! ultrahorrible
+// 
+VOID
+FORCEINLINE
+KiTrapStub(IN ULONG Flags,
+           IN PVOID Handler)
+{
+    ULONG FrameSize;
+    
+    /* Is this a fast system call? They don't have a stack! */
+    if (Flags & KI_FAST_SYSTEM_CALL)
+	{
+#if defined(_MSC_VER)
+		_ASM_BEGIN
+		mov esp, ss:[KIP0PCRADDRESS + offset KPCR.TSS]
+		mov esp, KTSS.Esp0[esp]
+		_ASM_END
+#elif defined(__GNUC__)
+		__asm__ __volatile__
+		(
+			"movl %%ss:%c[t], %%esp\n"
+			"movl %c[e](%%esp), %%esp\n"
+			:
+			: [e] "i"(FIELD_OFFSET(KTSS, Esp0)),
+			  [t] "i"(&PCR->TSS)
+			: "%esp"
+		);
+#elif
+#error unsupported compiler
+#endif
+	}
+    
+    /* Check what kind of trap frame this trap requires */
+    if (Flags & KI_SOFTWARE_TRAP)
+    {
+        /* Software traps need a complete non-ring transition trap frame */
+        FrameSize = FIELD_OFFSET(KTRAP_FRAME, HardwareEsp);
+    }
+    else if (Flags & KI_FAST_SYSTEM_CALL)
+    {
+        /* SYSENTER requires us to build a complete ring transition trap frame */
+        FrameSize = FIELD_OFFSET(KTRAP_FRAME, V86Es);
+        
+        /* And it only preserves nonvolatile registers */
+        Flags |= KI_NONVOLATILES_ONLY;
+    }
+    else if (Flags & KI_PUSH_FAKE_ERROR_CODE)
+    {
+        /* If the trap doesn't have an error code, we'll make space for it */
+        FrameSize = FIELD_OFFSET(KTRAP_FRAME, Eip);
+    }
+    else
+    {
+        /* The trap already has an error code, so just make space for the rest */
+        FrameSize = FIELD_OFFSET(KTRAP_FRAME, ErrCode);
+    }
+    
+    /* Software traps need to get their EIP from the caller's frame */
+    if (Flags & KI_SOFTWARE_TRAP)
+	{
+#if defined(_MSC_VER)
+		_ASM pop eax
+#elif defined(__GNUC)
+		__asm__ __volatile__ ("popl %%eax\n":::"%esp");
+#elif
+#error unsupported compiler
+#endif
+	}
+    /* Save nonvolatile registers */
+#if defined(_MSC_VER)
+	_ASM_BEGIN
+		mov KTRAP_FRAME.Ebp[esp], ebp
+		mov KTRAP_FRAME.Ebx[esp], ebx
+		mov KTRAP_FRAME.Esi[esp], esi
+		mov KTRAP_FRAME.Edi[esp], edi
+	_ASM_END
+#elif defined(__GNUC)
+    __asm__ __volatile__
+    (
+        /* EBX, ESI, EDI and EBP are saved */
+        "movl %%ebp, %c[p](%%esp)\n"
+        "movl %%ebx, %c[b](%%esp)\n"
+        "movl %%esi, %c[s](%%esp)\n"
+        "movl %%edi, %c[i](%%esp)\n"
+        :
+        : [b] "i"(- FrameSize + FIELD_OFFSET(KTRAP_FRAME, Ebx)),
+          [s] "i"(- FrameSize + FIELD_OFFSET(KTRAP_FRAME, Esi)),
+          [i] "i"(- FrameSize + FIELD_OFFSET(KTRAP_FRAME, Edi)),
+          [p] "i"(- FrameSize + FIELD_OFFSET(KTRAP_FRAME, Ebp))
+        : "%esp"
+    );
+#elif
+#error unsupported compiler
+#endif
+    
+    /* Does the caller want nonvolatiles only? */
+    if (!(Flags & KI_NONVOLATILES_ONLY))
+	{
+#if defined(_MSC_VER)
+		_ASM_BEGIN
+			mov KTRAP_FRAME.Eax[esp], eax
+			mov KTRAP_FRAME.Ecx[esp], ecx
+			mov KTRAP_FRAME.Edx[esp], eax
+		_ASM_END
+#elif defined(__GNUC)
+		__asm__ __volatile__
+		(
+			/* Otherwise, save the volatiles as well */
+			"movl %%eax, %c[a](%%esp)\n"
+			"movl %%ecx, %c[c](%%esp)\n"
+			"movl %%edx, %c[d](%%esp)\n"
+			:
+			: [a] "i"(- FrameSize + FIELD_OFFSET(KTRAP_FRAME, Eax)),
+			  [c] "i"(- FrameSize + FIELD_OFFSET(KTRAP_FRAME, Ecx)),
+			  [d] "i"(- FrameSize + FIELD_OFFSET(KTRAP_FRAME, Edx))
+			: "%esp"
+		);
+#elif
+#error unsupported compiler
+#endif
+	}
+	/* Now set parameter 1 (ECX) to point to the frame */
+    /* make space for this frame */
+#if defined(_MSC_VER)
+	_ASM_BEGIN
+		sub esp, FrameSize
+		mov ecx, esp
+	_ASM_END
+	// !!! this is horrible and won't work after stkf optimization
+#elif defined(__GNUC)
+	__asm__ __volatile__ ("movl %%esp, %%ecx\n":::"%esp");
+    __asm__ __volatile__ ("subl $%c[e],%%esp\n":: [e] "i"(FrameSize) : "%esp");
+    __asm__ __volatile__ ("subl $%c[e],%%ecx\n":: [e] "i"(FrameSize) : "%ecx");
+#elif
+#error unsupported compiler
+#endif
+
+    /* Now jump to the C handler */
+
+	/*
+     * For hardware interrupts, set parameter 2 (EDX) to hold KINTERRUPT.
+     * This code will be dynamically patched when an interrupt is registered!
+	 !!! ultrahorrible
+     */
+	if (Flags & KI_HARDWARE_INT)
+	{
+#if defined(_MSC_VER)
+		// !!! temp hack
+		_ASM_BEGIN
+			mov edx, [TrapStubInterrupt]
+			jmp [Handler]
+		_ASM_END
+#elif defined(__GNUC)
+		__asm__ __volatile__
+		(
+			".globl _KiInterruptTemplate2ndDispatch\n_KiInterruptTemplate2ndDispatch:\n"
+			"movl $0, %%edx\n"
+			".globl _KiInterruptTemplateObject\n_KiInterruptTemplateObject:\n"
+			::: "%edx"
+			"jmp *%0\n"
+			".globl _KiInterruptTemplateDispatch\n_KiInterruptTemplateDispatch:\n"
+			:
+			: "a"(Handler)
+
+		);
+#elif
+#error unsupported compiler
+#endif
+	}
+    
+#if defined(_MSC_VER)
+		_ASM jmp [Handler]
+#elif defined(__GNUC)
+	else __asm__ __volatile__ ("jmp %c[x]\n":: [x] "i"(Handler));
+#elif
+#error unsupported compiler
+#endif
+}
+
 #endif

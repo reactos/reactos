@@ -42,6 +42,11 @@
 #include <reactos_cfg.h>
 #include <cpu.h>
 
+// !!! temp disable some warnings
+_NOWARN_MSC(4244)	// ULONG to USHORT
+_NOWARN_MSC(4018)	// ULONG to USHORT
+
+
 #include <ntverp.h>
 
 /* DDK/IFS/NDK Headers */
@@ -70,6 +75,7 @@
 #include <ctype.h>
 #include <malloc.h>
 #include <wchar.h>
+#include <intrin2.h>
 
 /* SEH support with PSEH */
 #include <pseh/pseh2.h>

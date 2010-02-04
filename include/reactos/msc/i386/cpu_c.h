@@ -7,8 +7,9 @@ extern i32u KeI386FxsrPresent;
 // not recognized by inline assembler:
 // mov eax, cr4
 #define CpuMovEaxCr4 _ASM _emit 0x0f _ASM _emit 0x20 _ASM _emit 0xe0
+#define CpuMovCr4Eax _ASM _emit 0x0f _ASM _emit 0x22 _ASM _emit 0xe0
 // sysexit
-#define CpuSysExit() _ASM _emit 0x0f _ASM _emit 0x35
+#define CpuSysExit _ASM _emit 0x0f _ASM _emit 0x35
 
 // enable / disable int flag
 #ifndef CPU_PREFER_NOINTRIN
@@ -89,6 +90,16 @@ _INLINEF void CpuSetTr(IN i16u x) {_ASM_BEGIN
 #define CpuSetTr_m(x) _ASM ltr x
 
 // get/set crx reg
+_INLINEF void CpuGetCr0(i32u x) {_ASM_BEGIN
+    mov eax, cr0
+	_ASM_END}
+
+_INLINEF void CpuSetCr0(i32u x) {_ASM_BEGIN
+    mov eax, x
+    mov cr0, eax
+	_ASM_END}
+#define CpuSetCr0_m(x) _ASM mov cr0, x
+
 _INLINEF void CpuGetCr2(i32u x) {_ASM_BEGIN
     mov eax, cr2
 	_ASM_END}
@@ -98,6 +109,27 @@ _INLINEF void CpuSetCr2(i32u x) {_ASM_BEGIN
     mov cr2, eax
 	_ASM_END}
 #define CpuSetCr2_m(x) _ASM mov cr2, x
+
+_INLINEF void CpuGetCr3(i32u x) {_ASM_BEGIN
+    mov eax, cr3
+	_ASM_END}
+
+_INLINEF void CpuSetCr3(i32u x) {_ASM_BEGIN
+    mov eax, x
+    mov cr3, eax
+	_ASM_END}
+#define CpuSetCr3_m(x) _ASM mov cr3, x
+
+_INLINEF void CpuGetCr4(i32u x) {_ASM_BEGIN
+	// mov eax, cr4	
+	CpuMovEaxCr4    
+	_ASM_END}
+
+_INLINEF void CpuSetCr4(i32u x) {_ASM_BEGIN
+    mov eax, x
+    // mov cr4, eax
+	CpuMovCr4Eax
+	_ASM_END}
 
 // get/set segment registers
 _INLINEF i16u CpuGetCs(void) {_ASM_BEGIN

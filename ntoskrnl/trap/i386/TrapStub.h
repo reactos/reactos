@@ -6,13 +6,21 @@
 #error
 #endif
 
+#ifndef TRAP_STUB_DS
+#define TRAP_STUB_DS KGDT_R3_DATA | RPL_MASK
+#endif
+
+#ifndef TRAP_STUB_FS
+#define TRAP_STUB_FS KGDT_R0_PCR
+#endif
+
 #define TRAP_STUB_NAMEH tokenpaste(TRAP_STUB_NAME, Handler)
 
 #if (TRAP_STUB_FLAGS & TRAPF_INTERRUPT)
 #define TRAP_STUB_PARAM2 tokenpaste(TRAP_STUB_NAME, Interrupt)
 PKINTERRUPT TRAP_STUB_PARAM2;
 #else
-VOID _FASTCALL TRAP_STUB_NAMEH(KTRAP_FRAME *TrapFrame);
+VOID _FASTCALL tokenpaste(TRAP_STUB_NAME, Handler)(KTRAP_FRAME *TrapFrame);
 #endif
 
 _NAKED VOID TRAP_STUB_NAME(VOID)
@@ -22,7 +30,6 @@ _NAKED VOID TRAP_STUB_NAME(VOID)
 #if (TRAP_STUB_FLAGS & TRAPF_FASTSYSCALL)
 		mov esp, ss:[KIP0PCRADDRESS + offset KPCR.TSS]
 		mov esp, KTSS.Esp0[esp]
-		// sub esp, dword ptr offset KTRAP_FRAME.V86Es
 		sub esp, dword ptr offset KTRAP_FRAME.V86Es
 #elif (TRAP_STUB_FLAGS & TRAPF_ERRORCODE)
 		sub esp, offset KTRAP_FRAME.ErrCode
@@ -61,12 +68,13 @@ _NAKED VOID TRAP_STUB_NAME(VOID)
 #endif
 
 		// call handler
-		mov ecx, esp
 #if (TRAP_STUB_FLAGS & TRAPF_INTERRUPT)
 		mov edx, TRAP_STUB_PARAM2
+		mov ecx, esp
 		call PKINTERRUPT.DispatchAddress[edx]
 #else
-		call TRAP_STUB_NAMEH
+		mov ecx, esp
+		call tokenpaste(TRAP_STUB_NAME, Handler)
 #endif
 
 		// restore regs

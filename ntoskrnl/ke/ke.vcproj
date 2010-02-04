@@ -195,6 +195,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\except.c"
+				>
+			</File>
+			<File
 				RelativePath="freeldr.c"
 				>
 			</File>
@@ -251,6 +255,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\time.c"
+				>
+			</File>
+			<File
 				RelativePath="timerobj.c"
 				>
 			</File>
@@ -278,6 +286,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\i386\exp.c"
+					>
+				</File>
+				<File
 					RelativePath=".\i386\irqobj.c"
 					>
 				</File>
@@ -302,7 +314,23 @@
 					>
 				</File>
 				<File
+					RelativePath=".\i386\trap.s"
+					>
+				</File>
+				<File
+					RelativePath=".\i386\traphdlr.c"
+					>
+				</File>
+				<File
 					RelativePath=".\i386\usercall.c"
+					>
+				</File>
+				<File
+					RelativePath=".\i386\usercall_asm.S"
+					>
+				</File>
+				<File
+					RelativePath=".\i386\v86vdm.c"
 					>
 				</File>
 			</Filter>

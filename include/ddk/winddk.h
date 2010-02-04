@@ -8452,22 +8452,7 @@ NTAPI
 KeLeaveCriticalRegion(
   VOID);
 
-#ifdef _X86_
-
-static __inline
-VOID
-KeMemoryBarrier(
-  VOID)
-{
-  volatile LONG Barrier;
-#if defined(__GNUC__)
-  __asm__ __volatile__ ("xchg %%eax, %0" : : "m" (Barrier) : "%eax");
-#elif defined(_MSC_VER)
-  __asm xchg [Barrier], eax
-#endif
-}
-
-#endif
+#define KeMemoryBarrier _MemoryBarrier
 
 NTKERNELAPI
 LONG
