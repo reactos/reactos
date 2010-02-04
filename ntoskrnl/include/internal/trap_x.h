@@ -17,6 +17,10 @@
 #define _TRAP_X_
 
 #include <debug.h>
+#define DBGTRAP DPRINT1
+// #define DBGTRAPENTRY DPRINT1("\n"); DbgDumpCpu(7|DBG_DUMPCPU_TSS); DPRINT1("TrapFrame=%p:\n", TrapFrame); DbgDumpMem(TrapFrame, 0x80)
+// #define DBGTRAPENTRY DPRINT1("\n");
+
 
 // !!! temp for testing
 extern KINTERRUPT *TrapStubInterrupt;
@@ -104,6 +108,7 @@ KiFillTrapFrameDebug(IN PKTRAP_FRAME TrapFrame)
     TrapFrame->DbgEbp = TrapFrame->Ebp;   
 }
 
+#if 0
 VOID
 FORCEINLINE
 KiExitTrapDebugChecks(IN PKTRAP_FRAME TrapFrame,
@@ -152,6 +157,8 @@ KiExitTrapDebugChecks(IN PKTRAP_FRAME TrapFrame,
         while (TRUE);
     }
 }
+#endif
+
 
 VOID
 FORCEINLINE
@@ -305,6 +312,7 @@ KiSystemCallTrapReturn(IN PKTRAP_FRAME TrapFrame)
     UNREACHABLE;
 }
 
+
 VOID
 FORCEINLINE
 DECLSPEC_NORETURN
@@ -356,6 +364,7 @@ KiSystemCallSysExitReturn(IN PKTRAP_FRAME TrapFrame)
     UNREACHABLE;
 }
 
+#if 0
 VOID
 FORCEINLINE
 DECLSPEC_NORETURN
@@ -405,6 +414,7 @@ KiTrapReturn(IN PKTRAP_FRAME TrapFrame)
 #endif
     UNREACHABLE;
 }
+#endif
 
 VOID
 FORCEINLINE
@@ -648,6 +658,7 @@ KiUserSystemCall(IN PKTRAP_FRAME TrapFrame)
 #endif
 }
   
+#if 0
 //
 // Generic Exit Routine
 //
@@ -659,11 +670,14 @@ KiExitTrap(IN PKTRAP_FRAME TrapFrame,
     // KTRAP_EXIT_SKIP_BITS SkipBits = { .Bits = Skip };
     KTRAP_EXIT_SKIP_BITS SkipBits;
     PULONG ReturnStack;
-    
+
+	DPRINTT("\n");
+
 	SkipBits.Bits = Skip;
 
     /* Debugging checks */
     KiExitTrapDebugChecks(TrapFrame, SkipBits);
+	DPRINTT("DebugChecks r\n");
 
     /* Restore the SEH handler chain */
     KeGetPcr()->Tib.ExceptionList = TrapFrame->ExceptionList;
@@ -684,7 +698,9 @@ KiExitTrap(IN PKTRAP_FRAME TrapFrame,
         while (TRUE);
     }
     
-    /* Check if this was a V8086 trap */
+    DPRINTT("100\n");
+
+	/* Check if this was a V8086 trap */
     if (__builtin_expect(TrapFrame->EFlags & EFLAGS_V86_MASK, 0)) KiTrapReturn(TrapFrame);
 
     /* Check if the trap frame was edited */
@@ -710,7 +726,7 @@ KiExitTrap(IN PKTRAP_FRAME TrapFrame,
          * wanted stack, and it uses IRET which allows a new CS to be inputted.
          *
          */
-         
+        DPRINTT("edited\n");
         /* Set CS that is requested */
         TrapFrame->SegCs = TrapFrame->TempSegCs;
          
@@ -730,7 +746,8 @@ KiExitTrap(IN PKTRAP_FRAME TrapFrame,
     /* Check if this is a user trap */
     if (__builtin_expect(KiUserTrap(TrapFrame), 1)) /* Ring 3 is where we spend time */
     {
-        /* Check if segments should be restored */
+        DPRINTT("user\n");
+		/* Check if segments should be restored */
         if (!SkipBits.SkipSegments)
         {
             /* Restore segments */
@@ -747,7 +764,8 @@ KiExitTrap(IN PKTRAP_FRAME TrapFrame,
     /* Check for system call -- a system call skips volatiles! */
     if (__builtin_expect(SkipBits.SkipVolatiles, 0)) /* More INTs than SYSCALLs */
     {
-        /* User or kernel call? */
+        DPRINTT("skip vol\n");
+		/* User or kernel call? */
         KiUserSystemCall(TrapFrame);
         
         /* Restore EFLags */
@@ -775,8 +793,11 @@ KiExitTrap(IN PKTRAP_FRAME TrapFrame,
     }
   
 	/* Return from interrupt */
+	DPRINTT("KiTrapReturn");
     KiTrapReturn(TrapFrame);
+	DPRINTT("r\n");
 }
+#endif
 
 //
 // Virtual 8086 Mode Optimized Trap Exit
@@ -912,6 +933,7 @@ KiEnterInterruptTrap(IN PKTRAP_FRAME TrapFrame)
     KiFillTrapFrameDebug(TrapFrame);
 }
 
+#if 0
 //
 // Generic Trap Entry
 //
@@ -971,6 +993,7 @@ KiEnterTrap(IN PKTRAP_FRAME TrapFrame)
     /* Set debug header */
     KiFillTrapFrameDebug(TrapFrame);
 }
+#endif
 
 //
 // Generates a Trap Prolog Stub for the given name

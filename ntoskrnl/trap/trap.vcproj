@@ -157,9 +157,17 @@
 				RelativePath=".\trap.c"
 				>
 			</File>
+			<File
+				RelativePath=".\TrapExit.c"
+				>
+			</File>
 			<Filter
 				Name="i386"
 				>
+				<File
+					RelativePath=".\i386\trap_asm.c"
+					>
+				</File>
 			</Filter>
 		</Filter>
 		<Filter

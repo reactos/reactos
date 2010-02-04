@@ -47,7 +47,7 @@ _NAKED VOID TRAP_STUB_NAME(VOID)
 #if !(TRAP_STUB_FLAGS & TRAPF_NOSAVESEG)
 		mov KTRAP_FRAME.SegDs[esp], ds
 		mov KTRAP_FRAME.SegEs[esp], es
-#if (TRAP_STUB_FLAGS & TRAPF_SAVEFS)
+#if !(TRAP_STUB_FLAGS & TRAPF_NOSAVEFS)
 		mov KTRAP_FRAME.SegFs[esp], fs
 #endif
 #if !(TRAP_STUB_FLAGS & TRAPF_NOLOADDS)
@@ -88,7 +88,7 @@ _NAKED VOID TRAP_STUB_NAME(VOID)
 #if !(TRAP_STUB_FLAGS & TRAPF_NOSAVESEG)
 		mov ds, KTRAP_FRAME.SegDs[esp]
 		mov es, KTRAP_FRAME.SegEs[esp]
-#if (TRAP_STUB_FLAGS & TRAPF_SAVEFS)
+#if !(TRAP_STUB_FLAGS & TRAPF_NOSAVEFS)
 		mov fs, KTRAP_FRAME.SegFs[esp]
 #endif
 #endif
@@ -101,10 +101,12 @@ _NAKED VOID TRAP_STUB_NAME(VOID)
 		mov edx, KTRAP_FRAME.Eip[esp]
 		add esp, dword ptr offset KTRAP_FRAME.V86Es
 		sti
-		sysexit
+		CpuSysExit
 #endif
 		mov ecx, KTRAP_FRAME.Ecx[esp]
 		mov edx, KTRAP_FRAME.Edx[esp]
+
+		add esp, KTRAP_FRAME_EIP
 		iretd
 
 	_ASM_END

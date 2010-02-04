@@ -458,12 +458,13 @@ extern ULONG KiFastSystemCallDisable;
 extern UCHAR KiDebugRegisterTrapOffsets[9];
 extern UCHAR KiDebugRegisterContextOffsets[9];
 
+// !!!
 // extern VOID __cdecl KiTrap02(VOID);
-VOID DECLSPEC_NORETURN KiTrap02(VOID);
-
+// VOID DECLSPEC_NORETURN KiTrap02(VOID);
 // extern VOID __cdecl KiTrap08(VOID);
 // extern VOID __cdecl KiTrap13(VOID);
 // extern VOID __cdecl KiFastCallEntry(VOID);
+
 extern VOID NTAPI ExpInterlockedPopEntrySListFault(VOID);
 extern VOID __cdecl CopyParams(VOID);
 extern VOID __cdecl ReadBatch(VOID);
@@ -475,6 +476,7 @@ extern CHAR KiSystemCallExit2[];
 //
 // Trap Macros
 //
+#include "trap.h"
 #include "trap_x.h"
 
 //

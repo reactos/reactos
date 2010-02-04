@@ -1,6 +1,8 @@
 _ONCE
 
-#define DBGTRAPENTRY
+#define DBGTRAP DPRINT1
+// #define DBGTRAPENTRY DPRINT1("\n"); DbgDumpCpu(7|DBG_DUMPCPU_TSS); DPRINT1("TrapFrame=%p:\n", TrapFrame); DbgDumpMem(TrapFrame, 0x80)
+#define DBGTRAPENTRY DPRINT1("\n"); DbgDumpCpu(7); DPRINT1("TrapFrame=%p:\n", TrapFrame); DbgDumpMem(TrapFrame, sizeof(KTRAP_FRAME));
 
 // TRAP_STUB_FLAGS TrapStub x-macro flags
 // trap type
@@ -9,8 +11,15 @@ _ONCE
 #define TRAPF_FASTSYSCALL	4
 // options
 #define TRAPF_NOSAVESEG		0x100
-#define TRAPF_SAVEFS		0x200
+#define TRAPF_NOSAVEFS		0x200
 #define TRAPF_SAVENOVOL		0x400
 #define TRAPF_NOLOADDS		0x800
 
 #include <trap_asm.h>
+
+VOID KiTrap02(VOID);
+
+// temporary
+VOID KiExitTrapDebugChecks(IN PKTRAP_FRAME TrapFrame, IN KTRAP_EXIT_SKIP_BITS SkipBits);
+VOID KiEnterTrap(IN PKTRAP_FRAME TrapFrame);
+VOID KiExitTrap(IN PKTRAP_FRAME TrapFrame, IN UCHAR Skip);

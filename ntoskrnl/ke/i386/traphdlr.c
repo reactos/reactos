@@ -9,7 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
+// #define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ********************************************************************/
@@ -295,6 +295,8 @@ DECLSPEC_NORETURN
 FASTCALL
 KiTrap00Handler(IN PKTRAP_FRAME TrapFrame)
 {
+	DBGTRAPENTRY
+
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
     
@@ -315,7 +317,9 @@ DECLSPEC_NORETURN
 FASTCALL
 KiTrap01Handler(IN PKTRAP_FRAME TrapFrame)
 {
-    /* Save trap frame */
+	DBGTRAPENTRY
+    
+	/* Save trap frame */
     KiEnterTrap(TrapFrame);
     
     /* Check for VDM trap */
@@ -331,16 +335,15 @@ KiTrap01Handler(IN PKTRAP_FRAME TrapFrame)
                              TrapFrame);
 }
 
-VOID
-DECLSPEC_NORETURN
-KiTrap02(VOID)
+VOID FASTCALL KiTrap02Handler(KTRAP_FRAME *TrapFrame)
 {
     PKTSS Tss, NmiTss;
     PKTHREAD Thread;
     PKPROCESS Process;
     PKGDTENTRY TssGdt;
-    KTRAP_FRAME TrapFrame;
     KIRQL OldIrql;
+    
+	DBGTRAPENTRY
     
     //
     // In some sort of strange recursion case, we might end up here with the IF
@@ -395,31 +398,31 @@ KiTrap02(VOID)
     // We just have to go get the values...
     //
     RtlZeroMemory(&TrapFrame, sizeof(KTRAP_FRAME));
-    TrapFrame.HardwareSegSs = Tss->Ss0;
-    TrapFrame.HardwareEsp = Tss->Esp0;
-    TrapFrame.EFlags = Tss->EFlags;
-    TrapFrame.SegCs = Tss->Cs;
-    TrapFrame.Eip = Tss->Eip;
-    TrapFrame.Ebp = Tss->Ebp;
-    TrapFrame.Ebx = Tss->Ebx;
-    TrapFrame.Esi = Tss->Esi;
-    TrapFrame.Edi = Tss->Edi;
-    TrapFrame.SegFs = Tss->Fs;
-    TrapFrame.ExceptionList = PCR->Tib.ExceptionList;
-    TrapFrame.PreviousPreviousMode = -1;
-    TrapFrame.Eax = Tss->Eax;
-    TrapFrame.Ecx = Tss->Ecx;
-    TrapFrame.Edx = Tss->Edx;
-    TrapFrame.SegDs = Tss->Ds;
-    TrapFrame.SegEs = Tss->Es;
-    TrapFrame.SegGs = Tss->Gs;
-    TrapFrame.DbgEip = Tss->Eip;
-    TrapFrame.DbgEbp = Tss->Ebp;
+    TrapFrame->HardwareSegSs = Tss->Ss0;
+    TrapFrame->HardwareEsp = Tss->Esp0;
+    TrapFrame->EFlags = Tss->EFlags;
+    TrapFrame->SegCs = Tss->Cs;
+    TrapFrame->Eip = Tss->Eip;
+    TrapFrame->Ebp = Tss->Ebp;
+    TrapFrame->Ebx = Tss->Ebx;
+    TrapFrame->Esi = Tss->Esi;
+    TrapFrame->Edi = Tss->Edi;
+    TrapFrame->SegFs = Tss->Fs;
+    TrapFrame->ExceptionList = PCR->Tib.ExceptionList;
+    TrapFrame->PreviousPreviousMode = -1;
+    TrapFrame->Eax = Tss->Eax;
+    TrapFrame->Ecx = Tss->Ecx;
+    TrapFrame->Edx = Tss->Edx;
+    TrapFrame->SegDs = Tss->Ds;
+    TrapFrame->SegEs = Tss->Es;
+    TrapFrame->SegGs = Tss->Gs;
+    TrapFrame->DbgEip = Tss->Eip;
+    TrapFrame->DbgEbp = Tss->Ebp;
     
     //
     // Store the trap frame in the KPRCB
     //
-    KiSaveProcessorState(&TrapFrame, NULL);
+    KiSaveProcessorState(TrapFrame, NULL);
     
     //
     // Call any registered NMI handlers and see if they handled it or not
@@ -482,6 +485,8 @@ DECLSPEC_NORETURN
 FASTCALL
 KiTrap03Handler(IN PKTRAP_FRAME TrapFrame)
 {
+	DBGTRAPENTRY
+    
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
     
@@ -494,6 +499,8 @@ DECLSPEC_NORETURN
 FASTCALL
 KiTrap04Handler(IN PKTRAP_FRAME TrapFrame)
 {
+	DBGTRAPENTRY
+    
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
     
@@ -514,6 +521,8 @@ DECLSPEC_NORETURN
 FASTCALL
 KiTrap05Handler(IN PKTRAP_FRAME TrapFrame)
 {
+	DBGTRAPENTRY
+    
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
     
@@ -540,6 +549,8 @@ KiTrap06Handler(IN PKTRAP_FRAME TrapFrame)
     PUCHAR Instruction;
     ULONG i;
     KIRQL OldIrql;
+    
+	DBGTRAPENTRY
     
     /* Check for V86 GPF */
     if (__builtin_expect(KiIsV8086TrapSafe(TrapFrame), 1))
@@ -625,6 +636,8 @@ KiTrap07Handler(IN PKTRAP_FRAME TrapFrame)
     PKTHREAD Thread, NpxThread;
     PFX_SAVE_AREA SaveArea, NpxSaveArea;
     ULONG Cr0;
+    
+	DBGTRAPENTRY
     
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
@@ -732,6 +745,8 @@ DECLSPEC_NORETURN
 FASTCALL
 KiTrap08Handler(IN PKTRAP_FRAME TrapFrame)
 {
+	DBGTRAPENTRY
+    
     /* FIXME: Not handled */
     KiSystemFatalException(EXCEPTION_DOUBLE_FAULT, TrapFrame);
 }
@@ -741,6 +756,8 @@ DECLSPEC_NORETURN
 FASTCALL
 KiTrap09Handler(IN PKTRAP_FRAME TrapFrame)
 {
+	DBGTRAPENTRY
+    
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
 
@@ -754,6 +771,8 @@ DECLSPEC_NORETURN
 FASTCALL
 KiTrap0AHandler(IN PKTRAP_FRAME TrapFrame)
 {
+	DBGTRAPENTRY
+    
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
 
@@ -769,6 +788,8 @@ DECLSPEC_NORETURN
 FASTCALL
 KiTrap0BHandler(IN PKTRAP_FRAME TrapFrame)
 {
+	DBGTRAPENTRY
+    
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
 
@@ -782,6 +803,8 @@ DECLSPEC_NORETURN
 FASTCALL
 KiTrap0CHandler(IN PKTRAP_FRAME TrapFrame)
 {
+	DBGTRAPENTRY
+    
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
 
@@ -800,6 +823,8 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
     PUCHAR Instructions;
     UCHAR Instruction = 0;
     KIRQL OldIrql;
+    
+	DBGTRAPENTRY
     
     /* Check for V86 GPF */
     if (__builtin_expect(KiIsV8086TrapSafe(TrapFrame), 1))
@@ -1075,6 +1100,8 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
     ULONG_PTR Cr2;
     NTSTATUS Status;
 
+	DBGTRAPENTRY
+    
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
 
@@ -1127,8 +1154,14 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
                            (PVOID)Cr2,
                            TrapFrame->SegCs & MODE_MASK,
                            TrapFrame);
-    if (Status == STATUS_SUCCESS) KiEoiHelper(TrapFrame);
-    
+	DPRINTT("MmAccessFault()=%x\n", Status);
+    if (Status == STATUS_SUCCESS)
+	{
+		// return;		// !!!
+		KiEoiHelper(TrapFrame);
+	}
+    DPRINTT("KiEoiHelper r\n");
+
     /* Check for S-LIST fault */
     if (TrapFrame->Eip == (ULONG_PTR)ExpInterlockedPopEntrySListFault)
     {
@@ -1186,6 +1219,8 @@ DECLSPEC_NORETURN
 FASTCALL
 KiTrap0FHandler(IN PKTRAP_FRAME TrapFrame)
 {
+	DBGTRAPENTRY
+    
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
 
@@ -1201,6 +1236,8 @@ KiTrap10Handler(IN PKTRAP_FRAME TrapFrame)
 {
     PKTHREAD Thread;
     PFX_SAVE_AREA SaveArea;
+    
+	DBGTRAPENTRY
     
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
@@ -1227,6 +1264,8 @@ DECLSPEC_NORETURN
 FASTCALL
 KiTrap11Handler(IN PKTRAP_FRAME TrapFrame)
 {
+	DBGTRAPENTRY
+    
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
 
@@ -1243,6 +1282,8 @@ KiTrap13Handler(IN PKTRAP_FRAME TrapFrame)
     PKTHREAD Thread;
     PFX_SAVE_AREA SaveArea;
     ULONG Cr0, MxCsrMask, Error;
+    
+	DBGTRAPENTRY
     
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
@@ -1326,6 +1367,8 @@ VOID
 FASTCALL
 KiGetTickCountHandler(IN PKTRAP_FRAME TrapFrame)
 {
+	DBGTRAPENTRY
+    
     UNIMPLEMENTED;
     while (TRUE);
 }
@@ -1334,6 +1377,8 @@ VOID
 FASTCALL
 KiCallbackReturnHandler(IN PKTRAP_FRAME TrapFrame)
 {
+	DBGTRAPENTRY
+    
     UNIMPLEMENTED;
     while (TRUE);
 }
@@ -1343,6 +1388,8 @@ DECLSPEC_NORETURN
 FASTCALL
 KiRaiseAssertionHandler(IN PKTRAP_FRAME TrapFrame)
 {
+	DBGTRAPENTRY
+    
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
 
@@ -1381,6 +1428,8 @@ KiSystemCall(IN ULONG SystemCallNumber,
     PKSERVICE_TABLE_DESCRIPTOR DescriptorTable;
     ULONG Id, Offset, StackBytes, Result;
     PVOID Handler;
+    
+	DBGTRAPENTRY
     
     /* Loop because we might need to try this twice in case of a GUI call */
     while (TRUE)
@@ -1472,6 +1521,8 @@ KiSystemCallHandler(IN PKTRAP_FRAME TrapFrame,
                     IN KPROCESSOR_MODE PreviousPreviousMode,
                     IN USHORT SegFs)
 {
+	DBGTRAPENTRY
+    
     /* No error code */
     TrapFrame->ErrCode = 0;
     
@@ -1513,6 +1564,8 @@ KiFastCallEntryHandler(IN PKTRAP_FRAME TrapFrame)
 	ULONG ServiceNumber = TrapFrame->Eax;
     PKTHREAD Thread;
         
+	DBGTRAPENTRY
+    
     /* Fixup segments */
     Ke386SetFs(KGDT_R0_PCR);
     Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
@@ -1553,6 +1606,8 @@ KiSystemServiceHandler(IN PKTRAP_FRAME TrapFrame)
     USHORT SegFs;
     PKTHREAD Thread;
 
+	DBGTRAPENTRY
+    
     /* Save and fixup FS */
     SegFs = Ke386GetFs();
     Ke386SetFs(KGDT_R0_PCR);
@@ -1578,6 +1633,7 @@ KiSystemServiceHandler(IN PKTRAP_FRAME TrapFrame)
 
 /* CPU AND SOFTWARE TRAPS *****************************************************/
 
+#if 0
 KiTrap(KiTrap00,         KI_PUSH_FAKE_ERROR_CODE);
 KiTrap(KiTrap01,         KI_PUSH_FAKE_ERROR_CODE);
 KiTrap(KiTrap03,         KI_PUSH_FAKE_ERROR_CODE);
@@ -1602,6 +1658,7 @@ KiTrap(KiRaiseAssertion, KI_PUSH_FAKE_ERROR_CODE);
 KiTrap(KiDebugService,   KI_PUSH_FAKE_ERROR_CODE);
 KiTrap(KiSystemService,  KI_PUSH_FAKE_ERROR_CODE | KI_NONVOLATILES_ONLY);
 KiTrap(KiFastCallEntry,  KI_FAST_SYSTEM_CALL);
+#endif
 
 /*
  * @implemented

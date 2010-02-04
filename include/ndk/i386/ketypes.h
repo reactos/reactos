@@ -179,52 +179,52 @@ Author:
 //
 typedef struct _KTRAP_FRAME
 {
-    ULONG DbgEbp;
-    ULONG DbgEip;
-    ULONG DbgArgMark;
-    ULONG DbgArgPointer;
-    USHORT TempSegCs;
-	USHORT RsvTempSegCs;
-    ULONG TempEsp;
-    ULONG Dr0;
-    ULONG Dr1;
-    ULONG Dr2;
-    ULONG Dr3;
-    ULONG Dr6;
-    ULONG Dr7;
-    USHORT SegGs;
-	USHORT RsvSegGs;
-    USHORT SegEs;
-	USHORT RsvSegEs;
-    USHORT SegDs;
-    USHORT RsvSegDs;
-    ULONG Edx;
-    ULONG Ecx;
-    ULONG Eax;
-    ULONG PreviousPreviousMode;
-    struct _EXCEPTION_REGISTRATION_RECORD FAR *ExceptionList;
-    USHORT SegFs;
-	USHORT RsvSegFs;
-    ULONG Edi;
-    ULONG Esi;
-    ULONG Ebx;
-    ULONG Ebp;
-    ULONG ErrCode;
-    ULONG Eip;
-    USHORT SegCs;
-	USHORT RsvSegCs;
-    ULONG EFlags;
-    ULONG HardwareEsp;
-    ULONG HardwareSegSs;
-    USHORT V86Es;
-	USHORT RsvV86Es;
-    SHORT V86Ds;
-    USHORT RsvV86Ds;
-    USHORT V86Fs;
-    USHORT RsvV86Fs;
-    USHORT V86Gs;
-    USHORT RsvV86Gs;
-} KTRAP_FRAME, *PKTRAP_FRAME;
+    ULONG DbgEbp;					// 00
+    ULONG DbgEip;					// 04
+    ULONG DbgArgMark;				// 08
+    ULONG DbgArgPointer;			// 0c
+    USHORT TempSegCs;				// 10
+	USHORT RsvTempSegCs;			// 12
+    ULONG TempEsp;					// 14
+    ULONG Dr0;						// 18
+    ULONG Dr1;						// 1c
+    ULONG Dr2;						// 20
+    ULONG Dr3;						// 24
+    ULONG Dr6;						// 28
+    ULONG Dr7;						// 2c
+    USHORT SegGs;					// 30
+	USHORT RsvSegGs;				// 32
+    USHORT SegEs;					// 34
+	USHORT RsvSegEs;				// 36
+    USHORT SegDs;					// 38
+    USHORT RsvSegDs;				// 3a
+    ULONG Edx;						// 3c
+    ULONG Ecx;						// 40
+    ULONG Eax;						// 44
+    ULONG PreviousPreviousMode;		// 48
+    struct _EXCEPTION_REGISTRATION_RECORD FAR *ExceptionList;	// 4c
+    USHORT SegFs;					// 50
+	USHORT RsvSegFs;				// 52
+    ULONG Edi;						// 54
+    ULONG Esi;						// 58
+    ULONG Ebx;						// 5c
+    ULONG Ebp;						// 60
+    ULONG ErrCode;					// 64
+    ULONG Eip;						// 68
+    USHORT SegCs;					// 6c
+	USHORT RsvSegCs;				// 6e
+    ULONG EFlags;					// 70
+    ULONG HardwareEsp;				// 74
+    ULONG HardwareSegSs;			// 78
+    USHORT V86Es;					// 7c
+	USHORT RsvV86Es;				// 7e
+    SHORT V86Ds;					// 80
+    USHORT RsvV86Ds;				// 82
+    USHORT V86Fs;					// 84
+    USHORT RsvV86Fs;				// 86
+    USHORT V86Gs;					// 88
+    USHORT RsvV86Gs;				// 8a
+} KTRAP_FRAME, *PKTRAP_FRAME;		// 8c
 
 //
 // Defines the Callback Stack Layout for User Mode Callbacks
