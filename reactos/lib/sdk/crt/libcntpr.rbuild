@@ -59,6 +59,8 @@
 			</directory>
 		</if>
 		<if property="ARCH" value="amd64">
+			<file>cos.c</file>
+			<file>sin.c</file>
 			<directory name="amd64">
 				<file>alldiv.S</file>
 				<file>atan.S</file>
