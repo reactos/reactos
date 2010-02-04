@@ -46,8 +46,8 @@ LlbFwVideoGetDisplaySize(OUT PULONG Width,
                          OUT PULONG Depth)
 {
     /* Query static settings */
-    *Width = LlbHwGetScreenWidth();
-    *Height = LlbHwGetScreenHeight();
+    *Width = LlbHwGetScreenWidth() / 8;
+    *Height = LlbHwGetScreenHeight() / 13;
     
     /* Depth is always 16 bpp */
     *Depth = 16;
@@ -127,7 +127,7 @@ LlbFwVideoPutChar(IN INT c,
                                       ColorPalette[Attr >> 4][2]);
                                       
     /* Compute buffer address */
-    Buffer = (PUSHORT)LlbHwGetFrameBuffer() + (LlbHwGetScreenWidth() * (Y * 8)) + (X * 8);
+    Buffer = (PUSHORT)LlbHwGetFrameBuffer() + (LlbHwGetScreenWidth() * (Y * 13)) + (X * 8);
                                       
     /* Draw it */
     LlbVideoDrawChar(c, Buffer, Color, BackColor);

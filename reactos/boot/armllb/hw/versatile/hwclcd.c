@@ -48,14 +48,14 @@ ULONG
 NTAPI
 LlbHwGetScreenWidth(VOID)
 {
-    return 640;
+    return 720;
 }
  
 ULONG
 NTAPI
 LlbHwGetScreenHeight(VOID)
 {
-    return 480;
+    return 400;
 }
 
 PVOID
