@@ -156,13 +156,13 @@ static NTSTATUS NTAPI ListenComplete
                                 FCB->ListenIrp.
                                 ConnectionReturnInfo->RemoteAddress));
 
-        TdiBuildNullConnectionInfo( &Qelt->ConnInfo, AddressType );
-        if( Qelt->ConnInfo ) {
+        Status = TdiBuildNullConnectionInfo( &Qelt->ConnInfo, AddressType );
+        if( NT_SUCCESS(Status) ) {
             TaCopyTransportAddressInPlace
                ( Qelt->ConnInfo->RemoteAddress,
                  FCB->ListenIrp.ConnectionReturnInfo->RemoteAddress );
             InsertTailList( &FCB->PendingConnections, &Qelt->ListEntry );
-        } else Status = STATUS_NO_MEMORY;
+        }
     }
 
     /* Satisfy a pre-accept request if one is available */
@@ -235,28 +235,21 @@ NTSTATUS AfdListenSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( !NT_SUCCESS(Status) ) return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
 
-    TdiBuildNullConnectionInfo
+    Status = TdiBuildNullConnectionInfo
 	( &FCB->ListenIrp.ConnectionCallInfo,
 	  FCB->LocalAddress->Address[0].AddressType );
-    TdiBuildNullConnectionInfo
+
+    if (!NT_SUCCESS(Status)) return UnlockAndMaybeComplete(FCB, Status, Irp, 0);
+
+    Status = TdiBuildNullConnectionInfo
 	( &FCB->ListenIrp.ConnectionReturnInfo,
 	  FCB->LocalAddress->Address[0].AddressType );
 
-    if( !FCB->ListenIrp.ConnectionReturnInfo || !FCB->ListenIrp.ConnectionCallInfo )
+    if (!NT_SUCCESS(Status))
     {
-        if (FCB->ListenIrp.ConnectionReturnInfo)
-        {
-            ExFreePool(FCB->ListenIrp.ConnectionReturnInfo);
-            FCB->ListenIrp.ConnectionReturnInfo = NULL;
-        }
-
-        if (FCB->ListenIrp.ConnectionCallInfo)
-        {
-            ExFreePool(FCB->ListenIrp.ConnectionCallInfo);
-            FCB->ListenIrp.ConnectionCallInfo = NULL;
-        }
-
-	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp, 0 );
+        ExFreePool(FCB->ListenIrp.ConnectionCallInfo);
+        FCB->ListenIrp.ConnectionCallInfo = NULL;
+        return UnlockAndMaybeComplete(FCB, Status, Irp, 0);
     }
 
     FCB->State = SOCKET_STATE_LISTENING;
@@ -337,29 +330,22 @@ NTSTATUS AfdAccept( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	Status = WarmSocketForConnection( FCB );
 
 	if( Status == STATUS_SUCCESS ) {
-            TdiBuildNullConnectionInfo
-	      ( &FCB->ListenIrp.ConnectionCallInfo,
-	        FCB->LocalAddress->Address[0].AddressType );
-            TdiBuildNullConnectionInfo
-	      ( &FCB->ListenIrp.ConnectionReturnInfo,
-                FCB->LocalAddress->Address[0].AddressType );
+	     Status = TdiBuildNullConnectionInfo
+		( &FCB->ListenIrp.ConnectionCallInfo,
+		  FCB->LocalAddress->Address[0].AddressType );
 
-            if( !FCB->ListenIrp.ConnectionReturnInfo || !FCB->ListenIrp.ConnectionCallInfo )
-            {
-                if (FCB->ListenIrp.ConnectionReturnInfo)
-                {
-                    ExFreePool(FCB->ListenIrp.ConnectionReturnInfo);
-                    FCB->ListenIrp.ConnectionReturnInfo = NULL;
-                }
+	    if (!NT_SUCCESS(Status)) return UnlockAndMaybeComplete(FCB, Status, Irp, 0);
 
-                if (FCB->ListenIrp.ConnectionCallInfo)
-                {
-                    ExFreePool(FCB->ListenIrp.ConnectionCallInfo);
-                    FCB->ListenIrp.ConnectionCallInfo = NULL;
-                }
+	    Status = TdiBuildNullConnectionInfo
+		( &FCB->ListenIrp.ConnectionReturnInfo,
+		  FCB->LocalAddress->Address[0].AddressType );
 
-	        return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp, 0 );
-            }
+	    if (!NT_SUCCESS(Status))
+	    {
+	        ExFreePool(FCB->ListenIrp.ConnectionCallInfo);
+	        FCB->ListenIrp.ConnectionCallInfo = NULL;
+	        return UnlockAndMaybeComplete(FCB, Status, Irp, 0);
+	    }
 
 	    Status = TdiListen( &FCB->ListenIrp.InFlightRequest,
 				FCB->Connection.Object,
