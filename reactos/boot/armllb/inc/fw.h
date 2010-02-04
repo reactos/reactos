@@ -94,4 +94,9 @@ LlbFwVideoSync(
     VOID
 );
 
+VOID
+LlbFwGetTime(
+    VOID
+);
+
 /* EOF */

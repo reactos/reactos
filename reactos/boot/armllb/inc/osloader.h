@@ -42,7 +42,7 @@ typedef struct
 // Information sent from LLB to OS Loader
 //
 #define ARM_BOARD_CONFIGURATION_MAJOR_VERSION 1
-#define ARM_BOARD_CONFIGURATION_MINOR_VERSION 3
+#define ARM_BOARD_CONFIGURATION_MINOR_VERSION 4
 typedef struct _ARM_BOARD_CONFIGURATION_BLOCK
 {
     ULONG MajorVersion;
@@ -69,6 +69,7 @@ typedef struct _ARM_BOARD_CONFIGURATION_BLOCK
     PVOID VideoSetPaletteColor;
     PVOID VideoGetPaletteColor;
     PVOID VideoSync;
+    PVOID GetTime;
 } ARM_BOARD_CONFIGURATION_BLOCK, *PARM_BOARD_CONFIGURATION_BLOCK;
 
 VOID

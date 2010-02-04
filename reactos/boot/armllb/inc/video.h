@@ -18,4 +18,13 @@ LlbVideoPutChar(
     IN CHAR c
 );
 
+VOID
+NTAPI
+LlbVideoDrawChar(
+    IN CHAR c,
+    IN PUSHORT Buffer,
+    IN USHORT Color,
+    IN USHORT BackColor
+);
+                 
 /* EOF */

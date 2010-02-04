@@ -325,8 +325,13 @@ VOID TuiDrawText(ULONG X, ULONG Y, PCSTR Text, UCHAR Attr)
 	// Draw the text
 	for (i=X, j=0; Text[j]  && i<UiScreenWidth; i++,j++)
 	{
+#ifndef _ARM_
 		ScreenMemory[((Y*2)*UiScreenWidth)+(i*2)] = (UCHAR)Text[j];
 		ScreenMemory[((Y*2)*UiScreenWidth)+(i*2)+1] = Attr;
+#else
+        UNREFERENCED_PARAMETER(ScreenMemory);
+        MachVideoPutChar(Text[j], Attr, i, Y);
+#endif
 	}
 }
 

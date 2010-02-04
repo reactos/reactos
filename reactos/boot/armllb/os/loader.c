@@ -86,6 +86,7 @@ LlbBuildArmBlock(VOID)
     ArmBlock.VideoSetPaletteColor = LlbFwVideoSetPaletteColor;
     ArmBlock.VideoGetPaletteColor = LlbFwVideoGetPaletteColor;
     ArmBlock.VideoSync = LlbFwVideoSync;
+    ArmBlock.GetTime = LlbFwGetTime;
 }
 
 VOID

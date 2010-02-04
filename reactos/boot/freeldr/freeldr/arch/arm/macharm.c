@@ -171,6 +171,7 @@ MachInit(IN PCCH CommandLine)
             MachVtbl.VideoSetPaletteColor = ArmBoardBlock->VideoSetPaletteColor;
             MachVtbl.VideoGetPaletteColor = ArmBoardBlock->VideoGetPaletteColor;
             MachVtbl.VideoSync = ArmBoardBlock->VideoSync;
+            MachVtbl.GetTime = ArmBoardBlock->GetTime;
                         
             /* Setup the disk and file system buffers */
             gDiskReadBuffer = 0x00090000;

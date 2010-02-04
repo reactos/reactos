@@ -75,11 +75,31 @@ LlbFwVideoHideShowTextCursor(IN BOOLEAN Show)
     return;
 }
 
+USHORT ColorPalette[16][3] =
+{
+    {0x00, 0x00, 0x00},
+    {0x00, 0x00, 0xAA},
+    {0x00, 0xAA, 0x00},
+    {0x00, 0xAA, 0xAA},
+    {0xAA, 0x00, 0x00},
+    {0xAA, 0x00, 0xAA},
+    {0xAA, 0x55, 0x00},
+    {0xAA, 0xAA, 0xAA},
+    {0x55, 0x55, 0x55},
+    {0x55, 0x55, 0xFF},
+    {0x55, 0xFF, 0x55},
+    {0x55, 0xFF, 0xFF},
+    {0xFF, 0x55, 0x55},
+    {0xFF, 0x55, 0xFF},
+    {0xFF, 0xFF, 0x55},
+    {0xFF, 0xFF, 0xFF},
+};
+
 VOID
 LlbFwVideoCopyOffScreenBufferToVRAM(IN PVOID Buffer)
 {
-    printf("%s is UNIMPLEMENTED", __FUNCTION__);
-    while (TRUE);
+    /* No double-buffer is used on ARM */
+    return;
 }
 
 VOID
@@ -95,8 +115,22 @@ LlbFwVideoPutChar(IN INT c,
                   IN ULONG X,
                   IN ULONG Y)
 {
-    printf("%s is UNIMPLEMENTED", __FUNCTION__);
-    while (TRUE);
+    ULONG Color, BackColor;
+    PUSHORT Buffer;
+    
+    /* Convert EGA index to color used by hardware */
+    Color = LlbHwVideoCreateColor(ColorPalette[Attr & 0xF][0],
+                                  ColorPalette[Attr & 0xF][1],
+                                  ColorPalette[Attr & 0xF][2]);
+    BackColor = LlbHwVideoCreateColor(ColorPalette[Attr >> 4][0],
+                                      ColorPalette[Attr >> 4][1],
+                                      ColorPalette[Attr >> 4][2]);
+                                      
+    /* Compute buffer address */
+    Buffer = (PUSHORT)LlbHwGetFrameBuffer() + (LlbHwGetScreenWidth() * (Y * 8)) + (X * 8);
+                                      
+    /* Draw it */
+    LlbVideoDrawChar(c, Buffer, Color, BackColor);
 }
 
 BOOLEAN
@@ -135,6 +169,14 @@ LlbFwVideoSync(VOID)
     printf("%s is UNIMPLEMENTED", __FUNCTION__);
     while (TRUE);
     return;
+}
+
+VOID
+LlbFwGetTime(VOID)
+{
+    printf("%s is UNIMPLEMENTED", __FUNCTION__);
+    while (TRUE);
+    return;   
 }
 
 /* EOF */

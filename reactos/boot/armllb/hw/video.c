@@ -268,51 +268,22 @@ CHAR LlbHwBootFont[] =
     0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
 };
 
-#if 0
-USHORT ColorPalette[16] =
-{
-    RGB565(0x00, 0x00, 0x00),
-    RGB565(0x00, 0x00, 0xAA),
-    RGB565(0x00, 0xAA, 0x00),
-    RGB565(0x00, 0xAA, 0xAA),
-    RGB565(0xAA, 0x00, 0x00),
-    RGB565(0xAA, 0x00, 0xAA),
-    RGB565(0xAA, 0x55, 0x00),
-    RGB565(0xAA, 0xAA, 0xAA),
-    RGB565(0x55, 0x55, 0x55),
-    RGB565(0x55, 0x55, 0xFF),
-    RGB565(0x55, 0xFF, 0x55),
-    RGB565(0x55, 0xFF, 0xFF),
-    RGB565(0xFF, 0x55, 0x55),
-    RGB565(0xFF, 0x55, 0xFF),
-    RGB565(0xFF, 0xFF, 0x55),
-    RGB565(0xFF, 0xFF, 0xFF),
-};
-#endif
-
 ULONG ScreenCursor;
 
 VOID
 NTAPI
 LlbVideoDrawChar(IN CHAR c,
-                 IN ULONG cx,
-                 IN ULONG cy,
+                 IN PUSHORT Buffer,
                  IN USHORT Color,
                  IN USHORT BackColor)
 {
-    PUSHORT Buffer;
     PCHAR Pixels;
     CHAR Line;
     ULONG y, ScreenWidth;
     LONG x;
-    PUSHORT VideoBuffer;
-    
-    /* Get screen width and frame buffer */
-    ScreenWidth = LlbHwGetScreenWidth();
-    VideoBuffer = LlbHwGetFrameBuffer();
 
-    /* Compute starting address on-screen and in the character-array */
-    Buffer = VideoBuffer + ScreenWidth * cy + cx;
+    /* Get screen width */
+    ScreenWidth = LlbHwGetScreenWidth();
     Pixels = LlbHwBootFont + c * 8;
 
     /* Loop y pixels */
@@ -371,13 +342,14 @@ VOID
 NTAPI
 LlbVideoPutChar(IN CHAR c)
 {
-    ULONG cx, cy, CharsPerLine, BackColor;
+    ULONG cx, cy, CharsPerLine, BackColor, ScreenWidth;
     
     /* Forecolor on this machine */
     BackColor = LlbHwVideoCreateColor(14, 0, 82);
     
     /* Amount of characters in a line */
-    CharsPerLine = LlbHwGetScreenWidth() / 8;
+    ScreenWidth = LlbHwGetScreenWidth();
+    CharsPerLine = ScreenWidth / 8;
 
     /* Handle new line and scrolling */
     if (c == '\n')
@@ -394,7 +366,10 @@ LlbVideoPutChar(IN CHAR c)
         cx = (ScreenCursor % CharsPerLine) * 8;
 
         /* Draw the character and increment the cursor */
-        LlbVideoDrawChar(c, cx, cy, 0xFFFF, BackColor);
+        LlbVideoDrawChar(c,
+                         (PUSHORT)LlbHwGetFrameBuffer() + ScreenWidth * cy + cx,
+                         0xFFFF,
+                         BackColor);
         ScreenCursor++;
     }
 }
