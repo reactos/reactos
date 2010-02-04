@@ -16,7 +16,8 @@
 PCHAR NandImageName       = "reactos.bin";
 PCHAR LlbImageName        = "./output-arm/boot/armllb/armllb.bin";
 PCHAR BootLdrImageName    = "./output-arm/boot/freeldr/freeldr/freeldr.sys";
-PCHAR FsImageName         = "ReactOS.img";
+PCHAR FsImageName         = "ramdisk.img";
+PCHAR RamImageName        = "ramdisk.bin";
 
 /* NAND On-Disk Memory Map */
 ULONG LlbStart     = 0x00000000,     LlbEnd = 0x00010000;   // 64  KB
@@ -135,11 +136,23 @@ WriteFileSystem(IN INT NandImageFile)
     close(FileDescriptor);
 }
 
+VOID
+NTAPI
+WriteRamDisk(IN INT RamDiskFile)
+{
+    INT FileDescriptor;
+
+    /* Open FS image and write it 16MB later */
+    FileDescriptor = open(FsImageName, O_RDWR);
+    WriteToFlash(RamDiskFile, FileDescriptor, 16 * 1024 * 1024, (32 + 16) * 1024 * 1024);
+    close(FileDescriptor);
+}
+
 int
 main(ULONG argc,
      char **argv)
 {
-    INT NandImageFile;
+    INT NandImageFile, RamDiskFile;
     
     /* Flat NAND, no OOB */
     if (argc == 2) NeedsOob = FALSE;
@@ -151,7 +164,24 @@ main(ULONG argc,
     /* Write components */
     WriteLlb(NandImageFile);
     WriteBootLdr(NandImageFile);
-    WriteFileSystem(NandImageFile);
+    if (NeedsOob)
+    {
+        /* Write the ramdisk normaly */
+        WriteFileSystem(NandImageFile);
+    }
+    else
+    {
+        /* Open a new file for the ramdisk */
+        RamDiskFile = open(RamImageName, O_RDWR | O_CREAT);
+        if (!RamDiskFile) exit(-1);
+
+        /* Write it */
+        WriteRamDisk(RamDiskFile);
+        
+        /* Close */
+        close(RamDiskFile);
+    }
+
 
     /* Close and return */
     close(NandImageFile);
