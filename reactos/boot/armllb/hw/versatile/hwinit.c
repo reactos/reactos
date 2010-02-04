@@ -40,9 +40,9 @@ LlbHwLoadOsLoaderFromRam(VOID)
     
     /* The OS loader is next, followed by the root file system */
     RootFs = Base + 0x80000; // 512 KB (see nandflash)
-    
+        
     /* Set parameters for the OS loader */
-    sprintf(CommandLine, "rdbase=0x%x rdsize=0x%x", RootFs, Size);
+    sprintf(CommandLine, "rdbase=0x%x rdsize=0x%x rdoffset=%d", RootFs, Size, 32256);
     LlbSetCommandLine(CommandLine);
     
     /* Return the OS loader base address */

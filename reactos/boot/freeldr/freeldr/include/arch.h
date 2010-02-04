@@ -47,9 +47,13 @@
 #define FILESYSBUFFER		0x80000	/* Buffer to store file system data (e.g. cluster buffer for FAT) */
 #define DISKREADBUFFER		0x90000	/* Buffer to store data read in from the disk via the BIOS */
 #define DISKREADBUFFER_SIZE 512
-#elif defined(_M_PPC) || defined(_M_MIPS) || defined(_M_ARM)
+#elif defined(_M_PPC) || defined(_M_MIPS)
 #define DISKREADBUFFER		    0x80000000
 #define FILESYSBUFFER           0x80000000
+#elif defined(_M_ARM)
+extern ULONG gDiskReadBuffer, gFileSysBuffer;
+#define DISKREADBUFFER gDiskReadBuffer
+#define FILESYSBUFFER  gFileSysBuffer
 #endif
 
 /* Makes "x" a global variable or label */

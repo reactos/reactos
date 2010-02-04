@@ -20,6 +20,7 @@ ULONG BootDrive, BootPartition;
 VOID ArmPrepareForReactOS(IN BOOLEAN Setup);
 ADDRESS_RANGE ArmBoardMemoryMap[16];
 ULONG ArmBoardMemoryMapRangeCount;
+ULONG gDiskReadBuffer, gFileSysBuffer;
 
 /* FUNCTIONS ******************************************************************/
 
@@ -69,25 +70,26 @@ ArmInit(IN PARM_BOARD_CONFIGURATION_BLOCK BootContext)
 }
 
 BOOLEAN
-ArmDiskGetDriveGeometry(IN ULONG DriveNumber,
-                        OUT PGEOMETRY Geometry)
+ArmDiskNormalizeSystemPath(IN OUT PCHAR SystemPath,
+                           IN unsigned Size)
 {
-    return FALSE;
+    TuiPrintf("Called: %s\n", SystemPath);
+    while (TRUE);
+    return TRUE;
 }
 
 BOOLEAN
-ArmDiskReadLogicalSectors(IN ULONG DriveNumber,
-                          IN ULONGLONG SectorNumber,
-                          IN ULONG SectorCount,
-                          IN PVOID Buffer)
+ArmDiskGetBootPath(OUT PCHAR BootPath,
+                   IN unsigned Size)
 {
-    return FALSE;
-}
-
-ULONG
-ArmDiskGetCacheableBlockCount(IN ULONG DriveNumber)
-{
-    return 0;
+    PCCH Path = "ramdisk(0)";
+    
+    /* Make sure enough space exists */
+    if (Size < sizeof(Path)) return FALSE;
+    
+    /* On ARM platforms, the loader is always in RAM */
+    strcpy(BootPath, Path);
+    return TRUE;
 }
 
 PCONFIGURATION_COMPONENT_DATA
@@ -106,6 +108,11 @@ ArmHwDetect(VOID)
     // The boot loader will send us a device tree, similar to ACPI
     // or OpenFirmware device trees, and we will convert it to ARC.
     //
+    
+    //
+    // Register RAMDISK Device
+    //
+    RamDiskInitialize();
     
     //
     // Return the root node
@@ -138,6 +145,8 @@ MachInit(IN PCCH CommandLine)
         // Check for Feroceon-base boards
         //
         case MACH_TYPE_FEROCEON:
+            TuiPrintf("Not implemented\n");
+            while (TRUE);
             break;
             
         //
@@ -149,6 +158,10 @@ MachInit(IN PCCH CommandLine)
             MachVtbl.ConsPutChar = ArmBoardBlock->ConsPutChar;
             MachVtbl.ConsKbHit = ArmBoardBlock->ConsKbHit;
             MachVtbl.ConsGetCh = ArmBoardBlock->ConsGetCh;
+            
+            /* Setup the disk and file system buffers */
+            gDiskReadBuffer = 0x00090000;
+            gFileSysBuffer = 0x00090000;
             break;
             
         //
@@ -156,6 +169,8 @@ MachInit(IN PCCH CommandLine)
         // For now that means only Beagle, but ZOOM and others should be ok too
         //
         case MACH_TYPE_OMAP3_BEAGLE:
+            TuiPrintf("Not implemented\n");
+            while (TRUE);
             break;
             
         default:
@@ -172,15 +187,8 @@ MachInit(IN PCCH CommandLine)
     //
     // Setup disk I/O routines
     //
-    MachVtbl.DiskReadLogicalSectors = ArmDiskReadLogicalSectors;
-    MachVtbl.DiskGetDriveGeometry = ArmDiskGetDriveGeometry;
-    MachVtbl.DiskGetCacheableBlockCount = ArmDiskGetCacheableBlockCount;
-    
-    //
-    // Now set default disk handling routines -- we don't need to override
-    //
-    MachVtbl.DiskGetBootPath = DiskGetBootPath;
-    MachVtbl.DiskNormalizeSystemPath = DiskNormalizeSystemPath;
+    MachVtbl.DiskGetBootPath = ArmDiskGetBootPath;
+    MachVtbl.DiskNormalizeSystemPath = ArmDiskNormalizeSystemPath;
     
     //
     // We can now print to the console
