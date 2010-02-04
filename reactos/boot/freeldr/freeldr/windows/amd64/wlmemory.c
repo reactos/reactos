@@ -341,13 +341,6 @@ WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG64 Pcr, IN ULONG64 Tss)
     /* LDT is unused */
 //    __lldt(0);
 
-    /* Load selectors for DS/ES/FS/GS/SS */
-    Ke386SetDs(KGDT64_R3_DATA | RPL_MASK);   // 0x2b
-    Ke386SetEs(KGDT64_R3_DATA | RPL_MASK);   // 0x2b
-    Ke386SetFs(KGDT64_R3_CMTEB | RPL_MASK);  // 0x53
-	Ke386SetGs(KGDT64_R3_DATA | RPL_MASK);   // 0x2b
-	Ke386SetSs(KGDT64_R0_DATA);              // 0x18
-
 	/* Load TSR */
 	__ltr(KGDT64_SYS_TSS);
 
