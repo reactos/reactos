@@ -36,8 +36,7 @@ ULONG
 LlbFwVideoSetDisplayMode(IN PCHAR DisplayModeName,
                          IN BOOLEAN Init)
 {
-    printf("%s is UNIMPLEMENTED", __FUNCTION__);
-    while (TRUE);
+    /* Return text mode */
     return 0;
 }
 
@@ -46,15 +45,19 @@ LlbFwVideoGetDisplaySize(OUT PULONG Width,
                          OUT PULONG Height,
                          OUT PULONG Depth)
 {
-    printf("%s is UNIMPLEMENTED", __FUNCTION__);
-    while (TRUE);
+    /* Query static settings */
+    *Width = LlbHwGetScreenWidth();
+    *Height = LlbHwGetScreenHeight();
+    
+    /* Depth is always 16 bpp */
+    *Depth = 16;
 }
 
 ULONG
 LlbFwVideoGetBufferSize(VOID)
 {
-    printf("%s is UNIMPLEMENTED", __FUNCTION__);
-    while (TRUE);
+    /* X * Y * BPP */
+    return LlbHwGetScreenWidth() * LlbHwGetScreenHeight() * 2;
 }
 
 VOID
@@ -68,8 +71,8 @@ LlbFwVideoSetTextCursorPosition(IN ULONG X,
 VOID
 LlbFwVideoHideShowTextCursor(IN BOOLEAN Show)
 {
-    printf("%s is UNIMPLEMENTED", __FUNCTION__);
-    while (TRUE);
+    /* Nothing to do */
+    return;
 }
 
 VOID
@@ -82,8 +85,8 @@ LlbFwVideoCopyOffScreenBufferToVRAM(IN PVOID Buffer)
 VOID
 LlbFwVideoClearScreen(IN UCHAR Attr)
 {
-    printf("%s is UNIMPLEMENTED", __FUNCTION__);
-    while (TRUE);
+    /* Clear the screen */
+    LlbVideoClearScreen(TRUE);
 }
 
 VOID

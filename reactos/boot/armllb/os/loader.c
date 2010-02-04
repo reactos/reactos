@@ -99,6 +99,13 @@ LlbBuildMemoryMap(VOID)
         
     /* Query memory information */
     LlbEnvGetMemoryInformation(&Base, &Size);
+    
+    /* Don't use memory that the RAMDISK is using */
+    /* HACK HACK */
+    Base += 32 * 1024 * 1024;
+    Size -= 32 * 1024 * 1024;
+    
+    /* Allocate an entry for it */
     LlbAllocateMemoryEntry(BiosMemoryUsable, Base, Size);
 
     /* Call the hardware-specific function for hardware-defined regions */
