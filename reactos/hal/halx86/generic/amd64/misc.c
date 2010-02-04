@@ -53,7 +53,7 @@ HalpInitIdtEntry(PKIDTENTRY64 Idt, PVOID Address)
     Idt->OffsetLow = (ULONG_PTR)Address & 0xffff;
     Idt->OffsetMiddle = ((ULONG_PTR)Address >> 16) & 0xffff;
     Idt->OffsetHigh = (ULONG_PTR)Address >> 32;
-    Idt->Selector = KGDT_64_R0_CODE;
+    Idt->Selector = KGDT64_R0_CODE;
     Idt->IstIndex = 0;
     Idt->Type = 0x0e;
     Idt->Dpl = 0;
