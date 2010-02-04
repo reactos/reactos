@@ -31,7 +31,7 @@
     ENTRY_END _start
 
 L_BootStackEnd:
-    .long 0x2000000
+    .long 0x00010000
         
 L_LlbStartup:
     .long LlbStartup

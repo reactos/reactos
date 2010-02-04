@@ -33,14 +33,11 @@ LlbHwLoadOsLoaderFromRam(VOID)
     PCHAR Offset;
     CHAR CommandLine[64];
     
-    /* On versatile, the NAND image is loaded as the RAMDISK */
-    LlbEnvGetRamDiskInformation(&Base, &Size);
+    /* On versatile we load the RAMDISK with initrd */
+    LlbEnvGetRamDiskInformation(&RootFs, &Size);
     
-    /* The LLB is first, which we already have, so skip it */
-    Base += 0x10000; // 64 KB (see nandflash)
-    
-    /* The OS loader is next, followed by the root file system */
-    RootFs = Base + 0x80000; // 512 KB (see nandflash)
+    /* The OS Loader is at 0x20000, always */
+    Base = 0x20000;
     
     /* Read image offset */
     Offset = LlbEnvRead("rdoffset");

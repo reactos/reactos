@@ -1036,6 +1036,9 @@ ArmPrepareForReactOS(IN BOOLEAN Setup)
     PULONG Buffer;
     PWCHAR ArmModuleName;
 
+    TuiPrintf("About to prepare for kernel boot\n");
+    while (TRUE);
+
     //
     // Allocate the ARM Shared Heap
     //
@@ -1607,6 +1610,7 @@ FrLdrStartup(IN ULONG Magic)
     //
     // Initialize the page directory
     //
+    TuiPrintf("About to jump into kernel\n");
     while (TRUE);
     ArmSetupPageDirectory();
 

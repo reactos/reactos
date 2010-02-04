@@ -47,6 +47,14 @@ LlbEnvParseArguments(IN PATAG Arguments)
                 /* Save RAMDISK start and size */
                 LlbEnvRamDiskStart = Atag->u.InitRd2.Start;
                 LlbEnvRamDiskSize = Atag->u.InitRd2.Size;
+                
+                /* Make sure it's 16MB-aligned */
+                LlbEnvRamDiskSize = (LlbEnvRamDiskSize + (16 * 1024 * 1024) - 1) 
+                                    &~ ((16 * 1024 * 1024) - 1);
+                
+                /* The RAMDISK actually starts 16MB later */
+                LlbEnvRamDiskStart += 16 * 1024 * 1024;
+                LlbEnvRamDiskSize  -= 16 * 1024 * 1024;
                 break;
                 
             case ATAG_CMDLINE:

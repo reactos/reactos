@@ -93,21 +93,8 @@ VOID
 NTAPI
 LlbBuildMemoryMap(VOID)
 {
-    ULONG Base, Size;
-    
     /* Zero out the memory map */
     memset(MemoryMap, 0, sizeof(MemoryMap));
-        
-    /* Query memory information */
-    LlbEnvGetMemoryInformation(&Base, &Size);
-    
-    /* Don't use memory that the RAMDISK is using */
-    /* HACK HACK */
-    Base += 32 * 1024 * 1024;
-    Size -= 32 * 1024 * 1024;
-    
-    /* Allocate an entry for it */
-    LlbAllocateMemoryEntry(BiosMemoryUsable, Base, Size);
 
     /* Call the hardware-specific function for hardware-defined regions */
     LlbHwBuildMemoryMap(MemoryMap);

@@ -73,8 +73,8 @@ BOOLEAN
 ArmDiskNormalizeSystemPath(IN OUT PCHAR SystemPath,
                            IN unsigned Size)
 {
-    TuiPrintf("Called: %s\n", SystemPath);
-    while (TRUE);
+    /* Only RAMDISK supported for now */
+    if (!strstr(SystemPath, "ramdisk(0)")) return FALSE;
     return TRUE;
 }
 

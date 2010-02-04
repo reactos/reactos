@@ -38,7 +38,7 @@
 			        <linkerflag>-Wl,--image-base=0x80FFF000</linkerflag>
 			    </if>
                 <if property="SARCH" value="versatile">
-			        <linkerflag>-Wl,--image-base=0x0080F000</linkerflag>
+			        <linkerflag>-Wl,--image-base=0x0001F000</linkerflag>
 			    </if>				
 			</group>
 		</module>
