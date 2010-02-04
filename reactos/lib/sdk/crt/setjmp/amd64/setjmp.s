@@ -44,8 +44,8 @@
  * Returns:    0
  * Notes:      Sets up the jmp_buf
  */
-PUBLIC __setjmp
-.proc __setjmp
+PUBLIC _setjmp
+.proc _setjmp
     /* Load rsp as it was before the call into rax */
     lea rax, [rsp + 8]
     /* Load return address into r8 */
@@ -73,7 +73,7 @@ PUBLIC __setjmp
     movdqa [rcx + JUMP_BUFFER_Xmm15], xmm15
     xor rax, rax
     ret
-.endp
+.endp _setjmp
 
 /*
  * int _setjmpex(jmp_buf _Buf,void *_Ctx);
@@ -83,8 +83,8 @@ PUBLIC __setjmp
  * Returns:    0
  * Notes:      Sets up the jmp_buf
  */
-PUBLIC __setjmpex
-.proc __setjmpex
+PUBLIC _setjmpex
+.proc _setjmpex
     /* Load rsp as it was before the call into rax */
     lea rax, [rsp + 8]
     /* Load return address into r8 */
@@ -112,7 +112,7 @@ PUBLIC __setjmpex
     movdqa [rcx + JUMP_BUFFER_Xmm15], xmm15
     xor rax, rax
     ret
-.endp
+.endp _setjmpex
 
 
 /*
@@ -123,8 +123,8 @@ PUBLIC __setjmpex
  * Returns:    Doesn't return
  * Notes:      Non-local goto
  */
-PUBLIC _longjmp
-.proc _longjmp
+PUBLIC longjmp
+.proc longjmp
 
     // FIXME: handle frame
 
@@ -155,4 +155,4 @@ PUBLIC _longjmp
     jnz 2f
     inc rax
 2:  jmp r8
-.endp
+.endp longjmp

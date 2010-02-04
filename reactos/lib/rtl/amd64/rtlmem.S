@@ -8,10 +8,12 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ndk/amd64/asmmacro.S>
+#include <reactos/asm.h>
+#include <ndk/amd64/asm.h>
 
 /* FUNCTIONS *****************************************************************/
-.intel_syntax noprefix
+
+.code64
 
 /* SIZE_T 
  * RtlCompareMemory(
@@ -27,6 +29,7 @@
     .pushreg rsi
     push rdi
     .pushreg rdi
+    .ENDPROLOG
 
     /* Setup registers for compare */
     mov rsi, rcx
@@ -38,41 +41,48 @@
     /* Get number of qwords */
     mov rcx, r8
     shr rcx, 3
-    jz 2f
+    jz RtlCompareMemory2
 
     /* Compare qwords */
     repe cmpsq
-    jnz 4f
+    jnz RtlCompareMemory4
 
-2:  /* Compare rest */
+RtlCompareMemory2:
+    /* Compare rest */
     mov rcx, r8
     and rcx, 7
-    jz 3f
+    jz RtlCompareMemory3
 
     repe cmpsb
-    jnz 5f
+    jnz RtlCompareMemory5
 
-3:  /* All equal */
+RtlCompareMemory3:
+    /* All equal */
     /* Return the full count */
     mov rax, rcx
-    jmp 6f
+    jmp RtlCompareMemory6
 
-4:  /* Not equal after comparing qwords */
+RtlCompareMemory4:
+    /* Not equal after comparing qwords */
     /* Compare the last qword */
     sub rsi, 8
     sub rdi, 8
     mov rcx, 8
     repe cmpsb
 
-5:  /* Not equal after comparing bytes */
+RtlCompareMemory5:
+    /* Not equal after comparing bytes */
     /* Return difference */
     sub rdi, rdx
     dec rdi
     mov rax, rdi
 
-6:  /* Cleanup and return */
+RtlCompareMemory6:
+   /* Cleanup and return */
     pop rdi
     pop rsi
     ret
-.endproc
+.endp RtlCompareMemory
+
+END
 

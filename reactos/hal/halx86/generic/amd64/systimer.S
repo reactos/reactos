@@ -7,8 +7,8 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <asm.h>
-#include <ndk/amd64/asmmacro.S>
+#include <reactos/asm.h>
+#include <ndk/amd64/asm.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -24,22 +24,16 @@ _MsgUnimplemented:
 .text
 .code64
 
-.global _HalpCalibrateStallExecution@0
-.func HalpCalibrateStallExecution@0
-_HalpCalibrateStallExecution@0:
-
-.endfunc
-
-.globl _HalpProfileInterrupt
-.func HalpProfileInterrupt
-_HalpProfileInterrupt:
-
-.endfunc
+PUBLIC HalpCalibrateStallExecution@0
+HalpCalibrateStallExecution@0:
 
 
-.globl _KeStallExecutionProcessor
-.func KeStallExecutionProcessor
-_KeStallExecutionProcessor:
+PUBLIC HalpProfileInterrupt
+HalpProfileInterrupt:
+
+
+PUBLIC KeStallExecutionProcessor
+KeStallExecutionProcessor:
 
     /* Get the number of microseconds required */
     jecxz Done
@@ -65,12 +59,10 @@ SubtractLoop:
 Done:
     /* Return */
     ret 4
-.endfunc
 
 
-.globl _HalpQuery8254Counter
-.func HalpQuery8254Counter
-_HalpQuery8254Counter:
+PUBLIC HalpQuery8254Counter
+HalpQuery8254Counter:
 
     /* Save EFLAGS and disable interrupts */
     pushfq
@@ -92,12 +84,9 @@ _HalpQuery8254Counter:
     mov eax, ecx
     popfq
     ret
-.endfunc
 
-.globl _HalpClockInterrupt
-.func HalpClockInterrupt
-_HalpClockInterrupt:
+PUBLIC HalpClockInterrupt
+HalpClockInterrupt:
     UNIMPLEMENTED _HalpClockInterrupt
     iret
-.endfunc
 

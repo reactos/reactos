@@ -8,14 +8,14 @@
 
 /* INCLUDES ******************************************************************/
 
+#include <reactos/asm.h>
 #include <ndk/amd64/asm.h>
-#include <ndk/amd64/asmmacro.S>
 
-.intel_syntax noprefix
+/* FUNCTIONS ****************************************************************/
 
+.code64
 
-.proc atan2
+PUBLIC atan2
+atan2:
     UNIMPLEMENTED atan2
     ret
-
-.endproc

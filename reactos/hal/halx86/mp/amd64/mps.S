@@ -8,84 +8,85 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ndk/asm.h>
+#include <reactos/asm.h>
+#include <ndk/amd64/asm.h>
 
 /* FUNCTIONS *****************************************************************/
 
 #define BEFORE \
   cld; \
-  pushq %rax; \
-  pushq %rbx; \
-  pushq %rcx; \
-  pushq %rdx; \
-  pushq %rsi; \
-  pushq %rdi; \
-  pushq %fs; \
-  pushq %gs; \
+  push rax; \
+  push rbx; \
+  push rcx; \
+  push rdx; \
+  push rsi; \
+  push rdi; \
+  push fs; \
+  push gs; \
   
 #define AFTER \
-  popq  %gs; \
-  popq  %fs; \
-  popq  %rdi; \
-  popq  %rsi; \
-  popq  %rdx; \
-  popq  %rcx; \
-  popq  %rbx; \
-  popq  %rax; \
+  pop  gs; \
+  pop  fs; \
+  pop  rdi; \
+  pop  rsi; \
+  pop  rdx; \
+  pop  rcx; \
+  pop  rbx; \
+  pop  rax; \
 
 #ifdef CONFIG_SMP
-.global _MpsIpiInterrupt
-_MpsIpiInterrupt:
+PUBLIC MpsIpiInterrupt
+MpsIpiInterrupt:
     /* Save registers */	
     BEFORE
 
     /* Call the C handler */
-    call  _MpsIpiHandler
+    call  MpsIpiHandler
 
     /* Return to the caller */
     AFTER
     iret
 #endif
   
-.globl _MpsErrorInterrupt
-_MpsErrorInterrupt:
+PUBLIC MpsErrorInterrupt
+MpsErrorInterrupt:
     /* Save registers */	
     BEFORE
 
     /* Call the C handler */
-    call  _MpsErrorHandler
+    call  MpsErrorHandler
 
     /* Return to the caller */
     AFTER
     iret
 
 
-.globl _MpsSpuriousInterrupt
-_MpsSpuriousInterrupt:
+PUBLIC MpsSpuriousInterrupt
+MpsSpuriousInterrupt:
     /* Save registers */	
     BEFORE
 
     /* Call the C handler */
-    call  _MpsSpuriousHandler
+    call  MpsSpuriousHandler
 
     /* Return to the caller */
     AFTER
     iret
 
-.global _MpsTimerInterrupt
-_MpsTimerInterrupt:
+PUBLIC MpsTimerInterrupt
+MpsTimerInterrupt:
     /* Save registers */	
     BEFORE
 
-    movl	$0xef,%ebx		
-  	movl	$0xceafbeef,%eax
-  	pushq 	%rax
-  	pushq 	%rsp
-  	pushq 	%rbx
-  	call	_MpsTimerHandler
-   	popq	%rax
-  	popq	%rax
-  	popq	%rax
+    mov	ebx, 0xef
+  	mov eax, 0xceafbeef
+  	push rax
+  	push rsp
+  	push rbx
+  	call MpsTimerHandler
+   	pop rax
+  	pop rax
+  	pop rax
 
     /* Return to the caller */
   	AFTER

@@ -8,13 +8,12 @@
 
 /* INCLUDES ******************************************************************/
 
+#include <reactos/asm.h>
 #include <ndk/amd64/asm.h>
-#include <ndk/amd64/asmmacro.S>
 
-.intel_syntax noprefix
+/* DATA *********************************************************************/
 
-
-.proc sqrtf
+PUBLIC sqrtf
+sqrtf:
     sqrtss	xmm0, xmm0
     ret
-.endproc

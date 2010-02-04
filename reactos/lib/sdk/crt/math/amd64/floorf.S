@@ -8,13 +8,15 @@
 
 /* INCLUDES ******************************************************************/
 
+#include <reactos/asm.h>
 #include <ndk/amd64/asm.h>
-#include <ndk/amd64/asmmacro.S>
 
-.intel_syntax noprefix
+/* FUNCTIONS ****************************************************************/
 
+.code64
 
-.proc floorf
+PUBLIC floorf
+floorf:
     /* Put parameter on the stack */
     movss [rsp - 0x10], xmm0
     fld   dword ptr [rsp]
@@ -36,5 +38,3 @@
     fstp  dword ptr [rsp - 0x10]
     movss xmm0, [rsp - 0x10]
     ret
-
-.endproc

@@ -44,8 +44,8 @@
  *
  *--*/
  .func KiThreadStartup
-.globl _KiThreadStartup
-_KiThreadStartup:
+.globl KiThreadStartup
+KiThreadStartup:
 
     /*
      * Clear all the non-volatile registers, so the thread won't be tempted to
@@ -85,7 +85,7 @@ _KiThreadStartup:
 
     /* Exit back to user-mode */
 //    jmp _KiServiceExit2
-UNIMPLEMENTED "KiThreadStartup->KiServiceExit2"
+UNIMPLEMENTED KiThreadStartup->KiServiceExit2
 
 BadThread:
 
@@ -112,10 +112,10 @@ BadThread:
  *     Absolutely all registers except ESP can be trampled here for maximum code flexibility.
  *
  *--*/
-.globl _KiSwapContextInternal
-.func _KiSwapContextInternal, _KiSwapContextInternal
-_KiSwapContextInternal:
-    UNIMPLEMENTED "KiSwapContextInternal"
+.globl KiSwapContextInternal
+.func KiSwapContextInternal
+KiSwapContextInternal:
+    UNIMPLEMENTED KiSwapContextInternal
     ret
 
 .endfunc
@@ -147,9 +147,9 @@ _KiSwapContextInternal:
  *     another thread switches to IT.
  *
  *--*/
-.globl _KiSwapContext
-.func _KiSwapContext, _KiSwapContext
-_KiSwapContext:
+.globl KiSwapContext
+.func KiSwapContext
+KiSwapContext:
 
     /* Save 10 registers */
     sub rsp, 10 * 8
@@ -180,7 +180,7 @@ _KiSwapContext:
     movzx ecx, byte ptr [edi+KTHREAD_WAIT_IRQL]
 
     /* Do the swap with the registers correctly setup */
-    call _KiSwapContextInternal
+    call KiSwapContextInternal
 
     /* Restore the registers */
     mov rbp, [rsp+0]

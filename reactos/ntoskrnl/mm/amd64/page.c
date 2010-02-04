@@ -13,11 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, MmInitGlobalKernelPageDirectory)
-#pragma alloc_text(INIT, MiInitPageDirectoryMap)
-#endif
-
 #undef InterlockedExchangePte
 #define InterlockedExchangePte(pte1, pte2) \
     InterlockedExchange64(&pte1->u.Long, pte2.u.Long)

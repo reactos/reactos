@@ -8,24 +8,25 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ndk/asm.h>
-.intel_syntax noprefix
+#include <reactos/asm.h>
+#include <ndk/amd64/asm.h>
 
 /* FUNCTIONS *****************************************************************/
+
+.code64
 
 /* 
  * VOID NTAPI
  * RtlCaptureContext(
  *     PCONTEXT ContextRecord); <rcx>
  */
-.func RtlCaptureContext
-.global _RtlCaptureContext
-_RtlCaptureContext:
-    .cfi_startproc
+PUBLIC RtlCaptureContext
+.PROC RtlCaptureContext
 
     /* Push rflags */
     pushfq
-    .cfi_adjust_cfa_offset 8
+    .ALLOCSTACK 8
+    .ENDPROLOG
 
     /* Save the basic register context */
     mov [rcx + CONTEXT_Rax], rax
@@ -47,7 +48,7 @@ _RtlCaptureContext:
     mov [rcx + CONTEXT_R9], r9
 
     /* Load former stack pointer in rax */
-    lea rax, [rsp + 0x10]
+    lea rax, [rsp + 16]
 
     mov [rcx + CONTEXT_R10], r10
     mov [rcx + CONTEXT_R11], r11
@@ -95,6 +96,8 @@ _RtlCaptureContext:
     /* Cleanup stack and return */
     add rsp, 8
     ret
-    .cfi_endproc
-.endfunc
+.ENDP RtlCaptureContext
+
+END
+
 

@@ -8,14 +8,13 @@
 
 /* INCLUDES ******************************************************************/
 
+#include <reactos/asm.h>
 #include <ndk/amd64/asm.h>
-#include <ndk/amd64/asmmacro.S>
 
-.intel_syntax noprefix
+/* DATA *********************************************************************/
 
-
-.proc log10
+PUBLIC log10
+log10:
     UNIMPLEMENTED log10
     ret
 
-.endproc

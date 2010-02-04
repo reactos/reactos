@@ -8,14 +8,15 @@
 
 /* INCLUDES ******************************************************************/
 
+#include <reactos/asm.h>
 #include <ndk/amd64/asm.h>
-#include <ndk/amd64/asmmacro.S>
 
-.intel_syntax noprefix
+/* FUNCTIONS ****************************************************************/
 
+.code64
 
-.proc ceil
+PUBLIC ceil
+ceil:
     UNIMPLEMENTED ceil
     ret
 
-.endproc

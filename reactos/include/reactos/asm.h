@@ -24,8 +24,9 @@ rip = 0
 #define MACRO(name, ...) name MACRO __VA_ARGS__
 
 /* To avoid reverse syntax we provide a new macro .PROC, replacing PROC... */
-.PROC MACRO namex
-    namex PROC FRAME
+.PROC MACRO name
+    name PROC FRAME
+    _name:
 ENDM
 
 /* ... and .ENDP, replacing ENDP */
@@ -41,6 +42,16 @@ ENDM
 /* MASM doesn't have an ASCIZ macro */
 .ASCIZ MACRO text
     DB text, 0
+ENDM
+
+.text MACRO
+ENDM
+
+.code64 MACRO
+  .code
+ENDM
+
+UNIMPLEMENTED MACRO name
 ENDM
 
 /* We need this to distinguish repeat from macros */
@@ -79,7 +90,9 @@ ENDM
 .endm
 
 /* MASM compatible PUBLIC */
-#define PUBLIC .global
+.macro PUBLIC symbol
+    .global \symbol
+.endm
 
 /* MASM compatible ALIGN */
 #define ALIGN .align
@@ -148,7 +161,7 @@ code = 1
     lea rdx, 1b[rip]
     lea r8, 2b[rip]
     mov r9, \line
-    call _DbgPrint
+    call DbgPrint
     add rsp, 0x20
 .endm
 #define UNIMPLEMENTED UNIMPLEMENTED2 __FILE__, __LINE__,

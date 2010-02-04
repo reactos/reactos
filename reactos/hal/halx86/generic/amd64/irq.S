@@ -7,65 +7,40 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <asm.h>
-#include <internal/i386/asmmacro.S>
-.intel_syntax noprefix
-
-.macro UNIMPLEMENTED func
-    jmp 2f
-1:
-    .ascii "Sorry, asm function "
-    .ascii func
-    .ascii " is unimplemented!\n\0"
-2:
-    movabs rcx, offset 1b
-    call _DbgPrint
-    ret
-.endm
-
-
-
-/* GLOBALS *******************************************************************/
-
+#include <reactos/asm.h>
+#include <ndk/amd64/asm.h>
 
 
 /* FUNCTIONS *****************************************************************/
 
-.global _HalEnableInterrupt
-.func _HalEnableInterrupt
-_HalEnableInterrupt:
-    UNIMPLEMENTED "HalEnableInterrupt"
-.endfunc
+PUBLIC HalEnableInterrupt
+HalEnableInterrupt:
+    UNIMPLEMENTED HalEnableInterrupt
+    ret
 
-.global _HalDisableInterrupt
-.func _HalDisableInterrupt
-_HalDisableInterrupt:
-    UNIMPLEMENTED "HalDisableInterrupt"
-.endfunc
+PUBLIC HalDisableInterrupt
+HalDisableInterrupt:
+    UNIMPLEMENTED HalDisableInterrupt
+    ret
 
-.global _HalRequestSoftwareInterrupt
-.func _HalRequestSoftwareInterrupt
-_HalRequestSoftwareInterrupt:
-    UNIMPLEMENTED "HalRequestSoftwareInterrupt"
-.endfunc
+PUBLIC HalRequestSoftwareInterrupt
+HalRequestSoftwareInterrupt:
+    UNIMPLEMENTED HalRequestSoftwareInterrupt
+    ret
 
-.global _HalSendSoftwareInterrupt
-.func _HalSendSoftwareInterrupt
-_HalSendSoftwareInterrupt:
-    UNIMPLEMENTED "HalSendSoftwareInterrupt"
-.endfunc
+PUBLIC HalSendSoftwareInterrupt
+HalSendSoftwareInterrupt:
+    UNIMPLEMENTED HalSendSoftwareInterrupt
+    ret
 
-.global _HalEndSystemInterrupt
-.func _HalEndSystemInterrupt
-_HalEndSystemInterrupt:
-    UNIMPLEMENTED "HalEndSystemInterrupt"
-.endfunc
+PUBLIC HalEndSystemInterrupt
+HalEndSystemInterrupt:
+    UNIMPLEMENTED HalEndSystemInterrupt
+    ret
 
-
-.globl _HalClearSoftwareInterrupt
-.func _HalClearSoftwareInterrupt
-_HalClearSoftwareInterrupt:
-    UNIMPLEMENTED "HalClearSoftwareInterrupt"
+PUBLIC HalClearSoftwareInterrupt
+HalClearSoftwareInterrupt:
+    UNIMPLEMENTED HalClearSoftwareInterrupt
 
     /* Get IRR mask */
     mov eax, 1
@@ -75,11 +50,8 @@ _HalClearSoftwareInterrupt:
     /* Set IRR */
 //    and gs:[KPCR_IRR], eax
     ret
-.endfunc
 
-.globl _HalBeginSystemInterrupt
-.func _HalBeginSystemInterrupt
-_HalBeginSystemInterrupt:
-    UNIMPLEMENTED "HalBeginSystemInterrupt"
-.endfunc
-
+PUBLIC HalBeginSystemInterrupt
+HalBeginSystemInterrupt:
+    UNIMPLEMENTED HalBeginSystemInterrupt
+    ret

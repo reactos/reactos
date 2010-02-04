@@ -8,8 +8,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ndk/amd64/asm.h>
-#include <ndk/amd64/asmmacro.S>
+#include <reactos/asm.h>
 
 .intel_syntax noprefix
 
@@ -21,11 +20,11 @@ _MsgUnimplemented:
 .proc _chkstk
     UNIMPLEMENTED chkstk
     ret
-.endproc
+.endp
 
 .proc _alloca_probe
     UNIMPLEMENTED alloca_probe
     ret
-.endproc
+.endp
 
 /* EOF */

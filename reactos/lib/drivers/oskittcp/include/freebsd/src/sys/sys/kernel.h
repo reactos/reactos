@@ -83,8 +83,13 @@ extern long timedelta;
 #ifdef _MSC_VER
 #define MAKE_SET(set, sym, type)
 #else
+#if defined(_M_AMD64)
+#define MAKE_SET(set, sym, type) \
+	asm(".stabs \"" #set "\", " #type ", 0, 0, " #sym)
+#else
 #define MAKE_SET(set, sym, type) \
 	asm(".stabs \"_" #set "\", " #type ", 0, 0, _" #sym)
+#endif
 #endif
 #define TEXT_SET(set, sym) MAKE_SET(set, sym, 23)
 #define DATA_SET(set, sym) MAKE_SET(set, sym, 25)

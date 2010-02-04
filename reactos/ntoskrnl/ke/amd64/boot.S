@@ -8,15 +8,16 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <asm.h>
-.intel_syntax noprefix
-.code64
+#include <reactos/asm.h>
+#include <ndk/amd64/asm.h>
+
 
 /* GLOBALS *******************************************************************/
 
 
 /* FUNCTIONS *****************************************************************/
 
+.code64
 .text
 
 /**
@@ -29,9 +30,8 @@
  *     IN CCHAR Number,                        <rsp + 0x28>
  *     IN PLOADER_PARAMETER_BLOCK LoaderBlock) <rsp + 0x30>
  */
-.globl _KiSetupStackAndInitializeKernel
-.func KiSetupStackAndInitializeKernel
-_KiSetupStackAndInitializeKernel:
+PUBLIC KiSetupStackAndInitializeKernel
+.PROC KiSetupStackAndInitializeKernel
 
     /* Save current stack */
     mov rsi, rsp
@@ -53,6 +53,9 @@ _KiSetupStackAndInitializeKernel:
     movsq
     movsq
 
-    jmp _KiInitializeKernelAndGotoIdleLoop
+    jmp KiInitializeKernelAndGotoIdleLoop
 
-.endfunc
+.ENDP KiSetupStackAndInitializeKernel
+
+END
+
