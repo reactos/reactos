@@ -21,8 +21,8 @@ LlbFwPutChar(INT Ch)
 BOOLEAN
 LlbFwKbHit(VOID)
 {
-    /* Not yet implemented */
-    return FALSE;
+    /* Check RX buffer */
+    return LlbHwKbdReady();
 }
 
 INT

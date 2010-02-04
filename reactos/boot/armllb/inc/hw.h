@@ -92,6 +92,12 @@ LlbHwKbdSend(
     IN ULONG Value
 );
 
+BOOLEAN
+NTAPI
+LlbHwKbdReady(
+    VOID
+);
+
 INT
 NTAPI
 LlbHwKbdRead(

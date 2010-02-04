@@ -115,19 +115,17 @@ LlbHwKbdSend(IN ULONG Value)
     WRITE_REGISTER_UCHAR(PL050_KMIDATA, Value);
 }
 
+BOOLEAN
+NTAPI
+LlbHwKbdReady(VOID)
+{
+    return READ_REGISTER_UCHAR(PL050_KMISTAT) & KMISTAT_RXFULL;
+}
+
 INT
 NTAPI
 LlbHwKbdRead(VOID)
 {
-    ULONG Status;
-
-    /* Wait for ready signal */    
-    do
-    {
-        /* Read TX buffer state */
-        Status = READ_REGISTER_UCHAR(PL050_KMISTAT);
-    } while (!(Status & KMISTAT_RXFULL));
-    
     /* Read current data on keyboard */
     return READ_REGISTER_UCHAR(PL050_KMIDATA);
 }
