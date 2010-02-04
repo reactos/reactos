@@ -32,4 +32,106 @@ LlbFwGetCh(VOID)
     return LlbKeyboardGetChar();
 }
 
+ULONG
+LlbFwVideoSetDisplayMode(IN PCHAR DisplayModeName,
+                         IN BOOLEAN Init)
+{
+    printf("%s is UNIMPLEMENTED", __FUNCTION__);
+    while (TRUE);
+    return 0;
+}
+
+VOID
+LlbFwVideoGetDisplaySize(OUT PULONG Width,
+                         OUT PULONG Height,
+                         OUT PULONG Depth)
+{
+    printf("%s is UNIMPLEMENTED", __FUNCTION__);
+    while (TRUE);
+}
+
+ULONG
+LlbFwVideoGetBufferSize(VOID)
+{
+    printf("%s is UNIMPLEMENTED", __FUNCTION__);
+    while (TRUE);
+}
+
+VOID
+LlbFwVideoSetTextCursorPosition(IN ULONG X,
+                                IN ULONG Y)
+{
+    printf("%s is UNIMPLEMENTED", __FUNCTION__);
+    while (TRUE);
+}
+
+VOID
+LlbFwVideoHideShowTextCursor(IN BOOLEAN Show)
+{
+    printf("%s is UNIMPLEMENTED", __FUNCTION__);
+    while (TRUE);
+}
+
+VOID
+LlbFwVideoCopyOffScreenBufferToVRAM(IN PVOID Buffer)
+{
+    printf("%s is UNIMPLEMENTED", __FUNCTION__);
+    while (TRUE);
+}
+
+VOID
+LlbFwVideoClearScreen(IN UCHAR Attr)
+{
+    printf("%s is UNIMPLEMENTED", __FUNCTION__);
+    while (TRUE);
+}
+
+VOID
+LlbFwVideoPutChar(IN INT c,
+                  IN UCHAR Attr,
+                  IN ULONG X,
+                  IN ULONG Y)
+{
+    printf("%s is UNIMPLEMENTED", __FUNCTION__);
+    while (TRUE);
+}
+
+BOOLEAN
+LlbFwVideoIsPaletteFixed(VOID)
+{
+    printf("%s is UNIMPLEMENTED", __FUNCTION__);
+    while (TRUE);
+    return TRUE;
+}
+
+VOID
+LlbFwVideoSetPaletteColor(IN UCHAR Color,
+                          IN UCHAR Red,
+                          IN UCHAR Green,
+                          IN UCHAR Blue)
+{
+    printf("%s is UNIMPLEMENTED", __FUNCTION__);
+    while (TRUE);
+    return;
+}
+
+VOID
+LlbFwVideoGetPaletteColor(IN UCHAR Color,
+                          OUT PUCHAR Red,
+                          OUT PUCHAR Green,
+                          OUT PUCHAR Blue)
+{
+    printf("%s is UNIMPLEMENTED", __FUNCTION__);
+    while (TRUE);
+    return;
+}
+
+VOID
+LlbFwVideoSync(VOID)
+{
+    printf("%s is UNIMPLEMENTED", __FUNCTION__);
+    while (TRUE);
+    return;
+}
+
 /* EOF */

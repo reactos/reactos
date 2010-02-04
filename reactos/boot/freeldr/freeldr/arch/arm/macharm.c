@@ -158,7 +158,20 @@ MachInit(IN PCCH CommandLine)
             MachVtbl.ConsPutChar = ArmBoardBlock->ConsPutChar;
             MachVtbl.ConsKbHit = ArmBoardBlock->ConsKbHit;
             MachVtbl.ConsGetCh = ArmBoardBlock->ConsGetCh;
-            
+            MachVtbl.VideoClearScreen = ArmBoardBlock->VideoClearScreen;
+            MachVtbl.VideoSetDisplayMode = ArmBoardBlock->VideoSetDisplayMode;
+            MachVtbl.VideoGetDisplaySize = ArmBoardBlock->VideoGetDisplaySize;
+            MachVtbl.VideoGetBufferSize = ArmBoardBlock->VideoGetBufferSize;
+            MachVtbl.VideoSetTextCursorPosition = ArmBoardBlock->VideoSetTextCursorPosition;
+            MachVtbl.VideoSetTextCursorPosition = ArmBoardBlock->VideoSetTextCursorPosition;
+            MachVtbl.VideoHideShowTextCursor = ArmBoardBlock->VideoHideShowTextCursor;
+            MachVtbl.VideoPutChar = ArmBoardBlock->VideoPutChar;
+            MachVtbl.VideoCopyOffScreenBufferToVRAM = ArmBoardBlock->VideoCopyOffScreenBufferToVRAM;
+            MachVtbl.VideoIsPaletteFixed = ArmBoardBlock->VideoIsPaletteFixed;
+            MachVtbl.VideoSetPaletteColor = ArmBoardBlock->VideoSetPaletteColor;
+            MachVtbl.VideoGetPaletteColor = ArmBoardBlock->VideoGetPaletteColor;
+            MachVtbl.VideoSync = ArmBoardBlock->VideoSync;
+                        
             /* Setup the disk and file system buffers */
             gDiskReadBuffer = 0x00090000;
             gFileSysBuffer = 0x00090000;
