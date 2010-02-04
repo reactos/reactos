@@ -1284,14 +1284,14 @@ MingwBackend::OutputRegistryInstallTarget ()
 	          "install_registry: %s\n",
 	          registryTargetFiles.c_str () );
 	fprintf ( fMakefile,
-	          "%s: %s %s $(MKHIVE_TARGET)\n",
+	          "%s: %s %s $(mkhive_TARGET)\n",
 	          registryTargetFiles.c_str (),
 	          registrySourceFiles.c_str (),
 	          GetFullPath ( system32 ).c_str () );
 	fprintf ( fMakefile,
 	          "\t$(ECHO_MKHIVE)\n" );
 	fprintf ( fMakefile,
-	          "\t$(MKHIVE_TARGET) boot%cbootdata %s $(ARCH) boot%cbootdata%chiveinst_$(ARCH).inf\n",
+	          "\t$(mkhive_TARGET) boot%cbootdata %s $(ARCH) boot%cbootdata%chiveinst_$(ARCH).inf\n",
 	          cSep, GetFullPath ( system32 ).c_str (),
 	          cSep, cSep );
 	fprintf ( fMakefile,
