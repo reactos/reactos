@@ -171,12 +171,11 @@ LlbFwVideoSync(VOID)
     return;
 }
 
-VOID
+TIMEINFO*
 LlbFwGetTime(VOID)
 {
-    printf("%s is UNIMPLEMENTED", __FUNCTION__);
-    while (TRUE);
-    return;   
+    /* Call existing function */
+    return LlbGetTime();
 }
 
 /* EOF */

@@ -104,6 +104,19 @@ LlbHwLoadOsLoaderFromRam(
     VOID
 );
 
+ULONG
+NTAPI
+LlbHwRtcRead(
+    VOID
+);
+
+//fix
+TIMEINFO*
+NTAPI
+LlbGetTime(
+    VOID
+);
+
 #ifdef _VERSATILE_
 #include "versa.h"
 #elif _OMAP3_

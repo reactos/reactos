@@ -8,6 +8,9 @@
 
 #include "precomp.h"
 
+#define PL031_RTC_DR                (LlbHwVersaRtcBase + 0x00)
+static const ULONG LlbHwVersaRtcBase = 0x101E8000;
+
 ULONG
 NTAPI
 LlbHwGetBoardType(VOID)
@@ -44,4 +47,10 @@ LlbHwBuildMemoryMap(IN PBIOS_MEMORY_MAP MemoryMap)
     LlbAllocateMemoryEntry(BiosMemoryReserved, 0x10000000, 128 * 1024 * 1024);
 }
 
+ULONG
+LlbHwRtcRead(VOID)
+{
+    /* Read RTC value */
+    return READ_REGISTER_ULONG(PL031_RTC_DR);
+}
 /* EOF */

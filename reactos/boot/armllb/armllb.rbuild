@@ -26,6 +26,7 @@
             <directory name="hw">
                 <file>keyboard.c</file>
                 <file>serial.c</file>
+                <file>time.c</file>
                 <file>video.c</file>
                 <if property="SARCH" value="omap3">
                     <directory name="omap3">

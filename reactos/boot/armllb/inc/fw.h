@@ -6,6 +6,16 @@
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
+typedef struct _TIMEINFO
+{
+    USHORT Year;
+    USHORT Month;
+    USHORT Day;
+    USHORT Hour;
+    USHORT Minute;
+    USHORT Second;
+} TIMEINFO;
+
 VOID
 LlbFwPutChar(
     INT Ch
@@ -94,7 +104,7 @@ LlbFwVideoSync(
     VOID
 );
 
-VOID
+TIMEINFO*
 LlbFwGetTime(
     VOID
 );
