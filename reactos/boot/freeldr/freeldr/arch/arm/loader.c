@@ -1031,13 +1031,13 @@ ArmPrepareForReactOS(IN BOOLEAN Setup)
     PLIST_ENTRY NextEntry, OldEntry;
     PARC_DISK_INFORMATION ArcDiskInformation;
     PARC_DISK_SIGNATURE ArcDiskSignature;
-    ULONG ArcDiskCount = 0, Checksum = 0;
+    ULONG ArcDiskCount = 0;
+#if 0
+    ULONG Checksum = 0;
     PMASTER_BOOT_RECORD Mbr;
     PULONG Buffer;
+#endif
     PWCHAR ArmModuleName;
-
-    TuiPrintf("About to prepare for kernel boot\n");
-    while (TRUE);
 
     //
     // Allocate the ARM Shared Heap
@@ -1533,6 +1533,7 @@ ArmPrepareForReactOS(IN BOOLEAN Setup)
     InitializeListHead(&ArcDiskInformation->DiskSignatureListHead);
     ArmLoaderBlock->ArcDiskInformation = (PVOID)((ULONG_PTR)ArcDiskInformation | KSEG0_BASE);
     
+#if 0
     //
     // Read the MBR
     //
@@ -1546,12 +1547,13 @@ ArmPrepareForReactOS(IN BOOLEAN Setup)
     for (i = 0; i < 128; i++) Checksum += Buffer[i];
     Checksum = ~Checksum + 1;
         
+#endif
     //
     // Allocate a disk signature and fill it out
     //
     ArcDiskSignature = ArmAllocateFromSharedHeap(sizeof(ARC_DISK_SIGNATURE));
-    ArcDiskSignature->Signature = Mbr->Signature;
-    ArcDiskSignature->CheckSum = Checksum;
+    ArcDiskSignature->Signature = 0xBADAB00B;// Mbr->Signature;
+    ArcDiskSignature->CheckSum = 0xFAB4BEEF; //Checksum;
     
     //
     // Allocare a string for the name and fill it out
