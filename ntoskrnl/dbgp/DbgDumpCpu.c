@@ -1,17 +1,18 @@
 void _CDECL DbgDumpCpu(int flags)
 {
 	CPUR_ALL sts;
-	CPUR_ALL *psts = &sts;
+	CPUR_ALL *psts;
 	CPU_GDTE *pgdt;
 	CPU_IDTE *pidt;
 	CPU_TSS *ptss;
 	i16u sel;
 	i32 x;
 
-	DbgPrintf("cpu state:\n");
-	memset(psts, 0, sizeof(CPUR_ALL));
+	// memset(psts, 0, sizeof(CPUR_ALL));
+	CpuRegSave(&sts, flags);
 
-	CpuRegSave(psts, flags);
+	psts = &sts;
+	DbgPrintf("cpu state:\n");
 
 	if(flags & DBG_DUMPCPU_GP)
 	{
@@ -61,5 +62,13 @@ void _CDECL DbgDumpCpu(int flags)
 		x = (i32)pgdt->limit0 | ((i32)pgdt->limit16<<16) + 1;
 		DbgPrintf("tss @ %08x.%08x:\n", (int)ptss, x);
 		DbgDumpMem(ptss, x);
+	}
+
+	// restore volatiles
+	_ASM
+	{
+		mov eax, sts.gp.eax
+		mov ecx, sts.gp.ecx
+		mov edx, sts.gp.edx
 	}
 }

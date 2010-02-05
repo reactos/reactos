@@ -1,4 +1,6 @@
 
+KINTERRUPT KiInterruptInitialData = {0};
+
 // create stubs
 _NOWARN_PUSH
 _NOWARN_MSC(4005)
@@ -130,12 +132,16 @@ _NOWARN_MSC(4005)
 #define TRAP_STUB_FLAGS TRAPF_FASTSYSCALL
 #include <TrapStub.h>
 
-#if 0
-#define TRAP_STUB_NAME KiInterruptTemplate
-#define TRAP_STUB_FLAGS TRAPF_VECTOR
+#define TRAP_STUB_NAME KiInterrupt
+#define TRAP_STUB_FLAGS TRAPF_INTERRUPT
 #include <TrapStub.h>
-#endif
 
 _NOWARN_POP
 
+void *kk = KiTrap00;
+
+VOID _CDECL KiTrapInit(VOID)
+{
+	KiInterruptInitialData.DispatchAddress = (PKINTERRUPT_ROUTINE)KiInterruptNoDispatch;
+}
 

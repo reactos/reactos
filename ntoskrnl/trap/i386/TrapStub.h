@@ -17,20 +17,24 @@
 #define TRAP_STUB_NAMEH tokenpaste(TRAP_STUB_NAME, Handler)
 
 #if (TRAP_STUB_FLAGS & TRAPF_INTERRUPT)
-#define TRAP_STUB_PARAM2 tokenpaste(TRAP_STUB_NAME, Interrupt)
-PKINTERRUPT TRAP_STUB_PARAM2;
+VOID _FASTCALL tokenpaste(TRAP_STUB_NAME, Handler)(KTRAP_FRAME *TrapFrame);
 #else
 VOID _FASTCALL tokenpaste(TRAP_STUB_NAME, Handler)(KTRAP_FRAME *TrapFrame);
 #endif
+VOID _CDECL TRAP_STUB_NAME(VOID);
 
-_NAKED VOID TRAP_STUB_NAME(VOID)
+_NAKED VOID _CDECL TRAP_STUB_NAME(VOID)
 {
 	_ASM_BEGIN
+
 		// setup frame
 #if (TRAP_STUB_FLAGS & TRAPF_FASTSYSCALL)
 		mov esp, ss:[KIP0PCRADDRESS + offset KPCR.TSS]
 		mov esp, KTSS.Esp0[esp]
 		sub esp, dword ptr offset KTRAP_FRAME.V86Es
+#elif (TRAP_STUB_FLAGS & TRAPF_INTERRUPT)
+		// the primary stub (trap_m.h) pushes the vector number
+		sub esp, offset KTRAP_FRAME.ErrCode
 #elif (TRAP_STUB_FLAGS & TRAPF_ERRORCODE)
 		sub esp, offset KTRAP_FRAME.ErrCode
 #elif (TRAP_STUB_FLAGS & TRAPF_SOFTWARE)
@@ -40,10 +44,20 @@ _NAKED VOID TRAP_STUB_NAME(VOID)
 		sub esp, offset KTRAP_FRAME.Eip
 #endif
 
+		// save volatiles
 		mov KTRAP_FRAME.Eax[esp], eax
 		mov KTRAP_FRAME.Ecx[esp], ecx
 		mov KTRAP_FRAME.Edx[esp], edx
 
+// !!! while testing we always save novol too
+// #if (TRAP_STUB_FLAGS & TRAPF_SAVENOVOL)
+		mov KTRAP_FRAME.Ebp[esp], ebp
+		mov KTRAP_FRAME.Ebx[esp], ebx
+		mov KTRAP_FRAME.Esi[esp], esi
+		mov KTRAP_FRAME.Edi[esp], edi
+// #endif
+
+		// save & load segs
 #if !(TRAP_STUB_FLAGS & TRAPF_NOSAVESEG)
 		mov KTRAP_FRAME.SegDs[esp], ds
 		mov KTRAP_FRAME.SegEs[esp], es
@@ -60,31 +74,17 @@ _NAKED VOID TRAP_STUB_NAME(VOID)
 #endif
 #endif
 
-#if (TRAP_STUB_FLAGS & TRAPF_SAVENOVOL)
-		mov KTRAP_FRAME.Ebp[esp], ebp
-		mov KTRAP_FRAME.Ebx[esp], ebx
-		mov KTRAP_FRAME.Esi[esp], esi
-		mov KTRAP_FRAME.Edi[esp], edi
-#endif
-
 		// call handler
 #if (TRAP_STUB_FLAGS & TRAPF_INTERRUPT)
-		mov edx, TRAP_STUB_PARAM2
+		mov edx, KTRAP_FRAME.ErrCode[esp]
 		mov ecx, esp
-		call PKINTERRUPT.DispatchAddress[edx]
+		call KINTERRUPT.DispatchAddress[edx]
 #else
 		mov ecx, esp
 		call tokenpaste(TRAP_STUB_NAME, Handler)
 #endif
 
-		// restore regs
-#if (TRAP_STUB_FLAGS & TRAPF_SAVENOVOL)
-		mov ebp, KTRAP_FRAME.Ebp[esp]
-		mov ebx, KTRAP_FRAME.Ebx[esp]
-		mov esi, KTRAP_FRAME.Esi[esp]
-		mov edi, KTRAP_FRAME.Edi[esp]
-#endif
-
+		// restore seg regs
 #if !(TRAP_STUB_FLAGS & TRAPF_NOSAVESEG)
 		mov ds, KTRAP_FRAME.SegDs[esp]
 		mov es, KTRAP_FRAME.SegEs[esp]
@@ -93,21 +93,29 @@ _NAKED VOID TRAP_STUB_NAME(VOID)
 #endif
 #endif
 
-		// restore volatle regs and return
-		mov eax, KTRAP_FRAME.Eax[esp]
+		// !!! while testing we always save novol too
+// #if (TRAP_STUB_FLAGS & TRAPF_SAVENOVOL)
+		mov ebp, KTRAP_FRAME.Ebp[esp]
+		mov ebx, KTRAP_FRAME.Ebx[esp]
+		mov esi, KTRAP_FRAME.Esi[esp]
+		mov edi, KTRAP_FRAME.Edi[esp]
+// #endif
 
+		// restore volatile regs and return
 #if (TRAP_STUB_FLAGS & TRAPF_FASTSYSCALL)
+		mov eax, KTRAP_FRAME.Eax[esp]
 		mov ecx, KTRAP_FRAME.HardwareEsp[esp]
 		mov edx, KTRAP_FRAME.Eip[esp]
 		add esp, dword ptr offset KTRAP_FRAME.V86Es
 		sti
 		CpuSysExit
-#endif
+#else
+		mov eax, KTRAP_FRAME.Eax[esp]
 		mov ecx, KTRAP_FRAME.Ecx[esp]
 		mov edx, KTRAP_FRAME.Edx[esp]
-
 		add esp, KTRAP_FRAME_EIP
 		iretd
+#endif
 
 	_ASM_END
 }

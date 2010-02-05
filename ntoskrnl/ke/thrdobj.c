@@ -794,9 +794,11 @@ KeInitThread(IN OUT PKTHREAD Thread,
     Thread->Teb = Teb;
 
     /* Check if we have a kernel stack */
+	DPRINTT("stack\n");
     if (!KernelStack)
     {
         /* We don't, allocate one */
+		DPRINTT("MmCreateKernelStack\n");
         KernelStack = MmCreateKernelStack(FALSE, 0);
         if (!KernelStack) return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -1283,6 +1285,7 @@ KeSetPriorityThread(IN PKTHREAD Thread,
     ASSERT((Priority <= HIGH_PRIORITY) && (Priority >= LOW_PRIORITY));
     ASSERT(KeIsExecutingDpc() == FALSE);
 
+	DPRINTT("\n");
     /* Lock the Dispatcher Database */
     OldIrql = KiAcquireDispatcherLock();
 
@@ -1313,7 +1316,8 @@ KeSetPriorityThread(IN PKTHREAD Thread,
     KiReleaseDispatcherLock(OldIrql);
 
     /* Return Old Priority */
-    return OldPriority;
+	DPRINTT("ret=%x\n", OldPriority);
+
 }
 
 /*

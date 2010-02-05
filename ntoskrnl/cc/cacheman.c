@@ -14,6 +14,7 @@
 #include <debug.h>
 
 PFSN_PREFETCHER_GLOBALS CcPfGlobals;
+BOOLEAN CcPfEnablePrefetcher = 0;
 
 /* FUNCTIONS *****************************************************************/
 

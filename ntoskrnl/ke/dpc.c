@@ -74,6 +74,9 @@ KiCheckTimerTable(IN ULARGE_INTEGER CurrentTime)
 #endif
 }
 
+// FIXME: KiTimerExpiration causes a crash if global optimization (MSVC9)
+// difficult to trace, it works most times, but sometimes make a called dpc routine crash
+_OPTIMIZE_OFF_GLOBAL
 VOID
 NTAPI
 KiTimerExpiration(IN PKDPC Dpc,

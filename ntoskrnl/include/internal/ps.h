@@ -9,7 +9,7 @@
 //
 // Define this if you want debugging support
 //
-#define _PS_DEBUG_                                      0x00
+#define _PS_DEBUG_                                      0xFFFF
 
 //
 // These define the Debug Masks Supported
@@ -28,6 +28,9 @@
 //
 // Debug/Tracing support
 //
+//
+// Debug/Tracing support
+//
 #if _PS_DEBUG_
 #ifdef NEW_DEBUG_SYSTEM_IMPLEMENTED // enable when Debug Filters are implemented
 #define PSTRACE(x, ...)                                     \
@@ -35,17 +38,16 @@
         DbgPrintEx("%s [%.16s] - ",                         \
                    __FUNCTION__,                            \
                    PsGetCurrentProcess()->ImageFileName);   \
-        DbgPrintEx(__VA_ARGS__);                            \
+				   DbgPrintEx(__VA_ARGS__);               \
     }
 #else
-#define PSTRACE(x, ...)                                     \
-    if (x & PspTraceLevel)                                  \
-    {                                                       \
-        DbgPrint("%s [%.16s] - ",                           \
-                 __FUNCTION__,                              \
-                 PsGetCurrentProcess()->ImageFileName);     \
-        DbgPrint(__VA_ARGS__);                              \
-    }
+#if 0
+#define PSTRACE(x, fmt, ...)
+	if(PspTraceLevel & x) \
+		DbgPrint("(%s:%d:%s:%s:%x) " fmt, __FILE__, __LINE__, __FUNCTION__, GetCurrentProcess()->ImageFileName, PsGetCurrentThreadId(), __VA_ARGS__)
+#else
+#define PSTRACE(x, fmt, ...) DPRINT1(fmt, __VA_ARGS__)
+#endif
 #endif
 #define PSREFTRACE(x)                                       \
     PSTRACE(PS_REF_DEBUG,                                   \
@@ -54,7 +56,7 @@
             __LINE__,                                       \
             OBJECT_TO_OBJECT_HEADER(x)->PointerCount)
 #else
-#define PSTRACE(x, ...) DPRINT(__VA_ARGS__)
+#define PSTRACE(x, fmt, ...) DPRINT(fmt, __VA_ARGS__)
 #define PSREFTRACE(x)
 #endif
 

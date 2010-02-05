@@ -25,10 +25,11 @@
 // !!! temp for testing
 extern KINTERRUPT *TrapStubInterrupt;
 
+#if 0
 VOID KiFastCallEntry(VOID);
 VOID KiTrap08(VOID);
 VOID KiTrap13(VOID);
-
+#endif
 
 VOID
 // DECLSPEC_NORETURN
@@ -224,10 +225,25 @@ FORCEINLINE
 // DECLSPEC_NORETURN /* Do not mark this as DECLSPEC_NORETURN because possibly executing code follows it! */
 KiSystemCallReturn(IN PKTRAP_FRAME TrapFrame)
 {
-    /* Restore nonvolatiles, EAX, and do a "jump" back to the kernel caller */
+	DPRINTT("\n");
+	/* Restore nonvolatiles, EAX, and do a "jump" back to the kernel caller */
 #if defined(_MSC_VER)
 	_ASM_BEGIN
 	mov esp, TrapFrame
+#if 1
+	mov ds, KTRAP_FRAME.SegDs[esp]
+	mov es, KTRAP_FRAME.SegEs[esp]
+	mov fs, KTRAP_FRAME.SegFs[esp]
+	mov ebp, KTRAP_FRAME.Ebp[esp]
+	mov ebx, KTRAP_FRAME.Ebx[esp]
+	mov esi, KTRAP_FRAME.Esi[esp]
+	mov edi, KTRAP_FRAME.Edi[esp]
+	mov eax, KTRAP_FRAME.Eax[esp]
+	mov ecx, KTRAP_FRAME.Ecx[esp]
+	mov edx, KTRAP_FRAME.Eip[esp]
+	add esp, KTRAP_FRAME_ESP
+	jmp edx
+#else
 	mov ebx, [esp+KTRAP_FRAME_EBX]
 	mov esi, [esp+KTRAP_FRAME_ESI]
 	mov edi, [esp+KTRAP_FRAME_EDI]
@@ -236,6 +252,7 @@ KiSystemCallReturn(IN PKTRAP_FRAME TrapFrame)
 	mov edx, [esp+KTRAP_FRAME_EIP]
 	add esp, KTRAP_FRAME_ESP
 	jmp edx
+#endif
 	_ASM_END
 #elif defined(__GNUC__)
 	__asm__ __volatile__
@@ -272,10 +289,24 @@ DECLSPEC_NORETURN
 FORCEINLINE
 KiSystemCallTrapReturn(IN PKTRAP_FRAME TrapFrame)
 {
-    /* Regular interrupt exit, but we only restore EAX as a volatile */
+	DPRINTT("\n");
+	/* Regular interrupt exit, but we only restore EAX as a volatile */
 #if defined(_MSC_VER)
 	_ASM_BEGIN
 	mov esp, TrapFrame
+#if 1
+	mov ds, KTRAP_FRAME.SegDs[esp]
+	mov es, KTRAP_FRAME.SegEs[esp]
+	mov fs, KTRAP_FRAME.SegFs[esp]
+	mov ebp, KTRAP_FRAME.Ebp[esp]
+	mov ebx, KTRAP_FRAME.Ebx[esp]
+	mov esi, KTRAP_FRAME.Esi[esp]
+	mov edi, KTRAP_FRAME.Edi[esp]
+	mov eax, KTRAP_FRAME.Eax[esp]
+	mov ecx, KTRAP_FRAME.Ecx[esp]
+	mov edx, KTRAP_FRAME.Edx[esp]
+	jmp edx
+#else
 	mov ebx, [esp+KTRAP_FRAME_EBX]
 	mov esi, [esp+KTRAP_FRAME_ESI]
 	mov edi, [esp+KTRAP_FRAME_EDI]
@@ -283,6 +314,7 @@ KiSystemCallTrapReturn(IN PKTRAP_FRAME TrapFrame)
 	mov eax, [esp+KTRAP_FRAME_EAX]
 	add esp, KTRAP_FRAME_EIP
 	iretd
+#endif
 	_ASM_END
 #elif defined(__GNUC__)
     __asm__ __volatile__
@@ -318,10 +350,26 @@ FORCEINLINE
 DECLSPEC_NORETURN
 KiSystemCallSysExitReturn(IN PKTRAP_FRAME TrapFrame)
 {
-    /* Restore nonvolatiles, EAX, and do a SYSEXIT back to the user caller */
+	DPRINTT("\n");
+	/* Restore nonvolatiles, EAX, and do a SYSEXIT back to the user caller */
 #if defined(_MSC_VER)
 	_ASM_BEGIN
 	mov esp, TrapFrame
+#if 1
+	mov ds, KTRAP_FRAME.SegDs[esp]
+	mov es, KTRAP_FRAME.SegEs[esp]
+	mov fs, KTRAP_FRAME.SegFs[esp]
+	mov ebp, KTRAP_FRAME.Ebp[esp]
+	mov ebx, KTRAP_FRAME.Ebx[esp]
+	mov esi, KTRAP_FRAME.Esi[esp]
+	mov edi, KTRAP_FRAME.Edi[esp]
+	mov eax, KTRAP_FRAME.Eax[esp]
+	mov ecx, KTRAP_FRAME.HardwareEsp[esp]
+	mov edx, KTRAP_FRAME.Eip[esp]
+	add esp, dword ptr offset KTRAP_FRAME.V86Es
+	sti
+	CpuSysExit
+#else
 	mov ebx, [esp+KTRAP_FRAME_EBX]
 	mov esi, [esp+KTRAP_FRAME_ESI]
 	mov edi, [esp+KTRAP_FRAME_EDI]
@@ -332,6 +380,7 @@ KiSystemCallSysExitReturn(IN PKTRAP_FRAME TrapFrame)
 	add esp, KTRAP_FRAME_V86_ES
 	sti
 	CpuSysExit
+#endif
 	_ASM_END
 #elif defined(__GNUC__)
 	__asm__ __volatile__
@@ -421,11 +470,27 @@ FORCEINLINE
 DECLSPEC_NORETURN
 KiDirectTrapReturn(IN PKTRAP_FRAME TrapFrame)
 {
+	DPRINTT("\n");
 #if defined(_MSC_VER)
 	_ASM_BEGIN
 		mov esp, TrapFrame
-		add esp, KTRAP_FRAME_EIP
-		iretd
+#if 1
+	mov ds, KTRAP_FRAME.SegDs[esp]
+	mov es, KTRAP_FRAME.SegEs[esp]
+	mov fs, KTRAP_FRAME.SegFs[esp]
+	mov ebp, KTRAP_FRAME.Ebp[esp]
+	mov ebx, KTRAP_FRAME.Ebx[esp]
+	mov esi, KTRAP_FRAME.Esi[esp]
+	mov edi, KTRAP_FRAME.Edi[esp]
+	mov eax, KTRAP_FRAME.Eax[esp]
+	mov ecx, KTRAP_FRAME.Ecx[esp]
+	mov edx, KTRAP_FRAME.Edx[esp]
+	add esp, KTRAP_FRAME_EIP
+	iretd
+#else
+	add esp, KTRAP_FRAME_EIP
+	iretd
+#endif
 	_ASM_END
 #elif defined(__GNUC__)
     /* Regular interrupt exit but we're not restoring any registers */
@@ -450,6 +515,7 @@ FORCEINLINE
 DECLSPEC_NORETURN
 KiCallReturn(IN PKTRAP_FRAME TrapFrame)
 {
+	DPRINTT("\n");
     /* Pops a trap frame out of the stack but returns with RET instead of IRET */
 #if defined(_MSC_VER)
 	_ASM_BEGIN
@@ -491,7 +557,8 @@ FORCEINLINE
 DECLSPEC_NORETURN
 KiEditedTrapReturn(IN PKTRAP_FRAME TrapFrame)
 {
-    /* Regular interrupt exit */
+	DPRINTT("\n");
+	/* Regular interrupt exit */
 #if defined(_MSC_VER)
 	_ASM_BEGIN
 	mov esp, TrapFrame

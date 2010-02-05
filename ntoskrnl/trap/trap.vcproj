@@ -34,7 +34,7 @@
 			/>
 			<Tool
 				Name="s_as_mscpp"
-				sIncPaths=".;$(inc);$(inc)\ndk;$(inc)\ndk\i386;$(s)\ntoskrnl\trap2\i386;$(s)\ntoskrnl\include"
+				sIncPaths=".;$(inc);$(inc)\ndk;$(inc)\ndk\i386;$(s)\ntoskrnl\$(trapx)\i386;$(s)\ntoskrnl\include"
 				sPPDefs="__ASM__"
 			/>
 			<Tool
@@ -48,11 +48,8 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="3"
 				AdditionalIncludeDirectories=""
-				AssemblerOutput="2"
 				ForcedIncludeFiles="ntoskrnl_bld.h"
-				ShowIncludes="true"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -98,7 +95,7 @@
 			/>
 			<Tool
 				Name="s_as_mscpp"
-				sIncPaths=".;$(inc);$(inc)\ndk;$(inc)\ndk\i386;$(s)\ntoskrnl\trap2\i386;$(s)\ntoskrnl\include"
+				sIncPaths=".;$(inc);$(inc)\ndk;$(inc)\ndk\i386;$(s)\ntoskrnl\$(trapx)\i386;$(s)\ntoskrnl\include"
 				sPPDefs="__ASM__"
 			/>
 			<Tool
@@ -158,14 +155,18 @@
 				>
 			</File>
 			<File
-				RelativePath=".\TrapExit.c"
+				RelativePath=".\TrapTmp.c"
 				>
 			</File>
 			<Filter
 				Name="i386"
 				>
 				<File
-					RelativePath=".\i386\trap_asm.c"
+					RelativePath=".\i386\idt.s"
+					>
+				</File>
+				<File
+					RelativePath=".\i386\trap_a.c"
 					>
 				</File>
 			</Filter>

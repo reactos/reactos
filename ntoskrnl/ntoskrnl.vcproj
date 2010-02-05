@@ -63,9 +63,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="mma3.lib mm.lib $(trapx).lib ke.lib ex.lib se.lib ob.lib ps.lib cm.lib io.lib pnp.lib cc.lib csq.lib cmlib.lib fs.lib rossym.lib wdmguid.lib rt.lib rtl.lib crtnt.lib cpu-i386.lib dbgp.lib kdw.lib hal.lib bootvid.lib kdcom.lib"
+				AdditionalDependencies="mma3.lib mm.lib trap.lib ke.lib ex.lib se.lib ob.lib ps.lib cm.lib io.lib pnp.lib cc.lib csq.lib cmlib.lib fs.lib rossym.lib wdmguid.lib rt.lib rtl.lib crtnt.lib cpu-i386.lib dbgp.lib kdw.lib hal.lib bootvid.lib kdcom.lib"
 				OutputFile="$(OutDir)/ntoskrnl.exe"
-				AdditionalLibraryDirectories=""
+				AdditionalLibraryDirectories="&quot;$(s)\libobj\or&quot;"
 				IgnoreAllDefaultLibraries="true"
 				ModuleDefinitionFile="ntoskrnl.def"
 				GenerateMapFile="true"
@@ -139,9 +139,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="mma3.lib mm.lib $(trapx).lib ke.lib ex.lib se.lib ob.lib ps.lib cm.lib io.lib pnp.lib cc.lib csq.lib cmlib.lib fs.lib rossym.lib wdmguid.lib rt.lib rtl.lib crtnt.lib cpu-i386.lib dbgp.lib kdw.lib hal.lib bootvid.lib kdcom.lib"
+				AdditionalDependencies="mma3.lib mm.lib trap.lib ke.lib ex.lib se.lib ob.lib ps.lib cm.lib io.lib pnp.lib cc.lib csq.lib cmlib.lib fs.lib rossym.lib wdmguid.lib rt.lib rtl.lib crtnt.lib cpu-i386.lib dbgp.lib kdw.lib hal.lib bootvid.lib kdcom.lib"
 				OutputFile="$(OutDir)/ntoskrnl.exe"
-				AdditionalLibraryDirectories=""
+				AdditionalLibraryDirectories="&quot;$(s)\libobj\or&quot;"
 				IgnoreAllDefaultLibraries="true"
 				ModuleDefinitionFile="ntoskrnl.def"
 				GenerateMapFile="true"
@@ -356,7 +356,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\int\ntoskrnl-Win32d\_ntoskrnl.map"
+				RelativePath="..\..\out\msc\obj\Win32-d\ntoskrnl\_ntoskrnl.map"
 				>
 			</File>
 			<File

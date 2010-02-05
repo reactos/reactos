@@ -413,6 +413,9 @@ MmInitSystem(IN ULONG Phase,
         /* Initialize the Loader Lock */
         KeInitializeMutant(&MmSystemLoadLock, FALSE);
 
+		DPRINT1("__test\n");
+		__test();
+
         /* Reload boot drivers */
         MiReloadBootLoadedDrivers(LoaderBlock);
 
@@ -434,7 +437,7 @@ MmInitSystem(IN ULONG Phase,
         MmInitSectionImplementation();
         MmInitPagingFile();
         
-        //
+		//
         // Create a PTE to double-map the shared data section. We allocate it
         // from paged pool so that we can't fault when trying to touch the PTE
         // itself (to map it), since paged pool addresses will already be mapped

@@ -176,10 +176,11 @@ struct _COMPRESSED_DATA_INFO;
     
 #endif
 
+
 #ifndef KERNEL_STACK_SIZE
-#define KERNEL_STACK_SIZE                   12288
-#define KERNEL_LARGE_STACK_SIZE             61440
-#define KERNEL_LARGE_STACK_COMMIT           12288
+#define KERNEL_STACK_SIZE 0x6000
+#define KERNEL_LARGE_STACK_SIZE 0xf000
+#define KERNEL_LARGE_STACK_COMMIT 0x6000
 #endif
 
 #define EXCEPTION_READ_FAULT    0

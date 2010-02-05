@@ -942,6 +942,8 @@ KiContinue(
     IN PKTRAP_FRAME TrapFrame
 );
 
+VOID FASTCALL KiInterruptNoDispatch(PKTRAP_FRAME TrapFrame, PKINTERRUPT Interrupt);
+
 VOID
 FASTCALL
 KiInterruptDispatch(

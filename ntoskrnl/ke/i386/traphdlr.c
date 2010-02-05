@@ -397,7 +397,7 @@ VOID FASTCALL KiTrap02Handler(KTRAP_FRAME *TrapFrame)
     //
     // We just have to go get the values...
     //
-    RtlZeroMemory(&TrapFrame, sizeof(KTRAP_FRAME));
+    RtlZeroMemory(TrapFrame, sizeof(KTRAP_FRAME));
     TrapFrame->HardwareSegSs = Tss->Ss0;
     TrapFrame->HardwareEsp = Tss->Esp0;
     TrapFrame->EFlags = Tss->EFlags;
@@ -1092,7 +1092,6 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-DECLSPEC_NORETURN
 FASTCALL
 KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
 {
@@ -1157,7 +1156,7 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
 	DPRINTT("MmAccessFault()=%x\n", Status);
     if (Status == STATUS_SUCCESS)
 	{
-		// return;		// !!!
+		return;		// !!!
 		KiEoiHelper(TrapFrame);
 	}
     DPRINTT("KiEoiHelper r\n");
@@ -1429,7 +1428,7 @@ KiSystemCall(IN ULONG SystemCallNumber,
     ULONG Id, Offset, StackBytes, Result;
     PVOID Handler;
     
-	DBGTRAPENTRY
+	// DBGTRAPENTRY
     
     /* Loop because we might need to try this twice in case of a GUI call */
     while (TRUE)

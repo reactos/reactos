@@ -388,6 +388,8 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     ULONG i;
 
+	DPRINT("\n");
+
     /* Get the system size */
     SystemSize = MmQuerySystemSize();
 
@@ -517,6 +519,7 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* FIXME: Initialize LDT/VDM support */
 
     /* Setup the reaper */
+	DPRINTT("PspReap\n");
     ExInitializeWorkItem(&PspReaperWorkItem, PspReapRoutine, NULL);
 
     /* Set the boot access token */
@@ -530,6 +533,8 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                NULL);
 
     /* Create the Initial System Process */
+	DPRINTT("Create the Initial System Process\n");
+	DbgDumpCpu(7);
     Status = PspCreateProcess(&PspInitialSystemProcessHandle,
                               PROCESS_ALL_ACCESS,
                               &ObjectAttributes,
@@ -539,16 +544,19 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                               0,
                               0,
                               FALSE);
+	DPRINTT("Create the Initial System Process r=%x\n", Status);
     if (!NT_SUCCESS(Status)) return FALSE;
-
+	
     /* Get a reference to it */
-    ObReferenceObjectByHandle(PspInitialSystemProcessHandle,
+	DPRINTT("ObReferenceObjectByHandle\n");
+	ObReferenceObjectByHandle(PspInitialSystemProcessHandle,
                               0,
                               PsProcessType,
                               KernelMode,
                               (PVOID*)&PsInitialSystemProcess,
                               NULL);
-
+	DPRINTT("ObReferenceObjectByHandle r\n");
+	
     /* Copy the process names */
     strcpy(PsIdleProcess->ImageFileName, "Idle");
     strcpy(PsInitialSystemProcess->ImageFileName, "System");
@@ -570,6 +578,7 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                   sizeof(OBJECT_NAME_INFORMATION));
 
     /* Setup the system initialization thread */
+	DPRINTT("Phase1Initialization\n");
     Status = PsCreateSystemThread(&SysThreadHandle,
                                   THREAD_ALL_ACCESS,
                                   &ObjectAttributes,
@@ -590,6 +599,7 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     SysThreadCreated = TRUE;
 
     /* Return success */
+	DPRINTT("r\n");
     return TRUE;
 }
 

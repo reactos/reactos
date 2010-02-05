@@ -4947,48 +4947,15 @@ static __inline PVOID GetFiberData(void)
 	return *((PVOID *)GetCurrentFiber());
 }
 
-#if defined(__GNUC__)
-
-static __inline__ BOOLEAN
-InterlockedBitTestAndSet(IN LONG volatile *Base,
-                         IN LONG Bit)
-{
-#if defined(_M_IX86)
-	LONG OldBit;
-	__asm__ __volatile__("lock "
-	                     "btsl %2,%1\n\t"
-	                     "sbbl %0,%0\n\t"
-	                     :"=r" (OldBit),"+m" (*Base)
-	                     :"Ir" (Bit)
-	                     : "memory");
-	return OldBit;
-#else
-	return (_InterlockedOr(Base, 1 << Bit) >> Bit) & 1;
-#endif
-}
-
-static __inline__ BOOLEAN
-InterlockedBitTestAndReset(IN LONG volatile *Base,
-                           IN LONG Bit)
-{
-#if defined(_M_IX86)
-	LONG OldBit;
-	__asm__ __volatile__("lock "
-	                     "btrl %2,%1\n\t"
-	                     "sbbl %0,%0\n\t"
-	                     :"=r" (OldBit),"+m" (*Base)
-	                     :"Ir" (Bit)
-	                     : "memory");
-	return OldBit;
-#else
-	return (_InterlockedAnd(Base, ~(1 << Bit)) >> Bit) & 1;
-#endif
-}
-
 #define BitScanForward _BitScanForward
 #define BitScanReverse _BitScanReverse
 
-#endif
+#define BitTest _bittest
+#define BitTestAndComplement _bittestandcomplement
+#define BitTestAndSet _bittestandset
+#define BitTestAndReset _bittestandreset
+#define InterlockedBitTestAndSet _interlockedbittestandset
+#define InterlockedBitTestAndReset _interlockedbittestandreset
 
 /* TODO: Other architectures than X86 */
 #if defined(_M_IX86)

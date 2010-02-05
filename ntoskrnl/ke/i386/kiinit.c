@@ -396,13 +396,14 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     ULONG Vendor[3];
 
     /* Detect and set the CPU Type */
+	DPRINTT("\n");
     KiSetProcessorType();
 
     /* Check if an FPU is present */
     NpxPresent = KiIsNpxPresent();
 
     /* Initialize the Power Management Support for this PRCB */
-    PoInitializePrcb(Prcb);
+	PoInitializePrcb(Prcb);
 
     /* Bugcheck if this is a 386 CPU */
     if (Prcb->CpuType == 3) KeBugCheckEx(0x5D, 0x386, 0, 0, 0);
@@ -599,6 +600,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     /* Raise back to HIGH_LEVEL and clear the PRCB for the loader block */
     KfRaiseIrql(HIGH_LEVEL);
     LoaderBlock->Prcb = 0;
+	DPRINTT("r\n");
 }
 
 VOID
@@ -719,10 +721,13 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Get GDT, IDT, PCR and TSS pointers */
     KiGetMachineBootPointers(&Gdt, &Idt, &Pcr, &Tss);
 
-    /* Setup the TSS descriptors and entries */
+	/* Setup the TSS descriptors and entries */
     Ki386InitializeTss(Tss, Idt, Gdt);
 
-    /* Initialize the PCR */
+	// !!! 
+	KiTrapInit();
+
+	/* Initialize the PCR */
     RtlZeroMemory(Pcr, PAGE_SIZE);
     KiInitializePcr(Cpu,
                     Pcr,

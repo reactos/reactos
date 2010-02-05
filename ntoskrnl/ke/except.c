@@ -177,6 +177,7 @@ NtRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
     PKTHREAD Thread;
     PKTRAP_FRAME TrapFrame;
 
+	DPRINTT("\n");	
     /* Get trap frame and link previous one*/
     Thread = KeGetCurrentThread();
     TrapFrame = Thread->TrapFrame;
@@ -217,7 +218,8 @@ NtContinue(IN PCONTEXT Context,
     NTSTATUS Status;
     PKTRAP_FRAME TrapFrame;
     
-    /* Get trap frame and link previous one*/
+	DPRINTT("\n");	
+	/* Get trap frame and link previous one*/
     Thread = KeGetCurrentThread();
     TrapFrame = Thread->TrapFrame;
     Thread->TrapFrame = KiGetLinkedTrapFrame(TrapFrame);

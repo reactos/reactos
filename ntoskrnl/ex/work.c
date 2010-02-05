@@ -91,6 +91,8 @@ ExpWorkerThreadEntryPoint(IN PVOID Context)
     KPROCESSOR_MODE WaitMode;
     EX_QUEUE_WORKER_INFO OldValue, NewValue;
 
+    DPRINTT("\n");
+
     /* Check if this is a dyamic thread */
     if ((ULONG_PTR)Context & EX_DYNAMIC_WORK_THREAD)
     {
@@ -222,6 +224,7 @@ ProcessLoop:
 
     /* Re-enable the stack swap */
     KeSetKernelStackSwapEnable(TRUE);
+    DPRINTT("r\n");
     return;
 }
 
@@ -428,6 +431,8 @@ ExpWorkerThreadBalanceManager(IN PVOID Context)
     PVOID WaitEvents[3];
     PAGED_CODE();
     UNREFERENCED_PARAMETER(Context);
+
+	DPRINTT("\n");
 
     /* Raise our priority above all other worker threads */
     KeSetBasePriorityThread(KeGetCurrentThread(),

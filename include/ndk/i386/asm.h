@@ -682,7 +682,13 @@ Author:
 //
 // Kernel Stack Size
 //
-#define KERNEL_STACK_SIZE                       0x3000
+// #define KERNEL_STACK_SIZE                       0x3000
+#ifndef KERNEL_STACK_SIZE
+#define KERNEL_STACK_SIZE 0x6000
+#define KERNEL_LARGE_STACK_SIZE 0xf000
+#define KERNEL_LARGE_STACK_COMMIT 0x6000
+#endif
+
 #endif
 
 //

@@ -365,11 +365,15 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     SECURITY_SUBJECT_CONTEXT SubjectContext;
     BOOLEAN NeedsPeb = FALSE;
     INITIAL_PEB InitialPeb;
+
+	DPRINTT("\n");
     PAGED_CODE();
+	DPRINTT("PSTRACE\n");
     PSTRACE(PS_PROCESS_DEBUG,
             "ProcessHandle: %p Parent: %p\n", ProcessHandle, ParentProcess);
-
-    /* Validate flags */
+	DPRINTT("PSTRACE r\n");
+    
+	/* Validate flags */
     if (Flags & ~PS_ALL_FLAGS) return STATUS_INVALID_PARAMETER;
 
     /* Check for parent */

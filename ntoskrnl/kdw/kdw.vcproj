@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="ke"
-	ProjectGUID="{33A96973-0632-4142-A411-36B937663234}"
-	RootNamespace="ke"
+	Name="kdw"
+	ProjectGUID="{97021AF5-ED87-4AA8-B116-2D53E5D6D528}"
+	RootNamespace="kd"
 	TargetFrameworkVersion="196613"
 	>
 	<Platforms>
@@ -24,7 +24,6 @@
 			ConfigurationType="4"
 			InheritedPropertySheets="..\ntoskrnl.vsprops"
 			CharacterSet="2"
-			WholeProgramOptimization="0"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -48,8 +47,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AssemblerOutput="4"
-				ForcedIncludeFiles="ntoskrnl_bld.h"
+				ForcedIncludeFiles="ntoskrnl_bld.h;precomp.h"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -85,7 +83,7 @@
 			ConfigurationType="4"
 			InheritedPropertySheets="..\ntoskrnl.vsprops"
 			CharacterSet="2"
-			WholeProgramOptimization="0"
+			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -110,8 +108,10 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				EnableIntrinsicFunctions="true"
+				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
-				ForcedIncludeFiles="ntoskrnl_bld.h"
+				WarningLevel="3"
+				ForcedIncludeFiles="ntoskrnl_bld.h;precomp.h"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -151,182 +151,66 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\__test.c"
-				>
-				<FileConfiguration
-					Name="d|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AssemblerOutput="4"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="apc.c"
+				RelativePath="CheckForActiveDebugger.c"
 				>
 			</File>
 			<File
-				RelativePath="balmgr.c"
+				RelativePath="DbgCommandString.c"
 				>
 			</File>
 			<File
-				RelativePath="bug.c"
+				RelativePath="DbgLoadImageSymbols.cpp"
 				>
 			</File>
 			<File
-				RelativePath="clock.c"
+				RelativePath="DbgPrompt.c"
 				>
 			</File>
 			<File
-				RelativePath="config.c"
+				RelativePath="DbgUnloadImageSymbols.c"
 				>
 			</File>
 			<File
-				RelativePath="devqueue.c"
+				RelativePath="kdapi.c"
 				>
 			</File>
 			<File
-				RelativePath="dpc.c"
+				RelativePath="kdbreak.c"
 				>
 			</File>
 			<File
-				RelativePath="eventobj.c"
+				RelativePath="kddata.c"
 				>
 			</File>
 			<File
-				RelativePath=".\except.c"
+				RelativePath="kdinit.c"
 				>
 			</File>
 			<File
-				RelativePath="freeldr.c"
+				RelativePath="kdlock.c"
 				>
 			</File>
 			<File
-				RelativePath="freeze.c"
+				RelativePath="kdprint.c"
 				>
 			</File>
 			<File
-				RelativePath="gate.c"
+				RelativePath="kdtrap.c"
 				>
 			</File>
 			<File
-				RelativePath="gmutex.c"
-				>
-			</File>
-			<File
-				RelativePath="ipi.c"
-				>
-			</File>
-			<File
-				RelativePath="krnlinit.c"
-				>
-			</File>
-			<File
-				RelativePath="mutex.c"
-				>
-			</File>
-			<File
-				RelativePath="procobj.c"
-				>
-			</File>
-			<File
-				RelativePath="profobj.c"
-				>
-			</File>
-			<File
-				RelativePath="queue.c"
-				>
-			</File>
-			<File
-				RelativePath="semphobj.c"
-				>
-			</File>
-			<File
-				RelativePath="spinlock.c"
-				>
-			</File>
-			<File
-				RelativePath="thrdobj.c"
-				>
-			</File>
-			<File
-				RelativePath="thrdschd.c"
-				>
-			</File>
-			<File
-				RelativePath=".\time.c"
-				>
-			</File>
-			<File
-				RelativePath="timerobj.c"
-				>
-			</File>
-			<File
-				RelativePath="wait.c"
+				RelativePath="mmdbg.c"
 				>
 			</File>
 			<Filter
-				Name="i386"
+				Name="i32"
 				>
 				<File
-					RelativePath=".\i386\abios.c"
+					RelativePath="i32\debug_asm.s"
 					>
 				</File>
 				<File
-					RelativePath=".\i386\context.c"
-					>
-				</File>
-				<File
-					RelativePath=".\i386\cpu.c"
-					>
-				</File>
-				<File
-					RelativePath=".\i386\ctxswitch.s"
-					>
-				</File>
-				<File
-					RelativePath=".\i386\exp.c"
-					>
-				</File>
-				<File
-					RelativePath=".\i386\irqobj.c"
-					>
-				</File>
-				<File
-					RelativePath=".\i386\kiinit.c"
-					>
-				</File>
-				<File
-					RelativePath=".\i386\ldt.c"
-					>
-				</File>
-				<File
-					RelativePath=".\i386\mtrr.c"
-					>
-				</File>
-				<File
-					RelativePath=".\i386\patpge.c"
-					>
-				</File>
-				<File
-					RelativePath=".\i386\thrdini.c"
-					>
-				</File>
-				<File
-					RelativePath=".\i386\traphdlr.c"
-					>
-				</File>
-				<File
-					RelativePath=".\i386\usercall.c"
-					>
-				</File>
-				<File
-					RelativePath=".\i386\usercall_asm.S"
-					>
-				</File>
-				<File
-					RelativePath=".\i386\v86vdm.c"
+					RelativePath="i32\kdi32.c"
 					>
 				</File>
 			</Filter>
@@ -336,6 +220,10 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath="..\include\ntoskrnl_bld.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"

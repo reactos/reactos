@@ -215,14 +215,15 @@ LdrFindResource_U(PVOID BaseAddress,
 
     _SEH2_TRY
     {
-	if (ResourceInfo)
+#if 0	// DbgPrint doesn't handle unicode yet
+		if (ResourceInfo)
         {
             DPRINT( "module %p type %ws name %ws lang %04lx level %ld\n",
                      BaseAddress, (LPCWSTR)ResourceInfo->Type,
                      Level > 1 ? (LPCWSTR)ResourceInfo->Name : L"",
                      Level > 2 ? ResourceInfo->Language : 0, Level );
         }
-
+#endif
         status = find_entry( BaseAddress, ResourceInfo, Level, &res, FALSE );
         if (status == STATUS_SUCCESS) *ResourceDataEntry = res;
     }

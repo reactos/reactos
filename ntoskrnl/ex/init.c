@@ -203,7 +203,7 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     ULONG NlsTablesEncountered = 0;
     ULONG NlsTableSizes[3]; /* 3 NLS tables */
 
-    /* Check if this is boot-time phase 0 initialization */
+	/* Check if this is boot-time phase 0 initialization */
     if (!ExpInitializationPhase)
     {
         /* Loop the memory descriptors */
@@ -376,6 +376,8 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
     PVOID EnvironmentPtr = NULL;
     PRTL_USER_PROCESS_INFORMATION ProcessInformation;
     PRTL_USER_PROCESS_PARAMETERS ProcessParams = NULL;
+
+	DPRINTT("\n");
 
     NullString.Length = sizeof(WCHAR);
 
@@ -833,7 +835,8 @@ ExpInitializeExecutive(IN ULONG Cpu,
     PCHAR RcEnd = NULL;
     CHAR VersionBuffer [65];
 
-    /* Validate Loader */
+    DPRINTT("\n");
+	/* Validate Loader */
     if (!ExpIsLoaderValid(LoaderBlock))
     {
         /* Invalid loader version */
@@ -845,6 +848,7 @@ ExpInitializeExecutive(IN ULONG Cpu,
     }
 
     /* Initialize PRCB pool lookaside pointers */
+	DPRINTT("ExInitPoolLookasidePointers\n");
     ExInitPoolLookasidePointers();
 
     /* Check if this is an application CPU */
@@ -1203,19 +1207,24 @@ ExpInitializeExecutive(IN ULONG Cpu,
 #endif
 
     /* Create the Basic Object Manager Types to allow new Object Types */
-    if (!ObInitSystem()) KeBugCheck(OBJECT_INITIALIZATION_FAILED);
+	DPRINTT("ObInitSystem\n");
+	if (!ObInitSystem()) KeBugCheck(OBJECT_INITIALIZATION_FAILED);
 
     /* Load basic Security for other Managers */
+	DPRINTT("SeInitSystem\n");
     if (!SeInitSystem()) KeBugCheck(SECURITY_INITIALIZATION_FAILED);
 
     /* Initialize the Process Manager */
+	DPRINTT("PsInitSystem\n");
     if (!PsInitSystem(LoaderBlock)) KeBugCheck(PROCESS_INITIALIZATION_FAILED);
 
     /* Initialize the PnP Manager */
+	DPRINTT("PpInitSystem\n");
     if (!PpInitSystem()) KeBugCheck(PP0_INITIALIZATION_FAILED);
 
     /* Initialize the User-Mode Debugging Subsystem */
-    DbgkInitialize();
+	DPRINTT("DbgkInitialize\n");
+	DbgkInitialize();
 
     /* Calculate the tick count multiplier */
     ExpTickCountMultiplier = ExComputeTickCountMultiplier(KeMaximumIncrement);
@@ -1228,6 +1237,7 @@ ExpInitializeExecutive(IN ULONG Cpu,
     /* Set the machine type */
     SharedUserData->ImageNumberLow = IMAGE_FILE_MACHINE_ARCHITECTURE;
     SharedUserData->ImageNumberHigh = IMAGE_FILE_MACHINE_ARCHITECTURE;
+    DPRINTT("r\n");
 }
 
 VOID
@@ -1254,7 +1264,8 @@ Phase1InitializationDiscard(IN PVOID Context)
     HANDLE KeyHandle, OptionHandle;
     PRTL_USER_PROCESS_PARAMETERS ProcessParameters = NULL;
 
-    /* Allocate the initialization buffer */
+    DPRINTT("\n");
+	/* Allocate the initialization buffer */
     InitBuffer = ExAllocatePoolWithTag(NonPagedPool,
                                        sizeof(INIT_BUFFER),
                                        'tinI');
@@ -1534,24 +1545,31 @@ Phase1InitializationDiscard(IN PVOID Context)
     }
 
     /* Set up Region Maps, Sections and the Paging File */
+    DPRINTT("MmInitSystem(1)\n");
     if (!MmInitSystem(1, LoaderBlock)) KeBugCheck(MEMORY1_INITIALIZATION_FAILED);
 
     /* Create NLS section */
+	DPRINTT("ExpInitNls\n");
     ExpInitNls(KeLoaderBlock);
 
     /* Initialize Cache Views */
+	DPRINTT("CcInitializeCacheManager\n");
     if (!CcInitializeCacheManager()) KeBugCheck(CACHE_INITIALIZATION_FAILED);
 
     /* Initialize the Registry */
+	DPRINTT("CmInitSystem1\n");
     if (!CmInitSystem1()) KeBugCheck(CONFIG_INITIALIZATION_FAILED);
 
     /* Initialize Prefetcher */
+    DPRINTT("CcPfInitializePrefetcher\n");
     CcPfInitializePrefetcher();
 
     /* Update progress bar */
+	DPRINTT("InbvUpdateProgressBar(15)\n");
     InbvUpdateProgressBar(15);
 
     /* Update timezone information */
+    DPRINTT("ExRefreshTimeZoneInformation\n");
     LastTzBias = ExpLastTimeZoneBias;
     ExRefreshTimeZoneInformation(&SystemBootTime);
 
@@ -1573,6 +1591,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     }
 
     /* Initialize the File System Runtime Library */
+	DPRINTT("FsRtlInitSystem\n");
     if (!FsRtlInitSystem()) KeBugCheck(FILE_INITIALIZATION_FAILED);
 
     /* Initialize range lists */

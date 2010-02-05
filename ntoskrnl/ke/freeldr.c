@@ -68,7 +68,7 @@ MEMORY_DESCRIPTOR MDArray[60] = { { 0, 0, 0 }, };
 #if defined(_X86_)
 
 /* The Boot TSS */
-KTSS KiBootTss;
+_ALIGN(0x80) KTSS KiBootTss;
 
 /* Old boot style IDT */
 KIDTENTRY KiBootIdt[256];
