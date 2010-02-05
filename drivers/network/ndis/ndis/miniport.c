@@ -2325,7 +2325,20 @@ NdisMRegisterMiniport(
         break;
 
       case 0x05:
-        MinSize = sizeof(NDIS50_MINIPORT_CHARACTERISTICS);
+        switch (MiniportCharacteristics->MinorNdisVersion)
+        {
+           case 0x00:
+             MinSize = sizeof(NDIS50_MINIPORT_CHARACTERISTICS);
+             break;
+
+           case 0x01:
+             MinSize = sizeof(NDIS51_MINIPORT_CHARACTERISTICS);
+             break;
+
+           default:
+             NDIS_DbgPrint(MIN_TRACE, ("Bad minor miniport characteristics version.\n"));
+             return NDIS_STATUS_BAD_VERSION;
+        }
         break;
 
       default:
