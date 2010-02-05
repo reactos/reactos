@@ -82,7 +82,7 @@ extern "C" {
 #elif defined(_MSC_VER)
 
 #if defined(_M_IA64) || defined(_M_AMD64) || defined(_M_CEE)
-#error Please implement me
+//#error Please implement me
 #endif
 
 #define _crt_va_start(v,l)	((void)((v) = (va_list)_ADDRESSOF(l) + _INTSIZEOF(l)))

@@ -118,8 +118,8 @@
 
 #if  __MINGW_GNUC_PREREQ (3, 1)
 #define __MINGW_ATTRIB_DEPRECATED __attribute__ ((__deprecated__))
-#elif __MINGW_MSC_PREREQ(12, 0)
-#define __MINGW_ATTRIB_DEPRECATED __declspec(deprecated)
+//#elif __MINGW_MSC_PREREQ(12, 0)
+//#define __MINGW_ATTRIB_DEPRECATED __declspec(deprecated)
 #else
 #define __MINGW_ATTRIB_DEPRECATED
 #endif
