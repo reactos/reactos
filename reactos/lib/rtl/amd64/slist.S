@@ -9,44 +9,46 @@
 #include <reactos/asm.h>
 #include <ndk/amd64/asm.h>
 
-#define SLIST8A_DEPTH_MASK       0x000000000000FFFF
-#define SLIST8A_DEPTH_INC        0x0000000000000001
-#define SLIST8A_SEQUENCE_MASK    0x0000000001FF0000
-#define SLIST8A_SEQUENCE_INC     0x0000000000010000
-#define SLIST8A_NEXTENTRY_MASK   0xFFFFFFFFFE000000
+#define SLIST8A_DEPTH_MASK       HEX(000000000000FFFF)
+#define SLIST8A_DEPTH_INC        HEX(0000000000000001)
+#define SLIST8A_SEQUENCE_MASK    HEX(0000000001FF0000)
+#define SLIST8A_SEQUENCE_INC     HEX(0000000000010000)
+#define SLIST8A_NEXTENTRY_MASK   HEX(FFFFFFFFFE000000)
 #define SLIST8A_NEXTENTRY_SHIFT  21
-#define SLIST8B_HEADERTYPE_MASK  0x0000000000000001
-#define SLIST8B_INIT_MASK        0x0000000000000002
-#define SLIST8B_REGION_MASK      0xE000000000000000
-#define SLIST8_POINTER_MASK      0x000007FFFFFFFFF0
+#define SLIST8B_HEADERTYPE_MASK  HEX(0000000000000001)
+#define SLIST8B_INIT_MASK        HEX(0000000000000002)
+#define SLIST8B_REGION_MASK      HEX(E000000000000000)
+#define SLIST8_POINTER_MASK      HEX(000007FFFFFFFFF0)
 
-#define SLIST16A_DEPTH_MASK      0x000000000000FFFF
-#define SLIST16A_DEPTH_INC       0x0000000000000001
-#define SLIST16A_SEQUENCE_MASK   0xFFFFFFFFFFFF0000
-#define SLIST16A_SEQUENCE_INC    0x0000000000010000
-#define SLIST16B_HEADERTYPE_MASK 0x0000000000000001
-#define SLIST16B_INIT_MASK       0x0000000000000002
-#define SLIST16B_NEXTENTY_MASK   0xFFFFFFFFFFFFFFF0
+#define SLIST16A_DEPTH_MASK      HEX(000000000000FFFF)
+#define SLIST16A_DEPTH_INC       HEX(0000000000000001)
+#define SLIST16A_SEQUENCE_MASK   HEX(FFFFFFFFFFFF0000)
+#define SLIST16A_SEQUENCE_INC    HEX(0000000000010000)
+#define SLIST16B_HEADERTYPE_MASK HEX(0000000000000001)
+#define SLIST16B_INIT_MASK       HEX(0000000000000002)
+#define SLIST16B_NEXTENTY_MASK   HEX(FFFFFFFFFFFFFFF0)
 
 
 /* FUNCTIONS ****************************************************************/
 
-.global ExpInterlockedPopEntrySList
-.global ExpInterlockedPopEntrySListResume
-.global ExpInterlockedPopEntrySListFault
-.global ExpInterlockedPopEntrySListEnd
-.global ExpInterlockedPopEntrySListResume16
-.global ExpInterlockedPopEntrySListFault16
-.global ExpInterlockedPopEntrySListEnd16
-.global ExpInterlockedPushEntrySList
-.global ExpInterlockedFlushSList
+.code64
+
+PUBLIC ExpInterlockedPopEntrySList
+PUBLIC ExpInterlockedPopEntrySListResume
+PUBLIC ExpInterlockedPopEntrySListFault
+PUBLIC ExpInterlockedPopEntrySListEnd
+PUBLIC ExpInterlockedPopEntrySListResume16
+PUBLIC ExpInterlockedPopEntrySListFault16
+PUBLIC ExpInterlockedPopEntrySListEnd16
+PUBLIC ExpInterlockedPushEntrySList
+PUBLIC ExpInterlockedFlushSList
 
 /* PSLIST_ENTRY
  * NTAPI
  * RtlInterlockedPopEntrySList(
  *     IN PSLIST_HEADER ListHead);
  */
-.proc RtlInterlockedPopEntrySList
+RtlInterlockedPopEntrySList:
 ExpInterlockedPopEntrySList:
 
     /* Load ListHead->Region into rdx */
@@ -70,10 +72,10 @@ ExpInterlockedPopEntrySListResume:
 
     /* Copy Depth and Sequence number and adjust Depth */
     lea r8, [rax - SLIST8A_DEPTH_INC]
-    and r8, SLIST8A_SEQUENCE_MASK | SLIST8A_DEPTH_MASK
+    and r8, (SLIST8A_SEQUENCE_MASK OR SLIST8A_DEPTH_MASK)
 
     /* Create a pointer template from rcx in rdx */
-    mov rdx, ~SLIST8_POINTER_MASK
+    mov rdx, (NOT SLIST8_POINTER_MASK)
     and rdx, rcx
 
     /* Shift the NextEntry pointer */
@@ -106,7 +108,7 @@ ExpInterlockedPopEntrySListEnd:
     shr rax, SLIST8A_NEXTENTRY_SHIFT
 
     /* Use rcx as pointer template */
-    mov rdx, ~SLIST8_POINTER_MASK
+    mov rdx, (NOT SLIST8_POINTER_MASK)
     and rdx, rcx
 
     /* Combine result and return */
@@ -139,7 +141,7 @@ ExpInterlockedPopEntrySListFault16:
     mov rcx, [r9]
 
     /* Set ListHead->HeaderType = 1 and  ListHead->Init = 1 */
-    or rcx, 0x3
+    or rcx, 3
 
     /* Copy Depth and Sequence number and adjust Depth */
     lea rbx, [rax - SLIST16A_DEPTH_INC]
@@ -165,8 +167,6 @@ RtlInterlockedPopEntrySListEmpty16:
     pop rbx
     ret
 
-.endp RtlInterlockedPopEntrySList
-
 
 /* PSLIST_ENTRY
  * NTAPI
@@ -174,7 +174,7 @@ RtlInterlockedPopEntrySListEmpty16:
  *     IN PSLIST_HEADER ListHead,
  *     IN PSLIST_ENTRY ListEntry);
  */
-.proc RtlInterlockedPushEntrySList
+RtlInterlockedPushEntrySList:
 ExpInterlockedPushEntrySList:
 
     /* Load ListHead->Alignment into rax */
@@ -200,7 +200,7 @@ RtlInterlockedPushEntrySListLoop:
     shr r8, SLIST8A_NEXTENTRY_SHIFT
 
     /* Create a pointer template from rcx in rdx */
-    mov r9, ~SLIST8_POINTER_MASK
+    mov r9, (NOT SLIST8_POINTER_MASK)
     and r9, rcx
 
     /* Combine to new pointer and save as ListEntry->NextEntry */
@@ -217,7 +217,7 @@ RtlInterlockedPushEntrySListEmpty:
 
     /* Copy and adjust depth and sequence number */
     lea r9, [rax + SLIST8A_DEPTH_INC + SLIST8A_SEQUENCE_INC]
-    and r9, SLIST8A_SEQUENCE_MASK | SLIST8A_DEPTH_MASK
+    and r9, SLIST8A_SEQUENCE_MASK OR SLIST8A_DEPTH_MASK
 
     /* Combine to exchange value in r8 */
     or r8, r9
@@ -247,7 +247,7 @@ RtlInterlockedPushEntrySList16:
 
     /* Set ListHead->HeaderType = 1 and  ListHead->Init = 1 */
     mov rcx, rdx
-    or rcx, 0x3
+    or rcx, 3
 
     mov rdx, [r8 + 8]
 
@@ -277,14 +277,13 @@ RtlInterlockedPushEntrySListLoop16:
     pop rbx
     ret
 
-.endp RtlInterlockedPushEntrySList
 
 /* PSLIST_ENTRY
  * NTAPI
  * RtlInterlockedFlushSList(
  *     IN PSINGLE_LIST_ENTRY ListHead);
  */
-.proc RtlInterlockedFlushSList
+RtlInterlockedFlushSList:
 ExpInterlockedFlushSList:
 
     /* Load ListHead->Region into rdx */
@@ -308,7 +307,7 @@ RtlInterlockedFlushSListLoop:
     jnz RtlInterlockedFlushSListLoop
 
     /* Use rcx as pointer template */
-    mov rdx, ~SLIST8_POINTER_MASK
+    mov rdx, (not SLIST8_POINTER_MASK)
     or rdx, rcx
 
     /* Combine result and return */
@@ -321,7 +320,7 @@ RtlInterlockedFlushSList16:
 
     mov rdx, [rcx + 8]
     xor rbx, rbx
-    mov rcx, 0x3
+    mov rcx, 3
 
 RtlInterlockedFlushSListLoop16:
 
@@ -339,4 +338,4 @@ RtlInterlockedFlushSListLoop16:
     pop rbx
     ret
 
-.endp RtlInterlockedFlushSList
+END
