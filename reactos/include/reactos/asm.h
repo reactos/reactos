@@ -157,7 +157,7 @@ code = 1
 2:  .asciz \file
 3:
     sub rsp, 0x20
-    lea rcx, _MsgUnimplemented[rip]
+    lea rcx, MsgUnimplemented[rip]
     lea rdx, 1b[rip]
     lea r8, 2b[rip]
     mov r9, \line
