@@ -454,7 +454,7 @@ SockLoadHelperDll(
     HelperData->WSHGetSockaddrType = (PWSH_GET_SOCKADDR_TYPE)
 										GetProcAddress(HelperData->hInstance,
 										"WSHGetSockaddrType");
-    HelperData->WSHGetWildcardSockaddr = (PWSH_GET_WILDCARD_SOCKEADDR)
+    HelperData->WSHGetWildcardSockaddr = (PWSH_GET_WILDCARD_SOCKADDR)
 											GetProcAddress(HelperData->hInstance,
 											"WSHGetWildcardSockaddr");
     HelperData->WSHGetBroadcastSockaddr = (PWSH_GET_BROADCAST_SOCKADDR)
