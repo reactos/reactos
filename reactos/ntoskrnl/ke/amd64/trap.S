@@ -905,6 +905,44 @@ PUBLIC KiUnexpectedInterrupt
     jmp $
 .ENDP KiUnexpectedInterrupt
 
+#ifdef _MSC_VER
 
+//void __lgdt(void *Source);
+PUBLIC __lgdt
+__lgdt:
+    lgdt fword ptr [rcx]
+    ret
+
+//void __sgdt(void *Destination);
+PUBLIC __sgdt
+__sgdt:
+    sgdt fword ptr [rcx]
+    ret
+
+// void __lldt(unsigned short Value)
+PUBLIC __lldt
+__lldt:
+    lldt cx
+    ret
+
+//void __sldt(void *Destination);
+PUBLIC __sldt
+__sldt:
+    sldt word ptr [rcx]
+    ret
+
+//void __ltr(unsigned short Source);
+PUBLIC __ltr
+__ltr:
+    ltr cx
+    ret
+
+//void __str(unsigned short *Destination);
+PUBLIC __str
+__str:
+    str word ptr [rcx]
+    ret
+
+#endif
 
 END

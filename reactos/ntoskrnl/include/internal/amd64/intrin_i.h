@@ -106,36 +106,17 @@ static __inline__ __attribute__((always_inline)) void __str(unsigned short *Dest
 
 #define UNIMPLEMENTED DbgPrint("%s is unimplemented!!!\n", __FUNCTION__);
 
-void FORCEINLINE __lgdt(void *Source)
-{
-	UNIMPLEMENTED;
-}
+void __lgdt(void *Source);
 
-void FORCEINLINE __sgdt(void *Destination)
-{
-	UNIMPLEMENTED;
-}
+void __sgdt(void *Destination);
 
-void FORCEINLINE __lldt(unsigned short Value)
-{
-	UNIMPLEMENTED;
-}
+void __lldt(unsigned short Value);
 
-void FORCEINLINE __sldt(void *Destination)
-{
-	UNIMPLEMENTED;
-}
+void __sldt(void *Destination);
 
-void FORCEINLINE __ltr(unsigned short Source)
-{
-	UNIMPLEMENTED;
-}
+void __ltr(unsigned short Source);
 
-void FORCEINLINE __str(unsigned short *Destination)
-{
-	UNIMPLEMENTED;
-}
-
+void __str(unsigned short *Destination);
 
 
 #else
