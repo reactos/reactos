@@ -14,6 +14,8 @@
 
 /* FUNCTIONS ****************************************************************/
 
+.code64
+
 /*++
  * KiThreadStartup
  *
@@ -43,8 +45,7 @@
  *     If a return from a system thread is detected, a bug check will occur.
  *
  *--*/
- .func KiThreadStartup
-.globl KiThreadStartup
+PUBLIC KiThreadStartup
 KiThreadStartup:
 
     /*
@@ -85,13 +86,12 @@ KiThreadStartup:
 
     /* Exit back to user-mode */
 //    jmp _KiServiceExit2
-UNIMPLEMENTED KiThreadStartup->KiServiceExit2
+UNIMPLEMENTED KiThreadStartup_KiServiceExit2
 
 BadThread:
 
     /* A system thread returned...this is very bad! */
     int 3
-.endfunc
 
 
 /*++
@@ -112,13 +112,11 @@ BadThread:
  *     Absolutely all registers except ESP can be trampled here for maximum code flexibility.
  *
  *--*/
-.globl KiSwapContextInternal
-.func KiSwapContextInternal
+PUBLIC KiSwapContextInternal
 KiSwapContextInternal:
     UNIMPLEMENTED KiSwapContextInternal
     ret
 
-.endfunc
 
 /**
  * KiSwapContext
@@ -147,8 +145,7 @@ KiSwapContextInternal:
  *     another thread switches to IT.
  *
  *--*/
-.globl KiSwapContext
-.func KiSwapContext
+PUBLIC KiSwapContext
 KiSwapContext:
 
     /* Save 10 registers */
@@ -198,4 +195,5 @@ KiSwapContext:
     /* Clean stack */
     add esp, 10 * 8
     ret
-.endfunc
+
+END

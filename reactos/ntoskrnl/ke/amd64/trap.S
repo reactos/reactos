@@ -24,28 +24,28 @@ EXTERN KiXmmExceptionHandler:PROC
 .data
 
 PUBLIC MsgUnimplemented
-_MsgUnimplemented:
+MsgUnimplemented:
 .ascii "WARNING:  %s at %s:%d is UNIMPLEMENTED!\n"
 
-_MsgPageFault:
+MsgPageFault:
 .ascii "Page fault! Code = 0x%x, RIP = %p, FaultingAddress = %p\n\0"
 
-_MsgGeneralProtFault:
+MsgGeneralProtFault:
 .ascii "General protection fault at %p!\n\0"
 
-_MsgBreakpointTrap:
+MsgBreakpointTrap:
 .ascii "BreakpointTrap at %p\n\0"
 
-_MsgUnexpectedInterrupt:
+MsgUnexpectedInterrupt:
 .ascii "UnexpectedInterrupt Vector=0x%02lx\n\0"
 
-_MsgInvalidOpcodeFault:
+MsgInvalidOpcodeFault:
 .ascii "Invalid opcode fault at %p!\n\0"
 
-_MsgDoubleFault:
+MsgDoubleFault:
 .ascii "Double fault at %p, rbp=%p!\n\0"
 
-_MsgTrapInfo:
+MsgTrapInfo:
 .ascii "Trap: %s at %p\n\0"
 
 MACRO(TRAPINFO, func)
@@ -55,7 +55,7 @@ LOCAL label1, label2
 label1:  .asciz "\func"
 label2:
     sub rsp, 32
-    lea rcx, _MsgTrapInfo[rip]
+    lea rcx, MsgTrapInfo[rip]
     lea rdx, 1b[rip]
     mov r8, [rbp + KTRAP_FRAME_Rip]
     call qword ptr FrLdrDbgPrint[rip]
@@ -421,7 +421,7 @@ PUBLIC KiBreakpointTrap
 
     TRAPINFO KiBreakpointTrap
 
-//    lea rcx, _MsgBreakpointTrap[rip]
+//    lea rcx, MsgBreakpointTrap[rip]
 //    mov rdx, rsp
 //    call qword ptr FrLdrDbgPrint[rip]
 
@@ -501,7 +501,7 @@ PUBLIC KiInvalidOpcodeFault
     TRAPINFO KiInvalidOpcodeFault
 
     mov rdx, [rbp + KTRAP_FRAME_Rip]
-    lea rcx, _MsgInvalidOpcodeFault[rip]
+    lea rcx, MsgInvalidOpcodeFault[rip]
     call qword ptr FrLdrDbgPrint[rip]
 
     /* Enable interrupts */
@@ -562,7 +562,7 @@ PUBLIC KiDoubleFaultAbort
     /* Push pseudo error code */
     ENTER_TRAP_FRAME TRAPFLAG_ALL
 
-    lea rcx, _MsgDoubleFault[rip]
+    lea rcx, MsgDoubleFault[rip]
     mov rdx, [rbp + KTRAP_FRAME_FaultAddress]
     mov r8, rbp
     call qword ptr FrLdrDbgPrint[rip]
@@ -639,7 +639,7 @@ PUBLIC KiGeneralProtectionFault
 
     TRAPINFO KiGeneralProtectionFault
     mov rdx, [rbp + KTRAP_FRAME_Rip]
-    lea rcx, _MsgGeneralProtFault[rip]
+    lea rcx, MsgGeneralProtFault[rip]
     call qword ptr FrLdrDbgPrint[rip]
 
     /* Call the C handler */
@@ -682,7 +682,7 @@ PUBLIC KiPageFault
     TRAPINFO KiPageFault
 
 #if 0
-    lea rcx, _MsgPageFault[rip]
+    lea rcx, MsgPageFault[rip]
     mov rdx, [rbp + KTRAP_FRAME_ErrorCode]
     mov r8, [rbp + KTRAP_FRAME_Rip]
     mov r9, [rbp + KTRAP_FRAME_FaultAddress]

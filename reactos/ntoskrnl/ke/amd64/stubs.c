@@ -165,22 +165,15 @@ __security_check_cookie()
 {
 }
 
+BOOLEAN CcPfEnablePrefetcher;
 
-NTKERNELAPI
-PSLIST_ENTRY
-ExpInterlockedPopEntrySList(
-     PSLIST_HEADER ListHead)
+unsigned long __readfsdword(const unsigned long Offset)
 {
     return 0;
 }
 
-NTKERNELAPI
-PSLIST_ENTRY
-ExpInterlockedPushEntrySList(
-    PSLIST_HEADER ListHead,
-    PSLIST_ENTRY ListEntry)
+void main()
 {
-    return 0;
 }
 
 #endif

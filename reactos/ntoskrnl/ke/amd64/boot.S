@@ -11,6 +11,7 @@
 #include <reactos/asm.h>
 #include <ndk/amd64/asm.h>
 
+EXTERN KiInitializeKernelAndGotoIdleLoop:PROC
 
 /* GLOBALS *******************************************************************/
 
@@ -37,13 +38,15 @@ PUBLIC KiSetupStackAndInitializeKernel
     mov rsi, rsp
 
     /* Setup the new stack */
-    mov ax, 0x18
+    mov ax, HEX(18)
     mov ss, ax
     mov rsp, r8
-    sub rsp, 0x300 // FIXME
+    sub rsp, HEX(300) // FIXME
 
     /* Copy stack parameters to the new stack */
-    sub rsp, 0x38
+    sub rsp, HEX(38)
+    .ENDPROLOG
+
     mov rdi, rsp
     movsq
     movsq
