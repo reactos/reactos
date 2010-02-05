@@ -507,8 +507,8 @@ WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 	LONG High, Low, Middle, Result;
 	ULONG Hint;
 
-	//DPRINTM(DPRINT_PELOADER, "WinLdrpBindImportName(): DllBase 0x%X, ImageBase 0x%X, ThunkData 0x%X, ExportDirectory 0x%X, ExportSize %d, ProcessForwards 0x%X\n",
-	//	DllBase, ImageBase, ThunkData, ExportDirectory, ExportSize, ProcessForwards);
+	DPRINTM(DPRINT_PELOADER, "WinLdrpBindImportName(): DllBase 0x%X, ImageBase 0x%X, ThunkData 0x%X, ExportDirectory 0x%X, ExportSize %d, ProcessForwards 0x%X\n",
+		DllBase, ImageBase, ThunkData, ExportDirectory, ExportSize, ProcessForwards);
 
 	/* Check passed DllBase param */
 	if(DllBase == NULL)
@@ -525,7 +525,7 @@ WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 	{
 		/* Yes, calculate the ordinal */
 		Ordinal = (ULONG)(IMAGE_ORDINAL(ThunkData->u1.Ordinal) - (UINT32)ExportDirectory->Base);
-		//DPRINTM(DPRINT_PELOADER, "WinLdrpBindImportName(): Ordinal %d\n", Ordinal);
+		DPRINTM(DPRINT_PELOADER, "WinLdrpBindImportName(): Ordinal %d\n", Ordinal);
 	}
 	else
 	{
@@ -543,12 +543,12 @@ WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 		NameTable = (PULONG)VaToPa(RVA(DllBase, ExportDirectory->AddressOfNames));
 		OrdinalTable = (PUSHORT)VaToPa(RVA(DllBase, ExportDirectory->AddressOfNameOrdinals));
 
-		//DPRINTM(DPRINT_PELOADER, "NameTable 0x%X, OrdinalTable 0x%X, ED->AddressOfNames 0x%X, ED->AOFO 0x%X\n",
-		//	NameTable, OrdinalTable, ExportDirectory->AddressOfNames, ExportDirectory->AddressOfNameOrdinals);
+		DPRINTM(DPRINT_PELOADER, "NameTable 0x%X, OrdinalTable 0x%X, ED->AddressOfNames 0x%X, ED->AOFO 0x%X\n",
+			NameTable, OrdinalTable, ExportDirectory->AddressOfNames, ExportDirectory->AddressOfNameOrdinals);
 
 		/* Get the hint, convert it to a physical pointer */
 		Hint = ((PIMAGE_IMPORT_BY_NAME)VaToPa((PVOID)ThunkData->u1.AddressOfData))->Hint;
-		//DPRINTM(DPRINT_PELOADER, "HintIndex %d\n", Hint);
+		DPRINTM(DPRINT_PELOADER, "HintIndex %d\n", Hint);
 
 		/* If Hint is less than total number of entries in the export directory,
 		   and import name == export name, then we can just get it from the OrdinalTable */
@@ -561,18 +561,19 @@ WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 			)
 		{
 			Ordinal = OrdinalTable[Hint];
-			//DPRINTM(DPRINT_PELOADER, "WinLdrpBindImportName(): Ordinal %d\n", Ordinal);
+			DPRINTM(DPRINT_PELOADER, "WinLdrpBindImportName(): Ordinal %d\n", Ordinal);
 		}
 		else
 		{
 			/* It's not the easy way, we have to lookup import name in the name table.
 			   Let's use a binary search for this task. */
 
-			//DPRINTM(DPRINT_PELOADER, "WinLdrpBindImportName() looking up the import name using binary search...\n");
-
 			/* Low boundary is set to 0, and high boundary to the maximum index */
 			Low = 0;
 			High = ExportDirectory->NumberOfNames - 1;
+
+			DPRINTM(DPRINT_PELOADER, "WinLdrpBindImportName() looking up import '%s' in #0..#%d\n",
+			        VaToPa(&((PIMAGE_IMPORT_BY_NAME)VaToPa(ThunkData->u1.AddressOfData))->Name[0]), High);
 
 			/* Perform a binary-search loop */
 			while (High >= Low)
@@ -584,9 +585,9 @@ WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 				Result = strcmp(VaToPa(&((PIMAGE_IMPORT_BY_NAME)VaToPa((PVOID)ThunkData->u1.AddressOfData))->Name[0]),
 					(PCHAR)VaToPa(RVA(DllBase, NameTable[Middle])));
 
-				/*DPRINTM(DPRINT_PELOADER, "Binary search: comparing Import '__', Export '%s'\n",*/
-					/*VaToPa(&((PIMAGE_IMPORT_BY_NAME)VaToPa(ThunkData->u1.AddressOfData))->Name[0]),*/
-					/*(PCHAR)VaToPa(RVA(DllBase, NameTable[Middle])));*/
+				DPRINTM(DPRINT_PELOADER, "Binary search: comparing Import '%s', Export #%ld:'%s' -> %d\n",
+					VaToPa(&((PIMAGE_IMPORT_BY_NAME)VaToPa(ThunkData->u1.AddressOfData))->Name[0]),
+					Middle, (PCHAR)VaToPa(RVA(DllBase, NameTable[Middle])), Result);
 
 				/*DPRINTM(DPRINT_PELOADER, "TE->u1.AOD %p, fulladdr %p\n",
 					ThunkData->u1.AddressOfData,
