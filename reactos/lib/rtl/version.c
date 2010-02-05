@@ -22,7 +22,7 @@ RtlGetVersion(
 
 /* FUNCTIONS ****************************************************************/
 
-static inline NTSTATUS version_compare_values(ULONG left, ULONG right, UCHAR condition)
+static __inline NTSTATUS version_compare_values(ULONG left, ULONG right, UCHAR condition)
 {
     switch (condition) {
         case VER_EQUAL:

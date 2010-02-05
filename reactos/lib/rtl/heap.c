@@ -219,7 +219,7 @@ static __inline unsigned int get_freelist_index( SIZE_T size )
 }
 
 /* get the memory protection type to use for a given heap */
-static inline ULONG get_protection_type( DWORD flags )
+static __inline ULONG get_protection_type( DWORD flags )
 {
     return (flags & HEAP_CREATE_ENABLE_EXECUTE) ? PAGE_EXECUTE_READWRITE : PAGE_READWRITE;
 }

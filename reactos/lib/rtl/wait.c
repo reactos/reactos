@@ -31,7 +31,7 @@ typedef struct _RTLP_WAIT
 
 /* PRIVATE FUNCTIONS *******************************************************/
 
-static inline PLARGE_INTEGER get_nt_timeout( PLARGE_INTEGER pTime, ULONG timeout )
+static __inline PLARGE_INTEGER get_nt_timeout( PLARGE_INTEGER pTime, ULONG timeout )
 {
     if (timeout == INFINITE) return NULL;
     pTime->QuadPart = (ULONGLONG)timeout * -10000;
