@@ -1511,7 +1511,7 @@ NdisMRegisterAdapterShutdownHandler(
   KeInitializeCallbackRecord(BugcheckContext->CallbackRecord);
 
   KeRegisterBugCheckCallback(BugcheckContext->CallbackRecord, NdisIBugcheckCallback,
-      BugcheckContext, sizeof(BugcheckContext), (PUCHAR)"Ndis Miniport");
+      BugcheckContext, sizeof(*BugcheckContext), (PUCHAR)"Ndis Miniport");
 
   IoRegisterShutdownNotification(Adapter->NdisMiniportBlock.DeviceObject);
 }
