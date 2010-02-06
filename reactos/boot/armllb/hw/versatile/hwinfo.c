@@ -47,7 +47,8 @@ LlbHwGetSerialUart(VOID)
 // 0x00000200 - 0x0000FFFF ARM STACK                                [ 62 KB]
 // 0x00010000 - 0x0001FFFF ARM LLB                                  [ 64 KB]
 // 0x00020000 - 0x0009FFFF ARM OS LOADER                            [512 KB]
-// 0x000A0000 - 0x007FFFFF OS LOADER FREE/UNUSED                    [7.3 MB]
+// 0x000A0000 - 0x000FFFFF ARM FRAMEBUFFER                          [384 KB]
+// 0x00100000 - 0x007FFFFF OS LOADER FREE/UNUSED                    [  7 MB]
 // 0x00800000 - 0x017FFFFF KERNEL, HAL, INITIAL DRIVER LOAD ADDR    [ 16 MB]
 // 0x01800000 - 0x037FFFFF RAM DISK                                 [ 32 MB]
 // 0x03800000 - 0x07FFFFFF FREE RAM                                 [ 72 MB]
@@ -55,14 +56,15 @@ LlbHwGetSerialUart(VOID)
 // 0x10000000 - 0x1FFFFFFF MMIO DEVICES                             [256 MB]
 BIOS_MEMORY_MAP LlbHwVersaMemoryMap[] =
 {
-    {0x00000000, 0x00000100, BiosMemoryReserved, 0},
-    {0x00000100, 0x00000100, BiosMemoryBootStrap, 0},
-    {0x00000200, 0x0000FE00, BiosMemoryBootStrap, 0},
-    {0x00010000, 0x00010000, BiosMemoryBootStrap, 0},
+    {0x00000000, 0x00000100, BiosMemoryReserved,   0},
+    {0x00000100, 0x00000100, BiosMemoryBootStrap,  0},
+    {0x00000200, 0x0000FE00, BiosMemoryBootStrap,  0},
+    {0x00010000, 0x00010000, BiosMemoryBootStrap,  0},
     {0x00020000, 0x00080000, BiosMemoryBootLoader, 0},
-    {0x00080000, 0x01000000, BiosMemoryUsable,   0},
-    {0x01800000, 0x02000000, BiosMemoryReserved, 0},
-    {0x10000000, 0x10000000, BiosMemoryReserved, 0},
+    {0x000A0000, 0x00060000, BiosMemoryBootLoader, 0},
+    {0x00100000, 0x01700000, BiosMemoryUsable,     0},
+    {0x01800000, 0x02000000, BiosMemoryReserved,   0},
+    {0x10000000, 0x10000000, BiosMemoryReserved,   0},
     {0, 0, 0, 0}
 };
 

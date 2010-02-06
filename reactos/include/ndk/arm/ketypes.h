@@ -197,13 +197,21 @@ typedef union _ARM_CONTROL_REGISTER
         ULONG HighVectors:1;
         ULONG RoundRobinReplacementEnabled:1;
         ULONG Armv4Compat:1;
-        ULONG Sbo1:1;
+        ULONG Ignored:6;
+        ULONG UnalignedAccess:1;
+        ULONG ExtendedPageTables:1;
         ULONG Sbz1:1;
-        ULONG Sbo2:1;
-        ULONG Reserved:14;
+        ULONG ExceptionBit:1;
+        ULONG Sbz2:1;
+        ULONG Nmif:1;
+        ULONG TexRemap:1;
+        ULONG ForceAp:1;
+        ULONG Reserved:2;
     };
     ULONG AsUlong;
 } ARM_CONTROL_REGISTER, *PARM_CONTROL_REGISTER;
+
+C_ASSERT(sizeof(ARM_CONTROL_REGISTER) == sizeof(ULONG));
 
 typedef union _ARM_ID_CODE_REGISTER
 {

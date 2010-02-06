@@ -39,17 +39,17 @@ MEMORY_DESCRIPTOR MDArray[16] = {{0}};
 ULONG ArmSharedHeapSize;
 PCHAR ArmSharedHeap;
 
-extern ADDRESS_RANGE ArmBoardMemoryMap[16];
-extern ULONG ArmBoardMemoryMapRangeCount;
-extern ARM_TRANSLATION_TABLE ArmTranslationTable;
-extern ARM_COARSE_PAGE_TABLE BootTranslationTable, KernelTranslationTable, FlatMapTranslationTable, MasterTranslationTable;
+extern PAGE_DIRECTORY_ARM startup_pagedirectory;
 extern ROS_KERNEL_ENTRY_POINT KernelEntryPoint;
 extern ULONG_PTR KernelBase;
+
+extern ADDRESS_RANGE ArmBoardMemoryMap[16];
+extern ULONG ArmBoardMemoryMapRangeCount;
 extern ULONG_PTR AnsiData, OemData, UnicodeData, RegistryData, KernelData, HalData, DriverData[16];
 extern ULONG RegistrySize, AnsiSize, OemSize, UnicodeSize, KernelSize, HalSize, DriverSize[16];
 extern PCHAR DriverName[16];
 extern ULONG Drivers;
-extern ULONG BootStack, TranslationTableStart, TranslationTableEnd;
+extern ULONG BootStack;
 
 ULONG SizeBits[] =
 {
@@ -675,11 +675,52 @@ ArmBuildLoaderMemoryList(VOID)
     return STATUS_SUCCESS;
 }
 
+#define PFN_SHIFT                   12
+#define LARGE_PFN_SHIFT             20
+
+#define STARTUP_BASE                0xC0000000
+#define HAL_BASE                    0xFFC00000
+#define MMIO_BASE                   0x10000000
+
+#define LowMemPageTableIndex        0
+#define StartupPageTableIndex       (STARTUP_BASE >> PDE_SHIFT)
+#define MmioPageTableIndex          (MMIO_BASE >> PDE_SHIFT)
+#define HalPageTableIndex           (HAL_BASE >> PDE_SHIFT)
+
+/* Converts a Physical Address into a Page Frame Number */
+#define PaToPfn(p)                  ((p) >> PFN_SHIFT)
+#define PaToLargePfn(p)             ((p) >> LARGE_PFN_SHIFT)
+    
 VOID
 ArmSetupPageDirectory(VOID)
-{   
-    ARM_TTB_REGISTER TtbRegister;
-    ARM_DOMAIN_REGISTER DomainRegister;
+{
+    PPAGE_DIRECTORY_ARM PageDir;
+    ULONG KernelPageTableIndex;
+    //ULONG i;
+    
+    /* Get the Kernel Table Index */
+    KernelPageTableIndex = KernelBase >> PDE_SHIFT;
+    printf("Kernel Base: 0x%p (PDE Index: %lx)\n", KernelBase, KernelPageTableIndex);
+    
+    /* Get the Startup Page Directory */
+    PageDir = (PPAGE_DIRECTORY_ARM)&startup_pagedirectory;
+    printf("Initial Page Directory: 0x%p\n", PageDir);
+    
+    /* Setup the Low Memory PDE as an identity-mapped Large Page (1MB) */
+    ((PHARDWARE_LARGE_PTE_ARMV6)PageDir->Pde)[LowMemPageTableIndex].LargePage = 1;
+    ((PHARDWARE_LARGE_PTE_ARMV6)PageDir->Pde)[LowMemPageTableIndex].Accessed = 1;
+    ((PHARDWARE_LARGE_PTE_ARMV6)PageDir->Pde)[LowMemPageTableIndex].PageFrameNumber = 0;
+    
+    /* Setup the MMIO PDE as two identity mapped large pages -- the kernel will blow these away later */
+    ((PHARDWARE_LARGE_PTE_ARMV6)PageDir->Pde)[MmioPageTableIndex].LargePage = 1;
+    ((PHARDWARE_LARGE_PTE_ARMV6)PageDir->Pde)[MmioPageTableIndex].Accessed = 1;
+    ((PHARDWARE_LARGE_PTE_ARMV6)PageDir->Pde)[MmioPageTableIndex].PageFrameNumber = PaToLargePfn(0x10000000);
+    ((PHARDWARE_LARGE_PTE_ARMV6)PageDir->Pde)[MmioPageTableIndex+1].LargePage = 1;
+    ((PHARDWARE_LARGE_PTE_ARMV6)PageDir->Pde)[MmioPageTableIndex+1].Accessed = 1;
+    ((PHARDWARE_LARGE_PTE_ARMV6)PageDir->Pde)[MmioPageTableIndex+1].PageFrameNumber = PaToLargePfn(0x10100000);
+    printf("Paging init done\n");
+    
+    #if 0
     ARM_PTE Pte;
     ULONG i, j;
     PARM_TRANSLATION_TABLE ArmTable;
@@ -989,33 +1030,39 @@ ArmSetupPageDirectory(VOID)
         MasterTable->Pte[i] = Pte;
         Pte.L2.Small.BaseAddress++;        
     }
+#endif
 }
 
 VOID
 ArmSetupPagingAndJump(IN ULONG Magic)
 {
+    ULONG_PTR PageDirectoryBaseAddress = (ULONG_PTR)&startup_pagedirectory;
     ARM_CONTROL_REGISTER ControlRegister;
+    ARM_TTB_REGISTER TtbRegister;
+    ARM_DOMAIN_REGISTER DomainRegister;
     
-    //
-    // Enable MMU, DCache and ICache
-    //
+    /* Set the TTBR */
+    TtbRegister.AsUlong = PageDirectoryBaseAddress;
+    ASSERT(TtbRegister.Reserved == 0);
+    KeArmTranslationTableRegisterSet(TtbRegister);
+
+    /* Disable domains and simply use access bits on PTEs */
+    DomainRegister.AsUlong = 0;
+    DomainRegister.Domain0 = ClientDomain;
+    KeArmDomainRegisterSet(DomainRegister);
+
+    /* Enable ARMv6+ paging (MMU), caches and the access bit */
     ControlRegister = KeArmControlRegisterGet();
     ControlRegister.MmuEnabled = TRUE;
     ControlRegister.ICacheEnabled = TRUE;
     ControlRegister.DCacheEnabled = TRUE;
+    ControlRegister.ForceAp = TRUE;
+    ControlRegister.ExtendedPageTables = TRUE;
     KeArmControlRegisterSet(ControlRegister);
-
-    //
-    // Reconfigure UART0
-    //
-	ArmBoardBlock->UartRegisterBase = UART_VIRTUAL |
-                                      (ArmBoardBlock->UartRegisterBase &
-                                       ((1 << PDE_SHIFT) - 1));
-    TuiPrintf("Mapped serial port to 0x%x\n", ArmBoardBlock->UartRegisterBase);
 	
-    //
-    // Jump to Kernel
-    //
+    /* Jump to Kernel */
+    TuiPrintf("Hello from MMU Enabled!\n");
+    while (TRUE);
     (*KernelEntryPoint)((PVOID)((ULONG_PTR)ArmLoaderBlock | KSEG0_BASE));
 }
 
@@ -1107,7 +1154,7 @@ ArmPrepareForReactOS(IN BOOLEAN Setup)
                                        0,
                                        &Dummy);
     if (Status != STATUS_SUCCESS) return;
-
+#if 0
     //
     // Setup descriptor for the boot page tables
     //
@@ -1118,7 +1165,7 @@ ArmPrepareForReactOS(IN BOOLEAN Setup)
                                        0,
                                        &Dummy);
     if (Status != STATUS_SUCCESS) return;
-
+#endif
     //
     // Setup descriptor for the kernel
     //
@@ -1612,8 +1659,6 @@ FrLdrStartup(IN ULONG Magic)
     //
     // Initialize the page directory
     //
-    TuiPrintf("About to jump into kernel\n");
-    while (TRUE);
     ArmSetupPageDirectory();
 
     //

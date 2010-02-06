@@ -62,7 +62,7 @@ PVOID
 NTAPI
 LlbHwGetFrameBuffer(VOID)
 {
-    return (PVOID)0x1000000;
+    return (PVOID)0x000A0000;
 }
 
 ULONG
