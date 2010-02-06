@@ -13,7 +13,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Параметри"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Select the services that you want for each input language shown in the list.\nUse the Add and Remove buttons to modify this list.", -1, 9, 6, 238, 25
+    LTEXT "Виберіть потрібні розкладки для кожної мови введення зі списку. Для зміни списку використовуйте кнопки ""Додати"" і ""Видалити"".", -1, 9, 6, 238, 25
     CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SORTASCENDING | LVS_REPORT | 0x0000808D, 8, 36, 237, 101
     PUSHBUTTON "Замов&чування", IDC_SET_DEFAULT, 101, 159, 144, 14
     PUSHBUTTON "&Додати...", IDC_ADD_BUTTON, 27, 142, 70, 14

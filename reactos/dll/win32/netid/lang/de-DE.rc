@@ -41,7 +41,7 @@ BEGIN
     PUSHBUTTON "&Mehr...", 1003, 150, 102, 75, 14
     GROUPBOX "Mitglied von", 1018, 7, 119, 219, 73
     AUTORADIOBUTTON "&Domäne:", 1008, 17, 132, 192, 10, WS_GROUP
-    AUTORADIOBUTTON "&Abrbeitsgruppe:", 1004, 17, 161, 191, 10
+    AUTORADIOBUTTON "&Arbeitsgruppe:", 1004, 17, 161, 191, 10
     EDITTEXT 116, 28, 144, 181, 14, ES_AUTOHSCROLL | WS_GROUP
     PUSHBUTTON "Meine  Domäne &finden", 1010, 7, 203, 109, 14, NOT WS_VISIBLE | WS_DISABLED
     EDITTEXT 1007, 28, 172, 181, 14, ES_UPPERCASE | ES_AUTOHSCROLL | ES_OEMCONVERT
@@ -75,12 +75,12 @@ BEGIN
     22 "Willkommen in der Arbeitsgruppe %1"
     23 "Willkommen in der Domäne %1"
     24 "Sie müssen den Computer neustarten, damit die Änderungen wirksam werden."
-	25 "You can change the name and the membership of this computer. Changes may affect access to network resources."
+    25 "Sie können den Namen und die Zugehörigkeit dieses Computers ändern. Änderungen können sich auf den Zugriff auf Netzwerkressourcen auswirken."
     1021 "Hinweis: Nur Administratoren können die Identifikation des Computers ändern."
     1022 "Hinweis: Die Identifikation des Computers kann aus folgendem Grund nicht geändert werden:"
-	1030 "The new computer name ""%s"" contains characters which are not allowed. Characters which are not allowed include ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' \" , . < > / and ?"
+    1030 "Der Computername ""%s"" enthält unerlaubte Zeichen. Unerlaubte Zeichen sind ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' \" , . < > / und ?"
     3210 "&Details >>"
     3220 "<< &Details"
-	4000 "Information"
-	4001 "Can't set new a computer name!"
+    4000 "Information"
+    4001 "Kann neuen Computernamen nicht setzen!"
 END

@@ -71,14 +71,15 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     FCB->LocalAddress = TaCopyTransportAddress( &BindReq->Address );
 
     if( FCB->LocalAddress )
-	TdiBuildConnectionInfo( &FCB->AddressFrom,
-				FCB->LocalAddress );
+	Status = TdiBuildConnectionInfo( &FCB->AddressFrom,
+					 FCB->LocalAddress );
 
-    if( FCB->AddressFrom )
+    if( NT_SUCCESS(Status) )
 	Status = WarmSocketForBind( FCB );
-    else return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
-
     AFD_DbgPrint(MID_TRACE,("FCB->Flags %x\n", FCB->Flags));
+
+    if( !NT_SUCCESS(Status) )
+        return UnlockAndMaybeComplete(FCB, Status, Irp, 0);
 
     if( FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS ) {
 	AFD_DbgPrint(MID_TRACE,("Calling TdiReceiveDatagram\n"));

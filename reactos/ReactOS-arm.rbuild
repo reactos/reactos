@@ -111,17 +111,7 @@
 		<xi:include href="ntoskrnl/ntoskrnl.rbuild" />
 	</directory>
 	<directory name="hal">
-		<directory name="halarm">
-			<directory name="generic">
-				<xi:include href="hal/halarm/generic/generic.rbuild" />
-			</directory>
-			<directory name="up">
-				<xi:include href="hal/halarm/up/halup.rbuild" />
-			</directory>
-		</directory>
-		<directory name="hal">
-			<xi:include href="hal/hal/hal.rbuild" />
-		</directory>
+		<xi:include href="hal/hal.rbuild" />
 	</directory>
 	<directory name="boot">
 		<xi:include href="boot/boot.rbuild" />

@@ -288,6 +288,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
       DPRINT("Destroying W32 thread TID:%d at IRQ level: %lu\n", Thread->Cid.UniqueThread, KeGetCurrentIrql());
 
       Win32Thread->TIF_flags |= TIF_INCLEANUP;
+      DceFreeThreadDCE(Win32Thread);
       HOOK_DestroyThreadHooks(Thread);
       UnregisterThreadHotKeys(Thread);
       /* what if this co_ func crash in umode? what will clean us up then? */

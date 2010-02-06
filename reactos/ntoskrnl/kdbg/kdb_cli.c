@@ -2072,7 +2072,7 @@ KdbpCmdPcr(
               Pcr->NtTib.Self, Pcr->Self, Pcr->Prcb, Pcr->Irql, Pcr->IRR, Pcr->IrrActive,
               Pcr->IDR, Pcr->KdVersionBlock, Pcr->IDT, Pcr->GDT, Pcr->TSS,
               Pcr->MajorVersion, Pcr->MinorVersion, Pcr->SetMember, Pcr->StallScaleFactor,
-              Pcr->Number, Pcr->L2CacheAssociativity,
+              Pcr->Number, Pcr->SecondLevelCacheAssociativity,
               Pcr->VdmAlert, Pcr->SecondLevelCacheSize, Pcr->InterruptMode);
 #elif defined(_M_AMD64)
     KdbpPrint("Current PCR is at 0x%x.\n", (INT_PTR)Pcr);

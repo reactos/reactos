@@ -27,9 +27,20 @@ ULONG
 WdmAudGetMixerCount();
 
 MMRESULT
+WdmAudOpenSoundDeviceByLegacy();
+
+MMRESULT
 WdmAudGetNumDevsByMMixer(
     IN  MMDEVICE_TYPE DeviceType,
     OUT DWORD* DeviceCount);
+
+MMRESULT
+WdmAudCommitWaveBufferByLegacy(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  PVOID OffsetPtr,
+    IN  DWORD Length,
+    IN  PSOUND_OVERLAPPED Overlap,
+    IN  LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine);
 
 MMRESULT
 WriteFileEx_Remixer(
@@ -133,13 +144,13 @@ WdmAudCommitWaveBufferByMMixer(
     IN  PSOUND_OVERLAPPED Overlap,
     IN  LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine);
 
-VOID
-WdmAudCleanupMMixer();
+MMRESULT
+WdmAudCleanupByMMixer();
 
 /* legacy.c */
 
-VOID
-WdmAudCleanupLegacy();
+MMRESULT
+WdmAudCleanupByLegacy();
 
 MMRESULT
 WdmAudGetCapabilitiesByLegacy(

@@ -18,6 +18,12 @@ RamDiskLoadVirtualFile(
     IN PCHAR FileName
 );
 
+VOID
+NTAPI
+RamDiskInitialize(
+    VOID
+);
+
 extern PVOID gRamDiskBase;
 extern ULONG gRamDiskSize;
 

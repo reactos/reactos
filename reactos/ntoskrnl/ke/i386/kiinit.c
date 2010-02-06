@@ -25,13 +25,16 @@ ULONG_PTR KiDoubleFaultStack = (ULONG_PTR)&KiDoubleFaultStackData[KERNEL_STACK_S
 KSPIN_LOCK KiFreezeExecutionLock;
 KSPIN_LOCK Ki486CompatibilityLock;
 
+/* Perf */
+ULONG ProcessCount;
+ULONGLONG BootCycles, BootCyclesEnd;
+
 /* FUNCTIONS *****************************************************************/
 
 VOID
 NTAPI
 KiInitMachineDependent(VOID)
 {
-    ULONG Protect;
     ULONG CpuCount;
     BOOLEAN FbCaching = FALSE;
     NTSTATUS Status;
@@ -153,12 +156,7 @@ KiInitMachineDependent(VOID)
             /* FIXME: Implement and enable XMM Page Zeroing for Mm */
 
             /* Patch the RtlPrefetchMemoryNonTemporal routine to enable it */
-            Protect = MmGetPageProtect(NULL, RtlPrefetchMemoryNonTemporal);
-            MmSetPageProtect(NULL,
-                             RtlPrefetchMemoryNonTemporal,
-                             Protect | PAGE_IS_WRITABLE);
             *(PCHAR)RtlPrefetchMemoryNonTemporal = 0x90;
-            MmSetPageProtect(NULL, RtlPrefetchMemoryNonTemporal, Protect);
         }
     }
 
@@ -320,6 +318,9 @@ KiInitMachineDependent(VOID)
         /* FIXME: TODO */
         DPRINT1("ISR Time Limit not yet supported\n");
     }
+    
+    /* Set CR0 features based on detected CPU */
+    KiSetCR0Bits();
 }
 
 VOID
@@ -400,9 +401,6 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
 
     /* Detect and set the CPU Type */
     KiSetProcessorType();
-
-    /* Set CR0 features based on detected CPU */
-    KiSetCR0Bits();
 
     /* Check if an FPU is present */
     NpxPresent = KiIsNpxPresent();
@@ -688,6 +686,9 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     KIDTENTRY NmiEntry, DoubleFaultEntry;
     PKTSS Tss;
     PKIPCR Pcr;
+    
+    /* Boot cycles timestamp */
+    BootCycles = __rdtsc();
     
     /* Check if we are being booted from FreeLDR */
     if (!((ULONG_PTR)LoaderBlock & 0x80000000)) KiRosPrepareForSystemStartup((PROS_LOADER_PARAMETER_BLOCK)LoaderBlock);

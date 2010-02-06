@@ -13,41 +13,8 @@
 #include "../../reactos/registry.h"
 #endif
 
-//
-// Marvell Feroceon-based SoC:
-// Buffalo Linkstation, KuroBox Pro, D-Link DS323 and others
-//
-#define MACH_TYPE_FEROCEON     526
-
-//
-// ARM Versatile PB:
-// qemu-system-arm -M versatilepb, RealView Development Boards and others
-//
-#define MACH_TYPE_VERSATILE_PB 387
-
-//
-// TI Beagle Board, OMAP3530 SoC
-// qemu-system-arm -M beagle, Beagle Board
-//
-#define MACH_TYPE_OMAP3_BEAGLE 1546
-
-//
-// Compatible boot-loaders should return us this information
-//
-#define ARM_BOARD_CONFIGURATION_MAJOR_VERSION 1
-#define ARM_BOARD_CONFIGURATION_MINOR_VERSION 1
-typedef struct _ARM_BOARD_CONFIGURATION_BLOCK
-{
-    ULONG MajorVersion;
-    ULONG MinorVersion;
-    ULONG BoardType;
-    ULONG ClockRate;
-    ULONG TimerRegisterBase;
-    ULONG UartRegisterBase;
-    ULONG MemoryMapEntryCount;
-    PBIOS_MEMORY_MAP MemoryMap;
-    CHAR CommandLine[256];
-} ARM_BOARD_CONFIGURATION_BLOCK, *PARM_BOARD_CONFIGURATION_BLOCK;
+#include "../../../../../armllb/inc/osloader.h"
+#include "../../../../../armllb/inc/machtype.h"
 
 //
 // Static heap for ARC Hardware Component Tree
@@ -78,42 +45,6 @@ FldrCreateComponentKey(
     IN ULONG Size,
     OUT PCONFIGURATION_COMPONENT_DATA *ComponentKey
 );
-
-VOID
-ArmFeroSerialInit(IN ULONG Baudrate);
-
-VOID
-ArmFeroPutChar(IN INT Char);
-
-INT
-ArmFeroGetCh(VOID);
-
-BOOLEAN
-ArmFeroKbHit(VOID);
-
-VOID
-ArmOmap3SerialInit(IN ULONG Baudrate);
-
-VOID
-ArmOmap3PutChar(IN INT Char);
-
-INT
-ArmOmap3GetCh(VOID);
-
-BOOLEAN
-ArmOmap3KbHit(VOID);
-
-VOID
-ArmVersaSerialInit(IN ULONG Baudrate);
-
-VOID
-ArmVersaPutChar(IN INT Char);
-
-INT
-ArmVersaGetCh(VOID);
-
-BOOLEAN
-ArmVersaKbHit(VOID);
 
 extern PARM_BOARD_CONFIGURATION_BLOCK ArmBoardBlock;
 

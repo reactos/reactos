@@ -110,6 +110,14 @@ static const DEVVTBL RamDiskVtbl = {
 
 VOID
 NTAPI
+RamDiskInitialize(VOID)
+{
+    /* Setup the RAMDISK device */
+    FsRegisterDevice("ramdisk(0)", &RamDiskVtbl);
+}
+
+VOID
+NTAPI
 RamDiskLoadVirtualFile(IN PCHAR FileName)
 {
     ULONG RamFile;

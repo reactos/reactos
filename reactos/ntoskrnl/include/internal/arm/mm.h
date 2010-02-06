@@ -1,12 +1,68 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_ARM_MM_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_ARM_MM_H
 
+typedef struct _HARDWARE_PDE_ARMV6
+{
+    ULONG Valid:1;     // Only for small pages
+    ULONG LargePage:1; // Note, if large then Valid = 0
+    ULONG Buffered:1;
+    ULONG Cached:1;
+    ULONG NoExecute:1;
+    ULONG Domain:4;
+    ULONG Ecc:1;
+    ULONG PageFrameNumber:22;
+} HARDWARE_PDE_ARMV6, *PHARDWARE_PDE_ARMV6;
+
+typedef struct _HARDWARE_LARGE_PTE_ARMV6
+{
+    ULONG Valid:1;     // Only for small pages
+    ULONG LargePage:1; // Note, if large then Valid = 0
+    ULONG Buffered:1;
+    ULONG Cached:1;
+    ULONG NoExecute:1;
+    ULONG Domain:4;
+    ULONG Ecc:1;
+    ULONG Accessed:1;
+    ULONG Owner:1;
+    ULONG CacheAttributes:3;
+    ULONG ReadOnly:1;
+    ULONG Shared:1;
+    ULONG NonGlobal:1;
+    ULONG SuperLagePage:1;
+    ULONG Reserved:1;
+    ULONG PageFrameNumber:12;
+} HARDWARE_LARGE_PTE_ARMV6, *PHARDWARE_LARGE_PTE_ARMV6;
+
+C_ASSERT(sizeof(HARDWARE_PDE_ARMV6) == sizeof(ULONG));
+C_ASSERT(sizeof(HARDWARE_LARGE_PTE_ARMV6) == sizeof(ULONG));
+
+
+typedef struct _HARDWARE_PTE_ARMV6
+{
+    ULONG NoExecute:1;
+    ULONG Valid:1;
+    ULONG Buffered:1;
+    ULONG Cached:1;
+    ULONG Owner:1;
+    ULONG Accessed:1;
+    ULONG CacheAttributes:3;
+    ULONG ReadOnly:1;
+    ULONG Shared:1;
+    ULONG NonGlobal:1;
+    ULONG PageFrameNumber:20;
+} HARDWARE_PTE_ARMV6, *PHARDWARE_PTE_ARMV6;
+
+/* For FreeLDR */
+typedef struct _PAGE_DIRECTORY_ARM
+{
+    HARDWARE_PDE_ARMV6 Pde[4096];
+} PAGE_DIRECTORY_ARM, *PPAGE_DIRECTORY_ARM;
+
 //
 // Number of bits corresponding to the area that a PDE entry represents (1MB)
 //
 #define PDE_SHIFT 20
 #define PDE_SIZE  (1 << PDE_SHIFT)
-
 
 //
 // FIXFIX: This is all wrong now!!!

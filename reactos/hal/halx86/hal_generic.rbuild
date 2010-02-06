@@ -19,7 +19,6 @@
 			<file>dma.c</file>
 			<file>drive.c</file>
 			<file>display.c</file>
-			<file>pic.c</file>
 			<file>profil.c</file>
 			<file>reboot.c</file>
 			<file>sysinfo.c</file>
@@ -28,6 +27,7 @@
 				<file>bios.c</file>
 				<file>halinit.c</file>
 				<file>misc.c</file>
+				<file>pic.c</file>
 				<file>usage.c</file>
 				<directory name="i386">
 					<file>portio.c</file>
@@ -40,6 +40,7 @@
 					<file>halinit.c</file>
 					<file>irq.S</file>
 					<file>misc.c</file>
+					<file>apic.c</file>
 					<file>systimer.S</file>
 					<file>usage.c</file>
 				</directory>

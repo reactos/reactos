@@ -310,7 +310,7 @@ ExpCreateWorkerThread(WORK_QUEUE_TYPE WorkQueueType,
 
     /* Dereference and close handle */
     ObDereferenceObject(Thread);
-    ZwClose(hThread);
+    ObCloseHandle(hThread, KernelMode);
 }
 
 /*++
@@ -586,7 +586,7 @@ ExpInitializeWorkerThreads(VOID)
     ExpWorkerThreadBalanceManagerPtr = Thread;
 
     /* Close the handle and return */
-    ZwClose(ThreadHandle);
+    ObCloseHandle(ThreadHandle, KernelMode);
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/

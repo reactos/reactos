@@ -9,6 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <freeldr.h>
+#define RGB565(r, g, b) (((r >> 3) << 11)| ((g >> 2) << 5)| ((b >> 3) << 0))
 
 /* GLOBALS ********************************************************************/
 
@@ -19,6 +20,7 @@ ULONG BootDrive, BootPartition;
 VOID ArmPrepareForReactOS(IN BOOLEAN Setup);
 ADDRESS_RANGE ArmBoardMemoryMap[16];
 ULONG ArmBoardMemoryMapRangeCount;
+ULONG gDiskReadBuffer, gFileSysBuffer;
 
 /* FUNCTIONS ******************************************************************/
 
@@ -33,7 +35,7 @@ ArmInit(IN PARM_BOARD_CONFIGURATION_BLOCK BootContext)
     ArmBoardBlock = BootContext;
     
     //
-    // Let's make sure we understand the boot-loader
+    // Let's make sure we understand the LLB
     //
     ASSERT(ArmBoardBlock->MajorVersion == ARM_BOARD_CONFIGURATION_MAJOR_VERSION);
     ASSERT(ArmBoardBlock->MinorVersion == ARM_BOARD_CONFIGURATION_MINOR_VERSION);
@@ -68,25 +70,26 @@ ArmInit(IN PARM_BOARD_CONFIGURATION_BLOCK BootContext)
 }
 
 BOOLEAN
-ArmDiskGetDriveGeometry(IN ULONG DriveNumber,
-                        OUT PGEOMETRY Geometry)
+ArmDiskNormalizeSystemPath(IN OUT PCHAR SystemPath,
+                           IN unsigned Size)
 {
-    return FALSE;
+    /* Only RAMDISK supported for now */
+    if (!strstr(SystemPath, "ramdisk(0)")) return FALSE;
+    return TRUE;
 }
 
 BOOLEAN
-ArmDiskReadLogicalSectors(IN ULONG DriveNumber,
-                          IN ULONGLONG SectorNumber,
-                          IN ULONG SectorCount,
-                          IN PVOID Buffer)
+ArmDiskGetBootPath(OUT PCHAR BootPath,
+                   IN unsigned Size)
 {
-    return FALSE;
-}
-
-ULONG
-ArmDiskGetCacheableBlockCount(IN ULONG DriveNumber)
-{
-    return 0;
+    PCCH Path = "ramdisk(0)";
+    
+    /* Make sure enough space exists */
+    if (Size < sizeof(Path)) return FALSE;
+    
+    /* On ARM platforms, the loader is always in RAM */
+    strcpy(BootPath, Path);
+    return TRUE;
 }
 
 PCONFIGURATION_COMPONENT_DATA
@@ -105,6 +108,11 @@ ArmHwDetect(VOID)
     // The boot loader will send us a device tree, similar to ACPI
     // or OpenFirmware device trees, and we will convert it to ARC.
     //
+    
+    //
+    // Register RAMDISK Device
+    //
+    RamDiskInitialize();
     
     //
     // Return the root node
@@ -133,32 +141,41 @@ MachInit(IN PCCH CommandLine)
     //
     switch (ArmBoardBlock->BoardType)
     {
-            //
-            // Check for Feroceon-base boards
-            //
+        //
+        // Check for Feroceon-base boards
+        //
         case MACH_TYPE_FEROCEON:
-            
-            //
-            // These boards use a UART16550. Set us up for 115200 bps
-            //
-            ArmFeroSerialInit(115200);
-            MachVtbl.ConsPutChar = ArmFeroPutChar;
-            MachVtbl.ConsKbHit = ArmFeroKbHit;
-            MachVtbl.ConsGetCh = ArmFeroGetCh;
+            TuiPrintf("Not implemented\n");
+            while (TRUE);
             break;
             
-            //
-            // Check for ARM Versatile PB boards
-            //
+        //
+        // Check for ARM Versatile PB boards
+        //
         case MACH_TYPE_VERSATILE_PB:
             
-            //
-            // These boards use a PrimeCell UART (PL011)
-            //
-            ArmVersaSerialInit(115200);
-            MachVtbl.ConsPutChar = ArmVersaPutChar;
-            MachVtbl.ConsKbHit = ArmVersaKbHit;
-            MachVtbl.ConsGetCh = ArmVersaGetCh;
+            /* Copy Machine Routines from Firmware Table */
+            MachVtbl.ConsPutChar = ArmBoardBlock->ConsPutChar;
+            MachVtbl.ConsKbHit = ArmBoardBlock->ConsKbHit;
+            MachVtbl.ConsGetCh = ArmBoardBlock->ConsGetCh;
+            MachVtbl.VideoClearScreen = ArmBoardBlock->VideoClearScreen;
+            MachVtbl.VideoSetDisplayMode = ArmBoardBlock->VideoSetDisplayMode;
+            MachVtbl.VideoGetDisplaySize = ArmBoardBlock->VideoGetDisplaySize;
+            MachVtbl.VideoGetBufferSize = ArmBoardBlock->VideoGetBufferSize;
+            MachVtbl.VideoSetTextCursorPosition = ArmBoardBlock->VideoSetTextCursorPosition;
+            MachVtbl.VideoSetTextCursorPosition = ArmBoardBlock->VideoSetTextCursorPosition;
+            MachVtbl.VideoHideShowTextCursor = ArmBoardBlock->VideoHideShowTextCursor;
+            MachVtbl.VideoPutChar = ArmBoardBlock->VideoPutChar;
+            MachVtbl.VideoCopyOffScreenBufferToVRAM = ArmBoardBlock->VideoCopyOffScreenBufferToVRAM;
+            MachVtbl.VideoIsPaletteFixed = ArmBoardBlock->VideoIsPaletteFixed;
+            MachVtbl.VideoSetPaletteColor = ArmBoardBlock->VideoSetPaletteColor;
+            MachVtbl.VideoGetPaletteColor = ArmBoardBlock->VideoGetPaletteColor;
+            MachVtbl.VideoSync = ArmBoardBlock->VideoSync;
+            MachVtbl.GetTime = ArmBoardBlock->GetTime;
+                        
+            /* Setup the disk and file system buffers */
+            gDiskReadBuffer = 0x00090000;
+            gFileSysBuffer = 0x00090000;
             break;
             
         //
@@ -166,14 +183,8 @@ MachInit(IN PCCH CommandLine)
         // For now that means only Beagle, but ZOOM and others should be ok too
         //
         case MACH_TYPE_OMAP3_BEAGLE:
-            
-            //
-            // These boards use a UART16550
-            //
-            ArmOmap3SerialInit(115200);
-            MachVtbl.ConsPutChar = ArmOmap3PutChar;
-            MachVtbl.ConsKbHit = ArmOmap3KbHit;
-            MachVtbl.ConsGetCh = ArmOmap3GetCh;
+            TuiPrintf("Not implemented\n");
+            while (TRUE);
             break;
             
         default:
@@ -190,19 +201,12 @@ MachInit(IN PCCH CommandLine)
     //
     // Setup disk I/O routines
     //
-    MachVtbl.DiskReadLogicalSectors = ArmDiskReadLogicalSectors;
-    MachVtbl.DiskGetDriveGeometry = ArmDiskGetDriveGeometry;
-    MachVtbl.DiskGetCacheableBlockCount = ArmDiskGetCacheableBlockCount;
-    
-    //
-    // Now set default disk handling routines -- we don't need to override
-    //
-    MachVtbl.DiskGetBootPath = DiskGetBootPath;
-    MachVtbl.DiskNormalizeSystemPath = DiskNormalizeSystemPath;
+    MachVtbl.DiskGetBootPath = ArmDiskGetBootPath;
+    MachVtbl.DiskNormalizeSystemPath = ArmDiskNormalizeSystemPath;
     
     //
     // We can now print to the console
     //
     TuiPrintf("%s for ARM\n", GetFreeLoaderVersionString());
-    TuiPrintf("Bootargs: %s\n", CommandLine);
+    TuiPrintf("Bootargs: %s\n\n", CommandLine);
 }

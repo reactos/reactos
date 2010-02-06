@@ -152,6 +152,9 @@ ExQueryDepthSList(IN PSLIST_HEADER ListHead)
     return (USHORT)(ListHead->Alignment & 0xffff);
 }
 
+
+ULONG ProcessCount;
+
 #ifdef _MSC_VER
 void
 __GSHandlerCheck()

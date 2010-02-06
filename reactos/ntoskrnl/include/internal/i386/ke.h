@@ -33,6 +33,9 @@
 #define KeGetTrapFramePc(TrapFrame) \
     ((TrapFrame)->Eip)
 
+#define KiGetLinkedTrapFrame(x) \
+    (PKTRAP_FRAME)((x)->Edx)
+    
 #define KeGetContextReturnRegister(Context) \
     ((Context)->Eax)
 
@@ -397,6 +400,7 @@ Ki386HandleOpcodeV86(
 
 VOID
 FASTCALL
+DECLSPEC_NORETURN
 KiEoiHelper(
     IN PKTRAP_FRAME TrapFrame
 );
@@ -410,6 +414,19 @@ Ki386BiosCallReturnAddress(
 ULONG_PTR
 FASTCALL
 KiExitV86Mode(
+    IN PKTRAP_FRAME TrapFrame
+);
+
+VOID
+NTAPI
+DECLSPEC_NORETURN
+KiDispatchExceptionFromTrapFrame(
+    IN NTSTATUS Code,
+    IN ULONG_PTR Address,
+    IN ULONG ParameterCount,
+    IN ULONG_PTR Parameter1,
+    IN ULONG_PTR Parameter2,
+    IN ULONG_PTR Parameter3,
     IN PKTRAP_FRAME TrapFrame
 );
 
@@ -442,7 +459,18 @@ extern VOID NTAPI ExpInterlockedPopEntrySListFault(VOID);
 extern VOID __cdecl CopyParams(VOID);
 extern VOID __cdecl ReadBatch(VOID);
 extern VOID __cdecl FrRestore(VOID);
+extern CHAR KiSystemCallExitBranch[];
+extern CHAR KiSystemCallExit[];
+extern CHAR KiSystemCallExit2[];
 
+//
+// Trap Macros
+//
+#include "../trap_x.h"
+
+//
+// Returns a thread's FPU save area
+//
 PFX_SAVE_AREA
 FORCEINLINE
 KiGetThreadNpxArea(IN PKTHREAD Thread)
@@ -523,20 +551,229 @@ Ke386SanitizeDr(IN PVOID DrAddress,
             (DrAddress <= MM_HIGHEST_USER_ADDRESS) ? DrAddress : 0);
 }
 
-FORCEINLINE
+//
+// Exception with no arguments
+//
 VOID
-KiV86TrapReturn(IN ULONG_PTR Stack)
+FORCEINLINE
+DECLSPEC_NORETURN
+KiDispatchException0Args(IN NTSTATUS Code,
+                         IN ULONG_PTR Address,
+                         IN PKTRAP_FRAME TrapFrame)
 {
-    /* Restore volatiles and stack */
+    /* Helper for exceptions with no arguments */
+    KiDispatchExceptionFromTrapFrame(Code, Address, 0, 0, 0, 0, TrapFrame);
+}
+
+//
+// Exception with one argument
+//
+VOID
+FORCEINLINE
+DECLSPEC_NORETURN
+KiDispatchException1Args(IN NTSTATUS Code,
+                         IN ULONG_PTR Address,
+                         IN ULONG P1,
+                         IN PKTRAP_FRAME TrapFrame)
+{
+    /* Helper for exceptions with no arguments */
+    KiDispatchExceptionFromTrapFrame(Code, Address, 1, P1, 0, 0, TrapFrame);
+}
+
+//
+// Exception with two arguments
+//
+VOID
+FORCEINLINE
+DECLSPEC_NORETURN
+KiDispatchException2Args(IN NTSTATUS Code,
+                         IN ULONG_PTR Address,
+                         IN ULONG P1,
+                         IN ULONG P2,
+                         IN PKTRAP_FRAME TrapFrame)
+{
+    /* Helper for exceptions with no arguments */
+    KiDispatchExceptionFromTrapFrame(Code, Address, 2, P1, P2, 0, TrapFrame);
+}
+
+//
+// Performs a system call
+//
+NTSTATUS
+FORCEINLINE
+KiSystemCallTrampoline(IN PVOID Handler,
+                       IN PVOID Arguments,
+                       IN ULONG StackBytes)
+{
+    NTSTATUS Result;
+    
+    /*
+     * This sequence does a RtlCopyMemory(Stack - StackBytes, Arguments, StackBytes)
+     * and then calls the function associated with the system call.
+     *
+     * It's done in assembly for two reasons: we need to muck with the stack,
+     * and the call itself restores the stack back for us. The only way to do
+     * this in C is to do manual C handlers for every possible number of args on
+     * the stack, and then have the handler issue a call by pointer. This is
+     * wasteful since it'll basically push the values twice and require another
+     * level of call indirection.
+     *
+     * The ARM kernel currently does this, but it should probably be changed
+     * later to function like this as well.
+     *
+     */
+    __asm__ __volatile__
+    (
+        "subl %1, %%esp\n"
+        "movl %%esp, %%edi\n"
+        "movl %2, %%esi\n"
+        "shrl $2, %1\n"
+        "rep movsd\n"
+        "call *%3\n"
+        "movl %%eax, %0\n"
+        : "=r"(Result)
+        : "c"(StackBytes),
+          "d"(Arguments),
+          "r"(Handler)
+        : "%esp", "%esi", "%edi"
+    );
+    
+    return Result;
+}
+
+//
+// Checks for pending APCs
+//
+VOID
+FORCEINLINE
+KiCheckForApcDelivery(IN PKTRAP_FRAME TrapFrame)
+{
+    PKTHREAD Thread;
+    KIRQL OldIrql;
+
+    /* Check for V8086 or user-mode trap */
+    if ((TrapFrame->EFlags & EFLAGS_V86_MASK) || (KiUserTrap(TrapFrame)))
+    {
+        /* Get the thread */
+        Thread = KeGetCurrentThread();
+        while (TRUE)
+        {
+            /* Turn off the alerted state for kernel mode */
+            Thread->Alerted[KernelMode] = FALSE;
+
+            /* Are there pending user APCs? */
+            if (!Thread->ApcState.UserApcPending) break;
+
+            /* Raise to APC level and enable interrupts */
+            OldIrql = KfRaiseIrql(APC_LEVEL);
+            _enable();
+
+            /* Deliver APCs */
+            KiDeliverApc(UserMode, NULL, TrapFrame);
+
+            /* Restore IRQL and disable interrupts once again */
+            KfLowerIrql(OldIrql);
+            _disable();
+        }
+    }
+}
+
+//
+// Converts a base thread to a GUI thread
+//
+NTSTATUS
+FORCEINLINE
+KiConvertToGuiThread(VOID)
+{
+    NTSTATUS Result;  
+    PVOID StackFrame;
+
+    /*
+     * Converting to a GUI thread safely updates ESP in-place as well as the
+     * current Thread->TrapFrame and EBP when KeSwitchKernelStack is called.
+     *
+     * However, PsConvertToGuiThread "helpfully" restores EBP to the original
+     * caller's value, since it is considered a nonvolatile register. As such,
+     * as soon as we're back after the conversion and we try to store the result
+     * which will probably be in some stack variable (EBP-based), we'll crash as
+     * we are touching the de-allocated non-expanded stack.
+     *
+     * Thus we need a way to update our EBP before EBP is touched, and the only
+     * way to guarantee this is to do the call itself in assembly, use the EAX
+     * register to store the result, fixup EBP, and then let the C code continue
+     * on its merry way.
+     *
+     */
+    __asm__ __volatile__
+    (
+        "movl %%ebp, %1\n"
+        "subl %%esp, %1\n"
+        "call _PsConvertToGuiThread@0\n"
+        "addl %%esp, %1\n"
+        "movl %1, %%ebp\n"
+        "movl %%eax, %0\n"
+        : "=r"(Result), "=r"(StackFrame)
+        :
+        : "%esp", "%ecx", "%edx"
+    );
+        
+    return Result;
+}
+
+//
+// Switches from boot loader to initial kernel stack
+//
+VOID
+FORCEINLINE
+KiSwitchToBootStack(IN ULONG_PTR InitialStack)
+{
+    /* We have to switch to a new stack before continuing kernel initialization */
     __asm__ __volatile__
     (
         "movl %0, %%esp\n"
-        "popa\n"
-        "ret\n"
-        :
-        : "r"(Stack)
+        "subl %1, %%esp\n"
+        "pushl %2\n"
+        "jmp _KiSystemStartupBootStack@0\n"
+        : 
+        : "c"(InitialStack),
+          "i"(NPX_FRAME_LENGTH + KTRAP_FRAME_ALIGN + KTRAP_FRAME_LENGTH),
+          "i"(CR0_EM | CR0_TS | CR0_MP)
         : "%esp"
     );
 }
+
+//
+// Normally this is done by the HAL, but on x86 as an optimization, the kernel
+// initiates the end by calling back into the HAL and exiting the trap here.
+//
+VOID
+FORCEINLINE
+KiEndInterrupt(IN KIRQL Irql,
+               IN PKTRAP_FRAME TrapFrame)
+{
+    /* Disable interrupts and end the interrupt */
+    _disable();
+    HalEndSystemInterrupt(Irql, TrapFrame);
+    
+    /* Exit the interrupt */
+    KiEoiHelper(TrapFrame);
+}
+
+//
+// PERF Code
+//
+VOID
+FORCEINLINE
+Ki386PerfEnd(VOID)
+{
+    extern ULONGLONG BootCyclesEnd, BootCycles;
+    BootCyclesEnd = __rdtsc();
+    DbgPrint("Boot took %I64d cycles!\n", BootCyclesEnd - BootCycles);
+    DbgPrint("Interrupts: %d System Calls: %d Context Switches: %d\n",
+             KeGetCurrentPrcb()->InterruptCount,
+             KeGetCurrentPrcb()->KeSystemCalls,
+             KeGetContextSwitches(KeGetCurrentPrcb()));
+}
+
 #endif
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_I386_KE_H */

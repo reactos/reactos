@@ -48,8 +48,6 @@ void fbsd_free( void *data, char *file, unsigned line, ... ) {
 void InitOskitTCP() {
     OS_DbgPrint(OSK_MID_TRACE,("Init Called\n"));
     KeInitializeSpinLock(&OSKLock);
-    OS_DbgPrint(OSK_MID_TRACE,("MB Init\n"));
-    mbinit();
     OS_DbgPrint(OSK_MID_TRACE,("Rawip Init\n"));
     rip_init();
     raw_init();
@@ -403,7 +401,7 @@ int OskitTCPAccept( void *socket,
 
 	so->so_state |= SS_NBIO | SS_ISCONNECTED;
         so->so_q = so->so_q0 = NULL;
-        so->so_qlen = 0;
+        so->so_qlen = so->so_q0len = 0;
         so->so_head = 0;
         so->so_connection = context;
 

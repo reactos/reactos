@@ -182,34 +182,28 @@ DC_SetOwnership(HDC hDC, PEPROCESS Owner)
     */
         if (pDC->rosdc.hClipRgn)
         {   // FIXME! HAX!!!
-            KeEnterCriticalRegion();
             Index = GDI_HANDLE_GET_INDEX(pDC->rosdc.hClipRgn);
             Entry = &GdiHandleTable->Entries[Index];
             if (Entry->UserData) FreeObjectAttr(Entry->UserData);
             Entry->UserData = NULL;
-            KeLeaveCriticalRegion();
             //
             if (!GDIOBJ_SetOwnership(pDC->rosdc.hClipRgn, Owner)) return FALSE;
         }
         if (pDC->rosdc.hVisRgn)
         {   // FIXME! HAX!!!
-            KeEnterCriticalRegion();
             Index = GDI_HANDLE_GET_INDEX(pDC->rosdc.hVisRgn);
             Entry = &GdiHandleTable->Entries[Index];
             if (Entry->UserData) FreeObjectAttr(Entry->UserData);
             Entry->UserData = NULL;
-            KeLeaveCriticalRegion();
             //
             if (!GDIOBJ_SetOwnership(pDC->rosdc.hVisRgn, Owner)) return FALSE;
         }
         if (pDC->rosdc.hGCClipRgn)
         {   // FIXME! HAX!!!
-            KeEnterCriticalRegion();
             Index = GDI_HANDLE_GET_INDEX(pDC->rosdc.hGCClipRgn);
             Entry = &GdiHandleTable->Entries[Index];
             if (Entry->UserData) FreeObjectAttr(Entry->UserData);
             Entry->UserData = NULL;
-            KeLeaveCriticalRegion();
             //
             if (!GDIOBJ_SetOwnership(pDC->rosdc.hGCClipRgn, Owner)) return FALSE;
         }
@@ -474,7 +468,7 @@ IntGdiCreateDisplayDC(HDEV hDev, ULONG DcType, BOOL EmptyDC)
         defaultDCstate->pdcattr = &defaultDCstate->dcattr;
         hsurf = (HSURF)PrimarySurface.pSurface; // HAX²
         defaultDCstate->dclevel.pSurface = SURFACE_ShareLockSurface(hsurf);
-        DC_vCopyState(dc, defaultDCstate);
+        DC_vCopyState(dc, defaultDCstate, TRUE);
         DC_UnlockDc(dc);
     }
     return hDC;
@@ -544,6 +538,14 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
     if (DCToDelete->rosdc.hGCClipRgn)
     {
         GreDeleteObject(DCToDelete->rosdc.hGCClipRgn);
+    }
+    if (DCToDelete->dclevel.prgnMeta)
+    {
+       GreDeleteObject(((PROSRGNDATA)DCToDelete->dclevel.prgnMeta)->BaseObject.hHmgr);
+    }
+    if (DCToDelete->prgnAPI)
+    {
+       GreDeleteObject(((PROSRGNDATA)DCToDelete->prgnAPI)->BaseObject.hHmgr);
     }
     PATH_Delete(DCToDelete->dclevel.hPath);
 

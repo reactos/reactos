@@ -24,11 +24,14 @@ int TCPSocketState(void *ClientData,
                NewState & SEL_ACCEPT  ? 'A' : 'a',
                NewState & SEL_WRITE   ? 'W' : 'w'));
 
+    /* If this socket is missing its socket context, that means that it
+     * has been created as a new connection in sonewconn but not accepted
+     * yet. We can safely ignore event notifications on these sockets.
+     * Once they are accepted, they will get a socket context and we will 
+     * be able to process them.
+     */
     if (!Connection)
-    {
-        //ASSERT(FALSE);
         return 0;
-    }
 
     TI_DbgPrint(DEBUG_TCP,("Called: NewState %x (Conn %x) (Change %x)\n",
                NewState, Connection,

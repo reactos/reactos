@@ -843,6 +843,9 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
 
     /* Run the Notification Routines */
     PspRunCreateProcessNotifyRoutines(Process, TRUE);
+    
+    /* If 12 processes have been created, enough of user-mode is ready */
+    if (++ProcessCount == 12) Ki386PerfEnd();
 
 CleanupWithRef:
     /*

@@ -19,9 +19,7 @@ ULONGLONG KeBootTimeBias;
 volatile KSYSTEM_TIME KeTickCount = { 0, 0, 0 };
 ULONG KeMaximumIncrement;
 ULONG KeMinimumIncrement;
-ULONG KeTimeAdjustment;
 ULONG KeTimeIncrement;
-LONG KiTickOffset = 0;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 

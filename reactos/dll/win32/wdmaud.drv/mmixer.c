@@ -518,8 +518,7 @@ WdmAudOpenSoundDeviceByMMixer(
     IN  struct _SOUND_DEVICE* SoundDevice,
     OUT PVOID* Handle)
 {
-    /* no-op */
-    return MMSYSERR_NOERROR;
+    return WdmAudInitUserModeMixer();
 }
 
 MMRESULT
@@ -731,7 +730,7 @@ WdmAudCommitWaveBufferByMMixer(
                     sizeof(KSSTREAM_HEADER),
                     &Length);
 
-    /* FIXXXXXME
+    /* HACK:
      * don't call completion routine directly
      */
     CompletionRoutine(ERROR_SUCCESS, Length, (LPOVERLAPPED)Overlap);

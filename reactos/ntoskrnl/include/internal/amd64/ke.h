@@ -164,6 +164,16 @@ KiRundownThread(IN PKTHREAD Thread)
 #endif
 }
 
+VOID
+FORCEINLINE
+KiEndInterrupt(IN KIRQL Irql,
+               IN PKTRAP_FRAME TrapFrame)
+{
+    DbgPrint("KiEndInterrupt is unimplemented\n");
+}
+
+#define Ki386PerfEnd(x)
+
 struct _KPCR;
 
 VOID

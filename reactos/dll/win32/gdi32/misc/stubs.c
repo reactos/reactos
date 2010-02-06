@@ -809,15 +809,16 @@ GdiArtificialDecrementDriver(LPWSTR pDriverName,BOOL unknown)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
 GdiCleanCacheDC(HDC hdc)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+   if (GDI_HANDLE_GET_TYPE(hdc) == GDILoObjType_LO_DC_TYPE)
+      return TRUE;
+   SetLastError(ERROR_INVALID_HANDLE);
+   return FALSE;
 }
 
 /*
@@ -860,7 +861,7 @@ GdiConvertEnhMetaFile(HENHMETAFILE hmf)
  */
 BOOL
 WINAPI
-GdiDrawStream(HDC dc, ULONG l, VOID *v)
+GdiDrawStream(HDC dc, ULONG l, VOID *v) // See Bug 4784
 {
     UNIMPLEMENTED;
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -934,15 +935,25 @@ GdiIsPlayMetafileDC(HDC hDC)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
 GdiValidateHandle(HGDIOBJ hobj)
 {
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+  PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX(hobj);
+  if ( (Entry->Type & GDI_ENTRY_BASETYPE_MASK) != 0 &&
+       ( (Entry->Type << GDI_ENTRY_UPPER_SHIFT) & GDI_HANDLE_TYPE_MASK ) == 
+                                                                   GDI_HANDLE_GET_TYPE(hobj) )
+  {
+    HANDLE pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
+    if(pid == NULL || pid == CurrentProcessId)
+    {
+      return TRUE;
+    }
+  }
+  return FALSE;
+
 }
 
 /*
@@ -1531,18 +1542,6 @@ GdiResetDCEMF(HANDLE SpoolFileHandle,
 /*
  * @unimplemented
  */
-ULONG WINAPI
-XLATEOBJ_iXlate(XLATEOBJ *XlateObj,
-                ULONG Color)
-{
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
 ULONG *
 WINAPI
 XLATEOBJ_piVector(XLATEOBJ *XlateObj)
@@ -1566,8 +1565,6 @@ GdiPlayEMF(LPWSTR pwszPrinterName,
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
 }
-
-
 
 /*
  * @unimplemented
@@ -1608,7 +1605,6 @@ GdiGradientFill(
     /* FIXME some part need be done in user mode */
     return NtGdiGradientFill(hdc, pVertex, nVertex, pMesh, nMesh, ulMode);
 }
-
 
 /*
  * @implemented

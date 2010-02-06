@@ -192,7 +192,7 @@ BEGIN
     LTEXT       "Доступное пространство:", IDC_STATIC, 20, 92, 183, 9
     LTEXT       "", IDC_SPACEAVAIL, 154, 92, 104, 9
     LTEXT       "Исходный размер (MB):", -1, 22, 118, 80, 9
-    LTEXT       "Максимальный размер (MB):", -1, 22, 131, 105, 9
+    LTEXT       "Максимальный размер (MB):", -1, 22, 131, 98, 9
     AUTORADIOBUTTON "&Другой размер", IDC_CUSTOM, 20, 105, 65, 9, WS_GROUP
     AUTORADIOBUTTON "Размер по выбору системы", IDC_SYSMANSIZE, 20, 145, 105, 9
     AUTORADIOBUTTON "Без файла подкачки", IDC_NOPAGEFILE, 20, 158, 85, 9

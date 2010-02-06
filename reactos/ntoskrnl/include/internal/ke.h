@@ -98,7 +98,6 @@ extern UCHAR KeNumberNodes;
 extern UCHAR KeProcessNodeSeed;
 extern ETHREAD KiInitialThread;
 extern EPROCESS KiInitialProcess;
-extern ULONG KiInterruptTemplate[KINTERRUPT_DISPATCH_CODES];
 extern PULONG KiInterruptTemplateObject;
 extern PULONG KiInterruptTemplateDispatch;
 extern PULONG KiInterruptTemplate2ndDispatch;
@@ -134,10 +133,14 @@ extern PVOID KeUserExceptionDispatcher;
 extern PVOID KeRaiseUserExceptionDispatcher;
 extern ULONG KeTimeIncrement;
 extern ULONG KeTimeAdjustment;
+extern LONG KiTickOffset;
 extern ULONG_PTR KiBugCheckData[5];
 extern ULONG KiFreezeFlag;
 extern ULONG KiDPCTimeout;
 extern PGDI_BATCHFLUSH_ROUTINE KeGdiFlushUserBatch;
+extern ULONGLONG BootCycles, BootCyclesEnd;
+extern ULONG ProcessCount;
+extern VOID __cdecl KiInterruptTemplate(VOID);
 
 /* MACROS *************************************************************************/
 
@@ -862,19 +865,7 @@ KeBugCheckWithTf(
     ULONG_PTR BugCheckParameter4,
     PKTRAP_FRAME Tf
 );
-
-VOID
-NTAPI
-KiDispatchExceptionFromTrapFrame(
-    IN NTSTATUS Code,
-    IN ULONG_PTR Address,
-    IN ULONG ParameterCount,
-    IN ULONG_PTR Parameter1,
-    IN ULONG_PTR Parameter2,
-    IN ULONG_PTR Parameter3,
-    IN PKTRAP_FRAME TrapFrame
-);
-                                  
+                              
 BOOLEAN
 NTAPI
 KiHandleNmi(VOID);
@@ -963,19 +954,6 @@ KiServiceExit2(
     IN PKTRAP_FRAME TrapFrame
 );
 
-#ifndef HAL_INTERRUPT_SUPPORT_IN_C
-VOID
-NTAPI
-KiInterruptDispatch(
-    VOID
-);
-
-VOID
-NTAPI
-KiChainedDispatch(
-    VOID
-);
-#else
 VOID
 FASTCALL
 KiInterruptDispatch(
@@ -989,7 +967,6 @@ KiChainedDispatch(
     IN PKTRAP_FRAME TrapFrame,
     IN PKINTERRUPT Interrupt
 );
-#endif
 
 VOID
 NTAPI
@@ -1111,16 +1088,17 @@ KiQuantumEnd(
 );
 
 VOID
-KiSystemService(
-    IN PKTHREAD Thread,
-    IN PKTRAP_FRAME TrapFrame,
-    IN ULONG Instruction
+FASTCALL
+KiIdleLoop(
+    VOID
 );
 
 VOID
 FASTCALL
-KiIdleLoop(
-    VOID
+DECLSPEC_NORETURN
+KiSystemFatalException(
+    IN ULONG ExceptionCode,
+    IN PKTRAP_FRAME TrapFrame
 );
 
 PVOID

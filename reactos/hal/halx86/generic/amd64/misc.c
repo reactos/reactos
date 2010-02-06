@@ -172,7 +172,7 @@ KeQueryPerformanceCounter(
 VOID
 NTAPI
 HalDisableSystemInterrupt(
-    ULONG Vector,
+    UCHAR Vector,
     KIRQL Irql)
 {
     UNIMPLEMENTED;
@@ -181,7 +181,7 @@ HalDisableSystemInterrupt(
 BOOLEAN
 NTAPI
 HalEnableSystemInterrupt(
-    ULONG Vector,
+    UCHAR Vector,
     KIRQL Irql,
     KINTERRUPT_MODE InterruptMode)
 {

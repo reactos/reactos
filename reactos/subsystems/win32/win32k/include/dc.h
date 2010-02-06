@@ -3,6 +3,7 @@
 
 typedef struct _DC *PDC;
 
+#include "engobjects.h"
 #include "brush.h"
 #include "bitmaps.h"
 #include "pdevobj.h"
@@ -31,22 +32,11 @@ typedef struct _ROS_DC_INFO
 
   BYTE   bitsPerPixel;
 
-  CLIPOBJ     *CombinedClip;
+  CLIPOBJ     *CombinedClip; /* Use XCLIPOBJ in DC. */
 
   UNICODE_STRING    DriverName;
 
 } ROS_DC_INFO;
-
-/* EXtended CLip and Window Region Object */
-typedef struct _XCLIPOBJ
-{
-  WNDOBJ  eClipWnd;
-  PVOID   pClipRgn;    /* prgnRao_ or (prgnVis_ if (prgnRao_ == z)) */
-  DWORD   Unknown1[16];
-  DWORD   nComplexity; /* count/mode based on # of rect in regions scan. */
-  PVOID   pUnknown;    /* UnK pointer to a large drawing structure. */
-                       /* We will use it for CombinedClip ptr. */
-} XCLIPOBJ, *PXCLIPOBJ;
 
 typedef struct _DCLEVEL
 {
@@ -163,7 +153,7 @@ BOOL FASTCALL IntGdiDeleteDC(HDC, BOOL);
 VOID FASTCALL DC_UpdateXforms(PDC  dc);
 BOOL FASTCALL DC_InvertXform(const XFORM *xformSrc, XFORM *xformDest);
 VOID FASTCALL DC_vUpdateViewportExt(PDC pdc);
-VOID FASTCALL DC_vCopyState(PDC pdcSrc, PDC pdcDst);
+VOID FASTCALL DC_vCopyState(PDC pdcSrc, PDC pdcDst, BOOL to);
 VOID FASTCALL DC_vUpdateFillBrush(PDC pdc);
 VOID FASTCALL DC_vUpdateLineBrush(PDC pdc);
 VOID FASTCALL DC_vUpdateTextBrush(PDC pdc);

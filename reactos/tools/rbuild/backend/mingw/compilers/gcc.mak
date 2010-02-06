@@ -129,7 +129,7 @@ else
 
 ${call RBUILD_intermediate_dir,$(2)}$$(SEP).gch_$(1)$$(SEP)$(notdir $(2)).gch: $(2) $(3) | ${call RBUILD_intermediate_dir,$(2)}$$(SEP).gch_$(1)
 	$$(ECHO_PCH)
-	$${gcc} -MF $$@ ${call RBUILD_cflags,$(1),$(4)} -x c-header -M -MP -MT $$@ $$<
+	$${gcc} -o $$@ ${call RBUILD_cflags,$(1),$(4)} -x c-header $$<
 
 endif
 
@@ -156,7 +156,7 @@ else
 
 ${call RBUILD_intermediate_dir,$(2)}$$(SEP).gch_$(1)$$(SEP)$(notdir $(2)).gch: $(2) $(3) | ${call RBUILD_intermediate_dir,$(2)}$$(SEP).gch_$(1)
 	$$(ECHO_PCH)
-	$${gpp} -MF $$@ ${call RBUILD_cxxflags,$(1),$(4)} -x c++-header -M -MP -MT $$@ $$<
+	$${gpp} -o $$@ ${call RBUILD_cxxflags,$(1),$(4)} -x c++-header $$<
 
 endif
 

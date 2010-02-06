@@ -19,19 +19,11 @@ ULONG KeTimeAdjustment;
 
 /* FUNCTIONS ******************************************************************/
 
-#ifdef _M_IX86
 VOID
-__attribute__((regparm(3)))
-KeUpdateSystemTimeHandler(IN ULONG Increment,
-                          IN KIRQL Irql,
-                          IN PKTRAP_FRAME TrapFrame)
-#else
-VOID
-NTAPI
+FASTCALL
 KeUpdateSystemTime(IN PKTRAP_FRAME TrapFrame,
                    IN KIRQL Irql,
                    IN ULONG Increment)
-#endif                   
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
     ULARGE_INTEGER CurrentTime, InterruptTime;
@@ -119,6 +111,9 @@ KeUpdateSystemTime(IN PKTRAP_FRAME TrapFrame,
         /* Increase interrupt count and exit */
         Prcb->InterruptCount++;
     }
+    
+    /* Disable interrupts and end the interrupt */
+    KiEndInterrupt(Irql, TrapFrame);
 }
 
 VOID

@@ -190,7 +190,7 @@ IntAttachMonitor(IN PDEVOBJ *pGdiDevice,
    Monitor->rcWork = Monitor->rcMonitor;
    Monitor->cWndStack = 0;
 
-   Monitor->hrgnMonitor= IntSysCreateRectRgnIndirect( &Monitor->rcMonitor );
+   Monitor->hrgnMonitor = IntSysCreateRectRgnIndirect( &Monitor->rcMonitor );
 
    IntGdiSetRegionOwner(Monitor->hrgnMonitor, GDI_OBJ_HMGR_PUBLIC);
 
@@ -263,6 +263,9 @@ IntDetachMonitor(IN PDEVOBJ *pGdiDevice)
       if (Monitor->Next != NULL)
          Monitor->Next->Prev = Monitor->Prev;
    }
+
+   if (Monitor->hrgnMonitor)
+      REGION_FreeRgnByHandle(Monitor->hrgnMonitor);
 
    IntDestroyMonitorObject(Monitor);
 

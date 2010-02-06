@@ -159,7 +159,6 @@ DC_AllocateDcAttr(HDC hDC)
   PVOID NewMem = NULL;
   PDC pDC;
 
-  KeEnterCriticalRegion();
   {
     INT Index = GDI_HANDLE_GET_INDEX((HGDIOBJ)hDC);
     PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
@@ -179,7 +178,6 @@ DC_AllocateDcAttr(HDC hDC)
        DPRINT1("DC_ATTR not allocated!\n");
     }
   }
-  KeLeaveCriticalRegion();
   pDC = DC_LockDc(hDC);
   ASSERT(pDC->pdcattr == &pDC->dcattr);
   if (NewMem)
@@ -198,7 +196,6 @@ DC_FreeDcAttr(HDC  DCToFree )
   pDC->pdcattr = &pDC->dcattr;
   DC_UnlockDc(pDC);
 
-  KeEnterCriticalRegion();
   {
     INT Index = GDI_HANDLE_GET_INDEX((HGDIOBJ)DCToFree);
     PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
@@ -208,7 +205,6 @@ DC_FreeDcAttr(HDC  DCToFree )
        Entry->UserData = NULL;
     }
   }
-  KeLeaveCriticalRegion();
 }
 
 
