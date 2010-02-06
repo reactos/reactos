@@ -1047,6 +1047,14 @@ static void test_settargetpath(void)
     ok( r == ERROR_SUCCESS, "failed to get target path: %d\n", r);
     ok( !lstrcmpi(buffer, "C:\\one\\two\\"), "Expected C:\\one\\two\\, got %s\n", buffer);
 
+    r = MsiSetTargetPath( hpkg, "TestParent", "C:\\one\\two\\three" );
+    ok( r == ERROR_SUCCESS, "MsiSetTargetPath returned %d\n", r );
+
+    sz = sizeof buffer - 1;
+    r = MsiGetTargetPath( hpkg, "TestParent", buffer, &sz );
+    ok( r == ERROR_SUCCESS, "failed to get target path: %d\n", r);
+    ok( !lstrcmpi(buffer, "C:\\one\\two\\three\\"), "Expected C:\\one\\two\\three\\, got %s\n", buffer);
+
     MsiCloseHandle( hpkg );
 }
 

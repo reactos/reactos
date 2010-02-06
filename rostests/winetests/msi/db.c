@@ -1454,8 +1454,30 @@ static void test_streamtable(void)
     MsiViewClose( view );
     MsiCloseHandle( view );
 
+    /* insert another one */
+    create_file( "test1.txt" );
+
+    rec = MsiCreateRecord( 2 );
+    MsiRecordSetString( rec, 1, "data1" );
+
+    r = MsiRecordSetStream( rec, 2, "test1.txt" );
+    ok( r == ERROR_SUCCESS, "Failed to add stream data to the record: %d\n", r);
+
+    DeleteFile("test1.txt");
+
     r = MsiDatabaseOpenView( hdb,
-            "SELECT `Name`, `Data` FROM `_Streams`", &view );
+            "INSERT INTO `_Streams` ( `Name`, `Data` ) VALUES ( ?, ? )", &view );
+    ok( r == ERROR_SUCCESS, "Failed to open database view: %d\n", r);
+
+    r = MsiViewExecute( view, rec );
+    ok( r == ERROR_SUCCESS, "Failed to execute view: %d\n", r);
+
+    MsiCloseHandle( rec );
+    MsiViewClose( view );
+    MsiCloseHandle( view );
+
+    r = MsiDatabaseOpenView( hdb,
+            "SELECT `Name`, `Data` FROM `_Streams` WHERE `Name` = 'data'", &view );
     ok( r == ERROR_SUCCESS, "Failed to open database view: %d\n", r);
 
     r = MsiViewExecute( view, 0 );
@@ -1476,10 +1498,76 @@ static void test_streamtable(void)
     ok( !lstrcmp(buf, "test.txt\n"), "Expected 'test.txt\\n', got %s\n", buf);
 
     MsiCloseHandle( rec );
+    MsiViewClose( view );
+    MsiCloseHandle( view );
+
+    r = MsiDatabaseOpenView( hdb,
+            "SELECT `Name`, `Data` FROM `_Streams` WHERE `Name` = 'data1'", &view );
+    ok( r == ERROR_SUCCESS, "Failed to open database view: %d\n", r);
+
+    r = MsiViewExecute( view, 0 );
+    ok( r == ERROR_SUCCESS, "Failed to execute view: %d\n", r);
 
     r = MsiViewFetch( view, &rec );
-    ok( r == ERROR_NO_MORE_ITEMS, "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
+    ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
+    size = MAX_PATH;
+    r = MsiRecordGetString( rec, 1, file, &size );
+    ok( r == ERROR_SUCCESS, "Failed to get string: %d\n", r);
+    ok( !lstrcmp(file, "data1"), "Expected 'data1', got %s\n", file);
+
+    size = MAX_PATH;
+    memset(buf, 0, MAX_PATH);
+    r = MsiRecordReadStream( rec, 2, buf, &size );
+    ok( r == ERROR_SUCCESS, "Failed to get stream: %d\n", r);
+    ok( !lstrcmp(buf, "test1.txt\n"), "Expected 'test1.txt\\n', got %s\n", buf);
+
+    MsiCloseHandle( rec );
+    MsiViewClose( view );
+    MsiCloseHandle( view );
+
+    /* perform an update */
+    create_file( "test2.txt" );
+    rec = MsiCreateRecord( 1 );
+
+    r = MsiRecordSetStream( rec, 1, "test2.txt" );
+    ok( r == ERROR_SUCCESS, "Failed to add stream data to the record: %d\n", r);
+
+    DeleteFile("test2.txt");
+
+    r = MsiDatabaseOpenView( hdb,
+            "UPDATE `_Streams` SET `Data` = ? WHERE `Name` = 'data1'", &view );
+    ok( r == ERROR_SUCCESS, "Failed to open database view: %d\n", r);
+
+    r = MsiViewExecute( view, rec );
+    ok( r == ERROR_SUCCESS, "Failed to execute view: %d\n", r);
+
+    MsiCloseHandle( rec );
+    MsiViewClose( view );
+    MsiCloseHandle( view );
+
+    r = MsiDatabaseOpenView( hdb,
+            "SELECT `Name`, `Data` FROM `_Streams` WHERE `Name` = 'data1'", &view );
+    ok( r == ERROR_SUCCESS, "Failed to open database view: %d\n", r);
+
+    r = MsiViewExecute( view, 0 );
+    ok( r == ERROR_SUCCESS, "Failed to execute view: %d\n", r);
+
+    r = MsiViewFetch( view, &rec );
+    ok( r == ERROR_SUCCESS, "Failed to fetch record: %d\n", r);
+
+    size = MAX_PATH;
+    r = MsiRecordGetString( rec, 1, file, &size );
+    ok( r == ERROR_SUCCESS, "Failed to get string: %d\n", r);
+    ok( !lstrcmp(file, "data1"), "Expected 'data1', got %s\n", file);
+
+    size = MAX_PATH;
+    memset(buf, 0, MAX_PATH);
+    r = MsiRecordReadStream( rec, 2, buf, &size );
+    ok( r == ERROR_SUCCESS, "Failed to get stream: %d\n", r);
+    todo_wine ok( !lstrcmp(buf, "test2.txt\n"), "Expected 'test2.txt\\n', got %s\n", buf);
+
+    MsiCloseHandle( rec );
     MsiViewClose( view );
     MsiCloseHandle( view );
     MsiCloseHandle( hdb );
@@ -3644,6 +3732,63 @@ static void test_join(void)
     r = MsiDatabaseOpenView(hdb, query, &hview);
     ok( r == ERROR_BAD_QUERY_SYNTAX,
         "Expected ERROR_BAD_QUERY_SYNTAX, got %d\n", r );
+
+    /* try updating a row in a join table */
+    query = "SELECT `Component`.`ComponentId`, `FeatureComponents`.`Feature_` "
+            "FROM `Component`, `FeatureComponents` "
+            "WHERE `Component`.`Component` = `FeatureComponents`.`Component_` "
+            "ORDER BY `Feature_`";
+    r = MsiDatabaseOpenView(hdb, query, &hview);
+    ok( r == ERROR_SUCCESS, "failed to open view: %d\n", r );
+
+    r = MsiViewExecute(hview, 0);
+    ok( r == ERROR_SUCCESS, "failed to execute view: %d\n", r );
+
+    r = MsiViewFetch(hview, &hrec);
+    ok( r == ERROR_SUCCESS, "failed to fetch view: %d\n", r );
+
+    r = MsiRecordSetString( hrec, 1, "epicranius" );
+    ok( r == ERROR_SUCCESS, "failed to set string: %d\n", r );
+
+    r = MsiViewModify(hview, MSIMODIFY_UPDATE, hrec);
+    ok( r == ERROR_SUCCESS, "failed to update row: %d\n", r );
+
+    /* try another valid operation for joins */
+    r = MsiViewModify(hview, MSIMODIFY_REFRESH, hrec);
+    todo_wine ok( r == ERROR_SUCCESS, "failed to refresh row: %d\n", r );
+
+    /* try an invalid operation for joins */
+    r = MsiViewModify(hview, MSIMODIFY_DELETE, hrec);
+    ok( r == ERROR_FUNCTION_FAILED, "unexpected result: %d\n", r );
+
+    r = MsiRecordSetString( hrec, 2, "epicranius" );
+    ok( r == ERROR_SUCCESS, "failed to set string: %d\n", r );
+
+    /* primary key cannot be updated */
+    r = MsiViewModify(hview, MSIMODIFY_UPDATE, hrec);
+    todo_wine ok( r == ERROR_FUNCTION_FAILED, "failed to update row: %d\n", r );
+
+    MsiCloseHandle(hrec);
+    MsiViewClose(hview);
+    MsiCloseHandle(hview);
+
+    r = MsiDatabaseOpenView(hdb, query, &hview);
+    ok(r == ERROR_SUCCESS, "MsiDatabaseOpenView failed\n");
+
+    r = MsiViewExecute(hview, 0);
+    ok(r == ERROR_SUCCESS, "MsiViewExecute failed\n");
+
+    r = MsiViewFetch(hview, &hrec);
+    ok(r == ERROR_SUCCESS, "MsiViewFetch failed\n");
+
+    size = MAX_PATH;
+    r = MsiRecordGetString( hrec, 1, buf, &size );
+    ok( r == ERROR_SUCCESS, "failed to get record string: %d\n", r );
+    ok( !lstrcmp( buf, "epicranius" ), "expected 'epicranius', got %s\n", buf );
+
+    MsiCloseHandle(hrec);
+    MsiViewClose(hview);
+    MsiCloseHandle(hview);
 
     MsiCloseHandle(hdb);
     DeleteFile(msifile);
