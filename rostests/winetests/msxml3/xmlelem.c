@@ -53,11 +53,7 @@ static void test_xmlelem(void)
 
     hr = CoCreateInstance(&CLSID_XMLDocument, NULL, CLSCTX_INPROC_SERVER,
                           &IID_IXMLDocument, (LPVOID*)&doc);
-    if (FAILED(hr))
-    {
-        skip("Failed to create XMLDocument instance\n");
-        return;
-    }
+    ok(hr == S_OK, "Expected S_OK, got 0x%08x\n", hr);
 
     V_VT(&vType) = VT_I4;
     V_I4(&vType) = XMLELEMTYPE_ELEMENT;
@@ -265,11 +261,7 @@ static void test_xmlelem_collection(void)
 
     hr = CoCreateInstance(&CLSID_XMLDocument, NULL, CLSCTX_INPROC_SERVER,
                           &IID_IXMLDocument, (LPVOID*)&doc);
-    if (FAILED(hr))
-    {
-        skip("Failed to create XMLDocument instance\n");
-        return;
-    }
+    ok(hr == S_OK, "Expected S_OK, got 0x%08x\n", hr);
 
     create_xml_file(szBankXML);
     GetFullPathNameA(szBankXML, MAX_PATH, pathA, NULL);
@@ -438,6 +430,144 @@ cleanup:
     DeleteFileA("bank.xml");
 }
 
+static void test_xmlelem_children(void)
+{
+    IXMLDocument *doc = NULL;
+    IXMLElement *element = NULL, *child = NULL, *child2 = NULL;
+    IXMLElementCollection *collection = NULL;
+    VARIANT vType, vName, vIndex;
+    LONG length;
+    HRESULT hr;
+
+    hr = CoCreateInstance(&CLSID_XMLDocument, NULL, CLSCTX_INPROC_SERVER,
+                          &IID_IXMLDocument, (LPVOID*)&doc);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+
+    V_VT(&vType) = VT_I4;
+    V_I4(&vType) = XMLELEMTYPE_ELEMENT;
+    V_VT(&vName) = VT_NULL;
+    hr = IXMLDocument_createElement(doc, vType, vName, &element);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(element != NULL, "Expected non-NULL element\n");
+
+    V_VT(&vType) = VT_I4;
+    V_I4(&vType) = XMLELEMTYPE_TEXT;
+    V_VT(&vName) = VT_NULL;
+    hr = IXMLDocument_createElement(doc, vType, vName, &child);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(child != NULL, "Expected non-NULL child\n");
+
+    V_VT(&vType) = VT_I4;
+    V_I4(&vType) = XMLELEMTYPE_TEXT;
+    V_VT(&vName) = VT_NULL;
+    hr = IXMLDocument_createElement(doc, vType, vName, &child2);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(child2 != NULL, "Expected non-NULL child\n");
+
+    hr = IXMLElement_addChild(element, child, 0, -1);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+
+    hr = IXMLElement_get_children(element, &collection);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(collection != NULL, "Expected non-NULL collection\n");
+
+    length = 0;
+    hr = IXMLElementCollection_get_length(collection, &length);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(length == 1, "Expected 1, got %08x\n", length);
+
+    /* remove/add child and check what happens with collection */
+    hr = IXMLElement_removeChild(element, child);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+
+    length = -1;
+    hr = IXMLElementCollection_get_length(collection, &length);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(length == 0, "Expected 0, got %08x\n", length);
+    IXMLElementCollection_Release(collection);
+
+    hr = IXMLElement_AddRef(child);
+    ok(hr == 2, "Expected 2, got %08x\n", hr);
+    IXMLElement_Release(child);
+    hr = IXMLElement_addChild(element, child, 0, -1);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    hr = IXMLElement_AddRef(child);
+    ok(hr == 2, "Expected 2, got %08x\n", hr);
+    IXMLElement_Release(child);
+    hr = IXMLElement_addChild(element, child2, 0, -1);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+
+    hr = IXMLElement_get_children(element, &collection);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(collection != NULL, "Expected non-NULL collection\n");
+
+    hr = IXMLElement_AddRef(child);
+    ok(hr == 2, "Expected 2, got %08x\n", hr);
+    IXMLElement_Release(child);
+
+    length = 0;
+    hr = IXMLElementCollection_get_length(collection, &length);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(length == 2, "Expected 2, got %08x\n", length);
+
+    IXMLElement_Release(child2);
+
+    length = 0;
+    hr = IXMLElementCollection_get_length(collection, &length);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(length == 2, "Expected 2, got %08x\n", length);
+
+    V_VT(&vIndex) = VT_I4;
+    V_I4(&vIndex) = 1;
+    hr = IXMLElementCollection_item(collection, vIndex, vName, (IDispatch **)&child2);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(child2 != NULL, "Expected not NULL child\n");
+    IXMLElementCollection_Release(collection);
+    IXMLElement_Release(child2);
+
+    /* add element->child->child2 structure, then remove child2 from node */
+    V_VT(&vType) = VT_I4;
+    V_I4(&vType) = XMLELEMTYPE_TEXT;
+    V_VT(&vName) = VT_NULL;
+    hr = IXMLDocument_createElement(doc, vType, vName, &child2);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(child2 != NULL, "Expected non-NULL child\n");
+
+    hr = IXMLElement_addChild(child, child2, 0, -1);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+
+    hr = IXMLElement_removeChild(element, child2);
+    ok(hr == E_INVALIDARG, "Expected E_INVALIDARG, got %08x\n", hr);
+
+    hr = IXMLElement_removeChild(child, child2);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+
+    hr = IXMLElement_removeChild(child, NULL);
+    ok(hr == E_INVALIDARG, "Expected E_INVALIDARG, got %08x\n", hr);
+
+    IXMLElement_Release(element);
+    IXMLElement_Release(child);
+    IXMLElement_Release(child2);
+    IXMLDocument_Release(doc);
+}
+
+static BOOL test_try_xmldoc(void)
+{
+    IXMLDocument *doc = NULL;
+    HRESULT hr;
+
+    hr = CoCreateInstance(&CLSID_XMLDocument, NULL, CLSCTX_INPROC_SERVER,
+                          &IID_IXMLDocument, (LPVOID*)&doc);
+    if (FAILED(hr))
+    {
+        skip("Failed to create XMLDocument instance\n");
+        return FALSE;
+    }
+
+    IXMLDocument_Release(doc);
+    return TRUE;
+}
+
 START_TEST(xmlelem)
 {
     HRESULT hr;
@@ -445,8 +575,15 @@ START_TEST(xmlelem)
     hr = CoInitialize(NULL);
     ok(hr == S_OK, "failed to init com\n");
 
+    if (!test_try_xmldoc())
+    {
+        CoUninitialize();
+        return;
+    }
+
     test_xmlelem();
     test_xmlelem_collection();
+    test_xmlelem_children();
 
     CoUninitialize();
 }

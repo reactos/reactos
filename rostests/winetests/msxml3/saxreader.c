@@ -520,6 +520,8 @@ static void test_saxreader(void)
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
     test_expect_call(CH_ENDTEST);
 
+    VariantClear(&var);
+
     SADim[0].lLbound= 0;
     SADim[0].cElements= sizeof(szTestXML)-1;
     pSA = SafeArrayCreate(VT_UI1, 1, SADim);
@@ -560,6 +562,8 @@ static void test_saxreader(void)
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
     test_expect_call(CH_ENDTEST);
 
+    VariantClear(&var);
+
     file = CreateFileA(testXmlA, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     ok(file != INVALID_HANDLE_VALUE, "Could not create file: %u\n", GetLastError());
     WriteFile(file, szTestXML, sizeof(szTestXML)-1, &bytesWritten, NULL);
@@ -591,6 +595,7 @@ static void test_saxreader(void)
     IXMLDOMDocument_Release(domDocument);
 
     ISAXXMLReader_Release(reader);
+    SysFreeString(bstrData);
 }
 
 START_TEST(saxreader)
