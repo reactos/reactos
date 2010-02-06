@@ -87,6 +87,7 @@ extern "C" {
 #define _crt_va_end(v)	((void)((v) = (va_list)0))
 #define __va_copy(d,s)	((void)((d) = (s)))
 #elif defined(_M_AMD64)
+#define _PTRSIZEOF(n) ((sizeof(n) + sizeof(void*) - 1) & ~(sizeof(void*) - 1))
 #define _ISSTRUCT(t) ((sizeof(t) > sizeof(void*)) || (sizeof(t) & (sizeof(t)-1)) != 0)
 #define _crt_va_start(v,l)	((void)((v) = (va_list)_ADDRESSOF(l) + _PTRSIZEOF(l)))
 #define _crt_va_arg(v,t)	_ISSTRUCT(t) ? \
