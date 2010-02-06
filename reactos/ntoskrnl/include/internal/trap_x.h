@@ -186,216 +186,6 @@ KiUserTrap(IN PKTRAP_FRAME TrapFrame)
 }
 
 //
-// Assembly exit stubs
-//
-VOID
-FORCEINLINE
-/* Do not mark this as DECLSPEC_NORETURN because possibly executing code follows it! */
-KiSystemCallReturn(IN PKTRAP_FRAME TrapFrame)
-{
-    /* Restore nonvolatiles, EAX, and do a "jump" back to the kernel caller */
-    __asm__ __volatile__
-    (
-        "movl %0, %%esp\n"
-        "movl %c[b](%%esp), %%ebx\n"
-        "movl %c[s](%%esp), %%esi\n"
-        "movl %c[i](%%esp), %%edi\n"
-        "movl %c[p](%%esp), %%ebp\n"
-        "movl %c[a](%%esp), %%eax\n"
-        "movl %c[e](%%esp), %%edx\n"
-        "addl $%c[v],%%esp\n" /* A WHOLE *KERNEL* frame since we're not IRET'ing */
-        "jmp *%%edx\n"
-        ".globl _KiSystemCallExit2\n_KiSystemCallExit2:\n"
-        :
-        : "r"(TrapFrame),
-          [b] "i"(KTRAP_FRAME_EBX),
-          [s] "i"(KTRAP_FRAME_ESI),
-          [i] "i"(KTRAP_FRAME_EDI),
-          [p] "i"(KTRAP_FRAME_EBP),
-          [a] "i"(KTRAP_FRAME_EAX),
-          [e] "i"(KTRAP_FRAME_EIP),
-          [v] "i"(KTRAP_FRAME_ESP)
-        : "%esp"
-    );
-}
-
-VOID
-FORCEINLINE
-DECLSPEC_NORETURN
-KiSystemCallTrapReturn(IN PKTRAP_FRAME TrapFrame)
-{
-    /* Regular interrupt exit, but we only restore EAX as a volatile */
-    __asm__ __volatile__
-    (
-        ".globl _KiSystemCallExit\n_KiSystemCallExit:\n"
-        "movl %0, %%esp\n"
-        "movl %c[b](%%esp), %%ebx\n"
-        "movl %c[s](%%esp), %%esi\n"
-        "movl %c[i](%%esp), %%edi\n"
-        "movl %c[p](%%esp), %%ebp\n"
-        "movl %c[a](%%esp), %%eax\n"
-        "addl $%c[e],%%esp\n"
-        "iret\n"
-        :
-        : "r"(TrapFrame),
-          [b] "i"(KTRAP_FRAME_EBX),
-          [s] "i"(KTRAP_FRAME_ESI),
-          [i] "i"(KTRAP_FRAME_EDI),
-          [p] "i"(KTRAP_FRAME_EBP),
-          [a] "i"(KTRAP_FRAME_EAX),         
-          [e] "i"(KTRAP_FRAME_EIP)
-        : "%esp"
-    );
-    UNREACHABLE;
-}
-
-VOID
-FORCEINLINE
-DECLSPEC_NORETURN
-KiSystemCallSysExitReturn(IN PKTRAP_FRAME TrapFrame)
-{
-    /* Restore nonvolatiles, EAX, and do a SYSEXIT back to the user caller */
-    __asm__ __volatile__
-    (
-        "movl %0, %%esp\n"
-        "movl %c[s](%%esp), %%esi\n"
-        "movl %c[b](%%esp), %%ebx\n"
-        "movl %c[i](%%esp), %%edi\n"
-        "movl %c[p](%%esp), %%ebp\n"
-        "movl %c[a](%%esp), %%eax\n"
-        "movl %c[e](%%esp), %%edx\n" /* SYSEXIT says EIP in EDX */
-        "movl %c[x](%%esp), %%ecx\n" /* SYSEXIT says ESP in ECX */
-        "addl $%c[v],%%esp\n" /* A WHOLE *USER* frame since we're not IRET'ing */
-        "sti\nsysexit\n"
-        :
-        : "r"(TrapFrame),
-          [b] "i"(KTRAP_FRAME_EBX),
-          [s] "i"(KTRAP_FRAME_ESI),
-          [i] "i"(KTRAP_FRAME_EDI),
-          [p] "i"(KTRAP_FRAME_EBP),
-          [a] "i"(KTRAP_FRAME_EAX),
-          [e] "i"(KTRAP_FRAME_EIP),
-          [x] "i"(KTRAP_FRAME_ESP),
-          [v] "i"(KTRAP_FRAME_V86_ES)
-        : "%esp"
-    );
-    UNREACHABLE;
-}
-
-VOID
-FORCEINLINE
-DECLSPEC_NORETURN
-KiTrapReturn(IN PKTRAP_FRAME TrapFrame)
-{
-    /* Regular interrupt exit */
-    __asm__ __volatile__
-    (
-        "movl %0, %%esp\n"
-        "movl %c[a](%%esp), %%eax\n"
-        "movl %c[b](%%esp), %%ebx\n"
-        "movl %c[c](%%esp), %%ecx\n"
-        "movl %c[d](%%esp), %%edx\n"
-        "movl %c[s](%%esp), %%esi\n"
-        "movl %c[i](%%esp), %%edi\n"
-        "movl %c[p](%%esp), %%ebp\n"
-        "addl $%c[e],%%esp\n"
-        "iret\n"
-        :
-        : "r"(TrapFrame),
-          [a] "i"(KTRAP_FRAME_EAX),
-          [b] "i"(KTRAP_FRAME_EBX),
-          [c] "i"(KTRAP_FRAME_ECX),
-          [d] "i"(KTRAP_FRAME_EDX),
-          [s] "i"(KTRAP_FRAME_ESI),
-          [i] "i"(KTRAP_FRAME_EDI),
-          [p] "i"(KTRAP_FRAME_EBP),
-          [e] "i"(KTRAP_FRAME_EIP)
-        : "%esp"
-    );
-    UNREACHABLE;
-}
-
-VOID
-FORCEINLINE
-DECLSPEC_NORETURN
-KiDirectTrapReturn(IN PKTRAP_FRAME TrapFrame)
-{
-    /* Regular interrupt exit but we're not restoring any registers */
-    __asm__ __volatile__
-    (
-        "movl %0, %%esp\n"
-        "addl $%c[e],%%esp\n"
-        "iret\n"
-        :
-        : "r"(TrapFrame),
-          [e] "i"(KTRAP_FRAME_EIP)
-        : "%esp"
-    );
-    UNREACHABLE;  
-}
-
-VOID
-FORCEINLINE
-DECLSPEC_NORETURN
-KiCallReturn(IN PKTRAP_FRAME TrapFrame)
-{
-    /* Pops a trap frame out of the stack but returns with RET instead of IRET */
-    __asm__ __volatile__
-    (
-        "movl %0, %%esp\n"
-        "movl %c[b](%%esp), %%ebx\n"
-        "movl %c[s](%%esp), %%esi\n"
-        "movl %c[i](%%esp), %%edi\n"
-        "movl %c[p](%%esp), %%ebp\n"
-        "addl $%c[e],%%esp\n"
-        "ret\n"
-        :
-        : "r"(TrapFrame),
-          [b] "i"(KTRAP_FRAME_EBX),
-          [s] "i"(KTRAP_FRAME_ESI),
-          [i] "i"(KTRAP_FRAME_EDI),
-          [p] "i"(KTRAP_FRAME_EBP),
-          [e] "i"(KTRAP_FRAME_EIP)
-        : "%esp"
-    );
-    UNREACHABLE;
-}
-
-VOID
-FORCEINLINE
-DECLSPEC_NORETURN
-KiEditedTrapReturn(IN PKTRAP_FRAME TrapFrame)
-{
-    /* Regular interrupt exit */
-    __asm__ __volatile__
-    (
-        "movl %0, %%esp\n"
-        "movl %c[a](%%esp), %%eax\n"
-        "movl %c[b](%%esp), %%ebx\n"
-        "movl %c[c](%%esp), %%ecx\n"
-        "movl %c[d](%%esp), %%edx\n"
-        "movl %c[s](%%esp), %%esi\n"
-        "movl %c[i](%%esp), %%edi\n"
-        "movl %c[p](%%esp), %%ebp\n"
-        "addl $%c[e],%%esp\n"
-        "movl (%%esp), %%esp\n"
-        "iret\n"
-        :
-        : "r"(TrapFrame),
-          [a] "i"(KTRAP_FRAME_EAX),
-          [b] "i"(KTRAP_FRAME_EBX),
-          [c] "i"(KTRAP_FRAME_ECX),
-          [d] "i"(KTRAP_FRAME_EDX),
-          [s] "i"(KTRAP_FRAME_ESI),
-          [i] "i"(KTRAP_FRAME_EDI),
-          [p] "i"(KTRAP_FRAME_EBP),
-          [e] "i"(KTRAP_FRAME_ERROR_CODE) /* We *WANT* the error code since ESP is there! */
-        : "%esp"
-    );
-    UNREACHABLE;
-}
-
-//
 // "BOP" code used by VDM and V8086 Mode
 //
 VOID
@@ -514,6 +304,162 @@ KiSetSaneSegments(IN PKTRAP_FRAME TrapFrame)
     TrapFrame->SegDs = Ds;
     TrapFrame->SegEs = Es;
 }
+
+//
+// Generates an Exit Epilog Stub for the given name
+//
+#define KI_FUNCTION_CALL            0x1
+#define KI_EDITED_FRAME             0x2
+#define KI_DIRECT_EXIT              0x4
+#define KI_FAST_SYSTEM_CALL_EXIT    0x8
+#define KI_SYSTEM_CALL_EXIT         0x10
+#define KI_SYSTEM_CALL_JUMP         0x20
+#define KiTrapExitStub(x, y)        VOID FORCEINLINE DECLSPEC_NORETURN x(IN PKTRAP_FRAME TrapFrame) { KiTrapExit(TrapFrame, y); UNREACHABLE; }
+#define KiTrapExitStub2(x, y)       VOID FORCEINLINE x(IN PKTRAP_FRAME TrapFrame) { KiTrapExit(TrapFrame, y); }
+
+//
+// How volatiles will be restored
+//
+#define KI_EAX_NO_VOLATILES         0x0
+#define KI_EAX_ONLY                 0x1
+#define KI_ALL_VOLATILES            0x2
+
+//
+// Exit mechanism to use
+//
+#define KI_EXIT_IRET                0x0
+#define KI_EXIT_SYSEXIT             0x1
+#define KI_EXIT_JMP                 0x2
+#define KI_EXIT_RET                 0x3
+
+//
+// Master Trap Epilog
+//
+VOID
+FORCEINLINE
+KiTrapExit(IN PKTRAP_FRAME TrapFrame,
+          IN ULONG Flags)
+{
+    ULONG FrameSize = FIELD_OFFSET(KTRAP_FRAME, Eip);
+    ULONG ExitMechanism = KI_EXIT_IRET, Volatiles = KI_ALL_VOLATILES, NonVolatiles = TRUE;
+    ULONG EcxField = FIELD_OFFSET(KTRAP_FRAME, Ecx), EdxField = FIELD_OFFSET(KTRAP_FRAME, Edx);
+    
+    /* System call exit needs a special label */
+    if (Flags & KI_SYSTEM_CALL_EXIT) __asm__ __volatile__
+    (
+        ".globl _KiSystemCallExit\n_KiSystemCallExit:\n"
+    );
+            
+    /* Start by making the trap frame equal to the stack */
+    __asm__ __volatile__
+    (
+        "movl %0, %%esp\n"
+        :
+        : "r"(TrapFrame)
+        : "%esp"
+    );
+        
+    /* Check what kind of trap frame this trap requires */
+    if (Flags & KI_FUNCTION_CALL)
+    {
+        /* These calls have an EIP on the stack they need */
+        ExitMechanism = KI_EXIT_RET;
+        Volatiles = FALSE;
+    }
+    else if (Flags & KI_EDITED_FRAME)
+    {
+        /* Edited frames store a new ESP in the error code field */
+        FrameSize = FIELD_OFFSET(KTRAP_FRAME, ErrCode);
+    }
+    else if (Flags & KI_DIRECT_EXIT)
+    {
+        /* Exits directly without restoring anything, interrupt frame on stack */
+        NonVolatiles = Volatiles = FALSE;
+    }
+    else if (Flags & KI_FAST_SYSTEM_CALL_EXIT)
+    {
+        /* We have a fake interrupt stack with a ring transition */
+        FrameSize = FIELD_OFFSET(KTRAP_FRAME, V86Es);
+        ExitMechanism = KI_EXIT_SYSEXIT;
+        
+        /* SYSEXIT wants EIP in EDX and ESP in ECX */
+        EcxField = FIELD_OFFSET(KTRAP_FRAME, HardwareEsp);
+        EdxField = FIELD_OFFSET(KTRAP_FRAME, Eip);
+    }
+    else if (Flags & KI_SYSTEM_CALL_EXIT)
+    {
+        /* Only restore EAX */
+        NonVolatiles = KI_EAX_ONLY;
+    }
+    else if (Flags & KI_SYSTEM_CALL_JUMP)
+    {
+        /* We have a fake interrupt stack with no ring transition */
+        FrameSize = FIELD_OFFSET(KTRAP_FRAME, HardwareEsp);
+        NonVolatiles = KI_EAX_ONLY;
+        ExitMechanism = KI_EXIT_JMP;
+    }
+    
+    /* Restore the non volatiles */
+    if (NonVolatiles) __asm__ __volatile__
+    (
+        "movl %c[b](%%esp), %%ebx\n"
+        "movl %c[s](%%esp), %%esi\n"
+        "movl %c[i](%%esp), %%edi\n"
+        "movl %c[p](%%esp), %%ebp\n"
+        :
+        : [b] "i"(FIELD_OFFSET(KTRAP_FRAME, Ebx)),
+          [s] "i"(FIELD_OFFSET(KTRAP_FRAME, Esi)),
+          [i] "i"(FIELD_OFFSET(KTRAP_FRAME, Edi)),
+          [p] "i"(FIELD_OFFSET(KTRAP_FRAME, Ebp))
+        : "%esp"
+    );
+    
+    /* Restore EAX if volatiles must be restored */
+    if (Volatiles) __asm__ __volatile__
+    (
+        "movl %c[a](%%esp), %%eax\n":: [a] "i"(FIELD_OFFSET(KTRAP_FRAME, Eax)) : "%esp"
+    );
+    
+    /* Restore the other volatiles if needed */
+    if (Volatiles == KI_ALL_VOLATILES) __asm__ __volatile__
+    (
+        "movl %c[c](%%esp), %%ecx\n"
+        "movl %c[d](%%esp), %%edx\n"
+        :
+        : [c] "i"(EcxField),
+          [d] "i"(EdxField)
+        : "%esp"
+    );
+    
+    /* Ring 0 system calls jump back to EDX */
+    if (Flags & KI_SYSTEM_CALL_JUMP) __asm__ __volatile__
+    (
+        "movl %c[d](%%esp), %%edx\n":: [d] "i"(FIELD_OFFSET(KTRAP_FRAME, Eip)) : "%esp"
+    );
+
+    /* Now destroy the trap frame on the stack */
+    __asm__ __volatile__ ("addl $%c[e],%%esp\n":: [e] "i"(FrameSize) : "%esp");
+    
+    /* Edited traps need to change to a new ESP */
+    if (Flags & KI_EDITED_FRAME) __asm__ __volatile__ ("movl (%%esp), %%esp\n":::"%esp");
+
+    /* Check the exit mechanism and apply it */
+    if (ExitMechanism == KI_EXIT_RET) __asm__ __volatile__("ret\n"::: "%esp");
+    else if (ExitMechanism == KI_EXIT_IRET) __asm__ __volatile__("iret\n"::: "%esp");
+    else if (ExitMechanism == KI_EXIT_JMP) __asm__ __volatile__("jmp *%%edx\n.globl _KiSystemCallExit2\n_KiSystemCallExit2:\n"::: "%esp");
+    else if (ExitMechanism == KI_EXIT_SYSEXIT) __asm__ __volatile__("sti\nsysexit\n"::: "%esp");   
+}
+
+//
+// All the specific trap epilog stubs
+//
+KiTrapExitStub (KiTrapReturn,              0);
+KiTrapExitStub (KiDirectTrapReturn,        KI_DIRECT_EXIT);
+KiTrapExitStub (KiCallReturn,              KI_FUNCTION_CALL);
+KiTrapExitStub (KiEditedTrapReturn,        KI_EDITED_FRAME);
+KiTrapExitStub2(KiSystemCallReturn,        KI_SYSTEM_CALL_JUMP);
+KiTrapExitStub (KiSystemCallSysExitReturn, KI_FAST_SYSTEM_CALL_EXIT);
+KiTrapExitStub (KiSystemCallTrapReturn,    KI_SYSTEM_CALL_EXIT);
 
 //
 // Generic Exit Routine
