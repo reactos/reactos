@@ -94,7 +94,7 @@ static ULONG WINAPI dom_pi_Release(
     if ( ref == 0 )
     {
         destroy_xmlnode(&This->node);
-        HeapFree( GetProcessHeap(), 0, This );
+        heap_free( This );
     }
 
     return ref;
@@ -604,7 +604,7 @@ IUnknown* create_pi( xmlNodePtr pi )
 {
     dom_pi *This;
 
-    This = HeapAlloc( GetProcessHeap(), 0, sizeof *This );
+    This = heap_alloc( sizeof *This );
     if ( !This )
         return NULL;
 

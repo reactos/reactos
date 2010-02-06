@@ -413,7 +413,7 @@ cleanup:
         IXMLDOMNodeList_Release( (IXMLDOMNodeList*) &This->lpVtbl );
     if (ctxt != NULL)
         xmlXPathFreeContext(ctxt);
-    HeapFree(GetProcessHeap(), 0, str);
+    heap_free(str);
     return hr;
 }
 

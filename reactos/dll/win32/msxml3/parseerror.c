@@ -97,7 +97,7 @@ static ULONG WINAPI parseError_Release(
         SysFreeString(This->url);
         SysFreeString(This->reason);
         SysFreeString(This->srcText);
-        HeapFree( GetProcessHeap(), 0, This );
+        heap_free( This );
     }
 
     return ref;
@@ -283,7 +283,7 @@ IXMLDOMParseError *create_parseError( LONG code, BSTR url, BSTR reason, BSTR src
 {
     parse_error_t *This;
 
-    This = HeapAlloc( GetProcessHeap(), 0, sizeof(*This) );
+    This = heap_alloc( sizeof(*This) );
     if ( !This )
         return NULL;
 

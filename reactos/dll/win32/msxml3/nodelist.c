@@ -104,7 +104,7 @@ static ULONG WINAPI xmlnodelist_Release(
     if ( ref == 0 )
     {
         xmldoc_release( This->parent->doc );
-        HeapFree( GetProcessHeap(), 0, This );
+        heap_free( This );
     }
 
     return ref;
@@ -314,7 +314,7 @@ IXMLDOMNodeList* create_children_nodelist( xmlNodePtr node )
 {
     xmlnodelist *nodelist;
 
-    nodelist = HeapAlloc( GetProcessHeap(), 0, sizeof *nodelist );
+    nodelist = heap_alloc( sizeof *nodelist );
     if ( !nodelist )
         return NULL;
 

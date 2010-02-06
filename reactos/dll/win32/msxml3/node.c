@@ -130,7 +130,7 @@ static ULONG WINAPI xmlnode_Release(
     ref = InterlockedDecrement( &This->ref );
     if(!ref) {
         destroy_xmlnode(This);
-        HeapFree( GetProcessHeap(), 0, This );
+        heap_free( This );
     }
 
     return ref;
@@ -354,7 +354,7 @@ static HRESULT WINAPI xmlnode_put_nodeValue(
       {
         str = xmlChar_from_wchar(V_BSTR(&string_value));
         xmlNodeSetContent(This->node, str);
-        HeapFree(GetProcessHeap(),0,str);
+        heap_free(str);
         hr = S_OK;
         break;
       }
@@ -920,7 +920,7 @@ static HRESULT WINAPI xmlnode_put_text(
 
     /* Escape the string. */
     str2 = xmlEncodeEntitiesReentrant(This->node->doc, str);
-    HeapFree(GetProcessHeap(), 0, str);
+    heap_free(str);
 
     xmlNodeSetContent(This->node, str2);
     xmlFree(str2);
@@ -1284,7 +1284,7 @@ static HRESULT WINAPI xmlnode_put_dataType(
             else
                 ERR("Failed to Create Namepsace\n");
         }
-        HeapFree( GetProcessHeap(), 0, str );
+        heap_free( str );
     }
 
     return hr;
