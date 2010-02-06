@@ -254,7 +254,7 @@ x86BiosCall(
     VmState.Flags.ReturnOnIret = 1;
 
     /* Call the x86 emulator */
-//    x86Emulator(&VmState);
+    x86Emulator(&VmState);
 
     /* Copy registers back to caller */
     *Registers = VmState.BiosRegisters;

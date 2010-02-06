@@ -5,7 +5,6 @@
 		<include>include</include>
 		<include base="ntoskrnl">include</include>
 		<define name="_NTHAL_" />
-		<define name="_X86BIOS_" />
 		<directory name="generic">
 			<directory name="bus">
 				<file>bushndlr.c</file>
@@ -43,7 +42,6 @@
 					<file>misc.c</file>
 					<file>systimer.S</file>
 					<file>usage.c</file>
-					<file>x86bios.c</file>
 				</directory>
 			</if>
 		</directory>
