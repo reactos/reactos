@@ -13,7 +13,7 @@
 	<directory name="dnsapi">
 		<file>adns.c</file>
 		<file>context.c</file>
-		<file>free.c</file>
+		<file>memory.c</file>
 		<file>names.c</file>
 		<file>query.c</file>
 		<file>stubs.c</file>

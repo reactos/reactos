@@ -6,6 +6,8 @@
 @ stub DnsAddRecordSet_W
 @ stub DnsAllocateRecord
 @ stub DnsApiHeapReset
+@ stdcall DnsApiAlloc(long)
+@ stdcall DnsApiFree(ptr)
 @ stub DnsAsyncRegisterHostAddrs_A
 @ stub DnsAsyncRegisterHostAddrs_UTF8
 @ stub DnsAsyncRegisterHostAddrs_W
