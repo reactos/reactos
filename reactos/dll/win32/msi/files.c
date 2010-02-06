@@ -365,7 +365,8 @@ static UINT ITERATE_DuplicateFiles(MSIRECORD *row, LPVOID param)
                         debugstr_w(component));
 
         /* the action taken was the same as the current install state */        
-        comp->Action = comp->Installed;
+        if (comp)
+            comp->Action = comp->Installed;
 
         return ERROR_SUCCESS;
     }

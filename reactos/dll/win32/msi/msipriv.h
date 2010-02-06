@@ -689,7 +689,6 @@ extern UINT msi_check_patch_applicable( MSIPACKAGE *package, MSISUMMARYINFO *si 
 
 /* action internals */
 extern UINT MSI_InstallPackage( MSIPACKAGE *, LPCWSTR, LPCWSTR );
-extern void ACTION_free_package_structures( MSIPACKAGE* );
 extern UINT ACTION_DialogBox( MSIPACKAGE*, LPCWSTR);
 extern UINT ACTION_ForceReboot(MSIPACKAGE *package);
 extern UINT MSI_Sequence( MSIPACKAGE *package, LPCWSTR szTable, INT iSequenceMode );

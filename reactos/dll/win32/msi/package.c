@@ -49,6 +49,237 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
+static void remove_tracked_tempfiles( MSIPACKAGE *package )
+{
+    struct list *item, *cursor;
+
+    LIST_FOR_EACH_SAFE( item, cursor, &package->tempfiles )
+    {
+        MSITEMPFILE *temp = LIST_ENTRY( item, MSITEMPFILE, entry );
+
+        list_remove( &temp->entry );
+        TRACE("deleting temp file %s\n", debugstr_w( temp->Path ));
+        if (!DeleteFileW( temp->Path ))
+            ERR("failed to delete %s\n", debugstr_w( temp->Path ));
+        msi_free( temp->Path );
+        msi_free( temp );
+    }
+}
+
+static void free_feature( MSIFEATURE *feature )
+{
+    struct list *item, *cursor;
+
+    LIST_FOR_EACH_SAFE( item, cursor, &feature->Children )
+    {
+        FeatureList *fl = LIST_ENTRY( item, FeatureList, entry );
+        list_remove( &fl->entry );
+        msi_free( fl );
+    }
+
+    LIST_FOR_EACH_SAFE( item, cursor, &feature->Components )
+    {
+        ComponentList *cl = LIST_ENTRY( item, ComponentList, entry );
+        list_remove( &cl->entry );
+        msi_free( cl );
+    }
+    msi_free( feature->Feature );
+    msi_free( feature->Feature_Parent );
+    msi_free( feature->Directory );
+    msi_free( feature->Description );
+    msi_free( feature->Title );
+    msi_free( feature );
+}
+
+static void free_extension( MSIEXTENSION *ext )
+{
+    struct list *item, *cursor;
+
+    LIST_FOR_EACH_SAFE( item, cursor, &ext->verbs )
+    {
+        MSIVERB *verb = LIST_ENTRY( item, MSIVERB, entry );
+
+        list_remove( &verb->entry );
+        msi_free( verb->Verb );
+        msi_free( verb->Command );
+        msi_free( verb->Argument );
+        msi_free( verb );
+    }
+
+    msi_free( ext->Extension );
+    msi_free( ext->ProgIDText );
+    msi_free( ext );
+}
+
+static void free_package_structures( MSIPACKAGE *package )
+{
+    INT i;
+    struct list *item, *cursor;
+
+    TRACE("Freeing package action data\n");
+
+    remove_tracked_tempfiles(package);
+
+    LIST_FOR_EACH_SAFE( item, cursor, &package->features )
+    {
+        MSIFEATURE *feature = LIST_ENTRY( item, MSIFEATURE, entry );
+        list_remove( &feature->entry );
+        free_feature( feature );
+    }
+
+    LIST_FOR_EACH_SAFE( item, cursor, &package->folders )
+    {
+        MSIFOLDER *folder = LIST_ENTRY( item, MSIFOLDER, entry );
+
+        list_remove( &folder->entry );
+        msi_free( folder->Parent );
+        msi_free( folder->Directory );
+        msi_free( folder->TargetDefault );
+        msi_free( folder->SourceLongPath );
+        msi_free( folder->SourceShortPath );
+        msi_free( folder->ResolvedTarget );
+        msi_free( folder->ResolvedSource );
+        msi_free( folder->Property );
+        msi_free( folder );
+    }
+
+    LIST_FOR_EACH_SAFE( item, cursor, &package->components )
+    {
+        MSICOMPONENT *comp = LIST_ENTRY( item, MSICOMPONENT, entry );
+
+        list_remove( &comp->entry );
+        msi_free( comp->Component );
+        msi_free( comp->ComponentId );
+        msi_free( comp->Directory );
+        msi_free( comp->Condition );
+        msi_free( comp->KeyPath );
+        msi_free( comp->FullKeypath );
+        msi_free( comp );
+    }
+
+    LIST_FOR_EACH_SAFE( item, cursor, &package->files )
+    {
+        MSIFILE *file = LIST_ENTRY( item, MSIFILE, entry );
+
+        list_remove( &file->entry );
+        msi_free( file->File );
+        msi_free( file->FileName );
+        msi_free( file->ShortName );
+        msi_free( file->LongName );
+        msi_free( file->Version );
+        msi_free( file->Language );
+        msi_free( file->TargetPath );
+        msi_free( file );
+    }
+
+    /* clean up extension, progid, class and verb structures */
+    LIST_FOR_EACH_SAFE( item, cursor, &package->classes )
+    {
+        MSICLASS *cls = LIST_ENTRY( item, MSICLASS, entry );
+
+        list_remove( &cls->entry );
+        msi_free( cls->clsid );
+        msi_free( cls->Context );
+        msi_free( cls->Description );
+        msi_free( cls->FileTypeMask );
+        msi_free( cls->IconPath );
+        msi_free( cls->DefInprocHandler );
+        msi_free( cls->DefInprocHandler32 );
+        msi_free( cls->Argument );
+        msi_free( cls->ProgIDText );
+        msi_free( cls );
+    }
+
+    LIST_FOR_EACH_SAFE( item, cursor, &package->extensions )
+    {
+        MSIEXTENSION *ext = LIST_ENTRY( item, MSIEXTENSION, entry );
+
+        list_remove( &ext->entry );
+        free_extension( ext );
+    }
+
+    LIST_FOR_EACH_SAFE( item, cursor, &package->progids )
+    {
+        MSIPROGID *progid = LIST_ENTRY( item, MSIPROGID, entry );
+
+        list_remove( &progid->entry );
+        msi_free( progid->ProgID );
+        msi_free( progid->Description );
+        msi_free( progid->IconPath );
+        msi_free( progid );
+    }
+
+    LIST_FOR_EACH_SAFE( item, cursor, &package->mimes )
+    {
+        MSIMIME *mt = LIST_ENTRY( item, MSIMIME, entry );
+
+        list_remove( &mt->entry );
+        msi_free( mt->clsid );
+        msi_free( mt->ContentType );
+        msi_free( mt );
+    }
+
+    LIST_FOR_EACH_SAFE( item, cursor, &package->appids )
+    {
+        MSIAPPID *appid = LIST_ENTRY( item, MSIAPPID, entry );
+
+        list_remove( &appid->entry );
+        msi_free( appid->AppID );
+        msi_free( appid->RemoteServerName );
+        msi_free( appid->LocalServer );
+        msi_free( appid->ServiceParameters );
+        msi_free( appid->DllSurrogate );
+        msi_free( appid );
+    }
+
+    LIST_FOR_EACH_SAFE( item, cursor, &package->sourcelist_info )
+    {
+        MSISOURCELISTINFO *info = LIST_ENTRY( item, MSISOURCELISTINFO, entry );
+
+        list_remove( &info->entry );
+        msi_free( info->value );
+        msi_free( info );
+    }
+
+    LIST_FOR_EACH_SAFE( item, cursor, &package->sourcelist_media )
+    {
+        MSIMEDIADISK *info = LIST_ENTRY( item, MSIMEDIADISK, entry );
+
+        list_remove( &info->entry );
+        msi_free( info->volume_label );
+        msi_free( info->disk_prompt );
+        msi_free( info );
+    }
+
+    if (package->script)
+    {
+        for (i = 0; i < TOTAL_SCRIPTS; i++)
+            msi_free_action_script( package, i );
+
+        for (i = 0; i < package->script->UniqueActionsCount; i++)
+            msi_free( package->script->UniqueActions[i] );
+
+        msi_free( package->script->UniqueActions );
+        msi_free( package->script );
+    }
+
+    if (package->patch)
+    {
+        msi_free( package->patch->patchcode );
+        msi_free( package->patch->transforms );
+        msi_free( package->patch );
+    }
+
+    msi_free( package->BaseURL );
+    msi_free( package->PackagePath );
+    msi_free( package->ProductCode );
+    msi_free( package->ActionFormat );
+    msi_free( package->LastAction );
+
+    /* cleanup control event subscriptions */
+    ControlEvent_CleanupSubscriptions( package );
+}
+
 static void MSI_FreePackage( MSIOBJECTHDR *arg)
 {
     MSIPACKAGE *package= (MSIPACKAGE*) arg;
@@ -57,7 +288,7 @@ static void MSI_FreePackage( MSIOBJECTHDR *arg)
         msi_dialog_destroy( package->dialog );
 
     msiobj_release( &package->db->hdr );
-    ACTION_free_package_structures(package);
+    free_package_structures(package);
 }
 
 static UINT create_temp_property_table(MSIPACKAGE *package)

@@ -41,7 +41,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(msidb);
 typedef struct tabSTREAM
 {
     UINT str_index;
-    LPWSTR name;
     IStream *stream;
 } STREAM;
 
@@ -72,7 +71,6 @@ static STREAM *create_stream(MSISTREAMSVIEW *sv, LPWSTR name, BOOL encoded, IStr
 {
     STREAM *stream;
     WCHAR decoded[MAX_STREAM_NAME_LEN];
-    LPWSTR ptr = name;
 
     stream = msi_alloc(sizeof(STREAM));
     if (!stream)
@@ -81,18 +79,11 @@ static STREAM *create_stream(MSISTREAMSVIEW *sv, LPWSTR name, BOOL encoded, IStr
     if (encoded)
     {
         decode_streamname(name, decoded);
-        ptr = decoded;
         TRACE("stream -> %s %s\n", debugstr_w(name), debugstr_w(decoded));
+        name = decoded;
     }
 
-    stream->name = strdupW(ptr);
-    if (!stream->name)
-    {
-        msi_free(stream);
-        return NULL;
-    }
-
-    stream->str_index = msi_addstringW(sv->db->strings, 0, stream->name, -1, 1, StringNonPersistent);
+    stream->str_index = msi_addstringW(sv->db->strings, 0, name, -1, 1, StringNonPersistent);
     stream->stream = stm;
     return stream;
 }
@@ -133,9 +124,9 @@ static UINT STREAMS_get_row( struct tagMSIVIEW *view, UINT row, MSIRECORD **rec 
 {
     MSISTREAMSVIEW *sv = (MSISTREAMSVIEW *)view;
 
-    FIXME("%p %d %p\n", sv, row, rec);
+    TRACE("%p %d %p\n", sv, row, rec);
 
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    return msi_view_get_row( sv->db, view, row, rec );
 }
 
 static UINT STREAMS_set_row(struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, UINT mask)
@@ -144,13 +135,13 @@ static UINT STREAMS_set_row(struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, U
     STREAM *stream;
     IStream *stm;
     STATSTG stat;
-    LPWSTR name = NULL;
+    LPWSTR encname = NULL, name = NULL;
     USHORT *data = NULL;
     HRESULT hr;
     ULONG count;
     UINT r = ERROR_FUNCTION_FAILED;
 
-    TRACE("(%p, %p)\n", view, rec);
+    TRACE("(%p, %d, %p, %08x)\n", view, row, rec, mask);
 
     if (row > sv->num_rows)
         return ERROR_FUNCTION_FAILED;
@@ -167,7 +158,10 @@ static UINT STREAMS_set_row(struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, U
     }
 
     if (stat.cbSize.QuadPart >> 32)
+    {
+        WARN("stream too large\n");
         goto done;
+    }
 
     data = msi_alloc(stat.cbSize.QuadPart);
     if (!data)
@@ -182,7 +176,13 @@ static UINT STREAMS_set_row(struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, U
 
     name = strdupW(MSI_RecordGetString(rec, 1));
     if (!name)
+    {
+        WARN("failed to retrieve stream name\n");
         goto done;
+    }
+
+    encname = encode_streamname(FALSE, name);
+    IStorage_DestroyElement(sv->db->storage, encname);
 
     r = write_stream_data(sv->db->storage, name, data, count, FALSE);
     if (r != ERROR_SUCCESS)
@@ -195,14 +195,20 @@ static UINT STREAMS_set_row(struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, U
     if (!stream)
         goto done;
 
-    IStorage_OpenStream(sv->db->storage, name, 0,
-                        STGM_READ | STGM_SHARE_EXCLUSIVE, 0, &stream->stream);
+    hr = IStorage_OpenStream(sv->db->storage, encname, 0,
+                             STGM_READ | STGM_SHARE_EXCLUSIVE, 0, &stream->stream);
+    if (FAILED(hr))
+    {
+        WARN("failed to open stream: %08x\n", hr);
+        goto done;
+    }
 
     sv->streams[row] = stream;
 
 done:
     msi_free(name);
     msi_free(data);
+    msi_free(encname);
 
     IStream_Release(stm);
 
@@ -212,6 +218,9 @@ done:
 static UINT STREAMS_insert_row(struct tagMSIVIEW *view, MSIRECORD *rec, UINT row, BOOL temporary)
 {
     MSISTREAMSVIEW *sv = (MSISTREAMSVIEW *)view;
+    UINT i;
+
+    TRACE("(%p, %p, %d, %d)\n", view, rec, row, temporary);
 
     if (!streams_set_table_size(sv, ++sv->num_rows))
         return ERROR_FUNCTION_FAILED;
@@ -219,7 +228,11 @@ static UINT STREAMS_insert_row(struct tagMSIVIEW *view, MSIRECORD *rec, UINT row
     if (row == -1)
         row = sv->num_rows - 1;
 
-    /* FIXME have to readjust rows */
+    /* shift the rows to make room for the new row */
+    for (i = sv->num_rows - 1; i > row; i--)
+    {
+        sv->streams[i] = sv->streams[i - 1];
+    }
 
     return STREAMS_set_row(view, row, rec, 0);
 }
@@ -274,7 +287,7 @@ static UINT STREAMS_get_column_info(struct tagMSIVIEW *view, UINT n,
     {
     case 1:
         name_ptr = Name;
-        if (type) *type = MSITYPE_STRING | MAX_STREAM_NAME_LEN;
+        if (type) *type = MSITYPE_STRING | MSITYPE_VALID | MAX_STREAM_NAME_LEN;
         break;
 
     case 2:
@@ -404,8 +417,6 @@ static UINT STREAMS_delete(struct tagMSIVIEW *view)
         {
             if (sv->streams[i]->stream)
                 IStream_Release(sv->streams[i]->stream);
-
-            msi_free(sv->streams[i]->name);
             msi_free(sv->streams[i]);
         }
     }
@@ -420,9 +431,9 @@ static UINT STREAMS_find_matching_rows(struct tagMSIVIEW *view, UINT col,
                                        UINT val, UINT *row, MSIITERHANDLE *handle)
 {
     MSISTREAMSVIEW *sv = (MSISTREAMSVIEW *)view;
-    UINT index = (UINT)*handle;
+    UINT index = PtrToUlong(*handle);
 
-    TRACE("(%d, %d): %d\n", *row, col, val);
+    TRACE("(%p, %d, %d, %p, %p)\n", view, col, val, row, handle);
 
     if (col == 0 || col > NUM_STREAMS_COLS)
         return ERROR_INVALID_PARAMETER;
@@ -438,8 +449,9 @@ static UINT STREAMS_find_matching_rows(struct tagMSIVIEW *view, UINT col,
         index++;
     }
 
-    *handle = (MSIITERHANDLE)++index;
-    if (index >= sv->num_rows)
+    *handle = UlongToPtr(++index);
+
+    if (index > sv->num_rows)
         return ERROR_NO_MORE_ITEMS;
 
     return ERROR_SUCCESS;
@@ -510,9 +522,16 @@ static INT add_streams_to_table(MSISTREAMSVIEW *sv)
             break;
         }
 
-        IStorage_OpenStream(sv->db->storage, stat.pwcsName, 0,
-                            STGM_READ | STGM_SHARE_EXCLUSIVE, 0, &stream->stream);
+        hr = IStorage_OpenStream(sv->db->storage, stat.pwcsName, 0,
+                                 STGM_READ | STGM_SHARE_EXCLUSIVE, 0, &stream->stream);
         CoTaskMemFree(stat.pwcsName);
+
+        if (FAILED(hr))
+        {
+            WARN("failed to open stream: %08x\n", hr);
+            count = -1;
+            break;
+        }
 
         if (!streams_set_table_size(sv, ++count))
         {
