@@ -259,6 +259,8 @@ DWORD WINAPI SetWindowStationUser(DWORD x1,DWORD x2)
 static const WCHAR primary_device_name[] = {'\\','\\','.','\\','D','I','S','P','L','A','Y','1',0};
 static const WCHAR primary_device_string[] = {'X','1','1',' ','W','i','n','d','o','w','i','n','g',' ',
                                               'S','y','s','t','e','m',0};
+static const WCHAR primary_device_deviceid[] = {'P','C','I','\\','V','E','N','_','0','0','0','0','&',
+                                                'D','E','V','_','0','0','0','0',0};
 
 /***********************************************************************
  *		EnumDisplayDevicesA (USER32.@)
@@ -313,7 +315,7 @@ BOOL WINAPI EnumDisplayDevicesW( LPCWSTR lpDevice, DWORD i, LPDISPLAY_DEVICEW lp
         DISPLAY_DEVICE_VGA_COMPATIBLE;
 
     if(lpDisplayDevice->cb >= offsetof(DISPLAY_DEVICEW, DeviceID) + sizeof(lpDisplayDevice->DeviceID))
-        lpDisplayDevice->DeviceID[0] = 0;
+        memcpy(lpDisplayDevice->DeviceID, primary_device_deviceid, sizeof(primary_device_deviceid));
     if(lpDisplayDevice->cb >= offsetof(DISPLAY_DEVICEW, DeviceKey) + sizeof(lpDisplayDevice->DeviceKey))
         lpDisplayDevice->DeviceKey[0] = 0;
 

@@ -1167,6 +1167,14 @@ void WINAPI SetObjectOwner( HGDIOBJ handle, HANDLE owner )
     /* Nothing to do */
 }
 
+/***********************************************************************
+ *           GdiInitializeLanguagePack    (GDI32.@)
+ */
+DWORD WINAPI GdiInitializeLanguagePack( DWORD arg )
+{
+    FIXME("stub\n");
+    return 0;
+}
 
 /***********************************************************************
  *           GdiFlush    (GDI32.@)
@@ -1202,7 +1210,7 @@ DWORD WINAPI GdiSetBatchLimit( DWORD limit )
  */
 BOOL WINAPI GetColorAdjustment(HDC hdc, LPCOLORADJUSTMENT lpca)
 {
-        FIXME("GetColorAdjustment, stub\n");
+        FIXME("stub\n");
         return 0;
 }
 
@@ -1231,6 +1239,6 @@ BOOL WINAPI GdiComment(HDC hdc, UINT cbSize, const BYTE *lpData)
  */
 BOOL WINAPI SetColorAdjustment(HDC hdc, const COLORADJUSTMENT* lpca)
 {
-        FIXME("SetColorAdjustment, stub\n");
+        FIXME("stub\n");
         return 0;
 }

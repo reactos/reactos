@@ -176,7 +176,7 @@ static BOOL set_server_info( HWND hwnd, INT offset, LONG_PTR newval, UINT size )
  */
 static inline LPSTR CLASS_GetMenuNameA( CLASS *classPtr )
 {
-    if (!HIWORD(classPtr->menuName)) return (LPSTR)classPtr->menuName;
+    if (IS_INTRESOURCE(classPtr->menuName)) return (LPSTR)classPtr->menuName;
     return (LPSTR)(classPtr->menuName + strlenW(classPtr->menuName) + 1);
 }
 
@@ -199,8 +199,8 @@ static inline LPWSTR CLASS_GetMenuNameW( CLASS *classPtr )
  */
 static void CLASS_SetMenuNameA( CLASS *classPtr, LPCSTR name )
 {
-    if (HIWORD(classPtr->menuName)) HeapFree( GetProcessHeap(), 0, classPtr->menuName );
-    if (HIWORD(name))
+    if (!IS_INTRESOURCE(classPtr->menuName)) HeapFree( GetProcessHeap(), 0, classPtr->menuName );
+    if (!IS_INTRESOURCE(name))
     {
         DWORD lenA = strlen(name) + 1;
         DWORD lenW = MultiByteToWideChar( CP_ACP, 0, name, lenA, NULL, 0 );
@@ -219,8 +219,8 @@ static void CLASS_SetMenuNameA( CLASS *classPtr, LPCSTR name )
  */
 static void CLASS_SetMenuNameW( CLASS *classPtr, LPCWSTR name )
 {
-    if (HIWORD(classPtr->menuName)) HeapFree( GetProcessHeap(), 0, classPtr->menuName );
-    if (HIWORD(name))
+    if (!IS_INTRESOURCE(classPtr->menuName)) HeapFree( GetProcessHeap(), 0, classPtr->menuName );
+    if (!IS_INTRESOURCE(name))
     {
         DWORD lenW = strlenW(name) + 1;
         DWORD lenA = WideCharToMultiByte( CP_ACP, 0, name, lenW, NULL, 0, NULL, NULL );

@@ -365,6 +365,7 @@ static UINT16 MFDRV_CreateFontIndirect(PHYSDEV dev, HFONT hFont, LOGFONTW *logfo
     char buffer[sizeof(METARECORD) - 2 + sizeof(LOGFONT16)];
     METARECORD *mr = (METARECORD *)&buffer;
     LOGFONT16 *font16;
+    INT written;
 
     mr->rdSize = (sizeof(METARECORD) + sizeof(LOGFONT16) - 2) / 2;
     mr->rdFunction = META_CREATEFONTINDIRECT;
@@ -383,8 +384,9 @@ static UINT16 MFDRV_CreateFontIndirect(PHYSDEV dev, HFONT hFont, LOGFONTW *logfo
     font16->lfClipPrecision  = logfont->lfClipPrecision;
     font16->lfQuality        = logfont->lfQuality;
     font16->lfPitchAndFamily = logfont->lfPitchAndFamily;
-    WideCharToMultiByte( CP_ACP, 0, logfont->lfFaceName, -1, font16->lfFaceName, LF_FACESIZE, NULL, NULL );
-    font16->lfFaceName[LF_FACESIZE-1] = 0;
+    written = WideCharToMultiByte( CP_ACP, 0, logfont->lfFaceName, -1, font16->lfFaceName, LF_FACESIZE - 1, NULL, NULL );
+    /* Zero pad the facename buffer, so that we don't write uninitialized data to disk */
+    memset(font16->lfFaceName + written, 0, LF_FACESIZE - written);
 
     if (!(MFDRV_WriteRecord( dev, mr, mr->rdSize * 2)))
         return 0;

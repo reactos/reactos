@@ -319,7 +319,7 @@
 @ stdcall GdiGetSpoolMessage(ptr long ptr long)
 @ stdcall GdiGradientFill(long ptr long ptr long long) 
 @ stdcall GdiInitSpool()
-@ stub GdiInitializeLanguagePack
+@ stdcall GdiInitializeLanguagePack(long)
 @ stdcall GdiIsMetaFileDC(long)
 @ stdcall GdiIsMetaPrintDC(long)
 @ stdcall GdiIsPlayMetafileDC(long)

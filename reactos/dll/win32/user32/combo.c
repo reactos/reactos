@@ -1910,8 +1910,14 @@ LRESULT ComboWndProc_common( HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
 	case WM_GETFONT:
 		return  (LRESULT)lphc->hFont;
 	case WM_SETFOCUS:
-		if( lphc->wState & CBF_EDIT )
-		    SetFocus( lphc->hWndEdit );
+               if( lphc->wState & CBF_EDIT ) {
+                   SetFocus( lphc->hWndEdit );
+                   /* The first time focus is received, select all the text */
+                   if( !(lphc->wState & CBF_BEENFOCUSED) ) {
+                       SendMessageW(lphc->hWndEdit, EM_SETSEL, 0, -1);
+                       lphc->wState |= CBF_BEENFOCUSED;
+                   }
+               }
 		else
 		    COMBO_SetFocus( lphc );
 		return  TRUE;

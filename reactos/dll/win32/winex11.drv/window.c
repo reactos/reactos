@@ -1327,6 +1327,15 @@ static void sync_window_position( Display *display, struct x11drv_win_data *data
     data->configure_serial = NextRequest( display );
     XReconfigureWMWindow( display, data->whole_window,
                           DefaultScreen(display), mask, &changes );
+#ifdef HAVE_LIBXSHAPE
+    if (data->shaped)
+    {
+        int x_offset = old_whole_rect->left - data->whole_rect.left;
+        int y_offset = old_whole_rect->top - data->whole_rect.top;
+        if (x_offset || y_offset)
+            XShapeOffsetShape( display, data->whole_window, ShapeBounding, x_offset, y_offset );
+    }
+#endif
     wine_tsx11_unlock();
 
     TRACE( "win %p/%lx pos %d,%d,%dx%d after %lx changes=%x serial=%lu\n",
@@ -1445,6 +1454,7 @@ static Window create_whole_window( Display *display, struct x11drv_win_data *dat
     COLORREF key;
     BYTE alpha;
     DWORD layered_flags;
+    HRGN win_rgn;
 
     if (!data->managed && is_window_managed( data->hwnd, SWP_NOACTIVATE, &data->window_rect ))
     {
@@ -1452,6 +1462,14 @@ static Window create_whole_window( Display *display, struct x11drv_win_data *dat
         data->managed = TRUE;
         SetPropA( data->hwnd, managed_prop, (HANDLE)1 );
     }
+
+    if ((win_rgn = CreateRectRgn( 0, 0, 0, 0 )) &&
+        GetWindowRgn( data->hwnd, win_rgn ) == ERROR)
+    {
+        DeleteObject( win_rgn );
+        win_rgn = 0;
+    }
+    data->shaped = (win_rgn != 0);
 
     mask = get_window_attributes( display, data, &attr );
 
@@ -1472,7 +1490,7 @@ static Window create_whole_window( Display *display, struct x11drv_win_data *dat
     if (data->whole_window) XSaveContext( display, data->whole_window, winContext, (char *)data->hwnd );
     wine_tsx11_unlock();
 
-    if (!data->whole_window) return 0;
+    if (!data->whole_window) goto done;
 
     if (!create_client_window( display, data, NULL ))
     {
@@ -1481,7 +1499,7 @@ static Window create_whole_window( Display *display, struct x11drv_win_data *dat
         XDestroyWindow( display, data->whole_window );
         data->whole_window = 0;
         wine_tsx11_unlock();
-        return 0;
+        goto done;
     }
 
     set_initial_wm_hints( display, data );
@@ -1494,7 +1512,7 @@ static Window create_whole_window( Display *display, struct x11drv_win_data *dat
     sync_window_text( display, data->whole_window, text );
 
     /* set the window region */
-    sync_window_region( display, data, (HRGN)1 );
+    if (win_rgn) sync_window_region( display, data, win_rgn );
 
     /* set the window opacity */
     if (!GetLayeredWindowAttributes( data->hwnd, &key, &alpha, &layered_flags )) layered_flags = 0;
@@ -1503,6 +1521,8 @@ static Window create_whole_window( Display *display, struct x11drv_win_data *dat
     wine_tsx11_lock();
     XFlush( display );  /* make sure the window exists before we start painting to it */
     wine_tsx11_unlock();
+done:
+    if (win_rgn) DeleteObject( win_rgn );
     return data->whole_window;
 }
 

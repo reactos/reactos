@@ -92,7 +92,7 @@ static HFONT MSGBOX_OnInit(HWND hwnd, LPMSGBOXPARAMSW lpmb)
     /* set text font */
     SendDlgItemMessageW (hwnd, MSGBOX_IDTEXT, WM_SETFONT, (WPARAM)hFont, 0);
 
-    if (HIWORD(lpmb->lpszCaption)) {
+    if (!IS_INTRESOURCE(lpmb->lpszCaption)) {
        SetWindowTextW(hwnd, lpmb->lpszCaption);
     } else {
         UINT len = LoadStringW( lpmb->hInstance, LOWORD(lpmb->lpszCaption), (LPWSTR)&ptr, 0 );
@@ -107,9 +107,7 @@ static HFONT MSGBOX_OnInit(HWND hwnd, LPMSGBOXPARAMSW lpmb)
             buffer = NULL;
         }
     }
-    if (HIWORD(lpmb->lpszText)) {
-       lpszText = lpmb->lpszText;
-    } else {
+    if (IS_INTRESOURCE(lpmb->lpszText)) {
         UINT len = LoadStringW( lpmb->hInstance, LOWORD(lpmb->lpszText), (LPWSTR)&ptr, 0 );
         lpszText = buffer = HeapAlloc( GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR) );
         if (buffer)
@@ -117,6 +115,8 @@ static HFONT MSGBOX_OnInit(HWND hwnd, LPMSGBOXPARAMSW lpmb)
             memcpy( buffer, ptr, len * sizeof(WCHAR) );
             buffer[len] = 0;
         }
+    } else {
+       lpszText = lpmb->lpszText;
     }
 
     TRACE_(msgbox)("%s\n", debugstr_w(lpszText));
@@ -460,21 +460,21 @@ INT WINAPI MessageBoxIndirectA( LPMSGBOXPARAMSA msgbox )
     UNICODE_STRING textW, captionW, iconW;
     int ret;
 
-    if (HIWORD(msgbox->lpszText))
-        RtlCreateUnicodeStringFromAsciiz(&textW, msgbox->lpszText);
-    else
+    if (IS_INTRESOURCE(msgbox->lpszText))
         textW.Buffer = (LPWSTR)msgbox->lpszText;
-    if (HIWORD(msgbox->lpszCaption))
-        RtlCreateUnicodeStringFromAsciiz(&captionW, msgbox->lpszCaption);
     else
+        RtlCreateUnicodeStringFromAsciiz(&textW, msgbox->lpszText);
+    if (IS_INTRESOURCE(msgbox->lpszCaption))
         captionW.Buffer = (LPWSTR)msgbox->lpszCaption;
+    else
+        RtlCreateUnicodeStringFromAsciiz(&captionW, msgbox->lpszCaption);
 
     if (msgbox->dwStyle & MB_USERICON)
     {
-        if (HIWORD(msgbox->lpszIcon))
-            RtlCreateUnicodeStringFromAsciiz(&iconW, msgbox->lpszIcon);
-        else
+        if (IS_INTRESOURCE(msgbox->lpszIcon))
             iconW.Buffer = (LPWSTR)msgbox->lpszIcon;
+        else
+            RtlCreateUnicodeStringFromAsciiz(&iconW, msgbox->lpszIcon);
     }
     else
         iconW.Buffer = NULL;
@@ -492,9 +492,9 @@ INT WINAPI MessageBoxIndirectA( LPMSGBOXPARAMSA msgbox )
 
     ret = MessageBoxIndirectW(&msgboxW);
 
-    if (HIWORD(textW.Buffer)) RtlFreeUnicodeString(&textW);
-    if (HIWORD(captionW.Buffer)) RtlFreeUnicodeString(&captionW);
-    if (HIWORD(iconW.Buffer)) RtlFreeUnicodeString(&iconW);
+    if (!IS_INTRESOURCE(textW.Buffer)) RtlFreeUnicodeString(&textW);
+    if (!IS_INTRESOURCE(captionW.Buffer)) RtlFreeUnicodeString(&captionW);
+    if (!IS_INTRESOURCE(iconW.Buffer)) RtlFreeUnicodeString(&iconW);
     return ret;
 }
 

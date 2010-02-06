@@ -199,6 +199,7 @@ extern INT SCROLL_SetNCSbState( HWND hwnd, int vMin, int vMax, int vPos,
 #define CBF_SELCHANGE           0x0400
 #define CBF_NOEDITNOTIFY        0x1000
 #define CBF_NOLBSELECT          0x2000  /* do not change current selection */
+#define CBF_BEENFOCUSED         0x4000  /* has it ever had focus           */
 #define CBF_EUI                 0x8000
 
 /* combo state struct */

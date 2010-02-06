@@ -2467,7 +2467,7 @@ HANDLE WINAPI LoadImageA( HINSTANCE hinst, LPCSTR name, UINT type,
     HANDLE res;
     LPWSTR u_name;
 
-    if (!HIWORD(name))
+    if (IS_INTRESOURCE(name))
         return LoadImageW(hinst, (LPCWSTR)name, type, desiredx, desiredy, loadflags);
 
     __TRY {

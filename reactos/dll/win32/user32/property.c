@@ -119,7 +119,7 @@ HANDLE WINAPI GetPropA( HWND hwnd, LPCSTR str )
 {
     WCHAR buffer[ATOM_BUFFER_SIZE];
 
-    if (!HIWORD(str)) return GetPropW( hwnd, (LPCWSTR)str );
+    if (IS_INTRESOURCE(str)) return GetPropW( hwnd, (LPCWSTR)str );
     if (!MultiByteToWideChar( CP_ACP, 0, str, -1, buffer, ATOM_BUFFER_SIZE )) return 0;
     return GetPropW( hwnd, buffer );
 }
@@ -135,7 +135,7 @@ HANDLE WINAPI GetPropW( HWND hwnd, LPCWSTR str )
     SERVER_START_REQ( get_window_property )
     {
         req->window = wine_server_user_handle( hwnd );
-        if (!HIWORD(str)) req->atom = LOWORD(str);
+        if (IS_INTRESOURCE(str)) req->atom = LOWORD(str);
         else wine_server_add_data( req, str, strlenW(str) * sizeof(WCHAR) );
         if (!wine_server_call_err( req )) ret = reply->data;
     }
@@ -151,7 +151,7 @@ BOOL WINAPI SetPropA( HWND hwnd, LPCSTR str, HANDLE handle )
 {
     WCHAR buffer[ATOM_BUFFER_SIZE];
 
-    if (!HIWORD(str)) return SetPropW( hwnd, (LPCWSTR)str, handle );
+    if (IS_INTRESOURCE(str)) return SetPropW( hwnd, (LPCWSTR)str, handle );
     if (!MultiByteToWideChar( CP_ACP, 0, str, -1, buffer, ATOM_BUFFER_SIZE )) return FALSE;
     return SetPropW( hwnd, buffer, handle );
 }
@@ -168,7 +168,7 @@ BOOL WINAPI SetPropW( HWND hwnd, LPCWSTR str, HANDLE handle )
     {
         req->window = wine_server_user_handle( hwnd );
         req->data   = (ULONG_PTR)handle;
-        if (!HIWORD(str)) req->atom = LOWORD(str);
+        if (IS_INTRESOURCE(str)) req->atom = LOWORD(str);
         else wine_server_add_data( req, str, strlenW(str) * sizeof(WCHAR) );
         ret = !wine_server_call_err( req );
     }
@@ -184,7 +184,7 @@ HANDLE WINAPI RemovePropA( HWND hwnd, LPCSTR str )
 {
     WCHAR buffer[ATOM_BUFFER_SIZE];
 
-    if (!HIWORD(str)) return RemovePropW( hwnd, (LPCWSTR)str );
+    if (IS_INTRESOURCE(str)) return RemovePropW( hwnd, (LPCWSTR)str );
     if (!MultiByteToWideChar( CP_ACP, 0, str, -1, buffer, ATOM_BUFFER_SIZE )) return 0;
     return RemovePropW( hwnd, buffer );
 }
@@ -200,7 +200,7 @@ HANDLE WINAPI RemovePropW( HWND hwnd, LPCWSTR str )
     SERVER_START_REQ( remove_window_property )
     {
         req->window = wine_server_user_handle( hwnd );
-        if (!HIWORD(str)) req->atom = LOWORD(str);
+        if (IS_INTRESOURCE(str)) req->atom = LOWORD(str);
         else wine_server_add_data( req, str, strlenW(str) * sizeof(WCHAR) );
         if (!wine_server_call_err( req )) ret = reply->data;
     }

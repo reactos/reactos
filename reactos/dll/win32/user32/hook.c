@@ -222,12 +222,12 @@ static LRESULT call_hook_AtoW( HOOKPROC proc, INT id, INT code, WPARAM wparam, L
         cbtcwW.hwndInsertAfter = cbtcwA->hwndInsertAfter;
         csW = *(CREATESTRUCTW *)cbtcwA->lpcs;
 
-        if (HIWORD(cbtcwA->lpcs->lpszName))
+        if (!IS_INTRESOURCE(cbtcwA->lpcs->lpszName))
         {
             RtlCreateUnicodeStringFromAsciiz(&usBuffer,cbtcwA->lpcs->lpszName);
             csW.lpszName = nameW = usBuffer.Buffer;
         }
-        if (HIWORD(cbtcwA->lpcs->lpszClass))
+        if (!IS_INTRESOURCE(cbtcwA->lpcs->lpszClass))
         {
             RtlCreateUnicodeStringFromAsciiz(&usBuffer,cbtcwA->lpcs->lpszClass);
             csW.lpszClass = classW = usBuffer.Buffer;
@@ -262,14 +262,14 @@ static LRESULT call_hook_WtoA( HOOKPROC proc, INT id, INT code, WPARAM wparam, L
         cbtcwA.hwndInsertAfter = cbtcwW->hwndInsertAfter;
         csA = *(CREATESTRUCTA *)cbtcwW->lpcs;
 
-        if (HIWORD(cbtcwW->lpcs->lpszName)) {
+        if (!IS_INTRESOURCE(cbtcwW->lpcs->lpszName)) {
             len = WideCharToMultiByte( CP_ACP, 0, cbtcwW->lpcs->lpszName, -1, NULL, 0, NULL, NULL );
             nameA = HeapAlloc( GetProcessHeap(), 0, len*sizeof(CHAR) );
             WideCharToMultiByte( CP_ACP, 0, cbtcwW->lpcs->lpszName, -1, nameA, len, NULL, NULL );
             csA.lpszName = nameA;
         }
 
-        if (HIWORD(cbtcwW->lpcs->lpszClass)) {
+        if (!IS_INTRESOURCE(cbtcwW->lpcs->lpszClass)) {
             len = WideCharToMultiByte( CP_ACP, 0, cbtcwW->lpcs->lpszClass, -1, NULL, 0, NULL, NULL );
             classA = HeapAlloc( GetProcessHeap(), 0, len*sizeof(CHAR) );
             WideCharToMultiByte( CP_ACP, 0, cbtcwW->lpcs->lpszClass, -1, classA, len, NULL, NULL );

@@ -563,7 +563,7 @@ static LRESULT DEFWND_DefWinProc( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         else if( wParam == VK_F10 )
         {
             if (GetKeyState(VK_SHIFT) & 0x8000)
-                SendMessageW( hwnd, WM_CONTEXTMENU, (WPARAM)hwnd, MAKELPARAM(-1, -1) );
+                SendMessageW( hwnd, WM_CONTEXTMENU, (WPARAM)hwnd, -1 );
             iF10Key = 1;
         }
         else if( wParam == VK_ESCAPE && (GetKeyState(VK_SHIFT) & 0x8000))
@@ -835,7 +835,7 @@ LRESULT WINAPI DefWindowProcA( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             CREATESTRUCTA *cs = (CREATESTRUCTA *)lParam;
             /* check for string, as static icons, bitmaps (SS_ICON, SS_BITMAP)
              * may have child window IDs instead of window name */
-            if (HIWORD(cs->lpszName))
+            if (!IS_INTRESOURCE(cs->lpszName))
                 DEFWND_SetTextA( hwnd, cs->lpszName );
             result = 1;
         }
@@ -982,7 +982,7 @@ LRESULT WINAPI DefWindowProcW(
             CREATESTRUCTW *cs = (CREATESTRUCTW *)lParam;
             /* check for string, as static icons, bitmaps (SS_ICON, SS_BITMAP)
              * may have child window IDs instead of window name */
-            if (HIWORD(cs->lpszName))
+            if (!IS_INTRESOURCE(cs->lpszName))
                 DEFWND_SetTextW( hwnd, cs->lpszName );
             result = 1;
         }

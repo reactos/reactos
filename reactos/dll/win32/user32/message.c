@@ -546,8 +546,8 @@ static size_t pack_message( HWND hwnd, UINT message, WPARAM wparam, LPARAM lpara
     {
         CREATESTRUCTW *cs = (CREATESTRUCTW *)lparam;
         push_data( data, cs, sizeof(*cs) );
-        if (HIWORD(cs->lpszName)) push_string( data, cs->lpszName );
-        if (HIWORD(cs->lpszClass)) push_string( data, cs->lpszClass );
+        if (!IS_INTRESOURCE(cs->lpszName)) push_string( data, cs->lpszName );
+        if (!IS_INTRESOURCE(cs->lpszClass)) push_string( data, cs->lpszClass );
         return sizeof(*cs);
     }
     case WM_GETTEXT:
@@ -690,8 +690,8 @@ static size_t pack_message( HWND hwnd, UINT message, WPARAM wparam, LPARAM lpara
     {
         MDICREATESTRUCTW *cs = (MDICREATESTRUCTW *)lparam;
         push_data( data, cs, sizeof(*cs) );
-        if (HIWORD(cs->szTitle)) push_string( data, cs->szTitle );
-        if (HIWORD(cs->szClass)) push_string( data, cs->szClass );
+        if (!IS_INTRESOURCE(cs->szTitle)) push_string( data, cs->szTitle );
+        if (!IS_INTRESOURCE(cs->szClass)) push_string( data, cs->szClass );
         return sizeof(*cs);
     }
     case WM_MDIGETACTIVE:
@@ -785,14 +785,14 @@ static BOOL unpack_message( HWND hwnd, UINT message, WPARAM *wparam, LPARAM *lpa
         WCHAR *str = (WCHAR *)(cs + 1);
         if (size < sizeof(*cs)) return FALSE;
         size -= sizeof(*cs);
-        if (HIWORD(cs->lpszName))
+        if (!IS_INTRESOURCE(cs->lpszName))
         {
             if (!check_string( str, size )) return FALSE;
             cs->lpszName = str;
             size -= (strlenW(str) + 1) * sizeof(WCHAR);
             str += strlenW(str) + 1;
         }
-        if (HIWORD(cs->lpszClass))
+        if (!IS_INTRESOURCE(cs->lpszClass))
         {
             if (!check_string( str, size )) return FALSE;
             cs->lpszClass = str;
@@ -957,14 +957,14 @@ static BOOL unpack_message( HWND hwnd, UINT message, WPARAM *wparam, LPARAM *lpa
         WCHAR *str = (WCHAR *)(cs + 1);
         if (size < sizeof(*cs)) return FALSE;
         size -= sizeof(*cs);
-        if (HIWORD(cs->szTitle))
+        if (!IS_INTRESOURCE(cs->szTitle))
         {
             if (!check_string( str, size )) return FALSE;
             cs->szTitle = str;
             size -= (strlenW(str) + 1) * sizeof(WCHAR);
             str += strlenW(str) + 1;
         }
-        if (HIWORD(cs->szClass))
+        if (!IS_INTRESOURCE(cs->szClass))
         {
             if (!check_string( str, size )) return FALSE;
             cs->szClass = str;

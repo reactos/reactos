@@ -287,14 +287,14 @@ static BOOL DIALOG_CreateControls32( HWND hwnd, LPCSTR template, const DLG_TEMPL
             LPSTR class_tmp = NULL;
             LPSTR caption_tmp = NULL;
 
-            if (HIWORD(class))
+            if (!IS_INTRESOURCE(class))
             {
                 DWORD len = WideCharToMultiByte( CP_ACP, 0, info.className, -1, NULL, 0, NULL, NULL );
                 class_tmp = HeapAlloc( GetProcessHeap(), 0, len );
                 WideCharToMultiByte( CP_ACP, 0, info.className, -1, class_tmp, len, NULL, NULL );
                 class = class_tmp;
             }
-            if (HIWORD(caption))
+            if (!IS_INTRESOURCE(caption))
             {
                 DWORD len = WideCharToMultiByte( CP_ACP, 0, info.windowName, -1, NULL, 0, NULL, NULL );
                 caption_tmp = HeapAlloc( GetProcessHeap(), 0, len );
@@ -633,14 +633,14 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
         LPSTR class_tmp = NULL;
         LPSTR caption_tmp = NULL;
 
-        if (HIWORD(class))
+        if (!IS_INTRESOURCE(class))
         {
             DWORD len = WideCharToMultiByte( CP_ACP, 0, template.className, -1, NULL, 0, NULL, NULL );
             class_tmp = HeapAlloc( GetProcessHeap(), 0, len );
             WideCharToMultiByte( CP_ACP, 0, template.className, -1, class_tmp, len, NULL, NULL );
             class = class_tmp;
         }
-        if (HIWORD(caption))
+        if (!IS_INTRESOURCE(caption))
         {
             DWORD len = WideCharToMultiByte( CP_ACP, 0, template.caption, -1, NULL, 0, NULL, NULL );
             caption_tmp = HeapAlloc( GetProcessHeap(), 0, len );

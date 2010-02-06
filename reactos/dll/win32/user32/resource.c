@@ -83,7 +83,7 @@ HACCEL WINAPI LoadAcceleratorsA(HINSTANCE instance,LPCSTR lpTableName)
     LPWSTR uni;
     HACCEL result = 0;
 
-    if (!HIWORD(lpTableName)) return LoadAcceleratorsW( instance, (LPCWSTR)lpTableName );
+    if (IS_INTRESOURCE(lpTableName)) return LoadAcceleratorsW( instance, (LPCWSTR)lpTableName );
 
     len = MultiByteToWideChar( CP_ACP, 0, lpTableName, -1, NULL, 0 );
     if ((uni = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) )))
