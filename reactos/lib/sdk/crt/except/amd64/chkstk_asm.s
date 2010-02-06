@@ -12,8 +12,8 @@
 
 .intel_syntax noprefix
 
-.global _MsgUnimplemented
-_MsgUnimplemented:
+.global MsgUnimplemented
+MsgUnimplemented:
 .asciz "WARNING:  %s at %s:%d is UNIMPLEMENTED!\n"
 
 
