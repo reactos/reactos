@@ -10,78 +10,69 @@
 
 #include <wine/debug.h>
 
-#define POLICY_DELETE (RTL_HANDLE_VALID << 1)
-typedef struct _LSAR_POLICY_HANDLE
+typedef struct _LSA_DB_HANDLE
 {
-    ULONG Flags;
+    ULONG Signature;
+    ULONG Type;
     LONG RefCount;
     ACCESS_MASK AccessGranted;
-} LSAR_POLICY_HANDLE, *PLSAR_POLICY_HANDLE;
+} LSA_DB_HANDLE, *PLSA_DB_HANDLE;
+
+#define LSAP_DB_SIGNATURE 0x12345678
 
 static RTL_CRITICAL_SECTION PolicyHandleTableLock;
-static RTL_HANDLE_TABLE PolicyHandleTable;
 
 WINE_DEFAULT_DEBUG_CHANNEL(lsasrv);
 
+
 /* FUNCTIONS ***************************************************************/
 
-static NTSTATUS
-ReferencePolicyHandle(
-    IN LSA_HANDLE ObjectHandle,
-    IN ACCESS_MASK DesiredAccess,
-    OUT PLSAR_POLICY_HANDLE *Policy)
+static LSAPR_HANDLE
+LsapCreateDbHandle(ULONG Type)
 {
-    PLSAR_POLICY_HANDLE ReferencedPolicy;
-    NTSTATUS Status = STATUS_SUCCESS;
+    PLSA_DB_HANDLE DbHandle;
 
-    RtlEnterCriticalSection(&PolicyHandleTableLock);
+//    RtlEnterCriticalSection(&PolicyHandleTableLock);
 
-    if (RtlIsValidIndexHandle(&PolicyHandleTable,
-                              HandleToUlong(ObjectHandle),
-                              (PRTL_HANDLE_TABLE_ENTRY*)&ReferencedPolicy) &&
-        !(ReferencedPolicy->Flags & POLICY_DELETE))
+    DbHandle = (PLSA_DB_HANDLE)RtlAllocateHeap(RtlGetProcessHeap(),
+                                               0,
+                                               sizeof(LSA_DB_HANDLE));
+    if (DbHandle != NULL)
     {
-        if (RtlAreAllAccessesGranted(ReferencedPolicy->AccessGranted,
-                                     DesiredAccess))
-        {
-            ReferencedPolicy->RefCount++;
-            *Policy = ReferencedPolicy;
-        }
-        else
-            Status = STATUS_ACCESS_DENIED;
+        DbHandle->Signature = LSAP_DB_SIGNATURE;
+        DbHandle->RefCount = 1;
+        DbHandle->Type = Type;
     }
-    else
-        Status = STATUS_INVALID_HANDLE;
 
-    RtlLeaveCriticalSection(&PolicyHandleTableLock);
+//    RtlLeaveCriticalSection(&PolicyHandleTableLock);
 
-    return Status;
+    return (LSAPR_HANDLE)DbHandle;
 }
 
-static VOID
-DereferencePolicyHandle(
-    IN OUT PLSAR_POLICY_HANDLE Policy,
-    IN BOOLEAN Delete)
+
+static BOOL
+LsapValidateDbHandle(LSAPR_HANDLE Handle)
 {
-    RtlEnterCriticalSection(&PolicyHandleTableLock);
+    PLSA_DB_HANDLE DbHandle = (PLSA_DB_HANDLE)Handle;
+    BOOL bValid = FALSE;
 
-    if (Delete)
+    _SEH2_TRY
     {
-        Policy->Flags |= POLICY_DELETE;
-        Policy->RefCount--;
-
-        ASSERT(Policy->RefCount != 0);
+        if (DbHandle->Signature == LSAP_DB_SIGNATURE)
+            bValid = TRUE;
     }
-
-    if (--Policy->RefCount == 0)
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        ASSERT(Policy->Flags & POLICY_DELETE);
-        RtlFreeHandle(&PolicyHandleTable,
-                      (PRTL_HANDLE_TABLE_ENTRY)Policy);
+        bValid = FALSE;
     }
+    _SEH2_END;
 
-    RtlLeaveCriticalSection(&PolicyHandleTableLock);
+
+    return bValid;
 }
+
+
+
 
 VOID
 LsarStartRpcServer(VOID)
@@ -89,9 +80,6 @@ LsarStartRpcServer(VOID)
     RPC_STATUS Status;
 
     RtlInitializeCriticalSection(&PolicyHandleTableLock);
-    RtlInitializeHandleTable(0x1000,
-                             sizeof(LSAR_POLICY_HANDLE),
-                             &PolicyHandleTable);
 
     TRACE("LsarStartRpcServer() called");
 
@@ -135,29 +123,21 @@ void __RPC_USER LSAPR_HANDLE_rundown(LSAPR_HANDLE hHandle)
 NTSTATUS LsarClose(
     LSAPR_HANDLE *ObjectHandle)
 {
-    PLSAR_POLICY_HANDLE Policy = NULL;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     TRACE("0x%p\n", ObjectHandle);
 
-#if 1
-    /* This is our fake handle, don't go too much long way */
-    if (*ObjectHandle == (LSA_HANDLE)0xcafe)
-    {
-        *ObjectHandle = NULL;
-        Status = STATUS_SUCCESS;
-    }
-#endif
+//    RtlEnterCriticalSection(&PolicyHandleTableLock);
 
-    Status = ReferencePolicyHandle((LSA_HANDLE)*ObjectHandle,
-                                   0,
-                                   &Policy);
-    if (NT_SUCCESS(Status))
+    if (LsapValidateDbHandle(*ObjectHandle))
     {
-        /* delete the handle */
-        DereferencePolicyHandle(Policy,
-                                TRUE);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, *ObjectHandle);
+        *ObjectHandle = NULL;
     }
+    else
+        Status = STATUS_INVALID_HANDLE;
+
+//    RtlLeaveCriticalSection(&PolicyHandleTableLock);
 
     return Status;
 }
@@ -227,18 +207,21 @@ NTSTATUS LsarOpenPolicy(
     ACCESS_MASK DesiredAccess,
     LSAPR_HANDLE *PolicyHandle)
 {
-#if 1
+    NTSTATUS Status = STATUS_SUCCESS;
+
     TRACE("LsarOpenPolicy called!\n");
 
-    *PolicyHandle = (LSAPR_HANDLE)0xcafe;
+    RtlEnterCriticalSection(&PolicyHandleTableLock);
+
+    *PolicyHandle = LsapCreateDbHandle(0);
+    if (*PolicyHandle == NULL)
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+
+    RtlLeaveCriticalSection(&PolicyHandleTableLock);
 
     TRACE("LsarOpenPolicy done!\n");
 
-    return STATUS_SUCCESS;
-#else
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-#endif
+    return Status;
 }
 
 
