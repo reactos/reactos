@@ -15,6 +15,11 @@
 /* GLOBALS *******************************************************************/
 
 BOOLEAN HalpPciLockSettings;
+#ifdef CONFIG_SMP
+#define HAL_BUILD_TYPE (0 | DBG)
+#else
+#define HAL_BUILD_TYPE (2 | DBG)
+#endif
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -59,30 +64,12 @@ HalInitSystem(IN ULONG BootPhase,
         /* Get command-line parameters */
         HalpGetParameters(LoaderBlock);
 
-#if DBG
-        /* Checked HAL requires checked kernel */
-        if (!(Prcb->BuildType & PRCB_BUILD_DEBUG))
+        /* Check if HAL and kernel have identical build type */
+        if (Prcb->BuildType != HAL_BUILD_TYPE)
         {
             /* No match, bugcheck */
-            KeBugCheckEx(MISMATCHED_HAL, 2, Prcb->BuildType, 1, 0);
+            KeBugCheckEx(MISMATCHED_HAL, 2, Prcb->BuildType, HAL_BUILD_TYPE, 0);
         }
-#else
-        /* Release build requires release HAL */
-        if (Prcb->BuildType & PRCB_BUILD_DEBUG)
-        {
-            /* No match, bugcheck */
-            KeBugCheckEx(MISMATCHED_HAL, 2, Prcb->BuildType, 0, 0);
-        }
-#endif
-
-#ifdef CONFIG_SMP
-        /* SMP HAL requires SMP kernel */
-        if (Prcb->BuildType & PRCB_BUILD_UNIPROCESSOR)
-        {
-            /* No match, bugcheck */
-            KeBugCheckEx(MISMATCHED_HAL, 2, Prcb->BuildType, 0, 0);
-        }
-#endif
 
         /* Validate the PRCB */
         if (Prcb->MajorVersion != PRCB_MAJOR_VERSION)
