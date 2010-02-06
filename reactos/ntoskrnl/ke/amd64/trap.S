@@ -25,28 +25,28 @@ EXTERN KiXmmExceptionHandler:PROC
 
 PUBLIC MsgUnimplemented
 MsgUnimplemented:
-.ascii "WARNING:  %s at %s:%d is UNIMPLEMENTED!\n"
+.asciz "WARNING:  %s at %s:%d is UNIMPLEMENTED!\n"
 
 MsgPageFault:
-.ascii "Page fault! Code = 0x%x, RIP = %p, FaultingAddress = %p\n\0"
+.asciz "Page fault! Code = 0x%x, RIP = %p, FaultingAddress = %p\n"
 
 MsgGeneralProtFault:
-.ascii "General protection fault at %p!\n\0"
+.asciz "General protection fault at %p!\n"
 
 MsgBreakpointTrap:
-.ascii "BreakpointTrap at %p\n\0"
+.asciz "BreakpointTrap at %p\n"
 
 MsgUnexpectedInterrupt:
-.ascii "UnexpectedInterrupt Vector=0x%02lx\n\0"
+.asciz "UnexpectedInterrupt Vector=0x%02lx\n"
 
 MsgInvalidOpcodeFault:
-.ascii "Invalid opcode fault at %p!\n\0"
+.asciz "Invalid opcode fault at %p!\n"
 
 MsgDoubleFault:
-.ascii "Double fault at %p, rbp=%p!\n\0"
+.asciz "Double fault at %p, rbp=%p!\n"
 
 MsgTrapInfo:
-.ascii "Trap: %s at %p\n\0"
+.asciz "Trap: %s at %p\n"
 
 MACRO(TRAPINFO, func)
 LOCAL label1, label2
