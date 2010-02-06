@@ -7,6 +7,12 @@
 
 /* INCLUDES *****************************************************************/
 
+/* Prevent that inline function with the same names are created */
+#define RtlConvertLongToLargeInteger RtlConvertLongToLargeInteger_inline
+#define RtlEnlargedIntegerMultiply RtlEnlargedIntegerMultiply_inline
+#define RtlEnlargedUnsignedDivide RtlEnlargedUnsignedDivide_inline
+#define RtlEnlargedUnsignedMultiply RtlEnlargedUnsignedMultiply_inline
+
 #include <rtl.h>
 
 #define NDEBUG
@@ -17,6 +23,7 @@
 /*
  * @implemented
  */
+#undef RtlConvertLongToLargeInteger
 LARGE_INTEGER
 NTAPI
 RtlConvertLongToLargeInteger (
@@ -49,6 +56,7 @@ RtlConvertUlongToLargeInteger (
 /*
  * @implemented
  */
+#undef RtlEnlargedIntegerMultiply
 LARGE_INTEGER
 NTAPI
 RtlEnlargedIntegerMultiply (
@@ -66,6 +74,7 @@ RtlEnlargedIntegerMultiply (
 /*
  * @implemented
  */
+#undef RtlEnlargedUnsignedDivide
 ULONG
 NTAPI
 RtlEnlargedUnsignedDivide (
@@ -83,6 +92,7 @@ RtlEnlargedUnsignedDivide (
 /*
  * @implemented
  */
+#undef RtlEnlargedUnsignedMultiply
 LARGE_INTEGER
 NTAPI
 RtlEnlargedUnsignedMultiply (
