@@ -67,4 +67,7 @@
 	<directory name="win32ksys">
 		<xi:include href="win32ksys/win32ksys.rbuild" />
 	</directory>
+	<directory name="x86emu">
+		<xi:include href="x86emu/x86emu.rbuild" />
+	</directory>
 </group>
