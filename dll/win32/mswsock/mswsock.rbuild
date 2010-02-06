@@ -1,7 +1,7 @@
 <module name="mswsock" type="win32dll" baseaddress="${BASEADDRESS_MSWSOCK}" installbase="system32" installname="mswsock.dll" unicode="yes">
 	<importlibrary definition="mswsock.spec"/>
 	<include base="ReactOS">include/reactos/winsock</include>
-	<include base="mswsock">dnslib/inc</include>
+	<include base="mswsock">dns/inc</include>
 	<include base="ReactOS">include/reactos/drivers</include>
 	<library>ntdll</library>
 	<library>advapi32</library>
