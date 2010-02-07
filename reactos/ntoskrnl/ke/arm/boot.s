@@ -17,6 +17,7 @@
     //
     // Put us in FIQ mode
     //
+    b .
     mrs r3, cpsr
     orr r3, r1, #CPSR_FIQ_MODE
     msr cpsr, r3

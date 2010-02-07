@@ -719,12 +719,9 @@ ArmSetupPageDirectory(VOID)
         
     /* Get the Kernel Table Index */
     KernelPageTableIndex = KernelBase >> PDE_SHIFT;
-    printf("Kernel Base: 0x%p (PDE Index: %lx)\n", KernelBase, KernelPageTableIndex);
-    
-    /* Allocate 1MB PDE_BASE and HYPER_SPACE. This will be improved later. Must be 1MB aligned */
+
+   /* Allocate 1MB PDE_BASE and HYPER_SPACE. This will be improved later. Must be 1MB aligned */
     PageDir = MmAllocateMemoryAtAddress(1 * 1024 * 1024, (PVOID)0x700000, LoaderMemoryData);
-    if (!PageDir) { printf("FATAL: No memory!\n"); while (TRUE); }
-    printf("Initial Page Directory: 0x%p\n", PageDir);
     
     /* Setup the Low Memory PDE as an identity-mapped Large Page (1MB) */
     LargePte = &PageDir->Pte[LowMemPageTableIndex];
@@ -741,31 +738,35 @@ ArmSetupPageDirectory(VOID)
     
     /* Allocate 8 page tables (8KB) to describe the 8MB initial kernel region */
     KernelPageTable = MmAllocateMemoryWithType(8192, LoaderMemoryData);
-    if (!KernelPageTable) { printf("FATAL: No memory!\n"); while (TRUE); }
-    printf("Kernel Page Tables: 0x%p\n", KernelPageTable);
     
     /* Setup the Kernel PDEs */
     PointerPde = &PageDir->Pde[KernelPageTableIndex];
     Pfn = PaPtrToPdePfn(KernelPageTable);
     for (i = 0; i < 8; i++)
     {
-        TempPde.PageFrameNumber = Pfn++;
+        TempPde.PageFrameNumber = Pfn;
         *PointerPde++ = TempPde;
+        Pfn++;
     }
-
+    
+    /* Setup the Kernel PTEs */
+    PointerPte = KernelPageTable->Pte;
+    Pfn = PaPtrToPfn(KERNEL_BASE_PHYS);
+    for (i = 0; i < 1536; i++)
+    {
+        TempPte.PageFrameNumber = Pfn++;
+        *PointerPte++ = TempPte;
+    }
+    
     /* Setup the Startup PDE */
-    printf("PAGEDIR: %p IDX: %lx PPDE: %p PFN: %lx \n", PageDir, StartupPdePageTableIndex, &PageDir->Pte[StartupPdePageTableIndex], PaToLargePfn((ULONG_PTR)PageDir));
     LargePte = &PageDir->Pte[StartupPdePageTableIndex];
     TempLargePte.PageFrameNumber = PaToLargePfn((ULONG_PTR)PageDir);
-    printf("PAGEDIR: %p IDX: %lx PPDE: %p PFN: %lx \n", PageDir, StartupPdePageTableIndex, LargePte, TempLargePte.PageFrameNumber);
     *LargePte = TempLargePte;
     
     /* After this point, any MiAddressToPde is guaranteed not to fault */
         
     /* Allocate 4 page tables (4KB) to describe the 4MB PTE_BASE region */
     PageTable = MmAllocateMemoryWithType(4096, LoaderMemoryData);
-    if (!PageTable) { printf("FATAL: No memory!\n"); while (TRUE); }
-    printf("Initial Page Tables: 0x%p\n", PageTable);
     
     /*
      * Link them in the Startup PDE.
@@ -794,7 +795,6 @@ ArmSetupPageDirectory(VOID)
      * and mapped in the PTE_BASE first, then the page table itself will be
      * editable through its flat PTE address.
      */
-    printf("Paging init done\n");
     return PageDir;
 }
 
@@ -825,8 +825,6 @@ ArmSetupPagingAndJump(IN PVOID PageDirectoryBaseAddress)
     KeArmControlRegisterSet(ControlRegister);
 	
     /* Jump to Kernel */
-    TuiPrintf("Hello from MMU Enabled!\n");
-    while (TRUE);
     (*KernelEntryPoint)((PVOID)((ULONG_PTR)ArmLoaderBlock | KSEG0_BASE));
 }
 

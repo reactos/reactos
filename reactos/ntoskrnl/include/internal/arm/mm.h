@@ -65,8 +65,8 @@ typedef struct _HARDWARE_PTE_ARMV6
     ULONG Valid:1;
     ULONG Buffered:1;
     ULONG Cached:1;
-    ULONG Owner:1;
     ULONG Accessed:1;
+    ULONG Owner:1;
     ULONG CacheAttributes:3;
     ULONG ReadOnly:1;
     ULONG Shared:1;
@@ -103,6 +103,65 @@ typedef enum _ARM_DOMAIN
     InvalidDomain,
     ManagerDomain
 } ARM_DOMAIN;
+
+struct _EPROCESS;
+PULONG MmGetPageDirectory(VOID);
+
+#define MI_MAKE_LOCAL_PAGE(x)      ((x)->u.Hard.NonGlobal = 1)
+#define MI_MAKE_DIRTY_PAGE(x)      
+#define MI_MAKE_OWNER_PAGE(x)      ((x)->u.Hard.Access = 1) // FIXFIX
+#define MI_MAKE_WRITE_PAGE(x)      ((x)->u.Hard.ExtendedAccess = 1) // FIXFIX
+#define MI_PAGE_DISABLE_CACHE(x)   ((x)->u.Hard.Cached = 0)
+#define MI_PAGE_WRITE_THROUGH(x)   ((x)->u.Hard.Buffered = 0)
+#define MI_PAGE_WRITE_COMBINED(x)  ((x)->u.Hard.Buffered = 1)
+#define MI_IS_PAGE_WRITEABLE(x)    ((x)->u.Hard.ExtendedAccess == 0)
+#define MI_IS_PAGE_COPY_ON_WRITE(x)FALSE
+#define MI_IS_PAGE_DIRTY(x)        TRUE
+
+/* Easy accessing PFN in PTE */
+#define PFN_FROM_PTE(v) ((v)->u.Hard.PageFrameNumber)
+
+
+#if 1
+
+//
+// FIXFIX: This is all wrong now!!!
+//
+
+//
+// Take 0x80812345 and extract:
+// PTE_BASE[0x808][0x12]
+//
+#define MiGetPteAddress(x)         \
+    (PMMPTE)(PTE_BASE + \
+             (((ULONG)(x) >> 20) << 12) + \
+             ((((ULONG)(x) >> 12) & 0xFF) << 2))
+
+#define MiGetPdeAddress(x)         \
+    (PMMPDE_HARDWARE)(PDE_BASE + \
+             (((ULONG)(x) >> 20) << 2))
+
+#define MiGetPdeOffset(x) (((ULONG)(x)) >> 22)
+
+//
+// FIXME: THESE ARE WRONG ATM.
+//
+#define MiAddressToPde(x) \
+((PMMPTE)(((((ULONG)(x)) >> 22) << 2) + PDE_BASE))
+#define MiAddressToPte(x) \
+((PMMPTE)(((((ULONG)(x)) >> 12) << 2) + PTE_BASE))
+#define MiAddressToPteOffset(x) \
+((((ULONG)(x)) << 10) >> 22)
+
+
+//
+// Convert a PTE into a corresponding address
+//
+#define MiPteToAddress(PTE) ((PVOID)((ULONG)(PTE) << 10))
+
+#define ADDR_TO_PAGE_TABLE(v) (((ULONG)(v)) / (1024 * PAGE_SIZE))
+#define ADDR_TO_PDE_OFFSET(v) ((((ULONG)(v)) / (1024 * PAGE_SIZE)))
+#define ADDR_TO_PTE_OFFSET(v)  ((((ULONG)(v)) % (1024 * PAGE_SIZE)) / PAGE_SIZE)
 
 //
 // FIXFIX: This is all wrong now!!!
@@ -223,69 +282,6 @@ typedef enum _ARM_PTE_ACCESS
     UserAccess
 } ARM_PTE_ACCESS;
 
-#if 0
-
-//
-// FIXFIX: This is all wrong now!!!
-//
-
-//
-// Take 0x80812345 and extract:
-// PTE_BASE[0x808][0x12]
-//
-#define MiGetPteAddress(x)         \
-    (PMMPTE)(PTE_BASE + \
-             (((ULONG)(x) >> 20) << 12) + \
-             ((((ULONG)(x) >> 12) & 0xFF) << 2))
-
-#define MiGetPdeAddress(x)         \
-    (PMMPDE_HARDWARE)(PDE_BASE + \
-             (((ULONG)(x) >> 20) << 2))
-
-#define MiGetPdeOffset(x) (((ULONG)(x)) >> 22)
-
-#define PTE_BASE    0xC0000000
-#define PTE_TOP    0xC03FFFFF
-#define PDE_BASE    0xC1000000
-#define HYPER_SPACE 0xC1100000
-
-//
-// FIXME: THESE ARE WRONG ATM.
-//
-#define MiAddressToPde(x) \
-((PMMPTE)(((((ULONG)(x)) >> 22) << 2) + PDE_BASE))
-#define MiAddressToPte(x) \
-((PMMPTE)(((((ULONG)(x)) >> 12) << 2) + PTE_BASE))
-#define MiAddressToPteOffset(x) \
-((((ULONG)(x)) << 10) >> 22)
-
-
-//
-// Convert a PTE into a corresponding address
-//
-#define MiPteToAddress(PTE) ((PVOID)((ULONG)(PTE) << 10))
-
-#define ADDR_TO_PAGE_TABLE(v) (((ULONG)(v)) / (1024 * PAGE_SIZE))
-#define ADDR_TO_PDE_OFFSET(v) ((((ULONG)(v)) / (1024 * PAGE_SIZE)))
-#define ADDR_TO_PTE_OFFSET(v)  ((((ULONG)(v)) % (1024 * PAGE_SIZE)) / PAGE_SIZE)
-
 #endif
-
-struct _EPROCESS;
-PULONG MmGetPageDirectory(VOID);
-
-#define MI_MAKE_LOCAL_PAGE(x)      ((x)->u.Hard.NonGlobal = 1)
-#define MI_MAKE_DIRTY_PAGE(x)      
-#define MI_MAKE_OWNER_PAGE(x)      ((x)->u.Hard.Access = 1) // FIXFIX
-#define MI_MAKE_WRITE_PAGE(x)      ((x)->u.Hard.ExtendedAccess = 1) // FIXFIX
-#define MI_PAGE_DISABLE_CACHE(x)   ((x)->u.Hard.Cached = 0)
-#define MI_PAGE_WRITE_THROUGH(x)   ((x)->u.Hard.Buffered = 0)
-#define MI_PAGE_WRITE_COMBINED(x)  ((x)->u.Hard.Buffered = 1)
-#define MI_IS_PAGE_WRITEABLE(x)    ((x)->u.Hard.ExtendedAccess == 0)
-#define MI_IS_PAGE_COPY_ON_WRITE(x)FALSE
-#define MI_IS_PAGE_DIRTY(x)        TRUE
-
-/* Easy accessing PFN in PTE */
-#define PFN_FROM_PTE(v) ((v)->u.Hard.PageFrameNumber)
 
 #endif
