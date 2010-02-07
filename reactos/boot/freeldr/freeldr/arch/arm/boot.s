@@ -19,19 +19,3 @@
 
 L_ArmInit:
     .long ArmInit
-
-.global PageDirectoryStart, PageDirectoryEnd
-.global startup_pagedirectory
-.global kernel_pagetable
-
-.bss
-PageDirectoryStart:
-kernel_pagetable:
-    .fill 2*4096, 1, 0
-    .space 4096
-startup_pagedirectory:
-    .fill 4*4096, 1, 0
-    
-
-.global PageDirectoryEnd
-PageDirectoryEnd:

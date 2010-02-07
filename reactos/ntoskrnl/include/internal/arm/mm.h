@@ -1,6 +1,32 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_ARM_MM_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_ARM_MM_H
 
+//
+// Number of bits corresponding to the area that a PDE entry represents (1MB)
+//
+#define PDE_SHIFT 20
+#define PDE_SIZE  (1 << PDE_SHIFT)
+
+//
+// Number of bits corresponding to the area that a coarse page table entry represents (4KB)
+//
+#define PTE_SHIFT 12
+#define PTE_SIZE (1 << PTE_SHIFT)
+
+//
+// Number of bits corresponding to the area that a coarse page table occupies (1KB)
+//
+#define CPT_SHIFT 10
+#define CPT_SIZE  (1 << CPT_SHIFT)
+
+//
+// Base Addresses
+//
+#define PTE_BASE    0xC0000000
+#define PTE_TOP     0xC03FFFFF
+#define PDE_BASE    0xC0400000
+#define HYPER_SPACE 0xC0404000
+
 typedef struct _HARDWARE_PDE_ARMV6
 {
     ULONG Valid:1;     // Only for small pages
@@ -33,10 +59,6 @@ typedef struct _HARDWARE_LARGE_PTE_ARMV6
     ULONG PageFrameNumber:12;
 } HARDWARE_LARGE_PTE_ARMV6, *PHARDWARE_LARGE_PTE_ARMV6;
 
-C_ASSERT(sizeof(HARDWARE_PDE_ARMV6) == sizeof(ULONG));
-C_ASSERT(sizeof(HARDWARE_LARGE_PTE_ARMV6) == sizeof(ULONG));
-
-
 typedef struct _HARDWARE_PTE_ARMV6
 {
     ULONG NoExecute:1;
@@ -52,36 +74,35 @@ typedef struct _HARDWARE_PTE_ARMV6
     ULONG PageFrameNumber:20;
 } HARDWARE_PTE_ARMV6, *PHARDWARE_PTE_ARMV6;
 
+C_ASSERT(sizeof(HARDWARE_PDE_ARMV6) == sizeof(ULONG));
+C_ASSERT(sizeof(HARDWARE_LARGE_PTE_ARMV6) == sizeof(ULONG));
+C_ASSERT(sizeof(HARDWARE_PTE_ARMV6) == sizeof(ULONG));
+
 /* For FreeLDR */
+typedef struct _PAGE_TABLE_ARM
+{
+    HARDWARE_PTE_ARMV6 Pte[1024];
+} PAGE_TABLE_ARM, *PPAGE_TABLE_ARM;
+
 typedef struct _PAGE_DIRECTORY_ARM
 {
-    HARDWARE_PDE_ARMV6 Pde[4096];
+    union 
+    {
+        HARDWARE_PDE_ARMV6 Pde[4096];
+        HARDWARE_LARGE_PTE_ARMV6 Pte[4096];
+    };
 } PAGE_DIRECTORY_ARM, *PPAGE_DIRECTORY_ARM;
 
-//
-// Number of bits corresponding to the area that a PDE entry represents (1MB)
-//
-#define PDE_SHIFT 20
-#define PDE_SIZE  (1 << PDE_SHIFT)
+C_ASSERT(sizeof(PAGE_TABLE_ARM) == PAGE_SIZE);
+C_ASSERT(sizeof(PAGE_DIRECTORY_ARM) == (4 * PAGE_SIZE));
 
-//
-// FIXFIX: This is all wrong now!!!
-//
-
-
-//
-// Number of bits corresponding to the area that a coarse page table entry represents (4KB)
-//
-#define PTE_SHIFT 12
-//#define PAGE_SIZE (1 << PTE_SHIFT) // FIXME: This conflicts with ndk/arm/mmtypes.h which does #define PAGE_SIZE 0x1000 -- use PTE_SIZE here instead?
-
-//
-// Number of bits corresponding to the area that a coarse page table occupies (1KB)
-//
-#define CPT_SHIFT 10
-#define CPT_SIZE  (1 << CPT_SHIFT)
-
-
+typedef enum _ARM_DOMAIN
+{
+    FaultDomain,
+    ClientDomain,
+    InvalidDomain,
+    ManagerDomain
+} ARM_DOMAIN;
 
 //
 // FIXFIX: This is all wrong now!!!
@@ -202,14 +223,7 @@ typedef enum _ARM_PTE_ACCESS
     UserAccess
 } ARM_PTE_ACCESS;
 
-typedef enum _ARM_DOMAIN
-{
-    FaultDomain,
-    ClientDomain,
-    InvalidDomain,
-    ManagerDomain
-} ARM_DOMAIN;
-
+#if 0
 
 //
 // FIXFIX: This is all wrong now!!!
@@ -235,10 +249,6 @@ typedef enum _ARM_DOMAIN
 #define PDE_BASE    0xC1000000
 #define HYPER_SPACE 0xC1100000
 
-struct _EPROCESS;
-PULONG MmGetPageDirectory(VOID);
-
-
 //
 // FIXME: THESE ARE WRONG ATM.
 //
@@ -249,6 +259,7 @@ PULONG MmGetPageDirectory(VOID);
 #define MiAddressToPteOffset(x) \
 ((((ULONG)(x)) << 10) >> 22)
 
+
 //
 // Convert a PTE into a corresponding address
 //
@@ -257,6 +268,11 @@ PULONG MmGetPageDirectory(VOID);
 #define ADDR_TO_PAGE_TABLE(v) (((ULONG)(v)) / (1024 * PAGE_SIZE))
 #define ADDR_TO_PDE_OFFSET(v) ((((ULONG)(v)) / (1024 * PAGE_SIZE)))
 #define ADDR_TO_PTE_OFFSET(v)  ((((ULONG)(v)) % (1024 * PAGE_SIZE)) / PAGE_SIZE)
+
+#endif
+
+struct _EPROCESS;
+PULONG MmGetPageDirectory(VOID);
 
 #define MI_MAKE_LOCAL_PAGE(x)      ((x)->u.Hard.NonGlobal = 1)
 #define MI_MAKE_DIRTY_PAGE(x)      

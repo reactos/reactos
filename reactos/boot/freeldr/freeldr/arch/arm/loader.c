@@ -40,6 +40,7 @@ ULONG ArmSharedHeapSize;
 PCHAR ArmSharedHeap;
 
 extern PAGE_DIRECTORY_ARM startup_pagedirectory;
+extern PAGE_TABLE_ARM kernel_pagetable;
 extern ROS_KERNEL_ENTRY_POINT KernelEntryPoint;
 extern ULONG_PTR KernelBase;
 
@@ -678,371 +679,134 @@ ArmBuildLoaderMemoryList(VOID)
 #define PFN_SHIFT                   12
 #define LARGE_PFN_SHIFT             20
 
-#define STARTUP_BASE                0xC0000000
+#define PTE_BASE                    0xC0000000
+#define PDE_BASE                    0xC0400000
 #define HAL_BASE                    0xFFC00000
 #define MMIO_BASE                   0x10000000
 
 #define LowMemPageTableIndex        0
-#define StartupPageTableIndex       (STARTUP_BASE >> PDE_SHIFT)
+#define StartupPtePageTableIndex    (PTE_BASE >> PDE_SHIFT)
+#define StartupPdePageTableIndex    (PDE_BASE >> PDE_SHIFT)
 #define MmioPageTableIndex          (MMIO_BASE >> PDE_SHIFT)
 #define HalPageTableIndex           (HAL_BASE >> PDE_SHIFT)
 
 /* Converts a Physical Address into a Page Frame Number */
 #define PaToPfn(p)                  ((p) >> PFN_SHIFT)
 #define PaToLargePfn(p)             ((p) >> LARGE_PFN_SHIFT)
-    
-VOID
+#define PaPtrToPfn(p)               (((ULONG_PTR)(p)) >> PFN_SHIFT)
+
+/* Converts a Physical Address into a Coarse Page Table PFN */
+#define PaPtrToPdePfn(p)            (((ULONG_PTR)(p)) >> CPT_SHIFT)
+
+HARDWARE_PTE_ARMV6 TempPte;
+HARDWARE_LARGE_PTE_ARMV6 TempLargePte;
+HARDWARE_PDE_ARMV6 TempPde;
+
+PVOID
 ArmSetupPageDirectory(VOID)
 {
     PPAGE_DIRECTORY_ARM PageDir;
+    PPAGE_TABLE_ARM PageTable, KernelPageTable;
     ULONG KernelPageTableIndex;
-    //ULONG i;
+    ULONG i;
+    PHARDWARE_PTE_ARMV6 PointerPte;
+    PHARDWARE_PDE_ARMV6 PointerPde;
+    PHARDWARE_LARGE_PTE_ARMV6 LargePte;
+    PFN_NUMBER Pfn;
     
+    /* Setup templates */
+    TempPte.Accessed = TempPte.Valid = TempLargePte.LargePage = TempLargePte.Accessed = TempPde.Valid = 1;
+        
     /* Get the Kernel Table Index */
     KernelPageTableIndex = KernelBase >> PDE_SHIFT;
     printf("Kernel Base: 0x%p (PDE Index: %lx)\n", KernelBase, KernelPageTableIndex);
     
-    /* Get the Startup Page Directory */
-    PageDir = (PPAGE_DIRECTORY_ARM)&startup_pagedirectory;
+    /* Allocate 1MB PDE_BASE and HYPER_SPACE. This will be improved later. Must be 1MB aligned */
+    PageDir = MmAllocateMemoryAtAddress(1 * 1024 * 1024, (PVOID)0x700000, LoaderMemoryData);
+    if (!PageDir) { printf("FATAL: No memory!\n"); while (TRUE); }
     printf("Initial Page Directory: 0x%p\n", PageDir);
     
     /* Setup the Low Memory PDE as an identity-mapped Large Page (1MB) */
-    ((PHARDWARE_LARGE_PTE_ARMV6)PageDir->Pde)[LowMemPageTableIndex].LargePage = 1;
-    ((PHARDWARE_LARGE_PTE_ARMV6)PageDir->Pde)[LowMemPageTableIndex].Accessed = 1;
-    ((PHARDWARE_LARGE_PTE_ARMV6)PageDir->Pde)[LowMemPageTableIndex].PageFrameNumber = 0;
+    LargePte = &PageDir->Pte[LowMemPageTableIndex];
+    *LargePte = TempLargePte;
     
     /* Setup the MMIO PDE as two identity mapped large pages -- the kernel will blow these away later */
-    ((PHARDWARE_LARGE_PTE_ARMV6)PageDir->Pde)[MmioPageTableIndex].LargePage = 1;
-    ((PHARDWARE_LARGE_PTE_ARMV6)PageDir->Pde)[MmioPageTableIndex].Accessed = 1;
-    ((PHARDWARE_LARGE_PTE_ARMV6)PageDir->Pde)[MmioPageTableIndex].PageFrameNumber = PaToLargePfn(0x10000000);
-    ((PHARDWARE_LARGE_PTE_ARMV6)PageDir->Pde)[MmioPageTableIndex+1].LargePage = 1;
-    ((PHARDWARE_LARGE_PTE_ARMV6)PageDir->Pde)[MmioPageTableIndex+1].Accessed = 1;
-    ((PHARDWARE_LARGE_PTE_ARMV6)PageDir->Pde)[MmioPageTableIndex+1].PageFrameNumber = PaToLargePfn(0x10100000);
-    printf("Paging init done\n");
-    
-    #if 0
-    ARM_PTE Pte;
-    ULONG i, j;
-    PARM_TRANSLATION_TABLE ArmTable;
-    PARM_COARSE_PAGE_TABLE BootTable, KernelTable, FlatMapTable, MasterTable;
-    
-    //
-    // Get the PDEs that we will use
-    //
-    ArmTable = &ArmTranslationTable;
-    BootTable = &BootTranslationTable;
-    KernelTable = &KernelTranslationTable;
-    FlatMapTable = &FlatMapTranslationTable;
-    MasterTable = &MasterTranslationTable;
-    
-    //
-    // Set the master L1 PDE as the TTB
-    //
-    TtbRegister.AsUlong = (ULONG)ArmTable;
-    ASSERT(TtbRegister.Reserved == 0);
-    KeArmTranslationTableRegisterSet(TtbRegister);
-    
-    //
-    // Use Domain 0, enforce AP bits (client)
-    //
-    DomainRegister.AsUlong = 0;
-    DomainRegister.Domain0 = ClientDomain;
-    KeArmDomainRegisterSet(DomainRegister);
-    
-    //
-    // Set Fault PTEs everywhere
-    //
-    RtlZeroMemory(ArmTable, sizeof(ARM_TRANSLATION_TABLE));
-    
-    //
-    // Identity map the first MB of memory
-    //
-    Pte.L1.Section.Type = SectionPte;
-    Pte.L1.Section.Buffered = FALSE;
-    Pte.L1.Section.Cached = FALSE;
-    Pte.L1.Section.Reserved = 1; // ARM926EJ-S manual recommends setting to 1
-    Pte.L1.Section.Domain = Domain0;
-    Pte.L1.Section.Access = SupervisorAccess;
-    Pte.L1.Section.BaseAddress = 0;
-    Pte.L1.Section.Ignored = Pte.L1.Section.Ignored1 = 0;
-    ArmTable->Pte[0] = Pte;
-    
-    //
-    // Map the page in MMIO space that contains the serial port and timers
-    //
-    Pte.L1.Section.BaseAddress = ArmBoardBlock->UartRegisterBase >> PDE_SHIFT;
-    ArmTable->Pte[UART_VIRTUAL >> PDE_SHIFT] = Pte;
-
-    //
-    // Create template PTE for the coarse page table which maps the PTE_BASE
-    //
-    Pte.L1.Coarse.Type = CoarsePte;
-    Pte.L1.Coarse.Domain = Domain0;
-    Pte.L1.Coarse.Reserved = 1; // ARM926EJ-S manual recommends setting to 1
-    Pte.L1.Coarse.Ignored = Pte.L1.Coarse.Ignored1 = 0;
-    Pte.L1.Coarse.BaseAddress = (ULONG)FlatMapTable >> CPT_SHIFT;
-
-    //
-    // On x86, there is 4MB of space, starting at 0xC0000000 to 0xC0400000
-    // which contains the mappings for each PTE on the system. 4MB is needed
-    // since for 4GB, there will be 1 million PTEs, each of 4KB.
-    //
-    // To describe a 4MB region, on x86, only requires a page table, which can
-    // be linked from the page table directory.
-    //
-    // On the other hand, on ARM, we can only describe 1MB regions, so we need
-    // four times less PTE entries to represent a single mapping (an L2 coarse
-    // page table). This is problematic, because this would only take up 1KB of
-    // space, and we can't have a page that small.
-    //
-    // This means we must:
-    //
-    // - Allocate page tables (in physical memory) with 4KB granularity, instead
-    //   of 1KB (the other 3KB is unused and invalid).
-    //
-    // - "Skip" the other 3KB in the region, because we can't point to another
-    //   coarse page table after just 1KB.
-    //
-    // So 0xC0000000 will be mapped to the page table that maps the range of
-    // 0x00000000 to 0x01000000, while 0xC0001000 till be mapped to the page
-    // table that maps the area from 0x01000000 to 0x02000000, and so on. In
-    // total, this will require 4 million entries, and additionally, because of
-    // the padding, since each 256 entries will be 4KB (instead of 1KB), this
-    // means we'll need 16MB (0xC0000000 to 0xC1000000).
-    //
-    // We call this region the flat-map area
-    //
-    for (i = (PTE_BASE >> PDE_SHIFT); i < ((PTE_BASE + 0x1000000) >> PDE_SHIFT); i++)
+    LargePte = &PageDir->Pte[MmioPageTableIndex];
+    Pfn = PaToLargePfn(0x10000000);
+    for (i = 0; i < 2; i++)
     {
-        //
-        // Write PTE and update the base address (next MB) for the next one
-        //
-        ArmTable->Pte[i] = Pte;
-        Pte.L1.Coarse.BaseAddress += 4;
+        TempLargePte.PageFrameNumber = Pfn++;
+        *LargePte++ = TempLargePte;
     }
     
-    //
-    // On x86, there is also the region of 0xC0300000 to 0xC03080000 which maps
-    // to the various PDEs on the system. Yes, this overlaps with the above, and
-    // works because of an insidious dark magic (self-mapping the PDE as a PTE).
-    // Unfortunately, this doesn't work on ARM, firstly because the size of a L1
-    // page table is different than from an L2 page table, and secondly, which
-    // is even worse, the format for an L1 page table is different than the one
-    // for an L2 page table -- basically meaning we cannot self-map.
-    //
-    // However, we somewhat emulate this behavior on ARM. This will be expensive
-    // since we manually need to keep track of every page directory added and
-    // add an entry in our flat-map region. We also need to keep track of every
-    // change in the TTB, so that we can update the mappings in our PDE region.
-    //
-    // Note that for us, this region starts at 0xC1000000, after the flat-map
-    // area.
-    //
-    // Finally, to deal with different sizes (1KB page tables, 4KB page size!),
-    // we pad the ARM L2 page tables to make them 4KB, so that each page will
-    // therefore point to an L2 page table.
-    //
-    // This region is a lot easier than the first -- an L1 page table is only
-    // 16KB, so to access any index inside it, we just need 4 pages, since each
-    // page is 4KB... Clearly, there's also no need to pad in this case.
-    //
-    // We'll call this region the master translation area.
-    //
-    Pte.L1.Coarse.BaseAddress = (ULONG)MasterTable >> CPT_SHIFT;
-    ArmTable->Pte[PDE_BASE >> PDE_SHIFT] = Pte;
-
-    //
-    // Now create the template for the coarse page tables which map the first 8MB
-    //
-    Pte.L1.Coarse.BaseAddress = (ULONG)BootTable >> CPT_SHIFT;
-
-    //
-    // Map 0x00000000 - 0x007FFFFF to 0x80000000 - 0x807FFFFF.
-    // This is where the freeldr boot structures are located, and we need them.
-    //
-    for (i = (KSEG0_BASE >> PDE_SHIFT); i < ((KSEG0_BASE + 0x800000) >> PDE_SHIFT); i++)
-    {
-        //
-        // Write PTE and update the base address (next MB) for the next one
-        //
-        ArmTable->Pte[i] = Pte;
-        Pte.L1.Coarse.BaseAddress += 4;
-    }
+    /* Allocate 8 page tables (8KB) to describe the 8MB initial kernel region */
+    KernelPageTable = MmAllocateMemoryWithType(8192, LoaderMemoryData);
+    if (!KernelPageTable) { printf("FATAL: No memory!\n"); while (TRUE); }
+    printf("Kernel Page Tables: 0x%p\n", KernelPageTable);
     
-    //
-    // Now create the template PTE for the coarse page tables for the next 6MB
-    //
-    Pte.L1.Coarse.BaseAddress = (ULONG)KernelTable >> CPT_SHIFT;
-
-    //
-    // Map 0x00800000 - 0x00DFFFFF to 0x80800000 - 0x80DFFFFF
-    // In this way, the KERNEL_PHYS_ADDR (0x800000) becomes 0x80800000
-    // which is the kernel virtual base address, just like on x86.
-    //
-    ASSERT(KernelBase == 0x80800000);
-    for (i = (KernelBase >> PDE_SHIFT); i < ((KernelBase + 0x600000) >> PDE_SHIFT); i++)
-    {
-        //
-        // Write PTE and update the base address (next MB) for the next one
-        //
-        ArmTable->Pte[i] = Pte;
-        Pte.L1.Coarse.BaseAddress += 4;
-    }
-    
-    //
-    // Now build the template PTE for the pages mapping the first 8MB
-    //
-    Pte.L2.Small.Type = SmallPte;
-    Pte.L2.Small.Buffered = Pte.L2.Small.Cached = 0;
-    Pte.L2.Small.Access0 =
-    Pte.L2.Small.Access1 =
-    Pte.L2.Small.Access2 =
-    Pte.L2.Small.Access3 = SupervisorAccess;
-    Pte.L2.Small.BaseAddress = 0;
-
-    //
-    // Loop each boot coarse page table (i).
-    // Each PDE describes 1MB. We're mapping an area of 8MB, so 8 times.
-    //
+    /* Setup the Kernel PDEs */
+    PointerPde = &PageDir->Pde[KernelPageTableIndex];
+    Pfn = PaPtrToPdePfn(KernelPageTable);
     for (i = 0; i < 8; i++)
     {
-        //
-        // Loop and set each the PTE (j).
-        // Each PTE describes 4KB. We're mapping an area of 1MB, so 256 times.
-        //
-        for (j = 0; j < (PDE_SIZE / PAGE_SIZE); j++)
-        {
-            //
-            // Write PTE and update the base address (next MB) for the next one
-            //
-            BootTable->Pte[j] = Pte;
-            Pte.L2.Small.BaseAddress++;        
-        }
+        TempPde.PageFrameNumber = Pfn++;
+        *PointerPde++ = TempPde;
+    }
+
+    /* Setup the Startup PDE */
+    printf("PAGEDIR: %p IDX: %lx PPDE: %p PFN: %lx \n", PageDir, StartupPdePageTableIndex, &PageDir->Pte[StartupPdePageTableIndex], PaToLargePfn((ULONG_PTR)PageDir));
+    LargePte = &PageDir->Pte[StartupPdePageTableIndex];
+    TempLargePte.PageFrameNumber = PaToLargePfn((ULONG_PTR)PageDir);
+    printf("PAGEDIR: %p IDX: %lx PPDE: %p PFN: %lx \n", PageDir, StartupPdePageTableIndex, LargePte, TempLargePte.PageFrameNumber);
+    *LargePte = TempLargePte;
+    
+    /* After this point, any MiAddressToPde is guaranteed not to fault */
         
-        //
-        // Next iteration
-        //
-        BootTable++;
-    }
+    /* Allocate 4 page tables (4KB) to describe the 4MB PTE_BASE region */
+    PageTable = MmAllocateMemoryWithType(4096, LoaderMemoryData);
+    if (!PageTable) { printf("FATAL: No memory!\n"); while (TRUE); }
+    printf("Initial Page Tables: 0x%p\n", PageTable);
     
-    //
-    // Now create the template PTE for the pages mapping the next 6MB
-    //
-    Pte.L2.Small.BaseAddress = (ULONG)KERNEL_BASE_PHYS >> PTE_SHIFT;
-    
-    //
-    // Loop each kernel coarse page table (i).
-    // Each PDE describes 1MB. We're mapping an area of 6MB, so 6 times.
-    //
-    for (i = 0; i < 6; i++)
-    {
-        //
-        // Loop and set each the PTE (j).
-        // Each PTE describes 4KB. We're mapping an area of 1MB, so 256 times.
-        //
-        for (j = 0; j < (PDE_SIZE / PAGE_SIZE); j++)
-        {
-            //
-            // Write PTE and update the base address (next MB) for the next one
-            //
-            KernelTable->Pte[j] = Pte;
-            Pte.L2.Small.BaseAddress++;
-        }
-
-        //
-        // Next iteration
-        //
-        KernelTable++;
-    }
-
-    //
-    // Now we need to create the PTEs for the addresses which have been mapped
-    // already.
-    //
-    // We have allocated 4 page table directories:
-    //
-    // - One for the kernel, 6MB
-    // - One for low-memory FreeLDR, 8MB
-    // - One for identity-mapping below 1MB, 1MB
-    // - And finally, one for the flat-map itself, 16MB
-    // 
-    // - Each MB mapped is a 1KB table, which we'll use a page to reference, so
-    //   we will require 31 pages.
-    //
-   
-    //
-    // For the 0x80000000 region (8MB)
-    //
-    Pte.L2.Small.BaseAddress = (ULONG)&BootTranslationTable >> PTE_SHIFT;
-    FlatMapTable = &(&FlatMapTranslationTable)[0x80000000 >> 28];
-    for (i = 0; i < 8; i++)
-    {
-        //
-        // Point to the page table mapping the next MB
-        //
-        FlatMapTable->Pte[i] = Pte;
-        Pte.L2.Small.BaseAddress++;        
-    }
-    
-    //
-    // For the 0x80800000 region (6MB)
-    //
-    Pte.L2.Small.BaseAddress = (ULONG)&KernelTranslationTable >> PTE_SHIFT;
-    for (i = 8; i < 14; i++)
-    {
-        //
-        // Point to the page table mapping the next MB
-        //
-        FlatMapTable->Pte[i] = Pte;
-        Pte.L2.Small.BaseAddress++;        
-    }
-    
-    //
-    // For the 0xC0000000 region (16MB)
-    //
-    Pte.L2.Small.BaseAddress = (ULONG)&FlatMapTranslationTable >> PTE_SHIFT;
-    FlatMapTable = &(&FlatMapTranslationTable)[0xC0000000 >> 28];
-    for (i = 0; i < 16; i++)
-    {
-        //
-        // Point to the page table mapping the next MB
-        //
-        FlatMapTable->Pte[i] = Pte;
-        Pte.L2.Small.BaseAddress++;        
-    }
-    
-    //
-    // For the 0xC1000000 region (1MB)
-    //
-    Pte.L2.Small.BaseAddress = (ULONG)&MasterTranslationTable >> PTE_SHIFT;
-    FlatMapTable->Pte[16] = Pte;
-    
-    //
-    // Now we handle the master translation area for our PDEs. We'll just make
-    // the 4 page tables point to the ARM TTB.
-    //
-    Pte.L2.Small.BaseAddress = (ULONG)&ArmTranslationTable >> PTE_SHIFT;
+    /*
+     * Link them in the Startup PDE.
+     * Note these are the entries in the PD at (MiAddressToPde(PTE_BASE)).
+     */
+    PointerPde = &PageDir->Pde[StartupPtePageTableIndex];
+    Pfn = PaPtrToPdePfn(PageTable);
     for (i = 0; i < 4; i++)
     {
-        //
-        // Point to the page table mapping the next MB
-        //
-        MasterTable->Pte[i] = Pte;
-        Pte.L2.Small.BaseAddress++;        
+        TempPde.PageFrameNumber = Pfn++;
+        *PointerPde++ = TempPde;
     }
-#endif
+    
+    /* 
+     * Now map these page tables in PTE space (MiAddressToPte(PTE_BASE)).
+     * Note that they all live on a single page, since each is 1KB.
+     */
+    PointerPte = &PageTable->Pte[0x300];
+    TempPte.PageFrameNumber = PaPtrToPfn(PageTable);
+    *PointerPte = TempPte;
+    
+    /*
+     * After this point, MiAddressToPte((PDE_BASE) to MiAddressToPte(PDE_TOP))
+     * is guaranteed not to fault.
+     * Any subsequent page allocation will first need its page table created
+     * and mapped in the PTE_BASE first, then the page table itself will be
+     * editable through its flat PTE address.
+     */
+    printf("Paging init done\n");
+    return PageDir;
 }
 
 VOID
-ArmSetupPagingAndJump(IN ULONG Magic)
+ArmSetupPagingAndJump(IN PVOID PageDirectoryBaseAddress)
 {
-    ULONG_PTR PageDirectoryBaseAddress = (ULONG_PTR)&startup_pagedirectory;
     ARM_CONTROL_REGISTER ControlRegister;
     ARM_TTB_REGISTER TtbRegister;
     ARM_DOMAIN_REGISTER DomainRegister;
     
     /* Set the TTBR */
-    TtbRegister.AsUlong = PageDirectoryBaseAddress;
+    TtbRegister.AsUlong = (ULONG_PTR)PageDirectoryBaseAddress;
     ASSERT(TtbRegister.Reserved == 0);
     KeArmTranslationTableRegisterSet(TtbRegister);
 
@@ -1648,6 +1412,7 @@ ArmPrepareForReactOS(IN BOOLEAN Setup)
 VOID
 FrLdrStartup(IN ULONG Magic)
 {
+    PVOID PageDir;
     //
     // Disable interrupts (already done)
     //
@@ -1659,10 +1424,10 @@ FrLdrStartup(IN ULONG Magic)
     //
     // Initialize the page directory
     //
-    ArmSetupPageDirectory();
+    PageDir = ArmSetupPageDirectory();
 
     //
     // Initialize paging and load NTOSKRNL
     //
-    ArmSetupPagingAndJump(Magic);
+    ArmSetupPagingAndJump(PageDir);
 }
