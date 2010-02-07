@@ -66,28 +66,22 @@ static PVOID CabinetReservedArea = NULL;
 
 
 /* Needed by zlib, but we don't want the dependency on msvcrt.dll */
-
-/* round to 16 bytes + alloc at minimum 16 bytes */
-#define ROUND_SIZE(size) (max(16, ROUND_UP(size, 16)))
-
-void* __cdecl malloc(size_t _size)
+void *__cdecl
+malloc(size_t size)
 {
-   size_t nSize = ROUND_SIZE(_size);
-
-   if (nSize<_size)
-       return NULL;
-
-   return RtlAllocateHeap(ProcessHeap, HEAP_ZERO_MEMORY, nSize);
+    return RtlAllocateHeap(ProcessHeap, HEAP_ZERO_MEMORY, size);
 }
 
-void __cdecl free(void* _ptr)
+void __cdecl
+free(void *ptr)
 {
-  RtlFreeHeap(ProcessHeap, 0, _ptr);
+    RtlFreeHeap(ProcessHeap, 0, ptr);
 }
 
-void* __cdecl calloc(size_t _nmemb, size_t _size)
+void *__cdecl
+calloc(size_t nmemb, size_t size)
 {
-  return (void*)RtlAllocateHeap (ProcessHeap, HEAP_ZERO_MEMORY, _size);
+    return (void *)RtlAllocateHeap(ProcessHeap, HEAP_ZERO_MEMORY, nmemb * size);
 }
 
 /* RAW codec */
@@ -108,9 +102,11 @@ RawCodecUncompress(PVOID OutputBuffer,
                    PLONG InputLength,
                    PLONG OutputLength)
 {
-    LONG In = abs(*InputLength), Out = abs(*OutputLength);
-    memcpy(OutputBuffer, InputBuffer, In < Out ? In : Out);
-    *InputLength = *OutputLength = In < Out ? In : Out;
+    LONG Len = min(abs(*InputLength), abs(*OutputLength));
+
+    memcpy(OutputBuffer, InputBuffer, Len);
+    *InputLength = *OutputLength = Len;
+
     return CS_SUCCESS;
 }
 
