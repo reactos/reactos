@@ -1317,7 +1317,7 @@ KeSetPriorityThread(IN PKTHREAD Thread,
 
     /* Return Old Priority */
 	DPRINTT("ret=%x\n", OldPriority);
-
+    return OldPriority;
 }
 
 /*

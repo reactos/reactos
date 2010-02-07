@@ -185,6 +185,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\i386\trap_m.s"
+				>
+			</File>
+			<File
 				RelativePath=".\i386\TrapStub.h"
 				>
 			</File>

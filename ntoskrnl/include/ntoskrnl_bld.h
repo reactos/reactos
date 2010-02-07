@@ -140,4 +140,4 @@ extern PUSHORT _NlsOemLeadByteInfo;
 #define HALDISPATCH                     (&HalDispatchTable)
 #define ExRaiseStatus RtlRaiseStatus
 
-void __test(void);
+void __test(int fn, void *arg);

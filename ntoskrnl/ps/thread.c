@@ -143,7 +143,10 @@ PspSystemThreadStartup(IN PKSTART_ROUTINE StartRoutine,
     PSTRACE(PS_THREAD_DEBUG,
             "StartRoutine: %p StartContext: %p\n", StartRoutine, StartContext);
 
-    /* Unlock the dispatcher Database */
+	// CpuDumpCpu(7);
+	// _ASM int 3
+
+	/* Unlock the dispatcher Database */
     KeLowerIrql(PASSIVE_LEVEL);
     Thread = PsGetCurrentThread();
 

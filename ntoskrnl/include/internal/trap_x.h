@@ -305,7 +305,7 @@ KiSystemCallTrapReturn(IN PKTRAP_FRAME TrapFrame)
 	mov eax, KTRAP_FRAME.Eax[esp]
 	mov ecx, KTRAP_FRAME.Ecx[esp]
 	mov edx, KTRAP_FRAME.Edx[esp]
-	jmp edx
+	iretd
 #else
 	mov ebx, [esp+KTRAP_FRAME_EBX]
 	mov esi, [esp+KTRAP_FRAME_ESI]
@@ -624,15 +624,14 @@ KiIssueBop(VOID)
 #endif
 }
 
-//
 // Returns whether or not this is a V86 trap by checking the EFLAGS field.
-//
-// FIXME: GCC 4.5 Can Improve this with "goto labels"
-//
 BOOLEAN
 FORCEINLINE
 KiIsV8086TrapSafe(IN PKTRAP_FRAME TrapFrame)
 {
+#if defined(_MSC_VER)
+	return TrapFrame->EFlags & EFLAGS_V86_MASK ? TRUE : FALSE;
+#elif defined(__GNUC__)
     BOOLEAN Result;
     
     /*
@@ -642,12 +641,9 @@ KiIsV8086TrapSafe(IN PKTRAP_FRAME TrapFrame)
      * Instead, we use the SS segment which is guaranteed to be correct. Because
      * operate in 32-bit flat mode, this works just fine.
      */
-#if defined(_MSC_VER)
-	_ASM_BEGIN
-		test ss:[TrapFrame+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
-		setnz Result
-	_ASM_END
-#elif defined(__GNUC__)
+//
+// FIXME: GCC 4.5 Can Improve this with "goto labels"
+//
 	asm volatile
      (
         "testl $%c[f], %%ss:%1\n"
@@ -656,13 +652,13 @@ KiIsV8086TrapSafe(IN PKTRAP_FRAME TrapFrame)
         : "m"(TrapFrame->EFlags),
           [f] "i"(EFLAGS_V86_MASK)
      );
+    /* If V86 flag was set */ 
+    return Result;
 #elif
 #error unsupported compiler
 #endif
-
-    /* If V86 flag was set */ 
-    return Result;
 }
+
 
 //
 // Returns whether or not this is a user-mode trap by checking the SegCs field.
@@ -673,8 +669,9 @@ BOOLEAN
 FORCEINLINE
 KiIsUserTrapSafe(IN PKTRAP_FRAME TrapFrame)
 {
-    BOOLEAN Result;
-    
+#if defined(_MSC_VER)
+	return TrapFrame->SegCs != KGDT_R0_CODE ? TRUE : FALSE;
+#elif defined(__GNUC__)
     /*
      * The check MUST be done this way, as we guarantee that no DS/ES/FS segment
      * is used (since it might be garbage).
@@ -682,13 +679,9 @@ KiIsUserTrapSafe(IN PKTRAP_FRAME TrapFrame)
      * Instead, we use the SS segment which is guaranteed to be correct. Because
      * operate in 32-bit flat mode, this works just fine.
      */
-#if defined(_MSC_VER)
-	_ASM_BEGIN
-		cmp ss:[TrapFrame+KTRAP_FRAME_CS], KGDT_R0_CODE
-		setnz Result
-	_ASM_END
-#elif defined(__GNUC__)
-     asm volatile
+    BOOLEAN Result;
+
+	asm volatile
      (
         "cmp $%c[f], %%ss:%1\n"
         "setnz %0\n"
@@ -696,12 +689,12 @@ KiIsUserTrapSafe(IN PKTRAP_FRAME TrapFrame)
         : "m"(TrapFrame->SegCs),
           [f] "i"(KGDT_R0_CODE)
      );
+    /* If V86 flag was set */ 
+    return Result;
 #elif
 #error unsupported compiler
 #endif
-    
-    /* If V86 flag was set */ 
-    return Result;
+   
 }
 
 VOID
@@ -940,6 +933,7 @@ KiEnterV86Trap(IN PKTRAP_FRAME TrapFrame)
     }
 }
 
+#if 0
 //
 // Interrupt Trap Entry
 //
@@ -947,15 +941,16 @@ VOID
 FORCEINLINE
 KiEnterInterruptTrap(IN PKTRAP_FRAME TrapFrame)
 {
-    ULONG Ds, Es;
+
+	// ULONG Ds, Es;
     
     /* Check for V86 mode, otherwise check for ring 3 code */
     if (__builtin_expect(KiIsV8086TrapSafe(TrapFrame), 0))
     {
         /* Set correct segments */
-        Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
-        Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
-        Ke386SetFs(KGDT_R0_PCR);
+        // Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
+        // Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
+        // Ke386SetFs(KGDT_R0_PCR);
 
         /* Restore V8086 segments into Protected Mode segments */
         TrapFrame->SegFs = TrapFrame->V86Fs;
@@ -965,20 +960,12 @@ KiEnterInterruptTrap(IN PKTRAP_FRAME TrapFrame)
     }
     else if (__builtin_expect(KiIsUserTrapSafe(TrapFrame), 1)) /* Ring 3 is more common */
     {
-        /* Save DS/ES and load correct values */
-        Es = Ke386GetEs();
-        Ds = Ke386GetDs();
-        TrapFrame->SegDs = Ds;
-        TrapFrame->SegEs = Es;
-        Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
-        Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
-        
-        /* Save FS/GS */
-        TrapFrame->SegFs = Ke386GetFs();
+        /* Save GS */
+        // TrapFrame->SegFs = Ke386GetFs();
         TrapFrame->SegGs = Ke386GetGs();
         
         /* Set correct FS */
-        Ke386SetFs(KGDT_R0_PCR);
+        // Ke386SetFs(KGDT_R0_PCR);
     }       
     
     /* Save exception list and terminate it */
@@ -997,8 +984,10 @@ KiEnterInterruptTrap(IN PKTRAP_FRAME TrapFrame)
     }
     
     /* Set debug header */
-    KiFillTrapFrameDebug(TrapFrame);
+    // KiFillTrapFrameDebug(TrapFrame);
 }
+#endif
+
 
 #if 0
 //
@@ -1178,7 +1167,7 @@ KiTrapStub(IN ULONG Flags,
 		_ASM_BEGIN
 			mov KTRAP_FRAME.Eax[esp], eax
 			mov KTRAP_FRAME.Ecx[esp], ecx
-			mov KTRAP_FRAME.Edx[esp], eax
+			mov KTRAP_FRAME.Edx[esp], edx
 		_ASM_END
 #elif defined(__GNUC)
 		__asm__ __volatile__

@@ -98,9 +98,13 @@ extern UCHAR KeNumberNodes;
 extern UCHAR KeProcessNodeSeed;
 extern ETHREAD KiInitialThread;
 extern EPROCESS KiInitialProcess;
+
+#if 0 // moved to interrupt.h
 extern PULONG KiInterruptTemplateObject;
 extern PULONG KiInterruptTemplateDispatch;
 extern PULONG KiInterruptTemplate2ndDispatch;
+#endif
+
 extern ULONG KiUnexpectedEntrySize;
 extern ULONG_PTR KiDoubleFaultStack;
 extern EX_PUSH_LOCK KernelAddressSpaceLock;

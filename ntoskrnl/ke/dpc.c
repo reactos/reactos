@@ -454,6 +454,8 @@ KiQuantumEnd(VOID)
     PKPRCB Prcb = KeGetCurrentPrcb();
     PKTHREAD NextThread, Thread = Prcb->CurrentThread;
 
+	DPRINTT("\n");
+
     /* Check if a DPC Event was requested to be signaled */
     if (InterlockedExchange(&Prcb->DpcSetEventRequest, 0))
     {

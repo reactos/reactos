@@ -140,8 +140,19 @@ _NOWARN_POP
 
 void *kk = KiTrap00;
 
+VOID _FASTCALL KiInterruptHandler(KTRAP_FRAME *TrapFrame, PKINTERRUPT Interrupt)
+{
+	DPRINTT("\n");
+	_ASM int 3
+	KiInterruptTemplateHandler(TrapFrame, Interrupt);
+	// KiTrapReturn(TrapFrame);
+}
+
 VOID _CDECL KiTrapInit(VOID)
 {
-	KiInterruptInitialData.DispatchAddress = (PKINTERRUPT_ROUTINE)KiInterruptNoDispatch;
+	PKINTERRUPT Interrupt = &KiInterruptInitialData;
+	
+	Interrupt->DispatchAddress = (PKINTERRUPT_ROUTINE)KiInterruptNoDispatch;
+	Interrupt->Vector = 0x30;
 }
 

@@ -345,7 +345,9 @@ KiSwapThread(IN PKTHREAD CurrentThread,
     PKTHREAD NextThread;
     ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
 
-    /* Acquire the PRCB lock */
+	DPRINTT("\n");
+
+	/* Acquire the PRCB lock */
     KiAcquirePrcbLock(Prcb);
 
     /* Get the next thread */
@@ -711,7 +713,9 @@ NtYieldExecution(VOID)
     PKPRCB Prcb = KeGetCurrentPrcb();
     PKTHREAD Thread = KeGetCurrentThread(), NextThread;
 
-    /* Fail if there's no ready summary */
+    DPRINTT("\n");
+
+	/* Fail if there's no ready summary */
     if (!Prcb->ReadySummary) return Status;
 
     /* Raise IRQL to synch */

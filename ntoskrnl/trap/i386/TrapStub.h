@@ -14,10 +14,10 @@
 #define TRAP_STUB_FS KGDT_R0_PCR
 #endif
 
-#define TRAP_STUB_NAMEH tokenpaste(TRAP_STUB_NAME, Handler)
+// #define TRAP_STUB_NAMEH tokenpaste(TRAP_STUB_NAME, Handler)
 
 #if (TRAP_STUB_FLAGS & TRAPF_INTERRUPT)
-VOID _FASTCALL tokenpaste(TRAP_STUB_NAME, Handler)(KTRAP_FRAME *TrapFrame);
+VOID _FASTCALL tokenpaste(TRAP_STUB_NAME, Handler)(KTRAP_FRAME *TrapFrame, PKINTERRUPT Interrupt);
 #else
 VOID _FASTCALL tokenpaste(TRAP_STUB_NAME, Handler)(KTRAP_FRAME *TrapFrame);
 #endif
@@ -33,7 +33,8 @@ _NAKED VOID _CDECL TRAP_STUB_NAME(VOID)
 		mov esp, KTSS.Esp0[esp]
 		sub esp, dword ptr offset KTRAP_FRAME.V86Es
 #elif (TRAP_STUB_FLAGS & TRAPF_INTERRUPT)
-		// the primary stub (trap_m.h) pushes the vector number
+		// the primary stub (trap_m.h) pushes a pointer to KINTERRUPT
+		int 3
 		sub esp, offset KTRAP_FRAME.ErrCode
 #elif (TRAP_STUB_FLAGS & TRAPF_ERRORCODE)
 		sub esp, offset KTRAP_FRAME.ErrCode
@@ -61,24 +62,26 @@ _NAKED VOID _CDECL TRAP_STUB_NAME(VOID)
 #if !(TRAP_STUB_FLAGS & TRAPF_NOSAVESEG)
 		mov KTRAP_FRAME.SegDs[esp], ds
 		mov KTRAP_FRAME.SegEs[esp], es
-#if !(TRAP_STUB_FLAGS & TRAPF_NOSAVEFS)
-		mov KTRAP_FRAME.SegFs[esp], fs
-#endif
 #if !(TRAP_STUB_FLAGS & TRAPF_NOLOADDS)
-#ifndef TRAP_STUB_DS
-#define TRAP_STUB_DS (KGDT_R3_DATA | RPL_MASK)
-#endif
 		mov ax, TRAP_STUB_DS
 		mov ds, ax
 		mov es, ax
 #endif
+#if !(TRAP_STUB_FLAGS & TRAPF_NOSAVEFS)
+		mov KTRAP_FRAME.SegFs[esp], fs
+#if (TRAP_STUB_FLAGS & TRAPF_LOADFS)
+		mov ax, TRAP_STUB_FS
+		mov fs, ax
 #endif
+#endif	// #if !(TRAP_STUB_FLAGS & TRAPF_NOSAVEFS)
+#endif	// #if !(TRAP_STUB_FLAGS & TRAPF_NOSAVESEG)
 
 		// call handler
 #if (TRAP_STUB_FLAGS & TRAPF_INTERRUPT)
 		mov edx, KTRAP_FRAME.ErrCode[esp]
 		mov ecx, esp
-		call KINTERRUPT.DispatchAddress[edx]
+		call tokenpaste(TRAP_STUB_NAME, Handler)
+		// call KINTERRUPT.DispatchAddress[edx]
 #else
 		mov ecx, esp
 		call tokenpaste(TRAP_STUB_NAME, Handler)

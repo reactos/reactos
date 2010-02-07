@@ -43,23 +43,20 @@ KiGetVectorDispatch(IN ULONG Vector,
     Entry = HalVectorToIDTEntry(Vector);
 
     /* Setup the handlers */
-    Dispatch->NoDispatch = (PVOID)KiInterruptNoDispatch;
+	Dispatch->NoDispatch = (PVOID)KiInterruptNoDispatch;
 	Dispatch->InterruptDispatch = (PVOID)KiInterruptDispatch;
-    Dispatch->FloatingDispatch = (PVOID)KiInterruptNoDispatch;			// Floating Interrupts are not supported
+    Dispatch->FloatingDispatch = (PVOID)KiInterruptNoDispatch; // Floating Interrupts are not supported
     Dispatch->ChainedDispatch = (PVOID)KiChainedDispatch;
-    // Dispatch->FlatDispatch = NULL;
-    Dispatch->FlatDispatch = (PVOID)KiInterruptNoDispatch;
+    Dispatch->FlatDispatch = (PVOID)NULL;
 
     /* Get the current handler */
     Current = KeQueryInterruptHandler(Vector);
 
     /* Set the interrupt */
-    Dispatch->Interrupt = CONTAINING_RECORD(Current,
-                                            KINTERRUPT,
-                                            DispatchCode);
+    Dispatch->Interrupt = KiInterruptGetObject(Current);
 
     /* Check what this interrupt is connected to */
-    if ((PKINTERRUPT_ROUTINE)Current == Dispatch->NoDispatch)
+    if (Current == (PVOID)Dispatch->NoDispatch)
     {
         /* Not connected */
         Dispatch->Type = NoConnect;
@@ -95,7 +92,9 @@ KiConnectVectorToInterrupt(IN PKINTERRUPT Interrupt,
     DISPATCH_INFO Dispatch;
     PKINTERRUPT_ROUTINE Handler;
 
-    /* Get vector data */
+	DPRINTT("\n");
+
+	/* Get vector data */
     KiGetVectorDispatch(Interrupt->Vector, &Dispatch);
 
     /* Check if we're only disconnecting */
@@ -121,9 +120,13 @@ KiConnectVectorToInterrupt(IN PKINTERRUPT Interrupt,
         ASSERT(Dispatch.FlatDispatch == NULL);
         Handler = (PVOID)&Interrupt->DispatchCode;
     }
-
+	
     /* Register the interrupt */
-    KeRegisterInterruptHandler(Interrupt->Vector, Handler);
+	_ASM int 3
+	Interrupt->DispatchAddress = Handler;
+	KeRegisterInterruptHandler(Interrupt->Vector, (PVOID)&Interrupt->DispatchCode);
+
+    // KeRegisterInterruptHandler(Interrupt->Vector, Handler);
 }
 
 VOID
@@ -145,27 +148,22 @@ KiExitInterrupt(IN PKTRAP_FRAME TrapFrame,
     KiEoiHelper(TrapFrame);
 }
 
-#if 0
 VOID
 KiUnexpectedInterrupt(VOID)
 {
     /* Crash the machine */
     KeBugCheck(TRAP_CAUSE_UNKNOWN);
 }
-#endif
     
-typedef void (FASTCALL PKI_INTERRUPT_DISPATCH)(IN PKTRAP_FRAME TrapFrame, IN PKINTERRUPT Interrupt);
-
 VOID
 FASTCALL
-// KiUnexpectedInterruptTailHandler(IN PKTRAP_FRAME TrapFrame, IN PKINTERRUPT Interrupt )
-KiInterruptNoDispatch(IN PKTRAP_FRAME TrapFrame, IN PKINTERRUPT Interrupt)
+KiUnexpectedInterruptTailHandler(IN PKTRAP_FRAME TrapFrame, PKINTERRUPT Interrupt)
 {
     KIRQL OldIrql;
     
-	DPRINTT("\n");
+    DPRINTT("\n");
 
-    /* Enter trap */
+	/* Enter trap */
     KiEnterInterruptTrap(TrapFrame);
     
     /* Increase interrupt count */
@@ -187,12 +185,52 @@ KiInterruptNoDispatch(IN PKTRAP_FRAME TrapFrame, IN PKINTERRUPT Interrupt)
     }
 }
 
-VOID FASTCALL KiInterruptDispatch(IN PKTRAP_FRAME TrapFrame, IN PKINTERRUPT Interrupt)
+typedef
+VOID
+(FASTCALL PKI_INTERRUPT_DISPATCH)(
+    IN PKTRAP_FRAME TrapFrame,
+    IN PKINTERRUPT Interrupt
+);
+
+VOID
+FASTCALL
+KiInterruptNoDispatch(IN PKTRAP_FRAME TrapFrame, PKINTERRUPT Interrupt)
+{
+    KIRQL OldIrql;
+    
+	DPRINTT("\n");
+
+	/* Enter trap */
+    KiEnterInterruptTrap(TrapFrame);
+    
+    /* Increase interrupt count */
+    KeGetCurrentPrcb()->InterruptCount++;
+    
+    /* Start the interrupt */
+    if (HalBeginSystemInterrupt(HIGH_LEVEL, Interrupt->Vector, &OldIrql))
+    {
+        /* Warn user */
+        DPRINT1("\n\x7\x7!!! Unexpected Interrupt %02lx !!!\n");
+        
+        /* Now call the epilogue code */
+        KiExitInterrupt(TrapFrame, OldIrql, FALSE);
+    }
+    else
+    {
+        /* Now call the epilogue code */
+        KiExitInterrupt(TrapFrame, OldIrql, TRUE);
+    }
+}
+
+VOID
+FASTCALL
+KiInterruptDispatch(IN PKTRAP_FRAME TrapFrame,
+                    IN PKINTERRUPT Interrupt)
 {       
     KIRQL OldIrql;
 
-	DPRINTT("\n");
-    /* Increase interrupt count */
+    DPRINTT("\n");
+	/* Increase interrupt count */
     KeGetCurrentPrcb()->InterruptCount++;
     
     /* Begin the interrupt, making sure it's not spurious */
@@ -228,8 +266,9 @@ KiChainedDispatch(IN PKTRAP_FRAME TrapFrame,
     BOOLEAN Handled;
     PLIST_ENTRY NextEntry, ListHead;
     
-	DPRINTT("\n");
-    /* Increase interrupt count */
+    DPRINTT("\n");
+
+	/* Increase interrupt count */
     KeGetCurrentPrcb()->InterruptCount++;
 
     /* Begin the interrupt, making sure it's not spurious */
@@ -296,25 +335,21 @@ KiChainedDispatch(IN PKTRAP_FRAME TrapFrame,
     }
  }
 
-
-#if 0
 VOID
 FASTCALL
 KiInterruptTemplateHandler(IN PKTRAP_FRAME TrapFrame,
                            IN PKINTERRUPT Interrupt)
 {   
-    /* Enter interrupt frame */
+	DPRINTT("\n");
+	/* Enter interrupt frame */
     KiEnterInterruptTrap(TrapFrame);
 
     /* Call the correct dispatcher */
     ((PKI_INTERRUPT_DISPATCH*)Interrupt->DispatchAddress)(TrapFrame, Interrupt);
 }
-#endif
 
-#if 0
-KiTrap(KiInterruptTemplate,         KI_PUSH_FAKE_ERROR_CODE | KI_HARDWARE_INT);
-KiTrap(KiUnexpectedInterruptTail,   KI_PUSH_FAKE_ERROR_CODE);
-#endif
+// KiTrap(KiInterruptTemplate,         KI_PUSH_FAKE_ERROR_CODE | KI_HARDWARE_INT);
+// KiTrap(KiUnexpectedInterruptTail,   KI_PUSH_FAKE_ERROR_CODE);
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
@@ -335,10 +370,7 @@ KeInitializeInterrupt(IN PKINTERRUPT Interrupt,
                       IN CHAR ProcessorNumber,
                       IN BOOLEAN FloatingSave)
 {
-    // ULONG i;
-	iptru PatchAddr;
-    PULONG DispatchCode = &Interrupt->DispatchCode[0];
-	PULONG Patch = DispatchCode;
+	PULONG DispatchCode = &Interrupt->DispatchCode[0];
 
     /* Set the Interrupt Header */
     Interrupt->Type = InterruptObject;
@@ -368,29 +400,12 @@ KeInitializeInterrupt(IN PKINTERRUPT Interrupt,
     Interrupt->FloatingSave = FloatingSave;
     Interrupt->TickCount = MAXULONG;
     Interrupt->DispatchCount = MAXULONG;
-	Interrupt->DispatchAddress = (PKINTERRUPT_ROUTINE)KiInterruptNoDispatch;
 
-#if 0 // !!!
-	/* Loop the template in memory */
-	for (i = 0; i < KINTERRUPT_DISPATCH_CODES; i++)
-    {
-        /* Copy the dispatch code */
-        *DispatchCode++ = ((PULONG)KiInterruptTemplate)[i];
-    }
-#endif
+    /* copy the handler template code to the actual handler instance */
+	memcpy(DispatchCode, KiInterruptTemplate, KiInterruptTemplateSize);
 
-#if 0
-	/* Jump to the last 4 bytes */
-    Patch = (PULONG)((ULONG_PTR)Patch +
-                     ((ULONG_PTR)&KiInterruptTemplateObject -
-                      (ULONG_PTR)KiInterruptTemplate) - 4);
-
-    /* Apply the patch */
-    *Patch = PtrToUlong(Interrupt);
-#endif
-
-	PatchAddr = (iptru)KiInterrupt0 + Interrupt->Vector * ((iptru)KiInterrupt1 - (iptru)KiInterrupt0);
-	*((iptru *)(PatchAddr+1)) = (iptru)Interrupt;
+	// patch handler to associate PKINTERRUPT to it
+	KiInterruptSetObject(DispatchCode, Interrupt);
 
     /* Disconnect it at first */
     Interrupt->Connected = FALSE;
@@ -409,7 +424,9 @@ KeConnectInterrupt(IN PKINTERRUPT Interrupt)
     ULONG Vector;
     DISPATCH_INFO Dispatch;
 
-    /* Get data from interrupt */
+    DPRINTT("\n");
+
+	/* Get data from interrupt */
     Number = Interrupt->Number;
     Vector = Interrupt->Vector;
     Irql = Interrupt->Irql;
@@ -507,7 +524,8 @@ KeDisconnectInterrupt(IN PKINTERRUPT Interrupt)
     PKINTERRUPT NextInterrupt;
     BOOLEAN State;
 
-    /* Set the affinity */
+	DPRINTT("\n");
+	/* Set the affinity */
     KeSetSystemAffinityThread(1 << Interrupt->Number);
 
     /* Lock the dispatcher */
@@ -588,6 +606,8 @@ KeSynchronizeExecution(IN OUT PKINTERRUPT Interrupt,
     NTSTATUS Status;
     KIRQL OldIrql;
     
+	DPRINTT("\n");
+
     /* Raise IRQL */
     OldIrql = KfRaiseIrql(Interrupt->SynchronizeIrql);
     

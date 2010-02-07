@@ -361,6 +361,7 @@ MmInitSystem(IN ULONG Phase,
     
     if (Phase == 0)
     {
+		DPRINTT("phase 0\n");
         /* Initialize the kernel address space */
         KeInitializeGuardedMutex(&PsGetCurrentProcess()->AddressCreationLock);
         MmKernelAddressSpace = MmGetCurrentAddressSpace();
@@ -413,9 +414,6 @@ MmInitSystem(IN ULONG Phase,
         /* Initialize the Loader Lock */
         KeInitializeMutant(&MmSystemLoadLock, FALSE);
 
-		DPRINT1("__test\n");
-		__test();
-
         /* Reload boot drivers */
         MiReloadBootLoadedDrivers(LoaderBlock);
 
@@ -432,7 +430,8 @@ MmInitSystem(IN ULONG Phase,
     }
     else if (Phase == 1)
     {
-        MmInitializeRmapList();
+        DPRINTT("phase 1\n");
+		MmInitializeRmapList();
         MmInitializePageOp();
         MmInitSectionImplementation();
         MmInitPagingFile();
@@ -479,7 +478,7 @@ MmInitSystem(IN ULONG Phase,
     {
 
     }
-
+	DPRINTT("r\n");
     return TRUE;
 }
 

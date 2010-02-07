@@ -1159,7 +1159,6 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
 		return;		// !!!
 		KiEoiHelper(TrapFrame);
 	}
-    DPRINTT("KiEoiHelper r\n");
 
     /* Check for S-LIST fault */
     if (TrapFrame->Eip == (ULONG_PTR)ExpInterlockedPopEntrySListFault)

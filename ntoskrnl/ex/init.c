@@ -1226,6 +1226,10 @@ ExpInitializeExecutive(IN ULONG Cpu,
 	DPRINTT("DbgkInitialize\n");
 	DbgkInitialize();
 
+	DPRINTT("DbgkInitialize r\n");
+	_asm int 3
+
+
     /* Calculate the tick count multiplier */
     ExpTickCountMultiplier = ExComputeTickCountMultiplier(KeMaximumIncrement);
     SharedUserData->TickCountMultiplier = ExpTickCountMultiplier;
@@ -1265,6 +1269,19 @@ Phase1InitializationDiscard(IN PVOID Context)
     PRTL_USER_PROCESS_PARAMETERS ProcessParameters = NULL;
 
     DPRINTT("\n");
+
+	// _enable();
+	// DPRINTT("_enable\n");
+	// _ASM int 3
+	__test(0x110, 0);
+
+
+	// DPRINTT("DbgWait\n");
+	// DbgWait(5000 * 10000);
+	// DPRINTT("DbgWait r\n");
+	// _ASM int 3
+	
+
 	/* Allocate the initialization buffer */
     InitBuffer = ExAllocatePoolWithTag(NonPagedPool,
                                        sizeof(INIT_BUFFER),
@@ -1282,7 +1299,11 @@ Phase1InitializationDiscard(IN PVOID Context)
     KeSetPriorityThread(KeGetCurrentThread(), HIGH_PRIORITY);
 
     /* Do Phase 1 HAL Initialization */
-    if (!HalInitSystem(1, LoaderBlock)) KeBugCheck(HAL1_INITIALIZATION_FAILED);
+	DPRINTT("HalInitSystem\n");
+    if (!HalInitSystem(1, LoaderBlock))
+		KeBugCheck(HAL1_INITIALIZATION_FAILED);
+	DPRINTT("HalInitSystem r\n");
+
 
     /* Get the command line and upcase it */
     CommandLine = _strupr(LoaderBlock->LoadOptions);
