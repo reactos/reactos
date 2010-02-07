@@ -263,8 +263,9 @@ SecondaryDirectSoundBuffer8Impl_fnLock(
     else
     {
         ASSERT(dwOffset < This->BufferSize);
-        ASSERT(dwBytes < This->BufferSize);
-        ASSERT(dwBytes + dwOffset <= This->BufferSize);
+        ASSERT(dwBytes <= This->BufferSize);
+
+        dwBytes = min(This->BufferSize - dwOffset, dwBytes);
 
         *ppvAudioPtr1 = This->Buffer + dwOffset;
         *pdwAudioBytes1 = dwBytes;
@@ -316,7 +317,7 @@ SecondaryDirectSoundBuffer8Impl_fnPlay(
     /* release primary buffer */
     PrimaryDirectSoundBuffer_ReleaseLock(This->PrimaryBuffer);
 
-    DPRINT1("SetFormatSuccess PrimaryBuffer %p\n", This->PrimaryBuffer);
+    DPRINT("SetFormatSuccess PrimaryBuffer %p\n", This->PrimaryBuffer);
     return DS_OK;
 }
 
