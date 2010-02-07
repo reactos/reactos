@@ -229,7 +229,7 @@ NTSTATUS LsarOpenPolicy(
 NTSTATUS LsarQueryInformationPolicy(
     LSAPR_HANDLE PolicyHandle,
     POLICY_INFORMATION_CLASS InformationClass,
-    unsigned long PolicyInformation)
+    PLSAPR_POLICY_INFORMATION *PolicyInformation)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -240,7 +240,7 @@ NTSTATUS LsarQueryInformationPolicy(
 NTSTATUS LsarSetInformationPolicy(
     LSAPR_HANDLE PolicyHandle,
     POLICY_INFORMATION_CLASS InformationClass,
-    unsigned long *PolicyInformation)
+    PLSAPR_POLICY_INFORMATION PolicyInformation)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
