@@ -560,8 +560,14 @@ NTSTATUS LsarEnmuerateAccountRights(
     PRPC_SID AccountSid,
     PLSAPR_USER_RIGHT_SET UserRights)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    FIXME("(%p,%p,%p) stub\n", PolicyHandle, AccountSid, UserRights);
+
+    if (!LsapValidateDbHandle(PolicyHandle))
+        return STATUS_INVALID_HANDLE;
+
+    UserRights->Entries = 0;
+    UserRights->UserRights = NULL;
+    return STATUS_OBJECT_NAME_NOT_FOUND;
 }
 
 
