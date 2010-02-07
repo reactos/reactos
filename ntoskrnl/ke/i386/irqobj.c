@@ -33,6 +33,7 @@ KiGetVectorDispatch(IN ULONG Vector,
     UCHAR Type;
     UCHAR Entry;
 
+	DPRINTT("\n");
     /* Check if this is a primary or 2nd-level dispatch */
     Type = HalSystemVectorDispatchEntry(Vector,
                                         &Dispatch->FlatDispatch,
@@ -151,6 +152,7 @@ KiExitInterrupt(IN PKTRAP_FRAME TrapFrame,
 VOID
 KiUnexpectedInterrupt(VOID)
 {
+	DPRINTT("\n");
     /* Crash the machine */
     KeBugCheck(TRAP_CAUSE_UNKNOWN);
 }
@@ -173,7 +175,7 @@ KiUnexpectedInterruptTailHandler(IN PKTRAP_FRAME TrapFrame, PKINTERRUPT Interrup
     if (HalBeginSystemInterrupt(HIGH_LEVEL, Interrupt->Vector, &OldIrql))
     {
         /* Warn user */
-        DPRINT1("\n\x7\x7!!! Unexpected Interrupt %02lx !!!\n");
+        DPRINT1("!!! Unexpected Interrupt %02lx !!!\n");
         
         /* Now call the epilogue code */
         KiExitInterrupt(TrapFrame, OldIrql, FALSE);
@@ -210,7 +212,7 @@ KiInterruptNoDispatch(IN PKTRAP_FRAME TrapFrame, PKINTERRUPT Interrupt)
     if (HalBeginSystemInterrupt(HIGH_LEVEL, Interrupt->Vector, &OldIrql))
     {
         /* Warn user */
-        DPRINT1("\n\x7\x7!!! Unexpected Interrupt %02lx !!!\n");
+        DPRINT1("!!! Unexpected Interrupt %x !!!\n", Interrupt->Vector);
         
         /* Now call the epilogue code */
         KiExitInterrupt(TrapFrame, OldIrql, FALSE);
@@ -372,7 +374,9 @@ KeInitializeInterrupt(IN PKINTERRUPT Interrupt,
 {
 	PULONG DispatchCode = &Interrupt->DispatchCode[0];
 
-    /* Set the Interrupt Header */
+    DPRINTT("\n");
+
+	/* Set the Interrupt Header */
     Interrupt->Type = InterruptObject;
     Interrupt->Size = sizeof(KINTERRUPT);
 

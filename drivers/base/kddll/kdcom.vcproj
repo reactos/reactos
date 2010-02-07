@@ -131,6 +131,7 @@
 				AdditionalDependencies="ntoskrnl.lib hal.lib"
 				ModuleDefinitionFile="kdcom.def"
 				GenerateDebugInformation="true"
+				SubSystem="0"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				ResourceOnlyDLL="true"

@@ -70,6 +70,7 @@
 				ModuleDefinitionFile="ntoskrnl.def"
 				GenerateMapFile="true"
 				MapFileName="$(IntDir)\_ntoskrnl.map"
+				SubSystem="0"
 				EntryPointSymbol="KiSystemStartup"
 				BaseAddress="0x80800000"
 			/>
@@ -146,6 +147,7 @@
 				ModuleDefinitionFile="ntoskrnl.def"
 				GenerateMapFile="true"
 				MapFileName="$(IntDir)\_ntoskrnl.map"
+				SubSystem="0"
 				LinkTimeCodeGeneration="1"
 				EntryPointSymbol="KiSystemStartup"
 				BaseAddress="0x80800000"

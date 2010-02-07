@@ -931,6 +931,7 @@ KiRestoreProcessorControlState(PKPROCESSOR_STATE ProcessorState)
     // Restore GDT and IDT
     //
     Ke386SetGlobalDescriptorTable(&ProcessorState->SpecialRegisters.Gdtr.Limit);
+	
     __lidt(&ProcessorState->SpecialRegisters.Idtr.Limit);
 
     //

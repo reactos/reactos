@@ -34,7 +34,6 @@ _NAKED VOID _CDECL TRAP_STUB_NAME(VOID)
 		sub esp, dword ptr offset KTRAP_FRAME.V86Es
 #elif (TRAP_STUB_FLAGS & TRAPF_INTERRUPT)
 		// the primary stub (trap_m.h) pushes a pointer to KINTERRUPT
-		int 3
 		sub esp, offset KTRAP_FRAME.ErrCode
 #elif (TRAP_STUB_FLAGS & TRAPF_ERRORCODE)
 		sub esp, offset KTRAP_FRAME.ErrCode
@@ -46,32 +45,40 @@ _NAKED VOID _CDECL TRAP_STUB_NAME(VOID)
 #endif
 
 		// save volatiles
-		mov KTRAP_FRAME.Eax[esp], eax
-		mov KTRAP_FRAME.Ecx[esp], ecx
 		mov KTRAP_FRAME.Edx[esp], edx
+		mov KTRAP_FRAME.Ecx[esp], ecx
+		mov KTRAP_FRAME.Eax[esp], eax
 
-// !!! while testing we always save novol too
+		// !!! only for testing we are always saving novol
 // #if (TRAP_STUB_FLAGS & TRAPF_SAVENOVOL)
-		mov KTRAP_FRAME.Ebp[esp], ebp
-		mov KTRAP_FRAME.Ebx[esp], ebx
-		mov KTRAP_FRAME.Esi[esp], esi
 		mov KTRAP_FRAME.Edi[esp], edi
+		mov KTRAP_FRAME.Esi[esp], esi
+		mov KTRAP_FRAME.Ebx[esp], ebx
+		mov KTRAP_FRAME.Ebp[esp], ebp
 // #endif
 
 		// save & load segs
 #if !(TRAP_STUB_FLAGS & TRAPF_NOSAVESEG)
-		mov KTRAP_FRAME.SegDs[esp], ds
-		mov KTRAP_FRAME.SegEs[esp], es
 #if !(TRAP_STUB_FLAGS & TRAPF_NOLOADDS)
 		mov ax, TRAP_STUB_DS
-		mov ds, ax
+#endif
+#if (TRAP_STUB_FLAGS & TRAPF_LOADFS)
+		mov dx, TRAP_STUB_FS
+#endif
+		// gs most probably does not need save/restore,
+		// but we're playing safe for now
+		mov KTRAP_FRAME.SegGs[esp], gs
+		mov KTRAP_FRAME.SegEs[esp], es
+		mov KTRAP_FRAME.SegDs[esp], ds
+
+#if !(TRAP_STUB_FLAGS & TRAPF_NOLOADDS)
 		mov es, ax
+		mov ds, ax
 #endif
 #if !(TRAP_STUB_FLAGS & TRAPF_NOSAVEFS)
 		mov KTRAP_FRAME.SegFs[esp], fs
 #if (TRAP_STUB_FLAGS & TRAPF_LOADFS)
-		mov ax, TRAP_STUB_FS
-		mov fs, ax
+		mov fs, dx
 #endif
 #endif	// #if !(TRAP_STUB_FLAGS & TRAPF_NOSAVEFS)
 #endif	// #if !(TRAP_STUB_FLAGS & TRAPF_NOSAVESEG)
@@ -89,19 +96,20 @@ _NAKED VOID _CDECL TRAP_STUB_NAME(VOID)
 
 		// restore seg regs
 #if !(TRAP_STUB_FLAGS & TRAPF_NOSAVESEG)
-		mov ds, KTRAP_FRAME.SegDs[esp]
+		mov es, KTRAP_FRAME.SegGs[esp]
 		mov es, KTRAP_FRAME.SegEs[esp]
+		mov ds, KTRAP_FRAME.SegDs[esp]
 #if !(TRAP_STUB_FLAGS & TRAPF_NOSAVEFS)
 		mov fs, KTRAP_FRAME.SegFs[esp]
 #endif
 #endif
 
-		// !!! while testing we always save novol too
+// !!! only for testing we're always saving novol
 // #if (TRAP_STUB_FLAGS & TRAPF_SAVENOVOL)
-		mov ebp, KTRAP_FRAME.Ebp[esp]
-		mov ebx, KTRAP_FRAME.Ebx[esp]
-		mov esi, KTRAP_FRAME.Esi[esp]
 		mov edi, KTRAP_FRAME.Edi[esp]
+		mov esi, KTRAP_FRAME.Esi[esp]
+		mov ebx, KTRAP_FRAME.Ebx[esp]
+		mov ebp, KTRAP_FRAME.Ebp[esp]
 // #endif
 
 		// restore volatile regs and return
@@ -113,10 +121,10 @@ _NAKED VOID _CDECL TRAP_STUB_NAME(VOID)
 		sti
 		CpuSysExit
 #else
-		mov eax, KTRAP_FRAME.Eax[esp]
-		mov ecx, KTRAP_FRAME.Ecx[esp]
 		mov edx, KTRAP_FRAME.Edx[esp]
-		add esp, KTRAP_FRAME_EIP
+		mov ecx, KTRAP_FRAME.Ecx[esp]
+		mov eax, KTRAP_FRAME.Eax[esp]
+		add esp, offset KTRAP_FRAME.Eip
 		iretd
 #endif
 

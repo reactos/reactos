@@ -1298,10 +1298,14 @@ Phase1InitializationDiscard(IN PVOID Context)
     /* Set us at maximum priority */
     KeSetPriorityThread(KeGetCurrentThread(), HIGH_PRIORITY);
 
-    /* Do Phase 1 HAL Initialization */
 	DPRINTT("HalInitSystem\n");
+	_ASM int 3
+
+    /* Do Phase 1 HAL Initialization */
     if (!HalInitSystem(1, LoaderBlock))
 		KeBugCheck(HAL1_INITIALIZATION_FAILED);
+
+	_ASM int 3
 	DPRINTT("HalInitSystem r\n");
 
 

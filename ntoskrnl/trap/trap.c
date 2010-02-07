@@ -140,12 +140,18 @@ _NOWARN_POP
 
 void *kk = KiTrap00;
 
-VOID _FASTCALL KiInterruptHandler(KTRAP_FRAME *TrapFrame, PKINTERRUPT Interrupt)
+VOID FASTCALL KiInterruptHandler(KTRAP_FRAME *TrapFrame, PKINTERRUPT Interrupt)
 {
 	DPRINTT("\n");
-	_ASM int 3
+	// _ASM int 3
 	KiInterruptTemplateHandler(TrapFrame, Interrupt);
 	// KiTrapReturn(TrapFrame);
+}
+
+VOID FASTCALL Kii386EoiHelper(KTRAP_FRAME *TrapFrame)
+{
+	DPRINT1("!!! This should not be used\n");
+	KiEoiHelper(TrapFrame); 
 }
 
 VOID _CDECL KiTrapInit(VOID)
