@@ -720,12 +720,9 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Get GDT, IDT, PCR and TSS pointers */
     KiGetMachineBootPointers(&Gdt, &Idt, &Pcr, &Tss);
-
+	
 	/* Setup the TSS descriptors and entries */
     Ki386InitializeTss(Tss, Idt, Gdt);
-
-	// !!! 
-	KiTrapInit();
 
 	/* Initialize the PCR */
     RtlZeroMemory(Pcr, PAGE_SIZE);
@@ -745,9 +742,6 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     __writefsdword(KPCR_DR6, 0);
     __writefsdword(KPCR_DR7, 0);
 
-    /* Setup the IDT */
-    KeInitExceptions();
-
     /* Load Ring 3 selectors for DS/ES */
     Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
     Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
@@ -756,14 +750,23 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     RtlCopyMemory(&NmiEntry, &Idt[2], sizeof(KIDTENTRY));
     RtlCopyMemory(&DoubleFaultEntry, &Idt[8], sizeof(KIDTENTRY));
 
-    /* Copy kernel's trap handlers */
+    /* Setup the IDT */
+    KeInitExceptions();
+	Idt = KiIdt;
+
+#if 0
+	/* Copy kernel's trap handlers */
     RtlCopyMemory(Idt,
                   (PVOID)KiIdtDescriptor.Base,
                   KiIdtDescriptor.Limit + 1);
+#endif
 
     /* Restore NMI and double fault */
     RtlCopyMemory(&Idt[2], &NmiEntry, sizeof(KIDTENTRY));
     RtlCopyMemory(&Idt[8], &DoubleFaultEntry, sizeof(KIDTENTRY));
+
+	__lidt(&KiIdtDescriptor.Limit);
+	KiTrapInit();
 
 AppCpuInit:
     /* Loop until we can release the freeze lock */

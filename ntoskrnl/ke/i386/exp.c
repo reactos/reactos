@@ -53,7 +53,8 @@ KeInitExceptions(VOID)
 {
     ULONG i;
     USHORT FlippedSelector;
-
+	
+	DPRINTT("\n");
     /* Loop the IDT */
     for (i = 0; i <= MAXIMUM_IDTVECTOR; i++)
     {
