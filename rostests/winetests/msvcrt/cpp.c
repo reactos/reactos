@@ -1034,6 +1034,10 @@ static void test_demangle(void)
 /* 113 */ {"?f@T@@QAEHQAY1BE@BO@$$CBD@Z", "public: int __thiscall T::f(char const (* const)[20][30])"},
 /* 114 */ {"??0?$Foo@U?$vector_c@H$00$01$0?1$0A@$0A@$0HPPPPPPP@$0HPPPPPPP@$0HPPPPPPP@$0HPPPPPPP@$0HPPPPPPP@$0HPPPPPPP@$0HPPPPPPP@$0HPPPPPPP@$0HPPPPPPP@$0HPPPPPPP@$0HPPPPPPP@$0HPPPPPPP@$0HPPPPPPP@$0HPPPPPPP@$0HPPPPPPP@@mpl@boost@@@@QAE@XZ",
            "public: __thiscall Foo<struct boost::mpl::vector_c<int,1,2,-2,0,0,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647> >::Foo<struct boost::mpl::vector_c<int,1,2,-2,0,0,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647> >(void)"},
+/* 115 */ {"?swprintf@@YAHPAGIPBGZZ", "int __cdecl swprintf(unsigned short *,unsigned int,unsigned short const *,...)"},
+/* 116 */ {"?vswprintf@@YAHPAGIPBGPAD@Z", "int __cdecl vswprintf(unsigned short *,unsigned int,unsigned short const *,char *)"},
+/* 117 */ {"?vswprintf@@YAHPA_WIPB_WPAD@Z", "int __cdecl vswprintf(wchar_t *,unsigned int,wchar_t const *,char *)"},
+/* 118 */ {"?swprintf@@YAHPA_WIPB_WZZ", "int __cdecl swprintf(wchar_t *,unsigned int,wchar_t const *,...)"},
 
     };
     int i, num_test = (sizeof(test)/sizeof(test[0]));

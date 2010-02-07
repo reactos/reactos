@@ -422,6 +422,35 @@ static WCHAR* AtoW( const char* p )
     return buffer;
 }
 
+/* Test reading in text mode when the 512'th character read is \r*/
+static void test_readboundary(void)
+{
+  FILE *fp;
+  char buf[513], rbuf[513];
+  int i, j;
+  for (i = 0; i < 511; i++)
+    {
+      j = (i%('~' - ' ')+ ' ');
+      buf[i] = j;
+    }
+  buf[511] = '\n';
+  buf[512] =0;
+  fp = fopen("boundary.tst", "wt");
+  fwrite(buf, 512,1,fp);
+  fclose(fp);
+  fp = fopen("boundary.tst", "rt");
+  for(i=0; i<512; i++)
+    {
+      fseek(fp,0 , SEEK_CUR);
+      rbuf[i] = fgetc(fp);
+    }
+  rbuf[512] =0;
+  fclose(fp);
+  unlink("boundary.tst");
+
+  ok(strcmp(buf, rbuf) == 0,"CRLF on buffer boundary failure\n");
+  }
+
 static void test_fgetc( void )
 {
   char* tempf;
@@ -437,6 +466,14 @@ static void test_fgetc( void )
   ok(ich == ret, "First fgetc expected %x got %x\n", ich, ret);
   ret = fgetc(tempfh);
   ok(ich == ret, "Second fgetc expected %x got %x\n", ich, ret);
+  fclose(tempfh);
+  tempfh = fopen(tempf,"wt");
+  fputc('\n', tempfh);
+  fclose(tempfh);
+  tempfh = fopen(tempf,"wt");
+  setbuf(tempfh, NULL);
+  ret = fgetc(tempfh);
+  ok(ret == -1, "Unbuffered fgetc in text mode must failed on \\r\\n\n");
   fclose(tempfh);
   unlink(tempf);
   free(tempf);
@@ -800,15 +837,23 @@ static void test_file_write_read( void )
   tempfd = _open(tempf,_O_RDONLY|_O_TEXT); /* open in TEXT mode */
   _lseek(tempfd, -1, FILE_END);
   ret = _read(tempfd,btext,LLEN);
-  ok(ret == 1, "_read expected 1 got bad length: %d\n", ret);
+  ok(ret == 1 && *btext == '\n', "_read expected 1 got bad length: %d\n", ret);
   _lseek(tempfd, -2, FILE_END);
   ret = _read(tempfd,btext,LLEN);
   ok(ret == 1 && *btext == '\n', "_read expected '\\n' got bad length: %d\n", ret);
   _lseek(tempfd, -3, FILE_END);
+  ret = _read(tempfd,btext,1);
+  ok(ret == 1 && *btext == 'e', "_read expected 'e' got \"%.*s\" bad length: %d\n", ret, btext, ret);
+  ok(tell(tempfd) == 41, "bad position %u expecting 41\n", tell(tempfd));
+  _lseek(tempfd, -3, FILE_END);
   ret = _read(tempfd,btext,2);
   ok(ret == 1 && *btext == 'e', "_read expected 'e' got \"%.*s\" bad length: %d\n", ret, btext, ret);
   ok(tell(tempfd) == 42, "bad position %u expecting 42\n", tell(tempfd));
-  _close(tempfd);
+  _lseek(tempfd, -3, FILE_END);
+  ret = _read(tempfd,btext,3);
+  ok(ret == 2 && *btext == 'e', "_read expected 'e' got \"%.*s\" bad length: %d\n", ret, btext, ret);
+  ok(tell(tempfd) == 43, "bad position %u expecting 43\n", tell(tempfd));
+   _close(tempfd);
 
   ret = unlink(tempf);
   ok( ret == 0 ,"Can't unlink '%s': %d\n", tempf, errno);
@@ -835,7 +880,23 @@ static void test_file_write_read( void )
       "problems with _O_BINARY _write / _O_TEXT _read\n");
   _close(tempfd);
 
-   ret =_chmod (tempf, _S_IREAD | _S_IWRITE);
+  /* test _read with single bytes. CR should be skipped and LF pulled in */
+  tempfd = _open(tempf,_O_RDONLY|_O_TEXT); /* open in TEXT mode */
+  for (i=0; i<strlen(mytext); i++)  /* */
+    {
+      _read(tempfd,btext, 1);
+      ok(btext[0] ==  mytext[i],"_read failed at pos %d 0x%02x vs 0x%02x\n", i, btext[0], mytext[i]);
+    }
+  while (_read(tempfd,btext, 1));
+  _close(tempfd);
+
+  /* test _read in buffered mode. Last CR should be skipped but  LF not pulled in */
+  tempfd = _open(tempf,_O_RDONLY|_O_TEXT); /* open in TEXT mode */
+  i = _read(tempfd,btext, strlen(mytext));
+  ok(i == strlen(mytext)-1, "_read_i %d vs %d\n", i, strlen(mytext));
+  _close(tempfd);
+
+  ret =_chmod (tempf, _S_IREAD | _S_IWRITE);
   ok( ret == 0,
      "Can't chmod '%s' to read-write: %d\n", tempf, errno);
   ret = unlink(tempf);
@@ -1353,6 +1414,11 @@ static void test_unlink(void)
     rmdir("test_unlink");
 }
 
+void test_dup2(void)
+{
+    ok(-1 == _dup2(0, -1), "expected _dup2 to fail when second arg is negative\n" );
+}
+
 START_TEST(file)
 {
     int arg_c;
@@ -1373,6 +1439,7 @@ START_TEST(file)
             ok(0, "invalid argument '%s'\n", arg_v[2]);
         return;
     }
+    test_dup2();
     test_file_inherit(arg_v[0]);
     test_file_write_read();
     test_chsize();
@@ -1388,6 +1455,7 @@ START_TEST(file)
     test_asciimode2();
     test_readmode(FALSE); /* binary mode */
     test_readmode(TRUE);  /* ascii mode */
+    test_readboundary();
     test_fgetc();
     test_fputc();
     test_flsbuf();
