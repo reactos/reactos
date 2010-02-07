@@ -693,8 +693,11 @@ CPortPinWaveCyclic::UpdateCommonBuffer(
 
         if (m_ConnectDetails->Interface.Id == KSINTERFACE_STANDARD_LOOPED_STREAMING)
         {
-            // normalize position
-            m_Position.PlayOffset = m_Position.PlayOffset % m_Position.WriteOffset;
+            if (m_Position.WriteOffset)
+            {
+                // normalize position
+                m_Position.PlayOffset = m_Position.PlayOffset % m_Position.WriteOffset;
+            }
         }
     }
 }
@@ -742,8 +745,11 @@ CPortPinWaveCyclic::UpdateCommonBufferOverlap(
 
         if (m_ConnectDetails->Interface.Id == KSINTERFACE_STANDARD_LOOPED_STREAMING)
         {
-            // normalize position
-            m_Position.PlayOffset = m_Position.PlayOffset % m_Position.WriteOffset;
+            if (m_Position.WriteOffset)
+            {
+                // normalize position
+                m_Position.PlayOffset = m_Position.PlayOffset % m_Position.WriteOffset;
+            }
         }
 
     }
