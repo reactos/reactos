@@ -43,7 +43,7 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "K&omprimieren...",            119
         MENUITEM "Deko&mprimieren...",          120
         MENUITEM SEPARATOR
-        MENUITEM "&Ausführen...",               ID_EXECUTE
+        MENUITEM "&Ausführen...",               ID_RUN
         MENUITEM "&Drucken...",                 102
         MENUITEM "Zuord&nen...",                103
         MENUITEM SEPARATOR
@@ -142,21 +142,6 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM SEPARATOR
         MENUITEM "&Info über Winefile...",      ID_ABOUT
     }
-}
-
-
-IDD_EXECUTE DIALOG FIXED IMPURE 15, 13, 210, 63
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Ausführen"
-FONT 8, "MS Shell Dlg"
-{
-    CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
-    CONTROL         "Befehls&zeile:", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
-    EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
-    CONTROL         "Als &Symbol", 214, "Button", BS_AUTOCHECKBOX|WS_TABSTOP,3, 45, 71, 12
-    DEFPUSHBUTTON   "OK", 1, 158, 6, 47, 14
-    PUSHBUTTON      "Abbrechen", 2, 158, 23, 47, 14
-    PUSHBUTTON      "&Hilfe", 254, 158, 43, 47, 14
 }
 
 IDD_SELECT_DESTINATION DIALOG FIXED IMPURE 15, 13, 210, 63

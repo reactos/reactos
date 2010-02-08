@@ -1688,37 +1688,17 @@ static HWND create_child_window(ChildWnd* child)
 	return child->hwnd;
 }
 
+#define	RFF_NODEFAULT		0x02	/* No default item selected. */
 
-struct ExecuteDialog {
-	WCHAR	cmd[MAX_PATH];
-	int		cmdshow;
-};
-
-static INT_PTR CALLBACK ExecuteDialogDlgProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
+static void WineFile_OnRun( HWND hwnd )
 {
-	static struct ExecuteDialog* dlg;
+	static const WCHAR shell32_dll[] = {'S','H','E','L','L','3','2','.','D','L','L',0};
+        void (WINAPI *pRunFileDlgAW )(HWND, HICON, LPWSTR, LPWSTR, LPWSTR, DWORD);
+	HMODULE hshell = GetModuleHandleW( shell32_dll );
 
-	switch(nmsg) {
-		case WM_INITDIALOG:
-			dlg = (struct ExecuteDialog*) lparam;
-			return 1;
-
-		case WM_COMMAND: {
-			int id = (int)wparam;
-
-			if (id == IDOK) {
-				GetWindowTextW(GetDlgItem(hwnd, 201), dlg->cmd, MAX_PATH);
-				dlg->cmdshow = get_check(hwnd,214) ? SW_SHOWMINIMIZED : SW_SHOWNORMAL;
-				EndDialog(hwnd, id);
-			} else if (id == IDCANCEL)
-				EndDialog(hwnd, id);
-
-			return 1;}
-	}
-
-	return 0;
+	pRunFileDlgAW = (void*)GetProcAddress(hshell, (LPCSTR)61);
+	if (pRunFileDlgAW) pRunFileDlgAW( hwnd, 0, NULL, NULL, NULL, RFF_NODEFAULT);
 }
-
 
 static INT_PTR CALLBACK DestinationDlgProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
@@ -2268,18 +2248,9 @@ static LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM
                                                       Globals.saveSettings ? MF_CHECKED : MF_UNCHECKED );
 					break;
 
-				case ID_EXECUTE: {
-					struct ExecuteDialog dlg;
-
-					memset(&dlg, 0, sizeof(struct ExecuteDialog));
-
-					if (DialogBoxParamW(Globals.hInstance, MAKEINTRESOURCEW(IDD_EXECUTE), hwnd, ExecuteDialogDlgProc, (LPARAM)&dlg) == IDOK) {
-						HINSTANCE hinst = ShellExecuteW(hwnd, NULL/*operation*/, dlg.cmd/*file*/, NULL/*parameters*/, NULL/*dir*/, dlg.cmdshow);
-
-						if (PtrToUlong(hinst) <= 32)
-							display_error(hwnd, GetLastError());
-					}
-					break;}
+				case ID_RUN:
+					WineFile_OnRun( hwnd );
+					break;
 
 				case ID_CONNECT_NETWORK_DRIVE: {
 					DWORD ret = WNetConnectionDialog(hwnd, RESOURCETYPE_DISK);

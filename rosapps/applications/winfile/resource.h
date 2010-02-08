@@ -35,7 +35,6 @@
 
 /* dialogs */
 
-#define IDD_EXECUTE                     103
 #define IDD_SELECT_DESTINATION          104
 #define IDD_DIALOG_VIEW_TYPE            105
 #define IDD_DIALOG_PROPERTIES           106
@@ -44,7 +43,7 @@
 /* control ids */
 
 #define ID_ACTIVATE                     101
-#define ID_EXECUTE                      105
+#define ID_RUN                          105
 #define ID_FILE_MOVE                    106
 #define ID_FILE_COPY                    107
 #define ID_FILE_DELETE                  108

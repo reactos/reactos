@@ -42,7 +42,7 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "&Becsomagolás...",            119
         MENUITEM "K&icsomagolás...",            120
         MENUITEM SEPARATOR
-        MENUITEM "&Futtatás...",                ID_EXECUTE
+        MENUITEM "&Futtatás...",                ID_RUN
         MENUITEM "&Nyomtatás...",               102
         MENUITEM "Társítás...",                 103
         MENUITEM SEPARATOR
@@ -145,19 +145,4 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM SEPARATOR
         MENUITEM "&Winefile-ról...",            ID_ABOUT
     }
-}
-
-
-IDD_EXECUTE DIALOG FIXED IMPURE 15, 13, 210, 63
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Futtatás"
-FONT 8, "MS Shell Dlg"
-{
-    CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
-    CONTROL         "&Parancs:", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
-    EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
-    CONTROL         "&Szimbólumként", 214, "Button", BS_AUTOCHECKBOX|WS_TABSTOP,3, 45, 71, 12
-    DEFPUSHBUTTON   "OK", 1, 158, 6, 47, 14
-    PUSHBUTTON      "Mégse", 2, 158, 23, 47, 14
-    PUSHBUTTON      "&Súgó", 254, 158, 43, 47, 14
 }

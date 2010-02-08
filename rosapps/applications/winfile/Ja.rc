@@ -44,7 +44,7 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "圧縮(&O)...",                119
         MENUITEM "解凍(&O)...",              120
         MENUITEM SEPARATOR
-        MENUITEM "実行(&R)...",                     ID_EXECUTE
+        MENUITEM "実行(&R)...",                     ID_RUN
         MENUITEM "印刷(&P)...",                   102
         MENUITEM "関連付け...",                103
         MENUITEM SEPARATOR
@@ -147,21 +147,6 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM SEPARATOR
         MENUITEM "Winefile について(&A)...",          ID_ABOUT
     }
-}
-
-
-IDD_EXECUTE DIALOG FIXED IMPURE 15, 13, 210, 63
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "実行"
-FONT 9, "MS Shell Dlg"
-{
-    CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
-    CONTROL         "コマンド(&C):", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
-    EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
-    CONTROL         "As &Symbol", 214, "Button", BS_AUTOCHECKBOX|WS_TABSTOP,3, 45, 71, 12
-    DEFPUSHBUTTON   "OK", 1, 158, 6, 47, 14
-    PUSHBUTTON      "キャンセル", 2, 158, 23, 47, 14
-    PUSHBUTTON      "ヘルプ(&H)", 254, 158, 43, 47, 14
 }
 
 IDD_SELECT_DESTINATION DIALOG FIXED IMPURE 15, 13, 210, 63

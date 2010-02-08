@@ -1,4 +1,4 @@
-/*
+﻿/*
  * WineFile
  * Simplified and Traditional Chinese Language Support
  *
@@ -43,7 +43,7 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "压缩(&O)...",               119
         MENUITEM "解压缩(&O)...",             120
         MENUITEM SEPARATOR
-        MENUITEM "运行(&R)...",               ID_EXECUTE
+        MENUITEM "运行(&R)...",               ID_RUN
         MENUITEM "打印(&P)...",               102
         MENUITEM "配置文件相关...",             103
         MENUITEM SEPARATOR
@@ -148,21 +148,6 @@ IDM_WINEFILE MENU FIXED IMPURE
     }
 }
 
-
-IDD_EXECUTE DIALOG FIXED IMPURE 15, 13, 210, 63
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "运行"
-FONT 9, "MS Shell Dlg"
-{
-    CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
-    CONTROL         "命令(&C):", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
-    EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
-    CONTROL         "作为连接(&S)", 214, "Button", BS_AUTOCHECKBOX|WS_TABSTOP,3, 45, 71, 12
-    DEFPUSHBUTTON   "确定", 1, 158, 6, 47, 14
-    PUSHBUTTON      "取消", 2, 158, 23, 47, 14
-    PUSHBUTTON      "帮助(&H)", 254, 158, 43, 47, 14
-}
-
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 /* Menu */
@@ -181,7 +166,7 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "壓縮(&O)...",               119
         MENUITEM "解壓縮(&O)...",             120
         MENUITEM SEPARATOR
-        MENUITEM "執行(&R)...",               ID_EXECUTE
+        MENUITEM "執行(&R)...",               ID_RUN
         MENUITEM "列印(&P)...",               102
         MENUITEM "配置檔案相關...",             103
         MENUITEM SEPARATOR
@@ -284,20 +269,5 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM SEPARATOR
         MENUITEM "&關於 Winefile...",           ID_ABOUT
     }
-}
-
-
-IDD_EXECUTE DIALOG FIXED IMPURE 15, 13, 210, 63
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "執行"
-FONT 9, "MS Shell Dlg"
-{
-    CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
-    CONTROL         "指令(&C):", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
-    EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
-    CONTROL         "作為連接(&S)", 214, "Button", BS_AUTOCHECKBOX|WS_TABSTOP,3, 45, 71, 12
-    DEFPUSHBUTTON   "確定", 1, 158, 6, 47, 14
-    PUSHBUTTON      "取消", 2, 158, 23, 47, 14
-    PUSHBUTTON      "幫助(&H)", 254, 158, 43, 47, 14
 }
 #pragma code_page(default)
