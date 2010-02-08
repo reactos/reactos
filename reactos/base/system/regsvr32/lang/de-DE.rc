@@ -12,7 +12,7 @@ IDS_UsageMessage, "%s\n\nSyntax: regsvr32 [/u] [/s] [/c] [/n] [/i[:cmdline]] dll
 /s -	Hintergrundmodus; Meldungen werden nicht angezeigt\n\
 /c -	Konsolenausgabe verwenden\n\
 /i -	Aufruf von DLLInstall, wobei optional eine [Befehlszeile] übergeben\n\
-	werden kann. Unter Verwendung von /u wird die DLL_Deinstallation\n\
+	werden kann. Unter Verwendung von /u wird die DLL-Deinstallation\n\
 	aufgerufen.\n\
 /n -	Kein Aufruf von DLLRegisterServer. Diese Option muss mit /i verwendet werden."
 
@@ -20,12 +20,12 @@ IDS_NoDllSpecified,  "Es wurde kein DLL-Name angegeben."
 
 IDS_InvalidFlag,     "Ungültiger Parameter: %s"
 
-IDS_SwitchN_NoI,     "Ungültiger Parameter: /n muss zusammen mit dem /i Schalter verwendet werden."
+IDS_SwitchN_NoI,     "Ungültiger Parameter: /n muss zusammen mit dem /i-Schalter verwendet werden."
 
-IDS_DllNotLoaded,    "LoadLibrary('%s') ist fehlgeschlagen.\nGetLastError Rückgabewert 0x%08x."
+IDS_DllNotLoaded,    "LoadLibrary('%s') ist fehlgeschlagen.\nGetLastError-Rückgabewert 0x%08x."
 
 IDS_MissingEntry,    "%s wurde geladen, aber der %s Einstiegspunkt wurde nicht gefunden.\n\n\
-%s wurde möglicherweise nicht exportiert, oder eine fehlerhafte Version von %s befindet sich im Speicher. Erwägen Sie die Verwendung von PView um es festzustellen und zu löschen."
+%s wurde möglicherweise nicht exportiert, oder eine fehlerhafte Version von %s befindet sich im Speicher. Erwägen Sie die Verwendung von PView, um es festzustellen und zu löschen."
 
 IDS_FailureMessage,  "%s in %s ist fehlgeschlagen.\nRückgabewert: 0x%08x"
 

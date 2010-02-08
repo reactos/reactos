@@ -51,7 +51,7 @@ END
 
 IDD_PROPPAGEDNSANDNETBIOS DIALOGEX 0, 0, 266, 125
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "DNS Suffix und NetBIOS Computername"
+CAPTION "DNS-Suffix und NetBIOS-Computername"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Primäres DNS Suffix dieses Computers:", -1, 7, 5, 253, 8
@@ -68,13 +68,13 @@ STRINGTABLE
 BEGIN
     1 "* Unbekannt *"
     2 "ARBEITSGRUPPE"
-    3 "Bei dem Versuch Domänenmitgliedschaftsinformationen zu lesen trat folgender Fehler auf:"
+    3 "Bei dem Versuch, Domänenmitgliedschaftsinformationen zu lesen, trat folgender Fehler auf:"
     4 "Computernamen ändern"
     5 "Arbeitsgruppe:"
     6 "Domäne:"
     22 "Willkommen in der Arbeitsgruppe %1"
     23 "Willkommen in der Domäne %1"
-    24 "Sie müssen den Computer neustarten, damit die Änderungen wirksam werden."
+    24 "Sie müssen den Computer neu starten, damit die Änderungen wirksam werden."
     25 "Sie können den Namen und die Zugehörigkeit dieses Computers ändern. Änderungen können sich auf den Zugriff auf Netzwerkressourcen auswirken."
     1021 "Hinweis: Nur Administratoren können die Identifikation des Computers ändern."
     1022 "Hinweis: Die Identifikation des Computers kann aus folgendem Grund nicht geändert werden:"

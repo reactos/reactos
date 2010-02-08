@@ -193,7 +193,7 @@ BEGIN
     IDS_TOOLTIP9, "Sprühdose"
     IDS_TOOLTIP10, "Text"
     IDS_TOOLTIP11, "Linie"
-    IDS_TOOLTIP12, "Bezier-Kurve"
+    IDS_TOOLTIP12, "Bézier-Kurve"
     IDS_TOOLTIP13, "Rechteck"
     IDS_TOOLTIP14, "Polygon"
     IDS_TOOLTIP15, "Ellipse"
