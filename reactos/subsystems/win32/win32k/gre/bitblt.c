@@ -595,6 +595,12 @@ GreSetDIBits(
         return 0;
     }
 
+    if (!ScanLines || (StartScan >= bitmap->SurfObj.sizlBitmap.cy))
+        return 0;
+
+    if (StartScan + ScanLines > bitmap->SurfObj.sizlBitmap.cy)
+        ScanLines = bitmap->SurfObj.sizlBitmap.cy - StartScan;
+
     // Get RGB values
     if (ColorUse == DIB_PAL_COLORS)
       lpRGB = DIB_MapPaletteColors(DC, bmi);

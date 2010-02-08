@@ -136,7 +136,7 @@ HBITMAP APIENTRY RosGdiCreateDIBSection( HDC physDev, HBITMAP hbitmap,
 
     /* Get DIB section size */
     szSize.cx = dib->dsBm.bmWidth;
-    szSize.cy = abs(dib->dsBm.bmHeight);
+    szSize.cy = dib->dsBm.bmHeight;
 
     /* Get its format */
     ulFormat = GrepBitmapFormat(dib->dsBmih.biBitCount * dib->dsBmih.biPlanes,
@@ -146,7 +146,7 @@ HBITMAP APIENTRY RosGdiCreateDIBSection( HDC physDev, HBITMAP hbitmap,
     hbmDIB = GreCreateBitmap(szSize,
                              dib->dsBm.bmWidthBytes, ulFormat,
                              BMF_DONTCACHE | BMF_USERMEM | BMF_NOZEROINIT |
-                             0,
+                             (dib->dsBmih.biHeight < 0 ? BMF_TOPDOWN : 0),
                              dib->dsBm.bmBits);
 
     dib->dsBmih.biClrUsed = 0;
@@ -371,13 +371,13 @@ INT APIENTRY RosGdiSetDIBits(HDC physDev, HBITMAP hUserBitmap, UINT StartScan,
         hBitmap, hUserBitmap, StartScan, ScanLines);
 
     /* Set the bits */
-    GreSetDIBits(pDC,
-                 hBitmap,
-                 StartScan,
-                 ScanLines,
-                 Bits,
-                 bmi,
-                 ColorUse);
+    ScanLines = GreSetDIBits(pDC,
+                             hBitmap,
+                             StartScan,
+                             ScanLines,
+                             Bits,
+                             bmi,
+                             ColorUse);
 
     /* Release DC objects */
     DC_Unlock(pDC);
