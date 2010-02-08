@@ -1,0 +1,85 @@
+﻿/*
+ * XCOPY - Wine-compatible xcopy program
+ * Ukrainian language support
+ *
+ * Copyright (C) 2007 J. Edmeades
+ * Copyright (C) 2010 I. Paliychuk
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "xcopy.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    STRING_INVPARMS, "Невірна кількість параметрів - Введіть xcopy /? для довідки\n"
+    STRING_INVPARM,  "Невірний параметр '%s' -  Введіть xcopy /? для довідки\n"
+    STRING_PAUSE,    "Натисніть <enter> щоб почати копіювання\n"
+    STRING_SIMCOPY,  "%d файл(ів) буде скопійовано\n"
+    STRING_COPY,     "%d файл(ів) скопійовано\n"
+    STRING_QISDIR,   "'%s' є файлом чи директорією\n" \
+                     "on the target?\n" \
+                     "(F - Файл, D - Директорія)\n"
+    STRING_SRCPROMPT,"%s? (Yes|No)\n"
+    STRING_OVERWRITE,"Переписати %s? (Yes|No|All)\n"
+    STRING_COPYFAIL, "Під час копіювання '%s' в '%s' сталась помилка r/c %d\n"
+    STRING_OPENFAIL, "Не вдалось відкрити '%s'\n"
+    STRING_READFAIL, "Помилка читання '%s'\n"
+    STRING_YES_CHAR, "Y"
+    STRING_NO_CHAR,  "N"
+    STRING_ALL_CHAR, "A"
+    STRING_FILE_CHAR,"F"
+    STRING_DIR_CHAR, "D"
+
+    STRING_HELP,
+"XCOPY - Копіює файли та дерева директорій за призначенням\n\
+\n\
+Syntax:\n\
+XCOPY source [dest] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
+\t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y]\n\
+\n\
+Where:\n\
+\n\
+[/I]  Assume directory if destination does not exist and copying 2 or\n\
+\tmore files\n\
+[/S]  Копіює директорії та піддиректорії\n\
+[/E]  Копіює директорії та піддиректорії, включно з порожніми\n\
+[/Q]  Do not list names during copy, ie quiet.\n\
+[/F]  Під час копіювання відображає повні імена початкових і кінцевих файлів\n\
+[/L]  Simulate operation, showing names which would be copied\n\
+[/W]  Питає підтвердження перед початком копіювання\n\
+[/T]  Створює структуру каталогів але не копіює файли\n\
+[/Y]  Suppress prompting when overwriting files\n\
+[/-Y] Питає підтвердження на перезапис файлів\n\
+[/P]  Prompts on each source file before copying\n\
+[/N]  Копіює, використовуючи короткі імена\n\
+[/U]  Copy only files which already exist in destination\n\
+[/R]  Перезаписує файли, доступні лише для читання\n\
+[/H]  Include hidden and system files in the copy\n\
+[/C]  Продовжує роботу, навіть якщо при копіюванні виникла помилка\n\
+[/A]  Копіює лише файли з властивістю АРХІВНИЙ\n\
+[/M]  Копіює лише файли з властивістю АРХІВНИЙ, видаляє\n\
+\властивість АРХІВНИЙ\n\
+[/D | /D:m-d-y] Копіює лише нові файли або ті, які були змінені після вказаної дати.\n\
+\t\tЯкщо дата не вказана, only copy if destination is older\n\
+\t\tthan source\n\n"
+
+}
+#pragma code_page(default)

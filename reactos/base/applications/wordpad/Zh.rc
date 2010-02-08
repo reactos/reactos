@@ -51,7 +51,7 @@ BEGIN
         MENUITEM "删除(&D)\tDEL", ID_EDIT_CLEAR
         MENUITEM "全选(&S)\tCtrl+A", ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "查找(&F)...\tCrtl+F", ID_FIND
+        MENUITEM "查找(&F)...\tCtrl+F", ID_FIND
         MENUITEM "找下一个(&N)\tF3", ID_FIND_NEXT
         MENUITEM "替换(&R)...\tCtrl+H", ID_REPLACE
         MENUITEM SEPARATOR
@@ -223,6 +223,8 @@ BEGIN
     STRING_PREVIEW_PREVPAGE,         "上一页"
     STRING_PREVIEW_TWOPAGES,         "双页"
     STRING_PREVIEW_ONEPAGE,          "单页"
+    STRING_PREVIEW_ZOOMIN,           "Zoom in"
+    STRING_PREVIEW_ZOOMOUT,          "Zoom out"
     STRING_PREVIEW_CLOSE,            "关闭"
 END
 
@@ -276,7 +278,7 @@ BEGIN
         MENUITEM "刪除(&D)\tDEL", ID_EDIT_CLEAR
         MENUITEM "全選(&S)\tCtrl+A", ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "查找(&F)...\tCrtl+F", ID_FIND
+        MENUITEM "查找(&F)...\tCtrl+F", ID_FIND
         MENUITEM "找下一個(&N)\tF3", ID_FIND_NEXT
         MENUITEM "替換(&R)...\tCtrl+H", ID_REPLACE
         MENUITEM SEPARATOR

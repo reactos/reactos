@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright 2004 by Krzysztof Foltman
  * Copyright 2007 by Alexander N. Sørnes <alex@thehandofagony.com>
  *
@@ -66,6 +66,7 @@ IDI_TXT ICON "txt.ico"
 #include "En.rc"
 #include "Fr.rc"
 #include "Hu.rc"
+#include "It.rc"
 #include "Ja.rc"
 #include "Ko.rc"
 #include "Lt.rc"
@@ -77,4 +78,5 @@ IDI_TXT ICON "txt.ico"
 #include "Si.rc"
 #include "Sv.rc"
 #include "Tr.rc"
+#include "Uk.rc"
 #include "Zh.rc"

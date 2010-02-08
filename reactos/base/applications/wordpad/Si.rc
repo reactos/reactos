@@ -48,7 +48,7 @@ BEGIN
         MENUITEM "Po&briši\tDEL",                 ID_EDIT_CLEAR
         MENUITEM "Izberi &vse\tCtrl+A",         ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "Na&jdi ...\tCrtl+F",         ID_FIND
+        MENUITEM "Na&jdi ...\tCtrl+F",         ID_FIND
         MENUITEM "Najdi n&aslednje\tF3",              ID_FIND_NEXT
         MENUITEM "Za&menjaj ...\tCtrl+H",      ID_REPLACE
         MENUITEM SEPARATOR
@@ -220,6 +220,8 @@ BEGIN
     STRING_PREVIEW_PREVPAGE,         "Prejšnja"
     STRING_PREVIEW_TWOPAGES,         "Dve strani"
     STRING_PREVIEW_ONEPAGE,          "Ena stran"
+    STRING_PREVIEW_ZOOMIN,           "Zoom in"
+    STRING_PREVIEW_ZOOMOUT,          "Zoom out"
     STRING_PREVIEW_CLOSE,            "Zapri"
 END
 

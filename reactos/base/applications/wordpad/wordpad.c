@@ -56,6 +56,9 @@ static const WCHAR wszMainWndClass[] = {'W','O','R','D','P','A','D','T','O','P',
 
 static const WCHAR stringFormat[] = {'%','2','d','\0'};
 
+const WCHAR wszPreviewWndClass[] = {'P','r','t','P','r','e','v','i','e','w',0};
+LRESULT CALLBACK preview_proc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 static HWND hMainWnd;
 static HWND hEditorWnd;
 static HWND hFindWnd;
@@ -85,7 +88,7 @@ static void DoLoadStrings(void)
     static const WCHAR files_txt[] = {'*','.','t','x','t','\0'};
     static const WCHAR files_all[] = {'*','.','*','\0'};
 
-    HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hMainWnd, GWLP_HINSTANCE);
+    HINSTANCE hInstance = GetModuleHandleW(0);
 
     LoadStringW(hInstance, STRING_RICHTEXT_FILES_RTF, p, MAX_STRING_LEN);
     p += lstrlenW(p) + 1;
@@ -683,8 +686,7 @@ static void set_bar_states(void)
 
 static void preview_exit(HWND hMainWnd)
 {
-    HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hMainWnd, GWLP_HINSTANCE);
-    HMENU hMenu = LoadMenuW(hInstance, MAKEINTRESOURCEW(IDM_MAINMENU));
+    HMENU hMenu = LoadMenuW(GetModuleHandleW(0), MAKEINTRESOURCEW(IDM_MAINMENU));
     HWND hEditorWnd = GetDlgItem(hMainWnd, IDC_EDITOR);
 
     set_bar_states();
@@ -701,7 +703,7 @@ static void preview_exit(HWND hMainWnd)
 static void set_fileformat(WPARAM format)
 {
     HICON hIcon;
-    HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hMainWnd, GWLP_HINSTANCE);
+    HINSTANCE hInstance = GetModuleHandleW(0);
     fileFormat = format;
 
     if(format & SF_TEXT)
@@ -980,8 +982,7 @@ static void DialogOpenFile(void)
 
 static void dialog_about(void)
 {
-    HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hMainWnd, GWLP_HINSTANCE);
-    HICON icon = LoadImageW(hInstance, MAKEINTRESOURCEW(IDI_WORDPAD), IMAGE_ICON, 48, 48, LR_SHARED);
+    HICON icon = LoadImageW(GetModuleHandleW(0), MAKEINTRESOURCEW(IDI_WORDPAD), IMAGE_ICON, 48, 48, LR_SHARED);
     ShellAboutW(hMainWnd, wszAppTitle, 0, icon);
 }
 
@@ -1088,7 +1089,7 @@ static void dialog_viewproperties(void)
     PROPSHEETPAGEW psp[2];
     PROPSHEETHEADERW psh;
     size_t i;
-    HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hMainWnd, GWLP_HINSTANCE);
+    HINSTANCE hInstance = GetModuleHandleW(0);
     LPCPROPSHEETPAGEW ppsp = (LPCPROPSHEETPAGEW)&psp;
 
     psp[0].dwSize = sizeof(PROPSHEETPAGEW);
@@ -1241,7 +1242,7 @@ static LRESULT handle_findmsg(LPFINDREPLACEW pFr)
         if(pFr->Flags & FR_WHOLEWORD)
             flags |= FR_WHOLEWORD;
 
-        ret = SendMessageW(hEditorWnd, EM_FINDTEXTW, (WPARAM)flags, (LPARAM)&ft);
+        ret = SendMessageW(hEditorWnd, EM_FINDTEXTW, flags, (LPARAM)&ft);
 
         if(ret == -1)
         {
@@ -1250,7 +1251,7 @@ static LRESULT handle_findmsg(LPFINDREPLACEW pFr)
                 ft.chrg.cpMin = cr.cpMin = 0;
                 ft.chrg.cpMax = cr.cpMax = startPos;
 
-                ret = SendMessageW(hEditorWnd, EM_FINDTEXTW, (WPARAM)flags, (LPARAM)&ft);
+                ret = SendMessageW(hEditorWnd, EM_FINDTEXTW, flags, (LPARAM)&ft);
             }
         }
 
@@ -1263,7 +1264,7 @@ static LRESULT handle_findmsg(LPFINDREPLACEW pFr)
         {
             end = ret + lstrlenW(pFr->lpstrFindWhat);
             cr.cpMin = end;
-            SendMessageW(hEditorWnd, EM_SETSEL, (WPARAM)ret, (LPARAM)end);
+            SendMessageW(hEditorWnd, EM_SETSEL, ret, end);
             SendMessageW(hEditorWnd, EM_SCROLLCARET, 0, 0);
 
             if(pFr->Flags & FR_REPLACE || pFr->Flags & FR_REPLACEALL)
@@ -1414,7 +1415,7 @@ static INT_PTR CALLBACK newfile_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
     {
         case WM_INITDIALOG:
             {
-                HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hMainWnd, GWLP_HINSTANCE);
+                HINSTANCE hInstance = GetModuleHandleW(0);
                 WCHAR buffer[MAX_STRING_LEN];
                 HWND hListWnd = GetDlgItem(hWnd, IDC_NEWFILE);
 
@@ -1459,8 +1460,7 @@ static INT_PTR CALLBACK paraformat_proc(HWND hWnd, UINT message, WPARAM wParam, 
     {
         case WM_INITDIALOG:
             {
-                HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hMainWnd,
-                                                                  GWLP_HINSTANCE);
+                HINSTANCE hInstance = GetModuleHandleW(0);
                 WCHAR buffer[MAX_STRING_LEN];
                 HWND hListWnd = GetDlgItem(hWnd, IDC_PARA_ALIGN);
                 HWND hLeftWnd = GetDlgItem(hWnd, IDC_PARA_LEFT);
@@ -1737,7 +1737,7 @@ static int context_menu(LPARAM lParam)
         int from = 0, to = 0;
         POINTL pt;
         SendMessageW(hEditorWnd, EM_GETSEL, (WPARAM)&from, (LPARAM)&to);
-        SendMessageW(hEditorWnd, EM_POSFROMCHAR, (WPARAM)&pt, (LPARAM)to);
+        SendMessageW(hEditorWnd, EM_POSFROMCHAR, (WPARAM)&pt, to);
         ClientToScreen(hEditorWnd, (POINT*)&pt);
         x = pt.x;
         y = pt.y;
@@ -1752,7 +1752,7 @@ static int context_menu(LPARAM lParam)
 static LRESULT OnCreate( HWND hWnd )
 {
     HWND hToolBarWnd, hFormatBarWnd,  hReBarWnd, hFontListWnd, hSizeListWnd, hRulerWnd;
-    HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE);
+    HINSTANCE hInstance = GetModuleHandleW(0);
     HANDLE hDLL;
     TBADDBITMAP ab;
     int nStdBitmaps = 0;
@@ -2018,7 +2018,7 @@ static LRESULT OnCommand( HWND hWnd, WPARAM wParam, LPARAM lParam)
 
     case ID_FILE_NEW:
         {
-            HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE);
+            HINSTANCE hInstance = GetModuleHandleW(0);
             int ret = DialogBox(hInstance, MAKEINTRESOURCE(IDD_NEWFILE), hWnd,
                                 newfile_proc);
 
@@ -2334,25 +2334,15 @@ static LRESULT OnCommand( HWND hWnd, WPARAM wParam, LPARAM lParam)
         break;
 
     case ID_DATETIME:
-        {
-        HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE);
-        DialogBoxW(hInstance, MAKEINTRESOURCEW(IDD_DATETIME), hWnd, datetime_proc);
+        DialogBoxW(GetModuleHandleW(0), MAKEINTRESOURCEW(IDD_DATETIME), hWnd, datetime_proc);
         break;
-        }
 
     case ID_PARAFORMAT:
-        {
-            HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE);
-            DialogBoxW(hInstance, MAKEINTRESOURCEW(IDD_PARAFORMAT), hWnd,
-                       paraformat_proc);
-        }
+        DialogBoxW(GetModuleHandleW(0), MAKEINTRESOURCEW(IDD_PARAFORMAT), hWnd, paraformat_proc);
         break;
 
     case ID_TABSTOPS:
-        {
-            HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE);
-            DialogBoxW(hInstance, MAKEINTRESOURCEW(IDD_TABSTOPS), hWnd, tabstops_proc);
-        }
+        DialogBoxW(GetModuleHandleW(0), MAKEINTRESOURCEW(IDD_PARAFORMAT), hWnd, tabstops_proc);
         break;
 
     case ID_ABOUT:
@@ -2460,7 +2450,7 @@ static LRESULT OnSize( HWND hWnd, WPARAM wParam, LPARAM lParam )
 {
     int nStatusSize = 0;
     RECT rc;
-    HWND hwndEditor = GetDlgItem(hWnd, IDC_EDITOR);
+    HWND hwndEditor = preview_isactive() ? GetDlgItem(hWnd, IDC_PREVIEW) : GetDlgItem(hWnd, IDC_EDITOR);
     HWND hwndStatusBar = GetDlgItem(hWnd, IDC_STATUSBAR);
     HWND hwndReBar = GetDlgItem(hWnd, IDC_REBAR);
     HWND hRulerWnd = GetDlgItem(hWnd, IDC_RULER);
@@ -2563,9 +2553,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
         }
         break;
     case WM_PAINT:
-        if(preview_isactive())
-            return print_preview(hWnd);
-        else
+        if(!preview_isactive())
             return DefWindowProcW(hWnd, msg, wParam, lParam);
 
     default:
@@ -2603,6 +2591,18 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hOldInstance, LPSTR szCmdPar
     wc.hbrBackground = GetSysColorBrush(COLOR_WINDOW);
     wc.lpszMenuName = MAKEINTRESOURCEW(IDM_MAINMENU);
     wc.lpszClassName = wszMainWndClass;
+    RegisterClassW(&wc);
+
+    wc.style = CS_HREDRAW | CS_VREDRAW;
+    wc.lpfnWndProc = preview_proc;
+    wc.cbClsExtra = 0;
+    wc.cbWndExtra = 0;
+    wc.hInstance = hInstance;
+    wc.hIcon = NULL;
+    wc.hCursor = LoadCursor(NULL, IDC_IBEAM);
+    wc.hbrBackground = GetSysColorBrush(COLOR_WINDOW);
+    wc.lpszMenuName = NULL;
+    wc.lpszClassName = wszPreviewWndClass;
     RegisterClassW(&wc);
 
     registry_read_winrect(&rc);
