@@ -119,7 +119,7 @@ int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
 #define MEM_PROFILE 0
 
 #define SMALL_SIZE 128
-#define LARGE_SIZE 2048
+#define LARGE_SIZE 2049
 
 #define SIGNATURE_LARGE 'LLLL'
 #define SIGNATURE_SMALL 'SSSS'
