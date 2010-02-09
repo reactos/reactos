@@ -277,6 +277,8 @@ VOID Rs232PortPutByte(UCHAR ByteToSend)
 	WRITE_PORT_UCHAR (SER_THR(Rs232PortBase), ByteToSend);
 }
 
+#endif /* DBG */
+
 BOOLEAN Rs232PortInUse(ULONG Base)
 {
 #if DBG
@@ -286,5 +288,4 @@ BOOLEAN Rs232PortInUse(ULONG Base)
 #endif
 }
 
-#endif /* DBG */
-#endif
+#endif /* not _M_ARM */
