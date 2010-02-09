@@ -28,10 +28,10 @@
 //
 // FIXME: mmtypes.h?
 //
-#define KIPCR                   0xFFFFF000
-#define KI_USER_SHARED_DATA     0xFFFFE000
+#define KIP0PCRADDRESS          0xFFDFF000
+#define KI_USER_SHARED_DATA     0xFFDF0000
 #define USPCR                   0x7FFF0000
-#define PCR                     ((volatile KPCR * const)KIPCR)
+#define PCR                     ((KPCR * const)KIP0PCRADDRESS)
 #define USERPCR                 ((volatile KPCR * const)USPCR)
 #define KeGetPcr()              PCR
 #ifndef _WINNT_H
@@ -47,24 +47,12 @@ extern ULONG_PTR MmUserProbeAddress;
 #define MM_SYSTEM_RANGE_START             MmSystemRangeStart
 #define MM_USER_PROBE_ADDRESS             MmUserProbeAddress
 #define MM_LOWEST_USER_ADDRESS            (PVOID)0x10000
-#define MM_LOWEST_SYSTEM_ADDRESS          (PVOID)0xC1400000
+#define MM_LOWEST_SYSTEM_ADDRESS          (PVOID)0xC0800000
 
 //
 // Maximum IRQs
 //
 #define MAXIMUM_VECTOR          16
-
-//
-// Just read it from the PCR
-//
-#define KeGetCurrentProcessorNumber()  (int)PCR->Number
-#define KeGetCurrentIrql()             PCR->CurrentIrql
-#define _KeGetCurrentThread()          PCR->CurrentThread
-#define _KeGetPreviousMode()           PCR->CurrentThread->PreviousMode
-#define _KeIsExecutingDpc()            (PCR->DpcRoutineActive != 0)
-#define KeGetCurrentThread()           _KeGetCurrentThread()
-#define KeGetPreviousMode()            _KeGetPreviousMode()
-#define KeGetDcacheFillSize()          PCR->DcacheFillSize
 
 
 //
@@ -132,7 +120,6 @@ typedef struct _CONTEXT {
 
 //
 // Processor Control Region
-// On ARM, it's actually readable from user-mode, much like KUSER_SHARED_DATA
 //
 #ifdef _WINNT_H
 typedef
@@ -141,60 +128,36 @@ VOID
 #endif
 typedef struct _KPCR
 {
-    ULONG MinorVersion;
-    ULONG MajorVersion;
-    PKINTERRUPT_ROUTINE InterruptRoutine[32];
-    PVOID XcodeDispatch;
-    ULONG FirstLevelDcacheSize;
-    ULONG FirstLevelDcacheFillSize;
-    ULONG FirstLevelIcacheSize;
-    ULONG FirstLevelIcacheFillSize;
-    ULONG SecondLevelDcacheSize;
-    ULONG SecondLevelDcacheFillSize;
-    ULONG SecondLevelIcacheSize;
-    ULONG SecondLevelIcacheFillSize;
+    union
+    {
+        NT_TIB NtTib;
+        struct
+        {
+            struct _EXCEPTION_REGISTRATION_RECORD *Used_ExceptionList; // Unused
+            PVOID Used_StackBase; // Unused
+            PVOID PerfGlobalGroupMask;
+            PVOID TssCopy; // Unused
+            ULONG ContextSwitches;
+            KAFFINITY SetMemberCopy; // Unused
+            PVOID Used_Self;
+        };
+    };
+    struct _KPCR *Self;
     struct _KPRCB *Prcb;
-    struct _TEB *Teb;
-    PVOID TlsArray;
-    ULONG DcacheFillSize;
-    ULONG IcacheAlignment;
-    ULONG IcacheFillSize;
-    ULONG ProcessorId;
-    ULONG ProfileInterval;
-    ULONG ProfileCount;
-    ULONG StallExecutionCount;
-    ULONG StallScaleFactor;
-    CCHAR Number;
-    PVOID DataBusError;
-    PVOID InstructionBusError;
-    ULONG CachePolicy;
-    ULONG AlignedCachePolicy;
-    UCHAR IrqlMask[32];
-    ULONG IrqlTable[32];
-    UCHAR CurrentIrql;
+    KIRQL Irql;
+    ULONG IRR; // Unused
+    ULONG IrrActive; // Unused
+    ULONG IDR; // Unused
+    PVOID KdVersionBlock;
+    PVOID IDT; // Unused
+    PVOID GDT; // Unused
+    PVOID TSS; // Unused
+    USHORT MajorVersion;
+    USHORT MinorVersion;
     KAFFINITY SetMember;
-    struct _KTHREAD *CurrentThread;
-    ULONG ReservedVectors;
-    KAFFINITY NotMember;
-    ULONG SystemReserved[6];
-    ULONG DcacheAlignment;
-    ULONG HalReserved[64];
-    BOOLEAN FirstLevelActive;
-    BOOLEAN DpcRoutineActive;
-    ULONG CurrentPid;
-    BOOLEAN OnInterruptStack;
-    PVOID SavedInitialStack;
-    PVOID SavedStackLimit;
-    PVOID SystemServiceDispatchStart;
-    PVOID SystemServiceDispatchEnd;
-    PVOID InterruptStack;
-    PVOID PanicStack;
-    PVOID BadVaddr;
-    PVOID InitialStack;
-    PVOID StackLimit;
-    ULONG QuantumEnd;
-    PVOID PerfGlobalGroupMask;
-    ULONG ContextSwitches;
+    ULONG StallScaleFactor;
+    UCHAR SpareUnused;
+    UCHAR Number;
 } KPCR, *PKPCR;
 
 //
@@ -203,7 +166,7 @@ typedef struct _KPCR
 FORCEINLINE
 struct _TEB* NtCurrentTeb(VOID)
 {
-    return (struct _TEB*)USERPCR->Teb;
+    return (struct _TEB*)USERPCR->Used_Self;
 }
 
 #ifndef _WINNT_H
