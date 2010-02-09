@@ -15,7 +15,7 @@
 /* GLOBALS ********************************************************************/
 
 ULONG MmGlobalKernelPageDirectory[4096];
-//MMPTE MiArmTemplatePte, MiArmTemplatePde;
+MMPDE HyperTemplatePde;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -248,9 +248,15 @@ MmInitGlobalKernelPageDirectory(VOID)
     PULONG CurrentPageDirectory = (PULONG)PDE_BASE;
     extern MMPTE HyperTemplatePte;
     
-    /* Setup template */
-    HyperTemplatePte.u.Hard.Valid = HyperTemplatePte.u.Hard.Access = 1;
-    
+    /* Setup PTE template */
+    HyperTemplatePte.u.Long = 0;
+    HyperTemplatePte.u.Hard.Valid = 1;
+    HyperTemplatePte.u.Hard.Access = 1;
+
+    /* Setup PDE template */
+    HyperTemplatePde.u.Long = 0;
+    HyperTemplatePde.u.Hard.Valid = 1;
+        
     /* Loop the 2GB of address space which belong to the kernel */
     for (i = MiGetPdeOffset(MmSystemRangeStart); i < 2048; i++)
     {
