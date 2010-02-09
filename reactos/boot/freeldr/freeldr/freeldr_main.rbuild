@@ -4,9 +4,5 @@
 	<include base="freeldr_main">include</include>
 	<include base="ntoskrnl">include</include>
 	<define name="_NTHAL_" />
-	<group compilerset="gcc">
-		<compilerflag>-fno-inline</compilerflag>
-		<compilerflag>-fno-zero-initialized-in-bss</compilerflag>
-	</group>
 	<file>bootmgr.c</file>
 </module>

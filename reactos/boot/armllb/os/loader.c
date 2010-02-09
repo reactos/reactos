@@ -76,16 +76,7 @@ LlbBuildArmBlock(VOID)
     ArmBlock.VideoClearScreen = LlbFwVideoClearScreen;
     ArmBlock.VideoSetDisplayMode = LlbFwVideoSetDisplayMode;
     ArmBlock.VideoGetDisplaySize = LlbFwVideoGetDisplaySize;
-    ArmBlock.VideoGetBufferSize = LlbFwVideoGetBufferSize;
-    ArmBlock.VideoSetTextCursorPosition = LlbFwVideoSetTextCursorPosition;
-    ArmBlock.VideoSetTextCursorPosition = LlbFwVideoSetTextCursorPosition;
-    ArmBlock.VideoHideShowTextCursor = LlbFwVideoHideShowTextCursor;
     ArmBlock.VideoPutChar = LlbFwVideoPutChar;
-    ArmBlock.VideoCopyOffScreenBufferToVRAM = LlbFwVideoCopyOffScreenBufferToVRAM;
-    ArmBlock.VideoIsPaletteFixed = LlbFwVideoIsPaletteFixed;
-    ArmBlock.VideoSetPaletteColor = LlbFwVideoSetPaletteColor;
-    ArmBlock.VideoGetPaletteColor = LlbFwVideoGetPaletteColor;
-    ArmBlock.VideoSync = LlbFwVideoSync;
     ArmBlock.GetTime = LlbFwGetTime;
 }
 
