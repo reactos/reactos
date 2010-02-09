@@ -32,7 +32,7 @@ LlbHwVersaClcdInitialize(VOID)
     WRITE_REGISTER_ULONG(PL110_LCDUPBASE, (ULONG)LlbHwGetFrameBuffer());
     WRITE_REGISTER_ULONG(PL110_LCDLPBASE, (ULONG)LlbHwGetFrameBuffer());
     
-    /* Initialize timings to 1024x720 */
+    /* Initialize timings to 720x400 */
 	WRITE_REGISTER_ULONG(PL110_LCDTIMING0, LCDTIMING0_PPL(LlbHwGetScreenWidth()));
 	WRITE_REGISTER_ULONG(PL110_LCDTIMING1, LCDTIMING1_LPP(LlbHwGetScreenHeight()));
     
