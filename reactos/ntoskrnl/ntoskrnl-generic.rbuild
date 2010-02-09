@@ -365,7 +365,7 @@
 		</if>
 		<if property="ARCH" value="arm">
 			<directory name="arm">
-				<file>stubs.c</file>
+				<file>page.c</file>
 			</directory>
 		</if>
 		<if property="ARCH" value="powerpc">
