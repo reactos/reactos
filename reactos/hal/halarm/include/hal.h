@@ -9,6 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 /* C Headers */
+#define DbgPrint DbgPrintEarly
 #include <stdio.h>
 
 /* WDK HAL Compilation hack */
@@ -22,6 +23,7 @@
 
 /* IFS/DDK/NDK Headers */
 #include <ntifs.h>
+#include <ioaccess.h>
 #include <bugcodes.h>
 #include <ntdddisk.h>
 #include <arc/arc.h>
@@ -29,6 +31,7 @@
 #include <kefuncs.h>
 #include <intrin.h>
 #include <halfuncs.h>
+#include <inbvfuncs.h>
 #include <iofuncs.h>
 #include <ldrtypes.h>
 #include <obfuncs.h>
