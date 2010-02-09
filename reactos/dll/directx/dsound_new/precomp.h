@@ -201,7 +201,8 @@ HRESULT
 NewPrimarySoundBuffer(
     LPDIRECTSOUNDBUFFER8 *OutBuffer,
     LPFILTERINFO Filter,
-    DWORD dwLevel);
+    DWORD dwLevel,
+    DWORD dwFlags);
 
 HRESULT
 PrimaryDirectSoundBuffer_SetFormat(
