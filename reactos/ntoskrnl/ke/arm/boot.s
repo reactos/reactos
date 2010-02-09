@@ -14,48 +14,24 @@
     NESTED_ENTRY KiSystemStartup
     PROLOG_END KiSystemStartup
     
-    /* Put us in FIQ mode */
-    mrs r3, cpsr
-    orr r3, r1, #CPSR_FIQ_MODE
-    msr cpsr, r3
-    
-    /* Set FIQ stack and registers */
+    /* Put us in FIQ mode, set IRQ stack */
+    msr cpsr_c, #CPSR_FIQ_MODE
     ldr sp, [a1, #LpbInterruptStack]
-    mov r8, #0
-    mov r9, #0
-    mov r10, #0
     
     /* Repeat for IRQ mode */
-    mrs r3, cpsr
-    orr r3, r1, #CPSR_IRQ_MODE
-    msr cpsr, r3
+    msr cpsr_c, #CPSR_IRQ_MODE
     ldr sp, [a1, #LpbInterruptStack]
-    mov r8, #0
-    mov r9, #0
-    mov r10, #0
 
-    /* Put us in ABORT mode */
-    mrs r3, cpsr
-    orr r3, r1, #CPSR_ABORT_MODE
-    msr cpsr, r3
-       
-    /* Set panic stack */
+    /* Put us in ABORT mode and set the panic stack */
+    msr cpsr_c, #CPSR_ABORT_MODE
     ldr sp, [a1, #LpbPanicStack]
     
-    /* Put us in UND (Undefined) mode */
-    mrs r3, cpsr
-    orr r3, r1, #CPSR_UND_MODE
-    msr cpsr, r3
-       
-    /* Set panic stack */
+    /* Repeat for UND (Undefined) mode */
+    msr cpsr_c, #CPSR_UND_MODE
     ldr sp, [a1, #LpbPanicStack]
     
-    /* Put us into SVC (Supervisor) mode */
-    mrs r3, cpsr
-    orr r3, r1, #CPSR_SVC_MODE
-    msr cpsr, r3
-
-    /* Switch to boot kernel stack */
+    /* Put us into SVC (Supervisor) mode and set the kernel stack */
+    msr cpsr_c, #CPSR_SVC_MODE
     ldr sp, [a1, #LpbKernelStack]
     
     /* Go to C code */
