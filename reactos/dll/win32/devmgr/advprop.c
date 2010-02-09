@@ -1405,7 +1405,8 @@ GetParentNode:
     }
 
     /* set the device location edit control text */
-    if (GetDeviceLocationString(DeviceInfoData->DevInst,
+    if (GetDeviceLocationString(DeviceInfoSet,
+                                DeviceInfoData,
                                 dap->ParentDevInst,
                                 dap->szTemp,
                                 sizeof(dap->szTemp) / sizeof(dap->szTemp[0])))

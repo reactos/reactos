@@ -181,7 +181,8 @@ UpdateControlStates(IN PHARDWARE_PAGE_DATA hpd)
         }
 
         /* get the location string */
-        if (GetDeviceLocationString(HwDevInfo->DevInfoData.DevInst,
+        if (GetDeviceLocationString(HwDevInfo->ClassDevInfo->hDevInfo,
+                                    &HwDevInfo->DevInfoData,
                                     0,
                                     szBuffer,
                                     sizeof(szBuffer) / sizeof(szBuffer[0])) &&
