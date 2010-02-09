@@ -27,6 +27,7 @@
 #define PDE_BASE    0xC0400000
 #define HYPER_SPACE 0xC0404000
 
+#if 0
 typedef struct _HARDWARE_PDE_ARMV6
 {
     ULONG Valid:1;     // Only for small pages
@@ -77,6 +78,7 @@ typedef struct _HARDWARE_PTE_ARMV6
 C_ASSERT(sizeof(HARDWARE_PDE_ARMV6) == sizeof(ULONG));
 C_ASSERT(sizeof(HARDWARE_LARGE_PTE_ARMV6) == sizeof(ULONG));
 C_ASSERT(sizeof(HARDWARE_PTE_ARMV6) == sizeof(ULONG));
+#endif
 
 /* For FreeLDR */
 typedef struct _PAGE_TABLE_ARM

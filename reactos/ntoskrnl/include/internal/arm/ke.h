@@ -54,7 +54,7 @@
 // All architectures but x86 have it in the PRCB's KeContextSwitches
 //
 #define KeGetContextSwitches(Prcb)  \
-    Prcb->KeContextSwitches
+    CONTAINING_RECORD(Prcb, KIPCR, PrcbData)->ContextSwitches
 
 //
 // Returns the Interrupt State from a Trap Frame.
@@ -106,13 +106,6 @@ KiApcInterrupt(
 );
 
 #include "mm.h"
-
-VOID
-KeFillFixedEntryTb(
-    IN ARM_PTE Pte,
-    IN PVOID Virtual,
-    IN ULONG Index
-);
 
 VOID
 KeFlushTb(

@@ -8,6 +8,11 @@
 
 /* INCLUDES ******************************************************************/
 
+/* ARM Bringup Hack */
+#ifdef _M_ARM
+#define DbgPrint DbgPrintEarly
+#endif
+
 /* Version Data */
 #undef __MSVCRT__
 #include <psdk/ntverp.h>
