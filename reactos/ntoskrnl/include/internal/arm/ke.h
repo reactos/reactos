@@ -77,10 +77,7 @@ FORCEINLINE
 VOID
 KeFlushProcessTb(VOID)
 {
-    //
-    // We need to implement this!
-    //
-    ASSERTMSG("Need ARM flush routine\n", FALSE);
+    KeArmFlushTlb();
 }
 
 FORCEINLINE
