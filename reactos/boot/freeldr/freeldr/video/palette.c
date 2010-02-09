@@ -16,9 +16,8 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-
+#ifndef _M_ARM
 #include <freeldr.h>
-
 VOID VideoSavePaletteState(PPALETTE_ENTRY Palette, ULONG ColorCount)
 {
 	ULONG		Color;
@@ -40,3 +39,4 @@ VOID VideoRestorePaletteState(PPALETTE_ENTRY Palette, ULONG ColorCount)
 		MachVideoSetPaletteColor(Color, Palette[Color].Red, Palette[Color].Green, Palette[Color].Blue);
 	}
 }
+#endif
