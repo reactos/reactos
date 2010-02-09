@@ -579,7 +579,8 @@ MmProbeAndLockPages(IN PMDL Mdl,
     PETHREAD Thread;
     PMMSUPPORT AddressSpace;
     NTSTATUS ProbeStatus;
-    PMMPTE PointerPte, PointerPde, LastPte;
+    PMMPTE PointerPte, LastPte;
+    PMMPDE PointerPde;
     PFN_NUMBER PageFrameIndex;
     PMMPFN Pfn1;
     BOOLEAN UsePfnLock;

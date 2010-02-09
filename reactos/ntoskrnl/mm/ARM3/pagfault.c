@@ -24,7 +24,7 @@ NTSTATUS
 FASTCALL
 MiCheckPdeForPagedPool(IN PVOID Address)
 {
-    PMMPTE PointerPde;
+    PMMPDE PointerPde;
     NTSTATUS Status = STATUS_SUCCESS;
     
     //
@@ -37,7 +37,7 @@ MiCheckPdeForPagedPool(IN PVOID Address)
         // Send a hint to the page fault handler that this is only a valid fault
         // if we already detected this was access within the page table range
         //
-        PointerPde = MiAddressToPte(Address);
+        PointerPde = (PMMPDE)MiAddressToPte(Address);
         Status = STATUS_WAIT_1;
     }
     else if (Address < MmSystemRangeStart)
@@ -200,7 +200,8 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
                  IN PVOID TrapInformation)
 {
     KIRQL OldIrql = KeGetCurrentIrql(), LockIrql;
-    PMMPTE PointerPde, PointerPte;
+    PMMPTE PointerPte;
+    PMMPDE PointerPde;
     MMPTE TempPte;
     PETHREAD CurrentThread;
     NTSTATUS Status;
