@@ -243,7 +243,7 @@ BOOL CDECL RosDrv_Ellipse( NTDRV_PDEVICE *physDev, INT left, INT top, INT right,
 BOOL CDECL RosDrv_EnumDeviceFonts( NTDRV_PDEVICE *physDev, LPLOGFONTW plf,
                                    FONTENUMPROCW proc, LPARAM lp )
 {
-    UNIMPLEMENTED;
+    /* We're always using client-side fonts. */
     return FALSE;
 }
 
