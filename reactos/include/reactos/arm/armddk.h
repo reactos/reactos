@@ -122,9 +122,7 @@ typedef struct _CONTEXT {
 // Processor Control Region
 //
 #ifdef _WINNT_H
-typedef
-VOID
-(*PKINTERRUPT_ROUTINE)(VOID);
+#define KIRQL ULONG
 #endif
 typedef struct _KPCR
 {

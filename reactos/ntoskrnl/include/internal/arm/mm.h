@@ -111,12 +111,12 @@ PULONG MmGetPageDirectory(VOID);
 
 #define MI_MAKE_LOCAL_PAGE(x)      ((x)->u.Hard.NonGlobal = 1)
 #define MI_MAKE_DIRTY_PAGE(x)      
-#define MI_MAKE_OWNER_PAGE(x)      ((x)->u.Hard.Access = 1) // FIXFIX
-#define MI_MAKE_WRITE_PAGE(x)      ((x)->u.Hard.ExtendedAccess = 1) // FIXFIX
+#define MI_MAKE_OWNER_PAGE(x)      ((x)->u.Hard.Owner = 1)
+#define MI_MAKE_WRITE_PAGE(x)      ((x)->u.Hard.ReadOnly = 0)
 #define MI_PAGE_DISABLE_CACHE(x)   ((x)->u.Hard.Cached = 0)
 #define MI_PAGE_WRITE_THROUGH(x)   ((x)->u.Hard.Buffered = 0)
 #define MI_PAGE_WRITE_COMBINED(x)  ((x)->u.Hard.Buffered = 1)
-#define MI_IS_PAGE_WRITEABLE(x)    ((x)->u.Hard.ExtendedAccess == 0)
+#define MI_IS_PAGE_WRITEABLE(x)    ((x)->u.Hard.ReadOnly == 0)
 #define MI_IS_PAGE_COPY_ON_WRITE(x)FALSE
 #define MI_IS_PAGE_DIRTY(x)        TRUE
 
