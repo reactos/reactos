@@ -316,9 +316,13 @@ typedef struct _KPRCB
     UCHAR Reserved;
     USHORT BuildType;
     KAFFINITY SetMember;
+    UCHAR CpuType;
+    UCHAR CpuID;
+    USHORT CpuStep;
     KPROCESSOR_STATE ProcessorState;
     ULONG KernelReserved[16];
     ULONG HalReserved[16];
+    UCHAR PrcbPad0[92];
     KSPIN_LOCK_QUEUE LockQueue[LockQueueMaximumLock];
     struct _KTHREAD *NpxThread;
     ULONG InterruptCount;
@@ -334,7 +338,6 @@ typedef struct _KPRCB
     UCHAR NodeColor;
     UCHAR Spare1;
     ULONG NodeShiftedColor;
-    ULONG PcrPage;
     struct _KNODE *ParentNode;
     ULONG MultiThreadProcessorSet;
     struct _KPRCB *MultiThreadSetMaster;
@@ -361,19 +364,22 @@ typedef struct _KPRCB
     LARGE_INTEGER IoReadTransferCount;
     LARGE_INTEGER IoWriteTransferCount;
     LARGE_INTEGER IoOtherTransferCount;
-    ULONG KeContextSwitches;
+    ULONG SpareCounter1[8];
     PP_LOOKASIDE_LIST PPLookasideList[16];
     PP_LOOKASIDE_LIST PPNPagedLookasideList[32];
     PP_LOOKASIDE_LIST PPPagedLookasideList[32];
     volatile ULONG PacketBarrier;
     volatile ULONG ReverseStall;
     PVOID IpiFrame;
+    UCHAR PrcbPad2[52];
     volatile PVOID CurrentPacket[3];
     volatile ULONG TargetSet;
     volatile PKIPI_WORKER WorkerRoutine;
     volatile ULONG IpiFrozen;
+    UCHAR PrcbPad3[40];
     volatile ULONG RequestSummary;
     volatile struct _KPRCB *SignalDone;
+    UCHAR PrcbPad4[56];
     struct _KDPC_DATA DpcData[2];
     PVOID DpcStack;
     ULONG MaximumDpcQueueDepth;
@@ -391,15 +397,19 @@ typedef struct _KPRCB
     KEVENT DpcEvent;
     UCHAR ThreadDpcEnable;
     volatile BOOLEAN QuantumEnd;
+    UCHAR PrcbPad50;
     volatile UCHAR IdleSchedule;
     LONG DpcSetEventRequest;
+    UCHAR PrcbPad5[18];
     LONG TickOffset;
     KDPC CallDpc;
+    ULONG PrcbPad7[8];
     LIST_ENTRY WaitListHead;
     ULONG ReadySummary;
     ULONG QueueIndex;
     LIST_ENTRY DispatcherReadyListHead[32];
     SINGLE_LIST_ENTRY DeferredReadyListHead;
+    ULONG PrcbPad72[11];
     PVOID ChainedInterruptList;
     LONG LookasideIrpFloat;
     volatile LONG MmPageFaultCount;
@@ -415,12 +425,78 @@ typedef struct _KPRCB
     volatile LONG MmDirtyWriteIoCount;
     volatile LONG MmMappedPagesWriteCount;
     volatile LONG MmMappedWriteIoCount;
+    ULONG SpareFields0[1];
     CHAR VendorString[13];
+    UCHAR InitialApicId;
+    UCHAR LogicalProcessorsPerPhysicalProcessor;
     ULONG MHz;
     ULONG FeatureBits;
+    LARGE_INTEGER UpdateSignature;
     volatile LARGE_INTEGER IsrTime;
+    LARGE_INTEGER SpareField1;
+    //FX_SAVE_AREA NpxSaveArea;
     PROCESSOR_POWER_STATE PowerState;
 } KPRCB, *PKPRCB;
+
+//
+// Processor Control Region
+//
+typedef struct _KIPCR
+{
+    union
+    {
+        NT_TIB NtTib;
+        struct
+        {
+            struct _EXCEPTION_REGISTRATION_RECORD *Used_ExceptionList; // Unused
+            PVOID Used_StackBase; // Unused
+            PVOID PerfGlobalGroupMask;
+            PVOID TssCopy; // Unused
+            ULONG ContextSwitches;
+            KAFFINITY SetMemberCopy; // Unused
+            PVOID Used_Self;
+        };
+    };
+    struct _KPCR *Self;
+    struct _KPRCB *Prcb;
+    KIRQL Irql;
+    ULONG IRR; // Unused
+    ULONG IrrActive; // Unused
+    ULONG IDR; // Unused
+    PVOID KdVersionBlock;
+    PVOID IDT; // Unused
+    PVOID GDT; // Unused
+    PVOID TSS; // Unused
+    USHORT MajorVersion;
+    USHORT MinorVersion;
+    KAFFINITY SetMember;
+    ULONG StallScaleFactor;
+    UCHAR SpareUnused;
+    UCHAR Number;
+    // arm part
+    UCHAR Spare0[2];
+    UCHAR IrqlMask[32];
+    ULONG IrqlTable[32];
+    PKINTERRUPT_ROUTINE InterruptRoutine[32];
+    ULONG ReservedVectors;
+    ULONG FirstLevelDcacheSize;
+    ULONG FirstLevelDcacheFillSize;
+    ULONG FirstLevelIcacheSize;
+    ULONG FirstLevelIcacheFillSize;
+    ULONG SecondLevelDcacheSize;
+    ULONG SecondLevelDcacheFillSize;
+    ULONG SecondLevelIcacheSize;
+    ULONG SecondLevelIcacheFillSize;
+    ULONG DcacheFillSize;
+    ULONG DcacheAlignment;
+    ULONG IcacheAlignment;
+    ULONG IcacheFillSize;
+    ULONG ProcessorId;
+    PVOID InterruptStack;
+    PVOID PanicStack;
+    PVOID InitialStack;
+    KPRCB PrcbData;
+} KIPCR, *PKIPCR;
 
 //
 // Macro to get current KPRCB
@@ -431,6 +507,18 @@ KeGetCurrentPrcb(VOID)
 {
     return PCR->Prcb;
 }
+
+//
+// Just read it from the PCR
+//
+#define KeGetCurrentProcessorNumber()  (int)PCR->Number
+#define KeGetCurrentIrql()             PCR->Irql
+#define _KeGetCurrentThread()          KeGetCurrentPrcb()->CurrentThread
+#define _KeGetPreviousMode()           KeGetCurrentPrcb()->CurrentThread->PreviousMode
+#define _KeIsExecutingDpc()            (KeGetCurrentPrcb()->DpcRoutineActive != 0)
+#define KeGetCurrentThread()           _KeGetCurrentThread()
+#define KeGetPreviousMode()            _KeGetPreviousMode()
+#define KeGetDcacheFillSize()          PCR->DcacheFillSize
 
 #endif
 #endif
