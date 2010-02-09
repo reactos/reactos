@@ -170,6 +170,31 @@ typedef union _MMPTE_HARDWARE
     ULONG AsUlong;
 } MMPTE_HARDWARE, *PMMPTE_HARDWARE;
 
+typedef union _MMPDE_HARDWARE
+{
+    struct
+    {
+        ULONG Valid:1;
+        ULONG LargePage:1;
+        ULONG Buffered:1;
+        ULONG Cached:1;
+        ULONG NoExecute:1;
+        ULONG Domain:4;
+        ULONG Ecc:1;
+        ULONG PageFrameNumber:22;
+    };
+    ULONG AsUlong;
+} MMPDE_HARDWARE, *PMMPDE_HARDWARE;
+
+typedef struct _MMPDE
+{
+    union 
+    {
+        MMPDE_HARDWARE Hard;
+        ULONG Long;
+    } u;
+} MMPDE, *PMMPDE;
+
 //
 // Use the right PTE structure
 //
