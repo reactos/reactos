@@ -17,6 +17,7 @@ typedef struct
 
     LPFILTERINFO Filter;
     DWORD dwLevel;
+    DWORD dwFlags;
     LPWAVEFORMATEX Format;
     PUCHAR Buffer;
     DWORD BufferSize;
@@ -97,8 +98,27 @@ SecondaryDirectSoundBuffer8Impl_fnGetCaps(
     LPDIRECTSOUNDBUFFER8 iface,
     LPDSBCAPS pDSBufferCaps)
 {
-    UNIMPLEMENTED
-    return DSERR_INVALIDPARAM;
+    LPCDirectSoundBuffer This = (LPCDirectSoundBuffer)CONTAINING_RECORD(iface, CDirectSoundBuffer, lpVtbl);
+
+    if (!pDSBufferCaps)
+    {
+        /* invalid parameter */
+        return DSERR_INVALIDPARAM;
+    }
+
+    if (pDSBufferCaps->dwSize < sizeof(DSBCAPS))
+    {
+        /* invalid buffer size */
+        return DSERR_INVALIDPARAM;
+    }
+
+    /* get buffer details */
+    pDSBufferCaps->dwUnlockTransferRate = 0;
+    pDSBufferCaps->dwPlayCpuOverhead = 0;
+    pDSBufferCaps->dwSize = This->BufferSize;
+    pDSBufferCaps->dwFlags = This->dwFlags;
+
+    return DS_OK;
 }
 
 HRESULT
@@ -528,6 +548,7 @@ NewSecondarySoundBuffer(
     This->lpVtbl = &vt_DirectSoundBuffer8;
     This->Filter = Filter;
     This->dwLevel = dwLevel;
+    This->dwFlags = lpcDSBufferDesc->dwFlags;
     This->State = KSSTATE_STOP;
     This->Flags = 0;
     This->Position = 0;

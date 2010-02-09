@@ -229,8 +229,37 @@ PrimaryDirectSoundBuffer8Impl_fnPlay(
     DWORD dwPriority,
     DWORD dwFlags)
 {
-    UNIMPLEMENTED
-    return DSERR_INVALIDPARAM;
+    LPCDirectSoundBuffer This = (LPCDirectSoundBuffer)CONTAINING_RECORD(iface, CDirectSoundBuffer, lpVtbl);
+
+    if (dwReserved1 != 0 || !(dwFlags & DSBPLAY_LOOPING))
+    {
+        /* invalid parameter */
+        return DSERR_INVALIDPARAM;
+    }
+
+    PrimaryDirectSoundBuffer_AcquireLock(iface);
+
+    if (This->State == KSSTATE_STOP)
+    {
+        PrimaryDirectSoundBuffer_SetState(iface, KSSTATE_ACQUIRE);
+        ASSERT(This->State == KSSTATE_ACQUIRE);
+    }
+
+    if (This->State == KSSTATE_ACQUIRE)
+    {
+        PrimaryDirectSoundBuffer_SetState(iface, KSSTATE_PAUSE);
+        ASSERT(This->State == KSSTATE_PAUSE);
+    }
+
+    if (This->State == KSSTATE_PAUSE)
+    {
+        PrimaryDirectSoundBuffer_SetState(iface, KSSTATE_RUN);
+        ASSERT(This->State == KSSTATE_RUN);
+    }
+
+    PrimaryDirectSoundBuffer_ReleaseLock(iface);
+
+    return DS_OK;
 }
 
 HRESULT
@@ -239,8 +268,8 @@ PrimaryDirectSoundBuffer8Impl_fnSetCurrentPosition(
     LPDIRECTSOUNDBUFFER8 iface,
     DWORD dwNewPosition)
 {
-    UNIMPLEMENTED
-    return DSERR_INVALIDPARAM;
+    /* The position of a primary buffer can't be set */
+    return DSERR_INVALIDCALL;
 }
 
 HRESULT
@@ -303,8 +332,31 @@ WINAPI
 PrimaryDirectSoundBuffer8Impl_fnStop(
     LPDIRECTSOUNDBUFFER8 iface)
 {
-    UNIMPLEMENTED
-    return DSERR_INVALIDPARAM;
+    LPCDirectSoundBuffer This = (LPCDirectSoundBuffer)CONTAINING_RECORD(iface, CDirectSoundBuffer, lpVtbl);
+
+    PrimaryDirectSoundBuffer_AcquireLock(iface);
+
+    if (This->State == KSSTATE_RUN)
+    {
+        PrimaryDirectSoundBuffer_SetState(iface, KSSTATE_PAUSE);
+        ASSERT(This->State == KSSTATE_PAUSE);
+    }
+
+    if (This->State == KSSTATE_PAUSE)
+    {
+        PrimaryDirectSoundBuffer_SetState(iface, KSSTATE_ACQUIRE);
+        ASSERT(This->State == KSSTATE_ACQUIRE);
+    }
+
+    if (This->State == KSSTATE_ACQUIRE)
+    {
+        PrimaryDirectSoundBuffer_SetState(iface, KSSTATE_STOP);
+        ASSERT(This->State == KSSTATE_STOP);
+    }
+
+    PrimaryDirectSoundBuffer_ReleaseLock(iface);
+
+    return DS_OK;
 }
 
 
