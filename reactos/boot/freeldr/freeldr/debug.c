@@ -21,7 +21,7 @@
 
 #include <debug.h>
 
-#if DBG
+#if defined(DBG) && !defined(_M_ARM)
 
 //#define DEBUG_ALL
 //#define DEBUG_INIFILE

@@ -17,10 +17,10 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-
+#ifndef _M_ARM
+ 
 #include <freeldr.h>
 #include <debug.h>
-
 #ifdef __i386__
 #define	LINUX_READ_CHUNK_SIZE	0x20000			// Read 128k at a time
 
@@ -516,3 +516,4 @@ BOOLEAN LinuxReadInitrd(PFILE LinuxInitrdFile)
 	return TRUE;
 }
 #endif /* __i386__ */
+#endif

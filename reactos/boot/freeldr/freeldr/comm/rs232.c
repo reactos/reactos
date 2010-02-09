@@ -18,6 +18,8 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+ 
+#ifndef _M_ARM
 
 #include <freeldr.h>
 
@@ -275,8 +277,6 @@ VOID Rs232PortPutByte(UCHAR ByteToSend)
 	WRITE_PORT_UCHAR (SER_THR(Rs232PortBase), ByteToSend);
 }
 
-#endif /* DBG */
-
 BOOLEAN Rs232PortInUse(ULONG Base)
 {
 #if DBG
@@ -285,3 +285,6 @@ BOOLEAN Rs232PortInUse(ULONG Base)
     return FALSE;
 #endif
 }
+
+#endif /* DBG */
+#endif
