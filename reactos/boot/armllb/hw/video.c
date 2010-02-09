@@ -274,7 +274,7 @@ ULONG ScreenCursor;
 
 VOID
 NTAPI
-LlbVideoDrawChar(IN CHAR c,
+LlbVideoDrawChar(IN UCHAR c,
                  IN PUSHORT Buffer,
                  IN USHORT Color,
                  IN USHORT BackColor)
@@ -342,7 +342,7 @@ LlbVideoClearScreen(IN BOOLEAN OsLoader)
 
 VOID
 NTAPI
-LlbVideoPutChar(IN CHAR c)
+LlbVideoPutChar(IN UCHAR c)
 {
     ULONG cx, cy, CharsPerLine, BackColor, ScreenWidth;
     

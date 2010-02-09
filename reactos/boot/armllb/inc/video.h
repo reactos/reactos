@@ -15,13 +15,13 @@ LlbVideoClearScreen(
 VOID
 NTAPI
 LlbVideoPutChar(
-    IN CHAR c
+    IN UCHAR c
 );
 
 VOID
 NTAPI
 LlbVideoDrawChar(
-    IN CHAR c,
+    IN UCHAR c,
     IN PUSHORT Buffer,
     IN USHORT Color,
     IN USHORT BackColor
