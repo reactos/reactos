@@ -39,7 +39,7 @@
 extern char* g_file;
 extern int g_line;
 
-#if defined(DBG) && !defined(_M_ARM)
+#if DBG && !defined(_M_ARM)
 
     VOID	DbgPrintMask(ULONG Mask, char *format, ...);
 	VOID	DebugInit(VOID);
