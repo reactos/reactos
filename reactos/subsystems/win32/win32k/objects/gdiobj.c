@@ -30,7 +30,7 @@
 
 #include "gdidbg.c"
 
-/* static */ /* FIXME: -fno-unit-at-a-time breaks this */
+static
 BOOL INTERNAL_CALL GDI_CleanupDummy(PVOID ObjectBody);
 
 /** GLOBALS *******************************************************************/
@@ -140,7 +140,7 @@ DeAllocTypeDataDump(INT TypeInfo)
 /*
  * Dummy GDI Cleanup Callback
  */
-/* static */ /* FIXME: -fno-unit-at-a-time breaks this */
+static
 BOOL INTERNAL_CALL
 GDI_CleanupDummy(PVOID ObjectBody)
 {
