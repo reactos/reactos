@@ -4,6 +4,7 @@
  *
  * - Image functions for symbol info
  */
+#include <sys/stat.h>
 #include <errno.h>
 #include <string.h>
 #include <rsym.h>

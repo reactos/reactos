@@ -13,7 +13,6 @@
 #include "compat.h"
 #include "util.h"
 #include "options.h"
-#include "revision.h"
 #include "log2lines.h"
 
 static void
@@ -195,7 +194,7 @@ regscan(FILE *outFile)
             char path[MAX_PATH];
             char path2[MAX_PATH];
             int wflag = 0;
-            log(outFile, "\nRegression candidates:\n");
+            clilog(outFile, "Regression candidates:\n");
             while (( pos = findRev(finx, &r) ))
             {
                 if (r < (revinfo.buildrev - revinfo.range))
@@ -216,11 +215,11 @@ regscan(FILE *outFile)
                         {
                             if (wflag == 1)
                             {
-                                log(outFile, "%sChanged paths:\n", line);
+                                clilog(outFile, "%sChanged paths:\n", line);
                                 summ.regfound++;
                                 wflag = 2;
                             }
-                            log(outFile, "%s", line2);
+                            clilog(outFile, "%s", line2);
                         }
                     }
                     else
@@ -229,11 +228,11 @@ regscan(FILE *outFile)
                 if (wflag == 2)
                 {
                     int i = 0;
-                    log(outFile, "\n");
+                    clilog(outFile, "\n");
                     while (fgets(line2, LINESIZE, flog))
                     {
                         i++;
-                        log(outFile, "%s", line2);
+                        clilog(outFile, "%s", line2);
                         if (strncmp(LOGBOTTOM, line2, sizeof(LOGBOTTOM) - 1) == 0)
                             break;
                     }

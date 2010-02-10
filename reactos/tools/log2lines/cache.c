@@ -11,12 +11,10 @@
 #include "util.h"
 #include "version.h"
 #include "compat.h"
-#include "config.h"
-#include "list.h"
 #include "options.h"
 #include "help.h"
 #include "image.h"
-#include "revision.h"
+
 #include "log2lines.h"
 
 static char *cache_name;
@@ -77,11 +75,6 @@ check_directory(int force)
     char *check_iso;
     char *check_dir;
 
-    if (opt_Revision)
-    {
-        revinfo.rev = getRevision(NULL, 1);
-        revinfo.range = DEF_RANGE;
-    }
     check_iso = strrchr(opt_dir, '.');
     l2l_dbg(1, "Checking directory: %s\n", opt_dir);
     if (check_iso && PATHCMP(check_iso, ".7z") == 0)
@@ -138,11 +131,6 @@ check_directory(int force)
             l2l_dbg(0, "ISO image not found: %s\n", opt_dir);
             return 1;
         }
-    }
-    if (opt_Revision)
-    {
-        revinfo.buildrev = getTBRevision(opt_dir);
-        l2l_dbg(1, "Trunk build revision: %d\n", revinfo.buildrev);
     }
     cache_name = malloc(MAX_PATH);
     tmp_name = malloc(MAX_PATH);
@@ -238,10 +226,11 @@ create_cache(int force, int skipImageBase)
     l2l_dbg(0, "Scanning %s ...\n", opt_dir);
     snprintf(Line, LINESIZE, DIR_FMT, opt_dir, tmp_name);
     l2l_dbg(1, "Executing: %s\n", Line);
-    if (system(Line) < 0)
+    if (system(Line) != 0)
     {
         l2l_dbg(0, "Cannot list directory %s\n", opt_dir);
         l2l_dbg(1, "Failed to execute: '%s'\n", Line);
+        remove(tmp_name);
         return 2;
     }
     l2l_dbg(0, "Creating cache ...");

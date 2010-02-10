@@ -20,3 +20,5 @@ int get_ImageBase(char *fname, size_t *ImageBase);
 
 
 #endif /* __L2L_IMAGE_H__ */
+
+/* EOF */
