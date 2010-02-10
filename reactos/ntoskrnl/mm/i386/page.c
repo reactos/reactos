@@ -1012,12 +1012,6 @@ MmInitGlobalKernelPageDirectory(VOID)
     
     DPRINT("MmInitGlobalKernelPageDirectory()\n");
     
-    //
-    // Setup template
-    //
-    HyperTemplatePte.u.Long = (PA_PRESENT | PA_READWRITE | PA_DIRTY | PA_ACCESSED);
-    if (Ke386GlobalPagesEnabled) HyperTemplatePte.u.Long |= PA_GLOBAL;
-    
     for (i = ADDR_TO_PDE_OFFSET(MmSystemRangeStart); i < 1024; i++)
     {
         if (i != ADDR_TO_PDE_OFFSET(PAGETABLE_MAP) &&

@@ -29,6 +29,9 @@
 PMEMORY_ALLOCATION_DESCRIPTOR MxFreeDescriptor;
 MEMORY_ALLOCATION_DESCRIPTOR MxOldFreeDescriptor;
 
+MMPTE ValidKernelPde = {.u.Hard.Valid = 1, .u.Hard.Write = 1, .u.Hard.Dirty = 1, .u.Hard.Accessed = 1};
+MMPTE ValidKernelPte = {.u.Hard.Valid = 1, .u.Hard.Write = 1, .u.Hard.Dirty = 1, .u.Hard.Accessed = 1};
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 PFN_NUMBER
@@ -70,7 +73,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     ULONG FreePages = 0;
     PFN_NUMBER PageFrameIndex, PoolPages;
     PMMPTE StartPde, EndPde, PointerPte, LastPte;
-    MMPTE TempPde = HyperTemplatePte, TempPte = HyperTemplatePte;
+    MMPTE TempPde, TempPte;
     PVOID NonPagedPoolExpansionVa;
     ULONG OldCount, L2Associativity;
     PFN_NUMBER FreePage, FreePageCount, PagesLeft, BasePage, PageCount;
@@ -97,11 +100,18 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         if (MmLargeStackSize < KERNEL_STACK_SIZE) MmLargeStackSize = KERNEL_STACK_SIZE;
     }
     
-    //
-    // The large kernel stack is cutomizable, but use default value for now
-    //
-    MmLargeStackSize = KERNEL_LARGE_STACK_SIZE;
-
+    /* Check for global bit */
+    if (KeFeatureBits & KF_GLOBAL_PAGE)
+    {
+        /* Set it on the template PTE and PDE */
+        ValidKernelPte.u.Hard.Global = TRUE;
+        ValidKernelPde.u.Hard.Global = TRUE;
+    }
+    
+    /* Now templates are ready */
+    TempPte = ValidKernelPte;
+    TempPde = ValidKernelPde;
+     
     //
     // Set CR3 for the system process
     //
