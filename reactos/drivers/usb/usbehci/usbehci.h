@@ -176,30 +176,23 @@ typedef struct _EHCI_SETUP_FORMAT
     USHORT wLength;
 } EHCI_SETUP_FORMAT, *PEHCI_SETUP_FORMAT;
 
-typedef struct _STANDARD_DEVICE_DESC
-{
-	UCHAR bLength;
-	UCHAR bDescriptorType;
-	USHORT bcdUSB;
-	UCHAR bDeviceClass; 
-	UCHAR bDeviceSubClass; 
-	UCHAR bDeviceProtocal; 
-	UCHAR bMaxPacketSize; 
-	USHORT idVendor; 
-	USHORT idProduct; 
-	USHORT bcdDevice; 
-	UCHAR iManufacturer; 
-	UCHAR iProduct; 
-	UCHAR iSerialNumber; 
-	UCHAR bNumConfigurations;
-} STANDARD_DEVICE_DESC, *PSTANDARD_DEVICE_DESC;
-
 typedef struct _STRING_DESCRIPTOR
 {
   UCHAR bLength;		/* Size of this descriptor in bytes */
   UCHAR bDescriptorType;	/* STRING Descriptor Type */
   UCHAR bString[0];		/* UNICODE encoded string */
 } STRING_DESCRIPTOR, *PSTRING_DESCRIPTOR;
+
+typedef struct _USB_DEVICE
+{
+    UCHAR Address;
+    ULONG Port;
+    PVOID ParentDevice;
+    USB_DEVICE_DESCRIPTOR DeviceDescriptor;
+    USB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor;
+    USB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
+    USB_ENDPOINT_DESCRIPTOR EndPointDescriptor;
+} USB_DEVICE, *PUSB_DEVICE;
 
 /* USBCMD register 32 bits */
 typedef struct _EHCI_USBCMD_CONTENT
@@ -292,7 +285,6 @@ typedef struct _EHCI_CAPS {
     UCHAR        PortRoute [8];
 } EHCI_CAPS, *PEHCI_CAPS;
 
-
 typedef struct _COMMON_DEVICE_EXTENSION
 {
     BOOLEAN IsFdo;
@@ -309,9 +301,7 @@ typedef struct _FDO_DEVICE_EXTENSION
     PDEVICE_OBJECT Pdo;
     ULONG DeviceState;
 
-    /* USB Specs says a max of 127 devices */
-    ULONG ChildDeviceCount;
-
+    PVOID RootHubDeviceHandle;
     PDMA_ADAPTER pDmaAdapter;
 
     ULONG Vector;
@@ -322,10 +312,6 @@ typedef struct _FDO_DEVICE_EXTENSION
     PKINTERRUPT EhciInterrupt;
     KDPC DpcObject;
     KAFFINITY Affinity;
-
-    LIST_ENTRY IrpQueue;
-    KSPIN_LOCK IrpQueueLock;
-    PIRP CurrentIrp;
 
     ULONG MapRegisters;
 
@@ -354,7 +340,6 @@ typedef struct _FDO_DEVICE_EXTENSION
 
     PULONG ResourceBase;
     ULONG Size;
-
 } FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
 
 typedef struct _PDO_DEVICE_EXTENSION
@@ -362,15 +347,25 @@ typedef struct _PDO_DEVICE_EXTENSION
     COMMON_DEVICE_EXTENSION Common;
     PDEVICE_OBJECT DeviceObject;
     PDEVICE_OBJECT ControllerFdo;
-
+    PUSB_DEVICE UsbDevices[127];
+    LIST_ENTRY IrpQueue;
+    KSPIN_LOCK IrpQueueLock;
+    PIRP CurrentIrp;
+    HANDLE ThreadHandle;
+    ULONG ChildDeviceCount;
+    BOOLEAN HaltUrbHandling;
 } PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
-
 
 typedef struct _WORKITEM_DATA
 {
     PIO_WORKITEM IoWorkItem;
     PFDO_DEVICE_EXTENSION FdoDeviceExtension;
+    PDEVICE_OBJECT PortDeviceObject;
 } WORKITEM_DATA, *PWORKITEM_DATA;
+
+
+VOID NTAPI
+UrbWorkerThread(PVOID Context);
 
 NTSTATUS NTAPI
 GetBusInterface(PDEVICE_OBJECT pcifido, PBUS_INTERFACE_STANDARD busInterface);
@@ -406,27 +401,18 @@ NTSTATUS NTAPI
 PdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 BOOLEAN
-GetDeviceDescriptor (PFDO_DEVICE_EXTENSION DeviceExtension, UCHAR Index);
+GetDeviceDescriptor(PFDO_DEVICE_EXTENSION DeviceExtension, UCHAR Index, PUSB_DEVICE_DESCRIPTOR OutBuffer, BOOLEAN Hub);
 
 BOOLEAN
 GetDeviceStringDescriptor(PFDO_DEVICE_EXTENSION DeviceExtension, UCHAR Index);
 
 VOID
-CompletePendingRequest(PFDO_DEVICE_EXTENSION DeviceExtension);
+QueueURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension, PIRP Irp);
 
 VOID
-QueueRequest(PFDO_DEVICE_EXTENSION DeviceExtension, PIRP Irp);
+CompletePendingURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension);
 
 VOID
-QueueRequest(PFDO_DEVICE_EXTENSION DeviceExtension, PIRP Irp);
-
-VOID
-CompletePendingRequest(PFDO_DEVICE_EXTENSION DeviceExtension);
-
-VOID
-DeviceArrivalWorkItem(PDEVICE_OBJECT DeviceObject, PVOID Context);
-
-VOID
-RequestCancel (PDEVICE_OBJECT DeviceObject, PIRP Irp);
+URBRequestCancel (PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 #endif
