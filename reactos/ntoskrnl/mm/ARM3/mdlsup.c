@@ -372,7 +372,7 @@ MmMapLockedPagesSpecifyCache(IN PMDL Mdl,
         //
         // Get the template
         //
-        TempPte = HyperTemplatePte;
+        TempPte = ValidKernelPte;
         switch (CacheAttribute)
         {
             case MiNonCached:

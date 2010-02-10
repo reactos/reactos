@@ -113,7 +113,7 @@ MiResolveDemandZeroFault(IN PVOID Address,
     //
     // Build the PTE
     //
-    TempPte = HyperTemplatePte;
+    TempPte = ValidKernelPte;
     TempPte.u.Hard.PageFrameNumber = PageFrameNumber;
     *PointerPte = TempPte;
     ASSERT(PointerPte->u.Hard.Valid == 1);

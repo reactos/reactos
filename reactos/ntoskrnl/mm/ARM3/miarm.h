@@ -127,6 +127,8 @@ typedef struct _PHYSICAL_MEMORY_DESCRIPTOR
 } PHYSICAL_MEMORY_DESCRIPTOR, *PPHYSICAL_MEMORY_DESCRIPTOR;
 
 extern MMPTE HyperTemplatePte;
+extern MMPTE ValidKernelPde;
+extern MMPTE ValidKernelPte;
 
 extern ULONG MmSizeOfNonPagedPoolInBytes;
 extern ULONG MmMaximumNonPagedPoolInBytes;

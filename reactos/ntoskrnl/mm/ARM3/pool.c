@@ -213,7 +213,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
             //
             // Get the template PTE we'll use to expand
             //
-            TempPte = HyperTemplatePte;
+            TempPte = ValidKernelPte;
             
             //
             // Get the first PTE in expansion space
@@ -493,7 +493,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
     //
     // Loop the pages
     //
-    TempPte = HyperTemplatePte;
+    TempPte = ValidKernelPte;
     do
     {
         //

@@ -442,7 +442,7 @@ NTAPI
 MiBuildPagedPool(VOID)
 {
     PMMPTE PointerPte, PointerPde;
-    MMPTE TempPte = HyperTemplatePte;
+    MMPTE TempPte = ValidKernelPte;
     PFN_NUMBER PageFrameIndex;
     KIRQL OldIrql;
     ULONG Size, BitMapSize;
@@ -467,7 +467,7 @@ MiBuildPagedPool(VOID)
     // page directory array in the old ReactOS Mm is used (but in a less hacky
     // way).
     //
-    TempPte = HyperTemplatePte;
+    TempPte = ValidKernelPte;
     TempPte.u.Hard.PageFrameNumber = MmSystemPageDirectory;
     ASSERT(PointerPte->u.Hard.Valid == 0);
     ASSERT(TempPte.u.Hard.Valid == 1);

@@ -1000,8 +1000,6 @@ MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
     }
 }
 
-extern MMPTE HyperTemplatePte;
-
 VOID
 INIT_FUNCTION
 NTAPI

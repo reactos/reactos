@@ -35,6 +35,7 @@ NTAPI
 MiDbgTranslatePhysicalAddress(IN ULONG64 PhysicalAddress,
                               IN ULONG Flags)
 {
+    extern MMPTE ValidKernelPte;
     PFN_NUMBER Pfn;
     MMPTE TempPte;
     PVOID MappingBaseAddress;
@@ -77,7 +78,7 @@ MiDbgTranslatePhysicalAddress(IN ULONG64 PhysicalAddress,
     //
     //
     //
-    TempPte = HyperTemplatePte;
+    TempPte = ValidKernelPte;
 
     //
     // Convert physical address to PFN
