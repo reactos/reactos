@@ -2,17 +2,17 @@
 
 [Section]
 Name = ReactOS Build Environment
-Version = 1.4.5
+Version = 1.5
 Licence = GPL
 Description = Allows you to build the ReactOS Source. For more instructions see ReactOS wiki.
-Size = 14.9MB
+Size = 13.5MB
 Category = 7
 URLSite = http://reactos.org/wiki/Build_Environment/
-URLDownload = http://ovh.dl.sourceforge.net/sourceforge/reactos/RosBE-1.4.5.exe
+URLDownload = http://ovh.dl.sourceforge.net/sourceforge/reactos/RosBE-1.5.exe
 CDPath = none
 
 [Section.0407]
-Description = Erlaubt es Ihnen ReactOS aus den Quellen zu bauen. Im ReactOS-Wiki finden Sie dazu nähere Anweisungen.
+Description = Erlaubt es Ihnen den ReactOS Source Code zu kompilieren. Im ReactOS-Wiki finden Sie dazu nähere Anweisungen.
 
 [Section.040a]
 Description = Te permite compilar el código de ReactOS. Para más instrucciones consulta la wiki de ReactOS.
