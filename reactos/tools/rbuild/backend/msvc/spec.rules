@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<VisualStudioToolFile
+	Name="Spec"
+	Version="8,00"
+	>
+	<Rules>
+		<CustomBuildRule
+			Name="spec"
+			DisplayName="Spec"
+			CommandLine="$(Tools)\winebuild\winebuild.exe -o &quot;[$Output]&quot; --def -k -E [inputs]"
+			Outputs="[$Output]"
+			FileExtensions="*.spec"
+			ExecutionDescription="Generating module definition file"
+			>
+			<Properties>
+				<StringProperty
+					Name="Output"
+					DisplayName="Output"
+					Description="The path of the def file"
+					Switch="[value]"
+					DefaultValue="$(IntDir)\$(InputName).def"
+				/>
+			</Properties>
+		</CustomBuildRule>
+		<CustomBuildRule
+			Name="Pspec"
+			DisplayName="pspec"
+			CommandLine="cl /nologo /E [includes] [inputs] &gt; &quot;[Specfile]&quot; | $(Tools)\winebuild\winebuild.exe -o &quot;[Output]&quot; --def -k -E &quot;[Specfile]&quot;"
+			Outputs="&quot;[$Output]&quot;"
+			FileExtensions="*.pspec"
+			ExecutionDescription="Generating module definition file"
+			>
+			<Properties>
+				<StringProperty
+					Name="includes"
+					DisplayName="includes"
+					Switch="/I &quot;[value]&quot;"
+					Delimited="true"
+				/>
+				<StringProperty
+					Name="Output"
+					DisplayName="Output"
+					Description="The path to the def file"
+					Switch="[value]"
+					DefaultValue="$(IntDir)/$(InputName).def"
+				/>
+				<StringProperty
+					Name="Specfile"
+					DisplayName="Spec file"
+					Description="Spec file"
+					Switch="[value]"
+					DefaultValue="$(IntDir)\$(InputName).spec"
+				/>
+			</Properties>
+		</CustomBuildRule>
+	</Rules>
+</VisualStudioToolFile>

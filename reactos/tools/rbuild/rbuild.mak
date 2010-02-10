@@ -209,6 +209,7 @@ RBUILD_BACKEND_MSVC_BASE_SOURCES = $(addprefix $(RBUILD_MSVC_BASE_), \
 	slnmaker.cpp \
 	vcprojmaker.cpp \
 	vcxprojmaker.cpp \
+	vspropsmaker.cpp \
 	)
 
 RBUILD_BACKEND_SOURCES = \
@@ -496,7 +497,11 @@ $(RBUILD_MSVC_INT_)msvc.o: $(RBUILD_MSVC_BASE_)msvc.cpp $(RBUILD_HEADERS) | $(RB
 $(RBUILD_MSVC_INT_)projmaker.o: $(RBUILD_MSVC_BASE_)projmaker.cpp $(RBUILD_HEADERS) | $(RBUILD_MSVC_INT)
 	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
-	
+
+$(RBUILD_MSVC_INT_)vspropsmaker.o: $(RBUILD_MSVC_BASE_)vspropsmaker.cpp $(RBUILD_HEADERS) | $(RBUILD_MSVC_INT)
+	$(ECHO_HOSTCC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
 $(RBUILD_MSVC_INT_)slnmaker.o: $(RBUILD_MSVC_BASE_)slnmaker.cpp $(RBUILD_HEADERS) | $(RBUILD_MSVC_INT)
 	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@

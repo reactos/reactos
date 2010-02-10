@@ -134,6 +134,11 @@ ParseVCProjectSwitch (
 			if (configuration.VSProjectVersion.length() == 3) //7.1
 				configuration.VSProjectVersion.append("0");
 
+			//We should set this here because in the end we will use
+			//msc sompiler so we need to parse msc specidic
+			//definitions and includes
+			configuration.Compiler = MicrosoftC;
+
 			break;
 		case 'c':
 			configuration.VSConfigurationType = string (&switchStart[3]);

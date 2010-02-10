@@ -167,6 +167,13 @@ enum LinkerSet
 	MicrosoftLink
 };
 
+enum SpecFileType
+{
+    None,
+    Spec = 1,
+    PSpec = 2
+};
+
 class Configuration
 {
 public:
@@ -197,6 +204,7 @@ public:
 	static std::string GetArch ();
 	static std::string GetIntermediatePath ();
 	static std::string GetOutputPath ();
+	static std::string GetSourcePath ();
 	static std::string GetCdOutputPath ();
 	static std::string GetInstallPath ();
 	static std::string GetAutomakeFile ( const std::string& defaultFile );
@@ -425,6 +433,7 @@ public:
 	void InvokeModule () const;
 	void ProcessXML ();
 	std::string GetDllName() const;
+	SpecFileType IsSpecDefinitionFile () const;
 private:
 	void SetImportLibrary ( ImportLibrary* importLibrary );
 	void SetDelayImportLibrary ( ImportLibrary* importLibrary );

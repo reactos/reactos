@@ -80,6 +80,28 @@ VCProjMaker::~VCProjMaker()
 	fclose ( OUT );
 }
 
+std::string
+VCProjMaker::_get_file_path( FileLocation* file, std::string relative_path)
+{
+	if (file->directory == SourceDirectory)
+	{
+		// We want the full path here for directory support later on
+		return Path::RelativeFromDirectory (file->relative_path, relative_path );
+	}
+	else if(file->directory == IntermediateDirectory)
+	{
+		return std::string("$(obj)\\") + file->relative_path;
+	}
+	else if(file->directory == OutputDirectory)
+	{
+		return std::string("$(out)\\") + file->relative_path;
+	}
+
+	return std::string("");
+}
+
+
+
 void
 VCProjMaker::_generate_proj_file ( const Module& module )
 {
@@ -91,7 +113,6 @@ VCProjMaker::_generate_proj_file ( const Module& module )
 	// make sure the containers are empty
 	header_files.clear();
 	includes.clear();
-	includes_ros.clear();
 	libraries.clear();
 	common_defines.clear();
 
@@ -110,21 +131,8 @@ VCProjMaker::_generate_proj_file ( const Module& module )
 	printf ( "Creating MSVC project: '%s'\n", vcproj_file.c_str() );
 
 	string path_basedir = module.GetPathToBaseDir ();
-	string intenv = Environment::GetIntermediatePath ();
-	string outenv = Environment::GetOutputPath ();
-	string outdir;
-	string intdir;
 	string vcdir;
 
-	if ( intenv == "obj-i386" )
-		intdir = path_basedir + "obj-i386"; /* append relative dir from project dir */
-	else
-		intdir = intenv;
-
-	if ( outenv == "output-i386" )
-		outdir = path_basedir + "output-i386";
-	else
-		outdir = outenv;
 
 	if ( configuration.UseVSVersionInPath )
 	{
@@ -135,93 +143,65 @@ VCProjMaker::_generate_proj_file ( const Module& module )
 
 	vector<string> source_files, resource_files;
 	vector<const IfableData*> ifs_list;
-	ifs_list.push_back ( &module.project.non_if_data );
-	ifs_list.push_back ( &module.non_if_data );
 
-	while ( ifs_list.size() )
+	const IfableData& data = module.non_if_data/**ifs_list.back()*/;
+	const vector<File*>& files = data.files;
+	for ( i = 0; i < files.size(); i++ )
 	{
-		const IfableData& data = *ifs_list.back();
-		ifs_list.pop_back();
-		const vector<File*>& files = data.files;
-		for ( i = 0; i < files.size(); i++ )
-		{
-			if (files[i]->file.directory != SourceDirectory)
-				continue;
+		string path = _get_file_path(&files[i]->file, module.output->relative_path);
+		string file = path + std::string("\\") + files[i]->file.name;
 
-			// We want the full path here for directory support later on
-			string path = Path::RelativeFromDirectory (
-				files[i]->file.relative_path,
-				module.output->relative_path );
-			string file = path + std::string("\\") + files[i]->file.name;
-
-			if ( !stricmp ( Right(file,3).c_str(), ".rc" ) )
-				resource_files.push_back ( file );
-			else if ( !stricmp ( Right(file,2).c_str(), ".h" ) )
-				header_files.push_back ( file );
-			else
-				source_files.push_back ( file );
-		}
-		const vector<Include*>& incs = data.includes;
-		for ( i = 0; i < incs.size(); i++ )
-		{
-			string path = Path::RelativeFromDirectory (
-				incs[i]->directory->relative_path,
-				module.output->relative_path );
-			if ( module.type != RpcServer && module.type != RpcClient )
-			{
-				if ( path.find ("/include/reactos/idl") != string::npos)
-				{
-					include_idl = true;
-					continue;
-				}
-			}
-			// switch between general headers and ros headers
-			if ( !strncmp(incs[i]->directory->relative_path.c_str(), "include\\crt", 11 ) ||
-			     !strncmp(incs[i]->directory->relative_path.c_str(), "include\\ddk", 11 ) ||
-			     !strncmp(incs[i]->directory->relative_path.c_str(), "include\\GL", 10 ) ||
-			     !strncmp(incs[i]->directory->relative_path.c_str(), "include\\psdk", 12 ) ||
-			     !strncmp(incs[i]->directory->relative_path.c_str(), "include\\reactos\\wine", 20 ) )
-			{
-				if (strncmp(incs[i]->directory->relative_path.c_str(), "include\\crt", 11 ))
-					// not crt include
-					includes_ros.push_back ( path );
-			}
-			else
-			{
-				includes.push_back ( path );
-			}
-		}
-		const vector<Library*>& libs = data.libraries;
-		for ( i = 0; i < libs.size(); i++ )
-		{
-			string libpath = outdir + "\\" + libs[i]->importedModule->output->relative_path + "\\" + _get_vc_dir() + "\\---\\" + libs[i]->name + ".lib";
-			libraries.push_back ( libpath );
-		}
-		const vector<Define*>& defs = data.defines;
-		for ( i = 0; i < defs.size(); i++ )
-		{
-			if ( defs[i]->backend != "" && defs[i]->backend != "msvc" )
-				continue;
-
-			if ( defs[i]->value[0] )
-				common_defines.insert( defs[i]->name + "=" + defs[i]->value );
-			else
-				common_defines.insert( defs[i]->name );
-		}
-		for ( std::map<std::string, Property*>::const_iterator p = data.properties.begin(); p != data.properties.end(); ++ p )
-		{
-			Property& prop = *p->second;
-			if ( strstr ( module.baseaddress.c_str(), prop.name.c_str() ) )
-				baseaddr = prop.value;
-		}
+		if ( !stricmp ( Right(file,3).c_str(), ".rc" ) )
+			resource_files.push_back ( file );
+		else if ( !stricmp ( Right(file,2).c_str(), ".h" ) )
+			header_files.push_back ( file );
+		else
+			source_files.push_back ( file );
 	}
-	/* include intermediate path for reactos.rc */
-	string version = intdir + "\\include";
-	includes.push_back (version);
-	version += "\\reactos";
-	includes.push_back (version);
+	const vector<Include*>& incs = data.includes;
+	for ( i = 0; i < incs.size(); i++ )
+	{
+		string path = _get_file_path(incs[i]->directory, module.output->relative_path);
 
-	string include_string;
+		if ( module.type != RpcServer && module.type != RpcClient )
+		{
+			if ( path.find ("/include/reactos/idl") != string::npos)
+			{
+				include_idl = true;
+				continue;
+			}
+		}
+		includes.push_back ( path );
+	}
+	const vector<Library*>& libs = data.libraries;
+	for ( i = 0; i < libs.size(); i++ )
+	{
+		string libpath = "$(out)\\" + libs[i]->importedModule->output->relative_path + "\\" + _get_vc_dir() + "\\$(ConfigurationName)\\" + libs[i]->name + ".lib";
+		libraries.push_back ( libpath );
+	}
+	const vector<Define*>& defs = data.defines;
+	for ( i = 0; i < defs.size(); i++ )
+	{
+		if ( defs[i]->backend != "" && defs[i]->backend != "msvc" )
+			continue;
+
+		if ( defs[i]->value[0] )
+			common_defines.insert( defs[i]->name + "=" + defs[i]->value );
+		else
+			common_defines.insert( defs[i]->name );
+	}
+	for ( std::map<std::string, Property*>::const_iterator p = data.properties.begin(); p != data.properties.end(); ++ p )
+	{
+		Property& prop = *p->second;
+		if ( strstr ( module.baseaddress.c_str(), prop.name.c_str() ) )
+			baseaddr = prop.value;
+	}
+
+	if(module.IsSpecDefinitionFile())
+	{
+		std::string path = _get_file_path(module.importLibrary->source, module.output->relative_path);
+		source_files.push_back ( path + std::string("\\") + module.importLibrary->source->name );
+	}
 
 	fprintf ( OUT, "<?xml version=\"1.0\" encoding = \"Windows-1252\"?>\r\n" );
 	fprintf ( OUT, "<VisualStudioProject\r\n" );
@@ -239,6 +219,15 @@ VCProjMaker::_generate_proj_file ( const Module& module )
 	fprintf ( OUT, "\t\t<Platform\r\n" );
 	fprintf ( OUT, "\t\t\tName=\"Win32\"/>\r\n" );
 	fprintf ( OUT, "\t</Platforms>\r\n" );
+
+	fprintf ( OUT, "\t<ToolFiles>\r\n" );
+	fprintf ( OUT, "\t\t<ToolFile\r\n" );
+	fprintf ( OUT, "\t\t\tRelativePath=\"%s%s\"\r\n", path_basedir.c_str(), "tools\\rbuild\\backend\\msvc\\s_as_mscpp.rules" );
+	fprintf ( OUT, "\t\t/>\r\n" );
+	fprintf ( OUT, "\t\t<ToolFile\r\n" );
+	fprintf ( OUT, "\t\t\tRelativePath=\"%s%s\"\r\n", path_basedir.c_str(), "tools\\rbuild\\backend\\msvc\\spec.rules" );
+	fprintf ( OUT, "\t\t/>\r\n" );
+	fprintf ( OUT, "\t</ToolFiles>\r\n" );
 
 	// Set the binary type
 	string module_type = GetExtension(*module.output);
@@ -335,21 +324,8 @@ VCProjMaker::_generate_proj_file ( const Module& module )
 		{
 			const MSVCConfiguration& config = *m_configurations[iconfig];
 
-			if (( isrcfile == 0 ) && ( module.pch != NULL ))
-			{
-				/* little hack to speed up PCH */
-				fprintf ( OUT, "%s\t<FileConfiguration\r\n", indent_tab.c_str() );
-				fprintf ( OUT, "%s\t\tName=\"", indent_tab.c_str() );
-				fprintf ( OUT, config.name.c_str() );
-				fprintf ( OUT, "|Win32\">\r\n" );
-				fprintf ( OUT, "%s\t\t<Tool\r\n", indent_tab.c_str() );
-				fprintf ( OUT, "%s\t\t\tName=\"VCCLCompilerTool\"\r\n", indent_tab.c_str() );
-				fprintf ( OUT, "%s\t\t\tUsePrecompiledHeader=\"1\"/>\r\n", indent_tab.c_str() );
-				fprintf ( OUT, "%s\t</FileConfiguration>\r\n", indent_tab.c_str() );
-			}
-
 			//if (configuration.VSProjectVersion < "8.00") {
-				if ((source_file.find(".idl") != string::npos) || ((source_file.find(".asm") != string::npos || tolower(source_file.at(source_file.size() - 1)) == 's')))
+				if ((source_file.find(".idl") != string::npos) || ((source_file.find(".asm") != string::npos)))
 				{
 					fprintf ( OUT, "%s\t<FileConfiguration\r\n", indent_tab.c_str() );
 					fprintf ( OUT, "%s\t\tName=\"", indent_tab.c_str() );
@@ -386,12 +362,6 @@ VCProjMaker::_generate_proj_file ( const Module& module )
 					{
 						fprintf ( OUT, "%s\t\t\tName=\"VCCustomBuildTool\"\r\n", indent_tab.c_str() );
 						fprintf ( OUT, "%s\t\t\tCommandLine=\"nasmw $(InputPath) -f coff -o &quot;$(OutDir)\\$(InputName).obj&quot;\"\r\n", indent_tab.c_str() );
-						fprintf ( OUT, "%s\t\t\tOutputs=\"$(OutDir)\\$(InputName).obj\"/>\r\n", indent_tab.c_str() );
-					}
-					else if ((tolower(source_file.at(source_file.size() - 1)) == 's'))
-					{
-						fprintf ( OUT, "%s\t\t\tName=\"VCCustomBuildTool\"\r\n", indent_tab.c_str() );
-						fprintf ( OUT, "%s\t\t\tCommandLine=\"cl /E &quot;$(InputPath)&quot; %s /D__ASM__ | as -o &quot;$(OutDir)\\$(InputName).obj&quot;\"\r\n", indent_tab.c_str(), include_string.c_str() );
 						fprintf ( OUT, "%s\t\t\tOutputs=\"$(OutDir)\\$(InputName).obj\"/>\r\n", indent_tab.c_str() );
 					}
 					fprintf ( OUT, "%s\t</FileConfiguration>\r\n", indent_tab.c_str() );
@@ -452,24 +422,19 @@ void VCProjMaker::_generate_standard_configuration( const Module& module,
 													BinaryType binaryType )
 {
 	string path_basedir = module.GetPathToBaseDir ();
-	string intenv = Environment::GetIntermediatePath ();
-	string outenv = Environment::GetOutputPath ();
-	string outdir;
-	string intdir;
 	string vcdir;
 
-	bool debug = ( cfg.optimization == Debug );
-	bool release = ( cfg.optimization == Release );
-	bool speed = ( cfg.optimization == Speed );
-
 	bool include_idl = false;
-	string include_string;
 
 	size_t i;
 	string intermediatedir = "";
 	string importLib;
-	// don't do the work m_configurations.size() times
-	if (module.importLibrary != NULL)
+
+	if(module.IsSpecDefinitionFile())
+	{
+		importLib = "$(IntDir)\\$(ProjectName).def";
+	}
+	else if (module.importLibrary != NULL)
 	{
 		intermediatedir = module.output->relative_path + vcdir;
 		importLib = _strip_gcc_deffile(module.importLibrary->source->name, module.importLibrary->source->relative_path, intermediatedir);
@@ -491,17 +456,6 @@ void VCProjMaker::_generate_standard_configuration( const Module& module,
 	else
 		CfgType = ConfigUnknown;
 
-
-	if ( intenv == "obj-i386" )
-		intdir = path_basedir + "obj-i386"; /* append relative dir from project dir */
-	else
-		intdir = intenv;
-
-	if ( outenv == "output-i386" )
-		outdir = path_basedir + "output-i386";
-	else
-		outdir = outenv;
-
 	if ( configuration.UseVSVersionInPath )
 	{
 		vcdir = DEF_SSEP + _get_vc_dir();
@@ -512,23 +466,58 @@ void VCProjMaker::_generate_standard_configuration( const Module& module,
 
 	if ( configuration.UseConfigurationInPath )
 	{
-		fprintf ( OUT, "\t\t\tOutputDirectory=\"%s\\%s%s\\%s\"\r\n", outdir.c_str (), module.output->relative_path.c_str (), vcdir.c_str (), cfg.name.c_str() );
-		fprintf ( OUT, "\t\t\tIntermediateDirectory=\"%s\\%s%s\\%s\"\r\n", intdir.c_str (), module.output->relative_path.c_str (), vcdir.c_str (), cfg.name.c_str() );
+		fprintf ( OUT, "\t\t\tOutputDirectory=\"$(out)\\%s%s\\$(ConfigurationName)\"\r\n", module.output->relative_path.c_str (), vcdir.c_str () );
+		fprintf ( OUT, "\t\t\tIntermediateDirectory=\"$(obj)\\%s%s\\$(ConfigurationName)\"\r\n", module.output->relative_path.c_str (), vcdir.c_str () );
 	}
 	else
 	{
-		fprintf ( OUT, "\t\t\tOutputDirectory=\"%s\\%s%s\"\r\n", outdir.c_str (), module.output->relative_path.c_str (), vcdir.c_str () );
-		fprintf ( OUT, "\t\t\tIntermediateDirectory=\"%s\\%s%s\"\r\n", intdir.c_str (), module.output->relative_path.c_str (), vcdir.c_str () );
+		fprintf ( OUT, "\t\t\tOutputDirectory=\"$(out)\\%s%s\"\r\n", module.output->relative_path.c_str (), vcdir.c_str () );
+		fprintf ( OUT, "\t\t\tIntermediateDirectory=\"$(obj)\\%s%s\"\r\n", module.output->relative_path.c_str (), vcdir.c_str () );
 	}
 
 	fprintf ( OUT, "\t\t\tConfigurationType=\"%d\"\r\n", CfgType );
+
+	fprintf ( OUT, "\t\t\tInheritedPropertySheets=\"%s%s.vsprops\"\r\n", path_basedir.c_str (), cfg.name.c_str ());
 	fprintf ( OUT, "\t\t\tCharacterSet=\"2\"\r\n" );
 	fprintf ( OUT, "\t\t\t>\r\n" );
 
 	fprintf ( OUT, "\t\t\t<Tool\r\n" );
-	fprintf ( OUT, "\t\t\t\tName=\"VCCLCompilerTool\"\r\n" );
+	fprintf ( OUT, "\t\t\t\tName=\"s_as_mscpp\"\r\n" );
+	fprintf ( OUT, "\t\t\t\tsIncPaths=\"" );
+	fprintf ( OUT, "./;" );
+	for ( i = 0; i < includes.size(); i++ )
+	{
+		const std::string& include = includes[i];
+		if ( strcmp ( include.c_str(), "." ) )
+		{
+			fprintf ( OUT, "%s", include.c_str() );
+			fprintf ( OUT, ";" );
+		}
+	}
+	fprintf ( OUT, "$(globalIncludes);\"\r\n");
+	fprintf ( OUT, "\t\t\t\tsPPDefs=\"__ASM__\"\r\n" );
+	fprintf ( OUT, "\t\t\t/>\r\n" );
 
-	fprintf ( OUT, "\t\t\t\tOptimization=\"%d\"\r\n", release ? 2 : 0 );
+	fprintf ( OUT, "\t\t\t<Tool\r\n" );
+	fprintf ( OUT, "\t\t\t\tName=\"Pspec\"\r\n" );
+	fprintf ( OUT, "\t\t\t\tincludes=\"" );
+	fprintf ( OUT, "./;" );
+	for ( i = 0; i < includes.size(); i++ )
+	{
+		const std::string& include = includes[i];
+		if ( strcmp ( include.c_str(), "." ) )
+		{
+			fprintf ( OUT, "%s", include.c_str() );
+			fprintf ( OUT, ";" );
+		}
+	}
+	fprintf ( OUT, "$(globalIncludes);\"\r\n");
+	fprintf ( OUT, "\t\t\t\tsPPDefs=\"__ASM__\"\r\n" );
+	fprintf ( OUT, "\t\t\t/>\r\n" );
+
+
+	fprintf ( OUT, "\t\t\t<Tool\r\n" );
+	fprintf ( OUT, "\t\t\t\tName=\"VCCLCompilerTool\"\r\n" );
 
 	fprintf ( OUT, "\t\t\t\tAdditionalIncludeDirectories=\"" );
 	bool multiple_includes = false;
@@ -541,7 +530,6 @@ void VCProjMaker::_generate_standard_configuration( const Module& module,
 			if ( multiple_includes )
 				fprintf ( OUT, ";" );
 			fprintf ( OUT, "%s", include.c_str() );
-			include_string += " /I " + include;
 			multiple_includes = true;
 		}
 	}
@@ -552,67 +540,17 @@ void VCProjMaker::_generate_standard_configuration( const Module& module,
 
 		if ( configuration.UseConfigurationInPath )
 		{
-			fprintf ( OUT, "%s\\include\\reactos\\idl%s\\%s\r\n", intdir.c_str (), vcdir.c_str (), cfg.name.c_str() );
+			fprintf ( OUT, "$(int)\\include\\reactos\\idl%s\\$(ConfigurationName)\r\n", vcdir.c_str ());
 		}
 		else
 		{
-			fprintf ( OUT, "%s\\include\\reactos\\idl\r\n", intdir.c_str () );
+			fprintf ( OUT, "$(int)\\include\\reactos\\idl\r\n" );
 		}
 	}
-	if ( cfg.headers == ReactOSHeaders )
-	{
-		for ( i = 0; i < includes_ros.size(); i++ )
-		{
-			const std::string& include = includes_ros[i];
-			if ( multiple_includes )
-				fprintf ( OUT, ";" );
-			fprintf ( OUT, "%s", include.c_str() );
-			//include_string += " /I " + include;
-			multiple_includes = true;
-		}
-	}
-	else
-	{
-		// Add WDK or PSDK paths, if user provides them
-		if (getenv ( "BASEDIR" ) != NULL &&
-			(module.type == Kernel ||
-			 module.type == KernelModeDLL ||
-			 module.type == KernelModeDriver ||
-			 module.type == KeyboardLayout))
-		{
-			string WdkBase, SdkPath, CrtPath, DdkPath;
-			WdkBase = getenv ( "BASEDIR" );
-			SdkPath = WdkBase + "\\inc\\api";
-			CrtPath = WdkBase + "\\inc\\crt";
-			DdkPath = WdkBase + "\\inc\\ddk";
 
-			if ( multiple_includes )
-				fprintf ( OUT, ";" );
-
-			fprintf ( OUT, "%s;", SdkPath.c_str() );
-			fprintf ( OUT, "%s;", CrtPath.c_str() );
-			fprintf ( OUT, "%s", DdkPath.c_str() );
-			multiple_includes = true;
-		}
-	}
 	fprintf ( OUT, "\"\r\n" );
 
 	StringSet defines = common_defines;
-
-	// Always add _CRT_SECURE_NO_WARNINGS to disable warnings about not
-	// using the safe functions introduced in MSVC8.
-	defines.insert ( "_CRT_SECURE_NO_WARNINGS" );
-
-	if ( debug )
-	{
-		defines.insert ( "_DEBUG" );
-	}
-
-	if ( cfg.headers == MSVCHeaders )
-	{
-		// this is a define in MinGW w32api, but not Microsoft's headers
-		defines.insert ( "STDCALL=__stdcall" );
-	}
 
 	if ( binaryType == Lib || binaryType == Exe )
 	{
@@ -627,20 +565,13 @@ void VCProjMaker::_generate_standard_configuration( const Module& module,
 	fprintf ( OUT, "\t\t\t\tPreprocessorDefinitions=\"" );
 	for ( StringSet::iterator it1=defines.begin(); it1!=defines.end(); it1++ )
 	{
-		if ( i > 0 )
-			fprintf ( OUT, ";" );
-
 		string unescaped = *it1;
-		fprintf ( OUT, "%s", _replace_str(unescaped, "\"","").c_str() );
+		fprintf ( OUT, "%s ; ", _replace_str(unescaped, "\"","").c_str() );
 	}
 	fprintf ( OUT, "\"\r\n" );
-	fprintf ( OUT, "\t\t\t\tForcedIncludeFiles=\"%s\"\r\n", "warning.h");
-	fprintf ( OUT, "\t\t\t\tMinimalRebuild=\"%s\"\r\n", speed ? "TRUE" : "FALSE" );
-	fprintf ( OUT, "\t\t\t\tBasicRuntimeChecks=\"0\"\r\n" );
-	fprintf ( OUT, "\t\t\t\tRuntimeLibrary=\"%d\"\r\n", debug ? 3 : 2 );	// 3=/MDd 2=/MD
-	fprintf ( OUT, "\t\t\t\tBufferSecurityCheck=\"FALSE\"\r\n" );
-	fprintf ( OUT, "\t\t\t\tEnableFunctionLevelLinking=\"FALSE\"\r\n" );
 
+	//disable precompiled headers for now
+#if 0
 	if ( module.pch != NULL )
 	{
 		fprintf ( OUT, "\t\t\t\tUsePrecompiledHeader=\"2\"\r\n" );
@@ -657,44 +588,17 @@ void VCProjMaker::_generate_standard_configuration( const Module& module,
 		if (pos == string::npos && std::find(header_files.begin(), header_files.end(), pch_path) == header_files.end())
 			header_files.push_back(pch_path);
 	}
-	else
-	{
-		fprintf ( OUT, "\t\t\t\tUsePrecompiledHeader=\"0\"\r\n" );
-	}
+#endif
 
-	fprintf ( OUT, "\t\t\t\tWholeProgramOptimization=\"%s\"\r\n", release ? "FALSE" : "FALSE");
-	if ( release )
-	{
-		fprintf ( OUT, "\t\t\t\tFavorSizeOrSpeed=\"1\"\r\n" );
-		fprintf ( OUT, "\t\t\t\tStringPooling=\"true\"\r\n" );
-	}
+	if ( module.cplusplus )
+		fprintf ( OUT, "\t\t\t\tCompileAs=\"2\"\r\n" );
 
-	fprintf ( OUT, "\t\t\t\tWarningLevel=\"%s\"\r\n", speed ? "0" : "3" );
-	fprintf ( OUT, "\t\t\t\tDetect64BitPortabilityProblems=\"%s\"\r\n", "FALSE");
-	if ( !module.cplusplus )
-		fprintf ( OUT, "\t\t\t\tCompileAs=\"1\"\r\n" );
-
-	if ( module.type == Win32CUI || module.type == Win32GUI )
-	{
-		fprintf ( OUT, "\t\t\t\tCallingConvention=\"%d\"\r\n", 0 );	// 0=__cdecl
-	}
-	else
-	{
-		fprintf ( OUT, "\t\t\t\tCallingConvention=\"%d\"\r\n", 2 );	// 2=__stdcall
-	}
-
-	fprintf ( OUT, "\t\t\t\tDebugInformationFormat=\"%s\"/>\r\n", speed ? "0" : release ? "3": "4");	// 3=/Zi 4=ZI
+	fprintf ( OUT, "\t\t\t/>\r\n");
 
 	fprintf ( OUT, "\t\t\t<Tool\r\n" );
 	fprintf ( OUT, "\t\t\t\tName=\"VCCustomBuildTool\"/>\r\n" );
 
-	if ( binaryType == Lib )
-	{
-		fprintf ( OUT, "\t\t\t<Tool\r\n" );
-		fprintf ( OUT, "\t\t\t\tName=\"VCLibrarianTool\"\r\n" );
-		fprintf ( OUT, "\t\t\t\tOutputFile=\"$(OutDir)/%s.lib\"/>\r\n", module.name.c_str() );
-	}
-	else
+	if ( binaryType != Lib )
 	{
 		fprintf ( OUT, "\t\t\t<Tool\r\n" );
 		fprintf ( OUT, "\t\t\t\tName=\"VCLinkerTool\"\r\n" );
@@ -728,25 +632,6 @@ void VCProjMaker::_generate_standard_configuration( const Module& module,
 
 		fprintf ( OUT, "\t\t\t\tAdditionalLibraryDirectories=\"" );
 
-		// Add WDK libs paths, if needed
-		if (getenv ( "BASEDIR" ) != NULL &&
-			(module.type == Kernel ||
-			 module.type == KernelModeDLL ||
-			 module.type == KernelModeDriver ||
-			 module.type == KeyboardLayout))
-		{
-			string WdkBase, CrtPath, DdkPath;
-			WdkBase = getenv ( "BASEDIR" );
-			CrtPath = WdkBase + "\\lib\\crt\\i386";
-			DdkPath = WdkBase + "\\lib\\wnet\\i386";
-
-			fprintf ( OUT, "%s;", CrtPath.c_str() );
-			fprintf ( OUT, "%s", DdkPath.c_str() );
-
-			if (libraries.size () > 0)
-				fprintf ( OUT, ";" );
-		}
-
 		// Add conventional libraries dirs
 		for (i = 0; i < libraries.size (); i++)
 		{
@@ -754,7 +639,6 @@ void VCProjMaker::_generate_standard_configuration( const Module& module,
 				fprintf ( OUT, ";" );
 
 			string libpath = libraries[i].c_str();
-			libpath.replace (libpath.find("---"), 3, cfg.name);
 			libpath = libpath.substr (0, libpath.find_last_of ("\\") );
 			fprintf ( OUT, "%s", libpath.c_str() );
 		}
@@ -762,13 +646,6 @@ void VCProjMaker::_generate_standard_configuration( const Module& module,
 		fprintf ( OUT, "\"\r\n" );
 
 		fprintf ( OUT, "\t\t\t\tOutputFile=\"$(OutDir)/%s%s\"\r\n", module.name.c_str(), module_type.c_str() );
-		fprintf ( OUT, "\t\t\t\tLinkIncremental=\"%d\"\r\n", debug ? 2 : 1 );
-		fprintf ( OUT, "\t\t\t\tGenerateDebugInformation=\"%s\"\r\n", speed ? "FALSE" : "TRUE" );
-		fprintf ( OUT, "\t\t\t\tLinkTimeCodeGeneration=\"%d\"\r\n", release? 0 : 0);	// whole program optimization
-
-		if ( debug )
-			fprintf ( OUT, "\t\t\t\tProgramDatabaseFile=\"$(OutDir)/%s.pdb\"\r\n", module.name.c_str() );
-
 		if ( binaryType == Sys )
 		{
 			if (module.GetEntryPoint() == "0")
@@ -831,7 +708,7 @@ void VCProjMaker::_generate_standard_configuration( const Module& module,
 				fprintf ( OUT, "\t\t\t\tIgnoreAllDefaultLibraries=\"TRUE\"\r\n" );
 			}
 		}
-		fprintf ( OUT, "\t\t\t\tTargetMachine=\"%d\"/>\r\n", 1 );
+		fprintf ( OUT, "\t\t\t/>\r\n" );
 	}
 
 	fprintf ( OUT, "\t\t\t<Tool\r\n" );
@@ -850,17 +727,7 @@ void VCProjMaker::_generate_standard_configuration( const Module& module,
 			multiple_includes = true;
 		}
 	}
-	if ( cfg.headers == ReactOSHeaders )
-	{
-		for ( i = 0; i < includes_ros.size(); i++ )
-		{
-			const std::string& include = includes_ros[i];
-			if ( multiple_includes )
-				fprintf ( OUT, ";" );
-			fprintf ( OUT, "%s", include.c_str() );
-			multiple_includes = true;
-		}
-	}
+
 	fprintf ( OUT, "\"/>\r\n " );
 
 	fprintf ( OUT, "\t\t\t<Tool\r\n" );
@@ -871,16 +738,6 @@ void VCProjMaker::_generate_standard_configuration( const Module& module,
 		fprintf ( OUT, "\t\t\t\tName=\"VCManifestTool\"\r\n" );
 		fprintf ( OUT, "\t\t\t\tEmbedManifest=\"false\"/>\r\n" );
 	}
-	fprintf ( OUT, "\t\t\t<Tool\r\n" );
-	fprintf ( OUT, "\t\t\t\tName=\"VCPostBuildEventTool\"/>\r\n" );
-	fprintf ( OUT, "\t\t\t<Tool\r\n" );
-	fprintf ( OUT, "\t\t\t\tName=\"VCPreBuildEventTool\"/>\r\n" );
-	fprintf ( OUT, "\t\t\t<Tool\r\n" );
-	fprintf ( OUT, "\t\t\t\tName=\"VCPreLinkEventTool\"/>\r\n" );
-	fprintf ( OUT, "\t\t\t<Tool\r\n" );
-	fprintf ( OUT, "\t\t\t\tName=\"VCWebServiceProxyGeneratorTool\"/>\r\n" );
-	fprintf ( OUT, "\t\t\t<Tool\r\n" );
-	fprintf ( OUT, "\t\t\t\tName=\"VCWebDeploymentTool\"/>\r\n" );
 	fprintf ( OUT, "\t\t</Configuration>\r\n" );
 }
 

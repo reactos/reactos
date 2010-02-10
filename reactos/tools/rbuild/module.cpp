@@ -1430,6 +1430,24 @@ Module::GetDllName () const
 		throw new InvalidOperationException ( __FILE__, __LINE__, "Module %s has no dllname." );
 }
 
+SpecFileType
+Module::IsSpecDefinitionFile () const
+{
+	if(!importLibrary)
+		return None;
+
+	std::string ext = GetExtension ( *importLibrary->source );
+
+	if ( ext == ".spec" )
+		return Spec;
+
+	if ( ext == ".pspec" )
+		return PSpec;
+
+	return None;
+}
+
+
 File::File ( DirectoryLocation directory,
              const string& relative_path,
              const string& name,

@@ -83,7 +83,6 @@ MSVCBackend::MSVCBackend(Project &project,
 
 void MSVCBackend::Process()
 {
-	// TODO FIXME wine hack?
 	bool only_msvc_headers = false;
 
 	while ( m_configurations.size () > 0 )
@@ -95,14 +94,14 @@ void MSVCBackend::Process()
 
 	m_configurations.push_back ( new MSVCConfiguration( Debug ));
 	m_configurations.push_back ( new MSVCConfiguration( Release ));
-	m_configurations.push_back ( new MSVCConfiguration( Speed ));
+//	m_configurations.push_back ( new MSVCConfiguration( Speed ));
 	m_configurations.push_back ( new MSVCConfiguration( RosBuild ));
 
 	if (!only_msvc_headers)
 	{
 		m_configurations.push_back ( new MSVCConfiguration( Debug, ReactOSHeaders ));
 		m_configurations.push_back ( new MSVCConfiguration( Release, ReactOSHeaders ));
-		m_configurations.push_back ( new MSVCConfiguration( Speed, ReactOSHeaders ));
+//		m_configurations.push_back ( new MSVCConfiguration( Speed, ReactOSHeaders ));
 	}
 
 	if ( configuration.CleanAsYouGo ) {
@@ -117,6 +116,22 @@ void MSVCBackend::Process()
 
 	filename_sln += "_auto.sln";
 	printf ( "Creating MSVC workspace: %s\n", filename_sln.c_str() );
+
+	//Write a property page for each configuration
+	for ( size_t icfg = 0; icfg < m_configurations.size(); icfg++ )
+	{
+		MSVCConfiguration* cfg = m_configurations[icfg];
+
+		//RosBuild doesn't need a property page
+		if(cfg->optimization == RosBuild)
+			continue;
+
+		string filename_props(  cfg->name );
+		filename_props += ".vsprops";
+		//Write the propery pages files
+		PropsMaker propsMaker( configuration, &ProjectNode, filename_props, cfg );
+		propsMaker._generate_props( _get_solution_version(), _get_studio_version() );
+	}
 
 	// Write out the project files
 	ProcessModules();
@@ -376,7 +391,7 @@ MSVCBackend::_get_object_files ( const Module& module, vector<string>& out) cons
 void
 MSVCBackend::_get_def_files ( const Module& module, vector<string>& out) const
 {
-	if (module.HasImportLibrary ())
+	if (module.HasImportLibrary())
 	{
 #if 0
 		string modulename = module.GetBasePath ();

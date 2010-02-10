@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<VisualStudioToolFile
+	Name="s as (gnu_as mscpp)"
+	Version="8,00"
+	>
+	<Rules>
+		<CustomBuildRule
+			Name="s_as_mscpp"
+			DisplayName="s (gnu_as mscpp)"
+			CommandLine="cl /nologo /E [sIncPaths] [sPPDefs] $(InputPath) | $(RosBE)\i386\bin\as -o [sOutF]"
+			Outputs="[$sOutF]"
+			FileExtensions="*.s"
+			ExecutionDescription="Assembling "
+			>
+			<Properties>
+				<StringProperty
+					Name="sOutF"
+					DisplayName="Obj File"
+					Description="Obj File (-o [file])"
+					Switch="&quot;[value]&quot;"
+					DefaultValue="$(IntDir)\$(InputName).obj"
+				/>
+				<StringProperty
+					Name="sIncPaths"
+					DisplayName="Inc Paths"
+					Description="Include serach paths (/I [path])"
+					Switch="/I &quot;[value]&quot;"
+					DefaultValue="$(globalIncludes)"
+					Delimited="true"
+					Inheritable="true"
+				/>
+				<StringProperty
+					Name="sPPDefs"
+					DisplayName="Preproc Defs"
+					Description="Preprocessor Definitions (/D [symbol])"
+					Switch="/D &quot;[value]&quot;"
+					Delimited="true"
+					Inheritable="true"
+				/>
+			</Properties>
+		</CustomBuildRule>
+	</Rules>
+</VisualStudioToolFile>
+
