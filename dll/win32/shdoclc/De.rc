@@ -110,8 +110,8 @@ IDR_BROWSE_CONTEXT_MENU MENU
         }
         MENUITEM SEPARATOR
         MENUITEM SEPARATOR
-        MENUITEM "&Zellen Eigenschaften",    IDM_CELLPROPERTIES
-        MENUITEM "&Tabellen Eigenschaften",  IDM_TABLEPROPERTIES
+        MENUITEM "&Zellen-Eigenschaften",    IDM_CELLPROPERTIES
+        MENUITEM "&Tabellen-Eigenschaften",  IDM_TABLEPROPERTIES
     }
 
     POPUP "1DSeiten Auswahl"

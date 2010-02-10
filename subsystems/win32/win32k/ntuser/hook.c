@@ -62,9 +62,9 @@ IntGetHookObject(HHOOK hHook)
         return NULL;
     }
 
-    ASSERT(USER_BODY_TO_HEADER(Hook)->RefCount >= 0);
+    ASSERT(Hook->head.cLockObj >= 0);
 
-    USER_BODY_TO_HEADER(Hook)->RefCount++;
+    Hook->head.cLockObj++;
 
     return Hook;
 }
@@ -98,15 +98,12 @@ IntAddHook(PETHREAD Thread, int HookId, BOOLEAN Global, PWINSTATION_OBJECT WinSt
         }
     }
 
-    Hook = UserCreateObject(gHandleTable, &Handle, otHook, sizeof(HOOK));
+    Hook = UserCreateObject(gHandleTable, NULL, &Handle, otHook, sizeof(HOOK));
     if (NULL == Hook)
     {
         return NULL;
     }
 
-//    Hook->head.pti =?
-//    Hook->head.rpdesk
-    Hook->head.h = Handle;
     Hook->Thread = Thread;
     Hook->HookId = HookId;
 
@@ -116,7 +113,14 @@ IntAddHook(PETHREAD Thread, int HookId, BOOLEAN Global, PWINSTATION_OBJECT WinSt
         ASSERT(W32Thread != NULL);
         W32Thread->fsHooks |= HOOKID_TO_FLAG(HookId);
 
-        GetWin32ClientInfo()->fsHooks = W32Thread->fsHooks;
+        if (W32Thread->pClientInfo)
+           W32Thread->pClientInfo->fsHooks = W32Thread->fsHooks;
+
+        if (W32Thread->pDeskInfo) // Do this for now.
+           W32Thread->pDeskInfo->fsHooks= W32Thread->fsHooks;
+
+        Hook->head.pti = W32Thread;
+        Hook->head.rpdesk = W32Thread->rpdesk;
     }
 
     RtlInitUnicodeString(&Hook->ModuleName, NULL);
@@ -217,7 +221,7 @@ IntFreeHook(PHOOKTABLE Table, PHOOK Hook, PWINSTATION_OBJECT WinStaObj)
     }
 
     /* Close handle */
-    UserDeleteObject(Hook->head.h, otHook);
+    UserDeleteObject(UserHMGetHandle(Hook), otHook);
 }
 
 /* remove a hook, freeing it if the chain is not in use */
@@ -235,6 +239,9 @@ IntRemoveHook(PHOOK Hook, PWINSTATION_OBJECT WinStaObj, BOOL TableAlreadyLocked)
     W32Thread->fsHooks &= ~HOOKID_TO_FLAG(Hook->HookId);
 
     GetWin32ClientInfo()->fsHooks = W32Thread->fsHooks;
+
+    if (W32Thread->pDeskInfo) // Do this for now.
+       W32Thread->pDeskInfo->fsHooks= W32Thread->fsHooks;
 
     if (0 != Table->Counts[HOOKID_TO_INDEX(Hook->HookId)])
     {
@@ -296,7 +303,7 @@ IntCallLowLevelHook(PHOOK Hook, INT Code, WPARAM wParam, LPARAM lParam)
     /* FIXME should get timeout from
      * HKEY_CURRENT_USER\Control Panel\Desktop\LowLevelHooksTimeout */
     Status = co_MsqSendMessage(((PTHREADINFO)Hook->Thread->Tcb.Win32Thread)->MessageQueue,
-                                (HWND)Code,
+                                IntToPtr(Code),
                                 Hook->HookId,
                                 wParam,
                                 lParam,
@@ -347,6 +354,7 @@ co_HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam)
 
     if ((Hook->Thread != PsGetCurrentThread()) && (Hook->Thread != NULL))
     {
+        DPRINT1("\nHook found by Id and posted to Thread! %d\n",HookId );
         /* Post it in message queue. */
         return IntCallLowLevelHook(Hook, Code, wParam, lParam);
     }
@@ -1133,7 +1141,7 @@ NtUserSetWindowsHookEx(HINSTANCE Mod,
         Mod = NULL;
         Global = FALSE;
 
-        if (!NT_SUCCESS(PsLookupThreadByThreadId((HANDLE) ThreadId, &Thread)))
+        if (!NT_SUCCESS(PsLookupThreadByThreadId((HANDLE)(DWORD_PTR) ThreadId, &Thread)))
         {
             DPRINT1("Invalid thread id 0x%x\n", ThreadId);
             SetLastWin32Error(ERROR_INVALID_PARAMETER);
@@ -1274,7 +1282,7 @@ NtUserSetWindowsHookEx(HINSTANCE Mod,
         Hook->Proc = HookProc;
 
     Hook->Ansi = Ansi;
-    Handle = Hook->head.h;
+    Handle = UserHMGetHandle(Hook);
 
     /* Clear the client threads next hook. */
     ClientInfo->phkCurrent = 0;
@@ -1325,7 +1333,7 @@ NtUserUnhookWindowsHookEx(HHOOK Hook)
         RETURN( FALSE);
     }
 
-    ASSERT(Hook == HookObj->head.h);
+    ASSERT(Hook == UserHMGetHandle(HookObj));
 
     IntRemoveHook(HookObj, WinStaObj, FALSE);
 
@@ -1339,5 +1347,5 @@ CLEANUP:
     UserLeave();
     END_CLEANUP;
 }
- 
+
 /* EOF */

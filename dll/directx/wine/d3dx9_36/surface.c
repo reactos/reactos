@@ -323,6 +323,84 @@ HRESULT WINAPI D3DXLoadSurfaceFromResourceW(LPDIRECT3DSURFACE9 pDestSurface,
     return D3DXERR_INVALIDDATA;
 }
 
+
+/************************************************************
+ * copy_simple_data
+ *
+ * Copies the source buffer to the destination buffer, performing
+ * any necessary format conversion and color keying.
+ * Works only for ARGB formats with 1 - 4 bytes per pixel.
+ */
+static void copy_simple_data(CONST BYTE *src,  UINT  srcpitch, POINT  srcsize, CONST PixelFormatDesc  *srcformat,
+                             CONST BYTE *dest, UINT destpitch, POINT destsize, CONST PixelFormatDesc *destformat,
+                             DWORD dwFilter)
+{
+    DWORD srcshift[4], destshift[4];
+    DWORD srcmask[4], destmask[4];
+    BOOL process_channel[4];
+    DWORD channels[4];
+    DWORD channelmask = 0;
+
+    UINT minwidth, minheight;
+    BYTE *srcptr, *destptr;
+    UINT i, x, y;
+
+    ZeroMemory(channels, sizeof(channels));
+    ZeroMemory(process_channel, sizeof(process_channel));
+
+    for(i = 0;i < 4;i++) {
+        /* srcshift is used to extract the _relevant_ components */
+        srcshift[i]  =  srcformat->shift[i] + max( srcformat->bits[i] - destformat->bits[i], 0);
+
+        /* destshift is used to move the components to the correct position */
+        destshift[i] = destformat->shift[i] + max(destformat->bits[i] -  srcformat->bits[i], 0);
+
+        srcmask[i]  = ((1 <<  srcformat->bits[i]) - 1) <<  srcformat->shift[i];
+        destmask[i] = ((1 << destformat->bits[i]) - 1) << destformat->shift[i];
+
+        /* channelmask specifies bits which aren't used in the source format but in the destination one */
+        if(destformat->bits[i]) {
+            if(srcformat->bits[i]) process_channel[i] = TRUE;
+            else channelmask |= destmask[i];
+        }
+    }
+
+    minwidth  = (srcsize.x < destsize.x) ? srcsize.x : destsize.x;
+    minheight = (srcsize.y < destsize.y) ? srcsize.y : destsize.y;
+
+    for(y = 0;y < minheight;y++) {
+        srcptr  = (BYTE*)( src + y *  srcpitch);
+        destptr = (BYTE*)(dest + y * destpitch);
+        for(x = 0;x < minwidth;x++) {
+            /* extract source color components */
+            if(srcformat->type == FORMAT_ARGB) {
+                const DWORD col = *(DWORD*)srcptr;
+                for(i = 0;i < 4;i++)
+                    if(process_channel[i])
+                        channels[i] = (col & srcmask[i]) >> srcshift[i];
+            }
+
+            /* recombine the components */
+            if(destformat->type == FORMAT_ARGB) {
+                DWORD* const pixel = (DWORD*)destptr;
+                *pixel = 0;
+
+                for(i = 0;i < 4;i++) {
+                    if(process_channel[i]) {
+                        /* necessary to make sure that e.g. an X4R4G4B4 white maps to an R8G8B8 white instead of 0xf0f0f0 */
+                        signed int shift;
+                        for(shift = destshift[i]; shift > destformat->shift[i]; shift -= srcformat->bits[i]) *pixel |= channels[i] << shift;
+                        *pixel |= (channels[i] >> (destformat->shift[i] - shift)) << destformat->shift[i];
+                    }
+                }
+                *pixel |= channelmask;   /* new channels are set to their maximal value */
+            }
+            srcptr  +=  srcformat->bytes_per_pixel;
+            destptr += destformat->bytes_per_pixel;
+        }
+    }
+}
+
 /************************************************************
  * D3DXLoadSurfaceFromMemory
  *
@@ -350,7 +428,8 @@ HRESULT WINAPI D3DXLoadSurfaceFromResourceW(LPDIRECT3DSURFACE9 pDestSurface,
  *            E_FAIL, if SrcFormat is D3DFMT_UNKNOWN or the dimensions of pSrcRect are invalid
  *
  * NOTES
- *   pSrcRect specifies the dimensions of the source data
+ *   pSrcRect specifies the dimensions of the source data;
+ *   negative values for pSrcRect are allowed as we're only looking at the width and height anyway.
  *
  */
 HRESULT WINAPI D3DXLoadSurfaceFromMemory(LPDIRECT3DSURFACE9 pDestSurface,
@@ -364,11 +443,44 @@ HRESULT WINAPI D3DXLoadSurfaceFromMemory(LPDIRECT3DSURFACE9 pDestSurface,
                                          DWORD dwFilter,
                                          D3DCOLOR Colorkey)
 {
-    TRACE("stub\n");
+    CONST PixelFormatDesc *srcformatdesc, *destformatdesc;
+    D3DSURFACE_DESC surfdesc;
+    D3DLOCKED_RECT lockrect;
+    POINT srcsize, destsize;
+    HRESULT hr;
+    TRACE("(void)\n");
 
     if( !pDestSurface || !pSrcMemory || !pSrcRect ) return D3DERR_INVALIDCALL;
     if(SrcFormat == D3DFMT_UNKNOWN || pSrcRect->left >= pSrcRect->right || pSrcRect->top >= pSrcRect->bottom) return E_FAIL;
-    return E_NOTIMPL;
+
+    if(dwFilter != D3DX_FILTER_NONE) return E_NOTIMPL;
+
+    IDirect3DSurface9_GetDesc(pDestSurface, &surfdesc);
+
+    srcformatdesc = get_format_info(SrcFormat);
+    destformatdesc = get_format_info(surfdesc.Format);
+    if( srcformatdesc->type == FORMAT_UNKNOWN ||  srcformatdesc->bytes_per_pixel > 4) return E_NOTIMPL;
+    if(destformatdesc->type == FORMAT_UNKNOWN || destformatdesc->bytes_per_pixel > 4) return E_NOTIMPL;
+
+    srcsize.x = pSrcRect->right - pSrcRect->left;
+    srcsize.y = pSrcRect->bottom - pSrcRect->top;
+    if( !pDestRect ) {
+        destsize.x = surfdesc.Width;
+        destsize.y = surfdesc.Height;
+    } else {
+        destsize.x = pDestRect->right - pDestRect->left;
+        destsize.y = pDestRect->bottom - pDestRect->top;
+    }
+
+    hr = IDirect3DSurface9_LockRect(pDestSurface, &lockrect, pDestRect, 0);
+    if(FAILED(hr)) return D3DXERR_INVALIDDATA;
+
+    copy_simple_data((CONST BYTE*)pSrcMemory, SrcPitch, srcsize, srcformatdesc,
+                     (CONST BYTE*)lockrect.pBits, lockrect.Pitch, destsize, destformatdesc,
+                     dwFilter);
+
+    IDirect3DSurface9_UnlockRect(pDestSurface);
+    return D3D_OK;
 }
 
 /************************************************************

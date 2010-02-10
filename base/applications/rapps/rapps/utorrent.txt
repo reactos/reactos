@@ -11,14 +11,19 @@ URLSite = http://www.utorrent.com/
 URLDownload = http://download.utorrent.com/1.8.5/utorrent.exe
 CDPath = none
 
-[Section.0419]
-Licence = Бесплатная для не комерческого использования
-Description = Маленький и быстрый BitTorrent клиент.
 
 [Section.0407]
 Licence = Freeware für nichtkommerzielle Nutzung
 Description = Kleiner und schneller BitTorrent Client.
 
+[Section.040a]
+Licence = Gratuito para uso no comercial
+Description = Pequeño y rápido cliente BitTorrent.
+
 [Section.0415]
 Licence = Freeware (do użytku domowego)
 Description = Mały i szybki klient BitTorrent.
+
+[Section.0419]
+Licence = Бесплатная для некоммерческого использования
+Description = Маленький и быстрый клиент BitTorrent.

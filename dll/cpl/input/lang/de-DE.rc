@@ -5,7 +5,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Einstellungen"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Wählen Sie die Dienste, die Sie für die Eingabesprachen in der Liste verwenden wollen.\nVerwenden Sie Hinzufügen und Entfernen, um die Liste zu bearbeiten.", -1, 9, 6, 238, 25
+    LTEXT "Wählen Sie die Dienste aus, die Sie für die Eingabesprachen in der Liste verwenden wollen.\nVerwenden Sie Hinzufügen und Entfernen, um die Liste zu bearbeiten.", -1, 9, 6, 238, 25
     CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SORTASCENDING | LVS_REPORT | 0x0000808D, 8, 36, 237, 101
     PUSHBUTTON "&Als Standard", IDC_SET_DEFAULT, 101, 159, 144, 14
     PUSHBUTTON "&Hinzufügen...", IDC_ADD_BUTTON, 27, 142, 70, 14
@@ -22,7 +22,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Um Caps Lock zu deaktivieren", -1, 7, 7, 258, 26
     AUTORADIOBUTTON "Caps &Lock Taste drücken", IDC_PRESS_CL_KEY_RB, 14, 17, 120, 11, WS_GROUP
-    AUTORADIOBUTTON "&Shift Taste drücken", IDC_PRESS_SHIFT_KEY_RB, 144, 17, 120, 11, NOT WS_TABSTOP
+    AUTORADIOBUTTON "Um&schalttaste drücken", IDC_PRESS_SHIFT_KEY_RB, 144, 17, 120, 11, NOT WS_TABSTOP
     GROUPBOX "Schnelltasten für Eingabesprachen", -1, 7, 37, 258, 95
     LTEXT "Aktion", -1, 14, 47, 60, 9
     RTEXT "Tasten&kombination", -1, 177, 47, 79, 9
@@ -57,7 +57,7 @@ BEGIN
     AUTORADIOBUTTON "&Strg", IDC_CTRL_LANG, 29, 31, 30, 11
     AUTORADIOBUTTON "&Alt links", IDC_LEFT_ALT_LANG, 29, 45, 46, 12
     AUTOCHECKBOX "&Tastaturlayout umschalten", IDC_SWITCH_KBLAYOUTS_CB, 16, 65, 141, 12
-    LTEXT "Shift", -1, 74, 87, 27, 12
+    LTEXT "Umschalt", -1, 74, 87, 27, 12
     CTEXT "+", -1, 63, 87, 8, 9
     AUTORADIOBUTTON "S&trg", IDC_CTRL_LAYOUT, 30, 81, 30, 11
     AUTORADIOBUTTON "A&lt links", IDC_LEFT_ALT_LAYOUT, 30, 95, 44, 12
@@ -67,7 +67,7 @@ END
 
 IDD_INPUT_LANG_PROP DIALOGEX 20, 20, 227, 75
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Eingabesprache Einstellungen"
+CAPTION "Eingabespracheneinstellungen"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Eingabesprache:", -1, 7, 7, 61, 8
@@ -94,8 +94,8 @@ BEGIN
     IDS_CONFIRMATION         "Bestätigung"
     IDS_LAYOUT_EXISTS        "Dieses Layout existiert bereits."
     IDS_LAYOUT_EXISTS2       "Dieses Layout existiert bereits und kann nicht hinzugefügt werden."
-    IDS_CTRL_SHIFT           "Strg+Shift"
-    IDS_LEFT_ALT_SHIFT       "Alt links+Shift"
+    IDS_CTRL_SHIFT           "Strg+Umschalt"
+    IDS_LEFT_ALT_SHIFT       "Alt links+Umschalt"
     IDS_SWITCH_BET_INLANG    "Zwischen Eingabesprachen umschalten"
 END
 
@@ -171,7 +171,7 @@ BEGIN
     IDS_CHINESE_TRADITIONAL_BIG5CODE_LAYOUT,        "Chinesisch (traditionell) - Big5-Code"
     IDS_CHINESE_TRADITIONAL_DAYI_LAYOUT,            "Chinesisch (traditionell) - DaYi"
     IDS_CHINESE_TRADITIONAL_UNICODE_LAYOUT,         "Chinesisch (traditionell) - Unicode"
-    IDS_CHINESE_TRADITIONAL_ALPHANUMERIC_LAYOUT,    "Chinesisch (traditionell) - Alphanumerisch"
+    IDS_CHINESE_TRADITIONAL_ALPHANUMERIC_LAYOUT,    "Chinesisch (traditionell) - Alphanummerisch"
     IDS_CHINESE_SIMPLIFIED_USKEYBOARD_LAYOUT,       "Chinesisch (vereinfacht) - US-Tastatur"
     IDS_CHINESE_SIMPLIFIED_QUANPIN_LAYOUT,          "Chinesisch (vereinfacht) - QuanPin"
     IDS_CHINESE_SIMPLIFIED_SHUANGPIN_LAYOUT,        "Chinesisch (vereinfacht) - ShuangPin"
@@ -220,7 +220,7 @@ BEGIN
     IDS_ARMENIAN_EASTERN_LAYOUT,                    "Ostarmenisch"
     IDS_ARMENIAN_WESTERN_LAYOUT,                    "Westarmenisch"
     IDS_GREEK_POLYTONIC_LAYOUT,                     "Griechisch (Polytonisch)"
-    IDS_USENG_TABLE_IBM_ARABIC238L_LAYOUT,          "US-Englische Tabelle für IBM Arabisch 238_L"
+    IDS_USENG_TABLE_IBM_ARABIC238L_LAYOUT,          "US-englische Tabelle für IBM Arabisch 238_L"
     IDS_FARSI_LAYOUT,                               "Farsi"
     IDS_GAELIC_LAYOUT,                              "Gälisch"
     IDS_PORTUGUESE_BRAZIL_ABNT2_LAYOUT,             "Portugiesisch (Brasilianisch, ABNT2)"
@@ -231,12 +231,12 @@ BEGIN
     IDS_SYRIAC_PHONETIC_LAYOUT,                     "Syrisch (Phonetisch)"
     IDS_DIVEHI_PHONETIC_LAYOUT,                     "Divehi (Phonetisch)"
     IDS_DIVEHI_TYPEWRITER_LAYOUT,                   "Divehi (Schreibmaschine)"
-    IDS_BULGARIAN_PHONETIC_CLASSIC_LAYOUT,          "Bulgarian Phonetic (Classic)"
-    IDS_BULGARIAN_PHONETIC_BDS_LAYOUT,              "Bulgarian Phonetic (BDS)"
-    IDS_BULGARIAN_BDS_LAYOUT,                       "Bulgarian BDS 5237-1978"
-    IDS_GERMAN_RISTOME_LAYOUT,                      "German (RISTOME)"
-    IDS_GERMAN_NEO_11_LAYOUT,                       "German (NEO-1.1)"
-    IDS_GERMAN_DE_ERGO_LAYOUT,                      "German (de_ergo)"
-    IDS_BURMESE_LAYOUT,                             "Burmese"
+    IDS_BULGARIAN_PHONETIC_CLASSIC_LAYOUT,          "Bulgarisch (klassisch phonetisch)"
+    IDS_BULGARIAN_PHONETIC_BDS_LAYOUT,              "Bulgarisch BDS (phonetisch)"
+    IDS_BULGARIAN_BDS_LAYOUT,                       "Bulgarisch BDS 5237-1978"
+    IDS_GERMAN_RISTOME_LAYOUT,                      "Deutsch (RISTOME)"
+    IDS_GERMAN_NEO_11_LAYOUT,                       "Deutsch (NEO-1.1)"
+    IDS_GERMAN_DE_ERGO_LAYOUT,                      "Deutsch (de_ergo)"
+    IDS_BURMESE_LAYOUT,                             "Burmesisch"
     IDS_UKRAINIAN_STUDENT_LAYOUT,                   "Ukrainian (Student)"
 END

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="comctl32" type="win32dll" baseaddress="${BASEADDRESS_COMCTL32}" installbase="system32" installname="comctl32.dll" allowwarnings="true">
+<module name="comctl32" type="win32dll" baseaddress="${BASEADDRESS_COMCTL32}" installbase="system32" installname="comctl32.dll" unicode="yes" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllInstall" />
 	<importlibrary definition="comctl32.spec" />
 	<include base="comctl32">.</include>
@@ -49,7 +49,6 @@
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>advapi32</library>
-	<library>kernel32</library>
 	<library>winmm</library>
 	<library>uxtheme</library>
 	<library>ntdll</library>

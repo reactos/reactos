@@ -12,7 +12,6 @@
 	<library>opengl32</library>
 	<library>gdi32</library>
 	<library>advapi32</library>
-	<library>kernel32</library>
 	<library>uuid</library>
 
 	<file>ati_fragment_shader.c</file>
@@ -30,9 +29,9 @@
 	<file>glsl_shader.c</file>
 	<file>nvidia_texture_shader.c</file>
 	<file>palette.c</file>
-	<file>pixelshader.c</file>
 	<file>query.c</file>
 	<file>resource.c</file>
+	<file>shader.c</file>
 	<file>shader_sm1.c</file>
 	<file>shader_sm4.c</file>
 	<file>state.c</file>
@@ -46,7 +45,6 @@
 	<file>texture.c</file>
 	<file>utils.c</file>
 	<file>vertexdeclaration.c</file>
-	<file>vertexshader.c</file>
 	<file>view.c</file>
 	<file>volume.c</file>
 	<file>volumetexture.c</file>

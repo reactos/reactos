@@ -544,7 +544,6 @@ BOOL CreateNewKey(HWND hwndTV, HTREEITEM hItem)
     HKEY hKey = NULL;
     HKEY hNewKey = NULL;
     BOOL bSuccess = FALSE;
-    LONG lResult;
     DWORD dwDisposition;
     HTREEITEM hNewItem;
 
@@ -559,7 +558,7 @@ BOOL CreateNewKey(HWND hwndTV, HTREEITEM hItem)
     do
     {
         _sntprintf(szNewKey, sizeof(szNewKey) / sizeof(szNewKey[0]), szNewKeyFormat, iIndex++);
-        lResult = RegCreateKeyEx(hKey, szNewKey, 0, NULL, 0, KEY_ALL_ACCESS, NULL, &hNewKey, &dwDisposition);
+        RegCreateKeyEx(hKey, szNewKey, 0, NULL, 0, KEY_ALL_ACCESS, NULL, &hNewKey, &dwDisposition);
         if (hNewKey && (dwDisposition == REG_OPENED_EXISTING_KEY))
         {
             RegCloseKey(hNewKey);

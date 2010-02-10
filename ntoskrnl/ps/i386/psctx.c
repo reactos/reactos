@@ -50,7 +50,7 @@ PspGetOrSetContextKernelRoutine(IN PKAPC Apc,
     PGET_SET_CTX_CONTEXT GetSetContext;
     PKEVENT Event;
     PCONTEXT Context;
-    PKTHREAD Thread;
+    PETHREAD Thread;
     KPROCESSOR_MODE Mode;
     PKTRAP_FRAME TrapFrame = NULL;
     PAGED_CODE();
@@ -63,15 +63,13 @@ PspGetOrSetContextKernelRoutine(IN PKAPC Apc,
     Thread = Apc->SystemArgument2;
     
     /* If this is a kernel-mode request, grab the saved trap frame */
-    if (Mode == KernelMode) TrapFrame = Thread->TrapFrame;
+    if (Mode == KernelMode) TrapFrame = Thread->Tcb.TrapFrame;
     
     /* If we don't have one, grab it from the stack */
     if (!TrapFrame)
     {
         /* Trap frame is right under our initial stack */
-        TrapFrame = (PKTRAP_FRAME)((ULONG_PTR)Thread->InitialStack -
-                                   ROUND_UP(sizeof(KTRAP_FRAME), KTRAP_FRAME_ALIGN) -
-                                   sizeof(FX_SAVE_AREA));
+        TrapFrame = KeGetTrapFrame(&Thread->Tcb);
     }
 
     /* Check if it's a set or get */

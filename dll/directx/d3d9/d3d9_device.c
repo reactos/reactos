@@ -26,7 +26,7 @@ LPDIRECT3DDEVICE9_INT IDirect3DDevice9ToImpl(LPDIRECT3DDEVICE9 iface)
 
 static HRESULT InvalidCall(LPDIRECT3DDEVICE9_INT This, LPSTR ErrorMsg)
 {
-    DPRINT1(ErrorMsg);
+    DPRINT1("%s",ErrorMsg);
     UNLOCK_D3DDEVICE9();
     return D3DERR_INVALIDCALL;
 }

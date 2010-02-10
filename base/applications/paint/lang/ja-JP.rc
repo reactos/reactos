@@ -201,6 +201,6 @@ BEGIN
     IDS_TOOLTIP16, "角丸四角形"
     IDS_OPENFILTER, "ビットマップ ファイル (*.bmp;*.dib)\1*.bmp;*.dib\1すべてのファイル (*.*)\1*.*\1"
     IDS_SAVEFILTER, "24 ビット ビットマップ (*.bmp;*.dib)\1*.bmp;*.dib\1"
-    IDS_FILESIZE, "%d bytes"
-    IDS_PRINTRES, "%d x %d pixels per meter"
+    IDS_FILESIZE, "%d バイト"
+    IDS_PRINTRES, "%d x %d ピクセル/メートル"
 END

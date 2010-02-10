@@ -4585,6 +4585,32 @@ typedef struct _NT_TIB {
     struct _NT_TIB *Self;
 } NT_TIB, *PNT_TIB;
 
+typedef struct _NT_TIB32 {
+	ULONG ExceptionList;
+	ULONG StackBase;
+	ULONG StackLimit;
+	ULONG SubSystemTib;
+	union {
+		ULONG FiberData;
+		ULONG Version;
+	};
+	ULONG ArbitraryUserPointer;
+	ULONG Self;
+} NT_TIB32,*PNT_TIB32;
+
+typedef struct _NT_TIB64 {
+	ULONG64 ExceptionList;
+	ULONG64 StackBase;
+	ULONG64 StackLimit;
+	ULONG64 SubSystemTib;
+	union {
+		ULONG64 FiberData;
+		ULONG Version;
+	};
+	ULONG64 ArbitraryUserPointer;
+	ULONG64 Self;
+} NT_TIB64,*PNT_TIB64;
+
 typedef enum _PROCESSINFOCLASS {
   ProcessBasicInformation,
   ProcessQuotaLimits,
@@ -5123,23 +5149,7 @@ FORCEINLINE
 ULONG
 KeGetCurrentProcessorNumber(VOID)
 {
-#if defined(__GNUC__)
-  ULONG ret;
-  __asm__ __volatile__ (
-    "movl %%fs:%c1, %0\n"
-    : "=r" (ret)
-    : "i" (FIELD_OFFSET(KPCR, Number))
-  );
-  return ret;
-#elif defined(_MSC_VER)
-#if _MSC_FULL_VER >= 13012035
-  return (ULONG)__readfsbyte(FIELD_OFFSET(KPCR, Number));
-#else
-  __asm { movzx eax, fs:[0] KPCR.Number }
-#endif
-#else
-#error Unknown compiler
-#endif
+    return (ULONG)__readfsbyte(FIELD_OFFSET(KPCR, Number));
 }
 
 NTHALAPI
@@ -5236,7 +5246,7 @@ typedef struct DECLSPEC_ALIGN(16) _CONTEXT {
     USHORT SegFs;
     USHORT SegGs;
     USHORT SegSs;
-    USHORT EFlags;
+    ULONG EFlags;
 
     /* Debug */
     ULONG64 Dr0;
@@ -8553,6 +8563,21 @@ KeRegisterBugCheckCallback(
   IN PUCHAR  Component);
 
 NTKERNELAPI
+PVOID
+NTAPI
+KeRegisterNmiCallback(
+  IN PNMI_CALLBACK CallbackRoutine,
+  IN PVOID Context
+);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+KeDeregisterNmiCallback(
+  IN PVOID Handle
+);
+
+NTKERNELAPI
 VOID
 FASTCALL
 KeReleaseInStackQueuedSpinLockFromDpcLevel(
@@ -8968,6 +8993,19 @@ MmAllocatePagesForMdl(
   IN PHYSICAL_ADDRESS  SkipBytes,
   IN SIZE_T  TotalBytes);
 
+#if (NTDDI_VERSION >= NTDDI_WS03SP1)
+NTKERNELAPI
+PMDL
+NTAPI
+MmAllocatePagesForMdlEx(
+  IN PHYSICAL_ADDRESS LowAddress,
+  IN PHYSICAL_ADDRESS HighAddress,
+  IN PHYSICAL_ADDRESS SkipBytes,
+  IN SIZE_T TotalBytes,
+  IN MEMORY_CACHING_TYPE CacheType,
+  IN ULONG Flags);
+#endif
+
 NTKERNELAPI
 VOID
 NTAPI
@@ -9351,7 +9389,7 @@ MmSecureVirtualMemory(
   IN ULONG  ProbeMode);
 
 NTKERNELAPI
-ULONG
+SIZE_T
 NTAPI
 MmSizeOfMdl(
   IN PVOID  Base,

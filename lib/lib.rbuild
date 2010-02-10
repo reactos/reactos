@@ -31,6 +31,9 @@
 	<directory name="inflib">
 		<xi:include href="inflib/inflib.rbuild" />
 	</directory>
+	<directory name="lsalib">
+		<xi:include href="lsalib/lsalib.rbuild" />
+	</directory>
 	<directory name="nls">
 		<xi:include href="nls/nls.rbuild" />
 	</directory>

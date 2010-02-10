@@ -1,8 +1,7 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
- * FILE:       drivers/filesystems/ms/rw.c
+ * FILE:       drivers/filesystems/msfs/rw.c
  * PURPOSE:    Mailslot filesystem
  * PROGRAMMER: Eric Kohl
  */
@@ -63,25 +62,33 @@ MsfsRead(PDEVICE_OBJECT DeviceObject,
                                    KernelMode,
                                    FALSE,
                                    &Fcb->TimeOut);
-    if ((NT_SUCCESS(Status)) && (Fcb->MessageCount > 0))
+    if (NT_SUCCESS(Status))
     {
-        /* copy current message into buffer */
-        Message = CONTAINING_RECORD(Fcb->MessageListHead.Flink,
-                                    MSFS_MESSAGE,
-                                    MessageListEntry);
-
-        memcpy(Buffer, &Message->Buffer, min(Message->Size,Length));
-        LengthRead = Message->Size;
-
-        KeAcquireSpinLock(&Fcb->MessageListLock, &oldIrql);
-        RemoveHeadList(&Fcb->MessageListHead);
-        KeReleaseSpinLock(&Fcb->MessageListLock, oldIrql);
-
-        ExFreePool(Message);
-        Fcb->MessageCount--;
-        if (Fcb->MessageCount == 0)
+        if (Fcb->MessageCount > 0)
         {
-            KeClearEvent(&Fcb->MessageEvent);
+            /* copy current message into buffer */
+            Message = CONTAINING_RECORD(Fcb->MessageListHead.Flink,
+                                        MSFS_MESSAGE,
+                                        MessageListEntry);
+
+            memcpy(Buffer, &Message->Buffer, min(Message->Size,Length));
+            LengthRead = Message->Size;
+
+            KeAcquireSpinLock(&Fcb->MessageListLock, &oldIrql);
+            RemoveHeadList(&Fcb->MessageListHead);
+            KeReleaseSpinLock(&Fcb->MessageListLock, oldIrql);
+
+            ExFreePool(Message);
+            Fcb->MessageCount--;
+            if (Fcb->MessageCount == 0)
+            {
+                KeClearEvent(&Fcb->MessageEvent);
+            }
+        }
+        else if (Fcb->TimeOut.QuadPart != 0LL)
+        {
+            /* No message found after waiting */
+            Status = STATUS_IO_TIMEOUT;
         }
      }
 

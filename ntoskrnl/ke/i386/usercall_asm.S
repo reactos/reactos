@@ -200,11 +200,9 @@ SetEip:
     /* Bring interrupts back */
     sti
 
-    /* Write the debug data */
-    SET_TF_DEBUG_HEADER
-
     /* Exit to user-mode */
-    jmp _KiServiceExit
+    mov ecx, esp
+    jmp @KiServiceExit@8
 
 SaveDebug:
 

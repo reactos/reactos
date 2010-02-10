@@ -1,5 +1,5 @@
 ::
-:: Call from Makefile command line within Visual Studio with the following parameters:
+:: This script is called from the Makefile command line within Visual Studio using the following parameters:
 ::
 ::		%1 - $(build)
 ::		%2 - $(target)
@@ -41,21 +41,28 @@ set "_ROSBE_FULL_PATH_=%_ROSBE_PATH_DIR%%_ROSBE_PATH_%"
 ::echo RosBE insall path = %_ROSBE_FULL_PATH_%
 
 :: Set the path which contains our build tools
-set _ROSBE_BIN_PATH=%_ROSBE_FULL_PATH_%\i386\bin
-
-:: Set the make.exe path
-set _MAKE_COMMAND=%_ROSBE_BIN_PATH%\mingw32-make.exe
-
-:: This file is located in the source root
-set _ROS_SOURCE_ROOT=%~dp0
+set _ROSBE_BIN_PATH=%_ROSBE_FULL_PATH_%i386\bin
 
 :: Add the path to the search path
 path=%path%;%_ROSBE_BIN_PATH%
 
+:: Set the make path
+set _MAKE_COMMAND=""
+if exist "%_ROSBE_BIN_PATH%\mingw32-make.exe" (
+    set _MAKE_COMMAND=mingw32-make.exe
+)
+if exist "%_ROSBE_BIN_PATH%\make.exe" (
+    set _MAKE_COMMAND=make.exe
+)
+if %_MAKE_COMMAND% == "" (
+    goto err_no_make
+)
+
+:: This file is located in the source root
+set _ROS_SOURCE_ROOT=%~dp0
+
 :: Change the current dir to the source root
 cd %_ROS_SOURCE_ROOT%
-
-
 
 :: Run the requested build task
 if "%1" == "build" (
@@ -89,6 +96,10 @@ call "%_MAKE_COMMAND%" -j 1 %2%
 
 goto :exit
 
+:err_no_make
+echo.
+echo Cannot find  a make executable
+goto :err_no_rosbe
 
 :err_no_rosbe
 echo.
@@ -103,6 +114,4 @@ echo.
 exit 2
 
 :exit
-echo.
-echo done
 echo.

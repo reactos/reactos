@@ -831,7 +831,7 @@ UINT WINAPI MsiDatabaseCommit( MSIHANDLE hdb )
             return ERROR_INVALID_HANDLE;
 
         IWineMsiRemoteDatabase_Release( remote_database );
-        WARN("MsiDatabaseCommit not allowed during a custom action!\n");
+        WARN("not allowed during a custom action!\n");
 
         return ERROR_SUCCESS;
     }

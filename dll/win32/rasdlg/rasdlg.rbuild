@@ -2,7 +2,6 @@
 	<importlibrary definition="rasdlg.spec" />
 	<include base="rasdlg">.</include>
 	<library>wine</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 	<library>uuid</library>
 	<file>rasdlg.c</file>

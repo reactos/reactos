@@ -10,6 +10,7 @@
 				<file>bushndlr.c</file>
 				<file>isabus.c</file>
 				<file>halbus.c</file>
+				<file>pcibus.c</file>
 				<file>pcidata.c</file>
 				<file>sysbus.c</file>
 			</directory>
@@ -28,7 +29,6 @@
 			<file>systimer.S</file>
 			<file>timer.c</file>
 			<file>usage.c</file>
-			<file>v86.s</file>
 		</directory>
 		<directory name="include">
 			<pch>hal.h</pch>

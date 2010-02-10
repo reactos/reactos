@@ -152,6 +152,14 @@ PFN_NUMBER MmSystemPageDirectory;
 PMMPTE MmSystemPagePtes;
 
 //
+// The system cache starts right after hyperspace. The first few pages are for
+// keeping track of the system working set list.
+//
+// This should be 0xC0C00000 -- the cache itself starts at 0xC1000000
+//
+PMMWSL MmSystemCacheWorkingSetList = MI_SYSTEM_CACHE_WS_START;
+
+//
 // Windows NT seems to choose between 7000, 11000 and 50000
 // On systems with more than 32MB, this number is then doubled, and further
 // aligned up to a PDE boundary (4MB).
@@ -223,6 +231,22 @@ PVOID MmSystemCacheStart;
 PVOID MmSystemCacheEnd;
 MMSUPPORT MmSystemCacheWs;
 
+//
+// This is where hyperspace ends (followed by the system cache working set)
+//
+PVOID MmHyperSpaceEnd;
+
+//
+// Page coloring algorithm data
+//
+ULONG MmSecondaryColors;
+ULONG MmSecondaryColorMask;
+
+//
+// Actual (registry-configurable) size of a GUI thread's stack
+//
+ULONG MmLargeStackSize;
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 //
@@ -276,6 +300,48 @@ MxGetNextPage(IN PFN_NUMBER PageCount)
     MxFreeDescriptor->BasePage += PageCount;
     MxFreeDescriptor->PageCount -= PageCount;
     return Pfn;
+}
+
+PFN_NUMBER
+NTAPI
+MiPagesInLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
+                     IN PBOOLEAN IncludeType)
+{
+    PLIST_ENTRY NextEntry;
+    PFN_NUMBER PageCount = 0;
+    PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
+    
+    //
+    // Now loop through the descriptors
+    //
+    NextEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
+    while (NextEntry != &LoaderBlock->MemoryDescriptorListHead)
+    {
+        //
+        // Grab each one, and check if it's one we should include
+        //
+        MdBlock = CONTAINING_RECORD(NextEntry,
+                                    MEMORY_ALLOCATION_DESCRIPTOR,
+                                    ListEntry);
+        if ((MdBlock->MemoryType < LoaderMaximum) &&
+            (IncludeType[MdBlock->MemoryType]))
+        {
+            //
+            // Add this to our running total
+            //
+            PageCount += MdBlock->PageCount;
+        }
+        
+        //
+        // Try the next descriptor
+        //
+        NextEntry = MdBlock->ListEntry.Flink;
+    }
+    
+    //
+    // Return the total
+    //
+    return PageCount;
 }
 
 PPHYSICAL_MEMORY_DESCRIPTOR
@@ -606,17 +672,26 @@ MmArmInitSystem(IN ULONG Phase,
     PLIST_ENTRY NextEntry;
     PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
     ULONG FreePages = 0;
-    PFN_NUMBER PageFrameIndex;
+    PFN_NUMBER PageFrameIndex, PoolPages;
     PMMPTE StartPde, EndPde, PointerPte, LastPte;
     MMPTE TempPde = HyperTemplatePte, TempPte = HyperTemplatePte;
     PVOID NonPagedPoolExpansionVa;
-    ULONG OldCount;
+    ULONG OldCount, i, L2Associativity;
     BOOLEAN IncludeType[LoaderMaximum];
-    ULONG i;
     PVOID Bitmap;
     PPHYSICAL_MEMORY_RUN Run;
     PFN_NUMBER FreePage, FreePageCount, PagesLeft, BasePage, PageCount;
     
+    //
+    // Instantiate memory that we don't consider RAM/usable
+    // We use the same exclusions that Windows does, in order to try to be
+    // compatible with WinLDR-style booting
+    //
+    for (i = 0; i < LoaderMaximum; i++) IncludeType[i] = TRUE;
+    IncludeType[LoaderBad] = FALSE;
+    IncludeType[LoaderFirmwarePermanent] = FALSE;
+    IncludeType[LoaderSpecialMemory] = FALSE;
+    IncludeType[LoaderBBTMemory] = FALSE;
     if (Phase == 0)
     {
         //
@@ -698,7 +773,61 @@ MmArmInitSystem(IN ULONG Phase,
         //
         MiSystemViewStart = (PVOID)((ULONG_PTR)MmSessionBase -
                                     MmSystemViewSize);
+                                    
+        //
+        // Count physical pages on the system
+        //
+        PageCount = MiPagesInLoaderBlock(LoaderBlock, IncludeType);
         
+        //
+        // Check if this is a machine with less than 19MB of RAM
+        //
+        if (PageCount < MI_MIN_PAGES_FOR_SYSPTE_TUNING)
+        {
+            //
+            // Use the very minimum of system PTEs
+            //
+            MmNumberOfSystemPtes = 7000;
+        }
+        else
+        {
+            //
+            // Use the default, but check if we have more than 32MB of RAM
+            //
+            MmNumberOfSystemPtes = 11000;
+            if (PageCount > MI_MIN_PAGES_FOR_SYSPTE_BOOST)
+            {
+                //
+                // Double the amount of system PTEs
+                //
+                MmNumberOfSystemPtes <<= 1;
+            }
+        }
+        
+        DPRINT("System PTE count has been tuned to %d (%d bytes)\n",
+               MmNumberOfSystemPtes, MmNumberOfSystemPtes * PAGE_SIZE);
+               
+        //
+        //
+        // Start of Architecture Specific Initialization Code
+        //
+        //
+        
+        //
+        // The large kernel stack is cutomizable, but use default value for now
+        //
+        MmLargeStackSize = KERNEL_LARGE_STACK_SIZE;
+        
+        //
+        // Setup template
+        //
+        HyperTemplatePte.u.Long = 0;
+        HyperTemplatePte.u.Hard.Valid = 1;
+        HyperTemplatePte.u.Hard.Write = 1;
+        HyperTemplatePte.u.Hard.Dirty = 1;
+        HyperTemplatePte.u.Hard.Accessed = 1;
+        if (Ke386GlobalPagesEnabled) HyperTemplatePte.u.Hard.Global = 1;
+
         //
         // Set CR3 for the system process
         //
@@ -784,9 +913,13 @@ MmArmInitSystem(IN ULONG Phase,
                         //
                         // For now, it is
                         //
-                        FreePages = MdBlock->PageCount;
                         MxFreeDescriptor = MdBlock;
                     }
+                    
+                    //
+                    // More free pages
+                    //
+                    FreePages += MdBlock->PageCount;
                 }
             }
             
@@ -803,34 +936,6 @@ MmArmInitSystem(IN ULONG Phase,
         MxOldFreeDescriptor = *MxFreeDescriptor;
         
         //
-        // Check if this is a machine with less than 19MB of RAM
-        //
-        if (MmNumberOfPhysicalPages < MI_MIN_PAGES_FOR_SYSPTE_TUNING)
-        {
-            //
-            // Use the very minimum of system PTEs
-            //
-            MmNumberOfSystemPtes = 7000;
-        }
-        else
-        {
-            //
-            // Use the default, but check if we have more than 32MB of RAM
-            //
-            MmNumberOfSystemPtes = 11000;
-            if (MmNumberOfPhysicalPages > MI_MIN_PAGES_FOR_SYSPTE_BOOST)
-            {
-                //
-                // Double the amount of system PTEs
-                //
-                MmNumberOfSystemPtes <<= 1;
-            }
-        }
-        
-        DPRINT("System PTE count has been tuned to %d (%d bytes)\n",
-               MmNumberOfSystemPtes, MmNumberOfSystemPtes * PAGE_SIZE);
-        
-        //
         // Check if this is a machine with less than 256MB of RAM, and no overide
         //
         if ((MmNumberOfPhysicalPages <= MI_MIN_PAGES_FOR_NONPAGED_POOL_TUNING) &&
@@ -841,6 +946,11 @@ MmArmInitSystem(IN ULONG Phase,
             //
             MmSizeOfNonPagedPoolInBytes = 2 * 1024 * 1024;
         }
+        
+        //
+        // Hyperspace ends here
+        //
+        MmHyperSpaceEnd = (PVOID)((ULONG_PTR)MmSystemCacheWorkingSetList - 1);
         
         //
         // Check if the user gave a ridicuously large nonpaged pool RAM size
@@ -900,26 +1010,86 @@ MmArmInitSystem(IN ULONG Phase,
         if (!MmMaximumNonPagedPoolInBytes)
         {
             //
-            // Start with the default (1MB) and add 400 KB for each MB above 4
+            // Start with the default (1MB)
             //
             MmMaximumNonPagedPoolInBytes = MmDefaultMaximumNonPagedPool;
-            MmMaximumNonPagedPoolInBytes += (MmNumberOfPhysicalPages - 1024) /
-                                             256 * MmMaxAdditionNonPagedPoolPerMb;
+            
+            //
+            // Add space for PFN database
+            //
+            MmMaximumNonPagedPoolInBytes += (ULONG)
+                PAGE_ALIGN((MmHighestPhysicalPage +  1) * sizeof(MMPFN));
+            
+            //
+            // Add 400KB for each MB above 4
+            //
+            MmMaximumNonPagedPoolInBytes += (FreePages - 1024) / 256 *
+                                            MmMaxAdditionNonPagedPoolPerMb;
         }
+        
+        //
+        // Make sure there's at least 16 pages + the PFN available for expansion
+        //
+        PoolPages = MmSizeOfNonPagedPoolInBytes + (PAGE_SIZE * 16) +
+                    ((ULONG)PAGE_ALIGN(MmHighestPhysicalPage + 1) *
+                    sizeof(MMPFN));
+        if (MmMaximumNonPagedPoolInBytes < PoolPages)
+        {
+            //
+            // Set it to the minimum value for the maximum (yuck!)
+            //
+            MmMaximumNonPagedPoolInBytes = PoolPages;
+        }
+        
+        //
+        // Systems with 2GB of kernel address space get double the size
+        //
+        PoolPages = MI_MAX_NONPAGED_POOL_SIZE * 2;
         
         //
         // Don't let the maximum go too high
         //
-        if (MmMaximumNonPagedPoolInBytes > MI_MAX_NONPAGED_POOL_SIZE)
+        if (MmMaximumNonPagedPoolInBytes > PoolPages)
         {
             //
             // Set it to the upper limit
             //
-            MmMaximumNonPagedPoolInBytes = MI_MAX_NONPAGED_POOL_SIZE;
+            MmMaximumNonPagedPoolInBytes = PoolPages;
         }
         
         //
-        // Calculate the number of bytes, and then convert to pages
+        // Check if this is a system with > 128MB of non paged pool
+        //
+        if (MmMaximumNonPagedPoolInBytes > MI_MAX_NONPAGED_POOL_SIZE)
+        {
+            //
+            // FIXME: Unsure about additional checks needed
+            //
+            DPRINT1("Untested path\n");
+        }
+        
+        //
+        // Get L2 cache information
+        //
+        L2Associativity = KeGetPcr()->SecondLevelCacheAssociativity;
+        MmSecondaryColors = KeGetPcr()->SecondLevelCacheSize;
+        if (L2Associativity) MmSecondaryColors /= L2Associativity;
+        
+        //
+        // Compute final color mask and count
+        //
+        MmSecondaryColors >>= PAGE_SHIFT;
+        if (!MmSecondaryColors) MmSecondaryColors = 1;
+        MmSecondaryColorMask = MmSecondaryColors - 1;
+        
+        //
+        // Store it
+        //
+        KeGetCurrentPrcb()->SecondaryColorMask = MmSecondaryColorMask;
+        
+        //
+        // Calculate the number of bytes for the PFN database
+        // and then convert to pages
         //
         MxPfnAllocation = (MmHighestPhysicalPage + 1) * sizeof(MMPFN);
         MxPfnAllocation >>= PAGE_SHIFT;
@@ -973,6 +1143,19 @@ MmArmInitSystem(IN ULONG Phase,
                                     PAGE_SHIFT;
             MmNumberOfSystemPtes--;
             ASSERT(MmNumberOfSystemPtes > 1000);
+        }
+        
+        //
+        // Check if we are in a situation where the size of the paged pool
+        // is so large that it overflows into nonpaged pool
+        //
+        if (MmSizeOfPagedPoolInBytes >
+            ((ULONG_PTR)MmNonPagedSystemStart - (ULONG_PTR)MmPagedPoolStart))
+        {
+            //
+            // We need some recalculations here
+            //
+            DPRINT1("Paged pool is too big!\n");
         }
         
         //
@@ -1295,18 +1478,7 @@ MmArmInitSystem(IN ULONG Phase,
         MiSyncARM3WithROS(MmNonPagedSystemStart, (PVOID)((ULONG_PTR)MmNonPagedPoolEnd - 1));
         MiSyncARM3WithROS(MmPfnDatabase, (PVOID)((ULONG_PTR)MmNonPagedPoolStart + MmSizeOfNonPagedPoolInBytes - 1));
         MiSyncARM3WithROS((PVOID)HYPER_SPACE, (PVOID)(HYPER_SPACE + PAGE_SIZE - 1));
-
-        //
-        // Instantiate memory that we don't consider RAM/usable
-        // We use the same exclusions that Windows does, in order to try to be
-        // compatible with WinLDR-style booting
-        //
-        for (i = 0; i < LoaderMaximum; i++) IncludeType[i] = TRUE;
-        IncludeType[LoaderBad] = FALSE;
-        IncludeType[LoaderFirmwarePermanent] = FALSE;
-        IncludeType[LoaderSpecialMemory] = FALSE;
-        IncludeType[LoaderBBTMemory] = FALSE;
-        
+    
         //
         // Build the physical memory block
         //

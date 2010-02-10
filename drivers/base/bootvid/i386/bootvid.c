@@ -357,7 +357,7 @@ VidInitialize(IN BOOLEAN SetMode)
 {
     ULONG Context = 0;
     PHYSICAL_ADDRESS TranslatedAddress;
-    PHYSICAL_ADDRESS NullAddress = {{0, 0}};
+    PHYSICAL_ADDRESS NullAddress = {{0, 0}}, VgaAddress;
     ULONG AddressSpace = 1;
     BOOLEAN Result;
     ULONG_PTR Base;
@@ -373,12 +373,57 @@ VidInitialize(IN BOOLEAN SetMode)
                                           TRUE);
     if (!Result) return FALSE;
 
-    /* See if this is I/O Space, which we need to map */
-TryAgain:
+    /* Loop trying to find posssible VGA base addresses */
+    while (TRUE)
+    {
+        /* See if this is I/O Space, which we need to map */
+        if (!AddressSpace)
+        {
+            /* Map it */
+            Base = (ULONG_PTR)MmMapIoSpace(TranslatedAddress, 0x400, MmNonCached);
+        }
+        else
+        {
+            /* The base is the translated address, no need to map I/O space */
+            Base = TranslatedAddress.LowPart;
+        }
+
+        /* Try to see if this is VGA */
+        VgaRegisterBase = Base;
+        if (VgaIsPresent())
+        {
+            /* Translate the VGA Memory Address */
+            VgaAddress.LowPart = 0xA0000;
+            AddressSpace = 0;
+            Result = HalFindBusAddressTranslation(VgaAddress,
+                                                  &AddressSpace,
+                                                  &TranslatedAddress,
+                                                  &Context,
+                                                  FALSE);
+            if (Result) break;
+            
+            /* Try to see if there's any other address */
+            Result = HalFindBusAddressTranslation(NullAddress,
+                                                  &AddressSpace,
+                                                  &TranslatedAddress,
+                                                  &Context,
+                                                  TRUE);
+            if (!Result) return FALSE;
+        }
+        else
+        {
+            /* It's not, so unmap the I/O space if we mapped it */
+            if (!AddressSpace) MmUnmapIoSpace((PVOID)VgaRegisterBase, 0x400);
+        }
+    }
+
+    /* Success! See if this is I/O Space, which we need to map */
     if (!AddressSpace)
     {
         /* Map it */
-        Base = (ULONG_PTR)MmMapIoSpace(TranslatedAddress, 0x400, MmNonCached);
+        Base = (ULONG_PTR)MmMapIoSpace(TranslatedAddress,
+                                       0x20000,
+                                       MmNonCached);
     }
     else
     {
@@ -386,67 +431,23 @@ TryAgain:
         Base = TranslatedAddress.LowPart;
     }
 
-    /* Set the VGA Register base and now check if we have a VGA device */
-    VgaRegisterBase = Base;
-    if (VgaIsPresent())
+    /* Set the VGA Memory Base */
+    VgaBase = Base;
+
+    /* Now check if we have to set the mode */
+    if (SetMode)
     {
-        /* Translate the VGA Memory Address */
-        NullAddress.LowPart = 0xA0000;
-        AddressSpace = 0;
-        Result = HalFindBusAddressTranslation(NullAddress,
-                                              &AddressSpace,
-                                              &TranslatedAddress,
-                                              &Context,
-                                              FALSE);
-        if (Result)
-        {
-            /* Success! See if this is I/O Space, which we need to map */
-            if (!AddressSpace)
-            {
-                /* Map it */
-                Base = (ULONG_PTR)MmMapIoSpace(TranslatedAddress,
-                                               0x20000,
-                                               MmNonCached);
-            }
-            else
-            {
-                /* The base is the translated address, no need to map I/O space */
-                Base = TranslatedAddress.LowPart;
-            }
+        /* Reset the display */
+        HalResetDisplay();
+        curr_x = 0;
+        curr_y = 0;
 
-            /* Set the VGA Memory Base */
-            VgaBase = Base;
-
-            /* Now check if we have to set the mode */
-            if (SetMode)
-            {
-                /* Reset the display */
-                HalResetDisplay();
-                curr_x = 0;
-                curr_y = 0;
-
-                /* Initialize it */
-                VgaInterpretCmdStream(AT_Initialization);
-                return TRUE;
-            }
-        }
+        /* Initialize it */
+        VgaInterpretCmdStream(AT_Initialization);
     }
-    else
-    {
-        /* It's not, so unmap the I/O space if we mapped it */
-        if (!AddressSpace) MmUnmapIoSpace((PVOID)VgaRegisterBase, 0x400);
-    }
-
-    /* If we got here, then we failed...let's try again */
-    Result = HalFindBusAddressTranslation(NullAddress,
-                                          &AddressSpace,
-                                          &TranslatedAddress,
-                                          &Context,
-                                          TRUE);
-    if (Result) goto TryAgain;
-
-    /* If we got here, then we failed even past our re-try... */
-    return FALSE;
+    
+    /* VGA is ready */
+    return TRUE;
 }
 
 /*

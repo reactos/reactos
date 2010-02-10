@@ -1,0 +1,14 @@
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_USAGE, "使用法: shutdown [-?] [-l | -s | -r] [-f]\n\n\
+  引数なしもしくは -?\tこのメッセージを表\示します\n\
+  -l\t\t\tログオフ\n\
+  -s\t\t\tコンピュータをシャットダウンします\n\
+  -r\t\t\tコンピュータをシャットダウンして再起動します\n\
+  -f\t\t\t実行中のアプリケーションを警告なしに閉じます\n\
+    \t\t\t他のパラメータを指定しない場合、ログオフn\n\
+    \t\t\tします"
+END

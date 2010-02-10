@@ -27,10 +27,10 @@ Author:
 // KPCR Access for non-IA64 builds
 //
 #define K0IPCR                  ((ULONG_PTR)(KIP0PCRADDRESS))
-#define PCR                     ((volatile KPCR * const)K0IPCR)
+#define PCR                     ((KPCR * const)K0IPCR)
 #if defined(CONFIG_SMP) || defined(NT_BUILD)
 #undef  KeGetPcr
-#define KeGetPcr()              ((volatile KPCR * const)__readfsdword(0x1C))
+#define KeGetPcr()              ((KPCR * const)__readfsdword(FIELD_OFFSET(KPCR, Self)))
 #endif
 
 //
@@ -106,6 +106,17 @@ Author:
 #define EFLAG_ZERO              0x4000
 
 //
+// Legacy floating status word bit masks.
+//
+#define FSW_INVALID_OPERATION   0x1
+#define FSW_DENORMAL            0x2
+#define FSW_ZERO_DIVIDE         0x4
+#define FSW_OVERFLOW            0x8
+#define FSW_UNDERFLOW           0x10
+#define FSW_PRECISION           0x20
+#define FSW_STACK_FAULT         0x40
+
+//
 // IPI Types
 //
 #define IPI_APC                 1
@@ -129,7 +140,11 @@ Author:
 //
 // IOPM Definitions
 //
+#define IOPM_COUNT              1
+#define IOPM_SIZE               8192
+#define IOPM_FULL_SIZE          8196
 #define IO_ACCESS_MAP_NONE      0
+#define IOPM_DIRECTION_MAP_SIZE 32
 #define IOPM_OFFSET             FIELD_OFFSET(KTSS, IoMaps[0].IoMap)
 #define KiComputeIopmOffset(MapNumber)              \
     (MapNumber == IO_ACCESS_MAP_NONE) ?             \
@@ -690,8 +705,8 @@ typedef struct _KIPCR
     ULONG StallScaleFactor;
     UCHAR SpareUnused;
     UCHAR Number;
-    UCHAR Reserved;
-    UCHAR L2CacheAssociativity;
+    UCHAR Spare0;
+    UCHAR SecondLevelCacheAssociativity;
     ULONG VdmAlert;
     ULONG KernelReserved[14];
     ULONG SecondLevelCacheSize;
@@ -708,8 +723,8 @@ typedef struct _KIPCR
 //
 typedef struct _KiIoAccessMap
 {
-    UCHAR DirectionMap[32];
-    UCHAR IoMap[8196];
+    UCHAR DirectionMap[IOPM_DIRECTION_MAP_SIZE];
+    UCHAR IoMap[IOPM_FULL_SIZE];
 } KIIO_ACCESS_MAP;
 
 typedef struct _KTSS
@@ -747,8 +762,8 @@ typedef struct _KTSS
     USHORT Reserved8;
     USHORT Flags;
     USHORT IoMapBase;
-    KIIO_ACCESS_MAP IoMaps[1];
-    UCHAR IntDirectionMap[32];
+    KIIO_ACCESS_MAP IoMaps[IOPM_COUNT];
+    UCHAR IntDirectionMap[IOPM_DIRECTION_MAP_SIZE];
 } KTSS, *PKTSS;
 
 //

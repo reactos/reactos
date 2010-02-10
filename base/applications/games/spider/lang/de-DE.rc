@@ -54,7 +54,7 @@ BEGIN
     IDS_SPI_NAME    "Spider"
     IDS_SPI_ABOUT   "Spider Solitaire von Gregor Schneider\n\nCardLib Version 1.0"
     IDS_SPI_QUIT    "Laufendes Spiel beenden?"
-    IDS_SPI_WIN     "Gratulation, Sie haben gewonnen!"
+    IDS_SPI_WIN     "Glückwunsch, Sie haben gewonnen!"
     IDS_SPI_DEAL    "Neu geben?"
 END
 

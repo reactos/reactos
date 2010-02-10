@@ -1,4 +1,4 @@
-; UTF-8
+Ôªø; UTF-8
 
 [Section]
 Name = PuTTY
@@ -11,9 +11,11 @@ URLSite = http://www.chiark.greenend.org.uk/~sgtatham/putty/
 URLDownload = http://the.earth.li/~sgtatham/putty/latest/x86/putty-0.60-installer.exe
 CDPath = none
 
-
 [Section.0407]
-Description = Ein freier SSH-, Telnet-, rlogin- und TCP-Client
+Description = Ein freier SSH-, Telnet-, rlogin- und TCP-Client.
+
+[Section.040a]
+Description = Un ciente SSH, Telnet, rlogin y TCP gratuito.
 
 [Section.0415]
-Description = Darmowy klient obs≥ugujπcy protoko≥y SSH, Telnet, rlogin oraz bezpoúrednie TCP.
+Description = Darmowy klient obs≈ÇugujƒÖcy protoko≈Çy SSH, Telnet, rlogin oraz bezpo≈õrednie TCP.

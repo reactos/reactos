@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS system libraries
  * PURPOSE:         Handle table
  * FILE:            lib/rtl/handle.c
- * PROGRAMER:       Eric Kohl <ekohl@rz-online.de>
+ * PROGRAMER:       Eric Kohl
  */
 
 /* INCLUDES *****************************************************************/

@@ -1,4 +1,4 @@
-; UTF-8
+﻿; UTF-8
 
 [Section]
 Name = Visual Basic 6 Runtime
@@ -7,14 +7,18 @@ Licence = Unknown
 Description = Visual Basic 6 Runtime.
 Size = 1.0MB
 Category = 14
-URLSite = http://support.microsoft.com/kb/192461
+URLSite = http://support.microsoft.com/kb/192461/
 URLDownload = http://download.microsoft.com/download/vb60pro/install/6/win98me/en-us/vbrun60.exe
 CDPath = none
 
 [Section.0407]
 Licence = Unbekannt
-Description = Visual Basic 6 Laufzeitsystem
+Description = Visual Basic 6 Laufzeitsystem.
+
+[Section.040a]
+Licence = Desconocida
+Description = Librerias Visual Basic 6.
 
 [Section.0415]
 Licence = Nieznana
-Description = Biblioteki uruchomieniowe Visual Basic 6
+Description = Biblioteki uruchomieniowe Visual Basic 6.

@@ -50,7 +50,7 @@ void MakePath(TCHAR *szDest, UINT nDestLen, const TCHAR *szExt)
     lstrcpy(ptr + 1, szExt);
 }
 
-BOOL CALLBACK DifficultyDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK DifficultyDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
@@ -154,9 +154,6 @@ int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE hPrev, LPTSTR szCmdLine, int iCm
             DispatchMessage(&msg);
         }
     }
-
-    try { throw 0; } catch (int i) { } /* HACK */
-
     return msg.wParam;
 }
 
@@ -239,7 +236,7 @@ CardImageWndProc(HWND hwnd,
 }
 
 
-BOOL CALLBACK CardBackDlgProc(HWND hDlg,
+INT_PTR CALLBACK CardBackDlgProc(HWND hDlg,
                               UINT uMsg,
                               WPARAM wParam,
                               LPARAM lParam)

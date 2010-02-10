@@ -27,13 +27,24 @@
 		<file>rtlswap.s</file>
 		<file>thread.c</file>
 	</directory>
-   	</if>
+	</if>
 	<if property="ARCH" value="arm">
 		<directory name="arm">
 			<file>debug_asm.S</file>
 		</directory>
-        <file>mem.c</file>
-        <file>memgen.c</file>
+		<file>mem.c</file>
+		<file>memgen.c</file>
+	</if>
+	<if property="ARCH" value="amd64">
+		<directory name="amd64">
+			<file>debug_asm.S</file>
+			<file>except_asm.S</file>
+			<file>slist.S</file>
+			<file>unwind.c</file>
+			<file>stubs.c</file>
+		</directory>
+		<file>mem.c</file>
+		<file>memgen.c</file>
 	</if>
 	<directory name="austin">
 		<file>avl.c</file>
@@ -96,9 +107,5 @@
 	<file>version.c</file>
 	<file>wait.c</file>
 	<file>workitem.c</file>
-	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38269
 	<pch>rtl.h</pch>
-	-->
-	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
-	<compilerflag compilerset="gcc">-fno-unit-at-a-time</compilerflag>
 </module>

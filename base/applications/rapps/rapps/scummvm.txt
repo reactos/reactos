@@ -1,4 +1,4 @@
-; UTF-8
+ï»¿; UTF-8
 
 [Section]
 Name = ScummVM
@@ -11,9 +11,11 @@ URLSite = http://scummvm.org/
 URLDownload = http://dfn.dl.sourceforge.net/project/scummvm/scummvm/1.0.0/scummvm-1.0.0-win32.exe
 CDPath = none
 
-
 [Section.0407]
-Description = Sam and Max, Day of the Tentacle usw in ReactOS
+Description = Sam and Max, Day of the Tentacle usw in ReactOS.
+
+[Section.040a]
+Description = Sam and Max, Day of the Tentacle en ReactOS.
 
 [Section.0415]
-Description = Program pozwalaj¹cy uruchomiæ stare gry przygodowe (Sam and Max, Day of the Tentacle, Monkey Island) w ReactOS
+Description = Program pozwalajÄ…cy uruchomiÄ‡ stare gry przygodowe (Sam and Max, Day of the Tentacle, Monkey Island) w ReactOS.

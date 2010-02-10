@@ -1,9 +1,10 @@
 /*
  * PROJECT:         ReactOS Kernel
- * LICENSE:         GPL - See COPYING in the top level directory
+ * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            ntoskrnl/ke/except.c
  * PURPOSE:         Platform independent exception handling
- * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ * PROGRAMMERS:     ReactOS Portable Systems Group
+ *                  Alex Ionescu (alex.ionescu@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
@@ -162,6 +163,83 @@ KiRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
 
     /* We are done */
     return STATUS_SUCCESS;
+}
+
+/* SYSTEM CALLS ***************************************************************/
+
+NTSTATUS
+NTAPI
+NtRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
+                 IN PCONTEXT Context,
+                 IN BOOLEAN FirstChance)
+{
+    NTSTATUS Status;
+    PKTHREAD Thread;
+    PKTRAP_FRAME TrapFrame;
+
+    /* Get trap frame and link previous one*/
+    Thread = KeGetCurrentThread();
+    TrapFrame = Thread->TrapFrame;
+    Thread->TrapFrame = KiGetLinkedTrapFrame(TrapFrame);
+    
+    /* Set exception list */
+#ifdef _M_IX86
+    KeGetPcr()->Tib.ExceptionList = TrapFrame->ExceptionList;
+#endif
+    
+    /* Raise the exception */
+    Status = KiRaiseException(ExceptionRecord,
+                              Context,
+                              NULL,
+                              TrapFrame,
+                              FirstChance);
+    if (NT_SUCCESS(Status))
+    {
+        /* It was handled, so exit restoring all state */
+        KiServiceExit2(TrapFrame);
+    }
+    else
+    {
+        /* Exit with error */
+        KiServiceExit(TrapFrame, Status);
+    }
+    
+    /* We don't actually make it here */
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+NtContinue(IN PCONTEXT Context,
+           IN BOOLEAN TestAlert)
+{
+    PKTHREAD Thread;
+    NTSTATUS Status;
+    PKTRAP_FRAME TrapFrame;
+    
+    /* Get trap frame and link previous one*/
+    Thread = KeGetCurrentThread();
+    TrapFrame = Thread->TrapFrame;
+    Thread->TrapFrame = KiGetLinkedTrapFrame(TrapFrame);
+    
+    /* Continue from this point on */
+    Status = KiContinue(Context, NULL, TrapFrame);
+    if (NT_SUCCESS(Status))
+    {
+        /* Check if alert was requested */
+        if (TestAlert) KeTestAlertThread(Thread->PreviousMode);
+        
+        /* Exit to new trap frame */
+        KiServiceExit2(TrapFrame);
+    }
+    else
+    {
+        /* Exit with an error */
+        KiServiceExit(TrapFrame, Status);
+    }
+    
+    /* We don't actually make it here */
+    return Status;
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-; UTF-8
+﻿; UTF-8
 
 [Section]
 Name = LGeneral
@@ -14,5 +14,8 @@ CDPath = none
 [Section.0407]
 Description = Panzer-General-Klon verwendet SDL Bibliotheken.
 
+[Section.040a]
+Description = Clon de Panzer General usando las librerias SDL.
+
 [Section.0415]
-Description = Klon gry Panzer General napisany przy u�yciu biblioteki SDL.
+Description = Klon gry Panzer General napisany przy użyciu biblioteki SDL.

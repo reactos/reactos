@@ -2628,7 +2628,14 @@ HKEY WINAPI SetupDiCreateDeviceInterfaceRegKeyW(
         HINF InfHandle,
         PCWSTR InfSectionName)
 {
+    HKEY hKey, hDevKey;
+    LPWSTR SymbolicLink;
+    DWORD Length, Index;
+    LONG rc;
+    WCHAR bracedGuidString[39];
+    struct DeviceInterface *DevItf;
     struct DeviceInfoSet *set = (struct DeviceInfoSet *)DeviceInfoSet;
+
     TRACE("%p %p %d %08x %p %p\n", DeviceInfoSet, DeviceInterfaceData, Reserved,
             samDesired, InfHandle, InfSectionName);
 
@@ -2650,11 +2657,79 @@ HKEY WINAPI SetupDiCreateDeviceInterfaceRegKeyW(
         SetLastError(ERROR_INVALID_PARAMETER);
         return INVALID_HANDLE_VALUE;
     }
-    
-    FIXME("%p %p %d %08x %p %p\n", DeviceInfoSet, DeviceInterfaceData, Reserved,
-            samDesired, InfHandle, InfSectionName);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return INVALID_HANDLE_VALUE;
+
+    hKey = SetupDiOpenClassRegKeyExW(&DeviceInterfaceData->InterfaceClassGuid, samDesired, DIOCR_INTERFACE, NULL, NULL);
+    if (hKey == INVALID_HANDLE_VALUE)
+    {
+        hKey = SetupDiOpenClassRegKeyExW(NULL, samDesired, DIOCR_INTERFACE, NULL, NULL);
+        if (hKey == INVALID_HANDLE_VALUE)
+        {
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return INVALID_HANDLE_VALUE;
+        }
+        SETUPDI_GuidToString(&DeviceInterfaceData->InterfaceClassGuid, bracedGuidString);
+
+        if (RegCreateKeyExW(hKey, bracedGuidString, 0, NULL, 0, samDesired, NULL, &hDevKey, NULL) != ERROR_SUCCESS)
+        {
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return INVALID_HANDLE_VALUE;
+        }
+        RegCloseKey(hKey);
+        hKey = hDevKey;
+    }
+
+    DevItf = (struct DeviceInterface *)DeviceInterfaceData->Reserved;
+
+    Length = (wcslen(DevItf->SymbolicLink)+1) * sizeof(WCHAR);
+    SymbolicLink = HeapAlloc(GetProcessHeap(), 0, Length);
+    if (!SymbolicLink)
+    {
+        RegCloseKey(hKey);
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return INVALID_HANDLE_VALUE;
+    }
+
+    wcscpy(SymbolicLink, DevItf->SymbolicLink);
+
+    Index = 0;
+    while(SymbolicLink[Index])
+    {
+        if (SymbolicLink[Index] == L'\\')
+        {
+            SymbolicLink[Index] = L'#';
+        }
+        Index++;
+    }
+
+    rc = RegCreateKeyExW(hKey, SymbolicLink, 0, NULL, 0, samDesired, NULL, &hDevKey, NULL);
+
+    RegCloseKey(hKey);
+    HeapFree(GetProcessHeap(), 0, SymbolicLink);
+
+    if (rc == ERROR_SUCCESS)
+    {
+        if (InfHandle && InfSectionName)
+        {
+            if (!SetupInstallFromInfSection(NULL /*FIXME */,
+                                            InfHandle,
+                                            InfSectionName,
+                                            SPINST_INIFILES | SPINST_REGISTRY | SPINST_INI2REG | SPINST_FILES | SPINST_BITREG | SPINST_REGSVR | SPINST_UNREGSVR | SPINST_PROFILEITEMS | SPINST_COPYINF,
+                                            hDevKey,
+                                            NULL,
+                                            0,
+                                            set->SelectedDevice->InstallParams.InstallMsgHandler,
+                                            set->SelectedDevice->InstallParams.InstallMsgHandlerContext,
+                                            INVALID_HANDLE_VALUE,
+                                            NULL))
+            {
+                RegCloseKey(hDevKey);
+                return INVALID_HANDLE_VALUE;
+            }
+        }
+    }
+
+    SetLastError(rc);
+    return hDevKey;
 }
 
 /***********************************************************************
@@ -3611,6 +3686,7 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
             key = INVALID_HANDLE_VALUE;
         }
     }
+
     return key;
 }
 

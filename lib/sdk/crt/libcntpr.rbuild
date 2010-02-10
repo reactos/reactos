@@ -83,6 +83,14 @@
 		<file>lfind.c</file>
 	</directory>
 
+	<directory name="setjmp">
+		<if property="ARCH" value="i386">
+			<directory name="i386">
+				<file>setjmp.s</file>
+			</directory>
+		</if>
+	</directory>
+
 	<directory name="stdlib">
 		<file>qsort.c</file>
 	</directory>

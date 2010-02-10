@@ -568,11 +568,11 @@ InterlockedAdd64(
 #ifndef _SLIST_HEADER_
 #define _SLIST_HEADER_
 
-#define SLIST_ENTRY SINGLE_LIST_ENTRY
-#define _SLIST_ENTRY _SINGLE_LIST_ENTRY
-#define PSLIST_ENTRY PSINGLE_LIST_ENTRY
-
 #if defined(_WIN64)
+typedef struct DECLSPEC_ALIGN(16) _SLIST_ENTRY *PSLIST_ENTRY;
+typedef struct DECLSPEC_ALIGN(16) _SLIST_ENTRY {
+	PSLIST_ENTRY Next;
+} SLIST_ENTRY;
 typedef union DECLSPEC_ALIGN(16) _SLIST_HEADER {
     struct {
         ULONGLONG Alignment;
@@ -597,6 +597,9 @@ typedef union DECLSPEC_ALIGN(16) _SLIST_HEADER {
     } Header16;
 } SLIST_HEADER, *PSLIST_HEADER;
 #else
+#define SLIST_ENTRY SINGLE_LIST_ENTRY
+#define _SLIST_ENTRY _SINGLE_LIST_ENTRY
+#define PSLIST_ENTRY PSINGLE_LIST_ENTRY
 typedef union _SLIST_HEADER {
     ULONGLONG Alignment;
     struct {

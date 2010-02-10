@@ -63,11 +63,11 @@ IntGdiGetLanguageID(VOID)
 /*
  * @unimplemented
  */
-DWORD APIENTRY
+DWORD_PTR APIENTRY
 NtUserGetThreadState(
    DWORD Routine)
 {
-   DECLARE_RETURN(DWORD);
+   DWORD_PTR ret = 0;
 
    DPRINT("Enter NtUserGetThreadState\n");
    if (Routine != THREADSTATE_GETTHREADINFO)
@@ -83,51 +83,56 @@ NtUserGetThreadState(
    {
       case THREADSTATE_GETTHREADINFO:
          GetW32ThreadInfo();
-         RETURN(0);
-
+         break;
       case THREADSTATE_FOCUSWINDOW:
-         RETURN( (DWORD)IntGetThreadFocusWindow());
+         ret = (DWORD_PTR)IntGetThreadFocusWindow();
+         break;
       case THREADSTATE_CAPTUREWINDOW:
          /* FIXME should use UserEnterShared */
-         RETURN( (DWORD)IntGetCapture());
+         ret = (DWORD_PTR)IntGetCapture();
+         break;
       case THREADSTATE_PROGMANWINDOW:
-         RETURN( (DWORD)GetW32ThreadInfo()->pDeskInfo->hProgmanWindow);
+         ret = (DWORD_PTR)GetW32ThreadInfo()->pDeskInfo->hProgmanWindow;
+         break;
       case THREADSTATE_TASKMANWINDOW:
-         RETURN( (DWORD)GetW32ThreadInfo()->pDeskInfo->hTaskManWindow);
+         ret = (DWORD_PTR)GetW32ThreadInfo()->pDeskInfo->hTaskManWindow;
+         break;
       case THREADSTATE_ACTIVEWINDOW:
-         RETURN ( (DWORD)UserGetActiveWindow());
+         ret = (DWORD_PTR)UserGetActiveWindow();
+         break;
       case THREADSTATE_INSENDMESSAGE:
          {
-           DWORD Ret = ISMEX_NOSEND;
            PUSER_MESSAGE_QUEUE MessageQueue = 
                 ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->MessageQueue;
            DPRINT1("THREADSTATE_INSENDMESSAGE\n");
 
+           ret = ISMEX_NOSEND;
            if (!IsListEmpty(&MessageQueue->SentMessagesListHead))
            {
-             Ret = ISMEX_SEND;
+             ret = ISMEX_SEND;
            }
            else if (!IsListEmpty(&MessageQueue->NotifyMessagesListHead))
            {
            /* FIXME Need to set message flag when in callback mode with notify */
-             Ret = ISMEX_NOTIFY;
+             ret = ISMEX_NOTIFY;
            }
            /* FIXME Need to set message flag if replied to or ReplyMessage */
-           RETURN( Ret);           
+           break;         
          }
       case THREADSTATE_GETMESSAGETIME: 
          /* FIXME Needs more work! */
-         RETURN( ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->timeLast);
+         ret = ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->timeLast;
+         break;
 
       case THREADSTATE_GETINPUTSTATE:
-         RETURN( HIWORD(IntGetQueueStatus(FALSE)) & (QS_KEY | QS_MOUSEBUTTON));
+         ret = HIWORD(IntGetQueueStatus(FALSE)) & (QS_KEY | QS_MOUSEBUTTON);
+         break;
    }
-   RETURN( 0);
 
-CLEANUP:
-   DPRINT("Leave NtUserGetThreadState, ret=%i\n",_ret_);
+   DPRINT("Leave NtUserGetThreadState, ret=%i\n", ret);
    UserLeave();
-   END_CLEANUP;
+
+   return ret;
 }
 
 
@@ -180,19 +185,19 @@ NtUserGetGUIThreadInfo(
 
    if(idThread)
    {
-      Status = PsLookupThreadByThreadId((HANDLE)idThread, &Thread);
+      Status = PsLookupThreadByThreadId((HANDLE)(DWORD_PTR)idThread, &Thread);
       if(!NT_SUCCESS(Status))
       {
          SetLastWin32Error(ERROR_ACCESS_DENIED);
          RETURN( FALSE);
       }
-      Desktop = ((PTHREADINFO)Thread->Tcb.Win32Thread)->Desktop;
+      Desktop = ((PTHREADINFO)Thread->Tcb.Win32Thread)->rpdesk;
    }
    else
    {
       /* get the foreground thread */
       PTHREADINFO W32Thread = (PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread;
-      Desktop = W32Thread->Desktop;
+      Desktop = W32Thread->rpdesk;
       if(Desktop)
       {
          MsgQueue = Desktop->ActiveMessageQueue;
@@ -469,9 +474,9 @@ GetW32ThreadInfo(VOID)
 
     pti->pcti = &pti->cti; // FIXME Need to set it in desktop.c!
 
-    if (pti->Desktop != NULL)
+    if (pti->rpdesk != NULL)
     {
-       pti->pDeskInfo = pti->Desktop->DesktopInfo;
+       pti->pDeskInfo = pti->rpdesk->pDeskInfo;
     }
     else
     {

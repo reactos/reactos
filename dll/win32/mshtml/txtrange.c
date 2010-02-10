@@ -177,12 +177,14 @@ static BOOL is_space_elem(nsIDOMNode *node)
     return ret;
 }
 
-static inline void wstrbuf_init(wstrbuf_t *buf)
+static inline BOOL wstrbuf_init(wstrbuf_t *buf)
 {
     buf->len = 0;
     buf->size = 16;
     buf->buf = heap_alloc(buf->size * sizeof(WCHAR));
+    if (!buf->buf) return FALSE;
     *buf->buf = 0;
+    return TRUE;
 }
 
 static inline void wstrbuf_finish(wstrbuf_t *buf)
@@ -549,13 +551,14 @@ HRESULT get_node_text(HTMLDOMNode *node, BSTR *ret)
     wstrbuf_t buf;
     HRESULT hres = S_OK;
 
-    wstrbuf_init(&buf);
+    if (!wstrbuf_init(&buf))
+        return E_OUTOFMEMORY;
     wstrbuf_append_node_rec(&buf, node->nsnode);
     if(buf.buf) {
         *ret = SysAllocString(buf.buf);
         if(!*ret)
             hres = E_OUTOFMEMORY;
-    }else {
+    } else {
         *ret = NULL;
     }
     wstrbuf_finish(&buf);
@@ -1171,9 +1174,10 @@ static HRESULT WINAPI HTMLTxtRange_get_text(IHTMLTxtRange *iface, BSTR *p)
     if(!This->nsrange)
         return S_OK;
 
-    wstrbuf_init(&buf);
+    if (!wstrbuf_init(&buf))
+        return E_OUTOFMEMORY;
     range_to_string(This, &buf);
-    if(buf.buf)
+    if (buf.buf)
         *p = SysAllocString(buf.buf);
     wstrbuf_finish(&buf);
 

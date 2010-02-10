@@ -19,15 +19,15 @@ END
 
 IDM_WINEMINE MENU DISCARDABLE
 BEGIN
-	POPUP "&Game"
+	POPUP "&Гра"
         BEGIN
 		MENUITEM "&Нова\tF2",      IDM_NEW
 		MENUITEM SEPARATOR
 		MENUITEM "&Мітки (?)",     IDM_MARKQ
 		MENUITEM SEPARATOR
-		MENUITEM "&Новачок",       IDM_BEGINNER
+		MENUITEM "Нова&чок",       IDM_BEGINNER
 		MENUITEM "&Аматор",        IDM_ADVANCED
-		MENUITEM "&Професіонал",   IDM_EXPERT
+		MENUITEM "Про&фесіонал",   IDM_EXPERT
 		MENUITEM "&Особливі...",   IDM_CUSTOM
 		MENUITEM SEPARATOR
 		MENUITEM "&Чемпіони...",   IDM_TIMES
@@ -55,7 +55,7 @@ BEGIN
 	LTEXT           "",              IDC_NAME1, 132,  20,  55,   8
 	LTEXT           "",              IDC_NAME2, 132,  30,  55,   8
 	LTEXT           "",              IDC_NAME3, 132,  40,  55,   8
-	DEFPUSHBUTTON   "OK",            IDOK,      127,  57,  50,  15
+	DEFPUSHBUTTON   "OK",           IDOK,      127,  57,  50,  15
 	PUSHBUTTON      "&Скидання результатів", IDRESET,    18,  57,  67,  15
 END
 
@@ -66,7 +66,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT           "Введіть Ваше ім'я", IDIGNORE,      25,  10, 150,  10
 	EDITTEXT                             IDC_EDITNAME,  25,  20, 110,  12
-	DEFPUSHBUTTON   "OK",                IDOK,          60,  40,  40,  15
+	DEFPUSHBUTTON   "OK",               IDOK,          60,  40,  40,  15
 END
 
 IDD_CUSTOM DIALOGEX DISCARDABLE  0, 0, 139, 80

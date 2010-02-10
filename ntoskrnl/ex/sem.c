@@ -235,6 +235,7 @@ NtQuerySemaphore(IN HANDLE SemaphoreHandle,
                                          SemaphoreInformation,
                                          SemaphoreInformationLength,
                                          ReturnLength,
+                                         NULL,
                                          PreviousMode);
     if (!NT_SUCCESS(Status))
     {

@@ -95,7 +95,23 @@ Author:
 //
 #define KTSS_ESP0                               0x4
 #define KTSS_CR3                                0x1C
+#define KTSS_EIP                                0x20
 #define KTSS_EFLAGS                             0x24
+#define KTSS_EAX                                0x28
+#define KTSS_ECX                                0x2C
+#define KTSS_EDX                                0x30
+#define KTSS_EBX                                0x34
+#define KTSS_ESP                                0x38
+#define KTSS_EBP                                0x3C
+#define KTSS_ESI                                0x40
+#define KTSS_EDI                                0x44
+#define KTSS_ES                                 0x48
+#define KTSS_CS                                 0x4C
+#define KTSS_SS                                 0x50
+#define KTSS_DS                                 0x54
+#define KTSS_FS                                 0x58
+#define KTSS_GS                                 0x5C
+#define KTSS_LDT                                0x60
 #define KTSS_IOMAPBASE                          0x66
 #define KTSS_IO_MAPS                            0x68
 
@@ -624,6 +640,26 @@ Author:
 #define SERVICE_DESCRIPTOR_LIMIT                0x0008
 #define SERVICE_DESCRIPTOR_NUMBER               0x000C
 #define SERVICE_DESCRIPTOR_LENGTH               0x0010
+
+//
+// Exception codes
+//
+#define EXCEPTION_DIVIDED_BY_ZERO               0
+#define EXCEPTION_DEBUG                         1
+#define EXCEPTION_NMI                           2
+#define EXCEPTION_INT3                          3
+#define EXCEPTION_BOUND_CHECK                   5
+#define EXCEPTION_INVALID_OPCODE                6
+#define EXCEPTION_NPX_NOT_AVAILABLE             7
+#define EXCEPTION_DOUBLE_FAULT                  8
+#define EXCEPTION_NPX_OVERRUN                   9
+#define EXCEPTION_INVALID_TSS                   0x0A
+#define EXCEPTION_SEGMENT_NOT_PRESENT           0x0B
+#define EXCEPTION_STACK_FAULT                   0x0C
+#define EXCEPTION_GP_FAULT                      0x0D
+#define EXCEPTION_RESERVED_TRAP                 0x0F
+#define EXCEPTION_NPX_ERROR                     0x010
+#define EXCEPTION_ALIGNMENT_CHECK               0x011
 
 //
 // VDM State Pointer

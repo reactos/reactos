@@ -161,7 +161,7 @@ BEGIN
 	IDS_CAT_GAMES "Juegos y Entretenimiento"
 	IDS_CAT_GRAPHICS "Gráficos"
 	IDS_CAT_INTERNET "Internet & Redes"
-	IDS_CAT_LIBS "Librarias"
+	IDS_CAT_LIBS "Librerias"
 	IDS_CAT_OFFICE "Oficina"
 	IDS_CAT_OTHER "Otros"
 	IDS_CAT_SCIENCE "Ciencia"

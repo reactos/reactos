@@ -1,12 +1,12 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/advapi32/sec/lsa.c
+ * FILE:            dll/win32/advapi32/sec/lsa.c
  * PURPOSE:         Local security authority functions
  * PROGRAMMER:      Emanuele Aliberti
  * UPDATE HISTORY:
- *	19990322 EA created
- *	19990515 EA stubs
+ *      19990322 EA created
+ *      19990515 EA stubs
  *      20030202 KJK compressed stubs
  *
  */
@@ -217,7 +217,7 @@ LsaDeleteTrustedDomain(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 WINAPI
@@ -227,10 +227,35 @@ LsaEnumerateAccountRights(
     PLSA_UNICODE_STRING *UserRights,
     PULONG CountOfRights)
 {
-    FIXME("(%p,%p,%p,%p) stub\n", PolicyHandle, AccountSid, UserRights, CountOfRights);
-    *UserRights = 0;
-    *CountOfRights = 0;
-    return STATUS_OBJECT_NAME_NOT_FOUND;
+    LSAPR_USER_RIGHT_SET UserRightsSet;
+    NTSTATUS Status;
+
+    TRACE("(%p,%p,%p,%p) stub\n", PolicyHandle, AccountSid, UserRights, CountOfRights);
+
+    UserRightsSet.Entries = 0;
+    UserRightsSet.UserRights = NULL;
+
+    RpcTryExcept
+    {
+        Status = LsarEnmuerateAccountRights((LSAPR_HANDLE)PolicyHandle,
+                                            AccountSid,
+                                            &UserRightsSet);
+
+        *CountOfRights = UserRightsSet.Entries;
+        *UserRights = (PUNICODE_STRING)UserRightsSet.UserRights;
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+
+        if (UserRightsSet.UserRights != NULL)
+        {
+            MIDL_user_free(UserRightsSet.UserRights);
+        }
+    }
+    RpcEndExcept;
+
+    return Status;
 }
 
 /*
@@ -288,7 +313,8 @@ LsaEnumerateTrustedDomainsEx(
 /*
  * @implemented
  */
-NTSTATUS WINAPI
+NTSTATUS
+WINAPI
 LsaFreeMemory(PVOID Buffer)
 {
     TRACE("(%p)\n", Buffer);
@@ -360,6 +386,12 @@ LsaLookupNames2(
 {
     FIXME("(%p,0x%08x,0x%08x,%p,%p,%p) stub\n", PolicyHandle, Flags,
         Count, Names, ReferencedDomains, Sids);
+    if (Names != NULL && Count > 0)
+    {
+        *ReferencedDomains = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(LSA_REFERENCED_DOMAIN_LIST));
+        *Sids = RtlAllocateHeap(RtlGetProcessHeap(), 0, Count * sizeof(LSA_TRANSLATED_SID2));
+        return STATUS_SOME_NOT_MAPPED;
+    }
     return STATUS_NONE_MAPPED;
 }
 

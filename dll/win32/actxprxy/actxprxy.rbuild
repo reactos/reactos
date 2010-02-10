@@ -11,12 +11,10 @@
 	<library>wine</library>
 	<library>actxprxy_interface</library>
 	<library>actxprxy_proxy</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 	<library>rpcrt4</library>
 	<library>pseh</library>
 	<file>usrmarshal.c</file>
-	<compilerflag compilerset="gcc">-fno-unit-at-a-time</compilerflag>
 </module>
 <module name="actxprxy_interface" type="idlinterface">
 	<file>actxprxy_servprov.idl</file>

@@ -911,6 +911,13 @@ static DWORD mac_delete_credential(LPCWSTR TargetName)
 }
 #endif
 
+/******************************************************************************
+ * convert_PCREDENTIALW_to_PCREDENTIALA [internal]
+ *
+ * convert a Credential struct from UNICODE to ANSI and return the needed size in Bytes
+ *
+ */
+
 static INT convert_PCREDENTIALW_to_PCREDENTIALA(const CREDENTIALW *CredentialW, PCREDENTIALA CredentialA, INT len)
 {
     char *buffer;
@@ -996,6 +1003,12 @@ static INT convert_PCREDENTIALW_to_PCREDENTIALA(const CREDENTIALW *CredentialW, 
     return needed;
 }
 
+/******************************************************************************
+ * convert_PCREDENTIALA_to_PCREDENTIALW [internal]
+ *
+ * convert a Credential struct from ANSI to UNICODE and return the needed size in Bytes
+ *
+ */
 static INT convert_PCREDENTIALA_to_PCREDENTIALW(const CREDENTIALA *CredentialA, PCREDENTIALW CredentialW, INT len)
 {
     char *buffer;
@@ -1556,6 +1569,172 @@ BOOL WINAPI CredReadW(LPCWSTR TargetName, DWORD Type, DWORD Flags, PCREDENTIALW 
 }
 
 /******************************************************************************
+ * CredReadDomainCredentialsA [ADVAPI32.@]
+ */
+BOOL WINAPI CredReadDomainCredentialsA(PCREDENTIAL_TARGET_INFORMATIONA TargetInformation,
+                                       DWORD Flags, DWORD *Size, PCREDENTIALA **Credentials)
+{
+    PCREDENTIAL_TARGET_INFORMATIONW TargetInformationW;
+    INT len, i;
+    WCHAR *buffer, *end;
+    BOOL ret;
+    PCREDENTIALW* CredentialsW;
+
+    TRACE("(%p, 0x%x, %p, %p)\n", TargetInformation, Flags, Size, Credentials);
+
+    /* follow Windows behavior - do not test for NULL, initialize early */
+    *Size = 0;
+    *Credentials = NULL;
+
+    if (!TargetInformation)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    len = sizeof(*TargetInformationW);
+    if (TargetInformation->TargetName)
+        len += MultiByteToWideChar(CP_ACP, 0, TargetInformation->TargetName, -1, NULL, 0) * sizeof(WCHAR);
+    if (TargetInformation->NetbiosServerName)
+        len += MultiByteToWideChar(CP_ACP, 0, TargetInformation->NetbiosServerName, -1, NULL, 0) * sizeof(WCHAR);
+    if (TargetInformation->DnsServerName)
+        len += MultiByteToWideChar(CP_ACP, 0, TargetInformation->DnsServerName, -1, NULL, 0) * sizeof(WCHAR);
+    if (TargetInformation->NetbiosDomainName)
+        len += MultiByteToWideChar(CP_ACP, 0, TargetInformation->NetbiosDomainName, -1, NULL, 0) * sizeof(WCHAR);
+    if (TargetInformation->DnsDomainName)
+        len += MultiByteToWideChar(CP_ACP, 0, TargetInformation->DnsDomainName, -1, NULL, 0) * sizeof(WCHAR);
+    if (TargetInformation->DnsTreeName)
+        len += MultiByteToWideChar(CP_ACP, 0, TargetInformation->DnsTreeName, -1, NULL, 0) * sizeof(WCHAR);
+    if (TargetInformation->PackageName)
+        len += MultiByteToWideChar(CP_ACP, 0, TargetInformation->PackageName, -1, NULL, 0) * sizeof(WCHAR);
+
+    TargetInformationW = HeapAlloc(GetProcessHeap(), 0, len);
+    if (!TargetInformationW)
+    {
+        SetLastError(ERROR_OUTOFMEMORY);
+        return FALSE;
+    }
+    buffer = (WCHAR*)(TargetInformationW + 1);
+    end = (WCHAR *)((char *)TargetInformationW + len);
+
+    if (TargetInformation->TargetName)
+    {
+        TargetInformationW->TargetName = buffer;
+        buffer += MultiByteToWideChar(CP_ACP, 0, TargetInformation->TargetName, -1,
+                                      TargetInformationW->TargetName, end - buffer);
+    } else
+        TargetInformationW->TargetName = NULL;
+
+    if (TargetInformation->NetbiosServerName)
+    {
+        TargetInformationW->NetbiosServerName = buffer;
+        buffer += MultiByteToWideChar(CP_ACP, 0, TargetInformation->NetbiosServerName, -1,
+                                      TargetInformationW->NetbiosServerName, end - buffer);
+    } else
+        TargetInformationW->NetbiosServerName = NULL;
+
+    if (TargetInformation->DnsServerName)
+    {
+        TargetInformationW->DnsServerName = buffer;
+        buffer += MultiByteToWideChar(CP_ACP, 0, TargetInformation->DnsServerName, -1,
+                                      TargetInformationW->DnsServerName, end - buffer);
+    } else
+        TargetInformationW->DnsServerName = NULL;
+
+    if (TargetInformation->NetbiosDomainName)
+    {
+        TargetInformationW->NetbiosDomainName = buffer;
+        buffer += MultiByteToWideChar(CP_ACP, 0, TargetInformation->NetbiosDomainName, -1,
+                                      TargetInformationW->NetbiosDomainName, end - buffer);
+    } else
+        TargetInformationW->NetbiosDomainName = NULL;
+
+    if (TargetInformation->DnsDomainName)
+    {
+        TargetInformationW->DnsDomainName = buffer;
+        buffer += MultiByteToWideChar(CP_ACP, 0, TargetInformation->DnsDomainName, -1,
+                                      TargetInformationW->DnsDomainName, end - buffer);
+    } else
+        TargetInformationW->DnsDomainName = NULL;
+
+    if (TargetInformation->DnsTreeName)
+    {
+        TargetInformationW->DnsTreeName = buffer;
+        buffer += MultiByteToWideChar(CP_ACP, 0, TargetInformation->DnsTreeName, -1,
+                                      TargetInformationW->DnsTreeName, end - buffer);
+    } else
+        TargetInformationW->DnsTreeName = NULL;
+
+    if (TargetInformation->PackageName)
+    {
+        TargetInformationW->PackageName = buffer;
+        buffer += MultiByteToWideChar(CP_ACP, 0, TargetInformation->PackageName, -1,
+                                      TargetInformationW->PackageName, end - buffer);
+    } else
+        TargetInformationW->PackageName = NULL;
+
+    TargetInformationW->Flags = TargetInformation->Flags;
+    TargetInformationW->CredTypeCount = TargetInformation->CredTypeCount;
+    TargetInformationW->CredTypes = TargetInformation->CredTypes;
+
+    ret = CredReadDomainCredentialsW(TargetInformationW, Flags, Size, &CredentialsW);
+
+    HeapFree(GetProcessHeap(), 0, TargetInformationW);
+
+    if (ret)
+    {
+        char *buf;
+        INT needed;
+
+        len = *Size * sizeof(PCREDENTIALA);
+        for (i = 0; i < *Size; i++)
+            len += convert_PCREDENTIALW_to_PCREDENTIALA(CredentialsW[i], NULL, 0);
+
+        *Credentials = HeapAlloc(GetProcessHeap(), 0, len);
+        if (!*Credentials)
+        {
+            CredFree(CredentialsW);
+            SetLastError(ERROR_OUTOFMEMORY);
+            return FALSE;
+        }
+
+        buf = (char *)&(*Credentials)[*Size];
+        len -= *Size * sizeof(PCREDENTIALA);
+        for (i = 0; i < *Size; i++)
+        {
+            (*Credentials)[i] = (PCREDENTIALA)buf;
+            needed = convert_PCREDENTIALW_to_PCREDENTIALA(CredentialsW[i], (*Credentials)[i], len);
+            buf += needed;
+            len -= needed;
+        }
+
+        CredFree(CredentialsW);
+    }
+    return ret;
+}
+
+/******************************************************************************
+ * CredReadDomainCredentialsW [ADVAPI32.@]
+ */
+BOOL WINAPI CredReadDomainCredentialsW(PCREDENTIAL_TARGET_INFORMATIONW TargetInformation, DWORD Flags,
+                                       DWORD *Size, PCREDENTIALW **Credentials)
+{
+    FIXME("(%p, 0x%x, %p, %p) stub\n", TargetInformation, Flags, Size, Credentials);
+
+    /* follow Windows behavior - do not test for NULL, initialize early */
+    *Size = 0;
+    *Credentials = NULL;
+    if (!TargetInformation)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    SetLastError(ERROR_NOT_FOUND);
+    return FALSE;
+}
+
+/******************************************************************************
  * CredWriteA [ADVAPI32.@]
  */
 BOOL WINAPI CredWriteA(PCREDENTIALA Credential, DWORD Flags)
@@ -1712,172 +1891,6 @@ BOOL WINAPI CredGetSessionTypes(DWORD persistCount, LPDWORD persists)
         }
     }
     return TRUE;
-}
-
-/******************************************************************************
- * CredReadDomainCredentialsW [ADVAPI32.@]
- */
-BOOL WINAPI CredReadDomainCredentialsW(PCREDENTIAL_TARGET_INFORMATIONW TargetInformation, DWORD Flags,
-                                       DWORD *Size, PCREDENTIALW **Credentials)
-{
-    FIXME("(%p, 0x%x, %p, %p) stub\n", TargetInformation, Flags, Size, Credentials);
-
-    /* follow Windows behavior - do not test for NULL, initialize early */
-    *Size = 0;
-    *Credentials = NULL;
-    if (!TargetInformation)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
-    SetLastError(ERROR_NOT_FOUND);
-    return FALSE;
-}
-
-/******************************************************************************
- * CredReadDomainCredentialsA [ADVAPI32.@]
- */
-BOOL WINAPI CredReadDomainCredentialsA(PCREDENTIAL_TARGET_INFORMATIONA TargetInformation,
-                                       DWORD Flags, DWORD *Size, PCREDENTIALA **Credentials)
-{
-    PCREDENTIAL_TARGET_INFORMATIONW TargetInformationW;
-    INT len, i;
-    WCHAR *buffer, *end;
-    BOOL ret;
-    PCREDENTIALW* CredentialsW;
-
-    TRACE("(%p, 0x%x, %p, %p)\n", TargetInformation, Flags, Size, Credentials);
-
-    /* follow Windows behavior - do not test for NULL, initialize early */
-    *Size = 0;
-    *Credentials = NULL;
-
-    if (!TargetInformation)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
-    len = sizeof(*TargetInformationW);
-    if (TargetInformation->TargetName)
-        len += MultiByteToWideChar(CP_ACP, 0, TargetInformation->TargetName, -1, NULL, 0) * sizeof(WCHAR);
-    if (TargetInformation->NetbiosServerName)
-        len += MultiByteToWideChar(CP_ACP, 0, TargetInformation->NetbiosServerName, -1, NULL, 0) * sizeof(WCHAR);
-    if (TargetInformation->DnsServerName)
-        len += MultiByteToWideChar(CP_ACP, 0, TargetInformation->DnsServerName, -1, NULL, 0) * sizeof(WCHAR);
-    if (TargetInformation->NetbiosDomainName)
-        len += MultiByteToWideChar(CP_ACP, 0, TargetInformation->NetbiosDomainName, -1, NULL, 0) * sizeof(WCHAR);
-    if (TargetInformation->DnsDomainName)
-        len += MultiByteToWideChar(CP_ACP, 0, TargetInformation->DnsDomainName, -1, NULL, 0) * sizeof(WCHAR);
-    if (TargetInformation->DnsTreeName)
-        len += MultiByteToWideChar(CP_ACP, 0, TargetInformation->DnsTreeName, -1, NULL, 0) * sizeof(WCHAR);
-    if (TargetInformation->PackageName)
-        len += MultiByteToWideChar(CP_ACP, 0, TargetInformation->PackageName, -1, NULL, 0) * sizeof(WCHAR);
-
-    TargetInformationW = HeapAlloc(GetProcessHeap(), 0, len);
-    if (!TargetInformationW)
-    {
-        SetLastError(ERROR_OUTOFMEMORY);
-        return FALSE;
-    }
-    buffer = (WCHAR*)(TargetInformationW + 1);
-    end = (WCHAR *)((char *)TargetInformationW + len);
-
-    if (TargetInformation->TargetName)
-    {
-        TargetInformationW->TargetName = buffer;
-        buffer += MultiByteToWideChar(CP_ACP, 0, TargetInformation->TargetName, -1,
-                                      TargetInformationW->TargetName, end - buffer);
-    } else
-        TargetInformationW->TargetName = NULL;
-
-    if (TargetInformation->NetbiosServerName)
-    {
-        TargetInformationW->NetbiosServerName = buffer;
-        buffer += MultiByteToWideChar(CP_ACP, 0, TargetInformation->NetbiosServerName, -1,
-                                      TargetInformationW->NetbiosServerName, end - buffer);
-    } else
-        TargetInformationW->NetbiosServerName = NULL;
-
-    if (TargetInformation->DnsServerName)
-    {
-        TargetInformationW->DnsServerName = buffer;
-        buffer += MultiByteToWideChar(CP_ACP, 0, TargetInformation->DnsServerName, -1,
-                                      TargetInformationW->DnsServerName, end - buffer);
-    } else
-        TargetInformationW->DnsServerName = NULL;
-
-    if (TargetInformation->NetbiosDomainName)
-    {
-        TargetInformationW->NetbiosDomainName = buffer;
-        buffer += MultiByteToWideChar(CP_ACP, 0, TargetInformation->NetbiosDomainName, -1,
-                                      TargetInformationW->NetbiosDomainName, end - buffer);
-    } else
-        TargetInformationW->NetbiosDomainName = NULL;
-
-    if (TargetInformation->DnsDomainName)
-    {
-        TargetInformationW->DnsDomainName = buffer;
-        buffer += MultiByteToWideChar(CP_ACP, 0, TargetInformation->DnsDomainName, -1,
-                                      TargetInformationW->DnsDomainName, end - buffer);
-    } else
-        TargetInformationW->DnsDomainName = NULL;
-
-    if (TargetInformation->DnsTreeName)
-    {
-        TargetInformationW->DnsTreeName = buffer;
-        buffer += MultiByteToWideChar(CP_ACP, 0, TargetInformation->DnsTreeName, -1,
-                                      TargetInformationW->DnsTreeName, end - buffer);
-    } else
-        TargetInformationW->DnsTreeName = NULL;
-
-    if (TargetInformation->PackageName)
-    {
-        TargetInformationW->PackageName = buffer;
-        buffer += MultiByteToWideChar(CP_ACP, 0, TargetInformation->PackageName, -1,
-                                      TargetInformationW->PackageName, end - buffer);
-    } else
-        TargetInformationW->PackageName = NULL;
-
-    TargetInformationW->Flags = TargetInformation->Flags;
-    TargetInformationW->CredTypeCount = TargetInformation->CredTypeCount;
-    TargetInformationW->CredTypes = TargetInformation->CredTypes;
-
-    ret = CredReadDomainCredentialsW(TargetInformationW, Flags, Size, &CredentialsW);
-
-    HeapFree(GetProcessHeap(), 0, TargetInformationW);
-
-    if (ret)
-    {
-        char *buf;
-        INT needed;
-
-        len = *Size * sizeof(PCREDENTIALA);
-        for (i = 0; i < *Size; i++)
-            len += convert_PCREDENTIALW_to_PCREDENTIALA(CredentialsW[i], NULL, 0);
-
-        *Credentials = HeapAlloc(GetProcessHeap(), 0, len);
-        if (!*Credentials)
-        {
-            CredFree(CredentialsW);
-            SetLastError(ERROR_OUTOFMEMORY);
-            return FALSE;
-        }
-
-        buf = (char *)&(*Credentials)[*Size];
-        len -= *Size * sizeof(PCREDENTIALA);
-        for (i = 0; i < *Size; i++)
-        {
-            (*Credentials)[i] = (PCREDENTIALA)buf;
-            needed = convert_PCREDENTIALW_to_PCREDENTIALA(CredentialsW[i], (*Credentials)[i], len);
-            buf += needed;
-            len -= needed;
-        }
-
-        CredFree(CredentialsW);
-    }
-    return ret;
 }
 
 BOOL

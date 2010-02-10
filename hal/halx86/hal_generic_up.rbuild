@@ -6,7 +6,7 @@
 		<include base="ntoskrnl">include</include>
 		<define name="_NTHAL_" />
 		<directory name="generic">
-			<file>irq.S</file>
+			<file>pic.c</file>
 			<file>processor.c</file>
 			<file>spinlock.c</file>
 		</directory>

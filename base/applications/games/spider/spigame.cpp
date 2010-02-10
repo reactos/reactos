@@ -201,6 +201,8 @@ bool CARDLIBPROC StackDragProc(CardRegion &stackobj, int numDragCards)
 /* Game finished successfully */
 void GameFinished()
 {
+    SpiderWnd.EmptyStacks();
+
     MessageBox(SpiderWnd, MsgWin, szAppName, MB_OK | MB_ICONINFORMATION);
     if( IDYES == MessageBox(SpiderWnd, MsgDeal, szAppName, MB_YESNO | MB_ICONQUESTION) )
     {
@@ -208,7 +210,6 @@ void GameFinished()
     }
     else
     {
-        SpiderWnd.EmptyStacks();
         fGameStarted = false;
     }
 }

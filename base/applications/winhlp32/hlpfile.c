@@ -797,28 +797,34 @@ static void HLPFILE_AddHotSpotLinks(struct RtfData* rd, HLPFILE* file,
          */
         str += strlen(str) + 1;     /* skip hotspot name */
 
+        hslink = NULL;
         switch (start[7 + 15 * i + 0])
         /* The next two chars always look like 0x04 0x00 ???
          * What are they for ?
          */
         {
+        case 0xC8:
+            hslink = (HLPFILE_HOTSPOTLINK*)
+                HLPFILE_AllocLink(rd, hlp_link_macro, str, -1, 0, 0, 1, -1);
+            break;
+
         case 0xE6:
         case 0xE7:
             hslink = (HLPFILE_HOTSPOTLINK*)
                 HLPFILE_AllocLink(rd, (start[7 + 15 * i + 0] & 1) ? hlp_link_link : hlp_link_popup,
                                   file->lpszPath, -1, HLPFILE_Hash(str),
                                   0, 1, -1);
-            if (hslink)
-            {
-                hslink->x      = GET_USHORT(start, 7 + 15 * i + 3);
-                hslink->y      = GET_USHORT(start, 7 + 15 * i + 5);
-                hslink->width  = GET_USHORT(start, 7 + 15 * i + 7);
-                hslink->height = GET_USHORT(start, 7 + 15 * i + 9);
-                /* target = GET_UINT(start, 7 + 15 * i + 11); */
-            }
             break;
         default:
             WINE_FIXME("unknown hotsport target 0x%x\n", start[7 + 15 * i + 0]);
+        }
+        if (hslink)
+        {
+            hslink->x      = GET_USHORT(start, 7 + 15 * i + 3);
+            hslink->y      = GET_USHORT(start, 7 + 15 * i + 5);
+            hslink->width  = GET_USHORT(start, 7 + 15 * i + 7);
+            hslink->height = GET_USHORT(start, 7 + 15 * i + 9);
+            /* target = GET_UINT(start, 7 + 15 * i + 11); */
         }
         str += strlen(str) + 1;
     }

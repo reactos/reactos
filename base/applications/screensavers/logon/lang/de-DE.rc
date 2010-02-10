@@ -2,6 +2,6 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DESCRIPTION "Logon Bildschirmschoner"
+    IDS_DESCRIPTION "Logon-Bildschirmschoner"
     IDS_TEXT        "Keinerlei Einstellungen notwendig."
 END

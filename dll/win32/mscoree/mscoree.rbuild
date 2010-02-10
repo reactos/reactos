@@ -4,7 +4,6 @@
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
 	<library>wine</library>
-	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>uuid</library>
 	<file>corruntimehost.c</file>

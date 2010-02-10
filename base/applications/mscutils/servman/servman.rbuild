@@ -2,7 +2,6 @@
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="servman" type="win32gui" installbase="system32" installname="servman.exe" unicode="yes">
 	<include base="servman">.</include>
-	<library>kernel32</library>
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>advapi32</library>
@@ -15,7 +14,8 @@
 		<file>control.c</file>
 		<file>create.c</file>
 		<file>delete.c</file>
-		<file>dependencies.c</file>
+		<file>dependencies_tv1.c</file>
+		<file>dependencies_tv2.c</file>
 		<file>export.c</file>
 		<file>listview.c</file>
 		<file>mainwnd.c</file>
@@ -28,6 +28,7 @@
 		<file>servman.c</file>
 		<file>start.c</file>
 		<file>stop.c</file>
+		<file>stop_dependencies.c</file>		
 	</compilationunit>
 	<file>servman.rc</file>
 	<pch>precomp.h</pch>

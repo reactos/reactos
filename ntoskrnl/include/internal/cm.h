@@ -1301,7 +1301,7 @@ CmpCreateEvent(
 PVOID
 NTAPI
 CmpAllocate(
-    IN ULONG Size,
+    IN SIZE_T Size,
     IN BOOLEAN Paged,
     IN ULONG Tag
 );

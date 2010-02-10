@@ -17,6 +17,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#ifndef _M_ARM
 #include <freeldr.h>
 #include <debug.h>
 
@@ -1308,3 +1309,6 @@ const DEVVTBL* Ext2Mount(ULONG DeviceId)
 	else
 		return NULL;
 }
+
+#endif
+

@@ -243,6 +243,7 @@ BEGIN
     IDS_SYS_ENTERTAINMENT       "Meelelahutus"
     IDS_CMT_MPLAY32             "Ava Meediamängija"
     IDS_CMT_SNDVOL32            "Ava Helitugevuse Kontroll"
+    IDS_CMT_SNDREC32            "Launch Sound Recorder"
 END
 
 STRINGTABLE
@@ -278,6 +279,7 @@ BEGIN
     IDS_SHORT_SERVICE    "Service Manager.lnk"
     IDS_SHORT_SNAP       "SnapShot.lnk"
     IDS_SHORT_SNDVOL32   "Volume Control.lnk"
+    IDS_SHORT_SNDREC32   "Audiorecorder.lnk"
     IDS_SHORT_SOLITAIRE  "Solitaire.lnk"
     IDS_SHORT_WINEMINE   "WineMine.lnk"
     IDS_SHORT_WORDPAD    "WordPad.lnk"

@@ -333,9 +333,8 @@ static PROFILESECTION *PROFILE_Load(HANDLE hFile, ENCODING * pEncoding)
         return NULL;
 
     buffer_base = HeapAlloc(GetProcessHeap(), 0 , dwFileSize);
-    if (!buffer_base)
-        return NULL;
-
+    if (!buffer_base) return NULL;
+    
     if (!ReadFile(hFile, buffer_base, dwFileSize, &dwFileSize, NULL))
     {
         HeapFree(GetProcessHeap(), 0, buffer_base);
@@ -363,7 +362,6 @@ static PROFILESECTION *PROFILE_Load(HANDLE hFile, ENCODING * pEncoding)
         MultiByteToWideChar(CP_ACP, 0, pBuffer, dwFileSize, szFile, len);
         szEnd = szFile + len;
         break;
-
     case ENCODING_UTF8:
         DPRINT("UTF8 encoding\n");
 
@@ -377,20 +375,17 @@ static PROFILESECTION *PROFILE_Load(HANDLE hFile, ENCODING * pEncoding)
         MultiByteToWideChar(CP_UTF8, 0, pBuffer, dwFileSize, szFile, len);
         szEnd = szFile + len;
         break;
-
     case ENCODING_UTF16LE:
         DPRINT("UTF16 Little Endian encoding\n");
         szFile = pBuffer;
         szEnd = (WCHAR *)((char *)pBuffer + dwFileSize);
         break;
-
     case ENCODING_UTF16BE:
         DPRINT("UTF16 Big Endian encoding\n");
         szFile = pBuffer;
         szEnd = (WCHAR *)((char *)pBuffer + dwFileSize);
         PROFILE_ByteSwapShortBuffer(szFile, dwFileSize / sizeof(WCHAR));
         break;
-
     default:
         DPRINT("encoding type %d not implemented\n", *pEncoding);
         HeapFree(GetProcessHeap(), 0, buffer_base);
@@ -398,7 +393,7 @@ static PROFILESECTION *PROFILE_Load(HANDLE hFile, ENCODING * pEncoding)
     }
 
     first_section = HeapAlloc( GetProcessHeap(), 0, sizeof(*section) );
-    if (first_section == NULL)
+    if(first_section == NULL)
     {
         if (szFile != pBuffer)
             HeapFree(GetProcessHeap(), 0, szFile);
@@ -849,9 +844,7 @@ static BOOL PROFILE_Open( LPCWSTR filename, BOOL write_access )
           MRUProfile[i] = MRUProfile[i-1];
        CurProfile=tempProfile;
       }
-
-    if (CurProfile->filename)
-        PROFILE_ReleaseFile();
+    if(CurProfile->filename) PROFILE_ReleaseFile();
 
     /* OK, now that CurProfile is definitely free we assign it our new file */
     CurProfile->filename  = HeapAlloc( GetProcessHeap(), 0, (wcslen(buffer)+1) * sizeof(WCHAR) );
@@ -1209,14 +1202,13 @@ DWORD WINAPI GetPrivateProfileStringA( LPCSTR section, LPCSTR entry,
                                      filenameW.Buffer);
     if (len)
     {
-        ret = WideCharToMultiByte(CP_ACP, 0, bufferW, retW + 1, buffer, len, NULL, NULL);
-        if (!ret)
+        if (retW)
         {
-            ret = len - 1;
-            buffer[ret] = 0;
+            ret = WideCharToMultiByte(CP_ACP, 0, bufferW, retW, buffer, len - 1, NULL, NULL);
+            if (!ret)
+                ret = len - 1;
         }
-        else
-            ret--; /* strip terminating 0 */
+        buffer[ret] = 0;
     }
 
     RtlFreeUnicodeString(&sectionW);

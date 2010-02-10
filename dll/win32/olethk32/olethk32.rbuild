@@ -6,6 +6,5 @@
 	<file>main.c</file>
 	<file>version.rc</file>
 	<library>wine</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 </module>

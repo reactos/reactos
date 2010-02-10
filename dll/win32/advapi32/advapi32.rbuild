@@ -14,7 +14,6 @@
 	<library>eventlog_client</library>
 	<library>rpcrt4</library>
 	<library>wine</library>
-	<library>kernel32</library>
 	<library>pseh</library>
 	<library>ntdll</library>
 	<pch>advapi32.h</pch>
@@ -60,5 +59,4 @@
 			<file>token.c</file>
 	</directory>
 	<file>advapi32.rc</file>
-	<compilerflag compilerset="gcc">-fno-unit-at-a-time</compilerflag>
 </module>

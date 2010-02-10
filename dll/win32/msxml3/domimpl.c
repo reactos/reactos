@@ -89,7 +89,7 @@ static ULONG WINAPI dimimpl_Release(
     ref = InterlockedDecrement( &This->ref );
     if ( ref == 0 )
     {
-        HeapFree( GetProcessHeap(), 0, This );
+        heap_free( This );
     }
 
     return ref;
@@ -216,7 +216,7 @@ IUnknown* create_doc_Implementation(void)
 {
     domimpl *This;
 
-    This = HeapAlloc( GetProcessHeap(), 0, sizeof *This );
+    This = heap_alloc( sizeof *This );
     if ( !This )
         return NULL;
 

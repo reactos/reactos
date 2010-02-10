@@ -43,6 +43,7 @@ BOOL FASTCALL IntKeyboardInput(KEYBDINPUT *ki);
 BOOL UserInitDefaultKeyboardLayout();
 PKBL UserHklToKbl(HKL hKl);
 BOOL FASTCALL UserAttachThreadInput(PTHREADINFO,PTHREADINFO,BOOL);
+BOOL FASTCALL IntConnectThreadInput(PTHREADINFO,PTHREADINFO*,PUSER_MESSAGE_QUEUE*);
 
 #define ThreadHasInputAccess(W32Thread) \
   (TRUE)

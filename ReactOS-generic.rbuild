@@ -89,8 +89,6 @@
 	<group compilerset="gcc">
 		<compilerflag>-Wall</compilerflag>
 		<compilerflag compiler="cxx">-Wno-non-virtual-dtor</compilerflag>
-		<compilerflag compiler="cc,cxx">-gstabs+</compilerflag>
-		<compilerflag compiler="as">-gstabs+</compilerflag>
 	</group>
 
 	<group compilerset="msc">
@@ -119,14 +117,9 @@
 		</if>
 
 		<compilerflag>-fno-strict-aliasing</compilerflag>
-		<compilerflag>-Wno-strict-aliasing</compilerflag>
 		<compilerflag>-Wpointer-arith</compilerflag>
 		<compilerflag>-Wno-multichar</compilerflag>
-		<!--
 		<compilerflag>-Wno-error=uninitialized</compilerflag>
-		<compilerflag>-Wno-error=unused-function</compilerflag>
-		<compilerflag>-Wno-error=write-strings</compilerflag>
-		-->
 		<!-- compilerflag>-H</compilerflag>    enable this for header traces -->
 	</group>
 
@@ -156,5 +149,4 @@
 		<compilerflag>/GS-</compilerflag>
 	</group>
 
-	<define name="_USE_32BIT_TIME_T" />
 </group>

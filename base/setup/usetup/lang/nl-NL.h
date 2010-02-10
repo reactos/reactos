@@ -1013,7 +1013,7 @@ static MUI_ENTRY nlNLBootLoaderEntries[] =
     {
         8,
         12,
-        "Installeer de bootloader op de harde schijf (MBR).",
+        "Installeer de bootloader op de harde schijf (bootsector).",
         TEXT_STYLE_NORMAL
     },
     {

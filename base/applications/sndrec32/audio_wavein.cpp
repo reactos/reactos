@@ -1,10 +1,11 @@
-/*
-* PROJECT:         ReactOS Sound Record Application
-* LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            base/applications/sndrec32/audio_wavein.cpp
-* PURPOSE:         Audio WaveIn
-* PROGRAMMERS:     Marco Pagliaricci <ms_blue (at) hotmail (dot) it>
-*/
+/* PROJECT:         ReactOS sndrec32
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            base/applications/sndrec32/audio_wavein.cpp
+ * PURPOSE:         Sound recording
+ * PROGRAMMERS:     Marco Pagliaricci (irc: rendar)
+ */
+
+
 
 #include "stdafx.h"
 #include "audio_wavein.hpp"
@@ -14,17 +15,19 @@
 _AUDIO_NAMESPACE_START_
 
 
-    void
-    audio_wavein::init_( void )
+void
+audio_wavein::init_( void )
 {
     ZeroMemory(( LPVOID ) &wave_format, 
-        sizeof( WAVEFORMATEX ));
+                    sizeof( WAVEFORMATEX ));
 
     wave_format.cbSize = sizeof( WAVEFORMATEX );
 
     wavein_handle = 0;
     recthread_id = 0;
     wakeup_recthread = 0;
+
+    data_flushed_event = 0;
 
     buf_secs = _AUDIO_DEFAULT_WAVEINBUFSECS;
 
@@ -34,7 +37,7 @@ _AUDIO_NAMESPACE_START_
 
 
 void
-    audio_wavein::alloc_buffers_mem_( unsigned int buffs, float secs )
+audio_wavein::alloc_buffers_mem_( unsigned int buffs, float secs )
 {
 
 
@@ -65,9 +68,9 @@ void
 
     tot_size = onebuf_size * buffs;
 
-
-
-
+    
+    
+    
     //
     // Allocs memory for the audio buffers
     //
@@ -105,7 +108,7 @@ void
 
 
 void 
-    audio_wavein::free_buffers_mem_( void )
+audio_wavein::free_buffers_mem_( void )
 {
 
 
@@ -128,7 +131,7 @@ void
 
 
 void 
-    audio_wavein::init_headers_( void )
+audio_wavein::init_headers_( void )
 {
 
 
@@ -153,7 +156,7 @@ void
     //
     // This is the base address for one buffer
     //
-
+    
     BYTE * buf_addr = main_buffer;
 
 
@@ -173,7 +176,7 @@ void
 
 
 void 
-    audio_wavein::prep_headers_( void )
+audio_wavein::prep_headers_( void )
 {
     MMRESULT err;
     bool error = false;
@@ -193,14 +196,14 @@ void
     for ( unsigned int i = 0; i < buffers; ++i )
     {
         err = waveInPrepareHeader( wavein_handle, 
-            &wave_headers[ i ], sizeof( WAVEHDR ));
+                    &wave_headers[ i ], sizeof( WAVEHDR ));
 
 
         if ( err != MMSYSERR_NOERROR )
             error = true;
 
     }
-
+    
 
     if ( error )
         MessageBox( 0, TEXT("waveInPrepareHeader Error."), 0, 0 );
@@ -210,7 +213,7 @@ void
 }
 
 void 
-    audio_wavein::unprep_headers_( void )
+audio_wavein::unprep_headers_( void )
 {
     MMRESULT err;
     bool error = false;
@@ -231,14 +234,14 @@ void
     for ( unsigned int i = 0; i < buffers; ++i )
     {
         err = waveInUnprepareHeader( wavein_handle, 
-            &wave_headers[ i ], sizeof( WAVEHDR ));
+                    &wave_headers[ i ], sizeof( WAVEHDR ));
 
 
         if ( err != MMSYSERR_NOERROR )
             error = true;
 
     }
-
+    
 
     if ( error )
         MessageBox( 0, TEXT("waveInUnPrepareHeader Error."), 0, 0 );
@@ -247,7 +250,7 @@ void
 
 
 void 
-    audio_wavein::add_buffers_to_driver_( void )
+audio_wavein::add_buffers_to_driver_( void )
 {
     MMRESULT err;
     bool error = false;
@@ -269,14 +272,14 @@ void
     for ( unsigned int i = 0; i < buffers; ++i )
     {
         err = waveInAddBuffer( wavein_handle, 
-            &wave_headers[ i ], sizeof( WAVEHDR ));
+                &wave_headers[ i ], sizeof( WAVEHDR ));
 
 
         if ( err != MMSYSERR_NOERROR )
             error = true;
 
     }
-
+    
 
     if ( error )
         MessageBox( 0, TEXT("waveInAddBuffer Error."), 0, 0 );
@@ -286,7 +289,7 @@ void
 
 
 void
-    audio_wavein::close( void ) 
+audio_wavein::close( void ) 
 {
 
 
@@ -306,7 +309,7 @@ void
     // If the wavein is recording,
     // then stop recording and close it.
     //
-
+    
     if ( status == WAVEIN_RECORDING )
         stop_recording();
 
@@ -335,7 +338,7 @@ void
     //
 
     while (( waveInClose( wavein_handle )) 
-        != MMSYSERR_NOERROR ) Sleep( 1 );
+                    != MMSYSERR_NOERROR ) Sleep( 1 );
 
 
 
@@ -352,12 +355,12 @@ void
     //
 
     init_();
-
+    
 }
 
 
 void
-    audio_wavein::open( void )
+audio_wavein::open( void )
 {
 
     MMRESULT err;
@@ -433,14 +436,14 @@ void
 
     recthread_handle = 
         CreateThread( NULL, 
-        0, 
-        audio_wavein::recording_procedure, 
-        ( PVOID ) this, 
-        0, 
-        &recthread_id 
-        );
+                      0, 
+                      audio_wavein::recording_procedure, 
+                      ( PVOID ) this, 
+                      0, 
+                      &recthread_id 
+            );
 
-
+    
 
     //
     // Checking thread handle
@@ -476,12 +479,12 @@ void
     //
 
     err = waveInOpen( &wavein_handle, 
-        0, 
-        &wave_format, 
-        recthread_id, 
-        0, 
-        CALLBACK_THREAD 
-        );
+                      0, 
+                      &wave_format, 
+                      recthread_id, 
+                      0, 
+                      CALLBACK_THREAD 
+            );
 
 
     if ( err != MMSYSERR_NOERROR ) 
@@ -519,7 +522,7 @@ void
 
 
 void
-    audio_wavein::start_recording( void )
+audio_wavein::start_recording( void )
 {
 
     MMRESULT err;
@@ -528,7 +531,7 @@ void
 
 
     if (( status != WAVEIN_READY ) 
-        && ( status != WAVEIN_STOP ))
+                && ( status != WAVEIN_STOP ))
     {} //TODO: throw error
 
 
@@ -548,7 +551,7 @@ void
     // we will pass to the driver with our
     // audio informations, and buffer informations.
     //
-
+    
     prep_headers_();
 
 
@@ -569,7 +572,7 @@ void
     // Signaling event for waking up
     // the recorder thread.
     //
-
+    
     ev = SetEvent( wakeup_recthread );
 
 
@@ -580,13 +583,13 @@ void
         MessageBox( 0, TEXT("Event Error."), 0, 0 );
 
     }
-
+    
 
     //
     // Start recording
     //
 
-
+    
     err = waveInStart( wavein_handle );
 
 
@@ -611,9 +614,9 @@ void
 
 
 void
-    audio_wavein::stop_recording( void )
+audio_wavein::stop_recording( void )
 {
-
+        
 
     MMRESULT err;
     DWORD wait;
@@ -623,15 +626,8 @@ void
         return;
 
 
-
+    
     status = WAVEIN_FLUSHING;
-
-
-    if ( data_flushed_event )
-        wait = WaitForSingleObject( 
-        data_flushed_event, INFINITE 
-        );
-
 
 
     //
@@ -653,7 +649,17 @@ void
     }
 
 
+    if ( data_flushed_event )
+        wait = WaitForSingleObject( 
+                        data_flushed_event, INFINITE 
+                    );
 
+
+
+    
+
+
+    
     //
     // Stop recording.
     //
@@ -684,7 +690,7 @@ void
 
 
 
-
+    
 
 
 
@@ -697,7 +703,7 @@ void
 
 
 DWORD WINAPI 
-    audio_wavein::recording_procedure( LPVOID arg )
+audio_wavein::recording_procedure( LPVOID arg )
 {
 
 
@@ -706,7 +712,7 @@ DWORD WINAPI
     DWORD wait;
     audio_wavein * _this = ( audio_wavein * ) arg;
 
-
+    
 
 
     //
@@ -716,8 +722,8 @@ DWORD WINAPI
     if ( _this == 0 )
         return 0;
 
-
-
+    
+    
     //
     // The thread can go to sleep for now.
     // It will be wake up only when there is audio data
@@ -726,25 +732,25 @@ DWORD WINAPI
 
     if ( _this->wakeup_recthread )
         wait = WaitForSingleObject( 
-        _this->wakeup_recthread, INFINITE 
-        );
+                        _this->wakeup_recthread, INFINITE 
+                    );
 
 
 
 
 
-
+    
     //
     // If status of the `audio_wavein' object 
     // is not ready or recording the thread can exit.
     //
 
     if (( _this->status != WAVEIN_READY ) && 
-        ( _this->status != WAVEIN_RECORDING ))
+                ( _this->status != WAVEIN_RECORDING ))
         return 0;
 
 
-
+    
 
 
 
@@ -758,115 +764,116 @@ DWORD WINAPI
 
         switch ( msg.message )
         {
+                
+            case MM_WIM_DATA:
+            
+                phdr = ( WAVEHDR * ) msg.lParam;
 
-        case MM_WIM_DATA:
-
-            phdr = ( WAVEHDR * ) msg.lParam;
-
-            if (( _this->status == WAVEIN_RECORDING ) 
-                || ( _this->status == WAVEIN_FLUSHING ))
-            {
-
-                //
-                // Flushes recorded audio data to 
-                // the `audio_receiver' object.
-                //
-
-                _this->audio_rcvd.audio_receive(
-                    ( unsigned char * )phdr->lpData, 
-                    phdr->dwBytesRecorded 
-                    );
-
-
-                //
-                // Updating `audio_receiver' total
-                // bytes received _AFTER_ calling
-                // `audio_receive' function.
-                //
-
-                _this->audio_rcvd.bytes_received += 
-                    phdr->dwBytesRecorded;
-
-
-
-
-                //
-                // If status is not flushing data, then
-                // we can re-add the buffer for reusing it.
-                // Otherwise, if we are flushing pending data,
-                // we cannot re-add buffer because we don't need
-                // it anymore
-                //
-
-                if ( _this->status != WAVEIN_FLUSHING )
+                if (( _this->status == WAVEIN_RECORDING ) 
+                            || ( _this->status == WAVEIN_FLUSHING ))
                 {
 
+
+                    if ( phdr->dwFlags & WHDR_DONE )
+                    {
+
+                        //
+                        // Flushes recorded audio data to 
+                        // the `audio_receiver' object.
+                        //
+
+                        _this->audio_rcvd.audio_receive(
+                                ( unsigned char * )phdr->lpData, 
+                                phdr->dwBytesRecorded 
+                            );
+
+                        
+                        //
+                        // Updating `audio_receiver' total
+                        // bytes received _AFTER_ calling
+                        // `audio_receive' function.
+                        //
+
+                        _this->audio_rcvd.bytes_received += 
+                                        phdr->dwBytesRecorded;
+                    }
+    
+
+                            
                     //
-                    // Let the audio driver reuse the buffer
+                    // If status is not flushing data, then
+                    // we can re-add the buffer for reusing it.
+                    // Otherwise, if we are flushing pending data,
+                    // we cannot re-add buffer because we don't need
+                    // it anymore
                     //
 
-                    waveInAddBuffer( _this->wavein_handle, 
-                        phdr, sizeof( WAVEHDR ));
+                    if ( _this->status != WAVEIN_FLUSHING )
+                    {
+
+                        //
+                        // Let the audio driver reuse the buffer
+                        //
+
+                        waveInAddBuffer( _this->wavein_handle, 
+                                            phdr, sizeof( WAVEHDR ));
 
 
-                } else {
+                    } else {
 
-                    //
-                    // If we are flushing pending data, we have
-                    // to prepare to stop recording.
-                    // Set WAVEHDR flag to 0, and fires the event
-                    // `data_flushed_event', that will wake up
-                    // the main thread that is sleeping into
-                    // wavein_in::stop_recording() member function,
-                    // waiting the last `MM_WIM_DATA' message that
-                    // contain pending data.
-                    //
+                        //
+                        // If we are flushing pending data, we have
+                        // to prepare to stop recording.
+                        // Set WAVEHDR flag to 0, and fires the event
+                        // `data_flushed_event', that will wake up
+                        // the main thread that is sleeping into
+                        // wavein_in::stop_recording() member function,
+                        // waiting the last `MM_WIM_DATA' message that
+                        // contain pending data.
+                        //
 
+                        phdr->dwFlags = 0;
 
-
-
-                    phdr->dwFlags = 0;
-
-                    SetEvent( _this->data_flushed_event );
+                        SetEvent( _this->data_flushed_event );
 
 
-                    //
-                    // The recording is gooing to stop, so the
-                    // recording thread can go to sleep!
-                    //
+                        //
+                        // The recording is gooing to stop, so the
+                        // recording thread can go to sleep!
+                        //
 
-                    wait = WaitForSingleObject( 
-                        _this->wakeup_recthread, INFINITE );
-
-                }
-
-
-            }//if WAVEIN_RECORDING || WAVEIN_FLUSHING
-
-            break;
+                        wait = WaitForSingleObject( 
+                                    _this->wakeup_recthread, INFINITE );
+                            
+                    }
 
 
+                }//if WAVEIN_RECORDING || WAVEIN_FLUSHING
+
+                break;
 
 
+            
+
+                        
 
 
 
 
+            case MM_WIM_CLOSE:
 
-        case MM_WIM_CLOSE:
+                //
+                // The thread can exit now.
+                //
 
-            //
-            // The thread can exit now.
-            //
+                return 0;
 
-            return 0;
-
-            break;
+                break;
 
 
 
         }  //end switch( msg.message )
-
+        
     }  //end while( GetMessage( ... ))
 
     return 0;				

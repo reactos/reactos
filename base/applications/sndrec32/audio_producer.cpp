@@ -1,12 +1,10 @@
-/*
- * PROJECT:         ReactOS Sound Record Application
+/* PROJECT:         ReactOS sndrec32
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            base/applications/sndrec32/audio_producer.cpp
- * PURPOSE:         Audio Format
- * PROGRAMMERS:     Marco Pagliaricci <ms_blue (at) hotmail (dot) it>
+ * PURPOSE:         Sound recording
+ * PROGRAMMERS:     Marco Pagliaricci (irc: rendar)
  */
 
-
-#include "StdAfx.h"
+#include "stdafx.h"
 #include "audio_producer.hpp"
 

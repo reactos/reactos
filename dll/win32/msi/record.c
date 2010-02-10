@@ -64,7 +64,7 @@ static void MSI_FreeField( MSIFIELD *field )
     }
 }
 
-static void MSI_CloseRecord( MSIOBJECTHDR *arg )
+void MSI_CloseRecord( MSIOBJECTHDR *arg )
 {
     MSIRECORD *rec = (MSIRECORD *) arg;
     UINT i;

@@ -1998,12 +1998,7 @@ LRESULT WINAPI ComboWndProc_common( HWND hwnd, UINT message,
 			COMBO_FlipListbox( lphc, FALSE, FALSE );
                 return  0;
 
-	case WM_CHAR:
-	case WM_IME_CHAR:
 	case WM_KEYDOWN:
-	{
-		HWND hwndTarget;
-
 		if ((wParam == VK_RETURN || wParam == VK_ESCAPE) &&
 		     (lphc->wState & CBF_DROPPED))
 		{
@@ -2015,6 +2010,11 @@ LRESULT WINAPI ComboWndProc_common( HWND hwnd, UINT message,
                   COMBO_FlipListbox( lphc, FALSE, FALSE );
                   return TRUE;
                }
+               /* fall through */
+	case WM_CHAR:
+	case WM_IME_CHAR:
+        {
+		HWND hwndTarget;
 
 		if( lphc->wState & CBF_EDIT )
 		    hwndTarget = lphc->hWndEdit;

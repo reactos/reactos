@@ -5,7 +5,7 @@
  * PURPOSE:         No Text UI interface
  * PROGRAMMERS:     Hervé Poussineau
  */
-
+#ifndef _M_ARM
 #include <freeldr.h>
 
 BOOLEAN NoUiInitialize(VOID)
@@ -118,3 +118,4 @@ BOOLEAN NoUiDisplayMenu(PCSTR MenuItemList[], ULONG MenuItemCount, ULONG Default
 VOID NoUiDrawMenu(PUI_MENU_INFO MenuInfo)
 {
 }
+#endif

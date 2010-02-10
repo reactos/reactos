@@ -15,6 +15,58 @@
     : "memory");
 
 FORCEINLINE
+VOID
+Ke386FxStore(IN PFX_SAVE_AREA SaveArea)
+{
+    asm volatile ("fxrstor (%0)" : : "r"(SaveArea));
+}
+
+FORCEINLINE
+VOID
+Ke386FxSave(IN PFX_SAVE_AREA SaveArea)
+{
+    asm volatile ("fxsave (%0)" : : "r"(SaveArea));
+}
+
+
+FORCEINLINE
+VOID
+Ke386FnSave(IN PFLOATING_SAVE_AREA SaveArea)
+{
+    asm volatile ("fnsave (%0); wait" : : "r"(SaveArea));
+}
+
+FORCEINLINE
+VOID
+Ke386SaveFpuState(IN PFX_SAVE_AREA SaveArea)
+{
+    extern ULONG KeI386FxsrPresent;
+    if (KeI386FxsrPresent)
+    {
+        __asm__ __volatile__ ("fxsave %0\n" : : "m"(SaveArea));
+    }
+    else
+    {
+        __asm__ __volatile__ ("fnsave %0\n wait\n" : : "m"(SaveArea));
+    }
+}
+
+FORCEINLINE
+VOID
+Ke386LoadFpuState(IN PFX_SAVE_AREA SaveArea)
+{
+    extern ULONG KeI386FxsrPresent;
+    if (KeI386FxsrPresent)
+    {
+        __asm__ __volatile__ ("fxrstor %0\n" : "=m"(SaveArea) : );
+    }
+    else
+    {
+        __asm__ __volatile__ (".globl _FrRestore\n _FrRestore: \n frstor %0\n wait\n" : "=m"(SaveArea) : );
+    }
+}
+
+FORCEINLINE
 USHORT
 Ke386GetLocalDescriptorTable()
 {
@@ -52,6 +104,7 @@ Ke386GetTr(VOID)
 #define _Ke386SetSeg(N,X)         __asm__ __volatile__("movl %0,%%" #N : :"r" (X));
 
 #define Ke386FnInit()               __asm__("fninit\n\t");
+#define Ke386ClearDirectionFlag()   __asm__ __volatile__ ("cld")
 
 
 //
@@ -64,6 +117,9 @@ Ke386GetTr(VOID)
 //
 #define Ke386GetSs()                _Ke386GetSeg(ss)
 #define Ke386GetFs()                _Ke386GetSeg(fs)
+#define Ke386GetDs()                _Ke386GetSeg(ds)
+#define Ke386GetEs()                _Ke386GetSeg(es)
+#define Ke386GetGs()                _Ke386GetSeg(gs)
 #define Ke386SetFs(X)               _Ke386SetSeg(fs, X)
 #define Ke386SetDs(X)               _Ke386SetSeg(ds, X)
 #define Ke386SetEs(X)               _Ke386SetSeg(es, X)

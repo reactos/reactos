@@ -1319,9 +1319,8 @@ NTAPI
 KiSetupSyscallHandler();
 
 VOID
-FASTCALL
-KiRosPrepareForSystemStartup(IN ULONG Dummy,
-                             IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
+NTAPI
+KiRosPrepareForSystemStartup(IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PLOADER_PARAMETER_BLOCK NtLoaderBlock;
     ULONG size, i = 0, *ent;
@@ -1411,5 +1410,5 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
 #endif
 
     /* Do general System Startup */
-    KiSystemStartupReal(NtLoaderBlock);
+    KiSystemStartup(NtLoaderBlock);
 }

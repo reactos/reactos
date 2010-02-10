@@ -23,6 +23,10 @@
 #define LVSTARTUP 3
 #define LVLOGONAS 4
 
+#define IMAGE_UNKNOWN 0
+#define IMAGE_SERVICE 1
+#define IMAGE_DRIVER 2
+
 typedef struct _MAIN_WND_INFO
 {
     HWND  hMainWnd;
@@ -39,6 +43,8 @@ typedef struct _MAIN_WND_INFO
     BOOL bDlgOpen;
     BOOL bInMenuLoop;
     BOOL bIsUserAnAdmin;
+
+    PVOID pTag;
 
 } MAIN_WND_INFO, *PMAIN_WND_INFO;
 
@@ -84,15 +90,18 @@ typedef struct _STOP_INFO
 } STOP_INFO, *PSTOP_INFO;
 
 /* control */
-BOOL Control(PMAIN_WND_INFO Info, HWND hProgDlg, DWORD Control);
+BOOL Control(PMAIN_WND_INFO Info, HWND hProgress, DWORD Control);
 BOOL DoStop(PMAIN_WND_INFO Info);
 BOOL DoPause(PMAIN_WND_INFO Info);
 BOOL DoResume(PMAIN_WND_INFO Info);
 
 /* progress.c */
-HWND CreateProgressDialog(HWND hParent, LPTSTR lpServiceName, UINT Event);
-VOID IncrementProgressBar(HWND hProgDlg);
-VOID CompleteProgressBar(HWND hProgDlg);
+#define DEFAULT_STEP 0
+HWND CreateProgressDialog(HWND hParent, UINT LabelId);
+BOOL DestroyProgressDialog(HWND hProgress, BOOL bComplete);
+VOID InitializeProgressDialog(HWND hProgress, LPWSTR lpServiceName);
+VOID IncrementProgressBar(HWND hProgress, UINT NewPos);
+VOID CompleteProgressBar(HWND hProgress);
 
 /* query.c */
 ENUM_SERVICE_STATUS_PROCESS* GetSelectedService(PMAIN_WND_INFO Info);
@@ -105,11 +114,6 @@ BOOL RefreshServiceList(PMAIN_WND_INFO Info);
 BOOL UpdateServiceStatus(ENUM_SERVICE_STATUS_PROCESS* pService);
 BOOL GetServiceList(PMAIN_WND_INFO Info, DWORD *NumServices);
 
-/* dependencies */
-LPENUM_SERVICE_STATUS GetServiceDependents(SC_HANDLE hService, LPDWORD lpdwCount);
-BOOL HasDependentServices(SC_HANDLE hService);
-INT_PTR CALLBACK StopDependsDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
-LPTSTR GetDependentServices(SC_HANDLE hService);
 
 /* propsheet.c */
 typedef struct _SERVICEPROPSHEET
@@ -117,7 +121,27 @@ typedef struct _SERVICEPROPSHEET
     PMAIN_WND_INFO Info;
     ENUM_SERVICE_STATUS_PROCESS *pService;
     HIMAGELIST hDependsImageList;
+    HWND hDependsWnd;
+    HWND hDependsTreeView1;
+    HWND hDependsTreeView2;
 } SERVICEPROPSHEET, *PSERVICEPROPSHEET;
+
+
+HTREEITEM AddItemToTreeView(HWND hTreeView, HTREEITEM hRoot, LPTSTR lpDisplayName, LPTSTR lpServiceName, ULONG serviceType, BOOL bHasChildren);
+
+/* stop_dependencies */
+INT_PTR CALLBACK StopDependsDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+LPWSTR GetListOfServicesToStop(LPWSTR lpServiceName);
+
+/* tv1_dependencies */
+BOOL TV1_Initialize(PSERVICEPROPSHEET pDlgInfo, LPTSTR lpServiceName);
+VOID TV1_AddDependantsToTree(PSERVICEPROPSHEET pDlgInfo, HTREEITEM hParent, LPTSTR lpServiceName);
+
+/* tv2_dependencies */
+BOOL TV2_Initialize(PSERVICEPROPSHEET pDlgInfo, LPTSTR lpServiceName);
+VOID TV2_AddDependantsToTree(PSERVICEPROPSHEET pDlgInfo, HTREEITEM hParent, LPTSTR lpServiceName);
+BOOL TV2_HasDependantServices(LPWSTR lpServiceName);
+LPENUM_SERVICE_STATUS TV2_GetDependants(LPWSTR lpServiceName, LPDWORD lpdwCount);
 
 LONG APIENTRY OpenPropSheet(PMAIN_WND_INFO Info);
 

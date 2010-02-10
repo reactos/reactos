@@ -26,7 +26,6 @@
 #include "wined3d_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_texture);
-#define GLINFO_LOCATION This->resource.wineD3DDevice->adapter->gl_info
 
 HRESULT basetexture_init(IWineD3DBaseTextureImpl *texture, UINT levels, WINED3DRESOURCETYPE resource_type,
         IWineD3DDeviceImpl *device, UINT size, DWORD usage, const struct GlPixelFormatDesc *format_desc,
@@ -82,11 +81,12 @@ static void gltexture_delete(struct gl_texture *tex)
 void basetexture_unload(IWineD3DBaseTexture *iface)
 {
     IWineD3DTextureImpl *This = (IWineD3DTextureImpl *)iface;
-    IWineD3DDeviceImpl *device = This->resource.wineD3DDevice;
+    IWineD3DDeviceImpl *device = This->resource.device;
+    struct wined3d_context *context = NULL;
 
-    if(This->baseTexture.texture_rgb.name ||
-       This->baseTexture.texture_srgb.name) {
-        ActivateContext(device, NULL, CTXUSAGE_RESOURCELOAD);
+    if (This->baseTexture.texture_rgb.name || This->baseTexture.texture_srgb.name)
+    {
+        context = context_acquire(device, NULL, CTXUSAGE_RESOURCELOAD);
     }
 
     if(This->baseTexture.texture_rgb.name) {
@@ -95,6 +95,9 @@ void basetexture_unload(IWineD3DBaseTexture *iface)
     if(This->baseTexture.texture_srgb.name) {
         gltexture_delete(&This->baseTexture.texture_srgb);
     }
+
+    if (context) context_release(context);
+
     This->baseTexture.texture_rgb.dirty = TRUE;
     This->baseTexture.texture_srgb.dirty = TRUE;
 }
@@ -121,7 +124,7 @@ DWORD basetexture_set_lod(IWineD3DBaseTexture *iface, DWORD LODNew)
         This->baseTexture.texture_rgb.states[WINED3DTEXSTA_MAXMIPLEVEL] = ~0U;
         This->baseTexture.texture_srgb.states[WINED3DTEXSTA_MAXMIPLEVEL] = ~0U;
         if(This->baseTexture.bindCount) {
-            IWineD3DDeviceImpl_MarkStateDirty(This->resource.wineD3DDevice, STATE_SAMPLER(This->baseTexture.sampler));
+            IWineD3DDeviceImpl_MarkStateDirty(This->resource.device, STATE_SAMPLER(This->baseTexture.sampler));
         }
     }
 
@@ -149,7 +152,7 @@ DWORD basetexture_get_level_count(IWineD3DBaseTexture *iface)
 HRESULT basetexture_set_autogen_filter_type(IWineD3DBaseTexture *iface, WINED3DTEXTUREFILTERTYPE FilterType)
 {
   IWineD3DBaseTextureImpl *This = (IWineD3DBaseTextureImpl *)iface;
-  IWineD3DDeviceImpl *device = This->resource.wineD3DDevice;
+  IWineD3DDeviceImpl *device = This->resource.device;
   UINT textureDimensions = IWineD3DBaseTexture_GetTextureDimensions(iface);
 
   if (!(This->resource.usage & WINED3DUSAGE_AUTOGENMIPMAP)) {
@@ -161,7 +164,8 @@ HRESULT basetexture_set_autogen_filter_type(IWineD3DBaseTexture *iface, WINED3DT
        * Or should we delay the applying until the texture is used for drawing? For now, apply
        * immediately.
        */
-      ActivateContext(device, NULL, CTXUSAGE_RESOURCELOAD);
+      struct wined3d_context *context = context_acquire(device, NULL, CTXUSAGE_RESOURCELOAD);
+
       ENTER_GL();
       glBindTexture(textureDimensions, This->baseTexture.texture_rgb.name);
       checkGLcall("glBindTexture");
@@ -183,6 +187,8 @@ HRESULT basetexture_set_autogen_filter_type(IWineD3DBaseTexture *iface, WINED3DT
               checkGLcall("glTexParameteri(textureDimensions, GL_GENERATE_MIPMAP_HINT_SGIS, GL_NICEST)");
       }
       LEAVE_GL();
+
+      context_release(context);
   }
   This->baseTexture.filterType = FilterType;
   TRACE("(%p) :\n", This);
@@ -200,10 +206,8 @@ WINED3DTEXTUREFILTERTYPE basetexture_get_autogen_filter_type(IWineD3DBaseTexture
 
 void basetexture_generate_mipmaps(IWineD3DBaseTexture *iface)
 {
-  IWineD3DBaseTextureImpl *This = (IWineD3DBaseTextureImpl *)iface;
-  /* TODO: implement filters using GL_SGI_generate_mipmaps http://oss.sgi.com/projects/ogl-sample/registry/SGIS/generate_mipmap.txt */
-  FIXME("(%p) : stub\n", This);
-  return ;
+    /* TODO: Implement filters using GL_SGI_generate_mipmaps. */
+    FIXME("iface %p stub!\n", iface);
 }
 
 BOOL basetexture_set_dirty(IWineD3DBaseTexture *iface, BOOL dirty)
@@ -319,35 +323,38 @@ HRESULT basetexture_bind(IWineD3DBaseTexture *iface, BOOL srgb, BOOL *set_surfac
 }
 
 /* GL locking is done by the caller */
-static inline void apply_wrap(const GLint textureDimensions, const DWORD state, const GLint type,
-                              BOOL cond_np2) {
-    GLint wrapParm;
+static void apply_wrap(const struct wined3d_gl_info *gl_info, GLenum target,
+        WINED3DTEXTUREADDRESS d3d_wrap, GLenum param, BOOL cond_np2)
+{
+    GLint gl_wrap;
 
-    if (state < minLookup[WINELOOKUP_WARPPARAM] || state > maxLookup[WINELOOKUP_WARPPARAM]) {
-        FIXME("Unrecognized or unsupported WINED3DTADDRESS_U value %d\n", state);
-    } else {
-        if(textureDimensions==GL_TEXTURE_CUBE_MAP_ARB) {
-            /* Cubemaps are always set to clamp, regardless of the sampler state. */
-            wrapParm = GL_CLAMP_TO_EDGE;
-        } else if(cond_np2) {
-            if(state == WINED3DTADDRESS_WRAP) {
-                wrapParm = GL_CLAMP_TO_EDGE;
-            } else {
-                wrapParm = stateLookup[WINELOOKUP_WARPPARAM][state - minLookup[WINELOOKUP_WARPPARAM]];
-            }
-        } else {
-            wrapParm = stateLookup[WINELOOKUP_WARPPARAM][state - minLookup[WINELOOKUP_WARPPARAM]];
-        }
-        TRACE("Setting WRAP_S to %d for %x\n", wrapParm, textureDimensions);
-        glTexParameteri(textureDimensions, type, wrapParm);
-        checkGLcall("glTexParameteri(..., type, wrapParm)");
+    if (d3d_wrap < WINED3DTADDRESS_WRAP || d3d_wrap > WINED3DTADDRESS_MIRRORONCE)
+    {
+        FIXME("Unrecognized or unsupported WINED3DTEXTUREADDRESS %#x.\n", d3d_wrap);
+        return;
     }
+
+    if (target == GL_TEXTURE_CUBE_MAP_ARB
+            || (cond_np2 && d3d_wrap == WINED3DTADDRESS_WRAP))
+    {
+        /* Cubemaps are always set to clamp, regardless of the sampler state. */
+        gl_wrap = GL_CLAMP_TO_EDGE;
+    }
+    else
+    {
+        gl_wrap = gl_info->wrap_lookup[d3d_wrap - WINED3DTADDRESS_WRAP];
+    }
+
+    TRACE("Setting param %#x to %#x for target %#x.\n", param, gl_wrap, target);
+    glTexParameteri(target, param, gl_wrap);
+    checkGLcall("glTexParameteri(target, param, gl_wrap)");
 }
 
 /* GL locking is done by the caller (state handler) */
 void basetexture_apply_state_changes(IWineD3DBaseTexture *iface,
         const DWORD textureStates[WINED3D_HIGHEST_TEXTURE_STATE + 1],
-        const DWORD samplerStates[WINED3D_HIGHEST_SAMPLER_STATE + 1])
+        const DWORD samplerStates[WINED3D_HIGHEST_SAMPLER_STATE + 1],
+        const struct wined3d_gl_info *gl_info)
 {
     IWineD3DBaseTextureImpl *This = (IWineD3DBaseTextureImpl *)iface;
     DWORD state;
@@ -368,19 +375,19 @@ void basetexture_apply_state_changes(IWineD3DBaseTexture *iface,
 
     if(samplerStates[WINED3DSAMP_ADDRESSU]      != gl_tex->states[WINED3DTEXSTA_ADDRESSU]) {
         state = samplerStates[WINED3DSAMP_ADDRESSU];
-        apply_wrap(textureDimensions, state, GL_TEXTURE_WRAP_S, cond_np2);
+        apply_wrap(gl_info, textureDimensions, state, GL_TEXTURE_WRAP_S, cond_np2);
         gl_tex->states[WINED3DTEXSTA_ADDRESSU] = state;
     }
 
     if(samplerStates[WINED3DSAMP_ADDRESSV]      != gl_tex->states[WINED3DTEXSTA_ADDRESSV]) {
         state = samplerStates[WINED3DSAMP_ADDRESSV];
-        apply_wrap(textureDimensions, state, GL_TEXTURE_WRAP_T, cond_np2);
+        apply_wrap(gl_info, textureDimensions, state, GL_TEXTURE_WRAP_T, cond_np2);
         gl_tex->states[WINED3DTEXSTA_ADDRESSV] = state;
     }
 
     if(samplerStates[WINED3DSAMP_ADDRESSW]      != gl_tex->states[WINED3DTEXSTA_ADDRESSW]) {
         state = samplerStates[WINED3DSAMP_ADDRESSW];
-        apply_wrap(textureDimensions, state, GL_TEXTURE_WRAP_R, cond_np2);
+        apply_wrap(gl_info, textureDimensions, state, GL_TEXTURE_WRAP_R, cond_np2);
         gl_tex->states[WINED3DTEXSTA_ADDRESSW] = state;
     }
 
@@ -470,7 +477,7 @@ void basetexture_apply_state_changes(IWineD3DBaseTexture *iface,
 
     if (gl_tex->states[WINED3DTEXSTA_MAXANISOTROPY] != aniso)
     {
-        if (GL_SUPPORT(EXT_TEXTURE_FILTER_ANISOTROPIC))
+        if (gl_info->supported[EXT_TEXTURE_FILTER_ANISOTROPIC])
         {
             glTexParameteri(textureDimensions, GL_TEXTURE_MAX_ANISOTROPY_EXT, aniso);
             checkGLcall("glTexParameteri(GL_TEXTURE_MAX_ANISOTROPY_EXT, aniso)");

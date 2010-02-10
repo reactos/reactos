@@ -119,7 +119,7 @@ static inline xmldoc_priv * priv_from_xmlDocPtr(xmlDocPtr doc)
 static xmldoc_priv * create_priv(void)
 {
     xmldoc_priv *priv;
-    priv = HeapAlloc( GetProcessHeap(), 0, sizeof (*priv) );
+    priv = heap_alloc( sizeof (*priv) );
 
     if(priv)
     {
@@ -164,9 +164,9 @@ LONG xmldoc_release(xmlDocPtr doc)
         LIST_FOR_EACH_ENTRY_SAFE( orphan, orphan2, &priv->orphans, orphan_entry, entry )
         {
             xmlFreeNode( orphan->node );
-            HeapFree( GetProcessHeap(), 0, orphan );
+            heap_free( orphan );
         }
-        HeapFree(GetProcessHeap(), 0, doc->_private);
+        heap_free(doc->_private);
 
         xmlFreeDoc(doc);
     }
@@ -179,7 +179,7 @@ HRESULT xmldoc_add_orphan(xmlDocPtr doc, xmlNodePtr node)
     xmldoc_priv *priv = priv_from_xmlDocPtr(doc);
     orphan_entry *entry;
 
-    entry = HeapAlloc( GetProcessHeap(), 0, sizeof (*entry) );
+    entry = heap_alloc( sizeof (*entry) );
     if(!entry)
         return E_OUTOFMEMORY;
 
@@ -198,7 +198,7 @@ HRESULT xmldoc_remove_orphan(xmlDocPtr doc, xmlNodePtr node)
         if( entry->node == node )
         {
             list_remove( &entry->entry );
-            HeapFree( GetProcessHeap(), 0, entry );
+            heap_free( entry );
             return S_OK;
         }
     }
@@ -1041,7 +1041,7 @@ static HRESULT WINAPI domdoc_createElement(
 
     TRACE("created xmlptr %p\n", xmlnode);
     elem_unk = create_element(xmlnode);
-    HeapFree(GetProcessHeap(), 0, xml_name);
+    heap_free(xml_name);
 
     hr = IUnknown_QueryInterface(elem_unk, &IID_IXMLDOMElement, (void **)element);
     IUnknown_Release(elem_unk);
@@ -1094,7 +1094,7 @@ static HRESULT WINAPI domdoc_createTextNode(
 
     xml_content = xmlChar_from_wchar(data);
     xmlnode = xmlNewText(xml_content);
-    HeapFree(GetProcessHeap(), 0, xml_content);
+    heap_free(xml_content);
 
     if(!xmlnode)
         return E_FAIL;
@@ -1126,7 +1126,7 @@ static HRESULT WINAPI domdoc_createComment(
 
     xml_content = xmlChar_from_wchar(data);
     xmlnode = xmlNewComment(xml_content);
-    HeapFree(GetProcessHeap(), 0, xml_content);
+    heap_free(xml_content);
 
     if(!xmlnode)
         return E_FAIL;
@@ -1158,7 +1158,7 @@ static HRESULT WINAPI domdoc_createCDATASection(
 
     xml_content = xmlChar_from_wchar(data);
     xmlnode = xmlNewCDataBlock(get_doc( This ), xml_content, strlen( (char*)xml_content) );
-    HeapFree(GetProcessHeap(), 0, xml_content);
+    heap_free(xml_content);
 
     if(!xmlnode)
         return E_FAIL;
@@ -1199,8 +1199,8 @@ static HRESULT WINAPI domdoc_createProcessingInstruction(
     TRACE("created xmlptr %p\n", xmlnode);
     *pi = (IXMLDOMProcessingInstruction*)create_pi(xmlnode);
 
-    HeapFree(GetProcessHeap(), 0, xml_content);
-    HeapFree(GetProcessHeap(), 0, xml_target);
+    heap_free(xml_content);
+    heap_free(xml_target);
 
     return S_OK;
 #else
@@ -1228,7 +1228,7 @@ static HRESULT WINAPI domdoc_createAttribute(
 
     xml_name = xmlChar_from_wchar(name);
     xmlnode = (xmlNode *)xmlNewProp(NULL, xml_name, NULL);
-    HeapFree(GetProcessHeap(), 0, xml_name);
+    heap_free(xml_name);
 
     if(!xmlnode)
         return E_FAIL;
@@ -1260,7 +1260,7 @@ static HRESULT WINAPI domdoc_createEntityReference(
 
     xml_name = xmlChar_from_wchar(name);
     xmlnode = xmlNewReference(get_doc( This ), xml_name );
-    HeapFree(GetProcessHeap(), 0, xml_name);
+    heap_free(xml_name);
 
     if(!xmlnode)
         return E_FAIL;
@@ -1279,17 +1279,28 @@ static HRESULT WINAPI domdoc_getElementsByTagName(
     BSTR tagName,
     IXMLDOMNodeList** resultList )
 {
+    static const WCHAR xpathformat[] =
+            { '/','/','*','[','l','o','c','a','l','-','n','a','m','e','(',')','=','\'','%','s','\'',']',0 };
     domdoc *This = impl_from_IXMLDOMDocument2( iface );
     LPWSTR szPattern;
     HRESULT hr;
     TRACE("(%p)->(%s, %p)\n", This, debugstr_w(tagName), resultList);
 
-    szPattern = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR)*(2+lstrlenW(tagName)+1));
-    szPattern[0] = szPattern[1] = '/';
-    lstrcpyW(szPattern + 2, tagName);
+    if (tagName[0] == '*' && tagName[1] == 0)
+    {
+        szPattern = heap_alloc(sizeof(WCHAR)*4);
+        szPattern[0] = szPattern[1] = '/';
+        szPattern[2] = '*';
+        szPattern[3] = 0;
+    }
+    else
+    {
+        szPattern = heap_alloc(sizeof(WCHAR)*(20+lstrlenW(tagName)+1));
+        wsprintfW(szPattern, xpathformat, tagName);
+    }
 
     hr = queryresult_create((xmlNodePtr)get_doc(This), szPattern, resultList);
-    HeapFree(GetProcessHeap(), 0, szPattern);
+    heap_free(szPattern);
 
     return hr;
 }
@@ -1359,7 +1370,7 @@ static HRESULT WINAPI domdoc_createNode(
         break;
     }
 
-    HeapFree(GetProcessHeap(), 0, xml_name);
+    heap_free(xml_name);
 
     if(xmlnode && *node)
     {
@@ -1588,7 +1599,7 @@ static BOOL bstr_to_utf8( BSTR bstr, char **pstr, int *plen )
     LPSTR str;
 
     len = WideCharToMultiByte( CP_UTF8, 0, bstr, blen, NULL, 0, NULL, NULL );
-    str = HeapAlloc( GetProcessHeap(), 0, len );
+    str = heap_alloc( len );
     if ( !str )
         return FALSE;
     WideCharToMultiByte( CP_UTF8, 0, bstr, blen, str, len, NULL, NULL );
@@ -1619,7 +1630,7 @@ static HRESULT WINAPI domdoc_loadXML(
         if ( bstrXML  && bstr_to_utf8( bstrXML, &str, &len ) )
         {
             xmldoc = doparse( str, len );
-            HeapFree( GetProcessHeap(), 0, str );
+            heap_free( str );
             if ( !xmldoc )
                 This->error = E_FAIL;
             else
@@ -2193,7 +2204,7 @@ HRESULT DOMDocument_create_from_xmldoc(xmlDocPtr xmldoc, IXMLDOMDocument2 **docu
 {
     domdoc *doc;
 
-    doc = HeapAlloc( GetProcessHeap(), 0, sizeof (*doc) );
+    doc = heap_alloc( sizeof (*doc) );
     if( !doc )
         return E_OUTOFMEMORY;
 

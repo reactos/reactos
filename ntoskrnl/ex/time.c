@@ -25,33 +25,195 @@ ULONG ExpAltTimeZoneBias;
 ULONG ExpTimeZoneId;
 ULONG ExpTickCountMultiplier;
 ERESOURCE ExpTimeRefreshLock;
+ULONG ExpKernelResolutionCount = 0;
+ULONG ExpTimerResolutionCount = 0;
 
 /* FUNCTIONS ****************************************************************/
 
+/*++
+ * @name ExAcquireTimeRefreshLock
+ *
+ *     The ExReleaseTimeRefreshLock routine acquires the system-wide lock used
+ *     to synchronize clock interrupt frequency changes.
+ *
+ * @param Wait
+ *        If TRUE, the system will block the caller thread waiting for the lock
+ *        to become available. If FALSE, the routine will fail if the lock has
+ *        already been acquired.
+ *
+ * @return Boolean value indicating success or failure of the lock acquisition.
+ *
+ * @remarks None.
+ *
+ *--*/
 BOOLEAN
 NTAPI
-ExAcquireTimeRefreshLock(BOOLEAN Wait)
+ExAcquireTimeRefreshLock(
+    IN BOOLEAN Wait
+    )
 {
-    /* Simply acquire the Resource */
+    /* Block APCs */
     KeEnterCriticalRegion();
+
+    /* Attempt lock acquisition */
     if (!(ExAcquireResourceExclusiveLite(&ExpTimeRefreshLock, Wait)))
     {
-        /* We failed! */
+        /* Lock was not acquired, enable APCs and fail */
         KeLeaveCriticalRegion();
         return FALSE;
     }
 
-    /* Success */
+    /* Lock has been acquired */
     return TRUE;
 }
 
+/*++
+ * @name ExReleaseTimeRefreshLock
+ *
+ *     The ExReleaseTimeRefreshLock routine releases the system-wide lock used
+ *     to synchronize clock interrupt frequency changes.
+ *
+ * @param None.
+ *
+ * @return None.
+ *
+ * @remarks None.
+ *
+ *--*/
 VOID
 NTAPI
-ExReleaseTimeRefreshLock(VOID)
+ExReleaseTimeRefreshLock(
+    VOID
+    )
 {
-    /* Simply release the Resource */
+    /* Release the lock and re-enable APCs */
     ExReleaseResourceLite(&ExpTimeRefreshLock);
     KeLeaveCriticalRegion();
+}
+
+/*++
+ * @name ExSetTimerResolution
+ * @exported
+ *
+ *     The KiInsertQueueApc routine modifies the frequency at which the system
+ *     clock interrupts.
+ *
+ * @param DesiredTime
+ *        Specifies the amount of time that should elapse between each timer
+ *        interrupt, in 100-nanosecond units.
+ *
+ *        This parameter is ignored if SetResolution is FALSE.
+ *
+ * @param SetResolution
+ *        If TRUE, the call is a request to set the clock interrupt frequency to
+ *        the value specified by DesiredTime. If FALSE, the call is a request to
+ *        restore the clock interrupt frequency to the system's default value.
+ *
+ * @return New timer resolution, in 100-nanosecond ticks.
+ *
+ * @remarks (1) The clock frequency is changed only if the DesiredTime value is
+ *              less than the current setting.
+ *
+ *          (2) The routine just returns the current setting if the DesiredTime
+ *              value is greater than what is currently set.
+ *
+ *          (3) If the DesiredTime value is less than the system clock can
+ *              support, the routine uses the smallest resolution the system can
+ *              support, and returns that value.
+ *
+ *          (4) If multiple drivers have attempted to change the clock interrupt
+ *              frequency, the system will only restore the default frequency
+ *              once ALL drivers have called the routine with SetResolution set
+ *              to FALSE.
+ *
+ *          NB. This routine synchronizes with IRP_MJ_POWER requests through the
+ *              TimeRefreshLock.
+ *
+ *--*/
+ULONG
+NTAPI
+ExSetTimerResolution(IN ULONG DesiredTime,
+                     IN BOOLEAN SetResolution)
+{
+    ULONG CurrentIncrement;
+
+    /* Wait for clock interrupt frequency and power requests to synchronize */
+    ExAcquireTimeRefreshLock(TRUE);
+
+    /* Obey remark 2*/
+    CurrentIncrement = KeTimeIncrement;
+
+    /* Check the type of operation this is */
+    if (SetResolution)
+    {
+        /*
+         * If this is the first kernel change, bump the timer resolution change
+         * count, then bump the kernel change count as well.
+         *
+         * These two variables are tracked differently since user-mode processes
+         * can also change the timer resolution through the NtSetTimerResolution
+         * system call. A per-process flag in the EPROCESS then stores the per-
+         * process change state.
+         *
+         */
+        if (!ExpKernelResolutionCount++) ExpTimerResolutionCount++;
+
+        /* Obey remark 3 */
+        if (DesiredTime < KeMinimumIncrement) DesiredTime = KeMinimumIncrement;
+
+        /* Obey remark 1 */
+        if (DesiredTime < KeTimeIncrement)
+        {
+            /* Force this thread on CPU zero, since we don't want it to drift */
+            KeSetSystemAffinityThread(1);
+
+            /* Now call the platform driver (HAL) to make the change */
+            CurrentIncrement = HalSetTimeIncrement(DesiredTime);
+
+            /* Put the thread back to its original affinity */
+            KeRevertToUserAffinityThread();
+
+            /* Finally, keep track of the new value in the kernel */
+            KeTimeIncrement = CurrentIncrement;
+        }
+    }
+    else
+    {
+        /* First, make sure that a driver has actually changed the resolution */
+        if (ExpKernelResolutionCount)
+        {
+            /* Obey remark 4 */
+            if (--ExpKernelResolutionCount)
+            {
+                /*
+                 * All kernel drivers have requested the original frequency to
+                 * be restored, but there might still be user processes with an
+                 * ongoing clock interrupt frequency change, so make sure that
+                 * this isn't the case.
+                 */
+                if (--ExpTimerResolutionCount)
+                {
+                    /* Force this thread on one CPU so that it doesn't drift */
+                    KeSetSystemAffinityThread(1);
+
+                    /* Call the HAL to restore the frequency to its default */
+                    CurrentIncrement = HalSetTimeIncrement(KeMaximumIncrement);
+
+                    /* Put the thread back to its original affinity */
+                    KeRevertToUserAffinityThread();
+
+                    /* Finally, keep track of the new value in the kernel */
+                    KeTimeIncrement = CurrentIncrement;
+                }
+            }
+        }
+    }
+
+    /* Release the clock interrupt frequency lock since changes are done */
+    ExReleaseTimeRefreshLock();
+
+    /* And return the current value -- which could reflect the new frequency */
+    return CurrentIncrement;
 }
 
 VOID
@@ -303,18 +465,6 @@ ExLocalTimeToSystemTime(PLARGE_INTEGER LocalTime,
                         PLARGE_INTEGER SystemTime)
 {
     SystemTime->QuadPart = LocalTime->QuadPart + ExpTimeZoneBias.QuadPart;
-}
-
-/*
- * @unimplemented
- */
-ULONG
-NTAPI
-ExSetTimerResolution(IN ULONG DesiredTime,
-                     IN BOOLEAN SetResolution)
-{
-    UNIMPLEMENTED;
-    return 0;
 }
 
 /*

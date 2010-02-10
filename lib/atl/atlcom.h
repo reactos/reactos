@@ -33,7 +33,7 @@ class CComEnum;
 class CComObjectRootBase
 {
 public:
-	long									m_dwRef;
+	LONG									m_dwRef;
 public:
 	CComObjectRootBase()
 	{
@@ -99,13 +99,13 @@ public:
 	ULONG InternalAddRef()
 	{
 		ATLASSERT(m_dwRef >= 0);
-		return ThreadModel::Increment(reinterpret_cast<int *>(&m_dwRef));
+		return ThreadModel::Increment(&m_dwRef);
 	}
 
 	ULONG InternalRelease()
 	{
 		ATLASSERT(m_dwRef > 0);
-		return ThreadModel::Decrement(reinterpret_cast<int *>(&m_dwRef));
+		return ThreadModel::Decrement(&m_dwRef);
 	}
 
 	void Lock()

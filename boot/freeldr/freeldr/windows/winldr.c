@@ -316,6 +316,7 @@ WinLdrLoadBootDrivers(PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 		// Convert the RegistryPath and DTE addresses to VA since we are not going to use it anymore
 		BootDriver->RegistryPath.Buffer = PaToVa(BootDriver->RegistryPath.Buffer);
+		BootDriver->FilePath.Buffer = PaToVa(BootDriver->FilePath.Buffer);
 		BootDriver->LdrEntry = PaToVa(BootDriver->LdrEntry);
 
 		NextBd = BootDriver->Link.Flink;
@@ -417,7 +418,7 @@ LoadAndBootWindows(PCSTR OperatingSystemName,
 	PCHAR PathSeparator;
 	PVOID NtosBase = NULL, HalBase = NULL, KdComBase = NULL;
 	BOOLEAN Status;
-	ULONG SectionId;
+	ULONG_PTR SectionId;
 	PLOADER_PARAMETER_BLOCK LoaderBlock, LoaderBlockVA;
 	KERNEL_ENTRY_POINT KiSystemStartup;
 	PLDR_DATA_TABLE_ENTRY KernelDTE, HalDTE, KdComDTE = NULL;
@@ -584,7 +585,7 @@ LoadAndBootWindows(PCSTR OperatingSystemName,
 	WinLdrTurnOnPaging(LoaderBlock, PcrBasePage, TssBasePage, GdtIdt);
 
 	/* Save final value of LoaderPagesSpanned */
-	LoaderBlock->Extension->LoaderPagesSpanned = LoaderPagesSpanned;
+	LoaderBlockVA->Extension->LoaderPagesSpanned = LoaderPagesSpanned;
 
 	DPRINTM(DPRINT_WINDOWS, "Hello from paged mode, KiSystemStartup %p, LoaderBlockVA %p!\n",
 		KiSystemStartup, LoaderBlockVA);

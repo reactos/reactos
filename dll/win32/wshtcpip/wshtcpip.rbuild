@@ -5,7 +5,6 @@
 	<include base="wshtcpip">.</include>
 	<include base="tdilib">.</include>
 	<library>ntdll</library>
-	<library>kernel32</library>
 	<library>ws2_32</library>
 	<library>tdilib</library>
 	<file>wshtcpip.c</file>

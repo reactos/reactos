@@ -8,19 +8,6 @@
 
 #ifndef _M_ARM
 FORCEINLINE
-PRKTHREAD
-KeGetCurrentThread(VOID)
-{
-#ifdef _M_IX86
-    /* Return the current thread */
-    return ((PKIPCR)KeGetPcr())->PrcbData.CurrentThread;
-#else
-    PKPRCB Prcb = KeGetCurrentPrcb();
-    return Prcb->CurrentThread;
-#endif
-}
-
-FORCEINLINE
 UCHAR
 KeGetPreviousMode(VOID)
 {
@@ -28,23 +15,6 @@ KeGetPreviousMode(VOID)
     return KeGetCurrentThread()->PreviousMode;
 }
 #endif
-
-FORCEINLINE
-VOID
-KeFlushProcessTb(VOID)
-{
-    /* Flush the TLB by resetting CR3 */
-#ifdef _M_PPC
-    __asm__("sync\n\tisync\n\t");
-#elif _M_ARM
-    //
-    // We need to implement this!
-    //
-    ASSERTMSG("Need ARM flush routine\n", FALSE);
-#else
-    __writecr3(__readcr3());
-#endif
-}
 
 //
 // Enters a Guarded Region
@@ -132,27 +102,6 @@ KeFlushProcessTb(VOID)
 }
 
 #ifndef CONFIG_SMP
-//
-// Spinlock Acquire at IRQL >= DISPATCH_LEVEL
-//
-FORCEINLINE
-VOID
-KxAcquireSpinLock(IN PKSPIN_LOCK SpinLock)
-{
-    /* On UP builds, spinlocks don't exist at IRQL >= DISPATCH */
-    UNREFERENCED_PARAMETER(SpinLock);
-}
-
-//
-// Spinlock Release at IRQL >= DISPATCH_LEVEL
-//
-FORCEINLINE
-VOID
-KxReleaseSpinLock(IN PKSPIN_LOCK SpinLock)
-{
-    /* On UP builds, spinlocks don't exist at IRQL >= DISPATCH */
-    UNREFERENCED_PARAMETER(SpinLock);
-}
 
 //
 // This routine protects against multiple CPU acquires, it's meaningless on UP.
@@ -302,21 +251,6 @@ KiCheckDeferredReadyList(IN PKPRCB Prcb)
 
 FORCEINLINE
 VOID
-KiRundownThread(IN PKTHREAD Thread)
-{
-#if defined(_M_IX86) || defined(_M_AMD64)
-    /* Check if this is the NPX Thread */
-    if (KeGetCurrentPrcb()->NpxThread == Thread)
-    {
-        /* Clear it */
-        KeGetCurrentPrcb()->NpxThread = NULL;
-        Ke386FnInit();
-    }
-#endif
-}
-
-FORCEINLINE
-VOID
 KiRequestApcInterrupt(IN BOOLEAN NeedApc,
                       IN UCHAR Processor)
 {
@@ -347,72 +281,6 @@ KiReleaseTimerLock(IN PKSPIN_LOCK_QUEUE LockQueue)
 }
 
 #else
-
-//
-// Spinlock Acquisition at IRQL >= DISPATCH_LEVEL
-//
-FORCEINLINE
-VOID
-KxAcquireSpinLock(IN PKSPIN_LOCK SpinLock)
-{
-    /* Make sure that we don't own the lock already */
-    if (((KSPIN_LOCK)KeGetCurrentThread() | 1) == *SpinLock)
-    {
-        /* We do, bugcheck! */
-        KeBugCheckEx(SPIN_LOCK_ALREADY_OWNED, (ULONG_PTR)SpinLock, 0, 0, 0);
-    }
-
-    /* Start acquire loop */
-    for (;;)
-    {
-        /* Try to acquire it */
-        if (InterlockedBitTestAndSet((PLONG)SpinLock, 0))
-        {
-            /* Value changed... wait until it's unlocked */
-            while (*(volatile KSPIN_LOCK *)SpinLock == 1)
-            {
-#if DBG
-                /* On debug builds, we use a much slower but useful routine */
-                //Kii386SpinOnSpinLock(SpinLock, 5);
-
-                /* FIXME: Do normal yield for now */
-                YieldProcessor();
-#else
-                /* Otherwise, just yield and keep looping */
-                YieldProcessor();
-#endif
-            }
-        }
-        else
-        {
-#if DBG
-            /* On debug builds, we OR in the KTHREAD */
-            *SpinLock = (KSPIN_LOCK)KeGetCurrentThread() | 1;
-#endif
-            /* All is well, break out */
-            break;
-        }
-    }
-}
-
-//
-// Spinlock Release at IRQL >= DISPATCH_LEVEL
-//
-FORCEINLINE
-VOID
-KxReleaseSpinLock(IN PKSPIN_LOCK SpinLock)
-{
-#if DBG
-    /* Make sure that the threads match */
-    if (((KSPIN_LOCK)KeGetCurrentThread() | 1) != *SpinLock)
-    {
-        /* They don't, bugcheck */
-        KeBugCheckEx(SPIN_LOCK_NOT_OWNED, (ULONG_PTR)SpinLock, 0, 0, 0);
-    }
-#endif
-    /* Clear the lock */
-    InterlockedAnd((PLONG)SpinLock, 0);
-}
 
 FORCEINLINE
 VOID
@@ -655,14 +523,6 @@ KiCheckDeferredReadyList(IN PKPRCB Prcb)
 {
     /* Scan the deferred ready lists if required */
     if (Prcb->DeferredReadyListHead.Next) KiProcessDeferredReadyList(Prcb);
-}
-
-FORCEINLINE
-VOID
-KiRundownThread(IN PKTHREAD Thread)
-{
-    /* Nothing to do */
-    return;
 }
 
 FORCEINLINE
@@ -1023,6 +883,13 @@ KiCheckAlertability(IN PKTHREAD Thread,
 
     /* Otherwise, we're fine */
     return STATUS_WAIT_0;
+}
+
+ULONG
+FORCEINLINE
+KiComputeTimerTableIndex(IN ULONGLONG DueTime)
+{
+    return (DueTime / KeMaximumIncrement) & (TIMER_TABLE_SIZE - 1);
 }
 
 //
@@ -1810,4 +1677,19 @@ _KeTryToAcquireGuardedMutex(IN OUT PKGUARDED_MUTEX GuardedMutex)
     GuardedMutex->Owner = Thread;
     GuardedMutex->SpecialApcDisable = Thread->SpecialApcDisable;
     return TRUE;
+}
+
+
+FORCEINLINE
+VOID
+KiAcquireNmiListLock(OUT PKIRQL OldIrql)
+{
+    KeAcquireSpinLock(&KiNmiCallbackListLock, OldIrql);
+}
+
+FORCEINLINE
+VOID
+KiReleaseNmiListLock(IN KIRQL OldIrql)
+{
+    KeReleaseSpinLock(&KiNmiCallbackListLock, OldIrql);
 }

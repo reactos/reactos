@@ -1,4 +1,4 @@
-; UTF-8
+﻿; UTF-8
 
 [Section]
 Name = Simple Direct Media Layer (SDL) Runtime
@@ -14,6 +14,10 @@ CDPath = none
 [Section.0407]
 Name = Simple Direct Media Layer (SDL) Laufzeitsystem
 Description = Erforderlich um einige Open Source Spiele auszuführen. Sie brauchen 7-Zip oder einen ähnlichen Entpacker um es zu entpacken.
+
+[Section.040a]
+Name = Libería Simple Direct Media Layer (SDL)
+Description = Necesario para ejecutar varios juegos de código abierto. Necesita 7-Zip o una utilidad similar para extraerlo.
 
 [Section.0415]
 Name = Biblioteka uruchomieniowa Simple Direct Media Layer (SDL)

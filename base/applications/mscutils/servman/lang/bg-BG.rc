@@ -93,7 +93,7 @@ BEGIN
   LTEXT "Описание:", IDC_STATIC, 4, 51, 110, 11
   LTEXT "Път до изпълнимия:", IDC_STATIC, 6, 73, 110, 9
 /* startup type*/
-  LTEXT "Вид на пускане:", IDC_STATIC, 6, 108, 110, 11
+  LTEXT "Пускане:", IDC_STATIC, 6, 108, 110, 11
   LTEXT "Състояние на услугата:", IDC_STATIC, 4, 138, 110, 11
   LTEXT "", IDC_SERV_STATUS, 120, 138, 176, 11, WS_CHILD | WS_VISIBLE
 /*  LTEXT "You can specify the start parameters that apply when you start the service from here.",IDC_STATIC, 6,177,240,15 */
@@ -107,8 +107,8 @@ CAPTION "Зависимости"
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
 BEGIN
-  CONTROL "", IDC_DEPEND_TREE1, "SysTreeView32" ,0x50010007, 8, 70, 236, 68, 0x00000200
-  CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", 0x50010007, 8, 151, 234, 67, 0x00000200
+  CONTROL "", IDC_DEPEND_TREE1, "SysTreeView32" , WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 70, 236, 68
+  CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 234, 67
 /*  LTEXT "Some services depend on other services, system drivers and load order groups. If a system component is stopped or it is not running properly, dependant services can be affected.", IDC_STATIC,8, 7, 238, 26 */
   LTEXT "Някои услуги зависят от други услуги, водачи (driver) и зареждат други групи. Ако някоя системна съставка е спряна или не работи правилно, зависимите от нея услуги може да бъдат засегнати.", IDC_STATIC,8, 7, 238, 26
   LTEXT "Тази услуга зависи от следните съставки", IDC_STATIC, 8, 57, 236, 9

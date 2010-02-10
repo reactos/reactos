@@ -86,7 +86,7 @@ static ULONG WINAPI schema_cache_Release( IXMLDOMSchemaCollection *iface )
 
     if ( ref == 0 )
     {
-        HeapFree( GetProcessHeap(), 0, This );
+        heap_free( This );
     }
 
     return ref;
@@ -233,7 +233,7 @@ static const struct IXMLDOMSchemaCollectionVtbl schema_vtbl =
 
 HRESULT SchemaCache_create(IUnknown *pUnkOuter, LPVOID *ppObj)
 {
-    schema_t *schema = HeapAlloc( GetProcessHeap(), 0, sizeof (*schema) );
+    schema_t *schema = heap_alloc( sizeof (*schema) );
     if( !schema )
         return E_OUTOFMEMORY;
 

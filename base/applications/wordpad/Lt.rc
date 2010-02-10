@@ -49,7 +49,7 @@ BEGIN
         MENUITEM "&Šalinti\tDEL",                   ID_EDIT_CLEAR
         MENUITEM "&Pažymėti viską\tCtrl+A",         ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "I&eškoti...\tCrtl+F",             ID_FIND
+        MENUITEM "I&eškoti...\tCtrl+F",             ID_FIND
         MENUITEM "Iešk&oti kito\tF3",               ID_FIND_NEXT
         MENUITEM "Pa&keisti...\tCtrl+H",            ID_REPLACE
         MENUITEM SEPARATOR
@@ -221,6 +221,8 @@ BEGIN
     STRING_PREVIEW_PREVPAGE,         "Ankstesnis puslapis"
     STRING_PREVIEW_TWOPAGES,         "Du puslapiai"
     STRING_PREVIEW_ONEPAGE,          "Vienas puslapis"
+    STRING_PREVIEW_ZOOMIN,           "Didinti"
+    STRING_PREVIEW_ZOOMOUT,          "Mažinti"
     STRING_PREVIEW_CLOSE,            "Užverti"
 END
 

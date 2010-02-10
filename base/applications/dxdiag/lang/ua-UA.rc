@@ -1,0 +1,232 @@
+/*
+ * PROJECT:     ReactOS dxdiag
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/applications/dxdiag/lang/uk-UA.rc
+ * PURPOSE:     Ukraianian Language File for ReactOS dxdiag
+ * TRANSLATOR:  Sakara Yevhen
+ */
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+IDD_MAIN_DIALOG DIALOGEX DISCARDABLE  0, 0, 478, 280
+STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP |
+    WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU |
+    WS_THICKFRAME
+CAPTION "Засіб діагностики ReactX"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Tab1",IDC_TAB_CONTROL,"SysTabControl32",WS_TABSTOP,2,2,474,250
+    PUSHBUTTON "&Довідка", IDC_BUTTON_HELP, 2, 260, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    DEFPUSHBUTTON "&Наступна сторінка", IDC_BUTTON_NEXT, 203, 260, 94, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&Зберегти всю інформацію...", IDC_BUTTON_SAVE_INFO, 301, 260, 120, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "&Вихід", IDC_BUTTON_EXIT, 425, 260, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+IDD_SYSTEM_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 190
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Ця програма дозволяє отримати докладні відомості про встановлені компоненти і драйвери ReactX.", -1, 10, 10, 443, 17
+    LTEXT "Якщо ви знаєте можливу причину неполадки, можна відразу вибрати відповідну вкладку. В іншому випадку використовуйте кнопку ""Наступна сторінка"" для послідовного перегляду сторінок.", -1, 10, 30, 443, 25
+    GROUPBOX "Відомості про систему", -1, 10, 58, 443, 130, SS_RIGHT
+    LTEXT "Поточні час і дата:", -1, 70, 70, 80, 10, SS_RIGHT
+    LTEXT "Ім'я комп'ютера:", -1, 70, 80, 80, 10, SS_RIGHT
+    LTEXT "Операційна система:", -1, 50, 90, 100, 10, SS_RIGHT
+    LTEXT "Мова:", -1, 70, 100, 80, 10, SS_RIGHT
+    LTEXT "Виробник комп'ютера:", -1, 50, 110, 100, 10, SS_RIGHT
+    LTEXT "Модель комп'ютера:", -1, 70, 120, 80, 10, SS_RIGHT
+    LTEXT "BIOS:", -1, 70, 130, 80, 10, SS_RIGHT
+    LTEXT "Процесор:", -1, 70, 140, 80, 10, SS_RIGHT
+    LTEXT "Пам'ять:", -1, 70, 150, 80, 10, SS_RIGHT
+    LTEXT "Файл підкачки:", -1, 70, 160, 80, 10, SS_RIGHT
+    LTEXT "Версія ReactX:", -1, 70, 170, 80, 10, SS_RIGHT
+    LTEXT "", IDC_STATIC_TIME, 155, 70, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_COMPUTER, 155, 80, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_OS, 155, 90, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_LANG, 155, 100, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_MANU, 155, 110, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_MODEL, 155, 120, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_BIOS, 155, 130, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_PROC, 155, 140, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_MEM, 155, 150, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_SWAP, 155, 160, 195, 10, SS_LEFT
+    LTEXT "", IDC_STATIC_VERSION, 155, 170, 195, 10, SS_LEFT
+END
+
+IDD_DISPLAY_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Пристрій", -1, 10, 10, 220, 100
+    RTEXT "Назва:", -1, 20, 25, 70, 10
+    RTEXT "Виробник:", -1, 20, 35, 70, 10
+    RTEXT "Тип мікросхем:", -1, 20, 45, 70, 10
+    RTEXT "Тип конвертера DAC:", -1, 15, 55, 75, 10
+    RTEXT "Всього пам'яті:", -1, 20, 65, 70, 10
+    RTEXT "Режим екрану:", -1, 20, 75, 70, 10
+    RTEXT "Монітор:", -1, 20, 85, 70, 10
+    LTEXT "", IDC_STATIC_ADAPTER_ID, 95, 25, 130, 10
+    LTEXT "", IDC_STATIC_ADAPTER_VENDOR, 95, 35, 130, 10
+    LTEXT "", IDC_STATIC_ADAPTER_CHIP, 95, 45, 130, 10
+    LTEXT "", IDC_STATIC_ADAPTER_DAC, 95, 55, 130, 10
+    LTEXT "", IDC_STATIC_ADAPTER_MEM, 95, 65, 130, 10
+    LTEXT "", IDC_STATIC_ADAPTER_MODE, 95, 75, 130, 10
+    LTEXT "", IDC_STATIC_ADAPTER_MONITOR, 95, 85, 130, 10
+
+    GROUPBOX "Драйвери", -1, 240, 10, 220, 100
+    RTEXT "Головний:", -1, 245, 30, 55, 10
+    RTEXT "Версія:", -1, 245, 40, 55, 10
+    RTEXT "Дата:", -1, 245, 50, 55, 10
+    RTEXT "Підпис:", -1, 245, 60, 55, 10
+    RTEXT "Міні-VDD:", -1, 245, 70, 55, 10
+    RTEXT "VDD:", -1, 245, 80, 55, 10
+    RTEXT "Версія DDI:", -1, 245, 90, 55, 10
+    LTEXT "", IDC_STATIC_ADAPTER_DRIVER, 305, 30, 130, 10
+    LTEXT "", IDC_STATIC_ADAPTER_VERSION, 305, 40, 130, 10
+    LTEXT "", IDC_STATIC_ADAPTER_DATE, 305, 50, 130, 10
+    LTEXT "", IDC_STATIC_ADAPTER_LOGO, 305, 60, 130, 10
+    LTEXT "", IDC_STATIC_ADAPTER_MINIVDD, 305, 70, 130, 10
+    LTEXT "", IDC_STATIC_ADAPTER_VDD, 305, 80, 130, 10
+    LTEXT "", IDC_STATIC_ADAPTER_DDI, 305, 90, 130, 10
+
+    GROUPBOX "Можливості ReactX", -1, 10, 115, 450, 65
+    RTEXT "Прискорення DirectDraw:", -1, 15, 130, 110, 12
+    RTEXT "Прискорення Direct3D:", -1, 15, 145, 110, 12
+    RTEXT "Прискорення текстур AGP:", -1, 15, 160, 110, 12
+    LTEXT "", IDC_STATIC_DDSTATE, 130, 130, 40, 10
+    LTEXT "", IDC_STATIC_D3DSTATE, 130, 145, 40, 10
+    LTEXT "", IDC_STATIC_AGPSTATE, 130, 160, 40, 10
+    PUSHBUTTON "Увімкнути", IDC_BUTTON_DDRAW, 170, 126, 60, 14, WS_DISABLED
+    PUSHBUTTON "Увімкнути", IDC_BUTTON_D3D, 170, 142, 60, 14, WS_DISABLED
+    PUSHBUTTON "Увімкнути", IDC_BUTTON_AGP, 170, 158, 60, 14, WS_DISABLED
+    PUSHBUTTON "Перевірка DirectDraw", IDC_BUTTON_TESTDD, 250, 126, 80, 14
+    PUSHBUTTON "Перевірка Direct3D", IDC_BUTTON_TEST3D, 250, 142, 80, 14, WS_DISABLED
+
+    GROUPBOX "Примітки", -1, 10, 185, 450, 34
+    EDITTEXT  IDC_TEXT_INFO, 20, 195, 432, 18, WS_DISABLED | WS_TABSTOP
+END
+
+
+IDD_SOUND_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Пристрій", -1, 10, 10, 250, 100
+    RTEXT "Назва:", -1, 20, 25, 70, 10
+    RTEXT "Код пристрою:", -1, 20, 35, 70, 10
+    RTEXT "Код виробника:", -1, 20, 45, 70, 10
+    RTEXT "Код продукту:", -1, 20, 55, 70, 10
+    RTEXT "Тип:", -1, 20, 65, 70, 10
+    RTEXT "За замовчуванням:", -1, 20, 75, 70, 10
+    LTEXT "", IDC_STATIC_DSOUND_NAME, 95, 25, 150, 10
+    LTEXT "", IDC_STATIC_DSOUND_DEVICEID, 95, 35, 150, 10
+    LTEXT "", IDC_STATIC_DSOUND_VENDORID, 95, 45, 150, 10
+    LTEXT "", IDC_STATIC_DSOUND_PRODUCTID, 95, 55, 150, 10
+    LTEXT "", IDC_STATIC_DSOUND_TYPE, 95, 65, 150, 10
+    LTEXT "", IDC_STATIC_DSOUND_STANDARD, 95, 75, 150, 10
+    GROUPBOX "Драйвери", -1, 270, 10, 190, 100
+    RTEXT "Назва:", -1, 275, 25, 55, 10
+    RTEXT "Версія:", -1, 275, 35, 55, 10
+    RTEXT "Дата:", -1, 275, 45, 55, 10
+    RTEXT "Підпис:", -1, 275, 55, 55, 10
+    RTEXT "Інші файли:", -1, 275, 65, 55, 10
+    RTEXT "Постачальник:", -1, 275, 75, 55, 10
+    LTEXT "", IDC_STATIC_DSOUND_DRIVER, 335, 25, 100, 10
+    LTEXT "", IDC_STATIC_DSOUND_VERSION, 335, 35, 100, 10
+    LTEXT "", IDC_STATIC_DSOUND_DATE, 335, 45, 100, 10
+    LTEXT "", IDC_STATIC_DSOUND_LOGO, 335, 55, 100, 10
+    LTEXT "", IDC_STATIC_DSOUND_FILES, 335, 65, 100, 10
+    LTEXT "", IDC_STATIC_ADAPTER_PROVIDER, 335, 75, 100, 10
+    GROUPBOX "Можливості ReactX", -1, 10, 115, 450, 60
+    CONTROL "", IDC_SLIDER_DSOUND, "msctls_trackbar32", TBS_BOTTOM | TBS_AUTOTICKS | WS_TABSTOP, 120, 135, 80, 17
+    RTEXT "Рівень апаратного\nприскорення:", -1, 20, 135, 90, 20
+    PUSHBUTTON "Перевірка DirectSound", IDC_BUTTON_TESTDSOUND, 270, 130, 80, 14
+    GROUPBOX "Примітки", -1, 10, 180, 450, 40
+    EDITTEXT  IDC_TEXT_DSOUNDINFO, 20, 190, 432, 20, WS_DISABLED | WS_TABSTOP
+END
+
+IDD_MUSIC_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+
+IDD_INPUT_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Пристрої DirectInput", -1, 10, 10, 452, 80
+    CONTROL "", IDC_LIST_DEVICE, "SysListView32", LVS_REPORT | WS_CHILD | WS_BORDER | WS_TABSTOP, 20, 20, 432, 60
+    GROUPBOX "Пристрої введення", -1, 10, 100, 452, 60
+    CONTROL "", IDC_TREE_PORT, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 20, 110, 432, 40, 0x00000200
+    GROUPBOX "Інформація", -1, 10, 170, 452, 50
+    EDITTEXT  IDC_RICH_INFO, 20, 180, 432, 30, WS_DISABLED | WS_TABSTOP
+END
+
+IDD_NETWORK_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Зареєстровані постачальники DirectPlay", -1, 10, 10, 452, 80
+    CONTROL "", IDC_LIST_PROVIDER, "SysListView32", LVS_REPORT | WS_CHILD | WS_BORDER | WS_TABSTOP, 20, 22, 432, 60
+END
+
+IDD_HELP_DIALOG DIALOGEX DISCARDABLE  0, 0, 462, 220
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_MAIN_DIALOG "Засіб діагностики ReactX"
+	IDS_SYSTEM_DIALOG "Система"
+	IDS_DISPLAY_DIALOG "Екран"
+	IDS_SOUND_DIALOG "Звук"
+	IDS_MUSIC_DIALOG "Музика"
+	IDS_INPUT_DIALOG "Введення"
+	IDS_NETWORK_DIALOG "Мережа"
+	IDS_HELP_DIALOG "Довідка"
+	IDS_FORMAT_MB "%I64uМБ ОЗУ"
+	IDS_FORMAT_SWAP "%I64u МБ використано, %I64u МБ в наявності"
+	IDS_FORMAT_UNIPROC "%s (%u ЦП)"
+	IDS_FORMAT_MPPROC  "%s (%u ЦП)"
+	IDS_VERSION_UNKNOWN "Невідома версія"
+	IDS_DEVICE_STATUS_ATTACHED "Під'єднано"
+	IDS_DEVICE_STATUS_MISSING "Від'єднано"
+	IDS_DEVICE_STATUS_UNKNOWN "Невідомо"
+	IDS_DEVICE_NAME "Назва пристрою"
+	IDS_DEVICE_STATUS "Стан"
+	IDS_DEVICE_CONTROLLER "ID контролера"
+	IDS_DEVICE_MANUFACTURER "ID виробника"
+	IDS_DEVICE_PRODUCT "ID продукту"
+	IDS_DEVICE_FORCEFEEDBACK "Драйвер Force Feedback"
+	IDS_NOT_APPLICABLE "Н/Д"
+	IDS_OPTION_YES "Так"
+	IDS_DIRECTPLAY_COL_NAME1 "Назва"
+	IDS_DIRECTPLAY_COL_NAME2 "Реєстр"
+	IDS_DIRECTPLAY_COL_NAME3 "Файл"
+	IDS_DIRECTPLAY_COL_NAME4 "Версія"
+	IDS_DIRECTPLAY8_MODEMSP "Постачальник служби модему DirectPlay8"
+	IDS_DIRECTPLAY8_SERIALSP "Постачальник служби остан. порту DirectPlay8"
+	IDS_DIRECTPLAY8_IPXSP "Постачальник служби IPX DirectPlay8"
+	IDS_DIRECTPLAY8_TCPSP "Постачальник служби TCP/IP DirectPlay8"
+	IDS_DIRECTPLAY_TCPCONN "Інтернет-підключення TCP/IP для DirectPlay"
+	IDS_DIRECTPLAY_IPXCONN "IPX підключення для DirectPlay"
+	IDS_DIRECTPLAY_MODEMCONN "Підключення через модем для DirectPlay"
+	IDS_DIRECTPLAY_SERIALCONN "Послідовне підключення для DirectPlay"
+	IDS_REG_SUCCESS "Так"
+	IDS_REG_FAIL "Помилка"
+	IDS_DDTEST_ERROR "Збій у перевірці!"
+	IDS_DDTEST_DESCRIPTION "Буде виконана перевірка DirecDraw на цей пристрій. Продовжити?"
+	IDS_DDPRIMARY_DESCRIPTION "Цей тест буде використовувати DirectDraw для малювання на первинній поверхні. Будуть виводитись чорні та білі прямокутники. Продовжити?"
+	IDS_DDPRIMARY_RESULT "Ви бачили чорні та білі прямокутники?"
+	IDS_DDOFFSCREEN_DESCRIPTION "Цей тест буде використовувати DirectDraw для малювання в закадровий буфер. Повинен рухатись білий прямокутник. Продовжити?"
+	IDS_DDOFFSCREEN_RESULT "Ви бачили, як рухався білий прямокутник?"
+	IDS_DDFULLSCREEN_DESCRIPTION "Цей тест буде використовувати DirectDraw для малювання в повноекранному режимі. Повинен рухатись білий прямокутник. Продовжити?"
+	IDS_DDFULLSCREEN_RESULT "Ви бачили, як рухався білий прямокутник в повноекранному режимі?"
+	IDS_FORMAT_ADAPTER_MEM "%u Мб"
+	IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u біт)(%uГц)"
+	IDS_OPTION_NO "Ні"
+END

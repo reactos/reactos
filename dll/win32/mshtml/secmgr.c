@@ -84,7 +84,7 @@ static HRESULT WINAPI InternetHostSecurityManager_ProcessUrlAction(IInternetHost
             pContext, cbContext, dwFlags, dwReserved);
 }
 
-static DWORD confirm_safety(HTMLDocumentNode *This, const WCHAR *url, IUnknown *obj)
+static HRESULT confirm_safety(HTMLDocumentNode *This, const WCHAR *url, struct CONFIRMSAFETY *cs, DWORD *ret)
 {
     DWORD policy, enabled_opts, supported_opts;
     IObjectSafety *obj_safety;
@@ -94,12 +94,29 @@ static DWORD confirm_safety(HTMLDocumentNode *This, const WCHAR *url, IUnknown *
 
     hres = IInternetSecurityManager_ProcessUrlAction(This->secmgr, url, URLACTION_SCRIPT_SAFE_ACTIVEX,
             (BYTE*)&policy, sizeof(policy), NULL, 0, 0, 0);
-    if(FAILED(hres) || policy != URLPOLICY_ALLOW)
-        return URLPOLICY_DISALLOW;
+    if(FAILED(hres) || policy != URLPOLICY_ALLOW) {
+        *ret = URLPOLICY_DISALLOW;
+        return S_OK;
+    }
 
-    hres = IUnknown_QueryInterface(obj, &IID_IObjectSafety, (void**)&obj_safety);
-    if(FAILED(hres))
-        return URLPOLICY_DISALLOW;
+    hres = IUnknown_QueryInterface(cs->pUnk, &IID_IObjectSafety, (void**)&obj_safety);
+    if(FAILED(hres)) {
+        CATID scripting_catid = CATID_SafeForScripting;
+
+        if(!This->catmgr) {
+            hres = CoCreateInstance(&CLSID_StdComponentCategoriesMgr, NULL, CLSCTX_INPROC_SERVER,
+                    &IID_ICatInformation, (void**)&This->catmgr);
+            if(FAILED(hres))
+                return hres;
+        }
+
+        hres = ICatInformation_IsClassOfCategories(This->catmgr, &cs->clsid, 1, &scripting_catid, 0, NULL);
+        if(FAILED(hres))
+            return hres;
+
+        *ret = hres == S_OK ? URLPOLICY_ALLOW : URLPOLICY_DISALLOW;
+        return S_OK;
+    }
 
     hres = IObjectSafety_GetInterfaceSafetyOptions(obj_safety, &IID_IDispatchEx, &supported_opts, &enabled_opts);
     if(SUCCEEDED(hres)) {
@@ -109,10 +126,9 @@ static DWORD confirm_safety(HTMLDocumentNode *This, const WCHAR *url, IUnknown *
         hres = IObjectSafety_SetInterfaceSafetyOptions(obj_safety, &IID_IDispatchEx, enabled_opts, enabled_opts);
     }
     IObjectSafety_Release(obj_safety);
-    if(FAILED(hres))
-        return URLPOLICY_DISALLOW;
 
-    return URLPOLICY_ALLOW;
+    *ret = SUCCEEDED(hres) ? URLPOLICY_ALLOW : URLPOLICY_DISALLOW;
+    return S_OK;
 }
 
 static HRESULT WINAPI InternetHostSecurityManager_QueryCustomPolicy(IInternetHostSecurityManager *iface, REFGUID guidKey,
@@ -149,7 +165,9 @@ static HRESULT WINAPI InternetHostSecurityManager_QueryCustomPolicy(IInternetHos
             return E_FAIL;
         }
 
-        policy = confirm_safety(This, url, cs->pUnk);
+        hres = confirm_safety(This, url, cs, &policy);
+        if(FAILED(hres))
+            return hres;
 
         *ppPolicy = CoTaskMemAlloc(sizeof(policy));
         if(!*ppPolicy)

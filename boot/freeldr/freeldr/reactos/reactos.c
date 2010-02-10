@@ -18,6 +18,7 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+#ifndef _M_ARM
 
 #include <freeldr.h>
 #include <debug.h>
@@ -889,6 +890,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
      * Load boot drivers
      */
     FrLdrLoadBootDrivers(szBootPath, 40);
+    UiDrawProgressBarCenter(100, 100, szLoadingMsg);
     //UiUnInitialize("Booting ReactOS...");
 
     //
@@ -901,5 +903,6 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
     //
     FrLdrStartup(0x2badb002);
 }
+#endif
 
 /* EOF */

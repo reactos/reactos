@@ -4,7 +4,6 @@
 	<library>pseh</library>
 	<library>uuid</library>
 	<library>ntdll</library>
-	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>gdi32</library>
 	<library>user32</library>
@@ -21,6 +20,4 @@
 	<file>logfile.c</file>
 	<file>wizard.c</file>
 	<file>syssetup.rc</file>
-	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
-	<compilerflag compilerset="gcc">-fno-unit-at-a-time</compilerflag>
 </module>

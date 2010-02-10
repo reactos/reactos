@@ -89,7 +89,7 @@ BOOLEAN CacheInitializeDrive(ULONG DriveNumber)
 	CacheManagerDrive.BlockSize = MachDiskGetCacheableBlockCount(DriveNumber);
 
 	CacheBlockCount = 0;
-	CacheSizeLimit = GetSystemMemorySize() / 8;
+	CacheSizeLimit = TotalPagesInLookupTable / 8 * MM_PAGE_SIZE;
 	CacheSizeCurrent = 0;
 	if (CacheSizeLimit < (64 * 1024))
 	{

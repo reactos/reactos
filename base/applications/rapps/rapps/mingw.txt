@@ -1,4 +1,4 @@
-; UTF-8
+﻿; UTF-8
 
 [Section]
 Name = MinGW
@@ -11,9 +11,11 @@ URLSite = http://mingw.org/
 URLDownload = http://ovh.dl.sourceforge.net/sourceforge/mingw/MinGW-5.1.6.exe
 CDPath = none
 
-
 [Section.0407]
 Description = Eine Portierung der GNU Werkzeugkette mit GCC, GDB, GNU make usw.
 
+[Section.040a]
+Description = Es una cadena de herramientas GNU con GCC, GDB, GNU make, etc.
+
 [Section.0415]
-Description = Kompilator GCC dla platformy Windows wraz z dodatkowymi narz�dziami (GDB, make, itd.).
+Description = Kompilator GCC dla platformy Windows wraz z dodatkowymi narzędziami (GDB, make, itd.).

@@ -317,7 +317,8 @@ GetDeviceManufacturerString(IN HDEVINFO DeviceInfoSet,
 
 
 BOOL
-GetDeviceLocationString(IN DEVINST dnDevInst  OPTIONAL,
+GetDeviceLocationString(IN HDEVINFO DeviceInfoSet,
+                        IN PSP_DEVINFO_DATA DeviceInfoData,
                         IN DEVINST dnParentDevInst  OPTIONAL,
                         OUT LPWSTR szBuffer,
                         IN DWORD BufferSize)
@@ -326,68 +327,104 @@ GetDeviceLocationString(IN DEVINST dnDevInst  OPTIONAL,
     ULONG DataSize;
     CONFIGRET cRet;
     LPWSTR szFormatted;
+    HKEY hKey;
+    DWORD dwSize, dwType;
     BOOL Ret = FALSE;
 
     DataSize = BufferSize * sizeof(WCHAR);
     szBuffer[0] = L'\0';
-    if (dnParentDevInst != 0)
+
+    hKey = SetupDiOpenDevRegKey(DeviceInfoSet,
+                                DeviceInfoData,
+                                DICS_FLAG_GLOBAL,
+                                0,
+                                DIREG_DRV,
+                                KEY_QUERY_VALUE);
+    if (hKey != INVALID_HANDLE_VALUE)
     {
-        /* query the parent node name */
-        if (CM_Get_DevNode_Registry_Property(dnParentDevInst,
-                                             CM_DRP_DEVICEDESC,
-                                             &RegDataType,
-                                             szBuffer,
-                                             &DataSize,
-                                             0) == CR_SUCCESS &&
-             RegDataType == REG_SZ &&
-             LoadAndFormatString(hDllInstance,
-                                 IDS_DEVONPARENT,
-                                 &szFormatted,
-                                 szBuffer) != 0)
+        /* query the LocationInformationOverride value */
+        dwSize = BufferSize;
+        if (RegQueryValueEx(hKey,
+                            L"LocationInformationOverride",
+                            NULL,
+                            &dwType,
+                            (LPBYTE)szBuffer,
+                            &dwSize) == ERROR_SUCCESS &&
+            dwType == REG_SZ &&
+            szBuffer[0] != L'\0')
         {
-            wcsncpy(szBuffer,
-                    szFormatted,
-                    BufferSize - 1);
-            szBuffer[BufferSize - 1] = L'\0';
-            LocalFree((HLOCAL)szFormatted);
             Ret = TRUE;
         }
-    }
-    else if (dnDevInst != 0)
-    {
-        cRet = CM_Get_DevNode_Registry_Property(dnDevInst,
-                                                CM_DRP_LOCATION_INFORMATION,
-                                                &RegDataType,
-                                                szBuffer,
-                                                &DataSize,
-                                                0);
-        if (cRet == CR_SUCCESS && RegDataType == REG_SZ)
+        else
         {
-            /* FIXME - check string for NULL termination! */
-            Ret = TRUE;
+            szBuffer[0] = L'\0';
         }
 
-        if (Ret && szBuffer[0] >= L'0' && szBuffer[0] <= L'9')
+        RegCloseKey(hKey);
+    }
+
+
+    if (!Ret)
+    {
+        if (dnParentDevInst != 0)
         {
-            /* convert the string to an integer value and create a
-               formatted string */
-            ULONG ulLocation = (ULONG)wcstoul(szBuffer,
-                                              NULL,
-                                              10);
-            if (LoadAndFormatString(hDllInstance,
-                                    IDS_LOCATIONSTR,
-                                    &szFormatted,
-                                    ulLocation,
-                                    szBuffer) != 0)
+            /* query the parent node name */
+            if (CM_Get_DevNode_Registry_Property(dnParentDevInst,
+                                                 CM_DRP_DEVICEDESC,
+                                                 &RegDataType,
+                                                 szBuffer,
+                                                 &DataSize,
+                                                 0) == CR_SUCCESS &&
+                 RegDataType == REG_SZ &&
+                 LoadAndFormatString(hDllInstance,
+                                     IDS_DEVONPARENT,
+                                     &szFormatted,
+                                     szBuffer) != 0)
             {
                 wcsncpy(szBuffer,
                         szFormatted,
                         BufferSize - 1);
                 szBuffer[BufferSize - 1] = L'\0';
                 LocalFree((HLOCAL)szFormatted);
+                Ret = TRUE;
             }
-            else
-                Ret = FALSE;
+        }
+        else if (DeviceInfoData->DevInst != 0)
+        {
+            cRet = CM_Get_DevNode_Registry_Property(DeviceInfoData->DevInst,
+                                                    CM_DRP_LOCATION_INFORMATION,
+                                                    &RegDataType,
+                                                    szBuffer,
+                                                    &DataSize,
+                                                    0);
+            if (cRet == CR_SUCCESS && RegDataType == REG_SZ)
+            {
+                /* FIXME - check string for NULL termination! */
+                Ret = TRUE;
+            }
+
+            if (Ret && szBuffer[0] >= L'0' && szBuffer[0] <= L'9')
+            {
+                /* convert the string to an integer value and create a
+                   formatted string */
+                ULONG ulLocation = (ULONG)wcstoul(szBuffer,
+                                                  NULL,
+                                                  10);
+                if (LoadAndFormatString(hDllInstance,
+                                        IDS_LOCATIONSTR,
+                                        &szFormatted,
+                                        ulLocation,
+                                        szBuffer) != 0)
+                {
+                    wcsncpy(szBuffer,
+                            szFormatted,
+                            BufferSize - 1);
+                    szBuffer[BufferSize - 1] = L'\0';
+                    LocalFree((HLOCAL)szFormatted);
+                }
+                else
+                    Ret = FALSE;
+            }
         }
     }
 

@@ -169,11 +169,7 @@ else
 endif
 
 ifeq ($(ROS_AUTOMAKE),)
-  ifeq ($(ARCH),i386)
-    ROS_AUTOMAKE=makefile.auto
-  else
-    ROS_AUTOMAKE=makefile-$(ARCH).auto
-  endif
+  ROS_AUTOMAKE=makefile-$(ARCH).auto
 endif
 
 all: $(ROS_AUTOMAKE)
@@ -353,6 +349,7 @@ ifeq ($(HOST),mingw32-linux)
 	endif
 	export SEP = /
 	mkdir = -$(Q)mkdir -p
+	checkpoint = $(Q)touch
 	rm = $(Q)rm -f
 	cp = $(Q)cp
 	NUL = /dev/null
@@ -361,6 +358,7 @@ else # mingw32-windows
 	ROS_EMPTY =
 	export SEP = \$(ROS_EMPTY)
 	mkdir = -$(Q)mkdir
+	checkpoint = $(Q)copy /y NUL
 	rm = $(Q)del /f /q
 	cp = $(Q)copy /y
 	NUL = NUL

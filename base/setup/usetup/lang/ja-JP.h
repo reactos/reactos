@@ -83,31 +83,31 @@ static MUI_ENTRY jaJPWelcomePageEntries[] =
     {
         8,
         15,
-        "\x07  ReactOS¦ ²Ý½Ä°Ù ½ÙÆÊ ENTER·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "\x07  ReactOS ¦ ²Ý½Ä°Ù ½ÙÆÊ ENTER ·°¦ µ¼Ã ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  ReactOS¦ ¼­³Ì¸ Ó¼¸Ê º³¼Ý ½ÙÆÊ R·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "\x07  ReactOS ¦ ¼­³Ì¸ Ó¼¸Ê º³¼Ý ½ÙÆÊ R ·°¦ µ¼Ã ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  ReactOSÉ ×²¾Ý½¼Þ®³¹Ý ¦Ë®³¼Þ ½ÙÆÊ L·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "\x07  ReactOS É ×²¾Ý½¼Þ®³¹Ý¦ Ë®³¼Þ ½ÙÆÊ L ·°¦ µ¼Ã ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  ReactOS¦ ²Ý½Ä°Ù¾½ÞÆ Á­³¼½Ù ÊÞ±²Ê F3·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "\x07  ReactOS ¦ ²Ý½Ä°Ù ¾½ÞÆ Á­³¼½Ù ÊÞ±²Ê F3 ·°¦ µ¼Ã ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
-        "ReactOSÉ ¼®³»²Å ¼Þ®³Î³Æ ¶Ý¼ÃÊ ¶·¦ ºÞ×Ý¸ÀÞ»²:",
+        "ReactOS É ¼®³»²Å ¼Þ®³Î³Æ ¶Ý¼ÃÊ ²¶¦ ºÞ×Ý ¸ÀÞ»²:",
         TEXT_STYLE_NORMAL
     },
     {
@@ -141,13 +141,13 @@ static MUI_ENTRY jaJPIntroPageEntries[] =
     {
         6,
         8,
-        "ReactOS ¾¯Ä±¯ÌßÊ ¼®· ¶²ÊÂ ÀÞÝ¶²Æ ±ØÏ½¡ ¿ÉÀÒ¤ ÏÀÞ",
+        "ReactOS ¾¯Ä±¯ÌßÊ ¼®·¶²ÊÂÀÞÝ¶²Æ ±ØÏ½¡ ¿ÉÀÒ¤ ÏÀÞ",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "¼Þ­³ÌÞÝÆ ØÖ³ÃÞ·Ù ¾¯Ä±¯Ìß±ÌßØ¹°¼®Ý É ½ÍÞÃÉ·É³Ê »Îß°Ä »ÚÏ¾Ý¡",
+        "¼Þ­³ÌÞÝÆ ØÖ³ÃÞ·Ù ¾¯Ä±¯Ìß ±ÌßØ¹°¼®ÝÉ ½ÍÞÃÉ ·É³Ê »Îß°Ä »ÚÏ¾Ý¡",
         TEXT_STYLE_NORMAL
     },
     {
@@ -159,13 +159,13 @@ static MUI_ENTRY jaJPIntroPageEntries[] =
     {
         8,
         13,
-        "- ¾¯Ä±¯ÌßÊ 1ÂÉ ÃÞ¨½¸Æ Â· 1Â²¼Þ®³É Ìß×²ÏØ Êß°Ã¨¼®Ý¦ ±Â¶³ºÄÊ ÃÞ·Ï¾Ý¡",
+        "- ¾¯Ä±¯ÌßÊ 1ÂÉ ÃÞ¨½¸Æ Â· 1Â²¼Þ®³É Ìß×²ÏØ Êß°Ã¨¼®Ý¦ ±Â¶³ºÄ¶Þ ÃÞ·Ï¾Ý¡",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "- ¶¸Á®³ Êß°Ã¨¼®Ý ¶Þ ºÉÃÞ¨½¸¼Þ®³Æ ¿Ý»Þ²½Ù ÊÞ±²¤ ¾¯Ä±¯ÌßÊ",
+        "- ¶¸Á®³ Êß°Ã¨¼®Ý¶Þ ºÉ ÃÞ¨½¸¼Þ®³Æ ¿Ý»Þ²½Ù ÊÞ±²¤ ¾¯Ä±¯ÌßÊ",
         TEXT_STYLE_NORMAL
     },
     {
@@ -201,13 +201,13 @@ static MUI_ENTRY jaJPIntroPageEntries[] =
     {
         8,
         23,
-        "\x07  ReactOS¦ ²Ý½Ä°Ù ½ÙÆÊ ENTER ·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "\x07  ReactOS ¦ ²Ý½Ä°Ù ½ÙÆÊ ENTER ·°¦ µ¼Ã ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
-        "\x07  ReactOS¦ ²Ý½Ä°Ù¾½ÞÆ Á­³¼ ½Ù ÊÞ±²Ê F3·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "\x07  ReactOS ¦ ²Ý½Ä°Ù¾½ÞÆ Á­³¼ ½Ù ÊÞ±²Ê F3 ·°¦ µ¼Ã ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL
     },
     {
@@ -241,31 +241,31 @@ static MUI_ENTRY jaJPLicensePageEntries[] =
     {
         8,
         8,
-        "ºÉ ReactOS ¼½ÃÑÊ ¸Ð±Ü¾ ¶É³Å ×²¾Ý½(X11Ô¤BSD µÖËÞ",
+        "ºÉ ReactOS ¼½ÃÑÊ ¸Ð±Ü¾ ¶É³Å ×²¾Ý½(X11 Ô¤BSD µÖËÞ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         9,
-        "GNU LGPL×²¾Ý½ ÅÄÞ) É º°ÄÞ¦ Ì¸Ñ Êß°ÂÄ ÄÓÆ GNU GPLÉ",
+        "GNU LGPL ×²¾Ý½ ÅÄÞ)É º°ÄÞ¦ Ì¸Ñ Êß°ÂÄ ÄÓÆ GNU GPL É",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "¼Þ®³¹Ý É ÓÄÆ ×²¾Ý½ »ÚÃ²Ï½¡",
+        "¼Þ®³¹ÝÉ ÓÄÆ ×²¾Ý½ »ÚÃ²Ï½¡",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "ReactOS ¼½ÃÑÉ ²ÁÌÞÉ ½ÍÞÃÉ ¿ÌÄ³ª±Ê ReactOS ¼½ÃÑÉ ²ÁÌÞÃÞ",
+        "ReactOS ¼½ÃÑÉ ²ÁÌÞÉ ¿ÌÄ³ª±É ½ÍÞÃÊ ReactOS ¼½ÃÑÉ ²ÁÌÞÃÞ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
-        "±ÙÕ´Æ GNU GPLÀÞ¹ÃÞÅ¸¤ ¿É ¿ÌÄ³ª±É µØ¼ÞÅÙ×²¾Ý½É ÓÄÆÓ",
+        "±ÙÕ´Æ GNU GPL ÀÞ¹ÃÞÅ¸¤ ¿É ¿ÌÄ³ª±É µØ¼ÞÅÙ ×²¾Ý½É ÓÄÆÓ",
         TEXT_STYLE_NORMAL
     },
     {
@@ -277,25 +277,25 @@ static MUI_ENTRY jaJPLicensePageEntries[] =
     {
         8,
         15,
-        "ºÉ ¿ÌÄ³ª±Ê 'ÑÎ¼®³' ÃÞ Ã³·®³ »Ú¤ Á²·Î³Ô º¸»²Î³¶Þ Ã·µ³»ÚÙ",
+        "ºÉ ¿ÌÄ³ª±Ê 'ÑÎ¼®³'ÃÞ Ã³·®³ »Ú¤ Á²·Î³Ô º¸»²Î³¶Þ Ã·µ³»ÚÙ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         16,
-        "ÊÞ±²¦ É¿Þ²Ã¤ ØÖ³ ¾²¹ÞÝ¦ ³¹Ï½¡ ReactOSÉ ×²¾Ý½ ·®³ÖÊ",
+        "ÊÞ±²¦ É¿Þ²Ã¤ ØÖ³ ¾²¹ÞÝ¦ ³¹Ï½¡ ReactOS É ×²¾Ý½ ·®³ÖÊ",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "ÀÞ²»Ý¼¬ÍÉ ÊÝÊÞ²¦ Ì¾¸Þ ÀÞ¹ ÃÞ½¡",
+        "ÀÞ²»Ý¼¬ÍÉ ÊÝÊÞ²¦ Ì¾¸Þ ÀÞ¹ÃÞ½¡",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
-        "GNU General Public License¦ ReactOSÄ ÄÓÆ ³¹Ä×Å¶¯À",
+        "GNU General Public License ¦ ReactOS Ä ÄÓÆ ³¹Ä×Å¶¯À",
         TEXT_STYLE_NORMAL
     },
     {
@@ -319,7 +319,7 @@ static MUI_ENTRY jaJPLicensePageEntries[] =
     {
         8,
         24,
-        "ºÚÊ ÌØ°¿ÌÄ³ª± ÃÞ½¡ ¼®³»²Ê ¿°½É ºËß°¼Þ®³¹Ý¦ ºÞ×Ý ¸ÀÞ»²¡",
+        "ºÚÊ ÌØ° ¿ÌÄ³ª±ÃÞ½¡ ¼®³»²Ê ¿°½É ºËß°¼Þ®³¹Ý¦ ºÞ×Ý ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL
     },
     {
@@ -331,7 +331,7 @@ static MUI_ENTRY jaJPLicensePageEntries[] =
     {
         8,
         26,
-        "Æµ²ÃÓ ÄÞ³Ö³ ÃÞ½¡",
+        "Æµ²ÃÓ ÄÞ³Ö³ÃÞ½¡",
         TEXT_STYLE_NORMAL
     },
     {
@@ -394,19 +394,19 @@ static MUI_ENTRY jaJPDevicePageEntries[] =
     },
     {
         25,
-        16, "ºÚ×É ÃÞÊÞ²½ ¾¯Ã²¦ ¼Þ­ÀÞ¸ ½Ù",
+        16, "ºÚ×É ÃÞÊÞ²½É ¾¯Ã²¦ ¼Þ­ÀÞ¸ ½Ù",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         19,
-        "UP Ó¼¸Ê DOWN·°¦ µ¼Ã ´ÝÄØ°¦ ¾ÝÀ¸ ½Ù ºÄÆÖØ",
+        "UP Ó¼¸Ê DOWN ·°¦ µ¼Ã ´ÝÄØ°¦ ¾ÝÀ¸ ½Ù ºÄÆÖØ",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         20,
-        "Ê°ÄÞ³ª±É ¾¯Ã²¦ ÍÝº³ ÃÞ·Ï½¡ ¾ÝÀ¸ ¼À×¤ ENTER·°¦ µ¼Ã Ã·¾ÂÅ ¾¯Ã²¦",
+        "Ê°ÄÞ³ª±É ¾¯Ã²¦ ÍÝº³ ÃÞ·Ï½¡ ¾ÝÀ¸ ¼À×¤ ENTER ·°¦ µ¼Ã Ã·¾ÂÅ ¾¯Ã²¦",
         TEXT_STYLE_NORMAL
     },
     {
@@ -418,13 +418,13 @@ static MUI_ENTRY jaJPDevicePageEntries[] =
     {
         6,
         23,
-        "ºÚ×É ¾¯Ã²¶Þ ½ÍÞÃ ÀÀÞ¼² ÊÞ±²Ê¤ \"ºÚ×É ÃÞÊÞ²½ ¾¯Ã²¦ ¼Þ­ÀÞ¸ ½Ù\" ¦ ¾ÝÀ¸ ¼Ã¤",
+        "ºÚ×É ¾¯Ã²¶Þ ½ÍÞÃ ÀÀÞ¼² ÊÞ±²Ê¤ \"ºÚ×É ÃÞÊÞ²½É ¾¯Ã²¦ ¼Þ­ÀÞ¸ ½Ù\" ¦ ¾ÝÀ¸ ¼Ã¤",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         24,
-        "ENTER·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "ENTER ·°¦ µ¼Ã ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL
     },
     {
@@ -470,25 +470,25 @@ static MUI_ENTRY jaJPRepairPageEntries[] =
     {
         8,
         15,
-        "\x07  OS¦ º³¼Ý ½Ù ÆÊ U·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "\x07  OS ¦ º³¼Ý ½ÙÆÊ U ·°¦ µ¼Ã ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  ¶²Ì¸ ºÝ¿°Ù¦ Ë×¸ÆÊ R·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "\x07  ¶²Ì¸ ºÝ¿°Ù¦ Ë×¸ÆÊ R ·°¦ µ¼Ã ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Ò²ÝÍß°¼ÞÆ ÓÄÞÙ ÆÊ ESC·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "\x07  Ò²ÝÍß°¼ÞÆ ÓÄÞÙÆÊ ESC ·°¦ µ¼Ã ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  ºÝËß­°À¦ »²·ÄÞ³ ½ÙÆÊ ENTER·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "\x07  ºÝËß­°À¦ »²·ÄÞ³ ½ÙÆÊ ENTER ·°¦ µ¼Ã ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL
     },
     {
@@ -521,19 +521,19 @@ static MUI_ENTRY jaJPComputerPageEntries[] =
     {
         8,
         10,
-        "\x07  UP Ó¼¸Ê DOWN·°¦ µ¼Ã Ã·½Ù ºÝËß­°ÀÉ ¼­Ù²¦ ¾ÝÀ¸ ¼Ã ¸ÀÞ»²¡",
+        "\x07  UP Ó¼¸Ê DOWN ·°¦ µ¼Ã Ã·½Ù ºÝËß­°ÀÉ ¼­Ù²¦ ¾ÝÀ¸ ¼Ã ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Â·ÞÆ ENTER·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "   Â·ÞÆ ENTER ·°¦ µ¼Ã ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  ºÝËß­°ÀÉ ¼­Ù²¦ ÍÝº³¾½ÞÆ Ï´É Íß°¼ÞÆ ÓÄÞÙ ÊÞ±²Ê ESC·°¦",
+        "\x07  ºÝËß­°ÀÉ ¼­Ù²¦ ÍÝº³¾½ÞÆ Ï´É Íß°¼ÞÆ ÓÄÞÙ ÊÞ±²Ê ESC ·°¦",
         TEXT_STYLE_NORMAL
     },
     {
@@ -567,7 +567,7 @@ static MUI_ENTRY jaJPFlushPageEntries[] =
     {
         10,
         6,
-        "¼½ÃÑÊ ¶¸¼ÞÂÆ ½ÍÞÃÉ ½ÍÞÃÉ ÃÞ°À¶Þ ÃÞ¨½¸¼Þ®³Æ Î¿ÞÝ »ÚÙ Ö³Æ ¼Ã²Ï½",
+        "¼½ÃÑÊ ¶¸¼ÞÂÆ ½ÍÞÃÉ ÃÞ°À¶Þ ÃÞ¨½¸¼Þ®³Æ Î¿ÞÝ »ÚÙ Ö³Æ ¼Ã²Ï½",
         TEXT_STYLE_NORMAL
     },
     {
@@ -607,31 +607,31 @@ static MUI_ENTRY jaJPQuitPageEntries[] =
     {
         10,
         6,
-        "ReactOSÊ Ï¯À¸ ²Ý½Ä°Ù »ÚÏ¾Ý",
+        "ReactOS Ê ¶Ý¾ÞÝÆ ²Ý½Ä°Ù »ÚÏ¾ÝÃÞ¼À",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "ÄÞ×²ÌÞ A: ¶× ÌÛ¯Ëß° ÃÞ¨½¸¤ CD ÄÞ×²ÌÞ ¶×",
+        "ÄÞ×²ÌÞ A: ¶× ÌÛ¯Ëß° ÃÞ¨½¸¤ CD ÄÞ×²ÌÞ¶×",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "½ÍÞÃÉ CD-ROM¦ ÄØÀÞ¼Ã ¸ÀÞ»²¡",
+        "½ÍÞÃÉ CD-ROM ¦ ÄØÀÞ¼Ã ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         11,
-        "ºÝËß­°À¦ »²·ÄÞ³ ½ÙÆÊ ENTER·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "ºÝËß­°À¦ »²·ÄÞ³ ½ÙÆÊ ENTER ·°¦ µ¼Ã ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "µÏÁ¸ÀÞ»² ...",
+        "µÏÁ ¸ÀÞ»² ...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
     },
     {
@@ -658,19 +658,19 @@ static MUI_ENTRY jaJPDisplayPageEntries[] =
     },
     {   8,
         10,
-         "\x07  UP Ó¼¸Ê DOWN·°¦ µ¼Ã Ã·½Ù ÃÞ¨½ÌßÚ²É ¼­Ù²¦ ¾ÝÀ¸ ¼Ã ¸ÀÞ»²¡",
+         "\x07  UP Ó¼¸Ê DOWN ·°¦ µ¼Ã Ã·½Ù ÃÞ¨½ÌßÚ²É ¼­Ù²¦ ¾ÝÀ¸ ¼Ã ¸ÀÞ»²¡",
          TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Â·ÞÆ ENTER·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "   Â·ÞÆ ENTER ·°¦ µ¼Ã ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  ÃÞ¨½ÌßÚ²É ¼­Ù²¦ ÍÝº³¾½ÞÆ Ï´É Íß°¼ÞÆ ÓÄÞÙÆÊ ESC·°¦",
+        "\x07  ÃÞ¨½ÌßÚ²É ¼­Ù²¦ ÍÝº³¾½ÞÆ Ï´É Íß°¼ÞÆ ÓÄÞÙÆÊ ESC ·°¦",
         TEXT_STYLE_NORMAL
     },
     {
@@ -704,25 +704,25 @@ static MUI_ENTRY jaJPSuccessPageEntries[] =
     {
         10,
         6,
-        "ReactOSÉ ·ÎÝÌÞÌÞÝÉ ²Ý½Ä°ÙÊ ¾²º³ ¼Ï¼À¡",
+        "ReactOS É ·ÎÝÌÞÌÞÝÉ ²Ý½Ä°ÙÊ ¾²º³ ¼Ï¼À¡",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "ÄÞ×²ÌÞ A: ¶× ÌÛ¯Ëß° ÃÞ¨½¸¤ CD ÄÞ×²ÌÞ ¶×",
+        "ÄÞ×²ÌÞ A: ¶× ÌÛ¯Ëß° ÃÞ¨½¸¤ CD ÄÞ×²ÌÞ¶×",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "½ÍÞÃÉ CD-ROM¦ ÄØÀÞ¼Ã ¸ÀÞ»²¡",
+        "½ÍÞÃÉ CD-ROM ¦ ÄØÀÞ¼Ã ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         11,
-        "ºÝËß­°À¦ »²·ÄÞ³ ½Ù ÆÊ ENTER·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "ºÝËß­°À¦ »²·ÄÞ³ ½ÙÆÊ ENTER ·°¦ µ¼Ã ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL
     },
     {
@@ -750,7 +750,7 @@ static MUI_ENTRY jaJPBootPageEntries[] =
     {
         6,
         8,
-        "¾¯Ä±¯ÌßÊ ÌÞ°ÄÛ°ÀÞ¦ ºÝËß­°ÀÉ Ê°ÄÞÃÞ¨½¸ ¼Þ®³ Æ ²Ý½Ä°Ù",
+        "¾¯Ä±¯ÌßÊ ÌÞ°ÄÛ°ÀÞ¦ ºÝËß­°ÀÉ Ê°ÄÞÃÞ¨½¸¼Þ®³Æ ²Ý½Ä°Ù",
         TEXT_STYLE_NORMAL
     },
     {
@@ -762,13 +762,13 @@ static MUI_ENTRY jaJPBootPageEntries[] =
     {
         6,
         13,
-        "ÄÞ×²ÌÞ A: Æ Ì«°Ï¯Ä»ÚÀ ÌÛ¯Ëß° ÃÞ¨½¸¦ ²ÚÃ¤",
+        "ÄÞ×²ÌÞ A: Æ Ì«°Ï¯Ä »ÚÀ ÌÛ¯Ëß° ÃÞ¨½¸¦ ²ÚÃ¤",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "ENTER·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "ENTER ·°¦ µ¼Ã ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL,
     },
     {
@@ -803,37 +803,37 @@ static MUI_ENTRY jaJPSelectPartitionEntries[] =
     {
         6,
         9,
-        "ÃÞ²½¸ ½Íß°½É ²Á×Ý ÃÞ½¡",
+        "ÃÞ¨½¸ ½Íß°½É ²Á×ÝÃÞ½¡",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "\x07  UP Ó¼¸Ê DOWN·°¦ µ¼Ã Ø½Ä´ÝÄØ°¦ ¾ÝÀ¸ ¼Ã ¸ÀÞ»²¡",
+        "\x07  UP Ó¼¸Ê DOWN ·°¦ µ¼Ã Ø½Ä ´ÝÄØ°¦ ¾ÝÀ¸ ¼Ã ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  ¾ÝÀ¸»ÚÀ Êß°Ã¨¼®ÝÆ ReactOS¦ ²Ý½Ä°Ù½Ù ÆÊ ENTER·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "\x07  ¾ÝÀ¸»ÚÀ Êß°Ã¨¼®ÝÆ ReactOS ¦ ²Ý½Ä°Ù ½ÙÆÊ ENTER ·°¦ µ¼Ã ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07  ±À×¼² Êß°Ã¨¼®Ý ¦ »¸¾²½Ù ÆÊ C·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "\x07  ±À×¼² Êß°Ã¨¼®Ý ¦ »¸¾² ½ÙÆÊ C ·°¦ µ¼Ã ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  ·¿ÝÉ Êß°Ã¨¼®Ý¦ »¸¼Þ®½Ù ÆÊ D·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "\x07  ·¿ÝÉ Êß°Ã¨¼®Ý¦ »¸¼Þ® ½ÙÆÊ D ·°¦ µ¼Ã ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "µÏÁ¸ÀÞ»²...",
+        "µÏÁ ¸ÀÞ»²...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -861,7 +861,7 @@ static MUI_ENTRY jaJPFormatPartitionEntries[] =
     {
         6,
         10,
-        "¾¯Ä±¯ÌßÊ Êß°Ã¨¼®Ý¦ Ì«°Ï¯Ä ¼Ï½¡ ¿Þ¯º³ ½ÙÆÊ ENTER·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "¾¯Ä±¯ÌßÊ Êß°Ã¨¼®Ý¦ Ì«°Ï¯Ä ¼Ï½¡ ¿Þ¯º³ ½ÙÆÊ ENTER ·°¦ µ¼Ã ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL
     },
     {
@@ -889,7 +889,7 @@ static MUI_ENTRY jaJPInstallDirectoryEntries[] =
     {
         6,
         8,
-        "¾¯Ä±¯ÌßÊ ReactOSÉ Ì§²Ù¦ ¾ÝÀ¸ »ÚÀ Êß°Ã¨¼®Ý ¼Þ®³Æ ²Ý½Ä°Ù¼Ï½¡ ReactOS¦",
+        "¾¯Ä±¯ÌßÊ ReactOS É Ì§²Ù¦ ¾ÝÀ¸ »ÚÀ Êß°Ã¨¼®Ý¼Þ®³Æ ²Ý½Ä°Ù ¼Ï½¡ ReactOS ¦",
         TEXT_STYLE_NORMAL
     },
     {
@@ -901,13 +901,13 @@ static MUI_ENTRY jaJPInstallDirectoryEntries[] =
     {
         6,
         14,
-        "½²¼®³ ÃÞ¨Ú¸ÄØ¦ ÍÝº³½ÙÆÊABACKSPACE·°ÃÞ »¸¼Þ®¼À ±ÄÆ¤",
+        "½²¼®³ ÃÞ¨Ú¸ÄØ¦ ÍÝº³½ÙÆÊ¤ BACKSPACE ·°ÃÞ Ó¼Þ¦ »¸¼Þ® ¼À ±ÄÆ¤",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "ReactOS¦ ²Ý½Ä°Ù ½Ù ÃÞ¨Ú¸ÄØ¦ Æ­³Ø®¸",
+        "ReactOS ¦ ²Ý½Ä°Ù ½Ù ÃÞ¨Ú¸ÄØ¦ Æ­³Ø®¸",
         TEXT_STYLE_NORMAL
     },
     {
@@ -947,7 +947,7 @@ static MUI_ENTRY jaJPFileCopyEntries[] =
     {
         0,
         13,
-        "ºËß°½Ù ±²ÀÞ ¼ÊÞ×¸ µÏÁ ¸ÀÞ»²¡",
+        "ºËß° ½Ù ±²ÀÞ ¼ÊÞ×¸ µÏÁ ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
@@ -981,13 +981,13 @@ static MUI_ENTRY jaJPBootLoaderEntries[] =
     {
         6,
         8,
-        "¾¯Ä±¯ÌßÊ ÌÞ°ÄÛ°ÀÞ¦ ²Ý½Ä°Ù ¼Ï½",
+        "¾¯Ä±¯ÌßÊ ÌÞ°Ä Û°ÀÞ¦ ²Ý½Ä°Ù ¼Ï½",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
-        "ÌÞ°ÄÛ°ÀÞ¦ Ê°ÄÞÃÞ¨½¸ (MBR) Æ ²Ý½Ä°Ù ½Ù¡",
+        "ÌÞ°ÄÛ°ÀÞ¦ Ê°ÄÞÃÞ¨½¸ (ÌÞ°Ä¾¸À)Æ ²Ý½Ä°Ù ½Ù¡",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1027,19 +1027,19 @@ static MUI_ENTRY jaJPKeyboardSettingsEntries[] =
     {
         6,
         8,
-        "²Ý½Ä°Ù »ÚÙ ·°ÎÞ°ÄÞÉ ¼­Ù²¦ ÍÝº³½Ù ºÄ¶Þ ¾ÝÀ¸ »ÚÏ¼À¡",
+        "²Ý½Ä°Ù »ÚÙ ·°ÎÞ°ÄÞÉ ¼­Ù²¦ ÍÝº³ ½Ù ºÄ¶Þ ¾ÝÀ¸ »ÚÏ¼À¡",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  UP Ó¼¸Ê DOWN·°¦ µ¼Ã Ã·½Ù ·°ÎÞ°ÄÞÉ ¼­Ù²¦ ¾ÝÀ¸¼Ã ¸ÀÞ»²¡",
+        "\x07  UP Ó¼¸Ê DOWN ·°¦ µ¼Ã Ã·½Ù ·°ÎÞ°ÄÞÉ ¼­Ù²¦ ¾ÝÀ¸ ¼Ã ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   Â·ÞÆ ENTER·°¦ µ¼Ã¸ÀÞ»²¡",
+        "   Â·ÞÆ ENTER ·°¦ µ¼Ã ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1079,25 +1079,25 @@ static MUI_ENTRY jaJPLayoutSettingsEntries[] =
     {
         6,
         8,
-        "²Ý½Ä°Ù»ÚÙ ·ÄÃ²É Ú²±³Ä¦ ¾ÝÀ¸¼Ã ¸ÀÞ»²¡",
+        "·Ã²É Ú²±³ÄÄ¼Ã ²Ý½Ä°Ù »ÚÙ Ú²±³Ä¦ ¾ÝÀ¸ ¼Ã ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  UP Ó¼¸Ê DOWN·°¦ µ¼Ã Ã·½Ù ·°ÎÞ°ÄÞ Ú²±³Ä¦ ¾ÝÀ¸¼Ã¤",
+        "\x07  UP Ó¼¸Ê DOWN ·°¦ µ¼Ã Ã·½Ù ·°ÎÞ°ÄÞ Ú²±³Ä¦ ¾ÝÀ¸ ¼Ã¤",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "    Â·ÞÆ ENTER·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "    Â·ÞÆ ENTER ·°¦ µ¼Ã ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  ·°ÎÞ°ÄÞ Ú²±³Ä¦ ÍÝº³ ¾½ÞÆ Ï´É Íß°¼ÞÆ ÓÄÞÙÆÊ ESC·°¦",
+        "\x07  ·°ÎÞ°ÄÞ Ú²±³Ä¦ ÍÝº³ ¾½ÞÆ Ï´É Íß°¼ÞÆ ÓÄÞÙÆÊ ESC ·°¦",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1132,13 +1132,13 @@ static MUI_ENTRY jaJPPrepareCopyEntries[] =
     {
         6,
         8,
-        "¾¯Ä±¯ÌßÊ ReactOSÉÌ§²Ù¦ ºÝËß­°ÀÆ ºËß°½Ù ¼Þ­ÝËÞ¦ ¼Ã ²Ï½¡ ",
+        "¾¯Ä±¯ÌßÊ ReactOS ÉÌ§²Ù¦ ºÝËß­°ÀÆ ºËß° ½Ù ¼Þ­ÝËÞ¦ ¼Ã ²Ï½¡ ",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ºËß°½Ù Ì§²Ù Ø½Ä¦ »¸¾² Á­³...",
+        "ºËß° ½Ù Ì§²ÙÉØ½Ä¦ »¸¾² Á­³...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1167,19 +1167,19 @@ static MUI_ENTRY jaJPSelectFSEntries[] =
     {
         8,
         19,
-        "\x07  UP Ó¼¸Ê DOWN·°¦ µ¼Ã Ì§²Ù ¼½ÃÑ¦ ¾ÝÀ¸¼Ã ¸ÀÞ»²¡",
+        "\x07  UP Ó¼¸Ê DOWN ·°¦ µ¼Ã Ì§²Ù ¼½ÃÑ¦ ¾ÝÀ¸ ¼Ã ¸ÀÞ»²¡",
         0
     },
     {
         8,
         21,
-        "\x07  Êß°Ã¨¼®Ý¦ Ì«°Ï¯Ä½ÙÆÊ ENTER·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "\x07  Êß°Ã¨¼®Ý¦ Ì«°Ï¯Ä ½ÙÆÊ ENTER ·°¦ µ¼Ã ¸ÀÞ»²¡",
         0
     },
     {
         8,
         23,
-        "\x07  ÍÞÂÉ Êß°Ã¨¼®Ý¦ ¾ÝÀ¸½Ù ÊÞ±²¤ ESC·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "\x07  ÍÞÂÉ Êß°Ã¨¼®Ý¦ ¾ÝÀ¸ ½Ù ÊÞ±²¤ ESC ·°¦ µ¼Ã ¸ÀÞ»²¡",
         0
     },
     {
@@ -1208,25 +1208,25 @@ static MUI_ENTRY jaJPDeletePartitionEntries[] =
     {
         6,
         8,
-        "ºÉ Êß°Ã¨¼®Ý¦ »¸¼Þ®½Ù ºÄ¶Þ ¾ÝÀ¸ »ÚÏ¼À",
+        "ºÉ Êß°Ã¨¼®Ý¦ »¸¼Þ® ½Ù ºÄ¶Þ ¾ÝÀ¸ »ÚÏ¼À",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
-        "\x07  ºÉ Êß°Ã¨¼®Ý¦ »¸¼Þ® ½ÙÆÊ D·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "\x07  ºÉ Êß°Ã¨¼®Ý¦ »¸¼Þ® ½ÙÆÊ D ·°¦ µ¼Ã ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL
     },
     {
         11,
         19,
-        "¹²º¸(WARNING): ºÉ Êß°Ã¨¼®Ý ¼Þ®³É ½ÍÞÃÉ ÃÞ°ÀÊ ³¼ÅÜÚ Ï½!",
+        "¹²º¸(WARNING): ºÉ Êß°Ã¨¼®Ý¼Þ®³É ½ÍÞÃÉ ÃÞ°ÀÊ ³¼ÅÜÚÏ½!",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  ·¬Ý¾Ù½Ù ÆÊ ESC·° ¦ µ¼Ã¸ÀÞ»²¡",
+        "\x07  ·¬Ý¾Ù ½ÙÆÊ ESC ·°¦ µ¼Ã ¸ÀÞ»²¡",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1276,12 +1276,12 @@ MUI_ERROR jaJPErrorEntries[] =
 {
     {
         //ERROR_NOT_INSTALLED
-        "ReactOSÊ ºÝËß­°ÀÆ Ï¯À¸ ²Ý½Ä°Ù\n"
-        "»ÚÏ¾Ý¡ ¾¯Ä±¯Ìß¦ Á­³¼ ½Ù ÊÞ±²¤ ReactOS¦ ²Ý½Ä°Ù½Ù ÆÊ ¾¯Ä±¯Ìß¦\n"
+        "ReactOS Ê ºÝËß­°ÀÆ ¶Ý¾ÞÝÆ ²Ý½Ä°Ù\n"
+        "»ÚÏ¾Ý¡ ¾¯Ä±¯Ìß¦ Á­³¼ ½Ù ÊÞ±²¤ ReactOS ¦ ²Ý½Ä°Ù ½ÙÆÊ ¾¯Ä±¯Ìß¦\n"
         "Ó³²ÁÄÞ ¼Þ¯º³ ½Ù ËÂÖ³¶Þ ±ØÏ½¡\n"
         "\n"
-        "  \x07  ¾¯Ä±¯Ìß¦ ¿Þ¯º³½ÆÊ ENTER·°¦ µ¼Ã ¸ÀÞ»²¡\n"
-        "  \x07  ¾¯Ä±¯Ìß¦ Á­³¼½ÙÆÊ F3·°¦ µ¼Ã ¸ÀÞ»²¡",
+        "  \x07  ¾¯Ä±¯Ìß¦ ¿Þ¯º³ ½ÙÆÊ ENTER ·°¦ µ¼Ã ¸ÀÞ»²¡\n"
+        "  \x07  ¾¯Ä±¯Ìß¦ Á­³¼ ½ÙÆÊ F3 ·°¦ µ¼Ã ¸ÀÞ»²¡",
         "F3 = Á­³¼  ENTER = ¿Þ¯º³"
     },
     {
@@ -1291,7 +1291,7 @@ MUI_ERROR jaJPErrorEntries[] =
     },
     {
         //ERROR_NO_SOURCE_DRIVE
-        "¾¯Ä±¯ÌßÊ ¿°½ ÄÞ×²ÌÞ ¦ ¹Ý¼­Â ÃÞ·Ï¾Ý ÃÞ¼À¡\n",
+        "¾¯Ä±¯ÌßÊ ¿°½ ÄÞ×²ÌÞ¦ ¹Ý¼­Â ÃÞ·Ï¾Ý ÃÞ¼À¡\n",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
@@ -1321,38 +1321,38 @@ MUI_ERROR jaJPErrorEntries[] =
     },
     {
         //ERROR_LOAD_COMPUTER,
-        "¾¯Ä±¯ÌßÊ ºÝËß­°ÀÉ ¼­Ù² Ø½Ä É ÖÐºÐÆ ¼¯Êß² ¼Ï¼À¡\n",
+        "¾¯Ä±¯ÌßÊ ºÝËß­°ÀÉ ¼­Ù² Ø½ÄÉ ÖÐºÐÆ ¼¯Êß² ¼Ï¼À¡\n",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
         //ERROR_LOAD_DISPLAY,
-        "¾¯Ä±¯ÌßÊ ÃÞ¨½ÌßÚ²É ¾¯Ã² Ø½Ä É ÖÐºÐÆ ¼¯Êß² ¼Ï¼À¡\n",
+        "¾¯Ä±¯ÌßÊ ÃÞ¨½ÌßÚ²É ¾¯Ã² Ø½ÄÉ ÖÐºÐÆ ¼¯Êß² ¼Ï¼À¡\n",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
         //ERROR_LOAD_KEYBOARD,
-        "¾¯Ä±¯ÌßÊ ·°ÎÞ°ÄÞÉ ¼­Ù² Ø½Ä É ÖÐºÐÆ ¼¯Êß² ¼Ï¼À¡\n",
+        "¾¯Ä±¯ÌßÊ ·°ÎÞ°ÄÞÉ ¼­Ù² Ø½ÄÉ ÖÐºÐÆ ¼¯Êß² ¼Ï¼À¡\n",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
         //ERROR_LOAD_KBLAYOUT,
-        "¾¯Ä±¯ÌßÊ ·°ÎÞ°ÄÞ Ú²±³Ä Ø½Ä É ÖÐºÐÆ ¼¯Êß² ¼Ï¼À¡\n",
+        "¾¯Ä±¯ÌßÊ ·°ÎÞ°ÄÞ Ú²±³Ä Ø½ÄÉ ÖÐºÐÆ ¼¯Êß² ¼Ï¼À¡\n",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
         //ERROR_WARN_PARTITION,
           "¾¯Ä±¯ÌßÊ ½¸Å¸ÄÓ 1ÂÉ Ê°ÄÞÃÞ¨½¸¶Þ Ã·¾ÂÆ ±Â¶´Å² ºÞ¶Ý¾²É Å²\n"
-          "Êß°Ã¨¼®Ý Ã°ÌÞÙ¦ Ì¸Ñ ºÄ¦ Ê¯¹Ý ¼Ï¼À!\n"
+          "Êß°Ã¨¼®Ý Ã°ÌÞÙ¦ Ì¸Ñ ºÄ¦ ¹Ý¼­Â ¼Ï¼À!\n"
           "\n"
-          "Êß°Ã¨¼®Ý¦ »¸¾² ÏÀÊ »¸¼Þ®¼Ã¤ ºÉ Êß°Ã¨¼®Ý Ã°ÌÞÙ¦ Ê¶² ÃÞ·Ï½\n"
+          "Êß°Ã¨¼®Ý¦ »¸¾² ÏÀÊ »¸¼Þ® ¼Ã¤ ºÉ Êß°Ã¨¼®Ý Ã°ÌÞÙ¦ Ê¶² ÃÞ·Ï½\n"
           "\n"
-          "  \x07  ¾¯Ä±¯Ìß¦ Á­³¼ ½ÙÆÊ F3·°¦ µ¼Ã ¸ÀÞ»²¡"
-          "  \x07  ¿Þ¯º³ ½ÙÆÊ ENTER·°¦ µ¼Ã ¸ÀÞ»²¡",
+          "  \x07  ¾¯Ä±¯Ìß¦ Á­³¼ ½ÙÆÊ F3 ·°¦ µ¼Ã ¸ÀÞ»²¡\n"
+          "  \x07  ¿Þ¯º³ ½ÙÆÊ ENTER ·°¦ µ¼Ã ¸ÀÞ»²¡",
           "F3= Á­³¼  ENTER = ¿Þ¯º³"
     },
     {
         //ERROR_NEW_PARTITION,
-        "±À×¼² Êß°Ã¨¼®Ý ¦ ½ÃÞÆ ¿Ý»Þ²½Ù\n"
+        "±À×¼² Êß°Ã¨¼®Ý¦ ½ÃÞÆ ¿Ý»Þ²½Ù\n"
         "Êß°Ã¨¼®ÝÉ Å²ÌÞÆ »¸¾² ½ÙºÄÊ ÃÞ·Ï¾Ý!\n"
         "\n"
         "  * ¿Þ¯º³ ½ÙÆÊ ÅÆ¶ ·°¦ µ¼Ã ¸ÀÞ»²¡",
@@ -1382,27 +1382,27 @@ MUI_ERROR jaJPErrorEntries[] =
     },
     {
         //ERROR_UPDATE_DISPLAY_SETTINGS,
-        "¾¯Ä±¯ÌßÊ ÃÞ¨½ÌßÚ²É Ú¼Þ½ÄØ ¾¯Ã² É º³¼ÝÆ ¼¯Êß² ¼Ï¼À¡",
+        "¾¯Ä±¯ÌßÊ ÃÞ¨½ÌßÚ²É Ú¼Þ½ÄØ ¾¯Ã²É º³¼ÝÆ ¼¯Êß² ¼Ï¼À¡",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
         //ERROR_IMPORT_HIVE,
-        "¾¯Ä±¯ÌßÊ Ê²ÌÞ Ì§²Ù É ²ÝÎß°ÄÆ ¼¯Êß² ¼Ï¼À¡",
+        "¾¯Ä±¯ÌßÊ Ê²ÌÞ Ì§²ÙÉ ²ÝÎß°ÄÆ ¼¯Êß² ¼Ï¼À¡",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
         //ERROR_FIND_REGISTRY
-        "¾¯Ä±¯ÌßÊ Ú¼Þ½ÄØ ÃÞ°À Ì§²Ù É ¹Ý¼­ÂÆ ¼¯Êß² ¼Ï¼À¡",
+        "¾¯Ä±¯ÌßÊ Ú¼Þ½ÄØ ÃÞ°À Ì§²ÙÉ ¹Ý¼­ÂÆ ¼¯Êß² ¼Ï¼À¡",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
         //ERROR_CREATE_HIVE,
-        "¾¯Ä±¯ÌßÊ Ú¼Þ½ÄØ Ê²ÌÞ É »¸¾²Æ ¼¯Êß² ¼Ï¼À¡",
+        "¾¯Ä±¯ÌßÊ Ú¼Þ½ÄØ Ê²ÌÞÉ »¸¾²Æ ¼¯Êß² ¼Ï¼À¡",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
         //ERROR_INITIALIZE_REGISTRY,
-        "¾¯Ä±¯ÌßÊ Ú¼Þ½ÄØ É ¼®·¶Æ ¼¯Êß² ¼Ï¼À¡",
+        "¾¯Ä±¯ÌßÊ Ú¼Þ½ÄØÉ ¼®·¶Æ ¼¯Êß² ¼Ï¼À¡",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
@@ -1412,50 +1412,50 @@ MUI_ERROR jaJPErrorEntries[] =
     },
     {
         //ERROR_CABINET_MISSING,
-        "·¬ËÞÈ¯Ä ¶Þ ÐÂ¶ØÏ¾Ý¡\n",
+        "·¬ËÞÈ¯Ä¶Þ ÐÂ¶ØÏ¾Ý¡\n",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
         //ERROR_CABINET_SCRIPT,
-        "·¬ËÞÈ¯ÄÅ²Æ ¾¯Ä±¯Ìß ½¸ØÌßÄ ¶Þ ÐÂ¶ØÏ¾Ý¡\n",
+        "·¬ËÞÈ¯ÄÅ²Æ ¾¯Ä±¯Ìß ½¸ØÌßÄ¶Þ ÐÂ¶ØÏ¾Ý¡\n",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
         //ERROR_COPY_QUEUE,
-        "¾¯Ä±¯ÌßÊ ºËß° Ì§²Ù ·­° É µ°ÌßÝÆ ¼¯Êß² ¼Ï¼À¡\n",
+        "¾¯Ä±¯ÌßÊ ºËß° Ì§²Ù ·­°É µ°ÌßÝÆ ¼¯Êß² ¼Ï¼À¡\n",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
         //ERROR_CREATE_DIR,
-        "¾¯Ä±¯ÌßÊ ²Ý½Ä°Ù ÃÞ¨Ú¸ÄØ ¦ »¸¾² ÃÞ·Ï¾Ý ÃÞ¼À¡",
+        "¾¯Ä±¯ÌßÊ ²Ý½Ä°Ù ÃÞ¨Ú¸ÄØ¦ »¸¾² ÃÞ·Ï¾Ý ÃÞ¼À¡",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
         //ERROR_TXTSETUP_SECTION,
-        "¾¯Ä±¯ÌßÊ TXTSETUP.SIF Å²É 'Directories' ¾¸¼®Ý É¹Ý»¸Æ\n"
+        "¾¯Ä±¯ÌßÊ TXTSETUP.SIF Å²É 'Directories' ¾¸¼®ÝÉ ¹Ý»¸Æ\n"
         "¼¯Êß² ¼Ï¼À¡\n",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
         //ERROR_CABINET_SECTION,
-        "¾¯Ä±¯ÌßÊ ·¬ËÞÈ¯Ä Å²É 'Directories' ¾¸¼®Ý É¹Ý»¸Æ\n"
+        "¾¯Ä±¯ÌßÊ ·¬ËÞÈ¯ÄÅ²É 'Directories' ¾¸¼®ÝÉ ¹Ý»¸Æ\n"
         "¼¯Êß² ¼Ï¼À¡\n",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
         //ERROR_CREATE_INSTALL_DIR
-        "¾¯Ä±¯ÌßÊ ²Ý½Ä°Ù ÃÞ¨Ú¸ÄØ ¦ »¸¾² ÃÞ·Ï¾Ý ÃÞ¼À¡",
+        "¾¯Ä±¯ÌßÊ ²Ý½Ä°Ù ÃÞ¨Ú¸ÄØ¦ »¸¾² ÃÞ·Ï¾Ý ÃÞ¼À¡",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
         //ERROR_FIND_SETUPDATA,
-        "¾¯Ä±¯ÌßÊ TXTSETUP.SIF Å²É 'SetupData' ¾¸¼®Ý É¹Ý»¸Æ\n"
+        "¾¯Ä±¯ÌßÊ TXTSETUP.SIF Å²É 'SetupData' ¾¸¼®ÝÉ ¹Ý»¸Æ\n"
         "¼¯Êß² ¼Ï¼À¡\n",
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
         //ERROR_WRITE_PTABLE,
-        "¾¯Ä±¯ÌßÊ Êß°Ã¨¼®Ý Ã°ÌÞÙ É ¶·ºÐ Æ ¼¯Êß² ¼Ï¼À¡\n"
+        "¾¯Ä±¯ÌßÊ Êß°Ã¨¼®Ý Ã°ÌÞÙÉ ¶·ºÐÆ ¼¯Êß² ¼Ï¼À¡\n"
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
@@ -1465,7 +1465,7 @@ MUI_ERROR jaJPErrorEntries[] =
     },
     {
         //ERROR_UPDATE_LOCALESETTINGS,
-        "¾¯Ä±¯ÌßÊ ¼½ÃÑ Û¹°Ù ¦ ¾¯Ã² ÃÞ·Ï¾Ý ÃÞ¼À¡\n"
+        "¾¯Ä±¯ÌßÊ ¼½ÃÑ Û¹°Ù¦ ¾¯Ã² ÃÞ·Ï¾Ý ÃÞ¼À¡\n"
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
@@ -1483,7 +1483,6 @@ MUI_ERROR jaJPErrorEntries[] =
         NULL
     }
 };
-
 
 MUI_PAGE jaJPPages[] =
 {
@@ -1596,13 +1595,13 @@ MUI_STRING jaJPStrings[] =
     {STRING_PARTITIONSIZE,
      "±À×¼² Êß°Ã¨¼®ÝÉ »²½Þ:"},
     {STRING_CHOOSENEWPARTITION,
-     "±À×¼² Êß°Ã¨¼®Ý ¦ Â·ÞÆ »¸¾²½Ù ºÄ¶Þ ¾ÝÀ¸ »ÚÏ¼À:"},
+     "±À×¼² Êß°Ã¨¼®Ý¦ Â·ÞÆ »¸¾²½Ù ºÄ¶Þ ¾ÝÀ¸ »ÚÏ¼À:"},
     {STRING_HDDSIZE,
     "±À×¼² Êß°Ã¨¼®ÝÉ »²½Þ¦ Ò¶ÞÊÞ²Ä ÀÝ²ÃÞ Æ­³Ø®¸ ¼Ã¸ÀÞ»²¡"},
     {STRING_CREATEPARTITION,
      "   ENTER = Êß°Ã¨¼®Ý »¸¾²   ESC = ·¬Ý¾Ù   F3 = Á­³¼"},
     {STRING_PARTFORMAT,
-    "ºÉ Êß°Ã¨¼®ÝÊ Â·ÞÆ Ì«°Ï¯Ä »ÚÏ½¡"},
+    "ºÉ Êß°Ã¨¼®ÝÊ Â·ÞÉ Ã¼Þ­ÝÃÞ Ì«°Ï¯Ä »ÚÏ½¡"},
     {STRING_NONFORMATTEDPART,
     "ReactOS¦ ¼Ý· ÏÀÊ ÐÌ«°Ï¯ÄÉ Êß°Ã¨¼®ÝÆ ²Ý½Ä°Ù½Ù ºÄ¶Þ ¾ÝÀ¸ »ÚÏ¼À¡"},
     {STRING_INSTALLONPART,
@@ -1620,7 +1619,7 @@ MUI_STRING jaJPStrings[] =
     {STRING_SETUPCOPYINGFILES,
      "¾¯Ä±¯ÌßÊ Ì§²Ù¦ ºËß° ¼Ã ²Ï½..."},
     {STRING_REGHIVEUPDATE,
-    "   Ú¼Þ½ÄØ Ê²ÌÞ É º³¼Ý Á­³..."},
+    "   Ú¼Þ½ÄØ Ê²ÌÞÉ º³¼Ý Á­³..."},
     {STRING_IMPORTFILE,
     "   %S ¦ ²ÝÎß°Ä Á­³..."},
     {STRING_DISPLAYETTINGSUPDATE,
@@ -1628,7 +1627,7 @@ MUI_STRING jaJPStrings[] =
     {STRING_LOCALESETTINGSUPDATE,
     "   Á²· ¾¯Ã²É º³¼Ý Á­³..."},
     {STRING_KEYBOARDSETTINGSUPDATE,
-    "   ·°ÎÞ°ÄÞ Ú²±³ÄÉ ¾¯Ã² º³¼Ý Á­³..."},
+    "   ·°ÎÞ°ÄÞ Ú²±³ÄÉ ¾¯Ã²¦ º³¼Ý Á­³..."},
     {STRING_CODEPAGEINFOUPDATE,
     "   º°ÄÞ Íß°¼Þ É ¼Þ®³Î³¦ Ú¼Þ½ÄØÆ Â²¶ Á­³..."},
     {STRING_DONE,
@@ -1680,9 +1679,9 @@ MUI_STRING jaJPStrings[] =
     {STRING_MAXSIZE,
     "MB (»²ÀÞ². %lu MB)"},
     {STRING_UNFORMATTED,
-    "¼Ý· (Ð Ì«°Ï¯Ä)"},
+    "¼Ý· (ÐÌ«°Ï¯Ä)"},
     {STRING_FORMATUNUSED,
-    "Ð ¼Ö³"},
+    "Ð¼Ö³"},
     {STRING_FORMATUNKNOWN,
     "ÌÒ²"},
     {STRING_KB,
@@ -1692,7 +1691,7 @@ MUI_STRING jaJPStrings[] =
     {STRING_GB,
     "GB"},
     {STRING_ADDKBLAYOUTS,
-    "·°ÎÞ°ÄÞ Ú²±³Ä É Â²¶ Á­³"},
+    "·°ÎÞ°ÄÞ Ú²±³ÄÉ Â²¶ Á­³"},
     {0, 0}
 };
 

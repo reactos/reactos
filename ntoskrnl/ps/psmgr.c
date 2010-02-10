@@ -586,7 +586,7 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                               KernelMode,
                               (PVOID*)&SysThread,
                               NULL);
-    ZwClose(SysThreadHandle);
+    ObCloseHandle(SysThreadHandle, KernelMode);
     SysThreadCreated = TRUE;
 
     /* Return success */

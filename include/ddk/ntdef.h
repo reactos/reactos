@@ -529,7 +529,21 @@ typedef CONST STRING* PCOEM_STRING;
 typedef STRING CANSI_STRING;
 typedef PSTRING PCANSI_STRING;
 
+typedef struct _STRING32 {
+    USHORT   Length;
+    USHORT   MaximumLength;
+    ULONG  Buffer;
+} STRING32, *PSTRING32, 
+  UNICODE_STRING32, *PUNICODE_STRING32, 
+  ANSI_STRING32, *PANSI_STRING32;
 
+typedef struct _STRING64 {
+    USHORT   Length;
+    USHORT   MaximumLength;
+    ULONGLONG  Buffer;
+} STRING64, *PSTRING64,
+  UNICODE_STRING64, *PUNICODE_STRING64, 
+  ANSI_STRING64, *PANSI_STRING64;
 
 //
 // LangID and NLS
@@ -679,10 +693,7 @@ typedef struct _SINGLE_LIST_ENTRY {
 //
 // C_ASSERT Definition
 //
-#define __C_ASSERT_JOIN(X, Y) __C_ASSERT_DO_JOIN(X, Y)
-#define __C_ASSERT_DO_JOIN(X, Y) __C_ASSERT_DO_JOIN2(X, Y)
-#define __C_ASSERT_DO_JOIN2(X, Y) X##Y
-#define C_ASSERT(e) typedef char __C_ASSERT_JOIN(__C_ASSERT__, __LINE__)[(e) ? 1 : -1]
+#define C_ASSERT(expr) extern char (*c_assert(void)) [(expr) ? 1 : -1]
 
 
 

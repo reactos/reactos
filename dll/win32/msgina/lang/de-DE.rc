@@ -50,7 +50,7 @@ STRINGTABLE
 BEGIN
     IDS_LOGGEDOUTSAS "Willkommen!"
     IDS_LOCKEDSAS "Der Computer ist derzeit gesperrt."
-    IDS_PRESSCTRLALTDELETE "Drücken Sie Strg+Alt+Entf um sich anzumelden."
+    IDS_PRESSCTRLALTDELETE "Drücken Sie Strg+Alt+Entf, um sich anzumelden."
     IDS_ASKFORUSER "Benutzername: "
     IDS_ASKFORPASSWORD "Passwort: "
     IDS_FORCELOGOFF "Dies wird den derzeitigen Benutzer abmelden. Alle ungespeicherten Daten gehen verloren. Fortsetzen?"

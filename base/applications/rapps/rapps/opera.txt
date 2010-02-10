@@ -11,11 +11,14 @@ URLSite = http://www.opera.com/
 URLDownload = http://ftp.opera.com/pub/opera/win/1010/int/Opera_1010_in_Setup.exe
 CDPath = none
 
-[Section.0419]
-Description = Популярный браузер со многими дополнительными возможностями, включающий почтовый и BitTorrent клиент.
-
 [Section.0407]
 Description = Der populäre Opera Browser mit vielen fortschrittlichen Eigenschaften, enthält einen Mail und BitTorrent Client.
 
+[Section.040a]
+Description = Popular navegador web con muchas características avanzadas e incluye un cliente de correo y BitTorrent.
+
 [Section.0415]
 Description = Popularna przeglądarka internetowa z wieloma zaawansowanymi funkcjami, zawierająca klientów: poczty oraz BitTorrent.
+
+[Section.0419]
+Description = Популярный браузер со многими дополнительными возможностями, включающий клиентов почты и BitTorrent.

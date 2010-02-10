@@ -4,7 +4,6 @@
 	<library>wine</library>
 	<library>advapi32</library>
 	<library>user32</library>
-	<library>kernel32</library>
 	<file>reg.c</file>
 	<file>rsrc.rc</file>
 </module>

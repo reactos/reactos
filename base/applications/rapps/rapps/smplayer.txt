@@ -1,4 +1,4 @@
-; UTF-8
+﻿; UTF-8
 
 [Section]
 Name = SMPlayer
@@ -11,10 +11,13 @@ URLSite = http://smplayer.sourceforge.net/
 URLDownload = http://downloads.sourceforge.net/project/smplayer/SMPlayer/0.6.8/smplayer-0.6.8-win32.exe
 CDPath = none
 
-
 [Section.0407]
 URLSite = http://smplayer.sourceforge.net/index.php?tr_lang=de
 
+[Section.040a]
+URLSite = http://smplayer.sourceforge.net/index.php?tr_lang=es
+Description = Interfaz gráfico para Mplayer (reproductor multimedia).
+
 [Section.0415]
 URLSite = http://smplayer.sourceforge.net/index.php?tr_lang=pl
-Description = Graficzna nak�adka na MPlayer, otwarty odtwarzacz film�w.
+Description = Graficzna nakładka na MPlayer, otwarty odtwarzacz filmów.

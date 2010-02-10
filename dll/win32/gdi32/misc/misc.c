@@ -16,10 +16,9 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-/* $Id$
- *
+/*
  * PROJECT:         ReactOS gdi32.dll
- * FILE:            lib/gdi32/misc/misc.c
+ * FILE:            dll/win32/gdi32/misc/misc.c
  * PURPOSE:         Miscellaneous functions
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  * UPDATE HISTORY:
@@ -282,5 +281,48 @@ GdiAddGlsBounds(HDC hdc,LPRECT prc)
 {
     //FIXME: Lookup what 0x8000 means
     return NtGdiSetBoundsRect(hdc, prc, 0x8000 |  DCB_ACCUMULATE ) ? TRUE : FALSE;
+}
+
+extern PGDIHANDLECACHE GdiHandleCache;
+
+HGDIOBJ
+FASTCALL
+hGetPEBHandle(HANDLECACHETYPE Type, COLORREF cr)
+{
+   int Number;
+   HANDLE Lock;
+   HGDIOBJ Handle = NULL;
+
+   Lock = InterlockedCompareExchangePointer( (PVOID*)&GdiHandleCache->ulLock,
+                                              NtCurrentTeb(),
+                                              NULL );
+   
+   if (Lock) return Handle;
+
+   Number = GdiHandleCache->ulNumHandles[Type];
+
+   if ( Number && Number <= CACHE_REGION_ENTRIES )
+   {
+      if ( Type == hctRegionHandle)
+      {
+         PRGN_ATTR pRgn_Attr;
+         HGDIOBJ *hPtr;
+         hPtr = GdiHandleCache->Handle + CACHE_BRUSH_ENTRIES+CACHE_PEN_ENTRIES;
+         Handle = hPtr[Number - 1];
+
+         if (GdiGetHandleUserData( Handle, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr))
+         {
+            if (pRgn_Attr->AttrFlags & ATTR_CACHED)
+            {
+               DPRINT("Get Handle! Count %d PEB 0x%x\n", GdiHandleCache->ulNumHandles[Type], NtCurrentTeb()->ProcessEnvironmentBlock);
+               pRgn_Attr->AttrFlags &= ~ATTR_CACHED;
+               hPtr[Number - 1] = NULL;
+               GdiHandleCache->ulNumHandles[Type]--;
+            }
+         }
+      }
+   }
+   (void)InterlockedExchangePointer((PVOID*)&GdiHandleCache->ulLock, Lock);
+   return Handle;
 }
 

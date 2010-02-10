@@ -8,6 +8,4 @@
 	<file>misc.c</file>
 	<file>mouclass.c</file>
 	<file>mouclass.rc</file>
-	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
-	<compilerflag compilerset="gcc">-fno-unit-at-a-time</compilerflag>
 </module>

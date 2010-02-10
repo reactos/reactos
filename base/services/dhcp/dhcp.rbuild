@@ -11,7 +11,6 @@
 	<define name="write">_write</define>
 
 	<library>ntdll</library>
-	<library>kernel32</library>
 	<library>ws2_32</library>
 	<library>iphlpapi</library>
 	<library>advapi32</library>

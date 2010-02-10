@@ -83,7 +83,7 @@ static ULONG WINAPI httprequest_Release(IXMLHTTPRequest *iface)
     ref = InterlockedDecrement( &This->ref );
     if ( ref == 0 )
     {
-        HeapFree( GetProcessHeap(), 0, This );
+        heap_free( This );
     }
 
     return ref;
@@ -317,7 +317,7 @@ HRESULT XMLHTTPRequest_create(IUnknown *pUnkOuter, LPVOID *ppObj)
 
     TRACE("(%p,%p)\n", pUnkOuter, ppObj);
 
-    req = HeapAlloc( GetProcessHeap(), 0, sizeof (*req) );
+    req = heap_alloc( sizeof (*req) );
     if( !req )
         return E_OUTOFMEMORY;
 

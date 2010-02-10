@@ -191,6 +191,21 @@ typedef struct _GDI_TEB_BATCH
     ULONG  Buffer[0x136];
 } GDI_TEB_BATCH;
 
+typedef struct _RTL_ACTIVATION_CONTEXT_STACK_FRAME
+{
+    struct _RTL_ACTIVATION_CONTEXT_STACK_FRAME *Previous;
+    struct _ACTIVATION_CONTEXT                 *ActivationContext;
+    ULONG                                       Flags;
+} RTL_ACTIVATION_CONTEXT_STACK_FRAME, *PRTL_ACTIVATION_CONTEXT_STACK_FRAME;
+
+typedef struct _ACTIVATION_CONTEXT_STACK
+{
+    ULONG                               Flags;
+    ULONG                               NextCookieSequenceNumber;
+    RTL_ACTIVATION_CONTEXT_STACK_FRAME *ActiveFrame;
+    LIST_ENTRY                          FrameListCache;
+} ACTIVATION_CONTEXT_STACK, *PACTIVATION_CONTEXT_STACK;
+
 /***********************************************************************
  * PEB data structure
  */
@@ -279,7 +294,8 @@ typedef struct _TEB
     PVOID           SystemReserved1[54];        /* 0cc used for kernel32 private data in Wine */
     PVOID           Spare1;                     /* 1a4 */
     LONG            ExceptionCode;              /* 1a8 */
-    BYTE            SpareBytes1[40];            /* 1ac */
+    PACTIVATION_CONTEXT_STACK     ActivationContextStackPointer;            /* 1a8/02c8 */
+    BYTE            SpareBytes1[36];            /* 1ac */
     PVOID           SystemReserved2[10];        /* 1d4 used for ntdll private data in Wine */
     GDI_TEB_BATCH   GdiTebBatch;                /* 1fc */
     ULONG           gdiRgn;                     /* 6dc */
@@ -364,6 +380,20 @@ typedef enum _FILE_INFORMATION_CLASS {
     FileNetworkOpenInformation,
     FileAttributeTagInformation,
     FileTrackingInformation,
+    FileIdBothDirectoryInformation,
+    FileIdFullDirectoryInformation,
+    FileValidDataLengthInformation,
+    FileShortNameInformation = 40,
+    /* 41, 42, 43 undocumented */
+    FileSfioReserveInformation = 44,
+    FileSfioVolumeInformation = 45,
+    FileHardLinkInformation = 46,
+    /* 47 undocumented */
+    FileNormalizedNameInformation = 48,
+    /* 49 undocumented */
+    FileIdGlobalTxDirectoryInformation = 50,
+    /* 51, 52, 53 undocumented */
+    FileStandardLinkInformation = 54,
     FileMaximumInformation
 } FILE_INFORMATION_CLASS, *PFILE_INFORMATION_CLASS;
 
@@ -397,6 +427,22 @@ typedef struct _FILE_FULL_DIRECTORY_INFORMATION {
 } FILE_FULL_DIRECTORY_INFORMATION, *PFILE_FULL_DIRECTORY_INFORMATION,
   FILE_FULL_DIR_INFORMATION, *PFILE_FULL_DIR_INFORMATION;
 
+typedef struct _FILE_ID_FULL_DIRECTORY_INFORMATION {
+    ULONG               NextEntryOffset;
+    ULONG               FileIndex;
+    LARGE_INTEGER       CreationTime;
+    LARGE_INTEGER       LastAccessTime;
+    LARGE_INTEGER       LastWriteTime;
+    LARGE_INTEGER       ChangeTime;
+    LARGE_INTEGER       EndOfFile;
+    LARGE_INTEGER       AllocationSize;
+    ULONG               FileAttributes;
+    ULONG               FileNameLength;
+    ULONG               EaSize;
+    LARGE_INTEGER       FileId;
+    WCHAR               FileName[ANYSIZE_ARRAY];
+} FILE_ID_FULL_DIRECTORY_INFORMATION, *PFILE_ID_FULL_DIRECTORY_INFORMATION;
+
 typedef struct _FILE_BOTH_DIRECTORY_INFORMATION {
     ULONG               NextEntryOffset;
     ULONG               FileIndex;
@@ -414,6 +460,24 @@ typedef struct _FILE_BOTH_DIRECTORY_INFORMATION {
     WCHAR               FileName[ANYSIZE_ARRAY];
 } FILE_BOTH_DIRECTORY_INFORMATION, *PFILE_BOTH_DIRECTORY_INFORMATION,
   FILE_BOTH_DIR_INFORMATION, *PFILE_BOTH_DIR_INFORMATION;
+
+typedef struct _FILE_ID_BOTH_DIRECTORY_INFORMATION {
+    ULONG               NextEntryOffset;
+    ULONG               FileIndex;
+    LARGE_INTEGER       CreationTime;
+    LARGE_INTEGER       LastAccessTime;
+    LARGE_INTEGER       LastWriteTime;
+    LARGE_INTEGER       ChangeTime;
+    LARGE_INTEGER       EndOfFile;
+    LARGE_INTEGER       AllocationSize;
+    ULONG               FileAttributes;
+    ULONG               FileNameLength;
+    ULONG               EaSize;
+    CHAR                ShortNameLength;
+    WCHAR               ShortName[12];
+    LARGE_INTEGER       FileId;
+    WCHAR               FileName[ANYSIZE_ARRAY];
+} FILE_ID_BOTH_DIRECTORY_INFORMATION, *PFILE_ID_BOTH_DIRECTORY_INFORMATION;
 
 typedef struct _FILE_BASIC_INFORMATION {
     LARGE_INTEGER CreationTime;

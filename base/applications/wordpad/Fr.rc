@@ -49,7 +49,7 @@ BEGIN
         MENUITEM "&Effacer\tDel",                   ID_EDIT_CLEAR
         MENUITEM "&Sélectionner tout\tCtrl+A",      ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "&Rechercher...\tCrtl+F",             ID_FIND
+        MENUITEM "&Rechercher...\tCtrl+F",             ID_FIND
         MENUITEM "Rechercher le &suivant\tF3",                  ID_FIND_NEXT
         MENUITEM "&Remplacer...\tCtrl+H",          ID_REPLACE
         MENUITEM SEPARATOR
@@ -221,6 +221,8 @@ BEGIN
     STRING_PREVIEW_PREVPAGE,         "Page précédente"
     STRING_PREVIEW_TWOPAGES,         "Deux pages"
     STRING_PREVIEW_ONEPAGE,          "Une page"
+    STRING_PREVIEW_ZOOMIN,           "Zoom avant"
+    STRING_PREVIEW_ZOOMOUT,          "Zoom arrière"
     STRING_PREVIEW_CLOSE,            "Fermer"
 END
 

@@ -2,7 +2,6 @@
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="netstat" type="win32cui" installbase="system32" installname="netstat.exe">
 	<include base="netstat">.</include>
-	<library>kernel32</library>
 	<library>user32</library>
 	<library>ws2_32</library>
 	<library>snmpapi</library>

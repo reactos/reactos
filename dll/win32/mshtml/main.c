@@ -47,6 +47,7 @@ HINSTANCE hInst;
 DWORD mshtml_tls = TLS_OUT_OF_INDEXES;
 
 static HINSTANCE shdoclc = NULL;
+static HDC display_dc;
 
 static void thread_detach(void)
 {
@@ -71,6 +72,8 @@ static void process_detach(void)
         FreeLibrary(shdoclc);
     if(mshtml_tls != TLS_OUT_OF_INDEXES)
         TlsFree(mshtml_tls);
+    if(display_dc)
+        DeleteObject(display_dc);
 }
 
 HINSTANCE get_shdoclc(void)
@@ -82,6 +85,21 @@ HINSTANCE get_shdoclc(void)
         return shdoclc;
 
     return shdoclc = LoadLibraryExW(wszShdoclc, NULL, LOAD_LIBRARY_AS_DATAFILE);
+}
+
+HDC get_display_dc(void)
+{
+    static const WCHAR displayW[] = {'D','I','S','P','L','A','Y',0};
+
+    if(!display_dc) {
+        HDC hdc;
+
+        hdc = CreateICW(displayW, NULL, NULL, NULL);
+        if(InterlockedCompareExchangePointer((void**)&display_dc, hdc, NULL))
+            DeleteObject(hdc);
+    }
+
+    return display_dc;
 }
 
 BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)

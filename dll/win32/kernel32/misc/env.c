@@ -382,7 +382,6 @@ FreeEnvironmentStringsW (
 	LPWSTR	EnvironmentStrings
 	)
 {
- (void)EnvironmentStrings;
  return TRUE;
 }
 

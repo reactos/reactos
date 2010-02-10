@@ -65,13 +65,13 @@ static MUI_ENTRY deDEWelcomePageEntries[] =
     {
         6,
         8,
-        "Willkommen zum ReactOS Setup",
+        "Willkommen zum ReactOS-Setup",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
         11,
-        "Dieser Teil des Setups kopiert das ReactOS Betriebssystem auf Ihren",
+        "Dieser Teil des Setups kopiert das ReactOS-Betriebssystem auf Ihren",
         TEXT_STYLE_NORMAL
     },
     {
@@ -107,7 +107,7 @@ static MUI_ENTRY deDEWelcomePageEntries[] =
     {
         6,
         23,
-        "FÅr weitere Informationen, besuchen Sie bitte:",
+        "FÅr weitere Informationen besuchen Sie bitte:",
         TEXT_STYLE_NORMAL
     },
     {
@@ -141,7 +141,7 @@ static MUI_ENTRY deDEIntroPageEntries[] =
     {
         6,
         8,
-        "Das ReactOS Setup ist noch in einer frÅhen Entwicklungsphase. Es unter-",
+        "Das ReactOS-Setup ist noch in einer frÅhen Entwicklungsphase. Es unter-",
         TEXT_STYLE_NORMAL
     },
     {
@@ -165,7 +165,7 @@ static MUI_ENTRY deDEIntroPageEntries[] =
     {
         8,
         14,
-        "- Setup kann keine primÑre Partition von einer HDD lîschen",
+        "- Setup kann keine primÑre Partition von einer HDD lîschen,",
         TEXT_STYLE_NORMAL
     },
     {
@@ -177,7 +177,7 @@ static MUI_ENTRY deDEIntroPageEntries[] =
     {
         8,
         16,
-        "- Setup kann die erste erweiterte Partition nicht von der HDD lîschen",
+        "- Setup kann die erste erweiterte Partition nicht von der HDD lîschen,",
         TEXT_STYLE_NORMAL
     },
     {
@@ -189,7 +189,7 @@ static MUI_ENTRY deDEIntroPageEntries[] =
     {
         8,
         18,
-        "- Setup unterstÅtzt nur FAT Dateisysteme.",
+        "- Setup unterstÅtzt nur FAT-Dateisysteme.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -406,7 +406,7 @@ static MUI_ENTRY deDEDevicePageEntries[] =
     {
         6,
         20,
-        "Dann drÅcken Sie die Eingabetaste, um eine Einstellung abzuÑndern.",
+        "Dann drÅcken Sie die Eingabetaste, um eine Einstellung zu Ñndern.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -452,7 +452,7 @@ static MUI_ENTRY deDERepairPageEntries[] =
     {
         6,
         8,
-        "Das ReactOS Setup ist noch in einer frÅhen Entwicklungsphase. Es unter-",
+        "Das ReactOS-Setup ist noch in einer frÅhen Entwicklungsphase. Es unter-",
         TEXT_STYLE_NORMAL
     },
     {
@@ -488,7 +488,7 @@ static MUI_ENTRY deDERepairPageEntries[] =
     {
         8,
         21,
-        "\x07  DrÅcken Sie ENTER, um den Computer neuzustarten.",
+        "\x07  DrÅcken Sie ENTER, um den Computer neu zu starten.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -579,7 +579,7 @@ static MUI_ENTRY deDEFlushPageEntries[] =
     {
         10,
         9,
-        "Der PC wird automatisch neustarten, wenn der Vorgang beendet ist.",
+        "Der PC wird automatisch neunstarten, wenn der Vorgang beendet ist.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -895,7 +895,7 @@ static MUI_ENTRY deDEInstallDirectoryEntries[] =
     {
         6,
         8,
-        "Setup installiert die ReactOS Installationsdateien in die ausgewÑhlte",
+        "Setup installiert die ReactOS-Installationsdateien in die ausgewÑhlte",
         TEXT_STYLE_NORMAL
     },
     {
@@ -907,13 +907,13 @@ static MUI_ENTRY deDEInstallDirectoryEntries[] =
     {
         6,
         14,
-        "Um den Vorschlag zu Ñndern drÅcken sie die 'Entf' Taste um",
+        "Um den Vorschlag zu Ñndern drÅcken sie die 'Entf'-Taste, um",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "Zeichen zu lîschen und gegeben sie dann den Namen des Verzeichnis ein",
+        "Zeichen zu lîschen, und geben sie dann den Namen des Verzeichnis ein",
         TEXT_STYLE_NORMAL
     },
     {
@@ -941,7 +941,7 @@ static MUI_ENTRY deDEFileCopyEntries[] =
     {
         0,
         12,
-        "Bitte warten Sie wÑhrend ReactOS Setup die ReactOS Dateien",
+        "Bitte warten Sie, wÑhrend das ReactOS-Setup die ReactOS-Dateien",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
     },
     {
@@ -987,7 +987,7 @@ static MUI_ENTRY deDEBootLoaderEntries[] =
     {
         8,
         12,
-        "Boot-Loader auf der Festplatte installieren (Boot-Sektor).",
+        "Boot-Loader auf der Festplatte installieren (Bootsektor).",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1079,7 +1079,7 @@ static MUI_ENTRY deDELayoutSettingsEntries[] =
     {
         6,
         8,
-        "Bitte wÑhlen Sie ein zu installierendes Standard Layout.",
+        "Bitte wÑhlen Sie ein zu installierendes Standardlayout aus.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1161,7 +1161,7 @@ static MUI_ENTRY deDESelectFSEntries[] =
     {
         6,
         17,
-        "WÑhlen Sie ein Dateisystem von der folgenden Liste.",
+        "WÑhlen Sie ein Dateisystem aus der folgenden Liste aus.",
         0
     },
     {
@@ -1208,7 +1208,7 @@ static MUI_ENTRY deDEDeletePartitionEntries[] =
     {
         6,
         8,
-        "Sie haben sich entschieden diese Partition zu lîschen",
+        "Sie haben sich entschieden, diese Partition zu lîschen",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1260,7 +1260,7 @@ static MUI_ENTRY deDERegistryEntries[] =
     {
         0,
         0,
-        "Registry Hives erstellen...",
+        "Registryzweige erstellen...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1287,62 +1287,62 @@ MUI_ERROR deDEErrorEntries[] =
     {
         //ERROR_NO_HDD
         "Setup konnte keine Festplatte finden.\n",
-        "ENTER = Computer neustarten"
+        "ENTER = Computer neu starten"
     },
     {
         //ERROR_NO_SOURCE_DRIVE
         "Setup konnte das Quelllaufwerk nicht finden.\n",
-        "ENTER = Computer neustarten"
+        "ENTER = Computer neu starten"
     },
     {
         //ERROR_LOAD_TXTSETUPSIF
         "Setup konnte TXTSETUP.SIF nicht finden.\n",
-        "ENTER = Computer neustarten"
+        "ENTER = Computer neu starten"
     },
     {
         //ERROR_CORRUPT_TXTSETUPSIF
-        "Setup fand eine korrupte TXTSETUP.SIF.\n",
-        "ENTER = Computer neustarten"
+        "Setup fand eine defekte TXTSETUP.SIF.\n",
+        "ENTER = Computer neu starten"
     },
     {
         //ERROR_SIGNATURE_TXTSETUPSIF,
         "Setup fand eine ungÅltige Signatur in TXTSETUP.SIF.\n",
-        "ENTER = Computer neustarten"
+        "ENTER = Computer neu starten"
     },
     {
         //ERROR_DRIVE_INFORMATION
         "Setup konnte keine Laufwerksinformationen abfragen.\n",
-        "ENTER = Computer neustarten"
+        "ENTER = Computer neu starten"
     },
     {
         //ERROR_WRITE_BOOT,
-        "Setup konnte den FAT Bootcode nicht auf der Partition installieren.",
-        "ENTER = Computer neustarten"
+        "Setup konnte den FAT-Bootcode nicht auf der Partition installieren.",
+        "ENTER = Computer neu starten"
     },
     {
         //ERROR_LOAD_COMPUTER,
         "Setup konnte die Computertypenliste nicht laden.\n",
-        "ENTER = Computer neustarten"
+        "ENTER = Computer neu starten"
     },
     {
         //ERROR_LOAD_DISPLAY,
         "Setup konnte die Displayeinstellungsliste nicht laden.\n",
-        "ENTER = Computer neustarten"
+        "ENTER = Computer neu starten"
     },
     {
         //ERROR_LOAD_KEYBOARD,
         "Setup konnte die Tastaturtypenliste nicht laden.\n",
-        "ENTER = Computer neustarten"
+        "ENTER = Computer neu starten"
     },
     {
         //ERROR_LOAD_KBLAYOUT,
         "Setup konnte die Tastaturlayoutliste nicht laden.\n",
-        "ENTER = Computer neustarten"
+        "ENTER = Computer neu starten"
     },
     {
         //ERROR_WARN_PARTITION,
         "Setup hat mindestens eine Festplatte mit einer inkompatiblen Partitionstabelle\n"
-        "welche nicht richtig verwendet werden kînnen!\n"
+        "gefunden, die nicht richtig verwendet werden kann!\n"
         "\n"
         "Partitionen zu erstellen/lîschen kann die Partitionstabelle zerstîren.\n"
         "\n"
@@ -1367,8 +1367,8 @@ MUI_ERROR deDEErrorEntries[] =
     },
     {
         //ERROR_INSTALL_BOOTCODE,
-        "Setup konnte den FAT Bootcode nicht auf der Partition installieren.",
-        "ENTER = Computer neustarten"
+        "Setup konnte den FAT-Bootcode nicht auf der Partition installieren.",
+        "ENTER = Computer neu starten"
     },
     {
         //ERROR_NO_FLOPPY,
@@ -1378,105 +1378,105 @@ MUI_ERROR deDEErrorEntries[] =
     {
         //ERROR_UPDATE_KBSETTINGS,
         "Setup konnte das Tastaturlayout nicht aktualisieren.",
-        "ENTER = Computer neustarten"
+        "ENTER = Computer neu starten"
     },
     {
         //ERROR_UPDATE_DISPLAY_SETTINGS,
         "Setup konnte die Display-Registrywerte nicht aktualisieren.",
-        "ENTER = Computer neustarten"
+        "ENTER = Computer neu starten"
     },
     {
         //ERROR_IMPORT_HIVE,
-        "Setup konnte keine Hive Datei importieren.",
-        "ENTER = Computer neustarten"
+        "Setup konnte keine Hive-Datei importieren.",
+        "ENTER = Computer neu starten"
     },
     {
         //ERROR_FIND_REGISTRY
         "Setup konnte die Registrydateien nicht finden.",
-        "ENTER = Computer neustarten"
+        "ENTER = Computer neu starten"
     },
     {
         //ERROR_CREATE_HIVE,
-        "Setup konnte die Registry-Hives nicht erstellen.",
-        "ENTER = Computer neustarten"
+        "Setup konnte die Registryzweige nicht erstellen.",
+        "ENTER = Computer neu starten"
     },
     {
         //ERROR_INITIALIZE_REGISTRY,
         "Setup konnte die Registry nicht initialisieren.",
-        "ENTER = Computer neustarten"
+        "ENTER = Computer neu starten"
     },
     {
         //ERROR_INVALID_CABINET_INF,
-        "Cabinet hat keine gÅltige .inf Datei.\n",
-        "ENTER = Computer neustarten"
+        "Cabinet hat keine gÅltige .inf-Datei.\n",
+        "ENTER = Computer neu starten"
     },
     {
         //ERROR_CABINET_MISSING,
         "Cabinet nicht gefunden.\n",
-        "ENTER = Computer neustarten"
+        "ENTER = Computer neu starten"
     },
     {
         //ERROR_CABINET_SCRIPT,
-        "Cabinet enthÑlt kein Setup Skript.\n",
-        "ENTER = Computer neustarten"
+        "Cabinet enthÑlt kein Setup-Skript.\n",
+        "ENTER = Computer neu starten"
     },
     {
         //ERROR_COPY_QUEUE,
         "Setup konnte die Liste mit zu kopierenden Dateien nicht finden.\n",
-        "ENTER = Computer neustarten"
+        "ENTER = Computer neu starten"
     },
     {
         //ERROR_CREATE_DIR,
         "Setup konnte die Installationspfade nicht erstellen.",
-        "ENTER = Computer neustarten"
+        "ENTER = Computer neu starten"
     },
     {
         //ERROR_TXTSETUP_SECTION,
-        "Setup konnte die 'Ordner' Sektion in\n"
+        "Setup konnte die 'Ordner'-Sektion in\n"
         "TXTSETUP.SIF nicht finden.\n",
-        "ENTER = Computer neustarten"
+        "ENTER = Computer neu starten"
     },
     {
         //ERROR_CABINET_SECTION,
-        "Setup konnte die 'Ordner' Sektion im\n"
+        "Setup konnte die 'Ordner'-Sektion im\n"
         "Cabinet nicht finden.\n",
-        "ENTER = Computer neustarten"
+        "ENTER = Computer neu starten"
     },
     {
         //ERROR_CREATE_INSTALL_DIR
         "Setup konnte den Installationspfad nicht erstellen.",
-        "ENTER = Computer neustarten"
+        "ENTER = Computer neu starten"
     },
     {
         //ERROR_FIND_SETUPDATA,
-        "Setup konnte die 'SetupData' Sektion in\n"
+        "Setup konnte die 'SetupData'-Sektion in\n"
         "TXTSETUP.SIF nicht finden.\n",
-        "ENTER = Computer neustarten"
+        "ENTER = Computer neu starten"
     },
     {
         //ERROR_WRITE_PTABLE,
         "Setup konnte die Partitionstabellen nicht schreiben.\n"
-        "ENTER = Computer neustarten"
+        "ENTER = Computer neu starten"
     },
     {
         //ERROR_ADDING_CODEPAGE,
-        "Setup konnte den CodePage-Eintrag nicht hinzufÅgen.\n"
-        "ENTER = Computer neustarten"
+        "Setup konnte den Codepage-Eintrag nicht hinzufÅgen.\n"
+        "ENTER = Computer neu starten"
     },
     {
         //ERROR_UPDATE_LOCALESETTINGS,
         "Setup konnte die Systemsprache nicht einstellen.\n"
-        "ENTER = Computer neustarten"
+        "ENTER = Computer neu starten"
     },
     {
         //ERROR_ADDING_KBLAYOUTS,
-        "Setup konnte die Tastaturlayouts nicht in Registry eintragen.\n"
-        "ENTER = Computer neustarten"
+        "Setup konnte die Tastaturlayouts nicht in der Registry eintragen.\n"
+        "ENTER = Computer neu starten"
     },
         {
         //ERROR_UPDATE_GEOID,
-        "Setup konnte den geographischen Standort nicht einstellen.\n"
-        "ENTER = Computer neustarten"
+        "Setup konnte den geografischen Standort nicht einstellen.\n"
+        "ENTER = Computer neu starten"
     },
 {
         NULL,
@@ -1596,7 +1596,7 @@ MUI_STRING deDEStrings[] =
     {STRING_PARTITIONSIZE,
      "Grî·e der neuen Partition:"},
     {STRING_CHOOSENEWPARTITION,
-     "Sie haben beschlossen eine neue Partition zu erstellen auf"},
+     "Sie haben beschlossen, eine neue Partition zu erstellen auf"},
     {STRING_HDDSIZE,
     "Bitte geben Sie die Grî·e der neuen Partition in Megabyte ein."},
     {STRING_CREATEPARTITION,
@@ -1606,21 +1606,21 @@ MUI_STRING deDEStrings[] =
     {STRING_NONFORMATTEDPART,
     "Sie wollen ReactOS auf einer neuen/unformatieren Partition installieren."},
     {STRING_INSTALLONPART,
-    "Setup installiert ReactOS auf diese Partition"},
+    "Setup installiert ReactOS auf dieser Partition"},
     {STRING_CHECKINGPART,
     "Setup ÅberprÅft die ausgewÑhlte Partition."},
     {STRING_QUITCONTINUE,
     "F3 = Beenden  ENTER = Fortsetzen"},
     {STRING_REBOOTCOMPUTER,
-    "ENTER = Computer neustarten"},
+    "ENTER = Computer neu starten"},
     {STRING_TXTSETUPFAILED,
-    "Setup konnte die '%S' Sektion\nin TXTSETUP.SIF nicht finden.\n"},
+    "Setup konnte die '%S'-Sektion\nin TXTSETUP.SIF nicht finden.\n"},
     {STRING_COPYING,
      "\xB3 Kopiere Datei: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Setup kopiert Dateien..."},
     {STRING_REGHIVEUPDATE,
-    "   Registry hives werden aktualisiert..."},
+    "   Registryzweige werden aktualisiert..."},
     {STRING_IMPORTFILE,
     "   Importiere %S..."},
     {STRING_DISPLAYETTINGSUPDATE,
@@ -1628,27 +1628,27 @@ MUI_STRING deDEStrings[] =
     {STRING_LOCALESETTINGSUPDATE,
     "   Lokalisierungseinstellungen werden aktualisiert..."},
     {STRING_KEYBOARDSETTINGSUPDATE,
-    "   Tastaturlayout Einstellungen werden aktualisiert..."},
+    "   Tastaturlayouteinstellungen werden aktualisiert..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Codepage Informationen werden hinzugefÅgt..."},
+    "   Codepage-Informationen werden hinzugefÅgt..."},
     {STRING_DONE,
     "   Fertig..."},
     {STRING_REBOOTCOMPUTER2,
-    "   ENTER = Computer neustarten"},
+    "   ENTER = Computer neu starten"},
     {STRING_CONSOLEFAIL1,
     "Konsole konnte nicht geîffnet werden\n\n"},
     {STRING_CONSOLEFAIL2,
-    "Der hÑufigste Grund hierfÅr ist die Verwendung einer USB Tastautur\n"},
+    "Der hÑufigste Grund hierfÅr ist die Verwendung einer USB-Tastatur\n"},
     {STRING_CONSOLEFAIL3,
-    "USB Tastaturen werden noch nicht vollstÑndig unterstÅtzt\n"},
+    "USB-Tastaturen werden noch nicht vollstÑndig unterstÅtzt\n"},
     {STRING_FORMATTINGDISK,
     "Setup formatiert Ihre Festplatte"},
     {STRING_CHECKINGDISK,
     "Setup ¸berpr¸ft Ihre Festplatte"},
     {STRING_FORMATDISK1,
-    " Formatiere Partition als %S Dateisystem (Schnell) "},
+    " Formatiere Partition als %S-Dateisystem (Schnell) "},
     {STRING_FORMATDISK2,
-    " Formatiere Partition als %S Dateisystem "},
+    " Formatiere Partition als %S-Dateisystem "},
     {STRING_KEEPFORMAT,
     " Dateisystem beibehalten (Keine VerÑnderungen) "},
     {STRING_HDINFOPARTCREATE,

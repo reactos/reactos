@@ -1,24 +1,27 @@
-/*
- * PROJECT:         ReactOS Sound Record Application
+/* PROJECT:         ReactOS sndrec32
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            base/applications/sndrec32/audio_resampler_acm.cpp
- * PURPOSE:         Audio Resampler
- * PROGRAMMERS:     Marco Pagliaricci <ms_blue (at) hotmail (dot) it>
+ * PURPOSE:         Sound recording
+ * PROGRAMMERS:     Marco Pagliaricci (irc: rendar)
  */
+
 
 #include "stdafx.h"
 #include "audio_resampler_acm.hpp"
+#include <stdio.h>
+
+
 
 _AUDIO_NAMESPACE_START_
 
 
-    /////////////////////////////////////////
-    ///////     Private Functions    ////////
-    /////////////////////////////////////////
+/////////////////////////////////////////
+///////     Private Functions    ////////
+/////////////////////////////////////////
 
 
-    void
-    audio_resampler_acm::init_( void )
+void
+audio_resampler_acm::init_( void )
 {
 
 
@@ -32,8 +35,8 @@ _AUDIO_NAMESPACE_START_
     ZeroMemory( &wformat_dst, sizeof( WAVEFORMATEX ));
 
 
-
-
+    
+    
     //
     // Setting structures sizes
     //
@@ -90,7 +93,7 @@ _AUDIO_NAMESPACE_START_
 
 
 void
-    audio_resampler_acm::open( void )
+audio_resampler_acm::open( void )
 {
 
 
@@ -102,13 +105,13 @@ void
     //
 
     err = acmStreamOpen( &acm_stream, 0, &wformat_src, &wformat_dst, 
-        0, 0, 0, ACM_STREAMOPENF_NONREALTIME );
+                    0, 0, 0, ACM_STREAMOPENF_NONREALTIME );
 
 
     if ( err != MMSYSERR_NOERROR )
     {
         //TODO: throw error
-        printf("acmOpen error: %i\n", err);
+        MessageBox( 0, _T("acmOpen error: %i"), _T("ERROR"), MB_ICONERROR );
 
     }
 
@@ -122,10 +125,10 @@ void
         (( float )audfmt_in.byte_rate() * ( float )buf_secs );
 
 
-
-
-
-
+    
+    
+    
+    
     //
     // Calcs destination source buffer lenght
     // with help of ACM apis
@@ -133,12 +136,13 @@ void
 
     err = acmStreamSize( acm_stream, 
         src_buflen, &dst_buflen, ACM_STREAMSIZEF_SOURCE );
-
+    
 
     if ( err != MMSYSERR_NOERROR )
     {
         //TODO: throw error
-        printf("acmSize error\n");
+        MessageBox( 0, _T("acmStreamSize error"), _T("ERROR"), MB_ICONERROR );
+
 
     }
 
@@ -153,7 +157,7 @@ void
     acm_header.fdwStatus = 0;
     acm_header.dwUser = 0;
 
-
+    
     acm_header.pbSrc = ( LPBYTE ) new BYTE [ src_buflen ];
     acm_header.cbSrcLength = src_buflen;
     acm_header.cbSrcLengthUsed = 0;
@@ -178,7 +182,9 @@ void
     if ( err != MMSYSERR_NOERROR )
     {
         //TODO: throw error
-        printf("prep. header error\n");
+        MessageBox( 0, _T("acmStreamPrepareHeader error"), _T("ERROR"), MB_ICONERROR );
+
+
     }
 
 
@@ -196,7 +202,7 @@ void
 
 
 void
-    audio_resampler_acm::close( void )
+audio_resampler_acm::close( void )
 {
 
 
@@ -214,10 +220,10 @@ void
 
             err = acmStreamUnprepareHeader( acm_stream, &acm_header, 0L );
 
-
+        
             if ( err != MMSYSERR_NOERROR )
             {
-
+            
                 //
                 // Free buffer memory
                 //
@@ -243,7 +249,9 @@ void
 
 
                 //TODO: throw error
+                MessageBox( 0, _T("acmStreamUnPrepareHeader error"), _T("ERROR"), MB_ICONERROR );
 
+            
             }
         }
 
@@ -280,6 +288,9 @@ void
 
 
             //TODO: throw error!
+
+            MessageBox( 0, _T("acmStreamClose error"), _T("ERROR"), MB_ICONERROR );
+
 
         }
 
@@ -328,7 +339,7 @@ void
 
 
 void 
-    audio_resampler_acm::audio_receive( unsigned char * data, unsigned int size )
+audio_resampler_acm::audio_receive( unsigned char * data, unsigned int size )
 {
 
     MMRESULT err;
@@ -340,7 +351,7 @@ void
     if ( stream_opened )
     {
 
-
+        
         //
         // Copy audio data from extern to
         // internal source buffer
@@ -357,7 +368,8 @@ void
         if ( err != MMSYSERR_NOERROR )
         {
             //TODO: throw error
-            printf("acm convert error\n");
+            MessageBox( 0, _T("acmStreamConvert error"), _T("ERROR"), MB_ICONERROR );
+
 
         }
 
@@ -367,10 +379,9 @@ void
         //
 
         while(( ACMSTREAMHEADER_STATUSF_DONE & acm_header.fdwStatus ) == 0 );
+    
 
-
-        printf("Processed successfully %lu bytes of audio.\n", acm_header.cbDstLengthUsed );
-
+        
 
 
         //
@@ -383,5 +394,14 @@ void
     }
 
 }
+
+
+
+
+
+
+
+
+
 
 _AUDIO_NAMESPACE_END_

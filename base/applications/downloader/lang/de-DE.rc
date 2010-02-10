@@ -15,11 +15,11 @@ STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU 
 CAPTION "Einstellungen"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Download Ordner:", -1, 6, 10, 140, 8
+    LTEXT "Downloadordner:", -1, 6, 10, 140, 8
     EDITTEXT IDC_DOWNLOAD_FOLDER_EDIT, 6, 20, 205, 14, WS_VISIBLE | WS_TABSTOP
     PUSHBUTTON "W&ähle...", IDC_CHOOSE_BUTTON, 216, 20, 45, 14
     AUTOCHECKBOX "&Installationsdateien nach dem Setup löschen", IDC_DELINST_FILES_CHECKBOX, 8, 40, 210, 10, WS_GROUP
-    LTEXT "Update Server:", -1, 6, 55, 140, 8
+    LTEXT "Updateserver:", -1, 6, 55, 140, 8
     EDITTEXT IDC_UPDATE_SERVER_EDIT, 6, 65, 255, 14, WS_VISIBLE | WS_TABSTOP
     DEFPUSHBUTTON "&OK", IDOK, 147, 90, 54, 15
     PUSHBUTTON "&Abbrechen", IDCANCEL, 207, 90, 54, 15
@@ -31,7 +31,7 @@ BEGIN
     IDS_WELCOME_TITLE        "Willkommen im ReactOS Downloader"
     IDS_WELCOME              "Bitte wählen Sie links eine Kategorie. Dies ist Version 1.1."
     IDS_NO_APP_TITLE         "Keine Anwendung ausgewählt"
-    IDS_NO_APP               "Bitte wählen Sie eine Anwendung, bevor Sie die Download-Schaltfläche betätigen. Wenn Sie Hilfe benötigen, drücken Sie die Hilfe-Schaltfläche in der oberen rechten Ecke."
+    IDS_NO_APP               "Bitte wählen Sie eine Anwendung aus, bevor Sie die Download-Schaltfläche betätigen. Wenn Sie Hilfe benötigen, drücken Sie die Hilfe-Schaltfläche in der oberen rechten Ecke."
     IDS_UPDATE_TITLE         "Update"
     IDS_UPDATE               "Diese Funktion wurde noch nicht implementiert."
     IDS_HELP_TITLE           "Hilfe"
@@ -41,20 +41,20 @@ BEGIN
     IDS_CHOOSE_SUB           "Bitte wählen Sie eine Unterkategorie."
     IDS_CHOOSE_CATEGORY      "Bitte wählen Sie eine Kategorie."
     IDS_CHOOSE_BOTH          "Bitte wählen Sie eine Unterkategorie oder eine Anwendung."
-    IDS_XMLERROR_1           "XML Datei nicht gefunden!"
-    IDS_XMLERROR_2           "XML Datei kann nicht verarbeitet werden!"
+    IDS_XMLERROR_1           "XML-Datei nicht gefunden!"
+    IDS_XMLERROR_2           "XML-Datei kann nicht verarbeitet werden!"
     IDS_DOWNLOAD_ERROR       "Die Datei konnte nicht heruntergeladen werden.\nBitte prüfen sie, ob eine Verbindung zum Internet besteht."
     IDS_VERSION              "Version: "
     IDS_LICENCE              "Lizenz: "
     IDS_MAINTAINER           "Maintainer: "
     IDS_APPS_TITLE           "Anwendungen"
     IDS_CATS_TITLE           "Kategorien"
-    IDS_CHOOSE_FOLDER        "Bitte wählen Sie den Ordner..."
+    IDS_CHOOSE_FOLDER        "Bitte wählen Sie den Ordner aus..."
     IDS_NOTCREATE_REGKEY     "Registryschlüssel könnte nicht erstellt werden."
     IDS_DOWNLOAD_FOLDER      "Downloader"
     IDS_UNABLECREATE_FOLDER  "Es konnte kein Ordner mit diesem Namen erstellt werden!"
     IDS_UPDATE_URL           "http://svn.reactos.org"
-    IDS_INSTALL_DEP          "%s wird benötigt um %s ausführen zu können. Soll %s jetzt installiert werden?"
+    IDS_INSTALL_DEP          "%s wird benötigt, um %s ausführen zu können. Soll %s jetzt installiert werden?"
     TTT_HELPBUTTON           "Hilfe über den Downloader"
     TTT_UPDATEBUTTON         "Noch nicht vorhanden"
     TTT_PROFBUTTON           "Konfiguriert den Downloader"

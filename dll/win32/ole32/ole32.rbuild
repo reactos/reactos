@@ -20,7 +20,6 @@
 	<library>ole32_irot_client</library>
 	<library>ole32_proxy</library>
 	<library>rpcrt4</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 	<library>uuid</library>
 	<library>pseh</library>
@@ -64,8 +63,6 @@
 	<file>dcom.idl</file>
 	<file>irot.idl</file>
 	<include base="ole32" root="intermediate">.</include>
-	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
-	<compilerflag compilerset="gcc">-fno-unit-at-a-time</compilerflag>
 </module>
 <module name="ole32_irot_server" type="rpcserver">
 	<file>irot.idl</file>

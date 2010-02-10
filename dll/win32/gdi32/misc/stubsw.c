@@ -1,6 +1,5 @@
-/* $Id$
- *
- * reactos/lib/gdi32/misc/stubs.c
+/*
+ * dll/win32/gdi32/misc/stubsw.c
  *
  * GDI32.DLL Stubs for Unicode functions
  *
@@ -10,10 +9,7 @@
  */
 
 #include "precomp.h"
-
-#define UNIMPLEMENTED DbgPrint("GDI32: %s is unimplemented, please try again later.\n", __FUNCTION__);
-
-
+#include <debug.h>
 
 
 /*

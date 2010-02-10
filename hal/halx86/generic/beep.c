@@ -1,10 +1,9 @@
 /*
  * PROJECT:         ReactOS HAL
- * LICENSE:         GPL - See COPYING in the top level directory
+ * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            hal/halx86/generic/beep.c
  * PURPOSE:         Speaker support (beeping)
- * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
- *                  Eric Kohl (ekohl@abo.rhein-zeitung.de)
+ * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
 /* INCLUDES ******************************************************************/
@@ -12,13 +11,6 @@
 #include <hal.h>
 #define NDEBUG
 #include <debug.h>
-
-/* CONSTANTS *****************************************************************/
-
-#define TIMER2      (PUCHAR)0x42
-#define TIMER3      (PUCHAR)0x43
-#define PORT_B      (PUCHAR)0x61
-#define CLOCKFREQ   1193167
 
 /* FUNCTIONS *****************************************************************/
 
@@ -29,42 +21,96 @@ BOOLEAN
 NTAPI
 HalMakeBeep(IN ULONG Frequency)
 {
-    UCHAR Data;
+    SYSTEM_CONTROL_PORT_B_REGISTER SystemControl;
+    TIMER_CONTROL_PORT_REGISTER TimerControl;
     ULONG Divider;
+    BOOLEAN Result = FALSE;
 
-    /* Acquire CMOS Lock */
+    //
+    // Acquire CMOS Lock
+    //
     HalpAcquireSystemHardwareSpinLock();
 
-    /* Turn the register off */
-    Data = READ_PORT_UCHAR(PORT_B);
-    WRITE_PORT_UCHAR(PORT_B, Data & 0xFC);
+    //
+    // Turn the timer off by disconnecting its output pin and speaker gate
+    //
+    SystemControl.Bits = __inbyte(SYSTEM_CONTROL_PORT_B);
+    SystemControl.SpeakerDataEnable = FALSE;
+    SystemControl.Timer2GateToSpeaker = FALSE;
+    __outbyte(SYSTEM_CONTROL_PORT_B, SystemControl.Bits);
 
-    /* Check if we have a frequency */
+    //
+    // Check if we have a frequency
+    //
     if (Frequency)
     {
-        /* Set the divider */
-        Divider = CLOCKFREQ / Frequency;
+        //
+        // Set the divider
+        //
+        Divider = PIT_FREQUENCY / Frequency;
 
-        /* Check if it's too large */
-        if (Divider > 0x10000)
+        //
+        // Check if it's too large
+        //
+        if (Divider <= 0x10000)
         {
-            /* Fail */
-            HalpReleaseCmosSpinLock();
-            return FALSE;
+            //
+            // Program the PIT for binary mode
+            //
+            TimerControl.BcdMode = FALSE;
+            
+            //
+            // Program the PIT to generate a square wave (Mode 3) on channel 2.
+            // Channel 0 is used for the IRQ0 clock interval timer, and channel
+            // 1 is used for DRAM refresh.
+            //
+            // Mode 2 gives much better accuracy, but generates an output signal
+            // that drops to low for each input signal cycle at 0.8381 useconds.
+            // This is too fast for the PC speaker to process and would result
+            // in no sound being emitted.
+            //
+            // Mode 3 will generate a high pulse that is a bit longer and will
+            // allow the PC speaker to notice. Additionally, take note that on
+            // channel 2, when input goes low the counter will stop and output
+            // will go to high.
+            //
+            TimerControl.OperatingMode = PitOperatingMode3;
+            TimerControl.Channel = PitChannel2;
+            
+            //
+            // Set the access mode that we'll use to program the reload value.
+            //
+            TimerControl.AccessMode = PitAccessModeLowHigh;
+            
+            //
+            // Now write the programming bits
+            //
+            __outbyte(TIMER_CONTROL_PORT, TimerControl.Bits);
+            
+            //
+            // Next we write the reload value for channel 2
+            //
+            __outbyte(TIMER_CHANNEL2_DATA_PORT, Divider & 0xFF);
+            __outbyte(TIMER_CHANNEL2_DATA_PORT, Divider >> 8);
+
+            //
+            // Reconnect the speaker to the timer and re-enable the output pin
+            //
+            SystemControl.Bits = __inbyte(SYSTEM_CONTROL_PORT_B);
+            SystemControl.SpeakerDataEnable = TRUE;
+            SystemControl.Timer2GateToSpeaker = TRUE;
+            __outbyte(SYSTEM_CONTROL_PORT_B, SystemControl.Bits);
+            Result = TRUE;
         }
-
-        /* Set timer divider */
-        WRITE_PORT_UCHAR(TIMER3, 0xB6);
-        WRITE_PORT_UCHAR(TIMER2, (UCHAR)(Divider & 0xFF));
-        WRITE_PORT_UCHAR(TIMER2, (UCHAR)((Divider>>8) & 0xFF));
-
-        /* Turn speaker on */
-        WRITE_PORT_UCHAR(PORT_B, READ_PORT_UCHAR(PORT_B) | 0x03);
     }
 
-    /* Release CMOS lock */
+    //
+    // Release CMOS lock
+    //
     HalpReleaseCmosSpinLock();
 
-    /* Return success */
-    return TRUE;
+    //
+    // Return success
+    //
+    return Result;
 }

@@ -141,7 +141,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
     PMMPTE PointerPte, StartPte;
     MMPTE TempPte;
     PMMPFN Pfn1;
-    PVOID BaseVa;
+    PVOID BaseVa, BaseVaStart;
     PMMFREE_POOL_ENTRY FreeEntry;
     PKSPIN_LOCK_QUEUE LockQueue;
     
@@ -169,11 +169,133 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
         if (i == 0xFFFFFFFF)
         {
             //
-            // Out of memory!
+            // Get the page bit count
             //
-            DPRINT1("OUT OF PAGED POOL!!!\n");
-            KeReleaseGuardedMutex(&MmPagedPoolMutex);
-            return NULL;
+            i = ((SizeInPages - 1) / 1024) + 1;
+            
+            //
+            // Check if there is enougn paged pool expansion space left
+            //
+            if (MmPagedPoolInfo.NextPdeForPagedPoolExpansion >
+                MiAddressToPte(MmPagedPoolInfo.LastPteForPagedPool))
+            {
+                //
+                // Out of memory!
+                //
+                DPRINT1("OUT OF PAGED POOL!!!\n");
+                KeReleaseGuardedMutex(&MmPagedPoolMutex);
+                return NULL;
+            }
+            
+            //
+            // Check if we'll have to expand past the last PTE we have available
+            //            
+            if (((i - 1) + MmPagedPoolInfo.NextPdeForPagedPoolExpansion) >
+                 MiAddressToPte(MmPagedPoolInfo.LastPteForPagedPool))
+            {
+                //
+                // We can only support this much then
+                //
+                SizeInPages = MiAddressToPte(MmPagedPoolInfo.LastPteForPagedPool) - 
+                              MmPagedPoolInfo.NextPdeForPagedPoolExpansion +
+                              1;
+                ASSERT(SizeInPages < i);
+                i = SizeInPages;
+            }
+            else
+            {
+                //
+                // Otherwise, there is plenty of space left for this expansion
+                //
+                SizeInPages = i;
+            }
+            
+            //
+            // Get the template PTE we'll use to expand
+            //
+            TempPte = HyperTemplatePte;
+            
+            //
+            // Get the first PTE in expansion space
+            //
+            PointerPte = MmPagedPoolInfo.NextPdeForPagedPoolExpansion;
+            BaseVa = MiPteToAddress(PointerPte);
+            BaseVaStart = BaseVa;
+            
+            //
+            // Lock the PFN database and loop pages
+            //            
+            OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);          
+            do
+            {
+                //
+                // It should not already be valid
+                //
+                ASSERT(PointerPte->u.Hard.Valid == 0);
+                
+                //
+                // Request a paged pool page and write the PFN for it
+                //
+                PageFrameNumber = MmAllocPage(MC_PPOOL, 0);
+                TempPte.u.Hard.PageFrameNumber = PageFrameNumber;
+                
+                //
+                // Save it into our double-buffered system page directory
+                //
+                MmSystemPagePtes[(ULONG_PTR)PointerPte & (PAGE_SIZE - 1) /
+                                 sizeof(MMPTE)] = TempPte;
+                            
+                //
+                // Write the actual PTE now
+                //
+                *PointerPte++ = TempPte;
+                
+                //
+                // Move on to the next expansion address
+                //
+                BaseVa = (PVOID)((ULONG_PTR)BaseVa + PAGE_SIZE);
+            } while (--i > 0);
+            
+            //
+            // Release the PFN database lock
+            //            
+            KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+            
+            //
+            // These pages are now available, clear their availablity bits
+            //
+            RtlClearBits(MmPagedPoolInfo.PagedPoolAllocationMap,
+                         (MmPagedPoolInfo.NextPdeForPagedPoolExpansion -
+                          MiAddressToPte(MmPagedPoolInfo.FirstPteForPagedPool)) *
+                         1024,
+                         SizeInPages * 1024);
+                        
+            //
+            // Update the next expansion location
+            //
+            MmPagedPoolInfo.NextPdeForPagedPoolExpansion += SizeInPages;
+            
+            //
+            // Zero out the newly available memory
+            //
+            RtlZeroMemory(BaseVaStart, SizeInPages * PAGE_SIZE);
+            
+            //
+            // Now try consuming the pages again
+            //
+            SizeInPages = BYTES_TO_PAGES(SizeInBytes);
+            i = RtlFindClearBitsAndSet(MmPagedPoolInfo.PagedPoolAllocationMap,
+                                       SizeInPages,
+                                       0);
+            if (i == 0xFFFFFFFF) 
+            {
+                //
+                // Out of memory!
+                //
+                DPRINT1("OUT OF PAGED POOL!!!\n");
+                KeReleaseGuardedMutex(&MmPagedPoolMutex);
+                return NULL;
+            }
         }
         
         //

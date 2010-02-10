@@ -10,7 +10,6 @@
 	<library>wine</library>
 	<library>uuid</library>
 	<library>rpcrt4_epm_client</library>
-	<library>kernel32</library>
 	<library>user32</library>
 	<library>advapi32</library>
 	<library>secur32</library>
@@ -40,8 +39,6 @@
 	<file>rpcrt4.rc</file>
 	<file>epm.idl</file>
 	<include base="rpcrt4" root="intermediate">.</include>
-	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
-	<compilerflag compilerset="gcc">-fno-unit-at-a-time</compilerflag>
 </module>
 <module name="rpcrt4_epm_client" type="rpcclient">
 	<file>epm.idl</file>

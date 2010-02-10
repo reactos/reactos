@@ -21,7 +21,7 @@
  * PROJECT:         ReactOS system libraries
  * PURPOSE:         Computer name functions
  * FILE:            lib/kernel32/misc/computername.c
- * PROGRAMER:       Eric Kohl (ekohl@rz-online.de)
+ * PROGRAMER:       Eric Kohl
  */
 
 /* INCLUDES ******************************************************************/

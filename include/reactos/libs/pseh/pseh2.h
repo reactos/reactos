@@ -19,6 +19,9 @@
 	FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 	DEALINGS IN THE SOFTWARE.
 */
+#ifdef _M_AMD64
+#include "pseh2_64.h"
+#else
 
 #ifndef KJK_PSEH2_H_
 #define KJK_PSEH2_H_
@@ -400,6 +403,7 @@ __SEH_END_SCOPE_CHAIN;
 
 #endif
 
+#endif
 #endif
 
 /* EOF */

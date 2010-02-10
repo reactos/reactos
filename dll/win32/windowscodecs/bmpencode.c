@@ -47,6 +47,13 @@ struct bmp_pixelformat {
 
 static const struct bmp_pixelformat formats[] = {
     {&GUID_WICPixelFormat24bppBGR, 24, BI_RGB},
+    {&GUID_WICPixelFormat16bppBGR555, 16, BI_RGB},
+    {&GUID_WICPixelFormat16bppBGR565, 16, BI_BITFIELDS, 0xf800, 0x7e0, 0x1f, 0},
+    {&GUID_WICPixelFormat32bppBGR, 32, BI_RGB},
+#if 0
+    /* Windows doesn't seem to support this one. */
+    {&GUID_WICPixelFormat32bppBGRA, 32, BI_BITFIELDS, 0xff0000, 0xff00, 0xff, 0xff000000},
+#endif
     {NULL}
 };
 
@@ -338,11 +345,24 @@ static HRESULT WINAPI BmpFrameEncode_Commit(IWICBitmapFrameEncode *iface)
     bih.bV5ClrUsed = 0;
     bih.bV5ClrImportant = 0;
 
+    if (This->format->compression == BI_BITFIELDS)
+    {
+        if (This->format->alphamask)
+            bih.bV5Size = info_size = sizeof(BITMAPV4HEADER);
+        else
+            info_size = sizeof(BITMAPINFOHEADER)+12;
+        bih.bV5RedMask = This->format->redmask;
+        bih.bV5GreenMask = This->format->greenmask;
+        bih.bV5BlueMask = This->format->bluemask;
+        bih.bV5AlphaMask = This->format->alphamask;
+        bih.bV5AlphaMask = LCS_DEVICE_RGB;
+    }
+
     bfh.bfSize = sizeof(BITMAPFILEHEADER) + info_size + bih.bV5SizeImage;
     bfh.bfOffBits = sizeof(BITMAPFILEHEADER) + info_size;
 
     pos.QuadPart = 0;
-    hr = IStream_Seek(This->stream, pos, STREAM_SEEK_SET, NULL);\
+    hr = IStream_Seek(This->stream, pos, STREAM_SEEK_SET, NULL);
     if (FAILED(hr)) return hr;
 
     hr = IStream_Write(This->stream, &bfh, sizeof(BITMAPFILEHEADER), &byteswritten);

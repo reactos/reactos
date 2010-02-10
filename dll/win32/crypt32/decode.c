@@ -3106,43 +3106,6 @@ static BOOL CRYPT_AsnDecodeAltNameInternal(const BYTE *pbEncoded,
     return ret;
 }
 
-/* Like CRYPT_AsnDecodeIntegerInternal, but swaps the bytes */
-static BOOL CRYPT_AsnDecodeIntegerSwapBytes(const BYTE *pbEncoded,
- DWORD cbEncoded, DWORD dwFlags, void *pvStructInfo, DWORD *pcbStructInfo,
- DWORD *pcbDecoded)
-{
-    BOOL ret;
-
-    TRACE("(%p, %d, 0x%08x, %p, %d, %p)\n", pbEncoded, cbEncoded, dwFlags,
-     pvStructInfo, *pcbStructInfo, pcbDecoded);
-
-    /* Can't use the CRYPT_DECODE_NOCOPY_FLAG, because we modify the bytes in-
-     * place.
-     */
-    ret = CRYPT_AsnDecodeIntegerInternal(pbEncoded, cbEncoded,
-     dwFlags & ~CRYPT_DECODE_NOCOPY_FLAG, pvStructInfo, pcbStructInfo,
-     pcbDecoded);
-    if (ret && pvStructInfo)
-    {
-        CRYPT_DATA_BLOB *blob = pvStructInfo;
-
-        if (blob->cbData)
-        {
-            DWORD i;
-            BYTE temp;
-
-            for (i = 0; i < blob->cbData / 2; i++)
-            {
-                temp = blob->pbData[i];
-                blob->pbData[i] = blob->pbData[blob->cbData - i - 1];
-                blob->pbData[blob->cbData - i - 1] = temp;
-            }
-        }
-    }
-    TRACE("returning %d (%08x)\n", ret, GetLastError());
-    return ret;
-}
-
 static BOOL WINAPI CRYPT_AsnDecodeAuthorityKeyId(DWORD dwCertEncodingType,
  LPCSTR lpszStructType, const BYTE *pbEncoded, DWORD cbEncoded, DWORD dwFlags,
  PCRYPT_DECODE_PARA pDecodePara, void *pvStructInfo, DWORD *pcbStructInfo)
@@ -3153,7 +3116,7 @@ static BOOL WINAPI CRYPT_AsnDecodeAuthorityKeyId(DWORD dwCertEncodingType,
     {
         struct AsnDecodeSequenceItem items[] = {
          { ASN_CONTEXT | 0, offsetof(CERT_AUTHORITY_KEY_ID_INFO, KeyId),
-           CRYPT_AsnDecodeIntegerSwapBytes, sizeof(CRYPT_DATA_BLOB),
+           CRYPT_AsnDecodeOctetsInternal, sizeof(CRYPT_DATA_BLOB),
            TRUE, TRUE, offsetof(CERT_AUTHORITY_KEY_ID_INFO, KeyId.pbData), 0 },
          { ASN_CONTEXT | ASN_CONSTRUCTOR| 1,
            offsetof(CERT_AUTHORITY_KEY_ID_INFO, CertIssuer),
@@ -3188,7 +3151,7 @@ static BOOL WINAPI CRYPT_AsnDecodeAuthorityKeyId2(DWORD dwCertEncodingType,
     {
         struct AsnDecodeSequenceItem items[] = {
          { ASN_CONTEXT | 0, offsetof(CERT_AUTHORITY_KEY_ID2_INFO, KeyId),
-           CRYPT_AsnDecodeIntegerSwapBytes, sizeof(CRYPT_DATA_BLOB),
+           CRYPT_AsnDecodeOctetsInternal, sizeof(CRYPT_DATA_BLOB),
            TRUE, TRUE, offsetof(CERT_AUTHORITY_KEY_ID2_INFO, KeyId.pbData), 0 },
          { ASN_CONTEXT | ASN_CONSTRUCTOR| 1,
            offsetof(CERT_AUTHORITY_KEY_ID2_INFO, AuthorityCertIssuer),

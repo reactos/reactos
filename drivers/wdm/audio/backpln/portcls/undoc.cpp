@@ -484,7 +484,7 @@ DumpFilterDescriptor(
                     RtlStringFromGUID(*EventItem->Set, &GuidString);
                     DPRINT1("EventIndex %u GUID %S Id %u Flags %x\n", Index, GuidString.Buffer, EventItem->Id, EventItem->Flags);
 
-                    EventItem = (PPCEVENT_ITEM)((ULONG_PTR)EventItem + FilterDescription->AutomationTable->EventItemSize);
+                    EventItem = (PPCEVENT_ITEM)((ULONG_PTR)EventItem + NodeDescriptor->AutomationTable->EventItemSize);
                 }
 
             }

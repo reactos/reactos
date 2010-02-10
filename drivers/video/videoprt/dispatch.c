@@ -361,10 +361,10 @@ IntVideoPortPnPStartDevice(
                 FullList->InterfaceType, FullList->BusNumber, DeviceExtension->SystemIoBusNumber, FullList->PartialResourceList.Version, FullList->PartialResourceList.Revision);
 
          /* FIXME: Is this ASSERT ok for resources from the PNP manager? */
-         ASSERT(FullList->InterfaceType == PCIBus &&
-                FullList->BusNumber == DeviceExtension->SystemIoBusNumber &&
-                1 == FullList->PartialResourceList.Version &&
-                1 == FullList->PartialResourceList.Revision);
+         ASSERT(FullList->InterfaceType == PCIBus);
+         ASSERT(FullList->BusNumber == DeviceExtension->SystemIoBusNumber);
+         ASSERT(1 == FullList->PartialResourceList.Version);
+         ASSERT(1 == FullList->PartialResourceList.Revision);
 	 for (Descriptor = FullList->PartialResourceList.PartialDescriptors;
               Descriptor < FullList->PartialResourceList.PartialDescriptors + FullList->PartialResourceList.Count;
               Descriptor++)

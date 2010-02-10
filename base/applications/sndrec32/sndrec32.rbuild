@@ -4,10 +4,10 @@
 	<include base="sndrec32">.</include>
 	<library>winmm</library>
 	<library>user32</library>
-	<library>kernel32</library>
 	<library>msacm32</library>
 	<library>comctl32</library>
 	<library>comdlg32</library>
+	<library>gdi32</library>
 	<file>audio_format.cpp</file>
 	<file>audio_membuffer.cpp</file>
 	<file>audio_producer.cpp</file>
@@ -16,5 +16,5 @@
 	<file>audio_wavein.cpp</file>
 	<file>audio_waveout.cpp</file>
 	<file>sndrec32.cpp</file>
-	<file>sndrec32.rc</file>
+	<file>rsrc.rc</file>
 </module>

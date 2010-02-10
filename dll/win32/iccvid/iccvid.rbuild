@@ -7,6 +7,4 @@
 	<file>rsrc.rc</file>
 	<library>wine</library>
 	<library>user32</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
-</module>

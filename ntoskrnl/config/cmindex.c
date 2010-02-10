@@ -752,7 +752,7 @@ CmpFindSubKeyByName(IN PHHIVE Hive,
                             return HCELL_NIL;
                         }
 
-                        if ((Found) && (SubKey != HCELL_NIL))
+                        if (SubKey != HCELL_NIL)
                         {
                             HvReleaseCell(Hive, CellToRelease);
                             return SubKey;
@@ -1294,8 +1294,8 @@ CmpSplitLeaf(IN PHHIVE Hive,
     {
         RtlMoveMemory(&IndexKey->List[RootSelect + 2],
                       &IndexKey->List[RootSelect + 1],
-                      IndexKey->Count -
-                      (RootSelect + 1) * sizeof(HCELL_INDEX));
+                      (IndexKey->Count -
+                      (RootSelect + 1)) * sizeof(HCELL_INDEX));
     }
 
     /* Make sure both old and new computed counts are valid */

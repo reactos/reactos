@@ -1,4 +1,4 @@
-; UTF-8
+﻿; UTF-8
 
 [Section]
 Name = Visual Studio 2005 Runtime
@@ -13,8 +13,12 @@ CDPath = none
 
 [Section.0407]
 Licence = Unbekannt
-Description = Visual Studio 2005 Laufzeitsystem
+Description = Visual Studio 2005 Laufzeitsystem.
+
+[Section.040a]
+Licence = Desconocida
+Description = Librerias Visual Studio 2005.
 
 [Section.0415]
 Licence = Nieznana
-Description = Biblioteki uruchomieniowe Visual Studio 2005
+Description = Biblioteki uruchomieniowe Visual Studio 2005.

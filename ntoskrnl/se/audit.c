@@ -138,7 +138,7 @@ SeLocateProcessImageName(IN PEPROCESS Process,
         if (NT_SUCCESS(Status))
         {
             /* Set it */
-            if (InterlockedCompareExchangePointer(&Process->
+            if (InterlockedCompareExchangePointer((PVOID*)&Process->
                                                   SeAuditProcessCreationInfo.ImageFileName,
                                                   AuditName,
                                                   NULL))

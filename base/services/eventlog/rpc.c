@@ -29,7 +29,6 @@ DWORD WINAPI RpcThreadRoutine(LPVOID lpParameter)
     }
 
     Status = RpcServerRegisterIf(eventlog_v0_0_s_ifspec, NULL, NULL);
-
     if (Status != RPC_S_OK)
     {
         DPRINT("RpcServerRegisterIf() failed (Status %lx)\n", Status);
@@ -37,7 +36,6 @@ DWORD WINAPI RpcThreadRoutine(LPVOID lpParameter)
     }
 
     Status = RpcServerListen(1, RPC_C_LISTEN_MAX_CALLS_DEFAULT, FALSE);
-
     if (Status != RPC_S_OK)
     {
         DPRINT("RpcServerListen() failed (Status %lx)\n", Status);
@@ -533,8 +531,48 @@ NTSTATUS ElfrRegisterEventSourceA(
     DWORD MinorVersion,
     IELF_HANDLE *LogHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    UNICODE_STRING UNCServerNameW = { 0, 0, NULL };
+    UNICODE_STRING ModuleNameW    = { 0, 0, NULL };
+
+    if (UNCServerName &&
+        !RtlCreateUnicodeStringFromAsciiz(&UNCServerNameW, UNCServerName))
+    {
+        return STATUS_NO_MEMORY;
+    }
+
+    if (ModuleName &&
+        !RtlAnsiStringToUnicodeString(&ModuleNameW, (PANSI_STRING)ModuleName, TRUE))
+    {
+        RtlFreeUnicodeString(&UNCServerNameW);
+        return STATUS_NO_MEMORY;
+    }
+
+    /* RegModuleName must be an empty string */
+    if (RegModuleName->Length > 0)
+    {
+        RtlFreeUnicodeString(&UNCServerNameW);
+        RtlFreeUnicodeString(&ModuleNameW);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if ((MajorVersion != 1) || (MinorVersion != 1))
+    {
+        RtlFreeUnicodeString(&UNCServerNameW);
+        RtlFreeUnicodeString(&ModuleNameW);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /*FIXME: UNCServerName must specify the server or empty for local */
+
+    /*FIXME: Must verify that caller has write access */
+
+    *LogHandle = ElfCreateEventLogHandle(ModuleNameW.Buffer,
+                                         TRUE);
+
+    RtlFreeUnicodeString(&UNCServerNameW);
+    RtlFreeUnicodeString(&ModuleNameW);
+
+    return STATUS_SUCCESS;
 }
 
 

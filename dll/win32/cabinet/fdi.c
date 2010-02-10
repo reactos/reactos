@@ -2519,6 +2519,7 @@ BOOL __cdecl FDICopy(
   /* slight overestimation here to save CPU cycles in the developer's brain */
   if ((pathlen + filenamelen + 3) > MAX_PATH) {
     ERR("MAX_PATH exceeded.\n");
+    PFDI_FREE(hfdi, decomp_state);
     PFDI_INT(hfdi)->perf->erfOper = FDIERROR_CABINET_NOT_FOUND;
     PFDI_INT(hfdi)->perf->erfType = ERROR_FILE_NOT_FOUND;
     PFDI_INT(hfdi)->perf->fError = TRUE;
@@ -2540,6 +2541,7 @@ BOOL __cdecl FDICopy(
   /* get a handle to the cabfile */
   cabhf = PFDI_OPEN(hfdi, fullpath, _O_RDONLY|_O_BINARY, _S_IREAD | _S_IWRITE);
   if (cabhf == -1) {
+    PFDI_FREE(hfdi, decomp_state);
     PFDI_INT(hfdi)->perf->erfOper = FDIERROR_CABINET_NOT_FOUND;
     PFDI_INT(hfdi)->perf->fError = TRUE;
     SetLastError(ERROR_FILE_NOT_FOUND);
@@ -2548,6 +2550,7 @@ BOOL __cdecl FDICopy(
 
   if (cabhf == 0) {
     ERR("PFDI_OPEN returned zero for %s.\n", fullpath);
+    PFDI_FREE(hfdi, decomp_state);
     PFDI_INT(hfdi)->perf->erfOper = FDIERROR_CABINET_NOT_FOUND;
     PFDI_INT(hfdi)->perf->erfType = ERROR_FILE_NOT_FOUND;
     PFDI_INT(hfdi)->perf->fError = TRUE;
@@ -2558,6 +2561,7 @@ BOOL __cdecl FDICopy(
   /* check if it's really a cabfile. Note that this doesn't implement the bug */
   if (!FDI_read_entries(hfdi, cabhf, &fdici, &(CAB(mii)))) {
     ERR("FDIIsCabinet failed.\n");
+    PFDI_FREE(hfdi, decomp_state);
     PFDI_CLOSE(hfdi, cabhf);
     return FALSE;
   }

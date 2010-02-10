@@ -5,6 +5,7 @@
 	<include base="itss">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
+	<dependency>wineheaders</dependency>
 	<file>chm_lib.c</file>
 	<file>lzx.c</file>
 	<file>itss.c</file>
@@ -17,7 +18,6 @@
 	<library>urlmon</library>
 	<library>shlwapi</library>
 	<library>ole32</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 </module>
 </group>

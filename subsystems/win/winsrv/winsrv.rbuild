@@ -6,7 +6,6 @@
 	<include base="csr">include</include>
 	<library>ntdll</library>
 	<library>csrsrv</library>
-	<library>kernel32</library>
 	<library>user32</library>
 	<library>gdi32</library>
 	<file>dllmain.c</file>

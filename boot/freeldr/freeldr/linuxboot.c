@@ -17,10 +17,10 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-
+#ifndef _M_ARM
+ 
 #include <freeldr.h>
 #include <debug.h>
-
 #ifdef __i386__
 #define	LINUX_READ_CHUNK_SIZE	0x20000			// Read 128k at a time
 
@@ -40,6 +40,36 @@ PVOID			LinuxKernelLoadAddress = NULL;
 PVOID			LinuxInitrdLoadAddress = NULL;
 CHAR			LinuxBootDescription[80];
 CHAR			LinuxBootPath[260] = "";
+
+BOOLEAN RemoveQuotes(PCHAR QuotedString)
+{
+	CHAR	TempString[200];
+	PCHAR p;
+	PSTR Start;
+
+	//
+	// Skip spaces up to "
+	//
+	p = QuotedString;
+	while (*p == ' ' || *p == '"')
+		p++;
+	Start = p;
+
+	//
+	// Go up to next "
+	//
+	while (*p != '"' && *p != ANSI_NULL)
+		p++;
+	*p = ANSI_NULL;
+
+	//
+	// Copy result
+	//
+	strcpy(TempString, Start);
+	strcpy(QuotedString, TempString);
+
+	return TRUE;
+}
 
 VOID LoadAndBootLinux(PCSTR OperatingSystemName, PCSTR Description)
 {
@@ -486,3 +516,4 @@ BOOLEAN LinuxReadInitrd(PFILE LinuxInitrdFile)
 	return TRUE;
 }
 #endif /* __i386__ */
+#endif

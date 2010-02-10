@@ -1,4 +1,4 @@
-; UTF-8
+ï»¿; UTF-8
 
 [Section]
 Name = SciTE
@@ -12,4 +12,7 @@ URLDownload = http://fastbull.dl.sourceforge.net/sourceforge/scintilla/Sc201.exe
 CDPath = none
 
 [Section.0407]
-Description = SciTE ist ein SCIntilla basierter Text Editor. Ursprünglich wurde er erstellt, um Scintilla vorzuführen, wuchs aber zu einem nützlichen Editor mit der Fähigkeit Programme zu erstellen und auszuführen.
+Description = SciTE ist ein SCIntilla basierter Text Editor. UrsprÃ¼nglich wurde er erstellt, um Scintilla vorzufÃ¼hren, wuchs aber zu einem nÃ¼tzlichen Editor mit der FÃ¤higkeit Programme zu erstellen und auszufÃ¼hren.
+
+[Section.040a]
+Description = Editor de texto basado en SCIntilla. Originalmente creado para demostrar Scintilla, a crecido para ser un gran editor con capacidad para crear y ejecutar programas.

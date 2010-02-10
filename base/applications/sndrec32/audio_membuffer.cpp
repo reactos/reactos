@@ -1,19 +1,29 @@
-/*
- * PROJECT:         ReactOS Sound Record Application
+/* PROJECT:         ReactOS sndrec32
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            base/applications/sndrec32/audio_membuffer.cpp
- * PURPOSE:         Audio MemBuffer
- * PROGRAMMERS:     Marco Pagliaricci <ms_blue (at) hotmail (dot) it>
+ * PURPOSE:         Sound recording
+ * PROGRAMMERS:     Marco Pagliaricci (irc: rendar)
  */
+
+
 
 #include "stdafx.h"
 #include "audio_membuffer.hpp"
 
+
+
 _AUDIO_NAMESPACE_START_
 
 
+
+
+//////////////////////////////////////
+/////// Protected Functions  /////////
+//////////////////////////////////////
+
+
 void 
-    audio_membuffer::alloc_mem_( unsigned int bytes )
+audio_membuffer::alloc_mem_( unsigned int bytes )
 {
 
     //
@@ -63,7 +73,7 @@ void
 
 
 void
-    audio_membuffer::free_mem_( void )
+audio_membuffer::free_mem_( void )
 {
 
     if ( audio_data )
@@ -76,7 +86,7 @@ void
 
 
 void
-    audio_membuffer::resize_mem_( unsigned int new_size )
+audio_membuffer::resize_mem_( unsigned int new_size )
 {
 
 
@@ -100,7 +110,7 @@ void
         return;
 
 
-
+    
 
     BYTE * new_mem;
 
@@ -166,7 +176,7 @@ void
 
 
 void 
-    audio_membuffer::truncate_( void )
+audio_membuffer::truncate_( void )
 {
 
     //
@@ -183,7 +193,7 @@ void
     if ( audio_data )
     {
 
-
+        
         //
         // Allocs a new buffer.
         //
@@ -243,7 +253,7 @@ void
 
 
 void
-    audio_membuffer::clear( void )
+audio_membuffer::clear( void )
 {
 
     free_mem_();
@@ -254,7 +264,7 @@ void
 
 
 void 
-    audio_membuffer::reset( void )
+audio_membuffer::reset( void )
 {
 
 
@@ -278,7 +288,7 @@ void
 }
 
 void 
-    audio_membuffer::alloc_bytes( unsigned int bytes )
+audio_membuffer::alloc_bytes( unsigned int bytes )
 {
 
     alloc_mem_( bytes );
@@ -287,18 +297,18 @@ void
 
 
 
-
+        
 void 
-    audio_membuffer::alloc_seconds( unsigned int secs )
+audio_membuffer::alloc_seconds( unsigned int secs )
 {
-
+    
     alloc_mem_( aud_info.byte_rate() * secs );
 
 }
 
 
 void 
-    audio_membuffer::alloc_seconds( float secs )
+audio_membuffer::alloc_seconds( float secs )
 {
 
     alloc_mem_(( unsigned int )(( float ) aud_info.byte_rate() * secs ));
@@ -309,7 +319,7 @@ void
 
 
 void 
-    audio_membuffer::resize_bytes( unsigned int bytes )
+audio_membuffer::resize_bytes( unsigned int bytes )
 {
 
     resize_mem_( bytes );
@@ -317,9 +327,9 @@ void
 }
 
 
-
+        
 void 
-    audio_membuffer::resize_seconds( unsigned int secs )
+audio_membuffer::resize_seconds( unsigned int secs )
 {
 
     resize_mem_( aud_info.byte_rate() * secs );
@@ -328,15 +338,14 @@ void
 
 
 void 
-    audio_membuffer::resize_seconds( float secs )
+audio_membuffer::resize_seconds( float secs )
 {
 
     resize_mem_(( unsigned int )
         (( float )aud_info.byte_rate() * secs )
-        );
+    );
 
 }
-
 
 
 
@@ -353,9 +362,11 @@ void
 
 
 void 
-    audio_membuffer::audio_receive
-    ( unsigned char * data, unsigned int size )
+audio_membuffer::audio_receive
+        ( unsigned char * data, unsigned int size )
 {
+
+    
 
 
     //
@@ -414,7 +425,7 @@ void
         resize_mem_( tot_mem );
 
     }
-
+        
 
     //
     // Now we have enough free space in the
@@ -424,24 +435,25 @@ void
     memcpy( audio_data + bytes_received, data, size );
 
 
-
-
+    
+    
     if ( audio_arrival )
         audio_arrival( aud_info.samples_in_bytes( size ));
-
+    
 
 
 }
 
 
 unsigned int 
-    audio_membuffer::read( BYTE * out_buf, unsigned int bytes )
+audio_membuffer::read( BYTE * out_buf, unsigned int bytes )
 {
+
 
     //
     // Some checking
     //
-
+    
     if ( !audio_data )
         return 0;
 
@@ -457,7 +469,7 @@ unsigned int
 
     unsigned int to_copy = 
         bytes > to_play ? to_play : bytes;
-
+    
 
     //
     // Copies the audio data out.
@@ -473,13 +485,13 @@ unsigned int
     // `audio_producer' object).
     //
 
-    bytes_played_ += bytes;
+    bytes_played_ += to_copy;
 
 
     if ( audio_arrival )
-        audio_arrival( aud_info.samples_in_bytes( bytes ));
+        audio_arrival( aud_info.samples_in_bytes( to_copy ));
 
-
+    
     //
     // Returns the exact size of audio data
     // produced.
@@ -490,12 +502,13 @@ unsigned int
 
 
 bool
-    audio_membuffer::finished( void ) 
+audio_membuffer::finished( void ) 
 {
     if ( bytes_played_ < bytes_received )
         return false;
     else
         return true;
 }
+
 
 _AUDIO_NAMESPACE_END_

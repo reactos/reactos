@@ -11,9 +11,11 @@ URLSite = http://www.freebasic.net/
 URLDownload = http://ovh.dl.sourceforge.net/sourceforge/fbc/FreeBASIC-v0.20.0b-win32.exe
 CDPath = none
 
-
 [Section.0407]
-Description = Open Source BASIC Compiler. Die BASIC Syntax ist kompatibel zu QBASIC. 
+Description = Open Source BASIC Compiler. Die BASIC Syntax ist kompatibel zu QBASIC.
+
+[Section.040a]
+Description = Compilador BASIC de código abierto. El lenguaje BASIC es compatible con QBASIC.
 
 [Section.0415]
-Description = Otwarty kompilator BASIC, ze składnią kompatybilną z QBASIC. 
+Description = Otwarty kompilator BASIC, ze składnią kompatybilną z QBASIC.

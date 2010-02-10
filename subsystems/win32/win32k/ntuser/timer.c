@@ -49,13 +49,13 @@ CreateTimer(VOID)
 
   if (!FirstpTmr)
   {
-      FirstpTmr = UserCreateObject(gHandleTable, &Handle, otTimer, sizeof(TIMER));
+      FirstpTmr = UserCreateObject(gHandleTable, NULL, &Handle, otTimer, sizeof(TIMER));
       if (FirstpTmr) InitializeListHead(&FirstpTmr->ptmrList);
       Ret = FirstpTmr;
   }
   else
   {
-      Ret = UserCreateObject(gHandleTable, &Handle, otTimer, sizeof(TIMER));
+      Ret = UserCreateObject(gHandleTable, NULL, &Handle, otTimer, sizeof(TIMER));
       if (Ret) InsertTailList(&FirstpTmr->ptmrList, &Ret->ptmrList);
   } 
   return Ret;
@@ -69,7 +69,7 @@ RemoveTimer(PTIMER pTmr)
   if (pTmr)
   {
      RemoveEntryList(&pTmr->ptmrList);
-     UserDeleteObject( USER_BODY_TO_HEADER(pTmr)->hSelf, otTimer);
+     UserDeleteObject( UserHMGetHandle(pTmr), otTimer);
      return TRUE;
   }
   return FALSE;
@@ -82,6 +82,7 @@ FindTimer(PWINDOW_OBJECT Window,
           UINT flags,
           BOOL Distroy)
 {
+  PLIST_ENTRY pLE;
   PTIMER pTmr = FirstpTmr;
   KeEnterCriticalRegion();
   do
@@ -100,7 +101,8 @@ FindTimer(PWINDOW_OBJECT Window,
        break;
     }
 
-    pTmr = (PTIMER)pTmr->ptmrList.Flink;
+    pLE = pTmr->ptmrList.Flink;
+    pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
   } while (pTmr != FirstpTmr);
   KeLeaveCriticalRegion();
 
@@ -111,6 +113,7 @@ PTIMER
 FASTCALL
 FindSystemTimer(PMSG pMsg)
 {
+  PLIST_ENTRY pLE;
   PTIMER pTmr = FirstpTmr;
   KeEnterCriticalRegion();
   do
@@ -121,7 +124,8 @@ FindSystemTimer(PMSG pMsg)
          (pTmr->flags & TMRF_SYSTEM) )
        break;
 
-    pTmr = (PTIMER)pTmr->ptmrList.Flink;
+    pLE = pTmr->ptmrList.Flink;
+    pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);    
   } while (pTmr != FirstpTmr);
   KeLeaveCriticalRegion();
 
@@ -135,6 +139,7 @@ ValidateTimerCallback(PTHREADINFO pti,
                       WPARAM wParam,
                       LPARAM lParam)
 {
+  PLIST_ENTRY pLE;
   PTIMER pTmr = FirstpTmr;
 
   if (!pTmr) return FALSE;
@@ -144,11 +149,11 @@ ValidateTimerCallback(PTHREADINFO pti,
   {
     if ( (lParam == (LPARAM)pTmr->pfn) &&
          (pTmr->flags & (TMRF_SYSTEM|TMRF_RIT)) &&
-//       (pTmr->head.pti->ppi == pti->ppi) )
          (pTmr->pti->ppi == pti->ppi) )
        break;
 
-    pTmr = (PTIMER)pTmr->ptmrList.Flink;
+    pLE = pTmr->ptmrList.Flink;
+    pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
   } while (pTmr != FirstpTmr);
   KeLeaveCriticalRegion();
 
@@ -199,7 +204,7 @@ InternalSetTimer( PWINDOW_OBJECT Window,
      if (!pTmr) return 0;
 
     if (Window && (Type & TMRF_TIFROMWND))
-       pTmr->pti = Window->OwnerThread->Tcb.Win32Thread;
+       pTmr->pti = Window->pti->pEThread->Tcb.Win32Thread;
     else
     {
        if (Type & TMRF_RIT)
@@ -253,7 +258,7 @@ SetSystemTimer( PWINDOW_OBJECT Window,
                 UINT uElapse,
                 TIMERPROC lpTimerFunc) 
 {
-  if (Window && Window->OwnerThread->ThreadsProcess != PsGetCurrentProcess())
+  if (Window && Window->pti->pEThread->ThreadsProcess != PsGetCurrentProcess())
   {
      SetLastWin32Error(ERROR_ACCESS_DENIED);
      return 0;
@@ -265,6 +270,7 @@ BOOL
 FASTCALL
 PostTimerMessages(PWINDOW_OBJECT Window)
 {
+  PLIST_ENTRY pLE;
   PUSER_MESSAGE_QUEUE ThreadQueue;
   MSG Msg;
   PTHREADINFO pti;
@@ -299,7 +305,8 @@ PostTimerMessages(PWINDOW_OBJECT Window)
            Hit = TRUE;
         }
 
-     pTmr = (PTIMER)pTmr->ptmrList.Flink;
+     pLE = pTmr->ptmrList.Flink;
+     pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
   } while (pTmr != FirstpTmr);
   KeLeaveCriticalRegion();
 
@@ -312,6 +319,7 @@ ProcessTimers(VOID)
 {
   LARGE_INTEGER TickCount, DueTime;
   LONG Time;
+  PLIST_ENTRY pLE;
   PTIMER pTmr = FirstpTmr;
 
   if (!pTmr) return;
@@ -327,7 +335,8 @@ ProcessTimers(VOID)
   {
     if (pTmr->flags & TMRF_WAITING)
     {
-       pTmr = (PTIMER)pTmr->ptmrList.Flink;
+       pLE = pTmr->ptmrList.Flink;
+       pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
        continue;
     }
 
@@ -363,7 +372,8 @@ ProcessTimers(VOID)
        else
           pTmr->cmsCountdown -= Time - TimeLast;
     }
-    pTmr = (PTIMER)pTmr->ptmrList.Flink;
+    pLE = pTmr->ptmrList.Flink;
+    pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
   } while (pTmr != FirstpTmr);
 
   // Restart the timer thread!
@@ -419,7 +429,7 @@ IntSetTimer(HWND Wnd, UINT_PTR IDEvent, UINT Elapse, TIMERPROC TimerFunc, BOOL S
          return 0;
       }
 
-      if (Window->OwnerThread->ThreadsProcess != PsGetCurrentProcess())
+      if (Window->pti->pEThread->ThreadsProcess != PsGetCurrentProcess())
       {
          DPRINT1("Trying to set timer for window in another process (shatter attack?)\n");
          SetLastWin32Error(ERROR_ACCESS_DENIED);
@@ -427,7 +437,7 @@ IntSetTimer(HWND Wnd, UINT_PTR IDEvent, UINT Elapse, TIMERPROC TimerFunc, BOOL S
       }
 
       Ret = IDEvent;
-      MessageQueue = Window->MessageQueue;
+      MessageQueue = Window->pti->MessageQueue;
    }
 
 #if 0
@@ -489,7 +499,7 @@ IntKillTimer(HWND Wnd, UINT_PTR IDEvent, BOOL SystemTimer)
                                 IDEvent, SystemTimer ? WM_SYSTIMER : WM_TIMER))
       {
          // Give it another chance to find the timer.
-         if (Window && !( MsqKillTimer(Window->MessageQueue, Wnd,
+         if (Window && !( MsqKillTimer(Window->pti->MessageQueue, Wnd,
                             IDEvent, SystemTimer ? WM_SYSTIMER : WM_TIMER)))
          {
             DPRINT1("Unable to locate timer in message queue for Window.\n");

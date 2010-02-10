@@ -6,7 +6,7 @@
 	</module>
 	<module name="ntdll" type="nativedll" entrypoint="0" baseaddress="${BASEADDRESS_NTDLL}" installbase="system32" installname="ntdll.dll" iscrt="yes">
 		<bootstrap installbase="$(CDOUTPUT)/system32" />
-		<importlibrary definition="def/ntdll_$(ARCH).def" />
+		<importlibrary definition="def/ntdll.pspec" />
 		<include base="ntdll">include</include>
 		<include base="ntdll" root="intermediate"></include>
 		<include base="ReactOS">include/reactos/subsys</include>
@@ -46,6 +46,7 @@
 		<directory name="ldr">
 			<file>startup.c</file>
 			<file>utils.c</file>
+			<file>actctx.c</file>
 		</directory>
 		<directory name="rtl">
 			<file>libsupp.c</file>

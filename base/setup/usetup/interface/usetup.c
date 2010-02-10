@@ -1786,8 +1786,8 @@ CreatePartitionPage (PINPUT_RECORD Ir)
             else
             {
                 /* Round-up by cylinder size */
-                PartSize = ROUND_UP (PartSize * 1024 * 1024,
-                                     DiskEntry->CylinderSize);
+                PartSize = (PartSize * 1024 * 1024 + DiskEntry->CylinderSize - 1) /
+                           DiskEntry->CylinderSize * DiskEntry->CylinderSize;
 
                 /* But never get larger than the unpartitioned disk space */
                 if (PartSize > PartEntry->UnpartitionedLength)
