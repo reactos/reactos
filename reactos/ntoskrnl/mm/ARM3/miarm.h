@@ -198,6 +198,12 @@ MiInitMachineDependent(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
+PFN_NUMBER
+NTAPI
+MxGetNextPage(
+    IN PFN_NUMBER PageCount
+);
+
 PPHYSICAL_MEMORY_DESCRIPTOR
 NTAPI
 MmInitializeMemoryLimits(

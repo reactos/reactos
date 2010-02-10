@@ -261,6 +261,30 @@ MiSyncARM3WithROS(IN PVOID AddressStart,
 
 PFN_NUMBER
 NTAPI
+MxGetNextPage(IN PFN_NUMBER PageCount)
+{
+    PFN_NUMBER Pfn;
+ 
+    /* Make sure we have enough pages */
+    if (PageCount > MxFreeDescriptor->PageCount)
+    {
+        /* Crash the system */
+        KeBugCheckEx(INSTALL_MORE_MEMORY,
+                     MmNumberOfPhysicalPages,
+                     MxFreeDescriptor->PageCount,
+                     MxOldFreeDescriptor.PageCount,
+                     PageCount);
+    }
+    
+    /* Use our lowest usable free pages */
+    Pfn = MxFreeDescriptor->BasePage;
+    MxFreeDescriptor->BasePage += PageCount;
+    MxFreeDescriptor->PageCount -= PageCount;
+    return Pfn;
+}
+
+PFN_NUMBER
+NTAPI
 MiPagesInLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                      IN PBOOLEAN IncludeType)
 {
