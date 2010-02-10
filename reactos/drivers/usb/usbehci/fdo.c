@@ -10,15 +10,18 @@
 /* INCLUDES *******************************************************************/
 #include "usbehci.h"
 #include <stdio.h>
+
 //#include "ntstrsafe.h"
 
 VOID NTAPI
 EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVOID SystemArgument2)
 {
     PFDO_DEVICE_EXTENSION FdoDeviceExtension;
+    PPDO_DEVICE_EXTENSION PdoDeviceExtension;
     ULONG CStatus;
 
     FdoDeviceExtension = (PFDO_DEVICE_EXTENSION) DeferredContext;
+    PdoDeviceExtension = (PPDO_DEVICE_EXTENSION) FdoDeviceExtension->Pdo->DeviceExtension;
 
     CStatus = (ULONG) SystemArgument2;
 
@@ -39,8 +42,6 @@ EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVO
             /* Check for port change on this port */
             if (tmp & 0x02)
             {
-                PWORKITEM_DATA WorkItemData = NULL;
-
                 /* Connect or Disconnect? */
                 if (tmp & 0x01)
                 {
@@ -81,31 +82,9 @@ EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVO
                     tmp = READ_REGISTER_ULONG((PULONG)((Base + EHCI_PORTSC) + (4 * i)));
 
                     DPRINT("port tmp %x\n", tmp);
-                    GetDeviceDescriptor(FdoDeviceExtension, 0);
-                    FdoDeviceExtension->ChildDeviceCount++;
-                    CompletePendingRequest(FdoDeviceExtension);
-
-                    WorkItemData = ExAllocatePool(NonPagedPool, sizeof(WORKITEM_DATA));
-                    if (!WorkItemData)
-                    {
-                        DPRINT1("No memory\n");
-                        break;
-                    }
-
-                    WorkItemData->IoWorkItem = IoAllocateWorkItem(FdoDeviceExtension->Pdo);
-                    if (!WorkItemData->IoWorkItem)
-                    {
-                        DPRINT1("WorkItem allocation failed!\n");
-                        break;
-                    }
-
-
-                    WorkItemData->FdoDeviceExtension = FdoDeviceExtension;
-                    
-                    IoQueueWorkItem(WorkItemData->IoWorkItem,
-                                    (PIO_WORKITEM_ROUTINE)DeviceArrivalWorkItem,
-                                    DelayedWorkQueue,
-                                    WorkItemData);
+                    GetDeviceDescriptor(FdoDeviceExtension, 0, 0, FALSE);
+                    PdoDeviceExtension->ChildDeviceCount++;
+                    //CompletePendingURBRequest(PdoDeviceExtension);
                 }
                 else
                 {
@@ -116,7 +95,6 @@ EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVO
                     tmp |= 0x02;
                     WRITE_REGISTER_ULONG((PULONG) ((Base + EHCI_PORTSC) + (4 * i)), tmp);
                 }
-
             }
         }
     }
@@ -180,7 +158,6 @@ InterruptService(PKINTERRUPT Interrupt, PVOID ServiceContext)
 BOOLEAN
 ResetPort(PDEVICE_OBJECT DeviceObject)
 {
-
     /*FIXME: Implement me */
 
     return TRUE;
@@ -310,8 +287,6 @@ StartEhci(PDEVICE_OBJECT DeviceObject)
                       EHCI_USBINTR_INTE | EHCI_USBINTR_ERR | EHCI_USBINTR_ASYNC | EHCI_USBINTR_HSERR
                       | EHCI_USBINTR_FLROVR  | EHCI_USBINTR_PC);
 
-    //UsbCmd = (PEHCI_USBCMD_CONTENT) &tmp;
-
     UsbCmd->Run = 1;
     WRITE_REGISTER_ULONG((PULONG)(base + EHCI_USBCMD), tmp);
 
@@ -351,13 +326,11 @@ GetCapabilities(PFDO_DEVICE_EXTENSION DeviceExtension, ULONG Base)
     PCap->HCSParamsLong = READ_REGISTER_ULONG((PULONG)(Base + 4));
     PCap->HCCParams = READ_REGISTER_ULONG((PULONG)(Base + 8));
 
-
     DPRINT("Length %d\n", PCap->Length);
     DPRINT("Reserved %d\n", PCap->Reserved);
     DPRINT("HCIVersion %x\n", PCap->HCIVersion);
     DPRINT("HCSParams %x\n", PCap->HCSParamsLong);
     DPRINT("HCCParams %x\n", PCap->HCCParams);
-
 
     if (PCap->HCCParams & 0x02)
         DPRINT1("Frame list size is configurable\n");
@@ -412,8 +385,8 @@ StartDevice(PDEVICE_OBJECT DeviceObject, PCM_PARTIAL_RESOURCE_LIST raw, PCM_PART
     DeviceDescription.MaximumLength = EHCI_MAX_SIZE_TRANSFER;
 
     FdoDeviceExtension->pDmaAdapter = IoGetDmaAdapter(FdoDeviceExtension->LowerDevice,
-                                                    &DeviceDescription,
-                                                    &FdoDeviceExtension->MapRegisters);
+                                                      &DeviceDescription,
+                                                      &FdoDeviceExtension->MapRegisters);
 
     if (FdoDeviceExtension->pDmaAdapter == NULL)
     {
@@ -561,14 +534,16 @@ FdoQueryBusRelations(
     NTSTATUS Status;
     ULONG UsbDeviceNumber = 0;
     WCHAR CharDeviceName[64];
+
     UNICODE_STRING DeviceName;
 
     DeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    /* Create the PDO */
+
+    /* Create the PDO with the next available number */
     while (TRUE)
     {
-        /* FIXME: Use safe string sprintf*/
-        /* RtlStringCchPrintfW(CharDeviceName, 64, L"USBFDO-%d", UsbDeviceNumber); */
+        /* FIXME: Use safe string */
+        /* RtlStringCchPrintfW(CharDeviceName, 64, L"USBPDO-%d", UsbDeviceNumber); */
         swprintf(CharDeviceName, L"\\Device\\USBPDO-%d", UsbDeviceNumber);
         RtlInitUnicodeString(&DeviceName, CharDeviceName);
         DPRINT("DeviceName %wZ\n", &DeviceName);
@@ -604,20 +579,17 @@ FdoQueryBusRelations(
     PdoDeviceExtension->Common.IsFdo = FALSE;
 
     PdoDeviceExtension->ControllerFdo = DeviceObject;
+    PdoDeviceExtension->DeviceObject = Pdo;
+
+    InitializeListHead(&PdoDeviceExtension->IrpQueue);
+    KeInitializeSpinLock(&PdoDeviceExtension->IrpQueueLock);
 
     Pdo->Flags &= ~DO_DEVICE_INITIALIZING;
+
     DeviceExtension->Pdo = Pdo;
 
-    /*swprintf(CharSymLinkName, L"\\Device\\HCD%d", UsbDeviceNumber);
-    RtlInitUnicodeString(&SymLinkName, CharSymLinkName);
-    Status = IoCreateSymbolicLink(&SymLinkName, &DeviceName);
-
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Warning: Unable to create symbolic link for ehci usb device!\n");
-    }*/
-
     DeviceRelations = (PDEVICE_RELATIONS)ExAllocatePool(PagedPool, sizeof(DEVICE_RELATIONS));
+
     if (!DeviceRelations)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -646,7 +618,7 @@ FdoDispatchPnp(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     {
         case IRP_MN_START_DEVICE:
         {
-            DPRINT("START_DEVICE\n");
+            DPRINT1("START_DEVICE\n");
             Irp->IoStatus.Status = STATUS_SUCCESS;
             Status = ForwardAndWait(DeviceObject, Irp);
 
@@ -657,7 +629,7 @@ FdoDispatchPnp(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
         }
         case IRP_MN_QUERY_DEVICE_RELATIONS:
         {
-            DPRINT("IRP_MN_QUERY_DEVICE_RELATIONS\n");
+            DPRINT1("IRP_MN_QUERY_DEVICE_RELATIONS\n");
             switch(Stack->Parameters.QueryDeviceRelations.Type)
             {
                 case BusRelations:
@@ -687,6 +659,14 @@ FdoDispatchPnp(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
         {
             DPRINT("IRP_MN_QUERY_RESOURCE_REQUIREMENTS\n");
         }
+        case IRP_MN_QUERY_INTERFACE:
+        {
+            Status = STATUS_SUCCESS;
+            Information = 0;
+            Status = ForwardIrpAndForget(DeviceObject, Irp);
+            return Status;
+            break;
+        }
         default:
         {
             DPRINT1("IRP_MJ_PNP / Unhandled minor function 0x%lx\n", Stack->MinorFunction);
@@ -710,21 +690,22 @@ AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT Pdo)
     WCHAR CharSymLinkName[64];
     UNICODE_STRING DeviceName;
     UNICODE_STRING SymLinkName;
+    UNICODE_STRING InterfaceSymLinkName;
     ULONG BytesRead;
     PCI_COMMON_CONFIG PciConfig;
 
     PFDO_DEVICE_EXTENSION FdoDeviceExtension;
 
-    DPRINT1("Ehci AddDevice\n");
+    DPRINT("Ehci AddDevice\n");
 
-    /* Create the FDO */
+    /* Create the FDO with next available number */
     while (TRUE)
     {
         /* FIXME: Use safe string sprintf*/
         /* RtlStringCchPrintfW(CharDeviceName, 64, L"USBFDO-%d", UsbDeviceNumber); */
         swprintf(CharDeviceName, L"\\Device\\USBFDO-%d", UsbDeviceNumber);
         RtlInitUnicodeString(&DeviceName, CharDeviceName);
-        DPRINT1("DeviceName %wZ\n", &DeviceName);
+        DPRINT("DeviceName %wZ\n", &DeviceName);
 
         Status = IoCreateDevice(DriverObject,
                                 sizeof(FDO_DEVICE_EXTENSION),
@@ -734,8 +715,8 @@ AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT Pdo)
                                 FALSE,
                                 &Fdo);
 
-       if (NT_SUCCESS(Status))
-           break;
+        if (NT_SUCCESS(Status))
+            break;
 
         if ((Status == STATUS_OBJECT_NAME_EXISTS) || (Status == STATUS_OBJECT_NAME_COLLISION))
         {
@@ -758,21 +739,17 @@ AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT Pdo)
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Warning: Unable to create symbolic link for ehci usb device!\n");
+        DPRINT1("Warning: Unable to create symbolic link for ehci host controller!\n");
     }
-
-    DPRINT("Attaching created device %x to %x\n", Fdo, Pdo);
 
     FdoDeviceExtension = (PFDO_DEVICE_EXTENSION) Fdo->DeviceExtension;
     RtlZeroMemory(FdoDeviceExtension, sizeof(PFDO_DEVICE_EXTENSION));
-
-    InitializeListHead(&FdoDeviceExtension->IrpQueue);
-    KeInitializeSpinLock(&FdoDeviceExtension->IrpQueueLock);
 
     FdoDeviceExtension->Common.IsFdo = TRUE;
     FdoDeviceExtension->DeviceObject = Fdo;
 
     FdoDeviceExtension->LowerDevice = IoAttachDeviceToDeviceStack(Fdo, Pdo);
+
     if (FdoDeviceExtension->LowerDevice == NULL)
     {
         DPRINT1("UsbEhci: Failed to attach to device stack!\n");
@@ -782,10 +759,10 @@ AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT Pdo)
         return STATUS_NO_SUCH_DEVICE;
     }
 
-    Fdo->Flags |= DO_BUFFERED_IO | DO_POWER_PAGABLE;
+    Fdo->Flags |= DO_BUFFERED_IO;// | DO_POWER_PAGABLE;
 
-    DPRINT("Attached %x!\n", FdoDeviceExtension->LowerDevice);
     ASSERT(FdoDeviceExtension->LowerDevice == Pdo);
+
     Status = GetBusInterface(FdoDeviceExtension->LowerDevice, &FdoDeviceExtension->BusInterface);
 
     if (!NT_SUCCESS(Status))
@@ -796,8 +773,6 @@ AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT Pdo)
         IoDeleteDevice(Fdo);
         return Status;
     }
-
-    DPRINT("Context %x\n", FdoDeviceExtension->BusInterface.Context);
 
     BytesRead = (*FdoDeviceExtension->BusInterface.GetBusData)(
         FdoDeviceExtension->BusInterface.Context,
@@ -827,15 +802,24 @@ AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT Pdo)
         DPRINT("PCI_ENABLE_BUS_MASTER\n");
 
     DPRINT("BaseAddress[0] %x\n", PciConfig.u.type0.BaseAddresses[0]);
-    DPRINT("Vendor %x\n", PciConfig.VendorID);
-    DPRINT("Device %x\n", PciConfig.DeviceID);
+    DPRINT1("Vendor %x\n", PciConfig.VendorID);
+    DPRINT1("Device %x\n", PciConfig.DeviceID);
 
     FdoDeviceExtension->VendorId = PciConfig.VendorID;
     FdoDeviceExtension->DeviceId = PciConfig.DeviceID;
 
-    DPRINT("FdoDeviceExtension->NextLowerDevice %x\n", FdoDeviceExtension->LowerDevice);
     FdoDeviceExtension->DeviceState = DEVICEINTIALIZED;
 
+    Status = IoRegisterDeviceInterface(Pdo, &GUID_DEVINTERFACE_USB_HOST_CONTROLLER, NULL, &InterfaceSymLinkName);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Unable to register device interface!\n");
+    }
+    else
+    {
+        Status = IoSetDeviceInterfaceState(&InterfaceSymLinkName, TRUE);
+        DPRINT1("SetInterfaceState %x\n", Status);
+    }
     Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
 
     return STATUS_SUCCESS;

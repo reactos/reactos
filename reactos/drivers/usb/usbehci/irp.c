@@ -10,28 +10,26 @@
 #include "usbehci.h"
 
 VOID
-RequestCancel (PDEVICE_OBJECT DeviceObject, PIRP Irp)
+RequestURBCancel (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     PPDO_DEVICE_EXTENSION PdoDeviceExtension;
-    PFDO_DEVICE_EXTENSION FdoDeviceExtension;
 
     PdoDeviceExtension = (PPDO_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
-    FdoDeviceExtension = (PFDO_DEVICE_EXTENSION) PdoDeviceExtension->ControllerFdo->DeviceExtension;
 
     KIRQL OldIrql = Irp->CancelIrql;
     IoReleaseCancelSpinLock(DISPATCH_LEVEL);
 
-    KeAcquireSpinLockAtDpcLevel(&FdoDeviceExtension->IrpQueueLock);
+    KeAcquireSpinLockAtDpcLevel(&PdoDeviceExtension->IrpQueueLock);
     RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
 
-    KeReleaseSpinLock(&FdoDeviceExtension->IrpQueueLock, OldIrql);
+    KeReleaseSpinLock(&PdoDeviceExtension->IrpQueueLock, OldIrql);
 
-   Irp->IoStatus.Status = STATUS_CANCELLED;
-   IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    Irp->IoStatus.Status = STATUS_CANCELLED;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 }
 
 VOID
-QueueRequest(PFDO_DEVICE_EXTENSION DeviceExtension, PIRP Irp)
+QueueURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension, PIRP Irp)
 {
     KIRQL OldIrql;
 
@@ -51,10 +49,13 @@ QueueRequest(PFDO_DEVICE_EXTENSION DeviceExtension, PIRP Irp)
 }
 
 VOID
-CompletePendingRequest(PFDO_DEVICE_EXTENSION DeviceExtension)
+CompletePendingURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension)
 {
     PLIST_ENTRY NextIrp = NULL;
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
+    ULONG_PTR Information = 0;
     PIO_STACK_LOCATION Stack;
+    PUSB_DEVICE UsbDevice = NULL;
     KIRQL oldIrql;
     PIRP Irp = NULL;
     URB *Urb;
@@ -75,83 +76,275 @@ CompletePendingRequest(PFDO_DEVICE_EXTENSION DeviceExtension)
         Urb = (PURB) Stack->Parameters.Others.Argument1;
         ASSERT(Urb);
 
-        /* FIXME: Fill in information for Argument1/URB */
+        Information = 0;
+        Status = STATUS_SUCCESS;
 
-        DPRINT("TransferBuffer %x\n", Urb->UrbControlDescriptorRequest.TransferBuffer);
-        DPRINT("TransferBufferLength %x\n", Urb->UrbControlDescriptorRequest.TransferBufferLength);
-        DPRINT("Index %x\n", Urb->UrbControlDescriptorRequest.Index);
-        DPRINT("DescriptorType %x\n",     Urb->UrbControlDescriptorRequest.DescriptorType);    
-        DPRINT("LanguageId %x\n", Urb->UrbControlDescriptorRequest.LanguageId);
+        DPRINT1("TransferBuffer %x\n", Urb->UrbControlDescriptorRequest.TransferBuffer);
+        DPRINT1("TransferBufferLength %x\n", Urb->UrbControlDescriptorRequest.TransferBufferLength);
 
-        Irp->IoStatus.Status = STATUS_SUCCESS;
-        Irp->IoStatus.Information = 0;
+        UsbDevice = Urb->UrbHeader.UsbdDeviceHandle;
+        /* UsbdDeviceHandle of 0 is root hub */
+        if (UsbDevice == NULL)
+            UsbDevice = DeviceExtension->UsbDevices[0];
+
+        switch (Urb->UrbHeader.Function)
+        {
+            case URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER:
+            {
+                /* We should not get here yet! */
+                ASSERT(FALSE);
+            }
+            case URB_FUNCTION_GET_STATUS_FROM_DEVICE:
+            {
+                DPRINT1("Get Status from Device\n");
+            }
+            case URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE:
+            {
+                Urb->UrbHeader.Function = 0x08;
+                Urb->UrbHeader.UsbdFlags = 0;
+                Urb->UrbHeader.UsbdDeviceHandle = UsbDevice;
+
+                switch(Urb->UrbControlDescriptorRequest.DescriptorType)
+                {
+                    case USB_DEVICE_DESCRIPTOR_TYPE:
+                    {
+                        DPRINT1("USB DEVICE DESC\n");
+                        if (Urb->UrbControlDescriptorRequest.TransferBufferLength >= sizeof(USB_DEVICE_DESCRIPTOR))
+                        {
+                            Urb->UrbControlDescriptorRequest.TransferBufferLength = sizeof(USB_DEVICE_DESCRIPTOR);
+                        }
+
+                        RtlCopyMemory(Urb->UrbControlDescriptorRequest.TransferBuffer,
+                                      &UsbDevice->DeviceDescriptor,
+                                      Urb->UrbControlDescriptorRequest.TransferBufferLength);
+
+                        Urb->UrbHeader.Status = USBD_STATUS_SUCCESS;
+
+                        break;
+                    }
+                    case USB_CONFIGURATION_DESCRIPTOR_TYPE:
+                    {
+                        DPRINT1("USB CONFIG DESC\n");
+                        ULONG FullDescriptorLength = sizeof(USB_CONFIGURATION_DESCRIPTOR) +
+                                                     sizeof(USB_INTERFACE_DESCRIPTOR) +
+                                                     sizeof(USB_ENDPOINT_DESCRIPTOR);
+
+                        if (Urb->UrbControlDescriptorRequest.TransferBufferLength >= FullDescriptorLength)
+                        {
+                            Urb->UrbControlDescriptorRequest.TransferBufferLength = FullDescriptorLength;
+                        }
+
+                        RtlCopyMemory(Urb->UrbControlDescriptorRequest.TransferBuffer,
+                                      &UsbDevice->ConfigurationDescriptor,
+                                      Urb->UrbControlDescriptorRequest.TransferBufferLength);
+
+                        Urb->UrbHeader.Status = USBD_STATUS_SUCCESS;
+
+                        break;
+                    }
+                    case USB_STRING_DESCRIPTOR_TYPE:
+                    {
+                        DPRINT1("Usb String Descriptor not implemented\n");
+                    }
+                    default:
+                    {
+                        DPRINT1("Descriptor Type %x not supported!\n", Urb->UrbControlDescriptorRequest.DescriptorType);
+                    }
+                }
+            }
+            case URB_FUNCTION_SELECT_CONFIGURATION:
+            {
+                PUSBD_INTERFACE_INFORMATION InterfaceInfo;
+                LONG iCount, pCount;
+
+                DPRINT("Selecting Configuration\n");
+                DPRINT("Length %x\n", Urb->UrbHeader.Length);
+                DPRINT("Urb->UrbSelectConfiguration.ConfigurationHandle %x\n",Urb->UrbSelectConfiguration.ConfigurationHandle);
+
+                if (Urb->UrbSelectConfiguration.ConfigurationDescriptor)
+                {
+                    DPRINT("ConfigurationDescriptor = %p\n", Urb->UrbSelectConfiguration.ConfigurationDescriptor);
+                    DPRINT(" bLength = %d\n", Urb->UrbSelectConfiguration.ConfigurationDescriptor->bLength);
+                    DPRINT(" bDescriptorType = %d\n", Urb->UrbSelectConfiguration.ConfigurationDescriptor->bDescriptorType);
+                    DPRINT(" wTotalLength = %d\n", Urb->UrbSelectConfiguration.ConfigurationDescriptor->wTotalLength);
+                    DPRINT(" bNumInterfaces = %d\n", Urb->UrbSelectConfiguration.ConfigurationDescriptor->bNumInterfaces);
+                    DPRINT(" bConfigurationValue = %d\n", Urb->UrbSelectConfiguration.ConfigurationDescriptor->bConfigurationValue);
+                    DPRINT(" iConfiguration = %d\n", Urb->UrbSelectConfiguration.ConfigurationDescriptor->iConfiguration);
+                    DPRINT(" bmAttributes = %04x\n", Urb->UrbSelectConfiguration.ConfigurationDescriptor->bmAttributes);
+                    DPRINT(" MaxPower = %d\n", Urb->UrbSelectConfiguration.ConfigurationDescriptor->MaxPower);
+
+
+                    Urb->UrbSelectConfiguration.ConfigurationHandle = (PVOID)&DeviceExtension->UsbDevices[0]->ConfigurationDescriptor;
+                    DPRINT("ConfigHandle %x\n", Urb->UrbSelectConfiguration.ConfigurationHandle);
+                    InterfaceInfo = &Urb->UrbSelectConfiguration.Interface;
+
+                    for (iCount = 0; iCount < Urb->UrbSelectConfiguration.ConfigurationDescriptor->bNumInterfaces; iCount++)
+                    {
+                        DPRINT("InterfaceInformation[%d]\n", iCount);
+                        DPRINT(" Length = %d\n", InterfaceInfo->Length);
+                        DPRINT(" InterfaceNumber = %d\n", InterfaceInfo->InterfaceNumber);
+                        DPRINT(" AlternateSetting = %d\n", InterfaceInfo->AlternateSetting);
+                        DPRINT(" Class = %02x\n", (ULONG)InterfaceInfo->Class);
+                        DPRINT(" SubClass = %02x\n", (ULONG)InterfaceInfo->SubClass);
+                        DPRINT(" Protocol = %02x\n", (ULONG)InterfaceInfo->Protocol);
+                        DPRINT(" Reserved = %02x\n", (ULONG)InterfaceInfo->Reserved);
+                        DPRINT(" InterfaceHandle = %p\n", InterfaceInfo->InterfaceHandle);
+                        DPRINT(" NumberOfPipes = %d\n", InterfaceInfo->NumberOfPipes);
+                        InterfaceInfo->InterfaceHandle = (PVOID)&UsbDevice->InterfaceDescriptor;
+                        InterfaceInfo->Class = UsbDevice->InterfaceDescriptor.bInterfaceClass;
+                        InterfaceInfo->SubClass = UsbDevice->InterfaceDescriptor.bInterfaceSubClass;
+                        InterfaceInfo->Protocol = UsbDevice->InterfaceDescriptor.bInterfaceProtocol;
+                        InterfaceInfo->Reserved = 0;
+
+                        for (pCount = 0; pCount < InterfaceInfo->NumberOfPipes; pCount++)
+                        {
+                          DPRINT("Pipe[%d]\n", pCount);
+                          DPRINT(" MaximumPacketSize = %d\n", InterfaceInfo->Pipes[pCount].MaximumPacketSize);
+                          DPRINT(" EndpointAddress = %d\n", InterfaceInfo->Pipes[pCount].EndpointAddress);
+                          DPRINT(" Interval = %d\n", InterfaceInfo->Pipes[pCount].Interval);
+                          DPRINT(" PipeType = %d\n", InterfaceInfo->Pipes[pCount].PipeType);
+                          DPRINT(" PipeHandle = %x\n", InterfaceInfo->Pipes[pCount].PipeHandle);
+                          DPRINT(" MaximumTransferSize = %d\n", InterfaceInfo->Pipes[pCount].MaximumTransferSize);
+                          DPRINT(" PipeFlags = %08x\n", InterfaceInfo->Pipes[pCount].PipeFlags);
+                          InterfaceInfo->Pipes[pCount].MaximumPacketSize = UsbDevice->EndPointDescriptor.wMaxPacketSize;
+                          InterfaceInfo->Pipes[pCount].EndpointAddress = UsbDevice->EndPointDescriptor.bEndpointAddress;
+                          InterfaceInfo->Pipes[pCount].Interval = UsbDevice->EndPointDescriptor.bInterval;
+                          InterfaceInfo->Pipes[pCount].PipeType = UsbdPipeTypeInterrupt;
+                          InterfaceInfo->Pipes[pCount].PipeHandle = (PVOID)&UsbDevice->EndPointDescriptor;
+                          if (InterfaceInfo->Pipes[pCount].MaximumTransferSize == 0)
+                              InterfaceInfo->Pipes[pCount].MaximumTransferSize = 4096;
+                          /* InterfaceInfo->Pipes[j].PipeFlags = 0; */
+                        }
+                        InterfaceInfo = (PUSBD_INTERFACE_INFORMATION)((PUCHAR)InterfaceInfo + InterfaceInfo->Length);
+                    }
+
+                    Urb->UrbHeader.UsbdDeviceHandle = UsbDevice;
+                    Urb->UrbHeader.UsbdFlags = 0;
+                    Urb->UrbHeader.Status = USBD_STATUS_SUCCESS;
+                }
+                else
+                {
+                    /* FIXME: Set device to unconfigured state */
+                }
+                break;
+            }
+            case URB_FUNCTION_CLASS_DEVICE:
+            {
+                switch (Urb->UrbControlVendorClassRequest.Request)
+                {
+                    case USB_REQUEST_GET_DESCRIPTOR:
+                    {
+                        DPRINT1("TransferFlags %x\n", Urb->UrbControlVendorClassRequest.TransferFlags);
+                        DPRINT1("Urb->UrbControlVendorClassRequest.Value %x\n", Urb->UrbControlVendorClassRequest.Value);
+
+
+                        switch (Urb->UrbControlVendorClassRequest.Value >> 8)
+                        {
+                            case USB_DEVICE_CLASS_AUDIO:
+                            {
+                                DPRINT1("USB_DEVICE_CLASS_AUDIO\n");
+                                break;
+                            }
+                            case USB_DEVICE_CLASS_COMMUNICATIONS:
+                            {
+                                DPRINT1("USB_DEVICE_CLASS_COMMUNICATIONS\n");
+                                break;
+                            }
+                            case USB_DEVICE_CLASS_HUMAN_INTERFACE:
+                            {
+                                DPRINT1("USB_DEVICE_CLASS_HUMAN_INTERFACE\n");
+                                break;
+                            }
+                            case USB_DEVICE_CLASS_MONITOR:
+                            {
+                                DPRINT1("USB_DEVICE_CLASS_MONITOR\n");
+                                break;
+                            }
+                            case USB_DEVICE_CLASS_PHYSICAL_INTERFACE:
+                            {
+                                DPRINT1("USB_DEVICE_CLASS_PHYSICAL_INTERFACE\n");
+                                break;
+                            }
+                            case USB_DEVICE_CLASS_POWER:
+                            {
+                                DPRINT1("USB_DEVICE_CLASS_POWER\n");
+                                break;
+                            }
+                            case USB_DEVICE_CLASS_PRINTER:
+                            {
+                                DPRINT1("USB_DEVICE_CLASS_PRINTER\n");
+                                break;
+                            }
+                            case USB_DEVICE_CLASS_STORAGE:
+                            {
+                               DPRINT1("USB_DEVICE_CLASS_STORAGE\n");
+                               break;
+                            }
+                            case USB_DEVICE_CLASS_RESERVED:
+                            case USB_DEVICE_CLASS_HUB:
+                            {
+                                PUSB_HUB_DESCRIPTOR UsbHubDescr = Urb->UrbControlVendorClassRequest.TransferBuffer;
+                                /* FIXME: Handle more than root hub? */
+                                if(Urb->UrbControlVendorClassRequest.TransferBufferLength >= sizeof(USB_HUB_DESCRIPTOR))
+                                {
+                                    Urb->UrbControlVendorClassRequest.TransferBufferLength = sizeof(USB_HUB_DESCRIPTOR);
+                                }
+                                else
+                                {
+                                    /* FIXME: Handle this correctly */
+                                    UsbHubDescr->bDescriptorLength = sizeof(USB_HUB_DESCRIPTOR);
+                                    UsbHubDescr->bDescriptorType = 0x29;
+                                    return;
+                                }
+                                DPRINT1("USB_DEVICE_CLASS_HUB request\n");
+                                UsbHubDescr->bDescriptorLength = sizeof(USB_HUB_DESCRIPTOR);
+                                UsbHubDescr->bDescriptorType = 0x29;
+                                UsbHubDescr->bNumberOfPorts = 0x08;
+                                UsbHubDescr->wHubCharacteristics = 0x0012;
+                                UsbHubDescr->bPowerOnToPowerGood = 0x01;
+                                UsbHubDescr->bHubControlCurrent = 0x00;
+                                UsbHubDescr->bRemoveAndPowerMask[0] = 0x00;
+                                UsbHubDescr->bRemoveAndPowerMask[1] = 0x00;
+                                UsbHubDescr->bRemoveAndPowerMask[2] = 0xff;
+                                break;
+                            }
+                            default:
+                            {
+                                DPRINT1("Unknown UrbControlVendorClassRequest Value\n");
+                            }
+                        }
+                        Urb->UrbHeader.Function = 0x08;
+                        Urb->UrbHeader.Status = USBD_STATUS_SUCCESS;
+                        Urb->UrbHeader.UsbdDeviceHandle = UsbDevice;
+                        Urb->UrbHeader.UsbdFlags = 0;
+                        /* Stop handling the URBs now as its not coded yet */
+                        DeviceExtension->HaltUrbHandling = TRUE;
+                        break;
+                    }
+                    default:
+                    {
+                        DPRINT1("Unhandled URB request for class device\n");
+                        Urb->UrbHeader.Status = USBD_STATUS_INVALID_URB_FUNCTION;
+                    }
+                }
+                break;
+            }
+            default:
+            {
+                DPRINT1("Unhandled URB %x\n", Urb->UrbHeader.Function);
+                Urb->UrbHeader.Status = USBD_STATUS_INVALID_URB_FUNCTION;
+            }
+
+        }
 
         KeReleaseSpinLock(&DeviceExtension->IrpQueueLock, oldIrql);
+
+        Irp->IoStatus.Status = Status;
+        Irp->IoStatus.Information = Information;
+
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         KeAcquireSpinLock(&DeviceExtension->IrpQueueLock, &oldIrql);
     }
 
     KeReleaseSpinLock(&DeviceExtension->IrpQueueLock, oldIrql);
 }
-
-NTSTATUS
-NTAPI
-ArrivalNotificationCompletion(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID PContext)
-{
-    PDEVICE_OBJECT PortDeviceObject = (PDEVICE_OBJECT) PContext;
-    IoFreeIrp(Irp);
-    ObDereferenceObject(PortDeviceObject);
-    return STATUS_MORE_PROCESSING_REQUIRED;
-}
-
-VOID
-DeviceArrivalWorkItem(PDEVICE_OBJECT DeviceObject, PVOID Context)
-{
-    PWORKITEM_DATA WorkItemData;
-    PIO_STACK_LOCATION IrpStack = NULL;
-    PDEVICE_OBJECT PortDeviceObject = NULL;
-    PIRP Irp = NULL;
-
-    WorkItemData = (PWORKITEM_DATA)Context;
-
-    PortDeviceObject = IoGetAttachedDeviceReference(WorkItemData->FdoDeviceExtension->Pdo);
-
-    if (!PortDeviceObject)
-    {
-        DPRINT1("Unable to notify Pdos parent of device arrival.\n");
-        goto Cleanup;
-    }
-
-    if (PortDeviceObject == DeviceObject)
-    {
-        /* Piontless to send query relations to ourself */
-        ObDereferenceObject(PortDeviceObject);
-        goto Cleanup;
-    }
-
-    Irp = IoAllocateIrp(PortDeviceObject->StackSize, FALSE);
-
-    if (!Irp)
-    {
-        DPRINT1("Unable to allocate IRP\n");
-    }
-
-    IoSetCompletionRoutine(Irp,
-                           (PIO_COMPLETION_ROUTINE)ArrivalNotificationCompletion,
-                           (PVOID) PortDeviceObject,
-                           TRUE,
-                           TRUE,
-                           TRUE);
-
-    IrpStack = IoGetNextIrpStackLocation(Irp);
-    IrpStack->Parameters.QueryDeviceRelations.Type = TargetDeviceRelation;
-    IrpStack->MajorFunction = IRP_MJ_PNP;
-    IrpStack->MinorFunction = IRP_MN_QUERY_DEVICE_RELATIONS;
-
-    IoCallDriver(PortDeviceObject, Irp);
-
-Cleanup:
-    IoFreeWorkItem(WorkItemData->IoWorkItem);
-    ExFreePool(WorkItemData);
-}
-
