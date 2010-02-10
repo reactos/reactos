@@ -373,14 +373,6 @@ MmInitSystem(IN ULONG Phase,
         // Initialize ARM³ in phase 0
         //
         MmArmInitSystem(0, KeLoaderBlock);    
-        
-        /* Initialize the page list */
-        MmInitializePageList();
-        
-        //
-        // Initialize ARM³ in phase 1
-        //
-        MmArmInitSystem(1, KeLoaderBlock);
 
 #if defined(_WINKD_)
         //

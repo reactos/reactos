@@ -168,6 +168,20 @@ extern SIZE_T MmAllocatedNonPagedPool;
 extern ULONG_PTR MmSubsectionBase;
 extern ULONG MmSpecialPoolTag;
 extern PVOID MmHyperSpaceEnd;
+extern PMMWSL MmSystemCacheWorkingSetList;
+extern ULONG MmMinimumNonPagedPoolSize;
+extern ULONG MmMinAdditionNonPagedPoolPerMb;
+extern ULONG MmDefaultMaximumNonPagedPool;
+extern ULONG MmMaxAdditionNonPagedPoolPerMb;
+extern ULONG MmSecondaryColors;
+extern ULONG MmSecondaryColorMask;
+extern ULONG MmNumberOfSystemPtes;
+extern ULONG MmMaximumNonPagedPoolPercent;
+
+//
+// Actual (registry-configurable) size of a GUI thread's stack
+//
+ULONG MmLargeStackSize;
 
 NTSTATUS
 NTAPI
@@ -176,6 +190,33 @@ MmArmInitSystem(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
+NTSTATUS
+NTAPI
+MiInitMachineDependent(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
+PPHYSICAL_MEMORY_DESCRIPTOR
+NTAPI
+MmInitializeMemoryLimits(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock,
+    IN PBOOLEAN IncludeType
+);
+                         
+PFN_NUMBER
+NTAPI
+MiPagesInLoaderBlock(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock,
+    IN PBOOLEAN IncludeType
+);
+                     
+VOID
+FASTCALL
+MiSyncARM3WithROS(
+    IN PVOID AddressStart,
+    IN PVOID AddressEnd
+);
+                         
 NTSTATUS
 NTAPI
 MmArmAccessFault(

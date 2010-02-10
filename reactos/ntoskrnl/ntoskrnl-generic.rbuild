@@ -390,6 +390,7 @@
 			<file>hypermap.c</file>
 			<file>iosup.c</file>
 			<file>mdlsup.c</file>
+			<file>mminit.c</file>
 			<file>mmsup.c</file>
 			<file>ncache.c</file>
 			<file>pagfault.c</file>
