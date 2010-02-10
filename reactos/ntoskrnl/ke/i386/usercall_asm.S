@@ -8,11 +8,14 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <asm.h>
+#include <reactos/asm.h>
+#include <ndk/i386/asm.h>
 #include <internal/i386/asmmacro.S>
-.intel_syntax noprefix
 
 /* FUNCTIONS ****************************************************************/
+
+.code32
+.text
 
 .globl _KiGetUserModeStackAddress@0
 .func KiGetUserModeStackAddress@0

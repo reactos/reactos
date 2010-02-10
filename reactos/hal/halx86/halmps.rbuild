@@ -11,6 +11,7 @@
 		<library>hal_generic</library>
 		<library>hal_generic_mp</library>
 		<library>ntoskrnl</library>
+		<library>libcntpr</library>
 		<directory name="mp">
 			<file>mps.S</file>
 			<file>mpsboot.asm</file>

@@ -196,68 +196,6 @@ KiIssueBop(VOID)
     asm volatile(".byte 0xC4\n.byte 0xC4\n");
 }
 
-//
-// Returns whether or not this is a V86 trap by checking the EFLAGS field.
-//
-// FIXME: GCC 4.5 Can Improve this with "goto labels"
-//
-BOOLEAN
-FORCEINLINE
-KiIsV8086TrapSafe(IN PKTRAP_FRAME TrapFrame)
-{
-    BOOLEAN Result;
-    
-    /*
-     * The check MUST be done this way, as we guarantee that no DS/ES/FS segment
-     * is used (since it might be garbage).
-     *
-     * Instead, we use the SS segment which is guaranteed to be correct. Because
-     * operate in 32-bit flat mode, this works just fine.
-     */
-     asm volatile
-     (
-        "testl $%c[f], %%ss:%1\n"
-        "setnz %0\n"
-        : "=a"(Result)
-        : "m"(TrapFrame->EFlags),
-          [f] "i"(EFLAGS_V86_MASK)
-     );
-    
-    /* If V86 flag was set */ 
-    return Result;
-}
-
-//
-// Returns whether or not this is a user-mode trap by checking the SegCs field.
-//
-// FIXME: GCC 4.5 Can Improve this with "goto labels"
-//
-BOOLEAN
-FORCEINLINE
-KiIsUserTrapSafe(IN PKTRAP_FRAME TrapFrame)
-{
-    BOOLEAN Result;
-    
-    /*
-     * The check MUST be done this way, as we guarantee that no DS/ES/FS segment
-     * is used (since it might be garbage).
-     *
-     * Instead, we use the SS segment which is guaranteed to be correct. Because
-     * operate in 32-bit flat mode, this works just fine.
-     */
-     asm volatile
-     (
-        "cmp $%c[f], %%ss:%1\n"
-        "setnz %0\n"
-        : "=a"(Result)
-        : "m"(TrapFrame->SegCs),
-          [f] "i"(KGDT_R0_CODE)
-     );
-    
-    /* If V86 flag was set */ 
-    return Result;
-}
-
 VOID
 FORCEINLINE
 KiUserSystemCall(IN PKTRAP_FRAME TrapFrame)
@@ -279,30 +217,6 @@ KiUserSystemCall(IN PKTRAP_FRAME TrapFrame)
         :
         : "r"(TrapFrame->SegCs)
     );
-}
-
-VOID
-FORCEINLINE
-KiSetSaneSegments(IN PKTRAP_FRAME TrapFrame)
-{
-    ULONG Ds, Es;
-    
-    /*
-     * We really have to get a good DS/ES first before touching any data.
-     *
-     * These two reads will either go in a register (with optimizations ON) or
-     * a stack variable (which is on SS:ESP, guaranteed to be good/valid).
-     *
-     * Because the assembly is marked volatile, the order of instructions is
-     * as-is, otherwise the optimizer could simply get rid of our DS/ES.
-     *
-     */
-    Ds = Ke386GetDs();
-    Es = Ke386GetEs();
-    Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
-    Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
-    TrapFrame->SegDs = Ds;
-    TrapFrame->SegEs = Es;
 }
 
 //
@@ -643,17 +557,9 @@ VOID
 FORCEINLINE
 KiEnterV86Trap(IN PKTRAP_FRAME TrapFrame)
 {
-    /* Load correct registers */
-    Ke386SetFs(KGDT_R0_PCR);
-    Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
-    Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
-
     /* Save exception list */
     TrapFrame->ExceptionList = KeGetPcr()->Tib.ExceptionList;
 
-    /* Clear direction flag */
-    Ke386ClearDirectionFlag();
-    
     /* Save DR7 and check for debugging */
     TrapFrame->Dr7 = __readdr(7);
     if (__builtin_expect(TrapFrame->Dr7 & ~DR7_RESERVED_MASK, 0))
@@ -670,40 +576,10 @@ VOID
 FORCEINLINE
 KiEnterInterruptTrap(IN PKTRAP_FRAME TrapFrame)
 {
-    /* Check for V86 mode, otherwise check for ring 3 code */
-    if (__builtin_expect(KiIsV8086TrapSafe(TrapFrame), 0))
-    {
-        /* Set correct segments */
-        Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
-        Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
-        Ke386SetFs(KGDT_R0_PCR);
-
-        /* Restore V8086 segments into Protected Mode segments */
-        TrapFrame->SegFs = TrapFrame->V86Fs;
-        TrapFrame->SegGs = TrapFrame->V86Gs;
-        TrapFrame->SegDs = TrapFrame->V86Ds;
-        TrapFrame->SegEs = TrapFrame->V86Es;
-    }
-    else if (__builtin_expect(KiIsUserTrapSafe(TrapFrame), 1)) /* Ring 3 is more common */
-    {
-        /* Switch to sane segments */
-        KiSetSaneSegments(TrapFrame);
-
-        /* Save FS/GS */
-        TrapFrame->SegFs = Ke386GetFs();
-        TrapFrame->SegGs = Ke386GetGs();
-        
-        /* Set correct FS */
-        Ke386SetFs(KGDT_R0_PCR);
-    }       
-    
     /* Save exception list and terminate it */
     TrapFrame->ExceptionList = KeGetPcr()->Tib.ExceptionList;
     KeGetPcr()->Tib.ExceptionList = EXCEPTION_CHAIN_END;
 
-    /* Clear direction flag */
-    Ke386ClearDirectionFlag();
-    
     /* Flush DR7 and check for debugging */
     TrapFrame->Dr7 = 0;
     if (__builtin_expect(KeGetCurrentThread()->DispatcherHeader.DebugActive & 0xFF, 0))
@@ -723,29 +599,8 @@ VOID
 FORCEINLINE
 KiEnterTrap(IN PKTRAP_FRAME TrapFrame)
 {
-    /* Switch to sane segments */
-    KiSetSaneSegments(TrapFrame);
-        
-    /* Now we can save the other segments and then switch to the correct FS */
-    TrapFrame->SegFs = Ke386GetFs();
-    TrapFrame->SegGs = Ke386GetGs();
-    Ke386SetFs(KGDT_R0_PCR);
-
     /* Save exception list */
     TrapFrame->ExceptionList = KeGetPcr()->Tib.ExceptionList;
-    
-    /* Check for V86 mode */
-    if (__builtin_expect(TrapFrame->EFlags & EFLAGS_V86_MASK, 0))
-    {
-        /* Restore V8086 segments into Protected Mode segments */
-        TrapFrame->SegFs = TrapFrame->V86Fs;
-        TrapFrame->SegGs = TrapFrame->V86Gs;
-        TrapFrame->SegDs = TrapFrame->V86Ds;
-        TrapFrame->SegEs = TrapFrame->V86Es;
-    }
-
-    /* Clear direction flag */
-    Ke386ClearDirectionFlag();
     
     /* Flush DR7 and check for debugging */
     TrapFrame->Dr7 = 0;
@@ -757,132 +612,6 @@ KiEnterTrap(IN PKTRAP_FRAME TrapFrame)
     
     /* Set debug header */
     KiFillTrapFrameDebug(TrapFrame);
-}
-
-//
-// Generates a Trap Prolog Stub for the given name
-//
-#define KI_PUSH_FAKE_ERROR_CODE 0x1
-#define KI_UNUSED               0x2
-#define KI_NONVOLATILES_ONLY    0x4
-#define KI_FAST_SYSTEM_CALL     0x8
-#define KI_SOFTWARE_TRAP        0x10
-#define KI_HARDWARE_INT         0x20
-#define KiTrap(x, y)            VOID DECLSPEC_NORETURN x(VOID) { KiTrapStub(y, x##Handler); UNREACHABLE; }
-#define KiTrampoline(x, y)      VOID DECLSPEC_NOINLINE x(VOID) { KiTrapStub(y, x##Handler); }
-
-//
-// Trap Prolog Stub
-//
-VOID
-FORCEINLINE
-KiTrapStub(IN ULONG Flags,
-           IN PVOID Handler)
-{
-    ULONG FrameSize;
-    
-    /* Is this a fast system call? They don't have a stack! */
-    if (Flags & KI_FAST_SYSTEM_CALL) __asm__ __volatile__
-    (
-        "movl %%ss:%c[t], %%esp\n"
-        "movl %c[e](%%esp), %%esp\n"
-        :
-        : [e] "i"(FIELD_OFFSET(KTSS, Esp0)),
-          [t] "i"(&PCR->TSS)
-        : "%esp"
-    );
-    
-    /* Check what kind of trap frame this trap requires */
-    if (Flags & KI_SOFTWARE_TRAP)
-    {
-        /* Software traps need a complete non-ring transition trap frame */
-        FrameSize = FIELD_OFFSET(KTRAP_FRAME, HardwareEsp);
-    }
-    else if (Flags & KI_FAST_SYSTEM_CALL)
-    {
-        /* SYSENTER requires us to build a complete ring transition trap frame */
-        FrameSize = FIELD_OFFSET(KTRAP_FRAME, V86Es);
-        
-        /* And it only preserves nonvolatile registers */
-        Flags |= KI_NONVOLATILES_ONLY;
-    }
-    else if (Flags & KI_PUSH_FAKE_ERROR_CODE)
-    {
-        /* If the trap doesn't have an error code, we'll make space for it */
-        FrameSize = FIELD_OFFSET(KTRAP_FRAME, Eip);
-    }
-    else
-    {
-        /* The trap already has an error code, so just make space for the rest */
-        FrameSize = FIELD_OFFSET(KTRAP_FRAME, ErrCode);
-    }
-    
-    /* Software traps need to get their EIP from the caller's frame */
-    if (Flags & KI_SOFTWARE_TRAP) __asm__ __volatile__ ("popl %%eax\n":::"%esp");
-    
-    /* Save nonvolatile registers */
-    __asm__ __volatile__
-    (
-        /* EBX, ESI, EDI and EBP are saved */
-        "movl %%ebp, %c[p](%%esp)\n"
-        "movl %%ebx, %c[b](%%esp)\n"
-        "movl %%esi, %c[s](%%esp)\n"
-        "movl %%edi, %c[i](%%esp)\n"
-        :
-        : [b] "i"(- FrameSize + FIELD_OFFSET(KTRAP_FRAME, Ebx)),
-          [s] "i"(- FrameSize + FIELD_OFFSET(KTRAP_FRAME, Esi)),
-          [i] "i"(- FrameSize + FIELD_OFFSET(KTRAP_FRAME, Edi)),
-          [p] "i"(- FrameSize + FIELD_OFFSET(KTRAP_FRAME, Ebp))
-        : "%esp"
-    );
-    
-    /* Does the caller want nonvolatiles only? */
-    if (!(Flags & KI_NONVOLATILES_ONLY)) __asm__ __volatile__
-    (
-        /* Otherwise, save the volatiles as well */
-        "movl %%eax, %c[a](%%esp)\n"
-        "movl %%ecx, %c[c](%%esp)\n"
-        "movl %%edx, %c[d](%%esp)\n"
-        :
-        : [a] "i"(- FrameSize + FIELD_OFFSET(KTRAP_FRAME, Eax)),
-          [c] "i"(- FrameSize + FIELD_OFFSET(KTRAP_FRAME, Ecx)),
-          [d] "i"(- FrameSize + FIELD_OFFSET(KTRAP_FRAME, Edx))
-        : "%esp"
-    );
-
-    /* Now set parameter 1 (ECX) to point to the frame */
-    __asm__ __volatile__ ("movl %%esp, %%ecx\n":::"%esp");
-    
-    /* Now go ahead and make space for this frame */
-    __asm__ __volatile__ ("subl $%c[e],%%esp\n":: [e] "i"(FrameSize) : "%esp");
-    __asm__ __volatile__ ("subl $%c[e],%%ecx\n":: [e] "i"(FrameSize) : "%ecx");
-
-    /*
-     * For hardware interrupts, set parameter 2 (EDX) to hold KINTERRUPT.
-     * This code will be dynamically patched when an interrupt is registered!
-     */  
-    if (Flags & KI_HARDWARE_INT) __asm__ __volatile__
-    (
-        ".globl _KiInterruptTemplate2ndDispatch\n_KiInterruptTemplate2ndDispatch:\n"
-        "movl $0, %%edx\n"
-        ".globl _KiInterruptTemplateObject\n_KiInterruptTemplateObject:\n"
-        ::: "%edx"
-    );
-    
-    /* Now jump to the C handler */
-    if (Flags & KI_HARDWARE_INT)__asm__ __volatile__
-    (
-        /*
-         * For hardware interrupts, use an absolute JMP instead of a relative JMP
-         * since the position of this code is arbitrary in memory, and therefore
-         * the compiler-generated offset will not be correct.
-         */
-        "jmp *%0\n"
-        ".globl _KiInterruptTemplateDispatch\n_KiInterruptTemplateDispatch:\n"
-        :
-        : "a"(Handler)
-    );
-    else __asm__ __volatile__ ("jmp %c[x]\n":: [x] "i"(Handler));
 }
 
 #endif

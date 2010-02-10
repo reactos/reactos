@@ -248,10 +248,12 @@ Author:
 #define KINTERRUPT_SERVICE_CONTEXT              0x10
 #define KINTERRUPT_TICK_COUNT                   0x18
 #define KINTERRUPT_ACTUAL_LOCK                  0x1C
+#define KINTERRUPT_DISPATCH_ADDRESS             0x20
 #define KINTERRUPT_VECTOR                       0x24
 #define KINTERRUPT_IRQL                         0x28
 #define KINTERRUPT_SYNCHRONIZE_IRQL             0x29
 #define KINTERRUPT_DISPATCH_COUNT               0x38
+#define KINTERRUPT_DISPATCH_CODE                0x3C
 
 //
 // KGDTENTRY Offsets

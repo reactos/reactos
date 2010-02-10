@@ -161,8 +161,6 @@ HalpProfileInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     KiEoiHelper(TrapFrame);
 }
 
-KiTrap(HalpClockInterrupt,   KI_PUSH_FAKE_ERROR_CODE);
-KiTrap(HalpProfileInterrupt, KI_PUSH_FAKE_ERROR_CODE);
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 

@@ -10,6 +10,7 @@
 		<library>hal_generic</library>
 		<library>hal_generic_up</library>
 		<library>ntoskrnl</library>
+		<library>libcntpr</library>
 		<directory name="up">
 			<file>halinit_up.c</file>
 			<file>halup.rc</file>

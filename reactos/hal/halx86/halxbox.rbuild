@@ -10,6 +10,7 @@
 		<library>hal_generic</library>
 		<library>hal_generic_up</library>
 		<library>ntoskrnl</library>
+		<library>libcntpr</library>
 		<directory name="xbox">
 			<file>halinit_xbox.c</file>
 			<file>part_xbox.c</file>

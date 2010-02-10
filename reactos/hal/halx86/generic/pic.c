@@ -1335,4 +1335,3 @@ HalpDispatchInterrupt2(VOID)
     }
 }
 
-KiTrap(HalpApcInterrupt,       KI_SOFTWARE_TRAP);

@@ -12,6 +12,9 @@
 #include <hal.h>
 #define NDEBUG
 #include <debug.h>
+#include <setjmp.h>
+
+void HalpTrap0D();
 
 /* GLOBALS ********************************************************************/
 
@@ -46,6 +49,9 @@ ULONG_PTR HalpSavedEsp;
 
 /* Where the real mode code ends */
 extern PVOID HalpRealModeEnd;
+
+/* Context saved for return from v86 mode */
+jmp_buf HalpSavedContext;
 
 /* REAL MODE CODE AND STACK START HERE ****************************************/
 
@@ -230,60 +236,44 @@ HalpTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
     while (TRUE);
 }
 
-KiTrap(HalpTrap0D, 0);
-
 VOID
 DECLSPEC_NORETURN
-HalpTrap06(VOID)
+HalpTrap06()
 {
-    PKTRAP_FRAME TrapFrame;
-    
     /* Restore ES/DS to known good values first */
     Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
     Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
-    
-    /* Read trap frame address */
-    TrapFrame = (PKTRAP_FRAME)HalpSavedEsp;
-    
-    /* Restore segments from the trap frame */
-    Ke386SetGs(TrapFrame->SegGs);
-    Ke386SetFs(TrapFrame->SegFs);
-    Ke386SetEs(TrapFrame->SegEs);
-    Ke386SetDs(TrapFrame->SegDs);
-    
-    /* Restore EFlags */
-    __writeeflags(TrapFrame->EFlags);
-    
-    /* Exit the V86 mode trap frame */
-    KiCallReturn(TrapFrame);
+
+    /* Restore the stack */ 
+    KeGetPcr()->TSS->Esp0 = HalpSavedEsp0;
+
+    /* Return back to where we left */
+    longjmp(HalpSavedContext, 1);
+    UNREACHABLE;
 }
 
 /* V8086 ENTER ****************************************************************/
 
 VOID
-FASTCALL
-DECLSPEC_NORETURN
-HalpBiosCallHandler(IN PKTRAP_FRAME TrapFrame)
+NTAPI
+HalpBiosCall()
 {
     /* Must be volatile so it doesn't get optimized away! */
     volatile KTRAP_FRAME V86TrapFrame;
     ULONG_PTR StackOffset, CodeOffset;
     
-    /* Fill out the quick-n-dirty trap frame */
-    TrapFrame->EFlags = __readeflags();
-    TrapFrame->SegGs = Ke386GetGs();
-    TrapFrame->SegFs = Ke386GetFs();
-    TrapFrame->SegEs = Ke386GetEs();
-    TrapFrame->SegDs = Ke386GetDs();
-    
-    /* Our stack (the frame) */
-    HalpSavedEsp = (ULONG_PTR)TrapFrame;
+    /* Save the context, check for return */
+    if (_setjmp(HalpSavedContext))
+    {
+        /* Returned from v86 */
+        return;
+    }
     
     /* Kill alignment faults */
     __writecr0(__readcr0() & ~CR0_AM);
     
     /* Set new stack address */
-    KeGetPcr()->TSS->Esp0 = HalpSavedEsp - sizeof(FX_SAVE_AREA);
+    KeGetPcr()->TSS->Esp0 = (ULONG)&V86TrapFrame - 0x20 - sizeof(FX_SAVE_AREA);
 
     /* Compute segmented IP and SP offsets */
     StackOffset = (ULONG_PTR)&HalpRealModeEnd - 4 - (ULONG_PTR)HalpRealModeStart;
@@ -303,8 +293,6 @@ HalpBiosCallHandler(IN PKTRAP_FRAME TrapFrame)
     /* Exit to V86 mode */
     KiDirectTrapReturn((PKTRAP_FRAME)&V86TrapFrame);
 }
-
-KiTrampoline(HalpBiosCall, KI_PUSH_FAKE_ERROR_CODE | KI_NONVOLATILES_ONLY);
 
 /* FUNCTIONS ******************************************************************/
 

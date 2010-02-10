@@ -53,7 +53,15 @@ KiVdmTrap(IN PKTRAP_FRAME TrapFrame)
     return ((TrapFrame->EFlags & EFLAGS_V86_MASK) ||
             ((KiUserTrap(TrapFrame)) && (PsGetCurrentProcess()->VdmObjects)));
 }
- 
+
+BOOLEAN
+FORCEINLINE
+KiV86Trap(IN PKTRAP_FRAME TrapFrame)
+{
+    /* Check if the V8086 flag is on */
+    return ((TrapFrame->EFlags & EFLAGS_V86_MASK) != 0);
+}
+
 /* TRAP EXIT CODE *************************************************************/
 
 VOID
@@ -223,7 +231,7 @@ KiNpxHandler(IN PKTRAP_FRAME TrapFrame,
                                  DataOffset,
                                  TrapFrame);
     }
-    
+
     /* Check for invalid operation */
     if (Error & FSW_INVALID_OPERATION)
     {
@@ -540,7 +548,7 @@ KiTrap06Handler(IN PKTRAP_FRAME TrapFrame)
     KIRQL OldIrql;
     
     /* Check for V86 GPF */
-    if (__builtin_expect(KiIsV8086TrapSafe(TrapFrame), 1))
+    if (__builtin_expect(KiV86Trap(TrapFrame), 1))
     {
         /* Enter V86 trap */
         KiEnterV86Trap(TrapFrame);
@@ -800,7 +808,7 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
     KIRQL OldIrql;
     
     /* Check for V86 GPF */
-    if (__builtin_expect(KiIsV8086TrapSafe(TrapFrame), 1))
+    if (__builtin_expect(KiV86Trap(TrapFrame), 1))
     {
         /* Enter V86 trap */
         KiEnterV86Trap(TrapFrame);
@@ -845,7 +853,7 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
 
     /* Check for user-mode GPF */
     if (KiUserTrap(TrapFrame))
-    {   
+    {
         /* Should not be VDM */
         ASSERT(KiVdmTrap(TrapFrame) == FALSE);
         
@@ -1502,19 +1510,13 @@ KiSystemCallHandler(IN PKTRAP_FRAME TrapFrame,
 }
 
 VOID
-__attribute__((regparm(3)))
+FASTCALL
 DECLSPEC_NORETURN
-KiFastCallEntryHandler(IN ULONG ServiceNumber,
-                       IN PVOID Arguments,
-                       IN PKTRAP_FRAME TrapFrame)
+KiFastCallEntryHandler(IN PKTRAP_FRAME TrapFrame,
+                       IN PVOID Arguments)
 {
     PKTHREAD Thread;
-        
-    /* Fixup segments */
-    Ke386SetFs(KGDT_R0_PCR);
-    Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
-    Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
-    
+
     /* Set up a fake INT Stack and enable interrupts */
     TrapFrame->HardwareSegSs = KGDT_R3_DATA | RPL_MASK;
     TrapFrame->HardwareEsp = (ULONG_PTR)Arguments;
@@ -1531,7 +1533,7 @@ KiFastCallEntryHandler(IN ULONG ServiceNumber,
 
     /* Call the shared handler (inline) */
     KiSystemCallHandler(TrapFrame,
-                        ServiceNumber,
+                        TrapFrame->Eax,
                         Arguments,
                         Thread,
                         UserMode,
@@ -1540,64 +1542,28 @@ KiFastCallEntryHandler(IN ULONG ServiceNumber,
 }
 
 VOID
-__attribute__((regparm(3)))
+FASTCALL
 DECLSPEC_NORETURN
-KiSystemServiceHandler(IN ULONG ServiceNumber,
-                       IN PVOID Arguments,
-                       IN PKTRAP_FRAME TrapFrame)
+KiSystemServiceHandler(IN PKTRAP_FRAME TrapFrame,
+                       IN PVOID Arguments)
 {
-    USHORT SegFs;
     PKTHREAD Thread;
 
-    /* Save and fixup FS */
-    SegFs = Ke386GetFs();
-    Ke386SetFs(KGDT_R0_PCR);
-        
     /* Get the current thread */
     Thread = KeGetCurrentThread();
     
     /* Chain trap frames */
     TrapFrame->Edx = (ULONG_PTR)Thread->TrapFrame;
     
-    /* Clear direction flag */
-    Ke386ClearDirectionFlag();
-    
     /* Call the shared handler (inline) */
     KiSystemCallHandler(TrapFrame,
-                        ServiceNumber,
+                        TrapFrame->Eax,
                         Arguments,
                         Thread,
                         KiUserTrap(TrapFrame),
                         Thread->PreviousMode,
-                        SegFs);
+                        TrapFrame->SegFs);
 }
-
-/* CPU AND SOFTWARE TRAPS *****************************************************/
-
-KiTrap(KiTrap00,         KI_PUSH_FAKE_ERROR_CODE);
-KiTrap(KiTrap01,         KI_PUSH_FAKE_ERROR_CODE);
-KiTrap(KiTrap03,         KI_PUSH_FAKE_ERROR_CODE);
-KiTrap(KiTrap04,         KI_PUSH_FAKE_ERROR_CODE);
-KiTrap(KiTrap05,         KI_PUSH_FAKE_ERROR_CODE);
-KiTrap(KiTrap06,         KI_PUSH_FAKE_ERROR_CODE);
-KiTrap(KiTrap07,         KI_PUSH_FAKE_ERROR_CODE);
-KiTrap(KiTrap08,         0);
-KiTrap(KiTrap09,         KI_PUSH_FAKE_ERROR_CODE);
-KiTrap(KiTrap0A,         0);
-KiTrap(KiTrap0B,         0);
-KiTrap(KiTrap0C,         0);
-KiTrap(KiTrap0D,         0);
-KiTrap(KiTrap0E,         0);
-KiTrap(KiTrap0F,         KI_PUSH_FAKE_ERROR_CODE);
-KiTrap(KiTrap10,         KI_PUSH_FAKE_ERROR_CODE);
-KiTrap(KiTrap11,         KI_PUSH_FAKE_ERROR_CODE);
-KiTrap(KiTrap13,         KI_PUSH_FAKE_ERROR_CODE);
-KiTrap(KiGetTickCount,   KI_PUSH_FAKE_ERROR_CODE);
-KiTrap(KiCallbackReturn, KI_PUSH_FAKE_ERROR_CODE);       
-KiTrap(KiRaiseAssertion, KI_PUSH_FAKE_ERROR_CODE);
-KiTrap(KiDebugService,   KI_PUSH_FAKE_ERROR_CODE);
-KiTrap(KiSystemService,  KI_PUSH_FAKE_ERROR_CODE | KI_NONVOLATILES_ONLY);
-KiTrap(KiFastCallEntry,  KI_FAST_SYSTEM_CALL);
 
 /*
  * @implemented

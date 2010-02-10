@@ -3,19 +3,33 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PURPOSE:         System Traps, Entrypoints and Exitpoints
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
+ *                  Timo Kreuzer (timo.kreuzer@reactos.org)
  * NOTE:            See asmmacro.S for the shared entry/exit code.
  */
 
 /* INCLUDES ******************************************************************/
 
-#include <asm.h>
+#include <reactos/asm.h>
+#include <ndk/i386/asm.h>
 #include <internal/i386/asmmacro.S>
-.intel_syntax noprefix
+
+MACRO(GENERATE_IDT_STUB, Number)
+idt _KiUnexpectedInterrupt&Number, INT_32_DPL0
+ENDM
+
+MACRO(GENERATE_INT_HANDLER, Number)
+.func KiUnexpectedInterrupt&Number
+_KiUnexpectedInterrupt&Number:
+    mov eax, PRIMARY_VECTOR_BASE + Number
+    jmp _KiEndUnexpectedRange@0
+.endfunc
+ENDM
 
 /* GLOBALS *******************************************************************/
 
 .data
-.globl _KiIdt
+
+PUBLIC _KiIdt
 _KiIdt:
 /* This is the Software Interrupt Table that we handle in this file:        */
 idt _KiTrap00,         INT_32_DPL0  /* INT 00: Divide Error (#DE)           */
@@ -47,26 +61,86 @@ idt _KiRaiseAssertion, INT_32_DPL3  /* INT 2C: Debug Assertion Handler      */
 idt _KiDebugService,   INT_32_DPL3  /* INT 2D: Debug Service Handler        */
 idt _KiSystemService,  INT_32_DPL3  /* INT 2E: System Call Service Handler  */
 idt _KiTrap0F,         INT_32_DPL0  /* INT 2F: RESERVED                     */
-GENERATE_IDT_STUBS                  /* INT 30-FF: UNEXPECTED INTERRUPTS     */
+i = 0
+.rept 208
+    GENERATE_IDT_STUB %i
+    i = i + 1
+.endr
 
-.globl _KiIdtDescriptor
+PUBLIC _KiIdtDescriptor
 _KiIdtDescriptor:
     .short 0
     .short 0x7FF
     .long _KiIdt
 
-.globl _KiUnexpectedEntrySize
+PUBLIC _KiUnexpectedEntrySize
 _KiUnexpectedEntrySize:
     .long _KiUnexpectedInterrupt1 - _KiUnexpectedInterrupt0
 
+/******************************************************************************/
+.code32
 .text
-/* HARDWARE INTERRUPT HANDLERS ************************************************/
 
-.globl _KiStartUnexpectedRange@0
+TRAP_ENTRY KiTrap00, KI_PUSH_FAKE_ERROR_CODE
+TRAP_ENTRY KiTrap01, KI_PUSH_FAKE_ERROR_CODE
+TRAP_ENTRY KiTrap03, KI_PUSH_FAKE_ERROR_CODE
+TRAP_ENTRY KiTrap04, KI_PUSH_FAKE_ERROR_CODE
+TRAP_ENTRY KiTrap05, KI_PUSH_FAKE_ERROR_CODE
+TRAP_ENTRY KiTrap06, KI_PUSH_FAKE_ERROR_CODE
+TRAP_ENTRY KiTrap07, KI_PUSH_FAKE_ERROR_CODE
+TRAP_ENTRY KiTrap08, 0
+TRAP_ENTRY KiTrap09, KI_PUSH_FAKE_ERROR_CODE
+TRAP_ENTRY KiTrap0A, 0
+TRAP_ENTRY KiTrap0B, 0
+TRAP_ENTRY KiTrap0C, 0
+TRAP_ENTRY KiTrap0D, 0
+TRAP_ENTRY KiTrap0E, 0
+TRAP_ENTRY KiTrap0F, KI_PUSH_FAKE_ERROR_CODE
+TRAP_ENTRY KiTrap10, KI_PUSH_FAKE_ERROR_CODE
+TRAP_ENTRY KiTrap11, KI_PUSH_FAKE_ERROR_CODE
+TRAP_ENTRY KiTrap13, KI_PUSH_FAKE_ERROR_CODE
+TRAP_ENTRY KiGetTickCount, KI_PUSH_FAKE_ERROR_CODE
+TRAP_ENTRY KiCallbackReturn, KI_PUSH_FAKE_ERROR_CODE
+TRAP_ENTRY KiRaiseAssertion, KI_PUSH_FAKE_ERROR_CODE
+TRAP_ENTRY KiDebugService, KI_PUSH_FAKE_ERROR_CODE
+TRAP_ENTRY KiUnexpectedInterruptTail, KI_PUSH_FAKE_ERROR_CODE
+
+ALIGN 4
+EXTERN @KiInterruptTemplateHandler@8
+PUBLIC _KiInterruptTemplate
+_KiInterruptTemplate:
+    KiEnterTrap KI_PUSH_FAKE_ERROR_CODE
+PUBLIC _KiInterruptTemplate2ndDispatch
+_KiInterruptTemplate2ndDispatch:
+    mov edx, 0
+PUBLIC _KiInterruptTemplateObject
+_KiInterruptTemplateObject:
+    mov eax, offset @KiInterruptTemplateHandler@8
+    jmp eax
+PUBLIC _KiInterruptTemplateDispatch
+_KiInterruptTemplateDispatch:
+
+EXTERN @KiSystemServiceHandler@8:PROC
+PUBLIC _KiSystemService
+_KiSystemService:
+    KiEnterTrap (KI_PUSH_FAKE_ERROR_CODE OR KI_NONVOLATILES_ONLY OR KI_DONT_SAVE_SEGS)
+    jmp @KiSystemServiceHandler@8
+
+EXTERN @KiFastCallEntryHandler@8:PROC
+PUBLIC _KiFastCallEntry
+_KiFastCallEntry:
+    KiEnterTrap (KI_FAST_SYSTEM_CALL OR KI_NONVOLATILES_ONLY OR KI_DONT_SAVE_SEGS)
+    jmp @KiFastCallEntryHandler@8
+
+PUBLIC _KiStartUnexpectedRange@0
 _KiStartUnexpectedRange@0:
-
-GENERATE_INT_HANDLERS
-
-.globl _KiEndUnexpectedRange@0
+i = 0
+.rept 208
+    GENERATE_INT_HANDLER %i
+    i = i + 1
+.endr
+PUBLIC _KiEndUnexpectedRange@0
 _KiEndUnexpectedRange@0:
     jmp _KiUnexpectedInterruptTail
+
+END

@@ -28,6 +28,7 @@
 			<file>sysinfo.c</file>
 			<file>systimer.S</file>
 			<file>timer.c</file>
+			<file>trap.S</file>
 			<file>usage.c</file>
 		</directory>
 		<directory name="include">
