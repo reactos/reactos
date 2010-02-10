@@ -158,6 +158,59 @@ MiComputeNonPagedPoolVa(IN ULONG FreePages)
     }
 }
 
+VOID
+NTAPI
+MiComputeColorInformation(VOID)
+{
+    ULONG L2Associativity;
+    
+    /* Check if no setting was provided already */
+    if (!MmSecondaryColors)
+    {
+        /* Get L2 cache information */
+        L2Associativity = KeGetPcr()->SecondLevelCacheAssociativity;
+        
+        /* The number of colors is the number of cache bytes by set/way */
+        MmSecondaryColors = KeGetPcr()->SecondLevelCacheSize;
+        if (L2Associativity) MmSecondaryColors /= L2Associativity;
+    }
+    
+    /* Now convert cache bytes into pages */
+    MmSecondaryColors >>= PAGE_SHIFT;
+    if (!MmSecondaryColors)
+    {
+        /* If there was no cache data from the KPCR, use the default colors */
+        MmSecondaryColors = MI_SECONDARY_COLORS;
+    }
+    else
+    {
+        /* Otherwise, make sure there aren't too many colors */
+        if (MmSecondaryColors > MI_MAX_SECONDARY_COLORS)
+        {
+            /* Set the maximum */
+            MmSecondaryColors = MI_MAX_SECONDARY_COLORS;
+        }
+        
+        /* Make sure there aren't too little colors */
+        if (MmSecondaryColors < MI_MIN_SECONDARY_COLORS)
+        {
+            /* Set the default */
+            MmSecondaryColors = MI_SECONDARY_COLORS;
+        }
+        
+        /* Finally make sure the colors are a power of two */
+        if (MmSecondaryColors & (MmSecondaryColors - 1))
+        {
+            /* Set the default */
+            MmSecondaryColors = MI_SECONDARY_COLORS;
+        }
+    }
+    
+    /* Compute the mask and store it */
+    MmSecondaryColorMask = MmSecondaryColors - 1;
+    KeGetCurrentPrcb()->SecondaryColorMask = MmSecondaryColorMask;    
+}
+
 NTSTATUS
 NTAPI
 MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -169,7 +222,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PMMPTE StartPde, EndPde, PointerPte, LastPte;
     MMPTE TempPde, TempPte;
     PVOID NonPagedPoolExpansionVa;
-    ULONG OldCount, L2Associativity;
+    ULONG OldCount;
     PFN_NUMBER FreePage, FreePageCount, PagesLeft, BasePage, PageCount;
 
     /* Check for kernel stack size that's too big */
@@ -316,24 +369,8 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Compute non paged pool limits and size */
     MiComputeNonPagedPoolVa(FreePages);
     
-    //
-    // Get L2 cache information
-    //
-    L2Associativity = KeGetPcr()->SecondLevelCacheAssociativity;
-    MmSecondaryColors = KeGetPcr()->SecondLevelCacheSize;
-    if (L2Associativity) MmSecondaryColors /= L2Associativity;
-    
-    //
-    // Compute final color mask and count
-    //
-    MmSecondaryColors >>= PAGE_SHIFT;
-    if (!MmSecondaryColors) MmSecondaryColors = 1;
-    MmSecondaryColorMask = MmSecondaryColors - 1;
-    
-    //
-    // Store it
-    //
-    KeGetCurrentPrcb()->SecondaryColorMask = MmSecondaryColorMask;
+    /* Compute color information (L2 cache-separated paging lists) */
+    MiComputeColorInformation();
     
     //
     // Calculate the number of bytes for the PFN database

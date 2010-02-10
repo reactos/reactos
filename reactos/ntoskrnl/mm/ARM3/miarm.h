@@ -31,6 +31,10 @@
 #define MI_NONPAGED_POOL_END                   (PVOID)0xFFBE0000
 #define MI_DEBUG_MAPPING                       (PVOID)0xFFBFF000
 
+#define MI_MIN_SECONDARY_COLORS                 8
+#define MI_SECONDARY_COLORS                     64
+#define MI_MAX_SECONDARY_COLORS                 1024
+
 #define MM_HIGHEST_VAD_ADDRESS \
     (PVOID)((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - (16 * PAGE_SIZE))
 
