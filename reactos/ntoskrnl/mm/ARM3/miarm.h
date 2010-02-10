@@ -130,6 +130,13 @@ typedef struct _PHYSICAL_MEMORY_DESCRIPTOR
     PHYSICAL_MEMORY_RUN Run[1];
 } PHYSICAL_MEMORY_DESCRIPTOR, *PPHYSICAL_MEMORY_DESCRIPTOR;
 
+typedef struct _MMCOLOR_TABLES
+{
+    PFN_NUMBER Flink;
+    PVOID Blink;
+    PFN_NUMBER Count;
+} MMCOLOR_TABLES, *PMMCOLOR_TABLES;
+
 extern MMPTE HyperTemplatePte;
 extern MMPTE ValidKernelPde;
 extern MMPTE ValidKernelPte;

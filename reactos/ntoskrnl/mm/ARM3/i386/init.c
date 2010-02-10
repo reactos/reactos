@@ -33,6 +33,19 @@ MEMORY_ALLOCATION_DESCRIPTOR MxOldFreeDescriptor;
 MMPTE ValidKernelPde = {.u.Hard.Valid = 1, .u.Hard.Write = 1, .u.Hard.Dirty = 1, .u.Hard.Accessed = 1};
 MMPTE ValidKernelPte = {.u.Hard.Valid = 1, .u.Hard.Write = 1, .u.Hard.Dirty = 1, .u.Hard.Accessed = 1};
 
+/*
+ * For each page's worth bytes of L2 cache in a given set/way line, the zero and
+ * free lists are organized in what is called a "color".
+ *
+ * This array points to the two lists, so it can be thought of as a multi-dimensional
+ * array of MmFreePagesByColor[2][MmSecondaryColors]. Since the number is dynamic,
+ * we describe the array in pointer form instead.
+ *
+ * On a final note, the color tables themselves are right after the PFN database.
+ */
+C_ASSERT(FreePageList == 1);
+PMMCOLOR_TABLES MmFreePagesByColor[FreePageList + 1];
+
 /* Make the code cleaner with some definitions for size multiples */
 #define _1KB (1024)
 #define _1MB (1000 * _1KB)
@@ -211,6 +224,56 @@ MiComputeColorInformation(VOID)
     KeGetCurrentPrcb()->SecondaryColorMask = MmSecondaryColorMask;    
 }
 
+VOID
+NTAPI
+MiInitializeColorTables(VOID)
+{
+    ULONG i;
+    PMMPTE PointerPte, LastPte;
+    MMPTE TempPte = ValidKernelPte;
+    
+    /* The color table starts after the PFN database */
+    MmFreePagesByColor[0] = (PMMCOLOR_TABLES)&MmPfnDatabase[MmHighestPhysicalPage + 1];
+    
+    /* Loop the PTEs. We have two color tables for each secondary color */
+    PointerPte = MiAddressToPte(&MmFreePagesByColor[0][0]);
+    LastPte = MiAddressToPte((ULONG_PTR)MmFreePagesByColor[0] +
+                             (2 * MmSecondaryColors * sizeof(MMCOLOR_TABLES))
+                             - 1);
+    while (PointerPte <= LastPte)
+    {
+        /* Check for valid PTE */
+        if (PointerPte->u.Hard.Valid == 0)
+        {
+            /* Get a page and map it */
+            TempPte.u.Hard.PageFrameNumber = MxGetNextPage(1);
+            ASSERT(TempPte.u.Hard.Valid == 1);
+            *PointerPte = TempPte;
+            
+            /* Zero out the page */
+            RtlZeroMemory(MiPteToAddress(PointerPte), PAGE_SIZE);
+        }
+        
+        /* Next */
+        PointerPte++;
+    }
+    
+    /* Now set the address of the next list, right after this one */
+    MmFreePagesByColor[1] = &MmFreePagesByColor[0][MmSecondaryColors];
+    
+    /* Now loop the lists to set them up */
+    for (i = 0; i < MmSecondaryColors; i++)
+    {
+        /* Set both free and zero lists for each color */
+        MmFreePagesByColor[ZeroedPageList][i].Flink = 0xFFFFFFFF;
+        MmFreePagesByColor[ZeroedPageList][i].Blink = (PVOID)0xFFFFFFFF;
+        MmFreePagesByColor[ZeroedPageList][i].Count = 0;
+        MmFreePagesByColor[FreePageList][i].Flink = 0xFFFFFFFF;
+        MmFreePagesByColor[FreePageList][i].Blink = (PVOID)0xFFFFFFFF;
+        MmFreePagesByColor[FreePageList][i].Count = 0;
+    }
+}
+
 NTSTATUS
 NTAPI
 MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -373,10 +436,11 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     MiComputeColorInformation();
     
     //
-    // Calculate the number of bytes for the PFN database
+    // Calculate the number of bytes for the PFN database, and the color tables,
     // and then convert to pages
     //
     MxPfnAllocation = (MmHighestPhysicalPage + 1) * sizeof(MMPFN);
+    MxPfnAllocation += (MmSecondaryColors * sizeof(MMCOLOR_TABLES) * 2);
     MxPfnAllocation >>= PAGE_SHIFT;
     
     //
@@ -688,6 +752,9 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     //
     MxFreeDescriptor->BasePage = FreePage;
     MxFreeDescriptor->PageCount = FreePageCount;
+    
+    /* Initialize the color tables */
+    MiInitializeColorTables();
 
     /* Call back into shitMM to setup the PFN database */
     MmInitializePageList();
