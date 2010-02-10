@@ -244,7 +244,7 @@ QueryBusInformation(PVOID BusContext,
 
 BOOLEAN
 USB_BUSIFFN
-IsDeviceHighSpeed(PVOID BusCOntext)
+IsDeviceHighSpeed(PVOID BusContext)
 {
     DPRINT1("IsDeviceHighSpeed called\n");
     return TRUE;
