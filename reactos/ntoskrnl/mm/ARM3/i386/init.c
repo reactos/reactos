@@ -74,7 +74,29 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PVOID NonPagedPoolExpansionVa;
     ULONG OldCount, L2Associativity;
     PFN_NUMBER FreePage, FreePageCount, PagesLeft, BasePage, PageCount;
+
+    /* Check for kernel stack size that's too big */
+    if (MmLargeStackSize > (KERNEL_LARGE_STACK_SIZE / 1024))
+    {
+        /* Sanitize to default value */
+        MmLargeStackSize = KERNEL_LARGE_STACK_SIZE;
+    }
+    else
+    {
+        /* Take the registry setting, and convert it into bytes */
+        MmLargeStackSize *= 1024;
         
+        /* Now align it to a page boundary */
+        MmLargeStackSize = PAGE_ROUND_UP(MmLargeStackSize);
+        
+        /* Sanity checks */
+        ASSERT(MmLargeStackSize <= KERNEL_LARGE_STACK_SIZE);
+        ASSERT((MmLargeStackSize & (PAGE_SIZE - 1)) == 0);
+        
+        /* Make sure it's not too low */
+        if (MmLargeStackSize < KERNEL_STACK_SIZE) MmLargeStackSize = KERNEL_STACK_SIZE;
+    }
+    
     //
     // The large kernel stack is cutomizable, but use default value for now
     //

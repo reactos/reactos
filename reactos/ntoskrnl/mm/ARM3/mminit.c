@@ -232,7 +232,7 @@ ULONG MmSecondaryColorMask;
 //
 // Actual (registry-configurable) size of a GUI thread's stack
 //
-ULONG MmLargeStackSize;
+ULONG MmLargeStackSize = KERNEL_LARGE_STACK_SIZE;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
