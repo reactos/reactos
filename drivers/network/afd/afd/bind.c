@@ -32,20 +32,6 @@ NTSTATUS WarmSocketForBind( PAFD_FCB FCB ) {
                                 FCB->LocalAddress,
                                 &FCB->AddressFile.Handle,
                                 &FCB->AddressFile.Object );
-    if (!NT_SUCCESS(Status))
-        return Status;
-
-    if (FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS)
-    {
-        Status = TdiQueryMaxDatagramLength(FCB->AddressFile.Object,
-                                           &FCB->Recv.Size);
-        if (NT_SUCCESS(Status))
-        {
-            FCB->Recv.Window = ExAllocatePool(PagedPool, FCB->Recv.Size);
-            if (!FCB->Recv.Window)
-                Status = STATUS_NO_MEMORY;
-        }
-    }
 
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
 
@@ -71,16 +57,22 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     FCB->LocalAddress = TaCopyTransportAddress( &BindReq->Address );
 
     if( FCB->LocalAddress )
-	TdiBuildConnectionInfo( &FCB->AddressFrom,
-				FCB->LocalAddress );
-
-    if( FCB->AddressFrom )
 	Status = WarmSocketForBind( FCB );
-    else return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
+    else Status = STATUS_NO_MEMORY;
+
+    if( NT_SUCCESS(Status) )
+	FCB->State = SOCKET_STATE_BOUND;
+    else return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
 
     AFD_DbgPrint(MID_TRACE,("FCB->Flags %x\n", FCB->Flags));
 
-    if( FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS ) {
+    if( FCB->Flags & SGID_CONNECTIONLESS ) {
+	/* This will be the from address for subsequent recvfrom calls */
+	TdiBuildConnectionInfo( &FCB->AddressFrom,
+				FCB->LocalAddress );
+
+	if( !FCB->AddressFrom ) return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp, 0 );
+
 	AFD_DbgPrint(MID_TRACE,("Calling TdiReceiveDatagram\n"));
 
 	Status = TdiReceiveDatagram
@@ -98,10 +90,6 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	if( Status == STATUS_PENDING ) Status = STATUS_SUCCESS;
     }
 
-    if (NT_SUCCESS(Status))
-        FCB->State = SOCKET_STATE_BOUND;
-
-    /* MSAFD relies on us returning the address file handle in the IOSB */
-    return UnlockAndMaybeComplete( FCB, Status, Irp, (ULONG_PTR)FCB->AddressFile.Handle );
+    return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
 }
 

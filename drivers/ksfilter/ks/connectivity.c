@@ -511,18 +511,19 @@ KsPinPropertyHandler(
                 break;
             }
 
-
             Irp->IoStatus.Information = KeyInfo->DataLength + sizeof(WCHAR);
+
 
             if (KeyInfo->DataLength + sizeof(WCHAR) > IoStack->Parameters.DeviceIoControl.OutputBufferLength)
             {
-                Status = STATUS_BUFFER_OVERFLOW;
+                Status = STATUS_MORE_ENTRIES;
                 ExFreePool(KeyInfo);
                 break;
             }
 
             RtlMoveMemory(Irp->UserBuffer, &KeyInfo->Data, KeyInfo->DataLength);
             ((LPWSTR)Irp->UserBuffer)[KeyInfo->DataLength / sizeof(WCHAR)] = L'\0';
+            Irp->IoStatus.Information = KeyInfo->DataLength + sizeof(WCHAR);
             ExFreePool(KeyInfo);
             break;
         case KSPROPERTY_PIN_PROPOSEDATAFORMAT:
@@ -740,7 +741,6 @@ KsHandleSizedListQuery(
     if (IoStack->Parameters.DeviceIoControl.OutputBufferLength == sizeof(KSMULTIPLE_ITEM))
     {
         /* buffer can only hold the length descriptor */
-        Irp->IoStatus.Information = sizeof(KSMULTIPLE_ITEM);
         return STATUS_SUCCESS;
     }
 

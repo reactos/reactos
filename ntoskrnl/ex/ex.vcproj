@@ -14,7 +14,7 @@
 	</Platforms>
 	<ToolFiles>
 		<ToolFile
-			RelativePath="..\..\tools\msc\s_as_mscpp.rules"
+			RelativePath="..\..\..\..\..\_sdk\vscfg\rules\s_as_mscpp.rules"
 		/>
 	</ToolFiles>
 	<Configurations>
@@ -34,7 +34,7 @@
 			/>
 			<Tool
 				Name="s_as_mscpp"
-				sIncPaths=".;$(inc);$(inc)\ndk;$(inc)\ndk\i386;$(s)\ntoskrnl\trap2\i386;$(s)\ntoskrnl\include"
+				sIncPaths="$(inc);$(inc)\ndk;$(inc)\ndk\i386;$(s)\ntoskrnl\include"
 				sPPDefs="__ASM__"
 			/>
 			<Tool
@@ -94,7 +94,7 @@
 			/>
 			<Tool
 				Name="s_as_mscpp"
-				sIncPaths=".;$(inc);$(inc)\ndk;$(inc)\ndk\i386;$(s)\ntoskrnl\trap1\i386;$(s)\ntoskrnl\include"
+				sIncPaths="$(inc);$(inc)\ndk;$(inc)\ndk\i386;$(s)\ntoskrnl\include"
 				sPPDefs="__ASM__"
 			/>
 			<Tool
@@ -301,6 +301,20 @@
 				<File
 					RelativePath=".\i386\interlck_asm.S"
 					>
+					<FileConfiguration
+						Name="d|Win32"
+						>
+						<Tool
+							Name="s_as_mscpp"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="r|Win32"
+						>
+						<Tool
+							Name="s_as_mscpp"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath=".\i386\ioport.S"
@@ -321,7 +335,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="$(objrbe)\ntoskrnl\ex\zw.s"
+					RelativePath=".\i386\zw.S"
 					>
 				</File>
 			</Filter>

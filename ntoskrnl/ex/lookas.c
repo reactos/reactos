@@ -12,9 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, ExpInitLookasideLists)
-#endif
 
 /* GLOBALS *******************************************************************/
 
@@ -47,7 +44,9 @@ ExInitializeSystemLookasideList(IN PGENERAL_LOOKASIDE List,
     List->Depth = 2;
     List->Allocate = ExAllocatePoolWithTag;
     List->Free = ExFreePool;
-    InitializeSListHead(&List->ListHead);
+    List->ListHead.Next.Next = NULL;
+    List->ListHead.Depth = 0;
+    List->ListHead.Sequence = 0;
     List->TotalAllocates = 0;
     List->AllocateHits = 0;
     List->TotalFrees = 0;
@@ -85,9 +84,8 @@ ExInitPoolLookasidePointers(VOID)
     }
 }
 
-VOID
-NTAPI
-ExpInitLookasideLists()
+SECT_INIT_FN(ExpInitLookasideLists)
+VOID NTAPI ExpInitLookasideLists()
 {
     ULONG i;
 

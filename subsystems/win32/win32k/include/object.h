@@ -8,7 +8,13 @@
 #define FIRST_USER_HANDLE 0x0020  /* first possible value for low word of user handle */
 #define LAST_USER_HANDLE  0xffef  /* last possible value for low word of user handle */
 
-#define HANDLEENTRY_INDESTROY 1
+#define USER_HEADER_TO_BODY(ObjectHeader) \
+  ((PVOID)(((PUSER_OBJECT_HEADER)ObjectHeader) + 1))
+
+#define USER_BODY_TO_HEADER(ObjectBody) \
+  ((PUSER_OBJECT_HEADER)(((PUSER_OBJECT_HEADER)ObjectBody) - 1))
+
+
 
 typedef struct _USER_HANDLE_ENTRY
 {
@@ -19,8 +25,7 @@ typedef struct _USER_HANDLE_ENTRY
         PTHREADINFO pti;          // pointer to Win32ThreadInfo
         PPROCESSINFO ppi;         // pointer to W32ProcessInfo
     };
-    unsigned char  type;         /* object type (0 if free) */
-    unsigned char  flags;
+    unsigned short type;         /* object type (0 if free) */
     unsigned short generation;   /* generation counter */
 } USER_HANDLE_ENTRY, * PUSER_HANDLE_ENTRY;
 
@@ -42,31 +47,37 @@ typedef enum _USER_OBJECT_TYPE
   otWindow,
   otMenu,
   otCursorIcon,
-  otSMWP,
+  otDWP,
   otHook,
-  otClipBoardData,
-  otCallProc,
+  otCallProc = 7,
   otAccel,
-  otDDEaccess,
-  otDDEconv,
-  otDDExact,
-  otMonitor,
-  otKBDlayout,
-  otKBDfile,
-  otEvent,
-  otTimer,
-  otInputContext,
-  otHidData,
-  otDeviceInfo,
-  otTouchInput,
-  otGestureInfo
+  otMonitor = 12,
+  otEvent = 15,
+  otTimer
+
 } USER_OBJECT_TYPE;
+
+
+typedef struct _USER_OBJECT_HEADER
+/*
+ * Header for user object
+ */
+{
+//  USER_OBJECT_TYPE Type;
+  LONG RefCount;
+  BOOL destroyed;
+  HANDLE hSelf;
+//  CSHORT Size;
+} USER_OBJECT_HEADER, *PUSER_OBJECT_HEADER;
+
 
 typedef struct _USER_REFERENCE_ENTRY
 {
    SINGLE_LIST_ENTRY Entry;
    PVOID obj;
 } USER_REFERENCE_ENTRY, *PUSER_REFERENCE_ENTRY;
+
+
 
 #include <malloc.h>
 
@@ -97,11 +108,11 @@ extern PUSER_HANDLE_TABLE gHandleTable;
 VOID FASTCALL UserReferenceObject(PVOID obj);
 PVOID FASTCALL UserReferenceObjectByHandle(HANDLE handle, USER_OBJECT_TYPE type);
 BOOL FASTCALL UserDereferenceObject(PVOID obj);
-PVOID FASTCALL UserCreateObject(PUSER_HANDLE_TABLE ht, struct _DESKTOP* pDesktop, HANDLE* h,USER_OBJECT_TYPE type , ULONG size);
+PVOID FASTCALL UserCreateObject(PUSER_HANDLE_TABLE ht, HANDLE* h,USER_OBJECT_TYPE type , ULONG size);
 BOOL FASTCALL UserDeleteObject(HANDLE h, USER_OBJECT_TYPE type );
 PVOID UserGetObject(PUSER_HANDLE_TABLE ht, HANDLE handle, USER_OBJECT_TYPE type );
 HANDLE UserAllocHandle(PUSER_HANDLE_TABLE ht, PVOID object, USER_OBJECT_TYPE type );
-BOOL FASTCALL UserFreeHandle(PUSER_HANDLE_TABLE ht, HANDLE handle );
+BOOL UserFreeHandle(PUSER_HANDLE_TABLE ht, HANDLE handle );
 PVOID UserGetNextHandle(PUSER_HANDLE_TABLE ht, HANDLE* handle, USER_OBJECT_TYPE type );
 PUSER_HANDLE_ENTRY handle_to_entry(PUSER_HANDLE_TABLE ht, HANDLE handle );
 BOOL FASTCALL UserCreateHandleTable(VOID);
@@ -139,6 +150,8 @@ UserDerefObjectCo(PVOID obj)
     ASSERT(obj == UserReferenceEntry->obj);
     UserDereferenceObject(obj);
 }
+
+HANDLE FASTCALL UserObjectToHandle(PVOID obj);
 
 VOID  FASTCALL CreateStockObjects (VOID);
 VOID  FASTCALL CreateSysColorObjects (VOID);

@@ -36,25 +36,16 @@
 #include "wine/unicode.h"
 
 #include "mshtml_private.h"
-#include "htmlevent.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
-
-typedef struct {
-    task_t header;
-    HTMLDocumentObj *doc;
-    BOOL set_download;
-} download_proc_task_t;
 
 static BOOL use_gecko_script(LPCWSTR url)
 {
     static const WCHAR fileW[] = {'f','i','l','e',':'};
     static const WCHAR aboutW[] = {'a','b','o','u','t',':'};
-    static const WCHAR resW[] = {'r','e','s',':'};
 
     return strncmpiW(fileW, url, sizeof(fileW)/sizeof(WCHAR))
-        && strncmpiW(aboutW, url, sizeof(aboutW)/sizeof(WCHAR))
-        && strncmpiW(resW, url, sizeof(resW)/sizeof(WCHAR));
+        && strncmpiW(aboutW, url, sizeof(aboutW)/sizeof(WCHAR));
 }
 
 void set_current_mon(HTMLWindow *This, IMoniker *mon)
@@ -126,8 +117,7 @@ static void set_progress_proc(task_t *_task)
 
 static void set_downloading_proc(task_t *_task)
 {
-    download_proc_task_t *task = (download_proc_task_t*)_task;
-    HTMLDocumentObj *doc = task->doc;
+    HTMLDocumentObj *doc = ((docobj_task_t*)_task)->doc;
     IOleCommandTarget *olecmd;
     HRESULT hres;
 
@@ -139,20 +129,16 @@ static void set_downloading_proc(task_t *_task)
     if(!doc->client)
         return;
 
-    if(task->set_download) {
-        hres = IOleClientSite_QueryInterface(doc->client, &IID_IOleCommandTarget, (void**)&olecmd);
-        if(SUCCEEDED(hres)) {
-            VARIANT var;
+    hres = IOleClientSite_QueryInterface(doc->client, &IID_IOleCommandTarget, (void**)&olecmd);
+    if(SUCCEEDED(hres)) {
+        VARIANT var;
 
-            V_VT(&var) = VT_I4;
-            V_I4(&var) = 1;
+        V_VT(&var) = VT_I4;
+        V_I4(&var) = 1;
 
-            IOleCommandTarget_Exec(olecmd, NULL, OLECMDID_SETDOWNLOADSTATE,
-                    OLECMDEXECOPT_DONTPROMPTUSER, &var, NULL);
-            IOleCommandTarget_Release(olecmd);
-        }
-
-        doc->download_state = 1;
+        IOleCommandTarget_Exec(olecmd, NULL, OLECMDID_SETDOWNLOADSTATE, OLECMDEXECOPT_DONTPROMPTUSER,
+                               &var, NULL);
+        IOleCommandTarget_Release(olecmd);
     }
 
     if(doc->hostui) {
@@ -166,14 +152,13 @@ static void set_downloading_proc(task_t *_task)
     }
 }
 
-static HRESULT set_moniker(HTMLDocument *This, IMoniker *mon, IBindCtx *pibc, BOOL set_download)
+static HRESULT set_moniker(HTMLDocument *This, IMoniker *mon, IBindCtx *pibc)
 {
     nsChannelBSC *bscallback;
     LPOLESTR url = NULL;
     docobj_task_t *task;
-    download_proc_task_t *download_task;
-    nsIWineURI *nsuri;
     HRESULT hres;
+    nsresult nsres;
 
     if(pibc) {
         IUnknown *unk = NULL;
@@ -254,21 +239,7 @@ static HRESULT set_moniker(HTMLDocument *This, IMoniker *mon, IBindCtx *pibc, BO
         }
     }
 
-    hres = create_doc_uri(This->window, url, &nsuri);
-    CoTaskMemFree(url);
-    if(FAILED(hres))
-        return hres;
-
     bscallback = create_channelbsc(mon);
-
-    nsIWineURI_SetChannelBSC(nsuri, bscallback);
-    hres = load_nsuri(This->window, nsuri, LOAD_INITIAL_DOCUMENT_URI);
-    nsIWineURI_SetChannelBSC(nsuri, NULL);
-    if(SUCCEEDED(hres))
-        set_window_bscallback(This->window, bscallback);
-    IUnknown_Release((IUnknown*)bscallback);
-    if(FAILED(hres))
-        return hres;
 
     if(This->doc_obj->frame) {
         task = heap_alloc(sizeof(docobj_task_t));
@@ -276,10 +247,26 @@ static HRESULT set_moniker(HTMLDocument *This, IMoniker *mon, IBindCtx *pibc, BO
         push_task(&task->header, set_progress_proc, This->doc_obj->basedoc.task_magic);
     }
 
-    download_task = heap_alloc(sizeof(download_proc_task_t));
-    download_task->doc = This->doc_obj;
-    download_task->set_download = set_download;
-    push_task(&download_task->header, set_downloading_proc, This->doc_obj->basedoc.task_magic);
+    task = heap_alloc(sizeof(docobj_task_t));
+    task->doc = This->doc_obj;
+    push_task(&task->header, set_downloading_proc, This->doc_obj->basedoc.task_magic);
+
+    if(This->doc_obj->nscontainer) {
+        This->doc_obj->nscontainer->bscallback = bscallback;
+        nsres = nsIWebNavigation_LoadURI(This->doc_obj->nscontainer->navigation, url,
+                LOAD_FLAGS_NONE, NULL, NULL, NULL);
+        This->doc_obj->nscontainer->bscallback = NULL;
+        if(NS_FAILED(nsres)) {
+            WARN("LoadURI failed: %08x\n", nsres);
+            IUnknown_Release((IUnknown*)bscallback);
+            CoTaskMemFree(url);
+            return E_FAIL;
+        }
+    }
+
+    set_window_bscallback(This->window, bscallback);
+    IUnknown_Release((IUnknown*)bscallback);
+    CoTaskMemFree(url);
 
     return S_OK;
 }
@@ -287,11 +274,8 @@ static HRESULT set_moniker(HTMLDocument *This, IMoniker *mon, IBindCtx *pibc, BO
 void set_ready_state(HTMLWindow *window, READYSTATE readystate)
 {
     window->readystate = readystate;
-    if(window->doc_obj && window->doc_obj->basedoc.window == window)
+    if(window->doc_obj->basedoc.window == window)
         call_property_onchanged(&window->doc_obj->basedoc.cp_propnotif, DISPID_READYSTATE);
-    if(window->frame_element)
-        fire_event(window->frame_element->element.node.doc, EVENTID_READYSTATECHANGE,
-                   window->frame_element->element.node.nsnode, NULL);
 }
 
 static HRESULT get_doc_string(HTMLDocumentNode *This, char **str)
@@ -375,7 +359,7 @@ static HRESULT WINAPI PersistMoniker_Load(IPersistMoniker *iface, BOOL fFullyAva
 
     TRACE("(%p)->(%x %p %p %08x)\n", This, fFullyAvailable, pimkName, pibc, grfMode);
 
-    hres = set_moniker(This, pimkName, pibc, TRUE);
+    hres = set_moniker(This, pimkName, pibc);
     if(FAILED(hres))
         return hres;
 
@@ -636,7 +620,7 @@ static HRESULT WINAPI PersistStreamInit_Load(IPersistStreamInit *iface, LPSTREAM
         return hres;
     }
 
-    hres = set_moniker(This, mon, NULL, TRUE);
+    hres = set_moniker(This, mon, NULL);
     IMoniker_Release(mon);
     if(FAILED(hres))
         return hres;
@@ -681,45 +665,8 @@ static HRESULT WINAPI PersistStreamInit_GetSizeMax(IPersistStreamInit *iface,
 static HRESULT WINAPI PersistStreamInit_InitNew(IPersistStreamInit *iface)
 {
     HTMLDocument *This = PERSTRINIT_THIS(iface);
-    IMoniker *mon;
-    HGLOBAL body;
-    LPSTREAM stream;
-    HRESULT hres;
-
-    static const WCHAR about_blankW[] = {'a','b','o','u','t',':','b','l','a','n','k',0};
-    static const WCHAR html_bodyW[] = {'<','H','T','M','L','>','<','/','H','T','M','L','>',0};
-
-    TRACE("(%p)\n", This);
-
-    body = GlobalAlloc(0, sizeof(html_bodyW));
-    if(!body)
-        return E_OUTOFMEMORY;
-    memcpy(body, html_bodyW, sizeof(html_bodyW));
-
-    hres = CreateURLMoniker(NULL, about_blankW, &mon);
-    if(FAILED(hres)) {
-        WARN("CreateURLMoniker failed: %08x\n", hres);
-        GlobalFree(body);
-        return hres;
-    }
-
-    hres = set_moniker(This, mon, NULL, FALSE);
-    IMoniker_Release(mon);
-    if(FAILED(hres)) {
-        GlobalFree(body);
-        return hres;
-    }
-
-    hres = CreateStreamOnHGlobal(body, TRUE, &stream);
-    if(FAILED(hres)) {
-        GlobalFree(body);
-        return hres;
-    }
-
-    hres = channelbsc_load_stream(This->window->bscallback, stream);
-
-    IStream_Release(stream);
-    return hres;
+    FIXME("(%p)\n", This);
+    return E_NOTIMPL;
 }
 
 #undef PERSTRINIT_THIS

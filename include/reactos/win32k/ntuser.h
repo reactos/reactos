@@ -40,13 +40,13 @@ typedef struct _DESKTOPINFO
 {
     PVOID pvDesktopBase;
     PVOID pvDesktopLimit;
-    struct _WND *spwnd;
-    DWORD fsHooks;
-    struct tagHOOK * aphkStart[16];
 
+    HANDLE hKernelHeap;
+    ULONG_PTR HeapLimit;
     HWND hTaskManWindow;
     HWND hProgmanWindow;
     HWND hShellWindow;
+    struct _WND *Wnd;
 
     union
     {
@@ -94,18 +94,12 @@ typedef struct _THRDESKHEAD
 
 typedef struct _PROCDESKHEAD
 {
-  HEAD;
+  HANDLE h;
+  DWORD  cLockObj;  
   DWORD hTaskWow;
   struct _DESKTOP *rpdesk;
   PVOID       pSelf;
 } PROCDESKHEAD, *PPROCDESKHEAD;
-
-typedef struct _PROCMARKHEAD
-{
-  HEAD;
-  ULONG hTaskWow;
-  PPROCESSINFO ppi;
-} PROCMARKHEAD, *PPROCMARKHEAD;
 
 #define UserHMGetHandle(obj) ((obj)->head.h)
 
@@ -775,8 +769,6 @@ typedef struct _USERCONNECT
 //
 #define DCX_USESTYLE     0x00010000
 #define DCX_KEEPCLIPRGN  0x00040000
-#define DCX_KEEPLAYOUT   0x40000000
-#define DCX_PROCESSOWNED 0x80000000
 
 //
 // Non SDK Queue message types.
@@ -1254,22 +1246,22 @@ NtUserCallNextHookEx(
   LPARAM lParam,
   BOOL Ansi);
 
-DWORD_PTR
+DWORD
 NTAPI
 NtUserCallNoParam(
   DWORD Routine);
 
-DWORD_PTR
+DWORD
 NTAPI
 NtUserCallOneParam(
-  DWORD_PTR Param,
+  DWORD Param,
   DWORD Routine);
 
-DWORD_PTR
+DWORD
 NTAPI
 NtUserCallTwoParam(
-  DWORD_PTR Param1,
-  DWORD_PTR Param2,
+  DWORD Param1,
+  DWORD Param2,
   DWORD Routine);
 
 BOOL
@@ -1548,15 +1540,6 @@ NtUserDrawCaptionTemp(
   const PUNICODE_STRING str,
   UINT uFlags);
 
-// Used with NtUserDrawIconEx, last parameter.
-typedef struct _DRAWICONEXDATA
-{
-  HBITMAP hbmMask;
-  HBITMAP hbmColor;
-  int cx;
-  int cy;
-} DRAWICONEXDATA, *PDRAWICONEXDATA;
-
 BOOL
 NTAPI
 NtUserDrawIconEx(
@@ -1569,8 +1552,8 @@ NtUserDrawIconEx(
   UINT istepIfAniCur,
   HBRUSH hbrFlickerFreeDraw,
   UINT diFlags,
-  BOOL bMetaHDC,
-  PVOID pDIXData);
+  DWORD Unknown0,
+  DWORD Unknown1);
 
 DWORD
 NTAPI
@@ -2027,7 +2010,7 @@ enum ThreadStateRoutines
     THREADSTATE_GETINPUTSTATE
 };
 
-DWORD_PTR
+DWORD
 NTAPI
 NtUserGetThreadState(
   DWORD Routine);
@@ -2476,13 +2459,13 @@ NTAPI
 NtUserResolveDesktopForWOW(
   DWORD Unknown0);
 
-BOOL
+DWORD
 NTAPI
 NtUserSBGetParms(
-  HWND hwnd,
-  int fnBar,
-  PSBDATA pSBData,
-  LPSCROLLINFO lpsi);
+  DWORD Unknown0,
+  DWORD Unknown1,
+  DWORD Unknown2,
+  DWORD Unknown3);
 
 BOOL
 NTAPI
@@ -3146,6 +3129,12 @@ NtUserGetMonitorInfo(
   OUT LPMONITORINFO pMonitorInfo);
 
 /* Should be done in usermode */
+BOOL
+NTAPI
+NtUserGetScrollInfo(
+  HWND hwnd,
+  int fnBar,
+  LPSCROLLINFO lpsi);
 
 /* (other FocusedItem values give the position of the focused item) */
 #define NO_SELECTED_ITEM  0xffff

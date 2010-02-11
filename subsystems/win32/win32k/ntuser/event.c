@@ -138,7 +138,7 @@ IntRemoveEvent(PEVENTHOOK pEH)
       RemoveEntryList(&pEH->Chain);
       GlobalEvents->Counts--;
       if (!GlobalEvents->Counts) gpsi->dwInstalledEventHooks = 0;
-      UserDeleteObject(UserHMGetHandle(pEH), otEvent);
+      UserDeleteObject(pEH->head.h, otEvent);
       KeLeaveCriticalRegion();
       return TRUE;
    }
@@ -160,14 +160,14 @@ co_EVENT_CallEvents( DWORD event,
 
    pEH = pEP->pEH;
    
-   Result = co_IntCallEventProc( UserHMGetHandle(pEH),
-                                 event,
-                                 hwnd,
-                                 pEP->idObject,
-                                 pEP->idChild,
-                                (DWORD_PTR)(NtCurrentTeb()->ClientId).UniqueThread,
-                                (DWORD)EngGetTickCount(),
-                                 pEH->Proc);
+   Result = co_IntCallEventProc( pEH->head.h,
+                                       event,
+                                        hwnd,
+                               pEP->idObject,
+                                pEP->idChild,
+ (DWORD)(NtCurrentTeb()->ClientId).UniqueThread,
+                    (DWORD)EngGetTickCount(),
+                                   pEH->Proc);
    return Result;
 }
 
@@ -202,7 +202,7 @@ IntNotifyWinEvent(
         if (pEH->head.pti->pEThread != PsGetCurrentThread())
         { // if all process || all thread || other thread same process
            if (!(pEH->idProcess) || !(pEH->idThread) || 
-               (NtCurrentTeb()->ClientId.UniqueProcess == (PVOID)(DWORD_PTR)pEH->idProcess))
+               (NtCurrentTeb()->ClientId.UniqueProcess == (PVOID)pEH->idProcess))
            {
               Result = IntCallLowLevelEvent( pEH,
                                              Event,
@@ -213,7 +213,7 @@ IntNotifyWinEvent(
         }// if ^skip own thread && ((Pid && CPid == Pid && ^skip own process) || all process)
         else if ( !(pEH->Flags & WINEVENT_SKIPOWNTHREAD) &&
                    ( ((pEH->idProcess &&
-                     NtCurrentTeb()->ClientId.UniqueProcess == (PVOID)(DWORD_PTR)pEH->idProcess) &&
+                     NtCurrentTeb()->ClientId.UniqueProcess == (PVOID)pEH->idProcess) &&
                      !(pEH->Flags & WINEVENT_SKIPOWNPROCESS)) ||
                      !pEH->idProcess ) )
         {
@@ -323,7 +323,7 @@ NtUserSetWinEventHook(
       }
    }
 
-   pEH = UserCreateObject(gHandleTable, NULL, &Handle, otEvent, sizeof(EVENTHOOK));
+   pEH = UserCreateObject(gHandleTable, &Handle, otEvent, sizeof(EVENTHOOK));
    if (pEH)
    {
       InsertTailList(&GlobalEvents->Events, &pEH->Chain);

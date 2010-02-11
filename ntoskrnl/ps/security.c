@@ -631,7 +631,7 @@ PsImpersonateClient(IN PETHREAD Thread,
             if (!Impersonation) return STATUS_INSUFFICIENT_RESOURCES;
 
             /* Update the pointer */
-            OldData = InterlockedCompareExchangePointer((PVOID*)&Thread->
+            OldData = InterlockedCompareExchangePointer(&Thread->
                                                         ImpersonationInfo,
                                                         Impersonation,
                                                         NULL);

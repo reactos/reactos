@@ -16,9 +16,10 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/*
+/* $Id$
+ *
  * PROJECT:         ReactOS user32.dll
- * FILE:            dll/win32/user32/windows/paint.c
+ * FILE:            lib/user32/windows/paint.c
  * PURPOSE:         Input
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:
@@ -37,20 +38,9 @@ static HBRUSH FrameBrushes[13];
 static HBITMAP hHatch;
 const DWORD HatchBitmap[4] = {0x5555AAAA, 0x5555AAAA, 0x5555AAAA, 0x5555AAAA};
 
-BOOL WINAPI MirrorRgn(HWND hwnd, HRGN hrgn);
 BOOL WINAPI PolyPatBlt(HDC,DWORD,PPATRECT,INT,ULONG);
 
 /* FUNCTIONS *****************************************************************/
-
-INT
-WINAPI
-MirrorWindowRect( PWND pWnd, LPRECT lprc)
-{
-  INT Ret = pWnd->rcWindow.right - pWnd->rcWindow.left - lprc->left;
-  lprc->left = pWnd->rcWindow.right - pWnd->rcWindow.left - lprc->right;
-  lprc->right = Ret;
-  return Ret;
-}
 
 VOID
 CreateFrameBrushes(VOID)
@@ -102,24 +92,7 @@ GetUpdateRect(
   LPRECT Rect,
   BOOL Erase)
 {
-  PWND pWnd;
-
-  pWnd = ValidateHwnd(Wnd);
-  if (!pWnd)
-     return FALSE;
-/*
-  if ( pWnd->hrgnUpdate ||
-       pWnd->state & (WNDS_SENDERASEBACKGROUND|WNDS_SENDNCPAINT|WNDS_UPDATEDIRTY|WNDS_PAINTNOTPROCESSED))
-  {*/
-     return NtUserGetUpdateRect(Wnd, Rect, Erase);
-/*  }
-
-  if (Rect)
-  { // Did the Rgn update? No! Back set and shutup!
-     Rect->left = Rect->right = Rect->top = Rect->bottom = 0;
-  }
-  return FALSE;  // msdn: "If there is no update region, the return value is zero."
-*/
+  return NtUserGetUpdateRect(Wnd, Rect, Erase);
 }
 
 
@@ -133,25 +106,7 @@ GetUpdateRgn(
   HRGN hRgn,
   BOOL bErase)
 {
-  PWND pWnd;
-
-  if (!hRgn)
-  {
-     SetLastError(ERROR_INVALID_HANDLE);
-     return ERROR;
-  }
-
-  pWnd = ValidateHwnd(hWnd);
-  if (!pWnd)
-     return ERROR;
-/*
-  if ( pWnd->hrgnUpdate ||
-       pWnd->state & (WNDS_SENDERASEBACKGROUND|WNDS_SENDNCPAINT|WNDS_UPDATEDIRTY|WNDS_PAINTNOTPROCESSED))
-  {*/
-     return NtUserGetUpdateRgn(hWnd, hRgn, bErase);
-/*  }
-  SetRectRgn(hRgn, 0, 0, 0, 0);
-  return NULLREGION;*/
+  return NtUserGetUpdateRgn(hWnd, hRgn, bErase);
 }
 
 
@@ -159,14 +114,8 @@ GetUpdateRgn(
  * @implemented
  */
 BOOL WINAPI
-ScrollDC(
-   HDC hDC,
-   int dx,
-   int dy,
-   CONST RECT *lprcScroll,
-   CONST RECT *lprcClip,
-   HRGN hrgnUpdate,
-   LPRECT lprcUpdate)
+ScrollDC(HDC hDC, int dx, int dy, CONST RECT *lprcScroll, CONST RECT *lprcClip,
+   HRGN hrgnUpdate, LPRECT lprcUpdate)
 {
    if (hDC == NULL) return FALSE;
 
@@ -178,13 +127,8 @@ ScrollDC(
       return TRUE;
    }
 
-   return NtUserScrollDC( hDC,
-                          dx,
-                          dy,
-                          lprcScroll,
-                          lprcClip,
-                          hrgnUpdate,
-                          lprcUpdate);
+   return NtUserScrollDC(hDC, dx, dy, lprcScroll, lprcClip, hrgnUpdate,
+      lprcUpdate);
 }
 
 /*
@@ -205,13 +149,7 @@ SetWindowRgn(
    Hook = BeginIfHookedUserApiHook();
 
    /* Bypass SEH and go direct. */
-   if (!Hook)
-   {
-      Ret = NtUserSetWindowRgn(hWnd, hRgn, bRedraw);
-      if (hRgn && Ret)
-          DeleteObject(hRgn);
-      return Ret;
-   }
+   if (!Hook) return (int)NtUserSetWindowRgn(hWnd, hRgn, bRedraw);
 
    _SEH2_TRY
    {
@@ -235,19 +173,24 @@ WINAPI
 UpdateWindow(
   HWND hWnd)
 {
-  PWND pWnd = ValidateHwnd(hWnd);
-
-  if (!pWnd)
-     return FALSE;
-/*
-  if ( pWnd->hrgnUpdate ||
-       pWnd->state & WNDS_INTERNALPAINT ||
-       pWnd->spwndChild )
-  {*/
-     return NtUserCallHwndLock(hWnd, HWNDLOCK_ROUTINE_UPDATEWINDOW);
-/*  }
-  return TRUE;*/
+  return RedrawWindow( hWnd, NULL, 0, RDW_UPDATENOW | RDW_ALLCHILDREN );
 }
+
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+ValidateRect(
+  HWND hWnd,
+  CONST RECT *lpRect)
+{
+  /* FIXME: should RDW_NOCHILDREN be included too? Ros used to,
+     but Wine dont so i removed it... */
+  return RedrawWindow(hWnd, lpRect, 0, RDW_VALIDATE);
+}
+
 
 /*
  * @implemented
@@ -258,8 +201,11 @@ ValidateRgn(
   HWND hWnd,
   HRGN hRgn)
 {
-  return NtUserCallHwndParamLock(hWnd, (DWORD)hRgn, TWOPARAM_ROUTINE_VALIDATERGN);
+  /* FIXME: should RDW_NOCHILDREN be included too? Ros used to,
+     but Wine dont so i removed it... */
+  return RedrawWindow( hWnd, NULL, hRgn, RDW_VALIDATE );
 }
+
 
 /*
  * @implemented
@@ -270,32 +216,9 @@ GetWindowRgn(
   HWND hWnd,
   HRGN hRgn)
 {
-  PWND pWnd;
-  int Ret;
-
-  if (!hRgn)
-     return ERROR;
-
-  pWnd = ValidateHwnd(hWnd);
-
-  if (!pWnd) // || !pwnd->hrgnClip || pwnd->state2 & WNDS2_MAXIMIZEDMONITORREGION)
-     return ERROR;
-/*
-  Ret = CombineRgn(hRgn, pWnd->hrgnClip, NULL, RGN_COPY);
-
-  if (!Ret)
-     return ERROR;
-
-  if (pWnd->fnid != FNID_DESKTOP)
-     Ret = OffsetRgn(hRgn, -pWnd->rcWindow.left, -pWnd->rcWindow.top);
-
-  if (pWnd->ExStyle & WS_EX_LAYOUTRTL)
-     MirrorRgn(hWnd, hRgn);
-*/
-  Ret = (int)NtUserCallTwoParam((DWORD_PTR)hWnd, (DWORD_PTR)hRgn, TWOPARAM_ROUTINE_GETWINDOWRGN);
-
-  return Ret;
+  return (int)NtUserCallTwoParam((DWORD)hWnd, (DWORD)hRgn, TWOPARAM_ROUTINE_GETWINDOWRGN);
 }
+
 
 /*
  * @implemented
@@ -306,31 +229,7 @@ GetWindowRgnBox(
     HWND hWnd,
     LPRECT lprc)
 {
-  PWND pWnd;
-  int Ret;
-
-  if (!lprc)
-     return ERROR;
-
-  pWnd = ValidateHwnd(hWnd);
-
-  if (!pWnd) // || !pwnd->hrgnClip || pwnd->state2 & WNDS2_MAXIMIZEDMONITORREGION)
-     return ERROR;
-/*
-  Ret = GetRgnBox(pWnd->hrgnClip, lprc);
-
-  if (!Ret)
-     return ERROR;
-
-  if (pWnd->fnid != FNID_DESKTOP)
-     Ret = OffsetRect(lprc, -pWnd->rcWindow.left, -pWnd->rcWindow.top);
-
-  if (pWnd->ExStyle & WS_EX_LAYOUTRTL)
-     MirrorWindowRect(pWnd, lprc);
-*/
-  Ret = (int)NtUserCallTwoParam((DWORD_PTR)hWnd, (DWORD_PTR)lprc, TWOPARAM_ROUTINE_GETWINDOWRGNBOX);
-
-  return Ret;
+  return (int)NtUserCallTwoParam((DWORD)hWnd, (DWORD)lprc, TWOPARAM_ROUTINE_GETWINDOWRGNBOX);
 }
 
 

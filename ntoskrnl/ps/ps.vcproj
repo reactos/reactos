@@ -189,6 +189,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="3"
+						AssemblerOutput="4"
 					/>
 				</FileConfiguration>
 			</File>

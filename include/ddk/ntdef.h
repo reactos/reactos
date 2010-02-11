@@ -156,7 +156,7 @@ typedef unsigned long POINTER_64; // FIXME! HACK!!!
 // Returns the byte offset of the specified structure's member
 //
 #ifndef __GNUC__
-#define FIELD_OFFSET(Type, Field) ((LONG)(LONG_PTR)&(((Type*) 0)->Field))
+#define FIELD_OFFSET(Type, Field) ((size_t)&(((Type*)0)->Field))
 #else
 #define FIELD_OFFSET(Type, Field) __builtin_offsetof(Type, Field)
 #endif
@@ -173,8 +173,10 @@ typedef unsigned long POINTER_64; // FIXME! HACK!!!
 //
 // Calling Conventions
 //
-#ifndef FASTCALL
-#define FASTCALL _FASTCALL
+#if defined(_M_IX86)
+#define FASTCALL __fastcall
+#else
+#define FASTCALL
 #endif
 
 #define NTAPI __stdcall
@@ -190,13 +192,9 @@ typedef unsigned long POINTER_64; // FIXME! HACK!!!
 //
 
 // Done the same way as in windef.h for now
-#ifndef DECLSPEC_IMPORT
 #define DECLSPEC_IMPORT __declspec(dllimport)
-#endif
-
-#ifndef DECLSPEC_NORETURN
 #define DECLSPEC_NORETURN __declspec(noreturn)
-#endif
+
 
 #ifndef DECLSPEC_ADDRSAFE
 #if (_MSC_VER >= 1200) && (defined(_M_ALPHA) || defined(_M_AXP64))

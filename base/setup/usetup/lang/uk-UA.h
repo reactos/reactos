@@ -1,8 +1,3 @@
-/*
- *      translated by Artem Reznikov, Igor Paliychuk, 2010
- *      http://www.reactos.org/uk/
- */ 
-
 #ifndef LANG_UK_UA_H__
 #define LANG_UK_UA_H__
 
@@ -18,7 +13,7 @@ static MUI_ENTRY ukUALanguagePageEntries[] =
     {
         4,
         3,
-        " Встановлення ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -30,26 +25,26 @@ static MUI_ENTRY ukUALanguagePageEntries[] =
     {
         8,
         10,
-        "\x07  Будь-ласка, виберiть мову, яка буде використана пiд час встановлення.",
+        "\x07  Please choose the language used for the installation process.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   i натиснiть ENTER.",
+        "   Then press ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Ця мова буде використовуватись по замовчуванню у встановленiй системi.",
+        "\x07  This Language will be the default language for the final system.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Продовжити  F3 = Вийти",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        "   ENTER=Продовжити  F3=Вихiд",
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -64,55 +59,55 @@ static MUI_ENTRY ukUAWelcomePageEntries[] =
     {
         4,
         3,
-        " Встановлення ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Ласкаво просимо до програми встановлення ReactOS",
+        "Ласкаво просимо до програми установки ReactOS",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
         11,
-        "На цьому етапi встановлення вiдбудеться копiювання ReactOS на Ваш",
+        "Ця частина установки копiює операцiйну систему ReactOS у Ваш",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "комп'ютер i пiдготовка до другого етапу встановлення.",
+        "комп'ютер i готує другу частину установки.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07  Натиснiть ENTER щоб встановити ReactOS.",
+        "\x07  Натиснiть <ENTER> щоб устанити ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Натиснiть R для оновлення ReactOS.",
+        "\x07  Натиснiть <R> щоб вiдновити ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Натиснiть L для перегляду лiцензiйних умов ReactOS",
+        "\x07  Натиснiть <L> щоб переглянути лiцензiйнi умови ReactOS",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Натиснiть F3 щоб вийти. не встановлюючи ReactOS.",
+        "\x07  Натиснiть <F3> щоб вийти, не встановлюючи ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
-        "Для отримання детальнiшої iнформацiї про ReactOS, будь-ласка вiдвiдайте:",
+        "Для бiльш конкретної iнформацiї про ReactOS, будь ласка вiдвiдайте:",
         TEXT_STYLE_NORMAL
     },
     {
@@ -124,8 +119,8 @@ static MUI_ENTRY ukUAWelcomePageEntries[] =
     {
         0,
         0,
-        "ENTER = Продовжити  R = Вiдновити  L = Лiцензiя  F3 = Вийти",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        "   ENTER=Продовжити  R=Вiдновити F3=Вихiд",
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -140,49 +135,49 @@ static MUI_ENTRY ukUAIntroPageEntries[] =
     {
         4,
         3,
-        " Встановлення ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Встановлювач ReactOS знаходиться в раннiй стадiї розробки i ще не",
+        "ReactOS знаходиться в раннiй стадiї розробки i не пiдтримує всi",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "пiдтримує всi функцiї повноцiнної програми встановлення.",
+        "пiдтримуйте всi функцiї повноцiнного додатку установки.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "Присутнi наступнi обмеження:",
+        "Є наступнi обмеження:",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "- Встановлювач не пiдтримує бiльше нiж один первинний роздiл на диск.",
+        "- Установка можлива тiльки на первинний роздiл диска.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "- Встановлювач не може видалити первинний роздiл з диску",
+        "- При установцi не можна видалити первинний роздiл диска",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "  поки на диску наявний розширений роздiл.",
+        "  поки на диску є розширений роздiл.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         16,
-        "- Встановлювач не може видалити перший розширений роздiл з диску",
+        "- При установцi не можна видалити перший розширений роздiл з диска",
         TEXT_STYLE_NORMAL
     },
     {
@@ -194,32 +189,32 @@ static MUI_ENTRY ukUAIntroPageEntries[] =
     {
         8,
         18,
-        "- Встановлювач пiдтримує лише файлову систему FAT.",
+        "- При установцi пiдтримується тiльки файлова система FAT.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "- Перевiрка файлової системи ще не впроваджена.",
+        "- Перевiрка файлової системи не здiйснюється.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         23,
-        "\x07  Натиснiть ENTER щоб встановити ReactOS.",
+        "\x07  Натиснiть <ENTER> для установки ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
-        "\x07  Натиснiть F3 щоб вийти, не встановлюючи ReactOS.",
+        "\x07  Натиснiть <F3> для виходу з установки ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Продовжити   F3 = Вийти",
-        TEXT_TYPE_STATUS| TEXT_PADDING_BIG
+        "   ENTER=Продовжити  F3=Вихiд",
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -234,7 +229,7 @@ static MUI_ENTRY ukUALicensePageEntries[] =
     {
         4,
         3,
-        " Встановлення ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
@@ -246,19 +241,19 @@ static MUI_ENTRY ukUALicensePageEntries[] =
     {
         8,
         8,
-        "ReactOS лiцензовано вiдповiдно до умов",
+        "ReactOS лiцензована вiдповiдно до Вiдкритої лiцензiйної",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         9,
-        "GNU GPL. Також ReactOS мiстить компоненти, якi лiцензовано",
+        "угоди GNU GPL i мiстить компоненти, якi поширюються",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "за сумiсними лiцензiями: X11, BSD, GNU LGPL.",
+        "за сумiсними лiцензiями: X11, BSD i GNU LGPL.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -276,19 +271,19 @@ static MUI_ENTRY ukUALicensePageEntries[] =
     {
         8,
         13,
-        "первинних лiцензiї.",
+        "первиннiй лiцензiї.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "Дане програмне забезпечення поставляється БЕЗ ГАРАНТIЇ i без обмежень",
+        "Дане програмне забезпечення поставляється БЕЗ ГАРАНТiЇ i без обмежень",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         16,
-        "у використаннi, як за мiсцевим, так i мiжнародним правом",
+        "у використаннi, як в мiсцевому, так i мiжнародному правi",
         TEXT_STYLE_NORMAL
     },
     {
@@ -324,26 +319,26 @@ static MUI_ENTRY ukUALicensePageEntries[] =
     {
         8,
         24,
-        "Це є вiльне програмне забезпечення; див. джерело для перегляду прав.",
+        "Це вiльне програмне забезпечення; див. джерело для перегляду прав.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
-        "Не даються НIЯКI гарантiї; нi гарантiї ТОВАРНОГО СТАНУ, нi ",
+        "НЕМАЄ НiЯКИХ ГАРАНТiЙ; немає гарантiї ТОВАРНОГО СТАНУ або",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         26,
-        "ПРИДАТНОСТI ДЛЯ КОНКРЕТНИХ ЦIЛЕЙ",
+        "ПРИДАТНОСТi ДЛЯ КОНКРЕТНИХ ЦiЛЕЙ",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Повернутись",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        "   ENTER=Повернутися",
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -358,44 +353,44 @@ static MUI_ENTRY ukUADevicePageEntries[] =
     {
         4,
         3,
-        " Встановлення ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "У списку нижче приведенi поточнi параметри пристроїв.",
+        "У списку нижче приведенi пристрої i їх параметри.",
         TEXT_STYLE_NORMAL
     },
     {
-        24,
+        8,
         11,
-        "Комп'ютер:",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
+        "      Комп'ютер:",
+        TEXT_STYLE_NORMAL
     },
     {
-        24,
+        8,
         12,
-        "Екран:",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
+        "          Екран:",
+        TEXT_STYLE_NORMAL,
     },
     {
-        24,
+        8,
         13,
-        "Клавiатура:",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
+        "     Клавiатура:",
+        TEXT_STYLE_NORMAL
     },
     {
-        24,
+        8,
         14,
         "Клав. розкладка:",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
+        TEXT_STYLE_NORMAL
     },
     {
-        24,
+        8,
         16,
-        "Прийняти:",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_RIGHT
+        "    Застосувати:",
+        TEXT_STYLE_NORMAL
     },
     {
         25,
@@ -405,13 +400,13 @@ static MUI_ENTRY ukUADevicePageEntries[] =
     {
         6,
         19,
-        "Ви можете змiнити параметри пристроїв натискаючи клавiшi ВГОРУ i ВНИЗ",
+        "Ви можете змiнити параметри пристроїв натискаючи клавiшi <ВГОРУ> i <ВНИЗ>",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         20,
-        "для видiлення елементу i клавiшу ENTER для вибору iнших варiантiв",
+        "для видiлення елементу i клавiшу <ENTER> для вибору iнших варiантiв",
         TEXT_STYLE_NORMAL
     },
     {
@@ -423,20 +418,20 @@ static MUI_ENTRY ukUADevicePageEntries[] =
     {
         6,
         23,
-        "Коли всi параметри будуть визначенi, виберiть \"Застосувати данi параметри пристроїв\"",
+        "Коли всi параметри визначенi, виберiть \"Застосувати данi параметри пристроїв\"",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         24,
-        "i натиснiть ENTER.",
+        "i натиснiть <ENTER>.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Продовжити   F3 = Вийти",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        "   ENTER=Продовжити  F3=Вихiд",
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -451,56 +446,56 @@ static MUI_ENTRY ukUARepairPageEntries[] =
     {
         4,
         3,
-        " Встановлення ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Встановлювач ReactOS знаходиться в раннiй стадiї розробки i ще не",
+        "ReactOS Setup is in an early development phase. It does not yet",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "пiдтримує всi функцiї повноцiнної програми встановлення.",
+        "support all the functions of a fully usable setup application.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "Функцiї вiдновлення ще не впровадженi.",
+        "The repair functions are not implemented yet.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07  Натиснiть U щоб оновити OS.",
+        "\x07  Press U for Updating OS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Натиснiть R для запуску Консолi Вiдновлення.",
+        "\x07  Press R for the Recovery Console.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Натиснiть ESC для повернення до головної сторiнки.",
+        "\x07  Press ESC to return to the main page.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Натиснiть ENTER щоб перезавантажити комп'ютер.",
+        "\x07  Press ENTER to reboot your computer.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ESC = Головна Сторiнка  U = Оновити  R = Вiдновити  ENTER = Перезавантажити",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        "   ESC = Main page  ENTER = Reboot",
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -514,44 +509,44 @@ static MUI_ENTRY ukUAComputerPageEntries[] =
     {
         4,
         3,
-        " Встановлення ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Тут Ви можете змiнити тип Вашого комп'ютера.",
+        "You want to change the type of computer to be installed.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Натискайте клавiшi ВВЕРХ та ВНИЗ для вибору типу Вашого комп'ютера.",
+        "\x07  Press the UP or DOWN key to select the desired computer type.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   i натиснiть ENTER.",
+        "   Then press ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Натиснiть ESC для повернення до попередньої сторiнки без змiни",
+        "\x07  Press the ESC key to return to the previous page without changing",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   типу комп'ютера.",
+        "   the computer type.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Продовжити   ESC = Скасувати   F3 = Вийти",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        "   ENTER = Continue   ESC = Cancel   F3 = Quit",
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -566,32 +561,32 @@ static MUI_ENTRY ukUAFlushPageEntries[] =
     {
         4,
         3,
-        " Встановлення ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         10,
         6,
-        "Система перевiряє чи всi данi збережено на диск",
+        "The system is now making sure all data is stored on your disk",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "Це може зайняти декiлька хвилин",
+        "This may take a minute",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "Пiсля завершення комп'ютер буде автоматично перезавантажено",
+        "When finished, your computer will reboot automatically",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Очищую кеш",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        "   Flushing cache",
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -606,38 +601,38 @@ static MUI_ENTRY ukUAQuitPageEntries[] =
     {
         4,
         3,
-        " Встановлення ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         10,
         6,
-        "ReactOS не встановлено повнiстю",
+        "ReactOS is not completely installed",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "Витягнiть дискуту з дисководу A: та",
+        "Remove floppy disk from Drive A: and",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "всi CD-ROM з CD-приводiв.",
+        "all CD-ROMs from CD-Drives.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         11,
-        "Натиснiть ENTER щоб перезавантажити комп'ютер.",
+        "Press ENTER to reboot your computer.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Будь-ласка зачекайте ...",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        "   Please wait ...",
+        TEXT_TYPE_STATUS,
     },
     {
         0,
@@ -652,43 +647,43 @@ static MUI_ENTRY ukUADisplayPageEntries[] =
     {
         4,
         3,
-        " Встановлення ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Тут ви можете змiнити тип екрану.",
+        "You want to change the type of display to be installed.",
         TEXT_STYLE_NORMAL
     },
     {   8,
         10,
-         "\x07  Натискайте клавiшi ВВЕРХ та ВНИЗ для вибору потрiбного типу монiтору.",
+         "\x07  Press the UP or DOWN key to select the desired display type.",
          TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   i натиснiть ENTER.",
+        "   Then press ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Натиснiть ESC для повернення до попередньої сторiнки без змiни",
+        "\x07  Press the ESC key to return to the previous page without changing",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   типу монiтора.",
+        "   the display type.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Продовжити   ESC = Скасувати   F3 = Вийти",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        "   ENTER = Continue   ESC = Cancel   F3 = Quit",
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -703,38 +698,38 @@ static MUI_ENTRY ukUASuccessPageEntries[] =
     {
         4,
         3,
-        " Встановлення ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         10,
         6,
-        "Основнi компоненти ReactOS були успiшно встановленi.",
+        "The basic components of ReactOS have been installed successfully.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         8,
-        "Витягнiть дискету з дисководу A: та",
+        "Remove floppy disk from Drive A: and",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         9,
-        "всiх CD-ROM з CD-приводiв.",
+        "all CD-ROMs from CD-Drive.",
         TEXT_STYLE_NORMAL
     },
     {
         10,
         11,
-        "Натиснiть ENTER щоб перезавантажити комп'ютер.",
+        "Press ENTER to reboot your computer.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Перезавантажити комп'ютер",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        "   ENTER = Reboot computer",
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -749,38 +744,38 @@ static MUI_ENTRY ukUABootPageEntries[] =
     {
         4,
         3,
-        " Встановлення ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Встановлювач не може встановити bootloader на жорсткий диск",
+        "Setup cannot install the bootloader on your computers",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "Вашого комп'ютера",
+        "hardisk",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         13,
-        "Будь-ласка вставте вiдформатовану дискету в дивковод A: та",
+        "Please insert a formatted floppy disk in drive A: and",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "натиснiть ENTER.",
+        "press ENTER.",
         TEXT_STYLE_NORMAL,
     },
     {
         0,
         0,
-        "ENTER = Продовжити   F3 = Вийти",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        "   ENTER=Продовжити  F3=Вихiд",
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -796,50 +791,50 @@ static MUI_ENTRY ukUASelectPartitionEntries[] =
     {
         4,
         3,
-        " Встановлення ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Нижче приведений список iснуючих роздiлiв та незайнятого мiсця, де можна",
+        "The list below shows existing partitions and unused disk",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "створити новi роздiли.",
+        "space for new partitions.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "\x07  Натискайте клавiшi ВВЕРХ та ВНИЗ для вибору пункту.",
+        "\x07  Press UP or DOWN to select a list entry.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Натиснiть ENTER щоб встановити ReactOS на вибраний роздiл.",
+        "\x07  Press ENTER to install ReactOS onto the selected partition.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07  Натиснiть C щоб створити новий роздiл.",
+        "\x07  Press C to create a new partition.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Натиснiть D щоб видалити iснуючий роздiл.",
+        "\x07  Press D to delete an existing partition.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Будь-ласка зачекайте...",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        "   Please wait...",
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -854,26 +849,26 @@ static MUI_ENTRY ukUAFormatPartitionEntries[] =
     {
         4,
         3,
-        " Встановлення ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Форматування роздiлу",
+        "Format partition",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         10,
-        "Зараз встановлювач вiдформатує роздiл. Натиснiть ENTER для продовження.",
+        "Setup will now format the partition. Press ENTER to continue.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Продовжити   F3 = Вийти",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        "   ENTER=Продовжити  F3=Вихiд",
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -888,44 +883,44 @@ static MUI_ENTRY ukUAInstallDirectoryEntries[] =
     {
         4,
         3,
-        " Встановлення ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Встановлювач встановить файли ReactOS на вибраний роздiл. Виберiть",
+        "Setup installs ReactOS files onto the selected partition. Choose a",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "директорiю, в яку Ви хочете встановити ReactOS:",
+        "directory where you want ReactOS to be installed:",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         14,
-        "Щоб змiнити директорiю натиснiть BACKSPACE для видалення",
+        "To change the suggested directory, press BACKSPACE to delete",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "символiв пiсля чого введiть назву директорiї для",
+        "characters and then type the directory where you want ReactOS to",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "встановлення ReactOS.",
+        "be installed.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Продовжити   F3 = Вийти",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        "   ENTER=Продовжити  F3=Вихiд",
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -940,31 +935,31 @@ static MUI_ENTRY ukUAFileCopyEntries[] =
     {
         4,
         3,
-        " Встановлення ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
-        0,
+        11,
         12,
-        "Будь-ласка, зачекайте поки встановлювач ReactOS копiює файли до",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+        "Please wait while ReactOS Setup copies files to your ReactOS",
+        TEXT_STYLE_NORMAL
     },
     {
-        0,
+        30,
         13,
-        "папки призначення.",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+        "installation folder.",
+        TEXT_STYLE_NORMAL
     },
     {
-        0,
+        20,
         14,
-        "Це може зайняти декiлька хвилин.",
-        TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER
+        "This may take several minutes to complete.",
+        TEXT_STYLE_NORMAL
     },
     {
-        50,
         0,
-        "\xB3 Будь-ласка зачекайте...    ",
+        0,
+        "                                                           \xB3 Please wait...    ",
         TEXT_TYPE_STATUS
     },
     {
@@ -980,38 +975,38 @@ static MUI_ENTRY ukUABootLoaderEntries[] =
     {
         4,
         3,
-        " Встановлення ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Встановлювач встановлює boot loader",
+        "Setup is installing the boot loader",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         12,
-        "Встановити bootloader на жорсткий диск (bootsector).",
+        "Install bootloader on the harddisk (MBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Встановити bootloader на дискету.",
+        "Install bootloader on a floppy disk.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "Не встановлювати bootloader.",
+        "Skip install bootloader.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Продовжити   F3 = Вийти",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        "   ENTER=Продовжити  F3=Вихiд",
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -1026,44 +1021,44 @@ static MUI_ENTRY ukUAKeyboardSettingsEntries[] =
     {
         4,
         3,
-        " Встановлення ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Тут Ви можете змiнити тип клавiатури.",
+        "You want to change the type of keyboard to be installed.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Натискайте клавiшi ВВЕРХ та ВНИЗ для вибору потрiбного типу клавiатури.",
+        "\x07  Press the UP or DOWN key to select the desired keyboard type.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   i натиснiть ENTER.",
+        "   Then press ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Натиснiть ESC для повернення на попередню сторiнку без змiни",
+        "\x07  Press the ESC key to return to the previous page without changing",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   типу клавiатури.",
+        "   the keyboard type.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Продовжити   ESC = Скасувати   F3 = Вийти",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        "   ENTER = Continue   ESC = Cancel   F3 = Quit",
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -1078,44 +1073,44 @@ static MUI_ENTRY ukUALayoutSettingsEntries[] =
     {
         4,
         3,
-        " Встановлення ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Виберiть розкладку, яка буде встановлена яка стандартна.",
+        "You want to change the keyboard layout to be installed.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Натискайте клавiшi ВВЕРХ та ВНИЗ для вибору потрiбної розкладки",
+        "\x07  Press the UP or DOWN key to select the desired keyboard",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "    клавiатури i натиснiть ENTER.",
+        "    layout. Then press ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  Натиснiть ESC для повернення на попередню сторiнку без змiни",
+        "\x07  Press the ESC key to return to the previous page without changing",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "   розкладки клавiатури.",
+        "   the keyboard layout.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Продовжити   ESC = Скасувати   F3 = Вийти",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        "   ENTER = Continue   ESC = Cancel   F3 = Quit",
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -1131,20 +1126,20 @@ static MUI_ENTRY ukUAPrepareCopyEntries[] =
     {
         4,
         3,
-        " Встановлення ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Встановлювач готує Ваш комп'ютер для копiювання файлiв ReactOS. ",
+        "Setup prepares your computer for copying the ReactOS files. ",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Генерую список файлiв...",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        "   Building the file copy list...",
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -1160,38 +1155,38 @@ static MUI_ENTRY ukUASelectFSEntries[] =
     {
         4,
         3,
-        " Встановлення ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         17,
-        "Виберiть файлову систему зi списку нижче.",
+        "Select a file system from the list below.",
         0
     },
     {
         8,
         19,
-        "\x07  Натискайте клавiшi ВВЕРХ та ВНИЗ для вибору файлової системи.",
+        "\x07  Press UP or DOWN to select a file system.",
         0
     },
     {
         8,
         21,
-        "\x07  Натиснiть ENTER щоб вiдформатувати роздiл.",
+        "\x07  Press ENTER to format the partition.",
         0
     },
     {
         8,
         23,
-        "\x07  Натиснiть ESC для вибору iншого роздiлу.",
+        "\x07  Press ESC to select another partition.",
         0
     },
     {
         0,
         0,
-        "ENTER = Продовжити   ESC = Скасувати   F3 = Вийти",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        "   ENTER = Continue   ESC = Cancel   F3 = Quit",
+        TEXT_TYPE_STATUS
     },
 
     {
@@ -1207,38 +1202,38 @@ static MUI_ENTRY ukUADeletePartitionEntries[] =
     {
         4,
         3,
-        " Встановлення ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Ви вибрали видалення роздiлу",
+        "You have chosen to delete the partition",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         18,
-        "\x07  Натиснiть D для видалення роздiлу.",
+        "\x07  Press D to delete the partition.",
         TEXT_STYLE_NORMAL
     },
     {
         11,
         19,
-        "УВАГА: Всi данi на цьому роздiлi будуть втраченi!",
+        "WARNING: All data on this partition will be lost!",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Натиснiть ESC для скасування.",
+        "\x07  Press ESC to cancel.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "D = Видалити Роздiл   ESC = Скасувати   F3 = Вийти",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        "   D = Delete Partition   ESC = Cancel   F3 = Quit",
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -1253,20 +1248,20 @@ static MUI_ENTRY ukUARegistryEntries[] =
     {
         4,
         3,
-        " Встановлення ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Встановлювач оновлює конфiгурацiю системи. ",
+        "Setup is updating the system configuration. ",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Створюю структуру реєстру...",
-        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
+        "   Creating registry hives...",
+        TEXT_TYPE_STATUS
     },
     {
         0,
@@ -1281,214 +1276,214 @@ MUI_ERROR ukUAErrorEntries[] =
 {
     {
         //ERROR_NOT_INSTALLED
-        "ReactOS не був повнiстю встановлений на Ваш\n"
-        "комп'ютер. Якщо ви вийдете з встановлювача зараз,\n"
-        "то Вам буде необхiдно запустити програму встановлення\n"
-        "знову, якщо Ви хочете встановити ReactOS,\n"
+        "ReactOS is not completely installed on your\n"
+        "computer. If you quit Setup now, you will need to\n"
+        "run Setup again to install ReactOS.\n"
         "\n"
-        "  \x07  Натиснiть ENTER щоб продовжити встановлення.\n"
-        "  \x07  Натиснiть F3 для виходу з встановлювача.",
-        "F3 = Вийти  ENTER = Продовжити"
+        "  \x07  Press ENTER to continue Setup.\n"
+        "  \x07  Press F3 to quit Setup.",
+        "F3 = Quit  ENTER = Continue"
     },
     {
         //ERROR_NO_HDD
-        "Не вдалось знайти жорсткий диск.\n",
-        "ENTER = Перезавантажити комп'ютер"
+        "Setup could not find a harddisk.\n",
+        "ENTER = Reboot computer"
     },
     {
         //ERROR_NO_SOURCE_DRIVE
-        "Не вдалось знайти установочний диск.\n",
-        "ENTER = Перезавантажити комп'ютер"
+        "Setup could not find its source drive.\n",
+        "ENTER = Reboot computer"
     },
     {
         //ERROR_LOAD_TXTSETUPSIF
-        "Не вдалось завантажити файл TXTSETUP.SIF.\n",
-        "ENTER = Перезавантажити комп'ютер"
+        "Setup failed to load the file TXTSETUP.SIF.\n",
+        "ENTER = Reboot computer"
     },
     {
         //ERROR_CORRUPT_TXTSETUPSIF
-        "Файл TXTSETUP.SIF пошкоджений.\n",
-        "ENTER = Перезавантажити комп'ютер"
+        "Setup found a corrupt TXTSETUP.SIF.\n",
+        "ENTER = Reboot computer"
     },
     {
         //ERROR_SIGNATURE_TXTSETUPSIF,
-        "Виявлено некоректний пiдпис в TXTSETUP.SIF.\n",
-        "ENTER = Перезавантажити комп'ютер"
+        "Setup found an invalid signature in TXTSETUP.SIF.\n",
+        "ENTER = Reboot computer"
     },
     {
         //ERROR_DRIVE_INFORMATION
-        "Не вдалось отримати данi про системний диск.\n",
-        "ENTER = Перезавантажити комп'ютер"
+        "Setup could not retrieve system drive information.\n",
+        "ENTER = Reboot computer"
     },
     {
         //ERROR_WRITE_BOOT,
-        "Не вдалось встановити завантажувальний код FAT на ситемний роздiл.",
-        "ENTER = Перезавантажити комп'ютер"
+        "Setup failed to install FAT bootcode on the system partition.",
+        "ENTER = Reboot computer"
     },
     {
         //ERROR_LOAD_COMPUTER,
-        "Не вдалось завантажити список типiв комп'ютера.\n",
-        "ENTER = Перезавантажити комп'ютер"
+        "Setup failed to load the computer type list.\n",
+        "ENTER = Reboot computer"
     },
     {
         //ERROR_LOAD_DISPLAY,
-        "Не вдалось завантажити список режимiв екрану.\n",
-        "ENTER = Перезавантажити комп'ютер"
+        "Setup failed to load the display settings list.\n",
+        "ENTER = Reboot computer"
     },
     {
         //ERROR_LOAD_KEYBOARD,
-        "Не вдалось завантажити список типiв клавiатури.\n",
-        "ENTER = Перезавантажити комп'ютер"
+        "Setup failed to load the keyboard type list.\n",
+        "ENTER = Reboot computer"
     },
     {
         //ERROR_LOAD_KBLAYOUT,
-        "Не вдалось завантажити список розкладок клавiатури.\n",
-        "ENTER = Перезавантажити комп'ютер"
+        "Setup failed to load the keyboard layout list.\n",
+        "ENTER = Reboot computer"
     },
     {
         //ERROR_WARN_PARTITION,
-          "Знайдено як мiнiмум один жорсткий диск, що мiстить роздiл,\n"
-          "який не пiдтримується ReactOS!\n"
+          "Setup found that at least one harddisk contains an incompatible\n"
+          "partition table that can not be handled properly!\n"
           "\n"
-          "Створення чи видалення роздiлiв може зруйнувати таблицю роздiлiв.\n"
+          "Creating or deleting partitions can destroy the partition table.\n"
           "\n"
-          "  \x07  Натиснiть F3 для виходу з встановлювача.\n"
-          "  \x07  Натиснiть ENTER щоб продовжити.",
-          "F3= Вийти  ENTER = Продовжити"
+          "  \x07  Press F3 to quit Setup."
+          "  \x07  Press ENTER to continue.",
+          "F3= Quit  ENTER = Continue"
     },
     {
         //ERROR_NEW_PARTITION,
-        "Ви не можете створити новий роздiл на\n"
-        "вже iснуючому роздiлi!\n"
+        "You can not create a new Partition inside\n"
+        "of an already existing Partition!\n"
         "\n"
-        "  * Натиснiть будь-яку клавiшу щоб продовжити.",
+        "  * Press any key to continue.",
         NULL
     },
     {
         //ERROR_DELETE_SPACE,
-        "Не можна видалити нерозмiчену область на диску!\n"
+        "You can not delete unpartitioned disk space!\n"
         "\n"
-        "  * Натиснiть будь-яку клавiшу щоб продовжити.",
+        "  * Press any key to continue.",
         NULL
     },
     {
         //ERROR_INSTALL_BOOTCODE,
-        "Не вдалось встановити завантажувальний код FAT на ситемний роздiл.",
-        "ENTER = Перезавантажити комп'ютер"
+        "Setup failed to install the FAT bootcode on the system partition.",
+        "ENTER = Reboot computer"
     },
     {
         //ERROR_NO_FLOPPY,
-        "Вiдсутня дискета в дисководi A:.",
-        "ENTER = Продовжити"
+        "No disk in drive A:.",
+        "ENTER = Continue"
     },
     {
         //ERROR_UPDATE_KBSETTINGS,
-        "Не вдалось оновити параметри розкладки клавiатури.",
-        "ENTER = Перезавантажити комп'ютер"
+        "Setup failed to update keyboard layout settings.",
+        "ENTER = Reboot computer"
     },
     {
         //ERROR_UPDATE_DISPLAY_SETTINGS,
-        "Не вдалось оновити параметри екрану в реєстрi.",
-        "ENTER = Перезавантажити комп'ютер"
+        "Setup failed to update display registry settings.",
+        "ENTER = Reboot computer"
     },
     {
         //ERROR_IMPORT_HIVE,
-        "Не вдалось iмпортувати файл кущiв реєстру.",
-        "ENTER = Перезавантажити комп'ютер"
+        "Setup failed to import a hive file.",
+        "ENTER = Reboot computer"
     },
     {
         //ERROR_FIND_REGISTRY
-        "Не вдалось знайти файли даних реєстру.",
-        "ENTER = Перезавантажити комп'ютер"
+        "Setup failed to find the registry data files.",
+        "ENTER = Reboot computer"
     },
     {
         //ERROR_CREATE_HIVE,
-        "Не вдалось створити кущi реєстру.",
-        "ENTER = Перезавантажити комп'ютер"
+        "Setup failed to create the registry hives.",
+        "ENTER = Reboot computer"
     },
     {
         //ERROR_INITIALIZE_REGISTRY,
-        "Не вдалось iнiцiалiзувати реєстр.",
-        "ENTER = Перезавантажити комп'ютер"
+        "Setup failed to set the initialize the registry.",
+        "ENTER = Reboot computer"
     },
     {
         //ERROR_INVALID_CABINET_INF,
-        "Cabinet має некоректний inf-файл.\n",
-        "ENTER = Перезавантажити комп'ютер"
+        "Cabinet has no valid inf file.\n",
+        "ENTER = Reboot computer"
     },
     {
         //ERROR_CABINET_MISSING,
-        "Cabinet не знайдено.\n",
-        "ENTER = Перезавантажити комп'ютер"
+        "Cabinet not found.\n",
+        "ENTER = Reboot computer"
     },
     {
         //ERROR_CABINET_SCRIPT,
-        "Cabinet не має установочного сценарiю.\n",
-        "ENTER = Перезавантажити комп'ютер"
+        "Cabinet has no setup script.\n",
+        "ENTER = Reboot computer"
     },
     {
         //ERROR_COPY_QUEUE,
-        "Не вдалось вiдкрити чергу копiювання файлiв.\n",
-        "ENTER = Перезавантажити комп'ютер"
+        "Setup failed to open the copy file queue.\n",
+        "ENTER = Reboot computer"
     },
     {
         //ERROR_CREATE_DIR,
-        "Не вдалось створити директорiї для встановлення.",
-        "ENTER = Перезавантажити комп'ютер"
+        "Setup could not create install directories.",
+        "ENTER = Reboot computer"
     },
     {
         //ERROR_TXTSETUP_SECTION,
-        "Не вдалось знайти секцiю 'Directories'\n"
-        "в файлi TXTSETUP.SIF.\n",
-        "ENTER = Перезавантажити комп'ютер"
+        "Setup failed to find the 'Directories' section\n"
+        "in TXTSETUP.SIF.\n",
+        "ENTER = Reboot computer"
     },
     {
         //ERROR_CABINET_SECTION,
-        "Не вдалось знайти секцiю 'Directories'\n"
-        "в cabinet.\n",
-        "ENTER = Перезавантажити комп'ютер"
+        "Setup failed to find the 'Directories' section\n"
+        "in the cabinet.\n",
+        "ENTER = Reboot computer"
     },
     {
         //ERROR_CREATE_INSTALL_DIR
-        "Не вдалось створити директорiю для встановлння.",
-        "ENTER = Перезавантажити комп'ютер"
+        "Setup could not create the install directory.",
+        "ENTER = Reboot computer"
     },
     {
         //ERROR_FIND_SETUPDATA,
-        "Не вдалось знайти секцiю 'SetupData'\n"
-        "в файлi TXTSETUP.SIF.\n",
-        "ENTER = Перезавантажити комп'ютер"
+        "Setup failed to find the 'SetupData' section\n"
+        "in TXTSETUP.SIF.\n",
+        "ENTER = Reboot computer"
     },
     {
         //ERROR_WRITE_PTABLE,
-        "Не вдалось записати таблицi роздiлiв.\n"
-        "ENTER = Перезавантажити комп'ютер"
+        "Setup failed to write partition tables.\n"
+        "ENTER = Reboot computer"
     },
     {
         //ERROR_ADDING_CODEPAGE,
-        "Не вдалось додати параметри кодування в реєстр.\n"
-        "ENTER = Перезавантажити комп'ютер"
+        "Setup failed to add codepage to registry.\n"
+        "ENTER = Reboot computer"
     },
     {
         //ERROR_UPDATE_LOCALESETTINGS,
-        "Не вдалось встановити локаль системи.\n"
-        "ENTER = Перезавантажити комп'ютер"
+        "Setup could not set the system locale.\n"
+        "ENTER = Reboot computer"
     },
     {
         //ERROR_ADDING_KBLAYOUTS,
-        "Не вдалось додати розкладки клавiатури до реєстру.\n"
-        "ENTER = Перезавантажити комп'ютер"
+        "Setup failed to add keyboard layouts to registry.\n"
+        "ENTER = Reboot computer"
     },
     {
         //ERROR_UPDATE_GEOID,
-        "Не вдалось встановити geo id.\n"
-        "ENTER = Перезавантажити комп'ютер"
+        "Setup could not set the geo id.\n"
+        "ENTER = Reboot computer"
     },
     {
         NULL,
         NULL
     }
 };
+
 
 MUI_PAGE ukUAPages[] =
 {
@@ -1593,103 +1588,103 @@ MUI_PAGE ukUAPages[] =
 MUI_STRING ukUAStrings[] =
 {
     {STRING_PLEASEWAIT,
-     "   Будь-ласка, зачекайте..."},
+     "   Please wait..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Встановити   C = Створити Роздiл   F3 = Вийти"},
+     "   ENTER = Install   C = Create Partition   F3 = Quit"},
     {STRING_INSTALLDELETEPARTITION,
-     "   ENTER = Встановити   D = Видалити Роздiл   F3 = Вийти"},
+     "   ENTER = Install   D = Delete Partition   F3 = Quit"},
     {STRING_PARTITIONSIZE,
-     "Розмiр нового роздiлу:"},
+     "Size of new partition:"},
     {STRING_CHOOSENEWPARTITION,
-     "Ви хочете створити новий роздiл на"},
+     "You have chosen to create a new partition on"},
     {STRING_HDDSIZE,
-    "Будь-ласка, введiть розмiр нового роздiлу в мегабайтах."},
+    "Please enter the size of the new partition in megabytes."},
     {STRING_CREATEPARTITION,
-     "   ENTER = Створити Роздiл   ESC = Скасувати   F3 = Вийти"},
+     "   ENTER = Create Partition   ESC = Cancel   F3 = Quit"},
     {STRING_PARTFORMAT,
-    "Цей роздiл буде вiдформатовано."},
+    "This Partition will be formatted next."},
     {STRING_NONFORMATTEDPART,
-    "Ви вибрали встановлення ReactOS на новий або неформатований роздiл."},
+    "You chose to install ReactOS on a new or unformatted Partition."},
     {STRING_INSTALLONPART,
-    "ReactOS встановлюється на роздiл"},
+    "Setup install ReactOS onto Partition"},
     {STRING_CHECKINGPART,
-    "Встановлювач перевiряє вибраний роздiл."},
+    "Setup is now checking the selected partition."},
     {STRING_QUITCONTINUE,
-    "F3= Вийти  ENTER = Продовжити"},
+    "F3= Quit  ENTER = Continue"},
     {STRING_REBOOTCOMPUTER,
-    "ENTER = Перезавантажити комп'ютер"},
+    "ENTER = Reboot computer"},
     {STRING_TXTSETUPFAILED,
-    "Встановлювач не змiг знайти секцiю '%S' \nв файлi TXTSETUP.SIF.\n"},
+    "Setup failed to find the '%S' section\nin TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "\xB3 Копiювання: %S"},
+     "\xB3 Copying file: %S"},
     {STRING_SETUPCOPYINGFILES,
-     "Встановлювач копiює файли..."},
+     "Setup is copying files..."},
     {STRING_REGHIVEUPDATE,
-    "   Оновлення кущiв реєстру..."},
+    "   Updating registry hives..."},
     {STRING_IMPORTFILE,
-    "   Iмпортування %S..."},
+    "   Importing %S..."},
     {STRING_DISPLAYETTINGSUPDATE,
-    "   Оновлення параметрiв екрану в реєстрi..."},
+    "   Updating display registry settings..."},
     {STRING_LOCALESETTINGSUPDATE,
-    "   Оновлення параметрiв локалi..."},
+    "   Updating locale settings..."},
     {STRING_KEYBOARDSETTINGSUPDATE,
-    "   Оновлення параметрiв розкладки клавiатури..."},
+    "   Updating keyboard layout settings..."},
     {STRING_CODEPAGEINFOUPDATE,
-    "   Додавання даних про кодову сторiнку в реєстр..."},
+    "   Adding codepage information to registry..."},
     {STRING_DONE,
-    "   Готово..."},
+    "   Done..."},
     {STRING_REBOOTCOMPUTER2,
-    "   ENTER = Перезавантажити комп'ютер"},
+    "   ENTER = Reboot computer"},
     {STRING_CONSOLEFAIL1,
-    "Не вдалось вiдкрити консоль\n\n"},
+    "Unable to open the console\n\n"},
     {STRING_CONSOLEFAIL2,
-    "Найбiльш ймовiрна причина цього -  використання USB клавiатури\n"},
+    "The most common cause of this is using an USB keyboard\n"},
     {STRING_CONSOLEFAIL3,
-    "USB клавiатури ще не пiдтримуються повнiстю\n"},
+    "USB keyboards are not fully supported yet\n"},
     {STRING_FORMATTINGDISK,
-    "Встановлювач форматує ваш диск"},
+    "Setup is formatting your disk"},
     {STRING_CHECKINGDISK,
-    "Встановлювач перевiряє ваш диск"},
+    "Setup is checking your disk"},
     {STRING_FORMATDISK1,
-    " Форматувати роздiл в файловiй системi %S (швидке форматування) "},
+    " Format partition as %S file system (quick format) "},
     {STRING_FORMATDISK2,
-    " Форматувати роздiл в файловiй системi %S  "},
+    " Format partition as %S file system "},
     {STRING_KEEPFORMAT,
-    " Залишити iснуючу файлову систему (без змiн) "},
+    " Keep current file system (no changes) "},
     {STRING_HDINFOPARTCREATE,
-    "%I64u %s  Жорсткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) on %wZ."},
+    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ."},
     {STRING_HDDINFOUNK1,
-    "%I64u %s  Жорсткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu)."},
+    "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
     {STRING_HDDINFOUNK2,
     "   %c%c  Type %lu    %I64u %s"},
     {STRING_HDINFOPARTDELETE,
-    "на %I64u %s  Жорсткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) on %wZ."},
+    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ."},
     {STRING_HDDINFOUNK3,
-    "на %I64u %s  Жорсткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu)."},
+    "on %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
     {STRING_HDINFOPARTZEROED,
-    "Жорсткий диск %lu (%I64u %s), Порт=%hu, Шина=%hu, Id=%hu (%wZ)."},
+    "Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK4,
     "%c%c  Type %lu    %I64u %s"},
     {STRING_HDINFOPARTEXISTS,
-    "на Жорсткому диску %lu (%I64u %s), Порт=%hu, Шина=%hu, Id=%hu (%wZ)."},
+    "on Harddisk %lu (%I64u %s), Port=%hu, Bus=%hu, Id=%hu (%wZ)."},
     {STRING_HDDINFOUNK5,
     "%c%c  Type %-3u                         %6lu %s"},
     {STRING_HDINFOPARTSELECT,
-    "%6lu %s  Жорсткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu) on %S"},
+    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %S"},
     {STRING_HDDINFOUNK6,
-    "%6lu %s  Жорсткий диск %lu  (Порт=%hu, Шина=%hu, Id=%hu)"},
+    "%6lu %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)"},
     {STRING_NEWPARTITION,
-    "Встановлювач створив новий роздiл на"},
+    "Setup created a new partition on"},
     {STRING_UNPSPACE,
-    "    Нерозмiчена область              %6lu %s"},
+    "    Unpartitioned space              %6lu %s"},
     {STRING_MAXSIZE,
-    "MB (макс. %lu MB)"},
+    "MB (max. %lu MB)"},
     {STRING_UNFORMATTED,
-    "Новий (Неформатований)"},
+    "New (Unformatted)"},
     {STRING_FORMATUNUSED,
-    "Не використано"},
+    "Unused"},
     {STRING_FORMATUNKNOWN,
-    "Невiдомо"},
+    "Unknown"},
     {STRING_KB,
     "KB"},
     {STRING_MB,
@@ -1697,8 +1692,8 @@ MUI_STRING ukUAStrings[] =
     {STRING_GB,
     "GB"},
     {STRING_ADDKBLAYOUTS,
-    "Додавання розкладок клавiатури"},
+    "Adding keyboard layouts"},
     {0, 0}
 };
 
-#endif 
+#endif

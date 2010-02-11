@@ -29,7 +29,6 @@ typedef struct _MENU_ITEM
 
 typedef struct _MENU_OBJECT
 {
-  PROCDESKHEAD head;
   PEPROCESS Process;
   LIST_ENTRY ListEntry;
   PMENU_ITEM MenuItemList;

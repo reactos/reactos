@@ -43,7 +43,6 @@ extern int rectSel_dest[4];
 extern HWND hSelection;
 extern HWND hImageArea;
 extern HBITMAP hSelBm;
-extern HBITMAP hSelMask;
 
 extern int palColors[28];
 
@@ -54,7 +53,6 @@ extern HWND hStatusBar;
 extern HWND hScrollbox;
 extern HWND hMainWnd;
 extern HWND hPalWin;
-extern HWND hToolBoxContainer;
 extern HWND hToolSettings;
 extern HWND hTrackbarZoom;
 extern CHOOSECOLOR choosecolor;

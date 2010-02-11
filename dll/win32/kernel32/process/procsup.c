@@ -1177,7 +1177,7 @@ GetAppName:
                              hSection,
                              hDebug,
                              NULL);
-    if (!NT_SUCCESS(Status))
+    if(!NT_SUCCESS(Status))
     {
         DPRINT1("Unable to create process, status 0x%x\n", Status);
         SetLastErrorByStatus(Status);

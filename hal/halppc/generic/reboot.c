@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/hal/x86/reboot.c
  * PURPOSE:         Reboot functions.
- * PROGRAMMER:      Eric Kohl
+ * PROGRAMMER:      Eric Kohl (ekohl@abo.rhein-zeitung.de)
  * UPDATE HISTORY:
  *                  Created 11/10/99
  */

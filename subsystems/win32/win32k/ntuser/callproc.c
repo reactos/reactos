@@ -20,30 +20,35 @@ WNDPROC
 GetCallProcHandle(IN PCALLPROCDATA CallProc)
 {
     /* FIXME - check for 64 bit architectures... */
-    return (WNDPROC)((ULONG_PTR)UserHMGetHandle(CallProc) | 0xFFFF0000);
+    return (WNDPROC)((ULONG_PTR)UserObjectToHandle(CallProc) | 0xFFFF0000);
 }
 
 VOID
 DestroyCallProc(IN PDESKTOPINFO Desktop,
                 IN OUT PCALLPROCDATA CallProc)
 {
-    UserDeleteObject(UserHMGetHandle(CallProc), otCallProc);
+    /* FIXME - use new object manager! */
+    HANDLE Handle = UserObjectToHandle(CallProc);
+
+    UserDeleteObject(Handle,
+                    otCallProc);
 }
 
 PCALLPROCDATA
-CloneCallProc(IN PDESKTOP Desktop,
+CloneCallProc(IN PDESKTOPINFO Desktop,
               IN PCALLPROCDATA CallProc)
 {
     PCALLPROCDATA NewCallProc;
     HANDLE Handle;
 
+    /* FIXME - use new object manager! */
     NewCallProc = (PCALLPROCDATA)UserCreateObject(gHandleTable,
-                                             Desktop,
                                              &Handle,
                                              otCallProc,
                                              sizeof(CALLPROCDATA));
     if (NewCallProc != NULL)
     {
+        NewCallProc->head.h = Handle;
         NewCallProc->pfnClientPrevious = CallProc->pfnClientPrevious;
         NewCallProc->wType = CallProc->wType;
         NewCallProc->spcpdNext = NULL;
@@ -53,7 +58,7 @@ CloneCallProc(IN PDESKTOP Desktop,
 }
 
 PCALLPROCDATA
-CreateCallProc(IN PDESKTOP Desktop,
+CreateCallProc(IN PDESKTOPINFO Desktop,
                IN WNDPROC WndProc,
                IN BOOL Unicode,
                IN PPROCESSINFO pi)
@@ -61,13 +66,14 @@ CreateCallProc(IN PDESKTOP Desktop,
     PCALLPROCDATA NewCallProc;
     HANDLE Handle;
 
+    /* FIXME - use new object manager! */
     NewCallProc = (PCALLPROCDATA)UserCreateObject(gHandleTable,
-                                             Desktop,
                                              &Handle,
                                              otCallProc,
                                              sizeof(CALLPROCDATA));
     if (NewCallProc != NULL)
     {
+        NewCallProc->head.h = Handle;
         NewCallProc->pfnClientPrevious = WndProc;
         NewCallProc->wType |= Unicode ? UserGetCPDA2U : UserGetCPDU2A ;
         NewCallProc->spcpdNext = NULL;
@@ -84,6 +90,7 @@ UserGetCallProcInfo(IN HANDLE hCallProc,
 
     /* NOTE: Accessing the WNDPROC_INFO structure may raise an exception! */
 
+    /* FIXME - use new object manager! */
     CallProc = UserGetObject(gHandleTable,
                              hCallProc,
                              otCallProc);

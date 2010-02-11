@@ -5170,7 +5170,7 @@ RtlUnicodeToMultiByteN(
     OUT PCHAR MultiByteString,
     IN ULONG MaxBytesInMultiByteString,
     OUT PULONG BytesInMultiByteString OPTIONAL,
-    IN PWCH UnicodeString,
+    IN PCWCH UnicodeString,
     IN ULONG BytesInUnicodeString
 );
 
@@ -5181,7 +5181,7 @@ RtlOemToUnicodeN(
     OUT PWSTR UnicodeString,
     IN ULONG MaxBytesInUnicodeString,
     OUT PULONG BytesInUnicodeString OPTIONAL,
-    IN PCH OemString,
+    IN PCCH OemString,
     IN ULONG BytesInOemString
 );
 

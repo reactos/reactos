@@ -85,12 +85,14 @@ PsGetThreadTeb(
     IN PETHREAD Thread
 );
 
+#if 0	// defined in ntddk.h
 NTKERNELAPI
 HANDLE
 NTAPI
 PsGetThreadId(
     IN PETHREAD Thread
 );
+#endif
 
 NTKERNELAPI
 BOOLEAN
@@ -173,6 +175,7 @@ PsGetProcessInheritedFromUniqueProcessId(
 //
 // Quota Functions
 //
+#if 0	// defined in ntifs.h
 NTKERNELAPI
 VOID
 NTAPI
@@ -181,6 +184,7 @@ PsChargePoolQuota(
     IN POOL_TYPE PoolType,
     IN SIZE_T    Amount
 );
+#endif
 
 NTKERNELAPI
 NTSTATUS
@@ -198,6 +202,7 @@ PsChargeProcessPagedPoolQuota(
     IN SIZE_T    Amount
 );
 
+#if 0	// defined in ntifs.h
 NTKERNELAPI
 NTSTATUS
 NTAPI
@@ -206,7 +211,9 @@ PsChargeProcessPoolQuota(
     IN POOL_TYPE PoolType,
     IN SIZE_T    Amount
 );
+#endif
 
+#if 0	// defined in ntifs.h
 NTKERNELAPI
 VOID
 NTAPI
@@ -215,6 +222,7 @@ PsReturnPoolQuota(
     IN POOL_TYPE PoolType,
     IN SIZE_T    Amount
 );
+#endif
 
 NTKERNELAPI
 VOID

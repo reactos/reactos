@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            hal/halx86/mp/mpsirql.c
+ * FILE:            ntoskrnl/hal/x86/mpsirql.c
  * PURPOSE:         Implements IRQLs for multiprocessor systems
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
@@ -292,7 +292,7 @@ KeRaiseIrqlToSynchLevel (VOID)
 
 BOOLEAN NTAPI
 HalBeginSystemInterrupt (KIRQL Irql,
-			 UCHAR Vector,
+			 ULONG Vector,
 			 PKIRQL OldIrql)
 {
   ULONG Flags;
@@ -319,7 +319,7 @@ HalBeginSystemInterrupt (KIRQL Irql,
 
 VOID NTAPI
 HalEndSystemInterrupt (KIRQL Irql,
-                       IN PKTRAP_FRAME TrapFrame)
+		       ULONG Unknown2)
 /*
  * FUNCTION: Finish a system interrupt and restore the specified irq level.
  */
@@ -338,8 +338,8 @@ HalEndSystemInterrupt (KIRQL Irql,
   
 VOID
 NTAPI
-HalDisableSystemInterrupt(UCHAR Vector,
-			  KIRQL Irql)
+HalDisableSystemInterrupt(ULONG Vector,
+			              KIRQL Irql)
 {
   ULONG irq;
 
@@ -361,7 +361,7 @@ HalDisableSystemInterrupt(UCHAR Vector,
 
 
 BOOLEAN NTAPI
-HalEnableSystemInterrupt (UCHAR Vector,
+HalEnableSystemInterrupt (ULONG Vector,
 			  KIRQL Irql,
 			  KINTERRUPT_MODE InterruptMode)
 {

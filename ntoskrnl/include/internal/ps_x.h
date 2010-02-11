@@ -35,9 +35,10 @@
 #define PspClearProcessFlag(Process, Flag) \
     InterlockedAnd((PLONG)&Process->Flags, ~Flag)
 
+// don't use PETHREAD, it's ambiguous
 FORCEINLINE
 VOID
-PspRunCreateThreadNotifyRoutines(IN PETHREAD CurrentThread,
+PspRunCreateThreadNotifyRoutines(IN ETHREAD *CurrentThread,
                                  IN BOOLEAN Create)
 {
     ULONG i;

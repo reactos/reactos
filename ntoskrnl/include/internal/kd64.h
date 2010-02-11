@@ -528,5 +528,3 @@ extern ULONG KdpNumInternalBreakpoints;
 extern ULONG KdpCurrentSymbolStart, KdpCurrentSymbolEnd;
 extern ULONG TraceDataBuffer[40];
 extern ULONG TraceDataBufferPosition;
-
-_ONCE_END

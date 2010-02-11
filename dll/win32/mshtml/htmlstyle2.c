@@ -212,19 +212,15 @@ static HRESULT WINAPI HTMLStyle2_get_bottom(IHTMLStyle2 *iface, VARIANT *p)
 static HRESULT WINAPI HTMLStyle2_put_right(IHTMLStyle2 *iface, VARIANT v)
 {
     HTMLStyle *This = HTMLSTYLE2_THIS(iface);
-
-    TRACE("(%p)->(%s)\n", This, debugstr_variant(&v));
-
-    return set_nsstyle_attr_var(This->nsstyle, STYLEID_RIGHT, &v, 0);
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI HTMLStyle2_get_right(IHTMLStyle2 *iface, VARIANT *p)
 {
     HTMLStyle *This = HTMLSTYLE2_THIS(iface);
-
-    TRACE("(%p)->(%p)\n", This, p);
-
-    return get_nsstyle_attr_var(This->nsstyle, STYLEID_RIGHT, p, 0);
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI HTMLStyle2_put_pixelBottom(IHTMLStyle2 *iface, LONG v)

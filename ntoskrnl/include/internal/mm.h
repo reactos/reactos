@@ -1762,7 +1762,7 @@ PEPROCESS
 MmGetAddressSpaceOwner(IN PMMSUPPORT AddressSpace)
 {
     if (AddressSpace == MmKernelAddressSpace) return NULL;
-    return CONTAINING_RECORD(AddressSpace, EPROCESS, Vm);
+    return (PEPROCESS)CONTAINING_RECORD(AddressSpace, EPROCESS, Vm);
 }
 
 FORCEINLINE

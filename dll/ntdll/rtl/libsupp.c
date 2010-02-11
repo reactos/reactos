@@ -201,8 +201,8 @@ RtlpCaptureStackLimits(IN ULONG_PTR Ebp,
                        IN ULONG_PTR *StackEnd)
 {
     /* FIXME: Verify */
-    *StackBegin = (ULONG_PTR)NtCurrentTeb()->Tib.StackLimit;
-    *StackEnd = (ULONG_PTR)NtCurrentTeb()->Tib.StackBase;
+    *StackBegin = (ULONG_PTR)NtCurrentTeb()->NtTib.StackLimit;
+    *StackEnd = (ULONG_PTR)NtCurrentTeb()->NtTib.StackBase;
     return TRUE;
 }
 

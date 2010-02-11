@@ -60,7 +60,6 @@ int rectSel_dest[4];
 HWND hSelection;
 HWND hImageArea;
 HBITMAP hSelBm;
-HBITMAP hSelMask;
 
 /* initial palette colors; may be changed by the user during execution */
 int palColors[28] = { 0x000000, 0x464646, 0x787878, 0x300099, 0x241ced, 0x0078ff, 0x0ec2ff,
@@ -77,7 +76,6 @@ HWND hStatusBar;
 HWND hScrollbox;
 HWND hMainWnd;
 HWND hPalWin;
-HWND hToolBoxContainer;
 HWND hToolSettings;
 HWND hTrackbarZoom;
 CHOOSECOLOR choosecolor;
@@ -287,9 +285,6 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     CreateWindowEx(0, _T("STATIC"), _T(""), WS_CHILD | WS_VISIBLE | SS_ETCHEDHORZ, 0, 0, 5000, 2, hwnd, NULL,
                    hThisInstance, NULL);
 
-    hToolBoxContainer =
-        CreateWindowEx(0, _T("WindowsApp"), _T(""), WS_CHILD | WS_VISIBLE, 2, 2, 52, 350, hwnd, NULL,
-                       hThisInstance, NULL);
     /* creating the 16 bitmap radio buttons and setting the bitmap */
 
 
@@ -300,7 +295,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     hToolbar =
         CreateWindowEx(0, TOOLBARCLASSNAME, NULL,
                        WS_CHILD | WS_VISIBLE | CCS_NOPARENTALIGN | CCS_VERT | CCS_NORESIZE | TBSTYLE_TOOLTIPS,
-                       1, 1, 50, 205, hToolBoxContainer, NULL, hThisInstance, NULL);
+                       3, 3, 50, 205, hwnd, NULL, hThisInstance, NULL);
     hImageList = ImageList_Create(16, 16, ILC_COLOR24 | ILC_MASK, 16, 0);
     SendMessage(hToolbar, TB_SETIMAGELIST, 0, (LPARAM) hImageList);
     tempBm = LoadImage(hThisInstance, MAKEINTRESOURCE(IDB_TOOLBARICONS), IMAGE_BITMAP, 256, 16, 0);
@@ -332,8 +327,8 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
 
     /* creating the tool settings child window */
     hToolSettings =
-        CreateWindowEx(0, _T("ToolSettings"), _T(""), WS_CHILD | WS_VISIBLE, 5, 208, 42, 140,
-                       hToolBoxContainer, NULL, hThisInstance, NULL);
+        CreateWindowEx(0, _T("ToolSettings"), _T(""), WS_CHILD | WS_VISIBLE, 7, 210, 42, 140, hwnd, NULL,
+                       hThisInstance, NULL);
     hTrackbarZoom =
         CreateWindowEx(0, TRACKBAR_CLASS, _T(""), WS_CHILD | TBS_VERT | TBS_AUTOTICKS, 1, 1, 40, 64,
                        hToolSettings, NULL, hThisInstance, NULL);

@@ -157,7 +157,6 @@ typedef DWORD (WINAPI *QUERYSPOOLMODE) (HANDLE,DWORD,DWORD);
 typedef DWORD (WINAPI *QUERYREMOTEFONTS) (DWORD,DWORD,DWORD);
 
 extern CLOSEPRINTER fpClosePrinter;
-extern OPENPRINTERW fpOpenPrinterW;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -290,7 +289,6 @@ WINAPI
 GdiGetBitmapBitsSize(BITMAPINFO *lpbmi);
 
 VOID GdiSAPCallback(PLDC pldc);
-HGDIOBJ FASTCALL hGetPEBHandle(HANDLECACHETYPE,COLORREF);
 
 int FASTCALL DocumentEventEx(PVOID,HANDLE,HDC,int,ULONG,PVOID,ULONG,PVOID);
 BOOL FASTCALL EndPagePrinterEx(PVOID,HANDLE);

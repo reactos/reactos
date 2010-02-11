@@ -13,11 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, MmInitializePageOp)
-#endif
-
-
 /* GLOBALS *******************************************************************/
 
 #define PAGEOP_HASH_TABLE_SIZE       (32)
@@ -241,10 +236,8 @@ MmGetPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
    return(PageOp);
 }
 
-VOID
-INIT_FUNCTION
-NTAPI
-MmInitializePageOp(VOID)
+SECT_INIT_FN(MmInitializePageOp)
+VOID NTAPI MmInitializePageOp(VOID)
 {
    memset(MmPageOpHashTable, 0, sizeof(MmPageOpHashTable));
    KeInitializeSpinLock(&MmPageOpHashTableLock);

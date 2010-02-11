@@ -57,7 +57,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ntoskrnl.lib hal.lib"
+				AdditionalDependencies="ntoskrnl.lib hal.lib $(NOINHERIT)"
+				OutputFile="$(OutDir)\$(ProjectName).dll"
 				ModuleDefinitionFile="kdcom.def"
 				GenerateDebugInformation="true"
 				SubSystem="0"
@@ -128,10 +129,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="ntoskrnl.lib hal.lib"
+				AdditionalDependencies="ntoskrnl.lib hal.lib $(NOINHERIT)"
+				OutputFile="$(OutDir)\$(ProjectName).dll"
 				ModuleDefinitionFile="kdcom.def"
 				GenerateDebugInformation="true"
-				SubSystem="0"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				ResourceOnlyDLL="true"

@@ -112,38 +112,6 @@ drawZoomFrame(int mouseX, int mouseY)
     ReleaseDC(hImageArea, hdc);
 }
 
-void
-alignChildrenToMainWindow()
-{
-    int x, y, w, h;
-    RECT clientRect;
-    GetClientRect(hMainWnd, &clientRect);
-
-    if (IsWindowVisible(hToolBoxContainer))
-    {
-        x = 56;
-        w = clientRect.right - 56;
-    }
-    else
-    {
-        x = 0;
-        w = clientRect.right;
-    }
-    if (IsWindowVisible(hPalWin))
-    {
-        y = 49;
-        h = clientRect.bottom - 49;
-    }
-    else
-    {
-        y = 3;
-        h = clientRect.bottom - 3;
-    }
-
-    MoveWindow(hScrollbox, x, y, w, IsWindowVisible(hStatusBar) ? h - 23 : h, TRUE);
-    MoveWindow(hPalWin, x, 9, 255, 32, TRUE);
-}
-
 BOOL drawing;
 
 LRESULT CALLBACK
@@ -211,10 +179,14 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     }
                     break;
                 case 1:
-                    EnableMenuItem(GetMenu(hMainWnd), IDM_EDITUNDO,
-                                   (undoSteps > 0) ? (MF_ENABLED | MF_BYCOMMAND) : (MF_GRAYED | MF_BYCOMMAND));
-                    EnableMenuItem(GetMenu(hMainWnd), IDM_EDITREDO,
-                                   (redoSteps > 0) ? (MF_ENABLED | MF_BYCOMMAND) : (MF_GRAYED | MF_BYCOMMAND));
+                    if (undoSteps > 0)
+                        EnableMenuItem(GetMenu(hMainWnd), IDM_EDITUNDO, MF_ENABLED | MF_BYCOMMAND);
+                    else
+                        EnableMenuItem(GetMenu(hMainWnd), IDM_EDITUNDO, MF_GRAYED | MF_BYCOMMAND);
+                    if (redoSteps > 0)
+                        EnableMenuItem(GetMenu(hMainWnd), IDM_EDITREDO, MF_ENABLED | MF_BYCOMMAND);
+                    else
+                        EnableMenuItem(GetMenu(hMainWnd), IDM_EDITREDO, MF_GRAYED | MF_BYCOMMAND);
                     if (IsWindowVisible(hSelection))
                     {
                         EnableMenuItem(GetMenu(hMainWnd), IDM_EDITCUT, MF_ENABLED | MF_BYCOMMAND);
@@ -247,15 +219,10 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                                   (MF_CHECKED | MF_BYCOMMAND) : (MF_UNCHECKED | MF_BYCOMMAND));
                     break;
             }
-            CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWTOOLBOX,
-                          IsWindowVisible(hToolBoxContainer) ?
-                              (MF_CHECKED | MF_BYCOMMAND) : (MF_UNCHECKED | MF_BYCOMMAND));
-            CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWCOLORPALETTE,
-                          IsWindowVisible(hPalWin) ?
-                              (MF_CHECKED | MF_BYCOMMAND) : (MF_UNCHECKED | MF_BYCOMMAND));
-            CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWSTATUSBAR,
-                          IsWindowVisible(hStatusBar) ?
-                              (MF_CHECKED | MF_BYCOMMAND) : (MF_UNCHECKED | MF_BYCOMMAND));
+            if (IsWindowVisible(hStatusBar))
+                CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWSTATUSBAR, MF_CHECKED | MF_BYCOMMAND);
+            else
+                CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWSTATUSBAR, MF_UNCHECKED | MF_BYCOMMAND);
 
             CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWSHOWGRID,
                           showGrid ? (MF_CHECKED | MF_BYCOMMAND) : (MF_UNCHECKED | MF_BYCOMMAND));
@@ -285,7 +252,8 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 int test[] = { LOWORD(lParam) - 260, LOWORD(lParam) - 140, LOWORD(lParam) - 20 };
                 SendMessage(hStatusBar, WM_SIZE, wParam, lParam);
                 SendMessage(hStatusBar, SB_SETPARTS, 3, (LPARAM)&test);
-                alignChildrenToMainWindow();
+                MoveWindow(hScrollbox, 56, 49, LOWORD(lParam) - 56, HIWORD(lParam) - 72, TRUE);
+                //InvalidateRect(hwnd, NULL, TRUE);
             }
             if (hwnd == hImageArea)
             {
@@ -744,15 +712,18 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     break;
                 case IDM_EDITDELETESELECTION:
                 {
-                    /* remove selection window and already painted content using undo(),
-                    paint Rect for rectangular selections and nothing for freeform selections */
-                    undo();
-                    if (activeTool == 2)
-                    {
-                        newReversible();
-                        Rect(hDrawingDC, rectSel_dest[0], rectSel_dest[1], rectSel_dest[2] + rectSel_dest[0],
-                             rectSel_dest[3] + rectSel_dest[1], bgColor, bgColor, 0, TRUE);
-                    }
+                    /* FIXME: deleting freeform selections unsupported */
+                    RECT selectionRect, areaRect;
+                    long x1, x2, y1, y2;
+
+                    GetWindowRect(hSelection, &selectionRect);
+                    GetWindowRect(hImageArea, &areaRect);
+                    x1 = ((selectionRect.left - areaRect.left) / (zoom / 1000)) + 1;
+                    y1 = ((selectionRect.top - areaRect.top) / (zoom / 1000)) + 1;
+                    x2 = (selectionRect.right - areaRect.left) / (zoom / 1000);
+                    y2 = (selectionRect.bottom - areaRect.top) / (zoom / 1000);
+                    Rect(hDrawingDC, x1, y1, x2, y2, bgColor, bgColor, 0, TRUE);
+                    ShowWindow(hSelection, SW_HIDE);
                     break;
                 }
                 case IDM_EDITSELECTALL:
@@ -842,17 +813,8 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     updateCanvasAndScrollbars();
                     break;
 
-                case IDM_VIEWTOOLBOX:
-                    ShowWindow(hToolBoxContainer, IsWindowVisible(hToolBoxContainer) ? SW_HIDE : SW_SHOW);
-                    alignChildrenToMainWindow();
-                    break;
-                case IDM_VIEWCOLORPALETTE:
-                    ShowWindow(hPalWin, IsWindowVisible(hPalWin) ? SW_HIDE : SW_SHOW);
-                    alignChildrenToMainWindow();
-                    break;
                 case IDM_VIEWSTATUSBAR:
                     ShowWindow(hStatusBar, IsWindowVisible(hStatusBar) ? SW_HIDE : SW_SHOW);
-                    alignChildrenToMainWindow();
                     break;
 
                 case IDM_VIEWSHOWGRID:

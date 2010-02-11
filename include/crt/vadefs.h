@@ -85,9 +85,9 @@ extern "C" {
 #error Please implement me
 #endif
 
-#define _crt_va_start(v,l)	((void)((v) = (va_list)_ADDRESSOF(l) + _INTSIZEOF(l)))
-#define _crt_va_arg(v,l)	(*(l *)(((v) += _INTSIZEOF(l)) - _INTSIZEOF(l)))
-#define _crt_va_end(v)	((void)((v) = (va_list)0))
+#define _crt_va_start(ap,v)  ( ap = (va_list)_ADDRESSOF(v) + _INTSIZEOF(v) )
+#define _crt_va_arg(ap,t)    ( *(t *)((ap += _INTSIZEOF(t)) - _INTSIZEOF(t)) )
+#define _crt_va_end(ap)      ( ap = (va_list)0 )
 #define __va_copy(d,s)	((void)((d) = (s)))
 #endif
 

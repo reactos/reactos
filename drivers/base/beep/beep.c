@@ -4,7 +4,7 @@
  * FILE:            drivers/base/beep/beep.c
  * PURPOSE:         Beep Device Driver
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
- *                  Eric Kohl
+ *                  Eric Kohl (ekohl@rz-online.de)
  */
 
 /* INCLUDES ******************************************************************/

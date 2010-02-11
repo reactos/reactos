@@ -13,10 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, SepInitSecurityIDs)
-#endif
-
 /* GLOBALS ********************************************************************/
 
 SID_IDENTIFIER_AUTHORITY SeNullSidAuthority = {SECURITY_NULL_SID_AUTHORITY};
@@ -90,10 +86,8 @@ FreeInitializedSids(VOID)
     if (SeAnonymousLogonSid) ExFreePool(SeAnonymousLogonSid);
 }
 
-BOOLEAN
-INIT_FUNCTION
-NTAPI
-SepInitSecurityIDs(VOID)
+SECT_INIT_FN(SepInitSecurityIDs)
+BOOLEAN NTAPI SepInitSecurityIDs(VOID)
 {
     ULONG SidLength0;
     ULONG SidLength1;

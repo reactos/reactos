@@ -779,16 +779,6 @@ static UINT msi_load_admin_properties(MSIPACKAGE *package)
     return r;
 }
 
-static void adjust_allusers_property( MSIPACKAGE *package )
-{
-    /* FIXME: this should depend on the user's privileges */
-    if (msi_get_property_int( package, szAllUsers, 0 ) == 2)
-    {
-        TRACE("resetting ALLUSERS property from 2 to 1\n");
-        MSI_SetPropertyW( package, szAllUsers, szOne );
-    }
-}
-
 MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db, LPCWSTR base_url )
 {
     static const WCHAR szLevel[] = { 'U','I','L','e','v','e','l',0 };
@@ -828,8 +818,6 @@ MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db, LPCWSTR base_url )
 
         if (package->WordCount & msidbSumInfoSourceTypeAdminImage)
             msi_load_admin_properties( package );
-
-        adjust_allusers_property( package );
     }
 
     return package;
@@ -845,7 +833,7 @@ MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db, LPCWSTR base_url )
  *        we should read all the tables to memory, then open the
  *        database to read binary streams on demand.
  */ 
-static UINT copy_package_to_temp( LPCWSTR szPackage, LPWSTR filename )
+static LPCWSTR copy_package_to_temp( LPCWSTR szPackage, LPWSTR filename )
 {
     WCHAR path[MAX_PATH];
 
@@ -854,16 +842,16 @@ static UINT copy_package_to_temp( LPCWSTR szPackage, LPWSTR filename )
 
     if( !CopyFileW( szPackage, filename, FALSE ) )
     {
-        UINT error = GetLastError();
-        ERR("failed to copy package %s to %s (%u)\n", debugstr_w(szPackage), debugstr_w(filename), error);
         DeleteFileW( filename );
-        return error;
+        ERR("failed to copy package %s\n", debugstr_w(szPackage) );
+        return szPackage;
     }
 
-    return ERROR_SUCCESS;
+    TRACE("Opening relocated package %s\n", debugstr_w( filename ));
+    return filename;
 }
 
-UINT msi_download_file( LPCWSTR szUrl, LPWSTR filename )
+LPCWSTR msi_download_file( LPCWSTR szUrl, LPWSTR filename )
 {
     LPINTERNET_CACHE_ENTRY_INFOW cache_entry;
     DWORD size = 0;
@@ -879,24 +867,20 @@ UINT msi_download_file( LPCWSTR szUrl, LPWSTR filename )
         cache_entry = HeapAlloc( GetProcessHeap(), 0, size );
         if ( !GetUrlCacheEntryInfoW( szUrl, cache_entry, &size ) )
         {
-            UINT error = GetLastError();
             HeapFree( GetProcessHeap(), 0, cache_entry );
-            return error;
+            return szUrl;
         }
 
         lstrcpyW( filename, cache_entry->lpszLocalFileName );
         HeapFree( GetProcessHeap(), 0, cache_entry );
-        return ERROR_SUCCESS;
+        return filename;
     }
 
     hr = URLDownloadToCacheFileW( NULL, szUrl, filename, MAX_PATH, 0, NULL );
     if ( FAILED(hr) )
-    {
-        WARN("failed to download %s to cache file\n", debugstr_w(szUrl));
-        return ERROR_FUNCTION_FAILED;
-    }
+        return szUrl;
 
-    return ERROR_SUCCESS;
+    return filename;
 }
 
 static UINT msi_get_local_package_name( LPWSTR path )
@@ -941,7 +925,7 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
     MSIHANDLE handle;
     LPWSTR ptr, base_url = NULL;
     UINT r;
-    WCHAR temppath[MAX_PATH], localfile[MAX_PATH], cachefile[MAX_PATH];
+    WCHAR temppath[MAX_PATH], localfile[MAX_PATH];
     LPCWSTR file = szPackage;
 
     TRACE("%s %p\n", debugstr_w(szPackage), pPackage);
@@ -968,15 +952,9 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
     {
         if ( UrlIsW( szPackage, URLIS_URL ) )
         {
-            r = msi_download_file( szPackage, cachefile );
-            if ( r != ERROR_SUCCESS )
-                return r;
-
-            r = copy_package_to_temp( cachefile, temppath );
-            if ( r != ERROR_SUCCESS )
-                return r;
-
-            file = temppath;
+            file = msi_download_file( szPackage, temppath );
+            if ( file != szPackage )
+                file = copy_package_to_temp( file, temppath );
 
             base_url = strdupW( szPackage );
             if ( !base_url )
@@ -986,13 +964,7 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
             if (ptr) *(ptr + 1) = '\0';
         }
         else
-        {
-            r = copy_package_to_temp( szPackage, temppath );
-            if ( r != ERROR_SUCCESS )
-                return r;
-
-            file = temppath;
-        }
+            file = copy_package_to_temp( szPackage, temppath );
 
         r = msi_get_local_package_name( localfile );
         if (r != ERROR_SUCCESS)
@@ -1006,8 +978,6 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
                 debugstr_w(file), debugstr_w(localfile), GetLastError());
             return GetLastError();
         }
-
-        TRACE("Opening relocated package %s\n", debugstr_w( file ));
 
         /* transforms that add binary streams require that we open the database
          * read/write, which is safe because we always create a copy that is thrown

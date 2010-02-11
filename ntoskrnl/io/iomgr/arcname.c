@@ -4,7 +4,7 @@
 * FILE:            ntoskrnl/io/iomgr/arcname.c
 * PURPOSE:         ARC Path Initialization Functions
 * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
-*                  Eric Kohl
+*                  Eric Kohl (ekohl@rz-online.de)
 */
 
 /* INCLUDES ******************************************************************/
@@ -21,10 +21,9 @@ extern PROS_LOADER_PARAMETER_BLOCK KeRosLoaderBlock;
 
 /* FUNCTIONS *****************************************************************/
 
-BOOLEAN
-INIT_FUNCTION
-NTAPI
-IopApplyRosCdromArcHack(IN ULONG i)
+BOOLEAN NTAPI IopApplyRosCdromArcHack(IN ULONG i);
+SECT_INIT_FN(IopApplyRosCdromArcHack)
+BOOLEAN NTAPI IopApplyRosCdromArcHack(IN ULONG i)
 {
     ULONG DeviceNumber = -1;
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -122,10 +121,13 @@ IopApplyRosCdromArcHack(IN ULONG i)
     return FALSE;
 }
 
-BOOLEAN
-INIT_FUNCTION
-NTAPI
-IopGetDiskInformation(IN ULONG i,
+BOOLEAN NTAPI IopGetDiskInformation(IN ULONG i,
+                      OUT PULONG CheckSum,
+                      OUT PULONG Signature,
+                      OUT PULONG PartitionCount,
+                      OUT PDEVICE_OBJECT *DiskDeviceObject);
+SECT_INIT_FN(IopGetDiskInformation)
+BOOLEAN NTAPI IopGetDiskInformation(IN ULONG i,
                       OUT PULONG CheckSum,
                       OUT PULONG Signature,
                       OUT PULONG PartitionCount,
@@ -276,12 +278,9 @@ IopGetDiskInformation(IN ULONG i,
     return TRUE;
 }
 
-BOOLEAN
-INIT_FUNCTION
-NTAPI
-IopAssignArcNamesToCdrom(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
-                         IN PULONG Buffer,
-                         IN ULONG DiskNumber)
+BOOLEAN NTAPI IopAssignArcNamesToCdrom(IN PLOADER_PARAMETER_BLOCK LoaderBlock, IN PULONG Buffer, IN ULONG DiskNumber);
+SECT_INIT_FN(IopAssignArcNamesToCdrom)
+BOOLEAN NTAPI IopAssignArcNamesToCdrom(IN PLOADER_PARAMETER_BLOCK LoaderBlock, IN PULONG Buffer, IN ULONG DiskNumber)
 {
     CHAR ArcBuffer[128];
     ANSI_STRING TempString;
@@ -417,10 +416,8 @@ checkbootcd:
     return FALSE;
 }
 
-NTSTATUS
-INIT_FUNCTION
-NTAPI
-IopCreateArcNames(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+SECT_INIT_FN(IopCreateArcNames)
+NTSTATUS NTAPI IopCreateArcNames(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PCONFIGURATION_INFORMATION ConfigInfo = IoGetConfigurationInformation();
     PARC_DISK_INFORMATION ArcDiskInfo = LoaderBlock->ArcDiskInformation;

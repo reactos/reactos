@@ -57,7 +57,7 @@ typedef struct
 #include "poppack.h"
 
 /* forward declarations... actually in user32\windows\icon.c but useful here */
-HICON CreateCursorIconFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cxDesired, int cyDesired, int xHotspot, int yHotspot, BOOL fIcon);
+HICON ICON_CreateIconFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cxDesired, int cyDesired, int xHotspot, int yHotspot);
 CURSORICONDIRENTRY *CURSORICON_FindBestIcon( CURSORICONDIR *dir, int width, int height, int colors);
 CURSORICONDIRENTRY *CURSORICON_FindBestCursor( CURSORICONDIR *dir, int width, int height, int colors);
 
@@ -328,6 +328,12 @@ LoadCursorIconImage(
    else
    {
       ColorBits = GetDeviceCaps(hScreenDc, BITSPIXEL);
+      /*
+       * FIXME:
+       * Remove this after proper support for alpha icons will be finished.
+       */
+      if (ColorBits > 8)
+         ColorBits = 8;
    }
 
    /* Pick the best size. */
@@ -384,7 +390,7 @@ LoadCursorIconImage(
    /* Make data point to the start of the XOR image data. */
    Data = (PBYTE)SafeIconImage + HeaderSize;
 
-   hIcon = CreateCursorIconFromData(hScreenDc, Data, SafeIconImage, width, height, width/2, height/2, Icon);
+   hIcon = ICON_CreateIconFromData(hScreenDc, Data, SafeIconImage, width, height, width/2, height/2);
    RtlFreeHeap(GetProcessHeap(), 0, SafeIconImage);
    DeleteDC(hScreenDc);
 

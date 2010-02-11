@@ -32,10 +32,6 @@ PDRIVER_OBJECT IopRootDriverObject;
 FAST_MUTEX IopBusTypeGuidListLock;
 PIO_BUS_TYPE_GUID_LIST IopBusTypeGuidList = NULL;
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, PnpInit)
-#pragma alloc_text(INIT, PnpInit2)
-#endif
 
 typedef struct _INVALIDATE_DEVICE_RELATION_DATA
 {
@@ -2112,8 +2108,15 @@ IopInitializePnpServices(IN PDEVICE_NODE DeviceNode)
    return IopTraverseDeviceTree(&Context);
 }
 
-static NTSTATUS INIT_FUNCTION
-IopEnumerateDetectedDevices(
+static NTSTATUS IopEnumerateDetectedDevices(
+   IN HANDLE hBaseKey,
+   IN PUNICODE_STRING RelativePath OPTIONAL,
+   IN HANDLE hRootKey,
+   IN BOOLEAN EnumerateSubKeys,
+   IN PCM_FULL_RESOURCE_DESCRIPTOR ParentBootResources,
+   IN ULONG ParentBootResourcesLength);
+SECT_INIT_FN(IopEnumerateDetectedDevices)
+static NTSTATUS IopEnumerateDetectedDevices(
    IN HANDLE hBaseKey,
    IN PUNICODE_STRING RelativePath OPTIONAL,
    IN HANDLE hRootKey,
@@ -2541,8 +2544,9 @@ cleanup:
    return Status;
 }
 
-static BOOLEAN INIT_FUNCTION
-IopIsAcpiComputer(VOID)
+static BOOLEAN IopIsAcpiComputer(VOID);
+SECT_INIT_FN(IopIsAcpiComputer)
+static BOOLEAN IopIsAcpiComputer(VOID)
 {
 #ifndef ENABLE_ACPI
    return FALSE;
@@ -2681,8 +2685,9 @@ cleanup:
 #endif
 }
 
-static NTSTATUS INIT_FUNCTION
-IopUpdateRootKey(VOID)
+static NTSTATUS IopUpdateRootKey(VOID);
+SECT_INIT_FN(IopUpdateRootKey)
+static NTSTATUS IopUpdateRootKey(VOID)
 {
    UNICODE_STRING EnumU = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Enum");
    UNICODE_STRING RootPathU = RTL_CONSTANT_STRING(L"Root");
@@ -2833,15 +2838,15 @@ IopGetRegistryValue(IN HANDLE Handle,
     return STATUS_SUCCESS;
 }
 
-static NTSTATUS INIT_FUNCTION
-NTAPI
-PnpDriverInitializeEmpty(IN struct _DRIVER_OBJECT *DriverObject, IN PUNICODE_STRING RegistryPath)
+static NTSTATUS NTAPI PnpDriverInitializeEmpty(IN struct _DRIVER_OBJECT *DriverObject, IN PUNICODE_STRING RegistryPath);
+SECT_INIT_FN(PnpDriverInitializeEmpty)
+static NTSTATUS NTAPI PnpDriverInitializeEmpty(IN struct _DRIVER_OBJECT *DriverObject, IN PUNICODE_STRING RegistryPath)
 {
    return STATUS_SUCCESS;
 }
 
-VOID INIT_FUNCTION
-PnpInit(VOID)
+SECT_INIT_FN(PnpInit)
+VOID PnpInit(VOID)
 {
     PDEVICE_OBJECT Pdo;
     NTSTATUS Status;
@@ -3236,7 +3241,7 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
         * always contains the enumerator name followed by \\ */
         Ptr = wcschr(DeviceNode->InstancePath.Buffer, L'\\');
         ASSERT(Ptr);
-        Length = (Ptr - DeviceNode->InstancePath.Buffer) * sizeof(WCHAR);
+        Length = (Ptr - DeviceNode->InstancePath.Buffer + 1) * sizeof(WCHAR);
         Data = DeviceNode->InstancePath.Buffer;
         break;
 

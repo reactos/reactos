@@ -34,7 +34,6 @@ typedef enum {
     EVENTID_MOUSEUP,
     EVENTID_PASTE,
     EVENTID_READYSTATECHANGE,
-    EVENTID_RESIZE,
     EVENTID_SELECTSTART,
     EVENTID_LAST
 } eventid_t;
@@ -48,7 +47,6 @@ HRESULT get_event_handler(event_target_t**,eventid_t,VARIANT*);
 HRESULT attach_event(event_target_t**,HTMLDocument*,BSTR,IDispatch*,VARIANT_BOOL*);
 HRESULT dispatch_event(HTMLDOMNode*,const WCHAR*,VARIANT*,VARIANT_BOOL*);
 HRESULT call_event(HTMLDOMNode*,eventid_t);
-void update_cp_events(HTMLWindow*,cp_static_data_t*);
 
 static inline event_target_t **get_node_event_target(HTMLDOMNode *node)
 {
@@ -73,4 +71,14 @@ static inline HRESULT set_doc_event(HTMLDocument *doc, eventid_t eid, VARIANT *v
 static inline HRESULT get_doc_event(HTMLDocument *doc, eventid_t eid, VARIANT *var)
 {
     return get_node_event(&doc->doc_node->node, eid, var);
+}
+
+static inline HRESULT set_window_event(HTMLWindow *window, eventid_t eid, VARIANT *var)
+{
+    return set_event_handler(&window->event_target, window->doc, eid, var);
+}
+
+static inline HRESULT get_window_event(HTMLWindow *window, eventid_t eid, VARIANT *var)
+{
+    return get_event_handler(&window->event_target, eid, var);
 }

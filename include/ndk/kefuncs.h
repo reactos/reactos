@@ -178,6 +178,7 @@ KiCoprocessorError(
 );
 
 VOID
+NTAPI
 KiUnexpectedInterrupt(
     VOID
 );
@@ -233,6 +234,21 @@ NTAPI
 KeFlushEntireTb(
     IN BOOLEAN Invalid,
     IN BOOLEAN AllProcessors
+);
+
+VOID
+NTAPI
+KeUpdateSystemTime(
+    PKTRAP_FRAME TrapFrame,
+    KIRQL Irql,
+    ULONG Increment
+);
+
+VOID
+NTAPI
+KeUpdateRunTime(
+    PKTRAP_FRAME TrapFrame,
+    KIRQL Irql
 );
 
 VOID

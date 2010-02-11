@@ -33,17 +33,10 @@
         DbgPrintEx(__VA_ARGS__);                            \
     }
 #else
-#define IOTRACE(x, ...)                                     \
-    if (x & IopTraceLevel)                                  \
-    {                                                       \
-        DbgPrint("%s [%.16s] - ",                           \
-                 __FUNCTION__,                              \
-                 PsGetCurrentProcess()->ImageFileName);     \
-        DbgPrint(__VA_ARGS__);                              \
-    }
+#define IOTRACE(x, fmt, ...) if(IopTraceLevel & x) DPRINT2(fmt, __VA_ARGS__)
 #endif
 #else
-#define IOTRACE(x, ...) DPRINT(__VA_ARGS__)
+#define IOTRACE(x, fmt, ...) DPRINT(fmt, __VA_ARGS__)
 #endif
 
 //
@@ -576,8 +569,8 @@ IoDestroyDriverList(
     VOID
 );
 
+SECT_INIT_FND
 NTSTATUS
-INIT_FUNCTION
 IopInitPlugPlayEvents(VOID);
 
 NTSTATUS

@@ -32,6 +32,7 @@
 /* PSDK/NDK Headers */
 #include <windows.h>
 #include <ntndk.h>
+#include <arch/ketypes.h>
 
 /* C Headers */
 #include <stdlib.h>
@@ -47,7 +48,4 @@
 
 #include <wchar.h>
 
-_INTRINSIC(_BitScanReverse)
-_INTRINSIC(_BitScanForward)
-
-#include <dbgp.h>
+#include <dbg.h>

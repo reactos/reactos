@@ -890,9 +890,6 @@ NtInitializeRegistry(IN USHORT Flag)
     /* Always do this as kernel mode */
     if (KeGetPreviousMode() == UserMode) return ZwInitializeRegistry(Flag);
 
-    /* Enough of the system has booted by now */
-    Ki386PerfEnd();
-            
     /* Validate flag */
     if (Flag > CM_BOOT_FLAG_MAX) return STATUS_INVALID_PARAMETER;
 

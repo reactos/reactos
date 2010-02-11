@@ -1187,8 +1187,53 @@ static HRESULT WINAPI IDirectDrawImpl_GetScanLine(IDirectDraw7 *iface, DWORD *Sc
 static HRESULT WINAPI
 IDirectDrawImpl_TestCooperativeLevel(IDirectDraw7 *iface)
 {
-    TRACE("iface %p.\n", iface);
+    IDirectDrawImpl *This = (IDirectDrawImpl *)iface;
+    HRESULT hr;
+    TRACE("(%p)\n", This);
 
+    EnterCriticalSection(&ddraw_cs);
+    /* Description from MSDN:
+     * For fullscreen apps return DDERR_NOEXCLUSIVEMODE if the user switched
+     * away from the app with e.g. alt-tab. Windowed apps receive
+     * DDERR_EXCLUSIVEMODEALREADYSET if another application created a
+     * DirectDraw object in exclusive mode. DDERR_WRONGMODE is returned,
+     * when the video mode has changed
+     */
+
+    hr =  IWineD3DDevice_TestCooperativeLevel(This->wineD3DDevice);
+
+    /* Fix the result value. These values are mapped from their
+     * d3d9 counterpart.
+     */
+    switch(hr)
+    {
+        case WINED3DERR_DEVICELOST:
+            if(This->cooperative_level & DDSCL_EXCLUSIVE)
+            {
+                LeaveCriticalSection(&ddraw_cs);
+                return DDERR_NOEXCLUSIVEMODE;
+            }
+            else
+            {
+                LeaveCriticalSection(&ddraw_cs);
+                return DDERR_EXCLUSIVEMODEALREADYSET;
+            }
+
+        case WINED3DERR_DEVICENOTRESET:
+            LeaveCriticalSection(&ddraw_cs);
+            return DD_OK;
+
+        case WINED3D_OK:
+            LeaveCriticalSection(&ddraw_cs);
+            return DD_OK;
+
+        case WINED3DERR_DRIVERINTERNALERROR:
+        default:
+            ERR("(%p) Unexpected return value %08x from wineD3D, "
+                " returning DD_OK\n", This, hr);
+    }
+
+    LeaveCriticalSection(&ddraw_cs);
     return DD_OK;
 }
 
@@ -1291,8 +1336,21 @@ IDirectDrawImpl_EnumDisplayModes(IDirectDraw7 *iface,
 
     WINED3DFORMAT checkFormatList[] =
     {
+        WINED3DFMT_B8G8R8_UNORM,
+        WINED3DFMT_B8G8R8A8_UNORM,
         WINED3DFMT_B8G8R8X8_UNORM,
         WINED3DFMT_B5G6R5_UNORM,
+        WINED3DFMT_B5G5R5X1_UNORM,
+        WINED3DFMT_B5G5R5A1_UNORM,
+        WINED3DFMT_B4G4R4A4_UNORM,
+        WINED3DFMT_B2G3R3_UNORM,
+        WINED3DFMT_B2G3R3A8_UNORM,
+        WINED3DFMT_B4G4R4X4_UNORM,
+        WINED3DFMT_R10G10B10A2_UNORM,
+        WINED3DFMT_R8G8B8A8_UNORM,
+        WINED3DFMT_R8G8B8X8_UNORM,
+        WINED3DFMT_B10G10R10A2_UNORM,
+        WINED3DFMT_P8_UINT_A8_UNORM,
         WINED3DFMT_P8_UINT,
     };
 
@@ -1485,12 +1543,10 @@ IDirectDrawImpl_GetDeviceIdentifier(IDirectDraw7 *iface,
 
     /* The DDGDI_GETHOSTIDENTIFIER returns the information about the 2D
      * host adapter, if there's a secondary 3D adapter. This doesn't apply
-     * to any modern hardware, nor is it interesting for Wine, so ignore it.
-     * Size of DDDEVICEIDENTIFIER2 may be aligned to 8 bytes and thus 4
-     * bytes too long. So only copy the relevant part of the structure
+     * to any modern hardware, nor is it interesting for Wine, so ignore it
      */
 
-    memcpy(DDDI, &deviceidentifier, FIELD_OFFSET(DDDEVICEIDENTIFIER2, dwWHQLLevel) + sizeof(DWORD));
+    *DDDI = deviceidentifier;
     return DD_OK;
 }
 
@@ -1655,11 +1711,9 @@ IDirectDrawImpl_RecreateSurfacesCallback(IDirectDrawSurface7 *surf,
             TRUE /* Lockable */, FALSE /* Discard */, surfImpl->mipmap_level, &surfImpl->WineD3DSurface, Usage, Pool,
             MultiSampleType, MultiSampleQuality, This->ImplType, Parent, &ddraw_null_wined3d_parent_ops);
     IUnknown_Release(Parent);
-    if (FAILED(hr))
-    {
-        surfImpl->WineD3DSurface = wineD3DSurface;
+
+    if(hr != D3D_OK)
         return hr;
-    }
 
     IWineD3DSurface_SetClipper(surfImpl->WineD3DSurface, clipper);
 
@@ -2438,7 +2492,6 @@ IDirectDrawImpl_CreateSurface(IDirectDraw7 *iface,
         extra_surfaces = DDSD->u5.dwBackBufferCount;
         desc2.ddsCaps.dwCaps &= ~DDSCAPS_FRONTBUFFER; /* It's not a front buffer */
         desc2.ddsCaps.dwCaps |= DDSCAPS_BACKBUFFER;
-        desc2.u5.dwBackBufferCount = 0;
     }
 
     hr = DD_OK;

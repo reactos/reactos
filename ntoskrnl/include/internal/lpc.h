@@ -35,18 +35,12 @@
         DbgPrintEx(__VA_ARGS__);                            \
     }
 #else
-#define LPCTRACE(x, ...)                                    \
-    if (x & LpcpTraceLevel)                                 \
-    {                                                       \
-        DbgPrint("%s [%.16s:%lx] - ",                       \
-                 __FUNCTION__,                              \
-                 PsGetCurrentProcess()->ImageFileName,      \
-                 PsGetCurrentThreadId());                   \
-        DbgPrint(__VA_ARGS__);                              \
-    }
+#define LPCTRACE(x, fmt, ...) \
+	if(LpcpTraceLevel & x) \
+		DbgPrint("(%s:%d:%s:%s:%x) " fmt, __FILE__, __LINE__, __FUNCTION__, GetCurrentProcess()->ImageFileName, PsGetCurrentThreadId(), __VA_ARGS__)
 #endif
 #else
-#define LPCTRACE(x, ...) DPRINT(__VA_ARGS__)
+#define LPCTRACE(x, fmt, ...) DPRINT(fmt, __VA_ARGS__)
 #endif
 
 //

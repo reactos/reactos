@@ -745,7 +745,7 @@ CONFIGRET WINAPI CM_Disable_DevNode_Ex(
     RpcTryExcept
     {
         ret = PNP_DeviceInstanceAction(BindingHandle,
-                                       PNP_DEVINST_DISABLE,
+                                       5,
                                        ulFlags,
                                        lpDevInst,
                                        NULL);
@@ -844,7 +844,7 @@ CONFIGRET WINAPI CM_Enable_DevNode_Ex(
     RpcTryExcept
     {
         ret = PNP_DeviceInstanceAction(BindingHandle,
-                                       PNP_DEVINST_ENABLE,
+                                       4,
                                        ulFlags,
                                        lpDevInst,
                                        NULL);
@@ -3044,7 +3044,7 @@ CONFIGRET WINAPI CM_Move_DevNode_Ex(
     RpcTryExcept
     {
         ret = PNP_DeviceInstanceAction(BindingHandle,
-                                       PNP_DEVINST_MOVE,
+                                       2,
                                        ulFlags,
                                        lpFromDevInst,
                                        lpToDevInst);
@@ -3301,7 +3301,7 @@ CM_Reenumerate_DevNode_Ex(
     RpcTryExcept
     {
         ret = PNP_DeviceInstanceAction(BindingHandle,
-                                       PNP_DEVINST_REENUMERATE,
+                                       7,
                                        ulFlags,
                                        lpDevInst,
                                        NULL);
@@ -3775,60 +3775,6 @@ CONFIGRET WINAPI CM_Set_DevNode_Registry_Property_ExW(
 
 
 /***********************************************************************
- * CM_Set_HW_Prof [SETUPAPI.@]
- */
-CONFIGRET WINAPI CM_Set_HW_Prof(
-    ULONG ulHardwareProfile, ULONG ulFlags)
-{
-    TRACE("%lu %lu\n", ulHardwareProfile, ulFlags);
-    return CM_Set_HW_Prof_Ex(ulHardwareProfile, ulFlags, NULL);
-}
-
-
-/***********************************************************************
- * CM_Set_HW_Prof_Ex [SETUPAPI.@]
- */
-CONFIGRET WINAPI CM_Set_HW_Prof_Ex(
-    ULONG ulHardwareProfile, ULONG ulFlags, HMACHINE hMachine)
-{
-    RPC_BINDING_HANDLE BindingHandle = NULL;
-    CONFIGRET ret;
-
-    TRACE("%lu %lu %lx\n", ulHardwareProfile, ulFlags, hMachine);
-
-    if (!IsUserAdmin())
-        return CR_ACCESS_DENIED;
-
-    if (ulFlags != 0)
-        return CR_INVALID_FLAG;
-
-    if (hMachine != NULL)
-    {
-        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
-        if (BindingHandle == NULL)
-            return CR_FAILURE;
-    }
-    else
-    {
-        if (!PnpGetLocalHandles(&BindingHandle, NULL))
-            return CR_FAILURE;
-    }
-
-    RpcTryExcept
-    {
-        ret = PNP_SetHwProf(BindingHandle, ulHardwareProfile, ulFlags);
-    }
-    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
-    {
-        ret = RpcStatusToCmStatus(RpcExceptionCode());
-    }
-    RpcEndExcept;
-
-    return ret;
-}
-
-
-/***********************************************************************
  * CM_Set_HW_Prof_FlagsA [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Set_HW_Prof_FlagsA(
@@ -3989,7 +3935,7 @@ CONFIGRET WINAPI CM_Setup_DevNode_Ex(
     RpcTryExcept
     {
         ret = PNP_DeviceInstanceAction(BindingHandle,
-                                       PNP_DEVINST_SETUP,
+                                       3,
                                        ulFlags,
                                        lpDevInst,
                                        NULL);

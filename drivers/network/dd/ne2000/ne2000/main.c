@@ -501,6 +501,8 @@ static NDIS_STATUS NTAPI MiniportQueryInformation(
     NDIS_MEDIUM Medium   = NdisMedium802_3;
     PNIC_ADAPTER Adapter = (PNIC_ADAPTER)MiniportAdapterContext;
 
+    ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
+
     NDIS_DbgPrint(MAX_TRACE, ("Called. Oid (0x%X).\n", Oid));
 
     Status   = NDIS_STATUS_SUCCESS;
@@ -669,6 +671,8 @@ static NDIS_STATUS NTAPI MiniportReset(
 {
     NDIS_STATUS NdisStatus = NDIS_STATUS_SUCCESS;
 
+    ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
+
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
 #ifndef NOCARD
@@ -747,6 +751,8 @@ static NDIS_STATUS NTAPI MiniportSetInformation(
     ULONG GenericULONG;
     NDIS_STATUS Status   = NDIS_STATUS_SUCCESS;
     PNIC_ADAPTER Adapter = (PNIC_ADAPTER)MiniportAdapterContext;
+
+    ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
 
     NDIS_DbgPrint(MAX_TRACE, ("Called. Oid (0x%X).\n", Oid));
 
@@ -856,6 +862,8 @@ static NDIS_STATUS NTAPI MiniportTransferData(
     UINT RecvStart;
     UINT RecvStop;
     PNIC_ADAPTER Adapter = (PNIC_ADAPTER)MiniportAdapterContext;
+
+    ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
 
     NDIS_DbgPrint(MAX_TRACE, ("Called. Packet (0x%X)  ByteOffset (0x%X)  BytesToTransfer (%d).\n",
         Packet, ByteOffset, BytesToTransfer));

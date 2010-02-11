@@ -226,13 +226,6 @@ struct ClassImageList
     INT* IconIndexes;
 };
 
-struct FileLog /* HSPFILELOG */
-{
-    DWORD ReadOnly;
-    DWORD SystemLog;
-    LPWSTR LogName;
-};
-
 extern HINSTANCE hInstance;
 #define RC_STRING_MAX_SIZE 256
 

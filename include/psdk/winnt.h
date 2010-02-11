@@ -4947,6 +4947,46 @@ static __inline PVOID GetFiberData(void)
 	return *((PVOID *)GetCurrentFiber());
 }
 
+#if defined(__GNUC__)
+
+static __inline__ BOOLEAN
+InterlockedBitTestAndSet(IN LONG volatile *Base,
+                         IN LONG Bit)
+{
+#if defined(_M_IX86)
+	LONG OldBit;
+	__asm__ __volatile__("lock "
+	                     "btsl %2,%1\n\t"
+	                     "sbbl %0,%0\n\t"
+	                     :"=r" (OldBit),"+m" (*Base)
+	                     :"Ir" (Bit)
+	                     : "memory");
+	return OldBit;
+#else
+	return (_InterlockedOr(Base, 1 << Bit) >> Bit) & 1;
+#endif
+}
+
+static __inline__ BOOLEAN
+InterlockedBitTestAndReset(IN LONG volatile *Base,
+                           IN LONG Bit)
+{
+#if defined(_M_IX86)
+	LONG OldBit;
+	__asm__ __volatile__("lock "
+	                     "btrl %2,%1\n\t"
+	                     "sbbl %0,%0\n\t"
+	                     :"=r" (OldBit),"+m" (*Base)
+	                     :"Ir" (Bit)
+	                     : "memory");
+	return OldBit;
+#else
+	return (_InterlockedAnd(Base, ~(1 << Bit)) >> Bit) & 1;
+#endif
+}
+
+#endif
+
 #define BitScanForward _BitScanForward
 #define BitScanReverse _BitScanReverse
 
@@ -4956,6 +4996,7 @@ static __inline PVOID GetFiberData(void)
 #define BitTestAndReset _bittestandreset
 #define InterlockedBitTestAndSet _interlockedbittestandset
 #define InterlockedBitTestAndReset _interlockedbittestandreset
+
 
 /* TODO: Other architectures than X86 */
 #if defined(_M_IX86)
@@ -4974,7 +5015,23 @@ static __inline PVOID GetFiberData(void)
 
 /* TODO: Other architectures than X86 */
 #if defined(_M_IX86)
-#define MemoryBarrier _MemoryBarrier
+#if defined(_MSC_VER)
+FORCEINLINE
+VOID
+MemoryBarrier (VOID)
+{
+    LONG Barrier;
+    __asm { xchg Barrier, eax }
+}
+#else
+FORCEINLINE
+VOID
+MemoryBarrier(VOID)
+{
+    LONG Barrier;
+    __asm__ __volatile__("xchgl %%eax, %[Barrier]" : : [Barrier] "m" (Barrier) : "memory");
+}
+#endif
 #elif defined (_M_AMD64)
 #define MemoryBarrier __faststorefence
 #elif defined(_M_PPC)

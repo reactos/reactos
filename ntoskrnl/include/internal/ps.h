@@ -9,7 +9,7 @@
 //
 // Define this if you want debugging support
 //
-#define _PS_DEBUG_                                      0xFFFF
+#define _PS_DEBUG_                                      0x00
 
 //
 // These define the Debug Masks Supported
@@ -28,9 +28,6 @@
 //
 // Debug/Tracing support
 //
-//
-// Debug/Tracing support
-//
 #if _PS_DEBUG_
 #ifdef NEW_DEBUG_SYSTEM_IMPLEMENTED // enable when Debug Filters are implemented
 #define PSTRACE(x, ...)                                     \
@@ -38,7 +35,7 @@
         DbgPrintEx("%s [%.16s] - ",                         \
                    __FUNCTION__,                            \
                    PsGetCurrentProcess()->ImageFileName);   \
-				   DbgPrintEx(__VA_ARGS__);               \
+        DbgPrintEx(__VA_ARGS__);                            \
     }
 #else
 #if 0

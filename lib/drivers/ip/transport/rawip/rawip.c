@@ -195,9 +195,6 @@ NTSTATUS RawIPSendDatagram(
     USHORT RemotePort;
     NTSTATUS Status;
     PNEIGHBOR_CACHE_ENTRY NCE;
-    KIRQL OldIrql;
-
-    LockObject(AddrFile, &OldIrql);
 
     TI_DbgPrint(MID_TRACE,("Sending Datagram(%x %x %x %d)\n",
 			   AddrFile, ConnInfo, BufferData, DataSize));
@@ -212,11 +209,13 @@ NTSTATUS RawIPSendDatagram(
 	break;
 
     default:
-	UnlockObject(AddrFile, OldIrql);
 	return STATUS_UNSUCCESSFUL;
     }
 
     TI_DbgPrint(MID_TRACE,("About to get route to destination\n"));
+
+    if(!(NCE = RouteGetRouteToDestination( &RemoteAddress )))
+	return STATUS_NETWORK_UNREACHABLE;
 
     LocalAddress = AddrFile->Address;
     if (AddrIsUnspecified(&LocalAddress))
@@ -225,19 +224,7 @@ NTSTATUS RawIPSendDatagram(
          * then use the unicast address of the
          * interface we're sending over
          */
-        if(!(NCE = RouteGetRouteToDestination( &RemoteAddress ))) {
-	     UnlockObject(AddrFile, OldIrql);
-	     return STATUS_NETWORK_UNREACHABLE;
-        }
-
         LocalAddress = NCE->Interface->Unicast;
-    }
-    else
-    {
-        if(!(NCE = NBLocateNeighbor( &LocalAddress ))) {
-	     UnlockObject(AddrFile, OldIrql);
-	     return STATUS_INVALID_PARAMETER;
-        }
     }
 
     Status = BuildRawIpPacket( AddrFile,
@@ -248,8 +235,6 @@ NTSTATUS RawIPSendDatagram(
                                AddrFile->Port,
                                BufferData,
                                DataSize );
-
-    UnlockObject(AddrFile, OldIrql);
 
     if( !NT_SUCCESS(Status) )
 	return Status;

@@ -776,7 +776,7 @@ typedef struct _TEB_ACTIVE_FRAME
 //
 typedef struct _TEB
 {
-    NT_TIB Tib;
+    NT_TIB NtTib;					// Tib
     PVOID EnvironmentPointer;
     CLIENT_ID ClientId;
     PVOID ActiveRpcHandle;

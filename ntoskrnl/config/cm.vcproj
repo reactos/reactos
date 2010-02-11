@@ -237,7 +237,7 @@
 				>
 			</File>
 			<Filter
-				Name="i32"
+				Name="i386"
 				>
 				<File
 					RelativePath=".\i386\cmhardwr.c"

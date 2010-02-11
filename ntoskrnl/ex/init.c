@@ -4,7 +4,7 @@
  * FILE:            ntoskrnl/ex/init.c
  * PURPOSE:         Executive Initialization Code
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
- *                  Eric Kohl
+ *                  Eric Kohl (ekohl@rz-online.de)
  */
 
 /* INCLUDES ******************************************************************/
@@ -68,7 +68,7 @@ PVOID ExpNlsTableBase;
 ULONG ExpAnsiCodePageDataOffset, ExpOemCodePageDataOffset;
 ULONG ExpUnicodeCaseTableDataOffset;
 NLSTABLEINFO ExpNlsTableInfo;
-SIZE_T ExpNlsTableSize;
+ULONG ExpNlsTableSize;
 PVOID ExpNlsSectionPointer;
 
 /* CMOS Timer Sanity */
@@ -196,14 +196,14 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     NTSTATUS Status;
     HANDLE NlsSection;
     PVOID SectionBase = NULL;
-    SIZE_T ViewSize = 0;
+    ULONG ViewSize = 0;
     LARGE_INTEGER SectionOffset = {{0, 0}};
     PLIST_ENTRY ListHead, NextEntry;
     PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
     ULONG NlsTablesEncountered = 0;
     ULONG NlsTableSizes[3]; /* 3 NLS tables */
 
-	/* Check if this is boot-time phase 0 initialization */
+    /* Check if this is boot-time phase 0 initialization */
     if (!ExpInitializationPhase)
     {
         /* Loop the memory descriptors */
@@ -303,7 +303,7 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                        KernelMode,
                                        &ExpNlsSectionPointer,
                                        NULL);
-    ObCloseHandle(NlsSection, KernelMode);
+    ZwClose(NlsSection);
     if (!NT_SUCCESS(Status))
     {
         /* Failed */
@@ -369,15 +369,13 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
                       OUT PCHAR *ProcessEnvironment)
 {
     NTSTATUS Status;
-    SIZE_T Size;
+    ULONG Size;
     PWSTR p;
     UNICODE_STRING NullString = RTL_CONSTANT_STRING(L"");
     UNICODE_STRING SmssName, Environment, SystemDriveString, DebugString;
     PVOID EnvironmentPtr = NULL;
     PRTL_USER_PROCESS_INFORMATION ProcessInformation;
     PRTL_USER_PROCESS_PARAMETERS ProcessParams = NULL;
-
-	DPRINTT("\n");
 
     NullString.Length = sizeof(WCHAR);
 
@@ -831,12 +829,11 @@ ExpInitializeExecutive(IN ULONG Cpu,
     PLDR_DATA_TABLE_ENTRY NtosEntry;
     PRTL_MESSAGE_RESOURCE_ENTRY MsgEntry;
     ANSI_STRING CsdString;
-    SIZE_T Remaining = 0;
+    ULONG Remaining = 0;
     PCHAR RcEnd = NULL;
     CHAR VersionBuffer [65];
 
-    DPRINTT("\n");
-	/* Validate Loader */
+    /* Validate Loader */
     if (!ExpIsLoaderValid(LoaderBlock))
     {
         /* Invalid loader version */
@@ -848,7 +845,6 @@ ExpInitializeExecutive(IN ULONG Cpu,
     }
 
     /* Initialize PRCB pool lookaside pointers */
-	DPRINTT("ExInitPoolLookasidePointers\n");
     ExInitPoolLookasidePointers();
 
     /* Check if this is an application CPU */
@@ -1207,28 +1203,19 @@ ExpInitializeExecutive(IN ULONG Cpu,
 #endif
 
     /* Create the Basic Object Manager Types to allow new Object Types */
-	DPRINTT("ObInitSystem\n");
-	if (!ObInitSystem()) KeBugCheck(OBJECT_INITIALIZATION_FAILED);
+    if (!ObInitSystem()) KeBugCheck(OBJECT_INITIALIZATION_FAILED);
 
     /* Load basic Security for other Managers */
-	DPRINTT("SeInitSystem\n");
     if (!SeInitSystem()) KeBugCheck(SECURITY_INITIALIZATION_FAILED);
 
     /* Initialize the Process Manager */
-	DPRINTT("PsInitSystem\n");
     if (!PsInitSystem(LoaderBlock)) KeBugCheck(PROCESS_INITIALIZATION_FAILED);
 
     /* Initialize the PnP Manager */
-	DPRINTT("PpInitSystem\n");
     if (!PpInitSystem()) KeBugCheck(PP0_INITIALIZATION_FAILED);
 
     /* Initialize the User-Mode Debugging Subsystem */
-	DPRINTT("DbgkInitialize\n");
-	DbgkInitialize();
-
-	DPRINTT("DbgkInitialize r\n");
-	_asm int 3
-
+    DbgkInitialize();
 
     /* Calculate the tick count multiplier */
     ExpTickCountMultiplier = ExComputeTickCountMultiplier(KeMaximumIncrement);
@@ -1241,7 +1228,6 @@ ExpInitializeExecutive(IN ULONG Cpu,
     /* Set the machine type */
     SharedUserData->ImageNumberLow = IMAGE_FILE_MACHINE_ARCHITECTURE;
     SharedUserData->ImageNumberHigh = IMAGE_FILE_MACHINE_ARCHITECTURE;
-    DPRINTT("r\n");
 }
 
 VOID
@@ -1259,8 +1245,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     PCHAR StringBuffer, EndBuffer, BeginBuffer, MpString = "";
     PINIT_BUFFER InitBuffer;
     ANSI_STRING TempString;
-    ULONG LastTzBias, Length, YearHack = 0, Disposition, MessageCode = 0;
-    SIZE_T Size;
+    ULONG LastTzBias, Size, Length, YearHack = 0, Disposition, MessageCode = 0;
     PRTL_USER_PROCESS_INFORMATION ProcessInfo;
     KEY_VALUE_PARTIAL_INFORMATION KeyPartialInfo;
     UNICODE_STRING KeyName, DebugString;
@@ -1268,21 +1253,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     HANDLE KeyHandle, OptionHandle;
     PRTL_USER_PROCESS_PARAMETERS ProcessParameters = NULL;
 
-    DPRINTT("\n");
-
-	// _enable();
-	// DPRINTT("_enable\n");
-	// _ASM int 3
-	__test(0x110, 0);
-
-
-	// DPRINTT("DbgWait\n");
-	// DbgWait(5000 * 10000);
-	// DPRINTT("DbgWait r\n");
-	// _ASM int 3
-	
-
-	/* Allocate the initialization buffer */
+    /* Allocate the initialization buffer */
     InitBuffer = ExAllocatePoolWithTag(NonPagedPool,
                                        sizeof(INIT_BUFFER),
                                        'tinI');
@@ -1298,16 +1269,8 @@ Phase1InitializationDiscard(IN PVOID Context)
     /* Set us at maximum priority */
     KeSetPriorityThread(KeGetCurrentThread(), HIGH_PRIORITY);
 
-	DPRINTT("HalInitSystem\n");
-	_ASM int 3
-
     /* Do Phase 1 HAL Initialization */
-    if (!HalInitSystem(1, LoaderBlock))
-		KeBugCheck(HAL1_INITIALIZATION_FAILED);
-
-	_ASM int 3
-	DPRINTT("HalInitSystem r\n");
-
+    if (!HalInitSystem(1, LoaderBlock)) KeBugCheck(HAL1_INITIALIZATION_FAILED);
 
     /* Get the command line and upcase it */
     CommandLine = _strupr(LoaderBlock->LoadOptions);
@@ -1362,14 +1325,14 @@ Phase1InitializationDiscard(IN PVOID Context)
     StringBuffer = InitBuffer->VersionBuffer;
     BeginBuffer = StringBuffer;
     EndBuffer = StringBuffer;
-    Size = 256;
+    Length = 256;
     if (CmCSDVersionString.Length)
     {
         /* Print the version string */
         Status = RtlStringCbPrintfExA(StringBuffer,
                                       255,
                                       &EndBuffer,
-                                      &Size,
+                                      &Length,
                                       0,
                                       ": %wZ",
                                       &CmCSDVersionString);
@@ -1382,7 +1345,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     else
     {
         /* No version */
-        Size = 255;
+        Length = 255;
     }
 
     /* Null-terminate the string */
@@ -1406,7 +1369,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     {
         /* Create the banner message */
         Status = RtlStringCbPrintfA(EndBuffer,
-                                    Size,
+                                    Length,
                                     MsgEntry->Text,
                                     StringBuffer,
                                     NtBuildNumber & 0xFFFF,
@@ -1420,7 +1383,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     else
     {
         /* Use hard-coded banner message */
-        Status = RtlStringCbCopyA(EndBuffer, Size, "REACTOS (R)\n");
+        Status = RtlStringCbCopyA(EndBuffer, Length, "REACTOS (R)\n");
         if (!NT_SUCCESS(Status))
         {
             /* Bugcheck */
@@ -1446,8 +1409,11 @@ Phase1InitializationDiscard(IN PVOID Context)
         if (Y2KHackRequired) TimeFields.Year = (CSHORT)YearHack;
 
         /* Convert to time fields */
-        RtlTimeFieldsToTime(&TimeFields, &SystemBootTime);
+		if(!RtlTimeFieldsToTime(&TimeFields, &SystemBootTime))
+			DPRINT1("RtlTimeFieldsToTime failed\n");
         UniversalBootTime = SystemBootTime;
+		DPRINTT("Timefields: %04d-%02d-%02d\n", TimeFields.Year, TimeFields.Month, TimeFields.Day);
+		DPRINTT("SystemBootTime=%016I64=%I64d\n", UniversalBootTime.QuadPart, UniversalBootTime.QuadPart);
 
         /* Check if real time is GMT */
         if (!ExpRealTimeIsUniversal)
@@ -1570,31 +1536,24 @@ Phase1InitializationDiscard(IN PVOID Context)
     }
 
     /* Set up Region Maps, Sections and the Paging File */
-    DPRINTT("MmInitSystem(1)\n");
     if (!MmInitSystem(1, LoaderBlock)) KeBugCheck(MEMORY1_INITIALIZATION_FAILED);
 
     /* Create NLS section */
-	DPRINTT("ExpInitNls\n");
     ExpInitNls(KeLoaderBlock);
 
     /* Initialize Cache Views */
-	DPRINTT("CcInitializeCacheManager\n");
     if (!CcInitializeCacheManager()) KeBugCheck(CACHE_INITIALIZATION_FAILED);
 
     /* Initialize the Registry */
-	DPRINTT("CmInitSystem1\n");
     if (!CmInitSystem1()) KeBugCheck(CONFIG_INITIALIZATION_FAILED);
 
     /* Initialize Prefetcher */
-    DPRINTT("CcPfInitializePrefetcher\n");
     CcPfInitializePrefetcher();
 
     /* Update progress bar */
-	DPRINTT("InbvUpdateProgressBar(15)\n");
     InbvUpdateProgressBar(15);
 
     /* Update timezone information */
-    DPRINTT("ExRefreshTimeZoneInformation\n");
     LastTzBias = ExpLastTimeZoneBias;
     ExRefreshTimeZoneInformation(&SystemBootTime);
 
@@ -1616,7 +1575,6 @@ Phase1InitializationDiscard(IN PVOID Context)
     }
 
     /* Initialize the File System Runtime Library */
-	DPRINTT("FsRtlInitSystem\n");
     if (!FsRtlInitSystem()) KeBugCheck(FILE_INITIALIZATION_FAILED);
 
     /* Initialize range lists */

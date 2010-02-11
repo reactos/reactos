@@ -5,7 +5,7 @@
  * PURPOSE:         Deferred Procedure Call (DPC) Support
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Philip Susi (phreak@iag.net)
- *                  Eric Kohl
+ *                  Eric Kohl (ekohl@abo.rhein-zeitung.de)
  */
 
 /* INCLUDES ******************************************************************/
@@ -322,6 +322,7 @@ KiTimerExpiration(IN PKDPC Dpc,
         KiReleaseDispatcherLock(OldIrql);
     }
 }
+_OPTIMIZE_DFT
 
 VOID
 FASTCALL
@@ -453,8 +454,6 @@ KiQuantumEnd(VOID)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
     PKTHREAD NextThread, Thread = Prcb->CurrentThread;
-
-	DPRINTT("\n");
 
     /* Check if a DPC Event was requested to be signaled */
     if (InterlockedExchange(&Prcb->DpcSetEventRequest, 0))

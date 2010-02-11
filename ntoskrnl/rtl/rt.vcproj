@@ -14,7 +14,7 @@
 	</Platforms>
 	<ToolFiles>
 		<ToolFile
-			RelativePath="..\..\..\..\..\_sdk\vscfg\rules\s_as_mscpp.rules"
+			RelativePath="..\..\tools\msc\s_as_mscpp.rules"
 		/>
 	</ToolFiles>
 	<Configurations>
@@ -150,11 +150,19 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="libsupp.c"
+				RelativePath="GetGlobalFlags.c"
 				>
 			</File>
 			<File
-				RelativePath=".\misc.c"
+				RelativePath="GetVersion.c"
+				>
+			</File>
+			<File
+				RelativePath=".\libsupp2.c"
+				>
+			</File>
+			<File
+				RelativePath="WalkFrameChain.c"
 				>
 			</File>
 			<Filter

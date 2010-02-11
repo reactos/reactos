@@ -69,12 +69,6 @@ typedef MIXER_STATUS(*PMIXER_OPEN_KEY)(
     IN ULONG DesiredAccess,
     OUT PHANDLE OutKey);
 
-typedef PVOID (*PMIXER_ALLOC_EVENT_DATA)(
-    IN ULONG ExtraBytes);
-
-typedef VOID (*PMIXER_FREE_EVENT_DATA)(
-    IN PVOID EventData);
-
 typedef struct
 {
      ULONG SizeOfStruct;
@@ -89,8 +83,6 @@ typedef struct
      PMIXER_OPEN_KEY OpenKey;
      PMIXER_QUERY_KEY_VALUE QueryKeyValue;
      PMIXER_CLOSEKEY CloseKey;
-     PMIXER_ALLOC_EVENT_DATA AllocEventData;
-     PMIXER_FREE_EVENT_DATA FreeEventData;
 }MIXER_CONTEXT, *PMIXER_CONTEXT;
 
 MIXER_STATUS
@@ -173,11 +165,5 @@ MMixerOpenWave(
     IN ULONG bWaveIn,
     IN LPWAVEFORMATEX WaveFormat,
     OUT PHANDLE PinHandle);
-
-MIXER_STATUS
-MMixerSetWaveStatus(
-    IN PMIXER_CONTEXT MixerContext,
-    IN HANDLE PinHandle,
-    IN KSSTATE State);
 
 #endif

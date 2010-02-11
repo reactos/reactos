@@ -16,7 +16,7 @@
 #ifndef __INTERNAL_DEBUG
 #define __INTERNAL_DEBUG
 
-#undef NDEBUG
+// #undef NDEBUG
 
 /* Define DbgPrint/DbgPrintEx/RtlAssert unless the NDK is used */
 #if !defined(_RTLFUNCS_H) && !defined(_NTDDK_)
@@ -121,18 +121,8 @@ RtlAssert(
 #define ASSERT_IRQL_EQUAL(x) ASSERT(KeGetCurrentIrql()==(x))
 #define ASSERT_IRQL_LESS(x) ASSERT(KeGetCurrentIrql()<(x))
 
-NTKERNELAPI
-VOID
-NTAPI
-KeQuerySystemTime(
-  OUT PLARGE_INTEGER  CurrentTime);
-
-NTSYSCALLAPI
-NTSTATUS
-NTAPI
-NtYieldExecution(
-    VOID
-);
+NTKERNELAPI VOID NTAPI KeQuerySystemTime(OUT PLARGE_INTEGER CurrentTime);
+NTSYSCALLAPI NTSTATUS NTAPI NtYieldExecution(VOID);
 
 _INLINE VOID DbgWait(i64 x)
 {
@@ -148,3 +138,4 @@ _INLINE VOID DbgWait(i64 x)
 }
 
 #endif /* __INTERNAL_DEBUG */
+

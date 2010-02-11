@@ -10,9 +10,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, ExpWin32kInit)
-#endif
 
 /* DATA **********************************************************************/
 
@@ -97,8 +94,8 @@ ExpDesktopDelete(PVOID DeletedObject)
     ExpDesktopObjectDelete(&Parameters);
 }
 
+SECT_INIT_FN(ExpWin32kInit)
 VOID
-INIT_FUNCTION
 NTAPI
 ExpWin32kInit(VOID)
 {

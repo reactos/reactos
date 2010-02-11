@@ -12,6 +12,7 @@
 #define NDEBUG
 #include <debug.h>
 
+//VIRTUAL"
 #define MODULE_INVOLVED_IN_ARM3
 #include "../ARM3/miarm.h"
 
@@ -634,7 +635,7 @@ MmSecureVirtualMemory(IN PVOID Address,
                       IN ULONG Mode)
 {
     UNIMPLEMENTED;
-    return Address;
+    return NULL;
 }
 
 /*

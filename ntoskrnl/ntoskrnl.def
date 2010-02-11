@@ -1,5 +1,3 @@
-;ntoskrnl.def
-
 LIBRARY ntoskrnl.exe
 
 EXPORTS
@@ -1566,4 +1564,3 @@ ZwQueryDriverEntryOrder
 ZwQueryInformationAtom
 ZwSecureConnectPort
 ZwSetDriverEntryOrder
-

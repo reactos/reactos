@@ -46,15 +46,12 @@
 _NOWARN_MSC(4244)	// ULONG to USHORT
 _NOWARN_MSC(4018)	// ULONG to USHORT
 
-
 #include <ntverp.h>
 
 /* DDK/IFS/NDK Headers */
 #define _REALLY_GET_CALLERS_CALLER
 #include <excpt.h>
 #include <ntdef.h>
-#undef DECLSPEC_IMPORT
-#define DECLSPEC_IMPORT
 #include <ntifs.h>
 #include <ntdddisk.h>
 #include <wdmguid.h>
@@ -75,7 +72,7 @@ _NOWARN_MSC(4018)	// ULONG to USHORT
 #include <ctype.h>
 #include <malloc.h>
 #include <wchar.h>
-#include <intrin2.h>
+#include <intrin.h>
 
 /* SEH support with PSEH */
 #include <pseh/pseh2.h>
@@ -104,7 +101,7 @@ _NOWARN_MSC(4018)	// ULONG to USHORT
 #include "config.h"
 
 #include <rtlp.h>
-#include <internal\dbgp.h>
+#include <internal\dbg.h>
 #include <kd64.h>
 
 // _INTRINSIC(_enable)

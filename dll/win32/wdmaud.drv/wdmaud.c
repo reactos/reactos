@@ -327,7 +327,63 @@ QueryWdmWaveDeviceFormatSupport(
 }
 
 
+DWORD
+WINAPI
+MixerEventThreadRoutine(
+    LPVOID Parameter)
+{
+    HANDLE WaitObjects[2];
+    DWORD dwResult;
+    MMRESULT Result;
+    WDMAUD_DEVICE_INFO DeviceInfo;
+    PSOUND_DEVICE_INSTANCE Instance = (PSOUND_DEVICE_INSTANCE)Parameter;
 
+    /* setup wait objects */
+    WaitObjects[0] = Instance->hNotifyEvent;
+    WaitObjects[1] = Instance->hStopEvent;
+
+    /* zero device info */
+    ZeroMemory(&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO));
+
+    DeviceInfo.hDevice = Instance->Handle;
+    DeviceInfo.DeviceType = MIXER_DEVICE_TYPE;
+
+    do
+    {
+        dwResult = WaitForMultipleObjects(2, WaitObjects, FALSE, INFINITE);
+
+        if (dwResult == WAIT_OBJECT_0 + 1)
+        {
+            /* stop event was signalled */
+            break;
+        }
+
+        do
+        {
+            Result = SyncOverlappedDeviceIoControl(KernelHandle,
+                                                   IOCTL_GET_MIXER_EVENT,
+                                                   (LPVOID) &DeviceInfo,
+                                                   sizeof(WDMAUD_DEVICE_INFO),
+                                                   (LPVOID) &DeviceInfo,
+                                                   sizeof(WDMAUD_DEVICE_INFO),
+                                                   NULL);
+
+            if (Result == MMSYSERR_NOERROR)
+            {
+                DriverCallback(Instance->WinMM.ClientCallback,
+                               HIWORD(Instance->WinMM.Flags),
+                               Instance->WinMM.Handle,
+                               DeviceInfo.u.MixerEvent.NotificationType,
+                               Instance->WinMM.ClientCallbackInstanceData,
+                               (DWORD_PTR)DeviceInfo.u.MixerEvent.Value,
+                               0);
+            }
+        }while(Result == MMSYSERR_NOERROR);
+    }while(TRUE);
+
+    /* done */
+    return 0;
+}
 
 
 MMRESULT
@@ -518,6 +574,72 @@ SetWdmWaveDeviceFormat(
     return MMSYSERR_NOERROR;
 }
 
+MMRESULT
+WriteFileEx_Committer2(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  PVOID OffsetPtr,
+    IN  DWORD Length,
+    IN  PSOUND_OVERLAPPED Overlap,
+    IN  LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine)
+{
+    HANDLE Handle;
+    MMRESULT Result;
+    WDMAUD_DEVICE_INFO DeviceInfo;
+    PSOUND_DEVICE SoundDevice;
+    MMDEVICE_TYPE DeviceType;
+    BOOL Ret;
+
+    VALIDATE_MMSYS_PARAMETER( SoundDeviceInstance );
+    VALIDATE_MMSYS_PARAMETER( OffsetPtr );
+    VALIDATE_MMSYS_PARAMETER( Overlap );
+    VALIDATE_MMSYS_PARAMETER( CompletionRoutine );
+
+    GetSoundDeviceInstanceHandle(SoundDeviceInstance, &Handle);
+
+
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
+
+    if ( ! MMSUCCESS(Result) )
+    {
+        return TranslateInternalMmResult(Result);
+    }
+
+    Result = GetSoundDeviceType(SoundDevice, &DeviceType);
+    SND_ASSERT( Result == MMSYSERR_NOERROR );
+
+    SND_ASSERT(Handle);
+
+    ZeroMemory(&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO));
+
+    DeviceInfo.Header.FrameExtent = Length;
+    if (DeviceType == WAVE_OUT_DEVICE_TYPE)
+    {
+        DeviceInfo.Header.DataUsed = Length;
+    }
+    DeviceInfo.Header.Data = OffsetPtr;
+    DeviceInfo.Header.Size = sizeof(WDMAUD_DEVICE_INFO);
+    DeviceInfo.Header.PresentationTime.Numerator = 1;
+    DeviceInfo.Header.PresentationTime.Denominator = 1;
+    DeviceInfo.hDevice = Handle;
+    DeviceInfo.DeviceType = DeviceType;
+
+    Overlap->Standard.hEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
+
+    if (DeviceType == WAVE_OUT_DEVICE_TYPE)
+    {
+        Ret = WriteFileEx(KernelHandle, &DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), (LPOVERLAPPED)Overlap, CompletionRoutine);
+        if (Ret)
+            WaitForSingleObjectEx (KernelHandle, INFINITE, TRUE);
+    }
+    else if (DeviceType == WAVE_IN_DEVICE_TYPE)
+    {
+        Ret = ReadFileEx(KernelHandle, &DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), (LPOVERLAPPED)Overlap, CompletionRoutine);
+        //if (Ret)
+        //    WaitForSingleObjectEx (KernelHandle, INFINITE, TRUE);
+    }
+
+    return MMSYSERR_NOERROR;
+}
 
 MMRESULT
 SetWdmWaveState(
@@ -901,7 +1023,7 @@ DriverProc(
 
             if ( Handle == INVALID_HANDLE_VALUE )
             {
-                SND_ERR(L"Failed to open \\\\.\\wdmaud\n");
+                SND_ERR(L"Failed to open %s\n", KERNEL_DEVICE_NAME);
                 CleanupEntrypointMutexes();
 
                 //UnlistAllSoundDevices();

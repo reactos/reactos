@@ -38,6 +38,8 @@ static NTSTATUS NTAPI SendComplete
 							Irp->IoStatus.Status,
 							Irp->IoStatus.Information));
 
+    ASSERT_IRQL(APC_LEVEL);
+
     if( !SocketAcquireStateLock( FCB ) )
         return STATUS_FILE_CLOSED;
 

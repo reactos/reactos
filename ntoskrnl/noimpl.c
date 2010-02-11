@@ -323,4 +323,3 @@ NTSTATUS __stdcall XIPDispatch(i32 Prm1, void *Dst,i32 Prm2)
 	return STATUS_NOT_IMPLEMENTED;
 }
 
-// VOID NTAPI TstFunc(void) {};

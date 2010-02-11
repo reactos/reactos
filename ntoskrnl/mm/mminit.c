@@ -65,10 +65,9 @@ FALSE;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-VOID
-INIT_FUNCTION
-NTAPI
-MiInitSystemMemoryAreas()
+VOID NTAPI MiInitSystemMemoryAreas(void);
+SECT_INIT_FN(MiInitSystemMemoryAreas)
+VOID NTAPI MiInitSystemMemoryAreas(void)
 {
     PVOID BaseAddress;
     PHYSICAL_ADDRESS BoundaryAddressMultiple;
@@ -361,7 +360,6 @@ MmInitSystem(IN ULONG Phase,
     
     if (Phase == 0)
     {
-		DPRINTT("phase 0\n");
         /* Initialize the kernel address space */
         KeInitializeGuardedMutex(&PsGetCurrentProcess()->AddressCreationLock);
         MmKernelAddressSpace = MmGetCurrentAddressSpace();
@@ -398,7 +396,66 @@ MmInitSystem(IN ULONG Phase,
         
         /* Intialize system memory areas */
         MiInitSystemMemoryAreas();
-
+        
+        //
+        // STEP 1: Allocate and free a single page, repeatedly
+        // We should always get the same address back
+        //
+        if (1)
+        {
+            PULONG Test, OldTest;
+            ULONG i;
+        
+            OldTest = Test = MiAllocatePoolPages(PagedPool, PAGE_SIZE);
+            ASSERT(Test);
+            for (i = 0; i < 16; i++)
+            {
+                MiFreePoolPages(Test);
+                Test = MiAllocatePoolPages(PagedPool, PAGE_SIZE);
+                ASSERT(OldTest == Test);
+            }
+            MiFreePoolPages(Test);
+        }
+        
+        //
+        // STEP 2: Allocate 2048 pages without freeing them
+        // We should run out of space at 1024 pages, since we don't support
+        // expansion yet.
+        //
+        if (1)
+        {
+            PULONG Test[2048];
+            ULONG i;
+            
+            for (i = 0; i < 2048; i++)
+            {
+                Test[i] = MiAllocatePoolPages(PagedPool, PAGE_SIZE);
+                if (!Test[i]) 
+                {
+                    ASSERT(i == 1024);
+                    break;
+                }
+            }
+            
+            //
+            // Cleanup
+            //
+            while (--i) if (Test[i]) MiFreePoolPages(Test[i]);
+        }
+        
+        //
+        // STEP 3: Allocate a page and touch it.
+        // We should get an ARM3 page fault and it should handle the fault
+        //
+        if (1)
+        {
+            PULONG Test;
+            
+            Test = MiAllocatePoolPages(PagedPool, PAGE_SIZE);
+            ASSERT(*Test == 0);
+            MiFreePoolPages(Test);
+        }
+        
         /* Dump the address space */
         MiDbgDumpAddressSpace();
         
@@ -430,13 +487,12 @@ MmInitSystem(IN ULONG Phase,
     }
     else if (Phase == 1)
     {
-        DPRINTT("phase 1\n");
-		MmInitializeRmapList();
+        MmInitializeRmapList();
         MmInitializePageOp();
         MmInitSectionImplementation();
         MmInitPagingFile();
         
-		//
+        //
         // Create a PTE to double-map the shared data section. We allocate it
         // from paged pool so that we can't fault when trying to touch the PTE
         // itself (to map it), since paged pool addresses will already be mapped
@@ -478,7 +534,7 @@ MmInitSystem(IN ULONG Phase,
     {
 
     }
-	DPRINTT("r\n");
+
     return TRUE;
 }
 

@@ -1,6 +1,6 @@
 @ stdcall LpkPresent()
 @ stdcall ScriptApplyDigitSubstitution(ptr ptr ptr)
-@ stdcall ScriptApplyLogicalWidth(ptr long long ptr ptr ptr ptr ptr ptr)
+@ stub ScriptApplyLogicalWidth
 @ stdcall ScriptBreak(ptr long ptr ptr)
 @ stdcall ScriptCPtoX(long long long long ptr ptr ptr ptr ptr)
 @ stdcall ScriptCacheGetHeight(ptr ptr ptr)
@@ -12,7 +12,7 @@
 @ stdcall ScriptGetProperties(ptr long)
 @ stdcall ScriptIsComplex(wstr long long)
 @ stdcall ScriptItemize(wstr long long ptr ptr ptr ptr)
-@ stdcall ScriptJustify(ptr ptr long long long ptr)
+@ stub ScriptJustify
 @ stdcall ScriptLayout(long ptr ptr ptr)
 @ stdcall ScriptPlace(ptr ptr ptr long ptr ptr ptr ptr ptr)
 @ stdcall ScriptRecordDigitSubstitution(ptr ptr)

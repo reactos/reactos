@@ -13,9 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, MmInitializeRmapList)
-#endif
 
 /* TYPES ********************************************************************/
 
@@ -37,8 +34,8 @@ static NPAGED_LOOKASIDE_LIST RmapLookasideList;
 
 /* FUNCTIONS ****************************************************************/
 
+SECT_INIT_FN(MmInitializeRmapList)
 VOID
-INIT_FUNCTION
 NTAPI
 MmInitializeRmapList(VOID)
 {

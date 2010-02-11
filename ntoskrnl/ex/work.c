@@ -12,9 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, ExpInitializeWorkerThreads)
-#endif
 
 /* DATA **********************************************************************/
 
@@ -91,13 +88,13 @@ ExpWorkerThreadEntryPoint(IN PVOID Context)
     KPROCESSOR_MODE WaitMode;
     EX_QUEUE_WORKER_INFO OldValue, NewValue;
 
-    DPRINTT("\n");
-
     /* Check if this is a dyamic thread */
     if ((ULONG_PTR)Context & EX_DYNAMIC_WORK_THREAD)
     {
         /* It is, which means we will eventually time out after 10 minutes */
-        Timeout.QuadPart = Int32x32To64(10, -10000000 * 60);
+        // Timeout.QuadPart = Int32x32To64(10, -10000000 * 60);
+		Timeout.QuadPart = -600 * (i64)10000000;
+		DPRINTT("Timeout=%I64d\n", Timeout.QuadPart);
         TimeoutPointer = &Timeout;
     }
 
@@ -149,7 +146,7 @@ ProcessLoop:
                                    TimeoutPointer);
 
         /* Check if we timed out and quit this loop in that case */
-        if ((NTSTATUS)(ULONG_PTR)QueueEntry == STATUS_TIMEOUT) break;
+        if ((NTSTATUS)QueueEntry == STATUS_TIMEOUT) break;
 
         /* Increment Processed Work Items */
         InterlockedIncrement((PLONG)&WorkQueue->WorkItemsProcessed);
@@ -224,8 +221,6 @@ ProcessLoop:
 
     /* Re-enable the stack swap */
     KeSetKernelStackSwapEnable(TRUE);
-    DPRINTT("r\n");
-    return;
 }
 
 /*++
@@ -274,7 +269,7 @@ ExpCreateWorkerThread(WORK_QUEUE_TYPE WorkQueueType,
                          NULL,
                          NULL,
                          ExpWorkerThreadEntryPoint,
-                         UlongToPtr(Context));
+                         (PVOID)Context);
 
     /* If the thread is dynamic */
     if (Dynamic)
@@ -313,7 +308,7 @@ ExpCreateWorkerThread(WORK_QUEUE_TYPE WorkQueueType,
 
     /* Dereference and close handle */
     ObDereferenceObject(Thread);
-    ObCloseHandle(hThread, KernelMode);
+    ZwClose(hThread);
 }
 
 /*++
@@ -432,8 +427,6 @@ ExpWorkerThreadBalanceManager(IN PVOID Context)
     PAGED_CODE();
     UNREFERENCED_PARAMETER(Context);
 
-	DPRINTT("\n");
-
     /* Raise our priority above all other worker threads */
     KeSetBasePriorityThread(KeGetCurrentThread(),
                             EX_CRITICAL_QUEUE_PRIORITY_INCREMENT + 1);
@@ -506,10 +499,8 @@ ExpWorkerThreadBalanceManager(IN PVOID Context)
  * @remarks This routine is only called once during system initialization.
  *
  *--*/
-VOID
-INIT_FUNCTION
-NTAPI
-ExpInitializeWorkerThreads(VOID)
+SECT_INIT_FN(ExpInitializeWorkerThreads)
+VOID NTAPI ExpInitializeWorkerThreads(VOID)
 {
     ULONG WorkQueueType;
     ULONG CriticalThreads, DelayedThreads;
@@ -591,7 +582,7 @@ ExpInitializeWorkerThreads(VOID)
     ExpWorkerThreadBalanceManagerPtr = Thread;
 
     /* Close the handle and return */
-    ObCloseHandle(ThreadHandle, KernelMode);
+    ZwClose(ThreadHandle);
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/

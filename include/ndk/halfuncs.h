@@ -133,7 +133,7 @@ BOOLEAN
 NTAPI
 HalBeginSystemInterrupt(
     KIRQL Irql,
-    UCHAR Vector,
+    ULONG Vector,
     PKIRQL OldIrql
 );
 
@@ -147,7 +147,7 @@ NTHALAPI
 VOID
 NTAPI
 HalDisableSystemInterrupt(
-    UCHAR Vector,
+    ULONG Vector,
     KIRQL Irql
 );
 
@@ -155,7 +155,7 @@ NTHALAPI
 BOOLEAN
 NTAPI
 HalEnableSystemInterrupt(
-    UCHAR Vector,
+    ULONG Vector,
     KIRQL Irql,
     KINTERRUPT_MODE InterruptMode
 );
@@ -165,7 +165,7 @@ VOID
 NTAPI
 HalEndSystemInterrupt(
     KIRQL Irql,
-    IN PKTRAP_FRAME TrapFrame
+    ULONG Vector
 );
 
 #ifdef _ARM_ // FIXME: ndk/arm? armddk.h?
@@ -272,13 +272,6 @@ BOOLEAN
 NTAPI
 HalSetRealTimeClock(
     IN PTIME_FIELDS RtcTime
-);
-
-NTHALAPI
-ULONG
-NTAPI
-HalSetTimeIncrement(
-    IN ULONG Increment
 );
 
 #endif

@@ -14,46 +14,59 @@ typedef struct _WINDOW_OBJECT *PWINDOW_OBJECT;
 #include <include/scroll.h>
 
 extern ATOM AtomMessage;
-extern ATOM AtomWndObj; /* WNDOBJ list */
 
 BOOL FASTCALL UserUpdateUiState(PWND Wnd, WPARAM wParam);
 
 typedef struct _WINDOW_OBJECT
 {
-  THRDESKHEAD head;
+  /* NOTE: Do *NOT* Move this pointer anywhere in this structure! This
+           is a pointer to the WINDOW structure that eventually replaces
+           the WINDOW_OBJECT structure! USER32 expects this pointer to
+           be here until WINDOW_OBJECT has completely been superseded! */
   PWND Wnd;
 
   /* Pointer to the thread information */
   PTHREADINFO pti; // Use Wnd->head.pti
   /* system menu handle. */
   HMENU SystemMenu;
+  /* Entry in the thread's list of windows. */
+  LIST_ENTRY ListEntry;
   /* Handle for the window. */
-  HWND hSelf; // Use Wnd->head.h
+  HWND hSelf;
   /* Window flags. */
   ULONG state;
   /* Handle of region of the window to be updated. */
-  HANDLE hrgnUpdate;
+  HANDLE UpdateRegion;
   /* Handle of the window region. */
-  HANDLE hrgnClip;
+  HANDLE WindowRegion;
+  /* Pointer to the owning thread's message queue. */
+  PUSER_MESSAGE_QUEUE MessageQueue;
   struct _WINDOW_OBJECT* spwndChild;
   struct _WINDOW_OBJECT* spwndNext;
   struct _WINDOW_OBJECT* spwndPrev;
+  /* Entry in the list of thread windows. */
+  LIST_ENTRY ThreadListEntry;
   /* Handle to the parent window. */
   struct _WINDOW_OBJECT* spwndParent;
   /* Handle to the owner window. */
   HWND hOwner; // Use spwndOwner
-
-
+  /* DC Entries (DCE) */
+  PDCE Dce;
   /* Scrollbar info */
-  PSBINFOEX pSBInfo; // convert to PSBINFO
-  /* Entry in the list of thread windows. */
-  LIST_ENTRY ThreadListEntry;
+  PWINDOW_SCROLLINFO Scroll;
+  PETHREAD OwnerThread; // Use Wnd->head.pti
+  HWND hWndLastPopup; /* handle to last active popup window (wine doesn't use pointer, for unk. reason)*/
+  /* counter for tiled child windows */
+  ULONG TiledCounter;
+  /* WNDOBJ list */
+  LIST_ENTRY WndObjListHead;
 } WINDOW_OBJECT; /* PWINDOW_OBJECT already declared at top of file */
 
 /* Window flags. */
 #define WINDOWOBJECT_NEED_SIZE            WNDS_SENDSIZEMOVEMSGS
 #define WINDOWOBJECT_NEED_ERASEBKGND      WNDS_ERASEBACKGROUND
 #define WINDOWOBJECT_NEED_NCPAINT         WNDS_SENDNCPAINT
+#define WINDOWOBJECT_NEED_INTERNALPAINT   WNDS_INTERNALPAINT
 #define WINDOWOBJECT_RESTOREMAX           (0x00000020) // Set/Clr WS_MAXIMIZE && Clr/Set WS_EX2_VERTICALLYMAXIMIZEDLEFT/RIGHT
 
 #define WINDOWSTATUS_DESTROYING         WNDS2_INDESTROY
@@ -78,17 +91,15 @@ typedef struct _WINDOW_OBJECT
 
 
 #define IntWndBelongsToThread(WndObj, W32Thread) \
-  (((WndObj->pti->pEThread && WndObj->pti->pEThread->Tcb.Win32Thread)) && \
-   (WndObj->pti->pEThread->Tcb.Win32Thread == W32Thread))
-//  ((WndObj->head.pti) && (WndObj->head.pti == W32Thread))
+  (((WndObj->OwnerThread && WndObj->OwnerThread->Tcb.Win32Thread)) && \
+   (WndObj->OwnerThread->Tcb.Win32Thread == W32Thread))
 
 #define IntGetWndThreadId(WndObj) \
-  WndObj->pti->pEThread->Cid.UniqueThread
-//  WndObj->head.pti->pEThread->Cid.UniqueThread
+  WndObj->OwnerThread->Cid.UniqueThread
 
 #define IntGetWndProcessId(WndObj) \
-  WndObj->pti->pEThread->ThreadsProcess->UniqueProcessId
-//  WndObj->head.pti->pEThread->ThreadsProcess->UniqueProcessId
+  WndObj->OwnerThread->ThreadsProcess->UniqueProcessId
+
 
 BOOL FASTCALL
 IntIsWindow(HWND hWnd);

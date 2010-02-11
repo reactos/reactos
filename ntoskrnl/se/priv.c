@@ -13,10 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, SepInitPrivileges)
-#endif
-
 /* GLOBALS ********************************************************************/
 
 LUID SeCreateTokenPrivilege;
@@ -48,10 +44,8 @@ LUID SeEnableDelegationPrivilege;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-VOID
-INIT_FUNCTION
-NTAPI
-SepInitPrivileges (VOID)
+SECT_INIT_FN(SepInitPrivileges)
+VOID NTAPI SepInitPrivileges(VOID)
 {
     SeCreateTokenPrivilege.LowPart = SE_CREATE_TOKEN_PRIVILEGE;
     SeCreateTokenPrivilege.HighPart = 0;

@@ -16,9 +16,10 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/*
+/* $Id$
+ *
  * PROJECT:         ReactOS user32.dll
- * FILE:            dll/win32/user32/windows/input.c
+ * FILE:            lib/user32/windows/input.c
  * PURPOSE:         Input
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:
@@ -154,7 +155,7 @@ GetAsyncKeyState(int vKey)
 HKL WINAPI
 GetKeyboardLayout(DWORD idThread)
 {
-  return (HKL)NtUserCallOneParam((DWORD_PTR) idThread,  ONEPARAM_ROUTINE_GETKEYBOARDLAYOUT);
+  return (HKL)NtUserCallOneParam((DWORD) idThread,  ONEPARAM_ROUTINE_GETKEYBOARDLAYOUT);
 }
 
 
@@ -248,7 +249,7 @@ GetKeyboardLayoutNameW(LPWSTR pwszKLID)
 int WINAPI
 GetKeyboardType(int nTypeFlag)
 {
-return (int)NtUserCallOneParam((DWORD_PTR) nTypeFlag,  ONEPARAM_ROUTINE_GETKEYBOARDTYPE);
+return (int)NtUserCallOneParam((DWORD) nTypeFlag,  ONEPARAM_ROUTINE_GETKEYBOARDTYPE);
 }
 
 

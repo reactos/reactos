@@ -13,9 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, SepInitSDs)
-#endif
 
 /* GLOBALS ********************************************************************/
 
@@ -28,10 +25,8 @@ PSECURITY_DESCRIPTOR SeUnrestrictedSd = NULL;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-BOOLEAN
-INIT_FUNCTION
-NTAPI
-SepInitSDs(VOID)
+SECT_INIT_FN(SepInitSDs)
+BOOLEAN NTAPI SepInitSDs(VOID)
 {
     /* Create PublicDefaultSd */
     SePublicDefaultSd = ExAllocatePoolWithTag(PagedPool,

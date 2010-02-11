@@ -298,10 +298,10 @@ NtGdiSelectBitmap(
     }
 
     /* FIXME; improve by using a region without a handle and selecting it */
-    hVisRgn = IntSysCreateRectRgn( 0,
-                                   0,
-                                   psurfBmp->SurfObj.sizlBitmap.cx,
-                                   psurfBmp->SurfObj.sizlBitmap.cy);
+    hVisRgn = NtGdiCreateRectRgn(0,
+                                 0,
+                                 psurfBmp->SurfObj.sizlBitmap.cx,
+                                 psurfBmp->SurfObj.sizlBitmap.cy);
 
     /* Release the exclusive lock */
     SURFACE_UnlockSurface(psurfBmp);
@@ -314,7 +314,7 @@ NtGdiSelectBitmap(
     if (hVisRgn)
     {
         GdiSelectVisRgn(hDC, hVisRgn);
-        REGION_FreeRgnByHandle(hVisRgn);
+        GreDeleteObject(hVisRgn);
     }
 
     return hOrgBmp;

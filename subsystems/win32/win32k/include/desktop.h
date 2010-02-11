@@ -6,34 +6,29 @@
 
 typedef struct _DESKTOP
 {
-    PDESKTOPINFO pDeskInfo;
+    CSHORT Type;
+    CSHORT Size;
     LIST_ENTRY ListEntry;
-    /* Pointer to the associated window station. */
-    struct _WINSTATION_OBJECT *rpwinstaParent;
-    PWND spwndForeground;
-    PWND spwndTray;
-    PWND spwndMessage;
-    PWND spwndTooltip;
-    PSECTION_OBJECT hsectionDesktop;
-    PWIN32HEAP pheapDesktop;
-    ULONG_PTR ulHeapSize;
-    LIST_ENTRY PtiList;
-    /* use for tracking mouse moves. */
-    PWND spwndTrack;
-    DWORD htEx;
-    RECT rcMouseHover;
-    DWORD dwMouseHoverTime;
 
-    /* ReactOS */
-    /* Rectangle of the work area */
-    RECTL WorkArea;
+    LIST_ENTRY PtiList;
+
+    /* Pointer to the associated window station. */
+    struct _WINSTATION_OBJECT *WindowStation;
     /* Pointer to the active queue. */
     PVOID ActiveMessageQueue;
+    /* Rectangle of the work area */
+    RECTL WorkArea;
     /* Handle of the desktop window. */
     HANDLE DesktopWindow;
     /* Thread blocking input */
     PVOID BlockInputThread;
+
     LIST_ENTRY ShellHookWindows;
+
+    PWIN32HEAP pheapDesktop;
+    PSECTION_OBJECT DesktopHeapSection;
+    PDESKTOPINFO pDeskInfo;
+    PWND spwndMessage;
 } DESKTOP, *PDESKTOP;
 
 extern PDESKTOP InputDesktop;
@@ -128,7 +123,7 @@ VOID co_IntShellHookNotify(WPARAM Message, LPARAM lParam);
 HDC FASTCALL UserGetDesktopDC(ULONG,BOOL,BOOL);
 
 #define IntIsActiveDesktop(Desktop) \
-  ((Desktop)->rpwinstaParent->ActiveDesktop == (Desktop))
+  ((Desktop)->WindowStation->ActiveDesktop == (Desktop))
 
 #define GET_DESKTOP_NAME(d)                                             \
     OBJECT_HEADER_TO_NAME_INFO(OBJECT_TO_OBJECT_HEADER(d)) ?            \
@@ -208,10 +203,10 @@ DesktopHeapGetUserDelta(VOID)
     ULONG_PTR Delta = 0;
 
     pti = PsGetCurrentThreadWin32Thread();
-    if (!pti->rpdesk)
+    if (!pti->Desktop)
         return 0;
 
-    pheapDesktop = pti->rpdesk->pheapDesktop;
+    pheapDesktop = pti->Desktop->pheapDesktop;
 
     W32Process = PsGetCurrentProcessWin32Process();
     Mapping = W32Process->HeapMappings.Next;

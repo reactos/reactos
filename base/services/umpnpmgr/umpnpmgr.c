@@ -667,11 +667,11 @@ DWORD PNP_GetDeviceRegProp(
             case CM_DRP_BUSNUMBER:
                 PlugPlayData.Property = DevicePropertyBusNumber;
                 break;
-#endif
 
             case CM_DRP_ENUMERATOR_NAME:
-                PlugPlayData.Property = 15; //DevicePropertyEnumeratorName;
+                PlugPlayData.Property = DevicePropertyEnumeratorName;
                 break;
+#endif
 
             default:
                 return CR_INVALID_PROPERTY;
@@ -831,24 +831,8 @@ DWORD PNP_CreateKey(
     DWORD samDesired,
     DWORD ulFlags)
 {
-    HKEY hKey = 0;
-
-    if (RegCreateKeyExW(HKEY_LOCAL_MACHINE,
-                        pszSubKey,
-                        0,
-                        NULL,
-                        0,
-                        KEY_ALL_ACCESS,
-                        NULL,
-                        &hKey,
-                        NULL))
-        return CR_REGISTRY_ERROR;
-
-    /* FIXME: Set security key */
-
-    RegCloseKey(hKey);
-
-    return CR_SUCCESS;
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
 }
 
 
@@ -1101,102 +1085,53 @@ DWORD PNP_CreateDevInst(
 }
 
 
-static CONFIGRET
-MoveDeviceInstance(LPWSTR pszDeviceInstanceDestination,
-                   LPWSTR pszDeviceInstanceSource)
-{
-    DPRINT("MoveDeviceInstance: not implemented\n");
-    /* FIXME */
-    return CR_CALL_NOT_IMPLEMENTED;
-}
-
-
-static CONFIGRET
-SetupDeviceInstance(LPWSTR pszDeviceInstance,
-                    DWORD ulFlags)
-{
-    DPRINT("SetupDeviceInstance: not implemented\n");
-    /* FIXME */
-    return CR_CALL_NOT_IMPLEMENTED;
-}
-
-
-static CONFIGRET
-EnableDeviceInstance(LPWSTR pszDeviceInstance)
-{
-    PLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData;
-    CONFIGRET ret = CR_SUCCESS;
-    NTSTATUS Status;
-
-    DPRINT("Enable device instance\n");
-
-    RtlInitUnicodeString(&ResetDeviceData.DeviceInstance, pszDeviceInstance);
-    Status = NtPlugPlayControl(PlugPlayControlResetDevice, &ResetDeviceData, sizeof(PLUGPLAY_CONTROL_RESET_DEVICE_DATA));
-    if (!NT_SUCCESS(Status))
-        ret = NtStatusToCrError(Status);
-
-    return ret;
-}
-
-
-static CONFIGRET
-DisableDeviceInstance(LPWSTR pszDeviceInstance)
-{
-    DPRINT("DisableDeviceInstance: not implemented\n");
-    /* FIXME */
-    return CR_CALL_NOT_IMPLEMENTED;
-}
-
-
-static CONFIGRET
-ReenumerateDeviceInstance(LPWSTR pszDeviceInstance)
-{
-    DPRINT("ReenumerateDeviceInstance: not implemented\n");
-    /* FIXME */
-    return CR_CALL_NOT_IMPLEMENTED;
-}
-
-
 /* Function 29 */
+#define PNP_DEVINST_SETUP       0x3
+#define PNP_DEVINST_ENABLE      0x4
+#define PNP_DEVINST_REENUMERATE 0x7
 DWORD PNP_DeviceInstanceAction(
     handle_t hBinding,
-    DWORD ulAction,
-    DWORD ulFlags,
+    DWORD ulMajorAction,
+    DWORD ulMinorAction,
     LPWSTR pszDeviceInstance1,
     LPWSTR pszDeviceInstance2)
 {
     CONFIGRET ret = CR_SUCCESS;
+    NTSTATUS Status;
 
     UNREFERENCED_PARAMETER(hBinding);
+    UNREFERENCED_PARAMETER(ulMinorAction);
+    UNREFERENCED_PARAMETER(pszDeviceInstance2);
 
     DPRINT("PNP_DeviceInstanceAction() called\n");
 
-    switch (ulAction)
+    switch (ulMajorAction)
     {
-        case PNP_DEVINST_MOVE:
-            ret = MoveDeviceInstance(pszDeviceInstance1,
-                                     pszDeviceInstance2);
-            break;
-
         case PNP_DEVINST_SETUP:
-            ret = SetupDeviceInstance(pszDeviceInstance1,
-                                      ulFlags);
+            DPRINT("Setup device instance\n");
+            /* FIXME */
+            ret = CR_CALL_NOT_IMPLEMENTED;
             break;
 
         case PNP_DEVINST_ENABLE:
-            ret = EnableDeviceInstance(pszDeviceInstance1);
+        {
+            PLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData;
+            DPRINT("Enable device instance\n");
+            RtlInitUnicodeString(&ResetDeviceData.DeviceInstance, pszDeviceInstance1);
+            Status = NtPlugPlayControl(PlugPlayControlResetDevice, &ResetDeviceData, sizeof(PLUGPLAY_CONTROL_RESET_DEVICE_DATA));
+            if (!NT_SUCCESS(Status))
+                ret = NtStatusToCrError(Status);
             break;
-
-        case PNP_DEVINST_DISABLE:
-            ret = DisableDeviceInstance(pszDeviceInstance1);
-            break;
+        }
 
         case PNP_DEVINST_REENUMERATE:
-            ret = ReenumerateDeviceInstance(pszDeviceInstance1);
+            DPRINT("Reenumerate device instance\n");
+            /* FIXME */
+            ret = CR_CALL_NOT_IMPLEMENTED;
             break;
 
         default:
-            DPRINT1("Unknown device action %lu: not implemented\n", ulAction);
+            DPRINT1("Unknown function %lu\n", ulMajorAction);
             ret = CR_CALL_NOT_IMPLEMENTED;
     }
 
@@ -1543,70 +1478,8 @@ DWORD PNP_HwProfFlags(
     DWORD ulNameLength,
     DWORD ulFlags)
 {
-    CONFIGRET ret = CR_SUCCESS;
-    WCHAR szKeyName[MAX_PATH];
-    HKEY hKey;
-    HKEY hDeviceKey;
-    DWORD dwSize;
-
-    UNREFERENCED_PARAMETER(hBinding);
-
-    DPRINT("PNP_HwProfFlags() called\n");
-
-    if (ulConfig == 0)
-    {
-        wcscpy(szKeyName,
-               L"System\\CurrentControlSet\\HardwareProfiles\\Current\\System\\CurrentControlSet\\Enum");
-    }
-    else
-    {
-        swprintf(szKeyName,
-                 L"System\\CurrentControlSet\\HardwareProfiles\\%04u\\System\\CurrentControlSet\\Enum",
-                 ulConfig);
-    }
-
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                      szKeyName,
-                      0,
-                      KEY_QUERY_VALUE,
-                      &hKey) != ERROR_SUCCESS)
-        return CR_REGISTRY_ERROR;
-
-    if (ulAction == PNP_GET_HWPROFFLAGS)
-    {
-         if (RegOpenKeyExW(hKey,
-                           pDeviceID,
-                           0,
-                           KEY_QUERY_VALUE,
-                           &hDeviceKey) != ERROR_SUCCESS)
-         {
-            *pulValue = 0;
-         }
-         else
-         {
-             dwSize = sizeof(DWORD);
-             if (!RegQueryValueExW(hDeviceKey,
-                                   L"CSConfigFlags",
-                                   NULL,
-                                   NULL,
-                                   (LPBYTE)pulValue,
-                                   &dwSize) != ERROR_SUCCESS)
-             {
-                 *pulValue = 0;
-             }
-
-             RegCloseKey(hDeviceKey);
-         }
-    }
-    else if (ulAction == PNP_SET_HWPROFFLAGS)
-    {
-        /* FIXME: not implemented yet */
-        ret = CR_CALL_NOT_IMPLEMENTED;
-    }
-
-    RegCloseKey(hKey);
-
-    return ret;
+    UNIMPLEMENTED;
+    return CR_CALL_NOT_IMPLEMENTED;
 }
 
 
@@ -1825,9 +1698,7 @@ DWORD PNP_QueryResConfList(
 
 /* Function 55 */
 DWORD PNP_SetHwProf(
-    handle_t hBinding,
-    DWORD ulHardwareProfile,
-    DWORD ulFlags)
+    handle_t hBinding)
 {
     UNIMPLEMENTED;
     return CR_CALL_NOT_IMPLEMENTED;
@@ -2402,7 +2273,7 @@ PnpEventThread(LPVOID lpParameter)
             DWORD len;
             DWORD DeviceIdLength;
 
-            DPRINT("Device enumerated: %S\n", PnpEvent->TargetDevice.DeviceIds);
+            DPRINT("Device arrival event: %S\n", PnpEvent->TargetDevice.DeviceIds);
 
             DeviceIdLength = lstrlenW(PnpEvent->TargetDevice.DeviceIds);
             if (DeviceIdLength)
@@ -2421,11 +2292,6 @@ PnpEventThread(LPVOID lpParameter)
                     SetEvent(hDeviceInstallListNotEmpty);
                 }
             }
-        }
-        else if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_ARRIVAL, &RpcStatus))
-        {
-            DPRINT("Device arrival: %S\n", PnpEvent->TargetDevice.DeviceIds);
-            /* FIXME: ? */
         }
         else
         {

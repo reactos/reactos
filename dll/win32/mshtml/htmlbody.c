@@ -63,97 +63,40 @@ static const WCHAR yellowW[] = {'y','e','l','l','o','w',0};
 
 static const struct {
     LPCWSTR keyword;
-    DWORD rgb;
+    const WCHAR hexstr[8];
 } keyword_table[] = {
-    {aquaW,     0x00ffff},
-    {blackW,    0x000000},
-    {blueW,     0x0000ff},
-    {fuchsiaW,  0xff00ff},
-    {grayW,     0x808080},
-    {greenW,    0x008000},
-    {limeW,     0x00ff00},
-    {maroonW,   0x800000},
-    {navyW,     0x000080},
-    {oliveW,    0x808000},
-    {purpleW,   0x800080},
-    {redW,      0xff0000},
-    {silverW,   0xc0c0c0},
-    {tealW,     0x008080},
-    {whiteW,    0xffffff},
-    {yellowW,   0xffff00}
+    {aquaW,     {'#','0','0','f','f','f','f',0}},
+    {blackW,    {'#','0','0','0','0','0','0',0}},
+    {blueW,     {'#','0','0','0','0','f','f',0}},
+    {fuchsiaW,  {'#','f','f','0','0','f','f',0}},
+    {grayW,     {'#','8','0','8','0','8','0',0}},
+    {greenW,    {'#','0','0','8','0','0','0',0}},
+    {limeW,     {'#','0','0','f','f','0','0',0}},
+    {maroonW,   {'#','8','0','0','0','0','0',0}},
+    {navyW,     {'#','0','0','0','0','8','0',0}},
+    {oliveW,    {'#','8','0','8','0','0','0',0}},
+    {purpleW,   {'#','8','0','0','0','8','0',0}},
+    {redW,      {'#','f','f','0','0','0','0',0}},
+    {silverW,   {'#','c','0','c','0','c','0',0}},
+    {tealW,     {'#','0','0','8','0','8','0',0}},
+    {whiteW,    {'#','f','f','f','f','f','f',0}},
+    {yellowW,   {'#','f','f','f','f','0','0',0}}
 };
 
-static int comp_value(const WCHAR *ptr, int dpc)
+static BSTR nscolor_to_str(LPCWSTR color)
 {
-    int ret = 0;
-    WCHAR ch;
+    int i;
 
-    if(dpc > 2)
-        dpc = 2;
+    if(!color || *color == '#')
+        return SysAllocString(color);
 
-    while(dpc--) {
-        if(!*ptr)
-            ret *= 16;
-        else if(isdigitW(ch = *ptr++))
-            ret = ret*16 + (ch-'0');
-        else if('a' <= ch && ch <= 'f')
-            ret = ret*16 + (ch-'a') + 10;
-        else if('A' <= ch && ch <= 'F')
-            ret = ret*16 + (ch-'A') + 10;
-        else
-            ret *= 16;
+    for(i=0; i < sizeof(keyword_table)/sizeof(keyword_table[0]); i++) {
+        if(!strcmpiW(color, keyword_table[i].keyword))
+            return SysAllocString(keyword_table[i].hexstr);
     }
 
-    return ret;
-}
-
-/* Based on Gecko NS_LooseHexToRGB */
-static int loose_hex_to_rgb(const WCHAR *hex)
-{
-    int len, dpc;
-
-    len = strlenW(hex);
-    if(*hex == '#') {
-        hex++;
-        len--;
-    }
-    if(len <= 3)
-        return 0;
-
-    dpc = min(len/3 + (len%3 ? 1 : 0), 4);
-    return (comp_value(hex, dpc) << 16)
-        | (comp_value(hex+dpc, dpc) << 8)
-        | comp_value(hex+2*dpc, dpc);
-}
-
-static HRESULT nscolor_to_str(LPCWSTR color, BSTR *ret)
-{
-    int i, rgb = -1;
-
-    static const WCHAR formatW[] = {'#','%','0','2','x','%','0','2','x','%','0','2','x',0};
-
-    if(!color || !*color) {
-        *ret = NULL;
-        return S_OK;
-    }
-
-    if(*color != '#') {
-        for(i=0; i < sizeof(keyword_table)/sizeof(keyword_table[0]); i++) {
-            if(!strcmpiW(color, keyword_table[i].keyword))
-                rgb = keyword_table[i].rgb;
-        }
-    }
-    if(rgb == -1)
-        rgb = loose_hex_to_rgb(color);
-
-    *ret = SysAllocStringLen(NULL, 7);
-    if(!*ret)
-        return E_OUTOFMEMORY;
-
-    sprintfW(*ret, formatW, rgb>>16, (rgb>>8)&0xff, rgb&0xff);
-
-    TRACE("%s -> %s\n", debugstr_w(color), debugstr_w(*ret));
-    return S_OK;
+    WARN("unknown color %s\n", debugstr_w(color));
+    return SysAllocString(color);
 }
 
 static BOOL variant_to_nscolor(const VARIANT *v, nsAString *nsstr)
@@ -405,25 +348,23 @@ static HRESULT WINAPI HTMLBodyElement_get_bgColor(IHTMLBodyElement *iface, VARIA
     HTMLBodyElement *This = HTMLBODY_THIS(iface);
     nsAString strColor;
     nsresult nsres;
-    HRESULT hres;
+    const PRUnichar *color;
 
     TRACE("(%p)->(%p)\n", This, p);
 
     nsAString_Init(&strColor, NULL);
     nsres = nsIDOMHTMLBodyElement_GetBgColor(This->nsbody, &strColor);
-    if(NS_SUCCEEDED(nsres)) {
-        const PRUnichar *color;
-
-        nsAString_GetData(&strColor, &color);
-        V_VT(p) = VT_BSTR;
-        hres = nscolor_to_str(color, &V_BSTR(p));
-    }else {
+    if(NS_FAILED(nsres))
         ERR("SetBgColor failed: %08x\n", nsres);
-        hres = E_FAIL;
-    }
+
+    nsAString_GetData(&strColor, &color);
+
+    V_VT(p) = VT_BSTR;
+    V_BSTR(p) = nscolor_to_str(color);
 
     nsAString_Finish(&strColor);
-    return hres;
+
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLBodyElement_put_text(IHTMLBodyElement *iface, VARIANT v)
@@ -448,21 +389,22 @@ static HRESULT WINAPI HTMLBodyElement_get_text(IHTMLBodyElement *iface, VARIANT 
     HTMLBodyElement *This = HTMLBODY_THIS(iface);
     nsAString text;
     nsresult nsres;
-    HRESULT hres;
 
     TRACE("(%p)->(%p)\n", This, p);
 
     nsAString_Init(&text, NULL);
-    nsres = nsIDOMHTMLBodyElement_GetText(This->nsbody, &text);
-    if(NS_SUCCEEDED(nsres)) {
-        const PRUnichar *color;
 
-        nsAString_GetData(&text, &color);
+    V_VT(p) = VT_BSTR;
+    V_BSTR(p) = NULL;
+
+    nsres = nsIDOMHTMLBodyElement_GetText(This->nsbody, &text);
+    if(NS_SUCCEEDED(nsres))
+    {
+        const PRUnichar *sText;
+        nsAString_GetData(&text, &sText);
+
         V_VT(p) = VT_BSTR;
-        hres = nscolor_to_str(color, &V_BSTR(p));
-    }else {
-        ERR("GetText failed: %08x\n", nsres);
-        hres = E_FAIL;
+        V_BSTR(p) = SysAllocString(sText);
     }
 
     nsAString_Finish(&text);
@@ -783,8 +725,8 @@ static event_target_t **HTMLBodyElement_get_event_target(HTMLDOMNode *iface)
 {
     HTMLBodyElement *This = HTMLBODY_NODE_THIS(iface);
 
-    return This->textcont.element.node.doc
-        ? &This->textcont.element.node.doc->body_event_target
+    return This->textcont.element.node.doc && This->textcont.element.node.doc->basedoc.window
+        ? &This->textcont.element.node.doc->basedoc.window->event_target
         : &This->textcont.element.node.event_target;
 }
 
@@ -829,7 +771,7 @@ HTMLElement *HTMLBodyElement_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *ns
 
     HTMLTextContainer_Init(&ret->textcont, doc, nselem, &HTMLBodyElement_dispex);
 
-    ConnectionPoint_Init(&ret->cp_propnotif, &ret->textcont.element.cp_container, &IID_IPropertyNotifySink, NULL);
+    ConnectionPoint_Init(&ret->cp_propnotif, &ret->textcont.element.cp_container, &IID_IPropertyNotifySink);
 
     nsres = nsIDOMHTMLElement_QueryInterface(nselem, &IID_nsIDOMHTMLBodyElement,
                                              (void**)&ret->nsbody);

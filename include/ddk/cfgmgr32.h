@@ -230,16 +230,6 @@ typedef RESOURCEID *PRESOURCEID;
 #define CM_REGISTRY_CONFIG                 0x00000200
 #define CM_REGISTRY_BITS                   0x00000301
 
-#define CM_DEVCAP_LOCKSUPPORTED            0x00000001
-#define CM_DEVCAP_EJECTSUPPORTED           0x00000002
-#define CM_DEVCAP_REMOVABLE                0x00000004
-#define CM_DEVCAP_DOCKDEVICE               0x00000008
-#define CM_DEVCAP_UNIQUEID                 0x00000010
-#define CM_DEVCAP_SILENTINSTALL            0x00000020
-#define CM_DEVCAP_RAWDEVICEOK              0x00000040
-#define CM_DEVCAP_SURPRISEREMOVALOK        0x00000080
-#define CM_DEVCAP_HARDWAREDISABLED         0x00000100
-#define CM_DEVCAP_NONDYNAMIC               0x00000200
 
 typedef struct BusNumber_Des_s {
   DWORD  BUSD_Count;
@@ -2117,20 +2107,8 @@ CM_Set_DevNode_Registry_Property_ExW(
 #define CM_Set_DevNode_Registry_Property_Ex CM_Set_DevNode_Registry_Property_ExA
 #endif /* UNICODE */
 
-CMAPI
-CONFIGRET
-WINAPI
-CM_Set_HW_Prof(
-  IN ULONG  ulHardwareProfile,
-  IN ULONG  ulFlags);
-
-CMAPI
-CONFIGRET
-WINAPI
-CM_Set_HW_Prof_Ex(
-  IN ULONG  ulHardwareProfile,
-  IN ULONG  ulFlags,
-  IN HMACHINE  hMachine);
+/* FIXME: Obsolete CM_Set_HW_Prof */
+/* FIXME: Obsolete CM_Set_HW_Prof_Ex */
 
 /* CM_Set_HW_Prof_Flags[_Ex].ulFlags constants */
 #define CM_SET_HW_PROF_FLAGS_UI_NOT_OK  (0x00000001)

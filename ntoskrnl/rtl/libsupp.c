@@ -292,7 +292,21 @@ RtlWalkFrameChain(OUT PVOID *Callers,
     PKTRAP_FRAME TrapFrame;
 
     /* Get current EBP */
-	CpuGetEbp_m(Stack);
+#if defined(_M_IX86)
+#if defined __GNUC__
+    __asm__("mov %%ebp, %0" : "=r" (Stack) : );
+#elif defined(_MSC_VER)
+    __asm mov Stack, ebp
+#endif
+#elif defined(_M_MIPS)
+        __asm__("move $sp, %0" : "=r" (Stack) : );
+#elif defined(_M_PPC)
+    __asm__("mr %0,1" : "=r" (Stack) : );
+#elif defined(_M_ARM)
+    __asm__("mov sp, %0" : "=r"(Stack) : );
+#else
+#error Unknown architecture
+#endif
 
     /* Set it as the stack begin limit as well */
     StackBegin = (ULONG_PTR)Stack;
@@ -328,8 +342,8 @@ RtlWalkFrameChain(OUT PVOID *Callers,
             }
 
             /* Get the stack limits */
-            StackBegin = (ULONG_PTR)Teb->Tib.StackLimit;
-            StackEnd = (ULONG_PTR)Teb->Tib.StackBase;
+            StackBegin = (ULONG_PTR)Teb->NtTib.StackLimit;
+            StackEnd = (ULONG_PTR)Teb->NtTib.StackBase;
 #ifdef _M_IX86
             Stack = TrapFrame->Ebp;
 #elif defined(_M_PPC)
@@ -403,6 +417,7 @@ RtlWalkFrameChain(OUT PVOID *Callers,
     /* Return frames parsed */
     return i;
 }
+
 #endif
 
 /* RTL Atom Tables ************************************************************/

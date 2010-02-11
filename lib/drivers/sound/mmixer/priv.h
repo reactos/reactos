@@ -15,14 +15,8 @@
 #include "mmixer.h"
 
 #include <stdio.h>
-#define YDEBUG
-#include <debug.h>
 
-typedef struct
-{
-    KSEVENTDATA EventData;
-    LIST_ENTRY Entry;
-}EVENT_ITEM, *LPEVENT_ITEM;
+#include <debug.h>
 
 typedef struct
 {
@@ -31,7 +25,6 @@ typedef struct
     HANDLE        hMixer;
     LIST_ENTRY    LineList;
     ULONG         ControlId;
-    LIST_ENTRY    EventList;
 }MIXER_INFO, *LPMIXER_INFO;
 
 typedef struct
@@ -274,10 +267,5 @@ MMixerInitializeWaveInfo(
     IN LPWSTR DeviceName,
     IN ULONG bWaveIn,
     IN ULONG PinId);
-
-MIXER_STATUS
-MMixerAddEvents(
-    IN PMIXER_CONTEXT MixerContext,
-    IN OUT LPMIXER_INFO MixerInfo);
 
 #endif

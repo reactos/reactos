@@ -27,10 +27,10 @@ Author:
 // KPCR Access for non-IA64 builds
 //
 #define K0IPCR                  ((ULONG_PTR)(KIP0PCRADDRESS))
-#define PCR                     ((KPCR * const)K0IPCR)
+#define PCR                     ((volatile KPCR * const)K0IPCR)
 #if defined(CONFIG_SMP) || defined(NT_BUILD)
 #undef  KeGetPcr
-#define KeGetPcr()              ((KPCR * const)__readfsdword(FIELD_OFFSET(KPCR, Self)))
+#define KeGetPcr()              ((volatile KPCR * const)__readfsdword(0x1C))
 #endif
 
 //
@@ -106,17 +106,6 @@ Author:
 #define EFLAG_ZERO              0x4000
 
 //
-// Legacy floating status word bit masks.
-//
-#define FSW_INVALID_OPERATION   0x1
-#define FSW_DENORMAL            0x2
-#define FSW_ZERO_DIVIDE         0x4
-#define FSW_OVERFLOW            0x8
-#define FSW_UNDERFLOW           0x10
-#define FSW_PRECISION           0x20
-#define FSW_STACK_FAULT         0x40
-
-//
 // IPI Types
 //
 #define IPI_APC                 1
@@ -140,11 +129,7 @@ Author:
 //
 // IOPM Definitions
 //
-#define IOPM_COUNT              1
-#define IOPM_SIZE               8192
-#define IOPM_FULL_SIZE          8196
 #define IO_ACCESS_MAP_NONE      0
-#define IOPM_DIRECTION_MAP_SIZE 32
 #define IOPM_OFFSET             FIELD_OFFSET(KTSS, IoMaps[0].IoMap)
 #define KiComputeIopmOffset(MapNumber)              \
     (MapNumber == IO_ACCESS_MAP_NONE) ?             \
@@ -179,52 +164,42 @@ Author:
 //
 typedef struct _KTRAP_FRAME
 {
-    ULONG DbgEbp;					// 00
-    ULONG DbgEip;					// 04
-    ULONG DbgArgMark;				// 08
-    ULONG DbgArgPointer;			// 0c
-    USHORT TempSegCs;				// 10
-	USHORT RsvTempSegCs;			// 12
-    ULONG TempEsp;					// 14
-    ULONG Dr0;						// 18
-    ULONG Dr1;						// 1c
-    ULONG Dr2;						// 20
-    ULONG Dr3;						// 24
-    ULONG Dr6;						// 28
-    ULONG Dr7;						// 2c
-    USHORT SegGs;					// 30
-	USHORT RsvSegGs;				// 32
-    USHORT SegEs;					// 34
-	USHORT RsvSegEs;				// 36
-    USHORT SegDs;					// 38
-    USHORT RsvSegDs;				// 3a
-    ULONG Edx;						// 3c
-    ULONG Ecx;						// 40
-    ULONG Eax;						// 44
-    ULONG PreviousPreviousMode;		// 48
-    struct _EXCEPTION_REGISTRATION_RECORD FAR *ExceptionList;	// 4c
-    USHORT SegFs;					// 50
-	USHORT RsvSegFs;				// 52
-    ULONG Edi;						// 54
-    ULONG Esi;						// 58
-    ULONG Ebx;						// 5c
-    ULONG Ebp;						// 60
-    ULONG ErrCode;					// 64
-    ULONG Eip;						// 68
-    USHORT SegCs;					// 6c
-	USHORT RsvSegCs;				// 6e
-    ULONG EFlags;					// 70
-    ULONG HardwareEsp;				// 74
-    ULONG HardwareSegSs;			// 78
-    USHORT V86Es;					// 7c
-	USHORT RsvV86Es;				// 7e
-    SHORT V86Ds;					// 80
-    USHORT RsvV86Ds;				// 82
-    USHORT V86Fs;					// 84
-    USHORT RsvV86Fs;				// 86
-    USHORT V86Gs;					// 88
-    USHORT RsvV86Gs;				// 8a
-} KTRAP_FRAME, *PKTRAP_FRAME;		// 8c
+    ULONG DbgEbp;
+    ULONG DbgEip;
+    ULONG DbgArgMark;
+    ULONG DbgArgPointer;
+    ULONG TempSegCs;
+    ULONG TempEsp;
+    ULONG Dr0;
+    ULONG Dr1;
+    ULONG Dr2;
+    ULONG Dr3;
+    ULONG Dr6;
+    ULONG Dr7;
+    ULONG SegGs;
+    ULONG SegEs;
+    ULONG SegDs;
+    ULONG Edx;
+    ULONG Ecx;
+    ULONG Eax;
+    ULONG PreviousPreviousMode;
+    struct _EXCEPTION_REGISTRATION_RECORD FAR *ExceptionList;
+    ULONG SegFs;
+    ULONG Edi;
+    ULONG Esi;
+    ULONG Ebx;
+    ULONG Ebp;
+    ULONG ErrCode;
+    ULONG Eip;
+    ULONG SegCs;
+    ULONG EFlags;
+    ULONG HardwareEsp;
+    ULONG HardwareSegSs;
+    ULONG V86Es;
+    ULONG V86Ds;
+    ULONG V86Fs;
+    ULONG V86Gs;
+} KTRAP_FRAME, *PKTRAP_FRAME;
 
 //
 // Defines the Callback Stack Layout for User Mode Callbacks
@@ -439,19 +414,19 @@ typedef struct _KPROCESSOR_STATE
 #pragma pack(push,4)
 typedef struct _KPRCB
 {
-    USHORT MinorVersion;
-    USHORT MajorVersion;
-    struct _KTHREAD *CurrentThread;
-    struct _KTHREAD *NextThread;
-    struct _KTHREAD *IdleThread;
-    UCHAR Number;
-    UCHAR Reserved;
+    USHORT MinorVersion;									// 120 000
+    USHORT MajorVersion;									// 122
+    struct _KTHREAD *CurrentThread;							// 124
+    struct _KTHREAD *NextThread;							// 128
+    struct _KTHREAD *IdleThread;							// 12c
+    UCHAR Number;											// 130
+    UCHAR Reserved;											// 131 PcNestingLevel
     USHORT BuildType;
     KAFFINITY SetMember;
-    UCHAR CpuType;
-    UCHAR CpuID;
-    USHORT CpuStep;
-    KPROCESSOR_STATE ProcessorState;
+    UCHAR CpuType;											// 138 ok to here
+    UCHAR CpuID;											// 139
+    USHORT CpuStep;											// 140
+    KPROCESSOR_STATE ProcessorState;						// 142
     ULONG KernelReserved[16];
     ULONG HalReserved[16];
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
@@ -460,7 +435,7 @@ typedef struct _KPRCB
 #else
     UCHAR PrcbPad0[92];
 #endif
-    KSPIN_LOCK_QUEUE LockQueue[LockQueueMaximumLock];
+    KSPIN_LOCK_QUEUE LockQueue[LockQueueMaximumLock];		// a7c bad
     struct _KTHREAD *NpxThread;
     ULONG InterruptCount;
     ULONG KernelTime;
@@ -682,7 +657,21 @@ typedef struct _KPRCB
 
 //
 // Processor Control Region
-//
+
+// KIPCR overlaps KPCR extending it at the end,
+// so the first typedef should be ok,
+// pending of test
+// this would be as in win ddk defs
+#if 0
+typedef struct _KIPCR
+{
+	struct _KPCR;
+	ULONG InterruptMode;
+    UCHAR Spare1;
+    ULONG KernelReserved2[17];
+    KPRCB PrcbData;
+} KIPCR, *PKIPCR;
+#else
 typedef struct _KIPCR
 {
     union
@@ -699,7 +688,7 @@ typedef struct _KIPCR
             PVOID Used_Self;
         };
     };
-    struct _KPCR *Self;
+    struct _KPCR *SelfPcr;		// Self
     struct _KPRCB *Prcb;
     KIRQL Irql;
     ULONG IRR;
@@ -715,8 +704,8 @@ typedef struct _KIPCR
     ULONG StallScaleFactor;
     UCHAR SpareUnused;
     UCHAR Number;
-    UCHAR Spare0;
-    UCHAR SecondLevelCacheAssociativity;
+    UCHAR Reserved;
+    UCHAR L2CacheAssociativity;
     ULONG VdmAlert;
     ULONG KernelReserved[14];
     ULONG SecondLevelCacheSize;
@@ -726,6 +715,7 @@ typedef struct _KIPCR
     ULONG KernelReserved2[17];
     KPRCB PrcbData;
 } KIPCR, *PKIPCR;
+#endif
 #pragma pack(pop)
 
 //
@@ -733,47 +723,52 @@ typedef struct _KIPCR
 //
 typedef struct _KiIoAccessMap
 {
-    UCHAR DirectionMap[IOPM_DIRECTION_MAP_SIZE];
-    UCHAR IoMap[IOPM_FULL_SIZE];
+    UCHAR DirectionMap[32];
+    UCHAR IoMap[8196];
 } KIIO_ACCESS_MAP;
 
 typedef struct _KTSS
 {
-    USHORT Backlink;
-    USHORT Reserved0;
-    ULONG Esp0;
-    USHORT Ss0;
-    USHORT Reserved1;
-    ULONG NotUsed1[4];
-    ULONG CR3;
-    ULONG Eip;
-    ULONG EFlags;
-    ULONG Eax;
-    ULONG Ecx;
-    ULONG Edx;
-    ULONG Ebx;
-    ULONG Esp;
-    ULONG Ebp;
-    ULONG Esi;
-    ULONG Edi;
-    USHORT Es;
-    USHORT Reserved2;
-    USHORT Cs;
-    USHORT Reserved3;
-    USHORT Ss;
-    USHORT Reserved4;
-    USHORT Ds;
-    USHORT Reserved5;
-    USHORT Fs;
-    USHORT Reserved6;
-    USHORT Gs;
-    USHORT Reserved7;
-    USHORT LDT;
-    USHORT Reserved8;
-    USHORT Flags;
-    USHORT IoMapBase;
-    KIIO_ACCESS_MAP IoMaps[IOPM_COUNT];
-    UCHAR IntDirectionMap[IOPM_DIRECTION_MAP_SIZE];
+    USHORT Backlink;		// 00
+    USHORT rsv02;			// 02
+    ULONG Esp0;				// 04
+    USHORT Ss0;				// 08
+    USHORT rsv0A;			// 0A
+    ULONG Esp1;				// 0C
+    USHORT Ss1;				// 10
+    USHORT rsv12;			// 12
+    ULONG Esp2;				// 14
+    USHORT Ss2;				// 18
+    USHORT rsv1A;			// 1A
+    ULONG CR3;				// 1C
+    ULONG Eip;				// 20
+    ULONG EFlags;			// 24
+    ULONG Eax;				// 28
+    ULONG Ecx;				// 2C
+    ULONG Edx;				// 30 
+    ULONG Ebx;				// 34
+    ULONG Esp;				// 38
+    ULONG Ebp;				// 3C
+    ULONG Esi;				// 40
+    ULONG Edi;				// 44
+    USHORT Es;				// 48
+    USHORT rsv4A;			// 4A
+    USHORT Cs;				// 4C
+    USHORT rsv4E;			// 4E
+    USHORT Ss;				// 50
+    USHORT rsv52;			// 52
+    USHORT Ds;				// 54
+    USHORT rsv56;			// 56
+    USHORT Fs;				// 58
+    USHORT rsv5A;			// 5A
+    USHORT Gs;				// 5C
+    USHORT rsv5E;			// 5E
+    USHORT LDT;				// 60
+    USHORT rsv62;			// 62
+    USHORT Flags;			// 64
+    USHORT IoMapBase;		// 66
+    KIIO_ACCESS_MAP IoMaps[1];	// 68
+    UCHAR IntDirectionMap[32];
 } KTSS, *PKTSS;
 
 //

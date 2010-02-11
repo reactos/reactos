@@ -900,7 +900,7 @@ UserGetProcessWindowStation(VOID)
    {
       DPRINT1("Should use ObFindHandleForObject\n");
       pti = PsGetCurrentThreadWin32Thread();
-      Status = ObOpenObjectByPointer(pti->rpdesk->rpwinstaParent,
+      Status = ObOpenObjectByPointer(pti->Desktop->WindowStation,
                                      0,
                                      NULL,
                                      WINSTA_ALL_ACCESS,
@@ -951,9 +951,9 @@ IntGetWinStaObj(VOID)
     */
 
    Win32Thread = PsGetCurrentThreadWin32Thread();
-   if(Win32Thread != NULL && Win32Thread->rpdesk != NULL)
+   if(Win32Thread != NULL && Win32Thread->Desktop != NULL)
    {
-      WinStaObj = Win32Thread->rpdesk->rpwinstaParent;
+      WinStaObj = Win32Thread->Desktop->WindowStation;
       ObReferenceObjectByPointer(WinStaObj, KernelMode, ExWindowStationObjectType, 0);
    }
    else if((CurrentProcess = PsGetCurrentProcess()) != CsrProcess)

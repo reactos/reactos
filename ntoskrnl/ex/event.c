@@ -13,9 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, ExpInitializeEventImplementation)
-#endif
 
 /* GLOBALS *******************************************************************/
 
@@ -36,10 +33,8 @@ static const INFORMATION_CLASS_INFO ExEventInfoClass[] =
 
 /* FUNCTIONS *****************************************************************/
 
-VOID
-INIT_FUNCTION
-NTAPI
-ExpInitializeEventImplementation(VOID)
+SECT_INIT_FN(ExpInitializeEventImplementation)
+VOID NTAPI ExpInitializeEventImplementation(VOID)
 {
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     UNICODE_STRING Name;
@@ -331,7 +326,6 @@ NtQueryEvent(IN HANDLE EventHandle,
                                          EventInformation,
                                          EventInformationLength,
                                          ReturnLength,
-                                         NULL,
                                          PreviousMode);
     if(!NT_SUCCESS(Status))
     {

@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/hal/x86/portio.c
  * PURPOSE:         Port I/O functions
- * PROGRAMMER:      Eric Kohl
+ * PROGRAMMER:      Eric Kohl (ekohl@abo.rhein-zeitung.de)
  * UPDATE HISTORY:
  *                  Created 18/10/99
  */

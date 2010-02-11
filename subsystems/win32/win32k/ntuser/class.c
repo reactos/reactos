@@ -551,7 +551,7 @@ IntGetClassForDesktop(IN OUT PCLS BaseClass,
                 Class->pclsClone = NULL;
                 Class->pclsBase = BaseClass;
                 Class->pclsNext = BaseClass->pclsClone;
-                (void)InterlockedExchangePointer((PVOID*)&BaseClass->pclsClone,
+                (void)InterlockedExchangePointer(&BaseClass->pclsClone,
                                                  Class);
             }
         }
@@ -1265,7 +1265,7 @@ UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
                            MenuName,
                            fnID,
                            dwFlags,
-                           pti->rpdesk,
+                           pti->Desktop,
                            pi);
 
     if (Class != NULL)

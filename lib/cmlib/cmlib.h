@@ -89,8 +89,6 @@
     #endif
 
     #include <ntdef.h>
-    #undef DECLSPEC_IMPORT
-    #define DECLSPEC_IMPORT
     #include <ntddk.h>
 #endif
 

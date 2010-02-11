@@ -38,9 +38,9 @@
 	<directory name="ke">
 		<if property="ARCH" value="i386">
 			<directory name="i386">
+				<file first="true">boot.S</file>
 				<file>abios.c</file>
 				<file>cpu.c</file>
-				<file>context.c</file>
 				<file>ctxswitch.S</file>
 				<file>exp.c</file>
 				<file>irqobj.c</file>
@@ -48,12 +48,13 @@
 				<file>ldt.c</file>
 				<file>mtrr.c</file>
 				<file>patpge.c</file>
+				<file>systimer.S</file>
 				<file>thrdini.c</file>
 				<file>trap.s</file>
-				<file>traphdlr.c</file>
 				<file>usercall_asm.S</file>
 				<file>usercall.c</file>
 				<file>v86vdm.c</file>
+				<file>v86m_sup.S</file>
 			</directory>
 		</if>
 		<if property="ARCH" value="arm">
@@ -65,6 +66,7 @@
 				<file>kiinit.c</file>
 				<file>stubs_asm.s</file>
 				<file>thrdini.c</file>
+				<file>time.c</file>
 				<file>trap.s</file>
 				<file>trapc.c</file>
 				<file>usercall.c</file>
@@ -105,7 +107,6 @@
 		<file>queue.c</file>
 		<file>semphobj.c</file>
 		<file>spinlock.c</file>
-		<file>time.c</file>
 		<file>thrdschd.c</file>
 		<file>thrdobj.c</file>
 		<file>timerobj.c</file>
@@ -402,6 +403,7 @@
 		</directory>
 		<file>anonmem.c</file>
 		<file>balance.c</file>
+		<file>dbgpool.c</file>
 		<file>freelist.c</file>
 		<file>marea.c</file>
 		<if property="_WINKD_" value ="1">
@@ -413,6 +415,7 @@
 		<file>pagefile.c</file>
 		<file>pageop.c</file>
 		<file>pe.c</file>
+		<file>pool.c</file>
 		<file>ppool.c</file>
 		<file>procsup.c</file>
 		<file>region.c</file>

@@ -13,9 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, ExpInitializeProfileImplementation)
-#endif
 
 #define TAG_PROFILE 'forP'
 
@@ -61,8 +58,8 @@ ExpDeleteProfile(PVOID ObjectBody)
     if (Profile->Process) ObDereferenceObject(Profile->Process);
 }
 
+SECT_INIT_FN(ExpInitializeProfileImplementation)
 VOID
-INIT_FUNCTION
 NTAPI
 ExpInitializeProfileImplementation(VOID)
 {

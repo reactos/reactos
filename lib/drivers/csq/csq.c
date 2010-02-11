@@ -30,7 +30,6 @@
 #define DECLSPEC_IMPORT
 #include <ntifs.h>
 
-
 static VOID NTAPI IopCsqCancelRoutine(PDEVICE_OBJECT DeviceObject,
                                PIRP Irp)
 /*
@@ -75,7 +74,7 @@ static VOID NTAPI IopCsqCancelRoutine(PDEVICE_OBJECT DeviceObject,
 	Csq->CsqReleaseLock(Csq, Irql);
 }
 
-
+
 NTSTATUS NTAPI IoCsqInitialize(PIO_CSQ Csq,
                                PIO_CSQ_INSERT_IRP CsqInsertIrp,
                                PIO_CSQ_REMOVE_IRP CsqRemoveIrp,
@@ -111,7 +110,6 @@ NTSTATUS NTAPI IoCsqInitialize(PIO_CSQ Csq,
 	return STATUS_SUCCESS;
 }
 
-
 NTSTATUS NTAPI IoCsqInitializeEx(PIO_CSQ Csq,
                                  PIO_CSQ_INSERT_IRP_EX CsqInsertIrpEx,
                                  PIO_CSQ_REMOVE_IRP CsqRemoveIrp,
@@ -147,7 +145,7 @@ NTSTATUS NTAPI IoCsqInitializeEx(PIO_CSQ Csq,
 	return STATUS_SUCCESS;
 }
 
-
+
 VOID NTAPI IoCsqInsertIrp(PIO_CSQ Csq,
                           PIRP Irp,
                           PIO_CSQ_IRP_CONTEXT Context)
@@ -164,7 +162,6 @@ VOID NTAPI IoCsqInsertIrp(PIO_CSQ Csq,
 	IoCsqInsertIrpEx(Csq, Irp, Context, 0);
 }
 
-
 NTSTATUS NTAPI IoCsqInsertIrpEx(PIO_CSQ Csq,
                                 PIRP Irp,
                                 PIO_CSQ_IRP_CONTEXT Context,
@@ -282,7 +279,6 @@ NTSTATUS NTAPI IoCsqInsertIrpEx(PIO_CSQ Csq,
 	return Retval;
 }
 
-
 PIRP NTAPI IoCsqRemoveIrp(PIO_CSQ Csq,
                           PIO_CSQ_IRP_CONTEXT Context)
 /*

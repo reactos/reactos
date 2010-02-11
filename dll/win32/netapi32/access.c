@@ -494,7 +494,7 @@ static void ACCESS_QueryAdminDisplayInformation(PNET_DISPLAY_USER *buf, PDWORD p
     PNET_DISPLAY_USER usr;
 
     /* set up buffer */
-    name_sz = lstrlenW(sAdminUserName) + 1;
+    name_sz = lstrlenW(sAdminUserName);
     comment_sz = 1;
     full_name_sz = 1;
     
@@ -533,7 +533,7 @@ static void ACCESS_QueryGuestDisplayInformation(PNET_DISPLAY_USER *buf, PDWORD p
     PNET_DISPLAY_USER usr;
 
     /* set up buffer */
-    name_sz = lstrlenW(sGuestUserName) + 1;
+    name_sz = lstrlenW(sGuestUserName);
     comment_sz = 1;
     full_name_sz = 1;
     

@@ -16,6 +16,7 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+/* $Id$ */
 
 #include <w32k.h>
 
@@ -655,61 +656,6 @@ NtGdiSetBitmapDimension(
     return Ret;
 }
 
-VOID IntHandleSpecialColorType(HDC hDC, COLORREF* Color)
-{
-    PDC pdc = NULL;
-    RGBQUAD quad;
-    PALETTEENTRY palEntry;
-    UINT index;
-
-    switch (*Color >> 24)
-    {
-        case 0x10: /* DIBINDEX */
-            if (IntGetDIBColorTable(hDC, LOWORD(*Color), 1, &quad) == 1) 
-            {
-                *Color = RGB(quad.rgbRed, quad.rgbGreen, quad.rgbBlue);
-            }
-            else
-            {
-                /* Out of color table bounds - use black */
-                *Color = RGB(0, 0, 0);
-            }
-            break;
-        case 0x02: /* PALETTERGB */
-            pdc = DC_LockDc(hDC);
-            if (pdc->dclevel.hpal != NtGdiGetStockObject(DEFAULT_PALETTE))
-            {
-                index = NtGdiGetNearestPaletteIndex(pdc->dclevel.hpal, *Color);
-                IntGetPaletteEntries(pdc->dclevel.hpal, index, 1, &palEntry);
-                *Color = RGB(palEntry.peRed, palEntry.peGreen, palEntry.peBlue);
-            }
-            else
-            {
-                /* Use the pure color */
-                *Color = *Color & 0x00FFFFFF;
-            }
-            DC_UnlockDc(pdc);
-            break;
-        case 0x01: /* PALETTEINDEX */
-            pdc = DC_LockDc(hDC);
-            if (IntGetPaletteEntries(pdc->dclevel.hpal, LOWORD(*Color), 1, &palEntry) == 1)
-            {
-                *Color = RGB(palEntry.peRed, palEntry.peGreen, palEntry.peBlue);
-            }
-            else
-            {
-                /* Index does not exist, use zero index */
-                IntGetPaletteEntries(pdc->dclevel.hpal, 0, 1, &palEntry);
-                *Color = RGB(palEntry.peRed, palEntry.peGreen, palEntry.peBlue);
-            }
-            DC_UnlockDc(pdc);
-            break;
-        default:
-            DPRINT("Unsupported color type %d passed\n", *Color >> 24);
-            break;
-    }   
-}
-
 BOOL APIENTRY
 GdiSetPixelV(
     HDC hDC,
@@ -717,28 +663,22 @@ GdiSetPixelV(
     INT Y,
     COLORREF Color)
 {
-    HBRUSH hBrush;
+    HBRUSH hbrush = NtGdiCreateSolidBrush(Color, NULL);
     HGDIOBJ OldBrush;
 
-    if ((Color & 0xFF000000) != 0)
-    {
-        IntHandleSpecialColorType(hDC, &Color);
-    }
+    if (hbrush == NULL)
+        return(FALSE);
 
-    hBrush = NtGdiCreateSolidBrush(Color, NULL);
-    if (hBrush == NULL)
-        return FALSE;
-
-    OldBrush = NtGdiSelectBrush(hDC, hBrush);
+    OldBrush = NtGdiSelectBrush(hDC, hbrush);
     if (OldBrush == NULL)
     {
-        GreDeleteObject(hBrush);
-        return FALSE;
+        GreDeleteObject(hbrush);
+        return(FALSE);
     }
 
     NtGdiPatBlt(hDC, X, Y, 1, 1, PATCOPY);
     NtGdiSelectBrush(hDC, OldBrush);
-    GreDeleteObject(hBrush);
+    GreDeleteObject(hbrush);
 
     return TRUE;
 }

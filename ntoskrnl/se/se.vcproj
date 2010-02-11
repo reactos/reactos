@@ -73,7 +73,7 @@
 		<Configuration
 			Name="r|Win32"
 			OutputDirectory="$(lib)"
-			ConfigurationType="4"
+			ConfigurationType="1"
 			InheritedPropertySheets="..\ntoskrnl.vsprops"
 			CharacterSet="2"
 			WholeProgramOptimization="0"
@@ -109,10 +109,17 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLibrarianTool"
+				Name="VCLinkerTool"
+				GenerateDebugInformation="true"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -122,6 +129,9 @@
 			/>
 			<Tool
 				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"

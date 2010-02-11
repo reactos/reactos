@@ -20,20 +20,10 @@
 
 VOID
 NTAPI
-Ki386VdmEnablePentiumExtentions(IN BOOLEAN Enable)
+Ki386VdmEnablePentiumExtentions(VOID)
 {
-    ULONG EFlags, Cr4;
-    
-    /* Save interrupt state and disable them */
-    EFlags = __readeflags();
-    _disable();
-    
-    /* Enable or disable VME as required */
-    Cr4 = __readcr4();
-    __writecr4(Enable ? Cr4 | CR4_VME : Cr4 & ~CR4_VME);
-    
-    /* Restore interrupt state */
-    __writeeflags(EFlags);
+    /* FIXME: Support this */
+    DPRINT1("VME support detected but not yet taken advantage of\n");
 }
 
 VOID
@@ -73,7 +63,7 @@ KeI386VdmInitialize(VOID)
         if (KeGetPcr()->Prcb->FeatureBits & KF_V86_VIS)
         {
             /* Enable them. FIXME: Use IPI */
-            Ki386VdmEnablePentiumExtentions(TRUE);
+            Ki386VdmEnablePentiumExtentions();
             KeI386VirtualIntExtensions = TRUE;
         }
     }

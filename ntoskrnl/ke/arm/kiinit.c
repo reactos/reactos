@@ -18,7 +18,6 @@ KINTERRUPT KxUnexpectedInterrupt;
 BOOLEAN KeIsArmV6;
 ULONG KeNumberProcessIds;
 ULONG KeNumberTbEntries;
-ULONG ProcessCount; // PERF
 extern PVOID KiArmVectorTable;
 #define __ARMV6__ KeIsArmV6
 
@@ -115,7 +114,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
             //
             // Copy the template code
             //
-            KxUnexpectedInterrupt.DispatchCode[i] = ((PULONG)KiInterruptTemplate)[i];
+            KxUnexpectedInterrupt.DispatchCode[i] = KiInterruptTemplate[i];
         }
         
         //

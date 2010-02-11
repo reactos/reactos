@@ -533,7 +533,7 @@ void nsfree(void *mem)
     nsIMemory_Free(nsmem, mem);
 }
 
-static void nsACString_Init(nsACString *str, const char *data)
+void nsACString_Init(nsACString *str, const char *data)
 {
     NS_CStringContainerInit(str);
     if(data)
@@ -550,7 +550,7 @@ PRUint32 nsACString_GetData(const nsACString *str, const char **data)
     return NS_CStringGetData(str, data, NULL);
 }
 
-static void nsACString_Finish(nsACString *str)
+void nsACString_Finish(nsACString *str)
 {
     NS_CStringContainerFinish(str);
 }
@@ -1149,7 +1149,6 @@ static nsresult NSAPI nsURIContentListener_OnStartURIOpen(nsIURIContentListener 
     nsIWineURI *wine_uri;
     nsACString spec_str;
     const char *spec;
-    BOOL is_doc_uri;
     nsresult nsres;
 
     nsACString_Init(&spec_str, NULL);
@@ -1166,12 +1165,29 @@ static nsresult NSAPI nsURIContentListener_OnStartURIOpen(nsIURIContentListener 
         return NS_ERROR_NOT_IMPLEMENTED;
     }
 
-    nsIWineURI_GetIsDocumentURI(wine_uri, &is_doc_uri);
+    nsIWineURI_SetNSContainer(wine_uri, This);
+    nsIWineURI_SetIsDocumentURI(wine_uri, TRUE);
 
-    if(!is_doc_uri) {
-        nsIWineURI_SetNSContainer(wine_uri, This);
-        nsIWineURI_SetIsDocumentURI(wine_uri, TRUE);
+    if(This->bscallback) {
+        IMoniker *mon = get_channelbsc_mon(This->bscallback);
 
+        if(mon) {
+            LPWSTR wine_url;
+            HRESULT hres;
+
+            hres = IMoniker_GetDisplayName(mon, NULL, 0, &wine_url);
+            if(SUCCEEDED(hres)) {
+                nsIWineURI_SetWineURL(wine_uri, wine_url);
+                CoTaskMemFree(wine_url);
+            }else {
+                WARN("GetDisplayName failed: %08x\n", hres);
+            }
+
+            IMoniker_Release(mon);
+        }
+
+        *_retval = FALSE;
+    }else if(This->doc) {
         *_retval = translate_url(This->doc->basedoc.doc_obj, wine_uri);
     }
 

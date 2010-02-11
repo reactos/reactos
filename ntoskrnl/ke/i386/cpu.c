@@ -27,7 +27,7 @@ ULONG KeProcessorArchitecture;
 ULONG KeProcessorLevel;
 ULONG KeProcessorRevision;
 ULONG KeFeatureBits;
-ULONG KiFastSystemCallDisable;
+ULONG KiFastSystemCallDisable = 1;
 ULONG KeI386NpxPresent = 0;
 ULONG KiMXCsrMask = 0;
 ULONG MxcsrFeatureMask = 0;
@@ -40,20 +40,10 @@ ULONG KeLargestCacheLine = 0x40;
 ULONG KeDcacheFlushCount = 0;
 ULONG KeIcacheFlushCount = 0;
 ULONG KiDmaIoCoherency = 0;
-ULONG KePrefetchNTAGranularity = 32;
 CHAR KeNumberProcessors;
 KAFFINITY KeActiveProcessors = 1;
 BOOLEAN KiI386PentiumLockErrataPresent;
 BOOLEAN KiSMTProcessorsPresent;
-
-/* The distance between SYSEXIT and IRETD return modes */
-UCHAR KiSystemCallExitAdjust;
-
-/* The offset that was applied -- either 0 or the value above */
-UCHAR KiSystemCallExitAdjusted;
-
-/* Whether the adjustment was already done once */
-BOOLEAN KiFastCallCopyDoneOnce;
 
 /* Flush data */
 volatile LONG KiTbFlushTimeStamp;
@@ -454,7 +444,6 @@ KiGetCacheInformation(VOID)
     ULONG CacheRequests = 0, i;
     ULONG CurrentRegister;
     UCHAR RegisterByte;
-    ULONG Size, Associativity = 0, CacheLine = 64, CurrentSize = 0;
     BOOLEAN FirstPass = TRUE;
 
     /* Set default L2 size */
@@ -519,144 +508,17 @@ KiGetCacheInformation(VOID)
                              * (32MB), or from 0x80 to 0x89 (same size but
                              * 8-way associative.
                              */
-                            if (((RegisterByte > 0x40) && (RegisterByte <= 0x47)) ||
-                                ((RegisterByte > 0x78) && (RegisterByte <= 0x7C)) ||
-                                ((RegisterByte > 0x80) && (RegisterByte <= 0x85)))
+                            if (((RegisterByte > 0x40) &&
+                                 (RegisterByte <= 0x49)) ||
+                                ((RegisterByte > 0x80) &&
+                                (RegisterByte <= 0x89)))
                             {
-                                /* Compute associativity */
-                                Associativity = 4;
-                                if (RegisterByte >= 0x79) Associativity = 8;
-                                
                                 /* Mask out only the first nibble */
-                                RegisterByte &= 0x07;
+                                RegisterByte &= 0x0F;
 
-                                /* Check if this cache is bigger than the last */
-                                Size = 0x10000 << RegisterByte;
-                                if ((Size / Associativity) > CurrentSize)
-                                {
-                                    /* Set the L2 Cache Size and Associativity */
-                                    CurrentSize = Size / Associativity;
-                                    Pcr->SecondLevelCacheSize = Size;
-                                    Pcr->SecondLevelCacheAssociativity = Associativity;
-                                }
-                            }
-                            else if ((RegisterByte > 0x21) && (RegisterByte <= 0x29))
-                            {
-                                /* Set minimum cache line size */
-                                if (CacheLine < 128) CacheLine = 128;
-                                
-                                /* Hard-code size/associativity */
-                                Associativity = 8;
-                                switch (RegisterByte)
-                                {
-                                    case 0x22:
-                                        Size = 512 * 1024;
-                                        Associativity = 4;
-                                        break;
-                                        
-                                    case 0x23:
-                                        Size = 1024 * 1024;
-                                        break;
-                                        
-                                    case 0x25:
-                                        Size = 2048 * 1024;
-                                        break;
-                                        
-                                    case 0x29:
-                                        Size = 4096 * 1024;
-                                        break;
-                                    
-                                    default:
-                                        Size = 0;
-                                        break;
-                                }
-                                
-                                /* Check if this cache is bigger than the last */
-                                if ((Size / Associativity) > CurrentSize)
-                                {
-                                    /* Set the L2 Cache Size and Associativity */
-                                    CurrentSize = Size / Associativity;
-                                    Pcr->SecondLevelCacheSize = Size;
-                                    Pcr->SecondLevelCacheAssociativity = Associativity;
-                                }
-                            }
-                            else if (((RegisterByte > 0x65) && (RegisterByte < 0x69)) ||
-                                      (RegisterByte == 0x2C) || (RegisterByte == 0xF0))
-                            {
-                                /* Indicates L1 cache line of 64 bytes */
-                                KePrefetchNTAGranularity = 64;
-                            }
-                            else if (RegisterByte == 0xF1)
-                            {
-                                /* Indicates L1 cache line of 128 bytes */
-                                KePrefetchNTAGranularity = 128;
-                            }
-                            else if (((RegisterByte >= 0x4A) && (RegisterByte <= 0x4C)) ||
-                                      (RegisterByte == 0x78) ||
-                                      (RegisterByte == 0x7D) ||
-                                      (RegisterByte == 0x7F) ||
-                                      (RegisterByte == 0x86) ||
-                                      (RegisterByte == 0x87))
-                            {
-                                /* Set minimum cache line size */
-                                if (CacheLine < 64) CacheLine = 64;
-                                
-                                /* Hard-code size/associativity */
-                                switch (RegisterByte)
-                                {
-                                    case 0x4A:
-                                        Size = 4 * 1024 * 1024;
-                                        Associativity = 8;
-                                        break;
-                                        
-                                    case 0x4B:
-                                        Size = 6 * 1024 * 1024;
-                                        Associativity = 12;
-                                        break;
-                                        
-                                    case 0x4C:
-                                        Size = 8 * 1024 * 1024;
-                                        Associativity = 16;
-                                        break;
-                                        
-                                    case 0x78:
-                                        Size = 1 * 1024 * 1024;
-                                        Associativity = 4;
-                                        break;
-                                        
-                                    case 0x7D:
-                                        Size = 2 * 1024 * 1024;
-                                        Associativity = 8;
-                                        break;
-                                            
-                                    case 0x7F:
-                                        Size = 512 * 1024;
-                                        Associativity = 2;
-                                        break;
-                                                
-                                    case 0x86:
-                                        Size = 512 * 1024;
-                                        Associativity = 4;
-                                        break;
-                                    
-                                    case 0x87:
-                                        Size = 1 * 1024 * 1024;
-                                        Associativity = 8;
-                                        break;
-
-                                    default:
-                                        Size = 0;
-                                        break;
-                                }
-                                
-                                /* Check if this cache is bigger than the last */
-                                if ((Size / Associativity) > CurrentSize)
-                                {
-                                    /* Set the L2 Cache Size and Associativity */
-                                    CurrentSize = Size / Associativity;
-                                    Pcr->SecondLevelCacheSize = Size;
-                                    Pcr->SecondLevelCacheAssociativity = Associativity;
-                                }
+                                /* Set the L2 Cache Size */
+                                Pcr->SecondLevelCacheSize = 0x10000 <<
+                                                            RegisterByte;
                             }
                         }
                     }
@@ -666,65 +528,15 @@ KiGetCacheInformation(VOID)
 
         case CPU_AMD:
 
-            /* Check if we support CPUID 0x80000005 */
-            CPUID(0x80000000, &Data[0], &Data[1], &Data[2], &Data[3]);
-            if (Data[0] >= 0x80000006)
+            /* Check if we support CPUID 0x80000006 */
+            CPUID(0x80000000, &Data[0], &Dummy, &Dummy, &Dummy);
+            if (Data[0] >= 6)
             {
-                /* Get L1 size first */
-                CPUID(0x80000005, &Data[0], &Data[1], &Data[2], &Data[3]);
-                KePrefetchNTAGranularity = Data[2] & 0xFF;
-                
-                /* Check if we support CPUID 0x80000006 */
-                CPUID(0x80000000, &Data[0], &Data[1], &Data[2], &Data[3]);
-                if (Data[0] >= 0x80000006)
-                {   
-                    /* Get 2nd level cache and tlb size */
-                    CPUID(0x80000006, &Data[0], &Data[1], &Data[2], &Data[3]);
-                    
-                    /* Cache line size */
-                    CacheLine = Data[2] & 0xFF;
-                    
-                    /* Hardcode associativity */
-                    RegisterByte = Data[2] >> 12;
-                    switch (RegisterByte)
-                    {
-                        case 2:
-                            Associativity = 2;
-                            break;
-                        
-                        case 4:
-                            Associativity = 4;
-                            break;
-                            
-                        case 6:
-                            Associativity = 8;
-                            break;
-                            
-                        case 8:
-                        case 15:
-                            Associativity = 16;
-                            break;
-                        
-                        default:
-                            Associativity = 1;
-                            break;
-                    }
-                    
-                    /* Compute size */
-                    Size = (Data[2] >> 16) << 10;
-                    
-                    /* Hack for Model 6, Steping 300 */
-                    if ((KeGetCurrentPrcb()->CpuType == 6) &&
-                        (KeGetCurrentPrcb()->CpuStep == 0x300))
-                    {
-                        /* Stick 64K in there */
-                        Size = 64 * 1024;
-                    }
+                /* Get 2nd level cache and tlb size */
+                CPUID(0x80000006, &Dummy, &Dummy, &Data[2], &Dummy);
 
-                    /* Set the L2 Cache Size and associativity */
-                    Pcr->SecondLevelCacheSize = Size;
-                    Pcr->SecondLevelCacheAssociativity = Associativity;
-                }
+                /* Set the L2 Cache Size */
+                Pcr->SecondLevelCacheSize = (Data[2] & 0xFFFF0000) >> 6;
             }
             break;
 
@@ -736,14 +548,6 @@ KiGetCacheInformation(VOID)
             /* FIXME */
             break;
     }
-    
-    /* Set the cache line */
-    if (CacheLine > KeLargestCacheLine) KeLargestCacheLine = CacheLine;
-    DPRINT1("Prefetch Cache: %d bytes\tL2 Cache: %d bytes\tL2 Cache Line: %d bytes\tL2 Cache Associativity: %d\n",
-            KePrefetchNTAGranularity,
-            Pcr->SecondLevelCacheSize,
-            KeLargestCacheLine,
-            Pcr->SecondLevelCacheAssociativity);
 }
 
 VOID
@@ -778,12 +582,11 @@ KiInitializeTSS2(IN PKTSS Tss,
     }
 
     /* Now clear the I/O Map */
-    ASSERT(IOPM_COUNT == 1);
-    RtlFillMemory(Tss->IoMaps[0].IoMap, IOPM_FULL_SIZE, 0xFF);
+    RtlFillMemory(Tss->IoMaps[0].IoMap, 8096, -1);
 
     /* Initialize Interrupt Direction Maps */
     p = (PUCHAR)(Tss->IoMaps[0].DirectionMap);
-    RtlZeroMemory(p, IOPM_DIRECTION_MAP_SIZE);
+    RtlZeroMemory(p, 32);
 
     /* Add DPMI support for interrupts */
     p[0] = 4;
@@ -792,7 +595,7 @@ KiInitializeTSS2(IN PKTSS Tss,
 
     /* Initialize the default Interrupt Direction Map */
     p = Tss->IntDirectionMap;
-    RtlZeroMemory(Tss->IntDirectionMap, IOPM_DIRECTION_MAP_SIZE);
+    RtlZeroMemory(Tss->IntDirectionMap, 32);
 
     /* Add DPMI support */
     p[0] = 4;
@@ -832,7 +635,7 @@ Ki386InitializeTss(IN PKTSS Tss,
     KiInitializeTSS(Tss);
 
     /* Load the task register */
-    Ke386SetTr(KGDT_TSS);
+    CpuSetTr(KGDT_TSS);
 
     /* Setup the Task Gate for Double Fault Traps */
     TaskGateEntry = (PKGDTENTRY)&Idt[8];
@@ -845,12 +648,12 @@ Ki386InitializeTss(IN PKTSS Tss,
     Tss = (PKTSS)KiDoubleFaultTSS;
     KiInitializeTSS(Tss);
     Tss->CR3 = __readcr3();
-    Tss->Esp0 = KiDoubleFaultStack;
-    Tss->Esp = KiDoubleFaultStack;
-    Tss->Eip = PtrToUlong(KiTrap08);
+    Tss->Esp0 = PtrToUlong(KiDoubleFaultStack);
+    Tss->Esp = PtrToUlong(KiDoubleFaultStack);
+    Tss->Eip = PtrToUlong(KiTrap8);
     Tss->Cs = KGDT_R0_CODE;
     Tss->Fs = KGDT_R0_PCR;
-    Tss->Ss = Ke386GetSs();
+    Tss->Ss = CpuGetSs();
     Tss->Es = KGDT_R3_DATA | RPL_MASK;
     Tss->Ds = KGDT_R3_DATA | RPL_MASK;
 
@@ -875,12 +678,12 @@ Ki386InitializeTss(IN PKTSS Tss,
     Tss = (PKTSS)KiNMITSS;
     KiInitializeTSS(Tss);
     Tss->CR3 = __readcr3();
-    Tss->Esp0 = KiDoubleFaultStack;
-    Tss->Esp = KiDoubleFaultStack;
-    Tss->Eip = PtrToUlong(KiTrap02);
+    Tss->Esp0 = PtrToUlong(KiDoubleFaultStack);
+    Tss->Esp = PtrToUlong(KiDoubleFaultStack);
+    Tss->Eip = PtrToUlong(KiTrap2);
     Tss->Cs = KGDT_R0_CODE;
     Tss->Fs = KGDT_R0_PCR;
-    Tss->Ss = Ke386GetSs();
+    Tss->Ss = CpuGetSs();
     Tss->Es = KGDT_R3_DATA | RPL_MASK;
     Tss->Ds = KGDT_R3_DATA | RPL_MASK;
 
@@ -913,7 +716,7 @@ KiRestoreProcessorControlState(PKPROCESSOR_STATE ProcessorState)
     // Restore the CR registers
     //
     __writecr0(ProcessorState->SpecialRegisters.Cr0);
-    Ke386SetCr2(ProcessorState->SpecialRegisters.Cr2);
+    CpuSetCr2(ProcessorState->SpecialRegisters.Cr2);
     __writecr3(ProcessorState->SpecialRegisters.Cr3);
     if (KeFeatureBits & KF_CR4) __writecr4(ProcessorState->SpecialRegisters.Cr4);
 
@@ -930,9 +733,8 @@ KiRestoreProcessorControlState(PKPROCESSOR_STATE ProcessorState)
     //
     // Restore GDT and IDT
     //
-    Ke386SetGlobalDescriptorTable(&ProcessorState->SpecialRegisters.Gdtr.Limit);
-	
-    __lidt(&ProcessorState->SpecialRegisters.Idtr.Limit);
+    CpuSetGdt(&ProcessorState->SpecialRegisters.Gdtr.Limit);
+    CpuSetIdt(&ProcessorState->SpecialRegisters.Idtr.Limit);
 
     //
     // Clear the busy flag so we don't crash if we reload the same selector
@@ -944,8 +746,8 @@ KiRestoreProcessorControlState(PKPROCESSOR_STATE ProcessorState)
     //
     // Restore TSS and LDT
     //
-    Ke386SetTr(ProcessorState->SpecialRegisters.Tr);
-    Ke386SetLocalDescriptorTable(ProcessorState->SpecialRegisters.Ldtr);
+    CpuSetTr(ProcessorState->SpecialRegisters.Tr);
+    CpuSetLdt(ProcessorState->SpecialRegisters.Ldtr);
 }
 
 VOID
@@ -969,10 +771,10 @@ KiSaveProcessorControlState(OUT PKPROCESSOR_STATE ProcessorState)
     __writedr(7, 0);
 
     /* Save GDT, IDT, LDT and TSS */
-    Ke386GetGlobalDescriptorTable(&ProcessorState->SpecialRegisters.Gdtr.Limit);
-    __sidt(&ProcessorState->SpecialRegisters.Idtr.Limit);
-    ProcessorState->SpecialRegisters.Tr = Ke386GetTr();
-    ProcessorState->SpecialRegisters.Ldtr = Ke386GetLocalDescriptorTable();
+    CpuGetGdt(&ProcessorState->SpecialRegisters.Gdtr.Limit);
+	CpuGetIdt(&ProcessorState->SpecialRegisters.Idtr.Limit);
+    ProcessorState->SpecialRegisters.Tr = CpuGetTr();
+    ProcessorState->SpecialRegisters.Ldtr = CpuGetLdt();
 }
 
 VOID
@@ -998,92 +800,16 @@ KiLoadFastSyscallMachineSpecificRegisters(IN ULONG_PTR Context)
 
 VOID
 NTAPI
-KiDisableFastSyscallReturn(VOID)
-{
-#if 0
-    /* Was it applied? */
-    if (KiSystemCallExitAdjusted)
-    {        
-        /* Restore the original value */
-        KiSystemCallExitBranch[1] = KiSystemCallExitBranch[1] - KiSystemCallExitAdjusted;
-                
-        /* It's not adjusted anymore */
-        KiSystemCallExitAdjusted = FALSE;
-    }
-#endif
-}
-
-VOID
-NTAPI
-KiEnableFastSyscallReturn(VOID)
-{
-#if 0
-	/* Check if the patch has already been done */
-    if ((KiSystemCallExitAdjusted == KiSystemCallExitAdjust) &&
-        (KiFastCallCopyDoneOnce))
-    {
-        return;
-    }
-    
-    /* Make sure the offset is within the distance of a Jxx SHORT */
-    if ((KiSystemCallExitBranch[1] - KiSystemCallExitAdjust) < 0x80)
-    {
-        /* Remove any existing code patch */
-        KiDisableFastSyscallReturn();
-        
-        /* We should have a JNZ there */
-        ASSERT(KiSystemCallExitBranch[0] == 0x75);
-
-        /* Do the patch */        
-        KiSystemCallExitAdjusted = KiSystemCallExitAdjust;
-        KiSystemCallExitBranch[1] -= KiSystemCallExitAdjusted;
-        
-        /* Remember that we've done it */
-        KiFastCallCopyDoneOnce = TRUE;
-    }
-    else
-    {
-        /* This shouldn't happen unless we've messed the macros up */
-        DPRINT1("Your compiled kernel is broken!\n");
-        DbgBreakPoint();
-    }
-#endif
-}
-
-VOID
-NTAPI
 KiRestoreFastSyscallReturnState(VOID)
 {
-#if 0
-	/* Check if the CPU Supports fast system call */
-    if (KeFeatureBits & KF_FAST_SYSCALL)
-    {
-        /* Check if it has been disabled */
-        if (!KiFastSystemCallDisable)
-        {
-            /* KiSystemCallExit2 should come BEFORE KiSystemCallExit */
-            ASSERT(KiSystemCallExit2 < KiSystemCallExit);
-            
-            /* It's enabled, so we'll have to do a code patch */
-            KiSystemCallExitAdjust = KiSystemCallExit - KiSystemCallExit2;
-        }
-        else
-        {
-            /* Disable fast system call */
-            KeFeatureBits &= ~KF_FAST_SYSCALL;
-        }
-    }
-    
-    /* Now check if all CPUs support fast system call, and the registry allows it */
+    /* FIXME: NT has support for SYSCALL, IA64-SYSENTER, etc. */
+
+    /* Check if the CPU Supports fast system call */
     if (KeFeatureBits & KF_FAST_SYSCALL)
     {
         /* Do an IPI to enable it */
         KeIpiGenericCall(KiLoadFastSyscallMachineSpecificRegisters, 0);
     }
-    
-    /* Perform the code patch that is required */
-    KiEnableFastSyscallReturn();
-#endif
 }
 
 ULONG_PTR
@@ -1110,13 +836,13 @@ Ki386EnableXMMIExceptions(IN ULONG_PTR Context)
 {
     PKIDTENTRY IdtEntry;
 
-    /* Get the IDT Entry for Interrupt 0x13 */
-    IdtEntry = &((PKIPCR)KeGetPcr())->IDT[0x13];
+    /* Get the IDT Entry for Interrupt 19 */
+    IdtEntry = &((PKIPCR)KeGetPcr())->IDT[19];
 
     /* Set it up */
     IdtEntry->Selector = KGDT_R0_CODE;
-    IdtEntry->Offset = ((ULONG_PTR)KiTrap13 & 0xFFFF);
-    IdtEntry->ExtendedOffset = ((ULONG_PTR)KiTrap13 >> 16) & 0xFFFF;
+    IdtEntry->Offset = ((ULONG_PTR)KiTrap19 & 0xFFFF);
+    IdtEntry->ExtendedOffset = ((ULONG_PTR)KiTrap19 >> 16) & 0xFFFF;
     ((PKIDT_ACCESS)&IdtEntry->Access)->Dpl = 0;
     ((PKIDT_ACCESS)&IdtEntry->Access)->Present = 1;
     ((PKIDT_ACCESS)&IdtEntry->Access)->SegmentType = I386_INTERRUPT_GATE;
@@ -1197,194 +923,7 @@ KeZeroPages(IN PVOID Address,
     RtlZeroMemory(Address, Size);
 }
 
-VOID
-NTAPI
-KiSaveProcessorState(IN PKTRAP_FRAME TrapFrame,
-                     IN PKEXCEPTION_FRAME ExceptionFrame)
-{
-    PKPRCB Prcb = KeGetCurrentPrcb();
-
-    //
-    // Save full context
-    //
-    Prcb->ProcessorState.ContextFrame.ContextFlags = CONTEXT_FULL |
-                                                     CONTEXT_DEBUG_REGISTERS;
-    KeTrapFrameToContext(TrapFrame, NULL, &Prcb->ProcessorState.ContextFrame);
-
-    //
-    // Save control registers
-    //
-    KiSaveProcessorControlState(&Prcb->ProcessorState);
-}
-
-BOOLEAN
-NTAPI
-KiIsNpxPresent(VOID)
-{
-    ULONG Cr0;
-    USHORT Magic;
-    
-    /* Set magic */
-    Magic = 0xFFFF;
-    
-    /* Read CR0 and mask out FPU flags */
-    Cr0 = __readcr0() & ~(CR0_MP | CR0_TS | CR0_EM | CR0_ET);
-    
-    /* Store on FPU stack */
-	CpuFninit();
-	CpuFnGetSw_m(Magic);
-
-    /* Magic should now be cleared */
-    if (Magic & 0xFF)
-    {
-        /* You don't have an FPU -- enable emulation for now */
-        __writecr0(Cr0 | CR0_EM | CR0_TS);
-        return FALSE;
-    }
-    
-    /* You have an FPU, enable it */
-    Cr0 |= CR0_ET;
-    
-    /* Enable INT 16 on 486 and higher */
-    if (KeGetCurrentPrcb()->CpuType >= 3) Cr0 |= CR0_NE;
-    
-    /* Set FPU state */
-    __writecr0(Cr0 | CR0_EM | CR0_TS);
-    return TRUE;
-}
-
-BOOLEAN
-NTAPI
-KiIsNpxErrataPresent(VOID)
-{
-    BOOLEAN ErrataPresent;
-    ULONG Cr0;
-    volatile double Value1, Value2;
-    
-    /* Disable interrupts */
-    _disable();
-    
-    /* Read CR0 and remove FPU flags */
-    Cr0 = __readcr0();
-    __writecr0(Cr0 & ~(CR0_MP | CR0_TS | CR0_EM));
-    
-    /* Initialize FPU state */
-	CpuFninit();
-    
-    /* Multiply the magic values and divide, we should get the result back */
-    Value1 = 4195835.0;
-    Value2 = 3145727.0;
-    ErrataPresent = (Value1 * Value2 / 3145727.0) != 4195835.0;
-    
-    /* Restore CR0 */
-    __writecr0(Cr0);
-    
-    /* Enable interrupts */
-    _enable();
-    
-    /* Return if there's an errata */
-    return ErrataPresent;
-}
-
-VOID
-NTAPI
-KiFlushNPXState(IN PFLOATING_SAVE_AREA SaveArea)
-{
-    ULONG EFlags, Cr0;
-    PKTHREAD Thread, NpxThread;
-    PFX_SAVE_AREA FxSaveArea;
-    
-    /* Save volatiles and disable interrupts */
-    EFlags = __readeflags();
-    _disable();
-    
-    /* Save the PCR and get the current thread */
-    Thread = KeGetCurrentThread();
-    
-    /* Check if we're already loaded */
-    if (Thread->NpxState != NPX_STATE_LOADED)
-    {
-        /* If there's nothing to load, quit */
-        if (!SaveArea) return;
-        
-        /* Need FXSR support for this */
-        ASSERT(KeI386FxsrPresent == TRUE);
-        
-        /* Check for sane CR0 */
-        Cr0 = __readcr0();
-        if (Cr0 & (CR0_MP | CR0_TS | CR0_EM))
-        {
-            /* Mask out FPU flags */
-            __writecr0(Cr0 & ~(CR0_MP | CR0_TS | CR0_EM));
-        }
-        
-        /* Get the NPX thread and check its FPU state */
-        NpxThread = KeGetCurrentPrcb()->NpxThread;
-        if ((NpxThread) && (NpxThread->NpxState == NPX_STATE_LOADED))
-        {
-            /* Get the FX frame and store the state there */
-            FxSaveArea = KiGetThreadNpxArea(NpxThread);
-            Ke386FxSave(FxSaveArea);
-            
-            /* NPX thread has lost its state */
-            NpxThread->NpxState = NPX_STATE_NOT_LOADED;
-        }
-        
-        /* Now load NPX state from the NPX area */
-        FxSaveArea = KiGetThreadNpxArea(Thread);
-        Ke386FxStore(FxSaveArea);    
-    }
-    else
-    {
-        /* Check for sane CR0 */
-        Cr0 = __readcr0();
-        if (Cr0 & (CR0_MP | CR0_TS | CR0_EM))
-        {
-            /* Mask out FPU flags */
-            __writecr0(Cr0 & ~(CR0_MP | CR0_TS | CR0_EM));
-        }
-        
-        /* Get FX frame */
-        FxSaveArea = KiGetThreadNpxArea(Thread);
-        Thread->NpxState = NPX_STATE_NOT_LOADED;
-        
-        /* Save state if supported by CPU */
-        if (KeI386FxsrPresent) Ke386FxSave(FxSaveArea);
-    }
-
-    /* Now save the FN state wherever it was requested */
-    if (SaveArea) Ke386FnSave(SaveArea);
-
-    /* Clear NPX thread */
-    KeGetCurrentPrcb()->NpxThread = NULL;
-    
-    /* Add the CR0 from the NPX frame */
-    Cr0 |= NPX_STATE_NOT_LOADED;
-    Cr0 |= FxSaveArea->Cr0NpxState;
-    __writecr0(Cr0);
-    
-    /* Restore interrupt state */
-    __writeeflags(EFlags);
-}
-
 /* PUBLIC FUNCTIONS **********************************************************/
-
-/*
- * @implemented
- */
-VOID
-NTAPI
-KiCoprocessorError(VOID)
-{
-    PFX_SAVE_AREA NpxArea;
-    
-    /* Get the FPU area */
-    NpxArea = KiGetThreadNpxArea(KeGetCurrentThread());
-    
-    /* Set CR0_TS */
-    NpxArea->Cr0NpxState = CR0_TS;
-    __writecr0(__readcr0() | CR0_TS);
-}
 
 /*
  * @implemented
@@ -1395,7 +934,7 @@ KeSaveFloatingPointState(OUT PKFLOATING_SAVE Save)
 {
     PFNSAVE_FORMAT FpState;
     ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
-    DPRINT1("%s is not really implemented\n", __FUNCTION__);
+	UNIMPLEMENTED
 
     /* check if we are doing software emulation */
     if (!KeI386NpxPresent) return STATUS_ILLEGAL_FLOAT_CONTEXT;
@@ -1404,6 +943,7 @@ KeSaveFloatingPointState(OUT PKFLOATING_SAVE Save)
     if (!FpState) return STATUS_INSUFFICIENT_RESOURCES;
 
     *((PVOID *) Save) = FpState;
+
 	CpuFnsave(FpState);
 
     KeGetCurrentThread()->DispatcherHeader.NpxIrql = KeGetCurrentIrql();
@@ -1419,7 +959,7 @@ KeRestoreFloatingPointState(IN PKFLOATING_SAVE Save)
 {
     PFNSAVE_FORMAT FpState = *((PVOID *) Save);
     ASSERT(KeGetCurrentThread()->DispatcherHeader.NpxIrql == KeGetCurrentIrql());
-    DPRINT1("%s is not really implemented\n", __FUNCTION__);
+	UNIMPLEMENTED
 
 	CpuFnclex();
 	CpuFrstor(FpState);

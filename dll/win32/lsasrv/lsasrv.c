@@ -1,13 +1,3 @@
-/*
- * PROJECT:     Local Security Authority Server DLL
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/lsasrv/lsasrv.c
- * PURPOSE:     Main file
- * COPYRIGHT:   Copyright 2006-2009 Eric Kohl
- */
-
-/* INCLUDES ****************************************************************/
-
 #define WIN32_NO_STATUS
 #include <windows.h>
 #define NTOS_MODE_USER
@@ -20,20 +10,17 @@
 WINE_DEFAULT_DEBUG_CHANNEL(lsasrv);
 
 
-/* FUNCTIONS ***************************************************************/
-
 NTSTATUS WINAPI
 LsapInitLsa(VOID)
 {
     HANDLE hEvent;
     DWORD dwError;
 
-    TRACE("LsapInitLsa() called\n");
+    TRACE("LsapInitLsa()\n");
 
     /* Start the RPC server */
     LsarStartRpcServer();
 
-    TRACE("Creating notification event!\n");
     /* Notify the service manager */
     hEvent = CreateEventW(NULL,
                           TRUE,
@@ -56,12 +43,9 @@ LsapInitLsa(VOID)
         }
     }
 
-    TRACE("Set notification event!\n");
     SetEvent(hEvent);
 
     /* NOTE: Do not close the event handle!!!! */
-
-    StartAuthenticationPort();
 
     return STATUS_SUCCESS;
 }

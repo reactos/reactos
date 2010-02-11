@@ -248,24 +248,9 @@ static HRESULT WINAPI ServiceProvider_QueryService(IServiceProvider *iface, REFG
         return S_OK;
     }
 
-    if(This->doc_obj->client) {
-        IServiceProvider *sp;
-        HRESULT hres;
-
-        hres = IOleClientSite_QueryInterface(This->doc_obj->client,
-                &IID_IServiceProvider, (void**)&sp);
-        if(SUCCEEDED(hres)) {
-            hres = IServiceProvider_QueryService(sp, guidService, riid, ppv);
-            IServiceProvider_Release(sp);
-
-            if(SUCCEEDED(hres))
-                return hres;
-        }
-    }
-
     FIXME("(%p)->(%s %s %p)\n", This, debugstr_guid(guidService), debugstr_guid(riid), ppv);
     
-    return E_NOINTERFACE;
+    return E_UNEXPECTED;
 }
 
 static const IServiceProviderVtbl ServiceProviderVtbl = {

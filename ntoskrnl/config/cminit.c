@@ -163,17 +163,13 @@ CmpInitializeHive(OUT PCMHIVE *RegistryHive,
     /* Set flags */
     Hive->Flags = HiveFlags;
 
-    /* Check if this is a primary */
-    if (Primary)
-    {
-        /* Check how large the file is */
-        ZwQueryInformationFile(Primary,
-                               &IoStatusBlock,
-                               &FileInformation,
-                               sizeof(FileInformation),
-                               FileStandardInformation);
-        Cluster = FileInformation.EndOfFile.LowPart;
-    }
+    /* Check how large the file is */
+    ZwQueryInformationFile(Primary,
+                           &IoStatusBlock,
+                           &FileInformation,
+                           sizeof(FileInformation),
+                           FileStandardInformation);
+    Cluster = FileInformation.EndOfFile.LowPart;
 
     /* Initialize it */
     Status = HvInitialize(&Hive->Hive,

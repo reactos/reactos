@@ -365,28 +365,23 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     SECURITY_SUBJECT_CONTEXT SubjectContext;
     BOOLEAN NeedsPeb = FALSE;
     INITIAL_PEB InitialPeb;
-
-	DPRINTT("\n");
     PAGED_CODE();
-	DPRINTT("PSTRACE\n");
     PSTRACE(PS_PROCESS_DEBUG,
             "ProcessHandle: %p Parent: %p\n", ProcessHandle, ParentProcess);
-    
-	/* Validate flags */
+
+    /* Validate flags */
     if (Flags & ~PS_ALL_FLAGS) return STATUS_INVALID_PARAMETER;
 
     /* Check for parent */
     if (ParentProcess)
     {
         /* Reference it */
-		DPRINTT("ObReferenceObjectByHandle\n");
-		Status = ObReferenceObjectByHandle(ParentProcess,
+        Status = ObReferenceObjectByHandle(ParentProcess,
                                            PROCESS_CREATE_PROCESS,
                                            PsProcessType,
                                            PreviousMode,
                                            (PVOID*)&Parent,
                                            NULL);
-		DPRINTT("ObReferenceObjectByHandle r=%x\n", Status);
         if (!NT_SUCCESS(Status)) return Status;
 
         /* If this process should be in a job but the parent isn't */
@@ -848,9 +843,6 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
 
     /* Run the Notification Routines */
     PspRunCreateProcessNotifyRoutines(Process, TRUE);
-    
-    /* If 12 processes have been created, enough of user-mode is ready */
-    if (++ProcessCount == 12) Ki386PerfEnd();
 
 CleanupWithRef:
     /*

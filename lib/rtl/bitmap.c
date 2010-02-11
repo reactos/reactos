@@ -43,7 +43,7 @@ BitCountTable[256] =
 
 /* PRIVATE FUNCTIONS ********************************************************/
 
-static __inline__
+static _INLINE
 ULONG
 RtlpGetLengthOfRunClear(
     IN PRTL_BITMAP BitMapHeader,
@@ -92,7 +92,7 @@ RtlpGetLengthOfRunClear(
     return Length;
 }
 
-static __inline__
+static _INLINE
 ULONG
 RtlpGetLengthOfRunSet(
     IN PRTL_BITMAP BitMapHeader,
@@ -600,7 +600,7 @@ RtlFindNextForwardRunSet(
 
     /* Assume a clear run first, count it's length */
     Length = RtlpGetLengthOfRunClear(BitMapHeader, FromIndex, MAXULONG);
-    *StartingRunIndex = FromIndex + Length;
+    *StartingRunIndex = FromIndex;
 
     /* Now return the length of the run */
     return RtlpGetLengthOfRunSet(BitMapHeader, FromIndex, MAXULONG);

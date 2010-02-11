@@ -1961,14 +1961,7 @@ tcp_mss(tp, offer)
 
 	inp = tp->t_inpcb;
 	if ((rt = tcp_rtlookup(inp)) == NULL) {
-#ifndef __REACTOS__
 		tp->t_maxopd = tp->t_maxseg = tcp_mssdflt;
-#else
-		if (offer < tcp_mssdflt)
-			tp->t_maxopd = tp->t_maxseg = tcp_mssdflt;
-		else
-			tp->t_maxopd = tp->t_maxseg = min(offer, tcp_mssopt(tp));
-#endif
 		return;
 	}
 #ifndef __REACTOS__
@@ -2123,20 +2116,15 @@ int
 tcp_mssopt(tp)
 	struct tcpcb *tp;
 {
-#ifndef __REACTOS__
 	struct rtentry *rt;
 
 	rt = tcp_rtlookup(tp->t_inpcb);
 	if (rt == NULL)
 		return tcp_mssdflt;
-
+#ifndef __REACTOS__
 	return rt->rt_ifp->if_mtu - sizeof(struct tcpiphdr);
 #else
-	struct ifaddr *ifa = ifa_ifwithnet((struct sockaddr *)&tp->t_inpcb->inp_faddr);
-	if (ifa == NULL)
-		return tcp_mssdflt;
-
-	return ifa->ifa_mtu - sizeof(struct tcpiphdr);
+	return tcp_mssdflt;
 #endif
 }
 #endif /* TUBA_INCLUDE */

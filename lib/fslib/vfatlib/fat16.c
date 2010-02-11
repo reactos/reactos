@@ -4,7 +4,7 @@
  * FILE:        fat16.c
  * PURPOSE:     Fat16 support
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
- *              Eric Kohl
+ *              Eric Kohl (ekohl@rz-online.de)
  * REVISIONS:
  *   EK 05/04-2003 Created
  */

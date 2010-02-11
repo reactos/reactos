@@ -163,10 +163,8 @@ ExpCheckForApcsDisabled(IN KIRQL Irql,
  * @remarks This routine should only be called once, during system startup.
  *
  *--*/
-VOID
-NTAPI
-INIT_FUNCTION
-ExpResourceInitialization(VOID)
+SECT_INIT_FN(ExpResourceInitialization)
+VOID NTAPI ExpResourceInitialization(VOID)
 {
     /* Setup the timeout */
     ExpTimeout.QuadPart = Int32x32To64(4, -10000000);
@@ -214,7 +212,7 @@ ExpAllocateExclusiveWaiterEvent(IN PERESOURCE Resource,
             KeInitializeEvent(Event, SynchronizationEvent, FALSE);
 
             /* Set it */
-            if (InterlockedCompareExchangePointer((PVOID*)&Resource->ExclusiveWaiters,
+            if (InterlockedCompareExchangePointer(&Resource->ExclusiveWaiters,
                                                   Event,
                                                   NULL))
             {
@@ -274,7 +272,7 @@ ExpAllocateSharedWaiterSemaphore(IN PERESOURCE Resource,
             KeInitializeSemaphore(Semaphore, 0, MAXLONG);
 
             /* Set it */
-            if (InterlockedCompareExchangePointer((PVOID*)&Resource->SharedWaiters,
+            if (InterlockedCompareExchangePointer(&Resource->SharedWaiters,
                                                   Semaphore,
                                                   NULL))
             {

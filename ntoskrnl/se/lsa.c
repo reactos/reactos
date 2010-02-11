@@ -49,7 +49,7 @@ NTSTATUS
 NTAPI
 LsaFreeReturnBuffer(PVOID Buffer)
 {
-    SIZE_T Size = 0;
+    ULONG Size = 0;
     return ZwFreeVirtualMemory(NtCurrentProcess(),
                                &Buffer,
                                &Size,

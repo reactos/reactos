@@ -1,24 +1,25 @@
 Index: usp10.c
 ===================================================================
---- usp10.c	(revision 44689)
+--- usp10.c	(revision 34385)
 +++ usp10.c	(working copy)
-@@ -1841,3 +1841,9 @@
-     for (i = 0; i < num_glyphs; i++) justify[i] = advance[i];
+@@ -1726,3 +1726,10 @@
+     for (i = 0; i < nbchars; i++) widths[i] = glyph_width[i];
      return S_OK;
  }
 +
-+BOOL gbLpkPresent = FALSE;
-+VOID WINAPI LpkPresent()
-+{
-+    gbLpkPresent = TRUE; /* Turn it on this way! Wine is out of control! */
-+}
++
++VOID WINAPI LpkPresent()   
++{   
++    /* FIXME */   
++    ERR("LPK: %s is unimplemented, please try again later.\n", __FUNCTION__);   
++} 
 Index: usp10.spec
 ===================================================================
---- usp10.spec	(revision 44689)
+--- usp10.spec	(revision 34385)
 +++ usp10.spec	(working copy)
 @@ -1,4 +1,4 @@
 -@ stub LpkPresent
 +@ stdcall LpkPresent()
  @ stdcall ScriptApplyDigitSubstitution(ptr ptr ptr)
- @ stdcall ScriptApplyLogicalWidth(ptr long long ptr ptr ptr ptr ptr ptr)
+ @ stub ScriptApplyLogicalWidth
  @ stdcall ScriptBreak(ptr long ptr ptr)

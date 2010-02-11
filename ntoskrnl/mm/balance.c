@@ -13,11 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, MmInitializeBalancer)
-#pragma alloc_text(INIT, MmInitializeMemoryConsumer)
-#pragma alloc_text(INIT, MiInitBalancerThread)
-#endif
 
 
 /* TYPES ********************************************************************/
@@ -55,10 +50,8 @@ VOID MmPrintMemoryStatistic(VOID)
             MmAvailablePages);
 }
 
-VOID
-INIT_FUNCTION
-NTAPI
-MmInitializeBalancer(ULONG NrAvailablePages, ULONG NrSystemPages)
+SECT_INIT_FN(MmInitializeBalancer)
+VOID NTAPI MmInitializeBalancer(ULONG NrAvailablePages, ULONG NrSystemPages)
 {
    memset(MiMemoryConsumers, 0, sizeof(MiMemoryConsumers));
    InitializeListHead(&AllocationListHead);
@@ -89,12 +82,10 @@ MmInitializeBalancer(ULONG NrAvailablePages, ULONG NrSystemPages)
    MiMemoryConsumers[MC_SYSTEM].PagesUsed = 0;
 }
 
-VOID
-INIT_FUNCTION
-NTAPI
-MmInitializeMemoryConsumer(ULONG Consumer,
-                           NTSTATUS (*Trim)(ULONG Target, ULONG Priority,
-                                            PULONG NrFreed))
+SECT_INIT_FN(MmInitializeMemoryConsumer)
+VOID NTAPI MmInitializeMemoryConsumer(
+	ULONG Consumer,
+    NTSTATUS (*Trim)(ULONG Target, ULONG Priority, PULONG NrFreed))
 {
    MiMemoryConsumers[Consumer].Trim = Trim;
 }
@@ -424,10 +415,8 @@ MiBalancerThread(PVOID Unused)
    }
 }
 
-VOID
-INIT_FUNCTION
-NTAPI
-MiInitBalancerThread(VOID)
+SECT_INIT_FN(MiInitBalancerThread)
+VOID NTAPI MiInitBalancerThread(VOID)
 {
    KPRIORITY Priority;
    NTSTATUS Status;
@@ -435,7 +424,6 @@ MiInitBalancerThread(VOID)
 
    LARGE_INTEGER dummyJunkNeeded;
    dummyJunkNeeded.QuadPart = -20000000; /* 2 sec */
-   ;
 #endif
 
 

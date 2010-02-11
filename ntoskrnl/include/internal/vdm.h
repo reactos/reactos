@@ -23,11 +23,11 @@
 #ifdef NEW_DEBUG_SYSTEM_IMPLEMENTED // enable when Debug Filters are implemented
 #define VMTRACE DbgPrintEx
 #else
-#define VMTRACE(x, ...)                                 \
-    if (x & VdmpTraceLevel) DbgPrint(__VA_ARGS__)
+#define VMTRACE(x, fmt, ...) \
+	if (x & VdmpTraceLevel) DbgPrint(fmt, __VA_ARGS__)
 #endif
 #else
-#define VMTRACE(x, ...) DPRINT(__VA_ARGS__)
+#define VMTRACE(x, fmt, ...) DPRINT(fmt, __VA_ARGS__)
 #endif
 
 //

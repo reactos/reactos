@@ -176,11 +176,12 @@ struct _COMPRESSED_DATA_INFO;
     
 #endif
 
-
+// different values may have been defined if we are not exactly windows
+// some reactos builds overflowed the stack with these values
 #ifndef KERNEL_STACK_SIZE
-#define KERNEL_STACK_SIZE 0x6000
-#define KERNEL_LARGE_STACK_SIZE 0xf000
-#define KERNEL_LARGE_STACK_COMMIT 0x6000
+#define KERNEL_STACK_SIZE                   0x3000		// 12288
+#define KERNEL_LARGE_STACK_SIZE             0xf000		// 61440
+#define KERNEL_LARGE_STACK_COMMIT           0x3000		// 12288
 #endif
 
 #define EXCEPTION_READ_FAULT    0
@@ -5050,32 +5051,37 @@ typedef struct _FLOATING_SAVE_AREA {
     ULONG Cr0NpxState;
 } FLOATING_SAVE_AREA, *PFLOATING_SAVE_AREA;
 
+// = windows, but segment regs are 32 bits in both,
+// which may cause unnecessary rt conversions
 typedef struct _CONTEXT {
-    ULONG ContextFlags;
-    ULONG Dr0;
-    ULONG Dr1;
-    ULONG Dr2;
-    ULONG Dr3;
-    ULONG Dr6;
-    ULONG Dr7;
-    FLOATING_SAVE_AREA FloatSave;
-    ULONG SegGs;
-    ULONG SegFs;
-    ULONG SegEs;
-    ULONG SegDs;
-    ULONG Edi;
-    ULONG Esi;
-    ULONG Ebx;
-    ULONG Edx;
-    ULONG Ecx;
-    ULONG Eax;
-    ULONG Ebp;
-    ULONG Eip;
-    ULONG SegCs;
-    ULONG EFlags;
-    ULONG Esp;
-    ULONG SegSs;
-    UCHAR ExtendedRegisters[MAXIMUM_SUPPORTED_EXTENSION];
+    ULONG ContextFlags;		// 00
+    ULONG Dr0;				// 04
+    ULONG Dr1;				// 08
+    ULONG Dr2;				// 0c
+    ULONG Dr3;				// 10
+    ULONG Dr6;				// 14
+    ULONG Dr7;				// 18
+    FLOATING_SAVE_AREA FloatSave;	// 1c
+    USHORT SegGs;			// 8c
+	USHORT SegGsRsv;
+    USHORT SegFs;			// 90
+	USHORT SegFsRsv;
+    USHORT SegEs;			// 94
+	USHORT SegEsRsv;
+    ULONG SegDs;			// 98
+    ULONG Edi;				// 9c
+    ULONG Esi;				// a0
+    ULONG Ebx;				// a4
+    ULONG Edx;				// a8
+    ULONG Ecx;				// ac
+    ULONG Eax;				// b0
+    ULONG Ebp;				// b4
+    ULONG Eip;				// b8
+    ULONG SegCs;			// bc
+    ULONG EFlags;			// c0
+    ULONG Esp;				// c4
+    ULONG SegSs;			// c8
+    UCHAR ExtendedRegisters[MAXIMUM_SUPPORTED_EXTENSION];	// cc
 } CONTEXT;
 
 //
@@ -5109,31 +5115,57 @@ typedef struct _KPCR_TIB {
   struct _KPCR_TIB *Self;       /* 18 */
 } KPCR_TIB, *PKPCR_TIB;         /* 1C */
 
+// copied from win ddk for compat, names were slighty different
+// as comments indicate
 typedef struct _KPCR {
-  KPCR_TIB  Tib;                /* 00 */
-  struct _KPCR  *Self;          /* 1C */
-  struct _KPRCB  *Prcb;         /* 20 */
-  KIRQL  Irql;                  /* 24 */
-  ULONG  IRR;                   /* 28 */
-  ULONG  IrrActive;             /* 2C */
-  ULONG  IDR;                   /* 30 */
-  PVOID  KdVersionBlock;        /* 34 */
-  PUSHORT  IDT;                 /* 38 */
-  PUSHORT  GDT;                 /* 3C */
-  struct _KTSS  *TSS;           /* 40 */
-  USHORT  MajorVersion;         /* 44 */
-  USHORT  MinorVersion;         /* 46 */
-  KAFFINITY  SetMember;         /* 48 */
-  ULONG  StallScaleFactor;      /* 4C */
-  UCHAR  SpareUnused;           /* 50 */
-  UCHAR  Number;                /* 51 */
-  UCHAR Spare0;
-  UCHAR SecondLevelCacheAssociativity;
-  ULONG VdmAlert;
-  ULONG KernelReserved[14];         // For use by the kernel
-  ULONG SecondLevelCacheSize;
-  ULONG HalReserved[16];            // For use by Hal
-} KPCR, *PKPCR;                 /* 54 */
+// Start of the architecturally defined section of the PCR. This section
+// may be directly addressed by vendor/platform specific HAL code and will
+// not change from version to version of NT.
+//
+// Certain fields in the TIB are not used in kernel mode. These include the
+// stack limit, subsystem TIB, fiber data, arbitrary user pointer, and the
+// self address of then PCR itself (another field has been added for that
+// purpose). Therefore, these fields are overlaid with other data to get
+// better cache locality.
+
+    union {
+        NT_TIB  NtTib;							// 00 Tib
+        struct {
+            struct _EXCEPTION_REGISTRATION_RECORD *Used_ExceptionList;	// 00
+            PVOID Used_StackBase;					// 04
+            PVOID Spare2;							// 08
+            PVOID TssCopy;							// 0c
+            ULONG ContextSwitches;					// 10
+            KAFFINITY SetMemberCopy;				// 14
+            PVOID Used_Self;						// 18
+        };
+    };
+
+    struct _KPCR *SelfPcr;              		// 1c Self flat address of this PCR
+    struct _KPRCB *Prcb;                		// 20 pointer to Prcb
+    KIRQL   Irql;                       		// 24 do not use 3 bytes after this as HALs assume they are zero.
+    ULONG   IRR;								// 28
+    ULONG   IrrActive;							// 2c
+    ULONG   IDR;								// 30
+    PVOID   KdVersionBlock;						// 34
+
+    struct _KIDTENTRY *IDT;						// 38
+    struct _KGDTENTRY *GDT;						// 3c
+    struct _KTSS      *TSS;						// 40
+    USHORT  MajorVersion;						// 44
+    USHORT  MinorVersion;						// 46
+    KAFFINITY SetMember;						// 48
+    ULONG   StallScaleFactor;					// 4c
+    UCHAR   SpareUnused;						// 50
+    UCHAR   Number;								// 51
+    UCHAR   Spare0;								// 52
+    UCHAR   SecondLevelCacheAssociativity;		// 53
+    ULONG   VdmAlert;							// 54
+    ULONG   KernelReserved[14];         		// 58 For use by the kernel
+    ULONG   SecondLevelCacheSize;				// 90
+    ULONG   HalReserved[16];					// 94 For use by Hal
+
+} KPCR, *PKPCR;									// d4
 
 #define KeGetPcr()                      PCR
 
@@ -5152,7 +5184,23 @@ FORCEINLINE
 ULONG
 KeGetCurrentProcessorNumber(VOID)
 {
-    return (ULONG)__readfsbyte(FIELD_OFFSET(KPCR, Number));
+#if defined(__GNUC__)
+  ULONG ret;
+  __asm__ __volatile__ (
+    "movl %%fs:%c1, %0\n"
+    : "=r" (ret)
+    : "i" (FIELD_OFFSET(KPCR, Number))
+  );
+  return ret;
+#elif defined(_MSC_VER)
+#if _MSC_FULL_VER >= 13012035
+  return (ULONG)__readfsbyte(FIELD_OFFSET(KPCR, Number));
+#else
+  __asm { movzx eax, fs:[0] KPCR.Number }
+#endif
+#else
+#error Unknown compiler
+#endif
 }
 
 NTHALAPI
@@ -6262,7 +6310,7 @@ KeTryToAcquireGuardedMutex(
     (_FastMutex)->Count = FM_LOCK_BIT; \
     (_FastMutex)->Owner = NULL; \
     (_FastMutex)->Contention = 0; \
-    KeInitializeEvent(&(_FastMutex)->Gate, SynchronizationEvent, FALSE); \
+    KeInitializeEvent(&(_FastMutex)->Event, SynchronizationEvent, FALSE); \
 }
 
 NTKERNELAPI
@@ -8453,7 +8501,22 @@ NTAPI
 KeLeaveCriticalRegion(
   VOID);
 
-#define KeMemoryBarrier _MemoryBarrier
+#ifdef _X86_
+
+static __inline
+VOID
+KeMemoryBarrier(
+  VOID)
+{
+  volatile LONG Barrier;
+#if defined(__GNUC__)
+  __asm__ __volatile__ ("xchg %%eax, %0" : : "m" (Barrier) : "%eax");
+#elif defined(_MSC_VER)
+  __asm xchg [Barrier], eax
+#endif
+}
+
+#endif
 
 NTKERNELAPI
 LONG
@@ -8549,21 +8612,6 @@ KeRegisterBugCheckCallback(
   IN PVOID  Buffer,
   IN ULONG  Length,
   IN PUCHAR  Component);
-
-NTKERNELAPI
-PVOID
-NTAPI
-KeRegisterNmiCallback(
-  IN PNMI_CALLBACK CallbackRoutine,
-  IN PVOID Context
-);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-KeDeregisterNmiCallback(
-  IN PVOID Handle
-);
 
 NTKERNELAPI
 VOID
@@ -10385,44 +10433,16 @@ NTAPI
 DbgBreakPointWithStatus(
   IN ULONG  Status);
 
-ULONG
-DDKCDECLAPI
-DbgPrint(
-  IN PCCH  Format,
-  IN ...);
 
-NTSYSAPI
-ULONG
-DDKCDECLAPI
-DbgPrintEx(
-  IN ULONG  ComponentId,
-  IN ULONG  Level,
-  IN PCCH  Format,
-  IN ...);
 
-ULONG
-NTAPI
-vDbgPrintEx(
-  IN ULONG ComponentId,
-  IN ULONG Level,
-  IN PCCH Format,
-  IN va_list ap);
 
-ULONG
-NTAPI
-vDbgPrintExWithPrefix(
-  IN PCCH Prefix,
-  IN ULONG ComponentId,
-  IN ULONG Level,
-  IN PCCH Format,
-  IN va_list ap);
-
-NTKERNELAPI
-ULONG
-DDKCDECLAPI
-DbgPrintReturnControlC(
-  IN PCCH  Format,
-  IN ...);
+NTSYSAPI ULONG NTAPI vDbgPrintExWithPrefix(PCCH Prefix, ULONG ComponentId, ULONG Level, PCCH Format, va_list arglist);
+NTSYSAPI ULONG NTAPI vDbgPrintEx(ULONG ComponentId, ULONG Level, PCCH Format, va_list arglist);
+ULONG _CDECL DbgPrint(PCSTR Format, ...);
+NTSYSAPI ULONG _CDECL DbgPrintEx(ULONG ComponentId, ULONG Level, PCSTR Format, ...);
+NTSYSAPI ULONG _CDECL DbgPrintReturnControlC(PCCH Format, ...);
+NTSYSAPI NTSTATUS NTAPI DbgQueryDebugFilterState(ULONG ComponentId, ULONG Level);
+NTSYSAPI NTSTATUS NTAPI DbgSetDebugFilterState(ULONG ComponentId, ULONG Level, BOOLEAN State);
 
 ULONG
 NTAPI
@@ -10432,20 +10452,7 @@ DbgPrompt(
     IN ULONG MaximumResponseLength
 );
 
-NTKERNELAPI
-NTSTATUS
-NTAPI
-DbgQueryDebugFilterState(
-  IN ULONG  ComponentId,
-  IN ULONG  Level);
 
-NTKERNELAPI
-NTSTATUS
-NTAPI
-DbgSetDebugFilterState(
-  IN ULONG  ComponentId,
-  IN ULONG  Level,
-  IN BOOLEAN  State);
 
 #if DBG
 

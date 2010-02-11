@@ -82,16 +82,12 @@ GENERAL_LOOKASIDE IoSmallIrpLookaside;
 GENERAL_LOOKASIDE IopMdlLookasideList;
 extern GENERAL_LOOKASIDE IoCompletionPacketLookaside;
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, IoInitSystem)
-#endif
 
 /* INIT FUNCTIONS ************************************************************/
 
-VOID
-INIT_FUNCTION
-NTAPI
-IopInitLookasideLists(VOID)
+VOID NTAPI IopInitLookasideLists(VOID);
+SECT_INIT_FN(IopInitLookasideLists)
+VOID NTAPI IopInitLookasideLists(VOID)
 {
     ULONG LargeIrpSize, SmallIrpSize, MdlSize;
     LONG i;
@@ -235,10 +231,9 @@ IopInitLookasideLists(VOID)
     }
 }
 
-BOOLEAN
-INIT_FUNCTION
-NTAPI
-IopCreateObjectTypes(VOID)
+BOOLEAN NTAPI IopCreateObjectTypes(VOID);
+SECT_INIT_FN(IopCreateObjectTypes)
+BOOLEAN NTAPI IopCreateObjectTypes(VOID)
 {
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     UNICODE_STRING Name;
@@ -323,10 +318,9 @@ IopCreateObjectTypes(VOID)
     return TRUE;
 }
 
-BOOLEAN
-INIT_FUNCTION
-NTAPI
-IopCreateRootDirectories()
+BOOLEAN NTAPI IopCreateRootDirectories(void);
+SECT_INIT_FN(IopCreateRootDirectories)
+BOOLEAN NTAPI IopCreateRootDirectories(void)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING DirName;
@@ -360,10 +354,9 @@ IopCreateRootDirectories()
     return TRUE;
 }
 
-BOOLEAN
-INIT_FUNCTION
-NTAPI
-IopMarkBootPartition(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+BOOLEAN NTAPI IopMarkBootPartition(IN PLOADER_PARAMETER_BLOCK LoaderBlock);
+SECT_INIT_FN(IopMarkBootPartition)
+BOOLEAN NTAPI IopMarkBootPartition(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     STRING DeviceString;
@@ -430,10 +423,8 @@ IopMarkBootPartition(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     return TRUE;
 }
 
-BOOLEAN
-INIT_FUNCTION
-NTAPI
-IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+SECT_INIT_FN(IoInitSystem)
+BOOLEAN NTAPI IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     LARGE_INTEGER ExpireTime;
     NTSTATUS Status;

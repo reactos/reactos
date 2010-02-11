@@ -64,14 +64,6 @@ typedef struct _DPC_QUEUE_ENTRY
     PVOID Context;
 } DPC_QUEUE_ENTRY, *PDPC_QUEUE_ENTRY;
 
-typedef struct _KNMI_HANDLER_CALLBACK
-{
-    struct _KNMI_HANDLER_CALLBACK* Next;
-    PNMI_CALLBACK Callback;
-    PVOID Context;
-    PVOID Handle;
-} KNMI_HANDLER_CALLBACK, *PKNMI_HANDLER_CALLBACK;
-
 typedef PCHAR
 (NTAPI *PKE_BUGCHECK_UNICODE_TO_ANSI)(
     IN PUNICODE_STRING Unicode,
@@ -79,8 +71,6 @@ typedef PCHAR
     IN ULONG Length
 );
 
-extern PKNMI_HANDLER_CALLBACK KiNmiCallbackListHead;
-extern KSPIN_LOCK KiNmiCallbackListLock;
 extern PVOID KeUserApcDispatcher;
 extern PVOID KeUserCallbackDispatcher;
 extern PVOID KeUserExceptionDispatcher;
@@ -98,15 +88,13 @@ extern UCHAR KeNumberNodes;
 extern UCHAR KeProcessNodeSeed;
 extern ETHREAD KiInitialThread;
 extern EPROCESS KiInitialProcess;
-
-#if 0 // moved to interrupt.h
+extern ULONG KiInterruptTemplate[KINTERRUPT_DISPATCH_CODES];
 extern PULONG KiInterruptTemplateObject;
 extern PULONG KiInterruptTemplateDispatch;
 extern PULONG KiInterruptTemplate2ndDispatch;
-#endif
-
 extern ULONG KiUnexpectedEntrySize;
-extern ULONG_PTR KiDoubleFaultStack;
+extern UCHAR P0BootStack[];
+extern UCHAR KiDoubleFaultStack[];
 extern EX_PUSH_LOCK KernelAddressSpaceLock;
 extern ULONG KiMaximumDpcQueueDepth;
 extern ULONG KiMinimumDpcRate;
@@ -137,13 +125,9 @@ extern PVOID KeUserExceptionDispatcher;
 extern PVOID KeRaiseUserExceptionDispatcher;
 extern ULONG KeTimeIncrement;
 extern ULONG KeTimeAdjustment;
-extern LONG KiTickOffset;
 extern ULONG_PTR KiBugCheckData[5];
 extern ULONG KiFreezeFlag;
 extern ULONG KiDPCTimeout;
-extern PGDI_BATCHFLUSH_ROUTINE KeGdiFlushUserBatch;
-extern ULONGLONG BootCycles, BootCyclesEnd;
-extern ULONG ProcessCount;
 
 /* MACROS *************************************************************************/
 
@@ -231,14 +215,6 @@ extern ULONG ProcessCount;
 
 #endif
 
-#if 0 // moved to trap_x.h
-#define KTS_SYSCALL_BIT (((KTRAP_EXIT_SKIP_BITS) { { .SystemCall   = TRUE } }).Bits)
-#define KTS_PM_BIT      (((KTRAP_EXIT_SKIP_BITS) { { .PreviousMode   = TRUE } }).Bits)
-#define KTS_SEG_BIT     (((KTRAP_EXIT_SKIP_BITS) { { .Segments  = TRUE } }).Bits)
-#define KTS_VOL_BIT     (((KTRAP_EXIT_SKIP_BITS) { { .Volatiles = TRUE } }).Bits)
-#define KTS_FULL_BIT    (((KTRAP_EXIT_SKIP_BITS) { { .Full = TRUE } }).Bits)
-#endif // moved to trap_x.h
-
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
 
 VOID
@@ -265,7 +241,7 @@ WRMSR(
 );
 
 /* Finds a new thread to run */
-LONG_PTR
+NTSTATUS
 FASTCALL
 KiSwapThread(
     IN PKTHREAD Thread,
@@ -649,7 +625,7 @@ VOID
 FASTCALL
 KiUnwaitThread(
     IN PKTHREAD Thread,
-    IN LONG_PTR WaitStatus,
+    IN NTSTATUS WaitStatus,
     IN KPRIORITY Increment
 );
 
@@ -738,6 +714,12 @@ KiTimerExpiration(
 
 ULONG
 NTAPI
+KiComputeTimerTableIndex(
+    IN LONGLONG TimeValue
+);
+
+ULONG
+NTAPI
 KeSetProcess(
     struct _KPROCESS* Process,
     KPRIORITY Increment,
@@ -819,7 +801,7 @@ KiInitializeBugCheck(VOID);
 
 VOID
 NTAPI
-KiSystemStartup(
+KiSystemStartupReal(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
@@ -870,10 +852,6 @@ KeBugCheckWithTf(
     ULONG_PTR BugCheckParameter4,
     PKTRAP_FRAME Tf
 );
-                              
-BOOLEAN
-NTAPI
-KiHandleNmi(VOID);
 
 VOID
 NTAPI
@@ -928,38 +906,16 @@ KiEndUnexpectedRange(
     VOID
 );
 
-NTSTATUS
-NTAPI
-KiRaiseException(
-    IN PEXCEPTION_RECORD ExceptionRecord,
-    IN PCONTEXT Context,
-    IN PKEXCEPTION_FRAME ExceptionFrame,
-    IN PKTRAP_FRAME TrapFrame,
-    IN BOOLEAN SearchFrames
-);
-
-NTSTATUS
-NTAPI
-KiContinue(
-    IN PCONTEXT Context,
-    IN PKEXCEPTION_FRAME ExceptionFrame,
-    IN PKTRAP_FRAME TrapFrame
-);
-
-VOID FASTCALL KiInterruptNoDispatch(PKTRAP_FRAME TrapFrame, PKINTERRUPT Interrupt);
-
 VOID
-FASTCALL
+NTAPI
 KiInterruptDispatch(
-    IN PKTRAP_FRAME TrapFrame,
-    IN PKINTERRUPT Interrupt
+    VOID
 );
 
 VOID
-FASTCALL
+NTAPI
 KiChainedDispatch(
-    IN PKTRAP_FRAME TrapFrame,
-    IN PKINTERRUPT Interrupt
+    VOID
 );
 
 VOID
@@ -1063,13 +1019,6 @@ KiSaveProcessorControlState(
 );
 
 VOID
-NTAPI
-KiSaveProcessorState(
-    IN PKTRAP_FRAME TrapFrame,
-    IN PKEXCEPTION_FRAME ExceptionFrame
-);
-
-VOID
 FASTCALL
 KiRetireDpcList(
     IN PKPRCB Prcb
@@ -1082,17 +1031,15 @@ KiQuantumEnd(
 );
 
 VOID
-FASTCALL
-KiIdleLoop(
-    VOID
+KiSystemService(
+    IN PKTHREAD Thread,
+    IN PKTRAP_FRAME TrapFrame,
+    IN ULONG Instruction
 );
 
 VOID
-DECLSPEC_NORETURN
-FASTCALL
-KiSystemFatalException(
-    IN ULONG ExceptionCode,
-    IN PKTRAP_FRAME TrapFrame
+KiIdleLoop(
+    VOID
 );
 
 #include "ke_x.h"

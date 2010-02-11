@@ -143,8 +143,6 @@ KeBalanceSetManager(IN PVOID Context)
     PVOID WaitObjects[1];
     NTSTATUS Status;
 
-    DPRINTT("\n");
-
     /* Set us at a low real-time priority level */
     KeSetPriorityThread(KeGetCurrentThread(), LOW_REALTIME_PRIORITY);
 

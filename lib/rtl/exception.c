@@ -17,7 +17,7 @@
 
 /* FUNCTIONS ***************************************************************/
 
-#if !defined(_M_IX86) && !defined(_M_AMD64)
+#if !defined(_M_IX86)
 
 /*
  * @implemented
@@ -63,14 +63,8 @@ RtlRaiseException(IN PEXCEPTION_RECORD ExceptionRecord)
     RtlRaiseStatus(Status);
 }
 
-#endif
-
-#if !defined(_M_IX86)
-
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable:4717) // RtlRaiseStatus is recursive by design
-#endif
+_NOWARN_PUSH
+_NOWARN_MSC(4717) // RtlRaiseStatus is recursive by design
 
 /*
  * @implemented
@@ -113,12 +107,10 @@ RtlRaiseStatus(IN NTSTATUS Status)
     /* If we returned, raise a status */
     RtlRaiseStatus(Status);
 }
+_NOWARN_POP
 
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
-#endif
+#endif // #if !defined(_M_IX86)
 
 /*
  * @implemented

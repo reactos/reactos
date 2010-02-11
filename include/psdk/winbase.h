@@ -943,14 +943,6 @@ typedef struct tagHW_PROFILE_INFOW {
 	WCHAR szHwProfileName[MAX_PROFILE_LEN];
 } HW_PROFILE_INFOW,*LPHW_PROFILE_INFOW;
 
-/* Event Logging */
-
-#define EVENTLOG_FULL_INFO          0
-
-typedef struct _EVENTLOG_FULL_INFORMATION {
-    DWORD dwFull;
-} EVENTLOG_FULL_INFORMATION, *LPEVENTLOG_FULL_INFORMATION;
-
 typedef enum _GET_FILEEX_INFO_LEVELS {
 	GetFileExInfoStandard,
 	GetFileExMaxInfoLevel
@@ -1628,7 +1620,6 @@ BOOL WINAPI GetNamedPipeInfo(HANDLE,PDWORD,PDWORD,PDWORD,PDWORD);
 #if (_WIN32_WINNT >= 0x0501)
 VOID WINAPI GetNativeSystemInfo(LPSYSTEM_INFO);
 #endif
-BOOL WINAPI GetEventLogInformation(HANDLE,DWORD,LPVOID,DWORD,LPDWORD);
 BOOL WINAPI GetNumberOfEventLogRecords(HANDLE,PDWORD);
 BOOL WINAPI GetOldestEventLogRecord(HANDLE,PDWORD);
 BOOL WINAPI GetOverlappedResult(HANDLE,LPOVERLAPPED,PDWORD,BOOL);
@@ -1854,7 +1845,9 @@ VOID WINAPI InitializeSRWLock(PSRWLOCK);
 
 LONG WINAPI InterlockedOr(IN OUT LONG volatile *,LONG);
 LONG WINAPI InterlockedAnd(IN OUT LONG volatile *,LONG);
+LONG WINAPI InterlockedCompareExchange(IN OUT LONG volatile *,LONG,LONG);
 LONG WINAPI InterlockedDecrement(IN OUT LONG volatile *);
+LONG WINAPI InterlockedExchange(IN OUT LONG volatile *,LONG);
 #if defined(_WIN64)
  /* PVOID WINAPI InterlockedExchangePointer(PVOID*,PVOID); */
  #define InterlockedExchangePointer(t,v) \
@@ -1867,7 +1860,7 @@ LONG WINAPI InterlockedDecrement(IN OUT LONG volatile *);
  #define InterlockedExchangePointer(t,v) \
     (PVOID)InterlockedExchange((LPLONG)(t),(LONG)(v))
  /* PVOID WINAPI InterlockedCompareExchangePointer(PVOID*,PVOID,PVOID); */
-#define InterlockedCompareExchangePointer(d,e,c) \
+ #define InterlockedCompareExchangePointer(d,e,c) \
     (PVOID)InterlockedCompareExchange((LPLONG)(d),(LONG)(e),(LONG)(c))
 #endif
 LONG WINAPI InterlockedExchangeAdd(IN OUT LONG volatile *,LONG);

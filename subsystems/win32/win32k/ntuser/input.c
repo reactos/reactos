@@ -120,8 +120,10 @@ ProcessMouseInputData(PMOUSE_INPUT_DATA Data, ULONG InputCount)
       /* Check if the mouse move is absolute */
       if (mid->Flags == MOUSE_MOVE_ABSOLUTE)
       {
-         /* Set flag to convert to screen location */
+         /* Set flag and convert to screen location */
          mi.dwFlags |= MOUSEEVENTF_ABSOLUTE;
+         mi.dx = mi.dx / (65535 / (UserGetSystemMetrics(SM_CXVIRTUALSCREEN) - 1));
+         mi.dy = mi.dy / (65535 / (UserGetSystemMetrics(SM_CYVIRTUALSCREEN) - 1));
       }
 
       if(mid->ButtonFlags)
@@ -458,7 +460,7 @@ IntKeyboardSendWinKeyMsg()
    Mesg.lParam = 0;
 
    /* The QS_HOTKEY is just a guess */
-   MsqPostMessage(Window->pti->MessageQueue, &Mesg, FALSE, QS_HOTKEY);
+   MsqPostMessage(Window->MessageQueue, &Mesg, FALSE, QS_HOTKEY);
 }
 
 static VOID APIENTRY
@@ -990,7 +992,7 @@ IntBlockInput(PTHREADINFO W32Thread, BOOL BlockIt)
    PTHREADINFO OldBlock;
    ASSERT(W32Thread);
 
-   if(!W32Thread->rpdesk || ((W32Thread->TIF_flags & TIF_INCLEANUP) && BlockIt))
+   if(!W32Thread->Desktop || ((W32Thread->TIF_flags & TIF_INCLEANUP) && BlockIt))
    {
       /*
        * fail blocking if exiting the thread
@@ -1004,14 +1006,14 @@ IntBlockInput(PTHREADINFO W32Thread, BOOL BlockIt)
     *         e.g. services running in the service window station cannot block input
     */
    if(!ThreadHasInputAccess(W32Thread) ||
-         !IntIsActiveDesktop(W32Thread->rpdesk))
+         !IntIsActiveDesktop(W32Thread->Desktop))
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       return FALSE;
    }
 
-   ASSERT(W32Thread->rpdesk);
-   OldBlock = W32Thread->rpdesk->BlockInputThread;
+   ASSERT(W32Thread->Desktop);
+   OldBlock = W32Thread->Desktop->BlockInputThread;
    if(OldBlock)
    {
       if(OldBlock != W32Thread)
@@ -1019,11 +1021,11 @@ IntBlockInput(PTHREADINFO W32Thread, BOOL BlockIt)
          SetLastWin32Error(ERROR_ACCESS_DENIED);
          return FALSE;
       }
-      W32Thread->rpdesk->BlockInputThread = (BlockIt ? W32Thread : NULL);
+      W32Thread->Desktop->BlockInputThread = (BlockIt ? W32Thread : NULL);
       return OldBlock == NULL;
    }
 
-   W32Thread->rpdesk->BlockInputThread = (BlockIt ? W32Thread : NULL);
+   W32Thread->Desktop->BlockInputThread = (BlockIt ? W32Thread : NULL);
    return OldBlock == NULL;
 }
 
@@ -1050,19 +1052,48 @@ IntMouseInput(MOUSEINPUT *mi)
 {
    const UINT SwapBtnMsg[2][2] =
       {
-         {WM_LBUTTONDOWN, WM_RBUTTONDOWN},
+         {
+            WM_LBUTTONDOWN, WM_RBUTTONDOWN
+         },
          {WM_LBUTTONUP, WM_RBUTTONUP}
       };
    const WPARAM SwapBtn[2] =
       {
          MK_LBUTTON, MK_RBUTTON
       };
-   POINT MousePos;
+   POINT MousePos = {0}, OrgPos;
    PSYSTEM_CURSORINFO CurInfo;
-   BOOL SwapButtons;
+   PWINSTATION_OBJECT WinSta;
+   BOOL DoMove, SwapButtons;
    MSG Msg;
+   SURFACE *psurf;
+   SURFOBJ *pso;
+   PDC dc;
+   PWINDOW_OBJECT DesktopWindow;
+
+#if 1
+
+   HDC hDC;
+
+   /* FIXME - get the screen dc from the window station or desktop */
+   if(!(hDC = IntGetScreenDC()))
+   {
+      return FALSE;
+   }
+#endif
 
    ASSERT(mi);
+#if 0
+
+   WinSta = PsGetCurrentProcessWin32Process()->WindowStation;
+#else
+   /* FIXME - ugly hack but as long as we're using this dumb callback from the
+   mouse class driver, we can't access the window station from the calling
+   process */
+   WinSta = InputWindowStation;
+#endif
+
+   ASSERT(WinSta);
 
    CurInfo = IntGetSysCursorInfo();
 
@@ -1074,26 +1105,84 @@ IntMouseInput(MOUSEINPUT *mi)
    }
 
    SwapButtons = gspv.bMouseBtnSwap;
+   DoMove = FALSE;
 
-   MousePos = gpsi->ptCursor;
+   OrgPos = MousePos = gpsi->ptCursor;
 
    if(mi->dwFlags & MOUSEEVENTF_MOVE)
    {
       if(mi->dwFlags & MOUSEEVENTF_ABSOLUTE)
       {
-         MousePos.x = mi->dx * UserGetSystemMetrics(SM_CXVIRTUALSCREEN) >> 16;
-         MousePos.y = mi->dy * UserGetSystemMetrics(SM_CYVIRTUALSCREEN) >> 16;
+         MousePos.x = mi->dx;
+         MousePos.y = mi->dy;
       }
       else
       {
          MousePos.x += mi->dx;
          MousePos.y += mi->dy;
       }
+
+      DesktopWindow = IntGetWindowObject(WinSta->ActiveDesktop->DesktopWindow);
+
+      if (DesktopWindow)
+      {
+         if(MousePos.x >= DesktopWindow->Wnd->rcClient.right)
+            MousePos.x = DesktopWindow->Wnd->rcClient.right - 1;
+         if(MousePos.y >= DesktopWindow->Wnd->rcClient.bottom)
+            MousePos.y = DesktopWindow->Wnd->rcClient.bottom - 1;
+         UserDereferenceObject(DesktopWindow);
+      }
+
+      if(MousePos.x < 0)
+         MousePos.x = 0;
+      if(MousePos.y < 0)
+         MousePos.y = 0;
+
+      if(CurInfo->CursorClipInfo.IsClipped)
+      {
+         /* The mouse cursor needs to be clipped */
+
+         if(MousePos.x >= (LONG)CurInfo->CursorClipInfo.Right)
+            MousePos.x = (LONG)CurInfo->CursorClipInfo.Right;
+         if(MousePos.x < (LONG)CurInfo->CursorClipInfo.Left)
+            MousePos.x = (LONG)CurInfo->CursorClipInfo.Left;
+         if(MousePos.y >= (LONG)CurInfo->CursorClipInfo.Bottom)
+            MousePos.y = (LONG)CurInfo->CursorClipInfo.Bottom;
+         if(MousePos.y < (LONG)CurInfo->CursorClipInfo.Top)
+            MousePos.y = (LONG)CurInfo->CursorClipInfo.Top;
+      }
+
+      DoMove = (MousePos.x != OrgPos.x || MousePos.y != OrgPos.y);
+   }
+
+   if (DoMove)
+   {
+      dc = DC_LockDc(hDC);
+      if (dc)
+      {
+         psurf = dc->dclevel.pSurface;
+         if (psurf)
+         {
+            pso = &psurf->SurfObj;
+
+            if (CurInfo->ShowingCursor)
+            {
+               IntEngMovePointer(pso, MousePos.x, MousePos.y, &(GDIDEV(pso)->Pointer.Exclude));
+            }
+            /* Only now, update the info in the PDEVOBJ, so EngMovePointer can
+            * use the old values to move the pointer image */
+            gpsi->ptCursor.x = MousePos.x;
+            gpsi->ptCursor.y = MousePos.y;
+         }
+
+         DC_UnlockDc(dc);
+      }
    }
 
    /*
     * Insert the messages into the system queue
     */
+
    Msg.wParam = CurInfo->ButtonsDown;
    Msg.lParam = MAKELPARAM(MousePos.x, MousePos.y);
    Msg.pt = MousePos;
@@ -1108,10 +1197,13 @@ IntMouseInput(MOUSEINPUT *mi)
       Msg.wParam |= MK_CONTROL;
    }
 
-   if(mi->dwFlags & MOUSEEVENTF_MOVE)
+   if(DoMove)
    {
-      UserSetCursorPos(MousePos.x, MousePos.y);
+      Msg.message = WM_MOUSEMOVE;
+      MsqInsertSystemMessage(&Msg);
    }
+
+   Msg.message = 0;
    if(mi->dwFlags & MOUSEEVENTF_LEFTDOWN)
    {
       gQueueKeyStateTable[VK_LBUTTON] |= 0xc0;
@@ -1394,7 +1486,7 @@ UserAttachThreadInput( PTHREADINFO pti, PTHREADINFO ptiTo, BOOL fAttach)
    /* Do not attach to system threads or between different desktops. */
    if ( pti->TIF_flags & TIF_DONTATTACHQUEUE ||
         ptiTo->TIF_flags & TIF_DONTATTACHQUEUE ||
-        pti->rpdesk != ptiTo->rpdesk )
+        pti->Desktop != ptiTo->Desktop )
       return FALSE;
 
    /* If Attach set, allocate and link. */
@@ -1451,7 +1543,7 @@ NtUserSendInput(
    W32Thread = PsGetCurrentThreadWin32Thread();
    ASSERT(W32Thread);
 
-   if(!W32Thread->rpdesk)
+   if(!W32Thread->Desktop)
    {
       RETURN( 0);
    }
@@ -1467,7 +1559,7 @@ NtUserSendInput(
     *         e.g. services running in the service window station cannot block input
     */
    if(!ThreadHasInputAccess(W32Thread) ||
-         !IntIsActiveDesktop(W32Thread->rpdesk))
+         !IntIsActiveDesktop(W32Thread->Desktop))
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       RETURN( 0);

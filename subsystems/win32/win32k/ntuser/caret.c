@@ -62,7 +62,7 @@ IntSetCaretBlinkTime(UINT uMSeconds)
 {
    /* Don't save the new value to the registry! */
    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-   PWINSTATION_OBJECT WinStaObject = pti->rpdesk->rpwinstaParent;
+   PWINSTATION_OBJECT WinStaObject = pti->Desktop->WindowStation;
 
    /* windows doesn't do this check */
    if((uMSeconds < MIN_CARETBLINKRATE) || (uMSeconds > MAX_CARETBLINKRATE))
@@ -152,7 +152,7 @@ IntGetCaretBlinkTime(VOID)
    UINT Ret;
 
    pti = PsGetCurrentThreadWin32Thread();
-   WinStaObject = pti->rpdesk->rpwinstaParent;
+   WinStaObject = pti->Desktop->WindowStation;
 
    Ret = WinStaObject->CaretBlinkRate;
    if(!Ret)
@@ -245,7 +245,7 @@ BOOL FASTCALL co_UserHideCaret(PWINDOW_OBJECT Window OPTIONAL)
 
    if (Window) ASSERT_REFS_CO(Window);
 
-   if(Window && Window->pti->pEThread != PsGetCurrentThread())
+   if(Window && Window->OwnerThread != PsGetCurrentThread())
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       return FALSE;
@@ -280,7 +280,7 @@ BOOL FASTCALL co_UserShowCaret(PWINDOW_OBJECT Window OPTIONAL)
 
    if (Window) ASSERT_REFS_CO(Window);
 
-   if(Window && Window->pti->pEThread != PsGetCurrentThread())
+   if(Window && Window->OwnerThread != PsGetCurrentThread())
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       return FALSE;
@@ -332,7 +332,7 @@ NtUserCreateCaret(
       RETURN(FALSE);
    }
 
-   if(Window->pti->pEThread != PsGetCurrentThread())
+   if(Window->OwnerThread != PsGetCurrentThread())
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       RETURN(FALSE);

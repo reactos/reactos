@@ -110,7 +110,7 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 83 "sql.y"
+#line 76 "sql.y"
 
     struct sql_str str;
     LPWSTR string;

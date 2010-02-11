@@ -46,15 +46,12 @@ UCHAR KiDebugRegisterTrapOffsets[9] =
 
 /* FUNCTIONS *****************************************************************/
 
-VOID
-INIT_FUNCTION
-NTAPI
-KeInitExceptions(VOID)
+SECT_INIT_FN(KeInitExceptions)
+VOID NTAPI KeInitExceptions(VOID)
 {
     ULONG i;
     USHORT FlippedSelector;
-	
-	DPRINTT("\n");
+
     /* Loop the IDT */
     for (i = 0; i <= MAXIMUM_IDTVECTOR; i++)
     {
@@ -304,40 +301,6 @@ KiTagWordFnsaveToFxsave(USHORT TagWord)
     FxTagWord = (FxTagWord | (FxTagWord >> 2)) & 0x0f0f; /* 0000VVVV0000VVVV */
     FxTagWord = (FxTagWord | (FxTagWord >> 4)) & 0x00ff; /* 00000000VVVVVVVV */
     return FxTagWord;
-}
-
-VOID
-NTAPI
-Ki386AdjustEsp0(IN PKTRAP_FRAME TrapFrame)
-{
-    PKTHREAD Thread;
-    ULONG_PTR Stack;
-    ULONG EFlags;
-    
-    /* Get the current thread's stack */
-    Thread = KeGetCurrentThread();
-    Stack = (ULONG_PTR)Thread->InitialStack;
-    
-    /* Check if we are in V8086 mode */
-    if (!(TrapFrame->EFlags & EFLAGS_V86_MASK))
-    {
-        /* Bias the stack for the V86 segments */
-        Stack -= (FIELD_OFFSET(KTRAP_FRAME, V86Gs) -
-                  FIELD_OFFSET(KTRAP_FRAME, HardwareSegSs));
-    }
-    
-    /* Bias the stack for the FPU area */
-    Stack -= sizeof(FX_SAVE_AREA);
-    
-    /* Disable interrupts */
-    EFlags = __readeflags();
-    _disable();
-    
-    /* Set new ESP0 value in the TSS */
-    KeGetPcr()->TSS->Esp0 = Stack;
-    
-    /* Restore old interrupt state */
-    __writeeflags(EFlags);
 }
 
 VOID
@@ -807,7 +770,6 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
             /* Otherwise clear DR registers */
             Context->Dr0 =
             Context->Dr1 =
-            Context->Dr2 =
             Context->Dr3 =
             Context->Dr6 =
             Context->Dr7 = 0;
@@ -874,8 +836,8 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
     /* Set the context flags */
     Context.ContextFlags = CONTEXT_FULL | CONTEXT_DEBUG_REGISTERS;
 
-    /* Check if User Mode or if the kernel debugger is enabled */
-    if ((PreviousMode == UserMode) || (KeGetPcr()->KdVersionBlock))
+    /* Check if User Mode or if the debugger is enabled */
+    if ((PreviousMode == UserMode) || (KdDebuggerEnabled))
     {
         /* Add the FPU Flag */
         Context.ContextFlags |= CONTEXT_FLOATING_POINT;
@@ -1105,61 +1067,6 @@ Handled:
                          PreviousMode);
     return;
 }
-
-VOID
-NTAPI
-KiDispatchExceptionFromTrapFrame(IN NTSTATUS Code,
-                                 IN ULONG_PTR Address,
-                                 IN ULONG ParameterCount,
-                                 IN ULONG_PTR Parameter1,
-                                 IN ULONG_PTR Parameter2,
-                                 IN ULONG_PTR Parameter3,
-                                 IN PKTRAP_FRAME TrapFrame)
-{
-    EXCEPTION_RECORD ExceptionRecord;
-
-    /* Build the exception record */
-    ExceptionRecord.ExceptionCode = Code;
-    ExceptionRecord.ExceptionFlags = 0;
-    ExceptionRecord.ExceptionRecord = NULL;
-    ExceptionRecord.ExceptionAddress = (PVOID)Address;
-    ExceptionRecord.NumberParameters = ParameterCount;
-    if (ParameterCount)
-    {
-        /* Copy extra parameters */
-        ExceptionRecord.ExceptionInformation[0] = Parameter1;
-        ExceptionRecord.ExceptionInformation[1] = Parameter2;
-        ExceptionRecord.ExceptionInformation[2] = Parameter3;
-    }
-    
-    /* Now go dispatch the exception */
-    KiDispatchException(&ExceptionRecord,
-                        NULL,
-                        TrapFrame,
-                        TrapFrame->EFlags & EFLAGS_V86_MASK ?
-                        -1 : KiUserTrap(TrapFrame),
-                        TRUE);
-
-    /* Return from this trap */
-    KiEoiHelper(TrapFrame);
-}
-
-VOID
-_NORETURN
-FASTCALL
-KiSystemFatalException(IN ULONG ExceptionCode,
-                       IN PKTRAP_FRAME TrapFrame)
-{
-    /* Bugcheck the system */
-    KeBugCheckWithTf(UNEXPECTED_KERNEL_MODE_TRAP,
-                     ExceptionCode,
-                     0,
-                     0,
-                     0,
-                     TrapFrame);
-}
-
-/* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
  * @implemented

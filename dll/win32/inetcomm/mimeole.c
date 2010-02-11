@@ -1610,7 +1610,6 @@ static HRESULT create_body_offset_list(IStream *stm, const char *boundary, struc
     } while(1);
 
 end:
-    HeapFree(GetProcessHeap(), 0, nl_boundary);
     HeapFree(GetProcessHeap(), 0, buf);
     return hr;
 }

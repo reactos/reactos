@@ -32,11 +32,10 @@
 #ifdef NEW_DEBUG_SYSTEM_IMPLEMENTED // enable when Debug Filters are implemented
 #define FSTRACE DbgPrintEx
 #else
-#define FSTRACE(x, ...)                                 \
-    if (x & FsRtlpTraceLevel) DbgPrint(__VA_ARGS__)
+#define FSTRACE(x, fmt, ...) if (x & FsRtlpTraceLevel) DPRINT1(fmt, __VA_ARGS__)
 #endif
 #else
-#define FSTRACE(x, ...) DPRINT(__VA_ARGS__)
+#define FSTRACE(x, fmt, ...) DPRINT(fmt, __VA_ARGS__)
 #endif
 
 //

@@ -68,7 +68,7 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
         LoaderBlock.Flags |= MB_FLAGS_ACPI_TABLE;
 
         /* Get BIOS memory map */
-        RtlZeroMemory(BiosMemoryMap, sizeof(BiosMemoryMap));
+        RtlZeroMemory(BiosMemoryMap, sizeof(BIOS_MEMORY_MAP) * 32);
         BiosMemoryMapEntryCount = PcMemGetMemoryMap(BiosMemoryMap,
             sizeof(BiosMemoryMap) / sizeof(BIOS_MEMORY_MAP));
 
@@ -79,14 +79,6 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
         /* Set 'Configuration Data' value */
         PartialResourceList =
             MmHeapAlloc(sizeof(CM_PARTIAL_RESOURCE_LIST) + TableSize);
-
-        if (PartialResourceList == NULL)
-        {
-            DPRINTM(DPRINT_HWDETECT,
-                    "Failed to allocate resource descriptor\n");
-            return;
-        }
-
         memset(PartialResourceList, 0, sizeof(CM_PARTIAL_RESOURCE_LIST) + TableSize);
         PartialResourceList->Version = 0;
         PartialResourceList->Revision = 0;

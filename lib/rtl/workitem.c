@@ -33,19 +33,19 @@ typedef struct _RTLP_WORKITEM
     HANDLE TokenHandle;
 } RTLP_WORKITEM, *PRTLP_WORKITEM;
 
-static LONG ThreadPoolInitialized = 0;
+static volatile LONG ThreadPoolInitialized = 0;
 static RTL_CRITICAL_SECTION ThreadPoolLock;
 static PRTLP_IOWORKERTHREAD PersistentIoThread;
 static LIST_ENTRY ThreadPoolIOWorkerThreadsList;
 static HANDLE ThreadPoolCompletionPort;
-static LONG ThreadPoolWorkerThreads;
+static volatile LONG ThreadPoolWorkerThreads;
 static LONG ThreadPoolWorkerThreadsRequests;
-static LONG ThreadPoolWorkerThreadsLongRequests;
-static LONG ThreadPoolIOWorkerThreads;
-static LONG ThreadPoolIOWorkerThreadsRequests;
-static LONG ThreadPoolIOWorkerThreadsLongRequests;
+static volatile LONG ThreadPoolWorkerThreadsLongRequests;
+static volatile LONG ThreadPoolIOWorkerThreads;
+static volatile LONG ThreadPoolIOWorkerThreadsRequests;
+static volatile LONG ThreadPoolIOWorkerThreadsLongRequests;
 
-#define IsThreadPoolInitialized() ((volatile LONG)ThreadPoolInitialized == 1)
+#define IsThreadPoolInitialized() (ThreadPoolInitialized == 1)
 
 static NTSTATUS
 RtlpInitializeThreadPool(VOID)
@@ -614,8 +614,8 @@ Wait:
             /* FIXME - figure out an effective method to determine if it's appropriate to
                        lower the number of threads. For now let's always terminate if there's
                        at least one thread and no queued items. */
-            Terminate = ((volatile LONG)ThreadPoolIOWorkerThreads - (volatile LONG)ThreadPoolIOWorkerThreadsLongRequests >= WORKERTHREAD_CREATION_THRESHOLD) &&
-                        ((volatile LONG)ThreadPoolIOWorkerThreadsRequests == 0);
+            Terminate = (ThreadPoolIOWorkerThreads - ThreadPoolIOWorkerThreadsLongRequests >= WORKERTHREAD_CREATION_THRESHOLD) &&
+                        (ThreadPoolIOWorkerThreadsRequests == 0);
 
             if (Terminate)
             {
@@ -718,7 +718,7 @@ RtlpWorkerThreadProc(IN PVOID Parameter)
             {
                 /* FIXME - we might want to optimize this */
                 if (TimeoutCount++ > 2 &&
-                    (volatile LONG)ThreadPoolWorkerThreads - (volatile LONG)ThreadPoolWorkerThreadsLongRequests >= WORKERTHREAD_CREATION_THRESHOLD)
+                    ThreadPoolWorkerThreads - ThreadPoolWorkerThreadsLongRequests >= WORKERTHREAD_CREATION_THRESHOLD)
                 {
                     Terminate = TRUE;
                 }
@@ -819,7 +819,7 @@ RtlQueueWorkItem(IN WORKERCALLBACKFUNC Function,
                 /* Grow the thread pool */
                 Status = RtlpStartWorkerThread(RtlpIoWorkerThreadProc);
 
-                if (!NT_SUCCESS(Status) && (volatile LONG)ThreadPoolIOWorkerThreads != 0)
+                if (!NT_SUCCESS(Status) && ThreadPoolIOWorkerThreads)
                 {
                     /* We failed to create the thread, but there's at least one there so
                        we can at least queue the request */
@@ -846,7 +846,7 @@ RtlQueueWorkItem(IN WORKERCALLBACKFUNC Function,
                 /* Grow the thread pool */
                 Status = RtlpStartWorkerThread(RtlpWorkerThreadProc);
 
-                if (!NT_SUCCESS(Status) && (volatile LONG)ThreadPoolWorkerThreads != 0)
+                if (!NT_SUCCESS(Status) && ThreadPoolWorkerThreads != 0)
                 {
                     /* We failed to create the thread, but there's at least one there so
                        we can at least queue the request */

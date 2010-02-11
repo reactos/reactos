@@ -739,7 +739,6 @@ static UINT ACTION_RecurseSearchDirectory(MSIPACKAGE *package, LPWSTR *appValue,
     size_t dirLen = lstrlenW(dir), fileLen = lstrlenW(sig->File);
     WCHAR subpath[MAX_PATH];
     WCHAR *buf;
-    DWORD len;
 
     static const WCHAR starDotStarW[] = { '*','.','*',0 };
 
@@ -754,8 +753,7 @@ static UINT ACTION_RecurseSearchDirectory(MSIPACKAGE *package, LPWSTR *appValue,
      * here.  Add two because we might need to add a backslash if the dir name
      * isn't backslash-terminated.
      */
-    len = dirLen + max(fileLen, strlenW(starDotStarW)) + 2;
-    buf = msi_alloc(len * sizeof(WCHAR));
+    buf = msi_alloc( (dirLen + max(fileLen, strlenW(starDotStarW)) + 2) * sizeof(WCHAR));
     if (!buf)
         return ERROR_OUTOFMEMORY;
 
@@ -817,7 +815,7 @@ static UINT ACTION_RecurseSearchDirectory(MSIPACKAGE *package, LPWSTR *appValue,
         }
     }
 
-    if (*appValue != buf)
+    if (!*appValue)
         msi_free(buf);
 
     return rc;

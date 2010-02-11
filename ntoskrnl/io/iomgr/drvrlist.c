@@ -45,11 +45,8 @@ LIST_ENTRY GroupListHead = {NULL, NULL};
 LIST_ENTRY ServiceListHead  = {NULL, NULL};
 extern BOOLEAN NoGuiBoot;
 
-VOID
-FASTCALL
-INIT_FUNCTION
-IopDisplayLoadingMessage(PVOID ServiceName,
-                         BOOLEAN Unicode);
+SECT_INIT_FND
+VOID FASTCALL IopDisplayLoadingMessage(PVOID ServiceName, BOOLEAN Unicode);
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -256,8 +253,8 @@ IopCreateServiceListEntry(PUNICODE_STRING ServiceName)
 }
 
 
-NTSTATUS INIT_FUNCTION
-IoCreateDriverList(VOID)
+SECT_INIT_FN(IoCreateDriverList)
+NTSTATUS IoCreateDriverList(VOID)
 {
   RTL_QUERY_REGISTRY_TABLE QueryTable[2];
   PKEY_BASIC_INFORMATION KeyInfo = NULL;
@@ -353,8 +350,8 @@ IoCreateDriverList(VOID)
   return(STATUS_SUCCESS);
 }
 
-NTSTATUS INIT_FUNCTION
-IoDestroyDriverList(VOID)
+SECT_INIT_FN(IoDestroyDriverList)
+NTSTATUS IoDestroyDriverList(VOID)
 {
     PSERVICE_GROUP CurrentGroup;
     PSERVICE CurrentService;
@@ -411,8 +408,9 @@ IoDestroyDriverList(VOID)
     return STATUS_SUCCESS;
 }
 
-static INIT_FUNCTION NTSTATUS
-IopLoadDriver(PSERVICE Service)
+static NTSTATUS IopLoadDriver(PSERVICE Service);
+SECT_INIT_FN(IopLoadDriver)
+static NTSTATUS IopLoadDriver(PSERVICE Service)
 {
    NTSTATUS Status = STATUS_UNSUCCESSFUL;
 

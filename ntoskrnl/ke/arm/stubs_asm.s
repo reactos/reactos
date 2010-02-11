@@ -15,6 +15,7 @@ GENERATE_ARM_STUB RtlpGetStackLimits
 GENERATE_ARM_STUB DbgBreakPointWithStatus 
 GENERATE_ARM_STUB KeRaiseUserException 
 GENERATE_ARM_STUB KdpGdbStubInit
+GENERATE_ARM_STUB NtRaiseException
 
 //
 // Driver ISRs
@@ -36,3 +37,4 @@ GENERATE_ARM_STUB RtlInitializeContext
 GENERATE_ARM_STUB KeUserModeCallback
 GENERATE_ARM_STUB KiCallUserMode
 GENERATE_ARM_STUB NtCallbackReturn
+GENERATE_ARM_STUB NtContinue

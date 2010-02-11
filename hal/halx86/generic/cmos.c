@@ -4,7 +4,7 @@
  * FILE:            hal/halx86/generic/cmos.c
  * PURPOSE:         CMOS Access Routines (Real Time Clock and LastKnownGood)
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
- *                  Eric Kohl
+ *                  Eric Kohl (ekohl@abo.rhein-zeitung.de)
  */
 
 /* INCLUDES ******************************************************************/
@@ -17,42 +17,8 @@
 
 KSPIN_LOCK HalpSystemHardwareLock;
 UCHAR HalpCmosCenturyOffset;
-ULONG HalpSystemHardwareFlags;
 
-/* PRIVATE FUNCTIONS **********************************************************/
-
-VOID
-NTAPI
-HalpAcquireSystemHardwareSpinLock(VOID)
-{
-    ULONG Flags;
-
-    /* Get flags and disable interrupts */
-    Flags = __readeflags();
-    _disable();
-
-    /* Acquire the lock */
-    KxAcquireSpinLock(&HalpSystemHardwareLock);
-
-    /* We have the lock, save the flags now */
-    HalpSystemHardwareFlags = Flags;
-}
-
-VOID
-NTAPI
-HalpReleaseCmosSpinLock(VOID)
-{
-    ULONG Flags;
-
-    /* Get the flags */
-    Flags = HalpSystemHardwareFlags;
-
-    /* Release the lock */
-    KxReleaseSpinLock(&HalpSystemHardwareLock);
-
-    /* Restore the flags */
-    __writeeflags(Flags);
-}
+/* PRIVATE FUNCTIONS *********************************************************/
 
 FORCEINLINE
 UCHAR

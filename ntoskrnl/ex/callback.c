@@ -250,10 +250,8 @@ ExpDeleteCallback(IN PVOID Object)
  * @remarks None
  *
  *--*/
-BOOLEAN
-INIT_FUNCTION
-NTAPI
-ExpInitializeCallbacks(VOID)
+SECT_INIT_FN(ExpInitializeCallbacks)
+BOOLEAN NTAPI ExpInitializeCallbacks(VOID)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     NTSTATUS Status;

@@ -20,7 +20,7 @@
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS GUI first stage setup application
- * FILE:        base/setup/reactos/reactos.c
+ * FILE:        subsys/system/reactos/reactos.c
  * PROGRAMMERS: Eric Kohl
  *              Matthias Kupfer
  *              Dmitry Chapyshev (dmitry@reactos.org)
@@ -103,7 +103,7 @@ TCHAR abort_msg[512], abort_title[64];
 HINSTANCE hInstance;
 BOOL isUnattend;
 
-LONG LoadGenentry(HINF hinf,PCTSTR name,PGENENTRY *gen,PINFCONTEXT context);
+LONG LoadGenentry(HINF hinf,PCTSTR name,PGENENTRY gen,PINFCONTEXT context);
 
 /* FUNCTIONS ****************************************************************/
 
@@ -668,7 +668,7 @@ DriveDlgProc(HWND hwndDlg,
              WPARAM wParam,
              LPARAM lParam)
 {
-#if 1
+#if 0
     HDEVINFO h;
     HWND hList;
     SP_DEVINFO_DATA DevInfoData;
@@ -692,7 +692,7 @@ DriveDlgProc(HWND hwndDlg,
                                  WM_SETFONT,
                                  (WPARAM)hTitleFont,
                                  (LPARAM)TRUE);*/
-#if 1
+#if 0
             h = SetupDiGetClassDevs(&GUID_DEVCLASS_DISKDRIVE, NULL, NULL, DIGCF_PRESENT);
             if (h != INVALID_HANDLE_VALUE)
             {
@@ -805,6 +805,10 @@ SummaryDlgProc(HWND hwndDlg,
             dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
             SetWindowLongPtr(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
         
+            hwndControl = GetDlgItem(GetParent(hwndDlg), IDCANCEL);
+            ShowWindow(hwndControl, SW_HIDE);
+            EnableWindow(hwndControl, FALSE);
+
             /* Set title font */
             /*SendDlgItemMessage(hwndDlg,
                                  IDC_STARTTITLE,
@@ -824,14 +828,6 @@ SummaryDlgProc(HWND hwndDlg,
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_NEXT | PSWIZB_BACK);
                     break;
 
-                case PSN_QUERYCANCEL:
-                    SetWindowLongPtr(hwndDlg,
-                                     DWL_MSGRESULT,
-                                     MessageBox(GetParent(hwndDlg),
-                                             abort_msg,
-                                             abort_title,
-                                             MB_YESNO | MB_ICONQUESTION) != IDYES);
-                    return TRUE;
                 default:
                     break;
             }
@@ -863,6 +859,10 @@ ProcessDlgProc(HWND hwndDlg,
             dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
             SetWindowLongPtr(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
         
+            hwndControl = GetDlgItem(GetParent(hwndDlg), IDCANCEL);
+            ShowWindow(hwndControl, SW_HIDE);
+            EnableWindow(hwndControl, FALSE);
+
             /* Set title font */
             /*SendDlgItemMessage(hwndDlg,
                                  IDC_STARTTITLE,
@@ -883,14 +883,7 @@ ProcessDlgProc(HWND hwndDlg,
                    // disable all buttons during installation process
                    // PropSheet_SetWizButtons(GetParent(hwndDlg), 0 );
                    break;
-                case PSN_QUERYCANCEL:
-                    SetWindowLongPtr(hwndDlg,
-                                     DWL_MSGRESULT,
-                                     MessageBox(GetParent(hwndDlg),
-                                             abort_msg,
-                                             abort_title,
-                                             MB_YESNO | MB_ICONQUESTION) != IDYES);
-                    return TRUE;
+
                 default:
                    break;
             }
@@ -923,10 +916,6 @@ RestartDlgProc(HWND hwndDlg,
             dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
             SetWindowLongPtr(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
         
-            hwndControl = GetDlgItem(GetParent(hwndDlg), IDCANCEL);
-            ShowWindow(hwndControl, SW_HIDE);
-            EnableWindow(hwndControl, FALSE);
-
             /* Set title font */
             /*SendDlgItemMessage(hwndDlg,
                                  IDC_STARTTITLE,
@@ -1095,13 +1084,13 @@ void LoadSetupData()
         }
 
         // get computers list
-        SetupData.CompCount = LoadGenentry(hTxtsetupSif,_T("Computer"),&SetupData.pComputers,&InfContext);
+        SetupData.CompCount = LoadGenentry(hTxtsetupSif,_T("Computer"),SetupData.pComputers,&InfContext);
 
         // get display list
-        SetupData.DispCount = LoadGenentry(hTxtsetupSif,_T("Display"),&SetupData.pDisplays,&InfContext);
+        SetupData.DispCount = LoadGenentry(hTxtsetupSif,_T("Display"),SetupData.pDisplays,&InfContext);
 
         // get keyboard list
-        SetupData.KeybCount = LoadGenentry(hTxtsetupSif, _T("Keyboard"),&SetupData.pKeyboards,&InfContext);
+        SetupData.KeybCount = LoadGenentry(hTxtsetupSif, _T("Keyboard"),SetupData.pKeyboards,&InfContext);
 
         // get install directory
         if (SetupFindFirstLine(hTxtsetupSif, _T("SetupData"), _T("DefaultPath"), &InfContext))
@@ -1116,16 +1105,15 @@ void LoadSetupData()
     }
 }
 
-LONG LoadGenentry(HINF hinf,PCTSTR name,PGENENTRY *gen,PINFCONTEXT context)
+LONG LoadGenentry(HINF hinf,PCTSTR name,PGENENTRY gen,PINFCONTEXT context)
 {
     LONG TotalCount;
-    DWORD LineLength;
 
     TotalCount = SetupGetLineCount(hinf, name);
     if (TotalCount > 0)
     {
-        *gen = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GENENTRY) * TotalCount);
-        if (*gen != NULL)
+        gen = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GENENTRY) * TotalCount);
+        if (gen != NULL)
         {
             if (SetupFindFirstLine(hinf, name, NULL, context))
             {
@@ -1134,22 +1122,22 @@ LONG LoadGenentry(HINF hinf,PCTSTR name,PGENENTRY *gen,PINFCONTEXT context)
                 {
                     SetupGetStringField(context,
                                         0,
-                                        (*gen)[Count].Id,
-                                        sizeof((*gen)[Count].Id) / sizeof(TCHAR),
-                                        &LineLength);
+                                        gen[Count].Id,
+                                        sizeof(gen[Count].Id) / sizeof(TCHAR),
+                                        NULL);
 
                     SetupGetStringField(context,
                                         1,
-                                        (*gen)[Count].Value,
-                                        sizeof((*gen)[Count].Value) / sizeof(TCHAR),
-                                        &LineLength);
-                    ++Count;
+                                        gen[Count].Value,
+                                        sizeof(gen[Count].Value) / sizeof(TCHAR),
+                                        NULL);
+                    Count++;
                 }
                 while (SetupFindNextLine(context, context) && Count < TotalCount);
             }
         }
-	else return 0;
     }
+
     return TotalCount;
 }
 
@@ -1205,10 +1193,10 @@ _tWinMain(HINSTANCE hInst,
     hInstance = hInst;
     isUnattend = isUnattendSetup();
 
-    LoadString(hInst,IDS_ABORTSETUP, abort_msg, sizeof(abort_msg)/sizeof(TCHAR));
-    LoadString(hInst,IDS_ABORTSETUP2, abort_title,sizeof(abort_title)/sizeof(TCHAR));
     if (!isUnattend)
     {
+        LoadString(hInst,IDS_ABORTSETUP, abort_msg, sizeof(abort_msg)/sizeof(TCHAR));
+        LoadString(hInst,IDS_ABORTSETUP2, abort_title,sizeof(abort_title)/sizeof(TCHAR));
 
         LoadSetupData();
 
@@ -1288,16 +1276,19 @@ _tWinMain(HINSTANCE hInst,
     psp.pszTemplate = MAKEINTRESOURCE(IDD_PROCESSPAGE);
     ahpsp[nPages++] = CreatePropertySheetPage(&psp);
 
-    /* Create finish to reboot page */
-    psp.dwSize = sizeof(PROPSHEETPAGE);
-    psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
-    psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_RESTARTTITLE);
-    psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_RESTARTSUBTITLE);
-    psp.hInstance = hInst;
-    psp.lParam = 0;
-    psp.pfnDlgProc = RestartDlgProc;
-    psp.pszTemplate = MAKEINTRESOURCE(IDD_RESTARTPAGE);
-    ahpsp[nPages++] = CreatePropertySheetPage(&psp);
+    if (!isUnattend)
+    {
+        /* Create finish to reboot page */
+        psp.dwSize = sizeof(PROPSHEETPAGE);
+        psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
+        psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_RESTARTTITLE);
+        psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_RESTARTSUBTITLE);
+        psp.hInstance = hInst;
+        psp.lParam = 0;
+        psp.pfnDlgProc = RestartDlgProc;
+        psp.pszTemplate = MAKEINTRESOURCE(IDD_RESTARTPAGE);
+        ahpsp[nPages++] = CreatePropertySheetPage(&psp);
+    }
 
     /* Create the property sheet */
     psh.dwSize = sizeof(PROPSHEETHEADER);

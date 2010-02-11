@@ -13,9 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, ExpInitializeSemaphoreImplementation)
-#endif
 
 /* GLOBALS ******************************************************************/
 
@@ -37,10 +34,8 @@ static const INFORMATION_CLASS_INFO ExSemaphoreInfoClass[] =
 
 /* FUNCTIONS *****************************************************************/
 
-VOID
-INIT_FUNCTION
-NTAPI
-ExpInitializeSemaphoreImplementation(VOID)
+SECT_INIT_FN(ExpInitializeSemaphoreImplementation)
+VOID NTAPI ExpInitializeSemaphoreImplementation(VOID)
 {
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     UNICODE_STRING Name;
@@ -235,7 +230,6 @@ NtQuerySemaphore(IN HANDLE SemaphoreHandle,
                                          SemaphoreInformation,
                                          SemaphoreInformationLength,
                                          ReturnLength,
-                                         NULL,
                                          PreviousMode);
     if (!NT_SUCCESS(Status))
     {

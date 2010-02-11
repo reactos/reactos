@@ -39,7 +39,7 @@ typedef struct {
     nsIDOMHTMLImageElement *nsimg;
 } HTMLImgElement;
 
-#define HTMLIMG(x)  ((IHTMLImgElement*)  &(x)->lpHTMLImgElementVtbl)
+#define HTMLIMG(x)  (&(x)->lpHTMLImgElementVtbl)
 
 #define HTMLIMG_THIS(iface) DEFINE_THIS(HTMLImgElement, HTMLImgElement, iface)
 
@@ -437,24 +437,8 @@ static HRESULT WINAPI HTMLImgElement_put_name(IHTMLImgElement *iface, BSTR v)
 static HRESULT WINAPI HTMLImgElement_get_name(IHTMLImgElement *iface, BSTR *p)
 {
     HTMLImgElement *This = HTMLIMG_THIS(iface);
-    nsAString strName;
-    nsresult nsres;
-
-    TRACE("(%p)->(%p)\n", This, p);
-
-    nsAString_Init(&strName, NULL);
-    nsres = nsIDOMHTMLImageElement_GetName(This->nsimg, &strName);
-    if(NS_SUCCEEDED(nsres)) {
-        const PRUnichar *str;
-
-        nsAString_GetData(&strName, &str);
-        *p = *str ? SysAllocString(str) : NULL;
-    }else {
-        ERR("GetName failed: %08x\n", nsres);
-    }
-    nsAString_Finish(&strName);
-
-    return NS_SUCCEEDED(nsres) ? S_OK : E_FAIL;
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI HTMLImgElement_put_width(IHTMLImgElement *iface, LONG v)
@@ -588,24 +572,11 @@ static void HTMLImgElement_destructor(HTMLDOMNode *iface)
     HTMLElement_destructor(&This->element.node);
 }
 
-static HRESULT HTMLImgElement_get_readystate(HTMLDOMNode *iface, BSTR *p)
-{
-    HTMLImgElement *This = HTMLIMG_NODE_THIS(iface);
-
-    return IHTMLImgElement_get_readyState(HTMLIMG(This), p);
-}
-
 #undef HTMLIMG_NODE_THIS
 
 static const NodeImplVtbl HTMLImgElementImplVtbl = {
     HTMLImgElement_QI,
-    HTMLImgElement_destructor,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    HTMLImgElement_get_readystate
+    HTMLImgElement_destructor
 };
 
 static const tid_t HTMLImgElement_iface_tids[] = {

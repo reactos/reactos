@@ -18,6 +18,32 @@
 #define SIZEOF_DEVMODEW_400 212
 #define SIZEOF_DEVMODEW_500 220
 
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+PtInRegion(IN HRGN hrgn,
+           int x,
+           int y)
+{
+    /* FIXME some stuff at user mode need be fixed */
+    return NtGdiPtInRegion(hrgn,x,y);
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+RectInRegion(HRGN hrgn,
+             LPCRECT prcl)
+{
+    /* FIXME some stuff at user mode need be fixed */
+    return NtGdiRectInRegion(hrgn, (LPRECT) prcl);
+}
+
 /*
  * @unimplemented
  */
@@ -40,6 +66,8 @@ SaveDC(IN HDC hdc)
     /* FIXME Sharememory */
     return NtGdiSaveDC(hdc);
 }
+
+
 
 /*
  * @implemented
@@ -166,6 +194,8 @@ EnumObjects(HDC hdc,
     return Result;
 }
 
+
+
 /*
  * @implemented
  */
@@ -179,6 +209,7 @@ GetBoundsRect(
 {
     return NtGdiGetBoundsRect(hdc,lprcBounds,flags & DCB_RESET);
 }
+
 
 /*
  * @unimplemented
@@ -1528,6 +1559,21 @@ GdiResetDCEMF(HANDLE SpoolFileHandle,
     return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
+INT
+WINAPI
+CombineRgn(HRGN  hDest,
+           HRGN  hSrc1,
+           HRGN  hSrc2,
+           INT  CombineMode)
+{
+    /* FIXME some part should be done in user mode */
+    return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode);
+}
+
 /*
  * @unimplemented
  */
@@ -1590,6 +1636,29 @@ VOID WINAPI GdiInitializeLanguagePack(DWORD InitParam)
 {
     UNIMPLEMENTED;
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+}
+
+
+/*
+ * @implemented
+ */
+INT
+WINAPI
+ExcludeClipRect(IN HDC hdc, IN INT xLeft, IN INT yTop, IN INT xRight, IN INT yBottom)
+{
+    /* FIXME some part need be done on user mode size */
+    return NtGdiExcludeClipRect(hdc, xLeft, yTop, xRight, yBottom);
+}
+
+/*
+ * @implemented
+ */
+INT
+WINAPI
+ExtSelectClipRgn( IN HDC hdc, IN HRGN hrgn, IN INT iMode)
+{
+    /* FIXME some part need be done on user mode size */
+    return NtGdiExtSelectClipRgn(hdc,hrgn, iMode);
 }
 
 /*
@@ -1704,6 +1773,138 @@ GetFontData(HDC hdc,
     return NtGdiGetFontData(hdc, dwTable, dwOffset, lpvBuffer, cbData);
 }
 
+
+/*
+ * @implemented
+ *
+ */
+DWORD
+WINAPI
+GetRegionData(HRGN hrgn,
+              DWORD nCount,
+              LPRGNDATA lpRgnData)
+{
+    if (!lpRgnData)
+    {
+        nCount = 0;
+    }
+
+    return NtGdiGetRegionData(hrgn,nCount,lpRgnData);
+}
+
+
+/*
+ * @implemented
+ *
+ */
+INT
+WINAPI
+GetRgnBox(HRGN hrgn,
+          LPRECT prcOut)
+{
+#if 0
+  PRGN_ATTR Rgn_Attr;
+  if (!GdiGetHandleUserData((HGDIOBJ) hRgn, GDI_OBJECT_TYPE_REGION, (PVOID) &Rgn_Attr))
+     return NtGdiGetRgnBox(hrgn, prcOut);
+  if (Rgn_Attr->Flags == NULLREGION)
+  {
+     prcOut->left   = 0;
+     prcOut->top    = 0;
+     prcOut->right  = 0;
+     prcOut->bottom = 0;
+  }
+  else
+  {
+     if (Rgn_Attr->Flags != SIMPLEREGION) return NtGdiGetRgnBox(hrgn, prcOut);
+     *prcOut = Rgn_Attr->Rect;
+  }
+  return Rgn_Attr->Flags;
+#endif
+  return NtGdiGetRgnBox(hrgn, prcOut);
+}
+
+
+/*
+ * @implemented
+ *
+ */
+INT
+WINAPI
+OffsetRgn( HRGN hrgn,
+          int nXOffset,
+          int nYOffset)
+{
+    /* FIXME some part are done in user mode */
+    return NtGdiOffsetRgn(hrgn,nXOffset,nYOffset);
+}
+
+/*
+ * @implemented
+ */
+INT
+WINAPI
+IntersectClipRect(HDC hdc,
+                  int nLeftRect,
+                  int nTopRect,
+                  int nRightRect,
+                  int nBottomRect)
+{
+#if 0
+// Handle something other than a normal dc object.
+  if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
+  {
+    if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
+      return MFDRV_IntersectClipRect( hdc, nLeftRect, nTopRect, nRightRect, nBottomRect);
+    else
+    {
+      PLDC pLDC = GdiGetLDC(hdc);
+      if ( pLDC )
+      {
+         if (pLDC->iType != LDC_EMFLDC || EMFDRV_IntersectClipRect( hdc, nLeftRect, nTopRect, nRightRect, nBottomRect))
+             return NtGdiIntersectClipRect(hdc, nLeftRect, nTopRect, nRightRect, nBottomRect);
+      }
+      else
+        SetLastError(ERROR_INVALID_HANDLE);
+      return 0;
+    }
+  }
+#endif
+    return NtGdiIntersectClipRect(hdc, nLeftRect, nTopRect, nRightRect, nBottomRect);
+}
+
+/*
+ * @implemented
+ */
+INT
+WINAPI
+OffsetClipRgn(HDC hdc,
+              int nXOffset,
+              int nYOffset)
+{
+#if 0
+// Handle something other than a normal dc object.
+  if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
+  {
+    if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
+      return MFDRV_OffsetClipRgn( hdc, nXOffset, nYOffset );
+    else
+    {
+      PLDC pLDC = GdiGetLDC(hdc);
+      if ( !pLDC )
+      {
+         SetLastError(ERROR_INVALID_HANDLE);
+         return 0;
+      }
+      if (pLDC->iType == LDC_EMFLDC && !EMFDRV_OffsetClipRgn( hdc, nXOffset, nYOffset ))
+         return 0;
+      return NtGdiOffsetClipRgn( hdc,  nXOffset,  nYOffset);
+    }
+  }
+#endif
+  return NtGdiOffsetClipRgn( hdc,  nXOffset,  nYOffset);
+}
+
+
 INT
 WINAPI
 NamedEscape(HDC hdc,
@@ -1720,6 +1921,8 @@ NamedEscape(HDC hdc,
      */
     return NtGdiExtEscape(NULL,pDriver,wcslen(pDriver),iEsc,cjIn,pjIn,cjOut,pjOut);
 }
+
+
 
 /*
  * @unimplemented

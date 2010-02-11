@@ -200,9 +200,11 @@ SetEip:
     /* Bring interrupts back */
     sti
 
+    /* Write the debug data */
+    SET_TF_DEBUG_HEADER
+
     /* Exit to user-mode */
-    mov ecx, esp
-    jmp @KiServiceExit@8
+    jmp _KiServiceExit
 
 SaveDebug:
 
@@ -424,7 +426,7 @@ NoStack:
  *         non-GUI to a GUI Thread. The caller is responsible for freeing the
  *         previous stack. The new stack values MUST be valid before calling
  *         this routine.
- *
+ * !!! changes ebp, which breaks PsConvertToGuiThread when ebp is not used for stack frame (stack frame optimization)
  *--*/
 .globl _KeSwitchKernelStack@8
 .func KeSwitchKernelStack@8

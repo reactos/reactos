@@ -134,7 +134,9 @@ extern "C" {
 #define _pascal __stdcall
 #define __pascal __stdcall
 
+#ifndef CDECL
 #define CDECL _cdecl
+#endif
 
 #if !defined(__x86_64__) //defined(_STDCALL_SUPPORTED)
 #define CALLBACK    __stdcall

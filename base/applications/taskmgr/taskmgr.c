@@ -55,27 +55,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 
     /* check wether we're already running or not */
     hMutex = CreateMutexW(NULL, TRUE, L"taskmgrros");
-    if (hMutex && GetLastError() == ERROR_ALREADY_EXISTS)
-    {
-        /* Restore existing taskmanager and bring window to front */
-        /* Relies on the fact that the application title string and window title are the same */
-        HWND hTaskMgr;
-        TCHAR szTaskmgr[128];
-
-        LoadString(hInst, IDS_APP_TITLE, szTaskmgr, sizeof(szTaskmgr)/sizeof(TCHAR));
-        hTaskMgr = FindWindow(NULL, szTaskmgr);
-
-        if (hTaskMgr != NULL)
-        {
-            SendMessage(hTaskMgr, WM_SYSCOMMAND, SC_RESTORE, 0);
-            SetForegroundWindow(hTaskMgr);
-        }
-        return 0;
-    }
-    else if (!hMutex)
-    {
+    if ((!hMutex) || (GetLastError() == ERROR_ALREADY_EXISTS))
         return 1;
-    }
 
     /* Initialize global variables */
     hInst = hInstance;

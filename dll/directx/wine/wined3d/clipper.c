@@ -28,23 +28,22 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 
-static HRESULT WINAPI IWineD3DClipperImpl_QueryInterface(IWineD3DClipper *iface, REFIID riid, void **object)
+static HRESULT WINAPI IWineD3DClipperImpl_QueryInterface(IWineD3DClipper *iface, REFIID riid, void **Obj)
 {
-    TRACE("iface %p, riid %s, object %p.\n", iface, debugstr_guid(riid), object);
+    IWineD3DClipperImpl *This = (IWineD3DClipperImpl *)iface;
 
-    if (IsEqualGUID(riid, &IID_IWineD3DClipper)
-            || IsEqualGUID(riid, &IID_IWineD3DBase)
-            || IsEqualGUID(riid, &IID_IUnknown))
+    TRACE("(%p)->(%p,%p)\n", This, riid, Obj);
+    if (IsEqualGUID(&IID_IUnknown, riid)
+        || IsEqualGUID(&IID_IWineD3DClipper, riid))
     {
-        IUnknown_AddRef(iface);
-        *object = iface;
+        *Obj = iface;
+        IWineD3DClipper_AddRef(iface);
         return S_OK;
     }
-
-    WARN("%s not implemented, returning E_NOINTERFACE.\n", debugstr_guid(riid));
-
-    *object = NULL;
-    return E_NOINTERFACE;
+    else
+    {
+        return E_NOINTERFACE;
+    }
 }
 
 static ULONG WINAPI IWineD3DClipperImpl_AddRef(IWineD3DClipper *iface )
@@ -144,11 +143,11 @@ static HRESULT WINAPI IWineD3DClipperImpl_GetClipList(IWineD3DClipper *iface, co
 
 static HRESULT WINAPI IWineD3DClipperImpl_SetClipList(IWineD3DClipper *iface, const RGNDATA *rgn, DWORD Flags)
 {
+    IWineD3DClipperImpl *This = (IWineD3DClipperImpl *)iface;
     static int warned = 0;
 
     if (warned++ < 10 || rgn == NULL)
-        FIXME("iface %p, region %p, flags %#x stub!\n", iface, rgn, Flags);
-
+        FIXME("(%p,%p,%d),stub!\n",This,rgn,Flags);
     return WINED3D_OK;
 }
 
@@ -163,7 +162,8 @@ static HRESULT WINAPI IWineD3DClipperImpl_GetHwnd(IWineD3DClipper *iface, HWND *
 
 static HRESULT WINAPI IWineD3DClipperImpl_IsClipListChanged(IWineD3DClipper *iface, BOOL *changed)
 {
-    FIXME("iface %p, changed %p stub!\n", iface, changed);
+    IWineD3DClipperImpl *This = (IWineD3DClipperImpl *)iface;
+    FIXME("(%p)->(%p),stub!\n",This,changed);
 
     /* XXX What is safest? */
     *changed = FALSE;

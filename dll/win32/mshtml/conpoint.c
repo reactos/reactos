@@ -89,13 +89,13 @@ static HRESULT WINAPI ConnectionPoint_QueryInterface(IConnectionPoint *iface,
 static ULONG WINAPI ConnectionPoint_AddRef(IConnectionPoint *iface)
 {
     ConnectionPoint *This = CONPOINT_THIS(iface);
-    return IConnectionPointContainer_AddRef(CONPTCONT(This->container));
+    return IConnectionPointContainer_AddRef(This->container);
 }
 
 static ULONG WINAPI ConnectionPoint_Release(IConnectionPoint *iface)
 {
     ConnectionPoint *This = CONPOINT_THIS(iface);
-    return IConnectionPointContainer_Release(CONPTCONT(This->container));
+    return IConnectionPointContainer_Release(This->container);
 }
 
 static HRESULT WINAPI ConnectionPoint_GetConnectionInterface(IConnectionPoint *iface, IID *pIID)
@@ -121,7 +121,7 @@ static HRESULT WINAPI ConnectionPoint_GetConnectionPointContainer(IConnectionPoi
     if(!ppCPC)
         return E_POINTER;
 
-    *ppCPC = CONPTCONT(This->container);
+    *ppCPC = This->container;
     IConnectionPointContainer_AddRef(*ppCPC);
     return S_OK;
 }
@@ -158,9 +158,6 @@ static HRESULT WINAPI ConnectionPoint_Advise(IConnectionPoint *iface, IUnknown *
 
     This->sinks[i].unk = sink;
     *pdwCookie = i+1;
-
-    if(!i && This->data && This->data->on_advise)
-        This->data->on_advise(This->container->outer, This->data);
 
     return S_OK;
 }
@@ -201,15 +198,14 @@ static const IConnectionPointVtbl ConnectionPointVtbl =
     ConnectionPoint_EnumConnections
 };
 
-void ConnectionPoint_Init(ConnectionPoint *cp, ConnectionPointContainer *container, REFIID riid, cp_static_data_t *data)
+void ConnectionPoint_Init(ConnectionPoint *cp, ConnectionPointContainer *container, REFIID riid)
 {
     cp->lpConnectionPointVtbl = &ConnectionPointVtbl;
-    cp->container = container;
+    cp->container = CONPTCONT(container);
     cp->sinks = NULL;
     cp->sinks_size = 0;
     cp->iid = riid;
     cp->next = NULL;
-    cp->data = data;
 
     cp->next = container->cp_list;
     container->cp_list = cp;
@@ -263,9 +259,6 @@ static HRESULT WINAPI ConnectionPointContainer_FindConnectionPoint(IConnectionPo
     ConnectionPoint *iter;
 
     TRACE("(%p)->(%s %p)\n", This, debugstr_cp_guid(riid), ppCP);
-
-    if(This->forward_container)
-        return IConnectionPointContainer_FindConnectionPoint(CONPTCONT(This), riid, ppCP);
 
     *ppCP = NULL;
 

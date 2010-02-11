@@ -63,14 +63,14 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="mma3.lib mm.lib trap.lib ke.lib ex.lib se.lib ob.lib ps.lib cm.lib io.lib pnp.lib cc.lib csq.lib cmlib.lib fs.lib rossym.lib wdmguid.lib rt.lib rtl.lib crtnt.lib cpu-i386.lib dbgp.lib kdw.lib hal.lib bootvid.lib kdcom.lib"
+				AdditionalDependencies="$(NOINHERIT);mma3.lib mm.lib ke.lib ex.lib se.lib ob.lib ps.lib cm.lib cmlib.lib io.lib pnp.lib cc.lib csq.lib fs.lib rt.lib rtl.lib crtnt.lib cpu-i386.lib dbg.lib kd.lib hal.lib bootvid.lib kdcom.lib"
 				OutputFile="$(OutDir)/ntoskrnl.exe"
-				AdditionalLibraryDirectories="&quot;$(s)\libobj\or&quot;"
+				AdditionalLibraryDirectories=""
 				IgnoreAllDefaultLibraries="true"
+				IgnoreDefaultLibraryNames=""
 				ModuleDefinitionFile="ntoskrnl.def"
 				GenerateMapFile="true"
 				MapFileName="$(IntDir)\_ntoskrnl.map"
-				SubSystem="0"
 				EntryPointSymbol="KiSystemStartup"
 				BaseAddress="0x80800000"
 			/>
@@ -140,14 +140,13 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="mma3.lib mm.lib trap.lib ke.lib ex.lib se.lib ob.lib ps.lib cm.lib io.lib pnp.lib cc.lib csq.lib cmlib.lib fs.lib rossym.lib wdmguid.lib rt.lib rtl.lib crtnt.lib cpu-i386.lib dbgp.lib kdw.lib hal.lib bootvid.lib kdcom.lib"
+				AdditionalDependencies="$(NOINHERIT);mma3.lib mm.lib ke.lib ex.lib se.lib ob.lib ps.lib cm.lib cmlib.lib io.lib pnp.lib cc.lib csq.lib fs.lib rt.lib rtl.lib crtnt.lib cpu-i386.lib dbg.lib kd.lib hal.lib bootvid.lib kdcom.lib"
 				OutputFile="$(OutDir)/ntoskrnl.exe"
-				AdditionalLibraryDirectories="&quot;$(s)\libobj\or&quot;"
+				AdditionalLibraryDirectories=""
 				IgnoreAllDefaultLibraries="true"
 				ModuleDefinitionFile="ntoskrnl.def"
 				GenerateMapFile="true"
 				MapFileName="$(IntDir)\_ntoskrnl.map"
-				SubSystem="0"
 				LinkTimeCodeGeneration="1"
 				EntryPointSymbol="KiSystemStartup"
 				BaseAddress="0x80800000"
@@ -321,23 +320,15 @@
 			Filter="h;hpp;hxx;hm;inl"
 			>
 			<File
-				RelativePath="..\include\reactos\msc\intrin2.h"
+				RelativePath="..\..\inc\ntoskrnl\ntoskrnl_bld.h"
 				>
 			</File>
 			<File
-				RelativePath=".\include\internal\ntoskrnl.h"
+				RelativePath="..\..\inc\_dft\osver.h"
 				>
 			</File>
 			<File
-				RelativePath=".\include\ntoskrnl_bld.h"
-				>
-			</File>
-			<File
-				RelativePath="..\include\reactos\msc\i386\platf.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\precomp.h"
+				RelativePath="..\..\inc\dft\msc\i32\platf.h"
 				>
 			</File>
 		</Filter>
@@ -346,7 +337,7 @@
 			Filter="ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 			>
 			<File
-				RelativePath="$(objrbe)\ntoskrnl\ntoskrnl_ntoskrnl.res"
+				RelativePath="..\obj_rosbe\ntoskrnl\ntoskrnl_ntoskrnl.res"
 				>
 			</File>
 		</Filter>
@@ -354,11 +345,11 @@
 			Name="doc"
 			>
 			<File
-				RelativePath=".\doc\__info.txt"
+				RelativePath=".\__svnport.txt"
 				>
 			</File>
 			<File
-				RelativePath="..\..\out\msc\obj\Win32-d\ntoskrnl\_ntoskrnl.map"
+				RelativePath="..\..\int\ntoskrnl-Win32-d\_ntoskrnl.map"
 				>
 			</File>
 			<File

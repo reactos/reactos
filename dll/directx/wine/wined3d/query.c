@@ -3,7 +3,6 @@
  *
  * Copyright 2005 Oliver Stieber
  * Copyright 2007-2008 Stefan Dösinger for CodeWeavers
- * Copyright 2009 Henri Verbeet for CodeWeavers.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -31,7 +30,7 @@
  */
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
-#define GLINFO_LOCATION This->device->adapter->gl_info
+#define GLINFO_LOCATION This->wineD3DDevice->adapter->gl_info
 
 /* *******************************************
    IWineD3DQuery IUnknown parts follow
@@ -89,17 +88,23 @@ static ULONG  WINAPI IWineD3DQueryImpl_Release(IWineD3DQuery *iface) {
 /* *******************************************
    IWineD3DQuery IWineD3DQuery parts follow
    ******************************************* */
-static HRESULT WINAPI IWineD3DQueryImpl_GetParent(IWineD3DQuery *iface, IUnknown **parent)
-{
-    TRACE("iface %p, parent %p.\n", iface, parent);
+static HRESULT  WINAPI IWineD3DQueryImpl_GetParent(IWineD3DQuery *iface, IUnknown** parent){
+    IWineD3DQueryImpl *This = (IWineD3DQueryImpl *)iface;
 
-    *parent = (IUnknown *)parent;
+    *parent= (IUnknown*) parent;
     IUnknown_AddRef(*parent);
-
-    TRACE("Returning %p.\n", *parent);
-
+    TRACE("(%p) : returning %p\n", This, *parent);
     return WINED3D_OK;
 }
+
+static HRESULT  WINAPI IWineD3DQueryImpl_GetDevice(IWineD3DQuery* iface, IWineD3DDevice **pDevice){
+    IWineD3DQueryImpl *This = (IWineD3DQueryImpl *)iface;
+    IWineD3DDevice_AddRef((IWineD3DDevice *)This->wineD3DDevice);
+    *pDevice = (IWineD3DDevice *)This->wineD3DDevice;
+    TRACE("(%p) returning %p\n", This, *pDevice);
+    return WINED3D_OK;
+}
+
 
 static HRESULT  WINAPI IWineD3DQueryImpl_GetData(IWineD3DQuery* iface, void* pData, DWORD dwSize, DWORD dwGetDataFlags){
     IWineD3DQueryImpl *This = (IWineD3DQueryImpl *)iface;
@@ -266,9 +271,6 @@ static HRESULT  WINAPI IWineD3DQueryImpl_GetData(IWineD3DQuery* iface, void* pDa
 static HRESULT  WINAPI IWineD3DOcclusionQueryImpl_GetData(IWineD3DQuery* iface, void* pData, DWORD dwSize, DWORD dwGetDataFlags) {
     IWineD3DQueryImpl *This = (IWineD3DQueryImpl *) iface;
     struct wined3d_occlusion_query *query = This->extendedData;
-    IWineD3DDeviceImpl *device = This->device;
-    const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
-    struct wined3d_context *context;
     DWORD* data = pData;
     GLuint available;
     GLuint samples;
@@ -293,7 +295,7 @@ static HRESULT  WINAPI IWineD3DOcclusionQueryImpl_GetData(IWineD3DQuery* iface, 
         return S_FALSE;
     }
 
-    if (!gl_info->supported[ARB_OCCLUSION_QUERY])
+    if (!GL_SUPPORT(ARB_OCCLUSION_QUERY))
     {
         WARN("(%p) : Occlusion queries not supported. Returning 1.\n", This);
         *data = 1;
@@ -307,7 +309,7 @@ static HRESULT  WINAPI IWineD3DOcclusionQueryImpl_GetData(IWineD3DQuery* iface, 
         return S_OK;
     }
 
-    context = context_acquire(This->device, query->context->current_rt, CTXUSAGE_RESOURCELOAD);
+    ActivateContext(This->wineD3DDevice, query->context->current_rt, CTXUSAGE_RESOURCELOAD);
 
     ENTER_GL();
 
@@ -333,16 +335,13 @@ static HRESULT  WINAPI IWineD3DOcclusionQueryImpl_GetData(IWineD3DQuery* iface, 
 
     LEAVE_GL();
 
-    context_release(context);
-
     return res;
 }
 
 static HRESULT  WINAPI IWineD3DEventQueryImpl_GetData(IWineD3DQuery* iface, void* pData, DWORD dwSize, DWORD dwGetDataFlags) {
     IWineD3DQueryImpl *This = (IWineD3DQueryImpl *) iface;
     struct wined3d_event_query *query = This->extendedData;
-    struct wined3d_context *context;
-    BOOL *data = pData;
+    BOOL* data = pData;
 
     TRACE("(%p) : type D3DQUERY_EVENT, pData %p, dwSize %#x, dwGetDataFlags %#x\n", This, pData, dwSize, dwGetDataFlags);
 
@@ -350,7 +349,7 @@ static HRESULT  WINAPI IWineD3DEventQueryImpl_GetData(IWineD3DQuery* iface, void
 
     if (!query->context)
     {
-        TRACE("Query not started, returning TRUE.\n");
+        ERR("Query not started, returning TRUE.\n");
         *data = TRUE;
 
         return S_OK;
@@ -365,16 +364,16 @@ static HRESULT  WINAPI IWineD3DEventQueryImpl_GetData(IWineD3DQuery* iface, void
         return S_OK;
     }
 
-    context = context_acquire(This->device, query->context->current_rt, CTXUSAGE_RESOURCELOAD);
+    ActivateContext(This->wineD3DDevice, query->context->current_rt, CTXUSAGE_RESOURCELOAD);
 
     ENTER_GL();
 
-    if (context->gl_info->supported[APPLE_FENCE])
+    if (GL_SUPPORT(APPLE_FENCE))
     {
         *data = GL_EXTCALL(glTestFenceAPPLE(query->id));
         checkGLcall("glTestFenceAPPLE");
     }
-    else if (context->gl_info->supported[NV_FENCE])
+    else if (GL_SUPPORT(NV_FENCE))
     {
         *data = GL_EXTCALL(glTestFenceNV(query->id));
         checkGLcall("glTestFenceNV");
@@ -386,8 +385,6 @@ static HRESULT  WINAPI IWineD3DEventQueryImpl_GetData(IWineD3DQuery* iface, void
     }
 
     LEAVE_GL();
-
-    context_release(context);
 
     return S_OK;
 }
@@ -475,36 +472,34 @@ static HRESULT  WINAPI IWineD3DEventQueryImpl_Issue(IWineD3DQuery* iface,  DWORD
             if (query->context->tid != GetCurrentThreadId())
             {
                 context_free_event_query(query);
-                context = context_acquire(This->device, NULL, CTXUSAGE_RESOURCELOAD);
+                context = ActivateContext(This->wineD3DDevice, NULL, CTXUSAGE_RESOURCELOAD);
                 context_alloc_event_query(context, query);
             }
             else
             {
-                context = context_acquire(This->device, query->context->current_rt, CTXUSAGE_RESOURCELOAD);
+                ActivateContext(This->wineD3DDevice, query->context->current_rt, CTXUSAGE_RESOURCELOAD);
             }
         }
         else
         {
-            context = context_acquire(This->device, NULL, CTXUSAGE_RESOURCELOAD);
+            context = ActivateContext(This->wineD3DDevice, NULL, CTXUSAGE_RESOURCELOAD);
             context_alloc_event_query(context, query);
         }
 
         ENTER_GL();
 
-        if (context->gl_info->supported[APPLE_FENCE])
+        if (GL_SUPPORT(APPLE_FENCE))
         {
             GL_EXTCALL(glSetFenceAPPLE(query->id));
             checkGLcall("glSetFenceAPPLE");
         }
-        else if (context->gl_info->supported[NV_FENCE])
+        else if (GL_SUPPORT(NV_FENCE))
         {
             GL_EXTCALL(glSetFenceNV(query->id, GL_ALL_COMPLETED_NV));
             checkGLcall("glSetFenceNV");
         }
 
         LEAVE_GL();
-
-        context_release(context);
     }
     else if(dwIssueFlags & WINED3DISSUE_BEGIN)
     {
@@ -523,10 +518,8 @@ static HRESULT  WINAPI IWineD3DEventQueryImpl_Issue(IWineD3DQuery* iface,  DWORD
 
 static HRESULT  WINAPI IWineD3DOcclusionQueryImpl_Issue(IWineD3DQuery* iface,  DWORD dwIssueFlags) {
     IWineD3DQueryImpl *This = (IWineD3DQueryImpl *)iface;
-    IWineD3DDeviceImpl *device = This->device;
-    const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
 
-    if (gl_info->supported[ARB_OCCLUSION_QUERY])
+    if (GL_SUPPORT(ARB_OCCLUSION_QUERY))
     {
         struct wined3d_occlusion_query *query = This->extendedData;
         struct wined3d_context *context;
@@ -541,12 +534,12 @@ static HRESULT  WINAPI IWineD3DOcclusionQueryImpl_Issue(IWineD3DQuery* iface,  D
                     FIXME("Wrong thread, can't restart query.\n");
 
                     context_free_occlusion_query(query);
-                    context = context_acquire(This->device, NULL, CTXUSAGE_RESOURCELOAD);
+                    context = ActivateContext(This->wineD3DDevice, NULL, CTXUSAGE_RESOURCELOAD);
                     context_alloc_occlusion_query(context, query);
                 }
                 else
                 {
-                    context = context_acquire(This->device, query->context->current_rt, CTXUSAGE_RESOURCELOAD);
+                    ActivateContext(This->wineD3DDevice, query->context->current_rt, CTXUSAGE_RESOURCELOAD);
 
                     ENTER_GL();
                     GL_EXTCALL(glEndQueryARB(GL_SAMPLES_PASSED_ARB));
@@ -557,7 +550,7 @@ static HRESULT  WINAPI IWineD3DOcclusionQueryImpl_Issue(IWineD3DQuery* iface,  D
             else
             {
                 if (query->context) context_free_occlusion_query(query);
-                context = context_acquire(This->device, NULL, CTXUSAGE_RESOURCELOAD);
+                context = ActivateContext(This->wineD3DDevice, NULL, CTXUSAGE_RESOURCELOAD);
                 context_alloc_occlusion_query(context, query);
             }
 
@@ -565,8 +558,6 @@ static HRESULT  WINAPI IWineD3DOcclusionQueryImpl_Issue(IWineD3DQuery* iface,  D
             GL_EXTCALL(glBeginQueryARB(GL_SAMPLES_PASSED_ARB, query->id));
             checkGLcall("glBeginQuery()");
             LEAVE_GL();
-
-            context_release(context);
         }
         if (dwIssueFlags & WINED3DISSUE_END) {
             /* Msdn says _END on a non-building occlusion query returns an error, but
@@ -581,14 +572,12 @@ static HRESULT  WINAPI IWineD3DOcclusionQueryImpl_Issue(IWineD3DQuery* iface,  D
                 }
                 else
                 {
-                    context = context_acquire(This->device, query->context->current_rt, CTXUSAGE_RESOURCELOAD);
+                    ActivateContext(This->wineD3DDevice, query->context->current_rt, CTXUSAGE_RESOURCELOAD);
 
                     ENTER_GL();
                     GL_EXTCALL(glEndQueryARB(GL_SAMPLES_PASSED_ARB));
                     checkGLcall("glEndQuery()");
                     LEAVE_GL();
-
-                    context_release(context);
                 }
             }
         }
@@ -634,6 +623,7 @@ const IWineD3DQueryVtbl IWineD3DQuery_Vtbl =
     IWineD3DQueryImpl_Release,
      /*** IWineD3Dquery methods ***/
     IWineD3DQueryImpl_GetParent,
+    IWineD3DQueryImpl_GetDevice,
     IWineD3DQueryImpl_GetData,
     IWineD3DQueryImpl_GetDataSize,
     IWineD3DQueryImpl_GetType,
@@ -648,6 +638,7 @@ const IWineD3DQueryVtbl IWineD3DEventQuery_Vtbl =
     IWineD3DQueryImpl_Release,
     /*** IWineD3Dquery methods ***/
     IWineD3DQueryImpl_GetParent,
+    IWineD3DQueryImpl_GetDevice,
     IWineD3DEventQueryImpl_GetData,
     IWineD3DEventQueryImpl_GetDataSize,
     IWineD3DQueryImpl_GetType,
@@ -662,6 +653,7 @@ const IWineD3DQueryVtbl IWineD3DOcclusionQuery_Vtbl =
     IWineD3DQueryImpl_Release,
     /*** IWineD3Dquery methods ***/
     IWineD3DQueryImpl_GetParent,
+    IWineD3DQueryImpl_GetDevice,
     IWineD3DOcclusionQueryImpl_GetData,
     IWineD3DOcclusionQueryImpl_GetDataSize,
     IWineD3DQueryImpl_GetType,

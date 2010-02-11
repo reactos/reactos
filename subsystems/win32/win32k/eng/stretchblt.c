@@ -389,7 +389,7 @@ IntEngStretchBlt(SURFOBJ *psoDest,
 {
     BOOLEAN ret;
     COLORADJUSTMENT ca;
-    POINTL MaskOrigin = {0, 0};
+    POINT MaskOrigin;
     SURFACE *psurfDest;
     SURFACE *psurfSource = NULL;
     RECTL InputClippedRect;
@@ -456,8 +456,7 @@ IntEngStretchBlt(SURFOBJ *psoDest,
 
     if (pMaskOrigin != NULL)
     {
-        MaskOrigin.x = pMaskOrigin->x;
-        MaskOrigin.y = pMaskOrigin->y;
+        MaskOrigin.x = pMaskOrigin->x; MaskOrigin.y = pMaskOrigin->y;
     }
 
     /* No success yet */
@@ -483,35 +482,16 @@ IntEngStretchBlt(SURFOBJ *psoDest,
     if (psurfDest->flHooks & HOOK_STRETCHBLTROP)
     {
         /* Drv->StretchBltROP (look at http://www.osronline.com/ddkx/graphics/ddifncs_0z3b.htm ) */
-        ret = GDIDEVFUNCS(psoDest).StretchBltROP(psoDest,
-                                                 (UsesSource) ? psoSource : NULL,
-                                                 MaskSurf,
-                                                 ClipRegion,
-                                                 ColorTranslation,
-                                                 &ca, BrushOrigin,
-                                                 &OutputRect,
-                                                 &InputRect,
-                                                 &MaskOrigin,
-                                                 COLORONCOLOR,
-                                                 pbo,
-                                                 ROP);
+        // FIXME: MaskOrigin is always NULL !
+        ret = GDIDEVFUNCS(psoDest).StretchBltROP(psoDest, (UsesSource) ? psoSource : NULL, MaskSurf, ClipRegion, ColorTranslation,
+                  &ca, BrushOrigin, &OutputRect, &InputRect, NULL, COLORONCOLOR, pbo, ROP);
     }
 
     if (! ret)
     {
-        ret = EngStretchBltROP(psoDest,
-                               (UsesSource) ? psoSource : NULL,
-                               MaskSurf,
-                               ClipRegion,
-                               ColorTranslation,
-                               &ca,
-                               BrushOrigin,
-                               &OutputRect,
-                               &InputRect,
-                               &MaskOrigin,
-                               COLORONCOLOR,
-                               pbo,
-                               ROP);
+        // FIXME: see previous fixme
+        ret = EngStretchBltROP(psoDest, (UsesSource) ? psoSource : NULL, MaskSurf, ClipRegion, ColorTranslation,
+                            &ca, BrushOrigin, &OutputRect, &InputRect, NULL, COLORONCOLOR, pbo, ROP);
     }
 
     if (UsesSource)

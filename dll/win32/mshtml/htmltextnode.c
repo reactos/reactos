@@ -35,8 +35,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 struct HTMLDOMTextNode {
     HTMLDOMNode node;
     const IHTMLDOMTextNodeVtbl   *lpIHTMLDOMTextNodeVtbl;
-
-    nsIDOMText *nstext;
 };
 
 #define HTMLTEXT(x)  (&(x)->lpIHTMLDOMTextNodeVtbl)
@@ -121,17 +119,8 @@ static HRESULT WINAPI HTMLDOMTextNode_toString(IHTMLDOMTextNode *iface, BSTR *St
 static HRESULT WINAPI HTMLDOMTextNode_get_length(IHTMLDOMTextNode *iface, LONG *p)
 {
     HTMLDOMTextNode *This = HTMLTEXT_THIS(iface);
-    PRUint32 length = 0;
-    nsresult nsres;
-
-    TRACE("(%p)->(%p)\n", This, p);
-
-    nsres = nsIDOMText_GetLength(This->nstext, &length);
-    if(NS_FAILED(nsres))
-        ERR("GetLength failed: %08x\n", nsres);
-
-    *p = length;
-    return S_OK;
+    FIXME("(%p)->(%p)\n", This, p);
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI HTMLDOMTextNode_splitText(IHTMLDOMTextNode *iface, LONG offset, IHTMLDOMNode **pRetNode)
@@ -181,9 +170,6 @@ static void HTMLDOMTextNode_destructor(HTMLDOMNode *iface)
 {
     HTMLDOMTextNode *This = HTMLTEXT_NODE_THIS(iface);
 
-    if(This->nstext)
-        IHTMLDOMTextNode_Release(This->nstext);
-
     HTMLDOMNode_destructor(&This->node);
 }
 
@@ -209,8 +195,7 @@ static dispex_static_data_t HTMLDOMTextNode_dispex = {
 
 HTMLDOMNode *HTMLDOMTextNode_Create(HTMLDocumentNode *doc, nsIDOMNode *nsnode)
 {
-    HTMLDOMTextNode *ret;
-    nsresult nsres;
+    HTMLDOMTextNode *ret ;
 
     ret = heap_alloc_zero(sizeof(*ret));
     ret->node.vtbl = &HTMLDOMTextNodeImplVtbl;
@@ -218,10 +203,6 @@ HTMLDOMNode *HTMLDOMTextNode_Create(HTMLDocumentNode *doc, nsIDOMNode *nsnode)
 
     init_dispex(&ret->node.dispex, (IUnknown*)HTMLTEXT(ret), &HTMLDOMTextNode_dispex);
     HTMLDOMNode_Init(doc, &ret->node, nsnode);
-
-    nsres = nsIDOMNode_QueryInterface(nsnode, &IID_nsIDOMText, (void**)&ret->nstext);
-    if(NS_FAILED(nsres))
-        ERR("Could not get nsIDOMText iface: %08x\n", nsres);
 
     return &ret->node;
 }

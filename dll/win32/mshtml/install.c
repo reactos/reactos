@@ -47,13 +47,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
-#ifdef __i386__
-#define GECKO_ARCH "x86"
-#else
-#define GECKO_ARCH ""
-#endif
-
-#define GECKO_FILE_NAME "wine_gecko-" GECKO_VERSION "-" GECKO_ARCH ".cab"
+#define GECKO_FILE_NAME "wine_gecko-" GECKO_VERSION "-x86.cab"
 
 static const WCHAR mshtml_keyW[] =
     {'S','o','f','t','w','a','r','e',
@@ -193,7 +187,7 @@ static BOOL install_from_unix_file(const char *file_name)
     int fd;
     BOOL ret;
 
-    static WCHAR * (CDECL *wine_get_dos_file_name)(const char*);
+    static WCHAR *(*wine_get_dos_file_name)(const char*);
     static const WCHAR kernel32W[] = {'k','e','r','n','e','l','3','2','.','d','l','l',0};
 
     fd = open(file_name, O_RDONLY);
@@ -436,8 +430,7 @@ static LPWSTR get_url(void)
 
     static const WCHAR wszGeckoUrl[] = {'G','e','c','k','o','U','r','l',0};
     static const WCHAR httpW[] = {'h','t','t','p'};
-    static const WCHAR arch_formatW[] = {'?','a','r','c','h','='};
-    static const WCHAR v_formatW[] = {'&','v','='};
+    static const WCHAR v_formatW[] = {'?','a','r','c','h','=','x','8','6','&','v','=',0};
 
     /* @@ Wine registry key: HKCU\Software\Wine\MSHTML */
     res = RegOpenKeyW(HKEY_CURRENT_USER, mshtml_keyW, &hkey);
@@ -455,15 +448,8 @@ static LPWSTR get_url(void)
     }
 
     if(returned_size > sizeof(httpW) && !memcmp(url, httpW, sizeof(httpW))) {
-        DWORD len;
-
-        len = strlenW(url);
-        memcpy(url+len, arch_formatW, sizeof(arch_formatW));
-        len += sizeof(arch_formatW)/sizeof(WCHAR);
-        len += MultiByteToWideChar(CP_ACP, 0, GECKO_ARCH, sizeof(GECKO_ARCH), url+len, size/sizeof(WCHAR)-len)-1;
-        memcpy(url+len, v_formatW, sizeof(v_formatW));
-        len += sizeof(v_formatW)/sizeof(WCHAR);
-        MultiByteToWideChar(CP_ACP, 0, GECKO_VERSION, -1, url+len, size/sizeof(WCHAR)-len);
+        strcatW(url, v_formatW);
+        MultiByteToWideChar(CP_ACP, 0, GECKO_VERSION, -1, url+strlenW(url), size/sizeof(WCHAR)-strlenW(url));
     }
 
     TRACE("Got URL %s\n", debugstr_w(url));
@@ -525,9 +511,6 @@ static INT_PTR CALLBACK installer_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARA
 BOOL install_wine_gecko(BOOL silent)
 {
     HANDLE hsem;
-
-    if(!*GECKO_ARCH)
-        return FALSE;
 
     SetLastError(ERROR_SUCCESS);
     hsem = CreateSemaphoreA( NULL, 0, 1, "mshtml_install_semaphore");

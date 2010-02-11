@@ -418,10 +418,10 @@ KdbSymProcessSymbols(
         KdbpSymAddCachedFile(&LdrEntry->FullDllName, LdrEntry->PatchInformation);
     }
 
-    DPRINT("Installed symbols: %wZ@%p-%p %p\n",
+    DPRINT("Installed symbols: %wZ@%08x-%08x %p\n",
            &LdrEntry->BaseDllName,
            LdrEntry->DllBase,
-           (PVOID)(LdrEntry->SizeOfImage + (ULONG_PTR)LdrEntry->DllBase),
+           LdrEntry->SizeOfImage + (ULONG)LdrEntry->DllBase,
            LdrEntry->PatchInformation);
 
 }

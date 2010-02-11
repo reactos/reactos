@@ -216,10 +216,8 @@ ExpTimerApcKernelRoutine(IN PKAPC Apc,
     ObDereferenceObjectEx(Timer, DerefsToDo);
 }
 
-VOID
-INIT_FUNCTION
-NTAPI
-ExpInitializeTimerImplementation(VOID)
+SECT_INIT_FN(ExpInitializeTimerImplementation)
+VOID NTAPI ExpInitializeTimerImplementation(VOID)
 {
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     UNICODE_STRING Name;
@@ -528,7 +526,6 @@ NtQueryTimer(IN HANDLE TimerHandle,
                                          TimerInformation,
                                          TimerInformationLength,
                                          ReturnLength,
-                                         NULL,
                                          PreviousMode);
     if (!NT_SUCCESS(Status)) return Status;
 

@@ -29,8 +29,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(d3d9);
 static HRESULT WINAPI IDirect3DStateBlock9Impl_QueryInterface(LPDIRECT3DSTATEBLOCK9 iface, REFIID riid, LPVOID* ppobj) {
     IDirect3DStateBlock9Impl *This = (IDirect3DStateBlock9Impl *)iface;
 
-    TRACE("iface %p, riid %s, object %p.\n", iface, debugstr_guid(riid), ppobj);
-
     if (IsEqualGUID(riid, &IID_IUnknown)
         || IsEqualGUID(riid, &IID_IDirect3DStateBlock9)) {
         IDirect3DStateBlock9_AddRef(iface);
@@ -47,7 +45,7 @@ static ULONG WINAPI IDirect3DStateBlock9Impl_AddRef(LPDIRECT3DSTATEBLOCK9 iface)
     IDirect3DStateBlock9Impl *This = (IDirect3DStateBlock9Impl *)iface;
     ULONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("%p increasing refcount to %u.\n", iface, ref);
+    TRACE("(%p) : AddRef from %d\n", This, ref - 1);
 
     return ref;
 }
@@ -56,7 +54,7 @@ static ULONG WINAPI IDirect3DStateBlock9Impl_Release(LPDIRECT3DSTATEBLOCK9 iface
     IDirect3DStateBlock9Impl *This = (IDirect3DStateBlock9Impl *)iface;
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("%p decreasing refcount to %u.\n", iface, ref);
+    TRACE("(%p) : ReleaseRef to %d\n", This, ref);
 
     if (ref == 0) {
         wined3d_mutex_lock();
@@ -70,25 +68,28 @@ static ULONG WINAPI IDirect3DStateBlock9Impl_Release(LPDIRECT3DSTATEBLOCK9 iface
 }
 
 /* IDirect3DStateBlock9 Interface follow: */
-static HRESULT WINAPI IDirect3DStateBlock9Impl_GetDevice(IDirect3DStateBlock9 *iface, IDirect3DDevice9 **device)
-{
+static HRESULT WINAPI IDirect3DStateBlock9Impl_GetDevice(LPDIRECT3DSTATEBLOCK9 iface, IDirect3DDevice9** ppDevice) {
     IDirect3DStateBlock9Impl *This = (IDirect3DStateBlock9Impl *)iface;
+    IWineD3DDevice *wined3d_device;
+    HRESULT hr;
+    TRACE("(%p) Relay\n", This);
 
-    TRACE("iface %p, device %p.\n", iface, device);
+    wined3d_mutex_lock();
+    hr = IWineD3DStateBlock_GetDevice(This->wineD3DStateBlock, &wined3d_device);
+    if (SUCCEEDED(hr))
+    {
+        IWineD3DDevice_GetParent(wined3d_device, (IUnknown **)ppDevice);
+        IWineD3DDevice_Release(wined3d_device);
+    }
+    wined3d_mutex_unlock();
 
-    *device = (IDirect3DDevice9 *)This->parentDevice;
-    IDirect3DDevice9_AddRef(*device);
-
-    TRACE("Returning device %p.\n", *device);
-
-    return D3D_OK;
+    return hr;
 }
 
 static HRESULT WINAPI IDirect3DStateBlock9Impl_Capture(LPDIRECT3DSTATEBLOCK9 iface) {
     IDirect3DStateBlock9Impl *This = (IDirect3DStateBlock9Impl *)iface;
     HRESULT hr;
-
-    TRACE("iface %p.\n", iface);
+    TRACE("(%p) Relay\n", This);
 
     wined3d_mutex_lock();
     hr = IWineD3DStateBlock_Capture(This->wineD3DStateBlock);
@@ -100,8 +101,7 @@ static HRESULT WINAPI IDirect3DStateBlock9Impl_Capture(LPDIRECT3DSTATEBLOCK9 ifa
 static HRESULT WINAPI IDirect3DStateBlock9Impl_Apply(LPDIRECT3DSTATEBLOCK9 iface) {
     IDirect3DStateBlock9Impl *This = (IDirect3DStateBlock9Impl *)iface;
     HRESULT hr;
-
-    TRACE("iface %p.\n", iface);
+    TRACE("(%p) Relay\n", This);
 
     wined3d_mutex_lock();
     hr = IWineD3DStateBlock_Apply(This->wineD3DStateBlock);
@@ -130,7 +130,7 @@ HRESULT WINAPI IDirect3DDevice9Impl_CreateStateBlock(LPDIRECT3DDEVICE9EX iface, 
    IDirect3DStateBlock9Impl* object;
    HRESULT hrc = D3D_OK;
 
-   TRACE("iface %p, type %#x, stateblock %p.\n", iface, Type, ppStateBlock);
+   TRACE("(%p) Relay\n", This);
 
    if(Type != D3DSBT_ALL         && Type != D3DSBT_PIXELSTATE &&
       Type != D3DSBT_VERTEXSTATE                              ) {
@@ -164,8 +164,7 @@ HRESULT WINAPI IDirect3DDevice9Impl_BeginStateBlock(IDirect3DDevice9Ex *iface)
 {
     IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
     HRESULT hr;
-
-    TRACE("iface %p.\n", iface);
+    TRACE("(%p) Relay\n", This);
 
     wined3d_mutex_lock();
     hr = IWineD3DDevice_BeginStateBlock(This->WineD3DDevice);
@@ -181,7 +180,7 @@ HRESULT WINAPI IDirect3DDevice9Impl_EndStateBlock(IDirect3DDevice9Ex *iface, IDi
     IDirect3DStateBlock9Impl *object;
     HRESULT hr;
 
-    TRACE("iface %p, stateblock %p.\n", iface, ppSB);
+    TRACE("(%p) Relay\n", This);
 
     /* Tell wineD3D to endstateblock before anything else (in case we run out
      * of memory later and cause locking problems) */

@@ -249,7 +249,6 @@ GpStatus WINGDIPAPI GdipCombineRegionPath(GpRegion *region, GpPath *path, Combin
     if(mode == CombineModeReplace){
         delete_element(&region->node);
         memcpy(region, path_region, sizeof(GpRegion));
-        GdipFree(path_region);
         return Ok;
     }
 
@@ -296,7 +295,6 @@ GpStatus WINGDIPAPI GdipCombineRegionRect(GpRegion *region,
     if(mode == CombineModeReplace){
         delete_element(&region->node);
         memcpy(region, rect_region, sizeof(GpRegion));
-        GdipFree(rect_region);
         return Ok;
     }
 

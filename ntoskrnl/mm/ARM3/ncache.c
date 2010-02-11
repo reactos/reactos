@@ -12,6 +12,7 @@
 #define NDEBUG
 #include <debug.h>
 
+//NCACHE"
 #define MODULE_INVOLVED_IN_ARM3
 #include "../ARM3/miarm.h"
 

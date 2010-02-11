@@ -402,8 +402,7 @@ static GLuint gen_ati_shader(const struct texture_stage_op op[MAX_TEXTURES], con
     checkGLcall("GL_EXTCALL(glBeginFragmentShaderATI())");
 
     /* Pass 1: Generate sampling instructions for perturbation maps */
-    for (stage = 0; stage < gl_info->limits.textures; ++stage)
-    {
+      for(stage = 0; stage < GL_LIMITS(textures); stage++) {
         if(op[stage].cop == WINED3DTOP_DISABLE) break;
         if(op[stage].cop != WINED3DTOP_BUMPENVMAP &&
            op[stage].cop != WINED3DTOP_BUMPENVMAPLUMINANCE) continue;
@@ -428,8 +427,7 @@ static GLuint gen_ati_shader(const struct texture_stage_op op[MAX_TEXTURES], con
     }
 
     /* Pass 2: Generate perturbation calculations */
-    for (stage = 0; stage < gl_info->limits.textures; ++stage)
-    {
+    for(stage = 0; stage < GL_LIMITS(textures); stage++) {
         GLuint argmodextra_x, argmodextra_y;
         struct color_fixup_desc fixup;
 
@@ -477,8 +475,7 @@ static GLuint gen_ati_shader(const struct texture_stage_op op[MAX_TEXTURES], con
     }
 
     /* Pass 3: Generate sampling instructions for regular textures */
-    for (stage = 0; stage < gl_info->limits.textures; ++stage)
-    {
+    for(stage = 0; stage < GL_LIMITS(textures); stage++) {
         if(op[stage].cop == WINED3DTOP_DISABLE) {
             break;
         }
@@ -798,10 +795,10 @@ static GLuint gen_ati_shader(const struct texture_stage_op op[MAX_TEXTURES], con
 }
 #undef GLINFO_LOCATION
 
-#define GLINFO_LOCATION stateblock->device->adapter->gl_info
+#define GLINFO_LOCATION stateblock->wineD3DDevice->adapter->gl_info
 static void set_tex_op_atifs(DWORD state, IWineD3DStateBlockImpl *stateblock, struct wined3d_context *context)
 {
-    IWineD3DDeviceImpl *This = stateblock->device;
+    IWineD3DDeviceImpl          *This = stateblock->wineD3DDevice;
     const struct atifs_ffp_desc *desc;
     struct ffp_frag_settings     settings;
     struct atifs_private_data   *priv = This->fragment_priv;
@@ -818,14 +815,13 @@ static void set_tex_op_atifs(DWORD state, IWineD3DStateBlockImpl *stateblock, st
             return;
         }
         new_desc->num_textures_used = 0;
-        for (i = 0; i < context->gl_info->limits.texture_stages; ++i)
-        {
+        for(i = 0; i < GL_LIMITS(texture_stages); i++) {
             if(settings.op[i].cop == WINED3DTOP_DISABLE) break;
             new_desc->num_textures_used = i;
         }
 
         memcpy(&new_desc->parent.settings, &settings, sizeof(settings));
-        new_desc->shader = gen_ati_shader(settings.op, context->gl_info);
+        new_desc->shader = gen_ati_shader(settings.op, &GLINFO_LOCATION);
         add_ffp_frag_shader(&priv->fragment_shaders, &new_desc->parent);
         TRACE("Allocated fixed function replacement shader descriptor %p\n", new_desc);
         desc = new_desc;
@@ -889,7 +885,7 @@ static void textransform(DWORD state, IWineD3DStateBlockImpl *stateblock, struct
 
 static void atifs_apply_pixelshader(DWORD state, IWineD3DStateBlockImpl *stateblock, struct wined3d_context *context)
 {
-    IWineD3DDeviceImpl *device = stateblock->device;
+    IWineD3DDeviceImpl *device = stateblock->wineD3DDevice;
     BOOL use_vshader = use_vs(stateblock);
 
     context->last_was_pshader = use_ps(stateblock);

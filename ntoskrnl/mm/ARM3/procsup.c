@@ -12,6 +12,7 @@
 #define NDEBUG
 #include <debug.h>
 
+//PROCSUP"
 #define MODULE_INVOLVED_IN_ARM3
 #include "../ARM3/miarm.h"
 
@@ -165,10 +166,7 @@ MmCreateKernelStack(IN BOOLEAN GuiStack,
         //
         *PointerPte = TempPte;
     }
-
-    // Bug #4835
-    (VOID)InterlockedExchangeAddUL(&MiMemoryConsumers[MC_NPPOOL].PagesUsed, StackPages);
-
+    
     //
     // Release the PFN lock
     //
@@ -634,13 +632,13 @@ MmCreateTeb(IN PEPROCESS Process,
         //
         // Set TIB Data
         //
-        Teb->Tib.ExceptionList = EXCEPTION_CHAIN_END;
-        Teb->Tib.Self = (PNT_TIB)Teb;
+        Teb->NtTib.ExceptionList = EXCEPTION_CHAIN_END;
+        Teb->NtTib.Self = (PNT_TIB)Teb;
         
         //
         // Identify this as an OS/2 V3.0 ("Cruiser") TIB
         //
-        Teb->Tib.Version = 30 << 8;
+        Teb->NtTib.Version = 30 << 8;
         
         //
         // Set TEB Data
@@ -659,8 +657,8 @@ MmCreateTeb(IN PEPROCESS Process,
             //
             // Use initial TEB values
             //
-            Teb->Tib.StackBase = InitialTeb->StackBase;
-            Teb->Tib.StackLimit = InitialTeb->StackLimit;
+            Teb->NtTib.StackBase = InitialTeb->StackBase;
+            Teb->NtTib.StackLimit = InitialTeb->StackLimit;
             Teb->DeallocationStack = InitialTeb->AllocatedStackBase;
         }
         else
@@ -668,8 +666,8 @@ MmCreateTeb(IN PEPROCESS Process,
             //
             // Use grandparent TEB values
             //
-            Teb->Tib.StackBase = InitialTeb->PreviousStackBase;
-            Teb->Tib.StackLimit = InitialTeb->PreviousStackLimit;
+            Teb->NtTib.StackBase = InitialTeb->PreviousStackBase;
+            Teb->NtTib.StackLimit = InitialTeb->PreviousStackLimit;
         }
 
         //

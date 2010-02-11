@@ -11,7 +11,7 @@
 
 /* GLOBALS ********************************************************************/
 
-PFNDBGPRNT KdpDbgPrint = NULL;
+// PFNDBGPRNT KdpDbgPrint = NULL;
 ULONG CurrentPacketId = INITIAL_PACKET_ID | SYNC_PACKET_ID;
 ULONG RemotePacketId = 0;
 
@@ -89,7 +89,7 @@ KdDebuggerInitialize1(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
 {
     // HACK: misuse this function to get a pointer to FrLdrDbgPrint
-    KdpDbgPrint = (PVOID)LoaderBlock;
+    // KdpDbgPrint = (PVOID)LoaderBlock;
     KDDBGPRINT("KdDebuggerInitialize1\n");
 
     return STATUS_NOT_IMPLEMENTED;

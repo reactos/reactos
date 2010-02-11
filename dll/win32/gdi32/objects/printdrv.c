@@ -52,7 +52,7 @@ static GETSPOOLFILEHANDLE fpGetSpoolFileHandle;
 static GETPRINTERW fpGetPrinterW;
 static GETPRINTERDRIVERW fpGetPrinterDriverW;
 static ISVALIDDEVMODEW fpIsValidDevmodeW;
-OPENPRINTERW fpOpenPrinterW;
+static OPENPRINTERW fpOpenPrinterW;
 static QUERYSPOOLMODE fpQuerySpoolMode;
 static QUERYREMOTEFONTS fpQueryRemoteFonts;
 static QUERYCOLORPROFILE fpQueryColorProfile;

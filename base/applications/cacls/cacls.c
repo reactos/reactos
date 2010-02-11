@@ -180,14 +180,14 @@ BOOL
 PrintFileDacl(IN LPTSTR FilePath,
               IN LPTSTR FileName)
 {
-    SIZE_T Length;
+    SIZE_T Indent;
     PSECURITY_DESCRIPTOR SecurityDescriptor;
     DWORD SDSize = 0;
     TCHAR FullFileName[MAX_PATH + 1];
     BOOL Error = FALSE, Ret = FALSE;
 
-    Length = _tcslen(FilePath) + _tcslen(FileName);
-    if (Length > MAX_PATH)
+    Indent = _tcslen(FilePath) + _tcslen(FileName);
+    if (Indent++ > MAX_PATH - 1)
     {
         /* file name too long */
         SetLastError(ERROR_FILE_NOT_FOUND);

@@ -27,6 +27,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_decl);
 
+#define GLINFO_LOCATION This->wineD3DDevice->adapter->gl_info
+
 static void dump_wined3dvertexelement(const WINED3DVERTEXELEMENT *element) {
     TRACE("     format: %s (%#x)\n", debug_d3dformat(element->format), element->format);
     TRACE(" input_slot: %u\n", element->input_slot);
@@ -66,8 +68,12 @@ static ULONG WINAPI IWineD3DVertexDeclarationImpl_Release(IWineD3DVertexDeclarat
     ULONG ref;
     TRACE("(%p) : Releasing from %d\n", This, This->ref);
     ref = InterlockedDecrement(&This->ref);
-    if (!ref)
-    {
+    if (ref == 0) {
+        if(iface == This->wineD3DDevice->stateBlock->vertexDecl) {
+            /* See comment in PixelShader::Release */
+            IWineD3DDeviceImpl_MarkStateDirty(This->wineD3DDevice, STATE_VDECL);
+        }
+
         HeapFree(GetProcessHeap(), 0, This->elements);
         This->parent_ops->wined3d_object_destroyed(This->parent);
         HeapFree(GetProcessHeap(), 0, This);
@@ -85,6 +91,16 @@ static HRESULT WINAPI IWineD3DVertexDeclarationImpl_GetParent(IWineD3DVertexDecl
     *parent= This->parent;
     IUnknown_AddRef(*parent);
     TRACE("(%p) : returning %p\n", This, *parent);
+    return WINED3D_OK;
+}
+
+static HRESULT WINAPI IWineD3DVertexDeclarationImpl_GetDevice(IWineD3DVertexDeclaration *iface, IWineD3DDevice** ppDevice) {
+    IWineD3DVertexDeclarationImpl *This = (IWineD3DVertexDeclarationImpl *)iface;
+    TRACE("(%p) : returning %p\n", This, This->wineD3DDevice);
+
+    *ppDevice = (IWineD3DDevice *) This->wineD3DDevice;
+    IWineD3DDevice_AddRef(*ppDevice);
+
     return WINED3D_OK;
 }
 
@@ -184,6 +200,7 @@ static const IWineD3DVertexDeclarationVtbl IWineD3DVertexDeclaration_Vtbl =
     IWineD3DVertexDeclarationImpl_Release,
     /* IWineD3DVertexDeclaration */
     IWineD3DVertexDeclarationImpl_GetParent,
+    IWineD3DVertexDeclarationImpl_GetDevice,
 };
 
 HRESULT vertexdeclaration_init(IWineD3DVertexDeclarationImpl *declaration, IWineD3DDeviceImpl *device,
@@ -206,7 +223,7 @@ HRESULT vertexdeclaration_init(IWineD3DVertexDeclarationImpl *declaration, IWine
     declaration->ref = 1;
     declaration->parent = parent;
     declaration->parent_ops = parent_ops;
-    declaration->device = device;
+    declaration->wineD3DDevice = device;
     declaration->elements = HeapAlloc(GetProcessHeap(), 0, sizeof(*declaration->elements) * element_count);
     if (!declaration->elements)
     {

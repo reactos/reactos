@@ -1133,7 +1133,7 @@ IntIncrementSequenceNumber(VOID)
     PWINSTATION_OBJECT WinStaObj;
 
     pti = PsGetCurrentThreadWin32Thread();
-    WinStaObj = pti->rpdesk->rpwinstaParent;
+    WinStaObj = pti->Desktop->WindowStation;
 
     WinStaObj->Clipboard->ClipboardSequenceNumber++;
 }

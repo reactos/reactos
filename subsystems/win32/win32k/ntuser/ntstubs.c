@@ -505,10 +505,25 @@ NtUserQueryUserCounters(
    return 0;
 }
 
+
 DWORD
 APIENTRY
 NtUserRegisterTasklist(
    DWORD Unknown0)
+{
+   UNIMPLEMENTED
+
+   return 0;
+}
+
+
+DWORD
+APIENTRY
+NtUserSBGetParms(
+   DWORD Unknown0,
+   DWORD Unknown1,
+   DWORD Unknown2,
+   DWORD Unknown3)
 {
    UNIMPLEMENTED
 
@@ -1111,6 +1126,18 @@ NtUserGetLayeredWindowAttributes(
     COLORREF *pcrKey,
     BYTE *pbAlpha,
     DWORD *pdwFlags)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+/* ValidateRect gets redirected to NtUserValidateRect:
+   http://blog.csdn.net/ntdll/archive/2005/10/19/509299.aspx */
+BOOL
+APIENTRY
+NtUserValidateRect(
+    HWND hWnd,
+    const RECT *lpRect)
 {
     UNIMPLEMENTED;
     return 0;

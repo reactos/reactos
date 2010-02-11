@@ -26,9 +26,6 @@
 #define SECS_15_OCT_1582_TO_1601  ((17 + 30 + 31 + 365 * 18 + 5) * SECSPERDAY)
 #define TICKS_15_OCT_1582_TO_1601 ((ULONGLONG)SECS_15_OCT_1582_TO_1601 * TICKSPERSEC)
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, ExpInitUuids)
-#endif
 
 
 /* GLOBALS ****************************************************************/
@@ -45,10 +42,8 @@ static LARGE_INTEGER LuidValue;
 
 /* FUNCTIONS ****************************************************************/
 
-VOID
-INIT_FUNCTION
-NTAPI
-ExpInitUuids(VOID)
+SECT_INIT_FN(ExpInitUuids)
+VOID NTAPI ExpInitUuids(VOID)
 {
     ExInitializeFastMutex(&UuidMutex);
 
@@ -214,10 +209,8 @@ ExpCreateUuids(PULARGE_INTEGER Time,
     return STATUS_SUCCESS;
 }
 
-VOID
-INIT_FUNCTION
-NTAPI
-ExpInitLuid(VOID)
+SECT_INIT_FN(ExpInitLuid)
+VOID NTAPI ExpInitLuid(VOID)
 {
     LUID DummyLuidValue = SYSTEM_LUID;
 

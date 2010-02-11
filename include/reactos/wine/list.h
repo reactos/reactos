@@ -21,17 +21,7 @@
 #ifndef __WINE_SERVER_LIST_H
 #define __WINE_SERVER_LIST_H
 
-#ifdef __cplusplus
-#define __WINE_SERVER_LIST_INLINE inline
-#else
-#if defined(__GNUC__)
-#define __WINE_SERVER_LIST_INLINE extern __inline__ __attribute__((__always_inline__))
-#elif defined(_MSC_VER)
-#define __WINE_SERVER_LIST_INLINE __inline
-#else
-#define __WINE_SERVER_LIST_INLINE static
-#endif
-#endif
+#define __WINE_SERVER_LIST_INLINE _INLINE
 
 struct list
 {

@@ -11,7 +11,6 @@ typedef struct tagCURICON_PROCESS
 
 typedef struct _CURICON_OBJECT
 {
-  PROCMARKHEAD head;
   LIST_ENTRY ListEntry;
   HANDLE Self;
   LIST_ENTRY ProcessList;
@@ -48,7 +47,7 @@ typedef struct _SYSTEM_CURSORINFO
   UINT ButtonsDown;
   CURSORCLIP_INFO CursorClipInfo;
   PCURICON_OBJECT CurrentCursorObject;
-  INT ShowingCursor;
+  BYTE ShowingCursor;
 /*
   UINT WheelScroLines;
   UINT WheelScroChars;
@@ -78,9 +77,9 @@ BOOL UserDrawIconEx(HDC hDc, INT xLeft, INT yTop, PCURICON_OBJECT pIcon, INT cxW
    INT cyHeight, UINT istepIfAniCur, HBRUSH hbrFlickerFreeDraw, UINT diFlags);
 PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon);
 
-BOOL UserSetCursorPos( INT x, INT y);
+BOOL FASTCALL UserSetCursorPos( INT x, INT y);
 
-int UserShowCursor(BOOL bShow);
+int APIENTRY UserShowCursor(BOOL bShow);
 
 PSYSTEM_CURSORINFO FASTCALL
 IntGetSysCursorInfo();

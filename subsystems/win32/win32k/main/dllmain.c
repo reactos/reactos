@@ -114,9 +114,6 @@ Win32kProcessCallback(struct _EPROCESS *Process,
 
       InitializeListHead(&Win32Process->MenuListHead);
 
-      InitializeListHead(&Win32Process->GDIBrushAttrFreeList);
-      InitializeListHead(&Win32Process->GDIDcAttrFreeList);
-
       InitializeListHead(&Win32Process->PrivateFontListHead);
       ExInitializeFastMutex(&Win32Process->PrivateFontListLock);
 
@@ -246,7 +243,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
         if (hDesk != NULL)
         {
           PDESKTOP DesktopObject;
-          Win32Thread->rpdesk = NULL;
+          Win32Thread->Desktop = NULL;
           Status = ObReferenceObjectByHandle(hDesk,
                                              0,
                                              ExDesktopObjectType,
@@ -288,7 +285,6 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
       DPRINT("Destroying W32 thread TID:%d at IRQ level: %lu\n", Thread->Cid.UniqueThread, KeGetCurrentIrql());
 
       Win32Thread->TIF_flags |= TIF_INCLEANUP;
-      DceFreeThreadDCE(Win32Thread);
       HOOK_DestroyThreadHooks(Thread);
       UnregisterThreadHotKeys(Thread);
       /* what if this co_ func crash in umode? what will clean us up then? */

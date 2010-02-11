@@ -35,9 +35,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, CcInitView)
-#endif
 
 /* GLOBALS *******************************************************************/
 
@@ -1290,8 +1287,8 @@ CcGetFileObjectFromSectionPtrs(IN PSECTION_OBJECT_POINTERS SectionObjectPointers
    return NULL;
 }
 
+SECT_INIT_FN(CcInitView)
 VOID
-INIT_FUNCTION
 NTAPI
 CcInitView(VOID)
 {

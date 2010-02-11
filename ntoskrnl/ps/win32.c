@@ -38,8 +38,6 @@ PsConvertToGuiThread(VOID)
     NTSTATUS Status;
     PAGED_CODE();
 
-	DPRINTT("\n");
-
     /* Validate the previous mode */
     if (KeGetPreviousMode() == KernelMode) return STATUS_INVALID_PARAMETER;
 

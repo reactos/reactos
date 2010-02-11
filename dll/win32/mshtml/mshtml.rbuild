@@ -29,7 +29,6 @@
 	<file>htmlelem3.c</file>
 	<file>htmlelemcol.c</file>
 	<file>htmlevent.c</file>
-	<file>htmlform.c</file>
 	<file>htmlframebase.c</file>
 	<file>htmlgeneric.c</file>
 	<file>htmliframe.c</file>
@@ -38,7 +37,6 @@
 	<file>htmllocation.c</file>
 	<file>htmlnode.c</file>
 	<file>htmloption.c</file>
-	<file>htmlscreen.c</file>
 	<file>htmlscript.c</file>
 	<file>htmlselect.c</file>
 	<file>htmlstyle.c</file>

@@ -35,12 +35,10 @@ extern VOID FASTCALL CHECK_PAGED_CODE_RTL(char *file, int line);
 	((n + (align-1)) & ~(align-1))
 #endif
 
-#define RVA(m, b) ((PVOID)((ULONG_PTR)(b) + (ULONG_PTR)(m)))
-
 VOID
 NTAPI
-RtlpGetStackLimits(PULONG_PTR LowLimit,
-                   PULONG_PTR HighLimit);
+RtlpGetStackLimits(PULONG_PTR StackBase,
+                   PULONG_PTR StackLimit);
 
 PEXCEPTION_REGISTRATION_RECORD
 NTAPI
@@ -117,10 +115,17 @@ RtlpHandleDpcStackException(IN PEXCEPTION_REGISTRATION_RECORD RegistrationFrame,
 #define RtlpAllocateStringMemory RtlpAllocateMemory
 #define RtlpFreeStringMemory     RtlpFreeMemory
 
-#if 0	// macros in dbgp.h
-BOOLEAN NTAPI RtlpSetInDbgPrint(VOID);
-VOID NTAPI RtlpClearInDbgPrint(VOID);
-#endif
+BOOLEAN
+NTAPI
+RtlpSetInDbgPrint(
+    VOID
+);
+
+VOID
+NTAPI
+RtlpClearInDbgPrint(
+    VOID
+);
 
 /* i386/except.S */
 
@@ -184,5 +189,4 @@ extern HANDLE TimerThreadHandle;
 NTSTATUS
 RtlpInitializeTimerThread(VOID);
 
-_ONCE_END
 /* EOF */

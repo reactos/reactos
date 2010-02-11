@@ -48,7 +48,6 @@ VOID SendICMPComplete(
 
 
 BOOLEAN PrepareICMPPacket(
-    PADDRESS_FILE AddrFile,
     PIP_INTERFACE Interface,
     PIP_PACKET IPPacket,
     PIP_ADDRESS Destination,
@@ -115,11 +114,8 @@ BOOLEAN PrepareICMPPacket(
     IPHeader->Id = (USHORT)Random();
     /* One fragment at offset 0 */
     IPHeader->FlagsFragOfs = 0;
-    /* Set TTL */
-    if (AddrFile)
-        IPHeader->Ttl = AddrFile->TTL;
-    else
-        IPHeader->Ttl = 128;
+    /* Time-to-Live is 128 */
+    IPHeader->Ttl = 128;
     /* Internet Control Message Protocol */
     IPHeader->Protocol = IPPROTO_ICMP;
     /* Checksum is 0 (for later calculation of this) */
@@ -163,7 +159,6 @@ NTSTATUS ICMPSendDatagram(
     USHORT RemotePort;
     NTSTATUS Status;
     PNEIGHBOR_CACHE_ENTRY NCE;
-    KIRQL OldIrql;
 
     TI_DbgPrint(MID_TRACE,("Sending Datagram(%x %x %x %d)\n",
 			   AddrFile, ConnInfo, BufferData, DataSize));
@@ -183,7 +178,8 @@ NTSTATUS ICMPSendDatagram(
 
     TI_DbgPrint(MID_TRACE,("About to get route to destination\n"));
 
-    LockObject(AddrFile, &OldIrql);
+    if(!(NCE = RouteGetRouteToDestination( &RemoteAddress )))
+	return STATUS_NETWORK_UNREACHABLE;
 
     LocalAddress = AddrFile->Address;
     if (AddrIsUnspecified(&LocalAddress))
@@ -192,31 +188,14 @@ NTSTATUS ICMPSendDatagram(
          * then use the unicast address of the
          * interface we're sending over
          */
-        if(!(NCE = RouteGetRouteToDestination( &RemoteAddress )))
-        {
-             UnlockObject(AddrFile, OldIrql);
-	     return STATUS_NETWORK_UNREACHABLE;
-        }
-
         LocalAddress = NCE->Interface->Unicast;
     }
-    else
-    {
-        if(!(NCE = NBLocateNeighbor( &LocalAddress )))
-        {
-             UnlockObject(AddrFile, OldIrql);
-	     return STATUS_INVALID_PARAMETER;
-        }
-    }
 
-    Status = PrepareICMPPacket( AddrFile,
-                                NCE->Interface,
+    Status = PrepareICMPPacket( NCE->Interface,
                                 &Packet,
                                 &RemoteAddress,
                                 BufferData,
                                 DataSize );
-
-    UnlockObject(AddrFile, OldIrql);
 
     if( !NT_SUCCESS(Status) )
 	return Status;
@@ -353,7 +332,7 @@ VOID ICMPReply(
 
     DataSize = IPPacket->TotalSize - IPPacket->HeaderSize;
 
-    if( !PrepareICMPPacket(NULL, Interface, &NewPacket, &IPPacket->SrcAddr,
+    if( !PrepareICMPPacket(Interface, &NewPacket, &IPPacket->SrcAddr,
 			   IPPacket->Data, DataSize) ) return;
 
     ((PICMP_HEADER)NewPacket.Data)->Type     = Type;

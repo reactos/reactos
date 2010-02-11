@@ -3,7 +3,7 @@
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/fs/vfat/shutdown.c
  * PURPOSE:          VFAT Filesystem
- * PROGRAMMER:       Eric Kohl
+ * PROGRAMMER:       Eric Kohl (ekohl@rz-online.de)
  */
 
 /* INCLUDES *****************************************************************/

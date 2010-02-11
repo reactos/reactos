@@ -30,54 +30,63 @@ GetSelectedService(PMAIN_WND_INFO Info)
 LPQUERY_SERVICE_CONFIG
 GetServiceConfig(LPTSTR lpServiceName)
 {
-    LPQUERY_SERVICE_CONFIG lpServiceConfig = NULL;
-    SC_HANDLE hSCManager;
-    SC_HANDLE hService;
-    DWORD dwBytesNeeded;
+    SC_HANDLE hSCManager = NULL;
+    SC_HANDLE hSc = NULL;
+    LPQUERY_SERVICE_CONFIG pServiceConfig = NULL;
+    DWORD BytesNeeded = 0;
 
     hSCManager = OpenSCManager(NULL,
                                NULL,
-                               SC_MANAGER_ALL_ACCESS);
-    if (hSCManager)
+                               SC_MANAGER_ENUMERATE_SERVICE);
+    if (hSCManager == NULL)
     {
-        hService = OpenService(hSCManager,
-                               lpServiceName,
-                               SERVICE_QUERY_STATUS | SERVICE_ENUMERATE_DEPENDENTS | SERVICE_QUERY_CONFIG);
-        if (hService)
-        {
-            if (!QueryServiceConfig(hService,
-                                    NULL,
-                                    0,
-                                    &dwBytesNeeded))
-            {
-                if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
-                {
-                    lpServiceConfig = (LPQUERY_SERVICE_CONFIG)HeapAlloc(GetProcessHeap(),
-                                                                        0,
-                                                                        dwBytesNeeded);
-                    if (lpServiceConfig)
-                    {
-                        if (!QueryServiceConfig(hService,
-                                                lpServiceConfig,
-                                                dwBytesNeeded,
-                                                &dwBytesNeeded))
-                        {
-                            HeapFree(GetProcessHeap(),
-                                     0,
-                                     lpServiceConfig);
-                            lpServiceConfig = NULL;
-                        }
-                    }
-                }
-            }
-
-            CloseServiceHandle(hService);
-        }
-
-        CloseServiceHandle(hSCManager);
+        GetError();
+        return NULL;
     }
 
-    return lpServiceConfig;
+    hSc = OpenService(hSCManager,
+                      lpServiceName,
+                      SERVICE_QUERY_CONFIG);
+    if (hSc == NULL)
+    {
+        GetError();
+        goto cleanup;
+    }
+
+    if (!QueryServiceConfig(hSc,
+                            pServiceConfig,
+                            0,
+                            &BytesNeeded))
+    {
+        if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+        {
+            pServiceConfig = (LPQUERY_SERVICE_CONFIG) HeapAlloc(ProcessHeap,
+                                                                0,
+                                                                BytesNeeded);
+            if (pServiceConfig == NULL)
+                goto cleanup;
+
+            if (!QueryServiceConfig(hSc,
+                                    pServiceConfig,
+                                    BytesNeeded,
+                                    &BytesNeeded))
+            {
+                HeapFree(ProcessHeap,
+                         0,
+                         pServiceConfig);
+
+                pServiceConfig = NULL;
+            }
+        }
+    }
+
+cleanup:
+    if (hSCManager != NULL)
+        CloseServiceHandle(hSCManager);
+    if (hSc != NULL)
+        CloseServiceHandle(hSc);
+
+    return pServiceConfig;
 }
 
 
@@ -143,7 +152,6 @@ GetServiceDescription(LPTSTR lpServiceName)
     SERVICE_DESCRIPTION *pServiceDescription = NULL;
     LPTSTR lpDescription = NULL;
     DWORD BytesNeeded = 0;
-    DWORD dwSize;
 
     hSCManager = OpenSCManager(NULL,
                                NULL,
@@ -181,16 +189,12 @@ GetServiceDescription(LPTSTR lpServiceName)
                 {
                     if (pServiceDescription->lpDescription)
                     {
-                        dwSize = _tcslen(pServiceDescription->lpDescription) + 1;
                         lpDescription = HeapAlloc(ProcessHeap,
                                                   0,
-                                                  dwSize * sizeof(TCHAR));
+                                                  (_tcslen(pServiceDescription->lpDescription) + 1) * sizeof(TCHAR));
                         if (lpDescription)
-                        {
-                            _tcscpy_s(lpDescription,
-                                      dwSize,
-                                      pServiceDescription->lpDescription);
-                        }
+                            _tcscpy(lpDescription,
+                                    pServiceDescription->lpDescription);
                     }
                 }
             }

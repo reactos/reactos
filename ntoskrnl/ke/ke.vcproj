@@ -14,7 +14,7 @@
 	</Platforms>
 	<ToolFiles>
 		<ToolFile
-			RelativePath="..\..\tools\msc\s_as_mscpp.rules"
+			RelativePath="..\..\..\..\..\_sdk\vscfg\rules\s_as_mscpp.rules"
 		/>
 	</ToolFiles>
 	<Configurations>
@@ -48,7 +48,6 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AssemblerOutput="4"
 				ForcedIncludeFiles="ntoskrnl_bld.h"
 			/>
 			<Tool
@@ -151,18 +150,6 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\__test.c"
-				>
-				<FileConfiguration
-					Name="d|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AssemblerOutput="4"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath="apc.c"
 				>
 			</File>
@@ -189,13 +176,21 @@
 			<File
 				RelativePath="dpc.c"
 				>
+				<FileConfiguration
+					Name="d|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AssemblerOutput="4"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="eventobj.c"
 				>
 			</File>
 			<File
-				RelativePath=".\except.c"
+				RelativePath="except.c"
 				>
 			</File>
 			<File
@@ -255,10 +250,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\time.c"
-				>
-			</File>
-			<File
 				RelativePath="timerobj.c"
 				>
 			</File>
@@ -274,7 +265,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\i386\context.c"
+					RelativePath=".\i386\boot.s"
 					>
 				</File>
 				<File
@@ -310,11 +301,15 @@
 					>
 				</File>
 				<File
+					RelativePath=".\i386\systimer.s"
+					>
+				</File>
+				<File
 					RelativePath=".\i386\thrdini.c"
 					>
 				</File>
 				<File
-					RelativePath=".\i386\traphdlr.c"
+					RelativePath=".\i386\trap.s"
 					>
 				</File>
 				<File
@@ -322,7 +317,11 @@
 					>
 				</File>
 				<File
-					RelativePath=".\i386\usercall_asm.S"
+					RelativePath=".\i386\usercall_asm.s"
+					>
+				</File>
+				<File
+					RelativePath=".\i386\v86m_sup.s"
 					>
 				</File>
 				<File

@@ -387,7 +387,7 @@ ExRaiseHardError(IN NTSTATUS ErrorStatus,
                  IN ULONG ValidResponseOptions,
                  OUT PULONG Response)
 {
-    SIZE_T Size;
+    ULONG Size;
     UNICODE_STRING CapturedParams[MAXIMUM_HARDERROR_PARAMETERS];
     ULONG i;
     PULONG_PTR UserData = NULL, ParameterBase;

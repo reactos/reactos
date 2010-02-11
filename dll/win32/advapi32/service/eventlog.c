@@ -28,18 +28,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
 static RPC_UNICODE_STRING EmptyString = { 0, 0, L"" };
 
-static inline LPWSTR SERV_dup( LPCSTR str )
-{
-    UINT len;
-    LPWSTR wstr;
-
-    if( !str )
-        return NULL;
-    len = MultiByteToWideChar( CP_ACP, 0, str, -1, NULL, 0 );
-    wstr = HeapAlloc( GetProcessHeap(), 0, len*sizeof (WCHAR) );
-    MultiByteToWideChar( CP_ACP, 0, str, -1, wstr, len );
-    return wstr;
-}
 
 handle_t __RPC_USER
 EVENTLOG_HANDLE_A_bind(EVENTLOG_HANDLE_A UNCServerName)
@@ -373,29 +361,6 @@ DeregisterEventSource(IN HANDLE hEventLog)
 
 
 /******************************************************************************
- * GetEventLogInformation [ADVAPI32.@]
- *
- * PARAMS
- *   hEventLog      [I] Handle to event log
- *   dwInfoLevel    [I] Level of event log information to return
- *   lpBuffer       [O] Buffer that receives the event log information
- *   cbBufSize      [I] Size of the lpBuffer buffer
- *   pcbBytesNeeded [O] Required buffer size
- */
-BOOL WINAPI
-GetEventLogInformation(IN HANDLE hEventLog,
-                       IN DWORD dwInfoLevel,
-                       OUT LPVOID lpBuffer,
-                       IN DWORD cbBufSize,
-                       OUT LPDWORD pcbBytesNeeded)
-{
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
-
-/******************************************************************************
  * GetNumberOfEventLogRecords [ADVAPI32.@]
  *
  * PARAMS
@@ -411,12 +376,6 @@ GetNumberOfEventLogRecords(IN HANDLE hEventLog,
 
     TRACE("%p, %p\n", hEventLog, NumberOfRecords);
 
-    if(!NumberOfRecords)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-    
     RpcTryExcept
     {
         Status = ElfrNumberOfRecords(hEventLog,
@@ -456,12 +415,6 @@ GetOldestEventLogRecord(IN HANDLE hEventLog,
 
     TRACE("%p, %p\n", hEventLog, OldestRecord);
 
-    if(!OldestRecord)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-    
     RpcTryExcept
     {
         Status = ElfrOldestRecord(hEventLog,
@@ -587,32 +540,35 @@ OpenBackupEventLogW(IN LPCWSTR lpUNCServerName,
 
 /******************************************************************************
  * OpenEventLogA [ADVAPI32.@]
- *
- * Opens a handle to the specified event log.
- *
- * PARAMS
- *  lpUNCServerName [I] UNC name of the server on which the event log is
- *                      opened.
- *  lpSourceName    [I] Name of the log.
- *
- * RETURNS
- *  Success: Handle to an event log.
- *  Failure: NULL
  */
 HANDLE WINAPI
-OpenEventLogA(IN LPCSTR uncname,
-              IN LPCSTR source)
+OpenEventLogA(IN LPCSTR lpUNCServerName,
+              IN LPCSTR lpSourceName)
 {
-    LPWSTR uncnameW, sourceW;
-    HANDLE handle;
+    UNICODE_STRING UNCServerName;
+    UNICODE_STRING SourceName;
+    HANDLE Handle;
 
-    uncnameW = SERV_dup(uncname);
-    sourceW = SERV_dup(source);
-    handle = OpenEventLogW(uncnameW, sourceW);
-    HeapFree(GetProcessHeap(), 0, uncnameW);
-    HeapFree(GetProcessHeap(), 0, sourceW);
+    if (!RtlCreateUnicodeStringFromAsciiz(&UNCServerName, lpUNCServerName))
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return NULL;
+    }
 
-    return handle;
+    if (!RtlCreateUnicodeStringFromAsciiz(&SourceName, lpSourceName))
+    {
+        RtlFreeUnicodeString(&UNCServerName);
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return NULL;
+    }
+
+    Handle = OpenEventLogW(UNCServerName.Buffer,
+                           SourceName.Buffer);
+
+    RtlFreeUnicodeString(&UNCServerName);
+    RtlFreeUnicodeString(&SourceName);
+
+    return Handle;
 }
 
 
@@ -682,12 +638,6 @@ ReadEventLogA(IN HANDLE hEventLog,
         hEventLog, dwReadFlags, dwRecordOffset, lpBuffer,
         nNumberOfBytesToRead, pnBytesRead, pnMinNumberOfBytesNeeded);
 
-    if(!pnBytesRead || !pnMinNumberOfBytesNeeded)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
     /* If buffer is NULL set nNumberOfBytesToRead to 0 to prevent rpcrt4 from
        trying to access a null pointer */
     if (!lpBuffer)
@@ -751,12 +701,6 @@ ReadEventLogW(IN HANDLE hEventLog,
     TRACE("%p, %lu, %lu, %p, %lu, %p, %p\n",
         hEventLog, dwReadFlags, dwRecordOffset, lpBuffer,
         nNumberOfBytesToRead, pnBytesRead, pnMinNumberOfBytesNeeded);
-
-    if(!pnBytesRead || !pnMinNumberOfBytesNeeded)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
 
     /* If buffer is NULL set nNumberOfBytesToRead to 0 to prevent rpcrt4 from
        trying to access a null pointer */

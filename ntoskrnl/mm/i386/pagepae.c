@@ -13,12 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, MmInitGlobalKernelPageDirectory)
-#pragma alloc_text(INIT, MiInitPageDirectoryMap)
-#endif
-
-
 /* GLOBALS *****************************************************************/
 
 #define PA_BIT_PRESENT   (0)
@@ -2424,8 +2418,8 @@ MiGetUserPageDirectoryCount(VOID)
    return Ke386Pae ? PAE_ADDR_TO_PDE_OFFSET(MmSystemRangeStart) : ADDR_TO_PDE_OFFSET(MmSystemRangeStart);
 }
 
+SECT_INIT_FN(MiInitPageDirectoryMap)
 VOID
-INIT_FUNCTION
 NTAPI
 MiInitPageDirectoryMap(VOID)
 {

@@ -503,8 +503,3 @@ InvalidateRect(HWND hWnd, CONST RECT* lpRect, BOOL bErase)
 {
     return NtUserInvalidateRect(hWnd, lpRect, bErase);
 }
-
-EXTINLINE BOOL WINAPI ValidateRect( HWND hWnd, CONST RECT *lpRect)
-{
-   return NtUserValidateRect(hWnd, lpRect);
-}

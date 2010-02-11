@@ -213,10 +213,6 @@ struct GpImage{
     ImageType type;
     GUID format;
     UINT flags;
-    UINT palette_flags;
-    UINT palette_count;
-    UINT palette_size;
-    ARGB *palette_entries;
 };
 
 struct GpMetafile{

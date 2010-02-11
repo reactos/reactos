@@ -794,11 +794,9 @@ KeInitThread(IN OUT PKTHREAD Thread,
     Thread->Teb = Teb;
 
     /* Check if we have a kernel stack */
-	DPRINTT("stack\n");
     if (!KernelStack)
     {
         /* We don't, allocate one */
-		DPRINTT("MmCreateKernelStack\n");
         KernelStack = MmCreateKernelStack(FALSE, 0);
         if (!KernelStack) return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -915,12 +913,12 @@ KeGetCurrentThread(VOID)
  * @implemented
  */
 #undef KeGetPreviousMode
-UCHAR
-NTAPI
+NTKERNELAPI
+KPROCESSOR_MODE
 KeGetPreviousMode(VOID)
 {
     /* Return the previous mode of this thread */
-    return _KeGetPreviousMode();
+    return KeGetCurrentThread()->PreviousMode;
 }
 
 /*
@@ -1285,7 +1283,6 @@ KeSetPriorityThread(IN PKTHREAD Thread,
     ASSERT((Priority <= HIGH_PRIORITY) && (Priority >= LOW_PRIORITY));
     ASSERT(KeIsExecutingDpc() == FALSE);
 
-	DPRINTT("\n");
     /* Lock the Dispatcher Database */
     OldIrql = KiAcquireDispatcherLock();
 
@@ -1316,7 +1313,6 @@ KeSetPriorityThread(IN PKTHREAD Thread,
     KiReleaseDispatcherLock(OldIrql);
 
     /* Return Old Priority */
-	DPRINTT("ret=%x\n", OldPriority);
     return OldPriority;
 }
 
@@ -1360,9 +1356,7 @@ KeTerminateThread(IN KPRIORITY Increment)
         SavedEntry = Entry;
 
         /* Now try to do the exchange */
-        Entry = InterlockedCompareExchangePointer((PVOID*)ListHead,
-                                                  ThreadAddr,
-                                                  Entry);
+        Entry = InterlockedCompareExchangePointer(ListHead, ThreadAddr, Entry);
 
         /* Break out if the change was succesful */
     } while (Entry != SavedEntry);

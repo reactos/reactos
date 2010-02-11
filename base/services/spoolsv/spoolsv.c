@@ -11,10 +11,8 @@
 #define WIN32_NO_STATUS
 #include <windows.h>
 
-#include "wine/debug.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(spoolsv);
-
+#define NDEBUG
+#include <debug.h>
 
 /* GLOBALS ******************************************************************/
 
@@ -26,35 +24,6 @@ SERVICE_STATUS ServiceStatus;
 
 /* FUNCTIONS *****************************************************************/
 
-static VOID
-UpdateServiceStatus(DWORD dwState)
-{
-    ServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
-    ServiceStatus.dwCurrentState = dwState;
-
-    if (dwState == SERVICE_RUNNING)
-        ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_PAUSE_CONTINUE | SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
-    else if (dwState == SERVICE_PAUSED)
-        ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_PAUSE_CONTINUE;
-    else
-        ServiceStatus.dwControlsAccepted = 0;
-
-    ServiceStatus.dwWin32ExitCode = 0;
-    ServiceStatus.dwServiceSpecificExitCode = 0;
-    ServiceStatus.dwCheckPoint = 0;
-
-    if (dwState == SERVICE_START_PENDING ||
-        dwState == SERVICE_STOP_PENDING ||
-        dwState == SERVICE_PAUSE_PENDING ||
-        dwState == SERVICE_CONTINUE_PENDING)
-        ServiceStatus.dwWaitHint = 10000;
-    else
-        ServiceStatus.dwWaitHint = 0;
-
-    SetServiceStatus(ServiceStatusHandle,
-                     &ServiceStatus);
-}
-
 
 static DWORD WINAPI
 ServiceControlHandler(DWORD dwControl,
@@ -62,41 +31,17 @@ ServiceControlHandler(DWORD dwControl,
                       LPVOID lpEventData,
                       LPVOID lpContext)
 {
-    TRACE("ServiceControlHandler() called\n");
-
     switch (dwControl)
     {
         case SERVICE_CONTROL_STOP:
-            TRACE("  SERVICE_CONTROL_STOP received\n");
-            UpdateServiceStatus(SERVICE_STOPPED);
-            return ERROR_SUCCESS;
-
-        case SERVICE_CONTROL_PAUSE:
-            TRACE("  SERVICE_CONTROL_PAUSE received\n");
-            UpdateServiceStatus(SERVICE_PAUSED);
-            return ERROR_SUCCESS;
-
-        case SERVICE_CONTROL_CONTINUE:
-            TRACE("  SERVICE_CONTROL_CONTINUE received\n");
-            UpdateServiceStatus(SERVICE_RUNNING);
-            return ERROR_SUCCESS;
-
-        case SERVICE_CONTROL_INTERROGATE:
-            TRACE("  SERVICE_CONTROL_INTERROGATE received\n");
-            SetServiceStatus(ServiceStatusHandle,
-                             &ServiceStatus);
-            return ERROR_SUCCESS;
-
         case SERVICE_CONTROL_SHUTDOWN:
-            TRACE("  SERVICE_CONTROL_SHUTDOWN received\n");
-            UpdateServiceStatus(SERVICE_STOPPED);
             return ERROR_SUCCESS;
 
         default :
-            TRACE("  Control %lu received\n");
             return ERROR_CALL_NOT_IMPLEMENTED;
     }
 }
+
 
 
 static VOID CALLBACK
@@ -105,18 +50,23 @@ ServiceMain(DWORD argc, LPTSTR *argv)
     UNREFERENCED_PARAMETER(argc);
     UNREFERENCED_PARAMETER(argv);
 
-    TRACE("ServiceMain() called\n");
+    DPRINT("ServiceMain() called\n");
 
     ServiceStatusHandle = RegisterServiceCtrlHandlerExW(SERVICE_NAME,
                                                         ServiceControlHandler,
                                                         NULL);
 
-    TRACE("Calling SetServiceStatus()\n");
-    UpdateServiceStatus(SERVICE_RUNNING);
-    TRACE("SetServiceStatus() called\n");
-
-
-    TRACE("ServiceMain() done\n");
+    /* Service is now running */
+    ServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
+    ServiceStatus.dwServiceSpecificExitCode = 0;
+    ServiceStatus.dwWin32ExitCode = NO_ERROR;
+    ServiceStatus.dwWaitHint = 0;
+    ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP;
+    ServiceStatus.dwCheckPoint = 0;
+    ServiceStatus.dwCurrentState = SERVICE_RUNNING;
+    SetServiceStatus(ServiceStatusHandle, &ServiceStatus);
+    
+    DPRINT("ServiceMain() done\n");
 }
 
 
@@ -132,11 +82,11 @@ wmain(int argc, WCHAR *argv[])
     UNREFERENCED_PARAMETER(argc);
     UNREFERENCED_PARAMETER(argv);
 
-    TRACE("Spoolsv: main() started\n");
+    DPRINT("Spoolsv: main() started\n");
 
     StartServiceCtrlDispatcher(ServiceTable);
 
-    TRACE("Spoolsv: main() done\n");
+    DPRINT("Spoolsv: main() done\n");
 
     ExitThread(0);
 

@@ -267,6 +267,7 @@ CIrpQueue::GetMapping(
     if (!Irp)
     {
         DPRINT("NoIrp\n");
+        return STATUS_UNSUCCESSFUL;
         // no irp available, use silence buffer
         *Buffer = (PUCHAR)m_SilenceBuffer;
         *BufferSize = m_MaxFrameSize;

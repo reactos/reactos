@@ -13,9 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, ExpInitializeMutantImplementation)
-#endif
 
 /* DATA **********************************************************************/
 
@@ -50,10 +47,8 @@ ExpDeleteMutant(PVOID ObjectBody)
                     FALSE);
 }
 
-VOID
-INIT_FUNCTION
-NTAPI
-ExpInitializeMutantImplementation(VOID)
+SECT_INIT_FN(ExpInitializeMutantImplementation)
+VOID NTAPI ExpInitializeMutantImplementation(VOID)
 {
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     UNICODE_STRING Name;
@@ -242,7 +237,6 @@ NtQueryMutant(IN HANDLE MutantHandle,
                                          MutantInformation,
                                          MutantInformationLength,
                                          ResultLength,
-                                         NULL,
                                          PreviousMode);
     if(!NT_SUCCESS(Status))
     {

@@ -12,6 +12,7 @@
 #define NDEBUG
 #include <debug.h>
 
+//INIT"
 #define MODULE_INVOLVED_IN_ARM3
 #include "../../ARM3/miarm.h"
 
@@ -56,7 +57,6 @@ PVOID MmSystemRangeStart;
 PVOID MmSystemCacheStart;
 PVOID MmSystemCacheEnd;
 MMSUPPORT MmSystemCacheWs;
-PVOID MmHyperSpaceEnd;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 

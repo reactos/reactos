@@ -49,7 +49,6 @@ HalpInitializeClock(VOID)
     ULONG Increment;
     USHORT RollOver;
     ULONG_PTR Flags;
-    TIMER_CONTROL_PORT_REGISTER TimerControl;
 
     /* Check the CPU Type */
     if (Prcb->CpuType <= 4)
@@ -60,7 +59,7 @@ HalpInitializeClock(VOID)
     }
 
     /* Get increment and rollover for the largest time clock ms possible */
-    Increment = HalpRolloverTable[HalpLargestClockMS - 1].HighPart;
+    Increment= HalpRolloverTable[HalpLargestClockMS - 1].HighPart;
     RollOver = (USHORT)HalpRolloverTable[HalpLargestClockMS - 1].LowPart;
 
     /* Set the maximum and minimum increment with the kernel */
@@ -70,37 +69,11 @@ HalpInitializeClock(VOID)
     /* Disable interrupts */
     Flags = __readeflags();
     _disable();
-    
-    //
-    // Program the PIT for binary mode
-    //
-    TimerControl.BcdMode = FALSE;
 
-    //
-    // Program the PIT to generate a normal rate wave (Mode 3) on channel 0.
-    // Channel 0 is used for the IRQ0 clock interval timer, and channel
-    // 1 is used for DRAM refresh.
-    //
-    // Mode 2 gives much better accuracy than Mode 3.
-    //
-    TimerControl.OperatingMode = PitOperatingMode2;
-    TimerControl.Channel = PitChannel0;
-    
-    //
-    // Set the access mode that we'll use to program the reload value.
-    //
-    TimerControl.AccessMode = PitAccessModeLowHigh;
-    
-    //
-    // Now write the programming bits
-    //
-    __outbyte(TIMER_CONTROL_PORT, TimerControl.Bits);
-    
-    //
-    // Next we write the reload value for channel 0
-    //
-    __outbyte(TIMER_CHANNEL0_DATA_PORT, RollOver & 0xFF);
-    __outbyte(TIMER_CHANNEL0_DATA_PORT, RollOver >> 8);
+    /* Set the rollover */
+    __outbyte(TIMER_CONTROL_PORT, TIMER_SC0 | TIMER_BOTH | TIMER_MD2);
+    __outbyte(TIMER_DATA_PORT0, RollOver & 0xFF);
+    __outbyte(TIMER_DATA_PORT0, RollOver >> 8);
 
     /* Restore interrupts if they were previously enabled */
     __writeeflags(Flags);
@@ -108,61 +81,6 @@ HalpInitializeClock(VOID)
     /* Save rollover and return */
     HalpCurrentRollOver = RollOver;
 }
-
-VOID
-FASTCALL
-HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)
-{
-    KIRQL Irql;
-    
-    /* Enter trap */
-    KiEnterInterruptTrap(TrapFrame);
-    
-    /* Start the interrupt */
-    if (HalBeginSystemInterrupt(CLOCK2_LEVEL, PRIMARY_VECTOR_BASE, &Irql))
-    {
-        /* Update the performance counter */
-        HalpPerfCounter.QuadPart += HalpCurrentRollOver;
-        
-        /* Check if someone changed the time rate */
-        if (HalpClockSetMSRate)
-        {
-            /* Not yet supported */
-            UNIMPLEMENTED;
-            while (TRUE);
-        }
-        
-        /* Update the system time -- the kernel will exit this trap  */
-        KeUpdateSystemTime(TrapFrame, HalpCurrentTimeIncrement, Irql);
-    }
-    
-    /* Spurious, just end the interrupt */
-    KiEoiHelper(TrapFrame);
-}
-
-VOID
-FASTCALL
-HalpProfileInterruptHandler(IN PKTRAP_FRAME TrapFrame)
-{
-    KIRQL Irql;
-    
-    /* Enter trap */
-    KiEnterInterruptTrap(TrapFrame);
-    
-    /* Start the interrupt */
-    if (HalBeginSystemInterrupt(PROFILE_LEVEL, PRIMARY_VECTOR_BASE + 8, &Irql))
-    {
-        /* Profiling isn't yet enabled */
-        UNIMPLEMENTED;
-        while (TRUE);
-    }
-    
-    /* Spurious, just end the interrupt */
-    KiEoiHelper(TrapFrame);
-}
-
-KiTrap(HalpClockInterrupt,   KI_PUSH_FAKE_ERROR_CODE);
-KiTrap(HalpProfileInterrupt, KI_PUSH_FAKE_ERROR_CODE);
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 

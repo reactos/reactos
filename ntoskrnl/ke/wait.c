@@ -87,7 +87,7 @@ KiUnlinkThread(IN PKTHREAD Thread,
 VOID
 FASTCALL
 KiUnwaitThread(IN PKTHREAD Thread,
-               IN LONG_PTR WaitStatus,
+               IN NTSTATUS WaitStatus,
                IN KPRIORITY Increment)
 {
     /* Unlink the thread */
@@ -110,7 +110,7 @@ KiAcquireFastMutex(IN PFAST_MUTEX FastMutex)
     FastMutex->Contention++;
 
     /* Wait for the event */
-    KeWaitForSingleObject(&FastMutex->Gate,
+    KeWaitForSingleObject(&FastMutex->Event,
                           WrMutex,
                           KernelMode,
                           FALSE,

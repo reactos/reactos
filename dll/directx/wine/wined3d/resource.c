@@ -33,7 +33,7 @@ HRESULT resource_init(IWineD3DResource *iface, WINED3DRESOURCETYPE resource_type
 {
     struct IWineD3DResourceClass *resource = &((IWineD3DResourceImpl *)iface)->resource;
 
-    resource->device = device;
+    resource->wineD3DDevice = device;
     resource->parent = parent;
     resource->resourceType = resource_type;
     resource->ref = 1;
@@ -87,7 +87,7 @@ void resource_cleanup(IWineD3DResource *iface)
     TRACE("(%p) Cleaning up resource\n", This);
     if (This->resource.pool == WINED3DPOOL_DEFAULT) {
         TRACE("Decrementing device memory pool by %u\n", This->resource.size);
-        WineD3DAdapterChangeGLRam(This->resource.device, -This->resource.size);
+        WineD3DAdapterChangeGLRam(This->resource.wineD3DDevice, -This->resource.size);
     }
 
     LIST_FOR_EACH_SAFE(e1, e2, &This->resource.privateData) {
@@ -102,7 +102,16 @@ void resource_cleanup(IWineD3DResource *iface)
     This->resource.allocatedMemory = 0;
     This->resource.heapMemory = 0;
 
-    if (This->resource.device) device_resource_released(This->resource.device, iface);
+    if (This->resource.wineD3DDevice) device_resource_released(This->resource.wineD3DDevice, iface);
+}
+
+HRESULT resource_get_device(IWineD3DResource *iface, IWineD3DDevice** ppDevice)
+{
+    IWineD3DResourceImpl *This = (IWineD3DResourceImpl *)iface;
+    TRACE("(%p) : returning %p\n", This, This->resource.wineD3DDevice);
+    *ppDevice = (IWineD3DDevice *) This->resource.wineD3DDevice;
+    IWineD3DDevice_AddRef(*ppDevice);
+    return WINED3D_OK;
 }
 
 static PrivateData* resource_find_private_data(IWineD3DResourceImpl *This, REFGUID tag)
@@ -179,8 +188,7 @@ HRESULT resource_get_private_data(IWineD3DResource *iface, REFGUID refguid, void
 
     if (data->flags & WINED3DSPD_IUNKNOWN) {
         *(LPUNKNOWN *)pData = data->ptr.object;
-        if (((IWineD3DImpl *)This->resource.device->wined3d)->dxVersion != 7)
-        {
+        if(((IWineD3DImpl *) This->resource.wineD3DDevice->wineD3D)->dxVersion != 7) {
             /* D3D8 and D3D9 addref the private data, DDraw does not. This can't be handled in
              * ddraw because it doesn't know if the pointer returned is an IUnknown * or just a
              * Blob

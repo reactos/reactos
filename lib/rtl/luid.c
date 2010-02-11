@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS system libraries
  * PURPOSE:         Locally unique identifier (LUID) helper functions
  * FILE:            lib/rtl/luid.c
- * PROGRAMER:       Eric Kohl
+ * PROGRAMER:       Eric Kohl <ekohl@zr-online.de>
  */
 
 /* INCLUDES *****************************************************************/

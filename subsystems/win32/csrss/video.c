@@ -24,7 +24,7 @@ InitializeVideoAddressSpace(VOID)
     HANDLE PhysMemHandle;
     PVOID BaseAddress;
     LARGE_INTEGER Offset;
-    SIZE_T ViewSize;
+    ULONG ViewSize;
     CHAR IVTAndBda[1024+256];
 
     /* Open the physical memory section */

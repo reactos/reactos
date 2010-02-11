@@ -65,11 +65,7 @@
 #include <sys/socketvar.h>
 
 #ifdef OSKIT
-#ifndef __REACTOS__
 #include <oskit/dev/dev.h>
-#else
-#include <osenv.h>
-#endif
 #endif
 
 /*

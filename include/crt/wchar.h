@@ -26,11 +26,11 @@ extern "C" {
 #define WCHAR_MIN 0
 #endif
 #ifndef WCHAR_MAX
-#define WCHAR_MAX ((wchar_t)-1) /* UINT16_MAX */
+#define WCHAR_MAX 0xFFFF
 #endif
 
 #ifndef WEOF
-#define WEOF (wint_t)(0xFFFF)
+#define WEOF 0xFFFF
 #endif
 
 #ifndef _FILE_DEFINED
@@ -779,8 +779,8 @@ __CRT_INLINE wchar_t *__cdecl _wctime(const time_t *_Time) { return _wctime64(_T
 #ifndef __NO_ISOCEXT /* these need static lib libmingwex.a */
   wchar_t *__cdecl wmemset(wchar_t *s, wchar_t c, size_t n);
   _CONST_RETURN wchar_t *__cdecl wmemchr(const wchar_t *s, wchar_t c, size_t n);
-  int wmemcmp(const wchar_t *s1, const wchar_t *s2,size_t n);
-  wchar_t *__cdecl wmemcpy(wchar_t *s1,const wchar_t *s2,size_t n);
+_CRTIMP int __cdecl wmemcmp(const wchar_t *s1, const wchar_t *s2,size_t n);
+_CRTIMP wchar_t *__cdecl wmemcpy(wchar_t *s1,const wchar_t *s2,size_t n);
   wchar_t *__cdecl wmemmove(wchar_t *s1, const wchar_t *s2, size_t n);
   long long __cdecl wcstoll(const wchar_t *nptr,wchar_t **endptr, int base);
   unsigned long long __cdecl wcstoull(const wchar_t *nptr,wchar_t **endptr, int base);

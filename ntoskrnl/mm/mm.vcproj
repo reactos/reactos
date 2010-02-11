@@ -145,6 +145,10 @@
 				>
 			</File>
 			<File
+				RelativePath="dbgpool.c"
+				>
+			</File>
+			<File
 				RelativePath="freelist.c"
 				>
 			</File>
@@ -177,11 +181,15 @@
 				>
 			</File>
 			<File
+				RelativePath="pool.c"
+				>
+			</File>
+			<File
 				RelativePath="ppool.c"
 				>
 			</File>
 			<File
-				RelativePath=".\procsup.c"
+				RelativePath="procsup.c"
 				>
 			</File>
 			<File

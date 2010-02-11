@@ -155,11 +155,9 @@ IopGetDriverObject(
  * Display 'Loading XXX...' message.
  */
 
-VOID 
-FASTCALL
-INIT_FUNCTION
-IopDisplayLoadingMessage(PVOID ServiceName, 
-                         BOOLEAN Unicode)
+VOID FASTCALL IopDisplayLoadingMessage(PVOID ServiceName, BOOLEAN Unicode);
+SECT_INIT_FN(IopDisplayLoadingMessage)
+VOID FASTCALL IopDisplayLoadingMessage(PVOID ServiceName, BOOLEAN Unicode)
 {
     CHAR TextBuffer[256];
     PCHAR Extra = ".sys";
