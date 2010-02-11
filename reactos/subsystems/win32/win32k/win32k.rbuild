@@ -14,21 +14,24 @@
 	<include base="ReactOS">include/reactos/drivers</include>
 
 	<compilerflag compilerset="gcc">-fms-extensions</compilerflag>
+	<compilerflag compilerset="msc">/wd4276</compilerflag>
+	<define name="LANGPACK" />
+	<define name="_WIN32K_" />
 
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<library>freetype</library>
 	<library>libcntpr</library>
 	<library>pseh</library>
+
 	<directory name="include">
-		<!--pch>win32k.h</pch-->
+		<pch>win32k.h</pch>
 	</directory>
 	<directory name="dib" root="intermediate">
 		<file>dib8gen.c</file>
 		<file>dib16gen.c</file>
 		<file>dib32gen.c</file>
 	</directory>
-
 	<directory name="dib">
 		<file>dib1bpp.c</file>
 		<file>dib4bpp.c</file>
@@ -50,7 +53,6 @@
 			<file>dib32bppc.c</file>
 		</ifnot>
 	</directory>
-
 	<directory name="eng">
 		<file>device.c</file>
 		<file>driver.c</file>

@@ -12,6 +12,12 @@ CPPFLAG_UNICODE:=-DUNICODE -D_UNICODE
 BUILTIN_CFLAGS+= -fno-optimize-sibling-calls
 BUILTIN_CXXFLAGS+= -fno-optimize-sibling-calls
 
+# Add -fno-set-stack-executable required for x86/MinGW
+ifneq (,$(filter $(ARCH),amd64 i386))
+	BUILTIN_CFLAGS+= -fno-set-stack-executable
+	BUILTIN_CXXFLAGS+= -fno-set-stack-executable
+endif
+
 #(module, source, dependencies, cflags, output)
 define RBUILD_DEPENDS
 

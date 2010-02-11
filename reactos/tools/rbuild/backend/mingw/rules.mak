@@ -263,7 +263,7 @@ ${call RBUILD_intermediate_path_noext,$(2)}_c: $(2) $(3) $$(widl_TARGET) | ${cal
 	$$(Q)$$(widl_TARGET) ${call RBUILD_midlflags,$(1),$(4),-I${call RBUILD_dir,$(2)}} -h -H ${call RBUILD_intermediate_path_noext,$(2)}_c.h -c -C ${call RBUILD_intermediate_path_noext,$(2)}_c.c $(2)
 	$${checkpoint} $$@>$(NUL)
 
-${call RBUILD_CC,$(1),${call RBUILD_intermediate_path_noext,$(2)}_c.c,,-fno-unit-at-a-time,${call RBUILD_intermediate_path_noext,$(2)}_c.o}
+${call RBUILD_CC,$(1),${call RBUILD_intermediate_path_noext,$(2)}_c.c,,,${call RBUILD_intermediate_path_noext,$(2)}_c.o}
 
 endef
 
@@ -279,7 +279,7 @@ ${call RBUILD_intermediate_path_noext,$(2)}_s: $(2) $(3) $$(widl_TARGET) | ${cal
 	$$(Q)$$(widl_TARGET) ${call RBUILD_midlflags,$(1),$(4),-I${call RBUILD_dir,$(2)}} -h -H ${call RBUILD_intermediate_path_noext,$(2)}_s.h -s -S ${call RBUILD_intermediate_path_noext,$(2)}_s.c $(2)
 	$${checkpoint} $$@>$(NUL)
 
-${call RBUILD_CC,$(1),${call RBUILD_intermediate_path_noext,$(2)}_s.c,,-fno-unit-at-a-time,${call RBUILD_intermediate_path_noext,$(2)}_s.o}
+${call RBUILD_CC,$(1),${call RBUILD_intermediate_path_noext,$(2)}_s.c,,,${call RBUILD_intermediate_path_noext,$(2)}_s.o}
 
 endef
 
@@ -295,7 +295,7 @@ ${call RBUILD_intermediate_path_noext,$(2)}_p: $(2) $(3) $$(widl_TARGET) | ${cal
 	$$(Q)$$(widl_TARGET) ${call RBUILD_midlflags,$(1),$(4),-I${call RBUILD_dir,$(2)}} -h -H ${call RBUILD_intermediate_path_noext,$(2)}_p.h -p -P ${call RBUILD_intermediate_path_noext,$(2)}_p.c $(2)
 	$${checkpoint} $$@>$(NUL)
 
-${call RBUILD_CC,$(1),${call RBUILD_intermediate_path_noext,$(2)}_p.c,,-fno-unit-at-a-time,${call RBUILD_intermediate_path_noext,$(2)}_p.o}
+${call RBUILD_CC,$(1),${call RBUILD_intermediate_path_noext,$(2)}_p.c,,,${call RBUILD_intermediate_path_noext,$(2)}_p.o}
 
 endef
 
@@ -308,7 +308,7 @@ ${call RBUILD_intermediate_path_noext,$(2)}_i.c: $(2) $(3) $$(widl_TARGET) | ${c
 	$$(ECHO_WIDL)
 	$$(Q)$$(widl_TARGET) ${call RBUILD_midlflags,$(1),$(4),-I${call RBUILD_dir,$(2)}} -u -U $$@ $$<
 
-${call RBUILD_CC,$(1),${call RBUILD_intermediate_path_noext,$(2)}_i.c,,-fno-unit-at-a-time,${call RBUILD_intermediate_path_noext,$(2)}_i.o}
+${call RBUILD_CC,$(1),${call RBUILD_intermediate_path_noext,$(2)}_i.c,,,${call RBUILD_intermediate_path_noext,$(2)}_i.o}
 
 endef
 

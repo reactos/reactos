@@ -49,7 +49,6 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #include <win32k/ntuser.h>
 #include <win32k/ntgdityp.h>
 #include <win32k/ntgdihdl.h>
-#define LANGPACK
 #include <psdk/ntgdi.h>
 
 /* Internal  Win32K Header */
