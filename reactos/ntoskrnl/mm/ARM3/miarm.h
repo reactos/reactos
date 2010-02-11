@@ -213,7 +213,7 @@ extern ULONG MmMaximumNonPagedPoolPercent;
 extern ULONG MmLargeStackSize;
 
 #define MI_PFN_TO_PFNENTRY(x)     (&MmPfnDatabase[1][x])
-#define MI_PFNENTRY_TO_PFN(x)     (Pfn - &MmPfnDatabase[1])
+#define MI_PFNENTRY_TO_PFN(x)     (x - MmPfnDatabase[1])
 
 NTSTATUS
 NTAPI
