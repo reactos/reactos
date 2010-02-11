@@ -10,6 +10,8 @@
 
 #include "windows.h"
 #include "wingdi.h"
+#include <winddi.h>
+#include <win32k/ntgdityp.h>
 #include "ntrosgdi.h"
 #include "wine/debug.h"
 

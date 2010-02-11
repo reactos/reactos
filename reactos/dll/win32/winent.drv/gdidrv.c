@@ -14,6 +14,8 @@
 #include "winbase.h"
 #include "winuser.h"
 #include "wingdi.h"
+#include <winddi.h>
+#include <win32k/ntgdityp.h>
 #include "ntrosgdi.h"
 #include "winent.h"
 #include "wine/debug.h"
@@ -70,8 +72,22 @@ BOOL CDECL RosDrv_AlphaBlend(NTDRV_PDEVICE *physDevDst, INT xDst, INT yDst, INT 
 BOOL CDECL RosDrv_Arc( NTDRV_PDEVICE *physDev, INT left, INT top, INT right, INT bottom,
             INT xstart, INT ystart, INT xend, INT yend )
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    POINT pts[4];
+
+    /* Map coordinates */
+    pts[0].x = left;
+    pts[0].y = top;
+    pts[1].x = right;
+    pts[1].y = bottom;
+    pts[2].x = xstart;
+    pts[2].y = ystart;
+    pts[3].x = xend;
+    pts[3].y = yend;
+
+    LPtoDP(physDev->hUserDC, pts, 4);
+
+    return RosGdiArc(physDev->hKernelDC, pts[0].x, pts[0].y, pts[1].x, pts[1].y,
+        pts[2].x, pts[2].y, pts[3].x, pts[3].y, GdiTypeArc);
 }
 
 BOOL CDECL RosDrv_BitBlt( NTDRV_PDEVICE *physDevDst, INT xDst, INT yDst,
@@ -116,8 +132,22 @@ BOOL CDECL RosDrv_BitBlt( NTDRV_PDEVICE *physDevDst, INT xDst, INT yDst,
 BOOL CDECL RosDrv_Chord( NTDRV_PDEVICE *physDev, INT left, INT top, INT right, INT bottom,
               INT xstart, INT ystart, INT xend, INT yend )
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    POINT pts[4];
+
+    /* Map coordinates */
+    pts[0].x = left;
+    pts[0].y = top;
+    pts[1].x = right;
+    pts[1].y = bottom;
+    pts[2].x = xstart;
+    pts[2].y = ystart;
+    pts[3].x = xend;
+    pts[3].y = yend;
+
+    LPtoDP(physDev->hUserDC, pts, 4);
+
+    return RosGdiArc(physDev->hKernelDC, pts[0].x, pts[0].y, pts[1].x, pts[1].y,
+        pts[2].x, pts[2].y, pts[3].x, pts[3].y, GdiTypeChord );
 }
 
 BOOL CDECL RosDrv_CreateBitmap( NTDRV_PDEVICE *physDev, HBITMAP hbitmap, LPVOID bmBits )
@@ -471,8 +501,8 @@ BOOL CDECL RosDrv_Pie( NTDRV_PDEVICE *physDev, INT left, INT top, INT right, INT
 
     LPtoDP(physDev->hUserDC, pts, 4);
 
-    return RosGdiPie(physDev->hKernelDC, pts[0].x, pts[0].y, pts[1].x, pts[1].y,
-        pts[2].x, pts[2].y, pts[3].x, pts[3].y);
+    return RosGdiArc(physDev->hKernelDC, pts[0].x, pts[0].y, pts[1].x, pts[1].y,
+        pts[2].x, pts[2].y, pts[3].x, pts[3].y, GdiTypePie);
 }
 
 BOOL CDECL RosDrv_PolyPolygon( NTDRV_PDEVICE *physDev, const POINT* pt, const INT* counts, UINT polygons)

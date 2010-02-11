@@ -146,9 +146,7 @@ BOOL APIENTRY RosGdiGetTextMetrics(HDC physDev, TEXTMETRICW *metrics);
 
 /* misc.c */
 BOOL APIENTRY RosGdiArc( HDC physDev, INT left, INT top, INT right, INT bottom,
-            INT xstart, INT ystart, INT xend, INT yend );
-BOOL APIENTRY RosGdiChord( HDC physDev, INT left, INT top, INT right, INT bottom,
-              INT xstart, INT ystart, INT xend, INT yend );
+            INT xstart, INT ystart, INT xend, INT yend, ARCTYPE arc );
 BOOL APIENTRY RosGdiEllipse( HDC physDev, INT left, INT top, INT right, INT bottom );
 INT APIENTRY RosGdiExtEscape( HDC physDev, INT escape, INT in_count, LPCVOID in_data,
                             INT out_count, LPVOID out_data );
@@ -158,8 +156,6 @@ BOOL APIENTRY RosGdiExtTextOut( HDC physDev, INT x, INT y, UINT flags,
                    const RECT *lprect, LPCWSTR wstr, UINT count,
                    const INT *lpDx, gsCacheEntryFormat *formatEntry );
 BOOL APIENTRY RosGdiLineTo( HDC physDev, INT x1, INT y1, INT x2, INT y2 );
-BOOL APIENTRY RosGdiPie( HDC physDev, INT left, INT top, INT right, INT bottom,
-            INT xstart, INT ystart, INT xend, INT yend );
 BOOL APIENTRY RosGdiPolyPolygon( HDC physDev, const POINT* pt, const INT* counts, UINT polygons);
 BOOL APIENTRY RosGdiPolyPolyline( HDC physDev, const POINT* pt, const DWORD* counts, DWORD polylines );
 BOOL APIENTRY RosGdiPolygon( HDC physDev, const POINT* pt, INT count );

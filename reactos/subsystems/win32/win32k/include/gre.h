@@ -1,6 +1,23 @@
 #ifndef __WIN32K_GRE_H
 #define __WIN32K_GRE_H
 
+/* Math stuff */
+#define M_PI_2 1.57079632679489661923
+
+/* arc.c */
+BOOLEAN
+APIENTRY
+GrepArc(PDC  dc,
+        int  Left,
+        int  Top,
+        int  Right,
+        int  Bottom,
+        int  XRadialStart,
+        int  YRadialStart,
+        int  XRadialEnd,
+        int  YRadialEnd,
+        ARCTYPE arctype);
+
 /* bitblt.c */
 INT NTAPI DIB_GetDIBWidthBytes(INT width, INT depth);
 
@@ -90,6 +107,61 @@ LONG FASTCALL GreChangeDisplaySettings(PUNICODE_STRING pDeviceName,
 NTSTATUS FASTCALL GreEnumDisplaySettings(PUNICODE_STRING pDeviceName, DWORD iModeNum,
                                          LPDEVMODEW pDevMode, DWORD dwFlags);
 INT APIENTRY GreGetDeviceCaps(PDC pDC, INT cap);
+
+/* drawing.c */
+
+VOID
+APIENTRY
+GrepFillArc( PDC dc,
+            INT XLeft,
+            INT YLeft,
+            INT Width,
+            INT Height,
+            double StartArc,
+            double EndArc,
+            ARCTYPE arctype,
+            PPOINTL BrushOrigin);
+
+BOOLEAN
+APIENTRY
+GrepDrawArc( PDC dc,
+            INT XLeft,
+            INT YLeft,
+            INT Width,
+            INT Height,
+            double StartArc,
+            double EndArc,
+            ARCTYPE arctype,
+            PBRUSHGDI pbrush,
+            PPOINTL BrushOrigin);
+
+BOOLEAN
+APIENTRY
+GrepDrawEllipse(PDC dc,
+                INT XLeft,
+                INT YLeft,
+                INT Width,
+                INT Height,
+                PBRUSHGDI pbrush,
+                PPOINTL brushOrg);
+
+BOOLEAN
+APIENTRY
+GrepFillEllipse(PDC dc,
+                INT XLeft,
+                INT YLeft,
+                INT Width,
+                INT Height,
+                PBRUSHGDI pbrush,
+                PPOINTL brushOrg);
+
+/* ellipse.c */
+VOID NTAPI
+GreEllipse(PDC dc,
+           INT Left,
+           INT Top,
+           INT Right,
+           INT Bottom);
 
 /* font.c */
 VOID NTAPI

@@ -16,24 +16,25 @@ extern PDEVOBJ PrimarySurface;
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
-BOOL APIENTRY RosGdiArc( HDC physDev, INT left, INT top, INT right, INT bottom,
-            INT xstart, INT ystart, INT xend, INT yend )
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-BOOL APIENTRY RosGdiChord( HDC physDev, INT left, INT top, INT right, INT bottom,
-              INT xstart, INT ystart, INT xend, INT yend )
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
 BOOL APIENTRY RosGdiEllipse( HDC physDev, INT left, INT top, INT right, INT bottom )
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    PDC pDC;
+
+    /* Get a pointer to the DC */
+    pDC = DC_Lock(physDev);
+
+    /* Add DC origin */
+    left += pDC->rcVport.left + pDC->rcDcRect.left;
+    top += pDC->rcVport.top + pDC->rcDcRect.top;
+    right += pDC->rcVport.left + pDC->rcDcRect.left;
+    bottom += pDC->rcVport.top + pDC->rcDcRect.top;
+
+    GreEllipse(pDC, left, top, right, bottom);
+
+    /* Release the object */
+    DC_Unlock(pDC);
+
+    return TRUE;
 }
 
 INT APIENTRY RosGdiExtEscape( HDC physDev, INT escape, INT in_count, LPCVOID in_data,
@@ -106,11 +107,30 @@ BOOL APIENTRY RosGdiLineTo( HDC physDev, INT x1, INT y1, INT x2, INT y2 )
     return TRUE;
 }
 
-BOOL APIENTRY RosGdiPie( HDC physDev, INT left, INT top, INT right, INT bottom,
-            INT xstart, INT ystart, INT xend, INT yend )
+BOOL APIENTRY RosGdiArc( HDC physDev, INT left, INT top, INT right, INT bottom,
+            INT xstart, INT ystart, INT xend, INT yend, ARCTYPE arc )
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    PDC pDC;
+
+    /* Get a pointer to the DC */
+    pDC = DC_Lock(physDev);
+
+    /* Add DC origin */
+    left += pDC->rcVport.left + pDC->rcDcRect.left;
+    top += pDC->rcVport.top + pDC->rcDcRect.top;
+    right += pDC->rcVport.left + pDC->rcDcRect.left;
+    bottom += pDC->rcVport.top + pDC->rcDcRect.top;
+    xstart += pDC->rcVport.left + pDC->rcDcRect.left;
+    ystart += pDC->rcVport.top + pDC->rcDcRect.top;
+    xend += pDC->rcVport.left + pDC->rcDcRect.left;
+    yend += pDC->rcVport.top + pDC->rcDcRect.top;
+
+    GrepArc(pDC, left, top, right, bottom, xstart, ystart, xend, yend, arc);
+
+    /* Release the object */
+    DC_Unlock(pDC);
+
+    return TRUE;
 }
 
 BOOL APIENTRY RosGdiPolyPolygon( HDC physDev, const POINT* pt, const INT* counts, UINT polygons)

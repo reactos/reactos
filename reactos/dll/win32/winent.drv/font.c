@@ -16,6 +16,8 @@
 #include "winbase.h"
 #include "winuser.h"
 #include "wingdi.h"
+#include <winddi.h>
+#include <win32k/ntgdityp.h>
 #include "ntrosgdi.h"
 #include "winent.h"
 #include "wine/unicode.h"

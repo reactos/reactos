@@ -17,6 +17,8 @@
 #include "wingdi.h"
 #define NTOS_USER_MODE
 #include <ndk/ntndk.h>
+#include <winddi.h>
+#include <win32k/ntgdityp.h>
 #include "ntrosgdi.h"
 #include "win32k/rosuser.h"
 #include "winent.h"

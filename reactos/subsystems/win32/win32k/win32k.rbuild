@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE group SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="win32k" type="kernelmodedriver" installbase="system32" installname="win32k.sys">
+<module name="win32k" type="kernelmodedriver" installbase="system32" installname="win32k.sys" crt="libcntpr">
 	<importlibrary definition="win32k.pspec" />
 	<define name="_WIN32K_" />
 
@@ -95,9 +95,12 @@
 		<file>misc.c</file>
 	</directory>
 	<directory name="gre">
+		<file>arc.c</file>
 		<file>bitblt.c</file>
 		<file>brushobj.c</file>
 		<file>clipobj.c</file>
+		<file>drawing.c</file>
+		<file>ellipse.c</file>
 		<file>font.c</file>
 		<file>gdiobj.c</file>
 		<file>lineto.c</file>
@@ -118,6 +121,17 @@
 		<file>monitor.c</file>
 		<file>kbdlayout.c</file>
 		<file>keyboard.c</file>
+	</directory>
+	<directory name="math">
+		<if property="ARCH" value="i386">
+			<directory name="i386">
+				<file>cos_asm.s</file>
+				<file>sin_asm.s</file>
+				<file>atan2_asm.s</file>
+				<file>floor_asm.s</file>
+				<file>ceil_asm.s</file>
+			</directory>
+		</if>
 	</directory>
 	<directory name="swm">
 		<file>winman.c</file>

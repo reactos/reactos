@@ -46,14 +46,12 @@ RosGdiGetPixelFormat               1
 RosGdiGetSystemPaletteEntries      4
 RosGdiGetTextExtentExPoint         7
 RosGdiGetTextMetrics               2
-RosGdiArc                          9
-RosGdiChord                        9
+RosGdiArc                          10
 RosGdiEllipse                      5
 RosGdiExtEscape                    6
 RosGdiExtFloodFill                 5
 RosGdiExtTextOut                   9
 RosGdiLineTo                       5
-RosGdiPie                          9
 RosGdiPolyPolygon                  4
 RosGdiPolyPolyline                 4
 RosGdiPolygon                      3
