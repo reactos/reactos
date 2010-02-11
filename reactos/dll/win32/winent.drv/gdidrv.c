@@ -236,8 +236,17 @@ BOOL CDECL RosDrv_DeleteDC( NTDRV_PDEVICE *physDev )
 
 BOOL CDECL RosDrv_Ellipse( NTDRV_PDEVICE *physDev, INT left, INT top, INT right, INT bottom )
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    POINT pts[2];
+
+    /* Map coordinates */
+    pts[0].x = left;
+    pts[0].y = top;
+    pts[1].x = right;
+    pts[1].y = bottom;
+
+    LPtoDP(physDev->hUserDC, pts, 2);
+
+    return RosGdiEllipse(physDev->hKernelDC, pts[0].x, pts[0].y, pts[1].x, pts[1].y);
 }
 
 BOOL CDECL RosDrv_EnumDeviceFonts( NTDRV_PDEVICE *physDev, LPLOGFONTW plf,
@@ -448,8 +457,22 @@ BOOL CDECL RosDrv_PatBlt( NTDRV_PDEVICE *physDev, INT left, INT top, INT width, 
 BOOL CDECL RosDrv_Pie( NTDRV_PDEVICE *physDev, INT left, INT top, INT right, INT bottom,
             INT xstart, INT ystart, INT xend, INT yend )
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    POINT pts[4];
+
+    /* Map coordinates */
+    pts[0].x = left;
+    pts[0].y = top;
+    pts[1].x = right;
+    pts[1].y = bottom;
+    pts[2].x = xstart;
+    pts[2].y = ystart;
+    pts[3].x = xend;
+    pts[3].y = yend;
+
+    LPtoDP(physDev->hUserDC, pts, 4);
+
+    return RosGdiPie(physDev->hKernelDC, pts[0].x, pts[0].y, pts[1].x, pts[1].y,
+        pts[2].x, pts[2].y, pts[3].x, pts[3].y);
 }
 
 BOOL CDECL RosDrv_PolyPolygon( NTDRV_PDEVICE *physDev, const POINT* pt, const INT* counts, UINT polygons)
