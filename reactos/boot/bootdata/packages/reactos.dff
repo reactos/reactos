@@ -156,7 +156,7 @@ dll\directx\dinput8\dinput8.dll                     1
 dll\directx\dmusic\dmusic.dll                       1
 dll\directx\dplay\dplay.dll                         1
 dll\directx\dplayx\dplayx.dll                       1
-dll\directx\dsound\dsound.dll                       1
+dll\directx\dsound_new\dsound.dll                   1
 dll\directx\dxdiagn\dxdiagn.dll                     1
 dll\directx\wine\ddraw\ddraw.dll                    1
 dll\directx\d3d8thk\d3d8thk.dll                     1
@@ -515,7 +515,7 @@ drivers\storage\ide\pciidex\pciidex.sys             2
 ;drivers\usb\miniport\usbuhci\usbuhci.sys           2
 ;drivers\usb\usbhub\usbhub.sys                      2
 ;drivers\usb\usbport\usbport.sys                    2
-drivers\usb\nt4compat\usbdriver\usbdriver.sys       2
+;drivers\usb\nt4compat\usbdriver\usbdriver.sys       2
 
 drivers\video\displays\vga\vgaddi.dll               1
 drivers\video\displays\framebuf\framebuf.dll        1
@@ -528,6 +528,7 @@ drivers\wdm\audio\filters\kmixer\kmixer.sys         2
 drivers\wdm\audio\sysaudio\sysaudio.sys             2
 drivers\wdm\audio\legacy\wdmaud\wdmaud.sys          2
 drivers\wdm\audio\backpln\portcls\portcls.sys       2
+drivers\wdm\audio\backpln\audio_test\audio_test.exe 1
 drivers\wdm\audio\drm\drmk\drmk.sys                 2
 drivers\wmi\wmilib.sys                              2
 
@@ -798,4 +799,21 @@ modules\rostests\winetests\wintrust\wintrust_winetest.exe                  7   o
 modules\rostests\winetests\wlanapi\wlanapi_winetest.exe                    7   optional
 modules\rostests\winetests\ws2_32\ws2_32_winetest.exe                      7   optional
 
+
 modules\wallpaper\Angelus_02_ROSWP.bmp                                     4   optional
+modules\windows\alcxwdm.sys                                                2   optional
+modules\windows\dlkfet5b.sys                                               2   optional
+modules\windows\cmaudio.sys                                                2   optional
+modules\windows\cmaudio.inf                                                6   optional
+;modules\windows\es1370mp.sys                                               2   optional
+;modules\windows\es1371mp.sys                                               2   optional
+modules\windows\alcxwdm.inf                                                6   optional
+modules\windows\netdlfet.inf                                               6   optional
+modules\windows\ks.inf                                                     6   optional
+;modules\windows\wdma_ens.inf                                               6   optional
+modules\windows\b.mp3                                                      7   optional
+modules\windows\winamp.exe                                                 7   optional
+modules\windows\windows.wav                                                7   optional
+modules\windows\D530.exe                                                   7   optional
+modules\windows\vmaudio.sys                                                2   optional
+modules\windows\vmaudio.inf                                                6   optional

@@ -13,17 +13,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <wchar.h>
+#include "mmixer.h"
 
 #include "interface.h"
-
-typedef struct
-{
-    LIST_ENTRY Entry;
-    HANDLE hMixer;
-    ULONG NotificationType;
-    ULONG Value;
-}MIXER_EVENT, *PMIXER_EVENT;
-
 
 typedef struct
 {
@@ -47,60 +39,6 @@ typedef struct
 typedef struct
 {
     LIST_ENTRY Entry;
-    ULONG dwControlID;
-}MIXERCONTROL_DATA, *LPMIXERCONTROL_DATA;
-
-typedef struct
-{
-    MIXERCONTROL_DATA Header;
-    LONG SignedMinimum;
-    LONG SignedMaximum;
-    LONG SteppingDelta;
-    ULONG InputSteppingDelta;
-    ULONG ValuesCount;
-    PLONG Values;
-}MIXERVOLUME_DATA, *LPMIXERVOLUME_DATA;
-
-
-
-typedef struct
-{
-    LIST_ENTRY Entry;
-    ULONG PinId;
-    ULONG DeviceIndex;
-    MIXERLINEW Line;
-    LPMIXERCONTROLW LineControls;
-    PULONG          NodeIds;
-    LIST_ENTRY LineControlsExtraData;
-}MIXERLINE_EXT, *LPMIXERLINE_EXT;
-
-
-typedef struct
-{
-    MIXERCAPSW    MixCaps;
-    ULONG DeviceIndex;
-    LIST_ENTRY    LineList;
-    ULONG ControlId;
-}MIXER_INFO, *LPMIXER_INFO;
-
-
-typedef struct
-{
-    LIST_ENTRY Entry;
-    ULONG FilterId;
-    ULONG PinId;
-    ULONG bInput;
-    union
-    {
-        WAVEOUTCAPSW OutCaps;
-        WAVEINCAPSW  InCaps;
-    }u;
-}WAVE_INFO, *LPWAVE_INFO;
-
-
-typedef struct
-{
-    LIST_ENTRY Entry;
     UNICODE_STRING SymbolicLink;
 }SYSAUDIO_ENTRY, *PSYSAUDIO_ENTRY;
 
@@ -117,17 +55,16 @@ typedef struct
     HANDLE hSysAudio;
     PFILE_OBJECT FileObject;
 
-    ULONG MixerInfoCount;
-    LPMIXER_INFO MixerInfo;
-
-    ULONG WaveInDeviceCount;
-    LIST_ENTRY WaveInList;
-
-    ULONG WaveOutDeviceCount;
-    LIST_ENTRY WaveOutList;
-
     LIST_ENTRY WdmAudClientList;
 }WDMAUD_DEVICE_EXTENSION, *PWDMAUD_DEVICE_EXTENSION;
+
+typedef struct
+{
+    PWDMAUD_CLIENT ClientInfo;
+    PWDMAUD_DEVICE_EXTENSION DeviceExtension;
+    SOUND_DEVICE_TYPE DeviceType;
+}PIN_CREATE_CONTEXT, *PPIN_CREATE_CONTEXT;
+
 
 NTSTATUS
 NTAPI
@@ -279,7 +216,7 @@ NTAPI
 WdmAudWaveInitialize(
     IN PDEVICE_OBJECT DeviceObject);
 
-NTSTATUS
+ULONG
 ClosePin(
     IN  PWDMAUD_CLIENT ClientInfo,
     IN  ULONG FilterId,
@@ -295,18 +232,51 @@ InsertPinHandle(
     IN  HANDLE PinHandle,
     IN  ULONG FreeIndex);
 
-
-NTSTATUS
-GetWaveInfoByIndexAndType(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  ULONG DeviceIndex,
-    IN  SOUND_DEVICE_TYPE DeviceType,
-    OUT LPWAVE_INFO *OutWaveInfo);
-
 NTSTATUS
 GetSysAudioDevicePnpName(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  ULONG DeviceIndex,
     OUT LPWSTR * Device);
+
+NTSTATUS
+OpenSysAudioDeviceByIndex(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  ULONG DeviceIndex,
+    IN  PHANDLE DeviceHandle,
+    IN  PFILE_OBJECT * FileObject);
+
+NTSTATUS
+OpenDevice(
+    IN LPWSTR Device,
+    OUT PHANDLE DeviceHandle,
+    OUT PFILE_OBJECT * FileObject);
+
+ULONG
+WdmAudGetMixerDeviceCount();
+
+ULONG
+WdmAudGetWaveInDeviceCount();
+
+ULONG
+WdmAudGetWaveOutDeviceCount();
+
+NTSTATUS
+WdmAudGetMixerPnpNameByIndex(
+    IN  ULONG DeviceIndex,
+    OUT LPWSTR * Device);
+
+NTSTATUS
+WdmAudGetPnpNameByIndexAndType(
+    IN ULONG DeviceIndex, 
+    IN SOUND_DEVICE_TYPE DeviceType, 
+    OUT LPWSTR *Device);
+
+
+/* sup.c */
+
+ULONG
+GetSysAudioDeviceCount(
+    IN  PDEVICE_OBJECT DeviceObject);
+
 
 #endif

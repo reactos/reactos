@@ -467,7 +467,7 @@ WdmAudSetWdmWaveDeviceFormatByMMixer(
 
     bWaveIn = (DeviceType == WAVE_IN_DEVICE_TYPE ? TRUE : FALSE);
 
-    if (MMixerOpenWave(&MixerContext, DeviceId, bWaveIn, WaveFormat, &Instance->Handle) == MM_STATUS_SUCCESS)
+    if (MMixerOpenWave(&MixerContext, DeviceId, bWaveIn, WaveFormat, NULL, NULL, &Instance->Handle) == MM_STATUS_SUCCESS)
     {
         if (DeviceType == WAVE_OUT_DEVICE_TYPE)
         {

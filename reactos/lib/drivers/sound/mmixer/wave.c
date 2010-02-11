@@ -233,12 +233,15 @@ MMixerOpenWavePin(
     IN ULONG PinId,
     IN LPWAVEFORMATEX WaveFormatEx,
     IN ACCESS_MASK DesiredAccess,
+    IN PIN_CREATE_CALLBACK CreateCallback,
+    IN PVOID Context,
     OUT PHANDLE PinHandle)
 {
     PKSPIN_CONNECT PinConnect;
     PKSDATAFORMAT_WAVEFORMATEX DataFormat;
     LPMIXER_DATA MixerData;
     NTSTATUS Status;
+    MIXER_STATUS MixerStatus;
 
     MixerData = MMixerGetDataByDeviceId(MixerList, DeviceId);
     if (!MixerData)
@@ -260,16 +263,28 @@ MMixerOpenWavePin(
     /* initialize with requested wave format */
     MMixerInitializeDataFormat(DataFormat, WaveFormatEx);
 
-    /* now create the pin */
-    Status = KsCreatePin(MixerData->hDevice, PinConnect, DesiredAccess, PinHandle);
+    if (CreateCallback)
+    {
+        /* let the callback handle the creation */
+        MixerStatus = CreateCallback(Context, DeviceId, PinId, MixerData->hDevice, PinConnect, DesiredAccess, PinHandle);
+    }
+    else
+    {
+        /* now create the pin */
+        Status = KsCreatePin(MixerData->hDevice, PinConnect, DesiredAccess, PinHandle);
+
+        /* normalize status */
+        if (Status == STATUS_SUCCESS)
+            MixerStatus = MM_STATUS_SUCCESS;
+        else
+            MixerStatus = MM_STATUS_UNSUCCESSFUL;
+    }
 
     /* free create info */
     MixerContext->Free(PinConnect);
 
-    if (Status == STATUS_SUCCESS)
-        return MM_STATUS_SUCCESS;
-    else
-        return MM_STATUS_UNSUCCESSFUL;
+    /* done */
+    return MixerStatus;
 }
 
 VOID
@@ -415,6 +430,8 @@ MMixerOpenWave(
     IN ULONG DeviceIndex,
     IN ULONG bWaveIn,
     IN LPWAVEFORMATEX WaveFormat,
+    IN PIN_CREATE_CALLBACK CreateCallback,
+    IN PVOID Context,
     OUT PHANDLE PinHandle)
 {
     PMIXER_LIST MixerList;
@@ -459,7 +476,7 @@ MMixerOpenWave(
     }
 
     /* now try open the pin */
-    return MMixerOpenWavePin(MixerContext, MixerList, WaveInfo->DeviceId, WaveInfo->PinId, WaveFormat, DesiredAccess, PinHandle);
+    return MMixerOpenWavePin(MixerContext, MixerList, WaveInfo->DeviceId, WaveInfo->PinId, WaveFormat, DesiredAccess, CreateCallback, Context, PinHandle);
 }
 
 MIXER_STATUS

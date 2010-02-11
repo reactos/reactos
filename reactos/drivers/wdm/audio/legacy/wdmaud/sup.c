@@ -2,11 +2,36 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel Streaming
  * FILE:            drivers/wdm/audio/legacy/wdmaud/sup.c
- * PURPOSE:         System Audio graph builder
+ * PURPOSE:         Misc support routines
  * PROGRAMMER:      Andrew Greenwood
  *                  Johannes Anderwald
  */
 #include "wdmaud.h"
+
+ULONG
+GetSysAudioDeviceCount(
+    IN  PDEVICE_OBJECT DeviceObject)
+{
+    PWDMAUD_DEVICE_EXTENSION DeviceExtension;
+    KSPROPERTY Pin;
+    ULONG Count, BytesReturned;
+    NTSTATUS Status;
+
+    /* setup the query request */
+    Pin.Set = KSPROPSETID_Sysaudio;
+    Pin.Id = KSPROPERTY_SYSAUDIO_DEVICE_COUNT;
+    Pin.Flags = KSPROPERTY_TYPE_GET;
+
+    DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    /* query sysaudio for the device count */
+    Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSPROPERTY), (PVOID)&Count, sizeof(ULONG), &BytesReturned);
+    if (!NT_SUCCESS(Status))
+        return 0;
+
+    return Count;
+}
+
 
 NTSTATUS
 SetIrpIoStatus(
@@ -21,7 +46,7 @@ SetIrpIoStatus(
 
 }
 
-NTSTATUS
+ULONG
 ClosePin(
     IN  PWDMAUD_CLIENT ClientInfo,
     IN  ULONG FilterId,
@@ -298,3 +323,83 @@ FindProductName(
     return Status;
 }
 
+NTSTATUS
+GetSysAudioDevicePnpName(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  ULONG DeviceIndex,
+    OUT LPWSTR * Device)
+{
+    ULONG BytesReturned;
+    KSP_PIN Pin;
+    NTSTATUS Status;
+    PWDMAUD_DEVICE_EXTENSION DeviceExtension;
+
+   /* first check if the device index is within bounds */
+   if (DeviceIndex >= GetSysAudioDeviceCount(DeviceObject))
+       return STATUS_INVALID_PARAMETER;
+
+    /* setup the query request */
+    Pin.Property.Set = KSPROPSETID_Sysaudio;
+    Pin.Property.Id = KSPROPERTY_SYSAUDIO_DEVICE_INTERFACE_NAME;
+    Pin.Property.Flags = KSPROPERTY_TYPE_GET;
+    Pin.PinId = DeviceIndex;
+
+    DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    /* query sysaudio for the device path */
+    Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSPROPERTY) + sizeof(ULONG), NULL, 0, &BytesReturned);
+
+    /* check if the request failed */
+    if (Status != STATUS_BUFFER_TOO_SMALL || BytesReturned == 0)
+        return STATUS_UNSUCCESSFUL;
+
+    /* allocate buffer for the device */
+    *Device = ExAllocatePool(NonPagedPool, BytesReturned);
+    if (!Device)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* query sysaudio again for the device path */
+    Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSPROPERTY) + sizeof(ULONG), (PVOID)*Device, BytesReturned, &BytesReturned);
+
+    if (!NT_SUCCESS(Status))
+    {
+        /* failed */
+        ExFreePool(*Device);
+        return Status;
+    }
+
+    return Status;
+}
+
+NTSTATUS
+OpenDevice(
+    IN LPWSTR Device,
+    OUT PHANDLE DeviceHandle,
+    OUT PFILE_OBJECT * FileObject)
+{
+    NTSTATUS Status;
+    HANDLE hDevice;
+
+    /* now open the device */
+    Status = WdmAudOpenSysAudioDevice(Device, &hDevice);
+
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    *DeviceHandle = hDevice;
+
+    if (FileObject)
+    {
+        Status = ObReferenceObjectByHandle(hDevice, FILE_READ_DATA | FILE_WRITE_DATA, IoFileObjectType, KernelMode, (PVOID*)FileObject, NULL);
+
+        if (!NT_SUCCESS(Status))
+        {
+            ZwClose(hDevice);
+        }
+    }
+
+    return Status;
+
+}
