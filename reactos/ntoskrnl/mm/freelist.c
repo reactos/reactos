@@ -48,7 +48,8 @@
 #define PHYSICAL_PAGE        MMPFN
 #define PPHYSICAL_PAGE       PMMPFN
 
-PPHYSICAL_PAGE MmPfnDatabase;
+/* The first array contains ReactOS PFNs, the second contains ARM3 PFNs */
+PPHYSICAL_PAGE MmPfnDatabase[2];
 
 ULONG MmAvailablePages;
 ULONG MmResidentAvailablePages;
@@ -59,7 +60,7 @@ SIZE_T MmSharedCommit;
 SIZE_T MmDriverCommit;
 SIZE_T MmProcessCommit;
 SIZE_T MmPagedPoolCommit;
-SIZE_T MmPeakCommitment;
+SIZE_T MmPeakCommitment; 
 SIZE_T MmtotalCommitLimitMaximum;
 
 MMPFNLIST MmZeroedPageListHead;
@@ -101,7 +102,7 @@ MmGetLRUFirstUserPage(VOID)
    PageDescriptor = CONTAINING_RECORD(NextListEntry, PHYSICAL_PAGE, ListEntry);
    ASSERT_PFN(PageDescriptor);
    KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-   return PageDescriptor - MmPfnDatabase;
+   return PageDescriptor - MmPfnDatabase[0];
 }
 
 VOID
@@ -142,7 +143,7 @@ MmGetLRUNextUserPage(PFN_TYPE PreviousPfn)
    }
    PageDescriptor = CONTAINING_RECORD(NextListEntry, PHYSICAL_PAGE, ListEntry);
    KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-   return PageDescriptor - MmPfnDatabase;
+   return PageDescriptor - MmPfnDatabase[0];
 }
 
 VOID
@@ -758,9 +759,9 @@ MmInitializePageList(VOID)
             for (i = 0; i < Md->PageCount; i++)
             {
                 /* Mark it as a free page */
-                MmPfnDatabase[Md->BasePage + i].Flags.Type = MM_PHYSICAL_PAGE_FREE;
+                MmPfnDatabase[0][Md->BasePage + i].Flags.Type = MM_PHYSICAL_PAGE_FREE;
                 InsertTailList(&FreeUnzeroedPageListHead,
-                               &MmPfnDatabase[Md->BasePage + i].ListEntry);
+                               &MmPfnDatabase[0][Md->BasePage + i].ListEntry);
                 UnzeroedPageCount++;
                 MmAvailablePages++;
             }
@@ -771,7 +772,7 @@ MmInitializePageList(VOID)
             for (i = 0; i < Md->PageCount; i++)
             {
                 /* Everything else is used memory */
-                MmPfnDatabase[Md->BasePage + i] = UsedPage;
+                MmPfnDatabase[0][Md->BasePage + i] = UsedPage;
                 NrSystemPages++;
             }
         }
@@ -781,10 +782,10 @@ MmInitializePageList(VOID)
     for (i = MxOldFreeDescriptor.BasePage; i < MxFreeDescriptor->BasePage; i++)
     {
         /* Ensure this page was not added previously */
-        ASSERT(MmPfnDatabase[i].Flags.Type == 0);
+        ASSERT(MmPfnDatabase[0][i].Flags.Type == 0);
 
         /* Mark it as used kernel memory */
-        MmPfnDatabase[i] = UsedPage;
+        MmPfnDatabase[0][i] = UsedPage;
         NrSystemPages++;
     }
     
@@ -1082,7 +1083,7 @@ MmAllocPage(ULONG Consumer, SWAPENTRY SwapEntry)
 
    MmAvailablePages--;
 
-   PfnOffset = PageDescriptor - MmPfnDatabase;
+   PfnOffset = PageDescriptor - MmPfnDatabase[0];
    if ((NeedClear) && (Consumer != MC_SYSTEM))
    {
       MiZeroPage(PfnOffset);
@@ -1155,7 +1156,7 @@ MmZeroPageThreadMain(PVOID Ignored)
          /* We set the page to used, because MmCreateVirtualMapping failed with unused pages */
          PageDescriptor->Flags.Type = MM_PHYSICAL_PAGE_USED;
          KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-         Pfn = PageDescriptor - MmPfnDatabase;
+         Pfn = PageDescriptor - MmPfnDatabase[0];
          Status = MiZeroPage(Pfn);
 
          oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);

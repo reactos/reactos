@@ -38,6 +38,26 @@
 #define MM_HIGHEST_VAD_ADDRESS \
     (PVOID)((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - (16 * PAGE_SIZE))
 
+/* Make the code cleaner with some definitions for size multiples */
+#define _1KB (1024)
+#define _1MB (1000 * _1KB)
+
+/* Size of a PDE directory, and size of a page table */
+#define PDE_SIZE (PDE_COUNT * sizeof(MMPDE))
+#define PT_SIZE  (PTE_COUNT * sizeof(MMPTE))
+
+/* Architecture specific count of PDEs in a directory, and count of PTEs in a PT */
+#ifdef _M_IX86
+#define PD_COUNT  1
+#define PDE_COUNT 4096
+#define PTE_COUNT 1024
+#elif _M_ARM
+#define PD_COUNT  1
+#define PDE_COUNT 1024
+#define PTE_COUNT 256
+#else
+#error Define these please!
+#endif
 
 //
 // FIXFIX: These should go in ex.h after the pool merge
@@ -190,11 +210,10 @@ extern ULONG MmSecondaryColors;
 extern ULONG MmSecondaryColorMask;
 extern ULONG MmNumberOfSystemPtes;
 extern ULONG MmMaximumNonPagedPoolPercent;
+extern ULONG MmLargeStackSize;
 
-//
-// Actual (registry-configurable) size of a GUI thread's stack
-//
-ULONG MmLargeStackSize;
+#define MI_PFN_TO_PFNENTRY(x)     (&MmPfnDatabase[1][x])
+#define MI_PFNENTRY_TO_PFN(x)     (Pfn - &MmPfnDatabase[1])
 
 NTSTATUS
 NTAPI
@@ -206,6 +225,30 @@ MmArmInitSystem(
 NTSTATUS
 NTAPI
 MiInitMachineDependent(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
+VOID
+NTAPI
+MiComputeColorInformation(
+    VOID
+);
+
+VOID
+NTAPI
+MiMapPfnDatabase(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
+VOID
+NTAPI
+MiInitializeColorTables(
+    VOID
+);
+
+VOID
+NTAPI
+MiInitializePfnDatabase(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 

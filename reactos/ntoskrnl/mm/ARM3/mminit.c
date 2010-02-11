@@ -234,6 +234,30 @@ ULONG MmSecondaryColorMask;
 //
 ULONG MmLargeStackSize = KERNEL_LARGE_STACK_SIZE;
 
+//
+// Before we have a PFN database, memory comes straight from our physical memory
+// blocks, which is nice because it's guaranteed contiguous and also because once
+// we take a page from here, the system doesn't see it anymore.
+// However, once the fun is over, those pages must be re-integrated back into
+// PFN society life, and that requires us keeping a copy of the original layout
+// so that we can parse it later.
+//
+PMEMORY_ALLOCATION_DESCRIPTOR MxFreeDescriptor;
+MEMORY_ALLOCATION_DESCRIPTOR MxOldFreeDescriptor;
+
+/*
+ * For each page's worth bytes of L2 cache in a given set/way line, the zero and
+ * free lists are organized in what is called a "color".
+ *
+ * This array points to the two lists, so it can be thought of as a multi-dimensional
+ * array of MmFreePagesByColor[2][MmSecondaryColors]. Since the number is dynamic,
+ * we describe the array in pointer form instead.
+ *
+ * On a final note, the color tables themselves are right after the PFN database.
+ */
+C_ASSERT(FreePageList == 1);
+PMMCOLOR_TABLES MmFreePagesByColor[FreePageList + 1];
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 //
@@ -281,6 +305,264 @@ MxGetNextPage(IN PFN_NUMBER PageCount)
     MxFreeDescriptor->BasePage += PageCount;
     MxFreeDescriptor->PageCount -= PageCount;
     return Pfn;
+}
+
+VOID
+NTAPI
+MiComputeColorInformation(VOID)
+{
+    ULONG L2Associativity;
+    
+    /* Check if no setting was provided already */
+    if (!MmSecondaryColors)
+    {
+        /* Get L2 cache information */
+        L2Associativity = KeGetPcr()->SecondLevelCacheAssociativity;
+        
+        /* The number of colors is the number of cache bytes by set/way */
+        MmSecondaryColors = KeGetPcr()->SecondLevelCacheSize;
+        if (L2Associativity) MmSecondaryColors /= L2Associativity;
+    }
+    
+    /* Now convert cache bytes into pages */
+    MmSecondaryColors >>= PAGE_SHIFT;
+    if (!MmSecondaryColors)
+    {
+        /* If there was no cache data from the KPCR, use the default colors */
+        MmSecondaryColors = MI_SECONDARY_COLORS;
+    }
+    else
+    {
+        /* Otherwise, make sure there aren't too many colors */
+        if (MmSecondaryColors > MI_MAX_SECONDARY_COLORS)
+        {
+            /* Set the maximum */
+            MmSecondaryColors = MI_MAX_SECONDARY_COLORS;
+        }
+        
+        /* Make sure there aren't too little colors */
+        if (MmSecondaryColors < MI_MIN_SECONDARY_COLORS)
+        {
+            /* Set the default */
+            MmSecondaryColors = MI_SECONDARY_COLORS;
+        }
+        
+        /* Finally make sure the colors are a power of two */
+        if (MmSecondaryColors & (MmSecondaryColors - 1))
+        {
+            /* Set the default */
+            MmSecondaryColors = MI_SECONDARY_COLORS;
+        }
+    }
+    
+    /* Compute the mask and store it */
+    MmSecondaryColorMask = MmSecondaryColors - 1;
+    KeGetCurrentPrcb()->SecondaryColorMask = MmSecondaryColorMask;    
+}
+
+VOID
+NTAPI
+MiInitializeColorTables(VOID)
+{
+    ULONG i;
+    PMMPTE PointerPte, LastPte;
+    MMPTE TempPte = ValidKernelPte;
+    
+    /* The color table starts after the ARM3 PFN database */
+    MmFreePagesByColor[0] = (PMMCOLOR_TABLES)&MmPfnDatabase[1][MmHighestPhysicalPage + 1];
+    
+    /* Loop the PTEs. We have two color tables for each secondary color */
+    PointerPte = MiAddressToPte(&MmFreePagesByColor[0][0]);
+    LastPte = MiAddressToPte((ULONG_PTR)MmFreePagesByColor[0] +
+                             (2 * MmSecondaryColors * sizeof(MMCOLOR_TABLES))
+                             - 1);
+    while (PointerPte <= LastPte)
+    {
+        /* Check for valid PTE */
+        if (PointerPte->u.Hard.Valid == 0)
+        {
+            /* Get a page and map it */
+            TempPte.u.Hard.PageFrameNumber = MxGetNextPage(1);
+            ASSERT(TempPte.u.Hard.Valid == 1);
+            *PointerPte = TempPte;
+            
+            /* Zero out the page */
+            RtlZeroMemory(MiPteToAddress(PointerPte), PAGE_SIZE);
+        }
+        
+        /* Next */
+        PointerPte++;
+    }
+    
+    /* Now set the address of the next list, right after this one */
+    MmFreePagesByColor[1] = &MmFreePagesByColor[0][MmSecondaryColors];
+    
+    /* Now loop the lists to set them up */
+    for (i = 0; i < MmSecondaryColors; i++)
+    {
+        /* Set both free and zero lists for each color */
+        MmFreePagesByColor[ZeroedPageList][i].Flink = 0xFFFFFFFF;
+        MmFreePagesByColor[ZeroedPageList][i].Blink = (PVOID)0xFFFFFFFF;
+        MmFreePagesByColor[ZeroedPageList][i].Count = 0;
+        MmFreePagesByColor[FreePageList][i].Flink = 0xFFFFFFFF;
+        MmFreePagesByColor[FreePageList][i].Blink = (PVOID)0xFFFFFFFF;
+        MmFreePagesByColor[FreePageList][i].Count = 0;
+    }
+}
+
+BOOLEAN
+NTAPI
+MiIsRegularMemory(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
+                  IN PFN_NUMBER Pfn)
+{
+    PLIST_ENTRY NextEntry;
+    PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
+
+    /* Loop the memory descriptors */
+    NextEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
+    while (NextEntry != &LoaderBlock->MemoryDescriptorListHead)
+    {
+        /* Get the memory descriptor */
+        MdBlock = CONTAINING_RECORD(NextEntry,
+                                    MEMORY_ALLOCATION_DESCRIPTOR,
+                                    ListEntry);
+
+        /* Check if this PFN could be part of the block */
+        if (Pfn >= (MdBlock->BasePage))
+        {
+            /* Check if it really is part of the block */
+            if (Pfn < (MdBlock->BasePage + MdBlock->PageCount))
+            {
+                /* Check if the block is actually memory we don't map */
+                if ((MdBlock->MemoryType == LoaderFirmwarePermanent) ||
+                    (MdBlock->MemoryType == LoaderBBTMemory) ||
+                    (MdBlock->MemoryType == LoaderSpecialMemory))
+                {
+                    /* We don't need PFN database entries for this memory */
+                    break;
+                }
+
+                /* This is memory we want to map */
+                return TRUE;
+            }
+        }
+        else
+        {
+            /* Blocks are ordered, so if it's not here, it doesn't exist */
+            break;
+        }
+
+        /* Get to the next descriptor */
+        NextEntry = MdBlock->ListEntry.Flink;
+    }
+
+    /* Check if this PFN is actually from our free memory descriptor */
+    if ((Pfn >= MxOldFreeDescriptor.BasePage) &&
+        (Pfn < MxOldFreeDescriptor.BasePage + MxOldFreeDescriptor.PageCount))
+    {
+        /* We use these pages for initial mappings, so we do want to count them */
+        return TRUE;
+    }
+
+    /* Otherwise this isn't memory that we describe or care about */
+    return FALSE;
+}
+
+VOID
+NTAPI
+MiMapPfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    ULONG FreePage, FreePageCount, PagesLeft, BasePage, PageCount;
+    PLIST_ENTRY NextEntry;
+    PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
+    PMMPTE PointerPte, LastPte;
+    MMPTE TempPte = ValidKernelPte;
+    
+    /* Get current page data, since we won't be using MxGetNextPage as it would corrupt our state */
+    FreePage = MxFreeDescriptor->BasePage;
+    FreePageCount = MxFreeDescriptor->PageCount;
+    PagesLeft = 0;
+    
+    /* Loop the memory descriptors */
+    NextEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
+    while (NextEntry != &LoaderBlock->MemoryDescriptorListHead)
+    {
+        /* Get the descriptor */
+        MdBlock = CONTAINING_RECORD(NextEntry,
+                                    MEMORY_ALLOCATION_DESCRIPTOR,
+                                    ListEntry);
+        if ((MdBlock->MemoryType == LoaderFirmwarePermanent) ||
+            (MdBlock->MemoryType == LoaderBBTMemory) ||
+            (MdBlock->MemoryType == LoaderSpecialMemory))
+        {
+            /* These pages are not part of the PFN database */
+            NextEntry = MdBlock->ListEntry.Flink;
+            continue;
+        }
+        
+        /* Next, check if this is our special free descriptor we've found */
+        if (MdBlock == MxFreeDescriptor)
+        {
+            /* Use the real numbers instead */
+            BasePage = MxOldFreeDescriptor.BasePage;
+            PageCount = MxOldFreeDescriptor.PageCount;
+        }
+        else
+        {
+            /* Use the descriptor's numbers */
+            BasePage = MdBlock->BasePage;
+            PageCount = MdBlock->PageCount;
+        }
+        
+        /* Get the PTEs for this range */
+        PointerPte = MiAddressToPte(&MmPfnDatabase[0][BasePage]);
+        LastPte = MiAddressToPte(((ULONG_PTR)&MmPfnDatabase[0][BasePage + PageCount]) - 1);
+        DPRINT("MD Type: %lx Base: %lx Count: %lx\n", MdBlock->MemoryType, BasePage, PageCount);
+        
+        /* Loop them */
+        while (PointerPte <= LastPte)
+        {
+            /* We'll only touch PTEs that aren't already valid */
+            if (PointerPte->u.Hard.Valid == 0)
+            {
+                /* Use the next free page */
+                TempPte.u.Hard.PageFrameNumber = FreePage;
+                ASSERT(FreePageCount != 0);
+                
+                /* Consume free pages */
+                FreePage++;
+                FreePageCount--;
+                if (!FreePageCount)
+                {
+                    /* Out of memory */
+                    KeBugCheckEx(INSTALL_MORE_MEMORY,
+                                 MmNumberOfPhysicalPages,
+                                 FreePageCount,
+                                 MxOldFreeDescriptor.PageCount,
+                                 1);
+                }
+                
+                /* Write out this PTE */
+                PagesLeft++;
+                ASSERT(PointerPte->u.Hard.Valid == 0);
+                ASSERT(TempPte.u.Hard.Valid == 1);
+                *PointerPte = TempPte;
+                
+                /* Zero this page */
+                RtlZeroMemory(MiPteToAddress(PointerPte), PAGE_SIZE);
+            }
+            
+            /* Next! */
+            PointerPte++;
+        }
+        
+        /* Do the next address range */
+        NextEntry = MdBlock->ListEntry.Flink;
+    }
+    
+    /* Now update the free descriptors to consume the pages we used up during the PFN allocation loop */
+    MxFreeDescriptor->BasePage = FreePage;
+    MxFreeDescriptor->PageCount = FreePageCount;
 }
 
 PFN_NUMBER
@@ -788,7 +1070,7 @@ MmArmInitSystem(IN ULONG Phase,
         // Sync us up with ReactOS Mm
         //
         MiSyncARM3WithROS(MmNonPagedSystemStart, (PVOID)((ULONG_PTR)MmNonPagedPoolEnd - 1));
-        MiSyncARM3WithROS(MmPfnDatabase, (PVOID)((ULONG_PTR)MmNonPagedPoolStart + MmSizeOfNonPagedPoolInBytes - 1));
+        MiSyncARM3WithROS(MmPfnDatabase[0], (PVOID)((ULONG_PTR)MmNonPagedPoolStart + MmSizeOfNonPagedPoolInBytes - 1));
         MiSyncARM3WithROS((PVOID)HYPER_SPACE, (PVOID)(HYPER_SPACE + PAGE_SIZE - 1));
       
         //
