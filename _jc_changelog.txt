@@ -120,6 +120,16 @@ very often the msc part was wrong, and compiler specific directives,
 have been replaced by instances of the macros defined in these includes.
 Many in ke\i386\cpu.c but also many others spread among many files.
 
+* [crt] lib\sdk\crt2
+- created lib\sdk\crt2, initially a copy of crt, to avoid breaking
+the current crt.
+This is the one being linked in the msvc ntoskrnl.
+Many functions have been put in separate files, to avoid linkage of unused
+functions. A few of them have been improved. vsprintf was taken from
+the rtl.
+- currently contains at least all the functions needed and exported by ntoskrnl,
+some others are missing.
+
 * [ntos] DbgPrint improvements
 - DbgPrint support moved to ntoskrnl/dbg.
 - DbgPrint now uses a function pointer to the actual handler, so that it can
@@ -264,17 +274,13 @@ what's unnefficient), and eliminated unneeded and undesirable casts.
 [ntos] declaration of KeInvalidateAllCaches lacked NTAPI, necessary since it's
 an export. The problem manifested only if not using stdcall as compiler default.
 
-* [crt] lib\sdk\crt2
-- created lib\sdk\crt2, initially a copy of crt, to avoid breaking
-the current crt while testing changes.
-This is the one being linked in the msvc ntoskrnl.
-Many functions have been put in separate files, to avoid linkage of unused
-functions. A few of them have been improved. vsprintf was taken from
-the rtl.
-- currently contains at least all the functions needed and exported by ntoskrnl,
-some others are missing.
+20100210 commit 45567
 
-* [crt] lib\rtl2
-- created lib\rtl2, a copy of rtl, to avoid breaking current rtl while testing changes.
-- minor changes and some fix. Use diff to check changes, not big deal.
 
+[global]
+include\platf now contains the files tht were in the following locations,
+that are removed:
+include/reactos/msc/ include/reactos/gnuc/ include/reactos/i386/
+include/crt/msc include/crt/mingw32
+
+[ntos] msvc: path to rules files in vcprojs fixed
