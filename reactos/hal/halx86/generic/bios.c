@@ -243,6 +243,7 @@ HalpTrap06()
     /* Restore ES/DS to known good values first */
     Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
     Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
+    Ke386SetFs(KGDT_R0_PCR);
 
     /* Restore the stack */ 
     KeGetPcr()->TSS->Esp0 = HalpSavedEsp0;
