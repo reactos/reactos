@@ -1082,8 +1082,6 @@ MmPageOutPhysicalAddress(PFN_TYPE Page);
 
 /* freelist.c **********************************************************/
 
-#define ASSERT_PFN(x) ASSERT((x)->u3.e1.CacheAttribute != 0)
-
 FORCEINLINE
 PMMPFN
 MiGetPfnEntry(IN PFN_TYPE Pfn)
@@ -1099,9 +1097,6 @@ MiGetPfnEntry(IN PFN_TYPE Pfn)
 
     /* Get the entry */
     Page = &MmPfnDatabase[0][Pfn];
-
-    /* Make sure it's valid */
-    ASSERT_PFN(Page);
 
     /* Return it */
     return Page;
