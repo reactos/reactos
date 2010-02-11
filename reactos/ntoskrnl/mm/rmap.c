@@ -202,7 +202,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
 
    ExAcquireFastMutex(&RmapListLock);
    entry = MmGetRmapListHeadPage(Page);
-   if (entry == NULL || MmGetLockCountPage(Page) != 0)
+   if (entry == NULL)
    {
       ExReleaseFastMutex(&RmapListLock);
       return(STATUS_UNSUCCESSFUL);

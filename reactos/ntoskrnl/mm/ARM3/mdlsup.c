@@ -966,7 +966,6 @@ MmProbeAndLockPages(IN PMDL Mdl,
             // Now lock the page
             //
             MmReferencePage(PageFrameIndex);
-            MmLockPage(PageFrameIndex);
         }
         else
         {
@@ -1124,7 +1123,6 @@ MmUnlockPages(IN PMDL Mdl)
                 //
                 // Unlock and dereference
                 //
-                MmUnlockPage(*MdlPages);
                 MmDereferencePage(*MdlPages);
             }
         } while (++MdlPages < LastPage);
@@ -1218,7 +1216,6 @@ MmUnlockPages(IN PMDL Mdl)
         //
         // Unlock and dereference
         //
-        MmUnlockPage(*MdlPages);
         MmDereferencePage(*MdlPages);
     } while (++MdlPages < LastPage);
     
