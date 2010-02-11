@@ -852,6 +852,52 @@ DisplayCsFlags(IN PDEVADVPROP_INFO dap,
 
 
 static VOID
+DisplayMatchingDeviceId(IN PDEVADVPROP_INFO dap,
+                        IN HWND hwndListView)
+{
+    HDEVINFO DeviceInfoSet;
+    PSP_DEVINFO_DATA DeviceInfoData;
+    WCHAR szBuffer[256];
+    HKEY hKey;
+    DWORD dwSize;
+    DWORD dwType;
+
+    if (dap->CurrentDeviceInfoSet != INVALID_HANDLE_VALUE)
+    {
+        DeviceInfoSet = dap->CurrentDeviceInfoSet;
+        DeviceInfoData = &dap->CurrentDeviceInfoData;
+    }
+    else
+    {
+        DeviceInfoSet = dap->DeviceInfoSet;
+        DeviceInfoData = &dap->DeviceInfoData;
+    }
+
+    hKey = SetupDiOpenDevRegKey(DeviceInfoSet,
+                                DeviceInfoData,
+                                DICS_FLAG_GLOBAL,
+                                0,
+                                DIREG_DRV,
+                                KEY_QUERY_VALUE);
+    if (hKey != INVALID_HANDLE_VALUE)
+    {
+        dwSize = 256 * sizeof(WCHAR);
+        if (RegQueryValueEx(hKey,
+                            L"MatchingDeviceId",
+                            NULL,
+                            &dwType,
+                            (LPBYTE)szBuffer,
+                            &dwSize) == ERROR_SUCCESS)
+        {
+            SetListViewText(hwndListView, 0, szBuffer);
+        }
+
+        RegCloseKey(hKey);
+    }
+}
+
+
+static VOID
 DisplayDeviceProperties(IN PDEVADVPROP_INFO dap,
                         IN HWND hwndComboBox,
                         IN HWND hwndListView)
@@ -873,7 +919,6 @@ DisplayDeviceProperties(IN PDEVADVPROP_INFO dap,
             SetListViewText(hwndListView, 0, dap->szDeviceID);
             break;
 
-
         case 1: /* Hardware ID */
             DisplayDevicePropertyText(dap,
                                       hwndListView,
@@ -886,10 +931,10 @@ DisplayDeviceProperties(IN PDEVADVPROP_INFO dap,
                                       SPDRP_COMPATIBLEIDS);
             break;
 
-#if 0
         case 3: /* Matching ID */
+            DisplayMatchingDeviceId(dap,
+                                    hwndListView);
             break;
-#endif
 
         case 4: /* Service */
             DisplayDevicePropertyText(dap,
