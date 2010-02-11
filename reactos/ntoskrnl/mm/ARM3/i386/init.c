@@ -507,7 +507,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     MiInitializeColorTables();
     
     /* Build the PFN Database */
-    //MiInitializePfnDatabase(LoaderBlock);
+    MiInitializePfnDatabase(LoaderBlock);
 
     /* Call back into shitMM to setup the ReactOS PFN database */
     MmInitializePageList();

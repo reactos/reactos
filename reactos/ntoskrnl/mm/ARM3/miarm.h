@@ -49,11 +49,11 @@
 /* Architecture specific count of PDEs in a directory, and count of PTEs in a PT */
 #ifdef _M_IX86
 #define PD_COUNT  1
-#define PDE_COUNT 4096
+#define PDE_COUNT 1024
 #define PTE_COUNT 1024
 #elif _M_ARM
 #define PD_COUNT  1
-#define PDE_COUNT 1024
+#define PDE_COUNT 4096
 #define PTE_COUNT 256
 #else
 #error Define these please!
