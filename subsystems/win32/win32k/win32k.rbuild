@@ -20,9 +20,7 @@
 	<compilerflag compilerset="msc">/wd4276</compilerflag>
 	<define name="LANGPACK" />
 	<define name="_WIN32K_" />
-	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38269
 	<pch>pch.h</pch>
-	-->
 
 	<directory name="dib" root="intermediate">
 		<file>dib8gen.c</file>
@@ -205,8 +203,5 @@
 		<file>stubs.c</file>
 		<file>umpdstubs.c</file>
 	</directory>
-
-	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
-	<compilerflag compilerset="gcc">-fno-unit-at-a-time</compilerflag>
 </module>
 </group>
