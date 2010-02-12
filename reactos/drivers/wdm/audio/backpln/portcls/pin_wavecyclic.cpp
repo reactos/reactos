@@ -450,10 +450,14 @@ PinWaveCyclicState(
                 // FIXME
                 // complete with successful state
                 Pin->m_IrpQueue->CancelBuffers();
+                Pin->m_Position.PlayOffset = 0;
+                Pin->m_Position.WriteOffset = 0;
             }
             else if (Pin->m_State == KSSTATE_STOP)
             {
                 Pin->m_IrpQueue->CancelBuffers();
+                Pin->m_Position.PlayOffset = 0;
+                Pin->m_Position.WriteOffset = 0;
             }
             // store result
             Irp->IoStatus.Information = sizeof(KSSTATE);
