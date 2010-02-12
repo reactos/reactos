@@ -1,8 +1,0 @@
-There are two kind of things, the essentials and the optionals.
-
-Optionals:
-- Implement a way to bypass the IP stack and send packets directly.
-- Sort and beauty the code, maybe rewritting in C++.
-
-Essentials:
-- Compile it and test it in MS Windows platforms(work in progress).
