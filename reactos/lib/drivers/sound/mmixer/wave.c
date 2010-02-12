@@ -611,3 +611,61 @@ MMixerSetWaveStatus(
 
     return MixerContext->Control(PinHandle, IOCTL_KS_PROPERTY, &Property, sizeof(KSPROPERTY), &State, sizeof(KSSTATE), &Length);
 }
+
+MIXER_STATUS
+MMixerGetWaveDevicePath(
+    IN PMIXER_CONTEXT MixerContext,
+    IN ULONG bWaveIn,
+    IN ULONG DeviceId,
+    OUT LPWSTR * DevicePath)
+{
+    PMIXER_LIST MixerList;
+    LPMIXER_DATA MixerData;
+    LPWAVE_INFO WaveInfo;
+    ULONG Length;
+    MIXER_STATUS Status;
+
+    // verify mixer context
+    Status = MMixerVerifyContext(MixerContext);
+
+    if (Status != MM_STATUS_SUCCESS)
+    {
+        // invalid context passed
+        return Status;
+    }
+
+    // grab mixer list
+    MixerList = (PMIXER_LIST)MixerContext->MixerContext;
+
+    /* find destination wave */
+    Status = MMixerGetWaveInfoByIndexAndType(MixerList, DeviceId, bWaveIn, &WaveInfo);
+    if (Status != MM_STATUS_SUCCESS)
+    {
+        /* failed to find wave info */
+        return MM_STATUS_INVALID_PARAMETER;
+    }
+
+    /* get associated device id */
+    MixerData = MMixerGetDataByDeviceId(MixerList, WaveInfo->DeviceId);
+    if (!MixerData)
+        return MM_STATUS_INVALID_PARAMETER;
+
+    /* calculate length */
+    Length = wcslen(MixerData->DeviceName)+1;
+
+    /* allocate destination buffer */
+    *DevicePath = MixerContext->Alloc(Length * sizeof(WCHAR));
+
+    if (!*DevicePath)
+    {
+        /* no memory */
+        return MM_STATUS_NO_MEMORY;
+    }
+
+    /* copy device path */
+    MixerContext->Copy(*DevicePath, MixerData->DeviceName, Length * sizeof(WCHAR));
+
+    /* done */
+    return MM_STATUS_SUCCESS;
+}
+

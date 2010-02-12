@@ -191,4 +191,11 @@ MMixerSetWaveStatus(
     IN HANDLE PinHandle,
     IN KSSTATE State);
 
+MIXER_STATUS
+MMixerGetWaveDevicePath(
+    IN PMIXER_CONTEXT MixerContext,
+    IN ULONG bWaveIn,
+    IN ULONG DeviceId,
+    OUT LPWSTR * DevicePath);
+
 #endif

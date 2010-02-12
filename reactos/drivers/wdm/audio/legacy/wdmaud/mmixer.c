@@ -551,10 +551,12 @@ NTSTATUS
 WdmAudGetPnpNameByIndexAndType(
     IN ULONG DeviceIndex, 
     IN SOUND_DEVICE_TYPE DeviceType, 
-    OUT LPWSTR *Device)
+    OUT LPWSTR *DevicePath)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    if (MMixerGetWaveDevicePath(&MixerContext, DeviceType == WAVE_IN_DEVICE_TYPE, DeviceIndex, DevicePath) == MM_STATUS_SUCCESS)
+        return STATUS_SUCCESS;
+    else
+        return STATUS_UNSUCCESSFUL;
 }
 
 NTSTATUS
