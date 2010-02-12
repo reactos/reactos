@@ -1101,8 +1101,6 @@ MiniportReset(
 {
   DPRINT("Called\n");
 
-  ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
-
   /* MiniportReset doesn't do anything at the moment... perhaps this should be fixed. */
 
   *AddressingReset = FALSE;
