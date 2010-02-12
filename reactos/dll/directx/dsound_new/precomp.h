@@ -15,7 +15,7 @@
 #include <dsconf.h>
 #include <vfwmsgs.h>
 #include <setupapi.h>
-#define NDEBUG
+#define YDEBUG
 #include <debug.h>
 #include <ks.h>
 #include <ksmedia.h>

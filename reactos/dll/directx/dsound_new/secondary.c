@@ -19,6 +19,7 @@ typedef struct
     DWORD dwLevel;
     DWORD dwFlags;
     DWORD dwFrequency;
+    DWORD BufferPosition;
     LONG Volume;
     LONG VolumePan;
     LPWAVEFORMATEX Format;
@@ -135,7 +136,12 @@ SecondaryDirectSoundBuffer8Impl_fnGetCurrentPosition(
 
     //DPRINT("SecondaryDirectSoundBuffer8Impl_fnGetCurrentPosition This %p Play %p Write %p\n", This, pdwCurrentPlayCursor, pdwCurrentWriteCursor);
 
-    return PrimaryDirectSoundBuffer_GetPosition(This->PrimaryBuffer, pdwCurrentPlayCursor, pdwCurrentWriteCursor);
+    if (pdwCurrentWriteCursor)
+    {
+        *pdwCurrentWriteCursor = This->BufferPosition;
+    }
+
+    return PrimaryDirectSoundBuffer_GetPosition(This->PrimaryBuffer, pdwCurrentPlayCursor, NULL);
 }
 
 HRESULT
@@ -322,6 +328,12 @@ SecondaryDirectSoundBuffer8Impl_fnLock(
 
         *ppvAudioPtr1 = This->Buffer + dwOffset;
         *pdwAudioBytes1 = dwBytes;
+
+        This->BufferPosition = dwOffset + dwBytes;
+
+        if (This->BufferPosition == This->BufferSize)
+            This->BufferPosition = 0;
+
         if (ppvAudioPtr2)
             *ppvAudioPtr2 = NULL;
         if (pdwAudioBytes2)
@@ -351,6 +363,13 @@ SecondaryDirectSoundBuffer8Impl_fnPlay(
     /* sanity check */
     ASSERT(dwFlags & DSBPLAY_LOOPING);
 
+
+    if (This->State == KSSTATE_RUN)
+    {
+        /* sound buffer is already playing */
+        return DS_OK;
+    }
+
     /* set dataformat */
     hResult = PrimaryDirectSoundBuffer_SetFormat(This->PrimaryBuffer, This->Format, TRUE);
 
@@ -371,6 +390,8 @@ SecondaryDirectSoundBuffer8Impl_fnPlay(
     PrimaryDirectSoundBuffer_ReleaseLock(This->PrimaryBuffer);
 
     DPRINT("SetFormatSuccess PrimaryBuffer %p\n", This->PrimaryBuffer);
+    This->State = KSSTATE_RUN;
+
     return DS_OK;
 }
 
@@ -480,6 +501,13 @@ SecondaryDirectSoundBuffer8Impl_fnStop(
     PrimaryDirectSoundBuffer_SetState(This->PrimaryBuffer, KSSTATE_PAUSE);
     PrimaryDirectSoundBuffer_SetState(This->PrimaryBuffer, KSSTATE_ACQUIRE);
     PrimaryDirectSoundBuffer_SetState(This->PrimaryBuffer, KSSTATE_STOP);
+
+    DPRINT("SecondaryDirectSoundBuffer8Impl_fnStop\n");
+
+
+    /* set state to stop */
+    This->State = KSSTATE_STOP;
+    This->BufferPosition = 0;
 
     return DS_OK;
 }
@@ -619,6 +647,8 @@ NewSecondarySoundBuffer(
         return DSERR_OUTOFMEMORY;
     }
 
+    /* fill buffer with silence */
+    FillMemory(This->Buffer, lpcDSBufferDesc->dwBufferBytes, lpcDSBufferDesc->lpwfxFormat->wBitsPerSample == 8 ? 0x80 : 0);
 
     This->ref = 1;
     This->lpVtbl = &vt_DirectSoundBuffer8;

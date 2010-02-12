@@ -100,6 +100,8 @@ PrimaryDirectSoundBuffer8Impl_fnGetCaps(
 {
     LPCDirectSoundBuffer This = (LPCDirectSoundBuffer)CONTAINING_RECORD(iface, CDirectSoundBuffer, lpVtbl);
 
+    DPRINT("PrimaryDirectSoundBuffer8Impl_fnGetCaps\n");
+
     if (!pDSBufferCaps)
     {
         /* invalid parameter */
@@ -130,6 +132,8 @@ PrimaryDirectSoundBuffer8Impl_fnGetCurrentPosition(
 {
     LPCDirectSoundBuffer This = (LPCDirectSoundBuffer)CONTAINING_RECORD(iface, CDirectSoundBuffer, lpVtbl);
 
+    DPRINT("PrimaryDirectSoundBuffer8Impl_fnGetCurrentPosition\n");
+
     if (This->dwLevel < DSSCL_PRIORITY)
     {
         /* needs priority level */
@@ -156,6 +160,8 @@ PrimaryDirectSoundBuffer8Impl_fnGetFormat(
 {
     DWORD FormatSize;
     LPCDirectSoundBuffer This = (LPCDirectSoundBuffer)CONTAINING_RECORD(iface, CDirectSoundBuffer, lpVtbl);
+
+    DPRINT("PrimaryDirectSoundBuffer8Impl_fnGetFormat\n");
 
     FormatSize = sizeof(WAVEFORMATEX) + This->Format.cbSize;
 
@@ -199,6 +205,8 @@ PrimaryDirectSoundBuffer8Impl_fnGetVolume(
 {
     LPCDirectSoundBuffer This = (LPCDirectSoundBuffer)CONTAINING_RECORD(iface, CDirectSoundBuffer, lpVtbl);
 
+    DPRINT("PrimaryDirectSoundBuffer8Impl_fnGetVolume\n");
+
     if (!plVolume)
     {
         /* invalid parameter */
@@ -218,6 +226,8 @@ PrimaryDirectSoundBuffer8Impl_fnGetPan(
     LPLONG plPan)
 {
     LPCDirectSoundBuffer This = (LPCDirectSoundBuffer)CONTAINING_RECORD(iface, CDirectSoundBuffer, lpVtbl);
+
+    DPRINT("PrimaryDirectSoundBuffer8Impl_fnGetPan\n");
 
     if (!plPan)
     {
@@ -239,6 +249,8 @@ PrimaryDirectSoundBuffer8Impl_fnGetFrequency(
 {
     LPCDirectSoundBuffer This = (LPCDirectSoundBuffer)CONTAINING_RECORD(iface, CDirectSoundBuffer, lpVtbl);
 
+    DPRINT("PrimaryDirectSoundBuffer8Impl_fnGetFrequency\n");
+
     if (!pdwFrequency)
     {
         /* invalid parameter */
@@ -258,6 +270,8 @@ PrimaryDirectSoundBuffer8Impl_fnGetStatus(
     LPDWORD pdwStatus)
 {
     LPCDirectSoundBuffer This = (LPCDirectSoundBuffer)CONTAINING_RECORD(iface, CDirectSoundBuffer, lpVtbl);
+
+    DPRINT("PrimaryDirectSoundBuffer8Impl_fnGetStatus\n");
 
     if (!pdwStatus)
     {
@@ -311,6 +325,8 @@ PrimaryDirectSoundBuffer8Impl_fnPlay(
     DWORD dwFlags)
 {
     LPCDirectSoundBuffer This = (LPCDirectSoundBuffer)CONTAINING_RECORD(iface, CDirectSoundBuffer, lpVtbl);
+
+    DPRINT("PrimaryDirectSoundBuffer8Impl_fnPlay dwFlags %x\n", dwFlags);
 
     if (dwReserved1 != 0 || !(dwFlags & DSBPLAY_LOOPING))
     {
@@ -446,6 +462,8 @@ PrimaryDirectSoundBuffer8Impl_fnStop(
     LPDIRECTSOUNDBUFFER8 iface)
 {
     LPCDirectSoundBuffer This = (LPCDirectSoundBuffer)CONTAINING_RECORD(iface, CDirectSoundBuffer, lpVtbl);
+
+    DPRINT("PrimaryDirectSoundBuffer8Impl_fnStop\n");
 
     PrimaryDirectSoundBuffer_AcquireLock(iface);
 
@@ -631,8 +649,9 @@ PrimaryDirectSoundBuffer_GetPosition(
     KSAUDIO_POSITION Position;
     KSPROPERTY Request;
     DWORD Result;
-
     LPCDirectSoundBuffer This = (LPCDirectSoundBuffer)CONTAINING_RECORD(iface, CDirectSoundBuffer, lpVtbl);
+
+    //DPRINT("PrimaryDirectSoundBuffer_GetPosition\n");
 
     if (!This->hPin)
     {
@@ -769,6 +788,15 @@ NewPrimarySoundBuffer(
     This->Volume = DSBVOLUME_MAX;
     This->VolumePan = DSBPAN_CENTER;
     This->hPin = NULL;
+
+    /* FIXME: determine default format for audio device */
+    This->Format.cbSize = sizeof(WAVEFORMATEX);
+    This->Format.nChannels = 2;
+    This->Format.nSamplesPerSec = 44100;
+    This->Format.wBitsPerSample = 16;
+    This->Format.wFormatTag = WAVE_FORMAT_PCM;
+    This->Format.nBlockAlign = (This->Format.nChannels * This->Format.wBitsPerSample) / 8;
+    This->Format.nAvgBytesPerSec = (This->Format.nChannels * This->Format.nSamplesPerSec * This->Format.wBitsPerSample) / 8;
 
     InitializeCriticalSection(&This->Lock);
 
