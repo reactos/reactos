@@ -7,7 +7,7 @@ Licence = Unknown
 Description = Visual Studio 6 Runtime.
 Size = 1.7MB
 Category = 14
-URLSite = http://support.microsoft.com/kb/259403
+URLSite = http://support.microsoft.com/kb/259403/
 URLDownload = http://download.microsoft.com/download/vc60pro/update/1/w9xnt4/en-us/vc6redistsetup_enu.exe
 CDPath = none
 
@@ -22,4 +22,3 @@ Description = Librerias Visual Studio 2006.
 [Section.0415]
 Licence = Nieznana
 Description = Biblioteki uruchomieniowe Visual Studio 6.
-

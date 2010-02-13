@@ -463,7 +463,7 @@ static UINT ACTION_AppSearchReg(MSIPACKAGE *package, LPWSTR *appValue, MSISIGNAT
         ACTION_ConvertRegValue(regType, value, sz, appValue);
         break;
     default:
-        FIXME("AppSearch unimplemented for type %d (key path %s, value %s)\n",
+        FIXME("unimplemented for type %d (key path %s, value %s)\n",
               type, debugstr_w(keyPath), debugstr_w(valueName));
     }
 end:

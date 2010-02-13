@@ -46,7 +46,7 @@ BEGIN
         MENUITEM "&Fjern\tDEL",               ID_EDIT_CLEAR
         MENUITEM "&Marker alt\tCtrl+A",       ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "&Søg efter...\tCrtl+F",     ID_FIND
+        MENUITEM "&Søg efter...\tCtrl+F",     ID_FIND
         MENUITEM "Søg efter &næste\tF3",      ID_FIND_NEXT
         MENUITEM "E&rstat...\tCtrl+H",        ID_REPLACE
         MENUITEM SEPARATOR
@@ -218,6 +218,8 @@ BEGIN
     STRING_PREVIEW_PREVPAGE,         "Forrige side"
     STRING_PREVIEW_TWOPAGES,         "To sider"
     STRING_PREVIEW_ONEPAGE,          "Én side"
+    STRING_PREVIEW_ZOOMIN,           "Zoom in"
+    STRING_PREVIEW_ZOOMOUT,          "Zoom out"
     STRING_PREVIEW_CLOSE,            "Luk"
 END
 

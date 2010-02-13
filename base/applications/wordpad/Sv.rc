@@ -48,7 +48,7 @@ BEGIN
         MENUITEM "Ta &bort\tDEL",               ID_EDIT_CLEAR
         MENUITEM "&Markera allt\tCtrl+A",       ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "&Sök...\tCrtl+F",             ID_FIND
+        MENUITEM "&Sök...\tCtrl+F",             ID_FIND
         MENUITEM "Sök &nästa\tF3",              ID_FIND_NEXT
         MENUITEM "&Ersätt...\tCtrl+H",          ID_REPLACE
         MENUITEM SEPARATOR
@@ -220,6 +220,8 @@ BEGIN
     STRING_PREVIEW_PREVPAGE,         "Föregående sida"
     STRING_PREVIEW_TWOPAGES,         "Två sidor"
     STRING_PREVIEW_ONEPAGE,          "En sida"
+    STRING_PREVIEW_ZOOMIN,           "Zooma in"
+    STRING_PREVIEW_ZOOMOUT,          "Zooma ut"
     STRING_PREVIEW_CLOSE,            "Stäng"
 END
 

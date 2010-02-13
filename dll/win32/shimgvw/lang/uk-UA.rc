@@ -1,0 +1,25 @@
+/*
+ * PROJECT:     ReactOS Logon GINA DLL
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        dll/win32/shimgvw/lang/uk-UA.rc
+ * PURPOSE:     Ukraianian Language File for msgina
+ * TRANSLATOR:  Igor Paliychuk
+ */
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+	IDS_APPTITLE    "Програма перегляду зображень і факсів ReactOS"
+    IDS_SETASDESKBG "Встановити як фон робочого столу"
+
+    /* Tooltips */
+    IDS_TOOLTIP_NEXT_PIC   "Наступне зображення"
+    IDS_TOOLTIP_PREV_PIC   "Попереднє зображення"
+    IDS_TOOLTIP_ZOOM_IN    "Збільшити (+)"
+    IDS_TOOLTIP_ZOOM_OUT   "Зменшити (-)"
+    IDS_TOOLTIP_ROT_CLOCKW "Повернути за годинниковою стрілкою (Ctrl+K)"
+    IDS_TOOLTIP_ROT_COUNCW "Повернути проти годинникової стрілки (Ctrl+L)"
+    IDS_TOOLTIP_PRINT      "Друк (Ctrl+P)"
+    IDS_TOOLTIP_SAVEAS     "Зберегти як... (Ctrl+S)"
+END

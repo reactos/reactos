@@ -19,4 +19,3 @@ Description = Es una cadena de herramientas GNU con GCC, GDB, GNU make, etc.
 
 [Section.0415]
 Description = Kompilator GCC dla platformy Windows wraz z dodatkowymi narzędziami (GDB, make, itd.).
-

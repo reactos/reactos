@@ -39,7 +39,7 @@ typedef struct {
     nsIDOMHTMLScriptElement *nsscript;
 } HTMLScriptElement;
 
-#define HTMLSCRIPT(x)  (&(x)->lpHTMLScriptElementVtbl)
+#define HTMLSCRIPT(x)  ((IHTMLScriptElement*)  &(x)->lpHTMLScriptElementVtbl)
 
 #define HTMLSCRIPT_THIS(iface) DEFINE_THIS(HTMLScriptElement, HTMLScriptElement, iface)
 
@@ -299,11 +299,24 @@ static void HTMLScriptElement_destructor(HTMLDOMNode *iface)
     HTMLElement_destructor(&This->element.node);
 }
 
+static HRESULT HTMLScriptElement_get_readystate(HTMLDOMNode *iface, BSTR *p)
+{
+    HTMLScriptElement *This = HTMLSCRIPT_NODE_THIS(iface);
+
+    return IHTMLScriptElement_get_readyState(HTMLSCRIPT(This), p);
+}
+
 #undef HTMLSCRIPT_NODE_THIS
 
 static const NodeImplVtbl HTMLScriptElementImplVtbl = {
     HTMLScriptElement_QI,
-    HTMLScriptElement_destructor
+    HTMLScriptElement_destructor,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    HTMLScriptElement_get_readystate
 };
 
 HTMLElement *HTMLScriptElement_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem)

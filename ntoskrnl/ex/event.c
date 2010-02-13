@@ -331,6 +331,7 @@ NtQueryEvent(IN HANDLE EventHandle,
                                          EventInformation,
                                          EventInformationLength,
                                          ReturnLength,
+                                         NULL,
                                          PreviousMode);
     if(!NT_SUCCESS(Status))
     {

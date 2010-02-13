@@ -20,7 +20,7 @@
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS GUI first stage setup application
- * FILE:        subsys/system/reactos/reactos.c
+ * FILE:        base/setup/reactos/reactos.c
  * PROGRAMMERS: Eric Kohl
  *              Matthias Kupfer
  *              Dmitry Chapyshev (dmitry@reactos.org)

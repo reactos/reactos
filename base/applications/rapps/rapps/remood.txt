@@ -1,0 +1,15 @@
+; UTF-8
+
+[Section]
+Name = ReMooD
+Version = 0.8a
+Licence = GPL
+Description = ReMooD is a source port of Doom Legacy. It aims to provide the classic Legacy Experience with new features and more stability. This supports Windows 98/98SE/ME/NT/2000/XP/2003/ Vista/2008/7/XP 64-bit/2003 64-bit/Vista 64-bit/2008 64-bit/7 64-bit; ReactOS 0.3.x and higher; and Linux (x86 and x86_64).
+Size = 1.2M
+Category = 4
+URLSite = http://remood.sourceforge.net/
+URLDownload = http://ovh.dl.sourceforge.net/sourceforge/remood/remoodsetup-win32_08a.exe
+CDPath = none
+
+[Section.0407]
+Description = ReMooD ist ein Port des Doom Legacy Sources. Es versucht das klassische Legacy Erfahrung zusammen mit neuen Features und mehr Stabilität zu bieten. Unterstützt werden Windows 98/98SE/ME/NT/2000/XP/2003/ Vista/2008/7/XP 64-bit/2003 64-bit/Vista 64-bit/2008 64-bit/7 64-bit; ReactOS 0.3.x und höher; und Linux (x86 und x86_64).

@@ -42,6 +42,34 @@
 
 ---------------------------------------------------------------------------*/
 
+/* EXtended CLip and Window Region Object */
+typedef struct _XCLIPOBJ
+{
+  WNDOBJ;
+  PVOID   pClipRgn;    /* prgnRao_ or (prgnVis_ if (prgnRao_ == z)) */
+  RECTL   rclClipRgn;
+  PVOID   pscanClipRgn; /* Ptr to regions rect buffer based on iDirection. */
+  DWORD   cScan;
+  DWORD   reserved;
+  ULONG   ulBSize;
+  LONG    lscnSize;
+  ULONG   ulObjSize;
+  ULONG   iDirection;
+  ULONG   ulClipType;
+  DWORD   reserved1;
+  LONG    lUpDown;
+  DWORD   reserved2;
+  BOOL    bShouldDoAll;
+  DWORD   nComplexity; /* count/mode based on # of rect in regions scan. */
+  PVOID   pDDA;        /* Pointer to a large drawing structure. */
+} XCLIPOBJ, *PXCLIPOBJ;
+/*
+  EngCreateClip allocates XCLIPOBJ and RGNOBJ, pco->co.pClipRgn = &pco->ro.
+  {
+    XCLIPOBJ co;
+    RGNOBJ   ro;
+  }
+ */
 typedef struct _CLIPGDI {
   CLIPOBJ ClipObj;
   ULONG EnumPos;

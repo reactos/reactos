@@ -15,16 +15,27 @@
 VOID AddEntity(ULONG EntityType, PVOID Context, ULONG Flags)
 {
     KIRQL OldIrql;
-    ULONG i, Count = 0;
+    ULONG i, Instance = 0;
+    BOOLEAN ChoseIndex = FALSE;
 
     TcpipAcquireSpinLock(&EntityListLock, &OldIrql);
 
-    for (i = 0; i < EntityCount; i++)
-         if (EntityList[i].tei_entity == EntityType)
-             Count++;
+    while (!ChoseIndex)
+    {
+         ChoseIndex = TRUE;
+         for (i = 0; i < EntityCount; i++)
+         {
+             if (EntityList[i].tei_entity == EntityType &&
+                 EntityList[i].tei_instance == Instance)
+             {
+                 Instance++;
+                 ChoseIndex = FALSE;
+             }
+         }
+    }
 
     EntityList[EntityCount].tei_entity = EntityType;
-    EntityList[EntityCount].tei_instance = Count;
+    EntityList[EntityCount].tei_instance = Instance;
     EntityList[EntityCount].context = Context;
     EntityList[EntityCount].flags = Flags;
     EntityCount++;

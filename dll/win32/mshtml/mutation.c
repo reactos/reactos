@@ -37,10 +37,9 @@
 WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 enum {
+    MUTATION_BINDTOTREE,
     MUTATION_COMMENT,
     MUTATION_ENDLOAD,
-    MUTATION_FRAME,
-    MUTATION_IFRAME,
     MUTATION_SCRIPT
 };
 
@@ -271,87 +270,25 @@ static void pop_mutation_queue(HTMLDocumentNode *doc)
     heap_free(tmp);
 }
 
-static nsresult init_nsdoc_window(HTMLDocumentNode *doc, nsIDOMDocument *nsdoc, HTMLWindow **ret)
+static void bind_to_tree(HTMLDocumentNode *doc, nsISupports *nsiface)
 {
-    nsIDOMWindow *nswindow;
-
-    nswindow = get_nsdoc_window(nsdoc);
-    if(!nswindow)
-        return NS_ERROR_FAILURE;
-
-    if(!nswindow_to_window(nswindow)) {
-        HTMLWindow *window;
-        HRESULT hres;
-
-        hres = HTMLWindow_Create(doc->basedoc.doc_obj, nswindow, doc->basedoc.window, &window);
-        if(SUCCEEDED(hres))
-            *ret = window;
-    }
-
-    nsIDOMWindow_Release(nswindow);
-    return NS_OK;
-}
-
-static nsresult init_iframe_window(HTMLDocumentNode *doc, nsISupports *nsunk)
-{
-    nsIDOMHTMLIFrameElement *nsiframe;
-    HTMLWindow *window = NULL;
-    nsIDOMDocument *nsdoc;
+    nsIDOMNode *nsnode;
+    HTMLDOMNode *node;
     nsresult nsres;
 
-    nsres = nsISupports_QueryInterface(nsunk, &IID_nsIDOMHTMLIFrameElement, (void**)&nsiframe);
-    if(NS_FAILED(nsres)) {
-        ERR("Could not get nsIDOMHTMLIFrameElement: %08x\n", nsres);
-        return nsres;
+    nsres = nsISupports_QueryInterface(nsiface, &IID_nsIDOMNode, (void**)&nsnode);
+    if(NS_FAILED(nsres))
+        return;
+
+    node = get_node(doc, nsnode, TRUE);
+    nsIDOMNode_Release(nsnode);
+    if(!node) {
+        ERR("Could not get node\n");
+        return;
     }
 
-    nsres = nsIDOMHTMLIFrameElement_GetContentDocument(nsiframe, &nsdoc);
-    nsIDOMHTMLIFrameElement_Release(nsiframe);
-    if(NS_FAILED(nsres) || !nsdoc) {
-        ERR("GetContentDocument failed: %08x\n", nsres);
-        return nsres;
-    }
-
-    nsres = init_nsdoc_window(doc, nsdoc, &window);
-
-    if(window) {
-        HTMLIFrame_Create(doc, (nsIDOMHTMLElement*)nsiframe, window);
-        IHTMLWindow2_Release(HTMLWINDOW2(window));
-    }
-
-    nsIDOMDocument_Release(nsdoc);
-    return nsres;
-}
-
-static nsresult init_frame_window(HTMLDocumentNode *doc, nsISupports *nsunk)
-{
-    nsIDOMHTMLFrameElement *nsframe;
-    HTMLWindow *window = NULL;
-    nsIDOMDocument *nsdoc;
-    nsresult nsres;
-
-    nsres = nsISupports_QueryInterface(nsunk, &IID_nsIDOMHTMLFrameElement, (void**)&nsframe);
-    if(NS_FAILED(nsres)) {
-        ERR("Could not get nsIDOMHTMLFrameElement: %08x\n", nsres);
-        return nsres;
-    }
-
-    nsres = nsIDOMHTMLFrameElement_GetContentDocument(nsframe, &nsdoc);
-    nsIDOMHTMLFrameElement_Release(nsframe);
-    if(NS_FAILED(nsres) || !nsdoc) {
-        ERR("GetContentDocument failed: %08x\n", nsres);
-        return nsres;
-    }
-
-    nsres = init_nsdoc_window(doc, nsdoc, &window);
-
-    if(window) {
-        HTMLFrameElement_Create(doc, (nsIDOMHTMLElement*)nsframe, window);
-        IHTMLWindow2_Release(HTMLWINDOW2(window));
-    }
-
-    nsIDOMDocument_Release(nsdoc);
-    return nsres;
+    if(node->vtbl->bind_to_tree)
+        node->vtbl->bind_to_tree(node);
 }
 
 /* Calls undocumented 69 cmd of CGID_Explorer */
@@ -426,6 +363,10 @@ static nsresult NSAPI nsRunnable_Run(nsIRunnable *iface)
 
     while(This->mutation_queue) {
         switch(This->mutation_queue->type) {
+        case MUTATION_BINDTOTREE:
+            bind_to_tree(This, This->mutation_queue->nsiface);
+            break;
+
         case MUTATION_COMMENT: {
             nsIDOMComment *nscomment;
             nsAString comment_str;
@@ -475,14 +416,6 @@ static nsresult NSAPI nsRunnable_Run(nsIRunnable *iface)
 
         case MUTATION_ENDLOAD:
             handle_end_load(This);
-            break;
-
-        case MUTATION_FRAME:
-            init_frame_window(This, This->mutation_queue->nsiface);
-            break;
-
-        case MUTATION_IFRAME:
-            init_iframe_window(This, This->mutation_queue->nsiface);
             break;
 
         case MUTATION_SCRIPT: {
@@ -689,7 +622,7 @@ static void NSAPI nsDocumentObserver_BindToDocument(nsIDocumentObserver *iface, 
     if(NS_SUCCEEDED(nsres)) {
         TRACE("iframe node\n");
 
-        push_mutation_queue(This, MUTATION_IFRAME, (nsISupports*)nsiframe);
+        push_mutation_queue(This, MUTATION_BINDTOTREE, (nsISupports*)nsiframe);
         nsIDOMHTMLIFrameElement_Release(nsiframe);
     }
 
@@ -697,7 +630,7 @@ static void NSAPI nsDocumentObserver_BindToDocument(nsIDocumentObserver *iface, 
     if(NS_SUCCEEDED(nsres)) {
         TRACE("frame node\n");
 
-        push_mutation_queue(This, MUTATION_FRAME, (nsISupports*)nsframe);
+        push_mutation_queue(This, MUTATION_BINDTOTREE, (nsISupports*)nsframe);
         nsIDOMHTMLFrameElement_Release(nsframe);
     }
 }

@@ -60,6 +60,7 @@ int rectSel_dest[4];
 HWND hSelection;
 HWND hImageArea;
 HBITMAP hSelBm;
+HBITMAP hSelMask;
 
 /* initial palette colors; may be changed by the user during execution */
 int palColors[28] = { 0x000000, 0x464646, 0x787878, 0x300099, 0x241ced, 0x0078ff, 0x0ec2ff,

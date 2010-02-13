@@ -450,10 +450,14 @@ PinWaveCyclicState(
                 // FIXME
                 // complete with successful state
                 Pin->m_IrpQueue->CancelBuffers();
+                Pin->m_Position.PlayOffset = 0;
+                Pin->m_Position.WriteOffset = 0;
             }
             else if (Pin->m_State == KSSTATE_STOP)
             {
                 Pin->m_IrpQueue->CancelBuffers();
+                Pin->m_Position.PlayOffset = 0;
+                Pin->m_Position.WriteOffset = 0;
             }
             // store result
             Irp->IoStatus.Information = sizeof(KSSTATE);
@@ -693,8 +697,11 @@ CPortPinWaveCyclic::UpdateCommonBuffer(
 
         if (m_ConnectDetails->Interface.Id == KSINTERFACE_STANDARD_LOOPED_STREAMING)
         {
-            // normalize position
-            m_Position.PlayOffset = m_Position.PlayOffset % m_Position.WriteOffset;
+            if (m_Position.WriteOffset)
+            {
+                // normalize position
+                m_Position.PlayOffset = m_Position.PlayOffset % m_Position.WriteOffset;
+            }
         }
     }
 }
@@ -742,8 +749,11 @@ CPortPinWaveCyclic::UpdateCommonBufferOverlap(
 
         if (m_ConnectDetails->Interface.Id == KSINTERFACE_STANDARD_LOOPED_STREAMING)
         {
-            // normalize position
-            m_Position.PlayOffset = m_Position.PlayOffset % m_Position.WriteOffset;
+            if (m_Position.WriteOffset)
+            {
+                // normalize position
+                m_Position.PlayOffset = m_Position.PlayOffset % m_Position.WriteOffset;
+            }
         }
 
     }

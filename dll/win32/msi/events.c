@@ -383,6 +383,28 @@ static UINT ControlEvent_ReinstallMode(MSIPACKAGE *package, LPCWSTR argument,
     return MSI_SetPropertyW( package, szReinstallMode, argument );
 }
 
+static UINT ControlEvent_ValidateProductID(MSIPACKAGE *package, LPCWSTR argument,
+                                           msi_dialog *dialog)
+{
+    static const WCHAR szProductID[] = {'P','r','o','d','u','c','t','I','D',0};
+    static const WCHAR szPIDTemplate[] = {'P','I','D','T','e','m','p','l','a','t','e',0};
+    static const WCHAR szPIDKEY[] = {'P','I','D','K','E','Y',0};
+    LPWSTR key, template;
+    UINT ret = ERROR_SUCCESS;
+
+    template = msi_dup_property( package, szPIDTemplate );
+    key = msi_dup_property( package, szPIDKEY );
+
+    if (key && template)
+    {
+        FIXME( "partial stub: template %s key %s\n", debugstr_w(template), debugstr_w(key) );
+        ret = MSI_SetPropertyW( package, szProductID, key );
+    }
+    msi_free( template );
+    msi_free( key );
+    return ret;
+}
+
 static const struct _events Events[] = {
     { "EndDialog",ControlEvent_EndDialog },
     { "NewDialog",ControlEvent_NewDialog },
@@ -398,6 +420,7 @@ static const struct _events Events[] = {
     { "DirectoryListUp",ControlEvent_DirectoryListUp },
     { "SelectionBrowse",ControlEvent_SpawnDialog },
     { "ReinstallMode",ControlEvent_ReinstallMode },
+    { "ValidateProductID",ControlEvent_ValidateProductID },
     { NULL,NULL },
 };
 

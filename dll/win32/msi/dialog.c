@@ -166,6 +166,8 @@ static MSIFEATURE *msi_seltree_get_selected_feature( msi_control *control );
 #define WM_MSI_DIALOG_CREATE  (WM_USER+0x100)
 #define WM_MSI_DIALOG_DESTROY (WM_USER+0x101)
 
+#define USER_INSTALLSTATE_ALL 0x1000
+
 static DWORD uiThreadId;
 static HWND hMsiHiddenWindow;
 
@@ -1876,7 +1878,7 @@ msi_seltree_popup_menu( HWND hwnd, INT x, INT y )
 
     /* FIXME: load strings from resources */
     AppendMenuA( hMenu, MF_ENABLED, INSTALLSTATE_LOCAL, "Install feature locally");
-    AppendMenuA( hMenu, MF_GRAYED, 0x1000, "Install entire feature");
+    AppendMenuA( hMenu, MF_ENABLED, USER_INSTALLSTATE_ALL, "Install entire feature");
     AppendMenuA( hMenu, MF_ENABLED, INSTALLSTATE_ADVERTISED, "Install on demand");
     AppendMenuA( hMenu, MF_ENABLED, INSTALLSTATE_ABSENT, "Don't install");
     r = TrackPopupMenu( hMenu, TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RETURNCMD,
@@ -1897,6 +1899,37 @@ msi_seltree_feature_from_item( HWND hwnd, HTREEITEM hItem )
     SendMessageW( hwnd, TVM_GETITEMW, 0, (LPARAM) &tvi );
 
     return (MSIFEATURE*) tvi.lParam;
+}
+
+static void
+msi_seltree_update_feature_installstate( HWND hwnd, HTREEITEM hItem,
+        MSIPACKAGE *package, MSIFEATURE *feature, INSTALLSTATE state )
+{
+    msi_feature_set_state( package, feature, state );
+    msi_seltree_sync_item_state( hwnd, feature, hItem );
+    ACTION_UpdateComponentStates( package, feature->Feature );
+}
+
+static void
+msi_seltree_update_siblings_and_children_installstate( HWND hwnd, HTREEITEM curr,
+        MSIPACKAGE *package, INSTALLSTATE state)
+{
+    /* update all siblings */
+    do
+    {
+        MSIFEATURE *feature;
+        HTREEITEM child;
+
+        feature = msi_seltree_feature_from_item( hwnd, curr );
+        msi_seltree_update_feature_installstate( hwnd, curr, package, feature, state );
+
+        /* update this sibling's children */
+        child = (HTREEITEM)SendMessageW( hwnd, TVM_GETNEXTITEM, (WPARAM)TVGN_CHILD, (LPARAM)curr );
+        if (child)
+            msi_seltree_update_siblings_and_children_installstate( hwnd, child,
+                    package, state );
+    }
+    while ((curr = (HTREEITEM)SendMessageW( hwnd, TVM_GETNEXTITEM, (WPARAM)TVGN_NEXT, (LPARAM)curr )));
 }
 
 static LRESULT
@@ -1931,18 +1964,22 @@ msi_seltree_menu( HWND hwnd, HTREEITEM hItem )
 
     switch (r)
     {
-    case INSTALLSTATE_LOCAL:
+    case USER_INSTALLSTATE_ALL:
+        r = INSTALLSTATE_LOCAL;
+        /* fall-through */
     case INSTALLSTATE_ADVERTISED:
     case INSTALLSTATE_ABSENT:
-        msi_feature_set_state(package, feature, r);
+        {
+            HTREEITEM child;
+            child = (HTREEITEM)SendMessageW( hwnd, TVM_GETNEXTITEM, (WPARAM)TVGN_CHILD, (LPARAM)hItem );
+            if (child)
+                msi_seltree_update_siblings_and_children_installstate( hwnd, child, package, r );
+        }
+        /* fall-through */
+    case INSTALLSTATE_LOCAL:
+        msi_seltree_update_feature_installstate( hwnd, hItem, package, feature, r );
         break;
-    default:
-        FIXME("select feature and all children\n");
     }
-
-    /* update */
-    msi_seltree_sync_item_state( hwnd, feature, hItem );
-    ACTION_UpdateComponentStates( package, feature->Feature );
 
     return 0;
 }

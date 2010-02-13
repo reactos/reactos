@@ -8,7 +8,7 @@
  */
 
 /* INCLUDES ******************************************************************/
-
+#ifndef _M_ARM
 #include <freeldr.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -530,3 +530,4 @@ TuiProcessMenuKeyboardEvent(PUI_MENU_INFO MenuInfo,
     //
     return KeyEvent;
 }
+#endif

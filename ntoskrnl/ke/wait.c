@@ -87,7 +87,7 @@ KiUnlinkThread(IN PKTHREAD Thread,
 VOID
 FASTCALL
 KiUnwaitThread(IN PKTHREAD Thread,
-               IN NTSTATUS WaitStatus,
+               IN LONG_PTR WaitStatus,
                IN KPRIORITY Increment)
 {
     /* Unlink the thread */

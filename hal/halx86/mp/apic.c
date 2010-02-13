@@ -20,7 +20,7 @@
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS kernel
- * FILE:        hal/halx86/apic.c
+ * FILE:        hal/halx86/mp/apic.c
  * PURPOSE:     
  * PROGRAMMER:  
  */
@@ -1109,5 +1109,26 @@ HaliStartApplicationProcessor(ULONG Cpu, ULONG Stack)
 }
 
 #endif
+
+VOID
+FASTCALL
+DECLSPEC_NORETURN
+HalpApcInterruptHandler(IN PKTRAP_FRAME TrapFrame)
+{
+    /* Set up a fake INT Stack */
+    TrapFrame->EFlags = __readeflags();
+    TrapFrame->SegCs = KGDT_R0_CODE;
+    TrapFrame->Eip = TrapFrame->Eax;
+    
+    /* Build the trap frame */
+    KiEnterInterruptTrap(TrapFrame);
+    
+    /* unimplemented */
+    UNIMPLEMENTED;
+    
+    /* Exit the interrupt */
+    KiEoiHelper(TrapFrame); 
+
+}
 
 /* EOF */

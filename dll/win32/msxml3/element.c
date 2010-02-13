@@ -502,7 +502,7 @@ static HRESULT WINAPI domelem_get_tagName(
     len = MultiByteToWideChar( CP_UTF8, 0, (LPCSTR) element->name, -1, NULL, 0 );
     if (element->ns)
         len += MultiByteToWideChar( CP_UTF8, 0, (LPCSTR) element->ns->prefix, -1, NULL, 0 );
-    str = HeapAlloc( GetProcessHeap(), 0, len * sizeof (WCHAR) );
+    str = heap_alloc( len * sizeof (WCHAR) );
     if ( !str )
         return E_OUTOFMEMORY;
     if (element->ns)
@@ -512,7 +512,7 @@ static HRESULT WINAPI domelem_get_tagName(
     }
     MultiByteToWideChar( CP_UTF8, 0, (LPCSTR) element->name, -1, str + offset, len - offset );
     *p = SysAllocString( str );
-    HeapFree( GetProcessHeap(), 0, str );
+    heap_free( str );
 
     return S_OK;
 }
@@ -545,7 +545,7 @@ static HRESULT WINAPI domelem_getAttribute(
     else
         xml_value = xmlGetNsProp(element, xml_name, NULL);
 
-    HeapFree(GetProcessHeap(), 0, xml_name);
+    heap_free(xml_name);
     if(xml_value)
     {
         V_VT(value) = VT_BSTR;
@@ -587,8 +587,8 @@ static HRESULT WINAPI domelem_setAttribute(
     if(!xmlSetNsProp(element, NULL,  xml_name, xml_value))
         hr = E_FAIL;
 
-    HeapFree(GetProcessHeap(), 0, xml_value);
-    HeapFree(GetProcessHeap(), 0, xml_name);
+    heap_free(xml_value);
+    heap_free(xml_name);
     VariantClear(&var);
 
     return hr;
@@ -598,8 +598,19 @@ static HRESULT WINAPI domelem_removeAttribute(
     IXMLDOMElement *iface,
     BSTR p)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    domelem *This = impl_from_IXMLDOMElement( iface );
+    IXMLDOMNamedNodeMap *attr;
+    HRESULT hr;
+
+    TRACE("(%p)->(%s)", This, debugstr_w(p));
+
+    hr = IXMLDOMElement_get_attributes(iface, &attr);
+    if (hr != S_OK) return hr;
+
+    hr = IXMLDOMNamedNodeMap_removeNamedItem(attr, p, NULL);
+    IXMLDOMNamedNodeMap_Release(attr);
+
+    return hr;
 }
 
 static HRESULT WINAPI domelem_getAttributeNode(
@@ -628,7 +639,7 @@ static HRESULT WINAPI domelem_getAttributeNode(
 
     if(!xmlValidateNameValue(xml_name))
     {
-        HeapFree(GetProcessHeap(), 0, xml_name);
+        heap_free(xml_name);
         return E_FAIL;
     }
 
@@ -639,7 +650,7 @@ static HRESULT WINAPI domelem_getAttributeNode(
         IUnknown_Release(unk);
     }
 
-    HeapFree(GetProcessHeap(), 0, xml_name);
+    heap_free(xml_name);
 
     return hr;
 }
@@ -666,6 +677,8 @@ static HRESULT WINAPI domelem_getElementsByTagName(
     IXMLDOMElement *iface,
     BSTR bstrName, IXMLDOMNodeList** resultList)
 {
+    static const WCHAR xpathformat[] =
+            { '.','/','/','*','[','l','o','c','a','l','-','n','a','m','e','(',')','=','\'','%','s','\'',']',0 };
     domelem *This = impl_from_IXMLDOMElement( iface );
     LPWSTR szPattern;
     xmlNodePtr element;
@@ -673,10 +686,19 @@ static HRESULT WINAPI domelem_getElementsByTagName(
 
     TRACE("(%p)->(%s,%p)\n", This, debugstr_w(bstrName), resultList);
 
-    szPattern = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR)*(3+lstrlenW(bstrName)+1));
-    szPattern[0] = '.';
-    szPattern[1] = szPattern[2] = '/';
-    lstrcpyW(szPattern+3, bstrName);
+    if (bstrName[0] == '*' && bstrName[1] == 0)
+    {
+        szPattern = heap_alloc(sizeof(WCHAR)*5);
+        szPattern[0] = '.';
+        szPattern[1] = szPattern[2] = '/';
+        szPattern[3] = '*';
+        szPattern[4] = 0;
+    }
+    else
+    {
+        szPattern = heap_alloc(sizeof(WCHAR)*(21+lstrlenW(bstrName)+1));
+        wsprintfW(szPattern, xpathformat, bstrName);
+    }
     TRACE("%s\n", debugstr_w(szPattern));
 
     element = get_element(This);
@@ -684,7 +706,7 @@ static HRESULT WINAPI domelem_getElementsByTagName(
         hr = E_FAIL;
     else
         hr = queryresult_create(element, szPattern, resultList);
-    HeapFree(GetProcessHeap(), 0, szPattern);
+    heap_free(szPattern);
 
     return hr;
 }
@@ -768,7 +790,7 @@ IUnknown* create_element( xmlNodePtr element )
 {
     domelem *This;
 
-    This = HeapAlloc( GetProcessHeap(), 0, sizeof *This );
+    This = heap_alloc( sizeof *This );
     if ( !This )
         return NULL;
 

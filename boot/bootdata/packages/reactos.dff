@@ -798,4 +798,5 @@ modules\rostests\winetests\wintrust\wintrust_winetest.exe                  7   o
 modules\rostests\winetests\wlanapi\wlanapi_winetest.exe                    7   optional
 modules\rostests\winetests\ws2_32\ws2_32_winetest.exe                      7   optional
 
+
 modules\wallpaper\Angelus_02_ROSWP.bmp                                     4   optional

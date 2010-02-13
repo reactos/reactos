@@ -49,7 +49,7 @@ BEGIN
         MENUITEM "&Удалить\tDEL",               ID_EDIT_CLEAR
         MENUITEM "Выделить в&се\tCtrl+A",       ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "&Найти...\tCrtl+F",           ID_FIND
+        MENUITEM "&Найти...\tCtrl+F",           ID_FIND
         MENUITEM "На&йти далее\tF3",            ID_FIND_NEXT
         MENUITEM "&Заменить...\tCtrl+H",        ID_REPLACE
         MENUITEM SEPARATOR
@@ -221,6 +221,8 @@ BEGIN
     STRING_PREVIEW_PREVPAGE,         "Предыдущая страница"
     STRING_PREVIEW_TWOPAGES,         "Две страницы"
     STRING_PREVIEW_ONEPAGE,          "Одна страница"
+    STRING_PREVIEW_ZOOMIN,           "Zoom in"
+    STRING_PREVIEW_ZOOMOUT,          "Zoom out"
     STRING_PREVIEW_CLOSE,            "Закрыть"
 END
 

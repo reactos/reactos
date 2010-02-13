@@ -3,6 +3,7 @@
 <module name="oskittcp" type="staticlibrary">
 	<define name="__NTDRIVER__"/>
 	<define name="KERNEL"/>
+	<define name="OSKIT"/>
 	<include base="oskittcp">include/freebsd</include>
 	<include base="oskittcp">include/freebsd/sys/include</include>
 	<include base="oskittcp">include/freebsd/src/sys</include>
@@ -22,6 +23,7 @@
 		<file>ip_output.c</file>
 		<file>kern_clock.c</file>
 		<file>kern_subr.c</file>
+		<file>osenv.c</file>
 		<file>param.c</file>
 		<file>radix.c</file>
 		<file>random.c</file>

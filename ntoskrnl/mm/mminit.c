@@ -109,7 +109,7 @@ MiInitSystemMemoryAreas()
     //
     // Protect the PFN database
     //
-    BaseAddress = MmPfnDatabase;
+    BaseAddress = MmPfnDatabase[0];
     Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
                                 MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
                                 &BaseAddress,
@@ -292,8 +292,8 @@ MiDbgDumpAddressSpace(VOID)
             (ULONG_PTR)MmPagedPoolBase + MmPagedPoolSize,
             "Paged Pool");
     DPRINT1("          0x%p - 0x%p\t%s\n",
-            MmPfnDatabase,
-            (ULONG_PTR)MmPfnDatabase + (MxPfnAllocation << PAGE_SHIFT),
+            MmPfnDatabase[0],
+            (ULONG_PTR)MmPfnDatabase[0] + (MxPfnAllocation << PAGE_SHIFT),
             "PFN Database");
     DPRINT1("          0x%p - 0x%p\t%s\n",
             MmNonPagedPoolStart,
@@ -354,9 +354,9 @@ NTAPI
 MmInitSystem(IN ULONG Phase,
              IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    extern MMPTE HyperTemplatePte;
+    extern MMPTE ValidKernelPte;
     PMMPTE PointerPte;
-    MMPTE TempPte = HyperTemplatePte;
+    MMPTE TempPte = ValidKernelPte;
     PFN_NUMBER PageFrameNumber;
     
     if (Phase == 0)
@@ -373,14 +373,6 @@ MmInitSystem(IN ULONG Phase,
         // Initialize ARM³ in phase 0
         //
         MmArmInitSystem(0, KeLoaderBlock);    
-        
-        /* Initialize the page list */
-        MmInitializePageList();
-        
-        //
-        // Initialize ARM³ in phase 1
-        //
-        MmArmInitSystem(1, KeLoaderBlock);
 
 #if defined(_WINKD_)
         //

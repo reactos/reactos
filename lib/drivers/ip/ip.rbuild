@@ -17,7 +17,6 @@
 		<file>interface.c</file>
 		<file>ip.c</file>
 		<file>loopback.c</file>
-		<file>memtrack.c</file>
 		<file>neighbor.c</file>
 		<file>ports.c</file>
 		<file>receive.c</file>

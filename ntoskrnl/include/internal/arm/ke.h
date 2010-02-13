@@ -3,6 +3,8 @@
 
 #include "intrin_i.h"
 
+#define KiServiceExit2 KiExceptionExit
+
 //
 //Lockdown TLB entries
 //
@@ -52,7 +54,7 @@
 // All architectures but x86 have it in the PRCB's KeContextSwitches
 //
 #define KeGetContextSwitches(Prcb)  \
-    Prcb->KeContextSwitches
+    CONTAINING_RECORD(Prcb, KIPCR, PrcbData)->ContextSwitches
 
 //
 // Returns the Interrupt State from a Trap Frame.
@@ -75,10 +77,7 @@ FORCEINLINE
 VOID
 KeFlushProcessTb(VOID)
 {
-    //
-    // We need to implement this!
-    //
-    ASSERTMSG("Need ARM flush routine\n", FALSE);
+    KeArmFlushTlb();
 }
 
 FORCEINLINE
@@ -91,8 +90,12 @@ KiRundownThread(IN PKTHREAD Thread)
 VOID
 KiPassiveRelease(
     VOID
-
 );
+
+VOID
+KiSystemService(IN PKTHREAD Thread,
+                IN PKTRAP_FRAME TrapFrame,
+                IN ULONG Instruction);
 
 VOID
 KiApcInterrupt(
@@ -102,18 +105,15 @@ KiApcInterrupt(
 #include "mm.h"
 
 VOID
-KeFillFixedEntryTb(
-    IN ARM_PTE Pte,
-    IN PVOID Virtual,
-    IN ULONG Index
-);
-
-VOID
 KeFlushTb(
     VOID
 );
 
-#define KiSystemStartupReal KiSystemStartup
+#define Ki386PerfEnd()
+#define KiEndInterrupt(x,y)
+
+#define KiGetLinkedTrapFrame(x) \
+    (PKTRAP_FRAME)((x)->PreviousTrapFrame)
 
 #define KiGetPreviousMode(tf) \
     ((tf->Spsr & CPSR_MODES) == CPSR_USER_MODE) ? UserMode: KernelMode

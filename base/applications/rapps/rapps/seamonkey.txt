@@ -2,32 +2,31 @@
 
 [Section]
 Name = Mozilla SeaMonkey
-Version = 2.0
+Version = 2.0.2
 Licence = MPL/GPL/LGPL
 Description = Mozilla Suite is alive. This is the one and only Browser, Mail, Chat, and Composer bundle you will ever need.
-Size = 10.0MB
+Size = 10.1MB
 Category = 5
 URLSite = http://www.seamonkey-project.org/
-URLDownload = http://ftp.df.lth.se/mozilla/seamonkey/releases/2.0/win32/en-US/SeaMonkey%20Setup%202.0.exe
+URLDownload = http://ftp.df.lth.se/mozilla/seamonkey/releases/2.0.2/win32/en-US/SeaMonkey%20Setup%202.0.2.exe
 CDPath = none
 
 [Section.0407]
 Description = Mozilla Suite lebt. Dies ist das einzige Browser-, Mail-, Chat- and Composerwerkzeug-Bundle welches Sie benötigen.
 Size = 10.0MB
-URLDownload = http://ftp.df.lth.se/mozilla/seamonkey/releases/2.0/win32/de/SeaMonkey%20Setup%202.0.exe
+URLDownload = http://ftp.df.lth.se/mozilla/seamonkey/releases/2.0.2/win32/de/SeaMonkey%20Setup%202.0.2.exe
 
 [Section.040a]
 Description = La suite de Mozilla está viva. Es el primero y único navegador web, gestor de correo, lector de noticias, Chat y editor HTML que necesitarás.
-Size = 11.0MB
-URLDownload = http://releases.mozilla.org/pub/mozilla.org/seamonkey/releases/1.1.18/contrib-localized/seamonkey-1.1.18.es-ES.win32.installer.exe
+Size = 10.0MB
+URLDownload = http://ftp.df.lth.se/mozilla/seamonkey/releases/2.0.2/win32/es-ES/SeaMonkey%20Setup%202.0.2.exe
 
 [Section.0415]
 Description = Pakiet Mozilla żyje. W zestawie: przeglądarka, klient poczty, IRC oraz Edytor HTML - wszystko, czego potrzebujesz.
 Size = 10.8MB
-URLDownload = http://ftp.df.lth.se/mozilla/seamonkey/releases/2.0/win32/pl/SeaMonkey%20Setup%202.0.exe
+URLDownload = http://ftp.df.lth.se/mozilla/seamonkey/releases/2.0.2/win32/pl/SeaMonkey%20Setup%202.0.2.exe
 
 [Section.0419]
 Description = Продолжение Mozilla Suite. Включает браузер, почтовый клиент, IRC-клиент и HTML-редактор.
 Size = 10.4MB
-URLDownload = http://ftp.df.lth.se/mozilla/seamonkey/releases/2.0/win32/ru/SeaMonkey%20Setup%202.0.exe
-
+URLDownload = http://ftp.df.lth.se/mozilla/seamonkey/releases/2.0.2/win32/ru/SeaMonkey%20Setup%202.0.2.exe

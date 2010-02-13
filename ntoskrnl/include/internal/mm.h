@@ -108,27 +108,9 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
 /* Number of list heads to use */
 #define MI_FREE_POOL_LISTS 4
 
-#define MI_HYPERSPACE_PTES                  (256 - 1)
-#define MI_ZERO_PTES                        (32)
-#define MI_MAPPING_RANGE_START              (ULONG)HYPER_SPACE
-#define MI_MAPPING_RANGE_END                (MI_MAPPING_RANGE_START + \
-                                             MI_HYPERSPACE_PTES * PAGE_SIZE)
-#define MI_ZERO_PTE                         (PMMPTE)(MI_MAPPING_RANGE_END + \
-                                             PAGE_SIZE)
 
 /* Signature of free pool blocks */
 #define MM_FREE_POOL_TAG    'lprF'
-
-#define PAGE_TO_SECTION_PAGE_DIRECTORY_OFFSET(x) \
-    ((x) / (4*1024*1024))
-
-#define PAGE_TO_SECTION_PAGE_TABLE_OFFSET(x) \
-    ((((x)) % (4*1024*1024)) / (4*1024))
-
-#define NR_SECTION_PAGE_TABLES              1024
-#define NR_SECTION_PAGE_ENTRIES             1024
-
-#define TEB_BASE                            0x7FFDE000
 
 /* Although Microsoft says this isn't hardcoded anymore,
    they won't be able to change it. Stuff depends on it */
@@ -168,17 +150,6 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
  * Paged and non-paged pools are 8-byte aligned
  */
 #define MM_POOL_ALIGNMENT                   8
-
-/*
- * Maximum size of the kmalloc area (this is totally arbitary)
- */
-#define MM_KERNEL_MAP_SIZE                  (16*1024*1024)
-#define MM_KERNEL_MAP_BASE                  (0xf0c00000)
-
-/*
- * FIXME - different architectures have different cache line sizes...
- */
-#define MM_CACHE_LINE_SIZE                  32
 
 #define MM_ROUND_UP(x,s)                    \
     ((PVOID)(((ULONG_PTR)(x)+(s)-1) & ~((ULONG_PTR)(s)-1)))
@@ -394,7 +365,7 @@ typedef struct _MMPFN
     } u4;
 } MMPFN, *PMMPFN;
 
-extern PMMPFN MmPfnDatabase;
+extern PMMPFN MmPfnDatabase[2];
 
 typedef struct _MMPFNLIST
 {
@@ -1111,8 +1082,6 @@ MmPageOutPhysicalAddress(PFN_TYPE Page);
 
 /* freelist.c **********************************************************/
 
-#define ASSERT_PFN(x) ASSERT((x)->u3.e1.CacheAttribute != 0)
-
 FORCEINLINE
 PMMPFN
 MiGetPfnEntry(IN PFN_TYPE Pfn)
@@ -1127,10 +1096,7 @@ MiGetPfnEntry(IN PFN_TYPE Pfn)
     if ((MiPfnBitMap.Buffer) && !(RtlTestBit(&MiPfnBitMap, Pfn))) return NULL;
 
     /* Get the entry */
-    Page = &MmPfnDatabase[Pfn];
-
-    /* Make sure it's valid */
-    ASSERT_PFN(Page);
+    Page = &MmPfnDatabase[0][Pfn];
 
     /* Return it */
     return Page;
@@ -1143,7 +1109,7 @@ MiGetPfnEntryIndex(IN PMMPFN Pfn1)
     //
     // This will return the Page Frame Number (PFN) from the MMPFN
     //
-    return Pfn1 - MmPfnDatabase;
+    return Pfn1 - MmPfnDatabase[0];
 }
 
 PFN_TYPE

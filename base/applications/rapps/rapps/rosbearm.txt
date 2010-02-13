@@ -1,0 +1,21 @@
+﻿; UTF-8
+
+[Section]
+Name = ReactOS Build Environment ARM Addon
+Version = 1.0
+Licence = GPL
+Description = Allows you to build the ReactOS ARM Source. For more instructions see ReactOS wiki.
+Size = 11.1MB
+Category = 7
+URLSite = http://reactos.org/wiki/Build_Environment/
+URLDownload = http://ovh.dl.sourceforge.net/sourceforge/reactos/RosBE-ARM-1.0.exe
+CDPath = none
+
+[Section.0407]
+Description = Erlaubt es Ihnen den ReactOS ARM Source Code zu kompilieren. Im ReactOS-Wiki finden Sie dazu nähere Anweisungen.
+
+[Section.040a]
+Description = Te permite compilar el código de ReactOS ARM. Para más instrucciones consulta la wiki de ReactOS.
+
+[Section.0415]
+Description = Pozwala zbudować obraz płyty ReactOS ARM ze źródeł. Więcej informacji na Wiki ReactOS.

@@ -185,17 +185,19 @@ static void handle_docobj_load(HTMLDocumentObj *doc)
 
     hres = IOleClientSite_QueryInterface(doc->client, &IID_IOleCommandTarget, (void**)&olecmd);
     if(SUCCEEDED(hres)) {
-        VARIANT state, progress;
+        if(doc->download_state) {
+            VARIANT state, progress;
 
-        V_VT(&progress) = VT_I4;
-        V_I4(&progress) = 0;
-        IOleCommandTarget_Exec(olecmd, NULL, OLECMDID_SETPROGRESSPOS, OLECMDEXECOPT_DONTPROMPTUSER,
-                               &progress, NULL);
+            V_VT(&progress) = VT_I4;
+            V_I4(&progress) = 0;
+            IOleCommandTarget_Exec(olecmd, NULL, OLECMDID_SETPROGRESSPOS,
+                    OLECMDEXECOPT_DONTPROMPTUSER, &progress, NULL);
 
-        V_VT(&state) = VT_I4;
-        V_I4(&state) = 0;
-        IOleCommandTarget_Exec(olecmd, NULL, OLECMDID_SETDOWNLOADSTATE, OLECMDEXECOPT_DONTPROMPTUSER,
-                               &state, NULL);
+            V_VT(&state) = VT_I4;
+            V_I4(&state) = 0;
+            IOleCommandTarget_Exec(olecmd, NULL, OLECMDID_SETDOWNLOADSTATE,
+                    OLECMDEXECOPT_DONTPROMPTUSER, &state, NULL);
+        }
 
         IOleCommandTarget_Exec(olecmd, &CGID_ShellDocView, 103, 0, NULL, NULL);
         IOleCommandTarget_Exec(olecmd, &CGID_MSHTML, IDM_PARSECOMPLETE, 0, NULL, NULL);
@@ -203,6 +205,7 @@ static void handle_docobj_load(HTMLDocumentObj *doc)
 
         IOleCommandTarget_Release(olecmd);
     }
+    doc->download_state = 0;
 }
 
 static nsresult NSAPI handle_load(nsIDOMEventListener *iface, nsIDOMEvent *event)

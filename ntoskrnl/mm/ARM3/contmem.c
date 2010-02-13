@@ -276,7 +276,7 @@ MiFreeContiguousMemory(IN PVOID BaseAddress)
     // Now get the PFN entry for this, and make sure it's the correct one
     //
     Pfn1 = MiGetPfnEntry(PageFrameIndex);        
-    if (Pfn1->u3.e1.StartOfAllocation == 0)
+    if ((!Pfn1) || (Pfn1->u3.e1.StartOfAllocation == 0))
     {
         //
         // This probably means you did a free on an address that was in between

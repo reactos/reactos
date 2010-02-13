@@ -2117,8 +2117,20 @@ CM_Set_DevNode_Registry_Property_ExW(
 #define CM_Set_DevNode_Registry_Property_Ex CM_Set_DevNode_Registry_Property_ExA
 #endif /* UNICODE */
 
-/* FIXME: Obsolete CM_Set_HW_Prof */
-/* FIXME: Obsolete CM_Set_HW_Prof_Ex */
+CMAPI
+CONFIGRET
+WINAPI
+CM_Set_HW_Prof(
+  IN ULONG  ulHardwareProfile,
+  IN ULONG  ulFlags);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Set_HW_Prof_Ex(
+  IN ULONG  ulHardwareProfile,
+  IN ULONG  ulFlags,
+  IN HMACHINE  hMachine);
 
 /* CM_Set_HW_Prof_Flags[_Ex].ulFlags constants */
 #define CM_SET_HW_PROF_FLAGS_UI_NOT_OK  (0x00000001)

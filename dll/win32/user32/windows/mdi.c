@@ -303,8 +303,8 @@ void MDI_CalcDefaultChildPos( HWND hwndClient, INT total, LPPOINT lpPos, INT del
     if (total < 0) /* we are called from CreateWindow */
     {
         MDICLIENTINFO *ci = get_client_info(hwndClient);
-        total = ci->nTotalCreated;
-        *id = ci ? ci->idFirstChild + ci->nActiveChildren : 0;
+        total = ci ? ci->nTotalCreated : 0;                     // Do not portsync wine
+        *id = ci ? ci->idFirstChild + ci->nActiveChildren : 0;  // Do not portsync wine
         TRACE("MDI child id %04x\n", *id);
     }
 

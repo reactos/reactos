@@ -8,17 +8,7 @@
  */
 #include "wdmaud.h"
 
-const GUID KSPROPSETID_Pin                     = {0x8C134960L, 0x51AD, 0x11CF, {0x87, 0x8A, 0x94, 0xF8, 0x01, 0xC1, 0x00, 0x00}};
-const GUID KSPROPSETID_Connection               = {0x1D58C920L, 0xAC9B, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 const GUID KSPROPSETID_Sysaudio                 = {0xCBE3FAA0L, 0xCC75, 0x11D0, {0xB4, 0x65, 0x00, 0x00, 0x1A, 0x18, 0x18, 0xE6}};
-const GUID KSPROPSETID_General                  = {0x1464EDA5L, 0x6A8F, 0x11D1, {0x9A, 0xA7, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
-const GUID KSINTERFACESETID_Standard            = {0x1A8766A0L, 0x62CE, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
-const GUID KSMEDIUMSETID_Standard               = {0x4747B320L, 0x62CE, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
-const GUID KSDATAFORMAT_TYPE_AUDIO              = {0x73647561L, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71}};
-const GUID KSDATAFORMAT_SUBTYPE_PCM             = {0x00000001L, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71}};
-const GUID KSDATAFORMAT_SPECIFIER_WAVEFORMATEX  = {0x05589f81L, 0xc356, 0x11ce, {0xbf, 0x01, 0x00, 0xaa, 0x00, 0x55, 0x59, 0x5a}};
-const GUID KSPROPSETID_Topology                 = {0x720D4AC0L, 0x7533, 0x11D0, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
-
 
 NTSTATUS
 WdmAudControlOpen(
@@ -55,15 +45,15 @@ WdmAudControlDeviceType(
 
     if (DeviceInfo->DeviceType == MIXER_DEVICE_TYPE)
     {
-        Result = DeviceExtension->MixerInfoCount;
+        Result = WdmAudGetMixerDeviceCount();
     }
     else if (DeviceInfo->DeviceType == WAVE_OUT_DEVICE_TYPE)
     {
-        Result = DeviceExtension->WaveOutDeviceCount;
+        Result = WdmAudGetWaveInDeviceCount();
     }
     else if (DeviceInfo->DeviceType == WAVE_IN_DEVICE_TYPE)
     {
-        Result = DeviceExtension->WaveInDeviceCount;
+        Result = WdmAudGetWaveOutDeviceCount();
     }
 
     /* store result count */
@@ -221,7 +211,6 @@ WdmAudGetDeviceInterface(
     PWDMAUD_DEVICE_EXTENSION DeviceExtension;
     NTSTATUS Status;
     LPWSTR Device;
-    LPWAVE_INFO WaveInfo;
     ULONG Size, Length;
 
     /* get device extension */
@@ -233,16 +222,8 @@ WdmAudGetDeviceInterface(
     if (DeviceInfo->DeviceType == WAVE_IN_DEVICE_TYPE || DeviceInfo->DeviceType == WAVE_OUT_DEVICE_TYPE)
     {
         /* get wave info */
-        Status = GetWaveInfoByIndexAndType(DeviceObject, DeviceInfo->DeviceIndex, DeviceInfo->DeviceType, &WaveInfo);
+        Status = WdmAudGetPnpNameByIndexAndType(DeviceInfo->DeviceIndex, DeviceInfo->DeviceType, &Device);
 
-        /* check for success */
-        if (!NT_SUCCESS(Status))
-        {
-            /* invalid device id */
-            return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
-        }
-
-        Status = GetSysAudioDevicePnpName(DeviceObject, WaveInfo->FilterId, &Device);
         /* check for success */
         if (!NT_SUCCESS(Status))
         {
@@ -275,13 +256,13 @@ WdmAudGetDeviceInterface(
     }
     else if (DeviceInfo->DeviceType == MIXER_DEVICE_TYPE)
     {
-        if (DeviceInfo->DeviceIndex >= DeviceExtension->MixerInfoCount)
+        if (DeviceInfo->DeviceIndex >= WdmAudGetMixerDeviceCount())
         {
             /* invalid device id */
             return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, sizeof(WDMAUD_DEVICE_INFO));
         }
 
-        Status = GetSysAudioDevicePnpName(DeviceObject, DeviceExtension->MixerInfo[DeviceInfo->DeviceIndex].DeviceIndex, &Device);
+        Status = WdmAudGetMixerPnpNameByIndex(DeviceInfo->DeviceIndex, &Device);
         /* check for success */
         if (!NT_SUCCESS(Status))
         {
@@ -308,8 +289,6 @@ WdmAudGetDeviceInterface(
             //FIXME SEH
             RtlMoveMemory(DeviceInfo->u.Interface.DeviceInterfaceString, Device, Length);
         }
-
-        ExFreePool(Device);
         return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
     }
 

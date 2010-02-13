@@ -46,7 +46,7 @@ BEGIN
         MENUITEM "Tör&lés\tDel",                ID_EDIT_CLEAR
         MENUITEM "M&indet kijelöli\tCtrl+A",    ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "&Find...\tCrtl+F",         ID_FIND
+        MENUITEM "&Find...\tCtrl+F",         ID_FIND
         MENUITEM "Find &next\tF3",              ID_FIND_NEXT
         MENUITEM "&Replace...\tCtrl+H",      ID_REPLACE
         MENUITEM SEPARATOR
@@ -218,6 +218,8 @@ BEGIN
     STRING_PREVIEW_PREVPAGE,         "Previous page"
     STRING_PREVIEW_TWOPAGES,         "Two pages"
     STRING_PREVIEW_ONEPAGE,          "One page"
+    STRING_PREVIEW_ZOOMIN,           "Zoom in"
+    STRING_PREVIEW_ZOOMOUT,          "Zoom out"
     STRING_PREVIEW_CLOSE,            "Close"
 END
 

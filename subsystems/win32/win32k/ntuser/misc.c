@@ -191,13 +191,13 @@ NtUserGetGUIThreadInfo(
          SetLastWin32Error(ERROR_ACCESS_DENIED);
          RETURN( FALSE);
       }
-      Desktop = ((PTHREADINFO)Thread->Tcb.Win32Thread)->Desktop;
+      Desktop = ((PTHREADINFO)Thread->Tcb.Win32Thread)->rpdesk;
    }
    else
    {
       /* get the foreground thread */
       PTHREADINFO W32Thread = (PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread;
-      Desktop = W32Thread->Desktop;
+      Desktop = W32Thread->rpdesk;
       if(Desktop)
       {
          MsgQueue = Desktop->ActiveMessageQueue;
@@ -474,9 +474,9 @@ GetW32ThreadInfo(VOID)
 
     pti->pcti = &pti->cti; // FIXME Need to set it in desktop.c!
 
-    if (pti->Desktop != NULL)
+    if (pti->rpdesk != NULL)
     {
-       pti->pDeskInfo = pti->Desktop->pDeskInfo;
+       pti->pDeskInfo = pti->rpdesk->pDeskInfo;
     }
     else
     {

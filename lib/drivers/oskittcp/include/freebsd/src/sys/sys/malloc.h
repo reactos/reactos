@@ -36,7 +36,7 @@
 #ifndef _SYS_MALLOC_H_
 #define	_SYS_MALLOC_H_
 
-#ifndef OSKIT
+#if !defined(OSKIT) || defined(__REACTOS__)
 #define KMEMSTATS
 #endif
 
@@ -288,7 +288,6 @@ struct kmembuckets {
 #define	MALLOC(space, cast, size, type, flags) \
 	(space) = (cast)fbsd_malloc((u_long)(size), __FILE__, __LINE__, type, flags)
 #define FREE(addr, type) fbsd_free((caddr_t)(addr), __FILE__, __LINE__, type)
-
 #else /* do not collect statistics */
 #define	MALLOC(space, cast, size, type, flags) { \
 	register struct kmembuckets *kbp = &bucket[BUCKETINDX(size)]; \

@@ -51,6 +51,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(msi);
  *  Any binary data in a table is a reference to a stream.
  */
 
+#define IS_INTMSIDBOPEN(x)      (((ULONG_PTR)(x) >> 16) == 0)
+
 typedef struct tagMSITRANSFORM {
     struct list entry;
     IStorage *stg;
@@ -306,7 +308,7 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
 
     save_path = szDBPath;
     szMode = szPersist;
-    if( HIWORD( szPersist ) )
+    if( !IS_INTMSIDBOPEN(szPersist) )
     {
         if (!CopyFileW( szDBPath, szPersist, FALSE ))
             return ERROR_OPEN_FAILED;
@@ -459,7 +461,7 @@ UINT WINAPI MsiOpenDatabaseA(LPCSTR szDBPath, LPCSTR szPersist, MSIHANDLE *phDB)
             goto end;
     }
 
-    if( HIWORD(szPersist) )
+    if( !IS_INTMSIDBOPEN(szPersist) )
     {
         szwPersist = strdupAtoW( szPersist );
         if( !szwPersist )
@@ -471,7 +473,7 @@ UINT WINAPI MsiOpenDatabaseA(LPCSTR szDBPath, LPCSTR szPersist, MSIHANDLE *phDB)
     r = MsiOpenDatabaseW( szwDBPath, szwPersist, phDB );
 
 end:
-    if( HIWORD(szPersist) )
+    if( !IS_INTMSIDBOPEN(szPersist) )
         msi_free( szwPersist );
     msi_free( szwDBPath );
 

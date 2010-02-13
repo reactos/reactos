@@ -17,6 +17,11 @@ typedef struct
 
     LPFILTERINFO Filter;
     DWORD dwLevel;
+    DWORD dwFlags;
+    DWORD dwFrequency;
+    DWORD BufferPosition;
+    LONG Volume;
+    LONG VolumePan;
     LPWAVEFORMATEX Format;
     PUCHAR Buffer;
     DWORD BufferSize;
@@ -97,8 +102,27 @@ SecondaryDirectSoundBuffer8Impl_fnGetCaps(
     LPDIRECTSOUNDBUFFER8 iface,
     LPDSBCAPS pDSBufferCaps)
 {
-    UNIMPLEMENTED
-    return DSERR_INVALIDPARAM;
+    LPCDirectSoundBuffer This = (LPCDirectSoundBuffer)CONTAINING_RECORD(iface, CDirectSoundBuffer, lpVtbl);
+
+    if (!pDSBufferCaps)
+    {
+        /* invalid parameter */
+        return DSERR_INVALIDPARAM;
+    }
+
+    if (pDSBufferCaps->dwSize < sizeof(DSBCAPS))
+    {
+        /* invalid buffer size */
+        return DSERR_INVALIDPARAM;
+    }
+
+    /* get buffer details */
+    pDSBufferCaps->dwUnlockTransferRate = 0;
+    pDSBufferCaps->dwPlayCpuOverhead = 0;
+    pDSBufferCaps->dwSize = This->BufferSize;
+    pDSBufferCaps->dwFlags = This->dwFlags;
+
+    return DS_OK;
 }
 
 HRESULT
@@ -112,15 +136,20 @@ SecondaryDirectSoundBuffer8Impl_fnGetCurrentPosition(
 
     //DPRINT("SecondaryDirectSoundBuffer8Impl_fnGetCurrentPosition This %p Play %p Write %p\n", This, pdwCurrentPlayCursor, pdwCurrentWriteCursor);
 
-    return PrimaryDirectSoundBuffer_GetPosition(This->PrimaryBuffer, pdwCurrentPlayCursor, pdwCurrentWriteCursor);
+    if (pdwCurrentWriteCursor)
+    {
+        *pdwCurrentWriteCursor = This->BufferPosition;
+    }
+
+    return PrimaryDirectSoundBuffer_GetPosition(This->PrimaryBuffer, pdwCurrentPlayCursor, NULL);
 }
 
 HRESULT
 WINAPI
 SecondaryDirectSoundBuffer8Impl_fnGetFormat(
     LPDIRECTSOUNDBUFFER8 iface,
-    LPWAVEFORMATEX pwfxFormat, 
-    DWORD dwSizeAllocated, 
+    LPWAVEFORMATEX pwfxFormat,
+    DWORD dwSizeAllocated,
     LPDWORD pdwSizeWritten)
 {
     DWORD FormatSize;
@@ -166,8 +195,18 @@ SecondaryDirectSoundBuffer8Impl_fnGetVolume(
     LPDIRECTSOUNDBUFFER8 iface,
     LPLONG plVolume)
 {
-    UNIMPLEMENTED
-    return DSERR_INVALIDPARAM;
+    LPCDirectSoundBuffer This = (LPCDirectSoundBuffer)CONTAINING_RECORD(iface, CDirectSoundBuffer, lpVtbl);
+
+    if (!plVolume)
+    {
+        /* invalid parameter */
+        return DSERR_INVALIDPARAM;
+    }
+
+    /* get volume */
+    *plVolume = This->Volume;
+
+    return DS_OK;
 }
 
 HRESULT
@@ -176,8 +215,18 @@ SecondaryDirectSoundBuffer8Impl_fnGetPan(
     LPDIRECTSOUNDBUFFER8 iface,
     LPLONG plPan)
 {
-    UNIMPLEMENTED
-    return DSERR_INVALIDPARAM;
+    LPCDirectSoundBuffer This = (LPCDirectSoundBuffer)CONTAINING_RECORD(iface, CDirectSoundBuffer, lpVtbl);
+
+    if (!plPan)
+    {
+        /* invalid parameter */
+        return DSERR_INVALIDPARAM;
+    }
+
+    /* get frequency */
+    *plPan = This->VolumePan;
+
+    return DS_OK;
 }
 
 HRESULT
@@ -186,8 +235,18 @@ SecondaryDirectSoundBuffer8Impl_fnGetFrequency(
     LPDIRECTSOUNDBUFFER8 iface,
     LPDWORD pdwFrequency)
 {
-    UNIMPLEMENTED
-    return DSERR_INVALIDPARAM;
+    LPCDirectSoundBuffer This = (LPCDirectSoundBuffer)CONTAINING_RECORD(iface, CDirectSoundBuffer, lpVtbl);
+
+    if (!pdwFrequency)
+    {
+        /* invalid parameter */
+        return DSERR_INVALIDPARAM;
+    }
+
+    /* get frequency */
+    *pdwFrequency = This->dwFrequency;
+
+    return DS_OK;
 }
 
 HRESULT
@@ -223,8 +282,8 @@ SecondaryDirectSoundBuffer8Impl_fnInitialize(
     LPDIRECTSOUND pDirectSound,
     LPCDSBUFFERDESC pcDSBufferDesc)
 {
-    UNIMPLEMENTED
-    return DSERR_INVALIDPARAM;
+    /* RTFM */
+    return DSERR_ALREADYINITIALIZED;
 }
 
 HRESULT
@@ -263,11 +322,18 @@ SecondaryDirectSoundBuffer8Impl_fnLock(
     else
     {
         ASSERT(dwOffset < This->BufferSize);
-        ASSERT(dwBytes < This->BufferSize);
-        ASSERT(dwBytes + dwOffset <= This->BufferSize);
+        ASSERT(dwBytes <= This->BufferSize);
+
+        dwBytes = min(This->BufferSize - dwOffset, dwBytes);
 
         *ppvAudioPtr1 = This->Buffer + dwOffset;
         *pdwAudioBytes1 = dwBytes;
+
+        This->BufferPosition = dwOffset + dwBytes;
+
+        if (This->BufferPosition == This->BufferSize)
+            This->BufferPosition = 0;
+
         if (ppvAudioPtr2)
             *ppvAudioPtr2 = NULL;
         if (pdwAudioBytes2)
@@ -297,6 +363,13 @@ SecondaryDirectSoundBuffer8Impl_fnPlay(
     /* sanity check */
     ASSERT(dwFlags & DSBPLAY_LOOPING);
 
+
+    if (This->State == KSSTATE_RUN)
+    {
+        /* sound buffer is already playing */
+        return DS_OK;
+    }
+
     /* set dataformat */
     hResult = PrimaryDirectSoundBuffer_SetFormat(This->PrimaryBuffer, This->Format, TRUE);
 
@@ -316,7 +389,9 @@ SecondaryDirectSoundBuffer8Impl_fnPlay(
     /* release primary buffer */
     PrimaryDirectSoundBuffer_ReleaseLock(This->PrimaryBuffer);
 
-    DPRINT1("SetFormatSuccess PrimaryBuffer %p\n", This->PrimaryBuffer);
+    DPRINT("SetFormatSuccess PrimaryBuffer %p\n", This->PrimaryBuffer);
+    This->State = KSSTATE_RUN;
+
     return DS_OK;
 }
 
@@ -340,6 +415,7 @@ SecondaryDirectSoundBuffer8Impl_fnSetFormat(
     LPDIRECTSOUNDBUFFER8 iface,
     LPCWAVEFORMATEX pcfxFormat)
 {
+    /* RTFM */
     return DSERR_INVALIDCALL;
 }
 
@@ -349,8 +425,19 @@ SecondaryDirectSoundBuffer8Impl_fnSetVolume(
     LPDIRECTSOUNDBUFFER8 iface,
     LONG lVolume)
 {
-    UNIMPLEMENTED
-    return DSERR_INVALIDPARAM;
+    LPCDirectSoundBuffer This = (LPCDirectSoundBuffer)CONTAINING_RECORD(iface, CDirectSoundBuffer, lpVtbl);
+
+    if (lVolume < DSBVOLUME_MIN || lVolume > DSBVOLUME_MAX)
+    {
+        /* invalid parameter */
+        return DSERR_INVALIDPARAM;
+    }
+
+
+    /* Store volume */
+    This->Volume = lVolume;
+
+    return DS_OK;
 }
 
 HRESULT
@@ -359,8 +446,18 @@ SecondaryDirectSoundBuffer8Impl_fnSetPan(
     LPDIRECTSOUNDBUFFER8 iface,
     LONG lPan)
 {
-    UNIMPLEMENTED
-    return DSERR_INVALIDPARAM;
+    LPCDirectSoundBuffer This = (LPCDirectSoundBuffer)CONTAINING_RECORD(iface, CDirectSoundBuffer, lpVtbl);
+
+    if (lPan < DSBPAN_LEFT || lPan > DSBPAN_RIGHT)
+    {
+        /* invalid parameter */
+        return DSERR_INVALIDPARAM;
+    }
+
+    /* Store volume pan */
+    This->VolumePan = lPan;
+
+    return DS_OK;
 }
 
 HRESULT
@@ -369,8 +466,29 @@ SecondaryDirectSoundBuffer8Impl_fnSetFrequency(
     LPDIRECTSOUNDBUFFER8 iface,
     DWORD dwFrequency)
 {
-    UNIMPLEMENTED
-    return DSERR_INVALIDPARAM;
+    LPCDirectSoundBuffer This = (LPCDirectSoundBuffer)CONTAINING_RECORD(iface, CDirectSoundBuffer, lpVtbl);
+
+    if (dwFrequency == DSBFREQUENCY_ORIGINAL)
+    {
+        /* restore original frequency */
+        dwFrequency = This->Format->nSamplesPerSec;
+    }
+
+    if (dwFrequency < DSBFREQUENCY_MIN || dwFrequency > DSBFREQUENCY_MAX)
+    {
+        /* invalid frequency */
+        return DSERR_INVALIDPARAM;
+    }
+
+    if (dwFrequency != This->dwFrequency)
+    {
+        /* FIXME handle frequency change */
+    }
+
+    /* store frequency */
+    This->dwFrequency = dwFrequency;
+
+    return DS_OK;
 }
 
 HRESULT
@@ -383,6 +501,13 @@ SecondaryDirectSoundBuffer8Impl_fnStop(
     PrimaryDirectSoundBuffer_SetState(This->PrimaryBuffer, KSSTATE_PAUSE);
     PrimaryDirectSoundBuffer_SetState(This->PrimaryBuffer, KSSTATE_ACQUIRE);
     PrimaryDirectSoundBuffer_SetState(This->PrimaryBuffer, KSSTATE_STOP);
+
+    DPRINT("SecondaryDirectSoundBuffer8Impl_fnStop\n");
+
+
+    /* set state to stop */
+    This->State = KSSTATE_STOP;
+    This->BufferPosition = 0;
 
     return DS_OK;
 }
@@ -522,12 +647,18 @@ NewSecondarySoundBuffer(
         return DSERR_OUTOFMEMORY;
     }
 
+    /* fill buffer with silence */
+    FillMemory(This->Buffer, lpcDSBufferDesc->dwBufferBytes, lpcDSBufferDesc->lpwfxFormat->wBitsPerSample == 8 ? 0x80 : 0);
 
     This->ref = 1;
     This->lpVtbl = &vt_DirectSoundBuffer8;
     This->Filter = Filter;
     This->dwLevel = dwLevel;
+    This->dwFlags = lpcDSBufferDesc->dwFlags;
+    This->dwFrequency = lpcDSBufferDesc->lpwfxFormat->nSamplesPerSec;
     This->State = KSSTATE_STOP;
+    This->Volume = DSBVOLUME_MAX;
+    This->VolumePan = DSBPAN_CENTER;
     This->Flags = 0;
     This->Position = 0;
     This->BufferSize = lpcDSBufferDesc->dwBufferBytes;

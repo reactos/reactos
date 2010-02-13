@@ -57,13 +57,6 @@
 #include <sys/malloc.h>
 #endif
 
-#ifndef OSKIT
-#ifdef __REACTOS__
-/* #define OSKIT */
-#define LOCAL_OSKIT_DEFINED
-#endif
-#endif
-
 /*
  * Mbufs are of a single size, MSIZE (machine/machparam.h), which
  * includes overhead.  An mbuf may add a single "mbuf cluster" of size
@@ -301,21 +294,6 @@ union mcluster {
 	  } \
 	)
 
-#ifdef __REACTOS__
-#define MCLGET(m, how) { \
-          OS_DbgPrint(OSK_MID_TRACE,("(MCLGET) m = %x\n", m)); \
-          (m)->m_ext.ext_buf = malloc(MCLBYTES,__FILE__,__LINE__); \
-	  if ((m)->m_ext.ext_buf != NULL) { \
-              (m)->m_data = (m)->m_ext.ext_buf; \
-              (m)->m_flags |= M_EXT; \
-              (m)->m_ext.ext_size = MCLBYTES; \
-          } \
-        }
-
-#define MCLFREE(p) { \
-          free( (p), 0 ); \
-        }
-#else
 #define	MCLGET(m, how) \
 	{ MCLALLOC((m)->m_ext.ext_buf, (how)); \
           OS_DbgPrint(OSK_MID_TRACE,("(MCLGET) m = %x\n", m)); \
@@ -335,7 +313,6 @@ union mcluster {
 		mbstat.m_clfree++; \
 	  } \
 	)
-#endif
 #else
 #define	MCLGET(m, how) \
 	{ (m)->m_ext.ext_bufio = oskit_bufio_create(MCLBYTES); \
@@ -555,11 +532,6 @@ int mbtypes[] = {				/* XXX */
 #endif
 };
 #endif
-#endif
-
-#ifdef LOCAL_OSKIT_DEFINED
-#undef LOCAL_OSKIT_DEFINED
-#undef OSKIT
 #endif
 
 #endif /* !_SYS_MBUF_H_ */

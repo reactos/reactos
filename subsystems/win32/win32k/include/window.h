@@ -20,10 +20,7 @@ BOOL FASTCALL UserUpdateUiState(PWND Wnd, WPARAM wParam);
 
 typedef struct _WINDOW_OBJECT
 {
-  /* NOTE: Do *NOT* Move this pointer anywhere in this structure! This
-           is a pointer to the WINDOW structure that eventually replaces
-           the WINDOW_OBJECT structure! USER32 expects this pointer to
-           be here until WINDOW_OBJECT has completely been superseded! */
+  THRDESKHEAD head;
   PWND Wnd;
 
   /* Pointer to the thread information */
@@ -57,7 +54,6 @@ typedef struct _WINDOW_OBJECT
 #define WINDOWOBJECT_NEED_SIZE            WNDS_SENDSIZEMOVEMSGS
 #define WINDOWOBJECT_NEED_ERASEBKGND      WNDS_ERASEBACKGROUND
 #define WINDOWOBJECT_NEED_NCPAINT         WNDS_SENDNCPAINT
-#define WINDOWOBJECT_NEED_INTERNALPAINT   WNDS_INTERNALPAINT
 #define WINDOWOBJECT_RESTOREMAX           (0x00000020) // Set/Clr WS_MAXIMIZE && Clr/Set WS_EX2_VERTICALLYMAXIMIZEDLEFT/RIGHT
 
 #define WINDOWSTATUS_DESTROYING         WNDS2_INDESTROY

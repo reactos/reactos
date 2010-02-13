@@ -50,6 +50,46 @@
 #define IP_INTFC_INFO_ID                0x103
 #define MAX_PHYSADDR_SIZE               8
 
+/* Address Object Options */
+#define AO_OPTION_TTL                1
+#define AO_OPTION_MCASTTTL           2
+#define AO_OPTION_MCASTIF            3
+#define AO_OPTION_XSUM               4
+#define AO_OPTION_IPOPTIONS          5
+#define AO_OPTION_ADD_MCAST          6
+#define AO_OPTION_DEL_MCAST          7
+#define AO_OPTION_TOS                8
+#define AO_OPTION_IP_DONTFRAGMENT    9
+#define AO_OPTION_MCASTLOOP         10
+#define AO_OPTION_BROADCAST         11
+#define AO_OPTION_IP_HDRINCL        12
+#define AO_OPTION_RCVALL            13
+#define AO_OPTION_RCVALL_MCAST      14
+#define AO_OPTION_RCVALL_IGMPMCAST  15
+#define AO_OPTION_UNNUMBEREDIF      16
+#define AO_OPTION_IP_UCASTIF        17
+#define AO_OPTION_ABSORB_RTRALERT   18
+#define AO_OPTION_LIMIT_BCASTS      19
+#define AO_OPTION_INDEX_BIND        20
+#define AO_OPTION_INDEX_MCASTIF     21
+#define AO_OPTION_INDEX_ADD_MCAST   22
+#define AO_OPTION_INDEX_DEL_MCAST   23
+#define AO_OPTION_IFLIST            24
+#define AO_OPTION_ADD_IFLIST        25
+#define AO_OPTION_DEL_IFLIST        26
+#define AO_OPTION_IP_PKTINFO        27
+#define AO_OPTION_ADD_MCAST_SRC     28
+#define AO_OPTION_DEL_MCAST_SRC     29
+#define AO_OPTION_MCAST_FILTER      30
+#define AO_OPTION_BLOCK_MCAST_SRC   31
+#define AO_OPTION_UNBLOCK_MCAST_SRC 32
+#define AO_OPTION_UDP_CKSUM_COVER   33
+#define AO_OPTION_WINDOW            34
+#define AO_OPTION_SCALE_CWIN        35
+#define AO_OPTION_RCV_HOPLIMIT      36
+#define AO_OPTION_UNBIND            37
+#define AO_OPTION_PROTECT           38
+
 typedef struct IFEntry
 {
     ULONG if_index;

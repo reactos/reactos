@@ -30,7 +30,7 @@ const GUID SHELL32_AdvtShortcutProduct   = {0x9db1186f, 0x40df, 0x11d1, {0xaa, 0
 const GUID SHELL32_AdvtShortcutComponent = {0x9db1186e, 0x40df, 0x11d1, {0xaa, 0x8c, 0x00, 0xc0, 0x4f, 0xb6, 0x78, 0x63}};
 
 
-WINE_DEFAULT_DEBUG_CHANNEL(ole);
+WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 /*
  * Near the bottom of this file are the exported DllRegisterServer and

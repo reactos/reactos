@@ -11,6 +11,7 @@ typedef struct tagCURICON_PROCESS
 
 typedef struct _CURICON_OBJECT
 {
+  PROCMARKHEAD head;
   LIST_ENTRY ListEntry;
   HANDLE Self;
   LIST_ENTRY ProcessList;

@@ -30,17 +30,15 @@
 	<library>bootvid</library>
 	<library>wdmguid</library>
 	<dependency>bugcodes</dependency>
-	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38269
 	<directory name="include">
-		<pch>precomp.h</pch>
+		<pch>ntoskrnl.h</pch>
 	</directory>
-	-->
 	<directory name="ke">
 		<if property="ARCH" value="i386">
 			<directory name="i386">
-				<file first="true">boot.S</file>
 				<file>abios.c</file>
 				<file>cpu.c</file>
+				<file>context.c</file>
 				<file>ctxswitch.S</file>
 				<file>exp.c</file>
 				<file>irqobj.c</file>
@@ -48,7 +46,6 @@
 				<file>ldt.c</file>
 				<file>mtrr.c</file>
 				<file>patpge.c</file>
-				<file>systimer.S</file>
 				<file>thrdini.c</file>
 				<file>trap.s</file>
 				<file>traphdlr.c</file>
@@ -66,7 +63,6 @@
 				<file>kiinit.c</file>
 				<file>stubs_asm.s</file>
 				<file>thrdini.c</file>
-				<file>time.c</file>
 				<file>trap.s</file>
 				<file>trapc.c</file>
 				<file>usercall.c</file>
@@ -107,6 +103,7 @@
 		<file>queue.c</file>
 		<file>semphobj.c</file>
 		<file>spinlock.c</file>
+		<file>time.c</file>
 		<file>thrdschd.c</file>
 		<file>thrdobj.c</file>
 		<file>timerobj.c</file>
@@ -366,7 +363,7 @@
 		</if>
 		<if property="ARCH" value="arm">
 			<directory name="arm">
-				<file>stubs.c</file>
+				<file>page.c</file>
 			</directory>
 		</if>
 		<if property="ARCH" value="powerpc">
@@ -393,6 +390,7 @@
 			<file>hypermap.c</file>
 			<file>iosup.c</file>
 			<file>mdlsup.c</file>
+			<file>mminit.c</file>
 			<file>mmsup.c</file>
 			<file>ncache.c</file>
 			<file>pagfault.c</file>
@@ -503,7 +501,4 @@
 	</directory>
 	<file>ntoskrnl.rc</file>
 	<linkerscript>ntoskrnl_$(ARCH).lnk</linkerscript>
-
-	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
-	<compilerflag compilerset="gcc">-fno-unit-at-a-time</compilerflag>
 </group>

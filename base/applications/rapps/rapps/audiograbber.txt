@@ -7,7 +7,7 @@ Licence = Freeware
 Description = A very good CD Ripper/Audio File Converter.
 Size = 1.6MB
 Category = 1
-URLSite = http://www.audiograbber.com-us.net/
+URLSite = http://www.audiograbber.de/
 URLDownload = http://www.audiograbber.de/files/4898276276/agsetup183se.exe
 CDPath = none
 
@@ -19,4 +19,3 @@ Description = Un buen CD Ripper/ conversor de archivos de audio.
 
 [Section.0415]
 Description = Bardzo dobry CD Ripper/konwerter plików audio.
-

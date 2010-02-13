@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "avifile_private.h"
+
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 IDD_SAVEOPTIONS DIALOG FIXED IMPURE  43, 37, 226, 82

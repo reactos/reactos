@@ -12,6 +12,9 @@
 #include <hal.h>
 #define NDEBUG
 #include <debug.h>
+#include <setjmp.h>
+
+void HalpTrap0D();
 
 /* GLOBALS ********************************************************************/
 
@@ -40,6 +43,257 @@ USHORT HalpSavedIopmBase;
 PUSHORT HalpSavedIoMap;
 USHORT HalpSavedIoMapData[32][2];
 ULONG HalpSavedIoMapEntries;
+
+/* Where the protected mode stack is */
+ULONG_PTR HalpSavedEsp;
+
+/* Where the real mode code ends */
+extern PVOID HalpRealModeEnd;
+
+/* Context saved for return from v86 mode */
+jmp_buf HalpSavedContext;
+
+/* REAL MODE CODE AND STACK START HERE ****************************************/
+
+VOID
+DECLSPEC_NORETURN
+HalpRealModeStart(VOID)
+{
+    /* Do the video BIOS interrupt */
+    HalpCallBiosInterrupt(VIDEO_SERVICES, (SET_VIDEO_MODE << 8) | (GRAPHICS_MODE_12));
+    
+    /* Issue the BOP */
+    KiIssueBop();
+    
+    /* We want the stack to be inside this function so we can map real mode */
+    HalpRealModeStack(sizeof(ULONG), PAGE_SIZE / 2);
+    UNREACHABLE;
+}
+
+/* REAL MODE CODE AND STACK END HERE ******************************************/
+
+/* V86 OPCODE HANDLERS ********************************************************/
+
+BOOLEAN
+FASTCALL
+HalpOpcodeInvalid(IN PHAL_BIOS_FRAME BiosFrame)
+{
+    /* Print error message */
+    DPRINT1("HAL: An invalid V86 opcode was encountered at address %x:%x\n",
+            BiosFrame->SegCs, BiosFrame->Eip);
+
+    /* Break */
+    DbgBreakPoint();
+    return FALSE;
+}
+
+BOOLEAN
+FASTCALL
+HalpPushInt(IN PHAL_BIOS_FRAME BiosFrame,
+            IN ULONG Interrupt)
+{
+    PUSHORT Stack;
+    ULONG Eip;
+    
+    /* Calculate stack address (SP) */
+    Stack = (PUSHORT)(BiosFrame->SsBase + (BiosFrame->Esp & 0xFFFF));
+    
+    /* Push EFlags */
+    Stack--;
+    *Stack = BiosFrame->EFlags & 0xFFFF;
+    
+    /* Push CS */
+    Stack--;
+    *Stack = BiosFrame->SegCs & 0xFFFF;
+        
+    /* Push IP */
+    Stack--;
+    *Stack = BiosFrame->Eip & 0xFFFF;
+    
+    /* Compute new CS:IP from the IVT address for this interrupt entry */
+    Eip = *(PULONG)(Interrupt * 4);
+    BiosFrame->Eip = Eip & 0xFFFF;
+    BiosFrame->SegCs = Eip >> 16;
+    
+    /* Update stack address */
+    BiosFrame->Esp = (ULONG_PTR)Stack & 0xFFFF;
+    
+    /* Update CS to linear */
+    BiosFrame->CsBase = BiosFrame->SegCs << 4;
+    BiosFrame->CsLimit = 0xFFFF;
+    BiosFrame->CsFlags = 0;
+    
+    /* We're done */
+    return TRUE;
+}
+
+BOOLEAN
+FASTCALL
+HalpOpcodeINTnn(IN PHAL_BIOS_FRAME BiosFrame)
+{
+    UCHAR Interrupt;
+    PKTRAP_FRAME TrapFrame;
+    
+    /* Convert SS to linear */
+    BiosFrame->SsBase = BiosFrame->SegSs << 4;
+    BiosFrame->SsLimit = 0xFFFF;
+    BiosFrame->SsFlags = 0;
+    
+    /* Increase EIP and validate */
+    BiosFrame->Eip++;
+    if (BiosFrame->Eip > BiosFrame->CsLimit) return FALSE;
+    
+    /* Read interrupt number */
+    Interrupt = *(PUCHAR)(BiosFrame->CsBase + BiosFrame->Eip);
+    
+    /* Increase EIP and push the interrupt */
+    BiosFrame->Eip++;
+    if (HalpPushInt(BiosFrame, Interrupt))
+    {
+        /* Update the trap frame */
+        TrapFrame = BiosFrame->TrapFrame;
+        TrapFrame->HardwareSegSs = BiosFrame->SegSs;
+        TrapFrame->HardwareEsp = BiosFrame->Esp;
+        TrapFrame->SegCs = BiosFrame->SegCs;
+        TrapFrame->EFlags = BiosFrame->EFlags;
+        
+        /* Success */
+        return TRUE;
+    }
+    
+    /* Failure */
+    return FALSE;
+}
+
+BOOLEAN
+FASTCALL
+HalpDispatchV86Opcode(IN PKTRAP_FRAME TrapFrame)
+{
+    UCHAR Instruction;
+    HAL_BIOS_FRAME BiosFrame;
+    
+    /* Fill out the BIOS frame */
+    BiosFrame.TrapFrame = TrapFrame;
+    BiosFrame.SegSs = TrapFrame->HardwareSegSs;
+    BiosFrame.Esp = TrapFrame->HardwareEsp;
+    BiosFrame.EFlags = TrapFrame->EFlags;
+    BiosFrame.SegCs = TrapFrame->SegCs;
+    BiosFrame.Eip = TrapFrame->Eip;
+    BiosFrame.Prefix = 0;
+    
+    /* Convert CS to linear */
+    BiosFrame.CsBase = BiosFrame.SegCs << 4;
+    BiosFrame.CsLimit = 0xFFFF;
+    BiosFrame.CsFlags = 0;
+    
+    /* Validate IP */
+    if (BiosFrame.Eip > BiosFrame.CsLimit) return FALSE;
+    
+    /* Read IP */
+    Instruction = *(PUCHAR)(BiosFrame.CsBase + BiosFrame.Eip);
+    if (Instruction != 0xCD)
+    {
+        /* We only support INT */
+        HalpOpcodeInvalid(&BiosFrame);
+        return FALSE;
+    }
+    
+    /* Handle the interrupt */
+    if (HalpOpcodeINTnn(&BiosFrame))
+    {
+        /* Update EIP */
+        TrapFrame->Eip = BiosFrame.Eip;
+        
+        /* We're done */
+        return TRUE;
+    }
+    
+    /* Failure */
+    return FALSE;
+}
+
+/* V86 TRAP HANDLERS **********************************************************/
+
+VOID
+FASTCALL
+DECLSPEC_NORETURN
+HalpTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
+{
+    /* Enter the trap */
+    KiEnterTrap(TrapFrame);
+    
+    /* Check if this is a V86 trap */
+    if (TrapFrame->EFlags & EFLAGS_V86_MASK)
+    {
+        /* Dispatch the opcode and exit the trap */
+        HalpDispatchV86Opcode(TrapFrame);
+        KiEoiHelper(TrapFrame);
+    }
+    
+    /* Strange, it isn't! This can happen during NMI */
+    DPRINT1("HAL: Trap0D while not in V86 mode\n");
+    KiDumpTrapFrame(TrapFrame);
+    while (TRUE);
+}
+
+VOID
+DECLSPEC_NORETURN
+HalpTrap06()
+{
+    /* Restore ES/DS to known good values first */
+    Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
+    Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
+    Ke386SetFs(KGDT_R0_PCR);
+
+    /* Restore the stack */ 
+    KeGetPcr()->TSS->Esp0 = HalpSavedEsp0;
+
+    /* Return back to where we left */
+    longjmp(HalpSavedContext, 1);
+    UNREACHABLE;
+}
+
+/* V8086 ENTER ****************************************************************/
+
+VOID
+NTAPI
+HalpBiosCall()
+{
+    /* Must be volatile so it doesn't get optimized away! */
+    volatile KTRAP_FRAME V86TrapFrame;
+    ULONG_PTR StackOffset, CodeOffset;
+    
+    /* Save the context, check for return */
+    if (_setjmp(HalpSavedContext))
+    {
+        /* Returned from v86 */
+        return;
+    }
+    
+    /* Kill alignment faults */
+    __writecr0(__readcr0() & ~CR0_AM);
+    
+    /* Set new stack address */
+    KeGetPcr()->TSS->Esp0 = (ULONG)&V86TrapFrame - 0x20 - sizeof(FX_SAVE_AREA);
+
+    /* Compute segmented IP and SP offsets */
+    StackOffset = (ULONG_PTR)&HalpRealModeEnd - 4 - (ULONG_PTR)HalpRealModeStart;
+    CodeOffset = (ULONG_PTR)HalpRealModeStart & 0xFFF;
+    
+    /* Now build the V86 trap frame */
+    V86TrapFrame.V86Es = 0;
+    V86TrapFrame.V86Ds = 0;
+    V86TrapFrame.V86Gs = 0;
+    V86TrapFrame.V86Fs = 0;
+    V86TrapFrame.HardwareSegSs = 0x2000;
+    V86TrapFrame.HardwareEsp = StackOffset + CodeOffset;
+    V86TrapFrame.EFlags = __readeflags() | EFLAGS_V86_MASK | EFLAGS_IOPL;
+    V86TrapFrame.SegCs = 0x2000;
+    V86TrapFrame.Eip = CodeOffset;
+    
+    /* Exit to V86 mode */
+    KiDirectTrapReturn((PKTRAP_FRAME)&V86TrapFrame);
+}
 
 /* FUNCTIONS ******************************************************************/
 

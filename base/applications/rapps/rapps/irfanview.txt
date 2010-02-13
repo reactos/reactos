@@ -7,7 +7,7 @@ Licence = Freeware (for personal use)
 Description = Viewer for all kinds of graphics/audio files/video files.
 Size = 1.3MB
 Category = 3
-URLSite = http://www.irfanview.com
+URLSite = http://www.irfanview.com/
 URLDownload = http://irfanview.tuwien.ac.at/iview425_setup.exe
 CDPath = none
 
@@ -22,4 +22,3 @@ Description = Visor para toda clase de archivos de imagen,audio y video.
 [Section.0415]
 Licence = Freeware (dla użytku domowego)
 Description = Przeglądarka dla bardzo wielu typów obrazów, plików audio oraz wideo.
-

@@ -53,15 +53,17 @@ KiVdmOpcodePUSHF(IN PKTRAP_FRAME TrapFrame,
 {
     ULONG Esp, V86EFlags, TrapEFlags;
     
+    /* Check for VME support */
+    ASSERT(KeI386VirtualIntExtensions == FALSE);
+
     /* Get current V8086 flags and mask out interrupt flag */
-    DbgPrint("VDM: Handling PUSHF (PREFIX [0x%lx])\n", KiVdmGetPrefixFlags(Flags));
     V86EFlags = *KiNtVdmState;
     V86EFlags &= ~EFLAGS_INTERRUPT_MASK;
-    
+
     /* Get trap frame EFLags and leave only align, nested task and interrupt */
     TrapEFlags = TrapFrame->EFlags;
-    TrapEFlags &= (EFLAGS_ALIGN_CHECK | EFLAGS_NESTED_TASK | EFLAGS_INTERRUPT_MASK);
-    
+    V86EFlags &= (EFLAGS_ALIGN_CHECK | EFLAGS_NESTED_TASK | EFLAGS_INTERRUPT_MASK);
+
     /* Add in those flags if they exist, and add in the IOPL flag */
     V86EFlags |= TrapEFlags;
     V86EFlags |= EFLAGS_IOPL;
@@ -99,7 +101,6 @@ KiVdmOpcodePOPF(IN PKTRAP_FRAME TrapFrame,
     ULONG Esp, V86EFlags, EFlags, TrapEFlags;
     
     /* Build flat ESP */
-    DbgPrint("VDM: Handling POPF (PREFIX [0x%lx])\n", KiVdmGetPrefixFlags(Flags));
     Esp = (TrapFrame->HardwareSegSs << 4) + (USHORT)TrapFrame->HardwareEsp;
     
     /* Read EFlags */
@@ -126,15 +127,18 @@ KiVdmOpcodePOPF(IN PKTRAP_FRAME TrapFrame,
     /* Now leave only alignment, nested task and interrupt flag */
     EFlags &= (EFLAGS_ALIGN_CHECK | EFLAGS_NESTED_TASK | EFLAGS_INTERRUPT_MASK);
     
-    /* FIXME: Check for VME support */
-    
+    /* Get trap EFlags */
+    TrapEFlags = TrapFrame->EFlags;
+                
+    /* Check for VME support */
+    ASSERT(KeI386VirtualIntExtensions == FALSE);
+
     /* Add V86 and Interrupt flag */
     V86EFlags |= EFLAGS_V86_MASK | EFLAGS_INTERRUPT_MASK;
-    
+
     /* Update EFlags in trap frame */
-    TrapEFlags = TrapFrame->EFlags;
-    TrapFrame->EFlags = (TrapFrame->EFlags & EFLAGS_VIP) | V86EFlags;
-    
+    TrapFrame->EFlags |= V86EFlags;
+
     /* Check if ESP0 needs to be fixed up */
     if (TrapEFlags & EFLAGS_V86_MASK) Ki386AdjustEsp0(TrapFrame);
     
@@ -168,7 +172,8 @@ KiVdmOpcodeINTnn(IN PKTRAP_FRAME TrapFrame,
     /* Keep only alignment and interrupt flag from the V8086 state */
     V86EFlags &= (EFLAGS_ALIGN_CHECK | EFLAGS_INTERRUPT_MASK);
     
-    /* FIXME: Support VME */
+    /* Check for VME support */
+    ASSERT(KeI386VirtualIntExtensions == FALSE);
     
     /* Mask in the relevant V86 EFlags into the trap flags */
     V86EFlags |= (TrapEFlags & ~EFLAGS_INTERRUPT_MASK);
@@ -205,7 +210,6 @@ KiVdmOpcodeINTnn(IN PKTRAP_FRAME TrapFrame,
     
     /* Now read the interrupt number */
     Interrupt = *(PUCHAR)Eip;
-    DbgPrint("VDM: Handling INT [0x%lx]\n", Interrupt);
         
     /* Read the EIP from its IVT entry */
     Interrupt = *(PULONG)(Interrupt * 4);
@@ -248,7 +252,6 @@ KiVdmOpcodeIRET(IN PKTRAP_FRAME TrapFrame,
     ULONG Esp, V86EFlags, EFlags, TrapEFlags, Eip;
 
     /* Build flat ESP */
-    DbgPrint("VDM: Handling IRET (PREFIX [0x%lx])\n", KiVdmGetPrefixFlags(Flags));
     Esp = (TrapFrame->HardwareSegSs << 4) + TrapFrame->HardwareEsp;
     
     /* Check for OPER32 */
@@ -281,7 +284,8 @@ KiVdmOpcodeIRET(IN PKTRAP_FRAME TrapFrame,
     EFlags &= ~(EFLAGS_IOPL + EFLAGS_VIF + EFLAGS_NESTED_TASK + EFLAGS_VIP);
     V86EFlags = EFlags;
     
-    /* FIXME: Check for VME support */
+    /* Check for VME support */
+    ASSERT(KeI386VirtualIntExtensions == FALSE);
     
     /* Add V86 and Interrupt flag */
     EFlags |= EFLAGS_V86_MASK | EFLAGS_INTERRUPT_MASK;
@@ -299,7 +303,6 @@ KiVdmOpcodeIRET(IN PKTRAP_FRAME TrapFrame,
     
     /* Build flat EIP and check if this is the BOP instruction */
     Eip = (TrapFrame->SegCs << 4) + TrapFrame->Eip;
-    DbgPrint("VDM: Handling IRET EIP @ 0x%p [OPCODE: %lx]\n", Eip, *(PUSHORT)Eip);
     if (*(PUSHORT)Eip == 0xC4C4)
     {
         /* Dispatch the BOP */
@@ -319,10 +322,10 @@ FASTCALL
 KiVdmOpcodeCLI(IN PKTRAP_FRAME TrapFrame,
                IN ULONG Flags)
 {       
-    /* FIXME: Support VME */
+    /* Check for VME support */
+    ASSERT(KeI386VirtualIntExtensions == FALSE);
 
     /* Disable interrupts */
-    DbgPrint("VDM: Handling CLI\n");
     KiVdmClearVdmEFlags(EFLAGS_INTERRUPT_MASK);
     
     /* Skip instruction */
@@ -337,10 +340,10 @@ FASTCALL
 KiVdmOpcodeSTI(IN PKTRAP_FRAME TrapFrame,
                IN ULONG Flags)
 {
-    /* FIXME: Support VME */
+    /* Check for VME support */
+    ASSERT(KeI386VirtualIntExtensions == FALSE);
 
     /* Enable interrupts */
-    DbgPrint("VDM: Handling STI\n");
     KiVdmSetVdmEFlags(EFLAGS_INTERRUPT_MASK);
     
     /* Skip instruction */
@@ -361,7 +364,6 @@ KiVdmHandleOpcode(IN PKTRAP_FRAME TrapFrame,
     
     /* Get flat EIP of the *current* instruction (not the original EIP) */
     Eip = (TrapFrame->SegCs << 4) + TrapFrame->Eip;
-    DbgPrint("VDM: Handling Opcode @ 0x%p\n", Eip);
     Eip += KiVdmGetInstructionSize(Flags) - 1;
     
     /* Read the opcode entry */
@@ -420,7 +422,6 @@ KiVdmOpcodePrefix(IN PKTRAP_FRAME TrapFrame,
                   IN ULONG Flags)
 {
     /* Increase instruction size */
-    DbgPrint("VDM: Handling PREFIX [%lx] Opcode @ 0x%p\n", KiVdmGetPrefixFlags(Flags), TrapFrame->Eip);
     Flags++;
     
     /* Handle the next opcode */
@@ -478,9 +479,9 @@ KiExitV86Mode(IN PKTRAP_FRAME TrapFrame)
     GdtEntry->HighWord.Bytes.BaseMid = (UCHAR)((ULONG_PTR)Thread->Teb >> 16);
     GdtEntry->HighWord.Bytes.BaseHi = (UCHAR)((ULONG_PTR)Thread->Teb >> 24);
 
-    /* Enable interrupts and get back to protected mode */
+    /* Enable interrupts and return a pointer to the trap frame */
     _enable();
-    return TrapFrame->Edi;
+    return (ULONG)PmTrapFrame;
 }
 
 VOID
@@ -635,9 +636,7 @@ Ke386CallBios(IN ULONG Int,
     Tss->IoMapBase = (USHORT)IOPM_OFFSET;
 
     /* Switch stacks and work the magic */
-    DbgPrint("VDM: Entering V8086 Mode\n");
     Ki386SetupAndExitToV86Mode(VdmTeb);
-    DbgPrint("VDM: Exiting V8086 Mode\n");
 
     /* Restore IOPM */
     RtlCopyMemory(&Tss->IoMaps[0].IoMap, Ki386IopmSaveArea, PAGE_SIZE * 2);

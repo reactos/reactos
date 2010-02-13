@@ -7,7 +7,7 @@ Licence = Shareware
 Description = The most popular client for the Internet Relay Chat (IRC).
 Size = 1.66M
 Category = 5
-URLSite = http://www.mirc.com
+URLSite = http://www.mirc.com/
 URLDownload = http://mirc.bigchief.dk/mirc635.exe
 CDPath = none
 
@@ -19,4 +19,3 @@ Description = El más popular cliente para Internet Relay Chat (IRC).
 
 [Section.0415]
 Description = Najpopularniejszy klient IRC (Internet Relay Chat).
-

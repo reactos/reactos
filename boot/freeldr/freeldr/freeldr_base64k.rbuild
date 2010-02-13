@@ -4,10 +4,6 @@
 	<include base="freeldr_base64k">include</include>
 	<include base="ntoskrnl">include</include>
 	<define name="_NTHAL_" />
-	<group compilerset="gcc">
-		<compilerflag>-fno-inline</compilerflag>
-		<compilerflag>-fno-zero-initialized-in-bss</compilerflag>
-	</group>
 	<directory name="arch">
 		<if property="ARCH" value="i386">
 			<directory name="i386">

@@ -102,7 +102,7 @@ static ULONG WINAPI xmlnodemap_Release(
     if ( ref == 0 )
     {
         IXMLDOMNode_Release( This->node );
-        HeapFree( GetProcessHeap(), 0, This );
+        heap_free( This );
     }
 
     return ref;
@@ -191,7 +191,7 @@ xmlChar *xmlChar_from_wchar( LPWSTR str )
     xmlChar *xmlstr;
 
     len = WideCharToMultiByte( CP_UTF8, 0, str, -1, NULL, 0, NULL, NULL );
-    xmlstr = HeapAlloc( GetProcessHeap(), 0, len );
+    xmlstr = heap_alloc( len );
     if ( xmlstr )
         WideCharToMultiByte( CP_UTF8, 0, str, -1, (LPSTR) xmlstr, len, NULL, NULL );
     return xmlstr;
@@ -218,7 +218,7 @@ static HRESULT WINAPI xmlnodemap_getNamedItem(
 
     element_name = xmlChar_from_wchar( name );
     attr = xmlHasNsProp( node, element_name, NULL );
-    HeapFree( GetProcessHeap(), 0, element_name );
+    heap_free( element_name );
 
     if ( !attr )
     {
@@ -303,7 +303,7 @@ static HRESULT WINAPI xmlnodemap_removeNamedItem(
 
     element_name = xmlChar_from_wchar( name );
     attr = xmlHasNsProp( node, element_name, NULL );
-    HeapFree( GetProcessHeap(), 0, element_name );
+    heap_free( element_name );
 
     if ( !attr )
     {
@@ -531,7 +531,7 @@ IXMLDOMNamedNodeMap *create_nodemap( IXMLDOMNode *node )
 {
     xmlnodemap *nodemap;
 
-    nodemap = HeapAlloc( GetProcessHeap(), 0, sizeof *nodemap );
+    nodemap = heap_alloc( sizeof *nodemap );
     if ( !nodemap )
         return NULL;
 

@@ -267,7 +267,6 @@ CIrpQueue::GetMapping(
     if (!Irp)
     {
         DPRINT("NoIrp\n");
-        return STATUS_UNSUCCESSFUL;
         // no irp available, use silence buffer
         *Buffer = (PUCHAR)m_SilenceBuffer;
         *BufferSize = m_MaxFrameSize;
@@ -467,6 +466,11 @@ CIrpQueue::CancelBuffers()
     KsCancelIo(&m_IrpList, &m_IrpListLock);
     // reset stream start flag
     m_StartStream = FALSE;
+    // reset number of mappings
+    m_NumMappings = 0;
+    // reset number of data available
+    m_NumDataAvailable = 0;
+
     // done
     return TRUE;
 }

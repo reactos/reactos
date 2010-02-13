@@ -54,7 +54,6 @@ typedef struct _xmldoc
     HRESULT error;
 
     /* IXMLDocument */
-    IXMLElement *root;
     xmlDocPtr xmldoc;
 
     /* IPersistStream */
@@ -118,7 +117,7 @@ static ULONG WINAPI xmldoc_Release(IXMLDocument *iface)
     {
         xmlFreeDoc(This->xmldoc);
         if (This->stream) IStream_Release(This->stream);
-        HeapFree(GetProcessHeap(), 0, This);
+        heap_free(This);
     }
 
     return ref;
@@ -198,17 +197,19 @@ static HRESULT WINAPI xmldoc_Invoke(IXMLDocument *iface, DISPID dispIdMember,
 static HRESULT WINAPI xmldoc_get_root(IXMLDocument *iface, IXMLElement **p)
 {
     xmldoc *This = impl_from_IXMLDocument(iface);
+    xmlNodePtr root;
 
     TRACE("(%p, %p)\n", iface, p);
 
     if (!p)
         return E_INVALIDARG;
 
-    *p = This->root;
-    if (!*p)
+    *p = NULL;
+
+    if (!(root = xmlDocGetRootElement(This->xmldoc)))
         return E_FAIL;
 
-    return S_OK;
+    return XMLElement_create((IUnknown *)This, root, (LPVOID *)p, FALSE);
 }
 
 static HRESULT WINAPI xmldoc_get_fileSize(IXMLDocument *iface, BSTR *p)
@@ -439,14 +440,32 @@ static HRESULT WINAPI xmldoc_put_charset(IXMLDocument *iface, BSTR p)
 
 static HRESULT WINAPI xmldoc_get_version(IXMLDocument *iface, BSTR *p)
 {
-    FIXME("(%p, %p): stub\n", iface, p);
-    return E_NOTIMPL;
+    xmldoc *This = impl_from_IXMLDocument(iface);
+
+    TRACE("(%p, %p)\n", This, p);
+
+    if (!p) return E_INVALIDARG;
+    *p = bstr_from_xmlChar(This->xmldoc->version);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI xmldoc_get_doctype(IXMLDocument *iface, BSTR *p)
 {
-    FIXME("(%p, %p): stub\n", iface, p);
-    return E_NOTIMPL;
+    xmldoc *This = impl_from_IXMLDocument(iface);
+    xmlDtd *dtd;
+
+    TRACE("(%p, %p)\n", This, p);
+
+    if (!p) return E_INVALIDARG;
+
+    dtd = xmlGetIntSubset(This->xmldoc);
+    if (!dtd) return S_FALSE;
+
+    *p = bstr_from_xmlChar(dtd->name);
+    CharUpperBuffW(*p, SysStringLen(*p));
+
+    return S_OK;
 }
 
 static HRESULT WINAPI xmldoc_get_dtdURl(IXMLDocument *iface, BSTR *p)
@@ -501,7 +520,7 @@ static HRESULT WINAPI xmldoc_createElement(IXMLDocument *iface, VARIANT vType,
     node->type = type_msxml_to_libxml(V_I4(&vType));
 
     /* FIXME: create xmlNodePtr based on vType and var1 */
-    return XMLElement_create((IUnknown *)iface, node, (LPVOID *)ppElem);
+    return XMLElement_create((IUnknown *)iface, node, (LPVOID *)ppElem, TRUE);
 }
 
 static const struct IXMLDocumentVtbl xmldoc_vtbl =
@@ -556,8 +575,13 @@ static ULONG WINAPI xmldoc_IPersistStreamInit_Release(
 static HRESULT WINAPI xmldoc_IPersistStreamInit_GetClassID(
     IPersistStreamInit *iface, CLSID *classid)
 {
-    FIXME("(%p,%p): stub!\n", iface, classid);
-    return E_NOTIMPL;
+    xmldoc *this = impl_from_IPersistStreamInit(iface);
+    TRACE("(%p,%p)\n", this, classid);
+
+    if (!classid) return E_POINTER;
+
+    *classid = CLSID_XMLDocument;
+    return S_OK;
 }
 
 static HRESULT WINAPI xmldoc_IPersistStreamInit_IsDirty(
@@ -581,7 +605,6 @@ static HRESULT WINAPI xmldoc_IPersistStreamInit_Load(
     IPersistStreamInit *iface, LPSTREAM pStm)
 {
     xmldoc *This = impl_from_IPersistStreamInit(iface);
-    xmlNodePtr xmlnode;
     HRESULT hr;
     HGLOBAL hglobal;
     DWORD read, written, len;
@@ -593,6 +616,8 @@ static HRESULT WINAPI xmldoc_IPersistStreamInit_Load(
     if (!pStm)
         return E_INVALIDARG;
 
+    /* release previously allocated stream */
+    if (This->stream) IStream_Release(This->stream);
     hr = CreateStreamOnHGlobal(NULL, TRUE, &This->stream);
     if (FAILED(hr))
         return hr;
@@ -616,7 +641,10 @@ static HRESULT WINAPI xmldoc_IPersistStreamInit_Load(
     len = GlobalSize(hglobal);
     ptr = GlobalLock(hglobal);
     if (len != 0)
+    {
+        xmlFreeDoc(This->xmldoc);
         This->xmldoc = parse_xml(ptr, len);
+    }
     GlobalUnlock(hglobal);
 
     if (!This->xmldoc)
@@ -625,8 +653,7 @@ static HRESULT WINAPI xmldoc_IPersistStreamInit_Load(
         return E_FAIL;
     }
 
-    xmlnode = xmlDocGetRootElement(This->xmldoc);
-    return XMLElement_create((IUnknown *)This, xmlnode, (LPVOID *)&This->root);
+    return S_OK;
 }
 
 static HRESULT WINAPI xmldoc_IPersistStreamInit_Save(
@@ -639,15 +666,17 @@ static HRESULT WINAPI xmldoc_IPersistStreamInit_Save(
 static HRESULT WINAPI xmldoc_IPersistStreamInit_GetSizeMax(
     IPersistStreamInit *iface, ULARGE_INTEGER *pcbSize)
 {
-    FIXME("(%p, %p): stub!\n", iface, pcbSize);
+    xmldoc *This = impl_from_IPersistStreamInit(iface);
+    TRACE("(%p, %p)\n", This, pcbSize);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI xmldoc_IPersistStreamInit_InitNew(
     IPersistStreamInit *iface)
 {
-    FIXME("(%p): stub!\n", iface);
-    return E_NOTIMPL;
+    xmldoc *This = impl_from_IPersistStreamInit(iface);
+    TRACE("(%p)\n", This);
+    return S_OK;
 }
 
 static const IPersistStreamInitVtbl xmldoc_IPersistStreamInit_VTable =
@@ -669,7 +698,7 @@ HRESULT XMLDocument_create(IUnknown *pUnkOuter, LPVOID *ppObj)
 
     TRACE("(%p,%p)\n", pUnkOuter, ppObj);
 
-    doc = HeapAlloc(GetProcessHeap(), 0, sizeof (*doc));
+    doc = heap_alloc(sizeof (*doc));
     if(!doc)
         return E_OUTOFMEMORY;
 
@@ -677,7 +706,6 @@ HRESULT XMLDocument_create(IUnknown *pUnkOuter, LPVOID *ppObj)
     doc->lpvtblIPersistStreamInit = &xmldoc_IPersistStreamInit_VTable;
     doc->ref = 1;
     doc->error = S_OK;
-    doc->root = NULL;
     doc->xmldoc = NULL;
     doc->stream = NULL;
 

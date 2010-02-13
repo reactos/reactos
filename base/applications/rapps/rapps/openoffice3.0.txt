@@ -7,27 +7,25 @@ Licence = LGPL
 Description = THE Open Source Office Suite.
 Size = 134.3MB
 Category = 6
-URLSite = http://www.openoffice.org
+URLSite = http://www.openoffice.org/
 URLDownload = http://ftp.tu-chemnitz.de/pub/openoffice/stable/3.1.1/OOo_3.1.1_Win32Intel_install_en-US.exe
 CDPath = none
 
 [Section.0407]
 Description = DIE Open Source Office Suite.
-URLSite = http://de.openoffice.org
-Size = 156.8MB
-Version = 3.1.1
-URLDownload = http://ftp.tu-chemnitz.de/pub/openoffice/localized/de/3.1.1/OOo_3.1.1_Win32Intel_install_wJRE_de.exe
+URLSite = http://de.openoffice.org/
+Size = 142.9MB
+URLDownload = http://ftp.tu-chemnitz.de/pub/openoffice/localized/de/3.1.1/OOo_3.1.1_Win32Intel_install_de.exe
 
 [Section.040a]
 Description = La suite de ofimática de código abierto.
 URLSite = http://es.openoffice.org/
-Size = 130.0MB
 Version = 3.1.0
-URLDownload = http://openoffice.panu.it/localized/es/3.1.0/OOo_3.1.0_Win32Intel_install_es.exe
+Size = 130.0MB
+URLDownload = http://ftp.tu-chemnitz.de/pub/openoffice/localized/es/3.1.0/OOo_3.1.0_Win32Intel_install_es.exe
 
 [Section.0415]
 Description = Otwarty pakiet biurowy.
-URLSite = http://pl.openoffice.org
+URLSite = http://pl.openoffice.org/
 Size = 147.1MB
 URLDownload = http://ftp.tu-chemnitz.de/pub/openoffice/localized/pl/3.1.1/OOo_3.1.1_Win32Intel_install_pl.exe
-

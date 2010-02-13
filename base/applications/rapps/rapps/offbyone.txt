@@ -7,7 +7,7 @@ Licence = Freeware
 Description = The Off By One Browser is a very small and fast web browser with full HTML 3.2 support.
 Size = 0.98M
 Category = 5
-URLSite = http://offbyone.com
+URLSite = http://offbyone.com/
 URLDownload = http://offbyone.com/offbyone/images/OffByOneSetup.exe
 CDPath = none
 
@@ -19,4 +19,3 @@ Description = Es un pequeño y rápido navegador web con completo soporte HTML 3
 
 [Section.0415]
 Description = Bardzo mała i szybka przeglądarka internetowa z pełną obsługą HTML 3.2.
-

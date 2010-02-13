@@ -53,12 +53,13 @@ END
 
 IDD_SYSSETTINGS DIALOGEX 0, 0, 221, 106
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
-CAPTION "System Settings"
+CAPTION "Налаштування системи"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    GROUPBOX        "Version Info",IDC_STATIC,6,3,210,73
-    CONTROL         "Report as Workstation",IDC_REPORTASWORKSTATION,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,57,88,10
-    LTEXT           "ReactOS is built as a server OS and reports as such. Check this box to change this for applications only.",IDC_STATIC,15,15,183,41
+    GROUPBOX        "Інформація про версію",IDC_STATIC,6,3,210,73
+    CONTROL         "Позначити як робочу станцію",IDC_REPORTASWORKSTATION,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,57,88,10
+    CONTROL         "Позначити як робочу станцію",IDC_REPORTASWORKSTATION,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,57,88,10
+    LTEXT           "ReactOS будується як серверна ОС. Обрати прапорець, щоб змінити лише цей додаток.",IDC_STATIC,15,15,183,41
     PUSHBUTTON      "OK",IDOK,166,83,50,14
 END
 

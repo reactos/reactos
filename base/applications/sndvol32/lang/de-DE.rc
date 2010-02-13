@@ -19,7 +19,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_SNDVOL32       "Lautstärke Einstellungen"
+    IDS_SNDVOL32       "Lautstärke-Einstellungen"
     IDS_NOMIXERDEVICES "Es sind keine aktiven Mixer vorhanden! Die Anwendung wird jetzt beendet."
 END
 

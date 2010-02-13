@@ -244,7 +244,7 @@ HRESULT WINAPI AVIFileOpenW(PAVIFILE *ppfile, LPCWSTR szFile, UINT uMode,
   /* if no handler then try guessing it by extension */
   if (lpHandler == NULL) {
     if (! AVIFILE_GetFileHandlerByExtension(szFile, &clsidHandler))
-      return AVIERR_UNSUPPORTED;
+      clsidHandler = CLSID_AVIFile;
   } else
     clsidHandler = *lpHandler;
 
@@ -1225,13 +1225,14 @@ static BOOL AVISaveOptionsFmtChoose(HWND hWnd)
     acmMetrics(NULL, ACM_METRIC_MAX_SIZE_FORMAT, &size);
     if ((pOptions->cbFormat == 0 || pOptions->lpFormat == NULL) && size != 0) {
       pOptions->lpFormat = HeapAlloc(GetProcessHeap(), 0, size);
+      if (!pOptions->lpFormat) return FALSE;
       pOptions->cbFormat = size;
     } else if (pOptions->cbFormat < (DWORD)size) {
-      pOptions->lpFormat = HeapReAlloc(GetProcessHeap(), 0, pOptions->lpFormat, size);
+      void *new_buffer = HeapReAlloc(GetProcessHeap(), 0, pOptions->lpFormat, size);
+      if (!new_buffer) return FALSE;
+      pOptions->lpFormat = new_buffer;
       pOptions->cbFormat = size;
     }
-    if (pOptions->lpFormat == NULL)
-      return FALSE;
     afmtc.pwfx  = pOptions->lpFormat;
     afmtc.cbwfx = pOptions->cbFormat;
 

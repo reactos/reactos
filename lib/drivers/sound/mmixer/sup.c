@@ -588,7 +588,7 @@ MMixerGetDataByDeviceName(
     while(Entry != &MixerList->MixerData)
     {
         MixerData = (LPMIXER_DATA)CONTAINING_RECORD(Entry, MIXER_DATA, Entry);
-        if (wcsicmp(DeviceName, MixerData->DeviceName) == 0)
+        if (wcsicmp(&DeviceName[2], &MixerData->DeviceName[2]) == 0)
         {
             // found entry
             return MixerData;

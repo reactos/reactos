@@ -286,7 +286,7 @@ some others are missing.
 [ntos] msvc: path to rules files in vcprojs fixed
 
 
-***** 
+***** 45591
 
 [branch] revert to 45059
 First of a sequence of commits to heal branch and sync to trunk head, prior to commits of msvc builds based in current trunk.
@@ -294,5 +294,8 @@ First of a sequence of commits to heal branch and sync to trunk head, prior to c
 45572 will be the latest bootable msvc build based in 44678 until future commits complete the new msvc version (log will indicate that).
 
 ****** 
+
+[branch] merge trunk head
+
 
 

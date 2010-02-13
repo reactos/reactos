@@ -64,6 +64,9 @@
 	<directory name="d3dx9_41">
 		<xi:include href="d3dx9_41/d3dx9_41.rbuild" />
 	</directory>
+	<directory name="d3dx9_42">
+		<xi:include href="d3dx9_42/d3dx9_42.rbuild" />
+	</directory>
 	<directory name="ddraw">
 		<xi:include href="ddraw/ddraw.rbuild" />
 	</directory>

@@ -791,6 +791,7 @@ DisplayDevNodeFlags(IN PDEVADVPROP_INFO dap,
 //    SetListViewText(hwndListView, 0, dap->szTemp);
 }
 
+
 static VOID
 DisplayDevNodeEnumerator(IN PDEVADVPROP_INFO dap,
                          IN HWND hwndListView)
@@ -825,6 +826,76 @@ DisplayDevNodeEnumerator(IN PDEVADVPROP_INFO dap,
 }
 
 
+static VOID
+DisplayCsFlags(IN PDEVADVPROP_INFO dap,
+               IN HWND hwndListView)
+{
+    DWORD dwValue = 0;
+    INT index;
+
+    CM_Get_HW_Prof_Flags_Ex(dap->szDevName,
+                            0, /* current hardware profile */
+                            &dwValue,
+                            0,
+                            dap->hMachine);
+
+    index = 0;
+    if (dwValue & CSCONFIGFLAG_DISABLED)
+        SetListViewText(hwndListView, index++, L"CSCONFIGFLAG_DISABLED");
+
+    if (dwValue & CSCONFIGFLAG_DO_NOT_CREATE)
+        SetListViewText(hwndListView, index++, L"CSCONFIGFLAG_DO_NOT_CREATE");
+
+    if (dwValue & CSCONFIGFLAG_DO_NOT_START)
+        SetListViewText(hwndListView, index++, L"CSCONFIGFLAG_DO_NOT_START");
+}
+
+
+static VOID
+DisplayMatchingDeviceId(IN PDEVADVPROP_INFO dap,
+                        IN HWND hwndListView)
+{
+    HDEVINFO DeviceInfoSet;
+    PSP_DEVINFO_DATA DeviceInfoData;
+    WCHAR szBuffer[256];
+    HKEY hKey;
+    DWORD dwSize;
+    DWORD dwType;
+
+    if (dap->CurrentDeviceInfoSet != INVALID_HANDLE_VALUE)
+    {
+        DeviceInfoSet = dap->CurrentDeviceInfoSet;
+        DeviceInfoData = &dap->CurrentDeviceInfoData;
+    }
+    else
+    {
+        DeviceInfoSet = dap->DeviceInfoSet;
+        DeviceInfoData = &dap->DeviceInfoData;
+    }
+
+    hKey = SetupDiOpenDevRegKey(DeviceInfoSet,
+                                DeviceInfoData,
+                                DICS_FLAG_GLOBAL,
+                                0,
+                                DIREG_DRV,
+                                KEY_QUERY_VALUE);
+    if (hKey != INVALID_HANDLE_VALUE)
+    {
+        dwSize = 256 * sizeof(WCHAR);
+        if (RegQueryValueEx(hKey,
+                            L"MatchingDeviceId",
+                            NULL,
+                            &dwType,
+                            (LPBYTE)szBuffer,
+                            &dwSize) == ERROR_SUCCESS)
+        {
+            SetListViewText(hwndListView, 0, szBuffer);
+        }
+
+        RegCloseKey(hKey);
+    }
+}
+
 
 static VOID
 DisplayDeviceProperties(IN PDEVADVPROP_INFO dap,
@@ -848,7 +919,6 @@ DisplayDeviceProperties(IN PDEVADVPROP_INFO dap,
             SetListViewText(hwndListView, 0, dap->szDeviceID);
             break;
 
-
         case 1: /* Hardware ID */
             DisplayDevicePropertyText(dap,
                                       hwndListView,
@@ -861,10 +931,10 @@ DisplayDeviceProperties(IN PDEVADVPROP_INFO dap,
                                       SPDRP_COMPATIBLEIDS);
             break;
 
-#if 0
         case 3: /* Matching ID */
+            DisplayMatchingDeviceId(dap,
+                                    hwndListView);
             break;
-#endif
 
         case 4: /* Service */
             DisplayDevicePropertyText(dap,
@@ -875,9 +945,6 @@ DisplayDeviceProperties(IN PDEVADVPROP_INFO dap,
         case 5: /* Enumerator */
             DisplayDevNodeEnumerator(dap,
                                      hwndListView);
-//            DisplayDevicePropertyText(dap,
-//                                      hwndListView,
-//                                      SPDRP_ENUMERATOR_NAME);
             break;
 
         case 6: /* Capabilities */
@@ -897,22 +964,50 @@ DisplayDeviceProperties(IN PDEVADVPROP_INFO dap,
                                       SPDRP_CONFIGFLAGS);
             break;
 
-#if 0
         case 9: /* CSConfig Flags */
+            DisplayCsFlags(dap,
+                           hwndListView);
+            break;
+
+#if 0
+        case 10: /* Ejection relation */
+            break;
+
+        case 11: /* Removal relations */
+            break;
+
+        case 12: /* Bus relation */
             break;
 #endif
 
-        case 13: /* Upper Filters */
+        case 13: /* Device Upper Filters */
             DisplayDevicePropertyText(dap,
                                       hwndListView,
                                       SPDRP_UPPERFILTERS);
             break;
 
-        case 14: /* Lower Filters */
+        case 14: /* Device Lower Filters */
             DisplayDevicePropertyText(dap,
                                       hwndListView,
                                       SPDRP_LOWERFILTERS);
             break;
+
+#if 0
+        case 15: /* Class Upper Filters */
+            break;
+
+        case 16: /* Class Lower Filters */
+            break;
+
+        case 17: /* Class Installer */
+            break;
+
+        case 18: /* Class Coinstaller */
+            break;
+
+        case 19: /* Device Coinstaller */
+            break;
+#endif
 
         default:
             SetListViewText(hwndListView, 0, L"<Not implemented yet>");
@@ -1355,7 +1450,8 @@ GetParentNode:
     }
 
     /* set the device location edit control text */
-    if (GetDeviceLocationString(DeviceInfoData->DevInst,
+    if (GetDeviceLocationString(DeviceInfoSet,
+                                DeviceInfoData,
                                 dap->ParentDevInst,
                                 dap->szTemp,
                                 sizeof(dap->szTemp) / sizeof(dap->szTemp[0])))

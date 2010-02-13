@@ -209,6 +209,7 @@ KdbpKdbTrapFrameFromKernelStack(
 
     RtlZeroMemory(KdbTrapFrame, sizeof(KDB_KTRAP_FRAME));
     StackPtr = (ULONG_PTR *) KernelStack;
+#if _M_X86_
     KdbTrapFrame->Tf.Ebp = StackPtr[3];
     KdbTrapFrame->Tf.Edi = StackPtr[4];
     KdbTrapFrame->Tf.Esi = StackPtr[5];
@@ -220,6 +221,7 @@ KdbpKdbTrapFrameFromKernelStack(
     KdbTrapFrame->Tf.SegDs = KGDT_R0_DATA;
     KdbTrapFrame->Tf.SegEs = KGDT_R0_DATA;
     KdbTrapFrame->Tf.SegGs = KGDT_R0_DATA;
+#endif
 
     /* FIXME: what about the other registers??? */
 }
@@ -421,7 +423,7 @@ KdbpStepIntoInstruction(
     }
 
     /* Get the interrupt descriptor */
-    if (!NT_SUCCESS(KdbpSafeReadMemory(IntDesc, (PVOID)(Idtr.Base + (IntVect * 8)), sizeof (IntDesc))))
+    if (!NT_SUCCESS(KdbpSafeReadMemory(IntDesc, (PVOID)(ULONG_PTR)(Idtr.Base + (IntVect * 8)), sizeof (IntDesc))))
     {
         /*KdbpPrint("Couldn't access memory at 0x%p\n", (ULONG_PTR)Idtr.Base + (IntVect * 8));*/
         return FALSE;
@@ -1126,7 +1128,7 @@ KdbpAttachToThread(
     /* Get a pointer to the thread */
     if (!NT_SUCCESS(PsLookupThreadByThreadId(ThreadId, &Thread)))
     {
-        KdbpPrint("Invalid thread id: 0x%08x\n", (ULONG)ThreadId);
+        KdbpPrint("Invalid thread id: 0x%08x\n", (ULONG_PTR)ThreadId);
         return FALSE;
     }
     Process = Thread->ThreadsProcess;
@@ -1208,7 +1210,7 @@ KdbpAttachToProcess(
     /* Get a pointer to the process */
     if (!NT_SUCCESS(PsLookupProcessByProcessId(ProcessId, &Process)))
     {
-        KdbpPrint("Invalid process id: 0x%08x\n", (ULONG)ProcessId);
+        KdbpPrint("Invalid process id: 0x%08x\n", (ULONG_PTR)ProcessId);
         return FALSE;
     }
 
@@ -1216,7 +1218,7 @@ KdbpAttachToProcess(
     ObDereferenceObject(Process);
     if (Entry == &KdbCurrentProcess->ThreadListHead)
     {
-        KdbpPrint("No threads in process 0x%08x, cannot attach to process!\n", (ULONG)ProcessId);
+        KdbpPrint("No threads in process 0x%p, cannot attach to process!\n", ProcessId);
         return FALSE;
     }
 
@@ -1257,7 +1259,7 @@ KdbpInternalEnter()
     SavedStackLimit = Thread->Tcb.StackLimit;
     SavedKernelStack = Thread->Tcb.KernelStack;
     Thread->Tcb.InitialStack = Thread->Tcb.StackBase = (char*)KdbStack + KDB_STACK_SIZE;
-    Thread->Tcb.StackLimit = (ULONG)KdbStack;
+    Thread->Tcb.StackLimit = (ULONG_PTR)KdbStack;
     Thread->Tcb.KernelStack = (char*)KdbStack + KDB_STACK_SIZE;
 
     /*KdbpPrint("Switching to KDB stack 0x%08x-0x%08x (Current Stack is 0x%08x)\n", Thread->Tcb.StackLimit, Thread->Tcb.StackBase, Esp);*/

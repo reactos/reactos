@@ -115,7 +115,7 @@ PMENU_OBJECT FASTCALL UserGetMenuObject(HMENU hMenu)
       return NULL;
    }
 
-   ASSERT(USER_BODY_TO_HEADER(Menu)->RefCount >= 0);
+   ASSERT(Menu->head.cLockObj >= 0);
    return Menu;
 }
 
@@ -179,9 +179,9 @@ IntGetMenuObject(HMENU hMenu)
    PMENU_OBJECT Menu = UserGetMenuObject(hMenu);
    if (Menu)
    {
-      ASSERT(USER_BODY_TO_HEADER(Menu)->RefCount >= 0);
+      ASSERT(Menu->head.cLockObj >= 0);
 
-      USER_BODY_TO_HEADER(Menu)->RefCount++;
+      Menu->head.cLockObj++;
    }
    return Menu;
 }
@@ -297,10 +297,11 @@ IntCreateMenu(PHANDLE Handle, BOOL IsMenuBar)
    PMENU_OBJECT Menu;
    PPROCESSINFO CurrentWin32Process;
 
-   Menu = (PMENU_OBJECT)UserCreateObject(
-             gHandleTable, Handle,
-             otMenu, sizeof(MENU_OBJECT));
-
+   Menu = (PMENU_OBJECT)UserCreateObject( gHandleTable,
+                                          NULL,
+                                          Handle,
+                                          otMenu,
+                                          sizeof(MENU_OBJECT));
    if(!Menu)
    {
       *Handle = 0;
@@ -407,10 +408,11 @@ IntCloneMenu(PMENU_OBJECT Source)
    if(!Source)
       return NULL;
 
-   Menu = (PMENU_OBJECT)UserCreateObject(
-             gHandleTable, &hMenu,
-             otMenu, sizeof(MENU_OBJECT));
-
+   Menu = (PMENU_OBJECT)UserCreateObject( gHandleTable,
+                                          NULL,
+                                         &hMenu,
+                                          otMenu,
+                                          sizeof(MENU_OBJECT));
    if(!Menu)
       return NULL;
 

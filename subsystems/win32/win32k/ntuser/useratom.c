@@ -37,7 +37,7 @@ IntAddAtom(LPWSTR AtomName)
    RTL_ATOM Atom;
 
    pti = PsGetCurrentThreadWin32Thread();
-   if (pti->Desktop == NULL)
+   if (pti->rpdesk == NULL)
    {
       SetLastNtError(Status);
       return (RTL_ATOM)0;
@@ -61,7 +61,7 @@ IntGetAtomName(RTL_ATOM nAtom, LPWSTR lpBuffer, ULONG nSize)
    ULONG Size = nSize;
 
    pti = PsGetCurrentThreadWin32Thread();
-   if (pti->Desktop == NULL)
+   if (pti->rpdesk == NULL)
    {
       SetLastNtError(Status);
       return 0;

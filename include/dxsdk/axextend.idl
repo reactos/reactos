@@ -266,7 +266,7 @@ interface IFilterMapper2 : IUnknown
 
     HRESULT UnregisterFilter
         ( [in] const CLSID *pclsidCategory,
-          [in] const OLECHAR *szInstance,
+          [in] LPCOLESTR szInstance,
           [in] REFCLSID Filter
         );
 
@@ -275,7 +275,7 @@ interface IFilterMapper2 : IUnknown
           [in] LPCWSTR Name,
           [in, out] IMoniker **ppMoniker,
           [in] const CLSID *pclsidCategory,
-          [in] const OLECHAR *szInstance,
+          [in] LPCOLESTR szInstance,
           [in] const REGFILTER2 *prf2
         );
 
@@ -317,7 +317,7 @@ typedef enum tagQualityMessageType
 typedef struct tagQuality
 {
     QualityMessageType Type;
-    long               Proportion;
+    LONG               Proportion;
     REFERENCE_TIME       Late;
     REFERENCE_TIME       TimeStamp;
 } Quality;
@@ -482,7 +482,7 @@ pointer_default(unique)
 interface IMediaEventSink : IUnknown
 {
     HRESULT Notify(
-        [in] long EventCode,
+        [in] LONG EventCode,
         [in] LONG_PTR EventParam1,
         [in] LONG_PTR EventParam2
     );
@@ -824,11 +824,11 @@ typedef enum tagVideoProcAmpFlags
 ]
 interface IAMVideoProcAmp : IUnknown
 {
-    HRESULT GetRange( [in] long Property, [out] long *pMin, [out] long *pMax,
-                     [out] long *pSteppingDelta, [out] long *pDefault,
-                     [out] long *pCapsFlags);
-    HRESULT Set( [in] long Property, [in] long lValue, [in] long Flags);
-    HRESULT Get( [in] long Property, [out] long *lValue, [out] long *Flags);
+    HRESULT GetRange( [in] LONG Property, [out] LONG *pMin, [out] LONG *pMax,
+                     [out] LONG *pSteppingDelta, [out] LONG *pDefault,
+                     [out] LONG *pCapsFlags);
+    HRESULT Set( [in] LONG Property, [in] LONG lValue, [in] LONG Flags);
+    HRESULT Get( [in] LONG Property, [out] LONG *lValue, [out] LONG *Flags);
 }
 
 

@@ -2,7 +2,7 @@
  *
  * COPYRIGHT:             See COPYING in the top level directory
  * PROJECT:               ReactOS kernel
- * FILE:                  hal/halx86/generic/mpconfig.c
+ * FILE:                  hal/halx86/mp/mpconfig.c
  * PURPOSE:               
  * PROGRAMMER:            
  */

@@ -95,7 +95,7 @@ PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon)
         return NULL;
     }
 
-    ASSERT(USER_BODY_TO_HEADER(CurIcon)->RefCount >= 1);
+    ASSERT(CurIcon->head.cLockObj >= 1);
     return CurIcon;
 }
 
@@ -348,7 +348,7 @@ IntCreateCurIconHandle()
     PCURICON_OBJECT CurIcon;
     HANDLE hCurIcon;
 
-    CurIcon = UserCreateObject(gHandleTable, &hCurIcon, otCursorIcon, sizeof(CURICON_OBJECT));
+    CurIcon = UserCreateObject(gHandleTable, NULL, &hCurIcon, otCursorIcon, sizeof(CURICON_OBJECT));
 
     if (!CurIcon)
     {
@@ -1563,8 +1563,8 @@ NtUserDrawIconEx(
     UINT istepIfAniCur,
     HBRUSH hbrFlickerFreeDraw,
     UINT diFlags,
-    DWORD Unknown0,
-    DWORD Unknown1)
+    BOOL bMetaHDC, // When TRUE, GDI functions need to be handled in User32!
+    PVOID pDIXData)
 {
     PCURICON_OBJECT pIcon;
     BOOL Ret;

@@ -94,7 +94,7 @@ static ULONG WINAPI domattr_Release(
     if ( ref == 0 )
     {
         destroy_xmlnode(&This->node);
-        HeapFree( GetProcessHeap(), 0, This );
+        heap_free( This );
     }
 
     return ref;
@@ -546,7 +546,7 @@ IUnknown* create_attribute( xmlNodePtr attribute )
 {
     domattr *This;
 
-    This = HeapAlloc( GetProcessHeap(), 0, sizeof *This );
+    This = heap_alloc( sizeof *This );
     if ( !This )
         return NULL;
 

@@ -723,7 +723,7 @@
 @ stub UserLpkTabbedTextOut
 @ stdcall UserRealizePalette(long)
 @ stdcall UserRegisterWowHandlers(ptr ptr)
-@ stdcall ValidateRect(long ptr) ; Direct call NtUserValidateRect
+@ stdcall ValidateRect(long ptr) NtUserValidateRect
 @ stdcall ValidateRgn(long long)
 @ stdcall VkKeyScanA(long)
 @ stdcall VkKeyScanExA(long long)

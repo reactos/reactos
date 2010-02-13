@@ -31,9 +31,33 @@
 #define MI_NONPAGED_POOL_END                   (PVOID)0xFFBE0000
 #define MI_DEBUG_MAPPING                       (PVOID)0xFFBFF000
 
+#define MI_MIN_SECONDARY_COLORS                 8
+#define MI_SECONDARY_COLORS                     64
+#define MI_MAX_SECONDARY_COLORS                 1024
+
 #define MM_HIGHEST_VAD_ADDRESS \
     (PVOID)((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - (16 * PAGE_SIZE))
 
+/* Make the code cleaner with some definitions for size multiples */
+#define _1KB (1024)
+#define _1MB (1000 * _1KB)
+
+/* Size of a PDE directory, and size of a page table */
+#define PDE_SIZE (PDE_COUNT * sizeof(MMPDE))
+#define PT_SIZE  (PTE_COUNT * sizeof(MMPTE))
+
+/* Architecture specific count of PDEs in a directory, and count of PTEs in a PT */
+#ifdef _M_IX86
+#define PD_COUNT  1
+#define PDE_COUNT 1024
+#define PTE_COUNT 1024
+#elif _M_ARM
+#define PD_COUNT  1
+#define PDE_COUNT 4096
+#define PTE_COUNT 256
+#else
+#error Define these please!
+#endif
 
 //
 // FIXFIX: These should go in ex.h after the pool merge
@@ -126,7 +150,16 @@ typedef struct _PHYSICAL_MEMORY_DESCRIPTOR
     PHYSICAL_MEMORY_RUN Run[1];
 } PHYSICAL_MEMORY_DESCRIPTOR, *PPHYSICAL_MEMORY_DESCRIPTOR;
 
+typedef struct _MMCOLOR_TABLES
+{
+    PFN_NUMBER Flink;
+    PVOID Blink;
+    PFN_NUMBER Count;
+} MMCOLOR_TABLES, *PMMCOLOR_TABLES;
+
 extern MMPTE HyperTemplatePte;
+extern MMPTE ValidKernelPde;
+extern MMPTE ValidKernelPte;
 
 extern ULONG MmSizeOfNonPagedPoolInBytes;
 extern ULONG MmMaximumNonPagedPoolInBytes;
@@ -168,6 +201,19 @@ extern SIZE_T MmAllocatedNonPagedPool;
 extern ULONG_PTR MmSubsectionBase;
 extern ULONG MmSpecialPoolTag;
 extern PVOID MmHyperSpaceEnd;
+extern PMMWSL MmSystemCacheWorkingSetList;
+extern ULONG MmMinimumNonPagedPoolSize;
+extern ULONG MmMinAdditionNonPagedPoolPerMb;
+extern ULONG MmDefaultMaximumNonPagedPool;
+extern ULONG MmMaxAdditionNonPagedPoolPerMb;
+extern ULONG MmSecondaryColors;
+extern ULONG MmSecondaryColorMask;
+extern ULONG MmNumberOfSystemPtes;
+extern ULONG MmMaximumNonPagedPoolPercent;
+extern ULONG MmLargeStackSize;
+
+#define MI_PFN_TO_PFNENTRY(x)     (&MmPfnDatabase[1][x])
+#define MI_PFNENTRY_TO_PFN(x)     (x - MmPfnDatabase[1])
 
 NTSTATUS
 NTAPI
@@ -176,6 +222,63 @@ MmArmInitSystem(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
+NTSTATUS
+NTAPI
+MiInitMachineDependent(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
+VOID
+NTAPI
+MiComputeColorInformation(
+    VOID
+);
+
+VOID
+NTAPI
+MiMapPfnDatabase(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
+VOID
+NTAPI
+MiInitializeColorTables(
+    VOID
+);
+
+VOID
+NTAPI
+MiInitializePfnDatabase(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
+PFN_NUMBER
+NTAPI
+MxGetNextPage(
+    IN PFN_NUMBER PageCount
+);
+
+PPHYSICAL_MEMORY_DESCRIPTOR
+NTAPI
+MmInitializeMemoryLimits(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock,
+    IN PBOOLEAN IncludeType
+);
+                         
+PFN_NUMBER
+NTAPI
+MiPagesInLoaderBlock(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock,
+    IN PBOOLEAN IncludeType
+);
+                     
+VOID
+FASTCALL
+MiSyncARM3WithROS(
+    IN PVOID AddressStart,
+    IN PVOID AddressEnd
+);
+                         
 NTSTATUS
 NTAPI
 MmArmAccessFault(

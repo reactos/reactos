@@ -19,4 +19,3 @@ Description = Un ciente SSH, Telnet, rlogin y TCP gratuito.
 
 [Section.0415]
 Description = Darmowy klient obsługujący protokoły SSH, Telnet, rlogin oraz bezpośrednie TCP.
-

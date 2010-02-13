@@ -14,13 +14,21 @@
 
 UINT TdiAddressSizeFromType( UINT AddressType ) {
     switch( AddressType ) {
-    case AF_INET:
+    case TDI_ADDRESS_TYPE_IP:
 		return sizeof(TA_IP_ADDRESS);
+    case TDI_ADDRESS_TYPE_APPLETALK:
+		return sizeof(TA_APPLETALK_ADDRESS);
+    case TDI_ADDRESS_TYPE_NETBIOS:
+		return sizeof(TA_NETBIOS_ADDRESS);
+    /* case TDI_ADDRESS_TYPE_NS: */
+    case TDI_ADDRESS_TYPE_IPX:
+		return sizeof(TA_IPX_ADDRESS);
+    case TDI_ADDRESS_TYPE_VNS:
+		return sizeof(TA_VNS_ADDRESS);
     default:
-		AFD_DbgPrint(MID_TRACE,("TdiAddressSizeFromType - invalid type: %x\n", AddressType));
-		KeBugCheck( 0 );
+		DbgPrint("TdiAddressSizeFromType - invalid type: %x\n", AddressType);
+		return 0;
     }
-    return 0;
 }
 
 UINT TaLengthOfAddress( PTA_ADDRESS Addr ) {
@@ -85,6 +93,8 @@ static NTSTATUS TdiBuildNullConnectionInfoInPlace
 	PTRANSPORT_ADDRESS TransportAddress;
 
 	TdiAddressSize = TdiAddressSizeFromType(Type);
+	if (!TdiAddressSize)
+		return STATUS_INVALID_PARAMETER;
 
 	RtlZeroMemory(ConnInfo,
 				  sizeof(TDI_CONNECTION_INFORMATION) +
@@ -118,6 +128,10 @@ NTSTATUS TdiBuildNullConnectionInfo
 	NTSTATUS Status;
 
 	TdiAddressSize = TdiAddressSizeFromType(Type);
+	if (!TdiAddressSize) {
+		*ConnectionInfo = NULL;
+		return STATUS_INVALID_PARAMETER;
+	}
 
 	ConnInfo = (PTDI_CONNECTION_INFORMATION)
 		ExAllocatePool(NonPagedPool,
@@ -199,6 +213,9 @@ TdiBuildConnectionInfoPair
 
     /* FIXME: Get from socket information */
     TdiAddressSize = TdiAddressSizeFromType(From->Address[0].AddressType);
+	if (!TdiAddressSize)
+		return STATUS_INVALID_PARAMETER;
+
     SizeOfEntry = TdiAddressSize + sizeof(TDI_CONNECTION_INFORMATION);
 
     LayoutFrame = (PCHAR)ExAllocatePool(NonPagedPool, 2 * SizeOfEntry);

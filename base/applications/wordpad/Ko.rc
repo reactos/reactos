@@ -47,7 +47,7 @@ BEGIN
         MENUITEM "지우기(&C)\tDEL",                 ID_EDIT_CLEAR
         MENUITEM "모두 선택(&S)\tCtrl+A",         ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "찾기(&F)...\tCrtl+F",         ID_FIND
+        MENUITEM "찾기(&F)...\tCtrl+F",         ID_FIND
         MENUITEM "다음 찾기(&N)\tF3",              ID_FIND_NEXT
 	MENUITEM " 바꾸기(&R)...\tCtrl+H",      ID_REPLACE
         MENUITEM SEPARATOR
@@ -212,6 +212,8 @@ BEGIN
     STRING_PREVIEW_PREVPAGE,         "이전 페이지"
     STRING_PREVIEW_TWOPAGES,         "두 페이지"
     STRING_PREVIEW_ONEPAGE,          "한 페이지"
+    STRING_PREVIEW_ZOOMIN,           "Zoom in"
+    STRING_PREVIEW_ZOOMOUT,          "Zoom out"
     STRING_PREVIEW_CLOSE,            "닫기"
     STRING_UNITS_CM,             "cm"
 END

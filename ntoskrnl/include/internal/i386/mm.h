@@ -59,4 +59,32 @@ PULONG MmGetPageDirectory(VOID);
 #define MI_MAKE_WRITE_PAGE(x)      ((x)->u.Hard.Writable = 1)
 #endif
 
+#define PAGE_TO_SECTION_PAGE_DIRECTORY_OFFSET(x) \
+    ((x) / (4*1024*1024))
+
+#define PAGE_TO_SECTION_PAGE_TABLE_OFFSET(x) \
+    ((((x)) % (4*1024*1024)) / (4*1024))
+
+#define NR_SECTION_PAGE_TABLES              1024
+#define NR_SECTION_PAGE_ENTRIES             1024
+
+#define TEB_BASE                            0x7FFDE000
+
+#define MI_HYPERSPACE_PTES                  (256 - 1)
+#define MI_ZERO_PTES                        (32)
+#define MI_MAPPING_RANGE_START              (ULONG)HYPER_SPACE
+#define MI_MAPPING_RANGE_END                (MI_MAPPING_RANGE_START + \
+                                             MI_HYPERSPACE_PTES * PAGE_SIZE)
+#define MI_ZERO_PTE                         (PMMPTE)(MI_MAPPING_RANGE_END + \
+                                             PAGE_SIZE)
+
+/* On x86, these two are the same */
+#define MMPDE MMPTE
+#define PMMPDE PMMPTE
+
+/*
+* FIXME - different architectures have different cache line sizes...
+*/
+#define MM_CACHE_LINE_SIZE                  32
+
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_I386_MM_H */

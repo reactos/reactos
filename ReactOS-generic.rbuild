@@ -117,14 +117,9 @@
 		</if>
 
 		<compilerflag>-fno-strict-aliasing</compilerflag>
-		<compilerflag>-Wno-strict-aliasing</compilerflag>
 		<compilerflag>-Wpointer-arith</compilerflag>
 		<compilerflag>-Wno-multichar</compilerflag>
-		<!--
 		<compilerflag>-Wno-error=uninitialized</compilerflag>
-		<compilerflag>-Wno-error=unused-function</compilerflag>
-		<compilerflag>-Wno-error=write-strings</compilerflag>
-		-->
 		<!-- compilerflag>-H</compilerflag>    enable this for header traces -->
 	</group>
 

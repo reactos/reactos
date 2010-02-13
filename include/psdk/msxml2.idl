@@ -1070,6 +1070,14 @@ coclass DOMDocument30
     [default, source] dispinterface XMLDOMDocumentEvents;
 }
 
+[
+    uuid(88d969c0-f192-11d4-a65f-0040963251e5)
+]
+coclass DOMDocument40
+{
+    [default] interface IXMLDOMDocument2;
+    [default, source] dispinterface XMLDOMDocumentEvents;
+}
 
 [
     uuid(F6D90F12-9C73-11D3-B32E-00C04F990BB4)

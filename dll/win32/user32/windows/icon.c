@@ -16,10 +16,9 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * PROJECT:         ReactOS user32.dll
- * FILE:            lib/user32/windows/icon.c
+ * FILE:            dll/win32/user32/windows/icon.c
  * PURPOSE:         Icon
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:
@@ -346,7 +345,7 @@ DrawIcon(
   int Y,
   HICON hIcon)
 {
-  return DrawIconEx(hDC, X, Y, hIcon, 0, 0, 0, NULL, DI_NORMAL | DI_DEFAULTSIZE);
+  return DrawIconEx(hDC, X, Y, hIcon, 0, 0, 0, NULL, DI_NORMAL|DI_DEFAULTSIZE|DI_COMPAT);
 }
 
 /*

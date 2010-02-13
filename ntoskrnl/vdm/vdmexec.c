@@ -196,7 +196,42 @@ VdmpStartExecution(VOID)
     ASSERT(*VdmState == 0);
     ASSERT(VdmTib->VdmContext.EFlags & EFLAGS_V86_MASK);
 
-    /*  Get the VDM context and make sure it's an edited frame */
+    /* Check if VME is supported and V86 mode was enabled */
+    if ((KeI386VirtualIntExtensions) &&
+        (VdmTib->VdmContext.EFlags & EFLAGS_V86_MASK))
+    {
+        /* Check if interrupts are enabled */
+        if (Interrupts)
+        {
+            /* Set fake IF flag */
+            VdmTib->VdmContext.EFlags |= EFLAGS_VIF;
+        }
+        else
+        {
+            /* Remove fake IF flag, turn on real IF flag */
+            VdmTib->VdmContext.EFlags &= ~EFLAGS_VIF;
+            VdmTib->VdmContext.EFlags |= EFLAGS_INTERRUPT_MASK;
+        }
+    }
+    else
+    {
+        /* Set interrupt state in the VDM State */
+        if (VdmTib->VdmContext.EFlags & EFLAGS_INTERRUPT_MASK)
+        {
+            /* Enable them as well */
+            InterlockedOr((PLONG)VdmState, EFLAGS_INTERRUPT_MASK);
+        }
+        else
+        {
+            /* Disable them */
+            InterlockedAnd((PLONG)VdmState, ~EFLAGS_INTERRUPT_MASK);
+        }
+
+        /* Enable the interrupt flag */
+        VdmTib->VdmContext.EFlags |= EFLAGS_INTERRUPT_MASK;
+    }
+
+    /*  Get the VDM context and make sure it's not an edited frame */
     VdmContext = VdmTib->VdmContext;
     if (!(VdmContext.SegCs & FRAME_EDITED))
     {
@@ -204,25 +239,7 @@ VdmpStartExecution(VOID)
         KeLowerIrql(OldIrql);
         return STATUS_INVALID_SYSTEM_SERVICE;
     }
-
-    /* FIXME: Support VME */
-    ASSERT(VdmTib->VdmContext.EFlags & EFLAGS_V86_MASK);
-
-    /* Set interrupt state in the VDM State */
-    if (VdmTib->VdmContext.EFlags & EFLAGS_INTERRUPT_MASK)
-    {
-        /* Enable them as well */
-        InterlockedOr((PLONG)VdmState, EFLAGS_INTERRUPT_MASK);
-    }
-    else
-    {
-        /* Disable them */
-        InterlockedAnd((PLONG)VdmState, ~EFLAGS_INTERRUPT_MASK);
-    }
-
-    /* Enable the interrupt flag */
-    VdmTib->VdmContext.EFlags |= EFLAGS_INTERRUPT_MASK;
-
+    
     /* Now do the VDM Swap */
     VdmSwapContext(VdmFrame, &VdmTib->MonitorContext, &VdmContext);
 
@@ -251,17 +268,41 @@ VdmEndExecution(IN PKTRAP_FRAME TrapFrame,
     VdmTib->MonitorContext.Eax = STATUS_SUCCESS;
 
     /* Make a copy of the monitor context */
-    RtlCopyMemory(&Context, &VdmTib->MonitorContext, sizeof(CONTEXT));
+    Context = VdmTib->MonitorContext;
+    
+    /* Check if V86 mode was enabled or the trap was edited */
+    if ((Context.EFlags & EFLAGS_V86_MASK) || (Context.SegCs & FRAME_EDITED))
+    {
+        /* Switch contexts */
+        VdmSwapContext(TrapFrame, &VdmTib->VdmContext, &Context);
 
-    /* Switch contexts */
-    VdmSwapContext(TrapFrame, &VdmTib->VdmContext, &Context);
-
-    /* FIXME: Support VME */
-
-    /* Set the EFLAGS */
-    VdmTib->VdmContext.EFlags = (VdmTib->VdmContext.EFlags &
-                                 ~EFLAGS_INTERRUPT_MASK) |
-                                (*VdmState & EFLAGS_INTERRUPT_MASK);
+        /* Check if VME is supported and V86 mode was enabled */
+        if ((KeI386VirtualIntExtensions) &&
+            (VdmTib->VdmContext.EFlags & EFLAGS_V86_MASK))
+        {
+            /* Check for VIF (virtual interrupt) flag state */
+            if (VdmTib->VdmContext.EFlags & EFLAGS_VIF)
+            {
+                /* Set real IF flag */
+                VdmTib->VdmContext.EFlags |= EFLAGS_INTERRUPT_MASK;
+            }
+            else
+            {
+                /* Remove real IF flag */
+                VdmTib->VdmContext.EFlags &= ~EFLAGS_INTERRUPT_MASK;
+            }
+            
+            /* Turn off VIP and VIF */
+            TrapFrame->EFlags &= ~(EFLAGS_VIP | EFLAGS_VIF);
+            VdmTib->VdmContext.EFlags &= ~(EFLAGS_VIP | EFLAGS_VIF);
+        }
+        else
+        {
+            /* Set the EFLAGS based on our software copy of EFLAGS */
+            VdmTib->VdmContext.EFlags = (VdmTib->VdmContext.EFlags & ~EFLAGS_INTERRUPT_MASK) |
+                                        (*VdmState & EFLAGS_INTERRUPT_MASK);
+        }
+    }
 
     /* Lower IRQL and reutrn */
     KeLowerIrql(OldIrql);
