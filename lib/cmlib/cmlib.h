@@ -89,6 +89,8 @@
     #endif
 
     #include <ntdef.h>
+    #undef DECLSPEC_IMPORT
+    #define DECLSPEC_IMPORT
     #include <ntddk.h>
 #endif
 
@@ -99,11 +101,9 @@
 //
 #define CMLIB_HCELL_DEBUG                                 0x01
 
-#ifndef ROUND_DOWN
-#define ROUND_DOWN(n, align) \
-	(n & ~(align-1))
-#define ROUND_UP(n, align) \
-	((n + (align-1)) & ~(align-1))
+#ifndef ROUND_UP
+#define ROUND_UP(a,b)        ((((a)+(b)-1)/(b))*(b))
+#define ROUND_DOWN(a,b)      (((a)/(b))*(b))
 #endif
 
 //

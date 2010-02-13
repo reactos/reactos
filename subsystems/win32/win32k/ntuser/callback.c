@@ -474,7 +474,7 @@ co_IntCallHookProc(INT HookId,
                {
                   RtlCopyMemory(Extra, ClassName.Buffer, ClassName.Length);
                   CbtCreatewndExtra->Cs.lpszClass =
-                     (LPCWSTR) MAKELONG(Extra - (PCHAR) CbtCreatewndExtra, 1);
+                     (LPCWSTR)(ULONG_PTR) MAKELONG(Extra - (PCHAR) CbtCreatewndExtra, 1);
                   Extra += ClassName.Length;
 
                   if (Ansi)
@@ -700,7 +700,7 @@ co_IntCallLoadMenu( HINSTANCE hModule,
    Result = *(LRESULT*)ResultPointer;
 
    IntCbFreeMemory(Argument);
-  
+
    if (!NT_SUCCESS(Status))
    {
       return 0;

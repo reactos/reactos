@@ -24,8 +24,8 @@
 
 typedef UCHAR BYTE, *PBYTE;
 
-// typedef ULONG (*PFNDBGPRNT)(const char *Format, ...);
-// extern PFNDBGPRNT KdpDbgPrint;
+typedef ULONG (*PFNDBGPRNT)(const char *Format, ...);
+extern PFNDBGPRNT KdpDbgPrint;
 
 typedef enum
 {
@@ -37,7 +37,7 @@ typedef enum
 #ifndef KDDEBUG
 #define KDDBGPRINT(...)
 #else
-#define KDDBGPRINT DbgPrint
+#define KDDBGPRINT KdpDbgPrint
 #endif
 
 VOID

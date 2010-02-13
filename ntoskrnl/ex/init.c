@@ -4,7 +4,7 @@
  * FILE:            ntoskrnl/ex/init.c
  * PURPOSE:         Executive Initialization Code
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
- *                  Eric Kohl (ekohl@rz-online.de)
+ *                  Eric Kohl
  */
 
 /* INCLUDES ******************************************************************/
@@ -1409,11 +1409,8 @@ Phase1InitializationDiscard(IN PVOID Context)
         if (Y2KHackRequired) TimeFields.Year = (CSHORT)YearHack;
 
         /* Convert to time fields */
-		if(!RtlTimeFieldsToTime(&TimeFields, &SystemBootTime))
-			DPRINT1("RtlTimeFieldsToTime failed\n");
+        RtlTimeFieldsToTime(&TimeFields, &SystemBootTime);
         UniversalBootTime = SystemBootTime;
-		DPRINTT("Timefields: %04d-%02d-%02d\n", TimeFields.Year, TimeFields.Month, TimeFields.Day);
-		DPRINTT("SystemBootTime=%016I64=%I64d\n", UniversalBootTime.QuadPart, UniversalBootTime.QuadPart);
 
         /* Check if real time is GMT */
         if (!ExpRealTimeIsUniversal)

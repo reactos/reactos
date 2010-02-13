@@ -1,4 +1,6 @@
-20100210
+***** 45059 branch creation
+
+***** 45567
 
 [branch regression] revert branch to 44678
 - the msvc port based in 45263 (including new traps etc) is booting to desktop,
@@ -76,11 +78,11 @@ decission is made about this idea of isolating the different debuggers is
 made or its integration in trunk or any other request, i'll keep it in this
 location.
 
- * [tools] rules files
+[tools] rules files
 Rules files for msvc added in tools/msvc, adding support for as and nasm.
 The one to support masm is copied from msvc.
 
-* [global] platform abstraction includes
+[global] platform abstraction includes
 - created dir include/platf with includes providing abstraction of compiler-
 specific directives and platform-specific low level basics.
 - platf.h has the abstraction for compiler-specific directives and is intended
@@ -120,17 +122,7 @@ very often the msc part was wrong, and compiler specific directives,
 have been replaced by instances of the macros defined in these includes.
 Many in ke\i386\cpu.c but also many others spread among many files.
 
-* [crt] lib\sdk\crt2
-- created lib\sdk\crt2, initially a copy of crt, to avoid breaking
-the current crt.
-This is the one being linked in the msvc ntoskrnl.
-Many functions have been put in separate files, to avoid linkage of unused
-functions. A few of them have been improved. vsprintf was taken from
-the rtl.
-- currently contains at least all the functions needed and exported by ntoskrnl,
-some others are missing.
-
-* [ntos] DbgPrint improvements
+[ntos] DbgPrint improvements
 - DbgPrint support moved to ntoskrnl/dbg.
 - DbgPrint now uses a function pointer to the actual handler, so that it can
 be changed as necessary in different phases or by the kernel debuggers.
@@ -151,7 +143,7 @@ debugger is not activated all DbgPrint output is always handled by ser1,
 and if the debugger is activated output from kernel goes to com1 and from
 user to windbg, not a big problem anyway.
 
-* [sdk] sdks fixes
+[sdk] sdks fixes
 - some defs like #define NTKERNELAPI DECLSPEC_IMPORT has been made conditional as
 #ifndef NTKERNELAPI
 #define NTKERNELAPI DECLSPEC_IMPORT
@@ -174,14 +166,14 @@ NTSYSAPI ULONG _CDECL DbgPrintReturnControlC(PCCH Format, ...);
 NTSYSAPI NTSTATUS NTAPI DbgQueryDebugFilterState(ULONG ComponentId, ULONG Level);
 NTSYSAPI NTSTATUS NTAPI DbgSetDebugFilterState(ULONG ComponentId, ULONG Level, BOOLEAN State);
 
-* [ntos] added lacking global
+[ntos] added lacking global
 ntoskrnl\cc\cacheman.c
 BOOLEAN CcPfEnablePrefetcher = 0;
 
-* [ntos] ntoskrnl\ex\work.c: Int32x32To64 with all constant arguments is silly,
+[ntos] ntoskrnl\ex\work.c: Int32x32To64 with all constant arguments is silly,
 let the compiler do it instead of invoking a runtime multiplication.
 
-* [ntos] ntoskrnl\ke\dpc.c 
+[ntos] ntoskrnl\ke\dpc.c 
 FIXME: KiTimerExpiration causes a crash if global optimization (MSVC9)
 difficult to trace, it works most times, but sometimes make a called dpc routine
 crash.
@@ -189,48 +181,48 @@ Added _OPTIMIZE_OFF_GLOBAL and _OPTIMIZE_DFT before and after the function.
 _OPTIMIZE macros are defined in platf.h, appropiately in msc version and empty 
 in the gnuc one.
 
-* [ntos] ntoskrnl\ke\freeldr.c KERNEL_DESCRIPTOR_PAGE macro bug fix
+[ntos] ntoskrnl\ke\freeldr.c KERNEL_DESCRIPTOR_PAGE macro bug fix
 // #define KERNEL_DESCRIPTOR_PAGE(x) (((ULONG_PTR)x &~ KSEG0_BASE) >> PAGE_SHIFT)
 #define KERNEL_DESCRIPTOR_PAGE(x) ( ( (ULONG_PTR)x > KSEG0_BASE ? ((ULONG_PTR)x-KSEG0_BASE) : (ULONG_PTR)x) >> PAGE_SHIFT)
 
-* [ntos] TSS needs alignment
+[ntos] TSS needs alignment
 changed globals definition order
 _ALIGN(0x80) KTSS KiBootTss;
 _ALIGN is appropiately defined in platf.h for msc and gnuc
 
-* [ntos] mm/arm3
+[ntos] mm/arm3
 #line 15 in removed in all files
 These play havoc with msvc and ultracompare. I don't think
 they are necessary in any case so i removed them.
 If there is a good reason to have them, plz put them in #ifdef ARM block,
 or much better, define a macro in the platf.h for arm
 
-* [ntos] ntoskrnl\ps\win32.c
+[ntos] ntoskrnl\ps\win32.c
 PsConvertToGuiThread calls KeSwitchKernelStack, which changes the stack and ebp
 added _OPTIMIZE_OFF_STKF and _OPTIMIZE_DFT before and after the fn, so it
 works regardless of the optimizations chosen.
 
-* [rtl] GetGlobalFlags GetVersion moved to separate files so that are only
+[rtl] GetGlobalFlags GetVersion moved to separate files so that are only
 linked if actually used.
 
-* [ntos] ntoskrnl\include\internal\ke_x.h KeGetPreviousMode
+[ntos] ntoskrnl\include\internal\ke_x.h KeGetPreviousMode
 Changed to macro without outer cast.
 Don't use wrong cast or inline return type, it is unnecessary and
 can generate unnecessary rt conversion.
 
-* [ntos] use section macros in platf.h instead of compiler specific
+[ntos] use section macros in platf.h instead of compiler specific
 directives defs of PLACE_IN_SECTION, INIT_FUNCTION, PAGE_LOCKED_FUNCTION,
 PAGE_UNLOCKED_FUNCTION removed and refereces changed to macros based in 
 platf.h that are suitable for both gnuc and msc, unlike the previous ones
 that couldn't be defined for msc coz it needs the function name and is used
 only in definition, not in declaration.
 
-* [ntos] msc part in intrin_i.h removed
+[ntos] msc part in intrin_i.h removed
 cpu_c.h contains everything intrin_i had, and much more it didn't.
 gcc doesn't need it either if cpu_c.h is included instead, so this
 file should dissapear.
 
-* [ntos] PETHREAD and PEPROCESS ambiguity
+[ntos] PETHREAD and PEPROCESS ambiguity
 ddk may define PETHREAD as KTHREAD * or ETHREAD * depending on
 what specific includes are used.
 To avoid the ambiguity i replaced in some places PETHREAD for ETHREAD *,
@@ -274,13 +266,33 @@ what's unnefficient), and eliminated unneeded and undesirable casts.
 [ntos] declaration of KeInvalidateAllCaches lacked NTAPI, necessary since it's
 an export. The problem manifested only if not using stdcall as compiler default.
 
-20100210 commit 45567
+[crt] lib\sdk\crt2
+- created lib\sdk\crt2, initially a copy of crt, to avoid breaking
+the current crt while testing changes.
+This is the one being linked in the msvc ntoskrnl.
+Many functions have been put in separate files, to avoid linkage of unused
+functions. A few of them have been improved. vsprintf was taken from
+the rtl.
+- currently contains at least all the functions needed and exported by ntoskrnl,
+some others are missing.
+
+[crt] lib\rtl2
+- created lib\rtl2, a copy of rtl, to avoid breaking current rtl while testing changes.
+- minor changes and some fix. Use diff to check changes, not big deal.
 
 
-[global]
-include\platf now contains the files tht were in the following locations,
-that are removed:
-include/reactos/msc/ include/reactos/gnuc/ include/reactos/i386/
-include/crt/msc include/crt/mingw32
+***** 45572
 
 [ntos] msvc: path to rules files in vcprojs fixed
+
+
+***** 
+
+[branch] revert to 45059
+First of a sequence of commits to heal branch and sync to trunk head, prior to commits of msvc builds based in current trunk.
+45467 reverted the whole branch to 44678 to allow commits of msvc build based in 44678, problematic coz it is prior to branch creation.
+45572 will be the latest bootable msvc build based in 44678 until future commits complete the new msvc version (log will indicate that).
+
+****** 
+
+

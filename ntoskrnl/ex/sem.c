@@ -13,6 +13,9 @@
 #define NDEBUG
 #include <debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, ExpInitializeSemaphoreImplementation)
+#endif
 
 /* GLOBALS ******************************************************************/
 
@@ -34,8 +37,10 @@ static const INFORMATION_CLASS_INFO ExSemaphoreInfoClass[] =
 
 /* FUNCTIONS *****************************************************************/
 
-SECT_INIT_FN(ExpInitializeSemaphoreImplementation)
-VOID NTAPI ExpInitializeSemaphoreImplementation(VOID)
+VOID
+INIT_FUNCTION
+NTAPI
+ExpInitializeSemaphoreImplementation(VOID)
 {
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     UNICODE_STRING Name;

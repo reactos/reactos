@@ -1015,7 +1015,8 @@ ObpIncrementHandleCount(IN PVOID Object,
 
     /* Trace call and return */
     OBTRACE(OB_HANDLE_DEBUG,
-            "Incremented count for %p. Reason=%x HC=%x PC=%x\n",
+            "%s - Incremented count for: %p. Reason: %lx HC PC %lx %lx\n",
+            __FUNCTION__,
             Object,
             OpenReason,
             ObjectHeader->HandleCount,

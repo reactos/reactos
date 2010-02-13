@@ -100,6 +100,9 @@ MMixerOpen(
     // FIXME
     // handle event notification
 
+    Status = MMixerAddEvents(MixerContext, MixerInfo);
+
+
     // store result
     *MixerHandle = (HANDLE)MixerInfo;
 
@@ -163,7 +166,7 @@ MMixerGetLineInfo(
             return MM_STATUS_INVALID_PARAMETER;
         }
 
-        MixerLineSrc = MMixerGetSourceMixerLineByLineId(MixerInfo, MixerLine->dwSource);
+        MixerLineSrc = MMixerGetSourceMixerLineByLineId(MixerInfo, MixerLine->dwSource * 0x10000);
         if (MixerLineSrc)
         {
             DPRINT("Line %u Name %S\n", MixerLineSrc->Line.dwSource, MixerLineSrc->Line.szName);
@@ -422,7 +425,8 @@ MMixerInitialize(
         return MM_STATUS_INVALID_PARAMETER;
     }
 
-    if (!MixerContext->Alloc || !MixerContext->Control || !MixerContext->Free || !MixerContext->Open || 
+    if (!MixerContext->Alloc || !MixerContext->Control || !MixerContext->Free || !MixerContext->Open ||
+        !MixerContext->AllocEventData || !MixerContext->FreeEventData ||
         !MixerContext->Close || !MixerContext->OpenKey || !MixerContext->QueryKeyValue || !MixerContext->CloseKey)
     {
         // invalid parameter

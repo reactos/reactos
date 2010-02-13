@@ -29,7 +29,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(d3d8);
 /* IUnknown */
 static HRESULT WINAPI IDirect3DVertexDeclaration8Impl_QueryInterface(IDirect3DVertexDeclaration8 *iface, REFIID riid, void **obj_ptr)
 {
-    TRACE("(%p)->(%s, %p)\n", iface, debugstr_guid(riid), obj_ptr);
+    TRACE("iface %p, riid %s, object %p.\n", iface, debugstr_guid(riid), obj_ptr);
 
     if (IsEqualGUID(riid, &IID_IUnknown)
             || IsEqualGUID(riid, &IID_IDirect3DVertexDeclaration8))
@@ -46,9 +46,9 @@ static HRESULT WINAPI IDirect3DVertexDeclaration8Impl_QueryInterface(IDirect3DVe
 static ULONG WINAPI IDirect3DVertexDeclaration8Impl_AddRef(IDirect3DVertexDeclaration8 *iface)
 {
     IDirect3DVertexDeclaration8Impl *This = (IDirect3DVertexDeclaration8Impl *)iface;
-
     ULONG ref_count = InterlockedIncrement(&This->ref_count);
-    TRACE("(%p) : AddRef increasing to %d\n", This, ref_count);
+
+    TRACE("%p increasing refcount to %u.\n", iface, ref_count);
 
     if (ref_count == 1)
     {
@@ -63,9 +63,9 @@ static ULONG WINAPI IDirect3DVertexDeclaration8Impl_AddRef(IDirect3DVertexDeclar
 static ULONG WINAPI IDirect3DVertexDeclaration8Impl_Release(IDirect3DVertexDeclaration8 *iface)
 {
     IDirect3DVertexDeclaration8Impl *This = (IDirect3DVertexDeclaration8Impl *)iface;
-
     ULONG ref_count = InterlockedDecrement(&This->ref_count);
-    TRACE("(%p) : Releasing to %d\n", This, ref_count);
+
+    TRACE("%p decreasing refcount to %u.\n", iface, ref_count);
 
     if (!ref_count) {
         wined3d_mutex_lock();
@@ -301,7 +301,8 @@ static const wined3d_usage_t wined3d_usage_lookup[] = {
 };
 
 /* TODO: find out where rhw (or positionT) is for declaration8 */
-UINT convert_to_wined3d_declaration(const DWORD *d3d8_elements, DWORD *d3d8_elements_size, WINED3DVERTEXELEMENT **wined3d_elements)
+static UINT convert_to_wined3d_declaration(const DWORD *d3d8_elements, DWORD *d3d8_elements_size,
+        WINED3DVERTEXELEMENT **wined3d_elements)
 {
     const DWORD *token = d3d8_elements;
     WINED3DVERTEXELEMENT *element;

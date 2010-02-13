@@ -14,6 +14,10 @@
 #define NDEBUG
 #include <debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, IoInitFileSystemImplementation)
+#pragma alloc_text(INIT, IoInitVpbImplementation)
+#endif
 
 /* GLOBALS ******************************************************************/
 

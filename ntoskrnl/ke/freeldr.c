@@ -9,7 +9,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
-// #define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #if defined(_PPC_)
@@ -18,8 +18,7 @@
 #define KERNEL_DESCRIPTOR_PAGE(x) (((ULONG_PTR)x + KernelBase) >> PAGE_SHIFT)
 #else
 #define KERNEL_RVA(x) RVA(x,KSEG0_BASE)
-// #define KERNEL_DESCRIPTOR_PAGE(x) (((ULONG_PTR)x &~ KSEG0_BASE) >> PAGE_SHIFT)
-#define KERNEL_DESCRIPTOR_PAGE(x) ( ( (ULONG_PTR)x > KSEG0_BASE ? ((ULONG_PTR)x-KSEG0_BASE) : (ULONG_PTR)x) >> PAGE_SHIFT)
+#define KERNEL_DESCRIPTOR_PAGE(x) (((ULONG_PTR)x &~ KSEG0_BASE) >> PAGE_SHIFT)
 #endif
 
 typedef struct _BIOS_MEMORY_DESCRIPTOR
@@ -29,36 +28,6 @@ typedef struct _BIOS_MEMORY_DESCRIPTOR
 } BIOS_MEMORY_DESCRIPTOR, *PBIOS_MEMORY_DESCRIPTOR;
 
 /* GLOBALS *******************************************************************/
-
-#if defined(_X86_)
-
-/* The Boot TSS */
-_ALIGN(0x80) KTSS KiBootTss;
-
-/* Old boot style IDT */
-KIDTENTRY KiBootIdt[256];
-
-/* The Boot GDT */
-KGDTENTRY KiBootGdt[256] =
-{
-    {0x0000, 0x0000, {{0x00, 0x00, 0x00, 0x00}}},	// 00 KGDT_NULL
-    {0xffff, 0x0000, {{0x00, 0x9b, 0xcf, 0x00}}},	// 08 KGDT_R0_CODE
-    {0xffff, 0x0000, {{0x00, 0x93, 0xcf, 0x00}}},	// 10 KGDT_R0_DATA
-    {0xffff, 0x0000, {{0x00, 0xfb, 0xcf, 0x00}}},   // 18 KGDT_R3_CODE
-    {0xffff, 0x0000, {{0x00, 0xf3, 0xcf, 0x00}}},	// 20 KGDT_R3_DATA*/
-    {0x0000, 0x0000, {{0x00, 0x00, 0x00, 0x00}}},   // 28 KGDT_TSS */
-    {0x0001, 0xf000, {{0xdf, 0x93, 0xc0, 0xff}}},   // 30 KGDT_R0_PCR
-    {0x0fff, 0x0000, {{0x00, 0xf3, 0x40, 0x00}}},   // 38 KGDT_R3_TEB
-    {0x0000, 0x0000, {{0x00, 0x00, 0x00, 0x00}}},   // 40 KGDT_UNUSED
-    {0x0000, 0x0000, {{0x00, 0x00, 0x00, 0x00}}},   // 48 KGDT_LDT
-    {0x0000, 0x0000, {{0x00, 0x00, 0x00, 0x00}}},	// 50 KGDT_DF_TSS
-    {0x0000, 0x0000, {{0x00, 0x00, 0x00, 0x00}}}	// 58 KGDT_NMI_TSS
-};
-
-/* GDT Descriptor */
-KDESCRIPTOR KiGdtDescriptor = {0, sizeof(KiBootGdt) - 1, (ULONG)KiBootGdt};
-
-#endif
 
 /* FreeLDR Loader Data */
 PROS_LOADER_PARAMETER_BLOCK KeRosLoaderBlock;
@@ -96,6 +65,36 @@ PBIOS_MEMORY_DESCRIPTOR BiosMemoryDescriptorList = BiosMemoryDescriptors;
 ULONG NumberDescriptors = 0;
 MEMORY_DESCRIPTOR MDArray[60] = { { 0, 0, 0 }, };
 
+#if defined(_X86_)
+
+/* The Boot TSS */
+KTSS KiBootTss;
+
+/* Old boot style IDT */
+KIDTENTRY KiBootIdt[256];
+
+/* The Boot GDT */
+KGDTENTRY KiBootGdt[256] =
+{
+    {0x0000, 0x0000, {{0x00, 0x00, 0x00, 0x00}}},       /* KGDT_NULL */
+    {0xffff, 0x0000, {{0x00, 0x9b, 0xcf, 0x00}}},       /* KGDT_R0_CODE */
+    {0xffff, 0x0000, {{0x00, 0x93, 0xcf, 0x00}}},       /* KGDT_R0_DATA */
+    {0xffff, 0x0000, {{0x00, 0xfb, 0xcf, 0x00}}},       /* KGDT_R3_CODE */
+    {0xffff, 0x0000, {{0x00, 0xf3, 0xcf, 0x00}}},       /* KGDT_R3_DATA*/
+    {0x0000, 0x0000, {{0x00, 0x00, 0x00, 0x00}}},       /* KGDT_TSS */
+    {0x0001, 0xf000, {{0xdf, 0x93, 0xc0, 0xff}}},       /* KGDT_R0_PCR */
+    {0x0fff, 0x0000, {{0x00, 0xf3, 0x40, 0x00}}},       /* KGDT_R3_TEB */
+    {0x0000, 0x0000, {{0x00, 0x00, 0x00, 0x00}}},       /* KGDT_UNUSED */
+    {0x0000, 0x0000, {{0x00, 0x00, 0x00, 0x00}}},       /* KGDT_LDT */
+    {0x0000, 0x0000, {{0x00, 0x00, 0x00, 0x00}}},       /* KGDT_DF_TSS */
+    {0x0000, 0x0000, {{0x00, 0x00, 0x00, 0x00}}}        /* KGDT_NMI_TSS */
+};
+
+/* GDT Descriptor */
+KDESCRIPTOR KiGdtDescriptor = {0, sizeof(KiBootGdt) - 1, (ULONG)KiBootGdt};
+
+#endif
+
 /* FUNCTIONS *****************************************************************/
 
 PMEMORY_ALLOCATION_DESCRIPTOR
@@ -103,11 +102,7 @@ NTAPI
 KiRosGetMdFromArray(VOID)
 {
     /* Return the next MD from the list, but make sure we don't overflow */
-    if (BldrCurrentMd > 60)
-	{
-		DPRINT1("failed\n");
-		ASSERT(FALSE);
-	}
+    if (BldrCurrentMd > 60) ASSERT(FALSE);
     return &BldrMemoryDescriptors[BldrCurrentMd++];
 }
 
@@ -118,19 +113,15 @@ KiRosAddBiosBlock(ULONG Address,
 {
     PBIOS_MEMORY_DESCRIPTOR BiosBlock = BiosMemoryDescriptorList;
 
-	DPRINTT("addr=%x-%x\n", Address, Address+Size-1);
-
-	/* Loop our BIOS Memory Descriptor List */
+    /* Loop our BIOS Memory Descriptor List */
     while (BiosBlock->BlockSize > 0)
     {
-		// DPRINTT("BiosBlock: addr=%x-%x\n", BiosBlock->BlockBase, BiosBlock->BlockBase+BiosBlock->BlockSize);
         /* Check if we've found a matching head block */
         if (Address + Size == BiosBlock->BlockBase)
         {
             /* Simply enlarge and rebase it */
             BiosBlock->BlockBase = Address;
             BiosBlock->BlockSize += Size;
-			// DPRINTT("found1 addr=%x-%x\n", BiosBlock->BlockBase, BiosBlock->BlockBase+BiosBlock->BlockSize-1);
             break;
         }
 
@@ -139,8 +130,7 @@ KiRosAddBiosBlock(ULONG Address,
         {
             /* Simply enlarge it */
             BiosBlock->BlockSize += Size;
-			// DPRINTT("found2 addr=%x-%x\n", BiosBlock->BlockBase, BiosBlock->BlockBase+BiosBlock->BlockSize-1);
-			break;
+            break;
         }
 
         /* Nothing suitable found, try the next block */
@@ -157,9 +147,7 @@ KiRosAddBiosBlock(ULONG Address,
         /* Create a new block and mark it as the end of the array */
         BiosBlock++;
         BiosBlock->BlockBase = BiosBlock->BlockSize = 0L;
-
-		// DPRINTT("new addr=%x-%x\n", BiosBlock->BlockBase, BiosBlock->BlockBase+BiosBlock->BlockSize-1);
-	}
+    }
 }
 
 VOID
@@ -169,15 +157,12 @@ KiRosBuildBiosMemoryMap(VOID)
     ULONG BlockBegin, BlockEnd;
     ULONG j;
 
-	DPRINTT("\n");
-
-	/* Loop the BIOS Memory Map */
+    /* Loop the BIOS Memory Map */
     for (j = 0; j < KeMemoryMapRangeCount; j++)
     {
         /* Get the start and end addresses */
         BlockBegin = KeMemoryMap[j].BaseAddrLow;
         BlockEnd = KeMemoryMap[j].BaseAddrLow + KeMemoryMap[j].LengthLow - 1;
-		DPRINTT("%x-%x\n", BlockBegin, BlockEnd);
 
         /* Make sure this isn't a > 4GB descriptor */
         if (!KeMemoryMap[j].BaseAddrHigh)
@@ -203,31 +188,22 @@ KiRosAllocateArcDescriptor(IN ULONG PageBegin,
 {
     ULONG i;
 
-	// DPRINTT("01: %x-%x %x\n", PageBegin<<12, ((PageEnd+1)<<12)-1, MemoryType);
-
     /* Loop all our descriptors */
     for (i = 0; i < NumberDescriptors; i++)
     {
-		// DPRINTT("02: %x-%x %x\n", MDArray[i].BasePage<<12, ((MDArray[i].BasePage+MDArray[i].PageCount)<<12)-1, MDArray[i].MemoryType);
-
-		/* Attempt to fing a free block that describes our region */
+        /* Attempt to fing a free block that describes our region */
         if ((MDArray[i].MemoryType == MemoryFree) &&
             (MDArray[i].BasePage <= PageBegin) &&
             (MDArray[i].BasePage + MDArray[i].PageCount > PageBegin) &&
             (MDArray[i].BasePage + MDArray[i].PageCount >= PageEnd))
         {
             /* Found one! */
-			// DPRINTT("03: found\n");
             break;
         }
     }
 
     /* Check if we found no free blocks, and fail if so */
-    if (i == NumberDescriptors)
-	{
-		DPRINT1("failed 01\n");
-		return ENOMEM;
-	}
+    if (i == NumberDescriptors) return ENOMEM;
 
     /* Check if the block has our base address */
     if (MDArray[i].BasePage == PageBegin)
@@ -241,11 +217,7 @@ KiRosAllocateArcDescriptor(IN ULONG PageBegin,
         else
         {
             /* Otherwise, make sure we have enough descriptors */
-            if (NumberDescriptors == 60)
-			{
-				DPRINT1("failed 02\n");
-				return ENOMEM;
-			}
+            if (NumberDescriptors == 60) return ENOMEM;
 
             /* Cut this descriptor short */
             MDArray[i].BasePage = PageEnd;
@@ -261,11 +233,7 @@ KiRosAllocateArcDescriptor(IN ULONG PageBegin,
     else if ((MDArray[i].BasePage + MDArray[i].PageCount) == PageEnd)
     {
         /* This block has our end address, make sure we have a free block */
-        if (NumberDescriptors == 60)
-		{
-			DPRINT1("failed 03\n");
-			return ENOMEM;
-		}
+        if (NumberDescriptors == 60) return ENOMEM;
 
         /* Rebase this descriptor */
         MDArray[i].PageCount = PageBegin - MDArray[i].BasePage;
@@ -279,11 +247,7 @@ KiRosAllocateArcDescriptor(IN ULONG PageBegin,
     else
     {
         /* We'll need two descriptors, make sure they're available */
-        if ((NumberDescriptors + 1) >= 60)
-		{
-			DPRINT1("failed 04\n");
-			return ENOMEM;
-		}
+        if ((NumberDescriptors + 1) >= 60) return ENOMEM;
 
         /* Allocate a free memory descriptor for what follows us */
         MDArray[NumberDescriptors].BasePage = PageEnd;
@@ -302,8 +266,6 @@ KiRosAllocateArcDescriptor(IN ULONG PageBegin,
         NumberDescriptors++;
     }
 
-	// DPRINTT("ret: %x-%x %x\n", MDArray[i].BasePage<<12, ((MDArray[i].BasePage+MDArray[i].PageCount)<<12)-1, MDArray[i].MemoryType);
-
     /* Everything went well */
     return STATUS_SUCCESS;
 }
@@ -319,27 +281,18 @@ KiRosConfigureArcDescriptor(IN ULONG PageBegin,
     MEMORY_TYPE BlockType;
     BOOLEAN Combined = FALSE;
 
-	ULONG i1;
-	// DPRINTT("prms= %x-%x %x\n", PageBegin<<12, ((PageEnd)<<12)-1, MemoryType);
-
     /* If this descriptor seems bogus, just return */
-    if (PageEnd <= PageBegin)
-	{
-		DPRINT1("bogus begin > end\n");
-		return STATUS_SUCCESS;
-	}
+    if (PageEnd <= PageBegin) return STATUS_SUCCESS;
 
     /* Loop every ARC descriptor, trying to find one we can modify */
     for (i = 0; i < NumberDescriptors; i++)
     {
-		// DPRINTT("02 chk MDArray[%x]= %x-%x %x\n", i, MDArray[i].BasePage<<12, ((MDArray[i].BasePage+MDArray[i].PageCount)<<12)-1, MDArray[i].MemoryType);
-
         /* Get its settings */
         BlockBegin = MDArray[i].BasePage;
         BlockEnd = MDArray[i].BasePage + MDArray[i].PageCount;
         BlockType = MDArray[i].MemoryType;
 
-		/* Check if we can fit inside this block */
+        /* Check if we can fit inside this block */
         if (BlockBegin < PageBegin)
         {
             /* Check if we are larger then it */
@@ -353,20 +306,13 @@ KiRosConfigureArcDescriptor(IN ULONG PageBegin,
             if (BlockEnd > PageEnd)
             {
                 /* Make sure we can allocate a descriptor */
-                if (NumberDescriptors >= 60)
-				{
-					DPRINT1("failed 01\n");
-					return ENOMEM;
-				}
+                if (NumberDescriptors == 60) return ENOMEM;
 
                 /* Create a descriptor for whatever memory we're not part of */
                 MDArray[NumberDescriptors].MemoryType = BlockType;
                 MDArray[NumberDescriptors].BasePage = PageEnd;
                 MDArray[NumberDescriptors].PageCount  = BlockEnd - PageEnd;
                 NumberDescriptors++;
-				
-				i1 = NumberDescriptors-1;
-				// DPRINTT(" 03 new MDArray[%x]= %x-%x %x\n", i1, MDArray[i1].BasePage<<12, ((MDArray[i1].BasePage+MDArray[i1].PageCount)<<12)-1, MDArray[i1].MemoryType);
 
                 /* The next block ending is now where we begin */
                 BlockEnd = PageBegin;
@@ -421,8 +367,6 @@ KiRosConfigureArcDescriptor(IN ULONG PageBegin,
         MDArray[i].BasePage  = BlockBegin;
         MDArray[i].PageCount = BlockEnd - BlockBegin;
 
-		// DPRINTT("04 chg MDArray[%x]= %x-%x %x\n", i, MDArray[i].BasePage<<12, ((MDArray[i].BasePage+MDArray[i].PageCount)<<12)-1, MDArray[i].MemoryType);
-
         /* Check if we are killing the block */
         if (BlockBegin == BlockEnd)
         {
@@ -437,20 +381,13 @@ KiRosConfigureArcDescriptor(IN ULONG PageBegin,
     if (!(Combined) && (MemoryType < LoaderMaximum))
     {
         /* Make sure there's enough descriptors */
-        if (NumberDescriptors == 60)
-		{
-			DPRINT1("failed 02\n");
-			return ENOMEM;
-		}
+        if (NumberDescriptors == 60) return ENOMEM;
 
-		/* Allocate a new block with our data */
+        /* Allocate a new block with our data */
         MDArray[NumberDescriptors].MemoryType = MemoryType;
         MDArray[NumberDescriptors].BasePage = PageBegin;
-        MDArray[NumberDescriptors].PageCount = PageEnd - PageBegin;
-		NumberDescriptors++;
-
-		i1 = NumberDescriptors - 1;
-		// DPRINTT("05 new MDArray[%x]= %x-%x %x\n", i1, MDArray[i1].BasePage<<12, ((MDArray[i1].BasePage+MDArray[i].PageCount)<<12)-1, MDArray[i1].MemoryType);
+        MDArray[NumberDescriptors].PageCount  = PageEnd - PageBegin;
+        NumberDescriptors++;
     }
 
     /* Changes complete, return success */
@@ -466,130 +403,119 @@ KiRosBuildOsMemoryMap(VOID)
     NTSTATUS Status = STATUS_SUCCESS;
     ULONG BiosPage = 0xA0;
 
-	DPRINTT("\n");
-	while(1)
-	{
-		/* Loop the BIOS Memory Descriptor List */
-		MdBlock = BiosMemoryDescriptorList;
-		while (MdBlock->BlockSize)
-		{
-			/* Get the statrt and end addresses */
-			BlockStart = MdBlock->BlockBase;
-			BlockEnd = BlockStart + MdBlock->BlockSize - 1;
+    /* Loop the BIOS Memory Descriptor List */
+    MdBlock = BiosMemoryDescriptorList;
+    while (MdBlock->BlockSize)
+    {
+        /* Get the statrt and end addresses */
+        BlockStart = MdBlock->BlockBase;
+        BlockEnd = BlockStart + MdBlock->BlockSize - 1;
 
-			/* Align them to page boundaries */
-			BiasedStart = BlockStart & (PAGE_SIZE - 1);
-			if (BiasedStart) BlockStart = BlockStart + PAGE_SIZE - BiasedStart;
-			BiasedEnd = (BlockEnd + 1) & (ULONG)(PAGE_SIZE - 1);
-			if (BiasedEnd) BlockEnd -= BiasedEnd;
+        /* Align them to page boundaries */
+        BiasedStart = BlockStart & (PAGE_SIZE - 1);
+        if (BiasedStart) BlockStart = BlockStart + PAGE_SIZE - BiasedStart;
+        BiasedEnd = (BlockEnd + 1) & (ULONG)(PAGE_SIZE - 1);
+        if (BiasedEnd) BlockEnd -= BiasedEnd;
 
-			/* Get the actual page numbers */
-			PageStart = BlockStart >> PAGE_SHIFT;
-			PageEnd = (BlockEnd + 1) >> PAGE_SHIFT;
+        /* Get the actual page numbers */
+        PageStart = BlockStart >> PAGE_SHIFT;
+        PageEnd = (BlockEnd + 1) >> PAGE_SHIFT;
 
-			/* If we're starting at page 0, then put the BIOS page at the end */
-			if (!PageStart) BiosPage = PageEnd;
+        /* If we're starting at page 0, then put the BIOS page at the end */
+        if (!PageStart) BiosPage = PageEnd;
 
-			/* Check if we did any alignment */
-			if (BiasedStart)
-			{
-				/* Mark that region as reserved */
-				Status = KiRosConfigureArcDescriptor(PageStart - 1,
-													 PageStart,
-													 MemorySpecialMemory);
-				if (Status != STATUS_SUCCESS) break;
-			}
+        /* Check if we did any alignment */
+        if (BiasedStart)
+        {
+            /* Mark that region as reserved */
+            Status = KiRosConfigureArcDescriptor(PageStart - 1,
+                                                 PageStart,
+                                                 MemorySpecialMemory);
+            if (Status != STATUS_SUCCESS) break;
+        }
 
-			/* Check if we did any alignment */
-			if (BiasedEnd)
-			{
-				/* Mark that region as reserved */
-				Status = KiRosConfigureArcDescriptor(PageEnd - 1,
-													 PageEnd,
-													 MemorySpecialMemory);
-				if (Status != STATUS_SUCCESS) break;
+        /* Check if we did any alignment */
+        if (BiasedEnd)
+        {
+            /* Mark that region as reserved */
+            Status = KiRosConfigureArcDescriptor(PageEnd - 1,
+                                                 PageEnd,
+                                                 MemorySpecialMemory);
+            if (Status != STATUS_SUCCESS) break;
 
-				/* If the bios page was the last page, use the next one instead */
-				if (BiosPage == PageEnd) BiosPage += 1;
-			}
+            /* If the bios page was the last page, use the next one instead */
+            if (BiosPage == PageEnd) BiosPage += 1;
+        }
 
-			/* Check if the page is below the 16MB Memory hole */
-			if (PageEnd <= 0xFC0)
-			{
-				/* It is, mark the memory a free */
-				Status = KiRosConfigureArcDescriptor(PageStart,
-													 PageEnd,
-													 LoaderFree);
-			}
-			else if (PageStart >= 0x1000)
-			{
-				/* It's over 16MB, so that memory gets marked as reserve */
-				Status = KiRosConfigureArcDescriptor(PageStart,
-													 PageEnd,
-													 LoaderFree);
-			}
-			else
-			{
-				/* Check if it starts below the memory hole */
-				if (PageStart < 0xFC0)
-				{
-					/* Mark that part as free */
-					Status = KiRosConfigureArcDescriptor(PageStart,
-														 0xFC0,
-														 MemoryFree);
-					if (Status != STATUS_SUCCESS) break;
+        /* Check if the page is below the 16MB Memory hole */
+        if (PageEnd <= 0xFC0)
+        {
+            /* It is, mark the memory a free */
+            Status = KiRosConfigureArcDescriptor(PageStart,
+                                                 PageEnd,
+                                                 LoaderFree);
+        }
+        else if (PageStart >= 0x1000)
+        {
+            /* It's over 16MB, so that memory gets marked as reserve */
+            Status = KiRosConfigureArcDescriptor(PageStart,
+                                                 PageEnd,
+                                                 LoaderFree);
+        }
+        else
+        {
+            /* Check if it starts below the memory hole */
+            if (PageStart < 0xFC0)
+            {
+                /* Mark that part as free */
+                Status = KiRosConfigureArcDescriptor(PageStart,
+                                                     0xFC0,
+                                                     MemoryFree);
+                if (Status != STATUS_SUCCESS) break;
 
-					/* And update the page start for the code below */
-					PageStart = 0xFC0;
-				}
+                /* And update the page start for the code below */
+                PageStart = 0xFC0;
+            }
 
-				/* Any code in the memory hole region ends up as reserve */
-				Status = KiRosConfigureArcDescriptor(PageStart,
-													 PageEnd,
-													 LoaderFree);
-			}
+            /* Any code in the memory hole region ends up as reserve */
+            Status = KiRosConfigureArcDescriptor(PageStart,
+                                                 PageEnd,
+                                                 LoaderFree);
+        }
 
-			/* If we failed, break out, otherwise, go to the next BIOS block */
-			if (Status != STATUS_SUCCESS) break;
-			MdBlock++;
-		}
+        /* If we failed, break out, otherwise, go to the next BIOS block */
+        if (Status != STATUS_SUCCESS) break;
+        MdBlock++;
+    }
 
-		/* If anything failed until now, return error code */
-		if (Status != STATUS_SUCCESS)
-			break;
+    /* If anything failed until now, return error code */
+    if (Status != STATUS_SUCCESS) return Status;
 
-	#if defined(_X86_)
-		/* Set the top 16MB region as reserved */
-		Status = KiRosConfigureArcDescriptor(0xFC0, 0x1000, MemorySpecialMemory);
-		if (Status != STATUS_SUCCESS)
-			break;
+#if defined(_X86_)
+    /* Set the top 16MB region as reserved */
+    Status = KiRosConfigureArcDescriptor(0xFC0, 0x1000, MemorySpecialMemory);
+    if (Status != STATUS_SUCCESS) return Status;
 
-		/* Setup the BIOS region as reserved */
-		KiRosConfigureArcDescriptor(0xA0, 0x100, LoaderMaximum);
-		KiRosConfigureArcDescriptor(BiosPage, 0x100, MemoryFirmwarePermanent);
+    /* Setup the BIOS region as reserved */
+    KiRosConfigureArcDescriptor(0xA0, 0x100, LoaderMaximum);
+    KiRosConfigureArcDescriptor(BiosPage, 0x100, MemoryFirmwarePermanent);
 
-		/* Build an entry for the IVT */
-		Status = KiRosAllocateArcDescriptor(0, 1, MemoryFirmwarePermanent);
-		if (Status != STATUS_SUCCESS)
-			break;
-	#endif
+    /* Build an entry for the IVT */
+    Status = KiRosAllocateArcDescriptor(0, 1, MemoryFirmwarePermanent);
+    if (Status != STATUS_SUCCESS) return Status;
+#endif
 
-		/* Build an entry for the KPCR and KUSER_SHARED_DATA */
-		Status = KiRosAllocateArcDescriptor(1, 3, LoaderStartupPcrPage);
-		if (Status != STATUS_SUCCESS)
-			break;
+    /* Build an entry for the KPCR and KUSER_SHARED_DATA */
+    Status = KiRosAllocateArcDescriptor(1, 3, LoaderStartupPcrPage);
+    if (Status != STATUS_SUCCESS) return Status;
 
-		/* Build an entry for the PDE and return the status */
-		Status = KiRosAllocateArcDescriptor(KeRosLoaderBlock->
-											PageDirectoryStart >> PAGE_SHIFT,
-											KeRosLoaderBlock->
-											PageDirectoryEnd >> PAGE_SHIFT,
-											LoaderMemoryData);
-		break;
-	}
-	if(Status != STATUS_SUCCESS)
-		DPRINT1("failed\n");
-	return Status;
+    /* Build an entry for the PDE and return the status */
+    Status = KiRosAllocateArcDescriptor(KeRosLoaderBlock->
+                                        PageDirectoryStart >> PAGE_SHIFT,
+                                        KeRosLoaderBlock->
+                                        PageDirectoryEnd >> PAGE_SHIFT,
+                                        LoaderMemoryData);
+    return Status;
 }
 
 #if defined(_X86_)
@@ -600,9 +526,7 @@ KiRosBuildReservedMemoryMap(VOID)
     ULONG j;
     ULONG BlockBegin, BlockEnd, BiasedPage;
 
-	DPRINTT("\n");
-
-	/* Loop the BIOS Memory Map */
+    /* Loop the BIOS Memory Map */
     for (j = 0; j < KeMemoryMapRangeCount; j++)
     {
         /* Get the start and end addresses */
@@ -672,9 +596,7 @@ KiRosInsertNtDescriptor(IN PMEMORY_ALLOCATION_DESCRIPTOR NewDescriptor)
     PLIST_ENTRY ListHead, PreviousEntry, NextEntry;
     PMEMORY_ALLOCATION_DESCRIPTOR Descriptor = NULL, NextDescriptor = NULL;
 
-	// DPRINTT("%x-%x, %x\n", NewDescriptor->BasePage<<12, ((NewDescriptor->BasePage+NewDescriptor->PageCount)<<12)-1, NewDescriptor->MemoryType);
-
-	/* Loop the memory descriptor list */
+    /* Loop the memory descriptor list */
     ListHead = &KeLoaderBlock->MemoryDescriptorListHead;
     PreviousEntry = ListHead;
     NextEntry = ListHead->Flink;
@@ -745,9 +667,7 @@ KiRosBuildNtDescriptor(IN PMEMORY_ALLOCATION_DESCRIPTOR MemoryDescriptor,
     TYPE_OF_MEMORY CurrentType;
     BOOLEAN UseNext;
 
-	DPRINTT("\n");
-
-	/* Check how many pages we'll be consuming */
+    /* Check how many pages we'll be consuming */
     Delta = BasePage - MemoryDescriptor->BasePage;
     if (!(Delta) && (PageCount == MemoryDescriptor->PageCount))
     {
@@ -766,22 +686,14 @@ KiRosBuildNtDescriptor(IN PMEMORY_ALLOCATION_DESCRIPTOR MemoryDescriptor,
 
         /* Get a descriptor */
         Descriptor = KiRosGetMdFromArray();
-        if (!Descriptor)
-		{
-			DPRINT1("failed\n");
-			return STATUS_INSUFFICIENT_RESOURCES;
-		}
+        if (!Descriptor) return STATUS_INSUFFICIENT_RESOURCES;
 
         /* Check if we are using another descriptor */
         if (UseNext)
         {
             /* Allocate that one too */
             NextDescriptor = KiRosGetMdFromArray();
-            if (!NextDescriptor)
-			{
-				DPRINT1("failed\n");
-				return STATUS_INSUFFICIENT_RESOURCES;
-			}
+            if (!NextDescriptor) return STATUS_INSUFFICIENT_RESOURCES;
         }
 
         /* Build the descriptor we got */
@@ -834,9 +746,7 @@ KiRosFindNtDescriptor(IN ULONG BasePage)
     PMEMORY_ALLOCATION_DESCRIPTOR MdBlock = NULL;
     PLIST_ENTRY NextEntry, ListHead;
 
-	DPRINTT("\n");
-
-	/* Scan the memory descriptor list */
+    /* Scan the memory descriptor list */
     ListHead = &KeLoaderBlock->MemoryDescriptorListHead;
     NextEntry = ListHead->Flink;
     while (NextEntry != ListHead)
@@ -876,9 +786,7 @@ KiRosAllocateNtDescriptor(IN TYPE_OF_MEMORY MemoryType,
     ULONG ActiveAlignedBase = 0;
     PLIST_ENTRY NextEntry, ListHead;
 
-	// DPRINTT("%08x-%08x\n", BasePage<<12, (BasePage+PageCount)<<12);
-
-	/* If no information was given, make some assumptions */
+    /* If no information was given, make some assumptions */
     if (!Alignment) Alignment = 1;
     if (!PageCount) PageCount = 1;
 
@@ -954,33 +862,26 @@ KiRosBuildArcMemoryList(VOID)
     MEMORY_DESCRIPTOR *Memory;
     ULONG i;
 
-	DPRINTT("\n");
-
-	/* Loop all BIOS Memory Descriptors */
+    /* Loop all BIOS Memory Descriptors */
     for (i = 0; i < NumberDescriptors; i++)
     {
         /* Get the current descriptor */
         Memory = &MDArray[i];
-		// DPRINTT("01: %x-%x %x\n", Memory->BasePage<<12, ((Memory->BasePage+Memory->PageCount)<<12)-1, Memory->MemoryType);
 
         /* Allocate an NT Memory Descriptor */
         Descriptor = KiRosGetMdFromArray();
-        if (!Descriptor)
-		{
-			DPRINT1("failed\n");
-			return ENOMEM;
-		}
+        if (!Descriptor) return ENOMEM;
 
         /* Copy the memory type */
         Descriptor->MemoryType = Memory->MemoryType;
         if (Memory->MemoryType == MemoryFreeContiguous)
         {
-			/* Convert this to free */
+            /* Convert this to free */
             Descriptor->MemoryType = LoaderFree;
         }
         else if (Memory->MemoryType == MemorySpecialMemory)
         {
-			/* Convert this to special memory */
+            /* Convert this to special memory */
             Descriptor->MemoryType = LoaderSpecialMemory;
         }
 
@@ -1003,9 +904,7 @@ KiRosFixupComponentTree(IN PCONFIGURATION_COMPONENT_DATA p,
 {
     PCONFIGURATION_COMPONENT pp;
 
-	DPRINTT("\n");
-
-	/* Loop each entry */
+    /* Loop each entry */
     while (p)
     {
         /* Grab the component entry */
@@ -1050,75 +949,40 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
     ULONG KernelBase = RosLoaderBlock->ModsAddr[0].ModStart;
 #endif
 
-	DPRINTT("\n");
-
     /* Set the NT Loader block and initialize it */
     *NtLoaderBlock = KeLoaderBlock = LoaderBlock = &BldrLoaderBlock;
     RtlZeroMemory(LoaderBlock, sizeof(LOADER_PARAMETER_BLOCK));
 
-	/* Set the NLS Data block */
+    /* Set the NLS Data block */
     LoaderBlock->NlsData = &BldrNlsDataBlock;
 
-	/* Set the ARC Data block */
+    /* Set the ARC Data block */
     LoaderBlock->ArcDiskInformation = &BldrArcDiskInfo;
 
     /* Assume this is from FreeLDR's SetupLdr */
     LoaderBlock->SetupLdrBlock = &BldrSetupBlock;
 
-	/* Setup the list heads */
+    /* Setup the list heads */
     InitializeListHead(&LoaderBlock->LoadOrderListHead);
     InitializeListHead(&LoaderBlock->MemoryDescriptorListHead);
     InitializeListHead(&LoaderBlock->BootDriverListHead);
     InitializeListHead(&LoaderBlock->ArcDiskInformation->DiskSignatureListHead);
 
     /* Build the free memory map, which uses BIOS Descriptors */
-	KiRosBuildBiosMemoryMap();
+    KiRosBuildBiosMemoryMap();
 
     /* Build entries for ReactOS memory ranges, which uses ARC Descriptors */
     KiRosBuildOsMemoryMap();
 
 #if defined(_X86_)
     /* Build entries for the reserved map, which uses ARC Descriptors */
-	KiRosBuildReservedMemoryMap();
+    KiRosBuildReservedMemoryMap();
 #endif
 
     /* Now convert the BIOS and ARC Descriptors into NT Memory Descirptors */
     KiRosBuildArcMemoryList();
 
     /* Loop boot driver list */
-#if 0
-	ULONG Flags;
-    ULONG_PTR MemLower;
-    ULONG_PTR MemHigher;
-    ULONG BootDevice;
-    PCHAR CommandLine;
-    ULONG ModsCount;
-    PLOADER_MODULE ModsAddr;
-    UCHAR Syms[12];
-    SIZE_T MmapLength;
-    ULONG_PTR MmapAddr;
-    SIZE_T RdLength;
-    ULONG_PTR RdAddr;
-    ULONG DrivesCount;
-    PARC_DISK_SIGNATURE DrivesAddr;
-    ULONG ConfigTable;
-    ULONG BootLoaderName;
-    ULONG_PTR PageDirectoryStart;
-    ULONG_PTR PageDirectoryEnd;
-    ULONG_PTR KernelBase;
-    ULONG_PTR ArchExtra;
-    ULONG (*FrLdrDbgPrint)(const char *Format, ...);
-#endif
-
-#define r RosLoaderBlock
-
-	DPRINT("Flags=%x, MemLower=%x, MemHigher=%x, BootDevice=%x\n", r->Flags, r->MemLower, r->MemHigher, r->BootDevice);
-	DPRINT("CommandLine=%s\n", r->CommandLine);
-	DPRINT("Syms=%s\n", r->Syms);
-	DPRINT("MmapLen=%x, MmapAddr=%x\n", r->MmapLength, r->MmapAddr);
-	DPRINT("RdLen=%x, RdAddr=%x\n", r->RdLength, r->RdAddr);
-	DPRINT("DrivesCnt=%x\n", r->DrivesCount);
-	DPRINT("ModsCount=%x\n", r->ModsCount);
     for (i = 0; i < RosLoaderBlock->ModsCount; i++)
     {
         /* Get the ROS loader entry */
@@ -1126,16 +990,6 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
         DriverName = (PCHAR)RosEntry->String;
         ModStart = (PVOID)RosEntry->ModStart;
         ModSize = RosEntry->ModEnd - (ULONG_PTR)ModStart;
-		DPRINT("01 %04x: DriverName=%s, ModStart=%x, ModSize=%x\n", i, DriverName, ModStart, ModSize);
-	}
-	for (i = 0; i < RosLoaderBlock->ModsCount; i++)
-    {
-        /* Get the ROS loader entry */
-        RosEntry = &RosLoaderBlock->ModsAddr[i];
-        DriverName = (PCHAR)RosEntry->String;
-        ModStart = (PVOID)RosEntry->ModStart;
-        ModSize = RosEntry->ModEnd - (ULONG_PTR)ModStart;
-		DPRINT("02 %04x: DriverName=%s, ModStart=%x, ModSize=%x\n", i, DriverName, ModStart, ModSize);
 
 #if defined(_PPC_)
         ModStart -= KernelBase;
@@ -1237,14 +1091,11 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
         else
         {
             /* Create an MD for any driver */
-			DPRINTT("Create MD for any, ModStart=%x\n", ModStart);
             KiRosAllocateNtDescriptor(LoaderBootDriver,
                                       KERNEL_DESCRIPTOR_PAGE(ModStart),
                                       (ModSize + PAGE_SIZE - 1)>> PAGE_SHIFT,
                                       0,
                                       &Base);
-			DPRINTT("ModStart=%x\n", ModStart);
-			DPRINTT("*ModStart=%x\n",*((i16 *)ModStart));
         }
 
 #if defined(_PPC_)
@@ -1252,7 +1103,7 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
 #endif
 
         /* Lowercase the drivername so we can check its extension later */
-		strcpy(DriverNameLow, DriverName);
+        strcpy(DriverNameLow, DriverName);
         _strlwr(DriverNameLow);
 
         /* Setup the loader entry */
@@ -1295,22 +1146,20 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
         }
 
         /* Append base name of the driver */
-		RtlAppendUnicodeStringToString(&LdrEntry->FullDllName, &LdrEntry->BaseDllName);
+        RtlAppendUnicodeStringToString(&LdrEntry->FullDllName, &LdrEntry->BaseDllName);
 
         /* Copy data from Freeldr Module Entry */
         LdrEntry->DllBase = ModStart;
         LdrEntry->SizeOfImage = ModSize;
 
         /* Copy additional data */
-		NtHeader = RtlImageNtHeader(ModStart);
-
-		// #define RVA(m, b) ((PVOID)((ULONG_PTR)(b) + (ULONG_PTR)(m)))
-		LdrEntry->EntryPoint = RVA(ModStart,
+        NtHeader = RtlImageNtHeader(ModStart);
+        LdrEntry->EntryPoint = RVA(ModStart,
                                    NtHeader->
                                    OptionalHeader.AddressOfEntryPoint);
 
         /* Initialize other data */
-		LdrEntry->LoadCount = 1;
+        LdrEntry->LoadCount = 1;
         LdrEntry->Flags = LDRP_IMAGE_DLL |
                           LDRP_ENTRY_PROCESSED;
         if (RosEntry->Reserved) LdrEntry->Flags |= LDRP_ENTRY_INSERTED;
@@ -1341,12 +1190,13 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
                 continue;
             }
         }
+
         /* Insert it into the loader block */
         InsertTailList(&LoaderBlock->LoadOrderListHead,
                        &LdrEntry->InLoadOrderLinks);
     }
     
-	/* Now mark the remainder of the FreeLDR 6MB area as "in use" */
+    /* Now mark the remainder of the FreeLDR 6MB area as "in use" */
     KiRosAllocateNtDescriptor(LoaderMemoryData,
                               KERNEL_DESCRIPTOR_PAGE(RosEntry->ModEnd),
                               KERNEL_DESCRIPTOR_PAGE((0x80800000 + 0x600000)) -
@@ -1433,7 +1283,7 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
     do {if (*BootPath == '/') *BootPath = ' ';} while (*BootPath++);
 
     /* Now let's loop ARC disk information */
-	for (i = 0; i < RosLoaderBlock->DrivesCount; i++)
+    for (i = 0; i < RosLoaderBlock->DrivesCount; i++)
     {
         /* Get the ROS loader entry */
         RosDiskInfo = &RosLoaderBlock->DrivesAddr[i];
@@ -1462,13 +1312,11 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
     KiRosFixupComponentTree(LoaderBlock->ConfigurationRoot,
                             (ULONG_PTR)BldrArcHwBuffer -
                             RosLoaderBlock->ArchExtra);
-	DPRINTT("ret\n");
 }
 
 VOID
 NTAPI
 KiSetupSyscallHandler();
-
 
 VOID
 FASTCALL
@@ -1477,108 +1325,32 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
 {
     PLOADER_PARAMETER_BLOCK NtLoaderBlock;
     ULONG size, i = 0, *ent;
-
 #if defined(_X86_)
     PKTSS Tss;
     PKGDTENTRY TssEntry;
     KDESCRIPTOR IdtDescriptor;
 
-	PROS_LOADER_PARAMETER_BLOCK rlb = (PROS_LOADER_PARAMETER_BLOCK)LoaderBlock;
-	PLOADER_MODULE RosEntry;
-	ULONG modn;
-
-	// PROS_LOADER_PARAMETER_BLOCK rlb = LoaderBlock;
-	// dbgdcpu(-1);
-	DPRINTT("LoaderBlock=%x:\n", rlb);
-	DPRINTT("Flags=%x\n", rlb->Flags);
-	if(rlb->BootLoaderName) DPRINTT("BootLoaderName=%s\n", rlb->BootLoaderName);
-	DPRINTT("CommandLine=%s\n", rlb->CommandLine);
-	DPRINTT("Syms=%s\n", rlb->Syms);
-	DPRINTT("MemLower=%x, MemHigher=%x\n", rlb->MemLower, rlb->MemHigher);
-	DPRINTT("DrivesCount=%x\n", rlb->DrivesCount);
-	DPRINTT("BootDevice=%x\n", rlb->BootDevice);
-	DPRINTT("MmapAddr=%x, MmapLength=%x\n", rlb->MmapAddr, rlb->MmapLength);
-	DPRINTT("RdAddr=%x, RdLength=%x\n", rlb->RdAddr, rlb->RdLength);
-	DPRINTT("PageDirectoryStart=%x, PageDirectoryEnd=%x\n", rlb->PageDirectoryStart, rlb->PageDirectoryEnd);
-	DPRINTT("KernelBase=%x\n", rlb->KernelBase);
-	DPRINTT("ArchExtra=%x\n", rlb->ArchExtra);
-	DPRINTT("ConfigTable=%x\n", rlb->ConfigTable);
-
-	// ULONG ModsCount;
-    // PLOADER_MODULE ModsAddr;
-    // PARC_DISK_SIGNATURE DrivesAddr;
-    // ULONG (*FrLdrDbgPrint)(const char *Format, ...);
-	// dbgp("ModStart *0x80df8000=%x\n", *((int *)0x80df8000));
-	// dbgp("ModStart *0x80e05000=%x\n", *((int *)0x80e05000));
-
-    for(modn = 0; modn < rlb->ModsCount; modn++)
-    {
-		RosEntry = &rlb->ModsAddr[modn];
-		DPRINTT("Module %04x: %08x-%08x, DriverName=%s\n", modn, RosEntry->ModStart, RosEntry->ModEnd, RosEntry->String);
-	}
-    for(modn = 0; modn < rlb->ModsCount; modn++)
-    {
-		RosEntry = &rlb->ModsAddr[modn];
-		DPRINTT("Module %04x: %08x-%08x, DriverName=%s\n", modn, RosEntry->ModStart, RosEntry->ModEnd, RosEntry->String);
-		if(RosEntry->ModStart & 0x80000000) DPRINTT("*ModStart=%x\n", *((i32 *)RosEntry->ModStart));
-		DPRINTT("ok\n");
-	}
-
-	// prepare idt
-	__sidt(&IdtDescriptor.Limit);
+    __sidt(&IdtDescriptor.Limit);
     RtlCopyMemory(KiBootIdt, (PVOID)IdtDescriptor.Base, IdtDescriptor.Limit + 1);
     IdtDescriptor.Base = (ULONG)&KiBootIdt;
     IdtDescriptor.Limit = sizeof(KiBootIdt) - 1;
 
-	/* Initialize the boot TSS */
-	// KTSS KiBootTss;
-	Tss = &KiBootTss;
-	memset(&KiBootTss, 0, sizeof(KiBootTss));
-#if 0
-	Tss->Esp0 = EFlags;
-	Tss->Ss0 = KGDT_R0_DATA;
-	Tss->Esp1 = EFlags;
-	Tss->Ss1 = KGDT_R0_DATA;
-	Tss->Esp2 = EFlags;
-	Tss->Es = KGDT_R0_DATA;
-	Tss->Cs = KGDT_R0_CODE;
-	Tss->Ss = KGDT_R0_DATA;
-	Tss->Ds = KGDT_R0_DATA;
-	Tss->Fs = KGDT_R0_DATA;
-	Tss->Gs = KGDT_R0_DATA;
-	Tss->LDT = KGDT_LDT;
-	Tss->IoMapBase = (i8 *)Tss->IoMaps->IoMap - (i8 *)Tss;
-	Tss->IoMaps->IoMap[0x2000] = 0xFF;
-#endif
+    /* Load the GDT and IDT */
+    Ke386SetGlobalDescriptorTable(&KiGdtDescriptor.Limit);
+    __lidt(&IdtDescriptor.Limit);
 
+    /* Initialize the boot TSS */
+    Tss = &KiBootTss;
     TssEntry = &KiBootGdt[KGDT_TSS / sizeof(KGDTENTRY)];
-	TssEntry->HighWord.Bits.Sys = 0;
     TssEntry->HighWord.Bits.Type = I386_TSS;
+    TssEntry->HighWord.Bits.Pres = 1;
+    TssEntry->HighWord.Bits.Dpl = 0;
     TssEntry->BaseLow = (USHORT)((ULONG_PTR)Tss & 0xFFFF);
     TssEntry->HighWord.Bytes.BaseMid = (UCHAR)((ULONG_PTR)Tss >> 16);
     TssEntry->HighWord.Bytes.BaseHi = (UCHAR)((ULONG_PTR)Tss >> 24);
-    TssEntry->HighWord.Bytes.BaseHi = (UCHAR)((ULONG_PTR)Tss >> 24);
-	TssEntry->LimitLow = sizeof(KiBootTss);
-	TssEntry->HighWord.Bits.LimitHi = 0;
-	TssEntry->HighWord.Bits.Granularity = 0;
-	TssEntry->HighWord.Bits.Dpl = 0;
-    TssEntry->HighWord.Bits.Pres = 1;
 
-	// load GDT
-	DPRINTT("lgdt\n");
-	CpuSetGdt_m(KiGdtDescriptor.Limit);
-	
-	// load IDT
-	DPRINTT("lidt\n");
-	CpuSetIdt_m(IdtDescriptor.Limit);
-	
-	// set TSS selector
-	DPRINTT("ltr\n");
-    CpuSetTr(KGDT_TSS);
-	DPRINTT("05\n");
-	dbgdcpu(1);
-
-
+    /* Set the TSS selector */
+    Ke386SetTr(KGDT_TSS);
 #endif
 
 #if defined(_M_PPC)
@@ -1597,13 +1369,11 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
     KeRosLoaderBlock = LoaderBlock;
 
     /* Save memory manager data */
-	DPRINTT("010\n");
     KeMemoryMapRangeCount = 0;
     if (LoaderBlock->Flags & MB_FLAGS_MMAP_INFO)
     {
-		/* We have a memory map from the nice BIOS */
-        DPRINTT("LoaderBlock->Mmap to KeMemoryMap\n");
-		ent = ((PULONG)(LoaderBlock->MmapAddr - sizeof(ULONG)));
+        /* We have a memory map from the nice BIOS */
+        ent = ((PULONG)(LoaderBlock->MmapAddr - sizeof(ULONG)));
         size = *ent;
         i = 0;
 
@@ -1615,29 +1385,23 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
                     (PVOID)(LoaderBlock->MmapAddr + i),
                     sizeof(ADDRESS_RANGE));
 
-			DPRINTT("LoaderBlock->Mmap to KeMemoryMap %x, %x-%x\n", KeMemoryMapRangeCount,
-				KeMemoryMap[KeMemoryMapRangeCount].BaseAddrLow,
-				KeMemoryMap[KeMemoryMapRangeCount].BaseAddrLow + KeMemoryMap[KeMemoryMapRangeCount].LengthLow-1);
-
-			/* Increase Memory Map Count */
+            /* Increase Memory Map Count */
             KeMemoryMapRangeCount++;
 
             /* Increase Size */
             i += size;
         }
 
-		/* Save data */
+        /* Save data */
         LoaderBlock->MmapLength = KeMemoryMapRangeCount * sizeof(ADDRESS_RANGE);
         LoaderBlock->MmapAddr = (ULONG)KeMemoryMap;
-	}
+    }
     else
     {
         /* Nothing from BIOS */
-		DPRINTT("Nothing from BIOS\n");
         LoaderBlock->MmapLength = 0;
         LoaderBlock->MmapAddr = (ULONG)KeMemoryMap;
-	}
-	DPRINTT("11\n");
+    }
 
     /* Convert the loader block */
     KiRosFrldrLpbToNtLpb(KeRosLoaderBlock, &NtLoaderBlock);
@@ -1646,8 +1410,6 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
     DbgPrint("Finished KiRosFrldrLpbToNtLpb\n");
 #endif
 
-	/* Do general System Startup */
-	DPRINTT("KiSystemStartupReal\n");
+    /* Do general System Startup */
     KiSystemStartupReal(NtLoaderBlock);
-	DPRINTT("ret\n");
 }

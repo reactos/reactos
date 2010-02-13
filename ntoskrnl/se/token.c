@@ -13,6 +13,10 @@
 #define NDEBUG
 #include <debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, SepInitializeTokenImplementation)
+#endif
+
 /* GLOBALS ********************************************************************/
 
 POBJECT_TYPE SepTokenObjectType = NULL;
@@ -459,8 +463,10 @@ SepDeleteToken(PVOID ObjectBody)
 }
 
 
-SECT_INIT_FN(SepInitializeTokenImplementation)
-VOID NTAPI SepInitializeTokenImplementation(VOID)
+VOID
+INIT_FUNCTION
+NTAPI
+SepInitializeTokenImplementation(VOID)
 {
     UNICODE_STRING Name;
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;

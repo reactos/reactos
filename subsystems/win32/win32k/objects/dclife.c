@@ -135,23 +135,6 @@ DC_AllocDC(PUNICODE_STRING Driver)
     return NewDC;
 }
 
-VOID FASTCALL
-DC_FreeDC(HDC DCToFree)
-{
-    DC_FreeDcAttr(DCToFree);
-    if (!IsObjectDead(DCToFree))
-    {
-        if (!GDIOBJ_FreeObjByHandle(DCToFree, GDI_OBJECT_TYPE_DC))
-        {
-            DPRINT1("DC_FreeDC failed\n");
-        }
-    }
-    else
-    {
-        DPRINT1("Attempted to Delete 0x%x currently being destroyed!!!\n",DCToFree);
-    }
-}
-
 BOOL INTERNAL_CALL
 DC_Cleanup(PVOID ObjectBody)
 {
@@ -537,7 +520,7 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
     PATH_Delete(DCToDelete->dclevel.hPath);
 
     DC_UnlockDc(DCToDelete);
-    DC_FreeDC(hDC);
+    GreDeleteObject(hDC);
     return TRUE;
 }
 

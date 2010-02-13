@@ -106,6 +106,17 @@ Author:
 #define EFLAG_ZERO              0x4000
 
 //
+// Legacy floating status word bit masks.
+//
+#define FSW_INVALID_OPERATION   0x1
+#define FSW_DENORMAL            0x2
+#define FSW_ZERO_DIVIDE         0x4
+#define FSW_OVERFLOW            0x8
+#define FSW_UNDERFLOW           0x10
+#define FSW_PRECISION           0x20
+#define FSW_STACK_FAULT         0x40
+
+//
 // IPI Types
 //
 #define IPI_APC                 1
@@ -129,7 +140,11 @@ Author:
 //
 // IOPM Definitions
 //
+#define IOPM_COUNT              1
+#define IOPM_SIZE               8192
+#define IOPM_FULL_SIZE          8196
 #define IO_ACCESS_MAP_NONE      0
+#define IOPM_DIRECTION_MAP_SIZE 32
 #define IOPM_OFFSET             FIELD_OFFSET(KTSS, IoMaps[0].IoMap)
 #define KiComputeIopmOffset(MapNumber)              \
     (MapNumber == IO_ACCESS_MAP_NONE) ?             \
@@ -414,19 +429,19 @@ typedef struct _KPROCESSOR_STATE
 #pragma pack(push,4)
 typedef struct _KPRCB
 {
-    USHORT MinorVersion;									// 120 000
-    USHORT MajorVersion;									// 122
-    struct _KTHREAD *CurrentThread;							// 124
-    struct _KTHREAD *NextThread;							// 128
-    struct _KTHREAD *IdleThread;							// 12c
-    UCHAR Number;											// 130
-    UCHAR Reserved;											// 131 PcNestingLevel
+    USHORT MinorVersion;
+    USHORT MajorVersion;
+    struct _KTHREAD *CurrentThread;
+    struct _KTHREAD *NextThread;
+    struct _KTHREAD *IdleThread;
+    UCHAR Number;
+    UCHAR Reserved;
     USHORT BuildType;
     KAFFINITY SetMember;
-    UCHAR CpuType;											// 138 ok to here
-    UCHAR CpuID;											// 139
-    USHORT CpuStep;											// 140
-    KPROCESSOR_STATE ProcessorState;						// 142
+    UCHAR CpuType;
+    UCHAR CpuID;
+    USHORT CpuStep;
+    KPROCESSOR_STATE ProcessorState;
     ULONG KernelReserved[16];
     ULONG HalReserved[16];
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
@@ -435,7 +450,7 @@ typedef struct _KPRCB
 #else
     UCHAR PrcbPad0[92];
 #endif
-    KSPIN_LOCK_QUEUE LockQueue[LockQueueMaximumLock];		// a7c bad
+    KSPIN_LOCK_QUEUE LockQueue[LockQueueMaximumLock];
     struct _KTHREAD *NpxThread;
     ULONG InterruptCount;
     ULONG KernelTime;
@@ -657,21 +672,7 @@ typedef struct _KPRCB
 
 //
 // Processor Control Region
-
-// KIPCR overlaps KPCR extending it at the end,
-// so the first typedef should be ok,
-// pending of test
-// this would be as in win ddk defs
-#if 0
-typedef struct _KIPCR
-{
-	struct _KPCR;
-	ULONG InterruptMode;
-    UCHAR Spare1;
-    ULONG KernelReserved2[17];
-    KPRCB PrcbData;
-} KIPCR, *PKIPCR;
-#else
+//
 typedef struct _KIPCR
 {
     union
@@ -688,7 +689,7 @@ typedef struct _KIPCR
             PVOID Used_Self;
         };
     };
-    struct _KPCR *SelfPcr;		// Self
+    struct _KPCR *Self;
     struct _KPRCB *Prcb;
     KIRQL Irql;
     ULONG IRR;
@@ -715,7 +716,6 @@ typedef struct _KIPCR
     ULONG KernelReserved2[17];
     KPRCB PrcbData;
 } KIPCR, *PKIPCR;
-#endif
 #pragma pack(pop)
 
 //
@@ -723,52 +723,47 @@ typedef struct _KIPCR
 //
 typedef struct _KiIoAccessMap
 {
-    UCHAR DirectionMap[32];
-    UCHAR IoMap[8196];
+    UCHAR DirectionMap[IOPM_DIRECTION_MAP_SIZE];
+    UCHAR IoMap[IOPM_FULL_SIZE];
 } KIIO_ACCESS_MAP;
 
 typedef struct _KTSS
 {
-    USHORT Backlink;		// 00
-    USHORT rsv02;			// 02
-    ULONG Esp0;				// 04
-    USHORT Ss0;				// 08
-    USHORT rsv0A;			// 0A
-    ULONG Esp1;				// 0C
-    USHORT Ss1;				// 10
-    USHORT rsv12;			// 12
-    ULONG Esp2;				// 14
-    USHORT Ss2;				// 18
-    USHORT rsv1A;			// 1A
-    ULONG CR3;				// 1C
-    ULONG Eip;				// 20
-    ULONG EFlags;			// 24
-    ULONG Eax;				// 28
-    ULONG Ecx;				// 2C
-    ULONG Edx;				// 30 
-    ULONG Ebx;				// 34
-    ULONG Esp;				// 38
-    ULONG Ebp;				// 3C
-    ULONG Esi;				// 40
-    ULONG Edi;				// 44
-    USHORT Es;				// 48
-    USHORT rsv4A;			// 4A
-    USHORT Cs;				// 4C
-    USHORT rsv4E;			// 4E
-    USHORT Ss;				// 50
-    USHORT rsv52;			// 52
-    USHORT Ds;				// 54
-    USHORT rsv56;			// 56
-    USHORT Fs;				// 58
-    USHORT rsv5A;			// 5A
-    USHORT Gs;				// 5C
-    USHORT rsv5E;			// 5E
-    USHORT LDT;				// 60
-    USHORT rsv62;			// 62
-    USHORT Flags;			// 64
-    USHORT IoMapBase;		// 66
-    KIIO_ACCESS_MAP IoMaps[1];	// 68
-    UCHAR IntDirectionMap[32];
+    USHORT Backlink;
+    USHORT Reserved0;
+    ULONG Esp0;
+    USHORT Ss0;
+    USHORT Reserved1;
+    ULONG NotUsed1[4];
+    ULONG CR3;
+    ULONG Eip;
+    ULONG EFlags;
+    ULONG Eax;
+    ULONG Ecx;
+    ULONG Edx;
+    ULONG Ebx;
+    ULONG Esp;
+    ULONG Ebp;
+    ULONG Esi;
+    ULONG Edi;
+    USHORT Es;
+    USHORT Reserved2;
+    USHORT Cs;
+    USHORT Reserved3;
+    USHORT Ss;
+    USHORT Reserved4;
+    USHORT Ds;
+    USHORT Reserved5;
+    USHORT Fs;
+    USHORT Reserved6;
+    USHORT Gs;
+    USHORT Reserved7;
+    USHORT LDT;
+    USHORT Reserved8;
+    USHORT Flags;
+    USHORT IoMapBase;
+    KIIO_ACCESS_MAP IoMaps[IOPM_COUNT];
+    UCHAR IntDirectionMap[IOPM_DIRECTION_MAP_SIZE];
 } KTSS, *PKTSS;
 
 //

@@ -16,8 +16,6 @@
 #ifndef __INTERNAL_DEBUG
 #define __INTERNAL_DEBUG
 
-// #undef NDEBUG
-
 /* Define DbgPrint/DbgPrintEx/RtlAssert unless the NDK is used */
 #if !defined(_RTLFUNCS_H) && !defined(_NTDDK_)
 
@@ -83,59 +81,48 @@ RtlAssert(
 #define DPFLTR_DEFAULT_ID -1
 #if DBG
 
-#define DPRINTEX(ch, lev, fmt, ...) DbgPrintEx(ch, lev, "(%s:%d:%s) " fmt, __FILE__, __LINE__, __FUNCTION__, __VA_ARGS__)
+    /* These are always printed */
+    #define DPRINT1(fmt, ...) do { \
+        if (DbgPrint("(%s:%d) " fmt, __FILE__, __LINE__, ##__VA_ARGS__))  \
+            DbgPrint("(%s:%d) DbgPrint() failed!\n", __FILE__, __LINE__); \
+    } while (0)
 
-/* These are always printed */
-#define DPRINT1(fmt, ...) DbgPrint("(%s:%d:%s) " fmt, __FILE__, __LINE__, __FUNCTION__, __VA_ARGS__)
+    /* These are printed only if NDEBUG is NOT defined */
+    #ifndef NDEBUG
 
-/* These are printed only if NDEBUG is NOT defined */
-#ifndef NDEBUG
-#define DPRINT(fmt, ...) DPRINT1(fmt, __VA_ARGS__)
-#else
-#define DPRINT(...)
-#endif
-#define DPRINTT DPRINT
+        #define DPRINT(fmt, ...) do { \
+            if (DbgPrint("(%s:%d) " fmt, __FILE__, __LINE__, ##__VA_ARGS__))  \
+                DbgPrint("(%s:%d) DbgPrint() failed!\n", __FILE__, __LINE__); \
+        } while (0)
 
-#define DPRINTC(v1, v2, fmt, ...) if(v1 & v2) DPRINT1(fmt, ...)
+    #else
 
-#define UNIMPLEMENTED DPRINT1("UNIMPLEMENTED!\n");
-#define ERR_(ch, fmt, ...) DPRINTEX (DPFLTR_##ch##_ID, DPFLTR_ERROR_LEVEL, fmt, __VA_ARGS__)
-#define WARN_(ch, fmt, ...) DPRINTEX (DPFLTR_##ch##_ID, DPFLTR_WARNING_LEVEL, fmt, __VA_ARGS__)
-#define TRACE_(ch, fmt, ...) DPRINTEX (DPFLTR_##ch##_ID, DPFLTR_TRACE_LEVEL, fmt, __VA_ARGS__)
-#define INFO_(ch, fmt, ...) DPRINTEX (DPFLTR_##ch##_ID, DPFLTR_INFO_LEVEL, fmt, __VA_ARGS__)
+        #define DPRINT(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
 
+    #endif
+
+    #define UNIMPLEMENTED         DbgPrint("WARNING:  %s at %s:%d is UNIMPLEMENTED!\n",__FUNCTION__,__FILE__,__LINE__);
+
+    #define ERR_(ch, fmt, ...)    DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_ERROR_LEVEL, "(%s:%d) " fmt, __FILE__, __LINE__, ##__VA_ARGS__)
+    #define WARN_(ch, fmt, ...)   DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_WARNING_LEVEL, "(%s:%d) " fmt, __FILE__, __LINE__, ##__VA_ARGS__)
+    #define TRACE_(ch, fmt, ...)  DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_TRACE_LEVEL, "(%s:%d) " fmt, __FILE__, __LINE__, ##__VA_ARGS__)
+    #define INFO_(ch, fmt, ...)   DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_INFO_LEVEL, "(%s:%d) " fmt, __FILE__, __LINE__, ##__VA_ARGS__)
 #else /* not DBG */
-/* On non-debug builds, we never show these */
-#define DPRINT1(...)
-#define DPRINTEX(...)
-#define DPRINT(...)
-#define DPRINTC(...)
-#define UNIMPLEMENTED
-#define ERR_(ch, ...)
-#define WARN_(ch, ...)
-#define TRACE_(ch, ...)
-#define INFO_(ch, ...)
+
+    /* On non-debug builds, we never show these */
+    #define DPRINT1(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
+    #define DPRINT(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
+
+    #define UNIMPLEMENTED
+
+    #define ERR_(ch, ...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
+    #define WARN_(ch, ...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
+    #define TRACE_(ch, ...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
+    #define INFO_(ch, ...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
 #endif /* not DBG */
 
 #define ASSERT_IRQL_LESS_OR_EQUAL(x) ASSERT(KeGetCurrentIrql()<=(x))
 #define ASSERT_IRQL_EQUAL(x) ASSERT(KeGetCurrentIrql()==(x))
 #define ASSERT_IRQL_LESS(x) ASSERT(KeGetCurrentIrql()<(x))
 
-NTKERNELAPI VOID NTAPI KeQuerySystemTime(OUT PLARGE_INTEGER CurrentTime);
-NTSYSCALLAPI NTSTATUS NTAPI NtYieldExecution(VOID);
-
-_INLINE VOID DbgWait(i64 x)
-{
-	i64u t0;
-	i64u t;
-	KeQuerySystemTime((PLARGE_INTEGER)&t0);
-	t0 += x;
-	do
-	{
-		NtYieldExecution();
-		KeQuerySystemTime((PLARGE_INTEGER)&t);
-	} while (t < t0);
-}
-
 #endif /* __INTERNAL_DEBUG */
-

@@ -3,10 +3,10 @@
 	<include base="secur32">.</include>
 	<include base="ReactOS">include/reactos/subsys</include>
 	<define name="__SECUR32__" />
+	<library>lsalib</library>
 	<library>ntdll</library>
 	<library>advapi32</library>
 	<file>dllmain.c</file>
-	<file>lsa.c</file>
 	<file>secext.c</file>
 	<file>sspi.c</file>
 	<file>secur32.rc</file>

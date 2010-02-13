@@ -1534,6 +1534,760 @@ static void variant_from_registry_value(VARIANT *pVarResult, DWORD dwType, LPBYT
     }
 }
 
+static HRESULT InstallerImpl_CreateRecord(WORD wFlags,
+                                          DISPPARAMS* pDispParams,
+                                          VARIANT* pVarResult,
+                                          EXCEPINFO* pExcepInfo,
+                                          UINT* puArgErr)
+{
+    HRESULT hr;
+    VARIANTARG varg0;
+    MSIHANDLE hrec;
+    IDispatch* dispatch;
+
+    if (!(wFlags & DISPATCH_METHOD))
+        return DISP_E_MEMBERNOTFOUND;
+
+    VariantInit(&varg0);
+    hr = DispGetParam(pDispParams, 0, VT_I4, &varg0, puArgErr);
+    if (FAILED(hr))
+        return hr;
+
+    V_VT(pVarResult) = VT_DISPATCH;
+
+    hrec = MsiCreateRecord(V_I4(&varg0));
+    if (!hrec)
+        return DISP_E_EXCEPTION;
+
+    hr = create_automation_object(hrec, NULL, (LPVOID*)&dispatch,
+                                  &DIID_Record, RecordImpl_Invoke, NULL, 0);
+    if (SUCCEEDED(hr))
+        V_DISPATCH(pVarResult) = dispatch;
+
+    return hr;
+}
+
+static HRESULT InstallerImpl_OpenPackage(AutomationObject* This,
+                                         WORD wFlags,
+                                         DISPPARAMS* pDispParams,
+                                         VARIANT* pVarResult,
+                                         EXCEPINFO* pExcepInfo,
+                                         UINT* puArgErr)
+{
+    UINT ret;
+    HRESULT hr;
+    MSIHANDLE hpkg;
+    IDispatch* dispatch;
+    VARIANTARG varg0, varg1;
+
+    if (!(wFlags & DISPATCH_METHOD))
+        return DISP_E_MEMBERNOTFOUND;
+
+    if (pDispParams->cArgs == 0)
+        return DISP_E_TYPEMISMATCH;
+
+    if (V_VT(&pDispParams->rgvarg[pDispParams->cArgs - 1]) != VT_BSTR)
+        return DISP_E_TYPEMISMATCH;
+
+    VariantInit(&varg0);
+    hr = DispGetParam(pDispParams, 0, VT_BSTR, &varg0, puArgErr);
+    if (FAILED(hr))
+        return hr;
+
+    VariantInit(&varg1);
+    if (pDispParams->cArgs == 2)
+    {
+        hr = DispGetParam(pDispParams, 1, VT_I4, &varg1, puArgErr);
+        if (FAILED(hr))
+            goto done;
+    }
+    else
+    {
+        V_VT(&varg1) = VT_I4;
+        V_I4(&varg1) = 0;
+    }
+
+    V_VT(pVarResult) = VT_DISPATCH;
+
+    ret = MsiOpenPackageExW(V_BSTR(&varg0), V_I4(&varg1), &hpkg);
+    if (ret != ERROR_SUCCESS)
+    {
+        hr = DISP_E_EXCEPTION;
+        goto done;
+    }
+
+    hr = create_session(hpkg, (IDispatch *)This, &dispatch);
+    if (SUCCEEDED(hr))
+        V_DISPATCH(pVarResult) = dispatch;
+
+done:
+    VariantClear(&varg0);
+    VariantClear(&varg1);
+    return hr;
+}
+
+static HRESULT InstallerImpl_OpenProduct(WORD wFlags,
+                                         DISPPARAMS* pDispParams,
+                                         VARIANT* pVarResult,
+                                         EXCEPINFO* pExcepInfo,
+                                         UINT* puArgErr)
+{
+    HRESULT hr;
+    VARIANTARG varg0;
+
+    if (!(wFlags & DISPATCH_METHOD))
+        return DISP_E_MEMBERNOTFOUND;
+
+    VariantInit(&varg0);
+    hr = DispGetParam(pDispParams, 0, VT_BSTR, &varg0, puArgErr);
+    if (FAILED(hr))
+        return hr;
+
+    FIXME("%s\n", debugstr_w(V_BSTR(&varg0)));
+
+    VariantInit(pVarResult);
+
+    VariantClear(&varg0);
+    return S_OK;
+}
+
+static HRESULT InstallerImpl_OpenDatabase(WORD wFlags,
+                                          DISPPARAMS* pDispParams,
+                                          VARIANT* pVarResult,
+                                          EXCEPINFO* pExcepInfo,
+                                          UINT* puArgErr)
+{
+    UINT ret;
+    HRESULT hr;
+    MSIHANDLE hdb;
+    IDispatch* dispatch;
+    VARIANTARG varg0, varg1;
+
+    if (!(wFlags & DISPATCH_METHOD))
+        return DISP_E_MEMBERNOTFOUND;
+
+    VariantInit(&varg0);
+    hr = DispGetParam(pDispParams, 0, VT_BSTR, &varg0, puArgErr);
+    if (FAILED(hr))
+        return hr;
+
+    VariantInit(&varg1);
+    hr = DispGetParam(pDispParams, 1, VT_BSTR, &varg1, puArgErr);
+    if (FAILED(hr))
+        goto done;
+
+    V_VT(pVarResult) = VT_DISPATCH;
+
+    ret = MsiOpenDatabaseW(V_BSTR(&varg0), V_BSTR(&varg1), &hdb);
+    if (ret != ERROR_SUCCESS)
+    {
+        hr = DISP_E_EXCEPTION;
+        goto done;
+    }
+
+    hr = create_automation_object(hdb, NULL, (LPVOID *)&dispatch,
+                                  &DIID_Database, DatabaseImpl_Invoke, NULL, 0);
+    if (SUCCEEDED(hr))
+        V_DISPATCH(pVarResult) = dispatch;
+
+done:
+    VariantClear(&varg0);
+    VariantClear(&varg1);
+    return hr;
+}
+
+static HRESULT InstallerImpl_SummaryInformation(WORD wFlags,
+                                                DISPPARAMS* pDispParams,
+                                                VARIANT* pVarResult,
+                                                EXCEPINFO* pExcepInfo,
+                                                UINT* puArgErr)
+{
+    if (!(wFlags & DISPATCH_METHOD))
+        return DISP_E_MEMBERNOTFOUND;
+
+    FIXME("\n");
+
+    VariantInit(pVarResult);
+    return S_OK;
+}
+
+static HRESULT InstallerImpl_UILevel(WORD wFlags,
+                                     DISPPARAMS* pDispParams,
+                                     VARIANT* pVarResult,
+                                     EXCEPINFO* pExcepInfo,
+                                     UINT* puArgErr)
+{
+    HRESULT hr;
+    VARIANTARG varg0;
+    INSTALLUILEVEL ui;
+
+    if (!(wFlags & DISPATCH_PROPERTYPUT) && !(wFlags & DISPATCH_PROPERTYGET))
+        return DISP_E_MEMBERNOTFOUND;
+
+    if (wFlags & DISPATCH_PROPERTYPUT)
+    {
+        VariantInit(&varg0);
+        hr = DispGetParam(pDispParams, 0, VT_I4, &varg0, puArgErr);
+        if (FAILED(hr))
+            return hr;
+
+        ui = MsiSetInternalUI(V_I4(&varg0), NULL);
+        if (ui == INSTALLUILEVEL_NOCHANGE)
+            return DISP_E_EXCEPTION;
+    }
+    else if (wFlags & DISPATCH_PROPERTYGET)
+    {
+        ui = MsiSetInternalUI(INSTALLUILEVEL_NOCHANGE, NULL);
+        if (ui == INSTALLUILEVEL_NOCHANGE)
+            return DISP_E_EXCEPTION;
+
+        V_VT(pVarResult) = VT_I4;
+        V_I4(pVarResult) = ui;
+    }
+
+    return S_OK;
+}
+
+static HRESULT InstallerImpl_EnableLog(WORD wFlags,
+                                       DISPPARAMS* pDispParams,
+                                       VARIANT* pVarResult,
+                                       EXCEPINFO* pExcepInfo,
+                                       UINT* puArgErr)
+{
+    if (!(wFlags & DISPATCH_METHOD))
+        return DISP_E_MEMBERNOTFOUND;
+
+    FIXME("\n");
+
+    VariantInit(pVarResult);
+    return S_OK;
+}
+
+static HRESULT InstallerImpl_InstallProduct(WORD wFlags,
+                                            DISPPARAMS* pDispParams,
+                                            VARIANT* pVarResult,
+                                            EXCEPINFO* pExcepInfo,
+                                            UINT* puArgErr)
+{
+    UINT ret;
+    HRESULT hr;
+    VARIANTARG varg0, varg1;
+
+    if (!(wFlags & DISPATCH_METHOD))
+        return DISP_E_MEMBERNOTFOUND;
+
+    VariantInit(&varg0);
+    hr = DispGetParam(pDispParams, 0, VT_BSTR, &varg0, puArgErr);
+    if (FAILED(hr))
+        return hr;
+
+    VariantInit(&varg1);
+    hr = DispGetParam(pDispParams, 1, VT_BSTR, &varg1, puArgErr);
+    if (FAILED(hr))
+        goto done;
+
+    ret = MsiInstallProductW(V_BSTR(&varg0), V_BSTR(&varg1));
+    if (ret != ERROR_SUCCESS)
+    {
+        hr = DISP_E_EXCEPTION;
+        goto done;
+    }
+
+done:
+    VariantClear(&varg0);
+    VariantClear(&varg1);
+    return hr;
+}
+
+static HRESULT InstallerImpl_Version(WORD wFlags,
+                                     VARIANT* pVarResult,
+                                     EXCEPINFO* pExcepInfo,
+                                     UINT* puArgErr)
+{
+    HRESULT hr;
+    DLLVERSIONINFO verinfo;
+    WCHAR version[MAX_PATH];
+
+    static const WCHAR format[] = {
+        '%','d','.','%','d','.','%','d','.','%','d',0};
+
+    if (!(wFlags & DISPATCH_PROPERTYGET))
+        return DISP_E_MEMBERNOTFOUND;
+
+    verinfo.cbSize = sizeof(DLLVERSIONINFO);
+    hr = DllGetVersion(&verinfo);
+    if (FAILED(hr))
+        return hr;
+
+    sprintfW(version, format, verinfo.dwMajorVersion, verinfo.dwMinorVersion,
+             verinfo.dwBuildNumber, verinfo.dwPlatformID);
+
+    V_VT(pVarResult) = VT_BSTR;
+    V_BSTR(pVarResult) = SysAllocString(version);
+    return S_OK;
+}
+
+static HRESULT InstallerImpl_LastErrorRecord(WORD wFlags,
+                                             DISPPARAMS* pDispParams,
+                                             VARIANT* pVarResult,
+                                             EXCEPINFO* pExcepInfo,
+                                             UINT* puArgErr)
+{
+    if (!(wFlags & DISPATCH_METHOD))
+        return DISP_E_MEMBERNOTFOUND;
+
+    FIXME("\n");
+
+    VariantInit(pVarResult);
+    return S_OK;
+}
+
+static HRESULT InstallerImpl_RegistryValue(WORD wFlags,
+                                           DISPPARAMS* pDispParams,
+                                           VARIANT* pVarResult,
+                                           EXCEPINFO* pExcepInfo,
+                                           UINT* puArgErr)
+{
+    UINT ret;
+    HKEY hkey = NULL;
+    HRESULT hr;
+    UINT posValue;
+    DWORD type, size;
+    LPWSTR szString = NULL;
+    VARIANTARG varg0, varg1, varg2;
+
+    if (!(wFlags & DISPATCH_METHOD))
+        return DISP_E_MEMBERNOTFOUND;
+
+    VariantInit(&varg0);
+    hr = DispGetParam(pDispParams, 0, VT_I4, &varg0, puArgErr);
+    if (FAILED(hr))
+        return hr;
+
+    VariantInit(&varg1);
+    hr = DispGetParam(pDispParams, 1, VT_BSTR, &varg1, puArgErr);
+    if (FAILED(hr))
+        goto done;
+
+    /* Save valuePos so we can save puArgErr if we are unable to do our type
+     * conversions.
+     */
+    posValue = 2;
+    VariantInit(&varg2);
+    hr = DispGetParam_CopyOnly(pDispParams, &posValue, &varg2);
+    if (FAILED(hr))
+        goto done;
+
+    if (V_I4(&varg0) >= REG_INDEX_CLASSES_ROOT &&
+        V_I4(&varg0) <= REG_INDEX_DYN_DATA)
+    {
+        V_I4(&varg0) |= (UINT_PTR)HKEY_CLASSES_ROOT;
+    }
+
+    ret = RegOpenKeyW((HKEY)(UINT_PTR)V_I4(&varg0), V_BSTR(&varg1), &hkey);
+
+    /* Only VT_EMPTY case can do anything if the key doesn't exist. */
+    if (ret != ERROR_SUCCESS && V_VT(&varg2) != VT_EMPTY)
+    {
+        hr = DISP_E_BADINDEX;
+        goto done;
+    }
+
+    /* Third parameter can be VT_EMPTY, VT_I4, or VT_BSTR */
+    switch (V_VT(&varg2))
+    {
+        /* Return VT_BOOL clarifying whether registry key exists or not. */
+        case VT_EMPTY:
+            V_VT(pVarResult) = VT_BOOL;
+            V_BOOL(pVarResult) = (ret == ERROR_SUCCESS);
+            break;
+
+        /* Return the value of specified key if it exists. */
+        case VT_BSTR:
+            ret = RegQueryValueExW(hkey, V_BSTR(&varg2),
+                                   NULL, NULL, NULL, &size);
+            if (ret != ERROR_SUCCESS)
+            {
+                hr = DISP_E_BADINDEX;
+                goto done;
+            }
+
+            szString = msi_alloc(size);
+            if (!szString)
+            {
+                hr = E_OUTOFMEMORY;
+                goto done;
+            }
+
+            ret = RegQueryValueExW(hkey, V_BSTR(&varg2), NULL,
+                                   &type, (LPBYTE)szString, &size);
+            if (ret != ERROR_SUCCESS)
+            {
+                msi_free(szString);
+                hr = DISP_E_BADINDEX;
+                goto done;
+            }
+
+            variant_from_registry_value(pVarResult, type,
+                                        (LPBYTE)szString, size);
+            msi_free(szString);
+            break;
+
+        /* Try to make it into VT_I4, can use VariantChangeType for this. */
+        default:
+            hr = VariantChangeType(&varg2, &varg2, 0, VT_I4);
+            if (FAILED(hr))
+            {
+                if (hr == DISP_E_TYPEMISMATCH)
+                    *puArgErr = posValue;
+
+                goto done;
+            }
+
+            /* Retrieve class name or maximum value name or subkey name size. */
+            if (!V_I4(&varg2))
+                ret = RegQueryInfoKeyW(hkey, NULL, &size, NULL, NULL, NULL,
+                                       NULL, NULL, NULL, NULL, NULL, NULL);
+            else if (V_I4(&varg2) > 0)
+                ret = RegQueryInfoKeyW(hkey, NULL, NULL, NULL, NULL, NULL,
+                                       NULL, NULL, &size, NULL, NULL, NULL);
+            else /* V_I4(&varg2) < 0 */
+                ret = RegQueryInfoKeyW(hkey, NULL, NULL, NULL, NULL, &size,
+                                       NULL, NULL, NULL, NULL, NULL, NULL);
+
+            if (ret != ERROR_SUCCESS)
+                goto done;
+
+            szString = msi_alloc(++size * sizeof(WCHAR));
+            if (!szString)
+            {
+                hr = E_OUTOFMEMORY;
+                goto done;
+            }
+
+            if (!V_I4(&varg2))
+                ret = RegQueryInfoKeyW(hkey, szString, &size,NULL, NULL, NULL,
+                                       NULL, NULL, NULL, NULL, NULL, NULL);
+            else if (V_I4(&varg2) > 0)
+                ret = RegEnumValueW(hkey, V_I4(&varg2)-1, szString,
+                                    &size, 0, 0, NULL, NULL);
+            else /* V_I4(&varg2) < 0 */
+                ret = RegEnumKeyW(hkey, -1 - V_I4(&varg2), szString, size);
+
+            if (ret == ERROR_SUCCESS)
+            {
+                V_VT(pVarResult) = VT_BSTR;
+                V_BSTR(pVarResult) = SysAllocString(szString);
+            }
+
+            msi_free(szString);
+    }
+
+done:
+    VariantClear(&varg0);
+    VariantClear(&varg1);
+    VariantClear(&varg2);
+    RegCloseKey(hkey);
+    return hr;
+}
+
+static HRESULT InstallerImpl_Environment(WORD wFlags,
+                                         DISPPARAMS* pDispParams,
+                                         VARIANT* pVarResult,
+                                         EXCEPINFO* pExcepInfo,
+                                         UINT* puArgErr)
+{
+    if (!(wFlags & DISPATCH_METHOD))
+        return DISP_E_MEMBERNOTFOUND;
+
+    FIXME("\n");
+
+    VariantInit(pVarResult);
+    return S_OK;
+}
+
+static HRESULT InstallerImpl_FileAttributes(WORD wFlags,
+                                            DISPPARAMS* pDispParams,
+                                            VARIANT* pVarResult,
+                                            EXCEPINFO* pExcepInfo,
+                                            UINT* puArgErr)
+{
+    if (!(wFlags & DISPATCH_METHOD))
+        return DISP_E_MEMBERNOTFOUND;
+
+    FIXME("\n");
+
+    VariantInit(pVarResult);
+    return S_OK;
+}
+
+static HRESULT InstallerImpl_FileSize(WORD wFlags,
+                                      DISPPARAMS* pDispParams,
+                                      VARIANT* pVarResult,
+                                      EXCEPINFO* pExcepInfo,
+                                      UINT* puArgErr)
+{
+    if (!(wFlags & DISPATCH_METHOD))
+        return DISP_E_MEMBERNOTFOUND;
+
+    FIXME("\n");
+
+    VariantInit(pVarResult);
+    return S_OK;
+}
+
+static HRESULT InstallerImpl_FileVersion(WORD wFlags,
+                                         DISPPARAMS* pDispParams,
+                                         VARIANT* pVarResult,
+                                         EXCEPINFO* pExcepInfo,
+                                         UINT* puArgErr)
+{
+    if (!(wFlags & DISPATCH_METHOD))
+        return DISP_E_MEMBERNOTFOUND;
+
+    FIXME("\n");
+
+    VariantInit(pVarResult);
+    return S_OK;
+}
+
+static HRESULT InstallerImpl_ProductState(WORD wFlags,
+                                          DISPPARAMS* pDispParams,
+                                          VARIANT* pVarResult,
+                                          EXCEPINFO* pExcepInfo,
+                                          UINT* puArgErr)
+{
+    HRESULT hr;
+    VARIANTARG varg0;
+
+    if (!(wFlags & DISPATCH_PROPERTYGET))
+        return DISP_E_MEMBERNOTFOUND;
+
+    VariantInit(&varg0);
+    hr = DispGetParam(pDispParams, 0, VT_BSTR, &varg0, puArgErr);
+    if (FAILED(hr))
+        return hr;
+
+    V_VT(pVarResult) = VT_I4;
+    V_I4(pVarResult) = MsiQueryProductStateW(V_BSTR(&varg0));
+
+    VariantClear(&varg0);
+    return S_OK;
+}
+
+static HRESULT InstallerImpl_ProductInfo(WORD wFlags,
+                                         DISPPARAMS* pDispParams,
+                                         VARIANT* pVarResult,
+                                         EXCEPINFO* pExcepInfo,
+                                         UINT* puArgErr)
+{
+    UINT ret;
+    HRESULT hr;
+    DWORD size;
+    LPWSTR str = NULL;
+    VARIANTARG varg0, varg1;
+
+    if (!(wFlags & DISPATCH_PROPERTYGET))
+        return DISP_E_MEMBERNOTFOUND;
+
+    VariantInit(&varg0);
+    hr = DispGetParam(pDispParams, 0, VT_BSTR, &varg0, puArgErr);
+    if (FAILED(hr))
+        return hr;
+
+    VariantInit(&varg1);
+    hr = DispGetParam(pDispParams, 1, VT_BSTR, &varg1, puArgErr);
+    if (FAILED(hr))
+        goto done;
+
+    V_VT(pVarResult) = VT_BSTR;
+    V_BSTR(pVarResult) = NULL;
+
+    ret = MsiGetProductInfoW(V_BSTR(&varg0), V_BSTR(&varg1), NULL, &size);
+    if (ret != ERROR_SUCCESS)
+    {
+        hr = DISP_E_EXCEPTION;
+        goto done;
+    }
+
+    str = msi_alloc(++size * sizeof(WCHAR));
+    if (!str)
+    {
+        hr = E_OUTOFMEMORY;
+        goto done;
+    }
+
+    ret = MsiGetProductInfoW(V_BSTR(&varg0), V_BSTR(&varg1), str, &size);
+    if (ret != ERROR_SUCCESS)
+    {
+        hr = DISP_E_EXCEPTION;
+        goto done;
+    }
+
+    V_BSTR(pVarResult) = SysAllocString(str);
+    hr = S_OK;
+
+done:
+    msi_free(str);
+    VariantClear(&varg0);
+    VariantClear(&varg1);
+    return hr;
+}
+
+static void cleanup_products(IDispatch* dispatch, ULONG count)
+{
+    UINT i;
+    ListData* ldata = private_data((AutomationObject *)dispatch);
+
+    for (i = 0; i < count - 1; i++)
+        VariantClear(&ldata->pVars[i]);
+
+    ldata->ulCount = 0;
+    msi_free(ldata->pVars);
+
+    IDispatch_Release(dispatch);
+}
+
+static HRESULT InstallerImpl_Products(WORD wFlags,
+                                      DISPPARAMS* pDispParams,
+                                      VARIANT* pVarResult,
+                                      EXCEPINFO* pExcepInfo,
+                                      UINT* puArgErr)
+{
+    UINT ret;
+    HRESULT hr;
+    ULONG idx = 0;
+    ListData *ldata;
+    IDispatch *dispatch;
+    WCHAR product[GUID_SIZE];
+
+    if (!(wFlags & DISPATCH_PROPERTYGET))
+        return DISP_E_MEMBERNOTFOUND;
+
+    /* Find number of products. */
+    while ((ret = MsiEnumProductsW(idx, product)) == ERROR_SUCCESS)
+        idx++;
+
+    if (ret != ERROR_NO_MORE_ITEMS)
+        return DISP_E_EXCEPTION;
+
+    V_VT(pVarResult) = VT_DISPATCH;
+    hr = create_automation_object(0, NULL, (LPVOID*)&dispatch,
+                                  &DIID_StringList, ListImpl_Invoke,
+                                  ListImpl_Free, sizeof(ListData));
+    if (FAILED(hr))
+        return hr;
+
+    V_DISPATCH(pVarResult) = dispatch;
+
+    /* Save product strings. */
+    ldata = private_data((AutomationObject *)dispatch);
+    ldata->ulCount = 0;
+    ldata->pVars = msi_alloc_zero(sizeof(VARIANT) * idx);
+    if (!ldata->pVars)
+    {
+        IDispatch_Release(dispatch);
+        return E_OUTOFMEMORY;
+    }
+
+    ldata->ulCount = idx;
+    for (idx = 0; idx < ldata->ulCount; idx++)
+    {
+        ret = MsiEnumProductsW(idx, product);
+        if (ret != ERROR_SUCCESS)
+        {
+            cleanup_products(dispatch, idx - 1);
+            return DISP_E_EXCEPTION;
+        }
+
+        VariantInit(&ldata->pVars[idx]);
+        V_VT(&ldata->pVars[idx]) = VT_BSTR;
+        V_BSTR(&ldata->pVars[idx]) = SysAllocString(product);
+    }
+
+    return S_OK;
+}
+
+static HRESULT InstallerImpl_RelatedProducts(WORD wFlags,
+                                             DISPPARAMS* pDispParams,
+                                             VARIANT* pVarResult,
+                                             EXCEPINFO* pExcepInfo,
+                                             UINT* puArgErr)
+{
+    UINT ret;
+    ULONG idx;
+    HRESULT hr;
+    ListData *ldata;
+    VARIANTARG varg0;
+    IDispatch* dispatch;
+    WCHAR product[GUID_SIZE];
+
+    if (!(wFlags & DISPATCH_PROPERTYGET))
+        return DISP_E_MEMBERNOTFOUND;
+
+    VariantInit(&varg0);
+    hr = DispGetParam(pDispParams, 0, VT_BSTR, &varg0, puArgErr);
+    if (FAILED(hr))
+        return hr;
+
+    /* Find number of related products. */
+    idx = 0;
+    do
+    {
+        ret = MsiEnumRelatedProductsW(V_BSTR(&varg0), 0, idx, product);
+        if (ret == ERROR_SUCCESS)
+            idx++;
+    } while (ret == ERROR_SUCCESS);
+
+    if (ret != ERROR_NO_MORE_ITEMS)
+    {
+        hr = DISP_E_EXCEPTION;
+        goto done;
+    }
+
+    V_VT(pVarResult) = VT_DISPATCH;
+
+    hr = create_automation_object(0, NULL, (LPVOID*)&dispatch,
+                                  &DIID_StringList, ListImpl_Invoke,
+                                  ListImpl_Free, sizeof(ListData));
+    if (FAILED(hr))
+        goto done;
+
+    V_DISPATCH(pVarResult) = dispatch;
+
+    /* Save product strings. */
+    ldata = private_data((AutomationObject *)dispatch);
+    ldata->pVars = msi_alloc(sizeof(VARIANT) * idx);
+    if (!ldata->pVars)
+    {
+        IDispatch_Release(dispatch);
+        hr = E_OUTOFMEMORY;
+        goto done;
+    }
+
+    ldata->ulCount = idx;
+    for (idx = 0; idx < ldata->ulCount; idx++)
+    {
+        ret = MsiEnumRelatedProductsW(V_BSTR(&varg0), 0, idx, product);
+        if (ret != ERROR_SUCCESS)
+        {
+            cleanup_products(dispatch, idx - 1);
+            hr = DISP_E_EXCEPTION;
+            goto done;
+        }
+
+        VariantInit(&ldata->pVars[idx]);
+        V_VT(&ldata->pVars[idx]) = VT_BSTR;
+        V_BSTR(&ldata->pVars[idx]) = SysAllocString(product);
+    }
+
+    hr = S_OK;
+
+done:
+    VariantClear(&varg0);
+    return hr;
+}
+
 static HRESULT WINAPI InstallerImpl_Invoke(
         AutomationObject* This,
         DISPID dispIdMember,
@@ -1545,405 +2299,93 @@ static HRESULT WINAPI InstallerImpl_Invoke(
         EXCEPINFO* pExcepInfo,
         UINT* puArgErr)
 {
-    MSIHANDLE msiHandle;
-    IDispatch *pDispatch = NULL;
-    UINT ret;
-    VARIANTARG varg0, varg1, varg2;
-    HRESULT hr;
-    LPWSTR szString = NULL;
-    DWORD dwSize = 0;
-    INSTALLUILEVEL ui;
-
-    VariantInit(&varg0);
-    VariantInit(&varg1);
-    VariantInit(&varg2);
-
     switch (dispIdMember)
     {
         case DISPID_INSTALLER_CREATERECORD:
-            if (wFlags & DISPATCH_METHOD)
-            {
-                hr = DispGetParam(pDispParams, 0, VT_I4, &varg0, puArgErr);
-                if (FAILED(hr)) return hr;
-                V_VT(pVarResult) = VT_DISPATCH;
-                if ((msiHandle = MsiCreateRecord(V_I4(&varg0))))
-                {
-                    if (SUCCEEDED(hr = create_automation_object(msiHandle, NULL, (LPVOID*)&pDispatch, &DIID_Record, RecordImpl_Invoke, NULL, 0)))
-                        V_DISPATCH(pVarResult) = pDispatch;
-                    else
-                        ERR("Failed to create Record object, hresult 0x%08x\n", hr);
-                }
-                else
-                {
-                    ERR("MsiCreateRecord failed\n");
-                    return DISP_E_EXCEPTION;
-                }
-            }
-            else return DISP_E_MEMBERNOTFOUND;
-            break;
+            return InstallerImpl_CreateRecord(wFlags, pDispParams,
+                                              pVarResult, pExcepInfo, puArgErr);
 
         case DISPID_INSTALLER_OPENPACKAGE:
-            if (wFlags & DISPATCH_METHOD)
-            {
-                hr = DispGetParam(pDispParams, 0, VT_BSTR, &varg0, puArgErr);
-                if (FAILED(hr)) return hr;
-                hr = DispGetParam(pDispParams, 1, VT_I4, &varg1, puArgErr);
-                if (FAILED(hr))
-                {
-                    VariantClear(&varg0);
-                    return hr;
-                }
-                V_VT(pVarResult) = VT_DISPATCH;
-                if ((ret = MsiOpenPackageExW(V_BSTR(&varg0), V_I4(&varg1), &msiHandle)) == ERROR_SUCCESS)
-                {
-                    if (SUCCEEDED(hr = create_session(msiHandle, (IDispatch *)This, &pDispatch)))
-                        V_DISPATCH(pVarResult) = pDispatch;
-                    else
-                        ERR("Failed to create Session object, hresult 0x%08x\n", hr);
-                }
-                else
-                {
-                    VariantClear(&varg0);
-                    ERR("MsiOpenPackageEx returned %d\n", ret);
-                    return DISP_E_EXCEPTION;
-                }
-            }
-            else return DISP_E_MEMBERNOTFOUND;
-            break;
+            return InstallerImpl_OpenPackage(This, wFlags, pDispParams,
+                                             pVarResult, pExcepInfo, puArgErr);
+
+        case DISPID_INSTALLER_OPENPRODUCT:
+            return InstallerImpl_OpenProduct(wFlags, pDispParams,
+                                             pVarResult, pExcepInfo, puArgErr);
 
         case DISPID_INSTALLER_OPENDATABASE:
-            if (wFlags & DISPATCH_METHOD)
-            {
-                hr = DispGetParam(pDispParams, 0, VT_BSTR, &varg0, puArgErr);
-                if (FAILED(hr)) return hr;
+            return InstallerImpl_OpenDatabase(wFlags, pDispParams,
+                                              pVarResult, pExcepInfo, puArgErr);
 
-                hr = DispGetParam(pDispParams, 1, VT_BSTR, &varg1, puArgErr);
-                if (FAILED(hr))
-                {
-                    VariantClear(&varg0);
-                    return hr;
-                }
-
-                V_VT(pVarResult) = VT_DISPATCH;
-                if ((ret = MsiOpenDatabaseW(V_BSTR(&varg0), V_BSTR(&varg1), &msiHandle)) == ERROR_SUCCESS)
-                {
-                    hr = create_automation_object(msiHandle, NULL, (LPVOID *)&pDispatch,
-                                                  &DIID_Database, DatabaseImpl_Invoke, NULL, 0);
-                    if (SUCCEEDED(hr))
-                        V_DISPATCH(pVarResult) = pDispatch;
-                    else
-                        ERR("Failed to create Database object: 0x%08x\n", hr);
-                }
-                else
-                {
-                    VariantClear(&varg0);
-                    VariantClear(&varg1);
-                    ERR("MsiOpenDatabase returned %d\n", ret);
-                    return DISP_E_EXCEPTION;
-                }
-            }
-            else return DISP_E_MEMBERNOTFOUND;
-            break;
+        case DISPID_INSTALLER_SUMMARYINFORMATION:
+            return InstallerImpl_SummaryInformation(wFlags, pDispParams,
+                                                    pVarResult, pExcepInfo,
+                                                    puArgErr);
 
         case DISPID_INSTALLER_UILEVEL:
-            if (wFlags & DISPATCH_PROPERTYPUT)
-            {
-                hr = DispGetParam(pDispParams, 0, VT_I4, &varg0, puArgErr);
-                if (FAILED(hr)) return hr;
-                if ((ui = MsiSetInternalUI(V_I4(&varg0), NULL) == INSTALLUILEVEL_NOCHANGE))
-                {
-                    ERR("MsiSetInternalUI failed\n");
-                    return DISP_E_EXCEPTION;
-                }
-            }
-            else if (wFlags & DISPATCH_PROPERTYGET)
-            {
-                if ((ui = MsiSetInternalUI(INSTALLUILEVEL_NOCHANGE, NULL) == INSTALLUILEVEL_NOCHANGE))
-                {
-                    ERR("MsiSetInternalUI failed\n");
-                    return DISP_E_EXCEPTION;
-                }
+            return InstallerImpl_UILevel(wFlags, pDispParams,
+                                         pVarResult, pExcepInfo, puArgErr);
 
-                V_VT(pVarResult) = VT_I4;
-                V_I4(pVarResult) = ui;
-            }
-            else return DISP_E_MEMBERNOTFOUND;
-            break;
+        case DISPID_INSTALLER_ENABLELOG:
+            return InstallerImpl_EnableLog(wFlags, pDispParams,
+                                           pVarResult, pExcepInfo, puArgErr);
 
         case DISPID_INSTALLER_INSTALLPRODUCT:
-            if (wFlags & DISPATCH_METHOD)
-            {
-                hr = DispGetParam(pDispParams, 0, VT_BSTR, &varg0, puArgErr);
-                if (FAILED(hr)) return hr;
-                hr = DispGetParam(pDispParams, 1, VT_BSTR, &varg1, puArgErr);
-                if (FAILED(hr))
-                {
-                    VariantClear(&varg0);
-                    return hr;
-                }
-                if ((ret = MsiInstallProductW(V_BSTR(&varg0), V_BSTR(&varg1))) != ERROR_SUCCESS)
-                {
-                    VariantClear(&varg1);
-                    VariantClear(&varg0);
-                    ERR("MsiInstallProduct returned %d\n", ret);
-                    return DISP_E_EXCEPTION;
-                }
-            }
-            else return DISP_E_MEMBERNOTFOUND;
-            break;
+            return InstallerImpl_InstallProduct(wFlags, pDispParams,
+                                                pVarResult, pExcepInfo,
+                                                puArgErr);
 
         case DISPID_INSTALLER_VERSION:
-            if (wFlags & DISPATCH_PROPERTYGET) {
-                DLLVERSIONINFO verinfo;
-                WCHAR version[MAX_PATH];
+            return InstallerImpl_Version(wFlags, pVarResult,
+                                         pExcepInfo, puArgErr);
 
-                static const WCHAR format[] = {'%','d','.','%','d','.','%','d','.','%','d',0};
-
-                verinfo.cbSize = sizeof(DLLVERSIONINFO);
-                hr = DllGetVersion(&verinfo);
-                if (FAILED(hr)) return hr;
-
-                sprintfW(version, format, verinfo.dwMajorVersion, verinfo.dwMinorVersion,
-                         verinfo.dwBuildNumber, verinfo.dwPlatformID);
-
-                V_VT(pVarResult) = VT_BSTR;
-                V_BSTR(pVarResult) = SysAllocString(version);
-            }
-            else return DISP_E_MEMBERNOTFOUND;
-            break;
+        case DISPID_INSTALLER_LASTERRORRECORD:
+            return InstallerImpl_LastErrorRecord(wFlags, pDispParams,
+                                                 pVarResult, pExcepInfo,
+                                                 puArgErr);
 
         case DISPID_INSTALLER_REGISTRYVALUE:
-            if (wFlags & DISPATCH_METHOD) {
-                HKEY hkey;
-                DWORD dwType;
-                UINT posValue = 2;    /* Save valuePos so we can save puArgErr if we are unable to do our type conversions */
+            return InstallerImpl_RegistryValue(wFlags, pDispParams,
+                                               pVarResult, pExcepInfo,
+                                               puArgErr);
 
-                hr = DispGetParam(pDispParams, 0, VT_I4, &varg0, puArgErr);
-                if (FAILED(hr)) return hr;
-                hr = DispGetParam(pDispParams, 1, VT_BSTR, &varg1, puArgErr);
-                if (FAILED(hr)) return hr;
-                hr = DispGetParam_CopyOnly(pDispParams, &posValue, &varg2);
-                if (FAILED(hr))
-                {
-                    VariantClear(&varg1);
-                    return hr;
-                }
+        case DISPID_INSTALLER_ENVIRONMENT:
+            return InstallerImpl_Environment(wFlags, pDispParams,
+                                             pVarResult, pExcepInfo, puArgErr);
 
-                if (V_I4(&varg0) >= REG_INDEX_CLASSES_ROOT &&
-                    V_I4(&varg0) <= REG_INDEX_DYN_DATA)
-                    V_I4(&varg0) |= (UINT_PTR)HKEY_CLASSES_ROOT;
+        case DISPID_INSTALLER_FILEATTRIBUTES:
+            return InstallerImpl_FileAttributes(wFlags, pDispParams,
+                                                pVarResult, pExcepInfo,
+                                                puArgErr);
 
-                ret = RegOpenKeyW((HKEY)(UINT_PTR)V_I4(&varg0), V_BSTR(&varg1), &hkey);
+        case DISPID_INSTALLER_FILESIZE:
+            return InstallerImpl_FileSize(wFlags, pDispParams,
+                                          pVarResult, pExcepInfo, puArgErr);
 
-                /* Third parameter can be VT_EMPTY, VT_I4, or VT_BSTR */
-                switch (V_VT(&varg2))
-                {
-                    case VT_EMPTY:  /* Return VT_BOOL as to whether or not registry key exists */
-                        V_VT(pVarResult) = VT_BOOL;
-                        V_BOOL(pVarResult) = (ret == ERROR_SUCCESS);
-                        break;
-
-                    case VT_BSTR:   /* Return value of specified key if it exists */
-                        if (ret == ERROR_SUCCESS &&
-                            (ret = RegQueryValueExW(hkey, V_BSTR(&varg2), NULL, NULL, NULL, &dwSize)) == ERROR_SUCCESS)
-                        {
-                            if (!(szString = msi_alloc(dwSize)))
-                                ERR("Out of memory\n");
-                            else if ((ret = RegQueryValueExW(hkey, V_BSTR(&varg2), NULL, &dwType, (LPBYTE)szString, &dwSize)) == ERROR_SUCCESS)
-                                variant_from_registry_value(pVarResult, dwType, (LPBYTE)szString, dwSize);
-                        }
-
-                        if (ret != ERROR_SUCCESS)
-                        {
-                            msi_free(szString);
-                            VariantClear(&varg2);
-                            VariantClear(&varg1);
-                            return DISP_E_BADINDEX;
-                        }
-                        break;
-
-                    default:     /* Try to make it into VT_I4, can use VariantChangeType for this */
-                        hr = VariantChangeType(&varg2, &varg2, 0, VT_I4);
-                        if (SUCCEEDED(hr) && ret != ERROR_SUCCESS) hr = DISP_E_BADINDEX; /* Conversion fine, but couldn't find key */
-                        if (FAILED(hr))
-                        {
-                            if (hr == DISP_E_TYPEMISMATCH) *puArgErr = posValue;
-                            VariantClear(&varg2);   /* Unknown type, so let's clear it */
-                            VariantClear(&varg1);
-                            return hr;
-                        }
-
-                        /* Retrieve class name or maximum value name or subkey name size */
-                        if (!V_I4(&varg2))
-                            ret = RegQueryInfoKeyW(hkey, NULL, &dwSize, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-                        else if (V_I4(&varg2) > 0)
-                            ret = RegQueryInfoKeyW(hkey, NULL, NULL, NULL, NULL, NULL, NULL, NULL, &dwSize, NULL, NULL, NULL);
-                        else /* V_I4(&varg2) < 0 */
-                            ret = RegQueryInfoKeyW(hkey, NULL, NULL, NULL, NULL, &dwSize, NULL, NULL, NULL, NULL, NULL, NULL);
-
-                        if (ret == ERROR_SUCCESS)
-                        {
-                            if (!(szString = msi_alloc(++dwSize * sizeof(WCHAR))))
-                                ERR("Out of memory\n");
-                            else if (!V_I4(&varg2))
-                                ret = RegQueryInfoKeyW(hkey, szString, &dwSize, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-                            else if (V_I4(&varg2) > 0)
-                                ret = RegEnumValueW(hkey, V_I4(&varg2)-1, szString, &dwSize, 0, 0, NULL, NULL);
-                            else /* V_I4(&varg2) < 0 */
-                                ret = RegEnumKeyW(hkey, -1 - V_I4(&varg2), szString, dwSize);
-
-                            if (szString && ret == ERROR_SUCCESS)
-                            {
-                                V_VT(pVarResult) = VT_BSTR;
-                                V_BSTR(pVarResult) = SysAllocString(szString);
-                            }
-                        }
-                }
-
-                msi_free(szString);
-                RegCloseKey(hkey);
-            }
-            else return DISP_E_MEMBERNOTFOUND;
-            break;
+        case DISPID_INSTALLER_FILEVERSION:
+            return InstallerImpl_FileVersion(wFlags, pDispParams,
+                                             pVarResult, pExcepInfo, puArgErr);
 
         case DISPID_INSTALLER_PRODUCTSTATE:
-            if (wFlags & DISPATCH_PROPERTYGET) {
-                hr = DispGetParam(pDispParams, 0, VT_BSTR, &varg0, puArgErr);
-                if (FAILED(hr)) return hr;
-                V_VT(pVarResult) = VT_I4;
-                V_I4(pVarResult) = MsiQueryProductStateW(V_BSTR(&varg0));
-            }
-            else return DISP_E_MEMBERNOTFOUND;
-            break;
+            return InstallerImpl_ProductState(wFlags, pDispParams,
+                                              pVarResult, pExcepInfo, puArgErr);
 
         case DISPID_INSTALLER_PRODUCTINFO:
-            if (wFlags & DISPATCH_PROPERTYGET) {
-                hr = DispGetParam(pDispParams, 0, VT_BSTR, &varg0, puArgErr);
-                if (FAILED(hr)) return hr;
-                hr = DispGetParam(pDispParams, 1, VT_BSTR, &varg1, puArgErr);
-                if (FAILED(hr))
-                {
-                    VariantClear(&varg0);
-                    return hr;
-                }
-                V_VT(pVarResult) = VT_BSTR;
-                V_BSTR(pVarResult) = NULL;
-                if ((ret = MsiGetProductInfoW(V_BSTR(&varg0), V_BSTR(&varg1), NULL, &dwSize)) == ERROR_SUCCESS)
-                {
-                    if (!(szString = msi_alloc((++dwSize)*sizeof(WCHAR))))
-                        ERR("Out of memory\n");
-                    else if ((ret = MsiGetProductInfoW(V_BSTR(&varg0), V_BSTR(&varg1), szString, &dwSize)) == ERROR_SUCCESS)
-                        V_BSTR(pVarResult) = SysAllocString(szString);
-                    msi_free(szString);
-                }
-                if (ret != ERROR_SUCCESS)
-                {
-                    ERR("MsiGetProductInfo returned %d\n", ret);
-                    VariantClear(&varg1);
-                    VariantClear(&varg0);
-                    return DISP_E_EXCEPTION;
-                }
-            }
-            else return DISP_E_MEMBERNOTFOUND;
-            break;
+            return InstallerImpl_ProductInfo(wFlags, pDispParams,
+                                             pVarResult, pExcepInfo, puArgErr);
 
         case DISPID_INSTALLER_PRODUCTS:
-            if (wFlags & DISPATCH_PROPERTYGET)
-            {
-                ListData *ldata = NULL;
-                ULONG idx = 0;
-                WCHAR szProductBuf[GUID_SIZE];
-
-                /* Find number of products */
-                while ((ret = MsiEnumProductsW(idx, szProductBuf)) == ERROR_SUCCESS) idx++;
-                if (ret != ERROR_NO_MORE_ITEMS)
-                {
-                    ERR("MsiEnumProducts returned %d\n", ret);
-                    return DISP_E_EXCEPTION;
-                }
-
-                V_VT(pVarResult) = VT_DISPATCH;
-                if (SUCCEEDED(hr = create_automation_object(0, NULL, (LPVOID*)&pDispatch, &DIID_StringList, ListImpl_Invoke, ListImpl_Free, sizeof(ListData))))
-                {
-                    V_DISPATCH(pVarResult) = pDispatch;
-
-                    /* Save product strings */
-                    ldata = private_data((AutomationObject *)pDispatch);
-                    if (!(ldata->pVars = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(VARIANT)*idx)))
-                        ERR("Out of memory\n");
-                    else
-                    {
-                        ldata->ulCount = idx;
-                        for (idx = 0; idx < ldata->ulCount; idx++)
-                        {
-                            ret = MsiEnumProductsW(idx, szProductBuf);
-                            VariantInit(&ldata->pVars[idx]);
-                            V_VT(&ldata->pVars[idx]) = VT_BSTR;
-                            V_BSTR(&ldata->pVars[idx]) = SysAllocString(szProductBuf);
-                        }
-                    }
-                }
-                else
-                    ERR("Failed to create StringList object, hresult 0x%08x\n", hr);
-            }
-            else return DISP_E_MEMBERNOTFOUND;
-            break;
+            return InstallerImpl_Products(wFlags, pDispParams,
+                                          pVarResult, pExcepInfo, puArgErr);
 
         case DISPID_INSTALLER_RELATEDPRODUCTS:
-            if (wFlags & DISPATCH_PROPERTYGET)
-            {
-                ListData *ldata = NULL;
-                ULONG idx = 0;
-                WCHAR szProductBuf[GUID_SIZE];
+            return InstallerImpl_RelatedProducts(wFlags, pDispParams,
+                                                 pVarResult, pExcepInfo,
+                                                 puArgErr);
 
-                hr = DispGetParam(pDispParams, 0, VT_BSTR, &varg0, puArgErr);
-                if (FAILED(hr)) return hr;
-
-                /* Find number of related products */
-                while ((ret = MsiEnumRelatedProductsW(V_BSTR(&varg0), 0, idx, szProductBuf)) == ERROR_SUCCESS) idx++;
-                if (ret != ERROR_NO_MORE_ITEMS)
-                {
-                    VariantClear(&varg0);
-                    ERR("MsiEnumRelatedProducts returned %d\n", ret);
-                    return DISP_E_EXCEPTION;
-                }
-
-                V_VT(pVarResult) = VT_DISPATCH;
-                if (SUCCEEDED(hr = create_automation_object(0, NULL, (LPVOID*)&pDispatch, &DIID_StringList, ListImpl_Invoke, ListImpl_Free, sizeof(ListData))))
-                {
-                    V_DISPATCH(pVarResult) = pDispatch;
-
-                    /* Save product strings */
-                    ldata = private_data((AutomationObject *)pDispatch);
-                    if (!(ldata->pVars = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(VARIANT)*idx)))
-                        ERR("Out of memory\n");
-                    else
-                    {
-                        ldata->ulCount = idx;
-                        for (idx = 0; idx < ldata->ulCount; idx++)
-                        {
-                            ret = MsiEnumRelatedProductsW(V_BSTR(&varg0), 0, idx, szProductBuf);
-                            VariantInit(&ldata->pVars[idx]);
-                            V_VT(&ldata->pVars[idx]) = VT_BSTR;
-                            V_BSTR(&ldata->pVars[idx]) = SysAllocString(szProductBuf);
-                        }
-                    }
-                }
-                else
-                    ERR("Failed to create StringList object, hresult 0x%08x\n", hr);
-            }
-            else return DISP_E_MEMBERNOTFOUND;
-            break;
-
-         default:
+        default:
             return DISP_E_MEMBERNOTFOUND;
     }
-
-    VariantClear(&varg2);
-    VariantClear(&varg1);
-    VariantClear(&varg0);
-
-    return S_OK;
 }
 
 /* Wrapper around create_automation_object to create an installer object. */

@@ -11,6 +11,20 @@
 #define NDEBUG
 #include <debug.h>
 
+#define GDIOBJATTRFREE 170
+
+typedef struct _GDI_OBJ_ATTR_FREELIST
+{
+  LIST_ENTRY Entry;
+  DWORD nEntries;
+  PVOID AttrList[GDIOBJATTRFREE];
+} GDI_OBJ_ATTR_FREELIST, *PGDI_OBJ_ATTR_FREELIST;
+      
+typedef struct _GDI_OBJ_ATTR_ENTRY
+{
+  RGN_ATTR Attr[GDIOBJATTRFREE];
+} GDI_OBJ_ATTR_ENTRY, *PGDI_OBJ_ATTR_ENTRY;
+
 static const USHORT HatchBrushes[NB_HATCH_STYLES][8] =
 {
     {0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF}, /* HS_HORIZONTAL */
@@ -20,6 +34,134 @@ static const USHORT HatchBrushes[NB_HATCH_STYLES][8] =
     {0xF7, 0xF7, 0xF7, 0xF7, 0x00, 0xF7, 0xF7, 0xF7}, /* HS_CROSS      */
     {0x7E, 0xBD, 0xDB, 0xE7, 0xE7, 0xDB, 0xBD, 0x7E}  /* HS_DIAGCROSS  */
 };
+
+
+PVOID
+FASTCALL
+AllocateObjectAttr(VOID)
+{
+  PTHREADINFO pti;
+  PPROCESSINFO ppi;
+  PVOID pAttr;
+  PGDI_OBJ_ATTR_FREELIST pGdiObjAttrFreeList;
+  PGDI_OBJ_ATTR_ENTRY pGdiObjAttrEntry;
+  int i;
+  
+  pti = PsGetCurrentThreadWin32Thread();
+  if (pti->pgdiBrushAttr)
+  {
+     pAttr = pti->pgdiBrushAttr; // Get the free one.
+     pti->pgdiBrushAttr = NULL;
+     return pAttr;
+  }
+
+  ppi = PsGetCurrentProcessWin32Process();
+
+  if (!ppi->pBrushAttrList) // If set point is null, allocate new group.
+  {
+     pGdiObjAttrEntry = EngAllocUserMem(sizeof(GDI_OBJ_ATTR_ENTRY), 0);
+
+     if (!pGdiObjAttrEntry)
+     {
+        DPRINT1("Attr Failed User Allocation!\n");
+        return NULL;
+     }
+
+     DPRINT("AllocObjectAttr User 0x%x\n",pGdiObjAttrEntry);
+
+     pGdiObjAttrFreeList = ExAllocatePoolWithTag( PagedPool,
+                                                  sizeof(GDI_OBJ_ATTR_FREELIST),
+                                                  GDITAG_BRUSH_FREELIST);
+     if ( !pGdiObjAttrFreeList )
+     {
+        EngFreeUserMem(pGdiObjAttrEntry);
+        return NULL;
+     }
+
+     RtlZeroMemory(pGdiObjAttrFreeList, sizeof(GDI_OBJ_ATTR_FREELIST));
+
+     DPRINT("AllocObjectAttr Ex 0x%x\n",pGdiObjAttrFreeList);
+
+     InsertHeadList( &ppi->GDIBrushAttrFreeList, &pGdiObjAttrFreeList->Entry);
+
+     pGdiObjAttrFreeList->nEntries = GDIOBJATTRFREE;
+     // Start at the bottom up and set end of free list point.
+     ppi->pBrushAttrList = &pGdiObjAttrEntry->Attr[GDIOBJATTRFREE-1];
+     // Build the free attr list.
+     for ( i = 0; i < GDIOBJATTRFREE; i++)
+     {
+         pGdiObjAttrFreeList->AttrList[i] = &pGdiObjAttrEntry->Attr[i];
+     }
+  }
+
+  pAttr = ppi->pBrushAttrList;
+  pGdiObjAttrFreeList = (PGDI_OBJ_ATTR_FREELIST)ppi->GDIBrushAttrFreeList.Flink;
+
+  // Free the list when it is full!
+  if ( pGdiObjAttrFreeList->nEntries-- == 1)
+  {  // No more free entries, so yank the list.
+     RemoveEntryList( &pGdiObjAttrFreeList->Entry );
+
+     ExFreePoolWithTag( pGdiObjAttrFreeList, GDITAG_BRUSH_FREELIST );
+
+     if ( IsListEmpty( &ppi->GDIBrushAttrFreeList ) )
+     {
+        ppi->pBrushAttrList = NULL;
+        return pAttr;
+     }
+
+     pGdiObjAttrFreeList = (PGDI_OBJ_ATTR_FREELIST)ppi->GDIBrushAttrFreeList.Flink;
+  }
+
+  ppi->pBrushAttrList = pGdiObjAttrFreeList->AttrList[pGdiObjAttrFreeList->nEntries-1];
+
+  return pAttr;
+}
+
+VOID
+FASTCALL
+FreeObjectAttr(PVOID pAttr)
+{
+  PTHREADINFO pti;
+  PPROCESSINFO ppi;
+  PGDI_OBJ_ATTR_FREELIST pGdiObjAttrFreeList;
+
+  pti = PsGetCurrentThreadWin32Thread();
+  
+  if (!pti) return;
+  
+  if (!pti->pgdiBrushAttr)
+  {  // If it is null, just cache it for the next time.
+     pti->pgdiBrushAttr = pAttr;
+     return;
+  }
+
+  ppi = PsGetCurrentProcessWin32Process();
+
+  pGdiObjAttrFreeList = (PGDI_OBJ_ATTR_FREELIST)ppi->GDIBrushAttrFreeList.Flink;
+
+  // We add to the list of free entries, so this will grows!
+  if ( IsListEmpty(&ppi->GDIBrushAttrFreeList) ||
+       pGdiObjAttrFreeList->nEntries == GDIOBJATTRFREE )
+  {
+     pGdiObjAttrFreeList = ExAllocatePoolWithTag( PagedPool,
+                                                  sizeof(GDI_OBJ_ATTR_FREELIST),
+                                                  GDITAG_BRUSH_FREELIST);
+     if ( !pGdiObjAttrFreeList )
+     {
+        return;
+     }
+     InsertHeadList( &ppi->GDIBrushAttrFreeList, &pGdiObjAttrFreeList->Entry);
+     pGdiObjAttrFreeList->nEntries = 0;
+  }
+  // Up count, save the entry and set end of free list point.
+  ++pGdiObjAttrFreeList->nEntries; // Top Down...
+  pGdiObjAttrFreeList->AttrList[pGdiObjAttrFreeList->nEntries-1] = pAttr;
+  ppi->pBrushAttrList = pAttr;
+
+  return;
+}
+
 
 BOOL
 INTERNAL_CALL

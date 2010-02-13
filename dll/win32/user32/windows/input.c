@@ -155,7 +155,7 @@ GetAsyncKeyState(int vKey)
 HKL WINAPI
 GetKeyboardLayout(DWORD idThread)
 {
-  return (HKL)NtUserCallOneParam((DWORD) idThread,  ONEPARAM_ROUTINE_GETKEYBOARDLAYOUT);
+  return (HKL)NtUserCallOneParam((DWORD_PTR) idThread,  ONEPARAM_ROUTINE_GETKEYBOARDLAYOUT);
 }
 
 
@@ -249,7 +249,7 @@ GetKeyboardLayoutNameW(LPWSTR pwszKLID)
 int WINAPI
 GetKeyboardType(int nTypeFlag)
 {
-return (int)NtUserCallOneParam((DWORD) nTypeFlag,  ONEPARAM_ROUTINE_GETKEYBOARDTYPE);
+return (int)NtUserCallOneParam((DWORD_PTR) nTypeFlag,  ONEPARAM_ROUTINE_GETKEYBOARDTYPE);
 }
 
 

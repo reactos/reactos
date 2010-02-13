@@ -27,7 +27,7 @@ typedef union _BM_REQUEST_TYPE
     UCHAR   Reserved:3;
     UCHAR   Type:2;
     UCHAR   Dir:1;
-  };
+  } _BM;
   UCHAR B;
 } BM_REQUEST_TYPE, *PBM_REQUEST_TYPE;
 
@@ -80,7 +80,7 @@ typedef union _USB_HIGH_SPEED_MAXPACKET
     USHORT MaxPacket:11;
     USHORT HSmux:2;
     USHORT Reserved:3;
-  };
+  } _MP;
   USHORT us;
 } USB_HIGH_SPEED_MAXPACKET, *PUSB_HIGH_SPEED_MAXPACKET;
 
@@ -109,4 +109,4 @@ typedef struct _USB_INTERFACE_ASSOCIATION_DESCRIPTOR
 
 #include <poppack.h>
 
-#endif __USB200_H__
+#endif //__USB200_H__

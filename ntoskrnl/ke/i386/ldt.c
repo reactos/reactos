@@ -242,7 +242,7 @@ NtSetLdtEntries (ULONG Selector1,
                      ((PULONG) LdtDescriptor)[0],
                      ((PULONG) LdtDescriptor)[1]);
 
-    CpuSetLdt(KGDT_LDT);
+    Ke386SetLocalDescriptorTable(KGDT_LDT);
 
     if(LdtBase)
     {

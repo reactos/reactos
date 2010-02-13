@@ -1475,8 +1475,10 @@ DbgkClearProcessDebugObject(IN PEPROCESS Process,
     return STATUS_SUCCESS;
 }
 
-SECT_INIT_FN(DbgkInitialize)
-VOID NTAPI DbgkInitialize(VOID)
+VOID
+INIT_FUNCTION
+NTAPI
+DbgkInitialize(VOID)
 {
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     UNICODE_STRING Name;

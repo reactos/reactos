@@ -12,7 +12,7 @@
 #define NDEBUG
 #include <debug.h>
 
-//MMSUP"
+#line 15 "ARM³::MMSUP"
 #define MODULE_INVOLVED_IN_ARM3
 #include "../ARM3/miarm.h"
 

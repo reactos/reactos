@@ -266,8 +266,11 @@ KiInitMachineDependent(VOID)
                 FxSaveArea->U.FxArea.MXCsrMask = 0;
 
                 /* Save the current NPX State */
-				CpuFxsave(FxSaveArea);
-
+#ifdef __GNUC__
+                asm volatile("fxsave %0\n\t" : "=m" (*FxSaveArea));
+#else
+                __asm fxsave [FxSaveArea]
+#endif
                 /* Check if the current mask doesn't match the reserved bits */
                 if (FxSaveArea->U.FxArea.MXCsrMask != 0)
                 {
@@ -332,7 +335,7 @@ KiInitializePcr(IN ULONG ProcessorNumber,
     Pcr->PrcbData.CurrentThread = IdleThread;
 
     /* Set pointers to ourselves */
-    Pcr->SelfPcr = (PKPCR)Pcr;
+    Pcr->Self = (PKPCR)Pcr;
     Pcr->Prcb = &Pcr->PrcbData;
 
     /* Set the PCR Version */
@@ -609,16 +612,16 @@ KiGetMachineBootPointers(IN PKGDTENTRY *Gdt,
     USHORT Tr, Fs;
 
     /* Get GDT and IDT descriptors */
-    CpuGetGdt_m(GdtDescriptor.Limit);
-    CpuGetIdt_m(IdtDescriptor.Limit);
+    Ke386GetGlobalDescriptorTable(&GdtDescriptor.Limit);
+    __sidt(&IdtDescriptor.Limit);
 
     /* Save IDT and GDT */
     *Gdt = (PKGDTENTRY)GdtDescriptor.Base;
     *Idt = (PKIDTENTRY)IdtDescriptor.Base;
 
     /* Get TSS and FS Selectors */
-    Tr = CpuGetTr();
-    Fs = CpuGetFs();
+    Tr = Ke386GetTr();
+    Fs = Ke386GetFs();
 
     /* Get PCR Selector, mask it and get its GDT Entry */
     PcrSelector = *(PKGDTENTRY)((ULONG_PTR)*Gdt + (Fs & ~RPL_MASK));
@@ -656,7 +659,7 @@ KiSystemStartupReal(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     if (!Cpu)
     {
         /* If this is the boot CPU, set FS and the CPU Number*/
-        CpuSetFs(KGDT_R0_PCR);
+        Ke386SetFs(KGDT_R0_PCR);
         __writefsdword(KPCR_PROCESSOR_NUMBER, Cpu);
 
         /* Set the initial stack and idle thread as well */
@@ -705,8 +708,8 @@ KiSystemStartupReal(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     KeInitExceptions();
 
     /* Load Ring 3 selectors for DS/ES */
-    CpuSetDs(KGDT_R3_DATA | RPL_MASK);
-    CpuSetEs(KGDT_R3_DATA | RPL_MASK);
+    Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
+    Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
 
     /* Save NMI and double fault traps */
     RtlCopyMemory(&NmiEntry, &Idt[2], sizeof(KIDTENTRY));

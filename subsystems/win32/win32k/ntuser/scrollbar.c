@@ -167,7 +167,7 @@ IntUpdateSBInfo(PWINDOW_OBJECT Window, int wBar)
    LPSCROLLINFO psi;
 
    ASSERT(Window);
-   ASSERT(Window->Scroll);
+   ASSERT(Window->pSBInfo);
 
    sbi = IntGetScrollbarInfoFromWindow(Window, wBar);
    psi = IntGetScrollInfoFromWindow(Window, wBar);
@@ -228,6 +228,53 @@ co_IntGetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPSCROLLINFO lpsi)
    }
 
    return TRUE;
+}
+
+BOOL FASTCALL
+NEWco_IntGetScrollInfo(
+  PWND pWnd,
+  INT nBar,
+  PSBDATA pSBData,
+  LPSCROLLINFO lpsi)
+{
+  UINT Mask;
+  PSBTRACK pSBTrack = pWnd->head.pti->pSBTrack;
+
+  if (!SBID_IS_VALID(nBar))
+  {
+     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     DPRINT1("Trying to get scrollinfo for unknown scrollbar type %d\n", nBar);
+     return FALSE;
+  }
+
+  Mask = lpsi->fMask;
+
+  if (0 != (Mask & SIF_PAGE))
+  {
+     lpsi->nPage = pSBData->page;
+  }
+
+  if (0 != (Mask & SIF_POS))
+  {
+     lpsi->nPos = pSBData->pos;
+  }
+
+  if (0 != (Mask & SIF_RANGE))
+  {
+     lpsi->nMin = pSBData->posMin;
+     lpsi->nMax = pSBData->posMax;
+  }
+
+  if (0 != (Mask & SIF_TRACKPOS))
+  {
+     if ( pSBTrack &&
+          pSBTrack->nBar == nBar &&
+          pSBTrack->spwndTrack == pWnd )
+        lpsi->nTrackPos = pSBTrack->posNew;
+     else
+        lpsi->nTrackPos = pSBData->pos;
+  }
+  return (Mask & SIF_ALL) !=0;
 }
 
 static DWORD FASTCALL
@@ -429,21 +476,21 @@ co_IntCreateScrollBars(PWINDOW_OBJECT Window)
 
    ASSERT_REFS_CO(Window);
 
-   if(Window->Scroll)
+   if(Window->pSBInfo)
    {
       /* no need to create it anymore */
       return TRUE;
    }
 
    /* allocate memory for all scrollbars (HORZ, VERT, CONTROL) */
-   Size = 3 * (sizeof(WINDOW_SCROLLINFO));
-   if(!(Window->Scroll = ExAllocatePoolWithTag(PagedPool, Size, TAG_SBARINFO)))
+   Size = 3 * (sizeof(SBINFOEX));
+   if(!(Window->pSBInfo = ExAllocatePoolWithTag(PagedPool, Size, TAG_SBARINFO)))
    {
       DPRINT1("Unable to allocate memory for scrollbar information for window 0x%x\n", Window->hSelf);
       return FALSE;
    }
 
-   RtlZeroMemory(Window->Scroll, Size);
+   RtlZeroMemory(Window->pSBInfo, Size);
 
    Result = co_WinPosGetNonClientSize(Window,
                                       &Window->Wnd->rcWindow,
@@ -470,10 +517,10 @@ co_IntCreateScrollBars(PWINDOW_OBJECT Window)
 BOOL FASTCALL
 IntDestroyScrollBars(PWINDOW_OBJECT Window)
 {
-   if(Window->Scroll)
+   if(Window->pSBInfo)
    {
-      ExFreePool(Window->Scroll);
-      Window->Scroll = NULL;
+      ExFreePool(Window->pSBInfo);
+      Window->pSBInfo = NULL;
       return TRUE;
    }
    return FALSE;
@@ -567,7 +614,11 @@ CLEANUP:
 
 BOOL
 APIENTRY
-NtUserGetScrollInfo(HWND hWnd, int fnBar, LPSCROLLINFO lpsi)
+NtUserSBGetParms(
+  HWND hWnd, 
+  int fnBar, 
+  PSBDATA pSBData,
+  LPSCROLLINFO lpsi)
 {
    NTSTATUS Status;
    PWINDOW_OBJECT Window;

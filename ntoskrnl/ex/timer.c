@@ -216,8 +216,10 @@ ExpTimerApcKernelRoutine(IN PKAPC Apc,
     ObDereferenceObjectEx(Timer, DerefsToDo);
 }
 
-SECT_INIT_FN(ExpInitializeTimerImplementation)
-VOID NTAPI ExpInitializeTimerImplementation(VOID)
+VOID
+INIT_FUNCTION
+NTAPI
+ExpInitializeTimerImplementation(VOID)
 {
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     UNICODE_STRING Name;

@@ -169,7 +169,7 @@ KeUserModeCallback(IN ULONG RoutineIndex,
 
         /* Save the exception list */
         Teb = KeGetCurrentThread()->Teb;
-        ExceptionList = Teb->NtTib.ExceptionList;
+        ExceptionList = Teb->Tib.ExceptionList;
 
         /* Jump to user mode */
         *UserEsp = NewStack;
@@ -177,7 +177,7 @@ KeUserModeCallback(IN ULONG RoutineIndex,
         if (CallbackStatus != STATUS_CALLBACK_POP_STACK)
         {
             /* Only restore the exception list if we didn't crash in ring 3 */
-            Teb->NtTib.ExceptionList = ExceptionList;
+            Teb->Tib.ExceptionList = ExceptionList;
             CallbackStatus = STATUS_SUCCESS;
         }
         else

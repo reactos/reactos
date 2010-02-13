@@ -13,7 +13,14 @@
 #define NDEBUG
 #include <debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, MmInitGlobalKernelPageDirectory)
+#pragma alloc_text(INIT, MiInitPageDirectoryMap)
+#endif
+
+
 /* GLOBALS *****************************************************************/
+
 #define PA_BIT_PRESENT   (0)
 #define PA_BIT_READWRITE (1)
 #define PA_BIT_USER      (2)
@@ -995,8 +1002,8 @@ MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
 
 extern MMPTE HyperTemplatePte;
 
-SECT_INIT_FN(MmInitGlobalKernelPageDirectory)
 VOID
+INIT_FUNCTION
 NTAPI
 MmInitGlobalKernelPageDirectory(VOID)
 {

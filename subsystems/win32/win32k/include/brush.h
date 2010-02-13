@@ -128,4 +128,8 @@ PVOID
 NTAPI
 EBRUSHOBJ_pvGetEngBrush(EBRUSHOBJ *pebo);
 
+PVOID FASTCALL AllocateObjectAttr(VOID);
+
+VOID FASTCALL FreeObjectAttr(PVOID);
+
 #endif

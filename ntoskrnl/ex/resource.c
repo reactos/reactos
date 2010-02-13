@@ -163,8 +163,10 @@ ExpCheckForApcsDisabled(IN KIRQL Irql,
  * @remarks This routine should only be called once, during system startup.
  *
  *--*/
-SECT_INIT_FN(ExpResourceInitialization)
-VOID NTAPI ExpResourceInitialization(VOID)
+VOID
+NTAPI
+INIT_FUNCTION
+ExpResourceInitialization(VOID)
 {
     /* Setup the timeout */
     ExpTimeout.QuadPart = Int32x32To64(4, -10000000);

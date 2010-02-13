@@ -230,10 +230,118 @@ typedef struct _CertificateChain
     LONG ref;
 } CertificateChain, *PCertificateChain;
 
-static inline BOOL CRYPT_IsCertificateSelfSigned(PCCERT_CONTEXT cert)
+static BOOL CRYPT_IsCertificateSelfSigned(PCCERT_CONTEXT cert)
 {
-    return CertCompareCertificateName(cert->dwCertEncodingType,
-     &cert->pCertInfo->Subject, &cert->pCertInfo->Issuer);
+    PCERT_EXTENSION ext;
+    DWORD size;
+    BOOL ret;
+
+    if ((ext = CertFindExtension(szOID_AUTHORITY_KEY_IDENTIFIER2,
+     cert->pCertInfo->cExtension, cert->pCertInfo->rgExtension)))
+    {
+        CERT_AUTHORITY_KEY_ID2_INFO *info;
+
+        ret = CryptDecodeObjectEx(cert->dwCertEncodingType,
+         X509_AUTHORITY_KEY_ID2, ext->Value.pbData, ext->Value.cbData,
+         CRYPT_DECODE_ALLOC_FLAG | CRYPT_DECODE_NOCOPY_FLAG, NULL,
+         &info, &size);
+        if (ret)
+        {
+            if (info->AuthorityCertIssuer.cAltEntry &&
+             info->AuthorityCertSerialNumber.cbData)
+            {
+                PCERT_ALT_NAME_ENTRY directoryName = NULL;
+                DWORD i;
+
+                for (i = 0; !directoryName &&
+                 i < info->AuthorityCertIssuer.cAltEntry; i++)
+                    if (info->AuthorityCertIssuer.rgAltEntry[i].dwAltNameChoice
+                     == CERT_ALT_NAME_DIRECTORY_NAME)
+                        directoryName =
+                         &info->AuthorityCertIssuer.rgAltEntry[i];
+                if (directoryName)
+                {
+                    ret = CertCompareCertificateName(cert->dwCertEncodingType,
+                     &directoryName->u.DirectoryName, &cert->pCertInfo->Issuer)
+                     && CertCompareIntegerBlob(&info->AuthorityCertSerialNumber,
+                     &cert->pCertInfo->SerialNumber);
+                }
+                else
+                {
+                    FIXME("no supported name type in authority key id2\n");
+                    ret = FALSE;
+                }
+            }
+            else if (info->KeyId.cbData)
+            {
+                ret = CertGetCertificateContextProperty(cert,
+                 CERT_KEY_IDENTIFIER_PROP_ID, NULL, &size);
+                if (ret && size == info->KeyId.cbData)
+                {
+                    LPBYTE buf = CryptMemAlloc(size);
+
+                    if (buf)
+                    {
+                        CertGetCertificateContextProperty(cert,
+                         CERT_KEY_IDENTIFIER_PROP_ID, buf, &size);
+                        ret = !memcmp(buf, info->KeyId.pbData, size);
+                        CryptMemFree(buf);
+                    }
+                }
+                else
+                    ret = FALSE;
+            }
+            LocalFree(info);
+        }
+    }
+    else if ((ext = CertFindExtension(szOID_AUTHORITY_KEY_IDENTIFIER,
+     cert->pCertInfo->cExtension, cert->pCertInfo->rgExtension)))
+    {
+        CERT_AUTHORITY_KEY_ID_INFO *info;
+
+        ret = CryptDecodeObjectEx(cert->dwCertEncodingType,
+         X509_AUTHORITY_KEY_ID, ext->Value.pbData, ext->Value.cbData,
+         CRYPT_DECODE_ALLOC_FLAG | CRYPT_DECODE_NOCOPY_FLAG, NULL,
+         &info, &size);
+        if (ret)
+        {
+            if (info->CertIssuer.cbData && info->CertSerialNumber.cbData)
+            {
+                ret = CertCompareCertificateName(cert->dwCertEncodingType,
+                 &info->CertIssuer, &cert->pCertInfo->Issuer) &&
+                 CertCompareIntegerBlob(&info->CertSerialNumber,
+                 &cert->pCertInfo->SerialNumber);
+            }
+            else if (info->KeyId.cbData)
+            {
+                ret = CertGetCertificateContextProperty(cert,
+                 CERT_KEY_IDENTIFIER_PROP_ID, NULL, &size);
+                if (ret && size == info->KeyId.cbData)
+                {
+                    LPBYTE buf = CryptMemAlloc(size);
+
+                    if (buf)
+                    {
+                        CertGetCertificateContextProperty(cert,
+                         CERT_KEY_IDENTIFIER_PROP_ID, buf, &size);
+                        ret = !memcmp(buf, info->KeyId.pbData, size);
+                        CryptMemFree(buf);
+                    }
+                    else
+                        ret = FALSE;
+                }
+                else
+                    ret = FALSE;
+            }
+            else
+                ret = FALSE;
+            LocalFree(info);
+        }
+    }
+    else
+        ret = CertCompareCertificateName(cert->dwCertEncodingType,
+         &cert->pCertInfo->Subject, &cert->pCertInfo->Issuer);
+    return ret;
 }
 
 static void CRYPT_FreeChainElement(PCERT_CHAIN_ELEMENT element)
@@ -619,7 +727,7 @@ static BOOL rfc822_name_matches(LPCWSTR constraint, LPCWSTR name,
         *trustErrorStatus |= CERT_TRUST_INVALID_NAME_CONSTRAINTS;
     else if (!name)
         ; /* no match */
-    else if ((at = strchrW(constraint, '@')))
+    else if (strchrW(constraint, '@'))
         match = !lstrcmpiW(constraint, name);
     else
     {
@@ -2541,10 +2649,11 @@ static void CRYPT_CheckUsages(PCERT_CHAIN_CONTEXT chain,
              *  key usage extension be present and that a particular purpose
              *  be indicated in order for the certificate to be acceptable to
              *  that application."
-             * For now I'm being more conservative and disallowing it.
+             * Not all web sites include the extended key usage extension, so
+             * accept chains without it.
              */
-            WARN_(chain)("requested usage from a certificate with no usages\n");
-            validForUsage = FALSE;
+            TRACE_(chain)("requested usage from certificate with no usages\n");
+            validForUsage = TRUE;
         }
         if (!validForUsage)
         {
@@ -2641,6 +2750,8 @@ BOOL WINAPI CertGetCertificateChain(HCERTCHAINENGINE hChainEngine,
         if (!pChain->TrustStatus.dwErrorStatus)
             CRYPT_VerifyChainRevocation(pChain, pTime, pChainPara, dwFlags);
         CRYPT_CheckUsages(pChain, pChainPara);
+        TRACE_(chain)("error status: %08x\n",
+         pChain->TrustStatus.dwErrorStatus);
         if (ppChainContext)
             *ppChainContext = pChain;
         else

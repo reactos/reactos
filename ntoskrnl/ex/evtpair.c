@@ -13,6 +13,9 @@
 #define NDEBUG
 #include <debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, ExpInitializeEventPairImplementation)
+#endif
 
 /* GLOBALS *******************************************************************/
 
@@ -28,8 +31,10 @@ GENERIC_MAPPING ExEventPairMapping =
 
 /* FUNCTIONS *****************************************************************/
 
-SECT_INIT_FN(ExpInitializeEventPairImplementation)
-VOID NTAPI ExpInitializeEventPairImplementation(VOID)
+VOID
+INIT_FUNCTION
+NTAPI
+ExpInitializeEventPairImplementation(VOID)
 {
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     UNICODE_STRING Name;

@@ -13,6 +13,9 @@
 #define NDEBUG
 #include <debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, ExpInitializeEventImplementation)
+#endif
 
 /* GLOBALS *******************************************************************/
 
@@ -33,8 +36,10 @@ static const INFORMATION_CLASS_INFO ExEventInfoClass[] =
 
 /* FUNCTIONS *****************************************************************/
 
-SECT_INIT_FN(ExpInitializeEventImplementation)
-VOID NTAPI ExpInitializeEventImplementation(VOID)
+VOID
+INIT_FUNCTION
+NTAPI
+ExpInitializeEventImplementation(VOID)
 {
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     UNICODE_STRING Name;

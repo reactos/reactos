@@ -582,11 +582,12 @@ KiInitializeTSS2(IN PKTSS Tss,
     }
 
     /* Now clear the I/O Map */
-    RtlFillMemory(Tss->IoMaps[0].IoMap, 8096, -1);
+    ASSERT(IOPM_COUNT == 1);
+    RtlFillMemory(Tss->IoMaps[0].IoMap, IOPM_FULL_SIZE, 0xFF);
 
     /* Initialize Interrupt Direction Maps */
     p = (PUCHAR)(Tss->IoMaps[0].DirectionMap);
-    RtlZeroMemory(p, 32);
+    RtlZeroMemory(p, IOPM_DIRECTION_MAP_SIZE);
 
     /* Add DPMI support for interrupts */
     p[0] = 4;
@@ -595,7 +596,7 @@ KiInitializeTSS2(IN PKTSS Tss,
 
     /* Initialize the default Interrupt Direction Map */
     p = Tss->IntDirectionMap;
-    RtlZeroMemory(Tss->IntDirectionMap, 32);
+    RtlZeroMemory(Tss->IntDirectionMap, IOPM_DIRECTION_MAP_SIZE);
 
     /* Add DPMI support */
     p[0] = 4;
@@ -635,7 +636,7 @@ Ki386InitializeTss(IN PKTSS Tss,
     KiInitializeTSS(Tss);
 
     /* Load the task register */
-    CpuSetTr(KGDT_TSS);
+    Ke386SetTr(KGDT_TSS);
 
     /* Setup the Task Gate for Double Fault Traps */
     TaskGateEntry = (PKGDTENTRY)&Idt[8];
@@ -650,10 +651,10 @@ Ki386InitializeTss(IN PKTSS Tss,
     Tss->CR3 = __readcr3();
     Tss->Esp0 = PtrToUlong(KiDoubleFaultStack);
     Tss->Esp = PtrToUlong(KiDoubleFaultStack);
-    Tss->Eip = PtrToUlong(KiTrap8);
+    Tss->Eip = PtrToUlong(KiTrap08);
     Tss->Cs = KGDT_R0_CODE;
     Tss->Fs = KGDT_R0_PCR;
-    Tss->Ss = CpuGetSs();
+    Tss->Ss = Ke386GetSs();
     Tss->Es = KGDT_R3_DATA | RPL_MASK;
     Tss->Ds = KGDT_R3_DATA | RPL_MASK;
 
@@ -680,10 +681,10 @@ Ki386InitializeTss(IN PKTSS Tss,
     Tss->CR3 = __readcr3();
     Tss->Esp0 = PtrToUlong(KiDoubleFaultStack);
     Tss->Esp = PtrToUlong(KiDoubleFaultStack);
-    Tss->Eip = PtrToUlong(KiTrap2);
+    Tss->Eip = PtrToUlong(KiTrap02);
     Tss->Cs = KGDT_R0_CODE;
     Tss->Fs = KGDT_R0_PCR;
-    Tss->Ss = CpuGetSs();
+    Tss->Ss = Ke386GetSs();
     Tss->Es = KGDT_R3_DATA | RPL_MASK;
     Tss->Ds = KGDT_R3_DATA | RPL_MASK;
 
@@ -716,7 +717,7 @@ KiRestoreProcessorControlState(PKPROCESSOR_STATE ProcessorState)
     // Restore the CR registers
     //
     __writecr0(ProcessorState->SpecialRegisters.Cr0);
-    CpuSetCr2(ProcessorState->SpecialRegisters.Cr2);
+    Ke386SetCr2(ProcessorState->SpecialRegisters.Cr2);
     __writecr3(ProcessorState->SpecialRegisters.Cr3);
     if (KeFeatureBits & KF_CR4) __writecr4(ProcessorState->SpecialRegisters.Cr4);
 
@@ -733,8 +734,8 @@ KiRestoreProcessorControlState(PKPROCESSOR_STATE ProcessorState)
     //
     // Restore GDT and IDT
     //
-    CpuSetGdt(&ProcessorState->SpecialRegisters.Gdtr.Limit);
-    CpuSetIdt(&ProcessorState->SpecialRegisters.Idtr.Limit);
+    Ke386SetGlobalDescriptorTable(&ProcessorState->SpecialRegisters.Gdtr.Limit);
+    __lidt(&ProcessorState->SpecialRegisters.Idtr.Limit);
 
     //
     // Clear the busy flag so we don't crash if we reload the same selector
@@ -746,8 +747,8 @@ KiRestoreProcessorControlState(PKPROCESSOR_STATE ProcessorState)
     //
     // Restore TSS and LDT
     //
-    CpuSetTr(ProcessorState->SpecialRegisters.Tr);
-    CpuSetLdt(ProcessorState->SpecialRegisters.Ldtr);
+    Ke386SetTr(ProcessorState->SpecialRegisters.Tr);
+    Ke386SetLocalDescriptorTable(ProcessorState->SpecialRegisters.Ldtr);
 }
 
 VOID
@@ -771,10 +772,10 @@ KiSaveProcessorControlState(OUT PKPROCESSOR_STATE ProcessorState)
     __writedr(7, 0);
 
     /* Save GDT, IDT, LDT and TSS */
-    CpuGetGdt(&ProcessorState->SpecialRegisters.Gdtr.Limit);
-	CpuGetIdt(&ProcessorState->SpecialRegisters.Idtr.Limit);
-    ProcessorState->SpecialRegisters.Tr = CpuGetTr();
-    ProcessorState->SpecialRegisters.Ldtr = CpuGetLdt();
+    Ke386GetGlobalDescriptorTable(&ProcessorState->SpecialRegisters.Gdtr.Limit);
+    __sidt(&ProcessorState->SpecialRegisters.Idtr.Limit);
+    ProcessorState->SpecialRegisters.Tr = Ke386GetTr();
+    ProcessorState->SpecialRegisters.Ldtr = Ke386GetLocalDescriptorTable();
 }
 
 VOID
@@ -836,13 +837,13 @@ Ki386EnableXMMIExceptions(IN ULONG_PTR Context)
 {
     PKIDTENTRY IdtEntry;
 
-    /* Get the IDT Entry for Interrupt 19 */
-    IdtEntry = &((PKIPCR)KeGetPcr())->IDT[19];
+    /* Get the IDT Entry for Interrupt 0x13 */
+    IdtEntry = &((PKIPCR)KeGetPcr())->IDT[0x13];
 
     /* Set it up */
     IdtEntry->Selector = KGDT_R0_CODE;
-    IdtEntry->Offset = ((ULONG_PTR)KiTrap19 & 0xFFFF);
-    IdtEntry->ExtendedOffset = ((ULONG_PTR)KiTrap19 >> 16) & 0xFFFF;
+    IdtEntry->Offset = ((ULONG_PTR)KiTrap13 & 0xFFFF);
+    IdtEntry->ExtendedOffset = ((ULONG_PTR)KiTrap13 >> 16) & 0xFFFF;
     ((PKIDT_ACCESS)&IdtEntry->Access)->Dpl = 0;
     ((PKIDT_ACCESS)&IdtEntry->Access)->Present = 1;
     ((PKIDT_ACCESS)&IdtEntry->Access)->SegmentType = I386_INTERRUPT_GATE;
@@ -923,7 +924,44 @@ KeZeroPages(IN PVOID Address,
     RtlZeroMemory(Address, Size);
 }
 
+VOID
+NTAPI
+KiSaveProcessorState(IN PKTRAP_FRAME TrapFrame,
+                     IN PKEXCEPTION_FRAME ExceptionFrame)
+{
+    PKPRCB Prcb = KeGetCurrentPrcb();
+
+    //
+    // Save full context
+    //
+    Prcb->ProcessorState.ContextFrame.ContextFlags = CONTEXT_FULL |
+                                                     CONTEXT_DEBUG_REGISTERS;
+    KeTrapFrameToContext(TrapFrame, NULL, &Prcb->ProcessorState.ContextFrame);
+
+    //
+    // Save control registers
+    //
+    KiSaveProcessorControlState(&Prcb->ProcessorState);
+}
+
 /* PUBLIC FUNCTIONS **********************************************************/
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+KiCoprocessorError(VOID)
+{
+    PFX_SAVE_AREA NpxArea;
+    
+    /* Get the FPU area */
+    NpxArea = KiGetThreadNpxArea(KeGetCurrentThread());
+    
+    /* Set CR0_TS */
+    NpxArea->Cr0NpxState = CR0_TS;
+    __writecr0(__readcr0() | CR0_TS);
+}
 
 /*
  * @implemented
@@ -934,7 +972,7 @@ KeSaveFloatingPointState(OUT PKFLOATING_SAVE Save)
 {
     PFNSAVE_FORMAT FpState;
     ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
-	UNIMPLEMENTED
+    DPRINT1("%s is not really implemented\n", __FUNCTION__);
 
     /* check if we are doing software emulation */
     if (!KeI386NpxPresent) return STATUS_ILLEGAL_FLOAT_CONTEXT;
@@ -943,8 +981,14 @@ KeSaveFloatingPointState(OUT PKFLOATING_SAVE Save)
     if (!FpState) return STATUS_INSUFFICIENT_RESOURCES;
 
     *((PVOID *) Save) = FpState;
-
-	CpuFnsave(FpState);
+#ifdef __GNUC__
+    asm volatile("fnsave %0\n\t" : "=m" (*FpState));
+#else
+    __asm
+    {
+        fnsave [FpState]
+    };
+#endif
 
     KeGetCurrentThread()->DispatcherHeader.NpxIrql = KeGetCurrentIrql();
     return STATUS_SUCCESS;
@@ -959,10 +1003,18 @@ KeRestoreFloatingPointState(IN PKFLOATING_SAVE Save)
 {
     PFNSAVE_FORMAT FpState = *((PVOID *) Save);
     ASSERT(KeGetCurrentThread()->DispatcherHeader.NpxIrql == KeGetCurrentIrql());
-	UNIMPLEMENTED
+    DPRINT1("%s is not really implemented\n", __FUNCTION__);
 
-	CpuFnclex();
-	CpuFrstor(FpState);
+#ifdef __GNUC__
+    asm volatile("fnclex\n\t");
+    asm volatile("frstor %0\n\t" : "=m" (*FpState));
+#else
+    __asm
+    {
+        fnclex
+        frstor [FpState]
+    };
+#endif
 
     ExFreePool(FpState);
     return STATUS_SUCCESS;

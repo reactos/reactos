@@ -4,12 +4,22 @@
 /*
  * Use these to place a function in a specific section of the executable
  */
+#define PLACE_IN_SECTION(s)	__attribute__((section (s)))
+#ifdef __GNUC__
+#define INIT_FUNCTION		PLACE_IN_SECTION("INIT")
+#define PAGE_LOCKED_FUNCTION	PLACE_IN_SECTION("pagelk")
+#define PAGE_UNLOCKED_FUNCTION	PLACE_IN_SECTION("pagepo")
+#else
+#define INIT_FUNCTION
+#define PAGE_LOCKED_FUNCTION
+#define PAGE_UNLOCKED_FUNCTION
+#endif
 
 #ifdef _NTOSKRNL_
 
 #ifndef _ARM_
 #define KeGetCurrentThread  _KeGetCurrentThread
-#define KeGetPreviousMode() (KeGetCurrentThread()->PreviousMode)
+#define KeGetPreviousMode   _KeGetPreviousMode
 #endif
 #undef  PsGetCurrentProcess
 #define PsGetCurrentProcess _PsGetCurrentProcess
@@ -24,9 +34,7 @@
 #define InterlockedDecrement16       _InterlockedDecrement16
 #define InterlockedIncrement         _InterlockedIncrement
 #define InterlockedIncrement16       _InterlockedIncrement16
-#ifndef InterlockedCompareExchange		// defined iden in wdm.h
 #define InterlockedCompareExchange   _InterlockedCompareExchange
-#endif
 #define InterlockedCompareExchange16 _InterlockedCompareExchange16
 #define InterlockedCompareExchange64 _InterlockedCompareExchange64
 #define InterlockedExchange          _InterlockedExchange
@@ -152,15 +160,13 @@ C_ASSERT(FIELD_OFFSET(KPROCESS, DirectoryTableBase) == KPROCESS_DIRECTORY_TABLE_
 #endif
 
 #ifdef _M_IX86
-C_ASSERT(FIELD_OFFSET(KPCR, NtTib.ExceptionList) == KPCR_EXCEPTION_LIST);
-C_ASSERT(FIELD_OFFSET(KPCR, SelfPcr) == KPCR_SELF);
+C_ASSERT(FIELD_OFFSET(KPCR, Tib.ExceptionList) == KPCR_EXCEPTION_LIST);
+C_ASSERT(FIELD_OFFSET(KPCR, Self) == KPCR_SELF);
 C_ASSERT(FIELD_OFFSET(KPCR, IRR) == KPCR_IRR);
 C_ASSERT(FIELD_OFFSET(KPCR, IDR) == KPCR_IDR);
 C_ASSERT(FIELD_OFFSET(KPCR, Irql) == KPCR_IRQL);
-C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) == KPCR_PRCB_DATA);
 C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, CurrentThread) == KPCR_CURRENT_THREAD);
 C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, NextThread) == KPCR_PRCB_NEXT_THREAD);
-C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, CpuType) == KPCR_PRCB_CPU_TYPE);
 C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, NpxThread) == KPCR_NPX_THREAD);
 C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) == KPCR_PRCB_DATA);
 C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, KeSystemCalls) == KPCR_SYSTEM_CALLS);

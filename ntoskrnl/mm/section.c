@@ -49,6 +49,12 @@
 #include <debug.h>
 #include <reactos/exeformat.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, MmCreatePhysicalMemorySection)
+#pragma alloc_text(INIT, MmInitSectionImplementation)
+#endif
+
+
 /* TYPES *********************************************************************/
 
 typedef struct
@@ -2293,8 +2299,10 @@ MmpCloseSection(IN PEPROCESS Process OPTIONAL,
           Object, ProcessHandleCount);
 }
 
-SECT_INIT_FN(MmCreatePhysicalMemorySection)
-NTSTATUS NTAPI MmCreatePhysicalMemorySection(VOID)
+NTSTATUS
+INIT_FUNCTION
+NTAPI
+MmCreatePhysicalMemorySection(VOID)
 {
    PROS_SECTION_OBJECT PhysSection;
    NTSTATUS Status;
@@ -2342,8 +2350,10 @@ NTSTATUS NTAPI MmCreatePhysicalMemorySection(VOID)
    return(STATUS_SUCCESS);
 }
 
-SECT_INIT_FN(MmInitSectionImplementation)
-NTSTATUS NTAPI MmInitSectionImplementation(VOID)
+NTSTATUS
+INIT_FUNCTION
+NTAPI
+MmInitSectionImplementation(VOID)
 {
    OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
    UNICODE_STRING Name;

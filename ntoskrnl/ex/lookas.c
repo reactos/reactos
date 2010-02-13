@@ -12,6 +12,9 @@
 #define NDEBUG
 #include <debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, ExpInitLookasideLists)
+#endif
 
 /* GLOBALS *******************************************************************/
 
@@ -84,8 +87,9 @@ ExInitPoolLookasidePointers(VOID)
     }
 }
 
-SECT_INIT_FN(ExpInitLookasideLists)
-VOID NTAPI ExpInitLookasideLists()
+VOID
+NTAPI
+ExpInitLookasideLists()
 {
     ULONG i;
 

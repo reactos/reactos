@@ -551,7 +551,7 @@ IntGetClassForDesktop(IN OUT PCLS BaseClass,
                 Class->pclsClone = NULL;
                 Class->pclsBase = BaseClass;
                 Class->pclsNext = BaseClass->pclsClone;
-                (void)InterlockedExchangePointer(&BaseClass->pclsClone,
+                (void)InterlockedExchangePointer((PVOID*)&BaseClass->pclsClone,
                                                  Class);
             }
         }

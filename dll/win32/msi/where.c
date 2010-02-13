@@ -309,9 +309,7 @@ static UINT STRCMP_Evaluate( MSIWHEREVIEW *wv, UINT row, const struct expr *cond
         sr = lstrcmpW( l_str, r_str );
 
     *val = ( cond->u.expr.op == OP_EQ && ( sr == 0 ) ) ||
-           ( cond->u.expr.op == OP_NE && ( sr != 0 ) ) ||
-           ( cond->u.expr.op == OP_LT && ( sr < 0 ) ) ||
-           ( cond->u.expr.op == OP_GT && ( sr > 0 ) );
+           ( cond->u.expr.op == OP_NE && ( sr != 0 ) );
 
     return ERROR_SUCCESS;
 }
@@ -644,8 +642,6 @@ static UINT WHERE_VerifyCondition( MSIDATABASE *db, MSIVIEW *table, struct expr 
             switch( cond->u.expr.op )
             {
             case OP_EQ:
-            case OP_GT:
-            case OP_LT:
             case OP_NE:
                 break;
             default:

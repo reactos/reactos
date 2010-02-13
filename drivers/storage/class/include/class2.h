@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            services/storage/include/class2.h
  * PURPOSE:         SCSI class driver definitions
- * PROGRAMMER:      Eric Kohl (ekohl@rz-online.de)
+ * PROGRAMMER:      Eric Kohl
  */
 
 #ifndef __INCLUDE_DDK_CLASS2_H

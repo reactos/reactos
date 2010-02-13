@@ -298,7 +298,7 @@ BOOL
 WINAPI
 UnhookWindowsHook ( int nCode, HOOKPROC pfnFilterProc )
 {
-  return NtUserCallTwoParam(nCode, (DWORD)pfnFilterProc, TWOPARAM_ROUTINE_UNHOOKWINDOWSHOOK);
+  return NtUserCallTwoParam(nCode, (DWORD_PTR)pfnFilterProc, TWOPARAM_ROUTINE_UNHOOKWINDOWSHOOK);
 }
 
 /*

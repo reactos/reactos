@@ -133,14 +133,14 @@ extern ULONG NtBuildNumber;
 
 //
 // Pushlock bits
-// removed cast, unnecessary and not convenient
-#define EX_PUSH_LOCK_LOCK_V                 0x00
-#define EX_PUSH_LOCK_LOCK                   0x01
-#define EX_PUSH_LOCK_WAITING                0x02
-#define EX_PUSH_LOCK_WAKING                 0x04
-#define EX_PUSH_LOCK_MULTIPLE_SHARED        0x08
-#define EX_PUSH_LOCK_SHARE_INC              0x10
-#define EX_PUSH_LOCK_PTR_BITS               0x0F
+//
+#define EX_PUSH_LOCK_LOCK_V                 ((ULONG_PTR)0x0)
+#define EX_PUSH_LOCK_LOCK                   ((ULONG_PTR)0x1)
+#define EX_PUSH_LOCK_WAITING                ((ULONG_PTR)0x2)
+#define EX_PUSH_LOCK_WAKING                 ((ULONG_PTR)0x4)
+#define EX_PUSH_LOCK_MULTIPLE_SHARED        ((ULONG_PTR)0x8)
+#define EX_PUSH_LOCK_SHARE_INC              ((ULONG_PTR)0x10)
+#define EX_PUSH_LOCK_PTR_BITS               ((ULONG_PTR)0xf)
 
 //
 // Pushlock Wait Block Flags

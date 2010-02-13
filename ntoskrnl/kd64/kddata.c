@@ -24,7 +24,7 @@ VOID NTAPI RtlpBreakWithStatusInstruction(VOID);
 
 #if defined(_X86_)
 
-#define KPCR_SELF_PCR_OFFSET           FIELD_OFFSET(KPCR, SelfPcr)
+#define KPCR_SELF_PCR_OFFSET           FIELD_OFFSET(KPCR, Self)
 #define KPCR_CURRENT_PRCB_OFFSET       FIELD_OFFSET(KPCR, Prcb)
 #define KPCR_CONTAINED_PRCB_OFFSET     FIELD_OFFSET(KPCR, PrcbData)
 #define KPCR_INITIAL_STACK_OFFSET      0
@@ -34,7 +34,7 @@ VOID NTAPI RtlpBreakWithStatusInstruction(VOID);
 
 #elif defined(_AMD64_)
 
-#define KPCR_SELF_PCR_OFFSET           FIELD_OFFSET(KPCR, SelfPcr)
+#define KPCR_SELF_PCR_OFFSET           FIELD_OFFSET(KPCR, Self)
 #define KPCR_CURRENT_PRCB_OFFSET       FIELD_OFFSET(KPCR, CurrentPrcb)
 #define KPCR_CONTAINED_PRCB_OFFSET     FIELD_OFFSET(KPCR, Prcb)
 #define KPCR_INITIAL_STACK_OFFSET      0

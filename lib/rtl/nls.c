@@ -342,10 +342,10 @@ RtlMultiByteToUnicodeSize(PULONG UnicodeSize,
  * @unimplemented
  */
 NTSTATUS NTAPI
-RtlOemToUnicodeN (PWCH UnicodeString,
+RtlOemToUnicodeN (PWCHAR UnicodeString,
                   ULONG UnicodeSize,
                   PULONG ResultSize,
-                  PCCH OemString,
+                  PCHAR OemString,
                   ULONG OemSize)
 {
    ULONG Size = 0;
@@ -376,7 +376,7 @@ RtlOemToUnicodeN (PWCH UnicodeString,
 
       UCHAR Char;
       USHORT OemLeadByteInfo;
-      PCCH OemEnd = OemString + OemSize;
+      PCHAR OemEnd = OemString + OemSize;
 
       for (i = 0; i < UnicodeSize / sizeof(WCHAR) && OemString < OemEnd; i++)
       {
@@ -498,7 +498,7 @@ NTSTATUS NTAPI
 RtlUnicodeToMultiByteN (PCHAR MbString,
                         ULONG MbSize,
                         PULONG ResultSize,
-                        PCWCH UnicodeString,
+                        PWCHAR UnicodeString,
                         ULONG UnicodeSize)
 {
    ULONG Size = 0;
@@ -569,7 +569,7 @@ RtlUnicodeToMultiByteN (PCHAR MbString,
 NTSTATUS
 NTAPI
 RtlUnicodeToMultiByteSize(PULONG MbSize,
-                          PCWCH UnicodeString,
+                          PWCHAR UnicodeString,
                           ULONG UnicodeSize)
 {
     ULONG UnicodeLength = UnicodeSize / sizeof(WCHAR);
@@ -613,7 +613,7 @@ NTSTATUS NTAPI
 RtlUnicodeToOemN (PCHAR OemString,
                   ULONG OemSize,
                   PULONG ResultSize,
-                  PCWCH UnicodeString,
+                  PWCHAR UnicodeString,
                   ULONG UnicodeSize)
 {
    ULONG Size = 0;
@@ -762,7 +762,7 @@ NTSTATUS NTAPI
 RtlUpcaseUnicodeToMultiByteN (PCHAR MbString,
                               ULONG MbSize,
                               PULONG ResultSize,
-                              PCWCH UnicodeString,
+                              PWCHAR UnicodeString,
                               ULONG UnicodeSize)
 {
    WCHAR UpcaseChar;
@@ -806,7 +806,7 @@ NTSTATUS NTAPI
 RtlUpcaseUnicodeToOemN (PCHAR OemString,
                         ULONG OemSize,
                         PULONG ResultSize,
-                        PCWCH UnicodeString,
+                        PWCHAR UnicodeString,
                         ULONG UnicodeSize)
 {
    WCHAR UpcaseChar;

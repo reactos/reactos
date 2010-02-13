@@ -27,11 +27,11 @@
 #ifdef NEW_DEBUG_SYSTEM_IMPLEMENTED // enable when Debug Filters are implemented
 #define OBTRACE DbgPrintEx
 #else
-#define OBTRACE(x, fmt, ...)                                 \
-    if (x & ObpTraceLevel) DPRINT1(fmt, __VA_ARGS__)
+#define OBTRACE(x, ...)                                 \
+    if (x & ObpTraceLevel) DbgPrint(__VA_ARGS__)
 #endif
 #else
-#define OBTRACE(x, fmt, ...) DPRINT(fmt, __VA_ARGS__)
+#define OBTRACE(x, ...) DPRINT(__VA_ARGS__)
 #endif
 
 //

@@ -2,7 +2,7 @@
  //
  // XML storage C++ classes version 1.3
  //
- // Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009 Martin Fuchs <martin-fuchs@gmx.net>
+ // Copyright (c) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Martin Fuchs <martin-fuchs@gmx.net>
  //
 
  /// \file xmlstorage.cpp

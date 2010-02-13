@@ -943,6 +943,14 @@ typedef struct tagHW_PROFILE_INFOW {
 	WCHAR szHwProfileName[MAX_PROFILE_LEN];
 } HW_PROFILE_INFOW,*LPHW_PROFILE_INFOW;
 
+/* Event Logging */
+
+#define EVENTLOG_FULL_INFO          0
+
+typedef struct _EVENTLOG_FULL_INFORMATION {
+    DWORD dwFull;
+} EVENTLOG_FULL_INFORMATION, *LPEVENTLOG_FULL_INFORMATION;
+
 typedef enum _GET_FILEEX_INFO_LEVELS {
 	GetFileExInfoStandard,
 	GetFileExMaxInfoLevel
@@ -1620,6 +1628,7 @@ BOOL WINAPI GetNamedPipeInfo(HANDLE,PDWORD,PDWORD,PDWORD,PDWORD);
 #if (_WIN32_WINNT >= 0x0501)
 VOID WINAPI GetNativeSystemInfo(LPSYSTEM_INFO);
 #endif
+BOOL WINAPI GetEventLogInformation(HANDLE,DWORD,LPVOID,DWORD,LPDWORD);
 BOOL WINAPI GetNumberOfEventLogRecords(HANDLE,PDWORD);
 BOOL WINAPI GetOldestEventLogRecord(HANDLE,PDWORD);
 BOOL WINAPI GetOverlappedResult(HANDLE,LPOVERLAPPED,PDWORD,BOOL);
@@ -1839,9 +1848,6 @@ VOID WINAPI InitializeSRWLock(PSRWLOCK);
 #define InterlockedCompareExchangeRelease64 InterlockedCompareExchange64
 
 #else // !(defined (_M_AMD64) || defined (_M_IA64))
-
-#define InterlockedExchange _InterlockedExchange
-#define InterlockedCompareExchange _InterlockedCompareExchange
 
 LONG WINAPI InterlockedOr(IN OUT LONG volatile *,LONG);
 LONG WINAPI InterlockedAnd(IN OUT LONG volatile *,LONG);

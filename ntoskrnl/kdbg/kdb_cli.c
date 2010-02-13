@@ -527,7 +527,7 @@ KdbpCmdDisassembleX(
             return TRUE;
 
         if (Result > (ULONGLONG)(~((ULONG_PTR)0)))
-            KdbpPrint("Warning: Address %I64x is beeing truncated\n");
+            KdbpPrint("Warning: Address %I64x is beeing truncated\n",Result);
 
         Address = (ULONG_PTR)Result;
     }
@@ -790,7 +790,7 @@ KdbpCmdBackTrace(
                 return TRUE;
 
             if (Result > (ULONGLONG)(~((ULONG_PTR)0)))
-                KdbpPrint("Warning: Address %I64x is beeing truncated\n");
+                KdbpPrint("Warning: Address %I64x is beeing truncated\n",Result);
 
             Frame = (ULONG_PTR)Result;
         }
@@ -1133,7 +1133,7 @@ KdbpCmdBreakPoint(ULONG Argc, PCHAR Argv[])
     }
 
     if (Result > (ULONGLONG)(~((ULONG_PTR)0)))
-        KdbpPrint("%s: Warning: Address %I64x is beeing truncated\n", Argv[0]);
+        KdbpPrint("%s: Warning: Address %I64x is beeing truncated\n", Argv[0],Result);
 
     Address = (ULONG_PTR)Result;
 
@@ -1491,7 +1491,7 @@ KdbpCmdMod(
         }
 
         if (Result > (ULONGLONG)(~((ULONG_PTR)0)))
-            KdbpPrint("%s: Warning: Address %I64x is beeing truncated\n", Argv[0]);
+            KdbpPrint("%s: Warning: Address %I64x is beeing truncated\n", Argv[0],Result);
 
         Address = (ULONG_PTR)Result;
 

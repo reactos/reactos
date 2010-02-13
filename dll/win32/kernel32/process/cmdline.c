@@ -27,80 +27,85 @@ static BOOL bCommandLineInitialized = FALSE;
 
 /* FUNCTIONS ****************************************************************/
 
-static VOID
-InitCommandLines (VOID)
+static
+VOID
+InitCommandLines(VOID)
 {
-	PRTL_USER_PROCESS_PARAMETERS Params;
+    PRTL_USER_PROCESS_PARAMETERS Params;
 
-        /* FIXME - not thread-safe! */
+    /* FIXME - not thread-safe! */
 
-	// get command line
-	Params = NtCurrentPeb()->ProcessParameters;
-	RtlNormalizeProcessParams (Params);
+    // get command line
+    Params = NtCurrentPeb()->ProcessParameters;
+    RtlNormalizeProcessParams (Params);
 
-	// initialize command line buffers
-	CommandLineStringW.Length = Params->CommandLine.Length;
-	CommandLineStringW.MaximumLength = CommandLineStringW.Length + sizeof(WCHAR);
-	CommandLineStringW.Buffer = RtlAllocateHeap(GetProcessHeap(),
-						    HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,
-						    CommandLineStringW.MaximumLength);
-        if (CommandLineStringW.Buffer == NULL)
-        {
-            return;
-        }
+    // initialize command line buffers
+    CommandLineStringW.Length = Params->CommandLine.Length;
+    CommandLineStringW.MaximumLength = CommandLineStringW.Length + sizeof(WCHAR);
+    CommandLineStringW.Buffer = RtlAllocateHeap(GetProcessHeap(),
+                                                HEAP_GENERATE_EXCEPTIONS | HEAP_ZERO_MEMORY,
+                                                CommandLineStringW.MaximumLength);
+    if (CommandLineStringW.Buffer == NULL)
+    {
+        return;
+    }
 
-	RtlInitAnsiString(&CommandLineStringA, NULL);
+    RtlInitAnsiString(&CommandLineStringA, NULL);
 
-	// copy command line
-	RtlCopyUnicodeString (&CommandLineStringW,
-	                      &(Params->CommandLine));
-	CommandLineStringW.Buffer[CommandLineStringW.Length / sizeof(WCHAR)] = 0;
+    /* Copy command line */
+    RtlCopyUnicodeString(&CommandLineStringW,
+                         &(Params->CommandLine));
+    CommandLineStringW.Buffer[CommandLineStringW.Length / sizeof(WCHAR)] = 0;
 
-	/* convert unicode string to ansi (or oem) */
-	if (bIsFileApiAnsi)
-	    RtlUnicodeStringToAnsiString (&CommandLineStringA,
-					  &CommandLineStringW,
-					  TRUE);
-	else
-	    RtlUnicodeStringToOemString (&CommandLineStringA,
-					 &CommandLineStringW,
-					 TRUE);
+    /* convert unicode string to ansi (or oem) */
+    if (bIsFileApiAnsi)
+        RtlUnicodeStringToAnsiString(&CommandLineStringA,
+                                     &CommandLineStringW,
+                                     TRUE);
+    else
+        RtlUnicodeStringToOemString(&CommandLineStringA,
+                                    &CommandLineStringW,
+                                    TRUE);
 
-	CommandLineStringA.Buffer[CommandLineStringA.Length] = 0;
+    CommandLineStringA.Buffer[CommandLineStringA.Length] = 0;
 
-	bCommandLineInitialized = TRUE;
+    bCommandLineInitialized = TRUE;
 }
 
 
 /*
  * @implemented
  */
-LPSTR WINAPI GetCommandLineA(VOID)
+LPSTR
+WINAPI
+GetCommandLineA(VOID)
 {
-	if (bCommandLineInitialized == FALSE)
-	{
-		InitCommandLines ();
-	}
+    if (bCommandLineInitialized == FALSE)
+    {
+        InitCommandLines();
+    }
 
-	DPRINT ("CommandLine \'%s\'\n", CommandLineStringA.Buffer);
+    DPRINT("CommandLine \'%s\'\n", CommandLineStringA.Buffer);
 
-	return(CommandLineStringA.Buffer);
+    return CommandLineStringA.Buffer;
 }
 
 
 /*
  * @implemented
  */
-LPWSTR WINAPI GetCommandLineW (VOID)
+LPWSTR
+WINAPI
+GetCommandLineW(VOID)
 {
-	if (bCommandLineInitialized == FALSE)
-	{
-		InitCommandLines ();
-	}
+    if (bCommandLineInitialized == FALSE)
+    {
+        InitCommandLines();
+    }
 
-	DPRINT ("CommandLine \'%S\'\n", CommandLineStringW.Buffer);
+    DPRINT("CommandLine \'%S\'\n", CommandLineStringW.Buffer);
 
-	return(CommandLineStringW.Buffer);
+    return CommandLineStringW.Buffer;
 }
 
 /* EOF */

@@ -78,6 +78,20 @@ static UINT DROP_get_dimensions(struct tagMSIVIEW *view, UINT *rows, UINT *cols)
     return ERROR_FUNCTION_FAILED;
 }
 
+static UINT DROP_delete( struct tagMSIVIEW *view )
+{
+    MSIDROPVIEW *dv = (MSIDROPVIEW*)view;
+
+    TRACE("%p\n", dv );
+
+    if( dv->table )
+        dv->table->ops->delete( dv->table );
+
+    msi_free( dv );
+
+    return ERROR_SUCCESS;
+}
+
 static const MSIVIEWOPS drop_ops =
 {
     NULL,
@@ -91,7 +105,7 @@ static const MSIVIEWOPS drop_ops =
     DROP_get_dimensions,
     NULL,
     NULL,
-    NULL,
+    DROP_delete,
     NULL,
     NULL,
     NULL,

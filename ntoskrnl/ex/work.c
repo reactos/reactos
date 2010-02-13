@@ -12,6 +12,9 @@
 #define NDEBUG
 #include <debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, ExpInitializeWorkerThreads)
+#endif
 
 /* DATA **********************************************************************/
 
@@ -92,9 +95,7 @@ ExpWorkerThreadEntryPoint(IN PVOID Context)
     if ((ULONG_PTR)Context & EX_DYNAMIC_WORK_THREAD)
     {
         /* It is, which means we will eventually time out after 10 minutes */
-        // Timeout.QuadPart = Int32x32To64(10, -10000000 * 60);
-		Timeout.QuadPart = -600 * (i64)10000000;
-		DPRINTT("Timeout=%I64d\n", Timeout.QuadPart);
+        Timeout.QuadPart = Int32x32To64(10, -10000000 * 60);
         TimeoutPointer = &Timeout;
     }
 
@@ -221,6 +222,7 @@ ProcessLoop:
 
     /* Re-enable the stack swap */
     KeSetKernelStackSwapEnable(TRUE);
+    return;
 }
 
 /*++
@@ -499,8 +501,10 @@ ExpWorkerThreadBalanceManager(IN PVOID Context)
  * @remarks This routine is only called once during system initialization.
  *
  *--*/
-SECT_INIT_FN(ExpInitializeWorkerThreads)
-VOID NTAPI ExpInitializeWorkerThreads(VOID)
+VOID
+INIT_FUNCTION
+NTAPI
+ExpInitializeWorkerThreads(VOID)
 {
     ULONG WorkQueueType;
     ULONG CriticalThreads, DelayedThreads;

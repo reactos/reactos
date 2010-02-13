@@ -43,11 +43,11 @@
     }
 #endif
 #else
-#define DBGKTRACE(x, fmt, ...) DPRINT(fmt, __VA_ARGS__)
+#define DBGKTRACE(x, ...) DPRINT(__VA_ARGS__)
 #endif
 
-SECT_INIT_FND
 VOID
+INIT_FUNCTION
 NTAPI
 DbgkInitialize(
     VOID

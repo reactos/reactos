@@ -1478,7 +1478,7 @@ RtlUpcaseUnicodeToOemN(
     PCHAR OemString,
     ULONG OemSize,
     PULONG ResultSize,
-    PCWCH UnicodeString,
+    PWCHAR UnicodeString,
     ULONG UnicodeSize
 );
 
@@ -1508,7 +1508,7 @@ RtlUnicodeToOemN(
     PCHAR OemString,
     ULONG OemSize,
     PULONG ResultSize,
-    PCWCH UnicodeString,
+    PWCHAR UnicodeString,
     ULONG UnicodeSize
 );
 
@@ -1522,7 +1522,7 @@ RtlUnicodeToMultiByteN(
     PCHAR MbString,
     ULONG MbSize,
     PULONG ResultSize,
-    PCWCH UnicodeString,
+    PWCHAR UnicodeString,
     ULONG UnicodeSize
 );
 
@@ -1533,7 +1533,7 @@ RtlUpcaseUnicodeToMultiByteN(
     PCHAR MbString,
     ULONG MbSize,
     PULONG ResultSize,
-    PCWCH UnicodeString,
+    PWCHAR UnicodeString,
     ULONG UnicodeSize
 );
 
@@ -1542,7 +1542,7 @@ NTSTATUS
 NTAPI
 RtlUnicodeToMultiByteSize(
     PULONG MbSize,
-    PCWCH UnicodeString,
+    PWCHAR UnicodeString,
     ULONG UnicodeSize
 );
 
@@ -1570,7 +1570,7 @@ RtlOemToUnicodeN(
     PWSTR UnicodeString,
     ULONG MaxBytesInUnicodeString,
     PULONG BytesInUnicodeString,
-    IN PCCH OemString,
+    IN PCHAR OemString,
     ULONG BytesInOemString
 );
 
@@ -2638,7 +2638,7 @@ RtlFreeRangeList(IN PRTL_RANGE_LIST RangeList);
 ULONG
 __cdecl
 DbgPrint(
-    IN PCSTR Format,
+    IN PCCH  Format,
     IN ...
 );
 

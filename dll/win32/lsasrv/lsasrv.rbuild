@@ -2,11 +2,13 @@
 	<importlibrary definition="lsasrv.spec" />
 	<include base="lsasrv">.</include>
 	<include base="lsa_server">.</include>
+	<include base="ReactOS">include/reactos/subsys/lsass</include>
 	<library>lsa_server</library>
 	<library>wine</library>
 	<library>rpcrt4</library>
 	<library>ntdll</library>
 	<library>pseh</library>
+	<file>authport.c</file>
 	<file>lsarpc.c</file>
 	<file>lsasrv.c</file>
 	<file>lsasrv.rc</file>

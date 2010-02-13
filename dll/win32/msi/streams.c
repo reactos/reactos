@@ -400,12 +400,18 @@ static UINT STREAMS_delete(struct tagMSIVIEW *view)
 
     for (i = 0; i < sv->num_rows; i++)
     {
-        if (sv->streams[i] && sv->streams[i]->stream)
-            IStream_Release(sv->streams[i]->stream);
-        msi_free(sv->streams[i]);
+        if (sv->streams[i])
+        {
+            if (sv->streams[i]->stream)
+                IStream_Release(sv->streams[i]->stream);
+
+            msi_free(sv->streams[i]->name);
+            msi_free(sv->streams[i]);
+        }
     }
 
     msi_free(sv->streams);
+    msi_free(sv);
 
     return ERROR_SUCCESS;
 }

@@ -106,8 +106,8 @@ CAPTION "Εξαρτήσεις"
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
 BEGIN
-  CONTROL "", IDC_DEPEND_TREE1, "SysTreeView32" ,0x50010007, 8, 70, 236, 68, 0x00000200
-  CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", 0x50010007, 8, 151, 234, 67, 0x00000200
+  CONTROL "", IDC_DEPEND_TREE1, "SysTreeView32" , WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 70, 236, 68
+  CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 234, 67
   LTEXT "Some services depend on other services, system drivers and load order groups. If a system component is stopped or it is not running properly, dependant services can be affected.", IDC_STATIC,8, 7, 238, 26
   LTEXT "This service depends on the following components", IDC_STATIC, 8, 57, 236, 9
   LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13

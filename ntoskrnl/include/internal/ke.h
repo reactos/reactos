@@ -64,6 +64,14 @@ typedef struct _DPC_QUEUE_ENTRY
     PVOID Context;
 } DPC_QUEUE_ENTRY, *PDPC_QUEUE_ENTRY;
 
+typedef struct _KNMI_HANDLER_CALLBACK
+{
+    struct _KNMI_HANDLER_CALLBACK* Next;
+    PNMI_CALLBACK Callback;
+    PVOID Context;
+    PVOID Handle;
+} KNMI_HANDLER_CALLBACK, *PKNMI_HANDLER_CALLBACK;
+
 typedef PCHAR
 (NTAPI *PKE_BUGCHECK_UNICODE_TO_ANSI)(
     IN PUNICODE_STRING Unicode,
@@ -71,6 +79,8 @@ typedef PCHAR
     IN ULONG Length
 );
 
+extern PKNMI_HANDLER_CALLBACK KiNmiCallbackListHead;
+extern KSPIN_LOCK KiNmiCallbackListLock;
 extern PVOID KeUserApcDispatcher;
 extern PVOID KeUserCallbackDispatcher;
 extern PVOID KeUserExceptionDispatcher;
@@ -214,6 +224,12 @@ extern ULONG KiDPCTimeout;
 #define SERVICE_TABLE_TEST  (WIN32K_SERVICE_INDEX << BITS_PER_ENTRY)
 
 #endif
+
+#define KTS_SYSCALL_BIT (((KTRAP_STATE_BITS) { { .SystemCall   = TRUE } }).Bits)
+#define KTS_PM_BIT      (((KTRAP_STATE_BITS) { { .PreviousMode   = TRUE } }).Bits)
+#define KTS_SEG_BIT     (((KTRAP_STATE_BITS) { { .Segments  = TRUE } }).Bits)
+#define KTS_VOL_BIT     (((KTRAP_STATE_BITS) { { .Volatiles = TRUE } }).Bits)
+#define KTS_FULL_BIT    (((KTRAP_STATE_BITS) { { .Full = TRUE } }).Bits)
 
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
 
@@ -855,6 +871,22 @@ KeBugCheckWithTf(
 
 VOID
 NTAPI
+KiDispatchExceptionFromTrapFrame(
+    IN NTSTATUS Code,
+    IN ULONG_PTR Address,
+    IN ULONG ParameterCount,
+    IN ULONG_PTR Parameter1,
+    IN ULONG_PTR Parameter2,
+    IN ULONG_PTR Parameter3,
+    IN PKTRAP_FRAME TrapFrame
+);
+                                  
+BOOLEAN
+NTAPI
+KiHandleNmi(VOID);
+
+VOID
+NTAPI
 KeFlushCurrentTb(VOID);
 
 BOOLEAN
@@ -906,6 +938,7 @@ KiEndUnexpectedRange(
     VOID
 );
 
+#ifndef HAL_INTERRUPT_SUPPORT_IN_C
 VOID
 NTAPI
 KiInterruptDispatch(
@@ -917,6 +950,21 @@ NTAPI
 KiChainedDispatch(
     VOID
 );
+#else
+VOID
+FASTCALL
+KiInterruptDispatch(
+    IN PKTRAP_FRAME TrapFrame,
+    IN PKINTERRUPT Interrupt
+);
+
+VOID
+FASTCALL
+KiChainedDispatch(
+    IN PKTRAP_FRAME TrapFrame,
+    IN PKINTERRUPT Interrupt
+);
+#endif
 
 VOID
 NTAPI
@@ -1016,6 +1064,13 @@ VOID
 NTAPI
 KiSaveProcessorControlState(
     OUT PKPROCESSOR_STATE ProcessorState
+);
+
+VOID
+NTAPI
+KiSaveProcessorState(
+    IN PKTRAP_FRAME TrapFrame,
+    IN PKEXCEPTION_FRAME ExceptionFrame
 );
 
 VOID

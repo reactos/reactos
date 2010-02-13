@@ -23,7 +23,7 @@ static
 BOOL
 CsrIsConsoleHandle(HANDLE Handle)
 {
-    return ((ULONG)Handle & 0x10000003) == 0x3;
+    return ((ULONG_PTR)Handle & 0x10000003) == 0x3;
 }
 
 
@@ -77,7 +77,7 @@ CsrGetObject(
     Object_t **Object,
     DWORD Access )
 {
-    ULONG h = (ULONG)Handle >> 2;
+    ULONG_PTR h = (ULONG_PTR)Handle >> 2;
 
     DPRINT("CsrGetObject, Object: %x, %x, %x\n", 
            Object, Handle, ProcessData ? ProcessData->HandleTableSize : 0);
@@ -130,7 +130,7 @@ CsrReleaseObject(
     PCSRSS_PROCESS_DATA ProcessData,
     HANDLE Handle)
 {
-    ULONG h = (ULONG)Handle >> 2;
+    ULONG_PTR h = (ULONG_PTR)Handle >> 2;
     Object_t *Object;
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
@@ -187,7 +187,7 @@ CsrInsertObject(
     ProcessData->HandleTable[i].Object = Object;
     ProcessData->HandleTable[i].Access = Access;
     ProcessData->HandleTable[i].Inheritable = Inheritable;
-    *Handle = (HANDLE)((i << 2) | 0x3);
+    *Handle = UlongToHandle((i << 2) | 0x3);
     _InterlockedIncrement( &Object->ReferenceCount );
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
     return(STATUS_SUCCESS);
@@ -239,7 +239,7 @@ CsrVerifyObject(
     PCSRSS_PROCESS_DATA ProcessData,
     HANDLE Handle)
 {
-    ULONG h = (ULONG)Handle >> 2;
+    ULONG_PTR h = (ULONG_PTR)Handle >> 2;
 
     if (h >= ProcessData->HandleTableSize ||
         ProcessData->HandleTable[h].Object == NULL)

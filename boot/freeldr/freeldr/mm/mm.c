@@ -337,11 +337,6 @@ VOID DumpMemoryAllocMap(VOID)
 }
 #endif // DBG
 
-ULONG GetSystemMemorySize(VOID)
-{
-	return (TotalPagesInLookupTable * MM_PAGE_SIZE);
-}
-
 PPAGE_LOOKUP_TABLE_ITEM MmGetMemoryMap(ULONG *NoEntries)
 {
 	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTableAddress;

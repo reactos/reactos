@@ -149,7 +149,13 @@ SetWindowRgn(
    Hook = BeginIfHookedUserApiHook();
 
    /* Bypass SEH and go direct. */
-   if (!Hook) return (int)NtUserSetWindowRgn(hWnd, hRgn, bRedraw);
+   if (!Hook)
+   {
+      Ret = NtUserSetWindowRgn(hWnd, hRgn, bRedraw);
+      if (hRgn && Ret)
+          DeleteObject(hRgn);
+      return Ret;
+   }
 
    _SEH2_TRY
    {
@@ -216,7 +222,7 @@ GetWindowRgn(
   HWND hWnd,
   HRGN hRgn)
 {
-  return (int)NtUserCallTwoParam((DWORD)hWnd, (DWORD)hRgn, TWOPARAM_ROUTINE_GETWINDOWRGN);
+  return (int)NtUserCallTwoParam((DWORD_PTR)hWnd, (DWORD_PTR)hRgn, TWOPARAM_ROUTINE_GETWINDOWRGN);
 }
 
 
@@ -229,7 +235,7 @@ GetWindowRgnBox(
     HWND hWnd,
     LPRECT lprc)
 {
-  return (int)NtUserCallTwoParam((DWORD)hWnd, (DWORD)lprc, TWOPARAM_ROUTINE_GETWINDOWRGNBOX);
+  return (int)NtUserCallTwoParam((DWORD_PTR)hWnd, (DWORD_PTR)lprc, TWOPARAM_ROUTINE_GETWINDOWRGNBOX);
 }
 
 

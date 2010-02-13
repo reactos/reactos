@@ -5,7 +5,7 @@
  * PURPOSE:         Deferred Procedure Call (DPC) Support
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Philip Susi (phreak@iag.net)
- *                  Eric Kohl (ekohl@abo.rhein-zeitung.de)
+ *                  Eric Kohl
  */
 
 /* INCLUDES ******************************************************************/
@@ -74,9 +74,6 @@ KiCheckTimerTable(IN ULARGE_INTEGER CurrentTime)
 #endif
 }
 
-// FIXME: KiTimerExpiration causes a crash if global optimization (MSVC9)
-// difficult to trace, it works most times, but sometimes make a called dpc routine crash
-_OPTIMIZE_OFF_GLOBAL
 VOID
 NTAPI
 KiTimerExpiration(IN PKDPC Dpc,
@@ -322,7 +319,6 @@ KiTimerExpiration(IN PKDPC Dpc,
         KiReleaseDispatcherLock(OldIrql);
     }
 }
-_OPTIMIZE_DFT
 
 VOID
 FASTCALL

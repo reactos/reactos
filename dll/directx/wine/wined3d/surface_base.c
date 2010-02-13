@@ -117,10 +117,6 @@ ULONG WINAPI IWineD3DBaseSurfaceImpl_AddRef(IWineD3DSurface *iface) {
 /* ****************************************************
    IWineD3DSurface IWineD3DResource parts follow
    **************************************************** */
-HRESULT WINAPI IWineD3DBaseSurfaceImpl_GetDevice(IWineD3DSurface *iface, IWineD3DDevice** ppDevice) {
-    return resource_get_device((IWineD3DResource *)iface, ppDevice);
-}
-
 HRESULT WINAPI IWineD3DBaseSurfaceImpl_SetPrivateData(IWineD3DSurface *iface, REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags) {
     return resource_set_private_data((IWineD3DResource *)iface, refguid, pData, SizeOfData, Flags);
 }
@@ -166,11 +162,8 @@ HRESULT WINAPI IWineD3DBaseSurfaceImpl_GetContainer(IWineD3DSurface* iface, REFI
     }
 
     /* Standalone surfaces return the device as container. */
-    if (This->container) {
-        container = This->container;
-    } else {
-        container = (IWineD3DBase *)This->resource.wineD3DDevice;
-    }
+    if (This->container) container = This->container;
+    else container = (IWineD3DBase *)This->resource.device;
 
     TRACE("Relaying to QueryInterface\n");
     return IUnknown_QueryInterface(container, riid, ppContainer);
@@ -194,9 +187,9 @@ HRESULT WINAPI IWineD3DBaseSurfaceImpl_GetDesc(IWineD3DSurface *iface, WINED3DSU
     return WINED3D_OK;
 }
 
-HRESULT WINAPI IWineD3DBaseSurfaceImpl_GetBltStatus(IWineD3DSurface *iface, DWORD Flags) {
-    IWineD3DSurfaceImpl *This = (IWineD3DSurfaceImpl *)iface;
-    TRACE("(%p)->(%x)\n", This, Flags);
+HRESULT WINAPI IWineD3DBaseSurfaceImpl_GetBltStatus(IWineD3DSurface *iface, DWORD Flags)
+{
+    TRACE("iface %p, flags %#x.\n", iface, Flags);
 
     switch (Flags)
     {
@@ -346,7 +339,7 @@ DWORD WINAPI IWineD3DBaseSurfaceImpl_GetPitch(IWineD3DSurface *iface) {
     }
     else
     {
-        unsigned char alignment = This->resource.wineD3DDevice->surface_alignment;
+        unsigned char alignment = This->resource.device->surface_alignment;
         ret = This->resource.format_desc->byte_count * This->currentDesc.Width;  /* Bytes / row */
         ret = (ret + alignment - 1) & ~(alignment - 1);
     }
@@ -404,9 +397,8 @@ HRESULT WINAPI IWineD3DBaseSurfaceImpl_GetOverlayPosition(IWineD3DSurface *iface
 
 HRESULT WINAPI IWineD3DBaseSurfaceImpl_UpdateOverlayZOrder(IWineD3DSurface *iface, DWORD Flags, IWineD3DSurface *Ref) {
     IWineD3DSurfaceImpl *This = (IWineD3DSurfaceImpl *) iface;
-    IWineD3DSurfaceImpl *RefImpl = (IWineD3DSurfaceImpl *) Ref;
 
-    FIXME("(%p)->(%08x,%p) Stub!\n", This, Flags, RefImpl);
+    FIXME("iface %p, flags %#x, ref %p stub!\n", iface, Flags, Ref);
 
     if(!(This->resource.usage & WINED3DUSAGE_OVERLAY))
     {
@@ -511,7 +503,7 @@ HRESULT WINAPI IWineD3DBaseSurfaceImpl_SetContainer(IWineD3DSurface *iface, IWin
 HRESULT WINAPI IWineD3DBaseSurfaceImpl_SetFormat(IWineD3DSurface *iface, WINED3DFORMAT format) {
     IWineD3DSurfaceImpl *This = (IWineD3DSurfaceImpl *)iface;
     const struct GlPixelFormatDesc *format_desc = getFormatDescEntry(format,
-            &This->resource.wineD3DDevice->adapter->gl_info);
+            &This->resource.device->adapter->gl_info);
 
     if (This->resource.format_desc->format != WINED3DFMT_UNKNOWN)
     {
@@ -521,7 +513,7 @@ HRESULT WINAPI IWineD3DBaseSurfaceImpl_SetFormat(IWineD3DSurface *iface, WINED3D
 
     TRACE("(%p) : Setting texture format to (%d,%s)\n", This, format, debug_d3dformat(format));
 
-    This->resource.size = surface_calculate_size(format_desc, This->resource.wineD3DDevice->surface_alignment,
+    This->resource.size = surface_calculate_size(format_desc, This->resource.device->surface_alignment,
             This->pow2Width, This->pow2Height);
 
     This->Flags |= (WINED3DFMT_D16_LOCKABLE == format) ? SFLAG_LOCKABLE : 0;
@@ -797,7 +789,7 @@ static IWineD3DSurfaceImpl *surface_convert_format(IWineD3DSurfaceImpl *source, 
         return NULL;
     }
 
-    IWineD3DDevice_CreateSurface((IWineD3DDevice *)source->resource.wineD3DDevice, source->currentDesc.Width,
+    IWineD3DDevice_CreateSurface((IWineD3DDevice *)source->resource.device, source->currentDesc.Width,
             source->currentDesc.Height, to_fmt, TRUE /* lockable */, TRUE /* discard  */, 0 /* level */, &ret,
             0 /* usage */, WINED3DPOOL_SCRATCH, WINED3DMULTISAMPLE_NONE /* TODO: Multisampled conversion */,
             0 /* MultiSampleQuality */, IWineD3DSurface_GetImplType((IWineD3DSurface *) source),
@@ -1702,6 +1694,14 @@ HRESULT WINAPI IWineD3DBaseSurfaceImpl_BltFast(IWineD3DSurface *iface, DWORD dst
     if (trans & (WINEDDBLTFAST_SRCCOLORKEY | WINEDDBLTFAST_DESTCOLORKEY))
     {
         DWORD keylow, keyhigh;
+        DWORD mask = Src->resource.format_desc->red_mask |
+                     Src->resource.format_desc->green_mask |
+                     Src->resource.format_desc->blue_mask;
+
+        /* For some 8-bit formats like L8 and P8 color masks don't make sense */
+        if(!mask && bpp==1)
+            mask = 0xff;
+
         TRACE("Color keyed copy\n");
         if (trans & WINEDDBLTFAST_SRCCOLORKEY)
         {
@@ -1723,7 +1723,7 @@ HRESULT WINAPI IWineD3DBaseSurfaceImpl_BltFast(IWineD3DSurface *iface, DWORD dst
         for (y = 0; y < h; y++) { \
         for (x = 0; x < w; x++) { \
         tmp = s[x]; \
-        if (tmp < keylow || tmp > keyhigh) d[x] = tmp; \
+        if ((tmp & mask) < keylow || (tmp & mask) > keyhigh) d[x] = tmp; \
     } \
         s = (const type *)((const BYTE *)s + slock.Pitch); \
         d = (type *)((BYTE *)d + dlock.Pitch); \
@@ -1866,7 +1866,6 @@ HRESULT WINAPI IWineD3DBaseSurfaceImpl_LockRect(IWineD3DSurface *iface, WINED3DL
 
 void WINAPI IWineD3DBaseSurfaceImpl_BindTexture(IWineD3DSurface *iface, BOOL srgb) {
     ERR("Should not be called on base texture\n");
-    return;
 }
 
 /* TODO: think about moving this down to resource? */

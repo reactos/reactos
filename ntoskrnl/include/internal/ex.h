@@ -91,10 +91,32 @@ typedef struct
 #define MAX_MID_INDEX       (MID_LEVEL_ENTRIES * LOW_LEVEL_ENTRIES)
 #define MAX_HIGH_INDEX      (MID_LEVEL_ENTRIES * MID_LEVEL_ENTRIES * LOW_LEVEL_ENTRIES)
 
-#ifndef DEFINE_WAIT_BLOCK	// check gnuc/casm.h
+//
+// Detect old GCC
+//
+#if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__ < 40300) || \
+    (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__ == 40303) 
+
+#define DEFINE_WAIT_BLOCK(x)                                \
+    struct _AlignHack                                       \
+    {                                                       \
+        UCHAR Hack[15];                                     \
+        EX_PUSH_LOCK_WAIT_BLOCK UnalignedBlock;             \
+    } WaitBlockBuffer;                                      \
+    PEX_PUSH_LOCK_WAIT_BLOCK x = (PEX_PUSH_LOCK_WAIT_BLOCK) \
+        ((ULONG_PTR)&WaitBlockBuffer.UnalignedBlock &~ 0xF);
+
+#else
+
+//
+// This is only for compatibility; the compiler will optimize the extra
+// local variable (the actual pointer) away, so we don't take any perf hit
+// by doing this.
+//
 #define DEFINE_WAIT_BLOCK(x)                                \
     EX_PUSH_LOCK_WAIT_BLOCK WaitBlockBuffer;                \
     PEX_PUSH_LOCK_WAIT_BLOCK x = &WaitBlockBuffer;
+
 #endif
 
 #ifdef _WIN64
@@ -1121,7 +1143,8 @@ ExReleasePushLockExclusive(PEX_PUSH_LOCK PushLock)
     ASSERT(PushLock->Waiting || PushLock->Shared == 0);
 
     /* Unlock the pushlock */
-    OldValue.Value = InterlockedExchangeAddSizeT((PSIZE_T)PushLock, -EX_PUSH_LOCK_LOCK);
+    OldValue.Value = InterlockedExchangeAddSizeT((PSIZE_T)PushLock,
+                                                 -(SIZE_T)EX_PUSH_LOCK_LOCK);
 
     /* Sanity checks */
     ASSERT(OldValue.Locked);
@@ -1229,7 +1252,7 @@ _ExReleaseFastMutexUnsafe(IN OUT PFAST_MUTEX FastMutex)
     if (InterlockedIncrement(&FastMutex->Count) <= 0)
     {
         /* Someone was waiting for it, signal the waiter */
-        KeSetEventBoostPriority(&FastMutex->Event, NULL);
+        KeSetEventBoostPriority(&FastMutex->Gate, NULL);
     }
 }
 
@@ -1270,7 +1293,7 @@ _ExReleaseFastMutex(IN OUT PFAST_MUTEX FastMutex)
     if (InterlockedIncrement(&FastMutex->Count) <= 0)
     {
         /* Someone was waiting for it, signal the waiter */
-        KeSetEventBoostPriority(&FastMutex->Event, NULL);
+        KeSetEventBoostPriority(&FastMutex->Gate, NULL);
     }
     
     /* Lower IRQL back */

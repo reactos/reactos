@@ -20,7 +20,6 @@
 	<file>directx.c</file>
 	<file>indexbuffer.c</file>
 	<file>pixelshader.c</file>
-	<file>stateblock.c</file>
 	<file>surface.c</file>
 	<file>swapchain.c</file>
 	<file>texture.c</file>

@@ -38,13 +38,14 @@
         DbgPrintEx(__VA_ARGS__);                            \
     }
 #else
-#if 0
-#define PSTRACE(x, fmt, ...)
-	if(PspTraceLevel & x) \
-		DbgPrint("(%s:%d:%s:%s:%x) " fmt, __FILE__, __LINE__, __FUNCTION__, GetCurrentProcess()->ImageFileName, PsGetCurrentThreadId(), __VA_ARGS__)
-#else
-#define PSTRACE(x, fmt, ...) DPRINT1(fmt, __VA_ARGS__)
-#endif
+#define PSTRACE(x, ...)                                     \
+    if (x & PspTraceLevel)                                  \
+    {                                                       \
+        DbgPrint("%s [%.16s] - ",                           \
+                 __FUNCTION__,                              \
+                 PsGetCurrentProcess()->ImageFileName);     \
+        DbgPrint(__VA_ARGS__);                              \
+    }
 #endif
 #define PSREFTRACE(x)                                       \
     PSTRACE(PS_REF_DEBUG,                                   \
@@ -53,7 +54,7 @@
             __LINE__,                                       \
             OBJECT_TO_OBJECT_HEADER(x)->PointerCount)
 #else
-#define PSTRACE(x, fmt, ...) DPRINT(fmt, __VA_ARGS__)
+#define PSTRACE(x, ...) DPRINT(__VA_ARGS__)
 #define PSREFTRACE(x)
 #endif
 

@@ -280,13 +280,6 @@ static int reg_delete(WCHAR *key_name, WCHAR *value_name, BOOL value_empty,
         DWORD count;
         LONG rc;
 
-        if (value_name)
-        {
-            RegCloseKey(subkey);
-            reg_message(STRING_INVALID_CMDLINE);
-            return 1;
-        }
-
         rc = RegQueryInfoKeyW(subkey, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
             &maxValue, NULL, NULL, NULL);
         if (rc != ERROR_SUCCESS)
@@ -296,9 +289,7 @@ static int reg_delete(WCHAR *key_name, WCHAR *value_name, BOOL value_empty,
             return 1;
         }
         maxValue++;
-        
         szValue = HeapAlloc(GetProcessHeap(),0,maxValue*sizeof(WCHAR));
-        if (!szValue) return 1;
 
         while (1)
         {
@@ -306,14 +297,12 @@ static int reg_delete(WCHAR *key_name, WCHAR *value_name, BOOL value_empty,
             rc = RegEnumValueW(subkey, 0, szValue, &count, NULL, NULL, NULL, NULL);
             if (rc == ERROR_SUCCESS)
             {
-                rc = RegDeleteValueW(subkey,szValue);
+                rc = RegDeleteValueW(subkey, szValue);
                 if (rc != ERROR_SUCCESS)
                     break;
             }
             else break;
         }
-        
-        HeapFree(GetProcessHeap(), 0, szValue); 
         if (rc != ERROR_SUCCESS)
         {
             /* FIXME  delete failed */

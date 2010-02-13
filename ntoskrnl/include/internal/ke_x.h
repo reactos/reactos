@@ -7,13 +7,18 @@
 */
 
 #ifndef _M_ARM
-// don't use wrong cast or inline return type
-#define KeGetPreviousMode() (KeGetCurrentThread()->PreviousMode)
+FORCEINLINE
+UCHAR
+KeGetPreviousMode(VOID)
+{
+    /* Return the current mode */
+    return KeGetCurrentThread()->PreviousMode;
+}
 #endif
 
 //
 // Enters a Guarded Region
-// FIXME: -32768? unsafe comparison, 0x8000, macro...
+//
 #define KeEnterGuardedRegion()                                              \
 {                                                                           \
     PKTHREAD _Thread = KeGetCurrentThread();                                \
@@ -1752,4 +1757,19 @@ _KeTryToAcquireGuardedMutex(IN OUT PKGUARDED_MUTEX GuardedMutex)
     GuardedMutex->Owner = Thread;
     GuardedMutex->SpecialApcDisable = Thread->SpecialApcDisable;
     return TRUE;
+}
+
+
+FORCEINLINE
+VOID
+KiAcquireNmiListLock(OUT PKIRQL OldIrql)
+{
+    KeAcquireSpinLock(&KiNmiCallbackListLock, OldIrql);
+}
+
+FORCEINLINE
+VOID
+KiReleaseNmiListLock(IN KIRQL OldIrql)
+{
+    KeReleaseSpinLock(&KiNmiCallbackListLock, OldIrql);
 }

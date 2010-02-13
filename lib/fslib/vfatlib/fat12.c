@@ -4,7 +4,7 @@
  * FILE:        fat12.c
  * PURPOSE:     Fat12 support
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
- *              Eric Kohl (ekohl@rz-online.de)
+ *              Eric Kohl
  * REVISIONS:
  *   EK 05/04-2003 Created
  */

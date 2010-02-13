@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
  *
@@ -151,7 +149,7 @@ IntGetDIBColorTable(
     PDC dc;
     PSURFACE psurf;
     PPALETTE PalGDI;
-    UINT Index;
+    UINT Index, Count = 0;
     ULONG biBitCount;
 
     if (!(dc = DC_LockDc(hDC))) return 0;
@@ -199,15 +197,14 @@ IntGetDIBColorTable(
             Colors[Index - StartIndex].rgbGreen = PalGDI->IndexedColors[Index].peGreen;
             Colors[Index - StartIndex].rgbBlue = PalGDI->IndexedColors[Index].peBlue;
             Colors[Index - StartIndex].rgbReserved = 0;
+            Count++;
         }
         PALETTE_UnlockPalette(PalGDI);
     }
-    else
-        Entries = 0;
 
     DC_UnlockDc(dc);
 
-    return Entries;
+    return Count;
 }
 
 // Converts a DIB to a device-dependent bitmap
@@ -489,6 +486,8 @@ NtGdiSetDIBitsToDeviceInternal(
 
     pDestSurf = pSurf ? &pSurf->SurfObj : NULL;
 
+    ScanLines = min(ScanLines, abs(bmi->bmiHeader.biHeight) - StartScan);
+
     rcDest.left = XDest;
     rcDest.top = YDest;
     if (bTransformCoordinates)
@@ -499,11 +498,14 @@ NtGdiSetDIBitsToDeviceInternal(
     rcDest.top += pDC->ptlDCOrig.y;
     rcDest.right = rcDest.left + Width;
     rcDest.bottom = rcDest.top + Height;
+    rcDest.top += StartScan;
+
     ptSource.x = XSrc;
     ptSource.y = YSrc;
 
     SourceSize.cx = bmi->bmiHeader.biWidth;
-    SourceSize.cy = ScanLines; // this one --> abs(bmi->bmiHeader.biHeight) - StartScan
+    SourceSize.cy = ScanLines;
+
     DIBWidth = DIB_GetDIBWidthBytes(SourceSize.cx, bmi->bmiHeader.biBitCount);
 
     hSourceBitmap = EngCreateBitmap(SourceSize,
@@ -556,6 +558,9 @@ NtGdiSetDIBitsToDeviceInternal(
     EXLATEOBJ_vInitialize(&exlo, ppalDIB, ppalDDB, 0, 0, 0);
 
     /* Copy the bits */
+    DPRINT("BitsToDev with dstsurf=(%d|%d) (%d|%d), src=(%d|%d) w=%d h=%d\n", 
+        rcDest.left, rcDest.top, rcDest.right, rcDest.bottom,
+        ptSource.x, ptSource.y, SourceSize.cx, SourceSize.cy);
     Status = IntEngBitBlt(pDestSurf,
                           pSourceSurf,
                           NULL,
@@ -574,8 +579,7 @@ NtGdiSetDIBitsToDeviceInternal(
 Exit:
     if (NT_SUCCESS(Status))
     {
-        /* FIXME: Should probably be only the number of lines actually copied */
-        ret = ScanLines; // this one --> abs(Info->bmiHeader.biHeight) - StartScan;
+        ret = ScanLines;
     }
 
     if (ppalDIB) PALETTE_UnlockPalette(ppalDIB);
@@ -1354,6 +1358,7 @@ DIB_CreateDIBSection(
     RGBQUAD *lpRGB;
     HANDLE hSecure;
     DWORD dsBitfields[3] = {0};
+    ULONG ColorCount;
 
     DPRINT("format (%ld,%ld), planes %d, bpp %d, size %ld, colors %ld (%s)\n",
            bi->biWidth, bi->biHeight, bi->biPlanes, bi->biBitCount,
@@ -1435,9 +1440,19 @@ DIB_CreateDIBSection(
     hSecure = (HANDLE)0x1; // HACK OF UNIMPLEMENTED KERNEL STUFF !!!!
 
     if (usage == DIB_PAL_COLORS)
+    {
         lpRGB = DIB_MapPaletteColors(dc, bmi);
+        ColorCount = bi->biClrUsed;
+        if (ColorCount == 0)
+        {
+            ColorCount = 1 << bi->biBitCount;
+        }
+    }
     else
+    {
         lpRGB = bmi->bmiColors;
+        ColorCount = 1 << bi->biBitCount;
+    }
 
     /* Set dsBitfields values */
     if (usage == DIB_PAL_COLORS || bi->biBitCount <= 8)
@@ -1504,17 +1519,14 @@ DIB_CreateDIBSection(
                   table between the DIB and the X physical device. Obviously,
                   this is left out of the ReactOS implementation. Instead,
                   we call NtGdiSetDIBColorTable. */
-    bi->biClrUsed = 0;
-    /* set number of entries in bmi.bmiColors table */
-    if (bi->biBitCount == 1) {
-        bi->biClrUsed = 2;
-    } else
-        if (bi->biBitCount == 4) {
-            bi->biClrUsed = 16;
-        } else
-            if (bi->biBitCount == 8) {
-                bi->biClrUsed = 256;
-            }
+    if (bi->biBitCount <= 8)
+    {
+        bi->biClrUsed = 1 << bi->biBitCount;
+    }
+    else
+    {
+        bi->biClrUsed = 0;
+    }
 
     bmp->hDIBSection = section;
     bmp->hSecure = hSecure;
@@ -1527,12 +1539,16 @@ DIB_CreateDIBSection(
     bmp->biClrImportant = bi->biClrImportant;
 
     if (bi->biClrUsed != 0)
-        bmp->hDIBPalette = PALETTE_AllocPaletteIndexedRGB(bi->biClrUsed, lpRGB);
+    {
+        bmp->hDIBPalette = PALETTE_AllocPaletteIndexedRGB(ColorCount, lpRGB);
+    }
     else
+    {
         bmp->hDIBPalette = PALETTE_AllocPalette(PAL_BITFIELDS, 0, NULL,
                                                 dsBitfields[0],
                                                 dsBitfields[1],
                                                 dsBitfields[2]);
+    }
 
     // Clean up in case of errors
     if (!res || !bmp || !bm.bmBits)
@@ -1670,9 +1686,18 @@ DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi)
 
     for (i = 0; i < nNumColors; i++)
     {
-        lpRGB[i].rgbRed = palGDI->IndexedColors[*lpIndex].peRed;
-        lpRGB[i].rgbGreen = palGDI->IndexedColors[*lpIndex].peGreen;
-        lpRGB[i].rgbBlue = palGDI->IndexedColors[*lpIndex].peBlue;
+        if (*lpIndex < palGDI->NumColors)
+        {
+            lpRGB[i].rgbRed = palGDI->IndexedColors[*lpIndex].peRed;
+            lpRGB[i].rgbGreen = palGDI->IndexedColors[*lpIndex].peGreen;
+            lpRGB[i].rgbBlue = palGDI->IndexedColors[*lpIndex].peBlue;
+        }
+        else
+        {
+            lpRGB[i].rgbRed = 0;
+            lpRGB[i].rgbGreen = 0;
+            lpRGB[i].rgbBlue = 0;
+        }
         lpRGB[i].rgbReserved = 0;
         lpIndex++;
     }

@@ -9,13 +9,11 @@
 /* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
-// #define NDEBUG
+#define NDEBUG
 #include <debug.h>
+#include "internal/trap_x.h"
 
 /* GLOBALS ********************************************************************/
-
-// !!! temp for testing
-KINTERRUPT *TrapStubInterrupt;
 
 UCHAR KiTrapPrefixTable[] =
 {
@@ -47,20 +45,145 @@ UCHAR KiTrapIoTable[] =
     0x6E,                      /* OUTS                                 */
     0x6F,                      /* OUTS                                 */    
 };
-
-BOOLEAN
-FORCEINLINE
-KiVdmTrap(IN PKTRAP_FRAME TrapFrame)
-{
-    /* Either the V8086 flag is on, or this is user-mode with a VDM */
-    return ((TrapFrame->EFlags & EFLAGS_V86_MASK) ||
-            ((KiUserTrap(TrapFrame)) && (PsGetCurrentProcess()->VdmObjects)));
-}
  
 /* TRAP EXIT CODE *************************************************************/
 
 VOID
-// DECLSPEC_NORETURN
+FASTCALL
+KiExitTrap(IN PKTRAP_FRAME TrapFrame,
+           IN UCHAR Skip)
+{
+    KTRAP_EXIT_SKIP_BITS SkipBits = { .Bits = Skip };
+    KiExitTrapDebugChecks(TrapFrame, SkipBits);
+
+    /* If you skip volatile reload, you must skip segment reload */
+    ASSERT((SkipBits.SkipVolatiles == FALSE) || (SkipBits.SkipSegments == TRUE));
+
+    /* Restore the SEH handler chain */
+    KeGetPcr()->Tib.ExceptionList = TrapFrame->ExceptionList;
+    
+    /* Check if the previous mode must be restored */
+    if (!SkipBits.SkipPreviousMode)
+    {
+        /* Not handled yet */
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+
+    /* Check if there are active debug registers */
+    if (TrapFrame->Dr7 & ~DR7_RESERVED_MASK)
+    {
+        /* Not handled yet */
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+    
+    /* Check if this was a V8086 trap */
+    if (TrapFrame->EFlags & EFLAGS_V86_MASK) KiTrapReturn(TrapFrame);
+
+    /* Check if the trap frame was edited */
+    if (!(TrapFrame->SegCs & FRAME_EDITED))
+    {
+        /* Not handled yet */
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+    
+    /* Check if this is a user trap */
+    if (KiUserTrap(TrapFrame))
+    {
+        /* Check if segments should be restored */
+        if (!SkipBits.SkipSegments)
+        {
+            /* Restore segments */
+            Ke386SetGs(TrapFrame->SegGs);
+            Ke386SetEs(TrapFrame->SegEs);
+            Ke386SetDs(TrapFrame->SegDs);
+            Ke386SetFs(TrapFrame->SegFs);
+        }
+        
+        /* Always restore FS since it goes from KPCR to TEB */
+        Ke386SetFs(TrapFrame->SegFs);
+    }
+    
+    /* Check if the caller wants to skip volatiles */
+    if (SkipBits.SkipVolatiles)
+    {
+        /* 
+         * When we do the system call handler through this path, we need
+         * to have some sort to restore the kernel EAX instead of pushing
+         * back the user EAX. We'll figure it out...
+         */
+        DPRINT1("Warning: caller doesn't want volatiles restored\n"); 
+    }
+
+    /* Check for ABIOS code segment */
+    if (TrapFrame->SegCs == 0x80)
+    {
+        /* Not handled yet */
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+    
+    /* Check for system call -- a system call skips volatiles! */
+    if (SkipBits.SkipVolatiles)
+    {
+        /* Not handled yet */
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+    else
+    {
+        /* Return from interrupt */
+        KiTrapReturn(TrapFrame); 
+    }
+}
+
+VOID
+FASTCALL
+KiExitV86Trap(IN PKTRAP_FRAME TrapFrame)
+{
+    PKTHREAD Thread;
+    KIRQL OldIrql;
+    
+    /* Get the thread */
+    Thread = KeGetCurrentThread();
+    while (TRUE)
+    {
+        /* Turn off the alerted state for kernel mode */
+        Thread->Alerted[KernelMode] = FALSE;
+
+        /* Are there pending user APCs? */
+        if (!Thread->ApcState.UserApcPending) break;
+
+        /* Raise to APC level and enable interrupts */
+        OldIrql = KfRaiseIrql(APC_LEVEL);
+        _enable();
+
+        /* Deliver APCs */
+        KiDeliverApc(UserMode, NULL, TrapFrame);
+
+        /* Restore IRQL and disable interrupts once again */
+        KfLowerIrql(OldIrql);
+        _disable();
+        
+        /* Return if this isn't V86 mode anymore */
+        if (TrapFrame->EFlags & EFLAGS_V86_MASK) return;
+    }
+     
+    /* If we got here, we're still in a valid V8086 context, so quit it */
+    if (TrapFrame->Dr7 & ~DR7_RESERVED_MASK)
+    {
+        /* Not handled yet */
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+     
+    /* Return from interrupt */
+    KiTrapReturn(TrapFrame);
+}
+
+VOID
 FASTCALL
 KiEoiHelper(IN PKTRAP_FRAME TrapFrame)
 {
@@ -74,43 +197,212 @@ KiEoiHelper(IN PKTRAP_FRAME TrapFrame)
     KiExitTrap(TrapFrame, KTE_SKIP_PM_BIT);
 }
 
+/* TRAP ENTRY CODE ************************************************************/
+
 VOID
-// DECLSPEC_NORETURN7
 FASTCALL
-KiServiceExit(IN PKTRAP_FRAME TrapFrame, IN NTSTATUS Status)
+KiEnterV86Trap(IN PKTRAP_FRAME TrapFrame)
 {
-    /* Disable interrupts until we return */
-    _disable();
+    /* Load correct registers */
+    Ke386SetFs(KGDT_R0_PCR);
+    Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
+    Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
     
-    /* Check for APC delivery */
-    KiCheckForApcDelivery(TrapFrame);
+    /* Save registers */
+    KiTrapFrameFromPushaStack(TrapFrame);
     
-    /* Copy the status into EAX */
-    TrapFrame->Eax = Status;
+    /* Save exception list and bogus previous mode */
+    TrapFrame->PreviousPreviousMode = -1;
+    TrapFrame->ExceptionList = KeGetPcr()->Tib.ExceptionList;
+
+    /* Clear direction flag */
+    Ke386ClearDirectionFlag();
     
-    /* Now exit the trap for real */
-    KiExitTrap(TrapFrame, KTE_SKIP_SEG_BIT | KTE_SKIP_VOL_BIT);
+    /* Save DR7 and check for debugging */
+    TrapFrame->Dr7 = __readdr(7);
+    if (TrapFrame->Dr7 & ~DR7_RESERVED_MASK)
+    {
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
 }
 
 VOID
-// DECLSPEC_NORETURN
 FASTCALL
-KiServiceExit2(IN PKTRAP_FRAME TrapFrame)
+KiEnterInterruptTrap(IN PKTRAP_FRAME TrapFrame)
 {
-    /* Disable interrupts until we return */
-    _disable();
+    /* Save registers */
+    KiTrapFrameFromPushaStack(TrapFrame);
     
-    /* Check for APC delivery */
-    KiCheckForApcDelivery(TrapFrame);
+    /* Set bogus previous mode */
+    TrapFrame->PreviousPreviousMode = -1;
     
-    /* Now exit the trap for real */
-    KiExitTrap(TrapFrame, 0);
+    /* Check for V86 mode */
+    if (TrapFrame->EFlags & EFLAGS_V86_MASK)
+    {
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+    
+    /* Check if this wasn't kernel code */
+    if (TrapFrame->SegCs != KGDT_R0_CODE)
+    {
+        /* Save segments and then switch to correct ones */
+        TrapFrame->SegFs = Ke386GetFs();
+        TrapFrame->SegGs = Ke386GetGs();
+        TrapFrame->SegDs = Ke386GetDs();
+        TrapFrame->SegEs = Ke386GetEs();
+        Ke386SetFs(KGDT_R0_PCR);
+        Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
+        Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
+    }
+    
+    /* Save exception list and terminate it */
+    TrapFrame->ExceptionList = KeGetPcr()->Tib.ExceptionList;
+    KeGetPcr()->Tib.ExceptionList = EXCEPTION_CHAIN_END;
+    
+    /* FIXME: This doesn't support 16-bit ABIOS interrupts */
+    TrapFrame->ErrCode = 0;
+    
+    /* Clear direction flag */
+    Ke386ClearDirectionFlag();
+    
+    /* Flush DR7 and check for debugging */
+    TrapFrame->Dr7 = 0;
+    if (KeGetCurrentThread()->DispatcherHeader.DebugActive & 0xFF)
+    {
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+    
+    /* Set debug header */
+    KiFillTrapFrameDebug(TrapFrame);
+}
+
+VOID
+FASTCALL
+KiEnterTrap(IN PKTRAP_FRAME TrapFrame)
+{
+    ULONG Ds, Es;
+    
+    /*
+     * We really have to get a good DS/ES first before touching any data.
+     *
+     * These two reads will either go in a register (with optimizations ON) or
+     * a stack variable (which is on SS:ESP, guaranteed to be good/valid).
+     *
+     * Because the assembly is marked volatile, the order of instructions is
+     * as-is, otherwise the optimizer could simply get rid of our DS/ES.
+     *
+     */
+    Ds = Ke386GetDs();
+    Es = Ke386GetEs();
+    Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
+    Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
+    TrapFrame->SegDs = Ds;
+    TrapFrame->SegEs = Es;
+        
+    /* Now we can save the other segments and then switch to the correct FS */
+    TrapFrame->SegFs = Ke386GetFs();
+    TrapFrame->SegGs = Ke386GetGs();
+    Ke386SetFs(KGDT_R0_PCR);
+
+    /* Save registers */
+    KiTrapFrameFromPushaStack(TrapFrame);
+    
+    /* Save exception list and bogus previous mode */
+    TrapFrame->PreviousPreviousMode = -1;
+    TrapFrame->ExceptionList = KeGetPcr()->Tib.ExceptionList;
+    
+    /* Check for 16-bit stack */
+    if ((ULONG_PTR)TrapFrame < 0x10000)
+    {
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+    
+    /* Check for V86 mode */
+    if (TrapFrame->EFlags & EFLAGS_V86_MASK)
+    {
+        /* Restore V8086 segments into Protected Mode segments */
+        TrapFrame->SegFs = TrapFrame->V86Fs;
+        TrapFrame->SegGs = TrapFrame->V86Gs;
+        TrapFrame->SegDs = TrapFrame->V86Ds;
+        TrapFrame->SegEs = TrapFrame->V86Es;
+    }
+
+    /* Clear direction flag */
+    Ke386ClearDirectionFlag();
+    
+    /* Flush DR7 and check for debugging */
+    TrapFrame->Dr7 = 0;
+    if (KeGetCurrentThread()->DispatcherHeader.DebugActive & 0xFF)
+    {
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+    
+    /* Set debug header */
+    KiFillTrapFrameDebug(TrapFrame);
+}
+
+/* EXCEPTION CODE *************************************************************/
+
+VOID
+FASTCALL
+KiSystemFatalException(IN ULONG ExceptionCode,
+                       IN PKTRAP_FRAME TrapFrame)
+{
+    /* Bugcheck the system */
+    KeBugCheckWithTf(UNEXPECTED_KERNEL_MODE_TRAP,
+                     ExceptionCode,
+                     0,
+                     0,
+                     0,
+                     TrapFrame);
+}
+
+VOID
+NTAPI
+KiDispatchExceptionFromTrapFrame(IN NTSTATUS Code,
+                                 IN ULONG_PTR Address,
+                                 IN ULONG ParameterCount,
+                                 IN ULONG_PTR Parameter1,
+                                 IN ULONG_PTR Parameter2,
+                                 IN ULONG_PTR Parameter3,
+                                 IN PKTRAP_FRAME TrapFrame)
+{
+    EXCEPTION_RECORD ExceptionRecord;
+
+    /* Build the exception record */
+    ExceptionRecord.ExceptionCode = Code;
+    ExceptionRecord.ExceptionFlags = 0;
+    ExceptionRecord.ExceptionRecord = NULL;
+    ExceptionRecord.ExceptionAddress = (PVOID)Address;
+    ExceptionRecord.NumberParameters = ParameterCount;
+    if (ParameterCount)
+    {
+        /* Copy extra parameters */
+        ExceptionRecord.ExceptionInformation[0] = Parameter1;
+        ExceptionRecord.ExceptionInformation[1] = Parameter2;
+        ExceptionRecord.ExceptionInformation[2] = Parameter3;
+    }
+    
+    /* Now go dispatch the exception */
+    KiDispatchException(&ExceptionRecord,
+                        NULL,
+                        TrapFrame,
+                        TrapFrame->EFlags & EFLAGS_V86_MASK ?
+                        -1 : TrapFrame->SegCs & MODE_MASK,
+                        TRUE);
+
+    /* Return from this trap */
+    KiEoiHelper(TrapFrame);
 }
 
 /* TRAP HANDLERS **************************************************************/
 
 VOID
-DECLSPEC_NORETURN
 FASTCALL
 KiDebugHandler(IN PKTRAP_FRAME TrapFrame,
                IN ULONG Parameter1,
@@ -134,7 +426,6 @@ KiDebugHandler(IN PKTRAP_FRAME TrapFrame,
 }
 
 VOID
-DECLSPEC_NORETURN
 FASTCALL
 KiNpxHandler(IN PKTRAP_FRAME TrapFrame,
              IN PKTHREAD Thread,
@@ -291,12 +582,9 @@ KiNpxHandler(IN PKTRAP_FRAME TrapFrame,
 }
 
 VOID
-DECLSPEC_NORETURN
 FASTCALL
 KiTrap00Handler(IN PKTRAP_FRAME TrapFrame)
 {
-	DBGTRAPENTRY
-
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
     
@@ -313,13 +601,10 @@ KiTrap00Handler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-DECLSPEC_NORETURN
 FASTCALL
 KiTrap01Handler(IN PKTRAP_FRAME TrapFrame)
 {
-	DBGTRAPENTRY
-    
-	/* Save trap frame */
+    /* Save trap frame */
     KiEnterTrap(TrapFrame);
     
     /* Check for VDM trap */
@@ -335,15 +620,15 @@ KiTrap01Handler(IN PKTRAP_FRAME TrapFrame)
                              TrapFrame);
 }
 
-VOID FASTCALL KiTrap02Handler(KTRAP_FRAME *TrapFrame)
+VOID
+KiTrap02(VOID)
 {
     PKTSS Tss, NmiTss;
     PKTHREAD Thread;
     PKPROCESS Process;
     PKGDTENTRY TssGdt;
+    KTRAP_FRAME TrapFrame;
     KIRQL OldIrql;
-    
-	DBGTRAPENTRY
     
     //
     // In some sort of strange recursion case, we might end up here with the IF
@@ -397,32 +682,32 @@ VOID FASTCALL KiTrap02Handler(KTRAP_FRAME *TrapFrame)
     //
     // We just have to go get the values...
     //
-    RtlZeroMemory(TrapFrame, sizeof(KTRAP_FRAME));
-    TrapFrame->HardwareSegSs = Tss->Ss0;
-    TrapFrame->HardwareEsp = Tss->Esp0;
-    TrapFrame->EFlags = Tss->EFlags;
-    TrapFrame->SegCs = Tss->Cs;
-    TrapFrame->Eip = Tss->Eip;
-    TrapFrame->Ebp = Tss->Ebp;
-    TrapFrame->Ebx = Tss->Ebx;
-    TrapFrame->Esi = Tss->Esi;
-    TrapFrame->Edi = Tss->Edi;
-    TrapFrame->SegFs = Tss->Fs;
-    TrapFrame->ExceptionList = PCR->Tib.ExceptionList;
-    TrapFrame->PreviousPreviousMode = -1;
-    TrapFrame->Eax = Tss->Eax;
-    TrapFrame->Ecx = Tss->Ecx;
-    TrapFrame->Edx = Tss->Edx;
-    TrapFrame->SegDs = Tss->Ds;
-    TrapFrame->SegEs = Tss->Es;
-    TrapFrame->SegGs = Tss->Gs;
-    TrapFrame->DbgEip = Tss->Eip;
-    TrapFrame->DbgEbp = Tss->Ebp;
+    RtlZeroMemory(&TrapFrame, sizeof(KTRAP_FRAME));
+    TrapFrame.HardwareSegSs = Tss->Ss0;
+    TrapFrame.HardwareEsp = Tss->Esp0;
+    TrapFrame.EFlags = Tss->EFlags;
+    TrapFrame.SegCs = Tss->Cs;
+    TrapFrame.Eip = Tss->Eip;
+    TrapFrame.Ebp = Tss->Ebp;
+    TrapFrame.Ebx = Tss->Ebx;
+    TrapFrame.Esi = Tss->Esi;
+    TrapFrame.Edi = Tss->Edi;
+    TrapFrame.SegFs = Tss->Fs;
+    TrapFrame.ExceptionList = PCR->Tib.ExceptionList;
+    TrapFrame.PreviousPreviousMode = -1;
+    TrapFrame.Eax = Tss->Eax;
+    TrapFrame.Ecx = Tss->Ecx;
+    TrapFrame.Edx = Tss->Edx;
+    TrapFrame.SegDs = Tss->Ds;
+    TrapFrame.SegEs = Tss->Es;
+    TrapFrame.SegGs = Tss->Gs;
+    TrapFrame.DbgEip = Tss->Eip;
+    TrapFrame.DbgEbp = Tss->Ebp;
     
     //
     // Store the trap frame in the KPRCB
     //
-    KiSaveProcessorState(TrapFrame, NULL);
+    KiSaveProcessorState(&TrapFrame, NULL);
     
     //
     // Call any registered NMI handlers and see if they handled it or not
@@ -471,7 +756,7 @@ VOID FASTCALL KiTrap02Handler(KTRAP_FRAME *TrapFrame)
         //
         // Handled, return from interrupt
         //
-		CpuIret();
+        __asm__ __volatile__ ("iret\n");
     }
     
     //
@@ -481,12 +766,9 @@ VOID FASTCALL KiTrap02Handler(KTRAP_FRAME *TrapFrame)
 }
 
 VOID
-DECLSPEC_NORETURN
 FASTCALL
 KiTrap03Handler(IN PKTRAP_FRAME TrapFrame)
 {
-	DBGTRAPENTRY
-    
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
     
@@ -495,12 +777,9 @@ KiTrap03Handler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-DECLSPEC_NORETURN
 FASTCALL
 KiTrap04Handler(IN PKTRAP_FRAME TrapFrame)
 {
-	DBGTRAPENTRY
-    
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
     
@@ -517,12 +796,9 @@ KiTrap04Handler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-DECLSPEC_NORETURN
 FASTCALL
 KiTrap05Handler(IN PKTRAP_FRAME TrapFrame)
 {
-	DBGTRAPENTRY
-    
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
     
@@ -542,59 +818,17 @@ KiTrap05Handler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-DECLSPEC_NORETURN
 FASTCALL
 KiTrap06Handler(IN PKTRAP_FRAME TrapFrame)
 {
     PUCHAR Instruction;
     ULONG i;
-    KIRQL OldIrql;
     
-	DBGTRAPENTRY
-    
-    /* Check for V86 GPF */
-    if (__builtin_expect(KiIsV8086TrapSafe(TrapFrame), 1))
-    {
-        /* Enter V86 trap */
-        KiEnterV86Trap(TrapFrame);
-        
-        /* Must be a VDM process */
-        if (__builtin_expect(!PsGetCurrentProcess()->VdmObjects, 0))
-        {
-            /* Enable interrupts */
-            _enable();
-            
-            /* Setup illegal instruction fault */
-            KiDispatchException0Args(STATUS_ILLEGAL_INSTRUCTION,
-                                     TrapFrame->Eip,
-                                     TrapFrame);
-        }
-        
-        /* Go to APC level */
-        OldIrql = KfRaiseIrql(APC_LEVEL);
-        _enable();
-        
-        /* Check for BOP */
-        if (!VdmDispatchBop(TrapFrame))
-        {
-            /* Should only happen in VDM mode */
-            UNIMPLEMENTED;
-            while (TRUE);   
-        }
-        
-        /* Bring IRQL back */
-        KfLowerIrql(OldIrql);
-        _disable();
-        
-        /* Do a quick V86 exit if possible */
-        if (__builtin_expect(TrapFrame->EFlags & EFLAGS_V86_MASK, 1)) KiExitV86Trap(TrapFrame);
-        
-        /* Exit trap the slow way */
-        KiEoiHelper(TrapFrame);
-    }
-
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
+    
+    /* Check for VDM trap */
+    ASSERT((KiVdmTrap(TrapFrame)) == FALSE);
     
     /* Enable interrupts */
     Instruction = (PUCHAR)TrapFrame->Eip;
@@ -629,15 +863,12 @@ KiTrap06Handler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-DECLSPEC_NORETURN
 FASTCALL
 KiTrap07Handler(IN PKTRAP_FRAME TrapFrame)
 {
     PKTHREAD Thread, NpxThread;
     PFX_SAVE_AREA SaveArea, NpxSaveArea;
     ULONG Cr0;
-    
-	DBGTRAPENTRY
     
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
@@ -741,23 +972,17 @@ KiTrap07Handler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-DECLSPEC_NORETURN
 FASTCALL
 KiTrap08Handler(IN PKTRAP_FRAME TrapFrame)
 {
-	DBGTRAPENTRY
-    
     /* FIXME: Not handled */
     KiSystemFatalException(EXCEPTION_DOUBLE_FAULT, TrapFrame);
 }
 
 VOID
-DECLSPEC_NORETURN
 FASTCALL
 KiTrap09Handler(IN PKTRAP_FRAME TrapFrame)
 {
-	DBGTRAPENTRY
-    
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
 
@@ -767,12 +992,9 @@ KiTrap09Handler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-DECLSPEC_NORETURN
 FASTCALL
 KiTrap0AHandler(IN PKTRAP_FRAME TrapFrame)
 {
-	DBGTRAPENTRY
-    
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
 
@@ -784,12 +1006,9 @@ KiTrap0AHandler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-DECLSPEC_NORETURN
 FASTCALL
 KiTrap0BHandler(IN PKTRAP_FRAME TrapFrame)
 {
-	DBGTRAPENTRY
-    
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
 
@@ -799,12 +1018,9 @@ KiTrap0BHandler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-DECLSPEC_NORETURN
 FASTCALL
 KiTrap0CHandler(IN PKTRAP_FRAME TrapFrame)
 {
-	DBGTRAPENTRY
-    
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
 
@@ -814,9 +1030,9 @@ KiTrap0CHandler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-DECLSPEC_NORETURN
 FASTCALL
-KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
+KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame,
+                IN ULONG EFlags)
 {
     ULONG i, j, Iopl;
     BOOLEAN Privileged = FALSE;
@@ -824,16 +1040,14 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
     UCHAR Instruction = 0;
     KIRQL OldIrql;
     
-	DBGTRAPENTRY
-    
     /* Check for V86 GPF */
-    if (__builtin_expect(KiIsV8086TrapSafe(TrapFrame), 1))
+    if (EFlags & EFLAGS_V86_MASK)
     {
         /* Enter V86 trap */
         KiEnterV86Trap(TrapFrame);
         
         /* Must be a VDM process */
-        if (__builtin_expect(!PsGetCurrentProcess()->VdmObjects, 0))
+        if (!PsGetCurrentProcess()->VdmObjects)
         {
             /* Enable interrupts */
             _enable();
@@ -849,7 +1063,7 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
         _enable();
         
         /* Handle the V86 opcode */
-        if (__builtin_expect(Ki386HandleOpcodeV86(TrapFrame) == 0xFF, 0))
+        if (Ki386HandleOpcodeV86(TrapFrame) == 0xFF)
         {
             /* Should only happen in VDM mode */
             UNIMPLEMENTED;
@@ -861,7 +1075,7 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
         _disable();
         
         /* Do a quick V86 exit if possible */
-        if (__builtin_expect(TrapFrame->EFlags & EFLAGS_V86_MASK, 1)) KiExitV86Trap(TrapFrame);
+        if (TrapFrame->EFlags & EFLAGS_V86_MASK) KiExitV86Trap(TrapFrame);
         
         /* Exit trap the slow way */
         KiEoiHelper(TrapFrame);
@@ -883,31 +1097,27 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
             /* FIXME: Use SEH */
             Instructions = (PUCHAR)TrapFrame->Eip;
             
-            /* Scan next 15 bytes */
+            /* Scan next 15 opcodes */
             for (i = 0; i < 15; i++)
             {
                 /* Skip prefix instructions */
                 for (j = 0; j < sizeof(KiTrapPrefixTable); j++)
                 {
-                    /* Is this a prefix instruction? */
-                    if (Instructions[i] == KiTrapPrefixTable[j])
+                    /* Is this NOT a prefix instruction? */
+                    if (Instructions[i] != KiTrapPrefixTable[j])
                     {
-                        /* Stop looking */
+                        /* We can go ahead and handle the fault now */
+                        Instruction = Instructions[i];
                         break;
                     }
                 }
                 
-                /* Is this NOT any prefix instruction? */
-                if (j == sizeof(KiTrapPrefixTable))
-                {
-                    /* We can go ahead and handle the fault now */
-                    Instruction = Instructions[i];
-                    break;
-                }
+                /* Do we need to keep looking? */
+                if (Instruction) break;
             }
-            
+                
             /* If all we found was prefixes, then this instruction is too long */
-            if (i == 15)
+            if (!Instruction)
             {
                 /* Setup illegal instruction fault */
                 KiDispatchException0Args(STATUS_ILLEGAL_INSTRUCTION,
@@ -949,7 +1159,7 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
             {
                 /* Get the IOPL and compare with the RPL mask */
                 Iopl = (TrapFrame->EFlags & EFLAGS_IOPL) >> 12;
-                if ((TrapFrame->SegCs & RPL_MASK) > Iopl)
+                if ((TrapFrame->SegCs & RPL_MASK) == Iopl)
                 {
                     /* I/O privilege error -- check for known instructions */
                     if ((Instruction == 0xFA) || (Instruction == 0xFB)) // CLI or STI
@@ -992,6 +1202,14 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
                                  TrapFrame);
     }
 
+    /* Check for custom VDM trap handler */
+    if (KeGetPcr()->VdmAlert)
+    {
+        /* Not implemented */
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+    
     /* 
      * Check for a fault during checking of the user instruction.
      *
@@ -1066,8 +1284,8 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
      
      /* So since we're not dealing with the above case, check for RDMSR/WRMSR */
      if ((Instructions[0] == 0xF) &&            // 2-byte opcode
-        (((Instructions[1]) == 0x30) ||        // RDMSR
-         ((Instructions[2]) == 0x32)))         // WRMSR
+        (((Instructions[1] >> 8) == 0x30) ||        // RDMSR
+         ((Instructions[2] >> 8) == 0x32)))         // WRMSR
      {
         /* Unknown CPU MSR, so raise an access violation */
         KiDispatchException0Args(STATUS_ACCESS_VIOLATION,
@@ -1099,10 +1317,16 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
     ULONG_PTR Cr2;
     NTSTATUS Status;
 
-	DBGTRAPENTRY
-    
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
+
+    /* Check for custom VDM trap handler */
+    if (KeGetPcr()->VdmAlert)
+    {
+        /* Not implemented */
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
 
     /* Check if this is the base frame */
     Thread = KeGetCurrentThread();
@@ -1153,13 +1377,8 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
                            (PVOID)Cr2,
                            TrapFrame->SegCs & MODE_MASK,
                            TrapFrame);
-	DPRINTT("MmAccessFault()=%x\n", Status);
-    if (Status == STATUS_SUCCESS)
-	{
-		return;		// !!!
-		KiEoiHelper(TrapFrame);
-	}
-
+    if (Status == STATUS_SUCCESS) KiEoiHelper(TrapFrame);
+    
     /* Check for S-LIST fault */
     if (TrapFrame->Eip == (ULONG_PTR)ExpInterlockedPopEntrySListFault)
     {
@@ -1169,7 +1388,6 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
     }
     
     /* Check for syscall fault */
-#if 0
     if ((TrapFrame->Eip == (ULONG_PTR)CopyParams) ||
         (TrapFrame->Eip == (ULONG_PTR)ReadBatch))
     {
@@ -1177,7 +1395,7 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
         UNIMPLEMENTED;
         while (TRUE);
     }
-#endif
+
     /* Check for VDM trap */
     ASSERT((KiVdmTrap(TrapFrame)) == FALSE);
     
@@ -1213,12 +1431,9 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-DECLSPEC_NORETURN
 FASTCALL
 KiTrap0FHandler(IN PKTRAP_FRAME TrapFrame)
 {
-	DBGTRAPENTRY
-    
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
 
@@ -1227,15 +1442,13 @@ KiTrap0FHandler(IN PKTRAP_FRAME TrapFrame)
     KiSystemFatalException(EXCEPTION_RESERVED_TRAP, TrapFrame);
 }
 
+
 VOID
-DECLSPEC_NORETURN
 FASTCALL
 KiTrap10Handler(IN PKTRAP_FRAME TrapFrame)
 {
     PKTHREAD Thread;
     PFX_SAVE_AREA SaveArea;
-    
-	DBGTRAPENTRY
     
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
@@ -1258,12 +1471,9 @@ KiTrap10Handler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-DECLSPEC_NORETURN
 FASTCALL
 KiTrap11Handler(IN PKTRAP_FRAME TrapFrame)
 {
-	DBGTRAPENTRY
-    
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
 
@@ -1273,15 +1483,12 @@ KiTrap11Handler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-DECLSPEC_NORETURN
 FASTCALL
 KiTrap13Handler(IN PKTRAP_FRAME TrapFrame)
 {
     PKTHREAD Thread;
     PFX_SAVE_AREA SaveArea;
     ULONG Cr0, MxCsrMask, Error;
-    
-	DBGTRAPENTRY
     
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
@@ -1365,8 +1572,6 @@ VOID
 FASTCALL
 KiGetTickCountHandler(IN PKTRAP_FRAME TrapFrame)
 {
-	DBGTRAPENTRY
-    
     UNIMPLEMENTED;
     while (TRUE);
 }
@@ -1375,19 +1580,14 @@ VOID
 FASTCALL
 KiCallbackReturnHandler(IN PKTRAP_FRAME TrapFrame)
 {
-	DBGTRAPENTRY
-    
     UNIMPLEMENTED;
     while (TRUE);
 }
 
 VOID
-DECLSPEC_NORETURN
 FASTCALL
 KiRaiseAssertionHandler(IN PKTRAP_FRAME TrapFrame)
 {
-	DBGTRAPENTRY
-    
     /* Save trap frame */
     KiEnterTrap(TrapFrame);
 
@@ -1401,7 +1601,6 @@ KiRaiseAssertionHandler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-DECLSPEC_NORETURN
 FASTCALL
 KiDebugServiceHandler(IN PKTRAP_FRAME TrapFrame)
 {
@@ -1415,256 +1614,103 @@ KiDebugServiceHandler(IN PKTRAP_FRAME TrapFrame)
     KiDebugHandler(TrapFrame, TrapFrame->Eax, TrapFrame->Ecx, TrapFrame->Edx);
 }
 
-VOID
-DECLSPEC_NORETURN
+/* HARDWARE INTERRUPTS ********************************************************/
+
+/*
+ * This code can only be used once the HAL handles system interrupt code in C.
+ *
+ * This is because the HAL, when ending a system interrupt, might see pending
+ * DPC or APC interrupts, and attempt to piggyback on the interrupt context in
+ * order to deliver them. Once they have been devlivered, it will then "end" the
+ * interrupt context by doing a call to the ASM EOI Handler which naturally will
+ * throw up on our C-style KTRAP_FRAME.
+ *
+ * Once it works, expect a noticeable speed boost during hardware interrupts.
+ */
+#ifdef HAL_INTERRUPT_SUPPORT_IN_C
+
+typedef
 FASTCALL
-KiSystemCall(IN ULONG SystemCallNumber,
-             IN PVOID Arguments)
-{
-    PKTHREAD Thread;
-    PKTRAP_FRAME TrapFrame;
-    PKSERVICE_TABLE_DESCRIPTOR DescriptorTable;
-    ULONG Id, Offset, StackBytes, Result;
-    PVOID Handler;
-    
-	// DBGTRAPENTRY
-    
-    /* Loop because we might need to try this twice in case of a GUI call */
-    while (TRUE)
-    {
-        /* Decode the system call number */
-        Offset = (SystemCallNumber >> SERVICE_TABLE_SHIFT) & SERVICE_TABLE_MASK;
-        Id = SystemCallNumber & SERVICE_NUMBER_MASK;
-    
-        /* Get current thread, trap frame, and descriptor table */
-        Thread = KeGetCurrentThread();
-        TrapFrame = Thread->TrapFrame;
-        DescriptorTable = (PVOID)((ULONG_PTR)Thread->ServiceTable + Offset);
+VOID
+(PKI_INTERRUPT_DISPATCH)(
+    IN PKTRAP_FRAME TrapFrame,
+    IN PKINTERRUPT Interrupt
+);
 
-        /* Validate the system call number */
-        if (__builtin_expect(Id > DescriptorTable->Limit, 0))
-        {
-            /* Check if this is a GUI call */
-            if (__builtin_expect(!(Offset & SERVICE_TABLE_TEST), 0))
-            {
-                /* Fail the call */
-                Result = STATUS_INVALID_SYSTEM_SERVICE;
-                goto ExitCall;
-            }
-
-            /* Convert us to a GUI thread -- must wrap in ASM to get new EBP */        
-            Result = KiConvertToGuiThread();
-            if (__builtin_expect(!NT_SUCCESS(Result), 0))
-            {
-                /* Figure out how we should fail to the user */
-                UNIMPLEMENTED;
-                while (TRUE);
-            }
-            
-            /* Try the call again */
-            continue;
-        }
-        
-        /* If we made it here, the call is good */
-        break;
-    }
-    
-    /* Check if this is a GUI call */
-    if (__builtin_expect(Offset & SERVICE_TABLE_TEST, 0))
-    {
-        /* Get the batch count and flush if necessary */
-        if (NtCurrentTeb()->GdiBatchCount) KeGdiFlushUserBatch();
-    }
-    
-    /* Increase system call count */
-    KeGetCurrentPrcb()->KeSystemCalls++;
-    
-    /* FIXME: Increase individual counts on debug systems */
-    //KiIncreaseSystemCallCount(DescriptorTable, Id);
-    
-    /* Get stack bytes */
-    StackBytes = DescriptorTable->Number[Id];
-    
-    /* Probe caller stack */
-    if (__builtin_expect((Arguments < (PVOID)MmUserProbeAddress) && !(KiUserTrap(TrapFrame)), 0))
-    {
-        /* Access violation */
-        UNIMPLEMENTED;
-        while (TRUE);
-    }
-    
-    /* Get the handler and make the system call */
-    Handler = (PVOID)DescriptorTable->Base[Id];
-    Result = KiSystemCallTrampoline(Handler, Arguments, StackBytes);
-    
-    /* Make sure we're exiting correctly */
-    KiExitSystemCallDebugChecks(Id, TrapFrame);
-    
-    /* Restore the old trap frame */
-ExitCall:
-    Thread->TrapFrame = (PKTRAP_FRAME)TrapFrame->Edx;
-
-    /* Exit from system call */
-    KiServiceExit(TrapFrame, Result);
-}
-
+VOID
 FORCEINLINE
-VOID
-DECLSPEC_NORETURN
-KiSystemCallHandler(IN PKTRAP_FRAME TrapFrame,
-                    IN ULONG ServiceNumber,
-                    IN PVOID Arguments,
-                    IN PKTHREAD Thread,
-                    IN KPROCESSOR_MODE PreviousMode,
-                    IN KPROCESSOR_MODE PreviousPreviousMode,
-                    IN USHORT SegFs)
+KiExitInterrupt(IN PKTRAP_FRAME TrapFrame,
+                IN KIRQL OldIrql,
+                IN BOOLEAN Spurious)
 {
-	DBGTRAPENTRY
+    if (Spurious) KiEoiHelper(TrapFrame);
     
-    /* No error code */
-    TrapFrame->ErrCode = 0;
+    _disable();
     
-    /* Save previous mode and FS segment */
-    TrapFrame->PreviousPreviousMode = PreviousPreviousMode;
-    TrapFrame->SegFs = SegFs;
-        
-    /* Save the SEH chain and terminate it for now */    
-    TrapFrame->ExceptionList = KeGetPcr()->Tib.ExceptionList;
-    KeGetPcr()->Tib.ExceptionList = EXCEPTION_CHAIN_END;
-        
-    /* Clear DR7 and check for debugging */
-    TrapFrame->Dr7 = 0;
-    if (__builtin_expect(Thread->DispatcherHeader.DebugActive & 0xFF, 0))
+    DPRINT1("Calling HAL to restore IRQL to: %d\n", OldIrql);
+    HalEndSystemInterrupt(OldIrql, 0);
+    
+    DPRINT1("Exiting trap\n");
+    KiEoiHelper(TrapFrame);
+}
+
+VOID
+FASTCALL
+KiInterruptDispatch(IN PKTRAP_FRAME TrapFrame,
+                    IN PKINTERRUPT Interrupt)
+{       
+    KIRQL OldIrql;
+
+    KeGetCurrentPrcb()->InterruptCount++;
+    
+    DPRINT1("Calling HAL with %lx %lx\n", Interrupt->SynchronizeIrql, Interrupt->Vector);
+    if (HalBeginSystemInterrupt(Interrupt->SynchronizeIrql,
+                                Interrupt->Vector,
+                                &OldIrql))
     {
-        UNIMPLEMENTED;
-        while (TRUE);
+        /* Acquire interrupt lock */
+        KxAcquireSpinLock(Interrupt->ActualLock);
+        
+        /* Call the ISR */
+        DPRINT1("Calling ISR: %p with context: %p\n", Interrupt->ServiceRoutine, Interrupt->ServiceContext);
+        Interrupt->ServiceRoutine(Interrupt, Interrupt->ServiceContext);
+        
+        /* Release interrupt lock */
+        KxReleaseSpinLock(Interrupt->ActualLock);
+        
+        /* Now call the epilogue code */
+        DPRINT1("Exiting interrupt\n");
+        KiExitInterrupt(TrapFrame, OldIrql, FALSE);
     }
-
-    /* Set thread fields */
-    Thread->TrapFrame = TrapFrame;
-    Thread->PreviousMode = PreviousMode;
-    
-    /* Set debug header */
-    KiFillTrapFrameDebug(TrapFrame);
-    
-    /* Enable interrupts and make the call */
-    _enable();
-    KiSystemCall(ServiceNumber, Arguments);   
+    else
+    {
+        /* Now call the epilogue code */
+        DPRINT1("Exiting Spurious interrupt\n");
+        KiExitInterrupt(TrapFrame, OldIrql, TRUE);
+    }
 }
 
-// was __attribute__((regparm(3)))
 VOID
-_NORETURN
-_FASTCALL
-KiFastCallEntryHandler(IN PKTRAP_FRAME TrapFrame)
-{
-	PVOID Arguments = (PVOID)TrapFrame->Edx;
-	ULONG ServiceNumber = TrapFrame->Eax;
-    PKTHREAD Thread;
-        
-	DBGTRAPENTRY
+FASTCALL
+KiChainedDispatch(IN PKTRAP_FRAME TrapFrame,
+                  IN PKINTERRUPT Interrupt)
+{   
+    KeGetCurrentPrcb()->InterruptCount++;
     
-    /* Fixup segments */
-    Ke386SetFs(KGDT_R0_PCR);
-    Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
-    Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
-    
-    /* Set up a fake INT Stack and enable interrupts */
-    TrapFrame->HardwareSegSs = KGDT_R3_DATA | RPL_MASK;
-    TrapFrame->HardwareEsp = (ULONG_PTR)Arguments;
-    TrapFrame->EFlags = __readeflags() | EFLAGS_INTERRUPT_MASK;
-    TrapFrame->SegCs = KGDT_R3_CODE | RPL_MASK;
-    TrapFrame->Eip = SharedUserData->SystemCallReturn;
-    __writeeflags(0x2);
-    
-    /* Get the current thread */
-    Thread = KeGetCurrentThread();
-    
-    /* Arguments are actually 2 frames down (because of the double indirection) */
-    Arguments = (PVOID)(TrapFrame->HardwareEsp + 8);
-
-    /* Call the shared handler (inline) */
-    KiSystemCallHandler(TrapFrame,
-                        ServiceNumber,
-                        Arguments,
-                        Thread,
-                        UserMode,
-                        Thread->PreviousMode,
-                        KGDT_R3_TEB | RPL_MASK);
-}
-
-// was __attribute__((regparm(3)))
-VOID
-_NORETURN
-_FASTCALL
-KiSystemServiceHandler(IN PKTRAP_FRAME TrapFrame)
-{
-	PVOID Arguments = (PVOID)TrapFrame->Edx;
-    ULONG ServiceNumber = TrapFrame->Eax;
-    USHORT SegFs;
-    PKTHREAD Thread;
-
-	DBGTRAPENTRY
-    
-    /* Save and fixup FS */
-    SegFs = Ke386GetFs();
-    Ke386SetFs(KGDT_R0_PCR);
-        
-    /* Get the current thread */
-    Thread = KeGetCurrentThread();
-    
-    /* Chain trap frames */
-    TrapFrame->Edx = (ULONG_PTR)Thread->TrapFrame;
-    
-    /* Clear direction flag */
-    Ke386ClearDirectionFlag();
-    
-    /* Call the shared handler (inline) */
-    KiSystemCallHandler(TrapFrame,
-                        ServiceNumber,
-                        Arguments,
-                        Thread,
-                        KiUserTrap(TrapFrame),
-                        Thread->PreviousMode,
-                        SegFs);
-}
-
-/* CPU AND SOFTWARE TRAPS *****************************************************/
-
-#if 0
-KiTrap(KiTrap00,         KI_PUSH_FAKE_ERROR_CODE);
-KiTrap(KiTrap01,         KI_PUSH_FAKE_ERROR_CODE);
-KiTrap(KiTrap03,         KI_PUSH_FAKE_ERROR_CODE);
-KiTrap(KiTrap04,         KI_PUSH_FAKE_ERROR_CODE);
-KiTrap(KiTrap05,         KI_PUSH_FAKE_ERROR_CODE);
-KiTrap(KiTrap06,         KI_PUSH_FAKE_ERROR_CODE);
-KiTrap(KiTrap07,         KI_PUSH_FAKE_ERROR_CODE);
-KiTrap(KiTrap08,         0);
-KiTrap(KiTrap09,         KI_PUSH_FAKE_ERROR_CODE);
-KiTrap(KiTrap0A,         0);
-KiTrap(KiTrap0B,         0);
-KiTrap(KiTrap0C,         0);
-KiTrap(KiTrap0D,         0);
-KiTrap(KiTrap0E,         0);
-KiTrap(KiTrap0F,         KI_PUSH_FAKE_ERROR_CODE);
-KiTrap(KiTrap10,         KI_PUSH_FAKE_ERROR_CODE);
-KiTrap(KiTrap11,         KI_PUSH_FAKE_ERROR_CODE);
-KiTrap(KiTrap13,         KI_PUSH_FAKE_ERROR_CODE);
-KiTrap(KiGetTickCount,   KI_PUSH_FAKE_ERROR_CODE);
-KiTrap(KiCallbackReturn, KI_PUSH_FAKE_ERROR_CODE);       
-KiTrap(KiRaiseAssertion, KI_PUSH_FAKE_ERROR_CODE);
-KiTrap(KiDebugService,   KI_PUSH_FAKE_ERROR_CODE);
-KiTrap(KiSystemService,  KI_PUSH_FAKE_ERROR_CODE | KI_NONVOLATILES_ONLY);
-KiTrap(KiFastCallEntry,  KI_FAST_SYSTEM_CALL);
-#endif
-
-#if 0	// see idt.s
-VOID NTAPI _NAKED Kei386EoiHelper(VOID)
-{
-
-    /* We should never see this call happening */
-    DPRINT1("Mismatched NT/HAL version");
+    UNIMPLEMENTED;
     while (TRUE);
+}
+
+VOID
+FASTCALL
+KiInterruptHandler(IN PKTRAP_FRAME TrapFrame,
+                   IN PKINTERRUPT Interrupt)
+{   
+    /* Enter interrupt frame */
+    KiEnterInterruptTrap(TrapFrame);
+
+    /* Call the correct dispatcher */
+    ((PKI_INTERRUPT_DISPATCH*)Interrupt->DispatchAddress)(TrapFrame, Interrupt);
 }
 #endif
 

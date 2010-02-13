@@ -31,7 +31,7 @@ typedef struct _RTLP_WAIT
 
 /* PRIVATE FUNCTIONS *******************************************************/
 
-static _INLINE PLARGE_INTEGER get_nt_timeout( PLARGE_INTEGER pTime, ULONG timeout )
+static inline PLARGE_INTEGER get_nt_timeout( PLARGE_INTEGER pTime, ULONG timeout )
 {
     if (timeout == INFINITE) return NULL;
     pTime->QuadPart = (ULONGLONG)timeout * -10000;
@@ -220,7 +220,7 @@ RtlDeregisterWaitEx(HANDLE WaitHandle,
                 if (Status != STATUS_SUCCESS)
                     return Status;
 
-                InterlockedExchangePointer(&Wait->CompletionEvent, CompletionEvent);
+                (void)_InterlockedExchangePointer( &Wait->CompletionEvent, CompletionEvent );
 
                 if (Wait->CallbackInProgress)
                     NtWaitForSingleObject( CompletionEvent, FALSE, NULL );
@@ -229,7 +229,7 @@ RtlDeregisterWaitEx(HANDLE WaitHandle,
             }
             else
             {
-                InterlockedExchangePointer(&Wait->CompletionEvent, CompletionEvent);
+                (void)_InterlockedExchangePointer( &Wait->CompletionEvent, CompletionEvent );
 
                 if (Wait->CallbackInProgress)
                     Status = STATUS_PENDING;

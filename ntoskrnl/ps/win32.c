@@ -25,8 +25,6 @@ extern PKWIN32_POWEREVENT_CALLOUT PopEventCallout;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-// !!! KeSwitchKernelStack will change ebp
-_OPTIMIZE_OFF_STKF
 NTSTATUS
 NTAPI
 PsConvertToGuiThread(VOID)
@@ -103,7 +101,6 @@ PsConvertToGuiThread(VOID)
     /* Return status */
     return Status;
 }
-_OPTIMIZE_DFT
 
 /* PUBLIC FUNCTIONS **********************************************************/
 

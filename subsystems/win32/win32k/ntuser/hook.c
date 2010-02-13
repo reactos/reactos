@@ -298,7 +298,7 @@ IntCallLowLevelHook(PHOOK Hook, INT Code, WPARAM wParam, LPARAM lParam)
     /* FIXME should get timeout from
      * HKEY_CURRENT_USER\Control Panel\Desktop\LowLevelHooksTimeout */
     Status = co_MsqSendMessage(((PTHREADINFO)Hook->Thread->Tcb.Win32Thread)->MessageQueue,
-                                (HWND)Code,
+                                IntToPtr(Code),
                                 Hook->HookId,
                                 wParam,
                                 lParam,
@@ -1136,7 +1136,7 @@ NtUserSetWindowsHookEx(HINSTANCE Mod,
         Mod = NULL;
         Global = FALSE;
 
-        if (!NT_SUCCESS(PsLookupThreadByThreadId((HANDLE) ThreadId, &Thread)))
+        if (!NT_SUCCESS(PsLookupThreadByThreadId((HANDLE)(DWORD_PTR) ThreadId, &Thread)))
         {
             DPRINT1("Invalid thread id 0x%x\n", ThreadId);
             SetLastWin32Error(ERROR_INVALID_PARAMETER);
@@ -1342,5 +1342,5 @@ CLEANUP:
     UserLeave();
     END_CLEANUP;
 }
- 
+
 /* EOF */

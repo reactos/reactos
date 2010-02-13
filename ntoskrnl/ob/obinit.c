@@ -54,9 +54,10 @@ ULONG ObpInitializationPhase;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-BOOLEAN NTAPI ObInit2(VOID);
-SECT_INIT_FN(ObInit2)
-BOOLEAN NTAPI ObInit2(VOID)
+BOOLEAN
+INIT_FUNCTION
+NTAPI
+ObInit2(VOID)
 {
     CCHAR i;
     PKPRCB Prcb;
@@ -120,8 +121,10 @@ BOOLEAN NTAPI ObInit2(VOID)
     return TRUE;
 }
 
-SECT_INIT_FN(ObInitSystem)
-BOOLEAN NTAPI ObInitSystem(VOID)
+BOOLEAN
+INIT_FUNCTION
+NTAPI
+ObInitSystem(VOID)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING Name;

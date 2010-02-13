@@ -13,6 +13,10 @@
 #define NDEBUG
 #include <debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, IopInitBootLog)
+#pragma alloc_text(INIT, IopStartBootLog)
+#endif
 
 /* GLOBALS ******************************************************************/
 
@@ -25,16 +29,16 @@ static ERESOURCE IopBootLogResource;
 
 /* FUNCTIONS ****************************************************************/
 
-SECT_INIT_FN(IopInitBootLog)
-VOID IopInitBootLog(BOOLEAN StartBootLog)
+VOID INIT_FUNCTION
+IopInitBootLog(BOOLEAN StartBootLog)
 {
   ExInitializeResourceLite(&IopBootLogResource);
   if (StartBootLog) IopStartBootLog();
 }
 
 
-SECT_INIT_FN(IopStartBootLog)
-VOID IopStartBootLog(VOID)
+VOID INIT_FUNCTION
+IopStartBootLog(VOID)
 {
   IopBootLogCreate = TRUE;
   IopBootLogEnabled = TRUE;

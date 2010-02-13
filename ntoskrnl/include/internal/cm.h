@@ -29,11 +29,11 @@
 #ifdef NEW_DEBUG_SYSTEM_IMPLEMENTED // enable when Debug Filters are implemented
 #define CMTRACE DbgPrintEx
 #else
-#define CMTRACE(x, fmt, ...)                                 \
-    if (x & CmpTraceLevel) DPRINT1(fmt, __VA_ARGS__)
+#define CMTRACE(x, ...)                                 \
+    if (x & CmpTraceLevel) DbgPrint(__VA_ARGS__)
 #endif
 #else
-#define CMTRACE(x, fmt, ...) DPRINT(fmt, __VA_ARGS__)
+#define CMTRACE(x, ...) DPRINT(__VA_ARGS__)
 #endif
 
 //

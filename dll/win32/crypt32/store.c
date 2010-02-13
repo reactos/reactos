@@ -899,7 +899,8 @@ BOOL WINAPI CertAddCertificateContextToStore(HCERTSTORE hCertStore,
         if (existing)
         {
             CertContext_CopyProperties(existing, pCertContext);
-            *ppStoreContext = CertDuplicateCertificateContext(existing);
+            if (ppStoreContext)
+                *ppStoreContext = CertDuplicateCertificateContext(existing);
         }
         else
             toAdd = CertDuplicateCertificateContext(pCertContext);
@@ -1090,7 +1091,13 @@ BOOL WINAPI CertAddCRLContextToStore(HCERTSTORE hCertStore,
         break;
     case CERT_STORE_ADD_USE_EXISTING:
         if (existing)
+        {
             CrlContext_CopyProperties(existing, pCrlContext);
+            if (ppStoreContext)
+                *ppStoreContext = CertDuplicateCRLContext(existing);
+        }
+        else
+            toAdd = CertDuplicateCRLContext(pCrlContext);
         break;
     default:
         FIXME("Unimplemented add disposition %d\n", dwAddDisposition);

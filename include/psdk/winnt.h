@@ -4985,18 +4985,10 @@ InterlockedBitTestAndReset(IN LONG volatile *Base,
 #endif
 }
 
-#endif
-
 #define BitScanForward _BitScanForward
 #define BitScanReverse _BitScanReverse
 
-#define BitTest _bittest
-#define BitTestAndComplement _bittestandcomplement
-#define BitTestAndSet _bittestandset
-#define BitTestAndReset _bittestandreset
-#define InterlockedBitTestAndSet _interlockedbittestandset
-#define InterlockedBitTestAndReset _interlockedbittestandreset
-
+#endif
 
 /* TODO: Other architectures than X86 */
 #if defined(_M_IX86)

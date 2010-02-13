@@ -31,4 +31,9 @@ STRINGTABLE
     STRING_ADD_USAGE, "REG ADD <ключ> [/v <параметр> | /ve] [/t <тип>] [/s <разделитель>] [/d данные] [/f]\n"
     STRING_DELETE_USAGE, "REG DELETE <ключ> [/v <параметр> | /ve | /va] [/f]\n"
     STRING_QUERY_USAGE, "REG QUERY <ключ> [/v <параметр> | /ve] [/s]\n"
+    STRING_SUCCESS, "Операция успешно завершена\n"
+    STRING_INVALID_KEY, "Ошибка: неправильное имя ключа\n"
+    STRING_INVALID_CMDLINE, "Ошибка: неправильные параметры командной строки\n"
+    STRING_NO_REMOTE, "Ошибка: невозможно добавить ключи на удаленной машине\n"
+    STRING_CANNOT_FIND, "Ошибка: не удалось найти указанный ключ реестра или значение\n"
 }

@@ -110,7 +110,7 @@ KiAcquireFastMutex(IN PFAST_MUTEX FastMutex)
     FastMutex->Contention++;
 
     /* Wait for the event */
-    KeWaitForSingleObject(&FastMutex->Event,
+    KeWaitForSingleObject(&FastMutex->Gate,
                           WrMutex,
                           KernelMode,
                           FALSE,

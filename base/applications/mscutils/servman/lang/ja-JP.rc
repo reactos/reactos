@@ -106,8 +106,8 @@ CAPTION "依存関係"
 FONT 9, "MS UI Gothic",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
 BEGIN
-  CONTROL "", IDC_DEPEND_TREE1, "SysTreeView32" ,0x50010007, 8, 70, 236, 68, 0x00000200
-  CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", 0x50010007, 8, 151, 234, 67, 0x00000200
+  CONTROL "", IDC_DEPEND_TREE1, "SysTreeView32" , WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 70, 236, 68
+  CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 234, 67
   LTEXT "他のサービス、システム ドライバ、読み込み順グループなどに依存しているサービスがあります。システム コンポーネントが停止するか、または正常に実行されない場合、依存するサービスが影響されている場合があります。", IDC_STATIC,8, 7, 238, 26
   LTEXT "このサービスが依存するコンポーネント", IDC_STATIC, 8, 57, 236, 9
   LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
@@ -206,7 +206,7 @@ BEGIN
   IDS_NUM_SERVICES      "サービスの数: %d"
   IDS_STOP_DEPENDS      "%s を停止する場合、これらのサービスも停止します"
   IDS_NO_DEPENDS        "<依存関係なし>"
-  IDS_LICENSE           "このプログラムはフリーソ\フトウェアです。あなたはこれを、フリーソ\フトウェア財団によって発行された GNU一般公衆利用許諾契約書(バージョン2か、希望によってはそれ以降のバージョンのうちどれか)の定める条件の下で再頒布または改変することができます。\r\n\r\nこのプログラムは有用であることを願って配布されますが、*全くの無保証* です。*商業可能\性の保証*や*特定の目的への適合性*は、言外に示されたものも含め全く存在しません。詳しくはGNU一般公衆利用許諾契約書をご覧ください。\r\n\r\nあなたはこのプログラムと共に、GNU一般公衆利用許諾契約書の複製を一部受け取ったはずです。もし受け取っていなければ、フリーソ\フトウェア財団まで請求してください(宛先は the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA)。"
+  IDS_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 STRINGTABLE DISCARDABLE

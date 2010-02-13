@@ -83,11 +83,6 @@ struct tagMSITABLE
     WCHAR name[1];
 };
 
-typedef struct tagMSITRANSFORM {
-    struct list entry;
-    IStorage *stg;
-} MSITRANSFORM;
-
 static const WCHAR szStringData[] = {
     '_','S','t','r','i','n','g','D','a','t','a',0 };
 static const WCHAR szStringPool[] = {
@@ -154,7 +149,7 @@ static int utf2mime(int x)
     return -1;
 }
 
-static LPWSTR encode_streamname(BOOL bTable, LPCWSTR in)
+LPWSTR encode_streamname(BOOL bTable, LPCWSTR in)
 {
     DWORD count = MAX_STREAM_NAME;
     DWORD ch, next;
@@ -292,89 +287,6 @@ UINT read_stream_data( IStorage *stg, LPCWSTR stname, BOOL table,
         return ret;
     }
 
-    r = IStream_Stat(stm, &stat, STATFLAG_NONAME );
-    if( FAILED( r ) )
-    {
-        WARN("open stream failed r = %08x!\n", r);
-        goto end;
-    }
-
-    if( stat.cbSize.QuadPart >> 32 )
-    {
-        WARN("Too big!\n");
-        goto end;
-    }
-        
-    sz = stat.cbSize.QuadPart;
-    data = msi_alloc( sz );
-    if( !data )
-    {
-        WARN("couldn't allocate memory r=%08x!\n", r);
-        ret = ERROR_NOT_ENOUGH_MEMORY;
-        goto end;
-    }
-        
-    r = IStream_Read(stm, data, sz, &count );
-    if( FAILED( r ) || ( count != sz ) )
-    {
-        msi_free( data );
-        WARN("read stream failed r = %08x!\n", r);
-        goto end;
-    }
-
-    *pdata = data;
-    *psz = sz;
-    ret = ERROR_SUCCESS;
-
-end:
-    IStream_Release( stm );
-
-    return ret;
-}
-
-static UINT db_get_raw_stream( MSIDATABASE *db, LPCWSTR stname, IStream **stm )
-{
-    LPWSTR encname;
-    HRESULT r;
-
-    encname = encode_streamname(FALSE, stname);
-
-    TRACE("%s -> %s\n",debugstr_w(stname),debugstr_w(encname));
-
-    r = IStorage_OpenStream(db->storage, encname, NULL, 
-            STGM_READ | STGM_SHARE_EXCLUSIVE, 0, stm);
-    if( FAILED( r ) )
-    {
-        MSITRANSFORM *transform;
-
-        LIST_FOR_EACH_ENTRY( transform, &db->transforms, MSITRANSFORM, entry )
-        {
-            TRACE("looking for %s in transform storage\n", debugstr_w(stname) );
-            r = IStorage_OpenStream( transform->stg, encname, NULL, 
-                    STGM_READ | STGM_SHARE_EXCLUSIVE, 0, stm );
-            if (SUCCEEDED(r))
-                break;
-        }
-    }
-
-    msi_free( encname );
-
-    return SUCCEEDED(r) ? ERROR_SUCCESS : ERROR_FUNCTION_FAILED;
-}
-
-UINT read_raw_stream_data( MSIDATABASE *db, LPCWSTR stname,
-                              USHORT **pdata, UINT *psz )
-{
-    HRESULT r;
-    UINT ret = ERROR_FUNCTION_FAILED;
-    VOID *data;
-    ULONG sz, count;
-    IStream *stm = NULL;
-    STATSTG stat;
-
-    r = db_get_raw_stream( db, stname, &stm );
-    if( r != ERROR_SUCCESS)
-        return ret;
     r = IStream_Stat(stm, &stat, STATFLAG_NONAME );
     if( FAILED( r ) )
     {
@@ -1042,17 +954,22 @@ static UINT get_tablecolumns( MSIDATABASE *db,
 static void msi_update_table_columns( MSIDATABASE *db, LPCWSTR name )
 {
     MSITABLE *table;
+    LPWSTR tablename;
     UINT size, offset, old_count;
     UINT n;
 
-    table = find_cached_table( db, name );
+    /* We may free name in msi_free_colinfo. */
+    tablename = strdupW( name );
+
+    table = find_cached_table( db, tablename );
     old_count = table->col_count;
+    msi_free_colinfo( table->colinfo, table->col_count );
     msi_free( table->colinfo );
     table->colinfo = NULL;
 
-    table_get_column_info( db, name, &table->colinfo, &table->col_count );
+    table_get_column_info( db, tablename, &table->colinfo, &table->col_count );
     if (!table->col_count)
-        return;
+        goto done;
 
     size = msi_table_get_row_size( db, table->colinfo, table->col_count );
     offset = table->colinfo[table->col_count - 1].offset;
@@ -1063,6 +980,9 @@ static void msi_update_table_columns( MSIDATABASE *db, LPCWSTR name )
         if (old_count < table->col_count)
             memset( &table->data[n][offset], 0, size - offset );
     }
+
+done:
+    msi_free(tablename);
 }
 
 /* try to find the table name in the _Tables table */
@@ -1754,14 +1674,13 @@ static UINT TABLE_delete_row( struct tagMSIVIEW *view, UINT row )
         tv->columns[i].hash_table = NULL;
     }
 
-    if ( row == num_rows - 1 )
-        return ERROR_SUCCESS;
-
     for (i = row + 1; i < num_rows; i++)
     {
         memcpy(tv->table->data[i - 1], tv->table->data[i], tv->row_size);
         tv->table->data_persistent[i - 1] = tv->table->data_persistent[i];
     }
+
+    msi_free(tv->table->data[num_rows - 1]);
 
     return ERROR_SUCCESS;
 }
@@ -1827,6 +1746,9 @@ static UINT msi_refresh_record( struct tagMSIVIEW *view, MSIRECORD *rec, UINT ro
     r = TABLE_get_row(view, row - 1, &curr);
     if (r != ERROR_SUCCESS)
         return r;
+
+    /* Close the original record */
+    MSI_CloseRecord(&rec->hdr);
 
     count = MSI_RecordGetFieldCount(rec);
     for (i = 0; i < count; i++)
@@ -2316,7 +2238,6 @@ static UINT TABLE_drop(struct tagMSIVIEW *view)
 
     list_remove(&tv->table->entry);
     free_table(tv->table);
-    TABLE_delete(view);
 
 done:
     msiobj_release(&rec->hdr);
@@ -3009,26 +2930,4 @@ end:
         msi_destroy_stringtable( strings );
 
     return ret;
-}
-
-void append_storage_to_db( MSIDATABASE *db, IStorage *stg )
-{
-    MSITRANSFORM *t;
-
-    t = msi_alloc( sizeof *t );
-    t->stg = stg;
-    IStorage_AddRef( stg );
-    list_add_tail( &db->transforms, &t->entry );
-}
-
-void msi_free_transforms( MSIDATABASE *db )
-{
-    while( !list_empty( &db->transforms ) )
-    {
-        MSITRANSFORM *t = LIST_ENTRY( list_head( &db->transforms ),
-                                      MSITRANSFORM, entry );
-        list_remove( &t->entry );
-        IStorage_Release( t->stg );
-        msi_free( t );
-    }
 }

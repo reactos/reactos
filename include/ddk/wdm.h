@@ -19,9 +19,7 @@
 extern "C" {
 #endif
 
-#ifndef NTKERNELAPI
 #define NTKERNELAPI DECLSPEC_IMPORT
-#endif
 
 #ifdef _WIN64
 #define PORT_MAXIMUM_MESSAGE_LENGTH 512
@@ -2376,7 +2374,7 @@ typedef struct _FAST_MUTEX
     LONG Count;
     PKTHREAD Owner;
     ULONG Contention;
-    KEVENT Event;		// Gate
+    KEVENT Gate;
     ULONG OldIrql;
 } FAST_MUTEX, *PFAST_MUTEX;
 

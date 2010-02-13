@@ -549,7 +549,6 @@ typedef enum _KAPC_ENVIRONMENT
 //
 // CPU Cache Types 	 
 // 	 
-#if 0 // defined iden in wdm.h
 typedef enum _PROCESSOR_CACHE_TYPE 	 
 {
     CacheUnified, 	 
@@ -557,7 +556,6 @@ typedef enum _PROCESSOR_CACHE_TYPE
     CacheData, 	 
     CacheTrace, 	 
 } PROCESSOR_CACHE_TYPE;
-#endif
 
 //
 // PRCB DPC Data
@@ -582,7 +580,6 @@ typedef struct _PP_LOOKASIDE_LIST
 //
 // CPU Cache Descriptor 	 
 // 	 
-#if 0	// defined iden in wdm.h
 typedef struct _CACHE_DESCRIPTOR 	 
 {
     UCHAR Level; 	 
@@ -591,7 +588,6 @@ typedef struct _CACHE_DESCRIPTOR
     ULONG Size; 	 
     PROCESSOR_CACHE_TYPE Type; 	 
 } CACHE_DESCRIPTOR, *PCACHE_DESCRIPTOR;
-#endif
 
 //
 // Architectural Types

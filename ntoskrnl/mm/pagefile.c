@@ -31,6 +31,9 @@
 #define NDEBUG
 #include <debug.h>
 
+#if defined (ALLOC_PRAGMA)
+#pragma alloc_text(INIT, MmInitPagingFile)
+#endif
 
 PVOID
 NTAPI
@@ -195,9 +198,19 @@ MmGetOffsetPageFile(PRETRIEVAL_POINTERS_BUFFER RetrievalPointers, LARGE_INTEGER 
       }
    }
    KeBugCheck(MEMORY_MANAGEMENT);
+#if defined(__GNUC__)
 
-   Offset.QuadPart = 0;
-   return Offset;
+   return (LARGE_INTEGER)0LL;
+#else
+
+   {
+      const LARGE_INTEGER dummy =
+         {
+            0
+         };
+      return dummy;
+   }
+#endif
 }
 
 NTSTATUS
@@ -321,8 +334,10 @@ MmReadFromSwapPage(SWAPENTRY SwapEntry, PFN_TYPE Page)
    return(Status);
 }
 
-SECT_INIT_FN(MmInitPagingFile)
-VOID NTAPI MmInitPagingFile(VOID)
+VOID
+INIT_FUNCTION
+NTAPI
+MmInitPagingFile(VOID)
 {
    ULONG i;
 
@@ -666,7 +681,12 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
       return(STATUS_NO_MEMORY);
    }
 
+#if defined(__GNUC__)
+   Vcn.QuadPart = 0LL;
+#else
+
    Vcn.QuadPart = 0;
+#endif
 
    ExtentCount = 0;
    MaxVcn.QuadPart = (SafeInitialSize.QuadPart + BytesPerAllocationUnit - 1) / BytesPerAllocationUnit;

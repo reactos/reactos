@@ -51,10 +51,10 @@
 				<file>systimer.S</file>
 				<file>thrdini.c</file>
 				<file>trap.s</file>
+				<file>traphdlr.c</file>
 				<file>usercall_asm.S</file>
 				<file>usercall.c</file>
 				<file>v86vdm.c</file>
-				<file>v86m_sup.S</file>
 			</directory>
 		</if>
 		<if property="ARCH" value="arm">
@@ -403,7 +403,6 @@
 		</directory>
 		<file>anonmem.c</file>
 		<file>balance.c</file>
-		<file>dbgpool.c</file>
 		<file>freelist.c</file>
 		<file>marea.c</file>
 		<if property="_WINKD_" value ="1">
@@ -415,7 +414,6 @@
 		<file>pagefile.c</file>
 		<file>pageop.c</file>
 		<file>pe.c</file>
-		<file>pool.c</file>
 		<file>ppool.c</file>
 		<file>procsup.c</file>
 		<file>region.c</file>

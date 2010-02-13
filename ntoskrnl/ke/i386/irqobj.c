@@ -29,7 +29,7 @@ KiGetVectorDispatch(IN ULONG Vector,
                     IN PDISPATCH_INFO Dispatch)
 {
     PKINTERRUPT_ROUTINE Handler;
-    ULONG Current;
+    PVOID Current;
     UCHAR Type;
     UCHAR Entry;
 
@@ -48,15 +48,13 @@ KiGetVectorDispatch(IN ULONG Vector,
                                    KiUnexpectedEntrySize);
 
     /* Setup the handlers */
-    Dispatch->InterruptDispatch = KiInterruptDispatch;
+    Dispatch->InterruptDispatch = (PVOID)KiInterruptDispatch;
     Dispatch->FloatingDispatch = NULL; // Floating Interrupts are not supported
-    Dispatch->ChainedDispatch = KiChainedDispatch;
+    Dispatch->ChainedDispatch = (PVOID)KiChainedDispatch;
     Dispatch->FlatDispatch = NULL;
 
     /* Get the current handler */
-    Current = ((((PKIPCR)KeGetPcr())->IDT[Entry].ExtendedOffset << 16)
-               & 0xFFFF0000) |
-              (((PKIPCR)KeGetPcr())->IDT[Entry].Offset & 0xFFFF);
+    Current = KeQueryInterruptHandler(Vector);
 
     /* Set the interrupt */
     Dispatch->Interrupt = CONTAINING_RECORD(Current,
@@ -99,8 +97,9 @@ KiConnectVectorToInterrupt(IN PKINTERRUPT Interrupt,
 {
     DISPATCH_INFO Dispatch;
     PKINTERRUPT_ROUTINE Handler;
+#ifndef HAL_INTERRUPT_SUPPORT_IN_C
     PULONG Patch = &Interrupt->DispatchCode[0];
-    UCHAR Entry;
+#endif
 
     /* Get vector data */
     KiGetVectorDispatch(Interrupt->Vector, &Dispatch);
@@ -122,6 +121,8 @@ KiConnectVectorToInterrupt(IN PKINTERRUPT Interrupt,
         /* Set the handler */
         Interrupt->DispatchAddress = Handler;
 
+        /* Read note in trap.s -- patching not needed since JMP is static */
+#ifndef HAL_INTERRUPT_SUPPORT_IN_C
         /* Jump to the last 4 bytes */
         Patch = (PULONG)((ULONG_PTR)Patch +
                          ((ULONG_PTR)&KiInterruptTemplateDispatch -
@@ -129,20 +130,15 @@ KiConnectVectorToInterrupt(IN PKINTERRUPT Interrupt,
 
         /* Apply the patch */
         *Patch = (ULONG)((ULONG_PTR)Handler - ((ULONG_PTR)Patch + 4));
+#endif
 
         /* Now set the final handler address */
         ASSERT(Dispatch.FlatDispatch == NULL);
         Handler = (PVOID)&Interrupt->DispatchCode;
     }
 
-    /* Get the IDT entry for this vector */
-    Entry = HalVectorToIDTEntry(Interrupt->Vector);
-
-    /* Set the pointer in the IDT */
-    ((PKIPCR)KeGetPcr())->IDT[Entry].ExtendedOffset =
-        (USHORT)(((ULONG_PTR)Handler >> 16) & 0xFFFF);
-    ((PKIPCR)KeGetPcr())->IDT[Entry].Offset =
-        (USHORT)PtrToUlong(Handler);
+    /* Register the interrupt */
+    KeRegisterInterruptHandler(Interrupt->Vector, Handler);
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/
@@ -204,8 +200,10 @@ KeInitializeInterrupt(IN PKINTERRUPT Interrupt,
     }
 
     /* Sanity check */
+#ifndef HAL_INTERRUPT_SUPPORT_IN_C
     ASSERT((ULONG_PTR)&KiChainedDispatch2ndLvl -
            (ULONG_PTR)KiInterruptTemplate <= (KINTERRUPT_DISPATCH_CODES * 4));
+#endif
 
     /* Jump to the last 4 bytes */
     Patch = (PULONG)((ULONG_PTR)Patch +
@@ -397,6 +395,37 @@ KeDisconnectInterrupt(IN PKINTERRUPT Interrupt)
 
     /* Return to caller */
     return State;
+}
+
+/*
+ * @implemented
+ */
+BOOLEAN
+NTAPI
+KeSynchronizeExecution(IN OUT PKINTERRUPT Interrupt,
+                       IN PKSYNCHRONIZE_ROUTINE SynchronizeRoutine,
+                       IN PVOID SynchronizeContext OPTIONAL)
+{
+    NTSTATUS Status;
+    KIRQL OldIrql;
+    
+    /* Raise IRQL */
+    OldIrql = KfRaiseIrql(Interrupt->SynchronizeIrql);
+    
+    /* Acquire interrupt spinlock */
+    KeAcquireSpinLockAtDpcLevel(Interrupt->ActualLock);
+    
+    /* Call the routine */
+    Status = SynchronizeRoutine(SynchronizeContext);
+    
+    /* Release lock */
+    KeReleaseSpinLockFromDpcLevel(Interrupt->ActualLock);
+    
+    /* Lower IRQL */
+    KfLowerIrql(OldIrql);
+    
+    /* Return status */
+    return Status;
 }
 
 /* EOF */

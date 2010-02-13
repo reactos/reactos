@@ -27,7 +27,7 @@ RtlpInitializeTimerThread(VOID)
     return STATUS_NOT_IMPLEMENTED;
 }
 
-static _INLINE PLARGE_INTEGER get_nt_timeout( PLARGE_INTEGER pTime, ULONG timeout )
+static inline PLARGE_INTEGER get_nt_timeout( PLARGE_INTEGER pTime, ULONG timeout )
 {
     if (timeout == INFINITE) return NULL;
     pTime->QuadPart = (ULONGLONG)timeout * -10000;
@@ -101,7 +101,7 @@ static DWORD WINAPI timer_callback_wrapper(LPVOID p)
     return 0;
 }
 
-static _INLINE ULONGLONG queue_current_time(void)
+static inline ULONGLONG queue_current_time(void)
 {
     LARGE_INTEGER now;
     NtQuerySystemTime(&now);
@@ -134,7 +134,7 @@ static void queue_add_timer(struct queue_timer *t, ULONGLONG time,
         NtSetEvent(q->event, NULL);
 }
 
-static _INLINE void queue_move_timer(struct queue_timer *t, ULONGLONG time,
+static inline void queue_move_timer(struct queue_timer *t, ULONGLONG time,
                                     BOOL set_event)
 {
     /* We MUST hold the queue cs while calling this function.  */

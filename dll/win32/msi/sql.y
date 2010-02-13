@@ -47,7 +47,10 @@ typedef struct tag_SQL_input
     LPCWSTR command;
     DWORD n, len;
     UINT r;
-    MSIVIEW **view;  /* view structure for the resulting query */
+    MSIVIEW **view;  /* View structure for the resulting query.  This value
+                      * tracks the view currently being created so we can free
+                      * this view on syntax error.
+                      */
     struct list *mem;
 } SQL_input;
 
@@ -67,6 +70,10 @@ static struct expr * EXPR_column( void *info, const column_info *column );
 static struct expr * EXPR_ival( void *info, int val );
 static struct expr * EXPR_sval( void *info, const struct sql_str *str );
 static struct expr * EXPR_wildcard( void *info );
+
+#define PARSER_BUBBLE_UP_VIEW( sql, result, current_view ) \
+    *sql->view = current_view; \
+    result = current_view
 
 %}
 
@@ -149,7 +156,8 @@ oneinsert:
             INSERT_CreateView( sql->db, &insert, $3, $5, $9, FALSE );
             if( !insert )
                 YYABORT;
-            $$ = insert;
+
+            PARSER_BUBBLE_UP_VIEW( sql, $$,  insert );
         }
   | TK_INSERT TK_INTO table TK_LP selcollist TK_RP TK_VALUES TK_LP constlist TK_RP TK_TEMPORARY
         {
@@ -159,7 +167,8 @@ oneinsert:
             INSERT_CreateView( sql->db, &insert, $3, $5, $9, TRUE );
             if( !insert )
                 YYABORT;
-            $$ = insert;
+
+            PARSER_BUBBLE_UP_VIEW( sql, $$,  insert );
         }
     ;
 
@@ -178,7 +187,8 @@ onecreate:
                 sql->r = r;
                 YYABORT;
             }
-            $$ = create;
+
+            PARSER_BUBBLE_UP_VIEW( sql, $$,  create );
         }
   | TK_CREATE TK_TABLE table TK_LP table_def TK_RP TK_HOLD
         {
@@ -190,7 +200,8 @@ onecreate:
             CREATE_CreateView( sql->db, &create, $3, $5, TRUE );
             if( !create )
                 YYABORT;
-            $$ = create;
+
+            PARSER_BUBBLE_UP_VIEW( sql, $$,  create );
         }
     ;
 
@@ -203,7 +214,8 @@ oneupdate:
             UPDATE_CreateView( sql->db, &update, $2, $4, $6 );
             if( !update )
                 YYABORT;
-            $$ = update;
+
+            PARSER_BUBBLE_UP_VIEW( sql, $$,  update );
         }
   | TK_UPDATE table TK_SET update_assign_list
         {
@@ -213,7 +225,8 @@ oneupdate:
             UPDATE_CreateView( sql->db, &update, $2, $4, NULL );
             if( !update )
                 YYABORT;
-            $$ = update;
+
+            PARSER_BUBBLE_UP_VIEW( sql, $$,  update );
         }
     ;
 
@@ -226,7 +239,8 @@ onedelete:
             DELETE_CreateView( sql->db, &delete, $2 );
             if( !delete )
                 YYABORT;
-            $$ = delete;
+
+            PARSER_BUBBLE_UP_VIEW( sql, $$, delete );
         }
     ;
 
@@ -239,7 +253,8 @@ onealter:
             ALTER_CreateView( sql->db, &alter, $3, NULL, $4 );
             if( !alter )
                 YYABORT;
-            $$ = alter;
+
+            PARSER_BUBBLE_UP_VIEW( sql, $$, alter );
         }
   | TK_ALTER TK_TABLE table TK_ADD column_and_type
         {
@@ -249,7 +264,8 @@ onealter:
             ALTER_CreateView( sql->db, &alter, $3, $5, 0 );
             if (!alter)
                 YYABORT;
-            $$ = alter;
+
+            PARSER_BUBBLE_UP_VIEW( sql, $$, alter );
         }
   | TK_ALTER TK_TABLE table TK_ADD column_and_type TK_HOLD
         {
@@ -259,7 +275,8 @@ onealter:
             ALTER_CreateView( sql->db, &alter, $3, $5, 1 );
             if (!alter)
                 YYABORT;
-            $$ = alter;
+
+            PARSER_BUBBLE_UP_VIEW( sql, $$, alter );
         }
     ;
 
@@ -278,12 +295,14 @@ onedrop:
     TK_DROP TK_TABLE table
         {
             SQL_input* sql = (SQL_input*) info;
+            MSIVIEW* drop = NULL;
             UINT r;
 
-            $$ = NULL;
-            r = DROP_CreateView( sql->db, &$$, $3 );
+            r = DROP_CreateView( sql->db, &drop, $3 );
             if( r != ERROR_SUCCESS || !$$ )
                 YYABORT;
+
+            PARSER_BUBBLE_UP_VIEW( sql, $$, drop );
         }
   ;
 
@@ -414,15 +433,14 @@ unorderedsel:
   | TK_SELECT TK_DISTINCT selectfrom
         {
             SQL_input* sql = (SQL_input*) info;
+            MSIVIEW* distinct = NULL;
             UINT r;
 
-            $$ = NULL;
-            r = DISTINCT_CreateView( sql->db, &$$, $3 );
+            r = DISTINCT_CreateView( sql->db, &distinct, $3 );
             if (r != ERROR_SUCCESS)
-            {
-                $3->ops->delete($3);
                 YYABORT;
-            }
+
+            PARSER_BUBBLE_UP_VIEW( sql, $$, distinct );
         }
     ;
 
@@ -430,17 +448,16 @@ selectfrom:
     selcollist from
         {
             SQL_input* sql = (SQL_input*) info;
+            MSIVIEW* select = NULL;
             UINT r;
 
-            $$ = NULL;
             if( $1 )
             {
-                r = SELECT_CreateView( sql->db, &$$, $2, $1 );
+                r = SELECT_CreateView( sql->db, &select, $2, $1 );
                 if (r != ERROR_SUCCESS)
-                {
-                    $2->ops->delete($2);
                     YYABORT;
-                }
+
+                PARSER_BUBBLE_UP_VIEW( sql, $$, select );
             }
             else
                 $$ = $2;
@@ -464,15 +481,14 @@ from:
   | fromtable TK_WHERE expr
         {
             SQL_input* sql = (SQL_input*) info;
+            MSIVIEW* where = NULL;
             UINT r;
 
-            $$ = NULL;
-            r = WHERE_CreateView( sql->db, &$$, $1, $3 );
+            r = WHERE_CreateView( sql->db, &where, $1, $3 );
             if( r != ERROR_SUCCESS )
-            {
-                $1->ops->delete( $1 );
                 YYABORT;
-            }
+
+            PARSER_BUBBLE_UP_VIEW( sql, $$, where );
         }
     ;
 
@@ -480,21 +496,26 @@ fromtable:
     TK_FROM table
         {
             SQL_input* sql = (SQL_input*) info;
+            MSIVIEW* table = NULL;
             UINT r;
 
-            $$ = NULL;
-            r = TABLE_CreateView( sql->db, $2, &$$ );
+            r = TABLE_CreateView( sql->db, $2, &table );
             if( r != ERROR_SUCCESS || !$$ )
                 YYABORT;
+
+            PARSER_BUBBLE_UP_VIEW( sql, $$, table );
         }
   | TK_FROM tablelist
         {
             SQL_input* sql = (SQL_input*) info;
+            MSIVIEW* join = NULL;
             UINT r;
 
-            r = JOIN_CreateView( sql->db, &$$, $2 );
+            r = JOIN_CreateView( sql->db, &join, $2 );
             if( r != ERROR_SUCCESS )
                 YYABORT;
+
+            PARSER_BUBBLE_UP_VIEW( sql, $$, join );
         }
     ;
 

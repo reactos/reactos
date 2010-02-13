@@ -274,5 +274,12 @@ HalSetRealTimeClock(
     IN PTIME_FIELDS RtcTime
 );
 
+NTHALAPI
+ULONG
+NTAPI
+HalSetTimeIncrement(
+    IN ULONG Increment
+);
+
 #endif
 #endif

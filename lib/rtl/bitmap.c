@@ -43,7 +43,7 @@ BitCountTable[256] =
 
 /* PRIVATE FUNCTIONS ********************************************************/
 
-static _INLINE
+static __inline__
 ULONG
 RtlpGetLengthOfRunClear(
     IN PRTL_BITMAP BitMapHeader,
@@ -92,7 +92,7 @@ RtlpGetLengthOfRunClear(
     return Length;
 }
 
-static _INLINE
+static __inline__
 ULONG
 RtlpGetLengthOfRunSet(
     IN PRTL_BITMAP BitMapHeader,

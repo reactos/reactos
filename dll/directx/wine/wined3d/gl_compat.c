@@ -342,10 +342,10 @@ static void WINE_GLAPI wine_glFogCoorddvEXT(const GLdouble *f) {
 
 /* End GL_EXT_fog_coord emulation */
 
-#define GLINFO_LOCATION (*gl_info)
 void add_gl_compat_wrappers(struct wined3d_gl_info *gl_info)
 {
-    if(!GL_SUPPORT(ARB_MULTITEXTURE)) {
+    if (!gl_info->supported[ARB_MULTITEXTURE])
+    {
         TRACE("Applying GL_ARB_multitexture emulation hooks\n");
         gl_info->glActiveTextureARB         = wine_glActiveTextureARB;
         gl_info->glClientActiveTextureARB   = wine_glClientActiveTextureARB;
@@ -380,7 +380,8 @@ void add_gl_compat_wrappers(struct wined3d_gl_info *gl_info)
         gl_info->supported[ARB_MULTITEXTURE] = TRUE;
     }
 
-    if(!GL_SUPPORT(EXT_FOG_COORD)) {
+    if (!gl_info->supported[EXT_FOG_COORD])
+    {
         /* This emulation isn't perfect. There are a number of potential problems, but they should
          * not matter in practise:
          *
@@ -405,10 +406,13 @@ void add_gl_compat_wrappers(struct wined3d_gl_info *gl_info)
          * it via the GL core version, or someone messed around in the extension table in directx.c. Add version-
          * dependent loading for this extension if we ever hit this situation
          */
-        if(GL_SUPPORT(ARB_FRAGMENT_PROGRAM)) {
+        if (gl_info->supported[ARB_FRAGMENT_PROGRAM])
+        {
             FIXME("GL implementation supports GL_ARB_fragment_program but not GL_EXT_fog_coord\n");
             FIXME("The fog coord emulation will most likely fail\n");
-        } else if(GL_SUPPORT(ARB_FRAGMENT_SHADER)) {
+        }
+        else if (gl_info->supported[ARB_FRAGMENT_SHADER])
+        {
             FIXME("GL implementation supports GL_ARB_fragment_shader but not GL_EXT_fog_coord\n");
             FIXME("The fog coord emulation will most likely fail\n");
         }
@@ -533,4 +537,3 @@ void add_gl_compat_wrappers(struct wined3d_gl_info *gl_info)
         gl_info->supported[EXT_FOG_COORD] = TRUE;
     }
 }
-#undef GLINFO_LOCATION

@@ -5008,12 +5008,30 @@ static UINT ITERATE_WriteEnvironmentString( MSIRECORD *rec, LPVOID param )
         FIXME("Not removing environment variable on uninstall!\n");
 
     size = 0;
+    type = REG_SZ;
     res = RegQueryValueExW(env, name, NULL, &type, NULL, &size);
     if ((res != ERROR_SUCCESS && res != ERROR_FILE_NOT_FOUND) ||
         (res == ERROR_SUCCESS && type != REG_SZ && type != REG_EXPAND_SZ))
         goto done;
 
-    if (res != ERROR_FILE_NOT_FOUND)
+    if ((res == ERROR_FILE_NOT_FOUND || !(flags & ENV_MOD_MASK)))
+    {
+        /* Nothing to do. */
+        if (!value)
+        {
+            res = ERROR_SUCCESS;
+            goto done;
+        }
+
+        size = (lstrlenW(value) + 1) * sizeof(WCHAR);
+        newval = strdupW(value);
+        if (!newval)
+        {
+            res = ERROR_OUTOFMEMORY;
+            goto done;
+        }
+    }
+    else
     {
         if (flags & ENV_ACT_SETABSENT)
         {
@@ -5038,8 +5056,18 @@ static UINT ITERATE_WriteEnvironmentString( MSIRECORD *rec, LPVOID param )
             goto done;
         }
 
-        size += (lstrlenW(value) + 1) * sizeof(WCHAR);
-        newval =  msi_alloc(size);
+        size = (lstrlenW(data) + 1) * sizeof(WCHAR);
+        if (flags & ENV_MOD_MASK)
+        {
+            DWORD mod_size;
+            int multiplier = 0;
+            if (flags & ENV_MOD_APPEND) multiplier++;
+            if (flags & ENV_MOD_PREFIX) multiplier++;
+            mod_size = (lstrlenW(value) + 1) * multiplier;
+            size += mod_size * sizeof(WCHAR);
+        }
+
+        newval = msi_alloc(size);
         ptr = newval;
         if (!newval)
         {
@@ -5047,37 +5075,20 @@ static UINT ITERATE_WriteEnvironmentString( MSIRECORD *rec, LPVOID param )
             goto done;
         }
 
-        if (!(flags & ENV_MOD_MASK))
+        if (flags & ENV_MOD_PREFIX)
+        {
             lstrcpyW(newval, value);
-        else
-        {
-            if (flags & ENV_MOD_PREFIX)
-            {
-                lstrcpyW(newval, value);
-                lstrcatW(newval, szSemiColon);
-                ptr = newval + lstrlenW(value) + 1;
-            }
-
-            lstrcpyW(ptr, data);
-
-            if (flags & ENV_MOD_APPEND)
-            {
-                lstrcatW(newval, szSemiColon);
-                lstrcatW(newval, value);
-            }
-        }
-    }
-    else if (value)
-    {
-        size = (lstrlenW(value) + 1) * sizeof(WCHAR);
-        newval = msi_alloc(size);
-        if (!newval)
-        {
-            res = ERROR_OUTOFMEMORY;
-            goto done;
+            lstrcatW(newval, szSemiColon);
+            ptr = newval + lstrlenW(value) + 1;
         }
 
-        lstrcpyW(newval, value);
+        lstrcpyW(ptr, data);
+
+        if (flags & ENV_MOD_APPEND)
+        {
+            lstrcatW(newval, szSemiColon);
+            lstrcatW(newval, value);
+        }
     }
 
     if (newval)
@@ -5288,6 +5299,11 @@ static BOOL move_files_wildcard(LPWSTR source, LPWSTR dest, int options)
         goto done;
     }
 
+    /* file->dest may be shorter after the reallocation, so add a NULL
+     * terminator.  This is needed for the call to strrchrW, as there will no
+     * longer be a NULL terminator within the bounds of the allocation in this case.
+     */
+    file->dest[size - 1] = '\0';
     lstrcpyW(strrchrW(file->dest, '\\') + 1, file->destname);
 
     while (!list_empty(&files.entry))

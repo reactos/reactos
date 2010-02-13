@@ -245,7 +245,7 @@ BOOL FASTCALL co_UserHideCaret(PWINDOW_OBJECT Window OPTIONAL)
 
    if (Window) ASSERT_REFS_CO(Window);
 
-   if(Window && Window->OwnerThread != PsGetCurrentThread())
+   if(Window && Window->pti->pEThread != PsGetCurrentThread())
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       return FALSE;
@@ -280,7 +280,7 @@ BOOL FASTCALL co_UserShowCaret(PWINDOW_OBJECT Window OPTIONAL)
 
    if (Window) ASSERT_REFS_CO(Window);
 
-   if(Window && Window->OwnerThread != PsGetCurrentThread())
+   if(Window && Window->pti->pEThread != PsGetCurrentThread())
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       return FALSE;
@@ -332,7 +332,7 @@ NtUserCreateCaret(
       RETURN(FALSE);
    }
 
-   if(Window->OwnerThread != PsGetCurrentThread())
+   if(Window->pti->pEThread != PsGetCurrentThread())
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       RETURN(FALSE);

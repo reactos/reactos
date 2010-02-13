@@ -1281,6 +1281,13 @@ static void dialog_find(LPFINDREPLACEW fr, BOOL replace)
 {
     static WCHAR findBuffer[MAX_STRING_LEN];
 
+    /* Allow only one search/replace dialog to open */
+    if(hFindWnd != NULL)
+    {
+        SetActiveWindow(hFindWnd);
+        return;
+    }
+
     ZeroMemory(fr, sizeof(FINDREPLACEW));
     fr->lStructSize = sizeof(FINDREPLACEW);
     fr->hwndOwner = hMainWnd;

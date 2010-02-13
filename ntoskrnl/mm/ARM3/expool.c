@@ -12,7 +12,7 @@
 #define NDEBUG
 #include <debug.h>
 
-//EXPOOL"
+#line 15 "ARM³::EXPOOL"
 #define MODULE_INVOLVED_IN_ARM3
 #include "../ARM3/miarm.h"
 
@@ -178,17 +178,25 @@ ExUnlockPool(IN PPOOL_DESCRIPTOR Descriptor,
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
+/*
+ * @implemented
+ */
 PVOID
 NTAPI
-ExAllocateArmPoolWithTag(IN POOL_TYPE PoolType,
-                         IN SIZE_T NumberOfBytes,
-                         IN ULONG Tag)
+ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
+                      IN SIZE_T NumberOfBytes,
+                      IN ULONG Tag)
 {
     PPOOL_DESCRIPTOR PoolDesc;
     PLIST_ENTRY ListHead;
     PPOOL_HEADER Entry, NextEntry, FragmentEntry;
     KIRQL OldIrql;
     ULONG BlockSize, i;
+    
+    //
+    // Check for paged pool
+    //
+    if (PoolType == PagedPool) return ExAllocatePagedPoolWithTag(PagedPool, NumberOfBytes, Tag);
     
     //
     // Some sanity checks
@@ -449,10 +457,13 @@ ExAllocateArmPoolWithTag(IN POOL_TYPE PoolType,
     return ++Entry;
 }
 
+/*
+ * @implemented
+ */
 PVOID
 NTAPI
-ExAllocateArmPool(POOL_TYPE PoolType,
-                  SIZE_T NumberOfBytes)
+ExAllocatePool(POOL_TYPE PoolType,
+               SIZE_T NumberOfBytes)
 {
     //
     // Use a default tag of "None"
@@ -460,10 +471,13 @@ ExAllocateArmPool(POOL_TYPE PoolType,
     return ExAllocatePoolWithTag(PoolType, NumberOfBytes, 'enoN');
 }
 
+/*
+ * @implemented
+ */
 VOID
 NTAPI
-ExFreeArmPoolWithTag(IN PVOID P,
-                     IN ULONG TagToFree)
+ExFreePoolWithTag(IN PVOID P,
+                  IN ULONG TagToFree)
 {
     PPOOL_HEADER Entry, NextEntry;
     ULONG BlockSize;
@@ -471,6 +485,19 @@ ExFreeArmPoolWithTag(IN PVOID P,
     POOL_TYPE PoolType;
     PPOOL_DESCRIPTOR PoolDesc;
     BOOLEAN Combined = FALSE;
+    
+    //
+    // Check for paged pool
+    //
+    if ((P >= MmPagedPoolBase) &&
+        (P <= (PVOID)((ULONG_PTR)MmPagedPoolBase + MmPagedPoolSize)))
+    {
+        //
+        // Use old allocator
+        //
+        ExFreePagedPool(P);
+        return;
+    }
    
     //
     // Quickly deal with big page allocations
@@ -633,14 +660,17 @@ ExFreeArmPoolWithTag(IN PVOID P,
     ExUnlockPool(PoolDesc, OldIrql);
 }
 
+/*
+ * @implemented
+ */
 VOID
 NTAPI
-ExFreeArmPool(PVOID P)
+ExFreePool(PVOID P)
 {
     //
     // Just free without checking for the tag
     //
-    ExFreeArmPoolWithTag(P, 0);
+    ExFreePoolWithTag(P, 0);
 }
 
 /*

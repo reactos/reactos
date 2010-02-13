@@ -913,12 +913,12 @@ KeGetCurrentThread(VOID)
  * @implemented
  */
 #undef KeGetPreviousMode
-NTKERNELAPI
-KPROCESSOR_MODE
+UCHAR
+NTAPI
 KeGetPreviousMode(VOID)
 {
     /* Return the previous mode of this thread */
-    return KeGetCurrentThread()->PreviousMode;
+    return _KeGetPreviousMode();
 }
 
 /*

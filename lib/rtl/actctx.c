@@ -234,23 +234,23 @@ static WCHAR *xmlstrdupW(const xmlstr_t* str)
     return strW;
 }
 
-static _INLINE BOOL xmlstr_cmp(const xmlstr_t* xmlstr, const WCHAR *str)
+static inline BOOL xmlstr_cmp(const xmlstr_t* xmlstr, const WCHAR *str)
 {
     return !strncmpW(xmlstr->ptr, str, xmlstr->len) && !str[xmlstr->len];
 }
 
-static _INLINE BOOL xmlstr_cmpi(const xmlstr_t* xmlstr, const WCHAR *str)
+static inline BOOL xmlstr_cmpi(const xmlstr_t* xmlstr, const WCHAR *str)
 {
     return !strncmpiW(xmlstr->ptr, str, xmlstr->len) && !str[xmlstr->len];
 }
 
-static _INLINE BOOL xmlstr_cmp_end(const xmlstr_t* xmlstr, const WCHAR *str)
+static inline BOOL xmlstr_cmp_end(const xmlstr_t* xmlstr, const WCHAR *str)
 {
     return (xmlstr->len && xmlstr->ptr[0] == '/' &&
             !strncmpW(xmlstr->ptr + 1, str, xmlstr->len - 1) && !str[xmlstr->len - 1]);
 }
 
-static _INLINE BOOL isxmlspace( WCHAR ch )
+static inline BOOL isxmlspace( WCHAR ch )
 {
     return (ch == ' ' || ch == '\r' || ch == '\n' || ch == '\t');
 }
@@ -498,7 +498,7 @@ static WCHAR *build_assembly_dir(struct assembly_identity* ai)
     return ret;
 }
 
-static _INLINE void append_string( WCHAR *buffer, const WCHAR *prefix, const WCHAR *str )
+static inline void append_string( WCHAR *buffer, const WCHAR *prefix, const WCHAR *str )
 {
     WCHAR *p = buffer;
 
@@ -562,7 +562,7 @@ static ACTIVATION_CONTEXT *check_actctx( HANDLE h )
     return ret;
 }
 
-static _INLINE void actctx_addref( ACTIVATION_CONTEXT *actctx )
+static inline void actctx_addref( ACTIVATION_CONTEXT *actctx )
 {
     _InterlockedExchangeAdd( &actctx->ref_count, 1 );
 }
@@ -1513,7 +1513,6 @@ static NTSTATUS parse_manifest( struct actctx_loader* acl, struct assembly_ident
     {
         /* let's assume utf-8 for now */
         int len;
-        WCHAR *new_buff;	// 20091223: moved here, local storage shouldn't be allocated after a try block
 
         _SEH2_TRY
         {
@@ -1527,6 +1526,7 @@ static NTSTATUS parse_manifest( struct actctx_loader* acl, struct assembly_ident
         _SEH2_END;
 
         DPRINT("len = %x\n", len);
+        WCHAR *new_buff;
 
         if (len == -1)
         {

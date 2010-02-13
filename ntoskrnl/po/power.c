@@ -618,7 +618,7 @@ NtSetThreadExecutionState(IN EXECUTION_STATE esFlags,
     PreviousState = Thread->PowerState | ES_CONTINUOUS;
 
     /* Check if we need to update the power state */
-    if (esFlags & ES_CONTINUOUS) Thread->PowerState = (UCHAR)esFlags;
+    if (esFlags & ES_CONTINUOUS) Thread->PowerState = esFlags;
 
     /* Protect the write back to user mode */
     _SEH2_TRY

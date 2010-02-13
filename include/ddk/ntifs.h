@@ -24,9 +24,7 @@
 #define _NTIFS_
 #define _GNU_NTIFS_
 
-#ifndef NTKERNELAPI
 #define NTKERNELAPI DECLSPEC_IMPORT
-#endif
 
 #include <ntddk.h>
 
@@ -5170,7 +5168,7 @@ RtlUnicodeToMultiByteN(
     OUT PCHAR MultiByteString,
     IN ULONG MaxBytesInMultiByteString,
     OUT PULONG BytesInMultiByteString OPTIONAL,
-    IN PCWCH UnicodeString,
+    IN PWCH UnicodeString,
     IN ULONG BytesInUnicodeString
 );
 
@@ -5181,7 +5179,7 @@ RtlOemToUnicodeN(
     OUT PWSTR UnicodeString,
     IN ULONG MaxBytesInUnicodeString,
     OUT PULONG BytesInUnicodeString OPTIONAL,
-    IN PCCH OemString,
+    IN PCH OemString,
     IN ULONG BytesInOemString
 );
 
