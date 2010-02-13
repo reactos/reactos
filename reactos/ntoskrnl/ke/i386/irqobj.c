@@ -168,7 +168,7 @@ KiUnexpectedInterruptTailHandler(IN PKTRAP_FRAME TrapFrame)
     KeGetCurrentPrcb()->InterruptCount++;
     
     /* Start the interrupt */
-    if (HalBeginSystemInterrupt(HIGH_LEVEL, TrapFrame->Eax, &OldIrql))
+    if (HalBeginSystemInterrupt(HIGH_LEVEL, TrapFrame->ErrCode, &OldIrql))
     {
         /* Warn user */
         DPRINT1("\n\x7\x7!!! Unexpected Interrupt %02lx !!!\n");

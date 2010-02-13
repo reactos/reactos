@@ -20,7 +20,7 @@ ENDM
 MACRO(GENERATE_INT_HANDLER, Number)
 .func KiUnexpectedInterrupt&Number
 _KiUnexpectedInterrupt&Number:
-    mov eax, PRIMARY_VECTOR_BASE + Number
+    push PRIMARY_VECTOR_BASE + Number
     jmp _KiEndUnexpectedRange@0
 .endfunc
 ENDM
@@ -103,7 +103,7 @@ TRAP_ENTRY KiGetTickCount, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY KiCallbackReturn, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY KiRaiseAssertion, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY KiDebugService, KI_PUSH_FAKE_ERROR_CODE
-TRAP_ENTRY KiUnexpectedInterruptTail, KI_PUSH_FAKE_ERROR_CODE
+TRAP_ENTRY KiUnexpectedInterruptTail, 0
 
 ALIGN 4
 EXTERN @KiInterruptTemplateHandler@8
