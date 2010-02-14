@@ -605,7 +605,7 @@ GrepFillPolygon(
     BRUSHOBJ *BrushObj,
     CONST POINT *Points,
     int Count,
-    RECTL DestRect, 
+    CONST PRECTL DestRect,
     POINTL *BrushOrigin)
 {
     FILL_EDGE_LIST *list = 0;
@@ -622,7 +622,7 @@ GrepFillPolygon(
         return FALSE;
 
     /* For each Scanline from DestRect.top to DestRect.bottom, determine line segments to draw */
-    for ( ScanLine = DestRect.top; ScanLine < DestRect.bottom; ++ScanLine )
+    for ( ScanLine = DestRect->top; ScanLine < DestRect->bottom; ++ScanLine )
     {
         POLYGONFILL_BuildActiveList(ScanLine, list, &ActiveHead);
         //DEBUG_PRINT_ACTIVE_EDGELIST(ActiveHead);

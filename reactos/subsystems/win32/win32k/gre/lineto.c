@@ -112,6 +112,7 @@ GrePolyline(PDC pDC,
     /* Draw pen-based polygon */
     if (!(pDC->pLineBrush->flAttrs & GDIBRUSH_IS_NULL))
     {
+        GreUpdateBrush(pDC->pLineBrush, pDC);
         Mix = ROP2_TO_MIX(R2_COPYPEN);/*pdcattr->jROP2*/
         for (i=0; i<count-1; i++)
         {

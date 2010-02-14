@@ -189,7 +189,7 @@ GrepFillPolygon(
     BRUSHOBJ *BrushObj,
     CONST POINT *Points,
     int Count,
-    RECTL DestRect,
+    PRECTL DestRect,
     POINTL *BrushOrigin);
 
 /* rect.c */
@@ -203,7 +203,8 @@ GreRectangle(PDC dc,
 VOID NTAPI
 GrePolygon(PDC pDC,
            const POINT *ptPoints,
-           INT count);
+           INT count,
+           PRECTL pDestRect);
 
 VOID NTAPI
 GrePolyline(PDC pDC,

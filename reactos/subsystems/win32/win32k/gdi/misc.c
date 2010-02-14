@@ -151,6 +151,7 @@ BOOL APIENTRY RosGdiPolygon( HDC physDev, const POINT* pUserBuffer, INT count )
     NTSTATUS Status = STATUS_SUCCESS;
     POINT pStackBuf[16];
     POINT *pPoints = pStackBuf;
+    RECTL rcBound;
     ULONG i;
 
     /* Get a pointer to the DC */
@@ -186,15 +187,28 @@ BOOL APIENTRY RosGdiPolygon( HDC physDev, const POINT* pUserBuffer, INT count )
         return FALSE;
     }
 
-    /* Offset points data */
-    for (i=0; i<count; i++)
+    /* Calculate bounding rect and offset points data */
+    pPoints[0].x += pDC->rcDcRect.left + pDC->rcVport.left;
+    pPoints[0].y += pDC->rcDcRect.top + pDC->rcVport.top;
+
+    rcBound.left   = pPoints[0].x;
+    rcBound.right  = pPoints[0].x;
+    rcBound.top    = pPoints[0].y;
+    rcBound.bottom = pPoints[0].y;
+
+    for (i=1; i<count; i++)
     {
         pPoints[i].x += pDC->rcDcRect.left + pDC->rcVport.left;
         pPoints[i].y += pDC->rcDcRect.top + pDC->rcVport.top;
+
+        rcBound.left   = min(rcBound.left, pPoints[i].x);
+        rcBound.right  = max(rcBound.right, pPoints[i].x);
+        rcBound.top    = min(rcBound.top, pPoints[i].y);
+        rcBound.bottom = max(rcBound.bottom, pPoints[i].y);
     }
 
     /* Draw the polygon */
-    GrePolygon(pDC, pPoints, count);
+    GrePolygon(pDC, pPoints, count, &rcBound);
 
     /* Release the object */
     DC_Unlock(pDC);

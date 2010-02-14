@@ -98,19 +98,13 @@ VOID
 NTAPI
 GrePolygon(PDC pDC,
            const POINT *ptPoints,
-           INT count)
+           INT count,
+           PRECTL DestRect)
 {
     BOOLEAN bRet;
-    RECTL DestRect;
     MIX Mix;
     INT i;
     POINT BrushOrigin;
-
-    // HACK
-    DestRect.left = 0;
-    DestRect.top = 0;
-    DestRect.bottom = PrimarySurface.GDIInfo.ulVertRes;
-    DestRect.right = PrimarySurface.GDIInfo.ulHorzRes;
 
     BrushOrigin.x = pDC->ptBrushOrg.x + pDC->rcDcRect.left;
     BrushOrigin.y = pDC->ptBrushOrg.y + pDC->rcDcRect.top;
@@ -145,7 +139,7 @@ GrePolygon(PDC pDC,
                              ptPoints[i].y,
                              ptPoints[i+1].x,
                              ptPoints[i+1].y,
-                             &DestRect, // Bounding rectangle
+                             DestRect,
                              Mix);
         }
     }
