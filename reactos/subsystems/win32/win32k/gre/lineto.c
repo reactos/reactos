@@ -104,15 +104,10 @@ GrePolyline(PDC pDC,
            INT count)
 {
     BOOLEAN bRet;
+    POINT ptLine[2];
     RECTL DestRect;
     MIX Mix;
     INT i;
-
-    // HACK
-    DestRect.left = 0;
-    DestRect.top = 0;
-    DestRect.bottom = PrimarySurface.GDIInfo.ulVertRes;
-    DestRect.right = PrimarySurface.GDIInfo.ulHorzRes;
 
     /* Draw pen-based polygon */
     if (!(pDC->pLineBrush->flAttrs & GDIBRUSH_IS_NULL))
@@ -120,14 +115,24 @@ GrePolyline(PDC pDC,
         Mix = ROP2_TO_MIX(R2_COPYPEN);/*pdcattr->jROP2*/
         for (i=0; i<count-1; i++)
         {
+            ptLine[0].x = ptPoints[i].x + pDC->rcDcRect.left + pDC->rcVport.left;
+            ptLine[0].y = ptPoints[i].y + pDC->rcDcRect.top + pDC->rcVport.top;
+            ptLine[1].x = ptPoints[i+1].x + pDC->rcDcRect.left + pDC->rcVport.left;
+            ptLine[1].y = ptPoints[i+1].y + pDC->rcDcRect.top + pDC->rcVport.top;
+
+            DestRect.left = min(ptLine[0].x, ptLine[1].x);
+            DestRect.top = min(ptLine[0].y, ptLine[1].y);
+            DestRect.right = max(ptLine[0].x, ptLine[1].x);
+            DestRect.bottom = max(ptLine[0].y, ptLine[1].y);
+
             bRet = GreLineTo(&pDC->pBitmap->SurfObj,
                              pDC->CombinedClip,
                              &pDC->pLineBrush->BrushObj,
-                             ptPoints[i].x + pDC->rcDcRect.left + pDC->rcVport.left,
-                             ptPoints[i].y + pDC->rcDcRect.top + pDC->rcVport.top,
-                             ptPoints[i+1].x + pDC->rcDcRect.left + pDC->rcVport.left,
-                             ptPoints[i+1].y + pDC->rcDcRect.top + pDC->rcVport.top,
-                             &DestRect, // Bounding rectangle
+                             ptLine[0].x,
+                             ptLine[0].y,
+                             ptLine[1].x,
+                             ptLine[1].y,
+                             &DestRect,
                              Mix);
         }
     }
