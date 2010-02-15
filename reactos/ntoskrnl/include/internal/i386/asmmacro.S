@@ -115,38 +115,41 @@ MACRO(KiEnterTrap, Flags)
 
     endif
 
+    /* Make space for this frame */
+    sub esp, FrameSize
+
     /* Save nonvolatile registers */
-    mov [esp - FrameSize + KTRAP_FRAME_EBP], ebp
-    mov [esp - FrameSize + KTRAP_FRAME_EBX], ebx
-    mov [esp - FrameSize + KTRAP_FRAME_ESI], esi
-    mov [esp - FrameSize + KTRAP_FRAME_EDI], edi
+    mov [esp + KTRAP_FRAME_EBP], ebp
+    mov [esp + KTRAP_FRAME_EBX], ebx
+    mov [esp + KTRAP_FRAME_ESI], esi
+    mov [esp + KTRAP_FRAME_EDI], edi
 
     /* Save eax for system calls, for use by the C handler */
-    mov [esp - FrameSize + KTRAP_FRAME_EAX], eax
+    mov [esp + KTRAP_FRAME_EAX], eax
 
     /* Does the caller want nonvolatiles only? */
     if ((Flags AND KI_NONVOLATILES_ONLY) == 0)
         /* Otherwise, save the volatiles as well */
-        mov [esp - FrameSize + KTRAP_FRAME_ECX], ecx
-        mov [esp - FrameSize + KTRAP_FRAME_EDX], edx
+        mov [esp + KTRAP_FRAME_ECX], ecx
+        mov [esp + KTRAP_FRAME_EDX], edx
     endif
 
     /* Save segment registers? */
     if ((Flags AND KI_DONT_SAVE_SEGS) == 0)
 
         /* Check for V86 mode */
-        test byte ptr [esp - FrameSize + KTRAP_FRAME_EFLAGS + 2], (EFLAGS_V86_MASK >> 16)
+        test byte ptr [esp + KTRAP_FRAME_EFLAGS + 2], (EFLAGS_V86_MASK >> 16)
         jz not_v86_trap
 
             /* Restore V8086 segments into Protected Mode segments */
-            mov eax, [esp - FrameSize + KTRAP_FRAME_V86_DS]
-            mov ecx, [esp - FrameSize + KTRAP_FRAME_V86_ES]
-            mov [esp - FrameSize + KTRAP_FRAME_DS], eax
-            mov [esp - FrameSize + KTRAP_FRAME_ES], ecx
-            mov eax, [esp - FrameSize + KTRAP_FRAME_V86_FS]
-            mov ecx, [esp - FrameSize + KTRAP_FRAME_V86_GS]
-            mov [esp - FrameSize + KTRAP_FRAME_FS], eax
-            mov [esp - FrameSize + KTRAP_FRAME_GS], ecx
+            mov eax, [esp + KTRAP_FRAME_V86_DS]
+            mov ecx, [esp + KTRAP_FRAME_V86_ES]
+            mov [esp + KTRAP_FRAME_DS], eax
+            mov [esp + KTRAP_FRAME_ES], ecx
+            mov eax, [esp + KTRAP_FRAME_V86_FS]
+            mov ecx, [esp + KTRAP_FRAME_V86_GS]
+            mov [esp + KTRAP_FRAME_FS], eax
+            mov [esp + KTRAP_FRAME_GS], ecx
             jmp set_sane_segs
 
         not_v86_trap:
@@ -154,12 +157,12 @@ MACRO(KiEnterTrap, Flags)
             /* Save segment selectors */
             mov eax, ds
             mov ecx, es
-            mov [esp - FrameSize + KTRAP_FRAME_DS], eax
-            mov [esp - FrameSize + KTRAP_FRAME_ES], ecx
+            mov [esp + KTRAP_FRAME_DS], eax
+            mov [esp + KTRAP_FRAME_ES], ecx
             mov eax, fs
             mov ecx, gs
-            mov [esp - FrameSize + KTRAP_FRAME_FS], eax
-            mov [esp - FrameSize + KTRAP_FRAME_GS], ecx
+            mov [esp + KTRAP_FRAME_FS], eax
+            mov [esp + KTRAP_FRAME_GS], ecx
 
     endif
 
@@ -176,14 +179,11 @@ set_sane_segs:
         mov fs, ax
     endif
 
-    /* Make space for this frame */
-    sub esp, FrameSize
+    /* Set parameter 1 (ECX) to point to the frame */
+    mov ecx, esp
 
     /* Clear direction flag */
     cld
-
-    /* Set parameter 1 (ECX) to point to the frame */
-    mov ecx, esp
 
 ENDM
 
