@@ -461,8 +461,8 @@ void VCProjMaker::_generate_standard_configuration( const Module& module,
 		vcdir = DEF_SSEP + _get_vc_dir();
 	}
 
-		fprintf ( OUT, "\t\t<Configuration\r\n" );
-		fprintf ( OUT, "\t\t\tName=\"%s|Win32\"\r\n", cfg.name.c_str() );
+	fprintf ( OUT, "\t\t<Configuration\r\n" );
+	fprintf ( OUT, "\t\t\tName=\"%s|Win32\"\r\n", cfg.name.c_str() );
 
 	if ( configuration.UseConfigurationInPath )
 	{
@@ -527,24 +527,18 @@ void VCProjMaker::_generate_standard_configuration( const Module& module,
 		const std::string& include = includes[i];
 		if ( strcmp ( include.c_str(), "." ) )
 		{
-			const std::string& include = includes[i];
-			if ( strcmp ( include.c_str(), "." ) )
-			{
-				if ( multiple_includes )
-					fprintf ( OUT, ";" );
-				fprintf ( OUT, "%s", include.c_str() );
-				include_string += " /I " + include;
-				multiple_includes = true;
-			}
-		}
-		if ( include_idl )
-		{
 			if ( multiple_includes )
 				fprintf ( OUT, ";" );
 			fprintf ( OUT, "%s", include.c_str() );
 			multiple_includes = true;
 		}
-		if ( cfg.headers == ReactOSHeaders )
+	}
+	if ( include_idl )
+	{
+		if ( multiple_includes )
+			fprintf ( OUT, ";" );
+
+		if ( configuration.UseConfigurationInPath )
 		{
 			fprintf ( OUT, "$(int)\\include\\reactos\\idl%s\\$(ConfigurationName)\r\n", vcdir.c_str ());
 		}
@@ -556,17 +550,17 @@ void VCProjMaker::_generate_standard_configuration( const Module& module,
 
 	fprintf ( OUT, "\"\r\n" );
 
-		StringSet defines = common_defines;
+	StringSet defines = common_defines;
 
 	if ( binaryType == Lib || binaryType == Exe )
-		{
-			defines.insert ( "_LIB" );
-		}
-		else
-		{
-			defines.insert ( "_WINDOWS" );
-			defines.insert ( "_USRDLL" );
-		}
+	{
+		defines.insert ( "_LIB" );
+	}
+	else
+	{
+		defines.insert ( "_WINDOWS" );
+		defines.insert ( "_USRDLL" );
+	}
 
 	fprintf ( OUT, "\t\t\t\tPreprocessorDefinitions=\"" );
 	for ( StringSet::iterator it1=defines.begin(); it1!=defines.end(); it1++ )
@@ -601,8 +595,8 @@ void VCProjMaker::_generate_standard_configuration( const Module& module,
 
 	fprintf ( OUT, "\t\t\t/>\r\n");
 
-		fprintf ( OUT, "\t\t\t<Tool\r\n" );
-		fprintf ( OUT, "\t\t\t\tName=\"VCCustomBuildTool\"/>\r\n" );
+	fprintf ( OUT, "\t\t\t<Tool\r\n" );
+	fprintf ( OUT, "\t\t\t\tName=\"VCCustomBuildTool\"/>\r\n" );
 
 	if ( binaryType != Lib )
 	{
@@ -613,164 +607,136 @@ void VCProjMaker::_generate_standard_configuration( const Module& module,
 
 		if (configuration.VSProjectVersion == "9.00")
 		{
-			fprintf ( OUT, "\t\t\t<Tool\r\n" );
-			fprintf ( OUT, "\t\t\t\tName=\"VCLibrarianTool\"\r\n" );
-			fprintf ( OUT, "\t\t\t\tOutputFile=\"$(OutDir)/%s.lib\"/>\r\n", module.name.c_str() );
+			fprintf ( OUT, "\t\t\t\tRandomizedBaseAddress=\"0\"\r\n" );
+			fprintf ( OUT, "\t\t\t\tDataExecutionPrevention=\"0\"\r\n" );
 		}
-		else
+
+		if (module.importLibrary != NULL)
+			fprintf ( OUT, "\t\t\t\tModuleDefinitionFile=\"%s\"\r\n", importLib.c_str());
+
+		fprintf ( OUT, "\t\t\t\tAdditionalDependencies=\"" );
+		bool use_msvcrt_lib = false;
+		for ( i = 0; i < libraries.size(); i++ )
 		{
-			fprintf ( OUT, "\t\t\t<Tool\r\n" );
-			fprintf ( OUT, "\t\t\t\tName=\"VCLinkerTool\"\r\n" );
-		if (module.GetEntryPoint() == "0" && binaryType != Sys )
-				fprintf ( OUT, "AdditionalOptions=\"/noentry\"" );
-
-			if (configuration.VSProjectVersion == "9.00")
+			if ( i > 0 )
+				fprintf ( OUT, " " );
+			string libpath = libraries[i].c_str();
+			libpath = libpath.erase (0, libpath.find_last_of ("\\") + 1 );
+			if ( libpath == "msvcrt.lib" )
 			{
-				fprintf ( OUT, "\t\t\t\tRandomizedBaseAddress=\"0\"\r\n" );
-				fprintf ( OUT, "\t\t\t\tDataExecutionPrevention=\"0\"\r\n" );
+				use_msvcrt_lib = true;
 			}
+			fprintf ( OUT, "%s", libpath.c_str() );
+		}
+		fprintf ( OUT, "\"\r\n" );
 
-			if (module.importLibrary != NULL)
-				fprintf ( OUT, "\t\t\t\tModuleDefinitionFile=\"%s\"\r\n", importLib.c_str());
+		fprintf ( OUT, "\t\t\t\tAdditionalLibraryDirectories=\"" );
 
-			fprintf ( OUT, "\t\t\t\tAdditionalDependencies=\"" );
-			bool use_msvcrt_lib = false;
-			for ( i = 0; i < libraries.size(); i++ )
-			{
-				if ( i > 0 )
-					fprintf ( OUT, " " );
-				string libpath = libraries[i].c_str();
-				libpath = libpath.erase (0, libpath.find_last_of ("\\") + 1 );
-				if ( libpath == "msvcrt.lib" )
-				{
-					use_msvcrt_lib = true;
-				}
-				fprintf ( OUT, "%s", libpath.c_str() );
-			}
-			fprintf ( OUT, "\"\r\n" );
-
-			fprintf ( OUT, "\t\t\t\tAdditionalLibraryDirectories=\"" );
-
-			// Add conventional libraries dirs
-			for (i = 0; i < libraries.size (); i++)
-			{
-				if ( i > 0 )
-					fprintf ( OUT, ";" );
+		// Add conventional libraries dirs
+		for (i = 0; i < libraries.size (); i++)
+		{
+			if ( i > 0 )
+				fprintf ( OUT, ";" );
 
 			string libpath = libraries[i].c_str();
 			libpath = libpath.substr (0, libpath.find_last_of ("\\") );
 			fprintf ( OUT, "%s", libpath.c_str() );
 		}
 
-			fprintf ( OUT, "\"\r\n" );
+		fprintf ( OUT, "\"\r\n" );
 
 		fprintf ( OUT, "\t\t\t\tOutputFile=\"$(OutDir)/%s%s\"\r\n", module.name.c_str(), module_type.c_str() );
 		if ( binaryType == Sys )
-			{
+		{
 			if (module.GetEntryPoint() == "0")
-					fprintf ( OUT, "\t\t\t\tAdditionalOptions=\" /noentry /ALIGN:0x20 /SECTION:INIT,D /IGNORE:4001,4037,4039,4065,4070,4078,4087,4089,4096\"\r\n" );
-				else
-					fprintf ( OUT, "\t\t\t\tAdditionalOptions=\" /ALIGN:0x20 /SECTION:INIT,D /IGNORE:4001,4037,4039,4065,4070,4078,4087,4089,4096\"\r\n" );
+				fprintf ( OUT, "\t\t\t\tAdditionalOptions=\" /noentry /ALIGN:0x20 /SECTION:INIT,D /IGNORE:4001,4037,4039,4065,4070,4078,4087,4089,4096\"\r\n" );
+			else
+				fprintf ( OUT, "\t\t\t\tAdditionalOptions=\" /ALIGN:0x20 /SECTION:INIT,D /IGNORE:4001,4037,4039,4065,4070,4078,4087,4089,4096\"\r\n" );
+			fprintf ( OUT, "\t\t\t\tIgnoreAllDefaultLibraries=\"TRUE\"\r\n" );
+			fprintf ( OUT, "\t\t\t\tGenerateManifest=\"FALSE\"\r\n" );
+			fprintf ( OUT, "\t\t\t\tSubSystem=\"%d\"\r\n", 3 );
+			fprintf ( OUT, "\t\t\t\tDriver=\"%d\"\r\n", 1 );
+			fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"%s\"\r\n", module.GetEntryPoint() == "" ? "DriverEntry" : module.GetEntryPoint().c_str ());
+			fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", baseaddr == "" ? "0x10000" : baseaddr.c_str ());
+		}
+		else if ( binaryType == Exe )
+		{
+			if ( module.type == Kernel )
+			{
+				fprintf ( OUT, "\t\t\t\tAdditionalOptions=\" /SECTION:INIT,D /ALIGN:0x80\"\r\n" );
 				fprintf ( OUT, "\t\t\t\tIgnoreAllDefaultLibraries=\"TRUE\"\r\n" );
 				fprintf ( OUT, "\t\t\t\tGenerateManifest=\"FALSE\"\r\n" );
 				fprintf ( OUT, "\t\t\t\tSubSystem=\"%d\"\r\n", 3 );
 				fprintf ( OUT, "\t\t\t\tDriver=\"%d\"\r\n", 1 );
-			fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"%s\"\r\n", module.GetEntryPoint() == "" ? "DriverEntry" : module.GetEntryPoint().c_str ());
-				fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", baseaddr == "" ? "0x10000" : baseaddr.c_str ());
+				fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"KiSystemStartup\"\r\n" );
+				fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", baseaddr.c_str ());
 			}
-		else if ( binaryType == Exe )
+			else if ( module.type == NativeCUI )
 			{
-				if ( module.type == Kernel )
-				{
-					fprintf ( OUT, "\t\t\t\tAdditionalOptions=\" /SECTION:INIT,D /ALIGN:0x80\"\r\n" );
-					fprintf ( OUT, "\t\t\t\tIgnoreAllDefaultLibraries=\"TRUE\"\r\n" );
-					fprintf ( OUT, "\t\t\t\tGenerateManifest=\"FALSE\"\r\n" );
-					fprintf ( OUT, "\t\t\t\tSubSystem=\"%d\"\r\n", 3 );
-					fprintf ( OUT, "\t\t\t\tDriver=\"%d\"\r\n", 1 );
-					fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"KiSystemStartup\"\r\n" );
-					fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", baseaddr.c_str ());
-				}
-				else if ( module.type == NativeCUI )
-				{
-					fprintf ( OUT, "\t\t\t\tAdditionalOptions=\" /ALIGN:0x20\"\r\n" );
-					fprintf ( OUT, "\t\t\t\tSubSystem=\"%d\"\r\n", 1 );
-					fprintf ( OUT, "\t\t\t\tGenerateManifest=\"FALSE\"\r\n" );
-					fprintf ( OUT, "\t\t\t\tIgnoreAllDefaultLibraries=\"TRUE\"\r\n" );
-					fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"NtProcessStartup\"\r\n" );
-					fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", baseaddr.c_str ());
-				}
-				else if ( module.type == Win32CUI || module.type == Win32GUI || module.type == Win32SCR)
-				{
-					if ( use_msvcrt_lib )
-					{
-						fprintf ( OUT, "\t\t\t\tIgnoreAllDefaultLibraries=\"TRUE\"\r\n" );
-					}
-				fprintf ( OUT, "\t\t\t\tSubSystem=\"%d\"\r\n", 2 );
-				}
+				fprintf ( OUT, "\t\t\t\tAdditionalOptions=\" /ALIGN:0x20\"\r\n" );
+				fprintf ( OUT, "\t\t\t\tSubSystem=\"%d\"\r\n", 1 );
+				fprintf ( OUT, "\t\t\t\tGenerateManifest=\"FALSE\"\r\n" );
+				fprintf ( OUT, "\t\t\t\tIgnoreAllDefaultLibraries=\"TRUE\"\r\n" );
+				fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"NtProcessStartup\"\r\n" );
+				fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", baseaddr.c_str ());
 			}
-		else if ( binaryType == Dll )
+			else if ( module.type == Win32CUI || module.type == Win32GUI || module.type == Win32SCR)
 			{
-			if (module.GetEntryPoint() == "0")
-					fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"\"\r\n" );
-				else
-				{
-					// get rid of DllMain@12 because MSVC needs to link to _DllMainCRTStartup@12
-					// when using CRT
-				if (module.GetEntryPoint() == "DllMain@12")
-						fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"\"\r\n" );
-					else
-					fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"%s\"\r\n", module.GetEntryPoint().c_str ());
-				}
-				fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", baseaddr == "" ? "0x40000" : baseaddr.c_str ());
 				if ( use_msvcrt_lib )
 				{
 					fprintf ( OUT, "\t\t\t\tIgnoreAllDefaultLibraries=\"TRUE\"\r\n" );
 				}
+				fprintf ( OUT, "\t\t\t\tSubSystem=\"%d\"\r\n", 2 );
 			}
-			fprintf ( OUT, "\t\t\t\tTargetMachine=\"%d\"/>\r\n", 1 );
+		}
+		else if ( binaryType == Dll )
+		{
+			if (module.GetEntryPoint() == "0")
+				fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"\"\r\n" );
+			else
+			{
+				// get rid of DllMain@12 because MSVC needs to link to _DllMainCRTStartup@12
+				// when using CRT
+				if (module.GetEntryPoint() == "DllMain@12")
+					fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"\"\r\n" );
+				else
+					fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"%s\"\r\n", module.GetEntryPoint().c_str ());
+			}
+			fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", baseaddr == "" ? "0x40000" : baseaddr.c_str ());
+			if ( use_msvcrt_lib )
+			{
+				fprintf ( OUT, "\t\t\t\tIgnoreAllDefaultLibraries=\"TRUE\"\r\n" );
+			}
 		}
 		fprintf ( OUT, "\t\t\t/>\r\n" );
 	}
 
-		fprintf ( OUT, "\t\t\t<Tool\r\n" );
-		fprintf ( OUT, "\t\t\t\tName=\"VCResourceCompilerTool\"\r\n" );
-		fprintf ( OUT, "\t\t\t\tAdditionalIncludeDirectories=\"" );
-		multiple_includes = false;
-		fprintf ( OUT, "./;" );
-		for ( i = 0; i < includes.size(); i++ )
+	fprintf ( OUT, "\t\t\t<Tool\r\n" );
+	fprintf ( OUT, "\t\t\t\tName=\"VCResourceCompilerTool\"\r\n" );
+	fprintf ( OUT, "\t\t\t\tAdditionalIncludeDirectories=\"" );
+	multiple_includes = false;
+	fprintf ( OUT, "./;" );
+	for ( i = 0; i < includes.size(); i++ )
+	{
+		const std::string& include = includes[i];
+		if ( strcmp ( include.c_str(), "." ) )
 		{
-			const std::string& include = includes[i];
-			if ( strcmp ( include.c_str(), "." ) )
-			{
-				if ( multiple_includes )
-					fprintf ( OUT, ";" );
-				fprintf ( OUT, "%s", include.c_str() );
-				multiple_includes = true;
-			}
+			if ( multiple_includes )
+				fprintf ( OUT, ";" );
+			fprintf ( OUT, "%s", include.c_str() );
+			multiple_includes = true;
 		}
 	}
 
 	fprintf ( OUT, "\"/>\r\n " );
 
+	fprintf ( OUT, "\t\t\t<Tool\r\n" );
+	fprintf ( OUT, "\t\t\t\tName=\"VCMIDLTool\"/>\r\n" );
+	if (configuration.VSProjectVersion == "8.00")
+	{
 		fprintf ( OUT, "\t\t\t<Tool\r\n" );
-		fprintf ( OUT, "\t\t\t\tName=\"VCMIDLTool\"/>\r\n" );
-		if (configuration.VSProjectVersion == "8.00")
-		{
-			fprintf ( OUT, "\t\t\t<Tool\r\n" );
-			fprintf ( OUT, "\t\t\t\tName=\"VCManifestTool\"\r\n" );
-			fprintf ( OUT, "\t\t\t\tEmbedManifest=\"false\"/>\r\n" );
-		}
-		fprintf ( OUT, "\t\t\t<Tool\r\n" );
-		fprintf ( OUT, "\t\t\t\tName=\"VCPostBuildEventTool\"/>\r\n" );
-		fprintf ( OUT, "\t\t\t<Tool\r\n" );
-		fprintf ( OUT, "\t\t\t\tName=\"VCPreBuildEventTool\"/>\r\n" );
-		fprintf ( OUT, "\t\t\t<Tool\r\n" );
-		fprintf ( OUT, "\t\t\t\tName=\"VCPreLinkEventTool\"/>\r\n" );
-		fprintf ( OUT, "\t\t\t<Tool\r\n" );
-		fprintf ( OUT, "\t\t\t\tName=\"VCWebServiceProxyGeneratorTool\"/>\r\n" );
-		fprintf ( OUT, "\t\t\t<Tool\r\n" );
-		fprintf ( OUT, "\t\t\t\tName=\"VCWebDeploymentTool\"/>\r\n" );
-		fprintf ( OUT, "\t\t</Configuration>\r\n" );
+		fprintf ( OUT, "\t\t\t\tName=\"VCManifestTool\"\r\n" );
+		fprintf ( OUT, "\t\t\t\tEmbedManifest=\"false\"/>\r\n" );
 	}
 	fprintf ( OUT, "\t\t</Configuration>\r\n" );
 }
@@ -790,7 +756,7 @@ VCProjMaker::_generate_makefile_configuration( const Module& module, const MSVCC
 
 	if ( intenv == "obj-i386" )
 		intdir = path_basedir + "obj-i386"; /* append relative dir from project dir */
-			else
+	else
 		intdir = intenv;
 
 	if ( outenv == "output-i386" )
@@ -799,23 +765,23 @@ VCProjMaker::_generate_makefile_configuration( const Module& module, const MSVCC
 		outdir = outenv;
 
 	if ( configuration.UseVSVersionInPath )
-			{
+	{
 		vcdir = DEF_SSEP + _get_vc_dir();
-			}
+	}
 
 	fprintf ( OUT, "\t\t<Configuration\r\n" );
 	fprintf ( OUT, "\t\t\tName=\"%s|Win32\"\r\n", cfg.name.c_str() );
 
 	if ( configuration.UseConfigurationInPath )
-		{
+	{
 		fprintf ( OUT, "\t\t\tOutputDirectory=\"%s\\%s\\%s\"\r\n", outdir.c_str (), module.output->relative_path.c_str (), cfg.name.c_str() );
 		fprintf ( OUT, "\t\t\tIntermediateDirectory=\"%s\\%s\\%s\"\r\n", intdir.c_str (), module.output->relative_path.c_str (), cfg.name.c_str() );
-			}
-						else
-						{
+	}
+	else
+	{
 		fprintf ( OUT, "\t\t\tOutputDirectory=\"%s\\%s\"\r\n", outdir.c_str (), module.output->relative_path.c_str () );
 		fprintf ( OUT, "\t\t\tIntermediateDirectory=\"%s\\%s\"\r\n", intdir.c_str (), module.output->relative_path.c_str () );
-						}
+	}
 
 	fprintf ( OUT, "\t\t\tConfigurationType=\"0\"\r\n");
 	fprintf ( OUT, "\t\t\t>\r\n" );
@@ -834,6 +800,6 @@ VCProjMaker::_generate_makefile_configuration( const Module& module, const MSVCC
 	fprintf ( OUT, "\t\t\t\tForcedUsingAssemblies=\"\"\r\n");
 	fprintf ( OUT, "\t\t\t\tCompileAsManaged=\"\"\r\n");
 
-			fprintf ( OUT, "\t\t\t/>\r\n" );
-			fprintf ( OUT, "\t\t</Configuration>\r\n" );
-		}
+	fprintf ( OUT, "\t\t\t/>\r\n" );
+	fprintf ( OUT, "\t\t</Configuration>\r\n" );
+}
