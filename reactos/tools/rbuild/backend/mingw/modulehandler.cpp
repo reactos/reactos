@@ -1471,11 +1471,11 @@ MingwModuleHandler::GenerateLinkerCommand () const
 			  module.name.c_str(),
 			  definitionFilename.c_str(),
 			  module.xmlbuildFile.c_str(),
-		          linkerScriptArgument.c_str (),
+			  linkerScriptArgument.c_str(),
 			  extraLibraries.c_str(),
 			  module.GetEntryPoint().c_str(),
 			  module.baseaddress.c_str() );
-	}
+}
 
 void
 MingwModuleHandler::GenerateObjectFileTargets ( const IfableData& data )
@@ -1782,12 +1782,6 @@ MingwModuleHandler::GenerateOtherMacros ()
 		&module.linkerFlags,
 		used_defs );
 
-	/* LD automatically exports all symbols by default if -shared is specified. Prevent it from doing
-	   this by adding the option -exclude-all-symbols (available since Binutils 20091017). */
-	// FIXME: Should only be applied for -shared modules, when there's a smart way to check for them.
-	if ( ModuleHandlerInformations[module.type].DefaultHost == HostFalse && !module.importLibrary )
-		fprintf ( fMakefile, "%s_LDFLAGS+=$(LDFLAG_EXCLUDE_ALL_SYMBOLS)\n", module.name.c_str() );
-	
 	fprintf ( fMakefile, "\n\n" );
 }
 
@@ -1822,7 +1816,7 @@ MingwModuleHandler::GenerateRules ()
 		const FileLocation* ar_target = GenerateArchiveTarget ();
 
 		if ( ar_target )
-		delete ar_target;
+			delete ar_target;
 	}
 
 
@@ -2195,9 +2189,9 @@ MingwKernelModuleHandler::Process ()
 void
 MingwKernelModuleHandler::GenerateKernelModuleTarget ()
 {
-		GenerateRules ();
+	GenerateRules ();
 	GenerateLinkerCommand ();
-	}
+}
 
 
 MingwKernelModeDLLModuleHandler::MingwKernelModeDLLModuleHandler (
@@ -2224,9 +2218,9 @@ MingwKernelModeDLLModuleHandler::Process ()
 void
 MingwKernelModeDLLModuleHandler::GenerateKernelModeDLLModuleTarget ()
 {
-		GenerateRules ();
+	GenerateRules ();
 	GenerateLinkerCommand ();
-	}
+}
 
 
 MingwNativeDLLModuleHandler::MingwNativeDLLModuleHandler (
@@ -2252,9 +2246,9 @@ MingwNativeDLLModuleHandler::Process ()
 void
 MingwNativeDLLModuleHandler::GenerateNativeDLLModuleTarget ()
 {
-		GenerateRules ();
+	GenerateRules ();
 	GenerateLinkerCommand ();
-	}
+}
 
 
 MingwNativeCUIModuleHandler::MingwNativeCUIModuleHandler (
@@ -2280,9 +2274,9 @@ MingwNativeCUIModuleHandler::Process ()
 void
 MingwNativeCUIModuleHandler::GenerateNativeCUIModuleTarget ()
 {
-		GenerateRules ();
+	GenerateRules ();
 	GenerateLinkerCommand ();
-	}
+}
 
 
 MingwWin32DLLModuleHandler::MingwWin32DLLModuleHandler (
@@ -2349,9 +2343,9 @@ MingwWin32DLLModuleHandler::Process ()
 void
 MingwWin32DLLModuleHandler::GenerateWin32DLLModuleTarget ()
 {
-		GenerateRules ();
+	GenerateRules ();
 	GenerateLinkerCommand ();
-	}
+}
 
 
 void
@@ -2369,9 +2363,9 @@ MingwWin32OCXModuleHandler::Process ()
 void
 MingwWin32OCXModuleHandler::GenerateWin32OCXModuleTarget ()
 {
-		GenerateRules ();
+	GenerateRules ();
 	GenerateLinkerCommand ();
-	}
+}
 
 
 MingwWin32CUIModuleHandler::MingwWin32CUIModuleHandler (
@@ -2396,9 +2390,9 @@ MingwWin32CUIModuleHandler::Process ()
 void
 MingwWin32CUIModuleHandler::GenerateWin32CUIModuleTarget ()
 {
-		GenerateRules ();
+	GenerateRules ();
 	GenerateLinkerCommand ();
-	}
+}
 
 
 MingwWin32GUIModuleHandler::MingwWin32GUIModuleHandler (
@@ -2423,9 +2417,9 @@ MingwWin32GUIModuleHandler::Process ()
 void
 MingwWin32GUIModuleHandler::GenerateWin32GUIModuleTarget ()
 {
-		GenerateRules ();
+	GenerateRules ();
 	GenerateLinkerCommand ();
-	}
+}
 
 
 MingwBootLoaderModuleHandler::MingwBootLoaderModuleHandler (
@@ -3024,9 +3018,9 @@ MingwTestModuleHandler::GetModuleSpecificCompilationUnits ( vector<CompilationUn
 void
 MingwTestModuleHandler::GenerateTestModuleTarget ()
 {
-		GenerateRules ();
+	GenerateRules ();
 	GenerateLinkerCommand ();
-	}
+}
 
 
 MingwAliasModuleHandler::MingwAliasModuleHandler (
