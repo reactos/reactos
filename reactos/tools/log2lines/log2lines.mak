@@ -30,6 +30,7 @@ LOG2LINES_SOURCES = \
 	$(LOG2LINES_BASE_)image.c \
 	$(LOG2LINES_BASE_)stat.c \
 	$(LOG2LINES_BASE_)revision.c \
+	$(LOG2LINES_BASE_)cmd.c \
 	$(LOG2LINES_BASE_)log2lines.c \
 	$(RSYM_BASE_)rsym_common.c
 
@@ -80,6 +81,10 @@ $(LOG2LINES_INT_)stat.o: $(LOG2LINES_BASE_)stat.c | $(LOG2LINES_INT)
 	${host_gcc} $(LOG2LINES_HOST_CFLAGS) -c $< -o $@
 
 $(LOG2LINES_INT_)revision.o: $(LOG2LINES_BASE_)revision.c | $(LOG2LINES_INT)
+	$(ECHO_HOSTCC)
+	${host_gcc} $(LOG2LINES_HOST_CFLAGS) -c $< -o $@
+
+$(LOG2LINES_INT_)cmd.o: $(LOG2LINES_BASE_)cmd.c | $(LOG2LINES_INT)
 	$(ECHO_HOSTCC)
 	${host_gcc} $(LOG2LINES_HOST_CFLAGS) -c $< -o $@
 

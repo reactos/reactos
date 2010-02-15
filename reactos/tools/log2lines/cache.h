@@ -13,3 +13,5 @@ int read_cache(void);
 int create_cache(int force, int skipImageBase);
 
 #endif /* __L2L_CACHE_H__ */
+
+/* EOF */

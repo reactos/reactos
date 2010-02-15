@@ -32,13 +32,6 @@ PrefixFilename (
 	const std::string& filename,
 	const std::string& prefix );
 
-enum SpecFileType
-{
-    None,
-    Spec = 1,
-    PSpec = 2
-};
-
 class MingwModuleHandler
 {
 public:

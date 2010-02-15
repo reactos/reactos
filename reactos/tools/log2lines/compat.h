@@ -37,3 +37,5 @@
 
 
 #endif /* __L2L_COMPAT_H__ */
+
+/* EOF */

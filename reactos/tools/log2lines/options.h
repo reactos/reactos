@@ -18,6 +18,8 @@ extern int   opt_console;   // -c
 extern int   opt_mark;      // -m
 extern int   opt_Mark;      // -M
 extern char *opt_Pipe;      // -P
+extern int   opt_quit;      // -q (cli only)
+extern int   opt_cli;       // (cli internal)
 extern int   opt_raw;       // -r
 extern int   opt_stats;     // -s
 extern int   opt_Source;    // -S <opt_Source>[+<opt_SrcPlus>][,<sources_path>]
@@ -38,3 +40,5 @@ int optionInit(int argc, const char **argv);
 int optionParse(int argc, const char **argv);
 
 #endif /* __L2L_OPTIONS_H__ */
+
+/* EOF */

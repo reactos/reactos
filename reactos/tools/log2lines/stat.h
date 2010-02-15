@@ -28,3 +28,5 @@ void stat_print(FILE *outFile, PSUMM psumm);
 void stat_clear(PSUMM psumm);
 
 #endif /* __L2L_STAT_H__ */
+
+/* EOF */

@@ -26,3 +26,5 @@ int regscan(FILE *outFile);
 int updateSvnlog(void);
 
 #endif /* __L2L_REVISION_H__ */
+
+/* EOF */

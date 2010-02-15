@@ -13,6 +13,7 @@
 #include "compat.h"
 #include "config.h"
 #include "help.h"
+#include "log2lines.h"
 #include "options.h"
 
 char *optchars       = "bcd:fFhl:mMP:rR:sS:tTuUvz:";
@@ -25,6 +26,8 @@ int   opt_console    = 0;        // -c
 int   opt_mark       = 0;        // -m
 int   opt_Mark       = 0;        // -M
 char *opt_Pipe       = NULL;     // -P
+int   opt_quit       = 0;        // -q (cli only)
+int   opt_cli        = 0;        // (cli internal)
 int   opt_raw        = 0;        // -r
 int   opt_stats      = 0;        // -s
 int   opt_Source     = 0;        // -S <opt_Source>[+<opt_SrcPlus>][,<sources_path>]
@@ -46,29 +49,45 @@ int optionInit(int argc, const char **argv)
     char *s;
 
     strcpy(opt_dir, "");
+    strcpy(opt_logFile, "");
+    strcpy(opt_7z, CMD_7Z);
     strcpy(opt_SourcesPath, "");
     if ((s = getenv(SOURCES_ENV)))
         strcpy(opt_SourcesPath, s);
+    revinfo.rev = getRevision(NULL, 1);
+    revinfo.range = DEF_RANGE;
+    revinfo.buildrev = getTBRevision(opt_dir);
+    l2l_dbg(1, "Trunk build revision: %d\n", revinfo.buildrev);
 
     strcpy(opt_scanned, "");
     for (i = 1; i < argc; i++)
     {
-        if (strcmp(argv[i],"-P")==0)
+        if ((argv[i][0] == '-') && (i+1 < argc))
         {
-            //Because its argument can contain spaces we cant use getopt(), a known bug:
-            if (i+1 < argc)
+            //Because these arguments can contain spaces we cant use getopt(), a known bug:
+            switch (argv[i][1])
             {
+            case 'd':
+                strcpy(opt_dir, argv[i+1]);
+                break;
+            case 'l':
+                strcpy(opt_logFile, argv[i+1]);
+                break;
+            case 'P':
                 free(opt_Pipe);
                 opt_Pipe = malloc(LINESIZE);
                 strcpy(opt_Pipe, argv[i+1]);
+                break;
+            case 'z':
+                strcpy(opt_7z, argv[i+1]);
+                break;
             }
         }
         strcat(opt_scanned, argv[i]);
         strcat(opt_scanned, " ");
     }
+
     l2l_dbg(4,"opt_scanned=[%s]\n",opt_scanned);
-    strcpy(opt_logFile, "");
-    strcpy(opt_7z, CMD_7Z);
 
     return 0;
 }
@@ -91,7 +110,7 @@ int optionParse(int argc, const char **argv)
             break;
         case 'd':
             optCount++;
-            strcpy(opt_dir, optarg);
+            //just count, see optionInit()
             break;
         case 'f':
             opt_force++;
@@ -107,7 +126,7 @@ int optionParse(int argc, const char **argv)
             break;
         case 'l':
             optCount++;
-            strcpy(opt_logFile, optarg);
+            //just count, see optionInit()
             break;
         case 'm':
             opt_mark++;
@@ -120,7 +139,7 @@ int optionParse(int argc, const char **argv)
             break;
         case 'P':
             optCount++;
-            //just count, see above
+            //just count, see optionInit()
             break;
         case 'R':
             optCount++;
@@ -137,6 +156,12 @@ int optionParse(int argc, const char **argv)
             if (i == 1)
                 sscanf(optarg, "%*d,%s", opt_SourcesPath);
             l2l_dbg(3, "Sources option parse result: %d+%d,\"%s\"\n", opt_Source, opt_SrcPlus, opt_SourcesPath);
+            if (opt_Source)
+            {
+                /* need to retranslate for source info: */
+                opt_undo++;
+                opt_redo++;
+            }
             break;
         case 't':
             opt_twice++;
@@ -166,15 +191,14 @@ int optionParse(int argc, const char **argv)
         }
         optCount++;
     }
+    if(opt_console)
+    {
+        l2l_dbg(2, "Note: use 's' command in console mode. Statistics option disabled\n");
+        opt_stats = 0;
+    }
     if (opt_SourcesPath[0])
     {
         strcat(opt_SourcesPath, PATH_STR);
-    }
-    if (opt_Source)
-    {
-        /* need to retranslate for source info: */
-        opt_undo++;
-        opt_redo++;
     }
     if (!opt_dir[0])
     {

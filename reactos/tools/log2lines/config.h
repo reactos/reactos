@@ -15,7 +15,6 @@
 #define CACHEFILE       "log2lines.cache"
 #define TRKBUILDPREFIX  "bootcd-"
 #define SVN_PREFIX      "/trunk/reactos/"
-#define KDBG_PROMPT     "kdbg>"
 #define PIPEREAD_CMD    "piperead -c"
 
 
@@ -32,3 +31,5 @@ PATH_STR "reactos" PATH_STR "reactos > " DEV_NULL
 #define NAMESIZE        80
 
 #endif /* __L2L_CONFIG_H__ */
+
+/* EOF */

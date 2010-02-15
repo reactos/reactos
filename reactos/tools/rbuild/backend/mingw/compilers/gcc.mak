@@ -16,6 +16,12 @@ BUILTIN_CFLAGS+= -fno-optimize-sibling-calls
 endif
 BUILTIN_CXXFLAGS+= -fno-optimize-sibling-calls
 
+# Add -fno-set-stack-executable required for x86/MinGW
+ifneq (,$(filter $(ARCH), i386))
+	BUILTIN_CFLAGS+= -fno-set-stack-executable
+	BUILTIN_CXXFLAGS+= -fno-set-stack-executable
+endif
+
 #(module, source, dependencies, cflags, output)
 define RBUILD_DEPENDS
 
@@ -161,4 +167,3 @@ ${call RBUILD_intermediate_dir,$(2)}$$(SEP).gch_$(1)$$(SEP)$(notdir $(2)).gch: $
 endif
 
 endef
-

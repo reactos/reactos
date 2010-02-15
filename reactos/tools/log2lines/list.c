@@ -66,6 +66,19 @@ entry_insert(PLIST list, PLIST_MEMBER pentry)
     return pentry;
 }
 
+void list_clear(PLIST list)
+{
+    PLIST_MEMBER pentry = list->phead;
+    PLIST_MEMBER pnext;
+    while (pentry)
+    {
+        pnext = pentry->pnext;
+        entry_delete(pentry);
+        pentry = pnext;
+    }
+    list->phead = list->ptail = NULL;
+}
+
 #if 0
 LIST_MEMBER *
 entry_remove(LIST *list, LIST_MEMBER *pentry)

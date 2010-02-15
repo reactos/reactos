@@ -1,5 +1,6 @@
-LDFLAG_DLL:=-shared
-LDFLAG_DRIVER:=-shared --subsystem=native
+# -exclude-all-symbols disables autoexporting all symbols *if none were found* (either in a DEF file or using __declspec(dllexport)
+LDFLAG_DLL:=-shared -exclude-all-symbols
+LDFLAG_DRIVER:=-shared --subsystem=native -exclude-all-symbols
 LDFLAG_NOSTDLIB:=-nostartfiles -nostdlib
 LDFLAG_CONSOLE:=--subsystem=console
 LDFLAG_WINDOWS:=--subsystem=windows

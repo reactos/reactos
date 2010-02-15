@@ -2,7 +2,7 @@
  * ReactOS log2lines
  * Written by Jan Roeloffzen
  *
- * - Initialization and main loop
+ * - Initialization, translation and main loop
  */
 
 #include <errno.h>
@@ -13,17 +13,18 @@
 #include "util.h"
 #include "version.h"
 #include "compat.h"
-#include "config.h"
-#include "list.h"
 #include "options.h"
 #include "image.h"
 #include "cache.h"
 #include "log2lines.h"
 #include "help.h"
+#include "cmd.h"
 
 
 static FILE *stdIn          = NULL;
 static FILE *stdOut         = NULL;
+static const char *kdbg_prompt = KDBG_PROMPT;
+static const char *kdbg_cont   = KDBG_CONT;
 
 LIST sources;
 LINEINFO lastLine;
@@ -65,6 +66,8 @@ log_file(FILE *outFile, char *fileName, int line)
             i++;
         }
         fclose(src);
+        if ( i < min )
+            log(outFile, "| S--- source has only %d lines! (check source/revision)\n", i);
     }
     else
         l2l_dbg(1, "Can't open: %s (check " SOURCES_ENV ")\n", s);
@@ -332,7 +335,7 @@ translate_line(FILE *outFile, char *Line, char *path, char *LineOut)
         /* Strip all lines added by this tool: */
         char buf[NAMESIZE];
         if (sscanf(s, "| %s", buf) == 1)
-            if (buf[0] == '0' || strcmp(buf, "----") == 0 || strcmp(buf, "R---") == 0 || atoi(buf))
+            if (buf[0] == '0' || strcmp(buf, "----") == 0 || strcmp(buf, "L2L-") == 0 || strcmp(buf, "S---") == 0 || strcmp(buf, "R---") == 0 || atoi(buf))
                 res = 0;
     }
 
@@ -410,6 +413,9 @@ translate_files(FILE *inFile, FILE *outFile)
     int c;
     unsigned char ch;
     int i = 0;
+    const char *pc    = kdbg_cont;
+    const char *p     = kdbg_prompt;
+    const char *p_eos = p + sizeof(KDBG_PROMPT) - 1; //end of string pos
 
     if (Line && path && LineOut)
     {
@@ -418,23 +424,53 @@ translate_files(FILE *inFile, FILE *outFile)
         {
             while ((c = fgetc(inFile)) != EOF)
             {
+                if (opt_quit)break;
+
                 ch = (unsigned char)c;
                 if (!opt_raw)
                 {
                     switch (ch)
                     {
                     case '\n':
-                        translate_line(outFile, Line, path, LineOut);
+                        if ( strncmp(Line, KDBG_DISCARD, sizeof(KDBG_DISCARD)-1) == 0 )
+                        {
+                            memset(Line, '\0', LINESIZE);  // flushed
+                        }
+                        else
+                        {
+                            Line[1] = handle_escape_cmd(outFile, Line, path, LineOut);
+                            if (Line[1] != KDBG_ESC_CHAR)
+                            {
+                                if (p == p_eos)
+                                {
+                                    //kdbg prompt, so already echoed char by char 
+                                    memset(Line, '\0', LINESIZE);
+                                    translate_char(c, outFile);
+                                }
+                                else
+                                {
+                                    translate_line(outFile, Line, path, LineOut);
+                                    translate_char(c, outFile);
+                                    report(outFile);
+                                }
+                            }
+                        }
                         i = 0;
-                        translate_char(c, outFile);
-                        report(outFile);
+                        p  = kdbg_prompt;
+                        pc = kdbg_cont;
                         break;
                     case '<':
                         i = 0;
                         Line[i++] = ch;
                         break;
                     case '>':
-                        if (i)
+                        if (ch == *p)
+                        {
+                            p = p_eos;
+                            translate_line(outFile, Line, path, LineOut);
+                        }
+
+                        if (p != p_eos)
                         {
                             if (i < LINESIZE)
                             {
@@ -452,21 +488,27 @@ translate_files(FILE *inFile, FILE *outFile)
                         i = 0;
                         break;
                     default:
-                        if (i)
+                        if (ch == *p)p++;
+                        if (ch == *pc)pc++;
+                        if (i < LINESIZE)
                         {
-                            if (i < LINESIZE)
+                            Line[i++] = ch;
+                            if (p == p_eos)
                             {
-                                Line[i++] = ch;
+                                translate_char(c, outFile);
                             }
-                            else
+                            else if (!*pc)
                             {
                                 translate_line(outFile, Line, path, LineOut);
-                                translate_char(c, outFile);
                                 i = 0;
                             }
                         }
                         else
+                        {
+                            translate_line(outFile, Line, path, LineOut);
                             translate_char(c, outFile);
+                            i = 0;
+                        }
                     }
                 }
                 else
@@ -477,6 +519,8 @@ translate_files(FILE *inFile, FILE *outFile)
         {   // Line by line, slightly faster but less interactive
             while (fgets(Line, LINESIZE, inFile) != NULL)
             {
+                if (opt_quit)break;
+
                 if (!opt_raw)
                 {
                     translate_line(outFile, Line, path, LineOut);
@@ -552,26 +596,8 @@ main(int argc, const char **argv)
     read_cache();
     l2l_dbg(4, "Cache read complete\n");
 
-    if (*opt_logFile)
-    {
-        logFile = fopen(opt_logFile, "a");
-        if (logFile)
-        {
-            // disable buffering so fflush is not needed
-            if (!opt_buffered)
-            {
-                l2l_dbg(1, "Disabling log buffering on %s\n", opt_logFile);
-                setbuf(logFile, NULL);
-            }
-            else
-                l2l_dbg(1, "Enabling log buffering on %s\n", opt_logFile);
-        }
-        else
-        {
-            l2l_dbg(0, "Could not open logfile %s (%s)\n", opt_logFile, strerror(errno));
-            return 2;
-        }
-    }
+    if (set_LogFile(logFile))
+        return 2;
     l2l_dbg(4, "opt_logFile processed\n");
 
     if (opt_Pipe)
@@ -584,8 +610,6 @@ main(int argc, const char **argv)
             l2l_dbg(0, "Could not popen '%s' (%s)\n", opt_Pipe, strerror(errno));
             free(opt_Pipe); opt_Pipe = NULL;
         }
-
-        free(opt_Pipe); opt_Pipe = NULL;
     }
     l2l_dbg(4, "opt_Pipe processed\n");
 

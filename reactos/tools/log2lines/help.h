@@ -13,3 +13,5 @@ extern char *verboseUsage;
 void usage(int verbose);
 
 #endif /* __L2L_HELP_H__ */
+
+/* EOF */

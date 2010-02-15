@@ -16,6 +16,39 @@
 #include "options.h"
 
 int
+set_LogFile(FILE *logFile)
+{
+    if (*opt_logFile)
+    {
+        if (logFile)
+            fclose(logFile);
+        logFile = NULL;
+
+        if (strcmp(opt_logFile,"none") == 0)
+            return 0; //just close
+
+        logFile = fopen(opt_logFile, "a");
+        if (logFile)
+        {
+            // disable buffering so fflush is not needed
+            if (!opt_buffered)
+            {
+                l2l_dbg(1, "Disabling log buffering on %s\n", opt_logFile);
+                setbuf(logFile, NULL);
+            }
+            else
+                l2l_dbg(1, "Enabling log buffering on %s\n", opt_logFile);
+        }
+        else
+        {
+            l2l_dbg(0, "Could not open logfile %s (%s)\n", opt_logFile, strerror(errno));
+            return 2;
+        }
+    }
+    return 0;
+}
+
+int
 file_exists(char *name)
 {
     FILE *f;
