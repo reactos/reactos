@@ -37,6 +37,15 @@ struct ntdrv_win_data
     RECT        client_rect;    /* client area relative to parent */
 };
 
+/* gdidrv.c */
+int DIB_GetBitmapInfoEx( const BITMAPINFOHEADER *header, LONG *width,
+                                LONG *height, WORD *planes, WORD *bpp,
+                                WORD *compr, DWORD *size );
+
+int DIB_GetBitmapInfo( const BITMAPINFOHEADER *header, LONG *width,
+                              LONG *height, WORD *bpp, WORD *compr );
+
+
 /* font.c */
 VOID
 FeSelectFont(NTDRV_PDEVICE *physDev, HFONT hFont);

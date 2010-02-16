@@ -732,8 +732,59 @@ INT CDECL RosDrv_SetDIBitsToDevice( NTDRV_PDEVICE *physDev, INT xDest, INT yDest
                                     UINT startscan, UINT lines, LPCVOID bits,
                                     const BITMAPINFO *info, UINT coloruse )
 {
-    UNIMPLEMENTED;
-    return 0;
+    BOOL top_down;
+    LONG height, width;
+    WORD infoBpp, compression;
+    POINT pt;
+
+    pt.x = xDest; pt.y = yDest;
+    LPtoDP(physDev->hUserDC, &pt, 1);
+
+    /* Perform extensive parameter checking */
+    if (DIB_GetBitmapInfo( &info->bmiHeader, &width, &height,
+        &infoBpp, &compression ) == -1)
+        return 0;
+
+    top_down = (height < 0);
+    if (top_down) height = -height;
+
+    if (!lines || (startscan >= height)) return 0;
+    if (!top_down && startscan + lines > height) lines = height - startscan;
+
+    /* make xSrc,ySrc point to the upper-left corner, not the lower-left one,
+     * and clamp all values to fit inside [startscan,startscan+lines]
+     */
+    if (ySrc + cy <= startscan + lines)
+    {
+        UINT y = startscan + lines - (ySrc + cy);
+        if (ySrc < startscan) cy -= (startscan - ySrc);
+        if (!top_down)
+        {
+            /* avoid getting unnecessary lines */
+            ySrc = 0;
+            if (y >= lines) return 0;
+            lines -= y;
+        }
+        else
+        {
+            if (y >= lines) return lines;
+            ySrc = y;  /* need to get all lines in top down mode */
+        }
+    }
+    else
+    {
+        if (ySrc >= startscan + lines) return lines;
+        pt.y += ySrc + cy - (startscan + lines);
+        cy = startscan + lines - ySrc;
+        ySrc = 0;
+        if (cy > lines) cy = lines;
+    }
+    if (xSrc >= width) return lines;
+    if (xSrc + cx >= width) cx = width - xSrc;
+    if (!cx || !cy) return lines;
+
+    return RosGdiSetDIBitsToDevice(physDev->hKernelDC, pt.x, pt.y, cx, cy,
+        xSrc, ySrc, startscan, lines, bits, info, coloruse);
 }
 
 void CDECL RosDrv_SetDeviceClipping( NTDRV_PDEVICE *physDev, HRGN vis_rgn, HRGN clip_rgn )
@@ -848,6 +899,56 @@ BOOL CDECL RosDrv_UnrealizePalette( HPALETTE hpal )
 {
     UNIMPLEMENTED;
     return FALSE;
+}
+
+/***********************************************************************
+ *           DIB_GetBitmapInfoEx
+ *
+ * Get the info from a bitmap header.
+ * Return 1 for INFOHEADER, 0 for COREHEADER, -1 for error.
+ */
+int DIB_GetBitmapInfoEx( const BITMAPINFOHEADER *header, LONG *width,
+                                LONG *height, WORD *planes, WORD *bpp,
+                                WORD *compr, DWORD *size )
+{
+    if (header->biSize == sizeof(BITMAPCOREHEADER))
+    {
+        const BITMAPCOREHEADER *core = (const BITMAPCOREHEADER *)header;
+        *width  = core->bcWidth;
+        *height = core->bcHeight;
+        *planes = core->bcPlanes;
+        *bpp    = core->bcBitCount;
+        *compr  = 0;
+        *size   = 0;
+        return 0;
+    }
+    if (header->biSize >= sizeof(BITMAPINFOHEADER))
+    {
+        *width  = header->biWidth;
+        *height = header->biHeight;
+        *planes = header->biPlanes;
+        *bpp    = header->biBitCount;
+        *compr  = header->biCompression;
+        *size   = header->biSizeImage;
+        return 1;
+    }
+    ERR("(%d): unknown/wrong size for header\n", header->biSize );
+    return -1;
+}
+
+/***********************************************************************
+ *           DIB_GetBitmapInfo
+ *
+ * Get the info from a bitmap header.
+ * Return 1 for INFOHEADER, 0 for COREHEADER, -1 for error.
+ */
+int DIB_GetBitmapInfo( const BITMAPINFOHEADER *header, LONG *width,
+                              LONG *height, WORD *bpp, WORD *compr )
+{
+    WORD planes;
+    DWORD size;
+
+    return DIB_GetBitmapInfoEx( header, width, height, &planes, bpp, compr, &size);    
 }
 
 /* EOF */
