@@ -717,8 +717,7 @@ COLORREF CDECL RosDrv_SetDCPenColor( NTDRV_PDEVICE *physDev, COLORREF crColor )
 
 UINT CDECL RosDrv_SetDIBColorTable( NTDRV_PDEVICE *physDev, UINT start, UINT count, const RGBQUAD *colors )
 {
-    UNIMPLEMENTED;
-    return 0;
+    return RosGdiSetDIBColorTable(physDev->hKernelDC, start, count, colors);
 }
 
 INT CDECL RosDrv_SetDIBits( NTDRV_PDEVICE *physDev, HBITMAP hbitmap, UINT startscan,

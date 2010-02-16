@@ -351,10 +351,20 @@ LONG APIENTRY RosGdiSetBitmapBits( HBITMAP hbitmap, const void *bits, LONG count
     return 0;
 }
 
-UINT APIENTRY RosGdiSetDIBColorTable( HDC physDev, UINT start, UINT count, const RGBQUAD *colors )
+UINT APIENTRY RosGdiSetDIBColorTable( HDC physDev, UINT StartIndex, UINT Entries, const RGBQUAD *Colors )
 {
-    UNIMPLEMENTED;
-    return 0;
+    PDC pDC;
+
+    /* Get a pointer to the DCs */
+    pDC = DC_Lock(physDev);
+
+    Entries = GreSetDIBColorTable(pDC, StartIndex, Entries, Colors);
+
+    /* Release DC objects */
+    DC_Unlock(pDC);
+
+    /* Return amount of lines set */
+    return Entries;
 }
 
 INT APIENTRY RosGdiSetDIBits(HDC physDev, HBITMAP hUserBitmap, UINT StartScan,

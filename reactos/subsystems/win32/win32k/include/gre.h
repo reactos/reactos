@@ -109,6 +109,14 @@ GreSetDIBitsToDevice(
     CONST BITMAPINFO  *bmi,
     UINT  ColorUse);
 
+UINT
+NTAPI
+GreSetDIBColorTable(
+    PDC pDC,
+    UINT StartIndex,
+    UINT Entries,
+    CONST RGBQUAD *Colors);
+
 INT FASTCALL
 BitsPerFormat(ULONG Format);
 

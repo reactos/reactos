@@ -1227,4 +1227,53 @@ Exit:
     return ret;
 }
 
+UINT
+NTAPI
+GreSetDIBColorTable(
+    PDC dc,
+    UINT StartIndex,
+    UINT Entries,
+    CONST RGBQUAD *Colors)
+{
+    PSURFACE psurf;
+    PPALETTE PalGDI;
+    UINT Index;
+    ULONG biBitCount;
+
+    psurf = dc->pBitmap;
+    if (psurf == NULL)
+    {
+        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    biBitCount = BitsPerFormat(psurf->SurfObj.iBitmapFormat);
+    if (biBitCount <= 8 && StartIndex < (1 << biBitCount))
+    {
+        if (StartIndex + Entries > (1 << biBitCount))
+            Entries = (1 << biBitCount) - StartIndex;
+
+        PalGDI = PALETTE_LockPalette(psurf->hDIBPalette);
+        if (PalGDI == NULL)
+        {
+            SetLastWin32Error(ERROR_INVALID_HANDLE);
+            return 0;
+        }
+
+        for (Index = StartIndex;
+             Index < StartIndex + Entries && Index < PalGDI->NumColors;
+             Index++)
+        {
+            PalGDI->IndexedColors[Index].peRed = Colors[Index - StartIndex].rgbRed;
+            PalGDI->IndexedColors[Index].peGreen = Colors[Index - StartIndex].rgbGreen;
+            PalGDI->IndexedColors[Index].peBlue = Colors[Index - StartIndex].rgbBlue;
+        }
+        PALETTE_UnlockPalette(PalGDI);
+    }
+    else
+        Entries = 0;
+
+    return Entries;
+}
+
 /* EOF */
