@@ -1093,4 +1093,138 @@ cleanup:
     return Result;
 }
 
+INT
+NTAPI
+GreSetDIBitsToDevice(
+    PDC   pDC,
+    INT   XDest,
+    INT   YDest,
+    DWORD Width,
+    DWORD Height,
+    INT   XSrc,
+    INT   YSrc,
+    UINT  StartScan,
+    UINT  ScanLines,
+    CONST VOID  *Bits,
+    CONST BITMAPINFO  *bmi,
+    UINT  ColorUse)
+{
+    INT ret = 0;
+    NTSTATUS Status = STATUS_SUCCESS;
+    HBITMAP hSourceBitmap = NULL;
+    SURFOBJ *pDestSurf, *pSourceSurf = NULL;
+    SURFACE *pSurf;
+    RECTL rcDest;
+    POINTL ptSource;
+    INT DIBWidth;
+    SIZEL SourceSize;
+    XLATEOBJ *XlateObj = NULL;
+    PPALETTE pDCPalette;
+    HPALETTE DDBPalette, DIBPalette = NULL;
+    ULONG DDBPaletteType, DIBPaletteType;
+
+    if (!Bits) return 0;
+
+    /* Use destination palette obtained from the DC by default */
+    DDBPalette = pDC->pPDevice->DevInfo.hpalDefault;
+
+    /* Try to use hDIBPalette if it exists */
+    pSurf = pDC->pBitmap;
+    if (pSurf && pSurf->hDIBPalette)
+    {
+        DDBPalette = pSurf->hDIBPalette;
+    }
+
+    pDestSurf = pSurf ? &pSurf->SurfObj : NULL;
+
+    rcDest.left = XDest;
+    rcDest.top = YDest;
+    rcDest.left += pDC->rcVport.left + pDC->rcDcRect.left;
+    rcDest.top += pDC->rcVport.top + pDC->rcDcRect.top;
+
+    rcDest.right = rcDest.left + Width;
+    rcDest.bottom = rcDest.top + Height;
+    ptSource.x = XSrc;
+    ptSource.y = YSrc;
+
+    SourceSize.cx = bmi->bmiHeader.biWidth;
+    SourceSize.cy = ScanLines; // this one --> abs(bmi->bmiHeader.biHeight) - StartScan
+    DIBWidth = DIB_GetDIBWidthBytes(SourceSize.cx, bmi->bmiHeader.biBitCount);
+
+    hSourceBitmap = EngCreateBitmap(SourceSize,
+                                    DIBWidth,
+                                    GrepBitmapFormat(bmi->bmiHeader.biBitCount, bmi->bmiHeader.biCompression),
+                                    bmi->bmiHeader.biHeight < 0 ? BMF_TOPDOWN : 0,
+                                    (PVOID) Bits);
+    if (!hSourceBitmap)
+    {
+        SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+        Status = STATUS_NO_MEMORY;
+        goto Exit;
+    }
+
+    pSourceSurf = EngLockSurface((HSURF)hSourceBitmap);
+    if (!pSourceSurf)
+    {
+        Status = STATUS_UNSUCCESSFUL;
+        goto Exit;
+    }
+
+    /* Obtain destination palette */
+    pDCPalette = PALETTE_LockPalette(DDBPalette);
+    if (!pDCPalette)
+    {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        Status = STATUS_UNSUCCESSFUL;
+        goto Exit;
+    }
+
+    DDBPaletteType = pDCPalette->Mode;
+    PALETTE_UnlockPalette(pDCPalette);
+
+    DIBPalette = BuildDIBPalette(bmi, (PINT)&DIBPaletteType);
+    if (!DIBPalette)
+    {
+        SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+        Status = STATUS_NO_MEMORY;
+        goto Exit;
+    }
+
+    /* Determine XlateObj */
+    XlateObj = IntEngCreateXlate(DDBPaletteType, DIBPaletteType, DDBPalette, DIBPalette);
+    if (!XlateObj)
+    {
+        SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+        Status = STATUS_NO_MEMORY;
+        goto Exit;
+    }
+
+    /* Copy the bits */
+    Status = GrepBitBltEx(pDestSurf,
+                          pSourceSurf,
+                          NULL,
+                          pDC->CombinedClip,
+                          XlateObj,
+                          &rcDest,
+                          &ptSource,
+                          NULL,
+                          NULL,
+                          NULL,
+                          ROP3_TO_ROP4(SRCCOPY),
+                          TRUE);
+Exit:
+    if (NT_SUCCESS(Status))
+    {
+        /* FIXME: Should probably be only the number of lines actually copied */
+        ret = ScanLines; // this one --> abs(Info->bmiHeader.biHeight) - StartScan;
+    }
+
+    if (pSourceSurf) EngUnlockSurface(pSourceSurf);
+    if (hSourceBitmap) EngDeleteSurface((HSURF)hSourceBitmap);
+    if (XlateObj) EngDeleteXlate(XlateObj);
+    if (DIBPalette) PALETTE_FreePaletteByHandle(DIBPalette);
+
+    return ret;
+}
+
 /* EOF */

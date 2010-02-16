@@ -388,11 +388,33 @@ INT APIENTRY RosGdiSetDIBits(HDC physDev, HBITMAP hUserBitmap, UINT StartScan,
 
 INT APIENTRY RosGdiSetDIBitsToDevice( HDC physDev, INT xDest, INT yDest, DWORD cx,
                                     DWORD cy, INT xSrc, INT ySrc,
-                                    UINT startscan, UINT lines, LPCVOID bits,
-                                    const BITMAPINFO *info, UINT coloruse )
+                                    UINT StartScan, UINT ScanLines, LPCVOID Bits,
+                                    const BITMAPINFO *bmi, UINT ColorUse )
 {
-    UNIMPLEMENTED;
-    return 0;
+    PDC pDC;
+
+    /* Get a pointer to the DCs */
+    pDC = DC_Lock(physDev);
+
+    /* Set the bits */
+    ScanLines = GreSetDIBitsToDevice(pDC,
+                                     xDest,
+                                     yDest,
+                                     cx,
+                                     cy,
+                                     xSrc,
+                                     ySrc,
+                                     StartScan,
+                                     ScanLines,
+                                     Bits,
+                                     bmi,
+                                     ColorUse);
+
+    /* Release DC objects */
+    DC_Unlock(pDC);
+
+    /* Return amount of lines set */
+    return ScanLines;
 }
 
 BOOL APIENTRY RosGdiStretchBlt( HDC physDevDst, INT xDst, INT yDst,

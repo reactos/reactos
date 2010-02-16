@@ -93,6 +93,22 @@ GreGetDIBits(
     BITMAPINFO  *bmi,
     UINT  ColorUse);
 
+INT
+NTAPI
+GreSetDIBitsToDevice(
+    PDC   DC,
+    INT   xDest,
+    INT   yDest,
+    DWORD cx,
+    DWORD cy,
+    INT   xSrc,
+    INT   ySrc,
+    UINT  StartScan,
+    UINT  ScanLines,
+    CONST VOID  *Bits,
+    CONST BITMAPINFO  *bmi,
+    UINT  ColorUse);
+
 INT FASTCALL
 BitsPerFormat(ULONG Format);
 
@@ -361,5 +377,8 @@ MouseSafetyOnDrawStart(SURFOBJ *pso,
 
 INT FASTCALL
 MouseSafetyOnDrawEnd(SURFOBJ *pso);
+
+/* Test functions */
+VOID NTAPI GrePerformTests();
 
 #endif
