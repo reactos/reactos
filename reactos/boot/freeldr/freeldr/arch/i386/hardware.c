@@ -433,21 +433,33 @@ static LONG DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     ULONGLONG SectorOffset = 0;
     ULONGLONG SectorCount = 0;
     PARTITION_TABLE_ENTRY PartitionTableEntry;
+    GEOMETRY Geometry;
+    EXTENDED_GEOMETRY ExtGeometry;
     CHAR FileName[1];
 
     if (!DissectArcPath(Path, FileName, &DriveNumber, &DrivePartition))
         return EINVAL;
-    SectorSize = (DrivePartition == 0xff ? 2048 : 512);
+
+    ExtGeometry.Size = sizeof(EXTENDED_GEOMETRY);
+    if (DiskGetExtendedDriveParameters(DriveNumber, &ExtGeometry, ExtGeometry.Size))
+    {
+        SectorSize = ExtGeometry.BytesPerSector;
+        SectorCount = ExtGeometry.Sectors;
+    }
+    else if (MachDiskGetDriveGeometry(DriveNumber, &Geometry))
+    {
+        SectorSize = Geometry.BytesPerSector;
+        SectorCount = Geometry.Sectors;
+    }
+    else
+        return EINVAL;
+
     if (DrivePartition != 0xff && DrivePartition != 0)
     {
         if (!DiskGetPartitionEntry(DriveNumber, DrivePartition, &PartitionTableEntry))
             return EINVAL;
         SectorOffset = PartitionTableEntry.SectorCountBeforePartition;
         SectorCount = PartitionTableEntry.PartitionSectorCount;
-    }
-    else
-    {
-        SectorCount = 0; /* FIXME */
     }
 
     Context = MmHeapAlloc(sizeof(DISKCONTEXT));
