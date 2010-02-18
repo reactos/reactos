@@ -714,7 +714,7 @@ KiConvertToGuiThread(VOID)
         "movl %%eax, %0\n"
         : "=r"(Result), "=r"(StackFrame)
         :
-        : "%esp", "%ecx", "%edx"
+        : "%esp", "%ecx", "%edx", "memory"
     );
         
     return Result;
