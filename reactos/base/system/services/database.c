@@ -1054,7 +1054,7 @@ ScmStartService(PSERVICE Service, DWORD argc, LPWSTR *argv)
         {
             Group->ServicesRunning = TRUE;
         }
-        Service->Status.dwCurrentState = SERVICE_RUNNING;
+        Service->Status.dwCurrentState = SERVICE_START_PENDING;
     }
 #if 0
     else
