@@ -636,14 +636,13 @@ MiBuildPfnDatabaseFromPages(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             if (MiIsRegularMemory(LoaderBlock, PageFrameIndex))
             {
                 /* Yes we do, set it up */
-                //DPRINT1("PDE is valid, setting up PFN entry\n");
                 Pfn1 = MI_PFN_TO_PFNENTRY(PageFrameIndex);
                 Pfn1->u4.PteFrame = StartupPdIndex;
                 Pfn1->PteAddress = PointerPde;
                 Pfn1->u2.ShareCount++;
                 Pfn1->u3.e2.ReferenceCount = 1;
                 Pfn1->u3.e1.PageLocation = ActiveAndValid;
-                Pfn1->u3.e1.CacheAttribute = MiCached;
+                Pfn1->u3.e1.CacheAttribute = MiNonCached;
             }
             else
             {
@@ -686,7 +685,7 @@ MiBuildPfnDatabaseFromPages(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                 Pfn2->u2.ShareCount++;
                                 Pfn2->u3.e2.ReferenceCount = 1;
                                 Pfn2->u3.e1.PageLocation = ActiveAndValid;
-                                Pfn2->u3.e1.CacheAttribute = MiCached;
+                                Pfn2->u3.e1.CacheAttribute = MiNonCached;
                             }
                         }
                     }
@@ -712,21 +711,181 @@ VOID
 NTAPI
 MiBuildPfnDatabaseZeroPage(VOID)
 {
-    /* FIXME: TODO */
+    PMMPFN Pfn1;
+    PMMPDE PointerPde;
+    
+    /* Grab the lowest page and check if it has no real references */
+    Pfn1 = MI_PFN_TO_PFNENTRY(MmLowestPhysicalPage);
+    if (!(MmLowestPhysicalPage) && !(Pfn1->u3.e2.ReferenceCount))
+    {
+        /* Make it a bogus page to catch errors */
+        PointerPde = MiAddressToPde(0xFFFFFFFF);
+        Pfn1->u4.PteFrame = PFN_FROM_PTE(PointerPde);
+        Pfn1->PteAddress = PointerPde;
+        Pfn1->u2.ShareCount++;
+        Pfn1->u3.e2.ReferenceCount = 0xFFF0;
+        Pfn1->u3.e1.PageLocation = ActiveAndValid;
+        Pfn1->u3.e1.CacheAttribute = MiNonCached;
+    } 
 }
 
 VOID
 NTAPI
 MiBuildPfnDatabaseFromLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    /* FIXME: TODO */   
+    PLIST_ENTRY NextEntry;
+    PFN_NUMBER PageCount = 0;
+    PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
+    PFN_NUMBER PageFrameIndex;
+    PMMPFN Pfn1;
+    PMMPTE PointerPte;
+    PMMPDE PointerPde;
+    
+    /* Now loop through the descriptors */
+    NextEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
+    while (NextEntry != &LoaderBlock->MemoryDescriptorListHead)
+    {
+        /* Get the current descriptor */
+        MdBlock = CONTAINING_RECORD(NextEntry,
+                                    MEMORY_ALLOCATION_DESCRIPTOR,
+                                    ListEntry);
+
+        /* Read its data */
+        PageCount = MdBlock->PageCount;
+        PageFrameIndex = MdBlock->BasePage;
+
+        /* Don't allow memory above what the PFN database is mapping */
+        if (PageFrameIndex > MmHighestPhysicalPage)
+        {
+            /* Since they are ordered, everything past here will be larger */
+            break;
+        }
+
+        /* On the other hand, the end page might be higher up... */
+        if ((PageFrameIndex + PageCount) > (MmHighestPhysicalPage + 1))
+        {
+            /* In which case we'll trim the descriptor to go as high as we can */
+            PageCount = MmHighestPhysicalPage + 1 - PageFrameIndex;
+            MdBlock->PageCount = PageCount;
+            
+            /* But if there's nothing left to trim, we got too high, so quit */
+            if (!PageCount) break;
+        }
+
+        /* Now check the descriptor type */
+        switch (MdBlock->MemoryType)
+        {
+            /* Check for bad RAM */
+            case LoaderBad:
+            
+                DPRINT1("You have damaged RAM modules. Stopping boot\n");
+                while (TRUE);
+                break;
+
+            /* Check for free RAM */
+            case LoaderFree:
+            case LoaderLoadedProgram:
+            case LoaderFirmwareTemporary:
+            case LoaderOsloaderStack:
+
+                /* Get the last page of this descriptor. Note we loop backwards */
+                PageFrameIndex += PageCount - 1;
+                Pfn1 = MI_PFN_TO_PFNENTRY(PageFrameIndex);
+                while (PageCount--)
+                {
+                    /* If the page really has no references, mark it as free */
+                    if (!Pfn1->u3.e2.ReferenceCount)
+                    {
+                        Pfn1->u3.e1.CacheAttribute = MiNonCached;
+                        MiInsertPageInFreeList(PageFrameIndex);
+                    }
+
+                    /* Go to the next page */
+                    Pfn1--;
+                    PageFrameIndex--;
+                }
+                
+                /* Done with this block */
+                break;
+
+            /* Check for pages that are invisible to us */
+            case LoaderFirmwarePermanent:
+            case LoaderSpecialMemory:
+            case LoaderBBTMemory:
+
+                /* And skip them */
+                break;
+
+            default:
+
+                /* Map these pages with the KSEG0 mapping that adds 0x80000000 */
+                PointerPte = MiAddressToPte(KSEG0_BASE + (PageFrameIndex << PAGE_SHIFT));
+                Pfn1 = MI_PFN_TO_PFNENTRY(PageFrameIndex);
+                while (PageCount--)
+                {
+                    /* Check if the page is really unused */
+                    PointerPde = MiAddressToPde(KSEG0_BASE + (PageFrameIndex << PAGE_SHIFT));
+                    if (!Pfn1->u3.e2.ReferenceCount)
+                    {
+                        /* Mark it as being in-use */
+                        Pfn1->u4.PteFrame = PFN_FROM_PTE(PointerPde);
+                        Pfn1->PteAddress = PointerPte;
+                        Pfn1->u2.ShareCount++;
+                        Pfn1->u3.e2.ReferenceCount = 1;
+                        Pfn1->u3.e1.PageLocation = ActiveAndValid;
+                        Pfn1->u3.e1.CacheAttribute = MiNonCached;
+                        
+                        /* Check for RAM disk page */
+                        if (MdBlock->MemoryType == LoaderXIPRom)
+                        {
+                            /* Make it a pseudo-I/O ROM mapping */
+                            Pfn1->u1.Flink = 0;
+                            Pfn1->u2.ShareCount = 0;
+                            Pfn1->u3.e2.ReferenceCount = 0;
+                            Pfn1->u3.e1.PageLocation = 0;
+                            Pfn1->u3.e1.Rom = 1;
+                            Pfn1->u4.InPageError = 0;
+                            Pfn1->u3.e1.PrototypePte = 1;
+                        }
+                    }
+                    
+                    /* Advance page structures */
+                    Pfn1++;
+                    PageFrameIndex++;
+                    PointerPte++;
+                }
+                break;
+        }
+
+        /* Next descriptor entry */
+        NextEntry = MdBlock->ListEntry.Flink;
+    }
 }
 
 VOID
 NTAPI
 MiBuildPfnDatabaseSelf(VOID)
 {
-    /* FIXME: TODO */
+    PMMPTE PointerPte, LastPte;
+    PMMPFN Pfn1;
+    
+    /* Loop the PFN database page */
+    PointerPte = MiAddressToPte(MI_PFN_TO_PFNENTRY(MmLowestPhysicalPage));
+    LastPte = MiAddressToPte(MI_PFN_TO_PFNENTRY(MmHighestPhysicalPage));
+    while (PointerPte <= LastPte)
+    {
+        /* Make sure the page is valid */
+        if (PointerPte->u.Hard.Valid == 1)
+        {
+            /* Get the PFN entry and just mark it referenced */
+            Pfn1 = MI_PFN_TO_PFNENTRY(PointerPte->u.Hard.PageFrameNumber);
+            Pfn1->u2.ShareCount = 1;
+            Pfn1->u3.e2.ReferenceCount = 1;
+        }
+        
+        /* Next */
+        PointerPte++;
+    }
 }
 
 VOID
@@ -744,6 +903,69 @@ MiInitializePfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     
     /* Finally add the pages for the PFN database itself */ 
     MiBuildPfnDatabaseSelf();
+}
+
+VOID
+NTAPI
+MmDumpArmPfnDatabase(VOID)
+{
+    ULONG i;
+    PMMPFN Pfn1;
+    PCHAR Consumer = "Unknown";
+    KIRQL OldIrql;
+    ULONG ActivePages = 0, FreePages = 0, OtherPages = 0;
+    
+    KeRaiseIrql(HIGH_LEVEL, &OldIrql);
+    
+    //
+    // Loop the PFN database
+    //
+    for (i = 0; i <= MmHighestPhysicalPage; i++)
+    {
+        Pfn1 = MI_PFN_TO_PFNENTRY(i);
+        if (!Pfn1) continue;
+        
+        //
+        // Get the page location
+        //
+        switch (Pfn1->u3.e1.PageLocation)
+        {
+            case ActiveAndValid:
+                
+                Consumer = "Active and Valid";
+                ActivePages++;
+                break;
+                
+            case FreePageList:
+                
+                Consumer = "Free Page List";
+                FreePages++;
+                break;
+                
+            default:
+                
+                Consumer = "Other (ASSERT!)";
+                OtherPages++;
+                break;
+        }
+                
+        //
+        // Pretty-print the page
+        //
+        DbgPrint("0x%08p:\t%20s\t(%02d.%02d) [%08p-%08p])\n",
+                 i << PAGE_SHIFT,
+                 Consumer,
+                 Pfn1->u3.e2.ReferenceCount,
+                 Pfn1->u2.ShareCount,
+                 Pfn1->PteAddress,
+                 Pfn1->u4.PteFrame);
+    }
+    
+    DbgPrint("Active:               %d pages\t[%d KB]\n", ActivePages,  (ActivePages    << PAGE_SHIFT) / 1024);
+    DbgPrint("Free:                 %d pages\t[%d KB]\n", FreePages,    (FreePages      << PAGE_SHIFT) / 1024);
+    DbgPrint("Other:                %d pages\t[%d KB]\n", OtherPages,   (OtherPages     << PAGE_SHIFT) / 1024);
+    
+    KeLowerIrql(OldIrql);
 }
 
 PFN_NUMBER
