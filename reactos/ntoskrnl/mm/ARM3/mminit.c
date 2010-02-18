@@ -797,7 +797,7 @@ MiBuildPfnDatabaseFromLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                     if (!Pfn1->u3.e2.ReferenceCount)
                     {
                         Pfn1->u3.e1.CacheAttribute = MiNonCached;
-                        MiInsertPageInFreeList(PageFrameIndex);
+                        //MiInsertPageInFreeList(PageFrameIndex);
                     }
 
                     /* Go to the next page */
