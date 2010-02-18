@@ -1135,7 +1135,7 @@ BOOL
 WINAPI
 DllMain(IN HINSTANCE hinstDLL,
         IN DWORD dwReason,
-	    IN LPVOID lpvReserved)
+        IN LPVOID lpvReserved)
 {
     switch (dwReason)
     {
