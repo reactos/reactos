@@ -24,35 +24,6 @@ BOOLEAN MpwThreadShouldTerminate;
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS NTAPI
-MmWriteDirtyPages(ULONG Target, PULONG Actual)
-{
-   PFN_TYPE Page;
-   PFN_TYPE NextPage;
-   NTSTATUS Status;
-
-   Page = MmGetLRUFirstUserPage();
-   while (Page != 0 && Target > 0)
-   {
-      /*
-       * FIXME: While the current page is write back it is possible
-       *        that the next page is freed and not longer a user page.
-       */
-      NextPage = MmGetLRUNextUserPage(Page);
-      if (MmIsDirtyPageRmap(Page))
-      {
-         Status = MmWritePagePhysicalAddress(Page);
-         if (NT_SUCCESS(Status))
-         {
-            Target--;
-         }
-      }
-      Page = NextPage;
-   }
-   *Actual = Target;
-   return(STATUS_SUCCESS);
-}
-
-NTSTATUS NTAPI
 MmMpwThreadMain(PVOID Ignored)
 {
    NTSTATUS Status;
@@ -81,12 +52,6 @@ MmMpwThreadMain(PVOID Ignored)
       }
 
       PagesWritten = 0;
-#if 0
-      /*
-       *  FIXME: MmWriteDirtyPages doesn't work correctly.
-       */
-      MmWriteDirtyPages(128, &PagesWritten);
-#endif
 
       CcRosFlushDirtyPages(128, &PagesWritten);
    }
