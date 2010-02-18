@@ -548,6 +548,21 @@ interface IFileSinkFilter2 : IFileSinkFilter
 
 typedef IFileSinkFilter2 *PFILESINKFILTER2;
 
+[
+        object,
+        uuid(f90a6130-b658-11d2-ae49-0000f8754b99),
+        pointer_default(unique)
+]
+interface IAMDeviceRemoval : IUnknown
+{
+    HRESULT DeviceInfo(
+        [out] CLSID *pclsidInterfaceClass,
+        [out] LPWSTR *pwszSymbolicLink);
+    HRESULT Reassociate();
+    HRESULT Disassociate();
+}
+
+
 typedef enum
 {
     AM_FILE_OVERWRITE = 0x00000001,
@@ -775,6 +790,37 @@ interface IStreamBuilder : IUnknown
         );
 }
 
+[
+    object,
+    uuid(56a868af-0ad4-11ce-b03a-0020af0ba770),
+    pointer_default(unique)
+]
+interface IDistributorNotify : IUnknown
+{
+    HRESULT Stop(void);
+    HRESULT Pause(void);
+    HRESULT Run(REFERENCE_TIME tStart);
+    HRESULT SetSyncSource([in] IReferenceClock * pClock);
+    HRESULT NotifyGraphChange(void);
+}
+
+typedef enum
+{
+    AM_STREAM_INFO_START_DEFINED   = 0x01,
+    AM_STREAM_INFO_STOP_DEFINED    = 0x02,
+    AM_STREAM_INFO_DISCARDING      = 0x04,
+    AM_STREAM_INFO_STOP_SEND_EXTRA = 0x10
+} AM_STREAM_INFO_FLAGS;
+
+typedef struct
+{
+    REFERENCE_TIME tStart;
+    REFERENCE_TIME tStop;
+    DWORD dwStartCookie;
+    DWORD dwStopCookie;
+    DWORD dwFlags;
+}AM_STREAM_INFO;
+
 
 /*****************************************************************************
  * IAMStreamConfig interface
@@ -990,6 +1036,19 @@ interface ISeekingPassThru : IUnknown
     HRESULT Init( [in] BOOL bSupportRendering, [in] IPin *pPin);
 }
 
+[
+    local,
+    object,
+    uuid(4d5466b0-a49c-11d1-abe8-00a0c905f375),
+    pointer_default(unique)
+
+]
+interface IAMClockAdjust : IUnknown
+{
+    HRESULT SetClockDelta([in] REFERENCE_TIME rtDelta);
+};
+
+
 enum _AM_FILTER_MISC_FLAGS
 {
     AM_FILTER_MISC_FLAGS_IS_RENDERER = 0x1,
@@ -1006,3 +1065,19 @@ interface IAMFilterMiscFlags : IUnknown
 {
     ULONG GetMiscFlags();
 };
+
+
+[
+    object,
+    uuid(36b73881-c2c8-11cf-8b46-00805f6cef60),
+    pointer_default(unique)
+]
+interface IAMStreamControl : IUnknown
+{
+    HRESULT StartAt( [in] REFERENCE_TIME * ptStart,
+                     [in] DWORD dwCookie );
+    HRESULT StopAt(  [in] REFERENCE_TIME * ptStop,
+                     [in] BOOL bSendExtra,
+                     [in] DWORD dwCookie );
+    HRESULT GetInfo( [out] AM_STREAM_INFO *pInfo);
+}

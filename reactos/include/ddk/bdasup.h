@@ -26,6 +26,18 @@ typedef struct _BDA_FILTER_TEMPLATE
     const BDA_PIN_PAIRING *pPinPairs;
 } BDA_FILTER_TEMPLATE, *PBDA_FILTER_TEMPLATE;
 
+
+typedef struct _KSM_PIN
+{
+    KSMETHOD    Method;
+    union
+    {
+        ULONG       PinId;
+        ULONG       PinType;
+    };
+    ULONG       Reserved;
+} KSM_PIN, * PKSM_PIN;
+
 /* Functions */
 
 STDMETHODIMP_(NTSTATUS) BdaCheckChanges(IN PIRP  Irp);

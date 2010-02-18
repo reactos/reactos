@@ -244,3 +244,21 @@ interface IMediaPosition : IDispatch
     HRESULT CanSeekForward( [out] LONG *pCanSeekForward );
     HRESULT CanSeekBackward( [out] LONG *pCanSeekBackward );
 }
+
+/*****************************************************************************
+ * IDeferredCommand interface
+ */
+[
+    object,
+    uuid(56a868b8-0ad4-11ce-b03a-0020af0ba770),
+    pointer_default(unique)
+]
+interface IDeferredCommand : IUnknown
+{
+    HRESULT Cancel( void);
+    HRESULT Confidence([out] LONG *pConfidence);
+    HRESULT Postpone([in] REFTIME newtime);
+    HRESULT GetHResult([out] HRESULT *phrResult);
+ 
+}
+

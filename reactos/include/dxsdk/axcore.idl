@@ -348,6 +348,22 @@ interface IReferenceClock : IUnknown
 
 typedef IReferenceClock *PREFERENCECLOCK;
 
+
+[
+local,
+object,
+uuid(ebec459c-2eca-4d42-a8af-30df557614b8),
+pointer_default(unique)
+]
+interface IReferenceClockTimerControl : IUnknown {
+
+    HRESULT SetDefaultTimerResolution(
+        REFERENCE_TIME timerResolution);
+    HRESULT GetDefaultTimerResolution(
+        [out] REFERENCE_TIME* pTimerResolution);
+}
+
+
 /*
 [
 object,
