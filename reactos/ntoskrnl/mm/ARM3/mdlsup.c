@@ -954,7 +954,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
         // Grab the PFN
         //
         PageFrameIndex = PFN_FROM_PTE(PointerPte);
-        if (PageFrameIndex < MmHighestPhysicalPage)
+        if (PageFrameIndex <= MmHighestPhysicalPage)
         {
             //
             // Get the PFN entry
