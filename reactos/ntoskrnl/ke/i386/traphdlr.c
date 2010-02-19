@@ -1401,7 +1401,7 @@ KiSystemCall(IN ULONG SystemCallNumber,
         DescriptorTable = (PVOID)((ULONG_PTR)Thread->ServiceTable + Offset);
 
         /* Validate the system call number */
-        if (__builtin_expect(Id > DescriptorTable->Limit, 0))
+        if (__builtin_expect(Id >= DescriptorTable->Limit, 0))
         {
             /* Check if this is a GUI call */
             if (__builtin_expect(!(Offset & SERVICE_TABLE_TEST), 0))
