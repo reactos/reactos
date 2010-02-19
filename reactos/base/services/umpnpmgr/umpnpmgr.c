@@ -51,12 +51,11 @@
 
 /* GLOBALS ******************************************************************/
 
-static VOID CALLBACK
-ServiceMain(DWORD argc, LPTSTR *argv);
-
-static SERVICE_TABLE_ENTRY ServiceTable[2] =
+static VOID CALLBACK ServiceMain(DWORD, LPWSTR *);
+static WCHAR ServiceName[] = L"PlugPlay";
+static SERVICE_TABLE_ENTRYW ServiceTable[] =
 {
-    {TEXT("PlugPlay"), ServiceMain},
+    {ServiceName, ServiceMain},
     {NULL, NULL}
 };
 
@@ -2446,63 +2445,36 @@ PnpEventThread(LPVOID lpParameter)
 }
 
 
-static VOID CALLBACK
-ServiceMain(DWORD argc, LPTSTR *argv)
+static DWORD WINAPI
+ServiceControlHandler(DWORD dwControl,
+                      DWORD dwEventType,
+                      LPVOID lpEventData,
+                      LPVOID lpContext)
 {
-    HANDLE hThread;
-    DWORD dwThreadId;
-
-    UNREFERENCED_PARAMETER(argc);
-    UNREFERENCED_PARAMETER(argv);
-
-    DPRINT("ServiceMain() called\n");
-
-    hThread = CreateThread(NULL,
-                           0,
-                           PnpEventThread,
-                           NULL,
-                           0,
-                           &dwThreadId);
-    if (hThread != NULL)
-        CloseHandle(hThread);
-
-    hThread = CreateThread(NULL,
-                           0,
-                           RpcServerThread,
-                           NULL,
-                           0,
-                           &dwThreadId);
-    if (hThread != NULL)
-        CloseHandle(hThread);
-
-    hThread = CreateThread(NULL,
-                           0,
-                           DeviceInstallThread,
-                           NULL,
-                           0,
-                           &dwThreadId);
-    if (hThread != NULL)
-        CloseHandle(hThread);
-
-    DPRINT("ServiceMain() done\n");
+    /* FIXME */
+    DPRINT1("ServiceControlHandler() called (control code %lu)\n", dwControl);
+    return ERROR_SUCCESS;
 }
 
 
-int
-wmain(int argc, WCHAR *argv[])
+static DWORD
+ServiceInit(VOID)
 {
-    BOOLEAN OldValue;
+    HANDLE hThread;
+    DWORD dwThreadId;
     DWORD dwError;
-
-    UNREFERENCED_PARAMETER(argc);
-    UNREFERENCED_PARAMETER(argv);
-
-    DPRINT("Umpnpmgr: main() started\n");
+    BOOLEAN OldValue;
 
     /* We need this privilege for using CreateProcessAsUserW */
-    RtlAdjustPrivilege(SE_ASSIGNPRIMARYTOKEN_PRIVILEGE, TRUE, FALSE, &OldValue);
+    RtlAdjustPrivilege(SE_ASSIGNPRIMARYTOKEN_PRIVILEGE,
+                       TRUE,
+                       FALSE,
+                       &OldValue);
 
-    hInstallEvent = CreateEvent(NULL, TRUE, SetupIsActive()/*FALSE*/, NULL);
+    hInstallEvent = CreateEvent(NULL,
+                                TRUE,
+                                SetupIsActive()/*FALSE*/,
+                                NULL);
     if (hInstallEvent == NULL)
     {
         dwError = GetLastError();
@@ -2510,7 +2482,10 @@ wmain(int argc, WCHAR *argv[])
         return dwError;
     }
 
-    hDeviceInstallListNotEmpty = CreateEvent(NULL, FALSE, FALSE, NULL);
+    hDeviceInstallListNotEmpty = CreateEvent(NULL,
+                                             FALSE,
+                                             FALSE,
+                                             NULL);
     if (hDeviceInstallListNotEmpty == NULL)
     {
         dwError = GetLastError();
@@ -2557,11 +2532,110 @@ wmain(int argc, WCHAR *argv[])
         return dwError;
     }
 
-    StartServiceCtrlDispatcher(ServiceTable);
+    hThread = CreateThread(NULL,
+                           0,
+                           PnpEventThread,
+                           NULL,
+                           0,
+                           &dwThreadId);
+    if (hThread == NULL)
+    {
+        return GetLastError();
+    }
+    CloseHandle(hThread);
 
-    DPRINT("Umpnpmgr: main() done\n");
+    hThread = CreateThread(NULL,
+                           0,
+                           RpcServerThread,
+                           NULL,
+                           0,
+                           &dwThreadId);
+    if (hThread == NULL)
+    {
+        return GetLastError();
+    }
+    CloseHandle(hThread);
 
-    ExitThread(0);
+    hThread = CreateThread(NULL,
+                           0,
+                           DeviceInstallThread,
+                           NULL,
+                           0,
+                           &dwThreadId);
+    if (hThread == NULL)
+    {
+        return GetLastError();
+    }
+    CloseHandle(hThread);
+
+    return ERROR_SUCCESS;
+}
+
+
+static VOID CALLBACK
+ServiceMain(DWORD argc,
+            LPWSTR *argv)
+{
+    SERVICE_STATUS ServiceStatus;
+    SERVICE_STATUS_HANDLE ServiceStatusHandle;
+    DWORD dwError;
+
+    UNREFERENCED_PARAMETER(argc);
+    UNREFERENCED_PARAMETER(argv);
+
+    DPRINT("ServiceMain() called\n");
+
+    ServiceStatusHandle = RegisterServiceCtrlHandlerExW(ServiceName,
+                                                        ServiceControlHandler,
+                                                        NULL);
+    if (!ServiceStatusHandle)
+    {
+        dwError = GetLastError();
+        DPRINT1("RegisterServiceCtrlHandlerW() failed! (Error %lu)\n", dwError);
+        return;
+    }
+
+    ServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
+    ServiceStatus.dwCurrentState = SERVICE_START_PENDING;
+    ServiceStatus.dwControlsAccepted = 0;
+    ServiceStatus.dwWin32ExitCode = NO_ERROR;
+    ServiceStatus.dwServiceSpecificExitCode = 0;
+    ServiceStatus.dwCheckPoint = 0;
+    ServiceStatus.dwWaitHint = 2000;
+
+    SetServiceStatus(ServiceStatusHandle,
+                     &ServiceStatus);
+
+    dwError = ServiceInit();
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("Service stopped\n");
+        ServiceStatus.dwCurrentState = SERVICE_STOPPED;
+    }
+    else
+    {
+        ServiceStatus.dwCurrentState = SERVICE_RUNNING;
+    }
+
+    SetServiceStatus(ServiceStatusHandle,
+                     &ServiceStatus);
+
+    DPRINT("ServiceMain() done\n");
+}
+
+
+int
+wmain(int argc,
+      WCHAR *argv[])
+{
+    UNREFERENCED_PARAMETER(argc);
+    UNREFERENCED_PARAMETER(argv);
+
+    DPRINT1("Umpnpmgr: main() started\n");
+
+    StartServiceCtrlDispatcherW(ServiceTable);
+
+    DPRINT1("Umpnpmgr: main() done\n");
 
     return 0;
 }
