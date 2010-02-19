@@ -188,11 +188,6 @@ MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages)
             Target--;
             (*NrFreedPages)++;
         }
-        else if (Status == STATUS_PAGEFILE_QUOTA)
-        {
-            MmRemoveLRUUserPage(CurrentPage);
-            MmInsertLRULastUserPage(CurrentPage);
-        }
         
         CurrentPage = NextPage;
     }

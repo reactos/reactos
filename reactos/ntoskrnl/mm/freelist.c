@@ -74,71 +74,81 @@ static ULONG UnzeroedPageCount = 0;
 
 /* FUNCTIONS *************************************************************/
 
+static RTL_BITMAP MiUserPfnBitMap;
+
+/* FUNCTIONS *************************************************************/
+
+VOID
+NTAPI
+MiInitializeUserPfnBitmap(VOID)
+{
+    PVOID Bitmap;
+    
+    /* Allocate enough buffer for the PFN bitmap and align it on 32-bits */
+    Bitmap = ExAllocatePoolWithTag(NonPagedPool,
+                                   (((MmHighestPhysicalPage + 1) + 31) / 32) * 4,
+                                   '  mM');
+    ASSERT(Bitmap);
+
+    /* Initialize it and clear all the bits to begin with */
+    RtlInitializeBitMap(&MiUserPfnBitMap,
+                        Bitmap,
+                        MmHighestPhysicalPage + 1);
+    RtlClearAllBits(&MiUserPfnBitMap);
+}
+
 PFN_TYPE
 NTAPI
 MmGetLRUFirstUserPage(VOID)
 {
-   PLIST_ENTRY NextListEntry;
-   PHYSICAL_PAGE* PageDescriptor;
-   KIRQL oldIrql;
-
-   oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-   NextListEntry = UserPageListHead.Flink;
-   if (NextListEntry == &UserPageListHead)
-   {
-	  KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-      return 0;
-   }
-   PageDescriptor = CONTAINING_RECORD(NextListEntry, PHYSICAL_PAGE, ListEntry);
-   KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-   return PageDescriptor - MmPfnDatabase[0];
+    ULONG Position;
+    KIRQL OldIrql;
+    
+    /* Find the first user page */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    Position = RtlFindSetBits(&MiUserPfnBitMap, 1, 0);
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    if (Position == 0xFFFFFFFF) return 0;
+    
+    /* Return it */
+    return Position;
 }
 
 VOID
 NTAPI
 MmInsertLRULastUserPage(PFN_TYPE Pfn)
 {
-   KIRQL oldIrql;
-   PPHYSICAL_PAGE Page;
+    KIRQL OldIrql;
 
-   oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-   Page = MiGetPfnEntry(Pfn);
-//   if (!Page->Consumer != MC_USER) DPRINT1("Page Consumer: %d\n", Page->Consumer);
-   ASSERT(Page->Consumer == MC_USER);
-   ASSERT(Page->u3.e1.PageLocation = ActiveAndValid);
-   InsertTailList(&UserPageListHead, &Page->ListEntry);
-   KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
+    /* Set the page as a user page */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    RtlSetBit(&MiUserPfnBitMap, Pfn);
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
 }
 
 PFN_TYPE
 NTAPI
 MmGetLRUNextUserPage(PFN_TYPE PreviousPfn)
 {
-   PLIST_ENTRY NextListEntry;
-   PHYSICAL_PAGE* PageDescriptor;
-   KIRQL oldIrql;
-   PPHYSICAL_PAGE Page;
-
-   oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-   Page = MiGetPfnEntry(PreviousPfn);
-   ASSERT(Page->Consumer == MC_USER);
-   ASSERT(Page->u3.e1.PageLocation = ActiveAndValid);
-   NextListEntry = (PLIST_ENTRY)Page->ListEntry.Flink;
-   if (NextListEntry == &UserPageListHead)
-   {
-	  KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-      return 0;
-   }
-   PageDescriptor = CONTAINING_RECORD(NextListEntry, PHYSICAL_PAGE, ListEntry);
-   KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-   return PageDescriptor - MmPfnDatabase[0];
+    ULONG Position;
+    KIRQL OldIrql;
+    
+    /* Find the next user page */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    Position = RtlFindSetBits(&MiUserPfnBitMap, 1, PreviousPfn + 1);
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    if (Position == 0xFFFFFFFF) return 0;
+    
+    /* Return it */
+    return Position;
 }
 
 VOID
 NTAPI
 MmRemoveLRUUserPage(PFN_TYPE Page)
 {
-   RemoveEntryList(&MiGetPfnEntry(Page)->ListEntry);
+    /* Unset the page as a user page */
+    RtlClearBit(&MiUserPfnBitMap, Page);
 }
 
 BOOLEAN
@@ -907,7 +917,6 @@ MmDereferencePage(PFN_TYPE Pfn)
    if (Page->u3.e2.ReferenceCount == 0)
    {
       MmAvailablePages++;
-      if (Page->Consumer == MC_USER) RemoveEntryList(&Page->ListEntry);
       Page->u3.e1.PageLocation = FreePageList;
       InsertTailList(&FreeUnzeroedPageListHead,
                      &Page->ListEntry);

@@ -349,6 +349,8 @@ MiDbgDumpMemoryDescriptors(VOID)
     DPRINT1("Total: %08lX (%d MB)\n", TotalPages, (TotalPages * PAGE_SIZE) / 1024 / 1024);
 }
 
+VOID NTAPI MiInitializeUserPfnBitmap(VOID);
+
 BOOLEAN
 NTAPI
 MmInitSystem(IN ULONG Phase,
@@ -397,6 +399,7 @@ MmInitSystem(IN ULONG Phase,
         MmInitializePagedPool();
         
         /* Initialize working sets */
+        MiInitializeUserPfnBitmap();
         MmInitializeMemoryConsumer(MC_USER, MmTrimUserMemory);
 
         /* Initialize the user mode image list */
