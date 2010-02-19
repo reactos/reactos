@@ -1000,15 +1000,16 @@ MmZeroPageThreadMain(PVOID Ignored)
          Status = MiZeroPage(Pfn);
 
          oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-         PageDescriptor->u3.e1.PageLocation = ZeroedPageList;
          if (NT_SUCCESS(Status))
          {
             InsertHeadList(&FreeZeroedPageListHead, ListEntry);
+            PageDescriptor->u3.e1.PageLocation = ZeroedPageList;
             Count++;
          }
          else
          {
             InsertHeadList(&FreeUnzeroedPageListHead, ListEntry);
+            PageDescriptor->u3.e1.PageLocation = FreePageList;
             UnzeroedPageCount++;
          }
 
