@@ -480,7 +480,6 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
             Pfn1->u3.e1.StartOfAllocation = 1;
             Pfn1->u3.e1.EndOfAllocation = 1;
             Pfn1->u3.e2.ReferenceCount = 1;
-            Pfn1->u3.e1.PageLocation = ActiveAndValid;
             Pfn1->SavedSwapEntry = 0;
             
             //
