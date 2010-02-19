@@ -120,6 +120,7 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PFN_TYPE Page)
       if (IsListEmpty(&AllocationListHead) || MmAvailablePages < MiMinimumAvailablePages)
       {
          KeReleaseSpinLock(&AllocationListLock, OldIrql);
+         if(Consumer == MC_USER) MmRemoveLRUUserPage(Page);
          OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
          MmDereferencePage(Page);
          KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
