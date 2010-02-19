@@ -29,7 +29,6 @@
 //
 //        REACTOS                 NT
 //
-#define Consumer             u3.e1.PageColor
 #define RmapListHead         AweReferenceCount
 #define SavedSwapEntry       u4.EntireFrame
 #define RemoveEntryList(x)   RemoveEntryList((PLIST_ENTRY)x)
@@ -59,8 +58,6 @@ MMPFNLIST MmStandbyPageListHead;
 MMPFNLIST MmModifiedPageListHead;
 MMPFNLIST MmModifiedNoWritePageListHead;
 
-/* List of pages allocated to the MC_USER Consumer */
-static LIST_ENTRY UserPageListHead;
 /* List of pages zeroed by the ZPW (MmZeroPageThreadMain) */
 static LIST_ENTRY FreeZeroedPageListHead;
 /* List of free pages, filled by MmGetReferenceCountPage and
@@ -282,7 +279,6 @@ MiFindContiguousPages(IN PFN_NUMBER LowestPfn,
                             // This PFN is now a used page, set it up
                             //
                             RemoveEntryList(&Pfn1->ListEntry);
-                            Pfn1->Consumer = MC_NPPOOL;
                             Pfn1->u3.e2.ReferenceCount = 1;
                             Pfn1->SavedSwapEntry = 0;
                             
@@ -481,7 +477,6 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
             //
             // Allocate it and mark it
             //
-            Pfn1->Consumer = MC_NPPOOL;
             Pfn1->u3.e1.StartOfAllocation = 1;
             Pfn1->u3.e1.EndOfAllocation = 1;
             Pfn1->u3.e2.ReferenceCount = 1;
@@ -532,7 +527,6 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
                 //
                 // Now setup the page and mark it
                 //
-                Pfn1->Consumer = MC_NPPOOL;
                 Pfn1->u3.e2.ReferenceCount = 1;
                 Pfn1->u3.e1.StartOfAllocation = 1;
                 Pfn1->u3.e1.EndOfAllocation = 1;
@@ -642,43 +636,11 @@ MmDumpPfnDatabase(VOID)
         if (!Pfn1) continue;
         
         //
-        // Get the consumer
-        //
-        switch (Pfn1->Consumer)
-        {
-            case MC_NPPOOL:
-                
-                Type = "Nonpaged Pool";
-                break;
-                
-            case MC_PPOOL:
-                
-                Type = "Paged Pool";
-                break;
-                
-            case MC_CACHE:
-                
-                Type = "File System Cache";
-                break;
-                
-            case MC_USER:
-                
-                Type = "Process Working Set";
-                break;
-                
-            case MC_SYSTEM:
-                
-                Type = "System";
-                break;
-        }
-        
-        //
         // Get the type
         //
         if (MiIsPfnInUse(Pfn1))
         {
             State = "Used";
-            Totals[Pfn1->Consumer]++;
         }
         else
         {
@@ -720,13 +682,11 @@ MmInitializePageList(VOID)
     ULONG NrSystemPages = 0;
 
     /* Initialize the page lists */
-    InitializeListHead(&UserPageListHead);
     InitializeListHead(&FreeUnzeroedPageListHead);
     InitializeListHead(&FreeZeroedPageListHead);
 
     /* This is what a used page looks like */
     RtlZeroMemory(&UsedPage, sizeof(UsedPage));
-    UsedPage.Consumer = MC_NPPOOL;
     UsedPage.u3.e1.PageLocation = ActiveAndValid;
     UsedPage.u3.e2.ReferenceCount = 1;
 
@@ -784,9 +744,6 @@ MmInitializePageList(VOID)
     /* Finally handle the pages describing the PFN database themselves */
     for (i = MxOldFreeDescriptor.BasePage; i < MxFreeDescriptor->BasePage; i++)
     {
-        /* Ensure this page was not added previously */
-        ASSERT(MmPfnDatabase[0][i].Consumer == 0);
-
         /* Mark it as used kernel memory */
         MmPfnDatabase[0][i] = UsedPage;
         NrSystemPages++;
@@ -898,7 +855,6 @@ NTAPI
 MiSetConsumer(IN PFN_TYPE Pfn,
               IN ULONG Type)
 {
-    MiGetPfnEntry(Pfn)->Consumer = Type;
     MiGetPfnEntry(Pfn)->u3.e1.PageLocation = ActiveAndValid;
 }
 
@@ -966,7 +922,6 @@ MmAllocPage(ULONG Type, SWAPENTRY SwapEntry)
       PageDescriptor = CONTAINING_RECORD(ListEntry, PHYSICAL_PAGE, ListEntry);
    }
 
-   PageDescriptor->Consumer = Type;
    PageDescriptor->u3.e2.ReferenceCount = 1;
    PageDescriptor->SavedSwapEntry = SwapEntry;
 
