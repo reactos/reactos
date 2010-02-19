@@ -175,13 +175,14 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
     
     /* Check for global bit */
+#if 0
     if (KeFeatureBits & KF_GLOBAL_PAGE)
     {
         /* Set it on the template PTE and PDE */
         ValidKernelPte.u.Hard.Global = TRUE;
         ValidKernelPde.u.Hard.Global = TRUE;
     }
-    
+#endif
     /* Now templates are ready */
     TempPte = ValidKernelPte;
     TempPde = ValidKernelPde;

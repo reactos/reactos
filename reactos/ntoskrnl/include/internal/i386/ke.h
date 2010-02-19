@@ -439,7 +439,6 @@ extern ULONG KeI386EFlagsOrMaskV86;
 extern BOOLEAN KeI386VirtualIntExtensions;
 extern KIDTENTRY KiIdt[MAXIMUM_IDTVECTOR];
 extern KDESCRIPTOR KiIdtDescriptor;
-extern ULONG Ke386GlobalPagesEnabled;
 extern BOOLEAN KiI386PentiumLockErrataPresent;
 extern ULONG KeI386NpxPresent;
 extern ULONG KeI386XMMIPresent;

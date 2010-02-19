@@ -284,10 +284,6 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
                     KeBugCheck(MEMORY_MANAGEMENT);
                 }
                 Entry = PFN_TO_PTE(Pfn) | PA_PRESENT | PA_READWRITE;
-                if (Ke386GlobalPagesEnabled)
-                {
-                    Entry |= PA_GLOBAL;
-                }
                 if(0 != InterlockedCompareExchangePte(&MmGlobalKernelPageDirectory[PdeOffset], Entry, 0))
                 {
                     MmReleasePageMemoryConsumer(MC_SYSTEM, Pfn);
@@ -758,10 +754,6 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
     if (Address >= MmSystemRangeStart)
     {
         Attributes &= ~PA_USER;
-        if (Ke386GlobalPagesEnabled)
-        {
-            Attributes |= PA_GLOBAL;
-        }
     }
     else
     {
@@ -907,10 +899,6 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
     if (Address >= MmSystemRangeStart)
     {
         Attributes &= ~PA_USER;
-        if (Ke386GlobalPagesEnabled)
-        {
-            Attributes |= PA_GLOBAL;
-        }
     }
     else
     {
@@ -1017,11 +1005,6 @@ MmInitGlobalKernelPageDirectory(VOID)
             0 == MmGlobalKernelPageDirectory[i] && 0 != CurrentPageDirectory[i])
         {
             MmGlobalKernelPageDirectory[i] = CurrentPageDirectory[i];
-            if (Ke386GlobalPagesEnabled)
-            {
-                MmGlobalKernelPageDirectory[i] |= PA_GLOBAL;
-                CurrentPageDirectory[i] |= PA_GLOBAL;
-            }
         }
     }
 }
