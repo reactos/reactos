@@ -516,7 +516,7 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
                 //
                 // Make sure it's free and if this is our first pass, zeroed
                 //
-                if (!MiIsPfnInUse(Pfn1)) continue;
+                if (MiIsPfnInUse(Pfn1)) continue;
                 if ((Pfn1->u3.e1.PageLocation == ZeroedPageList) != LookForZeroedPages) continue;
                 
                 //
