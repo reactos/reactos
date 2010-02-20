@@ -60,6 +60,11 @@
 #endif
 
 //
+// PFN List Sentinel
+//
+#define LIST_HEAD 0xFFFFFFFF
+
+//
 // FIXFIX: These should go in ex.h after the pool merge
 //
 #define POOL_LISTS_PER_PAGE (PAGE_SIZE / sizeof(LIST_ENTRY))
@@ -211,6 +216,7 @@ extern ULONG MmSecondaryColorMask;
 extern ULONG MmNumberOfSystemPtes;
 extern ULONG MmMaximumNonPagedPoolPercent;
 extern ULONG MmLargeStackSize;
+extern PMMCOLOR_TABLES MmFreePagesByColor[FreePageList + 1];
 
 #define MI_PFN_TO_PFNENTRY(x)     (&MmPfnDatabase[1][x])
 #define MI_PFNENTRY_TO_PFN(x)     (x - MmPfnDatabase[1])
@@ -372,6 +378,32 @@ NTAPI
 MiUnmapLockedPagesInUserSpace(
     IN PVOID BaseAddress,
     IN PMDL Mdl
+);
+
+VOID
+NTAPI
+MiInsertInListTail(
+    IN PMMPFNLIST ListHead,
+    IN PMMPFN Entry
+);
+
+VOID
+NTAPI
+MiRemoveFromList(
+    IN PMMPFN Entry
+);
+
+PMMPFN
+NTAPI
+MiRemoveHeadList(
+    IN PMMPFNLIST ListHead
+);
+
+
+VOID
+NTAPI
+MiInsertPageInFreeList(
+    IN PFN_NUMBER PageFrameIndex
 );
 
 /* EOF */
