@@ -191,7 +191,7 @@ ScmCreateNewServiceRecord(LPCWSTR lpServiceName,
 VOID
 ScmDeleteServiceRecord(PSERVICE lpService)
 {
-    DPRINT1("Deleting Service %S\n", lpService->lpServiceName);
+    DPRINT("Deleting Service %S\n", lpService->lpServiceName);
 
     /* Delete the display name */
     if (lpService->lpDisplayName != NULL &&
@@ -215,12 +215,12 @@ ScmDeleteServiceRecord(PSERVICE lpService)
     /* Remove the Service from the List */
     RemoveEntryList(&lpService->ServiceListEntry);
 
-    DPRINT1("Deleted Service %S\n", lpService->lpServiceName);
+    DPRINT("Deleted Service %S\n", lpService->lpServiceName);
 
     /* Delete the service record */
     HeapFree(GetProcessHeap(), 0, lpService);
 
-    DPRINT1("Done\n");
+    DPRINT("Done\n");
 }
 
 
