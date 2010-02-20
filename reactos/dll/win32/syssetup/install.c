@@ -473,34 +473,17 @@ InstallSysSetupInfComponents(VOID)
 static BOOL
 EnableUserModePnpManager(VOID)
 {
-    SERVICE_STATUS_PROCESS ServiceStatus;
     SC_HANDLE hSCManager = NULL;
     SC_HANDLE hService = NULL;
-    DWORD dwStartTickCount;
-    DWORD dwOldCheckPoint;
-    DWORD BytesNeeded = 0;
-    DWORD dwWaitTime;
-    DWORD dwMaxWait;
-    HANDLE hEvent;
     BOOL ret = FALSE;
 
-    hEvent = OpenEventW(EVENT_ALL_ACCESS,
-                        FALSE,
-                        L"SC_AutoStartComplete");
-    if (hEvent == NULL)
-        goto cleanup;
-
-    WaitForSingleObject(hEvent, INFINITE);
-
-    hSCManager = OpenSCManager(NULL,
-                               NULL,
-                               SC_MANAGER_CONNECT);
+    hSCManager = OpenSCManager(NULL, NULL, 0);
     if (hSCManager == NULL)
         goto cleanup;
 
     hService = OpenServiceW(hSCManager,
                             L"PlugPlay",
-                            SERVICE_CHANGE_CONFIG | SERVICE_START | SERVICE_QUERY_STATUS);
+                            SERVICE_CHANGE_CONFIG | SERVICE_START);
     if (hService == NULL)
         goto cleanup;
 
@@ -515,69 +498,9 @@ EnableUserModePnpManager(VOID)
 
     ret = StartServiceW(hService, 0, NULL);
     if (!ret)
-    {
-        /* If the service is already running, just return TRUE */
-        ret = GetLastError() == ERROR_SERVICE_ALREADY_RUNNING;
-        goto cleanup;
-    }
-
-    ret = QueryServiceStatusEx(hService,
-                               SC_STATUS_PROCESS_INFO,
-                               (LPBYTE)&ServiceStatus,
-                               sizeof(SERVICE_STATUS_PROCESS),
-                               &BytesNeeded);
-    if (!ret)
         goto cleanup;
 
-    /* We don't want to wait for more than 30 seconds */
-    dwMaxWait = 30000;
-    dwStartTickCount = GetTickCount();
-
-    /* Loop until it's running */
-    while (ServiceStatus.dwCurrentState != SERVICE_RUNNING)
-    {
-        dwOldCheckPoint = ServiceStatus.dwCheckPoint;
-        dwWaitTime = ServiceStatus.dwWaitHint / 10;
-
-        /* Get the latest status info */
-        if (!QueryServiceStatusEx(hService,
-                                  SC_STATUS_PROCESS_INFO,
-                                  (LPBYTE)&ServiceStatus,
-                                  sizeof(SERVICE_STATUS_PROCESS),
-                                  &BytesNeeded))
-        {
-            /* Something went wrong... */
-            break;
-        }
-
-        /* Is the service making progress? */
-        if (ServiceStatus.dwCheckPoint > dwOldCheckPoint)
-        {
-            /* It is, get the latest tickcount to reset the max wait time */
-            dwStartTickCount = GetTickCount();
-            dwOldCheckPoint = ServiceStatus.dwCheckPoint;
-        }
-        else
-        {
-            /* It's not, make sure we haven't exceeded our wait time */
-            if (GetTickCount() >= dwStartTickCount + dwMaxWait)
-            {
-                /* We have, give up */
-                break;
-            }
-        }
-
-        /* Adjust the wait hint times */
-        if (dwWaitTime < 200)
-            dwWaitTime = 200;
-        else if (dwWaitTime > 10000)
-            dwWaitTime = 10000;
-
-        /* Wait before trying again */
-        Sleep(dwWaitTime);
-    }
-
-    ret = ServiceStatus.dwCurrentState == SERVICE_RUNNING;
+    ret = TRUE;
 
 cleanup:
     if (hSCManager != NULL)
