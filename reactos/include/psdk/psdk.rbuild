@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../tools/rbuild/project.dtd">
+<group>
 <module name="psdk" type="idlheader">
 	<file>activaut.idl</file>
 	<file>activdbg.idl</file>
@@ -67,3 +68,4 @@
 <module name="stdole2" type="embeddedtypelib">
 	<file>stdole2.idl</file>
 </module>
+</group>

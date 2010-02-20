@@ -1,5 +1,7 @@
-<!-- Temporarily compiling as a CUI app for testing purposes */
-<!--module name="mmdrv" type="win32dll" baseaddress="${BASEADDRESS_MMDRV}" installbase="system32" installname="mmdrv.dll" unicode="yes"-->
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+<!-- Temporarily compiling as a CUI app for testing purposes */ -->
+<!-- module name="mmdrv" type="win32dll" baseaddress="${BASEADDRESS_MMDRV}" installbase="system32" installname="mmdrv.dll" unicode="yes"-->
 <module name="sndblst" type="win32dll" installbase="system32" installname="sndblst.dll" unicode="yes">
 	<importlibrary definition="sndblst.spec" />
     <include base="ReactOS">include/reactos/libs/sound</include>

@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+<!DOCTYPE module SYSTEM "../../tools/rbuild/project.dtd">
 <module name="vgafonts" type="cabinet">
 	<bootstrap installbase="$(CDOUTPUT)" />
 	<file>437-8x8.bin</file>

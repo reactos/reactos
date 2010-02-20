@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+<group>
 <module name="chkstk" type="staticlibrary">
 	<directory name="except">
 		<if property="ARCH" value="i386">
@@ -490,3 +491,4 @@
 		<file>undname.c</file>
 	</directory>
 </module>
+</group>

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="mshtml_tlb" type="embeddedtypelib">
 	<dependency>stdole2</dependency>
@@ -10,3 +12,4 @@
 	<define name="__WINESRC__" />
 	<file>rsrc.rc</file>
 </module>
+</group>
