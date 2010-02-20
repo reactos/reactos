@@ -13,11 +13,11 @@
 
 /* GLOBALS ******************************************************************/
 
-VOID CALLBACK ServiceMain(DWORD argc, LPTSTR * argv);
-
-SERVICE_TABLE_ENTRY ServiceTable[2] =
+static VOID CALLBACK ServiceMain(DWORD, LPWSTR *);
+static WCHAR ServiceName[] = L"EventLog";
+static SERVICE_TABLE_ENTRYW ServiceTable[2] =
 {
-    { L"EventLog", (LPSERVICE_MAIN_FUNCTION) ServiceMain },
+    { ServiceName, ServiceMain },
     { NULL, NULL }
 };
 
@@ -26,7 +26,20 @@ HANDLE MyHeap = NULL;
 
 /* FUNCTIONS ****************************************************************/
 
-VOID CALLBACK ServiceMain(DWORD argc, LPTSTR * argv)
+static DWORD WINAPI
+ServiceControlHandler(DWORD dwControl,
+                      DWORD dwEventType,
+                      LPVOID lpEventData,
+                      LPVOID lpContext)
+{
+    /* FIXME */
+    DPRINT1("ServiceControlHandler() called (control code %lu)\n", dwControl);
+    return ERROR_SUCCESS;
+}
+
+
+static DWORD
+ServiceInit(VOID)
 {
     HANDLE hThread;
 
@@ -39,7 +52,10 @@ VOID CALLBACK ServiceMain(DWORD argc, LPTSTR * argv)
                            NULL);
 
     if (!hThread)
+    {
         DPRINT("Can't create PortThread\n");
+        return GetLastError();
+    }
     else
         CloseHandle(hThread);
 
@@ -52,10 +68,68 @@ VOID CALLBACK ServiceMain(DWORD argc, LPTSTR * argv)
                            NULL);
 
     if (!hThread)
+    {
         DPRINT("Can't create RpcThread\n");
+        return GetLastError();
+    }
     else
         CloseHandle(hThread);
+
+    return ERROR_SUCCESS;
 }
+
+
+static VOID CALLBACK
+ServiceMain(DWORD argc,
+            LPWSTR *argv)
+{
+    SERVICE_STATUS ServiceStatus;
+    SERVICE_STATUS_HANDLE ServiceStatusHandle;
+    DWORD dwError;
+
+    UNREFERENCED_PARAMETER(argc);
+    UNREFERENCED_PARAMETER(argv);
+
+    DPRINT("ServiceMain() called\n");
+
+    ServiceStatusHandle = RegisterServiceCtrlHandlerExW(ServiceName,
+                                                        ServiceControlHandler,
+                                                        NULL);
+    if (!ServiceStatusHandle)
+    {
+        dwError = GetLastError();
+        DPRINT1("RegisterServiceCtrlHandlerW() failed! (Error %lu)\n", dwError);
+        return;
+    }
+
+    ServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
+    ServiceStatus.dwCurrentState = SERVICE_START_PENDING;
+    ServiceStatus.dwControlsAccepted = 0;
+    ServiceStatus.dwWin32ExitCode = NO_ERROR;
+    ServiceStatus.dwServiceSpecificExitCode = 0;
+    ServiceStatus.dwCheckPoint = 0;
+    ServiceStatus.dwWaitHint = 2000;
+
+    SetServiceStatus(ServiceStatusHandle,
+                     &ServiceStatus);
+
+    dwError = ServiceInit();
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("Service stopped\n");
+        ServiceStatus.dwCurrentState = SERVICE_STOPPED;
+    }
+    else
+    {
+        ServiceStatus.dwCurrentState = SERVICE_RUNNING;
+    }
+
+    SetServiceStatus(ServiceStatusHandle,
+                     &ServiceStatus);
+
+    DPRINT("ServiceMain() done\n");
+}
+
 
 BOOL LoadLogFile(HKEY hKey, WCHAR * LogName)
 {
