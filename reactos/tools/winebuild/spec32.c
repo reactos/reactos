@@ -893,7 +893,6 @@ void BuildDef32File( DLLSPEC *spec )
             if  (odp->flags & FLAG_FORWARD)
             {
                 output( "=" );
-                if (!kill_at) output( "@" );
                 output( "%s", odp->link_name );
             }
             else if (strcmp(name, odp->link_name)) /* try to reduce output */
