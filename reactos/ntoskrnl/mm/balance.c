@@ -260,7 +260,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
    if ((Consumer == MC_NPPOOL) || (Consumer == MC_SYSTEM) || MiIsBalancerThread())
    {
       OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-      Page = MmAllocPage(Consumer, 0);
+      Page = MmAllocPage(Consumer);
       KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
       if (Page == 0)
       {
@@ -326,7 +326,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
     * Actually allocate the page.
     */
    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-   Page = MmAllocPage(Consumer, 0);
+   Page = MmAllocPage(Consumer);
    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
    if (Page == 0)
    {

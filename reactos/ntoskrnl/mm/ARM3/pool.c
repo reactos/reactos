@@ -236,7 +236,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
                 //
                 // Request a paged pool page and write the PFN for it
                 //
-                PageFrameNumber = MmAllocPage(MC_PPOOL, 0);
+                PageFrameNumber = MmAllocPage(MC_PPOOL);
                 TempPte.u.Hard.PageFrameNumber = PageFrameNumber;
                 
                 //
@@ -499,7 +499,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
         //
         // Allocate a page
         //
-        PageFrameNumber = MmAllocPage(MC_NPPOOL, 0);
+        PageFrameNumber = MmAllocPage(MC_NPPOOL);
         
         //
         // Get the PFN entry for it

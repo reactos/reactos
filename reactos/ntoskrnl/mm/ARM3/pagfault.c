@@ -97,7 +97,7 @@ MiResolveDemandZeroFault(IN PVOID Address,
     //
     // Get a page
     //
-    PageFrameNumber = MmAllocPage(MC_PPOOL, 0);
+    PageFrameNumber = MmAllocPage(MC_PPOOL);
     DPRINT("New pool page: %lx\n", PageFrameNumber);
     
     //

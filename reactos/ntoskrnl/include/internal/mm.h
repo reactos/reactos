@@ -1339,8 +1339,7 @@ MmSetDirtyPage(
 PFN_TYPE
 NTAPI
 MmAllocPage(
-    ULONG Consumer,
-    SWAPENTRY SavedSwapEntry
+    ULONG Consumer
 );
 
 LONG

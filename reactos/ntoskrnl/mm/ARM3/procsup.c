@@ -158,7 +158,7 @@ MmCreateKernelStack(IN BOOLEAN GuiStack,
         //
         // Get a page
         //
-        PageFrameIndex = MmAllocPage(MC_NPPOOL, 0);
+        PageFrameIndex = MmAllocPage(MC_NPPOOL);
         TempPte.u.Hard.PageFrameNumber = PageFrameIndex;
         
         //
@@ -257,7 +257,7 @@ MmGrowKernelStackEx(IN PVOID StackPointer,
         //
         // Get a page
         //
-        PageFrameIndex = MmAllocPage(MC_NPPOOL, 0);
+        PageFrameIndex = MmAllocPage(MC_NPPOOL);
         TempPte.u.Hard.PageFrameNumber = PageFrameIndex;
         
         //

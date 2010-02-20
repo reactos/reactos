@@ -547,7 +547,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     //
     // Allocate a page for it and create it
     //
-    PageFrameIndex = MmAllocPage(MC_SYSTEM, 0);
+    PageFrameIndex = MmAllocPage(MC_SYSTEM);
     TempPde.u.Hard.PageFrameNumber = PageFrameIndex;
     TempPde.u.Hard.Global = FALSE; // Hyperspace is local!
     ASSERT(StartPde->u.Hard.Valid == 0);

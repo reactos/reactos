@@ -30,7 +30,6 @@
 //        REACTOS                 NT
 //
 #define RmapListHead         AweReferenceCount
-#define SavedSwapEntry       u4.EntireFrame
 #define PHYSICAL_PAGE        MMPFN
 #define PPHYSICAL_PAGE       PMMPFN
 
@@ -255,7 +254,6 @@ MiFindContiguousPages(IN PFN_NUMBER LowestPfn,
                             //
                             MiRemoveFromList(Pfn1);
                             Pfn1->u3.e2.ReferenceCount = 1;
-                            Pfn1->SavedSwapEntry = 0;
                             
                             //
                             // Check if it was already zeroed
@@ -448,7 +446,6 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
             Pfn1->u3.e1.StartOfAllocation = 1;
             Pfn1->u3.e1.EndOfAllocation = 1;
             Pfn1->u3.e2.ReferenceCount = 1;
-            Pfn1->SavedSwapEntry = 0;
             
             //
             // Decrease available pages
@@ -497,7 +494,6 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
                 Pfn1->u3.e2.ReferenceCount = 1;
                 Pfn1->u3.e1.StartOfAllocation = 1;
                 Pfn1->u3.e1.EndOfAllocation = 1;
-                Pfn1->SavedSwapEntry = 0;
                                 
                 //
                 // Decrease available pages
@@ -747,7 +743,7 @@ MmSetSavedSwapEntryPage(PFN_TYPE Pfn,  SWAPENTRY SwapEntry)
    KIRQL oldIrql;
 
    oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-   MiGetPfnEntry(Pfn)->SavedSwapEntry = SwapEntry;
+   MiGetPfnEntry(Pfn)->u1.WsIndex = SwapEntry;
    KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
 }
 
@@ -759,7 +755,7 @@ MmGetSavedSwapEntryPage(PFN_TYPE Pfn)
    KIRQL oldIrql;
 
    oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-   SwapEntry = MiGetPfnEntry(Pfn)->SavedSwapEntry;
+   SwapEntry = MiGetPfnEntry(Pfn)->u1.WsIndex;
    KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
 
    return(SwapEntry);
@@ -845,7 +841,7 @@ MmDereferencePage(PFN_TYPE Pfn)
 
 PFN_TYPE
 NTAPI
-MmAllocPage(ULONG Type, SWAPENTRY SwapEntry)
+MmAllocPage(ULONG Type)
 {
    PFN_TYPE PfnOffset;
    PPHYSICAL_PAGE PageDescriptor;
@@ -876,7 +872,6 @@ MmAllocPage(ULONG Type, SWAPENTRY SwapEntry)
    }
 
    PageDescriptor->u3.e2.ReferenceCount = 1;
-   PageDescriptor->SavedSwapEntry = SwapEntry;
 
    MmAvailablePages--;
 

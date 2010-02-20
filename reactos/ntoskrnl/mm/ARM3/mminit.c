@@ -1251,7 +1251,7 @@ MiBuildPagedPool(VOID)
     //
     // Allocate a page and map the first paged pool PDE
     //
-    PageFrameIndex = MmAllocPage(MC_NPPOOL, 0);
+    PageFrameIndex = MmAllocPage(MC_NPPOOL);
     TempPte.u.Hard.PageFrameNumber = PageFrameIndex;
     ASSERT(PointerPde->u.Hard.Valid == 0);
     ASSERT(TempPte.u.Hard.Valid == 1);
