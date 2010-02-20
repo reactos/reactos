@@ -404,6 +404,9 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     DPRINT("PFN DB PA PFN begins at: %lx\n", PageFrameIndex);
     DPRINT("NP PA PFN begins at: %lx\n", PageFrameIndex + MxPfnAllocation);
 
+    /* Convert nonpaged pool size from bytes to pages */
+    MmMaximumNonPagedPoolInPages = MmMaximumNonPagedPoolInBytes >> PAGE_SHIFT;
+
     //
     // Now we need some pages to create the page tables for the NP system VA
     // which includes system PTEs and expansion NP
@@ -496,10 +499,9 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     ASSERT(MiAddressToPte(MmNonPagedSystemStart) <
            MiAddressToPte(MmNonPagedPoolExpansionStart));
     
-    //
-    // Now go ahead and initialize the ARM³ nonpaged pool
-    //
-    MiInitializeArmPool();
+    /* Now go ahead and initialize the nonpaged pool */
+    MiInitializeNonPagedPool();
+    MiInitializeNonPagedPoolThresholds();
 
     /* Map the PFN database pages */
     MiMapPfnDatabase(LoaderBlock);

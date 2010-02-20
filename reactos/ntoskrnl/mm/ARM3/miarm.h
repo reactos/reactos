@@ -168,6 +168,8 @@ extern MMPTE ValidKernelPte;
 
 extern ULONG MmSizeOfNonPagedPoolInBytes;
 extern ULONG MmMaximumNonPagedPoolInBytes;
+extern PFN_NUMBER MmMaximumNonPagedPoolInPages;
+extern PFN_NUMBER MmSizeOfPagedPoolInPages;
 extern PVOID MmNonPagedSystemStart;
 extern PVOID MmNonPagedPoolStart;
 extern PVOID MmNonPagedPoolExpansionStart;
@@ -217,6 +219,22 @@ extern ULONG MmNumberOfSystemPtes;
 extern ULONG MmMaximumNonPagedPoolPercent;
 extern ULONG MmLargeStackSize;
 extern PMMCOLOR_TABLES MmFreePagesByColor[FreePageList + 1];
+extern ULONG MmProductType;
+extern MM_SYSTEMSIZE MmSystemSize;
+extern PKEVENT MiLowMemoryEvent;
+extern PKEVENT MiHighMemoryEvent;
+extern PKEVENT MiLowPagedPoolEvent;
+extern PKEVENT MiHighPagedPoolEvent;
+extern PKEVENT MiLowNonPagedPoolEvent;
+extern PKEVENT MiHighNonPagedPoolEvent;
+extern PFN_NUMBER MmLowMemoryThreshold;
+extern PFN_NUMBER MmHighMemoryThreshold;
+extern PFN_NUMBER MiLowPagedPoolThreshold;
+extern PFN_NUMBER MiHighPagedPoolThreshold;
+extern PFN_NUMBER MiLowNonPagedPoolThreshold;
+extern PFN_NUMBER MiHighNonPagedPoolThreshold;
+extern PFN_NUMBER MmMinimumFreePages;
+extern PFN_NUMBER MmPlentyFreePages;
 
 #define MI_PFN_TO_PFNENTRY(x)     (&MmPfnDatabase[1][x])
 #define MI_PFNENTRY_TO_PFN(x)     (x - MmPfnDatabase[1])
@@ -258,6 +276,12 @@ MiInitializePfnDatabase(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
+BOOLEAN
+NTAPI
+MiInitializeMemoryEvents(
+    VOID
+);
+    
 PFN_NUMBER
 NTAPI
 MxGetNextPage(
@@ -296,7 +320,19 @@ MmArmAccessFault(
 
 VOID
 NTAPI
-MiInitializeArmPool(
+MiInitializeNonPagedPool(
+    VOID
+);
+
+VOID
+NTAPI
+MiInitializeNonPagedPoolThresholds(
+    VOID
+);
+
+VOID
+NTAPI
+MiInitializePoolEvents(
     VOID
 );
 
@@ -389,7 +425,7 @@ MiInsertInListTail(
 
 VOID
 NTAPI
-MiRemoveFromList(
+MiUnlinkFreeOrZeroedPage(
     IN PMMPFN Entry
 );
 

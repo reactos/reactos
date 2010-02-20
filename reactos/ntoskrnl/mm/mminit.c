@@ -402,25 +402,11 @@ MmInitSystem(IN ULONG Phase,
         MiInitializeUserPfnBitmap();
         MmInitializeMemoryConsumer(MC_USER, MmTrimUserMemory);
 
-        /* Initialize the user mode image list */
-        InitializeListHead(&MmLoadedUserImageList);
-
-        /* Initialize the Loader Lock */
-        KeInitializeMutant(&MmSystemLoadLock, FALSE);
-
         /* Reload boot drivers */
         MiReloadBootLoadedDrivers(LoaderBlock);
 
         /* Initialize the loaded module list */
         MiInitializeLoadedModuleList(LoaderBlock);
-
-        /* Setup shared user data settings that NT does as well */
-        ASSERT(SharedUserData->NumberOfPhysicalPages == 0);
-        SharedUserData->NumberOfPhysicalPages = MmNumberOfPhysicalPages;
-        SharedUserData->LargePageMinimum = 0;
-        
-        /* For now, we assume that we're always Server */
-        SharedUserData->NtProductType = NtProductServer;
     }
     else if (Phase == 1)
     {
@@ -453,6 +439,9 @@ MmInitSystem(IN ULONG Phase,
         MI_MAKE_OWNER_PAGE(&TempPte);
         TempPte.u.Hard.PageFrameNumber = PageFrameNumber;
         *MmSharedUserDataPte = TempPte;
+        
+        /* Setup the memory threshold events */
+        if (!MiInitializeMemoryEvents()) return FALSE;
         
         /*
          * Unmap low memory

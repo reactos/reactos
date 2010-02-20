@@ -245,14 +245,9 @@ MiFindContiguousPages(IN PFN_NUMBER LowestPfn,
                         do
                         {
                             //
-                            // One less free page
-                            //
-                            MmAvailablePages--;
-                            
-                            //
                             // This PFN is now a used page, set it up
                             //
-                            MiRemoveFromList(Pfn1);
+                            MiUnlinkFreeOrZeroedPage(Pfn1);
                             Pfn1->u3.e2.ReferenceCount = 1;
                             
                             //
@@ -638,12 +633,6 @@ MmInitializePageList(VOID)
     PMEMORY_ALLOCATION_DESCRIPTOR Md;
     PLIST_ENTRY NextEntry;
     ULONG NrSystemPages = 0;
-
-    /* Initialize the page lists */
-     MmFreePageListHead.Flink = MmFreePageListHead.Blink = LIST_HEAD;
-     MmZeroedPageListHead.Flink = MmZeroedPageListHead.Blink = LIST_HEAD;
-     MmZeroedPageListHead.Total = 0;
-     MmFreePageListHead.Total = 0;
 
     /* This is what a used page looks like */
     RtlZeroMemory(&UsedPage, sizeof(UsedPage));

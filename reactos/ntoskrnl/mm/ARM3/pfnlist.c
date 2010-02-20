@@ -18,12 +18,25 @@
 
 /* GLOBALS ********************************************************************/
 
-MMPFNLIST MmZeroedPageListHead;
-MMPFNLIST MmFreePageListHead;
-MMPFNLIST MmStandbyPageListHead;
-MMPFNLIST MmModifiedPageListHead;
-MMPFNLIST MmModifiedNoWritePageListHead;
+MMPFNLIST MmZeroedPageListHead = {0, ZeroedPageList, LIST_HEAD, LIST_HEAD};
+MMPFNLIST MmFreePageListHead = {0, FreePageList, LIST_HEAD, LIST_HEAD};
+MMPFNLIST MmStandbyPageListHead = {0, StandbyPageList, LIST_HEAD, LIST_HEAD};
+MMPFNLIST MmModifiedPageListHead = {0, ModifiedPageList, LIST_HEAD, LIST_HEAD};
+MMPFNLIST MmModifiedNoWritePageListHead = {0, ModifiedNoWritePageList, LIST_HEAD, LIST_HEAD};
+MMPFNLIST MmBadPageListHead = {0, BadPageList, LIST_HEAD, LIST_HEAD};
+MMPFNLIST MmRomPageListHead = {0, StandbyPageList, LIST_HEAD, LIST_HEAD};
 
+PMMPFNLIST MmPageLocationList[] =
+{
+    &MmZeroedPageListHead,
+    &MmFreePageListHead,
+    &MmStandbyPageListHead,
+    &MmModifiedPageListHead,
+    &MmModifiedNoWritePageListHead,
+    &MmBadPageListHead,
+    NULL,
+    NULL
+};
 /* FUNCTIONS ******************************************************************/
 
 VOID
@@ -57,25 +70,28 @@ MiInsertInListTail(IN PMMPFNLIST ListHead,
 
 VOID
 NTAPI
-MiRemoveFromList(IN PMMPFN Entry)
+MiUnlinkFreeOrZeroedPage(IN PMMPFN Entry)
 {
     PFN_NUMBER OldFlink, OldBlink;
     PMMPFNLIST ListHead;
+    MMLISTS ListName;
     
-    /* Find the list for this */
-    if (Entry->u3.e1.PageLocation == ZeroedPageList)
-    {
-        ListHead = &MmZeroedPageListHead;
-    }
-    else if (Entry->u3.e1.PageLocation == FreePageList)
-    {
-        ListHead = &MmFreePageListHead;
-    }
-    else
-    {
-        ListHead = NULL;
-        ASSERT(ListHead != NULL);
-    }
+    /* Make sure the PFN lock is held */
+    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    
+    /* Make sure the PFN entry isn't in-use */
+    ASSERT(Entry->u3.e1.WriteInProgress == 0);
+    ASSERT(Entry->u3.e1.ReadInProgress == 0);
+    
+    /* Find the list for this entry, make sure it's the free or zero list */
+    ListHead = MmPageLocationList[Entry->u3.e1.PageLocation];
+    ListName = ListHead->ListName;
+    ASSERT(ListHead != NULL);
+    ASSERT(ListName <= FreePageList);
+    
+    /* Remove one count */
+    ASSERT(ListHead->Total != 0);
+    ListHead->Total--;
     
     /* Get the forward and back pointers */
     OldFlink = Entry->u1.Flink;
@@ -106,8 +122,27 @@ MiRemoveFromList(IN PMMPFN Entry)
     }
     
     /* We are not on a list anymore */
-    ListHead->Total--;
     Entry->u1.Flink = Entry->u2.Blink = 0;
+    
+    /* FIXME: Deal with color list */
+    
+    /* See if we hit any thresholds */
+    if (MmAvailablePages == MmHighMemoryThreshold)
+    {
+        /* Clear the high memory event */
+        KeClearEvent(MiHighMemoryEvent);
+    }
+    else if (MmAvailablePages == MmLowMemoryThreshold)
+    {
+        /* Signal the low memory event */
+        KeSetEvent(MiLowMemoryEvent, 0, FALSE);
+    }
+    
+    /* One less page */
+    if (--MmAvailablePages < MmMinimumFreePages)
+    {
+        /* FIXME: Should wake up the MPW and working set manager, if we had one */
+    }
 }
 
 PMMPFN

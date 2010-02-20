@@ -26,6 +26,9 @@ ULONG MmMaximumNonPagedPoolPercent;
 ULONG MmSizeOfNonPagedPoolInBytes;
 ULONG MmMaximumNonPagedPoolInBytes;
 
+/* Some of the same values, in pages */
+PFN_NUMBER MmMaximumNonPagedPoolInPages;
+
 //
 // These numbers describe the discrete equation components of the nonpaged
 // pool sizing algorithm.
@@ -257,6 +260,46 @@ MEMORY_ALLOCATION_DESCRIPTOR MxOldFreeDescriptor;
  */
 C_ASSERT(FreePageList == 1);
 PMMCOLOR_TABLES MmFreePagesByColor[FreePageList + 1];
+
+/* An event used in Phase 0 before the rest of the system is ready to go */
+KEVENT MiTempEvent;
+
+/* All the events used for memory threshold notifications */
+PKEVENT MiLowMemoryEvent;
+PKEVENT MiHighMemoryEvent;
+PKEVENT MiLowPagedPoolEvent;
+PKEVENT MiHighPagedPoolEvent;
+PKEVENT MiLowNonPagedPoolEvent;
+PKEVENT MiHighNonPagedPoolEvent;
+
+/* The actual thresholds themselves, in page numbers */
+PFN_NUMBER MmLowMemoryThreshold;
+PFN_NUMBER MmHighMemoryThreshold;
+PFN_NUMBER MiLowPagedPoolThreshold;
+PFN_NUMBER MiHighPagedPoolThreshold;
+PFN_NUMBER MiLowNonPagedPoolThreshold;
+PFN_NUMBER MiHighNonPagedPoolThreshold;
+
+/*
+ * This number determines how many free pages must exist, at minimum, until we
+ * start trimming working sets and flushing modified pages to obtain more free
+ * pages.
+ *
+ * This number changes if the system detects that this is a server product
+ */
+PFN_NUMBER MmMinimumFreePages = 26;
+
+/* 
+ * This number indicates how many pages we consider to be a low limit of having
+ * "plenty" of free memory.
+ *
+ * It is doubled on systems that have more than 63MB of memory
+ */
+PFN_NUMBER MmPlentyFreePages = 400;
+
+/* These values store the type of system this is (small, med, large) and if server */
+ULONG MmProductType;
+MM_SYSTEMSIZE MmSystemSize;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -907,6 +950,217 @@ MiInitializePfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 VOID
 NTAPI
+MiAdjustWorkingSetManagerParameters(IN BOOLEAN Client)
+{
+    /* This function needs to do more work, for now, we tune page minimums */
+    
+    /* Check for a system with around 64MB RAM or more */
+    if (MmNumberOfPhysicalPages >= (63 * _1MB) / PAGE_SIZE)
+    {
+        /* Double the minimum amount of pages we consider for a "plenty free" scenario */
+        MmPlentyFreePages *= 2;
+    }
+}
+
+VOID
+NTAPI
+MiNotifyMemoryEvents(VOID)
+{
+    /* Are we in a low-memory situation? */
+    if (MmAvailablePages < MmLowMemoryThreshold)
+    {
+        /* Clear high, set low  */
+        if (KeReadStateEvent(MiHighMemoryEvent)) KeClearEvent(MiHighMemoryEvent);
+        if (!KeReadStateEvent(MiLowMemoryEvent)) KeSetEvent(MiLowMemoryEvent, 0, FALSE);
+    }
+    else if (MmAvailablePages < MmHighMemoryThreshold)
+    {
+        /* We are in between, clear both */
+        if (KeReadStateEvent(MiHighMemoryEvent)) KeClearEvent(MiHighMemoryEvent);
+        if (KeReadStateEvent(MiLowMemoryEvent)) KeClearEvent(MiLowMemoryEvent);
+    }
+    else
+    {
+        /* Clear low, set high  */
+        if (KeReadStateEvent(MiLowMemoryEvent)) KeClearEvent(MiLowMemoryEvent);
+        if (!KeReadStateEvent(MiHighMemoryEvent)) KeSetEvent(MiHighMemoryEvent, 0, FALSE);
+    }
+}
+
+NTSTATUS
+NTAPI
+MiCreateMemoryEvent(IN PUNICODE_STRING Name,
+                    OUT PKEVENT *Event)
+{
+    PACL Dacl;
+    HANDLE EventHandle;
+    ULONG DaclLength;
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    SECURITY_DESCRIPTOR SecurityDescriptor;
+
+    /* Create the SD */
+    Status = RtlCreateSecurityDescriptor(&SecurityDescriptor,
+                                         SECURITY_DESCRIPTOR_REVISION);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* One ACL with 3 ACEs, containing each one SID */
+    DaclLength = sizeof(ACL) +
+                 3 * sizeof(ACCESS_ALLOWED_ACE) +
+                 RtlLengthSid(SeLocalSystemSid) +
+                 RtlLengthSid(SeAliasAdminsSid) +
+                 RtlLengthSid(SeWorldSid);
+
+    /* Allocate space for the DACL */
+    Dacl = ExAllocatePoolWithTag(PagedPool, DaclLength, 'lcaD');
+    if (!Dacl) return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Setup the ACL inside it */
+    Status = RtlCreateAcl(Dacl, DaclLength, ACL_REVISION);
+    if (!NT_SUCCESS(Status)) goto CleanUp;
+    
+    /* Add query rights for everyone */
+    Status = RtlAddAccessAllowedAce(Dacl,
+                                    ACL_REVISION,
+                                    SYNCHRONIZE | EVENT_QUERY_STATE | READ_CONTROL,
+                                    SeWorldSid);
+    if (!NT_SUCCESS(Status)) goto CleanUp;
+    
+    /* Full rights for the admin */
+    Status = RtlAddAccessAllowedAce(Dacl,
+                                    ACL_REVISION,
+                                    EVENT_ALL_ACCESS,
+                                    SeAliasAdminsSid);
+    if (!NT_SUCCESS(Status)) goto CleanUp;
+    
+    /* As well as full rights for the system */
+    Status = RtlAddAccessAllowedAce(Dacl,
+                                    ACL_REVISION,
+                                    EVENT_ALL_ACCESS,
+                                    SeLocalSystemSid);
+    if (!NT_SUCCESS(Status)) goto CleanUp;
+  
+    /* Set this DACL inside the SD */
+    Status = RtlSetDaclSecurityDescriptor(&SecurityDescriptor,
+                                          TRUE,
+                                          Dacl,
+                                          FALSE);
+    if (!NT_SUCCESS(Status)) goto CleanUp;
+  
+    /* Setup the event attributes, making sure it's a permanent one */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               Name,
+                               OBJ_KERNEL_HANDLE | OBJ_PERMANENT,
+                               NULL,
+                               &SecurityDescriptor);
+
+    /* Create the event */
+    Status = ZwCreateEvent(&EventHandle,
+                           EVENT_ALL_ACCESS,
+                           &ObjectAttributes,
+                           NotificationEvent,
+                           FALSE);
+CleanUp:
+    /* Free the DACL */
+    ExFreePool(Dacl);
+
+    /* Check if this is the success path */
+    if (NT_SUCCESS(Status))
+    {
+        /* Add a reference to the object, then close the handle we had */
+        Status = ObReferenceObjectByHandle(EventHandle,
+                                           EVENT_MODIFY_STATE,
+                                           ExEventObjectType,
+                                           KernelMode,
+                                           (PVOID*)Event,
+                                           NULL);
+        ZwClose (EventHandle);                     
+    }
+
+    /* Return status */
+    return Status;
+}
+
+BOOLEAN
+NTAPI
+MiInitializeMemoryEvents(VOID)
+{
+    UNICODE_STRING LowString = RTL_CONSTANT_STRING(L"\\KernelObjects\\LowMemoryCondition");
+    UNICODE_STRING HighString = RTL_CONSTANT_STRING(L"\\KernelObjects\\HighMemoryCondition");
+    UNICODE_STRING LowPagedPoolString = RTL_CONSTANT_STRING(L"\\KernelObjects\\LowPagedPoolCondition");
+    UNICODE_STRING HighPagedPoolString = RTL_CONSTANT_STRING(L"\\KernelObjects\\HighPagedPoolCondition");
+    UNICODE_STRING LowNonPagedPoolString = RTL_CONSTANT_STRING(L"\\KernelObjects\\LowNonPagedPoolCondition");
+    UNICODE_STRING HighNonPagedPoolString = RTL_CONSTANT_STRING(L"\\KernelObjects\\HighNonPagedPoolCondition");
+    NTSTATUS Status;
+
+    /* Check if we have a registry setting */
+    if (MmLowMemoryThreshold)
+    {
+        /* Convert it to pages */
+        MmLowMemoryThreshold *= (_1MB / PAGE_SIZE);
+    }
+    else
+    {
+        /* The low memory threshold is hit when we don't consider that we have "plenty" of free pages anymore */
+        MmLowMemoryThreshold = MmPlentyFreePages;
+
+        /* More than one GB of memory? */
+        if (MmNumberOfPhysicalPages > 0x40000)
+        {
+            /* Start at 32MB, and add another 16MB for each GB */
+            MmLowMemoryThreshold = (32 * _1MB) / PAGE_SIZE;
+            MmLowMemoryThreshold += ((MmNumberOfPhysicalPages - 0x40000) >> 7);
+        }
+        else if (MmNumberOfPhysicalPages > 0x8000)
+        {
+            /* For systems with > 128MB RAM, add another 4MB for each 128MB */
+            MmLowMemoryThreshold += ((MmNumberOfPhysicalPages - 0x8000) >> 5);
+        }
+
+        /* Don't let the minimum threshold go past 64MB */
+        MmLowMemoryThreshold = min(MmLowMemoryThreshold, (64 * _1MB) / PAGE_SIZE);
+    }
+
+    /* Check if we have a registry setting */
+    if (MmHighMemoryThreshold)
+    {
+        /* Convert it into pages */
+        MmHighMemoryThreshold *= (_1MB / PAGE_SIZE);
+    }
+    else
+    {
+        /* Otherwise, the default is three times the low memory threshold */
+        MmHighMemoryThreshold = 3 * MmLowMemoryThreshold;
+        ASSERT(MmHighMemoryThreshold > MmLowMemoryThreshold);
+    }
+
+    /* Make sure high threshold is actually higher than the low */
+    MmHighMemoryThreshold = max(MmHighMemoryThreshold, MmLowMemoryThreshold);
+
+    /* Create the memory events for all the thresholds */
+    Status = MiCreateMemoryEvent(&LowString, &MiLowMemoryEvent);
+    if (!NT_SUCCESS(Status)) return FALSE;
+    Status = MiCreateMemoryEvent(&HighString, &MiHighMemoryEvent);
+    if (!NT_SUCCESS(Status)) return FALSE;
+    Status = MiCreateMemoryEvent(&LowPagedPoolString, &MiLowPagedPoolEvent);
+    if (!NT_SUCCESS(Status)) return FALSE;
+    Status = MiCreateMemoryEvent(&HighPagedPoolString, &MiHighPagedPoolEvent);
+    if (!NT_SUCCESS(Status)) return FALSE;
+    Status = MiCreateMemoryEvent(&LowNonPagedPoolString, &MiLowNonPagedPoolEvent);
+    if (!NT_SUCCESS(Status)) return FALSE;
+    Status = MiCreateMemoryEvent(&HighNonPagedPoolString, &MiHighNonPagedPoolEvent);
+    if (!NT_SUCCESS(Status)) return FALSE;
+
+    /* Now setup the pool events */
+    MiInitializePoolEvents();
+
+    /* Set the initial event state */
+    MiNotifyMemoryEvents();
+    return TRUE;
+}
+
+VOID
+NTAPI
 MmDumpArmPfnDatabase(VOID)
 {
     ULONG i;
@@ -1324,10 +1578,14 @@ MiBuildPagedPool(VOID)
     //
     InitializePool(PagedPool, 0);
 
-    //
-    // Initialize the paged pool mutex
-    //
-    KeInitializeGuardedMutex(&MmPagedPoolMutex);
+    /* Default low threshold of 30MB or one fifth of paged pool */
+    MiLowPagedPoolThreshold = (30 * _1MB) >> PAGE_SHIFT;
+    MiLowPagedPoolThreshold = min(MiLowPagedPoolThreshold, Size / 5);
+
+    /* Default high threshold of 60MB or 25% */
+    MiHighPagedPoolThreshold = (60 * _1MB) >> PAGE_SHIFT;
+    MiHighPagedPoolThreshold = min(MiHighPagedPoolThreshold, (Size * 2) / 5);
+    ASSERT(MiLowPagedPoolThreshold < MiHighPagedPoolThreshold);
 }
 
 NTSTATUS
@@ -1353,6 +1611,17 @@ MmArmInitSystem(IN ULONG Phase,
     IncludeType[LoaderBBTMemory] = FALSE;
     if (Phase == 0)
     {
+        /* Initialize the phase 0 temporary event */
+        KeInitializeEvent(&MiTempEvent, NotificationEvent, FALSE);
+
+        /* Set all the events to use the temporary event for now */
+        MiLowMemoryEvent = &MiTempEvent;
+        MiHighMemoryEvent = &MiTempEvent;
+        MiLowPagedPoolEvent = &MiTempEvent;
+        MiHighPagedPoolEvent = &MiTempEvent;
+        MiLowNonPagedPoolEvent = &MiTempEvent;
+        MiHighNonPagedPoolEvent = &MiTempEvent;
+        
         //
         // Define the basic user vs. kernel address space separation
         //
@@ -1432,6 +1701,16 @@ MmArmInitSystem(IN ULONG Phase,
         //
         MiSystemViewStart = (PVOID)((ULONG_PTR)MmSessionBase -
                                     MmSystemViewSize);
+                                    
+                                    
+        /* Initialize the user mode image list */
+        InitializeListHead(&MmLoadedUserImageList);
+        
+        /* Initialize the paged pool mutex */
+        KeInitializeGuardedMutex(&MmPagedPoolMutex);
+        
+        /* Initialize the Loader Lock */
+        KeInitializeMutant(&MmSystemLoadLock, FALSE);        
                                     
         //
         // Count physical pages on the system
@@ -1538,6 +1817,77 @@ MmArmInitSystem(IN ULONG Phase,
         // Size up paged pool and build the shadow system page directory
         //
         MiBuildPagedPool();
+        
+        /* Check how many pages the system has */
+        if (MmNumberOfPhysicalPages <= (13 * _1MB))
+        {
+            /* Set small system */
+            MmSystemSize = MmSmallSystem;
+        }
+        else if (MmNumberOfPhysicalPages <= (19 * _1MB))
+        {
+            /* Set small system */
+            MmSystemSize = MmSmallSystem;
+        }
+        else
+        {
+            /* Set medium system */
+            MmSystemSize = MmMediumSystem;
+        }
+
+        /* Check for more than 32MB */
+        if (MmNumberOfPhysicalPages >= ((32 * _1MB) / PAGE_SIZE))
+        {
+            /* Check for product type being "Wi" for WinNT */
+            if (MmProductType == '\0i\0W')
+            {
+                /* Then this is a large system */
+                MmSystemSize = MmLargeSystem;
+            }
+            else
+            {
+                /* For servers, we need 64MB to consider this as being large */
+                if (MmNumberOfPhysicalPages >= ((64 * _1MB) / PAGE_SIZE))
+                {
+                    /* Set it as large */
+                    MmSystemSize = MmLargeSystem;
+                }
+            }
+        }
+
+        /* Now setup the shared user data fields */
+        ASSERT(SharedUserData->NumberOfPhysicalPages == 0);
+        SharedUserData->NumberOfPhysicalPages = MmNumberOfPhysicalPages;
+        SharedUserData->LargePageMinimum = 0;
+
+        /* Check for workstation (Wi for WinNT) */
+        if (MmProductType == '\0i\0W')
+        {
+            /* Set Windows NT Workstation product type */
+            SharedUserData->NtProductType = NtProductWinNt;
+            MmProductType = 0;
+        }
+        else
+        {
+            /* Check for LanMan server */
+            if (MmProductType == '\0a\0L')
+            {
+                /* This is a domain controller */
+                SharedUserData->NtProductType = NtProductLanManNt;
+            }
+            else
+            {
+                /* Otherwise it must be a normal server */
+                SharedUserData->NtProductType = NtProductServer;
+            }
+
+            /* Set the product type, and make the system more aggressive with low memory */
+            MmProductType = 1;
+            MmMinimumFreePages = 81;
+        }
+
+        /* Update working set tuning parameters */
+        MiAdjustWorkingSetManagerParameters(!MmProductType);
     }
     
     //
