@@ -481,9 +481,20 @@ EnableUserModePnpManager(VOID)
     DWORD BytesNeeded = 0;
     DWORD dwWaitTime;
     DWORD dwMaxWait;
+    HANDLE hEvent;
     BOOL ret = FALSE;
 
-    hSCManager = OpenSCManager(NULL, NULL, 0);
+    hEvent = OpenEventW(EVENT_ALL_ACCESS,
+                        FALSE,
+                        L"SC_AutoStartComplete");
+    if (hEvent == NULL)
+        goto cleanup;
+
+    WaitForSingleObject(hEvent, INFINITE);
+
+    hSCManager = OpenSCManager(NULL,
+                               NULL,
+                               SC_MANAGER_CONNECT);
     if (hSCManager == NULL)
         goto cleanup;
 
