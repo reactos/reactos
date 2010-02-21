@@ -185,7 +185,12 @@ NTSTATUS
 USB_BUSIFFN
 RootHubInitNotification(PVOID BusContext, PVOID CallbackContext, PRH_INIT_CALLBACK CallbackRoutine)
 {
-    DPRINT1("RootHubInitNotification\n");
+    PPDO_DEVICE_EXTENSION PdoDeviceExtension;
+    DPRINT1("RootHubInitNotification %x, %x, %x\n", BusContext, CallbackContext, CallbackRoutine);
+
+    PdoDeviceExtension = (PPDO_DEVICE_EXTENSION)BusContext;
+    PdoDeviceExtension->CallbackContext = CallbackContext;
+    PdoDeviceExtension->CallbackRoutine = CallbackRoutine;
     return STATUS_SUCCESS;
 }
 

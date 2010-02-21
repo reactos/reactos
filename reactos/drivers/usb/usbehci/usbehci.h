@@ -7,6 +7,7 @@
 #include <stdio.h>
 #define	NDEBUG
 #include <debug.h>
+#include "usbiffn.h"
 #include <usbioctl.h>
 #include <usb.h>
 
@@ -188,6 +189,7 @@ typedef struct _USB_DEVICE
     UCHAR Address;
     ULONG Port;
     PVOID ParentDevice;
+    BOOLEAN IsHub;
     USB_DEVICE_DESCRIPTOR DeviceDescriptor;
     USB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor;
     USB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
@@ -354,6 +356,8 @@ typedef struct _PDO_DEVICE_EXTENSION
     HANDLE ThreadHandle;
     ULONG ChildDeviceCount;
     BOOLEAN HaltUrbHandling;
+    PVOID CallbackContext;
+    PRH_INIT_CALLBACK CallbackRoutine;
 } PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
 
 typedef struct _WORKITEM_DATA

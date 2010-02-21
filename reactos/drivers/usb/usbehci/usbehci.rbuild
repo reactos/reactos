@@ -9,6 +9,6 @@
 	<file>common.c</file>
 	<file>misc.c</file>
 	<file>irp.c</file>
-      <file>usbiffn.c</file>
+	<file>usbiffn.c</file>
 	<file>urbreq.c</file>
 </module>

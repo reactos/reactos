@@ -84,7 +84,7 @@ EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVO
                     DPRINT("port tmp %x\n", tmp);
                     GetDeviceDescriptor(FdoDeviceExtension, 0, 0, FALSE);
                     PdoDeviceExtension->ChildDeviceCount++;
-                    //CompletePendingURBRequest(PdoDeviceExtension);
+                    //PdoDeviceExtension->CallbackRoutine(PdoDeviceExtension->CallbackContext);
                 }
                 else
                 {

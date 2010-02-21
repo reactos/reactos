@@ -103,7 +103,6 @@ ForwardIrpAndForget(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     PDEVICE_OBJECT LowerDevice;
 
     LowerDevice = ((PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->LowerDevice;
-DPRINT1("DeviceObject %x, LowerDevice %x\n", DeviceObject, LowerDevice);
     ASSERT(LowerDevice);
 
     IoSkipCurrentIrpStackLocation(Irp);

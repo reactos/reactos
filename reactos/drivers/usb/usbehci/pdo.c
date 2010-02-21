@@ -82,6 +82,7 @@ UrbWorkerThread(PVOID Context)
     while (PdoDeviceExtension->HaltUrbHandling == FALSE)
     {
         CompletePendingURBRequest(PdoDeviceExtension);
+        KeStallExecutionProcessor(10);
     }
     DPRINT1("Thread terminated\n");
 }
@@ -105,6 +106,8 @@ PVOID InternalCreateUsbDevice(UCHAR DeviceNumber, ULONG Port, PUSB_DEVICE Parent
     UsbDevicePointer->Address = DeviceNumber;
     UsbDevicePointer->Port = Port;
     UsbDevicePointer->ParentDevice = Parent;
+
+    UsbDevicePointer->IsHub = Hub;
 
     return UsbDevicePointer;
 }
@@ -175,6 +178,13 @@ PdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
         case IOCTL_INTERNAL_USB_GET_HUB_COUNT:
         {
             DPRINT1("IOCTL_INTERNAL_USB_GET_HUB_COUNT\n");
+
+            if (Stack->Parameters.Others.Argument1)
+            {
+                /* FIXME: Determine the number of hubs between the usb device and root hub */
+                /* For now return 0 */
+                *(PVOID *)Stack->Parameters.Others.Argument1 = 0;
+            }
             break;
         }
         case IOCTL_INTERNAL_USB_GET_HUB_NAME:
@@ -345,10 +355,7 @@ PdoDispatchPnp(
             FdoDeviceExtension = (PFDO_DEVICE_EXTENSION)PdoDeviceExtension->ControllerFdo->DeviceExtension;
 
             /* Create the root hub */
-            RootHubDevice = InternalCreateUsbDevice(0, 0, NULL, TRUE);
-
-            RootHubDevice->Address = 1;
-            RootHubDevice->Port = 0;
+            RootHubDevice = InternalCreateUsbDevice(1, 0, NULL, TRUE);
 
             RtlCopyMemory(&RootHubDevice->DeviceDescriptor,
                           ROOTHUB2_DEVICE_DESCRIPTOR,
