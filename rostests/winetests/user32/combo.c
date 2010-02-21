@@ -401,6 +401,106 @@ static void test_changesize( DWORD style)
     DestroyWindow(hCombo);
 }
 
+static void test_editselection(void)
+{
+    HWND hCombo;
+    INT start,end;
+    HWND hEdit;
+    COMBOBOXINFO cbInfo;
+    BOOL ret;
+    DWORD len;
+    BOOL (WINAPI *pGetComboBoxInfo)(HWND, PCOMBOBOXINFO);
+    char edit[20];
+
+    pGetComboBoxInfo = (void*)GetProcAddress(GetModuleHandleA("user32.dll"), "GetComboBoxInfo");
+    if (!pGetComboBoxInfo){
+        win_skip("GetComboBoxInfo is not available\n");
+        return;
+    }
+
+    /* Build a combo */
+    hCombo = build_combo(CBS_SIMPLE);
+    cbInfo.cbSize = sizeof(COMBOBOXINFO);
+    SetLastError(0xdeadbeef);
+    ret = pGetComboBoxInfo(hCombo, &cbInfo);
+    ok(ret, "Failed to get combobox info structure. LastError=%d\n",
+       GetLastError());
+    hEdit = cbInfo.hwndItem;
+
+    /* Initially combo selection is empty*/
+    len = SendMessage(hCombo, CB_GETEDITSEL, 0,0);
+    ok(LOWORD(len)==0, "Unexpected start position for selection %d\n", LOWORD(len));
+    ok(HIWORD(len)==0, "Unexpected end position for selection %d\n", HIWORD(len));
+
+    /* Set some text, and press a key to replace it */
+    edit[0] = 0x00;
+    SendMessage(hCombo, WM_SETTEXT, 0, (LPARAM)"Jason1");
+    SendMessage(hCombo, WM_GETTEXT, sizeof(edit), (LPARAM)edit);
+    ok(strcmp(edit, "Jason1")==0, "Unexpected text retrieved %s\n", edit);
+
+    /* Now what is the selection - still empty */
+    SendMessage(hCombo, CB_GETEDITSEL, (WPARAM)&start, (WPARAM)&end);
+    len = SendMessage(hCombo, CB_GETEDITSEL, 0,0);
+    ok(LOWORD(len)==0, "Unexpected start position for selection %d\n", LOWORD(len));
+    ok(HIWORD(len)==0, "Unexpected end position for selection %d\n", HIWORD(len));
+
+    /* Give it focus, and it gets selected */
+    SendMessage(hCombo, WM_SETFOCUS, 0, (LPARAM)hEdit);
+    SendMessage(hCombo, CB_GETEDITSEL, (WPARAM)&start, (WPARAM)&end);
+    len = SendMessage(hCombo, CB_GETEDITSEL, 0,0);
+    ok(LOWORD(len)==0, "Unexpected start position for selection %d\n", LOWORD(len));
+    ok(HIWORD(len)==6, "Unexpected end position for selection %d\n", HIWORD(len));
+
+    /* Now emulate a key press */
+    edit[0] = 0x00;
+    SendMessage(hCombo, WM_CHAR, 'A', 0x1c0001);
+    SendMessage(hCombo, WM_GETTEXT, sizeof(edit), (LPARAM)edit);
+    ok(strcmp(edit, "A")==0, "Unexpected text retrieved %s\n", edit);
+
+    len = SendMessage(hCombo, CB_GETEDITSEL, 0,0);
+    ok(LOWORD(len)==1, "Unexpected start position for selection %d\n", LOWORD(len));
+    ok(HIWORD(len)==1, "Unexpected end position for selection %d\n", HIWORD(len));
+
+    /* Now what happens when it gets more focus a second time - it doesnt reselect */
+    SendMessage(hCombo, WM_SETFOCUS, 0, (LPARAM)hEdit);
+    len = SendMessage(hCombo, CB_GETEDITSEL, 0,0);
+    ok(LOWORD(len)==1, "Unexpected start position for selection %d\n", LOWORD(len));
+    ok(HIWORD(len)==1, "Unexpected end position for selection %d\n", HIWORD(len));
+    DestroyWindow(hCombo);
+
+    /* Start again - Build a combo */
+    hCombo = build_combo(CBS_SIMPLE);
+    cbInfo.cbSize = sizeof(COMBOBOXINFO);
+    SetLastError(0xdeadbeef);
+    ret = pGetComboBoxInfo(hCombo, &cbInfo);
+    ok(ret, "Failed to get combobox info structure. LastError=%d\n",
+       GetLastError());
+    hEdit = cbInfo.hwndItem;
+
+    /* Set some text and give focus so it gets selected */
+    edit[0] = 0x00;
+    SendMessage(hCombo, WM_SETTEXT, 0, (LPARAM)"Jason2");
+    SendMessage(hCombo, WM_GETTEXT, sizeof(edit), (LPARAM)edit);
+    ok(strcmp(edit, "Jason2")==0, "Unexpected text retrieved %s\n", edit);
+
+    SendMessage(hCombo, WM_SETFOCUS, 0, (LPARAM)hEdit);
+
+    /* Now what is the selection */
+    SendMessage(hCombo, CB_GETEDITSEL, (WPARAM)&start, (WPARAM)&end);
+    len = SendMessage(hCombo, CB_GETEDITSEL, 0,0);
+    ok(LOWORD(len)==0, "Unexpected start position for selection %d\n", LOWORD(len));
+    ok(HIWORD(len)==6, "Unexpected end position for selection %d\n", HIWORD(len));
+
+    /* Now change the selection to the apparently invalid start -1, end -1 and
+       show it means no selection (ie start -1) but cursor at end              */
+    SendMessage(hCombo, CB_SETEDITSEL, 0, -1);
+    edit[0] = 0x00;
+    SendMessage(hCombo, WM_CHAR, 'A', 0x1c0001);
+    SendMessage(hCombo, WM_GETTEXT, sizeof(edit), (LPARAM)edit);
+    ok(strcmp(edit, "Jason2A")==0, "Unexpected text retrieved %s\n", edit);
+    DestroyWindow(hCombo);
+}
+
 START_TEST(combo)
 {
     hMainWnd = CreateWindow("static", "Test", WS_OVERLAPPEDWINDOW, 10, 10, 300, 300, NULL, NULL, NULL, 0);
@@ -414,6 +514,7 @@ START_TEST(combo)
     test_WM_LBUTTONDOWN();
     test_changesize(CBS_DROPDOWN);
     test_changesize(CBS_DROPDOWNLIST);
+    test_editselection();
 
     DestroyWindow(hMainWnd);
 }

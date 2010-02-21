@@ -869,6 +869,14 @@ static void test_edit_control_3(void)
     ok(lstrlenA(str) == len, "text shouldn't have been truncated\n");
     test_notify(1, 0, 1);
 
+    len = SendMessageA(hWnd, EM_GETSEL, 0, 0);
+    ok(LOWORD(len)==0, "Unexpected start position for selection %d\n", LOWORD(len));
+    ok(HIWORD(len)==0, "Unexpected end position for selection %d\n", HIWORD(len));
+    SendMessage(hParent, WM_SETFOCUS, 0, (LPARAM)hWnd);
+    len = SendMessageA(hWnd, EM_GETSEL, 0, 0);
+    ok(LOWORD(len)==0, "Unexpected start position for selection %d\n", LOWORD(len));
+    ok(HIWORD(len)==0, "Unexpected end position for selection %d\n", HIWORD(len));
+
     SendMessageA(hWnd, EM_SETLIMITTEXT, 5, 0);
 
     SendMessageA(hWnd, WM_SETTEXT, 0, (LPARAM)"");

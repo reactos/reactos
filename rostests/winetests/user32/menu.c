@@ -1890,8 +1890,10 @@ static struct menu_mouse_tests_s {
     { INPUT_KEYBOARD, {{0}}, {'D', 0}, FALSE, FALSE },
     { INPUT_KEYBOARD, {{0}}, {VK_MENU, 'M', 'P', 0}, TRUE, FALSE },
     { INPUT_KEYBOARD, {{0}}, {'E', 0}, FALSE, FALSE },
+    { INPUT_KEYBOARD, {{0}}, {VK_F10, 0}, TRUE, FALSE },
+    { INPUT_KEYBOARD, {{0}}, {VK_F10, 0}, FALSE, FALSE },
 
-    { INPUT_MOUSE, {{1, 2}, {0}}, {0}, TRUE, TRUE }, /* test 18 */
+    { INPUT_MOUSE, {{1, 2}, {0}}, {0}, TRUE, TRUE }, /* test 20 */
     { INPUT_MOUSE, {{1, 1}, {0}}, {0}, FALSE, FALSE },
     { INPUT_MOUSE, {{1, 0}, {0}}, {0}, TRUE, TRUE },
     { INPUT_MOUSE, {{1, 1}, {0}}, {0}, FALSE, FALSE },
