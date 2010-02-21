@@ -425,6 +425,12 @@ MiInsertInListTail(
 
 VOID
 NTAPI
+MiInsertZeroListAtBack(
+    IN PFN_NUMBER PageIndex
+);
+
+VOID
+NTAPI
 MiUnlinkFreeOrZeroedPage(
     IN PMMPFN Entry
 );

@@ -70,6 +70,98 @@ MiInsertInListTail(IN PMMPFNLIST ListHead,
 
 VOID
 NTAPI
+MiInsertZeroListAtBack(IN PFN_NUMBER EntryIndex)
+{
+    PFN_NUMBER OldBlink;
+    PMMPFN Pfn1, Blink;
+    ULONG Color;
+    PMMCOLOR_TABLES ColorHead;
+    PMMPFNLIST ListHead;
+    
+    /* Make sure the PFN lock is held */
+    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    
+    /* Get the descriptor */
+    Pfn1 = MiGetPfnEntry(EntryIndex);
+    ASSERT(Pfn1->u3.e2.ReferenceCount == 0);
+    ASSERT(Pfn1->u4.MustBeCached == 0);
+    ASSERT(Pfn1->u3.e1.Rom == 0);
+    ASSERT(Pfn1->u3.e1.RemovalRequested == 0);
+    ASSERT(Pfn1->u4.InPageError == 0);
+    
+    /* Use the zero list */
+    ListHead = &MmZeroedPageListHead;
+    ListHead->Total++;
+         
+    /* Get the back link */
+    OldBlink = ListHead->Blink;
+    if (OldBlink != LIST_HEAD)
+    {
+        /* Set the back pointer to point to us now */
+        MiGetPfnEntry(OldBlink)->u1.Flink = EntryIndex;
+    }
+    else
+    {
+        /* Set the list to point to us */
+        ListHead->Flink = EntryIndex;
+    }
+    
+    /* Set the entry to point to the list head forwards, and the old page backwards */
+    Pfn1->u1.Flink = LIST_HEAD;
+    Pfn1->u2.Blink = OldBlink;
+    
+    /* And now the head points back to us, since we are last */
+    ListHead->Blink = EntryIndex;
+    
+    /* Update the page location */
+    Pfn1->u3.e1.PageLocation = ZeroedPageList;
+
+    /* FIXME: NOT YET Due to caller semantics: Update the available page count */
+    //MmAvailablePages++;
+
+    /* Check if we've reached the configured low memory threshold */
+    if (MmAvailablePages == MmLowMemoryThreshold)
+    {
+        /* Clear the event, because now we're ABOVE the threshold */
+        KeClearEvent(MiLowMemoryEvent);
+    }
+    else if (MmAvailablePages == MmHighMemoryThreshold)
+    {
+        /* Otherwise check if we reached the high threshold and signal the event */
+        KeSetEvent(MiHighMemoryEvent, 0, FALSE);
+    }
+    
+    /* Get the page color */
+    Color = EntryIndex & MmSecondaryColorMask;
+
+    /* Get the first page on the color list */
+    ColorHead = &MmFreePagesByColor[ZeroedPageList][Color];
+    if (ColorHead->Flink == LIST_HEAD)
+    {
+        /* The list is empty, so we are the first page */
+        Pfn1->u4.PteFrame = -1;
+        ColorHead->Flink = EntryIndex;
+    }
+    else
+    {
+        /* Get the previous page */
+        Blink = (PMMPFN)ColorHead->Blink;
+        
+        /* Make it link to us */
+        Pfn1->u4.PteFrame = MiGetPfnEntryIndex(Blink);
+        Blink->OriginalPte.u.Long = EntryIndex;
+    }
+    
+    /* Now initialize our own list pointers */
+    ColorHead->Blink = Pfn1;
+    Pfn1->OriginalPte.u.Long = LIST_HEAD;
+    
+    /* And increase the count in the colored list */
+    ColorHead->Count++;
+}
+
+VOID
+NTAPI
 MiUnlinkFreeOrZeroedPage(IN PMMPFN Entry)
 {
     PFN_NUMBER OldFlink, OldBlink;
@@ -184,7 +276,6 @@ VOID
 NTAPI
 MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
 {
-    MMLISTS ListName;
     PMMPFNLIST ListHead;
     PFN_NUMBER LastPage;
     PMMPFN Pfn1, Blink;
@@ -208,12 +299,11 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
 
     /* Get the free page list and increment its count */
     ListHead = &MmFreePageListHead;
-    ListName = FreePageList;
     ListHead->Total++;
 
     /* Get the last page on the list */
     LastPage = ListHead->Blink;
-    if (LastPage != -1)
+    if (LastPage != LIST_HEAD)
     {
         /* Link us with the previous page, so we're at the end now */
         MI_PFN_TO_PFNENTRY(LastPage)->u1.Flink = PageFrameIndex;
@@ -228,25 +318,38 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
     ListHead->Blink = PageFrameIndex;
     
     /* And initialize our own list pointers */
-    Pfn1->u1.Flink = -1;
+    Pfn1->u1.Flink = LIST_HEAD;
     Pfn1->u2.Blink = LastPage;
 
     /* Set the list name and default priority */
-    Pfn1->u3.e1.PageLocation = ListName;
+    Pfn1->u3.e1.PageLocation = FreePageList;
     Pfn1->u4.Priority = 3;
     
     /* Clear some status fields */
     Pfn1->u4.InPageError = 0;
     Pfn1->u4.AweAllocation = 0;
 
-    /* FIXME: More work to be done regarding page accounting */
+    /* Not yet until we switch to this */
+    //MmAvailablePages++;
+
+    /* Check if we've reached the configured low memory threshold */
+    if (MmAvailablePages == MmLowMemoryThreshold)
+    {
+        /* Clear the event, because now we're ABOVE the threshold */
+        KeClearEvent(MiLowMemoryEvent);
+    }
+    else if (MmAvailablePages == MmHighMemoryThreshold)
+    {
+        /* Otherwise check if we reached the high threshold and signal the event */
+        KeSetEvent(MiHighMemoryEvent, 0, FALSE);
+    }
 
     /* Get the page color */
     Color = PageFrameIndex & MmSecondaryColorMask;
 
     /* Get the first page on the color list */
-    ColorHead = &MmFreePagesByColor[ListName][Color];
-    if (ColorHead->Flink == -1)
+    ColorHead = &MmFreePagesByColor[FreePageList][Color];
+    if (ColorHead->Flink == LIST_HEAD)
     {
         /* The list is empty, so we are the first page */
         Pfn1->u4.PteFrame = -1;
@@ -264,7 +367,7 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
     
     /* Now initialize our own list pointers */
     ColorHead->Blink = Pfn1;
-    Pfn1->OriginalPte.u.Long = -1;
+    Pfn1->OriginalPte.u.Long = LIST_HEAD;
     
     /* And increase the count in the colored list */
     ColorHead->Count++;

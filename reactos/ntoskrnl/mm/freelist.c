@@ -936,8 +936,7 @@ MmZeroPageThreadMain(PVOID Ignored)
          oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
          if (NT_SUCCESS(Status))
          {
-            MiInsertInListTail(&MmZeroedPageListHead, PageDescriptor);
-            PageDescriptor->u3.e1.PageLocation = ZeroedPageList;
+            MiInsertZeroListAtBack(Pfn);
             Count++;
          }
          else
