@@ -8,13 +8,13 @@
 			</xi:fallback>
 		</xi:include>
 	</directory>
-	<!--directory name="rostests">
+	<directory name="rostests">
 		<xi:include href="rostests/directory.rbuild">
 			<xi:fallback>
 				<xi:include href="empty.rbuild" />
 			</xi:fallback>
 		</xi:include>
-	</directory-->
+	</directory>
 	<directory name="wallpaper">
 		<xi:include href="wallpaper/directory.rbuild">
 			<xi:fallback>
