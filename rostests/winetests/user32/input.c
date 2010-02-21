@@ -43,9 +43,10 @@
  *    if it is a problem.
  *
  */
-
-#define _WIN32_WINNT 0x500
+#undef _WIN32_WINNT
+#undef _WIN32_IE
 #define _WIN32_IE 0x0500
+#define _WIN32_WINNT 0x500
 
 #include <stdarg.h>
 #include <assert.h>
