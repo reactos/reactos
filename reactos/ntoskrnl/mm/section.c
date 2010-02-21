@@ -4420,63 +4420,6 @@ NtExtendSection(IN HANDLE SectionHandle,
    return STATUS_NOT_IMPLEMENTED;
 }
 
-
-/**********************************************************************
- * NAME       INTERNAL
- *  MmAllocateSection@4
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *  Length
- *
- * RETURN VALUE
- *
- * NOTE
- *  Code taken from ntoskrnl/mm/special.c.
- *
- * REVISIONS
- */
-PVOID NTAPI
-MmAllocateSection (IN ULONG Length, PVOID BaseAddress)
-{
-   PVOID Result;
-   MEMORY_AREA* marea;
-   NTSTATUS Status;
-   PMMSUPPORT AddressSpace;
-   PHYSICAL_ADDRESS BoundaryAddressMultiple;
-
-   DPRINT("MmAllocateSection(Length %x)\n",Length);
-
-   BoundaryAddressMultiple.QuadPart = 0;
-
-   AddressSpace = MmGetKernelAddressSpace();
-   Result = BaseAddress;
-   MmLockAddressSpace(AddressSpace);
-   Status = MmCreateMemoryArea (AddressSpace,
-                                MEMORY_AREA_SYSTEM,
-                                &Result,
-                                Length,
-                                0,
-                                &marea,
-                                FALSE,
-                                0,
-                                BoundaryAddressMultiple);
-   MmUnlockAddressSpace(AddressSpace);
-
-   if (!NT_SUCCESS(Status))
-   {
-      return (NULL);
-   }
-   DPRINT("Result %p\n",Result);
-
-   /* Create a virtual mapping for this memory area */
-   MmMapMemoryArea(Result, Length, MC_NPPOOL, PAGE_READWRITE);
-
-   return ((PVOID)Result);
-}
-
-
 /**********************************************************************
  * NAME       EXPORTED
  * MmMapViewOfSection
