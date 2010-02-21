@@ -45,8 +45,6 @@ BOOL ximInComposeMode=FALSE;
 static DWORD dwCompStringLength = 0;
 static LPBYTE CompositionString = NULL;
 static DWORD dwCompStringSize = 0;
-static LPBYTE ResultString = NULL;
-static DWORD dwResultStringSize = 0;
 
 #define STYLE_OFFTHESPOT (XIMPreeditArea | XIMStatusArea)
 #define STYLE_OVERTHESPOT (XIMPreeditPosition | XIMStatusNothing)
@@ -60,118 +58,45 @@ static XIMStyle ximStyle = 0;
 static XIMStyle ximStyleRoot = 0;
 static XIMStyle ximStyleRequest = STYLE_CALLBACK;
 
-static BOOL X11DRV_ImmSetInternalString(DWORD dwIndex, DWORD dwOffset,
+static void X11DRV_ImmSetInternalString(DWORD dwOffset,
                                         DWORD selLength, LPWSTR lpComp, DWORD dwCompLen)
 {
     /* Composition strings are edited in chunks */
     unsigned int byte_length = dwCompLen * sizeof(WCHAR);
     unsigned int byte_offset = dwOffset * sizeof(WCHAR);
     unsigned int byte_selection = selLength * sizeof(WCHAR);
-    BOOL rc = FALSE;
+    int byte_expansion = byte_length - byte_selection;
+    LPBYTE ptr_new;
 
-    TRACE("( %i, %i, %d, %p, %d):\n", dwOffset, selLength, dwIndex, lpComp, dwCompLen );
+    TRACE("( %i, %i, %p, %d):\n", dwOffset, selLength, lpComp, dwCompLen );
 
-    if (dwIndex == GCS_COMPSTR)
+    if (byte_expansion + dwCompStringLength >= dwCompStringSize)
     {
-        unsigned int i,j;
-        LPBYTE ptr_new;
-        LPBYTE ptr_old;
-
-        if ((dwCompLen == 0) && (selLength == 0))
-        {
-            /* DO Nothing */
-        }
-        /* deletion occurred */
-        else if ((dwCompLen== 0) && (selLength != 0))
-        {
-            if (dwCompStringLength)
-            {
-                for (i = 0; i < byte_selection; i++)
-                {
-                    if (byte_offset+byte_selection+i <
-                        dwCompStringLength)
-                    {
-                        CompositionString[byte_offset + i] =
-                        CompositionString[byte_offset + byte_selection + i];
-                    }
-                    else
-                        CompositionString[byte_offset + i] = 0;
-                }
-                /* clean up the end */
-                dwCompStringLength -= byte_selection;
-
-                i = dwCompStringLength;
-                while (i < dwCompStringSize)
-                {
-                    CompositionString[i++] = 0;
-                }
-            }
-        }
+        if (CompositionString)
+            ptr_new = HeapReAlloc(GetProcessHeap(), 0, CompositionString,
+                                  dwCompStringSize + byte_expansion);
         else
+            ptr_new = HeapAlloc(GetProcessHeap(), 0,
+                                dwCompStringSize + byte_expansion);
+
+        if (ptr_new == NULL)
         {
-            int byte_expansion = byte_length - byte_selection;
-
-            if (byte_expansion + dwCompStringLength >= dwCompStringSize)
-            {
-                if (CompositionString)
-                    CompositionString =
-                        HeapReAlloc(GetProcessHeap(), 0,
-                                    CompositionString,
-                                    dwCompStringSize +
-                                    byte_expansion);
-                else
-                     CompositionString =
-                        HeapAlloc(GetProcessHeap(), 0, dwCompStringSize +
-                                    byte_expansion);
-
-                memset(&(CompositionString[dwCompStringSize]), 0,
-                        byte_expansion);
-
-                dwCompStringSize += byte_expansion;
-            }
-
-            ptr_new =  ((LPBYTE)lpComp);
-            ptr_old = CompositionString + byte_offset + byte_selection;
-
-            dwCompStringLength += byte_expansion;
-
-            for (j=0,i = byte_offset; i < dwCompStringSize; i++)
-            {
-                if (j < byte_length)
-                {
-                    CompositionString[i] = ptr_new[j++];
-                }
-                else
-                {
-                    if (ptr_old < CompositionString + dwCompStringSize)
-                    {
-                        CompositionString[i] = *ptr_old;
-                        ptr_old++;
-                            }
-                    else
-                        CompositionString[i] = 0;
-                }
-            }
+            ERR("Couldn't expand composition string buffer\n");
+            return;
         }
 
-        rc = IME_SetCompositionString(SCS_SETSTR, CompositionString,
-                                      dwCompStringLength, NULL, 0);
-    }
-    else if ((dwIndex == GCS_RESULTSTR) && (lpComp) && (dwCompLen))
-    {
-        if (dwResultStringSize)
-            HeapFree(GetProcessHeap(),0,ResultString);
-        dwResultStringSize= byte_length;
-        ResultString= HeapAlloc(GetProcessHeap(),0,byte_length);
-        memcpy(ResultString,lpComp,byte_length);
-
-        rc = IME_SetCompositionString(SCS_SETSTR, ResultString,
-                                     dwResultStringSize, NULL, 0);
-
-        IME_NotifyIME( NI_COMPOSITIONSTR, CPS_COMPLETE, 0);
+        CompositionString = ptr_new;
+        dwCompStringSize += byte_expansion;
     }
 
-    return rc;
+    ptr_new = CompositionString + byte_offset;
+    memmove(ptr_new + byte_length, ptr_new + byte_selection,
+            dwCompStringLength - byte_offset - byte_selection);
+    memcpy(ptr_new, lpComp, byte_length);
+    dwCompStringLength += byte_expansion;
+
+    IME_SetCompositionString(SCS_SETSTR, CompositionString,
+                             dwCompStringLength, NULL, 0);
 }
 
 void X11DRV_XIMLookupChars( const char *str, DWORD count )
@@ -179,6 +104,8 @@ void X11DRV_XIMLookupChars( const char *str, DWORD count )
     DWORD dwOutput;
     WCHAR *wcOutput;
     HWND focus;
+
+    TRACE("%p %u\n", str, count);
 
     dwOutput = MultiByteToWideChar(CP_UNIXCP, 0, str, count, NULL, 0);
     wcOutput = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR) * dwOutput);
@@ -189,35 +116,14 @@ void X11DRV_XIMLookupChars( const char *str, DWORD count )
     if ((focus = GetFocus()))
         IME_UpdateAssociation(focus);
 
-    X11DRV_ImmSetInternalString(GCS_RESULTSTR,0,0,wcOutput,dwOutput);
+    IME_SetResultString(wcOutput, dwOutput);
     HeapFree(GetProcessHeap(), 0, wcOutput);
-}
-
-static void X11DRV_ImmSetOpenStatus(BOOL fOpen)
-{
-    if (fOpen == FALSE)
-    {
-        if (dwCompStringSize)
-            HeapFree(GetProcessHeap(),0,CompositionString);
-
-        dwCompStringSize = 0;
-        dwCompStringLength = 0;
-        CompositionString = NULL;
-
-        if (dwResultStringSize)
-            HeapFree(GetProcessHeap(),0,ResultString);
-
-        dwResultStringSize = 0;
-        ResultString = NULL;
-    }
-
-    IME_SetOpenStatus(fOpen);
 }
 
 static int XIMPreEditStartCallback(XIC ic, XPointer client_data, XPointer call_data)
 {
     TRACE("PreEditStartCallback %p\n",ic);
-    X11DRV_ImmSetOpenStatus(TRUE);
+    IME_SetOpenStatus(TRUE);
     ximInComposeMode = TRUE;
     return -1;
 }
@@ -226,7 +132,12 @@ static void XIMPreEditDoneCallback(XIC ic, XPointer client_data, XPointer call_d
 {
     TRACE("PreeditDoneCallback %p\n",ic);
     ximInComposeMode = FALSE;
-    X11DRV_ImmSetOpenStatus(FALSE);
+    if (dwCompStringSize)
+        HeapFree(GetProcessHeap(), 0, CompositionString);
+    dwCompStringSize = 0;
+    dwCompStringLength = 0;
+    CompositionString = NULL;
+    IME_SetOpenStatus(FALSE);
 }
 
 static void XIMPreEditDrawCallback(XIM ic, XPointer client_data,
@@ -258,20 +169,20 @@ static void XIMPreEditDrawCallback(XIM ic, XPointer client_data,
 
                     /* ignore null */
                     dwOutput --;
-                    X11DRV_ImmSetInternalString (GCS_COMPSTR, sel, len, wcOutput, dwOutput);
+                    X11DRV_ImmSetInternalString (sel, len, wcOutput, dwOutput);
                     HeapFree(GetProcessHeap(), 0, wcOutput);
                 }
             }
             else
             {
                 FIXME("wchar PROBIBILY WRONG\n");
-                X11DRV_ImmSetInternalString (GCS_COMPSTR, sel, len,
+                X11DRV_ImmSetInternalString (sel, len,
                                              (LPWSTR)P_DR->text->string.wide_char,
                                              P_DR->text->length);
             }
         }
         else
-            X11DRV_ImmSetInternalString (GCS_COMPSTR, sel, len, NULL, 0);
+            X11DRV_ImmSetInternalString (sel, len, NULL, 0);
         IME_SetCursorPos(P_DR->caret);
     }
     TRACE("Finished\n");

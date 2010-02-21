@@ -100,10 +100,7 @@ struct wow_handlers16
     HWND    (*create_window)(CREATESTRUCTW*,LPCWSTR,HINSTANCE,BOOL);
     LRESULT (*call_window_proc)(HWND,UINT,WPARAM,LPARAM,LRESULT*,void*);
     LRESULT (*call_dialog_proc)(HWND,UINT,WPARAM,LPARAM,LRESULT*,void*);
-    HICON   (*alloc_icon_handle)(UINT);
-    struct tagCURSORICONINFO *(*get_icon_ptr)(HICON);
-    void    (*release_icon_ptr)(HICON,struct tagCURSORICONINFO*);
-    int     (*free_icon_handle)(HICON);
+    void    (*free_icon_param)(ULONG_PTR);
 };
 
 struct wow_handlers32
@@ -121,6 +118,8 @@ struct wow_handlers32
     WNDPROC (*alloc_winproc)(WNDPROC,BOOL);
     struct tagDIALOGINFO *(*get_dialog_info)(HWND,BOOL);
     INT     (*dialog_box_loop)(HWND,HWND);
+    ULONG_PTR (*get_icon_param)(HICON);
+    ULONG_PTR (*set_icon_param)(HICON,ULONG_PTR);
 };
 
 extern struct wow_handlers16 wow_handlers DECLSPEC_HIDDEN;
@@ -132,6 +131,9 @@ extern LRESULT ListBoxWndProc_common(HWND,UINT,WPARAM,LPARAM,BOOL) DECLSPEC_HIDD
 extern LRESULT MDIClientWndProc_common(HWND,UINT,WPARAM,LPARAM,BOOL) DECLSPEC_HIDDEN;
 extern LRESULT ScrollBarWndProc_common(HWND,UINT,WPARAM,LPARAM,BOOL) DECLSPEC_HIDDEN;
 extern LRESULT StaticWndProc_common(HWND,UINT,WPARAM,LPARAM,BOOL) DECLSPEC_HIDDEN;
+
+extern ULONG_PTR get_icon_param( HICON handle ) DECLSPEC_HIDDEN;
+extern ULONG_PTR set_icon_param( HICON handle, ULONG_PTR param ) DECLSPEC_HIDDEN;
 
 /* Class functions */
 struct tagCLASS;  /* opaque structure */

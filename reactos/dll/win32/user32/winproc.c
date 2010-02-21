@@ -1128,37 +1128,6 @@ static DWORD wait_message( DWORD count, CONST HANDLE *handles, DWORD timeout, DW
     return ret;
 }
 
-static HICON alloc_icon_handle( unsigned int size )
-{
-    struct user_object *obj = HeapAlloc( GetProcessHeap(), 0, sizeof(*obj) + size );
-    if (!obj) return 0;
-    return alloc_user_handle( obj, USER_ICON );
-}
-
-static struct tagCURSORICONINFO *get_icon_ptr( HICON handle )
-{
-    struct user_object *obj = get_user_handle_ptr( handle, USER_ICON );
-    if (obj == OBJ_OTHER_PROCESS)
-    {
-        WARN( "cursor handle %p from other process\n", handle );
-        obj = NULL;
-    }
-    return obj ? (struct tagCURSORICONINFO *)(obj + 1) : NULL;
-}
-
-static void release_icon_ptr( HICON handle, struct tagCURSORICONINFO *ptr )
-{
-    release_user_handle_ptr( (struct user_object *)ptr - 1 );
-}
-
-static int free_icon_handle( HICON handle )
-{
-    struct user_object *obj = free_user_handle( handle, USER_ICON );
-    HeapFree( GetProcessHeap(), 0, obj );
-    return !obj;
-}
-
-
 /**********************************************************************
  *		UserRegisterWowHandlers (USER32.@)
  *
@@ -1180,6 +1149,8 @@ void WINAPI UserRegisterWowHandlers( const struct wow_handlers16 *new, struct wo
     orig->alloc_winproc   = WINPROC_AllocProc;
     orig->get_dialog_info = DIALOG_get_info;
     orig->dialog_box_loop = DIALOG_DoDialogBox;
+    orig->get_icon_param  = get_icon_param;
+    orig->set_icon_param  = set_icon_param;
 
     wow_handlers = *new;
 }
@@ -1197,8 +1168,5 @@ struct wow_handlers16 wow_handlers =
     WIN_CreateWindowEx,
     NULL,  /* call_window_proc */
     NULL,  /* call_dialog_proc */
-    alloc_icon_handle,
-    get_icon_ptr,
-    release_icon_ptr,
-    free_icon_handle
+    NULL,  /* free_icon_param */
 };

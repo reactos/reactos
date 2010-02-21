@@ -126,6 +126,86 @@ static CRITICAL_SECTION IconCrst = { &critsect_debug, -1, 0, 0, 0, 0 };
 static const WORD ICON_HOTSPOT = 0x4242;
 
 
+/**********************************************************************
+ * User objects management
+ */
+
+struct cursoricon_object
+{
+    struct user_object obj;      /* object header */
+    ULONG_PTR          param;    /* opaque param used by 16-bit code */
+    /* followed by cursor data in CURSORICONINFO format */
+};
+
+static HICON alloc_icon_handle( unsigned int size )
+{
+    struct cursoricon_object *obj = HeapAlloc( GetProcessHeap(), 0, sizeof(*obj) + size );
+    if (!obj) return 0;
+    obj->param = 0;
+    return alloc_user_handle( &obj->obj, USER_ICON );
+}
+
+static struct tagCURSORICONINFO *get_icon_ptr( HICON handle )
+{
+    struct cursoricon_object *obj = get_user_handle_ptr( handle, USER_ICON );
+    if (obj == OBJ_OTHER_PROCESS)
+    {
+        WARN( "icon handle %p from other process\n", handle );
+        obj = NULL;
+    }
+    return obj ? (struct tagCURSORICONINFO *)(obj + 1) : NULL;
+}
+
+static void release_icon_ptr( HICON handle, struct tagCURSORICONINFO *ptr )
+{
+    release_user_handle_ptr( (struct cursoricon_object *)ptr - 1 );
+}
+
+static BOOL free_icon_handle( HICON handle )
+{
+    struct cursoricon_object *obj = free_user_handle( handle, USER_ICON );
+
+    if (obj == OBJ_OTHER_PROCESS) WARN( "icon handle %p from other process\n", handle );
+    else if (obj)
+    {
+        ULONG_PTR param = obj->param;
+        HeapFree( GetProcessHeap(), 0, obj );
+        if (wow_handlers.free_icon_param && param) wow_handlers.free_icon_param( param );
+        return TRUE;
+    }
+    return FALSE;
+}
+
+ULONG_PTR get_icon_param( HICON handle )
+{
+    ULONG_PTR ret = 0;
+    struct cursoricon_object *obj = get_user_handle_ptr( handle, USER_ICON );
+
+    if (obj == OBJ_OTHER_PROCESS) WARN( "icon handle %p from other process\n", handle );
+    else if (obj)
+    {
+        ret = obj->param;
+        release_user_handle_ptr( obj );
+    }
+    return ret;
+}
+
+ULONG_PTR set_icon_param( HICON handle, ULONG_PTR param )
+{
+    ULONG_PTR ret = 0;
+    struct cursoricon_object *obj = get_user_handle_ptr( handle, USER_ICON );
+
+    if (obj == OBJ_OTHER_PROCESS) WARN( "icon handle %p from other process\n", handle );
+    else if (obj)
+    {
+        ret = obj->param;
+        obj->param = param;
+        release_user_handle_ptr( obj );
+    }
+    return ret;
+}
+
+
 /***********************************************************************
  *             map_fileW
  *
@@ -451,10 +531,10 @@ BOOL get_icon_size( HICON handle, SIZE *size )
 {
     CURSORICONINFO *info;
 
-    if (!(info = wow_handlers.get_icon_ptr( handle ))) return FALSE;
+    if (!(info = get_icon_ptr( handle ))) return FALSE;
     size->cx = info->nWidth;
     size->cy = info->nHeight;
-    wow_handlers.release_icon_ptr( handle, info );
+    release_icon_ptr( handle, info );
     return TRUE;
 }
 
@@ -831,10 +911,10 @@ static HICON CURSORICON_CreateIconFromBMI( BITMAPINFO *bmi,
     sizeXor = bmpXor.bmHeight * bmpXor.bmWidthBytes;
     sizeAnd = bmpAnd.bmHeight * bmpAnd.bmWidthBytes;
 
-    hObj = wow_handlers.alloc_icon_handle( sizeof(CURSORICONINFO) + sizeXor + sizeAnd );
+    hObj = alloc_icon_handle( sizeof(CURSORICONINFO) + sizeXor + sizeAnd );
     if (hObj)
     {
-        CURSORICONINFO *info = wow_handlers.get_icon_ptr( hObj );
+        CURSORICONINFO *info = get_icon_ptr( hObj );
 
         info->ptHotSpot.x   = hotspot.x;
         info->ptHotSpot.y   = hotspot.y;
@@ -848,7 +928,7 @@ static HICON CURSORICON_CreateIconFromBMI( BITMAPINFO *bmi,
 
         GetBitmapBits( hAndBits, sizeAnd, info + 1 );
         GetBitmapBits( hXorBits, sizeXor, (char *)(info + 1) + sizeAnd );
-        wow_handlers.release_icon_ptr( hObj, info );
+        release_icon_ptr( hObj, info );
     }
 
     DeleteObject( hAndBits );
@@ -1178,7 +1258,7 @@ static HICON CURSORICON_Load(HINSTANCE hInstance, LPCWSTR name,
     if (!hInstance) hInstance = user32_module;  /* Load OEM cursor/icon */
 
     /* don't cache 16-bit instances (FIXME: should never get 16-bit instances in the first place) */
-    if (!HIWORD( hInstance )) loadflags &= ~LR_SHARED;
+    if ((ULONG_PTR)hInstance >> 16 == 0) loadflags &= ~LR_SHARED;
 
     /* Get directory resource ID */
 
@@ -1451,15 +1531,15 @@ HICON WINAPI CopyIcon( HICON hIcon )
     int size;
     HICON hNew;
 
-    if (!(ptrOld = wow_handlers.get_icon_ptr( hIcon ))) return 0;
+    if (!(ptrOld = get_icon_ptr( hIcon ))) return 0;
     size = sizeof(CURSORICONINFO);
     size += ptrOld->nHeight * get_bitmap_width_bytes( ptrOld->nWidth, 1 );  /* and bitmap */
     size += ptrOld->nHeight * ptrOld->nWidthBytes;  /* xor bitmap */
-    hNew = wow_handlers.alloc_icon_handle( size );
-    ptrNew = wow_handlers.get_icon_ptr( hNew );
+    hNew = alloc_icon_handle( size );
+    ptrNew = get_icon_ptr( hNew );
     memcpy( ptrNew, ptrOld, size );
-    wow_handlers.release_icon_ptr( hIcon, ptrOld );
-    wow_handlers.release_icon_ptr( hNew, ptrNew );
+    release_icon_ptr( hIcon, ptrOld );
+    release_icon_ptr( hNew, ptrNew );
     return hNew;
 }
 
@@ -1472,7 +1552,7 @@ BOOL WINAPI DestroyIcon( HICON hIcon )
     TRACE_(icon)("%p\n", hIcon );
 
     if (CURSORICON_DelSharedIcon( hIcon ) == -1)
-        wow_handlers.free_icon_handle( hIcon );
+        free_icon_handle( hIcon );
     return TRUE;
 }
 
@@ -1572,10 +1652,10 @@ BOOL WINAPI DrawIcon( HDC hdc, INT x, INT y, HICON hIcon )
 
     TRACE("%p, (%d,%d), %p\n", hdc, x, y, hIcon);
 
-    if (!(ptr = wow_handlers.get_icon_ptr( hIcon ))) return FALSE;
+    if (!(ptr = get_icon_ptr( hIcon ))) return FALSE;
     if (!(hMemDC = CreateCompatibleDC( hdc )))
     {
-        wow_handlers.release_icon_ptr( hIcon, ptr );
+        release_icon_ptr( hIcon, ptr );
         return FALSE;
     }
 
@@ -1641,7 +1721,7 @@ BOOL WINAPI DrawIcon( HDC hdc, INT x, INT y, HICON hIcon )
     DeleteDC( hMemDC );
     if (hXorBits) DeleteObject( hXorBits );
     if (hAndBits) DeleteObject( hAndBits );
-    wow_handlers.release_icon_ptr( hIcon, ptr );
+    release_icon_ptr( hIcon, ptr );
     SetTextColor( hdc, oldFg );
     SetBkColor( hdc, oldBg );
     return TRUE;
@@ -1667,9 +1747,9 @@ HCURSOR WINAPI DECLSPEC_HOTPATCH SetCursor( HCURSOR hCursor /* [in] Handle of cu
     /* Change the cursor shape only if it is visible */
     if (thread_info->cursor_count >= 0)
     {
-        CURSORICONINFO *info = wow_handlers.get_icon_ptr( hCursor );
+        CURSORICONINFO *info = get_icon_ptr( hCursor );
         /* release before calling driver (FIXME) */
-        if (info) wow_handlers.release_icon_ptr( hCursor, info );
+        if (info) release_icon_ptr( hCursor, info );
         USER_Driver->pSetCursor( info );
     }
     return hOldCursor;
@@ -1688,9 +1768,9 @@ INT WINAPI DECLSPEC_HOTPATCH ShowCursor( BOOL bShow )
     {
         if (++thread_info->cursor_count == 0) /* Show it */
         {
-            CURSORICONINFO *info = wow_handlers.get_icon_ptr( thread_info->cursor );
+            CURSORICONINFO *info = get_icon_ptr( thread_info->cursor );
             /* release before calling driver (FIXME) */
-            if (info) wow_handlers.release_icon_ptr( thread_info->cursor, info );
+            if (info) release_icon_ptr( thread_info->cursor, info );
             USER_Driver->pSetCursor( info );
         }
     }
@@ -1868,7 +1948,7 @@ BOOL WINAPI GetIconInfo(HICON hIcon, PICONINFO iconinfo)
     CURSORICONINFO *ciconinfo;
     INT height;
 
-    if (!(ciconinfo = wow_handlers.get_icon_ptr( hIcon ))) return FALSE;
+    if (!(ciconinfo = get_icon_ptr( hIcon ))) return FALSE;
 
     TRACE("%p => %dx%d, %d bpp\n", hIcon,
           ciconinfo->nWidth, ciconinfo->nHeight, ciconinfo->bBitsPerPixel);
@@ -1905,7 +1985,7 @@ BOOL WINAPI GetIconInfo(HICON hIcon, PICONINFO iconinfo)
 
     iconinfo->hbmMask = CreateBitmap ( ciconinfo->nWidth, height,
                                 1, 1, ciconinfo + 1);
-    wow_handlers.release_icon_ptr( hIcon, ciconinfo );
+    release_icon_ptr( hIcon, ciconinfo );
 
     return TRUE;
 }
@@ -1946,10 +2026,10 @@ HICON WINAPI CreateIconIndirect(PICONINFO iconinfo)
 
     sizeAnd = bmpAnd.bmHeight * get_bitmap_width_bytes(bmpAnd.bmWidth, 1);
 
-    hObj = wow_handlers.alloc_icon_handle( sizeof(CURSORICONINFO) + sizeXor + sizeAnd );
+    hObj = alloc_icon_handle( sizeof(CURSORICONINFO) + sizeXor + sizeAnd );
     if (hObj)
     {
-        CURSORICONINFO *info = wow_handlers.get_icon_ptr( hObj );
+        CURSORICONINFO *info = get_icon_ptr( hObj );
 
         /* If we are creating an icon, the hotspot is unused */
         if (iconinfo->fIcon)
@@ -2058,7 +2138,7 @@ HICON WINAPI CreateIconIndirect(PICONINFO iconinfo)
                                dst_bits, &bminfo, DIB_RGB_COLORS );
             }
         }
-        wow_handlers.release_icon_ptr( hObj, info );
+        release_icon_ptr( hObj, info );
     }
     return hObj;
 }
@@ -2099,10 +2179,10 @@ BOOL WINAPI DrawIconEx( HDC hdc, INT x0, INT y0, HICON hIcon,
     TRACE_(icon)("(hdc=%p,pos=%d.%d,hicon=%p,extend=%d.%d,istep=%d,br=%p,flags=0x%08x)\n",
                  hdc,x0,y0,hIcon,cxWidth,cyWidth,istep,hbr,flags );
 
-    if (!(ptr = wow_handlers.get_icon_ptr( hIcon ))) return FALSE;
+    if (!(ptr = get_icon_ptr( hIcon ))) return FALSE;
     if (!(hMemDC = CreateCompatibleDC( hdc )))
     {
-        wow_handlers.release_icon_ptr( hIcon, ptr );
+        release_icon_ptr( hIcon, ptr );
         return FALSE;
     }
 
@@ -2250,7 +2330,7 @@ BOOL WINAPI DrawIconEx( HDC hdc, INT x0, INT y0, HICON hIcon,
     if (hMemDC) DeleteDC( hMemDC );
     if (hDC_off) DeleteDC(hDC_off);
     if (hB_off) DeleteObject(hB_off);
-    wow_handlers.release_icon_ptr( hIcon, ptr );
+    release_icon_ptr( hIcon, ptr );
     return result;
 }
 

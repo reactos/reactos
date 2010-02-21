@@ -1628,22 +1628,24 @@ static HWND SWP_DoOwnedPopups(HWND hwnd, HWND hwndInsertAfter)
     {
         /* make sure this popup stays above the owner */
 
-        if (hwndInsertAfter != HWND_TOP && hwndInsertAfter != HWND_TOPMOST)
+        if (hwndInsertAfter != HWND_TOPMOST)
         {
             if (!(list = WIN_ListChildren( GetDesktopWindow() ))) return hwndInsertAfter;
 
             for (i = 0; list[i]; i++)
             {
+                BOOL topmost = (GetWindowLongW( list[i], GWL_EXSTYLE ) & WS_EX_TOPMOST) != 0;
+
                 if (list[i] == owner)
                 {
                     if (i > 0) hwndInsertAfter = list[i-1];
-                    else hwndInsertAfter = HWND_TOP;
+                    else hwndInsertAfter = topmost ? HWND_TOPMOST : HWND_TOP;
                     break;
                 }
 
-                if (hwndInsertAfter == HWND_NOTOPMOST)
+                if (hwndInsertAfter == HWND_TOP || hwndInsertAfter == HWND_NOTOPMOST)
                 {
-                    if (!(GetWindowLongW( list[i], GWL_EXSTYLE ) & WS_EX_TOPMOST)) break;
+                    if (!topmost) break;
                 }
                 else if (list[i] == hwndInsertAfter) break;
             }

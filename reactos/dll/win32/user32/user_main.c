@@ -287,10 +287,6 @@ static BOOL process_attach(void)
     /* Setup palette function pointers */
     palette_init();
 
-#ifndef __REACTOS__
-    LoadLibraryA( "user.exe16" );
-#endif
-
     /* Initialize built-in window classes */
     CLASS_RegisterBuiltinClasses();
 

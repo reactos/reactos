@@ -1278,8 +1278,8 @@ void X11DRV_X_to_window_rect( struct x11drv_win_data *data, RECT *rect )
  * Synchronize the X window position with the Windows one
  */
 static void sync_window_position( Display *display, struct x11drv_win_data *data,
-                                  UINT swp_flags, const RECT *old_client_rect,
-                                  const RECT *old_whole_rect )
+                                  UINT swp_flags, const RECT *old_window_rect,
+                                  const RECT *old_whole_rect, const RECT *old_client_rect )
 {
     DWORD style = GetWindowLongW( data->hwnd, GWL_STYLE );
     XWindowChanges changes;
@@ -1330,10 +1330,13 @@ static void sync_window_position( Display *display, struct x11drv_win_data *data
 #ifdef HAVE_LIBXSHAPE
     if (data->shaped)
     {
-        int x_offset = old_whole_rect->left - data->whole_rect.left;
-        int y_offset = old_whole_rect->top - data->whole_rect.top;
-        if (x_offset || y_offset)
-            XShapeOffsetShape( display, data->whole_window, ShapeBounding, x_offset, y_offset );
+        int old_x_offset = old_window_rect->left - old_whole_rect->left;
+        int old_y_offset = old_window_rect->top - old_whole_rect->top;
+        int new_x_offset = data->window_rect.left - data->whole_rect.left;
+        int new_y_offset = data->window_rect.top - data->whole_rect.top;
+        if (old_x_offset != new_x_offset || old_y_offset != new_y_offset)
+            XShapeOffsetShape( display, data->whole_window, ShapeBounding,
+                               new_x_offset - old_x_offset, new_y_offset - old_y_offset );
     }
 #endif
     wine_tsx11_unlock();
@@ -1954,6 +1957,7 @@ void CDECL X11DRV_ReleaseDC( HWND hwnd, HDC hdc )
     escape.drawable_rect = virtual_screen_rect;
     SetRect( &escape.dc_rect, 0, 0, virtual_screen_rect.right - virtual_screen_rect.left,
              virtual_screen_rect.bottom - virtual_screen_rect.top );
+    OffsetRect( &escape.dc_rect, -escape.drawable_rect.left, -escape.drawable_rect.top );
     escape.fbconfig_id = 0;
     escape.gl_drawable = 0;
     escape.pixmap = 0;
@@ -2098,7 +2102,7 @@ void CDECL X11DRV_WindowPosChanged( HWND hwnd, HWND insert_after, UINT swp_flags
     Display *display;
     struct x11drv_win_data *data = X11DRV_get_win_data( hwnd );
     DWORD new_style = GetWindowLongW( hwnd, GWL_STYLE );
-    RECT old_whole_rect, old_client_rect;
+    RECT old_window_rect, old_whole_rect, old_client_rect;
     int event_type;
 
     if (!data) return;
@@ -2106,6 +2110,7 @@ void CDECL X11DRV_WindowPosChanged( HWND hwnd, HWND insert_after, UINT swp_flags
     thread_data = x11drv_thread_data();
     display = thread_data->display;
 
+    old_window_rect = data->window_rect;
     old_whole_rect  = data->whole_rect;
     old_client_rect = data->client_rect;
     data->window_rect = *rectWindow;
@@ -2164,7 +2169,8 @@ void CDECL X11DRV_WindowPosChanged( HWND hwnd, HWND insert_after, UINT swp_flags
     /* don't change position if we are about to minimize or maximize a managed window */
     if (!event_type &&
         !(data->managed && (swp_flags & SWP_STATECHANGED) && (new_style & (WS_MINIMIZE|WS_MAXIMIZE))))
-        sync_window_position( display, data, swp_flags, &old_client_rect, &old_whole_rect );
+        sync_window_position( display, data, swp_flags,
+                              &old_window_rect, &old_whole_rect, &old_client_rect );
 
     if ((new_style & WS_VISIBLE) &&
         ((new_style & WS_MINIMIZE) || is_window_rect_mapped( rectWindow )))

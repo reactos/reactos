@@ -1852,28 +1852,30 @@ static void xrender_blit(Picture src_pict, Picture mask_pict, Picture dst_pict, 
     int x_offset = (xscale<0) ? width : 0;
     int y_offset = (yscale<0) ? height : 0;
 
+    /* When we are using a mask, 'src_pict' contains a 1x1 picture for tiling, the actual source data is in mask_pict.
+     * The 'src_pict' data effectively acts as an alpha channel to the tile data. We need PictOpOver for correct rendering. */
+    int op = mask_pict ? PictOpOver : PictOpSrc;
+
     /* When we need to scale we perform scaling and source_x / source_y translation using a transformation matrix.
      * This is needed because XRender is inaccurate in combination with scaled source coordinates passed to XRenderComposite.
      * In all other cases we do use XRenderComposite for translation as it is faster than using a transformation matrix. */
     if(xscale != 1.0 || yscale != 1.0)
     {
-        /* When we are using a mask, 'src_pict' contains a 1x1 picture for tiling, the actual source data is in mask_pict */
         if(mask_pict)
             set_xrender_transformation(mask_pict, xscale, yscale, x_offset, y_offset);
         else
             set_xrender_transformation(src_pict, xscale, yscale, x_src + x_offset, y_src + y_offset);
 
-        pXRenderComposite(gdi_display, PictOpSrc, src_pict, mask_pict, dst_pict, 0, 0, 0, 0, 0, 0, width, height);
+        pXRenderComposite(gdi_display, op, src_pict, mask_pict, dst_pict, 0, 0, 0, 0, 0, 0, width, height);
     }
     else
     {
-        /* When we are using a mask, 'src_pict' contains a 1x1 picture for tiling, the actual source data is in mask_pict */
         if(mask_pict)
             set_xrender_transformation(mask_pict, 1, 1, 0, 0);
         else
             set_xrender_transformation(src_pict, 1, 1, 0, 0);
 
-        pXRenderComposite(gdi_display, PictOpSrc, src_pict, mask_pict, dst_pict, x_src, y_src, 0, 0, 0, 0, width, height);
+        pXRenderComposite(gdi_display, op, src_pict, mask_pict, dst_pict, x_src, y_src, 0, 0, 0, 0, width, height);
     }
 }
 
@@ -2166,7 +2168,7 @@ BOOL X11DRV_XRender_GetSrcAreaStretch(X11DRV_PDEVICE *physDevSrc, X11DRV_PDEVICE
     }
 
     /* mono -> color */
-    if(physDevSrc->depth == 1)
+    if(physDevSrc->depth == 1 && physDevDst->depth > 1)
     {
         XRenderColor col;
         get_xrender_color(dst_format, physDevDst->textPixel, &col);
@@ -2189,7 +2191,7 @@ BOOL X11DRV_XRender_GetSrcAreaStretch(X11DRV_PDEVICE *physDevSrc, X11DRV_PDEVICE
         wine_tsx11_unlock();
         LeaveCriticalSection( &xrender_cs );
     }
-    else /* color -> color but with different depths */
+    else /* color -> color (can be at different depths) or mono -> mono */
     {
         src_pict = get_xrender_picture_source(physDevSrc);
 

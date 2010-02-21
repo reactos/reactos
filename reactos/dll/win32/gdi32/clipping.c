@@ -385,7 +385,7 @@ INT WINAPI GetClipRgn( HDC hdc, HRGN hRgn )
 {
     INT ret = -1;
     DC * dc;
-    if (hRgn && (dc = get_dc_ptr( hdc )))
+    if ((dc = get_dc_ptr( hdc )))
     {
       if( dc->hClipRgn )
       {

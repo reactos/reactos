@@ -371,7 +371,7 @@ static int *X11DRV_DIB_GenColorMap( X11DRV_PDEVICE *physDev, int *colorMapping,
             }
             else
                 for (i = start; i < end; i++, rgb++)
-                    colorMapping[i] = X11DRV_PALETTE_LookupPixel(RGB(rgb->rgbRed,
+                    colorMapping[i] = X11DRV_PALETTE_LookupPixel(physDev->color_shifts, RGB(rgb->rgbRed,
                                                                 rgb->rgbGreen,
                                                                 rgb->rgbBlue));
         }
@@ -395,7 +395,7 @@ static int *X11DRV_DIB_GenColorMap( X11DRV_PDEVICE *physDev, int *colorMapping,
             }
             else
                 for (i = start; i < end; i++, rgb++)
-                    colorMapping[i] = X11DRV_PALETTE_LookupPixel(RGB(rgb->rgbtRed,
+                    colorMapping[i] = X11DRV_PALETTE_LookupPixel(physDev->color_shifts, RGB(rgb->rgbtRed,
                                                                rgb->rgbtGreen,
                                                                rgb->rgbtBlue));
         }

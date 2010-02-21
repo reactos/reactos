@@ -178,9 +178,17 @@ static void link_window( struct window *win, struct window *previous )
         struct list *entry = win->parent->children.next;
         if (!(win->ex_style & WS_EX_TOPMOST))  /* put it above the first non-topmost window */
         {
-            while (entry != &win->parent->children &&
-                   LIST_ENTRY( entry, struct window, entry )->ex_style & WS_EX_TOPMOST)
+            while (entry != &win->parent->children)
+            {
+                struct window *next = LIST_ENTRY( entry, struct window, entry );
+                if (!(next->ex_style & WS_EX_TOPMOST)) break;
+                if (next->handle == win->owner)  /* keep it above owner */
+                {
+                    win->ex_style |= WS_EX_TOPMOST;
+                    break;
+                }
                 entry = entry->next;
+            }
         }
         list_add_before( entry, &win->entry );
     }

@@ -169,6 +169,7 @@ typedef struct
 		     (LPARAM)(es->hwndSelf)); \
 	} while(0)
 
+static const WCHAR empty_stringW[] = {0};
 
 /*********************************************************************
  *
@@ -2876,8 +2877,7 @@ static void EDIT_WM_Paste(EDITSTATE *es)
 	}
         else if (es->style & ES_PASSWORD) {
             /* clear selected text in password edit box even with empty clipboard */
-            const WCHAR empty_strW[] = { 0 };
-            EDIT_EM_ReplaceSel(es, TRUE, empty_strW, TRUE, TRUE);
+            EDIT_EM_ReplaceSel(es, TRUE, empty_stringW, TRUE, TRUE);
         }
 	CloseClipboard();
 }
@@ -2919,8 +2919,6 @@ static void EDIT_WM_Copy(EDITSTATE *es)
  */
 static inline void EDIT_WM_Clear(EDITSTATE *es)
 {
-	static const WCHAR empty_stringW[] = {0};
-
 	/* Protect read-only edit control from modification */
 	if(es->style & ES_READONLY)
 	    return;
@@ -3672,7 +3670,6 @@ static void EDIT_WM_SetText(EDITSTATE *es, LPCWSTR text, BOOL unicode)
     } 
     else 
     {
-	static const WCHAR empty_stringW[] = {0};
 	TRACE("<NULL>\n");
 	EDIT_EM_ReplaceSel(es, FALSE, empty_stringW, FALSE, FALSE);
     }
@@ -4189,7 +4186,6 @@ static void EDIT_ImeComposition(HWND hwnd, LPARAM CompFlag, EDITSTATE *es)
 
     if (es->composition_len == 0 && es->selection_start != es->selection_end)
     {
-        static const WCHAR empty_stringW[] = {0};
         EDIT_EM_ReplaceSel(es, TRUE, empty_stringW, TRUE, TRUE);
         es->composition_start = es->selection_end;
     }
@@ -4932,7 +4928,6 @@ LRESULT EditWndProc_common( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, B
 	case WM_IME_ENDCOMPOSITION:
                 if (es->composition_len > 0)
                 {
-                        static const WCHAR empty_stringW[] = {0};
                         EDIT_EM_ReplaceSel(es, TRUE, empty_stringW, TRUE, TRUE);
                         es->selection_end = es->selection_start;
                         es->composition_len= 0;

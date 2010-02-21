@@ -528,7 +528,9 @@ static LRESULT DEFWND_DefWinProc( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
              * give the parent first chance to set the cursor */
             if ((LOWORD(lParam) < HTSIZEFIRST) || (LOWORD(lParam) > HTSIZELAST))
             {
-                if (SendMessageW(GetParent(hwnd), WM_SETCURSOR, wParam, lParam)) return TRUE;
+                HWND parent = GetParent( hwnd );
+                if (parent != GetDesktopWindow() &&
+                    SendMessageW( parent, WM_SETCURSOR, wParam, lParam )) return TRUE;
             }
         }
         NC_HandleSetCursor( hwnd, wParam, lParam );

@@ -348,10 +348,10 @@ static LPCSTR DIALOG_ParseTemplate32( LPCSTR template, DLG_TEMPLATE * result )
     WORD signature;
     WORD dlgver;
 
-    signature = GET_WORD(p); p++;
     dlgver = GET_WORD(p); p++;
+    signature = GET_WORD(p); p++;
 
-    if (signature == 1 && dlgver == 0xffff)  /* DIALOGEX resource */
+    if (dlgver == 1 && signature == 0xffff)  /* DIALOGEX resource */
     {
         result->dialogEx = TRUE;
         result->helpId   = GET_DWORD(p); p += 2;
@@ -671,7 +671,6 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
     dlgInfo->hMenu       = hMenu;
     dlgInfo->xBaseUnit   = xBaseUnit;
     dlgInfo->yBaseUnit   = yBaseUnit;
-    dlgInfo->idResult    = IDOK;
     dlgInfo->flags       = flags;
 
     if (template.helpId) SetWindowContextHelpId( hwnd, template.helpId );

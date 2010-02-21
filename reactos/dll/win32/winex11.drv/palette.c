@@ -1026,7 +1026,7 @@ int X11DRV_PALETTE_ToPhysical( X11DRV_PDEVICE *physDev, COLORREF color )
 /***********************************************************************
  *           X11DRV_PALETTE_LookupPixel
  */
-int X11DRV_PALETTE_LookupPixel(COLORREF color )
+int X11DRV_PALETTE_LookupPixel(ColorShifts *shifts, COLORREF color )
 {
     unsigned char spec_type = color >> 24;
 
@@ -1048,7 +1048,9 @@ int X11DRV_PALETTE_LookupPixel(COLORREF color )
         }
         else
         {
-            ColorShifts *shifts = &X11DRV_PALETTE_default_shifts;
+            /* No shifts are set in case of 1-bit */
+            if(!shifts) shifts = &X11DRV_PALETTE_default_shifts;
+
             /* scale each individually and construct the TrueColor pixel value */
             if (shifts->physicalRed.scale < 8)
                 red = red >> (8-shifts->physicalRed.scale);
@@ -1265,7 +1267,7 @@ UINT X11DRV_RealizePalette( X11DRV_PDEVICE *physDev, HPALETTE hpal, BOOL primary
                 }
                 else if ( X11DRV_PALETTE_PaletteFlags & X11DRV_PALETTE_VIRTUAL )
                 {
-                    index = X11DRV_PALETTE_LookupPixel( RGB( entries[i].peRed, entries[i].peGreen, entries[i].peBlue ));
+                    index = X11DRV_PALETTE_LookupPixel( physDev->color_shifts, RGB( entries[i].peRed, entries[i].peGreen, entries[i].peBlue ));
                 }
 
                 /* we have to map to existing entry in the system palette */

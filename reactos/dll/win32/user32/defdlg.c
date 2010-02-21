@@ -339,7 +339,7 @@ DIALOGINFO *DIALOG_get_info( HWND hwnd, BOOL create )
         dlgInfo->hMenu       = 0;
         dlgInfo->xBaseUnit   = 0;
         dlgInfo->yBaseUnit   = 0;
-        dlgInfo->idResult    = 0;
+        dlgInfo->idResult    = IDOK;
         dlgInfo->flags       = 0;
         wndPtr->dlgInfo = dlgInfo;
     }
