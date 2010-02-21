@@ -308,9 +308,6 @@ static void test_bitmap_font(void)
     SIZE size_orig;
     INT ret, i, width_orig, height_orig, scale, lfWidth;
 
-    skip("ROS-HACK: Skipping bitmap font tests!\n");
-    return;
-
     hdc = GetDC(0);
 
     /* "System" has only 1 pixel size defined, otherwise the test breaks */
@@ -2851,7 +2848,7 @@ static void test_orientation(void)
 static void test_oemcharset(void)
 {
     HDC hdc;
-    LOGFONTA lf;
+    LOGFONTA lf, clf;
     HFONT hfont, old_hfont;
     int charset;
 
@@ -2866,7 +2863,12 @@ static void test_oemcharset(void)
     charset = GetTextCharset(hdc);
 todo_wine
     ok(charset == OEM_CHARSET, "expected %d charset, got %d\n", OEM_CHARSET, charset);
-    SelectObject(hdc, old_hfont);
+    hfont = SelectObject(hdc, old_hfont);
+    GetObjectA(hfont, sizeof(clf), &clf);
+    ok(!lstrcmpA(clf.lfFaceName, lf.lfFaceName), "expected %s face name, got %s\n", lf.lfFaceName, clf.lfFaceName);
+    ok(clf.lfPitchAndFamily == lf.lfPitchAndFamily, "expected %x family, got %x\n", lf.lfPitchAndFamily, clf.lfPitchAndFamily);
+    ok(clf.lfCharSet == lf.lfCharSet, "expected %d charset, got %d\n", lf.lfCharSet, clf.lfCharSet);
+    ok(clf.lfHeight == lf.lfHeight, "expected %d height, got %d\n", lf.lfHeight, clf.lfHeight);
     DeleteObject(hfont);
     DeleteDC(hdc);
 }
