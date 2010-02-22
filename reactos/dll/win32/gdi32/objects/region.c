@@ -104,6 +104,7 @@ BOOL
 FASTCALL
 DeleteRegion( HRGN hRgn )
 {
+#if 0
   PRGN_ATTR Rgn_Attr;
 
   if ((GdiGetHandleUserData((HGDIOBJ) hRgn, GDI_OBJECT_TYPE_REGION, (PVOID) &Rgn_Attr)) &&
@@ -127,6 +128,7 @@ DeleteRegion( HRGN hRgn )
         }
      }
   }
+#endif
   return NtGdiDeleteObjectApp((HGDIOBJ) hRgn);
 }
 
