@@ -48,34 +48,35 @@ PrintString(LPCSTR fmt, ...)
 
 
 BOOL
-ScmCreateEvent(PHANDLE Event,
-               LPCWSTR Name)
+ScmCreateStartEvent(PHANDLE StartEvent)
 {
     HANDLE hEvent;
 
-    hEvent = CreateEventW(NULL,
-                          TRUE,
-                          FALSE,
-                          Name);
+    hEvent = CreateEvent(NULL,
+                         TRUE,
+                         FALSE,
+                         TEXT("SvcctrlStartEvent_A3752DX"));
     if (hEvent == NULL)
     {
         if (GetLastError() == ERROR_ALREADY_EXISTS)
         {
-            hEvent = OpenEventW(EVENT_ALL_ACCESS,
-                                FALSE,
-                                Name);
+            hEvent = OpenEvent(EVENT_ALL_ACCESS,
+                               FALSE,
+                               TEXT("SvcctrlStartEvent_A3752DX"));
+            if (hEvent == NULL)
+            {
+                return FALSE;
+            }
+        }
+        else
+        {
+            return FALSE;
         }
     }
 
-    if (hEvent)
-    {
-        DPRINT("SERVICES: created event %S with handle %x\n", Name, hEvent);
-        *Event = hEvent;
-        return TRUE;
-    }
+    *StartEvent = hEvent;
 
-    DPRINT1("SERVICES: Failed to create event %S\n", Name);
-    return FALSE;
+    return TRUE;
 }
 
 
@@ -298,7 +299,6 @@ wWinMain(HINSTANCE hInstance,
          int nShowCmd)
 {
     HANDLE hScmStartEvent;
-    HANDLE hScmAutoStartCompleteEvent;
     HANDLE hEvent;
     DWORD dwError;
 
@@ -307,16 +307,14 @@ wWinMain(HINSTANCE hInstance,
     /* Acquire privileges to load drivers */
     AcquireLoadDriverPrivilege();
 
-    /* Create events */
-    if (!ScmCreateEvent(&hScmAutoStartCompleteEvent, L"SC_AutoStartComplete"))
+    /* Create start event */
+    if (!ScmCreateStartEvent(&hScmStartEvent))
     {
+        DPRINT1("SERVICES: Failed to create start event\n");
         ExitThread(0);
     }
 
-    if (!ScmCreateEvent(&hScmStartEvent, L"SvcctrlStartEvent_A3752DX"))
-    {
-        ExitThread(0);
-    }
+    DPRINT("SERVICES: created start event with handle %x.\n", hScmStartEvent);
 
 //    ScmInitThreadManager();
 
@@ -355,9 +353,6 @@ wWinMain(HINSTANCE hInstance,
 
 
     DPRINT("SERVICES: Running.\n");
-
-    /* Signal complete event */
-    SetEvent(hScmAutoStartCompleteEvent);
 
 #if 1
     hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
