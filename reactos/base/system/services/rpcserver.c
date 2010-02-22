@@ -118,7 +118,7 @@ ScmStartRpcServer(VOID)
                                     NULL);
     if (Status != RPC_S_OK)
     {
-        DPRINT("RpcServerUseProtseqEpW() failed (Status %lx)\n", Status);
+        DPRINT1("RpcServerUseProtseqEpW() failed (Status %lx)\n", Status);
         return;
     }
 
@@ -127,14 +127,14 @@ ScmStartRpcServer(VOID)
                                  NULL);
     if (Status != RPC_S_OK)
     {
-        DPRINT("RpcServerRegisterIf() failed (Status %lx)\n", Status);
+        DPRINT1("RpcServerRegisterIf() failed (Status %lx)\n", Status);
         return;
     }
 
     Status = RpcServerListen(1, 20, TRUE);
     if (Status != RPC_S_OK)
     {
-        DPRINT("RpcServerListen() failed (Status %lx)\n", Status);
+        DPRINT1("RpcServerListen() failed (Status %lx)\n", Status);
         return;
     }
 
