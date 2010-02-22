@@ -1,0 +1,607 @@
+#ifndef DO_NO_IMPORTS
+import "unknwn.idl";
+import "strmif.idl";
+import "BdaTypes.h";
+#endif
+
+/************************************************************
+ *      interface IBDA_NetworkProvider
+ */
+[
+    object,
+    uuid(fd501041-8ebe-11ce-8183-00aa00577da2),
+    pointer_default(unique)
+]
+interface IBDA_NetworkProvider : IUnknown
+{
+        HRESULT PutSignalSource(
+            [in] ULONG ulSignalSource);
+
+        HRESULT GetSignalSource(
+            [in, out] ULONG * pulSignalSource);
+
+        HRESULT GetNetworkType(
+            [in, out] GUID * pguidNetworkType);
+
+        HRESULT PutTuningSpace(
+            [in] REFGUID guidTuningSpace);
+
+        HRESULT GetTuningSpace(
+            [in, out] GUID * pguidTuingSpace);
+
+        HRESULT RegisterDeviceFilter(
+            [in] IUnknown * pUnkFilterControl,
+            [in, out] ULONG * ppvRegisitrationContext);
+
+        HRESULT UnRegisterDeviceFilter(
+            [in] ULONG pvRegistrationContext);
+}
+
+
+/************************************************************
+ *      interface IBDA_EthernetFilter
+ */
+[
+    object,
+    uuid(71985F43-1CA1-11d3-9CC8-00C04F7971E0),
+    pointer_default(unique)
+]
+interface IBDA_EthernetFilter : IUnknown
+{
+        HRESULT GetMulticastListSize(
+            [in, out] ULONG * pulcbAddresses);
+
+        HRESULT PutMulticastList(
+            [in] ULONG ulcbAddresses,
+            [in] BYTE * pAddressList);
+
+        HRESULT GetMulticastList(
+            [in, out] ULONG * pulcbAddresses,
+            [out] BYTE * pAddressList);
+
+        HRESULT PutMulticastMode(
+            [in] ULONG ulModeMask);
+
+        HRESULT GetMulticastMode(
+            [out] ULONG * pulModeMask);
+
+}
+
+/************************************************************
+ *      interface IBDA_IPV4Filter
+ */
+[
+    object,
+    uuid(71985F44-1CA1-11d3-9CC8-00C04F7971E0),
+    pointer_default(unique)
+]
+
+interface IBDA_IPV4Filter : IUnknown
+{
+        HRESULT GetMulticastListSize(
+            [in, out] ULONG * pulcbAddresses);
+
+        HRESULT PutMulticastList(
+            [in] ULONG ulcbAddresses,
+            [in] BYTE * pAddressList);
+
+        HRESULT GetMulticastList(
+            [in, out] ULONG * pulcbAddresses,
+            [out] BYTE * pAddressList);
+
+        HRESULT PutMulticastMode(
+            [in] ULONG ulModeMask);
+
+        HRESULT GetMulticastMode(
+            [out] ULONG * pulModeMask);
+}
+
+/************************************************************
+ *      interface IBDA_IPV6Filter
+ */
+
+[
+    object,
+    uuid(E1785A74-2A23-4fb3-9245-A8F88017EF33),
+    pointer_default(unique)
+]
+interface IBDA_IPV6Filter : IUnknown
+{
+
+        HRESULT GetMulticastListSize(
+            [in, out] ULONG * pulcbAddresses);
+
+        HRESULT PutMulticastList(
+            [in] ULONG ulcbAddresses,
+            [in] BYTE * pAddressList);
+
+        HRESULT GetMulticastList(
+            [in, out] ULONG * pulcbAddresses,
+            [out] BYTE * pAddressList);
+
+        HRESULT PutMulticastMode(
+            [in] ULONG ulModeMask);
+
+        HRESULT GetMulticastMode(
+            [out] ULONG * pulModeMask);
+}
+
+/************************************************************
+ *      interface IBDA_DeviceControl
+ */
+
+[
+    object,
+    uuid(FD0A5AF3-B41D-11d2-9C95-00C04F7971E0),
+    pointer_default(unique)
+]
+interface IBDA_DeviceControl : IUnknown
+{
+        HRESULT StartChanges(void);
+        HRESULT CheckChanges(void);
+        HRESULT CommitChanges(void);
+        HRESULT GetChangeState(
+            [in, out] ULONG * pState);
+}
+
+/************************************************************
+ *      interface IBDA_PinControl
+ */
+[
+    object,
+    uuid(0DED49D5-A8B7-4d5d-97A1-12B0C195874D),
+    pointer_default(unique)
+]
+interface IBDA_PinControl : IUnknown
+{
+        HRESULT GetPinID(
+            [in, out] ULONG * pulPinID);
+
+        HRESULT GetPinType(
+            [in, out] ULONG * pulPinType);
+
+        HRESULT RegistrationContext(
+            [in, out] ULONG * pulRegistrationCtx);
+}
+
+/************************************************************
+ *      interface IBDA_SignalProperties
+ */
+[
+    object,
+    uuid(D2F1644B-B409-11d2-BC69-00A0C9EE9E16),
+    pointer_default(unique)
+]
+interface IBDA_SignalProperties : IUnknown
+{
+        HRESULT PutNetworkType(
+            [in] REFGUID guidNetworkType);
+
+        HRESULT GetNetworkType(
+            [in, out] GUID * pguidNetworkType);
+
+        HRESULT PutSignalSource(
+            [in] ULONG ulSignalSource);
+
+        HRESULT GetSignalSource(
+            [in, out] ULONG * pulSignalSource);
+
+        HRESULT PutTuningSpace(
+            [in] REFGUID guidTuningSpace);
+
+        HRESULT GetTuningSpace(
+            [in, out] GUID * pguidTuingSpace);
+}
+
+
+/************************************************************
+ *      interface IBDA_SignalStatistics
+ */
+[
+    object,
+    uuid(1347D106-CF3A-428a-A5CB-AC0D9A2A4338),
+    pointer_default(unique)
+]
+interface IBDA_SignalStatistics : IUnknown
+{
+        HRESULT put_SignalStrength(
+            [in] LONG lDbStrength);
+
+        HRESULT get_SignalStrength(
+            [in, out] LONG * plDbStrength);
+
+        HRESULT put_SignalQuality(
+            [in] LONG lPercentQuality);
+
+        HRESULT get_SignalQuality(
+            [in, out] LONG * plPercentQuality);
+
+        HRESULT put_SignalPresent(
+            [in] BOOLEAN fPresent);
+
+        HRESULT get_SignalPresent(
+            [in, out] BOOLEAN * pfPresent);
+
+        HRESULT put_SignalLocked(
+            [in] BOOLEAN fLocked);
+
+        HRESULT get_SignalLocked(
+            [in, out] BOOLEAN * pfLocked);
+
+        HRESULT put_SampleTime(
+            [in] LONG lmsSampleTime);
+
+        HRESULT get_SampleTime(
+            [in, out] LONG * plmsSampleTime);
+}
+
+/************************************************************
+ *      interface IBDA_Topology
+ */
+[
+    object,
+    uuid(79B56888-7FEA-4690-B45D-38FD3C7849BE),
+    pointer_default(unique)
+]
+interface IBDA_Topology : IUnknown
+{
+        HRESULT GetNodeTypes(
+            [in, out] ULONG * pulcNodeTypes,
+            [in]  ULONG ulcNodeTypesMax,
+            [in, out] ULONG * rgulNodeTypes);
+
+        HRESULT GetNodeDescriptors(
+            [in, out] ULONG * ulcNodeDescriptors,
+            [in]  ULONG ulcNodeDescriptorsMax,
+            [in, out] BDANODE_DESCRIPTOR * rgNodeDescriptors);
+
+        HRESULT GetNodeInterfaces(
+            [in]  ULONG ulNodeType,
+            [in, out] ULONG * pulcInterfaces,
+            [in]  ULONG ulcInterfacesMax,
+            [in, out] GUID * rgguidInterfaces);
+
+        HRESULT GetPinTypes(
+            [in, out] ULONG * pulcPinTypes,
+            [in]  ULONG ulcPinTypesMax,
+            [in, out] ULONG * rgulPinTypes);
+
+        HRESULT GetTemplateConnections(
+            [in, out] ULONG * pulcConnections,
+            [in]  ULONG ulcConnectionsMax,
+            [in, out, ] BDA_TEMPLATE_CONNECTION * rgConnections);
+
+        HRESULT CreatePin(
+            [in]  ULONG ulPinType,
+            [in, out] ULONG * pulPinId);
+
+        HRESULT DeletePin(
+            [in] ULONG ulPinId);
+
+        HRESULT SetMediaType(
+            [in]  ULONG ulPinId,
+            [in]  AM_MEDIA_TYPE * pMediaType);
+
+        HRESULT SetMedium(
+            [in] ULONG ulPinId,
+            [in] REGPINMEDIUM * pMedium);
+
+        HRESULT CreateTopology(
+            [in] ULONG ulInputPinId,
+            [in] ULONG ulOutputPinId);
+
+        HRESULT GetControlNode(
+            [in] ULONG ulInputPinId,
+            [in] ULONG ulOutputPinId,
+            [in] ULONG ulNodeType,
+            [in, out] IUnknown ** ppControlNode);
+}
+
+/************************************************************
+ *      interface IBDA_VoidTransform
+ */
+[
+    object,
+    uuid(71985F46-1CA1-11d3-9CC8-00C04F7971E0),
+    pointer_default(unique)
+]
+interface IBDA_VoidTransform : IUnknown
+{
+        HRESULT Start();
+
+        HRESULT Stop();
+}
+
+/************************************************************
+ *      interface IBDA_NullTransform
+ */
+
+[
+    object,
+    uuid(DDF15B0D-BD25-11d2-9CA0-00C04F7971E0),
+    pointer_default(unique)
+]
+interface IBDA_NullTransform : IUnknown
+{
+        HRESULT Start();
+
+        HRESULT Stop();
+}
+
+/************************************************************
+ *      interface IBDA_FrequencyFilter
+ */
+
+[
+    object,
+    uuid(71985F47-1CA1-11d3-9CC8-00C04F7971E0),
+    pointer_default(unique)
+]
+interface IBDA_FrequencyFilter : IUnknown
+{
+        HRESULT put_Autotune(
+            [in] ULONG ulTransponder);
+
+        HRESULT get_Autotune(
+            [in, out] ULONG * pulTransponder);
+
+        HRESULT put_Frequency(
+            [in] ULONG ulFrequency);
+
+        HRESULT get_Frequency(
+            [in, out] ULONG * pulFrequency);
+
+        HRESULT put_Polarity(
+            [in] Polarisation Polarity);
+
+        HRESULT get_Polarity(
+            [in, out] Polarisation *    pPolarity);
+
+        HRESULT put_Range(
+            [in] ULONG ulRange);
+
+        HRESULT get_Range(
+            [in, out] ULONG * pulRange);
+
+        HRESULT put_Bandwidth(
+            [in] ULONG ulBandwidth);
+
+        HRESULT get_Bandwidth(
+            [in, out] ULONG * pulBandwidth);
+
+        HRESULT put_FrequencyMultiplier(
+            [in] ULONG ulMultiplier);
+
+        HRESULT get_FrequencyMultiplier(
+            [in, out] ULONG * pulMultiplier);
+}
+
+/************************************************************
+ *      interface IBDA_LNBInfo
+ */
+[
+    object,
+    uuid(992CF102-49F9-4719-A664-C4F23E2408F4),
+    pointer_default(unique)
+]
+interface IBDA_LNBInfo : IUnknown
+{
+        HRESULT put_LocalOscilatorFrequencyLowBand(
+            [in] ULONG ulLOFLow);
+
+        HRESULT get_LocalOscilatorFrequencyLowBand(
+            [in, out] ULONG * pulLOFLow);
+
+        HRESULT put_LocalOscilatorFrequencyHighBand(
+            [in] ULONG ulLOFHigh);
+
+        HRESULT get_LocalOscilatorFrequencyHighBand(
+            [in, out] ULONG * pulLOFHigh);
+
+        HRESULT put_HighLowSwitchFrequency(
+            [in] ULONG ulSwitchFrequency);
+
+        HRESULT get_HighLowSwitchFrequency(
+            [in, out] ULONG * pulSwitchFrequency);
+}
+
+/************************************************************
+ *      interface IBDA_AutoDemodulate
+ */
+
+[
+    object,
+    uuid(DDF15B12-BD25-11d2-9CA0-00C04F7971E0),
+    pointer_default(unique)
+]
+interface IBDA_AutoDemodulate : IUnknown
+{
+        HRESULT put_AutoDemodulate();
+}
+
+/************************************************************
+ *      interface IBDA_DigitalDemodulator
+ */
+
+[
+    object,
+    uuid(EF30F379-985B-4d10-B640-A79D5E04E1E0),
+    pointer_default(unique)
+]
+interface IBDA_DigitalDemodulator : IUnknown
+{
+        HRESULT put_ModulationType(
+            [in] ModulationType * pModulationType);
+
+        HRESULT get_ModulationType(
+            [in, out] ModulationType * pModulationType);
+
+        HRESULT put_InnerFECMethod(
+            [in] FECMethod * pFECMethod);
+
+        HRESULT get_InnerFECMethod(
+            [in, out] FECMethod * pFECMethod);
+
+        HRESULT put_InnerFECRate(
+            [in] BinaryConvolutionCodeRate * pFECRate);
+
+        HRESULT get_InnerFECRate(
+            [in, out] BinaryConvolutionCodeRate * pFECRate);
+
+        HRESULT put_OuterFECMethod(
+            [in] FECMethod * pFECMethod);
+
+        HRESULT get_OuterFECMethod(
+            [in, out] FECMethod * pFECMethod);
+
+        HRESULT put_OuterFECRate(
+            [in] BinaryConvolutionCodeRate * pFECRate);
+
+        HRESULT get_OuterFECRate(
+            [in, out] BinaryConvolutionCodeRate * pFECRate);
+
+        HRESULT put_SymbolRate(
+            [in] ULONG * pSymbolRate);
+
+        HRESULT get_SymbolRate(
+            [in, out] ULONG * pSymbolRate);
+
+        HRESULT put_SpectralInversion(
+            [in] SpectralInversion * pSpectralInversion);
+
+        HRESULT get_SpectralInversion(
+            [in, out] SpectralInversion * pSpectralInversion);
+}
+
+typedef enum
+{
+    KSPROPERTY_IPSINK_MULTICASTLIST,
+    KSPROPERTY_IPSINK_ADAPTER_DESCRIPTION,
+    KSPROPERTY_IPSINK_ADAPTER_ADDRESS
+}KSPROPERTY_IPSINK;
+
+/************************************************************
+ *      interface IBDA_IPSinkControl
+ */
+
+[
+    object,
+    uuid(3F4DC8E2-4050-11d3-8F4B-00C04F7971E2),
+    pointer_default(unique),
+]
+interface IBDA_IPSinkControl : IUnknown
+{
+        HRESULT GetMulticastList(
+            [in, out] unsigned long *pulcbSize,
+            [in, out] BYTE **pbBuffer);
+
+        HRESULT GetAdapterIPAddress(
+            [in, out] unsigned long *pulcbSize,
+            [in, out] BYTE ** pbBuffer);
+
+}
+
+/************************************************************
+ *      interface IBDA_IPSinkInfo
+ */
+[
+    object,
+    uuid(A750108F-492E-4d51-95F7-649B23FF7AD7),
+    pointer_default(unique)
+]
+interface IBDA_IPSinkInfo : IUnknown
+{
+        HRESULT get_MulticastList(
+            [in, out] ULONG * pulcbAddresses,
+            [out] BYTE    **ppbAddressList);
+
+        HRESULT get_AdapterIPAddress(
+            [out] BSTR *pbstrBuffer);
+
+        HRESULT get_AdapterDescription(
+            [out] BSTR *pbstrBuffer);
+}
+
+/************************************************************
+ *      interface IEnumPIDMap
+ */
+
+[
+    object,
+    uuid(afb6c2a2-2c41-11d3-8a60-0000f81e0e4a),
+    pointer_default(unique)
+]
+interface IEnumPIDMap : IUnknown
+{
+        HRESULT Next(
+            [in] ULONG cRequest,
+            [in, out] PID_MAP * pPIDMap,
+            [out] ULONG * pcReceived);
+
+        HRESULT Skip(
+            [in] ULONG cRecords);
+
+        HRESULT Reset();
+
+        HRESULT Clone(
+            [out] IEnumPIDMap ** ppIEnumPIDMap);
+} ;
+
+/************************************************************
+ *      interface IMPEG2PIDMap
+ */
+
+[
+    object,
+    uuid(afb6c2a1-2c41-11d3-8a60-0000f81e0e4a),
+    pointer_default(unique)
+]
+interface IMPEG2PIDMap : IUnknown
+{
+        HRESULT MapPID(
+            [in] ULONG culPID,
+            [in] ULONG * pulPID,
+            [in] MEDIA_SAMPLE_CONTENT MediaSampleContent);
+
+        HRESULT UnmapPID(
+            [in] ULONG culPID,
+            [in] ULONG * pulPID);
+
+        HRESULT EnumPIDMap(
+            [out] IEnumPIDMap ** pIEnumPIDMap);
+} ;
+
+/************************************************************
+ *      interface IFrequencyMap
+ */
+
+    [
+     object,
+     uuid(06FB45C1-693C-4ea7-B79F-7A6A54D8DEF2),
+     pointer_default(unique),
+    ]
+
+    interface IFrequencyMap : IUnknown
+    {
+        HRESULT get_FrequencyMapping(
+            [out] ULONG* ulCount,
+            [out] ULONG** ppulList);
+
+        HRESULT put_FrequencyMapping(
+            [in] ULONG ulCount,
+            [in] ULONG *pList);
+
+        HRESULT get_CountryCode([out] ULONG *pulCountryCode);
+
+        HRESULT put_CountryCode(
+            [in] ULONG ulCountryCode);
+
+        HRESULT get_DefaultFrequencyMapping(
+            [in] ULONG ulCountryCode,
+            [out] ULONG* pulCount,
+            [out] ULONG** ppulList);
+
+        HRESULT get_CountryCodeList(
+            [out] ULONG* pulCount,
+            [out] ULONG** ppulList);
+    };
