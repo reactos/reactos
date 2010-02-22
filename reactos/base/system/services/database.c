@@ -17,6 +17,11 @@
 #define NDEBUG
 #include <debug.h>
 
+/*
+ * Uncomment the line below to start services
+ *  using the SERVICE_START_PENDING state
+ */
+// #define USE_SERVICE_START_PENDING
 
 /* GLOBALS *******************************************************************/
 
@@ -1038,12 +1043,23 @@ ScmStartService(PSERVICE Service, DWORD argc, LPWSTR *argv)
         /* Load driver */
         dwError = ScmLoadDriver(Service);
         if (dwError == ERROR_SUCCESS)
+        {
             Service->Status.dwControlsAccepted = SERVICE_ACCEPT_STOP;
+            Service->Status.dwCurrentState = SERVICE_RUNNING;
+        }
     }
     else
     {
         /* Start user-mode service */
         dwError = ScmStartUserModeService(Service, argc, argv);
+        if (dwError == ERROR_SUCCESS)
+        {
+#ifdef USE_SERVICE_START_PENDING
+            Service->Status.dwCurrentState = SERVICE_START_PENDING;
+#else
+            Service->Status.dwCurrentState = SERVICE_RUNNING;
+#endif
+        }
     }
 
     DPRINT("ScmStartService() done (Error %lu)\n", dwError);
@@ -1054,7 +1070,6 @@ ScmStartService(PSERVICE Service, DWORD argc, LPWSTR *argv)
         {
             Group->ServicesRunning = TRUE;
         }
-        Service->Status.dwCurrentState = SERVICE_RUNNING;
     }
 #if 0
     else
