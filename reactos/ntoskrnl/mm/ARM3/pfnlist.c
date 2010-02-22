@@ -73,9 +73,9 @@ NTAPI
 MiInsertZeroListAtBack(IN PFN_NUMBER EntryIndex)
 {
     PFN_NUMBER OldBlink;
-    PMMPFN Pfn1, Blink;
-    ULONG Color;
-    PMMCOLOR_TABLES ColorHead;
+    PMMPFN Pfn1;//, Blink;
+    //ULONG Color;
+    //PMMCOLOR_TABLES ColorHead;
     PMMPFNLIST ListHead;
     
     /* Make sure the PFN lock is held */
@@ -92,7 +92,7 @@ MiInsertZeroListAtBack(IN PFN_NUMBER EntryIndex)
     /* Use the zero list */
     ListHead = &MmZeroedPageListHead;
     ListHead->Total++;
-         
+
     /* Get the back link */
     OldBlink = ListHead->Blink;
     if (OldBlink != LIST_HEAD)
@@ -115,7 +115,7 @@ MiInsertZeroListAtBack(IN PFN_NUMBER EntryIndex)
     
     /* Update the page location */
     Pfn1->u3.e1.PageLocation = ZeroedPageList;
-
+#if 0
     /* FIXME: NOT YET Due to caller semantics: Update the available page count */
     //MmAvailablePages++;
 
@@ -158,6 +158,7 @@ MiInsertZeroListAtBack(IN PFN_NUMBER EntryIndex)
     
     /* And increase the count in the colored list */
     ColorHead->Count++;
+#endif
 }
 
 VOID
