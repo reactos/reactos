@@ -92,7 +92,9 @@ VIS_ComputeVisibleRegion(
           (PreviousWnd == Wnd && ClipSiblings))
       {
          CurrentSibling = CurrentWindow->spwndChild;
-         while (CurrentSibling != NULL && CurrentSibling != PreviousWindow)
+         while ( CurrentSibling != NULL && 
+                 CurrentSibling != PreviousWindow &&
+                 CurrentSibling->Wnd )
          {
             CurrentSiblingWnd = CurrentSibling->Wnd;
             if ((CurrentSiblingWnd->style & WS_VISIBLE) &&
@@ -121,7 +123,7 @@ VIS_ComputeVisibleRegion(
    if (ClipChildren)
    {
       CurrentWindow = Window->spwndChild;
-      while (CurrentWindow)
+      while (CurrentWindow && CurrentWindow->Wnd)
       {
          CurrentWnd = CurrentWindow->Wnd;
          if ((CurrentWnd->style & WS_VISIBLE) &&

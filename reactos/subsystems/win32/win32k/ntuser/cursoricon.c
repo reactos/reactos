@@ -238,7 +238,7 @@ BOOL UserSetCursorPos( INT x, INT y)
  * User32 macro NtUserShowCursor */
 int UserShowCursor(BOOL bShow)
 {
-    PSYSTEM_CURSORINFO CurInfo = IntGetSysCursorInfo();;
+    PSYSTEM_CURSORINFO CurInfo = IntGetSysCursorInfo();
     HDC hdcScreen;
 
     if (!(hdcScreen = IntGetScreenDC()))

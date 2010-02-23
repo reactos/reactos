@@ -181,7 +181,7 @@ DceDeleteClipRgn(DCE* Dce)
    }
    else if (Dce->hrgnClip != NULL)
    {
-      REGION_FreeRgnByHandle(Dce->hrgnClip);
+      GDIOBJ_FreeObjByHandle(Dce->hrgnClip, GDI_OBJECT_TYPE_REGION|GDI_OBJECT_TYPE_SILENT);
    }
 
    Dce->hrgnClip = NULL;
@@ -193,7 +193,7 @@ DceDeleteClipRgn(DCE* Dce)
 static INT FASTCALL
 DceReleaseDC(DCE* dce, BOOL EndPaint)
 {
-   if (DCX_DCEBUSY != (dce->DCXFlags & (DCX_DCEEMPTY | DCX_DCEBUSY)))
+   if (DCX_DCEBUSY != (dce->DCXFlags & (DCX_INDESTROY | DCX_DCEEMPTY | DCX_DCEBUSY)))
    {
       return 0;
    }
@@ -573,6 +573,12 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
    }
    else if (ClipRegion != NULL)
    {
+      if (Dce->hrgnClip != NULL)
+      {
+         DPRINT1("Should not be called!!\n");
+         GDIOBJ_FreeObjByHandle(Dce->hrgnClip, GDI_OBJECT_TYPE_REGION|GDI_OBJECT_TYPE_SILENT);
+         Dce->hrgnClip = NULL;
+      }
       Dce->hrgnClip = ClipRegion;
    }
 
@@ -621,6 +627,8 @@ DceFreeDCE(PDCE pdce, BOOLEAN Force)
   pLE = pdce->List.Flink;
   ret = CONTAINING_RECORD(pLE, DCE, List);
 
+  pdce->DCXFlags |= DCX_INDESTROY;
+
   if (Force && !GDIOBJ_OwnedByCurrentProcess(pdce->hDC))
   {
      DPRINT("Change ownership for DCE! -> %x\n" , pdce);
@@ -638,9 +646,9 @@ DceFreeDCE(PDCE pdce, BOOLEAN Force)
 
   if (!Hit) IntGdiDeleteDC(pdce->hDC, TRUE);
 
-  if (pdce->hrgnClip && ! (pdce->DCXFlags & DCX_KEEPCLIPRGN))
+  if (pdce->hrgnClip && !(pdce->DCXFlags & DCX_KEEPCLIPRGN))
   {
-      REGION_FreeRgnByHandle(pdce->hrgnClip);
+      GDIOBJ_FreeObjByHandle(pdce->hrgnClip, GDI_OBJECT_TYPE_REGION|GDI_OBJECT_TYPE_SILENT);
       pdce->hrgnClip = NULL;
   }
 
@@ -673,7 +681,7 @@ DceFreeWindowDCE(PWINDOW_OBJECT Window)
 
   if (DCECount <= 0)
   {
-     DPRINT1("No Entry!\n");
+     DPRINT1("FreeWindowDCE No Entry! %d\n",DCECount);
      return;
   }
 
@@ -681,8 +689,16 @@ DceFreeWindowDCE(PWINDOW_OBJECT Window)
   pDCE = CONTAINING_RECORD(pLE, DCE, List);
   do
   {
-     if (!pDCE) break;
-     if (IsListEmpty(&pDCE->List)) break;
+     if (!pDCE)
+     {
+        DPRINT1("FreeWindowDCE No DCE Pointer!\n");
+        break;
+     }
+     if (IsListEmpty(&pDCE->List))
+     {
+        DPRINT1("FreeWindowDCE List is Empty!!!!\n");
+        break;
+     }
      if ( pDCE->hwndCurrent == Window->hSelf &&
           !(pDCE->DCXFlags & DCX_DCEEMPTY) )
      {
@@ -700,7 +716,10 @@ DceFreeWindowDCE(PWINDOW_OBJECT Window)
 
               DPRINT("POWNED DCE going Cheap!! DCX_CACHE!! hDC-> %x \n", pDCE->hDC);
               if (!IntGdiSetDCOwnerEx( pDCE->hDC, GDI_OBJ_HMGR_NONE, FALSE))
-                  return;
+              {
+                  DPRINT1("Fail Owner Switch hDC-> %x \n", pDCE->hDC);
+                  break;
+              }
               /* Do not change owner so thread can clean up! */
            }
            else if (Window->Wnd->pcls->style & CS_OWNDC) /* owned DCE*/
@@ -711,6 +730,7 @@ DceFreeWindowDCE(PWINDOW_OBJECT Window)
            }
            else
            {
+              DPRINT1("Not POWNED or CLASSDC hwndCurrent -> %x \n", pDCE->hwndCurrent);
               ASSERT(FALSE);
            }
         }
@@ -825,7 +845,7 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window)
    {
       if(!pDCE) break;
       if(pLE == &LEDce) break;
-      if (0 == (pDCE->DCXFlags & DCX_DCEEMPTY))
+      if (0 == (pDCE->DCXFlags & (DCX_DCEEMPTY|DCX_INDESTROY)))
       {
          if (Window->hSelf == pDCE->hwndCurrent)
          {
@@ -902,9 +922,12 @@ IntWindowFromDC(HDC hDc)
   Dce = CONTAINING_RECORD(pLE, DCE, List);
   do
   {
-      if(Dce->hDC == hDc)
+      if (Dce->hDC == hDc)
       {
-         Ret = Dce->hwndCurrent;
+         if (Dce->DCXFlags & DCX_INDESTROY)
+            Ret = NULL;
+         else
+            Ret = Dce->hwndCurrent;
          break;
       }
       pLE = Dce->List.Flink;
