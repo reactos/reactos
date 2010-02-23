@@ -924,9 +924,9 @@ static BOOL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
         return FALSE;
     }
     
-    hf = CreateFontW(-SmallDiam, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
-                    SYMBOL_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                    DEFAULT_QUALITY, FIXED_PITCH|FF_DONTCARE, glyphFontName);
+    hf = CreateFontW(-SmallDiam, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE,
+                    DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                    DEFAULT_QUALITY, DEFAULT_PITCH|FF_DONTCARE, glyphFontName);
     alignsave = SetTextAlign(dc, TA_TOP|TA_LEFT);
     bksave = SetBkMode(dc, TRANSPARENT);
     clrsave = GetTextColor(dc);
