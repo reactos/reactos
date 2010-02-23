@@ -2,7 +2,7 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS WDM Streaming ActiveMovie Proxy
  * FILE:            dll/directx/ksproxy/classfactory.cpp
- * PURPOSE:         ClassFactory interface
+ * PURPOSE:         IClassFactory interface
  *
  * PROGRAMMERS:     Johannes Anderwald (janderwald@reactos.org)
  */
@@ -67,7 +67,16 @@ CClassFactory::CreateInstance(
     REFIID riid,
     LPVOID *ppvObject)
 {
+    WCHAR Buffer[MAX_PATH];
+    LPOLESTR lpstr;
+
     *ppvObject = NULL;
+
+    StringFromCLSID(riid, &lpstr);
+
+    swprintf(Buffer, L"riid %s", lpstr);
+    OutputDebugStringW(Buffer);
+
 
     if ( m_IID == NULL || IsEqualCLSID(riid, *m_IID) || IsEqualCLSID(riid, IID_IUnknown))
     {

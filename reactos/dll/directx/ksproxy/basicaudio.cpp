@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS WDM Streaming ActiveMovie Proxy
- * FILE:            dll/directx/ksproxy/cvpvbiconfig.cpp
- * PURPOSE:         CVPVBIConfig interface
+ * FILE:            dll/directx/ksproxy/basicaudio.cpp
+ * PURPOSE:         IBasicAudio interface
  *
  * PROGRAMMERS:     Johannes Anderwald (janderwald@reactos.org)
  */

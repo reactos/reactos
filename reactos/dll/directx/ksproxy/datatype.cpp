@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS WDM Streaming ActiveMovie Proxy
- * FILE:            dll/directx/ksproxy/ksproxy.c
+ * FILE:            dll/directx/ksproxy/datatype.cpp
  * PURPOSE:         IKsDataTypeHandler interface
  *
  * PROGRAMMERS:     Johannes Anderwald (janderwald@reactos.org)
