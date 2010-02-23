@@ -14,6 +14,24 @@
 //#include "ntstrsafe.h"
 
 VOID NTAPI
+DeviceArrivalWorkItem(PDEVICE_OBJECT DeviceObject, PVOID Context)
+{
+    PWORKITEM_DATA WorkItemData;
+    PPDO_DEVICE_EXTENSION PdoDeviceExtension;
+
+    WorkItemData = (PWORKITEM_DATA)Context;
+    PdoDeviceExtension = (PPDO_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
+
+    if (PdoDeviceExtension->CallbackRoutine)
+        PdoDeviceExtension->CallbackRoutine(PdoDeviceExtension->CallbackContext);
+    else
+        DPRINT1("PdoDeviceExtension->CallbackRoutine is NULL!\n");
+
+    IoFreeWorkItem(WorkItemData->IoWorkItem);
+    ExFreePool(WorkItemData);
+}
+
+VOID NTAPI
 EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVOID SystemArgument2)
 {
     PFDO_DEVICE_EXTENSION FdoDeviceExtension;
@@ -42,6 +60,7 @@ EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVO
             /* Check for port change on this port */
             if (tmp & 0x02)
             {
+                PWORKITEM_DATA WorkItemData = NULL;
                 /* Connect or Disconnect? */
                 if (tmp & 0x01)
                 {
@@ -84,7 +103,14 @@ EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVO
                     DPRINT("port tmp %x\n", tmp);
                     GetDeviceDescriptor(FdoDeviceExtension, 0, 0, FALSE);
                     PdoDeviceExtension->ChildDeviceCount++;
-                    //PdoDeviceExtension->CallbackRoutine(PdoDeviceExtension->CallbackContext);
+                    WorkItemData = ExAllocatePool(NonPagedPool, sizeof(WORKITEM_DATA));
+                    if (!WorkItemData) ASSERT(FALSE);
+                    WorkItemData->IoWorkItem = IoAllocateWorkItem(PdoDeviceExtension->DeviceObject);
+                    WorkItemData->PdoDeviceExtension = PdoDeviceExtension;
+                    IoQueueWorkItem(WorkItemData->IoWorkItem,
+                                    (PIO_WORKITEM_ROUTINE)DeviceArrivalWorkItem,
+                                    DelayedWorkQueue,
+                                    WorkItemData);
                 }
                 else
                 {

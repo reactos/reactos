@@ -363,7 +363,7 @@ typedef struct _PDO_DEVICE_EXTENSION
 typedef struct _WORKITEM_DATA
 {
     PIO_WORKITEM IoWorkItem;
-    PFDO_DEVICE_EXTENSION FdoDeviceExtension;
+    PPDO_DEVICE_EXTENSION PdoDeviceExtension;
     PDEVICE_OBJECT PortDeviceObject;
 } WORKITEM_DATA, *PWORKITEM_DATA;
 
@@ -418,5 +418,8 @@ CompletePendingURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension);
 
 VOID
 URBRequestCancel (PDEVICE_OBJECT DeviceObject, PIRP Irp);
+
+VOID NTAPI
+DeviceArrivalWorkItem(PDEVICE_OBJECT DeviceObject, PVOID Context);
 
 #endif

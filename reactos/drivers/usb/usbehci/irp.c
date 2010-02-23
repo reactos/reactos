@@ -92,12 +92,24 @@ CompletePendingURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension)
         {
             case URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER:
             {
-                /* We should not get here yet! */
-                ASSERT(FALSE);
+                /* Are we suppose to only return on this request when a device is connected
+                   or is it the RootHubInitNotification Callback */
+                DPRINT1("URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER:\n");
+                DPRINT1("--->TransferBufferLength %x\n",Urb->UrbBulkOrInterruptTransfer.TransferBufferLength);
+                DPRINT1("--->TransferBuffer %x\n",Urb->UrbBulkOrInterruptTransfer.TransferBuffer);
+                DPRINT1("--->PipeHandle %x\n",Urb->UrbBulkOrInterruptTransfer.PipeHandle);
+                DPRINT1("--->TransferFlags %x\n", Urb->UrbBulkOrInterruptTransfer.TransferFlags);
+                /* FIXME */
+                RtlZeroMemory(Urb->UrbBulkOrInterruptTransfer.TransferBuffer, Urb->UrbBulkOrInterruptTransfer.TransferBufferLength);
+                ((PUCHAR)Urb->UrbBulkOrInterruptTransfer.TransferBuffer)[0] = 1;
+                /* Turn off Irp handling as nothing is handled beyond this */
+                DeviceExtension->HaltUrbHandling = TRUE;
+                break;
             }
             case URB_FUNCTION_GET_STATUS_FROM_DEVICE:
             {
                 DPRINT1("Get Status from Device\n");
+                break;
             }
             case URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE:
             {
@@ -320,8 +332,6 @@ CompletePendingURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension)
                         Urb->UrbHeader.Status = USBD_STATUS_SUCCESS;
                         Urb->UrbHeader.UsbdDeviceHandle = UsbDevice;
                         Urb->UrbHeader.UsbdFlags = 0;
-                        /* Stop handling the URBs now as its not coded yet */
-                        //DeviceExtension->HaltUrbHandling = TRUE;
                         break;
                     }
                     default:
@@ -420,3 +430,4 @@ CompletePendingURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension)
 
     KeReleaseSpinLock(&DeviceExtension->IrpQueueLock, oldIrql);
 }
+
