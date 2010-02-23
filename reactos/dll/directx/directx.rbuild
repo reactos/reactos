@@ -4,6 +4,9 @@
 	<directory name="amstream">
 		<xi:include href="amstream/amstream.rbuild" />
 	</directory>
+	<directory name="bdaplgin">
+		<xi:include href="bdaplgin/bdaplgin.rbuild" />
+	</directory>
 	<directory name="d3d8thk">
 		<xi:include href="d3d8thk/d3d8thk.rbuild" />
 	</directory>

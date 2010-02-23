@@ -201,4 +201,58 @@ typedef enum {
         NULL, 0, NULL, NULL, 0)
 
 
+/* ------------------------------------------------------------
+  BDA Change Sync Method Set {FD0A5AF3-B41D-11d2-9C95-00C04F7971E0}
+*/
+
+#define STATIC_KSMETHODSETID_BdaChangeSync \
+    0xfd0a5af3, 0xb41d, 0x11d2, {0x9c, 0x95, 0x0, 0xc0, 0x4f, 0x79, 0x71, 0xe0}
+DEFINE_GUIDSTRUCT("FD0A5AF3-B41D-11d2-9C95-00C04F7971E0", KSMETHODSETID_BdaChangeSync);
+#define KSMETHODSETID_BdaChangeSync DEFINE_GUIDNAMED(KSMETHODSETID_BdaChangeSync)
+
+typedef enum {
+    KSMETHOD_BDA_START_CHANGES = 0,
+    KSMETHOD_BDA_CHECK_CHANGES,
+    KSMETHOD_BDA_COMMIT_CHANGES,
+    KSMETHOD_BDA_GET_CHANGE_STATE
+} KSMETHOD_BDA_CHANGE_SYNC;
+
+#define DEFINE_KSMETHOD_ITEM_BDA_START_CHANGES(MethodHandler, SupportHandler)\
+    DEFINE_KSMETHOD_ITEM(\
+        KSMETHOD_BDA_START_CHANGES,\
+        KSMETHOD_TYPE_NONE,\
+        (MethodHandler),\
+        sizeof(KSMETHOD),\
+        0,\
+        SupportHandler)
+
+#define DEFINE_KSMETHOD_ITEM_BDA_CHECK_CHANGES(MethodHandler, SupportHandler)\
+    DEFINE_KSMETHOD_ITEM(\
+        KSMETHOD_BDA_CHECK_CHANGES,\
+        KSMETHOD_TYPE_NONE,\
+        (MethodHandler),\
+        sizeof(KSMETHOD),\
+        0,\
+        SupportHandler)
+
+#define DEFINE_KSMETHOD_ITEM_BDA_COMMIT_CHANGES(MethodHandler, SupportHandler)\
+    DEFINE_KSMETHOD_ITEM(\
+        KSMETHOD_BDA_COMMIT_CHANGES,\
+        KSMETHOD_TYPE_NONE,\
+        (MethodHandler),\
+        sizeof(KSMETHOD),\
+        0,\
+        SupportHandler)
+
+#define DEFINE_KSMETHOD_ITEM_BDA_GET_CHANGE_STATE(MethodHandler, SupportHandler)\
+    DEFINE_KSMETHOD_ITEM(\
+        KSMETHOD_BDA_GET_CHANGE_STATE,\
+        KSMETHOD_TYPE_READ,\
+        (MethodHandler),\
+        sizeof(KSMETHOD),\
+        0,\
+        SupportHandler)
+
+
+
 #endif

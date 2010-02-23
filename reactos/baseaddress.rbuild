@@ -25,6 +25,7 @@
 	<property name="BASEADDRESS_MSGSM32ACM"		value="0x56db0000" />
 	<property name="BASEADDRESS_MSG711ACM"		value="0x584f0000" />
 	<property name="BASEADDRESS_IMAADP32ACM"	value="0x585e0000" />
+	<property name="BASEADDRESS_BDAPLGIN"	value="0x58600000" />
 	<property name="BASEADDRESS_TELEPHON"		value="0x58750000" />
 	<property name="BASEADDRESS_PWRCFG"		value="0x587e0000" />
 	<property name="BASEADDRESS_MMSYS"		value="0x588a0000" />
