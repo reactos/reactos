@@ -101,8 +101,9 @@ GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
         TextIntRealizeFont((HFONT) pgO->hgdiobj, NULL);
         pdcattr->ulDirty_ &= ~(DIRTY_CHARSET);
      }
-     case GdiBCDelObj:
      case GdiBCDelRgn:
+        DPRINT("Delete Region Object!\n");
+     case GdiBCDelObj:
      {
         PGDIBSOBJECT pgO = (PGDIBSOBJECT) pHdr;
         GreDeleteObject( pgO->hgdiobj );
@@ -146,8 +147,9 @@ NtGdiFlushUserBatch(VOID)
     HDC hDC = (HDC) pTeb->GdiTebBatch.HDC;
 
     /*  If hDC is zero and the buffer fills up with delete objects we need
-        to run anyway. So, hard code to the system batch limit. */
-    if ((hDC) || (GdiBatchCount >= GDI_BATCH_LIMIT))
+        to run anyway.
+     */
+    if (hDC || GdiBatchCount)
     {
       PCHAR pHdr = (PCHAR)&pTeb->GdiTebBatch.Buffer[0];
       PDC pDC = NULL;
