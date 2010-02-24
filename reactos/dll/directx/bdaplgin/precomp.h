@@ -12,8 +12,10 @@
 #include <wchar.h>
 #include <tchar.h>
 #include <uuids.h>
+#include <bdatypes.h>
 #include <bdaiface.h>
 #include <bdamedia.h>
+#include <assert.h>
 
 typedef HRESULT (CALLBACK *LPFNCREATEINSTANCE)(IUnknown* pUnkOuter, REFIID riid, LPVOID* ppvObject);
 
@@ -47,5 +49,50 @@ CBDAPinControl_fnConstructor(
     REFIID riid,
     LPVOID * ppv);
 
+/* controlnode.cpp */
+
+HRESULT
+WINAPI
+CControlNode_fnConstructor(
+    IUnknown * pUnkOuter,
+    ULONG NodeType,
+    ULONG PinId,
+    REFIID riid,
+    LPVOID * ppv);
+
+/* frequencyfilter.cpp */
+
+HRESULT
+WINAPI
+CBDAFrequencyFilter_fnConstructor(
+    IUnknown * pUnkOuter,
+    REFIID riid,
+    LPVOID * ppv);
+
+/* signalstatistics.cpp */
+
+HRESULT
+WINAPI
+CBDASignalStatistics_fnConstructor(
+    IUnknown * pUnkOuter,
+    REFIID riid,
+    LPVOID * ppv);
+
+/* lnbinfo.cpp */
+
+HRESULT
+WINAPI
+CBDALNBInfo_fnConstructor(
+    IUnknown * pUnkOuter,
+    REFIID riid,
+    LPVOID * ppv);
+
+/* digitaldemo.cpp */
+HRESULT
+WINAPI
+CBDADigitalDemodulator_fnConstructor(
+    IUnknown * pUnkOuter,
+    REFIID riid,
+    LPVOID * ppv);
 
 #endif

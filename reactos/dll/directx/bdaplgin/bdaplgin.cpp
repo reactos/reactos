@@ -31,6 +31,7 @@ DllMain(
     switch (fdwReason)
     {
         case DLL_PROCESS_ATTACH:
+            CoInitialize(NULL);
             OutputDebugStringW(L"BDAPLGIN::DllMain()\n");
             DisableThreadLibraryCalls(hInstDLL);
             break;

@@ -53,6 +53,9 @@ CBDAPinControl::QueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
+    WCHAR Buffer[MAX_PATH];
+    LPOLESTR lpstr;
+
     if (IsEqualGUID(refiid, IID_IUnknown))
     {
         *Output = PVOID(this);
@@ -65,7 +68,11 @@ CBDAPinControl::QueryInterface(
         reinterpret_cast<IBDA_PinControl*>(*Output)->AddRef();
         return NOERROR;
     }
-   OutputDebugStringW(L"CBDAPinControl::QueryInterface: NoInterface!!!\n");
+
+    StringFromCLSID(refiid, &lpstr);
+    swprintf(Buffer, L"CBDADeviceControl::QueryInterface: NoInterface for %s", lpstr);
+    OutputDebugStringW(Buffer);
+    CoTaskMemFree(lpstr);
     return E_NOINTERFACE;
 }
 //-------------------------------------------------------------------
