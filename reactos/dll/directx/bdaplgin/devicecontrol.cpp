@@ -21,6 +21,8 @@ const GUID IID_IBDA_Topology      = {0x79B56888, 0x7FEA, 0x4690, {0xB4, 0x5D, 0x
 const GUID IID_IKsObject           = {0x423c13a2, 0x2070, 0x11d0, {0x9e, 0xf7, 0x00, 0xaa, 0x00, 0xa2, 0x16, 0xa1}};
 const GUID KSPROPSETID_BdaTopology = {0xa14ee835, 0x0a23, 0x11d3, {0x9c, 0xc7, 0x0, 0xc0, 0x4f, 0x79, 0x71, 0xe0}};
 const GUID KSMETHODSETID_BdaDeviceConfiguration = {0x71985f45, 0x1ca1, 0x11d3, {0x9c, 0xc8, 0x0, 0xc0, 0x4f, 0x79, 0x71, 0xe0}};
+const GUID IID_IBaseFilter         = {0x56a86895, 0x0ad4, 0x11ce, {0xb0,0x3a, 0x00,0x20,0xaf,0x0b,0xa7,0x70}};
+
 
 class CBDADeviceControl : public IBDA_DeviceControl,
                           public IBDA_Topology
@@ -103,7 +105,7 @@ CBDADeviceControl::QueryInterface(
         reinterpret_cast<IBDA_Topology*>(*Output)->AddRef();
         return NOERROR;
     }
-#if 0
+
     if (IsEqualIID(refiid, IID_IDistributorNotify))
     {
         OutputDebugStringW(L"CBDADeviceControl::QueryInterface: No IDistributorNotify interface\n");
@@ -118,10 +120,8 @@ CBDADeviceControl::QueryInterface(
 
     if (IsEqualGUID(refiid, IID_IBDA_NetworkProvider))
     {
-        HRESULT hr = CoCreateInstance(CLSID_DVBTNetworkProvider, 0, CLSCTX_INPROC, IID_IBDA_NetworkProvider, (void**)Output);
-        swprintf(Buffer, L"CBDADeviceControl::QueryInterface: failed to construct IID_IBDA_NetworkProvider interface with %lx", hr);
-        OutputDebugStringW(Buffer);
-        return hr;
+        OutputDebugStringW(L"CBDADeviceControl::QueryInterface: No IID_IBDA_NetworkProvider interface\n");
+        return E_NOINTERFACE;
     }
 
     if (IsEqualGUID(refiid, IID_IMatrixMixer))
@@ -141,7 +141,6 @@ CBDADeviceControl::QueryInterface(
         OutputDebugStringW(L"CBDADeviceControl::QueryInterface: No IID_IAC3Filter interface\n");
         return E_NOINTERFACE;
     }
-#endif
 
     StringFromCLSID(refiid, &lpstr);
     swprintf(Buffer, L"CBDADeviceControl::QueryInterface: NoInterface for %s", lpstr);
@@ -385,7 +384,7 @@ CBDADeviceControl::GetControlNode(ULONG ulInputPinId, ULONG ulOutputPinId, ULONG
     if (FAILED(hr))
         return hr;
 
-    hr = CControlNode_fnConstructor(m_pUnkOuter, ulNodeType, PinId, IID_IUnknown, (LPVOID*)ppControlNode);
+    hr = CControlNode_fnConstructor(m_Handle, ulNodeType, PinId, IID_IUnknown, (LPVOID*)ppControlNode);
 
     swprintf(Buffer, L"CBDADeviceControl::GetControlNode: hr %lx\n", hr);
     OutputDebugStringW(Buffer);
@@ -401,6 +400,7 @@ CBDADeviceControl_fnConstructor(
 {
     HRESULT hr;
     IKsObject *pObject = NULL;
+    IBaseFilter *pFilter = NULL;
     HANDLE hFile;
 
     // sanity check
@@ -409,8 +409,21 @@ CBDADeviceControl_fnConstructor(
     // query for IKsObject
     hr = pUnkOuter->QueryInterface(IID_IKsObject, (void**)&pObject);
 
+    if (FAILED(hr))
+        return E_NOINTERFACE;
+
     // sanity check
     assert(hr == NOERROR);
+
+    // query for IBaseFilter interface support
+    hr = pUnkOuter->QueryInterface(IID_IBaseFilter, (void**)&pFilter);
+
+    if (FAILED(hr))
+    {
+        // release 
+       pObject->Release();
+       return E_NOINTERFACE;
+    }
 
     // another sanity check
     assert(pObject != NULL);

@@ -169,35 +169,10 @@ CBDASignalStatistics::get_SampleTime(LONG *plmsSampleTime)
 HRESULT
 WINAPI
 CBDASignalStatistics_fnConstructor(
-    IUnknown * pUnkOuter,
+    HANDLE hFile,
     REFIID riid,
     LPVOID * ppv)
 {
-    HRESULT hr;
-    IKsObject *pObject = NULL;
-    HANDLE hFile;
-
-    // sanity check
-    assert(pUnkOuter);
-
-    // query for IKsObject
-    hr = pUnkOuter->QueryInterface(IID_IKsObject, (void**)&pObject);
-
-    // sanity check
-    assert(hr == NOERROR);
-
-    // another sanity check
-    assert(pObject != NULL);
-
-    // get file handle
-    hFile = pObject->KsGetObjectHandle();
-
-    // one more sanity check
-    assert(hFile != NULL && hFile != INVALID_HANDLE_VALUE);
-
-    // release IKsObject interface
-    pObject->Release();
-
     // construct device control
     CBDASignalStatistics * handler = new CBDASignalStatistics(hFile);
 

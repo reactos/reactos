@@ -54,7 +54,7 @@ CBDAPinControl_fnConstructor(
 HRESULT
 WINAPI
 CControlNode_fnConstructor(
-    IUnknown * pUnkOuter,
+    HANDLE hFile,
     ULONG NodeType,
     ULONG PinId,
     REFIID riid,
@@ -65,7 +65,7 @@ CControlNode_fnConstructor(
 HRESULT
 WINAPI
 CBDAFrequencyFilter_fnConstructor(
-    IUnknown * pUnkOuter,
+    HANDLE hFile,
     REFIID riid,
     LPVOID * ppv);
 
@@ -74,7 +74,7 @@ CBDAFrequencyFilter_fnConstructor(
 HRESULT
 WINAPI
 CBDASignalStatistics_fnConstructor(
-    IUnknown * pUnkOuter,
+    HANDLE hFile,
     REFIID riid,
     LPVOID * ppv);
 
@@ -83,7 +83,7 @@ CBDASignalStatistics_fnConstructor(
 HRESULT
 WINAPI
 CBDALNBInfo_fnConstructor(
-    IUnknown * pUnkOuter,
+    HANDLE hFile,
     REFIID riid,
     LPVOID * ppv);
 
@@ -91,7 +91,7 @@ CBDALNBInfo_fnConstructor(
 HRESULT
 WINAPI
 CBDADigitalDemodulator_fnConstructor(
-    IUnknown * pUnkOuter,
+    HANDLE hFile,
     REFIID riid,
     LPVOID * ppv);
 

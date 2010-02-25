@@ -31,12 +31,12 @@ public:
         return m_Ref;
     }
 
-    CControlNode(IUnknown * pUnkOuter, ULONG NodeType, ULONG PinId) : m_Ref(0), m_pUnkOuter(pUnkOuter), m_NodeType(NodeType), m_PinId(PinId){};
+    CControlNode(HANDLE hFile, ULONG NodeType, ULONG PinId) : m_Ref(0), m_hFile(hFile), m_NodeType(NodeType), m_PinId(PinId){};
     virtual ~CControlNode(){};
 
 protected:
     LONG m_Ref;
-    IUnknown * m_pUnkOuter;
+    HANDLE m_hFile;
     ULONG m_NodeType;
     ULONG m_PinId;
 };
@@ -60,23 +60,20 @@ CControlNode::QueryInterface(
     }
     else if(IsEqualGUID(refiid, IID_IBDA_FrequencyFilter))
     {
-        return CBDAFrequencyFilter_fnConstructor(m_pUnkOuter, refiid, Output);
+        return CBDAFrequencyFilter_fnConstructor(m_hFile, refiid, Output);
     }
     else if(IsEqualGUID(refiid, IID_IBDA_SignalStatistics))
     {
-        return CBDASignalStatistics_fnConstructor(m_pUnkOuter, refiid, Output);
+        return CBDASignalStatistics_fnConstructor(m_hFile, refiid, Output);
     }
     else if(IsEqualGUID(refiid, IID_IBDA_LNBInfo))
     {
-        return CBDALNBInfo_fnConstructor(m_pUnkOuter, refiid, Output);
+        return CBDALNBInfo_fnConstructor(m_hFile, refiid, Output);
     }
     else if(IsEqualGUID(refiid, IID_IBDA_DigitalDemodulator))
     {
-        return CBDADigitalDemodulator_fnConstructor(m_pUnkOuter, refiid, Output);
+        return CBDADigitalDemodulator_fnConstructor(m_hFile, refiid, Output);
     }
-
-
-
 
     StringFromCLSID(refiid, &lpstr);
     swprintf(Buffer, L"CControlNode::QueryInterface: NoInterface for %s", lpstr);
@@ -90,17 +87,14 @@ CControlNode::QueryInterface(
 HRESULT
 WINAPI
 CControlNode_fnConstructor(
-    IUnknown * pUnkOuter,
+    HANDLE hFile,
     ULONG NodeType,
     ULONG PinId,
     REFIID riid,
     LPVOID * ppv)
 {
-    // sanity check
-    assert(pUnkOuter);
-
     // construct device control
-    CControlNode * handler = new CControlNode(pUnkOuter, NodeType, PinId);
+    CControlNode * handler = new CControlNode(hFile, NodeType, PinId);
 
     OutputDebugStringW(L"CControlNode_fnConstructor\n");
 
