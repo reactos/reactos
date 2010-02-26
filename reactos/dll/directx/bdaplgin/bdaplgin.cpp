@@ -32,7 +32,11 @@ DllMain(
     {
         case DLL_PROCESS_ATTACH:
             CoInitialize(NULL);
+
+#ifdef BDAPLGIN_TRACE
             OutputDebugStringW(L"BDAPLGIN::DllMain()\n");
+#endif
+
             DisableThreadLibraryCalls(hInstDLL);
             break;
     default:

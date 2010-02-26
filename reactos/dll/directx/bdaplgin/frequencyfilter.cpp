@@ -10,6 +10,7 @@
 #include "precomp.h"
 
 const GUID IID_IBDA_FrequencyFilter = {0x71985f47, 0x1ca1, 0x11d3, {0x9c, 0xc8, 0x00, 0xc0, 0x4f, 0x79, 0x71, 0xe0}};
+const GUID KSPROPSETID_BdaFrequencyFilter = {0x71985f47, 0x1ca1, 0x11d3, {0x9c, 0xc8, 0x0, 0xc0, 0x4f, 0x79, 0x71, 0xe0}};
 
 class CBDAFrequencyFilter : public IBDA_FrequencyFilter
 {
@@ -24,7 +25,6 @@ public:
     STDMETHODIMP_(ULONG) Release()
     {
         InterlockedDecrement(&m_Ref);
-
         if (!m_Ref)
         {
             delete this;
@@ -46,12 +46,13 @@ public:
     HRESULT STDMETHODCALLTYPE put_FrequencyMultiplier(ULONG ulMultiplier);
     HRESULT STDMETHODCALLTYPE get_FrequencyMultiplier(ULONG *pulMultiplier);
 
-    CBDAFrequencyFilter(HANDLE hFile) : m_Ref(0), m_hFile(hFile){};
+    CBDAFrequencyFilter(HANDLE hFile, ULONG NodeId) : m_Ref(0), m_hFile(hFile), m_NodeId(NodeId){};
     virtual ~CBDAFrequencyFilter(){};
 
 protected:
     LONG m_Ref;
     HANDLE m_hFile;
+    ULONG m_NodeId;
 };
 
 HRESULT
@@ -60,9 +61,6 @@ CBDAFrequencyFilter::QueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
-    WCHAR Buffer[MAX_PATH];
-    LPOLESTR lpstr;
-
     *Output = NULL;
 
     if (IsEqualGUID(refiid, IID_IUnknown))
@@ -79,10 +77,14 @@ CBDAFrequencyFilter::QueryInterface(
         return NOERROR;
     }
 
+#ifdef BDAPLGIN_TRACE
+    WCHAR Buffer[MAX_PATH];
+    LPOLESTR lpstr;
     StringFromCLSID(refiid, &lpstr);
     swprintf(Buffer, L"CControlNode::QueryInterface: NoInterface for %s", lpstr);
     OutputDebugStringW(Buffer);
     CoTaskMemFree(lpstr);
+#endif
 
     return E_NOINTERFACE;
 }
@@ -91,7 +93,6 @@ HRESULT
 STDMETHODCALLTYPE
 CBDAFrequencyFilter::put_Autotune(ULONG ulTransponder)
 {
-    OutputDebugStringW(L"CBDAFrequencyFilter::put_Autotune: NotImplemented\n");
     return E_NOINTERFACE;
 }
 
@@ -99,7 +100,6 @@ HRESULT
 STDMETHODCALLTYPE
 CBDAFrequencyFilter::get_Autotune(ULONG *pulTransponder)
 {
-    OutputDebugStringW(L"CBDAFrequencyFilter::get_Autotune\n");
     return E_NOINTERFACE;
 }
 
@@ -107,15 +107,33 @@ HRESULT
 STDMETHODCALLTYPE
 CBDAFrequencyFilter::put_Frequency(ULONG ulFrequency)
 {
-    OutputDebugStringW(L"CBDAFrequencyFilter::put_Frequency: NotImplemented\n");
-    return E_NOTIMPL;
+    KSP_NODE Node;
+    HRESULT hr;
+
+    ULONG BytesReturned;
+
+    // setup request
+    Node.Property.Set = KSPROPSETID_BdaFrequencyFilter;
+    Node.Property.Id = KSPROPERTY_BDA_RF_TUNER_FREQUENCY;
+    Node.Property.Flags = KSPROPERTY_TYPE_SET | KSPROPERTY_TYPE_TOPOLOGY;
+    Node.NodeId = m_NodeId;
+
+    // perform request
+    hr = KsSynchronousDeviceControl(m_hFile, IOCTL_KS_PROPERTY, (PVOID)&Node, sizeof(KSP_NODE), &ulFrequency, sizeof(ULONG), &BytesReturned);
+
+#ifdef BDAPLGIN_TRACE
+    WCHAR Buffer[100];
+    swprintf(Buffer, L"CBDAFrequencyFilter::put_Frequency: m_NodeId %lu hr %lx, BytesReturned %lu\n", m_NodeId, hr, BytesReturned);
+    OutputDebugStringW(Buffer);
+#endif
+
+    return hr;
 }
 
 HRESULT
 STDMETHODCALLTYPE
 CBDAFrequencyFilter::get_Frequency(ULONG *pulFrequency)
 {
-    OutputDebugStringW(L"CBDAFrequencyFilter::get_Frequency\n");
     return E_NOINTERFACE;
 }
 
@@ -123,15 +141,32 @@ HRESULT
 STDMETHODCALLTYPE
 CBDAFrequencyFilter::put_Polarity(Polarisation Polarity)
 {
-    OutputDebugStringW(L"CBDAFrequencyFilter::put_Polarity: NotImplemented\n");
-    return E_NOTIMPL;
+    KSP_NODE Node;
+    HRESULT hr;
+    ULONG BytesReturned;
+
+    // setup request
+    Node.Property.Set = KSPROPSETID_BdaFrequencyFilter;
+    Node.Property.Id = KSPROPERTY_BDA_RF_TUNER_POLARITY;
+    Node.Property.Flags = KSPROPERTY_TYPE_SET | KSPROPERTY_TYPE_TOPOLOGY;
+    Node.NodeId = m_NodeId;
+
+    // perform request
+    hr = KsSynchronousDeviceControl(m_hFile, IOCTL_KS_PROPERTY, (PVOID)&Node, sizeof(KSP_NODE), &Polarity, sizeof(Polarisation), &BytesReturned);
+
+#ifdef BDAPLGIN_TRACE
+    WCHAR Buffer[100];
+    swprintf(Buffer, L"CBDAFrequencyFilter::put_Polarity: m_NodeId %lu hr %lx, BytesReturned %lu\n", m_NodeId, hr, BytesReturned);
+    OutputDebugStringW(Buffer);
+#endif
+
+    return hr;
 }
 
 HRESULT
 STDMETHODCALLTYPE
 CBDAFrequencyFilter::get_Polarity(Polarisation *pPolarity)
 {
-    OutputDebugStringW(L"CBDAFrequencyFilter::get_Polarity\n");
     return E_NOINTERFACE;
 }
 
@@ -139,15 +174,32 @@ HRESULT
 STDMETHODCALLTYPE
 CBDAFrequencyFilter::put_Range(ULONG ulRange)
 {
-    OutputDebugStringW(L"CBDAFrequencyFilter::put_Range: NotImplemented\n");
-    return E_NOTIMPL;
+    KSP_NODE Node;
+    HRESULT hr;
+    ULONG BytesReturned;
+
+    // setup request
+    Node.Property.Set = KSPROPSETID_BdaFrequencyFilter;
+    Node.Property.Id = KSPROPERTY_BDA_RF_TUNER_RANGE;
+    Node.Property.Flags = KSPROPERTY_TYPE_SET | KSPROPERTY_TYPE_TOPOLOGY;
+    Node.NodeId = m_NodeId;
+
+    // perform request
+    hr = KsSynchronousDeviceControl(m_hFile, IOCTL_KS_PROPERTY, (PVOID)&Node, sizeof(KSP_NODE), &ulRange, sizeof(ULONG), &BytesReturned);
+
+#ifdef BDAPLGIN_TRACE
+    WCHAR Buffer[100];
+    swprintf(Buffer, L"CBDAFrequencyFilter::put_Polarity: m_NodeId %lu hr %lx, BytesReturned %lu\n", m_NodeId, hr, BytesReturned);
+    OutputDebugStringW(Buffer);
+#endif
+
+    return hr;
 }
 
 HRESULT
 STDMETHODCALLTYPE
 CBDAFrequencyFilter::get_Range(ULONG *pulRange)
 {
-    OutputDebugStringW(L"CBDAFrequencyFilter::get_Range\n");
     return E_NOINTERFACE;
 }
 
@@ -155,30 +207,64 @@ HRESULT
 STDMETHODCALLTYPE
 CBDAFrequencyFilter::put_Bandwidth(ULONG ulBandwidth)
 {
-    OutputDebugStringW(L"CBDAFrequencyFilter::put_Bandwidth: NotImplemented\n");
-    return E_NOTIMPL;
+    KSP_NODE Node;
+    HRESULT hr;
+    ULONG BytesReturned;
+
+    // setup request
+    Node.Property.Set = KSPROPSETID_BdaFrequencyFilter;
+    Node.Property.Id = KSPROPERTY_BDA_RF_TUNER_BANDWIDTH;
+    Node.Property.Flags = KSPROPERTY_TYPE_SET | KSPROPERTY_TYPE_TOPOLOGY;
+    Node.NodeId = m_NodeId;
+
+    // perform request
+    hr = KsSynchronousDeviceControl(m_hFile, IOCTL_KS_PROPERTY, (PVOID)&Node, sizeof(KSP_NODE), &ulBandwidth, sizeof(ULONG), &BytesReturned);
+
+#ifdef BDAPLGIN_TRACE
+    WCHAR Buffer[100];
+    swprintf(Buffer, L"CBDAFrequencyFilter::put_Bandwidth: m_NodeId %lu hr %lx, BytesReturned %lu\n", m_NodeId, hr, BytesReturned);
+    OutputDebugStringW(Buffer);
+#endif
+
+    return hr;
 }
 
 HRESULT
 STDMETHODCALLTYPE
 CBDAFrequencyFilter::get_Bandwidth(ULONG *pulBandwidth)
 {
-    OutputDebugStringW(L"CBDAFrequencyFilter::get_Bandwidth\n");
     return E_NOINTERFACE;
 }
 HRESULT
 STDMETHODCALLTYPE
 CBDAFrequencyFilter::put_FrequencyMultiplier(ULONG ulMultiplier)
 {
-    OutputDebugStringW(L"CBDAFrequencyFilter::put_FrequencyMultiplier: NotImplemented\n");
-    return E_NOTIMPL;
+    KSP_NODE Node;
+    HRESULT hr;
+    ULONG BytesReturned;
+
+    // setup request
+    Node.Property.Set = KSPROPSETID_BdaFrequencyFilter;
+    Node.Property.Id = KSPROPERTY_BDA_RF_TUNER_FREQUENCY_MULTIPLIER;
+    Node.Property.Flags = KSPROPERTY_TYPE_SET | KSPROPERTY_TYPE_TOPOLOGY;
+    Node.NodeId = m_NodeId;
+
+    // perform request
+    hr = KsSynchronousDeviceControl(m_hFile, IOCTL_KS_PROPERTY, (PVOID)&Node, sizeof(KSP_NODE), &ulMultiplier, sizeof(ULONG), &BytesReturned);
+
+#ifdef BDAPLGIN_TRACE
+    WCHAR Buffer[100];
+    swprintf(Buffer, L"CBDAFrequencyFilter::put_FrequencyMultiplier: m_NodeId %lu hr %lx, BytesReturned %lu\n", m_NodeId, hr, BytesReturned);
+    OutputDebugStringW(Buffer);
+#endif
+
+    return hr;
 }
 
 HRESULT
 STDMETHODCALLTYPE
 CBDAFrequencyFilter::get_FrequencyMultiplier(ULONG *pulMultiplier)
 {
-    OutputDebugStringW(L"CBDAFrequencyFilter::get_FrequencyMultiplier\n");
     return E_NOINTERFACE;
 }
 
@@ -186,13 +272,16 @@ HRESULT
 WINAPI
 CBDAFrequencyFilter_fnConstructor(
     HANDLE hFile,
+    ULONG NodeId,
     REFIID riid,
     LPVOID * ppv)
 {
     // construct device control
-    CBDAFrequencyFilter * handler = new CBDAFrequencyFilter(hFile);
+    CBDAFrequencyFilter * handler = new CBDAFrequencyFilter(hFile, NodeId);
 
+#ifdef BDAPLGIN_TRACE
     OutputDebugStringW(L"CBDAFrequencyFilter_fnConstructor\n");
+#endif
 
     if (!handler)
         return E_OUTOFMEMORY;

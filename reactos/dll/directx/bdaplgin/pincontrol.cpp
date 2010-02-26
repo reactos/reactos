@@ -25,7 +25,6 @@ public:
     STDMETHODIMP_(ULONG) Release()
     {
         InterlockedDecrement(&m_Ref);
-
         if (!m_Ref)
         {
             delete this;
@@ -77,7 +76,10 @@ HRESULT
 STDMETHODCALLTYPE
 CBDAPinControl::GetPinID(ULONG *pulPinID)
 {
+#ifdef BDAPLGIN_TRACE
     OutputDebugStringW(L"CBDAPinControl::GetPinID: NotImplemented\n");
+#endif
+
     return E_NOTIMPL;
 }
 
@@ -85,7 +87,10 @@ HRESULT
 STDMETHODCALLTYPE
 CBDAPinControl::GetPinType(ULONG *pulPinType)
 {
+#ifdef BDAPLGIN_TRACE
     OutputDebugStringW(L"CBDAPinControl::GetPinType: NotImplemented\n");
+#endif
+
     return E_NOTIMPL;
 }
 
@@ -93,7 +98,10 @@ HRESULT
 STDMETHODCALLTYPE
 CBDAPinControl::RegistrationContext(ULONG *pulRegistrationCtx)
 {
+#ifdef BDAPLGIN_TRACE
     OutputDebugStringW(L"CBDAPinControl::RegistrationContext: NotImplemented\n");
+#endif
+
     return E_NOTIMPL;
 }
 
@@ -220,7 +228,9 @@ CBDAPinControl_fnConstructor(
 
     CBDAPinControl * handler = new CBDAPinControl(hFile, pNetworkProvider, pConnectedPin);
 
+#ifdef BDAPLGIN_TRACE
     OutputDebugStringW(L"CBDAPinControl_fnConstructor");
+#endif
 
     if (!handler)
         return E_OUTOFMEMORY;

@@ -55,6 +55,7 @@ HRESULT
 WINAPI
 CControlNode_fnConstructor(
     HANDLE hFile,
+    IBaseFilter * pFilter,
     ULONG NodeType,
     ULONG PinId,
     REFIID riid,
@@ -66,6 +67,7 @@ HRESULT
 WINAPI
 CBDAFrequencyFilter_fnConstructor(
     HANDLE hFile,
+    ULONG NodeId,
     REFIID riid,
     LPVOID * ppv);
 
@@ -75,6 +77,7 @@ HRESULT
 WINAPI
 CBDASignalStatistics_fnConstructor(
     HANDLE hFile,
+    ULONG NodeId,
     REFIID riid,
     LPVOID * ppv);
 
@@ -84,6 +87,7 @@ HRESULT
 WINAPI
 CBDALNBInfo_fnConstructor(
     HANDLE hFile,
+    ULONG NodeId,
     REFIID riid,
     LPVOID * ppv);
 
@@ -92,6 +96,7 @@ HRESULT
 WINAPI
 CBDADigitalDemodulator_fnConstructor(
     HANDLE hFile,
+    ULONG NodeId,
     REFIID riid,
     LPVOID * ppv);
 

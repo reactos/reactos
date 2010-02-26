@@ -10,6 +10,7 @@
 #include "precomp.h"
 
 const GUID IID_IBDA_SignalStatistics = {0x1347d106, 0xcf3a, 0x428a, {0xa5, 0xcb, 0xac, 0x0d, 0x9a, 0x2a, 0x43, 0x38}};
+const GUID KSPROPSETID_BdaSignalStats = {0x1347d106, 0xcf3a, 0x428a, {0xa5, 0xcb, 0xac, 0xd, 0x9a, 0x2a, 0x43, 0x38}};
 
 class CBDASignalStatistics : public IBDA_SignalStatistics
 {
@@ -24,7 +25,6 @@ public:
     STDMETHODIMP_(ULONG) Release()
     {
         InterlockedDecrement(&m_Ref);
-
         if (!m_Ref)
         {
             delete this;
@@ -45,12 +45,13 @@ public:
     HRESULT STDMETHODCALLTYPE put_SampleTime(LONG lmsSampleTime);
     HRESULT STDMETHODCALLTYPE get_SampleTime(LONG *plmsSampleTime);
 
-    CBDASignalStatistics(HANDLE hFile) : m_Ref(0), m_hFile(hFile){};
+    CBDASignalStatistics(HANDLE hFile, ULONG NodeId) : m_Ref(0), m_hFile(hFile), m_NodeId(NodeId){};
     ~CBDASignalStatistics(){};
 
 protected:
     LONG m_Ref;
     HANDLE m_hFile;
+    ULONG m_NodeId;
 };
 
 HRESULT
@@ -59,9 +60,6 @@ CBDASignalStatistics::QueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
-    WCHAR Buffer[MAX_PATH];
-    LPOLESTR lpstr;
-
     *Output = NULL;
 
     if (IsEqualGUID(refiid, IID_IUnknown))
@@ -78,11 +76,6 @@ CBDASignalStatistics::QueryInterface(
         return NOERROR;
     }
 
-    StringFromCLSID(refiid, &lpstr);
-    swprintf(Buffer, L"CBDASignalStatistics::QueryInterface: NoInterface for %s", lpstr);
-    OutputDebugStringW(Buffer);
-    CoTaskMemFree(lpstr);
-
     return E_NOINTERFACE;
 }
 
@@ -90,93 +83,205 @@ HRESULT
 STDMETHODCALLTYPE
 CBDASignalStatistics::put_SignalStrength(LONG lDbStrength)
 {
-    OutputDebugStringW(L"CBDASignalStatistics::put_SignalStrength NotImplemented\n");
-    return E_NOTIMPL;
+    return E_NOINTERFACE;
 }
 
 HRESULT
 STDMETHODCALLTYPE
 CBDASignalStatistics::get_SignalStrength(LONG *plDbStrength)
 {
-    OutputDebugStringW(L"CBDASignalStatistics::get_SignalStrength NotImplemented\n");
-    return E_NOTIMPL;
+    KSP_NODE Node;
+    HRESULT hr;
+    ULONG BytesReturned;
+
+    // setup request
+    Node.Property.Set = KSPROPSETID_BdaSignalStats;
+    Node.Property.Id = KSPROPERTY_BDA_SIGNAL_STRENGTH;
+    Node.Property.Flags = KSPROPERTY_TYPE_GET | KSPROPERTY_TYPE_TOPOLOGY;
+    Node.NodeId = (ULONG)-1;
+
+    // perform request
+    hr = KsSynchronousDeviceControl(m_hFile, IOCTL_KS_PROPERTY, (PVOID)&Node, sizeof(KSP_NODE), plDbStrength, sizeof(LONG), &BytesReturned);
+
+#ifdef BDAPLGIN_TRACE
+    WCHAR Buffer[100];
+    swprintf(Buffer, L"CBDASignalStatistics::get_SignalStrength: m_NodeId %lu hr %lx, BytesReturned %lu plDbStrength %ld\n", m_NodeId, hr, BytesReturned, *plDbStrength);
+    OutputDebugStringW(Buffer);
+#endif
+
+    return hr;
 }
 
 HRESULT
 STDMETHODCALLTYPE
 CBDASignalStatistics::put_SignalQuality(LONG lPercentQuality)
 {
-    OutputDebugStringW(L"CBDASignalStatistics::put_SignalQuality NotImplemented\n");
-    return E_NOTIMPL;
+    return E_NOINTERFACE;
 }
 
 HRESULT
 STDMETHODCALLTYPE
 CBDASignalStatistics::get_SignalQuality(LONG *plPercentQuality)
 {
-    OutputDebugStringW(L"CBDASignalStatistics::get_SignalQuality NotImplemented\n");
-    return E_NOTIMPL;
+    KSP_NODE Node;
+    HRESULT hr;
+    ULONG BytesReturned;
+
+    // setup request
+    Node.Property.Set = KSPROPSETID_BdaSignalStats;
+    Node.Property.Id = KSPROPERTY_BDA_SIGNAL_QUALITY;
+    Node.Property.Flags = KSPROPERTY_TYPE_GET | KSPROPERTY_TYPE_TOPOLOGY;
+    Node.NodeId = (ULONG)-1;
+
+    // perform request
+    hr = KsSynchronousDeviceControl(m_hFile, IOCTL_KS_PROPERTY, (PVOID)&Node, sizeof(KSP_NODE), plPercentQuality, sizeof(LONG), &BytesReturned);
+
+#ifdef BDAPLGIN_TRACE
+    WCHAR Buffer[100];
+    swprintf(Buffer, L"CBDASignalStatistics::get_SignalQuality: m_NodeId %lu hr %lx, BytesReturned %lu plPercentQuality %lu\n", m_NodeId, hr, BytesReturned, *plPercentQuality);
+    OutputDebugStringW(Buffer);
+#endif
+
+    return hr;
 }
 
 HRESULT
 STDMETHODCALLTYPE
 CBDASignalStatistics::put_SignalPresent(BOOLEAN fPresent)
 {
-    OutputDebugStringW(L"CBDASignalStatistics::put_SignalPresent NotImplemented\n");
-    return E_NOTIMPL;
+    return E_NOINTERFACE;
 }
 
 HRESULT
 STDMETHODCALLTYPE
 CBDASignalStatistics::get_SignalPresent(BOOLEAN *pfPresent)
 {
-    OutputDebugStringW(L"CBDASignalStatistics::get_SignalPresent NotImplemented\n");
-    return E_NOTIMPL;
+    KSP_NODE Node;
+    HRESULT hr;
+    ULONG Present;
+    ULONG BytesReturned;
+
+    // setup request
+    Node.Property.Set = KSPROPSETID_BdaSignalStats;
+    Node.Property.Id = KSPROPERTY_BDA_SIGNAL_PRESENT;
+    Node.Property.Flags = KSPROPERTY_TYPE_GET | KSPROPERTY_TYPE_TOPOLOGY;
+    Node.NodeId = (ULONG)-1;
+
+    // perform request
+    hr = KsSynchronousDeviceControl(m_hFile, IOCTL_KS_PROPERTY, (PVOID)&Node, sizeof(KSP_NODE), &Present, sizeof(ULONG), &BytesReturned);
+    // store result
+    *pfPresent = Present;
+
+#ifdef BDAPLGIN_TRACE
+    WCHAR Buffer[100];
+    swprintf(Buffer, L"CBDASignalStatistics::get_SignalPresent: m_NodeId %lu hr %lx, BytesReturned %lu Present %lu\n", m_NodeId, hr, BytesReturned, Present);
+    OutputDebugStringW(Buffer);
+#endif
+
+    return hr;
 }
 
 HRESULT
 STDMETHODCALLTYPE
 CBDASignalStatistics::put_SignalLocked(BOOLEAN fLocked)
 {
-    OutputDebugStringW(L"CBDASignalStatistics::put_SignalLocked NotImplemented\n");
-    return E_NOTIMPL;
+    return E_NOINTERFACE;
 }
 
 HRESULT
 STDMETHODCALLTYPE
 CBDASignalStatistics::get_SignalLocked(BOOLEAN *pfLocked)
 {
-    OutputDebugStringW(L"CBDASignalStatistics::get_SignalLocked NotImplemented\n");
-    return E_NOTIMPL;
+    KSP_NODE Node;
+    HRESULT hr;
+    ULONG Locked;
+    ULONG BytesReturned;
+
+    // setup request
+    Node.Property.Set = KSPROPSETID_BdaSignalStats;
+    Node.Property.Id = KSPROPERTY_BDA_SIGNAL_LOCKED;
+    Node.Property.Flags = KSPROPERTY_TYPE_GET | KSPROPERTY_TYPE_TOPOLOGY;
+    Node.NodeId = (ULONG)-1;
+
+    // perform request
+    hr = KsSynchronousDeviceControl(m_hFile, IOCTL_KS_PROPERTY, (PVOID)&Node, sizeof(KSP_NODE), &Locked, sizeof(ULONG), &BytesReturned);
+    *pfLocked = Locked;
+
+#ifdef BDAPLGIN_TRACE
+    WCHAR Buffer[100];
+    swprintf(Buffer, L"CBDASignalStatistics::get_SignalLocked: m_NodeId %lu hr %lx, BytesReturned %lu Locked %lu\n", m_NodeId, hr, BytesReturned, Locked);
+    OutputDebugStringW(Buffer);
+#endif
+
+    return hr;
 }
 
 HRESULT
 STDMETHODCALLTYPE
 CBDASignalStatistics::put_SampleTime(LONG lmsSampleTime)
 {
-    OutputDebugStringW(L"CBDASignalStatistics::put_SampleTime NotImplemented\n");
-    return E_NOTIMPL;
+    KSP_NODE Node;
+    HRESULT hr;
+    ULONG BytesReturned;
+
+    // setup request
+    Node.Property.Set = KSPROPSETID_BdaSignalStats;
+    Node.Property.Id = KSPROPERTY_BDA_SAMPLE_TIME;
+    Node.Property.Flags = KSPROPERTY_TYPE_SET | KSPROPERTY_TYPE_TOPOLOGY;
+    Node.NodeId = (ULONG)-1;
+
+    // perform request
+    hr = KsSynchronousDeviceControl(m_hFile, IOCTL_KS_PROPERTY, (PVOID)&Node, sizeof(KSP_NODE), &lmsSampleTime, sizeof(LONG), &BytesReturned);
+
+#ifdef BDAPLGIN_TRACE
+    WCHAR Buffer[100];
+    swprintf(Buffer, L"CBDASignalStatistics::put_SampleTime: m_NodeId %lu hr %lx, BytesReturned %lu\n", m_NodeId, hr, BytesReturned);
+    OutputDebugStringW(Buffer);
+#endif
+
+    return hr;
 }
 
 HRESULT
 STDMETHODCALLTYPE
 CBDASignalStatistics::get_SampleTime(LONG *plmsSampleTime)
 {
-    OutputDebugStringW(L"CBDASignalStatistics::get_SampleTime NotImplemented\n");
-    return E_NOTIMPL;
+    KSP_NODE Node;
+    HRESULT hr;
+    ULONG BytesReturned;
+
+    // setup request
+    Node.Property.Set = KSPROPSETID_BdaSignalStats;
+    Node.Property.Id = KSPROPERTY_BDA_SAMPLE_TIME;
+    Node.Property.Flags = KSPROPERTY_TYPE_GET | KSPROPERTY_TYPE_TOPOLOGY;
+    Node.NodeId = (ULONG)-1;
+
+    // perform request
+    hr = KsSynchronousDeviceControl(m_hFile, IOCTL_KS_PROPERTY, (PVOID)&Node, sizeof(KSP_NODE), plmsSampleTime, sizeof(LONG), &BytesReturned);
+
+#ifdef BDAPLGIN_TRACE
+    WCHAR Buffer[100];
+    swprintf(Buffer, L"CBDASignalStatistics::get_SampleTime: m_NodeId %lu hr %lx, BytesReturned %lu \n", m_NodeId, hr, BytesReturned);
+    OutputDebugStringW(Buffer);
+#endif
+
+    return hr;
 }
 
 HRESULT
 WINAPI
 CBDASignalStatistics_fnConstructor(
     HANDLE hFile,
+    ULONG NodeId,
     REFIID riid,
     LPVOID * ppv)
 {
     // construct device control
-    CBDASignalStatistics * handler = new CBDASignalStatistics(hFile);
+    CBDASignalStatistics * handler = new CBDASignalStatistics(hFile, NodeId);
 
+#ifdef BDAPLGIN_TRACE
     OutputDebugStringW(L"CBDASignalStatistics_fnConstructor\n");
+#endif
 
     if (!handler)
         return E_OUTOFMEMORY;

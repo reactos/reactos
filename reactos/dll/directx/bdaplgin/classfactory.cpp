@@ -24,7 +24,6 @@ public:
     STDMETHODIMP_(ULONG) Release()
     {
         InterlockedDecrement(&m_Ref);
-
         if (!m_Ref)
         {
             delete this;

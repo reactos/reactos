@@ -22,7 +22,7 @@ const GUID IID_IKsObject           = {0x423c13a2, 0x2070, 0x11d0, {0x9e, 0xf7, 0
 const GUID KSPROPSETID_BdaTopology = {0xa14ee835, 0x0a23, 0x11d3, {0x9c, 0xc7, 0x0, 0xc0, 0x4f, 0x79, 0x71, 0xe0}};
 const GUID KSMETHODSETID_BdaDeviceConfiguration = {0x71985f45, 0x1ca1, 0x11d3, {0x9c, 0xc8, 0x0, 0xc0, 0x4f, 0x79, 0x71, 0xe0}};
 const GUID IID_IBaseFilter         = {0x56a86895, 0x0ad4, 0x11ce, {0xb0,0x3a, 0x00,0x20,0xaf,0x0b,0xa7,0x70}};
-
+const GUID KSMETHODSETID_BdaChangeSync = {0xfd0a5af3, 0xb41d, 0x11d2, {0x9c, 0x95, 0x0, 0xc0, 0x4f, 0x79, 0x71, 0xe0}};
 
 class CBDADeviceControl : public IBDA_DeviceControl,
                           public IBDA_Topology
@@ -38,7 +38,6 @@ public:
     STDMETHODIMP_(ULONG) Release()
     {
         InterlockedDecrement(&m_Ref);
-
         if (!m_Ref)
         {
             delete this;
@@ -66,13 +65,14 @@ public:
     HRESULT STDMETHODCALLTYPE CreateTopology(ULONG ulInputPinId, ULONG ulOutputPinId);
     HRESULT STDMETHODCALLTYPE GetControlNode(ULONG ulInputPinId, ULONG ulOutputPinId, ULONG ulNodeType, IUnknown **ppControlNode);
 
-    CBDADeviceControl(IUnknown * pUnkOuter, HANDLE hFile) : m_Ref(0), m_pUnkOuter(pUnkOuter), m_Handle(hFile){};
+    CBDADeviceControl(IUnknown * pUnkOuter, IBaseFilter *pFilter, HANDLE hFile) : m_Ref(0), m_pUnkOuter(pUnkOuter), m_Handle(hFile), m_pFilter(pFilter){};
     virtual ~CBDADeviceControl(){};
 
 protected:
     LONG m_Ref;
     IUnknown * m_pUnkOuter;
     HANDLE m_Handle;
+    IBaseFilter * m_pFilter;
 };
 
 HRESULT
@@ -81,9 +81,6 @@ CBDADeviceControl::QueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
-    WCHAR Buffer[MAX_PATH];
-    LPOLESTR lpstr;
-
     *Output = NULL;
 
     if (IsEqualGUID(refiid, IID_IUnknown))
@@ -106,47 +103,6 @@ CBDADeviceControl::QueryInterface(
         return NOERROR;
     }
 
-    if (IsEqualIID(refiid, IID_IDistributorNotify))
-    {
-        OutputDebugStringW(L"CBDADeviceControl::QueryInterface: No IDistributorNotify interface\n");
-        return E_NOINTERFACE;
-    }
-
-    if (IsEqualGUID(refiid, IID_IAMOpenProgress))
-    {
-        OutputDebugStringW(L"CBDADeviceControl::QueryInterface: No IAMOpenProgress interface\n");
-        return E_NOINTERFACE;
-    }
-
-    if (IsEqualGUID(refiid, IID_IBDA_NetworkProvider))
-    {
-        OutputDebugStringW(L"CBDADeviceControl::QueryInterface: No IID_IBDA_NetworkProvider interface\n");
-        return E_NOINTERFACE;
-    }
-
-    if (IsEqualGUID(refiid, IID_IMatrixMixer))
-    {
-        OutputDebugStringW(L"CBDADeviceControl::QueryInterface: No IID_IMatrixMixer interface\n");
-        return E_NOINTERFACE;
-    }
-
-    if (IsEqualGUID(refiid, IID_IAsyncReader))
-    {
-        OutputDebugStringW(L"CBDADeviceControl::QueryInterface: No IID_IAsyncReader interface\n");
-        return E_NOINTERFACE;
-    }
-
-    if (IsEqualGUID(refiid, IID_IAC3Filter))
-    {
-        OutputDebugStringW(L"CBDADeviceControl::QueryInterface: No IID_IAC3Filter interface\n");
-        return E_NOINTERFACE;
-    }
-
-    StringFromCLSID(refiid, &lpstr);
-    swprintf(Buffer, L"CBDADeviceControl::QueryInterface: NoInterface for %s", lpstr);
-    OutputDebugStringW(Buffer);
-    CoTaskMemFree(lpstr);
-
     return E_NOINTERFACE;
 }
 
@@ -158,8 +114,25 @@ HRESULT
 STDMETHODCALLTYPE
 CBDADeviceControl::StartChanges( void)
 {
-    OutputDebugStringW(L"CBDADeviceControl::StartChanges: NotImplemented\n");
-    return E_NOTIMPL;
+    KSMETHOD Method;
+    HRESULT hr;
+    ULONG BytesReturned;
+
+    /* setup request */
+    Method.Set = KSMETHODSETID_BdaChangeSync;
+    Method.Id = KSMETHOD_BDA_START_CHANGES;
+    Method.Flags = KSMETHOD_TYPE_NONE;
+
+    /* execute request */
+    hr = KsSynchronousDeviceControl(m_Handle, IOCTL_KS_METHOD, (PVOID)&Method, sizeof(KSMETHOD), NULL, 0, &BytesReturned);
+
+#ifdef BDAPLGIN_TRACE
+    WCHAR Buffer[100];
+    swprintf(Buffer, L"CBDADeviceControl::StartChanges: hr %lx, BytesReturned %lu\n", hr, BytesReturned);
+    OutputDebugStringW(Buffer);
+#endif
+
+    return hr;
 }
 
 
@@ -167,8 +140,25 @@ HRESULT
 STDMETHODCALLTYPE
 CBDADeviceControl::CheckChanges( void)
 {
-    OutputDebugStringW(L"CBDADeviceControl::CheckChanges: NotImplemented\n");
-    return E_NOTIMPL;
+    KSMETHOD Method;
+    HRESULT hr;
+    ULONG BytesReturned;
+
+    /* setup request */
+    Method.Set = KSMETHODSETID_BdaChangeSync;
+    Method.Id = KSMETHOD_BDA_CHECK_CHANGES;
+    Method.Flags = KSMETHOD_TYPE_NONE;
+
+    /* execute request */
+    hr = KsSynchronousDeviceControl(m_Handle, IOCTL_KS_METHOD, (PVOID)&Method, sizeof(KSMETHOD), NULL, 0, &BytesReturned);
+
+#ifdef BDAPLGIN_TRACE
+    WCHAR Buffer[100];
+    swprintf(Buffer, L"CBDADeviceControl::CheckChanges: hr %lx, BytesReturned %lu\n", hr, BytesReturned);
+    OutputDebugStringW(Buffer);
+#endif
+
+    return hr;
 }
 
 
@@ -176,16 +166,40 @@ HRESULT
 STDMETHODCALLTYPE
 CBDADeviceControl::CommitChanges( void)
 {
-    OutputDebugStringW(L"CBDADeviceControl::CommitChanges: NotImplemented\n");
-    return E_NOTIMPL;
+    KSMETHOD Method;
+    HRESULT hr;
+    ULONG BytesReturned;
+
+    /* setup request */
+    Method.Set = KSMETHODSETID_BdaChangeSync;
+    Method.Id = KSMETHOD_BDA_COMMIT_CHANGES;
+    Method.Flags = KSMETHOD_TYPE_NONE;
+
+    /* execute request */
+    hr = KsSynchronousDeviceControl(m_Handle, IOCTL_KS_METHOD, (PVOID)&Method, sizeof(KSMETHOD), NULL, 0, &BytesReturned);
+
+#ifdef BDAPLGIN_TRACE
+    WCHAR Buffer[100];
+    swprintf(Buffer, L"CBDADeviceControl::CommitChanges: hr %lx, BytesReturned %lu\n", hr, BytesReturned);
+    OutputDebugStringW(Buffer);
+#endif
+
+    return hr;
 }
 
 HRESULT
 STDMETHODCALLTYPE
 CBDADeviceControl::GetChangeState(ULONG *pState)
 {
-    OutputDebugStringW(L"CBDADeviceControl::GetChangeState: NotImplemented\n");
-    return E_NOTIMPL;
+    if (pState)
+    {
+        *pState = BDA_CHANGES_COMPLETE;
+        return S_OK;
+    }
+    else
+    {
+        return E_POINTER;
+    }
 }
 
 //-------------------------------------------------------------------
@@ -198,7 +212,6 @@ CBDADeviceControl::GetNodeTypes(ULONG *pulcNodeTypes, ULONG ulcNodeTypesMax, ULO
     KSPROPERTY Property;
     HRESULT hr;
     ULONG BytesReturned;
-    WCHAR Buffer[100];
 
     // setup request
     Property.Set = KSPROPSETID_BdaTopology;
@@ -210,8 +223,20 @@ CBDADeviceControl::GetNodeTypes(ULONG *pulcNodeTypes, ULONG ulcNodeTypesMax, ULO
 
     *pulcNodeTypes = (BytesReturned / sizeof(ULONG));
 
+#ifdef BDAPLGIN_TRACE
+    WCHAR Buffer[100];
     swprintf(Buffer, L"CBDADeviceControl::GetNodeTypes: hr %lx, BytesReturned %lu\n", hr, BytesReturned);
     OutputDebugStringW(Buffer);
+
+    if (SUCCEEDED(hr))
+    {
+        for(ULONG Index = 0; Index < *pulcNodeTypes; Index++)
+        {
+            swprintf(Buffer, L"CBDADeviceControl::GetPinTypes: Index %lu Value %lx\n", Index, rgulNodeTypes[Index]);
+            OutputDebugStringW(Buffer);
+        }
+    }
+#endif
 
     return hr;
 }
@@ -223,7 +248,7 @@ CBDADeviceControl::GetNodeDescriptors(ULONG *ulcNodeDescriptors, ULONG ulcNodeDe
     KSPROPERTY Property;
     HRESULT hr;
     ULONG BytesReturned;
-    WCHAR Buffer[100];
+
 
     // setup request
     Property.Set = KSPROPSETID_BdaTopology;
@@ -235,8 +260,27 @@ CBDADeviceControl::GetNodeDescriptors(ULONG *ulcNodeDescriptors, ULONG ulcNodeDe
 
     *ulcNodeDescriptors = (BytesReturned / sizeof(BDANODE_DESCRIPTOR));
 
+#ifdef BDAPLGIN_TRACE
+    WCHAR Buffer[1000];
     swprintf(Buffer, L"CBDADeviceControl::GetNodeDescriptors: hr %lx, BytesReturned %lu\n", hr, BytesReturned);
     OutputDebugStringW(Buffer);
+
+
+    if (SUCCEEDED(hr))
+    {
+        for(ULONG Index = 0; Index < min(*ulcNodeDescriptors, ulcNodeDescriptorsMax); Index++)
+        {
+            LPOLESTR pGUIDFunction, pGUIDName;
+
+            StringFromCLSID(rgNodeDescriptors[Index].guidFunction, &pGUIDFunction);
+            StringFromCLSID(rgNodeDescriptors[Index].guidName, &pGUIDName);
+
+            swprintf(Buffer, L"CBDADeviceControl::GetPinTypes: Index %lu Value %lx\nFunction %s\n Name %s\n-----\n", Index, rgNodeDescriptors[Index].ulBdaNodeType, pGUIDFunction, pGUIDName);
+            OutputDebugStringW(Buffer);
+        }
+    }
+#endif
+
 
     return hr;
 }
@@ -248,7 +292,7 @@ CBDADeviceControl::GetNodeInterfaces(ULONG ulNodeType, ULONG *pulcInterfaces, UL
     KSP_NODE Property;
     HRESULT hr;
     ULONG BytesReturned;
-    WCHAR Buffer[100];
+
 
     // setup request
     Property.Property.Set = KSPROPSETID_BdaTopology;
@@ -262,8 +306,24 @@ CBDADeviceControl::GetNodeInterfaces(ULONG ulNodeType, ULONG *pulcInterfaces, UL
 
     *pulcInterfaces = (BytesReturned / sizeof(GUID));
 
-    swprintf(Buffer, L"CBDADeviceControl::GetNodeInterfaces: hr %lx, BytesReturned %lu\n", hr, BytesReturned);
+#ifdef BDAPLGIN_TRACE
+    WCHAR Buffer[100];
+    swprintf(Buffer, L"CBDADeviceControl::GetNodeInterfaces: hr %lx, BytesReturned %lu ulNodeType %lu\n", hr, BytesReturned, ulNodeType);
     OutputDebugStringW(Buffer);
+
+    if (SUCCEEDED(hr))
+    {
+        for(ULONG Index = 0; Index < min(*pulcInterfaces, ulcInterfacesMax); Index++)
+        {
+            LPOLESTR pstr;
+
+            StringFromCLSID(rgguidInterfaces[Index], &pstr);
+
+            swprintf(Buffer, L"CBDADeviceControl::GetNodeInterfaces: Index %lu Name %s\n", Index, pstr);
+            OutputDebugStringW(Buffer);
+        }
+    }
+#endif
 
     return hr;
 }
@@ -275,7 +335,6 @@ CBDADeviceControl::GetPinTypes(ULONG *pulcPinTypes, ULONG ulcPinTypesMax, ULONG 
     KSPROPERTY Property;
     HRESULT hr;
     ULONG BytesReturned;
-    WCHAR Buffer[100];
 
     // setup request
     Property.Set = KSPROPSETID_BdaTopology;
@@ -287,8 +346,20 @@ CBDADeviceControl::GetPinTypes(ULONG *pulcPinTypes, ULONG ulcPinTypesMax, ULONG 
 
     *pulcPinTypes = (BytesReturned / sizeof(ULONG));
 
+#ifdef BDAPLGIN_TRACE
+    WCHAR Buffer[100];
     swprintf(Buffer, L"CBDADeviceControl::GetPinTypes: hr %lx, BytesReturned %lu\n", hr, BytesReturned);
     OutputDebugStringW(Buffer);
+
+    if (SUCCEEDED(hr))
+    {
+        for(ULONG Index = 0; Index < *pulcPinTypes; Index++)
+        {
+            swprintf(Buffer, L"CBDADeviceControl::GetPinTypes: Index %lu Value %lx\n", Index, rgulPinTypes[Index]);
+            OutputDebugStringW(Buffer);
+        }
+    }
+#endif
 
     return hr;
 }
@@ -297,7 +368,10 @@ HRESULT
 STDMETHODCALLTYPE
 CBDADeviceControl::GetTemplateConnections(ULONG *pulcConnections, ULONG ulcConnectionsMax, BDA_TEMPLATE_CONNECTION * rgConnections)
 {
+#ifdef BDAPLGIN_TRACE
     OutputDebugStringW(L"CBDADeviceControl::GetTemplateConnections: NotImplemented\n");
+#endif
+
     return E_NOTIMPL;
 }
 
@@ -305,7 +379,10 @@ HRESULT
 STDMETHODCALLTYPE
 CBDADeviceControl::CreatePin(ULONG ulPinType, ULONG *pulPinId)
 {
+#ifdef BDAPLGIN_TRACE
     OutputDebugStringW(L"CBDADeviceControl::CreatePin: NotImplemented\n");
+#endif
+
     return E_NOTIMPL;
 }
 
@@ -313,7 +390,10 @@ HRESULT
 STDMETHODCALLTYPE
 CBDADeviceControl::DeletePin(ULONG ulPinId)
 {
+#ifdef BDAPLGIN_TRACE
     OutputDebugStringW(L"CBDADeviceControl::DeletePin: NotImplemented\n");
+#endif
+
     return E_NOTIMPL;
 }
 
@@ -321,7 +401,10 @@ HRESULT
 STDMETHODCALLTYPE
 CBDADeviceControl::SetMediaType(ULONG ulPinId, AM_MEDIA_TYPE *pMediaType)
 {
+#ifdef BDAPLGIN_TRACE
     OutputDebugStringW(L"CBDADeviceControl::SetMediaType: NotImplemented\n");
+#endif
+
     return E_NOTIMPL;
 }
 
@@ -329,7 +412,10 @@ HRESULT
 STDMETHODCALLTYPE
 CBDADeviceControl::SetMedium(ULONG ulPinId, REGPINMEDIUM *pMedium)
 {
+#ifdef BDAPLGIN_TRACE
     OutputDebugStringW(L"CBDADeviceControl::SetMedium: NotImplemented\n");
+#endif
+
     return E_NOTIMPL;
 }
 
@@ -338,11 +424,10 @@ STDMETHODCALLTYPE
 CBDADeviceControl::CreateTopology(ULONG ulInputPinId, ULONG ulOutputPinId)
 {
     KSM_BDA_PIN_PAIR Method;
-    WCHAR Buffer[100];
     HRESULT hr;
     ULONG BytesReturned = 0;
 
-    Method.Method.Flags  = 0;
+    Method.Method.Flags  = KSMETHOD_TYPE_NONE;
     Method.Method.Id = KSMETHOD_BDA_CREATE_TOPOLOGY;
     Method.Method.Set = KSMETHODSETID_BdaDeviceConfiguration;
     Method.InputPinId = ulInputPinId;
@@ -350,8 +435,11 @@ CBDADeviceControl::CreateTopology(ULONG ulInputPinId, ULONG ulOutputPinId)
 
     hr = KsSynchronousDeviceControl(m_Handle, IOCTL_KS_METHOD, (PVOID)&Method, sizeof(KSM_BDA_PIN_PAIR), NULL, 0, &BytesReturned);
 
+#ifdef BDAPLGIN_TRACE
+    WCHAR Buffer[100];
     swprintf(Buffer, L"CBDADeviceControl::CreateTopology: hr %lx, BytesReturned %lu\n", hr, BytesReturned);
     OutputDebugStringW(Buffer);
+#endif
 
     return hr;
 }
@@ -360,12 +448,10 @@ HRESULT
 STDMETHODCALLTYPE
 CBDADeviceControl::GetControlNode(ULONG ulInputPinId, ULONG ulOutputPinId, ULONG ulNodeType, IUnknown **ppControlNode)
 {
-    KSP_BDA_NODE_PIN Property;
-    ULONG Dummy = 0;
     HRESULT hr;
     ULONG PinId = 0;
     ULONG BytesReturned;
-    WCHAR Buffer[100];
+    KSP_BDA_NODE_PIN Property;
 
     //setup request
     Property.Property.Set = KSPROPSETID_BdaTopology;
@@ -376,18 +462,27 @@ CBDADeviceControl::GetControlNode(ULONG ulInputPinId, ULONG ulOutputPinId, ULONG
     Property.ulNodeType = ulNodeType;
 
     // perform request
+    // WinXP SP3 expects minimum sizeof(KSP_BDA_NODE_PIN) + sizeof(ULONG)
+    // seems a driver to be a driver bug
+
     hr = KsSynchronousDeviceControl(m_Handle, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSP_BDA_NODE_PIN) + sizeof(ULONG), &PinId, sizeof(ULONG), &BytesReturned);
 
+#ifdef BDAPLGIN_TRACE
+    WCHAR Buffer[100];
     swprintf(Buffer, L"CBDADeviceControl::GetControlNode: hr %lx, BytesReturned %lu PinId %lu Dummy %lu\n", hr, BytesReturned, PinId, Dummy);
     OutputDebugStringW(Buffer);
+#endif
 
     if (FAILED(hr))
         return hr;
 
-    hr = CControlNode_fnConstructor(m_Handle, ulNodeType, PinId, IID_IUnknown, (LPVOID*)ppControlNode);
+    hr = CControlNode_fnConstructor(m_Handle, m_pFilter, ulNodeType, PinId, IID_IUnknown, (LPVOID*)ppControlNode);
 
+#ifdef BDAPLGIN_TRACE
     swprintf(Buffer, L"CBDADeviceControl::GetControlNode: hr %lx\n", hr);
     OutputDebugStringW(Buffer);
+#endif
+
     return hr;
 }
 
@@ -402,6 +497,8 @@ CBDADeviceControl_fnConstructor(
     IKsObject *pObject = NULL;
     IBaseFilter *pFilter = NULL;
     HANDLE hFile;
+
+    //DebugBreak();
 
     // sanity check
     assert(pUnkOuter);
@@ -437,10 +534,15 @@ CBDADeviceControl_fnConstructor(
     // release IKsObject interface
     pObject->Release();
 
-    // construct device control
-    CBDADeviceControl * handler = new CBDADeviceControl(pUnkOuter, hFile);
+    // release filter
+    pFilter->Release();
 
+    // construct device control
+    CBDADeviceControl * handler = new CBDADeviceControl(pUnkOuter, pFilter, hFile);
+
+#ifdef BDAPLGIN_TRACE
     OutputDebugStringW(L"CBDADeviceControl_fnConstructor\n");
+#endif
 
     if (!handler)
         return E_OUTOFMEMORY;
