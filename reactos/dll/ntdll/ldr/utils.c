@@ -1600,6 +1600,9 @@ LdrpProcessImportDirectoryEntry(PLDR_DATA_TABLE_ENTRY Module,
        IATSize++;
      }
 
+   /* No need to fixup anything if IAT is empty */
+   if (IATSize == 0) return STATUS_SUCCESS;
+
    /* Unprotect the region we are about to write into. */
    IATBase = (PVOID)ImportAddressList;
    IATSize *= sizeof(PVOID*);
