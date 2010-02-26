@@ -53,24 +53,6 @@ extern PVOID HalpRealModeEnd;
 /* Context saved for return from v86 mode */
 jmp_buf HalpSavedContext;
 
-/* REAL MODE CODE AND STACK START HERE ****************************************/
-
-VOID
-DECLSPEC_NORETURN
-HalpRealModeStart(VOID)
-{
-    /* Do the video BIOS interrupt */
-    HalpCallBiosInterrupt(VIDEO_SERVICES, (SET_VIDEO_MODE << 8) | (GRAPHICS_MODE_12));
-    
-    /* Issue the BOP */
-    KiIssueBop();
-    
-    /* We want the stack to be inside this function so we can map real mode */
-    HalpRealModeStack(sizeof(ULONG), PAGE_SIZE / 2);
-    UNREACHABLE;
-}
-
-/* REAL MODE CODE AND STACK END HERE ******************************************/
 
 /* V86 OPCODE HANDLERS ********************************************************/
 
@@ -292,7 +274,7 @@ HalpBiosCall()
     V86TrapFrame.Eip = CodeOffset;
     
     /* Exit to V86 mode */
-    KiDirectTrapReturn((PKTRAP_FRAME)&V86TrapFrame);
+    HalpExitToV86((PKTRAP_FRAME)&V86TrapFrame);
 }
 
 /* FUNCTIONS ******************************************************************/
