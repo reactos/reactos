@@ -9,8 +9,7 @@
  *
  */
 
-#ifndef _CONFIG_H_INCLUDED_
-#define _CONFIG_H_INCLUDED_
+#pragma once
 
 #define WIN32_LEAN_AND_MEAN
 
@@ -92,5 +91,3 @@
 #ifdef NT4_INTERNAL_COMMANDS
 #define INCLUDE_CMD_WINDOW
 #endif
-
-#endif /* _CONFIG_H_INCLUDED_ */

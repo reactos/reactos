@@ -5,8 +5,7 @@
  * - Misc utils
  */
 
-#ifndef __L2L_UTIL_H__
-#define __L2L_UTIL_H__
+#pragma once
 
 #include <stdio.h>
 
@@ -46,7 +45,5 @@ long my_atoi(const char *a);
 int isOffset(const char *a);
 int copy_file(char *src, char *dst);
 int set_LogFile(FILE *logFile);
-
-#endif /* __L2L_UTIL_H__ */
 
 /* EOF */

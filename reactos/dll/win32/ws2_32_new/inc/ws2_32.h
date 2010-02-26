@@ -5,8 +5,7 @@
  * PURPOSE:     WinSock 2.2 Main Header
  */
 
-#ifndef __WS2_32_H
-#define __WS2_32_H
+#pragma once
 
 /* Definitions for NDK Usage */
 #define WIN32_NO_STATUS
@@ -35,6 +34,3 @@
 
 /* Internal headers */
 #include "ws2_32p.h"
-
-#endif
-

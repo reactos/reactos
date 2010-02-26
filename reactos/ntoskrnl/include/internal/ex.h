@@ -1,5 +1,4 @@
-#ifndef __NTOSKRNL_INCLUDE_INTERNAL_EXECUTIVE_H
-#define __NTOSKRNL_INCLUDE_INTERNAL_EXECUTIVE_H
+#pragma once
 
 /* GLOBAL VARIABLES *********************************************************/
 
@@ -1410,5 +1409,3 @@ XIPInit(
 
 #define ExfInterlockedCompareExchange64UL(Destination, Exchange, Comperand) \
    (ULONGLONG)ExfInterlockedCompareExchange64((PLONGLONG)(Destination), (PLONGLONG)(Exchange), (PLONGLONG)(Comperand))
-
-#endif /* __NTOSKRNL_INCLUDE_INTERNAL_EXECUTIVE_H */

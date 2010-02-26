@@ -1,5 +1,4 @@
-#ifndef _KERNEL32_INCLUDE_KERNEL32_H
-#define _KERNEL32_INCLUDE_KERNEL32_H
+#pragma once
 
 #include "baseheap.h"
 
@@ -191,6 +190,3 @@ IntGetCodePageEntry(UINT CodePage);
 
 LPWSTR
 GetDllLoadPath(LPCWSTR lpModule);
-
-#endif /* ndef _KERNEL32_INCLUDE_KERNEL32_H */
-

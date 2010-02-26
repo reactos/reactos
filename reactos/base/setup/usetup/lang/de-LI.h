@@ -1,5 +1,4 @@
-#ifndef LANG_DE_LI_H__
-#define LANG_DE_LI_H__
+#pragma once
 
 MUI_LAYOUTS deLILayouts[] =
 {
@@ -8,5 +7,3 @@ MUI_LAYOUTS deLILayouts[] =
     { L"0409", L"00000409" },
     { NULL, NULL }
 };
-
-#endif

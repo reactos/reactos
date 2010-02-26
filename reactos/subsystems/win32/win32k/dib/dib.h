@@ -1,5 +1,4 @@
-#ifndef _W32K_DIB_DIB_H
-#define _W32K_DIB_DIB_H
+#pragma once
 
 #ifdef _M_IX86
 #define memset4(dest, value, count) asm volatile("rep stosl" : : "D"(dest), "a"(value), "c"(count) : "memory");
@@ -148,6 +147,3 @@ ULONG DIB_DoRop(ULONG Rop, ULONG Dest, ULONG Source, ULONG Pattern);
 #define DIB_GetSourceIndex(SourceSurf,sx,sy)                \
   DibFunctionsForBitmapFormat[SourceSurf->iBitmapFormat].   \
     DIB_GetPixel(SourceSurf, sx, sy)
-
-#endif /* _W32K_DIB_DIB_H */
-

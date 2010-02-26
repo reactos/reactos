@@ -18,8 +18,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef _internettoolbar_h
-#define _internettoolbar_h
+#pragma once
 
 static const int gBackCommandID = 0xa121;
 static const int gForwardCommandID = 0xa122;
@@ -239,5 +238,3 @@ BEGIN_COM_MAP(CInternetToolbar)
 	COM_INTERFACE_ENTRY_IID(IID_IBandSite, IBandSite)
 END_COM_MAP()
 };
-
-#endif // _internettoolbar_h

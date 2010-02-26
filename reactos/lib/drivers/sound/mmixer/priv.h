@@ -1,5 +1,4 @@
-#ifndef PRIV_H__
-#define PRIV_H__
+#pragma once
 
 #include <pseh/pseh2.h>
 #include <ntddk.h>
@@ -279,5 +278,3 @@ MIXER_STATUS
 MMixerAddEvents(
     IN PMIXER_CONTEXT MixerContext,
     IN OUT LPMIXER_INFO MixerInfo);
-
-#endif

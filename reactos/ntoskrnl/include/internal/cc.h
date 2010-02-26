@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_INTERNAL_CC_H
-#define __INCLUDE_INTERNAL_CC_H
+#pragma once
 
 typedef struct _PF_SCENARIO_ID
 {
@@ -315,5 +314,3 @@ CcRosReleaseFileCache(
 NTSTATUS
 NTAPI
 CcTryToInitializeFileCache(PFILE_OBJECT FileObject);
-
-#endif

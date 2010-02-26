@@ -4,8 +4,8 @@
  * FILE:        include/lan.h
  * PURPOSE:     LAN adapter definitions
  */
-#ifndef __LAN_H
-#define __LAN_H
+
+#pragma once
 
 /* NDIS version this driver supports */
 #define NDIS_VERSION_MAJOR 4
@@ -160,7 +160,5 @@ NDIS_STATUS InitNdisPools();
 VOID CloseNdisPools();
 
 PLAN_ADAPTER FindAdapterByIndex( PLAN_DEVICE_EXT DeviceExt, UINT Index );
-
-#endif /* __LAN_H */
 
 /* EOF */

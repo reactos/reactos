@@ -1,5 +1,4 @@
-#ifndef _WIN32K_DCE_H
-#define _WIN32K_DCE_H
+#pragma once
 
 /* Ported from WINE by Jason Filby */
 
@@ -64,5 +63,3 @@ void FASTCALL DceFreeClassDCE(HDC);
 HWND FASTCALL UserGethWnd(HDC,PWNDOBJ*);
 void FASTCALL DceFreeWindowDCE(PWINDOW_OBJECT);
 void FASTCALL DceFreeThreadDCE(PTHREADINFO);
-
-#endif /* _WIN32K_DCE_H */

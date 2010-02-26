@@ -4,8 +4,8 @@
  * FILE:        include/tags.h
  * PURPOSE:     Memory tags
  */
-#ifndef __TAGS_H
-#define __TAGS_H
+
+#pragma once
 
 #define CONN_ENDPT_TAG 'pEnC'
 #define ADDR_FILE_TAG 'FrdA'
@@ -35,5 +35,3 @@
 #define OSK_SMALL_TAG 'SKSO'
 #define LAN_ADAPTER_TAG ' NAL'
 #define WQ_CONTEXT_TAG 'noCW'
-
-#endif

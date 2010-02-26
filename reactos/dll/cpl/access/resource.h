@@ -1,5 +1,4 @@
-#ifndef __CPL_RESOURCE_H
-#define __CPL_RESOURCE_H
+#pragma once
 
 /* metrics */
 #define PROPSHEETWIDTH  246
@@ -112,7 +111,5 @@
 
 #define IDC_SERIAL_PORT_COMBO		275
 #define IDC_SERIAL_BAUD_COMBO		276
-
-#endif /* __CPL_RESOURCE_H */
 
 /* EOF */

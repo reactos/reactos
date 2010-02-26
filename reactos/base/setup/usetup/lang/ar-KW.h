@@ -1,5 +1,4 @@
-#ifndef LANG_AR_KW_H__
-#define LANG_AR_KW_H__
+#pragma once
 
 MUI_LAYOUTS arKWLayouts[] =
 {
@@ -7,5 +6,3 @@ MUI_LAYOUTS arKWLayouts[] =
     { L"3401", L"00000401" },
     { NULL, NULL }
 };
-
-#endif

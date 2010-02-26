@@ -1,5 +1,4 @@
-#ifndef _INTRIN_INTERNAL_
-#define _INTRIN_INTERNAL_
+#pragma once
 
 FORCEINLINE
 VOID
@@ -154,5 +153,3 @@ KeArmWaitForInterrupt(VOID)
 {
     __asm__ __volatile__ ("mcr p15, 0, %0, c7, c0, 4" : : "r"(0) : "cc");
 }
-
-#endif

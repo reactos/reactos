@@ -15,8 +15,8 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-#ifndef __RBUILD_H
-#define __RBUILD_H
+
+#pragma once
 
 #include "pch.h"
 
@@ -1095,5 +1095,3 @@ NormalizeFilename ( const std::string& filename );
 
 extern std::string
 ToLower ( std::string filename );
-
-#endif /* __RBUILD_H */

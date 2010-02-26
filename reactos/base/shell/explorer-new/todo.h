@@ -1,5 +1,4 @@
-#ifndef __TODO_H
-#define __TODO_H
+#pragma once
 
 #ifdef INTERFACE
 #undef INTERFACE
@@ -40,5 +39,3 @@ static const GUID SID_HACK_SMenuPopup = {0xD1E7AFEB,0x6A2E,0x11D0,{0x8C,0x78,0x0
 #define IDeskBarClient_UIActivateDBC(T,a) (T)->lpVtbl->UIActivateDBC(T,a)
 #define IDeskBarClient_GetSize(T,a,b) (T)->lpVtbl->GetSize(T,a,b)
 #endif
-
-#endif /* __TODO_H */

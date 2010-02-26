@@ -1,5 +1,4 @@
-#ifndef PRECOMP_H_
-#define PRECOMP_H_
+#pragma once
 
 #define BUILDING_KS
 #define _KSDDK_
@@ -97,5 +96,3 @@ CKsProxy_Constructor(
     IUnknown * pUnkOuter,
     REFIID riid,
     LPVOID * ppv);
-
-#endif

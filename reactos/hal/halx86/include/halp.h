@@ -2,8 +2,7 @@
  *
  */
 
-#ifndef __INTERNAL_HAL_HAL_H
-#define __INTERNAL_HAL_HAL_H
+#pragma once
 
 typedef struct _HAL_BIOS_FRAME
 {
@@ -805,5 +804,3 @@ extern KSPIN_LOCK HalpSystemHardwareLock;
 extern PADDRESS_USAGE HalpAddressUsageList;
 
 extern LARGE_INTEGER HalpPerfCounter;
-
-#endif /* __INTERNAL_HAL_HAL_H */

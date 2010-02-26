@@ -1,5 +1,4 @@
-#ifndef _SMSS_H_INCLUDED_
-#define _SMSS_H_INCLUDED_
+#pragma once
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -113,7 +112,4 @@ NTSTATUS SmInitializeDbgSs(VOID);
 VOID NTAPI DisplayString(LPCWSTR lpwString);
 VOID NTAPI PrintString (char* fmt, ...);
 
-#endif /* _SMSS_H_INCLUDED_ */
-
 /* EOF */
-

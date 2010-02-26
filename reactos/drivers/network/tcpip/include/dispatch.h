@@ -4,8 +4,8 @@
  * FILE:        include/dispatch.h
  * PURPOSE:     Dispatch routine prototypes
  */
-#ifndef __DISPATCH_H
-#define __DISPATCH_H
+
+#pragma once
 
 typedef struct _DISCONNECT_TYPE {
     UINT Type;
@@ -73,7 +73,5 @@ VOID DispDoDisconnect(
     PVOID Data);
 
 NTSTATUS IRPFinish( PIRP Irp, NTSTATUS Status );
-
-#endif /* __DISPATCH_H */
 
 /* EOF */

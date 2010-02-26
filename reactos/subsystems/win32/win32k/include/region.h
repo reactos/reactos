@@ -1,6 +1,4 @@
-
-#ifndef __WIN32K_REGION_H
-#define __WIN32K_REGION_H
+#pragma once
 
 #include "gdiobj.h"
 
@@ -59,5 +57,3 @@ PROSRGNDATA FASTCALL IntSysCreateRectpRgn(INT,INT,INT,INT);
 
 #define IntSysCreateRectpRgnIndirect(prc) \
   IntSysCreateRectpRgn((prc)->left, (prc)->top, (prc)->right, (prc)->bottom)
-
-#endif /* not __WIN32K_REGION_H */

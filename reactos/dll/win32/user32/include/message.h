@@ -6,8 +6,7 @@
  * PURPOSE:     Message management definitions
  */
 
-#ifndef LIB_USER32_INCLUDE_MESSAGE_H
-#define LIB_USER32_INCLUDE_MESSAGE_H
+#pragma once
 
 BOOL FASTCALL MessageInit(VOID);
 VOID FASTCALL MessageCleanup(VOID);
@@ -21,6 +20,3 @@ IsCallProcHandle(IN WNDPROC lpWndProc)
     /* FIXME - check for 64 bit architectures... */
     return ((ULONG_PTR)lpWndProc & 0xFFFF0000) == 0xFFFF0000;
 }
-
-
-#endif /* LIB_USER32_INCLUDE_MESSAGE_H */

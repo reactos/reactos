@@ -1,5 +1,4 @@
-#ifndef __WIN32K_PDEVOBJ_H
-#define __WIN32K_PDEVOBJ_H
+#pragma once
 
 #include <drivers/directx/directxint.h>
 
@@ -143,5 +142,3 @@ typedef struct _PDEVEDD
 } PDEVEDD, *PPDEVEDD;
 
 extern ULONG gdwDirectDrawContext;
-
-#endif /* !__WIN32K_PDEVOBJ_H */

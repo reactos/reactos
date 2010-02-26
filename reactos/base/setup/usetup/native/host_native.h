@@ -1,5 +1,4 @@
-#ifndef _HOST_NATIVE_H_
-#define _HOST_NATIVE_H_
+#pragma once
 
 #include "usetup.h"
 
@@ -12,5 +11,3 @@ typedef struct
 #define SetupInitDefaultQueueCallback(a) NULL
 #define SetupDefaultQueueCallbackW(a, b, c, d) TRUE
 #define SetupTermDefaultQueueCallback(a)
-
-#endif /* _HOST_NATIVE_H_ */

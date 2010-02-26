@@ -1,5 +1,4 @@
-#ifndef __PRECOMP_H
-#define __PRECOMP_H
+#pragma once
 
 #ifndef UNICODE
 #error Task-Manager uses NDK functions, so it can only be compiled with Unicode support enabled!
@@ -36,5 +35,3 @@
 #include "priority.h"
 #include "run.h"
 #include "trayicon.h"
-
-#endif /* __PRECOMP_H */

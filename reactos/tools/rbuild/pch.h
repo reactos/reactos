@@ -15,8 +15,8 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-#ifndef PCH_H
-#define PCH_H
+
+#pragma once
 
 #ifdef _MSC_VER
 #pragma warning ( disable : 4786 ) // identifier was truncated to '255' characters in the debug information
@@ -79,5 +79,3 @@ inline char *strupr(char *x)
 #define MAX_PATH PATH_MAX
 #define _MAX_PATH PATH_MAX
 #endif
-
-#endif//PCH_H

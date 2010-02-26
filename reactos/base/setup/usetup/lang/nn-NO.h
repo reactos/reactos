@@ -1,5 +1,4 @@
-#ifndef LANG_NN_NO_H__
-#define LANG_NN_NO_H__
+#pragma once
 
 MUI_LAYOUTS nnNOLayouts[] =
 {
@@ -7,5 +6,3 @@ MUI_LAYOUTS nnNOLayouts[] =
     { L"0409", L"00000409" },
     { NULL, NULL }
 };
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef __NTOSKRNL_INCLUDE_INTERNAL_KE_H
-#define __NTOSKRNL_INCLUDE_INTERNAL_KE_H
+#pragma once
 
 /* INCLUDES *****************************************************************/
 
@@ -1102,5 +1101,3 @@ KiSystemFatalException(
 );
 
 #include "ke_x.h"
-
-#endif /* __NTOSKRNL_INCLUDE_INTERNAL_KE_H */

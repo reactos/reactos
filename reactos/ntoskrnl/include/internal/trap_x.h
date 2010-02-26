@@ -5,8 +5,8 @@
  * PURPOSE:         Internal Inlined Functions for the Trap Handling Code
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
-#ifndef _TRAP_X_
-#define _TRAP_X_
+
+#pragma once
 
 //
 // Unreachable code hint for GCC 4.5.x, older GCC versions, and MSVC
@@ -613,5 +613,3 @@ KiEnterTrap(IN PKTRAP_FRAME TrapFrame)
     /* Set debug header */
     KiFillTrapFrameDebug(TrapFrame);
 }
-
-#endif

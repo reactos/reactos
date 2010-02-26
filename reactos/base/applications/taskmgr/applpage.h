@@ -20,8 +20,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __APPLICATIONPAGE_H
-#define __APPLICATIONPAGE_H
+#pragma once
 
 extern    HWND        hApplicationPage;                /* Application List Property Page */
 
@@ -43,5 +42,3 @@ void                ApplicationPage_OnWindowsBringToFront(void);
 void                ApplicationPage_OnSwitchTo(void);
 void                ApplicationPage_OnEndTask(void);
 void                ApplicationPage_OnGotoProcess(void);
-
-#endif /* __APPLICATIONPAGE_H */

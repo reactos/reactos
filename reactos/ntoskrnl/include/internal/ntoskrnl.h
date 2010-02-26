@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_INTERNAL_NTOSKRNL_H
-#define __INCLUDE_INTERNAL_NTOSKRNL_H
+#pragma once
 
 /*
  * Use these to place a function in a specific section of the executable
@@ -198,5 +197,3 @@ C_ASSERT(FIELD_OFFSET(KV86M_TRAP_FRAME, orig_ebp) == TF_ORIG_EBP);
 C_ASSERT(FIELD_OFFSET(KTSS, Esp0) == KTSS_ESP0);
 C_ASSERT(FIELD_OFFSET(KTSS, IoMapBase) == KTSS_IOMAPBASE);
 #endif
-
-#endif /* INCLUDE_INTERNAL_NTOSKRNL_H */

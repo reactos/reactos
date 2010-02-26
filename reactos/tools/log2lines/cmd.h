@@ -5,8 +5,7 @@
  * - Cli for escape commands
  */
 
-#ifndef __L2L_CMD_H__
-#define __L2L_CMD_H__
+#pragma once
 
 #include <stdio.h>
 
@@ -20,7 +19,5 @@
 #define KDBG_DISCARD    "Command '" KDBG_ESC_STR    //Discard responses at l2l escape commands
 
 char handle_escape_cmd(FILE *outFile, char *Line, char *path, char *LineOut);
-
-#endif /* __L2L_CMD_H__ */
 
 /* EOF */

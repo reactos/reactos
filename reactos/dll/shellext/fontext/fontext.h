@@ -1,5 +1,4 @@
-#ifndef __FONTEXT__H
-#define __FONTEXT__H
+#pragma once
 
 #define COBJMACROS
 #include <windows.h>
@@ -8,5 +7,3 @@
 #include <shlobj.h>
 
 #include <debug.h>
-
-#endif /* __FONTEXT__H */

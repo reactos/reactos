@@ -1,5 +1,4 @@
-#ifndef _NTOSKRNL_TAG_H
-#define _NTOSKRNL_TAG_H
+#pragma once
 
 /* formerly located in cc/view.c */
 #define TAG_CSEG  'GESC'
@@ -163,5 +162,3 @@
 
 #define TAG_WAIT            'tiaW'
 #define TAG_SEC_QUERY       'qSbO'
-
-#endif /* _NTOSKRNL_TAG_H */

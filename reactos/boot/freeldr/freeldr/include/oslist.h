@@ -17,8 +17,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __OSLIST_H
-#define __OSLIST_H
+#pragma once
 
 typedef struct tagOperatingSystemItem
 {
@@ -28,5 +27,3 @@ typedef struct tagOperatingSystemItem
 } OperatingSystemItem;
 
 OperatingSystemItem* InitOperatingSystemList(ULONG* OperatingSystemCountPointer);
-
-#endif // #defined __OSLIST_H

@@ -8,8 +8,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#ifndef USER32_PRIVATE_H
-#define USER32_PRIVATE_H
+#pragma once
 
 /* Private User32 Headers */
 #include "accel.h"
@@ -235,5 +234,4 @@ PVOID FASTCALL ValidateHandle(HANDLE, UINT);
 #define __EXCEPT_PAGE_FAULT else
 #define __ENDTRY
 
-#endif
 /* EOF */

@@ -3,8 +3,7 @@
  *
  */
 
-#ifndef __WIN32K_GDIOBJ_H
-#define __WIN32K_GDIOBJ_H
+#pragma once
 
 /* Public GDI Object/Handle definitions */
 #include <win32k/ntgdihdl.h>
@@ -132,5 +131,3 @@ GDIOBJ_IncrementShareCount(POBJ Object)
 #endif
 
 INT FASTCALL GreGetObjectOwner(HGDIOBJ, GDIOBJTYPE);
-
-#endif

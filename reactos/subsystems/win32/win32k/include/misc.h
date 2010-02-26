@@ -1,5 +1,4 @@
-#ifndef __WIN32K_MISC_H
-#define __WIN32K_MISC_H
+#pragma once
 
 typedef struct INTENG_ENTER_LEAVE_TAG
   {
@@ -47,5 +46,3 @@ RegWriteUserSetting(
     IN ULONG ulType,
     OUT PVOID pvData,
     IN ULONG cbDataSize);
-
-#endif /* __WIN32K_MISC_H */

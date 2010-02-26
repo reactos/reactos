@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_INTERNAL_MM_H
-#define __INCLUDE_INTERNAL_MM_H
+#pragma once
 
 #include <internal/arch/mm.h>
 
@@ -1743,5 +1742,3 @@ MmGetKernelAddressSpace(VOID)
 {
     return MmKernelAddressSpace;
 }
-
-#endif

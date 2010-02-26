@@ -42,8 +42,7 @@
  * source if you're curious about the inner workings of these routines.
  */
 
-#ifndef _REACTOS_CSQ_H
-#define _REACTOS_CSQ_H
+#pragma once
 
 /*
  * Prevent including the CSQ definitions twice. They're present in NTDDK
@@ -285,5 +284,3 @@ PIRP NTAPI IoCsqRemoveIrp(PIO_CSQ Csq,
  */
 PIRP NTAPI IoCsqRemoveNextIrp(PIO_CSQ Csq,
                               PVOID PeekContext);
-
-#endif /* _REACTOS_CSQ_H */

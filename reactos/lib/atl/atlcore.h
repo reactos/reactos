@@ -18,8 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef _atlcore_h
-#define _atlcore_h
+#pragma once
 
 #include <malloc.h>
 #include <olectl.h>
@@ -202,5 +201,3 @@ public:
 extern CAtlBaseModule _AtlBaseModule;
 
 }; // namespace ATL
-
-#endif // _atlcore_h

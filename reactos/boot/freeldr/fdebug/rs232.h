@@ -19,9 +19,7 @@
  */
 
 
-#ifndef __RS232_H
-#define __RS232_H
-
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -42,5 +40,3 @@ BOOL	Rs232WriteByteWin32(BYTE DataByte);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-
-#endif // !defined(__RS232_H)

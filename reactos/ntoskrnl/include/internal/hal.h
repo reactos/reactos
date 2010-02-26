@@ -5,8 +5,8 @@
  * PURPOSE:         Internal header for the I/O HAL Functions (Fstub)
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
-#ifndef _HAL_
-#define _HAL_
+
+#pragma once
 
 //
 // Default implementations of HAL dispatch table
@@ -156,5 +156,3 @@ typedef struct _PTE
     ULONG StartingSector;
     ULONG PartitionLength;
 } PTE, *PPTE;
-
-#endif

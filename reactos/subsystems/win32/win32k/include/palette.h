@@ -1,5 +1,4 @@
-#ifndef _WIN32K_PALETTE_H
-#define _WIN32K_PALETTE_H
+#pragma once
 
 #include <include/dc.h>
 
@@ -113,5 +112,3 @@ PALETTE_ulGetRGBColorFromIndex(PPALETTE ppal, ULONG ulIndex)
                ppal->IndexedColors[ulIndex].peGreen,
                ppal->IndexedColors[ulIndex].peBlue);
 }
-
-#endif /* not _WIN32K_PALETTE_H */

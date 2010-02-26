@@ -5,8 +5,8 @@
  * PURPOSE:         Internal header for PCI Support
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
-#ifndef _PCI_
-#define _PCI_
+
+#pragma once
 
 //
 // PCI Type 1 Ports
@@ -103,5 +103,3 @@ typedef struct _PCI_CARD_DESCRIPTOR
     USHORT SubsystemID;
     USHORT Reserved;
 } PCI_CARD_DESCRIPTOR, *PPCI_CARD_DESCRIPTOR;
-
-#endif

@@ -7,8 +7,7 @@
  * PROGRAMER:        Ge van Geldorp (ge@gse.nl)
  */
 
-#ifndef CSR_H_INCLUDED
-#define CSR_H_INCLUDED
+#pragma once
 
 extern PEPROCESS CsrProcess;
 
@@ -18,7 +17,5 @@ NTSTATUS FASTCALL CsrCloseHandle(HANDLE Handle);
 NTSTATUS WINAPI CsrInsertObject(HANDLE ObjectHandle,
                                  ACCESS_MASK DesiredAccess,
                                  PHANDLE Handle);
-
-#endif /* CSR_H_INCLUDED */
 
 /* EOF */

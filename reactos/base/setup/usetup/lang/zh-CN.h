@@ -1,5 +1,4 @@
-#ifndef LANG_ZH_CN_H__
-#define LANG_ZH_CN_H__
+#pragma once
 
 MUI_LAYOUTS zhCNLayouts[] =
 {
@@ -11,5 +10,3 @@ MUI_LAYOUTS zhCNLayouts[] =
     { L"0804", L"E0040804" },
     { NULL, NULL }
 };
-
-#endif

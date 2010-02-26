@@ -1,6 +1,4 @@
-
-#ifndef __WIN32K_DRIVER_H
-#define __WIN32K_DRIVER_H
+#pragma once
 
 #include <winddi.h>
 
@@ -21,7 +19,3 @@ BOOL  DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED,
 BOOL  DRIVER_UnregisterDriver(LPCWSTR  Name);
 INT  DRIVER_ReferenceDriver (LPCWSTR  Name);
 INT  DRIVER_UnreferenceDriver (LPCWSTR  Name);
-
-#endif
-
-

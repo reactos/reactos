@@ -24,8 +24,7 @@
  * PROGRAMMER:      Eric Kohl
  */
 
-#ifndef __SETTINGS_H__
-#define __SETTINGS_H__
+#pragma once
 
 PGENERIC_LIST
 CreateComputerTypeList(HINF InfFile);
@@ -65,7 +64,5 @@ ProcessKeyboardLayoutFiles(PGENERIC_LIST List);
 
 BOOLEAN
 SetGeoID(PWCHAR Id);
-
-#endif /* __SETTINGS_H__ */
 
 /* EOF */

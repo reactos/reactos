@@ -1,5 +1,4 @@
-#ifndef __L2L_CONFIG_H__
-#define __L2L_CONFIG_H__
+#pragma once
 
 /* Assume if an offset > ABS_TRESHOLD, then it must be absolute */
 #define ABS_TRESHOLD    0x00400000L
@@ -29,7 +28,5 @@ PATH_STR "reactos" PATH_STR "reactos > " DEV_NULL
 
 #define LINESIZE        1024
 #define NAMESIZE        80
-
-#endif /* __L2L_CONFIG_H__ */
 
 /* EOF */

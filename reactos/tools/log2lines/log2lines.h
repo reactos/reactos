@@ -1,5 +1,4 @@
-#ifndef __LOG2LINES_H__
-#define __LOG2LINES_H__
+#pragma once
 
 #include <stdio.h>
 #include <rsym.h>
@@ -29,7 +28,5 @@ extern LIST cache;
 extern FILE *logFile;
 extern LINEINFO lastLine;
 extern LIST sources;
-
-#endif /* __LOG2LINES_H__ */
 
 /* EOF */

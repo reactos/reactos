@@ -6,8 +6,7 @@
  * PURPOSE:         CSRSS API interface
  */
 
-#ifndef API_H_INCLUDED
-#define API_H_INCLUDED
+#pragma once
 
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
@@ -157,8 +156,4 @@ CSR_API(CsrSetShutdownParameters);
 CSR_API(CsrSetLogonNotifyWindow);
 CSR_API(CsrRegisterLogonProcess);
 
-
-#endif /* ndef API_H_INCLUDED */
-
 /* EOF */
-

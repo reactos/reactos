@@ -5,8 +5,7 @@
  *            Copyright 2001 - 2005 Eric Kohl
  */
 
-#ifndef CMLIB_HIVEDATA_H
-#define CMLIB_HIVEDATA_H
+#pragma once
 
 //
 // Hive operations
@@ -305,5 +304,3 @@ typedef struct _HHIVE
 
 #define IsFreeCell(Cell)(Cell->Size >= 0)
 #define IsUsedCell(Cell)(Cell->Size < 0)
-
-#endif /* CMLIB_HIVEDATA_H */

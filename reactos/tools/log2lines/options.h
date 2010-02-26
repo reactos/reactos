@@ -5,8 +5,7 @@
  * - Option parsing
  */
 
-#ifndef __L2L_OPTIONS_H__
-#define __L2L_OPTIONS_H__
+#pragma once
 
 extern char *optchars;
 extern int   opt_buffered;  // -b
@@ -38,7 +37,5 @@ extern char  opt_SourcesPath[];    //sources path
 
 int optionInit(int argc, const char **argv);
 int optionParse(int argc, const char **argv);
-
-#endif /* __L2L_OPTIONS_H__ */
 
 /* EOF */

@@ -17,8 +17,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __MACHINE_H_
-#define __MACHINE_H_
+#pragma once
 
 #ifndef __DISK_H
 #include "disk.h"
@@ -125,7 +124,5 @@ VOID MachPrepareForReactOS(IN BOOLEAN Setup);
 #define MachDiskGetDriveGeometry(Drive, Geom)	MachVtbl.DiskGetDriveGeometry((Drive), (Geom))
 #define MachDiskGetCacheableBlockCount(Drive)	MachVtbl.DiskGetCacheableBlockCount(Drive)
 #define MachHwDetect()				MachVtbl.HwDetect()
-
-#endif /* __MACHINE_H_ */
 
 /* EOF */

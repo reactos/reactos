@@ -18,8 +18,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __CMDLINE_H__
-#define __CMDLINE_H__
+#pragma once
 
 typedef struct tagCMDLINEINFO
 {
@@ -31,7 +30,5 @@ void CmdLineParse(char *CmdLine);
 
 const char *CmdLineGetDefaultOS(void);
 LONG CmdLineGetTimeOut(void);
-
-#endif /* __CMDLINE_H__ */
 
 /* EOF */

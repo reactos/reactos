@@ -3,8 +3,7 @@
  *      http://www.reactos.org/uk/
  */ 
 
-#ifndef LANG_UK_UA_H__
-#define LANG_UK_UA_H__
+#pragma once
 
 MUI_LAYOUTS ukUALayouts[] =
 {
@@ -1700,5 +1699,3 @@ MUI_STRING ukUAStrings[] =
     "Додавання розкладок клавiатури"},
     {0, 0}
 };
-
-#endif 

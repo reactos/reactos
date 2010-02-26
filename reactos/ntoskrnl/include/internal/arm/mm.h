@@ -1,5 +1,4 @@
-#ifndef __NTOSKRNL_INCLUDE_INTERNAL_ARM_MM_H
-#define __NTOSKRNL_INCLUDE_INTERNAL_ARM_MM_H
+#pragma once
 
 //
 // Number of bits corresponding to the area that a PDE entry represents (1MB)
@@ -157,5 +156,3 @@ PULONG MmGetPageDirectory(VOID);
     ((((x)) % (4*1024*1024)) / (4*1024))
     
 #define MM_CACHE_LINE_SIZE 64
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef __TNPARSER_H
-#define __TNPARSER_H
+#pragma once
 
 #include "tnconfig.h"
 
@@ -168,5 +167,3 @@ void saveScreen(CHAR_INFO* chiBuffer);
 void restoreScreen(CHAR_INFO* chiBuffer);
 CHAR_INFO* newBuffer();
 void deleteBuffer(CHAR_INFO* chiBuffer);
-
-#endif

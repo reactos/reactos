@@ -18,8 +18,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __I386_HARDWARE_H_
-#define __I386_HARDWARE_H_
+#pragma once
 
 #ifndef __REGISTRY_H
 #include "../../reactos/registry.h"
@@ -91,7 +90,5 @@ ULONG PnpBiosGetDeviceNodeCount(ULONG *NodeSize,
 			      ULONG *NodeCount);
 ULONG PnpBiosGetDeviceNode(UCHAR *NodeId,
 			 UCHAR *NodeBuffer);
-
-#endif /* __I386_HARDWARE_H_ */
 
 /* EOF */

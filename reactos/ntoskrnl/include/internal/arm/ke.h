@@ -1,5 +1,4 @@
-#ifndef __NTOSKRNL_INCLUDE_INTERNAL_ARM_KE_H
-#define __NTOSKRNL_INCLUDE_INTERNAL_ARM_KE_H
+#pragma once
 
 #include "intrin_i.h"
 
@@ -117,5 +116,3 @@ KeFlushTb(
 
 #define KiGetPreviousMode(tf) \
     ((tf->Spsr & CPSR_MODES) == CPSR_USER_MODE) ? UserMode: KernelMode
-
-#endif

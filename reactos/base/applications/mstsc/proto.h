@@ -17,8 +17,7 @@
    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#ifndef RDESKTOP_PROTO_H
-#define RDESKTOP_PROTO_H
+#pragma once
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
@@ -306,5 +305,3 @@ unsigned int seamless_send_focus(unsigned long id, unsigned long flags);
 }
 #endif
 /* *INDENT-ON* */
-
-#endif

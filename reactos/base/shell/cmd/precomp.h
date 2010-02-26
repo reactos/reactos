@@ -1,5 +1,4 @@
-#ifndef __CMD_PRECOMP_H
-#define __CMD_PRECOMP_H
+#pragma once
 
 #ifdef _MSC_VER
 #pragma warning ( disable : 4103 ) /* use #pragma pack to change alignment */
@@ -43,5 +42,3 @@ WINE_DEFAULT_DEBUG_CHANNEL(cmd);
 #else
 #define debugstr_aw debugstr_a
 #endif
-
-#endif /* __CMD_PRECOMP_H */

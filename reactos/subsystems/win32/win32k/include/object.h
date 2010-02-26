@@ -1,5 +1,4 @@
-#ifndef _WIN32K_OBJECT_H
-#define _WIN32K_OBJECT_H
+#pragma once
 
 #include "gdiobj.h"
 #include "bitmaps.h"
@@ -144,7 +143,5 @@ VOID  FASTCALL CreateStockObjects (VOID);
 VOID  FASTCALL CreateSysColorObjects (VOID);
 
 PPOINT FASTCALL GDI_Bezier (const POINT *Points, INT count, PINT nPtsOut);
-
-#endif /* _WIN32K_OBJECT_H */
 
 /* EOF */

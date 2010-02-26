@@ -6,8 +6,7 @@
  *             Ge van Geldorp <gvg@reactos.org>
  */
 
-#ifndef INFPRIV_H_INCLUDED
-#define INFPRIV_H_INCLUDED
+#pragma once
 
 #ifndef FIELD_OFFSET
 #define FIELD_OFFSET(t,f) ((ptrdiff_t)&(((t*)0)->f))
@@ -141,7 +140,5 @@ extern INFSTATUS InfpAddLineWithKey(PINFCONTEXT Context, PCTSTR Key);
 extern INFSTATUS InfpAddField(PINFCONTEXT Context, PCTSTR Data);
 
 extern VOID InfpFreeContext(PINFCONTEXT Context);
-
-#endif /* INFPRIV_H_INCLUDED */
 
 /* EOF */

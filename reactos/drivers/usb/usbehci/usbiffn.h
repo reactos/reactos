@@ -1,5 +1,4 @@
-#ifndef __USBIFFN_H__
-#define __USBIFFN_H__
+#pragma once
 
 #define USB_BUSIFFN __stdcall
 #include <ntifs.h>
@@ -195,6 +194,3 @@ IsDeviceHighSpeed(PVOID BusCOntext);
 NTSTATUS
 USB_BUSIFFN
 EnumLogEntry(PVOID BusContext, ULONG DriverTag, ULONG EnumTag, ULONG P1, ULONG P2);
-
-#endif
-

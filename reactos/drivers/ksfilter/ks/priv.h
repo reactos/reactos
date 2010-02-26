@@ -1,5 +1,4 @@
-#ifndef PRIV_H__
-#define PRIV_H__
+#pragma once
 
 #define _KSDDK_
 
@@ -36,5 +35,3 @@ DEFINE_KSPROPERTY_TABLE(PinSet) {\
     DEFINE_KSPROPERTY_ITEM_PIN_CONSTRAINEDDATARANGES(PropGeneral),\
     DEFINE_KSPROPERTY_ITEM_PIN_PROPOSEDATAFORMAT(PropGeneral)\
 }
-
-#endif

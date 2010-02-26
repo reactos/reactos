@@ -2,8 +2,7 @@
  * Lowlevel memory managment definitions
  */
 
-#ifndef __NTOSKRNL_INCLUDE_INTERNAL_I386_MM_H
-#define __NTOSKRNL_INCLUDE_INTERNAL_I386_MM_H
+#pragma once
 
 struct _EPROCESS;
 PULONG MmGetPageDirectory(VOID);
@@ -86,5 +85,3 @@ PULONG MmGetPageDirectory(VOID);
 * FIXME - different architectures have different cache line sizes...
 */
 #define MM_CACHE_LINE_SIZE                  32
-
-#endif /* __NTOSKRNL_INCLUDE_INTERNAL_I386_MM_H */

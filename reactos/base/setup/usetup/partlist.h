@@ -23,8 +23,7 @@
  * PROGRAMMER:      Eric Kohl
  */
 
-#ifndef __PARTLIST_H__
-#define __PARTLIST_H__
+#pragma once
 
 /* We have to define it there, because it is not in the MS DDK */
 #define PARTITION_EXT2 0x83
@@ -221,7 +220,5 @@ CheckForLinuxFdiskPartitions (PPARTLIST List);
 
 BOOLEAN
 WritePartitionsToDisk (PPARTLIST List);
-
-#endif /* __PARTLIST_H__ */
 
 /* EOF */

@@ -4,9 +4,8 @@
  * FILE:        include/neighbor.h
  * PURPOSE:     Neighbor definitions
  */
-#ifndef __NEIGHBOR_H
-#define __NEIGHBOR_H
 
+#pragma once
 
 #define NB_HASHMASK 0xF /* Hash mask for neighbor cache */
 
@@ -102,7 +101,5 @@ ULONG NBCopyNeighbors(
 
 VOID NBResetNeighborTimeout(
     PIP_ADDRESS Address);
-
-#endif /* __NEIGHBOR_H */
 
 /* EOF */

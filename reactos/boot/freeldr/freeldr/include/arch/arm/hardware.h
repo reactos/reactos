@@ -6,8 +6,7 @@
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
-#ifndef _ARM_HARDWARE_
-#define __ARM_HARDWARE_
+#pragma once
 
 #ifndef __REGISTRY_H
 #include "../../reactos/registry.h"
@@ -36,5 +35,3 @@ extern ULONG SecondLevelDcacheSize;
 extern ULONG SecondLevelDcacheFillSize;
 extern ULONG SecondLevelIcacheSize;
 extern ULONG SecondLevelIcacheFillSize;
-
-#endif

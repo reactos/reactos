@@ -6,8 +6,7 @@
  *             Ge van Geldorp <gvg@reactos.org>
  */
 
-#ifndef INFROS_H_INCLUDED
-#define INFROS_H_INCLUDED
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -76,7 +75,5 @@ extern VOID InfFreeContext(PINFCONTEXT Context);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-
-#endif /* INFROS_H_INCLUDED */
 
 /* EOF */

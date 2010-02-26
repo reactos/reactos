@@ -30,8 +30,7 @@
  *
  */
 
-#ifndef REACTOS_SCRIPTS_H_
-#define REACTOS_SCRIPTS_H_
+#pragma once
 
 #include <assert.h>
 #include <limits.h>
@@ -68,7 +67,5 @@ C_ASSERT(sizeof(SCRIPTS_Script) == 5 * sizeof(WCHAR));
 extern "C" bool SCRIPTS_GetCharScriptCode(UChar32 c, int32_t * code);
 extern "C" bool SCRIPTS_GetScriptCode(const SCRIPTS_Script * pScript, int32_t * code);
 extern "C" void SCRIPTS_GetScriptName(int32_t code, SCRIPTS_Script * pScript);
-
-#endif
 
 /* EOF */

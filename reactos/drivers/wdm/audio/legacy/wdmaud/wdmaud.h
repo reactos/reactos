@@ -1,5 +1,4 @@
-#ifndef WDMAUD_H__
-#define WDMAUD_H__
+#pragma once
 
 #include <pseh/pseh2.h>
 #include <ntddk.h>
@@ -277,6 +276,3 @@ WdmAudGetPnpNameByIndexAndType(
 ULONG
 GetSysAudioDeviceCount(
     IN  PDEVICE_OBJECT DeviceObject);
-
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef LANG_AR_DZ_H__
-#define LANG_AR_DZ_H__
+#pragma once
 
 MUI_LAYOUTS arDZLayouts[] =
 {
@@ -7,5 +6,3 @@ MUI_LAYOUTS arDZLayouts[] =
     { L"1401", L"00020401" },
     { NULL, NULL }
 };
-
-#endif

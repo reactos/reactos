@@ -17,8 +17,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __REACTOS_H
-#define __REACTOS_H
+#pragma once
 
 /* Base Addres of Kernel in Physical Memory */
 #define KERNEL_BASE_PHYS 0x800000
@@ -128,5 +127,3 @@ FrLdrLoadImage(
     IN INT nPos,
     IN ULONG ImageType
 );
-
-#endif // defined __REACTOS_H

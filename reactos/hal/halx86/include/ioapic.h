@@ -2,8 +2,7 @@
  *
  */
 
-#ifndef __INTERNAL_HAL_IOAPIC_H
-#define __INTERNAL_HAL_IOAPIC_H
+#pragma once
 
 /* I/O APIC Register Address Map */
 #define IOAPIC_IOREGSEL 0x0000  /* I/O Register Select (index) (R/W) */
@@ -95,9 +94,4 @@ VOID HaliReconfigurePciInterrupts(VOID);
 /* For debugging */
 VOID IOAPICDump(VOID);
 
-#endif
-
-
-
 /* EOF */
-

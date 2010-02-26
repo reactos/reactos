@@ -1,5 +1,4 @@
-#ifndef LANG_ZH_HK_H__
-#define LANG_ZH_HK_H__
+#pragma once
 
 MUI_LAYOUTS zhHKLayouts[] =
 {
@@ -7,5 +6,3 @@ MUI_LAYOUTS zhHKLayouts[] =
     { L"0C04", L"E0080404" },
     { NULL, NULL }
 };
-
-#endif

@@ -20,8 +20,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __TRAYICON_H
-#define __TRAYICON_H
+#pragma once
 
 #define WM_ONTRAYICON   WM_USER + 5
 
@@ -29,5 +28,3 @@ HICON	TrayIcon_GetProcessorUsageIcon(void);
 BOOL	TrayIcon_ShellAddTrayIcon(void);
 BOOL	TrayIcon_ShellRemoveTrayIcon(void);
 BOOL	TrayIcon_ShellUpdateTrayIcon(void);
-
-#endif /* __TRAYICON_H */

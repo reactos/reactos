@@ -1,5 +1,4 @@
-#ifndef __CHARMAP_PRECOMP_H
-#define __CHARMAP_PRECOMP_H
+#pragma once
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -53,5 +52,3 @@ VOID ShowAboutDlg(HWND hWndParent);
 
 BOOL RegisterMapClasses(HINSTANCE hInstance);
 VOID UnregisterMapClasses(HINSTANCE hInstance);
-
-#endif /* __CHARMAP_PRECOMP_H */

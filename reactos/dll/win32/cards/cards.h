@@ -18,8 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef _CARDS_H
-#define _CARDS_H
+#pragma once
 
 /*
  * 52 card faces +
@@ -58,5 +57,3 @@ BOOL WINAPI cdtDraw(HDC hdc, int x, int y, int card, int type, DWORD color);
 BOOL WINAPI cdtDrawExt(HDC hdc, int x, int y, int dx, int dy, int card, int suit, DWORD color);
 BOOL WINAPI cdtAnimate(HDC hdc, int cardback, int x, int y, int frame);
 void WINAPI cdtTerm(void);
-
-#endif /* _CARDS_H */

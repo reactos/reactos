@@ -1,6 +1,4 @@
-
-#ifndef __EHCI_H__
-#define __EHCI_H__
+#pragma once
 
 #include <ntifs.h>
 #include <ntddk.h>
@@ -421,5 +419,3 @@ URBRequestCancel (PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 VOID NTAPI
 DeviceArrivalWorkItem(PDEVICE_OBJECT DeviceObject, PVOID Context);
-
-#endif

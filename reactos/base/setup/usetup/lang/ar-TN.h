@@ -1,5 +1,4 @@
-#ifndef LANG_AR_TN_H__
-#define LANG_AR_TN_H__
+#pragma once
 
 MUI_LAYOUTS arTNLayouts[] =
 {
@@ -7,5 +6,3 @@ MUI_LAYOUTS arTNLayouts[] =
     { L"1C01", L"00020401" },
     { NULL, NULL }
 };
-
-#endif

@@ -33,8 +33,7 @@
  *	@(#)err.h	8.1 (Berkeley) 6/2/93
  */
 
-#ifndef _ERR_H_
-#define	_ERR_H_
+#pragma once
 
 /*
  * Don't use va_list in the err/warn prototypes.   Va_list is typedef'd in two
@@ -56,5 +55,3 @@ void		warn __P((const char *, ...));
 void		vwarn __P((const char *, va_list));
 void		warnx __P((const char *, ...));
 void		vwarnx __P((const char *, va_list));
-
-#endif /* !_ERR_H_ */

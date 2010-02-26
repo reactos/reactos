@@ -4,8 +4,8 @@
  * FILE:        include/checksum.h
  * PURPOSE:     Checksum routine definitions
  */
-#ifndef __CHECKSUM_H
-#define __CHECKSUM_H
+
+#pragma once
 
 
 ULONG ChecksumFold(
@@ -48,5 +48,3 @@ UDPv4ChecksumCalculate(
     (BOOLEAN)(TCPv4Checksum(Data, Count, \
       TCPv4Checksum(TcpPseudoHeader, sizeof(TCPv4_PSEUDO_HEADER), \
       0)) == DH2N(0x0000FFFF))
-
-#endif /* __CHECKSUM_H */

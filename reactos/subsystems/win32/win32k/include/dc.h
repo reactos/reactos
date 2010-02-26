@@ -1,5 +1,4 @@
-#ifndef __WIN32K_DC_H
-#define __WIN32K_DC_H
+#pragma once
 
 typedef struct _DC *PDC;
 
@@ -232,5 +231,3 @@ DC_vSelectPalette(PDC pdc, PPALETTE ppal)
 BOOL FASTCALL
 IntPrepareDriverIfNeeded(VOID);
 extern PDEVOBJ PrimarySurface;
-
-#endif /* not __WIN32K_DC_H */

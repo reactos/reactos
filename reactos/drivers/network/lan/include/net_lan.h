@@ -1,4 +1,4 @@
-#ifndef _NET_LAN_H
+#pragma once
 
 #include "net_wh.h"
 
@@ -75,5 +75,3 @@ typedef struct _LAN_ADAPTER_INFO_S {
 		   (Types), \
 		   sizeof(USHORT) * (NumTypes) ); \
   }
-
-#endif/*_NET_LAN_H*/

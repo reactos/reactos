@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_NAPI_WIN32_H
-#define __INCLUDE_NAPI_WIN32_H
+#pragma once
 
 /* W32PROCESS flags */
 #define W32PF_CONSOLEAPPLICATION      0x00000001
@@ -174,5 +173,3 @@ typedef struct _PROCESSINFO
   struct _KBL* KeyboardLayout; // THREADINFO only
   W32HEAP_USER_MAPPING HeapMappings;
 } PROCESSINFO;
-
-#endif /* __INCLUDE_NAPI_WIN32_H */

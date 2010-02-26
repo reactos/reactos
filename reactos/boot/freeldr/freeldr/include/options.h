@@ -17,9 +17,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __OPTIONS_H
-#define __OPTIONS_H
+#pragma once
 
 VOID	DoOptionsMenu(VOID);
-
-#endif // #defined __OPTIONS_H

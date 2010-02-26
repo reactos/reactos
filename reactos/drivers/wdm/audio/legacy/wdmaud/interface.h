@@ -1,5 +1,4 @@
-#ifndef INTERFACE_H__
-#define INTERFACE_H__
+#pragma once
 
 ///
 /// WDMAUD Interface Definition
@@ -375,4 +374,3 @@ typedef struct
              17, \
              METHOD_BUFFERED, \
              FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS)
-#endif

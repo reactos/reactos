@@ -28,8 +28,7 @@
  * jholderness@geocities.com
  */
 
-#ifndef __RUN_H
-#define __RUN_H
+#pragma once
 
 void TaskManager_OnFileNew(void);
 
@@ -50,5 +49,3 @@ UINT    uFlags);
 #define	RFF_CALCDIRECTORY	0x04	/* Calculates the working directory from the file name. */
 #define	RFF_NOLABEL			0x08	/* Removes the edit box label. */
 #define	RFF_NOSEPARATEMEM	0x20	/* Removes the Separate Memory Space check box (Windows NT only). */
-
-#endif /* __RUN_H */

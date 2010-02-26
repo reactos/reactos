@@ -1,5 +1,4 @@
-#ifndef __DEVMGMT_PRECOMP_H
-#define __DEVMGMT_PRECOMP_H
+#pragma once
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -93,5 +92,3 @@ HIMAGELIST InitImageList(UINT NumButtons,
 
 VOID GetError(VOID);
 VOID DisplayString(LPTSTR);
-
-#endif /* __DEVMGMT_PRECOMP_H */

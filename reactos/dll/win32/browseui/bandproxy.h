@@ -18,8 +18,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef _bandproxy_h
-#define _bandproxy_h
+#pragma once
 
 class CBandProxy :
 	public CComCoClass<CBandProxy, &CLSID_BandProxy>,
@@ -50,5 +49,3 @@ BEGIN_COM_MAP(CBandProxy)
 	COM_INTERFACE_ENTRY_IID(IID_IBandProxy, IBandProxy)
 END_COM_MAP()
 };
-
-#endif // _bandproxy_h

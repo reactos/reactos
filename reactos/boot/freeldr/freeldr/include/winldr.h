@@ -18,9 +18,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __WINLDR_H
-#define __WINLDR_H
-
+#pragma once
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //
@@ -108,6 +106,3 @@ typedef struct  /* Root System Descriptor Pointer */
 	CHAR             reserved [3];           /* reserved field must be 0 */
 } RSDP_DESCRIPTOR, *PRSDP_DESCRIPTOR;
 #include <poppack.h>
-
-
-#endif // defined __WINLDR_H

@@ -1,5 +1,4 @@
-#ifndef __TKEYMAP_H
-#define __TKEYMAP_H
+#pragma once
 
 #include "tkeydef.h"
 
@@ -35,5 +34,3 @@ struct KeyMap {
 
        ~KeyMap();
 };
-
-#endif

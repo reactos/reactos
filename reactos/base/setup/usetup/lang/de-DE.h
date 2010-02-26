@@ -1,5 +1,4 @@
-#ifndef LANG_DE_DE_H__
-#define LANG_DE_DE_H__
+#pragma once
 
 MUI_LAYOUTS deDELayouts[] =
 {
@@ -1695,5 +1694,3 @@ MUI_STRING deDEStrings[] =
     "Tastaturlayout hinzufügen"},
     {0, 0}
 };
-
-#endif

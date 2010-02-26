@@ -6,8 +6,8 @@
  * DEFINES:     DBG     - Enable debug output
  *              NASSERT - Disable assertions
  */
-#ifndef __DEBUG_H
-#define __DEBUG_H
+
+#pragma once
 
 #define NORMAL_MASK    0x000000FF
 #define SPECIAL_MASK   0xFFFFFF00
@@ -96,7 +96,3 @@ extern DWORD DebugTraceLevel;
 #define CP CHECKPOINT
 
 #include <memtrack.h>
-
-#endif /* __DEBUG_H */
-
-/* EOF */

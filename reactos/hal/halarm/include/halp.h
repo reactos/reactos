@@ -1,5 +1,4 @@
-#ifndef __INTERNAL_HAL_HAL_H
-#define __INTERNAL_HAL_HAL_H
+#pragma once
 
 //
 // ARM Headers
@@ -58,5 +57,3 @@ VOID HalpClockInterrupt(VOID);
 VOID HalpProfileInterrupt(VOID);
 
 extern ULONG HalpCurrentTimeIncrement, HalpNextTimeIncrement, HalpNextIntervalCount;
-
-#endif /* __INTERNAL_HAL_HAL_H */

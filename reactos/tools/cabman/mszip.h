@@ -4,8 +4,8 @@
  * FILE:        tools/cabman/mszip.h
  * PURPOSE:     CAB codec for MSZIP compressed data
  */
-#ifndef __MSZIP_H
-#define __MSZIP_H
+
+#pragma once
 
 #include "cabinet.h"
 #include <zlib.h>
@@ -35,7 +35,5 @@ private:
     int Status;
     z_stream ZStream; /* Zlib stream */
 };
-
-#endif /* __MSZIP_H */
 
 /* EOF */

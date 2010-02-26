@@ -24,8 +24,7 @@
  * PROGRAMMER:      Eric Kohl
  */
 
-#ifndef __USETUP_H__
-#define __USETUP_H__
+#pragma once
 
 /* C Headers */
 #include <ctype.h>
@@ -144,7 +143,5 @@ typedef enum _PAGE_NUMBER
 \
   InsertTailList(current, &((NewEntry)->ListEntryField));\
 }
-
-#endif /* __USETUP_H__*/
 
 /* EOF */

@@ -1,5 +1,4 @@
-#ifndef MIXER_H__
-#define MIXER_H__
+#pragma once
 
 typedef enum
 {
@@ -197,5 +196,3 @@ MMixerGetWaveDevicePath(
     IN ULONG bWaveIn,
     IN ULONG DeviceId,
     OUT LPWSTR * DevicePath);
-
-#endif

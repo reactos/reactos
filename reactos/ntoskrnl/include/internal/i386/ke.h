@@ -1,5 +1,4 @@
-#ifndef __NTOSKRNL_INCLUDE_INTERNAL_I386_KE_H
-#define __NTOSKRNL_INCLUDE_INTERNAL_I386_KE_H
+#pragma once
 
 #ifndef __ASM__
 
@@ -775,4 +774,3 @@ Ki386PerfEnd(VOID)
 }
 
 #endif
-#endif /* __NTOSKRNL_INCLUDE_INTERNAL_I386_KE_H */

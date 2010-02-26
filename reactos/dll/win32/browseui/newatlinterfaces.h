@@ -18,8 +18,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef _newatlinteraces_h
-#define _newatlinteraces_h
+#pragma once
 
 template<class T>
 class IProfferServiceImpl : public IProfferService
@@ -86,5 +85,3 @@ public:
 		return hResult;
 	}
 };
-
-#endif // _newatlinteraces_h

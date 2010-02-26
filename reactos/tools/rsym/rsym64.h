@@ -1,6 +1,4 @@
-
-#ifndef _RSYM64_H
-#define _RSYM64_H
+#pragma once
 
 //C_ASSERT(sizeof(ULONG) == 4);
 typedef unsigned char UBYTE;
@@ -179,7 +177,3 @@ typedef struct
     ULONG cScopes;
 
 } FILE_INFO, *PFILE_INFO;
-
-
-
-#endif // !_RSYM64_H

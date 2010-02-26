@@ -1,5 +1,4 @@
-#ifndef _WIN32K_TEXT_H
-#define _WIN32K_TEXT_H
+#pragma once
 
 #include <include/engobjects.h>
 
@@ -129,5 +128,3 @@ BOOL FASTCALL GreGetTextExtentExW(HDC,LPWSTR,ULONG,ULONG,PULONG,PULONG,LPSIZE,FL
 
 #define IntUnLockFreeType \
   ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&FreeTypeLock)
-
-#endif /* _WIN32K_TEXT_H */

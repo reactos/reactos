@@ -1,5 +1,4 @@
-#ifndef _ROS_CONTROLS_H
-#define _ROS_CONTROLS_H
+#pragma once
 
 /* Missing from Winuser.h */
 #define ES_COMBO        0x00000200   /* Undocumented. Parent is a combobox */
@@ -130,5 +129,3 @@ LRESULT WINAPI MDIClientWndProc_common( HWND hwnd, UINT message, WPARAM wParam, 
 LRESULT WINAPI StaticWndProcA( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 LRESULT WINAPI StaticWndProcW( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 LRESULT WINAPI StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL unicode);
-
-#endif /* _ROS_CONTROLS_H */
