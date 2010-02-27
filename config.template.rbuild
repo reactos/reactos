@@ -99,4 +99,10 @@
 -->
 <property name="BUILD_MP" value="1" />
 
+<!--
+	Whether to compile any usermode parts. This is while kernel mode is under
+	heavy development and usermode part not relevant for bootcd.
+-->
+<property name="USERMODE" value="0" />
+
 </group>

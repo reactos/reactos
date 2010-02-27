@@ -7,9 +7,13 @@
 	<directory name="bzip2">
 		<xi:include href="bzip2/bzip2.rbuild" />
 	</directory>
-	<directory name="cardlib">
-		<xi:include href="cardlib/cardlib.rbuild" />
-	</directory>
+
+	<if property="USERMODE" value="1">
+		<directory name="cardlib">
+			<xi:include href="cardlib/cardlib.rbuild" />
+		</directory>
+	</if>
+
 	<directory name="expat">
 		<xi:include href="expat/expat.rbuild" />
 	</directory>
