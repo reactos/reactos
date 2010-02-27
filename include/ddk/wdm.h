@@ -675,6 +675,271 @@ typedef ULONG PNP_DEVICE_STATE, *PPNP_DEVICE_STATE;
 #define PNP_DEVICE_RESOURCE_REQUIREMENTS_CHANGED 0x00000010
 #define PNP_DEVICE_NOT_DISABLEABLE               0x00000020
 
+typedef struct _TARGET_DEVICE_CUSTOM_NOTIFICATION {
+  USHORT  Version;
+  USHORT  Size;
+  GUID  Event;
+  struct _FILE_OBJECT  *FileObject;
+  LONG  NameBufferOffset;
+  UCHAR  CustomDataBuffer[1];
+} TARGET_DEVICE_CUSTOM_NOTIFICATION, *PTARGET_DEVICE_CUSTOM_NOTIFICATION;
+
+typedef struct _TARGET_DEVICE_REMOVAL_NOTIFICATION {
+  USHORT  Version;
+  USHORT  Size;
+  GUID  Event;
+  struct _FILE_OBJECT  *FileObject;
+} TARGET_DEVICE_REMOVAL_NOTIFICATION, *PTARGET_DEVICE_REMOVAL_NOTIFICATION;
+
+typedef enum _DEVICE_USAGE_NOTIFICATION_TYPE {
+  DeviceUsageTypeUndefined,
+  DeviceUsageTypePaging,
+  DeviceUsageTypeHibernation,
+  DeviceUsageTypeDumpFile
+} DEVICE_USAGE_NOTIFICATION_TYPE;
+
+typedef struct _POWER_SEQUENCE {
+  ULONG  SequenceD1;
+  ULONG  SequenceD2;
+  ULONG  SequenceD3;
+} POWER_SEQUENCE, *PPOWER_SEQUENCE;
+
+typedef enum {
+  DevicePropertyDeviceDescription = 0x0 | __string_type,
+  DevicePropertyHardwareID = 0x1 | __multiString_type,
+  DevicePropertyCompatibleIDs = 0x2 | __multiString_type,
+  DevicePropertyBootConfiguration = 0x3,
+  DevicePropertyBootConfigurationTranslated = 0x4,
+  DevicePropertyClassName = 0x5 | __string_type,
+  DevicePropertyClassGuid = 0x6 | __string_type,
+  DevicePropertyDriverKeyName = 0x7 | __string_type,
+  DevicePropertyManufacturer = 0x8 | __string_type,
+  DevicePropertyFriendlyName = 0x9 | __string_type,
+  DevicePropertyLocationInformation = 0xa | __string_type,
+  DevicePropertyPhysicalDeviceObjectName = 0xb | __string_type,
+  DevicePropertyBusTypeGuid = 0xc | __guid_type,
+  DevicePropertyLegacyBusType = 0xd,
+  DevicePropertyBusNumber = 0xe,
+  DevicePropertyEnumeratorName = 0xf | __string_type,
+  DevicePropertyAddress = 0x10,
+  DevicePropertyUINumber = 0x11,
+  DevicePropertyInstallState = 0x12,
+  DevicePropertyRemovalPolicy = 0x13,
+  DevicePropertyResourceRequirements = 0x14,
+  DevicePropertyAllocatedResources = 0x15,
+  DevicePropertyContainerID = 0x16 | __string_type
+} DEVICE_REGISTRY_PROPERTY;
+
+typedef enum _IO_NOTIFICATION_EVENT_CATEGORY {
+  EventCategoryReserved,
+  EventCategoryHardwareProfileChange,
+  EventCategoryDeviceInterfaceChange,
+  EventCategoryTargetDeviceChange
+} IO_NOTIFICATION_EVENT_CATEGORY;
+
+#define PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES    0x00000001
+
+typedef NTSTATUS
+(DDKAPI *PDRIVER_NOTIFICATION_CALLBACK_ROUTINE)(
+  IN PVOID NotificationStructure,
+  IN PVOID Context);
+
+typedef VOID
+(DDKAPI *PDEVICE_CHANGE_COMPLETE_CALLBACK)(
+  IN PVOID Context);
+
+/*
+** System structures
+*/
+
+#define SYMBOLIC_LINK_QUERY               0x0001
+#define SYMBOLIC_LINK_ALL_ACCESS          (STANDARD_RIGHTS_REQUIRED | 0x1)
+
+/* also in winnt,h */
+#define DUPLICATE_CLOSE_SOURCE            0x00000001
+#define DUPLICATE_SAME_ACCESS             0x00000002
+#define DUPLICATE_SAME_ATTRIBUTES         0x00000004
+/* end winnt.h */
+
+typedef struct _OBJECT_NAME_INFORMATION {
+  UNICODE_STRING  Name;
+} OBJECT_NAME_INFORMATION, *POBJECT_NAME_INFORMATION;
+
+typedef struct _IO_STATUS_BLOCK {
+  _ANONYMOUS_UNION union {
+    NTSTATUS  Status;
+    PVOID  Pointer;
+  } DUMMYUNIONNAME;
+  ULONG_PTR  Information;
+} IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
+
+typedef VOID
+(DDKAPI *PIO_APC_ROUTINE)(
+  IN PVOID ApcContext,
+  IN PIO_STATUS_BLOCK IoStatusBlock,
+  IN ULONG Reserved);
+
+typedef VOID
+(DDKAPI *PKNORMAL_ROUTINE)(
+  IN PVOID  NormalContext,
+  IN PVOID  SystemArgument1,
+  IN PVOID  SystemArgument2);
+
+typedef VOID
+(DDKAPI *PKKERNEL_ROUTINE)(
+  IN struct _KAPC  *Apc,
+  IN OUT PKNORMAL_ROUTINE  *NormalRoutine,
+  IN OUT PVOID  *NormalContext,
+  IN OUT PVOID  *SystemArgument1,
+  IN OUT PVOID  *SystemArgument2);
+
+typedef VOID
+(DDKAPI *PKRUNDOWN_ROUTINE)(
+  IN struct _KAPC  *Apc);
+
+typedef struct _KAPC
+{
+  UCHAR Type;
+  UCHAR SpareByte0;
+  UCHAR Size;
+  UCHAR SpareByte1;
+  ULONG SpareLong0;
+  struct _KTHREAD *Thread;
+  LIST_ENTRY ApcListEntry;
+  PKKERNEL_ROUTINE KernelRoutine;
+  PKRUNDOWN_ROUTINE RundownRoutine;
+  PKNORMAL_ROUTINE NormalRoutine;
+  PVOID NormalContext;
+  PVOID SystemArgument1;
+  PVOID SystemArgument2;
+  CCHAR ApcStateIndex;
+  KPROCESSOR_MODE ApcMode;
+  BOOLEAN Inserted;
+} KAPC, *PKAPC, *RESTRICTED_POINTER PRKAPC;
+
+typedef struct _KDEVICE_QUEUE_ENTRY {
+  LIST_ENTRY  DeviceListEntry;
+  ULONG  SortKey;
+  BOOLEAN  Inserted;
+} KDEVICE_QUEUE_ENTRY, *PKDEVICE_QUEUE_ENTRY,
+*RESTRICTED_POINTER PRKDEVICE_QUEUE_ENTRY;
+
+#define LOCK_QUEUE_WAIT                   1
+#define LOCK_QUEUE_OWNER                  2
+
+typedef struct _KSPIN_LOCK_QUEUE {
+  struct _KSPIN_LOCK_QUEUE  *volatile Next;
+  PKSPIN_LOCK volatile  Lock;
+} KSPIN_LOCK_QUEUE, *PKSPIN_LOCK_QUEUE;
+
+typedef struct _KLOCK_QUEUE_HANDLE {
+  KSPIN_LOCK_QUEUE  LockQueue;
+  KIRQL  OldIrql;
+} KLOCK_QUEUE_HANDLE, *PKLOCK_QUEUE_HANDLE;
+
+#define DPC_NORMAL 0
+#define DPC_THREADED 1
+
+#define ASSERT_APC(Object) \
+    ASSERT((Object)->Type == ApcObject)
+
+#define ASSERT_DPC(Object) \
+    ASSERT(((Object)->Type == 0) || \
+           ((Object)->Type == DpcObject) || \
+           ((Object)->Type == ThreadedDpcObject))
+
+#define ASSERT_DEVICE_QUEUE(Object) \
+    ASSERT((Object)->Type == DeviceQueueObject)
+
+typedef PVOID PKIPI_CONTEXT;
+
+typedef
+VOID
+(NTAPI *PKIPI_WORKER)(
+    IN PKIPI_CONTEXT PacketContext,
+    IN PVOID Parameter1,
+    IN PVOID Parameter2,
+    IN PVOID Parameter3
+);
+
+typedef struct _WAIT_CONTEXT_BLOCK {
+  KDEVICE_QUEUE_ENTRY  WaitQueueEntry;
+  PDRIVER_CONTROL  DeviceRoutine;
+  PVOID  DeviceContext;
+  ULONG  NumberOfMapRegisters;
+  PVOID  DeviceObject;
+  PVOID  CurrentIrp;
+  PKDPC  BufferChainingDpc;
+} WAIT_CONTEXT_BLOCK, *PWAIT_CONTEXT_BLOCK;
+
+typedef struct _KDPC
+{
+    UCHAR Type;
+    UCHAR Importance;
+    volatile USHORT Number;
+    LIST_ENTRY DpcListEntry;
+    PKDEFERRED_ROUTINE DeferredRoutine;
+    PVOID DeferredContext;
+    PVOID SystemArgument1;
+    PVOID SystemArgument2;
+    volatile PVOID  DpcData;
+} KDPC, *PKDPC, *RESTRICTED_POINTER PRKDPC;
+
+typedef struct _KGATE
+{
+    DISPATCHER_HEADER Header;
+} KGATE, *PKGATE, *RESTRICTED_POINTER PRKGATE;
+
+#define GM_LOCK_BIT          0x1
+#define GM_LOCK_BIT_V        0x0
+#define GM_LOCK_WAITER_WOKEN 0x2
+#define GM_LOCK_WAITER_INC   0x4
+
+typedef struct _KGUARDED_MUTEX
+{
+    volatile LONG Count;
+    PKTHREAD Owner;
+    ULONG Contention;
+    KGATE Gate;
+    __GNU_EXTENSION union
+    {
+        __GNU_EXTENSION struct
+        {
+            SHORT KernelApcDisable;
+            SHORT SpecialApcDisable;
+        };
+        ULONG CombinedApcDisable;
+    };
+} KGUARDED_MUTEX, *PKGUARDED_MUTEX;
+
+typedef struct _KMUTANT {
+  DISPATCHER_HEADER  Header;
+  LIST_ENTRY  MutantListEntry;
+  struct _KTHREAD  *RESTRICTED_POINTER OwnerThread;
+  BOOLEAN  Abandoned;
+  UCHAR  ApcDisable;
+} KMUTANT, *PKMUTANT, *RESTRICTED_POINTER PRKMUTANT, KMUTEX, *PKMUTEX, *RESTRICTED_POINTER PRKMUTEX;
+
+#define EVENT_INCREMENT                   1
+#define IO_NO_INCREMENT                   0
+#define IO_CD_ROM_INCREMENT               1
+#define IO_DISK_INCREMENT                 1
+#define IO_KEYBOARD_INCREMENT             6
+#define IO_MAILSLOT_INCREMENT             2
+#define IO_MOUSE_INCREMENT                6
+#define IO_NAMED_PIPE_INCREMENT           2
+#define IO_NETWORK_INCREMENT              2
+#define IO_PARALLEL_INCREMENT             1
+#define IO_SERIAL_INCREMENT               2
+#define IO_SOUND_INCREMENT                8
+#define IO_VIDEO_INCREMENT                1
+#define SEMAPHORE_INCREMENT               1
+
+#define MM_MAXIMUM_DISK_IO_SIZE          (0x10000)
+
+
+
+
 /* Simple types */
 typedef UCHAR KPROCESSOR_MODE;
 typedef LONG KPRIORITY;
