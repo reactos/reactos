@@ -49,10 +49,18 @@ extern "C" {
 #endif
 
 /* Pseudo modifiers for parameters */
+#ifndef IN
 #define IN
+#endif
+#ifndef OUT
 #define OUT
+#endif
+#ifndef OPTIONAL
 #define OPTIONAL
+#endif
+#ifndef UNALLIGNED
 #define UNALLIGNED
+#endif
 
 #define CONST const
 

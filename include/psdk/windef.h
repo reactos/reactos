@@ -64,8 +64,13 @@ extern "C" {
 #ifndef TRUE
 #define TRUE 1
 #endif
+
+#ifndef IN
 #define IN
+#endif
+#ifndef OUT
 #define OUT
+#endif
 #ifndef OPTIONAL
 #define OPTIONAL
 #endif
