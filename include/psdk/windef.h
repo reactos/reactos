@@ -204,16 +204,13 @@ extern "C" {
 #define DBG_UNREFERENCED_PARAMETER(P)
 #define DBG_UNREFERENCED_LOCAL_VARIABLE(L)
 
+#ifndef __ANONYMOUS_DEFINED
+#define __ANONYMOUS_DEFINED
+
 #ifndef NONAMELESSUNION
 #ifdef __GNUC__
-#if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95)
 #define _ANONYMOUS_UNION __extension__
 #define _ANONYMOUS_STRUCT __extension__
-#else
-#if defined(__cplusplus)
-#define _ANONYMOUS_UNION __extension__
-#endif /* __cplusplus */
-#endif /* __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95) */
 #elif defined(__WATCOMC__) || defined(_MSC_VER)
 #define _ANONYMOUS_UNION
 #define _ANONYMOUS_STRUCT
@@ -262,6 +259,8 @@ extern "C" {
 #define DUMMYSTRUCTNAME4
 #define DUMMYSTRUCTNAME5
 #endif
+
+#endif /* __ANONYMOUS_DEFINED */
 
 #ifndef NO_STRICT
 #ifndef STRICT

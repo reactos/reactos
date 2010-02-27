@@ -93,6 +93,9 @@ typedef unsigned long POINTER_64; // FIXME! HACK!!!
 // We should use the -fms-extensions compiler flag for gcc,
 // and clean up the mess.
 //
+#ifndef __ANONYMOUS_DEFINED
+#define __ANONYMOUS_DEFINED
+
 #ifndef NONAMELESSUNION
 #ifdef __GNUC__
 #define _ANONYMOUS_UNION __GNU_EXTENSION
@@ -132,14 +135,18 @@ typedef unsigned long POINTER_64; // FIXME! HACK!!!
 #define DUMMYSTRUCTNAME s
 #define DUMMYSTRUCTNAME2 s2
 #define DUMMYSTRUCTNAME3 s3
+#define DUMMYSTRUCTNAME4 s4
+#define DUMMYSTRUCTNAME5 s5
 #else
 #define _STRUCT_NAME(x)
 #define DUMMYSTRUCTNAME
 #define DUMMYSTRUCTNAME2
 #define DUMMYSTRUCTNAME3
+#define DUMMYSTRUCTNAME4
+#define DUMMYSTRUCTNAME5
 #endif
 
-
+#endif /* __ANONYMOUS_DEFINED */
 
 // FIXME
 #undef UNALIGNED
