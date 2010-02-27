@@ -71,6 +71,22 @@ extern "C" {
 #define ALIGN_UP_POINTER(p, t) \
     (ALIGN_DOWN_POINTER(((ULONG_PTR)(p) + sizeof(t) - 1), t))
 
+/*
+ * GUID Comparison
+ */
+
+#ifndef __IID_ALIGNED__
+    #define __IID_ALIGNED__
+    #ifdef __cplusplus
+        inline int IsEqualGUIDAligned(REFGUID guid1, REFGUID guid2)
+        {
+            return ((*(PLONGLONG)(&guid1) == *(PLONGLONG)(&guid2)) && (*((PLONGLONG)(&guid1) + 1) == *((PLONGLONG)(&guid2) + 1)));
+        }
+    #else
+        #define IsEqualGUIDAligned(guid1, guid2) \
+            ((*(PLONGLONG)(guid1) == *(PLONGLONG)(guid2)) && (*((PLONGLONG)(guid1) + 1) == *((PLONGLONG)(guid2) + 1)))
+    #endif 
+#endif
 
 /* Simple types */
 typedef UCHAR KPROCESSOR_MODE;

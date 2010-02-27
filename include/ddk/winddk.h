@@ -75,23 +75,6 @@ extern "C" {
 #endif
 
 /*
- * GUID Comparison
- */
-
-#ifndef __IID_ALIGNED__
-    #define __IID_ALIGNED__
-    #ifdef __cplusplus
-        inline int IsEqualGUIDAligned(REFGUID guid1, REFGUID guid2)
-        {
-            return ((*(PLONGLONG)(&guid1) == *(PLONGLONG)(&guid2)) && (*((PLONGLONG)(&guid1) + 1) == *((PLONGLONG)(&guid2) + 1)));
-        }
-    #else
-        #define IsEqualGUIDAligned(guid1, guid2) \
-            ((*(PLONGLONG)(guid1) == *(PLONGLONG)(guid2)) && (*((PLONGLONG)(guid1) + 1) == *((PLONGLONG)(guid2) + 1)))
-    #endif 
-#endif
-
-/*
 ** Forward declarations
 */
 
