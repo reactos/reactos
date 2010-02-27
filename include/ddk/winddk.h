@@ -78,25 +78,12 @@ extern "C" {
 ** Forward declarations
 */
 
-struct _IRP;
-struct _MDL;
-struct _KAPC;
-struct _KDPC;
 struct _KPCR;
 struct _KPRCB;
 struct _KTSS;
-struct _FILE_OBJECT;
-struct _DMA_ADAPTER;
-struct _DEVICE_OBJECT;
-struct _DRIVER_OBJECT;
-struct _IO_STATUS_BLOCK;
-struct _DEVICE_DESCRIPTION;
-struct _SCATTER_GATHER_LIST;
-struct _DRIVE_LAYOUT_INFORMATION;
 struct _DRIVE_LAYOUT_INFORMATION_EX;
 struct _LOADER_PARAMETER_BLOCK;
 
-typedef PVOID PSID;
 
 #if 1
 /* FIXME: Unknown definitions */
@@ -120,38 +107,10 @@ typedef enum
     IrpForward       // Irp is wmi irp, but targeted at another device object
 } SYSCTL_IRP_DISPOSITION, *PSYSCTL_IRP_DISPOSITION;
 
-/*
-** Routines specific to this DDK
-*/
-#define NtCurrentThread() ( (HANDLE)(LONG_PTR) -2 )
-
-/*
-** Simple structures
-*/
-
-typedef UCHAR KIRQL, *PKIRQL;
-
-typedef enum _MODE {
-  KernelMode,
-  UserMode,
-  MaximumMode
-} MODE;
-
 //
 // Forwarder
 //
 struct _COMPRESSED_DATA_INFO;
-
-/* Constants */
-#define NtCurrentProcess() ( (HANDLE)(LONG_PTR) -1 )
-#define ZwCurrentProcess() NtCurrentProcess()
-#define NtCurrentThread() ( (HANDLE)(LONG_PTR) -2 )
-#define ZwCurrentThread() NtCurrentThread()
-
-#if (_M_IX86)
-#define KIP0PCRADDRESS                      0xffdff000
-    
-#endif
 
 #define KERNEL_STACK_SIZE                   12288
 #define KERNEL_LARGE_STACK_SIZE             61440
@@ -274,38 +233,6 @@ typedef enum _DPFLTR_TYPE
     DPFLTR_WOW64_ID = 102,
     DPFLTR_ENDOFTABLE_ID
 } DPFLTR_TYPE;
-
-#define MAXIMUM_PROCESSORS                32
-
-#define MAXIMUM_WAIT_OBJECTS              64
-
-#define EX_RUNDOWN_ACTIVE                 0x1
-#define EX_RUNDOWN_COUNT_SHIFT            0x1
-#define EX_RUNDOWN_COUNT_INC              (1 << EX_RUNDOWN_COUNT_SHIFT)
-
-#define METHOD_BUFFERED                   0
-#define METHOD_IN_DIRECT                  1
-#define METHOD_OUT_DIRECT                 2
-#define METHOD_NEITHER                    3
-
-#define LOW_PRIORITY                      0
-#define LOW_REALTIME_PRIORITY             16
-#define HIGH_PRIORITY                     31
-#define MAXIMUM_PRIORITY                  32
-
-#define MAXIMUM_SUSPEND_COUNT             MAXCHAR
-
-#define MAXIMUM_FILENAME_LENGTH           256
-
-#define FILE_SUPERSEDED                   0x00000000
-#define FILE_OPENED                       0x00000001
-#define FILE_CREATED                      0x00000002
-#define FILE_OVERWRITTEN                  0x00000003
-#define FILE_EXISTS                       0x00000004
-#define FILE_DOES_NOT_EXIST               0x00000005
-
-#define FILE_USE_FILE_POINTER_POSITION    0xfffffffe
-#define FILE_WRITE_TO_END_OF_FILE         0xffffffff
 
 /* also in winnt.h */
 #define FILE_LIST_DIRECTORY               0x00000001
