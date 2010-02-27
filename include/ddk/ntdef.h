@@ -95,10 +95,8 @@ typedef unsigned long POINTER_64; // FIXME! HACK!!!
 //
 #ifndef NONAMELESSUNION
 #ifdef __GNUC__
-#if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95) || defined (__cplusplus)
 #define _ANONYMOUS_UNION __GNU_EXTENSION
 #define _ANONYMOUS_STRUCT __GNU_EXTENSION
-#endif /* __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95) || defined (__cplusplus) */
 #elif defined(__WATCOMC__) || defined(_MSC_VER)
 #define _ANONYMOUS_UNION
 #define _ANONYMOUS_STRUCT
