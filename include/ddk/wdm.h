@@ -238,6 +238,248 @@ typedef enum _MODE {
 #define FILE_OPEN_NO_RECALL               0x00400000
 #define FILE_OPEN_FOR_FREE_SPACE_QUERY    0x00800000
 
+#define FILE_ANY_ACCESS                   0x00000000
+#define FILE_SPECIAL_ACCESS               FILE_ANY_ACCESS
+#define FILE_READ_ACCESS                  0x00000001
+#define FILE_WRITE_ACCESS                 0x00000002
+
+#define FILE_ALL_ACCESS \
+  (STANDARD_RIGHTS_REQUIRED | \
+   SYNCHRONIZE | \
+   0x1FF)
+
+#define FILE_GENERIC_EXECUTE \
+  (STANDARD_RIGHTS_EXECUTE | \
+   FILE_READ_ATTRIBUTES | \
+   FILE_EXECUTE | \
+   SYNCHRONIZE)
+
+#define FILE_GENERIC_READ \
+  (STANDARD_RIGHTS_READ | \
+   FILE_READ_DATA | \
+   FILE_READ_ATTRIBUTES | \
+   FILE_READ_EA | \
+   SYNCHRONIZE)
+
+#define FILE_GENERIC_WRITE \
+  (STANDARD_RIGHTS_WRITE | \
+   FILE_WRITE_DATA | \
+   FILE_WRITE_ATTRIBUTES | \
+   FILE_WRITE_EA | \
+   FILE_APPEND_DATA | \
+   SYNCHRONIZE)
+
+/* end winnt.h */
+
+#define OBJ_NAME_PATH_SEPARATOR     ((WCHAR)L'\\')
+
+#define OBJECT_TYPE_CREATE (0x0001)
+#define OBJECT_TYPE_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0x1)
+
+#define DIRECTORY_QUERY (0x0001)
+#define DIRECTORY_TRAVERSE (0x0002)
+#define DIRECTORY_CREATE_OBJECT (0x0004)
+#define DIRECTORY_CREATE_SUBDIRECTORY (0x0008)
+#define DIRECTORY_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0xF)
+
+#define EVENT_QUERY_STATE (0x0001)
+#define EVENT_MODIFY_STATE (0x0002)
+#define EVENT_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x3)
+
+#define SEMAPHORE_QUERY_STATE (0x0001)
+#define SEMAPHORE_MODIFY_STATE (0x0002)
+#define SEMAPHORE_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x3)
+
+#define FM_LOCK_BIT             (0x1)
+#define FM_LOCK_BIT_V           (0x0)
+#define FM_LOCK_WAITER_WOKEN    (0x2)
+#define FM_LOCK_WAITER_INC      (0x4)
+
+#define PROCESSOR_FEATURE_MAX 64
+
+typedef enum _ALTERNATIVE_ARCHITECTURE_TYPE
+{
+    StandardDesign,
+    NEC98x86,
+    EndAlternatives
+} ALTERNATIVE_ARCHITECTURE_TYPE;
+
+typedef struct _KSYSTEM_TIME
+{
+    ULONG LowPart;
+    LONG High1Time;
+    LONG High2Time;
+} KSYSTEM_TIME, *PKSYSTEM_TIME;
+
+/*
+** IRP function codes
+*/
+
+#define IRP_MJ_CREATE                     0x00
+#define IRP_MJ_CREATE_NAMED_PIPE          0x01
+#define IRP_MJ_CLOSE                      0x02
+#define IRP_MJ_READ                       0x03
+#define IRP_MJ_WRITE                      0x04
+#define IRP_MJ_QUERY_INFORMATION          0x05
+#define IRP_MJ_SET_INFORMATION            0x06
+#define IRP_MJ_QUERY_EA                   0x07
+#define IRP_MJ_SET_EA                     0x08
+#define IRP_MJ_FLUSH_BUFFERS              0x09
+#define IRP_MJ_QUERY_VOLUME_INFORMATION   0x0a
+#define IRP_MJ_SET_VOLUME_INFORMATION     0x0b
+#define IRP_MJ_DIRECTORY_CONTROL          0x0c
+#define IRP_MJ_FILE_SYSTEM_CONTROL        0x0d
+#define IRP_MJ_DEVICE_CONTROL             0x0e
+#define IRP_MJ_INTERNAL_DEVICE_CONTROL    0x0f
+#define IRP_MJ_SCSI                       0x0f
+#define IRP_MJ_SHUTDOWN                   0x10
+#define IRP_MJ_LOCK_CONTROL               0x11
+#define IRP_MJ_CLEANUP                    0x12
+#define IRP_MJ_CREATE_MAILSLOT            0x13
+#define IRP_MJ_QUERY_SECURITY             0x14
+#define IRP_MJ_SET_SECURITY               0x15
+#define IRP_MJ_POWER                      0x16
+#define IRP_MJ_SYSTEM_CONTROL             0x17
+#define IRP_MJ_DEVICE_CHANGE              0x18
+#define IRP_MJ_QUERY_QUOTA                0x19
+#define IRP_MJ_SET_QUOTA                  0x1a
+#define IRP_MJ_PNP                        0x1b
+#define IRP_MJ_PNP_POWER                  0x1b
+#define IRP_MJ_MAXIMUM_FUNCTION           0x1b
+
+#define IRP_MN_SCSI_CLASS                 0x01
+
+#define IRP_MN_START_DEVICE               0x00
+#define IRP_MN_QUERY_REMOVE_DEVICE        0x01
+#define IRP_MN_REMOVE_DEVICE              0x02
+#define IRP_MN_CANCEL_REMOVE_DEVICE       0x03
+#define IRP_MN_STOP_DEVICE                0x04
+#define IRP_MN_QUERY_STOP_DEVICE          0x05
+#define IRP_MN_CANCEL_STOP_DEVICE         0x06
+
+#define IRP_MN_QUERY_DEVICE_RELATIONS       0x07
+#define IRP_MN_QUERY_INTERFACE              0x08
+#define IRP_MN_QUERY_CAPABILITIES           0x09
+#define IRP_MN_QUERY_RESOURCES              0x0A
+#define IRP_MN_QUERY_RESOURCE_REQUIREMENTS  0x0B
+#define IRP_MN_QUERY_DEVICE_TEXT            0x0C
+#define IRP_MN_FILTER_RESOURCE_REQUIREMENTS 0x0D
+
+#define IRP_MN_READ_CONFIG                  0x0F
+#define IRP_MN_WRITE_CONFIG                 0x10
+#define IRP_MN_EJECT                        0x11
+#define IRP_MN_SET_LOCK                     0x12
+#define IRP_MN_QUERY_ID                     0x13
+#define IRP_MN_QUERY_PNP_DEVICE_STATE       0x14
+#define IRP_MN_QUERY_BUS_INFORMATION        0x15
+#define IRP_MN_DEVICE_USAGE_NOTIFICATION    0x16
+#define IRP_MN_SURPRISE_REMOVAL             0x17
+
+#define IRP_MN_WAIT_WAKE                  0x00
+#define IRP_MN_POWER_SEQUENCE             0x01
+#define IRP_MN_SET_POWER                  0x02
+#define IRP_MN_QUERY_POWER                0x03
+
+#define IRP_MN_QUERY_ALL_DATA             0x00
+#define IRP_MN_QUERY_SINGLE_INSTANCE      0x01
+#define IRP_MN_CHANGE_SINGLE_INSTANCE     0x02
+#define IRP_MN_CHANGE_SINGLE_ITEM         0x03
+#define IRP_MN_ENABLE_EVENTS              0x04
+#define IRP_MN_DISABLE_EVENTS             0x05
+#define IRP_MN_ENABLE_COLLECTION          0x06
+#define IRP_MN_DISABLE_COLLECTION         0x07
+#define IRP_MN_REGINFO                    0x08
+#define IRP_MN_EXECUTE_METHOD             0x09
+
+#define IRP_MN_REGINFO_EX                 0x0b
+
+typedef enum _IO_PAGING_PRIORITY {
+  IoPagingPriorityInvalid,
+  IoPagingPriorityNormal,
+  IoPagingPriorityHigh,
+  IoPagingPriorityReserved1,
+  IoPagingPriorityReserved2
+} IO_PAGING_PRIORITY;
+
+typedef enum _IO_ALLOCATION_ACTION {
+  KeepObject = 1,
+  DeallocateObject,
+  DeallocateObjectKeepRegisters
+} IO_ALLOCATION_ACTION, *PIO_ALLOCATION_ACTION;
+
+typedef IO_ALLOCATION_ACTION
+(DDKAPI *PDRIVER_CONTROL)(
+  IN struct _DEVICE_OBJECT  *DeviceObject,
+  IN struct _IRP  *Irp,
+  IN PVOID  MapRegisterBase,
+  IN PVOID  Context);
+
+typedef VOID
+(DDKAPI *PDRIVER_LIST_CONTROL)(
+  IN struct _DEVICE_OBJECT  *DeviceObject,
+  IN struct _IRP  *Irp,
+  IN struct _SCATTER_GATHER_LIST  *ScatterGather,
+  IN PVOID  Context);
+
+typedef NTSTATUS
+(DDKAPI DRIVER_ADD_DEVICE)(
+  IN struct _DRIVER_OBJECT  *DriverObject,
+  IN struct _DEVICE_OBJECT  *PhysicalDeviceObject);
+typedef DRIVER_ADD_DEVICE *PDRIVER_ADD_DEVICE;
+
+typedef NTSTATUS
+(DDKAPI IO_COMPLETION_ROUTINE)(
+  IN struct _DEVICE_OBJECT  *DeviceObject,
+  IN struct _IRP  *Irp,
+  IN PVOID  Context);
+typedef IO_COMPLETION_ROUTINE *PIO_COMPLETION_ROUTINE;
+
+typedef VOID
+(DDKAPI DRIVER_CANCEL)(
+  IN struct _DEVICE_OBJECT  *DeviceObject,
+  IN struct _IRP  *Irp);
+typedef DRIVER_CANCEL *PDRIVER_CANCEL;
+
+typedef VOID
+(DDKAPI *PKDEFERRED_ROUTINE)(
+  IN struct _KDPC  *Dpc,
+  IN PVOID  DeferredContext,
+  IN PVOID  SystemArgument1,
+  IN PVOID  SystemArgument2);
+
+typedef NTSTATUS
+(DDKAPI DRIVER_DISPATCH)(
+  IN struct _DEVICE_OBJECT  *DeviceObject,
+  IN struct _IRP  *Irp);
+typedef DRIVER_DISPATCH *PDRIVER_DISPATCH;
+
+typedef VOID
+(DDKAPI *PIO_DPC_ROUTINE)(
+  IN struct _KDPC  *Dpc,
+  IN struct _DEVICE_OBJECT  *DeviceObject,
+  IN struct _IRP  *Irp,
+  IN PVOID  Context);
+
+typedef NTSTATUS
+(DDKAPI *PMM_DLL_INITIALIZE)(
+  IN PUNICODE_STRING  RegistryPath);
+
+typedef NTSTATUS
+(DDKAPI *PMM_DLL_UNLOAD)(
+  VOID);
+
+typedef NTSTATUS
+(DDKAPI DRIVER_INITIALIZE)(
+  IN struct _DRIVER_OBJECT  *DriverObject,
+  IN PUNICODE_STRING  RegistryPath);
+typedef DRIVER_INITIALIZE *PDRIVER_INITIALIZE;
+
+typedef BOOLEAN
+(DDKAPI KSERVICE_ROUTINE)(
+  IN struct _KINTERRUPT  *Interrupt,
+  IN PVOID  ServiceContext);
+typedef KSERVICE_ROUTINE *PKSERVICE_ROUTINE;
+
 /* Simple types */
 typedef UCHAR KPROCESSOR_MODE;
 typedef LONG KPRIORITY;
