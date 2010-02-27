@@ -13,6 +13,14 @@
 #include <stdarg.h>
 #include <string.h>
 
+/* Helper macro to enable gcc's extension.  */
+#ifndef __GNU_EXTENSION
+#ifdef __GNUC__
+#define __GNU_EXTENSION __extension__
+#else
+#define __GNU_EXTENSION
+#endif
+#endif
 
 typedef unsigned long POINTER_64; // FIXME! HACK!!!
 
@@ -87,14 +95,10 @@ typedef unsigned long POINTER_64; // FIXME! HACK!!!
 //
 #ifndef NONAMELESSUNION
 #ifdef __GNUC__
-#if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95)
-#define _ANONYMOUS_UNION __extension__
-#define _ANONYMOUS_STRUCT __extension__
-#else
-#if defined(__cplusplus)
-#define _ANONYMOUS_UNION __extension__
-#endif /* __cplusplus */
-#endif /* __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95) */
+#if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95) || defined (__cplusplus)
+#define _ANONYMOUS_UNION __GNU_EXTENSION
+#define _ANONYMOUS_STRUCT __GNU_EXTENSION
+#endif /* __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95) || defined (__cplusplus) */
 #elif defined(__WATCOMC__) || defined(_MSC_VER)
 #define _ANONYMOUS_UNION
 #define _ANONYMOUS_STRUCT
@@ -332,7 +336,7 @@ typedef struct _QUAD
 {
     _ANONYMOUS_UNION union
     {
-        __int64 UseThisFieldToCopy;
+        __GNU_EXTENSION __int64 UseThisFieldToCopy;
         double DoNotUseThisField;
     };
 } QUAD, *PQUAD, UQUAD, *PUQUAD;
@@ -374,8 +378,8 @@ typedef LONG HRESULT;
 //
 // 64-bit types
 //
-typedef __int64 LONGLONG, *PLONGLONG;
-typedef unsigned __int64 ULONGLONG, *PULONGLONG;
+__GNU_EXTENSION typedef __int64 LONGLONG, *PLONGLONG;
+__GNU_EXTENSION typedef unsigned __int64 ULONGLONG, *PULONGLONG;
 typedef ULONGLONG DWORDLONG, *PDWORDLONG;
 
 //
