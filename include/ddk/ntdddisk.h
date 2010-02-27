@@ -23,6 +23,15 @@
 #ifndef __NTDDDISK_H
 #define __NTDDDISK_H
 
+/* Helper macro to enable gcc's extension.  */
+#ifndef __GNU_EXTENSION
+#ifdef __GNUC__
+#define __GNU_EXTENSION __extension__
+#else
+#define __GNU_EXTENSION
+#endif
+#endif
+
 #include "ntddstor.h"
 
 #ifdef __cplusplus
@@ -394,7 +403,7 @@ typedef struct _DRIVE_LAYOUT_INFORMATION_GPT {
 typedef struct _DRIVE_LAYOUT_INFORMATION_EX {
   ULONG  PartitionStyle;
   ULONG  PartitionCount;
-  union {
+  __GNU_EXTENSION union {
     DRIVE_LAYOUT_INFORMATION_MBR  Mbr;
     DRIVE_LAYOUT_INFORMATION_GPT  Gpt;
   };

@@ -23,6 +23,15 @@
 #ifndef __WINDDK_H
 #define __WINDDK_H
 
+/* Helper macro to enable gcc's extension.  */
+#ifndef __GNU_EXTENSION
+#ifdef __GNUC__
+#define __GNU_EXTENSION __extension__
+#else
+#define __GNU_EXTENSION
+#endif
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -556,7 +565,7 @@ typedef struct _KUSER_SHARED_DATA
     ULONG SystemCall;
     ULONG SystemCallReturn;
     ULONGLONG SystemCallPad[3];
-    union {
+    __GNU_EXTENSION union {
         volatile KSYSTEM_TIME TickCount;
         volatile ULONG64 TickCountQuad;
     };
@@ -569,10 +578,10 @@ typedef struct _KUSER_SHARED_DATA
     USHORT UserModeGlobalLogger[8];
     ULONG HeapTracingPid[2];
     ULONG CritSecTracingPid[2];
-    union
+    __GNU_EXTENSION union
     {
         ULONG SharedDataFlags;
-        struct
+        __GNU_EXTENSION struct
         {
             ULONG DbgErrorPortPresent:1;
             ULONG DbgElevationEnabled:1;
@@ -1276,9 +1285,9 @@ typedef struct _KGUARDED_MUTEX
     PKTHREAD Owner;
     ULONG Contention;
     KGATE Gate;
-    union
+    __GNU_EXTENSION union
     {
-        struct
+        __GNU_EXTENSION struct
         {
             SHORT KernelApcDisable;
             SHORT SpecialApcDisable;
@@ -4591,7 +4600,7 @@ typedef struct _NT_TIB32 {
 	ULONG StackBase;
 	ULONG StackLimit;
 	ULONG SubSystemTib;
-	union {
+	__GNU_EXTENSION union {
 		ULONG FiberData;
 		ULONG Version;
 	};
@@ -4604,7 +4613,7 @@ typedef struct _NT_TIB64 {
 	ULONG64 StackBase;
 	ULONG64 StackLimit;
 	ULONG64 SubSystemTib;
-	union {
+	__GNU_EXTENSION union {
 		ULONG64 FiberData;
 		ULONG Version;
 	};
@@ -4705,7 +4714,7 @@ typedef struct _PROCESS_WS_WATCH_INFORMATION
 
 typedef struct _PROCESS_DEVICEMAP_INFORMATION
 {
-    union
+    __GNU_EXTENSION union
     {
         struct
         {
@@ -5382,10 +5391,10 @@ extern NTKERNELAPI ULONG_PTR MmUserProbeAddress;
 
 typedef struct _KPCR
 {
-    union
+    __GNU_EXTENSION union
     {
         NT_TIB NtTib;
-        struct
+        __GNU_EXTENSION struct
         {
             union _KGDTENTRY64 *GdtBase;
             struct _KTSS64 *TssBase;

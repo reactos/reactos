@@ -1,6 +1,15 @@
 #ifndef   __USB200_H__
 #define   __USB200_H__
 
+/* Helper macro to enable gcc's extension.  */
+#ifndef __GNU_EXTENSION
+#ifdef __GNUC__
+#define __GNU_EXTENSION __extension__
+#else
+#define __GNU_EXTENSION
+#endif
+#endif
+
 #include "usb100.h"
 
 #include <pshpack1.h>
@@ -37,7 +46,7 @@ typedef struct _USB_DEFAULT_PIPE_SETUP_PACKET
   UCHAR bRequest;
   union _wValue
   {
-    struct
+    __GNU_EXTENSION struct
     {
       UCHAR LowByte;
       UCHAR HiByte;
@@ -46,7 +55,7 @@ typedef struct _USB_DEFAULT_PIPE_SETUP_PACKET
   } wValue;
   union _wIndex
   {
-    struct
+    __GNU_EXTENSION struct
     {
       UCHAR LowByte;
       UCHAR HiByte;

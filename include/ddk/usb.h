@@ -3,6 +3,15 @@
 #ifndef   __USB_H__
 #define   __USB_H__
 
+/* Helper macro to enable gcc's extension.  */
+#ifndef __GNU_EXTENSION
+#ifdef __GNUC__
+#define __GNU_EXTENSION __extension__
+#else
+#define __GNU_EXTENSION
+#endif
+#endif
+
 #ifdef __USBDI_H__
 error
 #endif
@@ -323,7 +332,7 @@ struct _URB_ISOCH_TRANSFER
 
 typedef struct _URB
 {
-  union
+  __GNU_EXTENSION union
   {
       struct _URB_HEADER
          UrbHeader;

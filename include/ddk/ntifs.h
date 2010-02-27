@@ -24,6 +24,15 @@
 #define _NTIFS_
 #define _GNU_NTIFS_
 
+/* Helper macro to enable gcc's extension.  */
+#ifndef __GNU_EXTENSION
+#ifdef __GNUC__
+#define __GNU_EXTENSION __extension__
+#else
+#define __GNU_EXTENSION
+#endif
+#endif
+
 #define NTKERNELAPI DECLSPEC_IMPORT
 
 #include <ntddk.h>
@@ -962,7 +971,7 @@ typedef struct _REPARSE_DATA_BUFFER {
     ULONG  ReparseTag;
     USHORT ReparseDataLength;
     USHORT Reserved;
-    union {
+    __GNU_EXTENSION union {
         struct {
             USHORT SubstituteNameOffset;
             USHORT SubstituteNameLength;
@@ -1351,11 +1360,11 @@ typedef struct _FILE_OBJECTID_INFORMATION {
     LONGLONG        FileReference;
     UCHAR           ObjectId[16];
     _ANONYMOUS_UNION union {
-        struct {
+        __GNU_EXTENSION struct {
             UCHAR   BirthVolumeId[16];
             UCHAR   BirthObjectId[16];
             UCHAR   DomainId[16];
-        } ;
+        };
         UCHAR       ExtendedInfo[48];
     } DUMMYUNIONNAME;
 } FILE_OBJECTID_INFORMATION, *PFILE_OBJECTID_INFORMATION;
@@ -1985,13 +1994,13 @@ typedef struct _PORT_MESSAGE
         } s2;
         ULONG ZeroInit;
     } u2;
-    union
+    __GNU_EXTENSION union
     {
         LPC_CLIENT_ID ClientId;
         double DoNotUseThisField;
     };
     ULONG MessageId;
-    union
+    __GNU_EXTENSION union
     {
         LPC_SIZE_T ClientViewSize;
         ULONG CallbackId;

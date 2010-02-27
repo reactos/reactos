@@ -2,6 +2,15 @@
 extern "C" {
 #endif
 
+/* Helper macro to enable gcc's extension.  */
+#ifndef __GNU_EXTENSION
+#ifdef __GNUC__
+#define __GNU_EXTENSION __extension__
+#else
+#define __GNU_EXTENSION
+#endif
+#endif
+
 #define STDMETHODCALLTYPE __stdcall
 typedef GUID *PGUID;
 
@@ -30,7 +39,7 @@ typedef struct _BDA_FILTER_TEMPLATE
 typedef struct _KSM_PIN
 {
     KSMETHOD    Method;
-    union
+    __GNU_EXTENSION union
     {
         ULONG       PinId;
         ULONG       PinType;

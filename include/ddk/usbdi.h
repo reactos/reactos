@@ -23,6 +23,15 @@
 #ifndef __USBDI_H
 #define __USBDI_H
 
+/* Helper macro to enable gcc's extension.  */
+#ifndef __GNU_EXTENSION
+#ifdef __GNUC__
+#define __GNU_EXTENSION __extension__
+#else
+#define __GNU_EXTENSION
+#endif
+#endif
+
 #ifdef __USB_H
 #error usb.h cannot be included with usbdi.h
 #else
@@ -372,7 +381,7 @@ typedef struct _USBD_VERSION_INFORMATION {
 } USBD_VERSION_INFORMATION, *PUSBD_VERSION_INFORMATION;
 
 typedef struct _URB {
-	union {
+	__GNU_EXTENSION union {
 		struct _URB_HEADER  UrbHeader;
 		struct _URB_SELECT_INTERFACE  UrbSelectInterface;
 		struct _URB_SELECT_CONFIGURATION  UrbSelectConfiguration;
