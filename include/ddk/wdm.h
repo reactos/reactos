@@ -221,7 +221,7 @@ typedef struct _CM_PARTIAL_RESOURCE_DESCRIPTOR {
     } Interrupt;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     struct {
-      union {
+      __GNU_EXTENSION union {
         struct {
           USHORT Reserved;
           USHORT MessageCount;
@@ -1073,22 +1073,22 @@ InterlockedPushEntrySList(
 
 typedef struct _DISPATCHER_HEADER
 {
-    union
+    __GNU_EXTENSION union
     {
-        struct
+        __GNU_EXTENSION struct
         {
             UCHAR Type;
-            union
+            __GNU_EXTENSION union
             {
                 UCHAR Absolute;
                 UCHAR NpxIrql;
             };
-            union
+            __GNU_EXTENSION union
             {
                 UCHAR Size;
                 UCHAR Hand;
             };
-            union
+            __GNU_EXTENSION union
             {
                 UCHAR Inserted;
                 BOOLEAN DebugActive;
@@ -2410,7 +2410,7 @@ typedef struct _ERESOURCE
     ULONG ContentionCount;
     ULONG NumberOfSharedWaiters;
     ULONG NumberOfExclusiveWaiters;
-    union
+    __GNU_EXTENSION union
     {
         PVOID Address;
         ULONG_PTR CreatorBackTraceIndex;
@@ -2510,7 +2510,7 @@ typedef struct LOOKASIDE_ALIGN _NPAGED_LOOKASIDE_LIST {
 //} LOOKASIDE_LIST_EX, *PLOOKASIDE_LIST_EX;
 
 typedef struct _EX_RUNDOWN_REF {
-    union {
+    __GNU_EXTENSION union {
         volatile ULONG_PTR Count;
         volatile PVOID Ptr;
     };
