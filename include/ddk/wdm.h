@@ -88,11 +88,17 @@ extern "C" {
     #endif 
 #endif
 
+#if defined(_WIN64)
+#define POINTER_ALIGNMENT DECLSPEC_ALIGN(8)
+#else
+#define POINTER_ALIGNMENT
+#endif
+
 /*
 ** Forward declarations
 */
 
-struct _IRP;
+struct DECLSPEC_ALIGN(MEMORY_ALLOCATION_ALIGNMENT) _IRP;
 struct _MDL;
 struct _KAPC;
 struct _KDPC;
@@ -827,6 +833,54 @@ typedef struct _KDEVICE_QUEUE_ENTRY {
 #define LOCK_QUEUE_WAIT                   1
 #define LOCK_QUEUE_OWNER                  2
 
+#if defined(_AMD64_)
+
+typedef ULONG64 KSPIN_LOCK_QUEUE_NUMBER;
+
+#define LockQueueUnusedSpare0 0
+#define LockQueueExpansionLock 1
+#define LockQueueUnusedSpare2 2
+#define LockQueueSystemSpaceLock 3
+#define LockQueueVacbLock 4
+#define LockQueueMasterLock 5
+#define LockQueueNonPagedPoolLock 6
+#define LockQueueIoCancelLock 7
+#define LockQueueWorkQueueLock 8
+#define LockQueueIoVpbLock 9
+#define LockQueueIoDatabaseLock 10
+#define LockQueueIoCompletionLock 11
+#define LockQueueNtfsStructLock 12
+#define LockQueueAfdWorkQueueLock 13
+#define LockQueueBcbLock 14
+#define LockQueueMmNonPagedPoolLock 15
+#define LockQueueUnusedSpare16 16
+#define LockQueueMaximumLock (LockQueueUnusedSpare16 + 1)
+
+#else
+
+typedef enum _KSPIN_LOCK_QUEUE_NUMBER {
+  LockQueueUnusedSpare0,
+  LockQueueExpansionLock,
+  LockQueueUnusedSpare2,
+  LockQueueSystemSpaceLock,
+  LockQueueVacbLock,
+  LockQueueMasterLock,
+  LockQueueNonPagedPoolLock,
+  LockQueueIoCancelLock,
+  LockQueueWorkQueueLock,
+  LockQueueIoVpbLock,
+  LockQueueIoDatabaseLock,
+  LockQueueIoCompletionLock,
+  LockQueueNtfsStructLock,
+  LockQueueAfdWorkQueueLock,
+  LockQueueBcbLock,
+  LockQueueMmNonPagedPoolLock,
+  LockQueueUnusedSpare16,
+  LockQueueMaximumLock = LockQueueUnusedSpare16 + 1
+} KSPIN_LOCK_QUEUE_NUMBER, *PKSPIN_LOCK_QUEUE_NUMBER;
+
+#endif
+
 typedef struct _KSPIN_LOCK_QUEUE {
   struct _KSPIN_LOCK_QUEUE  *volatile Next;
   PKSPIN_LOCK volatile  Lock;
@@ -871,6 +925,25 @@ typedef struct _WAIT_CONTEXT_BLOCK {
   PVOID  CurrentIrp;
   PKDPC  BufferChainingDpc;
 } WAIT_CONTEXT_BLOCK, *PWAIT_CONTEXT_BLOCK;
+
+typedef struct _KDEVICE_QUEUE {
+  CSHORT Type;
+  CSHORT Size;
+  LIST_ENTRY DeviceListHead;
+  KSPIN_LOCK Lock;
+  #if defined(_AMD64_)
+  union {
+    BOOLEAN Busy;
+    struct {
+      LONG64 Reserved : 8;
+      LONG64 Hint : 56;
+    };
+  };
+  #else
+  BOOLEAN Busy;
+  #endif
+
+} KDEVICE_QUEUE, *PKDEVICE_QUEUE, *RESTRICTED_POINTER PRKDEVICE_QUEUE;
 
 typedef struct _KDPC
 {
@@ -920,6 +993,18 @@ typedef struct _KMUTANT {
   UCHAR  ApcDisable;
 } KMUTANT, *PKMUTANT, *RESTRICTED_POINTER PRKMUTANT, KMUTEX, *PKMUTEX, *RESTRICTED_POINTER PRKMUTEX;
 
+typedef struct _KTIMER {
+  DISPATCHER_HEADER Header;
+  ULARGE_INTEGER DueTime;
+  LIST_ENTRY TimerListEntry;
+  struct _KDPC *Dpc;
+  #if !defined(_X86_)
+  ULONG Processor;
+  #endif
+  ULONG Period;
+} KTIMER, *PKTIMER, *RESTRICTED_POINTER PRKTIMER;
+
+
 #define EVENT_INCREMENT                   1
 #define IO_NO_INCREMENT                   0
 #define IO_CD_ROM_INCREMENT               1
@@ -937,8 +1022,114 @@ typedef struct _KMUTANT {
 
 #define MM_MAXIMUM_DISK_IO_SIZE          (0x10000)
 
+typedef struct _IRP {
+  CSHORT  Type;
+  USHORT  Size;
+  struct _MDL  *MdlAddress;
+  ULONG  Flags;
+  union {
+    struct _IRP  *MasterIrp;
+    volatile LONG  IrpCount;
+    PVOID  SystemBuffer;
+  } AssociatedIrp;
+  LIST_ENTRY  ThreadListEntry;
+  IO_STATUS_BLOCK  IoStatus;
+  KPROCESSOR_MODE  RequestorMode;
+  BOOLEAN  PendingReturned;
+  CHAR  StackCount;
+  CHAR  CurrentLocation;
+  BOOLEAN  Cancel;
+  KIRQL  CancelIrql;
+  CCHAR  ApcEnvironment;
+  UCHAR  AllocationFlags;
+  PIO_STATUS_BLOCK  UserIosb;
+  PKEVENT  UserEvent;
+  union {
+    struct {
+      _ANONYMOUS_UNION union {      
+        PIO_APC_ROUTINE  UserApcRoutine;
+        PVOID IssuingProcess;
+      } DUMMYUNIONNAME;
+      PVOID  UserApcContext;
+    } AsynchronousParameters;
+    LARGE_INTEGER  AllocationSize;
+  } Overlay;
+  volatile PDRIVER_CANCEL  CancelRoutine;
+  PVOID  UserBuffer;
+  union {
+    struct {
+      _ANONYMOUS_UNION union {
+        KDEVICE_QUEUE_ENTRY  DeviceQueueEntry;
+        _ANONYMOUS_STRUCT struct {
+          PVOID  DriverContext[4];
+        } DUMMYSTRUCTNAME;
+      } DUMMYUNIONNAME;
+      PETHREAD  Thread;
+      PCHAR  AuxiliaryBuffer;
+      _ANONYMOUS_STRUCT struct {
+        LIST_ENTRY  ListEntry;
+        _ANONYMOUS_UNION union {
+          struct _IO_STACK_LOCATION  *CurrentStackLocation;
+          ULONG  PacketType;
+        } DUMMYUNIONNAME;
+      } DUMMYSTRUCTNAME;
+      struct _FILE_OBJECT  *OriginalFileObject;
+    } Overlay;
+    KAPC  Apc;
+    PVOID  CompletionKey;
+  } Tail;
+} IRP;
+typedef struct _IRP *PIRP;
 
+/* IRP.Flags */
 
+#define SL_FORCE_ACCESS_CHECK             0x01
+#define SL_OPEN_PAGING_FILE               0x02
+#define SL_OPEN_TARGET_DIRECTORY          0x04
+#define SL_CASE_SENSITIVE                 0x80
+
+#define SL_KEY_SPECIFIED                  0x01
+#define SL_OVERRIDE_VERIFY_VOLUME         0x02
+#define SL_WRITE_THROUGH                  0x04
+#define SL_FT_SEQUENTIAL_WRITE            0x08
+
+#define SL_FAIL_IMMEDIATELY               0x01
+#define SL_EXCLUSIVE_LOCK                 0x02
+
+#define SL_RESTART_SCAN                   0x01
+#define SL_RETURN_SINGLE_ENTRY            0x02
+#define SL_INDEX_SPECIFIED                0x04
+
+#define SL_WATCH_TREE                     0x01
+
+#define SL_ALLOW_RAW_MOUNT                0x01
+
+#define CTL_CODE(DeviceType, Function, Method, Access)( \
+  ((DeviceType) << 16) | ((Access) << 14) | ((Function) << 2) | (Method))
+
+#define DEVICE_TYPE_FROM_CTL_CODE(ctl) (((ULONG) (ctl & 0xffff0000)) >> 16)
+
+#define IRP_NOCACHE                     0x00000001
+#define IRP_PAGING_IO                   0x00000002
+#define IRP_MOUNT_COMPLETION            0x00000002
+#define IRP_SYNCHRONOUS_API             0x00000004
+#define IRP_ASSOCIATED_IRP              0x00000008
+#define IRP_BUFFERED_IO                 0x00000010
+#define IRP_DEALLOCATE_BUFFER           0x00000020
+#define IRP_INPUT_OPERATION             0x00000040
+#define IRP_SYNCHRONOUS_PAGING_IO       0x00000040
+#define IRP_CREATE_OPERATION            0x00000080
+#define IRP_READ_OPERATION              0x00000100
+#define IRP_WRITE_OPERATION             0x00000200
+#define IRP_CLOSE_OPERATION             0x00000400
+#define IRP_DEFER_IO_COMPLETION         0x00000800
+#define IRP_OB_QUERY_NAME               0x00001000
+#define IRP_HOLD_DEVICE_QUEUE           0x00002000
+
+#define IRP_QUOTA_CHARGED                 0x01
+#define IRP_ALLOCATED_MUST_SUCCEED        0x02
+#define IRP_ALLOCATED_FIXED_SIZE          0x04
+#define IRP_LOOKASIDE_ALLOCATION          0x08
 
 /* Simple types */
 typedef UCHAR KPROCESSOR_MODE;

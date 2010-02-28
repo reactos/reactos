@@ -424,56 +424,12 @@ typedef BOOLEAN
 (DDKAPI *PKTRANSFER_ROUTINE)(
   VOID);
 
-typedef struct _KDEVICE_QUEUE {
-  CSHORT  Type;
-  CSHORT  Size;
-  LIST_ENTRY  DeviceListHead;
-  KSPIN_LOCK  Lock;
-  BOOLEAN  Busy;
-} KDEVICE_QUEUE, *PKDEVICE_QUEUE, *RESTRICTED_POINTER PRKDEVICE_QUEUE;
-
-#define LOCK_QUEUE_TIMER_LOCK_SHIFT       4
-#define LOCK_QUEUE_TIMER_TABLE_LOCKS (1 << (8 - LOCK_QUEUE_TIMER_LOCK_SHIFT))
-
-typedef enum _KSPIN_LOCK_QUEUE_NUMBER
-{
-    LockQueueDispatcherLock,
-    LockQueueExpansionLock,
-    LockQueuePfnLock,
-    LockQueueSystemSpaceLock,
-    LockQueueVacbLock,
-    LockQueueMasterLock,
-    LockQueueNonPagedPoolLock,
-    LockQueueIoCancelLock,
-    LockQueueWorkQueueLock,
-    LockQueueIoVpbLock,
-    LockQueueIoDatabaseLock,
-    LockQueueIoCompletionLock,
-    LockQueueNtfsStructLock,
-    LockQueueAfdWorkQueueLock,
-    LockQueueBcbLock,
-    LockQueueMmNonPagedPoolLock,
-    LockQueueUnusedSpare16,
-    LockQueueTimerTableLock,
-    LockQueueMaximumLock = LockQueueTimerTableLock + LOCK_QUEUE_TIMER_TABLE_LOCKS
-} KSPIN_LOCK_QUEUE_NUMBER, *PKSPIN_LOCK_QUEUE_NUMBER;
-
-
-
 #define ASSERT_GATE(object) \
     ASSERT((((object)->Header.Type & KOBJECT_TYPE_MASK) == GateObject) || \
           (((object)->Header.Type & KOBJECT_TYPE_MASK) == EventSynchronizationObject))
 
 #define TIMER_TABLE_SIZE 512
 #define TIMER_TABLE_SHIFT 9
-
-typedef struct _KTIMER {
-  DISPATCHER_HEADER  Header;
-  ULARGE_INTEGER  DueTime;
-  LIST_ENTRY  TimerListEntry;
-  struct _KDPC  *Dpc;
-  LONG  Period;
-} KTIMER, *PKTIMER, *RESTRICTED_POINTER PRKTIMER;
 
 #define ASSERT_TIMER(E) \
     ASSERT(((E)->Header.Type == TimerNotificationObject) || \
@@ -495,115 +451,6 @@ typedef enum _TIMER_TYPE {
   SynchronizationTimer
 } TIMER_TYPE;
 
-typedef struct _IRP {
-  CSHORT  Type;
-  USHORT  Size;
-  struct _MDL  *MdlAddress;
-  ULONG  Flags;
-  union {
-    struct _IRP  *MasterIrp;
-    volatile LONG  IrpCount;
-    PVOID  SystemBuffer;
-  } AssociatedIrp;
-  LIST_ENTRY  ThreadListEntry;
-  IO_STATUS_BLOCK  IoStatus;
-  KPROCESSOR_MODE  RequestorMode;
-  BOOLEAN  PendingReturned;
-  CHAR  StackCount;
-  CHAR  CurrentLocation;
-  BOOLEAN  Cancel;
-  KIRQL  CancelIrql;
-  CCHAR  ApcEnvironment;
-  UCHAR  AllocationFlags;
-  PIO_STATUS_BLOCK  UserIosb;
-  PKEVENT  UserEvent;
-  union {
-    struct {
-      PIO_APC_ROUTINE  UserApcRoutine;
-      PVOID  UserApcContext;
-    } AsynchronousParameters;
-    LARGE_INTEGER  AllocationSize;
-  } Overlay;
-  volatile PDRIVER_CANCEL  CancelRoutine;
-  PVOID  UserBuffer;
-  union {
-    struct {
-      _ANONYMOUS_UNION union {
-        KDEVICE_QUEUE_ENTRY  DeviceQueueEntry;
-        _ANONYMOUS_STRUCT struct {
-          PVOID  DriverContext[4];
-        } DUMMYSTRUCTNAME;
-      } DUMMYUNIONNAME;
-      PETHREAD  Thread;
-      PCHAR  AuxiliaryBuffer;
-      _ANONYMOUS_STRUCT struct {
-        LIST_ENTRY  ListEntry;
-        _ANONYMOUS_UNION union {
-          struct _IO_STACK_LOCATION  *CurrentStackLocation;
-          ULONG  PacketType;
-        } DUMMYUNIONNAME;
-      } DUMMYSTRUCTNAME;
-      struct _FILE_OBJECT  *OriginalFileObject;
-    } Overlay;
-    KAPC  Apc;
-    PVOID  CompletionKey;
-  } Tail;
-} IRP;
-typedef struct _IRP *PIRP;
-
-/* IRP.Flags */
-
-#define SL_FORCE_ACCESS_CHECK             0x01
-#define SL_OPEN_PAGING_FILE               0x02
-#define SL_OPEN_TARGET_DIRECTORY          0x04
-#define SL_CASE_SENSITIVE                 0x80
-
-#define SL_KEY_SPECIFIED                  0x01
-#define SL_OVERRIDE_VERIFY_VOLUME         0x02
-#define SL_WRITE_THROUGH                  0x04
-#define SL_FT_SEQUENTIAL_WRITE            0x08
-
-#define SL_FAIL_IMMEDIATELY               0x01
-#define SL_EXCLUSIVE_LOCK                 0x02
-
-#define SL_RESTART_SCAN                   0x01
-#define SL_RETURN_SINGLE_ENTRY            0x02
-#define SL_INDEX_SPECIFIED                0x04
-
-#define SL_WATCH_TREE                     0x01
-
-#define SL_ALLOW_RAW_MOUNT                0x01
-
-#define CTL_CODE(DeviceType, Function, Method, Access)( \
-  ((DeviceType) << 16) | ((Access) << 14) | ((Function) << 2) | (Method))
-
-#define DEVICE_TYPE_FROM_CTL_CODE(ctl) (((ULONG) (ctl & 0xffff0000)) >> 16)
-
-enum
-{
-   IRP_NOCACHE = 0x1,
-   IRP_PAGING_IO = 0x2,
-   IRP_MOUNT_COMPLETION = 0x2,
-   IRP_SYNCHRONOUS_API = 0x4,
-   IRP_ASSOCIATED_IRP = 0x8,
-   IRP_BUFFERED_IO = 0x10,
-   IRP_DEALLOCATE_BUFFER = 0x20,
-   IRP_INPUT_OPERATION = 0x40,
-   IRP_SYNCHRONOUS_PAGING_IO = 0x40,
-   IRP_CREATE_OPERATION = 0x80,
-   IRP_READ_OPERATION = 0x100,
-   IRP_WRITE_OPERATION = 0x200,
-   IRP_CLOSE_OPERATION = 0x400,
-   IRP_DEFER_IO_COMPLETION = 0x800,
-   IRP_OB_QUERY_NAME = 0x1000,
-   IRP_HOLD_DEVICE_QUEUE = 0x2000,
-   IRP_RETRY_IO_COMPLETION = 0x4000
-};
-
-#define IRP_QUOTA_CHARGED                 0x01
-#define IRP_ALLOCATED_MUST_SUCCEED        0x02
-#define IRP_ALLOCATED_FIXED_SIZE          0x04
-#define IRP_LOOKASIDE_ALLOCATION          0x08
 
 typedef struct _BOOTDISK_INFORMATION {
   LONGLONG  BootPartitionOffset;
