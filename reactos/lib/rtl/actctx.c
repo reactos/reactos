@@ -551,14 +551,15 @@ static ACTIVATION_CONTEXT *check_actctx( HANDLE h )
     ACTIVATION_CONTEXT *ret = NULL, *actctx = h;
 
     if (!h || h == INVALID_HANDLE_VALUE) return NULL;
-    //__TRY
+    _SEH2_TRY
     {
         if (actctx && actctx->magic == ACTCTX_MAGIC) ret = actctx;
     }
-    //__EXCEPT_PAGE_FAULT
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
+        DPRINT1("Invalid activation context handle!\n");
     }
-    //__ENDTRY
+    _SEH2_END;
     return ret;
 }
 
