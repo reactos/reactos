@@ -347,6 +347,8 @@ ScServiceDispatcher(HANDLE hPipe,
     DWORD dwRunningServices = 0;
     LPWSTR lpServiceName;
     PACTIVE_SERVICE lpService;
+    SCM_REPLY_PACKET ReplyPacket;
+    DWORD dwError;
 
     TRACE("ScDispatcherLoop() called\n");
 
@@ -381,21 +383,41 @@ ScServiceDispatcher(HANDLE hPipe,
             {
                 case SERVICE_CONTROL_START:
                     TRACE("Start command - recieved SERVICE_CONTROL_START\n");
-                    if (ScStartService(lpService, ControlPacket) == ERROR_SUCCESS)
+                    dwError = ScStartService(lpService, ControlPacket);
+                    if (dwError == ERROR_SUCCESS)
                         dwRunningServices++;
                     break;
 
                 case SERVICE_CONTROL_STOP:
                     TRACE("Stop command - recieved SERVICE_CONTROL_STOP\n");
-                    if (ScControlService(lpService, ControlPacket) == ERROR_SUCCESS)
+                    dwError = ScControlService(lpService, ControlPacket);
+                    if (dwError == ERROR_SUCCESS)
                         dwRunningServices--;
                     break;
 
                 default:
                     TRACE("Command %lu received", ControlPacket->dwControl);
-                    ScControlService(lpService, ControlPacket);
-                    continue;
+                    dwError = ScControlService(lpService, ControlPacket);
+                    break;
             }
+        }
+        else
+        {
+            dwError = ERROR_NOT_FOUND;
+        }
+
+        ReplyPacket.dwError = dwError;
+
+        /* Send the reply packet */
+        bResult = WriteFile(hPipe,
+                            &ReplyPacket,
+                            sizeof(ReplyPacket),
+                            &Count,
+                            NULL);
+        if (bResult == FALSE)
+        {
+            ERR("Pipe write failed (Error: %lu)\n", GetLastError());
+            return FALSE;
         }
 
         if (dwRunningServices == 0)
