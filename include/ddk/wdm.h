@@ -832,14 +832,15 @@ typedef struct _KDEVICE_QUEUE_ENTRY {
 
 #define LOCK_QUEUE_WAIT                   1
 #define LOCK_QUEUE_OWNER                  2
+#define LOCK_QUEUE_TIMER_TABLE_LOCKS (1 << (8 - LOCK_QUEUE_TIMER_LOCK_SHIFT))
 
 #if defined(_AMD64_)
 
 typedef ULONG64 KSPIN_LOCK_QUEUE_NUMBER;
 
-#define LockQueueUnusedSpare0 0
+#define LockQueueDispatcherLock 0
 #define LockQueueExpansionLock 1
-#define LockQueueUnusedSpare2 2
+#define LockQueuePfnLock 2
 #define LockQueueSystemSpaceLock 3
 #define LockQueueVacbLock 4
 #define LockQueueMasterLock 5
@@ -854,14 +855,15 @@ typedef ULONG64 KSPIN_LOCK_QUEUE_NUMBER;
 #define LockQueueBcbLock 14
 #define LockQueueMmNonPagedPoolLock 15
 #define LockQueueUnusedSpare16 16
-#define LockQueueMaximumLock (LockQueueUnusedSpare16 + 1)
+#define LockQueueTimerTableLock 17
+#define LockQueueMaximumLock (LockQueueTimerTableLock + LOCK_QUEUE_TIMER_TABLE_LOCKS)
 
 #else
 
 typedef enum _KSPIN_LOCK_QUEUE_NUMBER {
-  LockQueueUnusedSpare0,
+  LockQueueDispatcherLock,
   LockQueueExpansionLock,
-  LockQueueUnusedSpare2,
+  LockQueuePfnLock,
   LockQueueSystemSpaceLock,
   LockQueueVacbLock,
   LockQueueMasterLock,
@@ -876,7 +878,8 @@ typedef enum _KSPIN_LOCK_QUEUE_NUMBER {
   LockQueueBcbLock,
   LockQueueMmNonPagedPoolLock,
   LockQueueUnusedSpare16,
-  LockQueueMaximumLock = LockQueueUnusedSpare16 + 1
+  LockQueueTimerTableLock,
+  LockQueueMaximumLock = LockQueueTimerTableLock + LOCK_QUEUE_TIMER_TABLE_LOCKS
 } KSPIN_LOCK_QUEUE_NUMBER, *PKSPIN_LOCK_QUEUE_NUMBER;
 
 #endif
