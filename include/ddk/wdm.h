@@ -2422,6 +2422,100 @@ typedef struct _IO_COMPLETION_CONTEXT {
 #define FO_SKIP_SET_EVENT            0x04000000
 #define FO_SKIP_SET_FAST_IO          0x08000000
 
+typedef struct _FILE_OBJECT
+{
+    CSHORT Type;
+    CSHORT Size;
+    PDEVICE_OBJECT DeviceObject;
+    PVPB Vpb;
+    PVOID FsContext;
+    PVOID FsContext2;
+    PSECTION_OBJECT_POINTERS SectionObjectPointer;
+    PVOID PrivateCacheMap;
+    NTSTATUS FinalStatus;
+    struct _FILE_OBJECT *RelatedFileObject;
+    BOOLEAN LockOperation;
+    BOOLEAN DeletePending;
+    BOOLEAN ReadAccess;
+    BOOLEAN WriteAccess;
+    BOOLEAN DeleteAccess;
+    BOOLEAN SharedRead;
+    BOOLEAN SharedWrite;
+    BOOLEAN SharedDelete;
+    ULONG Flags;
+    UNICODE_STRING FileName;
+    LARGE_INTEGER CurrentByteOffset;
+    volatile ULONG Waiters;
+    volatile ULONG Busy;
+    PVOID LastLock;
+    KEVENT Lock;
+    KEVENT Event;
+    volatile PIO_COMPLETION_CONTEXT CompletionContext;
+    KSPIN_LOCK IrpListLock;
+    LIST_ENTRY IrpList;
+    volatile PVOID FileObjectExtension;
+} FILE_OBJECT;
+typedef struct _FILE_OBJECT *PFILE_OBJECT;
+
+typedef enum _SECURITY_OPERATION_CODE {
+  SetSecurityDescriptor,
+  QuerySecurityDescriptor,
+  DeleteSecurityDescriptor,
+  AssignSecurityDescriptor
+} SECURITY_OPERATION_CODE, *PSECURITY_OPERATION_CODE;
+
+#define INITIAL_PRIVILEGE_COUNT           3
+
+typedef struct _INITIAL_PRIVILEGE_SET {
+  ULONG  PrivilegeCount;
+  ULONG  Control;
+  LUID_AND_ATTRIBUTES  Privilege[INITIAL_PRIVILEGE_COUNT];
+} INITIAL_PRIVILEGE_SET, * PINITIAL_PRIVILEGE_SET;
+
+#define SE_MIN_WELL_KNOWN_PRIVILEGE         2
+#define SE_CREATE_TOKEN_PRIVILEGE           2
+#define SE_ASSIGNPRIMARYTOKEN_PRIVILEGE     3
+#define SE_LOCK_MEMORY_PRIVILEGE            4
+#define SE_INCREASE_QUOTA_PRIVILEGE         5
+#define SE_MACHINE_ACCOUNT_PRIVILEGE        6
+#define SE_TCB_PRIVILEGE                    7
+#define SE_SECURITY_PRIVILEGE               8
+#define SE_TAKE_OWNERSHIP_PRIVILEGE         9
+#define SE_LOAD_DRIVER_PRIVILEGE            10
+#define SE_SYSTEM_PROFILE_PRIVILEGE         11
+#define SE_SYSTEMTIME_PRIVILEGE             12
+#define SE_PROF_SINGLE_PROCESS_PRIVILEGE    13
+#define SE_INC_BASE_PRIORITY_PRIVILEGE      14
+#define SE_CREATE_PAGEFILE_PRIVILEGE        15
+#define SE_CREATE_PERMANENT_PRIVILEGE       16
+#define SE_BACKUP_PRIVILEGE                 17
+#define SE_RESTORE_PRIVILEGE                18
+#define SE_SHUTDOWN_PRIVILEGE               19
+#define SE_DEBUG_PRIVILEGE                  20
+#define SE_AUDIT_PRIVILEGE                  21
+#define SE_SYSTEM_ENVIRONMENT_PRIVILEGE     22
+#define SE_CHANGE_NOTIFY_PRIVILEGE          23
+#define SE_REMOTE_SHUTDOWN_PRIVILEGE        24
+#define SE_UNDOCK_PRIVILEGE                 25
+#define SE_SYNC_AGENT_PRIVILEGE             26
+#define SE_ENABLE_DELEGATION_PRIVILEGE      27
+#define SE_MANAGE_VOLUME_PRIVILEGE          28
+#define SE_IMPERSONATE_PRIVILEGE            29
+#define SE_CREATE_GLOBAL_PRIVILEGE          30
+#define SE_TRUSTED_CREDMAN_ACCESS_PRIVILEGE 31
+#define SE_RELABEL_PRIVILEGE                32
+#define SE_INC_WORKING_SET_PRIVILEGE        33
+#define SE_TIME_ZONE_PRIVILEGE              34
+#define SE_CREATE_SYMBOLIC_LINK_PRIVILEGE   35
+#define SE_MAX_WELL_KNOWN_PRIVILEGE         SE_CREATE_SYMBOLIC_LINK_PRIVILEGE
+
+typedef struct _SECURITY_SUBJECT_CONTEXT {
+  PACCESS_TOKEN  ClientToken;
+  SECURITY_IMPERSONATION_LEVEL  ImpersonationLevel;
+  PACCESS_TOKEN  PrimaryToken;
+  PVOID  ProcessAuditId;
+} SECURITY_SUBJECT_CONTEXT, *PSECURITY_SUBJECT_CONTEXT;
+
 /* Simple types */
 typedef UCHAR KPROCESSOR_MODE;
 typedef LONG KPRIORITY;
