@@ -1772,6 +1772,362 @@ typedef struct _SCATTER_GATHER_LIST SCATTER_GATHER_LIST, *PSCATTER_GATHER_LIST;
 
 #endif
 
+#define MDL_MAPPED_TO_SYSTEM_VA     0x0001
+#define MDL_PAGES_LOCKED            0x0002
+#define MDL_SOURCE_IS_NONPAGED_POOL 0x0004
+#define MDL_ALLOCATED_FIXED_SIZE    0x0008
+#define MDL_PARTIAL                 0x0010
+#define MDL_PARTIAL_HAS_BEEN_MAPPED 0x0020
+#define MDL_IO_PAGE_READ            0x0040
+#define MDL_WRITE_OPERATION         0x0080
+#define MDL_PARENT_MAPPED_SYSTEM_VA 0x0100
+#define MDL_FREE_EXTRA_PTES         0x0200
+#define MDL_DESCRIBES_AWE           0x0400
+#define MDL_IO_SPACE                0x0800
+#define MDL_NETWORK_HEADER          0x1000
+#define MDL_MAPPING_CAN_FAIL        0x2000
+#define MDL_ALLOCATED_MUST_SUCCEED  0x4000
+#define MDL_INTERNAL                0x8000
+
+
+#define MDL_MAPPING_FLAGS ( \
+  MDL_MAPPED_TO_SYSTEM_VA     | \
+  MDL_PAGES_LOCKED            | \
+  MDL_SOURCE_IS_NONPAGED_POOL | \
+  MDL_PARTIAL_HAS_BEEN_MAPPED | \
+  MDL_PARENT_MAPPED_SYSTEM_VA | \
+  MDL_SYSTEM_VA               | \
+  MDL_IO_SPACE)
+
+typedef struct _DRIVER_EXTENSION {
+  struct _DRIVER_OBJECT  *DriverObject;
+  PDRIVER_ADD_DEVICE  AddDevice;
+  ULONG  Count;
+  UNICODE_STRING  ServiceKeyName;
+} DRIVER_EXTENSION, *PDRIVER_EXTENSION;
+
+#define DRVO_UNLOAD_INVOKED               0x00000001
+#define DRVO_LEGACY_DRIVER                0x00000002
+#define DRVO_BUILTIN_DRIVER               0x00000004
+
+typedef struct _DRIVER_OBJECT {
+  CSHORT  Type;
+  CSHORT  Size;
+  PDEVICE_OBJECT  DeviceObject;
+  ULONG  Flags;
+  PVOID  DriverStart;
+  ULONG  DriverSize;
+  PVOID  DriverSection;
+  PDRIVER_EXTENSION  DriverExtension;
+  UNICODE_STRING  DriverName;
+  PUNICODE_STRING  HardwareDatabase;
+  struct _FAST_IO_DISPATCH *FastIoDispatch;
+  PDRIVER_INITIALIZE  DriverInit;
+  PDRIVER_STARTIO  DriverStartIo;
+  PDRIVER_UNLOAD  DriverUnload;
+  PDRIVER_DISPATCH  MajorFunction[IRP_MJ_MAXIMUM_FUNCTION + 1];
+} DRIVER_OBJECT;
+typedef struct _DRIVER_OBJECT *PDRIVER_OBJECT;
+
+typedef struct _DMA_ADAPTER {
+  USHORT  Version;
+  USHORT  Size;
+  struct _DMA_OPERATIONS*  DmaOperations;
+} DMA_ADAPTER, *PDMA_ADAPTER;
+
+typedef VOID
+(DDKAPI *PPUT_DMA_ADAPTER)(
+  IN PDMA_ADAPTER  DmaAdapter);
+
+typedef PVOID
+(DDKAPI *PALLOCATE_COMMON_BUFFER)(
+  IN PDMA_ADAPTER  DmaAdapter,
+  IN ULONG  Length,
+  OUT PPHYSICAL_ADDRESS  LogicalAddress,
+  IN BOOLEAN  CacheEnabled);
+
+typedef VOID
+(DDKAPI *PFREE_COMMON_BUFFER)(
+  IN PDMA_ADAPTER  DmaAdapter,
+  IN ULONG  Length,
+  IN PHYSICAL_ADDRESS  LogicalAddress,
+  IN PVOID  VirtualAddress,
+  IN BOOLEAN  CacheEnabled);
+
+typedef NTSTATUS
+(DDKAPI *PALLOCATE_ADAPTER_CHANNEL)(
+  IN PDMA_ADAPTER  DmaAdapter,
+  IN PDEVICE_OBJECT  DeviceObject,
+  IN ULONG  NumberOfMapRegisters,
+  IN PDRIVER_CONTROL  ExecutionRoutine,
+  IN PVOID  Context);
+
+typedef BOOLEAN
+(DDKAPI *PFLUSH_ADAPTER_BUFFERS)(
+  IN PDMA_ADAPTER  DmaAdapter,
+  IN PMDL  Mdl,
+  IN PVOID  MapRegisterBase,
+  IN PVOID  CurrentVa,
+  IN ULONG  Length,
+  IN BOOLEAN  WriteToDevice);
+
+typedef VOID
+(DDKAPI *PFREE_ADAPTER_CHANNEL)(
+  IN PDMA_ADAPTER  DmaAdapter);
+
+typedef VOID
+(DDKAPI *PFREE_MAP_REGISTERS)(
+  IN PDMA_ADAPTER  DmaAdapter,
+  PVOID  MapRegisterBase,
+  ULONG  NumberOfMapRegisters);
+
+typedef PHYSICAL_ADDRESS
+(DDKAPI *PMAP_TRANSFER)(
+  IN PDMA_ADAPTER  DmaAdapter,
+  IN PMDL  Mdl,
+  IN PVOID  MapRegisterBase,
+  IN PVOID  CurrentVa,
+  IN OUT PULONG  Length,
+  IN BOOLEAN  WriteToDevice);
+
+typedef ULONG
+(DDKAPI *PGET_DMA_ALIGNMENT)(
+  IN PDMA_ADAPTER  DmaAdapter);
+
+typedef ULONG
+(DDKAPI *PREAD_DMA_COUNTER)(
+  IN PDMA_ADAPTER  DmaAdapter);
+
+typedef NTSTATUS
+(DDKAPI *PGET_SCATTER_GATHER_LIST)(
+  IN PDMA_ADAPTER  DmaAdapter,
+  IN PDEVICE_OBJECT  DeviceObject,
+  IN PMDL  Mdl,
+  IN PVOID  CurrentVa,
+  IN ULONG  Length,
+  IN PDRIVER_LIST_CONTROL  ExecutionRoutine,
+  IN PVOID  Context,
+  IN BOOLEAN  WriteToDevice);
+
+typedef VOID
+(DDKAPI *PPUT_SCATTER_GATHER_LIST)(
+  IN PDMA_ADAPTER  DmaAdapter,
+  IN PSCATTER_GATHER_LIST  ScatterGather,
+  IN BOOLEAN  WriteToDevice);
+
+typedef NTSTATUS
+(DDKAPI *PCALCULATE_SCATTER_GATHER_LIST_SIZE)(
+  IN PDMA_ADAPTER  DmaAdapter,
+  IN PMDL  Mdl  OPTIONAL,
+  IN PVOID  CurrentVa,
+  IN ULONG  Length,
+  OUT PULONG  ScatterGatherListSize,
+  OUT PULONG  pNumberOfMapRegisters  OPTIONAL);
+
+typedef NTSTATUS
+(DDKAPI *PBUILD_SCATTER_GATHER_LIST)(
+  IN PDMA_ADAPTER  DmaAdapter,
+  IN PDEVICE_OBJECT  DeviceObject,
+  IN PMDL  Mdl,
+  IN PVOID  CurrentVa,
+  IN ULONG  Length,
+  IN PDRIVER_LIST_CONTROL  ExecutionRoutine,
+  IN PVOID  Context,
+  IN BOOLEAN  WriteToDevice,
+  IN PVOID  ScatterGatherBuffer,
+  IN ULONG  ScatterGatherLength);
+
+typedef NTSTATUS
+(DDKAPI *PBUILD_MDL_FROM_SCATTER_GATHER_LIST)(
+  IN PDMA_ADAPTER  DmaAdapter,
+  IN PSCATTER_GATHER_LIST  ScatterGather,
+  IN PMDL  OriginalMdl,
+  OUT PMDL  *TargetMdl);
+
+typedef struct _DMA_OPERATIONS {
+  ULONG  Size;
+  PPUT_DMA_ADAPTER  PutDmaAdapter;
+  PALLOCATE_COMMON_BUFFER  AllocateCommonBuffer;
+  PFREE_COMMON_BUFFER  FreeCommonBuffer;
+  PALLOCATE_ADAPTER_CHANNEL  AllocateAdapterChannel;
+  PFLUSH_ADAPTER_BUFFERS  FlushAdapterBuffers;
+  PFREE_ADAPTER_CHANNEL  FreeAdapterChannel;
+  PFREE_MAP_REGISTERS  FreeMapRegisters;
+  PMAP_TRANSFER  MapTransfer;
+  PGET_DMA_ALIGNMENT  GetDmaAlignment;
+  PREAD_DMA_COUNTER  ReadDmaCounter;
+  PGET_SCATTER_GATHER_LIST  GetScatterGatherList;
+  PPUT_SCATTER_GATHER_LIST  PutScatterGatherList;
+  PCALCULATE_SCATTER_GATHER_LIST_SIZE  CalculateScatterGatherList;
+  PBUILD_SCATTER_GATHER_LIST  BuildScatterGatherList;
+  PBUILD_MDL_FROM_SCATTER_GATHER_LIST  BuildMdlFromScatterGatherList;
+} DMA_OPERATIONS, *PDMA_OPERATIONS;
+
+typedef enum _KPROFILE_SOURCE {
+  ProfileTime,
+  ProfileAlignmentFixup,
+  ProfileTotalIssues,
+  ProfilePipelineDry,
+  ProfileLoadInstructions,
+  ProfilePipelineFrozen,
+  ProfileBranchInstructions,
+  ProfileTotalNonissues,
+  ProfileDcacheMisses,
+  ProfileIcacheMisses,
+  ProfileCacheMisses,
+  ProfileBranchMispredictions,
+  ProfileStoreInstructions,
+  ProfileFpInstructions,
+  ProfileIntegerInstructions,
+  Profile2Issue,
+  Profile3Issue,
+  Profile4Issue,
+  ProfileSpecialInstructions,
+  ProfileTotalCycles,
+  ProfileIcacheIssues,
+  ProfileDcacheAccesses,
+  ProfileMemoryBarrierCycles,
+  ProfileLoadLinkedIssues,
+  ProfileMaximum
+} KPROFILE_SOURCE;
+
+typedef enum _KD_OPTION {
+    KD_OPTION_SET_BLOCK_ENABLE,
+} KD_OPTION;
+
+typedef enum _FILE_INFORMATION_CLASS {
+  FileDirectoryInformation = 1,
+  FileFullDirectoryInformation,
+  FileBothDirectoryInformation,
+  FileBasicInformation,
+  FileStandardInformation,
+  FileInternalInformation,
+  FileEaInformation,
+  FileAccessInformation,
+  FileNameInformation,
+  FileRenameInformation,
+  FileLinkInformation,
+  FileNamesInformation,
+  FileDispositionInformation,
+  FilePositionInformation,
+  FileFullEaInformation,
+  FileModeInformation,
+  FileAlignmentInformation,
+  FileAllInformation,
+  FileAllocationInformation,
+  FileEndOfFileInformation,
+  FileAlternateNameInformation,
+  FileStreamInformation,
+  FilePipeInformation,
+  FilePipeLocalInformation,
+  FilePipeRemoteInformation,
+  FileMailslotQueryInformation,
+  FileMailslotSetInformation,
+  FileCompressionInformation,
+  FileObjectIdInformation,
+  FileCompletionInformation,
+  FileMoveClusterInformation,
+  FileQuotaInformation,
+  FileReparsePointInformation,
+  FileNetworkOpenInformation,
+  FileAttributeTagInformation,
+  FileTrackingInformation,
+  FileIdBothDirectoryInformation,
+  FileIdFullDirectoryInformation,
+  FileValidDataLengthInformation,
+  FileShortNameInformation,
+  FileIoCompletionNotificationInformation,
+  FileIoStatusBlockRangeInformation,
+  FileIoPriorityHintInformation,
+  FileSfioReserveInformation,
+  FileSfioVolumeInformation,
+  FileHardLinkInformation,
+  FileProcessIdsUsingFileInformation,
+  FileNormalizedNameInformation,
+  FileNetworkPhysicalNameInformation,
+  FileIdGlobalTxDirectoryInformation,
+  FileIsRemoteDeviceInformation,
+  FileAttributeCacheInformation,
+  FileNumaNodeInformation,
+  FileStandardLinkInformation,
+  FileRemoteProtocolInformation,
+  FileMaximumInformation
+} FILE_INFORMATION_CLASS, *PFILE_INFORMATION_CLASS;
+
+typedef struct _FILE_POSITION_INFORMATION {
+  LARGE_INTEGER  CurrentByteOffset;
+} FILE_POSITION_INFORMATION, *PFILE_POSITION_INFORMATION;
+
+#include <pshpack8.h>
+typedef struct _FILE_BASIC_INFORMATION {
+  LARGE_INTEGER  CreationTime;
+  LARGE_INTEGER  LastAccessTime;
+  LARGE_INTEGER  LastWriteTime;
+  LARGE_INTEGER  ChangeTime;
+  ULONG  FileAttributes;
+} FILE_BASIC_INFORMATION, *PFILE_BASIC_INFORMATION;
+#include <poppack.h>
+
+typedef struct _FILE_STANDARD_INFORMATION {
+  LARGE_INTEGER  AllocationSize;
+  LARGE_INTEGER  EndOfFile;
+  ULONG  NumberOfLinks;
+  BOOLEAN  DeletePending;
+  BOOLEAN  Directory;
+} FILE_STANDARD_INFORMATION, *PFILE_STANDARD_INFORMATION;
+
+typedef struct _FILE_NETWORK_OPEN_INFORMATION {
+  LARGE_INTEGER  CreationTime;
+  LARGE_INTEGER  LastAccessTime;
+  LARGE_INTEGER  LastWriteTime;
+  LARGE_INTEGER  ChangeTime;
+  LARGE_INTEGER  AllocationSize;
+  LARGE_INTEGER  EndOfFile;
+  ULONG  FileAttributes;
+} FILE_NETWORK_OPEN_INFORMATION, *PFILE_NETWORK_OPEN_INFORMATION;
+
+typedef enum _FSINFOCLASS {
+  FileFsVolumeInformation = 1,
+  FileFsLabelInformation,
+  FileFsSizeInformation,
+  FileFsDeviceInformation,
+  FileFsAttributeInformation,
+  FileFsControlInformation,
+  FileFsFullSizeInformation,
+  FileFsObjectIdInformation,
+  FileFsDriverPathInformation,
+  FileFsVolumeFlagsInformation,
+  FileFsMaximumInformation
+} FS_INFORMATION_CLASS, *PFS_INFORMATION_CLASS;
+
+typedef struct _FILE_FS_DEVICE_INFORMATION {
+  DEVICE_TYPE  DeviceType;
+  ULONG  Characteristics;
+} FILE_FS_DEVICE_INFORMATION, *PFILE_FS_DEVICE_INFORMATION;
+
+typedef struct _FILE_FULL_EA_INFORMATION {
+  ULONG  NextEntryOffset;
+  UCHAR  Flags;
+  UCHAR  EaNameLength;
+  USHORT  EaValueLength;
+  CHAR  EaName[1];
+} FILE_FULL_EA_INFORMATION, *PFILE_FULL_EA_INFORMATION;
+
+/* ERESOURCE.Flag */
+
+#define ResourceNeverExclusive            0x0010
+#define ResourceReleaseByOtherThread      0x0020
+#define ResourceOwnedExclusive            0x0080
+
+#define RESOURCE_HASH_TABLE_SIZE          64
+
+typedef struct _DEVOBJ_EXTENSION
+{
+    CSHORT Type;
+    USHORT Size;
+    PDEVICE_OBJECT DeviceObject;
+} DEVOBJ_EXTENSION, *PDEVOBJ_EXTENSION;
+
 /* Simple types */
 typedef UCHAR KPROCESSOR_MODE;
 typedef LONG KPRIORITY;
