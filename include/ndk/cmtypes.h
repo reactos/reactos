@@ -54,7 +54,7 @@ Author:
 #define CmResourceTypeDma                       4
 #define CmResourceTypeDeviceSpecific            5
 #define CmResourceTypeBusNumber                 6
-#define CmResourceTypeMaximum                   7
+#define CmResourceTypeMemoryLarge               7
 #define CmResourceTypeNonArbitrated             128
 #define CmResourceTypeConfigData                128
 #define CmResourceTypeDevicePrivate             129

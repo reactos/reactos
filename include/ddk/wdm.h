@@ -1131,6 +1131,410 @@ typedef struct _IRP *PIRP;
 #define IRP_ALLOCATED_FIXED_SIZE          0x04
 #define IRP_LOOKASIDE_ALLOCATION          0x08
 
+typedef struct _BOOTDISK_INFORMATION {
+  LONGLONG  BootPartitionOffset;
+  LONGLONG  SystemPartitionOffset;
+  ULONG  BootDeviceSignature;
+  ULONG  SystemDeviceSignature;
+} BOOTDISK_INFORMATION, *PBOOTDISK_INFORMATION;
+
+typedef struct _BOOTDISK_INFORMATION_EX {
+  LONGLONG  BootPartitionOffset;
+  LONGLONG  SystemPartitionOffset;
+  ULONG  BootDeviceSignature;
+  ULONG  SystemDeviceSignature;
+  GUID  BootDeviceGuid;
+  GUID  SystemDeviceGuid;
+  BOOLEAN  BootDeviceIsGpt;
+  BOOLEAN  SystemDeviceIsGpt;
+} BOOTDISK_INFORMATION_EX, *PBOOTDISK_INFORMATION_EX;
+
+typedef struct _EISA_MEMORY_TYPE {
+  UCHAR  ReadWrite : 1;
+  UCHAR  Cached : 1;
+  UCHAR  Reserved0 : 1;
+  UCHAR  Type : 2;
+  UCHAR  Shared : 1;
+  UCHAR  Reserved1 : 1;
+  UCHAR  MoreEntries : 1;
+} EISA_MEMORY_TYPE, *PEISA_MEMORY_TYPE;
+
+#include <pshpack1.h>
+typedef struct _EISA_MEMORY_CONFIGURATION {
+  EISA_MEMORY_TYPE  ConfigurationByte;
+  UCHAR  DataSize;
+  USHORT  AddressLowWord;
+  UCHAR  AddressHighByte;
+  USHORT  MemorySize;
+} EISA_MEMORY_CONFIGURATION, *PEISA_MEMORY_CONFIGURATION;
+#include <poppack.h>
+
+typedef struct _EISA_IRQ_DESCRIPTOR {
+  UCHAR  Interrupt : 4;
+  UCHAR  Reserved : 1;
+  UCHAR  LevelTriggered : 1;
+  UCHAR  Shared : 1;
+  UCHAR  MoreEntries : 1;
+} EISA_IRQ_DESCRIPTOR, *PEISA_IRQ_DESCRIPTOR;
+
+typedef struct _EISA_IRQ_CONFIGURATION {
+  EISA_IRQ_DESCRIPTOR  ConfigurationByte;
+  UCHAR  Reserved;
+} EISA_IRQ_CONFIGURATION, *PEISA_IRQ_CONFIGURATION;
+
+typedef struct _DMA_CONFIGURATION_BYTE0 {
+  UCHAR Channel : 3;
+  UCHAR Reserved : 3;
+  UCHAR Shared : 1;
+  UCHAR MoreEntries : 1;
+} DMA_CONFIGURATION_BYTE0;
+
+typedef struct _DMA_CONFIGURATION_BYTE1 {
+  UCHAR  Reserved0 : 2;
+  UCHAR  TransferSize : 2;
+  UCHAR  Timing : 2;
+  UCHAR  Reserved1 : 2;
+} DMA_CONFIGURATION_BYTE1;
+
+typedef struct _EISA_DMA_CONFIGURATION {
+  DMA_CONFIGURATION_BYTE0  ConfigurationByte0;
+  DMA_CONFIGURATION_BYTE1  ConfigurationByte1;
+} EISA_DMA_CONFIGURATION, *PEISA_DMA_CONFIGURATION;
+
+#include <pshpack1.h>
+typedef struct _EISA_PORT_DESCRIPTOR {
+  UCHAR  NumberPorts : 5;
+  UCHAR  Reserved : 1;
+  UCHAR  Shared : 1;
+  UCHAR  MoreEntries : 1;
+} EISA_PORT_DESCRIPTOR, *PEISA_PORT_DESCRIPTOR;
+
+typedef struct _EISA_PORT_CONFIGURATION {
+  EISA_PORT_DESCRIPTOR  Configuration;
+  USHORT  PortAddress;
+} EISA_PORT_CONFIGURATION, *PEISA_PORT_CONFIGURATION;
+#include <poppack.h>
+
+typedef struct _CM_EISA_FUNCTION_INFORMATION {
+  ULONG  CompressedId;
+  UCHAR  IdSlotFlags1;
+  UCHAR  IdSlotFlags2;
+  UCHAR  MinorRevision;
+  UCHAR  MajorRevision;
+  UCHAR  Selections[26];
+  UCHAR  FunctionFlags;
+  UCHAR  TypeString[80];
+  EISA_MEMORY_CONFIGURATION  EisaMemory[9];
+  EISA_IRQ_CONFIGURATION  EisaIrq[7];
+  EISA_DMA_CONFIGURATION  EisaDma[4];
+  EISA_PORT_CONFIGURATION  EisaPort[20];
+  UCHAR  InitializationData[60];
+} CM_EISA_FUNCTION_INFORMATION, *PCM_EISA_FUNCTION_INFORMATION;
+
+/* CM_EISA_FUNCTION_INFORMATION.FunctionFlags */
+
+#define EISA_FUNCTION_ENABLED           0x80
+#define EISA_FREE_FORM_DATA             0x40
+#define EISA_HAS_PORT_INIT_ENTRY        0x20
+#define EISA_HAS_PORT_RANGE             0x10
+#define EISA_HAS_DMA_ENTRY              0x08
+#define EISA_HAS_IRQ_ENTRY              0x04
+#define EISA_HAS_MEMORY_ENTRY           0x02
+#define EISA_HAS_TYPE_ENTRY             0x01
+#define EISA_HAS_INFORMATION \
+  (EISA_HAS_PORT_RANGE + EISA_HAS_DMA_ENTRY + EISA_HAS_IRQ_ENTRY \
+  + EISA_HAS_MEMORY_ENTRY + EISA_HAS_TYPE_ENTRY)
+
+typedef struct _CM_EISA_SLOT_INFORMATION {
+  UCHAR  ReturnCode;
+  UCHAR  ReturnFlags;
+  UCHAR  MajorRevision;
+  UCHAR  MinorRevision;
+  USHORT  Checksum;
+  UCHAR  NumberFunctions;
+  UCHAR  FunctionInformation;
+  ULONG  CompressedId;
+} CM_EISA_SLOT_INFORMATION, *PCM_EISA_SLOT_INFORMATION;
+
+/* CM_EISA_SLOT_INFORMATION.ReturnCode */
+
+#define EISA_INVALID_SLOT               0x80
+#define EISA_INVALID_FUNCTION           0x81
+#define EISA_INVALID_CONFIGURATION      0x82
+#define EISA_EMPTY_SLOT                 0x83
+#define EISA_INVALID_BIOS_CALL          0x86
+
+typedef struct _CM_FLOPPY_DEVICE_DATA {
+  USHORT  Version;
+  USHORT  Revision;
+  CHAR  Size[8];
+  ULONG  MaxDensity;
+  ULONG  MountDensity;
+  UCHAR  StepRateHeadUnloadTime;
+  UCHAR  HeadLoadTime;
+  UCHAR  MotorOffTime;
+  UCHAR  SectorLengthCode;
+  UCHAR  SectorPerTrack;
+  UCHAR  ReadWriteGapLength;
+  UCHAR  DataTransferLength;
+  UCHAR  FormatGapLength;
+  UCHAR  FormatFillCharacter;
+  UCHAR  HeadSettleTime;
+  UCHAR  MotorSettleTime;
+  UCHAR  MaximumTrackValue;
+  UCHAR  DataTransferRate;
+} CM_FLOPPY_DEVICE_DATA, *PCM_FLOPPY_DEVICE_DATA;
+
+typedef struct _PNP_BUS_INFORMATION {
+  GUID  BusTypeGuid;
+  INTERFACE_TYPE  LegacyBusType;
+  ULONG  BusNumber;
+} PNP_BUS_INFORMATION, *PPNP_BUS_INFORMATION;
+
+#include <pshpack1.h>
+/* CM_PARTIAL_RESOURCE_DESCRIPTOR.Type */
+
+#define CmResourceTypeNull                0
+#define CmResourceTypePort                1
+#define CmResourceTypeInterrupt           2
+#define CmResourceTypeMemory              3
+#define CmResourceTypeDma                 4
+#define CmResourceTypeDeviceSpecific      5
+#define CmResourceTypeBusNumber           6
+#define CmResourceTypeMemoryLarge         7
+#define CmResourceTypeNonArbitrated     128
+#define CmResourceTypeConfigData        128
+#define CmResourceTypeDevicePrivate     129
+#define CmResourceTypePcCardConfig      130
+#define CmResourceTypeMfCardConfig      131
+
+/* CM_PARTIAL_RESOURCE_DESCRIPTOR.ShareDisposition */
+
+typedef enum _CM_SHARE_DISPOSITION {
+  CmResourceShareUndetermined,
+  CmResourceShareDeviceExclusive,
+  CmResourceShareDriverExclusive,
+  CmResourceShareShared
+} CM_SHARE_DISPOSITION;
+
+/* CM_PARTIAL_RESOURCE_DESCRIPTOR.Flags if Type = CmResourceTypePort */
+
+#define CM_RESOURCE_PORT_MEMORY           0x0000
+#define CM_RESOURCE_PORT_IO               0x0001
+#define CM_RESOURCE_PORT_10_BIT_DECODE    0x0004
+#define CM_RESOURCE_PORT_12_BIT_DECODE    0x0008
+#define CM_RESOURCE_PORT_16_BIT_DECODE    0x0010
+#define CM_RESOURCE_PORT_POSITIVE_DECODE  0x0020
+#define CM_RESOURCE_PORT_PASSIVE_DECODE   0x0040
+#define CM_RESOURCE_PORT_WINDOW_DECODE    0x0080
+#define CM_RESOURCE_PORT_BAR              0x0100
+
+/* CM_PARTIAL_RESOURCE_DESCRIPTOR.Flags if Type = CmResourceTypeInterrupt */
+
+#define CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE 0x0000
+#define CM_RESOURCE_INTERRUPT_LATCHED         0x0001
+#define CM_RESOURCE_INTERRUPT_MESSAGE         0x0002
+#define CM_RESOURCE_INTERRUPT_POLICY_INCLUDED 0x0004
+
+/* CM_PARTIAL_RESOURCE_DESCRIPTOR.Flags if Type = CmResourceTypeMemory */
+
+#define CM_RESOURCE_MEMORY_READ_WRITE                    0x0000
+#define CM_RESOURCE_MEMORY_READ_ONLY                     0x0001
+#define CM_RESOURCE_MEMORY_WRITE_ONLY                    0x0002
+#define CM_RESOURCE_MEMORY_WRITEABILITY_MASK             0x0003
+#define CM_RESOURCE_MEMORY_PREFETCHABLE                  0x0004
+#define CM_RESOURCE_MEMORY_COMBINEDWRITE                 0x0008
+#define CM_RESOURCE_MEMORY_24                            0x0010
+#define CM_RESOURCE_MEMORY_CACHEABLE                     0x0020
+#define CM_RESOURCE_MEMORY_WINDOW_DECODE                 0x0040
+#define CM_RESOURCE_MEMORY_BAR                           0x0080
+#define CM_RESOURCE_MEMORY_COMPAT_FOR_INACCESSIBLE_RANGE 0x0100
+
+/* CM_PARTIAL_RESOURCE_DESCRIPTOR.Flags if Type = CmResourceTypeDma */
+
+#define CM_RESOURCE_DMA_8                 0x0000
+#define CM_RESOURCE_DMA_16                0x0001
+#define CM_RESOURCE_DMA_32                0x0002
+#define CM_RESOURCE_DMA_8_AND_16          0x0004
+#define CM_RESOURCE_DMA_BUS_MASTER        0x0008
+#define CM_RESOURCE_DMA_TYPE_A            0x0010
+#define CM_RESOURCE_DMA_TYPE_B            0x0020
+#define CM_RESOURCE_DMA_TYPE_F            0x0040
+
+typedef struct _CM_PARTIAL_RESOURCE_LIST {
+  USHORT  Version;
+  USHORT  Revision;
+  ULONG  Count;
+  CM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptors[1];
+} CM_PARTIAL_RESOURCE_LIST, *PCM_PARTIAL_RESOURCE_LIST;
+
+typedef struct _CM_FULL_RESOURCE_DESCRIPTOR {
+  INTERFACE_TYPE  InterfaceType;
+  ULONG  BusNumber;
+  CM_PARTIAL_RESOURCE_LIST  PartialResourceList;
+} CM_FULL_RESOURCE_DESCRIPTOR, *PCM_FULL_RESOURCE_DESCRIPTOR;
+
+typedef struct _CM_RESOURCE_LIST {
+  ULONG  Count;
+  CM_FULL_RESOURCE_DESCRIPTOR  List[1];
+} CM_RESOURCE_LIST, *PCM_RESOURCE_LIST;
+
+typedef struct _CM_INT13_DRIVE_PARAMETER {
+  USHORT  DriveSelect;
+  ULONG  MaxCylinders;
+  USHORT  SectorsPerTrack;
+  USHORT  MaxHeads;
+  USHORT  NumberDrives;
+} CM_INT13_DRIVE_PARAMETER, *PCM_INT13_DRIVE_PARAMETER;
+
+typedef struct _CM_PNP_BIOS_DEVICE_NODE
+{
+    USHORT Size;
+    UCHAR Node;
+    ULONG ProductId;
+    UCHAR DeviceType[3];
+    USHORT DeviceAttributes;
+} CM_PNP_BIOS_DEVICE_NODE,*PCM_PNP_BIOS_DEVICE_NODE;
+
+typedef struct _CM_PNP_BIOS_INSTALLATION_CHECK
+{
+    UCHAR Signature[4];
+    UCHAR Revision;
+    UCHAR Length;
+    USHORT ControlField;
+    UCHAR Checksum;
+    ULONG EventFlagAddress;
+    USHORT RealModeEntryOffset;
+    USHORT RealModeEntrySegment;
+    USHORT ProtectedModeEntryOffset;
+    ULONG ProtectedModeCodeBaseAddress;
+    ULONG OemDeviceId;
+    USHORT RealModeDataBaseAddress;
+    ULONG ProtectedModeDataBaseAddress;
+} CM_PNP_BIOS_INSTALLATION_CHECK, *PCM_PNP_BIOS_INSTALLATION_CHECK;
+
+#include <poppack.h>
+
+typedef struct _CM_DISK_GEOMETRY_DEVICE_DATA
+{
+    ULONG BytesPerSector;
+    ULONG NumberOfCylinders;
+    ULONG SectorsPerTrack;
+    ULONG NumberOfHeads;
+} CM_DISK_GEOMETRY_DEVICE_DATA, *PCM_DISK_GEOMETRY_DEVICE_DATA;
+
+typedef struct _CM_KEYBOARD_DEVICE_DATA {
+  USHORT  Version;
+  USHORT  Revision;
+  UCHAR  Type;
+  UCHAR  Subtype;
+  USHORT  KeyboardFlags;
+} CM_KEYBOARD_DEVICE_DATA, *PCM_KEYBOARD_DEVICE_DATA;
+
+typedef struct _CM_MCA_POS_DATA {
+  USHORT  AdapterId;
+  UCHAR  PosData1;
+  UCHAR  PosData2;
+  UCHAR  PosData3;
+  UCHAR  PosData4;
+} CM_MCA_POS_DATA, *PCM_MCA_POS_DATA;
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+typedef struct CM_Power_Data_s {
+  ULONG  PD_Size;
+  DEVICE_POWER_STATE  PD_MostRecentPowerState;
+  ULONG  PD_Capabilities;
+  ULONG  PD_D1Latency;
+  ULONG  PD_D2Latency;
+  ULONG  PD_D3Latency;
+  DEVICE_POWER_STATE  PD_PowerStateMapping[PowerSystemMaximum];
+  SYSTEM_POWER_STATE  PD_DeepestSystemWake;
+} CM_POWER_DATA, *PCM_POWER_DATA;
+
+#define PDCAP_D0_SUPPORTED                0x00000001
+#define PDCAP_D1_SUPPORTED                0x00000002
+#define PDCAP_D2_SUPPORTED                0x00000004
+#define PDCAP_D3_SUPPORTED                0x00000008
+#define PDCAP_WAKE_FROM_D0_SUPPORTED      0x00000010
+#define PDCAP_WAKE_FROM_D1_SUPPORTED      0x00000020
+#define PDCAP_WAKE_FROM_D2_SUPPORTED      0x00000040
+#define PDCAP_WAKE_FROM_D3_SUPPORTED      0x00000080
+#define PDCAP_WARM_EJECT_SUPPORTED        0x00000100
+
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
+
+typedef struct _CM_SCSI_DEVICE_DATA {
+  USHORT  Version;
+  USHORT  Revision;
+  UCHAR  HostIdentifier;
+} CM_SCSI_DEVICE_DATA, *PCM_SCSI_DEVICE_DATA;
+
+typedef struct _CM_SERIAL_DEVICE_DATA {
+  USHORT  Version;
+  USHORT  Revision;
+  ULONG  BaudClock;
+} CM_SERIAL_DEVICE_DATA, *PCM_SERIAL_DEVICE_DATA;
+
+typedef enum _KINTERRUPT_POLARITY {
+  InterruptPolarityUnknown,
+  InterruptActiveHigh,
+  InterruptActiveLow
+} KINTERRUPT_POLARITY, *PKINTERRUPT_POLARITY;
+
+typedef struct _IO_ERROR_LOG_PACKET {
+  UCHAR  MajorFunctionCode;
+  UCHAR  RetryCount;
+  USHORT  DumpDataSize;
+  USHORT  NumberOfStrings;
+  USHORT  StringOffset;
+  USHORT  EventCategory;
+  NTSTATUS  ErrorCode;
+  ULONG  UniqueErrorValue;
+  NTSTATUS  FinalStatus;
+  ULONG  SequenceNumber;
+  ULONG  IoControlCode;
+  LARGE_INTEGER  DeviceOffset;
+  ULONG  DumpData[1];
+} IO_ERROR_LOG_PACKET, *PIO_ERROR_LOG_PACKET;
+
+typedef struct _IO_ERROR_LOG_MESSAGE {
+  USHORT  Type;
+  USHORT  Size;
+  USHORT  DriverNameLength;
+  LARGE_INTEGER  TimeStamp;
+  ULONG  DriverNameOffset;
+  IO_ERROR_LOG_PACKET  EntryData;
+} IO_ERROR_LOG_MESSAGE, *PIO_ERROR_LOG_MESSAGE;
+
+#define ERROR_LOG_LIMIT_SIZE               240
+#define IO_ERROR_LOG_MESSAGE_HEADER_LENGTH (sizeof(IO_ERROR_LOG_MESSAGE) - \
+                                            sizeof(IO_ERROR_LOG_PACKET) + \
+                                            (sizeof(WCHAR) * 40))
+#define ERROR_LOG_MESSAGE_LIMIT_SIZE                                          \
+    (ERROR_LOG_LIMIT_SIZE + IO_ERROR_LOG_MESSAGE_HEADER_LENGTH)
+#define IO_ERROR_LOG_MESSAGE_LENGTH                                           \
+    ((PORT_MAXIMUM_MESSAGE_LENGTH > ERROR_LOG_MESSAGE_LIMIT_SIZE) ?           \
+        ERROR_LOG_MESSAGE_LIMIT_SIZE :                                        \
+        PORT_MAXIMUM_MESSAGE_LENGTH)
+#define ERROR_LOG_MAXIMUM_SIZE (IO_ERROR_LOG_MESSAGE_LENGTH -                 \
+                                IO_ERROR_LOG_MESSAGE_HEADER_LENGTH)
+
+typedef enum _DMA_WIDTH {
+  Width8Bits,
+  Width16Bits,
+  Width32Bits,
+  MaximumDmaWidth
+} DMA_WIDTH, *PDMA_WIDTH;
+
+typedef enum _DMA_SPEED {
+  Compatible,
+  TypeA,
+  TypeB,
+  TypeC,
+  TypeF,
+  MaximumDmaSpeed
+} DMA_SPEED, *PDMA_SPEED;
+
 /* Simple types */
 typedef UCHAR KPROCESSOR_MODE;
 typedef LONG KPRIORITY;
