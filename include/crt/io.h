@@ -51,7 +51,7 @@ _CRTIMP char* __cdecl _getcwd (char*, int);
     time_t time_create;
     time_t time_access;
     time_t time_write;
-    __int64 size;
+    __MINGW_EXTENSION __int64 size;
     char name[260];
   };
 
@@ -60,7 +60,7 @@ _CRTIMP char* __cdecl _getcwd (char*, int);
     __time32_t time_create;
     __time32_t time_access;
     __time32_t time_write;
-    __int64 size;
+    __MINGW_EXTENSION __int64 size;
     char name[260];
   };
 
@@ -78,7 +78,7 @@ _CRTIMP char* __cdecl _getcwd (char*, int);
     __time64_t time_create;
     __time64_t time_access;
     __time64_t time_write;
-    __int64 size;
+    __MINGW_EXTENSION __int64 size;
     char name[260];
   };
 #endif /* _INTEGRAL_MAX_BITS >= 64 */
@@ -113,7 +113,7 @@ _CRTIMP char* __cdecl _getcwd (char*, int);
     time_t time_create;
     time_t time_access;
     time_t time_write;
-    __int64 size;
+    __MINGW_EXTENSION __int64 size;
     wchar_t name[260];
   };
 
@@ -122,7 +122,7 @@ _CRTIMP char* __cdecl _getcwd (char*, int);
     __time32_t time_create;
     __time32_t time_access;
     __time32_t time_write;
-    __int64 size;
+    __MINGW_EXTENSION __int64 size;
     wchar_t name[260];
   };
 
@@ -140,7 +140,7 @@ _CRTIMP char* __cdecl _getcwd (char*, int);
     __time64_t time_create;
     __time64_t time_access;
     __time64_t time_write;
-    __int64 size;
+    __MINGW_EXTENSION __int64 size;
     wchar_t name[260];
   };
 #endif
@@ -200,15 +200,15 @@ _CRTIMP char* __cdecl _getcwd (char*, int);
   _CRTIMP int __cdecl _write(int _FileHandle,const void *_Buf,unsigned int _MaxCharCount);
 
 #if _INTEGRAL_MAX_BITS >= 64
-  _CRTIMP __int64 __cdecl _filelengthi64(int _FileHandle);
+  __MINGW_EXTENSION _CRTIMP __int64 __cdecl _filelengthi64(int _FileHandle);
   _CRTIMP intptr_t __cdecl _findfirst32i64(const char *_Filename,struct _finddata32i64_t *_FindData);
   _CRTIMP intptr_t __cdecl _findfirst64i32(const char *_Filename,struct _finddata64i32_t *_FindData);
   _CRTIMP intptr_t __cdecl _findfirst64(const char *_Filename,struct __finddata64_t *_FindData);
   _CRTIMP int __cdecl _findnext32i64(intptr_t _FindHandle,struct _finddata32i64_t *_FindData);
   _CRTIMP int __cdecl _findnext64i32(intptr_t _FindHandle,struct _finddata64i32_t *_FindData);
   _CRTIMP int __cdecl _findnext64(intptr_t _FindHandle,struct __finddata64_t *_FindData);
-  _CRTIMP __int64 __cdecl _lseeki64(int _FileHandle,__int64 _Offset,int _Origin);
-  _CRTIMP __int64 __cdecl _telli64(int _FileHandle);
+  __MINGW_EXTENSION _CRTIMP __int64 __cdecl _lseeki64(int _FileHandle,__int64 _Offset,int _Origin);
+  __MINGW_EXTENSION _CRTIMP __int64 __cdecl _telli64(int _FileHandle);
 #ifdef __cplusplus
 #include <string.h>
 #endif

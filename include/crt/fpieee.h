@@ -49,7 +49,7 @@ extern "C" {
   typedef int _I32;
   typedef unsigned short _U16;
   typedef unsigned int _U32;
-  typedef __int64 _Q64;
+  __MINGW_EXTENSION typedef __int64 _Q64;
 
   typedef struct
 #if defined(__ia64__)
