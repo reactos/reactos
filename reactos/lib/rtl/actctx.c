@@ -420,7 +420,7 @@ static BOOL add_dependent_assembly_id(struct actctx_loader* acl,
     for (i = 0; i < acl->actctx->num_assemblies; i++)
         if (is_matching_identity( ai, &acl->actctx->assemblies[i].id ))
         {
-            DPRINT( "reusing existing assembly for %s arch %s version %u.%u.%u.%u\n",
+            DPRINT( "reusing existing assembly for %S arch %S version %u.%u.%u.%u\n",
                    ai->name, ai->arch, ai->version.major, ai->version.minor,
                    ai->version.build, ai->version.revision );
             return TRUE;
@@ -429,7 +429,7 @@ static BOOL add_dependent_assembly_id(struct actctx_loader* acl,
     for (i = 0; i < acl->num_dependencies; i++)
         if (is_matching_identity( ai, &acl->dependencies[i] ))
         {
-            DPRINT( "reusing existing dependency for %s arch %s version %u.%u.%u.%u\n",
+            DPRINT( "reusing existing dependency for %S arch %S version %u.%u.%u.%u\n",
                    ai->name, ai->arch, ai->version.major, ai->version.minor,
                    ai->version.build, ai->version.revision );
             return TRUE;
@@ -755,7 +755,7 @@ static BOOL parse_version(const xmlstr_t *str, struct assembly_version *version)
     return TRUE;
 
 error:
-    DPRINT1( "Wrong version definition in manifest file (%s)\n", str->ptr );
+    DPRINT1( "Wrong version definition in manifest file (%S)\n", str->ptr );
     return FALSE;
 }
 
@@ -764,7 +764,7 @@ static BOOL parse_expect_elem(xmlbuf_t* xmlbuf, const WCHAR* name)
     xmlstr_t    elem;
     if (!next_xml_elem(xmlbuf, &elem)) return FALSE;
     if (xmlstr_cmp(&elem, name)) return TRUE;
-    DPRINT1( "unexpected element %s\n", elem.ptr );
+    DPRINT1( "unexpected element %S\n", elem.ptr );
     return FALSE;
 }
 
@@ -775,7 +775,7 @@ static BOOL parse_expect_no_attr(xmlbuf_t* xmlbuf, BOOL* end)
 
     while (next_xml_attr(xmlbuf, &attr_name, &attr_value, &error, end))
     {
-        DPRINT1( "unexpected attr %s=%s\n", attr_name.ptr,
+        DPRINT1( "unexpected attr %S=%S\n", attr_name.ptr,
              attr_value.ptr);
     }
     return !error;
@@ -793,7 +793,7 @@ static BOOL parse_expect_end_elem(xmlbuf_t *xmlbuf, const WCHAR *name)
     if (!next_xml_elem(xmlbuf, &elem)) return FALSE;
     if (!xmlstr_cmp_end(&elem, name))
     {
-        DPRINT1( "unexpected element %s\n", elem.ptr );
+        DPRINT1( "unexpected element %S\n", elem.ptr );
         return FALSE;
     }
     return parse_end_element(xmlbuf);
@@ -849,13 +849,13 @@ static BOOL parse_assembly_identity_elem(xmlbuf_t* xmlbuf, ACTIVATION_CONTEXT* a
         }
         else if (xmlstr_cmp(&attr_name, languageW))
         {
-            DPRINT1("Unsupported yet language attribute (%s)\n",
+            DPRINT1("Unsupported yet language attribute (%S)\n",
                  attr_value.ptr);
             if (!(ai->language = xmlstrdupW(&attr_value))) return FALSE;
         }
         else
         {
-            DPRINT1("unknown attr %s=%s\n", attr_name.ptr,
+            DPRINT1("unknown attr %S=%S\n", attr_name.ptr,
                  attr_value.ptr);
         }
     }
@@ -881,7 +881,7 @@ static BOOL parse_com_class_elem(xmlbuf_t* xmlbuf, struct dll_redirect* dll)
         }
         else
         {
-            DPRINT1("unknown attr %s=%s\n", attr_name.ptr, attr_value.ptr);
+            DPRINT1("unknown attr %S=%S\n", attr_name.ptr, attr_value.ptr);
         }
     }
 
@@ -896,7 +896,7 @@ static BOOL parse_com_class_elem(xmlbuf_t* xmlbuf, struct dll_redirect* dll)
         }
         else
         {
-            DPRINT1("unknown elem %s\n", elem.ptr);
+            DPRINT1("unknown elem %S\n", elem.ptr);
             ret = parse_unknown_elem(xmlbuf, &elem);
         }
     }
@@ -924,7 +924,7 @@ static BOOL parse_cominterface_proxy_stub_elem(xmlbuf_t* xmlbuf, struct dll_redi
         }
         else
         {
-            DPRINT1("unknown attr %s=%s\n", attr_name.ptr, attr_value.ptr);
+            DPRINT1("unknown attr %S=%S\n", attr_name.ptr, attr_value.ptr);
         }
     }
 
@@ -957,7 +957,7 @@ static BOOL parse_typelib_elem(xmlbuf_t* xmlbuf, struct dll_redirect* dll)
         }
         else
         {
-            DPRINT1("unknown attr %s=%s\n", attr_name.ptr , attr_value.ptr);
+            DPRINT1("unknown attr %S=%S\n", attr_name.ptr , attr_value.ptr);
         }
     }
 
@@ -990,7 +990,7 @@ static BOOL parse_window_class_elem(xmlbuf_t* xmlbuf, struct dll_redirect* dll)
         }
         else
         {
-            DPRINT1("unknown elem %s\n", elem.ptr);
+            DPRINT1("unknown elem %S\n", elem.ptr);
             ret = parse_unknown_elem(xmlbuf, &elem);
         }
     }
@@ -1007,15 +1007,15 @@ static BOOL parse_binding_redirect_elem(xmlbuf_t* xmlbuf)
     {
         if (xmlstr_cmp(&attr_name, oldVersionW))
         {
-            DPRINT1("Not stored yet oldVersion=%s\n", attr_value.ptr);
+            DPRINT1("Not stored yet oldVersion=%S\n", attr_value.ptr);
         }
         else if (xmlstr_cmp(&attr_name, newVersionW))
         {
-            DPRINT1("Not stored yet newVersion=%s\n", attr_value.ptr);
+            DPRINT1("Not stored yet newVersion=%S\n", attr_value.ptr);
         }
         else
         {
-            DPRINT1("unknown attr %s=%s\n", attr_name.ptr, attr_value.ptr);
+            DPRINT1("unknown attr %S=%S\n", attr_name.ptr, attr_value.ptr);
         }
     }
 
@@ -1032,7 +1032,7 @@ static BOOL parse_description_elem(xmlbuf_t* xmlbuf)
         !parse_text_content(xmlbuf, &content))
         return FALSE;
 
-    DPRINT("Got description %s\n", content.ptr);
+    DPRINT("Got description %S\n", content.ptr);
 
     while (ret && (ret = next_xml_elem(xmlbuf, &elem)))
     {
@@ -1043,7 +1043,7 @@ static BOOL parse_description_elem(xmlbuf_t* xmlbuf)
         }
         else
         {
-            DPRINT1("unknown elem %s\n", elem.ptr);
+            DPRINT1("unknown elem %S\n", elem.ptr);
             ret = parse_unknown_elem(xmlbuf, &elem);
         }
     }
@@ -1073,7 +1073,7 @@ static BOOL parse_com_interface_external_proxy_stub_elem(xmlbuf_t* xmlbuf,
         }
         else
         {
-            DPRINT1("unknown attr %s=%s\n", attr_name.ptr, attr_value.ptr);
+            DPRINT1("unknown attr %S=%S\n", attr_name.ptr, attr_value.ptr);
         }
     }
 
@@ -1102,7 +1102,7 @@ static BOOL parse_clr_class_elem(xmlbuf_t* xmlbuf, struct assembly* assembly)
         }
         else
         {
-            DPRINT1("unknown attr %s=%s\n", attr_name.ptr, attr_value.ptr);
+            DPRINT1("unknown attr %S=%S\n", attr_name.ptr, attr_value.ptr);
         }
     }
 
@@ -1131,7 +1131,7 @@ static BOOL parse_clr_surrogate_elem(xmlbuf_t* xmlbuf, struct assembly* assembly
         }
         else
         {
-            DPRINT1("unknown attr %s=%s\n", attr_name.ptr, attr_value.ptr);
+            DPRINT1("unknown attr %S=%S\n", attr_name.ptr, attr_value.ptr);
         }
     }
 
@@ -1170,7 +1170,7 @@ static BOOL parse_dependent_assembly_elem(xmlbuf_t* xmlbuf, struct actctx_loader
         }
         else
         {
-            DPRINT1("unknown elem %s\n", elem.ptr);
+            DPRINT1("unknown elem %S\n", elem.ptr);
             ret = parse_unknown_elem(xmlbuf, &elem);
         }
     }
@@ -1189,11 +1189,11 @@ static BOOL parse_dependency_elem(xmlbuf_t* xmlbuf, struct actctx_loader* acl)
         {
             static const WCHAR yesW[] = {'y','e','s',0};
             optional = xmlstr_cmpi( &attr_value, yesW );
-            DPRINT1("optional=%s\n", attr_value.ptr);
+            DPRINT1("optional=%S\n", attr_value.ptr);
         }
         else
         {
-            DPRINT1("unknown attr %s=%s\n", attr_name.ptr, attr_value.ptr);
+            DPRINT1("unknown attr %S=%S\n", attr_name.ptr, attr_value.ptr);
         }
     }
 
@@ -1210,7 +1210,7 @@ static BOOL parse_dependency_elem(xmlbuf_t* xmlbuf, struct actctx_loader* acl)
         }
         else
         {
-            DPRINT1("unknown element %s\n", elem.ptr);
+            DPRINT1("unknown element %S\n", elem.ptr);
             ret = parse_unknown_elem(xmlbuf, &elem);
         }
     }
@@ -1247,7 +1247,7 @@ static BOOL parse_file_elem(xmlbuf_t* xmlbuf, struct assembly* assembly)
         if (xmlstr_cmp(&attr_name, nameW))
         {
             if (!(dll->name = xmlstrdupW(&attr_value))) return FALSE;
-            DPRINT("name=%s\n", attr_value.ptr);
+            DPRINT("name=%S\n", attr_value.ptr);
         }
         else if (xmlstr_cmp(&attr_name, hashW))
         {
@@ -1257,11 +1257,11 @@ static BOOL parse_file_elem(xmlbuf_t* xmlbuf, struct assembly* assembly)
         {
             static const WCHAR sha1W[] = {'S','H','A','1',0};
             if (!xmlstr_cmpi(&attr_value, sha1W))
-                DPRINT1("hashalg should be SHA1, got %s\n", attr_value.ptr);
+                DPRINT1("hashalg should be SHA1, got %S\n", attr_value.ptr);
         }
         else
         {
-            DPRINT1("unknown attr %s=%s\n", attr_name.ptr, attr_value.ptr);
+            DPRINT1("unknown attr %S=%S\n", attr_name.ptr, attr_value.ptr);
         }
     }
 
@@ -1298,7 +1298,7 @@ static BOOL parse_file_elem(xmlbuf_t* xmlbuf, struct assembly* assembly)
         }
         else
         {
-            DPRINT1("unknown elem %s\n", elem.ptr);
+            DPRINT1("unknown elem %S\n", elem.ptr);
             ret = parse_unknown_elem( xmlbuf, &elem );
         }
     }
@@ -1320,7 +1320,7 @@ static BOOL parse_assembly_elem(xmlbuf_t* xmlbuf, struct actctx_loader* acl,
             static const WCHAR v10W[] = {'1','.','0',0};
             if (!xmlstr_cmp(&attr_value, v10W))
             {
-                DPRINT1("wrong version %s\n", attr_value.ptr);
+                DPRINT1("wrong version %S\n", attr_value.ptr);
                 return FALSE;
             }
             version = TRUE;
@@ -1329,14 +1329,14 @@ static BOOL parse_assembly_elem(xmlbuf_t* xmlbuf, struct actctx_loader* acl,
         {
             if (!xmlstr_cmp(&attr_value, manifestv1W) && !xmlstr_cmp(&attr_value, manifestv3W))
             {
-                DPRINT1("wrong namespace %s\n", attr_value.ptr);
+                DPRINT1("wrong namespace %S\n", attr_value.ptr);
                 return FALSE;
             }
             xmlns = TRUE;
         }
         else
         {
-            DPRINT1("unknown attr %s=%s\n", attr_name.ptr, attr_value.ptr);
+            DPRINT1("unknown attr %S=%S\n", attr_name.ptr, attr_value.ptr);
         }
     }
 
@@ -1421,7 +1421,7 @@ static BOOL parse_assembly_elem(xmlbuf_t* xmlbuf, struct actctx_loader* acl,
         }
         else
         {
-            DPRINT1("unknown element %s\n", elem.ptr);
+            DPRINT1("unknown element %S\n", elem.ptr);
             ret = parse_unknown_elem(xmlbuf, &elem);
         }
         if (ret) ret = next_xml_elem(xmlbuf, &elem);
@@ -1443,19 +1443,19 @@ static NTSTATUS parse_manifest_buffer( struct actctx_loader* acl, struct assembl
 
     if (!xmlstr_cmp(&elem, assemblyW))
     {
-        DPRINT1("root element is %s, not <assembly>\n", elem.ptr);
+        DPRINT1("root element is %S, not <assembly>\n", elem.ptr);
         return STATUS_SXS_CANT_GEN_ACTCTX;
     }
 
     if (!parse_assembly_elem(xmlbuf, acl, assembly, ai))
     {
-        DPRINT1("failed to parse manifest %s\n", assembly->manifest.info );
+        DPRINT1("failed to parse manifest %S\n", assembly->manifest.info );
         return STATUS_SXS_CANT_GEN_ACTCTX;
     }
 
     if (next_xml_elem(xmlbuf, &elem))
     {
-        DPRINT1("unexpected element %s\n", elem.ptr);
+        DPRINT1("unexpected element %S\n", elem.ptr);
         return STATUS_SXS_CANT_GEN_ACTCTX;
     }
 
@@ -1476,7 +1476,7 @@ static NTSTATUS parse_manifest( struct actctx_loader* acl, struct assembly_ident
     struct assembly *assembly;
     int unicode_tests;
 
-    DPRINT( "parsing manifest loaded from %s base dir %s\n", filename, directory );
+    DPRINT( "parsing manifest loaded from %S base dir %S\n", filename, directory );
 
     if (!(assembly = add_assembly(acl->actctx, shared ? ASSEMBLY_SHARED_MANIFEST : ASSEMBLY_MANIFEST)))
         return STATUS_SXS_CANT_GEN_ACTCTX;
@@ -1655,7 +1655,7 @@ static NTSTATUS get_manifest_in_pe_file( struct actctx_loader* acl, struct assem
     SIZE_T              count;
     void               *base;
 
-    DPRINT( "looking for res %s in %s\n", resname, filename );
+    DPRINT( "looking for res %S in %S\n", resname, filename );
 
     attr.Length                   = sizeof(attr);
     attr.RootDirectory            = 0;
@@ -1748,7 +1748,7 @@ static NTSTATUS get_manifest_in_associated_manifest( struct actctx_loader* acl, 
 
     if (!((ULONG_PTR)resname >> 16)) resid = (ULONG_PTR)resname & 0xffff;
 
-    DPRINT( "looking for manifest associated with %s id %lu\n", filename, resid );
+    DPRINT( "looking for manifest associated with %S id %lu\n", filename, resid );
 
     if (module) /* use the module filename */
     {
@@ -1850,7 +1850,7 @@ static WCHAR *lookup_manifest_file( HANDLE dir, struct assembly_identity *ai )
             break;
         }
     }
-    else DPRINT1("no matching file for %s\n", lookup);
+    else DPRINT1("no matching file for %S\n", lookup);
     RtlFreeHeap( RtlGetProcessHeap(), 0, lookup );
     return ret;
 }
