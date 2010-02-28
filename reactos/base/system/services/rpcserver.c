@@ -637,8 +637,12 @@ DWORD RControlService(
     {
         /* Send control code to the service */
         dwError = ScmControlService(lpService,
-                                    dwControl,
-                                    lpServiceStatus);
+                                    dwControl);
+
+        /* Return service status information */
+        RtlCopyMemory(lpServiceStatus,
+                      &lpService->Status,
+                      sizeof(SERVICE_STATUS));
     }
 
     if ((dwError == ERROR_SUCCESS) && (pcbBytesNeeded))
@@ -652,10 +656,6 @@ DWORD RControlService(
         lpService->ThreadId = 0;
     }
 
-    /* Return service status information */
-    RtlCopyMemory(lpServiceStatus,
-                  &lpService->Status,
-                  sizeof(SERVICE_STATUS));
 
     return dwError;
 }

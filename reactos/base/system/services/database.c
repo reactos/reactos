@@ -679,12 +679,15 @@ ScmGetBootAndSystemDriverState(VOID)
 
 DWORD
 ScmControlService(PSERVICE Service,
-                  DWORD dwControl,
-                  LPSERVICE_STATUS lpServiceStatus)
+                  DWORD dwControl)
 {
     PSCM_CONTROL_PACKET ControlPacket;
-    DWORD Count;
+    SCM_REPLY_PACKET ReplyPacket;
+
+    DWORD dwWriteCount = 0;
+    DWORD dwReadCount = 0;
     DWORD TotalLength;
+    DWORD dwError = ERROR_SUCCESS;
 
     DPRINT("ScmControlService() called\n");
 
@@ -705,23 +708,29 @@ ScmControlService(PSERVICE Service,
     WriteFile(Service->ControlPipeHandle,
               ControlPacket,
               sizeof(SCM_CONTROL_PACKET) + (TotalLength * sizeof(WCHAR)),
-              &Count,
+              &dwWriteCount,
               NULL);
 
-    /* FIXME: Read the reply */
+    /* Read the reply */
+    ReadFile(Service->ControlPipeHandle,
+             &ReplyPacket,
+             sizeof(SCM_REPLY_PACKET),
+             &dwReadCount,
+             NULL);
 
     /* Release the contol packet */
     HeapFree(GetProcessHeap(),
              0,
              ControlPacket);
 
-    RtlCopyMemory(lpServiceStatus,
-                  &Service->Status,
-                  sizeof(SERVICE_STATUS));
+    if (dwReadCount == sizeof(SCM_REPLY_PACKET))
+    {
+        dwError = ReplyPacket.dwError;
+    }
 
-    DPRINT("ScmControlService) done\n");
+    DPRINT("ScmControlService() done\n");
 
-    return ERROR_SUCCESS;
+    return dwError;
 }
 
 
@@ -731,11 +740,15 @@ ScmSendStartCommand(PSERVICE Service,
                     LPWSTR *argv)
 {
     PSCM_CONTROL_PACKET ControlPacket;
+    SCM_REPLY_PACKET ReplyPacket;
     DWORD TotalLength;
     DWORD ArgsLength = 0;
     DWORD Length;
     PWSTR Ptr;
-    DWORD Count;
+    DWORD dwWriteCount = 0;
+    DWORD dwReadCount = 0;
+    DWORD dwError = ERROR_SUCCESS;
+    DWORD i;
 
     DPRINT("ScmSendStartCommand() called\n");
 
@@ -743,10 +756,10 @@ ScmSendStartCommand(PSERVICE Service,
     TotalLength = wcslen(Service->lpServiceName) + 1;
     if (argc > 0)
     {
-        for (Count = 0; Count < argc; Count++)
+        for (i = 0; i < argc; i++)
         {
-            DPRINT("Arg: %S\n", argv[Count]);
-            Length = wcslen(argv[Count]) + 1;
+            DPRINT("Arg: %S\n", argv[i]);
+            Length = wcslen(argv[i]) + 1;
             TotalLength += Length;
             ArgsLength += Length;
         }
@@ -786,19 +799,29 @@ ScmSendStartCommand(PSERVICE Service,
     WriteFile(Service->ControlPipeHandle,
               ControlPacket,
               sizeof(SCM_CONTROL_PACKET) + (TotalLength - 1) * sizeof(WCHAR),
-              &Count,
+              &dwWriteCount,
               NULL);
 
-    /* FIXME: Read the reply */
+    /* Read the reply */
+    ReadFile(Service->ControlPipeHandle,
+             &ReplyPacket,
+             sizeof(SCM_REPLY_PACKET),
+             &dwReadCount,
+             NULL);
 
     /* Release the contol packet */
     HeapFree(GetProcessHeap(),
              0,
              ControlPacket);
 
+    if (dwReadCount == sizeof(SCM_REPLY_PACKET))
+    {
+        dwError = ReplyPacket.dwError;
+    }
+
     DPRINT("ScmSendStartCommand() done\n");
 
-    return ERROR_SUCCESS;
+    return dwError;
 }
 
 
@@ -1192,7 +1215,6 @@ ScmAutoShutdownServices(VOID)
 {
     PLIST_ENTRY ServiceEntry;
     PSERVICE CurrentService;
-    SERVICE_STATUS ServiceStatus;
 
     DPRINT("ScmAutoShutdownServices() called\n");
 
@@ -1205,7 +1227,7 @@ ScmAutoShutdownServices(VOID)
             CurrentService->Status.dwCurrentState == SERVICE_START_PENDING)
         {
             /* shutdown service */
-            ScmControlService(CurrentService, SERVICE_CONTROL_STOP, &ServiceStatus);
+            ScmControlService(CurrentService, SERVICE_CONTROL_STOP);
         }
 
         ServiceEntry = ServiceEntry->Flink;

@@ -117,8 +117,7 @@ VOID ScmDeleteServiceRecord(PSERVICE lpService);
 DWORD ScmMarkServiceForDelete(PSERVICE pService);
 
 DWORD ScmControlService(PSERVICE Service,
-                        DWORD dwControl,
-                        LPSERVICE_STATUS lpServiceStatus);
+                        DWORD dwControl);
 
 BOOL ScmLockDatabaseExclusive(VOID);
 BOOL ScmLockDatabaseShared(VOID);
