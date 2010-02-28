@@ -51,6 +51,7 @@
 	<file>shtypes.idl</file>
 	<file>strmif.idl</file>
 	<file>textstor.idl</file>
+	<file>tuner.idl</file>
 	<file>tom.idl</file>
 	<file>unknwn.idl</file>
 	<file>urlhist.idl</file>

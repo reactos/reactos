@@ -1066,6 +1066,7 @@ interface IAMFilterMiscFlags : IUnknown
     ULONG GetMiscFlags();
 };
 
+#include <axextendenums.h>
 
 [
     object,
@@ -1081,3 +1082,16 @@ interface IAMStreamControl : IUnknown
                      [in] DWORD dwCookie );
     HRESULT GetInfo( [out] AM_STREAM_INFO *pInfo);
 }
+
+typedef enum tagTVAudioMode
+{
+    AMTVAUDIO_MODE_MONO     = 0x0001,
+    AMTVAUDIO_MODE_STEREO   = 0x0002,
+    AMTVAUDIO_MODE_LANG_A   = 0x0010,
+    AMTVAUDIO_MODE_LANG_B   = 0x0020,
+    AMTVAUDIO_MODE_LANG_C   = 0x0040,
+    AMTVAUDIO_PRESET_STEREO = 0x0200,
+    AMTVAUDIO_PRESET_LANG_A = 0x1000,
+    AMTVAUDIO_PRESET_LANG_B = 0x2000,
+    AMTVAUDIO_PRESET_LANG_C = 0x4000,
+}TVAudioMode;
