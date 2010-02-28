@@ -19,6 +19,11 @@ typedef struct _SCM_CONTROL_PACKET
     WCHAR szArguments[1];
 } SCM_CONTROL_PACKET, *PSCM_CONTROL_PACKET;
 
+typedef struct _SCM_REPLY_PACKET
+{
+    DWORD dwError;
+} SCM_REPLY_PACKET, *PSCM_REPLY_PACKET;
+
 #endif /* __SERVICES_SERVICES_H__ */
 
 /* EOF */
