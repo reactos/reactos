@@ -1586,6 +1586,23 @@ typedef struct _ACCESS_STATE {
  *                            Configuration Manager Types                     *
  ******************************************************************************/
 
+/* KEY_VALUE_Xxx.Type */
+
+#define REG_NONE                           0
+#define REG_SZ                             1
+#define REG_EXPAND_SZ                      2
+#define REG_BINARY                         3
+#define REG_DWORD                          4
+#define REG_DWORD_LITTLE_ENDIAN            4
+#define REG_DWORD_BIG_ENDIAN               5
+#define REG_LINK                           6
+#define REG_MULTI_SZ                       7
+#define REG_RESOURCE_LIST                  8
+#define REG_FULL_RESOURCE_DESCRIPTOR       9
+#define REG_RESOURCE_REQUIREMENTS_LIST    10
+#define REG_QWORD                         11
+#define REG_QWORD_LITTLE_ENDIAN           11
+
 //
 // Registry Access Rights
 //
@@ -2158,6 +2175,159 @@ IoMapTransfer(
 }
 #endif
 
+/* PCI_COMMON_CONFIG.Command */
+
+#define PCI_ENABLE_IO_SPACE               0x0001
+#define PCI_ENABLE_MEMORY_SPACE           0x0002
+#define PCI_ENABLE_BUS_MASTER             0x0004
+#define PCI_ENABLE_SPECIAL_CYCLES         0x0008
+#define PCI_ENABLE_WRITE_AND_INVALIDATE   0x0010
+#define PCI_ENABLE_VGA_COMPATIBLE_PALETTE 0x0020
+#define PCI_ENABLE_PARITY                 0x0040
+#define PCI_ENABLE_WAIT_CYCLE             0x0080
+#define PCI_ENABLE_SERR                   0x0100
+#define PCI_ENABLE_FAST_BACK_TO_BACK      0x0200
+#define PCI_DISABLE_LEVEL_INTERRUPT       0x0400
+
+/* PCI_COMMON_CONFIG.Status */
+
+#define PCI_STATUS_INTERRUPT_PENDING      0x0008
+#define PCI_STATUS_CAPABILITIES_LIST      0x0010
+#define PCI_STATUS_66MHZ_CAPABLE          0x0020
+#define PCI_STATUS_UDF_SUPPORTED          0x0040
+#define PCI_STATUS_FAST_BACK_TO_BACK      0x0080
+#define PCI_STATUS_DATA_PARITY_DETECTED   0x0100
+#define PCI_STATUS_DEVSEL                 0x0600
+#define PCI_STATUS_SIGNALED_TARGET_ABORT  0x0800
+#define PCI_STATUS_RECEIVED_TARGET_ABORT  0x1000
+#define PCI_STATUS_RECEIVED_MASTER_ABORT  0x2000
+#define PCI_STATUS_SIGNALED_SYSTEM_ERROR  0x4000
+#define PCI_STATUS_DETECTED_PARITY_ERROR  0x8000
+
+/* PCI_COMMON_CONFIG.HeaderType */
+
+#define PCI_MULTIFUNCTION                 0x80
+#define PCI_DEVICE_TYPE                   0x00
+#define PCI_BRIDGE_TYPE                   0x01
+#define PCI_CARDBUS_BRIDGE_TYPE           0x02
+
+#define PCI_CONFIGURATION_TYPE(PciData) \
+  (((PPCI_COMMON_CONFIG) (PciData))->HeaderType & ~PCI_MULTIFUNCTION)
+
+#define PCI_MULTIFUNCTION_DEVICE(PciData) \
+  ((((PPCI_COMMON_CONFIG) (PciData))->HeaderType & PCI_MULTIFUNCTION) != 0)
+
+/* PCI device classes */
+
+#define PCI_CLASS_PRE_20                    0x00
+#define PCI_CLASS_MASS_STORAGE_CTLR         0x01
+#define PCI_CLASS_NETWORK_CTLR              0x02
+#define PCI_CLASS_DISPLAY_CTLR              0x03
+#define PCI_CLASS_MULTIMEDIA_DEV            0x04
+#define PCI_CLASS_MEMORY_CTLR               0x05
+#define PCI_CLASS_BRIDGE_DEV                0x06
+#define PCI_CLASS_SIMPLE_COMMS_CTLR         0x07
+#define PCI_CLASS_BASE_SYSTEM_DEV           0x08
+#define PCI_CLASS_INPUT_DEV                 0x09
+#define PCI_CLASS_DOCKING_STATION           0x0a
+#define PCI_CLASS_PROCESSOR                 0x0b
+#define PCI_CLASS_SERIAL_BUS_CTLR           0x0c
+#define PCI_CLASS_WIRELESS_CTLR             0x0d
+#define PCI_CLASS_INTELLIGENT_IO_CTLR       0x0e
+#define PCI_CLASS_SATELLITE_COMMS_CTLR      0x0f
+#define PCI_CLASS_ENCRYPTION_DECRYPTION     0x10
+#define PCI_CLASS_DATA_ACQ_SIGNAL_PROC      0x11
+
+/* PCI device subclasses for class 0 */
+
+#define PCI_SUBCLASS_PRE_20_NON_VGA         0x00
+#define PCI_SUBCLASS_PRE_20_VGA             0x01
+
+/* PCI device subclasses for class 1 (mass storage controllers)*/
+
+#define PCI_SUBCLASS_MSC_SCSI_BUS_CTLR      0x00
+#define PCI_SUBCLASS_MSC_IDE_CTLR           0x01
+#define PCI_SUBCLASS_MSC_FLOPPY_CTLR        0x02
+#define PCI_SUBCLASS_MSC_IPI_CTLR           0x03
+#define PCI_SUBCLASS_MSC_RAID_CTLR          0x04
+#define PCI_SUBCLASS_MSC_OTHER              0x80
+
+/* PCI device subclasses for class 2 (network controllers)*/
+
+#define PCI_SUBCLASS_NET_ETHERNET_CTLR      0x00
+#define PCI_SUBCLASS_NET_TOKEN_RING_CTLR    0x01
+#define PCI_SUBCLASS_NET_FDDI_CTLR          0x02
+#define PCI_SUBCLASS_NET_ATM_CTLR           0x03
+#define PCI_SUBCLASS_NET_ISDN_CTLR          0x04
+#define PCI_SUBCLASS_NET_OTHER              0x80
+
+/* PCI device subclasses for class 3 (display controllers)*/
+
+#define PCI_SUBCLASS_VID_VGA_CTLR           0x00
+#define PCI_SUBCLASS_VID_XGA_CTLR           0x01
+#define PCI_SUBCLASS_VID_3D_CTLR            0x02
+#define PCI_SUBCLASS_VID_OTHER              0x80
+
+/* PCI device subclasses for class 4 (multimedia device)*/
+
+#define PCI_SUBCLASS_MM_VIDEO_DEV           0x00
+#define PCI_SUBCLASS_MM_AUDIO_DEV           0x01
+#define PCI_SUBCLASS_MM_TELEPHONY_DEV       0x02
+#define PCI_SUBCLASS_MM_OTHER               0x80
+
+/* PCI device subclasses for class 5 (memory controller)*/
+
+#define PCI_SUBCLASS_MEM_RAM                0x00
+#define PCI_SUBCLASS_MEM_FLASH              0x01
+#define PCI_SUBCLASS_MEM_OTHER              0x80
+
+/* PCI device subclasses for class 6 (bridge device)*/
+
+#define PCI_SUBCLASS_BR_HOST                0x00
+#define PCI_SUBCLASS_BR_ISA                 0x01
+#define PCI_SUBCLASS_BR_EISA                0x02
+#define PCI_SUBCLASS_BR_MCA                 0x03
+#define PCI_SUBCLASS_BR_PCI_TO_PCI          0x04
+#define PCI_SUBCLASS_BR_PCMCIA              0x05
+#define PCI_SUBCLASS_BR_NUBUS               0x06
+#define PCI_SUBCLASS_BR_CARDBUS             0x07
+#define PCI_SUBCLASS_BR_RACEWAY             0x08
+#define PCI_SUBCLASS_BR_OTHER               0x80
+
+/* PCI device subclasses for class C (serial bus controller)*/
+
+#define PCI_SUBCLASS_SB_IEEE1394            0x00
+#define PCI_SUBCLASS_SB_ACCESS              0x01
+#define PCI_SUBCLASS_SB_SSA                 0x02
+#define PCI_SUBCLASS_SB_USB                 0x03
+#define PCI_SUBCLASS_SB_FIBRE_CHANNEL       0x04
+#define PCI_SUBCLASS_SB_SMBUS               0x05
+
+#define PCI_MAX_DEVICES        32
+#define PCI_MAX_FUNCTION       8
+#define PCI_MAX_BRIDGE_NUMBER  0xFF
+#define PCI_INVALID_VENDORID   0xFFFF
+#define PCI_COMMON_HDR_LENGTH (FIELD_OFFSET(PCI_COMMON_CONFIG, DeviceSpecific))
+
+#define PCI_ADDRESS_IO_SPACE                0x00000001
+#define PCI_ADDRESS_MEMORY_TYPE_MASK        0x00000006
+#define PCI_ADDRESS_MEMORY_PREFETCHABLE     0x00000008
+#define PCI_ADDRESS_IO_ADDRESS_MASK         0xfffffffc
+#define PCI_ADDRESS_MEMORY_ADDRESS_MASK     0xfffffff0
+#define PCI_ADDRESS_ROM_ADDRESS_MASK        0xfffff800
+
+#define PCI_TYPE_32BIT 0
+#define PCI_TYPE_20BIT 2
+#define PCI_TYPE_64BIT 4
+
+#define POOL_COLD_ALLOCATION                256
+#define POOL_QUOTA_FAIL_INSTEAD_OF_RAISE    8
+#define POOL_RAISE_IF_ALLOCATION_FAILURE    16
+
+#define PCI_TYPE0_ADDRESSES               6
+#define PCI_TYPE1_ADDRESSES               2
+#define PCI_TYPE2_ADDRESSES               5
+
 #define IO_TYPE_ADAPTER                 1
 #define IO_TYPE_CONTROLLER              2
 #define IO_TYPE_DEVICE                  3
@@ -2294,6 +2464,17 @@ IoMapTransfer(
 #define FILE_DEVICE_MT_TRANSPORT          0x00000043
 #define FILE_DEVICE_BIOMETRIC             0x00000044
 #define FILE_DEVICE_PMI                   0x00000045
+
+typedef struct _PCI_SLOT_NUMBER {
+  union {
+    struct {
+      ULONG  DeviceNumber : 5;
+      ULONG  FunctionNumber : 3;
+      ULONG  Reserved : 24;
+    } bits;
+    ULONG  AsULONG;
+  } u;
+} PCI_SLOT_NUMBER, *PPCI_SLOT_NUMBER;
 
 typedef struct _IO_STATUS_BLOCK {
   _ANONYMOUS_UNION union {
