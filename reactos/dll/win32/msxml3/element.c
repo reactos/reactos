@@ -62,7 +62,7 @@ static HRESULT WINAPI domelem_QueryInterface(
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
 
-    TRACE("%p %s %p\n", This, debugstr_guid(riid), ppvObject);
+    TRACE("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppvObject);
 
     if ( IsEqualGUID( riid, &IID_IXMLDOMElement ) ||
          IsEqualGUID( riid, &IID_IDispatch ) ||
@@ -493,7 +493,7 @@ static HRESULT WINAPI domelem_get_tagName(
     DWORD offset = 0;
     LPWSTR str;
 
-    TRACE("%p\n", This );
+    TRACE("(%p)->(%p)\n", This, p );
 
     element = get_element( This );
     if ( !element )
@@ -526,7 +526,7 @@ static HRESULT WINAPI domelem_getAttribute(
     xmlChar *xml_name, *xml_value = NULL;
     HRESULT hr = S_FALSE;
 
-    TRACE("(%p)->(%s,%p)\n", This, debugstr_w(name), value);
+    TRACE("(%p)->(%s %p)\n", This, debugstr_w(name), value);
 
     if(!value || !name)
         return E_INVALIDARG;
@@ -567,7 +567,7 @@ static HRESULT WINAPI domelem_setAttribute(
     HRESULT hr;
     VARIANT var;
 
-    TRACE("(%p)->(%s, var)\n", This, debugstr_w(name));
+    TRACE("(%p)->(%s var)\n", This, debugstr_w(name));
 
     element = get_element( This );
     if ( !element )
@@ -660,7 +660,8 @@ static HRESULT WINAPI domelem_setAttributeNode(
     IXMLDOMAttribute* domAttribute,
     IXMLDOMAttribute** attributeNode)
 {
-    FIXME("\n");
+    domelem *This = impl_from_IXMLDOMElement( iface );
+    FIXME("(%p)->(%p %p)\n", This, domAttribute, attributeNode);
     return E_NOTIMPL;
 }
 
@@ -669,7 +670,8 @@ static HRESULT WINAPI domelem_removeAttributeNode(
     IXMLDOMAttribute* domAttribute,
     IXMLDOMAttribute** attributeNode)
 {
-    FIXME("\n");
+    domelem *This = impl_from_IXMLDOMElement( iface );
+    FIXME("(%p)->(%p %p)\n", This, domAttribute, attributeNode);
     return E_NOTIMPL;
 }
 
@@ -684,7 +686,7 @@ static HRESULT WINAPI domelem_getElementsByTagName(
     xmlNodePtr element;
     HRESULT hr;
 
-    TRACE("(%p)->(%s,%p)\n", This, debugstr_w(bstrName), resultList);
+    TRACE("(%p)->(%s %p)\n", This, debugstr_w(bstrName), resultList);
 
     if (bstrName[0] == '*' && bstrName[1] == 0)
     {
@@ -714,7 +716,8 @@ static HRESULT WINAPI domelem_getElementsByTagName(
 static HRESULT WINAPI domelem_normalize(
     IXMLDOMElement *iface )
 {
-    FIXME("\n");
+    domelem *This = impl_from_IXMLDOMElement( iface );
+    FIXME("%p\n", This);
     return E_NOTIMPL;
 }
 

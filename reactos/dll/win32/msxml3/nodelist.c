@@ -64,7 +64,7 @@ static HRESULT WINAPI xmlnodelist_QueryInterface(
     REFIID riid,
     void** ppvObject )
 {
-    TRACE("%p %s %p\n", iface, debugstr_guid(riid), ppvObject);
+    TRACE("(%p)->(%s %p)\n", iface, debugstr_guid(riid), ppvObject);
 
     if(!ppvObject)
         return E_INVALIDARG;
@@ -205,7 +205,7 @@ static HRESULT WINAPI xmlnodelist_get_item(
     xmlNodePtr curr;
     LONG nodeIndex = 0;
 
-    TRACE("%p %d\n", This, index);
+    TRACE("(%p)->(%d %p)\n", This, index, listItem);
 
     if(!listItem)
         return E_INVALIDARG;
@@ -238,7 +238,7 @@ static HRESULT WINAPI xmlnodelist_get_length(
 
     xmlnodelist *This = impl_from_IXMLDOMNodeList( iface );
 
-    TRACE("%p\n", This);
+    TRACE("(%p)->(%p)\n", This, listLength);
 
     if(!listLength)
         return E_INVALIDARG;
@@ -260,7 +260,7 @@ static HRESULT WINAPI xmlnodelist_nextNode(
 {
     xmlnodelist *This = impl_from_IXMLDOMNodeList( iface );
 
-    TRACE("%p %p\n", This, nextItem );
+    TRACE("(%p)->(%p)\n", This, nextItem );
 
     if(!nextItem)
         return E_INVALIDARG;
@@ -289,7 +289,8 @@ static HRESULT WINAPI xmlnodelist__newEnum(
         IXMLDOMNodeList* iface,
         IUnknown** ppUnk)
 {
-    FIXME("\n");
+    xmlnodelist *This = impl_from_IXMLDOMNodeList( iface );
+    FIXME("(%p)->(%p)\n", This, ppUnk);
     return E_NOTIMPL;
 }
 

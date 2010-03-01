@@ -54,7 +54,7 @@ static HRESULT WINAPI dimimpl_QueryInterface(
     void** ppvObject )
 {
     domimpl *This = impl_from_IXMLDOMImplementation( iface );
-    TRACE("%p %s %p\n", This, debugstr_guid(riid), ppvObject);
+    TRACE("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppvObject);
 
     if ( IsEqualGUID( riid, &IID_IXMLDOMImplementation ) ||
          IsEqualGUID( riid, &IID_IDispatch ) ||
@@ -181,7 +181,7 @@ static HRESULT WINAPI dimimpl_hasFeature(IXMLDOMImplementation* This, BSTR featu
     BOOL bValidFeature = FALSE;
     BOOL bValidVersion = FALSE;
 
-    TRACE("feature(%s) version (%s)\n", debugstr_w(feature), debugstr_w(version));
+    TRACE("(%p)->(%s %s %p)\n", This, debugstr_w(feature), debugstr_w(version), hasFeature);
 
     if(!feature || !hasFeature)
         return E_INVALIDARG;

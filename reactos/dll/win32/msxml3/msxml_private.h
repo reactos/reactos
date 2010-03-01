@@ -1,5 +1,5 @@
 /*
- *    MSXML Class Factory
+ *    Common definitions
  *
  * Copyright 2005 Mike McCormack
  *
@@ -174,6 +174,8 @@ static inline BSTR bstr_from_xmlChar(const xmlChar *str)
         if(ret)
             MultiByteToWideChar( CP_UTF8, 0, (LPCSTR)str, -1, ret, len);
     }
+    else
+        ret = SysAllocStringLen(NULL, 0);
 
     return ret;
 }

@@ -55,7 +55,7 @@ static HRESULT WINAPI domattr_QueryInterface(
     void** ppvObject )
 {
     domattr *This = impl_from_IXMLDOMAttribute( iface );
-    TRACE("%p %s %p\n", This, debugstr_guid(riid), ppvObject);
+    TRACE("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppvObject);
 
     if ( IsEqualGUID( riid, &IID_IXMLDOMAttribute ) ||
          IsEqualGUID( riid, &IID_IDispatch ) ||
@@ -213,7 +213,10 @@ static HRESULT WINAPI domattr_get_parentNode(
     IXMLDOMNode** parent )
 {
     domattr *This = impl_from_IXMLDOMAttribute( iface );
-    return IXMLDOMNode_get_parentNode( IXMLDOMNode_from_impl(&This->node), parent );
+    TRACE("(%p)->(%p)\n", This, parent);
+    if (!parent) return E_INVALIDARG;
+    *parent = NULL;
+    return S_FALSE;
 }
 
 static HRESULT WINAPI domattr_get_childNodes(

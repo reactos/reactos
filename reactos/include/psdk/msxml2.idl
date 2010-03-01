@@ -1980,6 +1980,15 @@ coclass SAXXMLReader30
 };
 
 [
+    uuid(7c6e29bc-8b8b-4c3d-859e-af6cd158be0f)
+]
+coclass SAXXMLReader40
+{
+    [default] interface IVBSAXXMLReader;
+    interface ISAXXMLReader;
+};
+
+[
     uuid(fc220ad8-a72a-4ee8-926e-0b7ad152a020)
 ]
 coclass MXXMLWriter
