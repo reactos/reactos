@@ -20,17 +20,21 @@
 
 #include "windef.h"
 
+/*UTF-8*/
+#pragma code_page(65001)
+
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
 {
-	4 "The specified installation package could not be opened.  Please check the file path and try again."
+	4 "Impossibile aprire il pacchetto di installazione specificato.  Per favore controlla l'indirizzo del file e riprova."
 	5 "percorso %s non trovato"
 	9 "inserire disco %s"
 	10 "parametri incorretti"
 	11 "immettere il nome della cartella che contiene %s"
-	12 "sorgente di installazione per la funzionalit‡ mancante"
-	13 "periferica di rete per la funzionalit‡ mancante"
-	14 "funzionalit‡ da:"
+	12 "sorgente di installazione per la funzionalit√† mancante"
+	13 "periferica di rete per la funzionalit√† mancante"
+	14 "funzionalit√† da:"
 	15 "selezionare la cartella che contiene %s"
 }
+#pragma code_page(default)

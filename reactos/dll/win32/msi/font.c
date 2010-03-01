@@ -66,6 +66,21 @@ typedef struct _tagTT_NAME_RECORD {
 
 static const WCHAR szRegisterFonts[] =
     {'R','e','g','i','s','t','e','r','F','o','n','t','s',0};
+static const WCHAR szUnregisterFonts[] =
+    {'U','n','r','e','g','i','s','t','e','r','F','o','n','t','s',0};
+
+static const WCHAR regfont1[] =
+    {'S','o','f','t','w','a','r','e','\\',
+     'M','i','c','r','o','s','o','f','t','\\',
+     'W','i','n','d','o','w','s',' ','N','T','\\',
+     'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
+     'F','o','n','t','s',0};
+static const WCHAR regfont2[] =
+    {'S','o','f','t','w','a','r','e','\\',
+     'M','i','c','r','o','s','o','f','t','\\',
+     'W','i','n','d','o','w','s','\\',
+     'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
+     'F','o','n','t','s',0};
 
 /*
  * Code based off of code located here
@@ -174,20 +189,7 @@ static UINT ITERATE_RegisterFonts(MSIRECORD *row, LPVOID param)
     LPWSTR name;
     LPCWSTR filename;
     MSIFILE *file;
-    static const WCHAR regfont1[] =
-        {'S','o','f','t','w','a','r','e','\\',
-         'M','i','c','r','o','s','o','f','t','\\',
-         'W','i','n','d','o','w','s',' ','N','T','\\',
-         'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
-         'F','o','n','t','s',0};
-    static const WCHAR regfont2[] =
-        {'S','o','f','t','w','a','r','e','\\',
-         'M','i','c','r','o','s','o','f','t','\\',
-         'W','i','n','d','o','w','s','\\',
-         'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
-         'F','o','n','t','s',0};
-    HKEY hkey1;
-    HKEY hkey2;
+    HKEY hkey1, hkey2;
     MSIRECORD *uirow;
     LPWSTR uipath, p;
 
@@ -199,10 +201,9 @@ static UINT ITERATE_RegisterFonts(MSIRECORD *row, LPVOID param)
         return ERROR_SUCCESS;
     }
 
-    /* check to make sure that component is installed */
-    if (!ACTION_VerifyComponentForAction( file->Component, INSTALLSTATE_LOCAL))
+    if (file->Component->ActionRequest != INSTALLSTATE_LOCAL)
     {
-        TRACE("Skipping: Component not scheduled for install\n");
+        TRACE("Component not scheduled for installation\n");
         return ERROR_SUCCESS;
     }
 
@@ -256,6 +257,84 @@ UINT ACTION_RegisterFonts(MSIPACKAGE *package)
 
     MSI_IterateRecords(view, NULL, ITERATE_RegisterFonts, package);
     msiobj_release(&view->hdr);
+
+    return ERROR_SUCCESS;
+}
+
+static UINT ITERATE_UnregisterFonts( MSIRECORD *row, LPVOID param )
+{
+    MSIPACKAGE *package = param;
+    LPWSTR name;
+    LPCWSTR filename;
+    MSIFILE *file;
+    HKEY hkey1, hkey2;
+    MSIRECORD *uirow;
+    LPWSTR uipath, p;
+
+    filename = MSI_RecordGetString( row, 1 );
+    file = get_loaded_file( package, filename );
+    if (!file)
+    {
+        ERR("Unable to load file\n");
+        return ERROR_SUCCESS;
+    }
+
+    if (file->Component->ActionRequest != INSTALLSTATE_ABSENT)
+    {
+        TRACE("Component not scheduled for removal\n");
+        return ERROR_SUCCESS;
+    }
+
+    RegCreateKeyW( HKEY_LOCAL_MACHINE, regfont1, &hkey1 );
+    RegCreateKeyW( HKEY_LOCAL_MACHINE, regfont2, &hkey2 );
+
+    if (MSI_RecordIsNull( row, 2 ))
+        name = load_ttfname_from( file->TargetPath );
+    else
+        name = msi_dup_record_field( row, 2 );
+
+    if (name)
+    {
+        RegDeleteValueW( hkey1, name );
+        RegDeleteValueW( hkey2, name );
+    }
+
+    msi_free( name );
+    RegCloseKey( hkey1 );
+    RegCloseKey( hkey2 );
+
+    /* the UI chunk */
+    uirow = MSI_CreateRecord( 1 );
+    uipath = strdupW( file->TargetPath );
+    p = strrchrW( uipath,'\\' );
+    if (p) p++;
+    else p = uipath;
+    MSI_RecordSetStringW( uirow, 1, p );
+    ui_actiondata( package, szUnregisterFonts, uirow );
+    msiobj_release( &uirow->hdr );
+    msi_free( uipath );
+    /* FIXME: call ui_progress? */
+
+    return ERROR_SUCCESS;
+}
+
+UINT ACTION_UnregisterFonts( MSIPACKAGE *package )
+{
+    UINT r;
+    MSIQUERY *view;
+    static const WCHAR query[] =
+        {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
+         '`','F','o','n','t','`',0};
+
+    r = MSI_DatabaseOpenViewW( package->db, query, &view );
+    if (r != ERROR_SUCCESS)
+    {
+        TRACE("MSI_DatabaseOpenViewW failed: %u\n", r);
+        return ERROR_SUCCESS;
+    }
+
+    MSI_IterateRecords( view, NULL, ITERATE_UnregisterFonts, package );
+    msiobj_release( &view->hdr );
 
     return ERROR_SUCCESS;
 }

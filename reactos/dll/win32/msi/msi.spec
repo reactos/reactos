@@ -171,8 +171,8 @@
 175 stdcall MsiApplyPatchW(wstr wstr long wstr)
 176 stdcall MsiAdvertiseScriptA(str long ptr long)
 177 stdcall MsiAdvertiseScriptW(wstr long ptr long)
-178 stub MsiGetPatchInfoA
-179 stub MsiGetPatchInfoW
+178 stdcall MsiGetPatchInfoA(str str ptr ptr)
+179 stdcall MsiGetPatchInfoW(wstr wstr ptr ptr)
 180 stdcall MsiEnumPatchesA(str long ptr ptr ptr)
 181 stdcall MsiEnumPatchesW(str long ptr ptr ptr)
 182 stdcall -private DllGetVersion(ptr)

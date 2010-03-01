@@ -64,6 +64,7 @@ interface IWineMsiRemotePackage : IUnknown
     HRESULT SetTargetPath( [in] BSTR folder, [in] BSTR value );
     HRESULT GetSourcePath( [in] BSTR folder, [out] BSTR *value, [out] DWORD *size );
     HRESULT GetMode( [in] MSIRUNMODE mode, [out] BOOL *ret );
+    HRESULT SetMode( [in] MSIRUNMODE mode, [in] BOOL state );
     HRESULT GetFeatureState( [in] BSTR feature, [out] INSTALLSTATE *installed, [out] INSTALLSTATE *action );
     HRESULT SetFeatureState( [in] BSTR feature, [in] INSTALLSTATE state );
     HRESULT GetComponentState( [in] BSTR component, [out] INSTALLSTATE *installed, [out] INSTALLSTATE *action );

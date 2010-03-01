@@ -32,6 +32,7 @@
 #include "query.h"
 
 #include "wine/debug.h"
+#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msidb);
 
@@ -486,7 +487,8 @@ static INT add_streams_to_table(MSISTREAMSVIEW *sv)
     STATSTG stat;
     STREAM *stream = NULL;
     HRESULT hr;
-    UINT count = 0, size;
+    UINT r, count = 0, size;
+    LPWSTR encname;
 
     hr = IStorage_EnumElements(sv->db->storage, 0, NULL, 0, &stgenum);
     if (FAILED(hr))
@@ -505,7 +507,10 @@ static INT add_streams_to_table(MSISTREAMSVIEW *sv)
             break;
 
         if (stat.type != STGTY_STREAM)
+        {
+            CoTaskMemFree(stat.pwcsName);
             continue;
+        }
 
         /* table streams are not in the _Streams table */
         if (*stat.pwcsName == 0x4840)
@@ -522,13 +527,22 @@ static INT add_streams_to_table(MSISTREAMSVIEW *sv)
             break;
         }
 
-        hr = IStorage_OpenStream(sv->db->storage, stat.pwcsName, 0,
-                                 STGM_READ | STGM_SHARE_EXCLUSIVE, 0, &stream->stream);
+        if (!strcmpW(stat.pwcsName, szSumInfo))
+        {
+            /* summary information stream is not encoded */
+            r = db_get_raw_stream(sv->db, stat.pwcsName, &stream->stream);
+        }
+        else
+        {
+            encname = encode_streamname(FALSE, stat.pwcsName);
+            r = db_get_raw_stream(sv->db, encname, &stream->stream);
+            msi_free(encname);
+        }
         CoTaskMemFree(stat.pwcsName);
 
-        if (FAILED(hr))
+        if (r != ERROR_SUCCESS)
         {
-            WARN("failed to open stream: %08x\n", hr);
+            WARN("unable to get stream %u\n", r);
             count = -1;
             break;
         }

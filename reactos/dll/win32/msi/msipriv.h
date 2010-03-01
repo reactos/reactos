@@ -961,6 +961,7 @@ extern UINT ACTION_RegisterProgIdInfo(MSIPACKAGE *package);
 extern UINT ACTION_RegisterExtensionInfo(MSIPACKAGE *package);
 extern UINT ACTION_RegisterMIMEInfo(MSIPACKAGE *package);
 extern UINT ACTION_RegisterFonts(MSIPACKAGE *package);
+extern UINT ACTION_UnregisterFonts(MSIPACKAGE *package);
 
 /* Helpers */
 extern DWORD deformat_string(MSIPACKAGE *package, LPCWSTR ptr, WCHAR** data );
@@ -981,8 +982,6 @@ extern void msi_free_action_script(MSIPACKAGE *package, UINT script);
 extern LPWSTR build_icon_path(MSIPACKAGE *, LPCWSTR);
 extern LPWSTR build_directory_name(DWORD , ...);
 extern BOOL create_full_pathW(const WCHAR *path);
-extern BOOL ACTION_VerifyComponentForAction(const MSICOMPONENT*, INSTALLSTATE);
-extern BOOL ACTION_VerifyFeatureForAction(const MSIFEATURE*, INSTALLSTATE);
 extern void reduce_to_longfilename(WCHAR*);
 extern LPWSTR create_component_advertise_string(MSIPACKAGE*, MSICOMPONENT*, LPCWSTR);
 extern void ACTION_UpdateComponentStates(MSIPACKAGE *package, LPCWSTR szFeature);
@@ -1071,6 +1070,11 @@ static const WCHAR szFindRelatedProducts[] = {'F','i','n','d','R','e','l','a','t
 static const WCHAR szAllUsers[] = {'A','L','L','U','S','E','R','S',0};
 static const WCHAR szCustomActionData[] = {'C','u','s','t','o','m','A','c','t','i','o','n','D','a','t','a',0};
 static const WCHAR szUILevel[] = {'U','I','L','e','v','e','l',0};
+static const WCHAR szProductID[] = {'P','r','o','d','u','c','t','I','D',0};
+static const WCHAR szPIDTemplate[] = {'P','I','D','T','e','m','p','l','a','t','e',0};
+static const WCHAR szPIDKEY[] = {'P','I','D','K','E','Y',0};
+static const WCHAR szTYPELIB[] = {'T','Y','P','E','L','I','B',0};
+static const WCHAR szSumInfo[] = {5 ,'S','u','m','m','a','r','y','I','n','f','o','r','m','a','t','i','o','n',0};
 
 /* memory allocation macro functions */
 static void *msi_alloc( size_t len ) __WINE_ALLOC_SIZE(1);

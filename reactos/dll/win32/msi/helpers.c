@@ -604,28 +604,6 @@ void ui_actiondata(MSIPACKAGE *package, LPCWSTR action, MSIRECORD * record)
     msiobj_release(&row->hdr);
 }
 
-BOOL ACTION_VerifyComponentForAction( const MSICOMPONENT* comp, INSTALLSTATE check )
-{
-    if (!comp)
-        return FALSE;
-
-    if (comp->ActionRequest == check)
-        return TRUE;
-    else
-        return FALSE;
-}
-
-BOOL ACTION_VerifyFeatureForAction( const MSIFEATURE* feature, INSTALLSTATE check )
-{
-    if (!feature)
-        return FALSE;
-
-    if (feature->ActionRequest == check)
-        return TRUE;
-    else
-        return FALSE;
-}
-
 void reduce_to_longfilename(WCHAR* filename)
 {
     LPWSTR p = strchrW(filename,'|');

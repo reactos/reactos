@@ -108,7 +108,7 @@ static void schedule_install_files(MSIPACKAGE *package)
 
     LIST_FOR_EACH_ENTRY(file, &package->files, MSIFILE, entry)
     {
-        if (!ACTION_VerifyComponentForAction(file->Component, INSTALLSTATE_LOCAL))
+        if (file->Component->ActionRequest != INSTALLSTATE_LOCAL)
         {
             TRACE("File %s is not scheduled for install\n", debugstr_w(file->File));
 
@@ -358,19 +358,15 @@ static UINT ITERATE_DuplicateFiles(MSIRECORD *row, LPVOID param)
 
     component = MSI_RecordGetString(row,2);
     comp = get_loaded_component(package,component);
+    if (!comp)
+        return ERROR_SUCCESS;
 
-    if (!ACTION_VerifyComponentForAction( comp, INSTALLSTATE_LOCAL ))
+    if (comp->ActionRequest != INSTALLSTATE_LOCAL)
     {
-        TRACE("Skipping copy due to disabled component %s\n",
-                        debugstr_w(component));
-
-        /* the action taken was the same as the current install state */        
-        if (comp)
-            comp->Action = comp->Installed;
-
+        TRACE("Component not scheduled for installation %s\n", debugstr_w(component));
+        comp->Action = comp->Installed;
         return ERROR_SUCCESS;
     }
-
     comp->Action = INSTALLSTATE_LOCAL;
 
     file_key = MSI_RecordGetString(row,3);
