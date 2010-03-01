@@ -1022,6 +1022,34 @@ typedef enum _KWAIT_REASON {
   MaximumWaitReason
 } KWAIT_REASON;
 
+typedef struct _KWAIT_BLOCK {
+  LIST_ENTRY WaitListEntry;
+  struct _KTHREAD *Thread;
+  PVOID Object;
+  struct _KWAIT_BLOCK *NextWaitBlock;
+  USHORT WaitKey;
+  UCHAR WaitType;
+  volatile UCHAR BlockState;
+
+#if defined(_WIN64)
+
+  LONG SpareLong;
+
+#endif
+
+} KWAIT_BLOCK, *PKWAIT_BLOCK, *PRKWAIT_BLOCK;
+
+typedef enum _KINTERRUPT_MODE {
+  LevelSensitive,
+  Latched
+} KINTERRUPT_MODE;
+
+#define THREAD_WAIT_OBJECTS 3
+
+typedef VOID
+(DDKAPI *PKINTERRUPT_ROUTINE)(
+  VOID);
+
 typedef enum _KD_OPTION {
     KD_OPTION_SET_BLOCK_ENABLE,
 } KD_OPTION;
@@ -2684,6 +2712,20 @@ typedef struct _PCI_COMMON_CONFIG {
 } PCI_COMMON_CONFIG, *PPCI_COMMON_CONFIG;
 
 #endif
+
+typedef enum _CREATE_FILE_TYPE {
+  CreateFileTypeNone,
+  CreateFileTypeNamedPipe,
+  CreateFileTypeMailslot
+} CREATE_FILE_TYPE;
+
+#define IO_FORCE_ACCESS_CHECK               0x001
+#define IO_NO_PARAMETER_CHECKING            0x100
+
+#define IO_REPARSE                      0x0
+#define IO_REMOUNT                      0x1
+
+
 
 typedef struct _PCI_SLOT_NUMBER {
   union {
@@ -5596,6 +5638,75 @@ RtlCheckBit(
 /******************************************************************************
  *                            Executive Types                                 *
  ******************************************************************************/
+
+typedef enum _KBUGCHECK_CALLBACK_REASON {
+  KbCallbackInvalid,
+  KbCallbackReserved1,
+  KbCallbackSecondaryDumpData,
+  KbCallbackDumpIo,
+  KbCallbackAddPages
+} KBUGCHECK_CALLBACK_REASON;
+
+struct _KBUGCHECK_REASON_CALLBACK_RECORD;
+
+typedef VOID
+(DDKAPI *PKBUGCHECK_REASON_CALLBACK_ROUTINE)(
+  IN KBUGCHECK_CALLBACK_REASON  Reason,
+  IN struct _KBUGCHECK_REASON_CALLBACK_RECORD  *Record,
+  IN OUT PVOID  ReasonSpecificData,
+  IN ULONG  ReasonSpecificDataLength);
+
+typedef struct _KBUGCHECK_REASON_CALLBACK_RECORD {
+  LIST_ENTRY  Entry;
+  PKBUGCHECK_REASON_CALLBACK_ROUTINE  CallbackRoutine;
+  PUCHAR  Component;
+  ULONG_PTR  Checksum;
+  KBUGCHECK_CALLBACK_REASON  Reason;
+  UCHAR  State;
+} KBUGCHECK_REASON_CALLBACK_RECORD, *PKBUGCHECK_REASON_CALLBACK_RECORD;
+
+typedef enum _KBUGCHECK_BUFFER_DUMP_STATE {
+  BufferEmpty,
+  BufferInserted,
+  BufferStarted,
+  BufferFinished,
+  BufferIncomplete
+} KBUGCHECK_BUFFER_DUMP_STATE;
+
+typedef VOID
+(DDKAPI *PKBUGCHECK_CALLBACK_ROUTINE)(
+  IN PVOID  Buffer,
+  IN ULONG  Length);
+
+typedef struct _KBUGCHECK_CALLBACK_RECORD {
+  LIST_ENTRY  Entry;
+  PKBUGCHECK_CALLBACK_ROUTINE  CallbackRoutine;
+  PVOID  Buffer;
+  ULONG  Length;
+  PUCHAR  Component;
+  ULONG_PTR  Checksum;
+  UCHAR  State;
+} KBUGCHECK_CALLBACK_RECORD, *PKBUGCHECK_CALLBACK_RECORD;
+
+typedef BOOLEAN
+(DDKAPI *PNMI_CALLBACK)(
+    IN PVOID Context,
+    IN BOOLEAN Handled);
+
+/*
+ * VOID
+ * KeInitializeCallbackRecord(
+ *   IN PKBUGCHECK_CALLBACK_RECORD  CallbackRecord)
+ */
+#define KeInitializeCallbackRecord(CallbackRecord) \
+  CallbackRecord->State = BufferEmpty;
+
+typedef enum _KDPC_IMPORTANCE {
+  LowImportance,
+  MediumImportance,
+  HighImportance,
+  MediumHighImportance
+} KDPC_IMPORTANCE;
 
 typedef enum _POOL_TYPE {
     NonPagedPool,

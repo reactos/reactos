@@ -1241,33 +1241,6 @@ typedef enum _EVENT_TYPE {
   SynchronizationEvent
 } EVENT_TYPE;
 
-typedef struct _KWAIT_BLOCK {
-  LIST_ENTRY  WaitListEntry;
-  struct _KTHREAD * RESTRICTED_POINTER  Thread;
-  PVOID  Object;
-  struct _KWAIT_BLOCK * RESTRICTED_POINTER  NextWaitBlock;
-  USHORT  WaitKey;
-  UCHAR WaitType;
-  UCHAR SpareByte;
-} KWAIT_BLOCK, *PKWAIT_BLOCK, *RESTRICTED_POINTER PRKWAIT_BLOCK;
-
-typedef enum _KINTERRUPT_MODE {
-  LevelSensitive,
-  Latched
-} KINTERRUPT_MODE;
-
-#define THREAD_WAIT_OBJECTS 3
-
-typedef VOID
-(DDKAPI *PKINTERRUPT_ROUTINE)(
-  VOID);
-
-typedef enum _CREATE_FILE_TYPE {
-  CreateFileTypeNone,
-  CreateFileTypeNamedPipe,
-  CreateFileTypeMailslot
-} CREATE_FILE_TYPE;
-
 typedef struct _CONFIGURATION_INFORMATION {
   ULONG  DiskCount;
   ULONG  FloppyCount;
@@ -1327,12 +1300,6 @@ typedef enum _CONFIGURATION_TYPE {
   MaximumType
 } CONFIGURATION_TYPE, *PCONFIGURATION_TYPE;
 
-#define IO_FORCE_ACCESS_CHECK               0x001
-#define IO_NO_PARAMETER_CHECKING            0x100
-
-#define IO_REPARSE                      0x0
-#define IO_REMOUNT                      0x1
-
 typedef NTSTATUS
 (DDKAPI *PIO_QUERY_DEVICE_ROUTINE)(
   IN PVOID  Context,
@@ -1353,73 +1320,6 @@ typedef enum _IO_QUERY_DEVICE_DATA_FORMAT {
   IoQueryDeviceComponentInformation,
   IoQueryDeviceMaxData
 } IO_QUERY_DEVICE_DATA_FORMAT, *PIO_QUERY_DEVICE_DATA_FORMAT;
-
-typedef enum _KBUGCHECK_CALLBACK_REASON {
-  KbCallbackInvalid,
-  KbCallbackReserved1,
-  KbCallbackSecondaryDumpData,
-  KbCallbackDumpIo,
-} KBUGCHECK_CALLBACK_REASON;
-
-struct _KBUGCHECK_REASON_CALLBACK_RECORD;
-
-typedef VOID
-(DDKAPI *PKBUGCHECK_REASON_CALLBACK_ROUTINE)(
-  IN KBUGCHECK_CALLBACK_REASON  Reason,
-  IN struct _KBUGCHECK_REASON_CALLBACK_RECORD  *Record,
-  IN OUT PVOID  ReasonSpecificData,
-  IN ULONG  ReasonSpecificDataLength);
-
-typedef struct _KBUGCHECK_REASON_CALLBACK_RECORD {
-  LIST_ENTRY  Entry;
-  PKBUGCHECK_REASON_CALLBACK_ROUTINE  CallbackRoutine;
-  PUCHAR  Component;
-  ULONG_PTR  Checksum;
-  KBUGCHECK_CALLBACK_REASON  Reason;
-  UCHAR  State;
-} KBUGCHECK_REASON_CALLBACK_RECORD, *PKBUGCHECK_REASON_CALLBACK_RECORD;
-
-typedef enum _KBUGCHECK_BUFFER_DUMP_STATE {
-  BufferEmpty,
-  BufferInserted,
-  BufferStarted,
-  BufferFinished,
-  BufferIncomplete
-} KBUGCHECK_BUFFER_DUMP_STATE;
-
-typedef VOID
-(DDKAPI *PKBUGCHECK_CALLBACK_ROUTINE)(
-  IN PVOID  Buffer,
-  IN ULONG  Length);
-
-typedef struct _KBUGCHECK_CALLBACK_RECORD {
-  LIST_ENTRY  Entry;
-  PKBUGCHECK_CALLBACK_ROUTINE  CallbackRoutine;
-  PVOID  Buffer;
-  ULONG  Length;
-  PUCHAR  Component;
-  ULONG_PTR  Checksum;
-  UCHAR  State;
-} KBUGCHECK_CALLBACK_RECORD, *PKBUGCHECK_CALLBACK_RECORD;
-
-typedef BOOLEAN
-(DDKAPI *PNMI_CALLBACK)(
-    IN PVOID Context,
-    IN BOOLEAN Handled);
-
-/*
- * VOID
- * KeInitializeCallbackRecord(
- *   IN PKBUGCHECK_CALLBACK_RECORD  CallbackRecord)
- */
-#define KeInitializeCallbackRecord(CallbackRecord) \
-  CallbackRecord->State = BufferEmpty;
-
-typedef enum _KDPC_IMPORTANCE {
-  LowImportance,
-  MediumImportance,
-  HighImportance
-} KDPC_IMPORTANCE;
 
 typedef enum _MEMORY_CACHING_TYPE_ORIG {
   MmFrameBufferCached = 2
