@@ -9,7 +9,8 @@
 
 #include "precomp.h"
 
-const GUID IID_IBDA_PinControl = {0x0DED49D5, 0xA8B7, 0x4d5d, {0x97, 0xA1, 0x12, 0xB0, 0xC1, 0x95, 0x87, 0x4D}};
+const GUID IID_IBDA_PinControl       = {0x0DED49D5, 0xA8B7, 0x4d5d, {0x97, 0xA1, 0x12, 0xB0, 0xC1, 0x95, 0x87, 0x4D}};
+const GUID KSPROPSETID_BdaPinControl = {0x0ded49d5, 0xa8b7, 0x4d5d, {0x97, 0xa1, 0x12, 0xb0, 0xc1, 0x95, 0x87, 0x4d}};
 const GUID IID_IPin = {0x56a86891, 0x0ad4, 0x11ce, {0xb0, 0x3a, 0x00, 0x20, 0xaf, 0x0b, 0xa7, 0x70}};
 
 class CBDAPinControl : public IBDA_PinControl
@@ -39,7 +40,11 @@ public:
 
 
     CBDAPinControl(HANDLE hFile, IBDA_NetworkProvider * pProvider, IPin * pConnectedPin) : m_Ref(0), m_Handle(hFile), m_pProvider(pProvider), m_pConnectedPin(pConnectedPin){};
-    virtual ~CBDAPinControl(){};
+    virtual ~CBDAPinControl()
+    {
+        //m_pConnectedPin->Release();
+        //m_pProvider->Release();
+    };
 
 protected:
     LONG m_Ref;
@@ -67,6 +72,16 @@ CBDAPinControl::QueryInterface(
         return NOERROR;
     }
 
+#ifdef BDAPLGIN_TRACE
+    WCHAR Buffer[MAX_PATH];
+    LPOLESTR lpstr;
+    StringFromCLSID(refiid, &lpstr);
+    swprintf(Buffer, L"CBDAPinControl::QueryInterface: NoInterface for %s", lpstr);
+    DebugBreak();
+    OutputDebugStringW(Buffer);
+    CoTaskMemFree(lpstr);
+#endif
+
     return E_NOINTERFACE;
 }
 //-------------------------------------------------------------------
@@ -76,22 +91,50 @@ HRESULT
 STDMETHODCALLTYPE
 CBDAPinControl::GetPinID(ULONG *pulPinID)
 {
+    KSPROPERTY Property;
+    ULONG BytesReturned;
+    HRESULT hr;
+
+    // setup request
+    Property.Set = KSPROPSETID_BdaPinControl;
+    Property.Id = KSPROPERTY_BDA_PIN_ID;
+    Property.Flags = KSPROPERTY_TYPE_GET;
+
+    // perform request
+    hr = KsSynchronousDeviceControl(m_Handle, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), pulPinID, sizeof(ULONG), &BytesReturned);
+
 #ifdef BDAPLGIN_TRACE
-    OutputDebugStringW(L"CBDAPinControl::GetPinID: NotImplemented\n");
+    WCHAR Buffer[100];
+    swprintf(Buffer, L"CBDAPinControl::GetPinID: hr %lx pulPinID %lu BytesReturned %lx\n", hr, *pulPinID, BytesReturned);
+    OutputDebugStringW(Buffer);
 #endif
 
-    return E_NOTIMPL;
+    return hr;
 }
 
 HRESULT
 STDMETHODCALLTYPE
 CBDAPinControl::GetPinType(ULONG *pulPinType)
 {
+    KSPROPERTY Property;
+    ULONG BytesReturned;
+    HRESULT hr;
+
+    // setup request
+    Property.Set = KSPROPSETID_BdaPinControl;
+    Property.Id = KSPROPERTY_BDA_PIN_TYPE;
+    Property.Flags = KSPROPERTY_TYPE_GET;
+
+    // perform request
+    hr = KsSynchronousDeviceControl(m_Handle, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), pulPinType, sizeof(ULONG), &BytesReturned);
+
 #ifdef BDAPLGIN_TRACE
-    OutputDebugStringW(L"CBDAPinControl::GetPinType: NotImplemented\n");
+    WCHAR Buffer[100];
+    swprintf(Buffer, L"CBDAPinControl::GetPinType: hr %lx pulPinType %lu BytesReturned %lx\n", hr, *pulPinType, BytesReturned);
+    OutputDebugStringW(Buffer);
 #endif
 
-    return E_NOTIMPL;
+    return hr;
 }
 
 HRESULT
@@ -112,15 +155,29 @@ CBDAPinControl_fnConstructor(
     REFIID riid,
     LPVOID * ppv)
 {
+    IPin * pConnectedPin = NULL;
+    IBDA_NetworkProvider * pNetworkProvider = NULL;
+    HANDLE hFile = INVALID_HANDLE_VALUE;
+
+#if 0
+    if (!IsEqualGUID(riid, IID_IUnknown))
+    {
+#ifdef BDAPLGIN_TRACE
+    OutputDebugStringW(L"CBDAPinControl_fnConstructor: Expected IUnknown\n");
+#endif
+        return REGDB_E_CLASSNOTREG;
+    }
+
+
     HRESULT hr;
     IKsObject * pObject = NULL;
-    IPin * pPin = NULL, * pConnectedPin = NULL;
+    IPin * pPin = NULL;
     IEnumFilters *pEnumFilters = NULL;
-    IBDA_NetworkProvider * pNetworkProvider = NULL;
+
     IBaseFilter * ppFilter[1];
     PIN_INFO PinInfo;
     FILTER_INFO FilterInfo;
-    HANDLE hFile = INVALID_HANDLE_VALUE;
+
 
     if (!pUnkOuter)
         return E_POINTER;
@@ -225,6 +282,7 @@ CBDAPinControl_fnConstructor(
         // no network provider interface in graph
         return E_NOINTERFACE;
     }
+#endif
 
     CBDAPinControl * handler = new CBDAPinControl(hFile, pNetworkProvider, pConnectedPin);
 

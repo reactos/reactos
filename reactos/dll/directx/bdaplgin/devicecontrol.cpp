@@ -469,7 +469,7 @@ CBDADeviceControl::GetControlNode(ULONG ulInputPinId, ULONG ulOutputPinId, ULONG
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDADeviceControl::GetControlNode: hr %lx, BytesReturned %lu PinId %lu Dummy %lu\n", hr, BytesReturned, PinId, Dummy);
+    swprintf(Buffer, L"CBDADeviceControl::GetControlNode: hr %lx, BytesReturned %lu PinId %lu\n", hr, BytesReturned, PinId);
     OutputDebugStringW(Buffer);
 #endif
 

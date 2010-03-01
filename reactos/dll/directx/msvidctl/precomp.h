@@ -1,7 +1,7 @@
 #ifndef PRECOMP_H__
 #define PRECOMP_H__
 
-#define BDAPLGIN_TRACE
+#define MSVIDCTL_TRACE
 #define BUILDING_KS
 #define _KSDDK_
 #include <dshow.h>
@@ -16,6 +16,7 @@
 #include <bdatypes.h>
 #include <bdaiface.h>
 #include <bdamedia.h>
+#include <tuner.h>
 #include <assert.h>
 
 typedef HRESULT (CALLBACK *LPFNCREATEINSTANCE)(IUnknown* pUnkOuter, REFIID riid, LPVOID* ppvObject);
@@ -33,72 +34,39 @@ CClassFactory_fnConstructor(
     PLONG pcRefDll,
     IID * riidInst);
 
-/* devicecontrol.cpp */
+/* tuningspace_container.cpp */
 HRESULT
 WINAPI
-CBDADeviceControl_fnConstructor(
-    IUnknown * pUnkOuter,
+CTuningSpaceContainer_fnConstructor(
+    IUnknown *pUnknown,
+    REFIID riid,
+    LPVOID * ppv);
+
+/* tuningspace.cpp */
+HRESULT
+WINAPI
+CTuningSpace_fnConstructor(
+    IUnknown *pUnknown,
+    REFIID riid,
+    LPVOID * ppv);
+
+/* tunerequest.cpp */
+HRESULT
+WINAPI
+CTuneRequest_fnConstructor(
+    IUnknown *pUnknown,
+    ITuningSpace * TuningSpace,
+    REFIID riid,
+    LPVOID * ppv);
+
+/* enumtuningspaces.cpp */
+HRESULT
+WINAPI
+CEnumTuningSpaces_fnConstructor(
+    IUnknown *pUnknown,
     REFIID riid,
     LPVOID * ppv);
 
 
-/* pincontrol.cpp */
-HRESULT
-WINAPI
-CBDAPinControl_fnConstructor(
-    IUnknown * pUnkOuter,
-    REFIID riid,
-    LPVOID * ppv);
-
-/* controlnode.cpp */
-
-HRESULT
-WINAPI
-CControlNode_fnConstructor(
-    HANDLE hFile,
-    IBaseFilter * pFilter,
-    ULONG NodeType,
-    ULONG PinId,
-    REFIID riid,
-    LPVOID * ppv);
-
-/* frequencyfilter.cpp */
-
-HRESULT
-WINAPI
-CBDAFrequencyFilter_fnConstructor(
-    HANDLE hFile,
-    ULONG NodeId,
-    REFIID riid,
-    LPVOID * ppv);
-
-/* signalstatistics.cpp */
-
-HRESULT
-WINAPI
-CBDASignalStatistics_fnConstructor(
-    HANDLE hFile,
-    ULONG NodeId,
-    REFIID riid,
-    LPVOID * ppv);
-
-/* lnbinfo.cpp */
-
-HRESULT
-WINAPI
-CBDALNBInfo_fnConstructor(
-    HANDLE hFile,
-    ULONG NodeId,
-    REFIID riid,
-    LPVOID * ppv);
-
-/* digitaldemo.cpp */
-HRESULT
-WINAPI
-CBDADigitalDemodulator_fnConstructor(
-    HANDLE hFile,
-    ULONG NodeId,
-    REFIID riid,
-    LPVOID * ppv);
 
 #endif
