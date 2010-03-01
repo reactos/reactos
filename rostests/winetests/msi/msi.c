@@ -10888,6 +10888,183 @@ static void test_MsiGetPatchInfoEx(void)
     LocalFree(usersid);
 }
 
+static void test_MsiGetPatchInfo(void)
+{
+    UINT r;
+    char prod_code[MAX_PATH], prod_squashed[MAX_PATH], val[MAX_PATH];
+    char patch_code[MAX_PATH], patch_squashed[MAX_PATH], keypath[MAX_PATH];
+    WCHAR valW[MAX_PATH], patch_codeW[MAX_PATH];
+    HKEY hkey_product, hkey_patch, hkey_patches, hkey_udprops, hkey_udproduct;
+    HKEY hkey_udpatch, hkey_udpatches, hkey_udproductpatches, hkey_udproductpatch;
+    DWORD size;
+    LONG res;
+
+    create_test_guid(patch_code, patch_squashed);
+    create_test_guid(prod_code, prod_squashed);
+    MultiByteToWideChar(CP_ACP, 0, patch_code, -1, patch_codeW, MAX_PATH);
+
+    r = MsiGetPatchInfoA(NULL, NULL, NULL, NULL);
+    ok(r == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %u\n", r);
+
+    r = MsiGetPatchInfoA(patch_code, NULL, NULL, NULL);
+    ok(r == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %u\n", r);
+
+    r = MsiGetPatchInfoA(patch_code, INSTALLPROPERTY_LOCALPACKAGEA, NULL, NULL);
+    ok(r == ERROR_UNKNOWN_PRODUCT, "expected ERROR_UNKNOWN_PRODUCT, got %u\n", r);
+
+    size = 0;
+    r = MsiGetPatchInfoA(patch_code, NULL, NULL, &size);
+    ok(r == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %u\n", r);
+
+    r = MsiGetPatchInfoA(patch_code, "", NULL, &size);
+    ok(r == ERROR_UNKNOWN_PROPERTY, "expected ERROR_UNKNOWN_PROPERTY, got %u\n", r);
+
+    lstrcpyA(keypath, "Software\\Classes\\Installer\\Products\\");
+    lstrcatA(keypath, prod_squashed);
+
+    res = RegCreateKeyA(HKEY_LOCAL_MACHINE, keypath, &hkey_product);
+    ok(res == ERROR_SUCCESS, "expected ERROR_SUCCESS got %d\n", res);
+
+    /* product key exists */
+    size = MAX_PATH;
+    lstrcpyA(val, "apple");
+    r = MsiGetPatchInfoA(patch_code, INSTALLPROPERTY_LOCALPACKAGEA, val, &size);
+    ok(r == ERROR_UNKNOWN_PRODUCT, "expected ERROR_UNKNOWN_PRODUCT got %u\n", r);
+    ok(!lstrcmpA(val, "apple"), "expected val to be unchanged, got \"%s\"\n", val);
+    ok(size == MAX_PATH, "expected size to be unchanged got %u\n", size);
+
+    res = RegCreateKeyA(hkey_product, "Patches", &hkey_patches);
+    ok(res == ERROR_SUCCESS, "expected ERROR_SUCCESS got %d\n", res);
+
+    /* patches key exists */
+    size = MAX_PATH;
+    lstrcpyA(val, "apple");
+    r = MsiGetPatchInfoA(patch_code, INSTALLPROPERTY_LOCALPACKAGEA, val, &size);
+    ok(r == ERROR_UNKNOWN_PRODUCT, "expected ERROR_UNKNOWN_PRODUCT got %u\n", r);
+    ok(!lstrcmpA(val, "apple"), "expected val to be unchanged got \"%s\"\n", val);
+    ok(size == MAX_PATH, "expected size to be unchanged got %u\n", size);
+
+    res = RegCreateKeyA(hkey_patches, patch_squashed, &hkey_patch);
+    ok(res == ERROR_SUCCESS, "expected ERROR_SUCCESS got %d\n", res);
+
+    /* patch key exists */
+    size = MAX_PATH;
+    lstrcpyA(val, "apple");
+    r = MsiGetPatchInfoA(patch_code, INSTALLPROPERTY_LOCALPACKAGEA, val, &size);
+    ok(r == ERROR_UNKNOWN_PRODUCT, "expected ERROR_UNKNOWN_PRODUCT got %u\n", r);
+    ok(!lstrcmpA(val, "apple"), "expected val to be unchanged got \"%s\"\n", val);
+    ok(size == MAX_PATH, "expected size to be unchanged got %u\n", size);
+
+    lstrcpyA(keypath, "Software\\Microsoft\\Windows\\CurrentVersion\\Installer");
+    lstrcatA(keypath, "\\UserData\\S-1-5-18\\Products\\");
+    lstrcatA(keypath, prod_squashed);
+
+    res = RegCreateKeyA(HKEY_LOCAL_MACHINE, keypath, &hkey_udproduct);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS got %d\n", res);
+
+    /* UserData product key exists */
+    size = MAX_PATH;
+    lstrcpyA(val, "apple");
+    r = MsiGetPatchInfoA(patch_code, INSTALLPROPERTY_LOCALPACKAGEA, val, &size);
+    ok(r == ERROR_UNKNOWN_PRODUCT, "expected ERROR_UNKNOWN_PRODUCT got %u\n", r);
+    ok(!lstrcmpA(val, "apple"), "expected val to be unchanged got \"%s\"\n", val);
+    ok(size == MAX_PATH, "expected size to be unchanged got %u\n", size);
+
+    res = RegCreateKeyA(hkey_udproduct, "InstallProperties", &hkey_udprops);
+    ok(res == ERROR_SUCCESS, "expected ERROR_SUCCESS got %d\n", res);
+
+    /* InstallProperties key exists */
+    size = MAX_PATH;
+    lstrcpyA(val, "apple");
+    r = MsiGetPatchInfoA(patch_code, INSTALLPROPERTY_LOCALPACKAGEA, val, &size);
+    ok(r == ERROR_UNKNOWN_PRODUCT, "expected ERROR_UNKNOWN_PRODUCT got %u\n", r);
+    ok(!lstrcmpA(val, "apple"), "expected val to be unchanged, got \"%s\"\n", val);
+    ok(size == MAX_PATH, "expected size to be unchanged got %u\n", size);
+
+    res = RegCreateKeyA(hkey_udproduct, "Patches", &hkey_udpatches);
+    ok(res == ERROR_SUCCESS, "expected ERROR_SUCCESS got %d\n", res);
+
+    /* UserData Patches key exists */
+    size = MAX_PATH;
+    lstrcpyA(val, "apple");
+    r = MsiGetPatchInfoA(patch_code, INSTALLPROPERTY_LOCALPACKAGEA, val, &size);
+    ok(r == ERROR_UNKNOWN_PRODUCT, "expected ERROR_UNKNOWN_PRODUCT got %u\n", r);
+    ok(!lstrcmpA(val, "apple"), "expected val to be unchanged got \"%s\"\n", val);
+    ok(size == MAX_PATH, "expected size to be unchanged got %u\n", size);
+
+    res = RegCreateKeyA(hkey_udproduct, "Patches", &hkey_udproductpatches);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    res = RegCreateKeyA(hkey_udproductpatches, patch_squashed, &hkey_udproductpatch);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    /* UserData product patch key exists */
+    size = MAX_PATH;
+    lstrcpyA(val, "apple");
+    r = MsiGetPatchInfoA(patch_code, INSTALLPROPERTY_LOCALPACKAGEA, val, &size);
+    ok(r == ERROR_UNKNOWN_PRODUCT, "expected ERROR_UNKNOWN_PRODUCT got %u\n", r);
+    ok(!lstrcmpA(val, "apple"), "expected val to be unchanged got \"%s\"\n", val);
+    ok(size == MAX_PATH, "expected size to be unchanged got %u\n", size);
+
+    lstrcpyA(keypath, "Software\\Microsoft\\Windows\\CurrentVersion\\Installer");
+    lstrcatA(keypath, "\\UserData\\S-1-5-18\\Patches\\");
+    lstrcatA(keypath, patch_squashed);
+
+    res = RegCreateKeyA(HKEY_LOCAL_MACHINE, keypath, &hkey_udpatch);
+    ok(res == ERROR_SUCCESS, "expected ERROR_SUCCESS got %d\n", res);
+
+    res = RegSetValueExA(hkey_udpatch, "LocalPackage", 0, REG_SZ, (const BYTE *)"c:\\test.msp", 12);
+    ok(res == ERROR_SUCCESS, "expected ERROR_SUCCESS got %d\n", res);
+
+    /* UserData Patch key exists */
+    size = 0;
+    lstrcpyA(val, "apple");
+    r = MsiGetPatchInfoA(patch_code, INSTALLPROPERTY_LOCALPACKAGEA, val, &size);
+    ok(r == ERROR_MORE_DATA, "expected ERROR_MORE_DATA got %u\n", r);
+    ok(!lstrcmpA(val, "apple"), "expected \"apple\", got \"%s\"\n", val);
+    ok(size == 11, "expected 11 got %u\n", size);
+
+    size = MAX_PATH;
+    lstrcpyA(val, "apple");
+    r = MsiGetPatchInfoA(patch_code, INSTALLPROPERTY_LOCALPACKAGEA, val, &size);
+    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS got %u\n", r);
+    ok(!lstrcmpA(val, "c:\\test.msp"), "expected \"c:\\test.msp\", got \"%s\"\n", val);
+    ok(size == 11, "expected 11 got %u\n", size);
+
+    size = 0;
+    valW[0] = 0;
+    r = MsiGetPatchInfoW(patch_codeW, INSTALLPROPERTY_LOCALPACKAGEW, valW, &size);
+    ok(r == ERROR_MORE_DATA, "expected ERROR_MORE_DATA got %u\n", r);
+    ok(!valW[0], "expected 0 got %u\n", valW[0]);
+    ok(size == 11, "expected 11 got %u\n", size);
+
+    size = MAX_PATH;
+    valW[0] = 0;
+    r = MsiGetPatchInfoW(patch_codeW, INSTALLPROPERTY_LOCALPACKAGEW, valW, &size);
+    ok(r == ERROR_SUCCESS, "expected ERROR_SUCCESS got %u\n", r);
+    ok(valW[0], "expected > 0 got %u\n", valW[0]);
+    ok(size == 11, "expected 11 got %u\n", size);
+
+    RegDeleteKeyA(hkey_udproductpatch, "");
+    RegCloseKey(hkey_udproductpatch);
+    RegDeleteKeyA(hkey_udproductpatches, "");
+    RegCloseKey(hkey_udproductpatches);
+    RegDeleteKeyA(hkey_udpatch, "");
+    RegCloseKey(hkey_udpatch);
+    RegDeleteKeyA(hkey_patches, "");
+    RegCloseKey(hkey_patches);
+    RegDeleteKeyA(hkey_product, "");
+    RegCloseKey(hkey_product);
+    RegDeleteKeyA(hkey_patch, "");
+    RegCloseKey(hkey_patch);
+    RegDeleteKeyA(hkey_udpatches, "");
+    RegCloseKey(hkey_udpatches);
+    RegDeleteKeyA(hkey_udprops, "");
+    RegCloseKey(hkey_udprops);
+    RegDeleteKeyA(hkey_udproduct, "");
+    RegCloseKey(hkey_udproduct);
+}
+
 static void test_MsiEnumProducts(void)
 {
     UINT r;
@@ -10985,6 +11162,7 @@ START_TEST(msi)
         test_MsiEnumPatchesEx();
         test_MsiEnumPatches();
         test_MsiGetPatchInfoEx();
+        test_MsiGetPatchInfo();
         test_MsiEnumProducts();
     }
 
