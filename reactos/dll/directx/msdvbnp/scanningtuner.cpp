@@ -23,7 +23,7 @@ public:
         InterlockedDecrement(&m_Ref);
         if (!m_Ref)
         {
-            delete this;
+            //delete this;
             return 0;
         }
         return m_Ref;
@@ -240,7 +240,6 @@ CScanningTunner_fnConstructor(
     REFIID riid,
     LPVOID * ppv)
 {
-    // construct device control
     CScanningTunner * handler = new CScanningTunner();
 
 #ifdef MSDVBNP_TRACE

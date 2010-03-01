@@ -25,7 +25,7 @@ public:
         InterlockedDecrement(&m_Ref);
         if (!m_Ref)
         {
-            delete this;
+            //delete this;
             return 0;
         }
         return m_Ref;
@@ -58,12 +58,15 @@ public:
     HRESULT STDMETHODCALLTYPE RegisterDeviceFilter(IUnknown *pUnkFilterControl, ULONG *ppvRegisitrationContext);
     HRESULT STDMETHODCALLTYPE UnRegisterDeviceFilter(ULONG pvRegistrationContext);
 
-    CNetworkProvider() : m_Ref(0), m_pGraph(0){};
+    CNetworkProvider() : m_Ref(0), m_pGraph(0), m_ReferenceClock(0), m_FilterState(State_Stopped) {m_Pins[0] = 0;};
     virtual ~CNetworkProvider(){};
 
 protected:
     LONG m_Ref;
     IFilterGraph *m_pGraph;
+    IReferenceClock * m_ReferenceClock;
+    FILTER_STATE m_FilterState;
+    IPin * m_Pins[1];
 };
 
 HRESULT
@@ -92,13 +95,10 @@ CNetworkProvider::QueryInterface(
         return CScanningTunner_fnConstructor(NULL, refiid, Output);
     }
 
-
-
     WCHAR Buffer[MAX_PATH];
     LPOLESTR lpstr;
     StringFromCLSID(refiid, &lpstr);
-    swprintf(Buffer, L"CNetworkProvider::QueryInterface: NoInterface for %s", lpstr);
-    DebugBreak();
+    swprintf(Buffer, L"CNetworkProvider::QueryInterface: NoInterface for %s !!!\n", lpstr);
     OutputDebugStringW(Buffer);
     CoTaskMemFree(lpstr);
 
@@ -150,8 +150,8 @@ CNetworkProvider::GetState(
     DWORD dwMilliSecsTimeout,
     FILTER_STATE *State)
 {
-    OutputDebugStringW(L"CNetworkProvider::GetState : NotImplemented\n");
-    return E_NOTIMPL;
+    *State = m_FilterState;
+    return S_OK;
 }
 
 HRESULT
@@ -159,8 +159,19 @@ STDMETHODCALLTYPE
 CNetworkProvider::SetSyncSource(
     IReferenceClock *pClock)
 {
-    OutputDebugStringW(L"CNetworkProvider::SetSyncSource : NotImplemented\n");
-    return E_NOTIMPL;
+    if (pClock)
+    {
+        pClock->AddRef();
+
+    }
+
+    if (m_ReferenceClock)
+    {
+        m_ReferenceClock->Release();
+    }
+
+    m_ReferenceClock = pClock;
+    return S_OK;
 }
 
 HRESULT
@@ -168,8 +179,14 @@ STDMETHODCALLTYPE
 CNetworkProvider::GetSyncSource(
     IReferenceClock **pClock)
 {
-    OutputDebugStringW(L"CNetworkProvider::GetSyncSource : NotImplemented\n");
-    return E_NOTIMPL;
+    if (!pClock)
+        return E_POINTER;
+
+    if (m_ReferenceClock)
+        m_ReferenceClock->AddRef();
+
+    *pClock = m_ReferenceClock;
+    return S_OK;
 }
 
 HRESULT
@@ -177,8 +194,14 @@ STDMETHODCALLTYPE
 CNetworkProvider::EnumPins(
     IEnumPins **ppEnum)
 {
-    OutputDebugStringW(L"CNetworkProvider::EnumPins : NotImplemented\n");
-    return E_NOTIMPL;
+    if (m_Pins[0] == 0)
+    {
+        HRESULT hr = CPin_fnConstructor(NULL, (IBaseFilter*)this, IID_IUnknown, (void**)&m_Pins[0]);
+        if (FAILED(hr))
+            return hr;
+    }
+
+    return CEnumPins_fnConstructor(NULL, 1, m_Pins, IID_IEnumPins, (void**)ppEnum);
 }
 
 HRESULT
@@ -196,8 +219,13 @@ STDMETHODCALLTYPE
 CNetworkProvider::QueryFilterInfo(
     FILTER_INFO *pInfo)
 {
-    OutputDebugStringW(L"CNetworkProvider::QueryFilterInfo : NotImplemented\n");
-    return E_NOTIMPL;
+    if (!pInfo)
+        return E_POINTER;
+
+    pInfo->achName[0] = L'\0';
+    pInfo->pGraph = m_pGraph;
+
+    return S_OK;
 }
 
 HRESULT
@@ -325,7 +353,6 @@ CNetworkProvider_fnConstructor(
     REFIID riid,
     LPVOID * ppv)
 {
-    // construct device control
     CNetworkProvider * handler = new CNetworkProvider();
 
 #ifdef MSDVBNP_TRACE

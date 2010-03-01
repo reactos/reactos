@@ -20,9 +20,12 @@
 	</group>
 
 	<file>classfactory.cpp</file>
+	<file>enum_mediatypes.cpp</file>
+	<file>enumpins.cpp</file>
 	<file>msdvbnp.cpp</file>
 	<file>msdvbnp.rc</file>
 	<file>networkprovider.cpp</file>
+	<file>pin.cpp</file>
 	<file>scanningtuner.cpp</file>
 </module>
 </group>

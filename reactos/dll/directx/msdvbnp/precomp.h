@@ -50,5 +50,33 @@ CScanningTunner_fnConstructor(
     REFIID riid,
     LPVOID * ppv);
 
+/* enumpins.cpp */
+HRESULT
+WINAPI
+CEnumPins_fnConstructor(
+    IUnknown *pUnknown,
+    ULONG NumPins,
+    IPin ** pins,
+    REFIID riid,
+    LPVOID * ppv);
+
+/* pin.cpp */
+HRESULT
+WINAPI
+CPin_fnConstructor(
+    IUnknown *pUnknown,
+    IBaseFilter * ParentFilter,
+    REFIID riid,
+    LPVOID * ppv);
+
+/* enum_mediatypes.cpp */
+HRESULT
+WINAPI
+CEnumMediaTypes_fnConstructor(
+    IUnknown *pUnknown,
+    ULONG MediaTypeCount,
+    AM_MEDIA_TYPE * MediaTypes,
+    REFIID riid,
+    LPVOID * ppv);
 
 #endif
