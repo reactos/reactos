@@ -24,6 +24,7 @@
 			<compilerflag>-ftracer</compilerflag>
 			<compilerflag>-momit-leaf-frame-pointer</compilerflag>
 		</if>
+		<compilerflag>-fms-extensions</compilerflag>
 		<compilerflag>-mpreferred-stack-boundary=2</compilerflag>
 		<compilerflag compiler="midl">-m32 --win32</compilerflag>
 		<compilerflag compiler="cc,cxx">-gstabs+</compilerflag>

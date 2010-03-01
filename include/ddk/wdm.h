@@ -2598,8 +2598,92 @@ typedef struct _SHARE_ACCESS {
   ULONG  SharedDelete;
 } SHARE_ACCESS, *PSHARE_ACCESS;
 
+typedef struct _PCI_COMMON_HEADER {
+  USHORT  VendorID;
+  USHORT  DeviceID;
+  USHORT  Command;
+  USHORT  Status;
+  UCHAR   RevisionID;
+  UCHAR   ProgIf;
+  UCHAR   SubClass;
+  UCHAR   BaseClass;
+  UCHAR   CacheLineSize;
+  UCHAR   LatencyTimer;
+  UCHAR   HeaderType;
+  UCHAR   BIST;
+  union {
+    struct _PCI_HEADER_TYPE_0 {
+      ULONG   BaseAddresses[PCI_TYPE0_ADDRESSES];
+      ULONG   CIS;
+      USHORT  SubVendorID;
+      USHORT  SubSystemID;
+      ULONG   ROMBaseAddress;
+      UCHAR   CapabilitiesPtr;
+      UCHAR   Reserved1[3];
+      ULONG   Reserved2;
+      UCHAR   InterruptLine;
+      UCHAR   InterruptPin;
+      UCHAR   MinimumGrant;
+      UCHAR   MaximumLatency;
+      } type0;
+    struct _PCI_HEADER_TYPE_1 {
+      ULONG   BaseAddresses[PCI_TYPE1_ADDRESSES];
+      UCHAR   PrimaryBus;
+      UCHAR   SecondaryBus;
+      UCHAR   SubordinateBus;
+      UCHAR   SecondaryLatency;
+      UCHAR   IOBase;
+      UCHAR   IOLimit;
+      USHORT  SecondaryStatus;
+      USHORT  MemoryBase;
+      USHORT  MemoryLimit;
+      USHORT  PrefetchBase;
+      USHORT  PrefetchLimit;
+      ULONG   PrefetchBaseUpper32;
+      ULONG   PrefetchLimitUpper32;
+      USHORT  IOBaseUpper16;
+      USHORT  IOLimitUpper16;
+      UCHAR   CapabilitiesPtr;
+      UCHAR   Reserved1[3];
+      ULONG   ROMBaseAddress;
+      UCHAR   InterruptLine;
+      UCHAR   InterruptPin;
+      USHORT  BridgeControl;
+      } type1;
+    struct _PCI_HEADER_TYPE_2 {
+      ULONG   SocketRegistersBaseAddress;
+      UCHAR   CapabilitiesPtr;
+      UCHAR   Reserved;
+      USHORT  SecondaryStatus;
+      UCHAR   PrimaryBus;
+      UCHAR   SecondaryBus;
+      UCHAR   SubordinateBus;
+      UCHAR   SecondaryLatency;
+      struct  {
+        ULONG   Base;
+        ULONG   Limit;
+      } Range[PCI_TYPE2_ADDRESSES-1];
+      UCHAR   InterruptLine;
+      UCHAR   InterruptPin;
+      USHORT  BridgeControl;
+    } type2;
+  } u;
+} PCI_COMMON_HEADER, *PPCI_COMMON_HEADER;
 
+#ifdef __cplusplus
 
+typedef struct _PCI_COMMON_CONFIG : PCI_COMMON_HEADER {
+  UCHAR  DeviceSpecific[192];
+} PCI_COMMON_CONFIG, *PPCI_COMMON_CONFIG;
+
+#else
+
+typedef struct _PCI_COMMON_CONFIG {
+  PCI_COMMON_HEADER  DUMMYSTRUCTNAME;
+  UCHAR  DeviceSpecific[192];
+} PCI_COMMON_CONFIG, *PPCI_COMMON_CONFIG;
+
+#endif
 
 typedef struct _PCI_SLOT_NUMBER {
   union {
