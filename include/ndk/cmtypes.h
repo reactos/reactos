@@ -142,11 +142,14 @@ typedef enum _KEY_VALUE_INFORMATION_CLASS
     KeyValuePartialInformationAlign64
 } KEY_VALUE_INFORMATION_CLASS;
 
-typedef enum _KEY_SET_INFORMATION_CLASS
-{
-    KeyWriteTimeInformation,
-    KeyUserFlagsInformation,
-    MaxKeySetInfoClass
+typedef enum _KEY_SET_INFORMATION_CLASS {
+  KeyWriteTimeInformation,
+  KeyWow64FlagsInformation,
+  KeyControlFlagsInformation,
+  KeySetVirtualizationInformation,
+  KeySetDebugInformation,
+  KeySetHandleTagsInformation,
+  MaxKeySetInfoClass
 } KEY_SET_INFORMATION_CLASS;
 
 #endif

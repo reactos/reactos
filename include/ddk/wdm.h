@@ -1289,6 +1289,32 @@ typedef struct _PNP_BUS_INFORMATION {
  *                         Memory manager Types                               *
  ******************************************************************************/
 
+#define MDL_MAPPED_TO_SYSTEM_VA     0x0001
+#define MDL_PAGES_LOCKED            0x0002
+#define MDL_SOURCE_IS_NONPAGED_POOL 0x0004
+#define MDL_ALLOCATED_FIXED_SIZE    0x0008
+#define MDL_PARTIAL                 0x0010
+#define MDL_PARTIAL_HAS_BEEN_MAPPED 0x0020
+#define MDL_IO_PAGE_READ            0x0040
+#define MDL_WRITE_OPERATION         0x0080
+#define MDL_PARENT_MAPPED_SYSTEM_VA 0x0100
+#define MDL_FREE_EXTRA_PTES         0x0200
+#define MDL_DESCRIBES_AWE           0x0400
+#define MDL_IO_SPACE                0x0800
+#define MDL_NETWORK_HEADER          0x1000
+#define MDL_MAPPING_CAN_FAIL        0x2000
+#define MDL_ALLOCATED_MUST_SUCCEED  0x4000
+#define MDL_INTERNAL                0x8000
+
+#define MDL_MAPPING_FLAGS ( \
+  MDL_MAPPED_TO_SYSTEM_VA     | \
+  MDL_PAGES_LOCKED            | \
+  MDL_SOURCE_IS_NONPAGED_POOL | \
+  MDL_PARTIAL_HAS_BEEN_MAPPED | \
+  MDL_PARENT_MAPPED_SYSTEM_VA | \
+  MDL_SYSTEM_VA               | \
+  MDL_IO_SPACE)
+
 typedef struct _MDL {
     struct _MDL *Next;
     CSHORT Size;
@@ -1336,6 +1362,704 @@ MmCreateMdl(
   IN SIZE_T  Length);
 
 #endif
+
+/******************************************************************************
+ *                            Security Manager Types                          *
+ ******************************************************************************/
+
+//
+// Access/Security Stuff
+//
+typedef ULONG ACCESS_MASK, *PACCESS_MASK;
+typedef PVOID PACCESS_TOKEN;
+
+#define DELETE                           0x00010000L
+#define READ_CONTROL                     0x00020000L
+#define WRITE_DAC                        0x00040000L
+#define WRITE_OWNER                      0x00080000L
+#define SYNCHRONIZE                      0x00100000L
+#define STANDARD_RIGHTS_REQUIRED         0x000F0000L
+#define STANDARD_RIGHTS_READ             READ_CONTROL
+#define STANDARD_RIGHTS_WRITE            READ_CONTROL
+#define STANDARD_RIGHTS_EXECUTE          READ_CONTROL
+#define STANDARD_RIGHTS_ALL              0x001F0000L
+#define SPECIFIC_RIGHTS_ALL              0x0000FFFFL
+#define ACCESS_SYSTEM_SECURITY           0x01000000L
+#define MAXIMUM_ALLOWED                  0x02000000L
+#define GENERIC_READ                     0x80000000L
+#define GENERIC_WRITE                    0x40000000L
+#define GENERIC_EXECUTE                  0x20000000L
+#define GENERIC_ALL                      0x10000000L
+
+typedef struct _GENERIC_MAPPING {
+    ACCESS_MASK GenericRead;
+    ACCESS_MASK GenericWrite;
+    ACCESS_MASK GenericExecute;
+    ACCESS_MASK GenericAll;
+} GENERIC_MAPPING, *PGENERIC_MAPPING;
+
+#define ACL_REVISION                      2
+#define ACL_REVISION_DS                   4
+
+#define ACL_REVISION1                     1
+#define ACL_REVISION2                     2
+#define ACL_REVISION3                     3
+#define ACL_REVISION4                     4
+#define MIN_ACL_REVISION                  ACL_REVISION2
+#define MAX_ACL_REVISION                  ACL_REVISION4
+
+typedef struct _ACL {
+    UCHAR AclRevision;
+    UCHAR Sbz1;
+    USHORT AclSize;
+    USHORT AceCount;
+    USHORT Sbz2;
+} ACL, *PACL;
+
+//
+// Current security descriptor revision value
+//
+#define SECURITY_DESCRIPTOR_REVISION     (1)
+#define SECURITY_DESCRIPTOR_REVISION1    (1)
+
+//
+// Privilege attributes
+//
+#define SE_PRIVILEGE_ENABLED_BY_DEFAULT (0x00000001L)
+#define SE_PRIVILEGE_ENABLED            (0x00000002L)
+#define SE_PRIVILEGE_REMOVED            (0X00000004L)
+#define SE_PRIVILEGE_USED_FOR_ACCESS    (0x80000000L)
+
+#define SE_PRIVILEGE_VALID_ATTRIBUTES   (SE_PRIVILEGE_ENABLED_BY_DEFAULT | \
+                                         SE_PRIVILEGE_ENABLED            | \
+                                         SE_PRIVILEGE_REMOVED            | \
+                                         SE_PRIVILEGE_USED_FOR_ACCESS)
+
+#include <pshpack4.h>
+typedef struct _LUID_AND_ATTRIBUTES {
+    LUID Luid;
+    ULONG Attributes;
+} LUID_AND_ATTRIBUTES, *PLUID_AND_ATTRIBUTES;
+#include <poppack.h>
+
+typedef LUID_AND_ATTRIBUTES LUID_AND_ATTRIBUTES_ARRAY[ANYSIZE_ARRAY];
+typedef LUID_AND_ATTRIBUTES_ARRAY *PLUID_AND_ATTRIBUTES_ARRAY;
+
+//
+// Privilege sets
+//
+#define PRIVILEGE_SET_ALL_NECESSARY (1)
+
+typedef struct _PRIVILEGE_SET {
+    ULONG PrivilegeCount;
+    ULONG Control;
+    LUID_AND_ATTRIBUTES Privilege[ANYSIZE_ARRAY];
+} PRIVILEGE_SET,*PPRIVILEGE_SET;
+
+typedef enum _SECURITY_IMPERSONATION_LEVEL {
+    SecurityAnonymous,
+    SecurityIdentification,
+    SecurityImpersonation,
+    SecurityDelegation
+} SECURITY_IMPERSONATION_LEVEL, * PSECURITY_IMPERSONATION_LEVEL;
+
+#define SECURITY_MAX_IMPERSONATION_LEVEL SecurityDelegation
+#define SECURITY_MIN_IMPERSONATION_LEVEL SecurityAnonymous
+#define DEFAULT_IMPERSONATION_LEVEL SecurityImpersonation
+#define VALID_IMPERSONATION_LEVEL(Level) (((Level) >= SECURITY_MIN_IMPERSONATION_LEVEL) && ((Level) <= SECURITY_MAX_IMPERSONATION_LEVEL))
+
+#define SECURITY_DYNAMIC_TRACKING (TRUE)
+#define SECURITY_STATIC_TRACKING (FALSE)
+
+typedef BOOLEAN SECURITY_CONTEXT_TRACKING_MODE, *PSECURITY_CONTEXT_TRACKING_MODE;
+
+typedef struct _SECURITY_QUALITY_OF_SERVICE {
+    ULONG Length;
+    SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
+    SECURITY_CONTEXT_TRACKING_MODE ContextTrackingMode;
+    BOOLEAN EffectiveOnly;
+} SECURITY_QUALITY_OF_SERVICE, *PSECURITY_QUALITY_OF_SERVICE;
+
+typedef struct _SE_IMPERSONATION_STATE {
+    PACCESS_TOKEN Token;
+    BOOLEAN CopyOnOpen;
+    BOOLEAN EffectiveOnly;
+    SECURITY_IMPERSONATION_LEVEL Level;
+} SE_IMPERSONATION_STATE, *PSE_IMPERSONATION_STATE;
+
+#define OWNER_SECURITY_INFORMATION       (0x00000001L)
+#define GROUP_SECURITY_INFORMATION       (0x00000002L)
+#define DACL_SECURITY_INFORMATION        (0x00000004L)
+#define SACL_SECURITY_INFORMATION        (0x00000008L)
+#define LABEL_SECURITY_INFORMATION       (0x00000010L)
+
+#define PROTECTED_DACL_SECURITY_INFORMATION     (0x80000000L)
+#define PROTECTED_SACL_SECURITY_INFORMATION     (0x40000000L)
+#define UNPROTECTED_DACL_SECURITY_INFORMATION   (0x20000000L)
+#define UNPROTECTED_SACL_SECURITY_INFORMATION   (0x10000000L)
+
+typedef enum _SECURITY_OPERATION_CODE {
+  SetSecurityDescriptor,
+  QuerySecurityDescriptor,
+  DeleteSecurityDescriptor,
+  AssignSecurityDescriptor
+} SECURITY_OPERATION_CODE, *PSECURITY_OPERATION_CODE;
+
+#define INITIAL_PRIVILEGE_COUNT           3
+
+typedef struct _INITIAL_PRIVILEGE_SET {
+  ULONG  PrivilegeCount;
+  ULONG  Control;
+  LUID_AND_ATTRIBUTES  Privilege[INITIAL_PRIVILEGE_COUNT];
+} INITIAL_PRIVILEGE_SET, * PINITIAL_PRIVILEGE_SET;
+
+#define SE_MIN_WELL_KNOWN_PRIVILEGE         2
+#define SE_CREATE_TOKEN_PRIVILEGE           2
+#define SE_ASSIGNPRIMARYTOKEN_PRIVILEGE     3
+#define SE_LOCK_MEMORY_PRIVILEGE            4
+#define SE_INCREASE_QUOTA_PRIVILEGE         5
+#define SE_MACHINE_ACCOUNT_PRIVILEGE        6
+#define SE_TCB_PRIVILEGE                    7
+#define SE_SECURITY_PRIVILEGE               8
+#define SE_TAKE_OWNERSHIP_PRIVILEGE         9
+#define SE_LOAD_DRIVER_PRIVILEGE            10
+#define SE_SYSTEM_PROFILE_PRIVILEGE         11
+#define SE_SYSTEMTIME_PRIVILEGE             12
+#define SE_PROF_SINGLE_PROCESS_PRIVILEGE    13
+#define SE_INC_BASE_PRIORITY_PRIVILEGE      14
+#define SE_CREATE_PAGEFILE_PRIVILEGE        15
+#define SE_CREATE_PERMANENT_PRIVILEGE       16
+#define SE_BACKUP_PRIVILEGE                 17
+#define SE_RESTORE_PRIVILEGE                18
+#define SE_SHUTDOWN_PRIVILEGE               19
+#define SE_DEBUG_PRIVILEGE                  20
+#define SE_AUDIT_PRIVILEGE                  21
+#define SE_SYSTEM_ENVIRONMENT_PRIVILEGE     22
+#define SE_CHANGE_NOTIFY_PRIVILEGE          23
+#define SE_REMOTE_SHUTDOWN_PRIVILEGE        24
+#define SE_UNDOCK_PRIVILEGE                 25
+#define SE_SYNC_AGENT_PRIVILEGE             26
+#define SE_ENABLE_DELEGATION_PRIVILEGE      27
+#define SE_MANAGE_VOLUME_PRIVILEGE          28
+#define SE_IMPERSONATE_PRIVILEGE            29
+#define SE_CREATE_GLOBAL_PRIVILEGE          30
+#define SE_TRUSTED_CREDMAN_ACCESS_PRIVILEGE 31
+#define SE_RELABEL_PRIVILEGE                32
+#define SE_INC_WORKING_SET_PRIVILEGE        33
+#define SE_TIME_ZONE_PRIVILEGE              34
+#define SE_CREATE_SYMBOLIC_LINK_PRIVILEGE   35
+#define SE_MAX_WELL_KNOWN_PRIVILEGE         SE_CREATE_SYMBOLIC_LINK_PRIVILEGE
+
+typedef struct _SECURITY_SUBJECT_CONTEXT {
+  PACCESS_TOKEN  ClientToken;
+  SECURITY_IMPERSONATION_LEVEL  ImpersonationLevel;
+  PACCESS_TOKEN  PrimaryToken;
+  PVOID  ProcessAuditId;
+} SECURITY_SUBJECT_CONTEXT, *PSECURITY_SUBJECT_CONTEXT;
+
+#include <pshpack4.h>
+typedef struct _ACCESS_STATE {
+  LUID  OperationID;
+  BOOLEAN  SecurityEvaluated;
+  BOOLEAN  GenerateAudit;
+  BOOLEAN  GenerateOnClose;
+  BOOLEAN  PrivilegesAllocated;
+  ULONG  Flags;
+  ACCESS_MASK  RemainingDesiredAccess;
+  ACCESS_MASK  PreviouslyGrantedAccess;
+  ACCESS_MASK  OriginalDesiredAccess;
+  SECURITY_SUBJECT_CONTEXT  SubjectSecurityContext;
+  PSECURITY_DESCRIPTOR  SecurityDescriptor;
+  PVOID  AuxData;
+  union {
+    INITIAL_PRIVILEGE_SET  InitialPrivilegeSet;
+    PRIVILEGE_SET  PrivilegeSet;
+  } Privileges;
+
+  BOOLEAN  AuditPrivileges;
+  UNICODE_STRING  ObjectName;
+  UNICODE_STRING  ObjectTypeName;
+} ACCESS_STATE, *PACCESS_STATE;
+#include <poppack.h>
+
+/******************************************************************************
+ *                            Configuration Manager Types                     *
+ ******************************************************************************/
+
+//
+// Registry Access Rights
+//
+#define KEY_QUERY_VALUE         (0x0001)
+#define KEY_SET_VALUE           (0x0002)
+#define KEY_CREATE_SUB_KEY      (0x0004)
+#define KEY_ENUMERATE_SUB_KEYS  (0x0008)
+#define KEY_NOTIFY              (0x0010)
+#define KEY_CREATE_LINK         (0x0020)
+#define KEY_WOW64_32KEY         (0x0200)
+#define KEY_WOW64_64KEY         (0x0100)
+#define KEY_WOW64_RES           (0x0300)
+
+#define KEY_READ                ((STANDARD_RIGHTS_READ       |\
+                                  KEY_QUERY_VALUE            |\
+                                  KEY_ENUMERATE_SUB_KEYS     |\
+                                  KEY_NOTIFY)                 \
+                                  &                           \
+                                 (~SYNCHRONIZE))
+
+#define KEY_WRITE               ((STANDARD_RIGHTS_WRITE      |\
+                                  KEY_SET_VALUE              |\
+                                  KEY_CREATE_SUB_KEY)         \
+                                  &                           \
+                                 (~SYNCHRONIZE))
+
+#define KEY_EXECUTE             ((KEY_READ)                   \
+                                  &                           \
+                                 (~SYNCHRONIZE))
+
+#define KEY_ALL_ACCESS          ((STANDARD_RIGHTS_ALL        |\
+                                  KEY_QUERY_VALUE            |\
+                                  KEY_SET_VALUE              |\
+                                  KEY_CREATE_SUB_KEY         |\
+                                  KEY_ENUMERATE_SUB_KEYS     |\
+                                  KEY_NOTIFY                 |\
+                                  KEY_CREATE_LINK)            \
+                                  &                           \
+                                 (~SYNCHRONIZE))
+
+//
+// Registry Open/Create Options
+//
+#define REG_OPTION_RESERVED         (0x00000000L)
+#define REG_OPTION_NON_VOLATILE     (0x00000000L)
+#define REG_OPTION_VOLATILE         (0x00000001L)
+#define REG_OPTION_CREATE_LINK      (0x00000002L)
+#define REG_OPTION_BACKUP_RESTORE   (0x00000004L)
+#define REG_OPTION_OPEN_LINK        (0x00000008L)
+
+#define REG_LEGAL_OPTION            \
+                (REG_OPTION_RESERVED            |\
+                 REG_OPTION_NON_VOLATILE        |\
+                 REG_OPTION_VOLATILE            |\
+                 REG_OPTION_CREATE_LINK         |\
+                 REG_OPTION_BACKUP_RESTORE      |\
+                 REG_OPTION_OPEN_LINK)
+
+//
+// Key creation/open disposition
+//
+#define REG_CREATED_NEW_KEY         (0x00000001L)
+#define REG_OPENED_EXISTING_KEY     (0x00000002L)
+
+//
+// Key restore & hive load flags
+//
+#define REG_WHOLE_HIVE_VOLATILE         (0x00000001L)
+#define REG_REFRESH_HIVE                (0x00000002L)
+#define REG_NO_LAZY_FLUSH               (0x00000004L)
+#define REG_FORCE_RESTORE               (0x00000008L)
+#define REG_APP_HIVE                    (0x00000010L)
+#define REG_PROCESS_PRIVATE             (0x00000020L)
+#define REG_START_JOURNAL               (0x00000040L)
+#define REG_HIVE_EXACT_FILE_GROWTH      (0x00000080L)
+#define REG_HIVE_NO_RM                  (0x00000100L)
+#define REG_HIVE_SINGLE_LOG             (0x00000200L)
+
+//
+// Unload Flags
+//
+#define REG_FORCE_UNLOAD            1
+
+//
+// Notify Filter Values
+//
+#define REG_NOTIFY_CHANGE_NAME          (0x00000001L)
+#define REG_NOTIFY_CHANGE_ATTRIBUTES    (0x00000002L)
+#define REG_NOTIFY_CHANGE_LAST_SET      (0x00000004L)
+#define REG_NOTIFY_CHANGE_SECURITY      (0x00000008L)
+
+#define REG_LEGAL_CHANGE_FILTER                 \
+                (REG_NOTIFY_CHANGE_NAME          |\
+                 REG_NOTIFY_CHANGE_ATTRIBUTES    |\
+                 REG_NOTIFY_CHANGE_LAST_SET      |\
+                 REG_NOTIFY_CHANGE_SECURITY)
+
+typedef struct _CM_FLOPPY_DEVICE_DATA {
+  USHORT  Version;
+  USHORT  Revision;
+  CHAR  Size[8];
+  ULONG  MaxDensity;
+  ULONG  MountDensity;
+  UCHAR  StepRateHeadUnloadTime;
+  UCHAR  HeadLoadTime;
+  UCHAR  MotorOffTime;
+  UCHAR  SectorLengthCode;
+  UCHAR  SectorPerTrack;
+  UCHAR  ReadWriteGapLength;
+  UCHAR  DataTransferLength;
+  UCHAR  FormatGapLength;
+  UCHAR  FormatFillCharacter;
+  UCHAR  HeadSettleTime;
+  UCHAR  MotorSettleTime;
+  UCHAR  MaximumTrackValue;
+  UCHAR  DataTransferRate;
+} CM_FLOPPY_DEVICE_DATA, *PCM_FLOPPY_DEVICE_DATA;
+
+#include <pshpack4.h>
+typedef struct _CM_PARTIAL_RESOURCE_DESCRIPTOR {
+  UCHAR Type;
+  UCHAR ShareDisposition;
+  USHORT Flags;
+  union {
+    struct {
+      PHYSICAL_ADDRESS Start;
+      ULONG Length;
+    } Generic;
+    struct {
+      PHYSICAL_ADDRESS Start;
+      ULONG Length;
+    } Port;
+    struct {
+      ULONG Level;
+      ULONG Vector;
+      KAFFINITY Affinity;
+    } Interrupt;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    struct {
+      __GNU_EXTENSION union {
+        struct {
+          USHORT Reserved;
+          USHORT MessageCount;
+          ULONG Vector;
+          KAFFINITY Affinity;
+        } Raw;
+        struct {
+          ULONG Level;
+          ULONG Vector;
+          KAFFINITY Affinity;
+        } Translated;
+      };
+    } MessageInterrupt;
+#endif
+    struct {
+      PHYSICAL_ADDRESS Start;
+      ULONG Length;
+    } Memory;
+    struct {
+      ULONG Channel;
+      ULONG Port;
+      ULONG Reserved1;
+    } Dma;
+    struct {
+      ULONG Data[3];
+    } DevicePrivate;
+    struct {
+      ULONG Start;
+      ULONG Length;
+      ULONG Reserved;
+    } BusNumber;
+    struct {
+      ULONG DataSize;
+      ULONG Reserved1;
+      ULONG Reserved2;
+    } DeviceSpecificData;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    struct {
+      PHYSICAL_ADDRESS Start;
+      ULONG Length40;
+    } Memory40;
+    struct {
+      PHYSICAL_ADDRESS Start;
+      ULONG Length48;
+    } Memory48;
+    struct {
+      PHYSICAL_ADDRESS Start;
+      ULONG Length64;
+    } Memory64;
+#endif
+  } u;
+} CM_PARTIAL_RESOURCE_DESCRIPTOR, *PCM_PARTIAL_RESOURCE_DESCRIPTOR;
+#include <poppack.h>
+
+#include <pshpack1.h>
+/* CM_PARTIAL_RESOURCE_DESCRIPTOR.Type */
+
+#define CmResourceTypeNull                0
+#define CmResourceTypePort                1
+#define CmResourceTypeInterrupt           2
+#define CmResourceTypeMemory              3
+#define CmResourceTypeDma                 4
+#define CmResourceTypeDeviceSpecific      5
+#define CmResourceTypeBusNumber           6
+#define CmResourceTypeMemoryLarge         7
+#define CmResourceTypeNonArbitrated     128
+#define CmResourceTypeConfigData        128
+#define CmResourceTypeDevicePrivate     129
+#define CmResourceTypePcCardConfig      130
+#define CmResourceTypeMfCardConfig      131
+
+/* CM_PARTIAL_RESOURCE_DESCRIPTOR.ShareDisposition */
+
+typedef enum _CM_SHARE_DISPOSITION {
+  CmResourceShareUndetermined,
+  CmResourceShareDeviceExclusive,
+  CmResourceShareDriverExclusive,
+  CmResourceShareShared
+} CM_SHARE_DISPOSITION;
+
+/* CM_PARTIAL_RESOURCE_DESCRIPTOR.Flags if Type = CmResourceTypePort */
+
+#define CM_RESOURCE_PORT_MEMORY           0x0000
+#define CM_RESOURCE_PORT_IO               0x0001
+#define CM_RESOURCE_PORT_10_BIT_DECODE    0x0004
+#define CM_RESOURCE_PORT_12_BIT_DECODE    0x0008
+#define CM_RESOURCE_PORT_16_BIT_DECODE    0x0010
+#define CM_RESOURCE_PORT_POSITIVE_DECODE  0x0020
+#define CM_RESOURCE_PORT_PASSIVE_DECODE   0x0040
+#define CM_RESOURCE_PORT_WINDOW_DECODE    0x0080
+#define CM_RESOURCE_PORT_BAR              0x0100
+
+/* CM_PARTIAL_RESOURCE_DESCRIPTOR.Flags if Type = CmResourceTypeInterrupt */
+
+#define CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE 0x0000
+#define CM_RESOURCE_INTERRUPT_LATCHED         0x0001
+#define CM_RESOURCE_INTERRUPT_MESSAGE         0x0002
+#define CM_RESOURCE_INTERRUPT_POLICY_INCLUDED 0x0004
+
+/* CM_PARTIAL_RESOURCE_DESCRIPTOR.Flags if Type = CmResourceTypeMemory */
+
+#define CM_RESOURCE_MEMORY_READ_WRITE                    0x0000
+#define CM_RESOURCE_MEMORY_READ_ONLY                     0x0001
+#define CM_RESOURCE_MEMORY_WRITE_ONLY                    0x0002
+#define CM_RESOURCE_MEMORY_WRITEABILITY_MASK             0x0003
+#define CM_RESOURCE_MEMORY_PREFETCHABLE                  0x0004
+#define CM_RESOURCE_MEMORY_COMBINEDWRITE                 0x0008
+#define CM_RESOURCE_MEMORY_24                            0x0010
+#define CM_RESOURCE_MEMORY_CACHEABLE                     0x0020
+#define CM_RESOURCE_MEMORY_WINDOW_DECODE                 0x0040
+#define CM_RESOURCE_MEMORY_BAR                           0x0080
+#define CM_RESOURCE_MEMORY_COMPAT_FOR_INACCESSIBLE_RANGE 0x0100
+
+/* CM_PARTIAL_RESOURCE_DESCRIPTOR.Flags if Type = CmResourceTypeDma */
+
+#define CM_RESOURCE_DMA_8                 0x0000
+#define CM_RESOURCE_DMA_16                0x0001
+#define CM_RESOURCE_DMA_32                0x0002
+#define CM_RESOURCE_DMA_8_AND_16          0x0004
+#define CM_RESOURCE_DMA_BUS_MASTER        0x0008
+#define CM_RESOURCE_DMA_TYPE_A            0x0010
+#define CM_RESOURCE_DMA_TYPE_B            0x0020
+#define CM_RESOURCE_DMA_TYPE_F            0x0040
+
+typedef struct _CM_PARTIAL_RESOURCE_LIST {
+  USHORT  Version;
+  USHORT  Revision;
+  ULONG  Count;
+  CM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptors[1];
+} CM_PARTIAL_RESOURCE_LIST, *PCM_PARTIAL_RESOURCE_LIST;
+
+typedef struct _CM_FULL_RESOURCE_DESCRIPTOR {
+  INTERFACE_TYPE  InterfaceType;
+  ULONG  BusNumber;
+  CM_PARTIAL_RESOURCE_LIST  PartialResourceList;
+} CM_FULL_RESOURCE_DESCRIPTOR, *PCM_FULL_RESOURCE_DESCRIPTOR;
+
+typedef struct _CM_RESOURCE_LIST {
+  ULONG  Count;
+  CM_FULL_RESOURCE_DESCRIPTOR  List[1];
+} CM_RESOURCE_LIST, *PCM_RESOURCE_LIST;
+
+typedef struct _CM_INT13_DRIVE_PARAMETER {
+  USHORT  DriveSelect;
+  ULONG  MaxCylinders;
+  USHORT  SectorsPerTrack;
+  USHORT  MaxHeads;
+  USHORT  NumberDrives;
+} CM_INT13_DRIVE_PARAMETER, *PCM_INT13_DRIVE_PARAMETER;
+
+typedef struct _CM_PNP_BIOS_DEVICE_NODE
+{
+    USHORT Size;
+    UCHAR Node;
+    ULONG ProductId;
+    UCHAR DeviceType[3];
+    USHORT DeviceAttributes;
+} CM_PNP_BIOS_DEVICE_NODE,*PCM_PNP_BIOS_DEVICE_NODE;
+
+typedef struct _CM_PNP_BIOS_INSTALLATION_CHECK
+{
+    UCHAR Signature[4];
+    UCHAR Revision;
+    UCHAR Length;
+    USHORT ControlField;
+    UCHAR Checksum;
+    ULONG EventFlagAddress;
+    USHORT RealModeEntryOffset;
+    USHORT RealModeEntrySegment;
+    USHORT ProtectedModeEntryOffset;
+    ULONG ProtectedModeCodeBaseAddress;
+    ULONG OemDeviceId;
+    USHORT RealModeDataBaseAddress;
+    ULONG ProtectedModeDataBaseAddress;
+} CM_PNP_BIOS_INSTALLATION_CHECK, *PCM_PNP_BIOS_INSTALLATION_CHECK;
+
+#include <poppack.h>
+
+typedef struct _CM_DISK_GEOMETRY_DEVICE_DATA
+{
+    ULONG BytesPerSector;
+    ULONG NumberOfCylinders;
+    ULONG SectorsPerTrack;
+    ULONG NumberOfHeads;
+} CM_DISK_GEOMETRY_DEVICE_DATA, *PCM_DISK_GEOMETRY_DEVICE_DATA;
+
+typedef struct _CM_KEYBOARD_DEVICE_DATA {
+  USHORT  Version;
+  USHORT  Revision;
+  UCHAR  Type;
+  UCHAR  Subtype;
+  USHORT  KeyboardFlags;
+} CM_KEYBOARD_DEVICE_DATA, *PCM_KEYBOARD_DEVICE_DATA;
+
+typedef struct _CM_MCA_POS_DATA {
+  USHORT  AdapterId;
+  UCHAR  PosData1;
+  UCHAR  PosData2;
+  UCHAR  PosData3;
+  UCHAR  PosData4;
+} CM_MCA_POS_DATA, *PCM_MCA_POS_DATA;
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+typedef struct CM_Power_Data_s {
+  ULONG  PD_Size;
+  DEVICE_POWER_STATE  PD_MostRecentPowerState;
+  ULONG  PD_Capabilities;
+  ULONG  PD_D1Latency;
+  ULONG  PD_D2Latency;
+  ULONG  PD_D3Latency;
+  DEVICE_POWER_STATE  PD_PowerStateMapping[PowerSystemMaximum];
+  SYSTEM_POWER_STATE  PD_DeepestSystemWake;
+} CM_POWER_DATA, *PCM_POWER_DATA;
+
+#define PDCAP_D0_SUPPORTED                0x00000001
+#define PDCAP_D1_SUPPORTED                0x00000002
+#define PDCAP_D2_SUPPORTED                0x00000004
+#define PDCAP_D3_SUPPORTED                0x00000008
+#define PDCAP_WAKE_FROM_D0_SUPPORTED      0x00000010
+#define PDCAP_WAKE_FROM_D1_SUPPORTED      0x00000020
+#define PDCAP_WAKE_FROM_D2_SUPPORTED      0x00000040
+#define PDCAP_WAKE_FROM_D3_SUPPORTED      0x00000080
+#define PDCAP_WARM_EJECT_SUPPORTED        0x00000100
+
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
+
+typedef struct _CM_SCSI_DEVICE_DATA {
+  USHORT  Version;
+  USHORT  Revision;
+  UCHAR  HostIdentifier;
+} CM_SCSI_DEVICE_DATA, *PCM_SCSI_DEVICE_DATA;
+
+typedef struct _CM_SERIAL_DEVICE_DATA {
+  USHORT  Version;
+  USHORT  Revision;
+  ULONG  BaudClock;
+} CM_SERIAL_DEVICE_DATA, *PCM_SERIAL_DEVICE_DATA;
+
+typedef enum _KEY_INFORMATION_CLASS {
+  KeyBasicInformation,
+  KeyNodeInformation,
+  KeyFullInformation,
+  KeyNameInformation,
+  KeyCachedInformation,
+  KeyFlagsInformation
+} KEY_INFORMATION_CLASS;
+
+typedef struct _KEY_BASIC_INFORMATION {
+  LARGE_INTEGER  LastWriteTime;
+  ULONG  TitleIndex;
+  ULONG  NameLength;
+  WCHAR  Name[1];
+} KEY_BASIC_INFORMATION, *PKEY_BASIC_INFORMATION;
+
+typedef struct _KEY_FULL_INFORMATION {
+  LARGE_INTEGER  LastWriteTime;
+  ULONG  TitleIndex;
+  ULONG  ClassOffset;
+  ULONG  ClassLength;
+  ULONG  SubKeys;
+  ULONG  MaxNameLen;
+  ULONG  MaxClassLen;
+  ULONG  Values;
+  ULONG  MaxValueNameLen;
+  ULONG  MaxValueDataLen;
+  WCHAR  Class[1];
+} KEY_FULL_INFORMATION, *PKEY_FULL_INFORMATION;
+
+typedef struct _KEY_NODE_INFORMATION {
+  LARGE_INTEGER  LastWriteTime;
+  ULONG  TitleIndex;
+  ULONG  ClassOffset;
+  ULONG  ClassLength;
+  ULONG  NameLength;
+  WCHAR  Name[1];
+} KEY_NODE_INFORMATION, *PKEY_NODE_INFORMATION;
+
+typedef struct _KEY_VALUE_BASIC_INFORMATION {
+  ULONG  TitleIndex;
+  ULONG  Type;
+  ULONG  NameLength;
+  WCHAR  Name[1];
+} KEY_VALUE_BASIC_INFORMATION, *PKEY_VALUE_BASIC_INFORMATION;
+
+typedef struct _KEY_VALUE_FULL_INFORMATION {
+  ULONG  TitleIndex;
+  ULONG  Type;
+  ULONG  DataOffset;
+  ULONG  DataLength;
+  ULONG  NameLength;
+  WCHAR  Name[1];
+} KEY_VALUE_FULL_INFORMATION, *PKEY_VALUE_FULL_INFORMATION;
+
+typedef struct _KEY_VALUE_PARTIAL_INFORMATION {
+  ULONG  TitleIndex;
+  ULONG  Type;
+  ULONG  DataLength;
+  UCHAR  Data[1];
+} KEY_VALUE_PARTIAL_INFORMATION, *PKEY_VALUE_PARTIAL_INFORMATION;
+
+typedef struct _KEY_VALUE_PARTIAL_INFORMATION_ALIGN64 {
+  ULONG  Type;
+  ULONG  DataLength;
+  UCHAR  Data[1];
+} KEY_VALUE_PARTIAL_INFORMATION_ALIGN64, *PKEY_VALUE_PARTIAL_INFORMATION_ALIGN64;
+
+typedef struct _KEY_VALUE_ENTRY {
+  PUNICODE_STRING  ValueName;
+  ULONG  DataLength;
+  ULONG  DataOffset;
+  ULONG  Type;
+} KEY_VALUE_ENTRY, *PKEY_VALUE_ENTRY;
+
+typedef enum _KEY_VALUE_INFORMATION_CLASS {
+  KeyValueBasicInformation,
+  KeyValueFullInformation,
+  KeyValuePartialInformation,
+  KeyValueFullInformationAlign64,
+  KeyValuePartialInformationAlign64
+} KEY_VALUE_INFORMATION_CLASS;
+
+typedef struct _KEY_WRITE_TIME_INFORMATION {
+  LARGE_INTEGER  LastWriteTime;
+} KEY_WRITE_TIME_INFORMATION, *PKEY_WRITE_TIME_INFORMATION;
+
+typedef enum _KEY_SET_INFORMATION_CLASS {
+  KeyWriteTimeInformation,
+  KeyWow64FlagsInformation,
+  KeyControlFlagsInformation,
+  KeySetVirtualizationInformation,
+  KeySetDebugInformation,
+  KeySetHandleTagsInformation,
+  MaxKeySetInfoClass
+} KEY_SET_INFORMATION_CLASS;
 
 /******************************************************************************
  *                         I/O Manager Functions                              *
@@ -1433,6 +2157,24 @@ IoMapTransfer(
                        WriteToDevice);
 }
 #endif
+
+#define IO_TYPE_ADAPTER                 1
+#define IO_TYPE_CONTROLLER              2
+#define IO_TYPE_DEVICE                  3
+#define IO_TYPE_DRIVER                  4
+#define IO_TYPE_FILE                    5
+#define IO_TYPE_IRP                     6
+#define IO_TYPE_MASTER_ADAPTER          7
+#define IO_TYPE_OPEN_PACKET             8
+#define IO_TYPE_TIMER                   9
+#define IO_TYPE_VPB                     10
+#define IO_TYPE_ERROR_LOG               11
+#define IO_TYPE_ERROR_MESSAGE           12
+#define IO_TYPE_DEVICE_OBJECT_EXTENSION 13
+
+#define IO_TYPE_CSQ_IRP_CONTEXT 1
+#define IO_TYPE_CSQ 2
+#define IO_TYPE_CSQ_EX 3
 
 /* IO_RESOURCE_DESCRIPTOR.Option */
 
@@ -2777,33 +3519,6 @@ typedef struct _SCATTER_GATHER_LIST SCATTER_GATHER_LIST, *PSCATTER_GATHER_LIST;
 
 #endif
 
-#define MDL_MAPPED_TO_SYSTEM_VA     0x0001
-#define MDL_PAGES_LOCKED            0x0002
-#define MDL_SOURCE_IS_NONPAGED_POOL 0x0004
-#define MDL_ALLOCATED_FIXED_SIZE    0x0008
-#define MDL_PARTIAL                 0x0010
-#define MDL_PARTIAL_HAS_BEEN_MAPPED 0x0020
-#define MDL_IO_PAGE_READ            0x0040
-#define MDL_WRITE_OPERATION         0x0080
-#define MDL_PARENT_MAPPED_SYSTEM_VA 0x0100
-#define MDL_FREE_EXTRA_PTES         0x0200
-#define MDL_DESCRIBES_AWE           0x0400
-#define MDL_IO_SPACE                0x0800
-#define MDL_NETWORK_HEADER          0x1000
-#define MDL_MAPPING_CAN_FAIL        0x2000
-#define MDL_ALLOCATED_MUST_SUCCEED  0x4000
-#define MDL_INTERNAL                0x8000
-
-
-#define MDL_MAPPING_FLAGS ( \
-  MDL_MAPPED_TO_SYSTEM_VA     | \
-  MDL_PAGES_LOCKED            | \
-  MDL_SOURCE_IS_NONPAGED_POOL | \
-  MDL_PARTIAL_HAS_BEEN_MAPPED | \
-  MDL_PARENT_MAPPED_SYSTEM_VA | \
-  MDL_SYSTEM_VA               | \
-  MDL_IO_SPACE)
-
 typedef NTSTATUS
 (DDKAPI DRIVER_ADD_DEVICE)(
   IN struct _DRIVER_OBJECT  *DriverObject,
@@ -3182,584 +3897,278 @@ typedef BOOLEAN
 (DDKAPI *PKSYNCHRONIZE_ROUTINE)(
   IN PVOID  SynchronizeContext);
 
-/******************************************************************************
- *                            Security Manager Types                          *
- ******************************************************************************/
+typedef struct _IO_SECURITY_CONTEXT {
+  PSECURITY_QUALITY_OF_SERVICE  SecurityQos;
+  PACCESS_STATE  AccessState;
+  ACCESS_MASK  DesiredAccess;
+  ULONG  FullCreateOptions;
+} IO_SECURITY_CONTEXT, *PIO_SECURITY_CONTEXT;
 
-//
-// Access/Security Stuff
-//
-typedef ULONG ACCESS_MASK, *PACCESS_MASK;
-typedef PVOID PACCESS_TOKEN;
+struct _IO_CSQ;
 
-#define DELETE                           0x00010000L
-#define READ_CONTROL                     0x00020000L
-#define WRITE_DAC                        0x00040000L
-#define WRITE_OWNER                      0x00080000L
-#define SYNCHRONIZE                      0x00100000L
-#define STANDARD_RIGHTS_REQUIRED         0x000F0000L
-#define STANDARD_RIGHTS_READ             READ_CONTROL
-#define STANDARD_RIGHTS_WRITE            READ_CONTROL
-#define STANDARD_RIGHTS_EXECUTE          READ_CONTROL
-#define STANDARD_RIGHTS_ALL              0x001F0000L
-#define SPECIFIC_RIGHTS_ALL              0x0000FFFFL
-#define ACCESS_SYSTEM_SECURITY           0x01000000L
-#define MAXIMUM_ALLOWED                  0x02000000L
-#define GENERIC_READ                     0x80000000L
-#define GENERIC_WRITE                    0x40000000L
-#define GENERIC_EXECUTE                  0x20000000L
-#define GENERIC_ALL                      0x10000000L
+typedef struct _IO_CSQ_IRP_CONTEXT {
+  ULONG  Type;
+  struct _IRP  *Irp;
+  struct _IO_CSQ  *Csq;
+} IO_CSQ_IRP_CONTEXT, *PIO_CSQ_IRP_CONTEXT;
 
-typedef struct _GENERIC_MAPPING {
-    ACCESS_MASK GenericRead;
-    ACCESS_MASK GenericWrite;
-    ACCESS_MASK GenericExecute;
-    ACCESS_MASK GenericAll;
-} GENERIC_MAPPING, *PGENERIC_MAPPING;
+typedef VOID
+(DDKAPI *PIO_CSQ_INSERT_IRP)(
+  IN struct _IO_CSQ  *Csq,
+  IN PIRP  Irp);
 
-#define ACL_REVISION                      2
-#define ACL_REVISION_DS                   4
+typedef VOID
+(DDKAPI *PIO_CSQ_REMOVE_IRP)(
+  IN struct _IO_CSQ  *Csq,
+  IN PIRP  Irp);
 
-#define ACL_REVISION1                     1
-#define ACL_REVISION2                     2
-#define ACL_REVISION3                     3
-#define ACL_REVISION4                     4
-#define MIN_ACL_REVISION                  ACL_REVISION2
-#define MAX_ACL_REVISION                  ACL_REVISION4
+typedef PIRP
+(DDKAPI *PIO_CSQ_PEEK_NEXT_IRP)(
+  IN struct _IO_CSQ  *Csq,
+  IN PIRP  Irp,
+  IN PVOID  PeekContext);
 
-typedef struct _ACL {
-    UCHAR AclRevision;
-    UCHAR Sbz1;
-    USHORT AclSize;
-    USHORT AceCount;
-    USHORT Sbz2;
-} ACL, *PACL;
+typedef VOID
+(DDKAPI *PIO_CSQ_ACQUIRE_LOCK)(
+  IN  struct _IO_CSQ  *Csq,
+  OUT PKIRQL  Irql);
 
+typedef VOID
+(DDKAPI *PIO_CSQ_RELEASE_LOCK)(
+  IN struct _IO_CSQ  *Csq,
+  IN KIRQL  Irql);
 
+typedef VOID
+(DDKAPI *PIO_CSQ_COMPLETE_CANCELED_IRP)(
+  IN  struct _IO_CSQ  *Csq,
+  IN  PIRP  Irp);
 
-//
-// Current security descriptor revision value
-//
-#define SECURITY_DESCRIPTOR_REVISION     (1)
-#define SECURITY_DESCRIPTOR_REVISION1    (1)
+typedef struct _IO_CSQ {
+  ULONG  Type;
+  PIO_CSQ_INSERT_IRP  CsqInsertIrp;
+  PIO_CSQ_REMOVE_IRP  CsqRemoveIrp;
+  PIO_CSQ_PEEK_NEXT_IRP  CsqPeekNextIrp;
+  PIO_CSQ_ACQUIRE_LOCK  CsqAcquireLock;
+  PIO_CSQ_RELEASE_LOCK  CsqReleaseLock;
+  PIO_CSQ_COMPLETE_CANCELED_IRP  CsqCompleteCanceledIrp;
+  PVOID  ReservePointer;
+} IO_CSQ, *PIO_CSQ;
 
-//
-// Privilege attributes
-//
-#define SE_PRIVILEGE_ENABLED_BY_DEFAULT (0x00000001L)
-#define SE_PRIVILEGE_ENABLED            (0x00000002L)
-#define SE_PRIVILEGE_REMOVED            (0X00000004L)
-#define SE_PRIVILEGE_USED_FOR_ACCESS    (0x80000000L)
+typedef enum _BUS_QUERY_ID_TYPE {
+  BusQueryDeviceID,
+  BusQueryHardwareIDs,
+  BusQueryCompatibleIDs,
+  BusQueryInstanceID,
+  BusQueryDeviceSerialNumber
+} BUS_QUERY_ID_TYPE, *PBUS_QUERY_ID_TYPE;
 
-#define SE_PRIVILEGE_VALID_ATTRIBUTES   (SE_PRIVILEGE_ENABLED_BY_DEFAULT | \
-                                         SE_PRIVILEGE_ENABLED            | \
-                                         SE_PRIVILEGE_REMOVED            | \
-                                         SE_PRIVILEGE_USED_FOR_ACCESS)
+typedef enum _DEVICE_TEXT_TYPE {
+  DeviceTextDescription,
+  DeviceTextLocationInformation
+} DEVICE_TEXT_TYPE, *PDEVICE_TEXT_TYPE;
 
+#if !defined(_ALPHA_)
 #include <pshpack4.h>
-typedef struct _LUID_AND_ATTRIBUTES {
-    LUID Luid;
-    ULONG Attributes;
-} LUID_AND_ATTRIBUTES, *PLUID_AND_ATTRIBUTES;
-#include <poppack.h>
-typedef LUID_AND_ATTRIBUTES LUID_AND_ATTRIBUTES_ARRAY[ANYSIZE_ARRAY];
-typedef LUID_AND_ATTRIBUTES_ARRAY *PLUID_AND_ATTRIBUTES_ARRAY;
-
-
-
-//
-// Privilege sets
-//
-#define PRIVILEGE_SET_ALL_NECESSARY (1)
-
-typedef struct _PRIVILEGE_SET {
-    ULONG PrivilegeCount;
-    ULONG Control;
-    LUID_AND_ATTRIBUTES Privilege[ANYSIZE_ARRAY];
-} PRIVILEGE_SET,*PPRIVILEGE_SET;
-
-typedef enum _SECURITY_IMPERSONATION_LEVEL {
-    SecurityAnonymous,
-    SecurityIdentification,
-    SecurityImpersonation,
-    SecurityDelegation
-} SECURITY_IMPERSONATION_LEVEL, * PSECURITY_IMPERSONATION_LEVEL;
-
-#define SECURITY_MAX_IMPERSONATION_LEVEL SecurityDelegation
-#define SECURITY_MIN_IMPERSONATION_LEVEL SecurityAnonymous
-#define DEFAULT_IMPERSONATION_LEVEL SecurityImpersonation
-#define VALID_IMPERSONATION_LEVEL(Level) (((Level) >= SECURITY_MIN_IMPERSONATION_LEVEL) && ((Level) <= SECURITY_MAX_IMPERSONATION_LEVEL))
-
-#define SECURITY_DYNAMIC_TRACKING (TRUE)
-#define SECURITY_STATIC_TRACKING (FALSE)
-
-typedef BOOLEAN SECURITY_CONTEXT_TRACKING_MODE, *PSECURITY_CONTEXT_TRACKING_MODE;
-
-typedef struct _SECURITY_QUALITY_OF_SERVICE {
-    ULONG Length;
-    SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
-    SECURITY_CONTEXT_TRACKING_MODE ContextTrackingMode;
-    BOOLEAN EffectiveOnly;
-} SECURITY_QUALITY_OF_SERVICE, *PSECURITY_QUALITY_OF_SERVICE;
-
-typedef struct _SE_IMPERSONATION_STATE {
-    PACCESS_TOKEN Token;
-    BOOLEAN CopyOnOpen;
-    BOOLEAN EffectiveOnly;
-    SECURITY_IMPERSONATION_LEVEL Level;
-} SE_IMPERSONATION_STATE, *PSE_IMPERSONATION_STATE;
-
-#define OWNER_SECURITY_INFORMATION       (0x00000001L)
-#define GROUP_SECURITY_INFORMATION       (0x00000002L)
-#define DACL_SECURITY_INFORMATION        (0x00000004L)
-#define SACL_SECURITY_INFORMATION        (0x00000008L)
-#define LABEL_SECURITY_INFORMATION       (0x00000010L)
-
-#define PROTECTED_DACL_SECURITY_INFORMATION     (0x80000000L)
-#define PROTECTED_SACL_SECURITY_INFORMATION     (0x40000000L)
-#define UNPROTECTED_DACL_SECURITY_INFORMATION   (0x20000000L)
-#define UNPROTECTED_SACL_SECURITY_INFORMATION   (0x10000000L)
-
-typedef enum _SECURITY_OPERATION_CODE {
-  SetSecurityDescriptor,
-  QuerySecurityDescriptor,
-  DeleteSecurityDescriptor,
-  AssignSecurityDescriptor
-} SECURITY_OPERATION_CODE, *PSECURITY_OPERATION_CODE;
-
-#define INITIAL_PRIVILEGE_COUNT           3
-
-typedef struct _INITIAL_PRIVILEGE_SET {
-  ULONG  PrivilegeCount;
-  ULONG  Control;
-  LUID_AND_ATTRIBUTES  Privilege[INITIAL_PRIVILEGE_COUNT];
-} INITIAL_PRIVILEGE_SET, * PINITIAL_PRIVILEGE_SET;
-
-#define SE_MIN_WELL_KNOWN_PRIVILEGE         2
-#define SE_CREATE_TOKEN_PRIVILEGE           2
-#define SE_ASSIGNPRIMARYTOKEN_PRIVILEGE     3
-#define SE_LOCK_MEMORY_PRIVILEGE            4
-#define SE_INCREASE_QUOTA_PRIVILEGE         5
-#define SE_MACHINE_ACCOUNT_PRIVILEGE        6
-#define SE_TCB_PRIVILEGE                    7
-#define SE_SECURITY_PRIVILEGE               8
-#define SE_TAKE_OWNERSHIP_PRIVILEGE         9
-#define SE_LOAD_DRIVER_PRIVILEGE            10
-#define SE_SYSTEM_PROFILE_PRIVILEGE         11
-#define SE_SYSTEMTIME_PRIVILEGE             12
-#define SE_PROF_SINGLE_PROCESS_PRIVILEGE    13
-#define SE_INC_BASE_PRIORITY_PRIVILEGE      14
-#define SE_CREATE_PAGEFILE_PRIVILEGE        15
-#define SE_CREATE_PERMANENT_PRIVILEGE       16
-#define SE_BACKUP_PRIVILEGE                 17
-#define SE_RESTORE_PRIVILEGE                18
-#define SE_SHUTDOWN_PRIVILEGE               19
-#define SE_DEBUG_PRIVILEGE                  20
-#define SE_AUDIT_PRIVILEGE                  21
-#define SE_SYSTEM_ENVIRONMENT_PRIVILEGE     22
-#define SE_CHANGE_NOTIFY_PRIVILEGE          23
-#define SE_REMOTE_SHUTDOWN_PRIVILEGE        24
-#define SE_UNDOCK_PRIVILEGE                 25
-#define SE_SYNC_AGENT_PRIVILEGE             26
-#define SE_ENABLE_DELEGATION_PRIVILEGE      27
-#define SE_MANAGE_VOLUME_PRIVILEGE          28
-#define SE_IMPERSONATE_PRIVILEGE            29
-#define SE_CREATE_GLOBAL_PRIVILEGE          30
-#define SE_TRUSTED_CREDMAN_ACCESS_PRIVILEGE 31
-#define SE_RELABEL_PRIVILEGE                32
-#define SE_INC_WORKING_SET_PRIVILEGE        33
-#define SE_TIME_ZONE_PRIVILEGE              34
-#define SE_CREATE_SYMBOLIC_LINK_PRIVILEGE   35
-#define SE_MAX_WELL_KNOWN_PRIVILEGE         SE_CREATE_SYMBOLIC_LINK_PRIVILEGE
-
-typedef struct _SECURITY_SUBJECT_CONTEXT {
-  PACCESS_TOKEN  ClientToken;
-  SECURITY_IMPERSONATION_LEVEL  ImpersonationLevel;
-  PACCESS_TOKEN  PrimaryToken;
-  PVOID  ProcessAuditId;
-} SECURITY_SUBJECT_CONTEXT, *PSECURITY_SUBJECT_CONTEXT;
-
-/******************************************************************************
- *                            Configuration Manager Types                     *
- ******************************************************************************/
-
-//
-// Registry Access Rights
-//
-#define KEY_QUERY_VALUE         (0x0001)
-#define KEY_SET_VALUE           (0x0002)
-#define KEY_CREATE_SUB_KEY      (0x0004)
-#define KEY_ENUMERATE_SUB_KEYS  (0x0008)
-#define KEY_NOTIFY              (0x0010)
-#define KEY_CREATE_LINK         (0x0020)
-#define KEY_WOW64_32KEY         (0x0200)
-#define KEY_WOW64_64KEY         (0x0100)
-#define KEY_WOW64_RES           (0x0300)
-
-#define KEY_READ                ((STANDARD_RIGHTS_READ       |\
-                                  KEY_QUERY_VALUE            |\
-                                  KEY_ENUMERATE_SUB_KEYS     |\
-                                  KEY_NOTIFY)                 \
-                                  &                           \
-                                 (~SYNCHRONIZE))
-
-#define KEY_WRITE               ((STANDARD_RIGHTS_WRITE      |\
-                                  KEY_SET_VALUE              |\
-                                  KEY_CREATE_SUB_KEY)         \
-                                  &                           \
-                                 (~SYNCHRONIZE))
-
-#define KEY_EXECUTE             ((KEY_READ)                   \
-                                  &                           \
-                                 (~SYNCHRONIZE))
-
-#define KEY_ALL_ACCESS          ((STANDARD_RIGHTS_ALL        |\
-                                  KEY_QUERY_VALUE            |\
-                                  KEY_SET_VALUE              |\
-                                  KEY_CREATE_SUB_KEY         |\
-                                  KEY_ENUMERATE_SUB_KEYS     |\
-                                  KEY_NOTIFY                 |\
-                                  KEY_CREATE_LINK)            \
-                                  &                           \
-                                 (~SYNCHRONIZE))
-
-//
-// Registry Open/Create Options
-//
-#define REG_OPTION_RESERVED         (0x00000000L)
-#define REG_OPTION_NON_VOLATILE     (0x00000000L)
-#define REG_OPTION_VOLATILE         (0x00000001L)
-#define REG_OPTION_CREATE_LINK      (0x00000002L)
-#define REG_OPTION_BACKUP_RESTORE   (0x00000004L)
-#define REG_OPTION_OPEN_LINK        (0x00000008L)
-
-#define REG_LEGAL_OPTION            \
-                (REG_OPTION_RESERVED            |\
-                 REG_OPTION_NON_VOLATILE        |\
-                 REG_OPTION_VOLATILE            |\
-                 REG_OPTION_CREATE_LINK         |\
-                 REG_OPTION_BACKUP_RESTORE      |\
-                 REG_OPTION_OPEN_LINK)
-
-//
-// Key creation/open disposition
-//
-#define REG_CREATED_NEW_KEY         (0x00000001L)
-#define REG_OPENED_EXISTING_KEY     (0x00000002L)
-
-//
-// Key restore & hive load flags
-//
-#define REG_WHOLE_HIVE_VOLATILE         (0x00000001L)
-#define REG_REFRESH_HIVE                (0x00000002L)
-#define REG_NO_LAZY_FLUSH               (0x00000004L)
-#define REG_FORCE_RESTORE               (0x00000008L)
-#define REG_APP_HIVE                    (0x00000010L)
-#define REG_PROCESS_PRIVATE             (0x00000020L)
-#define REG_START_JOURNAL               (0x00000040L)
-#define REG_HIVE_EXACT_FILE_GROWTH      (0x00000080L)
-#define REG_HIVE_NO_RM                  (0x00000100L)
-#define REG_HIVE_SINGLE_LOG             (0x00000200L)
-
-//
-// Unload Flags
-//
-#define REG_FORCE_UNLOAD            1
-
-//
-// Notify Filter Values
-//
-#define REG_NOTIFY_CHANGE_NAME          (0x00000001L)
-#define REG_NOTIFY_CHANGE_ATTRIBUTES    (0x00000002L)
-#define REG_NOTIFY_CHANGE_LAST_SET      (0x00000004L)
-#define REG_NOTIFY_CHANGE_SECURITY      (0x00000008L)
-
-#define REG_LEGAL_CHANGE_FILTER                 \
-                (REG_NOTIFY_CHANGE_NAME          |\
-                 REG_NOTIFY_CHANGE_ATTRIBUTES    |\
-                 REG_NOTIFY_CHANGE_LAST_SET      |\
-                 REG_NOTIFY_CHANGE_SECURITY)
-
-typedef struct _CM_FLOPPY_DEVICE_DATA {
-  USHORT  Version;
-  USHORT  Revision;
-  CHAR  Size[8];
-  ULONG  MaxDensity;
-  ULONG  MountDensity;
-  UCHAR  StepRateHeadUnloadTime;
-  UCHAR  HeadLoadTime;
-  UCHAR  MotorOffTime;
-  UCHAR  SectorLengthCode;
-  UCHAR  SectorPerTrack;
-  UCHAR  ReadWriteGapLength;
-  UCHAR  DataTransferLength;
-  UCHAR  FormatGapLength;
-  UCHAR  FormatFillCharacter;
-  UCHAR  HeadSettleTime;
-  UCHAR  MotorSettleTime;
-  UCHAR  MaximumTrackValue;
-  UCHAR  DataTransferRate;
-} CM_FLOPPY_DEVICE_DATA, *PCM_FLOPPY_DEVICE_DATA;
-
-#include <pshpack4.h>
-typedef struct _CM_PARTIAL_RESOURCE_DESCRIPTOR {
-  UCHAR Type;
-  UCHAR ShareDisposition;
-  USHORT Flags;
+#endif
+typedef struct _IO_STACK_LOCATION {
+  UCHAR  MajorFunction;
+  UCHAR  MinorFunction;
+  UCHAR  Flags;
+  UCHAR  Control;
   union {
     struct {
-      PHYSICAL_ADDRESS Start;
-      ULONG Length;
-    } Generic;
+      PIO_SECURITY_CONTEXT  SecurityContext;
+      ULONG  Options;
+      USHORT POINTER_ALIGNMENT  FileAttributes;
+      USHORT  ShareAccess;
+      ULONG POINTER_ALIGNMENT  EaLength;
+    } Create;
     struct {
-      PHYSICAL_ADDRESS Start;
-      ULONG Length;
-    } Port;
+      ULONG  Length;
+      ULONG POINTER_ALIGNMENT  Key;
+      LARGE_INTEGER  ByteOffset;
+    } Read;
     struct {
-      ULONG Level;
-      ULONG Vector;
-      KAFFINITY Affinity;
-    } Interrupt;
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+      ULONG  Length;
+      ULONG POINTER_ALIGNMENT  Key;
+      LARGE_INTEGER  ByteOffset;
+    } Write;
     struct {
-      __GNU_EXTENSION union {
-        struct {
-          USHORT Reserved;
-          USHORT MessageCount;
-          ULONG Vector;
-          KAFFINITY Affinity;
-        } Raw;
-        struct {
-          ULONG Level;
-          ULONG Vector;
-          KAFFINITY Affinity;
-        } Translated;
-      };
-    } MessageInterrupt;
-#endif
+      ULONG  Length;
+      PUNICODE_STRING  FileName;
+      FILE_INFORMATION_CLASS  FileInformationClass;
+      ULONG  FileIndex;
+    } QueryDirectory;
     struct {
-      PHYSICAL_ADDRESS Start;
-      ULONG Length;
-    } Memory;
+      ULONG  Length;
+      ULONG  CompletionFilter;
+    } NotifyDirectory;
     struct {
-      ULONG Channel;
-      ULONG Port;
-      ULONG Reserved1;
-    } Dma;
+      ULONG  Length;
+      FILE_INFORMATION_CLASS POINTER_ALIGNMENT  FileInformationClass;
+    } QueryFile;
     struct {
-      ULONG Data[3];
-    } DevicePrivate;
+      ULONG  Length;
+      FILE_INFORMATION_CLASS POINTER_ALIGNMENT  FileInformationClass;
+      PFILE_OBJECT  FileObject;
+      _ANONYMOUS_UNION union {
+        _ANONYMOUS_STRUCT struct {
+          BOOLEAN  ReplaceIfExists;
+          BOOLEAN  AdvanceOnly;
+        } DUMMYSTRUCTNAME;
+        ULONG  ClusterCount;
+        HANDLE  DeleteHandle;
+      } DUMMYUNIONNAME;
+    } SetFile;
     struct {
-      ULONG Start;
-      ULONG Length;
-      ULONG Reserved;
-    } BusNumber;
+      ULONG  Length;
+      PVOID  EaList;
+      ULONG  EaListLength;
+      ULONG  EaIndex;
+    } QueryEa;
     struct {
-      ULONG DataSize;
-      ULONG Reserved1;
-      ULONG Reserved2;
-    } DeviceSpecificData;
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+      ULONG  Length;
+    } SetEa;
     struct {
-      PHYSICAL_ADDRESS Start;
-      ULONG Length40;
-    } Memory40;
+      ULONG  Length;
+      FS_INFORMATION_CLASS POINTER_ALIGNMENT  FsInformationClass;
+    } QueryVolume;
     struct {
-      PHYSICAL_ADDRESS Start;
-      ULONG Length48;
-    } Memory48;
+      ULONG  Length;
+      FS_INFORMATION_CLASS  FsInformationClass;
+    } SetVolume;
     struct {
-      PHYSICAL_ADDRESS Start;
-      ULONG Length64;
-    } Memory64;
-#endif
-  } u;
-} CM_PARTIAL_RESOURCE_DESCRIPTOR, *PCM_PARTIAL_RESOURCE_DESCRIPTOR;
+      ULONG  OutputBufferLength;
+      ULONG  InputBufferLength;
+      ULONG  FsControlCode;
+      PVOID  Type3InputBuffer;
+    } FileSystemControl;
+    struct {
+      PLARGE_INTEGER  Length;
+      ULONG  Key;
+      LARGE_INTEGER  ByteOffset;
+    } LockControl;
+    struct {
+      ULONG  OutputBufferLength;
+      ULONG POINTER_ALIGNMENT  InputBufferLength;
+      ULONG POINTER_ALIGNMENT  IoControlCode;
+      PVOID  Type3InputBuffer;
+    } DeviceIoControl;
+    struct {
+      SECURITY_INFORMATION  SecurityInformation;
+      ULONG POINTER_ALIGNMENT  Length;
+    } QuerySecurity;
+    struct {
+      SECURITY_INFORMATION  SecurityInformation;
+      PSECURITY_DESCRIPTOR  SecurityDescriptor;
+    } SetSecurity;
+    struct {
+      PVPB  Vpb;
+      PDEVICE_OBJECT  DeviceObject;
+    } MountVolume;
+    struct {
+      PVPB  Vpb;
+      PDEVICE_OBJECT  DeviceObject;
+    } VerifyVolume;
+    struct {
+      struct _SCSI_REQUEST_BLOCK  *Srb;
+    } Scsi;
+    struct {
+      ULONG  Length;
+      PSID  StartSid;
+      struct _FILE_GET_QUOTA_INFORMATION  *SidList;
+      ULONG  SidListLength;
+    } QueryQuota;
+    struct {
+      ULONG  Length;
+    } SetQuota;
+    struct {
+      DEVICE_RELATION_TYPE  Type;
+    } QueryDeviceRelations;
+    struct {
+      CONST GUID  *InterfaceType;
+      USHORT  Size;
+      USHORT  Version;
+      PINTERFACE  Interface;
+      PVOID  InterfaceSpecificData;
+    } QueryInterface;
+    struct {
+      PDEVICE_CAPABILITIES  Capabilities;
+    } DeviceCapabilities;
+    struct {
+      PIO_RESOURCE_REQUIREMENTS_LIST  IoResourceRequirementList;
+    } FilterResourceRequirements;
+    struct {
+      ULONG  WhichSpace;
+      PVOID  Buffer;
+      ULONG  Offset;
+      ULONG POINTER_ALIGNMENT  Length;
+    } ReadWriteConfig;
+    struct {
+      BOOLEAN  Lock;
+    } SetLock;
+    struct {
+      BUS_QUERY_ID_TYPE  IdType;
+    } QueryId;
+    struct {
+      DEVICE_TEXT_TYPE  DeviceTextType;
+      LCID POINTER_ALIGNMENT  LocaleId;
+    } QueryDeviceText;
+    struct {
+      BOOLEAN  InPath;
+      BOOLEAN  Reserved[3];
+      DEVICE_USAGE_NOTIFICATION_TYPE POINTER_ALIGNMENT  Type;
+    } UsageNotification;
+    struct {
+      SYSTEM_POWER_STATE  PowerState;
+    } WaitWake;
+    struct {
+      PPOWER_SEQUENCE  PowerSequence;
+    } PowerSequence;
+    struct {
+      ULONG  SystemContext;
+      POWER_STATE_TYPE POINTER_ALIGNMENT  Type;
+      POWER_STATE POINTER_ALIGNMENT  State;
+      POWER_ACTION POINTER_ALIGNMENT  ShutdownType;
+    } Power;
+    struct {
+      PCM_RESOURCE_LIST  AllocatedResources;
+      PCM_RESOURCE_LIST  AllocatedResourcesTranslated;
+    } StartDevice;
+    struct {
+      ULONG_PTR  ProviderId;
+      PVOID  DataPath;
+      ULONG  BufferSize;
+      PVOID  Buffer;
+    } WMI;
+    struct {
+      PVOID  Argument1;
+      PVOID  Argument2;
+      PVOID  Argument3;
+      PVOID  Argument4;
+    } Others;
+  } Parameters;
+  PDEVICE_OBJECT  DeviceObject;
+  PFILE_OBJECT  FileObject;
+  PIO_COMPLETION_ROUTINE  CompletionRoutine;
+  PVOID  Context;
+} IO_STACK_LOCATION, *PIO_STACK_LOCATION;
+#if !defined(_ALPHA_)
 #include <poppack.h>
+#endif
 
-#include <pshpack1.h>
-/* CM_PARTIAL_RESOURCE_DESCRIPTOR.Type */
+/* IO_STACK_LOCATION.Control */
 
-#define CmResourceTypeNull                0
-#define CmResourceTypePort                1
-#define CmResourceTypeInterrupt           2
-#define CmResourceTypeMemory              3
-#define CmResourceTypeDma                 4
-#define CmResourceTypeDeviceSpecific      5
-#define CmResourceTypeBusNumber           6
-#define CmResourceTypeMemoryLarge         7
-#define CmResourceTypeNonArbitrated     128
-#define CmResourceTypeConfigData        128
-#define CmResourceTypeDevicePrivate     129
-#define CmResourceTypePcCardConfig      130
-#define CmResourceTypeMfCardConfig      131
+#define SL_PENDING_RETURNED               0x01
+#define SL_ERROR_RETURNED                 0x02
+#define SL_INVOKE_ON_CANCEL               0x20
+#define SL_INVOKE_ON_SUCCESS              0x40
+#define SL_INVOKE_ON_ERROR                0x80
 
-/* CM_PARTIAL_RESOURCE_DESCRIPTOR.ShareDisposition */
+/* IO_STACK_LOCATION.Parameters.ReadWriteControl.WhichSpace */
 
-typedef enum _CM_SHARE_DISPOSITION {
-  CmResourceShareUndetermined,
-  CmResourceShareDeviceExclusive,
-  CmResourceShareDriverExclusive,
-  CmResourceShareShared
-} CM_SHARE_DISPOSITION;
-
-/* CM_PARTIAL_RESOURCE_DESCRIPTOR.Flags if Type = CmResourceTypePort */
-
-#define CM_RESOURCE_PORT_MEMORY           0x0000
-#define CM_RESOURCE_PORT_IO               0x0001
-#define CM_RESOURCE_PORT_10_BIT_DECODE    0x0004
-#define CM_RESOURCE_PORT_12_BIT_DECODE    0x0008
-#define CM_RESOURCE_PORT_16_BIT_DECODE    0x0010
-#define CM_RESOURCE_PORT_POSITIVE_DECODE  0x0020
-#define CM_RESOURCE_PORT_PASSIVE_DECODE   0x0040
-#define CM_RESOURCE_PORT_WINDOW_DECODE    0x0080
-#define CM_RESOURCE_PORT_BAR              0x0100
-
-/* CM_PARTIAL_RESOURCE_DESCRIPTOR.Flags if Type = CmResourceTypeInterrupt */
-
-#define CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE 0x0000
-#define CM_RESOURCE_INTERRUPT_LATCHED         0x0001
-#define CM_RESOURCE_INTERRUPT_MESSAGE         0x0002
-#define CM_RESOURCE_INTERRUPT_POLICY_INCLUDED 0x0004
-
-/* CM_PARTIAL_RESOURCE_DESCRIPTOR.Flags if Type = CmResourceTypeMemory */
-
-#define CM_RESOURCE_MEMORY_READ_WRITE                    0x0000
-#define CM_RESOURCE_MEMORY_READ_ONLY                     0x0001
-#define CM_RESOURCE_MEMORY_WRITE_ONLY                    0x0002
-#define CM_RESOURCE_MEMORY_WRITEABILITY_MASK             0x0003
-#define CM_RESOURCE_MEMORY_PREFETCHABLE                  0x0004
-#define CM_RESOURCE_MEMORY_COMBINEDWRITE                 0x0008
-#define CM_RESOURCE_MEMORY_24                            0x0010
-#define CM_RESOURCE_MEMORY_CACHEABLE                     0x0020
-#define CM_RESOURCE_MEMORY_WINDOW_DECODE                 0x0040
-#define CM_RESOURCE_MEMORY_BAR                           0x0080
-#define CM_RESOURCE_MEMORY_COMPAT_FOR_INACCESSIBLE_RANGE 0x0100
-
-/* CM_PARTIAL_RESOURCE_DESCRIPTOR.Flags if Type = CmResourceTypeDma */
-
-#define CM_RESOURCE_DMA_8                 0x0000
-#define CM_RESOURCE_DMA_16                0x0001
-#define CM_RESOURCE_DMA_32                0x0002
-#define CM_RESOURCE_DMA_8_AND_16          0x0004
-#define CM_RESOURCE_DMA_BUS_MASTER        0x0008
-#define CM_RESOURCE_DMA_TYPE_A            0x0010
-#define CM_RESOURCE_DMA_TYPE_B            0x0020
-#define CM_RESOURCE_DMA_TYPE_F            0x0040
-
-typedef struct _CM_PARTIAL_RESOURCE_LIST {
-  USHORT  Version;
-  USHORT  Revision;
-  ULONG  Count;
-  CM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptors[1];
-} CM_PARTIAL_RESOURCE_LIST, *PCM_PARTIAL_RESOURCE_LIST;
-
-typedef struct _CM_FULL_RESOURCE_DESCRIPTOR {
-  INTERFACE_TYPE  InterfaceType;
-  ULONG  BusNumber;
-  CM_PARTIAL_RESOURCE_LIST  PartialResourceList;
-} CM_FULL_RESOURCE_DESCRIPTOR, *PCM_FULL_RESOURCE_DESCRIPTOR;
-
-typedef struct _CM_RESOURCE_LIST {
-  ULONG  Count;
-  CM_FULL_RESOURCE_DESCRIPTOR  List[1];
-} CM_RESOURCE_LIST, *PCM_RESOURCE_LIST;
-
-typedef struct _CM_INT13_DRIVE_PARAMETER {
-  USHORT  DriveSelect;
-  ULONG  MaxCylinders;
-  USHORT  SectorsPerTrack;
-  USHORT  MaxHeads;
-  USHORT  NumberDrives;
-} CM_INT13_DRIVE_PARAMETER, *PCM_INT13_DRIVE_PARAMETER;
-
-typedef struct _CM_PNP_BIOS_DEVICE_NODE
-{
-    USHORT Size;
-    UCHAR Node;
-    ULONG ProductId;
-    UCHAR DeviceType[3];
-    USHORT DeviceAttributes;
-} CM_PNP_BIOS_DEVICE_NODE,*PCM_PNP_BIOS_DEVICE_NODE;
-
-typedef struct _CM_PNP_BIOS_INSTALLATION_CHECK
-{
-    UCHAR Signature[4];
-    UCHAR Revision;
-    UCHAR Length;
-    USHORT ControlField;
-    UCHAR Checksum;
-    ULONG EventFlagAddress;
-    USHORT RealModeEntryOffset;
-    USHORT RealModeEntrySegment;
-    USHORT ProtectedModeEntryOffset;
-    ULONG ProtectedModeCodeBaseAddress;
-    ULONG OemDeviceId;
-    USHORT RealModeDataBaseAddress;
-    ULONG ProtectedModeDataBaseAddress;
-} CM_PNP_BIOS_INSTALLATION_CHECK, *PCM_PNP_BIOS_INSTALLATION_CHECK;
-
-#include <poppack.h>
-
-typedef struct _CM_DISK_GEOMETRY_DEVICE_DATA
-{
-    ULONG BytesPerSector;
-    ULONG NumberOfCylinders;
-    ULONG SectorsPerTrack;
-    ULONG NumberOfHeads;
-} CM_DISK_GEOMETRY_DEVICE_DATA, *PCM_DISK_GEOMETRY_DEVICE_DATA;
-
-typedef struct _CM_KEYBOARD_DEVICE_DATA {
-  USHORT  Version;
-  USHORT  Revision;
-  UCHAR  Type;
-  UCHAR  Subtype;
-  USHORT  KeyboardFlags;
-} CM_KEYBOARD_DEVICE_DATA, *PCM_KEYBOARD_DEVICE_DATA;
-
-typedef struct _CM_MCA_POS_DATA {
-  USHORT  AdapterId;
-  UCHAR  PosData1;
-  UCHAR  PosData2;
-  UCHAR  PosData3;
-  UCHAR  PosData4;
-} CM_MCA_POS_DATA, *PCM_MCA_POS_DATA;
-
-#if (NTDDI_VERSION >= NTDDI_WINXP)
-typedef struct CM_Power_Data_s {
-  ULONG  PD_Size;
-  DEVICE_POWER_STATE  PD_MostRecentPowerState;
-  ULONG  PD_Capabilities;
-  ULONG  PD_D1Latency;
-  ULONG  PD_D2Latency;
-  ULONG  PD_D3Latency;
-  DEVICE_POWER_STATE  PD_PowerStateMapping[PowerSystemMaximum];
-  SYSTEM_POWER_STATE  PD_DeepestSystemWake;
-} CM_POWER_DATA, *PCM_POWER_DATA;
-
-#define PDCAP_D0_SUPPORTED                0x00000001
-#define PDCAP_D1_SUPPORTED                0x00000002
-#define PDCAP_D2_SUPPORTED                0x00000004
-#define PDCAP_D3_SUPPORTED                0x00000008
-#define PDCAP_WAKE_FROM_D0_SUPPORTED      0x00000010
-#define PDCAP_WAKE_FROM_D1_SUPPORTED      0x00000020
-#define PDCAP_WAKE_FROM_D2_SUPPORTED      0x00000040
-#define PDCAP_WAKE_FROM_D3_SUPPORTED      0x00000080
-#define PDCAP_WARM_EJECT_SUPPORTED        0x00000100
-
-#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
-
-typedef struct _CM_SCSI_DEVICE_DATA {
-  USHORT  Version;
-  USHORT  Revision;
-  UCHAR  HostIdentifier;
-} CM_SCSI_DEVICE_DATA, *PCM_SCSI_DEVICE_DATA;
-
-typedef struct _CM_SERIAL_DEVICE_DATA {
-  USHORT  Version;
-  USHORT  Revision;
-  ULONG  BaudClock;
-} CM_SERIAL_DEVICE_DATA, *PCM_SERIAL_DEVICE_DATA;
+#define PCI_WHICHSPACE_CONFIG             0x0
+#define PCI_WHICHSPACE_ROM                0x52696350 /* 'PciR' */
 
 /******************************************************************************
  *                                 RTL Types                                  *
