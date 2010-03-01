@@ -981,6 +981,47 @@ typedef enum _KPROFILE_SOURCE {
   ProfileMaximum
 } KPROFILE_SOURCE;
 
+typedef enum _KWAIT_REASON {
+  Executive,
+  FreePage,
+  PageIn,
+  PoolAllocation,
+  DelayExecution,
+  Suspended,
+  UserRequest,
+  WrExecutive,
+  WrFreePage,
+  WrPageIn,
+  WrPoolAllocation,
+  WrDelayExecution,
+  WrSuspended,
+  WrUserRequest,
+  WrEventPair,
+  WrQueue,
+  WrLpcReceive,
+  WrLpcReply,
+  WrVirtualMemory,
+  WrPageOut,
+  WrRendezvous,
+  WrKeyedEvent,
+  WrTerminated,
+  WrProcessInSwap,
+  WrCpuRateControl,
+  WrCalloutStack,
+  WrKernel,
+  WrResource,
+  WrPushLock,
+  WrMutex,
+  WrQuantumEnd,
+  WrDispatchInt,
+  WrPreempted,
+  WrYieldExecution,
+  WrFastMutex,
+  WrGuardedMutex,
+  WrRundown,
+  MaximumWaitReason
+} KWAIT_REASON;
+
 typedef enum _KD_OPTION {
     KD_OPTION_SET_BLOCK_ENABLE,
 } KD_OPTION;
@@ -2465,6 +2506,101 @@ IoMapTransfer(
 #define FILE_DEVICE_BIOMETRIC             0x00000044
 #define FILE_DEVICE_PMI                   0x00000045
 
+#define MAXIMUM_VOLUME_LABEL_LENGTH       (32 * sizeof(WCHAR))
+
+typedef struct _VPB {
+  CSHORT  Type;
+  CSHORT  Size;
+  USHORT  Flags;
+  USHORT  VolumeLabelLength;
+  struct _DEVICE_OBJECT  *DeviceObject;
+  struct _DEVICE_OBJECT  *RealDevice;
+  ULONG  SerialNumber;
+  ULONG  ReferenceCount;
+  WCHAR  VolumeLabel[MAXIMUM_VOLUME_LABEL_LENGTH / sizeof(WCHAR)];
+} VPB, *PVPB;
+
+typedef struct _DEVICE_OBJECT {
+  CSHORT  Type;
+  USHORT  Size;
+  LONG  ReferenceCount;
+  struct _DRIVER_OBJECT  *DriverObject;
+  struct _DEVICE_OBJECT  *NextDevice;
+  struct _DEVICE_OBJECT  *AttachedDevice;
+  struct _IRP  *CurrentIrp;
+  PIO_TIMER  Timer;
+  ULONG  Flags;
+  ULONG  Characteristics;
+  volatile PVPB  Vpb;
+  PVOID  DeviceExtension;
+  DEVICE_TYPE  DeviceType;
+  CCHAR  StackSize;
+  union {
+    LIST_ENTRY  ListEntry;
+    WAIT_CONTEXT_BLOCK  Wcb;
+  } Queue;
+  ULONG  AlignmentRequirement;
+  KDEVICE_QUEUE  DeviceQueue;
+  KDPC  Dpc;
+  ULONG  ActiveThreadCount;
+  PSECURITY_DESCRIPTOR  SecurityDescriptor;
+  KEVENT  DeviceLock;
+  USHORT  SectorSize;
+  USHORT  Spare1;
+  struct _DEVOBJ_EXTENSION  *DeviceObjectExtension;
+  PVOID  Reserved;
+} DEVICE_OBJECT, *PDEVICE_OBJECT;
+
+typedef struct _IO_REMOVE_LOCK_TRACKING_BLOCK * PIO_REMOVE_LOCK_TRACKING_BLOCK;
+
+typedef struct _IO_REMOVE_LOCK_COMMON_BLOCK {
+  BOOLEAN  Removed;
+  BOOLEAN  Reserved[3];
+  volatile LONG  IoCount;
+  KEVENT  RemoveEvent;
+} IO_REMOVE_LOCK_COMMON_BLOCK;
+
+typedef struct _IO_REMOVE_LOCK_DBG_BLOCK {
+  LONG  Signature;
+  LONG  HighWatermark;
+  LONGLONG  MaxLockedTicks;
+  LONG  AllocateTag;
+  LIST_ENTRY  LockList;
+  KSPIN_LOCK  Spin;
+  volatile LONG  LowMemoryCount;
+  ULONG  Reserved1[4];
+  PVOID  Reserved2;
+  PIO_REMOVE_LOCK_TRACKING_BLOCK  Blocks;
+} IO_REMOVE_LOCK_DBG_BLOCK;
+
+typedef struct _IO_REMOVE_LOCK {
+  IO_REMOVE_LOCK_COMMON_BLOCK  Common;
+#if DBG
+  IO_REMOVE_LOCK_DBG_BLOCK  Dbg;
+#endif
+} IO_REMOVE_LOCK, *PIO_REMOVE_LOCK;
+
+typedef struct _IO_WORKITEM *PIO_WORKITEM;
+
+typedef VOID
+(DDKAPI IO_WORKITEM_ROUTINE)(
+  IN PDEVICE_OBJECT  DeviceObject,
+  IN PVOID  Context);
+typedef IO_WORKITEM_ROUTINE *PIO_WORKITEM_ROUTINE;
+
+typedef struct _SHARE_ACCESS {
+  ULONG  OpenCount;
+  ULONG  Readers;
+  ULONG  Writers;
+  ULONG  Deleters;
+  ULONG  SharedRead;
+  ULONG  SharedWrite;
+  ULONG  SharedDelete;
+} SHARE_ACCESS, *PSHARE_ACCESS;
+
+
+
+
 typedef struct _PCI_SLOT_NUMBER {
   union {
     struct {
@@ -3356,8 +3492,6 @@ typedef struct _IO_COMPLETION_CONTEXT {
 #define VPB_RAW_MOUNT                     0x0010
 #define VPB_DIRECT_WRITES_ALLOWED         0x0020
 
-#define MAXIMUM_VOLUME_LABEL_LENGTH       (32 * sizeof(WCHAR))
-
 /* IRP.Flags */
 
 #define SL_FORCE_ACCESS_CHECK             0x01
@@ -3489,49 +3623,6 @@ typedef struct _IO_COMPLETION_CONTEXT {
 #define IRP_MN_EXECUTE_METHOD             0x09
 
 #define IRP_MN_REGINFO_EX                 0x0b
-
-typedef struct _VPB {
-  CSHORT  Type;
-  CSHORT  Size;
-  USHORT  Flags;
-  USHORT  VolumeLabelLength;
-  struct _DEVICE_OBJECT  *DeviceObject;
-  struct _DEVICE_OBJECT  *RealDevice;
-  ULONG  SerialNumber;
-  ULONG  ReferenceCount;
-  WCHAR  VolumeLabel[MAXIMUM_VOLUME_LABEL_LENGTH / sizeof(WCHAR)];
-} VPB, *PVPB;
-
-typedef struct _DEVICE_OBJECT {
-  CSHORT  Type;
-  USHORT  Size;
-  LONG  ReferenceCount;
-  struct _DRIVER_OBJECT  *DriverObject;
-  struct _DEVICE_OBJECT  *NextDevice;
-  struct _DEVICE_OBJECT  *AttachedDevice;
-  struct _IRP  *CurrentIrp;
-  PIO_TIMER  Timer;
-  ULONG  Flags;
-  ULONG  Characteristics;
-  volatile PVPB  Vpb;
-  PVOID  DeviceExtension;
-  DEVICE_TYPE  DeviceType;
-  CCHAR  StackSize;
-  union {
-    LIST_ENTRY  ListEntry;
-    WAIT_CONTEXT_BLOCK  Wcb;
-  } Queue;
-  ULONG  AlignmentRequirement;
-  KDEVICE_QUEUE  DeviceQueue;
-  KDPC  Dpc;
-  ULONG  ActiveThreadCount;
-  PSECURITY_DESCRIPTOR  SecurityDescriptor;
-  KEVENT  DeviceLock;
-  USHORT  SectorSize;
-  USHORT  Spare1;
-  struct _DEVOBJ_EXTENSION  *DeviceObjectExtension;
-  PVOID  Reserved;
-} DEVICE_OBJECT, *PDEVICE_OBJECT;
 
 typedef struct _FILE_OBJECT
 {

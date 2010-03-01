@@ -1315,44 +1315,6 @@ typedef enum _EVENT_TYPE {
   SynchronizationEvent
 } EVENT_TYPE;
 
-typedef enum _KWAIT_REASON {
-  Executive,
-  FreePage,
-  PageIn,
-  PoolAllocation,
-  DelayExecution,
-  Suspended,
-  UserRequest,
-  WrExecutive,
-  WrFreePage,
-  WrPageIn,
-  WrPoolAllocation,
-  WrDelayExecution,
-  WrSuspended,
-  WrUserRequest,
-  WrEventPair,
-  WrQueue,
-  WrLpcReceive,
-  WrLpcReply,
-  WrVirtualMemory,
-  WrPageOut,
-  WrRendezvous,
-  Spare2,
-  WrGuardedMutex,
-  Spare4,
-  Spare5,
-  Spare6,
-  WrKernel,
-  WrResource,
-  WrPushLock,
-  WrMutex,
-  WrQuantumEnd,
-  WrDispatchInt,
-  WrPreempted,
-  WrYieldExecution,
-  MaximumWaitReason
-} KWAIT_REASON;
-
 typedef struct _KWAIT_BLOCK {
   LIST_ENTRY  WaitListEntry;
   struct _KTHREAD * RESTRICTED_POINTER  Thread;
@@ -1362,53 +1324,6 @@ typedef struct _KWAIT_BLOCK {
   UCHAR WaitType;
   UCHAR SpareByte;
 } KWAIT_BLOCK, *PKWAIT_BLOCK, *RESTRICTED_POINTER PRKWAIT_BLOCK;
-
-typedef struct _IO_REMOVE_LOCK_TRACKING_BLOCK * PIO_REMOVE_LOCK_TRACKING_BLOCK;
-
-typedef struct _IO_REMOVE_LOCK_COMMON_BLOCK {
-  BOOLEAN  Removed;
-  BOOLEAN  Reserved[3];
-  volatile LONG  IoCount;
-  KEVENT  RemoveEvent;
-} IO_REMOVE_LOCK_COMMON_BLOCK;
-
-typedef struct _IO_REMOVE_LOCK_DBG_BLOCK {
-  LONG  Signature;
-  LONG  HighWatermark;
-  LONGLONG  MaxLockedTicks;
-  LONG  AllocateTag;
-  LIST_ENTRY  LockList;
-  KSPIN_LOCK  Spin;
-  volatile LONG  LowMemoryCount;
-  ULONG  Reserved1[4];
-  PVOID  Reserved2;
-  PIO_REMOVE_LOCK_TRACKING_BLOCK  Blocks;
-} IO_REMOVE_LOCK_DBG_BLOCK;
-
-typedef struct _IO_REMOVE_LOCK {
-  IO_REMOVE_LOCK_COMMON_BLOCK  Common;
-#if DBG
-  IO_REMOVE_LOCK_DBG_BLOCK  Dbg;
-#endif
-} IO_REMOVE_LOCK, *PIO_REMOVE_LOCK;
-
-typedef struct _IO_WORKITEM *PIO_WORKITEM;
-
-typedef VOID
-(DDKAPI IO_WORKITEM_ROUTINE)(
-  IN PDEVICE_OBJECT  DeviceObject,
-  IN PVOID  Context);
-typedef IO_WORKITEM_ROUTINE *PIO_WORKITEM_ROUTINE;
-
-typedef struct _SHARE_ACCESS {
-  ULONG  OpenCount;
-  ULONG  Readers;
-  ULONG  Writers;
-  ULONG  Deleters;
-  ULONG  SharedRead;
-  ULONG  SharedWrite;
-  ULONG  SharedDelete;
-} SHARE_ACCESS, *PSHARE_ACCESS;
 
 typedef enum _KINTERRUPT_MODE {
   LevelSensitive,
