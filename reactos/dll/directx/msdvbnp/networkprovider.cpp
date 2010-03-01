@@ -75,6 +75,8 @@ CNetworkProvider::QueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
+    *Output = NULL;
+
     if (IsEqualGUID(refiid, IID_IUnknown))
     {
         *Output = PVOID(this);
@@ -359,7 +361,7 @@ CNetworkProvider_fnConstructor(
     WCHAR Buffer[MAX_PATH];
     LPOLESTR lpstr;
     StringFromCLSID(riid, &lpstr);
-    swprintf(Buffer, L"CNetworkProvider_fnConstructor riid %s pUnknown %p", lpstr, pUnknown);
+    swprintf(Buffer, L"CNetworkProvider_fnConstructor riid %s pUnknown %p\n", lpstr, pUnknown);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -372,6 +374,5 @@ CNetworkProvider_fnConstructor(
         delete handler;
         return E_NOINTERFACE;
     }
-    OutputDebugStringW(L"CNetworkProvider_fnConstructor Success");
     return NOERROR;
 }
