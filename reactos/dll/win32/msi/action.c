@@ -3761,7 +3761,7 @@ static UINT ITERATE_SelfRegModules(MSIRECORD *row, LPVOID param)
     MSIFILE *file;
     DWORD len;
     static const WCHAR ExeStr[] =
-        {'r','e','g','s','v','r','3','2','.','e','x','e',' ','\"',0};
+        {'r','e','g','s','v','r','3','2','.','e','x','e',' ',' /',' s',' ','\"',0};
     static const WCHAR close[] =  {'\"',0};
     STARTUPINFOW si;
     PROCESS_INFORMATION info;
@@ -3840,7 +3840,7 @@ static UINT ACTION_SelfRegModules(MSIPACKAGE *package)
 static UINT ITERATE_SelfUnregModules( MSIRECORD *row, LPVOID param )
 {
     static const WCHAR regsvr32[] =
-        {'r','e','g','s','v','r','3','2','.','e','x','e',' ','/','u',' ','\"',0};
+        {'r','e','g','s','v','r','3','2','.','e','x','e',' ','/','u',' ','/','s',' ','\"',0};
     static const WCHAR close[] =  {'\"',0};
     MSIPACKAGE *package = param;
     LPCWSTR filename;
