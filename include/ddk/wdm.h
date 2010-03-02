@@ -971,6 +971,13 @@ InterlockedPushEntrySList(
 #define DBG_STATUS_DEBUG_CONTROL          6
 #define DBG_STATUS_WORKER                 7
 
+#define KI_USER_SHARED_DATA               0xffdf0000
+
+#define PAGE_SIZE                         0x1000
+#define PAGE_SHIFT                        12L
+
+#define SharedUserData                    ((KUSER_SHARED_DATA * CONST) KI_USER_SHARED_DATA)
+
 typedef enum _TRACE_INFORMATION_CLASS {
   TraceIdClass,
   TraceHandleClass,
@@ -1392,6 +1399,50 @@ typedef struct _PNP_BUS_INFORMATION {
   INTERFACE_TYPE  LegacyBusType;
   ULONG  BusNumber;
 } PNP_BUS_INFORMATION, *PPNP_BUS_INFORMATION;
+
+typedef struct DECLSPEC_ALIGN(16) _M128A {
+    ULONGLONG Low;
+    LONGLONG High;
+} M128A, *PM128A;
+
+typedef struct DECLSPEC_ALIGN(16) _XSAVE_FORMAT {
+  USHORT ControlWord;
+  USHORT StatusWord;
+  UCHAR TagWord;
+  UCHAR Reserved1;
+  USHORT ErrorOpcode;
+  ULONG ErrorOffset;
+  USHORT ErrorSelector;
+  USHORT Reserved2;
+  ULONG DataOffset;
+  USHORT DataSelector;
+  USHORT Reserved3;
+  ULONG MxCsr;
+  ULONG MxCsr_Mask;
+  M128A FloatRegisters[8];
+
+#if defined(_WIN64)
+
+  M128A XmmRegisters[16];
+  UCHAR Reserved4[96];
+
+#else
+
+  M128A XmmRegisters[8];
+  UCHAR Reserved4[192];
+
+  ULONG StackControl[7];
+  ULONG Cr0NpxState;
+
+#endif
+
+} XSAVE_FORMAT, *PXSAVE_FORMAT;
+
+#ifdef _AMD64_
+
+typedef XSAVE_FORMAT XMM_SAVE_AREA32, *PXMM_SAVE_AREA32;
+
+#endif // _AMD64_
 
 /******************************************************************************
  *                         Memory manager Types                               *
@@ -5935,11 +5986,11 @@ RtlCheckBit(
 
 #define MAXIMUM_SUPPORTED_EXTENSION  512
 
-typedef ULONG PFN_COUNT;
-typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
-typedef LONG SPFN_NUMBER, *PSPFN_NUMBER;
-
 #if defined(_X86_)
+
+typedef ULONG PFN_COUNT;
+typedef LONG SPFN_NUMBER, *PSPFN_NUMBER;
+typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
 
 #define PASSIVE_LEVEL           0
 #define LOW_LEVEL               0
@@ -5957,6 +6008,10 @@ typedef LONG SPFN_NUMBER, *PSPFN_NUMBER;
 #endif
 #if defined(_AMD64_)
 
+typedef ULONG PFN_COUNT;
+typedef LONG64 SPFN_NUMBER, *PSPFN_NUMBER;
+typedef ULONG64 PFN_NUMBER, *PPFN_NUMBER;
+
 #define PASSIVE_LEVEL           0
 #define LOW_LEVEL               0
 #define APC_LEVEL               1
@@ -5971,6 +6026,10 @@ typedef LONG SPFN_NUMBER, *PSPFN_NUMBER;
 
 #endif
 #if defined(_IA64_)
+
+typedef ULONG PFN_COUNT;
+typedef LONG_PTR SPFN_NUMBER, *PSPFN_NUMBER;
+typedef ULONG_PTR PFN_NUMBER, *PPFN_NUMBER;
 
 #define PASSIVE_LEVEL           0
 #define LOW_LEVEL               0

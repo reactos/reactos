@@ -1706,13 +1706,6 @@ KeGetCurrentProcessorNumber(VOID)
     return (ULONG)__readfsbyte(FIELD_OFFSET(KPCR, Number));
 }
 
-#define KI_USER_SHARED_DATA               0xffdf0000
-
-#define PAGE_SIZE                         0x1000
-#define PAGE_SHIFT                        12L
-
-#define SharedUserData                    ((KUSER_SHARED_DATA * CONST) KI_USER_SHARED_DATA)
-
 extern NTKERNELAPI PVOID MmHighestUserAddress;
 extern NTKERNELAPI PVOID MmSystemRangeStart;
 extern NTKERNELAPI ULONG_PTR MmUserProbeAddress;
@@ -1744,30 +1737,6 @@ extern NTKERNELAPI ULONG_PTR MmUserProbeAddress;
 #define CONTEXT_EXCEPTION_REQUEST 0x40000000
 #define CONTEXT_EXCEPTION_REPORTING 0x80000000
 #endif
-
-typedef struct DECLSPEC_ALIGN(16) _M128A {
-    ULONGLONG Low;
-    LONGLONG High;
-} M128A, *PM128A;
-
-typedef struct _XMM_SAVE_AREA32 {
-    USHORT ControlWord;
-    USHORT StatusWord;
-    UCHAR TagWord;
-    UCHAR Reserved1;
-    USHORT ErrorOpcode;
-    ULONG ErrorOffset;
-    USHORT ErrorSelector;
-    USHORT Reserved2;
-    ULONG DataOffset;
-    USHORT DataSelector;
-    USHORT Reserved3;
-    ULONG MxCsr;
-    ULONG MxCsr_Mask;
-    M128A FloatRegisters[8];
-    M128A XmmRegisters[16];
-    UCHAR Reserved4[96];
-} XMM_SAVE_AREA32, *PXMM_SAVE_AREA32;
 
 typedef struct DECLSPEC_ALIGN(16) _CONTEXT {
     ULONG64 P1Home;
@@ -1855,23 +1824,6 @@ typedef struct DECLSPEC_ALIGN(16) _CONTEXT {
     ULONG64 LastExceptionToRip;
     ULONG64 LastExceptionFromRip;
 } CONTEXT;
-
-//
-// Used to contain PFNs and PFN counts
-//
-typedef ULONG PFN_COUNT;
-typedef ULONG64 PFN_NUMBER, *PPFN_NUMBER;
-typedef LONG64 SPFN_NUMBER, *PSPFN_NUMBER;
-
-#define PASSIVE_LEVEL                      0
-#define LOW_LEVEL                          0
-#define APC_LEVEL                          1
-#define DISPATCH_LEVEL                     2
-#define CLOCK_LEVEL                       13
-#define IPI_LEVEL                         14
-#define POWER_LEVEL                       14
-#define PROFILE_LEVEL                     15
-#define HIGH_LEVEL                        15
 
 #define PAGE_SIZE   0x1000
 #define PAGE_SHIFT 12L
