@@ -65,15 +65,50 @@ static inline InternetShortcut* impl_from_IPersistFile(IPersistFile *iface)
     return (InternetShortcut*)((char*)iface - FIELD_OFFSET(InternetShortcut, persistFile));
 }
 
-static BOOL StartLinkProcessor(LPCOLESTR szLink)
+static BOOL run_winemenubuilder( const WCHAR *args )
 {
-    static const WCHAR szFormat[] = {
-        'w','i','n','e','m','e','n','u','b','u','i','l','d','e','r','.','e','x','e',
-        ' ','-','w',' ','-','u',' ','"','%','s','"',0 };
+    static const WCHAR menubuilder[] = {'\\','w','i','n','e','m','e','n','u','b','u','i','l','d','e','r','.','e','x','e',0};
     LONG len;
     LPWSTR buffer;
     STARTUPINFOW si;
     PROCESS_INFORMATION pi;
+    BOOL ret;
+    WCHAR app[MAX_PATH];
+
+    GetSystemDirectoryW( app, MAX_PATH - sizeof(menubuilder)/sizeof(WCHAR) );
+    strcatW( app, menubuilder );
+
+    len = (strlenW( app ) + strlenW( args ) + 1) * sizeof(WCHAR);
+    buffer = heap_alloc( len );
+    if( !buffer )
+        return FALSE;
+
+    strcpyW( buffer, app );
+    strcatW( buffer, args );
+
+    TRACE("starting %s\n",debugstr_w(buffer));
+
+    memset(&si, 0, sizeof(si));
+    si.cb = sizeof(si);
+
+    ret = CreateProcessW( app, buffer, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi );
+
+    heap_free( buffer );
+
+    if (ret)
+    {
+        CloseHandle( pi.hProcess );
+        CloseHandle( pi.hThread );
+    }
+
+    return ret;
+}
+
+static BOOL StartLinkProcessor( LPCOLESTR szLink )
+{
+    static const WCHAR szFormat[] = { ' ','-','w',' ','-','u',' ','"','%','s','"',0 };
+    LONG len;
+    LPWSTR buffer;
     BOOL ret;
 
     len = sizeof(szFormat) + lstrlenW( szLink ) * sizeof(WCHAR);
@@ -82,22 +117,8 @@ static BOOL StartLinkProcessor(LPCOLESTR szLink)
         return FALSE;
 
     wsprintfW( buffer, szFormat, szLink );
-
-    TRACE("starting %s\n",debugstr_w(buffer));
-
-    memset(&si, 0, sizeof(si));
-    si.cb = sizeof(si);
-
-    ret = CreateProcessW( NULL, buffer, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi );
-
-    HeapFree( GetProcessHeap(), 0, buffer );
-
-    if (ret)
-    {
-        CloseHandle( pi.hProcess );
-        CloseHandle( pi.hThread );
-    }
-
+    ret = run_winemenubuilder( buffer );
+    heap_free( buffer );
     return ret;
 }
 
