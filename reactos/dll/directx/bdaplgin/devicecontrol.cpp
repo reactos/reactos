@@ -498,6 +498,10 @@ CBDADeviceControl_fnConstructor(
     IBaseFilter *pFilter = NULL;
     HANDLE hFile;
 
+#ifdef BDAPLGIN_TRACE
+    OutputDebugStringW(L"CBDADeviceControl_fnConstructor\n");
+#endif
+
     //DebugBreak();
 
     // sanity check
@@ -539,10 +543,6 @@ CBDADeviceControl_fnConstructor(
 
     // construct device control
     CBDADeviceControl * handler = new CBDADeviceControl(pUnkOuter, pFilter, hFile);
-
-#ifdef BDAPLGIN_TRACE
-    OutputDebugStringW(L"CBDADeviceControl_fnConstructor\n");
-#endif
 
     if (!handler)
         return E_OUTOFMEMORY;

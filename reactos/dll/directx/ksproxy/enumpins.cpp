@@ -35,13 +35,12 @@ public:
     HRESULT STDMETHODCALLTYPE Reset();
     HRESULT STDMETHODCALLTYPE Clone(IEnumPins **ppEnum);
 
-    CEnumPins(ULONG NumPins, IPin ** pins) : m_Ref(0), m_NumPins(NumPins), m_Pins(pins), m_Index(0){};
+    CEnumPins(std::vector<IPin*> Pins) : m_Ref(0), m_Pins(Pins), m_Index(0){};
     virtual ~CEnumPins(){};
 
 protected:
     LONG m_Ref;
-    ULONG m_NumPins;
-    IPin ** m_Pins;
+    std::vector<IPin*> m_Pins;
     ULONG m_Index;
 };
 
@@ -51,6 +50,7 @@ CEnumPins::QueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
+    *Output = NULL;
     if (IsEqualGUID(refiid, IID_IUnknown))
     {
         *Output = PVOID(this);
@@ -89,9 +89,13 @@ CEnumPins::Next(
     if (cPins > 1 && !pcFetched)
         return E_INVALIDARG;
 
+    WCHAR Buffer[MAX_PATH];
+    swprintf(Buffer, L"CEnumPins::Next: this %p m_Index %lx cPins %u\n", this, m_Index, cPins);
+    OutputDebugStringW(Buffer);
+
     while(i < cPins)
     {
-        if (m_Index + i >= m_NumPins)
+        if (m_Index + i >= m_Pins.size())
             break;
 
         ppPins[i] = m_Pins[m_Index + i];
@@ -106,7 +110,7 @@ CEnumPins::Next(
     }
 
     m_Index += i;
-
+    OutputDebugStringW(L"CEnumPins::Next: done\n");
     if (i < cPins)
         return S_FALSE;
     else
@@ -118,7 +122,7 @@ STDMETHODCALLTYPE
 CEnumPins::Skip(
     ULONG cPins)
 {
-    if (cPins + m_Index >= m_NumPins)
+    if (cPins + m_Index >= m_Pins.size())
     {
         return S_FALSE;
     }
@@ -147,13 +151,11 @@ CEnumPins::Clone(
 HRESULT
 WINAPI
 CEnumPins_fnConstructor(
-    IUnknown *pUnknown,
-    ULONG NumPins,
-    IPin ** pins,
+    std::vector<IPin*> Pins,
     REFIID riid,
     LPVOID * ppv)
 {
-    CEnumPins * handler = new CEnumPins(NumPins, pins);
+    CEnumPins * handler = new CEnumPins(Pins);
 
 #ifdef MSDVBNP_TRACE
     WCHAR Buffer[MAX_PATH];

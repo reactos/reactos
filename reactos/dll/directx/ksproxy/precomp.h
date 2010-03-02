@@ -97,3 +97,30 @@ CKsProxy_Constructor(
     IUnknown * pUnkOuter,
     REFIID riid,
     LPVOID * ppv);
+
+/* input_pin.cpp */
+HRESULT
+WINAPI
+CInputPin_Constructor(
+    IBaseFilter * ParentFilter,
+    LPCWSTR PinName,
+    REFIID riid,
+    LPVOID * ppv);
+
+/* output_pin.cpp */
+HRESULT
+WINAPI
+COutputPin_Constructor(
+    IBaseFilter * ParentFilter,
+    LPCWSTR PinName,
+    REFIID riid,
+    LPVOID * ppv);
+
+/* enumpins.cpp */
+HRESULT
+WINAPI
+CEnumPins_fnConstructor(
+    std::vector<IPin*> Pins,
+    REFIID riid,
+    LPVOID * ppv)
+;

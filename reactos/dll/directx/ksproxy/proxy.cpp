@@ -36,6 +36,7 @@ class CKsProxy : public IBaseFilter,
 {
 public:
     typedef std::vector<IUnknown *>ProxyPluginVector;
+    typedef std::vector<IPin *> PinVector;
 
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
@@ -81,7 +82,7 @@ public:
     // IKsObject
     HANDLE STDMETHODCALLTYPE KsGetObjectHandle();
 
-    CKsProxy() : m_Ref(0), m_pGraph(0), m_ReferenceClock(0), m_FilterState(State_Stopped), m_hDevice(0), m_Plugins(0) {};
+    CKsProxy() : m_Ref(0), m_pGraph(0), m_ReferenceClock(0), m_FilterState(State_Stopped), m_hDevice(0), m_Plugins(), m_Pins() {};
     virtual ~CKsProxy()
     {
         if (m_hDevice)
@@ -90,7 +91,11 @@ public:
 
     HRESULT STDMETHODCALLTYPE GetSupportedSets(LPGUID * pOutGuid, PULONG NumGuids);
     HRESULT STDMETHODCALLTYPE LoadProxyPlugins(LPGUID pGuids, ULONG NumGuids);
-
+    HRESULT STDMETHODCALLTYPE GetNumberOfPins(PULONG NumPins);
+    HRESULT STDMETHODCALLTYPE GetPinInstanceCount(ULONG PinId, PKSPIN_CINSTANCES Instances);
+    HRESULT STDMETHODCALLTYPE GetPinDataflow(ULONG PinId, KSPIN_DATAFLOW * DataFlow);
+    HRESULT STDMETHODCALLTYPE GetPinName(ULONG PinId, KSPIN_DATAFLOW DataFlow, ULONG PinCount, LPWSTR * OutPinName);
+    HRESULT STDMETHODCALLTYPE CreatePins();
 protected:
     LONG m_Ref;
     IFilterGraph *m_pGraph;
@@ -98,6 +103,7 @@ protected:
     FILTER_STATE m_FilterState;
     HANDLE m_hDevice;
     ProxyPluginVector m_Plugins;
+    PinVector m_Pins;
 };
 
 HRESULT
@@ -291,6 +297,206 @@ CKsProxy::LoadProxyPlugins(
     return S_OK;
 }
 
+HRESULT
+STDMETHODCALLTYPE
+CKsProxy::GetNumberOfPins(
+    PULONG NumPins)
+{
+    KSPROPERTY Property;
+    ULONG BytesReturned;
+
+    // setup request
+    Property.Set = KSPROPSETID_Pin;
+    Property.Id = KSPROPERTY_PIN_CTYPES;
+    Property.Flags = KSPROPERTY_TYPE_GET;
+
+    return KsSynchronousDeviceControl(m_hDevice, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)NumPins, sizeof(ULONG), &BytesReturned);
+}
+
+HRESULT
+STDMETHODCALLTYPE
+CKsProxy::GetPinInstanceCount(
+    ULONG PinId,
+    PKSPIN_CINSTANCES Instances)
+{
+    KSP_PIN Property;
+    ULONG BytesReturned;
+
+    // setup request
+    Property.Property.Set = KSPROPSETID_Pin;
+    Property.Property.Id = KSPROPERTY_PIN_CINSTANCES;
+    Property.Property.Flags = KSPROPERTY_TYPE_GET;
+    Property.PinId = PinId;
+    Property.Reserved = 0;
+
+    return KsSynchronousDeviceControl(m_hDevice, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSP_PIN), (PVOID)Instances, sizeof(KSPIN_CINSTANCES), &BytesReturned);
+}
+
+HRESULT
+STDMETHODCALLTYPE
+CKsProxy::GetPinDataflow(
+    ULONG PinId,
+    KSPIN_DATAFLOW * DataFlow)
+{
+    KSP_PIN Property;
+    ULONG BytesReturned;
+
+    // setup request
+    Property.Property.Set = KSPROPSETID_Pin;
+    Property.Property.Id = KSPROPERTY_PIN_DATAFLOW;
+    Property.Property.Flags = KSPROPERTY_TYPE_GET;
+    Property.PinId = PinId;
+    Property.Reserved = 0;
+
+    return KsSynchronousDeviceControl(m_hDevice, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSP_PIN), (PVOID)DataFlow, sizeof(KSPIN_DATAFLOW), &BytesReturned);
+}
+
+HRESULT
+STDMETHODCALLTYPE
+CKsProxy::GetPinName(
+    ULONG PinId,
+    KSPIN_DATAFLOW DataFlow,
+    ULONG PinCount,
+    LPWSTR * OutPinName)
+{
+    KSP_PIN Property;
+    LPWSTR PinName;
+    ULONG BytesReturned;
+    HRESULT hr;
+    WCHAR Buffer[100];
+
+    // setup request
+    Property.Property.Set = KSPROPSETID_Pin;
+    Property.Property.Id = KSPROPERTY_PIN_NAME;
+    Property.Property.Flags = KSPROPERTY_TYPE_GET;
+    Property.PinId = PinId;
+    Property.Reserved = 0;
+
+    // #1 try get it from pin directly
+    hr = KsSynchronousDeviceControl(m_hDevice, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSP_PIN), NULL, 0, &BytesReturned);
+
+    if (hr == MAKE_HRESULT(SEVERITY_ERROR, FACILITY_WIN32, ERROR_MORE_DATA))
+    {
+        // allocate pin name
+        PinName = (LPWSTR)CoTaskMemAlloc(BytesReturned);
+        if (!PinName)
+            return E_OUTOFMEMORY;
+
+        // retry with allocated buffer
+        hr = KsSynchronousDeviceControl(m_hDevice, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSP_PIN), PinName, BytesReturned, &BytesReturned);
+        if (SUCCEEDED(hr))
+        {
+            *OutPinName = PinName;
+            return hr;
+        }
+
+        //free buffer
+        CoTaskMemFree(PinName);
+    }
+
+    //
+    // TODO: retrieve pin name from topology node
+    //
+
+    if (DataFlow == KSPIN_DATAFLOW_IN)
+    {
+        swprintf(Buffer, L"Input%lu", PinCount);
+    }
+    else
+    {
+        swprintf(Buffer, L"Output%lu", PinCount);
+    }
+
+    // allocate pin name 
+    PinName = (LPWSTR)CoTaskMemAlloc((wcslen(Buffer)+1) * sizeof(WCHAR));
+    if (!PinName)
+        return E_OUTOFMEMORY;
+
+    // copy pin name
+    wcscpy(PinName, Buffer);
+
+    // store result
+    *OutPinName = PinName;
+    // done
+    return S_OK;
+}
+
+HRESULT
+STDMETHODCALLTYPE
+CKsProxy::CreatePins()
+{
+    ULONG NumPins, Index;
+    KSPIN_CINSTANCES Instances;
+    KSPIN_DATAFLOW DataFlow;
+    HRESULT hr;
+    WCHAR Buffer[100];
+    LPWSTR PinName;
+    IPin * pPin;
+    ULONG InputPin = 0;
+    ULONG OutputPin = 0;
+
+    // get number of pins
+    hr = GetNumberOfPins(&NumPins);
+    if (FAILED(hr))
+        return hr;
+
+    for(Index = 0; Index < NumPins; Index++)
+    {
+        // query current instance count
+        hr = GetPinInstanceCount(Index, &Instances);
+        if (FAILED(hr))
+            continue;
+
+        if (Instances.CurrentCount == Instances.PossibleCount)
+        {
+            // already maximum reached for this pin
+            continue;
+        }
+
+        // get direction of pin
+        hr = GetPinDataflow(Index, &DataFlow);
+        if (FAILED(hr))
+            continue;
+
+        if (DataFlow == KSPIN_DATAFLOW_IN)
+            hr = GetPinName(Index, DataFlow, InputPin, &PinName);
+        else
+            hr = GetPinName(Index, DataFlow, OutputPin, &PinName);
+
+        if (FAILED(hr))
+            continue;
+
+        // construct the pins
+        if (DataFlow == KSPIN_DATAFLOW_IN)
+        {
+            hr = CInputPin_Constructor((IBaseFilter*)this, PinName, IID_IPin, (void**)&pPin);
+            if (FAILED(hr))
+            {
+                CoTaskMemFree(PinName);
+                continue;
+            }
+            InputPin++;
+        }
+        else
+        {
+            hr = COutputPin_Constructor((IBaseFilter*)this, PinName, IID_IPin, (void**)&pPin);
+            if (FAILED(hr))
+            {
+                CoTaskMemFree(PinName);
+                continue;
+            }
+            OutputPin++;
+        }
+
+        // store pins
+        m_Pins.push_back(pPin);
+
+        swprintf(Buffer, L"Index %lu DataFlow %lu Name %s\n", Index, DataFlow, PinName);
+        OutputDebugStringW(Buffer);
+    }
+
+    return S_OK;
+}
 
 HRESULT
 STDMETHODCALLTYPE
@@ -336,6 +542,19 @@ CKsProxy::Load(IPropertyBag *pPropBag, IErrorLog *pErrorLog)
 
     // load all proxy plugins
     hr = LoadProxyPlugins(pGuid, NumGuids);
+    if (FAILED(hr))
+    {
+        CloseHandle(m_hDevice);
+        m_hDevice = NULL;
+        return hr;
+    }
+
+    // free sets
+    CoTaskMemFree(pGuid);
+
+    // now create the input / output pins
+    hr = CreatePins();
+
 
     CloseHandle(m_hDevice);
     m_hDevice = NULL;
@@ -438,8 +657,8 @@ STDMETHODCALLTYPE
 CKsProxy::EnumPins(
     IEnumPins **ppEnum)
 {
-    OutputDebugStringW(L"CKsProxy::EnumPins : NotImplemented\n");
-    return E_NOTIMPL;
+    OutputDebugStringW(L"CKsProxy::EnumPins\n");
+    return CEnumPins_fnConstructor(m_Pins, IID_IEnumPins, (void**)ppEnum);
 }
 
 HRESULT

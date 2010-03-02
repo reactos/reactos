@@ -12,7 +12,6 @@
 const GUID CBDADeviceControl_GUID = {STATIC_KSMETHODSETID_BdaChangeSync};
 const GUID CBDAPinControl_GUID = {0x0DED49D5, 0xA8B7, 0x4d5d, {0x97, 0xA1, 0x12, 0xB0, 0xC1, 0x95, 0x87, 0x4D}};
 
-
 static INTERFACE_TABLE InterfaceTable[] =
 {
     {&CBDADeviceControl_GUID, CBDADeviceControl_fnConstructor},

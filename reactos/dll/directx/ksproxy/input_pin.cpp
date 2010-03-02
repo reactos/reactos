@@ -1,17 +1,26 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Network Provider for MPEG2 based networks
- * FILE:            dll/directx/msdvbnp/pin.cpp
- * PURPOSE:         IPin interface
+ * PROJECT:         ReactOS WDM Streaming ActiveMovie Proxy
+ * FILE:            dll/directx/ksproxy/input_cpp.cpp
+ * PURPOSE:         InputPin of Proxy Filter
  *
  * PROGRAMMERS:     Johannes Anderwald (janderwald@reactos.org)
  */
 #include "precomp.h"
 
-const GUID KSDATAFORMAT_TYPE_BDA_ANTENNA = {0x71985f41, 0x1ca1, 0x11d3, {0x9c, 0xc8, 0x0, 0xc0, 0x4f, 0x79, 0x71, 0xe0}};
-const GUID GUID_NULL                     = {0x00000000L, 0x0000, 0x0000, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
-
-class CPin : public IPin
+class CInputPin : public IPin
+/*
+                  public IQualityControl,
+                  public IKsObject,
+                  public IKsPinEx,
+                  public IKsPinPipe,
+                  public ISpecifyPropertyPages,
+                  public IStreamBuilder,
+                  public IKsPropertySet,
+                  public IKsPinFactory,
+                  public IKsControl,
+                  public IKsAggregateControl
+*/
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
@@ -49,42 +58,34 @@ public:
     HRESULT STDMETHODCALLTYPE EndFlush();
     HRESULT STDMETHODCALLTYPE NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate);
 
-    CPin(IBaseFilter * ParentFilter) : m_Ref(0), m_ParentFilter(ParentFilter){};
-    virtual ~CPin(){};
-
-    static LPCWSTR PIN_ID;
+    CInputPin(IBaseFilter * ParentFilter, LPCWSTR PinName) : m_Ref(0), m_ParentFilter(ParentFilter), m_PinName(PinName){};
+    virtual ~CInputPin(){};
 
 protected:
     LONG m_Ref;
     IBaseFilter * m_ParentFilter;
+    LPCWSTR m_PinName;
 };
-
-
-LPCWSTR CPin::PIN_ID = L"Antenna Out";
 
 HRESULT
 STDMETHODCALLTYPE
-CPin::QueryInterface(
+CInputPin::QueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
-    if (IsEqualGUID(refiid, IID_IUnknown))
+    *Output = NULL;
+    if (IsEqualGUID(refiid, IID_IUnknown) ||
+        IsEqualGUID(refiid, IID_IPin))
     {
         *Output = PVOID(this);
         reinterpret_cast<IUnknown*>(*Output)->AddRef();
-        return NOERROR;
-    }
-    if (IsEqualGUID(refiid, IID_IPin))
-    {
-        *Output = (IPin*)(this);
-        reinterpret_cast<IPin*>(*Output)->AddRef();
         return NOERROR;
     }
 
     WCHAR Buffer[MAX_PATH];
     LPOLESTR lpstr;
     StringFromCLSID(refiid, &lpstr);
-    swprintf(Buffer, L"CPin::QueryInterface: NoInterface for %s\n", lpstr);
+    swprintf(Buffer, L"CInputPin::QueryInterface: NoInterface for %s\n", lpstr);
     OutputDebugStringW(Buffer);
     CoTaskMemFree(lpstr);
 
@@ -96,46 +97,46 @@ CPin::QueryInterface(
 //
 HRESULT
 STDMETHODCALLTYPE
-CPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
+CInputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
 {
-    OutputDebugStringW(L"CPin::Connect called\n");
+    OutputDebugStringW(L"CInputPin::Connect called\n");
     return E_NOTIMPL;
 }
 
 HRESULT
 STDMETHODCALLTYPE
-CPin::ReceiveConnection(IPin *pConnector, const AM_MEDIA_TYPE *pmt)
+CInputPin::ReceiveConnection(IPin *pConnector, const AM_MEDIA_TYPE *pmt)
 {
-    OutputDebugStringW(L"CPin::ReceiveConnection called\n");
+    OutputDebugStringW(L"CInputPin::ReceiveConnection called\n");
     return E_NOTIMPL;
 }
 HRESULT
 STDMETHODCALLTYPE
-CPin::Disconnect( void)
+CInputPin::Disconnect( void)
 {
-    OutputDebugStringW(L"CPin::Disconnect called\n");
+    OutputDebugStringW(L"CInputPin::Disconnect called\n");
     return E_NOTIMPL;
 }
 HRESULT
 STDMETHODCALLTYPE
-CPin::ConnectedTo(IPin **pPin)
+CInputPin::ConnectedTo(IPin **pPin)
 {
-    OutputDebugStringW(L"CPin::ConnectedTo called\n");
+    OutputDebugStringW(L"CInputPin::ConnectedTo called\n");
     return VFW_E_NOT_CONNECTED;
 }
 HRESULT
 STDMETHODCALLTYPE
-CPin::ConnectionMediaType(AM_MEDIA_TYPE *pmt)
+CInputPin::ConnectionMediaType(AM_MEDIA_TYPE *pmt)
 {
-    OutputDebugStringW(L"CPin::ConnectionMediaType called\n");
+    OutputDebugStringW(L"CInputPin::ConnectionMediaType called\n");
     return E_NOTIMPL;
 }
 HRESULT
 STDMETHODCALLTYPE
-CPin::QueryPinInfo(PIN_INFO *pInfo)
+CInputPin::QueryPinInfo(PIN_INFO *pInfo)
 {
-    wcscpy(pInfo->achName, PIN_ID);
-    pInfo->dir = PINDIR_OUTPUT;
+    wcscpy(pInfo->achName, m_PinName);
+    pInfo->dir = PINDIR_INPUT;
     pInfo->pFilter = m_ParentFilter;
     m_ParentFilter->AddRef();
 
@@ -143,11 +144,11 @@ CPin::QueryPinInfo(PIN_INFO *pInfo)
 }
 HRESULT
 STDMETHODCALLTYPE
-CPin::QueryDirection(PIN_DIRECTION *pPinDir)
+CInputPin::QueryDirection(PIN_DIRECTION *pPinDir)
 {
     if (pPinDir)
     {
-        *pPinDir = PINDIR_OUTPUT;
+        *pPinDir = PINDIR_INPUT;
         return S_OK;
     }
 
@@ -155,98 +156,74 @@ CPin::QueryDirection(PIN_DIRECTION *pPinDir)
 }
 HRESULT
 STDMETHODCALLTYPE
-CPin::QueryId(LPWSTR *Id)
+CInputPin::QueryId(LPWSTR *Id)
 {
-    *Id = (LPWSTR)CoTaskMemAlloc(sizeof(PIN_ID));
+    *Id = (LPWSTR)CoTaskMemAlloc((wcslen(m_PinName)+1)*sizeof(WCHAR));
     if (!*Id)
         return E_OUTOFMEMORY;
 
-    wcscpy(*Id, PIN_ID);
+    wcscpy(*Id, m_PinName);
     return S_OK;
 }
 HRESULT
 STDMETHODCALLTYPE
-CPin::QueryAccept(const AM_MEDIA_TYPE *pmt)
+CInputPin::QueryAccept(const AM_MEDIA_TYPE *pmt)
 {
-    OutputDebugStringW(L"CPin::QueryAccept called\n");
+    OutputDebugStringW(L"CInputPin::QueryAccept called\n");
     return E_NOTIMPL;
 }
 HRESULT
 STDMETHODCALLTYPE
-CPin::EnumMediaTypes(IEnumMediaTypes **ppEnum)
+CInputPin::EnumMediaTypes(IEnumMediaTypes **ppEnum)
 {
-    AM_MEDIA_TYPE *MediaType = (AM_MEDIA_TYPE*)CoTaskMemAlloc(sizeof(AM_MEDIA_TYPE));
-
-    if (!MediaType)
-    {
-        return E_OUTOFMEMORY;
-    }
-
-    MediaType->majortype = KSDATAFORMAT_TYPE_BDA_ANTENNA;
-    MediaType->subtype = MEDIASUBTYPE_None;
-    MediaType->formattype = GUID_NULL;
-    MediaType->bFixedSizeSamples = true;
-    MediaType->bTemporalCompression = false;
-    MediaType->lSampleSize = sizeof(CHAR);
-    MediaType->pUnk = NULL;
-    MediaType->cbFormat = 0;
-    MediaType->pbFormat = NULL;
-
-    return CEnumMediaTypes_fnConstructor(NULL, 1, MediaType, IID_IEnumMediaTypes, (void**)ppEnum);
-}
-HRESULT
-STDMETHODCALLTYPE
-CPin::QueryInternalConnections(IPin **apPin, ULONG *nPin)
-{
-    OutputDebugStringW(L"CPin::QueryInternalConnections called\n");
+    OutputDebugStringW(L"CInputPin::EnumMediaTypes called\n");
     return E_NOTIMPL;
 }
 HRESULT
 STDMETHODCALLTYPE
-CPin::EndOfStream( void)
+CInputPin::QueryInternalConnections(IPin **apPin, ULONG *nPin)
 {
-    OutputDebugStringW(L"CPin::EndOfStream called\n");
+    OutputDebugStringW(L"CInputPin::QueryInternalConnections called\n");
     return E_NOTIMPL;
 }
 HRESULT
 STDMETHODCALLTYPE
-CPin::BeginFlush( void)
+CInputPin::EndOfStream( void)
 {
-    OutputDebugStringW(L"CPin::BeginFlush called\n");
+    OutputDebugStringW(L"CInputPin::EndOfStream called\n");
     return E_NOTIMPL;
 }
 HRESULT
 STDMETHODCALLTYPE
-CPin::EndFlush( void)
+CInputPin::BeginFlush( void)
 {
-    OutputDebugStringW(L"CPin::EndFlush called\n");
+    OutputDebugStringW(L"CInputPin::BeginFlush called\n");
     return E_NOTIMPL;
 }
 HRESULT
 STDMETHODCALLTYPE
-CPin::NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate)
+CInputPin::EndFlush( void)
 {
-    OutputDebugStringW(L"CPin::NewSegment called\n");
+    OutputDebugStringW(L"CInputPin::EndFlush called\n");
+    return E_NOTIMPL;
+}
+HRESULT
+STDMETHODCALLTYPE
+CInputPin::NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate)
+{
+    OutputDebugStringW(L"CInputPin::NewSegment called\n");
     return E_NOTIMPL;
 }
 
 HRESULT
 WINAPI
-CPin_fnConstructor(
-    IUnknown *pUnknown,
+CInputPin_Constructor(
     IBaseFilter * ParentFilter,
+    LPCWSTR PinName,
     REFIID riid,
     LPVOID * ppv)
 {
-    CPin * handler = new CPin(ParentFilter);
-
-#ifdef MSDVBNP_TRACE
-    WCHAR Buffer[MAX_PATH];
-    LPOLESTR lpstr;
-    StringFromCLSID(riid, &lpstr);
-    swprintf(Buffer, L"CPin_fnConstructor riid %s pUnknown %p\n", lpstr, pUnknown);
-    OutputDebugStringW(Buffer);
-#endif
+    CInputPin * handler = new CInputPin(ParentFilter, PinName);
 
     if (!handler)
         return E_OUTOFMEMORY;
@@ -258,5 +235,5 @@ CPin_fnConstructor(
         return E_NOINTERFACE;
     }
 
-    return NOERROR;
+    return S_OK;
 }

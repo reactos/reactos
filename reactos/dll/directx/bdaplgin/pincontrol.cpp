@@ -59,6 +59,7 @@ CBDAPinControl::QueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
+    *Output = NULL;
     if (IsEqualGUID(refiid, IID_IUnknown))
     {
         *Output = PVOID(this);
@@ -77,7 +78,6 @@ CBDAPinControl::QueryInterface(
     LPOLESTR lpstr;
     StringFromCLSID(refiid, &lpstr);
     swprintf(Buffer, L"CBDAPinControl::QueryInterface: NoInterface for %s", lpstr);
-    DebugBreak();
     OutputDebugStringW(Buffer);
     CoTaskMemFree(lpstr);
 #endif
@@ -289,6 +289,8 @@ CBDAPinControl_fnConstructor(
 #ifdef BDAPLGIN_TRACE
     OutputDebugStringW(L"CBDAPinControl_fnConstructor");
 #endif
+
+    DebugBreak();
 
     if (!handler)
         return E_OUTOFMEMORY;
