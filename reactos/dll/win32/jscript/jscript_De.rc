@@ -43,6 +43,7 @@ STRINGTABLE DISCARDABLE
     IDS_NOT_BOOL            "Boolisches Objekt erwartet"
     IDS_JSCRIPT_EXPECTED    "JScript Objekt erwartet"
     IDS_REGEXP_SYNTAX_ERROR "Syntax Fehler in regulärem Ausdruck"
+    IDS_URI_INVALID_CHAR    "Zu verschlüsselnde URI enthält ungültige Zeichen"
     IDS_INVALID_LENGTH      "Array-Größe muss eine endliche, positive Ganzzahl sein"
     IDS_ARRAY_EXPECTED      "Array Objekt erwartet"
 }

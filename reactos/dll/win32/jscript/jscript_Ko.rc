@@ -1,0 +1,51 @@
+/*
+ * Copyright 2009 Piotr Caban
+ * Copyright 2010 YunSong Hwang
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "resource.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_TO_PRIMITIVE        "객페를 기본 형식으로 변환하는 중에 에러 발생"
+    IDS_INVALID_CALL_ARG    "올바르지 않은 프로시져 호출이나 인수"
+    IDS_CREATE_OBJ_ERROR    "자동화 서버가 객체를 만들 수 없습니다"
+    IDS_NO_PROPERTY         "객체는 이 속성이나 메소드를 지원하지 않습니다"
+    IDS_ARG_NOT_OPT         "인수는 옵션이 아닙니다"
+    IDS_SYNTAX_ERROR        "문법 에러"
+    IDS_SEMICOLON           "';' 가 필요합니다"
+    IDS_LBRACKET            "'(' 가 필요합니다"
+    IDS_RBRACKET            "')' 가 필요합니다"
+    IDS_UNTERMINATED_STR    "띁나지 않은 문자열 상수"
+    IDS_NOT_FUNC            "함수가 필요합니다"
+    IDS_NOT_DATE            "'[객체]' 는 날짜 객체가 아닙니다"
+    IDS_NOT_NUM             "숫자가 필요합니다"
+    IDS_OBJECT_EXPECTED     "객체가 필요합니다"
+    IDS_ILLEGAL_ASSIGN      "잘못된 할당"
+    IDS_UNDEFINED           "'|' 는 정의되지 않았습니다"
+    IDS_NOT_BOOL            "볼린 객제가 필요합니다"
+    IDS_JSCRIPT_EXPECTED    "JScript 객체가 필요합니다"
+    IDS_REGEXP_SYNTAX_ERROR "정규 표현식에 문법에러가 있습니다"
+    IDS_URI_INVALID_CHAR    "URI 는 올바르지 않은 문자를 포함해서 인코딩되었습니다"
+    IDS_INVALID_LENGTH      "배열 길이는 반드시  한정된 양의 정수이어야 합니다"
+    IDS_ARRAY_EXPECTED      "배열 객체가 필요합니다"
+}
