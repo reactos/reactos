@@ -42,12 +42,6 @@ extern "C" {
 
 #include "intrin.h"
 
-#if !defined(_NTHAL_)
-#define NTHALAPI DECLSPEC_IMPORT
-#else
-#define NTHALAPI
-#endif
-
 /* Pseudo modifiers for parameters */
 #ifndef IN
 #define IN
@@ -65,12 +59,6 @@ extern "C" {
 #define CONST const
 
 #define RESTRICTED_POINTER
-
-#if defined(_WIN64)
-#define POINTER_ALIGNMENT DECLSPEC_ALIGN(8)
-#else
-#define POINTER_ALIGNMENT
-#endif
 
 #define DECLSPEC_ADDRSAFE
 
@@ -1321,54 +1309,6 @@ typedef enum _IO_QUERY_DEVICE_DATA_FORMAT {
   IoQueryDeviceMaxData
 } IO_QUERY_DEVICE_DATA_FORMAT, *PIO_QUERY_DEVICE_DATA_FORMAT;
 
-typedef enum _MEMORY_CACHING_TYPE_ORIG {
-  MmFrameBufferCached = 2
-} MEMORY_CACHING_TYPE_ORIG;
-
-typedef enum _MEMORY_CACHING_TYPE {
-  MmNonCached = FALSE,
-  MmCached = TRUE,
-  MmWriteCombined = MmFrameBufferCached,
-  MmHardwareCoherentCached,
-  MmNonCachedUnordered,
-  MmUSWCCached,
-  MmMaximumCacheType
-} MEMORY_CACHING_TYPE;
-
-typedef enum _MM_PAGE_PRIORITY {
-  LowPagePriority,
-  NormalPagePriority = 16,
-  HighPagePriority = 32
-} MM_PAGE_PRIORITY;
-
-typedef enum _LOCK_OPERATION {
-  IoReadAccess,
-  IoWriteAccess,
-  IoModifyAccess
-} LOCK_OPERATION;
-
-#define FLUSH_MULTIPLE_MAXIMUM 32
-
-typedef enum _MM_SYSTEM_SIZE {
-  MmSmallSystem,
-  MmMediumSystem,
-  MmLargeSystem
-} MM_SYSTEMSIZE;
-
-typedef struct _OBJECT_HANDLE_INFORMATION {
-  ULONG HandleAttributes;
-  ACCESS_MASK GrantedAccess;
-} OBJECT_HANDLE_INFORMATION, *POBJECT_HANDLE_INFORMATION;
-
-typedef struct _CLIENT_ID {
-  HANDLE  UniqueProcess;
-  HANDLE  UniqueThread;
-} CLIENT_ID, *PCLIENT_ID;
-
-typedef VOID
-(DDKAPI *PKSTART_ROUTINE)(
-  IN PVOID  StartContext);
-
 typedef VOID
 (DDKAPI *PCREATE_PROCESS_NOTIFY_ROUTINE)(
   IN HANDLE  ParentId,
@@ -1588,82 +1528,6 @@ typedef struct _PROCESS_SESSION_INFORMATION
 {
     ULONG SessionId;
 } PROCESS_SESSION_INFORMATION, *PPROCESS_SESSION_INFORMATION;
-
-typedef VOID
-(DDKAPI *PREQUEST_POWER_COMPLETE)(
-  IN PDEVICE_OBJECT  DeviceObject,
-  IN UCHAR  MinorFunction,
-  IN POWER_STATE  PowerState,
-  IN PVOID  Context,
-  IN PIO_STATUS_BLOCK  IoStatus);
-
-typedef enum _TRACE_INFORMATION_CLASS {
-  TraceIdClass,
-  TraceHandleClass,
-  TraceEnableFlagsClass,
-  TraceEnableLevelClass,
-  GlobalLoggerHandleClass,
-  EventLoggerHandleClass,
-  AllLoggerHandlesClass,
-  TraceHandleByNameClass
-} TRACE_INFORMATION_CLASS;
-
-typedef enum _REG_NOTIFY_CLASS
-{
-  RegNtDeleteKey,
-  RegNtPreDeleteKey = RegNtDeleteKey,
-  RegNtSetValueKey,
-  RegNtPreSetValueKey = RegNtSetValueKey,
-  RegNtDeleteValueKey,
-  RegNtPreDeleteValueKey = RegNtDeleteValueKey,
-  RegNtSetInformationKey,
-  RegNtPreSetInformationKey = RegNtSetInformationKey,
-  RegNtRenameKey,
-  RegNtPreRenameKey = RegNtRenameKey,
-  RegNtEnumerateKey,
-  RegNtPreEnumerateKey = RegNtEnumerateKey,
-  RegNtEnumerateValueKey,
-  RegNtPreEnumerateValueKey = RegNtEnumerateValueKey,
-  RegNtQueryKey,
-  RegNtPreQueryKey = RegNtQueryKey,
-  RegNtQueryValueKey,
-  RegNtPreQueryValueKey = RegNtQueryValueKey,
-  RegNtQueryMultipleValueKey,
-  RegNtPreQueryMultipleValueKey = RegNtQueryMultipleValueKey,
-  RegNtPreCreateKey,
-  RegNtPostCreateKey,
-  RegNtPreOpenKey,
-  RegNtPostOpenKey,
-  RegNtKeyHandleClose,
-  RegNtPreKeyHandleClose = RegNtKeyHandleClose,
-  RegNtPostDeleteKey,
-  RegNtPostSetValueKey,
-  RegNtPostDeleteValueKey,
-  RegNtPostSetInformationKey,
-  RegNtPostRenameKey,
-  RegNtPostEnumerateKey,
-  RegNtPostEnumerateValueKey,
-  RegNtPostQueryKey,
-  RegNtPostQueryValueKey,
-  RegNtPostQueryMultipleValueKey,
-  RegNtPostKeyHandleClose,
-  RegNtPreCreateKeyEx,
-  RegNtPostCreateKeyEx,
-  RegNtPreOpenKeyEx,
-  RegNtPostOpenKeyEx
-} REG_NOTIFY_CLASS, *PREG_NOTIFY_CLASS;
-
-typedef NTSTATUS
-(NTAPI *PEX_CALLBACK_FUNCTION)(
-    IN PVOID CallbackContext,
-    IN PVOID Argument1,
-    IN PVOID Argument2
-);
-
-typedef struct _REG_DELETE_KEY_INFORMATION
-{
-    PVOID Object;
-} REG_DELETE_KEY_INFORMATION, *PREG_DELETE_KEY_INFORMATION;
 
 typedef struct _REG_SET_VALUE_KEY_INFORMATION
 {

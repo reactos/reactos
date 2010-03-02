@@ -28,7 +28,23 @@
 extern "C" {
 #endif
 
+#if !defined(_NTHALDLL_) && !defined(_BLDR_)
+
+#define NTHALAPI DECLSPEC_IMPORT
+
+#else
+
+#define NTHALAPI
+
+#endif
+
 #define NTKERNELAPI DECLSPEC_IMPORT
+
+#if defined(_WIN64)
+#define POINTER_ALIGNMENT DECLSPEC_ALIGN(8)
+#else
+#define POINTER_ALIGNMENT
+#endif
 
 #ifdef _WIN64
 #define PORT_MAXIMUM_MESSAGE_LENGTH 512
@@ -947,6 +963,21 @@ InterlockedPushEntrySList(
 
 #define PROCESSOR_FEATURE_MAX 64
 
+typedef enum _TRACE_INFORMATION_CLASS {
+  TraceIdClass,
+  TraceHandleClass,
+  TraceEnableFlagsClass,
+  TraceEnableLevelClass,
+  GlobalLoggerHandleClass,
+  EventLoggerHandleClass,
+  AllLoggerHandlesClass,
+  TraceHandleByNameClass,
+  LoggerEventsLostClass,
+  TraceSessionSettingsClass,
+  LoggerEventsLoggedClass,
+  MaxTraceInformationClass
+} TRACE_INFORMATION_CLASS;
+
 typedef enum _KINTERRUPT_POLARITY {
   InterruptPolarityUnknown,
   InterruptActiveHigh,
@@ -1384,6 +1415,8 @@ typedef struct _PNP_BUS_INFORMATION {
   MDL_SYSTEM_VA               | \
   MDL_IO_SPACE)
 
+#define FLUSH_MULTIPLE_MAXIMUM 32
+
 typedef struct _MDL {
     struct _MDL *Next;
     CSHORT Size;
@@ -1394,6 +1427,39 @@ typedef struct _MDL {
     ULONG ByteCount;
     ULONG ByteOffset;
 } MDL, *PMDL;
+
+typedef enum _MEMORY_CACHING_TYPE_ORIG {
+  MmFrameBufferCached = 2
+} MEMORY_CACHING_TYPE_ORIG;
+
+typedef enum _MEMORY_CACHING_TYPE {
+  MmNonCached = FALSE,
+  MmCached = TRUE,
+  MmWriteCombined = MmFrameBufferCached,
+  MmHardwareCoherentCached,
+  MmNonCachedUnordered,
+  MmUSWCCached,
+  MmMaximumCacheType
+} MEMORY_CACHING_TYPE;
+
+typedef enum _MM_PAGE_PRIORITY {
+  LowPagePriority,
+  NormalPagePriority = 16,
+  HighPagePriority = 32
+} MM_PAGE_PRIORITY;
+
+typedef enum _LOCK_OPERATION {
+  IoReadAccess,
+  IoWriteAccess,
+  IoModifyAccess
+} LOCK_OPERATION;
+
+typedef enum _MM_SYSTEM_SIZE {
+  MmSmallSystem,
+  MmMediumSystem,
+  MmLargeSystem
+} MM_SYSTEMSIZE;
+
 
 
 /******************************************************************************
@@ -2147,6 +2213,86 @@ typedef enum _KEY_SET_INFORMATION_CLASS {
   MaxKeySetInfoClass
 } KEY_SET_INFORMATION_CLASS;
 
+typedef enum _REG_NOTIFY_CLASS {
+  RegNtDeleteKey,
+  RegNtPreDeleteKey = RegNtDeleteKey,
+  RegNtSetValueKey,
+  RegNtPreSetValueKey = RegNtSetValueKey,
+  RegNtDeleteValueKey,
+  RegNtPreDeleteValueKey = RegNtDeleteValueKey,
+  RegNtSetInformationKey,
+  RegNtPreSetInformationKey = RegNtSetInformationKey,
+  RegNtRenameKey,
+  RegNtPreRenameKey = RegNtRenameKey,
+  RegNtEnumerateKey,
+  RegNtPreEnumerateKey = RegNtEnumerateKey,
+  RegNtEnumerateValueKey,
+  RegNtPreEnumerateValueKey = RegNtEnumerateValueKey,
+  RegNtQueryKey,
+  RegNtPreQueryKey = RegNtQueryKey,
+  RegNtQueryValueKey,
+  RegNtPreQueryValueKey = RegNtQueryValueKey,
+  RegNtQueryMultipleValueKey,
+  RegNtPreQueryMultipleValueKey = RegNtQueryMultipleValueKey,
+  RegNtPreCreateKey,
+  RegNtPostCreateKey,
+  RegNtPreOpenKey,
+  RegNtPostOpenKey,
+  RegNtKeyHandleClose,
+  RegNtPreKeyHandleClose = RegNtKeyHandleClose,
+  RegNtPostDeleteKey,
+  RegNtPostSetValueKey,
+  RegNtPostDeleteValueKey,
+  RegNtPostSetInformationKey,
+  RegNtPostRenameKey,
+  RegNtPostEnumerateKey,
+  RegNtPostEnumerateValueKey,
+  RegNtPostQueryKey,
+  RegNtPostQueryValueKey,
+  RegNtPostQueryMultipleValueKey,
+  RegNtPostKeyHandleClose,
+  RegNtPreCreateKeyEx,
+  RegNtPostCreateKeyEx,
+  RegNtPreOpenKeyEx,
+  RegNtPostOpenKeyEx,
+  RegNtPreFlushKey,
+  RegNtPostFlushKey,
+  RegNtPreLoadKey,
+  RegNtPostLoadKey,
+  RegNtPreUnLoadKey,
+  RegNtPostUnLoadKey,
+  RegNtPreQueryKeySecurity,
+  RegNtPostQueryKeySecurity,
+  RegNtPreSetKeySecurity,
+  RegNtPostSetKeySecurity,
+  RegNtCallbackObjectContextCleanup,
+  RegNtPreRestoreKey,
+  RegNtPostRestoreKey,
+  RegNtPreSaveKey,
+  RegNtPostSaveKey,
+  RegNtPreReplaceKey,
+  RegNtPostReplaceKey,
+  MaxRegNtNotifyClass
+} REG_NOTIFY_CLASS, *PREG_NOTIFY_CLASS;
+
+typedef NTSTATUS
+(NTAPI *PEX_CALLBACK_FUNCTION)(
+    IN PVOID CallbackContext,
+    IN PVOID Argument1,
+    IN PVOID Argument2
+);
+
+typedef struct _REG_DELETE_KEY_INFORMATION {
+  PVOID Object;
+  PVOID CallContext;
+  PVOID ObjectContext;
+  PVOID Reserved;
+} REG_DELETE_KEY_INFORMATION, *PREG_DELETE_KEY_INFORMATION
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+, REG_FLUSH_KEY_INFORMATION, *PREG_FLUSH_KEY_INFORMATION
+#endif
+;
+
 /******************************************************************************
  *                         I/O Manager Functions                              *
  ******************************************************************************/
@@ -2536,6 +2682,20 @@ IoMapTransfer(
 
 #define MAXIMUM_VOLUME_LABEL_LENGTH       (32 * sizeof(WCHAR))
 
+typedef struct _OBJECT_HANDLE_INFORMATION {
+  ULONG HandleAttributes;
+  ACCESS_MASK GrantedAccess;
+} OBJECT_HANDLE_INFORMATION, *POBJECT_HANDLE_INFORMATION;
+
+typedef struct _CLIENT_ID {
+  HANDLE  UniqueProcess;
+  HANDLE  UniqueThread;
+} CLIENT_ID, *PCLIENT_ID;
+
+typedef VOID
+(DDKAPI *PKSTART_ROUTINE)(
+  IN PVOID  StartContext);
+
 typedef struct _VPB {
   CSHORT  Type;
   CSHORT  Size;
@@ -2725,7 +2885,31 @@ typedef enum _CREATE_FILE_TYPE {
 #define IO_REPARSE                      0x0
 #define IO_REMOUNT                      0x1
 
+typedef union _POWER_STATE {
+  SYSTEM_POWER_STATE  SystemState;
+  DEVICE_POWER_STATE  DeviceState;
+} POWER_STATE, *PPOWER_STATE;
 
+typedef enum _POWER_STATE_TYPE {
+  SystemPowerState = 0,
+  DevicePowerState
+} POWER_STATE_TYPE, *PPOWER_STATE_TYPE;
+
+typedef struct _IO_STATUS_BLOCK {
+  _ANONYMOUS_UNION union {
+    NTSTATUS  Status;
+    PVOID  Pointer;
+  } DUMMYUNIONNAME;
+  ULONG_PTR  Information;
+} IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
+
+typedef VOID
+(DDKAPI *PREQUEST_POWER_COMPLETE)(
+  IN PDEVICE_OBJECT  DeviceObject,
+  IN UCHAR  MinorFunction,
+  IN POWER_STATE  PowerState,
+  IN PVOID  Context,
+  IN PIO_STATUS_BLOCK  IoStatus);
 
 typedef struct _PCI_SLOT_NUMBER {
   union {
@@ -2737,14 +2921,6 @@ typedef struct _PCI_SLOT_NUMBER {
     ULONG  AsULONG;
   } u;
 } PCI_SLOT_NUMBER, *PPCI_SLOT_NUMBER;
-
-typedef struct _IO_STATUS_BLOCK {
-  _ANONYMOUS_UNION union {
-    NTSTATUS  Status;
-    PVOID  Pointer;
-  } DUMMYUNIONNAME;
-  ULONG_PTR  Information;
-} IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
 
 typedef VOID
 (DDKAPI *PIO_APC_ROUTINE)(
@@ -2971,16 +3147,6 @@ typedef BOOLEAN
 (DDKAPI *PPCI_IS_DEVICE_PRESENT_EX)(
   IN PVOID Context,
   IN PPCI_DEVICE_PRESENCE_PARAMETERS Parameters);
-
-typedef union _POWER_STATE {
-  SYSTEM_POWER_STATE  SystemState;
-  DEVICE_POWER_STATE  DeviceState;
-} POWER_STATE, *PPOWER_STATE;
-
-typedef enum _POWER_STATE_TYPE {
-  SystemPowerState = 0,
-  DevicePowerState
-} POWER_STATE_TYPE, *PPOWER_STATE_TYPE;
 
 typedef struct _BUS_INTERFACE_STANDARD {
   USHORT  Size;
