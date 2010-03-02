@@ -2293,6 +2293,122 @@ typedef struct _REG_DELETE_KEY_INFORMATION {
 #endif
 ;
 
+typedef struct _REG_SET_VALUE_KEY_INFORMATION {
+  PVOID Object;
+  PUNICODE_STRING ValueName;
+  ULONG TitleIndex;
+  ULONG Type;
+  PVOID Data;
+  ULONG DataSize;
+  PVOID CallContext;
+  PVOID ObjectContext;
+  PVOID Reserved;
+} REG_SET_VALUE_KEY_INFORMATION, *PREG_SET_VALUE_KEY_INFORMATION;
+
+typedef struct _REG_DELETE_VALUE_KEY_INFORMATION {
+  PVOID Object;
+  PUNICODE_STRING ValueName;
+  PVOID CallContext;
+  PVOID ObjectContext;
+  PVOID Reserved;
+} REG_DELETE_VALUE_KEY_INFORMATION, *PREG_DELETE_VALUE_KEY_INFORMATION;
+
+typedef struct _REG_SET_INFORMATION_KEY_INFORMATION {
+  PVOID Object;
+  KEY_SET_INFORMATION_CLASS KeySetInformationClass;
+  PVOID KeySetInformation;
+  ULONG KeySetInformationLength;
+  PVOID CallContext;
+  PVOID ObjectContext;
+  PVOID Reserved;
+} REG_SET_INFORMATION_KEY_INFORMATION, *PREG_SET_INFORMATION_KEY_INFORMATION;
+
+typedef struct _REG_ENUMERATE_KEY_INFORMATION {
+  PVOID Object;
+  ULONG Index;
+  KEY_INFORMATION_CLASS KeyInformationClass;
+  PVOID KeyInformation;
+  ULONG Length;
+  PULONG ResultLength;
+  PVOID CallContext;
+  PVOID ObjectContext;
+  PVOID Reserved;
+} REG_ENUMERATE_KEY_INFORMATION, *PREG_ENUMERATE_KEY_INFORMATION;
+
+typedef struct _REG_ENUMERATE_VALUE_KEY_INFORMATION {
+  PVOID Object;
+  ULONG Index;
+  KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass;
+  PVOID KeyValueInformation;
+  ULONG Length;
+  PULONG ResultLength;
+  PVOID CallContext;
+  PVOID ObjectContext;
+  PVOID Reserved;
+} REG_ENUMERATE_VALUE_KEY_INFORMATION, *PREG_ENUMERATE_VALUE_KEY_INFORMATION;
+
+typedef struct _REG_QUERY_KEY_INFORMATION {
+  PVOID Object;
+  KEY_INFORMATION_CLASS KeyInformationClass;
+  PVOID KeyInformation;
+  ULONG Length;
+  PULONG ResultLength;
+  PVOID CallContext;
+  PVOID ObjectContext;
+  PVOID Reserved;
+} REG_QUERY_KEY_INFORMATION, *PREG_QUERY_KEY_INFORMATION;
+
+typedef struct _REG_QUERY_VALUE_KEY_INFORMATION {
+  PVOID Object;
+  PUNICODE_STRING ValueName;
+  KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass;
+  PVOID KeyValueInformation;
+  ULONG Length;
+  PULONG ResultLength;
+  PVOID CallContext;
+  PVOID ObjectContext;
+  PVOID Reserved;
+} REG_QUERY_VALUE_KEY_INFORMATION, *PREG_QUERY_VALUE_KEY_INFORMATION;
+
+typedef struct _REG_QUERY_MULTIPLE_VALUE_KEY_INFORMATION {
+  PVOID Object;
+  PKEY_VALUE_ENTRY ValueEntries;
+  ULONG EntryCount;
+  PVOID ValueBuffer;
+  PULONG BufferLength;
+  PULONG RequiredBufferLength;
+  PVOID CallContext;
+  PVOID ObjectContext;
+  PVOID Reserved;
+} REG_QUERY_MULTIPLE_VALUE_KEY_INFORMATION, *PREG_QUERY_MULTIPLE_VALUE_KEY_INFORMATION;
+
+typedef struct _REG_PRE_CREATE_KEY_INFORMATION {
+  PUNICODE_STRING CompleteName;
+} REG_PRE_CREATE_KEY_INFORMATION, REG_PRE_OPEN_KEY_INFORMATION,*PREG_PRE_CREATE_KEY_INFORMATION, *PREG_PRE_OPEN_KEY_INFORMATION;;
+
+typedef struct _REG_POST_CREATE_KEY_INFORMATION {
+  PUNICODE_STRING CompleteName;
+  PVOID Object;
+  NTSTATUS Status;
+} REG_POST_CREATE_KEY_INFORMATION,REG_POST_OPEN_KEY_INFORMATION, *PREG_POST_CREATE_KEY_INFORMATION, *PREG_POST_OPEN_KEY_INFORMATION;
+
+typedef struct _REG_POST_OPERATION_INFORMATION {
+  PVOID Object;
+  NTSTATUS Status;
+  PVOID PreInformation;
+  NTSTATUS ReturnStatus;
+  PVOID CallContext;
+  PVOID ObjectContext;
+  PVOID Reserved;
+} REG_POST_OPERATION_INFORMATION,*PREG_POST_OPERATION_INFORMATION;
+
+typedef struct _REG_KEY_HANDLE_CLOSE_INFORMATION {
+  PVOID Object;
+  PVOID CallContext;
+  PVOID ObjectContext;
+  PVOID Reserved;
+} REG_KEY_HANDLE_CLOSE_INFORMATION, *PREG_KEY_HANDLE_CLOSE_INFORMATION;
+
 /******************************************************************************
  *                         I/O Manager Functions                              *
  ******************************************************************************/
