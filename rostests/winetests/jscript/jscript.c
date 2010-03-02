@@ -203,37 +203,70 @@ static const IActiveScriptSiteVtbl ActiveScriptSiteVtbl = {
 
 static IActiveScriptSite ActiveScriptSite = { &ActiveScriptSiteVtbl };
 
-static void test_script_dispatch(IActiveScript *script, BOOL initialized)
+static void test_script_dispatch(IDispatchEx *dispex)
 {
-    IDispatchEx *dispex;
-    IDispatch *disp;
+    DISPPARAMS dp = {NULL,NULL,0,0};
+    EXCEPINFO ei;
     BSTR str;
     DISPID id;
+    VARIANT v;
     HRESULT hres;
-
-    disp = (void*)0xdeadbeef;
-    hres = IActiveScript_GetScriptDispatch(script, NULL, &disp);
-    if(!initialized) {
-        ok(hres == E_UNEXPECTED, "hres = %08x, expected E_UNEXPECTED\n", hres);
-        ok(!disp, "disp != NULL\n");
-        return;
-    }
-
-    ok(hres == S_OK, "GetScriptDispatch failed: %08x\n", hres);
-    if(FAILED(hres))
-        return;
-
-    ok(disp != NULL, "disp == NULL\n");
-    hres = IDispatch_QueryInterface(disp, &IID_IDispatchEx, (void**)&dispex);
-    IDispatch_Release(disp);
-    ok(hres == S_OK, "Could not get IDispatchEx interface: %08x\n", hres);
 
     str = a2bstr("ActiveXObject");
     hres = IDispatchEx_GetDispID(dispex, str, fdexNameCaseSensitive, &id);
     SysFreeString(str);
     ok(hres == S_OK, "GetDispID failed: %08x\n", hres);
 
-    IDispatchEx_Release(dispex);
+    str = a2bstr("Math");
+    hres = IDispatchEx_GetDispID(dispex, str, fdexNameCaseSensitive, &id);
+    SysFreeString(str);
+    ok(hres == S_OK, "GetDispID failed: %08x\n", hres);
+
+    memset(&ei, 0, sizeof(ei));
+    hres = IDispatchEx_InvokeEx(dispex, id, 0, DISPATCH_PROPERTYGET, &dp, &v, &ei, NULL);
+    ok(hres == S_OK, "InvokeEx failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_DISPATCH, "V_VT(v) = %d\n", V_VT(&v));
+    ok(V_DISPATCH(&v) != NULL, "V_DISPATCH(v) = NULL\n");
+    VariantClear(&v);
+
+    str = a2bstr("String");
+    hres = IDispatchEx_GetDispID(dispex, str, fdexNameCaseSensitive, &id);
+    SysFreeString(str);
+    ok(hres == S_OK, "GetDispID failed: %08x\n", hres);
+
+    memset(&ei, 0, sizeof(ei));
+    hres = IDispatchEx_InvokeEx(dispex, id, 0, DISPATCH_PROPERTYGET, &dp, &v, &ei, NULL);
+    ok(hres == S_OK, "InvokeEx failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_DISPATCH, "V_VT(v) = %d\n", V_VT(&v));
+    ok(V_DISPATCH(&v) != NULL, "V_DISPATCH(v) = NULL\n");
+    VariantClear(&v);
+}
+
+static IDispatchEx *get_script_dispatch(IActiveScript *script)
+{
+    IDispatchEx *dispex;
+    IDispatch *disp;
+    HRESULT hres;
+
+    disp = (void*)0xdeadbeef;
+    hres = IActiveScript_GetScriptDispatch(script, NULL, &disp);
+    ok(hres == S_OK, "GetScriptDispatch failed: %08x\n", hres);
+
+    IDispatch_QueryInterface(disp, &IID_IDispatchEx, (void**)&dispex);
+    IDispatch_Release(disp);
+    ok(hres == S_OK, "Could not get IDispatch iface: %08x\n", hres);
+    return dispex;
+}
+
+static void test_no_script_dispatch(IActiveScript *script)
+{
+    IDispatch *disp;
+    HRESULT hres;
+
+    disp = (void*)0xdeadbeef;
+    hres = IActiveScript_GetScriptDispatch(script, NULL, &disp);
+    ok(hres == E_UNEXPECTED, "hres = %08x, expected E_UNEXPECTED\n", hres);
+    ok(!disp, "disp != NULL\n");
 }
 
 static void test_safety(IUnknown *unk)
@@ -295,10 +328,54 @@ static void test_safety(IUnknown *unk)
     IObjectSafety_Release(safety);
 }
 
+static HRESULT set_script_prop(IActiveScript *engine, DWORD property, VARIANT *val)
+{
+    IActiveScriptProperty *script_prop;
+    HRESULT hres;
+
+    hres = IActiveScript_QueryInterface(engine, &IID_IActiveScriptProperty,
+            (void**)&script_prop);
+    ok(hres == S_OK, "Could not get IActiveScriptProperty iface: %08x\n", hres);
+
+    hres = IActiveScriptProperty_SetProperty(script_prop, property, NULL, val);
+    IActiveScriptProperty_Release(script_prop);
+    return hres;
+}
+
+static void test_invoke_versioning(IActiveScript *script)
+{
+    VARIANT v;
+    HRESULT hres;
+
+    V_VT(&v) = VT_NULL;
+    hres = set_script_prop(script, SCRIPTPROP_INVOKEVERSIONING, &v);
+    if(hres == E_NOTIMPL) {
+        win_skip("SCRIPTPROP_INVOKESTRING not supported\n");
+        return;
+    }
+    ok(hres == E_INVALIDARG, "SetProperty(SCRIPTPROP_INVOKEVERSIONING) failed: %08x\n", hres);
+
+    V_VT(&v) = VT_I2;
+    V_I2(&v) = 0;
+    hres = set_script_prop(script, SCRIPTPROP_INVOKEVERSIONING, &v);
+    ok(hres == E_INVALIDARG, "SetProperty(SCRIPTPROP_INVOKEVERSIONING) failed: %08x\n", hres);
+
+    V_VT(&v) = VT_I4;
+    V_I4(&v) = 16;
+    hres = set_script_prop(script, SCRIPTPROP_INVOKEVERSIONING, &v);
+    ok(hres == E_INVALIDARG, "SetProperty(SCRIPTPROP_INVOKEVERSIONING) failed: %08x\n", hres);
+
+    V_VT(&v) = VT_I4;
+    V_I4(&v) = 2;
+    hres = set_script_prop(script, SCRIPTPROP_INVOKEVERSIONING, &v);
+    ok(hres == S_OK, "SetProperty(SCRIPTPROP_INVOKEVERSIONING) failed: %08x\n", hres);
+}
+
 static void test_jscript(void)
 {
     IActiveScriptParse *parse;
     IActiveScript *script;
+    IDispatchEx *dispex;
     IUnknown *unk;
     ULONG ref;
     HRESULT hres;
@@ -322,6 +399,7 @@ static void test_jscript(void)
 
     test_state(script, SCRIPTSTATE_UNINITIALIZED);
     test_safety(unk);
+    test_invoke_versioning(script);
 
     hres = IActiveScriptParse64_InitNew(parse);
     ok(hres == S_OK, "InitNew failed: %08x\n", hres);
@@ -333,7 +411,7 @@ static void test_jscript(void)
     ok(hres == E_POINTER, "SetScriptSite failed: %08x, expected E_POINTER\n", hres);
 
     test_state(script, SCRIPTSTATE_UNINITIALIZED);
-    test_script_dispatch(script, FALSE);
+    test_no_script_dispatch(script);
 
     SET_EXPECT(GetLCID);
     SET_EXPECT(OnStateChange_INITIALIZED);
@@ -347,7 +425,8 @@ static void test_jscript(void)
     hres = IActiveScript_SetScriptSite(script, &ActiveScriptSite);
     ok(hres == E_UNEXPECTED, "SetScriptSite failed: %08x, expected E_UNEXPECTED\n", hres);
 
-    test_script_dispatch(script, TRUE);
+    dispex = get_script_dispatch(script);
+    test_script_dispatch(dispex);
 
     SET_EXPECT(OnStateChange_STARTED);
     hres = IActiveScript_SetScriptState(script, SCRIPTSTATE_STARTED);
@@ -362,7 +441,9 @@ static void test_jscript(void)
     CHECK_CALLED(OnStateChange_CLOSED);
 
     test_state(script, SCRIPTSTATE_CLOSED);
-    test_script_dispatch(script, FALSE);
+    test_no_script_dispatch(script);
+    test_script_dispatch(dispex);
+    IDispatchEx_Release(dispex);
 
     IUnknown_Release(parse);
     IActiveScript_Release(script);
@@ -430,7 +511,7 @@ static void test_jscript2(void)
     CHECK_CALLED(OnStateChange_CLOSED);
 
     test_state(script, SCRIPTSTATE_CLOSED);
-    test_script_dispatch(script, FALSE);
+    test_no_script_dispatch(script);
 
     IUnknown_Release(parse);
     IActiveScript_Release(script);

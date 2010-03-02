@@ -109,8 +109,14 @@ ok(typeof(this) === "object", "typeof(this) is not object");
 
 ok(testFunc1(true, "test") === true, "testFunc1 not returned true");
 
+tmp = (function() {1;})();
+ok(tmp === undefined, "tmp = " + tmp);
+tmp = eval("1;");
+ok(tmp === 1, "tmp = " + tmp);
+
 var obj1 = new Object();
 ok(typeof(obj1) === "object", "typeof(obj1) is not object");
+ok(obj1.constructor === Object, "unexpected obj1.constructor");
 obj1.test = true;
 obj1.func = function () {
     ok(this === obj1, "this is not obj1");
@@ -139,6 +145,7 @@ testConstr1.prototype.pvar = 1;
 
 var obj2 = new testConstr1(true);
 ok(typeof(obj2) === "object", "typeof(obj2) is not object");
+ok(obj2.constructor === testConstr1, "unexpected obj2.constructor");
 ok(obj2.pvar === 1, "obj2.pvar is not 1");
 
 testConstr1.prototype.pvar = 2;
@@ -147,6 +154,21 @@ ok(obj2.pvar === 2, "obj2.pvar is not 2");
 obj2.pvar = 3;
 testConstr1.prototype.pvar = 1;
 ok(obj2.pvar === 3, "obj2.pvar is not 3");
+
+obj1 = new Object();
+function testConstr3() {
+    return obj1;
+}
+
+obj2 = new testConstr3();
+ok(obj1 === obj2, "obj1 != obj2");
+
+function testConstr4() {
+    return 2;
+}
+
+obj2 = new testConstr3();
+ok(typeof(obj2) === "object", "typeof(obj2) = " + typeof(obj2));
 
 var obj3 = new Object;
 ok(typeof(obj3) === "object", "typeof(obj3) is not object");
@@ -189,6 +211,7 @@ if(false) {
 var obj3 = { prop1: 1,  prop2: typeof(false) };
 ok(obj3.prop1 === 1, "obj3.prop1 is not 1");
 ok(obj3.prop2 === "boolean", "obj3.prop2 is not \"boolean\"");
+ok(obj3.constructor === Object, "unexpected obj3.constructor");
 
 {
     var blockVar = 1;
@@ -326,6 +349,15 @@ tmp = -3.5 | 0;
 ok(tmp === -3, "-3.5 | 0 !== -3");
 ok(getVT(tmp) === "VT_I4", "getVT(3.5|0) = " + getVT(tmp));
 
+tmp = 0 | NaN;
+ok(tmp === 0, "0 | NaN = " + tmp);
+
+tmp = 0 | Infinity;
+ok(tmp === 0, "0 | NaN = " + tmp);
+
+tmp = 0 | (-Infinity);
+ok(tmp === 0, "0 | NaN = " + tmp);
+
 tmp = 10;
 ok((tmp |= 0x10) === 26, "tmp(10) |= 0x10 !== 26");
 ok(getVT(tmp) === "VT_I4", "getVT(tmp |= 10) = " + getVT(tmp));
@@ -360,6 +392,9 @@ ok(tmp === 2, "8 >> 2 = " + tmp);
 tmp = -64 >>> 4;
 ok(tmp === 0x0ffffffc, "-64 >>> 4 = " + tmp);
 
+tmp = 4 >>> NaN;
+ok(tmp === 4, "4 >>> NaN = " + tmp);
+
 tmp = 10;
 ok((tmp &= 8) === 8, "tmp(10) &= 8 !== 8");
 ok(getVT(tmp) === "VT_I4", "getVT(tmp &= 8) = " + getVT(tmp));
@@ -390,8 +425,10 @@ ok(+"3e3" === 3000, "+'3e3' !== 3000");
 
 tmp = new Number(1);
 ok(+tmp === 1, "+(new Number(1)) = " + (+tmp));
+ok(tmp.constructor === Number, "unexpected tmp.constructor");
 tmp = new String("1");
 ok(+tmp === 1, "+(new String('1')) = " + (+tmp));
+ok(tmp.constructor === String, "unexpected tmp.constructor");
 
 ok("" + 0 === "0", "\"\" + 0 !== \"0\"");
 ok("" + 123 === "123", "\"\" + 123 !== \"123\"");
@@ -831,6 +868,13 @@ ok(("1" in obj) === false, "1 is in obj");
 obj = [1,2,3];
 ok((1 in obj) === true, "1 is not in obj");
 
+obj = new Object();
+try {
+    obj.prop["test"];
+    ok(false, "expected exception");
+}catch(e) {}
+ok(!("prop" in obj), "prop in obj");
+
 ok(isNaN(NaN) === true, "isNaN(NaN) !== true");
 ok(isNaN(0.5) === false, "isNaN(0.5) !== false");
 ok(isNaN(Infinity) === false, "isNaN(Infinity) !== false");
@@ -934,6 +978,11 @@ ok((function (){return 1;})() === 1, "(function (){return 1;})() = " + (function
 var re = /=(\?|%3F)/g;
 ok(re.source === "=(\\?|%3F)", "re.source = " + re.source);
 
+tmp = new Array();
+for(var i=0; i<2; i++)
+    tmp[i] = /b/;
+ok(tmp[0] != tmp[1], "tmp[0] == tmp [1]");
+
 ok(createNullBSTR() === '', "createNullBSTR() !== ''");
 
 ok(getVT(nullDisp) === "VT_DISPATCH", "getVT(nullDisp) = " + getVT(nullDisp));
@@ -968,5 +1017,11 @@ ok(typeof(doesnotexist) === "undefined", "typeof(doesnotexist) = " + typeof(does
 
 (function() { newValue = 1; })();
 ok(newValue === 1, "newValue = " + newValue);
+
+obj = {undefined: 3};
+
+/* Keep this test in the end of file */
+undefined = 6;
+ok(undefined === 6, "undefined = " + undefined);
 
 reportSuccess();

@@ -17,7 +17,7 @@
  */
 
 
-var m, re, b;
+var m, re, b, i, obj;
 
 re = /a+/;
 ok(re.lastIndex === 0, "re.lastIndex = " + re.lastIndex);
@@ -71,6 +71,11 @@ m = re.exec();
 ok(m === null, "m is not null");
 ok(re.lastIndex === 0, "re.lastIndex = " + re.lastIndex);
 
+m = /(a|b)+|(c)/.exec("aa");
+ok(m[0] === "aa", "m[0] = " + m[0]);
+ok(m[1] === "a", "m[1] = " + m[1]);
+ok(m[2] === "", "m[2] = " + m[2]);
+
 b = re.test("  a ");
 ok(b === true, "re.test('  a ') returned " + b);
 ok(re.lastIndex === 3, "re.lastIndex = " + re.lastIndex);
@@ -91,10 +96,12 @@ ok(m[1] === "test", "m[1] = " + m[1]);
 b = /a*/.test();
 ok(b === true, "/a*/.test() returned " + b);
 
-m = "abcabc".match(/ca/);
+m = "abcabc".match(re = /ca/);
 ok(typeof(m) === "object", "typeof m is not object");
 ok(m.length === 1, "m.length is not 1");
 ok(m["0"] === "ca", "m[0] is not \"ca\"");
+ok(m.constructor === Array, "unexpected m.constructor");
+ok(re.lastIndex === 4, "re.lastIndex = " + re.lastIndex);
 
 m = "abcabc".match(/ab/);
 ok(typeof(m) === "object", "typeof m is not object");
@@ -160,8 +167,9 @@ ok(m["0"] === "ab", "m[0] is not \"ab\"");
 m = "abcabc".match();
 ok(m === null, "m is not null");
 
-r = "- [test] -".replace(/\[([^\[]+)\]/g, "success");
+r = "- [test] -".replace(re = /\[([^\[]+)\]/g, "success");
 ok(r === "- success -", "r = " + r + " expected '- success -'");
+ok(re.lastIndex === 8, "re.lastIndex = " + re.lastIndex);
 
 r = "[test] [test]".replace(/\[([^\[]+)\]/g, "aa");
 ok(r === "aa aa", "r = " + r + "aa aa");
@@ -280,6 +288,41 @@ ok(r.length === 2, "r.length = " + r.length);
 ok(r[0] === "1", "r[0] = " + r[0]);
 ok(r[1] === "2", "r[1] = " + r[1]);
 
+re = /,+/;
+r = "1,,2,".split(re);
+ok(r.length === 2, "r.length = " + r.length);
+ok(r[0] === "1", "r[0] = " + r[0]);
+ok(r[1] === "2", "r[1] = " + r[1]);
+ok(re.lastIndex === 5, "re.lastIndex = " + re.lastIndex);
+
+re = /,+/g;
+r = "1,,2,".split(re);
+ok(r.length === 2, "r.length = " + r.length);
+ok(r[0] === "1", "r[0] = " + r[0]);
+ok(r[1] === "2", "r[1] = " + r[1]);
+ok(re.lastIndex === 5, "re.lastIndex = " + re.lastIndex);
+
+r = "1 12 \t3".split(re = /\s+/).join(";");
+ok(r === "1;12;3", "r = " + r);
+ok(re.lastIndex === 6, "re.lastIndex = " + re.lastIndex);
+
+r = "123".split(re = /\s+/).join(";");
+ok(r === "123", "r = " + r);
+ok(re.lastIndex === 0, "re.lastIndex = " + re.lastIndex);
+
+/* another standard violation */
+r = "1 12 \t3".split(re = /(\s)+/g).join(";");
+ok(r === "1;12;3", "r = " + r);
+ok(re.lastIndex === 6, "re.lastIndex = " + re.lastIndex);
+
+re = /,+/;
+re.lastIndex = 4;
+r = "1,,2,".split(re);
+ok(r.length === 2, "r.length = " + r.length);
+ok(r[0] === "1", "r[0] = " + r[0]);
+ok(r[1] === "2", "r[1] = " + r[1]);
+ok(re.lastIndex === 5, "re.lastIndex = " + re.lastIndex);
+
 re = /abc[^d]/g;
 ok(re.source === "abc[^d]", "re.source = '" + re.source + "', expected 'abc[^d]'");
 
@@ -297,5 +340,118 @@ ok(re === RegExp(re, undefined), "re !== RegExp(re, undefined)");
 
 re = /abc/;
 ok(re === RegExp(re, undefined, 1), "re !== RegExp(re, undefined, 1)");
+
+re = /a/g;
+ok(re.lastIndex === 0, "re.lastIndex = " + re.lastIndex + " expected 0");
+
+m = re.exec(" a   ");
+ok(re.lastIndex === 2, "re.lastIndex = " + re.lastIndex + " expected 2");
+ok(m.index === 1, "m.index = " + m.index + " expected 1");
+
+m = re.exec(" a   ");
+ok(re.lastIndex === 0, "re.lastIndex = " + re.lastIndex + " expected 0");
+ok(m === null, "m = " + m + " expected null");
+
+re.lastIndex = 2;
+m = re.exec(" a a ");
+ok(re.lastIndex === 4, "re.lastIndex = " + re.lastIndex + " expected 4");
+ok(m.index === 3, "m.index = " + m.index + " expected 3");
+
+re.lastIndex = "2";
+ok(re.lastIndex === "2", "re.lastIndex = " + re.lastIndex + " expected '2'");
+m = re.exec(" a a ");
+ok(re.lastIndex === 4, "re.lastIndex = " + re.lastIndex + " expected 4");
+ok(m.index === 3, "m.index = " + m.index + " expected 3");
+
+var li = 0;
+var obj = new Object();
+obj.valueOf = function() { return li; };
+
+re.lastIndex = obj;
+ok(re.lastIndex === obj, "re.lastIndex = " + re.lastIndex + " expected obj");
+li = 2;
+m = re.exec(" a a ");
+ok(re.lastIndex === 2, "re.lastIndex = " + re.lastIndex + " expected 2");
+ok(m.index === 1, "m.index = " + m.index + " expected 1");
+
+re.lastIndex = 3;
+re.lastIndex = "test";
+ok(re.lastIndex === "test", "re.lastIndex = " + re.lastIndex + " expected 'test'");
+m = re.exec(" a a ");
+ok(re.lastIndex === 2 || re.lastIndex === 0, "re.lastIndex = " + re.lastIndex + " expected 2 or 0");
+if(re.lastIndex != 0)
+    ok(m.index === 1, "m.index = " + m.index + " expected 1");
+else
+    ok(m === null, "m = " + m + " expected null");
+
+re.lastIndex = 0;
+re.lastIndex = 3.9;
+ok(re.lastIndex === 3.9, "re.lastIndex = " + re.lastIndex + " expected 3.9");
+m = re.exec(" a a ");
+ok(re.lastIndex === 4, "re.lastIndex = " + re.lastIndex + " expected 4");
+ok(m.index === 3, "m.index = " + m.index + " expected 3");
+
+obj.valueOf = function() { throw 0; }
+re.lastIndex = obj;
+ok(re.lastIndex === obj, "unexpected re.lastIndex");
+m = re.exec(" a a ");
+ok(re.lastIndex === 2, "re.lastIndex = " + re.lastIndex + " expected 2");
+ok(m.index === 1, "m.index = " + m.index + " expected 1");
+
+re.lastIndex = -3;
+ok(re.lastIndex === -3, "re.lastIndex = " + re.lastIndex + " expected -3");
+m = re.exec(" a a ");
+ok(re.lastIndex === 0, "re.lastIndex = " + re.lastIndex + " expected 0");
+ok(m === null, "m = " + m + " expected null");
+
+re.lastIndex = -1;
+ok(re.lastIndex === -1, "re.lastIndex = " + re.lastIndex + " expected -1");
+m = re.exec("  ");
+ok(re.lastIndex === 0, "re.lastIndex = " + re.lastIndex + " expected 0");
+ok(m === null, "m = " + m + " expected null");
+
+re = /aa/g;
+i = 'baacd'.search(re);
+ok(i === 1, "'baacd'.search(re) = " + i);
+ok(re.lastIndex === 3, "re.lastIndex = " + re.lastIndex);
+
+re.lastIndex = 2;
+i = 'baacdaa'.search(re);
+ok(i === 1, "'baacd'.search(re) = " + i);
+ok(re.lastIndex === 3, "re.lastIndex = " + re.lastIndex);
+
+re = /aa/;
+i = 'baacd'.search(re);
+ok(i === 1, "'baacd'.search(re) = " + i);
+ok(re.lastIndex === 3, "re.lastIndex = " + re.lastIndex);
+
+re.lastIndex = 2;
+i = 'baacdaa'.search(re);
+ok(i === 1, "'baacd'.search(re) = " + i);
+ok(re.lastIndex === 3, "re.lastIndex = " + re.lastIndex);
+
+re = /d/g;
+re.lastIndex = 1;
+i = 'abc'.search(re);
+ok(i === -1, "'abc'.search(/d/g) = " + i);
+ok(re.lastIndex === 0, "re.lastIndex = " + re.lastIndex);
+
+i = 'abcdde'.search(/[df]/);
+ok(i === 3, "'abc'.search(/[df]/) = " + i);
+
+i = 'abcdde'.search(/[df]/, "a");
+ok(i === 3, "'abc'.search(/[df]/) = " + i);
+
+i = 'abcdde'.search("[df]");
+ok(i === 3, "'abc'.search(/d*/) = " + i);
+
+obj = {
+    toString: function() { return "abc"; }
+};
+i = String.prototype.search.call(obj, "b");
+ok(i === 1, "String.prototype.seatch.apply(obj, 'b') = " + i);
+
+i = " undefined ".search();
+ok(i === null, "' undefined '.search() = " + i);
 
 reportSuccess();

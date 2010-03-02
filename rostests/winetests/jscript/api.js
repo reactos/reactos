@@ -58,6 +58,47 @@ ok(tmp === "undefined", "encodeURI() = " + tmp);
 tmp = encodeURI("abc", "test");
 ok(tmp === "abc", "encodeURI('abc') = " + tmp);
 
+tmp = encodeURIComponent("abc");
+ok(tmp === "abc", "encodeURIComponent('abc') = " + tmp);
+dec = decodeURIComponent(tmp);
+ok(dec === "abc", "decodeURIComponent('" + tmp + "') = " + dec);
+tmp = encodeURIComponent("{abc}");
+ok(tmp === "%7Babc%7D", "encodeURIComponent('{abc}') = " + tmp);
+dec = decodeURIComponent(tmp);
+ok(dec === "{abc}", "decodeURIComponent('" + tmp + "') = " + dec);
+tmp = encodeURIComponent("");
+ok(tmp === "", "encodeURIComponent('') = " + tmp);
+dec = decodeURIComponent(tmp);
+ok(dec === "", "decodeURIComponent('" + tmp + "') = " + dec);
+tmp = encodeURIComponent("\01\02\03\04");
+ok(tmp === "%01%02%03%04", "encodeURIComponent('\\01\\02\\03\\04') = " + tmp);
+dec = decodeURIComponent(tmp);
+ok(dec === "\01\02\03\04", "decodeURIComponent('" + tmp + "') = " + dec);
+tmp = encodeURIComponent("{#@}");
+ok(tmp === "%7B%23%40%7D", "encodeURIComponent('{#@}') = " + tmp);
+dec = decodeURIComponent(tmp);
+ok(dec === "{#@}", "decodeURIComponent('" + tmp + "') = " + dec);
+tmp = encodeURIComponent("\xa1 ");
+ok(tmp === "%C2%A1%20", "encodeURIComponent(\\xa1 ) = " + tmp);
+dec = decodeURIComponent(tmp);
+ok(dec === "\xa1 ", "decodeURIComponent('" + tmp + "') = " + dec);
+tmp = encodeURIComponent("\xffff");
+ok(tmp.length === 8, "encodeURIComponent('\\xffff').length = " + tmp.length);
+dec = decodeURIComponent(tmp);
+ok(dec === "\xffff", "decodeURIComponent('" + tmp + "') = " + dec);
+tmp = encodeURIComponent("abcABC123;/?:@&=+$,-_.!~*'()");
+ok(tmp === "abcABC123%3B%2F%3F%3A%40%26%3D%2B%24%2C-_.!~*'()", "encodeURIComponent('abcABC123;/?:@&=+$,-_.!~*'()') = " + tmp);
+dec = decodeURIComponent(tmp);
+ok(dec === "abcABC123;/?:@&=+$,-_.!~*'()", "decodeURIComponent('" + tmp + "') = " + dec);
+tmp = encodeURIComponent();
+ok(tmp === "undefined", "encodeURIComponent() = " + tmp);
+tmp = encodeURIComponent("abc", "test");
+ok(tmp === "abc", "encodeURIComponent('abc') = " + tmp);
+dec = decodeURIComponent();
+ok(dec === "undefined", "decodeURIComponent() = " + dec);
+dec = decodeURIComponent("abc", "test");
+ok(dec === "abc", "decodeURIComponent('abc') = " + dec);
+
 tmp = escape("abc");
 ok(tmp === "abc", "escape('abc') = " + tmp);
 tmp = escape("");
@@ -190,6 +231,8 @@ tmp = "abc".charAt(-1);
 ok(tmp === "", "'abc',charAt(-1) = " + tmp);
 tmp = "abc".charAt(0,2);
 ok(tmp === "a", "'abc',charAt(0.2) = " + tmp);
+tmp = "abc".charAt(NaN);
+ok(tmp === "a", "'abc',charAt(NaN) = " + tmp);
 
 tmp = "abc".charCodeAt(0);
 ok(tmp === 0x61, "'abc'.charCodeAt(0) = " + tmp);
@@ -575,6 +618,12 @@ ok(arr.push(true, 'b', false) === 10, "arr.push(true, 'b', false) !== 10");
 ok(arr[8] === "b", "arr[8] != 'b'");
 ok(arr.length === 10, "arr.length != 10");
 
+arr.pop = Array.prototype.pop;
+ok(arr.pop() === false, "arr.pop() !== false");
+ok(arr[8] === "b", "arr[8] !== 'b'");
+ok(arr.pop() === 'b', "arr.pop() !== 'b'");
+ok(arr[8] === undefined, "arr[8] !== undefined");
+
 arr = [3,4,5];
 tmp = arr.pop();
 ok(arr.length === 2, "arr.length = " + arr.length);
@@ -587,6 +636,11 @@ ok(arr.length === 0, "arr.length = " + arr.length);
 ok(tmp === 3, "pop() = " + tmp);
 for(tmp in arr)
     ok(false, "not deleted " + tmp);
+tmp = arr.pop();
+ok(arr.length === 0, "arr.length = " + arr.length);
+ok(tmp === undefined, "tmp = " + tmp);
+arr = new Object();
+arr.pop = Array.prototype.pop;
 tmp = arr.pop();
 ok(arr.length === 0, "arr.length = " + arr.length);
 ok(tmp === undefined, "tmp = " + tmp);
@@ -611,6 +665,16 @@ ok(tmp === "1,2,,false,,,a", "arr.toString() = " + tmp);
 tmp = arr.toString("test");
 ok(tmp === "1,2,,false,,,a", "arr.toString() = " + tmp);
 
+arr = new Object();
+arr.length = 3;
+arr[0] = "aa";
+arr[2] = 2;
+arr[7] = 3;
+arr.join = Array.prototype.join;
+tmp = arr.join(",");
+ok(arr.length === 3, "arr.length = " + arr.length);
+ok(tmp === "aa,,2", "tmp = " + tmp);
+
 arr = [5,true,2,-1,3,false,"2.5"];
 tmp = arr.sort(function(x,y) { return y-x; });
 ok(tmp === arr, "tmp !== arr");
@@ -631,6 +695,15 @@ ok(arr.sort() === arr, "arr.sort() !== arr");
 for(var i=0; i < arr.length; i++)
     ok(arr[i] === tmp[i], "arr[" + i + "] = " + arr[i] + " expected " + tmp[i]);
 
+arr = new Object();
+arr.length = 3;
+arr[0] = 1;
+arr[2] = "aa";
+arr.sort = Array.prototype.sort;
+tmp = arr.sort();
+ok(arr === tmp, "tmp !== arr");
+ok(arr[0]===1 && arr[1]==="aa" && arr[2]===undefined, "arr is sorted incorectly");
+
 arr = ["1", "2", "3"];
 arr.length = 1;
 ok(arr.length === 1, "arr.length = " + arr.length);
@@ -645,8 +718,33 @@ ok(arr.valueOf === Object.prototype.valueOf, "arr.valueOf !== Object.prototype.v
 ok(arr === arr.valueOf(), "arr !== arr.valueOf");
 
 arr = [1,2,3];
+tmp = arr.reverse();
+ok(tmp === arr, "tmp !== arr");
+ok(arr.length === 3, "arr.length = " + arr.length);
+ok(arr.toString() === "3,2,1", "arr.toString() = " + arr.toString());
+
+arr = [];
+arr[3] = 5;
+arr[5] = 1;
+tmp = arr.reverse();
+ok(tmp === arr, "tmp !== arr");
+ok(arr.length === 6, "arr.length = " + arr.length);
+ok(arr.toString() === "1,,5,,,", "arr.toString() = " + arr.toString());
+
+arr = new Object();
+arr.length = 3;
+arr[0] = "aa";
+arr[2] = 2;
+arr[7] = 3;
+arr.reverse = Array.prototype.reverse;
+tmp = arr.reverse();
+ok(tmp === arr, "tmp !== arr");
+ok(arr.length === 3, "arr.length = " + arr.length);
+ok(arr[0] === 2 && arr[1] === undefined && arr[2] === "aa", "unexpected array");
+
+arr = [1,2,3];
 tmp = arr.unshift(0);
-ok(tmp === undefined, "[1,2,3].unshift(0) returned " +tmp);
+ok(tmp === (invokeVersion < 2 ? undefined : 4), "[1,2,3].unshift(0) returned " +tmp);
 ok(arr.length === 4, "arr.length = " + arr.length);
 ok(arr.toString() === "0,1,2,3", "arr.toString() = " + arr.toString());
 
@@ -654,13 +752,13 @@ arr = new Array(3);
 arr[0] = 1;
 arr[2] = 3;
 tmp = arr.unshift(-1,0);
-ok(tmp === undefined, "unshift returned " +tmp);
+ok(tmp === (invokeVersion < 2 ? undefined : 5), "unshift returned " +tmp);
 ok(arr.length === 5, "arr.length = " + arr.length);
 ok(arr.toString() === "-1,0,1,,3", "arr.toString() = " + arr.toString());
 
 arr = [1,2,3];
 tmp = arr.unshift();
-ok(tmp === undefined, "unshift returned " +tmp);
+ok(tmp === (invokeVersion < 2 ? undefined : 3), "unshift returned " +tmp);
 ok(arr.length === 3, "arr.length = " + arr.length);
 ok(arr.toString() === "1,2,3", "arr.toString() = " + arr.toString());
 
@@ -669,7 +767,7 @@ arr.length = 2;
 arr[0] = 1;
 arr[1] = 2;
 tmp = Array.prototype.unshift.call(arr, 0);
-ok(tmp === undefined, "unshift returned " +tmp);
+ok(tmp === (invokeVersion < 2 ? undefined : 3), "unshift returned " +tmp);
 ok(arr.length === 3, "arr.length = " + arr.length);
 ok(arr[0] === 0 && arr[1] === 1 && arr[2] === 2, "unexpected array");
 
@@ -1374,13 +1472,64 @@ callTest2.apply(tmp);
 (function () { callTest2.apply(tmp, arguments); })();
 
 function callTest3() {
+    testThis(this);
     ok(arguments.length === 0, "arguments.length = " + arguments.length + " expected 0");
 }
 
 callTest3.call();
+callTest3.call(undefined);
+callTest3.call(null);
+callTest3.apply();
+callTest3.apply(undefined);
+callTest3.apply(null);
 
 tmp = Number.prototype.toString.call(3);
 ok(tmp === "3", "Number.prototype.toString.call(3) = " + tmp);
+
+var func = new Function("return 3;");
+
+tmp = func();
+ok(tmp === 3, "func() = " + tmp);
+ok(func.call() === 3, "func.call() = " + tmp);
+ok(func.length === 0, "func.length = " + func.length);
+tmp = func.toString();
+ok(tmp === "function anonymous() {\nreturn 3;\n}", "func.toString() = " + tmp);
+
+func = new Function("x", "return x+2;");
+tmp = func(1);
+ok(tmp === 3, "func(1) = " + tmp);
+tmp = func.toString();
+ok(tmp === "function anonymous(x) {\nreturn x+2;\n}", "func.toString() = " + tmp);
+
+tmp = (new Function("x ", "return x+2;")).toString();
+ok(tmp === "function anonymous(x ) {\nreturn x+2;\n}", "func.toString() = " + tmp);
+
+func = new Function("x", "y", "return x+y");
+tmp = func(1,3);
+ok(tmp === 4, "func(1,3) = " + tmp);
+tmp = func.toString();
+ok(tmp === "function anonymous(x, y) {\nreturn x+y\n}", "func.toString() = " + tmp);
+
+func = new Function(" x, \ty", "\tz", "return x+y+z;");
+tmp = func(1,3,2);
+ok(tmp === 6, "func(1,3,2) = " + tmp);
+ok(func.length === 3, "func.length = " + func.length);
+tmp = func.toString();
+ok(tmp === "function anonymous( x, \ty, \tz) {\nreturn x+y+z;\n}", "func.toString() = " + tmp);
+
+func = new Function();
+tmp = func();
+ok(tmp === undefined, "func() = " + tmp);
+tmp = func.toString();
+ok(tmp == "function anonymous() {\n\n}", "func.toString() = " + tmp);
+
+func = (function() {
+        var tmp = 3;
+        return new Function("return tmp;");
+    })();
+tmp = 2;
+tmp = func();
+ok(tmp === 2, "func() = " + tmp);
 
 var date = new Date();
 
@@ -1566,7 +1715,7 @@ ok(Error.prototype.name === "Error", "Error.prototype.name = " + Error.prototype
 ok(err.name === "Error", "err.name = " + err.name);
 EvalError.prototype.message = "test";
 ok(err.toString !== Object.prototype.toString, "err.toString === Object.prototype.toString");
-ok(err.toString() === "[object Error]", "err.toString() = " + err.toString());
+ok(err.toString() === (invokeVersion < 2 ? "[object Error]" : "Error"), "err.toString() = " + err.toString());
 err = new EvalError();
 ok(EvalError.prototype.name === "EvalError", "EvalError.prototype.name = " + EvalError.prototype.name);
 ok(err.name === "EvalError", "err.name = " + err.name);
@@ -1574,37 +1723,67 @@ ok(err.toString === Error.prototype.toString, "err.toString !== Error.prototype.
 ok(err.message === "", "err.message != ''");
 err.message = date;
 ok(err.message === date, "err.message != date");
-ok(err.toString() === "[object Error]", "err.toString() = " + err.toString());
+ok(err.toString() === (invokeVersion < 2 ? "[object Error]" : "EvalError: "+err.message),
+   "err.toString() = " + err.toString());
 ok(err.toString !== Object.prototype.toString, "err.toString === Object.prototype.toString");
 err = new RangeError();
 ok(RangeError.prototype.name === "RangeError", "RangeError.prototype.name = " + RangeError.prototype.name);
 ok(err.name === "RangeError", "err.name = " + err.name);
-ok(err.toString() === "[object Error]", "err.toString() = " + err.toString());
+ok(err.toString() === (invokeVersion < 2 ? "[object Error]" : "RangeError"), "err.toString() = " + err.toString());
 err = new ReferenceError();
 ok(ReferenceError.prototype.name === "ReferenceError", "ReferenceError.prototype.name = " + ReferenceError.prototype.name);
 ok(err.name === "ReferenceError", "err.name = " + err.name);
-ok(err.toString() === "[object Error]", "err.toString() = " + err.toString());
+ok(err.toString() === (invokeVersion < 2 ? "[object Error]" : "ReferenceError"), "err.toString() = " + err.toString());
 err = new SyntaxError();
 ok(SyntaxError.prototype.name === "SyntaxError", "SyntaxError.prototype.name = " + SyntaxError.prototype.name);
 ok(err.name === "SyntaxError", "err.name = " + err.name);
-ok(err.toString() === "[object Error]", "err.toString() = " + err.toString());
+ok(err.toString() === (invokeVersion < 2 ? "[object Error]" : "SyntaxError"), "err.toString() = " + err.toString());
 err = new TypeError();
 ok(TypeError.prototype.name === "TypeError", "TypeError.prototype.name = " + TypeError.prototype.name);
 ok(err.name === "TypeError", "err.name = " + err.name);
-ok(err.toString() === "[object Error]", "err.toString() = " + err.toString());
+ok(err.toString() === (invokeVersion < 2 ? "[object Error]" : "TypeError"), "err.toString() = " + err.toString());
 err = new URIError();
 ok(URIError.prototype.name === "URIError", "URIError.prototype.name = " + URIError.prototype.name);
 ok(err.name === "URIError", "err.name = " + err.name);
-ok(err.toString() === "[object Error]", "err.toString() = " + err.toString());
+ok(err.toString() === (invokeVersion < 2 ? "[object Error]" : "URIError"), "err.toString() = " + err.toString());
 err = new Error("message");
 ok(err.message === "message", "err.message !== 'message'");
-ok(err.toString() === "[object Error]", "err.toString() = " + err.toString());
+ok(err.toString() === (invokeVersion < 2 ? "[object Error]" : "Error: message"), "err.toString() = " + err.toString());
 err = new Error(123);
 ok(err.number === 123, "err.number = " + err.number);
 err = new Error(0, "message");
 ok(err.number === 0, "err.number = " + err.number);
 ok(err.message === "message", "err.message = " + err.message);
 ok(err.description === "message", "err.description = " + err.description);
+
+tmp = new Object();
+tmp.toString = function() { return "test"; };
+
+tmp = Error.prototype.toString.call(tmp);
+ok(tmp === "[object Error]", "Error.prototype.toString.call(tmp) = " + tmp);
+
+err = new Error();
+err.name = null;
+ok(err.name === null, "err.name = " + err.name + " expected null");
+if(invokeVersion >= 2)
+    ok(err.toString() === "null", "err.toString() = " + err.toString());
+
+err = new Error();
+err.message = false;
+ok(err.message === false, "err.message = " + err.message + " expected false");
+if(invokeVersion >= 2)
+    ok(err.toString() === "Error: false", "err.toString() = " + err.toString());
+
+err = new Error();
+err.message = new Object();
+err.message.toString = function() { return ""; };
+if(invokeVersion >= 2)
+    ok(err.toString() === "Error", "err.toString() = " + err.toString());
+
+err = new Error();
+err.message = undefined;
+if(invokeVersion >= 2)
+    ok(err.toString() === "Error", "err.toString() = " + err.toString());
 
 function exception_test(func, type, number) {
     ret = "";
@@ -1648,6 +1827,7 @@ exception_test(function() {eval("if(")}, "SyntaxError", -2146827286);
 exception_test(function() {eval("'unterminated")}, "SyntaxError", -2146827273);
 exception_test(function() {eval("nonexistingfunc()")}, "TypeError", -2146823281);
 exception_test(function() {RegExp(/a/, "g");}, "RegExpError", -2146823271);
+exception_test(function() {encodeURI('\udcaa');}, "URIError", -2146823264);
 
 function testThisExcept(func, number) {
     exception_test(function() {func.call(new Object())}, "TypeError", number);
@@ -1729,6 +1909,10 @@ testArrayHostThis("shift");
 testArrayHostThis("slice");
 testArrayHostThis("splice");
 testArrayHostThis("unshift");
+testArrayHostThis("reverse");
+testArrayHostThis("join");
+testArrayHostThis("pop");
+testArrayHostThis("sort");
 
 function testObjectInherit(obj, constr, ts, tls, vo) {
     ok(obj instanceof Object, "obj is not instance of Object");
@@ -1940,5 +2124,44 @@ testFunctions(Function.prototype, [
         ["call", 1],
         ["toString", 0]
     ]);
+
+ok(ActiveXObject.length == 1, "ActiveXObject.length = " + ActiveXObject.length);
+ok(Array.length == 1, "Array.length = " + Array.length);
+ok(Boolean.length == 1, "Boolean.length = " + Boolean.length);
+ok(CollectGarbage.length == 0, "CollectGarbage.length = " + CollectGarbage.length);
+//ok(Date.length == 7, "Date.length = " + Date.length);
+ok(Enumerator.length == 7, "Enumerator.length = " + Enumerator.length);
+ok(Error.length == 1, "Error.length = " + Error.length);
+ok(EvalError.length == 1, "EvalError.length = " + EvalError.length);
+ok(Function.length == 1, "Function.length = " + Function.length);
+ok(GetObject.length == 2, "GetObject.length = " + GetObject.length);
+ok(Number.length == 1, "Number.length = " + Number.length);
+ok(Object.length == 0, "Object.length = " + Object.length);
+ok(RangeError.length == 1, "RangeError.length = " + RangeError.length);
+ok(ReferenceError.length == 1, "ReferenceError.length = " + ReferenceError.length);
+ok(RegExp.length == 2, "RegExp.length = " + RegExp.length);
+ok(ScriptEngine.length == 0, "ScriptEngine.length = " + ScriptEngine.length);
+ok(ScriptEngineBuildVersion.length == 0,
+    "ScriptEngineBuildVersion.length = " + ScriptEngineBuildVersion.length);
+ok(ScriptEngineMajorVersion.length == 0,
+    "ScriptEngineMajorVersion.length = " + ScriptEngineMajorVersion.length);
+ok(ScriptEngineMinorVersion.length == 0,
+    "ScriptEngineMinorVersion.length = " + ScriptEngineMinorVersion.length);
+//ok(String.length == 1, "String.length = " + String.length);
+ok(SyntaxError.length == 1, "SyntaxError.length = " + SyntaxError.length);
+ok(TypeError.length == 1, "TypeError.length = " + TypeError.length);
+ok(URIError.length == 1, "URIError.length = " + URIError.length);
+ok(VBArray.length == 1, "VBArray.length = " + VBArray.length);
+ok(decodeURI.length == 1, "decodeURI.length = " + decodeURI.length);
+ok(decodeURIComponent.length == 1, "decodeURIComponent.length = " + decodeURIComponent.length);
+ok(encodeURI.length == 1, "encodeURI.length = " + encodeURI.length);
+ok(encodeURIComponent.length == 1, "encodeURIComponent.length = " + encodeURIComponent.length);
+ok(escape.length == 1, "escape.length = " + escape.length);
+ok(eval.length == 1, "eval.length = " + eval.length);
+ok(isFinite.length == 1, "isFinite.length = " + isFinite.length);
+ok(isNaN.length == 1, "isNaN.length = " + isNaN.length);
+ok(parseFloat.length == 1, "parseFloat.length = " + parseFloat.length);
+ok(parseInt.length == 2, "parseInt.length = " + parseInt.length);
+ok(unescape.length == 1, "unescape.length = " + unescape.length);
 
 reportSuccess();
