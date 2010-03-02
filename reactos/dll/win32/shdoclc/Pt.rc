@@ -16,12 +16,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "shdoclc.h"
 
-LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+#pragma code_page(65001)
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_MESSAGE_BOX_TITLE, "Wine Internet Explorer"
+    IDS_MESSAGE_BOX_TITLE, "Explorador de Internet Wine"
 }
 
 STRINGTABLE DISCARDABLE
@@ -35,7 +38,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
     POPUP "Default"
     {
         MENUITEM "&Retroceder",                  IDM_GOBACKWARD
-        MENUITEM "&Avançar",               IDM_GOFORWARD
+        MENUITEM "&AvanÃ§ar",               IDM_GOFORWARD
         MENUITEM SEPARATOR
         MENUITEM "&Guardar fundo como...", IDM_SAVEBACKGROUND
         MENUITEM "&Definir como fundo",     IDM_SETWALLPAPER
@@ -47,9 +50,9 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "Criar &Atalho",       IDM_CREATESHORTCUT
         MENUITEM "Adicionar aos &Favoritos",     IDM_ADDFAVORITES
-        MENUITEM "&Ver Código Fonte",           IDM_VIEWSOURCE
+        MENUITEM "&Ver CÃ³digo Fonte",           IDM_VIEWSOURCE
         MENUITEM SEPARATOR
-        MENUITEM "C&odificação",              IDM_LANGUAGE
+        MENUITEM "C&odificaÃ§Ã£o",              IDM_LANGUAGE
         MENUITEM SEPARATOR
         MENUITEM "&Imprimir",                 IDM_PRINT
         MENUITEM "&Actualizar",               _IDM_REFRESH
@@ -60,10 +63,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
 
     POPUP "Imagem"
     {
-        MENUITEM "&Abrir ligação",               IDM_FOLLOWLINKC
-        MENUITEM "Abrir &ligação numa nova janela", IDM_FOLLOWLINKN
-        MENUITEM "&Guardar ligação como...",       IDM_SAVETARGET
-        MENUITEM "&Imprimir ligação",            IDM_PRINTTARGET
+        MENUITEM "&Abrir ligaÃ§Ã£o",               IDM_FOLLOWLINKC
+        MENUITEM "Abrir &ligaÃ§Ã£o numa nova janela", IDM_FOLLOWLINKN
+        MENUITEM "&Guardar ligaÃ§Ã£o como...",       IDM_SAVETARGET
+        MENUITEM "&Imprimir ligaÃ§Ã£o",            IDM_PRINTTARGET
         MENUITEM SEPARATOR
         MENUITEM "&Mostrar imagem",            IDM_SHOWPICTURE
         MENUITEM "G&uardar imagem como...",      IDM_SAVEPICTURE
@@ -101,14 +104,14 @@ IDR_BROWSE_CONTEXT_MENU MENU
     {
         POPUP "&Seleccionar"
         {
-            MENUITEM "&Célula",         IDM_CELLSELECT
+            MENUITEM "&CÃ©lula",         IDM_CELLSELECT
             MENUITEM "&Linha",          IDM_ROWSELECT
             MENUITEM "C&oluna",       IDM_COLUMNSELECT
             MENUITEM "&Tabela",        IDM_TABLESELECT
         }
         MENUITEM SEPARATOR
         MENUITEM SEPARATOR
-        MENUITEM "&Propriedades da Célula",  IDM_CELLPROPERTIES
+        MENUITEM "&Propriedades da CÃ©lula",  IDM_CELLPROPERTIES
         MENUITEM "&Propriedades da Tabela", IDM_TABLEPROPERTIES
     }
 
@@ -122,12 +125,12 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
     }
 
-    POPUP "Âncora"
+    POPUP "Ã‚ncora"
     {
         MENUITEM "&Abrir",                IDM_FOLLOWLINKC
         MENUITEM "A&brir numa nova janela",  IDM_FOLLOWLINKN
-        MENUITEM "&Guardar ligação como...",   IDM_SAVETARGET
-        MENUITEM "&Imprimir ligação",        IDM_PRINTTARGET
+        MENUITEM "&Guardar ligaÃ§Ã£o como...",   IDM_SAVETARGET
+        MENUITEM "&Imprimir ligaÃ§Ã£o",        IDM_PRINTTARGET
         MENUITEM SEPARATOR
         MENUITEM "&Cortar",                  IDM_CUT
         MENUITEM "C&opiar",                IDM_COPY
@@ -147,10 +150,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
 
     POPUP "Imagem DYNSRC"
     {
-        MENUITEM "&Abrir ligação",               IDM_FOLLOWLINKC
-        MENUITEM "A&brir ligação numa nova janela", IDM_FOLLOWLINKN
-        MENUITEM "&Guardar ligação como...",       IDM_SAVETARGET
-        MENUITEM "&Imprimir ligação",            IDM_PRINTTARGET
+        MENUITEM "&Abrir ligaÃ§Ã£o",               IDM_FOLLOWLINKC
+        MENUITEM "A&brir ligaÃ§Ã£o numa nova janela", IDM_FOLLOWLINKN
+        MENUITEM "&Guardar ligaÃ§Ã£o como...",       IDM_SAVETARGET
+        MENUITEM "&Imprimir ligaÃ§Ã£o",            IDM_PRINTTARGET
         MENUITEM SEPARATOR
         MENUITEM "&Mostrar imagem",            IDM_SHOWPICTURE
         MENUITEM "G&uardar video como...",        IDM_SAVEPICTURE
@@ -172,10 +175,10 @@ IDR_BROWSE_CONTEXT_MENU MENU
 
     POPUP "Imagem ART"
     {
-        MENUITEM "&Abrir ligação",               IDM_FOLLOWLINKC
-        MENUITEM "A&brir ligação numa nova janela", IDM_FOLLOWLINKN
-        MENUITEM "&Guardar ligação como...",       IDM_SAVETARGET
-        MENUITEM "&Imprimir ligação",            IDM_PRINTTARGET
+        MENUITEM "&Abrir ligaÃ§Ã£o",               IDM_FOLLOWLINKC
+        MENUITEM "A&brir ligaÃ§Ã£o numa nova janela", IDM_FOLLOWLINKN
+        MENUITEM "&Guardar ligaÃ§Ã£o como...",       IDM_SAVETARGET
+        MENUITEM "&Imprimir ligaÃ§Ã£o",            IDM_PRINTTARGET
         MENUITEM SEPARATOR
         MENUITEM "&Mostrar imagem",            IDM_SHOWPICTURE
         MENUITEM "G&uardar video como...",        IDM_SAVEPICTURE
@@ -189,10 +192,9 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM SEPARATOR
         MENUITEM "Adicionar aos &Favoritos...",     IDM_ADDFAVORITES
         MENUITEM SEPARATOR
-        MENUITEM SEPARATOR
-        MENUITEM "I&niciar",                     IDM_DYNSRCPLAY
-        MENUITEM "&Parar",                     IDM_DYNSRCSTOP
-        MENUITEM "&Recomeçar",                   IDM_IMGARTREWIND
+        MENUITEM "I&niciar",                     IDM_IMGARTPLAY
+        MENUITEM "&Parar",                       IDM_IMGARTSTOP
+        MENUITEM "&RecomeÃ§ar",                   IDM_IMGARTREWIND
         MENUITEM SEPARATOR
         MENUITEM SEPARATOR
         MENUITEM "Propriedade&s",              IDM_PROPERTIES
@@ -225,8 +227,8 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "Topo",          IDM_SCROLL_TOP
         MENUITEM "Fundo",       IDM_SCROLL_BOTTOM
         MENUITEM SEPARATOR
-        MENUITEM "Página Acima",      IDM_SCROLL_PAGEUP
-        MENUITEM "Página abaixo",    IDM_SCROLL_PAGEDOWN
+        MENUITEM "PÃ¡gina Acima",      IDM_SCROLL_PAGEUP
+        MENUITEM "PÃ¡gina abaixo",    IDM_SCROLL_PAGEDOWN
         MENUITEM SEPARATOR
         MENUITEM "Scroll Cima",    IDM_SCROLL_UP
         MENUITEM "Scroll Baixo",  IDM_SCROLL_DOWN
@@ -239,8 +241,8 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "Canto Esquerdo",    IDM_SCROLL_LEFTEDGE
         MENUITEM "Canto Direito",   IDM_SCROLL_RIGHTEDGE
         MENUITEM SEPARATOR
-        MENUITEM "Página esquerda",    IDM_SCROLL_PAGELEFT
-        MENUITEM "Página direita",   IDM_SCROLL_PAGERIGHT
+        MENUITEM "PÃ¡gina esquerda",    IDM_SCROLL_PAGELEFT
+        MENUITEM "PÃ¡gina direita",   IDM_SCROLL_PAGERIGHT
         MENUITEM SEPARATOR
         MENUITEM "Scroll Esquerda",  IDM_SCROLL_LEFT
         MENUITEM "Scroll Direita", IDM_SCROLL_RIGHT

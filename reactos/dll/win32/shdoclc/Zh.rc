@@ -18,6 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "shdoclc.h"
 
 /* Chinese text is encoded in UTF-8 */
 #pragma code_page(65001)
@@ -479,5 +480,3 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "向右滾動", IDM_SCROLL_RIGHT
     }
 }
-
-#pragma code_page(default)

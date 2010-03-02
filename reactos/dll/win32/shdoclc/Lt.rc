@@ -1,0 +1,252 @@
+/*
+ * Copyright 2009 Aurimas Fišeras <aurimas@gmail.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "shdoclc.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_LITHUANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_MESSAGE_BOX_TITLE, "Wine interneto naršyklė"
+}
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_PRINT_HEADER_TEMPLATE "&w&bPuslapis &p" /* FIXME: should be "&w&bPuslapis &p iš &P" */
+    IDS_PRINT_FOOTER_TEMPLATE "&u&b&d"
+}
+
+IDR_BROWSE_CONTEXT_MENU MENU
+{
+    POPUP "Numatytasis"
+    {
+        MENUITEM "&Atgal",                          IDM_GOBACKWARD
+        MENUITEM "&Pirmyn",                         IDM_GOFORWARD
+        MENUITEM SEPARATOR
+        MENUITEM "&Išsaugoti foną kaip...",         IDM_SAVEBACKGROUND
+        MENUITEM "Parinkti užsk&landos piešiniu",   IDM_SETWALLPAPER
+        MENUITEM "Kopijuoti &foną",                 IDM_COPYBACKGROUND
+        MENUITEM "Nustatyti da&rbalaukio elementu", IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "Pažymėti &viską",                 IDM_SELECTALL
+        MENUITEM "Į&dėti",                          IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Sukurti &šaukinį",                IDM_CREATESHORTCUT
+        MENUITEM "Pridėti į adr&esyną",             IDM_ADDFAVORITES
+        MENUITEM "Pirminis &tekstas",               IDM_VIEWSOURCE
+        MENUITEM SEPARATOR
+        MENUITEM "&Koduotė",                        IDM_LANGUAGE
+        MENUITEM SEPARATOR
+        MENUITEM "&Spausdinti",                     IDM_PRINT
+        MENUITEM "Atsiųsti iš &naujo",             _IDM_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "Savy&bės",                        IDM_PROPERTIES
+    }
+
+    POPUP "Paveikslas"
+    {
+        MENUITEM "&Atverti saitą",                     IDM_FOLLOWLINKC
+        MENUITEM "Atverti saitą &naujame lange",       IDM_FOLLOWLINKN
+        MENUITEM "Įrašyti saistomą &objektą kaip...",  IDM_SAVETARGET
+        MENUITEM "&Spausdinti saistomą objektą",       IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "Rod&yti paveikslą",                  IDM_SHOWPICTURE
+        MENUITEM "Įrašyti pa&veikslą kaip...",         IDM_SAVEPICTURE
+        MENUITEM "Išsiųsti pav&eikslą el. paštu...",   IDM_MP_EMAILPICTURE
+        MENUITEM "S&pausdinti paveikslą...",           IDM_MP_PRINTPICTURE
+        MENUITEM "Ei&ti į paveikslų aplanką",          IDM_MP_MYPICS
+        MENUITEM "Parinkti užsk&landos piešiniu",      IDM_SETWALLPAPER
+        MENUITEM "Nustatyti da&rbalaukio elementu...", IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "&Iškirpti",                          IDM_CUT
+        MENUITEM "&Kopijuoti",                         IDM_COPY
+        MENUITEM "Kopi&juoti adresą",                  IDM_COPYSHORTCUT
+        MENUITEM "Į&dėti",                             IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Prid&ėti į adresyną...",             IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "Savy&bės",                           IDM_PROPERTIES
+    }
+
+    POPUP "Valdiklis"
+    {
+        MENUITEM "&Atšaukti",       IDM_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "&Iškirpti",       IDM_CUT
+        MENUITEM "&Kopijuoti",      IDM_COPY
+        MENUITEM "Į&dėti",          IDM_PASTE
+        MENUITEM "&Šalinti",        IDM_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "Pažymėti &viską", IDM_SELECTALL
+    }
+
+    POPUP "Lentelė"
+    {
+        POPUP "&Pažymėti"
+        {
+            MENUITEM "lan&gelį",      IDM_CELLSELECT
+            MENUITEM "&eilutę",       IDM_ROWSELECT
+            MENUITEM "&stulpelį",     IDM_COLUMNSELECT
+            MENUITEM "&lentelę",      IDM_TABLESELECT
+        }
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "Lan&gelio savybės", IDM_CELLPROPERTIES
+        MENUITEM "&Lentelės savybės", IDM_TABLEPROPERTIES
+    }
+
+    POPUP "1DPuslapio žymėjimas"
+    {
+        MENUITEM "&Iškirpti",       IDM_CUT
+        MENUITEM "&Kopijuoti",      IDM_COPY
+        MENUITEM "Į&dėti",          IDM_PASTE
+        MENUITEM "Pažymėti &viską", IDM_SELECTALL
+        MENUITEM "&Spausdinti",     IDM_PRINT
+        MENUITEM SEPARATOR
+    }
+
+    POPUP "Žymė"
+    {
+        MENUITEM "&Atverti",                          IDM_FOLLOWLINKC
+        MENUITEM "Atverti &naujame lange",            IDM_FOLLOWLINKN
+        MENUITEM "Įrašyti saistomą &objektą kaip...", IDM_SAVETARGET
+        MENUITEM "&Spausdinti saistomą objektą",      IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "&Iškirpti",                         IDM_CUT
+        MENUITEM "&Kopijuoti",                        IDM_COPY
+        MENUITEM "Kopi&juoti adresą",                 IDM_COPYSHORTCUT
+        MENUITEM "Į&dėti",                            IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Pridėti į adr&esyną...",            IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "Savy&bės",                          IDM_PROPERTIES
+    }
+
+    POPUP "Nežinomas kontekstas"
+    {
+        MENUITEM SEPARATOR
+    }
+
+    POPUP "DYNSRC paveikslas"
+    {
+        MENUITEM "&Atverti saitą",                     IDM_FOLLOWLINKC
+        MENUITEM "Atverti saitą &naujame lange",       IDM_FOLLOWLINKN
+        MENUITEM "Įrašyti saistomą &objektą kaip...",  IDM_SAVETARGET
+        MENUITEM "&Spausdinti saistomą objektą",       IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "Rod&yti paveikslą",                  IDM_SHOWPICTURE
+        MENUITEM "Įrašyti pa&veikslą kaip...",         IDM_SAVEPICTURE
+        MENUITEM "Parinkti užsk&landos piešiniu",      IDM_SETWALLPAPER
+        MENUITEM "Nustatyti da&rbalaukio elementu...", IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "&Iškirpti",                          IDM_CUT
+        MENUITEM "&Kopijuoti",                         IDM_COPY
+        MENUITEM "Kopi&juoti adresą",                  IDM_COPYSHORTCUT
+        MENUITEM "Į&dėti",                             IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Pridėti į adr&esyną...",             IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "Leisti",                             IDM_DYNSRCPLAY
+        MENUITEM "Stabdyti",                           IDM_DYNSRCSTOP
+        MENUITEM "Savy&bės",                           IDM_PROPERTIES
+    }
+
+    POPUP "ART paveikslas"
+    {
+        MENUITEM "&Atverti saitą",                     IDM_FOLLOWLINKC
+        MENUITEM "Atverti saitą &naujame lange",       IDM_FOLLOWLINKN
+        MENUITEM "Įrašyti saistomą &objektą kaip...",  IDM_SAVETARGET
+        MENUITEM "&Spausdinti saistomą objektą",       IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "Rod&yti paveikslą",                  IDM_SHOWPICTURE
+        MENUITEM "Įrašyti pa&veikslą kaip...",         IDM_SAVEPICTURE
+        MENUITEM "Parinkti užsk&landos piešiniu",      IDM_SETWALLPAPER
+        MENUITEM "Nustatyti da&rbalaukio elementu...", IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "&Iškirpti",                          IDM_CUT
+        MENUITEM "&Kopijuoti",                         IDM_COPY
+        MENUITEM "Kopi&juoti adresą",                  IDM_COPYSHORTCUT
+        MENUITEM "Į&dėti",                             IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Pridėti į adr&esyną...",             IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM "Leisti",                             IDM_IMGARTPLAY
+        MENUITEM "Stabdyti",                           IDM_IMGARTSTOP
+        MENUITEM "Perleisti",                          IDM_IMGARTREWIND
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "Savy&bės",                           IDM_PROPERTIES
+    }
+
+    POPUP "Derinimas"
+    {
+        MENUITEM "Sekti gaires",                     IDM_TRACETAGS
+        MENUITEM "Išteklių klaidos",                 IDM_RESOURCEFAILURES
+        MENUITEM "Parodyti stebėjimo informaciją",   IDM_DUMPTRACKINGINFO
+        MENUITEM "Derinimo pertraukimas",            IDM_DEBUGBREAK
+        MENUITEM "Derinimo rodinys",                 IDM_DEBUGVIEW
+        MENUITEM "Parodyti medį",                    IDM_DUMPTREE
+        MENUITEM "Parodyti eilutes",                 IDM_DUMPLINES
+        MENUITEM "Parodyti rodymo medį",             IDM_DUMPDISPLAYTREE
+        MENUITEM "Parodyti formatų podėlius",        IDM_DUMPFORMATCACHES
+        MENUITEM "Parodyti išdėstymo stačiakampius", IDM_DUMPLAYOUTRECTS
+        MENUITEM "Atminties monitorius",             IDM_MEMORYMONITOR
+        MENUITEM "Našumo skaitikliai",               IDM_PERFORMANCEMETERS
+        MENUITEM "Išsaugoti HTML",                   IDM_SAVEHTML
+        MENUITEM SEPARATOR
+        MENUITEM "&Naršyti rodinį",                  IDM_BROWSEMODE
+        MENUITEM "&Redaguoti rodinį",                IDM_EDITMODE
+    }
+
+    POPUP "Stačioji slankjuostė"
+    {
+        MENUITEM "Slinkti čia",      IDM_SCROLL_HERE
+        MENUITEM SEPARATOR
+        MENUITEM "Viršus",           IDM_SCROLL_TOP
+        MENUITEM "Apačia",           IDM_SCROLL_BOTTOM
+        MENUITEM SEPARATOR
+        MENUITEM "Ankstesnis lapas", IDM_SCROLL_PAGEUP
+        MENUITEM "Tolesnis lapas",   IDM_SCROLL_PAGEDOWN
+        MENUITEM SEPARATOR
+        MENUITEM "Slinkti aukštyn",  IDM_SCROLL_UP
+        MENUITEM "Slinkti žemyn",    IDM_SCROLL_DOWN
+    }
+
+    POPUP "Gulsčioji slankjuostė"
+    {
+        MENUITEM "Slinkti čia",       IDM_SCROLL_HERE
+        MENUITEM SEPARATOR
+        MENUITEM "Kairysis kraštas",  IDM_SCROLL_LEFTEDGE
+        MENUITEM "Dešinysis kraštas", IDM_SCROLL_RIGHTEDGE
+        MENUITEM SEPARATOR
+        MENUITEM "Kairysis lapas",    IDM_SCROLL_PAGELEFT
+        MENUITEM "Dešinysis lapas",   IDM_SCROLL_PAGERIGHT
+        MENUITEM SEPARATOR
+        MENUITEM "Slinkti kairėn",    IDM_SCROLL_LEFT
+        MENUITEM "Slinkti dešinėn",   IDM_SCROLL_RIGHT
+    }
+}
+#pragma code_page(default)

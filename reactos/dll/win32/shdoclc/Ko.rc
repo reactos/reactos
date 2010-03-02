@@ -17,17 +17,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "shdoclc.h"
 
 LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_MESSAGE_BOX_TITLE, "Wine 인터넷 Explorer"
+    IDS_MESSAGE_BOX_TITLE, "Wine 인터넷 익스폴로어r"
 }
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_PRINT_HEADER_TEMPLATE "&w&bPage &p" /* FIXME: should be "&w&bPage &p of &P" */
+    IDS_PRINT_HEADER_TEMPLATE "&w&b페이지 &p" /* FIXME: should be "&w&bPage &p of &P" */
     IDS_PRINT_FOOTER_TEMPLATE "&u&b&d"
 }
 
