@@ -572,9 +572,6 @@ CIrpQueue::ReleaseMappingWithTag(
     
     Irp->IoStatus.Information = StreamHeader->FrameExtent;
 
-    // free stream header, no tag as wdmaud.drv allocates it atm
-    ExFreePool(StreamHeader);
-
     // complete the request
     IoCompleteRequest(Irp, IO_SOUND_INCREMENT);
 
