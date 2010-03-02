@@ -963,6 +963,14 @@ InterlockedPushEntrySList(
 
 #define PROCESSOR_FEATURE_MAX 64
 
+#define DBG_STATUS_CONTROL_C              1
+#define DBG_STATUS_SYSRQ                  2
+#define DBG_STATUS_BUGCHECK_FIRST         3
+#define DBG_STATUS_BUGCHECK_SECOND        4
+#define DBG_STATUS_FATAL                  5
+#define DBG_STATUS_DEBUG_CONTROL          6
+#define DBG_STATUS_WORKER                 7
+
 typedef enum _TRACE_INFORMATION_CLASS {
   TraceIdClass,
   TraceHandleClass,
@@ -4873,6 +4881,10 @@ typedef struct _IO_STACK_LOCATION {
 #define RTL_QUERY_REGISTRY_DIRECT         0x00000020
 #define RTL_QUERY_REGISTRY_DELETE         0x00000040
 
+#define HASH_STRING_ALGORITHM_DEFAULT     0
+#define HASH_STRING_ALGORITHM_X65599      1
+#define HASH_STRING_ALGORITHM_INVALID     0xffffffff
+
 typedef struct _RTL_BITMAP {
     ULONG SizeOfBitMap;
     PULONG Buffer;
@@ -5921,6 +5933,72 @@ RtlCheckBit(
  *                            Executive Types                                 *
  ******************************************************************************/
 
+#define MAXIMUM_SUPPORTED_EXTENSION  512
+
+typedef ULONG PFN_COUNT;
+typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
+typedef LONG SPFN_NUMBER, *PSPFN_NUMBER;
+
+#if defined(_X86_)
+
+#define PASSIVE_LEVEL           0
+#define LOW_LEVEL               0
+#define APC_LEVEL               1
+#define DISPATCH_LEVEL          2
+#define CMCI_LEVEL              5
+#define PROFILE_LEVEL           27
+#define CLOCK1_LEVEL            28
+#define CLOCK2_LEVEL            28
+#define IPI_LEVEL               29
+#define POWER_LEVEL             30
+#define HIGH_LEVEL              31
+#define CLOCK_LEVEL             (CLOCK2_LEVEL)
+
+#endif
+#if defined(_AMD64_)
+
+#define PASSIVE_LEVEL           0
+#define LOW_LEVEL               0
+#define APC_LEVEL               1
+#define DISPATCH_LEVEL          2
+#define CMCI_LEVEL              5
+#define CLOCK_LEVEL             13
+#define IPI_LEVEL               14
+#define DRS_LEVEL               14
+#define POWER_LEVEL             14
+#define PROFILE_LEVEL           15
+#define HIGH_LEVEL              15
+
+#endif
+#if defined(_IA64_)
+
+#define PASSIVE_LEVEL           0
+#define LOW_LEVEL               0
+#define APC_LEVEL               1
+#define DISPATCH_LEVEL          2
+#define CMC_LEVEL               3
+#define DEVICE_LEVEL_BASE       4
+#define PC_LEVEL                12
+#define IPI_LEVEL               14
+#define DRS_LEVEL               14
+#define CLOCK_LEVEL             13
+#define POWER_LEVEL             15
+#define PROFILE_LEVEL           15
+#define HIGH_LEVEL              15
+
+#endif
+
+typedef struct _KFLOATING_SAVE {
+  ULONG  ControlWord;
+  ULONG  StatusWord;
+  ULONG  ErrorOffset;
+  ULONG  ErrorSelector;
+  ULONG  DataOffset;
+  ULONG  DataSelector;
+  ULONG  Cr0NpxState;
+  ULONG  Spare1;
+} KFLOATING_SAVE, *PKFLOATING_SAVE;
+
 typedef enum _KBUGCHECK_CALLBACK_REASON {
   KbCallbackInvalid,
   KbCallbackReserved1,
@@ -6825,6 +6903,49 @@ ExFreeToPagedLookasideList(
 
 
 #endif // !defined(MIDL_PASS)
+
+NTHALAPI
+KIRQL
+NTAPI
+KeGetCurrentIrql(
+    VOID);
+
+#if defined(_M_AMD64)
+
+ULONG64
+__readgsqword (
+  IN ULONG Offset);
+
+#pragma intrinsic(__readgsqword)
+
+FORCEINLINE
+PKTHREAD
+KeGetCurrentThread (
+  VOID)
+{
+    return (struct _KTHREAD *)__readgsqword(0x188);
+}
+
+#endif
+
+#if defined(_M_IX86) || defined(_M_IA64)
+
+NTSYSAPI
+PKTHREAD
+NTAPI
+KeGetCurrentThread(
+  VOID);
+
+#endif
+
+/*
+** WMI structures
+*/
+
+typedef VOID
+(DDKAPI *WMI_NOTIFICATION_CALLBACK)(
+  PVOID  Wnode,
+  PVOID  Context);
 
 
 #ifdef __cplusplus

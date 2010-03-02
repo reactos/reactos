@@ -1573,14 +1573,6 @@ typedef VOID
   IN HANDLE  ThreadId,
   IN KPROCESSOR_MODE  Mode);
 
-#define DBG_STATUS_CONTROL_C              1
-#define DBG_STATUS_SYSRQ                  2
-#define DBG_STATUS_BUGCHECK_FIRST         3
-#define DBG_STATUS_BUGCHECK_SECOND        4
-#define DBG_STATUS_FATAL                  5
-#define DBG_STATUS_DEBUG_CONTROL          6
-#define DBG_STATUS_WORKER                 7
-
 typedef struct _PHYSICAL_MEMORY_RANGE {
   PHYSICAL_ADDRESS  BaseAddress;
   LARGE_INTEGER  NumberOfBytes;
@@ -1601,27 +1593,11 @@ typedef struct _DRIVER_VERIFIER_THUNK_PAIRS {
 #define DRIVER_VERIFIER_TRACK_POOL_ALLOCATIONS      0x0008
 #define DRIVER_VERIFIER_IO_CHECKING                 0x0010
 
-#define HASH_STRING_ALGORITHM_DEFAULT     0
-#define HASH_STRING_ALGORITHM_X65599      1
-#define HASH_STRING_ALGORITHM_INVALID     0xffffffff
-
 typedef VOID
 (DDKAPI *PTIMER_APC_ROUTINE)(
   IN PVOID  TimerContext,
   IN ULONG  TimerLowValue,
   IN LONG  TimerHighValue);
-
-
-
-/*
-** WMI structures
-*/
-
-typedef VOID
-(DDKAPI *WMI_NOTIFICATION_CALLBACK)(
-  PVOID  Wnode,
-  PVOID  Context);
-
 
 /*
 ** Architecture specific structures
@@ -1641,7 +1617,6 @@ typedef VOID
 #define CONTEXT_DEBUG_REGISTERS	(CONTEXT_i386|0x00000010L)
 #define CONTEXT_EXTENDED_REGISTERS (CONTEXT_i386|0x00000020L)
 #define CONTEXT_FULL	(CONTEXT_CONTROL|CONTEXT_INTEGER|CONTEXT_SEGMENTS)
-#define MAXIMUM_SUPPORTED_EXTENSION  512
 
 typedef struct _FLOATING_SAVE_AREA {
     ULONG ControlWord;
@@ -1682,24 +1657,6 @@ typedef struct _CONTEXT {
     ULONG SegSs;
     UCHAR ExtendedRegisters[MAXIMUM_SUPPORTED_EXTENSION];
 } CONTEXT;
-
-//
-// Used to contain PFNs and PFN counts
-//
-typedef ULONG PFN_COUNT;
-typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
-typedef LONG SPFN_NUMBER, *PSPFN_NUMBER;
-
-#define PASSIVE_LEVEL                      0
-#define LOW_LEVEL                          0
-#define APC_LEVEL                          1
-#define DISPATCH_LEVEL                     2
-#define PROFILE_LEVEL                     27
-#define CLOCK1_LEVEL                      28
-#define CLOCK2_LEVEL                      28
-#define IPI_LEVEL                         29
-#define POWER_LEVEL                       30
-#define HIGH_LEVEL                        31
 
 typedef struct _KPCR_TIB {
   PVOID  ExceptionList;         /* 00 */
@@ -1742,35 +1699,12 @@ typedef struct _KPCR {
 
 #define KeGetPcr()                      PCR
 
-typedef struct _KFLOATING_SAVE {
-  ULONG  ControlWord;
-  ULONG  StatusWord;
-  ULONG  ErrorOffset;
-  ULONG  ErrorSelector;
-  ULONG  DataOffset;
-  ULONG  DataSelector;
-  ULONG  Cr0NpxState;
-  ULONG  Spare1;
-} KFLOATING_SAVE, *PKFLOATING_SAVE;
-
 FORCEINLINE
 ULONG
 KeGetCurrentProcessorNumber(VOID)
 {
     return (ULONG)__readfsbyte(FIELD_OFFSET(KPCR, Number));
 }
-
-NTHALAPI
-KIRQL
-DDKAPI
-KeGetCurrentIrql(
-    VOID);
-
-NTKERNELAPI
-PRKTHREAD
-NTAPI
-KeGetCurrentThread(
-    VOID);
 
 #define KI_USER_SHARED_DATA               0xffdf0000
 
@@ -2026,12 +1960,6 @@ typedef struct _KPCR
 typedef struct _KFLOATING_SAVE {
   ULONG Dummy;
 } KFLOATING_SAVE, *PKFLOATING_SAVE;
-
-NTKERNELAPI
-PRKTHREAD
-NTAPI
-KeGetCurrentThread(
-    VOID);
 
 FORCEINLINE
 PKPCR
