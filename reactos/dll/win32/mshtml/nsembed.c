@@ -52,13 +52,15 @@ struct nsCStringContainer {
     void *v;
     void *d1;
     PRUint32 d2;
-    void *d3;
+    PRUint32 d3;
 };
+
+#define NS_STRING_CONTAINER_INIT_DEPEND  0x0002
 
 static nsresult (*NS_InitXPCOM2)(nsIServiceManager**,void*,void*);
 static nsresult (*NS_ShutdownXPCOM)(nsIServiceManager*);
 static nsresult (*NS_GetComponentRegistrar)(nsIComponentRegistrar**);
-static nsresult (*NS_StringContainerInit)(nsStringContainer*);
+static nsresult (*NS_StringContainerInit2)(nsStringContainer*,const PRUnichar*,PRUint32,PRUint32);
 static nsresult (*NS_CStringContainerInit)(nsCStringContainer*);
 static nsresult (*NS_StringContainerFinish)(nsStringContainer*);
 static nsresult (*NS_CStringContainerFinish)(nsCStringContainer*);
@@ -194,7 +196,7 @@ static BOOL load_xpcom(const PRUnichar *gre_path)
     NS_DLSYM(NS_InitXPCOM2);
     NS_DLSYM(NS_ShutdownXPCOM);
     NS_DLSYM(NS_GetComponentRegistrar);
-    NS_DLSYM(NS_StringContainerInit);
+    NS_DLSYM(NS_StringContainerInit2);
     NS_DLSYM(NS_CStringContainerInit);
     NS_DLSYM(NS_StringContainerFinish);
     NS_DLSYM(NS_CStringContainerFinish);
@@ -424,7 +426,7 @@ static BOOL init_xpcom(const PRUnichar *gre_path)
     nsAString path;
     nsIFile *gre_dir;
 
-    nsAString_Init(&path, gre_path);
+    nsAString_InitDepend(&path, gre_path);
     nsres = NS_NewLocalFile(&path, FALSE, &gre_dir);
     nsAString_Finish(&path);
     if(NS_FAILED(nsres)) {
@@ -555,11 +557,18 @@ static void nsACString_Finish(nsACString *str)
     NS_CStringContainerFinish(str);
 }
 
-void nsAString_Init(nsAString *str, const PRUnichar *data)
+BOOL nsAString_Init(nsAString *str, const PRUnichar *data)
 {
-    NS_StringContainerInit(str);
-    if(data)
-        nsAString_SetData(str, data);
+    return NS_SUCCEEDED(NS_StringContainerInit2(str, data, PR_UINT32_MAX, 0));
+}
+
+/*
+ * Initializes nsAString with data owned by caller.
+ * Caller must ensure that data is valid during lifetime of string object.
+ */
+void nsAString_InitDepend(nsAString *str, const PRUnichar *data)
+{
+    NS_StringContainerInit2(str, data, PR_UINT32_MAX, NS_STRING_CONTAINER_INIT_DEPEND);
 }
 
 void nsAString_SetData(nsAString *str, const PRUnichar *data)

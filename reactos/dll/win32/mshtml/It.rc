@@ -1,7 +1,5 @@
 /*
- * Norwegian Bokmål language support
- *
- * Copyright 2005-2009 Alexander N. Sørnes <alex@thehandofagony.com>
+ * Copyright 2010 Luca Bennati
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,44 +18,45 @@
 
 #include "resource.h"
 
+/*UTF-8*/
 #pragma code_page(65001)
 
-LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_HTMLDISABLED    "HTML-tegning er for øyeblikket deaktivert."
-    IDS_HTMLDOCUMENT    "HTML-dokument"
-    IDS_DOWNLOADING     "Laster ned..."
-    IDS_INSTALLING      "Installerer..."
+    IDS_HTMLDISABLED    "Il rendering HTML è correntemente disattivato."
+    IDS_HTMLDOCUMENT    "Documento HTML"
+    IDS_DOWNLOADING     "Scaricando..."
+    IDS_INSTALLING      "Installando..."
 }
 
 ID_DWL_DIALOG DIALOG LOADONCALL MOVEABLE DISCARDABLE  0, 0, 260, 95
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Installere Wine Gecko"
+CAPTION "Installer di Wine Gecko"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT "Wine could not find a Gecko package which is needed for applications embedding HTML " \
-          "to work correctly. Wine can automatically download and install it for you.\n\n" \
-          "Note: it's recommended to use distro packages instead. See http://wiki.winehq.org/Gecko for details.",
+    LTEXT "Wine non ha trovato un pacchetto Gecko che è necessario per applicazioni che incorporano HTML " \
+          "per funzionare correttamente. Wine può automaticamente scaricarlo ed installarlo per te.\n\n" \
+          "Nota: è raccomandato usare i pacchetti delle distribuzioni. Leggi http://wiki.winehq.org/Gecko per i dettagli.",
           ID_DWL_STATUS, 10, 10, 240, 50, SS_LEFT
-    CONTROL "Progress", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER|PBS_SMOOTH, 10, 40, 240, 12
-    DEFPUSHBUTTON "&Installer", ID_DWL_INSTALL, 200, 70, 50, 15, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "&Avbryt", IDCANCEL, 140, 70, 50, 15, WS_GROUP | WS_TABSTOP
+    CONTROL "Avanzamento", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER|PBS_SMOOTH, 10, 40, 240, 12
+    DEFPUSHBUTTON "&Installa", ID_DWL_INSTALL, 200, 70, 50, 15, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "&Annulla", IDCANCEL, 140, 70, 50, 15, WS_GROUP | WS_TABSTOP
 }
 
 IDD_HYPERLINK DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 250, 65
 STYLE DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Hyperkobling"
+CAPTION "Hyperlink"
 FONT 8, "MS Shell Dlg"
 {
-    GROUPBOX "Informasjon om koblingen", -1, 5, 5, 190, 55
-    LTEXT "&Type:", -1, 10, 22, 20, 10
+    GROUPBOX "Informazioni sull'hyperlink", -1, 5, 5, 190, 55
+    LTEXT "&Tipo:", -1, 10, 22, 20, 10
     COMBOBOX IDC_TYPE, 35, 20, 45, 100, WS_TABSTOP | WS_GROUP | WS_VSCROLL | CBS_DROPDOWNLIST | CBS_HASSTRINGS
     LTEXT "&URL:", -1, 10, 42, 20, 10
     EDITTEXT IDC_URL, 35, 40, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "OK", IDOK, 200, 10, 45, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "Avbryt", IDCANCEL, 200, 28, 45, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Annulla", IDCANCEL, 200, 28, 45, 14, WS_GROUP | WS_TABSTOP
 }
 
 ID_PROMPT_DIALOG DIALOG 0, 0, 200, 90
@@ -68,6 +67,6 @@ FONT 8, "MS Shell Dlg"
     LTEXT "", ID_PROMPT_PROMPT, 10, 10, 180, 30
     EDITTEXT ID_PROMPT_EDIT, 10, 45, 180, 14, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "OK", IDOK, 40, 65, 45, 15, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "Avbryt", IDCANCEL, 115, 65, 45, 15, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Annulla", IDCANCEL, 115, 65, 45, 15, WS_GROUP | WS_TABSTOP
 }
 #pragma code_page(default)

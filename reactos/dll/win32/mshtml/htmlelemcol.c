@@ -245,7 +245,7 @@ static BOOL is_elem_name(HTMLElement *elem, LPCWSTR name)
         return TRUE;
     }
 
-    nsAString_Init(&nsname, nameW);
+    nsAString_InitDepend(&nsname, nameW);
     nsres =  nsIDOMHTMLElement_GetAttribute(elem->nselem, &nsname, &nsstr);
     nsAString_Finish(&nsname);
     if(NS_SUCCEEDED(nsres)) {

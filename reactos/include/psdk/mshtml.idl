@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2007 Jacek Caban for CodeWeavers
+ * Copyright 2004-2010 Jacek Caban for CodeWeavers
  * Copyright 2008      Konstantin Kondratyuk (Etersoft)
  *
  * This library is free software; you can redistribute it and/or
@@ -2876,7 +2876,7 @@ interface IHTMLCurrentStyle4 : IDispatch
 
     [propget, id(DISPID_IHTMLCURRENTSTYLE4_MAXWIDTH), displaybind, bindable]
     HRESULT maxWidth([retval, out] VARIANT * p);
-};
+}
 
 /*****************************************************************************
  *    DispHTMLCurrentStyle dispinterface
@@ -5903,7 +5903,7 @@ coclass HTMLStyleSheetPage
     [default]           dispinterface DispHTMLStyleSheetPage;
                         interface IHTMLStyleSheetPage;
                         interface IHTMLDOMConstructor;
-};
+}
 
 [
     odl,
@@ -6702,7 +6702,7 @@ methods:
 
     [id(DISPID_HTMLFORMELEMENTEVENTS_ONRESET)]
     VARIANT_BOOL onreset();
-};
+}
 
 interface IHTMLEventObj;
 
@@ -6905,7 +6905,7 @@ methods:
 
     [id(DISPID_HTMLFORMELEMENTEVENTS2_ONRESET)]
     VARIANT_BOOL onreset([in] IHTMLEventObj* pEvtObj);
-};
+}
 
 [
     noncreatable,
@@ -7365,7 +7365,7 @@ interface IHTMLControlElement : IDispatch
 
     [propget, id(DISPID_IHTMLCONTROLELEMENT_CLIENTLEFT), displaybind, bindable]
     HRESULT clientLeft([retval, out] LONG * p);
-};
+}
 
 /*****************************************************************************
  *    IHTMLBodyElement interface
@@ -7634,7 +7634,7 @@ methods:
 
     [propget, id(DISPID_IHTMLBODYELEMENT2_ONAFTERPRINT), displaybind, bindable]
     VARIANT onafterprint();
-};
+}
 
 [
     uuid(3050f24a-98b5-11cf-bb82-00aa00bdce0b)
@@ -7655,7 +7655,7 @@ coclass HTMLBody
                         interface IHTMLTextContainer;
                         interface IHTMLBodyElement;
                         interface IHTMLBodyElement2;
-};
+}
 
 /*****************************************************************************
  *    IHTMLAnchorElement interface
@@ -8971,6 +8971,92 @@ interface IHTMLTextAreaElement : IDispatch
 }
 
 /*****************************************************************************
+ *    DispHTMLTextAreaElement dispinterface
+ */
+[
+    hidden,
+    uuid(3050f521-98b5-11cf-bb82-00aa00bdce0b)
+]
+dispinterface DispHTMLTextAreaElement
+{
+properties:
+methods:
+    WINE_HTMLDATAELEMENT_DISPINTERFACE_DECL;
+
+    [propget, id(DISPID_IHTMLTEXTAREAELEMENT_TYPE)]
+    BSTR type();
+
+    [propput, id(DISPID_IHTMLTEXTAREAELEMENT_VALUE), displaybind, bindable]
+    void value(BSTR v);
+
+    [propget, id(DISPID_IHTMLTEXTAREAELEMENT_VALUE), displaybind, bindable]
+    BSTR value();
+
+    [propput, id(DISPID_IHTMLTEXTAREAELEMENT_NAME), displaybind, bindable]
+    void name(BSTR v);
+
+    [propget, id(DISPID_IHTMLTEXTAREAELEMENT_NAME), displaybind, bindable]
+    BSTR name();
+
+    [propput, id(DISPID_IHTMLTEXTAREAELEMENT_STATUS)]
+    void status(VARIANT v);
+
+    [propget, id(DISPID_IHTMLTEXTAREAELEMENT_STATUS)]
+    VARIANT status();
+
+    [propget, id(DISPID_IHTMLTEXTAREAELEMENT_FORM)]
+    IHTMLFormElement *form();
+
+    [propput, id(DISPID_IHTMLTEXTAREAELEMENT_DEFAULTVALUE), displaybind, bindable, hidden]
+    void defaultValue(BSTR v);
+
+    [propget, id(DISPID_IHTMLTEXTAREAELEMENT_DEFAULTVALUE), displaybind, bindable, hidden]
+    BSTR defaultValue();
+
+    [id(DISPID_IHTMLTEXTAREAELEMENT_SELECT)]
+    void select();
+
+    [propput, id(DISPID_IHTMLTEXTAREAELEMENT_ONCHANGE), displaybind, bindable]
+    void onchange(VARIANT v);
+
+    [propget, id(DISPID_IHTMLTEXTAREAELEMENT_ONCHANGE), displaybind, bindable]
+    VARIANT onchange();
+
+    [propput, id(DISPID_IHTMLTEXTAREAELEMENT_ONSELECT), displaybind, bindable]
+    void onselect(VARIANT v);
+
+    [propget, id(DISPID_IHTMLTEXTAREAELEMENT_ONSELECT), displaybind, bindable]
+    VARIANT onselect();
+
+    [propput, id(DISPID_IHTMLTEXTAREAELEMENT_READONLY), displaybind, bindable]
+    void readOnly(VARIANT_BOOL v);
+
+    [propget, id(DISPID_IHTMLTEXTAREAELEMENT_READONLY), displaybind, bindable]
+    VARIANT_BOOL readOnly();
+
+    [propput, id(DISPID_IHTMLTEXTAREAELEMENT_ROWS), displaybind, bindable]
+    void rows(LONG v);
+
+    [propget, id(DISPID_IHTMLTEXTAREAELEMENT_ROWS), displaybind, bindable]
+    LONG rows();
+
+    [propput, id(DISPID_IHTMLTEXTAREAELEMENT_COLS), displaybind, bindable]
+    void cols(LONG v);
+
+    [propget, id(DISPID_IHTMLTEXTAREAELEMENT_COLS), displaybind, bindable]
+    LONG cols();
+
+    [propput, id(DISPID_IHTMLTEXTAREAELEMENT_WRAP), displaybind, bindable]
+    void wrap(BSTR v);
+
+    [propget, id(DISPID_IHTMLTEXTAREAELEMENT_WRAP), displaybind, bindable]
+    BSTR wrap();
+
+    [id(DISPID_IHTMLTEXTAREAELEMENT_CREATETEXTRANGE)]
+    IHTMLTxtRange *createTextRange();
+}
+
+/*****************************************************************************
  *    DispHTMLUnknownElement interface
  */
 [
@@ -10245,7 +10331,7 @@ interface IHTMLWindow4 : IDispatch
 
     [propget, id(DISPID_IHTMLWINDOW4_FRAMEELEMENT)]
     HRESULT frameElement([retval, out] IHTMLFrameBase* * p);
-};
+}
 
 /*****************************************************************************
  *    IHTMLWindow5 interface
@@ -10263,7 +10349,7 @@ interface IHTMLWindow5 : IDispatch
 
     [propget, id(DISPID_IHTMLWINDOW5_XMLHTTPREQUEST)]
     HRESULT XMLHttpRequest([retval, out] VARIANT * p);
-};
+}
 
 /*****************************************************************************
  *    DispHTMLScreen dispinterface
@@ -10902,7 +10988,7 @@ methods:
 
     [propget, id(DISPID_IHTMLWINDOW5_XMLHTTPREQUEST)]
     VARIANT XMLHttpRequest();
-};
+}
 
 /*****************************************************************************
  *    HTMLWindowEvents interface
@@ -10949,7 +11035,7 @@ methods:
 
     [id(DISPID_HTMLWINDOWEVENTS_ONAFTERPRINT)]
     void onafterprint();
-};
+}
 
 /*****************************************************************************
  *    HTMLWindowEvents2 interface
@@ -10996,7 +11082,7 @@ methods:
 
     [id(DISPID_HTMLWINDOWEVENTS2_ONAFTERPRINT)]
     void onafterprint([in] IHTMLEventObj* pEvtObj);
-};
+}
 
 /*****************************************************************************
  *    HTMLWindowProxy class
@@ -11013,7 +11099,7 @@ coclass HTMLWindowProxy
                         interface IHTMLWindow3;
                         interface IHTMLWindow4;
                         interface IHTMLWindow5;
-};
+}
 
 /*****************************************************************************
  *    HTMLDocumentEvents2 interface
@@ -11473,7 +11559,7 @@ methods:
 
     [id(DISPID_HTMLTEXTCONTAINEREVENTS_ONSELECT)]
     void onselect();
-};
+}
 
 /*****************************************************************************
  *    HTMLTextContainerEvents2 interface
@@ -11677,7 +11763,7 @@ methods:
 
     [id(DISPID_HTMLTEXTCONTAINEREVENTS2_ONSELECT)]
     void onselect([in] IHTMLEventObj* pEvtObj);
-};
+}
 
 /*****************************************************************************
  *    IHTMLDocument interface
@@ -13329,7 +13415,8 @@ methods:
 
     [id(DISPID_HTMLELEMENTEVENTS2_ONMOUSEWHEEL)]
     VARIANT_BOOL onmousewheel([in] IHTMLEventObj* pEvtObj);
-};
+}
+
 [
     hidden,
     uuid(3050f33c-98b5-11cf-bb82-00aa00bdce0b)
@@ -13526,8 +13613,7 @@ methods:
 
     [id(DISPID_HTMLELEMENTEVENTS_ONFOCUSOUT)]
     void onfocusout();
-
-};
+}
 
 [
     noncreatable,
@@ -13943,7 +14029,7 @@ methods:
 
     [id(DISPID_HTMLELEMENTEVENTS2_ONMOUSEWHEEL)]
     VARIANT_BOOL onmousewheel([in] IHTMLEventObj* pEvtObj);
-};
+}
 
 /*****************************************************************************
  *    IHTMLTableCaption interface
@@ -14153,7 +14239,7 @@ interface IHTMLTable2 : IDispatch
     HRESULT moveRow([defaultvalue(-1), in] LONG indexFrom,
         [defaultvalue(-1), in] LONG indexTo,
         [retval, out] IDispatch** row);
-};
+}
 
 [
     odl,
@@ -14168,7 +14254,7 @@ interface IHTMLTable3 : IDispatch
 
     [propget, id(DISPID_IHTMLTABLE3_SUMMARY), displaybind, bindable]
     HRESULT summary([retval, out] BSTR * p);
-};
+}
 
 [
     noncreatable,
@@ -14191,7 +14277,7 @@ coclass HTMLTable
                         interface IHTMLTable;
                         interface IHTMLTable2;
                         interface IHTMLTable3;
-};
+}
 
 [
     odl,
@@ -14627,6 +14713,74 @@ interface IHTMLScriptElement2 : IDispatch
 }
 
 /*****************************************************************************
+ *    DispHTMLScriptElement dispinterface
+ */
+[
+    hidden,
+    uuid(3050f530-98b5-11cf-bb82-00aa00bdce0b)
+]
+dispinterface DispHTMLScriptElement
+{
+properties:
+methods:
+    WINE_HTMLELEMENT_DISPINTERFACE_DECL;
+
+    [propput, id(DISPID_IHTMLSCRIPTELEMENT_SRC), displaybind, bindable]
+    void src(BSTR v);
+
+    [propget, id(DISPID_IHTMLSCRIPTELEMENT_SRC), displaybind, bindable]
+    BSTR src();
+
+    [propput, id(DISPID_IHTMLSCRIPTELEMENT_HTMLFOR), displaybind, bindable]
+    void htmlFor(BSTR v);
+
+    [propget, id(DISPID_IHTMLSCRIPTELEMENT_HTMLFOR), displaybind, bindable]
+    BSTR htmlFor();
+
+    [propput, id(DISPID_IHTMLSCRIPTELEMENT_EVENT), displaybind, bindable]
+    void event(BSTR v);
+
+    [propget, id(DISPID_IHTMLSCRIPTELEMENT_EVENT), displaybind, bindable]
+    BSTR event();
+
+    [propput, id(DISPID_IHTMLSCRIPTELEMENT_TEXT), displaybind, bindable]
+    void text(BSTR v);
+
+    [propget, id(DISPID_IHTMLSCRIPTELEMENT_TEXT), displaybind, bindable]
+    BSTR text();
+
+    [propput, id(DISPID_IHTMLSCRIPTELEMENT_DEFER), displaybind, bindable]
+    void defer(VARIANT_BOOL v);
+
+    [propget, id(DISPID_IHTMLSCRIPTELEMENT_DEFER), displaybind, bindable]
+    VARIANT_BOOL defer();
+
+    [propput, id(DISPID_IHTMLSCRIPTELEMENT_ONERROR), displaybind, bindable]
+    void onerror(VARIANT v);
+
+    [propget, id(DISPID_IHTMLSCRIPTELEMENT_ONERROR), displaybind, bindable]
+    VARIANT onerror();
+
+    [propput, id(DISPID_IHTMLSCRIPTELEMENT_TYPE), displaybind, bindable]
+    void type(BSTR v);
+
+    [propget, id(DISPID_IHTMLSCRIPTELEMENT_TYPE), displaybind, bindable]
+    BSTR type();
+
+    [propput, id(DISPID_IHTMLSCRIPTELEMENT2_CHARSET), displaybind, bindable]
+    void charset(BSTR v);
+
+    [propget, id(DISPID_IHTMLSCRIPTELEMENT2_CHARSET), displaybind, bindable]
+    BSTR charset();
+
+    [propput, id(DISPID_IHTMLSCRIPTELEMENT3_IE8_SRC)]
+    void ie8_src(BSTR v);
+
+    [propget, id(DISPID_IHTMLSCRIPTELEMENT3_IE8_SRC)]
+    BSTR ie8_src();
+}
+
+/*****************************************************************************
  *    IHTMLFrameBase interface
  */
 [
@@ -14692,6 +14846,61 @@ interface IHTMLFrameBase : IDispatch
     HRESULT scrolling([out, retval] BSTR *p);
 }
 
+#define WINE_IHTMLFRAMEBASE_DISPINTERFACE_DECL          \
+    [propput, id(DISPID_IHTMLFRAMEBASE_SRC)]            \
+    void src(BSTR v);                                   \
+                                                        \
+    [propget, id(DISPID_IHTMLFRAMEBASE_SRC)]            \
+    BSTR src();                                         \
+                                                        \
+    [propput, id(DISPID_IHTMLFRAMEBASE_NAME)]           \
+    void name(BSTR v);                                  \
+                                                        \
+    [propget, id(DISPID_IHTMLFRAMEBASE_NAME)]           \
+    BSTR name();                                        \
+                                                        \
+    [propput, id(DISPID_IHTMLFRAMEBASE_BORDER)]         \
+    void border(VARIANT v);                             \
+                                                        \
+    [propget, id(DISPID_IHTMLFRAMEBASE_BORDER)]         \
+    VARIANT border();                                   \
+                                                        \
+    [propput, id(DISPID_IHTMLFRAMEBASE_FRAMEBORDER)]    \
+    void frameBorder(BSTR v);                           \
+                                                        \
+    [propget, id(DISPID_IHTMLFRAMEBASE_FRAMEBORDER)]    \
+    BSTR frameBorder();                                 \
+                                                        \
+    [propput, id(DISPID_IHTMLFRAMEBASE_FRAMESPACING)]   \
+    void frameSpacing(VARIANT v);                       \
+                                                        \
+    [propget, id(DISPID_IHTMLFRAMEBASE_FRAMESPACING)]   \
+    VARIANT frameSpacing();                             \
+                                                        \
+    [propput, id(DISPID_IHTMLFRAMEBASE_MARGINWIDTH)]    \
+    void marginWidth(VARIANT v);                        \
+                                                        \
+    [propget, id(DISPID_IHTMLFRAMEBASE_MARGINWIDTH)]    \
+    VARIANT marginWidth();                              \
+                                                        \
+    [propput, id(DISPID_IHTMLFRAMEBASE_MARGINHEIGHT)]   \
+    void marginHeight(VARIANT v);                       \
+                                                        \
+    [propget, id(DISPID_IHTMLFRAMEBASE_MARGINHEIGHT)]   \
+    VARIANT marginHeight();                             \
+                                                        \
+    [propput, id(DISPID_IHTMLFRAMEBASE_NORESIZE)]       \
+    void noResize(VARIANT_BOOL v);                      \
+                                                        \
+    [propget, id(DISPID_IHTMLFRAMEBASE_NORESIZE)]       \
+    VARIANT_BOOL noResize();                            \
+                                                        \
+    [propput, id(DISPID_IHTMLFRAMEBASE_SCROLLING)]      \
+    void scrolling(BSTR v);                             \
+                                                        \
+    [propget, id(DISPID_IHTMLFRAMEBASE_SCROLLING)]      \
+    BSTR scrolling()
+
 /*****************************************************************************
  *    IHTMLFrameBase2 interface
  */
@@ -14728,6 +14937,152 @@ interface IHTMLFrameBase2 : IDispatch
     HRESULT allowTransparency([retval, out] VARIANT_BOOL *p);
 }
 
+#define WINE_IHTMLFRAMEBASE2_DISPINTERFACE_DECL                         \
+    [propget, id(DISPID_IHTMLFRAMEBASE2_CONTENTWINDOW)]                 \
+    IHTMLWindow2 *contentWindow();                                      \
+                                                                        \
+    [propput, id(DISPID_IHTMLFRAMEBASE2_ONLOAD), displaybind, bindable] \
+    void onload(VARIANT v);                                             \
+                                                                        \
+    [propget, id(DISPID_IHTMLFRAMEBASE2_ONLOAD), displaybind, bindable] \
+    VARIANT onload();                                                   \
+                                                                        \
+    [propput, id(DISPID_IHTMLFRAMEBASE2_ALLOWTRANSPARENCY)]             \
+    void allowTransparency(VARIANT_BOOL v);                             \
+                                                                        \
+    [propget, id(DISPID_IHTMLFRAMEBASE2_ALLOWTRANSPARENCY)]             \
+    VARIANT_BOOL allowTransparency()
+
+#define WINE_IHTMLFRAMEBASE3_DISPINTERFACE_DECL                           \
+    [propput, id(DISPID_IHTMLFRAMEBASE3_LONGDESC), displaybind, bindable] \
+    void longDesc(BSTR v);                                                \
+                                                                          \
+    [propget, id(DISPID_IHTMLFRAMEBASE3_LONGDESC), displaybind, bindable] \
+    BSTR longDesc()
+
+
+#define WINE_HTMLFRAMEBASE_DISPINTERFACE_DECL \
+    WINE_HTMLDATAELEMENT_DISPINTERFACE_DECL;  \
+    WINE_IHTMLFRAMEBASE_DISPINTERFACE_DECL;   \
+    WINE_IHTMLFRAMEBASE2_DISPINTERFACE_DECL;  \
+    WINE_IHTMLFRAMEBASE3_DISPINTERFACE_DECL
+
+/*****************************************************************************
+ *    IHTMLFrameElement3 interface
+ */
+[
+    odl,
+    oleautomation,
+    dual,
+    uuid(3051042d-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IHTMLFrameElement3 : IDispatch
+{
+    [propget, id(DISPID_IHTMLFRAMEELEMENT3_CONTENTDOCUMENT)]
+    HRESULT contentDocument([out, retval] IDispatch **p);
+
+    [propput, id(DISPID_IHTMLFRAMEELEMENT3_IE8_SRC)]
+    HRESULT src([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLFRAMEELEMENT3_IE8_SRC)]
+    HRESULT src([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLFRAMEELEMENT3_IE8_LONGDESC)]
+    HRESULT longDesc([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLFRAMEELEMENT3_IE8_LONGDESC)]
+    HRESULT longDesc([out, retval] BSTR *p);
+
+    [propput, id(DISPID_IHTMLFRAMEELEMENT3_IE8_FRAMEBORDER)]
+    HRESULT frameBorder([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLFRAMEELEMENT3_IE8_FRAMEBORDER)]
+    HRESULT frameBorder([out, retval] BSTR * p);
+}
+
+/*****************************************************************************
+ *    DispHTMLFrameElement dispinterface
+ */
+[
+    hidden,
+    uuid(3050f513-98b5-11cf-bb82-00aa00bdce0b)
+]
+dispinterface DispHTMLFrameElement
+{
+properties:
+methods:
+    WINE_HTMLFRAMEBASE_DISPINTERFACE_DECL;
+
+    [propput, id(DISPID_IHTMLFRAMEELEMENT_BORDERCOLOR)]
+    void borderColor(VARIANT v);
+
+    [propget, id(DISPID_IHTMLFRAMEELEMENT_BORDERCOLOR)]
+    VARIANT borderColor();
+
+    [propput, id(DISPID_IHTMLFRAMEELEMENT2_HEIGHT)]
+    void height(VARIANT v);
+
+    [propget, id(DISPID_IHTMLFRAMEELEMENT2_HEIGHT)]
+    VARIANT height();
+
+    [propput, id(DISPID_IHTMLFRAMEELEMENT2_WIDTH)]
+    void width(VARIANT v);
+
+    [propget, id(DISPID_IHTMLFRAMEELEMENT2_WIDTH)]
+    VARIANT width();
+
+    [propget, id(DISPID_IHTMLFRAMEELEMENT3_CONTENTDOCUMENT)]
+    IDispatch *contentDocument();
+
+    [propput, id(DISPID_IHTMLFRAMEELEMENT3_IE8_SRC)]
+    void ie8_src(BSTR v);
+
+    [propget, id(DISPID_IHTMLFRAMEELEMENT3_IE8_SRC)]
+    BSTR ie8_src();
+
+    [propput, id(DISPID_IHTMLFRAMEELEMENT3_IE8_LONGDESC)]
+    void ie8_longDesc(BSTR v);
+
+    [propget, id(DISPID_IHTMLFRAMEELEMENT3_IE8_LONGDESC)]
+    BSTR ie8_longDesc();
+
+    [propput, id(DISPID_IHTMLFRAMEELEMENT3_IE8_FRAMEBORDER)]
+    void ie8_frameBorder(BSTR v);
+
+    [propget, id(DISPID_IHTMLFRAMEELEMENT3_IE8_FRAMEBORDER)]
+    BSTR ie8_frameBorder();
+}
+
+/*****************************************************************************
+ *    IHTMLIFrameElement interface
+ */
+[
+    odl,
+    oleautomation,
+    dual,
+    uuid(3050f315-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IHTMLIFrameElement : IDispatch
+{
+    [propput, id(DISPID_IHTMLIFRAMEELEMENT_VSPACE)]
+    HRESULT vspace([in] LONG v);
+
+    [propget, id(DISPID_IHTMLIFRAMEELEMENT_VSPACE)]
+    HRESULT vspace([retval, out] LONG *p);
+
+    [propput, id(DISPID_IHTMLIFRAMEELEMENT_HSPACE)]
+    HRESULT hspace([in] LONG v);
+
+    [propget, id(DISPID_IHTMLIFRAMEELEMENT_HSPACE)]
+    HRESULT hspace([retval, out] LONG *p);
+
+    [propput, id(DISPID_IHTMLIFRAMEELEMENT_ALIGN), displaybind, bindable]
+    HRESULT align([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLIFRAMEELEMENT_ALIGN), displaybind, bindable]
+    HRESULT align([retval, out] BSTR *p);
+}
+
 /*****************************************************************************
  *    DispHTMLIFrame dispinterface
  */
@@ -14739,82 +15094,7 @@ dispinterface DispHTMLIFrame
 {
 properties:
 methods:
-    WINE_HTMLDATAELEMENT_DISPINTERFACE_DECL;
-
-    [propput, id(DISPID_IHTMLFRAMEBASE_SRC)]
-    void src(BSTR v);
-
-    [propget, id(DISPID_IHTMLFRAMEBASE_SRC)]
-    BSTR src();
-
-    [propput, id(DISPID_IHTMLFRAMEBASE_NAME)]
-    void name(BSTR v);
-
-    [propget, id(DISPID_IHTMLFRAMEBASE_NAME)]
-    BSTR name();
-
-    [propput, id(DISPID_IHTMLFRAMEBASE_BORDER)]
-    void border(VARIANT v);
-
-    [propget, id(DISPID_IHTMLFRAMEBASE_BORDER)]
-    VARIANT border();
-
-    [propput, id(DISPID_IHTMLFRAMEBASE_FRAMEBORDER)]
-    void frameBorder(BSTR v);
-
-    [propget, id(DISPID_IHTMLFRAMEBASE_FRAMEBORDER)]
-    BSTR frameBorder();
-
-    [propput, id(DISPID_IHTMLFRAMEBASE_FRAMESPACING)]
-    void frameSpacing(VARIANT v);
-
-    [propget, id(DISPID_IHTMLFRAMEBASE_FRAMESPACING)]
-    VARIANT frameSpacing();
-
-    [propput, id(DISPID_IHTMLFRAMEBASE_MARGINWIDTH)]
-    void marginWidth(VARIANT v);
-
-    [propget, id(DISPID_IHTMLFRAMEBASE_MARGINWIDTH)]
-    VARIANT marginWidth();
-
-    [propput, id(DISPID_IHTMLFRAMEBASE_MARGINHEIGHT)]
-    void marginHeight(VARIANT v);
-
-    [propget, id(DISPID_IHTMLFRAMEBASE_MARGINHEIGHT)]
-    VARIANT marginHeight();
-
-    [propput, id(DISPID_IHTMLFRAMEBASE_NORESIZE)]
-    void noResize(VARIANT_BOOL v);
-
-    [propget, id(DISPID_IHTMLFRAMEBASE_NORESIZE)]
-    VARIANT_BOOL noResize();
-
-    [propput, id(DISPID_IHTMLFRAMEBASE_SCROLLING)]
-    void scrolling(BSTR v);
-
-    [propget, id(DISPID_IHTMLFRAMEBASE_SCROLLING)]
-    BSTR scrolling();
-
-    [propget, id(DISPID_IHTMLFRAMEBASE2_CONTENTWINDOW)]
-    IHTMLWindow2 *contentWindow();
-
-    [propput, id(DISPID_IHTMLFRAMEBASE2_ONLOAD), displaybind, bindable]
-    void onload(VARIANT v);
-
-    [propget, id(DISPID_IHTMLFRAMEBASE2_ONLOAD), displaybind, bindable]
-    VARIANT onload();
-
-    [propput, id(DISPID_IHTMLFRAMEBASE2_ALLOWTRANSPARENCY)]
-    void allowTransparency(VARIANT_BOOL v);
-
-    [propget, id(DISPID_IHTMLFRAMEBASE2_ALLOWTRANSPARENCY)]
-    VARIANT_BOOL allowTransparency();
-
-    [propput, id(DISPID_IHTMLFRAMEBASE3_LONGDESC), displaybind, bindable]
-    void longDesc(BSTR v);
-
-    [propget, id(DISPID_IHTMLFRAMEBASE3_LONGDESC), displaybind, bindable]
-    BSTR longDesc();
+    WINE_HTMLFRAMEBASE_DISPINTERFACE_DECL;
 
     [propput, id(DISPID_IHTMLIFRAMEELEMENT_VSPACE)]
     void vspace(LONG v);

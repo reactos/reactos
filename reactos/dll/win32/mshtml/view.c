@@ -807,8 +807,19 @@ static HRESULT WINAPI ViewObject_Unfreeze(IViewObjectEx *iface, DWORD dwFreeze)
 static HRESULT WINAPI ViewObject_SetAdvise(IViewObjectEx *iface, DWORD aspects, DWORD advf, IAdviseSink *pAdvSink)
 {
     HTMLDocument *This = VIEWOBJ_THIS(iface);
-    FIXME("(%p)->(%d %d %p)\n", This, aspects, advf, pAdvSink);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%d %d %p)\n", This, aspects, advf, pAdvSink);
+
+    if(aspects != DVASPECT_CONTENT || advf != ADVF_PRIMEFIRST)
+        FIXME("unsuported arguments\n");
+
+    if(This->doc_obj->view_sink)
+        IAdviseSink_Release(This->doc_obj->view_sink);
+    if(pAdvSink)
+        IAdviseSink_AddRef(pAdvSink);
+
+    This->doc_obj->view_sink = pAdvSink;
+    return S_OK;
 }
 
 static HRESULT WINAPI ViewObject_GetAdvise(IViewObjectEx *iface, DWORD *pAspects, DWORD *pAdvf, IAdviseSink **ppAdvSink)

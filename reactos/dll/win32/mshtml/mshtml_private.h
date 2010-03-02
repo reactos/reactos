@@ -68,6 +68,7 @@ typedef enum {
     DispHTMLElementCollection_tid,
     DispHTMLFormElement_tid,
     DispHTMLGenericElement_tid,
+    DispHTMLFrameElement_tid,
     DispHTMLIFrame_tid,
     DispHTMLImg_tid,
     DispHTMLInputElement_tid,
@@ -75,10 +76,12 @@ typedef enum {
     DispHTMLNavigator_tid,
     DispHTMLOptionElement_tid,
     DispHTMLScreen_tid,
+    DispHTMLScriptElement_tid,
     DispHTMLSelectElement_tid,
     DispHTMLStyle_tid,
     DispHTMLTable_tid,
     DispHTMLTableRow_tid,
+    DispHTMLTextAreaElement_tid,
     DispHTMLUnknownElement_tid,
     DispHTMLWindow2_tid,
     HTMLDocumentEvents_tid,
@@ -108,13 +111,16 @@ typedef enum {
     IHTMLFormElement_tid,
     IHTMLFrameBase_tid,
     IHTMLFrameBase2_tid,
+    IHTMLFrameElement3_tid,
     IHTMLGenericElement_tid,
+    IHTMLIFrameElement_tid,
     IHTMLImageElementFactory_tid,
     IHTMLImgElement_tid,
     IHTMLInputElement_tid,
     IHTMLLocation_tid,
     IHTMLOptionElement_tid,
     IHTMLScreen_tid,
+    IHTMLScriptElement_tid,
     IHTMLSelectElement_tid,
     IHTMLStyle_tid,
     IHTMLStyle2_tid,
@@ -122,6 +128,7 @@ typedef enum {
     IHTMLStyle4_tid,
     IHTMLTable_tid,
     IHTMLTableRow_tid,
+    IHTMLTextAreaElement_tid,
     IHTMLTextContainer_tid,
     IHTMLUniqueName_tid,
     IHTMLWindow2_tid,
@@ -373,6 +380,7 @@ struct HTMLDocumentObj {
     IOleInPlaceSite *ipsite;
     IOleInPlaceFrame *frame;
     IOleInPlaceUIWindow *ip_window;
+    IAdviseSink *view_sink;
 
     DOCHOSTUIINFO hostinfo;
 
@@ -486,6 +494,14 @@ typedef struct {
 
     nsIDOMHTMLElement *nselem;
 } HTMLElement;
+
+#define HTMLELEMENT_TIDS    \
+    IHTMLDOMNode_tid,       \
+    IHTMLDOMNode2_tid,      \
+    IHTMLElement_tid,       \
+    IHTMLElement2_tid,      \
+    IHTMLElement3_tid,      \
+    IHTMLElement4_tid
 
 typedef struct {
     HTMLElement element;
@@ -696,7 +712,8 @@ void nsfree(void*);
 void nsACString_SetData(nsACString*,const char*);
 PRUint32 nsACString_GetData(const nsACString*,const char**);
 
-void nsAString_Init(nsAString*,const PRUnichar*);
+BOOL nsAString_Init(nsAString*,const PRUnichar*);
+void nsAString_InitDepend(nsAString*,const PRUnichar*);
 void nsAString_SetData(nsAString*,const PRUnichar*);
 PRUint32 nsAString_GetData(const nsAString*,const PRUnichar**);
 void nsAString_Finish(nsAString*);

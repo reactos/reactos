@@ -439,11 +439,14 @@ HRESULT WINAPI DllUnregisterServer(void)
 
 const char *debugstr_variant(const VARIANT *v)
 {
+    if(!v)
+        return "(null)";
+
     switch(V_VT(v)) {
     case VT_EMPTY:
-        return wine_dbg_sprintf("{VT_EMPTY}");
+        return "{VT_EMPTY}";
     case VT_NULL:
-        return wine_dbg_sprintf("{VT_NULL}");
+        return "{VT_NULL}";
     case VT_I4:
         return wine_dbg_sprintf("{VT_I4: %d}", V_I4(v));
     case VT_R8:

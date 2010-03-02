@@ -319,6 +319,19 @@ static const NodeImplVtbl HTMLScriptElementImplVtbl = {
     HTMLScriptElement_get_readystate
 };
 
+static const tid_t HTMLScriptElement_iface_tids[] = {
+    HTMLELEMENT_TIDS,
+    IHTMLScriptElement_tid,
+    0
+};
+
+static dispex_static_data_t HTMLScriptElement_dispex = {
+    NULL,
+    DispHTMLScriptElement_tid,
+    NULL,
+    HTMLScriptElement_iface_tids
+};
+
 HTMLElement *HTMLScriptElement_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem)
 {
     HTMLScriptElement *ret = heap_alloc_zero(sizeof(HTMLScriptElement));
@@ -327,7 +340,7 @@ HTMLElement *HTMLScriptElement_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *
     ret->lpHTMLScriptElementVtbl = &HTMLScriptElementVtbl;
     ret->element.node.vtbl = &HTMLScriptElementImplVtbl;
 
-    HTMLElement_Init(&ret->element, doc, nselem, NULL);
+    HTMLElement_Init(&ret->element, doc, nselem, &HTMLScriptElement_dispex);
 
     nsres = nsIDOMHTMLElement_QueryInterface(nselem, &IID_nsIDOMHTMLScriptElement, (void**)&ret->nsscript);
     if(NS_FAILED(nsres))

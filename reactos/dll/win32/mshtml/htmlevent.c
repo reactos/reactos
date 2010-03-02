@@ -743,7 +743,7 @@ static IHTMLEventObj *create_event(HTMLDOMNode *target, eventid_t eid, nsIDOMEve
         if(NS_SUCCEEDED(nsres)) {
             nsAString type_str;
 
-            nsAString_Init(&type_str, event_types[event_info[eid].type]);
+            nsAString_InitDepend(&type_str, event_types[event_info[eid].type]);
             nsres = nsIDOMDocumentEvent_CreateEvent(doc_event, &type_str, &ret->nsevent);
             nsAString_Finish(&type_str);
             nsIDOMDocumentEvent_Release(doc_event);
@@ -816,7 +816,7 @@ static void call_event_handlers(HTMLDocumentNode *doc, IHTMLEventObj *event_obj,
         ConnectionPointContainer *cp_container, eventid_t eid, IDispatch *this_obj)
 {
     handler_vector_t *handler_vector = NULL;
-    DWORD i;
+    int i;
     HRESULT hres;
 
     if(event_target)
@@ -845,7 +845,8 @@ static void call_event_handlers(HTMLDocumentNode *doc, IHTMLEventObj *event_obj,
         V_VT(&arg) = VT_DISPATCH;
         V_DISPATCH(&arg) = (IDispatch*)event_obj;
 
-        for(i=0; i < handler_vector->handler_cnt; i++) {
+        i = handler_vector->handler_cnt;
+        while(i--) {
             if(handler_vector->handlers[i]) {
                 TRACE("%s [%d] >>>\n", debugstr_w(event_info[eid].name), i);
                 hres = call_disp_func(handler_vector->handlers[i], &dp);
@@ -866,6 +867,9 @@ static void call_event_handlers(HTMLDocumentNode *doc, IHTMLEventObj *event_obj,
         for(cp = cp_container->cp_list; cp; cp = cp->next) {
             if(cp->sinks_size && is_cp_event(cp->data, event_info[eid].dispid)) {
                 for(i=0; i < cp->sinks_size; i++) {
+                    if(!cp->sinks[i].disp)
+                        continue;
+
                     TRACE("cp %s [%d] >>>\n", debugstr_w(event_info[eid].name), i);
                     hres = call_cp_func(cp->sinks[i].disp, event_info[eid].dispid);
                     if(hres == S_OK)
@@ -1124,6 +1128,34 @@ HRESULT attach_event(event_target_t **event_target_ptr, HTMLDocument *doc, BSTR 
     event_target->event_table[eid]->handlers[i] = disp;
 
     *res = VARIANT_TRUE;
+    return ensure_nsevent_handler(doc->doc_node, eid);
+}
+
+HRESULT detach_event(event_target_t *event_target, HTMLDocument *doc, BSTR name, IDispatch *disp)
+{
+    eventid_t eid;
+    DWORD i = 0;
+
+    if(!event_target)
+        return S_OK;
+
+    eid = attr_to_eid(name);
+    if(eid == EVENTID_LAST) {
+        WARN("Unknown event\n");
+        return S_OK;
+    }
+
+    if(!event_target->event_table[eid])
+        return S_OK;
+
+    while(i < event_target->event_table[eid]->handler_cnt) {
+        if(event_target->event_table[eid]->handlers[i] == disp) {
+            IDispatch_Release(event_target->event_table[eid]->handlers[i]);
+            event_target->event_table[eid]->handlers[i] = NULL;
+        }
+        i++;
+    }
+
     return S_OK;
 }
 

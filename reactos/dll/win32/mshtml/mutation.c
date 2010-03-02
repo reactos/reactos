@@ -168,12 +168,12 @@ static BOOL handle_insert_comment(HTMLDocumentNode *doc, const PRUnichar *commen
 
     memcpy(buf, ptr, (end-ptr)*sizeof(WCHAR));
     buf[end-ptr] = 0;
-    nsAString_Init(&nsstr, buf);
-    heap_free(buf);
+    nsAString_InitDepend(&nsstr, buf);
 
     /* FIXME: Find better way to insert HTML to document. */
     nsres = nsIDOMHTMLDocument_Write(doc->nsdoc, &nsstr);
     nsAString_Finish(&nsstr);
+    heap_free(buf);
     if(NS_FAILED(nsres)) {
         ERR("Write failed: %08x\n", nsres);
         return FALSE;
@@ -322,6 +322,8 @@ static void parse_complete_proc(task_t *task)
         init_editor(&doc->basedoc);
 
     call_explorer_69(doc);
+    if(doc->view_sink)
+        IAdviseSink_OnViewChange(doc->view_sink, DVASPECT_CONTENT, -1);
     call_property_onchanged(&doc->basedoc.cp_propnotif, 1005);
     call_explorer_69(doc);
 
@@ -396,7 +398,7 @@ static nsresult NSAPI nsRunnable_Run(nsIRunnable *iface)
                 static const PRUnichar remove_comment_magicW[] =
                     {'#','!','w','i','n','e', 'r','e','m','o','v','e','!','#',0};
 
-                nsAString_Init(&magic_str, remove_comment_magicW);
+                nsAString_InitDepend(&magic_str, remove_comment_magicW);
                 nsres = nsIDOMComment_SetData(nscomment, &magic_str);
                 nsAString_Finish(&magic_str);
                 if(NS_FAILED(nsres))

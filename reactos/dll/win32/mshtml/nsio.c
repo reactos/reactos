@@ -438,7 +438,7 @@ static nsresult NSAPI nsChannel_GetSecurityInfo(nsIHttpChannel *iface, nsISuppor
 {
     nsChannel *This = NSCHANNEL_THIS(iface);
 
-    FIXME("(%p)->(%p)\n", This, aSecurityInfo);
+    TRACE("(%p)->(%p)\n", This, aSecurityInfo);
 
     return NS_ERROR_NOT_IMPLEMENTED;
 }

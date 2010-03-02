@@ -16,6 +16,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "windef.h"
+#include "winuser.h"
+#include "commctrl.h"
+#include "mshtmcid.h"
+
+#include "resource.h"
+
 #define WINE_OLESELFREGISTER
 #define WINE_FILEDESCRIPTION_STR "Wine HTML Viewer"
 #define WINE_FILENAME_STR "mshtml.dll"
@@ -25,6 +32,32 @@
 #define WINE_PRODUCTVERSION_STR "6.0.2800.1106"
 
 #include "wine/wine_common_ver.rc"
+
+#include "Bg.rc"
+#include "Da.rc"
+#include "De.rc"
+#include "En.rc"
+#include "Es.rc"
+#include "Fi.rc"
+#include "Fr.rc"
+#include "Hu.rc"
+#include "It.rc"
+#include "Ja.rc"
+#include "Ko.rc"
+#include "Lt.rc"
+#include "Nl.rc"
+#include "No.rc"
+#include "Pl.rc"
+#include "Pt.rc"
+#include "Ro.rc"
+#include "Ru.rc"
+#include "Si.rc"
+#include "Sv.rc"
+#include "Tr.rc"
+#include "Uk.rc"
+#include "Zh.rc"
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 /* @makedep: mshtml.inf */
 REGINST REGINST mshtml.inf
