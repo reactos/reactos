@@ -629,6 +629,7 @@ media\drivers\etc\services                          5
 media\inf\audio.inf                                 6
 media\inf\acpi.inf                                  6
 media\inf\cdrom.inf                                 6
+media\inf\cpu.inf                                   6
 media\inf\display.inf                               6
 media\inf\font.inf                                  6
 media\inf\fdc.inf                                   6
