@@ -10,7 +10,7 @@
 	<library>ole32</library>
 	<library>setupapi</library>
 	<library>msvcrt</library>
-
+	<library>strmiids</library>
 	<group compilerset="gcc">
 		<compilerflag compiler="cxx">-fno-exceptions</compilerflag>
 		<compilerflag compiler="cxx">-fno-rtti</compilerflag>

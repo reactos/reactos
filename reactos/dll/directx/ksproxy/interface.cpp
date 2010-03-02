@@ -8,7 +8,6 @@
  */
 #include "precomp.h"
 
-const GUID IID_IKsInterfaceHandler = {0xD3ABC7E0, 0x9A61, 0x11D0, {0xA4, 0x0D, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
 const GUID IID_IKsObject           = {0x423c13a2, 0x2070, 0x11d0, {0x9e, 0xf7, 0x00, 0xaa, 0x00, 0xa2, 0x16, 0xa1}};
 
 class CKsInterfaceHandler : public IKsInterfaceHandler
@@ -119,6 +118,8 @@ CKsInterfaceHandler_Constructor(
     REFIID riid,
     LPVOID * ppv)
 {
+    OutputDebugStringW(L"CKsInterfaceHandler_Constructor\n");
+
     CKsInterfaceHandler * handler = new CKsInterfaceHandler();
 
     if (!handler)

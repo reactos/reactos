@@ -87,8 +87,6 @@ CKsQualityForwarder::KsFlushClient(
     OutputDebugString("UNIMPLEMENTED\n");
 }
 
-
-
 HRESULT
 WINAPI
 CKsQualityForwarder_Constructor(
@@ -98,6 +96,8 @@ CKsQualityForwarder_Constructor(
 {
     HRESULT hr;
     HANDLE handle;
+
+    OutputDebugStringW(L"CKsQualityForwarder_Constructor\n");
 
     // open default clock
     hr = KsOpenDefaultDevice(KSCATEGORY_QUALITY, GENERIC_READ | GENERIC_WRITE, &handle);

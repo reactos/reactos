@@ -1,5 +1,6 @@
 #pragma once
 
+#define _FORCENAMELESSUNION
 #define BUILDING_KS
 #define _KSDDK_
 #include <dshow.h>
@@ -14,8 +15,8 @@
 #include <dvp.h>
 #include <vptype.h>
 #include <vpconfig.h>
-
 #include <setupapi.h>
+#include <vector>
 //#include <debug.h>
 
 typedef HRESULT (CALLBACK *LPFNCREATEINSTANCE)(IUnknown* pUnkOuter, REFIID riid, LPVOID* ppvObject);

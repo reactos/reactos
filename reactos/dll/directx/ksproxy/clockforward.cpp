@@ -8,7 +8,6 @@
  */
 #include "precomp.h"
 
-const GUID IID_IDistributorNotify = {0x56a868af, 0x0ad4, 0x11ce, {0xb0, 0x3a, 0x00, 0x20, 0xaf, 0x0b, 0xa7, 0x70}};
 const GUID KSCATEGORY_CLOCK       = {0x53172480, 0x4791, 0x11D0, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 
 class CKsClockForwarder : public IDistributorNotify,
@@ -157,6 +156,8 @@ CKsClockForwarder_Constructor(
 {
     HRESULT hr;
     HANDLE handle;
+
+    OutputDebugStringW(L"CKsClockForwarder_Constructor\n");
 
     // open default clock
     hr = KsOpenDefaultDevice(KSCATEGORY_CLOCK, GENERIC_READ | GENERIC_WRITE, &handle);
