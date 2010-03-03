@@ -596,7 +596,10 @@ GreSetDIBits(
     }
 
     if (!ScanLines || (StartScan >= bitmap->SurfObj.sizlBitmap.cy))
+    {
+        SURFACE_Unlock(bitmap);
         return 0;
+    }
 
     if (StartScan + ScanLines > bitmap->SurfObj.sizlBitmap.cy)
         ScanLines = bitmap->SurfObj.sizlBitmap.cy - StartScan;
@@ -706,6 +709,41 @@ GreSetDIBits(
     PALETTE_FreePaletteByHandle(DIB_Palette);
     EngUnlockSurface(SourceSurf);
     EngDeleteSurface((HSURF)SourceBitmap);
+
+#if 0
+  /* optimisation for the case where the input bits are in exactly the same
+   * format as the internal representation and copying to the app bits is
+   * cheap - saves a round trip to the X server */
+  if (bmi->bmiHeader.biCompression == BI_RGB &&
+      ColorUse == DIB_RGB_COLORS &&
+      bmi->bmiHeader.biBitCount == BitsPerFormat(bitmap->SurfObj.iBitmapFormat)/* && bmi->bmiHeader.biBitCount != 1*/)
+  {
+      unsigned int srcwidthb = abs(bitmap->SurfObj.lDelta);
+      int dstwidthb = abs(bitmap->SurfObj.lDelta);//DIB_GetDIBWidthBytes( bmi->bmiHeader.biWidth, bmi->bmiHeader.biBitCount );
+      LPBYTE dbits = bitmap->SurfObj.pvBits, sbits = (LPBYTE)Bits + (StartScan * srcwidthb);
+      int widthb;
+      UINT y;
+
+      //DPRINT("syncing compatible set bits to app bits\n");
+      if ((bmi->bmiHeader.biHeight < 0) ^ (bitmap->SurfObj.lDelta > 0))
+      {
+          dbits += dstwidthb * (ScanLines-1);
+          dstwidthb = -dstwidthb;
+      }
+
+      widthb = min(srcwidthb, abs(dstwidthb));
+
+      DPRINT1("srcwidthb %d, dstwidthb %d, widthb %d\n", srcwidthb, dstwidthb, widthb);
+      DPRINT1("src bitcount %d, dst bitformat %d, dst bytesize %d vs scanlines * width %d\n",
+          bmi->bmiHeader.biBitCount, bitmap->SurfObj.iBitmapFormat, bitmap->SurfObj.cjBits,
+          ScanLines * dstwidthb);
+
+      for (y = 0; y < ScanLines; y++, dbits += dstwidthb, sbits += srcwidthb)
+        memcpy(dbits, sbits, widthb);
+
+      result = ScanLines;
+  }
+#endif
 
     SURFACE_Unlock(bitmap);
 
