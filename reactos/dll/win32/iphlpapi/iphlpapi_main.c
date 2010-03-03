@@ -789,6 +789,32 @@ DWORD WINAPI GetBestRoute(DWORD dwDestAddr, DWORD dwSourceAddr, PMIB_IPFORWARDRO
   return ret;
 }
 
+/******************************************************************
+ *    GetExtendedTcpTable (IPHLPAPI.@)
+ *
+ * Get the table of TCP endpoints available to the application.
+ *
+ * PARAMS
+ *  pTcpTable [Out]    table struct with the filtered TCP endpoints available to application
+ *  pdwSize   [In/Out] estimated size of the structure returned in pTcpTable, in bytes
+ *  bOrder    [In]     whether to order the table
+ *  ulAf	[in]	version of IP used by the TCP endpoints
+ *  TableClass [in]	type of the TCP table structure from TCP_TABLE_CLASS
+ *  Reserved [in]	reserved - this value must be zero
+ *
+ * RETURNS
+ *  Success: NO_ERROR
+ *  Failure: either ERROR_INSUFFICIENT_BUFFER or ERROR_INVALID_PARAMETER
+ *
+ * NOTES
+ */
+DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, ULONG ulAf, TCP_TABLE_CLASS TableClass, ULONG Reserved)
+{
+	DWORD ret = NO_ERROR;
+	UNIMPLEMENTED;
+	return ret;	
+}
+
 
 /******************************************************************
  *    GetFriendlyIfIndex (IPHLPAPI.@)
