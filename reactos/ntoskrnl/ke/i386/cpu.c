@@ -995,8 +995,55 @@ KiLoadFastSyscallMachineSpecificRegisters(IN ULONG_PTR Context)
     return 0;
 }
 
-VOID FASTCALL DECLSPEC_NORETURN KiSystemCallSysExitReturn(IN PKTRAP_FRAME TrapFrame);
-extern PVOID KiFastCallExitHandler;
+VOID
+NTAPI
+KiDisableFastSyscallReturn(VOID)
+{
+    /* Was it applied? */
+    if (KiSystemCallExitAdjusted)
+    {        
+        /* Restore the original value */
+        KiSystemCallExitBranch[1] = KiSystemCallExitBranch[1] - KiSystemCallExitAdjusted;
+                
+        /* It's not adjusted anymore */
+        KiSystemCallExitAdjusted = FALSE;
+    }
+}
+
+VOID
+NTAPI
+KiEnableFastSyscallReturn(VOID)
+{
+    /* Check if the patch has already been done */
+    if ((KiSystemCallExitAdjusted == KiSystemCallExitAdjust) &&
+        (KiFastCallCopyDoneOnce))
+    {
+        return;
+    }
+    
+    /* Make sure the offset is within the distance of a Jxx SHORT */
+    if ((KiSystemCallExitBranch[1] - KiSystemCallExitAdjust) < 0x80)
+    {
+        /* Remove any existing code patch */
+        KiDisableFastSyscallReturn();
+        
+        /* We should have a JNZ there */
+        ASSERT(KiSystemCallExitBranch[0] == 0x75);
+
+        /* Do the patch */        
+        KiSystemCallExitAdjusted = KiSystemCallExitAdjust;
+        KiSystemCallExitBranch[1] -= KiSystemCallExitAdjusted;
+        
+        /* Remember that we've done it */
+        KiFastCallCopyDoneOnce = TRUE;
+    }
+    else
+    {
+        /* This shouldn't happen unless we've messed the macros up */
+        DPRINT1("Your compiled kernel is broken!\n");
+        DbgBreakPoint();
+    }
+}
 
 VOID
 NTAPI
@@ -1008,11 +1055,11 @@ KiRestoreFastSyscallReturnState(VOID)
         /* Check if it has been disabled */
         if (!KiFastSystemCallDisable)
         {
-            /* Do an IPI to enable it */
-            KeIpiGenericCall(KiLoadFastSyscallMachineSpecificRegisters, 0);
-
-            /* It's enabled, so use the proper exit stub */
-            KiFastCallExitHandler = KiSystemCallSysExitReturn;
+            /* KiSystemCallExit2 should come BEFORE KiSystemCallExit */
+            ASSERT(KiSystemCallExit2 < KiSystemCallExit);
+            
+            /* It's enabled, so we'll have to do a code patch */
+            KiSystemCallExitAdjust = KiSystemCallExit - KiSystemCallExit2;
         }
         else
         {
@@ -1020,6 +1067,16 @@ KiRestoreFastSyscallReturnState(VOID)
             KeFeatureBits &= ~KF_FAST_SYSCALL;
         }
     }
+    
+    /* Now check if all CPUs support fast system call, and the registry allows it */
+    if (KeFeatureBits & KF_FAST_SYSCALL)
+    {
+        /* Do an IPI to enable it */
+        KeIpiGenericCall(KiLoadFastSyscallMachineSpecificRegisters, 0);
+    }
+    
+    /* Perform the code patch that is required */
+    KiEnableFastSyscallReturn();
 }
 
 ULONG_PTR
