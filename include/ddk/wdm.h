@@ -1476,6 +1476,71 @@ KeTestSpinLock(
 );
 #endif
 
+#if (NTDDI_VERSION >= NTDDI_WS03SP1)
+NTKERNELAPI
+BOOLEAN
+KeAreAllApcsDisabled(
+  VOID);
+
+/* Guarded Mutex routines */
+
+NTKERNELAPI
+VOID
+FASTCALL
+KeAcquireGuardedMutex(
+    IN OUT PKGUARDED_MUTEX GuardedMutex
+);
+
+NTKERNELAPI
+VOID
+FASTCALL
+KeAcquireGuardedMutexUnsafe(
+    IN OUT PKGUARDED_MUTEX GuardedMutex
+);
+
+NTKERNELAPI
+VOID
+KeEnterGuardedRegion(
+    VOID
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+KeLeaveGuardedRegion(
+    VOID
+);
+
+NTKERNELAPI
+VOID
+FASTCALL
+KeInitializeGuardedMutex(
+    OUT PKGUARDED_MUTEX GuardedMutex
+);
+
+NTKERNELAPI
+VOID
+FASTCALL
+KeReleaseGuardedMutexUnsafe(
+    IN OUT PKGUARDED_MUTEX GuardedMutex
+);
+
+NTKERNELAPI
+VOID
+FASTCALL
+KeReleaseGuardedMutex(
+    IN OUT PKGUARDED_MUTEX GuardedMutex
+);
+
+NTKERNELAPI
+BOOLEAN
+FASTCALL
+KeTryToAcquireGuardedMutex(
+    IN OUT PKGUARDED_MUTEX GuardedMutex
+);
+
+#endif
+
 /*
 ** Utillity functions
 */
@@ -1511,6 +1576,112 @@ KeTestSpinLock(
  */
 #define ROUND_TO_PAGES(Size) \
   (((ULONG_PTR) (Size) + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1))
+
+#if defined(_X86_) || defined(_AMD64_)
+
+//
+// x86 and x64 performs a 0x2C interrupt
+//
+#define DbgRaiseAssertionFailure __int2c
+
+#elif defined(_ARM_)
+
+//
+// TODO
+//
+
+#else
+#error Unsupported Architecture
+#endif
+
+#if DBG
+
+#define ASSERT(exp) \
+  (VOID)((!(exp)) ? \
+    RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ), FALSE : TRUE)
+
+#define ASSERTMSG(msg, exp) \
+  (VOID)((!(exp)) ? \
+    RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, msg ), FALSE : TRUE)
+
+#define RTL_SOFT_ASSERT(exp) \
+  (VOID)((!(exp)) ? \
+    DbgPrint("%s(%d): Soft assertion failed\n   Expression: %s\n", __FILE__, __LINE__, #exp), FALSE : TRUE)
+
+#define RTL_SOFT_ASSERTMSG(msg, exp) \
+  (VOID)((!(exp)) ? \
+    DbgPrint("%s(%d): Soft assertion failed\n   Expression: %s\n   Message: %s\n", __FILE__, __LINE__, #exp, (msg)), FALSE : TRUE)
+
+#define RTL_VERIFY(exp) ASSERT(exp)
+#define RTL_VERIFYMSG(msg, exp) ASSERTMSG(msg, exp)
+
+#define RTL_SOFT_VERIFY(exp) RTL_SOFT_ASSERT(exp)
+#define RTL_SOFT_VERIFYMSG(msg, exp) RTL_SOFT_ASSERTMSG(msg, exp)
+
+#if defined(_MSC_VER)
+
+#define NT_ASSERT(exp) \
+   ((!(exp)) ? \
+      (__annotation(L"Debug", L"AssertFail", L#exp), \
+       DbgRaiseAssertionFailure(), FALSE) : TRUE)
+
+#define NT_ASSERTMSG(msg, exp) \
+   ((!(exp)) ? \
+      (__annotation(L"Debug", L"AssertFail", L##msg), \
+      DbgRaiseAssertionFailure(), FALSE) : TRUE)
+
+#define NT_ASSERTMSGW(msg, exp) \
+    ((!(exp)) ? \
+        (__annotation(L"Debug", L"AssertFail", msg), \
+         DbgRaiseAssertionFailure(), FALSE) : TRUE)
+
+#else
+
+//
+// GCC doesn't support __annotation (nor PDB)
+//
+#define NT_ASSERT(exp) \
+   (VOID)((!(exp)) ? (DbgRaiseAssertionFailure(), FALSE) : TRUE)
+
+#define NT_ASSERTMSG NT_ASSERT
+#define NT_ASSERTMSGW NT_ASSERT
+
+#endif
+
+#else /* !DBG */
+
+#define ASSERT(exp) ((VOID) 0)
+#define ASSERTMSG(msg, exp) ((VOID) 0)
+
+#define RTL_SOFT_ASSERT(exp) ((VOID) 0)
+#define RTL_SOFT_ASSERTMSG(msg, exp) ((VOID) 0)
+
+#define RTL_VERIFY(exp) ((exp) ? TRUE : FALSE)
+#define RTL_VERIFYMSG(msg, exp) ((exp) ? TRUE : FALSE)
+
+#define RTL_SOFT_VERIFY(exp) ((exp) ? TRUE : FALSE)
+#define RTL_SOFT_VERIFYMSG(msg, exp) ((exp) ? TRUE : FALSE)
+
+#define NT_ASSERT(exp)     ((VOID)0)
+#define NT_ASSERTMSG(exp)  ((VOID)0)
+#define NT_ASSERTMSGW(exp) ((VOID)0)
+
+#endif /* DBG */
+
+#ifdef _NTSYSTEM_
+
+#define NLS_MB_CODE_PAGE_TAG NlsMbCodePageTag
+#define NLS_MB_OEM_CODE_PAGE_TAG NlsMbOemCodePageTag
+
+#else
+
+#define NLS_MB_CODE_PAGE_TAG (*NlsMbCodePageTag)
+#define NLS_MB_OEM_CODE_PAGE_TAG (*NlsMbOemCodePageTag)
+
+#endif /* _NTSYSTEM_ */
+
+extern BOOLEAN NLS_MB_CODE_PAGE_TAG;
+extern BOOLEAN NLS_MB_OEM_CODE_PAGE_TAG;
 
 
 /******************************************************************************
@@ -5056,6 +5227,122 @@ typedef struct _TIME_FIELDS {
 /******************************************************************************
  *                               RTL Functions                                *
  ******************************************************************************/
+
+FORCEINLINE
+VOID
+InitializeListHead(
+  OUT PLIST_ENTRY ListHead)
+{
+  ListHead->Flink = ListHead->Blink = ListHead;
+}
+
+FORCEINLINE
+VOID
+InsertHeadList(
+  IN OUT PLIST_ENTRY  ListHead,
+  IN OUT PLIST_ENTRY  Entry)
+{
+  PLIST_ENTRY OldFlink;
+  OldFlink = ListHead->Flink;
+  Entry->Flink = OldFlink;
+  Entry->Blink = ListHead;
+  OldFlink->Blink = Entry;
+  ListHead->Flink = Entry;
+}
+
+FORCEINLINE
+VOID
+InsertTailList(
+  IN OUT PLIST_ENTRY  ListHead,
+  IN OUT PLIST_ENTRY  Entry)
+{
+  PLIST_ENTRY OldBlink;
+  OldBlink = ListHead->Blink;
+  Entry->Flink = ListHead;
+  Entry->Blink = OldBlink;
+  OldBlink->Flink = Entry;
+  ListHead->Blink = Entry;
+}
+
+/*
+ * BOOLEAN
+ * IsListEmpty(
+ *   IN PLIST_ENTRY  ListHead)
+ */
+#define IsListEmpty(_ListHead) \
+  ((_ListHead)->Flink == (_ListHead))
+
+/*
+ * PSINGLE_LIST_ENTRY
+ * PopEntryList(
+ *   IN PSINGLE_LIST_ENTRY  ListHead)
+ */
+#define PopEntryList(ListHead) \
+{ \
+  PSINGLE_LIST_ENTRY _FirstEntry; \
+  _FirstEntry = (ListHead)->Next; \
+  if (_FirstEntry != NULL) \
+  (ListHead)->Next = _FirstEntry->Next; \
+}
+
+/*
+ * VOID
+ * PushEntryList(
+ *   IN PSINGLE_LIST_ENTRY  ListHead,
+ *   IN PSINGLE_LIST_ENTRY  Entry)
+ */
+#define PushEntryList(_ListHead, _Entry) \
+{
+  (_Entry)->Next = (_ListHead)->Next; \
+  (_ListHead)->Next = (_Entry); \
+}
+
+FORCEINLINE
+BOOLEAN
+RemoveEntryList(
+  IN PLIST_ENTRY  Entry)
+{
+  PLIST_ENTRY OldFlink;
+  PLIST_ENTRY OldBlink;
+
+  OldFlink = Entry->Flink;
+  OldBlink = Entry->Blink;
+  OldFlink->Blink = OldBlink;
+  OldBlink->Flink = OldFlink;
+  return (BOOLEAN)(OldFlink == OldBlink);
+}
+
+FORCEINLINE
+PLIST_ENTRY
+RemoveHeadList(
+  IN OUT PLIST_ENTRY  ListHead)
+{
+  PLIST_ENTRY Flink;
+  PLIST_ENTRY Entry;
+
+  Entry = ListHead->Flink;
+  Flink = Entry->Flink;
+  ListHead->Flink = Flink;
+  Flink->Blink = ListHead;
+  return Entry;
+}
+
+FORCEINLINE
+PLIST_ENTRY
+RemoveTailList(
+  IN OUT PLIST_ENTRY  ListHead)
+{
+  PLIST_ENTRY Blink;
+  PLIST_ENTRY Entry;
+
+  Entry = ListHead->Blink;
+  Blink = Entry->Blink;
+  ListHead->Blink = Blink;
+  Blink->Flink = ListHead;
+  return Entry;
+}
+
+
 
 NTSYSAPI
 VOID
