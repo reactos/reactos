@@ -257,27 +257,224 @@ SURFACE_Cleanup(PVOID ObjectBody)
 LONG FASTCALL
 GreGetBitmapBits(PSURFACE pSurf, ULONG ulBytes, PVOID pBits)
 {
-    /* Don't copy more bytes than the buffer has */
-    ulBytes = min(ulBytes, pSurf->SurfObj.cjBits);
+    LONG height, width, bytewidth;
+    LPBYTE tbuf, startline;
+    int h, w;
+    COLORREF cr;
+    PFN_DIB_GetPixel DibGetPixel;
 
-    /* Copy actual bits */
-    RtlCopyMemory(pBits, pSurf->SurfObj.pvBits, ulBytes);
+    DPRINT("(bmp=%p, buffer=%p, count=0x%x)\n", pSurf, pBits, ulBytes);
 
-    /* Return amount copied */
+    /* Check ulBytes */
+    if (!ulBytes) return 0;
+
+    bytewidth = pSurf->SurfObj.lDelta;
+    if (bytewidth < 0) bytewidth = -bytewidth;
+
+    height = ulBytes / bytewidth;
+    width = pSurf->SurfObj.sizlBitmap.cx;
+
+    /* Get getpixel routine address */
+    DibGetPixel = DibFunctionsForBitmapFormat[pSurf->SurfObj.iBitmapFormat].DIB_GetPixel;
+
+    /* copy bitmap to 16 bit padded image buffer with real bitsperpixel */
+    startline = pBits;
+    switch (BitsPerFormat(pSurf->SurfObj.iBitmapFormat))
+    {
+    case 1:
+        for (h=0;h<height;h++)
+        {
+            tbuf = startline;
+            *tbuf = 0;
+            for (w=0;w<width;w++)
+            {
+                if ((w%8) == 0)
+                    *tbuf = 0;
+                cr = DibGetPixel(&pSurf->SurfObj, w, h);
+                *tbuf |= cr<<(7-(w&7));
+                if ((w&7) == 7) ++tbuf;
+            }
+            startline += bytewidth;
+        }
+        break;
+    case 4:
+        for (h=0;h<height;h++)
+        {
+            tbuf = startline;
+            for (w=0;w<width;w++)
+            {
+                if (!(w & 1))
+                    *tbuf = DibGetPixel(&pSurf->SurfObj, w, h) << 4;
+                else
+                    *tbuf++ |= DibGetPixel(&pSurf->SurfObj, w, h) & 0x0f;
+            }
+            startline += bytewidth;
+        }
+        break;
+    case 8:
+        for (h=0;h<height;h++)
+        {
+            tbuf = startline;
+            for (w=0;w<width;w++)
+                *tbuf++ = DibGetPixel(&pSurf->SurfObj, w, h);
+            startline += bytewidth;
+        }
+        break;
+    case 15:
+    case 16:
+        for (h=0;h<height;h++)
+        {
+            tbuf = startline;
+            for (w=0;w<width;w++)
+            {
+            long pixel = DibGetPixel(&pSurf->SurfObj, w, h);
+
+            *tbuf++ = pixel & 0xff;
+            *tbuf++ = (pixel>>8) & 0xff;
+            }
+            startline += bytewidth;
+        }
+        break;
+    case 24:
+        for (h=0;h<height;h++)
+        {
+            tbuf = startline;
+            for (w=0;w<width;w++)
+            {
+                long pixel = DibGetPixel(&pSurf->SurfObj, w, h);
+
+                *tbuf++ = pixel & 0xff;
+                *tbuf++ = (pixel>> 8) & 0xff;
+                *tbuf++ = (pixel>>16) & 0xff;
+            }
+            startline += bytewidth;
+        }
+        break;
+
+    case 32:
+        for (h=0;h<height;h++)
+        {
+            tbuf = startline;
+            for (w=0;w<width;w++)
+            {
+                long pixel = DibGetPixel(&pSurf->SurfObj, w, h);
+
+                *tbuf++ = pixel & 0xff;
+                *tbuf++ = (pixel>> 8) & 0xff;
+                *tbuf++ = (pixel>>16) & 0xff;
+                *tbuf++ = (pixel>>24) & 0xff;
+            }
+            startline += bytewidth;
+        }
+        break;
+    default:
+        DPRINT1("Unhandled bits:%d\n", BitsPerFormat(pSurf->SurfObj.iBitmapFormat));
+    }
     return ulBytes;
 }
 
 LONG FASTCALL
 GreSetBitmapBits(PSURFACE pSurf, ULONG ulBytes, PVOID pBits)
 {
+    LONG height, width, bytewidth;
+    const BYTE *sbuf, *startline;
+    int h, w;
+    PFN_DIB_PutPixel DibPutPixel;
+
     /* Check ulBytes */
     if (!ulBytes) return 0;
 
-    /* Don't copy more bytes than the surface has */
-    ulBytes = min(ulBytes, pSurf->SurfObj.cjBits);
+    DPRINT("(bmp=%p, buffer=%p, count=0x%x)\n", pSurf, pBits, ulBytes);
 
-    /* Copy actual bits */
-    RtlCopyMemory(pSurf->SurfObj.pvBits, pBits, ulBytes);
+    bytewidth = pSurf->SurfObj.lDelta;
+    if (bytewidth < 0) bytewidth = -bytewidth;
+
+    height = ulBytes / bytewidth;
+    width = pSurf->SurfObj.sizlBitmap.cx;
+
+    /* Get getpixel routine address */
+    DibPutPixel = DibFunctionsForBitmapFormat[pSurf->SurfObj.iBitmapFormat].DIB_PutPixel;
+
+    /* copy bitmap to 16 bit padded image buffer with real bitsperpixel */
+    startline = pBits;
+    switch (BitsPerFormat(pSurf->SurfObj.iBitmapFormat))
+    {
+    case 1:
+        for (h=0;h<height;h++)
+        {
+            sbuf = startline;
+            for (w=0;w<width;w++)
+            {
+                DibPutPixel(&pSurf->SurfObj, w, h, (sbuf[0]>>(7-(w&7))) & 1);
+                if ((w&7) == 7)
+                    sbuf++;
+            }
+            startline += bytewidth;
+        }
+        break;
+    case 4:
+        for (h=0;h<height;h++)
+        {
+            sbuf = startline;
+            for (w=0;w<width;w++)
+            {
+                if (!(w & 1))
+                    DibPutPixel(&pSurf->SurfObj, w, h, *sbuf >> 4);
+                else
+                    DibPutPixel(&pSurf->SurfObj, w, h, *sbuf++ & 0xf);
+            }
+            startline += bytewidth;
+        }
+        break;
+    case 8:
+        for (h=0;h<height;h++)
+        {
+            sbuf = startline;
+            for (w=0;w<width;w++)
+                DibPutPixel(&pSurf->SurfObj, w, h, *sbuf++);
+            startline += bytewidth;
+        }
+        break;
+    case 15:
+    case 16:
+        for (h=0;h<height;h++)
+        {
+            sbuf = startline;
+            for (w=0;w<width;w++)
+            {
+                DibPutPixel(&pSurf->SurfObj, w, h, sbuf[1]*256+sbuf[0]);
+                sbuf+=2;
+            }
+            startline += bytewidth;
+        }
+        break;
+    case 24:
+        for (h=0;h<height;h++)
+        {
+            sbuf = startline;
+            for (w=0;w<width;w++)
+            {
+                DibPutPixel(&pSurf->SurfObj, w, h, (sbuf[2]<<16)+(sbuf[1]<<8)+sbuf[0]);
+                sbuf += 3;
+            }
+            startline += bytewidth;
+        }
+        break;
+    case 32:
+        for (h=0;h<height;h++)
+        {
+            sbuf = startline;
+            for (w=0;w<width;w++)
+            {
+                DibPutPixel(&pSurf->SurfObj, w, h, (sbuf[3]<<24)+(sbuf[2]<<16)+(sbuf[1]<<8)+sbuf[0]);
+                sbuf += 4;
+            }
+            startline += bytewidth;
+        }
+        break;
+    default:
+      DPRINT1("Unhandled bits:%d\n", BitsPerFormat(pSurf->SurfObj.iBitmapFormat));
+    }
 
     /* Return amount copied */
     return ulBytes;
