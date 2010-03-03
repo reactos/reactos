@@ -620,13 +620,9 @@ typedef struct _KWAIT_BLOCK {
   USHORT WaitKey;
   UCHAR WaitType;
   volatile UCHAR BlockState;
-
 #if defined(_WIN64)
-
   LONG SpareLong;
-
 #endif
-
 } KWAIT_BLOCK, *PKWAIT_BLOCK, *PRKWAIT_BLOCK;
 
 typedef enum _KINTERRUPT_MODE {
@@ -803,29 +799,6 @@ typedef struct _KDPC
     volatile PVOID  DpcData;
 } KDPC, *PKDPC, *RESTRICTED_POINTER PRKDPC;
 
-typedef enum _IO_ALLOCATION_ACTION {
-  KeepObject = 1,
-  DeallocateObject,
-  DeallocateObjectKeepRegisters
-} IO_ALLOCATION_ACTION, *PIO_ALLOCATION_ACTION;
-
-typedef IO_ALLOCATION_ACTION
-(DDKAPI *PDRIVER_CONTROL)(
-  IN struct _DEVICE_OBJECT  *DeviceObject,
-  IN struct _IRP  *Irp,
-  IN PVOID  MapRegisterBase,
-  IN PVOID  Context);
-
-typedef struct _WAIT_CONTEXT_BLOCK {
-  KDEVICE_QUEUE_ENTRY  WaitQueueEntry;
-  PDRIVER_CONTROL  DeviceRoutine;
-  PVOID  DeviceContext;
-  ULONG  NumberOfMapRegisters;
-  PVOID  DeviceObject;
-  PVOID  CurrentIrp;
-  PKDPC  BufferChainingDpc;
-} WAIT_CONTEXT_BLOCK, *PWAIT_CONTEXT_BLOCK;
-
 typedef struct _KDEVICE_QUEUE {
   CSHORT Type;
   CSHORT Size;
@@ -987,6 +960,7 @@ typedef struct DECLSPEC_ALIGN(16) _XSAVE_FORMAT {
 typedef XSAVE_FORMAT XMM_SAVE_AREA32, *PXMM_SAVE_AREA32;
 
 #endif // _AMD64_
+
 
 /******************************************************************************
  *                              Kernel Functions                              *
@@ -1377,9 +1351,7 @@ ProbeForWrite(
 
 #if defined(_X86_) || defined(_AMD64_)
 
-//
-// x86 and x64 performs a 0x2C interrupt
-//
+/* x86 and x64 performs a 0x2C interrupt */
 #define DbgRaiseAssertionFailure __int2c
 
 #elif defined(_ARM_)
@@ -1554,7 +1526,6 @@ typedef enum _MM_SYSTEM_SIZE {
 } MM_SYSTEMSIZE;
 
 
-
 /******************************************************************************
  *                       Memory manager Functions                             *
  ******************************************************************************/
@@ -1688,15 +1659,11 @@ typedef struct _ACL {
     USHORT Sbz2;
 } ACL, *PACL;
 
-//
-// Current security descriptor revision value
-//
+/* Current security descriptor revision value */
 #define SECURITY_DESCRIPTOR_REVISION     (1)
 #define SECURITY_DESCRIPTOR_REVISION1    (1)
 
-//
-// Privilege attributes
-//
+/* Privilege attributes */
 #define SE_PRIVILEGE_ENABLED_BY_DEFAULT (0x00000001L)
 #define SE_PRIVILEGE_ENABLED            (0x00000002L)
 #define SE_PRIVILEGE_REMOVED            (0X00000004L)
@@ -1717,9 +1684,7 @@ typedef struct _LUID_AND_ATTRIBUTES {
 typedef LUID_AND_ATTRIBUTES LUID_AND_ATTRIBUTES_ARRAY[ANYSIZE_ARRAY];
 typedef LUID_AND_ATTRIBUTES_ARRAY *PLUID_AND_ATTRIBUTES_ARRAY;
 
-//
-// Privilege sets
-//
+/* Privilege sets */
 #define PRIVILEGE_SET_ALL_NECESSARY (1)
 
 typedef struct _PRIVILEGE_SET {
@@ -1941,7 +1906,6 @@ typedef int CM_RESOURCE_TYPE;
 
 
 /* KEY_VALUE_Xxx.Type */
-
 #define REG_NONE                           0
 #define REG_SZ                             1
 #define REG_EXPAND_SZ                      2
@@ -1957,9 +1921,7 @@ typedef int CM_RESOURCE_TYPE;
 #define REG_QWORD                         11
 #define REG_QWORD_LITTLE_ENDIAN           11
 
-//
-// Registry Access Rights
-//
+/* Registry Access Rights */
 #define KEY_QUERY_VALUE         (0x0001)
 #define KEY_SET_VALUE           (0x0002)
 #define KEY_CREATE_SUB_KEY      (0x0004)
@@ -1997,9 +1959,7 @@ typedef int CM_RESOURCE_TYPE;
                                   &                           \
                                  (~SYNCHRONIZE))
 
-//
-// Registry Open/Create Options
-//
+/* Registry Open/Create Options */
 #define REG_OPTION_RESERVED         (0x00000000L)
 #define REG_OPTION_NON_VOLATILE     (0x00000000L)
 #define REG_OPTION_VOLATILE         (0x00000001L)
@@ -2015,15 +1975,11 @@ typedef int CM_RESOURCE_TYPE;
                  REG_OPTION_BACKUP_RESTORE      |\
                  REG_OPTION_OPEN_LINK)
 
-//
-// Key creation/open disposition
-//
+/* Key creation/open disposition */
 #define REG_CREATED_NEW_KEY         (0x00000001L)
 #define REG_OPENED_EXISTING_KEY     (0x00000002L)
 
-//
-// Key restore & hive load flags
-//
+/* Key restore & hive load flags */
 #define REG_WHOLE_HIVE_VOLATILE         (0x00000001L)
 #define REG_REFRESH_HIVE                (0x00000002L)
 #define REG_NO_LAZY_FLUSH               (0x00000004L)
@@ -2035,14 +1991,10 @@ typedef int CM_RESOURCE_TYPE;
 #define REG_HIVE_NO_RM                  (0x00000100L)
 #define REG_HIVE_SINGLE_LOG             (0x00000200L)
 
-//
-// Unload Flags
-//
+/* Unload Flags */
 #define REG_FORCE_UNLOAD            1
 
-//
-// Notify Filter Values
-//
+/* Notify Filter Values */
 #define REG_NOTIFY_CHANGE_NAME          (0x00000001L)
 #define REG_NOTIFY_CHANGE_ATTRIBUTES    (0x00000002L)
 #define REG_NOTIFY_CHANGE_LAST_SET      (0x00000004L)
@@ -3868,9 +3820,7 @@ RtlCheckBit(
 
 #endif // !defined(MIDL_PASS)
 
-//
-// Byte Swap Functions
-//
+/* Byte Swap Functions */
 #if (defined(_M_IX86) && (_MSC_FULL_VER > 13009037 || defined(__GNUC__))) || \
     ((defined(_M_AMD64) || defined(_M_IA64)) \
         && (_MSC_FULL_VER > 13009175 || defined(__GNUC__)))
@@ -3924,9 +3874,7 @@ RtlCheckBit(
 
 #else
 
-//
-// GCC doesn't support __annotation (nor PDB)
-//
+/* GCC doesn't support __annotation (nor PDB) */
 #define NT_ASSERT(exp) \
    (VOID)((!(exp)) ? (DbgRaiseAssertionFailure(), FALSE) : TRUE)
 
@@ -4278,6 +4226,29 @@ typedef struct _VPB {
   ULONG  ReferenceCount;
   WCHAR  VolumeLabel[MAXIMUM_VOLUME_LABEL_LENGTH / sizeof(WCHAR)];
 } VPB, *PVPB;
+
+typedef enum _IO_ALLOCATION_ACTION {
+  KeepObject = 1,
+  DeallocateObject,
+  DeallocateObjectKeepRegisters
+} IO_ALLOCATION_ACTION, *PIO_ALLOCATION_ACTION;
+
+typedef IO_ALLOCATION_ACTION
+(DDKAPI *PDRIVER_CONTROL)(
+  IN struct _DEVICE_OBJECT  *DeviceObject,
+  IN struct _IRP  *Irp,
+  IN PVOID  MapRegisterBase,
+  IN PVOID  Context);
+
+typedef struct _WAIT_CONTEXT_BLOCK {
+  KDEVICE_QUEUE_ENTRY  WaitQueueEntry;
+  PDRIVER_CONTROL  DeviceRoutine;
+  PVOID  DeviceContext;
+  ULONG  NumberOfMapRegisters;
+  PVOID  DeviceObject;
+  PVOID  CurrentIrp;
+  PKDPC  BufferChainingDpc;
+} WAIT_CONTEXT_BLOCK, *PWAIT_CONTEXT_BLOCK;
 
 typedef struct _DEVICE_OBJECT {
   CSHORT  Type;
@@ -8107,42 +8078,53 @@ typedef VOID
   IN PVOID  Argument1,
   IN PVOID  Argument2);
 
-typedef struct LOOKASIDE_ALIGN _GENERAL_LOOKASIDE {
-    union {
-        SLIST_HEADER ListHead;
-        SINGLE_LIST_ENTRY SingleListHead;
-    } DUMMYUNIONNAME;
-    USHORT Depth;
-    USHORT MaximumDepth;
-    ULONG TotalAllocates;
-    union {
-        ULONG AllocateMisses;
-        ULONG AllocateHits;
-    } DUMMYUNIONNAME2;
-    ULONG TotalFrees;
-    union {
-        ULONG FreeMisses;
-        ULONG FreeHits;
-    } DUMMYUNIONNAME3;
-    POOL_TYPE Type;
-    ULONG Tag;
-    ULONG Size;
-    union {
-        PALLOCATE_FUNCTION_EX AllocateEx; 
-        PALLOCATE_FUNCTION Allocate;
-    } DUMMYUNIONNAME4;
-    union {
-        PFREE_FUNCTION_EX FreeEx;
-        PFREE_FUNCTION Free;
-    } DUMMYUNIONNAME5;
-    LIST_ENTRY ListEntry;
-    ULONG  LastTotalAllocates;
-    union {
-        ULONG  LastAllocateMisses;
-        ULONG  LastAllocateHits;
-    } DUMMYUNIONNAME6;
+#define GENERAL_LOOKASIDE_LAYOUT                \
+    union {                                     \
+        SLIST_HEADER ListHead;                  \
+        SINGLE_LIST_ENTRY SingleListHead;       \
+    } DUMMYUNIONNAME;                           \
+    USHORT Depth;                               \
+    USHORT MaximumDepth;                        \
+    ULONG TotalAllocates;                       \
+    union {                                     \
+        ULONG AllocateMisses;                   \
+        ULONG AllocateHits;                     \
+    } DUMMYUNIONNAME2;                          \
+                                                \
+    ULONG TotalFrees;                           \
+    union {                                     \
+        ULONG FreeMisses;                       \
+        ULONG FreeHits;                         \
+    } DUMMYUNIONNAME3;                          \
+                                                \
+    POOL_TYPE Type;                             \
+    ULONG Tag;                                  \
+    ULONG Size;                                 \
+    union {                                     \
+        PALLOCATE_FUNCTION_EX AllocateEx;       \
+        PALLOCATE_FUNCTION Allocate;            \
+    } DUMMYUNIONNAME4;                          \
+                                                \
+    union {                                     \
+        PFREE_FUNCTION_EX FreeEx;               \
+        PFREE_FUNCTION Free;                    \
+    } DUMMYUNIONNAME5;                          \
+                                                \
+    LIST_ENTRY ListEntry;                       \
+    ULONG LastTotalAllocates;                   \
+    union {                                     \
+        ULONG LastAllocateMisses;               \
+        ULONG LastAllocateHits;                 \
+    } DUMMYUNIONNAME6;                          \
     ULONG Future[2];
+
+typedef struct LOOKASIDE_ALIGN _GENERAL_LOOKASIDE {
+    GENERAL_LOOKASIDE_LAYOUT
 } GENERAL_LOOKASIDE, *PGENERAL_LOOKASIDE;
+
+typedef struct _GENERAL_LOOKASIDE_POOL {
+    GENERAL_LOOKASIDE_LAYOUT
+} GENERAL_LOOKASIDE_POOL, *PGENERAL_LOOKASIDE_POOL;
 
 typedef struct _PAGED_LOOKASIDE_LIST {
     GENERAL_LOOKASIDE L;
@@ -8158,9 +8140,9 @@ typedef struct LOOKASIDE_ALIGN _NPAGED_LOOKASIDE_LIST {
 #endif
 } NPAGED_LOOKASIDE_LIST, *PNPAGED_LOOKASIDE_LIST;
 
-//typedef struct _LOOKASIDE_LIST_EX {
-//    GENERAL_LOOKASIDE_POOL L;
-//} LOOKASIDE_LIST_EX, *PLOOKASIDE_LIST_EX;
+typedef struct _LOOKASIDE_LIST_EX {
+    GENERAL_LOOKASIDE_POOL L;
+} LOOKASIDE_LIST_EX;
 
 typedef struct _EX_RUNDOWN_REF {
     __GNU_EXTENSION union {
@@ -9072,9 +9054,7 @@ typedef struct _OBJECT_NAME_INFORMATION {
   UNICODE_STRING  Name;
 } OBJECT_NAME_INFORMATION, *POBJECT_NAME_INFORMATION;
 
-//
-// Global debug flag
-//
+/* Global debug flag */
 extern ULONG NtGlobalFlag;
 
 #define PROCESS_DUP_HANDLE                 (0x0040)
@@ -9102,10 +9082,7 @@ extern ULONG NtGlobalFlag;
 #error Unknown architecture
 #endif
 
-
-//
-// Thread Access Rights
-//
+/* Thread Access Rights */
 #define THREAD_TERMINATE                 (0x0001)  
 #define THREAD_SUSPEND_RESUME            (0x0002)  
 #define THREAD_ALERT                     (0x0004)
@@ -9122,18 +9099,14 @@ extern ULONG NtGlobalFlag;
                                    0x3FF)
 #endif
 
-//
-// Service Start Types
-//
+/* Service Start Types */
 #define SERVICE_BOOT_START             0x00000000
 #define SERVICE_SYSTEM_START           0x00000001
 #define SERVICE_AUTO_START             0x00000002
 #define SERVICE_DEMAND_START           0x00000003
 #define SERVICE_DISABLED               0x00000004
 
-//
-// Process Qoutas
-//
+/* Process Qoutas */
 typedef struct _QUOTA_LIMITS {
     SIZE_T PagedPoolLimit;
     SIZE_T NonPagedPoolLimit;
