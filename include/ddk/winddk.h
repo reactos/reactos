@@ -2396,23 +2396,6 @@ RtlWalkFrameChain(
   IN ULONG  Count,
   IN ULONG  Flags);
 
-/* Fast Mutex */
-#define ExInitializeFastMutex(_FastMutex) \
-{ \
-    (_FastMutex)->Count = FM_LOCK_BIT; \
-    (_FastMutex)->Owner = NULL; \
-    (_FastMutex)->Contention = 0; \
-    KeInitializeEvent(&(_FastMutex)->Gate, SynchronizationEvent, FALSE); \
-}
-
-NTKERNELAPI
-VOID
-NTAPI
-KeInitializeEvent(
-  IN PRKEVENT  Event,
-  IN EVENT_TYPE  Type,
-  IN BOOLEAN  State);
-
 /******************************************************************************
  *                            Executive Types                                 *
  ******************************************************************************/
@@ -2497,16 +2480,6 @@ ExInterlockedExtendZone(
  */
 #define ExInterlockedFreeToZone(Zone, Block, Lock) \
     ExInterlockedPushEntryList(&(Zone)->FreeList, (PSINGLE_LIST_ENTRY)(Block), Lock)
-
-/*
- * VOID
- * InitializeSListHead(
- *   IN PSLIST_HEADER  SListHead)
- */
-#define InitializeSListHead(_SListHead) \
-	(_SListHead)->Alignment = 0
-
-#define ExInitializeSListHead InitializeSListHead
 
 /*
  * BOOLEAN

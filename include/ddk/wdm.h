@@ -1541,6 +1541,27 @@ KeTryToAcquireGuardedMutex(
 
 #endif
 
+/* Fast Mutex */
+
+NTKERNELAPI
+VOID
+KeInitializeEvent(
+  OUT PRKEVENT  Event,
+  IN EVENT_TYPE  Type,
+  IN BOOLEAN  State);
+
+FORCEINLINE
+VOID
+ExInitializeFastMutex(
+  OUT PFAST_MUTEX FastMutex)
+{
+  FastMutex->Count = FM_LOCK_BIT;
+  FastMutex->Owner = NULL;
+  FastMutex->Contention = 0;
+  KeInitializeEvent(&FastMutex->Event, SynchronizationEvent, FALSE);
+  return;
+}
+
 /*
 ** Utillity functions
 */
@@ -5264,37 +5285,35 @@ InsertTailList(
   ListHead->Blink = Entry;
 }
 
-/*
- * BOOLEAN
- * IsListEmpty(
- *   IN PLIST_ENTRY  ListHead)
- */
-#define IsListEmpty(_ListHead) \
-  ((_ListHead)->Flink == (_ListHead))
-
-/*
- * PSINGLE_LIST_ENTRY
- * PopEntryList(
- *   IN PSINGLE_LIST_ENTRY  ListHead)
- */
-#define PopEntryList(ListHead) \
-{ \
-  PSINGLE_LIST_ENTRY _FirstEntry; \
-  _FirstEntry = (ListHead)->Next; \
-  if (_FirstEntry != NULL) \
-  (ListHead)->Next = _FirstEntry->Next; \
+BOOLEAN
+FORCEINLINE
+IsListEmpty(
+  IN CONST LIST_ENTRY * ListHead)
+{
+  return (BOOLEAN)(ListHead->Flink == ListHead);
 }
 
-/*
- * VOID
- * PushEntryList(
- *   IN PSINGLE_LIST_ENTRY  ListHead,
- *   IN PSINGLE_LIST_ENTRY  Entry)
- */
-#define PushEntryList(_ListHead, _Entry) \
+FORCEINLINE
+PSINGLE_LIST_ENTRY
+PopEntryList(
+  IN OUT PSINGLE_LIST_ENTRY ListHead)
 {
-  (_Entry)->Next = (_ListHead)->Next; \
-  (_ListHead)->Next = (_Entry); \
+  PSINGLE_LIST_ENTRY FirstEntry;
+  FirstEntry = ListHead->Next;
+  if (FirstEntry != NULL) {
+    ListHead->Next = FirstEntry->Next;
+  }
+  return FirstEntry;
+}
+
+FORCEINLINE
+VOID
+PushEntryList(
+  IN OUT PSINGLE_LIST_ENTRY ListHead,
+  IN OUT PSINGLE_LIST_ENTRY Entry)
+{
+  Entry->Next = ListHead->Next;
+  ListHead->Next = Entry;
 }
 
 FORCEINLINE
@@ -5341,8 +5360,6 @@ RemoveTailList(
   Blink->Flink = ListHead;
   return Entry;
 }
-
-
 
 NTSYSAPI
 VOID
@@ -6656,6 +6673,58 @@ typedef struct _WORK_QUEUE_ITEM {
 /******************************************************************************
  *                          Executive Functions                               *
  ******************************************************************************/
+
+#if !defined(_WINBASE_)
+
+#if defined(_WIN64) && (defined(_NTDRIVER_) || defined(_NTDDK_) || defined(_NTIFS_) || defined(_NTHAL_) || defined(_NTOSP_))
+
+NTKERNELAPI
+VOID
+InitializeSListHead (
+  OUT PSLIST_HEADER SListHead);
+
+#else
+
+__inline
+VOID
+InitializeSListHead (
+  OUT PSLIST_HEADER SListHead)
+{
+
+#if defined(_IA64_)
+
+  ULONG64 FeatureBits;
+
+#endif
+
+#if defined(_WIN64)
+
+  if (((ULONG_PTR)SListHead & 0xf) != 0) {
+    RtlRaiseStatus(STATUS_DATATYPE_MISALIGNMENT);
+  }
+
+#endif
+
+  RtlZeroMemory(SListHead, sizeof(SLIST_HEADER));
+
+#if defined(_IA64_)
+
+  FeatureBits = __getReg(CV_IA64_CPUID4);
+  if ((FeatureBits & KF_16BYTE_INSTR) != 0) {
+    SListHead->Header16.HeaderType = 1;
+    SListHead->Header16.Init = 1;
+  }
+
+#endif
+
+  return;
+}
+
+#endif
+
+#endif // !defined(_WINBASE_)
+
+#define ExInitializeSListHead InitializeSListHead
 
 #if defined(_X86_)
 #if defined(_NTHAL_)
