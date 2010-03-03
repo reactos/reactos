@@ -2595,103 +2595,10 @@ IoCreateDisk(
   IN PCREATE_DISK  Disk);
 
 NTKERNELAPI
-NTSTATUS
-NTAPI
-IoCreateFile(
-  OUT PHANDLE FileHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  IN PLARGE_INTEGER AllocationSize OPTIONAL,
-  IN ULONG FileAttributes,
-  IN ULONG ShareAccess,
-  IN ULONG Disposition,
-  IN ULONG CreateOptions,
-  IN PVOID EaBuffer OPTIONAL,
-  IN ULONG EaLength,
-  IN CREATE_FILE_TYPE CreateFileType,
-  IN PVOID ExtraCreateParameters OPTIONAL,
-  IN ULONG Options);
-
-NTKERNELAPI
-PKEVENT
-NTAPI
-IoCreateNotificationEvent(
-  IN PUNICODE_STRING  EventName,
-  OUT PHANDLE  EventHandle);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoCreateSymbolicLink(
-  IN PUNICODE_STRING  SymbolicLinkName,
-  IN PUNICODE_STRING  DeviceName);
-
-NTKERNELAPI
-PKEVENT
-NTAPI
-IoCreateSynchronizationEvent(
-  IN PUNICODE_STRING  EventName,
-  OUT PHANDLE  EventHandle);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoCreateUnprotectedSymbolicLink(
-  IN PUNICODE_STRING  SymbolicLinkName,
-  IN PUNICODE_STRING  DeviceName);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoCsqInitialize(
-  PIO_CSQ  Csq,
-  IN PIO_CSQ_INSERT_IRP  CsqInsertIrp,
-  IN PIO_CSQ_REMOVE_IRP  CsqRemoveIrp,
-  IN PIO_CSQ_PEEK_NEXT_IRP  CsqPeekNextIrp,
-  IN PIO_CSQ_ACQUIRE_LOCK  CsqAcquireLock,
-  IN PIO_CSQ_RELEASE_LOCK  CsqReleaseLock,
-  IN PIO_CSQ_COMPLETE_CANCELED_IRP  CsqCompleteCanceledIrp);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoCsqInsertIrp(
-  IN  PIO_CSQ  Csq,
-  IN  PIRP  Irp,
-  IN  PIO_CSQ_IRP_CONTEXT  Context);
-
-NTKERNELAPI
-PIRP
-NTAPI
-IoCsqRemoveIrp(
-  IN  PIO_CSQ  Csq,
-  IN  PIO_CSQ_IRP_CONTEXT  Context);
-
-NTKERNELAPI
-PIRP
-NTAPI
-IoCsqRemoveNextIrp(
-  IN PIO_CSQ  Csq,
-  IN PVOID  PeekContext);
-
-NTKERNELAPI
 VOID
 NTAPI
 IoDeleteController(
   IN PCONTROLLER_OBJECT  ControllerObject);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoDeleteDevice(
-  IN PDEVICE_OBJECT  DeviceObject);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoDeleteSymbolicLink(
-  IN PUNICODE_STRING  SymbolicLinkName);
 
 /*
  * VOID
@@ -2703,72 +2610,8 @@ IoDeleteSymbolicLink(
 NTKERNELAPI
 VOID
 NTAPI
-IoDetachDevice(
-  IN OUT PDEVICE_OBJECT  TargetDevice);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoDisconnectInterrupt(
-  IN PKINTERRUPT  InterruptObject);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-IoForwardIrpSynchronously(
-  IN PDEVICE_OBJECT  DeviceObject,
-  IN PIRP  Irp);
-
-#define IoForwardAndCatchIrp IoForwardIrpSynchronously
-
-NTKERNELAPI
-VOID
-NTAPI
 IoFreeController(
   IN PCONTROLLER_OBJECT  ControllerObject);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoFreeErrorLogEntry(
-  PVOID  ElEntry);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoFreeIrp(
-  IN PIRP  Irp);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoFreeMdl(
-  IN PMDL  Mdl);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoFreeWorkItem(
-  IN PIO_WORKITEM  pIOWorkItem);
-
-NTKERNELAPI
-PDEVICE_OBJECT
-NTAPI
-IoGetAttachedDevice(
-  IN PDEVICE_OBJECT  DeviceObject);
-
-NTKERNELAPI
-PDEVICE_OBJECT
-NTAPI
-IoGetAttachedDeviceReference(
-  IN PDEVICE_OBJECT  DeviceObject);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoGetBootDiskInformation(
-  IN OUT PBOOTDISK_INFORMATION  BootDiskInformation,
-  IN ULONG  Size);
 
 NTKERNELAPI
 PCONFIGURATION_INFORMATION
@@ -2777,174 +2620,16 @@ IoGetConfigurationInformation(
   VOID);
 
 NTKERNELAPI
-PEPROCESS
-NTAPI
-IoGetCurrentProcess(
-  VOID);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoGetDeviceInterfaceAlias(
-  IN PUNICODE_STRING  SymbolicLinkName,
-  IN CONST GUID  *AliasInterfaceClassGuid,
-  OUT PUNICODE_STRING  AliasSymbolicLinkName);
-
-#define DEVICE_INTERFACE_INCLUDE_NONACTIVE 0x00000001
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoGetDeviceInterfaces(
-  IN CONST GUID  *InterfaceClassGuid,
-  IN PDEVICE_OBJECT  PhysicalDeviceObject  OPTIONAL,
-  IN ULONG  Flags,
-  OUT PWSTR  *SymbolicLinkList);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoGetDeviceObjectPointer(
-  IN PUNICODE_STRING  ObjectName,
-  IN ACCESS_MASK  DesiredAccess,
-  OUT PFILE_OBJECT  *FileObject,
-  OUT PDEVICE_OBJECT  *DeviceObject);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoGetDeviceProperty(
-  IN PDEVICE_OBJECT  DeviceObject,
-  IN DEVICE_REGISTRY_PROPERTY  DeviceProperty,
-  IN ULONG  BufferLength,
-  OUT PVOID  PropertyBuffer,
-  OUT PULONG  ResultLength);
-
-NTKERNELAPI
 PDEVICE_OBJECT
 NTAPI
 IoGetDeviceToVerify(
   IN PETHREAD  Thread);
 
 NTKERNELAPI
-PDMA_ADAPTER
-NTAPI
-IoGetDmaAdapter(
-  IN PDEVICE_OBJECT  PhysicalDeviceObject,
-  IN PDEVICE_DESCRIPTION  DeviceDescription,
-  IN OUT PULONG  NumberOfMapRegisters);
-
-NTKERNELAPI
-PVOID
-NTAPI
-IoGetDriverObjectExtension(
-  IN PDRIVER_OBJECT  DriverObject,
-  IN PVOID  ClientIdentificationAddress);
-
-NTKERNELAPI
 PGENERIC_MAPPING
 NTAPI
 IoGetFileObjectGenericMapping(
   VOID);
-
-/*
- * ULONG
- * IoGetFunctionCodeFromCtlCode(
- *   IN ULONG  ControlCode)
- */
-#define IoGetFunctionCodeFromCtlCode(_ControlCode) \
-  (((_ControlCode) >> 2) & 0x00000FFF)
-
-NTKERNELAPI
-PVOID
-NTAPI
-IoGetInitialStack(
-  VOID);
-
-NTKERNELAPI
-PDEVICE_OBJECT
-NTAPI
-IoGetRelatedDeviceObject(
-  IN PFILE_OBJECT  FileObject);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoGetStackLimits(
-  OUT PULONG_PTR  LowLimit,
-  OUT PULONG_PTR  HighLimit);
-
-FORCEINLINE
-ULONG_PTR
-IoGetRemainingStackSize(
-  VOID
-)
-{
-    ULONG_PTR End, Begin;
-    ULONG_PTR Result;
-
-    IoGetStackLimits(&Begin, &End);
-    Result = (ULONG_PTR)(&End) - Begin;
-    return Result;
-}
-
-NTKERNELAPI
-VOID
-NTAPI
-KeInitializeDpc(
-  IN PRKDPC  Dpc,
-  IN PKDEFERRED_ROUTINE  DeferredRoutine,
-  IN PVOID  DeferredContext);
-
-/*
- * VOID
- * IoInitializeDpcRequest(
- *   IN PDEVICE_OBJECT DeviceObject,
- *   IN PIO_DPC_ROUTINE DpcRoutine)
- */
-#define IoInitializeDpcRequest(_DeviceObject, \
-                               _DpcRoutine) \
-  KeInitializeDpc(&(_DeviceObject)->Dpc, \
-    (PKDEFERRED_ROUTINE) (_DpcRoutine), \
-    _DeviceObject)
-
-NTKERNELAPI
-VOID
-NTAPI
-IoInitializeIrp(
-  IN OUT PIRP  Irp,
-  IN USHORT  PacketSize,
-  IN CCHAR  StackSize);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoInitializeRemoveLockEx(
-  IN  PIO_REMOVE_LOCK Lock,
-  IN  ULONG   AllocateTag,
-  IN  ULONG   MaxLockedMinutes,
-  IN  ULONG   HighWatermark,
-  IN  ULONG   RemlockSize);
-
-/* VOID
- * IoInitializeRemoveLock(
- *   IN PIO_REMOVE_LOCK  Lock,
- *   IN ULONG  AllocateTag,
- *   IN ULONG  MaxLockedMinutes,
- *   IN ULONG  HighWatermark)
- */
-#define IoInitializeRemoveLock( \
-  Lock, AllocateTag, MaxLockedMinutes, HighWatermark) \
-  IoInitializeRemoveLockEx(Lock, AllocateTag, MaxLockedMinutes, \
-    HighWatermark, sizeof(IO_REMOVE_LOCK))
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoInitializeTimer(
-  IN PDEVICE_OBJECT  DeviceObject,
-  IN PIO_TIMER_ROUTINE  TimerRoutine,
-  IN PVOID  Context);
 
 NTKERNELAPI
 VOID
@@ -3033,15 +2718,6 @@ IoQueryDeviceDescription(
   IN PCONFIGURATION_TYPE  PeripheralType  OPTIONAL,
   IN PULONG  PeripheralNumber  OPTIONAL,
   IN PIO_QUERY_DEVICE_ROUTINE  CalloutRoutine,
-  IN PVOID  Context);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoQueueWorkItem(
-  IN PIO_WORKITEM  pIOWorkItem,
-  IN PIO_WORKITEM_ROUTINE  Routine,
-  IN WORK_QUEUE_TYPE  QueueType,
   IN PVOID  Context);
 
 NTKERNELAPI

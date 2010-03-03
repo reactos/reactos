@@ -6294,7 +6294,283 @@ IoCreateDevice(
   IN BOOLEAN  Exclusive,
   OUT PDEVICE_OBJECT  *DeviceObject);
 
+NTKERNELAPI
+NTSTATUS
+IoCreateFile(
+  OUT PHANDLE FileHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  IN PLARGE_INTEGER AllocationSize OPTIONAL,
+  IN ULONG FileAttributes,
+  IN ULONG ShareAccess,
+  IN ULONG Disposition,
+  IN ULONG CreateOptions,
+  IN PVOID EaBuffer OPTIONAL,
+  IN ULONG EaLength,
+  IN CREATE_FILE_TYPE CreateFileType,
+  IN PVOID InternalParameters OPTIONAL,
+  IN ULONG Options);
+
+NTKERNELAPI
+PKEVENT
+IoCreateNotificationEvent(
+  IN PUNICODE_STRING  EventName,
+  OUT PHANDLE  EventHandle);
+
+NTKERNELAPI
+NTSTATUS
+IoCreateSymbolicLink(
+  IN PUNICODE_STRING  SymbolicLinkName,
+  IN PUNICODE_STRING  DeviceName);
+
+NTKERNELAPI
+PKEVENT
+IoCreateSynchronizationEvent(
+  IN PUNICODE_STRING  EventName,
+  OUT PHANDLE  EventHandle);
+
+NTKERNELAPI
+NTSTATUS
+IoCreateUnprotectedSymbolicLink(
+  IN PUNICODE_STRING  SymbolicLinkName,
+  IN PUNICODE_STRING  DeviceName);
+
+NTKERNELAPI
+VOID
+IoDeleteDevice(
+  IN PDEVICE_OBJECT  DeviceObject);
+
+NTKERNELAPI
+NTSTATUS
+IoDeleteSymbolicLink(
+  IN PUNICODE_STRING  SymbolicLinkName);
+
+NTKERNELAPI
+VOID
+IoDetachDevice(
+  IN OUT PDEVICE_OBJECT  TargetDevice);
+
+NTKERNELAPI
+VOID
+IoDisconnectInterrupt(
+  IN PKINTERRUPT  InterruptObject);
+
+NTKERNELAPI
+VOID
+IoFreeIrp(
+  IN PIRP  Irp);
+
+NTKERNELAPI
+VOID
+IoFreeMdl(
+  IN PMDL  Mdl);
+
+NTKERNELAPI
+VOID
+IoFreeWorkItem(
+  IN PIO_WORKITEM  IoWorkItem);
+
+NTKERNELAPI
+PDEVICE_OBJECT
+NTAPI
+IoGetAttachedDevice(
+  IN PDEVICE_OBJECT  DeviceObject);
+
+NTKERNELAPI
+PDEVICE_OBJECT
+IoGetAttachedDeviceReference(
+  IN PDEVICE_OBJECT  DeviceObject);
+
+NTKERNELAPI
+NTSTATUS
+IoGetBootDiskInformation(
+  IN OUT PBOOTDISK_INFORMATION  BootDiskInformation,
+  IN ULONG  Size);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoGetDeviceInterfaceAlias(
+  IN PUNICODE_STRING  SymbolicLinkName,
+  IN CONST GUID  *AliasInterfaceClassGuid,
+  OUT PUNICODE_STRING  AliasSymbolicLinkName);
+
+NTKERNELAPI
+PEPROCESS
+IoGetCurrentProcess(
+  VOID);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoGetDeviceInterfaces(
+  IN CONST GUID  *InterfaceClassGuid,
+  IN PDEVICE_OBJECT  PhysicalDeviceObject  OPTIONAL,
+  IN ULONG  Flags,
+  OUT PWSTR  *SymbolicLinkList);
+
+NTKERNELAPI
+NTSTATUS
+IoGetDeviceObjectPointer(
+  IN PUNICODE_STRING  ObjectName,
+  IN ACCESS_MASK  DesiredAccess,
+  OUT PFILE_OBJECT  *FileObject,
+  OUT PDEVICE_OBJECT  *DeviceObject);
+
+NTKERNELAPI
+NTSTATUS
+IoGetDeviceProperty(
+  IN PDEVICE_OBJECT  DeviceObject,
+  IN DEVICE_REGISTRY_PROPERTY  DeviceProperty,
+  IN ULONG  BufferLength,
+  OUT PVOID  PropertyBuffer,
+  OUT PULONG  ResultLength);
+
+NTKERNELAPI
+PDMA_ADAPTER
+IoGetDmaAdapter(
+  IN PDEVICE_OBJECT  PhysicalDeviceObject OPTIONAL,
+  IN PDEVICE_DESCRIPTION  DeviceDescription,
+  IN OUT PULONG  NumberOfMapRegisters);
+
+NTKERNELAPI
+PVOID
+IoGetDriverObjectExtension(
+  IN PDRIVER_OBJECT  DriverObject,
+  IN PVOID  ClientIdentificationAddress);
+
+NTKERNELAPI
+PVOID
+IoGetInitialStack(
+  VOID);
+
+NTKERNELAPI
+PDEVICE_OBJECT
+IoGetRelatedDeviceObject(
+  IN PFILE_OBJECT  FileObject);
+
+NTKERNELAPI
+VOID
+IoQueueWorkItem(
+  IN PIO_WORKITEM  IoWorkItem,
+  IN PIO_WORKITEM_ROUTINE  WorkerRoutine,
+  IN WORK_QUEUE_TYPE  QueueType,
+  IN PVOID  Context OPTIONAL);
+
+NTKERNELAPI
+VOID
+KeInitializeDpc(
+  OUT PRKDPC  Dpc,
+  IN PKDEFERRED_ROUTINE  DeferredRoutine,
+  IN PVOID  DeferredContext OPTIONAL);
+
+NTKERNELAPI
+VOID
+IoInitializeIrp(
+  IN OUT PIRP  Irp,
+  IN USHORT  PacketSize,
+  IN CCHAR  StackSize);
+
+NTKERNELAPI
+VOID
+NTAPI
+IoInitializeRemoveLockEx(
+  IN  PIO_REMOVE_LOCK Lock,
+  IN  ULONG   AllocateTag,
+  IN  ULONG   MaxLockedMinutes,
+  IN  ULONG   HighWatermark,
+  IN  ULONG   RemlockSize);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoInitializeTimer(
+  IN PDEVICE_OBJECT  DeviceObject,
+  IN PIO_TIMER_ROUTINE  TimerRoutine,
+  IN PVOID  Context OPTIONAL);
+
 #endif
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+
+NTKERNELAPI
+NTSTATUS
+IoCsqInitialize(
+  IN PIO_CSQ  Csq,
+  IN PIO_CSQ_INSERT_IRP  CsqInsertIrp,
+  IN PIO_CSQ_REMOVE_IRP  CsqRemoveIrp,
+  IN PIO_CSQ_PEEK_NEXT_IRP  CsqPeekNextIrp,
+  IN PIO_CSQ_ACQUIRE_LOCK  CsqAcquireLock,
+  IN PIO_CSQ_RELEASE_LOCK  CsqReleaseLock,
+  IN PIO_CSQ_COMPLETE_CANCELED_IRP  CsqCompleteCanceledIrp);
+
+NTKERNELAPI
+VOID
+IoCsqInsertIrp(
+  IN  PIO_CSQ  Csq,
+  IN  PIRP  Irp,
+  IN  PIO_CSQ_IRP_CONTEXT  Context OPTIONAL);
+
+NTKERNELAPI
+PIRP
+IoCsqRemoveIrp(
+  IN  PIO_CSQ  Csq,
+  IN  PIO_CSQ_IRP_CONTEXT  Context);
+
+NTKERNELAPI
+PIRP
+IoCsqRemoveNextIrp(
+  IN PIO_CSQ  Csq,
+  IN PVOID  PeekContext);
+
+NTKERNELAPI
+BOOLEAN
+IoForwardIrpSynchronously(
+  IN PDEVICE_OBJECT  DeviceObject,
+  IN PIRP  Irp);
+
+#define IoForwardAndCatchIrp IoForwardIrpSynchronously
+
+NTKERNELAPI
+VOID
+IoFreeErrorLogEntry(
+  PVOID  ElEntry);
+
+#endif
+
+/* VOID
+ * IoInitializeRemoveLock(
+ *   IN PIO_REMOVE_LOCK  Lock,
+ *   IN ULONG  AllocateTag,
+ *   IN ULONG  MaxLockedMinutes,
+ *   IN ULONG  HighWatermark)
+ */
+#define IoInitializeRemoveLock( \
+  Lock, AllocateTag, MaxLockedMinutes, HighWatermark) \
+  IoInitializeRemoveLockEx(Lock, AllocateTag, MaxLockedMinutes, \
+    HighWatermark, sizeof(IO_REMOVE_LOCK))
+
+VOID
+FORCEINLINE
+IoInitializeDpcRequest(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PIO_DPC_ROUTINE DpcRoutine)
+{
+  KeInitializeDpc( &DeviceObject->Dpc,
+                   (PKDEFERRED_ROUTINE) DpcRoutine,
+                   DeviceObject );
+}
+
+#define DEVICE_INTERFACE_INCLUDE_NONACTIVE 0x00000001
+
+/*
+ * ULONG
+ * IoGetFunctionCodeFromCtlCode(
+ *   IN ULONG  ControlCode)
+ */
+#define IoGetFunctionCodeFromCtlCode(_ControlCode) \
+  (((_ControlCode) >> 2) & 0x00000FFF)
 
 /*
  * NTSTATUS
@@ -6341,6 +6617,24 @@ IoCopyCurrentIrpStackLocationToNext(
   nextIrpSp = IoGetNextIrpStackLocation(Irp);
   RtlCopyMemory( nextIrpSp, irpSp, FIELD_OFFSET(IO_STACK_LOCATION, CompletionRoutine));
   nextIrpSp->Control = 0;
+}
+
+NTKERNELAPI
+VOID
+IoGetStackLimits(
+  OUT PULONG_PTR  LowLimit,
+  OUT PULONG_PTR  HighLimit);
+
+FORCEINLINE
+ULONG_PTR
+IoGetRemainingStackSize(
+  VOID)
+{
+  ULONG_PTR End, Begin;
+  ULONG_PTR Result;
+
+  IoGetStackLimits(&Begin, &End);
+  return ((ULONG_PTR)(&End) - Begin);
 }
 
 /******************************************************************************
