@@ -112,8 +112,8 @@ VmxFindAdapter(IN PVOID HwDeviceExtension,
     
     /* Create the sync event */
     VideoPortCreateEvent(DeviceExtension,
-                         SynchronizationEvent,
-                         FALSE,
+                         NOTIFICATION_EVENT,
+                         NULL,
                          &DeviceExtension->SyncEvent);
                          
     /* Check for multi-monitor configuration */

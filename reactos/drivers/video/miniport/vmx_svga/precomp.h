@@ -5,8 +5,8 @@
  * PURPOSE:         VMWARE SVGA-II Driver Header
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
- 
-#include <ntddk.h>
+
+#include <ntdef.h>
 #include <dderror.h>
 #include <miniport.h>
 #include <ntddvdeo.h>
