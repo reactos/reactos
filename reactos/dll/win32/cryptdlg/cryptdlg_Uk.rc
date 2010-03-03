@@ -1,8 +1,8 @@
 /*
- * cryptdlg dll French resources
+ * cryptdlg dll resources
  *
- * Copyright 2008 Jonathan Ernst
- * Copyright 2009 Frédéric Delanoy
+ * Copyright 2008 Juan Lang
+ * Copyright 2010 Igor Paliychuk
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,19 +24,19 @@
 /* UTF-8 */
 #pragma code_page(65001)
 
-LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_CERT_POLICY "Politique de certificat"
-    IDS_POLICY_ID "Identifiant de politique : "
-    IDS_POLICY_QUALIFIER_INFO "Informations sur le qualificateur de politique"
-    IDS_POLICY_QUALIFIER_ID "Id de qualificateur de politique ="
-    IDS_CPS "Énoncé des pratiques de certification (CPS)"
-    IDS_USER_NOTICE "Avis utilisateur"
-    IDS_QUALIFIER "Qualificateur"
-    IDS_NOTICE_REF "Référence à l'avis"
-    IDS_ORGANIZATION "Organisation ="
-    IDS_NOTICE_NUM "Numéro de l'avis ="
-    IDS_NOTICE_TEXT "Texte de l'avis ="
+    IDS_CERT_POLICY "Certificate Policy"
+    IDS_POLICY_ID "Policy Identifier: "
+    IDS_POLICY_QUALIFIER_INFO "Policy Qualifier Info"
+    IDS_POLICY_QUALIFIER_ID "Policy Qualifier Id="
+    IDS_CPS "CPS" /* Certification Practice Statement */
+    IDS_USER_NOTICE "User Notice"
+    IDS_QUALIFIER "Qualifier"
+    IDS_NOTICE_REF "Notice Reference"
+    IDS_ORGANIZATION "Організація="
+    IDS_NOTICE_NUM "Notice Number="
+    IDS_NOTICE_TEXT "Notice Text="
 }
