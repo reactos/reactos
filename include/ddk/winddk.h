@@ -2529,58 +2529,6 @@ ExUuidCreate(
 #define ExIsResourceAcquired ExIsResourceAcquiredSharedLite
 #define ExReleaseResourceForThread ExReleaseResourceForThreadLite
 
-
-#if DBG
-
-#define PAGED_CODE() { \
-  if (KeGetCurrentIrql() > APC_LEVEL) { \
-    KdPrint( ("NTDDK: Pageable code called at IRQL > APC_LEVEL (%d)\n", KeGetCurrentIrql() )); \
-    ASSERT(FALSE); \
-  } \
-}
-
-#else
-
-#define PAGED_CODE()
-
-#endif
-
-NTKERNELAPI
-VOID
-NTAPI
-ProbeForRead(
-  IN CONST VOID  *Address,
-  IN SIZE_T  Length,
-  IN ULONG  Alignment);
-
-NTKERNELAPI
-VOID
-NTAPI
-ProbeForWrite(
-  IN PVOID  Address,
-  IN SIZE_T  Length,
-  IN ULONG  Alignment);
-
-
-
-/** Configuration manager routines **/
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-CmRegisterCallback(
-  IN PEX_CALLBACK_FUNCTION  Function,
-  IN PVOID  Context,
-  IN OUT PLARGE_INTEGER  Cookie);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-CmUnRegisterCallback(
-  IN LARGE_INTEGER  Cookie);
-
-
-
 /** Filesystem runtime library routines **/
 
 NTKERNELAPI
@@ -2588,8 +2536,6 @@ BOOLEAN
 NTAPI
 FsRtlIsTotalDeviceFailure(
   IN NTSTATUS  Status);
-
-
 
 /** Hardware abstraction layer routines **/
 
@@ -2613,7 +2559,6 @@ NTAPI
 HalPutDmaAdapter(
     PADAPTER_OBJECT AdapterObject
 );
-
 
 /** Io access routines **/
 

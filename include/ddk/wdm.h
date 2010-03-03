@@ -1562,6 +1562,56 @@ ExInitializeFastMutex(
   return;
 }
 
+#if DBG
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+#define PAGED_ASSERT( exp ) NT_ASSERT( exp )
+#else
+#define PAGED_ASSERT( exp ) ASSERT( exp )
+#endif
+
+#define PAGED_CODE() { \
+  if (KeGetCurrentIrql() > APC_LEVEL) { \
+    KdPrint( ("NTDDK: Pageable code called at IRQL > APC_LEVEL (%d)\n", KeGetCurrentIrql() )); \
+    PAGED_ASSERT(FALSE); \
+  } \
+}
+
+#else
+
+#define PAGED_CODE()
+
+#endif
+
+#if defined(_NTDDK_) || defined(_NTIFS_)
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTKERNELAPI
+VOID
+NTAPI
+ProbeForRead(
+  IN CONST VOID  *Address,
+  IN SIZE_T  Length,
+  IN ULONG  Alignment);
+
+#endif
+
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTKERNELAPI
+VOID
+NTAPI
+ProbeForWrite(
+  IN PVOID  Address,
+  IN SIZE_T  Length,
+  IN ULONG  Alignment);
+
+#endif
+
+
 /*
 ** Utillity functions
 */
@@ -2737,103 +2787,31 @@ typedef struct _REG_KEY_HANDLE_CLOSE_INFORMATION {
 } REG_KEY_HANDLE_CLOSE_INFORMATION, *PREG_KEY_HANDLE_CLOSE_INFORMATION;
 
 /******************************************************************************
- *                         I/O Manager Functions                              *
+ *                         Configuration Manager Functions                    *
  ******************************************************************************/
 
-#if defined(USE_DMA_MACROS) && !defined(_NTHAL_) && \
-   (defined(_NTDDK_) || defined(_NTDRIVER_)) || defined(_WDM_INCLUDED_)
+ #if (NTDDI_VERSION >= NTDDI_WINXP)
 
-#define DMA_MACROS_DEFINED
-
-FORCEINLINE
+NTKERNELAPI
 NTSTATUS
-IoAllocateAdapterChannel(
-    IN PADAPTER_OBJECT AdapterObject,
-    IN PDEVICE_OBJECT DeviceObject,
-    IN ULONG NumberOfMapRegisters,
-    IN PDRIVER_CONTROL ExecutionRoutine,
-    IN PVOID Context)
-{
-    PALLOCATE_ADAPTER_CHANNEL AllocateAdapterChannel;
-    AllocateAdapterChannel =
-        *(DmaAdapter)->DmaOperations->AllocateAdapterChannel;
-    ASSERT(AllocateAdapterChannel);
-    return AllocateAdapterChannel(DmaAdapter,
-                                  DeviceObject,
-                                  NumberOfMapRegisters,
-                                  ExecutionRoutine,
-                                  Context );
-}
+CmRegisterCallback(
+  IN PEX_CALLBACK_FUNCTION  Function,
+  IN PVOID  Context  OPTIONAL,
+  OUT PLARGE_INTEGER  Cookie);
 
-FORCEINLINE
-BOOLEAN
-IoFlushAdapterBuffers(
-    IN PADAPTER_OBJECT AdapterObject,
-    IN PMDL Mdl,
-    IN PVOID MapRegisterBase,
-    IN PVOID CurrentVa,
-    IN ULONG Length,
-    IN BOOLEAN WriteToDevice)
-{
-    PFLUSH_ADAPTER_BUFFERS FlushAdapterBuffers;
-    FlushAdapterBuffers = *(DmaAdapter)->DmaOperations->FlushAdapterBuffers;
-    ASSERT(FlushAdapterBuffers);
-    return FlushAdapterBuffers(DmaAdapter,
-                               Mdl,
-                               MapRegisterBase,
-                               CurrentVa,
-                               Length,
-                               WriteToDevice );
-}
+NTKERNELAPI
+NTSTATUS
+NTAPI
+CmUnRegisterCallback(
+  IN LARGE_INTEGER  Cookie);
 
-FORCEINLINE
-VOID
-IoFreeAdapterChannel(
-    IN PADAPTER_OBJECT AdapterObject)
-{
-    PFREE_ADAPTER_CHANNEL FreeAdapterChannel;
-    FreeAdapterChannel = *(DmaAdapter)->DmaOperations->FreeAdapterChannel;
-    ASSERT(FreeAdapterChannel);
-    FreeAdapterChannel(DmaAdapter);
-}
-
-FORCEINLINE
-VOID
-IoFreeMapRegisters(
-    IN PADAPTER_OBJECT AdapterObject,
-    IN PVOID MapRegisterBase,
-    IN ULONG NumberOfMapRegisters)
-{
-    PFREE_MAP_REGISTERS FreeMapRegisters;
-    FreeMapRegisters = *(DmaAdapter)->DmaOperations->FreeMapRegisters;
-    ASSERT(FreeMapRegisters);
-    FreeMapRegisters(DmaAdapter, MapRegisterBase, NumberOfMapRegisters);
-}
-
-FORCEINLINE
-PHYSICAL_ADDRESS
-IoMapTransfer(
-    IN PDMA_ADAPTER DmaAdapter,
-    IN PMDL Mdl,
-    IN PVOID MapRegisterBase,
-    IN PVOID CurrentVa,
-    IN OUT PULONG Length,
-    IN BOOLEAN WriteToDevice)
-{
-    PMAP_TRANSFER MapTransfer;
-
-    MapTransfer = *(DmaAdapter)->DmaOperations->MapTransfer;
-    ASSERT(MapTransfer);
-    return MapTransfer(DmaAdapter,
-                       Mdl,
-                       MapRegisterBase,
-                       CurrentVa,
-                       Length,
-                       WriteToDevice);
-}
 #endif
 
-/* PCI_COMMON_CONFIG.Command */
+/******************************************************************************
+ *                         I/O Manager Types                                  *
+ ******************************************************************************/
+
+ /* PCI_COMMON_CONFIG.Command */
 
 #define PCI_ENABLE_IO_SPACE               0x0001
 #define PCI_ENABLE_MEMORY_SPACE           0x0002
@@ -5176,6 +5154,516 @@ typedef struct _IO_STACK_LOCATION {
 
 #define PCI_WHICHSPACE_CONFIG             0x0
 #define PCI_WHICHSPACE_ROM                0x52696350 /* 'PciR' */
+
+/******************************************************************************
+ *                         I/O Manager Functions                              *
+ ******************************************************************************/
+
+#if defined(USE_DMA_MACROS) && !defined(_NTHAL_) && \
+   (defined(_NTDDK_) || defined(_NTDRIVER_)) || defined(_WDM_INCLUDED_)
+
+#define DMA_MACROS_DEFINED
+
+FORCEINLINE
+NTSTATUS
+IoAllocateAdapterChannel(
+    IN PADAPTER_OBJECT AdapterObject,
+    IN PDEVICE_OBJECT DeviceObject,
+    IN ULONG NumberOfMapRegisters,
+    IN PDRIVER_CONTROL ExecutionRoutine,
+    IN PVOID Context)
+{
+    PALLOCATE_ADAPTER_CHANNEL AllocateAdapterChannel;
+    AllocateAdapterChannel =
+        *(DmaAdapter)->DmaOperations->AllocateAdapterChannel;
+    ASSERT(AllocateAdapterChannel);
+    return AllocateAdapterChannel(DmaAdapter,
+                                  DeviceObject,
+                                  NumberOfMapRegisters,
+                                  ExecutionRoutine,
+                                  Context );
+}
+
+FORCEINLINE
+BOOLEAN
+IoFlushAdapterBuffers(
+    IN PADAPTER_OBJECT AdapterObject,
+    IN PMDL Mdl,
+    IN PVOID MapRegisterBase,
+    IN PVOID CurrentVa,
+    IN ULONG Length,
+    IN BOOLEAN WriteToDevice)
+{
+    PFLUSH_ADAPTER_BUFFERS FlushAdapterBuffers;
+    FlushAdapterBuffers = *(DmaAdapter)->DmaOperations->FlushAdapterBuffers;
+    ASSERT(FlushAdapterBuffers);
+    return FlushAdapterBuffers(DmaAdapter,
+                               Mdl,
+                               MapRegisterBase,
+                               CurrentVa,
+                               Length,
+                               WriteToDevice );
+}
+
+FORCEINLINE
+VOID
+IoFreeAdapterChannel(
+    IN PADAPTER_OBJECT AdapterObject)
+{
+    PFREE_ADAPTER_CHANNEL FreeAdapterChannel;
+    FreeAdapterChannel = *(DmaAdapter)->DmaOperations->FreeAdapterChannel;
+    ASSERT(FreeAdapterChannel);
+    FreeAdapterChannel(DmaAdapter);
+}
+
+FORCEINLINE
+VOID
+IoFreeMapRegisters(
+    IN PADAPTER_OBJECT AdapterObject,
+    IN PVOID MapRegisterBase,
+    IN ULONG NumberOfMapRegisters)
+{
+    PFREE_MAP_REGISTERS FreeMapRegisters;
+    FreeMapRegisters = *(DmaAdapter)->DmaOperations->FreeMapRegisters;
+    ASSERT(FreeMapRegisters);
+    FreeMapRegisters(DmaAdapter, MapRegisterBase, NumberOfMapRegisters);
+}
+
+FORCEINLINE
+PHYSICAL_ADDRESS
+IoMapTransfer(
+    IN PDMA_ADAPTER DmaAdapter,
+    IN PMDL Mdl,
+    IN PVOID MapRegisterBase,
+    IN PVOID CurrentVa,
+    IN OUT PULONG Length,
+    IN BOOLEAN WriteToDevice)
+{
+    PMAP_TRANSFER MapTransfer;
+
+    MapTransfer = *(DmaAdapter)->DmaOperations->MapTransfer;
+    ASSERT(MapTransfer);
+    return MapTransfer(DmaAdapter,
+                       Mdl,
+                       MapRegisterBase,
+                       CurrentVa,
+                       Length,
+                       WriteToDevice);
+}
+#endif
+
+#if !defined(_M_AMD64)
+NTHALAPI
+VOID
+NTAPI
+READ_PORT_BUFFER_UCHAR(
+  IN PUCHAR  Port,
+  IN PUCHAR  Buffer,
+  IN ULONG  Count);
+
+NTHALAPI
+VOID
+NTAPI
+READ_PORT_BUFFER_ULONG(
+  IN PULONG  Port,
+  IN PULONG  Buffer,
+  IN ULONG  Count);
+
+NTHALAPI
+VOID
+NTAPI
+READ_PORT_BUFFER_USHORT(
+  IN PUSHORT  Port,
+  IN PUSHORT  Buffer,
+  IN ULONG  Count);
+
+NTHALAPI
+UCHAR
+NTAPI
+READ_PORT_UCHAR(
+  IN PUCHAR  Port);
+
+NTHALAPI
+ULONG
+NTAPI
+READ_PORT_ULONG(
+  IN PULONG  Port);
+
+NTHALAPI
+USHORT
+NTAPI
+READ_PORT_USHORT(
+  IN PUSHORT  Port);
+
+NTKERNELAPI
+VOID
+NTAPI
+READ_REGISTER_BUFFER_UCHAR(
+  IN PUCHAR  Register,
+  IN PUCHAR  Buffer,
+  IN ULONG  Count);
+
+NTKERNELAPI
+VOID
+NTAPI
+READ_REGISTER_BUFFER_ULONG(
+  IN PULONG  Register,
+  IN PULONG  Buffer,
+  IN ULONG  Count);
+
+NTKERNELAPI
+VOID
+NTAPI
+READ_REGISTER_BUFFER_USHORT(
+  IN PUSHORT  Register,
+  IN PUSHORT  Buffer,
+  IN ULONG  Count);
+
+NTKERNELAPI
+UCHAR
+NTAPI
+READ_REGISTER_UCHAR(
+  IN PUCHAR  Register);
+
+NTKERNELAPI
+ULONG
+NTAPI
+READ_REGISTER_ULONG(
+  IN PULONG  Register);
+
+NTKERNELAPI
+USHORT
+NTAPI
+READ_REGISTER_USHORT(
+  IN PUSHORT  Register);
+
+NTHALAPI
+VOID
+NTAPI
+WRITE_PORT_BUFFER_UCHAR(
+  IN PUCHAR  Port,
+  IN PUCHAR  Buffer,
+  IN ULONG  Count);
+
+NTHALAPI
+VOID
+NTAPI
+WRITE_PORT_BUFFER_ULONG(
+  IN PULONG  Port,
+  IN PULONG  Buffer,
+  IN ULONG  Count);
+
+NTHALAPI
+VOID
+NTAPI
+WRITE_PORT_BUFFER_USHORT(
+  IN PUSHORT  Port,
+  IN PUSHORT  Buffer,
+  IN ULONG  Count);
+
+NTHALAPI
+VOID
+NTAPI
+WRITE_PORT_UCHAR(
+  IN PUCHAR  Port,
+  IN UCHAR  Value);
+
+NTHALAPI
+VOID
+NTAPI
+WRITE_PORT_ULONG(
+  IN PULONG  Port,
+  IN ULONG  Value);
+
+NTHALAPI
+VOID
+NTAPI
+WRITE_PORT_USHORT(
+  IN PUSHORT  Port,
+  IN USHORT  Value);
+
+NTKERNELAPI
+VOID
+NTAPI
+WRITE_REGISTER_BUFFER_UCHAR(
+  IN PUCHAR  Register,
+  IN PUCHAR  Buffer,
+  IN ULONG  Count);
+
+NTKERNELAPI
+VOID
+NTAPI
+WRITE_REGISTER_BUFFER_ULONG(
+  IN PULONG  Register,
+  IN PULONG  Buffer,
+  IN ULONG  Count);
+
+NTKERNELAPI
+VOID
+NTAPI
+WRITE_REGISTER_BUFFER_USHORT(
+  IN PUSHORT  Register,
+  IN PUSHORT  Buffer,
+  IN ULONG  Count);
+
+NTKERNELAPI
+VOID
+NTAPI
+WRITE_REGISTER_UCHAR(
+  IN PUCHAR  Register,
+  IN UCHAR  Value);
+
+NTKERNELAPI
+VOID
+NTAPI
+WRITE_REGISTER_ULONG(
+  IN PULONG  Register,
+  IN ULONG  Value);
+
+NTKERNELAPI
+VOID
+NTAPI
+WRITE_REGISTER_USHORT(
+  IN PUSHORT  Register,
+  IN USHORT  Value);
+
+#else
+
+FORCEINLINE
+VOID
+READ_PORT_BUFFER_UCHAR(
+  IN PUCHAR  Port,
+  IN PUCHAR  Buffer,
+  IN ULONG  Count)
+{
+    __inbytestring((USHORT)(ULONG_PTR)Port, Buffer, Count);
+}
+
+FORCEINLINE
+VOID
+READ_PORT_BUFFER_ULONG(
+  IN PULONG  Port,
+  IN PULONG  Buffer,
+  IN ULONG  Count)
+{
+    __indwordstring((USHORT)(ULONG_PTR)Port, Buffer, Count);
+}
+
+FORCEINLINE
+VOID
+READ_PORT_BUFFER_USHORT(
+  IN PUSHORT  Port,
+  IN PUSHORT  Buffer,
+  IN ULONG  Count)
+{
+    __inwordstring((USHORT)(ULONG_PTR)Port, Buffer, Count);
+}
+
+FORCEINLINE
+UCHAR
+READ_PORT_UCHAR(
+  IN PUCHAR  Port)
+{
+    return __inbyte((USHORT)(ULONG_PTR)Port);
+}
+
+FORCEINLINE
+ULONG
+READ_PORT_ULONG(
+  IN PULONG  Port)
+{
+    return __indword((USHORT)(ULONG_PTR)Port);
+}
+
+FORCEINLINE
+USHORT
+READ_PORT_USHORT(
+  IN PUSHORT  Port)
+{
+    return __inword((USHORT)(ULONG_PTR)Port);
+}
+
+FORCEINLINE
+VOID
+READ_REGISTER_BUFFER_UCHAR(
+  IN PUCHAR  Register,
+  IN PUCHAR  Buffer,
+  IN ULONG  Count)
+{
+    __movsb(Register, Buffer, Count);
+}
+
+FORCEINLINE
+VOID
+READ_REGISTER_BUFFER_ULONG(
+  IN PULONG  Register,
+  IN PULONG  Buffer,
+  IN ULONG  Count)
+{
+    __movsd(Register, Buffer, Count);
+}
+
+FORCEINLINE
+VOID
+READ_REGISTER_BUFFER_USHORT(
+  IN PUSHORT  Register,
+  IN PUSHORT  Buffer,
+  IN ULONG  Count)
+{
+    __movsw(Register, Buffer, Count);
+}
+
+FORCEINLINE
+UCHAR
+READ_REGISTER_UCHAR(
+  IN PUCHAR Register)
+{
+    return *Register;
+}
+
+FORCEINLINE
+ULONG
+READ_REGISTER_ULONG(
+  IN PULONG Register)
+{
+    return *Register;
+}
+
+FORCEINLINE
+USHORT
+READ_REGISTER_USHORT(
+  IN PUSHORT Register)
+{
+    return *Register;
+}
+
+FORCEINLINE
+VOID
+WRITE_PORT_BUFFER_UCHAR(
+  IN PUCHAR  Port,
+  IN PUCHAR  Buffer,
+  IN ULONG  Count)
+{
+    __outbytestring((USHORT)(ULONG_PTR)Port, Buffer, Count);
+}
+
+FORCEINLINE
+VOID
+WRITE_PORT_BUFFER_ULONG(
+  IN PULONG  Port,
+  IN PULONG  Buffer,
+  IN ULONG  Count)
+{
+    __outdwordstring((USHORT)(ULONG_PTR)Port, Buffer, Count);
+}
+
+FORCEINLINE
+VOID
+WRITE_PORT_BUFFER_USHORT(
+  IN PUSHORT  Port,
+  IN PUSHORT  Buffer,
+  IN ULONG  Count)
+{
+    __outwordstring((USHORT)(ULONG_PTR)Port, Buffer, Count);
+}
+
+FORCEINLINE
+VOID
+WRITE_PORT_UCHAR(
+  IN PUCHAR  Port,
+  IN UCHAR  Value)
+{
+    __outbyte((USHORT)(ULONG_PTR)Port, Value);
+}
+
+FORCEINLINE
+VOID
+WRITE_PORT_ULONG(
+  IN PULONG  Port,
+  IN ULONG  Value)
+{
+    __outdword((USHORT)(ULONG_PTR)Port, Value);
+}
+
+FORCEINLINE
+VOID
+WRITE_PORT_USHORT(
+  IN PUSHORT  Port,
+  IN USHORT  Value)
+{
+    __outword((USHORT)(ULONG_PTR)Port, Value);
+}
+
+FORCEINLINE
+VOID
+WRITE_REGISTER_BUFFER_UCHAR(
+  IN PUCHAR  Register,
+  IN PUCHAR  Buffer,
+  IN ULONG  Count)
+{
+    LONG Synch;
+    __movsb(Register, Buffer, Count);
+    InterlockedOr(&Synch, 1);
+}
+
+FORCEINLINE
+VOID
+WRITE_REGISTER_BUFFER_ULONG(
+  IN PULONG  Register,
+  IN PULONG  Buffer,
+  IN ULONG  Count)
+{
+    LONG Synch;
+    __movsd(Register, Buffer, Count);
+    InterlockedOr(&Synch, 1);
+}
+
+FORCEINLINE
+VOID
+WRITE_REGISTER_BUFFER_USHORT(
+  IN PUSHORT  Register,
+  IN PUSHORT  Buffer,
+  IN ULONG  Count)
+{
+    LONG Synch;
+    __movsw(Register, Buffer, Count);
+    InterlockedOr(&Synch, 1);
+}
+
+FORCEINLINE
+VOID
+WRITE_REGISTER_UCHAR(
+  IN PUCHAR  Register,
+  IN UCHAR  Value)
+{
+    LONG Synch;
+    *Register = Value;
+    InterlockedOr(&Synch, 1);
+}
+
+FORCEINLINE
+VOID
+WRITE_REGISTER_ULONG(
+  IN PULONG  Register,
+  IN ULONG  Value)
+{
+    LONG Synch;
+    *Register = Value;
+    InterlockedOr(&Synch, 1);
+}
+
+FORCEINLINE
+VOID
+WRITE_REGISTER_USHORT(
+  IN PUSHORT  Register,
+  IN USHORT  Value)
+{
+    LONG Sync;
+    *Register = Value;
+    InterlockedOr(&Sync, 1);
+}
+
+#endif
 
 /******************************************************************************
  *                                 RTL Types                                  *
