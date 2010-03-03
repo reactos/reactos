@@ -179,6 +179,14 @@ set_sane_segs:
         mov fs, ax
     endif
 
+#if DBG
+    /* Keep the frame chain intact */
+    mov eax, [esp + KTRAP_FRAME_EIP]
+    mov [esp + KTRAP_FRAME_DEBUGEIP], eax
+    mov [esp + KTRAP_FRAME_DEBUGEBP], ebp
+    mov ebp, esp
+#endif
+
     /* Set parameter 1 (ECX) to point to the frame */
     mov ecx, esp
 
@@ -187,11 +195,157 @@ set_sane_segs:
 
 ENDM
 
+MACRO(KiCallHandler, Handler)
+#if DBG
+    /* Use a call to get the return address for back traces */
+    call Handler
+#else
+    /* Use the faster jmp */
+    jmp Handler
+#endif
+    nop
+ENDM
+
 MACRO(TRAP_ENTRY, Trap, Flags)
 EXTERN @&Trap&Handler@4 :PROC
     PUBLIC _&Trap
     _&Trap:
     KiEnterTrap Flags
-    jmp @&Trap&Handler@4
+    KiCallHandler @&Trap&Handler@4
+ENDM
+
+#define KI_RESTORE_EAX        HEX(001)
+#define KI_RESTORE_ECX_EDX    HEX(002)
+#define KI_RESTORE_FS         HEX(004)
+#define KI_RESTORE_SEGMENTS   HEX(008)
+#define KI_RESTORE_EFLAGS     HEX(010)
+#define KI_EXIT_SYSCALL       HEX(020)
+#define KI_EXIT_JMP           HEX(040)
+#define KI_EXIT_RET           HEX(080)
+#define KI_EXIT_IRET          HEX(100)
+#define KI_EDITED_FRAME       HEX(200)
+#define KI_RESTORE_VOLATILES  (KI_RESTORE_EAX OR KI_RESTORE_ECX_EDX)
+
+MACRO(KiTrapExitStub, Name, Flags)
+
+PUBLIC @&Name&@4
+@&Name&@4:
+
+    if (Flags AND KI_RESTORE_EFLAGS)
+
+        /* We will pop EFlags off the stack */
+        OffsetEsp = KTRAP_FRAME_EFLAGS
+
+    elseif (Flags AND KI_EXIT_IRET)
+
+        /* This is the IRET frame */
+        OffsetEsp = KTRAP_FRAME_EIP
+
+    else
+
+        OffsetEsp = 0
+
+    endif
+
+    if (Flags AND KI_EDITED_FRAME)
+
+        /* Load the requested ESP */
+        mov esp, [ecx + KTRAP_FRAME_TEMPESP]
+
+        /* Put return address on the new stack */
+        push [ecx + KTRAP_FRAME_EIP]
+
+        /* Put EFLAGS on the new stack */
+        push [ecx + KTRAP_FRAME_EFLAGS]
+
+    else
+
+        /* Point esp to an appropriate member of the frame */
+        lea esp, [ecx + OffsetEsp]
+
+    endif
+
+    /* Restore non volatiles */
+    mov ebx, [ecx + KTRAP_FRAME_EBX]
+    mov esi, [ecx + KTRAP_FRAME_ESI]
+    mov edi, [ecx + KTRAP_FRAME_EDI]
+    mov ebp, [ecx + KTRAP_FRAME_EBP]
+
+    if (Flags AND KI_RESTORE_EAX)
+
+        /* Restore eax */
+        mov eax, [ecx + KTRAP_FRAME_EAX]
+
+    endif
+
+    if (Flags AND KI_RESTORE_ECX_EDX)
+
+        /* Restore volatiles */
+        mov edx, [ecx + KTRAP_FRAME_EDX]
+        mov ecx, [ecx + KTRAP_FRAME_ECX]
+
+    elseif (Flags AND KI_EXIT_JMP)
+
+        /* Load return address into edx */
+        mov edx, [esp - OffsetEsp + KTRAP_FRAME_EIP]
+
+    elseif (Flags AND KI_EXIT_SYSCALL)
+
+        /* Set sysexit parameters */
+        mov edx, [esp - OffsetEsp + KTRAP_FRAME_EIP]
+        mov ecx, [esp - OffsetEsp + KTRAP_FRAME_ESP]
+
+        /* Keep interrupts disabled until the sti / sysexit */
+        and byte ptr [esp - OffsetEsp + KTRAP_FRAME_EFLAGS + 1], ~(EFLAGS_INTERRUPT_MASK >> 8)
+
+    endif
+
+    if (Flags AND KI_RESTORE_SEGMENTS)
+
+        /* Restore segments for user mode */
+        mov ds, [esp - OffsetEsp + KTRAP_FRAME_DS]
+        mov es, [esp - OffsetEsp + KTRAP_FRAME_ES]
+        mov gs, [esp - OffsetEsp + KTRAP_FRAME_GS]
+
+    endif
+
+    if ((Flags AND KI_RESTORE_FS) OR (Flags AND KI_RESTORE_SEGMENTS))
+
+        /* Restore user mode FS */
+        mov fs, [esp - OffsetEsp + KTRAP_FRAME_FS]
+
+    endif
+
+    if (Flags AND KI_RESTORE_EFLAGS)
+
+        /* Restore EFLAGS */
+        popf
+
+    endif
+
+    if (Flags AND KI_EXIT_SYSCALL)
+
+        /* Enable interrupts and return to user mode.
+           Both must follow directly after another to be "atomic". */
+        sti
+        sysexit
+
+    elseif (Flags AND KI_EXIT_IRET)
+
+        /* Return with iret */
+        iret
+
+    elseif (Flags AND KI_EXIT_JMP)
+
+        /* Return to kernel mode with a jmp */
+        jmp edx
+
+    elseif (Flags AND KI_EXIT_RET)
+
+        /* Return to kernel mode with a ret */
+        ret
+
+    endif
+
 ENDM
 
