@@ -2052,18 +2052,6 @@ KeGetCurrentProcessorNumber(VOID)
 #error Unknown architecture
 #endif
 
-#define MM_DONT_ZERO_ALLOCATION             0x00000001
-#define MM_ALLOCATE_FROM_LOCAL_NODE_ONLY    0x00000002
-
-    
-#define EFLAG_SIGN                        0x8000
-#define EFLAG_ZERO                        0x4000
-#define EFLAG_SELECT                      (EFLAG_SIGN | EFLAG_ZERO)
-
-#define RESULT_NEGATIVE                   ((EFLAG_SIGN & ~EFLAG_ZERO) & EFLAG_SELECT)
-#define RESULT_ZERO                       ((~EFLAG_SIGN & EFLAG_ZERO) & EFLAG_SELECT)
-#define RESULT_POSITIVE                   ((~EFLAG_SIGN & ~EFLAG_ZERO) & EFLAG_SELECT)
-
 typedef enum _INTERLOCKED_RESULT {
   ResultNegative = RESULT_NEGATIVE,
   ResultZero = RESULT_ZERO,
@@ -2113,20 +2101,6 @@ typedef struct _PCIBUSDATA
 
 
 /** SPINLOCK FUNCTIONS ********************************************************/
-
-NTKERNELAPI
-BOOLEAN
-FASTCALL
-KeTryToAcquireSpinLockAtDpcLevel(
-    IN OUT PKSPIN_LOCK SpinLock
-);
-
-NTKERNELAPI
-BOOLEAN
-FASTCALL
-KeTestSpinLock(
-    IN PKSPIN_LOCK SpinLock
-);
 
 #if defined (_X86_)
 
@@ -2274,40 +2248,6 @@ KeAcquireSpinLockRaiseToDpc(
 
 #define ARGUMENT_PRESENT(ArgumentPointer) \
   ((CHAR*)((ULONG_PTR)(ArgumentPointer)) != (CHAR*)NULL)
-
-/*
- * ULONG
- * BYTE_OFFSET(
- *   IN PVOID  Va)
- */
-#define BYTE_OFFSET(Va) \
-  ((ULONG) ((ULONG_PTR) (Va) & (PAGE_SIZE - 1)))
-
-/*
- * ULONG
- * BYTES_TO_PAGES(
- *   IN ULONG  Size)
- */
-#define BYTES_TO_PAGES(Size) \
-  ((ULONG) ((ULONG_PTR) (Size) >> PAGE_SHIFT) + (((ULONG) (Size) & (PAGE_SIZE - 1)) != 0))
-
-/*
- * PVOID
- * PAGE_ALIGN(
- *   IN PVOID  Va)
- */
-#define PAGE_ALIGN(Va) \
-  ((PVOID) ((ULONG_PTR)(Va) & ~(PAGE_SIZE - 1)))
-
-/*
- * ULONG_PTR
- * ROUND_TO_PAGES(
- *   IN ULONG_PTR  Size)
- */
-#define ROUND_TO_PAGES(Size) \
-  ((ULONG_PTR) (((ULONG_PTR) Size + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1)))
-
-
 
 #if defined(_X86_) || defined(_AMD64_)
 

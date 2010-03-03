@@ -978,6 +978,14 @@ InterlockedPushEntrySList(
 
 #define SharedUserData                    ((KUSER_SHARED_DATA * CONST) KI_USER_SHARED_DATA)
 
+#define EFLAG_SIGN                        0x8000
+#define EFLAG_ZERO                        0x4000
+#define EFLAG_SELECT                      (EFLAG_SIGN | EFLAG_ZERO)
+
+#define RESULT_NEGATIVE                   ((EFLAG_SIGN & ~EFLAG_ZERO) & EFLAG_SELECT)
+#define RESULT_ZERO                       ((~EFLAG_SIGN & EFLAG_ZERO) & EFLAG_SELECT)
+#define RESULT_POSITIVE                   ((~EFLAG_SIGN & ~EFLAG_ZERO) & EFLAG_SELECT)
+
 typedef enum _TRACE_INFORMATION_CLASS {
   TraceIdClass,
   TraceHandleClass,
@@ -1445,8 +1453,76 @@ typedef XSAVE_FORMAT XMM_SAVE_AREA32, *PXMM_SAVE_AREA32;
 #endif // _AMD64_
 
 /******************************************************************************
+ *                              Kernel Functions                              *
+ ******************************************************************************/
+
+/* SPINLOCK FUNCTIONS */
+
+/* FIXME : #if (NTDDI_VERSION >= NTDDI_WS03SP1) */
+NTKERNELAPI
+BOOLEAN
+FASTCALL
+KeTryToAcquireSpinLockAtDpcLevel(
+    IN OUT PKSPIN_LOCK SpinLock
+);
+/* #endif (NTDDI_VERSION >= NTDDI_WS03SP1) */
+
+#if (NTDDI_VERSION >= NTDDI_WS03)
+NTKERNELAPI
+BOOLEAN
+FASTCALL
+KeTestSpinLock(
+    IN PKSPIN_LOCK SpinLock
+);
+#endif
+
+/*
+** Utillity functions
+*/
+
+/*
+ * ULONG
+ * BYTE_OFFSET(
+ *   IN PVOID  Va)
+ */
+#define BYTE_OFFSET(Va) \
+  ((ULONG) ((ULONG_PTR) (Va) & (PAGE_SIZE - 1)))
+
+/*
+ * ULONG
+ * BYTES_TO_PAGES(
+ *   IN ULONG  Size)
+ */
+#define BYTES_TO_PAGES(Size) \
+  (((Size) >> PAGE_SHIFT) + (((Size) & (PAGE_SIZE - 1)) != 0))
+
+/*
+ * PVOID
+ * PAGE_ALIGN(
+ *   IN PVOID  Va)
+ */
+#define PAGE_ALIGN(Va) \
+  ((PVOID) ((ULONG_PTR)(Va) & ~(PAGE_SIZE - 1)))
+
+/*
+ * ULONG_PTR
+ * ROUND_TO_PAGES(
+ *   IN ULONG_PTR  Size)
+ */
+#define ROUND_TO_PAGES(Size) \
+  (((ULONG_PTR) (Size) + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1))
+
+
+/******************************************************************************
  *                         Memory manager Types                               *
  ******************************************************************************/
+
+#define MM_DONT_ZERO_ALLOCATION                 0x00000001
+#define MM_ALLOCATE_FROM_LOCAL_NODE_ONLY        0x00000002
+#define MM_ALLOCATE_FULLY_REQUIRED              0x00000004
+#define MM_ALLOCATE_NO_WAIT                     0x00000008
+#define MM_ALLOCATE_PREFER_CONTIGUOUS           0x00000010
+#define MM_ALLOCATE_REQUIRE_CONTIGUOUS_CHUNKS   0x00000020
 
 #define MDL_MAPPED_TO_SYSTEM_VA     0x0001
 #define MDL_PAGES_LOCKED            0x0002
@@ -6863,10 +6939,6 @@ ExReleaseRundownProtectionEx(
     IN OUT PEX_RUNDOWN_REF RunRef,
     IN ULONG Count);
 #endif // (NTDDI_VERSION >= NTDDI_WINXPSP2)
-
-#if (NTDDI_VERSION >= NTDDI_WS03)
-
-#endif // (NTDDI_VERSION >= NTDDI_WS03)
 
 #if (NTDDI_VERSION >= NTDDI_WS03SP1)
 NTKERNELAPI

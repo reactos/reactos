@@ -24,6 +24,7 @@
 #undef DECLSPEC_IMPORT
 #define DECLSPEC_IMPORT
 #include <ntifs.h>
+#include <ntddk.h>
 #include <wdmguid.h>
 #include <arc/arc.h>
 #undef NTHALAPI
