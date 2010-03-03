@@ -2755,120 +2755,11 @@ IoReportResourceUsage(
   OUT PBOOLEAN  ConflictDetected);
 
 NTKERNELAPI
-NTSTATUS
-NTAPI
-IoReportTargetDeviceChange(
-  IN PDEVICE_OBJECT  PhysicalDeviceObject,
-  IN PVOID  NotificationStructure);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoReportTargetDeviceChangeAsynchronous(
-  IN PDEVICE_OBJECT  PhysicalDeviceObject,
-  IN PVOID  NotificationStructure,
-  IN PDEVICE_CHANGE_COMPLETE_CALLBACK  Callback  OPTIONAL,
-  IN PVOID  Context  OPTIONAL);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoRequestDeviceEject(
-  IN PDEVICE_OBJECT  PhysicalDeviceObject);
-
-/*
- * VOID
- * IoRequestDpc(
- *   IN PDEVICE_OBJECT  DeviceObject,
- *   IN PIRP  Irp,
- *   IN PVOID  Context);
- */
-#define IoRequestDpc(DeviceObject, Irp, Context)( \
-  KeInsertQueueDpc(&(DeviceObject)->Dpc, (Irp), (Context)))
-
-NTKERNELAPI
-VOID
-NTAPI
-IoReuseIrp(
-  IN OUT PIRP  Irp,
-  IN NTSTATUS  Status);
-
-/*
- * PDRIVER_CANCEL
- * IoSetCancelRoutine(
- *   IN PIRP  Irp,
- *   IN PDRIVER_CANCEL  CancelRoutine)
- */
-#define IoSetCancelRoutine(_Irp, \
-                           _CancelRoutine) \
-  ((PDRIVER_CANCEL) InterlockedExchangePointer( \
-    (PVOID *) &(_Irp)->CancelRoutine, (PVOID) (_CancelRoutine)))
-
-/*
- * VOID
- * IoSetCompletionRoutine(
- *   IN PIRP  Irp,
- *   IN PIO_COMPLETION_ROUTINE  CompletionRoutine,
- *   IN PVOID  Context,
- *   IN BOOLEAN  InvokeOnSuccess,
- *   IN BOOLEAN  InvokeOnError,
- *   IN BOOLEAN  InvokeOnCancel)
- */
-#define IoSetCompletionRoutine(_Irp, \
-                               _CompletionRoutine, \
-                               _Context, \
-                               _InvokeOnSuccess, \
-                               _InvokeOnError, \
-                               _InvokeOnCancel) \
-{ \
-  PIO_STACK_LOCATION _IrpSp; \
-  ASSERT((_InvokeOnSuccess) || (_InvokeOnError) || (_InvokeOnCancel) ? \
-    (_CompletionRoutine) != NULL : TRUE); \
-  _IrpSp = IoGetNextIrpStackLocation(_Irp); \
-  _IrpSp->CompletionRoutine = (PIO_COMPLETION_ROUTINE)(_CompletionRoutine); \
-  _IrpSp->Context = (_Context); \
-  _IrpSp->Control = 0; \
-  if (_InvokeOnSuccess) _IrpSp->Control = SL_INVOKE_ON_SUCCESS; \
-  if (_InvokeOnError) _IrpSp->Control |= SL_INVOKE_ON_ERROR; \
-  if (_InvokeOnCancel) _IrpSp->Control |= SL_INVOKE_ON_CANCEL; \
-}
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoSetCompletionRoutineEx(
-  IN PDEVICE_OBJECT  DeviceObject,
-  IN PIRP  Irp,
-  IN PIO_COMPLETION_ROUTINE  CompletionRoutine,
-  IN PVOID  Context,
-  IN BOOLEAN  InvokeOnSuccess,
-  IN BOOLEAN  InvokeOnError,
-  IN BOOLEAN  InvokeOnCancel);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoSetDeviceInterfaceState(
-  IN PUNICODE_STRING  SymbolicLinkName,
-  IN BOOLEAN  Enable);
-
-NTKERNELAPI
 VOID
 NTAPI
 IoSetHardErrorOrVerifyDevice(
   IN PIRP  Irp,
   IN PDEVICE_OBJECT  DeviceObject);
-
-/*
- * VOID
- * IoSetNextIrpStackLocation(
- *   IN OUT PIRP  Irp)
- */
-#define IoSetNextIrpStackLocation(_Irp) \
-{ \
-  (_Irp)->CurrentLocation--; \
-  (_Irp)->Tail.Overlay.CurrentStackLocation--; \
-}
 
 NTKERNELAPI
 NTSTATUS
@@ -2888,23 +2779,6 @@ IoSetPartitionInformationEx(
   IN struct _SET_PARTITION_INFORMATION_EX  *PartitionInfo);
 
 NTKERNELAPI
-VOID
-NTAPI
-IoSetShareAccess(
-  IN ACCESS_MASK  DesiredAccess,
-  IN ULONG  DesiredShareAccess,
-  IN OUT PFILE_OBJECT  FileObject,
-  OUT PSHARE_ACCESS  ShareAccess);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoSetStartIoAttributes(
-  IN PDEVICE_OBJECT  DeviceObject,
-  IN BOOLEAN  DeferredStartIo,
-  IN BOOLEAN  NonCancelable);
-
-NTKERNELAPI
 NTSTATUS
 NTAPI
 IoSetSystemPartition(
@@ -2916,48 +2790,8 @@ NTAPI
 IoSetThreadHardErrorMode(
   IN BOOLEAN  EnableHardErrors);
 
-/*
- * USHORT
- * IoSizeOfIrp(
- *   IN CCHAR  StackSize)
- */
-#define IoSizeOfIrp(_StackSize) \
-  ((USHORT) (sizeof(IRP) + ((_StackSize) * (sizeof(IO_STACK_LOCATION)))))
 
-/*
- * VOID
- * IoSkipCurrentIrpStackLocation(
- *   IN PIRP  Irp)
- */
-#define IoSkipCurrentIrpStackLocation(_Irp) \
-{ \
-  (_Irp)->CurrentLocation++; \
-  (_Irp)->Tail.Overlay.CurrentStackLocation++; \
-}
 
-NTKERNELAPI
-VOID
-NTAPI
-IoStartNextPacket(
-  IN PDEVICE_OBJECT  DeviceObject,
-  IN BOOLEAN  Cancelable);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoStartNextPacketByKey(
-  IN PDEVICE_OBJECT  DeviceObject,
-  IN BOOLEAN  Cancelable,
-  IN ULONG  Key);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoStartPacket(
-  IN PDEVICE_OBJECT  DeviceObject,
-  IN PIRP  Irp,
-  IN PULONG  Key  OPTIONAL,
-  IN PDRIVER_CANCEL  CancelFunction  OPTIONAL);
 
 NTKERNELAPI
 VOID

@@ -6574,6 +6574,66 @@ IoRemoveShareAccess(
   IN PFILE_OBJECT  FileObject,
   IN OUT PSHARE_ACCESS  ShareAccess);
 
+NTKERNELAPI
+NTSTATUS
+IoReportTargetDeviceChange(
+  IN PDEVICE_OBJECT  PhysicalDeviceObject,
+  IN PVOID  NotificationStructure);
+
+NTKERNELAPI
+NTSTATUS
+IoReportTargetDeviceChangeAsynchronous(
+  IN PDEVICE_OBJECT  PhysicalDeviceObject,
+  IN PVOID  NotificationStructure,
+  IN PDEVICE_CHANGE_COMPLETE_CALLBACK  Callback  OPTIONAL,
+  IN PVOID  Context  OPTIONAL);
+
+NTKERNELAPI
+VOID
+IoRequestDeviceEject(
+  IN PDEVICE_OBJECT  PhysicalDeviceObject);
+
+NTKERNELAPI
+VOID
+IoReuseIrp(
+  IN OUT PIRP  Irp,
+  IN NTSTATUS  Status);
+
+NTKERNELAPI
+NTSTATUS
+IoSetDeviceInterfaceState(
+  IN PUNICODE_STRING  SymbolicLinkName,
+  IN BOOLEAN  Enable);
+
+NTKERNELAPI
+VOID
+IoSetShareAccess(
+  IN ACCESS_MASK  DesiredAccess,
+  IN ULONG  DesiredShareAccess,
+  IN OUT PFILE_OBJECT  FileObject,
+  OUT PSHARE_ACCESS  ShareAccess);
+
+NTKERNELAPI
+VOID
+IoStartNextPacket(
+  IN PDEVICE_OBJECT  DeviceObject,
+  IN BOOLEAN  Cancelable);
+
+NTKERNELAPI
+VOID
+IoStartNextPacketByKey(
+  IN PDEVICE_OBJECT  DeviceObject,
+  IN BOOLEAN  Cancelable,
+  IN ULONG  Key);
+
+NTKERNELAPI
+VOID
+IoStartPacket(
+  IN PDEVICE_OBJECT  DeviceObject,
+  IN PIRP  Irp,
+  IN PULONG  Key  OPTIONAL,
+  IN PDRIVER_CANCEL  CancelFunction  OPTIONAL);
+
 #endif
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
@@ -6621,7 +6681,105 @@ VOID
 IoFreeErrorLogEntry(
   PVOID  ElEntry);
 
+NTKERNELAPI
+NTSTATUS
+IoSetCompletionRoutineEx(
+  IN PDEVICE_OBJECT  DeviceObject,
+  IN PIRP  Irp,
+  IN PIO_COMPLETION_ROUTINE  CompletionRoutine,
+  IN PVOID  Context,
+  IN BOOLEAN  InvokeOnSuccess,
+  IN BOOLEAN  InvokeOnError,
+  IN BOOLEAN  InvokeOnCancel);
+
+NTKERNELAPI
+VOID
+NTAPI
+IoSetStartIoAttributes(
+  IN PDEVICE_OBJECT  DeviceObject,
+  IN BOOLEAN  DeferredStartIo,
+  IN BOOLEAN  NonCancelable);
+
 #endif
+
+/*
+ * USHORT
+ * IoSizeOfIrp(
+ *   IN CCHAR  StackSize)
+ */
+#define IoSizeOfIrp(_StackSize) \
+  ((USHORT) (sizeof(IRP) + ((_StackSize) * (sizeof(IO_STACK_LOCATION)))))
+
+FORCEINLINE
+VOID
+IoSkipCurrentIrpStackLocation (
+  IN OUT PIRP Irp)
+{
+  ASSERT(Irp->CurrentLocation <= Irp->StackCount);
+  Irp->CurrentLocation++;
+  Irp->Tail.Overlay.CurrentStackLocation++;
+}
+
+FORCEINLINE
+VOID
+IoSetNextIrpStackLocation (
+  IN OUT PIRP Irp)
+{
+  ASSERT(Irp->CurrentLocation > 0);
+  Irp->CurrentLocation--;
+  Irp->Tail.Overlay.CurrentStackLocation--;
+}
+
+FORCEINLINE
+VOID
+IoSetCompletionRoutine(
+  IN PIRP Irp,
+  IN PIO_COMPLETION_ROUTINE CompletionRoutine OPTIONAL,
+  IN PVOID Context OPTIONAL,
+  IN BOOLEAN InvokeOnSuccess,
+  IN BOOLEAN InvokeOnError,
+  IN BOOLEAN InvokeOnCancel)
+{
+  PIO_STACK_LOCATION irpSp;
+  ASSERT( (InvokeOnSuccess || InvokeOnError || InvokeOnCancel) ? (CompletionRoutine != NULL) : TRUE );
+  irpSp = IoGetNextIrpStackLocation(Irp);
+  irpSp->CompletionRoutine = CompletionRoutine;
+  irpSp->Context = Context;
+  irpSp->Control = 0;
+
+  if (InvokeOnSuccess) {
+    irpSp->Control = SL_INVOKE_ON_SUCCESS;
+  }
+
+  if (InvokeOnError) {
+    irpSp->Control |= SL_INVOKE_ON_ERROR;
+  }
+
+  if (InvokeOnCancel) {
+    irpSp->Control |= SL_INVOKE_ON_CANCEL;
+  }
+}
+
+/*
+ * PDRIVER_CANCEL
+ * IoSetCancelRoutine(
+ *   IN PIRP  Irp,
+ *   IN PDRIVER_CANCEL  CancelRoutine)
+ */
+#define IoSetCancelRoutine(_Irp, \
+                           _CancelRoutine) \
+  ((PDRIVER_CANCEL) (ULONG_PTR) InterlockedExchangePointer( \
+    (PVOID *) &(_Irp)->CancelRoutine, (PVOID) (ULONG_PTR) (_CancelRoutine)))
+
+/*
+ * VOID
+ * IoRequestDpc(
+ *   IN PDEVICE_OBJECT  DeviceObject,
+ *   IN PIRP  Irp,
+ *   IN PVOID  Context);
+ */
+#define IoRequestDpc(DeviceObject, Irp, Context)( \
+  KeInsertQueueDpc(&(DeviceObject)->Dpc, (Irp), (Context)))
 
 /*
  * VOID
