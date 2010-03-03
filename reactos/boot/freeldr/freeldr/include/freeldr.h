@@ -60,6 +60,8 @@
 #include <reactos.h>
 #include <registry.h>
 #include <winldr.h>
+#include <ntdddisk.h>
+#include <internal/hal.h>
 /* file system headers */
 #include <fs/ext2.h>
 #include <fs/fat.h>
