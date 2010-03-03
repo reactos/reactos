@@ -32,6 +32,8 @@ static HMODULE hShlwapi;
 static HRESULT (WINAPI *pPathIsValidCharA)(char,DWORD);
 static HRESULT (WINAPI *pPathIsValidCharW)(WCHAR,DWORD);
 static LPWSTR  (WINAPI *pPathCombineW)(LPWSTR, LPCWSTR, LPCWSTR);
+static HRESULT (WINAPI *pPathCreateFromUrlA)(LPCSTR, LPSTR, LPDWORD, DWORD);
+static HRESULT (WINAPI *pPathCreateFromUrlW)(LPCWSTR, LPWSTR, LPDWORD, DWORD);
 
 /* ################ */
 
@@ -207,31 +209,39 @@ static void test_PathCreateFromUrl(void)
     WCHAR *pathW, *urlW;
     static const char url[] = "http://www.winehq.org";
 
+    if (!pPathCreateFromUrlA) {
+        win_skip("PathCreateFromUrlA not found\n");
+        return;
+    }
+
     /* Check ret_path = NULL */
     len = sizeof(url);
-    ret = PathCreateFromUrlA(url, NULL, &len, 0); 
+    ret = pPathCreateFromUrlA(url, NULL, &len, 0);
     ok ( ret == E_INVALIDARG, "got 0x%08x expected E_INVALIDARG\n", ret);
 
     for(i = 0; i < sizeof(TEST_PATHFROMURL) / sizeof(TEST_PATHFROMURL[0]); i++) {
         len = INTERNET_MAX_URL_LENGTH;
-        ret = PathCreateFromUrlA(TEST_PATHFROMURL[i].url, ret_path, &len, 0);
+        ret = pPathCreateFromUrlA(TEST_PATHFROMURL[i].url, ret_path, &len, 0);
         ok(ret == TEST_PATHFROMURL[i].ret, "ret %08x from url %s\n", ret, TEST_PATHFROMURL[i].url);
         if(TEST_PATHFROMURL[i].path) {
            ok(!lstrcmpi(ret_path, TEST_PATHFROMURL[i].path), "got %s expected %s from url %s\n", ret_path, TEST_PATHFROMURL[i].path,  TEST_PATHFROMURL[i].url);
            ok(len == strlen(ret_path), "ret len %d from url %s\n", len, TEST_PATHFROMURL[i].url);
         }
-        len = INTERNET_MAX_URL_LENGTH;
-        pathW = GetWideString(TEST_PATHFROMURL[i].path);
-        urlW = GetWideString(TEST_PATHFROMURL[i].url);
-        ret = PathCreateFromUrlW(urlW, ret_pathW, &len, 0);
-        WideCharToMultiByte(CP_ACP, 0, ret_pathW, -1, ret_path, sizeof(ret_path),0,0);
-        ok(ret == TEST_PATHFROMURL[i].ret, "ret %08x from url L\"%s\"\n", ret, TEST_PATHFROMURL[i].url);
-        if(TEST_PATHFROMURL[i].path) {
-            ok(!lstrcmpiW(ret_pathW, pathW), "got %s expected %s from url L\"%s\"\n", ret_path, TEST_PATHFROMURL[i].path, TEST_PATHFROMURL[i].url);
-            ok(len == lstrlenW(ret_pathW), "ret len %d from url L\"%s\"\n", len, TEST_PATHFROMURL[i].url);
+        if (pPathCreateFromUrlW) {
+            len = INTERNET_MAX_URL_LENGTH;
+            pathW = GetWideString(TEST_PATHFROMURL[i].path);
+            urlW = GetWideString(TEST_PATHFROMURL[i].url);
+            ret = pPathCreateFromUrlW(urlW, ret_pathW, &len, 0);
+            WideCharToMultiByte(CP_ACP, 0, ret_pathW, -1, ret_path, sizeof(ret_path),0,0);
+            ok(ret == TEST_PATHFROMURL[i].ret, "ret %08x from url L\"%s\"\n", ret, TEST_PATHFROMURL[i].url);
+            if(TEST_PATHFROMURL[i].path) {
+                ok(!lstrcmpiW(ret_pathW, pathW), "got %s expected %s from url L\"%s\"\n",
+                    ret_path, TEST_PATHFROMURL[i].path, TEST_PATHFROMURL[i].url);
+                ok(len == lstrlenW(ret_pathW), "ret len %d from url L\"%s\"\n", len, TEST_PATHFROMURL[i].url);
+            }
+            FreeWideString(urlW);
+            FreeWideString(pathW);
         }
-        FreeWideString(urlW);
-        FreeWideString(pathW);
     }
 }
 
@@ -690,7 +700,7 @@ static void test_PathAppendA(void)
 {
     char path[MAX_PATH];
     char too_long[LONG_LEN];
-    char one[HALF_LEN], two[HALF_LEN];
+    char half[HALF_LEN];
     BOOL res;
 
     lstrcpy(path, "C:\\one");
@@ -803,16 +813,16 @@ static void test_PathAppendA(void)
        "Expected length of path to be zero, got %i\n", lstrlen(path));
 
     /* both params combined are too long */
-    memset(one, 'a', HALF_LEN);
-    one[HALF_LEN - 1] = '\0';
-    memset(two, 'b', HALF_LEN);
-    two[HALF_LEN - 1] = '\0';
+    memset(path, 'a', HALF_LEN);
+    path[HALF_LEN - 1] = '\0';
+    memset(half, 'b', HALF_LEN);
+    half[HALF_LEN - 1] = '\0';
     SetLastError(0xdeadbeef);
-    res = PathAppendA(one, two);
+    res = PathAppendA(path, half);
     ok(!res, "Expected failure\n");
-    ok(lstrlen(one) == 0 ||
-       broken(lstrlen(one) == (HALF_LEN - 1)), /* Win95 and some W2K */
-       "Expected length of one to be zero, got %i\n", lstrlen(one));
+    ok(lstrlen(path) == 0 ||
+       broken(lstrlen(path) == (HALF_LEN - 1)), /* Win95 and some W2K */
+       "Expected length of path to be zero, got %i\n", lstrlen(path));
     ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got %d\n", GetLastError());
 }
 
@@ -1307,6 +1317,8 @@ static void test_PathUnquoteSpaces(void)
 START_TEST(path)
 {
   hShlwapi = GetModuleHandleA("shlwapi.dll");
+  pPathCreateFromUrlA = (void*)GetProcAddress(hShlwapi, "PathCreateFromUrlA");
+  pPathCreateFromUrlW = (void*)GetProcAddress(hShlwapi, "PathCreateFromUrlW");
 
   test_PathSearchAndQualify();
   test_PathCreateFromUrl();

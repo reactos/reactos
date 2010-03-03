@@ -40,6 +40,8 @@
     ok(ret == val1 || ret == val2, "Unexpected value of '" #expr "': " #fmt " instead of " #val1 " or " #val2 "\n", ret); \
 } while (0);
 
+static BOOL    (WINAPI *pChrCmpIA)(CHAR, CHAR);
+static BOOL    (WINAPI *pChrCmpIW)(WCHAR, WCHAR);
 static BOOL    (WINAPI *pIntlStrEqWorkerA)(BOOL,LPCSTR,LPCSTR,int);
 static BOOL    (WINAPI *pIntlStrEqWorkerW)(BOOL,LPCWSTR,LPCWSTR,int);
 static DWORD   (WINAPI *pSHAnsiToAnsi)(LPCSTR,LPSTR,int);
@@ -58,6 +60,7 @@ static HRESULT (WINAPI *pStrRetToBufA)(STRRET*,LPCITEMIDLIST,LPSTR,UINT);
 static HRESULT (WINAPI *pStrRetToBufW)(STRRET*,LPCITEMIDLIST,LPWSTR,UINT);
 static INT     (WINAPIV *pwnsprintfA)(LPSTR,INT,LPCSTR, ...);
 static INT     (WINAPIV *pwnsprintfW)(LPWSTR,INT,LPCWSTR, ...);
+static LPWSTR  (WINAPI *pStrChrNW)(LPWSTR,WCHAR,UINT);
 
 static int strcmpW(const WCHAR *str1, const WCHAR *str2)
 {
@@ -373,6 +376,27 @@ static void test_StrCpyW(void)
   }
 }
 
+static void test_StrChrNW(void)
+{
+    static WCHAR string[] = {'T','e','s','t','i','n','g',' ','S','t','r','i','n','g',0};
+    LPWSTR p;
+
+    if (!pStrChrNW)
+    {
+        win_skip("StrChrNW not available\n");
+        return;
+    }
+
+    p = pStrChrNW(string,'t',10);
+    ok(*p=='t',"Found wrong 't'\n");
+    ok(*(p+1)=='i',"next should be 'i'\n");
+
+    p = pStrChrNW(string,'S',10);
+    ok(*p=='S',"Found wrong 'S'\n");
+
+    p = pStrChrNW(string,'r',10);
+    ok(p==NULL,"Should not have found 'r'\n");
+}
 
 static void test_StrToIntA(void)
 {
@@ -586,9 +610,13 @@ static void test_StrCmpA(void)
   static const char str2[] = {'a','B','c','d','e','f'};
   ok(0 != StrCmpNA(str1, str2, 6), "StrCmpNA is case-insensitive\n");
   ok(0 == StrCmpNIA(str1, str2, 6), "StrCmpNIA is case-sensitive\n");
-  ok(!ChrCmpIA('a', 'a'), "ChrCmpIA doesn't work at all!\n");
-  ok(!ChrCmpIA('b', 'B'), "ChrCmpIA is not case-insensitive\n");
-  ok(ChrCmpIA('a', 'z'), "ChrCmpIA believes that a == z!\n");
+  if (pChrCmpIA) {
+    ok(!pChrCmpIA('a', 'a'), "ChrCmpIA doesn't work at all!\n");
+    ok(!pChrCmpIA('b', 'B'), "ChrCmpIA is not case-insensitive\n");
+    ok(pChrCmpIA('a', 'z'), "ChrCmpIA believes that a == z!\n");
+  }
+  else
+    win_skip("ChrCmpIA() is not available\n");
 
   if (pStrIsIntlEqualA)
   {
@@ -613,9 +641,13 @@ static void test_StrCmpW(void)
   static const WCHAR str2[] = {'a','B','c','d','e','f'};
   ok(0 != StrCmpNW(str1, str2, 5), "StrCmpNW is case-insensitive\n");
   ok(0 == StrCmpNIW(str1, str2, 5), "StrCmpNIW is case-sensitive\n");
-  ok(!ChrCmpIW('a', 'a'), "ChrCmpIW doesn't work at all!\n");
-  ok(!ChrCmpIW('b', 'B'), "ChrCmpIW is not case-insensitive\n");
-  ok(ChrCmpIW('a', 'z'), "ChrCmpIW believes that a == z!\n");
+  if (pChrCmpIW) {
+    ok(!pChrCmpIW('a', 'a'), "ChrCmpIW doesn't work at all!\n");
+    ok(!pChrCmpIW('b', 'B'), "ChrCmpIW is not case-insensitive\n");
+    ok(pChrCmpIW('a', 'z'), "ChrCmpIW believes that a == z!\n");
+  }
+  else
+    win_skip("ChrCmpIW() is not available\n");
 
   if (pStrIsIntlEqualW)
   {
@@ -903,6 +935,8 @@ START_TEST(string)
   GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, decimalDelim, 8);
 
   hShlwapi = GetModuleHandleA("shlwapi");
+  pChrCmpIA = (void *)GetProcAddress(hShlwapi, "ChrCmpIA");
+  pChrCmpIW = (void *)GetProcAddress(hShlwapi, "ChrCmpIW");
   pIntlStrEqWorkerA = (void *)GetProcAddress(hShlwapi, "IntlStrEqWorkerA");
   pIntlStrEqWorkerW = (void *)GetProcAddress(hShlwapi, "IntlStrEqWorkerW");
   pSHAnsiToAnsi = (void *)GetProcAddress(hShlwapi, (LPSTR)345);
@@ -911,6 +945,7 @@ START_TEST(string)
   pStrCatBuffW = (void *)GetProcAddress(hShlwapi, "StrCatBuffW");
   pStrCpyNXA = (void *)GetProcAddress(hShlwapi, (LPSTR)399);
   pStrCpyNXW = (void *)GetProcAddress(hShlwapi, (LPSTR)400);
+  pStrChrNW = (void *)GetProcAddress(hShlwapi, "StrChrNW");
   pStrFormatByteSize64A = (void *)GetProcAddress(hShlwapi, "StrFormatByteSize64A");
   pStrFormatKBSizeA = (void *)GetProcAddress(hShlwapi, "StrFormatKBSizeA");
   pStrFormatKBSizeW = (void *)GetProcAddress(hShlwapi, "StrFormatKBSizeW");
@@ -929,6 +964,7 @@ START_TEST(string)
   test_StrRChrA();
   test_StrRChrW();
   test_StrCpyW();
+  test_StrChrNW();
   test_StrToIntA();
   test_StrToIntW();
   test_StrToIntExA();

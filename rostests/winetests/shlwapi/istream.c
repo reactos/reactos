@@ -177,8 +177,7 @@ static void test_IStream_invalid_operations(IStream * stream, DWORD mode)
 
     /* IStream::Clone */
 
-    ret = IStream_Clone(stream, NULL);
-    ok(ret == E_NOTIMPL, "expected E_NOTIMPL, got 0x%08x\n", ret);
+    /* Passing a NULL pointer for the second IStream::Clone param crashes on Win7 */
 
     clone = NULL;
     ret = IStream_Clone(stream, &clone);

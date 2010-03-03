@@ -38,6 +38,8 @@ typedef DWORD (WINAPI *SHCopyKeyA_func)(HKEY,LPCSTR,HKEY,DWORD);
 static SHCopyKeyA_func pSHCopyKeyA;
 typedef DWORD (WINAPI *SHRegGetPathA_func)(HKEY,LPCSTR,LPCSTR,LPSTR,DWORD);
 static SHRegGetPathA_func pSHRegGetPathA;
+typedef LSTATUS (WINAPI *SHRegGetValueA_func)(HKEY,LPCSTR,LPCSTR,SRRF,LPDWORD,LPVOID,LPDWORD);
+static SHRegGetValueA_func pSHRegGetValueA;
 
 static char sTestpath1[] = "%LONGSYSTEMVAR%\\subdir1";
 static char sTestpath2[] = "%FOO%\\subdir1";
@@ -136,6 +138,44 @@ static void test_SHGetValue(void)
 	ok( ERROR_SUCCESS == dwRet, "SHGetValueA failed, ret=%u\n", dwRet);
 	ok( 0 == strcmp(sTestpath1, buf) , "Comparing of (%s) with (%s) failed\n", buf, sTestpath1);
 	ok( REG_SZ == dwType , "Expected REG_SZ, got (%u)\n", dwType);
+}
+
+static void test_SHRegGetValue(void)
+{
+    LSTATUS ret;
+    DWORD size, type;
+    char data[MAX_PATH];
+
+    if(!pSHRegGetValueA)
+        return;
+
+    size = MAX_PATH;
+    ret = pSHRegGetValueA(HKEY_CURRENT_USER, REG_TEST_KEY, "Test1", SRRF_RT_REG_EXPAND_SZ, &type, data, &size);
+    ok(ret == ERROR_INVALID_PARAMETER, "SHRegGetValue failed, ret=%u\n", ret);
+
+    size = MAX_PATH;
+    ret = pSHRegGetValueA(HKEY_CURRENT_USER, REG_TEST_KEY, "Test1", SRRF_RT_REG_SZ, &type, data, &size);
+    ok(ret == ERROR_SUCCESS, "SHRegGetValue failed, ret=%u\n", ret);
+    ok(!strcmp(data, sExpTestpath1), "data = %s, expected %s\n", data, sExpTestpath1);
+    ok(type == REG_SZ, "type = %d, expected REG_SZ\n", type);
+
+    size = MAX_PATH;
+    ret = pSHRegGetValueA(HKEY_CURRENT_USER, REG_TEST_KEY, "Test1", SRRF_RT_REG_DWORD, &type, data, &size);
+    ok(ret == ERROR_UNSUPPORTED_TYPE, "SHRegGetValue failed, ret=%u\n", ret);
+
+    size = MAX_PATH;
+    ret = pSHRegGetValueA(HKEY_CURRENT_USER, REG_TEST_KEY, "Test2", SRRF_RT_REG_EXPAND_SZ, &type, data, &size);
+    ok(ret == ERROR_INVALID_PARAMETER, "SHRegGetValue failed, ret=%u\n", ret);
+
+    size = MAX_PATH;
+    ret = pSHRegGetValueA(HKEY_CURRENT_USER, REG_TEST_KEY, "Test2", SRRF_RT_REG_SZ, &type, data, &size);
+    ok(ret == ERROR_SUCCESS, "SHRegGetValue failed, ret=%u\n", ret);
+    ok(!strcmp(data, sTestpath1), "data = %s, expected %s\n", data, sTestpath1);
+    ok(type == REG_SZ, "type = %d, expected REG_SZ\n", type);
+
+    size = MAX_PATH;
+    ret = pSHRegGetValueA(HKEY_CURRENT_USER, REG_TEST_KEY, "Test2", SRRF_RT_REG_QWORD, &type, data, &size);
+    ok(ret == ERROR_UNSUPPORTED_TYPE, "SHRegGetValue failed, ret=%u\n", ret);
 }
 
 static void test_SHGetRegPath(void)
@@ -414,7 +454,9 @@ START_TEST(shreg)
 	hshlwapi = GetModuleHandleA("shlwapi.dll");
         pSHCopyKeyA=(SHCopyKeyA_func)GetProcAddress(hshlwapi,"SHCopyKeyA");
         pSHRegGetPathA=(SHRegGetPathA_func)GetProcAddress(hshlwapi,"SHRegGetPathA");
+        pSHRegGetValueA=(SHRegGetValueA_func)GetProcAddress(hshlwapi,"SHRegGetValueA");
 	test_SHGetValue();
+        test_SHRegGetValue();
 	test_SHQUeryValueEx();
 	test_SHGetRegPath();
 	test_SHCopyKey();

@@ -21,12 +21,14 @@
 
 #include "wine/test.h"
 #include "shlwapi.h"
+#include "shlguid.h"
 
 #define expect(expected, got) ok ( expected == got, "Expected %d, got %d\n", expected, got)
 #define expect_hr(expected, got) ok ( expected == got, "Expected %08x, got %08x\n", expected, got)
 
 static HRESULT (WINAPI *pAssocQueryStringA)(ASSOCF,ASSOCSTR,LPCSTR,LPCSTR,LPSTR,LPDWORD) = NULL;
 static HRESULT (WINAPI *pAssocQueryStringW)(ASSOCF,ASSOCSTR,LPCWSTR,LPCWSTR,LPWSTR,LPDWORD) = NULL;
+static HRESULT (WINAPI *pAssocCreate)(CLSID, REFIID, void **) = NULL;
 
 /* Every version of Windows with IE should have this association? */
 static const WCHAR dotHtml[] = { '.','h','t','m','l',0 };
@@ -235,14 +237,55 @@ cleanup:
 
 }
 
+static void test_assoc_create(void)
+{
+    HRESULT hr;
+    IQueryAssociations *pqa;
+
+    if (!pAssocCreate)
+    {
+        win_skip("AssocCreate() is missing\n");
+        return;
+    }
+
+    hr = pAssocCreate(IID_NULL, &IID_NULL, NULL);
+    ok(hr == E_INVALIDARG, "Unexpected result : %08x\n", hr);
+
+    hr = pAssocCreate(CLSID_QueryAssociations, &IID_NULL, (LPVOID*)&pqa);
+    ok(hr == CLASS_E_CLASSNOTAVAILABLE || hr == E_NOTIMPL || hr == E_NOINTERFACE
+        , "Unexpected result : %08x\n", hr);
+
+    hr = pAssocCreate(IID_NULL, &IID_IQueryAssociations, (LPVOID*)&pqa);
+    ok(hr == CLASS_E_CLASSNOTAVAILABLE || hr == E_NOTIMPL || hr == E_INVALIDARG
+        , "Unexpected result : %08x\n", hr);
+
+    hr = pAssocCreate(CLSID_QueryAssociations, &IID_IQueryAssociations, (LPVOID*)&pqa);
+    ok(hr == S_OK  || hr == E_NOTIMPL /* win98 */
+        , "Unexpected result : %08x\n", hr);
+    if(hr == S_OK)
+    {
+        IQueryAssociations_Release(pqa);
+    }
+
+    hr = pAssocCreate(CLSID_QueryAssociations, &IID_IUnknown, (LPVOID*)&pqa);
+    ok(hr == S_OK  || hr == E_NOTIMPL /* win98 */
+        , "Unexpected result : %08x\n", hr);
+    if(hr == S_OK)
+    {
+        IQueryAssociations_Release(pqa);
+    }
+}
+
 START_TEST(assoc)
 {
     HMODULE hshlwapi;
     hshlwapi = GetModuleHandleA("shlwapi.dll");
     pAssocQueryStringA = (void*)GetProcAddress(hshlwapi, "AssocQueryStringA");
     pAssocQueryStringW = (void*)GetProcAddress(hshlwapi, "AssocQueryStringW");
+    pAssocCreate       = (void*)GetProcAddress(hshlwapi, "AssocCreate");
 
     test_getstring_bad();
     test_getstring_basic();
     test_getstring_no_extra();
+    test_assoc_create();
 }

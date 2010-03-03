@@ -353,7 +353,8 @@ static void test_CList(void)
   InitDummyStream(&streamobj);
   streamobj.failwritesize = TRUE;
   hRet = pSHLWAPI_17(&streamobj, list);
-  ok(hRet == STG_E_MEDIUMFULL, "changed size failure return\n");
+  ok(hRet == STG_E_MEDIUMFULL || broken(hRet == E_FAIL) /* Win7 */,
+     "changed size failure return\n");
   ok(streamobj.writecalls == 1, "called object after size failure\n");
   ok(streamobj.readcalls == 0,"called Read() after failure\n");
   ok(streamobj.seekcalls == 0,"called Seek() after failure\n");
