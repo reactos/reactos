@@ -1455,6 +1455,170 @@ typedef XSAVE_FORMAT XMM_SAVE_AREA32, *PXMM_SAVE_AREA32;
  *                              Kernel Functions                              *
  ******************************************************************************/
 
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTKERNELAPI
+DECLSPEC_NORETURN
+VOID
+NTAPI
+KeBugCheckEx(
+  IN ULONG  BugCheckCode,
+  IN ULONG_PTR  BugCheckParameter1,
+  IN ULONG_PTR  BugCheckParameter2,
+  IN ULONG_PTR  BugCheckParameter3,
+  IN ULONG_PTR  BugCheckParameter4);
+
+NTKERNELAPI
+BOOLEAN
+KeCancelTimer(
+  IN OUT PKTIMER);
+
+NTKERNELAPI
+NTSTATUS
+KeDelayExecutionThread(
+  IN KPROCESSOR_MODE  WaitMode,
+  IN BOOLEAN  Alertable,
+  IN PLARGE_INTEGER  Interval);
+
+NTKERNELAPI
+BOOLEAN
+KeDeregisterBugCheckCallback(
+  IN OUT PKBUGCHECK_CALLBACK_RECORD  CallbackRecord);
+
+NTKERNELAPI
+VOID
+KeEnterCriticalRegion(VOID);
+
+NTKERNELAPI
+VOID
+KeInitializeDeviceQueue(
+  OUT PKDEVICE_QUEUE  DeviceQueue);
+
+NTKERNELAPI
+VOID
+KeInitializeMutex(
+  OUT PRKMUTEX  Mutex,
+  IN ULONG  Level);
+
+NTKERNELAPI
+VOID
+KeInitializeSemaphore(
+  OUT PRKSEMAPHORE  Semaphore,
+  IN LONG  Count,
+  IN LONG  Limit);
+
+NTKERNELAPI
+VOID
+KeInitializeTimer(
+  OUT PKTIMER  Timer);
+
+NTKERNELAPI
+VOID
+KeInitializeTimerEx(
+  OUT PKTIMER  Timer,
+  IN TIMER_TYPE  Type);
+
+NTKERNELAPI
+BOOLEAN
+KeInsertByKeyDeviceQueue(
+  IN OUT PKDEVICE_QUEUE  DeviceQueue,
+  IN OUT PKDEVICE_QUEUE_ENTRY  DeviceQueueEntry,
+  IN ULONG  SortKey);
+
+NTKERNELAPI
+BOOLEAN
+KeInsertDeviceQueue(
+  IN OUT PKDEVICE_QUEUE  DeviceQueue,
+  IN OUT PKDEVICE_QUEUE_ENTRY  DeviceQueueEntry);
+
+NTKERNELAPI
+BOOLEAN
+KeInsertQueueDpc(
+  IN OUT PRKDPC  Dpc,
+  IN PVOID  SystemArgument1 OPTIONAL,
+  IN PVOID  SystemArgument2 OPTIONAL);
+
+NTKERNELAPI
+VOID
+KeLeaveCriticalRegion(VOID);
+
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+
+VOID
+FASTCALL
+KeAcquireInStackQueuedSpinLock (
+  IN OUT PKSPIN_LOCK SpinLock,
+  OUT PKLOCK_QUEUE_HANDLE LockHandle);
+
+NTKERNELAPI
+VOID
+FASTCALL
+KeAcquireInStackQueuedSpinLockAtDpcLevel(
+  IN OUT PKSPIN_LOCK  SpinLock,
+  OUT PKLOCK_QUEUE_HANDLE  LockHandle);
+
+NTKERNELAPI
+KIRQL
+KeAcquireInterruptSpinLock(
+  IN OUT PKINTERRUPT  Interrupt);
+
+NTKERNELAPI
+BOOLEAN
+KeAreApcsDisabled(VOID);
+
+NTKERNELAPI
+ULONG
+KeGetRecommendedSharedDataAlignment(VOID);
+
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WINXPSP2)
+
+NTKERNELAPI
+VOID
+KeFlushQueuedDpcs(
+  VOID);
+
+#endif
+
+#if defined(_IA64_)
+FORCEINLINE
+VOID
+KeFlushWriteBuffer (VOID)
+{
+  __mf ();
+  return;
+}
+
+#else
+NTHALAPI
+VOID
+KeFlushWriteBuffer (VOID);
+
+#endif
+
+NTKERNELAPI
+VOID
+KeClearEvent(
+  IN OUT PRKEVENT  Event);
+
+/*
+ * VOID
+ * KeFlushIoBuffers(
+ *   IN PMDL  Mdl,
+ *   IN BOOLEAN  ReadOperation,
+ *   IN BOOLEAN  DmaOperation)
+ */
+#define KeFlushIoBuffers(_Mdl, _ReadOperation, _DmaOperation)
+
+#define ExAcquireSpinLock(Lock, OldIrql) KeAcquireSpinLock((Lock), (OldIrql))
+#define ExReleaseSpinLock(Lock, OldIrql) KeReleaseSpinLock((Lock), (OldIrql))
+#define ExAcquireSpinLockAtDpcLevel(Lock) KeAcquireSpinLockAtDpcLevel(Lock)
+#define ExReleaseSpinLockFromDpcLevel(Lock) KeReleaseSpinLockFromDpcLevel(Lock)
+
+
 /* SPINLOCK FUNCTIONS */
 
 /* FIXME : #if (NTDDI_VERSION >= NTDDI_WS03SP1) */
@@ -6634,6 +6798,72 @@ IoStartPacket(
   IN PULONG  Key  OPTIONAL,
   IN PDRIVER_CANCEL  CancelFunction  OPTIONAL);
 
+NTKERNELAPI
+VOID
+IoStartTimer(
+  IN PDEVICE_OBJECT  DeviceObject);
+
+NTKERNELAPI
+VOID
+IoStopTimer(
+  IN PDEVICE_OBJECT  DeviceObject);
+
+NTKERNELAPI
+NTSTATUS
+IoUnregisterPlugPlayNotification(
+  IN PVOID  NotificationEntry);
+
+NTKERNELAPI
+VOID
+IoUnregisterShutdownNotification(
+  IN PDEVICE_OBJECT  DeviceObject);
+
+NTKERNELAPI
+VOID
+IoUpdateShareAccess(
+  IN PFILE_OBJECT  FileObject,
+  IN OUT PSHARE_ACCESS  ShareAccess);
+
+NTKERNELAPI
+NTSTATUS
+IoWMIAllocateInstanceIds(
+  IN GUID  *Guid,
+  IN ULONG  InstanceCount,
+  OUT ULONG  *FirstInstanceId);
+
+NTKERNELAPI
+NTSTATUS
+IoWMIQuerySingleInstanceMultiple(
+  IN PVOID  *DataBlockObjectList,
+  IN PUNICODE_STRING  InstanceNames,
+  IN ULONG  ObjectCount,
+  IN OUT ULONG  *InOutBufferSize,
+  OUT PVOID  OutBuffer);
+
+NTKERNELAPI
+NTSTATUS
+IoWMIRegistrationControl(
+  IN PDEVICE_OBJECT  DeviceObject,
+  IN ULONG  Action);
+
+NTKERNELAPI
+NTSTATUS
+IoWMISuggestInstanceName(
+  IN PDEVICE_OBJECT  PhysicalDeviceObject OPTIONAL,
+  IN PUNICODE_STRING  SymbolicLinkName OPTIONAL,
+  IN BOOLEAN  CombineNames,
+  OUT PUNICODE_STRING  SuggestedInstanceName);
+
+NTKERNELAPI
+NTSTATUS
+IoWMIWriteEvent(
+  IN PVOID  WnodeEventItem);
+
+NTKERNELAPI
+VOID
+IoWriteErrorLogEntry(
+  IN PVOID  ElEntry);
+
 #endif
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
@@ -6700,6 +6930,95 @@ IoSetStartIoAttributes(
   IN BOOLEAN  DeferredStartIo,
   IN BOOLEAN  NonCancelable);
 
+NTKERNELAPI
+NTSTATUS
+IoWMIDeviceObjectToInstanceName(
+  IN PVOID  DataBlockObject,
+  IN PDEVICE_OBJECT  DeviceObject,
+  OUT PUNICODE_STRING  InstanceName);
+
+NTKERNELAPI
+NTSTATUS
+IoWMIExecuteMethod(
+  IN PVOID  DataBlockObject,
+  IN PUNICODE_STRING  InstanceName,
+  IN ULONG  MethodId,
+  IN ULONG  InBufferSize,
+  IN OUT PULONG  OutBufferSize,
+  IN OUT  PUCHAR  InOutBuffer);
+
+NTKERNELAPI
+NTSTATUS
+IoWMIHandleToInstanceName(
+  IN PVOID  DataBlockObject,
+  IN HANDLE  FileHandle,
+  OUT PUNICODE_STRING  InstanceName);
+
+NTKERNELAPI
+NTSTATUS
+IoWMIOpenBlock(
+  IN GUID  *DataBlockGuid,
+  IN ULONG  DesiredAccess,
+  OUT PVOID  *DataBlockObject);
+
+NTKERNELAPI
+NTSTATUS
+IoWMIQueryAllData(
+  IN PVOID  DataBlockObject,
+  IN OUT ULONG  *InOutBufferSize,
+  OUT PVOID  OutBuffer);
+
+NTKERNELAPI
+NTSTATUS
+IoWMIQueryAllDataMultiple(
+  IN PVOID  *DataBlockObjectList,
+  IN ULONG  ObjectCount,
+  IN OUT ULONG  *InOutBufferSize,
+  OUT PVOID  OutBuffer);
+
+NTKERNELAPI
+NTSTATUS
+IoWMIQuerySingleInstance(
+  IN PVOID  DataBlockObject,
+  IN PUNICODE_STRING  InstanceName,
+  IN OUT ULONG  *InOutBufferSize,
+  OUT PVOID OutBuffer);
+
+NTKERNELAPI
+NTSTATUS
+IoWMISetNotificationCallback(
+  IN OUT PVOID  Object,
+  IN WMI_NOTIFICATION_CALLBACK  Callback,
+  IN PVOID  Context OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+IoWMISetSingleInstance(
+  IN PVOID  DataBlockObject,
+  IN PUNICODE_STRING  InstanceName,
+  IN ULONG  Version,
+  IN ULONG  ValueBufferSize,
+  IN PVOID  ValueBuffer);
+
+NTKERNELAPI
+NTSTATUS
+IoWMISetSingleItem(
+  IN PVOID  DataBlockObject,
+  IN PUNICODE_STRING  InstanceName,
+  IN ULONG  DataItemId,
+  IN ULONG  Version,
+  IN ULONG  ValueBufferSize,
+  IN PVOID  ValueBuffer);
+
+#endif
+
+#if defined(_WIN64)
+NTKERNELAPI
+ULONG
+IoWMIDeviceObjectToProviderId(
+  IN PDEVICE_OBJECT DeviceObject);
+#else
+#define IoWMIDeviceObjectToProviderId(DeviceObject) ((ULONG)(DeviceObject))
 #endif
 
 /*
