@@ -2069,7 +2069,6 @@ typedef struct _SECURITY_SUBJECT_CONTEXT {
   PVOID  ProcessAuditId;
 } SECURITY_SUBJECT_CONTEXT, *PSECURITY_SUBJECT_CONTEXT;
 
-#include <pshpack4.h>
 typedef struct _ACCESS_STATE {
   LUID  OperationID;
   BOOLEAN  SecurityEvaluated;
@@ -2092,7 +2091,6 @@ typedef struct _ACCESS_STATE {
   UNICODE_STRING  ObjectName;
   UNICODE_STRING  ObjectTypeName;
 } ACCESS_STATE, *PACCESS_STATE;
-#include <poppack.h>
 
 /******************************************************************************
  *                            Configuration Manager Types                     *
@@ -4952,7 +4950,7 @@ typedef enum _DEVICE_TEXT_TYPE {
   DeviceTextLocationInformation
 } DEVICE_TEXT_TYPE, *PDEVICE_TEXT_TYPE;
 
-#if !defined(_ALPHA_)
+#if !defined(_AMD64_) && !defined(_IA64_)
 #include <pshpack4.h>
 #endif
 typedef struct _IO_STACK_LOCATION {
@@ -5138,7 +5136,7 @@ typedef struct _IO_STACK_LOCATION {
   PIO_COMPLETION_ROUTINE  CompletionRoutine;
   PVOID  Context;
 } IO_STACK_LOCATION, *PIO_STACK_LOCATION;
-#if !defined(_ALPHA_)
+#if !defined(_AMD64_) && !defined(_IA64_)
 #include <poppack.h>
 #endif
 
