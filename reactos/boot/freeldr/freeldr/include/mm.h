@@ -116,3 +116,7 @@ PVOID	MmAllocateHighestMemoryBelowAddress(ULONG MemorySize, PVOID DesiredAddress
 
 PVOID	MmHeapAlloc(ULONG MemorySize);
 VOID	MmHeapFree(PVOID MemoryPointer);
+
+#define ExAllocatePool(pool, size) MmHeapAlloc(size)
+#define ExAllocatePoolWithTag(pool, size, tag) MmHeapAlloc(size)
+#define ExFreePool(p) MmHeapFree(p)
