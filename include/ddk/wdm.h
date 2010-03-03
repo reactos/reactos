@@ -1,5 +1,4 @@
-#ifndef _WDMDDK_
-#define _WDMDDK_
+#pragma once
 
 /* Helper macro to enable gcc's extension.  */
 #ifndef __GNU_EXTENSION
@@ -1476,11 +1475,14 @@ KeTestSpinLock(
 );
 #endif
 
-#if (NTDDI_VERSION >= NTDDI_WS03SP1)
+/* FIXME : #if (NTDDI_VERSION >= NTDDI_WS03SP1) */
 NTKERNELAPI
 BOOLEAN
 KeAreAllApcsDisabled(
   VOID);
+/* #endif (NTDDI_VERSION >= NTDDI_WS03SP1) */
+
+#if (NTDDI_VERSION >= NTDDI_WS03SP1)
 
 /* Guarded Mutex routines */
 
@@ -1549,18 +1551,6 @@ KeInitializeEvent(
   OUT PRKEVENT  Event,
   IN EVENT_TYPE  Type,
   IN BOOLEAN  State);
-
-FORCEINLINE
-VOID
-ExInitializeFastMutex(
-  OUT PFAST_MUTEX FastMutex)
-{
-  FastMutex->Count = FM_LOCK_BIT;
-  FastMutex->Owner = NULL;
-  FastMutex->Contention = 0;
-  KeInitializeEvent(&FastMutex->Event, SynchronizationEvent, FALSE);
-  return;
-}
 
 #if DBG
 
@@ -3853,13 +3843,12 @@ typedef struct _FILE_FULL_EA_INFORMATION {
   CHAR  EaName[1];
 } FILE_FULL_EA_INFORMATION, *PFILE_FULL_EA_INFORMATION;
 
-typedef struct _FAST_MUTEX
-{
-    LONG Count;
-    PKTHREAD Owner;
-    ULONG Contention;
-    KEVENT Gate;
-    ULONG OldIrql;
+typedef struct _FAST_MUTEX {
+  volatile LONG Count;
+  PKTHREAD Owner;
+  ULONG Contention;
+  KEVENT Event;
+  ULONG OldIrql;
 } FAST_MUTEX, *PFAST_MUTEX;
 
 typedef ULONG_PTR ERESOURCE_THREAD, *PERESOURCE_THREAD;
@@ -7320,6 +7309,18 @@ ExInterlockedPushEntrySList(
   (Item)->List.Flink = NULL; \
 }
 
+FORCEINLINE
+VOID
+ExInitializeFastMutex(
+  OUT PFAST_MUTEX FastMutex)
+{
+  FastMutex->Count = FM_LOCK_BIT;
+  FastMutex->Owner = NULL;
+  FastMutex->Contention = 0;
+  KeInitializeEvent(&FastMutex->Event, SynchronizationEvent, FALSE);
+  return;
+}
+
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
 NTKERNELAPI
@@ -7924,5 +7925,3 @@ typedef VOID
 #ifdef __cplusplus
 }
 #endif
-
-#endif // _WDMDDK_

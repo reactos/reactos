@@ -87,6 +87,10 @@ typedef unsigned long POINTER_64; // FIXME! HACK!!!
 #endif
 #endif // NULL
 
+typedef enum _EVENT_TYPE {
+  NotificationEvent,
+  SynchronizationEvent
+} EVENT_TYPE;
 
 //
 // FIXME

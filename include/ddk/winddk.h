@@ -1224,11 +1224,6 @@ typedef BOOLEAN
     struct _RTL_RANGE *Range
 );
 
-typedef enum _EVENT_TYPE {
-  NotificationEvent,
-  SynchronizationEvent
-} EVENT_TYPE;
-
 typedef struct _CONFIGURATION_INFORMATION {
   ULONG  DiskCount;
   ULONG  FloppyCount;

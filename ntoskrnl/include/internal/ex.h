@@ -1251,7 +1251,7 @@ _ExReleaseFastMutexUnsafe(IN OUT PFAST_MUTEX FastMutex)
     if (InterlockedIncrement(&FastMutex->Count) <= 0)
     {
         /* Someone was waiting for it, signal the waiter */
-        KeSetEventBoostPriority(&FastMutex->Gate, NULL);
+        KeSetEventBoostPriority(&FastMutex->Event, NULL);
     }
 }
 
@@ -1292,7 +1292,7 @@ _ExReleaseFastMutex(IN OUT PFAST_MUTEX FastMutex)
     if (InterlockedIncrement(&FastMutex->Count) <= 0)
     {
         /* Someone was waiting for it, signal the waiter */
-        KeSetEventBoostPriority(&FastMutex->Gate, NULL);
+        KeSetEventBoostPriority(&FastMutex->Event, NULL);
     }
     
     /* Lower IRQL back */
