@@ -1655,7 +1655,7 @@ IoCreateFile(OUT PHANDLE FileHandle,
              IN PVOID EaBuffer OPTIONAL,
              IN ULONG EaLength,
              IN CREATE_FILE_TYPE CreateFileType,
-             IN PVOID InternalParameters OPTIONAL,
+             IN PVOID ExtraCreateParameters OPTIONAL,
              IN ULONG Options)
 {
     KPROCESSOR_MODE AccessMode;
