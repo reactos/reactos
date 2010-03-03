@@ -26,6 +26,7 @@
 	<file>cvpconfig.cpp</file>
 	<file>cvpvbiconfig.cpp</file>
 	<file>datatype.cpp</file>
+	<file>enum_mediatypes.cpp</file>
 	<file>enumpins.cpp</file>
 	<file>input_pin.cpp</file>
 	<file>interface.cpp</file>

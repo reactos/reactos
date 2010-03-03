@@ -184,7 +184,7 @@ CPin::EnumMediaTypes(IEnumMediaTypes **ppEnum)
 
     MediaType->majortype = KSDATAFORMAT_TYPE_BDA_ANTENNA;
     MediaType->subtype = MEDIASUBTYPE_None;
-    MediaType->formattype = GUID_NULL;
+    MediaType->formattype = FORMAT_None;
     MediaType->bFixedSizeSamples = true;
     MediaType->bTemporalCompression = false;
     MediaType->lSampleSize = sizeof(CHAR);

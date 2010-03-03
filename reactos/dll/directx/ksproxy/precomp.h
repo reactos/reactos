@@ -16,6 +16,7 @@
 #include <vptype.h>
 #include <vpconfig.h>
 #include <setupapi.h>
+#include <stdio.h>
 #include <vector>
 //#include <debug.h>
 
@@ -104,6 +105,8 @@ WINAPI
 CInputPin_Constructor(
     IBaseFilter * ParentFilter,
     LPCWSTR PinName,
+    HANDLE hFilter,
+    ULONG PinId,
     REFIID riid,
     LPVOID * ppv);
 
@@ -122,5 +125,15 @@ WINAPI
 CEnumPins_fnConstructor(
     std::vector<IPin*> Pins,
     REFIID riid,
-    LPVOID * ppv)
-;
+    LPVOID * ppv);
+
+/* enum_mediatypes.cpp */
+HRESULT
+WINAPI
+CEnumMediaTypes_fnConstructor(
+    ULONG MediaTypeCount,
+    AM_MEDIA_TYPE * MediaTypes,
+    REFIID riid,
+    LPVOID * ppv);
+
+

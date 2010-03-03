@@ -10,7 +10,7 @@
 
 const GUID IID_IPersistPropertyBag = {0x37D84F60, 0x42CB, 0x11CE, {0x81, 0x35, 0x00, 0xAA, 0x00, 0x4B, 0xB8, 0x51}};
 const GUID GUID_NULL                     = {0x00000000L, 0x0000, 0x0000, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
-
+const GUID IID_IBDA_DeviceControl = {0xFD0A5AF3, 0xB41D, 0x11d2, {0x9C, 0x95, 0x00, 0xC0, 0x4F, 0x79, 0x71, 0xE0}};
 /*
     Needs IKsClock, IKsNotifyEvent
 */
@@ -132,6 +132,24 @@ CKsProxy::QueryInterface(
         *Output = (IKsObject*)(this);
         reinterpret_cast<IKsObject*>(*Output)->AddRef();
         return NOERROR;
+    }
+
+    for(ULONG Index = 0; Index < m_Plugins.size(); Index++)
+    {
+        if (m_Pins[Index])
+        {
+            HRESULT hr = m_Plugins[Index]->QueryInterface(refiid, Output);
+            if (SUCCEEDED(hr))
+            {
+                WCHAR Buffer[100];
+                LPOLESTR lpstr;
+                StringFromCLSID(refiid, &lpstr);
+                swprintf(Buffer, L"CKsProxy::QueryInterface plugin %lu supports interface %s\n", Index, lpstr);
+                OutputDebugStringW(Buffer);
+                CoTaskMemFree(lpstr);
+                return hr;
+            }
+        }
     }
 
     WCHAR Buffer[MAX_PATH];
@@ -469,7 +487,7 @@ CKsProxy::CreatePins()
         // construct the pins
         if (DataFlow == KSPIN_DATAFLOW_IN)
         {
-            hr = CInputPin_Constructor((IBaseFilter*)this, PinName, IID_IPin, (void**)&pPin);
+            hr = CInputPin_Constructor((IBaseFilter*)this, PinName, m_hDevice, Index, IID_IPin, (void**)&pPin);
             if (FAILED(hr))
             {
                 CoTaskMemFree(PinName);
@@ -554,11 +572,6 @@ CKsProxy::Load(IPropertyBag *pPropBag, IErrorLog *pErrorLog)
 
     // now create the input / output pins
     hr = CreatePins();
-
-
-    CloseHandle(m_hDevice);
-    m_hDevice = NULL;
-
 
     return hr;
 }
@@ -657,7 +670,6 @@ STDMETHODCALLTYPE
 CKsProxy::EnumPins(
     IEnumPins **ppEnum)
 {
-    OutputDebugStringW(L"CKsProxy::EnumPins\n");
     return CEnumPins_fnConstructor(m_Pins, IID_IEnumPins, (void**)ppEnum);
 }
 
@@ -666,8 +678,31 @@ STDMETHODCALLTYPE
 CKsProxy::FindPin(
     LPCWSTR Id, IPin **ppPin)
 {
-    OutputDebugStringW(L"CKsProxy::FindPin : NotImplemented\n");
-    return E_NOTIMPL;
+    ULONG PinId;
+
+    if (!ppPin)
+        return E_POINTER;
+
+    // convert to pin
+    int ret = swscanf(Id, L"%u", &PinId);
+
+    if (!ret || ret == EOF)
+    {
+        // invalid id
+        return VFW_E_NOT_FOUND;
+    }
+
+    if (PinId >= m_Pins.size() || m_Pins[PinId] == NULL)
+    {
+        // invalid id
+        return VFW_E_NOT_FOUND;
+    }
+
+    // found pin
+    *ppPin = m_Pins[PinId];
+    m_Pins[PinId]->AddRef();
+
+    return S_OK;
 }
 
 
@@ -702,7 +737,6 @@ CKsProxy::JoinFilterGraph(
         m_pGraph = 0;
     }
 
-    OutputDebugStringW(L"CKsProxy::JoinFilterGraph\n");
     return S_OK;
 }
 
