@@ -420,12 +420,6 @@ typedef BOOLEAN
     ASSERT(((E)->Header.Type == NotificationEvent) || \
            ((E)->Header.Type == SynchronizationEvent))
 
-
-typedef enum _TIMER_TYPE {
-  NotificationTimer,
-  SynchronizationTimer
-} TIMER_TYPE;
-
 #define KEYBOARD_INSERT_ON                0x08
 #define KEYBOARD_CAPS_LOCK_ON             0x04
 #define KEYBOARD_NUM_LOCK_ON              0x02

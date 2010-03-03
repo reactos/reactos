@@ -92,6 +92,11 @@ typedef enum _EVENT_TYPE {
   SynchronizationEvent
 } EVENT_TYPE;
 
+typedef enum _TIMER_TYPE {
+    NotificationTimer,
+    SynchronizationTimer
+} TIMER_TYPE;
+
 //
 // FIXME
 // We should use the -fms-extensions compiler flag for gcc,
