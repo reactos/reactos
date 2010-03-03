@@ -139,6 +139,16 @@ ShutdownThreadMain(PVOID Context)
    /* Run the thread on the boot processor */
    KeSetSystemAffinityThread(1);
 
+   PspShutdownProcessManager();
+
+   CmShutdownSystem();
+   IoShutdownRegisteredFileSystems();
+   IoShutdownRegisteredDevices();
+
+   ZwQuerySystemTime(&Now);
+
+   KeRaiseIrqlToDpcLevel();
+    
    if (InbvIsBootDriverInstalled())
      {
         InbvAcquireDisplayOwnership();
@@ -152,19 +162,12 @@ ShutdownThreadMain(PVOID Context)
 
    if (Action == ShutdownNoReboot)
      {
-        ZwQuerySystemTime(&Now);
         Now.u.LowPart = Now.u.LowPart >> 8; /* Seems to give a somewhat better "random" number */
         HalDisplayString(FamousLastWords[Now.u.LowPart %
                                          (sizeof(FamousLastWords) /
                                           sizeof(PCH))]);
      }
-
-   PspShutdownProcessManager();
-
-   CmShutdownSystem();
-   IoShutdownRegisteredFileSystems();
-   IoShutdownRegisteredDevices();
-
+     
    if (Action == ShutdownNoReboot)
      {
         HalDisplayString("\nYou can switch off your computer now\n");
