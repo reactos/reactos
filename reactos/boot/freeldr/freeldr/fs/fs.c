@@ -319,6 +319,13 @@ LONG ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
                     FileData[DeviceId].FuncTable = NULL;
                     return ret;
                 }
+                else if (!*FileName)
+                {
+                    /* Done, caller wanted to open the raw device */
+                    *FileId = DeviceId;
+                    pDevice->ReferenceCount++;
+                    return ESUCCESS;
+                }
 
                 /* Try to detect the file system */
 #ifndef _M_ARM
