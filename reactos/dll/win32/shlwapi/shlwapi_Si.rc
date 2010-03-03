@@ -45,4 +45,3 @@ STRINGTABLE DISCARDABLE
     IDS_TIME_INTERVAL_MINUTES  " min"
     IDS_TIME_INTERVAL_SECONDS  " sek"
 }
-#pragma code_page(default)

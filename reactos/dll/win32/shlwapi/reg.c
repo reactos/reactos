@@ -1138,68 +1138,6 @@ DWORD WINAPI SHGetValueA(HKEY hKey, LPCSTR lpszSubKey, LPCSTR lpszValue,
 }
 
 /*************************************************************************
- * SHRegGetValueA   [SHLWAPI.@]
- *
- * Get a value from the registry.
- *
- * PARAMS
- *   hKey       [I] Handle to registry key
- *   lpszSubKey [I] Name of sub key containing value to get
- *   lpszValue  [I] Name of value to get
- *   srrf       [I] Flags for restricting returned data
- *   pwType     [O] Pointer to the values type
- *   pvData     [O] Pointer to the values data
- *   pcbData    [O] Pointer to the values size
- *
- * RETURNS
- *   Success: ERROR_SUCCESS. Output parameters contain the details read.
- *   Failure: An error code from RegOpenKeyExA() or SHQueryValueExA().
- */
-DWORD WINAPI SHRegGetValueA(HKEY hKey, LPCSTR lpszSubKey, LPCSTR lpszValue, DWORD srrfFlags,
-                         LPDWORD pwType, LPVOID pvData, LPDWORD pcbData)
-{
-  DWORD dwRet = 0;
-  HKEY hSubKey = 0;
-
-  TRACE("(hkey=%p,%s,%s,%p,%p,%p)\n", hKey, debugstr_a(lpszSubKey),
-        debugstr_a(lpszValue), pwType, pvData, pcbData);
-  FIXME("Semi-Stub: Find meaning and implement handling of SRFF Flags 0x%08x\n", srrfFlags);
-
-  dwRet = RegOpenKeyExA(hKey, lpszSubKey, 0, KEY_QUERY_VALUE, &hSubKey);
-  if (! dwRet)
-  {
-    /* SHQueryValueEx expands Environment strings */
-    dwRet = SHQueryValueExA(hSubKey, lpszValue, 0, pwType, pvData, pcbData);
-    RegCloseKey(hSubKey);
-  }
-  return dwRet;
-}
-
-/*************************************************************************
- * SHReg GetRegValueW   [SHLWAPI.@]
- *
- * See SHGetValueA.
- */
-DWORD WINAPI SHRegGetValueW(HKEY hKey, LPCWSTR lpszSubKey, LPCWSTR lpszValue, DWORD srrfFlags,
-                         LPDWORD pwType, LPVOID pvData, LPDWORD pcbData)
-{
-  DWORD dwRet = 0;
-  HKEY hSubKey = 0;
-
-  TRACE("(hkey=%p,%s,%s,0x%08x, %p,%p,%p)\n", hKey, debugstr_w(lpszSubKey),
-        debugstr_w(lpszValue), srrfFlags,pwType, pvData, pcbData);
-  FIXME("Semi-Stub: Find meaning and implement handling of SRFF Flags 0x%08x\n", srrfFlags);
-
-  dwRet = RegOpenKeyExW(hKey, lpszSubKey, 0, KEY_QUERY_VALUE, &hSubKey);
-  if (! dwRet)
-  {
-    dwRet = SHQueryValueExW(hSubKey, lpszValue, 0, pwType, pvData, pcbData);
-    RegCloseKey(hSubKey);
-  }
-  return dwRet;
-}
-
-/*************************************************************************
  * SHGetValueW   [SHLWAPI.@]
  *
  * See SHGetValueA.
