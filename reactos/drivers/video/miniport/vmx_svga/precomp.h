@@ -20,13 +20,13 @@ typedef struct _HW_DEVICE_EXTENSION
     LARGE_INTEGER VramSize;
     PHYSICAL_ADDRESS VramBase;
     ULONG MemSize;
-    ULONG IndexPort;
-    ULONG ValuePort;
+    PULONG IndexPort;
+    PULONG ValuePort;
     PVOID FrameBufferBase;
     PVOID Fifo;
     ULONG InterruptPort;
     ULONG InterruptState;
-    PKEVENT SyncEvent;
+    PENG_EVENT SyncEvent;
     VIDEO_MODE_INFORMATION CurrentMode;
     ULONG VideoModeCount;
     ULONG Capabilities;
