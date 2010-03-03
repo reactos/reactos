@@ -39,6 +39,7 @@
 #include <ndk/asm.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/ldrtypes.h>
+#include <ndk/halfuncs.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>

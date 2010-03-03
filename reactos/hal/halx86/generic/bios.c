@@ -235,7 +235,6 @@ HalpTrap06()
     longjmp(HalpSavedContext, 1);
     UNREACHABLE;
 }
-#endif
 
 /* V8086 ENTER ****************************************************************/
 
@@ -278,6 +277,7 @@ HalpBiosCall()
     /* Exit to V86 mode */
     HalpExitToV86((PKTRAP_FRAME)&V86TrapFrame);
 }
+#endif
 
 /* FUNCTIONS ******************************************************************/
 
@@ -432,6 +432,7 @@ HalpRestoreIopm(VOID)
     while (i--) HalpSavedIoMap[HalpSavedIoMapData[i][0]] = HalpSavedIoMapData[i][1];
 }
 
+#ifndef _MINIHAL_
 VOID
 NTAPI
 HalpMapRealModeMemory(VOID)
@@ -499,7 +500,6 @@ HalpMapRealModeMemory(VOID)
     HalpFlushTLB();
 }
 
-#ifndef _MINIHAL_
 VOID
 NTAPI
 HalpSwitchToRealModeTrapHandlers(VOID)
