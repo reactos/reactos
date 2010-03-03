@@ -6490,6 +6490,90 @@ IoInitializeTimer(
   IN PIO_TIMER_ROUTINE  TimerRoutine,
   IN PVOID  Context OPTIONAL);
 
+NTKERNELAPI
+VOID
+IoInvalidateDeviceRelations(
+  IN PDEVICE_OBJECT  DeviceObject,
+  IN DEVICE_RELATION_TYPE  Type);
+
+NTKERNELAPI
+VOID
+IoInvalidateDeviceState(
+  IN PDEVICE_OBJECT  PhysicalDeviceObject);
+
+NTKERNELAPI
+BOOLEAN
+IoIsWdmVersionAvailable(
+  IN UCHAR  MajorVersion,
+  IN UCHAR  MinorVersion);
+
+NTKERNELAPI
+NTSTATUS
+IoOpenDeviceInterfaceRegistryKey(
+  IN PUNICODE_STRING  SymbolicLinkName,
+  IN ACCESS_MASK  DesiredAccess,
+  OUT PHANDLE  DeviceInterfaceKey);
+
+NTKERNELAPI
+NTSTATUS
+IoOpenDeviceRegistryKey(
+  IN PDEVICE_OBJECT  DeviceObject,
+  IN ULONG  DevInstKeyType,
+  IN ACCESS_MASK  DesiredAccess,
+  OUT PHANDLE  DevInstRegKey);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoRegisterDeviceInterface(
+  IN PDEVICE_OBJECT  PhysicalDeviceObject,
+  IN CONST GUID  *InterfaceClassGuid,
+  IN PUNICODE_STRING  ReferenceString  OPTIONAL,
+  OUT PUNICODE_STRING  SymbolicLinkName);
+
+NTKERNELAPI
+NTSTATUS
+IoRegisterPlugPlayNotification(
+  IN IO_NOTIFICATION_EVENT_CATEGORY  EventCategory,
+  IN ULONG  EventCategoryFlags,
+  IN PVOID  EventCategoryData  OPTIONAL,
+  IN PDRIVER_OBJECT  DriverObject,
+  IN PDRIVER_NOTIFICATION_CALLBACK_ROUTINE  CallbackRoutine,
+  IN OUT PVOID  Context OPTIONAL,
+  OUT PVOID  *NotificationEntry);
+
+NTKERNELAPI
+NTSTATUS
+IoRegisterShutdownNotification(
+  IN PDEVICE_OBJECT  DeviceObject);
+
+NTKERNELAPI
+VOID
+IoReleaseCancelSpinLock(
+  IN KIRQL  Irql);
+
+NTKERNELAPI
+VOID
+NTAPI
+IoReleaseRemoveLockAndWaitEx(
+  IN PIO_REMOVE_LOCK  RemoveLock,
+  IN PVOID  Tag OPTIONAL,
+  IN ULONG  RemlockSize);
+
+NTKERNELAPI
+VOID
+NTAPI
+IoReleaseRemoveLockEx(
+  IN PIO_REMOVE_LOCK  RemoveLock,
+  IN PVOID  Tag OPTIONAL,
+  IN ULONG  RemlockSize);
+
+NTKERNELAPI
+VOID
+IoRemoveShareAccess(
+  IN PFILE_OBJECT  FileObject,
+  IN OUT PSHARE_ACCESS  ShareAccess);
+
 #endif
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
@@ -6538,6 +6622,61 @@ IoFreeErrorLogEntry(
   PVOID  ElEntry);
 
 #endif
+
+/*
+ * VOID
+ * IoReleaseRemoveLock(
+ *   IN PIO_REMOVE_LOCK  RemoveLock,
+ *   IN PVOID  Tag)
+ */
+#define IoReleaseRemoveLock(_RemoveLock, \
+                            _Tag) \
+  IoReleaseRemoveLockEx(_RemoveLock, _Tag, sizeof(IO_REMOVE_LOCK))
+
+/*
+ * VOID
+ * IoReleaseRemoveLockAndWait(
+ *   IN PIO_REMOVE_LOCK  RemoveLock,
+ *   IN PVOID  Tag)
+ */
+#define IoReleaseRemoveLockAndWait(_RemoveLock, \
+                                   _Tag) \
+  IoReleaseRemoveLockAndWaitEx(_RemoveLock, _Tag, sizeof(IO_REMOVE_LOCK))
+
+#if defined(_WIN64)
+
+NTKERNELAPI
+BOOLEAN
+IoIs32bitProcess(
+  IN PIRP  Irp  OPTIONAL);
+
+#endif
+
+#define PLUGPLAY_REGKEY_DEVICE                            1
+#define PLUGPLAY_REGKEY_DRIVER                            2
+#define PLUGPLAY_REGKEY_CURRENT_HWPROFILE                 4
+
+FORCEINLINE
+VOID
+IoMarkIrpPending(
+  IN OUT PIRP Irp)
+{
+  IoGetCurrentIrpStackLocation( (Irp) )->Control |= SL_PENDING_RETURNED;
+}
+
+/*
+ * BOOLEAN
+ * IoIsErrorUserInduced(
+ *   IN NTSTATUS  Status);
+ */
+#define IoIsErrorUserInduced(Status) \
+   ((BOOLEAN)(((Status) == STATUS_DEVICE_NOT_READY) || \
+   ((Status) == STATUS_IO_TIMEOUT) || \
+   ((Status) == STATUS_MEDIA_WRITE_PROTECTED) || \
+   ((Status) == STATUS_NO_MEDIA_IN_DEVICE) || \
+   ((Status) == STATUS_VERIFY_REQUIRED) || \
+   ((Status) == STATUS_UNRECOGNIZED_MEDIA) || \
+   ((Status) == STATUS_WRONG_VOLUME)))
 
 /* VOID
  * IoInitializeRemoveLock(

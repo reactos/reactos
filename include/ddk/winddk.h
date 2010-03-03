@@ -2632,80 +2632,11 @@ IoGetFileObjectGenericMapping(
   VOID);
 
 NTKERNELAPI
-VOID
-NTAPI
-IoInvalidateDeviceRelations(
-  IN PDEVICE_OBJECT  DeviceObject,
-  IN DEVICE_RELATION_TYPE  Type);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoInvalidateDeviceState(
-  IN PDEVICE_OBJECT  PhysicalDeviceObject);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-IoIs32bitProcess(
-  IN PIRP  Irp  OPTIONAL);
-
-/*
- * BOOLEAN
- * IoIsErrorUserInduced(
- *   IN NTSTATUS  Status);
- */
-#define IoIsErrorUserInduced(Status) \
-   ((BOOLEAN)(((Status) == STATUS_DEVICE_NOT_READY) || \
-   ((Status) == STATUS_IO_TIMEOUT) || \
-   ((Status) == STATUS_MEDIA_WRITE_PROTECTED) || \
-   ((Status) == STATUS_NO_MEDIA_IN_DEVICE) || \
-   ((Status) == STATUS_VERIFY_REQUIRED) || \
-   ((Status) == STATUS_UNRECOGNIZED_MEDIA) || \
-   ((Status) == STATUS_WRONG_VOLUME)))
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-IoIsWdmVersionAvailable(
-  IN UCHAR  MajorVersion,
-  IN UCHAR  MinorVersion);
-
-NTKERNELAPI
 PIRP
 NTAPI
 IoMakeAssociatedIrp(
   IN PIRP  Irp,
   IN CCHAR  StackSize);
-
-/*
- * VOID
- * IoMarkIrpPending(
- *   IN OUT PIRP  Irp)
- */
-#define IoMarkIrpPending(_Irp) \
-  (IoGetCurrentIrpStackLocation(_Irp)->Control |= SL_PENDING_RETURNED)
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoOpenDeviceInterfaceRegistryKey(
-  IN PUNICODE_STRING  SymbolicLinkName,
-  IN ACCESS_MASK  DesiredAccess,
-  OUT PHANDLE  DeviceInterfaceKey);
-
-#define PLUGPLAY_REGKEY_DEVICE                            1
-#define PLUGPLAY_REGKEY_DRIVER                            2
-#define PLUGPLAY_REGKEY_CURRENT_HWPROFILE                 4
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoOpenDeviceRegistryKey(
-  IN PDEVICE_OBJECT  DeviceObject,
-  IN ULONG  DevInstKeyType,
-  IN ACCESS_MASK  DesiredAccess,
-  OUT PHANDLE  DevInstRegKey);
 
 NTKERNELAPI
 NTSTATUS
@@ -2777,88 +2708,12 @@ IoRegisterBootDriverReinitialization(
   IN PVOID  Context);
 
 NTKERNELAPI
-NTSTATUS
-NTAPI
-IoRegisterDeviceInterface(
-  IN PDEVICE_OBJECT  PhysicalDeviceObject,
-  IN CONST GUID  *InterfaceClassGuid,
-  IN PUNICODE_STRING  ReferenceString  OPTIONAL,
-  OUT PUNICODE_STRING  SymbolicLinkName);
-
-NTKERNELAPI
 VOID
 NTAPI
 IoRegisterDriverReinitialization(
   IN PDRIVER_OBJECT  DriverObject,
   IN PDRIVER_REINITIALIZE  DriverReinitializationRoutine,
   IN PVOID  Context);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoRegisterPlugPlayNotification(
-  IN IO_NOTIFICATION_EVENT_CATEGORY  EventCategory,
-  IN ULONG  EventCategoryFlags,
-  IN PVOID  EventCategoryData  OPTIONAL,
-  IN PDRIVER_OBJECT  DriverObject,
-  IN PDRIVER_NOTIFICATION_CALLBACK_ROUTINE  CallbackRoutine,
-  IN PVOID  Context,
-  OUT PVOID  *NotificationEntry);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoRegisterShutdownNotification(
-  IN PDEVICE_OBJECT  DeviceObject);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoReleaseCancelSpinLock(
-  IN KIRQL  Irql);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoReleaseRemoveLockAndWaitEx(
-  IN PIO_REMOVE_LOCK  RemoveLock,
-  IN PVOID  Tag,
-  IN ULONG  RemlockSize);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoReleaseRemoveLockEx(
-  IN PIO_REMOVE_LOCK  RemoveLock,
-  IN PVOID  Tag,
-  IN ULONG  RemlockSize);
-
-/*
- * VOID
- * IoReleaseRemoveLock(
- *   IN PIO_REMOVE_LOCK  RemoveLock,
- *   IN PVOID  Tag)
- */
-#define IoReleaseRemoveLock(_RemoveLock, \
-                            _Tag) \
-  IoReleaseRemoveLockEx(_RemoveLock, _Tag, sizeof(IO_REMOVE_LOCK))
-
-/*
- * VOID
- * IoReleaseRemoveLockAndWait(
- *   IN PIO_REMOVE_LOCK  RemoveLock,
- *   IN PVOID  Tag)
- */
-#define IoReleaseRemoveLockAndWait(_RemoveLock, \
-                                   _Tag) \
-  IoReleaseRemoveLockAndWaitEx(_RemoveLock, _Tag, sizeof(IO_REMOVE_LOCK))
-
-NTKERNELAPI
-VOID
-NTAPI
-IoRemoveShareAccess(
-  IN PFILE_OBJECT  FileObject,
-  IN OUT PSHARE_ACCESS  ShareAccess);
 
 NTKERNELAPI
 NTSTATUS
