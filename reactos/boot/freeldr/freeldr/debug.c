@@ -328,3 +328,22 @@ MsgBoxPrint(const char *Format, ...)
 	return 0;
 }
 
+NTKERNELAPI
+DECLSPEC_NORETURN
+VOID
+NTAPI
+KeBugCheckEx(
+    IN ULONG  BugCheckCode,
+    IN ULONG_PTR  BugCheckParameter1,
+    IN ULONG_PTR  BugCheckParameter2,
+    IN ULONG_PTR  BugCheckParameter3,
+    IN ULONG_PTR  BugCheckParameter4)
+{
+    char Buffer[64];
+    sprintf(Buffer, "*** STOP: 0x%08lX (0x%08lX, 0x%08lX, 0x%08lX, 0x%08lX)",
+        BugCheckCode, BugCheckParameter1, BugCheckParameter2,
+        BugCheckParameter3, BugCheckParameter4);
+    UiMessageBoxCritical(Buffer);
+    assert(FALSE);
+    for (;;);
+}
