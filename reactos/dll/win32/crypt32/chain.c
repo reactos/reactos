@@ -686,8 +686,12 @@ static BOOL url_matches(LPCWSTR constraint, LPCWSTR name,
             authority_end = strchrW(name, '?');
         if (!authority_end)
             authority_end = name + strlenW(name);
-        /* Remove any port number from the authority */
-        for (colon = authority_end; colon >= name && *colon != ':'; colon--)
+        /* Remove any port number from the authority.  The userinfo portion
+         * of an authority may contain a colon, so stop if a userinfo portion
+         * is found (indicated by '@').
+         */
+        for (colon = authority_end; colon >= name && *colon != ':' &&
+         *colon != '@'; colon--)
             ;
         if (*colon == ':')
             authority_end = colon;
@@ -3376,7 +3380,7 @@ BOOL WINAPI CertVerifyCertificateChainPolicy(LPCSTR szPolicyOID,
     TRACE("(%s, %p, %p, %p)\n", debugstr_a(szPolicyOID), pChainContext,
      pPolicyPara, pPolicyStatus);
 
-    if (!HIWORD(szPolicyOID))
+    if (IS_INTOID(szPolicyOID))
     {
         switch (LOWORD(szPolicyOID))
         {

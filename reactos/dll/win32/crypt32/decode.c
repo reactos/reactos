@@ -5578,7 +5578,7 @@ static CryptDecodeObjectExFunc CRYPT_GetBuiltinDecoder(DWORD dwCertEncodingType,
         SetLastError(ERROR_FILE_NOT_FOUND);
         return NULL;
     }
-    if (!HIWORD(lpszStructType))
+    if (IS_INTOID(lpszStructType))
     {
         switch (LOWORD(lpszStructType))
         {
