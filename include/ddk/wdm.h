@@ -5652,6 +5652,697 @@ WRITE_REGISTER_USHORT(
 
 #endif
 
+/** Io access routines **/
+
+#if !defined(_M_AMD64)
+NTHALAPI
+VOID
+NTAPI
+READ_PORT_BUFFER_UCHAR(
+  IN PUCHAR  Port,
+  IN PUCHAR  Buffer,
+  IN ULONG  Count);
+
+NTHALAPI
+VOID
+NTAPI
+READ_PORT_BUFFER_ULONG(
+  IN PULONG  Port,
+  IN PULONG  Buffer,
+  IN ULONG  Count);
+
+NTHALAPI
+VOID
+NTAPI
+READ_PORT_BUFFER_USHORT(
+  IN PUSHORT  Port,
+  IN PUSHORT  Buffer,
+  IN ULONG  Count);
+
+NTHALAPI
+UCHAR
+NTAPI
+READ_PORT_UCHAR(
+  IN PUCHAR  Port);
+
+NTHALAPI
+ULONG
+NTAPI
+READ_PORT_ULONG(
+  IN PULONG  Port);
+
+NTHALAPI
+USHORT
+NTAPI
+READ_PORT_USHORT(
+  IN PUSHORT  Port);
+
+NTKERNELAPI
+VOID
+NTAPI
+READ_REGISTER_BUFFER_UCHAR(
+  IN PUCHAR  Register,
+  IN PUCHAR  Buffer,
+  IN ULONG  Count);
+
+NTKERNELAPI
+VOID
+NTAPI
+READ_REGISTER_BUFFER_ULONG(
+  IN PULONG  Register,
+  IN PULONG  Buffer,
+  IN ULONG  Count);
+
+NTKERNELAPI
+VOID
+NTAPI
+READ_REGISTER_BUFFER_USHORT(
+  IN PUSHORT  Register,
+  IN PUSHORT  Buffer,
+  IN ULONG  Count);
+
+NTKERNELAPI
+UCHAR
+NTAPI
+READ_REGISTER_UCHAR(
+  IN PUCHAR  Register);
+
+NTKERNELAPI
+ULONG
+NTAPI
+READ_REGISTER_ULONG(
+  IN PULONG  Register);
+
+NTKERNELAPI
+USHORT
+NTAPI
+READ_REGISTER_USHORT(
+  IN PUSHORT  Register);
+
+NTHALAPI
+VOID
+NTAPI
+WRITE_PORT_BUFFER_UCHAR(
+  IN PUCHAR  Port,
+  IN PUCHAR  Buffer,
+  IN ULONG  Count);
+
+NTHALAPI
+VOID
+NTAPI
+WRITE_PORT_BUFFER_ULONG(
+  IN PULONG  Port,
+  IN PULONG  Buffer,
+  IN ULONG  Count);
+
+NTHALAPI
+VOID
+NTAPI
+WRITE_PORT_BUFFER_USHORT(
+  IN PUSHORT  Port,
+  IN PUSHORT  Buffer,
+  IN ULONG  Count);
+
+NTHALAPI
+VOID
+NTAPI
+WRITE_PORT_UCHAR(
+  IN PUCHAR  Port,
+  IN UCHAR  Value);
+
+NTHALAPI
+VOID
+NTAPI
+WRITE_PORT_ULONG(
+  IN PULONG  Port,
+  IN ULONG  Value);
+
+NTHALAPI
+VOID
+NTAPI
+WRITE_PORT_USHORT(
+  IN PUSHORT  Port,
+  IN USHORT  Value);
+
+NTKERNELAPI
+VOID
+NTAPI
+WRITE_REGISTER_BUFFER_UCHAR(
+  IN PUCHAR  Register,
+  IN PUCHAR  Buffer,
+  IN ULONG  Count);
+
+NTKERNELAPI
+VOID
+NTAPI
+WRITE_REGISTER_BUFFER_ULONG(
+  IN PULONG  Register,
+  IN PULONG  Buffer,
+  IN ULONG  Count);
+
+NTKERNELAPI
+VOID
+NTAPI
+WRITE_REGISTER_BUFFER_USHORT(
+  IN PUSHORT  Register,
+  IN PUSHORT  Buffer,
+  IN ULONG  Count);
+
+NTKERNELAPI
+VOID
+NTAPI
+WRITE_REGISTER_UCHAR(
+  IN PUCHAR  Register,
+  IN UCHAR  Value);
+
+NTKERNELAPI
+VOID
+NTAPI
+WRITE_REGISTER_ULONG(
+  IN PULONG  Register,
+  IN ULONG  Value);
+
+NTKERNELAPI
+VOID
+NTAPI
+WRITE_REGISTER_USHORT(
+  IN PUSHORT  Register,
+  IN USHORT  Value);
+
+#else
+
+FORCEINLINE
+VOID
+READ_PORT_BUFFER_UCHAR(
+  IN PUCHAR  Port,
+  IN PUCHAR  Buffer,
+  IN ULONG  Count)
+{
+    __inbytestring((USHORT)(ULONG_PTR)Port, Buffer, Count);
+}
+
+FORCEINLINE
+VOID
+READ_PORT_BUFFER_ULONG(
+  IN PULONG  Port,
+  IN PULONG  Buffer,
+  IN ULONG  Count)
+{
+    __indwordstring((USHORT)(ULONG_PTR)Port, Buffer, Count);
+}
+
+FORCEINLINE
+VOID
+READ_PORT_BUFFER_USHORT(
+  IN PUSHORT  Port,
+  IN PUSHORT  Buffer,
+  IN ULONG  Count)
+{
+    __inwordstring((USHORT)(ULONG_PTR)Port, Buffer, Count);
+}
+
+FORCEINLINE
+UCHAR
+READ_PORT_UCHAR(
+  IN PUCHAR  Port)
+{
+    return __inbyte((USHORT)(ULONG_PTR)Port);
+}
+
+FORCEINLINE
+ULONG
+READ_PORT_ULONG(
+  IN PULONG  Port)
+{
+    return __indword((USHORT)(ULONG_PTR)Port);
+}
+
+FORCEINLINE
+USHORT
+READ_PORT_USHORT(
+  IN PUSHORT  Port)
+{
+    return __inword((USHORT)(ULONG_PTR)Port);
+}
+
+FORCEINLINE
+VOID
+READ_REGISTER_BUFFER_UCHAR(
+  IN PUCHAR  Register,
+  IN PUCHAR  Buffer,
+  IN ULONG  Count)
+{
+    __movsb(Register, Buffer, Count);
+}
+
+FORCEINLINE
+VOID
+READ_REGISTER_BUFFER_ULONG(
+  IN PULONG  Register,
+  IN PULONG  Buffer,
+  IN ULONG  Count)
+{
+    __movsd(Register, Buffer, Count);
+}
+
+FORCEINLINE
+VOID
+READ_REGISTER_BUFFER_USHORT(
+  IN PUSHORT  Register,
+  IN PUSHORT  Buffer,
+  IN ULONG  Count)
+{
+    __movsw(Register, Buffer, Count);
+}
+
+FORCEINLINE
+UCHAR
+READ_REGISTER_UCHAR(
+  IN PUCHAR Register)
+{
+    return *Register;
+}
+
+FORCEINLINE
+ULONG
+READ_REGISTER_ULONG(
+  IN PULONG Register)
+{
+    return *Register;
+}
+
+FORCEINLINE
+USHORT
+READ_REGISTER_USHORT(
+  IN PUSHORT Register)
+{
+    return *Register;
+}
+
+FORCEINLINE
+VOID
+WRITE_PORT_BUFFER_UCHAR(
+  IN PUCHAR  Port,
+  IN PUCHAR  Buffer,
+  IN ULONG  Count)
+{
+    __outbytestring((USHORT)(ULONG_PTR)Port, Buffer, Count);
+}
+
+FORCEINLINE
+VOID
+WRITE_PORT_BUFFER_ULONG(
+  IN PULONG  Port,
+  IN PULONG  Buffer,
+  IN ULONG  Count)
+{
+    __outdwordstring((USHORT)(ULONG_PTR)Port, Buffer, Count);
+}
+
+FORCEINLINE
+VOID
+WRITE_PORT_BUFFER_USHORT(
+  IN PUSHORT  Port,
+  IN PUSHORT  Buffer,
+  IN ULONG  Count)
+{
+    __outwordstring((USHORT)(ULONG_PTR)Port, Buffer, Count);
+}
+
+FORCEINLINE
+VOID
+WRITE_PORT_UCHAR(
+  IN PUCHAR  Port,
+  IN UCHAR  Value)
+{
+    __outbyte((USHORT)(ULONG_PTR)Port, Value);
+}
+
+FORCEINLINE
+VOID
+WRITE_PORT_ULONG(
+  IN PULONG  Port,
+  IN ULONG  Value)
+{
+    __outdword((USHORT)(ULONG_PTR)Port, Value);
+}
+
+FORCEINLINE
+VOID
+WRITE_PORT_USHORT(
+  IN PUSHORT  Port,
+  IN USHORT  Value)
+{
+    __outword((USHORT)(ULONG_PTR)Port, Value);
+}
+
+FORCEINLINE
+VOID
+WRITE_REGISTER_BUFFER_UCHAR(
+  IN PUCHAR  Register,
+  IN PUCHAR  Buffer,
+  IN ULONG  Count)
+{
+    LONG Synch;
+    __movsb(Register, Buffer, Count);
+    InterlockedOr(&Synch, 1);
+}
+
+FORCEINLINE
+VOID
+WRITE_REGISTER_BUFFER_ULONG(
+  IN PULONG  Register,
+  IN PULONG  Buffer,
+  IN ULONG  Count)
+{
+    LONG Synch;
+    __movsd(Register, Buffer, Count);
+    InterlockedOr(&Synch, 1);
+}
+
+FORCEINLINE
+VOID
+WRITE_REGISTER_BUFFER_USHORT(
+  IN PUSHORT  Register,
+  IN PUSHORT  Buffer,
+  IN ULONG  Count)
+{
+    LONG Synch;
+    __movsw(Register, Buffer, Count);
+    InterlockedOr(&Synch, 1);
+}
+
+FORCEINLINE
+VOID
+WRITE_REGISTER_UCHAR(
+  IN PUCHAR  Register,
+  IN UCHAR  Value)
+{
+    LONG Synch;
+    *Register = Value;
+    InterlockedOr(&Synch, 1);
+}
+
+FORCEINLINE
+VOID
+WRITE_REGISTER_ULONG(
+  IN PULONG  Register,
+  IN ULONG  Value)
+{
+    LONG Synch;
+    *Register = Value;
+    InterlockedOr(&Synch, 1);
+}
+
+FORCEINLINE
+VOID
+WRITE_REGISTER_USHORT(
+  IN PUSHORT  Register,
+  IN USHORT  Value)
+{
+  LONG Sync;
+  *Register = Value;
+  InterlockedOr(&Sync, 1);
+}
+
+#endif
+
+/** I/O manager routines **/
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTKERNELAPI
+VOID
+IoAcquireCancelSpinLock(
+  OUT PKIRQL  Irql);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoAcquireRemoveLockEx(
+  IN PIO_REMOVE_LOCK  RemoveLock,
+  IN PVOID  Tag  OPTIONAL,
+  IN PCSTR  File,
+  IN ULONG  Line,
+  IN ULONG  RemlockSize);
+
+#endif
+
+/*
+ * NTSTATUS
+ * IoAcquireRemoveLock(
+ *   IN PIO_REMOVE_LOCK  RemoveLock,
+ *   IN OPTIONAL PVOID  Tag)
+ */
+#if DBG
+#define IoAcquireRemoveLock(RemoveLock, Tag) \
+  IoAcquireRemoveLockEx(RemoveLock, Tag, __FILE__, __LINE__, sizeof (IO_REMOVE_LOCK))
+#else
+#define IoAcquireRemoveLock(RemoveLock, Tag) \
+  IoAcquireRemoveLockEx(RemoveLock, Tag, "", 1, sizeof (IO_REMOVE_LOCK))
+#endif
+
+/*
+ * VOID
+ * IoAdjustPagingPathCount(
+ *   IN PLONG  Count,
+ *   IN BOOLEAN  Increment)
+ */
+#define IoAdjustPagingPathCount(_Count, \
+                                _Increment) \
+{ \
+  if (_Increment) \
+    { \
+      InterlockedIncrement(_Count); \
+    } \
+  else \
+    { \
+      InterlockedDecrement(_Count); \
+    } \
+}
+
+#if defined(USE_DMA_MACROS) && !defined(_NTHAL_) && (defined(_NTDDK_) || defined(_NTDRIVER_)) || defined(_WDM_INCLUDED_)
+FORCEINLINE
+NTSTATUS
+IoAllocateAdapterChannel(
+  IN PDMA_ADAPTER DmaAdapter,
+  IN PDEVICE_OBJECT DeviceObject,
+  IN ULONG NumberOfMapRegisters,
+  IN PDRIVER_CONTROL ExecutionRoutine,
+  IN PVOID Context)
+{
+  PALLOCATE_ADAPTER_CHANNEL allocateAdapterChannel;
+  NTSTATUS status;
+
+  allocateAdapterChannel = *(DmaAdapter)->DmaOperations->AllocateAdapterChannel;
+
+  ASSERT( allocateAdapterChannel != NULL );
+
+  status = allocateAdapterChannel( DmaAdapter,
+                                   DeviceObject,
+                                   NumberOfMapRegisters,
+                                   ExecutionRoutine,
+                                   Context );
+
+  return status;
+}
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTKERNELAPI
+NTSTATUS
+IoAllocateDriverObjectExtension(
+  IN PDRIVER_OBJECT  DriverObject,
+  IN PVOID  ClientIdentificationAddress,
+  IN ULONG  DriverObjectExtensionSize,
+  OUT PVOID  *DriverObjectExtension);
+
+NTKERNELAPI
+PVOID
+IoAllocateErrorLogEntry(
+  IN PVOID  IoObject,
+  IN UCHAR  EntrySize);
+
+NTKERNELAPI
+PIRP
+IoAllocateIrp(
+  IN CCHAR  StackSize,
+  IN BOOLEAN  ChargeQuota);
+
+NTKERNELAPI
+PMDL
+IoAllocateMdl(
+  IN PVOID  VirtualAddress OPTIONAL,
+  IN ULONG  Length,
+  IN BOOLEAN  SecondaryBuffer,
+  IN BOOLEAN  ChargeQuota,
+  IN OUT PIRP  Irp  OPTIONAL);
+
+NTKERNELAPI
+PIO_WORKITEM
+IoAllocateWorkItem(
+  IN PDEVICE_OBJECT  DeviceObject);
+
+NTKERNELAPI
+NTSTATUS
+IoAttachDevice(
+  IN PDEVICE_OBJECT  SourceDevice,
+  IN PUNICODE_STRING  TargetDevice,
+  OUT PDEVICE_OBJECT  *AttachedDevice);
+
+NTKERNELAPI
+PDEVICE_OBJECT
+IoAttachDeviceToDeviceStack(
+  IN PDEVICE_OBJECT  SourceDevice,
+  IN PDEVICE_OBJECT  TargetDevice);
+
+NTKERNELAPI
+PIRP
+IoBuildAsynchronousFsdRequest(
+  IN ULONG  MajorFunction,
+  IN PDEVICE_OBJECT  DeviceObject,
+  IN OUT PVOID  Buffer  OPTIONAL,
+  IN ULONG  Length  OPTIONAL,
+  IN PLARGE_INTEGER  StartingOffset  OPTIONAL,
+  IN PIO_STATUS_BLOCK  IoStatusBlock  OPTIONAL);
+
+NTKERNELAPI
+PIRP
+IoBuildDeviceIoControlRequest(
+  IN ULONG  IoControlCode,
+  IN PDEVICE_OBJECT  DeviceObject,
+  IN PVOID  InputBuffer  OPTIONAL,
+  IN ULONG  InputBufferLength,
+  OUT PVOID  OutputBuffer  OPTIONAL,
+  IN ULONG  OutputBufferLength,
+  IN BOOLEAN  InternalDeviceIoControl,
+  IN PKEVENT  Event,
+  OUT PIO_STATUS_BLOCK  IoStatusBlock);
+
+NTKERNELAPI
+VOID
+IoBuildPartialMdl(
+  IN PMDL  SourceMdl,
+  IN OUT PMDL  TargetMdl,
+  IN PVOID  VirtualAddress,
+  IN ULONG  Length);
+
+NTKERNELAPI
+PIRP
+IoBuildSynchronousFsdRequest(
+  IN ULONG  MajorFunction,
+  IN PDEVICE_OBJECT  DeviceObject,
+  IN OUT PVOID  Buffer  OPTIONAL,
+  IN ULONG  Length  OPTIONAL,
+  IN PLARGE_INTEGER  StartingOffset  OPTIONAL,
+  IN PKEVENT  Event,
+  OUT PIO_STATUS_BLOCK  IoStatusBlock);
+
+NTKERNELAPI
+NTSTATUS
+FASTCALL
+IofCallDriver(
+  IN PDEVICE_OBJECT  DeviceObject,
+  IN OUT PIRP  Irp);
+
+NTKERNELAPI
+BOOLEAN
+IoCancelIrp(
+  IN PIRP  Irp);
+
+NTKERNELAPI
+NTSTATUS
+IoCheckShareAccess(
+  IN ACCESS_MASK  DesiredAccess,
+  IN ULONG  DesiredShareAccess,
+  IN OUT PFILE_OBJECT  FileObject,
+  IN OUT PSHARE_ACCESS  ShareAccess,
+  IN BOOLEAN  Update);
+
+NTKERNELAPI
+VOID
+FASTCALL
+IofCompleteRequest(
+  IN PIRP  Irp,
+  IN CCHAR  PriorityBoost);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoConnectInterrupt(
+  OUT PKINTERRUPT  *InterruptObject,
+  IN PKSERVICE_ROUTINE  ServiceRoutine,
+  IN PVOID  ServiceContext OPTIONAL,
+  IN PKSPIN_LOCK  SpinLock  OPTIONAL,
+  IN ULONG  Vector,
+  IN KIRQL  Irql,
+  IN KIRQL  SynchronizeIrql,
+  IN KINTERRUPT_MODE    InterruptMode,
+  IN BOOLEAN  ShareVector,
+  IN KAFFINITY  ProcessorEnableMask,
+  IN BOOLEAN  FloatingSave);
+
+NTKERNELAPI
+NTSTATUS
+IoCreateDevice(
+  IN PDRIVER_OBJECT  DriverObject,
+  IN ULONG  DeviceExtensionSize,
+  IN PUNICODE_STRING  DeviceName  OPTIONAL,
+  IN DEVICE_TYPE  DeviceType,
+  IN ULONG  DeviceCharacteristics,
+  IN BOOLEAN  Exclusive,
+  OUT PDEVICE_OBJECT  *DeviceObject);
+
+#endif
+
+/*
+ * NTSTATUS
+ * IoCallDriver(
+ *   IN PDEVICE_OBJECT  DeviceObject,
+ *   IN OUT PIRP  Irp)
+ */
+#define IoCallDriver IofCallDriver
+
+/*
+ * VOID
+ * IoCompleteRequest(
+ *  IN PIRP  Irp,
+ *  IN CCHAR  PriorityBoost)
+ */
+#define IoCompleteRequest IofCompleteRequest
+
+FORCEINLINE
+PIO_STACK_LOCATION
+IoGetCurrentIrpStackLocation(
+  IN PIRP Irp)
+{
+  ASSERT(Irp->CurrentLocation <= Irp->StackCount + 1);
+  return Irp->Tail.Overlay.CurrentStackLocation;
+}
+
+FORCEINLINE
+PIO_STACK_LOCATION
+IoGetNextIrpStackLocation(
+  IN PIRP Irp)
+{
+  ASSERT(Irp->CurrentLocation > 0);
+  return ((Irp)->Tail.Overlay.CurrentStackLocation - 1 );
+}
+
+FORCEINLINE
+VOID
+IoCopyCurrentIrpStackLocationToNext(
+  IN PIRP Irp)
+{
+  PIO_STACK_LOCATION irpSp;
+  PIO_STACK_LOCATION nextIrpSp;
+  irpSp = IoGetCurrentIrpStackLocation(Irp);
+  nextIrpSp = IoGetNextIrpStackLocation(Irp);
+  RtlCopyMemory( nextIrpSp, irpSp, FIELD_OFFSET(IO_STACK_LOCATION, CompletionRoutine));
+  nextIrpSp->Control = 0;
+}
+
 /******************************************************************************
  *                                 RTL Types                                  *
  ******************************************************************************/
