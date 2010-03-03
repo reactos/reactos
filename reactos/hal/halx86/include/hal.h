@@ -17,8 +17,12 @@
 #undef _NTHAL_
 #undef DECLSPEC_IMPORT
 #define DECLSPEC_IMPORT
+#ifndef _MINIHAL_
 #undef NTSYSAPI
 #define NTSYSAPI __declspec(dllimport)
+#else
+#undef _NTSYSTEM_
+#endif
 
 /* IFS/DDK/NDK Headers */
 #include <ntifs.h>

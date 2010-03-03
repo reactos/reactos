@@ -14,6 +14,7 @@
 
 /* GLOBALS ********************************************************************/
 
+#ifndef _MINIHAL_
 /*
  * This table basically keeps track of level vs edge triggered interrupts.
  * Windows has 250+ entries, but it seems stupid to replicate that since the PIC
@@ -1335,3 +1336,28 @@ HalpDispatchInterrupt2(VOID)
     }
 }
 
+#else
+
+KIRQL
+NTAPI
+KeGetCurrentIrql(VOID)
+{
+    return PASSIVE_LEVEL;
+}
+
+VOID
+FASTCALL
+KfLowerIrql(
+    IN KIRQL OldIrql)
+{
+}
+
+KIRQL
+FASTCALL
+KfRaiseIrql(
+    IN KIRQL NewIrql)
+{
+    return NewIrql;
+}
+
+#endif

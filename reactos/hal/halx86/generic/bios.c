@@ -196,6 +196,7 @@ HalpDispatchV86Opcode(IN PKTRAP_FRAME TrapFrame)
 
 /* V86 TRAP HANDLERS **********************************************************/
 
+#ifndef _MINIHAL_
 VOID
 FASTCALL
 DECLSPEC_NORETURN
@@ -234,6 +235,7 @@ HalpTrap06()
     longjmp(HalpSavedContext, 1);
     UNREACHABLE;
 }
+#endif
 
 /* V8086 ENTER ****************************************************************/
 
@@ -497,6 +499,7 @@ HalpMapRealModeMemory(VOID)
     HalpFlushTLB();
 }
 
+#ifndef _MINIHAL_
 VOID
 NTAPI
 HalpSwitchToRealModeTrapHandlers(VOID)
@@ -517,6 +520,7 @@ HalpSwitchToRealModeTrapHandlers(VOID)
     //
     KeRegisterInterruptHandler(6, HalpTrap06);
 }
+#endif
 
 VOID
 NTAPI
@@ -626,6 +630,7 @@ HalpUnmapRealModeMemory(VOID)
     HalpFlushTLB();
 }
 
+#ifndef _MINIHAL_
 BOOLEAN
 NTAPI
 HalpBiosDisplayReset(VOID)
@@ -695,5 +700,6 @@ HalpBiosDisplayReset(VOID)
     __writeeflags(Flags);
     return TRUE;
 }
+#endif
 
 /* EOF */

@@ -702,6 +702,7 @@ PPCI_REGISTRY_INFO_INTERNAL
 NTAPI
 HalpQueryPciRegistryInfo(VOID)
 {
+#ifndef _MINIHAL_
     WCHAR NameBuffer[8];
     OBJECT_ATTRIBUTES  ObjectAttributes;
     UNICODE_STRING KeyName, ConfigName, IdentName;
@@ -924,6 +925,9 @@ HalpQueryPciRegistryInfo(VOID)
 
     /* Return it */
     return PciRegistryInfo;
+#else
+    return NULL;
+#endif
 }
 
 VOID
