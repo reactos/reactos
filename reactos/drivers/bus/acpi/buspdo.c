@@ -394,11 +394,23 @@ Bus_PDO_QueryDeviceId(
     switch (stack->Parameters.QueryId.IdType) {
 
     case BusQueryDeviceID:
-        acpi_bus_get_device(DeviceData->AcpiHandle, &Device);
+        if (DeviceData->AcpiHandle)
+        {
+            acpi_bus_get_device(DeviceData->AcpiHandle, &Device);
 
-        length = swprintf(temp,
-                          L"ACPI\\%hs",
-                          Device->pnp.hardware_id);
+            length = swprintf(temp,
+                              L"ACPI\\%hs",
+                              Device->pnp.hardware_id);
+        }
+        else
+        {
+            /* We know it's a fixed feature button because
+             * these are direct children of the ACPI root device
+             * and therefore have no handle
+             */
+            length = swprintf(temp,
+                              L"ACPI\\FixedButton");
+        }
 
         temp[++length] = UNICODE_NULL;
 
@@ -415,15 +427,22 @@ Bus_PDO_QueryDeviceId(
         break;
 
     case BusQueryInstanceID:
-        acpi_bus_get_device(DeviceData->AcpiHandle, &Device);
+        /* See comment in BusQueryDeviceID case */
+        if(DeviceData->AcpiHandle)
+        {
+           acpi_bus_get_device(DeviceData->AcpiHandle, &Device);
 
-        if(Device->flags.unique_id)
-            length = swprintf(temp,
-                              L"%hs",
-                              Device->pnp.unique_id);
+           if (Device->flags.unique_id)
+              length = swprintf(temp,
+                                L"%hs",
+                                Device->pnp.unique_id);
+           else
+              /* FIXME: Generate unique id! */
+              length = swprintf(temp, L"%ls", L"0000");
+        }
         else
-            /* FIXME: Generate unique id! */
-            length = swprintf(temp, L"%ls", L"0000");
+           /* FIXME: Generate unique id! */
+           length = swprintf(temp, L"%ls", L"0000");
 
         temp[++length] = UNICODE_NULL;
 
@@ -439,25 +458,39 @@ Bus_PDO_QueryDeviceId(
         break;
 
     case BusQueryHardwareIDs:
-        acpi_bus_get_device(DeviceData->AcpiHandle, &Device);
-
         length = 0;
 
-        length += swprintf(&temp[length],
-                           L"ACPI\\%hs",
-                           Device->pnp.hardware_id);
-        length++;
+        /* See comment in BusQueryDeviceID case */
+        if (DeviceData->AcpiHandle)
+        {
+            acpi_bus_get_device(DeviceData->AcpiHandle, &Device);
 
-        length += swprintf(&temp[length],
-                           L"*%hs",
-                           Device->pnp.hardware_id);
-        length++;
+            length += swprintf(&temp[length],
+                               L"ACPI\\%hs",
+                               Device->pnp.hardware_id);
+            length++;
 
-        temp[length] = UNICODE_NULL;
+            length += swprintf(&temp[length],
+                               L"*%hs",
+                               Device->pnp.hardware_id);
+            length++;
+         }
+         else
+         {
+            length += swprintf(&temp[length],
+                               L"ACPI\\FixedButton");
+            length++;
 
-        length++;
+            length += swprintf(&temp[length],
+                               L"*FixedButton");
+            length++;
+         }
 
-        temp[length] = UNICODE_NULL;
+         temp[length] = UNICODE_NULL;
+
+         length++;
+
+         temp[length] = UNICODE_NULL;
 
         buffer = ExAllocatePoolWithTag (PagedPool, length * sizeof(WCHAR), 'IPCA');
 
@@ -554,6 +587,11 @@ Bus_PDO_QueryDeviceText(
 			Buffer = L"Smart Battery";
 		   else if (wcsstr(DeviceData->HardwareIDs, L"ACPI0003") != 0)
 			Buffer = L"AC Adapter";
+		   /* Simply checking if AcpiHandle is NULL eliminates the need to check
+		    * for the 4 different names that ACPI knows the fixed feature button as internally
+		    */
+		   else if (!DeviceData->AcpiHandle)
+			Buffer = L"ACPI Fixed Feature Button";
 		  else
 			Buffer = L"Other ACPI device";
 
