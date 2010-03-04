@@ -1578,7 +1578,7 @@ IFSFldr_PersistFolder3_GetFolderTargetInfo (IPersistFolder3 * iface,
 {
     IGenericSFImpl *This = impl_from_IPersistFolder3(iface);
     FIXME ("(%p)->(%p)\n", This, ppfti);
-    ZeroMemory (ppfti, sizeof (ppfti));
+    ZeroMemory (ppfti, sizeof (*ppfti));
     return E_NOTIMPL;
 }
 
