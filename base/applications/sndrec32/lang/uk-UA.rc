@@ -1,0 +1,62 @@
+/*
+ * PROJECT:     ReactOS Sound Volume Control
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/applications/sndrec32/lang/uk-UA.rc
+ * PURPOSE:     Ukraianian Language File for Volume Control
+ * TRANSLATOR:  Sakara Yevhen
+ */
+ 
+ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+IDC_REACTOS_SNDREC32 ACCELERATORS
+BEGIN
+    "?",            IDM_ABOUT,              ASCII,  ALT
+    "/",            IDM_ABOUT,              ASCII,  ALT
+END
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 196, 75
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Інформація про reactOS_sndrec32"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    ICON            128,IDC_REACTOS_SNDREC32,19,14,21,20
+    LTEXT           "reactOS_sndrec32, версії 1.0",IDC_STATIC,56,16,114,8,SS_NOPREFIX
+    LTEXT           "Copyright (C) 2009",IDC_STATIC,55,25,114,8
+    DEFPUSHBUTTON   "OK",IDOK,139,54,50,14,WS_GROUP
+END
+
+IDR_MENU1 MENU
+BEGIN
+    POPUP "Файл"
+    BEGIN
+        MENUITEM "Новий",                        	ID_NEW
+        MENUITEM "Відкрити...",                     ID_FILE_OPEN
+        MENUITEM "Зберегти",                        ID_FILE_SAVE, GRAYED
+        MENUITEM "Зберегти як...",                  ID_FILE_SAVEAS, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Вихід",      		                ID_EXIT
+    END
+    MENUITEM "todo1",                       0
+    MENUITEM "todo2",                       0
+    POPUP "?"
+    BEGIN
+        MENUITEM "Про програму...",                 ID__ABOUT
+    END
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_APP_TITLE           "Звукозапис"
+    IDC_REACTOS_SNDREC32    "REACTOS_SNDREC32"
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_STRPOS              "Позиція: %.2f s"
+    IDS_STRDUR              "Довжина: %.2f s"
+    IDS_STRBUF              "Буфер: %.2f kb"
+    IDS_STRFMT              "%.1f kHz %u bits"
+    IDS_STRMONO             "моно"
+    IDS_STRSTEREO           "стерео"
+    IDS_STRCHAN             "%s"
+END
