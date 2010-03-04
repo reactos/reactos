@@ -234,6 +234,16 @@ static WCHAR *xmlstrdupW(const xmlstr_t* str)
     return strW;
 }
 
+static UNICODE_STRING xmlstr2unicode(const xmlstr_t *xmlstr)
+{
+    UNICODE_STRING res;
+
+    res.Buffer = (PWSTR)xmlstr->ptr;
+    res.Length = res.MaximumLength = xmlstr->len;
+
+    return res;
+}
+
 static inline BOOL xmlstr_cmp(const xmlstr_t* xmlstr, const WCHAR *str)
 {
     return !strncmpW(xmlstr->ptr, str, xmlstr->len) && !str[xmlstr->len];
@@ -732,6 +742,7 @@ static BOOL parse_version(const xmlstr_t *str, struct assembly_version *version)
     unsigned int ver[4];
     unsigned int pos;
     const WCHAR *curr;
+    UNICODE_STRING strU;
 
     /* major.minor.build.revision */
     ver[0] = ver[1] = ver[2] = ver[3] = pos = 0;
@@ -755,28 +766,34 @@ static BOOL parse_version(const xmlstr_t *str, struct assembly_version *version)
     return TRUE;
 
 error:
-    DPRINT1( "Wrong version definition in manifest file (%S)\n", str->ptr );
+    strU = xmlstr2unicode(str);
+    DPRINT1( "Wrong version definition in manifest file (%wZ)\n", &strU );
     return FALSE;
 }
 
 static BOOL parse_expect_elem(xmlbuf_t* xmlbuf, const WCHAR* name)
 {
     xmlstr_t    elem;
+    UNICODE_STRING elemU;
     if (!next_xml_elem(xmlbuf, &elem)) return FALSE;
     if (xmlstr_cmp(&elem, name)) return TRUE;
-    DPRINT1( "unexpected element %S\n", elem.ptr );
+    elemU = xmlstr2unicode(&elem);
+    DPRINT1( "unexpected element %wZ\n", &elemU );
     return FALSE;
 }
 
 static BOOL parse_expect_no_attr(xmlbuf_t* xmlbuf, BOOL* end)
 {
     xmlstr_t    attr_name, attr_value;
+    UNICODE_STRING attr_nameU, attr_valueU;
     BOOL        error;
 
     while (next_xml_attr(xmlbuf, &attr_name, &attr_value, &error, end))
     {
-        DPRINT1( "unexpected attr %S=%S\n", attr_name.ptr,
-             attr_value.ptr);
+        attr_nameU = xmlstr2unicode(&attr_name);
+        attr_valueU = xmlstr2unicode(&attr_name);
+        DPRINT1( "unexpected attr %S=%S\n", &attr_nameU,
+             &attr_valueU);
     }
     return !error;
 }
@@ -790,10 +807,12 @@ static BOOL parse_end_element(xmlbuf_t *xmlbuf)
 static BOOL parse_expect_end_elem(xmlbuf_t *xmlbuf, const WCHAR *name)
 {
     xmlstr_t    elem;
+    UNICODE_STRING elemU;
     if (!next_xml_elem(xmlbuf, &elem)) return FALSE;
     if (!xmlstr_cmp_end(&elem, name))
     {
-        DPRINT1( "unexpected element %S\n", elem.ptr );
+        elemU = xmlstr2unicode(&elem);
+        DPRINT1( "unexpected element %wZ\n", &elemU );
         return FALSE;
     }
     return parse_end_element(xmlbuf);
@@ -824,6 +843,7 @@ static BOOL parse_assembly_identity_elem(xmlbuf_t* xmlbuf, ACTIVATION_CONTEXT* a
 {
     xmlstr_t    attr_name, attr_value;
     BOOL        end = FALSE, error;
+    UNICODE_STRING  attr_valueU, attr_nameU;
 
     while (next_xml_attr(xmlbuf, &attr_name, &attr_value, &error, &end))
     {
@@ -849,14 +869,15 @@ static BOOL parse_assembly_identity_elem(xmlbuf_t* xmlbuf, ACTIVATION_CONTEXT* a
         }
         else if (xmlstr_cmp(&attr_name, languageW))
         {
-            DPRINT1("Unsupported yet language attribute (%S)\n",
-                 attr_value.ptr);
             if (!(ai->language = xmlstrdupW(&attr_value))) return FALSE;
+            DPRINT1("Unsupported yet language attribute (%S)\n",
+                 ai->language);
         }
         else
         {
-            DPRINT1("unknown attr %S=%S\n", attr_name.ptr,
-                 attr_value.ptr);
+            attr_nameU = xmlstr2unicode(&attr_name);
+            attr_valueU = xmlstr2unicode(&attr_value);
+            DPRINT1("unknown attr %wZ=%wZ\n", &attr_nameU, &attr_valueU);
         }
     }
 
@@ -869,6 +890,7 @@ static BOOL parse_com_class_elem(xmlbuf_t* xmlbuf, struct dll_redirect* dll)
     xmlstr_t elem, attr_name, attr_value;
     BOOL ret, end = FALSE, error;
     struct entity*      entity;
+    UNICODE_STRING  attr_valueU, attr_nameU;
 
     if (!(entity = add_entity(&dll->entities, ACTIVATION_CONTEXT_SECTION_COM_SERVER_REDIRECTION)))
         return FALSE;
@@ -881,7 +903,9 @@ static BOOL parse_com_class_elem(xmlbuf_t* xmlbuf, struct dll_redirect* dll)
         }
         else
         {
-            DPRINT1("unknown attr %S=%S\n", attr_name.ptr, attr_value.ptr);
+            attr_nameU = xmlstr2unicode(&attr_name);
+            attr_valueU = xmlstr2unicode(&attr_value);
+            DPRINT1("unknown attr %wZ=%wZ\n", &attr_nameU, &attr_valueU);
         }
     }
 
@@ -896,7 +920,8 @@ static BOOL parse_com_class_elem(xmlbuf_t* xmlbuf, struct dll_redirect* dll)
         }
         else
         {
-            DPRINT1("unknown elem %S\n", elem.ptr);
+            attr_nameU = xmlstr2unicode(&elem);
+            DPRINT1("unknown elem %wZ\n", &attr_nameU);
             ret = parse_unknown_elem(xmlbuf, &elem);
         }
     }
@@ -908,6 +933,7 @@ static BOOL parse_cominterface_proxy_stub_elem(xmlbuf_t* xmlbuf, struct dll_redi
     xmlstr_t    attr_name, attr_value;
     BOOL        end = FALSE, error;
     struct entity*      entity;
+    UNICODE_STRING  attr_valueU, attr_nameU;
 
     if (!(entity = add_entity(&dll->entities, ACTIVATION_CONTEXT_SECTION_COM_INTERFACE_REDIRECTION)))
         return FALSE;
@@ -924,7 +950,9 @@ static BOOL parse_cominterface_proxy_stub_elem(xmlbuf_t* xmlbuf, struct dll_redi
         }
         else
         {
-            DPRINT1("unknown attr %S=%S\n", attr_name.ptr, attr_value.ptr);
+            attr_nameU = xmlstr2unicode(&attr_name);
+            attr_valueU = xmlstr2unicode(&attr_value);
+            DPRINT1("unknown attr %wZ=%wZ\n", &attr_nameU, &attr_valueU);
         }
     }
 
@@ -937,6 +965,7 @@ static BOOL parse_typelib_elem(xmlbuf_t* xmlbuf, struct dll_redirect* dll)
     xmlstr_t    attr_name, attr_value;
     BOOL        end = FALSE, error;
     struct entity*      entity;
+    UNICODE_STRING  attr_valueU, attr_nameU;
 
     if (!(entity = add_entity(&dll->entities, ACTIVATION_CONTEXT_SECTION_COM_TYPE_LIBRARY_REDIRECTION)))
         return FALSE;
@@ -957,7 +986,9 @@ static BOOL parse_typelib_elem(xmlbuf_t* xmlbuf, struct dll_redirect* dll)
         }
         else
         {
-            DPRINT1("unknown attr %S=%S\n", attr_name.ptr , attr_value.ptr);
+            attr_nameU = xmlstr2unicode(&attr_name);
+            attr_valueU = xmlstr2unicode(&attr_value);
+            DPRINT1("unknown attr %wZ=%wZ\n", &attr_nameU, &attr_valueU);
         }
     }
 
@@ -970,6 +1001,7 @@ static BOOL parse_window_class_elem(xmlbuf_t* xmlbuf, struct dll_redirect* dll)
     xmlstr_t    elem, content;
     BOOL        end = FALSE, ret = TRUE;
     struct entity*      entity;
+    UNICODE_STRING elemU;
 
     if (!(entity = add_entity(&dll->entities, ACTIVATION_CONTEXT_SECTION_WINDOW_CLASS_REDIRECTION)))
         return FALSE;
@@ -990,7 +1022,8 @@ static BOOL parse_window_class_elem(xmlbuf_t* xmlbuf, struct dll_redirect* dll)
         }
         else
         {
-            DPRINT1("unknown elem %S\n", elem.ptr);
+            elemU = xmlstr2unicode(&elem);
+            DPRINT1("unknown elem %wZ\n", &elemU);
             ret = parse_unknown_elem(xmlbuf, &elem);
         }
     }
@@ -1001,21 +1034,25 @@ static BOOL parse_window_class_elem(xmlbuf_t* xmlbuf, struct dll_redirect* dll)
 static BOOL parse_binding_redirect_elem(xmlbuf_t* xmlbuf)
 {
     xmlstr_t    attr_name, attr_value;
+    UNICODE_STRING  attr_valueU, attr_nameU;
     BOOL        end = FALSE, error;
 
     while (next_xml_attr(xmlbuf, &attr_name, &attr_value, &error, &end))
     {
+        attr_nameU = xmlstr2unicode(&attr_name);
+        attr_valueU = xmlstr2unicode(&attr_value);
+
         if (xmlstr_cmp(&attr_name, oldVersionW))
         {
-            DPRINT1("Not stored yet oldVersion=%S\n", attr_value.ptr);
+            DPRINT1("Not stored yet oldVersion=%wZ\n", &attr_valueU);
         }
         else if (xmlstr_cmp(&attr_name, newVersionW))
         {
-            DPRINT1("Not stored yet newVersion=%S\n", attr_value.ptr);
+            DPRINT1("Not stored yet newVersion=%wZ\n", &attr_valueU);
         }
         else
         {
-            DPRINT1("unknown attr %S=%S\n", attr_name.ptr, attr_value.ptr);
+            DPRINT1("unknown attr %wZ=%wZ\n", &attr_nameU, &attr_valueU);
         }
     }
 
@@ -1026,13 +1063,15 @@ static BOOL parse_binding_redirect_elem(xmlbuf_t* xmlbuf)
 static BOOL parse_description_elem(xmlbuf_t* xmlbuf)
 {
     xmlstr_t    elem, content;
+    UNICODE_STRING elemU;
     BOOL        end = FALSE, ret = TRUE;
 
     if (!parse_expect_no_attr(xmlbuf, &end) || end ||
         !parse_text_content(xmlbuf, &content))
         return FALSE;
 
-    DPRINT("Got description %S\n", content.ptr);
+    elemU = xmlstr2unicode(&content);
+    DPRINT("Got description %wZ\n", &elemU);
 
     while (ret && (ret = next_xml_elem(xmlbuf, &elem)))
     {
@@ -1043,7 +1082,8 @@ static BOOL parse_description_elem(xmlbuf_t* xmlbuf)
         }
         else
         {
-            DPRINT1("unknown elem %S\n", elem.ptr);
+            elemU = xmlstr2unicode(&elem);
+            DPRINT1("unknown elem %wZ\n", &elemU);
             ret = parse_unknown_elem(xmlbuf, &elem);
         }
     }
@@ -1084,6 +1124,7 @@ static BOOL parse_com_interface_external_proxy_stub_elem(xmlbuf_t* xmlbuf,
 static BOOL parse_clr_class_elem(xmlbuf_t* xmlbuf, struct assembly* assembly)
 {
     xmlstr_t    attr_name, attr_value;
+    UNICODE_STRING attr_nameU, attr_valueU;
     BOOL        end = FALSE, error;
     struct entity*      entity;
 
@@ -1102,7 +1143,9 @@ static BOOL parse_clr_class_elem(xmlbuf_t* xmlbuf, struct assembly* assembly)
         }
         else
         {
-            DPRINT1("unknown attr %S=%S\n", attr_name.ptr, attr_value.ptr);
+            attr_nameU = xmlstr2unicode(&attr_name);
+            attr_valueU = xmlstr2unicode(&attr_value);
+            DPRINT1("unknown attr %wZ=%wZ\n", &attr_nameU, &attr_valueU);
         }
     }
 
@@ -1113,6 +1156,7 @@ static BOOL parse_clr_class_elem(xmlbuf_t* xmlbuf, struct assembly* assembly)
 static BOOL parse_clr_surrogate_elem(xmlbuf_t* xmlbuf, struct assembly* assembly)
 {
     xmlstr_t    attr_name, attr_value;
+    UNICODE_STRING attr_nameU, attr_valueU;
     BOOL        end = FALSE, error;
     struct entity*      entity;
 
@@ -1131,7 +1175,9 @@ static BOOL parse_clr_surrogate_elem(xmlbuf_t* xmlbuf, struct assembly* assembly
         }
         else
         {
-            DPRINT1("unknown attr %S=%S\n", attr_name.ptr, attr_value.ptr);
+            attr_nameU = xmlstr2unicode(&attr_name);
+            attr_valueU = xmlstr2unicode(&attr_value);
+            DPRINT1("unknown attr %wZ=%wZ\n", &attr_nameU, &attr_valueU);
         }
     }
 
@@ -1181,19 +1227,23 @@ static BOOL parse_dependent_assembly_elem(xmlbuf_t* xmlbuf, struct actctx_loader
 static BOOL parse_dependency_elem(xmlbuf_t* xmlbuf, struct actctx_loader* acl)
 {
     xmlstr_t attr_name, attr_value, elem;
+    UNICODE_STRING attr_nameU, attr_valueU;
     BOOL end = FALSE, ret = TRUE, error, optional = FALSE;
 
     while (next_xml_attr(xmlbuf, &attr_name, &attr_value, &error, &end))
     {
+        attr_nameU = xmlstr2unicode(&attr_name);
+        attr_valueU = xmlstr2unicode(&attr_value);
+
         if (xmlstr_cmp(&attr_name, optionalW))
         {
             static const WCHAR yesW[] = {'y','e','s',0};
             optional = xmlstr_cmpi( &attr_value, yesW );
-            DPRINT1("optional=%S\n", attr_value.ptr);
+            DPRINT1("optional=%wZ\n", &attr_valueU);
         }
         else
         {
-            DPRINT1("unknown attr %S=%S\n", attr_name.ptr, attr_value.ptr);
+            DPRINT1("unknown attr %wZ=%wZ\n", &attr_nameU, &attr_valueU);
         }
     }
 
@@ -1210,7 +1260,8 @@ static BOOL parse_dependency_elem(xmlbuf_t* xmlbuf, struct actctx_loader* acl)
         }
         else
         {
-            DPRINT1("unknown element %S\n", elem.ptr);
+            attr_nameU = xmlstr2unicode(&elem);
+            DPRINT1("unknown element %wZ\n", &attr_nameU);
             ret = parse_unknown_elem(xmlbuf, &elem);
         }
     }
@@ -1237,6 +1288,7 @@ static BOOL parse_noinheritable_elem(xmlbuf_t* xmlbuf)
 static BOOL parse_file_elem(xmlbuf_t* xmlbuf, struct assembly* assembly)
 {
     xmlstr_t    attr_name, attr_value, elem;
+    UNICODE_STRING attr_nameU, attr_valueU;
     BOOL        end = FALSE, error, ret = TRUE;
     struct dll_redirect* dll;
 
@@ -1244,10 +1296,13 @@ static BOOL parse_file_elem(xmlbuf_t* xmlbuf, struct assembly* assembly)
 
     while (next_xml_attr(xmlbuf, &attr_name, &attr_value, &error, &end))
     {
+        attr_nameU = xmlstr2unicode(&attr_name);
+        attr_valueU = xmlstr2unicode(&attr_value);
+
         if (xmlstr_cmp(&attr_name, nameW))
         {
             if (!(dll->name = xmlstrdupW(&attr_value))) return FALSE;
-            DPRINT("name=%S\n", attr_value.ptr);
+            DPRINT("name=%wZ\n", &attr_valueU);
         }
         else if (xmlstr_cmp(&attr_name, hashW))
         {
@@ -1257,11 +1312,11 @@ static BOOL parse_file_elem(xmlbuf_t* xmlbuf, struct assembly* assembly)
         {
             static const WCHAR sha1W[] = {'S','H','A','1',0};
             if (!xmlstr_cmpi(&attr_value, sha1W))
-                DPRINT1("hashalg should be SHA1, got %S\n", attr_value.ptr);
+                DPRINT1("hashalg should be SHA1, got %wZ\n", &attr_valueU);
         }
         else
         {
-            DPRINT1("unknown attr %S=%S\n", attr_name.ptr, attr_value.ptr);
+            DPRINT1("unknown attr %wZ=%wZ\n", &attr_nameU, &attr_valueU);
         }
     }
 
@@ -1298,7 +1353,8 @@ static BOOL parse_file_elem(xmlbuf_t* xmlbuf, struct assembly* assembly)
         }
         else
         {
-            DPRINT1("unknown elem %S\n", elem.ptr);
+            attr_nameU = xmlstr2unicode(&elem);
+            DPRINT1("unknown elem %wZ\n", &attr_nameU);
             ret = parse_unknown_elem( xmlbuf, &elem );
         }
     }
@@ -1311,16 +1367,20 @@ static BOOL parse_assembly_elem(xmlbuf_t* xmlbuf, struct actctx_loader* acl,
                                 struct assembly_identity* expected_ai)
 {
     xmlstr_t    attr_name, attr_value, elem;
+    UNICODE_STRING attr_nameU, attr_valueU;
     BOOL        end = FALSE, error, version = FALSE, xmlns = FALSE, ret = TRUE;
 
     while (next_xml_attr(xmlbuf, &attr_name, &attr_value, &error, &end))
     {
+        attr_nameU = xmlstr2unicode(&attr_name);
+        attr_valueU = xmlstr2unicode(&attr_value);
+
         if (xmlstr_cmp(&attr_name, manifestVersionW))
         {
             static const WCHAR v10W[] = {'1','.','0',0};
             if (!xmlstr_cmp(&attr_value, v10W))
             {
-                DPRINT1("wrong version %S\n", attr_value.ptr);
+                DPRINT1("wrong version %wZ\n", &attr_valueU);
                 return FALSE;
             }
             version = TRUE;
@@ -1329,14 +1389,14 @@ static BOOL parse_assembly_elem(xmlbuf_t* xmlbuf, struct actctx_loader* acl,
         {
             if (!xmlstr_cmp(&attr_value, manifestv1W) && !xmlstr_cmp(&attr_value, manifestv3W))
             {
-                DPRINT1("wrong namespace %S\n", attr_value.ptr);
+                DPRINT1("wrong namespace %wZ\n", &attr_valueU);
                 return FALSE;
             }
             xmlns = TRUE;
         }
         else
         {
-            DPRINT1("unknown attr %S=%S\n", attr_name.ptr, attr_value.ptr);
+            DPRINT1("unknown attr %wZ=%wZ\n", &attr_nameU, &attr_valueU);
         }
     }
 
@@ -1421,7 +1481,8 @@ static BOOL parse_assembly_elem(xmlbuf_t* xmlbuf, struct actctx_loader* acl,
         }
         else
         {
-            DPRINT1("unknown element %S\n", elem.ptr);
+            attr_nameU = xmlstr2unicode(&elem);
+            DPRINT1("unknown element %wZ\n", &attr_nameU);
             ret = parse_unknown_elem(xmlbuf, &elem);
         }
         if (ret) ret = next_xml_elem(xmlbuf, &elem);
@@ -1434,6 +1495,7 @@ static NTSTATUS parse_manifest_buffer( struct actctx_loader* acl, struct assembl
                                        struct assembly_identity* ai, xmlbuf_t *xmlbuf )
 {
     xmlstr_t elem;
+    UNICODE_STRING elemU;
 
     if (!next_xml_elem(xmlbuf, &elem)) return STATUS_SXS_CANT_GEN_ACTCTX;
 
@@ -1443,7 +1505,8 @@ static NTSTATUS parse_manifest_buffer( struct actctx_loader* acl, struct assembl
 
     if (!xmlstr_cmp(&elem, assemblyW))
     {
-        DPRINT1("root element is %S, not <assembly>\n", elem.ptr);
+        elemU = xmlstr2unicode(&elem);
+        DPRINT1("root element is %wZ, not <assembly>\n", &elemU);
         return STATUS_SXS_CANT_GEN_ACTCTX;
     }
 
@@ -1455,7 +1518,8 @@ static NTSTATUS parse_manifest_buffer( struct actctx_loader* acl, struct assembl
 
     if (next_xml_elem(xmlbuf, &elem))
     {
-        DPRINT1("unexpected element %S\n", elem.ptr);
+        elemU = xmlstr2unicode(&elem);
+        DPRINT1("unexpected element %wZ\n", &elemU);
         return STATUS_SXS_CANT_GEN_ACTCTX;
     }
 
