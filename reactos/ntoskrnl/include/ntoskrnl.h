@@ -71,6 +71,7 @@
 
 #include <reactos/probe.h>
 #include "internal/probe.h"
+#include "resource.h"
 
 //
 // Define the internal versions of external and public global data

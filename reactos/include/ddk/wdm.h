@@ -2354,6 +2354,11 @@ typedef enum _SUITE_TYPE {
     SingleUserTS,
     Personal,
     Blade,
+    EmbeddedRestricted,
+    SecurityAppliance,
+    StorageServer,
+    ComputeServer,
+    WHServer,
     MaxSuiteType
 } SUITE_TYPE;
 

@@ -23,21 +23,20 @@
 #endif
 #define VER_LANGNEUTRAL
 #include "common.ver"
+#include "resource.h"
 
 //
 // Bug Codes and Bitmaps
 //
 #include "bugcodes.rc"
-1   BITMAP DISCARDABLE "ntoskrnl/inbv/logo/1.bmp"
-2   BITMAP DISCARDABLE "ntoskrnl/inbv/logo/2.bmp"
-3   BITMAP DISCARDABLE "ntoskrnl/inbv/logo/3.bmp"
-4   BITMAP DISCARDABLE "ntoskrnl/inbv/logo/4.bmp"
-5   BITMAP DISCARDABLE "ntoskrnl/inbv/logo/5.bmp"
-6   BITMAP DISCARDABLE "ntoskrnl/inbv/logo/6.bmp"
-7   BITMAP DISCARDABLE "ntoskrnl/inbv/logo/7.bmp"
-8   BITMAP DISCARDABLE "ntoskrnl/inbv/logo/8.bmp"
-13  BITMAP DISCARDABLE "ntoskrnl/inbv/logo/13.bmp"
-14  BITMAP DISCARDABLE "ntoskrnl/inbv/logo/14.bmp"
-15  BITMAP DISCARDABLE "ntoskrnl/inbv/logo/15.bmp"
-16  BITMAP DISCARDABLE "ntoskrnl/inbv/logo/16.bmp"
-17  BITMAP DISCARDABLE "ntoskrnl/inbv/logo/17.bmp"
+IDB_BOOT_LOGO       BITMAP DISCARDABLE "ntoskrnl/inbv/logo/1.bmp"
+IDB_HIBERNATE_LOGO  BITMAP DISCARDABLE "ntoskrnl/inbv/logo/2.bmp"
+IDB_SHUTDOWN_LOGO   BITMAP DISCARDABLE "ntoskrnl/inbv/logo/3.bmp"
+IDB_BAR_SERVER      BITMAP DISCARDABLE "ntoskrnl/inbv/logo/4.bmp"
+IDB_LOGO            BITMAP DISCARDABLE "ntoskrnl/inbv/logo/5.bmp"
+IDB_LOGO_HEADER     BITMAP DISCARDABLE "ntoskrnl/inbv/logo/6.bmp"
+IDB_LOGO_BAND       BITMAP DISCARDABLE "ntoskrnl/inbv/logo/7.bmp"
+IDB_BAR_PRO         BITMAP DISCARDABLE "ntoskrnl/inbv/logo/8.bmp"
+IDB_SERVER_LOGO     BITMAP DISCARDABLE "ntoskrnl/inbv/logo/5.bmp"
+IDB_SERVER_HEADER   BITMAP DISCARDABLE "ntoskrnl/inbv/logo/14.bmp"
+IDB_SERVER_BAND     BITMAP DISCARDABLE "ntoskrnl/inbv/logo/15.bmp"
