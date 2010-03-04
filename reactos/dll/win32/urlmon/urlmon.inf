@@ -43,7 +43,6 @@ HKCR,"PROTOCOLS\Filter\lzdhtml","CLSID",,"%CLSID_DeCompMimeFilter%"
 
 
 [ZoneMap.Reg]
-HKCU,"Software\Microsoft\Windows\CurrentVersion\Internet Settings",,,
 HKCU,"%PATH_ZONEMAP%",,,
 HKLM,"%PATH_ZONEMAP%",,,
 HKCU,"%PATH_ZONEMAP%","ProxyByPass",  0x10001,0x1

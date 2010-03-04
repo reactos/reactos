@@ -15,7 +15,7 @@
 @ stdcall CoInternetCreateSecurityManager(ptr ptr long)
 @ stdcall CoInternetCreateZoneManager(ptr ptr long)
 @ stub CoInternetGetProtocolFlags
-@ stub CoInternetGetSecurityUrl
+@ stdcall CoInternetGetSecurityUrl(ptr ptr long long)
 @ stdcall CoInternetGetSession(long ptr long)
 @ stdcall CoInternetParseUrl(wstr long long wstr long ptr long)
 @ stdcall CoInternetQueryInfo(ptr long long ptr long ptr long)
@@ -26,6 +26,7 @@
 @ stdcall CreateAsyncBindCtx(long ptr ptr ptr)
 @ stdcall CreateAsyncBindCtxEx(ptr long ptr ptr ptr long)
 @ stdcall CreateFormatEnumerator(long ptr ptr)
+@ stdcall CreateUri(wstr long long ptr)
 @ stdcall CreateURLMoniker(ptr wstr ptr)
 @ stdcall CreateURLMonikerEx(ptr wstr ptr long)
 @ stdcall -private DllCanUnloadNow()

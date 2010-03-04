@@ -140,6 +140,7 @@ static HRESULT WINAPI DownloadBSC_OnProgress(IBindStatusCallback *iface, ULONG u
             debugstr_w(szStatusText));
 
     switch(ulStatusCode) {
+    case BINDSTATUS_CONNECTING:
     case BINDSTATUS_BEGINDOWNLOADDATA:
     case BINDSTATUS_DOWNLOADINGDATA:
     case BINDSTATUS_ENDDOWNLOADDATA:
@@ -153,8 +154,7 @@ static HRESULT WINAPI DownloadBSC_OnProgress(IBindStatusCallback *iface, ULONG u
         This->cache_file = heap_strdupW(szStatusText);
         break;
 
-    case BINDSTATUS_FINDINGRESOURCE:
-    case BINDSTATUS_CONNECTING:
+    case BINDSTATUS_FINDINGRESOURCE: /* FIXME */
         break;
 
     default:

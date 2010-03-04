@@ -1646,6 +1646,62 @@ interface IUri : IUnknown
         [out] BOOL *pfEqual);
 }
 
+cpp_quote("HRESULT WINAPI CreateUri(LPCWSTR,DWORD,DWORD_PTR,IUri**);")
+cpp_quote("HRESULT WINAPI CreateUriWithFragment(LPCWSTR,LPCWSTR,DWORD,DWORD_PTR,IUri**);")
+cpp_quote("HRESULT WINAPI CreateUriFromMultiByteString(LPCSTR,DWORD,DWORD,DWORD,DWORD_PTR,IUri**);")
+
+cpp_quote("#define Uri_HAS_ABSOLUTE_URI    (1 << Uri_PROPERTY_ABSOLUTE_URI)")
+cpp_quote("#define Uri_HAS_AUTHORITY       (1 << Uri_PROPERTY_AUTHORITY)")
+cpp_quote("#define Uri_HAS_DISPLAY_URI     (1 << Uri_PROPERTY_DISPLAY_URI)")
+cpp_quote("#define Uri_HAS_DOMAIN          (1 << Uri_PROPERTY_DOMAIN)")
+cpp_quote("#define Uri_HAS_EXTENSION       (1 << Uri_PROPERTY_EXTENSION)")
+cpp_quote("#define Uri_HAS_FRAGMENT        (1 << Uri_PROPERTY_FRAGMENT)")
+cpp_quote("#define Uri_HAS_HOST            (1 << Uri_PROPERTY_HOST)")
+cpp_quote("#define Uri_HAS_PASSWORD        (1 << Uri_PROPERTY_PASSWORD)")
+cpp_quote("#define Uri_HAS_PATH            (1 << Uri_PROPERTY_PATH)")
+cpp_quote("#define Uri_HAS_QUERY           (1 << Uri_PROPERTY_QUERY)")
+cpp_quote("#define Uri_HAS_RAW_URI         (1 << Uri_PROPERTY_RAW_URI)")
+cpp_quote("#define Uri_HAS_SCHEME_NAME     (1 << Uri_PROPERTY_SCHEME_NAME)")
+cpp_quote("#define Uri_HAS_USER_NAME       (1 << Uri_PROPERTY_USER_NAME)")
+cpp_quote("#define Uri_HAS_PATH_AND_QUERY  (1 << Uri_PROPERTY_PATH_AND_QUERY)")
+cpp_quote("#define Uri_HAS_USER_INFO       (1 << Uri_PROPERTY_USER_INFO)")
+cpp_quote("#define Uri_HAS_HOST_TYPE       (1 << Uri_PROPERTY_HOST_TYPE)")
+cpp_quote("#define Uri_HAS_PORT            (1 << Uri_PROPERTY_PORT)")
+cpp_quote("#define Uri_HAS_SCHEME          (1 << Uri_PROPERTY_SCHEME)")
+cpp_quote("#define Uri_HAS_ZONE            (1 << Uri_PROPERTY_ZONE)")
+
+cpp_quote("#define Uri_CREATE_ALLOW_RELATIVE                  0x0001")
+cpp_quote("#define Uri_CREATE_ALLOW_IMPLICIT_WILDCARD_SCHEME  0x0002")
+cpp_quote("#define Uri_CREATE_ALLOW_IMPLICIT_FILE_SCHEME      0x0004")
+cpp_quote("#define Uri_CREATE_NOFRAG                          0x0008")
+cpp_quote("#define Uri_CREATE_NO_CANONICALIZE                 0x0010")
+cpp_quote("#define Uri_CREATE_CANONICALIZE                    0x0100")
+cpp_quote("#define Uri_CREATE_FILE_USE_DOS_PATH               0x0020")
+cpp_quote("#define Uri_CREATE_DECODE_EXTRA_INFO               0x0040")
+cpp_quote("#define Uri_CREATE_NO_DECODE_EXTRA_INFO            0x0080")
+cpp_quote("#define Uri_CREATE_CRACK_UNKNOWN_SCHEMES           0x0200")
+cpp_quote("#define Uri_CREATE_NO_CRACK_UNKNOWN_SCHEMES        0x0400")
+cpp_quote("#define Uri_CREATE_PRE_PROCESS_HTML_URI            0x0800")
+cpp_quote("#define Uri_CREATE_NO_PRE_PROCESS_HTML_URI         0x1000")
+cpp_quote("#define Uri_CREATE_IE_SETTINGS                     0x2000")
+cpp_quote("#define Uri_CREATE_NO_IE_SETTINGS                  0x4000")
+cpp_quote("#define Uri_CREATE_NO_ENCODE_FORBIDDEN_CHARACTERS  0x8000")
+
+cpp_quote("#define Uri_DISPLAY_NO_FRAGMENT  0x00000001")
+cpp_quote("#define Uri_PUNYCODE_IDN_HOST    0x00000002")
+cpp_quote("#define Uri_DISPLAY_IDN_HOST     0x00000004")
+
+cpp_quote("#define Uri_ENCODING_USER_INFO_AND_PATH_IS_PERCENT_ENCODED_UTF8   0x00000001")
+cpp_quote("#define Uri_ENCODING_USER_INFO_AND_PATH_IS_CP                     0x00000002")
+cpp_quote("#define Uri_ENCODING_HOST_IS_IDN                                  0x00000004")
+cpp_quote("#define Uri_ENCODING_HOST_IS_PERCENT_ENCODED_UTF8                 0x00000008")
+cpp_quote("#define Uri_ENCODING_HOST_IS_PERCENT_ENCODED_CP                   0x00000010")
+cpp_quote("#define Uri_ENCODING_QUERY_AND_FRAGMENT_IS_PERCENT_ENCODED_UTF8   0x00000020")
+cpp_quote("#define Uri_ENCODING_QUERY_AND_FRAGMENT_IS_CP                     0x00000040")
+cpp_quote("#define Uri_ENCODING_RFC (Uri_ENCODING_USER_INFO_AND_PATH_IS_PERCENT_ENCODED_UTF8|Uri_ENCODING_HOST_IS_PERCENT_ENCODED_UTF8|Uri_ENCODING_QUERY_AND_FRAGMENT_IS_PERCENT_ENCODED_UTF8)")
+
+cpp_quote("#define UriBuilder_USE_ORIGINAL_FLAGS  0x00000001")
+
 /*****************************************************************************
  * IUriContainer interface
  */
@@ -1740,6 +1796,8 @@ cpp_quote("#define INET_E_DEFAULT_ACTION            INET_E_USE_DEFAULT_PROTOCOLH
 
 cpp_quote("HRESULT WINAPI CoGetClassObjectFromURL(REFCLSID, LPCWSTR, DWORD, DWORD, LPCWSTR, LPBINDCTX, DWORD, LPVOID, REFIID, LPVOID*);")
 cpp_quote("HRESULT WINAPI CreateURLMoniker(IMoniker *pmkContext, LPCWSTR szURL, IMoniker **ppmk);")
+cpp_quote("HRESULT WINAPI CreateURLMonikerEx(IMoniker*,LPCWSTR,IMoniker**,DWORD);")
+cpp_quote("HRESULT WINAPI CreateURLMonikerEx2(IMoniker*,IUri*,IMoniker**,DWORD);")
 cpp_quote("HRESULT WINAPI RegisterBindStatusCallback(IBindCtx *pbc, IBindStatusCallback *pbsc, IBindStatusCallback **ppbsc, DWORD dwReserved);")
 cpp_quote("HRESULT WINAPI CompareSecurityIds(BYTE*,DWORD,BYTE*,DWORD,DWORD);")
 cpp_quote("HRESULT WINAPI URLDownloadToFileA(LPUNKNOWN,LPCSTR,LPCSTR,DWORD,LPBINDSTATUSCALLBACK);")
@@ -1758,6 +1816,7 @@ cpp_quote("HRESULT WINAPI CoInternetCreateZoneManager(IServiceProvider*, IIntern
 cpp_quote("HRESULT WINAPI CoInternetParseUrl(LPCWSTR,PARSEACTION,DWORD,LPWSTR,DWORD,DWORD*,DWORD);")
 cpp_quote("HRESULT WINAPI CoInternetQueryInfo(LPCWSTR,QUERYOPTION,DWORD,LPVOID,DWORD,DWORD*,DWORD);")
 cpp_quote("HRESULT WINAPI CoInternetSetFeatureEnabled(INTERNETFEATURELIST,DWORD,BOOL);")
+cpp_quote("HRESULT WINAPI CoInternetGetSecurityUrl(LPCWSTR,LPWSTR*,PSUACTION,DWORD);")
 cpp_quote("HRESULT WINAPI CreateFormatEnumerator(UINT,FORMATETC*,IEnumFORMATETC**);")
 cpp_quote("HRESULT WINAPI GetSoftwareUpdateInfo( LPCWSTR szDistUnit, LPSOFTDISTINFO psdi);")
 cpp_quote("HRESULT WINAPI FaultInIEFeature(HWND,uCLSSPEC*,QUERYCONTEXT*,DWORD);")

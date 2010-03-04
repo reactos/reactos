@@ -27,18 +27,29 @@
 	<file>session.c</file>
 	<file>umon.c</file>
 	<file>umstream.c</file>
+	<file>uri.c</file>
 	<file>urlmon_main.c</file>
+	<file>usrmarshal.c</file>
 	<file>rsrc.rc</file>
 	<library>wine</library>
 	<library>uuid</library>
+	<library>rpcrt4</library>
 	<library>ole32</library>
 	<library>shlwapi</library>
 	<library>wininet</library>
 	<library>user32</library>
 	<library>advapi32</library>
+	<library>pseh</library>
+	<library>urlmon_proxy</library>
 	<library>ntdll</library>
 </module>
-<module name="urlmon_local_interface" type="idlinterface">
-	<file>urlmon_local.idl</file>
+<module name="urlmon_proxy" type="rpcproxy" allowwarnings="true">
+	<define name="__WINESRC__" />
+	<define name="ENTRY_PREFIX">URLMON_</define>
+	<define name="PROXY_DELEGATION"/>
+	<define name="REGISTER_PROXY_DLL"/>
+	<define name="_URLMON_"/>
+	<define name="PROXY_CLSID_IS">{0x79EAC9F1,0xBAF9,0x11CE,{0x8C,0x82,0x00,0xAA,0x00,0x4B,0xA9,0x0B}}</define>
+	<file>urlmon_urlmon.idl</file>
 </module>
 </group>

@@ -48,6 +48,12 @@ extern HRESULT GopherProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
 extern HRESULT MkProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
 extern HRESULT MimeFilter_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
 
+extern HRESULT WINAPI URLMON_DllGetClassObject(REFCLSID rclsid, REFIID iid,LPVOID *ppv) DECLSPEC_HIDDEN;
+extern HRESULT WINAPI URLMON_DllRegisterServer(void) DECLSPEC_HIDDEN;
+extern HRESULT WINAPI URLMON_DllUnregisterServer(void) DECLSPEC_HIDDEN;
+
+extern GUID const CLSID_PSFactoryBuffer DECLSPEC_HIDDEN;
+
 /**********************************************************************
  * Dll lifetime tracking declaration for urlmon.dll
  */
