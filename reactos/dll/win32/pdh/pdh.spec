@@ -38,10 +38,10 @@
 @ stub PdhEnumObjectsW
 @ stub PdhExpandCounterPathA
 @ stub PdhExpandCounterPathW
-@ stub PdhExpandWildCardPathA
+@ stdcall PdhExpandWildCardPathA(str str ptr ptr long)
 @ stub PdhExpandWildCardPathHA
 @ stub PdhExpandWildCardPathHW
-@ stub PdhExpandWildCardPathW
+@ stdcall PdhExpandWildCardPathW(wstr wstr ptr ptr long)
 @ stub PdhFormatFromRawValue
 @ stdcall PdhGetCounterInfoA(ptr long ptr ptr)
 @ stdcall PdhGetCounterInfoW(ptr long ptr ptr)
@@ -57,7 +57,7 @@
 @ stub PdhGetDefaultPerfObjectHA
 @ stub PdhGetDefaultPerfObjectHW
 @ stub PdhGetDefaultPerfObjectW
-@ stub PdhGetDllVersion
+@ stdcall PdhGetDllVersion(ptr)
 @ stub PdhGetFormattedCounterArrayA
 @ stub PdhGetFormattedCounterArrayW
 @ stdcall PdhGetFormattedCounterValue(ptr long ptr ptr)
@@ -127,7 +127,7 @@
 @ stub PdhSelectDataSourceA
 @ stub PdhSelectDataSourceW
 @ stdcall PdhSetCounterScaleFactor(ptr long)
-@ stub PdhSetDefaultRealTimeDataSource
+@ stdcall PdhSetDefaultRealTimeDataSource(long)
 @ stub PdhSetLogSetRunID
 @ stub PdhSetQueryTimeRange
 @ stub PdhTranslate009CounterA
