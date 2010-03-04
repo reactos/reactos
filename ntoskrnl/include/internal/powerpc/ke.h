@@ -77,6 +77,29 @@ FORCEINLINE struct _KPCR * NTHALAPI KeGetCurrentKPCR(
     return (struct _KPCR *)__readfsdword(0x1c);
 }
 
+FORCEINLINE
+VOID
+KeFlushProcessTb(VOID)
+{
+    /* Flush the TLB */
+    __asm__("sync\n\tisync\n\t");
+}
+
+FORCEINLINE
+PRKTHREAD
+KeGetCurrentThread(VOID)
+{
+    /* Return the current thread */
+    return KeGetCurrentPrcb()->CurrentThread;
+}
+
+FORCEINLINE
+VOID
+KiRundownThread(IN PKTHREAD Thread)
+{
+    /* FIXME */
+}
+
 #ifdef _NTOSKRNL_ /* FIXME: Move flags above to NDK instead of here */
 VOID
 NTAPI

@@ -136,31 +136,11 @@ MmPageOutVirtualMemory(PMMSUPPORT AddressSpace,
       return(STATUS_UNSUCCESSFUL);
    }
 
-   /*
-    * Disable the virtual mapping.
-    */
-   MmDisableVirtualMapping(Process, Address,
-                           &WasDirty, &Page);
+   MmDisableVirtualMapping(Process, Address, &WasDirty, &Page);
 
    if (Page == 0)
    {
       KeBugCheck(MEMORY_MANAGEMENT);
-   }
-
-   /*
-    * Paging out non-dirty data is easy.
-    */
-   if (!WasDirty)
-   {
-      MmDeleteVirtualMapping(Process, Address, FALSE, NULL, NULL);
-      MmDeleteAllRmaps(Page, NULL, NULL);
-      if ((SwapEntry = MmGetSavedSwapEntryPage(Page)) != 0)
-      {
-         MmCreatePageFileMapping(Process, Address, SwapEntry);
-         MmSetSavedSwapEntryPage(Page, 0);
-      }
-      MmReleasePageMemoryConsumer(MC_USER, Page);
-      return(STATUS_SUCCESS);
    }
 
    /*
@@ -186,7 +166,7 @@ MmPageOutVirtualMemory(PMMSUPPORT AddressSpace,
    {
       DPRINT1("MM: Failed to write to swap page (Status was 0x%.8X)\n",
               Status);
-      MmEnableVirtualMapping(Process, Address);
+	  MmEnableVirtualMapping(Process, Address);
       return(STATUS_UNSUCCESSFUL);
    }
 
@@ -194,11 +174,12 @@ MmPageOutVirtualMemory(PMMSUPPORT AddressSpace,
     * Otherwise we have succeeded, free the page
     */
    DPRINT("MM: Swapped out virtual memory page 0x%.8X!\n", Page << PAGE_SHIFT);
+   MmDeleteAllRmaps(Page, NULL, NULL);
    MmDeleteVirtualMapping(Process, Address, FALSE, NULL, NULL);
    MmCreatePageFileMapping(Process, Address, SwapEntry);
-   MmDeleteAllRmaps(Page, NULL, NULL);
    MmSetSavedSwapEntryPage(Page, 0);
-   MmReleasePageMemoryConsumer(MC_USER, Page);
+   DPRINT("Freeing page %x\n", Page);
+   MmDereferencePage(Page);
    return(STATUS_SUCCESS);
 }
 
@@ -223,9 +204,8 @@ MmNotPresentFaultVirtualMemory
    NTSTATUS Status;
    PMM_REGION Region;
    PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
-   KIRQL OldIrql;
 
-   DPRINT("Not Present %x in (%x-%x)\n", Address, MemoryArea->StartingAddress, MemoryArea->EndingAddress);
+   DPRINT("Not Present %x in %x:(%x-%x)\n", Address, Process, MemoryArea->StartingAddress, MemoryArea->EndingAddress);
     
    /*
     * There is a window between taking the page fault and locking the
@@ -234,13 +214,6 @@ MmNotPresentFaultVirtualMemory
     */
    if (MmIsPagePresent(Process, Address))
    {
-      if (Locked)
-      {
-         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-         MmLockPage(MmGetPfnForProcess(Process, Address));
-         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-      }
-	  DPRINT1("Page was present\n");
       return(STATUS_SUCCESS);
    }
 
@@ -275,15 +248,9 @@ MmNotPresentFaultVirtualMemory
 	   return(STATUS_GUARD_PAGE_VIOLATION);
    }
 
-   /*
-    * Handle swapped out pages.
-    */
-   if (MmIsPageSwapEntry(Process, Address) && !Required->Page[0])
+   if (MmIsPagePresent(Process, Address))
    {
-      MmGetPageFileMapping(Process, Address, &Required->SwapEntry);
-	  Required->DoAcquisition = MiSwapInPage;
-	  DPRINT1("Swap in\n");
-	  return STATUS_MORE_PROCESSING_REQUIRED;
+	   return STATUS_SUCCESS;
    }
 
    if (!Required->Page[0])
@@ -323,14 +290,6 @@ MmNotPresentFaultVirtualMemory
    /*
     * Finish the operation
     */
-   if (Locked)
-   {
-      OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-      MmLockPage(Required->Page[0]);
-      KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-   }
-
-   DPRINT("Success!\n");
    return(STATUS_SUCCESS);
 }
 
@@ -386,7 +345,8 @@ MmModifyAttributes(PMMSUPPORT AddressSpace,
                }
                MmDeleteRmap(Page, Process,
                             (char*)BaseAddress + (i * PAGE_SIZE));
-               MmReleasePageMemoryConsumer(MC_USER, Page);
+			   DPRINT("Freeing page %x\n", Page);
+               MmDereferencePage(Page);
             }
          }
       }
@@ -775,7 +735,9 @@ MmFreeVirtualMemoryPage(PVOID Context,
          MmSetSavedSwapEntryPage(Page, 0);
       }
       MmDeleteRmap(Page, Process, Address);
-      MmReleasePageMemoryConsumer(MC_USER, Page);
+	  DPRINT("Freeing page %x\n", Page);
+	  ASSERT(MmGetReferenceCountPage(Page) == 1);
+      MmDereferencePage(Page);
    }
    else if (SwapEntry != 0)
    {
@@ -791,8 +753,8 @@ MmFreeVirtualMemory(PEPROCESS Process,
    PLIST_ENTRY current_entry;
    PMM_REGION current;
 
-   DPRINT("MmFreeVirtualMemory(Process %p  MemoryArea %p)\n", Process,
-          MemoryArea);
+   DPRINT("MmFreeVirtualMemory(Process %p Address %x-%x MemoryArea %p)\n", Process,
+		  MemoryArea->StartingAddress, MemoryArea->EndingAddress, MemoryArea);
 
    /* Mark this memory area as about to be deleted. */
    MemoryArea->DeleteInProgress = TRUE;

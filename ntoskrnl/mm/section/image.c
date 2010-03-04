@@ -819,6 +819,10 @@ MmCreateImageSection
          for (i = 0; i < ImageSectionObject->NrSegments; i++)
          {
 			 ImageSectionObject->Segments[i].FileObject = FileObject;
+			 DPRINT1
+				 ("Segment %x created (%x)\n", 
+				  &ImageSectionObject->Segments[i], 
+				  &ImageSectionObject->Segments[i].Flags);
          }
 	  }
 
@@ -883,6 +887,7 @@ MiDeleteImageSection(PROS_SECTION_OBJECT Section)
 		for (i = 0; i < NrSegments; i++)
 		{
 			MiFreePageTablesSectionSegment(&SectionSegments[i], MiFreeSegmentPage);
+			DPRINT1("Free Segment %x\n", &SectionSegments[i]);
 		}
 
 		Section->FileObject->SectionObjectPointer->ImageSectionObject = NULL;

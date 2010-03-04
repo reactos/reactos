@@ -2447,7 +2447,7 @@ NtSetInformationFile(IN HANDLE FileHandle,
                     /* Set the Data */
                     Context->Key = CompletionInfo->Key;
                     Context->Port = Queue;
-                    if (InterlockedCompareExchangePointer(&FileObject->
+                    if (InterlockedCompareExchangePointer((PVOID*)&FileObject->
                                                           CompletionContext,
                                                           Context,
                                                           NULL))

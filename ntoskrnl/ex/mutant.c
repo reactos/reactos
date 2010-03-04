@@ -242,6 +242,7 @@ NtQueryMutant(IN HANDLE MutantHandle,
                                          MutantInformation,
                                          MutantInformationLength,
                                          ResultLength,
+                                         NULL,
                                          PreviousMode);
     if(!NT_SUCCESS(Status))
     {

@@ -167,7 +167,7 @@ MiZeroFillSection
 			MmInsertRmap(Page, NULL, Address);
 		}
 		else
-			MmReleasePageMemoryConsumer(MC_CACHE, Page);
+			MmDereferencePage(Page);
 
 		MmUnlockSectionSegment(Segment);
 		MmUnlockAddressSpace(AddressSpace);
@@ -229,10 +229,10 @@ MiFlushMappedSection
 			(MemoryArea->Data.SectionData.Segment, 
 			 &FileOffset);
 		Page = PFN_FROM_SSE(Entry);
-		if (Entry != 0 && !IS_SWAP_FROM_SSE(Entry) && MmIsDirtyPageRmap(Page) &&
+		if (Entry != 0 && !IS_SWAP_FROM_SSE(Entry) && 
+			(MmIsDirtyPageRmap(Page) || IS_DIRTY_SSE(Entry)) &&
 			FileOffset.QuadPart < FileSize->QuadPart)
 		{
-			MmLockPage(Page);
 			Pages[(PageAddress - BeginningAddress) >> PAGE_SHIFT] = Page;
 		}
 		else
@@ -254,7 +254,6 @@ MiFlushMappedSection
 			Status = MiWriteBackPage(Segment->FileObject, &FileOffset, PAGE_SIZE, Page);
 
 			MmLockAddressSpace(AddressSpace);
-			MmUnlockPage(Page);
 			MmSetCleanAllRmaps(Page);
 			MmUnlockAddressSpace(AddressSpace);
 
@@ -318,27 +317,19 @@ MmAlterViewAttributes(PMMSUPPORT AddressSpace,
 
 		 Present = MmIsPagePresent(Process, Address);
          if (DoCOW && Present)
-         {
-            LARGE_INTEGER Offset;
-            ULONG Entry;
-            PFN_TYPE Page;
-
-            Offset.QuadPart = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress
-                     + MemoryArea->Data.SectionData.ViewOffset.QuadPart;
-            Entry = MiGetPageEntrySectionSegment(Segment, &Offset);
-            Page = MmGetPfnForProcess(Process, Address);
-
-            Protect = PAGE_READONLY;
-            if (IS_SWAP_FROM_SSE(Entry) || PFN_FROM_SSE(Entry) != Page)
-            {
-               Protect = NewProtect;
-            }
-         }
-
-         if (Present)
-         {
-            MmSetPageProtect(Process, Address, Protect);
-         }
+		 {
+			 LARGE_INTEGER Offset;
+			 ULONG Entry;
+			 PFN_TYPE Page;
+			 
+			 Offset.QuadPart = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress
+				 + MemoryArea->Data.SectionData.ViewOffset.QuadPart;
+			 Entry = MiGetPageEntrySectionSegment(Segment, &Offset);
+			 Page = MmGetPfnForProcess(Process, Address);
+			 
+			 Protect = (IS_SWAP_FROM_SSE(Entry) || PFN_FROM_SSE(Entry) != Page) ? NewProtect : PAGE_READONLY;
+			 MmSetPageProtect(Process, Address, Protect);
+		 }
       }
    }
 }
@@ -420,6 +411,24 @@ MmQuerySectionView(PMEMORY_AREA MemoryArea,
    return(STATUS_SUCCESS);
 }
 
+VOID
+NTAPI
+MmFinalizeSegment(PMM_SECTION_SEGMENT Segment)
+{
+	MmLockSectionSegment(Segment);
+	if (Segment->Flags & MM_DATAFILE_SEGMENT)
+	{
+		Segment->FileObject->SectionObjectPointer->DataSectionObject = NULL;
+	}
+	MmUnlockSectionSegment(Segment);
+	MiFreePageTablesSectionSegment(Segment, MiFreeSegmentPage);
+	if (Segment->Flags & MM_DATAFILE_SEGMENT)
+	{
+		ObDereferenceObject(Segment->FileObject);
+	}	  
+	ExFreePool(Segment);
+}
+
 VOID NTAPI
 MmpDeleteSection(PVOID ObjectBody)
 {
@@ -441,19 +450,8 @@ MmpDeleteSection(PVOID ObjectBody)
 		  (RefCount = InterlockedDecrementUL(&Segment->ReferenceCount)) == 0)
 	  {
 		  DPRINT("Freeing section segment\n");
-		  MmLockSectionSegment(Segment);
-		  if (Segment->Flags & MM_DATAFILE_SEGMENT)
-		  {
-			  Segment->FileObject->SectionObjectPointer->DataSectionObject = NULL;
-		  }
 		  Section->Segment = NULL;
-		  MmUnlockSectionSegment(Segment);
-		  MiFreePageTablesSectionSegment(Segment, MiFreeSegmentPage);
-		  if (Segment->Flags & MM_DATAFILE_SEGMENT)
-		  {
-			  ObDereferenceObject(Segment->FileObject);
-		  }	  
-		  ExFreePool(Segment);
+		  MmFinalizeSegment(Segment);
 	  }
 	  else
 	  {
@@ -678,6 +676,7 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
    else
    {
       KeReleaseSpinLock(&FileObject->IrpListLock, OldIrql);
+	  DPRINT1("Free Segment %x\n", Segment);
       ExFreePool(Segment);
 
       DPRINT("Filling out Segment info (previous data section)\n");
@@ -723,6 +722,7 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
 	   }
    }
 
+   DPRINT1("Segment %x created (%x)\n", Segment, Segment->Flags);
    //KeSetEvent((PVOID)&FileObject->Lock, IO_NO_INCREMENT, FALSE);
 
    *SectionObject = Section;
@@ -899,6 +899,7 @@ MiMapViewOfSegment(PMMSUPPORT AddressSpace,
       return(Status);
    }
 
+   DPRINT1("MiMapViewOfSegment %x %x %x\n", MmGetAddressSpaceOwner(AddressSpace), *BaseAddress, Segment);
    ObReferenceObject((PVOID)Section);
 
    MArea->Data.SectionData.Segment = Segment;
@@ -929,6 +930,10 @@ MiMapViewOfSegment(PMMSUPPORT AddressSpace,
 	   MArea->AccessFault = MiCowSectionPage;
 	   MArea->PageOut = MmPageOutPageFileView;
    }
+
+   DPRINT1
+	   ("MiMapViewOfSegment(P %x, A %x, T %x)\n",
+		MmGetAddressSpaceOwner(AddressSpace), *BaseAddress, MArea->Type);
 
    return(STATUS_SUCCESS);
 }
@@ -1176,7 +1181,6 @@ MiFreeSegmentPage
 		}
 		MmDeleteSectionAssociation(OldPage);
 		MmDereferencePage(OldPage);
-		DPRINT("Done\n");
 	}
 	else if (IS_SWAP_FROM_SSE(Entry))
 	{
@@ -1276,6 +1280,8 @@ MmUnmapViewOfSegment(PMMSUPPORT AddressSpace,
    }
    MmUnlockSectionSegment(Segment);
    ObDereferenceObject(Section);
+
+   DPRINT1("MiUnmapViewOfSegment %x %x %x\n", MmGetAddressSpaceOwner(AddressSpace), BaseAddress, Segment);
 
    return(STATUS_SUCCESS);
 }
@@ -1429,6 +1435,7 @@ NtQuerySection(IN HANDLE SectionHandle,
                                         SectionInformation,
                                         SectionInformationLength,
                                         ResultLength,
+										NULL,
                                         PreviousMode);
 
    if(!NT_SUCCESS(Status))

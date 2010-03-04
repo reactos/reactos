@@ -45,8 +45,29 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
+
+VOID
+NTAPI
+MiChecksumPage(PFN_TYPE Page, const char *file, int line)
+{
+	KIRQL oldIrql = KeGetCurrentIrql();
+	PULONG Buffer;
+	ULONG Csum = 0, i;
+	KfRaiseIrql(DISPATCH_LEVEL);
+	Buffer = MmCreateHyperspaceMapping(Page);
+	if (Buffer)
+	{
+		for (i = 0; i < 1024; i++)
+		{
+			Csum += Buffer[i];
+		}
+		DbgPrint("(%s:%d) Csum: %x\n", file, line, Csum);
+	}
+	MmDeleteHyperspaceMapping(Buffer);
+	KfLowerIrql(oldIrql);
+}
 
 NTSTATUS
 NTAPI
@@ -65,7 +86,7 @@ MiGetOnePage
 		{
 			while (i > 0)
 			{
-				MmReleasePageMemoryConsumer(Required->Consumer, Required->Page[i-1]);
+				MmDereferencePage(Required->Page[i-1]);
 				i--;
 			}
 			return Status;
@@ -95,8 +116,9 @@ MiReadFilePage
 	BoundaryAddressMultiple.QuadPart = 0;
 
 	DPRINT
-		("Pulling page %08x%08x from disk\n", 
-		 FileOffset->u.HighPart, FileOffset->u.LowPart);
+		("Pulling page %08x%08x from %wZ\n", 
+		 FileOffset->u.HighPart, FileOffset->u.LowPart,
+		 &FileObject->FileName);
 
 	Status = MmRequestPageMemoryConsumer(RequiredResources->Consumer, TRUE, Page);
 	if (!NT_SUCCESS(Status))
@@ -161,6 +183,8 @@ MiReadFilePage
 		return Status;
 	}
 
+	MiChecksumPage(*Page, __FILE__, __LINE__);
+
 	return STATUS_SUCCESS;
 }
 
@@ -188,17 +212,10 @@ MiSwapInPage
 	}
 
 	MmSetSavedSwapEntryPage(Resources->Page[Resources->Offset], Resources->SwapEntry);
-	return Status;
-}
 
-NTSTATUS
-NTAPI
-MiWriteSwapPage
-(PMMSUPPORT AddressSpace,
- PMEMORY_AREA MemoryArea,
- PMM_REQUIRED_RESOURCES Resources)
-{
-	return MmWriteToSwapPage(Resources->SwapEntry, Resources->Page[Resources->Offset]);
+	MiChecksumPage(Resources->Page[Resources->Offset], __FILE__, __LINE__);
+
+	return Status;
 }
 
 NTSTATUS
@@ -208,6 +225,8 @@ MiWriteFilePage
  PMEMORY_AREA MemoryArea, 
  PMM_REQUIRED_RESOURCES Required)
 {
+	MiChecksumPage(Required->Page[Required->Offset], __FILE__, __LINE__);
+
 	return MiWriteBackPage
 		(Required->Context, 
 		 &Required->FileOffset, 

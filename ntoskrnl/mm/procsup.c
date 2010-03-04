@@ -150,6 +150,8 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     PROS_SECTION_OBJECT SectionObject = Section;
     BoundaryAddressMultiple.QuadPart = 0;
 
+	DPRINT1("MmInitializeProcessAddressSpace(%x,%x)\n", Process, ProcessAddressSpace);
+
     /* Initialize the Addresss Space lock */
     KeInitializeGuardedMutex(&Process->AddressCreationLock);
     Process->Vm.WorkingSetExpansionLinks.Flink = NULL;
@@ -316,7 +318,7 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
    PVOID Address;
    PMEMORY_AREA MemoryArea;
 
-   DPRINT1("MmDeleteProcessAddressSpace(Process %x (%s))\n", Process,
+   DPRINT1("MmDeleteProcessAddressSpace(Process %x %x (%s))\n", Process, &Process->Vm,
           Process->ImageFileName);
 
    MmLockAddressSpace(&Process->Vm);

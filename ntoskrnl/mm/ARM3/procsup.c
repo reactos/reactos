@@ -59,7 +59,7 @@ MmDeleteKernelStack(IN PVOID StackBase,
             //
             // Nuke it
             //
-            MmReleasePageMemoryConsumer(MC_NPPOOL, PFN_FROM_PTE(PointerPte));
+            MmDereferencePage(PFN_FROM_PTE(PointerPte));
         }
         
         //
@@ -134,7 +134,7 @@ MmCreateKernelStack(IN BOOLEAN GuiStack,
     //
     // Setup the template stack PTE
     //
-    TempPte = HyperTemplatePte;
+    TempPte = ValidKernelPte;
     MI_MAKE_LOCAL_PAGE(&TempPte);
     MI_MAKE_DIRTY_PAGE(&TempPte);
     TempPte.u.Hard.PageFrameNumber = 0;
@@ -166,7 +166,10 @@ MmCreateKernelStack(IN BOOLEAN GuiStack,
         //
         *PointerPte = TempPte;
     }
-    
+
+    // Bug #4835
+    (VOID)InterlockedExchangeAddUL(&MiMemoryConsumers[MC_NPPOOL].PagesUsed, StackPages);
+
     //
     // Release the PFN lock
     //
@@ -231,7 +234,7 @@ MmGrowKernelStackEx(IN PVOID StackPointer,
     //
     // Setup the template stack PTE
     //
-    TempPte = HyperTemplatePte;
+    TempPte = ValidKernelPte;
     MI_MAKE_LOCAL_PAGE(&TempPte);
     MI_MAKE_DIRTY_PAGE(&TempPte);
     TempPte.u.Hard.PageFrameNumber = 0;

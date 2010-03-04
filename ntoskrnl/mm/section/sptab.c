@@ -160,9 +160,9 @@ MiSetPageEntrySectionSegment
     PageTable->PageEntries[PageIndex] = Entry;
 	if (Entry && !IS_SWAP_FROM_SSE(Entry))
 		MmSetSectionAssociation(PFN_FROM_SSE(Entry), Segment, Offset);
-    DPRINT
+    DPRINT1
         ("MiSetPageEntrySectionSegment(%p,%08x%08x,%x)\n",
-         &Segment->PageTable, Offset->u.HighPart, Offset->u.LowPart, Entry);
+         &Segment, Offset->u.HighPart, Offset->u.LowPart, Entry);
     return STATUS_SUCCESS;
 }
 
@@ -183,7 +183,7 @@ MiGetPageEntrySectionSegment
     PageIndex = 
         (Offset->QuadPart - PageTable->FileOffset.QuadPart) / PAGE_SIZE;
     Result = PageTable->PageEntries[PageIndex];
-    DPRINT
+    DPRINT1
         ("MiGetPageEntrySectionSegment(%p,%08x%08x) => %x\n",
          &Segment->PageTable, 
          FileOffset.u.HighPart, 
@@ -212,11 +212,13 @@ MiFreePageTablesSectionSegment
 			int i;
 			for (i = 0; i < ENTRIES_PER_ELEMENT; i++)
 			{
+				ULONG Entry;
 				LARGE_INTEGER Offset;
 				Offset.QuadPart = Element->FileOffset.QuadPart + i * PAGE_SIZE;
-				if (Element->PageEntries[i])
+				Entry = Element->PageEntries[i];
+				if (Entry && !IS_SWAP_FROM_SSE(Entry))
 				{
-					DPRINT("Freeing page %x @ %x\n", Element->PageEntries[i], Offset.LowPart);
+					DPRINT1("Freeing page %x:%x @ %x\n", Segment, Entry, Offset.LowPart);
 					FreePage(Segment, &Offset);
 				}
 			}
@@ -269,10 +271,15 @@ MmSetSectionAssociation(PFN_TYPE Page, PMM_SECTION_SEGMENT Segment, PLARGE_INTEG
     USHORT SmallSize;
     PSECTION_PAGE_TABLE PageTable;
 
-	DPRINT("MmSetSectionAssociation %x %x %x\n", Page, Segment, Offset->LowPart);
+	DPRINT1("MmSetSectionAssociation %x %x %x\n", Page, Segment, Offset->LowPart);
     oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
     Pfn = MiGetPfnEntry(Page);
 	DPRINT("Pfn %x\n", Pfn);
+	if (!Pfn)
+	{
+		DPRINT1("Page %x fake for %x:%x\n", Page, Segment, Offset->LowPart);
+		ASSERT(FALSE);
+	}
     PageTable = 
         MiSectionPageTableGetOrAllocate(&Segment->PageTable, Offset);
     if (!PageTable) return STATUS_NO_MEMORY;
@@ -298,6 +305,7 @@ MmDeleteSectionAssociation(PFN_TYPE Page)
 {
     PMMPFN Pfn;
     KIRQL oldIrql;
+	DPRINT1("MmDeleteSectionAssociation(%x)\n", Page);
     oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
     Pfn = MiGetPfnEntry(Page);
 	Pfn->u2.SegmentPart = NULL;

@@ -259,20 +259,20 @@ Mmi386ReleaseMmInfo(PEPROCESS Process)
 		     }
 		  }
 		  MmDeleteHyperspaceMapping(Pde);
-	    	  MmReleasePageMemoryConsumer(MC_NPPOOL, PAE_PTE_TO_PFN(PageDir[j]));
+		  MmDereferencePage(PAE_PTE_TO_PFN(PageDir[j]));
 	       }
 	    }
 	 }
 	 if (i == PAE_ADDR_TO_PDTE_OFFSET(HYPERSPACE))
 	 {
-	    MmReleasePageMemoryConsumer(MC_NPPOOL, PAE_PTE_TO_PFN(PageDir[PAE_ADDR_TO_PDE_PAGE_OFFSET(HYPERSPACE)]));
-	    MmReleasePageMemoryConsumer(MC_NPPOOL, PAE_PTE_TO_PFN(PageDir[PAE_ADDR_TO_PDE_PAGE_OFFSET(HYPERSPACE)+1]));
+		 MmDereferencePage(PAE_PTE_TO_PFN(PageDir[PAE_ADDR_TO_PDE_PAGE_OFFSET(HYPERSPACE)]));
+		 MmDereferencePage(PAE_PTE_TO_PFN(PageDir[PAE_ADDR_TO_PDE_PAGE_OFFSET(HYPERSPACE)+1]));
 	 }
 	 MmDeleteHyperspaceMapping(PageDir);
-         MmReleasePageMemoryConsumer(MC_NPPOOL, PAE_PTE_TO_PFN(PageDirTable[i]));
+	 MmDereferencePage(PAE_PTE_TO_PFN(PageDirTable[i]));
       }
       MmDeleteHyperspaceMapping((PVOID)PageDirTable);
-      MmReleasePageMemoryConsumer(MC_NPPOOL, PAE_PTE_TO_PFN(Process->Pcb.DirectoryTableBase.QuadPart));
+      MmDereferencePage(PAE_PTE_TO_PFN(Process->Pcb.DirectoryTableBase.QuadPart));
    }
    else
    {
@@ -304,12 +304,12 @@ Mmi386ReleaseMmInfo(PEPROCESS Process)
 	       }
 	    }
 	    MmDeleteHyperspaceMapping(Pde);
-	    MmReleasePageMemoryConsumer(MC_NPPOOL, PTE_TO_PFN(PageDir[i]));
+	    MmDereferencePage(PTE_TO_PFN(PageDir[i]));
 	 }
       }
-      MmReleasePageMemoryConsumer(MC_NPPOOL, PTE_TO_PFN(PageDir[ADDR_TO_PDE_OFFSET(HYPERSPACE)]));
+      MmDereferencePage(PTE_TO_PFN(PageDir[ADDR_TO_PDE_OFFSET(HYPERSPACE)]));
       MmDeleteHyperspaceMapping(PageDir);
-      MmReleasePageMemoryConsumer(MC_NPPOOL, PTE_TO_PFN(Process->Pcb.DirectoryTableBase.u.LowPart));
+      MmDereferencePage(PTE_TO_PFN(Process->Pcb.DirectoryTableBase.u.LowPart));
    }
 
 #if defined(__GNUC__)
@@ -362,7 +362,7 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
       {
           for (j = 0; j < i; j++)
           {
-              MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn[j]);
+              MmDereferencePage(Pfn[j]);
           }
           
           return FALSE;
@@ -509,7 +509,7 @@ MmFreePageTable(PEPROCESS Process, PVOID Address)
    }
    else
    {
-      MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
+	   MmDereferencePage(Pfn);
    }
    if (Process != NULL && Process != CurrentProcess)
    {
@@ -565,7 +565,7 @@ MmGetPageTableForProcessForPAE(PEPROCESS Process, PVOID Address, BOOLEAN Create)
 	 Entry = ExfInterlockedCompareExchange64UL(PageDir, &Entry, &ZeroEntry);
 	 if (Entry != 0LL)
 	 {
-	    MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
+		 MmDereferencePage(Pfn);
 	    Pfn = PAE_PTE_TO_PFN(Entry);
 	 }
       }
@@ -604,7 +604,7 @@ MmGetPageTableForProcessForPAE(PEPROCESS Process, PVOID Address, BOOLEAN Create)
 	    }
 	    if (0LL != ExfInterlockedCompareExchange64UL(&MmGlobalKernelPageDirectoryForPAE[PAE_ADDR_TO_PDE_OFFSET(Address)], &Entry, &ZeroEntry))
 	    {
-	       MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
+			MmDereferencePage(Pfn);
 	    }
 	 }
 	 (void)ExfInterlockedCompareExchange64UL(PageDir, &MmGlobalKernelPageDirectoryForPAE[PAE_ADDR_TO_PDE_OFFSET(Address)], &ZeroEntry);
@@ -624,7 +624,7 @@ MmGetPageTableForProcessForPAE(PEPROCESS Process, PVOID Address, BOOLEAN Create)
          Entry = ExfInterlockedCompareExchange64UL(PageDir, &Entry, &ZeroEntry);
 	 if (Entry != 0LL)
 	 {
-	    MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
+		 MmDereferencePage(Pfn);
 	 }
       }
    }
@@ -662,7 +662,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
          Entry = InterlockedCompareExchangeUL(&PageDir[PdeOffset], PFN_TO_PTE(Pfn) | PA_PRESENT | PA_READWRITE | PA_USER, 0);
 	 if (Entry != 0)
 	 {
-	    MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
+		 MmDereferencePage(Pfn);
 	    Pfn = PTE_TO_PFN(Entry);
 	 }
       }
@@ -701,7 +701,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
 	    }
 	    if(0 != InterlockedCompareExchangeUL(&MmGlobalKernelPageDirectory[PdeOffset], Entry, 0))
 	    {
-	       MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
+			MmDereferencePage(Pfn);
 	    }
 	 }
          (void)InterlockedExchangeUL(PageDir, MmGlobalKernelPageDirectory[PdeOffset]);
@@ -720,7 +720,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
          Entry = InterlockedCompareExchangeUL(PageDir, PFN_TO_PTE(Pfn) | PA_PRESENT | PA_READWRITE | PA_USER, 0);
 	 if (Entry != 0)
 	 {
-	    MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
+		 MmDereferencePage(Pfn);
 	 }
       }
    }
@@ -981,7 +981,7 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
 
       if (FreePage && WasValid)
       {
-         MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
+		  MmDereferencePage(Pfn);
       }
 
       /*
@@ -1036,7 +1036,7 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
 
       if (FreePage && WasValid)
       {
-         MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
+		  MmDereferencePage(Pfn);
       }
 
       /*

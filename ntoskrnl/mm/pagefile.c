@@ -28,7 +28,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 #if defined (ALLOC_PRAGMA)
@@ -225,7 +225,8 @@ MmWriteToSwapPage(SWAPENTRY SwapEntry, PFN_TYPE Page)
    UCHAR MdlBase[sizeof(MDL) + sizeof(ULONG)];
    PMDL Mdl = (PMDL)MdlBase;
 
-   DPRINT("MmWriteToSwapPage\n");
+   DPRINT("MmWriteToSwapPage(%x,%x)\n", SwapEntry, Page);
+   MiChecksumPage(Page,__FILE__,__LINE__);
 
    if (SwapEntry == 0)
    {
@@ -410,6 +411,7 @@ MiAllocPageFromPagingFile(PPAGINGFILE PagingFile)
    }
 
    KeReleaseSpinLock(&PagingFile->AllocMapLock, oldIrql);
+   DPRINT1("No bits unset in page files\n");
    return(0xFFFFFFFF);
 }
 
@@ -470,6 +472,7 @@ MmAllocSwapPage(VOID)
    if (MiFreeSwapPages == 0)
    {
       KeReleaseSpinLock(&PagingFileListLock, oldIrql);
+	  DPRINT1("No free swap pages\n");
       return(0);
    }
 
@@ -483,6 +486,7 @@ MmAllocSwapPage(VOID)
          {
             KeBugCheck(MEMORY_MANAGEMENT);
             KeReleaseSpinLock(&PagingFileListLock, oldIrql);
+			DPRINT1("No next page available\n");
             return(STATUS_UNSUCCESSFUL);
          }
          MiUsedSwapPages++;

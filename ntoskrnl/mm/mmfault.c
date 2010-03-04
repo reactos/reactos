@@ -161,7 +161,7 @@ MmpAccessFaultInner
 	  if (Status == STATUS_SUCCESS + 1)
 	  {
 		  // Wait page ...
-		  DPRINT("Waiting for %x\n", Address);
+		  DPRINT1("Waiting for %x\n", Address);
 		  if (!NT_SUCCESS
 			  (KeWaitForSingleObject
 			   (&MmWaitPageEvent,
@@ -191,7 +191,7 @@ MmpAccessFaultInner
 			  ExInitializeWorkItem(&Context.WorkItem, (PWORKER_THREAD_ROUTINE)MmpFaultWorker, &Context);
 			  DPRINT("Queue work item\n");
 			  ExQueueWorkItem(&Context.WorkItem, DelayedWorkQueue);
-			  DPRINT("Wait\n");
+			  DPRINT1("Wait\n");
 			  KeWaitForSingleObject(&Context.Wait, 0, KernelMode, FALSE, NULL);
 			  Status = Context.Status;
 			  DPRINT("Status %x\n", Status);
@@ -281,16 +281,6 @@ MmpAccessFault
 
 NTSTATUS
 NTAPI
-MmFaultAcquirePage(PMM_REQUIRED_RESOURCES Resources)
-{
-	return MmRequestPageMemoryConsumer
-		(Resources->Consumer,
-		 TRUE,
-		 &Resources->Page[Resources->Offset]);
-}
-
-NTSTATUS
-NTAPI
 MmNotPresentFaultInner
 (KPROCESSOR_MODE Mode,
  PMMSUPPORT AddressSpace,
@@ -317,7 +307,15 @@ MmNotPresentFaultInner
 		if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
 		{
 			Status = STATUS_ACCESS_VIOLATION;
-			DPRINT("Address %x\n", Address);
+			if (MemoryArea)
+			{
+				DPRINT1("Type %x DIP %x\n", MemoryArea->Type, MemoryArea->DeleteInProgress);
+			}
+			else
+			{
+				DPRINT1("No memory area\n");
+			}
+			DPRINT("Process %x, Address %x\n", MmGetAddressSpaceOwner(AddressSpace), Address);
 			break;
 		}
 		
@@ -348,7 +346,7 @@ MmNotPresentFaultInner
 		if (Status == STATUS_SUCCESS + 1)
 		{
 			// Wait page ...
-			DPRINT("Waiting for %x\n", Address);
+			DPRINT1("Waiting for %x\n", Address);
 			if (!NT_SUCCESS
 				(KeWaitForSingleObject
 				 (&MmWaitPageEvent,
@@ -378,7 +376,7 @@ MmNotPresentFaultInner
 				ExInitializeWorkItem(&Context.WorkItem, (PWORKER_THREAD_ROUTINE)MmpFaultWorker, &Context);
 				DPRINT("Queue work item\n");
 				ExQueueWorkItem(&Context.WorkItem, DelayedWorkQueue);
-				DPRINT("Wait\n");
+				DPRINT1("Wait\n");
 				KeWaitForSingleObject(&Context.Wait, 0, KernelMode, FALSE, NULL);
 				Status = Context.Status;
 				DPRINT("Status %x\n", Status);
@@ -523,7 +521,6 @@ MmCommitPagedPoolAddress
  PMM_REQUIRED_RESOURCES Required)
 {
    NTSTATUS Status;
-   KIRQL OldIrql;
 
    if (MmIsPagePresent(NULL, Address))
 	   return STATUS_SUCCESS;
@@ -542,11 +539,5 @@ MmCommitPagedPoolAddress
                              PAGE_READWRITE,
                              &Required->Page[0],
                              1);
-   if (Locked)
-   {
-      OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-      MmLockPage(Required->Page[0]);
-      KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-   }
    return(Status);
 }

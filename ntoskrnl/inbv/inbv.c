@@ -111,7 +111,6 @@ InbvDriverInitialize(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     PCHAR CommandLine;
     BOOLEAN CustomLogo = FALSE;
     ULONG i;
-    extern BOOLEAN ExpInTextModeSetup;
 
     /* Quit if we're already installed */
     if (InbvBootDriverInstalled) return TRUE;
@@ -125,13 +124,13 @@ InbvDriverInitialize(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         CustomLogo = strstr(CommandLine, "BOOTLOGO") ? TRUE: FALSE;
     }
 
-    /* For SetupLDR, don't reset the BIOS Display -- FIXME! */
-    if (ExpInTextModeSetup) CustomLogo = TRUE;
-
     /* Initialize the video */
-    InbvBootDriverInstalled = VidInitialize(!CustomLogo);
+    InbvBootDriverInstalled = VidInitialize(FALSE);
     if (InbvBootDriverInstalled)
     {
+        /* Now reset the display, but only if there's a custom boot logo */
+        VidResetDisplay(CustomLogo);
+        
         /* Find bitmap resources in the kernel */
         ResourceCount = Count;
         for (i = 0; i < Count; i++)
@@ -408,38 +407,28 @@ VOID
 NTAPI
 InbvUpdateProgressBar(IN ULONG Progress)
 {
-    ULONG FillCount, Left = 0;
+    ULONG FillCount;
 
     /* Make sure the progress bar is enabled, that we own and are installed */
     if ((ShowProgressBar) &&
         (InbvBootDriverInstalled) &&
         (InbvDisplayState == INBV_DISPLAY_STATE_OWNED))
     {
-        /* Calculate the fill count */
-        FillCount = InbvProgressState.Bias * Progress + InbvProgressState.Floor;
-        FillCount *= 18;
-        FillCount /= 10000;
+        FillCount = InbvProgressState.Bias * Progress * 121 + InbvProgressState.Floor;
+        FillCount /= 1000000;
 
-        /* Start fill loop */
-        while (FillCount)
-        {
-            /* Acquire the lock */
-            InbvAcquireLock();
+        /* Acquire the lock */
+        InbvAcquireLock();
 
-            /* Fill the progress bar */
-            VidSolidColorFill(Left + ProgressBarLeft,
-                              ProgressBarTop,
-                              Left + ProgressBarLeft + 7,
-                              ProgressBarTop + 7,
-                              11);
+        /* Fill the progress bar */
+        VidSolidColorFill(ProgressBarLeft,
+                          ProgressBarTop,
+                          ProgressBarLeft + FillCount,
+                          ProgressBarTop + 12,
+                          11);
 
-            /* Release the lock */
-            InbvReleaseLock();
-
-            /* Update the X position */
-            Left += 9;
-            FillCount--;
-        }
+        /* Release the lock */
+        InbvReleaseLock();
     }
 }
 
@@ -614,7 +603,7 @@ DisplayBootBitmap(IN BOOLEAN SosMode)
         /* Is the boot driver installed? */
         if (!InbvBootDriverInstalled) return;
 
-        /* FIXME: TODO, display full-screen bitmap */
+        /* Display full-screen bitmap */
         Bitmap = InbvGetResourceAddress(5);
         if (Bitmap)
         {
@@ -627,6 +616,9 @@ DisplayBootBitmap(IN BOOLEAN SosMode)
             else
                 Top = (480 - BitmapInfoHeader->biHeight) / 2;
             InbvBitBlt(Bitmap, Left, Top);
+
+            /* Set progress bar coordinates and display it */
+            InbvSetProgressBarCoordinates(257, 352);
         }
     }
 

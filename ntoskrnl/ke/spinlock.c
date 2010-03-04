@@ -454,3 +454,22 @@ KeTestSpinLock(IN PKSPIN_LOCK SpinLock)
     /* Spinlock appears to be free */
     return TRUE;
 }
+
+#ifdef _M_IX86
+VOID
+NTAPI
+Kii386SpinOnSpinLock(PKSPIN_LOCK SpinLock, ULONG Flags)
+{
+    // FIXME: Handle flags
+    UNREFERENCED_PARAMETER(Flags);
+
+    /* Spin until it's unlocked */
+    while (*(volatile KSPIN_LOCK *)SpinLock & 1)
+    {
+        // FIXME: Check for timeout
+
+        /* Yield and keep looping */
+        YieldProcessor();
+    }
+}
+#endif

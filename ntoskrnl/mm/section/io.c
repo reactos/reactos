@@ -274,6 +274,7 @@ MiSimpleRead
     Status = IoCallDriver(DeviceObject, Irp);
     if (Status == STATUS_PENDING)
     {
+		DPRINT1("KeWaitForSingleObject(&ReadWait)\n");
 		if (!NT_SUCCESS
 			(KeWaitForSingleObject
 			 (&ReadWait, 
@@ -359,6 +360,7 @@ MiSimpleWrite
 
     if (Status == STATUS_PENDING)
     {
+		DPRINT1("KeWaitForSingleObject(&ReadWait)\n");
 		if (!NT_SUCCESS
 			(KeWaitForSingleObject
 			 (&ReadWait, 
@@ -377,48 +379,8 @@ MiSimpleWrite
     return ReadStatus->Status;
 }
 
-typedef struct _WRITE_SCHEDULE_ENTRY {
-	LIST_ENTRY Entry;
-	PFILE_OBJECT FileObject;
-	LARGE_INTEGER FileOffset;
-	ULONG Length;
-	PFN_TYPE Page;
-} WRITE_SCHEDULE_ENTRY, *PWRITE_SCHEDULE_ENTRY;
-
 extern KEVENT MpwThreadEvent;
 FAST_MUTEX MiWriteMutex;
-LIST_ENTRY MiWriteScheduleListHead;
-
-NTSTATUS
-NTAPI
-MiScheduleForWrite
-(PFILE_OBJECT FileObject,
- PLARGE_INTEGER FileOffset,
- PFN_TYPE Page,
- ULONG Length)
-{
-	PWRITE_SCHEDULE_ENTRY WriteEntry = 
-		ExAllocatePool(NonPagedPool, sizeof(WRITE_SCHEDULE_ENTRY));
-
-	if (WriteEntry == NULL)
-		return STATUS_NO_MEMORY;
-
-	ObReferenceObject(FileObject);
-	WriteEntry->FileObject = FileObject;
-	WriteEntry->FileOffset = *FileOffset;
-	WriteEntry->Length = Length;
-	MmReferencePage(Page);
-	WriteEntry->Page = Page;
-
-	ExAcquireFastMutex(&MiWriteMutex);
-	InsertTailList(&MiWriteScheduleListHead, &WriteEntry->Entry);
-	ExReleaseFastMutex(&MiWriteMutex);
-
-	KeSetEvent(&MpwThreadEvent, IO_NO_INCREMENT, FALSE);
-
-	return STATUS_SUCCESS;
-}
-
 
 NTSTATUS
 NTAPI
@@ -458,52 +420,4 @@ MiWriteBackPage
 	}
 
 	return Status;
-}
-
-VOID
-NTAPI
-MiWriteThread()
-{
-	BOOLEAN Complete;
-	NTSTATUS Status;
-	LIST_ENTRY OldHead;
-	PLIST_ENTRY Entry;
-	PWRITE_SCHEDULE_ENTRY WriteEntry;
-
-	ExAcquireFastMutex(&MiWriteMutex);
-	Complete = IsListEmpty(&MiWriteScheduleListHead);
-	ExReleaseFastMutex(&MiWriteMutex);
-	if (Complete)
-	{
-		DPRINT1("No items await writing\n");
-		KeSetEvent(&CcpLazyWriteEvent, IO_NO_INCREMENT, FALSE);
-	}
-	
-	DPRINT("Lazy write items are available\n");
-	KeResetEvent(&CcpLazyWriteEvent);
-	
-	ExAcquireFastMutex(&MiWriteMutex);
-	RtlCopyMemory(&OldHead, &MiWriteScheduleListHead, sizeof(OldHead));
-	OldHead.Flink->Blink = &OldHead;
-	OldHead.Blink->Flink = &OldHead;
-	InitializeListHead(&MiWriteScheduleListHead);
-	ExReleaseFastMutex(&MiWriteMutex);
-	
-	for (Entry = OldHead.Flink;
-		 !IsListEmpty(&OldHead);
-		 Entry = OldHead.Flink)
-	{
-		WriteEntry = CONTAINING_RECORD(Entry, WRITE_SCHEDULE_ENTRY, Entry);
-		Status = MiWriteBackPage(WriteEntry->FileObject, &WriteEntry->FileOffset, WriteEntry->Length, WriteEntry->Page);
-
-		if (!NT_SUCCESS(Status))
-		{
-			DPRINT1("MiSimpleWrite failed (%x)\n", Status);
-		}
-
-		MmDereferencePage(WriteEntry->Page);
-		ObDereferenceObject(WriteEntry->FileObject);
-		RemoveEntryList(&WriteEntry->Entry);
-		ExFreePool(WriteEntry);
-	}
 }

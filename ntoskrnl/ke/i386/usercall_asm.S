@@ -8,11 +8,14 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <asm.h>
+#include <reactos/asm.h>
+#include <ndk/i386/asm.h>
 #include <internal/i386/asmmacro.S>
-.intel_syntax noprefix
 
 /* FUNCTIONS ****************************************************************/
+
+.code32
+.text
 
 .globl _KiGetUserModeStackAddress@0
 .func KiGetUserModeStackAddress@0
@@ -200,11 +203,9 @@ SetEip:
     /* Bring interrupts back */
     sti
 
-    /* Write the debug data */
-    SET_TF_DEBUG_HEADER
-
     /* Exit to user-mode */
-    jmp _KiServiceExit
+    mov ecx, esp
+    jmp @KiServiceExit@8
 
 SaveDebug:
 

@@ -141,12 +141,12 @@ Mmi386ReleaseMmInfo(PEPROCESS Process)
         if (PageDir[i] != 0)
         {
             MiZeroPage(PTE_TO_PFN(PageDir[i]));
-            MmReleasePageMemoryConsumer(MC_NPPOOL, PTE_TO_PFN(PageDir[i]));
+            MmDereferencePage(PTE_TO_PFN(PageDir[i]));
         }
     }
-    MmReleasePageMemoryConsumer(MC_NPPOOL, PTE_TO_PFN(PageDir[ADDR_TO_PDE_OFFSET(HYPERSPACE)]));
+    MmDereferencePage(PTE_TO_PFN(PageDir[ADDR_TO_PDE_OFFSET(HYPERSPACE)]));
     MmDeleteHyperspaceMapping(PageDir);
-    MmReleasePageMemoryConsumer(MC_NPPOOL, PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]));
+    MmDereferencePage(PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]));
 
     Process->Pcb.DirectoryTableBase[0] = 0;
     Process->Pcb.DirectoryTableBase[1] = 0;
@@ -195,7 +195,7 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
         {
             for (j = 0; j < i; j++)
             {
-                MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn[j]);
+                MmDereferencePage(Pfn[j]);
             }
             
             return FALSE;
@@ -251,7 +251,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
             Entry = InterlockedCompareExchangePte(&PageDir[PdeOffset], PFN_TO_PTE(Pfn) | PA_PRESENT | PA_READWRITE | PA_USER, 0);
             if (Entry != 0)
             {
-                MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
+                MmDereferencePage(Pfn);
                 Pfn = PTE_TO_PFN(Entry);
             }
         }
@@ -290,7 +290,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
                 }
                 if(0 != InterlockedCompareExchangePte(&MmGlobalKernelPageDirectory[PdeOffset], Entry, 0))
                 {
-                    MmReleasePageMemoryConsumer(MC_SYSTEM, Pfn);
+                    MmDereferencePage(Pfn);
                 }
                 InterlockedExchangePte(PageDir, MmGlobalKernelPageDirectory[PdeOffset]);
                 RtlZeroMemory(MiPteToAddress(PageDir), PAGE_SIZE);
@@ -312,7 +312,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
             Entry = InterlockedCompareExchangePte(PageDir, PFN_TO_PTE(Pfn) | PA_PRESENT | PA_READWRITE | PA_USER, 0);
             if (Entry != 0)
             {
-                MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
+                MmDereferencePage(Pfn);
             }
         }
     }
@@ -440,9 +440,6 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
     ULONG Pte;
     PULONG Pt;
     
-    DPRINT("MmDeleteVirtualMapping(%x, %x, %d, %x, %x)\n",
-           Process, Address, FreePage, WasDirty, Page);
-
     Pt = MmGetPageTableForProcess(Process, Address, FALSE);
     
     if (Pt == NULL)
@@ -491,6 +488,9 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
     {
         *Page = Pfn;
     }
+	if (WasValid) 
+		DPRINT1("MmDeleteVirtualMapping(%x, %x, %d, %x, %x)\n",
+				Process, Address, FreePage, !!(Pte & PA_DIRTY), Pfn);
 }
 
 VOID
@@ -535,6 +535,7 @@ MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
      * Return some information to the caller
      */
     *SwapEntry = Pte >> 1;
+	DPRINT1("MmDeletePageFileMapping(%x,%x,%x)\n", Process, Address, *SwapEntry);
 }
 
 BOOLEAN
@@ -712,6 +713,7 @@ MmCreatePageFileMapping(PEPROCESS Process,
         MmUnmapPageTable(Pt);
     }
     
+	DPRINT1("MmCreatePageFileMapping(%x,%x,%x)\n", Process, Address, SwapEntry);
     return(STATUS_SUCCESS);
 }
 
@@ -732,7 +734,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
     ULONG Pte;
     BOOLEAN NoExecute = FALSE;
     
-    DPRINT("MmCreateVirtualMappingUnsafe(%x, %x, %x, %x (%x), %d)\n",
+    DPRINT1("MmCreateVirtualMappingUnsafe(%x, %x, %x, %x (%x), %d)\n",
            Process, Address, flProtect, Pages, *Pages, PageCount);
     
     if (Process == NULL)
@@ -1022,8 +1024,6 @@ MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
     }
 }
 
-extern MMPTE HyperTemplatePte;
-
 VOID
 INIT_FUNCTION
 NTAPI
@@ -1033,12 +1033,6 @@ MmInitGlobalKernelPageDirectory(VOID)
     PULONG CurrentPageDirectory = (PULONG)PAGEDIRECTORY_MAP;
     
     DPRINT("MmInitGlobalKernelPageDirectory()\n");
-    
-    //
-    // Setup template
-    //
-    HyperTemplatePte.u.Long = (PA_PRESENT | PA_READWRITE | PA_DIRTY | PA_ACCESSED);
-    if (Ke386GlobalPagesEnabled) HyperTemplatePte.u.Long |= PA_GLOBAL;
     
     for (i = ADDR_TO_PDE_OFFSET(MmSystemRangeStart); i < 1024; i++)
     {

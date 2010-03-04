@@ -7,11 +7,15 @@
  */
  
 /* INCLUDES ******************************************************************/
+
+#include <reactos/asm.h>
 #include <ndk/asm.h>
 #include <internal/i386/asmmacro.S>
-.intel_syntax noprefix
 
 /* FUNCTIONS ****************************************************************/
+
+.code32
+.text
 
 /*
  * NOTE: These functions must obey the following rules:

@@ -33,6 +33,7 @@ MM_RMAP_ENTRY, *PMM_RMAP_ENTRY;
 /* GLOBALS ******************************************************************/
 
 static FAST_MUTEX RmapListLock;
+static FAST_MUTEX GlobalPageOperation;
 static NPAGED_LOOKASIDE_LIST RmapLookasideList;
 extern KEVENT MmWaitPageEvent;
 
@@ -44,6 +45,7 @@ NTAPI
 MmInitializeRmapList(VOID)
 {
    ExInitializeFastMutex(&RmapListLock);
+   ExInitializeFastMutex(&GlobalPageOperation);
    ExInitializeNPagedLookasideList (&RmapLookasideList,
                                     NULL,
                                     NULL,
@@ -57,107 +59,62 @@ NTSTATUS
 NTAPI
 MmWritePagePhysicalAddress(PFN_TYPE Page)
 {
-   BOOLEAN ProcRef = FALSE;
+   BOOLEAN ProcRef = FALSE, DirtyPage = FALSE;
    PMM_RMAP_ENTRY entry;
-   PMEMORY_AREA MemoryArea;
-   PMMSUPPORT AddressSpace;
-   ULONG Type;
+   PMM_SECTION_SEGMENT Segment;
+   LARGE_INTEGER FileOffset;
+   ULONG Protect;
    PVOID Address;
-   PEPROCESS Process;
+   PEPROCESS Process = NULL;
    NTSTATUS Status = STATUS_SUCCESS;
+   KIRQL OldIrql;
 
-   /*
-    * Check that the address still has a valid rmap; then reference the
-    * process so it isn't freed while we are working.
-    */
-   ExAcquireFastMutex(&RmapListLock);
-   entry = MmGetRmapListHeadPage(Page);
-   if (entry == NULL)
+   ExAcquireFastMutex(&GlobalPageOperation);
+   if ((Segment = MmGetSectionAssociation(Page, &FileOffset)))
    {
-      ExReleaseFastMutex(&RmapListLock);
-      return(STATUS_UNSUCCESSFUL);
-   }
-   Process = entry->Process;
-   Address = entry->Address;
-   if ((((ULONG_PTR)Address) & 0xFFF) != 0)
-   {
-      KeBugCheck(MEMORY_MANAGEMENT);
-   }
-   if (Address < MmSystemRangeStart)
-   {
-	  DPRINT("Reference %x\n", Process);
-      Status = ObReferenceObjectByPointer(Process, PROCESS_ALL_ACCESS, NULL, KernelMode);
-      if (!NT_SUCCESS(Status))
-      {
-         return Status;
-      }
-	  ProcRef = TRUE;
-      AddressSpace = &Process->Vm;
-   }
-   else
-   {
-      AddressSpace = MmGetKernelAddressSpace();
-   }
-   ExReleaseFastMutex(&RmapListLock);
+	   if (Page == MM_WAIT_ENTRY)
+	   {
+		   DPRINT("In progress page out %x\n", Page);
+		   ExReleaseFastMutex(&GlobalPageOperation);
+		   return STATUS_UNSUCCESSFUL;
+	   }
 
-   /*
-    * Lock the address space; then check that the address we are using
-    * still corresponds to a valid memory area (the page might have been
-    * freed or paged out after we read the rmap entry.)
-    */
-   MmLockAddressSpace(AddressSpace);
-   MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, Address);
-   if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
-   {
-      MmUnlockAddressSpace(AddressSpace);
-	  if (ProcRef)
-	  {
-		  DPRINT("Dereference %x\n", Process);
-		  ObDereferenceObject(Process);
-	  }
-      return(STATUS_UNSUCCESSFUL);
-   }
+	   OldIrql = KfRaiseIrql(DISPATCH_LEVEL);
 
-   Type = MemoryArea->Type;
-   if (Type == MEMORY_AREA_SECTION_VIEW)
-   {
-      /*
-       * Release locks now we have a page op.
-       */
-      MmUnlockAddressSpace(AddressSpace);
+	   entry = MmGetRmapListHeadPage(Page);
+	   
+	   DPRINT("Entry %x\n", entry);
+	   while (entry != NULL)
+	   {
+		   Process = entry->Process;
+		   Address = entry->Address;
+		   
+		   DPRINT("Process %x Address %x Page %x\n", Process, Address, Page);
 
-      /*
-       * Do the actual page out work.
-       */
-      Status = MmWritePageSectionView(AddressSpace, MemoryArea, Address);
-   }
-   else if ((Type == MEMORY_AREA_PHYSICAL_MEMORY_SECTION) ||
-			(Type == MEMORY_AREA_PAGE_FILE_SECTION) ||
-			(Type == MEMORY_AREA_IMAGE_SECTION))
-   {
-	   MmUnlockAddressSpace(AddressSpace);
-	   Status = STATUS_SUCCESS;
-   }
-   else if ((Type == MEMORY_AREA_VIRTUAL_MEMORY) || (Type == MEMORY_AREA_PEB_OR_TEB))
-   {
-      /*
-       * Release locks now we have a page op.
-       */
-      MmUnlockAddressSpace(AddressSpace);
+		   Protect = MmGetPageProtect(Process, Address);
+		   if (Protect == PAGE_READWRITE)
+			   MmSetPageProtect(Process, Address, PAGE_READONLY);
+		   else if (Protect == PAGE_EXECUTE_READWRITE)
+			   MmSetPageProtect(Process, Address, PAGE_EXECUTE_READ);
 
-      /*
-       * Do the actual page out work.
-       */
-      Status = MmWritePageVirtualMemory(AddressSpace, MemoryArea, Address);
+		   // When we're not in a section and all rmaps evicted, we win
+		   
+		   entry = entry->Next;
+	   }
+	   
+	   KfLowerIrql(OldIrql);
+
+	   /*
+		* Do the actual page out work.
+		*/
+	   Status = MmWritePageSectionView(Segment, &FileOffset, Page, DirtyPage);
    }
-   else
-   {
-      KeBugCheck(MEMORY_MANAGEMENT);
-   }
+   
    if (ProcRef)
    {
       ObDereferenceObject(Process);
    }
+   ExReleaseFastMutex(&GlobalPageOperation);
    return(Status);
 }
 
@@ -179,54 +136,67 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
    NTSTATUS Status = STATUS_SUCCESS;
    MM_REQUIRED_RESOURCES Resources = { 0 };
 
-   ASSERT(Page);
+   DPRINT1("Page out %x (ref ct %x)\n", Page, MmGetReferenceCountPage(Page));
+   ExAcquireFastMutex(&GlobalPageOperation);
+   ExAcquireFastMutex(&RmapListLock);
+   entry = MmGetRmapListHeadPage(Page);
+   if (entry == NULL)
+   {
+      ExReleaseFastMutex(&RmapListLock);
+	  ExReleaseFastMutex(&GlobalPageOperation);
+      return(STATUS_UNSUCCESSFUL);
+   }
+   Process = entry->Process;
+   Address = entry->Address;
+   if ((((ULONG_PTR)Address) & 0xFFF) != 0)
+   {
+      KeBugCheck(MEMORY_MANAGEMENT);
+   }
+   ExReleaseFastMutex(&RmapListLock);
 
-   DPRINT("Page out %x\n", Page);
+   Dirty = MmIsDirtyPageRmap(Page);
 
    if ((Segment = MmGetSectionAssociation(Page, &FileOffset)))
    {
-	   DPRINT("Withdrawing page (%x) %x:%x\n", Page, Segment, FileOffset.LowPart);
+	   DPRINT1("Withdrawing page (%x) %x:%x\n", Page, Segment, FileOffset.LowPart);
 	   SectionPage = MmWithdrawSectionPage(Segment, &FileOffset, &Dirty);
-	   DPRINT("SectionPage %x\n", SectionPage);
+	   DPRINT1("SectionPage %x\n", SectionPage);
 	   if (SectionPage == MM_WAIT_ENTRY)
 	   {
-		   DPRINT("In progress page out %x\n", SectionPage);
+		   DPRINT1("In progress page out %x\n", SectionPage);
+		   ExReleaseFastMutex(&GlobalPageOperation);
 		   return STATUS_UNSUCCESSFUL;
 	   }
+	   ASSERT(SectionPage == Page);
+	   Resources.State = Dirty ? 1 : 0;
    }
    else
    {
 	   DPRINT("No segment association for %x\n", Page);
    }
-   
+
+   DPRINT1("Trying to unmap all instances of %x\n", Page);
    ExAcquireFastMutex(&RmapListLock);
    entry = MmGetRmapListHeadPage(Page);
-   if (MmGetLockCountPage(Page) != 0)
-   {
-      ExReleaseFastMutex(&RmapListLock);
-	  Status = STATUS_UNSUCCESSFUL;
-	  DPRINT("Page was locked %x\n", Page);
-	  goto bail;
-   }
 
-   DPRINT("Entry %x\n", entry);
+   DPRINT1("Entry %x\n", entry);
    while (entry != NULL && NT_SUCCESS(Status))
    {
 	   Process = entry->Process;
 	   Address = entry->Address;
 
-	   DPRINT("Process %x Address %x Page %x\n", Process, Address, Page);
+	   DPRINT1("Process %x Address %x Page %x\n", Process, Address, Page);
 
 	   if (Process && Address < MmSystemRangeStart)
 	   {
 		   // Make sure we don't try to page out part of an exiting process
-		   Status = ObReferenceObject(Process);
 		   if (PsIsProcessExiting(Process))
 		   {
-			   ObDereferenceObject(Process);
+			   DPRINT("bail\n");
 			   ExReleaseFastMutex(&RmapListLock);
 			   goto bail;
 		   }
+		   Status = ObReferenceObject(Process);
 		   if (!NT_SUCCESS(Status))
 		   {
 			   DPRINT("bail\n");
@@ -262,12 +232,13 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
 			   MemoryArea->DeleteInProgress ||
 			   !MemoryArea->PageOut)
 		   {
+			   Status = STATUS_UNSUCCESSFUL;
 			   MmUnlockAddressSpace(AddressSpace);
 			   DPRINT("bail\n");
 			   goto bail;
 		   }
 		   
-		   DPRINT
+		   DPRINT1
 			   ("Type %x (%x -> %x)\n", 
 				MemoryArea->Type, 
 				MemoryArea->StartingAddress, 
@@ -275,12 +246,11 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
 		   
 		   Resources.DoAcquisition = NULL;
 		   
-		   DPRINT("Page out page %x consumer %d\n", Page, MmGetPageConsumer(Page));
 		   Resources.Page[0] = Page;
 		   
 		   if (KeGetCurrentIrql() > APC_LEVEL)
 		   {
-			   DPRINT("BAD IRQL from %x\n", MemoryArea->PageOut);
+			   DPRINT1("BAD IRQL from %x\n", MemoryArea->PageOut);
 		   }
 		   ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
 		   
@@ -289,7 +259,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
 		   
 		   if (KeGetCurrentIrql() > APC_LEVEL)
 		   {
-			   DPRINT("BAD IRQL from %x\n", MemoryArea->PageOut);
+			   DPRINT1("BAD IRQL from %x\n", MemoryArea->PageOut);
 		   }
 		   ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
 		   
@@ -303,9 +273,9 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
 		   }
 		   else if (Status == STATUS_MORE_PROCESSING_REQUIRED)
 		   {
-			   DPRINT("DoAcquisition %x\n", Resources.DoAcquisition);
+			   DPRINT1("DoAcquisition %x\n", Resources.DoAcquisition);
 			   Status = Resources.DoAcquisition(AddressSpace, MemoryArea, &Resources);
-			   DPRINT("Status %x\n", Status);
+			   DPRINT1("Status %x\n", Status);
 			   if (!NT_SUCCESS(Status)) 
 			   {
 				   DPRINT("bail\n");
@@ -336,20 +306,26 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
 	   if (!entry && !Segment) 
 		   Evicted = TRUE;
 
-	   DPRINT("Entry %x\n", entry);
+	   DPRINT1("Entry %x\n", entry);
    }
 
    ExReleaseFastMutex(&RmapListLock);
 
 bail:
-   DPRINT("BAIL\n");
+   DPRINT1("BAIL %x\n", Status);
+
    if (Segment)
    {
-	   DPRINT("About to finalize section page %x %s\n", Page, Dirty ? "dirty" : "clean");
+	   DPRINT1("About to finalize section page %x (%x:%x) %s\n", Page, Segment, FileOffset.LowPart, Dirty ? "dirty" : "clean");
 
-	   if (MmGetRmapListHeadPage(Page))
+	   if (!NT_SUCCESS(Status) ||
+		   !NT_SUCCESS
+		   (Status = MmFinalizeSectionPageOut
+			(Segment, &FileOffset, Page, Dirty)))
 	   {
-		   DPRINT("Page %x was re-acquired while we were evicting it\n", Page);
+		   DPRINT1
+			   ("Failed to page out %x, replacing %x at %x in segment %x\n",
+				SectionPage, FileOffset.LowPart, Segment);
 		   MmLockSectionSegment(Segment);
 		   MiSetPageEntrySectionSegment(Segment, &FileOffset, Dirty ? DIRTY_SSE(MAKE_PFN_SSE(SectionPage)) : MAKE_PFN_SSE(SectionPage));
 		   MmUnlockSectionSegment(Segment);
@@ -357,33 +333,18 @@ bail:
 	   }
 	   else
 	   {
-		   Evicted = 
-			   NT_SUCCESS(Status) &&
-			   NT_SUCCESS(MmFinalizeSectionPageOut(Segment, &FileOffset, Page, Dirty));
-
-		   /* Note: on success, segment might not exist anymore, due to cache segment
-			* replacement in cc */
-
-		   if (!Evicted && SectionPage)
-		   {
-			   DPRINT
-				   ("Failed to page out, replacing %x at %x in segment %x\n",
-					SectionPage, FileOffset.LowPart, Segment);
-			   MmLockSectionSegment(Segment);
-			   MiSetPageEntrySectionSegment(Segment, &FileOffset, Dirty ? DIRTY_SSE(MAKE_PFN_SSE(SectionPage)) : MAKE_PFN_SSE(SectionPage));
-			   MmUnlockSectionSegment(Segment);
-			   KeSetEvent(&MmWaitPageEvent, IO_NO_INCREMENT, FALSE);
-		   }
+		   Evicted = TRUE;
 	   }
    }
 
    if (ProcRef)
    {
-	   DPRINT("Dereferencing process...\n");
+	   DPRINT1("Dereferencing process...\n");
 	   ObDereferenceObject(Process);
    }
 
-   DPRINT("Evicted %d\n", Evicted);
+   ExReleaseFastMutex(&GlobalPageOperation);
+   DPRINT1("%s %x %x\n", Evicted ? "Evicted" : "Spared", Page, Status);
    return Evicted ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 }
 
@@ -464,7 +425,7 @@ MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
    PMM_RMAP_ENTRY new_entry;
    ULONG PrevSize;
 
-   DPRINT("Insert Rmap: %x %x:%x\n", Page, Process, Address);
+   DPRINT1("Insert Rmap: %x %x:%x\n", Page, Process, Address);
 
    Address = (PVOID)PAGE_ROUND_DOWN(Address);
 
@@ -550,6 +511,9 @@ MmDeleteAllRmaps(PFN_TYPE Page, PVOID Context,
    {
       previous_entry = current_entry;
       current_entry = current_entry->Next;
+
+	  DPRINT1("Delete Rmap: %x %x:%x\n", Page, previous_entry->Process, previous_entry->Address);
+   
       if (DeleteMapping)
       {
          DeleteMapping(Context, previous_entry->Process,
@@ -566,6 +530,8 @@ MmDeleteAllRmaps(PFN_TYPE Page, PVOID Context,
          (void)InterlockedExchangeAddUL(&Process->Vm.WorkingSetSize, -PAGE_SIZE);
       }
    }
+
+   DPRINT1("MmDeleteAllRmaps(%x)\n", Page);
 }
 
 VOID
@@ -575,7 +541,7 @@ MmDeleteRmap(PFN_TYPE Page, PEPROCESS Process,
 {
    PMM_RMAP_ENTRY current_entry, previous_entry;
 
-   DPRINT("Delete Rmap: %x %x:%x\n", Page, Process, Address);
+   DPRINT1("Delete Rmap: %x %x:%x\n", Page, Process, Address);
 
    Address = (PVOID)PAGE_ROUND_DOWN(Address);
 

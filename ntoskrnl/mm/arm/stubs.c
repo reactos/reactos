@@ -675,7 +675,7 @@ MmDeleteVirtualMapping(IN PEPROCESS Process,
         //
         // Release the PFN if it was ours
         //
-        if ((FreePage) && (Pfn)) MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
+        if ((FreePage) && (Pfn)) MmDereferencePage(Pfn);
     }
     
     //

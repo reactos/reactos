@@ -62,19 +62,11 @@
 
 #include "ke.h"
 #include "ob.h"
-#ifndef _NEWCC_
 #include "mm.h"
-#else
-#include "newmm.h"
-#endif
 #include "ex.h"
 #include "cm.h"
 #include "ps.h"
-#ifndef _NEWCC_
 #include "cc.h"
-#else
-#include "newcc.h"
-#endif
 #include "io.h"
 #include "po.h"
 #include "se.h"
@@ -91,6 +83,7 @@
 #include "../kdbg/kdb.h"
 #endif
 #include "dbgk.h"
+#include "spinlock.h"
 #include "tag.h"
 #include "test.h"
 #include "inbv.h"
@@ -153,6 +146,7 @@ typedef struct _INFORMATION_CLASS_INFO
 
 #endif
 
+#if defined (_M_IX86) || defined(_M_AMD64)
 C_ASSERT(FIELD_OFFSET(KUSER_SHARED_DATA, SystemCall) == 0x300);
 C_ASSERT(FIELD_OFFSET(KTHREAD, InitialStack) == KTHREAD_INITIAL_STACK);
 C_ASSERT(FIELD_OFFSET(KTHREAD, Teb) == KTHREAD_TEB);
@@ -164,6 +158,7 @@ C_ASSERT(FIELD_OFFSET(KTHREAD, TrapFrame) == KTHREAD_TRAP_FRAME);
 C_ASSERT(FIELD_OFFSET(KTHREAD, CallbackStack) == KTHREAD_CALLBACK_STACK);
 C_ASSERT(FIELD_OFFSET(KTHREAD, ApcState.Process) == KTHREAD_APCSTATE_PROCESS);
 C_ASSERT(FIELD_OFFSET(KPROCESS, DirectoryTableBase) == KPROCESS_DIRECTORY_TABLE_BASE);
+#endif
 
 #ifdef _M_IX86
 C_ASSERT(FIELD_OFFSET(KPCR, Tib.ExceptionList) == KPCR_EXCEPTION_LIST);

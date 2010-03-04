@@ -54,7 +54,7 @@ KdpServiceDispatcher(ULONG Service,
 #if DBG
         case ' soR': /* ROS-INTERNAL */
         {
-            switch ((ULONG)Buffer1)
+            switch ((ULONG_PTR)Buffer1)
             {
                 case ManualBugCheck:
                     KeBugCheck(MANUALLY_INITIATED_CRASH);

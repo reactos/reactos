@@ -80,10 +80,6 @@ MmNotPresentFaultPageFile
 	 */
 	if (MmIsPagePresent(Process, Address))
 	{
-		if (Locked)
-		{
-			MmLockPage(MmGetPfnForProcess(Process, Address));
-		}
 		DPRINT("Done\n");
 		return(STATUS_SUCCESS);
 	}
@@ -131,19 +127,7 @@ MmNotPresentFaultPageFile
 	/*
 	 * Check if this page needs to be mapped COW
 	 */
-	if ((Segment->WriteCopy || 
-		 MemoryArea->Data.SectionData.WriteCopyView) &&
-		(Region->Protect == PAGE_READWRITE ||
-		 Region->Protect == PAGE_EXECUTE_READWRITE))
-	{
-		DPRINT("Cow\n");
-		Attributes = Region->Protect == PAGE_READWRITE ? PAGE_READONLY : PAGE_EXECUTE_READ;
-	}
-	else
-	{
-		Attributes = Region->Protect;
-		DPRINT("Normal %x\n", Attributes);
-	}
+	Attributes = Region->Protect == PAGE_READWRITE ? PAGE_READONLY : PAGE_EXECUTE_READ;
 
 	if (Required->State && Required->Page[0])
 	{
@@ -169,7 +153,6 @@ MmNotPresentFaultPageFile
 			if (NT_SUCCESS(Status))
 			{
 				MmInsertRmap(Required->Page[0], Process, Address);
-				if (Locked) MmLockPage(Required->Page[0]);
 			}
 			else
 			{
@@ -233,7 +216,6 @@ MmNotPresentFaultPageFile
 		if (NT_SUCCESS(Status))
 		{
 			MmInsertRmap(Page, Process, Address);
-			if (Locked) MmLockPage(Page);
 		}
 		DPRINT("XXX Set Event %x\n", Status);
 		KeSetEvent(&MmWaitPageEvent, IO_NO_INCREMENT, FALSE);
@@ -308,10 +290,6 @@ MmNotPresentFaultImageFile
 	 */
 	if (MmIsPagePresent(Process, Address))
 	{
-		if (Locked)
-		{
-			MmLockPage(MmGetPfnForProcess(Process, Address));
-		}
 		return(STATUS_SUCCESS);
 	}
 
@@ -334,15 +312,14 @@ MmNotPresentFaultImageFile
 	/*
 	 * Check if this page needs to be mapped COW
 	 */
-	if ((Segment->WriteCopy || MemoryArea->Data.SectionData.WriteCopyView) &&
-		(Region->Protect == PAGE_READWRITE ||
-		 Region->Protect == PAGE_EXECUTE_READWRITE))
-	{
-		Attributes = Region->Protect == PAGE_READWRITE ? PAGE_READONLY : PAGE_EXECUTE_READ;
-	}
+	if (Region->Protect == PAGE_READWRITE)
+		Attributes = PAGE_READONLY;
+	else if (Region->Protect == PAGE_EXECUTE_READWRITE)
+		Attributes = PAGE_EXECUTE_READ;
 	else
 	{
-		Attributes = Region->Protect;
+		DPRINT("Attributes READONLY for suspicious %x\n", Region->Protect);
+		Attributes = PAGE_READONLY; // Region->Protect
 	}
 
 	Entry = MiGetPageEntrySectionSegment(Segment, &Offset);
@@ -351,7 +328,7 @@ MmNotPresentFaultImageFile
 
 	if (Required->Page[0] && Required->State)
 	{
-		DPRINT("Have Page: %x %d\n", Page, Required->State);
+		DPRINT("Have Page: %x %d\n", Required->Page[0], Required->State);
 		if (Required->State & 2)
 		{
 			DPRINT("Set in section @ %x\n", Offset.LowPart);
@@ -374,7 +351,6 @@ MmNotPresentFaultImageFile
 			if (NT_SUCCESS(Status))
 			{
 				MmInsertRmap(Required->Page[0], Process, Address);
-				if (Locked) MmLockPage(Required->Page[0]);
 			}
 			else
 			{
@@ -443,7 +419,7 @@ MmNotPresentFaultImageFile
 			  Offset.QuadPart >= PAGE_ROUND_UP(Segment->RawLength.QuadPart))) 
 	{
 		DPRINT("BSS Page\n");
-		Required->State = 1;
+		Required->State = 3;
 		Required->Amount = 1;
 		Required->Consumer = MC_USER;
 		Required->DoAcquisition = MiGetOnePage;
@@ -470,10 +446,6 @@ MmNotPresentFaultImageFile
 			ASSERT(FALSE);
 		}
 		MmInsertRmap(Page, Process, (PVOID)PAddress);
-		if (Locked)
-		{
-			MmLockPage(Page);
-		}
 		MmUnlockSectionSegment(Segment);
 		return(STATUS_SUCCESS);
 	}
@@ -530,6 +502,51 @@ MiCowSectionPage
       return(STATUS_SUCCESS);
    }
 
+   Segment = MemoryArea->Data.SectionData.Segment;
+   Section = MemoryArea->Data.SectionData.Section;
+   Region = MmFindRegion(MemoryArea->StartingAddress,
+                         &MemoryArea->Data.SectionData.RegionListHead,
+                         Address, NULL);
+   /*
+    * Find the offset of the page
+    */
+   PAddress = MM_ROUND_DOWN(Address, PAGE_SIZE);
+   Offset.QuadPart = (ULONG_PTR)PAddress - (ULONG_PTR)MemoryArea->StartingAddress +
+	   MemoryArea->Data.SectionData.ViewOffset.QuadPart;
+
+
+   if (!Segment->WriteCopy &&
+	   !MemoryArea->Data.SectionData.WriteCopyView &&
+	   !(Segment->Flags & MM_IMAGE_SEGMENT))
+   {
+	   if (Region->Protect == PAGE_READWRITE || 
+		   Region->Protect == PAGE_EXECUTE_READWRITE)
+	   {
+		   DPRINT("setting non-cow page %x:%x to writable\n", Process, PAddress);
+		   if (Segment->FileObject)
+		   {
+			   DPRINT("file %wZ\n", &Segment->FileObject->FileName);
+		   }
+		   if (!MmIsPagePresent(Process, PAddress)) 
+		   {
+			   DPRINT("Not present!\n");
+			   return STATUS_SUCCESS;
+		   }
+		   DPRINT("Present ... set bit\n");
+		   MmLockSectionSegment(Segment);
+		   MiSetPageEntrySectionSegment(Segment, &Offset, DIRTY_SSE(MiGetPageEntrySectionSegment(Segment, &Offset)));
+		   MmSetPageProtect(Process, PAddress, Region->Protect);
+		   MmUnlockSectionSegment(Segment);
+		   DPRINT("Done\n");
+		   return STATUS_SUCCESS;
+	   }
+	   else
+	   {
+		   DPRINT("Not supposed to be writable\n");
+		   return STATUS_ACCESS_VIOLATION;
+	   }
+   }
+
    if (!Required->Page[0])
    {
 	   Required->Consumer = MC_PPOOL;
@@ -537,19 +554,6 @@ MiCowSectionPage
 	   Required->DoAcquisition = MiGetOnePage;
 	   return STATUS_MORE_PROCESSING_REQUIRED;
    }
-
-   Segment = MemoryArea->Data.SectionData.Segment;
-   Section = MemoryArea->Data.SectionData.Section;
-   Region = MmFindRegion(MemoryArea->StartingAddress,
-                         &MemoryArea->Data.SectionData.RegionListHead,
-                         Address, NULL);
-
-   /*
-    * Find the offset of the page
-    */
-   PAddress = MM_ROUND_DOWN(Address, PAGE_SIZE);
-   Offset.QuadPart = (ULONG_PTR)PAddress - (ULONG_PTR)MemoryArea->StartingAddress +
-	   MemoryArea->Data.SectionData.ViewOffset.QuadPart;
 
    /*
     * Lock the segment
@@ -631,11 +635,6 @@ MiCowSectionPage
       DPRINT1("Unable to create virtual mapping\n");
       ASSERT(FALSE);
    }
-   if (Locked)
-   {
-      MmLockPage(NewPage);
-      MmUnlockPage(OldPage);
-   }
 
    MmInsertRmap(NewPage, Process, PAddress);
    MmDereferencePage(OldPage);
@@ -661,214 +660,3 @@ MiSwapInSectionPage
 	
 	return MmReadFromSwapPage(Required->SwapEntry, Required->Page[0]);
 }
-
-NTSTATUS
-NTAPI
-MmWritePageSectionView(PMMSUPPORT AddressSpace,
-                       PMEMORY_AREA MemoryArea,
-                       PVOID Address)
-{
-   LARGE_INTEGER Offset;
-   PROS_SECTION_OBJECT Section;
-   PMM_SECTION_SEGMENT Segment;
-   PFN_TYPE Page;
-   SWAPENTRY SwapEntry;
-   ULONG Entry;
-   BOOLEAN Private;
-   NTSTATUS Status;
-   PFILE_OBJECT FileObject;
-   PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
-
-   Address = (PVOID)PAGE_ROUND_DOWN(Address);
-
-   Offset.QuadPart = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress +
-	   MemoryArea->Data.SectionData.ViewOffset.QuadPart;
-
-   /*
-    * Get the segment and section.
-    */
-   Segment = MemoryArea->Data.SectionData.Segment;
-   Section = MemoryArea->Data.SectionData.Section;
-
-   FileObject = Section->FileObject;
-   ASSERT(FileObject);
-
-   /*
-    * Get the section segment entry and the physical address.
-    */
-   Entry = MiGetPageEntrySectionSegment(Segment, &Offset);
-   Page = MmGetPfnForProcess(Process, Address);
-   SwapEntry = MmGetSavedSwapEntryPage(Page);
-
-   /*
-    * Check for a private (COWed) page.
-    */
-   if (IS_SWAP_FROM_SSE(Entry) || PFN_FROM_SSE(Entry) != Page)
-   {
-      Private = TRUE;
-   }
-   else
-   {
-      Private = FALSE;
-   }
-
-   /*
-    * If this page was direct mapped from the cache then the cache manager
-    * will take care of writing it back to disk.
-    */
-   if (!Private)
-   {
-      ASSERT(SwapEntry == 0);
-	  DPRINT("MiWriteBackPage(%wZ,%08x%08x)\n", &FileObject->FileName, Offset.u.HighPart, Offset.u.LowPart);
-      Status = MiWriteBackPage(FileObject, &Offset, PAGE_SIZE, Page);
-	  MmSetCleanAllRmaps(Page);
-	  MmUnlockSectionSegment(Segment);
-      return(Status);
-   }
-
-   /*
-    * If necessary, allocate an entry in the paging file for this page
-    */
-   if (SwapEntry == 0)
-   {
-      SwapEntry = MmAllocSwapPage();
-      if (SwapEntry == 0)
-      {
-		 MmUnlockSectionSegment(Segment);
-         return(STATUS_PAGEFILE_QUOTA);
-      }
-      MmSetSavedSwapEntryPage(Page, SwapEntry);
-   }
-
-   /*
-    * Write the page to the pagefile
-    */
-   DPRINT("Writing swap entry: %x %x\n", SwapEntry, Page);
-   Status = MmWriteToSwapPage(SwapEntry, Page);
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT1("MM: Failed to write to swap page (Status was 0x%.8X)\n",
-              Status);
-	  MmUnlockSectionSegment(Segment);
-      return(STATUS_UNSUCCESSFUL);
-   }
-
-   /*
-    * Otherwise we have succeeded.
-    */
-   DPRINT("Set clean %x\n", Page);
-   MmSetCleanAllRmaps(Page);
-   DPRINT("MM: Wrote section page 0x%.8X to swap!\n", Page << PAGE_SHIFT);
-   return(STATUS_SUCCESS);
-}
-
-NTSTATUS
-NTAPI
-MmPageOutPageFileView
-(PMMSUPPORT AddressSpace,
- MEMORY_AREA* MemoryArea,
- PVOID Address,
- PMM_REQUIRED_RESOURCES Required)
-{
-	NTSTATUS Status;
-	PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
-	LARGE_INTEGER TotalOffset;
-	PROS_SECTION_OBJECT Section;
-	PMM_SECTION_SEGMENT Segment;
-	PMM_REGION Region;
-	PVOID PAddress = MM_ROUND_DOWN(Address, PAGE_SIZE);
-	ULONG Entry;
-	PFN_TYPE OurPage, SectionPage;
-
-	TotalOffset.QuadPart = (ULONG_PTR)PAddress - (ULONG_PTR)MemoryArea->StartingAddress + 
-		MemoryArea->Data.SectionData.ViewOffset.QuadPart;
-
-	Segment = MemoryArea->Data.SectionData.Segment;
-	Section = MemoryArea->Data.SectionData.Section;
-	Region = MmFindRegion(MemoryArea->StartingAddress,
-						  &MemoryArea->Data.SectionData.RegionListHead,
-						  Address, NULL);
-
-	MmLockSectionSegment(Segment);
-	OurPage = Required->Page[0];
-
-	Entry = MiGetPageEntrySectionSegment(Segment, &TotalOffset);
-	ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
-	SectionPage = PFN_FROM_SSE(Entry);
-
-	if (MmIsPageSwapEntry(Process, Address))
-	{
-		SWAPENTRY SwapEntry;
-		MmGetPageFileMapping(Process, Address, &SwapEntry);
-		ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
-		if (SwapEntry == MM_WAIT_ENTRY)
-		{
-			DPRINT
-				("SwapEntry is a WAIT, our swap to is %x, State is %x for (%x:%x) on page %x\n",
-				 Required->SwapEntry,
-				 Required->State,
-				 Process,
-				 Address,
-				 OurPage);				 
-			if (Required->SwapEntry || (Required->State & 2))
-			{
-				Status = MmCreatePageFileMapping(Process, Address, Required->SwapEntry);
-				MmSetSavedSwapEntryPage(OurPage, 0);
-				ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
-				MmDeleteRmap(OurPage, Process, Address);
-				MmDereferencePage(OurPage);
-				MmUnlockSectionSegment(Segment);
-				KeSetEvent(&MmWaitPageEvent, IO_NO_INCREMENT, FALSE);
-				ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
-				DPRINT("XXX Set Event %x\n", Status);
-				return Status;
-			}
-			else
-			{
-				MmUnlockSectionSegment(Segment);
-				return STATUS_SUCCESS + 1;
-			}
-		}
-	}
-
-	DPRINT("Entry %x SectionPage %x OurPage %x\n", Entry, SectionPage, OurPage);
-	if (!MM_IS_WAIT_PTE(Entry) && 
-		(!Entry || IS_SWAP_FROM_SSE(Entry) || SectionPage != OurPage))
-	{
-		// We have a private page that differs from the parent
-		DPRINT("Private Page %x vs %x\n", SectionPage, OurPage);
-		if (!Required->SwapEntry && !(Required->State & 2))
-		{
-			Required->State |= 2;
-			Required->SwapEntry = MmAllocSwapPage();
-			if (!Required->SwapEntry)
-			{
-				MmUnlockSectionSegment(Segment);
-				return STATUS_PAGEFILE_QUOTA;
-			}
-			DPRINT("MiWriteSwapPage (%x -> %x)\n", OurPage, Required->SwapEntry);
-			Required->DoAcquisition = MiWriteSwapPage;
-			MmUnlockSectionSegment(Segment);
-			return STATUS_MORE_PROCESSING_REQUIRED;
-		}
-		else
-		{
-			DPRINT("Out of swap space for page %x\n", OurPage);
-			MmUnlockSectionSegment(Segment);
-			return STATUS_PAGEFILE_QUOTA;
-		}
-	}
-	else
-	{
-		BOOLEAN Dirty = !!MmIsDirtyPageRmap(OurPage);
-		Required->State |= Dirty;
-		DPRINT("Public page evicting %x (dirty %d)\n", OurPage, Required->State & 1);
-		MmDeleteVirtualMapping(Process, Address, FALSE, NULL, NULL);
-		MmDeleteRmap(OurPage, Process, Address);
-		MmDereferencePage(OurPage);
-		MmUnlockSectionSegment(Segment);
-		KeSetEvent(&MmWaitPageEvent, IO_NO_INCREMENT, FALSE);
-		return STATUS_SUCCESS;
-	}
-}
-
