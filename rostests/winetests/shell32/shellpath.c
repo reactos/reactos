@@ -675,7 +675,7 @@ static void testWinDir(void)
  */
 static void testSystemDir(void)
 {
-    char systemShellPath[MAX_PATH], systemDir[MAX_PATH] = { 0 };
+    char systemShellPath[MAX_PATH], systemDir[MAX_PATH], systemDirx86[MAX_PATH];
 
     if (!pSHGetSpecialFolderPathA) return;
 
@@ -689,13 +689,13 @@ static void testSystemDir(void)
          systemDir, systemShellPath);
     }
 
-    if (!pGetSystemWow64DirectoryA || !pGetSystemWow64DirectoryA(systemDir, sizeof(systemDir)))
-        GetSystemDirectoryA(systemDir, sizeof(systemDir));
-    myPathRemoveBackslashA(systemDir);
+    if (!pGetSystemWow64DirectoryA || !pGetSystemWow64DirectoryA(systemDirx86, sizeof(systemDirx86)))
+        GetSystemDirectoryA(systemDirx86, sizeof(systemDirx86));
+    myPathRemoveBackslashA(systemDirx86);
     if (pSHGetSpecialFolderPathA(NULL, systemShellPath, CSIDL_SYSTEMX86, FALSE))
     {
         myPathRemoveBackslashA(systemShellPath);
-        ok(!lstrcmpiA(systemDir, systemShellPath),
+        ok(!lstrcmpiA(systemDirx86, systemShellPath) || broken(!lstrcmpiA(systemDir, systemShellPath)),
          "GetSystemDirectory returns %s SHGetSpecialFolderPath returns %s\n",
          systemDir, systemShellPath);
     }

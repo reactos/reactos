@@ -102,6 +102,30 @@ static BOOL use_common(void)
     return TRUE;
 }
 
+static BOOL full_title(void)
+{
+    CABINETSTATE cs;
+
+    memset(&cs, 0, sizeof(cs));
+    if (pReadCabinetState)
+    {
+        pReadCabinetState(&cs, sizeof(cs));
+    }
+    else
+    {
+        HKEY key;
+        DWORD size;
+
+        win_skip("ReadCabinetState is not available, reading registry directly\n");
+        RegOpenKeyA(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CabinetState", &key);
+        size = sizeof(cs);
+        RegQueryValueExA(key, "Settings", NULL, NULL, (LPBYTE)&cs, &size);
+        RegCloseKey(key);
+    }
+
+    return (cs.fFullPathTitle == -1);
+}
+
 static char ProgramsDir[MAX_PATH];
 
 static char Group1Title[MAX_PATH]  = "Group1";
@@ -114,8 +138,6 @@ static void init_strings(void)
     char startup[MAX_PATH];
     char commonprograms[MAX_PATH];
     char programs[MAX_PATH];
-
-    CABINETSTATE cs;
 
     if (pSHGetSpecialFolderPathA)
     {
@@ -153,9 +175,7 @@ static void init_strings(void)
     else
         lstrcpyA(ProgramsDir, programs);
 
-    memset(&cs, 0, sizeof(cs));
-    pReadCabinetState(&cs, sizeof(cs));
-    if (cs.fFullPathTitle == -1)
+    if (full_title())
     {
         lstrcpyA(Group1Title, ProgramsDir);
         lstrcatA(Group1Title, "\\Group1");
