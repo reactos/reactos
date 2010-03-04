@@ -186,7 +186,7 @@ static statement_list_t *append_statement(statement_list_t *list, statement_t *s
 %token <str> aKNOWNTYPE
 %token <num> aNUM aHEXNUM
 %token <dbl> aDOUBLE
-%token <str> aSTRING aWSTRING
+%token <str> aSTRING aWSTRING aSQSTRING
 %token <uuid> aUUID
 %token aEOF
 %token SHL SHR
@@ -632,6 +632,7 @@ expr:	  aNUM					{ $$ = make_exprl(EXPR_NUM, $1); }
 	| tTRUE					{ $$ = make_exprl(EXPR_TRUEFALSE, 1); }
 	| aSTRING				{ $$ = make_exprs(EXPR_STRLIT, $1); }
 	| aWSTRING				{ $$ = make_exprs(EXPR_WSTRLIT, $1); }
+	| aSQSTRING				{ $$ = make_exprs(EXPR_CHARCONST, $1); }
 	| aIDENTIFIER				{ $$ = make_exprs(EXPR_IDENTIFIER, $1); }
 	| expr '?' expr ':' expr		{ $$ = make_expr3(EXPR_COND, $1, $3, $5); }
 	| expr LOGICALOR expr			{ $$ = make_expr2(EXPR_LOGOR, $1, $3); }
@@ -841,7 +842,7 @@ dispinterfacedef: dispinterfacehdr '{'
 	;
 
 inherit:					{ $$ = NULL; }
-	| ':' aKNOWNTYPE			{ $$ = find_type_or_error2($2, 0); }
+	| ':' aKNOWNTYPE			{ $$ = find_type_or_error2($2, 0); is_object_interface = 1; }
 	;
 
 interface: tINTERFACE aIDENTIFIER		{ $$ = get_type(TYPE_INTERFACE, $2, 0); }
@@ -852,9 +853,9 @@ interfacehdr: attributes interface		{ $$.interface = $2;
 						  $$.old_pointer_default = pointer_default;
 						  if (is_attr($1, ATTR_POINTERDEFAULT))
 						    pointer_default = get_attrv($1, ATTR_POINTERDEFAULT);
-						  is_object_interface = is_object($1);
 						  check_def($2);
 						  $2->attrs = check_iface_attrs($2->name, $1);
+						  is_object_interface = is_object($2);
 						  $2->defined = TRUE;
 						}
 	;
@@ -1033,7 +1034,7 @@ m_bitfield:					{ $$ = NULL; }
 
 struct_declarator: any_declarator m_bitfield	{ $$ = $1; $$->bits = $2;
 						  if (!$$->bits && !$$->var->name)
-						    error_loc("unnamed fields are not allowed");
+						    error_loc("unnamed fields are not allowed\n");
 						}
 	;
 

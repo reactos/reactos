@@ -38,7 +38,7 @@ extern void write_type_def_or_decl(FILE *h, type_t *t, int is_field, const char 
 extern void write_type_decl(FILE *f, type_t *t, const char *name);
 extern void write_type_decl_left(FILE *f, type_t *t);
 extern int needs_space_after(type_t *t);
-extern int is_object(const attr_list_t *list);
+extern int is_object(const type_t *iface);
 extern int is_local(const attr_list_t *list);
 extern int need_stub(const type_t *iface);
 extern int need_proxy(const type_t *iface);

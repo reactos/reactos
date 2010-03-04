@@ -254,6 +254,7 @@ void write_type_left(FILE *h, type_t *t, int declonly)
         break;
       case TYPE_BASIC:
         if (type_basic_get_type(t) != TYPE_BASIC_INT32 &&
+            type_basic_get_type(t) != TYPE_BASIC_INT64 &&
             type_basic_get_type(t) != TYPE_BASIC_HYPER)
         {
           if (type_basic_get_sign(t) < 0) fprintf(h, "signed ");
@@ -264,7 +265,6 @@ void write_type_left(FILE *h, type_t *t, int declonly)
         case TYPE_BASIC_INT8: fprintf(h, "small"); break;
         case TYPE_BASIC_INT16: fprintf(h, "short"); break;
         case TYPE_BASIC_INT: fprintf(h, "int"); break;
-        case TYPE_BASIC_INT64: fprintf(h, "__int64"); break;
         case TYPE_BASIC_INT3264: fprintf(h, "__int3264"); break;
         case TYPE_BASIC_BYTE: fprintf(h, "byte"); break;
         case TYPE_BASIC_CHAR: fprintf(h, "char"); break;
@@ -278,6 +278,12 @@ void write_type_left(FILE *h, type_t *t, int declonly)
             fprintf(h, "ULONG");
           else
             fprintf(h, "LONG");
+          break;
+        case TYPE_BASIC_INT64:
+          if (type_basic_get_sign(t) > 0)
+            fprintf(h, "UINT64");
+          else
+            fprintf(h, "INT64");
           break;
         case TYPE_BASIC_HYPER:
           if (type_basic_get_sign(t) > 0)
@@ -685,10 +691,12 @@ int has_out_arg_or_return(const var_t *func)
 
 /********** INTERFACES **********/
 
-int is_object(const attr_list_t *list)
+int is_object(const type_t *iface)
 {
     const attr_t *attr;
-    if (list) LIST_FOR_EACH_ENTRY( attr, list, const attr_t, entry )
+    if (type_is_defined(iface) && type_iface_get_inherit(iface))
+        return 1;
+    if (iface->attrs) LIST_FOR_EACH_ENTRY( attr, iface->attrs, const attr_t, entry )
         if (attr->type == ATTR_OBJECT || attr->type == ATTR_ODL) return 1;
     return 0;
 }
@@ -860,7 +868,7 @@ static void write_locals(FILE *fp, const type_t *iface, int body)
     = "/* WIDL-generated stub.  You must provide an implementation for this.  */";
   const statement_t *stmt;
 
-  if (!is_object(iface->attrs))
+  if (!is_object(iface))
     return;
 
   STATEMENTS_FOR_EACH_FUNC(stmt, type_iface_get_stmts(iface)) {
@@ -1174,7 +1182,7 @@ static void write_forward_decls(FILE *header, const statement_list_t *stmts)
       case STMT_TYPE:
         if (type_get_type(stmt->u.type) == TYPE_INTERFACE)
         {
-          if (is_object(stmt->u.type->attrs) || is_attr(stmt->u.type->attrs, ATTR_DISPINTERFACE))
+          if (is_object(stmt->u.type) || is_attr(stmt->u.type->attrs, ATTR_DISPINTERFACE))
             write_forward(header, stmt->u.type);
         }
         else if (type_get_type(stmt->u.type) == TYPE_COCLASS)
@@ -1209,7 +1217,7 @@ static void write_header_stmts(FILE *header, const statement_list_t *stmts, cons
         if (type_get_type(stmt->u.type) == TYPE_INTERFACE)
         {
           type_t *iface = stmt->u.type;
-          if (is_attr(stmt->u.type->attrs, ATTR_DISPINTERFACE) || is_object(stmt->u.type->attrs))
+          if (is_attr(stmt->u.type->attrs, ATTR_DISPINTERFACE) || is_object(stmt->u.type))
           {
             write_com_interface_start(header, iface);
             write_header_stmts(header, type_iface_get_stmts(iface), stmt->u.type, TRUE);

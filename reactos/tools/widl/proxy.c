@@ -698,12 +698,12 @@ static int does_any_iface(const statement_list_t *stmts, type_pred_t pred)
 
 int need_proxy(const type_t *iface)
 {
-  return is_object(iface->attrs) && !is_local(iface->attrs);
+  return is_object(iface) && !is_local(iface->attrs);
 }
 
 int need_stub(const type_t *iface)
 {
-  return !is_object(iface->attrs) && !is_local(iface->attrs);
+  return !is_object(iface) && !is_local(iface->attrs);
 }
 
 int need_proxy_file(const statement_list_t *stmts)
@@ -754,7 +754,7 @@ static void build_iface_list( const statement_list_t *stmts, type_t **ifaces[], 
             type_t *iface = stmt->u.type;
             if (type_iface_get_inherit(iface) && need_proxy(iface))
             {
-                *ifaces = xrealloc( *ifaces, (*count + 1) * sizeof(*ifaces) );
+                *ifaces = xrealloc( *ifaces, (*count + 1) * sizeof(**ifaces) );
                 (*ifaces)[(*count)++] = iface;
             }
         }

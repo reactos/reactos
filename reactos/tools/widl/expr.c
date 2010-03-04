@@ -87,7 +87,9 @@ expr_t *make_exprs(enum expr_type type, char *val)
     e->u.sval = val;
     e->is_const = FALSE;
     /* check for predefined constants */
-    if (type == EXPR_IDENTIFIER)
+    switch (type)
+    {
+    case EXPR_IDENTIFIER:
     {
         var_t *c = find_const(val, 0);
         if (c)
@@ -97,6 +99,21 @@ expr_t *make_exprs(enum expr_type type, char *val)
             e->is_const = TRUE;
             e->cval = c->eval->cval;
         }
+        break;
+    }
+    case EXPR_CHARCONST:
+        if (!val[0])
+            error_loc("empty character constant\n");
+        else if (val[1])
+            error_loc("multi-character constants are endian dependent\n");
+        else
+        {
+            e->is_const = TRUE;
+            e->cval = *val;
+        }
+        break;
+    default:
+        break;
     }
     return e;
 }
@@ -457,6 +474,11 @@ static struct expression_type resolve_expression(const struct expr_loc *expr_loc
         result.is_temporary = TRUE;
         result.type = type_new_pointer(RPC_FC_UP, type_new_int(TYPE_BASIC_WCHAR, 0), NULL);
         break;
+    case EXPR_CHARCONST:
+        result.is_variable = FALSE;
+        result.is_temporary = TRUE;
+        result.type = type_new_int(TYPE_BASIC_CHAR, 0);
+        break;
     case EXPR_DOUBLE:
         result.is_variable = FALSE;
         result.is_temporary = TRUE;
@@ -655,6 +677,9 @@ void write_expr(FILE *h, const expr_t *e, int brackets,
     case EXPR_WSTRLIT:
         fprintf(h, "L\"%s\"", e->u.sval);
         break;
+    case EXPR_CHARCONST:
+        fprintf(h, "'%s'", e->u.sval);
+        break;
     case EXPR_LOGNOT:
         fprintf(h, "!");
         write_expr(h, e->ref, 1, toplevel, toplevel_prefix, cont_type, local_var_prefix);
@@ -804,6 +829,7 @@ int compare_expr(const expr_t *a, const expr_t *b)
         case EXPR_IDENTIFIER:
         case EXPR_STRLIT:
         case EXPR_WSTRLIT:
+        case EXPR_CHARCONST:
             return strcmp(a->u.sval, b->u.sval);
         case EXPR_COND:
             ret = compare_expr(a->ref, b->ref);
