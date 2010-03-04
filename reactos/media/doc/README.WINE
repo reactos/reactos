@@ -230,13 +230,13 @@ snmpapi -
   reactos/dll/win32/snmpapi/main.c              # Synced at 20090222
 
 User32 -
-  reactos/dll/win32/user32/controls/button.c    # Synced to Wine-1_1_22
-  reactos/dll/win32/user32/controls/combo.c     # Synced to Wine-1_1_22
-  reactos/dll/win32/user32/controls/edit.c      # Synced to Wine-1_1_29
-  reactos/dll/win32/user32/controls/icontitle.c # Synced to Wine-1_1_13
-  reactos/dll/win32/user32/controls/listbox.c   # Synced to Wine-1_1_22
+  reactos/dll/win32/user32/controls/button.c    # Synced to Wine-1_1_39
+  reactos/dll/win32/user32/controls/combo.c     # Synced to Wine-1_1_39
+  reactos/dll/win32/user32/controls/edit.c      # Synced to Wine-1_1_39
+  reactos/dll/win32/user32/controls/icontitle.c # Synced to Wine-1_1_39
+  reactos/dll/win32/user32/controls/listbox.c   # Synced to Wine-1_1_39
   reactos/dll/win32/user32/controls/scrollbar.c # Forked
-  reactos/dll/win32/user32/controls/static.c    # Synced to Wine-1_1_22
+  reactos/dll/win32/user32/controls/static.c    # Synced to Wine-1_1_39
 
   reactos/dll/win32/user32/include/dde_private.h # Synced to wine 1.1.24
 
