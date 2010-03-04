@@ -51,6 +51,7 @@ MAKE_FUNCPTR(png_destroy_write_struct);
 MAKE_FUNCPTR(png_error);
 MAKE_FUNCPTR(png_get_bit_depth);
 MAKE_FUNCPTR(png_get_color_type);
+MAKE_FUNCPTR(png_get_error_ptr);
 MAKE_FUNCPTR(png_get_image_height);
 MAKE_FUNCPTR(png_get_image_width);
 MAKE_FUNCPTR(png_get_io_ptr);
@@ -58,8 +59,9 @@ MAKE_FUNCPTR(png_get_pHYs);
 MAKE_FUNCPTR(png_get_PLTE);
 MAKE_FUNCPTR(png_get_tRNS);
 MAKE_FUNCPTR(png_set_bgr);
+MAKE_FUNCPTR(png_set_error_fn);
+MAKE_FUNCPTR(png_set_expand_gray_1_2_4_to_8);
 MAKE_FUNCPTR(png_set_filler);
-MAKE_FUNCPTR(png_set_gray_1_2_4_to_8);
 MAKE_FUNCPTR(png_set_gray_to_rgb);
 MAKE_FUNCPTR(png_set_IHDR);
 MAKE_FUNCPTR(png_set_pHYs);
@@ -92,6 +94,7 @@ static void *load_libpng(void)
         LOAD_FUNCPTR(png_error);
         LOAD_FUNCPTR(png_get_bit_depth);
         LOAD_FUNCPTR(png_get_color_type);
+        LOAD_FUNCPTR(png_get_error_ptr);
         LOAD_FUNCPTR(png_get_image_height);
         LOAD_FUNCPTR(png_get_image_width);
         LOAD_FUNCPTR(png_get_io_ptr);
@@ -99,8 +102,9 @@ static void *load_libpng(void)
         LOAD_FUNCPTR(png_get_PLTE);
         LOAD_FUNCPTR(png_get_tRNS);
         LOAD_FUNCPTR(png_set_bgr);
+        LOAD_FUNCPTR(png_set_error_fn);
+        LOAD_FUNCPTR(png_set_expand_gray_1_2_4_to_8);
         LOAD_FUNCPTR(png_set_filler);
-        LOAD_FUNCPTR(png_set_gray_1_2_4_to_8);
         LOAD_FUNCPTR(png_set_gray_to_rgb);
         LOAD_FUNCPTR(png_set_IHDR);
         LOAD_FUNCPTR(png_set_pHYs);
@@ -118,6 +122,23 @@ static void *load_libpng(void)
 #undef LOAD_FUNCPTR
     }
     return libpng_handle;
+}
+
+static void user_error_fn(png_structp png_ptr, png_const_charp error_message)
+{
+    jmp_buf *pjmpbuf;
+
+    /* This uses setjmp/longjmp just like the default. We can't use the
+     * default because there's no way to access the jmp buffer in the png_struct
+     * that works in 1.2 and 1.4 and allows us to dynamically load libpng. */
+    WARN("PNG error: %s\n", debugstr_a(error_message));
+    pjmpbuf = ppng_get_error_ptr(png_ptr);
+    longjmp(*pjmpbuf, 1);
+}
+
+static void user_warning_fn(png_structp png_ptr, png_const_charp warning_message)
+{
+    WARN("PNG warning: %s\n", debugstr_a(warning_message));
 }
 
 typedef struct {
@@ -226,6 +247,8 @@ static HRESULT WINAPI PngDecoder_Initialize(IWICBitmapDecoder *iface, IStream *p
     int num_trans;
     png_uint_32 transparency;
     png_color_16p trans_values;
+    jmp_buf jmpbuf;
+
     TRACE("(%p,%p,%x)\n", iface, pIStream, cacheOptions);
 
     /* initialize libpng */
@@ -249,13 +272,14 @@ static HRESULT WINAPI PngDecoder_Initialize(IWICBitmapDecoder *iface, IStream *p
     }
 
     /* set up setjmp/longjmp error handling */
-    if (setjmp(png_jmpbuf(This->png_ptr)))
+    if (setjmp(jmpbuf))
     {
         ppng_destroy_read_struct(&This->png_ptr, &This->info_ptr, &This->end_info);
         HeapFree(GetProcessHeap(), 0, row_pointers);
         This->png_ptr = NULL;
         return E_FAIL;
     }
+    ppng_set_error_fn(This->png_ptr, &jmpbuf, user_error_fn, user_warning_fn);
 
     /* seek to the start of the stream */
     seek.QuadPart = 0;
@@ -282,7 +306,7 @@ static HRESULT WINAPI PngDecoder_Initialize(IWICBitmapDecoder *iface, IStream *p
         {
             if (bit_depth < 8)
             {
-                ppng_set_gray_1_2_4_to_8(This->png_ptr);
+                ppng_set_expand_gray_1_2_4_to_8(This->png_ptr);
                 bit_depth = 8;
             }
             ppng_set_gray_to_rgb(This->png_ptr);
@@ -849,6 +873,7 @@ static HRESULT WINAPI PngFrameEncode_WritePixels(IWICBitmapFrameEncode *iface,
     PngEncoder *This = encoder_from_frame(iface);
     png_byte **row_pointers=NULL;
     UINT i;
+    jmp_buf jmpbuf;
     TRACE("(%p,%u,%u,%u,%p)\n", iface, lineCount, cbStride, cbBufferSize, pbPixels);
 
     if (!This->frame_initialized || !This->width || !This->height || !This->format)
@@ -858,11 +883,12 @@ static HRESULT WINAPI PngFrameEncode_WritePixels(IWICBitmapFrameEncode *iface,
         return E_INVALIDARG;
 
     /* set up setjmp/longjmp error handling */
-    if (setjmp(png_jmpbuf(This->png_ptr)))
+    if (setjmp(jmpbuf))
     {
         HeapFree(GetProcessHeap(), 0, row_pointers);
         return E_FAIL;
     }
+    ppng_set_error_fn(This->png_ptr, &jmpbuf, user_error_fn, user_warning_fn);
 
     if (!This->info_written)
     {
@@ -978,16 +1004,18 @@ static HRESULT WINAPI PngFrameEncode_WriteSource(IWICBitmapFrameEncode *iface,
 static HRESULT WINAPI PngFrameEncode_Commit(IWICBitmapFrameEncode *iface)
 {
     PngEncoder *This = encoder_from_frame(iface);
+    jmp_buf jmpbuf;
     TRACE("(%p)\n", iface);
 
     if (!This->info_written || This->lines_written != This->height || This->frame_committed)
         return WINCODEC_ERR_WRONGSTATE;
 
     /* set up setjmp/longjmp error handling */
-    if (setjmp(png_jmpbuf(This->png_ptr)))
+    if (setjmp(jmpbuf))
     {
         return E_FAIL;
     }
+    ppng_set_error_fn(This->png_ptr, &jmpbuf, user_error_fn, user_warning_fn);
 
     ppng_write_end(This->png_ptr, This->info_ptr);
 
@@ -1093,6 +1121,7 @@ static HRESULT WINAPI PngEncoder_Initialize(IWICBitmapEncoder *iface,
     IStream *pIStream, WICBitmapEncoderCacheOption cacheOption)
 {
     PngEncoder *This = (PngEncoder*)iface;
+    jmp_buf jmpbuf;
 
     TRACE("(%p,%p,%u)\n", iface, pIStream, cacheOption);
 
@@ -1116,7 +1145,7 @@ static HRESULT WINAPI PngEncoder_Initialize(IWICBitmapEncoder *iface,
     This->stream = pIStream;
 
     /* set up setjmp/longjmp error handling */
-    if (setjmp(png_jmpbuf(This->png_ptr)))
+    if (setjmp(jmpbuf))
     {
         ppng_destroy_write_struct(&This->png_ptr, &This->info_ptr);
         This->png_ptr = NULL;
@@ -1124,6 +1153,7 @@ static HRESULT WINAPI PngEncoder_Initialize(IWICBitmapEncoder *iface,
         This->stream = NULL;
         return E_FAIL;
     }
+    ppng_set_error_fn(This->png_ptr, &jmpbuf, user_error_fn, user_warning_fn);
 
     /* set up custom i/o handling */
     ppng_set_write_fn(This->png_ptr, This, user_write_data, user_flush);
