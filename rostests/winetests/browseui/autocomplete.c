@@ -219,6 +219,7 @@ IACListVtbl TestACL_ACListVtbl =
     ole_ok(obj->lpVtbl->Next(obj, 1, &wstr, &i)); \
     ok(i == 1, "Expected i == 1, got %d\n", i); \
     ok(str[0] == wstr[0], "String mismatch\n"); \
+    CoTaskMemFree(wstr); \
 }
 
 #define expect_end(obj) \
@@ -280,9 +281,13 @@ static void test_ACLMulti(void)
 
     ole_ok(obj->lpVtbl->Next(obj, 15, wstrtab, &i));
     ok(i == 1, "Expected i == 1, got %d\n", i);
+    CoTaskMemFree(wstrtab[0]);
     ole_ok(obj->lpVtbl->Next(obj, 15, wstrtab, &i));
+    CoTaskMemFree(wstrtab[0]);
     ole_ok(obj->lpVtbl->Next(obj, 15, wstrtab, &i));
+    CoTaskMemFree(wstrtab[0]);
     ole_ok(obj->lpVtbl->Next(obj, 15, wstrtab, &i));
+    CoTaskMemFree(wstrtab[0]);
     ole_ok(acl->lpVtbl->Expand(acl, exp));
     ok(acl1->expcount == 2, "expcount - expected 1, got %d\n", acl1->expcount);
     ok(acl2->expcount == 0 /* XP */ || acl2->expcount == 2 /* Vista */,
@@ -316,6 +321,9 @@ static void test_ACLMulti(void)
     ok(mgr->lpVtbl->Release(mgr) == 0, "Unexpected references\n");
     ok(acl1->ref == 1, "acl1 not released\n");
     ok(acl2->ref == 1, "acl2 not released\n");
+
+    CoTaskMemFree(acl1);
+    CoTaskMemFree(acl2);
 }
 
 START_TEST(autocomplete)
