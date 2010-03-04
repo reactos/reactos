@@ -515,6 +515,8 @@ static void test_CryptCATAdminAddRemoveCatalog(void)
     ok(hcatinfo == NULL, "CryptCATAdminAddCatalog succeeded\n");
     ok(error == ERROR_BAD_FORMAT, "got %u expected ERROR_BAD_FORMAT\n", GetLastError());
     }
+    if (hcatinfo != NULL)
+        pCryptCATAdminReleaseCatalogContext(hcatadmin, hcatinfo, 0);
 
     SetLastError(0xdeadbeef);
     hcatinfo = pCryptCATAdminAddCatalog(hcatadmin, tmpfileW, basenameW, 1);
