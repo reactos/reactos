@@ -87,13 +87,11 @@ GpStatus WINGDIPAPI GdipCloneBrush(GpBrush *brush, GpBrush **clone)
             break;
         }
         case BrushTypeHatchFill:
-            *clone = GdipAlloc(sizeof(GpHatch));
-            if (!*clone) return OutOfMemory;
+        {
+            GpHatch *hatch = (GpHatch*)brush;
 
-            memcpy(*clone, brush, sizeof(GpHatch));
-
-            (*clone)->gdibrush = CreateBrushIndirect(&(*clone)->lb);
-            break;
+            return GdipCreateHatchBrush(hatch->hatchstyle, hatch->forecol, hatch->backcol, (GpHatch**)clone);
+        }
         case BrushTypePathGradient:{
             GpPathGradient *src, *dest;
             INT count;
@@ -189,18 +187,29 @@ GpStatus WINGDIPAPI GdipCloneBrush(GpBrush *brush, GpBrush **clone)
             break;
         }
         case BrushTypeTextureFill:
-            *clone = GdipAlloc(sizeof(GpTexture));
-            if(!*clone)    return OutOfMemory;
+        {
+            GpStatus stat;
+            GpTexture *texture = (GpTexture*)brush;
+            GpTexture *new_texture;
 
-            memcpy(*clone, brush, sizeof(GpTexture));
+            stat = GdipCreateTexture(texture->image, texture->wrap, &new_texture);
 
-            (*clone)->gdibrush = CreateBrushIndirect(&(*clone)->lb);
-            break;
+            if (stat == Ok)
+            {
+                memcpy(new_texture->transform, texture->transform, sizeof(GpMatrix));
+                *clone = (GpBrush*)new_texture;
+            }
+            else
+                *clone = NULL;
+
+            return stat;
+        }
         default:
             ERR("not implemented for brush type %d\n", brush->bt);
             return NotImplemented;
     }
 
+    TRACE("<-- %p\n", *clone);
     return Ok;
 }
 
@@ -317,6 +326,7 @@ GpStatus WINGDIPAPI GdipCreateHatchBrush(HatchStyle hatchstyle, ARGB forecol, AR
         (*brush)->forecol = forecol;
         (*brush)->backcol = backcol;
         (*brush)->hatchstyle = hatchstyle;
+        TRACE("<-- %p\n", *brush);
     }
     else
     {
@@ -336,8 +346,8 @@ GpStatus WINGDIPAPI GdipCreateLineBrush(GDIPCONST GpPointF* startpoint,
 {
     COLORREF col = ARGB2COLORREF(startcolor);
 
-    TRACE("(%p, %p, %x, %x, %d, %p)\n", startpoint, endpoint,
-          startcolor, endcolor, wrap, line);
+    TRACE("(%s, %s, %x, %x, %d, %p)\n", debugstr_pointf(startpoint),
+          debugstr_pointf(endpoint), startcolor, endcolor, wrap, line);
 
     if(!line || !startpoint || !endpoint || wrap == WrapModeClamp)
         return InvalidParameter;
@@ -396,6 +406,8 @@ GpStatus WINGDIPAPI GdipCreateLineBrush(GDIPCONST GpPointF* startpoint,
     (*line)->pblendcolor = NULL;
     (*line)->pblendpos = NULL;
     (*line)->pblendcount = 0;
+
+    TRACE("<-- %p\n", *line);
 
     return Ok;
 }
@@ -491,20 +503,74 @@ GpStatus WINGDIPAPI GdipCreateLineBrushFromRectI(GDIPCONST GpRect* rect,
 
 /******************************************************************************
  * GdipCreateLineBrushFromRectWithAngle [GDIPLUS.@]
- *
- * FIXME: angle value completely ignored. Don't know how to use it since native
- *        always set Brush rectangle to rect (independetly of this angle).
- *        Maybe it's used only on drawing.
  */
 GpStatus WINGDIPAPI GdipCreateLineBrushFromRectWithAngle(GDIPCONST GpRectF* rect,
     ARGB startcolor, ARGB endcolor, REAL angle, BOOL isAngleScalable, GpWrapMode wrap,
     GpLineGradient **line)
 {
+    GpStatus stat;
+    LinearGradientMode mode;
+    REAL width, height, exofs, eyofs;
+    REAL sin_angle, cos_angle, sin_cos_angle;
+
     TRACE("(%p, %x, %x, %.2f, %d, %d, %p)\n", rect, startcolor, endcolor, angle, isAngleScalable,
           wrap, line);
 
-    return GdipCreateLineBrushFromRect(rect, startcolor, endcolor, LinearGradientModeForwardDiagonal,
-                                       wrap, line);
+    sin_angle = sinf(deg2rad(angle));
+    cos_angle = cosf(deg2rad(angle));
+    sin_cos_angle = sin_angle * cos_angle;
+
+    if (isAngleScalable)
+    {
+        width = height = 1.0;
+    }
+    else
+    {
+        width = rect->Width;
+        height = rect->Height;
+    }
+
+    if (sin_cos_angle >= 0)
+        mode = LinearGradientModeForwardDiagonal;
+    else
+        mode = LinearGradientModeBackwardDiagonal;
+
+    stat = GdipCreateLineBrushFromRect(rect, startcolor, endcolor, mode, wrap, line);
+
+    if (stat == Ok)
+    {
+        if (sin_cos_angle >= 0)
+        {
+            exofs = width * sin_cos_angle + height * cos_angle * cos_angle;
+            eyofs = width * sin_angle * sin_angle + height * sin_cos_angle;
+        }
+        else
+        {
+            exofs = width * sin_angle * sin_angle + height * sin_cos_angle;
+            eyofs = -width * sin_cos_angle + height * sin_angle * sin_angle;
+        }
+
+        if (isAngleScalable)
+        {
+            exofs = exofs * rect->Width;
+            eyofs = eyofs * rect->Height;
+        }
+
+        if (sin_angle >= 0)
+        {
+            (*line)->endpoint.X = rect->X + exofs;
+            (*line)->endpoint.Y = rect->Y + eyofs;
+        }
+        else
+        {
+            (*line)->endpoint.X = (*line)->startpoint.X;
+            (*line)->endpoint.Y = (*line)->startpoint.Y;
+            (*line)->startpoint.X = rect->X + exofs;
+            (*line)->startpoint.Y = rect->Y + eyofs;
+        }
+    }
+
+    return stat;
 }
 
 GpStatus WINGDIPAPI GdipCreateLineBrushFromRectWithAngleI(GDIPCONST GpRect* rect,
@@ -570,6 +636,8 @@ GpStatus WINGDIPAPI GdipCreatePathGradient(GDIPCONST GpPointF* points,
     (*grad)->center.Y = 0.0;
     (*grad)->focus.X = 0.0;
     (*grad)->focus.Y = 0.0;
+
+    TRACE("<-- %p\n", *grad);
 
     return Ok;
 }
@@ -661,6 +729,8 @@ GpStatus WINGDIPAPI GdipCreatePathGradientFromPath(GDIPCONST GpPath* path,
     (*grad)->focus.X = 0.0;
     (*grad)->focus.Y = 0.0;
 
+    TRACE("<-- %p\n", *grad);
+
     return Ok;
 }
 
@@ -686,6 +756,8 @@ GpStatus WINGDIPAPI GdipCreateSolidFill(ARGB color, GpSolidFill **sf)
     (*sf)->brush.bt = BrushTypeSolidColor;
     (*sf)->color = color;
     (*sf)->bmp = ARGB2BMP(color);
+
+    TRACE("<-- %p\n", *sf);
 
     return Ok;
 }
@@ -749,14 +821,9 @@ GpStatus WINGDIPAPI GdipCreateTextureIA(GpImage *image,
     GDIPCONST GpImageAttributes *imageattr, REAL x, REAL y, REAL width,
     REAL height, GpTexture **texture)
 {
-    HDC hdc;
-    HBITMAP hbm, old = NULL;
-    BITMAPINFO *pbmi;
-    BITMAPINFOHEADER *bmih;
-    INT n_x, n_y, n_width, n_height, abs_height, stride, image_stride, i, bytespp;
-    BOOL bm_is_selected;
-    BYTE *dibits, *buff, *textbits;
+    HBITMAP hbm;
     GpStatus status;
+    GpImage *new_image=NULL;
 
     TRACE("(%p, %p, %.2f, %.2f, %.2f, %.2f, %p)\n", image, imageattr, x, y, width, height,
            texture);
@@ -764,124 +831,61 @@ GpStatus WINGDIPAPI GdipCreateTextureIA(GpImage *image,
     if(!image || !texture || x < 0.0 || y < 0.0 || width < 0.0 || height < 0.0)
         return InvalidParameter;
 
+    *texture = NULL;
+
     if(image->type != ImageTypeBitmap){
         FIXME("not implemented for image type %d\n", image->type);
         return NotImplemented;
     }
 
-    n_x = roundr(x);
-    n_y = roundr(y);
-    n_width = roundr(width);
-    n_height = roundr(height);
+    status = GdipCloneBitmapArea(x, y, width, height, PixelFormatDontCare, (GpBitmap*)image, (GpBitmap**)&new_image);
+    if (status != Ok)
+        return status;
 
-    if(n_x + n_width > ((GpBitmap*)image)->width ||
-       n_y + n_height > ((GpBitmap*)image)->height)
-        return InvalidParameter;
-
-    hbm = ((GpBitmap*)image)->hbitmap;
-    if(!hbm)   return GenericError;
-    hdc = ((GpBitmap*)image)->hdc;
-    bm_is_selected = (hdc != 0);
-
-    pbmi = GdipAlloc(sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
-    if (!pbmi)
-        return OutOfMemory;
-    pbmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    pbmi->bmiHeader.biBitCount = 0;
-
-    if(!bm_is_selected){
-        hdc = CreateCompatibleDC(0);
-        old = SelectObject(hdc, hbm);
+    hbm = ((GpBitmap*)new_image)->hbitmap;
+    if(!hbm)
+    {
+        status = GenericError;
+        goto exit;
     }
-
-    /* fill out bmi */
-    GetDIBits(hdc, hbm, 0, 0, NULL, pbmi, DIB_RGB_COLORS);
-
-    bytespp = pbmi->bmiHeader.biBitCount / 8;
-    abs_height = abs(pbmi->bmiHeader.biHeight);
-
-    if(n_x > pbmi->bmiHeader.biWidth || n_x + n_width > pbmi->bmiHeader.biWidth ||
-       n_y > abs_height || n_y + n_height > abs_height){
-        GdipFree(pbmi);
-        return InvalidParameter;
-    }
-
-    dibits = GdipAlloc(pbmi->bmiHeader.biSizeImage);
-
-    if(dibits)  /* this is not a good place to error out */
-        GetDIBits(hdc, hbm, 0, abs_height, dibits, pbmi, DIB_RGB_COLORS);
-
-    if(!bm_is_selected){
-        SelectObject(hdc, old);
-        DeleteDC(hdc);
-    }
-
-    if(!dibits){
-        GdipFree(pbmi);
-        return OutOfMemory;
-    }
-
-    image_stride = (pbmi->bmiHeader.biWidth * bytespp + 3) & ~3;
-    stride = (n_width * bytespp + 3) & ~3;
-    buff = GdipAlloc(sizeof(BITMAPINFOHEADER) + stride * n_height);
-    if(!buff){
-        GdipFree(pbmi);
-        GdipFree(dibits);
-        return OutOfMemory;
-    }
-
-    bmih = (BITMAPINFOHEADER*)buff;
-    textbits = (BYTE*) (bmih + 1);
-    bmih->biSize = sizeof(BITMAPINFOHEADER);
-    bmih->biWidth = n_width;
-    bmih->biHeight = n_height;
-    bmih->biCompression = BI_RGB;
-    bmih->biSizeImage = stride * n_height;
-    bmih->biBitCount = pbmi->bmiHeader.biBitCount;
-    bmih->biClrUsed = 0;
-    bmih->biPlanes = 1;
-
-    /* image is flipped */
-    if(pbmi->bmiHeader.biHeight > 0){
-        dibits += image_stride * (pbmi->bmiHeader.biHeight - 1);
-        image_stride *= -1;
-        textbits += stride * (n_height - 1);
-        stride *= -1;
-    }
-
-    GdipFree(pbmi);
-
-    for(i = 0; i < n_height; i++)
-        memcpy(&textbits[i * stride],
-               &dibits[n_x * bytespp + (n_y + i) * image_stride],
-               abs(stride));
 
     *texture = GdipAlloc(sizeof(GpTexture));
     if (!*texture){
-        GdipFree(dibits);
-        GdipFree(buff);
-        return OutOfMemory;
+        status = OutOfMemory;
+        goto exit;
     }
 
     if((status = GdipCreateMatrix(&(*texture)->transform)) != Ok){
-        GdipFree(*texture);
-        GdipFree(dibits);
-        GdipFree(buff);
-        return status;
+        goto exit;
     }
 
-    (*texture)->brush.lb.lbStyle = BS_DIBPATTERNPT;
-    (*texture)->brush.lb.lbColor = DIB_RGB_COLORS;
-    (*texture)->brush.lb.lbHatch = (ULONG_PTR)buff;
+    (*texture)->brush.lb.lbStyle = BS_PATTERN;
+    (*texture)->brush.lb.lbColor = 0;
+    (*texture)->brush.lb.lbHatch = (ULONG_PTR)hbm;
 
     (*texture)->brush.gdibrush = CreateBrushIndirect(&(*texture)->brush.lb);
     (*texture)->brush.bt = BrushTypeTextureFill;
     (*texture)->wrap = imageattr->wrap;
+    (*texture)->image = new_image;
 
-    GdipFree(dibits);
-    GdipFree(buff);
+exit:
+    if (status == Ok)
+    {
+        TRACE("<-- %p\n", *texture);
+    }
+    else
+    {
+        if (*texture)
+        {
+            GdipDeleteMatrix((*texture)->transform);
+            GdipFree(*texture);
+            *texture = NULL;
+        }
+        GdipDisposeImage(new_image);
+        TRACE("<-- error %u\n", status);
+    }
 
-    return Ok;
+    return status;
 }
 
 /******************************************************************************
@@ -979,6 +983,7 @@ GpStatus WINGDIPAPI GdipDeleteBrush(GpBrush *brush)
             break;
         case BrushTypeTextureFill:
             GdipDeleteMatrix(((GpTexture*)brush)->transform);
+            GdipDisposeImage(((GpTexture*)brush)->image);
             break;
         default:
             break;
@@ -1175,6 +1180,8 @@ GpStatus WINGDIPAPI GdipGetPathGradientSurroundColorsWithCount(GpPathGradient
 {
     static int calls;
 
+    TRACE("(%p,%p,%p)\n", grad, argb, count);
+
     if(!grad || !argb || !count || (*count < grad->pathdata.Count))
         return InvalidParameter;
 
@@ -1207,6 +1214,19 @@ GpStatus WINGDIPAPI GdipGetSolidFillColor(GpSolidFill *sf, ARGB *argb)
     *argb = sf->color;
 
     return Ok;
+}
+
+/******************************************************************************
+ * GdipGetTextureImage [GDIPLUS.@]
+ */
+GpStatus WINGDIPAPI GdipGetTextureImage(GpTexture *brush, GpImage **image)
+{
+    TRACE("(%p, %p)\n", brush, image);
+
+    if(!brush || !image)
+        return InvalidParameter;
+
+    return GdipCloneImage(brush->image, image);
 }
 
 /******************************************************************************
@@ -1430,6 +1450,8 @@ GpStatus WINGDIPAPI GdipSetPathGradientBlend(GpPathGradient *brush, GDIPCONST RE
 {
     static int calls;
 
+    TRACE("(%p,%p,%p,%i)\n", brush, blend, pos, count);
+
     if(!(calls++))
         FIXME("not implemented\n");
 
@@ -1463,7 +1485,7 @@ GpStatus WINGDIPAPI GdipSetPathGradientCenterColor(GpPathGradient *grad,
 GpStatus WINGDIPAPI GdipSetPathGradientCenterPoint(GpPathGradient *grad,
     GpPointF *point)
 {
-    TRACE("(%p, %p)\n", grad, point);
+    TRACE("(%p, %s)\n", grad, debugstr_pointf(point));
 
     if(!grad || !point)
         return InvalidParameter;
@@ -1522,6 +1544,8 @@ GpStatus WINGDIPAPI GdipSetPathGradientSigmaBlend(GpPathGradient *grad,
 {
     static int calls;
 
+    TRACE("(%p,%0.2f,%0.2f)\n", grad, focus, scale);
+
     if(!grad || focus < 0.0 || focus > 1.0 || scale < 0.0 || scale > 1.0)
         return InvalidParameter;
 
@@ -1535,6 +1559,8 @@ GpStatus WINGDIPAPI GdipSetPathGradientSurroundColorsWithCount(GpPathGradient
     *grad, ARGB *argb, INT *count)
 {
     static int calls;
+
+    TRACE("(%p,%p,%p)\n", grad, argb, count);
 
     if(!grad || !argb || !count || (*count <= 0) ||
         (*count > grad->pathdata.Count))
@@ -1749,6 +1775,8 @@ GpStatus WINGDIPAPI GdipResetLineTransform(GpLineGradient *brush)
 {
     static int calls;
 
+    TRACE("(%p)\n", brush);
+
     if(!(calls++))
         FIXME("not implemented\n");
 
@@ -1760,6 +1788,8 @@ GpStatus WINGDIPAPI GdipSetLineTransform(GpLineGradient *brush,
 {
     static int calls;
 
+    TRACE("(%p,%p)\n", brush,  matrix);
+
     if(!(calls++))
         FIXME("not implemented\n");
 
@@ -1770,6 +1800,8 @@ GpStatus WINGDIPAPI GdipScaleLineTransform(GpLineGradient *brush, REAL sx, REAL 
     GpMatrixOrder order)
 {
     static int calls;
+
+    TRACE("(%p,%0.2f,%0.2f,%u)\n", brush, sx, sy, order);
 
     if(!(calls++))
         FIXME("not implemented\n");
@@ -1837,6 +1869,8 @@ GpStatus WINGDIPAPI GdipRotateLineTransform(GpLineGradient* brush,
     REAL angle, GpMatrixOrder order)
 {
     static int calls;
+
+    TRACE("(%p,%0.2f,%u)\n", brush, angle, order);
 
     if(!brush)
         return InvalidParameter;

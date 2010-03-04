@@ -30,25 +30,30 @@ WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
 GpStatus WINGDIPAPI GdipCloneImageAttributes(GDIPCONST GpImageAttributes *imageattr,
     GpImageAttributes **cloneImageattr)
 {
+    GpStatus stat;
+
     TRACE("(%p, %p)\n", imageattr, cloneImageattr);
 
     if(!imageattr || !cloneImageattr)
         return InvalidParameter;
 
-    **cloneImageattr = *imageattr;
+    stat = GdipCreateImageAttributes(cloneImageattr);
 
-    return Ok;
+    if (stat == Ok)
+        **cloneImageattr = *imageattr;
+
+    return stat;
 }
 
 GpStatus WINGDIPAPI GdipCreateImageAttributes(GpImageAttributes **imageattr)
 {
-    TRACE("(%p)\n", imageattr);
-
     if(!imageattr)
         return InvalidParameter;
 
     *imageattr = GdipAlloc(sizeof(GpImageAttributes));
     if(!*imageattr)    return OutOfMemory;
+
+    TRACE("<-- %p\n", *imageattr);
 
     return Ok;
 }
@@ -84,21 +89,40 @@ GpStatus WINGDIPAPI GdipSetImageAttributesColorMatrix(GpImageAttributes *imageat
     ColorAdjustType type, BOOL enableFlag, GDIPCONST ColorMatrix* colorMatrix,
     GDIPCONST ColorMatrix* grayMatrix, ColorMatrixFlags flags)
 {
-    static int calls;
+    TRACE("(%p,%u,%i,%p,%p,%u)\n", imageattr, type, enableFlag, colorMatrix,
+        grayMatrix, flags);
 
-    if(!imageattr || !colorMatrix || !grayMatrix)
+    if(!imageattr || type >= ColorAdjustTypeCount || flags > ColorMatrixFlagsAltGray)
         return InvalidParameter;
 
-    if(!(calls++))
-        FIXME("not implemented\n");
+    if (enableFlag)
+    {
+        if (!colorMatrix)
+            return InvalidParameter;
 
-    return NotImplemented;
+        if (flags == ColorMatrixFlagsAltGray)
+        {
+            if (!grayMatrix)
+                return InvalidParameter;
+
+            imageattr->colormatrices[type].graymatrix = *grayMatrix;
+        }
+
+        imageattr->colormatrices[type].colormatrix = *colorMatrix;
+        imageattr->colormatrices[type].flags = flags;
+    }
+
+    imageattr->colormatrices[type].enabled = enableFlag;
+
+    return Ok;
 }
 
 GpStatus WINGDIPAPI GdipSetImageAttributesWrapMode(GpImageAttributes *imageAttr,
     WrapMode wrap, ARGB argb, BOOL clamp)
 {
     static int calls;
+
+    TRACE("(%p,%u,%08x,%i)\n", imageAttr, wrap, argb, clamp);
 
     if(!imageAttr)
         return InvalidParameter;
@@ -114,6 +138,8 @@ GpStatus WINGDIPAPI GdipSetImageAttributesCachedBackground(GpImageAttributes *im
 {
     static int calls;
 
+    TRACE("(%p,%i)\n", imageAttr, enableFlag);
+
     if(!(calls++))
         FIXME("not implemented\n");
 
@@ -123,18 +149,23 @@ GpStatus WINGDIPAPI GdipSetImageAttributesCachedBackground(GpImageAttributes *im
 GpStatus WINGDIPAPI GdipSetImageAttributesGamma(GpImageAttributes *imageAttr,
     ColorAdjustType type, BOOL enableFlag, REAL gamma)
 {
-    static int calls;
+    TRACE("(%p,%u,%i,%0.2f)\n", imageAttr, type, enableFlag, gamma);
 
-    if(!(calls++))
-        FIXME("not implemented\n");
+    if (!imageAttr || (enableFlag && gamma <= 0.0) || type >= ColorAdjustTypeCount)
+        return InvalidParameter;
 
-    return NotImplemented;
+    imageAttr->gamma_enabled[type] = enableFlag;
+    imageAttr->gamma[type] = gamma;
+
+    return Ok;
 }
 
 GpStatus WINGDIPAPI GdipSetImageAttributesNoOp(GpImageAttributes *imageAttr,
     ColorAdjustType type, BOOL enableFlag)
 {
     static int calls;
+
+    TRACE("(%p,%u,%i)\n", imageAttr, type, enableFlag);
 
     if(!(calls++))
         FIXME("not implemented\n");
@@ -146,6 +177,8 @@ GpStatus WINGDIPAPI GdipSetImageAttributesOutputChannel(GpImageAttributes *image
     ColorAdjustType type, BOOL enableFlag, ColorChannelFlags channelFlags)
 {
     static int calls;
+
+    TRACE("(%p,%u,%i,%x)\n", imageAttr, type, enableFlag, channelFlags);
 
     if(!(calls++))
         FIXME("not implemented\n");
@@ -159,6 +192,8 @@ GpStatus WINGDIPAPI GdipSetImageAttributesOutputChannelColorProfile(GpImageAttri
 {
     static int calls;
 
+    TRACE("(%p,%u,%i,%s)\n", imageAttr, type, enableFlag, debugstr_w(colorProfileFilename));
+
     if(!(calls++))
         FIXME("not implemented\n");
 
@@ -171,6 +206,8 @@ GpStatus WINGDIPAPI GdipSetImageAttributesRemapTable(GpImageAttributes *imageAtt
 {
     static int calls;
 
+    TRACE("(%p,%u,%i,%u,%p)\n", imageAttr, type, enableFlag, mapSize, map);
+
     if(!(calls++))
         FIXME("not implemented\n");
 
@@ -182,6 +219,8 @@ GpStatus WINGDIPAPI GdipSetImageAttributesThreshold(GpImageAttributes *imageAttr
 {
     static int calls;
 
+    TRACE("(%p,%u,%i,%0.2f)\n", imageAttr, type, enableFlag, threshold);
+
     if(!(calls++))
         FIXME("not implemented\n");
 
@@ -192,6 +231,8 @@ GpStatus WINGDIPAPI GdipSetImageAttributesToIdentity(GpImageAttributes *imageAtt
     ColorAdjustType type)
 {
     static int calls;
+
+    TRACE("(%p,%u)\n", imageAttr, type);
 
     if(!(calls++))
         FIXME("not implemented\n");

@@ -80,8 +80,14 @@ static inline REAL deg2rad(REAL degrees)
 
 extern const char *debugstr_rectf(CONST RectF* rc);
 
+extern const char *debugstr_pointf(CONST PointF* pt);
+
 extern void convert_32bppARGB_to_32bppPARGB(UINT width, UINT height,
     BYTE *dst_bits, INT dst_stride, const BYTE *src_bits, INT src_stride);
+
+extern GpStatus convert_pixels(UINT width, UINT height,
+    INT dst_stride, BYTE *dst_bits, PixelFormat dst_format,
+    INT src_stride, const BYTE *src_bits, PixelFormat src_format, ARGB *src_palette);
 
 struct GpPen{
     UINT style;
@@ -174,6 +180,7 @@ struct GpLineGradient{
 struct GpTexture{
     GpBrush brush;
     GpMatrix *transform;
+    GpImage *image;
     WrapMode wrap;  /* not used yet */
 };
 
@@ -217,6 +224,7 @@ struct GpImage{
     UINT palette_count;
     UINT palette_size;
     ARGB *palette_entries;
+    REAL xres, yres;
 };
 
 struct GpMetafile{
@@ -249,9 +257,19 @@ struct color_key{
     ARGB high;
 };
 
+struct color_matrix{
+    BOOL enabled;
+    ColorMatrixFlags flags;
+    ColorMatrix colormatrix;
+    ColorMatrix graymatrix;
+};
+
 struct GpImageAttributes{
     WrapMode wrap;
     struct color_key colorkeys[ColorAdjustTypeCount];
+    struct color_matrix colormatrices[ColorAdjustTypeCount];
+    BOOL gamma_enabled[ColorAdjustTypeCount];
+    REAL gamma[ColorAdjustTypeCount];
 };
 
 struct GpFont{
@@ -274,6 +292,8 @@ struct GpStringFormat{
     INT tabcount;
     REAL firsttab;
     REAL *tabs;
+    CharacterRange *character_ranges;
+    INT range_count;
 };
 
 struct GpFontCollection{

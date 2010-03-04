@@ -397,7 +397,7 @@
 @ stdcall GdipGetStringFormatTrimming(ptr ptr)
 @ stdcall GdipGetTextContrast(ptr ptr)
 @ stdcall GdipGetTextRenderingHint(ptr ptr)
-@ stub GdipGetTextureImage
+@ stdcall GdipGetTextureImage(ptr ptr)
 @ stdcall GdipGetTextureTransform(ptr ptr)
 @ stdcall GdipGetTextureWrapMode(ptr ptr)
 @ stdcall GdipGetVisibleClipBounds(ptr ptr)
@@ -424,7 +424,7 @@
 @ stdcall GdipIsOutlineVisiblePathPoint(ptr long long ptr ptr ptr)
 @ stdcall GdipIsOutlineVisiblePathPointI(ptr long long ptr ptr ptr)
 @ stdcall GdipIsStyleAvailable(ptr long ptr)
-@ stub GdipIsVisibleClipEmpty
+@ stdcall GdipIsVisibleClipEmpty(ptr ptr)
 @ stdcall GdipIsVisiblePathPoint(ptr long long ptr ptr)
 @ stdcall GdipIsVisiblePathPointI(ptr long long ptr ptr)
 @ stdcall GdipIsVisiblePoint(ptr long long ptr)
