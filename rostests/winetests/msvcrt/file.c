@@ -893,7 +893,7 @@ static void test_file_write_read( void )
   /* test _read in buffered mode. Last CR should be skipped but  LF not pulled in */
   tempfd = _open(tempf,_O_RDONLY|_O_TEXT); /* open in TEXT mode */
   i = _read(tempfd,btext, strlen(mytext));
-  ok(i == strlen(mytext)-1, "_read_i %d vs %d\n", i, strlen(mytext));
+  ok(i == strlen(mytext)-1, "_read_i %d\n", i);
   _close(tempfd);
 
   ret =_chmod (tempf, _S_IREAD | _S_IWRITE);
