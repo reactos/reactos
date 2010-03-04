@@ -64,13 +64,6 @@ CEnumPins::QueryInterface(
         return NOERROR;
     }
 
-    WCHAR Buffer[MAX_PATH];
-    LPOLESTR lpstr;
-    StringFromCLSID(refiid, &lpstr);
-    swprintf(Buffer, L"CEnumPins::QueryInterface: NoInterface for %s\n", lpstr);
-    OutputDebugStringW(Buffer);
-    CoTaskMemFree(lpstr);
-
     return E_NOINTERFACE;
 }
 
@@ -89,10 +82,6 @@ CEnumPins::Next(
     if (cPins > 1 && !pcFetched)
         return E_INVALIDARG;
 
-    WCHAR Buffer[MAX_PATH];
-    swprintf(Buffer, L"CEnumPins::Next: this %p m_Index %lx cPins %u\n", this, m_Index, cPins);
-    OutputDebugStringW(Buffer);
-
     while(i < cPins)
     {
         if (m_Index + i >= m_Pins.size())
@@ -110,7 +99,6 @@ CEnumPins::Next(
     }
 
     m_Index += i;
-    OutputDebugStringW(L"CEnumPins::Next: done\n");
     if (i < cPins)
         return S_FALSE;
     else
@@ -156,14 +144,6 @@ CEnumPins_fnConstructor(
     LPVOID * ppv)
 {
     CEnumPins * handler = new CEnumPins(Pins);
-
-#ifdef MSDVBNP_TRACE
-    WCHAR Buffer[MAX_PATH];
-    LPOLESTR lpstr;
-    StringFromCLSID(riid, &lpstr);
-    swprintf(Buffer, L"CEnumPins_fnConstructor riid %s pUnknown %p\n", lpstr, pUnknown);
-    OutputDebugStringW(Buffer);
-#endif
 
     if (!handler)
         return E_OUTOFMEMORY;

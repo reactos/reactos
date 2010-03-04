@@ -8,10 +8,10 @@
  */
 #include "precomp.h"
 
-class COutputPin : public IPin
+class COutputPin : public IPin,
+                  public IKsObject
 /*
                   public IQualityControl,
-                  public IKsObject,
                   public IKsPinEx,
                   public IKsPinPipe,
                   public ISpecifyPropertyPages,
@@ -61,6 +61,10 @@ public:
     HRESULT STDMETHODCALLTYPE EndFlush();
     HRESULT STDMETHODCALLTYPE NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate);
 
+    //IKsObject methods
+    HANDLE STDMETHODCALLTYPE KsGetObjectHandle();
+
+
     COutputPin(IBaseFilter * ParentFilter, LPCWSTR PinName) : m_Ref(0), m_ParentFilter(ParentFilter), m_PinName(PinName){};
     virtual ~COutputPin(){};
 
@@ -84,6 +88,12 @@ COutputPin::QueryInterface(
         reinterpret_cast<IUnknown*>(*Output)->AddRef();
         return NOERROR;
     }
+    else if (IsEqualGUID(refiid, IID_IKsObject))
+    {
+        *Output = (IKsObject*)(this);
+        reinterpret_cast<IKsObject*>(*Output)->AddRef();
+        return NOERROR;
+    }
 
     WCHAR Buffer[MAX_PATH];
     LPOLESTR lpstr;
@@ -93,6 +103,20 @@ COutputPin::QueryInterface(
     CoTaskMemFree(lpstr);
 
     return E_NOINTERFACE;
+}
+
+//-------------------------------------------------------------------
+// IKsObject
+//
+HANDLE
+STDMETHODCALLTYPE
+COutputPin::KsGetObjectHandle()
+{
+    OutputDebugStringW(L"COutputPin::KsGetObjectHandle CALLED\n");
+
+    //FIXME
+    // return pin handle
+    return NULL;
 }
 
 //-------------------------------------------------------------------
@@ -124,6 +148,7 @@ HRESULT
 STDMETHODCALLTYPE
 COutputPin::ConnectedTo(IPin **pPin)
 {
+    *pPin = NULL;
     OutputDebugStringW(L"COutputPin::ConnectedTo called\n");
     return VFW_E_NOT_CONNECTED;
 }

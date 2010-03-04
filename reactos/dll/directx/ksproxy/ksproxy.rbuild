@@ -11,6 +11,7 @@
 	<library>setupapi</library>
 	<library>msvcrt</library>
 	<library>strmiids</library>
+	<library>ksuser</library>
 	<group compilerset="gcc">
 		<compilerflag compiler="cxx">-fno-exceptions</compilerflag>
 		<compilerflag compiler="cxx">-fno-rtti</compilerflag>

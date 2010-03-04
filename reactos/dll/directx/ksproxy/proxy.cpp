@@ -95,6 +95,7 @@ public:
     HRESULT STDMETHODCALLTYPE GetPinInstanceCount(ULONG PinId, PKSPIN_CINSTANCES Instances);
     HRESULT STDMETHODCALLTYPE GetPinDataflow(ULONG PinId, KSPIN_DATAFLOW * DataFlow);
     HRESULT STDMETHODCALLTYPE GetPinName(ULONG PinId, KSPIN_DATAFLOW DataFlow, ULONG PinCount, LPWSTR * OutPinName);
+    HRESULT STDMETHODCALLTYPE GetPinCommunication(ULONG PinId, KSPIN_COMMUNICATION * Communication);
     HRESULT STDMETHODCALLTYPE CreatePins();
 protected:
     LONG m_Ref;
@@ -352,6 +353,25 @@ CKsProxy::GetPinInstanceCount(
 
 HRESULT
 STDMETHODCALLTYPE
+CKsProxy::GetPinCommunication(
+    ULONG PinId,
+    KSPIN_COMMUNICATION * Communication)
+{
+    KSP_PIN Property;
+    ULONG BytesReturned;
+
+    // setup request
+    Property.Property.Set = KSPROPSETID_Pin;
+    Property.Property.Id = KSPROPERTY_PIN_COMMUNICATION;
+    Property.Property.Flags = KSPROPERTY_TYPE_GET;
+    Property.PinId = PinId;
+    Property.Reserved = 0;
+
+    return KsSynchronousDeviceControl(m_hDevice, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSP_PIN), (PVOID)Communication, sizeof(KSPIN_COMMUNICATION), &BytesReturned);
+}
+
+HRESULT
+STDMETHODCALLTYPE
 CKsProxy::GetPinDataflow(
     ULONG PinId,
     KSPIN_DATAFLOW * DataFlow)
@@ -446,6 +466,7 @@ CKsProxy::CreatePins()
     ULONG NumPins, Index;
     KSPIN_CINSTANCES Instances;
     KSPIN_DATAFLOW DataFlow;
+    KSPIN_COMMUNICATION Communication;
     HRESULT hr;
     WCHAR Buffer[100];
     LPWSTR PinName;
@@ -462,6 +483,11 @@ CKsProxy::CreatePins()
     {
         // query current instance count
         hr = GetPinInstanceCount(Index, &Instances);
+        if (FAILED(hr))
+            continue;
+
+        // query pin communication;
+        hr = GetPinCommunication(Index, &Communication);
         if (FAILED(hr))
             continue;
 
@@ -487,7 +513,7 @@ CKsProxy::CreatePins()
         // construct the pins
         if (DataFlow == KSPIN_DATAFLOW_IN)
         {
-            hr = CInputPin_Constructor((IBaseFilter*)this, PinName, m_hDevice, Index, IID_IPin, (void**)&pPin);
+            hr = CInputPin_Constructor((IBaseFilter*)this, PinName, m_hDevice, Index, Communication, IID_IPin, (void**)&pPin);
             if (FAILED(hr))
             {
                 CoTaskMemFree(PinName);

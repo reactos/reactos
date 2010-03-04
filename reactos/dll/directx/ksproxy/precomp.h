@@ -107,6 +107,7 @@ CInputPin_Constructor(
     LPCWSTR PinName,
     HANDLE hFilter,
     ULONG PinId,
+    KSPIN_COMMUNICATION Communication,
     REFIID riid,
     LPVOID * ppv);
 
