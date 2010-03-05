@@ -10393,6 +10393,26 @@ extern volatile KSYSTEM_TIME KeTickCount;
 extern BOOLEAN NTSYSAPI NLS_MB_CODE_PAGE_TAG;
 extern BOOLEAN NTSYSAPI NLS_MB_OEM_CODE_PAGE_TAG;
 
+#if defined(USE_DMA_MACROS) && !defined(_NTHAL_) && (defined(_NTDDK_) || defined(_NTDRIVER_)) || defined(_WDM_INCLUDED_)
+FORCEINLINE
+PVOID
+NTAPI
+HalAllocateCommonBuffer(
+  IN PADAPTER_OBJECT  AdapterObject,
+  IN ULONG  Length,
+  OUT PPHYSICAL_ADDRESS  LogicalAddress,
+  IN BOOLEAN  CacheEnabled)
+{
+  PALLOCATE_COMMON_BUFFER allocateCommonBuffer;
+  PVOID commonBuffer;
+
+  allocateCommonBuffer = *(DmaAdapter)->DmaOperations->AllocateCommonBuffer;
+  ASSERT( allocateCommonBuffer != NULL );
+  commonBuffer = allocateCommonBuffer( DmaAdapter, Length, LogicalAddress, CacheEnabled );
+  return commonBuffer;
+}
+#endif
+
 #ifdef __cplusplus
 }
 #endif

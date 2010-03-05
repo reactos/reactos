@@ -3759,15 +3759,6 @@ HalAllocateAdapterChannel(
   IN PDRIVER_CONTROL  ExecutionRoutine);
 
 NTHALAPI
-PVOID
-NTAPI
-HalAllocateCommonBuffer(
-  IN PADAPTER_OBJECT  AdapterObject,
-  IN ULONG  Length,
-  OUT PPHYSICAL_ADDRESS  LogicalAddress,
-  IN BOOLEAN  CacheEnabled);
-
-NTHALAPI
 NTSTATUS
 NTAPI
 HalAssignSlotResources(
