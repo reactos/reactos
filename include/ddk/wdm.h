@@ -2400,6 +2400,68 @@ typedef struct _ACCESS_STATE {
   UNICODE_STRING  ObjectTypeName;
 } ACCESS_STATE, *PACCESS_STATE;
 
+/******************************************************************************
+ *                            Security Manager Functions                      *
+ ******************************************************************************/
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+SeAccessCheck(
+  IN PSECURITY_DESCRIPTOR  SecurityDescriptor,
+  IN PSECURITY_SUBJECT_CONTEXT  SubjectSecurityContext,
+  IN BOOLEAN  SubjectContextLocked,
+  IN ACCESS_MASK  DesiredAccess,
+  IN ACCESS_MASK  PreviouslyGrantedAccess,
+  OUT PPRIVILEGE_SET  *Privileges  OPTIONAL,
+  IN PGENERIC_MAPPING  GenericMapping,
+  IN KPROCESSOR_MODE  AccessMode,
+  OUT PACCESS_MASK  GrantedAccess,
+  OUT PNTSTATUS  AccessStatus);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+SeAssignSecurity(
+  IN PSECURITY_DESCRIPTOR  ParentDescriptor  OPTIONAL,
+  IN PSECURITY_DESCRIPTOR  ExplicitDescriptor  OPTIONAL,
+  OUT PSECURITY_DESCRIPTOR  *NewDescriptor,
+  IN BOOLEAN  IsDirectoryObject,
+  IN PSECURITY_SUBJECT_CONTEXT  SubjectContext,
+  IN PGENERIC_MAPPING  GenericMapping,
+  IN POOL_TYPE  PoolType);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+SeAssignSecurityEx(
+  IN PSECURITY_DESCRIPTOR  ParentDescriptor  OPTIONAL,
+  IN PSECURITY_DESCRIPTOR  ExplicitDescriptor  OPTIONAL,
+  OUT PSECURITY_DESCRIPTOR  *NewDescriptor,
+  IN GUID  *ObjectType  OPTIONAL,
+  IN BOOLEAN  IsDirectoryObject,
+  IN ULONG  AutoInheritFlags,
+  IN PSECURITY_SUBJECT_CONTEXT  SubjectContext,
+  IN PGENERIC_MAPPING  GenericMapping,
+  IN POOL_TYPE  PoolType);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+SeDeassignSecurity(
+  IN OUT PSECURITY_DESCRIPTOR  *SecurityDescriptor);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+SeValidSecurityDescriptor(
+  IN ULONG  Length,
+  IN PSECURITY_DESCRIPTOR  SecurityDescriptor);
+
+#endif
+
 
 /******************************************************************************
  *                            Power Types                     *
@@ -9457,6 +9519,53 @@ ObReleaseObjectSecurity(
   IN BOOLEAN  MemoryAllocated);
 
 #endif
+
+/******************************************************************************
+ *                          Process Manager Functions                         *
+ ******************************************************************************/
+
+/*
+ * PEPROCESS
+ * PsGetCurrentProcess(VOID)
+ */
+#define PsGetCurrentProcess IoGetCurrentProcess
+
+#if !defined(_PSGETCURRENTTHREAD_)
+
+#define _PSGETCURRENTTHREAD_
+
+FORCEINLINE
+PETHREAD
+NTAPI
+PsGetCurrentThread (
+  VOID)
+{
+  return (PETHREAD)KeGetCurrentThread();
+}
+
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PsCreateSystemThread(
+  OUT PHANDLE  ThreadHandle,
+  IN ULONG  DesiredAccess,
+  IN POBJECT_ATTRIBUTES  ObjectAttributes  OPTIONAL,
+  IN HANDLE  ProcessHandle  OPTIONAL,
+  OUT PCLIENT_ID  ClientId  OPTIONAL,
+  IN PKSTART_ROUTINE  StartRoutine,
+  IN PVOID  StartContext OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PsTerminateSystemThread(
+  IN NTSTATUS  ExitStatus);
+
+#define
 
 
 /******************************************************************************
