@@ -3036,69 +3036,10 @@ KeRaiseIrqlToSynchLevel(
 /** Memory manager routines **/
 
 NTKERNELAPI
-NTSTATUS
-NTAPI
-MmAdvanceMdl(
-  IN PMDL  Mdl,
-  IN ULONG  NumberOfBytes);
-
-NTKERNELAPI
-PVOID
-NTAPI
-MmAllocateContiguousMemory(
-  IN ULONG  NumberOfBytes,
-  IN PHYSICAL_ADDRESS  HighestAcceptableAddress);
-
-NTKERNELAPI
-PVOID
-NTAPI
-MmAllocateContiguousMemorySpecifyCache(
-  IN SIZE_T  NumberOfBytes,
-  IN PHYSICAL_ADDRESS  LowestAcceptableAddress,
-  IN PHYSICAL_ADDRESS  HighestAcceptableAddress,
-  IN PHYSICAL_ADDRESS  BoundaryAddressMultiple  OPTIONAL,
-  IN MEMORY_CACHING_TYPE  CacheType);
-
-NTKERNELAPI
-PVOID
-NTAPI
-MmAllocateMappingAddress(
-  IN SIZE_T  NumberOfBytes,
-  IN ULONG  PoolTag);
-
-NTKERNELAPI
 PVOID
 NTAPI
 MmAllocateNonCachedMemory(
   IN ULONG  NumberOfBytes);
-
-NTKERNELAPI
-PMDL
-NTAPI
-MmAllocatePagesForMdl(
-  IN PHYSICAL_ADDRESS  LowAddress,
-  IN PHYSICAL_ADDRESS  HighAddress,
-  IN PHYSICAL_ADDRESS  SkipBytes,
-  IN SIZE_T  TotalBytes);
-
-#if (NTDDI_VERSION >= NTDDI_WS03SP1)
-NTKERNELAPI
-PMDL
-NTAPI
-MmAllocatePagesForMdlEx(
-  IN PHYSICAL_ADDRESS LowAddress,
-  IN PHYSICAL_ADDRESS HighAddress,
-  IN PHYSICAL_ADDRESS SkipBytes,
-  IN SIZE_T TotalBytes,
-  IN MEMORY_CACHING_TYPE CacheType,
-  IN ULONG Flags);
-#endif
-
-NTKERNELAPI
-VOID
-NTAPI
-MmBuildMdlForNonPagedPool(
-  IN OUT PMDL  MemoryDescriptorList);
 
 typedef enum _MMFLUSH_TYPE {
   MmFlushForDelete,
@@ -3115,68 +3056,9 @@ MmFlushImageSection(
 NTKERNELAPI
 VOID
 NTAPI
-MmFreeContiguousMemory(
-  IN PVOID  BaseAddress);
-
-NTKERNELAPI
-VOID
-NTAPI
-MmFreeContiguousMemorySpecifyCache(
-  IN PVOID  BaseAddress,
-  IN SIZE_T  NumberOfBytes,
-  IN MEMORY_CACHING_TYPE  CacheType);
-
-NTKERNELAPI
-VOID
-NTAPI
-MmFreeMappingAddress(
-  IN PVOID  BaseAddress,
-  IN ULONG  PoolTag);
-
-NTKERNELAPI
-VOID
-NTAPI
 MmFreeNonCachedMemory(
   IN PVOID  BaseAddress,
   IN SIZE_T  NumberOfBytes);
-
-NTKERNELAPI
-VOID
-NTAPI
-MmFreePagesFromMdl(
-  IN PMDL  MemoryDescriptorList);
-
-/*
- * ULONG
- * MmGetMdlByteCount(
- *   IN PMDL  Mdl)
- */
-#define MmGetMdlByteCount(_Mdl) \
-  ((_Mdl)->ByteCount)
-
-/*
- * ULONG
- * MmGetMdlByteOffset(
- *   IN PMDL  Mdl)
- */
-#define MmGetMdlByteOffset(_Mdl) \
-  ((_Mdl)->ByteOffset)
-
-/*
- * PPFN_NUMBER
- * MmGetMdlPfnArray(
- *   IN PMDL  Mdl)
- */
-#define MmGetMdlPfnArray(_Mdl) \
-  ((PPFN_NUMBER) ((_Mdl) + 1))
-
-/*
- * PVOID
- * MmGetMdlVirtualAddress(
- *   IN PMDL  Mdl)
- */
-#define MmGetMdlVirtualAddress(_Mdl) \
-  ((PVOID) ((PCHAR) ((_Mdl)->StartVa) + (_Mdl)->ByteOffset))
 
 NTKERNELAPI
 PHYSICAL_ADDRESS
@@ -3195,26 +3077,6 @@ PVOID
 NTAPI
 MmGetVirtualForPhysical(
   IN PHYSICAL_ADDRESS  PhysicalAddress);
-
-NTKERNELAPI
-PVOID
-NTAPI
-MmMapLockedPagesSpecifyCache(
-  IN PMDL  MemoryDescriptorList,
-  IN KPROCESSOR_MODE  AccessMode,
-  IN MEMORY_CACHING_TYPE  CacheType,
-  IN PVOID  BaseAddress,
-  IN ULONG  BugCheckOnFailure,
-  IN MM_PAGE_PRIORITY  Priority);
-
-NTKERNELAPI
-PVOID
-NTAPI
-MmMapLockedPagesWithReservedMapping(
-  IN PVOID  MappingAddress,
-  IN ULONG  PoolTag,
-  IN PMDL  MemoryDescriptorList,
-  IN MEMORY_CACHING_TYPE  CacheType);
 
 NTKERNELAPI
 NTSTATUS
@@ -3262,12 +3124,6 @@ MmMarkPhysicalMemoryAsGood(
   IN PPHYSICAL_ADDRESS  StartAddress,
   IN OUT PLARGE_INTEGER  NumberOfBytes);
 
-NTKERNELAPI
-PVOID
-NTAPI
-MmGetSystemRoutineAddress(
-  IN PUNICODE_STRING  SystemRoutineName);
-
 /*
  * ULONG
  * ADDRESS_AND_SIZE_TO_SPAN_PAGES(
@@ -3279,26 +3135,6 @@ MmGetSystemRoutineAddress(
   ((ULONG) ((((ULONG_PTR) (_Va) & (PAGE_SIZE - 1)) \
     + (_Size) + (PAGE_SIZE - 1)) >> PAGE_SHIFT))
 
-/*
- * VOID
- * MmInitializeMdl(
- *   IN PMDL  MemoryDescriptorList,
- *   IN PVOID  BaseVa,
- *   IN SIZE_T  Length)
- */
-#define MmInitializeMdl(_MemoryDescriptorList, \
-                        _BaseVa, \
-                        _Length) \
-{ \
-  (_MemoryDescriptorList)->Next = (PMDL) NULL; \
-  (_MemoryDescriptorList)->Size = (CSHORT) (sizeof(MDL) + \
-    (sizeof(PFN_NUMBER) * ADDRESS_AND_SIZE_TO_SPAN_PAGES(_BaseVa, _Length))); \
-  (_MemoryDescriptorList)->MdlFlags = 0; \
-  (_MemoryDescriptorList)->StartVa = (PVOID) PAGE_ALIGN(_BaseVa); \
-  (_MemoryDescriptorList)->ByteOffset = BYTE_OFFSET(_BaseVa); \
-  (_MemoryDescriptorList)->ByteCount = (ULONG) _Length; \
-}
-
 NTKERNELAPI
 BOOLEAN
 NTAPI
@@ -3306,28 +3142,10 @@ MmIsAddressValid(
   IN PVOID  VirtualAddress);
 
 NTKERNELAPI
-LOGICAL
-NTAPI
-MmIsDriverVerifying(
-  IN PDRIVER_OBJECT  DriverObject);
-
-NTKERNELAPI
 BOOLEAN
 NTAPI
 MmIsThisAnNtAsSystem(
   VOID);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-MmIsVerifierEnabled(
-  OUT PULONG  VerifierFlags);
-
-NTKERNELAPI
-PVOID
-NTAPI
-MmLockPagableDataSection(
-  IN PVOID  AddressWithinSection);
 
 NTKERNELAPI
 PVOID
@@ -3351,21 +3169,6 @@ MmLockPagableSectionByHandle(
 NTKERNELAPI
 PVOID
 NTAPI
-MmMapIoSpace(
-  IN PHYSICAL_ADDRESS  PhysicalAddress,
-  IN ULONG  NumberOfBytes,
-  IN MEMORY_CACHING_TYPE  CacheEnable);
-
-NTKERNELAPI
-PVOID
-NTAPI
-MmMapLockedPages(
-  IN PMDL  MemoryDescriptorList,
-  IN KPROCESSOR_MODE  AccessMode);
-
-NTKERNELAPI
-PVOID
-NTAPI
 MmLockPageableDataSection (
     IN PVOID AddressWithinSection
 );
@@ -3376,35 +3179,6 @@ NTAPI
 MmUnlockPageableImageSection(
     IN PVOID ImageSectionHandle
 );
-
-NTKERNELAPI
-PVOID
-NTAPI
-MmPageEntireDriver(
-  IN PVOID  AddressWithinSection);
-
-NTKERNELAPI
-VOID
-NTAPI
-MmProbeAndLockProcessPages(
-  IN OUT PMDL  MemoryDescriptorList,
-  IN PEPROCESS  Process,
-  IN KPROCESSOR_MODE  AccessMode,
-  IN LOCK_OPERATION  Operation);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-MmProtectMdlSystemAddress(
-  IN PMDL  MemoryDescriptorList,
-  IN ULONG  NewProtect);
-
-NTKERNELAPI
-VOID
-NTAPI
-MmUnmapLockedPages(
-  IN PVOID  BaseAddress,
-  IN PMDL  MemoryDescriptorList);
 
 NTKERNELAPI
 NTSTATUS
@@ -3424,49 +3198,12 @@ NTAPI
 MmUnsecureVirtualMemory(
   IN HANDLE  SecureHandle);
 
-/*
- * VOID
- * MmPrepareMdlForReuse(
- *   IN PMDL  Mdl)
- */
-#define MmPrepareMdlForReuse(_Mdl) \
-{ \
-  if (((_Mdl)->MdlFlags & MDL_PARTIAL_HAS_BEEN_MAPPED) != 0) { \
-    ASSERT(((_Mdl)->MdlFlags & MDL_PARTIAL) != 0); \
-    MmUnmapLockedPages((_Mdl)->MappedSystemVa, (_Mdl)); \
-  } else if (((_Mdl)->MdlFlags & MDL_PARTIAL) == 0) { \
-    ASSERT(((_Mdl)->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA) == 0); \
-  } \
-}
-
-#define MmGetProcedureAddress(Address) (Address)
-
-NTKERNELAPI
-VOID
-NTAPI
-MmProbeAndLockPages(
-  IN OUT PMDL  MemoryDescriptorList,
-  IN KPROCESSOR_MODE  AccessMode,
-  IN LOCK_OPERATION  Operation);
-
-NTKERNELAPI
-MM_SYSTEMSIZE
-NTAPI
-MmQuerySystemSize(
-  VOID);
-
 NTKERNELAPI
 NTSTATUS
 NTAPI
 MmRemovePhysicalMemory(
   IN PPHYSICAL_ADDRESS  StartAddress,
   IN OUT PLARGE_INTEGER  NumberOfBytes);
-
-NTKERNELAPI
-VOID
-NTAPI
-MmResetDriverPaging(
-  IN PVOID  AddressWithinSection);
 
 NTKERNELAPI
 HANDLE
@@ -3477,47 +3214,11 @@ MmSecureVirtualMemory(
   IN ULONG  ProbeMode);
 
 NTKERNELAPI
-SIZE_T
-NTAPI
-MmSizeOfMdl(
-  IN PVOID  Base,
-  IN SIZE_T  Length);
-
-NTKERNELAPI
-VOID
-NTAPI
-MmUnlockPagableImageSection(
-  IN PVOID  ImageSectionHandle);
-
-NTKERNELAPI
-VOID
-NTAPI
-MmUnlockPages(
-  IN PMDL  MemoryDescriptorList);
-
-NTKERNELAPI
-VOID
-NTAPI
-MmUnmapIoSpace(
-  IN PVOID  BaseAddress,
-  IN SIZE_T  NumberOfBytes);
-
-NTKERNELAPI
-VOID
-NTAPI
-MmUnmapReservedMapping(
-  IN PVOID  BaseAddress,
-  IN ULONG  PoolTag,
-  IN PMDL  MemoryDescriptorList);
-
-NTKERNELAPI
 VOID
 NTAPI
 MmUnmapVideoDisplay(
   IN PVOID  BaseAddress,
   IN SIZE_T  NumberOfBytes);
-
-
 
 /** Object manager routines **/
 
