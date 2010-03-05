@@ -20,8 +20,9 @@
  *
  */
 
-#ifndef _NTIFS_
-#define _NTIFS_
+#pragma once
+
+#define _NTIFS_INCLUDED_
 #define _GNU_NTIFS_
 
 /* Helper macro to enable gcc's extension.  */
@@ -33,14 +34,95 @@
 #endif
 #endif
 
-#define NTKERNELAPI DECLSPEC_IMPORT
-
-#include <ntddk.h>
-
-#define _NTIFS_INCLUDED_
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define NTKERNELAPI DECLSPEC_IMPORT
+#define NTHALAPI DECLSPEC_IMPORT
+
+#include <ntddk.h>
+#include <excpt.h>
+#include <ntdef.h>
+#include <ntnls.h>
+#include <ntstatus.h>
+#include <bugcodes.h>
+#include <ntiologc.h>
+
+#ifndef FlagOn
+#define FlagOn(_F,_SF)        ((_F) & (_SF))
+#endif
+
+#ifndef BooleanFlagOn
+#define BooleanFlagOn(F,SF)   ((BOOLEAN)(((F) & (SF)) != 0))
+#endif
+
+#ifndef SetFlag
+#define SetFlag(_F,_SF)       ((_F) |= (_SF))
+#endif
+
+#ifndef ClearFlag
+#define ClearFlag(_F,_SF)     ((_F) &= ~(_SF))
+#endif
+
+typedef struct _BUS_HANDLER *PBUS_HANDLER;
+typedef struct _CALLBACK_OBJECT *PCALLBACK_OBJECT;
+typedef struct _DEVICE_HANDLER_OBJECT *PDEVICE_HANDLER_OBJECT;
+typedef struct _IO_TIMER *PIO_TIMER;
+typedef struct _KINTERRUPT *PKINTERRUPT;
+typedef struct _KPROCESS *PKPROCESS ,*PRKPROCESS, *PEPROCESS;
+typedef struct _KTHREAD *PKTHREAD, *PRKTHREAD, *PETHREAD;
+typedef struct _OBJECT_TYPE *POBJECT_TYPE;
+typedef struct _PEB *PPEB;
+typedef struct _ACL *PACL;
+
+#define PsGetCurrentProcess IoGetCurrentProcess
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+extern NTSYSAPI volatile CCHAR KeNumberProcessors;
+#elif (NTDDI_VERSION >= NTDDI_WINXP)
+extern NTSYSAPI CCHAR KeNumberProcessors;
+#else
+extern PCCHAR KeNumberProcessors;
+#endif
+
+typedef UNICODE_STRING LSA_UNICODE_STRING, *PLSA_UNICODE_STRING;
+typedef STRING LSA_STRING, *PLSA_STRING;
+typedef OBJECT_ATTRIBUTES LSA_OBJECT_ATTRIBUTES, *PLSA_OBJECT_ATTRIBUTES;
+
+#ifndef SID_IDENTIFIER_AUTHORITY_DEFINED
+#define SID_IDENTIFIER_AUTHORITY_DEFINED
+typedef struct _SID_IDENTIFIER_AUTHORITY {
+  UCHAR Value[6];
+} SID_IDENTIFIER_AUTHORITY,*PSID_IDENTIFIER_AUTHORITY,*LPSID_IDENTIFIER_AUTHORITY;
+#endif
+
+#ifndef SID_DEFINED
+#define SID_DEFINED
+typedef struct _SID {
+   UCHAR  Revision;
+   UCHAR  SubAuthorityCount;
+   SID_IDENTIFIER_AUTHORITY IdentifierAuthority;
+   ULONG SubAuthority[ANYSIZE_ARRAY];
+} SID, *PISID;
+#endif
+
+#define SID_REVISION                    1
+#define SID_MAX_SUB_AUTHORITIES         15
+#define SID_RECOMMENDED_SUB_AUTHORITIES 1
+
+typedef enum _SID_NAME_USE {
+    SidTypeUser = 1,
+    SidTypeGroup,
+    SidTypeDomain,
+    SidTypeAlias,
+    SidTypeWellKnownGroup,
+    SidTypeDeletedAccount,
+    SidTypeInvalid,
+    SidTypeUnknown,
+    SidTypeComputer,
+    SidTypeLabel
+} SID_NAME_USE, *PSID_NAME_USE;
 
 #pragma pack(push,4)
 
@@ -51,23 +133,6 @@ extern "C" {
 #define EX_PUSH_LOCK ULONG_PTR
 #define PEX_PUSH_LOCK PULONG_PTR
 
-    
-#ifndef FlagOn
-#define FlagOn(_F,_SF)        ((_F) & (_SF))
-#endif
-    
-#ifndef BooleanFlagOn
-#define BooleanFlagOn(F,SF)   ((BOOLEAN)(((F) & (SF)) != 0))
-#endif
-    
-#ifndef SetFlag
-#define SetFlag(_F,_SF)       ((_F) |= (_SF))
-#endif
-    
-#ifndef ClearFlag
-#define ClearFlag(_F,_SF)     ((_F) &= ~(_SF))
-#endif
-    
 #include "csq.h"
 
 #ifdef _NTOSKRNL_
@@ -86,7 +151,6 @@ extern LARGE_INTEGER                IoReadTransferCount;
 extern LARGE_INTEGER                IoWriteTransferCount;
 extern LARGE_INTEGER                IoOtherTransferCount;
 
-typedef STRING LSA_STRING, *PLSA_STRING;
 typedef ULONG  LSA_OPERATIONAL_MODE, *PLSA_OPERATIONAL_MODE;
 
 typedef enum _SECURITY_LOGON_TYPE
@@ -379,10 +443,6 @@ typedef enum _SECURITY_LOGON_TYPE
 #define SECURITY_WORLD_SID_AUTHORITY    {0,0,0,0,0,1}
 #define SECURITY_WORLD_RID              (0x00000000L)
 
-#define SID_REVISION                    1
-#define SID_MAX_SUB_AUTHORITIES         15
-#define SID_RECOMMENDED_SUB_AUTHORITIES 1
-
 #define TOKEN_ASSIGN_PRIMARY            (0x0001)
 #define TOKEN_DUPLICATE                 (0x0002)
 #define TOKEN_IMPERSONATE               (0x0004)
@@ -670,16 +730,6 @@ typedef struct _COMPRESSED_DATA_INFO {
     ULONG   CompressedChunkSizes[ANYSIZE_ARRAY];
 } COMPRESSED_DATA_INFO, *PCOMPRESSED_DATA_INFO;
 
-typedef struct _SID_IDENTIFIER_AUTHORITY {
-	UCHAR Value[6];
-} SID_IDENTIFIER_AUTHORITY,*PSID_IDENTIFIER_AUTHORITY,*LPSID_IDENTIFIER_AUTHORITY;
-
-typedef struct _SID {
-   UCHAR  Revision;
-   UCHAR  SubAuthorityCount;
-   SID_IDENTIFIER_AUTHORITY IdentifierAuthority;
-   ULONG SubAuthority[ANYSIZE_ARRAY];
-} SID, *PISID;
 typedef struct _SID_AND_ATTRIBUTES {
 	PSID Sid;
 	ULONG Attributes;
