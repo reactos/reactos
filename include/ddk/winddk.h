@@ -3392,7 +3392,7 @@ SeSinglePrivilegeCheck(
   LUID  PrivilegeValue,
   KPROCESSOR_MODE  PreviousMode);
 
-/** NtXxx routines **/
+/** NtXxx and ZwXxx routines **/
 
 NTSYSCALLAPI
 NTSTATUS
@@ -3413,10 +3413,6 @@ NtQueryInformationProcess(
   IN ULONG  ProcessInformationLength,
   OUT PULONG  ReturnLength OPTIONAL);
 
-
-
-/** NtXxx and ZwXxx routines **/
-
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -3429,20 +3425,6 @@ NTSTATUS
 NTAPI
 NtClose(
   IN HANDLE  Handle);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwClose(
-  IN HANDLE  Handle);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwCreateDirectoryObject(
-  OUT PHANDLE  DirectoryHandle,
-  IN ACCESS_MASK  DesiredAccess,
-  IN POBJECT_ATTRIBUTES  ObjectAttributes);
 
 NTSYSCALLAPI
 NTSTATUS
@@ -3467,52 +3449,11 @@ ZwCreateEvent(
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwCreateFile(
-  OUT PHANDLE  FileHandle,
-  IN ACCESS_MASK  DesiredAccess,
-  IN POBJECT_ATTRIBUTES  ObjectAttributes,
-  OUT PIO_STATUS_BLOCK  IoStatusBlock,
-  IN PLARGE_INTEGER  AllocationSize  OPTIONAL,
-  IN ULONG  FileAttributes,
-  IN ULONG  ShareAccess,
-  IN ULONG  CreateDisposition,
-  IN ULONG  CreateOptions,
-  IN PVOID  EaBuffer  OPTIONAL,
-  IN ULONG  EaLength);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwCreateKey(
-  OUT PHANDLE  KeyHandle,
-  IN ACCESS_MASK  DesiredAccess,
-  IN POBJECT_ATTRIBUTES  ObjectAttributes,
-  IN ULONG  TitleIndex,
-  IN PUNICODE_STRING  Class  OPTIONAL,
-  IN ULONG  CreateOptions,
-  OUT PULONG  Disposition  OPTIONAL);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
 ZwCreateTimer(
   OUT PHANDLE  TimerHandle,
   IN ACCESS_MASK  DesiredAccess,
   IN POBJECT_ATTRIBUTES  ObjectAttributes  OPTIONAL,
   IN TIMER_TYPE  TimerType);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwDeleteKey(
-  IN HANDLE  KeyHandle);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwDeleteValueKey(
-  IN HANDLE  KeyHandle,
-  IN PUNICODE_STRING  ValueName);
 
 NTSYSCALLAPI
 NTSTATUS
@@ -3544,59 +3485,10 @@ ZwDeviceIoControlFile(
   OUT PVOID  OutputBuffer,
   IN ULONG  OutputBufferSize);
 
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwEnumerateKey(
-  IN HANDLE  KeyHandle,
-  IN ULONG  Index,
-  IN KEY_INFORMATION_CLASS  KeyInformationClass,
-  OUT PVOID  KeyInformation,
-  IN ULONG  Length,
-  OUT PULONG  ResultLength);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwEnumerateValueKey(
-  IN HANDLE  KeyHandle,
-  IN ULONG  Index,
-  IN KEY_VALUE_INFORMATION_CLASS  KeyValueInformationClass,
-  OUT PVOID  KeyValueInformation,
-  IN ULONG  Length,
-  OUT PULONG  ResultLength);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwFlushKey(
-  IN HANDLE  KeyHandle);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwMakeTemporaryObject(
-  IN HANDLE  Handle);
-
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtMapViewOfSection(
-  IN HANDLE  SectionHandle,
-  IN HANDLE  ProcessHandle,
-  IN OUT PVOID  *BaseAddress,
-  IN ULONG_PTR  ZeroBits,
-  IN SIZE_T  CommitSize,
-  IN OUT PLARGE_INTEGER  SectionOffset  OPTIONAL,
-  IN OUT PSIZE_T  ViewSize,
-  IN SECTION_INHERIT  InheritDisposition,
-  IN ULONG  AllocationType,
-  IN ULONG  Protect);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwMapViewOfSection(
   IN HANDLE  SectionHandle,
   IN HANDLE  ProcessHandle,
   IN OUT PVOID  *BaseAddress,
@@ -3619,6 +3511,8 @@ NtOpenFile(
   IN ULONG  ShareAccess,
   IN ULONG  OpenOptions);
 
+
+
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -3633,92 +3527,15 @@ ZwOpenFile(
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwOpenKey(
-  OUT PHANDLE  KeyHandle,
-  IN ACCESS_MASK  DesiredAccess,
-  IN POBJECT_ATTRIBUTES  ObjectAttributes);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwOpenSection(
-  OUT PHANDLE  SectionHandle,
-  IN ACCESS_MASK  DesiredAccess,
-  IN POBJECT_ATTRIBUTES  ObjectAttributes);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwOpenSymbolicLinkObject(
-  OUT PHANDLE  LinkHandle,
-  IN ACCESS_MASK  DesiredAccess,
-  IN POBJECT_ATTRIBUTES  ObjectAttributes);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
 ZwOpenTimer(
   OUT PHANDLE  TimerHandle,
   IN ACCESS_MASK  DesiredAccess,
   IN POBJECT_ATTRIBUTES  ObjectAttributes);
 
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwQueryInformationFile(
-  IN HANDLE  FileHandle,
-  OUT PIO_STATUS_BLOCK  IoStatusBlock,
-  OUT PVOID  FileInformation,
-  IN ULONG  Length,
-  IN FILE_INFORMATION_CLASS  FileInformationClass);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwQueryKey(
-  IN HANDLE  KeyHandle,
-  IN KEY_INFORMATION_CLASS  KeyInformationClass,
-  OUT PVOID  KeyInformation,
-  IN ULONG  Length,
-  OUT PULONG  ResultLength);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwQuerySymbolicLinkObject(
-  IN HANDLE  LinkHandle,
-  IN OUT PUNICODE_STRING  LinkTarget,
-  OUT PULONG  ReturnedLength  OPTIONAL);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwQueryValueKey(
-  IN HANDLE  KeyHandle,
-  IN PUNICODE_STRING  ValueName,
-  IN KEY_VALUE_INFORMATION_CLASS  KeyValueInformationClass,
-  OUT PVOID  KeyValueInformation,
-  IN ULONG  Length,
-  OUT PULONG  ResultLength);
-
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtReadFile(
-  IN HANDLE  FileHandle,
-  IN HANDLE  Event  OPTIONAL,
-  IN PIO_APC_ROUTINE  ApcRoutine  OPTIONAL,
-  IN PVOID  ApcContext  OPTIONAL,
-  OUT PIO_STATUS_BLOCK  IoStatusBlock,
-  OUT PVOID  Buffer,
-  IN ULONG  Length,
-  IN PLARGE_INTEGER  ByteOffset  OPTIONAL,
-  IN PULONG  Key  OPTIONAL);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwReadFile(
   IN HANDLE  FileHandle,
   IN HANDLE  Event  OPTIONAL,
   IN PIO_APC_ROUTINE  ApcRoutine  OPTIONAL,
@@ -3746,16 +3563,6 @@ ZwSetEvent(
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwSetInformationFile(
-  IN HANDLE  FileHandle,
-  OUT PIO_STATUS_BLOCK  IoStatusBlock,
-  IN PVOID  FileInformation,
-  IN ULONG  Length,
-  IN FILE_INFORMATION_CLASS  FileInformationClass);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
 ZwSetInformationThread(
   IN HANDLE  ThreadHandle,
   IN THREADINFOCLASS  ThreadInformationClass,
@@ -3774,17 +3581,6 @@ ZwSetTimer(
   IN LONG  Period  OPTIONAL,
   OUT PBOOLEAN  PreviousState  OPTIONAL);
 
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwSetValueKey(
-  IN HANDLE  KeyHandle,
-  IN PUNICODE_STRING  ValueName,
-  IN ULONG  TitleIndex  OPTIONAL,
-  IN ULONG  Type,
-  IN PVOID  Data,
-  IN ULONG  DataSize);
-
 /* [Nt|Zw]MapViewOfSection.InheritDisposition constants */
 #define AT_EXTENDABLE_FILE                0x00002000
 #define AT_RESERVED                       0x20000000
@@ -3794,13 +3590,6 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtUnmapViewOfSection(
-  IN HANDLE  ProcessHandle,
-  IN PVOID  BaseAddress);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwUnmapViewOfSection(
   IN HANDLE  ProcessHandle,
   IN PVOID  BaseAddress);
 
@@ -3834,57 +3623,7 @@ NtWriteFile(
   IN PLARGE_INTEGER  ByteOffset  OPTIONAL,
   IN PULONG  Key  OPTIONAL);
 
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwWriteFile(
-  IN HANDLE  FileHandle,
-  IN HANDLE  Event  OPTIONAL,
-  IN PIO_APC_ROUTINE  ApcRoutine  OPTIONAL,
-  IN PVOID  ApcContext  OPTIONAL,
-  OUT PIO_STATUS_BLOCK  IoStatusBlock,
-  IN PVOID  Buffer,
-  IN ULONG  Length,
-  IN PLARGE_INTEGER  ByteOffset  OPTIONAL,
-  IN PULONG  Key  OPTIONAL);
-
-
-
 /** Power management support routines **/
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-PoCallDriver(
-  IN PDEVICE_OBJECT  DeviceObject,
-  IN OUT PIRP  Irp);
-
-NTKERNELAPI
-PULONG
-NTAPI
-PoRegisterDeviceForIdleDetection(
-  IN PDEVICE_OBJECT  DeviceObject,
-  IN ULONG  ConservationIdleTime,
-  IN ULONG  PerformanceIdleTime,
-  IN DEVICE_POWER_STATE  State);
-
-NTKERNELAPI
-PVOID
-NTAPI
-PoRegisterSystemState(
-  IN PVOID  StateHandle,
-  IN EXECUTION_STATE  Flags);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-PoRequestPowerIrp(
-  IN PDEVICE_OBJECT  DeviceObject,
-  IN UCHAR  MinorFunction,
-  IN POWER_STATE  PowerState,
-  IN PREQUEST_POWER_COMPLETE  CompletionFunction,
-  IN PVOID  Context,
-  OUT PIRP  *Irp OPTIONAL);
 
 NTKERNELAPI
 NTSTATUS
@@ -3892,14 +3631,8 @@ NTAPI
 PoRequestShutdownEvent(
   OUT PVOID  *Event);
 
-NTKERNELAPI
-VOID
-NTAPI
-PoSetDeviceBusy(
-  PULONG  IdlePointer);
 
-#define PoSetDeviceBusy(IdlePointer) \
- ((void)(*(IdlePointer) = 0))
+
 
 NTKERNELAPI
 POWER_STATE
@@ -3919,13 +3652,13 @@ NTKERNELAPI
 VOID
 NTAPI
 PoStartNextPowerIrp(
-  IN PIRP  Irp);
+  IN OUT PIRP  Irp);
 
 NTKERNELAPI
 VOID
 NTAPI
 PoUnregisterSystemState(
-  IN PVOID  StateHandle);
+  IN OUT PVOID  StateHandle);
 
 
 
