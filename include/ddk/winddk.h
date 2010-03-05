@@ -3041,11 +3041,6 @@ NTAPI
 MmAllocateNonCachedMemory(
   IN ULONG  NumberOfBytes);
 
-typedef enum _MMFLUSH_TYPE {
-  MmFlushForDelete,
-  MmFlushForWrite
-} MMFLUSH_TYPE;
-
 NTKERNELAPI
 BOOLEAN
 NTAPI
@@ -3241,27 +3236,10 @@ ObDereferenceSecurityDescriptor(
 NTKERNELAPI
 NTSTATUS
 NTAPI
-ObInsertObject(
-  IN PVOID  Object,
-  IN PACCESS_STATE  PassedAccessState  OPTIONAL,
-  IN ACCESS_MASK  DesiredAccess,
-  IN ULONG  AdditionalReferences,
-  OUT PVOID*  ReferencedObject  OPTIONAL,
-  OUT PHANDLE  Handle);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
 ObLogSecurityDescriptor(
   IN PSECURITY_DESCRIPTOR  InputSecurityDescriptor,
   OUT PSECURITY_DESCRIPTOR  *OutputSecurityDescriptor,
   IN ULONG RefBias);
-
-NTKERNELAPI
-VOID
-NTAPI
-ObMakeTemporaryObject(
-  IN PVOID  Object);
 
 NTKERNELAPI
 NTSTATUS
@@ -3274,25 +3252,6 @@ ObOpenObjectByName(
   IN ACCESS_MASK  DesiredAccess,
   IN OUT PVOID  ParseContext  OPTIONAL,
   OUT PHANDLE  Handle);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-ObOpenObjectByPointer(
-  IN PVOID  Object,
-  IN ULONG  HandleAttributes,
-  IN PACCESS_STATE  PassedAccessState  OPTIONAL,
-  IN ACCESS_MASK  DesiredAccess  OPTIONAL,
-  IN POBJECT_TYPE  ObjectType  OPTIONAL,
-  IN KPROCESSOR_MODE  AccessMode,
-  OUT PHANDLE  Handle);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-ObQueryObjectAuditingByHandle(
-  IN HANDLE  Handle,
-  OUT PBOOLEAN  GenerateOnClose);
 
 NTKERNELAPI
 NTSTATUS
@@ -3470,21 +3429,6 @@ NtDeviceIoControlFile(
   OUT PVOID  OutputBuffer,
   IN ULONG  OutputBufferSize);
 
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwDeviceIoControlFile(
-  IN HANDLE  DeviceHandle,
-  IN HANDLE  Event  OPTIONAL,
-  IN PIO_APC_ROUTINE  UserApcRoutine  OPTIONAL,
-  IN PVOID  UserApcContext  OPTIONAL,
-  OUT PIO_STATUS_BLOCK  IoStatusBlock,
-  IN ULONG  IoControlCode,
-  IN PVOID  InputBuffer,
-  IN ULONG  InputBufferSize,
-  OUT PVOID  OutputBuffer,
-  IN ULONG  OutputBufferSize);
-
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
@@ -3597,14 +3541,6 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtWaitForSingleObject(
-  IN HANDLE  ObjectHandle,
-  IN BOOLEAN  Alertable,
-  IN PLARGE_INTEGER  TimeOut  OPTIONAL);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwWaitForSingleObject(
   IN HANDLE  ObjectHandle,
   IN BOOLEAN  Alertable,
   IN PLARGE_INTEGER  TimeOut  OPTIONAL);

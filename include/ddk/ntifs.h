@@ -1650,6 +1650,11 @@ typedef struct _MBCB {
     BITMAP_RANGE    BitmapRange3;
 } MBCB, *PMBCB;
 
+typedef enum _MMFLUSH_TYPE {
+  MmFlushForDelete,
+  MmFlushForWrite
+} MMFLUSH_TYPE;
+
 typedef struct _MOVEFILE_DESCRIPTOR {
      HANDLE         FileHandle;
      ULONG          Reserved;
@@ -1698,7 +1703,6 @@ typedef struct _OBJECT_ALL_TYPES_INFO {
     ULONG               NumberOfObjectTypes;
     OBJECT_TYPE_INFO    ObjectsTypeInfo[1];
 } OBJECT_ALL_TYPES_INFO, *POBJECT_ALL_TYPES_INFO;
-
 
 typedef struct _PATHNAME_BUFFER {
     ULONG PathNameLength;
@@ -4547,37 +4551,45 @@ ObGetObjectPointerCount (
     IN PVOID Object
 );
 
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
 NTKERNELAPI
 NTSTATUS
 NTAPI
 ObInsertObject (
-    IN PVOID            Object,
-    IN PACCESS_STATE    PassedAccessState OPTIONAL,
-    IN ACCESS_MASK      DesiredAccess,
-    IN ULONG            AdditionalReferences,
-    OUT PVOID           *ReferencedObject OPTIONAL,
-    OUT PHANDLE         Handle
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-ObMakeTemporaryObject (
-    IN PVOID Object
-);
+  IN PVOID Object,
+  IN PACCESS_STATE PassedAccessState OPTIONAL,
+  IN ACCESS_MASK DesiredAccess OPTIONAL,
+  IN ULONG ObjectPointerBias,
+  OUT PVOID *NewObject OPTIONAL,
+  OUT PHANDLE Handle OPTIONAL);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 ObOpenObjectByPointer (
-    IN PVOID            Object,
-    IN ULONG            HandleAttributes,
-    IN PACCESS_STATE    PassedAccessState OPTIONAL,
-    IN ACCESS_MASK      DesiredAccess OPTIONAL,
-    IN POBJECT_TYPE     ObjectType OPTIONAL,
-    IN KPROCESSOR_MODE  AccessMode,
-    OUT PHANDLE         Handle
-);
+  IN PVOID Object,
+  IN ULONG HandleAttributes,
+  IN PACCESS_STATE PassedAccessState OPTIONAL,
+  IN ACCESS_MASK DesiredAccess OPTIONAL,
+  IN POBJECT_TYPE ObjectType OPTIONAL,
+  IN KPROCESSOR_MODE AccessMode,
+  OUT PHANDLE Handle);
+
+NTKERNELAPI
+VOID
+NTAPI
+ObMakeTemporaryObject (
+  IN PVOID Object);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+ObQueryObjectAuditingByHandle (
+  IN HANDLE Handle,
+  OUT PBOOLEAN GenerateOnClose);
+
+#endif
 
 NTKERNELAPI
 NTSTATUS
@@ -4587,14 +4599,6 @@ ObQueryNameString (
     OUT POBJECT_NAME_INFORMATION    ObjectNameInfo,
     IN ULONG                        Length,
     OUT PULONG                      ReturnLength
-);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-ObQueryObjectAuditingByHandle (
-    IN HANDLE       Handle,
-    OUT PBOOLEAN    GenerateOnClose
 );
 
 NTKERNELAPI
@@ -5809,21 +5813,23 @@ ZwDeleteValueKey (
     IN PUNICODE_STRING  Name
 );
 
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwDeviceIoControlFile (
-    IN HANDLE               FileHandle,
-    IN HANDLE               Event OPTIONAL,
-    IN PIO_APC_ROUTINE      ApcRoutine OPTIONAL,
-    IN PVOID                ApcContext OPTIONAL,
-    OUT PIO_STATUS_BLOCK    IoStatusBlock,
-    IN ULONG                IoControlCode,
-    IN PVOID                InputBuffer OPTIONAL,
-    IN ULONG                InputBufferLength,
-    OUT PVOID               OutputBuffer OPTIONAL,
-    IN ULONG                OutputBufferLength
-);
+  IN HANDLE FileHandle,
+  IN HANDLE Event OPTIONAL,
+  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+  IN PVOID ApcContext OPTIONAL,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  IN ULONG IoControlCode,
+  IN PVOID InputBuffer OPTIONAL,
+  IN ULONG InputBufferLength,
+  OUT PVOID OutputBuffer OPTIONAL,
+  IN ULONG OutputBufferLength);
+#endif
 
 NTSYSAPI
 NTSTATUS
@@ -6296,14 +6302,15 @@ ZwUnloadKey (
     IN POBJECT_ATTRIBUTES KeyObjectAttributes
 );
 
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwWaitForSingleObject (
-    IN HANDLE           Handle,
-    IN BOOLEAN          Alertable,
-    IN PLARGE_INTEGER   Timeout OPTIONAL
-);
+  IN HANDLE Handle,
+  IN BOOLEAN Alertable,
+  IN PLARGE_INTEGER Timeout OPTIONAL);
+#endif
 
 NTSYSAPI
 NTSTATUS
