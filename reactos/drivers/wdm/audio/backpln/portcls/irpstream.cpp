@@ -38,10 +38,7 @@ protected:
     volatile ULONG m_CurrentOffset;
     LONG m_NumMappings;
     ULONG m_NumDataAvailable;
-    BOOL m_StartStream;
     PKSPIN_CONNECT m_ConnectDetails;
-    PKSDATAFORMAT_WAVEFORMATEX m_DataFormat;
-
     KSPIN_LOCK m_IrpListLock;
     LIST_ENTRY m_IrpList;
     LIST_ENTRY m_FreeIrpList;
@@ -51,7 +48,6 @@ protected:
     ULONG m_OutOfMapping;
     ULONG m_MaxFrameSize;
     ULONG m_Alignment;
-    ULONG m_MinimumDataThreshold;
 
     LONG m_Ref;
 
@@ -87,18 +83,14 @@ NTSTATUS
 NTAPI
 CIrpQueue::Init(
     IN KSPIN_CONNECT *ConnectDetails,
-    IN PKSDATAFORMAT DataFormat,
-    IN PDEVICE_OBJECT DeviceObject,
     IN ULONG FrameSize,
     IN ULONG Alignment,
     IN PVOID SilenceBuffer)
 {
     m_ConnectDetails = ConnectDetails;
-    m_DataFormat = (PKSDATAFORMAT_WAVEFORMATEX)DataFormat;
     m_MaxFrameSize = FrameSize;
     m_SilenceBuffer = SilenceBuffer;
     m_Alignment = Alignment;
-    m_MinimumDataThreshold = ((PKSDATAFORMAT_WAVEFORMATEX)DataFormat)->WaveFormatEx.nAvgBytesPerSec / 3;
 
     InitializeListHead(&m_IrpList);
     InitializeListHead(&m_FreeIrpList);
@@ -273,10 +265,6 @@ CIrpQueue::GetMapping(
         // no irp available, use silence buffer
         *Buffer = (PUCHAR)m_SilenceBuffer;
         *BufferSize = m_MaxFrameSize;
-        // flag for port wave pci driver
-        m_OutOfMapping = TRUE;
-        // indicate flag to restart fast buffering
-        m_StartStream = FALSE;
         return STATUS_SUCCESS;
     }
 
@@ -436,8 +424,6 @@ CIrpQueue::CancelBuffers()
 
     // cancel all irps
     KsCancelIo(&m_IrpList, &m_IrpListLock);
-    // reset stream start flag
-    m_StartStream = FALSE;
     // reset number of mappings
     m_NumMappings = 0;
     // reset number of data available
@@ -470,7 +456,6 @@ CIrpQueue::GetMappingWithTag(
     {
         // no irp available
         m_OutOfMapping = TRUE;
-        m_StartStream = FALSE;
         return STATUS_NOT_FOUND;
     }
 

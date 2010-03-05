@@ -320,8 +320,6 @@ DECLARE_INTERFACE_(IIrpQueue, IUnknown)
 
     STDMETHOD_(NTSTATUS, Init)(THIS_
         IN KSPIN_CONNECT *ConnectDetails,
-        IN PKSDATAFORMAT DataFormat,
-        IN PDEVICE_OBJECT DeviceObject,
         IN ULONG FrameSize,
         IN ULONG Alignment,
         IN PVOID SilenceBuffer) PURE;
@@ -359,8 +357,6 @@ DECLARE_INTERFACE_(IIrpQueue, IUnknown)
 #define IMP_IIrpQueue                                  \
     STDMETHODIMP_(NTSTATUS) Init(THIS_                 \
         IN KSPIN_CONNECT *ConnectDetails,              \
-        IN PKSDATAFORMAT DataFormat,                   \
-        IN PDEVICE_OBJECT DeviceObject,                \
         IN ULONG FrameSize,                            \
         IN ULONG Alignment,                            \
         IN PVOID SilenceBuffer);                       \

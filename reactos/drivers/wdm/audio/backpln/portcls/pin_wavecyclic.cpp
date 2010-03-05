@@ -780,29 +780,32 @@ CPortPinWaveCyclic::RequestService()
 
     PC_ASSERT_IRQL(DISPATCH_LEVEL);
 
-    Status = m_IrpQueue->GetMapping(&Buffer, &BufferSize);
-    if (!NT_SUCCESS(Status))
+    if (m_State == KSSTATE_RUN)
     {
-        return;
+        Status = m_IrpQueue->GetMapping(&Buffer, &BufferSize);
+        if (!NT_SUCCESS(Status))
+        {
+            return;
+        }
+
+        Status = m_Stream->GetPosition(&Position);
+        DPRINT("Position %u Buffer %p BufferSize %u ActiveIrpOffset %u Capture %u\n", Position, Buffer, m_CommonBufferSize, BufferSize, m_Capture);
+
+        OldOffset = m_Position.PlayOffset;
+
+        if (Position < m_CommonBufferOffset)
+        {
+            UpdateCommonBufferOverlap(Position, m_FrameSize);
+        }
+        else if (Position >= m_CommonBufferOffset)
+        {
+            UpdateCommonBuffer(Position, m_FrameSize);
+        }
+
+        NewOffset = m_Position.PlayOffset;
+
+        GeneratePositionEvents(OldOffset, NewOffset);
     }
-
-    Status = m_Stream->GetPosition(&Position);
-    DPRINT("Position %u Buffer %p BufferSize %u ActiveIrpOffset %u Capture %u\n", Position, Buffer, m_CommonBufferSize, BufferSize, m_Capture);
-
-    OldOffset = m_Position.PlayOffset;
-
-    if (Position < m_CommonBufferOffset)
-    {
-        UpdateCommonBufferOverlap(Position, m_FrameSize);
-    }
-    else if (Position >= m_CommonBufferOffset)
-    {
-        UpdateCommonBuffer(Position, m_FrameSize);
-    }
-
-    NewOffset = m_Position.PlayOffset;
-
-    GeneratePositionEvents(OldOffset, NewOffset);
 }
 
 NTSTATUS
@@ -1239,7 +1242,7 @@ CPortPinWaveCyclic::Init(
     m_Stream->Silence(SilenceBuffer, m_FrameSize);
     m_Stream->Silence(m_CommonBuffer, m_CommonBufferSize);
 
-    Status = m_IrpQueue->Init(ConnectDetails, DataFormat, DeviceObject, m_FrameSize, 0, SilenceBuffer);
+    Status = m_IrpQueue->Init(ConnectDetails, m_FrameSize, 0, SilenceBuffer);
     if (!NT_SUCCESS(Status))
     {
        m_IrpQueue->Release();

@@ -605,7 +605,7 @@ CPortPinDMus::Init(
         m_ServiceGroup->SupportDelayedService();
     }
 
-    Status = m_IrpQueue->Init(ConnectDetails, m_Format, DeviceObject, 0, 0, NULL);
+    Status = m_IrpQueue->Init(ConnectDetails, 0, 0, NULL);
     if (!NT_SUCCESS(Status))
     {
         DPRINT("IrpQueue_Init failed with %x\n", Status);

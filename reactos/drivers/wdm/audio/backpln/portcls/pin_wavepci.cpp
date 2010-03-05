@@ -432,9 +432,12 @@ CPortPinWavePci::RequestService()
 {
     PC_ASSERT_IRQL(DISPATCH_LEVEL);
 
-    m_Stream->Service();
-    //TODO
-    //generate events
+    if (m_State == KSSTATE_RUN)
+    {
+        m_Stream->Service();
+        //TODO
+        //generate events
+    }
 }
 
 //==================================================================================================================================
@@ -829,7 +832,7 @@ CPortPinWavePci::Init(
     if (!NT_SUCCESS(Status))
         return Status;
 
-    Status = m_IrpQueue->Init(ConnectDetails, m_Format, DeviceObject, m_AllocatorFraming.FrameSize, m_AllocatorFraming.FileAlignment, NULL);
+    Status = m_IrpQueue->Init(ConnectDetails, m_AllocatorFraming.FrameSize, m_AllocatorFraming.FileAlignment, NULL);
     if (!NT_SUCCESS(Status))
     {
         DPRINT("IrpQueue_Init failed with %x\n", Status);
