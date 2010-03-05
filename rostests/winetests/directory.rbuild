@@ -37,6 +37,9 @@
 	<directory name="dnsapi">
 		<xi:include href="dnsapi/dnsapi.rbuild" />
 	</directory>
+	<directory name="dsound">
+		<xi:include href="dsound/dsound.rbuild" />
+	</directory>
 	<directory name="fusion">
 		<xi:include href="fusion/fusion.rbuild" />
 	</directory>
