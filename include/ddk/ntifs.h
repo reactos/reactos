@@ -231,6 +231,203 @@ typedef struct _SID_AND_ATTRIBUTES_HASH {
 
 #define SECURITY_WINDOWSMOBILE_ID_BASE_RID (0x00000070L)
 
+/* Well-known domain relative sub-authority values (RIDs) */
+
+#define DOMAIN_GROUP_RID_ENTERPRISE_READONLY_DOMAIN_CONTROLLERS (0x000001F2L)
+
+#define FOREST_USER_RID_MAX            (0x000001F3L)
+
+/* Well-known users */
+
+#define DOMAIN_USER_RID_ADMIN          (0x000001F4L)
+#define DOMAIN_USER_RID_GUEST          (0x000001F5L)
+#define DOMAIN_USER_RID_KRBTGT         (0x000001F6L)
+
+#define DOMAIN_USER_RID_MAX            (0x000003E7L)
+
+/* Well-known groups */
+
+#define DOMAIN_GROUP_RID_ADMINS        (0x00000200L)
+#define DOMAIN_GROUP_RID_USERS         (0x00000201L)
+#define DOMAIN_GROUP_RID_GUESTS        (0x00000202L)
+#define DOMAIN_GROUP_RID_COMPUTERS     (0x00000203L)
+#define DOMAIN_GROUP_RID_CONTROLLERS   (0x00000204L)
+#define DOMAIN_GROUP_RID_CERT_ADMINS   (0x00000205L)
+#define DOMAIN_GROUP_RID_SCHEMA_ADMINS (0x00000206L)
+#define DOMAIN_GROUP_RID_ENTERPRISE_ADMINS (0x00000207L)
+#define DOMAIN_GROUP_RID_POLICY_ADMINS (0x00000208L)
+#define DOMAIN_GROUP_RID_READONLY_CONTROLLERS (0x00000209L)
+
+/* Well-known aliases */
+
+#define DOMAIN_ALIAS_RID_ADMINS                         (0x00000220L)
+#define DOMAIN_ALIAS_RID_USERS                          (0x00000221L)
+#define DOMAIN_ALIAS_RID_GUESTS                         (0x00000222L)
+#define DOMAIN_ALIAS_RID_POWER_USERS                    (0x00000223L)
+
+#define DOMAIN_ALIAS_RID_ACCOUNT_OPS                    (0x00000224L)
+#define DOMAIN_ALIAS_RID_SYSTEM_OPS                     (0x00000225L)
+#define DOMAIN_ALIAS_RID_PRINT_OPS                      (0x00000226L)
+#define DOMAIN_ALIAS_RID_BACKUP_OPS                     (0x00000227L)
+
+#define DOMAIN_ALIAS_RID_REPLICATOR                     (0x00000228L)
+#define DOMAIN_ALIAS_RID_RAS_SERVERS                    (0x00000229L)
+#define DOMAIN_ALIAS_RID_PREW2KCOMPACCESS               (0x0000022AL)
+#define DOMAIN_ALIAS_RID_REMOTE_DESKTOP_USERS           (0x0000022BL)
+#define DOMAIN_ALIAS_RID_NETWORK_CONFIGURATION_OPS      (0x0000022CL)
+#define DOMAIN_ALIAS_RID_INCOMING_FOREST_TRUST_BUILDERS (0x0000022DL)
+
+#define DOMAIN_ALIAS_RID_MONITORING_USERS               (0x0000022EL)
+#define DOMAIN_ALIAS_RID_LOGGING_USERS                  (0x0000022FL)
+#define DOMAIN_ALIAS_RID_AUTHORIZATIONACCESS            (0x00000230L)
+#define DOMAIN_ALIAS_RID_TS_LICENSE_SERVERS             (0x00000231L)
+#define DOMAIN_ALIAS_RID_DCOM_USERS                     (0x00000232L)
+#define DOMAIN_ALIAS_RID_IUSERS                         (0x00000238L)
+#define DOMAIN_ALIAS_RID_CRYPTO_OPERATORS               (0x00000239L)
+#define DOMAIN_ALIAS_RID_CACHEABLE_PRINCIPALS_GROUP     (0x0000023BL)
+#define DOMAIN_ALIAS_RID_NON_CACHEABLE_PRINCIPALS_GROUP (0x0000023CL)
+#define DOMAIN_ALIAS_RID_EVENT_LOG_READERS_GROUP        (0x0000023DL)
+#define DOMAIN_ALIAS_RID_CERTSVC_DCOM_ACCESS_GROUP      (0x0000023EL)
+
+#define SECURITY_MANDATORY_LABEL_AUTHORITY          {0,0,0,0,0,16}
+#define SECURITY_MANDATORY_UNTRUSTED_RID            (0x00000000L)
+#define SECURITY_MANDATORY_LOW_RID                  (0x00001000L)
+#define SECURITY_MANDATORY_MEDIUM_RID               (0x00002000L)
+#define SECURITY_MANDATORY_HIGH_RID                 (0x00003000L)
+#define SECURITY_MANDATORY_SYSTEM_RID               (0x00004000L)
+#define SECURITY_MANDATORY_PROTECTED_PROCESS_RID    (0x00005000L)
+
+/* SECURITY_MANDATORY_MAXIMUM_USER_RID is the highest RID that
+   can be set by a usermode caller.*/
+
+#define SECURITY_MANDATORY_MAXIMUM_USER_RID   SECURITY_MANDATORY_SYSTEM_RID
+
+#define MANDATORY_LEVEL_TO_MANDATORY_RID(IL) (IL * 0x1000)
+
+/* Allocate the System Luid.  The first 1000 LUIDs are reserved.
+   Use #999 here (0x3e7 = 999) */
+
+#define SYSTEM_LUID                     { 0x3e7, 0x0 }
+#define ANONYMOUS_LOGON_LUID            { 0x3e6, 0x0 }
+#define LOCALSERVICE_LUID               { 0x3e5, 0x0 }
+#define NETWORKSERVICE_LUID             { 0x3e4, 0x0 }
+#define IUSER_LUID                      { 0x3e3, 0x0 }
+
+typedef struct _ACE_HEADER {
+  UCHAR AceType;
+  UCHAR AceFlags;
+  USHORT AceSize;
+} ACE_HEADER, *PACE_HEADER;
+
+/* also in winnt.h */
+#define ACCESS_MIN_MS_ACE_TYPE                  (0x0)
+#define ACCESS_ALLOWED_ACE_TYPE                 (0x0)
+#define ACCESS_DENIED_ACE_TYPE                  (0x1)
+#define SYSTEM_AUDIT_ACE_TYPE                   (0x2)
+#define SYSTEM_ALARM_ACE_TYPE                   (0x3)
+#define ACCESS_MAX_MS_V2_ACE_TYPE               (0x3)
+#define ACCESS_ALLOWED_COMPOUND_ACE_TYPE        (0x4)
+#define ACCESS_MAX_MS_V3_ACE_TYPE               (0x4)
+#define ACCESS_MIN_MS_OBJECT_ACE_TYPE           (0x5)
+#define ACCESS_ALLOWED_OBJECT_ACE_TYPE          (0x5)
+#define ACCESS_DENIED_OBJECT_ACE_TYPE           (0x6)
+#define SYSTEM_AUDIT_OBJECT_ACE_TYPE            (0x7)
+#define SYSTEM_ALARM_OBJECT_ACE_TYPE            (0x8)
+#define ACCESS_MAX_MS_OBJECT_ACE_TYPE           (0x8)
+#define ACCESS_MAX_MS_V4_ACE_TYPE               (0x8)
+#define ACCESS_MAX_MS_ACE_TYPE                  (0x8)
+#define ACCESS_ALLOWED_CALLBACK_ACE_TYPE        (0x9)
+#define ACCESS_DENIED_CALLBACK_ACE_TYPE         (0xA)
+#define ACCESS_ALLOWED_CALLBACK_OBJECT_ACE_TYPE (0xB)
+#define ACCESS_DENIED_CALLBACK_OBJECT_ACE_TYPE  (0xC)
+#define SYSTEM_AUDIT_CALLBACK_ACE_TYPE          (0xD)
+#define SYSTEM_ALARM_CALLBACK_ACE_TYPE          (0xE)
+#define SYSTEM_AUDIT_CALLBACK_OBJECT_ACE_TYPE   (0xF)
+#define SYSTEM_ALARM_CALLBACK_OBJECT_ACE_TYPE   (0x10)
+#define ACCESS_MAX_MS_V5_ACE_TYPE               (0x11)
+#define SYSTEM_MANDATORY_LABEL_ACE_TYPE         (0x11)
+
+/* The following are the inherit flags that go into the AceFlags field
+   of an Ace header. */
+
+#define OBJECT_INHERIT_ACE                (0x1)
+#define CONTAINER_INHERIT_ACE             (0x2)
+#define NO_PROPAGATE_INHERIT_ACE          (0x4)
+#define INHERIT_ONLY_ACE                  (0x8)
+#define INHERITED_ACE                     (0x10)
+#define VALID_INHERIT_FLAGS               (0x1F)
+
+#define SUCCESSFUL_ACCESS_ACE_FLAG       (0x40)
+#define FAILED_ACCESS_ACE_FLAG           (0x80)
+
+typedef struct _ACCESS_ALLOWED_ACE {
+  ACE_HEADER Header;
+  ACCESS_MASK Mask;
+  ULONG SidStart;
+} ACCESS_ALLOWED_ACE, *PACCESS_ALLOWED_ACE;
+
+typedef struct _ACCESS_DENIED_ACE {
+  ACE_HEADER Header;
+  ACCESS_MASK Mask;
+  ULONG SidStart;
+} ACCESS_DENIED_ACE, *PACCESS_DENIED_ACE;
+
+typedef struct _SYSTEM_AUDIT_ACE {
+  ACE_HEADER Header;
+  ACCESS_MASK Mask;
+  ULONG SidStart;
+} SYSTEM_AUDIT_ACE, *PSYSTEM_AUDIT_ACE;
+
+typedef struct _SYSTEM_ALARM_ACE {
+  ACE_HEADER Header;
+  ACCESS_MASK Mask;
+  ULONG SidStart;
+} SYSTEM_ALARM_ACE, *PSYSTEM_ALARM_ACE;
+
+typedef struct _SYSTEM_MANDATORY_LABEL_ACE {
+  ACE_HEADER Header;
+  ACCESS_MASK Mask;
+  ULONG SidStart;
+} SYSTEM_MANDATORY_LABEL_ACE, *PSYSTEM_MANDATORY_LABEL_ACE;
+
+#define SYSTEM_MANDATORY_LABEL_NO_WRITE_UP         0x1
+#define SYSTEM_MANDATORY_LABEL_NO_READ_UP          0x2
+#define SYSTEM_MANDATORY_LABEL_NO_EXECUTE_UP       0x4
+#define SYSTEM_MANDATORY_LABEL_VALID_MASK (SYSTEM_MANDATORY_LABEL_NO_WRITE_UP   | \
+                                           SYSTEM_MANDATORY_LABEL_NO_READ_UP    | \
+                                           SYSTEM_MANDATORY_LABEL_NO_EXECUTE_UP)
+
+#define SECURITY_DESCRIPTOR_MIN_LENGTH   (sizeof(SECURITY_DESCRIPTOR))
+
+typedef USHORT SECURITY_DESCRIPTOR_CONTROL,*PSECURITY_DESCRIPTOR_CONTROL;
+
+#define SE_OWNER_DEFAULTED              0x0001
+#define SE_GROUP_DEFAULTED              0x0002
+#define SE_DACL_PRESENT                 0x0004
+#define SE_DACL_DEFAULTED               0x0008
+#define SE_SACL_PRESENT                 0x0010
+#define SE_SACL_DEFAULTED               0x0020
+#define SE_DACL_UNTRUSTED               0x0040
+#define SE_SERVER_SECURITY              0x0080
+#define SE_DACL_AUTO_INHERIT_REQ        0x0100
+#define SE_SACL_AUTO_INHERIT_REQ        0x0200
+#define SE_DACL_AUTO_INHERITED          0x0400
+#define SE_SACL_AUTO_INHERITED          0x0800
+#define SE_DACL_PROTECTED               0x1000
+#define SE_SACL_PROTECTED               0x2000
+#define SE_RM_CONTROL_VALID             0x4000
+#define SE_SELF_RELATIVE                0x8000
+
+typedef struct _SECURITY_DESCRIPTOR_RELATIVE {
+  UCHAR Revision;
+  UCHAR Sbz1;
+  SECURITY_DESCRIPTOR_CONTROL Control;
+  ULONG Owner;
+  ULONG Group;
+  ULONG Sacl;
+  ULONG Dacl;
+} SECURITY_DESCRIPTOR_RELATIVE, *PISECURITY_DESCRIPTOR_RELATIVE;
+
 #pragma pack(push,4)
 
 #ifndef VER_PRODUCTBUILD
@@ -288,33 +485,6 @@ typedef enum _SECURITY_LOGON_TYPE
 #define DOS_STAR                        (L'<')
 #define DOS_QM                          (L'>')
 #define DOS_DOT                         (L'"')
-
-/* also in winnt.h */
-#define ACCESS_MIN_MS_ACE_TYPE                  (0x0)
-#define ACCESS_ALLOWED_ACE_TYPE                 (0x0)
-#define ACCESS_DENIED_ACE_TYPE                  (0x1)
-#define SYSTEM_AUDIT_ACE_TYPE                   (0x2)
-#define SYSTEM_ALARM_ACE_TYPE                   (0x3)
-#define ACCESS_MAX_MS_V2_ACE_TYPE               (0x3)
-#define ACCESS_ALLOWED_COMPOUND_ACE_TYPE        (0x4)
-#define ACCESS_MAX_MS_V3_ACE_TYPE               (0x4)
-#define ACCESS_MIN_MS_OBJECT_ACE_TYPE           (0x5)
-#define ACCESS_ALLOWED_OBJECT_ACE_TYPE          (0x5)
-#define ACCESS_DENIED_OBJECT_ACE_TYPE           (0x6)
-#define SYSTEM_AUDIT_OBJECT_ACE_TYPE            (0x7)
-#define SYSTEM_ALARM_OBJECT_ACE_TYPE            (0x8)
-#define ACCESS_MAX_MS_OBJECT_ACE_TYPE           (0x8)
-#define ACCESS_MAX_MS_V4_ACE_TYPE               (0x8)
-#define ACCESS_MAX_MS_ACE_TYPE                  (0x8)
-#define ACCESS_ALLOWED_CALLBACK_ACE_TYPE        (0x9)
-#define ACCESS_DENIED_CALLBACK_ACE_TYPE         (0xA)
-#define ACCESS_ALLOWED_CALLBACK_OBJECT_ACE_TYPE (0xB)
-#define ACCESS_DENIED_CALLBACK_OBJECT_ACE_TYPE  (0xC)
-#define SYSTEM_AUDIT_CALLBACK_ACE_TYPE          (0xD)
-#define SYSTEM_ALARM_CALLBACK_ACE_TYPE          (0xE)
-#define SYSTEM_AUDIT_CALLBACK_OBJECT_ACE_TYPE   (0xF)
-#define SYSTEM_ALARM_CALLBACK_OBJECT_ACE_TYPE   (0x10)
-#define ACCESS_MAX_MS_V5_ACE_TYPE               (0x10)
 
 #define COMPRESSION_FORMAT_NONE         (0x0000)
 #define COMPRESSION_FORMAT_DEFAULT      (0x0001)
@@ -595,23 +765,6 @@ typedef enum _SECURITY_LOGON_TYPE
 #define VACB_MAPPING_GRANULARITY        (0x40000)
 #define VACB_OFFSET_SHIFT               (18)
 
-#define SE_OWNER_DEFAULTED              0x0001
-#define SE_GROUP_DEFAULTED              0x0002
-#define SE_DACL_PRESENT                 0x0004
-#define SE_DACL_DEFAULTED               0x0008
-#define SE_SACL_PRESENT                 0x0010
-#define SE_SACL_DEFAULTED               0x0020
-#define SE_DACL_UNTRUSTED               0x0040
-#define SE_SERVER_SECURITY              0x0080
-#define SE_DACL_AUTO_INHERIT_REQ        0x0100
-#define SE_SACL_AUTO_INHERIT_REQ        0x0200
-#define SE_DACL_AUTO_INHERITED          0x0400
-#define SE_SACL_AUTO_INHERITED          0x0800
-#define SE_DACL_PROTECTED               0x1000
-#define SE_SACL_PROTECTED               0x2000
-#define SE_RM_CONTROL_VALID             0x4000
-#define SE_SELF_RELATIVE                0x8000
-
 #ifndef _WINNT_H
 #define _AUDIT_EVENT_TYPE_HACK 0
 #endif
@@ -837,97 +990,6 @@ typedef struct _COMPRESSED_DATA_INFO {
     ULONG   CompressedChunkSizes[ANYSIZE_ARRAY];
 } COMPRESSED_DATA_INFO, *PCOMPRESSED_DATA_INFO;
 
-//
-// Well-known domain relative sub-authority values (RIDs)
-//
-#define DOMAIN_GROUP_RID_ENTERPRISE_READONLY_DOMAIN_CONTROLLERS (0x000001F2L)
-
-#define FOREST_USER_RID_MAX            (0x000001F3L)
-
-//
-// Well-known users
-//
-#define DOMAIN_USER_RID_ADMIN          (0x000001F4L)
-#define DOMAIN_USER_RID_GUEST          (0x000001F5L)
-#define DOMAIN_USER_RID_KRBTGT         (0x000001F6L)
-
-#define DOMAIN_USER_RID_MAX            (0x000003E7L)
-
-//
-// Well-known groups
-//
-#define DOMAIN_GROUP_RID_ADMINS        (0x00000200L)
-#define DOMAIN_GROUP_RID_USERS         (0x00000201L)
-#define DOMAIN_GROUP_RID_GUESTS        (0x00000202L)
-#define DOMAIN_GROUP_RID_COMPUTERS     (0x00000203L)
-#define DOMAIN_GROUP_RID_CONTROLLERS   (0x00000204L)
-#define DOMAIN_GROUP_RID_CERT_ADMINS   (0x00000205L)
-#define DOMAIN_GROUP_RID_SCHEMA_ADMINS (0x00000206L)
-#define DOMAIN_GROUP_RID_ENTERPRISE_ADMINS (0x00000207L)
-#define DOMAIN_GROUP_RID_POLICY_ADMINS (0x00000208L)
-#define DOMAIN_GROUP_RID_READONLY_CONTROLLERS (0x00000209L)
-
-//
-// Well-known aliases
-//
-#define DOMAIN_ALIAS_RID_ADMINS                         (0x00000220L)
-#define DOMAIN_ALIAS_RID_USERS                          (0x00000221L)
-#define DOMAIN_ALIAS_RID_GUESTS                         (0x00000222L)
-#define DOMAIN_ALIAS_RID_POWER_USERS                    (0x00000223L)
-
-#define DOMAIN_ALIAS_RID_ACCOUNT_OPS                    (0x00000224L)
-#define DOMAIN_ALIAS_RID_SYSTEM_OPS                     (0x00000225L)
-#define DOMAIN_ALIAS_RID_PRINT_OPS                      (0x00000226L)
-#define DOMAIN_ALIAS_RID_BACKUP_OPS                     (0x00000227L)
-
-#define DOMAIN_ALIAS_RID_REPLICATOR                     (0x00000228L)
-#define DOMAIN_ALIAS_RID_RAS_SERVERS                    (0x00000229L)
-#define DOMAIN_ALIAS_RID_PREW2KCOMPACCESS               (0x0000022AL)
-#define DOMAIN_ALIAS_RID_REMOTE_DESKTOP_USERS           (0x0000022BL)
-#define DOMAIN_ALIAS_RID_NETWORK_CONFIGURATION_OPS      (0x0000022CL)
-#define DOMAIN_ALIAS_RID_INCOMING_FOREST_TRUST_BUILDERS (0x0000022DL)
-
-#define DOMAIN_ALIAS_RID_MONITORING_USERS               (0x0000022EL)
-#define DOMAIN_ALIAS_RID_LOGGING_USERS                  (0x0000022FL)
-#define DOMAIN_ALIAS_RID_AUTHORIZATIONACCESS            (0x00000230L)
-#define DOMAIN_ALIAS_RID_TS_LICENSE_SERVERS             (0x00000231L)
-#define DOMAIN_ALIAS_RID_DCOM_USERS                     (0x00000232L)
-#define DOMAIN_ALIAS_RID_IUSERS                         (0x00000238L)
-#define DOMAIN_ALIAS_RID_CRYPTO_OPERATORS               (0x00000239L)
-#define DOMAIN_ALIAS_RID_CACHEABLE_PRINCIPALS_GROUP     (0x0000023BL)
-#define DOMAIN_ALIAS_RID_NON_CACHEABLE_PRINCIPALS_GROUP (0x0000023CL)
-#define DOMAIN_ALIAS_RID_EVENT_LOG_READERS_GROUP        (0x0000023DL)
-#define DOMAIN_ALIAS_RID_CERTSVC_DCOM_ACCESS_GROUP      (0x0000023EL)
-
-
-#define SECURITY_MANDATORY_LABEL_AUTHORITY          {0,0,0,0,0,16}
-#define SECURITY_MANDATORY_UNTRUSTED_RID            (0x00000000L)
-#define SECURITY_MANDATORY_LOW_RID                  (0x00001000L)
-#define SECURITY_MANDATORY_MEDIUM_RID               (0x00002000L)
-#define SECURITY_MANDATORY_HIGH_RID                 (0x00003000L)
-#define SECURITY_MANDATORY_SYSTEM_RID               (0x00004000L)
-#define SECURITY_MANDATORY_PROTECTED_PROCESS_RID    (0x00005000L)
-
-//
-// SECURITY_MANDATORY_MAXIMUM_USER_RID is the highest RID that
-// can be set by a usermode caller.
-//
-#define SECURITY_MANDATORY_MAXIMUM_USER_RID   SECURITY_MANDATORY_SYSTEM_RID
-
-#define MANDATORY_LEVEL_TO_MANDATORY_RID(IL) (IL * 0x1000)
-
-//
-// Allocate the System Luid.  The first 1000 LUIDs are reserved.
-// Use #999 here (0x3e7 = 999)
-//
-#define SYSTEM_LUID                     { 0x3e7, 0x0 }
-#define ANONYMOUS_LOGON_LUID            { 0x3e6, 0x0 }
-#define LOCALSERVICE_LUID               { 0x3e5, 0x0 }
-#define NETWORKSERVICE_LUID             { 0x3e4, 0x0 }
-#define IUSER_LUID                      { 0x3e3, 0x0 }
-
-
-
 typedef struct _TOKEN_SOURCE {
 	CHAR SourceName[TOKEN_SOURCE_LENGTH];
 	LUID SourceIdentifier;
@@ -989,7 +1051,7 @@ typedef struct _TOKEN_STATISTICS {
 typedef struct _TOKEN_USER {
 	SID_AND_ATTRIBUTES User;
 } TOKEN_USER, *PTOKEN_USER;
-typedef USHORT SECURITY_DESCRIPTOR_CONTROL,*PSECURITY_DESCRIPTOR_CONTROL;
+
 typedef struct _SECURITY_DESCRIPTOR {
 	UCHAR Revision;
 	UCHAR Sbz1;
@@ -1000,23 +1062,12 @@ typedef struct _SECURITY_DESCRIPTOR {
 	PACL Dacl;
 } SECURITY_DESCRIPTOR, *PISECURITY_DESCRIPTOR;
 
-#define SECURITY_DESCRIPTOR_MIN_LENGTH   (sizeof(SECURITY_DESCRIPTOR))
-
 typedef struct _OBJECT_TYPE_LIST {
     USHORT Level;
     USHORT Sbz;
     GUID *ObjectType;
     } OBJECT_TYPE_LIST, *POBJECT_TYPE_LIST;
-    
-typedef struct _SECURITY_DESCRIPTOR_RELATIVE {
-    UCHAR Revision;
-    UCHAR Sbz1;
-    SECURITY_DESCRIPTOR_CONTROL Control;
-    ULONG Owner;
-    ULONG Group;
-    ULONG Sacl;
-    ULONG Dacl;
-} SECURITY_DESCRIPTOR_RELATIVE, *PISECURITY_DESCRIPTOR_RELATIVE;
+
 typedef enum _TOKEN_INFORMATION_CLASS {
 	TokenUser=1,TokenGroups,TokenPrivileges,TokenOwner,
 	TokenPrimaryGroup,TokenDefaultDacl,TokenSource,TokenType,
@@ -2167,59 +2218,6 @@ typedef struct _SECURITY_CLIENT_CONTEXT {
     BOOLEAN                     ServerIsRemote;
     TOKEN_CONTROL               ClientTokenControl;
 } SECURITY_CLIENT_CONTEXT, *PSECURITY_CLIENT_CONTEXT;
-
-//
-//  The following are the inherit flags that go into the AceFlags field
-//  of an Ace header.
-//
-#define OBJECT_INHERIT_ACE                (0x1)
-#define CONTAINER_INHERIT_ACE             (0x2)
-#define NO_PROPAGATE_INHERIT_ACE          (0x4)
-#define INHERIT_ONLY_ACE                  (0x8)
-#define INHERITED_ACE                     (0x10)
-#define VALID_INHERIT_FLAGS               (0x1F)
-
-typedef struct _ACE_HEADER
-{
-    UCHAR AceType;
-    UCHAR AceFlags;
-    USHORT AceSize;
-} ACE_HEADER, *PACE_HEADER;
-
-typedef struct _ACCESS_ALLOWED_ACE
-{
-    ACE_HEADER Header;
-    ACCESS_MASK Mask;
-    ULONG SidStart;
-} ACCESS_ALLOWED_ACE, *PACCESS_ALLOWED_ACE;
-
-typedef struct _ACCESS_DENIED_ACE
-{
-    ACE_HEADER Header;
-    ACCESS_MASK Mask;
-    ULONG SidStart;
-} ACCESS_DENIED_ACE, *PACCESS_DENIED_ACE;
-
-typedef struct _SYSTEM_AUDIT_ACE
-{
-    ACE_HEADER Header;
-    ACCESS_MASK Mask;
-    ULONG SidStart;
-} SYSTEM_AUDIT_ACE, *PSYSTEM_AUDIT_ACE;
-
-typedef struct _SYSTEM_ALARM_ACE
-{
-    ACE_HEADER Header;
-    ACCESS_MASK Mask;
-    ULONG SidStart;
-} SYSTEM_ALARM_ACE, *PSYSTEM_ALARM_ACE;
-
-typedef struct _SYSTEM_MANDATORY_LABEL_ACE
-{
-    ACE_HEADER Header;
-    ACCESS_MASK Mask;
-    ULONG SidStart;
-} SYSTEM_MANDATORY_LABEL_ACE, *PSYSTEM_MANDATORY_LABEL_ACE;
 
 typedef struct _TUNNEL {
     FAST_MUTEX          Mutex;
