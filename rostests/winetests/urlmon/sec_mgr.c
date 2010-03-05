@@ -91,6 +91,15 @@ static struct secmgr_test {
     {url7, 3,   S_OK, sizeof(secid7), secid7, S_OK}
 };
 
+static int strcmp_w(const WCHAR *str1, const WCHAR *str2)
+{
+    DWORD len1 = lstrlenW(str1);
+    DWORD len2 = lstrlenW(str2);
+
+    if(len1!=len2) return 1;
+    return memcmp(str1, str2, len1*sizeof(WCHAR));
+}
+
 static void test_SecurityManager(void)
 {
     int i;
@@ -605,11 +614,69 @@ static void test_GetZoneAttributes(void)
     ok(hr == S_OK, "got 0x%x (expected S_OK)\n", hr);
 }
 
+static void test_InternetSecurityMarshalling(void)
+{
+    IInternetSecurityManager *secmgr = NULL;
+    IUnknown *unk;
+    IStream *stream;
+    HRESULT hres;
+
+    hres = CoInternetCreateSecurityManager(NULL, &secmgr, 0);
+    if(FAILED(hres))
+        return;
+
+    hres = IInternetSecurityManager_QueryInterface(secmgr, &IID_IUnknown, (void**)&unk);
+    ok(hres == S_OK, "QueryInterface returned: %08x\n", hres);
+
+    hres = CreateStreamOnHGlobal(NULL, TRUE, &stream);
+    ok(hres == S_OK, "CreateStreamOnHGlobal returned: %08x\n", hres);
+
+    hres = CoMarshalInterface(stream, &IID_IInternetSecurityManager, unk, MSHCTX_INPROC, NULL, MSHLFLAGS_NORMAL);
+    ok(hres == S_OK, "CoMarshalInterface returned: %08x\n", hres);
+
+    IStream_Release(stream);
+    IUnknown_Release(unk);
+    IInternetSecurityManager_Release(secmgr);
+}
+
+static void test_InternetGetSecurityUrl(void)
+{
+    const WCHAR url5_out[] = {'h','t','t','p',':','w','w','w','.','w','i','n','e','h','q','.','o','r','g',0};
+    const WCHAR url7_out[] = {'f','t','p',':','w','i','n','e','h','q','.','o','r','g',0};
+
+    const WCHAR *in[] = {url2, url3, url4, url5, url7, url8, url9, url10};
+    const WCHAR *out_default[] = {url2, url3, url4, url5_out, url7_out, url8, url5_out, url10};
+    const WCHAR *out_securl[] = {url2, url3, url4, url5, url7, url8, url9, url10};
+
+    WCHAR *sec;
+    DWORD i;
+    HRESULT hres;
+
+    for(i=0; i<sizeof(in)/sizeof(WCHAR*); i++) {
+        hres = CoInternetGetSecurityUrl(in[i], &sec, PSU_DEFAULT, 0);
+        ok(hres == S_OK, "(%d) CoInternetGetSecurityUrl returned: %08x\n", i, hres);
+        if(hres == S_OK) {
+            ok(!strcmp_w(sec, out_default[i]), "(%d) Got %s, expected %s\n",
+                    i, wine_dbgstr_w(sec), wine_dbgstr_w(out_default[i]));
+            CoTaskMemFree(sec);
+        }
+
+        hres = CoInternetGetSecurityUrl(in[i], &sec, PSU_SECURITY_URL_ONLY, 0);
+        ok(hres == S_OK, "(%d) CoInternetGetSecurityUrl returned: %08x\n", i, hres);
+        if(hres == S_OK) {
+            ok(!strcmp_w(sec, out_securl[i]), "(%d) Got %s, expected %s\n",
+                    i, wine_dbgstr_w(sec), wine_dbgstr_w(out_securl[i]));
+            CoTaskMemFree(sec);
+        }
+    }
+}
+
 
 START_TEST(sec_mgr)
 {
     OleInitialize(NULL);
 
+    test_InternetGetSecurityUrl();
     test_SecurityManager();
     test_polices();
     test_CoInternetCreateZoneManager();
@@ -617,6 +684,7 @@ START_TEST(sec_mgr)
     test_GetZoneActionPolicy();
     test_GetZoneAt();
     test_GetZoneAttributes();
+    test_InternetSecurityMarshalling();
 
     OleUninitialize();
 }

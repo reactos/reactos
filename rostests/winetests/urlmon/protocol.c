@@ -131,7 +131,7 @@ static const WCHAR gzipW[] = {'g','z','i','p',0};
 static HRESULT expect_hrResult;
 static LPCWSTR file_name, http_url, expect_wsz;
 static IInternetProtocol *async_protocol = NULL;
-static BOOL first_data_notif, http_is_first, http_post_test;
+static BOOL first_data_notif, http_is_first, http_post_test, test_redirect;
 static int state = 0, prot_state, read_report_data;
 static DWORD bindf, ex_priority , pi;
 static IInternetProtocol *binding_protocol, *filtered_protocol;
@@ -442,19 +442,23 @@ static void call_continue(PROTOCOLDATA *protocol_data)
                 CLEAR_CALLED(ReportProgress_FINDINGRESOURCE);
                 CLEAR_CALLED(ReportProgress_CONNECTING);
                 CLEAR_CALLED(ReportProgress_PROXYDETECTING);
-            } else todo_wine {
-                    CHECK_NOT_CALLED(ReportProgress_FINDINGRESOURCE);
-                    /* IE7 does call this */
-                    CLEAR_CALLED(ReportProgress_CONNECTING);
-                }
+            }else if(test_redirect) {
+                CHECK_CALLED(ReportProgress_FINDINGRESOURCE);
+            }else todo_wine {
+                CHECK_NOT_CALLED(ReportProgress_FINDINGRESOURCE);
+                /* IE7 does call this */
+                CLEAR_CALLED(ReportProgress_CONNECTING);
+            }
         }
         if(tested_protocol == FTP_TEST)
             todo_wine CHECK_CALLED(ReportProgress_SENDINGREQUEST);
         else if (tested_protocol != HTTPS_TEST)
             CHECK_CALLED(ReportProgress_SENDINGREQUEST);
+        if(test_redirect)
+            CHECK_CALLED(ReportProgress_REDIRECTING);
         if(tested_protocol == HTTP_TEST || tested_protocol == HTTPS_TEST) {
             SET_EXPECT(OnResponse);
-            if(tested_protocol == HTTPS_TEST)
+            if(tested_protocol == HTTPS_TEST || test_redirect)
                 SET_EXPECT(ReportProgress_ACCEPTRANGES);
             SET_EXPECT(ReportProgress_MIMETYPEAVAILABLE);
             if(bindf & BINDF_NEEDFILE)
@@ -478,6 +482,8 @@ static void call_continue(PROTOCOLDATA *protocol_data)
                 CHECK_CALLED(OnResponse);
                 if(tested_protocol == HTTPS_TEST)
                     CHECK_CALLED(ReportProgress_ACCEPTRANGES);
+                else if(test_redirect)
+                    CLEAR_CALLED(ReportProgress_ACCEPTRANGES);
                 CHECK_CALLED(ReportProgress_MIMETYPEAVAILABLE);
                 if(bindf & BINDF_NEEDFILE)
                     CHECK_CALLED(ReportProgress_CACHEFILENAMEAVAILABLE);
@@ -616,7 +622,10 @@ static HRESULT WINAPI ProtocolSink_ReportProgress(IInternetProtocolSink *iface, 
         break;
     case BINDSTATUS_REDIRECTING:
         CHECK_EXPECT(ReportProgress_REDIRECTING);
-        ok(szStatusText == NULL, "szStatusText = %s\n", wine_dbgstr_w(szStatusText));
+        if(test_redirect)
+            ok(!strcmp_wa(szStatusText, "http://test.winehq.org/hello.html"), "szStatusText = %s\n", wine_dbgstr_w(szStatusText));
+        else
+            ok(szStatusText == NULL, "szStatusText = %s\n", wine_dbgstr_w(szStatusText));
         break;
     case BINDSTATUS_ENCODING:
         CHECK_EXPECT(ReportProgress_ENCODING);
@@ -1346,6 +1355,7 @@ static HRESULT WINAPI ProtocolEmul_Start(IInternetProtocol *iface, LPCWSTR szUrl
            "GetBindString(BINDSTRING_ACCEPT_MIMES) failed: %08x\n", hres);
         ok(fetched == 1, "fetched = %d, expected 1\n", fetched);
         ok(!strcmp_ww(acc_mimeW, accept_mimes[0]), "unexpected mimes %s\n", wine_dbgstr_w(accept_mimes[0]));
+        CoTaskMemFree(accept_mimes[0]);
 
         hres = IInternetBindInfo_QueryInterface(pOIBindInfo, &IID_IServiceProvider,
                                                 (void**)&service_provider);
@@ -1952,6 +1962,7 @@ static IClassFactory mimefilter_cf = { &MimeFilterCFVtbl };
 #define TEST_POST        0x10
 #define TEST_EMULATEPROT 0x20
 #define TEST_SHORT_READ  0x40
+#define TEST_REDIRECT    0x80
 
 static void init_test(int prot, DWORD flags)
 {
@@ -1977,6 +1988,7 @@ static void init_test(int prot, DWORD flags)
     emulate_prot = (flags & TEST_EMULATEPROT) != 0;
     wait_for_switch = TRUE;
     short_read = (flags & TEST_SHORT_READ) != 0;
+    test_redirect = (flags & TEST_REDIRECT) != 0;
 }
 
 static void test_priority(IInternetProtocol *protocol)
@@ -2429,6 +2441,8 @@ static void test_http_protocol_url(LPCWSTR url, int prot, DWORD flags)
         SET_EXPECT(ReportProgress_FINDINGRESOURCE);
         SET_EXPECT(ReportProgress_CONNECTING);
         SET_EXPECT(ReportProgress_SENDINGREQUEST);
+        if(test_redirect)
+            SET_EXPECT(ReportProgress_REDIRECTING);
         SET_EXPECT(ReportProgress_PROXYDETECTING);
         if(prot == HTTP_TEST)
             SET_EXPECT(ReportProgress_CACHEFILENAMEAVAILABLE);
@@ -2516,6 +2530,9 @@ static void test_http_protocol(void)
         {'h','t','t','p',':','/','/','c','r','o','s','s','o','v','e','r','.',
          'c','o','d','e','w','e','a','v','e','r','s','.','c','o','m','/',
          'p','o','s','t','t','e','s','t','.','p','h','p',0};
+    static const WCHAR redirect_url[] =
+        {'h','t','t','p',':','/','/','t','e','s','t','.','w','i','n','e','h','q','.','o','r','g','/',
+         't','e','s','t','r','e','d','i','r','e','c','t',0};
 
     trace("Testing http protocol (not from urlmon)...\n");
     bindf = BINDF_ASYNCHRONOUS | BINDF_ASYNCSTORAGE | BINDF_PULLDATA;
@@ -2538,6 +2555,10 @@ static void test_http_protocol(void)
     trace("Testing http protocol (direct read)...\n");
     bindf = BINDF_ASYNCHRONOUS | BINDF_ASYNCSTORAGE | BINDF_PULLDATA | BINDF_FROMURLMON;
     test_http_protocol_url(winehq_url, HTTP_TEST, TEST_DIRECT_READ);
+
+    trace("Testing http protocol (redirected)...\n");
+    bindf = BINDF_ASYNCHRONOUS | BINDF_ASYNCSTORAGE | BINDF_PULLDATA | BINDF_FROMURLMON;
+    test_http_protocol_url(redirect_url, HTTP_TEST, TEST_REDIRECT);
 }
 
 static void test_https_protocol(void)

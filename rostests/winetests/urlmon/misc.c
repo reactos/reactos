@@ -270,6 +270,10 @@ static const WCHAR wszHttp[] = {'h','t','t','p',0};
 static const WCHAR wszAbout[] = {'a','b','o','u','t',0};
 static const WCHAR wszEmpty[] = {0};
 
+static const WCHAR wszWineHQ[] = {'w','w','w','.','w','i','n','e','h','q','.','o','r','g',0};
+static const WCHAR wszHttpWineHQ[] = {'h','t','t','p',':','/','/','w','w','w','.',
+    'w','i','n','e','h','q','.','o','r','g',0};
+
 struct parse_test {
     LPCWSTR url;
     HRESULT secur_hres;
@@ -277,15 +281,19 @@ struct parse_test {
     HRESULT path_hres;
     LPCWSTR path;
     LPCWSTR schema;
+    LPCWSTR domain;
+    HRESULT domain_hres;
+    LPCWSTR rootdocument;
+    HRESULT rootdocument_hres;
 };
 
 static const struct parse_test parse_tests[] = {
-    {url1, S_OK,   url1,  E_INVALIDARG, NULL, wszRes},
-    {url2, E_FAIL, url2,  E_INVALIDARG, NULL, wszEmpty},
-    {url3, E_FAIL, url3,  S_OK, path3,        wszFile},
-    {url4, E_FAIL, url4e, S_OK, path4,        wszFile},
-    {url5, E_FAIL, url5,  E_INVALIDARG, NULL, wszHttp},
-    {url6, S_OK,   url6,  E_INVALIDARG, NULL, wszAbout}
+    {url1, S_OK,   url1,  E_INVALIDARG, NULL, wszRes, NULL, E_FAIL, NULL, E_FAIL},
+    {url2, E_FAIL, url2,  E_INVALIDARG, NULL, wszEmpty, NULL, E_FAIL, NULL, E_FAIL},
+    {url3, E_FAIL, url3,  S_OK, path3,        wszFile, wszEmpty, S_OK, NULL, E_FAIL},
+    {url4, E_FAIL, url4e, S_OK, path4,        wszFile, wszEmpty, S_OK, NULL, E_FAIL},
+    {url5, E_FAIL, url5,  E_INVALIDARG, NULL, wszHttp, wszWineHQ, S_OK, wszHttpWineHQ, S_OK},
+    {url6, S_OK,   url6,  E_INVALIDARG, NULL, wszAbout, NULL, E_FAIL, NULL, E_FAIL},
 };
 
 static void test_CoInternetParseUrl(void)
@@ -331,6 +339,23 @@ static void test_CoInternetParseUrl(void)
         ok(hres == S_OK, "[%d] schema failed: %08x\n", i, hres);
         ok(size == lstrlenW(parse_tests[i].schema), "[%d] wrong size\n", i);
         ok(!lstrcmpW(parse_tests[i].schema, buf), "[%d] wrong schema\n", i);
+
+        if(memcmp(parse_tests[i].url, wszRes, 3*sizeof(WCHAR))
+                && memcmp(parse_tests[i].url, wszAbout, 5*sizeof(WCHAR))) {
+            memset(buf, 0xf0, sizeof(buf));
+            hres = CoInternetParseUrl(parse_tests[i].url, PARSE_DOMAIN, 0, buf,
+                    sizeof(buf)/sizeof(WCHAR), &size, 0);
+            ok(hres == parse_tests[i].domain_hres, "[%d] domain failed: %08x\n", i, hres);
+            if(parse_tests[i].domain)
+                ok(!lstrcmpW(parse_tests[i].domain, buf), "[%d] wrong domain, received %s\n", i, wine_dbgstr_w(buf));
+        }
+
+        memset(buf, 0xf0, sizeof(buf));
+        hres = CoInternetParseUrl(parse_tests[i].url, PARSE_ROOTDOCUMENT, 0, buf,
+                sizeof(buf)/sizeof(WCHAR), &size, 0);
+        ok(hres == parse_tests[i].rootdocument_hres, "[%d] rootdocument failed: %08x\n", i, hres);
+        if(parse_tests[i].rootdocument)
+            ok(!lstrcmpW(parse_tests[i].rootdocument, buf), "[%d] wrong rootdocument, received %s\n", i, wine_dbgstr_w(buf));
     }
 }
 
@@ -755,7 +780,19 @@ static HRESULT WINAPI InternetProtocolInfo_ParseUrl(IInternetProtocolInfo *iface
         PARSEACTION ParseAction, DWORD dwParseFlags, LPWSTR pwzResult, DWORD cchResult,
         DWORD *pcchResult, DWORD dwReserved)
 {
-    CHECK_EXPECT(ParseUrl);
+    CHECK_EXPECT2(ParseUrl);
+
+    if(ParseAction == PARSE_SECURITY_URL) {
+        if(pcchResult)
+            *pcchResult = sizeof(url1)/sizeof(WCHAR);
+
+        if(cchResult<sizeof(url1)/sizeof(WCHAR))
+            return S_FALSE;
+
+        memcpy(pwzResult, url1, sizeof(url1));
+        return S_OK;
+    }
+
     return E_NOTIMPL;
 }
 
@@ -800,7 +837,7 @@ static IClassFactory *expect_cf;
 static HRESULT WINAPI ClassFactory_QueryInterface(IClassFactory *iface, REFIID riid, void **ppv)
 {
     if(IsEqualGUID(&IID_IInternetProtocolInfo, riid)) {
-        CHECK_EXPECT(QI_IInternetProtocolInfo);
+        CHECK_EXPECT2(QI_IInternetProtocolInfo);
         ok(iface == expect_cf, "unexpected iface\n");
         *ppv = &protocol_info;
         return qiret;
@@ -871,6 +908,7 @@ static void test_NameSpace(void)
 {
     IInternetSession *session;
     WCHAR buf[200];
+    LPWSTR sec_url;
     DWORD size;
     HRESULT hres;
 
@@ -914,6 +952,34 @@ static void test_NameSpace(void)
     hres = CoInternetParseUrl(url8, PARSE_ENCODE, 0, buf, sizeof(buf)/sizeof(WCHAR),
                               &size, 0);
     ok(hres == S_OK, "CoInternetParseUrl failed: %08x\n", hres);
+
+    CHECK_CALLED(QI_IInternetProtocolInfo);
+    CHECK_CALLED(ParseUrl);
+
+    SET_EXPECT(QI_IInternetProtocolInfo);
+    SET_EXPECT(ParseUrl);
+
+    hres = CoInternetParseUrl(url8, PARSE_SECURITY_URL, 0, buf,
+            sizeof(buf)/sizeof(WCHAR), &size, 0);
+    ok(hres == S_OK, "CoInternetParseUrl failed: %08x\n", hres);
+    ok(size == sizeof(url1)/sizeof(WCHAR), "Size = %d\n", size);
+    if(size == sizeof(url1)/sizeof(WCHAR))
+        ok(!memcmp(buf, url1, sizeof(url1)), "Encoded url = %s\n", wine_dbgstr_w(buf));
+
+    CHECK_CALLED(QI_IInternetProtocolInfo);
+    CHECK_CALLED(ParseUrl);
+
+    SET_EXPECT(QI_IInternetProtocolInfo);
+    SET_EXPECT(ParseUrl);
+
+    hres = CoInternetGetSecurityUrl(url8, &sec_url, PSU_SECURITY_URL_ONLY, 0);
+    ok(hres == S_OK, "CoInternetGetSecurityUrl failed: %08x\n", hres);
+    if(hres == S_OK) {
+        ok(lstrlenW(sec_url)>sizeof(wszFile)/sizeof(WCHAR) &&
+                !memcmp(sec_url, wszFile, sizeof(wszFile)-sizeof(WCHAR)),
+                "Encoded url = %s\n", wine_dbgstr_w(sec_url));
+        CoTaskMemFree(sec_url);
+    }
 
     CHECK_CALLED(QI_IInternetProtocolInfo);
     CHECK_CALLED(ParseUrl);

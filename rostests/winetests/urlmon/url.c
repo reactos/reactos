@@ -100,6 +100,7 @@ DEFINE_EXPECT(GetBindInfoEx);
 DEFINE_EXPECT(OnStartBinding);
 DEFINE_EXPECT(OnProgress_FINDINGRESOURCE);
 DEFINE_EXPECT(OnProgress_CONNECTING);
+DEFINE_EXPECT(OnProgress_REDIRECTING);
 DEFINE_EXPECT(OnProgress_SENDINGREQUEST);
 DEFINE_EXPECT(OnProgress_MIMETYPEAVAILABLE);
 DEFINE_EXPECT(OnProgress_BEGINDOWNLOADDATA);
@@ -121,6 +122,7 @@ DEFINE_EXPECT(Obj_OnProgress_BEGINSYNCOPERATION);
 DEFINE_EXPECT(Obj_OnProgress_ENDSYNCOPERATION);
 DEFINE_EXPECT(Obj_OnProgress_FINDINGRESOURCE);
 DEFINE_EXPECT(Obj_OnProgress_CONNECTING);
+DEFINE_EXPECT(Obj_OnProgress_REDIRECTING);
 DEFINE_EXPECT(Obj_OnProgress_CACHEFILENAMEAVAILABLE);
 DEFINE_EXPECT(Start);
 DEFINE_EXPECT(Read);
@@ -181,6 +183,7 @@ static IBinding *current_binding;
 static HANDLE complete_event, complete_event2;
 static HRESULT binding_hres;
 static BOOL have_IHttpNegotiate2, use_bscex;
+static BOOL test_redirect;
 
 static LPCWSTR urls[] = {
     WINE_ABOUT_URL,
@@ -380,12 +383,26 @@ static DWORD WINAPI thread_proc(PVOID arg)
         SET_EXPECT(OnProgress_SENDINGREQUEST);
     hres = IInternetProtocolSink_ReportProgress(protocol_sink,
             BINDSTATUS_SENDINGREQUEST, NULL);
-    ok(hres == S_OK, "ReportProxgress failed: %08x\n", hres);
+    ok(hres == S_OK, "ReportProgress failed: %08x\n", hres);
     WaitForSingleObject(complete_event, INFINITE);
     if(bind_to_object)
         CHECK_CALLED(Obj_OnProgress_SENDINGREQUEST);
     else
         CHECK_CALLED(OnProgress_SENDINGREQUEST);
+
+    if(test_redirect) {
+        if(bind_to_object)
+            SET_EXPECT(Obj_OnProgress_REDIRECTING);
+        else
+            SET_EXPECT(OnProgress_REDIRECTING);
+        hres = IInternetProtocolSink_ReportProgress(protocol_sink, BINDSTATUS_REDIRECTING, WINE_ABOUT_URL);
+        ok(hres == S_OK, "ReportProgress(BINDSTATUS_REFIRECTING) failed: %08x\n", hres);
+        WaitForSingleObject(complete_event, INFINITE);
+        if(bind_to_object)
+            CHECK_CALLED(Obj_OnProgress_REDIRECTING);
+        else
+            CHECK_CALLED(OnProgress_REDIRECTING);
+    }
 
     test_switch_fail();
 
@@ -773,7 +790,7 @@ static HRESULT WINAPI Protocol_Continue(IInternetProtocol *iface,
         IHttpNegotiate_Release(http_negotiate);
         ok(hres == S_OK, "OnResponse failed: %08x\n", hres);
 
-        if(test_protocol == HTTPS_TEST) {
+        if(test_protocol == HTTPS_TEST || test_redirect) {
             hres = IInternetProtocolSink_ReportProgress(protocol_sink, BINDSTATUS_ACCEPTRANGES, NULL);
             ok(hres == S_OK, "ReportProgress(BINDSTATUS_ACCEPTRANGES) failed: %08x\n", hres);
         }
@@ -1275,6 +1292,16 @@ static HRESULT WINAPI statusclb_OnProgress(IBindStatusCallbackEx *iface, ULONG u
         if((bindf & BINDF_ASYNCHRONOUS) && emulate_protocol)
             SetEvent(complete_event);
         break;
+    case BINDSTATUS_REDIRECTING:
+        if(iface == &objbsc)
+            CHECK_EXPECT(Obj_OnProgress_REDIRECTING);
+        else
+            CHECK_EXPECT(OnProgress_REDIRECTING);
+        ok(!lstrcmpW(szStatusText, WINE_ABOUT_URL), "unexpected status text %s\n",
+           wine_dbgstr_w(szStatusText));
+        if(!bind_to_object || iface == &objbsc)
+            SetEvent(complete_event);
+        break;
     case BINDSTATUS_SENDINGREQUEST:
         if(iface == &objbsc)
             CHECK_EXPECT(Obj_OnProgress_SENDINGREQUEST);
@@ -1700,6 +1727,8 @@ static HRESULT WINAPI PersistMoniker_Load(IPersistMoniker *iface, BOOL fFullyAva
     SET_EXPECT(QueryInterface_IBindStatusCallbackEx);
     SET_EXPECT(GetBindInfo);
     SET_EXPECT(OnStartBinding);
+    if(test_redirect)
+        SET_EXPECT(OnProgress_REDIRECTING);
     SET_EXPECT(OnProgress_BEGINDOWNLOADDATA);
     if(test_protocol == FILE_TEST)
         SET_EXPECT(OnProgress_CACHEFILENAMEAVAILABLE);
@@ -1716,6 +1745,8 @@ static HRESULT WINAPI PersistMoniker_Load(IPersistMoniker *iface, BOOL fFullyAva
     CLEAR_CALLED(QueryInterface_IBindStatusCallbackEx); /* IE 8 */
     CHECK_CALLED(GetBindInfo);
     CHECK_CALLED(OnStartBinding);
+    if(test_redirect)
+        CHECK_CALLED(OnProgress_REDIRECTING);
     CHECK_CALLED(OnProgress_BEGINDOWNLOADDATA);
     if(test_protocol == FILE_TEST)
         CHECK_CALLED(OnProgress_CACHEFILENAMEAVAILABLE);
@@ -2184,9 +2215,11 @@ static BOOL test_RegisterBindStatusCallback(void)
     return ret;
 }
 
-#define BINDTEST_EMULATE     1
-#define BINDTEST_TOOBJECT    2
-#define BINDTEST_FILEDWLAPI  4
+#define BINDTEST_EMULATE       0x0001
+#define BINDTEST_TOOBJECT      0x0002
+#define BINDTEST_FILEDWLAPI    0x0004
+#define BINDTEST_HTTPRESPONSE  0x0008
+#define BINDTEST_REDIRECT      0x0010
 
 static void init_bind_test(int protocol, DWORD flags, DWORD t)
 {
@@ -2201,9 +2234,14 @@ static void init_bind_test(int protocol, DWORD flags, DWORD t)
     bind_to_object = (flags & BINDTEST_TOOBJECT) != 0;
     tymed = t;
     filedwl_api = (flags & BINDTEST_FILEDWLAPI) != 0;
+    if(flags & BINDTEST_HTTPRESPONSE)
+        urls[HTTP_TEST] = SHORT_RESPONSE_URL;
+    else
+        urls[HTTP_TEST] = WINE_ABOUT_URL;
+    test_redirect = (flags & BINDTEST_REDIRECT) != 0;
 }
 
-static void test_BindToStorage(int protocol, BOOL emul, DWORD t)
+static void test_BindToStorage(int protocol, DWORD flags, DWORD t)
 {
     IMoniker *mon;
     HRESULT hres;
@@ -2214,7 +2252,7 @@ static void test_BindToStorage(int protocol, BOOL emul, DWORD t)
     IUnknown *unk = (IUnknown*)0x00ff00ff;
     IBinding *bind;
 
-    init_bind_test(protocol, emul ? BINDTEST_EMULATE : 0, t);
+    init_bind_test(protocol, flags, t);
 
     SET_EXPECT(QueryInterface_IServiceProvider);
     hres = CreateAsyncBindCtx(0, (IBindStatusCallback*)&bsc, NULL, &bctx);
@@ -2396,7 +2434,7 @@ static void test_BindToStorage(int protocol, BOOL emul, DWORD t)
         http_is_first = FALSE;
 }
 
-static void test_BindToObject(int protocol, BOOL emul)
+static void test_BindToObject(int protocol, DWORD flags)
 {
     IMoniker *mon;
     HRESULT hres;
@@ -2407,9 +2445,9 @@ static void test_BindToObject(int protocol, BOOL emul)
     IUnknown *unk = (IUnknown*)0x00ff00ff;
     IBinding *bind;
 
-    init_bind_test(protocol, BINDTEST_TOOBJECT | (emul ? BINDTEST_EMULATE : 0), TYMED_ISTREAM);
+    init_bind_test(protocol, BINDTEST_TOOBJECT|flags, TYMED_ISTREAM);
 
-    if(emul)
+    if(emulate_protocol)
         CoRegisterClassObject(&CLSID_HTMLDocument, (IUnknown *)&mime_cf,
                               CLSCTX_INPROC_SERVER, REGCLS_MULTIPLEUSE, &regid);
 
@@ -2500,14 +2538,14 @@ static void test_BindToObject(int protocol, BOOL emul)
     }else {
         ok(hres == S_OK, "IMoniker_BindToStorage failed: %08x\n", hres);
         ok(unk != NULL, "unk == NULL\n");
-        if(emul)
+        if(emulate_protocol)
             ok(unk == (IUnknown*)&PersistMoniker, "unk != PersistMoniker\n");
     }
     if(unk)
         IUnknown_Release(unk);
 
     while((bindf & BINDF_ASYNCHRONOUS) &&
-          !((!emul || stopped_binding) && stopped_obj_binding) && GetMessage(&msg,NULL,0,0)) {
+          !((!emulate_protocol || stopped_binding) && stopped_obj_binding) && GetMessage(&msg,NULL,0,0)) {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
@@ -2571,7 +2609,7 @@ static void test_BindToObject(int protocol, BOOL emul)
         CHECK_CALLED(Obj_OnStopBinding);
     }
 
-    if(test_protocol != HTTP_TEST || emul || urls[test_protocol] == SHORT_RESPONSE_URL || !(bindf & BINDF_ASYNCHRONOUS)) {
+    if(test_protocol != HTTP_TEST || emulate_protocol || !(bindf & BINDF_ASYNCHRONOUS)) {
         ok(IMoniker_Release(mon) == 0, "mon should be destroyed here\n");
         ok(IBindCtx_Release(bctx) == 0, "bctx should be destroyed here\n");
     }else {
@@ -2579,7 +2617,7 @@ static void test_BindToObject(int protocol, BOOL emul)
         IBindCtx_Release(bctx);
     }
 
-    if(emul)
+    if(emulate_protocol)
         CoRevokeClassObject(regid);
 
     if(test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST)
@@ -2612,6 +2650,7 @@ static void test_URLDownloadToFile(DWORD prot, BOOL emul)
             SET_EXPECT(QueryInterface_IHttpNegotiate2);
             SET_EXPECT(GetRootSecurityId);
             SET_EXPECT(QueryInterface_IWindowForBindingUI);
+            SET_EXPECT(OnProgress_CONNECTING);
         }
         if(test_protocol == HTTP_TEST || test_protocol == HTTPS_TEST || test_protocol == FILE_TEST)
             SET_EXPECT(OnProgress_SENDINGREQUEST);
@@ -2655,6 +2694,7 @@ static void test_URLDownloadToFile(DWORD prot, BOOL emul)
                 CHECK_CALLED(GetRootSecurityId);
             }
             CLEAR_CALLED(QueryInterface_IWindowForBindingUI);
+            CLEAR_CALLED(OnProgress_CONNECTING);
         }
         if(test_protocol == FILE_TEST)
             CHECK_CALLED(OnProgress_SENDINGREQUEST);
@@ -2821,40 +2861,8 @@ static void test_StdURLMoniker(void)
     IMoniker_Release(mon);
 }
 
-static void gecko_installer_workaround(BOOL disable)
-{
-    HKEY hkey;
-    DWORD res;
-
-    static BOOL has_url = FALSE;
-    static char url[2048];
-
-    if(!disable && !has_url)
-        return;
-
-    res = RegOpenKey(HKEY_CURRENT_USER, "Software\\Wine\\MSHTML", &hkey);
-    if(res != ERROR_SUCCESS)
-        return;
-
-    if(disable) {
-        DWORD type, size = sizeof(url);
-
-        res = RegQueryValueEx(hkey, "GeckoUrl", NULL, &type, (PVOID)url, &size);
-        if(res == ERROR_SUCCESS && type == REG_SZ)
-            has_url = TRUE;
-
-        RegDeleteValue(hkey, "GeckoUrl");
-    }else {
-        RegSetValueEx(hkey, "GeckoUrl", 0, REG_SZ, (PVOID)url, lstrlenA(url)+1);
-    }
-
-    RegCloseKey(hkey);
-}
-
 START_TEST(url)
 {
-    gecko_installer_workaround(TRUE);
-
     complete_event = CreateEvent(NULL, FALSE, FALSE, NULL);
     complete_event2 = CreateEvent(NULL, FALSE, FALSE, NULL);
     thread_id = GetCurrentThreadId();
@@ -2874,7 +2882,7 @@ START_TEST(url)
         test_BindToStorage_fail();
 
         trace("synchronous http test (COM not initialised)...\n");
-        test_BindToStorage(HTTP_TEST, FALSE, TYMED_ISTREAM);
+        test_BindToStorage(HTTP_TEST, 0, TYMED_ISTREAM);
 
         CoInitialize(NULL);
 
@@ -2882,95 +2890,100 @@ START_TEST(url)
         test_StdURLMoniker();
 
         trace("synchronous http test...\n");
-        test_BindToStorage(HTTP_TEST, FALSE, TYMED_ISTREAM);
+        test_BindToStorage(HTTP_TEST, 0, TYMED_ISTREAM);
 
         trace("synchronous http test (to object)...\n");
-        test_BindToObject(HTTP_TEST, FALSE);
+        test_BindToObject(HTTP_TEST, 0);
 
         trace("synchronous file test...\n");
-        test_BindToStorage(FILE_TEST, FALSE, TYMED_ISTREAM);
+        test_BindToStorage(FILE_TEST, 0, TYMED_ISTREAM);
 
         trace("synchronous file test (to object)...\n");
-        test_BindToObject(FILE_TEST, FALSE);
+        test_BindToObject(FILE_TEST, 0);
 
         bindf = BINDF_ASYNCHRONOUS | BINDF_ASYNCSTORAGE | BINDF_PULLDATA;
 
         trace("http test...\n");
-        test_BindToStorage(HTTP_TEST, FALSE, TYMED_ISTREAM);
+        test_BindToStorage(HTTP_TEST, 0, TYMED_ISTREAM);
 
         trace("http test (to file)...\n");
-        test_BindToStorage(HTTP_TEST, FALSE, TYMED_FILE);
+        test_BindToStorage(HTTP_TEST, 0, TYMED_FILE);
 
         trace("http test (to object)...\n");
-        test_BindToObject(HTTP_TEST, FALSE);
+        test_BindToObject(HTTP_TEST, 0);
 
         trace("http test (short response)...\n");
         http_is_first = TRUE;
-        urls[HTTP_TEST] = SHORT_RESPONSE_URL;
-        test_BindToStorage(HTTP_TEST, FALSE, TYMED_ISTREAM);
+        test_BindToStorage(HTTP_TEST, BINDTEST_HTTPRESPONSE, TYMED_ISTREAM);
 
         trace("http test (short response, to object)...\n");
-        test_BindToObject(HTTP_TEST, FALSE);
+        test_BindToObject(HTTP_TEST, 0);
 
         trace("emulated http test...\n");
-        test_BindToStorage(HTTP_TEST, TRUE, TYMED_ISTREAM);
+        test_BindToStorage(HTTP_TEST, BINDTEST_EMULATE, TYMED_ISTREAM);
 
         trace("emulated http test (to object)...\n");
-        test_BindToObject(HTTP_TEST, TRUE);
+        test_BindToObject(HTTP_TEST, BINDTEST_EMULATE);
+
+        trace("emulated http test (to object, redirect)...\n");
+        test_BindToObject(HTTP_TEST, BINDTEST_EMULATE|BINDTEST_REDIRECT);
 
         trace("emulated http test (to file)...\n");
-        test_BindToStorage(HTTP_TEST, TRUE, TYMED_FILE);
+        test_BindToStorage(HTTP_TEST, BINDTEST_EMULATE, TYMED_FILE);
+
+        trace("emulated http test (redirect)...\n");
+        test_BindToStorage(HTTP_TEST, BINDTEST_EMULATE|BINDTEST_REDIRECT, TYMED_ISTREAM);
 
         trace("asynchronous https test...\n");
-        test_BindToStorage(HTTPS_TEST, FALSE, TYMED_ISTREAM);
+        test_BindToStorage(HTTPS_TEST, 0, TYMED_ISTREAM);
 
         trace("emulated https test...\n");
-        test_BindToStorage(HTTPS_TEST, TRUE, TYMED_ISTREAM);
+        test_BindToStorage(HTTPS_TEST, BINDTEST_EMULATE, TYMED_ISTREAM);
 
         trace("about test...\n");
-        test_BindToStorage(ABOUT_TEST, FALSE, TYMED_ISTREAM);
+        test_BindToStorage(ABOUT_TEST, 0, TYMED_ISTREAM);
 
         trace("about test (to file)...\n");
-        test_BindToStorage(ABOUT_TEST, FALSE, TYMED_FILE);
+        test_BindToStorage(ABOUT_TEST, 0, TYMED_FILE);
 
         trace("about test (to object)...\n");
-        test_BindToObject(ABOUT_TEST, FALSE);
+        test_BindToObject(ABOUT_TEST, 0);
 
         trace("emulated about test...\n");
-        test_BindToStorage(ABOUT_TEST, TRUE, TYMED_ISTREAM);
+        test_BindToStorage(ABOUT_TEST, BINDTEST_EMULATE, TYMED_ISTREAM);
 
         trace("emulated about test (to file)...\n");
-        test_BindToStorage(ABOUT_TEST, TRUE, TYMED_FILE);
+        test_BindToStorage(ABOUT_TEST, BINDTEST_EMULATE, TYMED_FILE);
 
         trace("emulated about test (to object)...\n");
-        test_BindToObject(ABOUT_TEST, TRUE);
+        test_BindToObject(ABOUT_TEST, BINDTEST_EMULATE);
 
         trace("file test...\n");
-        test_BindToStorage(FILE_TEST, FALSE, TYMED_ISTREAM);
+        test_BindToStorage(FILE_TEST, 0, TYMED_ISTREAM);
 
         trace("file test (to file)...\n");
-        test_BindToStorage(FILE_TEST, FALSE, TYMED_FILE);
+        test_BindToStorage(FILE_TEST, 0, TYMED_FILE);
 
         trace("file test (to object)...\n");
-        test_BindToObject(FILE_TEST, FALSE);
+        test_BindToObject(FILE_TEST, 0);
 
         trace("emulated file test...\n");
-        test_BindToStorage(FILE_TEST, TRUE, TYMED_ISTREAM);
+        test_BindToStorage(FILE_TEST, BINDTEST_EMULATE, TYMED_ISTREAM);
 
         trace("emulated file test (to file)...\n");
-        test_BindToStorage(FILE_TEST, TRUE, TYMED_FILE);
+        test_BindToStorage(FILE_TEST, BINDTEST_EMULATE, TYMED_FILE);
 
         trace("emulated file test (to object)...\n");
-        test_BindToObject(FILE_TEST, TRUE);
+        test_BindToObject(FILE_TEST, BINDTEST_EMULATE);
 
         trace("emulated its test...\n");
-        test_BindToStorage(ITS_TEST, TRUE, TYMED_ISTREAM);
+        test_BindToStorage(ITS_TEST, BINDTEST_EMULATE, TYMED_ISTREAM);
 
         trace("emulated its test (to file)...\n");
-        test_BindToStorage(ITS_TEST, TRUE, TYMED_FILE);
+        test_BindToStorage(ITS_TEST, BINDTEST_EMULATE, TYMED_FILE);
 
         trace("emulated mk test...\n");
-        test_BindToStorage(MK_TEST, TRUE, TYMED_ISTREAM);
+        test_BindToStorage(MK_TEST, BINDTEST_EMULATE, TYMED_ISTREAM);
 
         trace("test URLDownloadToFile for file protocol...\n");
         test_URLDownloadToFile(FILE_TEST, FALSE);
@@ -2984,7 +2997,7 @@ START_TEST(url)
         bindf |= BINDF_NOWRITECACHE;
 
         trace("ftp test...\n");
-        test_BindToStorage(FTP_TEST, FALSE, TYMED_ISTREAM);
+        test_BindToStorage(FTP_TEST, 0, TYMED_ISTREAM);
 
         trace("test failures...\n");
         test_BindToStorage_fail();
@@ -2994,6 +3007,4 @@ START_TEST(url)
     CloseHandle(complete_event);
     CloseHandle(complete_event2);
     CoUninitialize();
-
-    gecko_installer_workaround(FALSE);
 }
