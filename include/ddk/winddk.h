@@ -3631,37 +3631,6 @@ NTAPI
 PoRequestShutdownEvent(
   OUT PVOID  *Event);
 
-
-
-
-NTKERNELAPI
-POWER_STATE
-NTAPI
-PoSetPowerState(
-  IN PDEVICE_OBJECT  DeviceObject,
-  IN POWER_STATE_TYPE  Type,
-  IN POWER_STATE  State);
-
-NTKERNELAPI
-VOID
-NTAPI
-PoSetSystemState(
-  IN EXECUTION_STATE  Flags);
-
-NTKERNELAPI
-VOID
-NTAPI
-PoStartNextPowerIrp(
-  IN OUT PIRP  Irp);
-
-NTKERNELAPI
-VOID
-NTAPI
-PoUnregisterSystemState(
-  IN OUT PVOID  StateHandle);
-
-
-
 /** WMI library support routines **/
 
 NTSTATUS
@@ -3682,16 +3651,6 @@ WmiFireEvent(
   IN ULONG  EventDataSize,
   IN PVOID  EventData);
 
-NTKERNELAPI
-NTSTATUS
-NTAPI
-WmiQueryTraceInformation(
-  IN TRACE_INFORMATION_CLASS  TraceInformationClass,
-  OUT PVOID  TraceInformation,
-  IN ULONG  TraceInformationLength,
-  OUT PULONG  RequiredLength OPTIONAL,
-  IN PVOID  Buffer OPTIONAL);
-
 NTSTATUS
 NTAPI
 WmiSystemControl(
@@ -3700,113 +3659,7 @@ WmiSystemControl(
   IN PIRP  Irp,
   OUT PSYSCTL_IRP_DISPOSITION  IrpDisposition);
 
-NTKERNELAPI
-NTSTATUS
-DDKCDECLAPI
-WmiTraceMessage(
-  IN TRACEHANDLE  LoggerHandle,
-  IN ULONG  MessageFlags,
-  IN LPGUID  MessageGuid,
-  IN USHORT  MessageNumber,
-  IN ...);
-
-#if 0
-/* FIXME: Get va_list from where? */
-NTKERNELAPI
-NTSTATUS
-DDKCDECLAPI
-WmiTraceMessageVa(
-  IN TRACEHANDLE  LoggerHandle,
-  IN ULONG  MessageFlags,
-  IN LPGUID  MessageGuid,
-  IN USHORT  MessageNumber,
-  IN va_list  MessageArgList);
-#endif
-
-
 /** Kernel debugger routines **/
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-KdDisableDebugger(
-  VOID);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-KdEnableDebugger(
-  VOID);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-KdRefreshDebuggerNotPresent(
-    VOID
-);
-
-#if (NTDDI_VERSION >= NTDDI_WS03SP1)
-NTKERNELAPI
-NTSTATUS
-NTAPI
-KdChangeOption(
-  IN KD_OPTION Option,
-  IN ULONG InBufferBytes OPTIONAL,
-  IN PVOID InBuffer,
-  IN ULONG OutBufferBytes OPTIONAL,
-  OUT PVOID OutBuffer,
-  OUT PULONG OutBufferNeeded OPTIONAL);
-#endif
-
-VOID
-NTAPI
-DbgBreakPoint(
-  VOID);
-
-NTSYSAPI
-VOID
-NTAPI
-DbgBreakPointWithStatus(
-  IN ULONG  Status);
-
-ULONG
-DDKCDECLAPI
-DbgPrint(
-  IN PCCH  Format,
-  IN ...);
-
-NTSYSAPI
-ULONG
-DDKCDECLAPI
-DbgPrintEx(
-  IN ULONG  ComponentId,
-  IN ULONG  Level,
-  IN PCCH  Format,
-  IN ...);
-
-ULONG
-NTAPI
-vDbgPrintEx(
-  IN ULONG ComponentId,
-  IN ULONG Level,
-  IN PCCH Format,
-  IN va_list ap);
-
-ULONG
-NTAPI
-vDbgPrintExWithPrefix(
-  IN PCCH Prefix,
-  IN ULONG ComponentId,
-  IN ULONG Level,
-  IN PCCH Format,
-  IN va_list ap);
-
-NTKERNELAPI
-ULONG
-DDKCDECLAPI
-DbgPrintReturnControlC(
-  IN PCCH  Format,
-  IN ...);
 
 ULONG
 NTAPI
@@ -3815,60 +3668,6 @@ DbgPrompt(
     OUT PCH Response,
     IN ULONG MaximumResponseLength
 );
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-DbgQueryDebugFilterState(
-  IN ULONG  ComponentId,
-  IN ULONG  Level);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-DbgSetDebugFilterState(
-  IN ULONG  ComponentId,
-  IN ULONG  Level,
-  IN BOOLEAN  State);
-
-#if DBG
-
-#define KdPrint(_x_) DbgPrint _x_
-#define KdPrintEx(_x_) DbgPrintEx _x_
-#define KdBreakPoint() DbgBreakPoint()
-#define KdBreakPointWithStatus(s) DbgBreakPointWithStatus(s)
-
-#else /* !DBG */
-
-#define KdPrint(_x_)
-#define KdPrintEx(_x_)
-#define KdBreakPoint()
-#define KdBreakPointWithStatus(s)
-
-#endif /* !DBG */
-
-#if defined(__GNUC__)
-
-extern NTKERNELAPI BOOLEAN KdDebuggerNotPresent;
-extern NTKERNELAPI BOOLEAN KdDebuggerEnabled;
-#define KD_DEBUGGER_ENABLED     KdDebuggerEnabled
-#define KD_DEBUGGER_NOT_PRESENT KdDebuggerNotPresent
-
-#elif defined(_NTDDK_) || defined(_NTHAL_) || defined(_WDMDDK_) || defined(_NTOSP_)
-
-extern NTKERNELAPI PBOOLEAN KdDebuggerNotPresent;
-extern NTKERNELAPI PBOOLEAN KdDebuggerEnabled;
-#define KD_DEBUGGER_ENABLED     *KdDebuggerEnabled
-#define KD_DEBUGGER_NOT_PRESENT *KdDebuggerNotPresent
-
-#else
-
-extern BOOLEAN KdDebuggerNotPresent;
-extern BOOLEAN KdDebuggerEnabled;
-#define KD_DEBUGGER_ENABLED     KdDebuggerEnabled
-#define KD_DEBUGGER_NOT_PRESENT KdDebuggerNotPresent
-
-#endif
 
 /** Stuff from winnt4.h */
 
