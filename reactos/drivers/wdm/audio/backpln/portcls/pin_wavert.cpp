@@ -100,91 +100,6 @@ CPortPinWaveRT::QueryInterface(
     return STATUS_UNSUCCESSFUL;
 }
 
-VOID
-NTAPI
-SetStreamWorkerRoutine(
-    IN PDEVICE_OBJECT  DeviceObject,
-    IN PVOID  Context)
-{
-    CPortPinWaveRT * This;
-    PSETSTREAM_CONTEXT Ctx = (PSETSTREAM_CONTEXT)Context;
-    KSSTATE State;
-
-    This = Ctx->Pin;
-    State = Ctx->State;
-
-    IoFreeWorkItem(Ctx->WorkItem);
-    FreeItem(Ctx, TAG_PORTCLASS);
-
-    // Has the audio stream resumed?
-    if (This->m_IrpQueue->NumMappings() && State == KSSTATE_STOP)
-        return;
-
-    // Set the state
-    if (NT_SUCCESS(This->m_Stream->SetState(State)))
-    {
-        // Set internal state to stop
-        This->m_State = State;
-
-        if (This->m_State == KSSTATE_STOP)
-        {
-            // reset start stream
-            This->m_IrpQueue->CancelBuffers(); //FIX function name
-            DPRINT("Stopping PreCompleted %u PostCompleted %u\n", This->m_PreCompleted, This->m_PostCompleted);
-        }
-
-        if (This->m_State == KSSTATE_RUN)
-        {
-            // start the notification timer
-        }
-    }
-}
-
-VOID
-NTAPI
-CPortPinWaveRT::SetStreamState(
-   IN KSSTATE State)
-{
-    PDEVICE_OBJECT DeviceObject;
-    PIO_WORKITEM WorkItem;
-    PSETSTREAM_CONTEXT Context;
-
-    PC_ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
-
-    // Has the audio stream resumed?
-    if (m_IrpQueue->NumMappings() && State == KSSTATE_STOP)
-        return;
-
-    // Has the audio state already been set?
-    if (m_State == State)
-        return;
-
-    // Get device object
-    DeviceObject = GetDeviceObjectFromPortWaveRT(m_Port);
-
-    // allocate set state context
-    Context = (PSETSTREAM_CONTEXT)AllocateItem(NonPagedPool, sizeof(SETSTREAM_CONTEXT), TAG_PORTCLASS);
-
-    if (!Context)
-        return;
-
-    // allocate work item
-    WorkItem = IoAllocateWorkItem(DeviceObject);
-
-    if (!WorkItem)
-    {
-        ExFreePool(Context);
-        return;
-    }
-
-    Context->Pin = this;
-    Context->WorkItem = WorkItem;
-    Context->State = State;
-
-    // queue the work item
-    IoQueueWorkItem(WorkItem, SetStreamWorkerRoutine, DelayedWorkQueue, (PVOID)Context);
-}
-
 //==================================================================================================================================
 
 NTSTATUS
@@ -313,7 +228,6 @@ CPortPinWaveRT::HandleKsProperty(
                         if (m_Format)
                             ExFreePoolWithTag(m_Format, TAG_PORTCLASS);
 
-                        m_IrpQueue->UpdateFormat((PKSDATAFORMAT)NewDataFormat);
                         m_Format = NewDataFormat;
                         Irp->IoStatus.Information = DataFormat->FormatSize;
                         Irp->IoStatus.Status = STATUS_SUCCESS;

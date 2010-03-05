@@ -36,9 +36,6 @@ public:
     IMP_IPortWavePciStream;
     CPortPinWavePci(IUnknown *OuterUnknown) {}
     virtual ~CPortPinWavePci(){}
-
-    VOID NTAPI SetState( IN KSSTATE State);
-    VOID NTAPI CloseStream();
 protected:
 
     friend NTSTATUS NTAPI PinWavePciState(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
@@ -77,9 +74,6 @@ protected:
 
     NTSTATUS NTAPI HandleKsProperty(IN PIRP Irp);
     NTSTATUS NTAPI HandleKsStream(IN PIRP Irp);
-
-
-    VOID NTAPI SetStreamState( IN KSSTATE State);
 };
 
 typedef struct
@@ -311,9 +305,6 @@ PinWavePciDataFormat(
             // free old format
             FreeItem(Pin->m_Format, TAG_PORTCLASS);
 
-            // update irp queue with new format
-            Pin->m_IrpQueue->UpdateFormat((PKSDATAFORMAT)NewDataFormat);
-
             // store new format
             Pin->m_Format = NewDataFormat;
             Irp->IoStatus.Information = NewDataFormat->FormatSize;
@@ -373,7 +364,7 @@ CPortPinWavePci::QueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
-    DPRINT("CPortPinWavePci::QueryInterface entered\n");
+    //DPRINT("CPortPinWavePci::QueryInterface entered\n");
 
     if (IsEqualGUIDAligned(refiid, IID_IIrpTarget) || 
         IsEqualGUIDAligned(refiid, IID_IUnknown))
@@ -436,132 +427,10 @@ CPortPinWavePci::TerminatePacket()
 
 
 VOID
-CPortPinWavePci::SetState(KSSTATE State)
-{
-    ULONG MinimumDataThreshold;
-    ULONG MaximumDataThreshold;
-
-    // Has the audio stream resumed?
-    if (m_IrpQueue->NumMappings() && State == KSSTATE_STOP)
-        return;
-
-    // Set the state
-    if (NT_SUCCESS(m_Stream->SetState(State)))
-    {
-        // Save new internal state
-        m_State = State;
-
-        if (m_State == KSSTATE_STOP)
-        {
-            // reset start stream
-            m_IrpQueue->CancelBuffers(); //FIX function name
-            //This->ServiceGroup->lpVtbl->CancelDelayedService(This->ServiceGroup);
-            // increase stop counter
-            m_StopCount++;
-            // get current data threshold
-            MinimumDataThreshold = m_IrpQueue->GetMinimumDataThreshold();
-            // get maximum data threshold
-            MaximumDataThreshold = ((PKSDATAFORMAT_WAVEFORMATEX)m_Format)->WaveFormatEx.nAvgBytesPerSec;
-            // increase minimum data threshold by 10 frames
-            MinimumDataThreshold += m_AllocatorFraming.FrameSize * 10;
-
-            // assure it has not exceeded
-            MinimumDataThreshold = min(MinimumDataThreshold, MaximumDataThreshold);
-            // store minimum data threshold
-            m_IrpQueue->SetMinimumDataThreshold(MinimumDataThreshold);
-
-            DPRINT("Stopping TotalCompleted %u StopCount %u MinimumDataThreshold %u\n", m_TotalPackets, m_StopCount, MinimumDataThreshold);
-        }
-        if (m_State == KSSTATE_RUN)
-        {
-            // start the notification timer
-            //m_ServiceGroup->RequestDelayedService(m_ServiceGroup, m_Delay);
-        }
-    }
-
-
-}
-
-VOID
-NTAPI
-PinWavePciSetStreamWorkerRoutine(
-    IN PDEVICE_OBJECT  DeviceObject,
-    IN PVOID  Context)
-{
-    CPortPinWavePci * This;
-    PSETSTREAM_CONTEXT Ctx = (PSETSTREAM_CONTEXT)Context;
-    KSSTATE State;
-
-    This = Ctx->Pin;
-    State = Ctx->State;
-
-    IoFreeWorkItem(Ctx->WorkItem);
-    FreeItem(Ctx, TAG_PORTCLASS);
-
-    This->SetState(State);
-}
-
-VOID
-NTAPI
-CPortPinWavePci::SetStreamState(
-   IN KSSTATE State)
-{
-    PDEVICE_OBJECT DeviceObject;
-    PIO_WORKITEM WorkItem;
-    PSETSTREAM_CONTEXT Context;
-
-    PC_ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
-
-    // Has the audio stream resumed?
-    if (m_IrpQueue->NumMappings() && State == KSSTATE_STOP)
-        return;
-
-    // Has the audio state already been set?
-    if (m_State == State)
-        return;
-
-    // Get device object
-    DeviceObject = GetDeviceObjectFromPortWavePci(m_Port);
-
-    // allocate set state context
-    Context = (PSETSTREAM_CONTEXT)AllocateItem(NonPagedPool, sizeof(SETSTREAM_CONTEXT), TAG_PORTCLASS);
-
-    if (!Context)
-        return;
-
-    // allocate work item
-    WorkItem = IoAllocateWorkItem(DeviceObject);
-
-    if (!WorkItem)
-    {
-        ExFreePool(Context);
-        return;
-    }
-
-    Context->Pin = this;
-    Context->WorkItem = WorkItem;
-    Context->State = State;
-
-    // queue the work item
-    IoQueueWorkItem(WorkItem, PinWavePciSetStreamWorkerRoutine, DelayedWorkQueue, (PVOID)Context);
-}
-
-
-VOID
 NTAPI
 CPortPinWavePci::RequestService()
 {
     PC_ASSERT_IRQL(DISPATCH_LEVEL);
-
-    if (m_IrpQueue->HasLastMappingFailed())
-    {
-        if (m_IrpQueue->NumMappings() == 0)
-        {
-            DPRINT("Stopping stream...\n");
-            SetStreamState(KSSTATE_STOP);
-            return;
-        }
-    }
 
     m_Stream->Service();
     //TODO
@@ -597,18 +466,18 @@ CPortPinWavePci::HandleKsProperty(
 {
     PKSPROPERTY Property;
     NTSTATUS Status;
-    UNICODE_STRING GuidString;
+    //UNICODE_STRING GuidString;
     PIO_STACK_LOCATION IoStack;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    DPRINT("IPortPinWave_HandleKsProperty entered\n");
+    //DPRINT("IPortPinWave_HandleKsProperty entered\n");
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
     if (IoStack->Parameters.DeviceIoControl.IoControlCode != IOCTL_KS_PROPERTY)
     {
-        DPRINT("Unhandled function %lx Length %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode, IoStack->Parameters.DeviceIoControl.InputBufferLength);
+        //DPRINT("Unhandled function %lx Length %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode, IoStack->Parameters.DeviceIoControl.InputBufferLength);
         
         Irp->IoStatus.Status = STATUS_SUCCESS;
 
@@ -621,10 +490,11 @@ CPortPinWavePci::HandleKsProperty(
     if (Status == STATUS_NOT_FOUND)
     {
         Property = (PKSPROPERTY)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
-
+#if 0
         RtlStringFromGUID(Property->Set, &GuidString);
-        DPRINT("Unhandeled property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
+        //DPRINT("Unhandeled property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
         RtlFreeUnicodeString(&GuidString);
+#endif
     }
 
     if (Status != STATUS_PENDING)
@@ -636,29 +506,6 @@ CPortPinWavePci::HandleKsProperty(
     return Status;
 }
 
-#if 0
-        else if (Property->Id == KSPROPERTY_CONNECTION_ALLOCATORFRAMING)
-        {
-            PKSALLOCATOR_FRAMING Framing = (PKSALLOCATOR_FRAMING)OutputBuffer;
-
-            PC_ASSERT_IRQL(DISPATCH_LEVEL);
-            // Validate input buffer
-            if (OutputBufferLength < sizeof(KSALLOCATOR_FRAMING))
-            {
-                IoStatusBlock->Information = sizeof(KSALLOCATOR_FRAMING);
-                IoStatusBlock->Status = STATUS_BUFFER_TOO_SMALL;
-                return STATUS_BUFFER_TOO_SMALL;
-            }
-            // copy frame allocator struct
-            RtlMoveMemory(Framing, &m_AllocatorFraming, sizeof(KSALLOCATOR_FRAMING));
-
-            IoStatusBlock->Information = sizeof(KSALLOCATOR_FRAMING);
-            IoStatusBlock->Status = STATUS_SUCCESS;
-            return STATUS_SUCCESS;
-        }
-    }
-#endif
-
 NTSTATUS
 NTAPI
 CPortPinWavePci::HandleKsStream(
@@ -666,9 +513,12 @@ CPortPinWavePci::HandleKsStream(
 {
     NTSTATUS Status;
     ULONG Data = 0;
+    BOOLEAN bFailed;
     InterlockedIncrement((PLONG)&m_TotalPackets);
 
     DPRINT("IPortPinWaveCyclic_HandleKsStream entered Total %u State %x MinData %u\n", m_TotalPackets, m_State, m_IrpQueue->NumData());
+
+    bFailed = m_IrpQueue->HasLastMappingFailed();
 
     Status = m_IrpQueue->AddMapping(Irp, &Data);
 
@@ -678,6 +528,12 @@ CPortPinWavePci::HandleKsStream(
             m_Position.WriteOffset += Data;
         else
             m_Position.WriteOffset += Data;
+
+        if (bFailed)
+        {
+            // notify stream of new mapping
+            m_Stream->MappingAvailable();
+        }
 
         return STATUS_PENDING;
     }
@@ -741,14 +597,20 @@ CPortPinWavePci::Flush(
     return KsDispatchInvalidDeviceRequest(DeviceObject, Irp);
 }
 
-VOID
+NTSTATUS
 NTAPI
-CPortPinWavePci::CloseStream()
+CPortPinWavePci::Close(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
 {
-    PMINIPORTWAVEPCISTREAM Stream;
-    ISubdevice *ISubDevice;
+    ISubdevice *SubDevice;
     NTSTATUS Status;
     PSUBDEVICE_DESCRIPTOR Descriptor;
+
+    if (m_ServiceGroup)
+    {
+        m_ServiceGroup->RemoveMember(PSERVICESINK(this));
+    }
 
     if (m_Stream)
     {
@@ -756,22 +618,18 @@ CPortPinWavePci::CloseStream()
         {
             m_Stream->SetState(KSSTATE_STOP);
         }
+        m_Stream->Release();
     }
 
-    if (m_ServiceGroup)
-    {
-        m_ServiceGroup->RemoveMember(PSERVICESINK(this));
-    }
-
-    Status = m_Port->QueryInterface(IID_ISubdevice, (PVOID*)&ISubDevice);
+    Status = m_Port->QueryInterface(IID_ISubdevice, (PVOID*)&SubDevice);
     if (NT_SUCCESS(Status))
     {
-        Status = ISubDevice->GetDescriptor(&Descriptor);
+        Status = SubDevice->GetDescriptor(&Descriptor);
         if (NT_SUCCESS(Status))
         {
             Descriptor->Factory.Instances[m_ConnectDetails->PinId].CurrentPinInstanceCount--;
         }
-        ISubDevice->Release();
+        SubDevice->Release();
     }
 
     if (m_Format)
@@ -780,93 +638,11 @@ CPortPinWavePci::CloseStream()
         m_Format = NULL;
     }
 
-    if (m_Stream)
-    {
-        Stream = m_Stream;
-        m_Stream = 0;
-        DPRINT("Closing stream at Irql %u\n", KeGetCurrentIrql());
-        Stream->Release();
-    }
-}
-
-VOID
-NTAPI
-PinWavePciCloseStreamRoutine(
-    IN PDEVICE_OBJECT  DeviceObject,
-    IN PVOID Context)
-{
-    CPortPinWavePci * This;
-    PCLOSESTREAM_CONTEXT Ctx = (PCLOSESTREAM_CONTEXT)Context;
-
-    This = (CPortPinWavePci*)Ctx->Pin;
-
-    This->CloseStream();
-
-    // complete the irp
-    Ctx->Irp->IoStatus.Information = 0;
-    Ctx->Irp->IoStatus.Status = STATUS_SUCCESS;
-    IoCompleteRequest(Ctx->Irp, IO_NO_INCREMENT);
-
-    // free the work item
-    IoFreeWorkItem(Ctx->WorkItem);
-
-    // free work item ctx
-    FreeItem(Ctx, TAG_PORTCLASS);
-}
-
-NTSTATUS
-NTAPI
-CPortPinWavePci::Close(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp)
-{
-    PCLOSESTREAM_CONTEXT Ctx;
-
-    if (m_Stream)
-    {
-        Ctx = (PCLOSESTREAM_CONTEXT)AllocateItem(NonPagedPool, sizeof(CLOSESTREAM_CONTEXT), TAG_PORTCLASS);
-        if (!Ctx)
-        {
-            DPRINT("Failed to allocate stream context\n");
-            goto cleanup;
-        }
-
-        Ctx->WorkItem = IoAllocateWorkItem(DeviceObject);
-        if (!Ctx->WorkItem)
-        {
-            DPRINT("Failed to allocate work item\n");
-            goto cleanup;
-        }
-
-        Ctx->Irp = Irp;
-        Ctx->Pin = (PVOID)this;
-
-        IoMarkIrpPending(Irp);
-        Irp->IoStatus.Information = 0;
-        Irp->IoStatus.Status = STATUS_PENDING;
-
-        // defer work item
-        IoQueueWorkItem(Ctx->WorkItem, PinWavePciCloseStreamRoutine, DelayedWorkQueue, (PVOID)Ctx);
-        // Return result
-        return STATUS_PENDING;
-    }
-
-    Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = STATUS_SUCCESS;
+    Irp->IoStatus.Information = 0;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
     return STATUS_SUCCESS;
-
-cleanup:
-
-    if (Ctx)
-        FreeItem(Ctx, TAG_PORTCLASS);
-
-    Irp->IoStatus.Information = 0;
-    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_UNSUCCESSFUL;
-
 }
 
 NTSTATUS

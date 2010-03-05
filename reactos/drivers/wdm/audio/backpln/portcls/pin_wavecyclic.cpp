@@ -543,9 +543,6 @@ PinWaveCyclicDataFormat(
             // free old format
             FreeItem(Pin->m_Format, TAG_PORTCLASS);
 
-            // update irp queue with new format
-            Pin->m_IrpQueue->UpdateFormat((PKSDATAFORMAT)NewDataFormat);
-
             // store new format
             Pin->m_Format = NewDataFormat;
             Irp->IoStatus.Information = NewDataFormat->FormatSize;

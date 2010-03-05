@@ -41,9 +41,6 @@ protected:
     VOID TransferMidiDataToDMus();
     VOID TransferMidiData();
 
-    VOID NTAPI SetStreamState(IN KSSTATE State);
-
-
     IPortDMus * m_Port;
     IPortFilterDMus * m_Filter;
     KSPIN_DESCRIPTOR * m_KsPinDescriptor;
@@ -75,10 +72,6 @@ protected:
     ULONG m_LastTag;
 
     LONG m_Ref;
-
-    friend VOID NTAPI SetStreamWorkerRoutineDMus(IN PDEVICE_OBJECT  DeviceObject, IN PVOID  Context);
-    friend VOID NTAPI CloseStreamRoutineDMus(IN PDEVICE_OBJECT  DeviceObject, IN PVOID Context);
-
 };
 
 typedef struct
@@ -199,92 +192,6 @@ CPortPinDMus::DisconnectOutput(
 //==================================================================================================================================
 
 VOID
-NTAPI
-SetStreamWorkerRoutineDMus(
-    IN PDEVICE_OBJECT  DeviceObject,
-    IN PVOID  Context)
-{
-    CPortPinDMus* This;
-    KSSTATE State;
-    NTSTATUS Status;
-    PSETSTREAM_CONTEXT Ctx = (PSETSTREAM_CONTEXT)Context;
-
-    This = Ctx->Pin;
-    State = Ctx->State;
-
-    IoFreeWorkItem(Ctx->WorkItem);
-    FreeItem(Ctx, TAG_PORTCLASS);
-
-    // Has the audio stream resumed?
-    if (This->m_IrpQueue->NumMappings() && State == KSSTATE_STOP)
-        return;
-
-    // Set the state
-    if (This->m_MidiStream)
-    {
-        Status = This->m_MidiStream->SetState(State);
-    }
-    else
-    {
-        Status = This->m_Mxf->SetState(State);
-    }
-
-    if (NT_SUCCESS(Status))
-    {
-        // Set internal state to requested state
-        This->m_State = State;
-
-        if (This->m_State == KSSTATE_STOP)
-        {
-            // reset start stream
-            This->m_IrpQueue->CancelBuffers(); //FIX function name
-            DPRINT("Stopping PreCompleted %u PostCompleted %u\n", This->m_PreCompleted, This->m_PostCompleted);
-        }
-    }
-}
-
-VOID
-NTAPI
-CPortPinDMus::SetStreamState(
-   IN KSSTATE State)
-{
-    PIO_WORKITEM WorkItem;
-    PSETSTREAM_CONTEXT Context;
-
-    PC_ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
-
-    // Has the audio stream resumed?
-    if (m_IrpQueue->NumMappings() && State == KSSTATE_STOP)
-        return;
-
-    // Has the audio state already been set?
-    if (m_State == State)
-        return;
-
-    // allocate set state context
-    Context = (PSETSTREAM_CONTEXT)AllocateItem(NonPagedPool, sizeof(SETSTREAM_CONTEXT), TAG_PORTCLASS);
-
-    if (!Context)
-        return;
-
-    // allocate work item
-    WorkItem = IoAllocateWorkItem(m_DeviceObject);
-
-    if (!WorkItem)
-    {
-        ExFreePool(Context);
-        return;
-    }
-
-    Context->Pin = this;
-    Context->WorkItem = WorkItem;
-    Context->State = State;
-
-    // queue the work item
-    IoQueueWorkItem(WorkItem, SetStreamWorkerRoutineDMus, DelayedWorkQueue, (PVOID)Context);
-}
-
-VOID
 CPortPinDMus::TransferMidiData()
 {
     NTSTATUS Status;
@@ -297,7 +204,6 @@ CPortPinDMus::TransferMidiData()
         Status = m_IrpQueue->GetMapping(&Buffer, &BufferSize);
         if (!NT_SUCCESS(Status))
         {
-            SetStreamState(KSSTATE_STOP);
             return;
         }
 
@@ -375,7 +281,6 @@ CPortPinDMus::TransferMidiDataToDMus()
 
     if (!Root)
     {
-        SetStreamState(KSSTATE_STOP);
         return;
     }
 
@@ -482,128 +387,59 @@ CPortPinDMus::Flush(
     return KsDispatchInvalidDeviceRequest(DeviceObject, Irp);
 }
 
-
-VOID
-NTAPI
-CloseStreamRoutineDMus(
-    IN PDEVICE_OBJECT  DeviceObject,
-    IN PVOID Context)
-{
-    PMINIPORTMIDISTREAM Stream = NULL;
-    NTSTATUS Status;
-    ISubdevice *ISubDevice;
-    PSUBDEVICE_DESCRIPTOR Descriptor;
-    CPortPinDMus * This;
-    PCLOSESTREAM_CONTEXT Ctx = (PCLOSESTREAM_CONTEXT)Context;
-
-    This = (CPortPinDMus*)Ctx->Pin;
-
-    if (This->m_MidiStream)
-    {
-        if (This->m_State != KSSTATE_STOP)
-        {
-            This->m_MidiStream->SetState(KSSTATE_STOP);
-        }
-        Stream = This->m_MidiStream;
-        This->m_MidiStream = NULL;
-    }
-
-    if (This->m_ServiceGroup)
-    {
-        This->m_ServiceGroup->RemoveMember(PSERVICESINK(This));
-    }
-
-    Status = This->m_Port->QueryInterface(IID_ISubdevice, (PVOID*)&ISubDevice);
-    if (NT_SUCCESS(Status))
-    {
-        Status = ISubDevice->GetDescriptor(&Descriptor);
-        if (NT_SUCCESS(Status))
-        {
-            Descriptor->Factory.Instances[This->m_ConnectDetails->PinId].CurrentPinInstanceCount--;
-            ISubDevice->Release();
-        }
-    }
-
-    if (This->m_Format)
-    {
-        ExFreePool(This->m_Format);
-        This->m_Format = NULL;
-    }
-
-    // complete the irp
-    Ctx->Irp->IoStatus.Information = 0;
-    Ctx->Irp->IoStatus.Status = STATUS_SUCCESS;
-    IoCompleteRequest(Ctx->Irp, IO_NO_INCREMENT);
-
-    // free the work item
-    IoFreeWorkItem(Ctx->WorkItem);
-
-    // free work item ctx
-    FreeItem(Ctx, TAG_PORTCLASS);
-
-    // destroy DMus pin
-    This->m_Filter->FreePin(PPORTPINDMUS(This));
-
-    if (Stream)
-    {
-        DPRINT("Closing stream at Irql %u\n", KeGetCurrentIrql());
-        Stream->Release();
-    }
-}
-
 NTSTATUS
 NTAPI
 CPortPinDMus::Close(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    PCLOSESTREAM_CONTEXT Ctx;
+    NTSTATUS Status;
+    ISubdevice * SubDevice;
+    PSUBDEVICE_DESCRIPTOR Descriptor;
 
-    if (m_MidiStream || m_Mxf)
+    if (m_ServiceGroup)
     {
-        Ctx = (PCLOSESTREAM_CONTEXT)AllocateItem(NonPagedPool, sizeof(CLOSESTREAM_CONTEXT), TAG_PORTCLASS);
-        if (!Ctx)
-        {
-            DPRINT("Failed to allocate stream context\n");
-            goto cleanup;
-        }
-
-        Ctx->WorkItem = IoAllocateWorkItem(DeviceObject);
-        if (!Ctx->WorkItem)
-        {
-            DPRINT("Failed to allocate work item\n");
-            goto cleanup;
-        }
-
-        Ctx->Irp = Irp;
-        Ctx->Pin = this;
-
-        IoMarkIrpPending(Irp);
-        Irp->IoStatus.Information = 0;
-        Irp->IoStatus.Status = STATUS_PENDING;
-
-        // defer work item
-        IoQueueWorkItem(Ctx->WorkItem, CloseStreamRoutineDMus, DelayedWorkQueue, (PVOID)Ctx);
-        // Return result
-        return STATUS_PENDING;
+        m_ServiceGroup->RemoveMember(PSERVICESINK(this));
     }
 
+    if (m_MidiStream)
+    {
+        if (m_State != KSSTATE_STOP)
+        {
+            m_MidiStream->SetState(KSSTATE_STOP);
+            m_State = KSSTATE_STOP;
+        }
+        DPRINT("Closing stream at Irql %u\n", KeGetCurrentIrql());
+        m_MidiStream->Release();
+    }
+
+    Status = m_Port->QueryInterface(IID_ISubdevice, (PVOID*)&SubDevice);
+    if (NT_SUCCESS(Status))
+    {
+        Status = SubDevice->GetDescriptor(&Descriptor);
+        if (NT_SUCCESS(Status))
+        {
+            // release reference count
+            Descriptor->Factory.Instances[m_ConnectDetails->PinId].CurrentPinInstanceCount--;
+        }
+        SubDevice->Release();
+    }
+
+    if (m_Format)
+    {
+        ExFreePool(m_Format);
+        m_Format = NULL;
+    }
+
+    // complete the irp
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = STATUS_SUCCESS;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
+    // destroy DMus pin
+    m_Filter->FreePin(PPORTPINDMUS(this));
+
     return STATUS_SUCCESS;
-
-cleanup:
-
-    if (Ctx)
-        FreeItem(Ctx, TAG_PORTCLASS);
-
-    Irp->IoStatus.Information = 0;
-    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_UNSUCCESSFUL;
-
 }
 
 NTSTATUS

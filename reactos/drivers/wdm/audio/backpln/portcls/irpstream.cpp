@@ -225,6 +225,9 @@ CIrpQueue::AddMapping(
     // add irp to cancelable queue
     KsAddIrpToCancelableQueue(&m_IrpList, &m_IrpListLock, Irp, KsListEntryTail, NULL);
 
+    // disable mapping failed status
+    m_OutOfMapping = FALSE;
+
     // done
     return Status;
 }
@@ -412,41 +415,10 @@ CIrpQueue::UpdateMapping(
 
 ULONG
 NTAPI
-CIrpQueue::NumMappings()
-{
-
-    // returns the amount of mappings available
-    return m_NumMappings;
-}
-
-ULONG
-NTAPI
 CIrpQueue::NumData()
 {
     // returns the amount of audio stream data available
     return m_NumDataAvailable;
-}
-
-
-BOOL
-NTAPI
-CIrpQueue::MinimumDataAvailable()
-{
-    BOOL Result;
-
-    if (m_StartStream)
-        return TRUE;
-
-    if (m_MinimumDataThreshold < m_NumDataAvailable)
-    {
-        m_StartStream = TRUE;
-        Result = TRUE;
-    }
-    else
-    {
-        Result = FALSE;
-    }
-    return Result;
 }
 
 BOOL
@@ -475,17 +447,6 @@ CIrpQueue::CancelBuffers()
     return TRUE;
 }
 
-VOID
-NTAPI
-CIrpQueue::UpdateFormat(
-    PKSDATAFORMAT DataFormat)
-{
-    m_DataFormat = (PKSDATAFORMAT_WAVEFORMATEX)DataFormat;
-    m_MinimumDataThreshold = m_DataFormat->WaveFormatEx.nAvgBytesPerSec / 3;
-    m_StartStream = FALSE;
-    m_NumDataAvailable = 0;
-}
-
 NTSTATUS
 NTAPI
 CIrpQueue::GetMappingWithTag(
@@ -510,7 +471,7 @@ CIrpQueue::GetMappingWithTag(
         // no irp available
         m_OutOfMapping = TRUE;
         m_StartStream = FALSE;
-        return STATUS_UNSUCCESSFUL;
+        return STATUS_NOT_FOUND;
     }
 
     //FIXME support more than one stream header
@@ -578,7 +539,7 @@ CIrpQueue::ReleaseMappingWithTag(
     return STATUS_SUCCESS;
 }
 
-BOOL
+BOOLEAN
 NTAPI
 CIrpQueue::HasLastMappingFailed()
 {
@@ -592,23 +553,6 @@ CIrpQueue::GetCurrentIrpOffset()
 
     return m_CurrentOffset;
 }
-
-VOID
-NTAPI
-CIrpQueue::SetMinimumDataThreshold(
-    ULONG MinimumDataThreshold)
-{
-
-    m_MinimumDataThreshold = MinimumDataThreshold;
-}
-
-ULONG
-NTAPI
-CIrpQueue::GetMinimumDataThreshold()
-{
-    return m_MinimumDataThreshold;
-}
-
 
 NTSTATUS
 NTAPI
