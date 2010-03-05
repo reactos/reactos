@@ -7431,6 +7431,7 @@ IoAllocateAdapterChannel(
 
 FORCEINLINE
 BOOLEAN
+NTAPI
 IoFlushAdapterBuffers(
     IN PDMA_ADAPTER DmaAdapter,
     IN PMDL Mdl,
@@ -7452,6 +7453,7 @@ IoFlushAdapterBuffers(
 
 FORCEINLINE
 VOID
+NTAPI
 IoFreeAdapterChannel(
     IN PDMA_ADAPTER DmaAdapter)
 {
@@ -7463,6 +7465,7 @@ IoFreeAdapterChannel(
 
 FORCEINLINE
 VOID
+NTAPI
 IoFreeMapRegisters(
     IN PDMA_ADAPTER DmaAdapter,
     IN PVOID MapRegisterBase,
@@ -7476,6 +7479,7 @@ IoFreeMapRegisters(
 
 FORCEINLINE
 PHYSICAL_ADDRESS
+NTAPI
 IoMapTransfer(
     IN PDMA_ADAPTER DmaAdapter,
     IN PMDL Mdl,
@@ -8838,6 +8842,10 @@ typedef struct _WORK_QUEUE_ITEM {
 /******************************************************************************
  *                          Executive Functions                               *
  ******************************************************************************/
+
+#define ExInterlockedIncrementLong(Addend,Lock) Exfi386InterlockedIncrementLong(Addend)
+#define ExInterlockedDecrementLong(Addend,Lock) Exfi386InterlockedDecrementLong(Addend)
+#define ExInterlockedExchangeUlong(Target, Value, Lock) Exfi386InterlockedExchangeUlong(Target, Value)
 
 #define ExInitializeSListHead InitializeSListHead
 

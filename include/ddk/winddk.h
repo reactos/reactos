@@ -3671,54 +3671,6 @@ DbgPrompt(
 
 /** Stuff from winnt4.h */
 
-#ifndef DMA_MACROS_DEFINED
-
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
-
-//DECLSPEC_DEPRECATED_DDK
-NTHALAPI
-BOOLEAN
-NTAPI
-IoFlushAdapterBuffers(
-    IN PADAPTER_OBJECT AdapterObject,
-    IN PMDL Mdl,
-    IN PVOID MapRegisterBase,
-    IN PVOID CurrentVa,
-    IN ULONG Length,
-    IN BOOLEAN WriteToDevice);
-
-//DECLSPEC_DEPRECATED_DDK
-NTHALAPI
-VOID
-NTAPI
-IoFreeAdapterChannel(
-    IN PADAPTER_OBJECT AdapterObject);
-
-//DECLSPEC_DEPRECATED_DDK
-NTHALAPI
-VOID
-NTAPI
-IoFreeMapRegisters(
-    IN PADAPTER_OBJECT AdapterObject,
-    IN PVOID MapRegisterBase,
-    IN ULONG NumberOfMapRegisters);
-
-//DECLSPEC_DEPRECATED_DDK
-NTHALAPI
-PHYSICAL_ADDRESS
-NTAPI
-IoMapTransfer(
-    IN PADAPTER_OBJECT AdapterObject,
-    IN PMDL Mdl,
-    IN PVOID MapRegisterBase,
-    IN PVOID CurrentVa,
-    IN OUT PULONG Length,
-    IN BOOLEAN WriteToDevice);
-
-
-#endif // (NTDDI_VERSION >= NTDDI_WIN2K)
-#endif // !defined(DMA_MACROS_DEFINED)
-
 NTKERNELAPI
 NTSTATUS
 NTAPI
@@ -4055,12 +4007,8 @@ Exfi386InterlockedExchangeUlong(
   IN PULONG  Target,
   IN ULONG  Value);
 
-#define ExInterlockedIncrementLong(Addend,Lock) Exfi386InterlockedIncrementLong(Addend)
-#define ExInterlockedDecrementLong(Addend,Lock) Exfi386InterlockedDecrementLong(Addend)
-#define ExInterlockedExchangeUlong(Target, Value, Lock) Exfi386InterlockedExchangeUlong(Target, Value)
-
 #endif /* _X86_ */
-    
+
 #ifdef _M_ARM
 //
 // NT-ARM is not documented
