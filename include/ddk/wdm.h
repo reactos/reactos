@@ -68,6 +68,7 @@ struct _DEVICE_DESCRIPTION;
 struct _SCATTER_GATHER_LIST;
 struct _DRIVE_LAYOUT_INFORMATION;
 struct _COMPRESSED_DATA_INFO;
+struct _IO_RESOURCE_DESCRIPTOR;
 
 /* Structures not exposed to drivers */
 typedef struct _OBJECT_TYPE *POBJECT_TYPE;
@@ -133,7 +134,6 @@ InterlockedBitTestAndReset(IN LONG volatile *Base,
 
 #endif
 
-
 #define BitScanForward _BitScanForward
 #define BitScanReverse _BitScanReverse
 #define BitTest _bittest
@@ -142,6 +142,11 @@ InterlockedBitTestAndReset(IN LONG volatile *Base,
 #define BitTestAndReset _bittestandreset
 #define InterlockedBitTestAndSet _interlockedbittestandset
 #define InterlockedBitTestAndReset _interlockedbittestandreset
+
+#ifdef _M_AMD64
+#define InterlockedBitTestAndSet64 _interlockedbittestandset64
+#define InterlockedBitTestAndReset64 _interlockedbittestandreset64
+#endif
 
 #if !defined(__INTERLOCKED_DECLARED)
 #define __INTERLOCKED_DECLARED
@@ -1363,21 +1368,6 @@ ProbeForWrite(
 #else
 #error Unsupported Architecture
 #endif
-
-#ifdef _NTSYSTEM_
-
-#define NLS_MB_CODE_PAGE_TAG NlsMbCodePageTag
-#define NLS_MB_OEM_CODE_PAGE_TAG NlsMbOemCodePageTag
-
-#else
-
-#define NLS_MB_CODE_PAGE_TAG (*NlsMbCodePageTag)
-#define NLS_MB_OEM_CODE_PAGE_TAG (*NlsMbOemCodePageTag)
-
-#endif /* _NTSYSTEM_ */
-
-extern BOOLEAN NLS_MB_CODE_PAGE_TAG;
-extern BOOLEAN NLS_MB_OEM_CODE_PAGE_TAG;
 
 
 /******************************************************************************
@@ -3568,7 +3558,7 @@ NTSYSAPI
 ULONGLONG
 NTAPI
 RtlIoDecodeMemIoResource (
-    IN PIO_RESOURCE_DESCRIPTOR Descriptor,
+    IN struct _IO_RESOURCE_DESCRIPTOR *Descriptor,
     OUT PULONGLONG Alignment OPTIONAL,
     OUT PULONGLONG MinimumAddress OPTIONAL,
     OUT PULONGLONG MaximumAddress OPTIONAL);
@@ -3577,7 +3567,7 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlIoEncodeMemIoResource(
-    IN PIO_RESOURCE_DESCRIPTOR Descriptor,
+    IN struct _IO_RESOURCE_DESCRIPTOR *Descriptor,
     IN UCHAR Type,
     IN ULONGLONG Length,
     IN ULONGLONG Alignment,
@@ -3910,7 +3900,6 @@ RtlCheckBit(
  ******************************************************************************/
 
  /* PCI_COMMON_CONFIG.Command */
-
 #define PCI_ENABLE_IO_SPACE               0x0001
 #define PCI_ENABLE_MEMORY_SPACE           0x0002
 #define PCI_ENABLE_BUS_MASTER             0x0004
@@ -3924,7 +3913,6 @@ RtlCheckBit(
 #define PCI_DISABLE_LEVEL_INTERRUPT       0x0400
 
 /* PCI_COMMON_CONFIG.Status */
-
 #define PCI_STATUS_INTERRUPT_PENDING      0x0008
 #define PCI_STATUS_CAPABILITIES_LIST      0x0010
 #define PCI_STATUS_66MHZ_CAPABLE          0x0020
@@ -3939,7 +3927,6 @@ RtlCheckBit(
 #define PCI_STATUS_DETECTED_PARITY_ERROR  0x8000
 
 /* PCI_COMMON_CONFIG.HeaderType */
-
 #define PCI_MULTIFUNCTION                 0x80
 #define PCI_DEVICE_TYPE                   0x00
 #define PCI_BRIDGE_TYPE                   0x01
@@ -3952,7 +3939,6 @@ RtlCheckBit(
   ((((PPCI_COMMON_CONFIG) (PciData))->HeaderType & PCI_MULTIFUNCTION) != 0)
 
 /* PCI device classes */
-
 #define PCI_CLASS_PRE_20                    0x00
 #define PCI_CLASS_MASS_STORAGE_CTLR         0x01
 #define PCI_CLASS_NETWORK_CTLR              0x02
@@ -3973,12 +3959,10 @@ RtlCheckBit(
 #define PCI_CLASS_DATA_ACQ_SIGNAL_PROC      0x11
 
 /* PCI device subclasses for class 0 */
-
 #define PCI_SUBCLASS_PRE_20_NON_VGA         0x00
 #define PCI_SUBCLASS_PRE_20_VGA             0x01
 
 /* PCI device subclasses for class 1 (mass storage controllers)*/
-
 #define PCI_SUBCLASS_MSC_SCSI_BUS_CTLR      0x00
 #define PCI_SUBCLASS_MSC_IDE_CTLR           0x01
 #define PCI_SUBCLASS_MSC_FLOPPY_CTLR        0x02
@@ -3987,7 +3971,6 @@ RtlCheckBit(
 #define PCI_SUBCLASS_MSC_OTHER              0x80
 
 /* PCI device subclasses for class 2 (network controllers)*/
-
 #define PCI_SUBCLASS_NET_ETHERNET_CTLR      0x00
 #define PCI_SUBCLASS_NET_TOKEN_RING_CTLR    0x01
 #define PCI_SUBCLASS_NET_FDDI_CTLR          0x02
@@ -3996,27 +3979,23 @@ RtlCheckBit(
 #define PCI_SUBCLASS_NET_OTHER              0x80
 
 /* PCI device subclasses for class 3 (display controllers)*/
-
 #define PCI_SUBCLASS_VID_VGA_CTLR           0x00
 #define PCI_SUBCLASS_VID_XGA_CTLR           0x01
 #define PCI_SUBCLASS_VID_3D_CTLR            0x02
 #define PCI_SUBCLASS_VID_OTHER              0x80
 
 /* PCI device subclasses for class 4 (multimedia device)*/
-
 #define PCI_SUBCLASS_MM_VIDEO_DEV           0x00
 #define PCI_SUBCLASS_MM_AUDIO_DEV           0x01
 #define PCI_SUBCLASS_MM_TELEPHONY_DEV       0x02
 #define PCI_SUBCLASS_MM_OTHER               0x80
 
 /* PCI device subclasses for class 5 (memory controller)*/
-
 #define PCI_SUBCLASS_MEM_RAM                0x00
 #define PCI_SUBCLASS_MEM_FLASH              0x01
 #define PCI_SUBCLASS_MEM_OTHER              0x80
 
 /* PCI device subclasses for class 6 (bridge device)*/
-
 #define PCI_SUBCLASS_BR_HOST                0x00
 #define PCI_SUBCLASS_BR_ISA                 0x01
 #define PCI_SUBCLASS_BR_EISA                0x02
@@ -4029,7 +4008,6 @@ RtlCheckBit(
 #define PCI_SUBCLASS_BR_OTHER               0x80
 
 /* PCI device subclasses for class C (serial bus controller)*/
-
 #define PCI_SUBCLASS_SB_IEEE1394            0x00
 #define PCI_SUBCLASS_SB_ACCESS              0x01
 #define PCI_SUBCLASS_SB_SSA                 0x02
@@ -4081,13 +4059,11 @@ RtlCheckBit(
 #define IO_TYPE_CSQ_EX 3
 
 /* IO_RESOURCE_DESCRIPTOR.Option */
-
 #define IO_RESOURCE_PREFERRED             0x01
 #define IO_RESOURCE_DEFAULT               0x02
 #define IO_RESOURCE_ALTERNATIVE           0x08
 
 /* DEVICE_OBJECT.Flags */
-
 #define DO_VERIFY_VOLUME                  0x00000002
 #define DO_BUFFERED_IO                    0x00000004
 #define DO_EXCLUSIVE                      0x00000008
@@ -4100,7 +4076,6 @@ RtlCheckBit(
 #define DO_POWER_INRUSH                   0x00004000
 
 /* DEVICE_OBJECT.Characteristics */
-
 #define FILE_REMOVABLE_MEDIA              0x00000001
 #define FILE_READ_ONLY_DEVICE             0x00000002
 #define FILE_FLOPPY_DISKETTE              0x00000004
@@ -4115,7 +4090,6 @@ RtlCheckBit(
 #define FILE_CHARACTERISTIC_WEBDAV_DEVICE 0x00002000
 
 /* DEVICE_OBJECT.AlignmentRequirement */
-
 #define FILE_BYTE_ALIGNMENT             0x00000000
 #define FILE_WORD_ALIGNMENT             0x00000001
 #define FILE_LONG_ALIGNMENT             0x00000003
@@ -4128,7 +4102,6 @@ RtlCheckBit(
 #define FILE_512_BYTE_ALIGNMENT         0x000001ff
 
 /* DEVICE_OBJECT.DeviceType */
-
 #define DEVICE_TYPE ULONG
 
 #define FILE_DEVICE_BEEP                  0x00000001
@@ -4328,91 +4301,94 @@ typedef struct _SHARE_ACCESS {
   ULONG  SharedDelete;
 } SHARE_ACCESS, *PSHARE_ACCESS;
 
-typedef struct _PCI_COMMON_HEADER {
-  USHORT  VendorID;
-  USHORT  DeviceID;
-  USHORT  Command;
-  USHORT  Status;
-  UCHAR   RevisionID;
-  UCHAR   ProgIf;
-  UCHAR   SubClass;
-  UCHAR   BaseClass;
-  UCHAR   CacheLineSize;
-  UCHAR   LatencyTimer;
-  UCHAR   HeaderType;
-  UCHAR   BIST;
-  union {
-    struct _PCI_HEADER_TYPE_0 {
-      ULONG   BaseAddresses[PCI_TYPE0_ADDRESSES];
-      ULONG   CIS;
-      USHORT  SubVendorID;
-      USHORT  SubSystemID;
-      ULONG   ROMBaseAddress;
-      UCHAR   CapabilitiesPtr;
-      UCHAR   Reserved1[3];
-      ULONG   Reserved2;
-      UCHAR   InterruptLine;
-      UCHAR   InterruptPin;
-      UCHAR   MinimumGrant;
-      UCHAR   MaximumLatency;
-      } type0;
-    struct _PCI_HEADER_TYPE_1 {
-      ULONG   BaseAddresses[PCI_TYPE1_ADDRESSES];
-      UCHAR   PrimaryBus;
-      UCHAR   SecondaryBus;
-      UCHAR   SubordinateBus;
-      UCHAR   SecondaryLatency;
-      UCHAR   IOBase;
-      UCHAR   IOLimit;
-      USHORT  SecondaryStatus;
-      USHORT  MemoryBase;
-      USHORT  MemoryLimit;
-      USHORT  PrefetchBase;
-      USHORT  PrefetchLimit;
-      ULONG   PrefetchBaseUpper32;
-      ULONG   PrefetchLimitUpper32;
-      USHORT  IOBaseUpper16;
-      USHORT  IOLimitUpper16;
-      UCHAR   CapabilitiesPtr;
-      UCHAR   Reserved1[3];
-      ULONG   ROMBaseAddress;
-      UCHAR   InterruptLine;
-      UCHAR   InterruptPin;
-      USHORT  BridgeControl;
-      } type1;
-    struct _PCI_HEADER_TYPE_2 {
-      ULONG   SocketRegistersBaseAddress;
-      UCHAR   CapabilitiesPtr;
-      UCHAR   Reserved;
-      USHORT  SecondaryStatus;
-      UCHAR   PrimaryBus;
-      UCHAR   SecondaryBus;
-      UCHAR   SubordinateBus;
-      UCHAR   SecondaryLatency;
-      struct  {
-        ULONG   Base;
-        ULONG   Limit;
-      } Range[PCI_TYPE2_ADDRESSES-1];
-      UCHAR   InterruptLine;
-      UCHAR   InterruptPin;
-      USHORT  BridgeControl;
-    } type2;
+/* While MS WDK uses inheritance in C++, we cannot do this with gcc, as
+   inheritance, even from a struct renders the type non-POD. So we use
+   this hack */
+#define PCI_COMMON_HEADER_MEMBERS \
+  USHORT  VendorID; \
+  USHORT  DeviceID; \
+  USHORT  Command; \
+  USHORT  Status; \
+  UCHAR   RevisionID; \
+  UCHAR   ProgIf; \
+  UCHAR   SubClass; \
+  UCHAR   BaseClass; \
+  UCHAR   CacheLineSize; \
+  UCHAR   LatencyTimer; \
+  UCHAR   HeaderType; \
+  UCHAR   BIST; \
+  union { \
+    struct _PCI_HEADER_TYPE_0 { \
+      ULONG   BaseAddresses[PCI_TYPE0_ADDRESSES]; \
+      ULONG   CIS; \
+      USHORT  SubVendorID; \
+      USHORT  SubSystemID; \
+      ULONG   ROMBaseAddress; \
+      UCHAR   CapabilitiesPtr; \
+      UCHAR   Reserved1[3]; \
+      ULONG   Reserved2; \
+      UCHAR   InterruptLine; \
+      UCHAR   InterruptPin; \
+      UCHAR   MinimumGrant; \
+      UCHAR   MaximumLatency; \
+      } type0; \
+    struct _PCI_HEADER_TYPE_1 { \
+      ULONG   BaseAddresses[PCI_TYPE1_ADDRESSES]; \
+      UCHAR   PrimaryBus; \
+      UCHAR   SecondaryBus; \
+      UCHAR   SubordinateBus; \
+      UCHAR   SecondaryLatency; \
+      UCHAR   IOBase; \
+      UCHAR   IOLimit; \
+      USHORT  SecondaryStatus; \
+      USHORT  MemoryBase; \
+      USHORT  MemoryLimit; \
+      USHORT  PrefetchBase; \
+      USHORT  PrefetchLimit; \
+      ULONG   PrefetchBaseUpper32; \
+      ULONG   PrefetchLimitUpper32; \
+      USHORT  IOBaseUpper16; \
+      USHORT  IOLimitUpper16; \
+      UCHAR   CapabilitiesPtr; \
+      UCHAR   Reserved1[3]; \
+      ULONG   ROMBaseAddress; \
+      UCHAR   InterruptLine; \
+      UCHAR   InterruptPin; \
+      USHORT  BridgeControl; \
+      } type1; \
+    struct _PCI_HEADER_TYPE_2 { \
+      ULONG   SocketRegistersBaseAddress; \
+      UCHAR   CapabilitiesPtr; \
+      UCHAR   Reserved; \
+      USHORT  SecondaryStatus; \
+      UCHAR   PrimaryBus; \
+      UCHAR   SecondaryBus; \
+      UCHAR   SubordinateBus; \
+      UCHAR   SecondaryLatency; \
+      struct  { \
+        ULONG   Base; \
+        ULONG   Limit; \
+      } Range[PCI_TYPE2_ADDRESSES-1]; \
+      UCHAR   InterruptLine; \
+      UCHAR   InterruptPin; \
+      USHORT  BridgeControl; \
+    } type2; \
   } u;
+
+typedef struct _PCI_COMMON_HEADER {
+  PCI_COMMON_HEADER_MEMBERS
 } PCI_COMMON_HEADER, *PPCI_COMMON_HEADER;
 
 #ifdef __cplusplus
-
-typedef struct _PCI_COMMON_CONFIG : PCI_COMMON_HEADER {
+typedef struct _PCI_COMMON_CONFIG {
+  PCI_COMMON_HEADER_MEMBERS
   UCHAR  DeviceSpecific[192];
 } PCI_COMMON_CONFIG, *PPCI_COMMON_CONFIG;
-
 #else
-
 typedef struct _PCI_COMMON_CONFIG {
   PCI_COMMON_HEADER  DUMMYSTRUCTNAME;
   UCHAR  DeviceSpecific[192];
 } PCI_COMMON_CONFIG, *PPCI_COMMON_CONFIG;
-
 #endif
 
 typedef enum _CREATE_FILE_TYPE {
@@ -6714,7 +6690,7 @@ WRITE_REGISTER_USHORT(
 FORCEINLINE
 NTSTATUS
 IoAllocateAdapterChannel(
-    IN PADAPTER_OBJECT AdapterObject,
+    IN PDMA_ADAPTER DmaAdapter,
     IN PDEVICE_OBJECT DeviceObject,
     IN ULONG NumberOfMapRegisters,
     IN PDRIVER_CONTROL ExecutionRoutine,
@@ -6734,7 +6710,7 @@ IoAllocateAdapterChannel(
 FORCEINLINE
 BOOLEAN
 IoFlushAdapterBuffers(
-    IN PADAPTER_OBJECT AdapterObject,
+    IN PDMA_ADAPTER DmaAdapter,
     IN PMDL Mdl,
     IN PVOID MapRegisterBase,
     IN PVOID CurrentVa,
@@ -6749,13 +6725,13 @@ IoFlushAdapterBuffers(
                                MapRegisterBase,
                                CurrentVa,
                                Length,
-                               WriteToDevice );
+                               WriteToDevice);
 }
 
 FORCEINLINE
 VOID
 IoFreeAdapterChannel(
-    IN PADAPTER_OBJECT AdapterObject)
+    IN PDMA_ADAPTER DmaAdapter)
 {
     PFREE_ADAPTER_CHANNEL FreeAdapterChannel;
     FreeAdapterChannel = *(DmaAdapter)->DmaOperations->FreeAdapterChannel;
@@ -6766,7 +6742,7 @@ IoFreeAdapterChannel(
 FORCEINLINE
 VOID
 IoFreeMapRegisters(
-    IN PADAPTER_OBJECT AdapterObject,
+    IN PDMA_ADAPTER DmaAdapter,
     IN PVOID MapRegisterBase,
     IN ULONG NumberOfMapRegisters)
 {
@@ -6849,33 +6825,6 @@ IoAcquireRemoveLockEx(
       InterlockedDecrement(_Count); \
     } \
 }
-
-#if defined(USE_DMA_MACROS) && !defined(_NTHAL_) && (defined(_NTDDK_) || defined(_NTDRIVER_)) || defined(_WDM_INCLUDED_)
-FORCEINLINE
-NTSTATUS
-IoAllocateAdapterChannel(
-  IN PDMA_ADAPTER DmaAdapter,
-  IN PDEVICE_OBJECT DeviceObject,
-  IN ULONG NumberOfMapRegisters,
-  IN PDRIVER_CONTROL ExecutionRoutine,
-  IN PVOID Context)
-{
-  PALLOCATE_ADAPTER_CHANNEL allocateAdapterChannel;
-  NTSTATUS status;
-
-  allocateAdapterChannel = *(DmaAdapter)->DmaOperations->AllocateAdapterChannel;
-
-  ASSERT( allocateAdapterChannel != NULL );
-
-  status = allocateAdapterChannel( DmaAdapter,
-                                   DeviceObject,
-                                   NumberOfMapRegisters,
-                                   ExecutionRoutine,
-                                   Context );
-
-  return status;
-}
-#endif
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
@@ -9121,6 +9070,17 @@ typedef struct _QUOTA_LIMITS {
 #define QUOTA_LIMITS_HARDWS_MAX_ENABLE  0x00000004
 #define QUOTA_LIMITS_HARDWS_MAX_DISABLE 0x00000008
 #define QUOTA_LIMITS_USE_DEFAULT_LIMITS 0x00000010
+
+/* HACK HACK HACK - GCC (or perhaps LD) is messing this up */
+#if defined(_NTSYSTEM_) || defined(__GNUC__)
+#define NLS_MB_CODE_PAGE_TAG NlsMbCodePageTag
+#define NLS_MB_OEM_CODE_PAGE_TAG NlsMbOemCodePageTag
+#else
+#define NLS_MB_CODE_PAGE_TAG (*NlsMbCodePageTag)
+#define NLS_MB_OEM_CODE_PAGE_TAG (*NlsMbOemCodePageTag)
+#endif /* _NT_SYSTEM */
+extern BOOLEAN NTSYSAPI NLS_MB_CODE_PAGE_TAG;
+extern BOOLEAN NTSYSAPI NLS_MB_OEM_CODE_PAGE_TAG;
 
 #ifdef __cplusplus
 }

@@ -972,7 +972,7 @@ static BOOLEAN NTAPI AddControllers(PDRIVER_OBJECT DriverObject)
 	    }
 
 	  /* 3e: Set up the DPC */
-	  IoInitializeDpcRequest(gControllerInfo[i].DriveInfo[j].DeviceObject, DpcForIsr);
+	  IoInitializeDpcRequest(gControllerInfo[i].DriveInfo[j].DeviceObject, (PIO_DPC_ROUTINE)DpcForIsr);
 
 	  /* 3f: Point the device extension at our DriveInfo struct */
 	  gControllerInfo[i].DriveInfo[j].DeviceObject->DeviceExtension = &gControllerInfo[i].DriveInfo[j];
