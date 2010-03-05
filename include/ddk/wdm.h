@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef _WDMDDK_
+#define _WDMDDK_
+
 /* Dependencies */
 #define NT_INCLUDED
 #include <excpt.h>
@@ -10449,3 +10452,5 @@ HalReadDmaCounter(
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* !_WDMDDK_ */
