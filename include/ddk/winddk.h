@@ -103,11 +103,6 @@ typedef enum
     IrpForward       // Irp is wmi irp, but targeted at another device object
 } SYSCTL_IRP_DISPOSITION, *PSYSCTL_IRP_DISPOSITION;
 
-//
-// Forwarder
-//
-struct _COMPRESSED_DATA_INFO;
-
 #define KERNEL_STACK_SIZE                   12288
 #define KERNEL_LARGE_STACK_SIZE             61440
 #define KERNEL_LARGE_STACK_COMMIT           12288
@@ -237,21 +232,14 @@ typedef enum _DPFLTR_TYPE
 
 /* end winnt.h */
 
-#define THREAD_ALERT (0x0004)
-
 /* Exported object types */
 extern POBJECT_TYPE NTSYSAPI ExDesktopObjectType;
-extern POBJECT_TYPE NTSYSAPI ExEventObjectType;
-extern POBJECT_TYPE NTSYSAPI ExSemaphoreObjectType;
 extern POBJECT_TYPE NTSYSAPI ExWindowStationObjectType;
 extern ULONG NTSYSAPI IoDeviceHandlerObjectSize;
 extern POBJECT_TYPE NTSYSAPI IoDeviceHandlerObjectType;
 extern POBJECT_TYPE NTSYSAPI IoDeviceObjectType;
 extern POBJECT_TYPE NTSYSAPI IoDriverObjectType;
-extern POBJECT_TYPE NTSYSAPI IoFileObjectType;
-extern POBJECT_TYPE NTSYSAPI PsThreadType;
 extern POBJECT_TYPE NTSYSAPI LpcPortObjectType;
-extern POBJECT_TYPE NTSYSAPI SeTokenObjectType;
 extern POBJECT_TYPE NTSYSAPI PsProcessType;
 
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
@@ -266,8 +254,6 @@ extern NTSYSAPI CCHAR KeNumberProcessors; //FIXME: Note to Alex: I won't fix thi
 #endif
 
 #define MAX_WOW64_SHARED_ENTRIES 16
-
-extern volatile KSYSTEM_TIME KeTickCount;
 
 #define NX_SUPPORT_POLICY_ALWAYSOFF 0
 #define NX_SUPPORT_POLICY_ALWAYSON 1
@@ -2861,44 +2847,7 @@ KePulseEvent(
   IN KPRIORITY  Increment,
   IN BOOLEAN  Wait);
 
-NTKERNELAPI
-KAFFINITY
-NTAPI
-KeQueryActiveProcessors(
-    VOID
-);
-
-NTHALAPI
-LARGE_INTEGER
-NTAPI
-KeQueryPerformanceCounter(
-  OUT PLARGE_INTEGER  PerformanceFrequency  OPTIONAL);
-
-NTKERNELAPI
-KPRIORITY
-NTAPI
-KeQueryPriorityThread(
-  IN PRKTHREAD  Thread);
-
-NTKERNELAPI
-ULONG
-NTAPI
-KeQueryRuntimeThread(
-  IN PKTHREAD Thread,
-  OUT PULONG UserTime);
-
 #if !defined(_M_AMD64)
-NTKERNELAPI
-ULONGLONG
-NTAPI
-KeQueryInterruptTime(
-  VOID);
-
-NTKERNELAPI
-VOID
-NTAPI
-KeQuerySystemTime(
-  OUT PLARGE_INTEGER  CurrentTime);
 
 NTKERNELAPI
 VOID
@@ -2908,140 +2857,6 @@ KeQueryTickCount(
 #endif
 
 NTKERNELAPI
-ULONG
-NTAPI
-KeQueryTimeIncrement(
-  VOID);
-
-NTKERNELAPI
-LONG
-NTAPI
-KeReadStateEvent(
-  IN PRKEVENT  Event);
-
-NTKERNELAPI
-LONG
-NTAPI
-KeReadStateMutex(
-  IN PRKMUTEX  Mutex);
-
-
-NTKERNELAPI
-LONG
-NTAPI
-KeReadStateSemaphore(
-  IN PRKSEMAPHORE  Semaphore);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-KeReadStateTimer(
-  IN PKTIMER  Timer);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-KeRegisterBugCheckCallback(
-  IN PKBUGCHECK_CALLBACK_RECORD  CallbackRecord,
-  IN PKBUGCHECK_CALLBACK_ROUTINE  CallbackRoutine,
-  IN PVOID  Buffer,
-  IN ULONG  Length,
-  IN PUCHAR  Component);
-
-NTKERNELAPI
-PVOID
-NTAPI
-KeRegisterNmiCallback(
-  IN PNMI_CALLBACK CallbackRoutine,
-  IN PVOID Context
-);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-KeDeregisterNmiCallback(
-  IN PVOID Handle
-);
-
-NTKERNELAPI
-VOID
-FASTCALL
-KeReleaseInStackQueuedSpinLockFromDpcLevel(
-  IN PKLOCK_QUEUE_HANDLE  LockHandle);
-
-NTKERNELAPI
-VOID
-NTAPI
-KeReleaseInterruptSpinLock(
-  IN PKINTERRUPT  Interrupt,
-  IN KIRQL  OldIrql);
-
-NTKERNELAPI
-LONG
-NTAPI
-KeReleaseMutex(
-  IN PRKMUTEX  Mutex,
-  IN BOOLEAN  Wait);
-
-NTKERNELAPI
-LONG
-NTAPI
-KeReleaseSemaphore(
-  IN PRKSEMAPHORE  Semaphore,
-  IN KPRIORITY  Increment,
-  IN LONG  Adjustment,
-  IN BOOLEAN  Wait);
-
-NTKERNELAPI
-PKDEVICE_QUEUE_ENTRY
-NTAPI
-KeRemoveByKeyDeviceQueue(
-  IN PKDEVICE_QUEUE  DeviceQueue,
-  IN ULONG  SortKey);
-
-NTKERNELAPI
-PKDEVICE_QUEUE_ENTRY
-NTAPI
-KeRemoveDeviceQueue(
-  IN PKDEVICE_QUEUE  DeviceQueue);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-KeRemoveEntryDeviceQueue(
-  IN PKDEVICE_QUEUE  DeviceQueue,
-  IN PKDEVICE_QUEUE_ENTRY  DeviceQueueEntry);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-KeRemoveQueueDpc(
-  IN PRKDPC  Dpc);
-
-NTKERNELAPI
-LONG
-NTAPI
-KeResetEvent(
-  IN PRKEVENT  Event);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-KeRestoreFloatingPointState(
-  IN PKFLOATING_SAVE  FloatSave);
-
-NTKERNELAPI
-VOID
-NTAPI
-KeRevertToUserAffinityThread(VOID);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-KeSaveFloatingPointState(
-  OUT PKFLOATING_SAVE  FloatSave);
-
-NTKERNELAPI
 LONG
 NTAPI
 KeSetBasePriorityThread(
@@ -3049,123 +2864,10 @@ KeSetBasePriorityThread(
   IN LONG  Increment);
 
 NTKERNELAPI
-LONG
-NTAPI
-KeSetEvent(
-  IN PRKEVENT  Event,
-  IN KPRIORITY  Increment,
-  IN BOOLEAN  Wait);
-
-NTKERNELAPI
-VOID
-NTAPI
-KeSetImportanceDpc(
-  IN PRKDPC  Dpc,
-  IN KDPC_IMPORTANCE  Importance);
-
-NTKERNELAPI
-KPRIORITY
-NTAPI
-KeSetPriorityThread(
-  IN PKTHREAD  Thread,
-  IN KPRIORITY  Priority);
-
-NTKERNELAPI
-VOID
-NTAPI
-KeSetSystemAffinityThread(
-    IN KAFFINITY Affinity);
-
-NTKERNELAPI
-VOID
-NTAPI
-KeSetTargetProcessorDpc(
-  IN PRKDPC  Dpc,
-  IN CCHAR  Number);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-KeSetTimer(
-  IN PKTIMER  Timer,
-  IN LARGE_INTEGER  DueTime,
-  IN PKDPC  Dpc  OPTIONAL);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-KeSetTimerEx(
-  IN PKTIMER  Timer,
-  IN LARGE_INTEGER  DueTime,
-  IN LONG  Period  OPTIONAL,
-  IN PKDPC  Dpc  OPTIONAL);
-
-NTKERNELAPI
 VOID
 FASTCALL
 KeSetTimeUpdateNotifyRoutine(
   IN PTIME_UPDATE_NOTIFY_ROUTINE  NotifyRoutine);
-
-NTHALAPI
-VOID
-NTAPI
-KeStallExecutionProcessor(
-  IN ULONG  MicroSeconds);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-KeSynchronizeExecution(
-  IN PKINTERRUPT    Interrupt,
-  IN PKSYNCHRONIZE_ROUTINE  SynchronizeRoutine,
-  IN PVOID  SynchronizeContext);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-KeWaitForMultipleObjects(
-  IN ULONG  Count,
-  IN PVOID  Object[],
-  IN WAIT_TYPE  WaitType,
-  IN KWAIT_REASON  WaitReason,
-  IN KPROCESSOR_MODE  WaitMode,
-  IN BOOLEAN  Alertable,
-  IN PLARGE_INTEGER  Timeout  OPTIONAL,
-  IN PKWAIT_BLOCK  WaitBlockArray  OPTIONAL);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-KeWaitForMutexObject(
-  IN PRKMUTEX  Mutex,
-  IN KWAIT_REASON  WaitReason,
-  IN KPROCESSOR_MODE  WaitMode,
-  IN BOOLEAN  Alertable,
-  IN PLARGE_INTEGER  Timeout  OPTIONAL);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-KeWaitForSingleObject(
-  IN PVOID  Object,
-  IN KWAIT_REASON  WaitReason,
-  IN KPROCESSOR_MODE  WaitMode,
-  IN BOOLEAN  Alertable,
-  IN PLARGE_INTEGER  Timeout  OPTIONAL);
-
-typedef
-ULONG_PTR
-(NTAPI *PKIPI_BROADCAST_WORKER)(
-    IN ULONG_PTR Argument
-);
-
-NTKERNELAPI
-ULONG_PTR
-NTAPI
-KeIpiGenericCall(
-    IN PKIPI_BROADCAST_WORKER BroadcastFunction,
-    IN ULONG_PTR Context
-);
 
 #if defined(_X86_)
 

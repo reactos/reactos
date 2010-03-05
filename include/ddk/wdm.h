@@ -722,6 +722,11 @@ VOID
     IN PVOID Parameter3
 );
 
+typedef
+ULONG_PTR
+(NTAPI *PKIPI_BROADCAST_WORKER)(
+    IN ULONG_PTR Argument);
+
 typedef ULONG_PTR KSPIN_LOCK, *PKSPIN_LOCK;
 
 typedef struct _KSPIN_LOCK_QUEUE {
@@ -971,6 +976,33 @@ typedef XSAVE_FORMAT XMM_SAVE_AREA32, *PXMM_SAVE_AREA32;
  *                              Kernel Functions                              *
  ******************************************************************************/
 
+#if (NTDDI_VERSION >= NTDDI_WIN2K) && defined(SINGLE_GROUP_LEGACY_API)
+NTKERNELAPI
+KAFFINITY
+KeQueryActiveProcessors (
+  VOID);
+#endif
+
+#if !defined(_M_AMD64)
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTKERNELAPI
+ULONGLONG
+NTAPI
+KeQueryInterruptTime(
+  VOID);
+
+NTKERNELAPI
+VOID
+NTAPI
+KeQuerySystemTime(
+  OUT PLARGE_INTEGER  CurrentTime);
+
+#endif
+
+#endif // !_M_AMD64
+
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
 NTKERNELAPI
@@ -1071,6 +1103,185 @@ VOID
 NTAPI
 KeLeaveCriticalRegion(VOID);
 
+NTHALAPI
+LARGE_INTEGER
+NTAPI
+KeQueryPerformanceCounter(
+  OUT PLARGE_INTEGER  PerformanceFrequency  OPTIONAL);
+
+NTKERNELAPI
+KPRIORITY
+NTAPI
+KeQueryPriorityThread(
+  IN PRKTHREAD  Thread);
+
+NTKERNELAPI
+ULONG
+NTAPI
+KeQueryTimeIncrement(
+  VOID);
+
+NTKERNELAPI
+LONG
+NTAPI
+KeReadStateEvent(
+  IN PRKEVENT  Event);
+
+NTKERNELAPI
+LONG
+NTAPI
+KeReadStateMutex(
+  IN PRKMUTEX  Mutex);
+
+
+NTKERNELAPI
+LONG
+NTAPI
+KeReadStateSemaphore(
+  IN PRKSEMAPHORE  Semaphore);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+KeReadStateTimer(
+  IN PKTIMER  Timer);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+KeRegisterBugCheckCallback(
+  OUT PKBUGCHECK_CALLBACK_RECORD  CallbackRecord,
+  IN PKBUGCHECK_CALLBACK_ROUTINE  CallbackRoutine,
+  IN PVOID  Buffer,
+  IN ULONG  Length,
+  IN PUCHAR  Component);
+
+NTKERNELAPI
+LONG
+NTAPI
+KeReleaseMutex(
+  IN OUT PRKMUTEX  Mutex,
+  IN BOOLEAN  Wait);
+
+NTKERNELAPI
+LONG
+NTAPI
+KeReleaseSemaphore(
+  IN OUT PRKSEMAPHORE  Semaphore,
+  IN KPRIORITY  Increment,
+  IN LONG  Adjustment,
+  IN BOOLEAN  Wait);
+
+NTKERNELAPI
+PKDEVICE_QUEUE_ENTRY
+NTAPI
+KeRemoveByKeyDeviceQueue(
+  IN OUT PKDEVICE_QUEUE  DeviceQueue,
+  IN ULONG  SortKey);
+
+NTKERNELAPI
+PKDEVICE_QUEUE_ENTRY
+NTAPI
+KeRemoveDeviceQueue(
+  IN OUT PKDEVICE_QUEUE  DeviceQueue);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+KeRemoveEntryDeviceQueue(
+  IN OUT PKDEVICE_QUEUE  DeviceQueue,
+  IN OUT PKDEVICE_QUEUE_ENTRY  DeviceQueueEntry);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+KeRemoveQueueDpc(
+  IN OUT PRKDPC  Dpc);
+
+NTKERNELAPI
+LONG
+NTAPI
+KeResetEvent(
+  IN OUT PRKEVENT  Event);
+
+NTKERNELAPI
+LONG
+NTAPI
+KeSetEvent(
+  IN OUT PRKEVENT  Event,
+  IN KPRIORITY  Increment,
+  IN BOOLEAN  Wait);
+
+NTKERNELAPI
+VOID
+NTAPI
+KeSetImportanceDpc(
+  IN OUT PRKDPC  Dpc,
+  IN KDPC_IMPORTANCE  Importance);
+
+NTKERNELAPI
+KPRIORITY
+NTAPI
+KeSetPriorityThread(
+  IN OUT PKTHREAD  Thread,
+  IN KPRIORITY  Priority);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+KeSetTimer(
+  IN OUT PKTIMER  Timer,
+  IN LARGE_INTEGER  DueTime,
+  IN PKDPC  Dpc  OPTIONAL);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+KeSetTimerEx(
+  IN OUT PKTIMER  Timer,
+  IN LARGE_INTEGER  DueTime,
+  IN LONG  Period  OPTIONAL,
+  IN PKDPC  Dpc  OPTIONAL);
+
+NTHALAPI
+VOID
+NTAPI
+KeStallExecutionProcessor(
+  IN ULONG  MicroSeconds);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+KeSynchronizeExecution(
+  IN OUT PKINTERRUPT    Interrupt,
+  IN PKSYNCHRONIZE_ROUTINE  SynchronizeRoutine,
+  IN PVOID  SynchronizeContext OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+KeWaitForMultipleObjects(
+  IN ULONG  Count,
+  IN PVOID  Object[],
+  IN WAIT_TYPE  WaitType,
+  IN KWAIT_REASON  WaitReason,
+  IN KPROCESSOR_MODE  WaitMode,
+  IN BOOLEAN  Alertable,
+  IN PLARGE_INTEGER  Timeout  OPTIONAL,
+  OUT PKWAIT_BLOCK  WaitBlockArray  OPTIONAL);
+
+#define KeWaitForMutexObject KeWaitForSingleObject
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+KeWaitForSingleObject(
+  IN PVOID  Object,
+  IN KWAIT_REASON  WaitReason,
+  IN KPROCESSOR_MODE  WaitMode,
+  IN BOOLEAN  Alertable,
+  IN PLARGE_INTEGER  Timeout  OPTIONAL);
+
 #endif
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
@@ -1104,6 +1315,26 @@ ULONG
 NTAPI
 KeGetRecommendedSharedDataAlignment(VOID);
 
+NTKERNELAPI
+ULONG
+NTAPI
+KeQueryRuntimeThread(
+  IN PKTHREAD Thread,
+  OUT PULONG UserTime);
+
+NTKERNELAPI
+VOID
+FASTCALL
+KeReleaseInStackQueuedSpinLockFromDpcLevel(
+  IN PKLOCK_QUEUE_HANDLE  LockHandle);
+
+NTKERNELAPI
+VOID
+NTAPI
+KeReleaseInterruptSpinLock(
+  IN OUT PKINTERRUPT  Interrupt,
+  IN KIRQL  OldIrql);
+
 #endif
 
 #if (NTDDI_VERSION >= NTDDI_WINXPSP2)
@@ -1115,6 +1346,44 @@ KeFlushQueuedDpcs(
   VOID);
 
 #endif
+
+#if (NTDDI_VERSION >= NTDDI_WS03)
+
+NTKERNELAPI
+PVOID
+NTAPI
+KeRegisterNmiCallback(
+  IN PNMI_CALLBACK CallbackRoutine,
+  IN PVOID Context OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+KeDeregisterNmiCallback(
+  IN PVOID Handle
+);
+
+NTKERNELAPI
+ULONG_PTR
+NTAPI
+KeIpiGenericCall(
+    IN PKIPI_BROADCAST_WORKER BroadcastFunction,
+    IN ULONG_PTR Context
+);
+
+#endif
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+KeSaveFloatingPointState(
+  OUT PKFLOATING_SAVE  FloatSave);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+KeRestoreFloatingPointState(
+  IN PKFLOATING_SAVE  FloatSave);
 
 #if defined(_IA64_)
 FORCEINLINE
@@ -1136,6 +1405,28 @@ VOID
 NTAPI
 KeClearEvent(
   IN OUT PRKEVENT Event);
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K) && defined(SINGLE_GROUP_LEGACY_API)
+
+NTKERNELAPI
+VOID
+NTAPI
+KeRevertToUserAffinityThread(VOID);
+
+NTKERNELAPI
+VOID
+NTAPI
+KeSetSystemAffinityThread(
+    IN KAFFINITY Affinity);
+
+NTKERNELAPI
+VOID
+NTAPI
+KeSetTargetProcessorDpc(
+  IN PRKDPC  Dpc,
+  IN CCHAR  Number);
+
+#endif
 
 /*
  * VOID
@@ -9032,14 +9323,14 @@ extern ULONG NtGlobalFlag;
 #endif
 
 /* Thread Access Rights */
-#define THREAD_TERMINATE                 (0x0001)  
-#define THREAD_SUSPEND_RESUME            (0x0002)  
+#define THREAD_TERMINATE                 (0x0001)
+#define THREAD_SUSPEND_RESUME            (0x0002)
 #define THREAD_ALERT                     (0x0004)
-#define THREAD_GET_CONTEXT               (0x0008)  
-#define THREAD_SET_CONTEXT               (0x0010)  
-#define THREAD_SET_INFORMATION           (0x0020)  
-#define THREAD_SET_LIMITED_INFORMATION   (0x0400)  
-#define THREAD_QUERY_LIMITED_INFORMATION (0x0800)  
+#define THREAD_GET_CONTEXT               (0x0008)
+#define THREAD_SET_CONTEXT               (0x0010)
+#define THREAD_SET_INFORMATION           (0x0020)
+#define THREAD_SET_LIMITED_INFORMATION   (0x0400)
+#define THREAD_QUERY_LIMITED_INFORMATION (0x0800)
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 #define THREAD_ALL_ACCESS         (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | \
                                    0xFFFF)
@@ -9070,6 +9361,24 @@ typedef struct _QUOTA_LIMITS {
 #define QUOTA_LIMITS_HARDWS_MAX_ENABLE  0x00000004
 #define QUOTA_LIMITS_HARDWS_MAX_DISABLE 0x00000008
 #define QUOTA_LIMITS_USE_DEFAULT_LIMITS 0x00000010
+
+/* Exported object types */
+extern POBJECT_TYPE NTSYSAPI ExEventObjectType;
+extern POBJECT_TYPE NTSYSAPI ExSemaphoreObjectType;
+extern POBJECT_TYPE NTSYSAPI IoFileObjectType;
+extern POBJECT_TYPE NTSYSAPI PsThreadType;
+extern POBJECT_TYPE NTSYSAPI SeTokenObjectType;
+extern POBJECT_TYPE NTSYSAPI PsProcessType;
+
+#if defined(_IA64_)
+
+extern volatile LARGE_INTEGER KeTickCount;
+
+#elif defined(_X86_)
+
+extern volatile KSYSTEM_TIME KeTickCount;
+
+#endif
 
 /* HACK HACK HACK - GCC (or perhaps LD) is messing this up */
 #if defined(_NTSYSTEM_) || defined(__GNUC__)
