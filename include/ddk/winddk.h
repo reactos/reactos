@@ -2551,6 +2551,18 @@ HalPutDmaAdapter(
 
 /** I/O manager routines **/
 
+#ifndef DMA_MACROS_DEFINED
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoAllocateAdapterChannel(
+    IN PADAPTER_OBJECT AdapterObject,
+    IN PDEVICE_OBJECT DeviceObject,
+    IN ULONG NumberOfMapRegisters,
+    IN PDRIVER_CONTROL ExecutionRoutine,
+    IN PVOID Context);
+#endif
+
 NTKERNELAPI
 VOID
 NTAPI
