@@ -322,7 +322,6 @@ IntVideoPortCreateAdapterDeviceObject(
 }
 
 
-/* FIXME: we have to detach the device object in IntVideoPortFindAdapter if it fails */
 NTSTATUS NTAPI
 IntVideoPortFindAdapter(
    IN PDRIVER_OBJECT DriverObject,
@@ -341,7 +340,7 @@ IntVideoPortFindAdapter(
    WCHAR SymlinkBuffer[20];
    UNICODE_STRING SymlinkName;
    BOOL LegacyDetection = FALSE;
-   ULONG DeviceNumber;
+   ULONG DeviceNumber, DisplayNumber;
 
    DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
    DeviceNumber = DeviceExtension->DeviceNumber;
@@ -423,6 +422,8 @@ IntVideoPortFindAdapter(
          {
             WARN_(VIDEOPRT, "HwFindAdapter call failed with error 0x%X\n", Status);
             RtlFreeUnicodeString(&DeviceExtension->RegistryPath);
+            if (DeviceExtension->NextDeviceObject)
+                IoDetachDevice(DeviceExtension->NextDeviceObject);
             IoDeleteDevice(DeviceObject);
 
             return Status;
@@ -444,6 +445,8 @@ IntVideoPortFindAdapter(
    {
       WARN_(VIDEOPRT, "HwFindAdapter call failed with error 0x%X\n", Status);
       RtlFreeUnicodeString(&DeviceExtension->RegistryPath);
+      if (DeviceExtension->NextDeviceObject)
+          IoDetachDevice(DeviceExtension->NextDeviceObject);
       IoDeleteDevice(DeviceObject);
       return Status;
    }
@@ -458,12 +461,30 @@ IntVideoPortFindAdapter(
    RtlInitUnicodeString(&DeviceName, DeviceBuffer);
 
    /* Create symbolic link "\??\DISPLAYx" */
-   swprintf(SymlinkBuffer, L"\\??\\DISPLAY%lu", DeviceNumber + 1);
-   RtlInitUnicodeString(&SymlinkName, SymlinkBuffer);
-   IoCreateSymbolicLink(&SymlinkName, &DeviceName);
+
+   /* HACK: We need this to find the first available display to
+    * use. We can't use the device number because then we could
+    * end up with \Device\Video0 being non-functional because
+    * HwFindAdapter returned an error. \Device\Video1 would be
+    * the correct primary display but it would be set to DISPLAY2
+    * so it would never be used and ROS would bugcheck on boot.
+    * By doing it this way, we ensure that DISPLAY1 is always
+    * functional. Another idea would be letting the IO manager
+    * give our video devices names then getting those names
+    * somehow and creating symbolic links to \Device\VideoX
+    * and \??\DISPLAYX once we know that HwFindAdapter has succeeded.
+    */
+   DisplayNumber = 0;
+   do
+   {
+      DisplayNumber++;
+      swprintf(SymlinkBuffer, L"\\??\\DISPLAY%lu", DisplayNumber);
+      RtlInitUnicodeString(&SymlinkName, SymlinkBuffer);
+   }
+   while (IoCreateSymbolicLink(&SymlinkName, &DeviceName) != STATUS_SUCCESS);
 
    /* Add entry to DEVICEMAP\VIDEO key in registry. */
-   swprintf(DeviceVideoBuffer, L"\\Device\\Video%d", DeviceNumber);
+   swprintf(DeviceVideoBuffer, L"\\Device\\Video%d", DisplayNumber - 1);
    RtlWriteRegistryValue(
       RTL_REGISTRY_DEVICEMAP,
       L"VIDEO",
@@ -489,6 +510,8 @@ IntVideoPortFindAdapter(
    if (!IntVideoPortSetupInterrupt(DeviceObject, DriverExtension, &ConfigInfo))
    {
       RtlFreeUnicodeString(&DeviceExtension->RegistryPath);
+      if (DeviceExtension->NextDeviceObject)
+          IoDetachDevice(DeviceExtension->NextDeviceObject);
       IoDeleteDevice(DeviceObject);
       return STATUS_INSUFFICIENT_RESOURCES;
    }
@@ -501,6 +524,8 @@ IntVideoPortFindAdapter(
    {
       if (DeviceExtension->InterruptObject != NULL)
          IoDisconnectInterrupt(DeviceExtension->InterruptObject);
+      if (DeviceExtension->NextDeviceObject)
+          IoDetachDevice(DeviceExtension->NextDeviceObject);
       RtlFreeUnicodeString(&DeviceExtension->RegistryPath);
       IoDeleteDevice(DeviceObject);
       WARN_(VIDEOPRT, "STATUS_INSUFFICIENT_RESOURCES\n");
