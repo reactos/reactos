@@ -3239,27 +3239,6 @@ ObDereferenceSecurityDescriptor(
   ULONG  Count);
 
 NTKERNELAPI
-LONG_PTR
-FASTCALL
-ObfDereferenceObject(
-  IN PVOID  Object);
-
-/*
- * VOID
- * ObDereferenceObject(
- *   IN PVOID  Object)
- */
-#define ObDereferenceObject ObfDereferenceObject
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-ObGetObjectSecurity(
-  IN PVOID  Object,
-  OUT PSECURITY_DESCRIPTOR  *SecurityDescriptor,
-  OUT PBOOLEAN  MemoryAllocated);
-
-NTKERNELAPI
 NTSTATUS
 NTAPI
 ObInsertObject(
@@ -3271,24 +3250,12 @@ ObInsertObject(
   OUT PHANDLE  Handle);
 
 NTKERNELAPI
-LONG_PTR
-FASTCALL
-ObfReferenceObject(
-  IN PVOID  Object);
-
-NTKERNELAPI
 NTSTATUS
 NTAPI
 ObLogSecurityDescriptor(
   IN PSECURITY_DESCRIPTOR  InputSecurityDescriptor,
   OUT PSECURITY_DESCRIPTOR  *OutputSecurityDescriptor,
   IN ULONG RefBias);
-/*
- * VOID
- * ObReferenceObject(
- *   IN PVOID  Object)
- */
-#define ObReferenceObject ObfReferenceObject
 
 NTKERNELAPI
 VOID
@@ -3330,17 +3297,6 @@ ObQueryObjectAuditingByHandle(
 NTKERNELAPI
 NTSTATUS
 NTAPI
-ObReferenceObjectByHandle(
-  IN HANDLE  Handle,
-  IN ACCESS_MASK  DesiredAccess,
-  IN POBJECT_TYPE  ObjectType  OPTIONAL,
-  IN KPROCESSOR_MODE  AccessMode,
-  OUT PVOID  *Object,
-  OUT POBJECT_HANDLE_INFORMATION  HandleInformation  OPTIONAL);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
 ObReferenceObjectByName(
   IN PUNICODE_STRING  ObjectPath,
   IN ULONG  Attributes,
@@ -3352,29 +3308,11 @@ ObReferenceObjectByName(
   OUT PVOID  *Object);
 
 NTKERNELAPI
-NTSTATUS
-NTAPI
-ObReferenceObjectByPointer(
-  IN PVOID  Object,
-  IN ACCESS_MASK  DesiredAccess,
-  IN POBJECT_TYPE  ObjectType,
-  IN KPROCESSOR_MODE  AccessMode);
-
-NTKERNELAPI
 VOID
 NTAPI
 ObReferenceSecurityDescriptor(
   IN PSECURITY_DESCRIPTOR  SecurityDescriptor,
   IN ULONG  Count);
-
-NTKERNELAPI
-VOID
-NTAPI
-ObReleaseObjectSecurity(
-  IN PSECURITY_DESCRIPTOR  SecurityDescriptor,
-  IN BOOLEAN  MemoryAllocated);
-
-
 
 /** Process manager routines **/
 
