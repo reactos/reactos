@@ -20,6 +20,7 @@ extern void func_console(void);
 extern void func_directory(void);
 extern void func_drive(void);
 extern void func_environ(void);
+extern void func_fiber(void);
 extern void func_file(void);
 extern void func_format_msg(void);
 extern void func_heap(void);
@@ -55,6 +56,7 @@ const struct test winetest_testlist[] =
     { "directory", func_directory },
     { "drive", func_drive },
     { "environ", func_environ },
+	{ "fiber", func_fiber },
     { "file", func_file },
     { "format_msg", func_format_msg },
     { "heap", func_heap },

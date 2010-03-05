@@ -32,6 +32,7 @@
 static const WCHAR foobarW[] = {'f','o','o','b','a','r',0};
 static const WCHAR FOOBARW[] = {'F','O','O','B','A','R',0};
 static const WCHAR _foobarW[] = {'_','f','o','o','b','a','r',0};
+static const WCHAR integfmt[] = {'#','%','d',0};
 
 static void do_initA(char* tmp, const char* pattern, int len)
 {
@@ -55,21 +56,6 @@ static void do_initW(WCHAR* tmp, const char* pattern, int len)
         if (!*p) p = pattern;
     }
     *tmp = '\0';
-}
-
-static void print_integral( WCHAR* buffer, int atom )
-{
-    BOOL first = TRUE;
-
-#define X(v) { if (atom >= v) {*buffer++ = '0' + atom / v; first = FALSE; } else if (!first || v == 1) *buffer++ = '0'; atom %= v; }
-    *buffer++ = '#';
-    X(10000);
-    X(1000);
-    X(100);
-    X(10);
-    X(1);
-    *buffer = '\0';
-#undef X
 }
 
 static BOOL unicode_OS;
@@ -281,7 +267,7 @@ static void test_get_atom_name(void)
                 WCHAR res[20];
                 
                 ok( (len > 1) && (len < 7), "bad length %d\n", len );
-                print_integral( res, i );
+                wsprintfW( res, integfmt, i );
                 memset( res + lstrlenW(res) + 1, 'a', 10 * sizeof(WCHAR));
                 ok( !memcmp( res, outW, 10 * sizeof(WCHAR) ), "bad buffer contents for %d\n", i );
                 if (len <= 1 || len >= 7) break;  /* don't bother testing all of them */
@@ -552,7 +538,7 @@ static void test_local_get_atom_name(void)
                 WCHAR res[20];
                 
                 ok( (len > 1) && (len < 7), "bad length %d\n", len );
-                print_integral( res, i );
+                wsprintfW( res, integfmt, i );
                 memset( res + lstrlenW(res) + 1, 'a', 10 * sizeof(WCHAR));
                 ok( !memcmp( res, outW, 10 * sizeof(WCHAR) ), "bad buffer contents for %d\n", i );
             }

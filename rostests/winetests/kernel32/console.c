@@ -24,6 +24,7 @@
 #include <stdio.h>
 
 static BOOL (WINAPI *pGetConsoleInputExeNameA)(DWORD, LPSTR);
+static DWORD (WINAPI *pGetConsoleProcessList)(LPDWORD, DWORD);
 static BOOL (WINAPI *pSetConsoleInputExeNameA)(LPCSTR);
 
 /* DEFAULT_ATTRIB is used for all initial filling of the console.
@@ -63,6 +64,7 @@ static void init_function_pointers(void)
 
     hKernel32 = GetModuleHandleA("kernel32.dll");
     KERNEL32_GET_PROC(GetConsoleInputExeNameA);
+    KERNEL32_GET_PROC(GetConsoleProcessList);
     KERNEL32_GET_PROC(SetConsoleInputExeNameA);
 
 #undef KERNEL32_GET_PROC
@@ -926,6 +928,66 @@ static void test_GetSetConsoleInputExeName(void)
     ok(!lstrcmpA(buffer, input_exe), "got %s expected %s\n", buffer, input_exe);
 }
 
+static void test_GetConsoleProcessList(void)
+{
+    DWORD ret, *list = NULL;
+
+    if (!pGetConsoleProcessList)
+    {
+        win_skip("GetConsoleProcessList is not available\n");
+        return;
+    }
+
+    SetLastError(0xdeadbeef);
+    ret = pGetConsoleProcessList(NULL, 0);
+    ok(ret == 0, "Expected failure\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER,
+       "Expected ERROR_INVALID_PARAMETER, got %d\n",
+       GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = pGetConsoleProcessList(NULL, 1);
+    ok(ret == 0, "Expected failure\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER,
+       "Expected ERROR_INVALID_PARAMETER, got %d\n",
+       GetLastError());
+
+    /* We should only have 1 process but only for these specific unit tests as
+     * we created our own console. An AttachConsole(ATTACH_PARENT_PROCESS) would
+     * give us two processes for example.
+     */
+    list = HeapAlloc(GetProcessHeap(), 0, sizeof(DWORD));
+
+    SetLastError(0xdeadbeef);
+    ret = pGetConsoleProcessList(list, 0);
+    ok(ret == 0, "Expected failure\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER,
+       "Expected ERROR_INVALID_PARAMETER, got %d\n",
+       GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = pGetConsoleProcessList(list, 1);
+    todo_wine
+    ok(ret == 1, "Expected 1, got %d\n", ret);
+
+    HeapFree(GetProcessHeap(), 0, list);
+
+    list = HeapAlloc(GetProcessHeap(), 0, ret * sizeof(DWORD));
+
+    SetLastError(0xdeadbeef);
+    ret = pGetConsoleProcessList(list, ret);
+    todo_wine
+    ok(ret == 1, "Expected 1, got %d\n", ret);
+
+    if (ret == 1)
+    {
+        DWORD pid = GetCurrentProcessId();
+        ok(list[0] == pid, "Expected %d, got %d\n", pid, list[0]);
+    }
+
+    HeapFree(GetProcessHeap(), 0, list);
+}
+
 START_TEST(console)
 {
     HANDLE hConIn, hConOut;
@@ -971,10 +1033,9 @@ START_TEST(console)
     /* still to be done: access rights & access on objects */
 
     if (!pGetConsoleInputExeNameA || !pSetConsoleInputExeNameA)
-    {
         win_skip("GetConsoleInputExeNameA and/or SetConsoleInputExeNameA is not available\n");
-        return;
-    }
     else
         test_GetSetConsoleInputExeName();
+
+    test_GetConsoleProcessList();
 }

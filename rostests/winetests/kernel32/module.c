@@ -359,6 +359,24 @@ static void testLoadLibraryEx(void)
     ok(GetLastError() == ERROR_FILE_NOT_FOUND ||
        broken(GetLastError() == ERROR_INVALID_HANDLE),  /* nt4 */
        "Expected ERROR_FILE_NOT_FOUND, got %d\n", GetLastError());
+
+    /* Free the loaded dll when its the first time this dll is loaded
+       in process - First time should pass, second fail */
+    SetLastError(0xdeadbeef);
+    hmodule = LoadLibraryExA("comctl32.dll", NULL, LOAD_LIBRARY_AS_DATAFILE);
+    ok(hmodule != 0, "Expected valid module handle\n");
+
+    SetLastError(0xdeadbeef);
+    ok(FreeLibrary(hmodule),
+       "Expected to be able to free the module, failed with %d\n",
+       GetLastError());
+    SetLastError(0xdeadbeef);
+    ok(!FreeLibrary(hmodule),
+       "Unexpected ability to free the module, failed with %d\n",
+       GetLastError());
+
+    CloseHandle(hmodule);
+
 }
 
 START_TEST(module)

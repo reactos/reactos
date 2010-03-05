@@ -1,5 +1,5 @@
 /*
- * Unit test suite
+ * Unit test suite for volume functions
  *
  * Copyright 2006 Stefan Leichter
  *

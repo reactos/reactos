@@ -411,7 +411,10 @@ static void test_ExitCode(void)
         crash_and_debug(hkey, test_exe, "dbg,none");
     else
         skip("\"none\" debugger test needs user interaction\n");
-    crash_and_debug(hkey, test_exe, "dbg,event,order");
+    if (disposition == REG_CREATED_NEW_KEY)
+        win_skip("'dbg,event,order' test doesn't finish on Win9x/WinMe\n");
+    else
+        crash_and_debug(hkey, test_exe, "dbg,event,order");
     crash_and_debug(hkey, test_exe, "dbg,attach,event,code2");
     if (pDebugSetProcessKillOnExit)
         crash_and_debug(hkey, test_exe, "dbg,attach,event,nokill");

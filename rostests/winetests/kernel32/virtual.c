@@ -872,13 +872,70 @@ static void test_CreateFileMapping(void)
     CloseHandle( handle );
 }
 
-static void test_BadPtr(void)
+static void test_IsBadReadPtr(void)
 {
-    void *ptr = (void*)1;
-    /* We assume address 1 is not mapped. */
-    ok(IsBadReadPtr(ptr,1),"IsBadReadPtr(1) failed.\n");
-    ok(IsBadWritePtr(ptr,1),"IsBadWritePtr(1) failed.\n");
-    ok(IsBadCodePtr(ptr),"IsBadCodePtr(1) failed.\n");
+    BOOL ret;
+    void *ptr = (void *)0xdeadbeef;
+    char stackvar;
+
+    ret = IsBadReadPtr(NULL, 0);
+    ok(ret == FALSE, "Expected IsBadReadPtr to return FALSE, got %d\n", ret);
+
+    ret = IsBadReadPtr(NULL, 1);
+    ok(ret == TRUE, "Expected IsBadReadPtr to return TRUE, got %d\n", ret);
+
+    ret = IsBadReadPtr(ptr, 0);
+    ok(ret == FALSE, "Expected IsBadReadPtr to return FALSE, got %d\n", ret);
+
+    ret = IsBadReadPtr(ptr, 1);
+    ok(ret == TRUE, "Expected IsBadReadPtr to return TRUE, got %d\n", ret);
+
+    ret = IsBadReadPtr(&stackvar, 0);
+    ok(ret == FALSE, "Expected IsBadReadPtr to return FALSE, got %d\n", ret);
+
+    ret = IsBadReadPtr(&stackvar, sizeof(char));
+    ok(ret == FALSE, "Expected IsBadReadPtr to return FALSE, got %d\n", ret);
+}
+
+static void test_IsBadWritePtr(void)
+{
+    BOOL ret;
+    void *ptr = (void *)0xdeadbeef;
+    char stackval;
+
+    ret = IsBadWritePtr(NULL, 0);
+    ok(ret == FALSE, "Expected IsBadWritePtr to return FALSE, got %d\n", ret);
+
+    ret = IsBadWritePtr(NULL, 1);
+    ok(ret == TRUE, "Expected IsBadWritePtr to return TRUE, got %d\n", ret);
+
+    ret = IsBadWritePtr(ptr, 0);
+    ok(ret == FALSE, "Expected IsBadWritePtr to return FALSE, got %d\n", ret);
+
+    ret = IsBadWritePtr(ptr, 1);
+    ok(ret == TRUE, "Expected IsBadWritePtr to return TRUE, got %d\n", ret);
+
+    ret = IsBadWritePtr(&stackval, 0);
+    ok(ret == FALSE, "Expected IsBadWritePtr to return FALSE, got %d\n", ret);
+
+    ret = IsBadWritePtr(&stackval, sizeof(char));
+    ok(ret == FALSE, "Expected IsBadWritePtr to return FALSE, got %d\n", ret);
+}
+
+static void test_IsBadCodePtr(void)
+{
+    BOOL ret;
+    void *ptr = (void *)0xdeadbeef;
+    char stackval;
+
+    ret = IsBadCodePtr(NULL);
+    ok(ret == TRUE, "Expected IsBadCodePtr to return TRUE, got %d\n", ret);
+
+    ret = IsBadCodePtr(ptr);
+    ok(ret == TRUE, "Expected IsBadCodePtr to return TRUE, got %d\n", ret);
+
+    ret = IsBadCodePtr((void *)&stackval);
+    ok(ret == FALSE, "Expected IsBadCodePtr to return FALSE, got %d\n", ret);
 }
 
 static void test_write_watch(void)
@@ -1220,6 +1277,8 @@ START_TEST(virtual)
     test_MapViewOfFile();
     test_NtMapViewOfSection();
     test_CreateFileMapping();
-    test_BadPtr();
+    test_IsBadReadPtr();
+    test_IsBadWritePtr();
+    test_IsBadCodePtr();
     test_write_watch();
 }

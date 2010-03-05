@@ -202,6 +202,8 @@ static void test__hwrite( void )
 
     ret = DeleteFileA( filename );
     ok( ret != 0, "DeleteFile failed (%d)\n", GetLastError(  ) );
+
+    LocalFree( contents );
 }
 
 
@@ -251,7 +253,9 @@ static void test__lcreat( void )
 
     ok( HFILE_ERROR != _lclose(filehandle), "_lclose complains\n" );
 
-    ok( INVALID_HANDLE_VALUE != FindFirstFileA( filename, &search_results ), "should be able to find file\n" );
+    find = FindFirstFileA( filename, &search_results );
+    ok( INVALID_HANDLE_VALUE != find, "should be able to find file\n" );
+    FindClose( find );
 
     ret = DeleteFileA(filename);
     ok( ret != 0, "DeleteFile failed (%d)\n", GetLastError());
@@ -263,7 +267,9 @@ static void test__lcreat( void )
 
     ok( HFILE_ERROR != _lclose(filehandle), "_lclose complains\n" );
 
-    ok( INVALID_HANDLE_VALUE != FindFirstFileA( filename, &search_results ), "should be able to find file\n" );
+    find = FindFirstFileA( filename, &search_results );
+    ok( INVALID_HANDLE_VALUE != find, "should be able to find file\n" );
+    FindClose( find );
 
     ok( 0 == DeleteFileA( filename ), "shouldn't be able to delete a readonly file\n" );
 
@@ -282,7 +288,9 @@ static void test__lcreat( void )
 
     ok( HFILE_ERROR != _lclose(filehandle), "_lclose complains\n" );
 
-    ok( INVALID_HANDLE_VALUE != FindFirstFileA( filename, &search_results ), "should STILL be able to find file\n" );
+    find = FindFirstFileA( filename, &search_results );
+    ok( INVALID_HANDLE_VALUE != find, "should STILL be able to find file\n" );
+    FindClose( find );
 
     ret = DeleteFileA( filename );
     ok( ret, "DeleteFile failed (%d)\n", GetLastError(  ) );
@@ -298,7 +306,9 @@ static void test__lcreat( void )
 
     ok( HFILE_ERROR != _lclose(filehandle), "_lclose complains\n" );
 
-    ok( INVALID_HANDLE_VALUE != FindFirstFileA( filename, &search_results ), "should STILL be able to find file\n" );
+    find = FindFirstFileA( filename, &search_results );
+    ok( INVALID_HANDLE_VALUE != find, "should STILL be able to find file\n" );
+    FindClose( find );
 
     ret = DeleteFileA( filename );
     ok( ret, "DeleteFile failed (%d)\n", GetLastError(  ) );
@@ -555,6 +565,8 @@ static void test__lwrite( void )
 
     ret = DeleteFileA( filename );
     ok( ret, "DeleteFile failed (%d)\n", GetLastError(  ) );
+
+    LocalFree( contents );
 }
 
 static void test_CopyFileA(void)
@@ -702,33 +714,22 @@ static void test_CopyFileW(void)
 /*
  *   Debugging routine to dump a buffer in a hexdump-like fashion.
  */
-static void dumpmem(unsigned char* mem, int len) {
-    int x,y;
-    char buf[200];
-    int ln=0;
+static void dumpmem(unsigned char *mem, int len)
+{
+    int x = 0;
+    char hex[49], *p;
+    char txt[17], *c;
 
-    for (x=0; x<len; x+=16) {
-        ln += sprintf(buf+ln, "%04x: ",x);
-        for (y=0; y<16; y++) {
-            if ((x+y)>len) {
-                ln += sprintf(buf+ln, "   ");
-            } else {
-                ln += sprintf(buf+ln, "%02hhx ",mem[x+y]);
-            }
-        }
-        ln += sprintf(buf+ln, "- ");
-        for (y=0; y<16; y++) {
-            if ((x+y)<=len) {
-                if (mem[x+y]<32 || mem[x+y]>127) {
-                    ln += sprintf(buf+ln, ".");
-                } else {
-                    ln += sprintf(buf+ln, "%c",mem[x+y]);
-                }
-            }
-        }
-        sprintf(buf+ln, "\n");
-        trace(buf);
-        ln = 0;
+    while (x < len)
+    {
+        p = hex;
+        c = txt;
+        do {
+            p += sprintf(p, "%02hhx ", mem[x]);
+            *c++ = (mem[x] >= 32 && mem[x] <= 127) ? mem[x] : '.';
+        } while (++x % 16 && x < len);
+        *c = '\0';
+        trace("%04x: %-48s- %s\n", x, hex, txt);
     }
 }
 

@@ -1,5 +1,5 @@
 /*
- * Unit test suite for environment functions.
+ * Unit test suite for resource functions.
  *
  * Copyright 2006 Mike McCormack
  *

@@ -70,15 +70,9 @@ static void test_Heap(void)
     heap=HeapCreate(0,2*memchunk,5*memchunk);
 
 /* Check that HeapCreate allocated the right amount of ram */
-    todo_wine {
-    /* Today HeapCreate seems to return a memory block larger than specified.
-       MSDN says the maximum heap size should be dwMaximumSize rounded up to the
-       nearest page boundary
-    */
-      mem1=HeapAlloc(heap,0,5*memchunk+1);
-      ok(mem1==NULL,"HeapCreate allocated more Ram than it should have\n");
-      HeapFree(heap,0,mem1);
-    }
+    mem1=HeapAlloc(heap,0,5*memchunk+1);
+    ok(mem1==NULL,"HeapCreate allocated more Ram than it should have\n");
+    HeapFree(heap,0,mem1);
 
 /* Check that a normal alloc works */
     mem1=HeapAlloc(heap,0,memchunk);

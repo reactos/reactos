@@ -1,5 +1,5 @@
 /*
- * Unit test suite for CreateProcess function.
+ * Unit test suite for process functions
  *
  * Copyright 2002 Eric Pouech
  * Copyright 2006 Dmitry Timoshkov

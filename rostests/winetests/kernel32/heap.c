@@ -21,14 +21,34 @@
 
 #include <stdarg.h>
 #include <stdlib.h>
+#include <stdio.h>
 
-#include "windef.h"
-#include "winbase.h"
+#define WIN32_NO_STATUS
+#include <windows.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
+
 #include "wine/test.h"
+
 
 #define MAGIC_DEAD 0xdeadbeef
 
+/* some undocumented flags (names are made up) */
+#define HEAP_PAGE_ALLOCS      0x01000000
+#define HEAP_VALIDATE         0x10000000
+#define HEAP_VALIDATE_ALL     0x20000000
+#define HEAP_VALIDATE_PARAMS  0x40000000
+
 static BOOL (WINAPI *pHeapQueryInformation)(HANDLE, HEAP_INFORMATION_CLASS, PVOID, SIZE_T, PSIZE_T);
+static ULONG (WINAPI *pRtlGetNtGlobalFlags)(void);
+
+struct heap_layout
+{
+    DWORD_PTR unknown[2];
+    DWORD pattern;
+    DWORD flags;
+    DWORD force_flags;
+};
 
 static SIZE_T resize_9x(SIZE_T size)
 {
@@ -467,8 +487,307 @@ static void test_HeapQueryInformation(void)
     ok(info == 0 || info == 1 || info == 2, "expected 0, 1 or 2, got %u\n", info);
 }
 
+static void test_heap_checks( DWORD flags )
+{
+    BYTE old, *p, *p2;
+    BOOL ret;
+    SIZE_T i, size, large_size = 3000 * 1024 + 37;
+
+    if (flags & HEAP_PAGE_ALLOCS) return;  /* no tests for that case yet */
+    trace( "testing heap flags %08x\n", flags );
+
+    p = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, 17 );
+    ok( p != NULL, "HeapAlloc failed\n" );
+
+    ret = HeapValidate( GetProcessHeap(), 0, p );
+    ok( ret, "HeapValidate failed\n" );
+
+    size = HeapSize( GetProcessHeap(), 0, p );
+    ok( size == 17, "Wrong size %lu\n", size );
+
+    ok( p[14] == 0, "wrong data %x\n", p[14] );
+    ok( p[15] == 0, "wrong data %x\n", p[15] );
+    ok( p[16] == 0, "wrong data %x\n", p[16] );
+
+    if (flags & HEAP_TAIL_CHECKING_ENABLED)
+    {
+        ok( p[17] == 0xab, "wrong padding %x\n", p[17] );
+        ok( p[18] == 0xab, "wrong padding %x\n", p[18] );
+        ok( p[19] == 0xab, "wrong padding %x\n", p[19] );
+    }
+
+    p2 = HeapReAlloc( GetProcessHeap(), HEAP_REALLOC_IN_PLACE_ONLY, p, 14 );
+    if (p2 == p)
+    {
+        if (flags & HEAP_TAIL_CHECKING_ENABLED)
+        {
+            ok( p[14] == 0xab, "wrong padding %x\n", p[14] );
+            ok( p[15] == 0xab, "wrong padding %x\n", p[15] );
+            ok( p[16] == 0xab, "wrong padding %x\n", p[16] );
+        }
+        else
+        {
+            ok( p[14] == 0, "wrong padding %x\n", p[14] );
+            ok( p[15] == 0, "wrong padding %x\n", p[15] );
+        }
+    }
+    else skip( "realloc in place failed\n ");
+
+    ret = HeapFree( GetProcessHeap(), 0, p );
+    ok( ret, "HeapFree failed\n" );
+
+    p = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, 17 );
+    ok( p != NULL, "HeapAlloc failed\n" );
+    old = p[17];
+    p[17] = 0xcc;
+
+    if (flags & HEAP_TAIL_CHECKING_ENABLED)
+    {
+        ret = HeapValidate( GetProcessHeap(), 0, p );
+        ok( !ret, "HeapValidate succeeded\n" );
+
+        /* other calls only check when HEAP_VALIDATE is set */
+        if (flags & HEAP_VALIDATE)
+        {
+            size = HeapSize( GetProcessHeap(), 0, p );
+            ok( size == ~(SIZE_T)0 || broken(size == ~0u), "Wrong size %lu\n", size );
+
+            p2 = HeapReAlloc( GetProcessHeap(), 0, p, 14 );
+            ok( p2 == NULL, "HeapReAlloc succeeded\n" );
+
+            ret = HeapFree( GetProcessHeap(), 0, p );
+            ok( !ret || broken(sizeof(void*) == 8), /* not caught on xp64 */
+                "HeapFree succeeded\n" );
+        }
+
+        p[17] = old;
+        size = HeapSize( GetProcessHeap(), 0, p );
+        ok( size == 17, "Wrong size %lu\n", size );
+
+        p2 = HeapReAlloc( GetProcessHeap(), 0, p, 14 );
+        ok( p2 != NULL, "HeapReAlloc failed\n" );
+        p = p2;
+    }
+
+    ret = HeapFree( GetProcessHeap(), 0, p );
+    ok( ret, "HeapFree failed\n" );
+
+    p = HeapAlloc( GetProcessHeap(), 0, 37 );
+    ok( p != NULL, "HeapAlloc failed\n" );
+    memset( p, 0xcc, 37 );
+
+    ret = HeapFree( GetProcessHeap(), 0, p );
+    ok( ret, "HeapFree failed\n" );
+
+    if (flags & HEAP_FREE_CHECKING_ENABLED)
+    {
+        ok( p[16] == 0xee, "wrong data %x\n", p[16] );
+        ok( p[17] == 0xfe, "wrong data %x\n", p[17] );
+        ok( p[18] == 0xee, "wrong data %x\n", p[18] );
+        ok( p[19] == 0xfe, "wrong data %x\n", p[19] );
+
+        ret = HeapValidate( GetProcessHeap(), 0, NULL );
+        ok( ret, "HeapValidate failed\n" );
+
+        old = p[16];
+        p[16] = 0xcc;
+        ret = HeapValidate( GetProcessHeap(), 0, NULL );
+        ok( !ret, "HeapValidate succeeded\n" );
+
+        p[16] = old;
+        ret = HeapValidate( GetProcessHeap(), 0, NULL );
+        ok( ret, "HeapValidate failed\n" );
+    }
+
+    /* now test large blocks */
+
+    p = HeapAlloc( GetProcessHeap(), 0, large_size );
+    ok( p != NULL, "HeapAlloc failed\n" );
+
+    ret = HeapValidate( GetProcessHeap(), 0, p );
+    ok( ret, "HeapValidate failed\n" );
+
+    size = HeapSize( GetProcessHeap(), 0, p );
+    ok( size == large_size, "Wrong size %lu\n", size );
+
+    ok( p[large_size - 2] == 0, "wrong data %x\n", p[large_size - 2] );
+    ok( p[large_size - 1] == 0, "wrong data %x\n", p[large_size - 1] );
+
+    if (flags & HEAP_TAIL_CHECKING_ENABLED)
+    {
+        /* Windows doesn't do tail checking on large blocks */
+        ok( p[large_size] == 0xab || broken(p[large_size] == 0), "wrong data %x\n", p[large_size] );
+        ok( p[large_size+1] == 0xab || broken(p[large_size+1] == 0), "wrong data %x\n", p[large_size+1] );
+        ok( p[large_size+2] == 0xab || broken(p[large_size+2] == 0), "wrong data %x\n", p[large_size+2] );
+        if (p[large_size] == 0xab)
+        {
+            p[large_size] = 0xcc;
+            ret = HeapValidate( GetProcessHeap(), 0, p );
+            ok( !ret, "HeapValidate succeeded\n" );
+
+            /* other calls only check when HEAP_VALIDATE is set */
+            if (flags & HEAP_VALIDATE)
+            {
+                size = HeapSize( GetProcessHeap(), 0, p );
+                ok( size == ~(SIZE_T)0, "Wrong size %lu\n", size );
+
+                p2 = HeapReAlloc( GetProcessHeap(), 0, p, large_size - 3 );
+                ok( p2 == NULL, "HeapReAlloc succeeded\n" );
+
+                ret = HeapFree( GetProcessHeap(), 0, p );
+                ok( !ret, "HeapFree succeeded\n" );
+            }
+            p[large_size] = 0xab;
+        }
+    }
+
+    ret = HeapFree( GetProcessHeap(), 0, p );
+    ok( ret, "HeapFree failed\n" );
+
+    /* test block sizes when tail checking */
+    if (flags & HEAP_TAIL_CHECKING_ENABLED)
+    {
+        for (size = 0; size < 64; size++)
+        {
+            p = HeapAlloc( GetProcessHeap(), 0, size );
+            for (i = 0; i < 32; i++) if (p[size + i] != 0xab) break;
+            ok( i >= 8, "only %lu tail bytes for size %lu\n", i, size );
+            HeapFree( GetProcessHeap(), 0, p );
+        }
+    }
+}
+
+static void test_debug_heap( const char *argv0, DWORD flags )
+{
+    char keyname[MAX_PATH];
+    char buffer[MAX_PATH];
+    PROCESS_INFORMATION	info;
+    STARTUPINFOA startup;
+    BOOL ret;
+    DWORD err;
+    HKEY hkey;
+    const char *basename;
+
+    if ((basename = strrchr( argv0, '\\' ))) basename++;
+    else basename = argv0;
+
+    sprintf( keyname, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\%s",
+             basename );
+    if (!strcmp( keyname + strlen(keyname) - 3, ".so" )) keyname[strlen(keyname) - 3] = 0;
+
+    err = RegCreateKeyA( HKEY_LOCAL_MACHINE, keyname, &hkey );
+    ok( !err, "failed to create '%s' error %u\n", keyname, err );
+    if (err) return;
+
+    if (flags == 0xdeadbeef)  /* magic value for unsetting it */
+        RegDeleteValueA( hkey, "GlobalFlag" );
+    else
+        RegSetValueExA( hkey, "GlobalFlag", 0, REG_DWORD, (BYTE *)&flags, sizeof(flags) );
+
+    memset( &startup, 0, sizeof(startup) );
+    startup.cb = sizeof(startup);
+
+    sprintf( buffer, "%s heap.c 0x%x", argv0, flags );
+    ret = CreateProcessA( NULL, buffer, NULL, NULL, FALSE, 0, NULL, NULL, &startup, &info );
+    ok( ret, "failed to create child process error %u\n", GetLastError() );
+    if (ret)
+    {
+        winetest_wait_child_process( info.hProcess );
+        CloseHandle( info.hThread );
+        CloseHandle( info.hProcess );
+    }
+    RegDeleteValueA( hkey, "GlobalFlag" );
+    RegCloseKey( hkey );
+    RegDeleteKeyA( HKEY_LOCAL_MACHINE, keyname );
+}
+
+static DWORD heap_flags_from_global_flag( DWORD flag )
+{
+    DWORD ret = 0;
+
+    if (flag & FLG_HEAP_ENABLE_TAIL_CHECK)
+        ret |= HEAP_TAIL_CHECKING_ENABLED;
+    if (flag & FLG_HEAP_ENABLE_FREE_CHECK)
+        ret |= HEAP_FREE_CHECKING_ENABLED;
+    if (flag & FLG_HEAP_VALIDATE_PARAMETERS)
+        ret |= HEAP_VALIDATE_PARAMS | HEAP_VALIDATE | HEAP_TAIL_CHECKING_ENABLED | HEAP_FREE_CHECKING_ENABLED;
+    if (flag & FLG_HEAP_VALIDATE_ALL)
+        ret |= HEAP_VALIDATE_ALL | HEAP_VALIDATE | HEAP_TAIL_CHECKING_ENABLED | HEAP_FREE_CHECKING_ENABLED;
+    if (flag & FLG_HEAP_DISABLE_COALESCING)
+        ret |= HEAP_DISABLE_COALESCE_ON_FREE;
+    if (flag & FLG_HEAP_PAGE_ALLOCS)
+        ret |= HEAP_PAGE_ALLOCS | HEAP_GROWABLE;
+    return ret;
+}
+
+static void test_child_heap( const char *arg )
+{
+    struct heap_layout *heap = GetProcessHeap();
+    DWORD expected = strtoul( arg, 0, 16 );
+    DWORD expect_heap;
+
+    if (expected == 0xdeadbeef)  /* expected value comes from Session Manager global flags */
+    {
+        HKEY hkey;
+        expected = 0;
+        if (!RegOpenKeyA( HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\Session Manager", &hkey ))
+        {
+            char buffer[32];
+            DWORD type, size = sizeof(buffer);
+
+            if (!RegQueryValueExA( hkey, "GlobalFlag", 0, &type, (BYTE *)buffer, &size ))
+            {
+                if (type == REG_DWORD) expected = *(DWORD *)buffer;
+                else if (type == REG_SZ) expected = strtoul( buffer, 0, 16 );
+            }
+            RegCloseKey( hkey );
+        }
+    }
+    if (expected && !pRtlGetNtGlobalFlags())  /* not working on NT4 */
+    {
+        win_skip( "global flags not set\n" );
+        return;
+    }
+
+    ok( pRtlGetNtGlobalFlags() == expected,
+        "%s: got global flags %08x expected %08x\n", arg, pRtlGetNtGlobalFlags(), expected );
+
+    expect_heap = heap_flags_from_global_flag( expected );
+
+    if (!(heap->flags & HEAP_GROWABLE) || heap->pattern == 0xffeeffee)  /* vista layout */
+    {
+        ok( heap->flags == 0, "%s: got heap flags %08x expected 0\n", arg, heap->flags );
+    }
+    else if (heap->pattern == 0xeeeeeeee && heap->flags == 0xeeeeeeee)
+    {
+        ok( expected & FLG_HEAP_PAGE_ALLOCS, "%s: got heap flags 0xeeeeeeee without page alloc\n", arg );
+    }
+    else
+    {
+        ok( heap->flags == (expect_heap | HEAP_GROWABLE),
+            "%s: got heap flags %08x expected %08x\n", arg, heap->flags, expect_heap );
+        ok( heap->force_flags == (expect_heap & ~0x18000080),
+            "%s: got heap force flags %08x expected %08x\n", arg, heap->force_flags, expect_heap );
+        expect_heap = heap->flags;
+    }
+
+    test_heap_checks( expect_heap );
+}
+
 START_TEST(heap)
 {
+    int argc;
+    char **argv;
+
+    pRtlGetNtGlobalFlags = (void *)GetProcAddress( GetModuleHandleA("ntdll.dll"), "RtlGetNtGlobalFlags" );
+
+    argc = winetest_get_mainargs( &argv );
+    if (argc >= 3)
+    {
+        test_child_heap( argv[2] );
+        return;
+    }
+
     test_heap();
     test_obsolete_flags();
 
@@ -480,4 +799,20 @@ START_TEST(heap)
     test_sized_HeapReAlloc((1 << 20), (2 << 20));
     test_sized_HeapReAlloc((1 << 20), 1);
     test_HeapQueryInformation();
+
+    if (pRtlGetNtGlobalFlags)
+    {
+        test_debug_heap( argv[0], 0 );
+        test_debug_heap( argv[0], FLG_HEAP_ENABLE_TAIL_CHECK );
+        test_debug_heap( argv[0], FLG_HEAP_ENABLE_FREE_CHECK );
+        test_debug_heap( argv[0], FLG_HEAP_VALIDATE_PARAMETERS );
+        test_debug_heap( argv[0], FLG_HEAP_VALIDATE_ALL );
+        test_debug_heap( argv[0], FLG_POOL_ENABLE_TAGGING );
+        test_debug_heap( argv[0], FLG_HEAP_ENABLE_TAGGING );
+        test_debug_heap( argv[0], FLG_HEAP_ENABLE_TAG_BY_DLL );
+        test_debug_heap( argv[0], FLG_HEAP_DISABLE_COALESCING );
+        test_debug_heap( argv[0], FLG_HEAP_PAGE_ALLOCS );
+        test_debug_heap( argv[0], 0xdeadbeef );
+    }
+    else win_skip( "RtlGetNtGlobalFlags not found, skipping heap debug tests\n" );
 }

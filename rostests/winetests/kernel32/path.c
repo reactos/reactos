@@ -57,6 +57,9 @@ static DWORD (WINAPI *pGetLongPathNameW)(LPWSTR,LPWSTR,DWORD);
 static BOOL  (WINAPI *pNeedCurrentDirectoryForExePathA)(LPCSTR);
 static BOOL  (WINAPI *pNeedCurrentDirectoryForExePathW)(LPCWSTR);
 
+static DWORD (WINAPI *pSearchPathA)(LPCSTR,LPCSTR,LPCSTR,DWORD,LPSTR,LPSTR*);
+static DWORD (WINAPI *pSearchPathW)(LPCWSTR,LPCWSTR,LPCWSTR,DWORD,LPWSTR,LPWSTR*);
+
 /* a structure to deal with wine todos somewhat cleanly */
 typedef struct {
   DWORD shortlen;
@@ -420,6 +423,7 @@ static void test_InitPathA(CHAR *newdir, CHAR *curDrive, CHAR *otherDrive)
 static void test_CurrentDirectoryA(CHAR *origdir, CHAR *newdir)
 {
   CHAR tmpstr[MAX_PATH],tmpstr1[MAX_PATH];
+  char *buffer;
   DWORD len,len1;
 /* Save the original directory, so that we can return to it at the end
    of the test
@@ -434,6 +438,45 @@ static void test_CurrentDirectoryA(CHAR *origdir, CHAR *newdir)
   ok(len1==len+1, "GetCurrentDirectoryA returned %d instead of %d\n",len1,len+1);
   ok(lstrcmpiA(tmpstr,"aaaaaaa")==0,
      "GetCurrentDirectoryA should not have modified the buffer\n");
+
+  buffer = HeapAlloc( GetProcessHeap(), 0, 2 * 65536 );
+  SetLastError( 0xdeadbeef );
+  strcpy( buffer, "foo" );
+  len = GetCurrentDirectoryA( 32767, buffer );
+  ok( len != 0 && len < MAX_PATH, "GetCurrentDirectoryA failed %u err %u\n", len, GetLastError() );
+  if (len) ok( !strcmp( buffer, origdir ), "wrong result %s\n", buffer );
+  SetLastError( 0xdeadbeef );
+  strcpy( buffer, "foo" );
+  len = GetCurrentDirectoryA( 32768, buffer );
+  ok( len != 0 && len < MAX_PATH, "GetCurrentDirectoryA failed %u err %u\n", len, GetLastError() );
+  if (len) ok( !strcmp( buffer, origdir ), "wrong result %s\n", buffer );
+  SetLastError( 0xdeadbeef );
+  strcpy( buffer, "foo" );
+  len = GetCurrentDirectoryA( 65535, buffer );
+  ok( (len != 0 && len < MAX_PATH) || broken(!len), /* nt4, win2k, xp */ "GetCurrentDirectoryA failed %u err %u\n", len, GetLastError() );
+  if (len) ok( !strcmp( buffer, origdir ), "wrong result %s\n", buffer );
+  SetLastError( 0xdeadbeef );
+  strcpy( buffer, "foo" );
+  len = GetCurrentDirectoryA( 65536, buffer );
+  ok( (len != 0 && len < MAX_PATH) || broken(!len), /* nt4 */ "GetCurrentDirectoryA failed %u err %u\n", len, GetLastError() );
+  if (len) ok( !strcmp( buffer, origdir ), "wrong result %s\n", buffer );
+  SetLastError( 0xdeadbeef );
+  strcpy( buffer, "foo" );
+  len = GetCurrentDirectoryA( 2 * 65536, buffer );
+  ok( (len != 0 && len < MAX_PATH) || broken(!len), /* nt4 */ "GetCurrentDirectoryA failed %u err %u\n", len, GetLastError() );
+  if (len) ok( !strcmp( buffer, origdir ), "wrong result %s\n", buffer );
+  HeapFree( GetProcessHeap(), 0, buffer );
+
+/* Check for crash prevention on swapped args. Crashes all but Win9x.
+*/
+  if (0)
+  {
+    SetLastError( 0xdeadbeef );
+    len = GetCurrentDirectoryA( 42, (LPSTR)(MAX_PATH + 42) );
+    ok( len == 0 && GetLastError() == ERROR_INVALID_PARAMETER,
+        "GetCurrentDirectoryA failed to fail %u err %u\n", len, GetLastError() );
+  }
+
 /* SetCurrentDirectoryA shouldn't care whether the string has a
    trailing '\\' or not
 */
@@ -1323,6 +1366,12 @@ static void test_GetWindowsDirectory(void)
 
 static void test_NeedCurrentDirectoryForExePathA(void)
 {
+    if (!pNeedCurrentDirectoryForExePathA)
+    {
+        win_skip("NeedCurrentDirectoryForExePathA is not available\n");
+        return;
+    }
+
     /* Crashes in Windows */
     if (0)
         ok(pNeedCurrentDirectoryForExePathA(NULL), "returned FALSE for NULL\n");
@@ -1343,6 +1392,12 @@ static void test_NeedCurrentDirectoryForExePathW(void)
     const WCHAR thispath[] = {'.', 0};
     const WCHAR fullpath[] = {'c', ':', '\\', 0};
     const WCHAR cmdname[] = {'c', 'm', 'd', '.', 'e', 'x', 'e', 0};
+
+    if (!pNeedCurrentDirectoryForExePathW)
+    {
+        win_skip("NeedCurrentDirectoryForExePathW is not available\n");
+        return;
+    }
 
     /* Crashes in Windows */
     if (0)
@@ -1444,19 +1499,95 @@ static void test_drive_letter_case(void)
 #undef is_upper_case_letter
 }
 
+static void test_SearchPathA(void)
+{
+    CHAR pathA[MAX_PATH], fileA[] = "", buffA[MAX_PATH];
+    CHAR *ptrA = NULL;
+    DWORD ret;
+
+    if (!pSearchPathA)
+    {
+        win_skip("SearchPathA isn't available\n");
+        return;
+    }
+
+    GetWindowsDirectoryA(pathA, sizeof(pathA)/sizeof(CHAR));
+
+    /* NULL filename */
+    SetLastError(0xdeadbeef);
+    ret = pSearchPathA(pathA, NULL, NULL, sizeof(buffA)/sizeof(CHAR), buffA, &ptrA);
+    ok(ret == 0, "Expected failure, got %d\n", ret);
+    ok(GetLastError() == ERROR_INVALID_PARAMETER,
+      "Expected ERROR_INVALID_PARAMETER, got %x\n", GetLastError());
+
+    /* empty filename */
+    SetLastError(0xdeadbeef);
+    ret = pSearchPathA(pathA, fileA, NULL, sizeof(buffA)/sizeof(CHAR), buffA, &ptrA);
+    ok(ret == 0, "Expected failure, got %d\n", ret);
+    ok(GetLastError() == ERROR_INVALID_PARAMETER ||
+       broken(GetLastError() == ERROR_FILE_NOT_FOUND) /* win9x */,
+      "Expected ERROR_INVALID_PARAMETER, got %x\n", GetLastError());
+}
+
+static void test_SearchPathW(void)
+{
+    WCHAR pathW[MAX_PATH], fileW[] = { 0 }, buffW[MAX_PATH];
+    WCHAR *ptrW = NULL;
+    DWORD ret;
+
+    if (!pSearchPathW)
+    {
+        win_skip("SearchPathW isn't available\n");
+        return;
+    }
+
+    /* SearchPathW is a stub on win9x and doesn't return sane error,
+       so quess if it's implemented indirectly */
+    SetLastError(0xdeadbeef);
+    GetWindowsDirectoryW(pathW, sizeof(pathW)/sizeof(WCHAR));
+    if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+    {
+        win_skip("SearchPathW not implemented\n");
+        return;
+    }
+
+if (0)
+{
+    /* NULL filename, crashes on nt4 */
+    SetLastError(0xdeadbeef);
+    ret = pSearchPathW(pathW, NULL, NULL, sizeof(buffW)/sizeof(WCHAR), buffW, &ptrW);
+    ok(ret == 0, "Expected failure, got %d\n", ret);
+    ok(GetLastError() == ERROR_INVALID_PARAMETER,
+       "Expected ERROR_INVALID_PARAMETER, got %x\n", GetLastError());
+}
+
+    /* empty filename */
+    SetLastError(0xdeadbeef);
+    ret = pSearchPathW(pathW, fileW, NULL, sizeof(buffW)/sizeof(WCHAR), buffW, &ptrW);
+    ok(ret == 0, "Expected failure, got %d\n", ret);
+    ok(GetLastError() == ERROR_INVALID_PARAMETER,
+      "Expected ERROR_INVALID_PARAMETER, got %x\n", GetLastError());
+}
+
+static void init_pointers(void)
+{
+    HMODULE hKernel32 = GetModuleHandleA("kernel32.dll");
+
+#define MAKEFUNC(f) (p##f = (void*)GetProcAddress(hKernel32, #f))
+    MAKEFUNC(GetLongPathNameA);
+    MAKEFUNC(GetLongPathNameW);
+    MAKEFUNC(NeedCurrentDirectoryForExePathA);
+    MAKEFUNC(NeedCurrentDirectoryForExePathW);
+    MAKEFUNC(SearchPathA);
+    MAKEFUNC(SearchPathW);
+#undef MAKEFUNC
+}
+
 START_TEST(path)
 {
     CHAR origdir[MAX_PATH],curdir[MAX_PATH], curDrive, otherDrive;
-    pGetLongPathNameA = (void*)GetProcAddress( GetModuleHandleA("kernel32.dll"),
-                                               "GetLongPathNameA" );
-    pGetLongPathNameW = (void*)GetProcAddress(GetModuleHandleA("kernel32.dll") ,
-                                               "GetLongPathNameW" );
-    pNeedCurrentDirectoryForExePathA =
-        (void*)GetProcAddress( GetModuleHandleA("kernel32.dll"),
-                               "NeedCurrentDirectoryForExePathA" );
-    pNeedCurrentDirectoryForExePathW =
-        (void*)GetProcAddress( GetModuleHandleA("kernel32.dll"),
-                               "NeedCurrentDirectoryForExePathW" );
+
+    init_pointers();
 
     /* Report only once */
     if (!pGetLongPathNameA)
@@ -1474,13 +1605,9 @@ START_TEST(path)
     test_GetShortPathNameW();
     test_GetSystemDirectory();
     test_GetWindowsDirectory();
-    if (pNeedCurrentDirectoryForExePathA)
-    {
-        test_NeedCurrentDirectoryForExePathA();
-    }
-    if (pNeedCurrentDirectoryForExePathW)
-    {
-        test_NeedCurrentDirectoryForExePathW();
-    }
+    test_NeedCurrentDirectoryForExePathA();
+    test_NeedCurrentDirectoryForExePathW();
     test_drive_letter_case();
+    test_SearchPathA();
+    test_SearchPathW();
 }

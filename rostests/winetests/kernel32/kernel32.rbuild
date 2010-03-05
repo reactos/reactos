@@ -17,6 +17,7 @@
 	<file>directory.c</file>
 	<file>drive.c</file>
 	<file>environ.c</file>
+	<file>fiber.c</file>
 	<file>file.c</file>
 	<file>format_msg.c</file>
 	<!-- <file>generated.c</file> -->
