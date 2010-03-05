@@ -45,11 +45,18 @@ static void test_IMalloc(void)
     pMAPIGetDefaultMalloc = (void*)GetProcAddress(hMapi32,
                                                   "MAPIGetDefaultMalloc@0");
     if (!pMAPIGetDefaultMalloc)
+    {
+        win_skip("MAPIGetDefaultMalloc is not available\n");
         return;
+    }
 
     lpMalloc = pMAPIGetDefaultMalloc();
+    ok(lpMalloc != NULL, "Expected MAPIGetDefaultMalloc to return non-NULL\n");
     if (!lpMalloc)
+    {
+        skip("MAPIGetDefaultMalloc failed\n");
         return;
+    }
 
     lpVoid = NULL;
     hRet = IMalloc_QueryInterface(lpMalloc, &IID_IUnknown, &lpVoid);
