@@ -667,6 +667,7 @@ static void test_TxSetText(void)
     ok(memcmp(rettext,settext,SysStringByteLen(rettext)) == 0,
                  "String returned differs\n");
 
+    SysFreeString(rettext);
     IUnknown_Release(txtserv);
     CoTaskMemFree(dummyTextHost);
 }
@@ -739,6 +740,31 @@ static void test_TxGetNaturalSize(void) {
     CoTaskMemFree(dummyTextHost);
 }
 
+static void test_TxDraw(void)
+{
+    HDC tmphdc = GetDC(NULL);
+    DWORD dwAspect = DVASPECT_CONTENT;
+    HDC hicTargetDev = NULL; /* Means "default" device */
+    DVTARGETDEVICE *ptd = NULL;
+    void *pvAspect = NULL;
+    HRESULT result;
+    RECTL client = {0,0,100,100};
+
+    if (!init_texthost())
+        return;
+
+    todo_wine {
+        result = ITextServices_TxDraw(txtserv, dwAspect, 0, pvAspect, ptd,
+                                      tmphdc, hicTargetDev, &client, NULL,
+                                      NULL, NULL, 0, 0);
+        ok(result == S_OK, "TxDraw failed\n");
+    }
+
+    IUnknown_Release(txtserv);
+    CoTaskMemFree(dummyTextHost);
+
+}
+
 START_TEST( txtsrv )
 {
     setup_thiscall_wrappers();
@@ -756,6 +782,7 @@ START_TEST( txtsrv )
         test_TxGetText();
         test_TxSetText();
         test_TxGetNaturalSize();
+        test_TxDraw();
     }
     if (wrapperCodeMem) VirtualFree(wrapperCodeMem, 0, MEM_RELEASE);
 }
