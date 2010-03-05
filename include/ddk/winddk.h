@@ -3772,16 +3772,6 @@ HalAssignSlotResources(
   IN OUT PCM_RESOURCE_LIST  *AllocatedResources);
 
 NTHALAPI
-VOID
-NTAPI
-HalFreeCommonBuffer(
-  IN PADAPTER_OBJECT  AdapterObject,
-  IN ULONG  Length,
-  IN PHYSICAL_ADDRESS  LogicalAddress,
-  IN PVOID  VirtualAddress,
-  IN BOOLEAN  CacheEnabled);
-
-NTHALAPI
 PADAPTER_OBJECT
 NTAPI
 HalGetAdapter(
@@ -3825,12 +3815,6 @@ HalGetInterruptVector(
   IN ULONG  BusInterruptVector,
   OUT PKIRQL  Irql,
   OUT PKAFFINITY  Affinity);
-
-NTHALAPI
-ULONG
-NTAPI
-HalReadDmaCounter(
-  IN PADAPTER_OBJECT  AdapterObject);
 
 NTHALAPI
 ULONG

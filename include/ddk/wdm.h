@@ -10411,6 +10411,39 @@ HalAllocateCommonBuffer(
   commonBuffer = allocateCommonBuffer( DmaAdapter, Length, LogicalAddress, CacheEnabled );
   return commonBuffer;
 }
+
+FORCEINLINE
+VOID
+NTAPI
+HalFreeCommonBuffer(
+  IN PDMA_ADAPTER DmaAdapter,
+  IN ULONG  Length,
+  IN PHYSICAL_ADDRESS  LogicalAddress,
+  IN PVOID  VirtualAddress,
+  IN BOOLEAN  CacheEnabled)
+{
+  PFREE_COMMON_BUFFER freeCommonBuffer;
+
+  freeCommonBuffer = *(DmaAdapter)->DmaOperations->FreeCommonBuffer;
+  ASSERT( freeCommonBuffer != NULL );
+  freeCommonBuffer( DmaAdapter, Length, LogicalAddress, VirtualAddress, CacheEnabled );
+}
+
+FORCEINLINE
+ULONG
+NTAPI
+HalReadDmaCounter(
+  IN PDMA_ADAPTER DmaAdapter)
+{
+  PREAD_DMA_COUNTER readDmaCounter;
+  ULONG counter;
+
+  readDmaCounter = *(DmaAdapter)->DmaOperations->ReadDmaCounter;
+  ASSERT( readDmaCounter != NULL );
+  counter = readDmaCounter( DmaAdapter );
+  return counter;
+}
+
 #endif
 
 #ifdef __cplusplus
