@@ -195,6 +195,8 @@ PinWavePciState(
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
     CPortPinWavePci *Pin;
     PSUBDEVICE_DESCRIPTOR Descriptor;
+    PVOID FirstTag, LastTag;
+    ULONG MappingsRevoked;
     PKSSTATE State = (PKSSTATE)Data;
 
     // get sub device descriptor 
@@ -221,6 +223,35 @@ PinWavePciState(
         {
             // store new state
             Pin->m_State = *State;
+            if (Pin->m_ConnectDetails->Interface.Id == KSINTERFACE_STANDARD_LOOPED_STREAMING && Pin->m_State == KSSTATE_STOP)
+            {
+                // FIXME
+                // complete with successful state
+                Pin->m_IrpQueue->CancelBuffers();
+                while(Pin->m_IrpQueue->GetAcquiredTagRange(&FirstTag, &LastTag))
+                {
+                    Status = Pin->m_Stream->RevokeMappings(FirstTag, LastTag, &MappingsRevoked);
+                    DPRINT("RevokeMappings Status %lx MappingsRevoked: %lu\n", Status, MappingsRevoked);
+                    KeStallExecutionProcessor(10);
+                }
+                Pin->m_Position.PlayOffset = 0;
+                Pin->m_Position.WriteOffset = 0;
+            }
+            else if (Pin->m_State == KSSTATE_STOP)
+            {
+                Pin->m_IrpQueue->CancelBuffers();
+                while(Pin->m_IrpQueue->GetAcquiredTagRange(&FirstTag, &LastTag))
+                {
+                    Status = Pin->m_Stream->RevokeMappings(FirstTag, LastTag, &MappingsRevoked);
+                    DPRINT("RevokeMappings Status %lx MappingsRevoked: %lu\n", Status, MappingsRevoked);
+                    KeStallExecutionProcessor(10);
+                }
+                Pin->m_Position.PlayOffset = 0;
+                Pin->m_Position.WriteOffset = 0;
+            }
+            // store result
+            Irp->IoStatus.Information = sizeof(KSSTATE);
+
         }
         // store result
         Irp->IoStatus.Information = sizeof(KSSTATE);

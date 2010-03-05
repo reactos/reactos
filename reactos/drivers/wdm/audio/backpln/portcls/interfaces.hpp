@@ -351,6 +351,11 @@ DECLARE_INTERFACE_(IIrpQueue, IUnknown)
 
     STDMETHOD_(BOOLEAN, HasLastMappingFailed)(THIS) PURE;
     STDMETHOD_(ULONG, GetCurrentIrpOffset)(THIS) PURE;
+
+    STDMETHOD_(BOOLEAN, GetAcquiredTagRange)(THIS_
+        IN PVOID * FirstTag,
+        IN PVOID * LastTag);
+
 };
 
 
@@ -387,7 +392,11 @@ DECLARE_INTERFACE_(IIrpQueue, IUnknown)
         IN PVOID Tag);                                 \
                                                        \
     STDMETHODIMP_(BOOLEAN) HasLastMappingFailed(THIS); \
-    STDMETHODIMP_(ULONG) GetCurrentIrpOffset(THIS);
+    STDMETHODIMP_(ULONG) GetCurrentIrpOffset(THIS);    \
+    STDMETHODIMP_(BOOLEAN) GetAcquiredTagRange(THIS_      \
+        IN PVOID * FirstTag,                           \
+        IN PVOID * LastTag);
+
 
 
 /*****************************************************************************

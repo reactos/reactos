@@ -539,6 +539,53 @@ CIrpQueue::GetCurrentIrpOffset()
     return m_CurrentOffset;
 }
 
+BOOLEAN
+NTAPI
+CIrpQueue::GetAcquiredTagRange(
+    IN PVOID * FirstTag,
+    IN PVOID * LastTag)
+{
+    KIRQL OldLevel;
+    BOOLEAN Ret = FALSE;
+    PIRP Irp;
+    PLIST_ENTRY CurEntry;
+
+    KeAcquireSpinLock(&m_IrpListLock, &OldLevel);
+
+    if (!IsListEmpty(&m_FreeIrpList))
+    {
+        // get first entry
+        CurEntry = RemoveHeadList(&m_FreeIrpList);
+        // get irp from list entry
+        Irp = (PIRP)CONTAINING_RECORD(CurEntry, IRP, Tail.Overlay.ListEntry);
+
+        // get tag of first acquired buffer
+        *FirstTag = Irp->Tail.Overlay.DriverContext[3];
+
+        // put back irp
+        InsertHeadList(&m_FreeIrpList, &Irp->Tail.Overlay.ListEntry);
+
+        // get last entry
+        CurEntry = RemoveTailList(&m_FreeIrpList);
+        // get irp from list entry
+        Irp = (PIRP)CONTAINING_RECORD(CurEntry, IRP, Tail.Overlay.ListEntry);
+
+        // get tag of first acquired buffer
+        *LastTag = Irp->Tail.Overlay.DriverContext[3];
+
+        // put back irp
+        InsertTailList(&m_FreeIrpList, &Irp->Tail.Overlay.ListEntry);
+
+        // indicate success
+        Ret = TRUE;
+    }
+
+    // release lock
+    KeReleaseSpinLock(&m_IrpListLock, OldLevel);
+    // done
+    return Ret;
+}
+
 NTSTATUS
 NTAPI
 NewIrpQueue(

@@ -347,7 +347,6 @@ PinWaveCyclicAudioPosition(
             DPRINT("Play %lu Write %lu\n", Position->PlayOffset, Position->WriteOffset);
         }
 
-
         Irp->IoStatus.Information = sizeof(KSAUDIO_POSITION);
         return STATUS_SUCCESS;
     }
