@@ -1,6 +1,6 @@
 #pragma once
 
-#include <PSHPACK1.h>
+#include <pshpack1.h>
 
 #define USB_UnConnected_Device_Address 0
 #define USB_UNCONNECTED_ADDRESS(address) ( USB_UnConnected_Device_Address == (address))
@@ -482,13 +482,13 @@ C_ASSERT((sizeof(USBHUBPORTSTATUS) == sizeof(WORD)));
 typedef union _USBHUBPORTSTATUSCHANGE {
   WORD wPortStatusChange;
   struct Bits {
-    BYTE  fConnectionStatusChange:1;
-    BYTE  fEnabledChange:1;
-    BYTE  fSuspendChange:1;
-    BYTE  fOverCurrentChange:1;
-    BYTE  fResetChange:1;
-    BYTE  bReserved1:3;
-    BYTE  bReserved2:8;
+    BYTE fConnectionStatusChange:1;
+    BYTE fEnabledChange:1;
+    BYTE fSuspendChange:1;
+    BYTE fOverCurrentChange:1;
+    BYTE fResetChange:1;
+    BYTE bReserved1:3;
+    BYTE bReserved2:8;
   } Bits;
 } USBHUBPORTSTATUSCHANGE;
 
@@ -674,4 +674,4 @@ typedef struct _USBHUBPORTDATA {
 
 #endif // !defined(MIDL_PASS)
 
-#include <POPPACK.h>
+#include <poppack.h>

@@ -30,6 +30,88 @@ extern "C" {
 
 #pragma pack(push,8)
 
+#ifndef MAX_NUM_PIPES
+#define MAX_NUM_PIPES                     8
+#endif
+
+#define BULKIN_FLAG                       0x80
+
+typedef struct _DRV_VERSION {
+  OUT ULONG major;
+  OUT ULONG minor;
+  OUT ULONG internal;
+} DRV_VERSION, *PDRV_VERSION;
+
+typedef struct _IO_BLOCK {
+  IN ULONG uOffset;
+  IN ULONG uLength;
+  IN OUT PUCHAR pbyData;
+  IN ULONG uIndex;
+} IO_BLOCK, *PIO_BLOCK;
+
+typedef struct _IO_BLOCK_EX {
+  IN ULONG uOffset;
+  IN ULONG uLength;
+  IN OUT PUCHAR pbyData;
+  IN ULONG uIndex;
+  IN UCHAR bRequest;
+  IN UCHAR bmRequestType;
+  IN UCHAR fTransferDirectionIn;
+} IO_BLOCK_EX, *PIO_BLOCK_EX;
+
+typedef struct _CHANNEL_INFO {
+  OUT ULONG EventChannelSize;
+  OUT ULONG uReadDataAlignment;
+  OUT ULONG uWriteDataAlignment;
+}CHANNEL_INFO, *PCHANNEL_INFO;
+
+typedef enum _PIPE_TYPE {
+  EVENT_PIPE,
+  READ_DATA_PIPE,
+  WRITE_DATA_PIPE,
+  ALL_PIPE
+} PIPE_TYPE;
+
+typedef struct _USBSCAN_GET_DESCRIPTOR {
+  IN UCHAR DescriptorType;
+  IN UCHAR Index;
+  IN USHORT LanguageId;
+} USBSCAN_GET_DESCRIPTOR, *PUSBSCAN_GET_DESCRIPTOR;
+
+typedef struct _DEVICE_DESCRIPTOR {
+  OUT USHORT usVendorId;
+  OUT USHORT usProductId;
+  OUT USHORT usBcdDevice;
+  OUT USHORT usLanguageId;
+} DEVICE_DESCRIPTOR, *PDEVICE_DESCRIPTOR;
+
+typedef enum _RAW_PIPE_TYPE {
+  USBSCAN_PIPE_CONTROL,
+  USBSCAN_PIPE_ISOCHRONOUS,
+  USBSCAN_PIPE_BULK,
+  USBSCAN_PIPE_INTERRUPT
+} RAW_PIPE_TYPE;
+
+typedef struct _USBSCAN_PIPE_INFORMATION {
+  USHORT MaximumPacketSize;
+  UCHAR EndpointAddress;
+  UCHAR Interval;
+  RAW_PIPE_TYPE PipeType;
+} USBSCAN_PIPE_INFORMATION, *PUSBSCAN_PIPE_INFORMATION;
+
+typedef struct _USBSCAN_PIPE_CONFIGURATION {
+  OUT ULONG NumberOfPipes;
+  OUT USBSCAN_PIPE_INFORMATION PipeInfo[MAX_NUM_PIPES];
+} USBSCAN_PIPE_CONFIGURATION, *PUSBSCAN_PIPE_CONFIGURATION;
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+typedef struct _USBSCAN_TIMEOUT {
+  IN ULONG TimeoutRead;
+  IN ULONG TimeoutWrite;
+  IN ULONG TimeoutEvent;
+} USBSCAN_TIMEOUT, *PUSBSCAN_TIMEOUT;
+#endif
+
 #define FILE_DEVICE_USB_SCAN              0x8000
 #define IOCTL_INDEX                       0x0800
 
@@ -70,88 +152,6 @@ extern "C" {
 #define IOCTL_SET_TIMEOUT \
   CTL_CODE(FILE_DEVICE_USB_SCAN, IOCTL_INDEX + 11,METHOD_BUFFERED,FILE_ANY_ACCESS)
 #endif
-
-#ifndef MAX_NUM_PIPES
-#define MAX_NUM_PIPES                     8
-#endif
-
-#define BULKIN_FLAG                       0x80
-
-typedef struct _CHANNEL_INFO {
-  OUT ULONG  EventChannelSize;
-  OUT ULONG  uReadDataAlignment;
-  OUT ULONG  uWriteDataAlignment;
-}CHANNEL_INFO, *PCHANNEL_INFO;
-
-typedef struct _DEVICE_DESCRIPTOR {
-  OUT USHORT  usVendorId;
-  OUT USHORT  usProductId;
-  OUT USHORT  usBcdDevice;
-  OUT USHORT  usLanguageId;
-} DEVICE_DESCRIPTOR, *PDEVICE_DESCRIPTOR;
-
-typedef struct _DRV_VERSION {
-  OUT ULONG  major;
-  OUT ULONG  minor;
-  OUT ULONG  internal;
-} DRV_VERSION, *PDRV_VERSION;
-
-typedef struct _IO_BLOCK {
-  IN ULONG  uOffset;
-  IN ULONG  uLength;
-  IN OUT PUCHAR  pbyData;
-  IN ULONG  uIndex;
-} IO_BLOCK, *PIO_BLOCK;
-
-typedef struct _IO_BLOCK_EX {
-  IN  ULONG  uOffset;
-  IN  ULONG  uLength;
-  IN OUT PUCHAR  pbyData;
-  IN  ULONG  uIndex;
-  IN  UCHAR  bRequest;
-  IN  UCHAR  bmRequestType;
-  IN  UCHAR  fTransferDirectionIn;
-} IO_BLOCK_EX, *PIO_BLOCK_EX;
-
-typedef struct _USBSCAN_GET_DESCRIPTOR {
-  IN UCHAR  DescriptorType;
-  IN UCHAR  Index;
-  IN USHORT  LanguageId;
-} USBSCAN_GET_DESCRIPTOR, *PUSBSCAN_GET_DESCRIPTOR;
-
-typedef enum _RAW_PIPE_TYPE {
-  USBSCAN_PIPE_CONTROL,
-  USBSCAN_PIPE_ISOCHRONOUS,
-  USBSCAN_PIPE_BULK,
-  USBSCAN_PIPE_INTERRUPT
-} RAW_PIPE_TYPE;
-
-typedef struct _USBSCAN_PIPE_INFORMATION {
-  USHORT  MaximumPacketSize;
-  UCHAR  EndpointAddress;
-  UCHAR  Interval;
-  RAW_PIPE_TYPE  PipeType;
-} USBSCAN_PIPE_INFORMATION, *PUSBSCAN_PIPE_INFORMATION;
-
-typedef struct _USBSCAN_PIPE_CONFIGURATION {
-  OUT ULONG  NumberOfPipes;
-  OUT USBSCAN_PIPE_INFORMATION  PipeInfo[MAX_NUM_PIPES];
-} USBSCAN_PIPE_CONFIGURATION, *PUSBSCAN_PIPE_CONFIGURATION;
-
-#if (NTDDI_VERSION >= NTDDI_WINXP)
-typedef struct _USBSCAN_TIMEOUT {
-  IN ULONG  TimeoutRead;
-  IN ULONG  TimeoutWrite;
-  IN ULONG  TimeoutEvent;
-} USBSCAN_TIMEOUT, *PUSBSCAN_TIMEOUT;
-#endif
-
-typedef enum _PIPE_TYPE {
-  EVENT_PIPE,
-  READ_DATA_PIPE,
-  WRITE_DATA_PIPE,
-  ALL_PIPE
-} PIPE_TYPE;
 
 #pragma pack(pop)
 
