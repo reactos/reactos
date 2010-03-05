@@ -550,6 +550,7 @@ static void propset_private_tests(void)
                               NULL, 0, &data, sizeof(data), &bytes);
         ok(rc==DS_OK, "Couldn't enumerate: 0x%x\n",rc);
     }
+    IKsPropertySet_Release(pps);
 }
 
 static BOOL WINAPI dsenum_callback(LPGUID lpGuid, LPCSTR lpcstrDescription,

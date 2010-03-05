@@ -54,7 +54,7 @@ static void IDirectSound8_test(LPDIRECTSOUND8 dso, BOOL initialized,
     IUnknown * unknown;
     IDirectSound * ds;
     IDirectSound8 * ds8;
-    DWORD speaker_config, new_speaker_config;
+    DWORD speaker_config, new_speaker_config, ref_speaker_config;
     DWORD certified;
 
     /* Try to Query for objects */
@@ -148,11 +148,17 @@ static void IDirectSound8_test(LPDIRECTSOUND8 dso, BOOL initialized,
 
     rc=IDirectSound8_GetSpeakerConfig(dso,&speaker_config);
     ok(rc==DS_OK,"IDirectSound8_GetSpeakerConfig() failed: %08x\n", rc);
+    ref_speaker_config = speaker_config;
 
     speaker_config = DSSPEAKER_COMBINED(DSSPEAKER_STEREO,
                                         DSSPEAKER_GEOMETRY_WIDE);
-    rc=IDirectSound8_SetSpeakerConfig(dso,speaker_config);
-    ok(rc==DS_OK,"IDirectSound8_SetSpeakerConfig() failed: %08x\n", rc);
+    if (speaker_config == ref_speaker_config)
+        speaker_config = DSSPEAKER_COMBINED(DSSPEAKER_STEREO,
+                                            DSSPEAKER_GEOMETRY_NARROW);
+    if(rc==DS_OK) {
+        rc=IDirectSound8_SetSpeakerConfig(dso,speaker_config);
+        ok(rc==DS_OK,"IDirectSound8_SetSpeakerConfig() failed: %08x\n", rc);
+    }
     if (rc==DS_OK) {
         rc=IDirectSound8_GetSpeakerConfig(dso,&new_speaker_config);
         ok(rc==DS_OK,"IDirectSound8_GetSpeakerConfig() failed: %08x\n", rc);
@@ -160,6 +166,7 @@ static void IDirectSound8_test(LPDIRECTSOUND8 dso, BOOL initialized,
                trace("IDirectSound8_GetSpeakerConfig() failed to set speaker "
                "config: expected 0x%08x, got 0x%08x\n",
                speaker_config,new_speaker_config);
+        IDirectSound8_SetSpeakerConfig(dso,ref_speaker_config);
     }
 
     rc=IDirectSound8_VerifyCertification(dso, &certified);
