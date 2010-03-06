@@ -97,6 +97,11 @@ typedef enum _TIMER_TYPE {
     SynchronizationTimer
 } TIMER_TYPE;
 
+typedef enum _WAIT_TYPE {
+  WaitAll,
+  WaitAny
+} WAIT_TYPE;
+
 //
 // FIXME
 // We should use the -fms-extensions compiler flag for gcc,
@@ -371,6 +376,9 @@ typedef USHORT FSHORT;
 typedef ULONG FLONG;
 typedef UCHAR BOOLEAN;
 typedef BOOLEAN *PBOOLEAN;
+
+typedef ULONG LOGICAL;
+typedef ULONG *PLOGICAL;
 
 //
 // Signed Types

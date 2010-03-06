@@ -78,7 +78,6 @@ typedef struct _OBJECT_TYPE *POBJECT_TYPE;
 typedef struct _HAL_DISPATCH_TABLE *PHAL_DISPATCH_TABLE;
 typedef struct _HAL_PRIVATE_DISPATCH_TABLE *PHAL_PRIVATE_DISPATCH_TABLE;
 typedef struct _DEVICE_HANDLER_OBJECT *PDEVICE_HANDLER_OBJECT;
-typedef struct _BUS_HANDLER *PBUS_HANDLER;
 typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT; 
 typedef struct _CALLBACK_OBJECT *PCALLBACK_OBJECT;
 typedef struct _ETHREAD *PETHREAD;
@@ -284,6 +283,8 @@ InterlockedAdd64(
 typedef UCHAR KIRQL, *PKIRQL;
 typedef UCHAR KPROCESSOR_MODE;
 typedef LONG KPRIORITY;
+
+typedef ULONG EXECUTION_STATE;
 
 typedef enum _MODE {
   KernelMode,
@@ -900,6 +901,28 @@ typedef struct _KTIMER {
   #endif
   ULONG Period;
 } KTIMER, *PKTIMER, *RESTRICTED_POINTER PRKTIMER;
+
+typedef BOOLEAN
+(DDKAPI *PKSYNCHRONIZE_ROUTINE)(
+  IN PVOID  SynchronizeContext);
+
+typedef enum _POOL_TYPE {
+  NonPagedPool,
+  PagedPool,
+  NonPagedPoolMustSucceed,
+  DontUseThisType,
+  NonPagedPoolCacheAligned,
+  PagedPoolCacheAligned,
+  NonPagedPoolCacheAlignedMustS,
+  MaxPoolType,
+  NonPagedPoolSession = 32,
+  PagedPoolSession,
+  NonPagedPoolMustSucceedSession,
+  DontUseThisTypeSession,
+  NonPagedPoolCacheAlignedSession,
+  PagedPoolCacheAlignedSession,
+  NonPagedPoolCacheAlignedMustSSession
+} POOL_TYPE;
 
 typedef enum _ALTERNATIVE_ARCHITECTURE_TYPE
 {
@@ -2019,7 +2042,7 @@ NTKERNELAPI
 LOGICAL
 NTAPI
 MmIsDriverVerifying(
-  IN PDRIVER_OBJECT  DriverObject);
+  IN struct _DRIVER_OBJECT *DriverObject);
 
 NTKERNELAPI
 PVOID
@@ -2063,7 +2086,7 @@ NTKERNELAPI
 VOID
 NTAPI
 MmProbeAndLockPages(
-  IN OUT PMDLX  MemoryDescriptorList,
+  IN OUT PMDL  MemoryDescriptorList,
   IN KPROCESSOR_MODE  AccessMode,
   IN LOCK_OPERATION  Operation);
 
@@ -2096,7 +2119,7 @@ NTKERNELAPI
 VOID
 NTAPI
 MmUnlockPages(
-  IN OUT PMDLX  MemoryDescriptorList);
+  IN OUT PMDL  MemoryDescriptorList);
 
 NTKERNELAPI
 VOID
@@ -2165,7 +2188,7 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 MmProtectMdlSystemAddress(
-  IN PMDLX  MemoryDescriptorList,
+  IN PMDL  MemoryDescriptorList,
   IN ULONG  NewProtect);
 
 NTKERNELAPI
@@ -2174,7 +2197,7 @@ NTAPI
 MmUnmapReservedMapping(
   IN PVOID  BaseAddress,
   IN ULONG  PoolTag,
-  IN PMDLX  MemoryDescriptorList);
+  IN PMDL  MemoryDescriptorList);
 
 #endif
 
@@ -2529,6 +2552,24 @@ typedef enum _DEVICE_POWER_STATE {
     PowerDeviceMaximum
 } DEVICE_POWER_STATE, *PDEVICE_POWER_STATE;
 
+typedef union _POWER_STATE {
+  SYSTEM_POWER_STATE  SystemState;
+  DEVICE_POWER_STATE  DeviceState;
+} POWER_STATE, *PPOWER_STATE;
+
+typedef enum _POWER_STATE_TYPE {
+  SystemPowerState = 0,
+  DevicePowerState
+} POWER_STATE_TYPE, *PPOWER_STATE_TYPE;
+
+typedef VOID
+(DDKAPI *PREQUEST_POWER_COMPLETE)(
+  IN struct _DEVICE_OBJECT  *DeviceObject,
+  IN UCHAR  MinorFunction,
+  IN POWER_STATE  PowerState,
+  IN PVOID  Context,
+  IN struct _IO_STATUS_BLOCK  *IoStatus);
+
 /******************************************************************************
  *                            Power Management Support Functions              *
  ******************************************************************************/
@@ -2541,14 +2582,14 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 PoCallDriver(
-  IN PDEVICE_OBJECT  DeviceObject,
-  IN OUT PIRP  Irp);
+  IN struct _DEVICE_OBJECT  *DeviceObject,
+  IN OUT struct _IRP  *Irp);
 
 NTKERNELAPI
 PULONG
 NTAPI
 PoRegisterDeviceForIdleDetection(
-  IN PDEVICE_OBJECT  DeviceObject,
+  IN struct _DEVICE_OBJECT  *DeviceObject,
   IN ULONG  ConservationIdleTime,
   IN ULONG  PerformanceIdleTime,
   IN DEVICE_POWER_STATE  State);
@@ -2564,18 +2605,18 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 PoRequestPowerIrp(
-  IN PDEVICE_OBJECT  DeviceObject,
+  IN struct _DEVICE_OBJECT  *DeviceObject,
   IN UCHAR  MinorFunction,
   IN POWER_STATE  PowerState,
   IN PREQUEST_POWER_COMPLETE  CompletionFunction OPTIONAL,
   IN PVOID  Context OPTIONAL,
-  OUT PIRP  *Irp OPTIONAL);
+  OUT struct _IRP  *Irp OPTIONAL);
 
 NTKERNELAPI
 POWER_STATE
 NTAPI
 PoSetPowerState(
-  IN PDEVICE_OBJECT  DeviceObject,
+  IN struct _DEVICE_OBJECT  *DeviceObject,
   IN POWER_STATE_TYPE  Type,
   IN POWER_STATE  State);
 
@@ -2589,7 +2630,7 @@ NTKERNELAPI
 VOID
 NTAPI
 PoStartNextPowerIrp(
-  IN OUT PIRP  Irp);
+  IN OUT struct _IRP  *Irp);
 
 NTKERNELAPI
 VOID
@@ -5128,16 +5169,6 @@ typedef enum _CREATE_FILE_TYPE {
 #define IO_REPARSE                      0x0
 #define IO_REMOUNT                      0x1
 
-typedef union _POWER_STATE {
-  SYSTEM_POWER_STATE  SystemState;
-  DEVICE_POWER_STATE  DeviceState;
-} POWER_STATE, *PPOWER_STATE;
-
-typedef enum _POWER_STATE_TYPE {
-  SystemPowerState = 0,
-  DevicePowerState
-} POWER_STATE_TYPE, *PPOWER_STATE_TYPE;
-
 typedef struct _IO_STATUS_BLOCK {
   _ANONYMOUS_UNION union {
     NTSTATUS  Status;
@@ -5145,14 +5176,6 @@ typedef struct _IO_STATUS_BLOCK {
   } DUMMYUNIONNAME;
   ULONG_PTR  Information;
 } IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
-
-typedef VOID
-(DDKAPI *PREQUEST_POWER_COMPLETE)(
-  IN PDEVICE_OBJECT  DeviceObject,
-  IN UCHAR  MinorFunction,
-  IN POWER_STATE  PowerState,
-  IN PVOID  Context,
-  IN PIO_STATUS_BLOCK  IoStatus);
 
 typedef struct _PCI_SLOT_NUMBER {
   union {
@@ -6705,10 +6728,6 @@ typedef VOID
 (DDKAPI *PIO_TIMER_ROUTINE)(
   IN struct _DEVICE_OBJECT  *DeviceObject,
   IN PVOID  Context);
-
-typedef BOOLEAN
-(DDKAPI *PKSYNCHRONIZE_ROUTINE)(
-  IN PVOID  SynchronizeContext);
 
 typedef struct _IO_SECURITY_CONTEXT {
   PSECURITY_QUALITY_OF_SERVICE  SecurityQos;
@@ -8675,24 +8694,6 @@ InterlockedPushEntrySList(
 #define PORT_MAXIMUM_MESSAGE_LENGTH 256
 #endif
 
-typedef enum _POOL_TYPE {
-    NonPagedPool,
-    PagedPool,
-    NonPagedPoolMustSucceed,
-    DontUseThisType,
-    NonPagedPoolCacheAligned,
-    PagedPoolCacheAligned,
-    NonPagedPoolCacheAlignedMustS,
-    MaxPoolType,
-    NonPagedPoolSession = 32,
-    PagedPoolSession,
-    NonPagedPoolMustSucceedSession,
-    DontUseThisTypeSession,
-    NonPagedPoolCacheAlignedSession,
-    PagedPoolCacheAlignedSession,
-    NonPagedPoolCacheAlignedMustSSession
-} POOL_TYPE;
-
 typedef enum _SUITE_TYPE {
     SmallBusiness,
     Enterprise,
@@ -10122,9 +10123,6 @@ typedef enum {
     LT_DONT_CARE,
     LT_LOWEST_LATENCY
 } LATENCY_TIME;
-
-
-typedef ULONG EXECUTION_STATE;
 
 /* Constants */
 #define NtCurrentProcess() ( (HANDLE)(LONG_PTR) -1 )

@@ -79,17 +79,17 @@ struct _KPRCB;
 struct _KTSS;
 struct _DRIVE_LAYOUT_INFORMATION_EX;
 struct _LOADER_PARAMETER_BLOCK;
+struct _BUS_HANDLER;
 
+typedef struct _BUS_HANDLER *PBUS_HANDLER;
 
 #if 1
 /* FIXME: Unknown definitions */
 struct _SET_PARTITION_INFORMATION_EX;
-typedef ULONG WAIT_TYPE;
 #define WaitAll 0
 #define WaitAny 1
 typedef HANDLE TRACEHANDLE;
 typedef PVOID PWMILIB_CONTEXT;
-typedef ULONG LOGICAL;
 #endif
 
 /*
@@ -3042,13 +3042,6 @@ MmAllocateNonCachedMemory(
   IN ULONG  NumberOfBytes);
 
 NTKERNELAPI
-BOOLEAN
-NTAPI
-MmFlushImageSection(
-  IN PSECTION_OBJECT_POINTERS  SectionObjectPointer,
-  IN MMFLUSH_TYPE  FlushType);
-
-NTKERNELAPI
 VOID
 NTAPI
 MmFreeNonCachedMemory(
@@ -3903,7 +3896,7 @@ NTKERNELAPI
 INTERLOCKED_RESULT
 FASTCALL
 Exfi386InterlockedIncrementLong(
-  IN PLONG  Addend);
+  IN OUT PLONG  volatile Addend);
 
 NTKERNELAPI
 INTERLOCKED_RESULT

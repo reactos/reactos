@@ -47,7 +47,7 @@ extern "C" {
 #include <ntnls.h>
 #include <ntstatus.h>
 #include <bugcodes.h>
-#include <ntiologc.h>
+/* FIXME : #include <ntiologc.h> */
 
 #ifndef FlagOn
 #define FlagOn(_F,_SF)        ((_F) & (_SF))
@@ -64,17 +64,6 @@ extern "C" {
 #ifndef ClearFlag
 #define ClearFlag(_F,_SF)     ((_F) &= ~(_SF))
 #endif
-
-typedef struct _BUS_HANDLER *PBUS_HANDLER;
-typedef struct _CALLBACK_OBJECT *PCALLBACK_OBJECT;
-typedef struct _DEVICE_HANDLER_OBJECT *PDEVICE_HANDLER_OBJECT;
-typedef struct _IO_TIMER *PIO_TIMER;
-typedef struct _KINTERRUPT *PKINTERRUPT;
-typedef struct _KPROCESS *PKPROCESS ,*PRKPROCESS, *PEPROCESS;
-typedef struct _KTHREAD *PKTHREAD, *PRKTHREAD, *PETHREAD;
-typedef struct _OBJECT_TYPE *POBJECT_TYPE;
-typedef struct _PEB *PPEB;
-typedef struct _ACL *PACL;
 
 #define PsGetCurrentProcess IoGetCurrentProcess
 
@@ -1032,7 +1021,8 @@ typedef struct _TOKEN_PRIVILEGES {
 	ULONG PrivilegeCount;
 	LUID_AND_ATTRIBUTES Privileges[ANYSIZE_ARRAY];
 } TOKEN_PRIVILEGES,*PTOKEN_PRIVILEGES,*LPTOKEN_PRIVILEGES;
-typedef enum tagTOKEN_TYPE {
+
+typedef enum _TOKEN_TYPE {
 	TokenPrimary = 1,
 	TokenImpersonation
 } TOKEN_TYPE,*PTOKEN_TYPE;
@@ -6393,5 +6383,3 @@ ZwYieldExecution (
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* _NTIFS_ */
