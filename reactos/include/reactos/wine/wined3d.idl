@@ -26,6 +26,7 @@
 import "unknwn.idl";
 
 cpp_quote("#if 0")
+typedef HANDLE HMONITOR;
 
 typedef struct _RGNDATAHEADER
 {
@@ -133,6 +134,10 @@ typedef enum _WINED3DDEGREETYPE
     WINED3DDEGREE_QUINTIC                   = 5,
     WINED3DDEGREE_FORCE_DWORD               = 0x7fffffff
 } WINED3DDEGREETYPE;
+
+#define WINEMAKEFOURCC(ch0, ch1, ch2, ch3) \
+        ((unsigned long)(unsigned char)(ch0) | ((unsigned long)(unsigned char)(ch1) << 8) | \
+        ((unsigned long)(unsigned char)(ch2) << 16) | ((unsigned long)(unsigned char)(ch3) << 24))
 
 typedef enum _WINED3DFORMAT
 {
@@ -253,21 +258,21 @@ typedef enum _WINED3DFORMAT
     WINED3DFMT_B8G8R8A8_UNORM,
     WINED3DFMT_B8G8R8X8_UNORM,
     /* FOURCC formats. */
-    WINED3DFMT_UYVY                         = 0x59565955, /* UYVY */
-    WINED3DFMT_YUY2                         = 0x32595559, /* YUY2 */
-    WINED3DFMT_YV12                         = 0x32315659, /* YV12 */
-    WINED3DFMT_DXT1                         = 0x31545844, /* DXT1 */
-    WINED3DFMT_DXT2                         = 0x32545844, /* DXT2 */
-    WINED3DFMT_DXT3                         = 0x33545844, /* DXT3 */
-    WINED3DFMT_DXT4                         = 0x34545844, /* DXT4 */
-    WINED3DFMT_DXT5                         = 0x35545844, /* DXT5 */
-    WINED3DFMT_MULTI2_ARGB8                 = 0x3154454d, /* MET1 */
-    WINED3DFMT_G8R8_G8B8                    = 0x42475247, /* GRGB */
-    WINED3DFMT_R8G8_B8G8                    = 0x47424752, /* RGBG */
-    WINED3DFMT_ATI2N                        = 0x32495441, /* ATI2 */
-    WINED3DFMT_INST                         = 0x54534e49, /* INST */
-    WINED3DFMT_NVHU                         = 0x5548564e, /* NVHU */
-    WINED3DFMT_NVHS                         = 0x5348564e, /* NVHS */
+    WINED3DFMT_UYVY                         = WINEMAKEFOURCC('U','Y','V','Y'),
+    WINED3DFMT_YUY2                         = WINEMAKEFOURCC('Y','U','Y','2'),
+    WINED3DFMT_YV12                         = WINEMAKEFOURCC('Y','V','1','2'),
+    WINED3DFMT_DXT1                         = WINEMAKEFOURCC('D','X','T','1'),
+    WINED3DFMT_DXT2                         = WINEMAKEFOURCC('D','X','T','2'),
+    WINED3DFMT_DXT3                         = WINEMAKEFOURCC('D','X','T','3'),
+    WINED3DFMT_DXT4                         = WINEMAKEFOURCC('D','X','T','4'),
+    WINED3DFMT_DXT5                         = WINEMAKEFOURCC('D','X','T','5'),
+    WINED3DFMT_MULTI2_ARGB8                 = WINEMAKEFOURCC('M','E','T','1'),
+    WINED3DFMT_G8R8_G8B8                    = WINEMAKEFOURCC('G','R','G','B'),
+    WINED3DFMT_R8G8_B8G8                    = WINEMAKEFOURCC('R','G','B','G'),
+    WINED3DFMT_ATI2N                        = WINEMAKEFOURCC('A','T','I','2'),
+    WINED3DFMT_INST                         = WINEMAKEFOURCC('I','N','S','T'),
+    WINED3DFMT_NVHU                         = WINEMAKEFOURCC('N','V','H','U'),
+    WINED3DFMT_NVHS                         = WINEMAKEFOURCC('N','V','H','S'),
 
     WINED3DFMT_FORCE_DWORD = 0xffffffff
 } WINED3DFORMAT;

@@ -236,7 +236,16 @@ IDirect3DVertexBufferImpl_Lock(IDirect3DVertexBuffer7 *iface,
     IDirect3DVertexBufferImpl *This = (IDirect3DVertexBufferImpl *)iface;
     WINED3DBUFFER_DESC Desc;
     HRESULT hr;
+    DWORD wined3d_flags = 0;
     TRACE("(%p)->(%08x,%p,%p)\n", This, Flags, Data, Size);
+
+    /* Writeonly: Pointless. Event: Unsupported by native according to the sdk
+     * nosyslock: Not applicable
+     */
+    if(!(Flags & DDLOCK_WAIT))          wined3d_flags |= WINED3DLOCK_DONOTWAIT;
+    if(Flags & DDLOCK_READONLY)         wined3d_flags |= WINED3DLOCK_READONLY;
+    if(Flags & DDLOCK_NOOVERWRITE)      wined3d_flags |= WINED3DLOCK_NOOVERWRITE;
+    if(Flags & DDLOCK_DISCARDCONTENTS)  wined3d_flags |= WINED3DLOCK_DISCARD;
 
     EnterCriticalSection(&ddraw_cs);
     if(Size)
@@ -253,7 +262,7 @@ IDirect3DVertexBufferImpl_Lock(IDirect3DVertexBuffer7 *iface,
     }
 
     hr = IWineD3DBuffer_Map(This->wineD3DVertexBuffer, 0 /* OffsetToLock */,
-            0 /* SizeToLock, 0 == Full lock */, (BYTE **)Data, Flags);
+            0 /* SizeToLock, 0 == Full lock */, (BYTE **)Data, wined3d_flags);
     LeaveCriticalSection(&ddraw_cs);
     return hr;
 }

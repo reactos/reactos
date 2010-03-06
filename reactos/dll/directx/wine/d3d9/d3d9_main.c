@@ -33,7 +33,7 @@ void WINAPI DebugSetMute(void) {
     /* nothing to do */
 }
 
-IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion) {
+IDirect3D9* WINAPI DECLSPEC_HOTPATCH Direct3DCreate9(UINT SDKVersion) {
     IDirect3D9Impl* object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IDirect3D9Impl));
 
     object->lpVtbl = &Direct3D9_Vtbl;
@@ -53,7 +53,7 @@ IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion) {
     return (IDirect3D9*) object;
 }
 
-HRESULT WINAPI Direct3DCreate9Ex(UINT SDKVersion, IDirect3D9Ex **direct3d9ex) {
+HRESULT WINAPI DECLSPEC_HOTPATCH Direct3DCreate9Ex(UINT SDKVersion, IDirect3D9Ex **direct3d9ex) {
     IDirect3D9 *ret;
     IDirect3D9Impl* object;
 

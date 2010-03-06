@@ -275,18 +275,6 @@ HRESULT surface_init(IDirect3DSurface8Impl *surface, IDirect3DDevice8Impl *devic
         UINT width, UINT height, D3DFORMAT format, BOOL lockable, BOOL discard, UINT level,
         DWORD usage, D3DPOOL pool, D3DMULTISAMPLE_TYPE multisample_type, DWORD multisample_quality) DECLSPEC_HIDDEN;
 
-/* ------------------ */
-/* IDirect3DResource8 */
-/* ------------------ */
-
-/*****************************************************************************
- * Predeclare the interface implementation structures
- */
-extern const IDirect3DResource8Vtbl Direct3DResource8_Vtbl DECLSPEC_HIDDEN;
-
-/*****************************************************************************
- * IDirect3DResource8 implementation structure
- */
 struct IDirect3DResource8Impl
 {
     /* IUnknown fields */

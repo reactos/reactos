@@ -627,8 +627,7 @@ static void nvts_enable(IWineD3DDevice *iface, BOOL enable) {
     LEAVE_GL();
 }
 
-static void nvrc_fragment_get_caps(WINED3DDEVTYPE devtype,
-        const struct wined3d_gl_info *gl_info, struct fragment_caps *pCaps)
+static void nvrc_fragment_get_caps(const struct wined3d_gl_info *gl_info, struct fragment_caps *pCaps)
 {
     pCaps->TextureOpCaps =  WINED3DTEXOPCAPS_ADD                        |
                             WINED3DTEXOPCAPS_ADDSIGNED                  |
@@ -671,7 +670,7 @@ static void nvrc_fragment_get_caps(WINED3DDEVTYPE devtype,
             WINED3DTEXOPCAPS_PREMODULATE */
 #endif
 
-    pCaps->MaxTextureBlendStages = gl_info->limits.texture_stages;
+    pCaps->MaxTextureBlendStages = min(MAX_TEXTURES, gl_info->limits.general_combiners);
     pCaps->MaxSimultaneousTextures = gl_info->limits.textures;
 
     pCaps->PrimitiveMiscCaps |=  WINED3DPMISCCAPS_TSSARGTEMP;
