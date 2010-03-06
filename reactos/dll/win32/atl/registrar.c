@@ -758,39 +758,44 @@ static HRESULT do_register_dll_server(IRegistrar *pRegistrar, LPCOLESTR wszDll,
                                       LPCOLESTR wszId, BOOL do_register,
                                       const struct _ATL_REGMAP_ENTRY* pMapEntries)
 {
-    WCHAR buf[MAX_PATH];
+    IRegistrar *registrar;
     HRESULT hres;
     const struct _ATL_REGMAP_ENTRY *pMapEntry;
 
     static const WCHAR wszModule[] = {'M','O','D','U','L','E',0};
     static const WCHAR wszRegistry[] = {'R','E','G','I','S','T','R','Y',0};
-    static const WCHAR wszCLSID_ATLRegistrar[] =
-            {'C','L','S','I','D','_','A','T','L','R','e','g','i','s','t','r','a','r',0};
 
-    if (!pRegistrar)
-        Registrar_create(NULL, &IID_IRegistrar, (void**)&pRegistrar);
+    if (pRegistrar)
+        registrar = pRegistrar;
+    else
+        Registrar_create(NULL, &IID_IRegistrar, (void**)&registrar);
 
-    IRegistrar_AddReplacement(pRegistrar, wszModule, wszDll);
+    IRegistrar_AddReplacement(registrar, wszModule, wszDll);
 
     for (pMapEntry = pMapEntries; pMapEntry && pMapEntry->szKey; pMapEntry++)
-        IRegistrar_AddReplacement(pRegistrar, pMapEntry->szKey, pMapEntry->szData);
-
-    StringFromGUID2(&CLSID_ATLRegistrar, buf, sizeof(buf)/sizeof(buf[0]));
-    IRegistrar_AddReplacement(pRegistrar, wszCLSID_ATLRegistrar, buf);
+        IRegistrar_AddReplacement(registrar, pMapEntry->szKey, pMapEntry->szData);
 
     if(do_register)
-        hres = IRegistrar_ResourceRegisterSz(pRegistrar, wszDll, wszId, wszRegistry);
+        hres = IRegistrar_ResourceRegisterSz(registrar, wszDll, wszId, wszRegistry);
     else
-        hres = IRegistrar_ResourceUnregisterSz(pRegistrar, wszDll, wszId, wszRegistry);
+        hres = IRegistrar_ResourceUnregisterSz(registrar, wszDll, wszId, wszRegistry);
 
-    IRegistrar_Release(pRegistrar);
+    if(registrar != pRegistrar)
+        IRegistrar_Release(registrar);
     return hres;
 }
 
 static HRESULT do_register_server(BOOL do_register)
 {
-    static const WCHAR wszDll[] = {'a','t','l','.','d','l','l',0};
-    return do_register_dll_server(NULL, wszDll, MAKEINTRESOURCEW(101), do_register, NULL);
+    static const WCHAR CLSID_ATLRegistrarW[] =
+            {'C','L','S','I','D','_','A','T','L','R','e','g','i','s','t','r','a','r',0};
+    static const WCHAR atl_dllW[] = {'a','t','l','.','d','l','l',0};
+
+    WCHAR clsid_str[40];
+    const struct _ATL_REGMAP_ENTRY reg_map[] = {{CLSID_ATLRegistrarW, clsid_str}, {NULL,NULL}};
+
+    StringFromGUID2(&CLSID_ATLRegistrar, clsid_str, sizeof(clsid_str)/sizeof(WCHAR));
+    return do_register_dll_server(NULL, atl_dllW, MAKEINTRESOURCEW(101), do_register, reg_map);
 }
 
 /***********************************************************************
