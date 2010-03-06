@@ -250,4 +250,7 @@
 	<directory name="winmm">
 		<xi:include href="winmm/winmm.rbuild" />
 	</directory>
+	<directory name="xmllite">
+		<xi:include href="xmllite/xmllite.rbuild" />
+	</directory>
 </group>
