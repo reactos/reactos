@@ -668,6 +668,7 @@ typedef enum _INTERFACE_TYPE {
   InternalPowerBus,
   PNPISABus,
   PNPBus,
+  Vmcs,
   MaximumInterfaceType
 } INTERFACE_TYPE, *PINTERFACE_TYPE;
 
@@ -833,31 +834,75 @@ typedef struct _KDEVICE_QUEUE {
 
 } KDEVICE_QUEUE, *PKDEVICE_QUEUE, *RESTRICTED_POINTER PRKDEVICE_QUEUE;
 
-typedef struct _DISPATCHER_HEADER
-{
-    __GNU_EXTENSION union
-    {
-        __GNU_EXTENSION struct
-        {
+#define TIMER_EXPIRED_INDEX_BITS        6
+#define TIMER_PROCESSOR_INDEX_BITS      5
+typedef struct _DISPATCHER_HEADER {
+    _ANONYMOUS_UNION union {
+        _ANONYMOUS_STRUCT struct {
             UCHAR Type;
-            __GNU_EXTENSION union
-            {
-                UCHAR Absolute;
+            _ANONYMOUS_UNION union {
+                _ANONYMOUS_UNION union {
+                    UCHAR TimerControlFlags;
+                    _ANONYMOUS_STRUCT struct {
+                        UCHAR Absolute:1;
+                        UCHAR Coalescable:1;
+                        UCHAR KeepShifting:1;
+                        UCHAR EncodedTolerableDelay:5;
+                    } DUMMYSTRUCTNAME;
+                } DUMMYUNIONNAME;
+                UCHAR Abandoned;
+#if (NTDDI_VERSION < NTDDI_WIN7)
                 UCHAR NpxIrql;
-            };
-            __GNU_EXTENSION union
-            {
+#endif
+                BOOLEAN Signalling;
+            } DUMMYUNIONNAME;
+            _ANONYMOUS_UNION union {
+                _ANONYMOUS_UNION union {
+                    UCHAR ThreadControlFlags;
+                    _ANONYMOUS_STRUCT struct {
+                        UCHAR CpuThrottled:1;
+                        UCHAR CycleProfiling:1;
+                        UCHAR CounterProfiling:1;
+                        UCHAR Reserved:5;
+                    } DUMMYSTRUCTNAME;
+                } DUMMYUNIONNAME;
                 UCHAR Size;
                 UCHAR Hand;
-            };
-            __GNU_EXTENSION union
-            {
+            } DUMMYUNIONNAME2;
+            _ANONYMOUS_UNION union {
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+                _ANONYMOUS_UNION union {
+                    UCHAR TimerMiscFlags;
+                    _ANONYMOUS_STRUCT struct {
+#if !defined(_X86_)
+                        UCHAR Index:TIMER_EXPIRED_INDEX_BITS;
+#else
+                        UCHAR Index:1;
+                        UCHAR Processor:TIMER_PROCESSOR_INDEX_BITS;
+#endif
+                        UCHAR Inserted:1;
+                        volatile UCHAR Expired:1;
+                    } DUMMYSTRUCTNAME;
+                } DUMMYUNIONNAME;
+#else
+                /* Pre Win7 compatibility fix to latest WDK */
                 UCHAR Inserted;
-                BOOLEAN DebugActive;
-            };
-        };
+#endif
+                _ANONYMOUS_UNION union {
+                    BOOLEAN DebugActive;
+                    _ANONYMOUS_STRUCT struct {
+                        BOOLEAN ActiveDR7:1;
+                        BOOLEAN Instrumented:1;
+                        BOOLEAN Reserved2:4;
+                        BOOLEAN UmsScheduled:1;
+                        BOOLEAN UmsPrimary:1;
+                    } DUMMYSTRUCTNAME;
+                } DUMMYUNIONNAME; /* should probably be DUMMYUNIONNAME2, but this is what WDK says */
+                BOOLEAN DpcActive;
+            } DUMMYUNIONNAME3;
+        } DUMMYSTRUCTNAME;
         volatile LONG Lock;
-    };
+    } DUMMYUNIONNAME;
     LONG SignalState;
     LIST_ENTRY WaitListHead;
 } DISPATCHER_HEADER, *PDISPATCHER_HEADER;
