@@ -445,6 +445,40 @@ typedef enum _AUDIT_EVENT_TYPE {
 
 #define AUDIT_ALLOW_NO_PRIVILEGE 0x1
 
+#define ACCESS_DS_SOURCE_A "DS"
+#define ACCESS_DS_SOURCE_W L"DS"
+#define ACCESS_DS_OBJECT_TYPE_NAME_A "Directory Service Object"
+#define ACCESS_DS_OBJECT_TYPE_NAME_W L"Directory Service Object"
+
+#define ACCESS_REASON_TYPE_MASK 0xffff0000
+#define ACCESS_REASON_DATA_MASK 0x0000ffff
+
+typedef enum _ACCESS_REASON_TYPE {
+  AccessReasonNone = 0x00000000,
+  AccessReasonAllowedAce = 0x00010000,
+  AccessReasonDeniedAce = 0x00020000,
+  AccessReasonAllowedParentAce = 0x00030000,
+  AccessReasonDeniedParentAce = 0x00040000,
+  AccessReasonMissingPrivilege = 0x00100000,
+  AccessReasonFromPrivilege = 0x00200000,
+  AccessReasonIntegrityLevel = 0x00300000,
+  AccessReasonOwnership = 0x00400000,
+  AccessReasonNullDacl = 0x00500000,
+  AccessReasonEmptyDacl = 0x00600000,
+  AccessReasonNoSD = 0x00700000,
+  AccessReasonNoGrant = 0x00800000
+} ACCESS_REASON_TYPE;
+
+typedef ULONG ACCESS_REASON;
+
+typedef struct _ACCESS_REASONS {
+  ACCESS_REASON Data[32];
+} ACCESS_REASONS, *PACCESS_REASONS;
+
+#define SE_SECURITY_DESCRIPTOR_FLAG_NO_OWNER_ACE    0x00000001
+#define SE_SECURITY_DESCRIPTOR_FLAG_NO_LABEL_ACE    0x00000002
+#define SE_SECURITY_DESCRIPTOR_VALID_FLAGS          0x00000003
+
 #pragma pack(push,4)
 
 #ifndef VER_PRODUCTBUILD
