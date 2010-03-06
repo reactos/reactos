@@ -135,6 +135,13 @@ static void test_reference(void)
     ok(r == S_OK, "failed\n");
     CoTaskMemFree(str);
 
+    r = IHlink_GetStringReference(lnk, -1, NULL, NULL);
+    ok(r == S_OK, "failed, r=%08x\n", r);
+
+    r = IHlink_GetStringReference(lnk, -1, NULL, &str);
+    ok(r == S_OK, "failed, r=%08x\n", r);
+    ok(str == NULL, "string should be null\n");
+
     r = IHlink_GetStringReference(lnk, HLINKGETREF_DEFAULT, &str, NULL);
     ok(r == S_OK, "failed\n");
     ok(!lstrcmpW(str, url2), "url wrong\n");
@@ -1210,6 +1217,18 @@ static void test_HlinkGetSetStringReference(void)
     ok(fnd_tgt == NULL, "Found target should have been NULL, was: %s\n", wine_dbgstr_w(fnd_tgt));
     ok(fnd_loc == NULL, "Found location should have been NULL, was: %s\n", wine_dbgstr_w(fnd_loc));
     CoTaskMemFree(fnd_tgt);
+    CoTaskMemFree(fnd_loc);
+
+    hres = IHlink_GetStringReference(link, -1, &fnd_tgt, NULL);
+    todo_wine ok(hres == E_FAIL, "IHlink_GetStringReference should have failed "
+           "with E_FAIL (0x%08x), instead: 0x%08x\n", E_FAIL, hres);
+    CoTaskMemFree(fnd_tgt);
+
+    hres = IHlink_GetStringReference(link, -1, NULL, NULL);
+    ok(hres == S_OK, "failed, hres=%08x\n", hres);
+
+    hres = IHlink_GetStringReference(link, -1, NULL, &fnd_loc);
+    ok(hres == S_OK, "failed, hres=%08x\n", hres);
     CoTaskMemFree(fnd_loc);
 
     hres = IHlink_GetStringReference(link, -1, &fnd_tgt, &fnd_loc);
