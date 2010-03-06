@@ -914,6 +914,9 @@ int CDECL fseek(FILE* file, long offset, int whence)
             if (file->_ptr[i] == '\n')
                 offset--;
         }
+        /* Black magic when reading CR at buffer boundary*/
+        if(fdesc[file->_file].wxflag & WX_READCR)
+            offset--;
     }
   }
   /* Discard buffered input */
