@@ -11,6 +11,7 @@
 
 #define NOEXTAPI
 #include <ntddk.h>
+#include <ntifs.h>
 #define NDEBUG
 #include <halfuncs.h>
 #include <stdio.h>

@@ -2813,6 +2813,77 @@ IoWritePartitionTableEx(
   IN PDEVICE_OBJECT  DeviceObject,
   IN struct _DRIVE_LAYOUT_INFORMATION_EX  *PartitionBuffer);
 
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+//DECLSPEC_DEPRECATED_DDK
+NTHALAPI
+VOID
+NTAPI
+IoFreeAdapterChannel(
+  IN PADAPTER_OBJECT AdapterObject);
+
+//DECLSPEC_DEPRECATED_DDK
+NTHALAPI
+PHYSICAL_ADDRESS
+NTAPI
+IoMapTransfer(
+  IN PADAPTER_OBJECT AdapterObject,
+  IN PMDL Mdl,
+  IN PVOID MapRegisterBase,
+  IN PVOID CurrentVa,
+  IN OUT PULONG Length,
+  IN BOOLEAN WriteToDevice);
+
+//DECLSPEC_DEPRECATED_DDK
+NTHALAPI
+BOOLEAN
+NTAPI
+IoFlushAdapterBuffers(
+  IN PADAPTER_OBJECT AdapterObject,
+  IN PMDL Mdl,
+  IN PVOID MapRegisterBase,
+  IN PVOID CurrentVa,
+  IN ULONG Length,
+  IN BOOLEAN WriteToDevice);
+
+//DECLSPEC_DEPRECATED_DDK
+NTHALAPI
+VOID
+NTAPI
+IoFreeMapRegisters(
+  IN PADAPTER_OBJECT AdapterObject,
+  IN PVOID MapRegisterBase,
+  IN ULONG NumberOfMapRegisters);
+
+//DECLSPEC_DEPRECATED_DDK
+NTHALAPI
+PVOID
+NTAPI
+HalAllocateCommonBuffer(
+  IN PADAPTER_OBJECT AdapterObject,
+  IN ULONG Length,
+  IN PPHYSICAL_ADDRESS LogicalAddress,
+  IN BOOLEAN CacheEnabled);
+
+//DECLSPEC_DEPRECATED_DDK
+NTHALAPI
+VOID
+NTAPI
+HalFreeCommonBuffer(
+  IN PADAPTER_OBJECT AdapterObject,
+  IN ULONG Length,
+  IN PHYSICAL_ADDRESS LogicalAddress,
+  IN PVOID VirtualAddress,
+  IN BOOLEAN CacheEnabled);
+
+//DECLSPEC_DEPRECATED_DDK
+NTHALAPI
+ULONG
+NTAPI
+HalReadDmaCounter(
+  IN PADAPTER_OBJECT AdapterObject);
+
+#endif
+
 /** Kernel routines **/
 
 NTKERNELAPI

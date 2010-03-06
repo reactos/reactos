@@ -1040,6 +1040,7 @@ KeSetTargetProcessorDpc(
 
 NTKERNELAPI
 KAFFINITY
+NTAPI
 KeQueryActiveProcessors(
   VOID);
 #endif
@@ -2607,7 +2608,7 @@ PoRequestPowerIrp(
   IN POWER_STATE  PowerState,
   IN PREQUEST_POWER_COMPLETE  CompletionFunction OPTIONAL,
   IN PVOID  Context OPTIONAL,
-  OUT struct _IRP  *Irp OPTIONAL);
+  OUT struct _IRP  **Irp OPTIONAL);
 
 NTKERNELAPI
 POWER_STATE
