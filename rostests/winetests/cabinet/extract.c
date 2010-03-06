@@ -670,6 +670,7 @@ static void test_Extract(void)
     lstrcpyA(session.Destination, "dest");
     session.Operation = EXTRACT_FILLFILELIST | EXTRACT_EXTRACTFILES;
     res = pExtract(&session, "extract.cab");
+    node = session.FileList;
     todo_wine
     {
         ok(res == HRESULT_FROM_WIN32(ERROR_ACCESS_DENIED) || res == E_FAIL,
@@ -694,8 +695,8 @@ static void test_Extract(void)
     todo_wine
     {
         ok(!DeleteFileA("dest\\testdir\\d.txt"), "Expected dest\\testdir\\d.txt to not exist\n");
+        ok(!check_list(&node, "testdir\\d.txt", FALSE), "list entry should not exist\n");
     }
-    ok(!check_list(&node, "testdir\\d.txt", FALSE), "list entry should not exist\n");
     ok(!check_list(&node, "testdir\\c.txt", FALSE), "list entry wrong\n");
     ok(!check_list(&node, "b.txt", FALSE), "list entry wrong\n");
     ok(!check_list(&node, "a.txt", TRUE), "list entry wrong\n");
