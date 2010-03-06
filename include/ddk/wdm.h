@@ -281,7 +281,7 @@ InterlockedAdd64(
  ******************************************************************************/
 
 typedef UCHAR KIRQL, *PKIRQL;
-typedef UCHAR KPROCESSOR_MODE;
+typedef CCHAR KPROCESSOR_MODE;
 typedef LONG KPRIORITY;
 
 typedef ULONG EXECUTION_STATE;
@@ -310,6 +310,7 @@ typedef enum _MODE {
 #define PF_COMPARE_EXCHANGE128             14   
 #define PF_COMPARE64_EXCHANGE128           15   
 #define PF_CHANNELS_ENABLED                16   
+#define PF_XSAVE_ENABLED                   17   
 
 #define MAXIMUM_SUPPORTED_EXTENSION  512
 #define MAXIMUM_WAIT_OBJECTS              64
@@ -1002,17 +1003,48 @@ typedef XSAVE_FORMAT XMM_SAVE_AREA32, *PXMM_SAVE_AREA32;
  *                              Kernel Functions                              *
  ******************************************************************************/
 
-#if (NTDDI_VERSION >= NTDDI_WIN2K) && defined(SINGLE_GROUP_LEGACY_API)
+NTKERNELAPI
+VOID
+NTAPI
+KeInitializeEvent(
+  OUT PRKEVENT  Event,
+  IN EVENT_TYPE  Type,
+  IN BOOLEAN  State);
+
+NTKERNELAPI
+VOID
+NTAPI
+KeClearEvent(
+  IN OUT PRKEVENT Event);
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+#if defined(SINGLE_GROUP_LEGACY_API)
+NTKERNELAPI
+VOID
+NTAPI
+KeRevertToUserAffinityThread(VOID);
+
+NTKERNELAPI
+VOID
+NTAPI
+KeSetSystemAffinityThread(
+    IN KAFFINITY Affinity);
+
+NTKERNELAPI
+VOID
+NTAPI
+KeSetTargetProcessorDpc(
+  IN PRKDPC  Dpc,
+  IN CCHAR  Number);
+
 NTKERNELAPI
 KAFFINITY
-KeQueryActiveProcessors (
+KeQueryActiveProcessors(
   VOID);
 #endif
 
 #if !defined(_M_AMD64)
-
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
-
 NTKERNELAPI
 ULONGLONG
 NTAPI
@@ -1024,12 +1056,7 @@ VOID
 NTAPI
 KeQuerySystemTime(
   OUT PLARGE_INTEGER  CurrentTime);
-
-#endif
-
-#endif // !_M_AMD64
-
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
+#endif /* !_M_AMD64 */
 
 NTKERNELAPI
 DECLSPEC_NORETURN
@@ -1312,6 +1339,7 @@ KeWaitForSingleObject(
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 
+// _DECL_HAL_KE_IMPORT
 VOID
 FASTCALL
 KeAcquireInStackQueuedSpinLock (
@@ -1399,6 +1427,7 @@ KeIpiGenericCall(
 
 #endif
 
+#if defined(_X86_)
 NTKERNELAPI
 NTSTATUS
 NTAPI
@@ -1410,6 +1439,7 @@ NTSTATUS
 NTAPI
 KeRestoreFloatingPointState(
   IN PKFLOATING_SAVE  FloatSave);
+#endif
 
 #if defined(_IA64_)
 FORCEINLINE
@@ -1424,34 +1454,6 @@ NTHALAPI
 VOID
 NTAPI
 KeFlushWriteBuffer(VOID);
-#endif
-
-NTKERNELAPI
-VOID
-NTAPI
-KeClearEvent(
-  IN OUT PRKEVENT Event);
-
-#if (NTDDI_VERSION >= NTDDI_WIN2K) && defined(SINGLE_GROUP_LEGACY_API)
-
-NTKERNELAPI
-VOID
-NTAPI
-KeRevertToUserAffinityThread(VOID);
-
-NTKERNELAPI
-VOID
-NTAPI
-KeSetSystemAffinityThread(
-    IN KAFFINITY Affinity);
-
-NTKERNELAPI
-VOID
-NTAPI
-KeSetTargetProcessorDpc(
-  IN PRKDPC  Dpc,
-  IN CCHAR  Number);
-
 #endif
 
 /*
@@ -1605,14 +1607,6 @@ NTAPI
 KeGetCurrentThread(
   VOID);
 #endif
-
-NTKERNELAPI
-VOID
-NTAPI
-KeInitializeEvent(
-  OUT PRKEVENT  Event,
-  IN EVENT_TYPE  Type,
-  IN BOOLEAN  State);
 
 /*
  * VOID
@@ -1776,7 +1770,8 @@ ProbeForWrite(
 #define MEM_LARGE_PAGES  0x20000000
 #define MEM_4MB_PAGES    0x80000000
 
-#define SEC_RESERVE       0x4000000     
+#define SEC_RESERVE       0x4000000
+#define SEC_COMMIT        0x8000000
 #define SEC_LARGE_PAGES  0x80000000
 
 /* Section map options */
