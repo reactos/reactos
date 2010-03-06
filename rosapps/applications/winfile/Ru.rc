@@ -246,4 +246,3 @@ STRINGTABLE
 
     IDS_FREE_SPACE_FMT      "%s из %s свободно"
 }
-#pragma code_page(default)

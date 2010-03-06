@@ -270,4 +270,3 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "&關於 Winefile...",           ID_ABOUT
     }
 }
-#pragma code_page(default)

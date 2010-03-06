@@ -250,4 +250,3 @@ STRINGTABLE
 
     IDS_FREE_SPACE_FMT      "%s sur %s libre"
 }
-#pragma code_page(default)
