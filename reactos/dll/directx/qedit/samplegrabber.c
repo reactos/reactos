@@ -1014,6 +1014,10 @@ SampleGrabber_Out_IPin_Connect(IPin *iface, IPin *receiver, const AM_MEDIA_TYPE 
     }
     else
 	type = &This->sg->mtype;
+    if (!IsEqualGUID(&type->formattype, &FORMAT_None) &&
+	!IsEqualGUID(&type->formattype, &GUID_NULL) &&
+	!type->pbFormat)
+	return VFW_E_TYPE_NOT_ACCEPTED;
     hr = IPin_ReceiveConnection(receiver,(IPin*)&This->lpVtbl,type);
     if (FAILED(hr))
 	return hr;
@@ -1053,6 +1057,10 @@ SampleGrabber_In_IPin_ReceiveConnection(IPin *iface, IPin *connector, const AM_M
 	if (!IsEqualGUID(&This->sg->mtype.formattype,&GUID_NULL) &&
 	    !IsEqualGUID(&This->sg->mtype.formattype,&FORMAT_None) &&
 	    !IsEqualGUID(&This->sg->mtype.formattype,&type->formattype))
+	    return VFW_E_TYPE_NOT_ACCEPTED;
+	if (!IsEqualGUID(&type->formattype, &FORMAT_None) &&
+	    !IsEqualGUID(&type->formattype, &GUID_NULL) &&
+	    !type->pbFormat)
 	    return VFW_E_TYPE_NOT_ACCEPTED;
         if (This->sg->mtype.pbFormat)
             CoTaskMemFree(This->sg->mtype.pbFormat);
