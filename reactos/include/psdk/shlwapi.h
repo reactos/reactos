@@ -1092,6 +1092,17 @@ BOOL WINAPI IsOS(DWORD);
 #define TPS_EXECUTEIO    0x00000001
 #define TPS_LONGEXECTIME 0x00000008
 
+/* SHFormatDateTimeA/SHFormatDateTimeW flags */
+#define FDTF_SHORTTIME          0x00000001
+#define FDTF_SHORTDATE          0x00000002
+#define FDTF_DEFAULT            (FDTF_SHORTDATE | FDTF_SHORTTIME)
+#define FDTF_LONGDATE           0x00000004
+#define FDTF_LONGTIME           0x00000008
+#define FDTF_RELATIVE           0x00000010
+#define FDTF_LTRDATE            0x00000100
+#define FDTF_RTLDATE            0x00000200
+#define FDTF_NOAUTOREADINGORDER 0x00000400
+
 #include <poppack.h> 
 
 #ifdef __cplusplus

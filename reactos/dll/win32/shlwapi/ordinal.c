@@ -1082,23 +1082,25 @@ HRESULT WINAPI IUnknown_Exec(IUnknown* lpUnknown, REFGUID pguidCmdGroup,
  * PARAMS
  *  hWnd   [I] Window to get value from
  *  offset [I] Offset of value
- *  wMask  [I] Mask for uiFlags
- *  wFlags [I] Bits to set in window value
+ *  mask   [I] Mask for flags
+ *  flags  [I] Bits to set in window value
  *
  * RETURNS
  *  The new value as it was set, or 0 if any parameter is invalid.
  *
  * NOTES
- *  Any bits set in uiMask are cleared from the value, then any bits set in
- *  uiFlags are set in the value.
+ *  Only bits specified in mask are affected - set if present in flags and
+ *  reset otherwise.
  */
-LONG WINAPI SHSetWindowBits(HWND hwnd, INT offset, UINT wMask, UINT wFlags)
+LONG WINAPI SHSetWindowBits(HWND hwnd, INT offset, UINT mask, UINT flags)
 {
-  LONG ret = GetWindowLongA(hwnd, offset);
-  LONG newFlags = (wFlags & wMask) | (ret & ~wFlags);
+  LONG ret = GetWindowLongW(hwnd, offset);
+  LONG new_flags = (flags & mask) | (ret & ~mask);
 
-  if (newFlags != ret)
-    ret = SetWindowLongA(hwnd, offset, newFlags);
+  TRACE("%p %d %x %x\n", hwnd, offset, mask, flags);
+
+  if (new_flags != ret)
+    ret = SetWindowLongW(hwnd, offset, new_flags);
   return ret;
 }
 
@@ -4659,7 +4661,7 @@ HRESULT WINAPI SHGetViewStatePropertyBag(LPCITEMIDLIST pidl, LPWSTR bag_name,
  *  fileTime   [I] Pointer to FILETIME structure specifying the time
  *  flags      [I] Flags specifying the desired output
  *  buf        [O] Pointer to buffer for output
- *  bufSize    [I] Number of characters that can be contained in buffer
+ *  size       [I] Number of characters that can be contained in buffer
  *
  * RETURNS
  *  success: number of characters written to the buffer
@@ -4667,10 +4669,65 @@ HRESULT WINAPI SHGetViewStatePropertyBag(LPCITEMIDLIST pidl, LPWSTR bag_name,
  *
  */
 INT WINAPI SHFormatDateTimeW(const FILETIME UNALIGNED *fileTime, DWORD *flags,
-    LPWSTR buf, UINT bufSize)
+    LPWSTR buf, UINT size)
 {
-    FIXME("%p %p %s %d STUB\n", fileTime, flags, debugstr_w(buf), bufSize);
-    return 0;
+#define SHFORMATDT_UNSUPPORTED_FLAGS (FDTF_RELATIVE | FDTF_LTRDATE | FDTF_RTLDATE | FDTF_NOAUTOREADINGORDER)
+    DWORD fmt_flags = flags ? *flags : FDTF_DEFAULT;
+    SYSTEMTIME st;
+    FILETIME ft;
+    INT ret = 0;
+
+    TRACE("%p %p %p %u\n", fileTime, flags, buf, size);
+
+    if (!buf || !size)
+        return 0;
+
+    if (fmt_flags & SHFORMATDT_UNSUPPORTED_FLAGS)
+        FIXME("ignoring some flags - 0x%08x\n", fmt_flags & SHFORMATDT_UNSUPPORTED_FLAGS);
+
+    FileTimeToLocalFileTime(fileTime, &ft);
+    FileTimeToSystemTime(&ft, &st);
+
+    /* first of all date */
+    if (fmt_flags & (FDTF_LONGDATE | FDTF_SHORTDATE))
+    {
+        static const WCHAR sep1[] = {',',' ',0};
+        static const WCHAR sep2[] = {' ',0};
+
+        DWORD date = fmt_flags & FDTF_LONGDATE ? DATE_LONGDATE : DATE_SHORTDATE;
+        ret = GetDateFormatW(LOCALE_USER_DEFAULT, date, &st, NULL, buf, size);
+        if (ret >= size) return ret;
+
+        /* add separator */
+        if (ret < size && (fmt_flags & (FDTF_LONGTIME | FDTF_SHORTTIME)))
+        {
+            if ((fmt_flags & FDTF_LONGDATE) && (ret < size + 2))
+            {
+                if (ret < size + 2)
+                {
+                   lstrcatW(&buf[ret-1], sep1);
+                   ret += 2;
+                }
+            }
+            else
+            {
+                lstrcatW(&buf[ret-1], sep2);
+                ret++;
+            }
+        }
+    }
+    /* time part */
+    if (fmt_flags & (FDTF_LONGTIME | FDTF_SHORTTIME))
+    {
+        DWORD time = fmt_flags & FDTF_LONGTIME ? 0 : TIME_NOSECONDS;
+
+        if (ret) ret--;
+        ret += GetTimeFormatW(LOCALE_USER_DEFAULT, time, &st, NULL, &buf[ret], size - ret);
+    }
+
+    return ret;
+
+#undef SHFORMATDT_UNSUPPORTED_FLAGS
 }
 
 /***********************************************************************
@@ -4680,21 +4737,19 @@ INT WINAPI SHFormatDateTimeW(const FILETIME UNALIGNED *fileTime, DWORD *flags,
  *
  */
 INT WINAPI SHFormatDateTimeA(const FILETIME UNALIGNED *fileTime, DWORD *flags,
-    LPCSTR buf, UINT bufSize)
+    LPSTR buf, UINT size)
 {
     WCHAR *bufW;
-    DWORD buflenW, convlen;
     INT retval;
 
-    if (!buf || !bufSize)
+    if (!buf || !size)
         return 0;
 
-    buflenW = bufSize;
-    bufW = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR) * buflenW);
-    retval = SHFormatDateTimeW(fileTime, flags, bufW, buflenW);
+    bufW = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR) * size);
+    retval = SHFormatDateTimeW(fileTime, flags, bufW, size);
 
     if (retval != 0)
-        convlen = WideCharToMultiByte(CP_ACP, 0, bufW, -1, (LPSTR) buf, bufSize, NULL, NULL);
+        WideCharToMultiByte(CP_ACP, 0, bufW, -1, buf, size, NULL, NULL);
 
     HeapFree(GetProcessHeap(), 0, bufW);
     return retval;

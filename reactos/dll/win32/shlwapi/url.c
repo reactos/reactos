@@ -630,6 +630,8 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
 	process_case = 1;
     }
     else do {
+        BOOL manual_search = FALSE;
+
         /* mk is a special case */
         if(base.nScheme == URL_SCHEME_MK) {
             static const WCHAR wsz[] = {':',':',0};
@@ -659,13 +661,45 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
             }
         }
 
-        /* Change .sizep2 to not have the last leaf in it,
-         * Note: we need to start after the location (if it exists)
-         */
-        work = strrchrW((base.pszSuffix+sizeloc), '/');
-        if (work) {
-            len = (DWORD)(work - base.pszSuffix + 1);
-            base.cchSuffix = len;
+        /* If there is a '#' and the characters immediately preceeding it are
+         * ".htm[l]", then begin looking for the last leaf starting from
+         * the '#'. Otherwise the '#' is not meaningful and just start
+         * looking from the end. */
+        if ((work = strchrW(base.pszSuffix + sizeloc, '#'))) {
+            const WCHAR htmlW[] = {'.','h','t','m','l',0};
+            const int len_htmlW = 5;
+            const WCHAR htmW[] = {'.','h','t','m',0};
+            const int len_htmW = 4;
+
+            if (work - base.pszSuffix > len_htmW * sizeof(WCHAR)) {
+                work -= len_htmW;
+                if (strncmpiW(work, htmW, len_htmW) == 0)
+                    manual_search = TRUE;
+                work += len_htmW;
+            }
+
+            if (!manual_search &&
+                    work - base.pszSuffix > len_htmlW * sizeof(WCHAR)) {
+                work -= len_htmlW;
+                if (strncmpiW(work, htmlW, len_htmlW) == 0)
+                    manual_search = TRUE;
+                work += len_htmlW;
+            }
+        }
+
+        if (manual_search) {
+            /* search backwards starting from the current position */
+            while (*work != '/' && work > base.pszSuffix + sizeloc)
+                --work;
+            if (work > base.pszSuffix + sizeloc)
+                base.cchSuffix = work - base.pszSuffix + 1;
+        }else {
+            /* search backwards starting from the end of the string */
+            work = strrchrW((base.pszSuffix+sizeloc), '/');
+            if (work) {
+                len = (DWORD)(work - base.pszSuffix + 1);
+                base.cchSuffix = len;
+            }
         }
 
 	/*
