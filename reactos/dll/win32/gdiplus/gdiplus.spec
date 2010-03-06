@@ -290,7 +290,7 @@
 @ stdcall GdipGetImageGraphicsContext(ptr ptr)
 @ stdcall GdipGetImageHeight(ptr ptr)
 @ stdcall GdipGetImageHorizontalResolution(ptr ptr)
-@ stub GdipGetImageItemData
+@ stdcall GdipGetImageItemData(ptr ptr)
 @ stdcall GdipGetImagePalette(ptr ptr long)
 @ stdcall GdipGetImagePaletteSize(ptr ptr)
 @ stdcall GdipGetImagePixelFormat(ptr ptr)
@@ -381,7 +381,7 @@
 @ stdcall GdipGetRegionDataSize(ptr ptr)
 @ stdcall GdipGetRegionHRgn(ptr ptr ptr)
 @ stub GdipGetRegionScans
-@ stub GdipGetRegionScansCount
+@ stdcall GdipGetRegionScansCount(ptr ptr ptr)
 @ stub GdipGetRegionScansI
 @ stub GdipGetRenderingOrigin
 @ stdcall GdipGetSmoothingMode(ptr ptr)

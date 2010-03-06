@@ -204,14 +204,23 @@ GpStatus WINGDIPAPI GdipSetImageAttributesRemapTable(GpImageAttributes *imageAtt
     ColorAdjustType type, BOOL enableFlag, UINT mapSize,
     GDIPCONST ColorMap *map)
 {
-    static int calls;
-
     TRACE("(%p,%u,%i,%u,%p)\n", imageAttr, type, enableFlag, mapSize, map);
 
-    if(!(calls++))
-        FIXME("not implemented\n");
+    if(!imageAttr || type >= ColorAdjustTypeCount)
+	return InvalidParameter;
 
-    return NotImplemented;
+    if (enableFlag)
+    {
+        if(!map || !mapSize)
+	    return InvalidParameter;
+
+        imageAttr->colorremaptables[type].mapsize = mapSize;
+        imageAttr->colorremaptables[type].colormap = map;
+    }
+
+    imageAttr->colorremaptables[type].enabled = enableFlag;
+
+    return Ok;
 }
 
 GpStatus WINGDIPAPI GdipSetImageAttributesThreshold(GpImageAttributes *imageAttr,

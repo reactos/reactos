@@ -264,10 +264,17 @@ struct color_matrix{
     ColorMatrix graymatrix;
 };
 
+struct color_remap_table{
+    BOOL enabled;
+    INT mapsize;
+    GDIPCONST ColorMap *colormap;
+};
+
 struct GpImageAttributes{
     WrapMode wrap;
     struct color_key colorkeys[ColorAdjustTypeCount];
     struct color_matrix colormatrices[ColorAdjustTypeCount];
+    struct color_remap_table colorremaptables[ColorAdjustTypeCount];
     BOOL gamma_enabled[ColorAdjustTypeCount];
     REAL gamma[ColorAdjustTypeCount];
 };

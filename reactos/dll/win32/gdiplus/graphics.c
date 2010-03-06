@@ -3173,9 +3173,10 @@ GpStatus WINGDIPAPI GdipGetInterpolationMode(GpGraphics *graphics,
     return Ok;
 }
 
+/* FIXME: Need to handle color depths less than 24bpp */
 GpStatus WINGDIPAPI GdipGetNearestColor(GpGraphics *graphics, ARGB* argb)
 {
-    FIXME("(%p, %p): stub\n", graphics, argb);
+    FIXME("(%p, %p): Passing color unmodified\n", graphics, argb);
 
     if(!graphics || !argb)
         return InvalidParameter;
@@ -3183,7 +3184,7 @@ GpStatus WINGDIPAPI GdipGetNearestColor(GpGraphics *graphics, ARGB* argb)
     if(graphics->busy)
         return ObjectBusy;
 
-    return NotImplemented;
+    return Ok;
 }
 
 GpStatus WINGDIPAPI GdipGetPageScale(GpGraphics *graphics, REAL *scale)
