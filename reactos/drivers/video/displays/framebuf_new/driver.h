@@ -7,7 +7,7 @@
  *                  ReactOS Portable Systems Group
  */
  
-#define DBG 1
+//#define DBG 1
 #include "stddef.h"
 #include <stdarg.h>
 #include "windef.h"
