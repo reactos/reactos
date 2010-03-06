@@ -2096,6 +2096,8 @@ static NTSTATUS find_query_actctx( HANDLE *handle, DWORD flags, ULONG class )
 
     if (flags & QUERY_ACTCTX_FLAG_USE_ACTIVE_ACTCTX)
     {
+        if (*handle) return STATUS_INVALID_PARAMETER;
+
         if (NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame)
             *handle = NtCurrentTeb()->ActivationContextStackPointer->ActiveFrame->ActivationContext;
     }
@@ -2103,6 +2105,8 @@ static NTSTATUS find_query_actctx( HANDLE *handle, DWORD flags, ULONG class )
     {
         ULONG magic;
         LDR_DATA_TABLE_ENTRY *pldr;
+
+        if (!*handle) return STATUS_INVALID_PARAMETER;
 
         LdrLockLoaderLock( 0, NULL, &magic );
         if (!LdrFindEntryForAddress( *handle, &pldr ))
