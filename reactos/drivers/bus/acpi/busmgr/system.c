@@ -373,15 +373,14 @@ acpi_suspend (
 	//		/* We don't support S4 under 2.4.  Give up */
 	//		return AE_ERROR;
 	//}
+	AcpiEnterSleepStatePrep(state);
 
 	status = AcpiEnterSleepState(state);
 	if (!ACPI_SUCCESS(status) && state != ACPI_STATE_S5)
 		return status;
 
-	AcpiEnterSleepStatePrep(state);
-
 	/* disable interrupts and flush caches */
-	//ACPI_DISABLE_IRQS();
+	_disable();
 	ACPI_FLUSH_CPU_CACHE();
 
 	/* perform OS-specific sleep actions */
@@ -395,7 +394,7 @@ acpi_suspend (
 	acpi_system_restore_state(state);
 
 	/* make sure interrupts are enabled */
-	//ACPI_ENABLE_IRQS();
+	_enable();
 
 	/* reset firmware waking vector */
 	AcpiSetFirmwareWakingVector((ACPI_PHYSICAL_ADDRESS) 0);

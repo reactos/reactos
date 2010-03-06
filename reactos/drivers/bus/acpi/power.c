@@ -103,7 +103,7 @@ Bus_FDO_Power (
     }
       oldPowerState = Data->Common.SystemPowerState;
       Data->Common.SystemPowerState = powerState.SystemState;
-      AcpiStatus = AcpiEnterSleepState(AcpiState);
+      AcpiStatus = acpi_suspend(AcpiState);
       if (!ACPI_SUCCESS(AcpiStatus)) {
         DPRINT1("Failed to enter sleep state %d (Status 0x%X)\n",
           AcpiState, AcpiStatus);
