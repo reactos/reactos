@@ -2270,6 +2270,158 @@ static void test_GdipIsVisibleRect(void)
     ReleaseDC(0, hdc);
 }
 
+static void test_GdipGetNearestColor(void)
+{
+    GpStatus status;
+    GpGraphics *graphics;
+    GpBitmap *bitmap;
+    ARGB color = 0xdeadbeef;
+    HDC hdc = GetDC(0);
+
+    /* create a graphics object */
+    ok(hdc != NULL, "Expected HDC to be initialized\n");
+
+    status = GdipCreateFromHDC(hdc, &graphics);
+    expect(Ok, status);
+    ok(graphics != NULL, "Expected graphics to be initialized\n");
+
+    status = GdipGetNearestColor(graphics, NULL);
+    expect(InvalidParameter, status);
+
+    status = GdipGetNearestColor(NULL, &color);
+    expect(InvalidParameter, status);
+    GdipDeleteGraphics(graphics);
+
+    status = GdipCreateBitmapFromScan0(10, 10, 10, PixelFormat1bppIndexed, NULL, &bitmap);
+    expect(Ok, status);
+    status = GdipGetImageGraphicsContext((GpImage*)bitmap, &graphics);
+    ok(broken(status == OutOfMemory) /* winver < Win7 */ || status == Ok, "status=%u\n", status);
+    if (status == Ok)
+    {
+        status = GdipGetNearestColor(graphics, &color);
+        expect(Ok, status);
+        expect(0xdeadbeef, color);
+        GdipDeleteGraphics(graphics);
+    }
+    GdipDisposeImage((GpImage*)bitmap);
+
+    status = GdipCreateBitmapFromScan0(10, 10, 10, PixelFormat4bppIndexed, NULL, &bitmap);
+    expect(Ok, status);
+    status = GdipGetImageGraphicsContext((GpImage*)bitmap, &graphics);
+    ok(broken(status == OutOfMemory) /* winver < Win7 */ || status == Ok, "status=%u\n", status);
+    if (status == Ok)
+    {
+        status = GdipGetNearestColor(graphics, &color);
+        expect(Ok, status);
+        expect(0xdeadbeef, color);
+        GdipDeleteGraphics(graphics);
+    }
+    GdipDisposeImage((GpImage*)bitmap);
+
+    status = GdipCreateBitmapFromScan0(10, 10, 10, PixelFormat8bppIndexed, NULL, &bitmap);
+    expect(Ok, status);
+    status = GdipGetImageGraphicsContext((GpImage*)bitmap, &graphics);
+    ok(broken(status == OutOfMemory) /* winver < Win7 */ || status == Ok, "status=%u\n", status);
+    if (status == Ok)
+    {
+        status = GdipGetNearestColor(graphics, &color);
+        expect(Ok, status);
+        expect(0xdeadbeef, color);
+        GdipDeleteGraphics(graphics);
+    }
+    GdipDisposeImage((GpImage*)bitmap);
+
+    status = GdipCreateBitmapFromScan0(10, 10, 10, PixelFormat16bppGrayScale, NULL, &bitmap);
+    expect(Ok, status);
+    status = GdipGetImageGraphicsContext((GpImage*)bitmap, &graphics);
+    todo_wine expect(OutOfMemory, status);
+    if (status == Ok)
+        GdipDeleteGraphics(graphics);
+    GdipDisposeImage((GpImage*)bitmap);
+
+    status = GdipCreateBitmapFromScan0(10, 10, 10, PixelFormat24bppRGB, NULL, &bitmap);
+    expect(Ok, status);
+    status = GdipGetImageGraphicsContext((GpImage*)bitmap, &graphics);
+    expect(Ok, status);
+    status = GdipGetNearestColor(graphics, &color);
+    expect(Ok, status);
+    expect(0xdeadbeef, color);
+    GdipDeleteGraphics(graphics);
+    GdipDisposeImage((GpImage*)bitmap);
+
+    status = GdipCreateBitmapFromScan0(10, 10, 10, PixelFormat32bppRGB, NULL, &bitmap);
+    expect(Ok, status);
+    status = GdipGetImageGraphicsContext((GpImage*)bitmap, &graphics);
+    expect(Ok, status);
+    status = GdipGetNearestColor(graphics, &color);
+    expect(Ok, status);
+    expect(0xdeadbeef, color);
+    GdipDeleteGraphics(graphics);
+    GdipDisposeImage((GpImage*)bitmap);
+
+    status = GdipCreateBitmapFromScan0(10, 10, 10, PixelFormat32bppARGB, NULL, &bitmap);
+    expect(Ok, status);
+    status = GdipGetImageGraphicsContext((GpImage*)bitmap, &graphics);
+    expect(Ok, status);
+    status = GdipGetNearestColor(graphics, &color);
+    expect(Ok, status);
+    expect(0xdeadbeef, color);
+    GdipDeleteGraphics(graphics);
+    GdipDisposeImage((GpImage*)bitmap);
+
+    status = GdipCreateBitmapFromScan0(10, 10, 10, PixelFormat48bppRGB, NULL, &bitmap);
+    expect(Ok, status);
+    status = GdipGetImageGraphicsContext((GpImage*)bitmap, &graphics);
+    expect(Ok, status);
+    status = GdipGetNearestColor(graphics, &color);
+    expect(Ok, status);
+    expect(0xdeadbeef, color);
+    GdipDeleteGraphics(graphics);
+    GdipDisposeImage((GpImage*)bitmap);
+
+    status = GdipCreateBitmapFromScan0(10, 10, 10, PixelFormat64bppARGB, NULL, &bitmap);
+    expect(Ok, status);
+    status = GdipGetImageGraphicsContext((GpImage*)bitmap, &graphics);
+    expect(Ok, status);
+    status = GdipGetNearestColor(graphics, &color);
+    expect(Ok, status);
+    expect(0xdeadbeef, color);
+    GdipDeleteGraphics(graphics);
+    GdipDisposeImage((GpImage*)bitmap);
+
+    status = GdipCreateBitmapFromScan0(10, 10, 10, PixelFormat64bppPARGB, NULL, &bitmap);
+    expect(Ok, status);
+    status = GdipGetImageGraphicsContext((GpImage*)bitmap, &graphics);
+    expect(Ok, status);
+    status = GdipGetNearestColor(graphics, &color);
+    expect(Ok, status);
+    expect(0xdeadbeef, color);
+    GdipDeleteGraphics(graphics);
+    GdipDisposeImage((GpImage*)bitmap);
+
+    status = GdipCreateBitmapFromScan0(10, 10, 10, PixelFormat16bppRGB565, NULL, &bitmap);
+    expect(Ok, status);
+    status = GdipGetImageGraphicsContext((GpImage*)bitmap, &graphics);
+    expect(Ok, status);
+    status = GdipGetNearestColor(graphics, &color);
+    expect(Ok, status);
+    todo_wine expect(0xffa8bce8, color);
+    GdipDeleteGraphics(graphics);
+    GdipDisposeImage((GpImage*)bitmap);
+
+    status = GdipCreateBitmapFromScan0(10, 10, 10, PixelFormat16bppRGB555, NULL, &bitmap);
+    expect(Ok, status);
+    status = GdipGetImageGraphicsContext((GpImage*)bitmap, &graphics);
+    expect(Ok, status);
+    status = GdipGetNearestColor(graphics, &color);
+    expect(Ok, status);
+    todo_wine expect(0xffa8b8e8, color);
+    GdipDeleteGraphics(graphics);
+    GdipDisposeImage((GpImage*)bitmap);
+
+    ReleaseDC(0, hdc);
+}
+
 START_TEST(graphics)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
@@ -2296,6 +2448,7 @@ START_TEST(graphics)
     test_GdipDrawLineI();
     test_GdipDrawLinesI();
     test_GdipDrawString();
+    test_GdipGetNearestColor();
     test_GdipGetVisibleClipBounds();
     test_GdipIsVisiblePoint();
     test_GdipIsVisibleRect();

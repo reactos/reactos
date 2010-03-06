@@ -1625,6 +1625,191 @@ static void test_multiframegif(void)
     IStream_Release(stream);
 }
 
+static void test_rotateflip(void)
+{
+    GpImage *bitmap;
+    GpStatus stat;
+    BYTE bits[24];
+    static const BYTE orig_bits[24] = {
+        0,0,0xff,    0,0xff,0,    0xff,0,0,    23,23,23,
+        0xff,0xff,0, 0xff,0,0xff, 0,0xff,0xff, 23,23,23};
+    UINT width, height;
+    ARGB color;
+
+    memcpy(bits, orig_bits, sizeof(bits));
+    stat = GdipCreateBitmapFromScan0(3, 2, 12, PixelFormat24bppRGB, bits, (GpBitmap**)&bitmap);
+    expect(Ok, stat);
+
+    stat = GdipImageRotateFlip(bitmap, Rotate90FlipNone);
+    todo_wine expect(Ok, stat);
+
+    stat = GdipGetImageWidth(bitmap, &width);
+    expect(Ok, stat);
+    stat = GdipGetImageHeight(bitmap, &height);
+    expect(Ok, stat);
+    todo_wine expect(2, width);
+    todo_wine expect(3, height);
+
+    stat = GdipBitmapGetPixel((GpBitmap*)bitmap, 0, 0, &color);
+    expect(Ok, stat);
+    todo_wine expect(0xff00ffff, color);
+
+    stat = GdipBitmapGetPixel((GpBitmap*)bitmap, 1, 0, &color);
+    expect(Ok, stat);
+    todo_wine expect(0xffff0000, color);
+
+    stat = GdipBitmapGetPixel((GpBitmap*)bitmap, 0, 2, &color);
+    todo_wine expect(Ok, stat);
+    todo_wine expect(0xffffff00, color);
+
+    stat = GdipBitmapGetPixel((GpBitmap*)bitmap, 1, 2, &color);
+    todo_wine expect(Ok, stat);
+    todo_wine expect(0xff0000ff, color);
+
+    expect(0, bits[0]);
+    expect(0, bits[1]);
+    expect(0xff, bits[2]);
+
+    GdipDisposeImage(bitmap);
+
+    memcpy(bits, orig_bits, sizeof(bits));
+    stat = GdipCreateBitmapFromScan0(3, 2, 12, PixelFormat24bppRGB, bits, (GpBitmap**)&bitmap);
+    expect(Ok, stat);
+
+    stat = GdipImageRotateFlip(bitmap, RotateNoneFlipX);
+    todo_wine expect(Ok, stat);
+
+    stat = GdipGetImageWidth(bitmap, &width);
+    expect(Ok, stat);
+    stat = GdipGetImageHeight(bitmap, &height);
+    expect(Ok, stat);
+    expect(3, width);
+    expect(2, height);
+
+    stat = GdipBitmapGetPixel((GpBitmap*)bitmap, 0, 0, &color);
+    expect(Ok, stat);
+    todo_wine expect(0xff0000ff, color);
+
+    stat = GdipBitmapGetPixel((GpBitmap*)bitmap, 2, 0, &color);
+    expect(Ok, stat);
+    todo_wine expect(0xffff0000, color);
+
+    stat = GdipBitmapGetPixel((GpBitmap*)bitmap, 0, 1, &color);
+    expect(Ok, stat);
+    todo_wine expect(0xffffff00, color);
+
+    stat = GdipBitmapGetPixel((GpBitmap*)bitmap, 2, 1, &color);
+    expect(Ok, stat);
+    todo_wine expect(0xff00ffff, color);
+
+    expect(0, bits[0]);
+    expect(0, bits[1]);
+    expect(0xff, bits[2]);
+
+    GdipDisposeImage(bitmap);
+
+    memcpy(bits, orig_bits, sizeof(bits));
+    stat = GdipCreateBitmapFromScan0(3, 2, 12, PixelFormat24bppRGB, bits, (GpBitmap**)&bitmap);
+    expect(Ok, stat);
+
+    stat = GdipImageRotateFlip(bitmap, RotateNoneFlipY);
+    todo_wine expect(Ok, stat);
+
+    stat = GdipGetImageWidth(bitmap, &width);
+    expect(Ok, stat);
+    stat = GdipGetImageHeight(bitmap, &height);
+    expect(Ok, stat);
+    expect(3, width);
+    expect(2, height);
+
+    stat = GdipBitmapGetPixel((GpBitmap*)bitmap, 0, 0, &color);
+    expect(Ok, stat);
+    todo_wine expect(0xff00ffff, color);
+
+    stat = GdipBitmapGetPixel((GpBitmap*)bitmap, 2, 0, &color);
+    expect(Ok, stat);
+    todo_wine expect(0xffffff00, color);
+
+    stat = GdipBitmapGetPixel((GpBitmap*)bitmap, 0, 1, &color);
+    expect(Ok, stat);
+    todo_wine expect(0xffff0000, color);
+
+    stat = GdipBitmapGetPixel((GpBitmap*)bitmap, 2, 1, &color);
+    expect(Ok, stat);
+    todo_wine expect(0xff0000ff, color);
+
+    expect(0, bits[0]);
+    expect(0, bits[1]);
+    expect(0xff, bits[2]);
+
+    GdipDisposeImage(bitmap);
+}
+
+static void test_remaptable(void)
+{
+    GpStatus stat;
+    GpImageAttributes *imageattr;
+    GpBitmap *bitmap1, *bitmap2;
+    GpGraphics *graphics;
+    ARGB color;
+    ColorMap *map;
+
+    map = GdipAlloc(sizeof(ColorMap));
+
+    map->oldColor.Argb = 0xff00ff00;
+    map->newColor.Argb = 0xffff00ff;
+
+    stat = GdipSetImageAttributesRemapTable(NULL, ColorAdjustTypeDefault, TRUE, 1, map);
+    expect(InvalidParameter, stat);
+
+    stat = GdipCreateImageAttributes(&imageattr);
+    expect(Ok, stat);
+
+    stat = GdipSetImageAttributesRemapTable(imageattr, ColorAdjustTypeDefault, TRUE, 1, NULL);
+    expect(InvalidParameter, stat);
+
+    stat = GdipSetImageAttributesRemapTable(imageattr, ColorAdjustTypeCount, TRUE, 1, map);
+    expect(InvalidParameter, stat);
+
+    stat = GdipSetImageAttributesRemapTable(imageattr, ColorAdjustTypeAny, TRUE, 1, map);
+    expect(InvalidParameter, stat);
+
+    stat = GdipSetImageAttributesRemapTable(imageattr, ColorAdjustTypeDefault, TRUE, 0, map);
+    expect(InvalidParameter, stat);
+
+    stat = GdipSetImageAttributesRemapTable(imageattr, ColorAdjustTypeDefault, FALSE, 0, NULL);
+    expect(Ok, stat);
+
+    stat = GdipSetImageAttributesRemapTable(imageattr, ColorAdjustTypeDefault, TRUE, 1, map);
+    expect(Ok, stat);
+
+    stat = GdipCreateBitmapFromScan0(1, 1, 0, PixelFormat32bppRGB, NULL, &bitmap1);
+    expect(Ok, stat);
+
+    stat = GdipCreateBitmapFromScan0(1, 1, 0, PixelFormat32bppRGB, NULL, &bitmap2);
+    expect(Ok, stat);
+
+    stat = GdipBitmapSetPixel(bitmap1, 0, 0, 0xff00ff00);
+    expect(Ok, stat);
+
+    stat = GdipGetImageGraphicsContext((GpImage*)bitmap2, &graphics);
+    expect(Ok, stat);
+
+    stat = GdipDrawImageRectRectI(graphics, (GpImage*)bitmap1, 0,0,1,1, 0,0,1,1,
+	UnitPixel, imageattr, NULL, NULL);
+    expect(Ok, stat);
+
+    stat = GdipBitmapGetPixel(bitmap2, 0, 0, &color);
+    expect(Ok, stat);
+    todo_wine ok(color_match(0xffff00ff, color, 1), "Expected ffff00ff, got %.8x\n", color);
+
+    GdipDeleteGraphics(graphics);
+    GdipDisposeImage((GpImage*)bitmap1);
+    GdipDisposeImage((GpImage*)bitmap2);
+    GdipDisposeImageAttributes(imageattr);
+    GdipFree(map);
+}
+
 START_TEST(image)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
@@ -1659,6 +1844,8 @@ START_TEST(image)
     test_colormatrix();
     test_gamma();
     test_multiframegif();
+    test_rotateflip();
+    test_remaptable();
 
     GdiplusShutdown(gdiplusToken);
 }
