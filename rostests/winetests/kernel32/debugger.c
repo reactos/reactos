@@ -31,12 +31,32 @@
 #define STATUS_DEBUGGER_INACTIVE         ((NTSTATUS) 0xC0000354)
 #endif
 
+#ifdef __GNUC__
+#define PRINTF_ATTR(fmt,args) __attribute__((format (printf,fmt,args)))
+#else
+#define PRINTF_ATTR(fmt,args)
+#endif
+
+#define child_ok (winetest_set_location(__FILE__, __LINE__), 0) ? (void)0 : test_child_ok
+
 static int    myARGC;
 static char** myARGV;
 
 static BOOL (WINAPI *pCheckRemoteDebuggerPresent)(HANDLE,PBOOL);
 static BOOL (WINAPI *pDebugActiveProcessStop)(DWORD);
 static BOOL (WINAPI *pDebugSetProcessKillOnExit)(BOOL);
+
+static LONG child_failures;
+
+static void PRINTF_ATTR(2, 3) test_child_ok(int condition, const char *msg, ...)
+{
+    va_list valist;
+
+    va_start(valist, msg);
+    winetest_vok(condition, msg, valist);
+    va_end(valist);
+    if (!condition) ++child_failures;
+}
 
 /* Copied from the process test */
 static void get_file_name(char* buf)
@@ -468,6 +488,94 @@ static void test_RemoteDebugger(void)
        "expected error ERROR_INVALID_PARAMETER, got %d/%x\n",GetLastError(), GetLastError());
 }
 
+struct child_blackbox
+{
+    LONG failures;
+};
+
+static void doChild(int argc, char **argv)
+{
+    struct child_blackbox blackbox;
+    const char *blackbox_file;
+    HANDLE parent;
+    DWORD ppid;
+    BOOL ret;
+
+    blackbox_file = argv[4];
+    sscanf(argv[3], "%08x", &ppid);
+
+    parent = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, ppid);
+    child_ok(!!parent, "OpenProcess failed, last error %#x.\n", GetLastError());
+
+    ret = DebugActiveProcess(ppid);
+    child_ok(ret, "DebugActiveProcess failed, last error %#x.\n", GetLastError());
+
+    ret = pDebugActiveProcessStop(ppid);
+    child_ok(ret, "DebugActiveProcessStop failed, last error %#x.\n", GetLastError());
+
+    ret = CloseHandle(parent);
+    child_ok(ret, "CloseHandle failed, last error %#x.\n", GetLastError());
+
+    blackbox.failures = child_failures;
+    save_blackbox(blackbox_file, &blackbox, sizeof(blackbox));
+}
+
+static void test_debug_loop(int argc, char **argv)
+{
+    const char *arguments = " debugger child ";
+    struct child_blackbox blackbox;
+    char blackbox_file[MAX_PATH];
+    PROCESS_INFORMATION pi;
+    STARTUPINFOA si;
+    DWORD pid;
+    char *cmd;
+    BOOL ret;
+
+    if (!pDebugActiveProcessStop)
+    {
+        win_skip("DebugActiveProcessStop not available, skipping test.\n");
+        return;
+    }
+
+    pid = GetCurrentProcessId();
+    get_file_name(blackbox_file);
+    cmd = HeapAlloc(GetProcessHeap(), 0, strlen(argv[0]) + strlen(arguments) + strlen(blackbox_file) + 10);
+    sprintf(cmd, "%s%s%08x %s", argv[0], arguments, pid, blackbox_file);
+
+    memset(&si, 0, sizeof(si));
+    si.cb = sizeof(si);
+    ret = CreateProcessA(NULL, cmd, NULL, NULL, FALSE, DEBUG_PROCESS, NULL, NULL, &si, &pi);
+    ok(ret, "CreateProcess failed, last error %#x.\n", GetLastError());
+
+    HeapFree(GetProcessHeap(), 0, cmd);
+
+    for (;;)
+    {
+        DEBUG_EVENT ev;
+
+        ret = WaitForDebugEvent(&ev, INFINITE);
+        ok(ret, "WaitForDebugEvent failed, last error %#x.\n", GetLastError());
+        if (!ret) break;
+
+        if (ev.dwDebugEventCode == EXIT_PROCESS_DEBUG_EVENT) break;
+
+        ret = ContinueDebugEvent(ev.dwProcessId, ev.dwThreadId, DBG_CONTINUE);
+        ok(ret, "ContinueDebugEvent failed, last error %#x.\n", GetLastError());
+        if (!ret) break;
+    }
+
+    ret = CloseHandle(pi.hThread);
+    ok(ret, "CloseHandle failed, last error %#x.\n", GetLastError());
+    ret = CloseHandle(pi.hProcess);
+    ok(ret, "CloseHandle failed, last error %#x.\n", GetLastError());
+
+    load_blackbox(blackbox_file, &blackbox, sizeof(blackbox));
+    ok(!blackbox.failures, "Got %d failures from child process.\n", blackbox.failures);
+
+    ret = DeleteFileA(blackbox_file);
+    ok(ret, "DeleteFileA failed, last error %#x.\n", GetLastError());
+}
+
 START_TEST(debugger)
 {
     HMODULE hdll;
@@ -486,9 +594,14 @@ START_TEST(debugger)
     {
         doDebugger(myARGC, myARGV);
     }
+    else if (myARGC >= 5 && !strcmp(myARGV[2], "child"))
+    {
+        doChild(myARGC, myARGV);
+    }
     else
     {
         test_ExitCode();
         test_RemoteDebugger();
+        test_debug_loop(myARGC, myARGV);
     }
 }

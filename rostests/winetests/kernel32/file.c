@@ -1602,12 +1602,12 @@ static void test_LockFile(void)
 
     /* zero-byte lock */
     ok( LockFile( handle, 100, 0, 0, 0 ), "LockFile 100,0 failed\n" );
-    limited_LockFile || ok( !LockFile( handle, 98, 0, 4, 0 ), "LockFile 98,4 succeeded\n" );
+    if (!limited_LockFile) ok( !LockFile( handle, 98, 0, 4, 0 ), "LockFile 98,4 succeeded\n" );
     ok( LockFile( handle, 90, 0, 10, 0 ), "LockFile 90,10 failed\n" );
-    limited_LockFile || ok( !LockFile( handle, 100, 0, 10, 0 ), "LockFile 100,10 failed\n" );
+    if (!limited_LockFile) ok( !LockFile( handle, 100, 0, 10, 0 ), "LockFile 100,10 failed\n" );
 
     ok( UnlockFile( handle, 90, 0, 10, 0 ), "UnlockFile 90,10 failed\n" );
-    !ok( UnlockFile( handle, 100, 0, 10, 0 ), "UnlockFile 100,10 failed\n" );
+    ok( !UnlockFile( handle, 100, 0, 10, 0 ), "UnlockFile 100,10 succeeded\n" );
 
     ok( UnlockFile( handle, 100, 0, 0, 0 ), "UnlockFile 100,0 failed\n" );
 

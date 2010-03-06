@@ -79,6 +79,7 @@ static DWORD FinishNotificationThread(HANDLE thread)
     ok(status == WAIT_OBJECT_0, "WaitForSingleObject status %d error %d\n", status, GetLastError());
 
     ok(GetExitCodeThread(thread, &exitcode), "Could not retrieve thread exit code\n");
+    CloseHandle(thread);
 
     return exitcode;
 }

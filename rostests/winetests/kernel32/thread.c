@@ -421,7 +421,17 @@ static VOID test_CreateThread_basic(void)
          "Thread did not execute successfully\n");
     ok(CloseHandle(thread[i])!=0,"CloseHandle failed\n");
   }
-  ok(TlsFree(tlsIndex)!=0,"TlsFree failed\n");
+
+  SetLastError(0xCAFEF00D);
+  ok(TlsFree(tlsIndex)!=0,"TlsFree failed: %08x\n", GetLastError());
+  ok(GetLastError()==0xCAFEF00D,
+     "GetLastError: expected 0xCAFEF00D, got %08x\n", GetLastError());
+
+  /* Test freeing an already freed TLS index */
+  SetLastError(0xCAFEF00D);
+  ok(TlsFree(tlsIndex)==0,"TlsFree succeeded\n");
+  ok(GetLastError()==ERROR_INVALID_PARAMETER,
+     "GetLastError: expected ERROR_INVALID_PARAMETER, got %08x\n", GetLastError());
 
   /* Test how passing NULL as a pointer to threadid works */
   SetLastError(0xFACEaBAD);
@@ -780,7 +790,7 @@ static VOID test_GetThreadTimes(void)
 static VOID test_thread_processor(void)
 {
    HANDLE curthread,curproc;
-   DWORD_PTR processMask,systemMask;
+   DWORD_PTR processMask,systemMask,retMask;
    SYSTEM_INFO sysInfo;
    int error=0;
    BOOL is_wow64;
@@ -803,6 +813,10 @@ static VOID test_thread_processor(void)
       "SetThreadAffinityMask failed\n");
    ok(SetThreadAffinityMask(curthread,processMask+1)==0,
       "SetThreadAffinityMask passed for an illegal processor\n");
+/* NOTE: Pre-Vista does not recognize the "all processors" flag (all bits set) */
+   retMask = SetThreadAffinityMask(curthread,~0UL);
+   ok(broken(retMask==0) || retMask==processMask,
+      "SetThreadAffinityMask(thread,-1) failed to request all processors.\n");
 /* NOTE: This only works on WinNT/2000/XP) */
    if (pSetThreadIdealProcessor) {
      SetLastError(0xdeadbeef);

@@ -709,6 +709,7 @@ static void test_message_from_hmodule(void)
     ok(ret == 0, "FormatMessageA returned %u instead of 0\n", ret);
     ok(error == ERROR_RESOURCE_LANG_NOT_FOUND ||
        error == ERROR_MR_MID_NOT_FOUND ||
+       error == ERROR_MUI_FILE_NOT_FOUND ||
        error == ERROR_MUI_FILE_NOT_LOADED,
        "last error %u\n", error);
 
@@ -719,7 +720,8 @@ static void test_message_from_hmodule(void)
     ok(ret == 0, "FormatMessageA returned %u instead of 0\n", ret);
     ok(error == ERROR_RESOURCE_LANG_NOT_FOUND ||
        error == ERROR_MR_MID_NOT_FOUND ||
-       error == ERROR_MUI_FILE_NOT_FOUND,
+       error == ERROR_MUI_FILE_NOT_FOUND ||
+       error == ERROR_MUI_FILE_NOT_LOADED,
        "last error %u\n", error);
 }
 
