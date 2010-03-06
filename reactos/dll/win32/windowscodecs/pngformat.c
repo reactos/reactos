@@ -60,7 +60,11 @@ MAKE_FUNCPTR(png_get_PLTE);
 MAKE_FUNCPTR(png_get_tRNS);
 MAKE_FUNCPTR(png_set_bgr);
 MAKE_FUNCPTR(png_set_error_fn);
+#if HAVE_PNG_SET_EXPAND_GRAY_1_2_4_TO_8
 MAKE_FUNCPTR(png_set_expand_gray_1_2_4_to_8);
+#else
+MAKE_FUNCPTR(png_set_gray_1_2_4_to_8);
+#endif
 MAKE_FUNCPTR(png_set_filler);
 MAKE_FUNCPTR(png_set_gray_to_rgb);
 MAKE_FUNCPTR(png_set_IHDR);
@@ -103,7 +107,11 @@ static void *load_libpng(void)
         LOAD_FUNCPTR(png_get_tRNS);
         LOAD_FUNCPTR(png_set_bgr);
         LOAD_FUNCPTR(png_set_error_fn);
+#if HAVE_PNG_SET_EXPAND_GRAY_1_2_4_TO_8
         LOAD_FUNCPTR(png_set_expand_gray_1_2_4_to_8);
+#else
+        LOAD_FUNCPTR(png_set_gray_1_2_4_to_8);
+#endif
         LOAD_FUNCPTR(png_set_filler);
         LOAD_FUNCPTR(png_set_gray_to_rgb);
         LOAD_FUNCPTR(png_set_IHDR);
@@ -306,7 +314,11 @@ static HRESULT WINAPI PngDecoder_Initialize(IWICBitmapDecoder *iface, IStream *p
         {
             if (bit_depth < 8)
             {
+#if HAVE_PNG_SET_EXPAND_GRAY_1_2_4_TO_8
                 ppng_set_expand_gray_1_2_4_to_8(This->png_ptr);
+#else
+                ppng_set_gray_1_2_4_to_8(This->png_ptr);
+#endif
                 bit_depth = 8;
             }
             ppng_set_gray_to_rgb(This->png_ptr);
