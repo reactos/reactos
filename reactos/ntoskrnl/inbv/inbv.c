@@ -409,7 +409,7 @@ InbvUpdateProgressBar(IN ULONG Progress)
                           ProgressBarTop,
                           ProgressBarLeft + FillCount,
                           ProgressBarTop + 12,
-                          11);
+                          15);
 
         /* Release the lock */
         InbvReleaseLock();
