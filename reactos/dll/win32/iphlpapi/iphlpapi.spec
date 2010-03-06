@@ -61,7 +61,7 @@
 @ stdcall GetNetworkParams( ptr ptr )
 @ stdcall GetNumberOfInterfaces( ptr )
 @ stub GetOwnerModuleFromTcp6Entry
-@ stub GetOwnerModuleFromTcpEntry
+@ stdcall GetOwnerModuleFromTcpEntry ( ptr long ptr ptr )
 @ stub GetOwnerModuleFromUdp6Entry
 @ stub GetOwnerModuleFromUdpEntry
 @ stdcall GetPerAdapterInfo( long ptr ptr )
