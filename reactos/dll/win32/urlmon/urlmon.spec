@@ -6,7 +6,7 @@
 #3 stub IsJITInProgress
 
 @ stub AsyncGetClassBits
-@ stub AsyncInstallDistributionUnit
+@ stdcall AsyncInstallDistributionUnit(ptr ptr ptr long long ptr ptr ptr long)
 @ stdcall BindAsyncMoniker(ptr long ptr ptr ptr)
 @ stdcall CoGetClassObjectFromURL(ptr wstr long long wstr ptr long ptr ptr ptr)
 @ stub CoInstall
