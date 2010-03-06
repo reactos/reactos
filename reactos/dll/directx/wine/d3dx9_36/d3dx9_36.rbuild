@@ -22,6 +22,7 @@
 	<file>shader.c</file>
 	<file>sprite.c</file>
 	<file>surface.c</file>
+	<file>texture.c</file>
 	<file>util.c</file>
 	<file>version.rc</file>
 

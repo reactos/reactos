@@ -89,4 +89,3 @@ STID_FILE_NOT_FOUND_s	"Non è stato possibile trovare '%s'. Vuoi cercare questo 
 STID_NO_RICHEDIT	"Non è stato possibile trovare un'implementazione richedit... Annullando"
 STID_PSH_INDEX,		"Argomenti di aiuto: "
 }
-#pragma code_page(default)

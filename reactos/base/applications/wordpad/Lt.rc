@@ -109,6 +109,30 @@ BEGIN
     END
 END
 
+IDM_COLOR_POPUP MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Juoda"          ID_COLOR_BLACK
+        MENUITEM "Kaštoninė"      ID_COLOR_MAROON
+        MENUITEM "Žalia"          ID_COLOR_GREEN
+        MENUITEM "Alyvinė"        ID_COLOR_OLIVE
+        MENUITEM "Ultramarinas"   ID_COLOR_NAVY
+        MENUITEM "Purpurinė"      ID_COLOR_PURPLE
+        MENUITEM "Neutrali ciano" ID_COLOR_TEAL
+        MENUITEM "Pilka"          ID_COLOR_GRAY
+        MENUITEM "Sidabrinė"      ID_COLOR_SILVER
+        MENUITEM "Raudona"        ID_COLOR_RED
+        MENUITEM "Gelsvai žalsva" ID_COLOR_LIME
+        MENUITEM "Geltona"        ID_COLOR_YELLOW
+        MENUITEM "Mėlyna"         ID_COLOR_BLUE
+        MENUITEM "Fuksija"        ID_COLOR_FUCHSIA
+        MENUITEM "Žydra"          ID_COLOR_AQUA
+        MENUITEM "Balta"          ID_COLOR_WHITE
+        MENUITEM "Automatic"      ID_COLOR_AUTOMATIC
+    END
+END
+
 IDD_DATETIME DIALOG DISCARDABLE 30, 20, 130, 80
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Data ir laikas"
@@ -224,6 +248,8 @@ BEGIN
     STRING_PREVIEW_ZOOMIN,           "Didinti"
     STRING_PREVIEW_ZOOMOUT,          "Mažinti"
     STRING_PREVIEW_CLOSE,            "Užverti"
+    STRING_PREVIEW_PAGE,             "Puslapis"
+    STRING_PREVIEW_PAGES,            "Puslapiai"
 END
 
 STRINGTABLE DISCARDABLE
@@ -249,4 +275,3 @@ BEGIN
     STRING_PRINTING_NOT_IMPLEMENTED,  "Spausdinimas nerealizuotas"
     STRING_MAX_TAB_STOPS,             "Negalima pridėti daugiau negu 32-jų tabuliavimo pozicijų."
 END
-#pragma code_page(default)

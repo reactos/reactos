@@ -31,4 +31,3 @@ STRINGTABLE
 {
     IDS_FAILED, "Не вдалось запустити Wordpad"
 }
-#pragma code_page(default)

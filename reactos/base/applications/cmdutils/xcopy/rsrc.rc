@@ -27,17 +27,19 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include <reactos/version.rc>
 
 #include "Da.rc"
-#include "De.rc"
 #include "En.rc"
-#include "Fr.rc"
-#include "It.rc"
-#include "Ja.rc"
 #include "Ko.rc"
-#include "Lt.rc"
-#include "Nl.rc"
 #include "No.rc"
 #include "Pl.rc"
 #include "Pt.rc"
+
+/* UTF-8 */
+#include "De.rc"
+#include "Fr.rc"
+#include "It.rc"
+#include "Ja.rc"
+#include "Lt.rc"
+#include "Nl.rc"
 #include "Ru.rc"
 #include "Si.rc"
 #include "Uk.rc"

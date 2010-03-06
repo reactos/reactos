@@ -107,6 +107,30 @@ BEGIN
     END
 END
 
+IDM_COLOR_POPUP MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Zwart"         ID_COLOR_BLACK
+        MENUITEM "Kastanjebruin" ID_COLOR_MAROON
+        MENUITEM "Groen"         ID_COLOR_GREEN
+        MENUITEM "Olijfgroen"    ID_COLOR_OLIVE
+        MENUITEM "Marineblauw"   ID_COLOR_NAVY
+        MENUITEM "Paars"         ID_COLOR_PURPLE
+        MENUITEM "Groenblauw"    ID_COLOR_TEAL
+        MENUITEM "Grijs"         ID_COLOR_GRAY
+        MENUITEM "Zilver"        ID_COLOR_SILVER
+        MENUITEM "Rood"          ID_COLOR_RED
+        MENUITEM "Lichtgroen"    ID_COLOR_LIME
+        MENUITEM "Geel"          ID_COLOR_YELLOW
+        MENUITEM "Blauw"         ID_COLOR_BLUE
+        MENUITEM "Fuchsiapaars"  ID_COLOR_FUCHSIA
+        MENUITEM "Zeeblauw"      ID_COLOR_AQUA
+        MENUITEM "Wit"           ID_COLOR_WHITE
+        MENUITEM "Automatic"     ID_COLOR_AUTOMATIC
+    END
+END
+
 IDD_DATETIME DIALOG DISCARDABLE 30, 20, 130, 80
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Datum en tijd"
@@ -214,6 +238,8 @@ BEGIN
     STRING_PREVIEW_ZOOMIN,           "Zoom in"
     STRING_PREVIEW_ZOOMOUT,          "Zoom out"
     STRING_PREVIEW_CLOSE,            "Sluiten"
+    STRING_PREVIEW_PAGE,             "Page"
+    STRING_PREVIEW_PAGES,            "Pages"
 END
 
 STRINGTABLE DISCARDABLE

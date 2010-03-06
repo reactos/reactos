@@ -108,6 +108,30 @@ BEGIN
     END
 END
 
+IDM_COLOR_POPUP MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Svart"      ID_COLOR_BLACK
+        MENUITEM "Rødbrun"    ID_COLOR_MAROON
+        MENUITEM "Grønn"      ID_COLOR_GREEN
+        MENUITEM "Oliven"     ID_COLOR_OLIVE
+        MENUITEM "Marineblå"  ID_COLOR_NAVY
+        MENUITEM "Purpur"     ID_COLOR_PURPLE
+        MENUITEM "Teal"       ID_COLOR_TEAL
+        MENUITEM "Grå"        ID_COLOR_GRAY
+        MENUITEM "Sølv"       ID_COLOR_SILVER
+        MENUITEM "Rød"        ID_COLOR_RED
+        MENUITEM "Lime-grønn" ID_COLOR_LIME
+        MENUITEM "Gul"        ID_COLOR_YELLOW
+        MENUITEM "Blå"        ID_COLOR_BLUE
+        MENUITEM "Fuchsia"    ID_COLOR_FUCHSIA
+        MENUITEM "Aqua"       ID_COLOR_AQUA
+        MENUITEM "Hvit"       ID_COLOR_WHITE
+        MENUITEM "Automatic"  ID_COLOR_AUTOMATIC
+    END
+END
+
 IDD_DATETIME DIALOG DISCARDABLE 30, 20, 130, 80
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Dato og klokkeslett"
@@ -223,6 +247,8 @@ BEGIN
     STRING_PREVIEW_ZOOMIN,           "Zoom in"
     STRING_PREVIEW_ZOOMOUT,          "Zoom out"
     STRING_PREVIEW_CLOSE,            "Lukk"
+    STRING_PREVIEW_PAGE,             "Page"
+    STRING_PREVIEW_PAGES,            "Pages"
 END
 
 STRINGTABLE DISCARDABLE
@@ -248,4 +274,3 @@ BEGIN
     STRING_PRINTING_NOT_IMPLEMENTED,  "Utskriftfunksjonen er ikke laget ennå."
     STRING_MAX_TAB_STOPS,             "Kan ikke legge til mer enn 32 tabulatorstopp."
 END
-#pragma code_page(default)

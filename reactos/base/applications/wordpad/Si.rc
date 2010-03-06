@@ -108,6 +108,30 @@ BEGIN
     END
 END
 
+IDM_COLOR_POPUP MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Črna"        ID_COLOR_BLACK
+        MENUITEM "Kostanjeva"  ID_COLOR_MAROON
+        MENUITEM "Zelena"      ID_COLOR_GREEN
+        MENUITEM "Olivna"      ID_COLOR_OLIVE
+        MENUITEM "Mornariška"  ID_COLOR_NAVY
+        MENUITEM "Vijolična"   ID_COLOR_PURPLE
+        MENUITEM "Zelenomodra" ID_COLOR_TEAL
+        MENUITEM "Siva"        ID_COLOR_GRAY
+        MENUITEM "Srebrna"     ID_COLOR_SILVER
+        MENUITEM "Rdeča"       ID_COLOR_RED
+        MENUITEM "Citronska"   ID_COLOR_LIME
+        MENUITEM "Rumena"      ID_COLOR_YELLOW
+        MENUITEM "Modra"       ID_COLOR_BLUE
+        MENUITEM "Roza"        ID_COLOR_FUCHSIA
+        MENUITEM "Akvamarin"   ID_COLOR_AQUA
+        MENUITEM "Bela"        ID_COLOR_WHITE
+        MENUITEM "Automatic"   ID_COLOR_AUTOMATIC
+    END
+END
+
 IDD_DATETIME DIALOG DISCARDABLE 30, 20, 130, 80
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Datum in čas"
@@ -223,6 +247,8 @@ BEGIN
     STRING_PREVIEW_ZOOMIN,           "Zoom in"
     STRING_PREVIEW_ZOOMOUT,          "Zoom out"
     STRING_PREVIEW_CLOSE,            "Zapri"
+    STRING_PREVIEW_PAGE,             "Page"
+    STRING_PREVIEW_PAGES,            "Pages"
 END
 
 STRINGTABLE DISCARDABLE
@@ -249,4 +275,3 @@ BEGIN
     STRING_PRINTING_NOT_IMPLEMENTED,  "Tiskanje (še) ni na voljo"
     STRING_MAX_TAB_STOPS,             "Ne morem vstaviti več kot 32 položajev tabulatorja."
 END
-#pragma code_page(default)

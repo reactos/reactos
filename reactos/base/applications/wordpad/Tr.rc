@@ -108,6 +108,30 @@ BEGIN
     END
 END
 
+IDM_COLOR_POPUP MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Siyah"        ID_COLOR_BLACK
+        MENUITEM "Koyu Kýrmýzý" ID_COLOR_MAROON
+        MENUITEM "Yeþil"        ID_COLOR_GREEN
+        MENUITEM "Koyu Sarý"    ID_COLOR_OLIVE
+        MENUITEM "Koyu Mavi"    ID_COLOR_NAVY
+        MENUITEM "Mor"          ID_COLOR_PURPLE
+        MENUITEM "Deniz Mavisi" ID_COLOR_TEAL
+        MENUITEM "Gri"          ID_COLOR_GRAY
+        MENUITEM "Gümüþ"        ID_COLOR_SILVER
+        MENUITEM "Kýrmýzý"      ID_COLOR_RED
+        MENUITEM "Parlak Yeþil" ID_COLOR_LIME
+        MENUITEM "Sarý"         ID_COLOR_YELLOW
+        MENUITEM "Mavi"         ID_COLOR_BLUE
+        MENUITEM "Pembe"        ID_COLOR_FUCHSIA
+        MENUITEM "Turkuaz"      ID_COLOR_AQUA
+        MENUITEM "Beyaz"        ID_COLOR_WHITE
+        MENUITEM "Automatic"    ID_COLOR_AUTOMATIC
+    END
+END
+
 IDD_DATETIME DIALOG DISCARDABLE 30, 20, 130, 80
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Date and time"
@@ -223,6 +247,8 @@ BEGIN
     STRING_PREVIEW_ZOOMIN,           "Zoom in"
     STRING_PREVIEW_ZOOMOUT,          "Zoom out"
     STRING_PREVIEW_CLOSE,            "Close"
+    STRING_PREVIEW_PAGE,             "Page"
+    STRING_PREVIEW_PAGES,            "Pages"
 END
 
 STRINGTABLE DISCARDABLE

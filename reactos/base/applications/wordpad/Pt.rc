@@ -110,6 +110,30 @@ BEGIN
     END
 END
 
+IDM_COLOR_POPUP MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Preto"         ID_COLOR_BLACK
+        MENUITEM "Castanho"      ID_COLOR_MAROON
+        MENUITEM "Verde"         ID_COLOR_GREEN
+        MENUITEM "Verde-oliva"   ID_COLOR_OLIVE
+        MENUITEM "Azul-marinho"  ID_COLOR_NAVY
+        MENUITEM "Roxo"          ID_COLOR_PURPLE
+        MENUITEM "Azul-petróleo" ID_COLOR_TEAL
+        MENUITEM "Cinza"         ID_COLOR_GRAY
+        MENUITEM "Prateado"      ID_COLOR_SILVER
+        MENUITEM "Vermelho"      ID_COLOR_RED
+        MENUITEM "Verde-limão"   ID_COLOR_LIME
+        MENUITEM "Amarelo"       ID_COLOR_YELLOW
+        MENUITEM "Azul"          ID_COLOR_BLUE
+        MENUITEM "Fúcsia"        ID_COLOR_FUCHSIA
+        MENUITEM "Azul-piscina"  ID_COLOR_AQUA
+        MENUITEM "Branco"        ID_COLOR_WHITE
+        MENUITEM "Automatic"     ID_COLOR_AUTOMATIC
+    END
+END
+
 IDD_DATETIME DIALOG DISCARDABLE 30, 20, 130, 80
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Data e hora"
@@ -225,6 +249,8 @@ BEGIN
     STRING_PREVIEW_ZOOMIN,           "Zoom in"
     STRING_PREVIEW_ZOOMOUT,          "Zoom out"
     STRING_PREVIEW_CLOSE,            "Fechar"
+    STRING_PREVIEW_PAGE,             "Page"
+    STRING_PREVIEW_PAGES,            "Pages"
 END
 
 STRINGTABLE DISCARDABLE
@@ -250,4 +276,3 @@ BEGIN
     STRING_PRINTING_NOT_IMPLEMENTED, "Impressão não implementada"
     STRING_MAX_TAB_STOPS,             "Não pode adicionar mais de 32 tabs."
 END
-#pragma code_page(default)

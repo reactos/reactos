@@ -27,6 +27,7 @@
 static const WCHAR key_recentfiles[] = {'R','e','c','e','n','t',' ','f','i','l','e',
                                         ' ','l','i','s','t',0};
 static const WCHAR key_options[] = {'O','p','t','i','o','n','s',0};
+static const WCHAR key_settings[] = {'S','e','t','t','i','n','g','s',0};
 static const WCHAR key_rtf[] = {'R','T','F',0};
 static const WCHAR key_text[] = {'T','e','x','t',0};
 
@@ -94,9 +95,14 @@ void registry_set_options(HWND hMainWnd)
         RegSetValueExW(hKey, var_maximized, 0, REG_DWORD, (LPBYTE)&isMaximized, sizeof(DWORD));
 
         registry_set_pagemargins(hKey);
+        RegCloseKey(hKey);
     }
 
-    RegCloseKey(hKey);
+    if(registry_get_handle(&hKey, &action, key_settings) == ERROR_SUCCESS)
+    {
+        registry_set_previewpages(hKey);
+        RegCloseKey(hKey);
+    }
 }
 
 void registry_read_winrect(RECT* rc)
@@ -337,6 +343,13 @@ void registry_read_options(void)
     else
     {
         registry_read_pagemargins(hKey);
+        RegCloseKey(hKey);
+    }
+
+    if(registry_get_handle(&hKey, 0, key_settings) != ERROR_SUCCESS) {
+        registry_read_previewpages(NULL);
+    } else {
+        registry_read_previewpages(hKey);
         RegCloseKey(hKey);
     }
 }

@@ -29,4 +29,3 @@ STRINGTABLE
 {
     IDS_FAILED, "Impossibile avviare WordPad"
 }
-#pragma code_page(default)

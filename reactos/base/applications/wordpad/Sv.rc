@@ -108,6 +108,30 @@ BEGIN
     END
 END
 
+IDM_COLOR_POPUP MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Svart"     ID_COLOR_BLACK
+        MENUITEM "Rödbrun"   ID_COLOR_MAROON
+        MENUITEM "Grön"      ID_COLOR_GREEN
+        MENUITEM "Oliv"      ID_COLOR_OLIVE
+        MENUITEM "Navy"      ID_COLOR_NAVY
+        MENUITEM "Lila"      ID_COLOR_PURPLE
+        MENUITEM "Teal"      ID_COLOR_TEAL
+        MENUITEM "Grå"       ID_COLOR_GRAY
+        MENUITEM "Silver"    ID_COLOR_SILVER
+        MENUITEM "Röd"       ID_COLOR_RED
+        MENUITEM "Lime"      ID_COLOR_LIME
+        MENUITEM "Gul"       ID_COLOR_YELLOW
+        MENUITEM "Blå"       ID_COLOR_BLUE
+        MENUITEM "Fuchsia"   ID_COLOR_FUCHSIA
+        MENUITEM "Aqua"      ID_COLOR_AQUA
+        MENUITEM "Vit"       ID_COLOR_WHITE
+        MENUITEM "Automatic" ID_COLOR_AUTOMATIC
+    END
+END
+
 IDD_DATETIME DIALOG DISCARDABLE 30, 20, 130, 80
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Datum och tid"
@@ -223,6 +247,8 @@ BEGIN
     STRING_PREVIEW_ZOOMIN,           "Zooma in"
     STRING_PREVIEW_ZOOMOUT,          "Zooma ut"
     STRING_PREVIEW_CLOSE,            "Stäng"
+    STRING_PREVIEW_PAGE,             "Sida"
+    STRING_PREVIEW_PAGES,            "Sidor"
 END
 
 STRINGTABLE DISCARDABLE
@@ -248,4 +274,3 @@ BEGIN
     STRING_PRINTING_NOT_IMPLEMENTED, "Utskrift ej implementerat."
     STRING_MAX_TAB_STOPS,            "Kan ej lägga till mer än 32 tabbstopp."
 END
-#pragma code_page(default)
