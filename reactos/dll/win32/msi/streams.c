@@ -527,9 +527,9 @@ static INT add_streams_to_table(MSISTREAMSVIEW *sv)
             break;
         }
 
-        if (!strcmpW(stat.pwcsName, szSumInfo))
+        /* these streams appear to be unencoded */
+        if (*stat.pwcsName == 0x0005)
         {
-            /* summary information stream is not encoded */
             r = db_get_raw_stream(sv->db, stat.pwcsName, &stream->stream);
         }
         else

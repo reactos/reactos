@@ -1621,6 +1621,25 @@ end:
     return r;
 }
 
+static void msi_reset_folders( MSIPACKAGE *package, BOOL source )
+{
+    MSIFOLDER *folder;
+
+    LIST_FOR_EACH_ENTRY( folder, &package->folders, MSIFOLDER, entry )
+    {
+        if ( source )
+        {
+            msi_free( folder->ResolvedSource );
+            folder->ResolvedSource = NULL;
+        }
+        else
+        {
+            msi_free( folder->ResolvedTarget );
+            folder->ResolvedTarget = NULL;
+        }
+    }
+}
+
 UINT MSI_SetPropertyW( MSIPACKAGE *package, LPCWSTR szName, LPCWSTR szValue)
 {
     MSIQUERY *view;

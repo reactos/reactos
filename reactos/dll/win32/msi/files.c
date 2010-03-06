@@ -24,10 +24,10 @@
  *
  * InstallFiles
  * DuplicateFiles
- * MoveFiles (TODO)
+ * MoveFiles
  * PatchFiles (TODO)
- * RemoveDuplicateFiles(TODO)
- * RemoveFiles(TODO)
+ * RemoveDuplicateFiles
+ * RemoveFiles
  */
 
 #include <stdarg.h>
@@ -83,23 +83,6 @@ static int msi_compare_file_version(MSIFILE *file)
         return 0;
 
     return lstrcmpW(version, file->Version);
-}
-
-static UINT get_file_target(MSIPACKAGE *package, LPCWSTR file_key, 
-                            MSIFILE** file)
-{
-    LIST_FOR_EACH_ENTRY( *file, &package->files, MSIFILE, entry )
-    {
-        if (lstrcmpW( file_key, (*file)->File )==0)
-        {
-            if ((*file)->state >= msifs_overwrite)
-                return ERROR_SUCCESS;
-            else
-                return ERROR_FILE_NOT_FOUND;
-        }
-    }
-
-    return ERROR_FUNCTION_FAILED;
 }
 
 static void schedule_install_files(MSIPACKAGE *package)
@@ -345,15 +328,407 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
     return rc;
 }
 
+#define is_dot_dir(x) ((x[0] == '.') && ((x[1] == 0) || ((x[1] == '.') && (x[2] == 0))))
+
+typedef struct
+{
+    struct list entry;
+    LPWSTR sourcename;
+    LPWSTR destname;
+    LPWSTR source;
+    LPWSTR dest;
+} FILE_LIST;
+
+static BOOL msi_move_file(LPCWSTR source, LPCWSTR dest, int options)
+{
+    BOOL ret;
+
+    if (GetFileAttributesW(source) == FILE_ATTRIBUTE_DIRECTORY ||
+        GetFileAttributesW(dest) == FILE_ATTRIBUTE_DIRECTORY)
+    {
+        WARN("Source or dest is directory, not moving\n");
+        return FALSE;
+    }
+
+    if (options == msidbMoveFileOptionsMove)
+    {
+        TRACE("moving %s -> %s\n", debugstr_w(source), debugstr_w(dest));
+        ret = MoveFileExW(source, dest, MOVEFILE_REPLACE_EXISTING);
+        if (!ret)
+        {
+            WARN("MoveFile failed: %d\n", GetLastError());
+            return FALSE;
+        }
+    }
+    else
+    {
+        TRACE("copying %s -> %s\n", debugstr_w(source), debugstr_w(dest));
+        ret = CopyFileW(source, dest, FALSE);
+        if (!ret)
+        {
+            WARN("CopyFile failed: %d\n", GetLastError());
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
+static LPWSTR wildcard_to_file(LPWSTR wildcard, LPWSTR filename)
+{
+    LPWSTR path, ptr;
+    DWORD dirlen, pathlen;
+
+    ptr = strrchrW(wildcard, '\\');
+    dirlen = ptr - wildcard + 1;
+
+    pathlen = dirlen + lstrlenW(filename) + 1;
+    path = msi_alloc(pathlen * sizeof(WCHAR));
+
+    lstrcpynW(path, wildcard, dirlen + 1);
+    lstrcatW(path, filename);
+
+    return path;
+}
+
+static void free_file_entry(FILE_LIST *file)
+{
+    msi_free(file->source);
+    msi_free(file->dest);
+    msi_free(file);
+}
+
+static void free_list(FILE_LIST *list)
+{
+    while (!list_empty(&list->entry))
+    {
+        FILE_LIST *file = LIST_ENTRY(list_head(&list->entry), FILE_LIST, entry);
+
+        list_remove(&file->entry);
+        free_file_entry(file);
+    }
+}
+
+static BOOL add_wildcard(FILE_LIST *files, LPWSTR source, LPWSTR dest)
+{
+    FILE_LIST *new, *file;
+    LPWSTR ptr, filename;
+    DWORD size;
+
+    new = msi_alloc_zero(sizeof(FILE_LIST));
+    if (!new)
+        return FALSE;
+
+    new->source = strdupW(source);
+    ptr = strrchrW(dest, '\\') + 1;
+    filename = strrchrW(new->source, '\\') + 1;
+
+    new->sourcename = filename;
+
+    if (*ptr)
+        new->destname = ptr;
+    else
+        new->destname = new->sourcename;
+
+    size = (ptr - dest) + lstrlenW(filename) + 1;
+    new->dest = msi_alloc(size * sizeof(WCHAR));
+    if (!new->dest)
+    {
+        free_file_entry(new);
+        return FALSE;
+    }
+
+    lstrcpynW(new->dest, dest, ptr - dest + 1);
+    lstrcatW(new->dest, filename);
+
+    if (list_empty(&files->entry))
+    {
+        list_add_head(&files->entry, &new->entry);
+        return TRUE;
+    }
+
+    LIST_FOR_EACH_ENTRY(file, &files->entry, FILE_LIST, entry)
+    {
+        if (lstrcmpW(source, file->source) < 0)
+        {
+            list_add_before(&file->entry, &new->entry);
+            return TRUE;
+        }
+    }
+
+    list_add_after(&file->entry, &new->entry);
+    return TRUE;
+}
+
+static BOOL move_files_wildcard(LPWSTR source, LPWSTR dest, int options)
+{
+    WIN32_FIND_DATAW wfd;
+    HANDLE hfile;
+    LPWSTR path;
+    BOOL res;
+    FILE_LIST files, *file;
+    DWORD size;
+
+    hfile = FindFirstFileW(source, &wfd);
+    if (hfile == INVALID_HANDLE_VALUE) return FALSE;
+
+    list_init(&files.entry);
+
+    for (res = TRUE; res; res = FindNextFileW(hfile, &wfd))
+    {
+        if (is_dot_dir(wfd.cFileName)) continue;
+
+        path = wildcard_to_file(source, wfd.cFileName);
+        if (!path)
+        {
+            res = FALSE;
+            goto done;
+        }
+
+        add_wildcard(&files, path, dest);
+        msi_free(path);
+    }
+
+    /* no files match the wildcard */
+    if (list_empty(&files.entry))
+        goto done;
+
+    /* only the first wildcard match gets renamed to dest */
+    file = LIST_ENTRY(list_head(&files.entry), FILE_LIST, entry);
+    size = (strrchrW(file->dest, '\\') - file->dest) + lstrlenW(file->destname) + 2;
+    file->dest = msi_realloc(file->dest, size * sizeof(WCHAR));
+    if (!file->dest)
+    {
+        res = FALSE;
+        goto done;
+    }
+
+    /* file->dest may be shorter after the reallocation, so add a NULL
+     * terminator.  This is needed for the call to strrchrW, as there will no
+     * longer be a NULL terminator within the bounds of the allocation in this case.
+     */
+    file->dest[size - 1] = '\0';
+    lstrcpyW(strrchrW(file->dest, '\\') + 1, file->destname);
+
+    while (!list_empty(&files.entry))
+    {
+        file = LIST_ENTRY(list_head(&files.entry), FILE_LIST, entry);
+
+        msi_move_file(file->source, file->dest, options);
+
+        list_remove(&file->entry);
+        free_file_entry(file);
+    }
+
+    res = TRUE;
+
+done:
+    free_list(&files);
+    FindClose(hfile);
+    return res;
+}
+
+static UINT ITERATE_MoveFiles( MSIRECORD *rec, LPVOID param )
+{
+    MSIPACKAGE *package = param;
+    MSIRECORD *uirow;
+    MSICOMPONENT *comp;
+    LPCWSTR sourcename, component;
+    LPWSTR sourcedir, destname = NULL, destdir = NULL, source = NULL, dest = NULL;
+    int options;
+    DWORD size;
+    BOOL ret, wildcards;
+
+    component = MSI_RecordGetString(rec, 2);
+    comp = get_loaded_component(package, component);
+    if (!comp)
+        return ERROR_SUCCESS;
+
+    if (comp->ActionRequest != INSTALLSTATE_LOCAL && comp->ActionRequest != INSTALLSTATE_SOURCE)
+    {
+        TRACE("Component not scheduled for installation: %s\n", debugstr_w(component));
+        comp->Action = comp->Installed;
+        return ERROR_SUCCESS;
+    }
+    comp->Action = comp->ActionRequest;
+
+    sourcename = MSI_RecordGetString(rec, 3);
+    options = MSI_RecordGetInteger(rec, 7);
+
+    sourcedir = msi_dup_property(package, MSI_RecordGetString(rec, 5));
+    if (!sourcedir)
+        goto done;
+
+    destdir = msi_dup_property(package, MSI_RecordGetString(rec, 6));
+    if (!destdir)
+        goto done;
+
+    if (!sourcename)
+    {
+        if (GetFileAttributesW(sourcedir) == INVALID_FILE_ATTRIBUTES)
+            goto done;
+
+        source = strdupW(sourcedir);
+        if (!source)
+            goto done;
+    }
+    else
+    {
+        size = lstrlenW(sourcedir) + lstrlenW(sourcename) + 2;
+        source = msi_alloc(size * sizeof(WCHAR));
+        if (!source)
+            goto done;
+
+        lstrcpyW(source, sourcedir);
+        if (source[lstrlenW(source) - 1] != '\\')
+            lstrcatW(source, szBackSlash);
+        lstrcatW(source, sourcename);
+    }
+
+    wildcards = strchrW(source, '*') || strchrW(source, '?');
+
+    if (MSI_RecordIsNull(rec, 4))
+    {
+        if (!wildcards)
+        {
+            destname = strdupW(sourcename);
+            if (!destname)
+                goto done;
+        }
+    }
+    else
+    {
+        destname = strdupW(MSI_RecordGetString(rec, 4));
+        if (destname)
+            reduce_to_longfilename(destname);
+    }
+
+    size = 0;
+    if (destname)
+        size = lstrlenW(destname);
+
+    size += lstrlenW(destdir) + 2;
+    dest = msi_alloc(size * sizeof(WCHAR));
+    if (!dest)
+        goto done;
+
+    lstrcpyW(dest, destdir);
+    if (dest[lstrlenW(dest) - 1] != '\\')
+        lstrcatW(dest, szBackSlash);
+
+    if (destname)
+        lstrcatW(dest, destname);
+
+    if (GetFileAttributesW(destdir) == INVALID_FILE_ATTRIBUTES)
+    {
+        ret = CreateDirectoryW(destdir, NULL);
+        if (!ret)
+        {
+            WARN("CreateDirectory failed: %d\n", GetLastError());
+            goto done;
+        }
+    }
+
+    if (!wildcards)
+        msi_move_file(source, dest, options);
+    else
+        move_files_wildcard(source, dest, options);
+
+done:
+    uirow = MSI_CreateRecord( 9 );
+    MSI_RecordSetStringW( uirow, 1, MSI_RecordGetString(rec, 1) );
+    MSI_RecordSetInteger( uirow, 6, 1 ); /* FIXME */
+    MSI_RecordSetStringW( uirow, 9, destdir );
+    ui_actiondata( package, szMoveFiles, uirow );
+    msiobj_release( &uirow->hdr );
+
+    msi_free(sourcedir);
+    msi_free(destdir);
+    msi_free(destname);
+    msi_free(source);
+    msi_free(dest);
+
+    return ERROR_SUCCESS;
+}
+
+UINT ACTION_MoveFiles( MSIPACKAGE *package )
+{
+    UINT rc;
+    MSIQUERY *view;
+
+    static const WCHAR ExecSeqQuery[] =
+        {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
+         '`','M','o','v','e','F','i','l','e','`',0};
+
+    rc = MSI_DatabaseOpenViewW(package->db, ExecSeqQuery, &view);
+    if (rc != ERROR_SUCCESS)
+        return ERROR_SUCCESS;
+
+    rc = MSI_IterateRecords(view, NULL, ITERATE_MoveFiles, package);
+    msiobj_release(&view->hdr);
+
+    return rc;
+}
+
+static WCHAR *get_duplicate_filename( MSIPACKAGE *package, MSIRECORD *row, const WCHAR *file_key, const WCHAR *src )
+{
+    DWORD len;
+    WCHAR *dst_name, *dst_path, *dst;
+
+    if (MSI_RecordIsNull( row, 4 ))
+    {
+        len = strlenW( src ) + 1;
+        if (!(dst_name = msi_alloc( len * sizeof(WCHAR)))) return NULL;
+        strcpyW( dst_name, strrchrW( src, '\\' ) + 1 );
+    }
+    else
+    {
+        MSI_RecordGetStringW( row, 4, NULL, &len );
+        if (!(dst_name = msi_alloc( ++len * sizeof(WCHAR) ))) return NULL;
+        MSI_RecordGetStringW( row, 4, dst_name, &len );
+        reduce_to_longfilename( dst_name );
+    }
+
+    if (MSI_RecordIsNull( row, 5 ))
+    {
+        WCHAR *p;
+        dst_path = strdupW( src );
+        p = strrchrW( dst_path, '\\' );
+        if (p) *p = 0;
+    }
+    else
+    {
+        const WCHAR *dst_key = MSI_RecordGetString( row, 5 );
+
+        dst_path = resolve_folder( package, dst_key, FALSE, FALSE, TRUE, NULL );
+        if (!dst_path)
+        {
+            /* try a property */
+            dst_path = msi_dup_property( package, dst_key );
+            if (!dst_path)
+            {
+                FIXME("Unable to get destination folder, try AppSearch properties\n");
+                msi_free( dst_name );
+                return NULL;
+            }
+        }
+    }
+
+    dst = build_directory_name( 2, dst_path, dst_name );
+    create_full_pathW( dst_path );
+
+    msi_free( dst_name );
+    msi_free( dst_path );
+    return dst;
+}
+
 static UINT ITERATE_DuplicateFiles(MSIRECORD *row, LPVOID param)
 {
     MSIPACKAGE *package = param;
-    WCHAR dest_name[0x100];
-    LPWSTR dest_path, dest;
+    LPWSTR dest;
     LPCWSTR file_key, component;
-    DWORD sz;
-    DWORD rc;
     MSICOMPONENT *comp;
+    MSIRECORD *uirow;
     MSIFILE *file;
 
     component = MSI_RecordGetString(row,2);
@@ -376,70 +751,38 @@ static UINT ITERATE_DuplicateFiles(MSIRECORD *row, LPVOID param)
         return ERROR_FUNCTION_FAILED;
     }
 
-    rc = get_file_target(package,file_key,&file);
-
-    if (rc != ERROR_SUCCESS)
+    file = get_loaded_file( package, file_key );
+    if (!file)
     {
-        ERR("Original file unknown %s\n",debugstr_w(file_key));
+        ERR("Original file unknown %s\n", debugstr_w(file_key));
         return ERROR_SUCCESS;
     }
 
-    if (MSI_RecordIsNull(row,4))
-        strcpyW(dest_name,strrchrW(file->TargetPath,'\\')+1);
-    else
+    dest = get_duplicate_filename( package, row, file_key, file->TargetPath );
+    if (!dest)
     {
-        sz=0x100;
-        MSI_RecordGetStringW(row,4,dest_name,&sz);
-        reduce_to_longfilename(dest_name);
+        WARN("Unable to get duplicate filename\n");
+        return ERROR_SUCCESS;
     }
 
-    if (MSI_RecordIsNull(row,5))
+    TRACE("Duplicating file %s to %s\n", debugstr_w(file->TargetPath), debugstr_w(dest));
+
+    if (!CopyFileW( file->TargetPath, dest, TRUE ))
     {
-        LPWSTR p;
-        dest_path = strdupW(file->TargetPath);
-        p = strrchrW(dest_path,'\\');
-        if (p)
-            *p=0;
+        WARN("Failed to copy file %s -> %s (%u)\n",
+             debugstr_w(file->TargetPath), debugstr_w(dest), GetLastError());
     }
-    else
-    {
-        LPCWSTR destkey;
-        destkey = MSI_RecordGetString(row,5);
-        dest_path = resolve_folder(package, destkey, FALSE, FALSE, TRUE, NULL);
-        if (!dest_path)
-        {
-            /* try a Property */
-            dest_path = msi_dup_property( package, destkey );
-            if (!dest_path)
-            {
-                FIXME("Unable to get destination folder, try AppSearch properties\n");
-                return ERROR_SUCCESS;
-            }
-        }
-    }
-
-    dest = build_directory_name(2, dest_path, dest_name);
-    create_full_pathW(dest_path);
-
-    TRACE("Duplicating file %s to %s\n",debugstr_w(file->TargetPath),
-                    debugstr_w(dest)); 
-
-    if (strcmpW(file->TargetPath,dest))
-        rc = !CopyFileW(file->TargetPath,dest,TRUE);
-    else
-        rc = ERROR_SUCCESS;
-
-    if (rc != ERROR_SUCCESS)
-        ERR("Failed to copy file %s -> %s, last error %d\n",
-            debugstr_w(file->TargetPath), debugstr_w(dest_path), GetLastError());
 
     FIXME("We should track these duplicate files as well\n");   
 
-    msi_free(dest_path);
+    uirow = MSI_CreateRecord( 9 );
+    MSI_RecordSetStringW( uirow, 1, MSI_RecordGetString( row, 1 ) );
+    MSI_RecordSetInteger( uirow, 6, file->FileSize );
+    MSI_RecordSetStringW( uirow, 9, MSI_RecordGetString( row, 5 ) );
+    ui_actiondata( package, szDuplicateFiles, uirow );
+    msiobj_release( &uirow->hdr );
+
     msi_free(dest);
-
-    msi_file_update_ui(package, file, szDuplicateFiles);
-
     return ERROR_SUCCESS;
 }
 
@@ -457,6 +800,84 @@ UINT ACTION_DuplicateFiles(MSIPACKAGE *package)
 
     rc = MSI_IterateRecords(view, NULL, ITERATE_DuplicateFiles, package);
     msiobj_release(&view->hdr);
+
+    return rc;
+}
+
+static UINT ITERATE_RemoveDuplicateFiles( MSIRECORD *row, LPVOID param )
+{
+    MSIPACKAGE *package = param;
+    LPWSTR dest;
+    LPCWSTR file_key, component;
+    MSICOMPONENT *comp;
+    MSIRECORD *uirow;
+    MSIFILE *file;
+
+    component = MSI_RecordGetString( row, 2 );
+    comp = get_loaded_component( package, component );
+    if (!comp)
+        return ERROR_SUCCESS;
+
+    if (comp->ActionRequest != INSTALLSTATE_ABSENT)
+    {
+        TRACE("Component not scheduled for removal %s\n", debugstr_w(component));
+        comp->Action = comp->Installed;
+        return ERROR_SUCCESS;
+    }
+    comp->Action = INSTALLSTATE_ABSENT;
+
+    file_key = MSI_RecordGetString( row, 3 );
+    if (!file_key)
+    {
+        ERR("Unable to get file key\n");
+        return ERROR_FUNCTION_FAILED;
+    }
+
+    file = get_loaded_file( package, file_key );
+    if (!file)
+    {
+        ERR("Original file unknown %s\n", debugstr_w(file_key));
+        return ERROR_SUCCESS;
+    }
+
+    dest = get_duplicate_filename( package, row, file_key, file->TargetPath );
+    if (!dest)
+    {
+        WARN("Unable to get duplicate filename\n");
+        return ERROR_SUCCESS;
+    }
+
+    TRACE("Removing duplicate %s of %s\n", debugstr_w(dest), debugstr_w(file->TargetPath));
+
+    if (!DeleteFileW( dest ))
+    {
+        WARN("Failed to delete duplicate file %s (%u)\n", debugstr_w(dest), GetLastError());
+    }
+
+    uirow = MSI_CreateRecord( 9 );
+    MSI_RecordSetStringW( uirow, 1, MSI_RecordGetString( row, 1 ) );
+    MSI_RecordSetStringW( uirow, 9, MSI_RecordGetString( row, 5 ) );
+    ui_actiondata( package, szRemoveDuplicateFiles, uirow );
+    msiobj_release( &uirow->hdr );
+
+    msi_free(dest);
+    return ERROR_SUCCESS;
+}
+
+UINT ACTION_RemoveDuplicateFiles( MSIPACKAGE *package )
+{
+    UINT rc;
+    MSIQUERY *view;
+    static const WCHAR query[] =
+        {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
+         '`','D','u','p','l','i','c','a','t','e','F','i','l','e','`',0};
+
+    rc = MSI_DatabaseOpenViewW( package->db, query, &view );
+    if (rc != ERROR_SUCCESS)
+        return ERROR_SUCCESS;
+
+    rc = MSI_IterateRecords( view, NULL, ITERATE_RemoveDuplicateFiles, package );
+    msiobj_release( &view->hdr );
 
     return rc;
 }
@@ -491,6 +912,7 @@ static UINT ITERATE_RemoveFiles(MSIRECORD *row, LPVOID param)
 {
     MSIPACKAGE *package = param;
     MSICOMPONENT *comp;
+    MSIRECORD *uirow;
     LPCWSTR component, filename, dirprop;
     UINT install_mode;
     LPWSTR dir = NULL, path = NULL;
@@ -529,11 +951,10 @@ static UINT ITERATE_RemoveFiles(MSIRECORD *row, LPVOID param)
         goto done;
     }
 
-    lstrcpyW(path, dir);
-    PathAddBackslashW(path);
-
     if (filename)
     {
+        lstrcpyW(path, dir);
+        PathAddBackslashW(path);
         lstrcatW(path, filename);
 
         TRACE("Deleting misc file: %s\n", debugstr_w(path));
@@ -541,11 +962,17 @@ static UINT ITERATE_RemoveFiles(MSIRECORD *row, LPVOID param)
     }
     else
     {
-        TRACE("Removing misc directory: %s\n", debugstr_w(path));
-        RemoveDirectoryW(path);
+        TRACE("Removing misc directory: %s\n", debugstr_w(dir));
+        RemoveDirectoryW(dir);
     }
 
 done:
+    uirow = MSI_CreateRecord( 9 );
+    MSI_RecordSetStringW( uirow, 1, MSI_RecordGetString(row, 1) );
+    MSI_RecordSetStringW( uirow, 9, dir );
+    ui_actiondata( package, szRemoveFiles, uirow );
+    msiobj_release( &uirow->hdr );
+
     msi_free(path);
     msi_free(dir);
     return ERROR_SUCCESS;
@@ -560,6 +987,9 @@ UINT ACTION_RemoveFiles( MSIPACKAGE *package )
     static const WCHAR query[] = {
         'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
         '`','R','e','m','o','v','e','F','i','l','e','`',0};
+    static const WCHAR folder_query[] = {
+        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
+        '`','C','r','e','a','t','e','F','o','l','d','e','r','`',0};
 
     r = MSI_DatabaseOpenViewW(package->db, query, &view);
     if (r == ERROR_SUCCESS)
@@ -568,10 +998,14 @@ UINT ACTION_RemoveFiles( MSIPACKAGE *package )
         msiobj_release(&view->hdr);
     }
 
+    r = MSI_DatabaseOpenViewW(package->db, folder_query, &view);
+    if (r == ERROR_SUCCESS)
+        msiobj_release(&view->hdr);
+
     LIST_FOR_EACH_ENTRY( file, &package->files, MSIFILE, entry )
     {
         MSIRECORD *uirow;
-        LPWSTR uipath, p;
+        LPWSTR dir, uipath, p;
 
         if ( file->state == msifs_installed )
             ERR("removing installed file %s\n", debugstr_w(file->TargetPath));
@@ -587,8 +1021,17 @@ UINT ACTION_RemoveFiles( MSIPACKAGE *package )
             continue;
 
         TRACE("removing %s\n", debugstr_w(file->File) );
-        if ( !DeleteFileW( file->TargetPath ) )
-            TRACE("failed to delete %s\n",  debugstr_w(file->TargetPath));
+        if (!DeleteFileW( file->TargetPath ))
+        {
+            WARN("failed to delete %s\n",  debugstr_w(file->TargetPath));
+        }
+        /* FIXME: check persistence for each directory */
+        else if (r && (dir = strdupW( file->TargetPath )))
+        {
+            if ((p = strrchrW( dir, '\\' ))) *p = 0;
+            RemoveDirectoryW( dir );
+            msi_free( dir );
+        }
         file->state = msifs_missing;
 
         /* the UI chunk */
