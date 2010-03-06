@@ -63,6 +63,7 @@ Bus_FDO_Power (
     PIO_STACK_LOCATION  stack;
 	ULONG AcpiState;
 	ACPI_STATUS AcpiStatus;
+    SYSTEM_POWER_STATE  oldPowerState;
 
     stack = IoGetCurrentIrpStackLocation (Irp);
     powerType = stack->Parameters.Power.Type;
@@ -77,8 +78,8 @@ Bus_FDO_Power (
                DbgDevicePowerString(powerState.DeviceState)));
     }
 
-  if (powerType == SystemPowerState) {
-    status = STATUS_SUCCESS;
+  if (powerType == SystemPowerState)
+  {     
     switch (powerState.SystemState) {
     case PowerSystemSleeping1:
       AcpiState = ACPI_STATE_S1;
@@ -96,13 +97,17 @@ Bus_FDO_Power (
       AcpiState = ACPI_STATE_S5;
       break;
     default:
-        return STATUS_UNSUCCESSFUL;
-        break;
+      AcpiState = ACPI_STATE_UNKNOWN;
+      ASSERT(FALSE);
+      break;
     }
+      oldPowerState = Data->Common.SystemPowerState;
+      Data->Common.SystemPowerState = powerState.SystemState;
       AcpiStatus = AcpiEnterSleepState(AcpiState);
       if (!ACPI_SUCCESS(AcpiStatus)) {
         DPRINT1("Failed to enter sleep state %d (Status 0x%X)\n",
           AcpiState, AcpiStatus);
+        Data->Common.SystemPowerState = oldPowerState;
         status = STATUS_UNSUCCESSFUL;
       }
   }
@@ -124,14 +129,10 @@ Bus_PDO_Power (
     POWER_STATE         powerState;
     POWER_STATE_TYPE    powerType;
     ULONG               error;
-    struct acpi_device  *device;
 
     stack = IoGetCurrentIrpStackLocation (Irp);
     powerType = stack->Parameters.Power.Type;
     powerState = stack->Parameters.Power.State;
-
-    if (PdoData->AcpiHandle)
-        acpi_bus_get_device(PdoData->AcpiHandle, &device);
 
     switch (stack->MinorFunction) {
     case IRP_MN_SET_POWER:
@@ -144,8 +145,9 @@ Bus_PDO_Power (
 
         switch (powerType) {
             case DevicePowerState:
-                if (!device)
+                if (!PdoData->AcpiHandle || !acpi_bus_power_manageable(PdoData->AcpiHandle))
                 {
+                    PoSetPowerState(PdoData->Common.Self, DevicePowerState, powerState);
                     PdoData->Common.DevicePowerState = powerState.DeviceState;
                     status = STATUS_SUCCESS;
                     break;
@@ -154,19 +156,19 @@ Bus_PDO_Power (
                 switch (powerState.DeviceState)
                 {
                     case PowerDeviceD0:
-                      error = acpi_power_transition(device, ACPI_STATE_D0);
+                      error = acpi_bus_set_power(PdoData->AcpiHandle, ACPI_STATE_D0);
                       break;
 
                     case PowerDeviceD1:
-                      error = acpi_power_transition(device, ACPI_STATE_D1);
+                      error = acpi_bus_set_power(PdoData->AcpiHandle, ACPI_STATE_D1);
                       break;
 
                     case PowerDeviceD2:
-                      error = acpi_power_transition(device, ACPI_STATE_D2);
+                      error = acpi_bus_set_power(PdoData->AcpiHandle, ACPI_STATE_D2);
                       break;
 
                     case PowerDeviceD3:
-                      error = acpi_power_transition(device, ACPI_STATE_D3);
+                      error = acpi_bus_set_power(PdoData->AcpiHandle, ACPI_STATE_D3);
                       break;
 
                     default:
@@ -176,6 +178,7 @@ Bus_PDO_Power (
 
                 if (ACPI_SUCCESS(error))
                 {
+                    PoSetPowerState(PdoData->Common.Self, DevicePowerState, powerState);
                     PdoData->Common.DevicePowerState = powerState.DeviceState;
                     status = STATUS_SUCCESS;
                 }

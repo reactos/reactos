@@ -417,12 +417,39 @@ Bus_InitializePdo (
     )
 {
     PPDO_DEVICE_DATA pdoData;
+    int acpistate;
+    DEVICE_POWER_STATE ntState;
 
     PAGED_CODE ();
 
     pdoData = (PPDO_DEVICE_DATA)  Pdo->DeviceExtension;
 
     DPRINT("pdo 0x%p, extension 0x%p\n", Pdo, pdoData);
+
+    if (pdoData->AcpiHandle)
+        acpi_bus_get_power(pdoData->AcpiHandle, &acpistate);
+    else
+        acpistate = ACPI_STATE_D0;
+
+    switch(acpistate)
+    {
+        case ACPI_STATE_D0:
+            ntState = PowerDeviceD0;
+            break;
+        case ACPI_STATE_D1:
+            ntState = PowerDeviceD1;
+            break;
+        case ACPI_STATE_D2:
+            ntState = PowerDeviceD2;
+            break;
+        case ACPI_STATE_D3:
+            ntState = PowerDeviceD3;
+            break;
+        default:
+            DPRINT1("Unknown power state (%d) returned by acpi\n",acpistate);
+            ntState = PowerDeviceUnspecified;
+            break;
+    }
 
     //
     // Initialize the rest
@@ -435,12 +462,8 @@ Bus_InitializePdo (
 
     INITIALIZE_PNP_STATE(pdoData->Common);
 
-    //
-    // PDO's usually start their life at D3
-    //
-
-    pdoData->Common.DevicePowerState = PowerDeviceD3;
-    pdoData->Common.SystemPowerState = PowerSystemWorking;
+    pdoData->Common.DevicePowerState = ntState;
+    pdoData->Common.SystemPowerState = FdoData->Common.SystemPowerState;
 
     Pdo->Flags |= DO_POWER_PAGABLE;
 

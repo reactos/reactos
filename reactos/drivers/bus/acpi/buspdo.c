@@ -32,14 +32,9 @@ Bus_PDO_PnP (
     )
 {
     NTSTATUS                status;
-    struct acpi_device      *device = NULL;
     POWER_STATE             state;
 
     PAGED_CODE ();
-
-    if (DeviceData->AcpiHandle)
-        acpi_bus_get_device(DeviceData->AcpiHandle, &device);
-
 
     //
     // NB: Because we are a bus enumerator, we have no one to whom we could
@@ -56,9 +51,10 @@ Bus_PDO_PnP (
         // required to allow others to access this device.
         // Power up the device.
         //
-        if (device && !ACPI_SUCCESS(acpi_power_transition(device, ACPI_STATE_D0)))
+        if (DeviceData->AcpiHandle && acpi_bus_power_manageable(DeviceData->AcpiHandle) &&
+            !ACPI_SUCCESS(acpi_bus_set_power(DeviceData->AcpiHandle, ACPI_STATE_D0)))
         {
-            DPRINT1("Device %x failed to start!\n", device);
+            DPRINT1("Device %x failed to start!\n", DeviceData->AcpiHandle);
             status = STATUS_UNSUCCESSFUL;
             break;
         }
@@ -76,9 +72,10 @@ Bus_PDO_PnP (
         // Here we shut down the device and give up and unmap any resources
         // we acquired for the device.
         //
-        if (device && !ACPI_SUCCESS(acpi_power_transition(device, ACPI_STATE_D3)))
+        if (DeviceData->AcpiHandle && acpi_bus_power_manageable(DeviceData->AcpiHandle) &&
+            !ACPI_SUCCESS(acpi_bus_set_power(DeviceData->AcpiHandle, ACPI_STATE_D3)))
         {
-            DPRINT1("Device %x failed to stop!\n", device);
+            DPRINT1("Device %x failed to stop!\n", DeviceData->AcpiHandle);
             status = STATUS_UNSUCCESSFUL;
             break;
         }
@@ -125,8 +122,6 @@ Bus_PDO_PnP (
             // We did receive a query-stop, so restore.
             //
             RESTORE_PREVIOUS_PNP_STATE(DeviceData->Common);
-            if (device)
-               acpi_power_transition(device, ACPI_STATE_D0);
         }
         status = STATUS_SUCCESS;// We must not fail this IRP.
         break;
