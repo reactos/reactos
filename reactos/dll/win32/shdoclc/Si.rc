@@ -248,4 +248,3 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "Drsenje desno", IDM_SCROLL_RIGHT
     }
 }
-#pragma code_page(default)

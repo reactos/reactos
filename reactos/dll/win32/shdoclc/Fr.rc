@@ -252,4 +252,3 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "Défilement vers la droite", IDM_SCROLL_RIGHT
     }
 }
-#pragma code_page(default)

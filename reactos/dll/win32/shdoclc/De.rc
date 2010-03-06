@@ -250,4 +250,3 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "Scrolle rechts",  IDM_SCROLL_RIGHT
     }
 }
-#pragma code_page(default)
