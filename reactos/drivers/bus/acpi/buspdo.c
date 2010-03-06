@@ -32,8 +32,13 @@ Bus_PDO_PnP (
     )
 {
     NTSTATUS                status;
+    struct acpi_device      *device = NULL;
+    POWER_STATE             state;
 
     PAGED_CODE ();
+
+    if (DeviceData->AcpiHandle)
+        acpi_bus_get_device(DeviceData->AcpiHandle, &device);
 
 
     //
@@ -51,6 +56,15 @@ Bus_PDO_PnP (
         // required to allow others to access this device.
         // Power up the device.
         //
+        if (device && !ACPI_SUCCESS(acpi_power_transition(device, ACPI_STATE_D0)))
+        {
+            DPRINT1("Device %x failed to start!\n", device);
+            status = STATUS_UNSUCCESSFUL;
+            break;
+        }
+
+        state.DeviceState = PowerDeviceD0;
+        PoSetPowerState(DeviceData->Common.Self, DevicePowerState, state);
         DeviceData->Common.DevicePowerState = PowerDeviceD0;
         SET_NEW_PNP_STATE(DeviceData->Common, Started);
         status = STATUS_SUCCESS;
@@ -62,7 +76,16 @@ Bus_PDO_PnP (
         // Here we shut down the device and give up and unmap any resources
         // we acquired for the device.
         //
+        if (device && !ACPI_SUCCESS(acpi_power_transition(device, ACPI_STATE_D3)))
+        {
+            DPRINT1("Device %x failed to stop!\n", device);
+            status = STATUS_UNSUCCESSFUL;
+            break;
+        }
 
+        state.DeviceState = PowerDeviceD3;
+        PoSetPowerState(DeviceData->Common.Self, DevicePowerState, state);
+        DeviceData->Common.DevicePowerState = PowerDeviceD3;
         SET_NEW_PNP_STATE(DeviceData->Common, Stopped);
         status = STATUS_SUCCESS;
         break;
@@ -102,6 +125,8 @@ Bus_PDO_PnP (
             // We did receive a query-stop, so restore.
             //
             RESTORE_PREVIOUS_PNP_STATE(DeviceData->Common);
+            if (device)
+               acpi_power_transition(device, ACPI_STATE_D0);
         }
         status = STATUS_SUCCESS;// We must not fail this IRP.
         break;
@@ -212,9 +237,6 @@ Bus_PDO_PnP (
     return status;
 }
 
-//
-// FIX ME FIX ME FIX ME !!!
-//
 NTSTATUS
 Bus_PDO_QueryDeviceCaps(
      PPDO_DEVICE_DATA     DeviceData,
@@ -223,10 +245,13 @@ Bus_PDO_QueryDeviceCaps(
 
     PIO_STACK_LOCATION      stack;
     PDEVICE_CAPABILITIES    deviceCapabilities;
-    DEVICE_CAPABILITIES     parentCapabilities;
-    NTSTATUS                status;
+    struct acpi_device *device = NULL;
+    ULONG i;
 
     PAGED_CODE ();
+
+    if (DeviceData->AcpiHandle)
+        acpi_bus_get_device(DeviceData->AcpiHandle, &device);
 
     stack = IoGetCurrentIrpStackLocation (Irp);
 
@@ -245,131 +270,80 @@ Bus_PDO_QueryDeviceCaps(
        return STATUS_UNSUCCESSFUL;
     }
 
-    //
-    // Get the device capabilities of the parent
-    //
-    status = Bus_GetDeviceCapabilities(
-        FDO_FROM_PDO(DeviceData)->NextLowerDriver, &parentCapabilities);
-    if (!NT_SUCCESS(status)) {
-
-        DPRINT("\tQueryDeviceCaps failed\n");
-        return status;
-
-    }
-
-    //
-    // The entries in the DeviceState array are based on the capabilities
-    // of the parent devnode. These entries signify the highest-powered
-    // state that the device can support for the corresponding system
-    // state. A driver can specify a lower (less-powered) state than the
-    // bus driver.  For eg: Suppose the acpi bus controller supports
-    // D0, D2, and D3; and the acpi Device supports D0, D1, D2, and D3.
-    // Following the above rule, the device cannot specify D1 as one of
-    // it's power state. A driver can make the rules more restrictive
-    // but cannot loosen them.
-    // First copy the parent's S to D state mapping
-    //
-
-    RtlCopyMemory(
-        deviceCapabilities->DeviceState,
-        parentCapabilities.DeviceState,
-        (PowerSystemShutdown + 1) * sizeof(DEVICE_POWER_STATE)
-        );
-
-    //
-    // Adjust the caps to what your device supports.
-    // Our device just supports D0 and D3.
-    //
+    deviceCapabilities->D1Latency = 0;
+    deviceCapabilities->D2Latency = 0;
+    deviceCapabilities->D3Latency = 0;
 
     deviceCapabilities->DeviceState[PowerSystemWorking] = PowerDeviceD0;
+    deviceCapabilities->DeviceState[PowerSystemSleeping1] = PowerDeviceD3;
+    deviceCapabilities->DeviceState[PowerSystemSleeping2] = PowerDeviceD3;
+    deviceCapabilities->DeviceState[PowerSystemSleeping3] = PowerDeviceD3;
 
-    if (deviceCapabilities->DeviceState[PowerSystemSleeping1] != PowerDeviceD0)
-        deviceCapabilities->DeviceState[PowerSystemSleeping1] = PowerDeviceD1;
+    for (i = 0; i < ACPI_D_STATE_COUNT && device; i++)
+    {
+        if (!device->power.states[i].flags.valid)
+            continue;
 
-    if (deviceCapabilities->DeviceState[PowerSystemSleeping2] != PowerDeviceD0)
-        deviceCapabilities->DeviceState[PowerSystemSleeping2] = PowerDeviceD3;
+        switch (i)
+        {
+           case ACPI_STATE_D0:
+              deviceCapabilities->DeviceState[PowerSystemWorking] = PowerDeviceD0;
+              break;
 
-    if (deviceCapabilities->DeviceState[PowerSystemSleeping3] != PowerDeviceD0)
-        deviceCapabilities->DeviceState[PowerSystemSleeping3] = PowerDeviceD3;
+           case ACPI_STATE_D1:
+              deviceCapabilities->DeviceState[PowerSystemSleeping1] = PowerDeviceD1;
+              deviceCapabilities->D1Latency = device->power.states[i].latency;
+              break;
+
+           case ACPI_STATE_D2:
+              deviceCapabilities->DeviceState[PowerSystemSleeping2] = PowerDeviceD2;
+              deviceCapabilities->D2Latency = device->power.states[i].latency;
+              break;
+
+           case ACPI_STATE_D3:
+              deviceCapabilities->DeviceState[PowerSystemSleeping3] = PowerDeviceD3;
+              deviceCapabilities->D3Latency = device->power.states[i].latency;
+              break;
+        }
+    }
 
     // We can wake the system from D1
     deviceCapabilities->DeviceWake = PowerDeviceD1;
 
-    //
-    // Specifies whether the device hardware supports the D1 and D2
-    // power state. Set these bits explicitly.
-    //
 
-    deviceCapabilities->DeviceD1 = TRUE; // Yes we can
-    deviceCapabilities->DeviceD2 = FALSE;
-
-    //
-    // Specifies whether the device can respond to an external wake
-    // signal while in the D0, D1, D2, and D3 state.
-    // Set these bits explicitly.
-    //
+    deviceCapabilities->DeviceD1 =
+        (deviceCapabilities->DeviceState[PowerSystemSleeping1] == PowerDeviceD1) ? TRUE : FALSE;
+    deviceCapabilities->DeviceD2 =
+        (deviceCapabilities->DeviceState[PowerSystemSleeping2] == PowerDeviceD2) ? TRUE : FALSE;
 
     deviceCapabilities->WakeFromD0 = FALSE;
     deviceCapabilities->WakeFromD1 = TRUE; //Yes we can
     deviceCapabilities->WakeFromD2 = FALSE;
     deviceCapabilities->WakeFromD3 = FALSE;
 
-
-    // We have no latencies
-
-    deviceCapabilities->D1Latency = 0;
-    deviceCapabilities->D2Latency = 0;
-    deviceCapabilities->D3Latency = 0;
-
-    // Ejection supported
-
-    deviceCapabilities->EjectSupported = TRUE;
-
-    //
-    // This flag specifies whether the device's hardware is disabled.
-    // The PnP Manager only checks this bit right after the device is
-    // enumerated. Once the device is started, this bit is ignored.
-    //
-    deviceCapabilities->HardwareDisabled = FALSE;
-
-    //
-    // Out simulated device can be physically removed.
-    //
-    deviceCapabilities->Removable = TRUE;
-    //
-    // Setting it to TURE prevents the warning dialog from appearing
-    // whenever the device is surprise removed.
-    //
-    deviceCapabilities->SurpriseRemovalOK = TRUE;
-
-    // We don't support system-wide unique IDs.
-
-    deviceCapabilities->UniqueID = FALSE;
-
-    //
-    // Specify whether the Device Manager should suppress all
-    // installation pop-ups except required pop-ups such as
-    // "no compatible drivers found."
-    //
+    if (device)
+    {
+       deviceCapabilities->EjectSupported = device->flags.ejectable;
+       deviceCapabilities->HardwareDisabled = !device->status.enabled;
+       deviceCapabilities->Removable = device->flags.removable;
+       deviceCapabilities->SurpriseRemovalOK = device->flags.suprise_removal_ok;
+       deviceCapabilities->UniqueID = device->flags.unique_id;
+       deviceCapabilities->NoDisplayInUI = !device->status.show_in_ui;
+       deviceCapabilities->Address = device->pnp.bus_address;
+    }
+    else
+    {
+       deviceCapabilities->EjectSupported = FALSE;
+       deviceCapabilities->HardwareDisabled = FALSE;
+       deviceCapabilities->Removable = FALSE;
+       deviceCapabilities->SurpriseRemovalOK = FALSE;
+       deviceCapabilities->UniqueID = FALSE;
+       deviceCapabilities->NoDisplayInUI = FALSE;
+       deviceCapabilities->Address = 0;
+    }
 
     deviceCapabilities->SilentInstall = FALSE;
-
-    //
-    // Specifies an address indicating where the device is located
-    // on its underlying bus. The interpretation of this number is
-    // bus-specific. If the address is unknown or the bus driver
-    // does not support an address, the bus driver leaves this
-    // member at its default value of 0xFFFFFFFF. In this example
-    // the location address is same as instance id.
-    //
-
-    //deviceCapabilities->Address = DeviceData->SerialNo;
-
-    //
-    // UINumber specifies a number associated with the device that can
-    // be displayed in the user interface.
-    //
-    //deviceCapabilities->UINumber = DeviceData->SerialNo;
+    deviceCapabilities->UINumber = (ULONG)-1;
 
     return STATUS_SUCCESS;
 

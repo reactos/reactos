@@ -123,10 +123,15 @@ Bus_PDO_Power (
     PIO_STACK_LOCATION  stack;
     POWER_STATE         powerState;
     POWER_STATE_TYPE    powerType;
+    ULONG               error;
+    struct acpi_device  *device;
 
     stack = IoGetCurrentIrpStackLocation (Irp);
     powerType = stack->Parameters.Power.Type;
     powerState = stack->Parameters.Power.State;
+
+    if (PdoData->AcpiHandle)
+        acpi_bus_get_device(PdoData->AcpiHandle, &device);
 
     switch (stack->MinorFunction) {
     case IRP_MN_SET_POWER:
@@ -139,9 +144,43 @@ Bus_PDO_Power (
 
         switch (powerType) {
             case DevicePowerState:
-                PoSetPowerState (PdoData->Common.Self, powerType, powerState);
-                PdoData->Common.DevicePowerState = powerState.DeviceState;
-                status = STATUS_SUCCESS;
+                if (!device)
+                {
+                    PdoData->Common.DevicePowerState = powerState.DeviceState;
+                    status = STATUS_SUCCESS;
+                    break;
+                }
+
+                switch (powerState.DeviceState)
+                {
+                    case PowerDeviceD0:
+                      error = acpi_power_transition(device, ACPI_STATE_D0);
+                      break;
+
+                    case PowerDeviceD1:
+                      error = acpi_power_transition(device, ACPI_STATE_D1);
+                      break;
+
+                    case PowerDeviceD2:
+                      error = acpi_power_transition(device, ACPI_STATE_D2);
+                      break;
+
+                    case PowerDeviceD3:
+                      error = acpi_power_transition(device, ACPI_STATE_D3);
+                      break;
+
+                    default:
+                      error = 0;
+                      break;
+                }
+
+                if (ACPI_SUCCESS(error))
+                {
+                    PdoData->Common.DevicePowerState = powerState.DeviceState;
+                    status = STATUS_SUCCESS;
+                }
+                else
+                    status = STATUS_UNSUCCESSFUL;
                 break;
 
             case SystemPowerState:
