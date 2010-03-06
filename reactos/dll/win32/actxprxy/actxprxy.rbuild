@@ -9,20 +9,29 @@
 	<include base="actxprxy" root="intermediate">.</include>
 	<define name="__WINESRC__" />
 	<library>wine</library>
-	<library>actxprxy_interface</library>
 	<library>actxprxy_proxy</library>
 	<library>ntdll</library>
 	<library>rpcrt4</library>
+	<library>ole32</library>
+	<library>oleaut32</library>
+	<library>uuid</library>
 	<library>pseh</library>
 	<file>usrmarshal.c</file>
-</module>
-<module name="actxprxy_interface" type="idlinterface">
-	<file>actxprxy_servprov.idl</file>
 </module>
 <module name="actxprxy_proxy" type="rpcproxy">
 	<define name="__WINESRC__" />
 	<define name="REGISTER_PROXY_DLL" />
-	<define name="PROXY_CLSID_IS">"{ 0xb8da6310, 0xe19b, 0x11d0, { 0x93, 0x3c, 0x00, 0xa0, 0xc9, 0x0d, 0xca, 0xa9 } }"</define>
+	<define name="PROXY_DELEGATION" />
+	<file>actxprxy_activscp.idl</file>
+	<file>actxprxy_comcat.idl</file>
+	<file>actxprxy_docobj.idl</file>
+	<file>actxprxy_hlink.idl</file>
+	<file>actxprxy_htiframe.idl</file>
+	<file>actxprxy_objsafe.idl</file>
+	<file>actxprxy_ocmm.idl</file>
 	<file>actxprxy_servprov.idl</file>
+	<!-- file>actxprxy_shobjidl.idl</file -->
+	<file>actxprxy_urlhist.idl
+</file>
 </module>
 </group>
