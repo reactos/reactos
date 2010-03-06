@@ -63,6 +63,7 @@ DEFINE_EXPECT(div_onclick);
 DEFINE_EXPECT(div_onclick_attached);
 DEFINE_EXPECT(timeout);
 DEFINE_EXPECT(doccp_onclick);
+DEFINE_EXPECT(div_onclick_disp);
 DEFINE_EXPECT(iframe_onreadystatechange_loading);
 DEFINE_EXPECT(iframe_onreadystatechange_interactive);
 DEFINE_EXPECT(iframe_onreadystatechange_complete);
@@ -674,6 +675,20 @@ static void _elem_attach_event(unsigned line, IUnknown *unk, const char *namea, 
     ok_(__FILE__,line)(res == VARIANT_TRUE, "attachEvent returned %x\n", res);
 }
 
+#define elem_detach_event(a,b,c) _elem_detach_event(__LINE__,a,b,c)
+static void _elem_detach_event(unsigned line, IUnknown *unk, const char *namea, IDispatch *disp)
+{
+    IHTMLElement2 *elem = _get_elem2_iface(line, unk);
+    BSTR name;
+    HRESULT hres;
+
+    name = a2bstr(namea);
+    hres = IHTMLElement2_detachEvent(elem, name, disp);
+    IHTMLElement2_Release(elem);
+    SysFreeString(name);
+    ok_(__FILE__,line)(hres == S_OK, "detachEvent failed: %08x\n", hres);
+}
+
 static HRESULT WINAPI DispatchEx_QueryInterface(IDispatchEx *iface, REFIID riid, void **ppv)
 {
     *ppv = NULL;
@@ -683,6 +698,23 @@ static HRESULT WINAPI DispatchEx_QueryInterface(IDispatchEx *iface, REFIID riid,
        || IsEqualGUID(riid, &IID_IDispatchEx))
         *ppv = iface;
     else {
+        ok(0, "unexpected riid %s\n", debugstr_guid(riid));
+        return E_NOINTERFACE;
+    }
+
+    return S_OK;
+}
+
+static HRESULT WINAPI Dispatch_QueryInterface(IDispatchEx *iface, REFIID riid, void **ppv)
+{
+    *ppv = NULL;
+
+    if(IsEqualGUID(riid, &IID_IUnknown)
+       || IsEqualGUID(riid, &IID_IDispatch)) {
+        *ppv = iface;
+    }else if(IsEqualGUID(riid, &IID_IDispatchEx)) {
+        return E_NOINTERFACE;
+    }else {
         ok(0, "unexpected riid %s\n", debugstr_guid(riid));
         return E_NOINTERFACE;
     }
@@ -1015,6 +1047,32 @@ static IDispatchExVtbl timeoutFuncVtbl = {
 
 static IDispatchEx timeoutFunc = { &timeoutFuncVtbl };
 
+static HRESULT WINAPI div_onclick_disp_Invoke(IDispatchEx *iface, DISPID id,
+        REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pdp,
+        VARIANT *pvarRes, EXCEPINFO *pei, UINT *puArgErr)
+{
+    CHECK_EXPECT(div_onclick_disp);
+
+    test_attached_event_args(id, wFlags, pdp, pvarRes, pei);
+
+    ok(IsEqualGUID(&IID_NULL, riid), "riid = %s\n", debugstr_guid(riid));
+    ok(!puArgErr, "puArgErr = %p\n", puArgErr);
+
+    return S_OK;
+}
+
+static IDispatchExVtbl div_onclick_dispVtbl = {
+    Dispatch_QueryInterface,
+    DispatchEx_AddRef,
+    DispatchEx_Release,
+    DispatchEx_GetTypeInfoCount,
+    DispatchEx_GetTypeInfo,
+    DispatchEx_GetIDsOfNames,
+    div_onclick_disp_Invoke,
+};
+
+static IDispatchEx div_onclick_disp = { &div_onclick_dispVtbl };
+
 static void pump_msgs(BOOL *b)
 {
     MSG msg;
@@ -1163,8 +1221,10 @@ static void test_onclick(IHTMLDocument2 *doc)
     CHECK_CALLED(document_onclick);
 
     cp_cookie = register_cp((IUnknown*)doc, &DIID_HTMLDocumentEvents, (IUnknown*)&doccp_obj);
+    elem_attach_event((IUnknown*)div, "onclick", (IDispatch*)&div_onclick_disp);
 
     SET_EXPECT(div_onclick);
+    SET_EXPECT(div_onclick_disp);
     SET_EXPECT(div_onclick_attached);
     SET_EXPECT(body_onclick);
     SET_EXPECT(document_onclick);
@@ -1174,12 +1234,36 @@ static void test_onclick(IHTMLDocument2 *doc)
     ok(hres == S_OK, "click failed: %08x\n", hres);
 
     CHECK_CALLED(div_onclick);
+    CHECK_CALLED(div_onclick_disp);
     CHECK_CALLED(div_onclick_attached);
     CHECK_CALLED(body_onclick);
     CHECK_CALLED(document_onclick);
     CHECK_CALLED(doccp_onclick);
 
     unregister_cp((IUnknown*)doc, &DIID_HTMLDocumentEvents, cp_cookie);
+
+    V_VT(&v) = VT_NULL;
+    hres = IHTMLElement_put_onclick(div, v);
+    ok(hres == S_OK, "put_onclick failed: %08x\n", hres);
+
+    hres = IHTMLElement_get_onclick(div, &v);
+    ok(hres == S_OK, "get_onclick failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_NULL, "get_onclick returned vt %d\n", V_VT(&v));
+
+    elem_detach_event((IUnknown*)div, "onclick", (IDispatch*)&div_onclick_disp);
+    elem_detach_event((IUnknown*)div, "onclick", (IDispatch*)&div_onclick_disp);
+    elem_detach_event((IUnknown*)div, "test", (IDispatch*)&div_onclick_disp);
+
+    SET_EXPECT(div_onclick_attached);
+    SET_EXPECT(body_onclick);
+    SET_EXPECT(document_onclick);
+
+    hres = IHTMLElement_click(div);
+    ok(hres == S_OK, "click failed: %08x\n", hres);
+
+    CHECK_CALLED(div_onclick_attached);
+    CHECK_CALLED(body_onclick);
+    CHECK_CALLED(document_onclick);
 
     IHTMLElement_Release(div);
     IHTMLElement_Release(body);

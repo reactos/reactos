@@ -1803,6 +1803,11 @@ static HRESULT WINAPI ActiveScriptParse_ParseScriptText(IActiveScriptParse *ifac
 
     test_func(dispex);
     test_nextdispid(dispex);
+
+    tmp = a2bstr("test");
+    hres = IDispatchEx_DeleteMemberByName(dispex, tmp, fdexNameCaseSensitive);
+    ok(hres == E_NOTIMPL, "DeleteMemberByName failed: %08x\n", hres);
+
     IDispatchEx_Release(dispex);
 
     script_disp = (IDispatch*)&scriptDisp;
@@ -1842,6 +1847,10 @@ static HRESULT WINAPI ActiveScriptParse_ParseScriptText(IActiveScriptParse *ifac
     CHECK_CALLED(GetScriptDispatch);
     CHECK_CALLED(script_testprop2_d);
     SysFreeString(tmp);
+
+    tmp = a2bstr("test");
+    hres = IDispatchEx_DeleteMemberByName(window_dispex, tmp, fdexNameCaseSensitive);
+    ok(hres == E_NOTIMPL, "DeleteMemberByName failed: %08x\n", hres);
 
     test_global_id();
 

@@ -22,10 +22,11 @@
 #include <wine/test.h>
 
 #include "mshtml.h"
+#include "wininet.h"
 
 struct location_test {
     const char *name;
-    const WCHAR *url;
+    const char *url;
 
     const char *href;
     const char *protocol;
@@ -37,75 +38,68 @@ struct location_test {
     const char *hash;
 };
 
-static const WCHAR http_url[] = {'h','t','t','p',':','/','/','w','w','w','.','w','i','n','e','h','q','.','o','r','g','?','s','e','a','r','c','h','#','h','a','s','h',0};
-static const struct location_test http_test = {
-            "HTTP",
-            http_url,
-            "http://www.winehq.org/?search#hash",
-            "http:",
-            "www.winehq.org:80",
-            "www.winehq.org",
-            "80",
-            "",
-            "?search",
-            "#hash"
-            };
-
-static const WCHAR http_file_url[] = {'h','t','t','p',':','/','/','w','w','w','.','w','i','n','e','h','q','.','o','r','g','/','f','i','l','e','?','s','e','a','r','c','h','#','h','a','s','h',0};
-static const struct location_test http_file_test = {
-            "HTTP with file",
-            http_file_url,
-            "http://www.winehq.org/file?search#hash",
-            "http:",
-            "www.winehq.org:80",
-            "www.winehq.org",
-            "80",
-            "file",
-            "?search",
-            "#hash"
-            };
-
-static const WCHAR ftp_url[] = {'f','t','p',':','/','/','f','t','p','.','w','i','n','e','h','q','.','o','r','g','/',0};
-static const struct location_test ftp_test = {
-            "FTP",
-            ftp_url,
-            "ftp://ftp.winehq.org/",
-            "ftp:",
-            "ftp.winehq.org:21",
-            "ftp.winehq.org",
-            "21",
-            "",
-            NULL,
-            NULL
-            };
-
-static const WCHAR ftp_file_url[] = {'f','t','p',':','/','/','f','t','p','.','w','i','n','e','h','q','.','o','r','g','/','f','i','l','e',0};
-static const struct location_test ftp_file_test = {
-            "FTP with file",
-            ftp_file_url,
-            "ftp://ftp.winehq.org/file",
-            "ftp:",
-            "ftp.winehq.org:21",
-            "ftp.winehq.org",
-            "21",
-            "file",
-            NULL,
-            NULL
-            };
-
-static const WCHAR file_url[] = {'f','i','l','e',':','/','/','C',':','\\','w','i','n','d','o','w','s','\\','w','i','n','.','i','n','i',0};
-static const struct location_test file_test = {
-            "FILE",
-            file_url,
-            "file:///C:/windows/win.ini",
-            "file:",
-            NULL,
-            NULL,
-            "",
-            "C:\\windows\\win.ini",
-            NULL,
-            NULL
-            };
+static const struct location_test location_tests[] = {
+    {
+        "HTTP",
+        "http://www.winehq.org?search#hash",
+        "http://www.winehq.org/?search#hash",
+        "http:",
+        "www.winehq.org:80",
+        "www.winehq.org",
+        "80",
+        "",
+        "?search",
+        "#hash"
+    },
+    {
+        "HTTP with file",
+        "http://www.winehq.org/file?search#hash",
+        "http://www.winehq.org/file?search#hash",
+        "http:",
+        "www.winehq.org:80",
+        "www.winehq.org",
+        "80",
+        "file",
+        "?search",
+        "#hash"
+    },
+    {
+        "FTP",
+        "ftp://ftp.winehq.org/",
+        "ftp://ftp.winehq.org/",
+        "ftp:",
+        "ftp.winehq.org:21",
+        "ftp.winehq.org",
+        "21",
+        "",
+        NULL,
+        NULL
+    },
+    {
+        "FTP with file",
+        "ftp://ftp.winehq.org/file",
+        "ftp://ftp.winehq.org/file",
+        "ftp:",
+        "ftp.winehq.org:21",
+        "ftp.winehq.org",
+        "21",
+        "file",
+        NULL,
+        NULL
+    },
+    {
+        "FILE",
+        "file://C:\\windows\\win.ini",
+        "file:///C:/windows/win.ini",
+        "file:",
+        NULL,
+        NULL,
+        "",
+        "C:\\windows\\win.ini",
+        NULL,
+        NULL
+    }
+};
 
 static int str_eq_wa(LPCWSTR strw, const char *stra)
 {
@@ -267,6 +261,7 @@ static void test_hash(IHTMLLocation *loc, const struct location_test *test)
 
 static void perform_test(const struct location_test* test)
 {
+    WCHAR url[INTERNET_MAX_URL_LENGTH];
     HRESULT hres;
     IBindCtx *bc;
     IMoniker *url_mon;
@@ -280,7 +275,8 @@ static void perform_test(const struct location_test* test)
     if(FAILED(hres))
         return;
 
-    hres = CreateURLMoniker(NULL, test->url, &url_mon);
+    MultiByteToWideChar(CP_ACP, 0, test->url, -1, url, sizeof(url)/sizeof(WCHAR));
+    hres = CreateURLMoniker(NULL, url, &url_mon);
     ok(hres == S_OK, "%s: CreateURLMoniker failed: 0x%08x\n", test->name, hres);
     if(FAILED(hres)){
         IBindCtx_Release(bc);
@@ -356,13 +352,12 @@ static void perform_test(const struct location_test* test)
 
 START_TEST(htmllocation)
 {
+    int i;
+
     CoInitialize(NULL);
 
-    perform_test(&http_test);
-    perform_test(&http_file_test);
-    perform_test(&ftp_test);
-    perform_test(&ftp_file_test);
-    perform_test(&file_test);
+    for(i=0; i < sizeof(location_tests)/sizeof(*location_tests); i++)
+        perform_test(location_tests+i);
 
     CoUninitialize();
 }
