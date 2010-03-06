@@ -2348,6 +2348,7 @@ static void check_field_common(const type_t *container_type,
     default:
         /* should be no other container types */
         assert(0);
+        return;
     }
 
     if (is_attr(arg->attrs, ATTR_LENGTHIS) &&
