@@ -76,6 +76,7 @@ int *__p___mb_cur_max(void);
 #define WX_OPEN           0x01
 #define WX_ATEOF          0x02
 #define WX_READEOF        0x04  /* like ATEOF, but for underlying file rather than buffer */
+#define WX_READCR         0x08  /* underlying file is at \r */
 #define WX_DONTINHERIT    0x10
 #define WX_APPEND         0x20
 #define WX_TEXT           0x80
@@ -1573,6 +1574,9 @@ static int read_i(int fd, void *buf, unsigned int count)
   char *bufstart = buf;
   HANDLE hand = fdtoh(fd);
 
+  if (count == 0)
+    return 0;
+
   if (fdesc[fd].wxflag & WX_READEOF) {
      fdesc[fd].wxflag |= WX_ATEOF;
      TRACE("already at EOF, returning 0\n");
@@ -1589,9 +1593,29 @@ static int read_i(int fd, void *buf, unsigned int count)
    */
     if (ReadFile(hand, bufstart, count, &num_read, NULL))
     {
-        if (fdesc[fd].wxflag & WX_TEXT)
+        if (count != 0 && num_read == 0)
+        {
+            fdesc[fd].wxflag |= (WX_ATEOF|WX_READEOF);
+            TRACE(":EOF %s\n",debugstr_an(buf,num_read));
+        }
+        else if (fdesc[fd].wxflag & WX_TEXT)
         {
               DWORD i, j;
+            if (bufstart[num_read-1] == '\r')
+            {
+                if(count == 1)
+                {
+                    fdesc[fd].wxflag  &=  ~WX_READCR;
+                    ReadFile(hand, bufstart, 1, &num_read, NULL);
+                }
+                else
+                {
+                    fdesc[fd].wxflag  |= WX_READCR;
+                    num_read--;
+                }
+            }
+	    else
+	     fdesc[fd].wxflag  &=  ~WX_READCR;
             for (i=0, j=0; i<num_read; i++)
             {
                 /* in text mode, a ctrl-z signals EOF */
@@ -1605,16 +1629,11 @@ static int read_i(int fd, void *buf, unsigned int count)
                  * BUG: should save state across calls somehow, so CR LF that
                  * straddles buffer boundary gets recognized properly?
                  */
-                if ((bufstart[i] != '\r')
-                        ||  ((i+1) < num_read && bufstart[i+1] != '\n'))
-                    bufstart[j++] = bufstart[i];
+		if ((bufstart[i] != '\r')
+                ||  ((i+1) < num_read && bufstart[i+1] != '\n'))
+		    bufstart[j++] = bufstart[i];
             }
             num_read = j;
-        }
-        if (count != 0 && num_read == 0)
-        {
-            fdesc[fd].wxflag |= (WX_ATEOF|WX_READEOF);
-            TRACE(":EOF %s\n",debugstr_an(buf,num_read));
         }
     }
     else
