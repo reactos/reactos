@@ -35,27 +35,30 @@
 
 #include "Bg.rc"
 #include "Da.rc"
-#include "De.rc"
 #include "En.rc"
 #include "Es.rc"
 #include "Fi.rc"
-#include "Fr.rc"
 #include "Hu.rc"
+#include "Ko.rc"
+#include "Nl.rc"
+#include "Pl.rc"
+#include "Sv.rc"
+#include "Tr.rc"
+
+/* UTF-8 */
+#include "De.rc"
+#include "Fr.rc"
 #include "It.rc"
 #include "Ja.rc"
-#include "Ko.rc"
 #include "Lt.rc"
-#include "Nl.rc"
 #include "No.rc"
-#include "Pl.rc"
 #include "Pt.rc"
 #include "Ro.rc"
 #include "Ru.rc"
 #include "Si.rc"
-#include "Sv.rc"
-#include "Tr.rc"
 #include "Uk.rc"
 #include "Zh.rc"
+
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 

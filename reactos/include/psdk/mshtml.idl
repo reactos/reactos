@@ -15407,3 +15407,23 @@ interface IElementBehaviorFactory : IUnknown
 }
 
 } /* library MSHTML */
+
+interface IOleCommandTarget;
+
+/*****************************************************************************
+ *    IHTMLPrivateWindow interface
+ */
+[
+    object,
+    uuid(3050f6dc-98b5-11cf-bb82-00aa00bdce0b),
+    local
+]
+interface IHTMLPrivateWindow : IUnknown
+{
+    HRESULT SuperNavigate(BSTR url, BSTR arg2, BSTR arg3, BSTR arg4, VARIANT *post_data, VARIANT *headers, ULONG flags);
+    HRESULT GetPendingUrl(BSTR *url);
+    HRESULT SetPICSTarget(IOleCommandTarget *cmdtrg);
+    HRESULT PICSComplete(int arg);
+    HRESULT FindWindowByName(LPCWSTR name, IHTMLWindow2 **ret);
+    HRESULT GetAddressBarUrl(BSTR *url);
+}

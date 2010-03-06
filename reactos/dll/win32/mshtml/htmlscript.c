@@ -214,8 +214,18 @@ static HRESULT WINAPI HTMLScriptElement_get_onerror(IHTMLScriptElement *iface, V
 static HRESULT WINAPI HTMLScriptElement_put_type(IHTMLScriptElement *iface, BSTR v)
 {
     HTMLScriptElement *This = HTMLSCRIPT_THIS(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(v));
-    return E_NOTIMPL;
+    nsAString nstype_str;
+    nsresult nsres;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(v));
+
+    nsAString_Init(&nstype_str, v);
+    nsres = nsIDOMHTMLScriptElement_SetType(This->nsscript, &nstype_str);
+    if (NS_FAILED(nsres))
+        ERR("SetType failed: %08x\n", nsres);
+    nsAString_Finish (&nstype_str);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLScriptElement_get_type(IHTMLScriptElement *iface, BSTR *p)

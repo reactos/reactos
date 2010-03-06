@@ -1,5 +1,5 @@
 /*
- * Copyright 2006 Jacek Caban for CodeWeavers
+ * Copyright 2006-2010 Jacek Caban for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,15 +25,17 @@
 #include "winuser.h"
 #include "ole2.h"
 #include "mshtmdid.h"
+#include "shlguid.h"
 
 #include "wine/debug.h"
-#include "wine/unicode.h"
 
 #include "mshtml_private.h"
 #include "htmlevent.h"
 #include "resource.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
+
+#define HTMLPRIVWINDOW(x)  ((IHTMLPrivateWindow*)  &(x)->lpIHTMLPrivateWindowVtbl)
 
 static struct list window_list = LIST_INIT(window_list);
 
@@ -166,6 +168,9 @@ static HRESULT WINAPI HTMLWindow2_QueryInterface(IHTMLWindow2 *iface, REFIID rii
     }else if(IsEqualGUID(&IID_IHTMLWindow4, riid)) {
         TRACE("(%p)->(IID_IHTMLWindow4 %p)\n", This, ppv);
         *ppv = HTMLWINDOW4(This);
+    }else if(IsEqualGUID(&IID_IHTMLPrivateWindow, riid)) {
+        TRACE("(%p)->(IID_IHTMLPrivateWindow %p)\n", This, ppv);
+        *ppv = HTMLPRIVWINDOW(This);
     }else if(dispex_query_interface(&This->dispex, riid, ppv)) {
         return *ppv ? S_OK : E_NOINTERFACE;
     }
@@ -1641,6 +1646,162 @@ static const IHTMLWindow4Vtbl HTMLWindow4Vtbl = {
     HTMLWindow4_get_frameElement
 };
 
+#define HTMLPRIVWINDOW_THIS(iface) DEFINE_THIS(HTMLWindow, IHTMLPrivateWindow, iface)
+
+static HRESULT WINAPI HTMLPrivateWindow_QueryInterface(IHTMLPrivateWindow *iface, REFIID riid, void **ppv)
+{
+    HTMLWindow *This = HTMLPRIVWINDOW_THIS(iface);
+
+    return IHTMLWindow2_QueryInterface(HTMLWINDOW2(This), riid, ppv);
+}
+
+static ULONG WINAPI HTMLPrivateWindow_AddRef(IHTMLPrivateWindow *iface)
+{
+    HTMLWindow *This = HTMLPRIVWINDOW_THIS(iface);
+
+    return IHTMLWindow2_AddRef(HTMLWINDOW2(This));
+}
+
+static ULONG WINAPI HTMLPrivateWindow_Release(IHTMLPrivateWindow *iface)
+{
+    HTMLWindow *This = HTMLPRIVWINDOW_THIS(iface);
+
+    return IHTMLWindow2_Release(HTMLWINDOW2(This));
+}
+
+static HRESULT WINAPI HTMLPrivateWindow_SuperNavigate(IHTMLPrivateWindow *iface, BSTR url, BSTR arg2, BSTR arg3,
+        BSTR arg4, VARIANT *post_data_var, VARIANT *headers_var, ULONG flags)
+{
+    HTMLWindow *This = HTMLPRIVWINDOW_THIS(iface);
+    DWORD post_data_size = 0;
+    BYTE *post_data = NULL;
+    WCHAR *headers = NULL;
+    nsChannelBSC *bsc;
+    IMoniker *mon;
+    BSTR new_url;
+    HRESULT hres;
+
+    TRACE("(%p)->(%s %s %s %s %s %s %x)\n", This, debugstr_w(url), debugstr_w(arg2), debugstr_w(arg3), debugstr_w(arg4),
+          debugstr_variant(post_data_var), debugstr_variant(headers_var), flags);
+
+    new_url = url;
+    if(This->doc_obj->hostui) {
+        OLECHAR *translated_url = NULL;
+
+        hres = IDocHostUIHandler_TranslateUrl(This->doc_obj->hostui, 0, url, &translated_url);
+        if(hres == S_OK && translated_url) {
+            new_url = SysAllocString(translated_url);
+            CoTaskMemFree(translated_url);
+        }
+    }
+
+    if(This->doc_obj->client) {
+        IOleCommandTarget *cmdtrg;
+
+        hres = IOleClientSite_QueryInterface(This->doc_obj->client, &IID_IOleCommandTarget, (void**)&cmdtrg);
+        if(SUCCEEDED(hres)) {
+            VARIANT in, out;
+
+            V_VT(&in) = VT_BSTR;
+            V_BSTR(&in) = new_url;
+            V_VT(&out) = VT_BOOL;
+            V_BOOL(&out) = VARIANT_TRUE;
+            hres = IOleCommandTarget_Exec(cmdtrg, &CGID_ShellDocView, 67, 0, &in, &out);
+            IOleCommandTarget_Release(cmdtrg);
+            if(SUCCEEDED(hres))
+                VariantClear(&out);
+        }
+    }
+
+    /* FIXME: Why not set_ready_state? */
+    This->readystate = READYSTATE_UNINITIALIZED;
+
+    hres = CreateURLMoniker(NULL, new_url, &mon);
+    if(new_url != url)
+        SysFreeString(new_url);
+    if(FAILED(hres))
+        return hres;
+
+    if(post_data_var) {
+        if(V_VT(post_data_var) == (VT_ARRAY|VT_UI1)) {
+            SafeArrayAccessData(V_ARRAY(post_data_var), (void**)&post_data);
+            post_data_size = V_ARRAY(post_data_var)->rgsabound[0].cElements;
+        }
+    }
+
+    if(headers_var && V_VT(headers_var) != VT_EMPTY && V_VT(headers_var) != VT_ERROR) {
+        if(V_VT(headers_var) != VT_BSTR)
+            return E_INVALIDARG;
+
+        headers = V_BSTR(headers_var);
+    }
+
+    hres = create_channelbsc(mon, headers, post_data, post_data_size, &bsc);
+    if(post_data)
+        SafeArrayUnaccessData(V_ARRAY(post_data_var));
+    if(FAILED(hres)) {
+        IMoniker_Release(mon);
+        return hres;
+    }
+
+    hres = set_moniker(&This->doc_obj->basedoc, mon, NULL, bsc, TRUE);
+    if(SUCCEEDED(hres))
+        hres = async_start_doc_binding(This, bsc);
+
+    IUnknown_Release((IUnknown*)bsc);
+    IMoniker_Release(mon);
+    return hres;
+}
+
+static HRESULT WINAPI HTMLPrivateWindow_GetPendingUrl(IHTMLPrivateWindow *iface, BSTR *url)
+{
+    HTMLWindow *This = HTMLPRIVWINDOW_THIS(iface);
+    FIXME("(%p)->(%p)\n", This, url);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLPrivateWindow_SetPICSTarget(IHTMLPrivateWindow *iface, IOleCommandTarget *cmdtrg)
+{
+    HTMLWindow *This = HTMLPRIVWINDOW_THIS(iface);
+    FIXME("(%p)->(%p)\n", This, cmdtrg);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLPrivateWindow_PICSComplete(IHTMLPrivateWindow *iface, int arg)
+{
+    HTMLWindow *This = HTMLPRIVWINDOW_THIS(iface);
+    FIXME("(%p)->(%x)\n", This, arg);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLPrivateWindow_FindWindowByName(IHTMLPrivateWindow *iface, LPCWSTR name, IHTMLWindow2 **ret)
+{
+    HTMLWindow *This = HTMLPRIVWINDOW_THIS(iface);
+    FIXME("(%p)->(%s %p)\n", This, debugstr_w(name), ret);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLPrivateWindow_GetAddressBar(IHTMLPrivateWindow *iface, BSTR *url)
+{
+    HTMLWindow *This = HTMLPRIVWINDOW_THIS(iface);
+    FIXME("(%p)->(%p)\n", This, url);
+    return E_NOTIMPL;
+}
+
+#undef HTMLPRIVWINDOW_THIS
+
+static const IHTMLPrivateWindowVtbl HTMLPrivateWindowVtbl = {
+    HTMLPrivateWindow_QueryInterface,
+    HTMLPrivateWindow_AddRef,
+    HTMLPrivateWindow_Release,
+    HTMLPrivateWindow_SuperNavigate,
+    HTMLPrivateWindow_GetPendingUrl,
+    HTMLPrivateWindow_SetPICSTarget,
+    HTMLPrivateWindow_PICSComplete,
+    HTMLPrivateWindow_FindWindowByName,
+    HTMLPrivateWindow_GetAddressBar
+};
+
 #define DISPEX_THIS(iface) DEFINE_THIS(HTMLWindow, IDispatchEx, iface)
 
 static HRESULT WINAPI WindowDispEx_QueryInterface(IDispatchEx *iface, REFIID riid, void **ppv)
@@ -1954,6 +2115,7 @@ HRESULT HTMLWindow_Create(HTMLDocumentObj *doc_obj, nsIDOMWindow *nswindow, HTML
     window->lpHTMLWindow2Vtbl = &HTMLWindow2Vtbl;
     window->lpHTMLWindow3Vtbl = &HTMLWindow3Vtbl;
     window->lpHTMLWindow4Vtbl = &HTMLWindow4Vtbl;
+    window->lpIHTMLPrivateWindowVtbl = &HTMLPrivateWindowVtbl;
     window->lpIDispatchExVtbl = &WindowDispExVtbl;
     window->ref = 1;
     window->doc_obj = doc_obj;
