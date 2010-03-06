@@ -479,6 +479,210 @@ typedef struct _ACCESS_REASONS {
 #define SE_SECURITY_DESCRIPTOR_FLAG_NO_LABEL_ACE    0x00000002
 #define SE_SECURITY_DESCRIPTOR_VALID_FLAGS          0x00000003
 
+typedef struct _SE_SECURITY_DESCRIPTOR {
+  ULONG Size;
+  ULONG Flags;
+  PSECURITY_DESCRIPTOR SecurityDescriptor;
+} SE_SECURITY_DESCRIPTOR, *PSE_SECURITY_DESCRIPTOR;
+
+typedef struct _SE_ACCESS_REQUEST {
+  ULONG Size;
+  PSE_SECURITY_DESCRIPTOR SeSecurityDescriptor;
+  ACCESS_MASK DesiredAccess;
+  ACCESS_MASK PreviouslyGrantedAccess;
+  PSID PrincipalSelfSid;
+  PGENERIC_MAPPING GenericMapping;
+  ULONG ObjectTypeListCount;
+  POBJECT_TYPE_LIST ObjectTypeList;
+} SE_ACCESS_REQUEST, *PSE_ACCESS_REQUEST;
+
+typedef struct _SE_ACCESS_REPLY {
+  ULONG Size;
+  ULONG ResultListCount;
+  PACCESS_MASK GrantedAccess;
+  PNTSTATUS AccessStatus;
+  PACCESS_REASONS AccessReason;
+  PPRIVILEGE_SET* Privileges;
+} SE_ACCESS_REPLY, *PSE_ACCESS_REPLY;
+
+typedef enum _SE_AUDIT_OPERATION {
+  AuditPrivilegeObject,
+  AuditPrivilegeService,
+  AuditAccessCheck,
+  AuditOpenObject,
+  AuditOpenObjectWithTransaction,
+  AuditCloseObject,
+  AuditDeleteObject,
+  AuditOpenObjectForDelete,
+  AuditOpenObjectForDeleteWithTransaction,
+  AuditCloseNonObject,
+  AuditOpenNonObject,
+  AuditObjectReference,
+  AuditHandleCreation,
+} SE_AUDIT_OPERATION, *PSE_AUDIT_OPERATION;
+
+typedef struct _SE_AUDIT_INFO {
+  ULONG Size;
+  AUDIT_EVENT_TYPE AuditType;
+  SE_AUDIT_OPERATION AuditOperation;
+  ULONG AuditFlags;
+  UNICODE_STRING SubsystemName;
+  UNICODE_STRING ObjectTypeName;
+  UNICODE_STRING ObjectName;
+  PVOID HandleId;
+  GUID* TransactionId;
+  LUID* OperationId;
+  BOOLEAN ObjectCreation;
+  BOOLEAN GenerateOnClose;
+} SE_AUDIT_INFO, *PSE_AUDIT_INFO;
+
+#define TOKEN_ASSIGN_PRIMARY            (0x0001)
+#define TOKEN_DUPLICATE                 (0x0002)
+#define TOKEN_IMPERSONATE               (0x0004)
+#define TOKEN_QUERY                     (0x0008)
+#define TOKEN_QUERY_SOURCE              (0x0010)
+#define TOKEN_ADJUST_PRIVILEGES         (0x0020)
+#define TOKEN_ADJUST_GROUPS             (0x0040)
+#define TOKEN_ADJUST_DEFAULT            (0x0080)
+#define TOKEN_ADJUST_SESSIONID          (0x0100)
+
+#define TOKEN_ALL_ACCESS_P (STANDARD_RIGHTS_REQUIRED  |\
+                            TOKEN_ASSIGN_PRIMARY      |\
+                            TOKEN_DUPLICATE           |\
+                            TOKEN_IMPERSONATE         |\
+                            TOKEN_QUERY               |\
+                            TOKEN_QUERY_SOURCE        |\
+                            TOKEN_ADJUST_PRIVILEGES   |\
+                            TOKEN_ADJUST_GROUPS       |\
+                            TOKEN_ADJUST_DEFAULT )
+
+#if ((defined(_WIN32_WINNT) && (_WIN32_WINNT > 0x0400)) || (!defined(_WIN32_WINNT)))
+#define TOKEN_ALL_ACCESS  (TOKEN_ALL_ACCESS_P |\
+                           TOKEN_ADJUST_SESSIONID )
+#else
+#define TOKEN_ALL_ACCESS  (TOKEN_ALL_ACCESS_P)
+#endif
+
+#define TOKEN_READ       (STANDARD_RIGHTS_READ     |\
+                          TOKEN_QUERY)
+
+#define TOKEN_WRITE      (STANDARD_RIGHTS_WRITE    |\
+                          TOKEN_ADJUST_PRIVILEGES  |\
+                          TOKEN_ADJUST_GROUPS      |\
+                          TOKEN_ADJUST_DEFAULT)
+
+#define TOKEN_EXECUTE    (STANDARD_RIGHTS_EXECUTE)
+
+typedef enum _TOKEN_TYPE {
+  TokenPrimary = 1,
+  TokenImpersonation
+} TOKEN_TYPE,*PTOKEN_TYPE;
+
+typedef enum _TOKEN_INFORMATION_CLASS {
+  TokenUser = 1,
+  TokenGroups,
+  TokenPrivileges,
+  TokenOwner,
+  TokenPrimaryGroup,
+  TokenDefaultDacl,
+  TokenSource,
+  TokenType,
+  TokenImpersonationLevel,
+  TokenStatistics,
+  TokenRestrictedSids,
+  TokenSessionId,
+  TokenGroupsAndPrivileges,
+  TokenSessionReference,
+  TokenSandBoxInert,
+  TokenAuditPolicy,
+  TokenOrigin,
+  TokenElevationType,
+  TokenLinkedToken,
+  TokenElevation,
+  TokenHasRestrictions,
+  TokenAccessInformation,
+  TokenVirtualizationAllowed,
+  TokenVirtualizationEnabled,
+  TokenIntegrityLevel,
+  TokenUIAccess,
+  TokenMandatoryPolicy,
+  TokenLogonSid,
+  MaxTokenInfoClass
+} TOKEN_INFORMATION_CLASS, *PTOKEN_INFORMATION_CLASS;
+
+typedef struct _TOKEN_USER {
+  SID_AND_ATTRIBUTES User;
+} TOKEN_USER, *PTOKEN_USER;
+
+typedef struct _TOKEN_GROUPS {
+  ULONG GroupCount;
+  SID_AND_ATTRIBUTES Groups[ANYSIZE_ARRAY];
+} TOKEN_GROUPS,*PTOKEN_GROUPS,*LPTOKEN_GROUPS;
+
+typedef struct _TOKEN_PRIVILEGES {
+  ULONG PrivilegeCount;
+  LUID_AND_ATTRIBUTES Privileges[ANYSIZE_ARRAY];
+} TOKEN_PRIVILEGES,*PTOKEN_PRIVILEGES,*LPTOKEN_PRIVILEGES;
+
+typedef struct _TOKEN_OWNER {
+  PSID Owner;
+} TOKEN_OWNER,*PTOKEN_OWNER;
+
+typedef struct _TOKEN_PRIMARY_GROUP {
+  PSID PrimaryGroup;
+} TOKEN_PRIMARY_GROUP,*PTOKEN_PRIMARY_GROUP;
+
+typedef struct _TOKEN_DEFAULT_DACL {
+  PACL DefaultDacl;
+} TOKEN_DEFAULT_DACL,*PTOKEN_DEFAULT_DACL;
+
+typedef struct _TOKEN_GROUPS_AND_PRIVILEGES {
+  ULONG SidCount;
+  ULONG SidLength;
+  PSID_AND_ATTRIBUTES Sids;
+  ULONG RestrictedSidCount;
+  ULONG RestrictedSidLength;
+  PSID_AND_ATTRIBUTES RestrictedSids;
+  ULONG PrivilegeCount;
+  ULONG PrivilegeLength;
+  PLUID_AND_ATTRIBUTES Privileges;
+  LUID AuthenticationId;
+} TOKEN_GROUPS_AND_PRIVILEGES, *PTOKEN_GROUPS_AND_PRIVILEGES;
+
+typedef struct _TOKEN_LINKED_TOKEN {
+  HANDLE LinkedToken;
+} TOKEN_LINKED_TOKEN, *PTOKEN_LINKED_TOKEN;
+
+typedef struct _TOKEN_ELEVATION {
+  ULONG TokenIsElevated;
+} TOKEN_ELEVATION, *PTOKEN_ELEVATION;
+
+typedef struct _TOKEN_MANDATORY_LABEL {
+  SID_AND_ATTRIBUTES Label;
+} TOKEN_MANDATORY_LABEL, *PTOKEN_MANDATORY_LABEL;
+
+#define TOKEN_MANDATORY_POLICY_OFF             0x0
+#define TOKEN_MANDATORY_POLICY_NO_WRITE_UP     0x1
+#define TOKEN_MANDATORY_POLICY_NEW_PROCESS_MIN 0x2
+
+#define TOKEN_MANDATORY_POLICY_VALID_MASK    (TOKEN_MANDATORY_POLICY_NO_WRITE_UP | \
+                                              TOKEN_MANDATORY_POLICY_NEW_PROCESS_MIN)
+
+typedef struct _TOKEN_MANDATORY_POLICY {
+  ULONG Policy;
+} TOKEN_MANDATORY_POLICY, *PTOKEN_MANDATORY_POLICY;
+
+typedef struct _TOKEN_ACCESS_INFORMATION {
+  PSID_AND_ATTRIBUTES_HASH SidHash;
+  PSID_AND_ATTRIBUTES_HASH RestrictedSidHash;
+  PTOKEN_PRIVILEGES Privileges;
+  LUID AuthenticationId;
+  TOKEN_TYPE TokenType;
+  SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
+  TOKEN_MANDATORY_POLICY MandatoryPolicy;
+  ULONG Flags;
+} TOKEN_ACCESS_INFORMATION, *PTOKEN_ACCESS_INFORMATION;
+
 #pragma pack(push,4)
 
 #ifndef VER_PRODUCTBUILD
@@ -771,37 +975,6 @@ typedef enum _SECURITY_LOGON_TYPE
 #define SECURITY_WORLD_SID_AUTHORITY    {0,0,0,0,0,1}
 #define SECURITY_WORLD_RID              (0x00000000L)
 
-#define TOKEN_ASSIGN_PRIMARY            (0x0001)
-#define TOKEN_DUPLICATE                 (0x0002)
-#define TOKEN_IMPERSONATE               (0x0004)
-#define TOKEN_QUERY                     (0x0008)
-#define TOKEN_QUERY_SOURCE              (0x0010)
-#define TOKEN_ADJUST_PRIVILEGES         (0x0020)
-#define TOKEN_ADJUST_GROUPS             (0x0040)
-#define TOKEN_ADJUST_DEFAULT            (0x0080)
-#define TOKEN_ADJUST_SESSIONID          (0x0100)
-
-#define TOKEN_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED |\
-                          TOKEN_ASSIGN_PRIMARY     |\
-                          TOKEN_DUPLICATE          |\
-                          TOKEN_IMPERSONATE        |\
-                          TOKEN_QUERY              |\
-                          TOKEN_QUERY_SOURCE       |\
-                          TOKEN_ADJUST_PRIVILEGES  |\
-                          TOKEN_ADJUST_GROUPS      |\
-                          TOKEN_ADJUST_DEFAULT     |\
-                          TOKEN_ADJUST_SESSIONID)
-
-#define TOKEN_READ       (STANDARD_RIGHTS_READ     |\
-                          TOKEN_QUERY)
-
-#define TOKEN_WRITE      (STANDARD_RIGHTS_WRITE    |\
-                          TOKEN_ADJUST_PRIVILEGES  |\
-                          TOKEN_ADJUST_GROUPS      |\
-                          TOKEN_ADJUST_DEFAULT)
-
-#define TOKEN_EXECUTE    (STANDARD_RIGHTS_EXECUTE)
-
 #define TOKEN_SOURCE_LENGTH 8
 /* end winnt.h */
 
@@ -1036,43 +1209,11 @@ typedef struct _TOKEN_CONTROL {
 	LUID ModifiedId;
 	TOKEN_SOURCE TokenSource;
 } TOKEN_CONTROL,*PTOKEN_CONTROL;
-typedef struct _TOKEN_DEFAULT_DACL {
-	PACL DefaultDacl;
-} TOKEN_DEFAULT_DACL,*PTOKEN_DEFAULT_DACL;
-typedef struct _TOKEN_GROUPS {
-	ULONG GroupCount;
-	SID_AND_ATTRIBUTES Groups[ANYSIZE_ARRAY];
-} TOKEN_GROUPS,*PTOKEN_GROUPS,*LPTOKEN_GROUPS;
-typedef struct _TOKEN_GROUPS_AND_PRIVILEGES {
-	ULONG SidCount;
-	ULONG SidLength;
-	PSID_AND_ATTRIBUTES Sids;
-	ULONG RestrictedSidCount;
-	ULONG RestrictedSidLength;
-	PSID_AND_ATTRIBUTES RestrictedSids;
-	ULONG PrivilegeCount;
-	ULONG PrivilegeLength;
-	PLUID_AND_ATTRIBUTES Privileges;
-	LUID AuthenticationId;
-} TOKEN_GROUPS_AND_PRIVILEGES, *PTOKEN_GROUPS_AND_PRIVILEGES;
+
 typedef struct _TOKEN_ORIGIN {
 	LUID OriginatingLogonSession;
 } TOKEN_ORIGIN, *PTOKEN_ORIGIN;
-typedef struct _TOKEN_OWNER {
-	PSID Owner;
-} TOKEN_OWNER,*PTOKEN_OWNER;
-typedef struct _TOKEN_PRIMARY_GROUP {
-	PSID PrimaryGroup;
-} TOKEN_PRIMARY_GROUP,*PTOKEN_PRIMARY_GROUP;
-typedef struct _TOKEN_PRIVILEGES {
-	ULONG PrivilegeCount;
-	LUID_AND_ATTRIBUTES Privileges[ANYSIZE_ARRAY];
-} TOKEN_PRIVILEGES,*PTOKEN_PRIVILEGES,*LPTOKEN_PRIVILEGES;
 
-typedef enum _TOKEN_TYPE {
-	TokenPrimary = 1,
-	TokenImpersonation
-} TOKEN_TYPE,*PTOKEN_TYPE;
 typedef struct _TOKEN_STATISTICS {
 	LUID TokenId;
 	LUID AuthenticationId;
@@ -1085,17 +1226,6 @@ typedef struct _TOKEN_STATISTICS {
 	ULONG PrivilegeCount;
 	LUID ModifiedId;
 } TOKEN_STATISTICS, *PTOKEN_STATISTICS;
-typedef struct _TOKEN_USER {
-	SID_AND_ATTRIBUTES User;
-} TOKEN_USER, *PTOKEN_USER;
-
-typedef enum _TOKEN_INFORMATION_CLASS {
-	TokenUser=1,TokenGroups,TokenPrivileges,TokenOwner,
-	TokenPrimaryGroup,TokenDefaultDacl,TokenSource,TokenType,
-	TokenImpersonationLevel,TokenStatistics,TokenRestrictedSids,
-	TokenSessionId,TokenGroupsAndPrivileges,TokenSessionReference,
-	TokenSandBoxInert,TokenAuditPolicy,TokenOrigin,
-} TOKEN_INFORMATION_CLASS;
 
 #define SYMLINK_FLAG_RELATIVE   1
 
