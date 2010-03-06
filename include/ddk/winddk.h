@@ -3650,6 +3650,7 @@ RtlLargeIntegerDivide(
   IN OUT PLARGE_INTEGER  Remainder);
 #endif
 
+#ifndef _X86_
 NTKERNELAPI
 INTERLOCKED_RESULT
 NTAPI
@@ -3671,6 +3672,7 @@ NTAPI
 ExInterlockedIncrementLong(
   IN PLONG  Addend,
   IN PKSPIN_LOCK  Lock);
+#endif
 
 NTHALAPI
 VOID

@@ -1794,6 +1794,7 @@ typedef struct _MDL {
     ULONG ByteCount;
     ULONG ByteOffset;
 } MDL, *PMDL;
+typedef MDL *PMDLX;
 
 typedef enum _MEMORY_CACHING_TYPE_ORIG {
   MmFrameBufferCached = 2
@@ -1997,8 +1998,9 @@ NTKERNELAPI
 VOID
 NTAPI
 MmBuildMdlForNonPagedPool(
-  IN OUT PMDL  MemoryDescriptorList);
+  IN OUT PMDLX  MemoryDescriptorList);
 
+//DECLSPEC_DEPRECATED_DDK
 NTKERNELAPI
 PMDL
 NTAPI
@@ -2126,6 +2128,15 @@ MmUnmapIoSpace(
 NTKERNELAPI
 VOID
 NTAPI
+MmProbeAndLockProcessPages(
+  IN OUT PMDL  MemoryDescriptorList,
+  IN PEPROCESS  Process,
+  IN KPROCESSOR_MODE  AccessMode,
+  IN LOCK_OPERATION  Operation);
+
+NTKERNELAPI
+VOID
+NTAPI
 MmUnmapLockedPages(
   IN PVOID  BaseAddress,
   IN PMDL  MemoryDescriptorList);
@@ -2169,15 +2180,6 @@ MmMapLockedPagesWithReservedMapping(
   IN ULONG  PoolTag,
   IN PMDL  MemoryDescriptorList,
   IN MEMORY_CACHING_TYPE  CacheType);
-
-NTKERNELAPI
-VOID
-NTAPI
-MmProbeAndLockProcessPages(
-  IN OUT PMDL  MemoryDescriptorList,
-  IN PEPROCESS  Process,
-  IN KPROCESSOR_MODE  AccessMode,
-  IN LOCK_OPERATION  Operation);
 
 NTKERNELAPI
 NTSTATUS
@@ -2793,7 +2795,12 @@ typedef struct _CM_PARTIAL_RESOURCE_DESCRIPTOR {
       ULONG Length;
     } Port;
     struct {
+#if defined(NT_PROCESSOR_GROUPS)
+      USHORT Level;
+      USHORT Group;
+#else
       ULONG Level;
+#endif
       ULONG Vector;
       KAFFINITY Affinity;
     } Interrupt;
@@ -2801,17 +2808,26 @@ typedef struct _CM_PARTIAL_RESOURCE_DESCRIPTOR {
     struct {
       __GNU_EXTENSION union {
         struct {
+#if defined(NT_PROCESSOR_GROUPS)
+          USHORT Group;
+#else
           USHORT Reserved;
+#endif
           USHORT MessageCount;
           ULONG Vector;
           KAFFINITY Affinity;
         } Raw;
         struct {
+#if defined(NT_PROCESSOR_GROUPS)
+          USHORT Level;
+          USHORT Group;
+#else
           ULONG Level;
+#endif
           ULONG Vector;
           KAFFINITY Affinity;
         } Translated;
-      };
+      } DUMMYUNIONNAME;
     } MessageInterrupt;
 #endif
     struct {
