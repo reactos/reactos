@@ -2272,10 +2272,12 @@ NTSTATUS WINAPI RtlCreateActivationContext( HANDLE *handle,  void *ptr )
     {
         UNICODE_STRING dir;
         WCHAR *p;
+        HMODULE module;
 
-        if ((status = get_module_filename( NtCurrentTeb()->ProcessEnvironmentBlock->ImageBaseAddress, &dir, 0 )))
-            goto error;
+        if (pActCtx->dwFlags & ACTCTX_FLAG_HMODULE_VALID) module = pActCtx->hModule;
+        else module = NtCurrentTeb()->ProcessEnvironmentBlock->ImageBaseAddress;
 
+        if ((status = get_module_filename( module, &dir, 0 ))) goto error;
         if ((p = strrchrW( dir.Buffer, '\\' ))) p[1] = 0;
         actctx->appdir.info = dir.Buffer;
     }
@@ -2339,7 +2341,6 @@ NTSTATUS WINAPI RtlCreateActivationContext( HANDLE *handle,  void *ptr )
 
     if (status == STATUS_SUCCESS) *handle = actctx;
     else actctx_release( actctx );
-
     return status;
 
 error:
