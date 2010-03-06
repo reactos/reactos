@@ -489,32 +489,24 @@ static HRESULT WINAPI domelem_get_tagName(
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
     xmlNodePtr element;
-    DWORD len;
-    DWORD offset = 0;
-    LPWSTR str;
+    const xmlChar *prefix;
+    xmlChar *qname;
 
     TRACE("(%p)->(%p)\n", This, p );
+
+    if (!p) return E_INVALIDARG;
 
     element = get_element( This );
     if ( !element )
         return E_FAIL;
 
-    len = MultiByteToWideChar( CP_UTF8, 0, (LPCSTR) element->name, -1, NULL, 0 );
-    if (element->ns)
-        len += MultiByteToWideChar( CP_UTF8, 0, (LPCSTR) element->ns->prefix, -1, NULL, 0 );
-    str = heap_alloc( len * sizeof (WCHAR) );
-    if ( !str )
-        return E_OUTOFMEMORY;
-    if (element->ns)
-    {
-        offset = MultiByteToWideChar( CP_UTF8, 0, (LPCSTR) element->ns->prefix, -1, str, len );
-        str[offset - 1] = ':';
-    }
-    MultiByteToWideChar( CP_UTF8, 0, (LPCSTR) element->name, -1, str + offset, len - offset );
-    *p = SysAllocString( str );
-    heap_free( str );
+    prefix = element->ns ? element->ns->prefix : NULL;
+    qname = xmlBuildQName(element->name, prefix, NULL, 0);
 
-    return S_OK;
+    *p = bstr_from_xmlChar(qname);
+    if (qname != element->name) xmlFree(qname);
+
+    return *p ? S_OK : E_OUTOFMEMORY;
 }
 
 static HRESULT WINAPI domelem_getAttribute(

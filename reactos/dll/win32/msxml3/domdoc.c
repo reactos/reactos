@@ -2214,7 +2214,7 @@ static ULONG WINAPI xmldoc_Safety_Release(IObjectSafety *iface)
     return IXMLDocument_Release((IXMLDocument *)This);
 }
 
-#define SAFETY_SUPPORTED_OPTIONS (INTERFACESAFE_FOR_UNTRUSTED_CALLER|INTERFACESAFE_FOR_UNTRUSTED_DATA)
+#define SAFETY_SUPPORTED_OPTIONS (INTERFACESAFE_FOR_UNTRUSTED_CALLER|INTERFACESAFE_FOR_UNTRUSTED_DATA|INTERFACE_USES_SECURITY_MANAGER)
 
 static HRESULT WINAPI xmldoc_Safety_GetInterfaceSafetyOptions(IObjectSafety *iface, REFIID riid,
         DWORD *pdwSupportedOptions, DWORD *pdwEnabledOptions)
@@ -2237,6 +2237,9 @@ static HRESULT WINAPI xmldoc_Safety_SetInterfaceSafetyOptions(IObjectSafety *ifa
 {
     domdoc *This = impl_from_IObjectSafety(iface);
     TRACE("(%p)->(%s %x %x)\n", This, debugstr_guid(riid), dwOptionSetMask, dwEnabledOptions);
+
+    if ((dwOptionSetMask & ~SAFETY_SUPPORTED_OPTIONS) != 0)
+        return E_FAIL;
 
     This->safeopt = dwEnabledOptions & dwOptionSetMask & SAFETY_SUPPORTED_OPTIONS;
     return S_OK;
