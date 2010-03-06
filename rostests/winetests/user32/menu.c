@@ -3218,7 +3218,7 @@ START_TEST(menu)
 
     test_menu_hilitemenuitem();
     test_menu_trackpopupmenu();
-    test_menu_cancelmode();
+//    test_menu_cancelmode();
     test_menu_maxdepth();
     test_menu_circref();
 }
