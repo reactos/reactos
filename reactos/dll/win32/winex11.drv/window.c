@@ -143,6 +143,31 @@ static void remove_startup_notification(Display *display, Window window)
 }
 
 
+struct has_popup_result
+{
+    HWND hwnd;
+    BOOL found;
+};
+
+static BOOL CALLBACK has_popup( HWND hwnd, LPARAM lparam )
+{
+    struct has_popup_result *result = (struct has_popup_result *)lparam;
+
+    if (hwnd == result->hwnd) return FALSE;  /* popups are always above owner */
+    result->found = (GetWindow( hwnd, GW_OWNER ) == result->hwnd);
+    return !result->found;
+}
+
+static BOOL has_owned_popups( HWND hwnd )
+{
+    struct has_popup_result result;
+
+    result.hwnd = hwnd;
+    result.found = FALSE;
+    EnumWindows( has_popup, (LPARAM)&result );
+    return result.found;
+}
+
 /***********************************************************************
  *		is_window_managed
  *
@@ -182,6 +207,8 @@ static BOOL is_window_managed( HWND hwnd, UINT swp_flags, const RECT *window_rec
     /* application windows are managed */
     ex_style = GetWindowLongW( hwnd, GWL_EXSTYLE );
     if (ex_style & WS_EX_APPWINDOW) return TRUE;
+    /* windows that own popups are managed */
+    if (has_owned_popups( hwnd )) return TRUE;
     /* default: not managed */
     return FALSE;
 }
@@ -918,7 +945,7 @@ static void set_initial_wm_hints( Display *display, struct x11drv_win_data *data
 {
     long i;
     Atom protocols[3];
-    Atom dndVersion = 4;
+    Atom dndVersion = WINE_XDND_VERSION;
     XClassHint *class_hints;
     char *process_name = get_process_name();
 
@@ -967,13 +994,41 @@ static void set_initial_wm_hints( Display *display, struct x11drv_win_data *data
 
 
 /***********************************************************************
+ *              get_owner_whole_window
+ *
+ * Retrieve an owner's window, creating it if necessary.
+ */
+static Window get_owner_whole_window( HWND owner )
+{
+    struct x11drv_win_data *data;
+
+    if (!owner) return 0;
+
+    if (!(data = X11DRV_get_win_data( owner )))
+    {
+        if (GetWindowThreadProcessId( owner, NULL ) != GetCurrentThreadId() ||
+            !(data = X11DRV_create_win_data( owner )))
+            return (Window)GetPropA( owner, whole_window_prop );
+    }
+    else if (!data->managed)  /* make it managed */
+    {
+        SetWindowPos( owner, 0, 0, 0, 0, 0,
+                      SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE |
+                      SWP_NOREDRAW | SWP_DEFERERASE | SWP_NOSENDCHANGING | SWP_STATECHANGED );
+    }
+    return data->whole_window;
+}
+
+
+/***********************************************************************
  *              set_wm_hints
  *
  * Set the window manager hints for a newly-created window
  */
 static void set_wm_hints( Display *display, struct x11drv_win_data *data )
 {
-    Window group_leader;
+    Window group_leader = data->whole_window;
+    Window owner_win = 0;
     Atom window_type;
     MwmHints mwm_hints;
     DWORD style, ex_style;
@@ -991,20 +1046,12 @@ static void set_wm_hints( Display *display, struct x11drv_win_data *data )
         style = GetWindowLongW( data->hwnd, GWL_STYLE );
         ex_style = GetWindowLongW( data->hwnd, GWL_EXSTYLE );
         owner = get_window_owner( data->hwnd );
+        if ((owner_win = get_owner_whole_window( owner ))) group_leader = owner_win;
     }
-
-    /* transient for hint */
-    if (owner)
-    {
-        Window owner_win = X11DRV_get_whole_window( owner );
-        wine_tsx11_lock();
-        XSetTransientForHint( display, data->whole_window, owner_win );
-        wine_tsx11_unlock();
-        group_leader = owner_win;
-    }
-    else group_leader = data->whole_window;
 
     wine_tsx11_lock();
+
+    if (owner_win) XSetTransientForHint( display, data->whole_window, owner_win );
 
     /* size hints */
     set_size_hints( display, data, style );

@@ -678,7 +678,9 @@ static INT BITMAP_GetObject( HGDIOBJ handle, INT count, LPVOID buffer )
     {
 	if (count >= sizeof(DIBSECTION))
 	{
-            memcpy( buffer, bmp->dib, sizeof(DIBSECTION) );
+            DIBSECTION *dib = buffer;
+            *dib = *bmp->dib;
+            dib->dsBmih.biHeight = abs( dib->dsBmih.biHeight );
             ret = sizeof(DIBSECTION);
 	}
 	else /* if (count >= sizeof(BITMAP)) */

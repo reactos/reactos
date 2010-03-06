@@ -134,7 +134,7 @@ UINT WINAPI SendInput( UINT count, LPINPUT inputs, int size )
                 break;
 
             case INPUT_KEYBOARD:
-                TRACE("keyboard: vk %x, scan %x, flags %x, time %u, info %lx\n",
+                TRACE("keyboard: vk %X, scan %x, flags %x, time %u, info %lx\n",
                       inputs[i].u.ki.wVk, inputs[i].u.ki.wScan, inputs[i].u.ki.dwFlags,
                       inputs[i].u.ki.time, inputs[i].u.ki.dwExtraInfo);
                 break;
@@ -657,7 +657,7 @@ UINT WINAPI MapVirtualKeyExA(UINT code, UINT maptype, HKL hkl)
  */
 UINT WINAPI MapVirtualKeyExW(UINT code, UINT maptype, HKL hkl)
 {
-    TRACE_(keyboard)("(%d, %d, %p)\n", code, maptype, hkl);
+    TRACE_(keyboard)("(%X, %d, %p)\n", code, maptype, hkl);
 
     return USER_Driver->pMapVirtualKeyEx(code, maptype, hkl);
 }
@@ -869,7 +869,7 @@ UINT WINAPI GetKeyboardLayoutList(INT nBuff, HKL *layouts)
 BOOL WINAPI RegisterHotKey(HWND hwnd,INT id,UINT modifiers,UINT vk)
 {
     static int once;
-    if (!once++) FIXME_(keyboard)("(%p,%d,0x%08x,%d): stub\n",hwnd,id,modifiers,vk);
+    if (!once++) FIXME_(keyboard)("(%p,%d,0x%08x,%X): stub\n",hwnd,id,modifiers,vk);
     return TRUE;
 }
 

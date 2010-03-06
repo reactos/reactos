@@ -1308,7 +1308,7 @@ static BOOL client_side_dib_copy( X11DRV_PDEVICE *physDevSrc, INT xSrc, INT ySrc
 
     bytesToCopy = width * bytesPerPixel;
 
-    if (srcDib.dsBmih.biHeight < 0)
+    if (physDevSrc->bitmap->topdown)
     {
       srcPtr = &physDevSrc->bitmap->base[ySrc*srcDib.dsBm.bmWidthBytes + xSrc*bytesPerPixel];
       srcRowOffset = srcDib.dsBm.bmWidthBytes;
@@ -1319,7 +1319,7 @@ static BOOL client_side_dib_copy( X11DRV_PDEVICE *physDevSrc, INT xSrc, INT ySrc
         + xSrc*bytesPerPixel];
       srcRowOffset = -srcDib.dsBm.bmWidthBytes;
     }
-    if (dstDib.dsBmih.biHeight < 0)
+    if (physDevDst->bitmap->topdown)
     {
       dstPtr = &physDevDst->bitmap->base[yDst*dstDib.dsBm.bmWidthBytes + xDst*bytesPerPixel];
       dstRowOffset = dstDib.dsBm.bmWidthBytes;

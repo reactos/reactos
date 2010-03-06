@@ -3393,29 +3393,33 @@ BOOL WINAPI UpdateLayeredWindowIndirect( HWND hwnd, const UPDATELAYEREDWINDOWINF
             cy = info->psize->cy;
             flags &= ~SWP_NOSIZE;
         }
-        TRACE( "moving window %p pos %d,%d %dx%x\n", hwnd, x, y, cx, cy );
+        TRACE( "moving window %p pos %d,%d %dx%d\n", hwnd, x, y, cx, cy );
         SetWindowPos( hwnd, 0, x, y, cx, cy, flags );
     }
 
     if (info->hdcSrc)
     {
-        RECT rect;
-        HDC hdc = GetDCEx( hwnd, 0, DCX_CACHE );
+        HDC hdc = GetWindowDC( hwnd );
 
         if (hdc)
         {
             int x = 0, y = 0;
+            RECT rect;
 
-            GetClientRect( hwnd, &rect );
+            GetWindowRect( hwnd, &rect );
+            OffsetRect( &rect, -rect.left, -rect.top);
             if (info->pptSrc)
             {
                 x = info->pptSrc->x;
                 y = info->pptSrc->y;
             }
-            /* FIXME: intersect rect with info->prcDirty */
-            TRACE( "copying window %p pos %d,%d\n", hwnd, x, y );
-            BitBlt( hdc, rect.left, rect.top, rect.right, rect.bottom,
-                    info->hdcSrc, rect.left + x, rect.top + y, SRCCOPY );
+
+            if (!info->prcDirty || (info->prcDirty && IntersectRect(&rect, &rect, info->prcDirty)))
+            {
+                TRACE( "copying window %p pos %d,%d\n", hwnd, x, y );
+                BitBlt( hdc, rect.left, rect.top, rect.right, rect.bottom,
+                        info->hdcSrc, rect.left + x, rect.top + y, SRCCOPY );
+            }
             ReleaseDC( hwnd, hdc );
         }
     }

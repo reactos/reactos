@@ -239,8 +239,17 @@ HBITMAP CDECL RosDrv_CreateDIBSection( NTDRV_PDEVICE *physDev, HBITMAP hbitmap,
                                        const BITMAPINFO *bmi, UINT usage )
 {
     DIBSECTION dib;
+    LONG height, width;
+    WORD infoBpp, compression;
 
     GetObjectW( hbitmap, sizeof(dib), &dib );
+
+    /* Get parameters to check if it's topdown or not.
+       GetObject doesn't return this info */
+    DIB_GetBitmapInfo(&bmi->bmiHeader, &width, &height, &infoBpp, &compression);
+
+    // TODO: Should pass as a flag instead
+    if (height < 0) dib.dsBmih.biHeight *= -1;
 
     return RosGdiCreateDIBSection(physDev->hKernelDC, hbitmap, bmi, usage, &dib);
 }

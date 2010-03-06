@@ -297,6 +297,7 @@ static struct dce *get_window_dce( HWND hwnd )
                 {
                     win->dce = dce;
                     dce->hwnd = hwnd;
+                    dce->count++;
                     list_add_tail( &dce_list, &dce->entry );
                 }
                 WIN_ReleasePtr( win );
@@ -496,7 +497,7 @@ static BOOL CALLBACK dc_hook( HDC hDC, WORD code, DWORD_PTR data, LPARAM lParam 
          * (between GetDC and ReleaseDC)
          */
         USER_Lock();
-        if (dce->count)
+        if (dce->count > 1)
         {
             WARN("Application trying to delete a busy DC %p\n", dce->hdc);
             retv = FALSE;

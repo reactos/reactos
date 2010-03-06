@@ -1862,7 +1862,7 @@ static void xrender_blit(Picture src_pict, Picture mask_pict, Picture dst_pict, 
     if(xscale != 1.0 || yscale != 1.0)
     {
         if(mask_pict)
-            set_xrender_transformation(mask_pict, xscale, yscale, x_offset, y_offset);
+            set_xrender_transformation(mask_pict, xscale, yscale, x_src + x_offset, y_src + y_offset);
         else
             set_xrender_transformation(src_pict, xscale, yscale, x_src + x_offset, y_src + y_offset);
 
@@ -1871,11 +1871,16 @@ static void xrender_blit(Picture src_pict, Picture mask_pict, Picture dst_pict, 
     else
     {
         if(mask_pict)
+        {
             set_xrender_transformation(mask_pict, 1, 1, 0, 0);
+            /* Note since the 'source data' is in the mask picture, we have to pass x_src / y_src using mask_x / mask_y */
+            pXRenderComposite(gdi_display, op, src_pict, mask_pict, dst_pict, 0, 0, x_src, y_src, 0, 0, width, height);
+        }
         else
+        {
             set_xrender_transformation(src_pict, 1, 1, 0, 0);
-
-        pXRenderComposite(gdi_display, op, src_pict, mask_pict, dst_pict, x_src, y_src, 0, 0, 0, 0, width, height);
+            pXRenderComposite(gdi_display, op, src_pict, mask_pict, dst_pict, x_src, y_src, 0, 0, 0, 0, width, height);
+        }
     }
 }
 
@@ -1948,10 +1953,10 @@ BOOL CDECL X11DRV_AlphaBlend(X11DRV_PDEVICE *devDst, INT xDst, INT yDst, INT wid
 
     /* If the source is a 1x1 bitmap, tiling is equivalent to stretching, but
         tiling is much faster. Therefore, we do no stretching in this case. */
-    repeat_src = dib.dsBmih.biWidth == 1 && abs(dib.dsBmih.biHeight) == 1;
+    repeat_src = dib.dsBmih.biWidth == 1 && dib.dsBmih.biHeight == 1;
 
     if (xSrc < 0 || ySrc < 0 || widthSrc < 0 || heightSrc < 0 || xSrc + widthSrc > dib.dsBmih.biWidth
-        || ySrc + heightSrc > abs(dib.dsBmih.biHeight))
+        || ySrc + heightSrc > dib.dsBmih.biHeight)
     {
         WARN("Invalid src coords: (%d,%d), size %dx%d\n", xSrc, ySrc, widthSrc, heightSrc);
         SetLastError(ERROR_INVALID_PARAMETER);
@@ -1964,7 +1969,7 @@ BOOL CDECL X11DRV_AlphaBlend(X11DRV_PDEVICE *devDst, INT xDst, INT yDst, INT wid
     }
     dstbits = data = HeapAlloc(GetProcessHeap(), 0, heightSrc * widthSrc * 4);
 
-    if(dib.dsBmih.biHeight < 0) { /* top-down dib */
+    if (devSrc->bitmap->topdown) { /* top-down dib */
         top_down = TRUE;
         dstbits += widthSrc * (heightSrc - 1);
         y2 = ySrc;

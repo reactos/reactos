@@ -2035,8 +2035,7 @@ static BOOL peek_message( MSG *msg, HWND hwnd, UINT first, UINT last, UINT flags
     if (!(buffer = HeapAlloc( GetProcessHeap(), 0, buffer_size ))) return FALSE;
 
     if (!first && !last) last = ~0;
-    if (hwnd == HWND_BROADCAST || hwnd == HWND_TOPMOST || hwnd == HWND_BOTTOM)
-        hwnd = (HWND)-1;
+    if (hwnd == HWND_BROADCAST) hwnd = HWND_TOPMOST;
 
     for (;;)
     {
@@ -3000,7 +2999,7 @@ BOOL WINAPI TranslateMessage( const MSG *msg )
     if (msg->message < WM_KEYFIRST || msg->message > WM_KEYLAST) return FALSE;
     if (msg->message != WM_KEYDOWN && msg->message != WM_SYSKEYDOWN) return TRUE;
 
-    TRACE_(key)("Translating key %s (%04lx), scancode %04x\n",
+    TRACE_(key)("Translating key %s (%04lX), scancode %04x\n",
                 SPY_GetVKeyName(msg->wParam), msg->wParam, HIWORD(msg->lParam));
 
     switch (msg->wParam)

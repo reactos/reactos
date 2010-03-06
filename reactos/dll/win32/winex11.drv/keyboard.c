@@ -52,6 +52,12 @@
 #include "wine/unicode.h"
 #include "wine/debug.h"
 
+/* log format (add 0-padding as appropriate):
+    keycode  %u  as in output from xev
+    keysym   %lx as in X11/keysymdef.h
+    vkey     %X  as in winuser.h
+    scancode %x
+*/
 WINE_DEFAULT_DEBUG_CHANNEL(keyboard);
 WINE_DECLARE_DEBUG_CHANNEL(key);
 
@@ -1146,7 +1152,7 @@ static WORD EVENT_event_to_vkey( XIC xic, XKeyEvent *e)
     if ((e->state & ControlMask) && (keysym == XK_Break))
         return VK_CANCEL;
 
-    TRACE_(key)("e->keycode = %x\n", e->keycode);
+    TRACE_(key)("e->keycode = %u\n", e->keycode);
 
     return keyc2vkey[e->keycode];
 }
@@ -1232,7 +1238,7 @@ void X11DRV_send_keyboard_input( WORD wVk, WORD wScan, DWORD event_flags, DWORD 
     {
         vk_hook = wVk = VK_PACKET;
         lParam = MAKELPARAM(1 /* repeat count */, wScan);
-        TRACE_(key)(" message=0x%04x wParam=0x%04x lParam=0x%08lx\n",
+        TRACE_(key)("message=0x%04x wParam=0x%04X lParam=0x%08lx\n",
                     message, wVk, lParam);
     }
 
@@ -1264,7 +1270,7 @@ void X11DRV_send_keyboard_input( WORD wVk, WORD wScan, DWORD event_flags, DWORD 
 
         lParam = MAKELPARAM(1 /* repeat count */, flags);
 
-        TRACE_(key)(" message=0x%04x wParam=0x%04x, lParam=0x%08lx, InputKeyState=0x%x\n",
+        TRACE_(key)(" message=0x%04x wParam=0x%04X, lParam=0x%08lx, InputKeyState=0x%x\n",
                     message, wVk, lParam, key_state_table[wVk]);
     }
 
@@ -1300,7 +1306,7 @@ static inline void KEYBOARD_UpdateOneState ( WORD vkey, WORD scan, int state, DW
 
         if (!state) flags |= KEYEVENTF_KEYUP;
 
-        TRACE("Adjusting state for vkey %#.2x. State before %#.2x\n",
+        TRACE("Adjusting state for vkey %#.2X. State before %#.2x\n",
               vkey, key_state_table[vkey & 0xff]);
 
         /* Fake key being pressed inside wine */
@@ -1378,7 +1384,7 @@ void X11DRV_KeyEvent( HWND hwnd, XEvent *xev )
     DWORD event_time = EVENT_x11_time_to_win32_time(event->time);
     Status status = 0;
 
-    TRACE_(key)("type %d, window %lx, state 0x%04x, keycode 0x%04x\n",
+    TRACE_(key)("type %d, window %lx, state 0x%04x, keycode %u\n",
 		event->type, event->window, event->state, event->keycode);
 
     wine_tsx11_lock();
@@ -1403,7 +1409,7 @@ void X11DRV_KeyEvent( HWND hwnd, XEvent *xev )
         ascii_chars = XLookupString(event, buf, sizeof(buf), &keysym, NULL);
     wine_tsx11_unlock();
 
-    TRACE_(key)("nbyte = %d, status 0x%x\n", ascii_chars, status);
+    TRACE_(key)("nbyte = %d, status %d\n", ascii_chars, status);
 
     if (status == XLookupChars)
     {
@@ -1433,7 +1439,7 @@ void X11DRV_KeyEvent( HWND hwnd, XEvent *xev )
         wine_tsx11_unlock();
 	if (!ksname)
 	  ksname = "No Name";
-	TRACE_(key)("%s : keysym=%lX (%s), # of chars=%d / %s\n",
+	TRACE_(key)("%s : keysym=%lx (%s), # of chars=%d / %s\n",
                     (event->type == KeyPress) ? "KeyPress" : "KeyRelease",
                     keysym, ksname, ascii_chars, debugstr_an(Str, ascii_chars));
     }
@@ -1446,7 +1452,7 @@ void X11DRV_KeyEvent( HWND hwnd, XEvent *xev )
     if (!vkey && ascii_chars) vkey = VK_NONAME;
     wine_tsx11_unlock();
 
-    TRACE_(key)("keycode 0x%x converted to vkey 0x%x\n",
+    TRACE_(key)("keycode %u converted to vkey 0x%X\n",
                 event->keycode, vkey);
 
     if (!vkey) return;
@@ -1526,7 +1532,7 @@ X11DRV_KEYBOARD_DetectLayout( Display *display )
             if (!use_xkb || !XkbTranslateKeySym(display, &keysym, 0, &ckey[keyc][i], 1, NULL))
 #endif
             {
-                TRACE("XKB could not translate keysym %ld\n", keysym);
+                TRACE("XKB could not translate keysym %04lx\n", keysym);
                 /* FIXME: query what keysym is used as Mode_switch, fill XKeyEvent
                  * with appropriate ShiftMask and Mode_switch, use XLookupString
                  * to get character in the local encoding.
@@ -1578,7 +1584,7 @@ X11DRV_KEYBOARD_DetectLayout( Display *display )
           char str[5];
           for (i = 0; i < 4; i++) str[i] = ckey[keyc][i] ? ckey[keyc][i] : ' ';
           str[4] = 0;
-          TRACE_(key)("mismatch for keysym 0x%04lX, keycode %d, got %s\n", keysym, keyc, str );
+          TRACE_(key)("mismatch for keycode %u, got %s\n", keyc, str);
           mismatch++;
           score -= syms;
 	}
@@ -1823,11 +1829,11 @@ void X11DRV_InitKeyboard( Display *display )
 	      }
 	    }
         }
-        TRACE("keycode %04x => vkey %04x\n", e2.keycode, vkey);
+        TRACE("keycode %u => vkey %04X\n", e2.keycode, vkey);
         keyc2vkey[e2.keycode] = vkey;
         keyc2scan[e2.keycode] = scan;
         if ((vkey & 0xff) && vkey_used[(vkey & 0xff)])
-            WARN("vkey %04x is being used by more than one keycode\n", vkey);
+            WARN("vkey %04X is being used by more than one keycode\n", vkey);
         vkey_used[(vkey & 0xff)] = 1;
     } /* for */
 
@@ -1875,7 +1881,7 @@ void X11DRV_InitKeyboard( Display *display )
 
         if (vkey)
         {
-            TRACE("keycode %04x => vkey %04x\n", e2.keycode, vkey);
+            TRACE("keycode %u => vkey %04X\n", e2.keycode, vkey);
             keyc2vkey[e2.keycode] = vkey;
         }
     } /* for */
@@ -1913,7 +1919,7 @@ void X11DRV_InitKeyboard( Display *display )
 
         if (TRACE_ON(keyboard))
         {
-            TRACE("spare virtual key %X assigned to keycode %X:\n",
+            TRACE("spare virtual key %04X assigned to keycode %u:\n",
                              vkey, e2.keycode);
             TRACE("(");
             for (i = 0; i < keysyms_per_keycode; i += 1)
@@ -1924,12 +1930,12 @@ void X11DRV_InitKeyboard( Display *display )
                 ksname = XKeysymToString(keysym);
                 if (!ksname)
                     ksname = "NoSymbol";
-                TRACE( "%lX (%s) ", keysym, ksname);
+                TRACE( "%lx (%s) ", keysym, ksname);
             }
             TRACE(")\n");
         }
 
-        TRACE("keycode %04x => vkey %04x\n", e2.keycode, vkey);
+        TRACE("keycode %u => vkey %04X\n", e2.keycode, vkey);
         keyc2vkey[e2.keycode] = vkey;
         vkey_used[vkey] = 1;
     } /* for */
@@ -1945,7 +1951,7 @@ void X11DRV_InitKeyboard( Display *display )
 
 	/* should make sure the scancode is unassigned here, but >=0x60 currently always is */
 
-	TRACE_(key)("assigning scancode %02x to unidentified keycode %02x (%s)\n",scan,keyc,ksname);
+	TRACE_(key)("assigning scancode %02x to unidentified keycode %u (%s)\n",scan,keyc,ksname);
 	keyc2scan[keyc]=scan++;
       }
 
@@ -1977,7 +1983,7 @@ SHORT CDECL X11DRV_GetAsyncKeyState(INT key)
     retval = ((key_state_table[key] & 0x40) ? 0x0001 : 0) |
              ((key_state_table[key] & 0x80) ? 0x8000 : 0);
     key_state_table[key] &= ~0x40;
-    TRACE_(key)("(%x) -> %x\n", key, retval);
+    TRACE_(key)("(%X) -> %x\n", key, retval);
     return retval;
 }
 
@@ -2128,8 +2134,7 @@ SHORT CDECL X11DRV_VkKeyScanEx(WCHAR wChar, HKL hkl)
     }
     wine_tsx11_unlock();
 
-    TRACE("'%c'(%#lx, %lu): got keycode %#.2x (%d)\n",
-            cChar, keysym, keysym, keycode, keycode);
+    TRACE("'%c'(%lx): got keycode %u\n", cChar, keysym, keycode);
 
     /* keycode -> (keyc2vkey) vkey */
     ret = keyc2vkey[keycode];
@@ -2299,7 +2304,7 @@ UINT CDECL X11DRV_MapVirtualKeyEx(UINT wCode, UINT wMapType, HKL hkl)
                           wine_tsx11_unlock();
 			  return 0; /* whatever */
 			}
-			TRACE("Found keycode %d (0x%2X)\n",e.keycode,e.keycode);
+			TRACE("Found keycode %u\n",e.keycode);
 
                         len = XLookupString(&e, s, sizeof(s), &keysym, NULL);
                         wine_tsx11_unlock();
@@ -2358,7 +2363,7 @@ INT CDECL X11DRV_GetKeyNameText(LONG lParam, LPWSTR lpBuffer, INT nSize)
   }
 
   ansi = X11DRV_MapVirtualKeyEx(vkey, MAPVK_VK_TO_CHAR, X11DRV_GetKeyboardLayout(0));
-  TRACE("scan 0x%04x, vkey 0x%04x, ANSI 0x%04x\n", scanCode, vkey, ansi);
+  TRACE("scan 0x%04x, vkey 0x%04X, ANSI 0x%04x\n", scanCode, vkey, ansi);
 
   /* first get the name of the "regular" keys which is the Upper case
      value of the keycap imprint.                                     */
@@ -2401,7 +2406,7 @@ INT CDECL X11DRV_GetKeyNameText(LONG lParam, LPWSTR lpBuffer, INT nSize)
       keys = XKeycodeToKeysym(display, keyc, 0);
       name = XKeysymToString(keys);
       wine_tsx11_unlock();
-      TRACE("found scan=%04x keyc=%04x keysym=%04x string=%s\n",
+      TRACE("found scan=%04x keyc=%u keysym=%04x string=%s\n",
             scanCode, keyc, (int)keys, name);
       if (lpBuffer && nSize && name)
           return MultiByteToWideChar(CP_UNIXCP, 0, name, -1, lpBuffer, nSize);
@@ -2409,7 +2414,7 @@ INT CDECL X11DRV_GetKeyNameText(LONG lParam, LPWSTR lpBuffer, INT nSize)
 
   /* Finally issue WARN for unknown keys   */
 
-  WARN("(%08x,%p,%d): unsupported key, vkey=%04x, ansi=%04x\n",lParam,lpBuffer,nSize,vkey,ansi);
+  WARN("(%08x,%p,%d): unsupported key, vkey=%04X, ansi=%04x\n",lParam,lpBuffer,nSize,vkey,ansi);
   if (lpBuffer && nSize)
     *lpBuffer = 0;
   return 0;
@@ -2610,9 +2615,9 @@ INT CDECL X11DRV_ToUnicodeEx(UINT virtKey, UINT scanCode, const BYTE *lpKeyState
         wine_tsx11_unlock();
 	return 0;
       }
-    else TRACE("Found keycode %d (0x%2X)\n",e.keycode,e.keycode);
+    else TRACE("Found keycode %u\n",e.keycode);
 
-    TRACE_(key)("type %d, window %lx, state 0x%04x, keycode 0x%04x\n",
+    TRACE_(key)("type %d, window %lx, state 0x%04x, keycode %u\n",
 		e.type, e.window, e.state, e.keycode);
 
     /* Clients should pass only KeyPress events to XmbLookupString,
@@ -2648,7 +2653,7 @@ INT CDECL X11DRV_ToUnicodeEx(UINT virtKey, UINT scanCode, const BYTE *lpKeyState
         ksname = XKeysymToString(keysym);
         wine_tsx11_unlock();
         if (!ksname) ksname = "No Name";
-        TRACE_(key)("%s : keysym=%lX (%s), # of chars=%d / %s\n",
+        TRACE_(key)("%s : keysym=%lx (%s), # of chars=%d / %s\n",
                     (e.type == KeyPress) ? "KeyPress" : "KeyRelease",
                     keysym, ksname, ret, debugstr_an(lpChar, ret));
     }
@@ -2707,9 +2712,9 @@ INT CDECL X11DRV_ToUnicodeEx(UINT virtKey, UINT scanCode, const BYTE *lpKeyState
 		ksname = "No Name";
 	    if ((keysym >> 8) != 0xff)
 		{
-		WARN("no char for keysym %04lX (%s) :\n",
+		WARN("no char for keysym %04lx (%s) :\n",
                     keysym, ksname);
-		WARN("virtKey=%X, scanCode=%X, keycode=%X, state=%X\n",
+		WARN("virtKey=%X, scanCode=%X, keycode=%u, state=%X\n",
                     virtKey, scanCode, e.keycode, e.state);
 		}
 	    }

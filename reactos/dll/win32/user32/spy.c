@@ -1166,10 +1166,10 @@ static const char * const VK_KeyNames[SPY_MAX_VKKEYSNUM + 1] =
     NULL,               /* 0x19 */
     NULL,               /* 0x1A */
     "VK_ESCAPE",        /* 0x1B */
-    NULL,               /* 0x1C */
-    NULL,               /* 0x1D */
-    NULL,               /* 0x1E */
-    NULL,               /* 0x1F */
+    "VK_CONVERT",       /* 0x1C */
+    "VK_NONCONVERT",    /* 0x1D */
+    "VK_ACCEPT",        /* 0x1E */
+    "VK_MODECHANGE",    /* 0x1F */
     "VK_SPACE",         /* 0x20 */
     "VK_PRIOR",         /* 0x21 */
     "VK_NEXT",          /* 0x22 */
@@ -1233,7 +1233,7 @@ static const char * const VK_KeyNames[SPY_MAX_VKKEYSNUM + 1] =
     "VK_RWIN",          /* 0x5C */
     "VK_APPS",          /* 0x5D */
     NULL,               /* 0x5E */
-    NULL,               /* 0x5F */
+    "VK_SLEEP",         /* 0x5F */
     "VK_NUMPAD0",       /* 0x60 */
     "VK_NUMPAD1",       /* 0x61 */
     "VK_NUMPAD2",       /* 0x62 */
@@ -1284,11 +1284,11 @@ static const char * const VK_KeyNames[SPY_MAX_VKKEYSNUM + 1] =
     NULL,               /* 0x8F */
     "VK_NUMLOCK",       /* 0x90 */
     "VK_SCROLL",        /* 0x91 */
-    NULL,               /* 0x92 */
-    NULL,               /* 0x93 */
-    NULL,               /* 0x94 */
-    NULL,               /* 0x95 */
-    NULL,               /* 0x96 */
+    "VK_OEM_NEC_EQUAL",       /* 0x92 aka. VK_OEM_FJ_JISHO */
+    "VK_OEM_FJ_MASSHOU",      /* 0x93 */
+    "VK_OEM_FJ_TOUROKU",      /* 0x94 */
+    "VK_OEM_FJ_LOYA",         /* 0x95 */
+    "VK_OEM_FJ_ROYA",         /* 0x96 */
     NULL,               /* 0x97 */
     NULL,               /* 0x98 */
     NULL,               /* 0x99 */

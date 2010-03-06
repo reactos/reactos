@@ -4054,7 +4054,7 @@ INT CDECL X11DRV_SetDIBits( X11DRV_PDEVICE *physDev, HBITMAP hbitmap, UINT start
       UINT y;
 
       TRACE("syncing compatible set bits to app bits\n");
-      if ((tmpheight < 0) ^ (ds.dsBmih.biHeight < 0))
+      if ((tmpheight < 0) ^ physBitmap->topdown)
       {
           dbits += dstwidthb * (lines-1);
           dstwidthb = -dstwidthb;
@@ -4249,7 +4249,7 @@ static void X11DRV_DIB_DoCopyDIBSection(X_PHYSBITMAP *physBitmap, BOOL toDIB,
   descr.palentry    = NULL;
   descr.infoWidth   = dibSection.dsBmih.biWidth;
   descr.infoBpp     = dibSection.dsBmih.biBitCount;
-  descr.lines       = dibSection.dsBmih.biHeight;
+  descr.lines       = physBitmap->topdown ? -dibSection.dsBmih.biHeight : dibSection.dsBmih.biHeight;
   descr.image       = physBitmap->image;
   descr.colorMap    = colorMap;
   descr.nColorMap   = nColorMap;
@@ -4726,12 +4726,17 @@ HBITMAP CDECL X11DRV_CreateDIBSection( X11DRV_PDEVICE *physDev, HBITMAP hbitmap,
 {
     X_PHYSBITMAP *physBitmap;
     DIBSECTION dib;
+    WORD bpp, compr;
+    LONG w, h;
 #ifdef HAVE_LIBXXSHM
     int major, minor;
     Bool pixmaps;
 #endif
 
+    DIB_GetBitmapInfo( &bmi->bmiHeader, &w, &h, &bpp, &compr );
+
     if (!(physBitmap = X11DRV_init_phys_bitmap( hbitmap ))) return 0;
+    if (h < 0) physBitmap->topdown = TRUE;
     physBitmap->status = DIB_Status_None;
 
     GetObjectW( hbitmap, sizeof(dib), &dib );

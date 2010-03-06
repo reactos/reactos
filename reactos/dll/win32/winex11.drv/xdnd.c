@@ -87,13 +87,21 @@ static CRITICAL_SECTION xdnd_cs = { &critsect_debug, -1, 0, 0, 0, 0 };
  */
 void X11DRV_XDND_EnterEvent( HWND hWnd, XClientMessageEvent *event )
 {
+    int version;
     Atom *xdndtypes;
     unsigned long count = 0;
 
-    TRACE("ver(%ld) check-XdndTypeList(%ld) data=%ld,%ld,%ld,%ld,%ld\n",
-          (event->data.l[1] & 0xFF000000) >> 24, (event->data.l[1] & 1),
+    version = (event->data.l[1] & 0xFF000000) >> 24;
+    TRACE("ver(%d) check-XdndTypeList(%ld) data=%ld,%ld,%ld,%ld,%ld\n",
+          version, (event->data.l[1] & 1),
           event->data.l[0], event->data.l[1], event->data.l[2],
           event->data.l[3], event->data.l[4]);
+
+    if (version > WINE_XDND_VERSION)
+    {
+        TRACE("Ignores unsupported version\n");
+        return;
+    }
 
     /* If the source supports more than 3 data types we retrieve
      * the entire list. */

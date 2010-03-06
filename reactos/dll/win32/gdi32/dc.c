@@ -819,7 +819,7 @@ BOOL WINAPI DeleteDC( HDC hdc )
     if (dc->hookProc && !dc->hookProc( hdc, DCHC_DELETEDC, dc->dwHookData, 0 ))
     {
         release_dc_ptr( dc );
-        return FALSE;
+        return TRUE;
     }
 
     while (dc->saveLevel)
