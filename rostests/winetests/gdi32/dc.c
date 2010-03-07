@@ -69,7 +69,7 @@ static void test_savedc_2(void)
     assert(hrgn != 0);
 
     hdc = GetDC(hwnd);
-    ok(hdc != NULL, "CreateDC rets %p\n", hdc);
+    ok(hdc != NULL, "GetDC failed\n");
 
     ret = GetClipBox(hdc, &rc_clip);
     ok(ret == SIMPLEREGION, "GetClipBox returned %d instead of SIMPLEREGION\n", ret);
@@ -328,6 +328,152 @@ static void test_DC_bitmap(void)
     ReleaseDC( 0, hdc );
 }
 
+static void test_DeleteDC(void)
+{
+    HWND hwnd;
+    HDC hdc, hdc_test;
+    WNDCLASSEX cls;
+    int ret;
+
+    /* window DC */
+    hwnd = CreateWindowExA(0, "static", NULL, WS_POPUP|WS_VISIBLE, 0,0,100,100,
+                           0, 0, 0, NULL);
+    ok(hwnd != 0, "CreateWindowExA failed\n");
+
+    hdc = GetDC(hwnd);
+    ok(hdc != 0, "GetDC failed\n");
+    ret = GetObjectType(hdc);
+    ok(ret == OBJ_DC, "expected OBJ_DC, got %d\n", ret);
+    ret = DeleteDC(hdc);
+    ok(ret, "DeleteDC failed\n");
+    ret = GetObjectType(hdc);
+    ok(!ret || broken(ret) /* win9x */, "GetObjectType should fail for a deleted DC\n");
+
+    hdc = GetWindowDC(hwnd);
+    ok(hdc != 0, "GetDC failed\n");
+    ret = GetObjectType(hdc);
+    ok(ret == OBJ_DC, "expected OBJ_DC, got %d\n", ret);
+    ret = DeleteDC(hdc);
+    ok(ret, "DeleteDC failed\n");
+    ret = GetObjectType(hdc);
+    ok(!ret || broken(ret) /* win9x */, "GetObjectType should fail for a deleted DC\n");
+
+    DestroyWindow(hwnd);
+
+    /* desktop window DC */
+    hwnd = GetDesktopWindow();
+    ok(hwnd != 0, "GetDesktopWindow failed\n");
+
+    hdc = GetDC(hwnd);
+    ok(hdc != 0, "GetDC failed\n");
+    ret = GetObjectType(hdc);
+    ok(ret == OBJ_DC, "expected OBJ_DC, got %d\n", ret);
+    ret = DeleteDC(hdc);
+    ok(ret, "DeleteDC failed\n");
+    ret = GetObjectType(hdc);
+    ok(!ret || broken(ret) /* win9x */, "GetObjectType should fail for a deleted DC\n");
+
+    hdc = GetWindowDC(hwnd);
+    ok(hdc != 0, "GetDC failed\n");
+    ret = GetObjectType(hdc);
+    ok(ret == OBJ_DC, "expected OBJ_DC, got %d\n", ret);
+    ret = DeleteDC(hdc);
+    ok(ret, "DeleteDC failed\n");
+    ret = GetObjectType(hdc);
+    ok(!ret || broken(ret) /* win9x */, "GetObjectType should fail for a deleted DC\n");
+
+    /* CS_CLASSDC */
+    memset(&cls, 0, sizeof(cls));
+    cls.cbSize = sizeof(cls);
+    cls.style = CS_CLASSDC;
+    cls.hInstance = GetModuleHandle(0);
+    cls.lpszClassName = "Wine class DC";
+    cls.lpfnWndProc = DefWindowProcA;
+    ret = RegisterClassExA(&cls);
+    ok(ret, "RegisterClassExA failed\n");
+
+    hwnd = CreateWindowExA(0, "Wine class DC", NULL, WS_POPUP|WS_VISIBLE, 0,0,100,100,
+                           0, 0, 0, NULL);
+    ok(hwnd != 0, "CreateWindowExA failed\n");
+
+    hdc = GetDC(hwnd);
+    ok(hdc != 0, "GetDC failed\n");
+    ret = GetObjectType(hdc);
+    ok(ret == OBJ_DC, "expected OBJ_DC, got %d\n", ret);
+    ret = DeleteDC(hdc);
+    ok(ret, "DeleteDC failed\n");
+    ret = GetObjectType(hdc);
+    ok(ret == OBJ_DC, "expected OBJ_DC, got %d\n", ret);
+    ret = ReleaseDC(hwnd, hdc);
+    ok(ret, "ReleaseDC failed\n");
+    ret = GetObjectType(hdc);
+    ok(ret == OBJ_DC, "expected OBJ_DC, got %d\n", ret);
+
+    hdc_test = hdc;
+
+    hdc = GetWindowDC(hwnd);
+    ok(hdc != 0, "GetDC failed\n");
+    ret = GetObjectType(hdc);
+    ok(ret == OBJ_DC, "expected OBJ_DC, got %d\n", ret);
+    ret = DeleteDC(hdc);
+    ok(ret, "DeleteDC failed\n");
+    ret = GetObjectType(hdc);
+    ok(!ret || broken(ret) /* win9x */, "GetObjectType should fail for a deleted DC\n");
+
+    DestroyWindow(hwnd);
+
+    ret = GetObjectType(hdc_test);
+    ok(ret == OBJ_DC, "expected OBJ_DC, got %d\n", ret);
+
+    ret = UnregisterClassA("Wine class DC", GetModuleHandle(NULL));
+    ok(ret, "UnregisterClassA failed\n");
+
+    ret = GetObjectType(hdc_test);
+todo_wine
+    ok(!ret, "GetObjectType should fail for a deleted DC\n");
+
+    /* CS_OWNDC */
+    memset(&cls, 0, sizeof(cls));
+    cls.cbSize = sizeof(cls);
+    cls.style = CS_OWNDC;
+    cls.hInstance = GetModuleHandle(0);
+    cls.lpszClassName = "Wine own DC";
+    cls.lpfnWndProc = DefWindowProcA;
+    ret = RegisterClassExA(&cls);
+    ok(ret, "RegisterClassExA failed\n");
+
+    hwnd = CreateWindowExA(0, "Wine own DC", NULL, WS_POPUP|WS_VISIBLE, 0,0,100,100,
+                           0, 0, 0, NULL);
+    ok(hwnd != 0, "CreateWindowExA failed\n");
+
+    hdc = GetDC(hwnd);
+    ok(hdc != 0, "GetDC failed\n");
+    ret = GetObjectType(hdc);
+    ok(ret == OBJ_DC, "expected OBJ_DC, got %d\n", ret);
+    ret = DeleteDC(hdc);
+    ok(ret, "DeleteDC failed\n");
+    ret = GetObjectType(hdc);
+    ok(ret == OBJ_DC, "expected OBJ_DC, got %d\n", ret);
+    ret = ReleaseDC(hwnd, hdc);
+    ok(ret, "ReleaseDC failed\n");
+    ret = GetObjectType(hdc);
+    ok(ret == OBJ_DC, "expected OBJ_DC, got %d\n", ret);
+
+    hdc = GetWindowDC(hwnd);
+    ok(hdc != 0, "GetDC failed\n");
+    ret = GetObjectType(hdc);
+    ok(ret == OBJ_DC, "expected OBJ_DC, got %d\n", ret);
+    ret = DeleteDC(hdc);
+    ok(ret, "DeleteDC failed\n");
+    ret = GetObjectType(hdc);
+    ok(!ret || broken(ret) /* win9x */, "GetObjectType should fail for a deleted DC\n");
+
+    DestroyWindow(hwnd);
+
+    ret = UnregisterClassA("Wine own DC", GetModuleHandle(NULL));
+    ok(ret, "UnregisterClassA failed\n");
+}
+
 START_TEST(dc)
 {
     test_savedc();
@@ -335,4 +481,5 @@ START_TEST(dc)
     test_GdiConvertToDevmodeW();
     test_CreateCompatibleDC();
     test_DC_bitmap();
+    test_DeleteDC();
 }

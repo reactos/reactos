@@ -301,7 +301,7 @@ static void test_dib_info(HBITMAP hbm, const void *bits, const BITMAPINFOHEADER 
 
     ok(bm.bmType == 0, "wrong bm.bmType %d\n", bm.bmType);
     ok(bm.bmWidth == bmih->biWidth, "wrong bm.bmWidth %d\n", bm.bmWidth);
-    ok(bm.bmHeight == bmih->biHeight, "wrong bm.bmHeight %d\n", bm.bmHeight);
+    ok(bm.bmHeight == abs(bmih->biHeight), "wrong bm.bmHeight %d\n", bm.bmHeight);
     dib_width_bytes = DIB_GetWidthBytes(bm.bmWidth, bm.bmBitsPixel);
     bm_width_bytes = BITMAP_GetWidthBytes(bm.bmWidth, bm.bmBitsPixel);
     if (bm.bmWidthBytes != dib_width_bytes) /* Win2k bug */
@@ -332,7 +332,7 @@ static void test_dib_info(HBITMAP hbm, const void *bits, const BITMAPINFOHEADER 
     ret = GetObject(hbm, sizeof(*bma) * 2, bma);
     ok(ret == sizeof(*bma) || broken(ret == sizeof(*bma) * 2 /* Win9x */), "wrong size %d\n", ret);
     ok(bm.bmWidth == bmih->biWidth, "wrong bm.bmWidth %d\n", bm.bmWidth);
-    ok(bm.bmHeight == bmih->biHeight, "wrong bm.bmHeight %d\n", bm.bmHeight);
+    ok(bm.bmHeight == abs(bmih->biHeight), "wrong bm.bmHeight %d\n", bm.bmHeight);
     ok(bm.bmBits == bits, "wrong bm.bmBits %p != %p\n", bm.bmBits, bits);
 
     ret = GetObject(hbm, sizeof(bm) / 2, &bm);
@@ -363,20 +363,22 @@ static void test_dib_info(HBITMAP hbm, const void *bits, const BITMAPINFOHEADER 
     ds.dsBmih.biSizeImage = 0;
 
     ok(ds.dsBmih.biSize == bmih->biSize, "%u != %u\n", ds.dsBmih.biSize, bmih->biSize);
-    ok(ds.dsBmih.biWidth == bmih->biWidth, "%u != %u\n", ds.dsBmih.biWidth, bmih->biWidth);
-    ok(ds.dsBmih.biHeight == bmih->biHeight, "%u != %u\n", ds.dsBmih.biHeight, bmih->biHeight);
+    ok(ds.dsBmih.biWidth == bmih->biWidth, "%d != %d\n", ds.dsBmih.biWidth, bmih->biWidth);
+    ok(ds.dsBmih.biHeight == abs(bmih->biHeight) ||
+       broken(ds.dsBmih.biHeight == bmih->biHeight), /* Win9x/WinMe */
+       "%d != %d\n", ds.dsBmih.biHeight, abs(bmih->biHeight));
     ok(ds.dsBmih.biPlanes == bmih->biPlanes, "%u != %u\n", ds.dsBmih.biPlanes, bmih->biPlanes);
     ok(ds.dsBmih.biBitCount == bmih->biBitCount, "%u != %u\n", ds.dsBmih.biBitCount, bmih->biBitCount);
     ok(ds.dsBmih.biCompression == bmih->biCompression, "%u != %u\n", ds.dsBmih.biCompression, bmih->biCompression);
     ok(ds.dsBmih.biSizeImage == bmih->biSizeImage, "%u != %u\n", ds.dsBmih.biSizeImage, bmih->biSizeImage);
-    ok(ds.dsBmih.biXPelsPerMeter == bmih->biXPelsPerMeter, "%u != %u\n", ds.dsBmih.biXPelsPerMeter, bmih->biXPelsPerMeter);
-    ok(ds.dsBmih.biYPelsPerMeter == bmih->biYPelsPerMeter, "%u != %u\n", ds.dsBmih.biYPelsPerMeter, bmih->biYPelsPerMeter);
+    ok(ds.dsBmih.biXPelsPerMeter == bmih->biXPelsPerMeter, "%d != %d\n", ds.dsBmih.biXPelsPerMeter, bmih->biXPelsPerMeter);
+    ok(ds.dsBmih.biYPelsPerMeter == bmih->biYPelsPerMeter, "%d != %d\n", ds.dsBmih.biYPelsPerMeter, bmih->biYPelsPerMeter);
 
     memset(&ds, 0xAA, sizeof(ds));
     ret = GetObject(hbm, sizeof(ds) - 4, &ds);
     ok(ret == sizeof(ds.dsBm) || broken(ret == (sizeof(ds) - 4) /* Win9x */), "wrong size %d\n", ret);
-    ok(ds.dsBm.bmWidth == bmih->biWidth, "%u != %u\n", ds.dsBmih.biWidth, bmih->biWidth);
-    ok(ds.dsBm.bmHeight == bmih->biHeight, "%u != %u\n", ds.dsBmih.biHeight, bmih->biHeight);
+    ok(ds.dsBm.bmWidth == bmih->biWidth, "%d != %d\n", ds.dsBmih.biWidth, bmih->biWidth);
+    ok(ds.dsBm.bmHeight == abs(bmih->biHeight), "%d != %d\n", ds.dsBmih.biHeight, abs(bmih->biHeight));
     ok(ds.dsBm.bmBits == bits, "%p != %p\n", ds.dsBm.bmBits, bits);
 
     ret = GetObject(hbm, 0, &ds);
@@ -525,6 +527,14 @@ static void test_dibsections(void)
     test_dib_info(hdib, bits, &pbmi->bmiHeader);
     DeleteObject(hdib);
 
+    /* Test a top-down DIB. */
+    pbmi->bmiHeader.biHeight = -100;
+    hdib = CreateDIBSection(hdc, pbmi, DIB_RGB_COLORS, (void**)&bits, NULL, 0);
+    ok(hdib != NULL, "CreateDIBSection error %d\n", GetLastError());
+    test_dib_info(hdib, bits, &pbmi->bmiHeader);
+    DeleteObject(hdib);
+
+    pbmi->bmiHeader.biHeight = 100;
     pbmi->bmiHeader.biBitCount = 8;
     pbmi->bmiHeader.biCompression = BI_RLE8;
     SetLastError(0xdeadbeef);
