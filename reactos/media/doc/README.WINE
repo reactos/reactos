@@ -250,7 +250,7 @@ User32 -
 
   reactos/dll/win32/user32/windows/defwnd.c     # Forked
   reactos/dll/win32/user32/windows/draw.c       # Forked at Wine-20020904 (uitools.c)
-  reactos/dll/win32/user32/windows/mdi.c        # Synced at 20060703
+  reactos/dll/win32/user32/windows/mdi.c        # Synced to Wine-1_1_40
   reactos/dll/win32/user32/windows/menu.c       # Forked
   reactos/dll/win32/user32/windows/messagebox.c # Forked
   reactos/dll/win32/user32/windows/rect.c       # Forked (uitools.c)
