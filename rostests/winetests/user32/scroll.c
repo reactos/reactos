@@ -411,8 +411,8 @@ START_TEST ( scroll )
       WS_OVERLAPPEDWINDOW|WS_VSCROLL|WS_HSCROLL,
       CW_USEDEFAULT, CW_USEDEFAULT, 100, 100, NULL, NULL, GetModuleHandleA(NULL), 0 );
 
-    if ( !ok( hMainWnd != NULL, "Failed to create parent window. Tests aborted.\n" ) )
-        return;
+    ok(hMainWnd != NULL, "Failed to create parent window. Tests aborted.\n");
+    if (!hMainWnd) return;
 
     assert( hScroll );
 

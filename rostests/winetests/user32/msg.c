@@ -12080,6 +12080,13 @@ static const struct
          { 0,            0,            FALSE },
          { 0,            WAIT_TIMEOUT, FALSE },
          { 0,            0,            FALSE },
+         { 0,            0,            FALSE },
+/* 15 */ { 0,            0,            FALSE },
+         { WAIT_TIMEOUT, 0,            FALSE },
+         { WAIT_TIMEOUT, 0,            FALSE },
+         { WAIT_TIMEOUT, 0,            FALSE },
+         { WAIT_TIMEOUT, 0,            FALSE },
+/* 20 */ { WAIT_TIMEOUT, 0,            FALSE },
 };
 
 static DWORD CALLBACK do_wait_idle_child_thread( void *arg )
@@ -12204,6 +12211,41 @@ static void do_wait_idle_child( int arg )
         thread = CreateThread( NULL, 0, do_wait_idle_child_thread, NULL, 0, &id );
         WaitForSingleObject( thread, 10000 );
         CloseHandle( thread );
+        break;
+    case 14:
+        SetEvent( start_event );
+        Sleep( 200 );
+        PeekMessage( &msg, HWND_TOPMOST, 0, 0, PM_NOREMOVE );
+        break;
+    case 15:
+        SetEvent( start_event );
+        Sleep( 200 );
+        PeekMessage( &msg, HWND_BROADCAST, 0, 0, PM_NOREMOVE );
+        break;
+    case 16:
+        SetEvent( start_event );
+        Sleep( 200 );
+        PeekMessage( &msg, HWND_BOTTOM, 0, 0, PM_NOREMOVE );
+        break;
+    case 17:
+        SetEvent( start_event );
+        Sleep( 200 );
+        PeekMessage( &msg, (HWND)0xdeadbeef, 0, 0, PM_NOREMOVE );
+        break;
+    case 18:
+        SetEvent( start_event );
+        Sleep( 200 );
+        PeekMessage( &msg, HWND_NOTOPMOST, 0, 0, PM_NOREMOVE );
+        break;
+    case 19:
+        SetEvent( start_event );
+        Sleep( 200 );
+        PeekMessage( &msg, HWND_MESSAGE, 0, 0, PM_NOREMOVE );
+        break;
+    case 20:
+        SetEvent( start_event );
+        Sleep( 200 );
+        PeekMessage( &msg, GetDesktopWindow(), 0, 0, PM_NOREMOVE );
         break;
     }
     WaitForSingleObject( end_event, 2000 );
