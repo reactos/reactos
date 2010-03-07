@@ -99,7 +99,7 @@ InterlockedExchangeAdd(IN OUT LONG volatile *Addend,
  */
 VOID
 NTAPI
-ProbeForRead(IN CONST VOID *Address,
+ProbeForRead(IN VOID *Address,
              IN SIZE_T Length,
              IN ULONG Alignment)
 {

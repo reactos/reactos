@@ -7,6 +7,7 @@
 	<define name="_NTOSKRNL_" />
 	<define name="_NTSYSTEM_" />
 	<define name="_IN_KERNEL_" />
+	<define name="NTDDI_VERSION">0x05020400</define>
 	<if property="_WINKD_" value="1">
 		<define name="_WINKD_" />
 	</if>
