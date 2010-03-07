@@ -1080,8 +1080,8 @@ NTKERNELAPI
 VOID
 NTAPI
 KeSetTargetProcessorDpc(
-  IN PRKDPC  Dpc,
-  IN CCHAR  Number);
+  IN OUT PRKDPC Dpc,
+  IN CCHAR Number);
 
 NTKERNELAPI
 KAFFINITY
@@ -1145,6 +1145,14 @@ VOID
 NTAPI
 KeInitializeDeviceQueue(
   OUT PKDEVICE_QUEUE  DeviceQueue);
+
+NTKERNELAPI
+VOID
+NTAPI
+KeInitializeDpc(
+  OUT PRKDPC  Dpc,
+  IN PKDEFERRED_ROUTINE  DeferredRoutine,
+  IN PVOID  DeferredContext OPTIONAL);
 
 NTKERNELAPI
 VOID
@@ -1381,14 +1389,14 @@ KeWaitForSingleObject(
   IN BOOLEAN  Alertable,
   IN PLARGE_INTEGER  Timeout  OPTIONAL);
 
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 
 // _DECL_HAL_KE_IMPORT
 VOID
 FASTCALL
-KeAcquireInStackQueuedSpinLock (
+KeAcquireInStackQueuedSpinLock(
   IN OUT PKSPIN_LOCK SpinLock,
   OUT PKLOCK_QUEUE_HANDLE LockHandle);
 
@@ -1435,7 +1443,39 @@ KeReleaseInterruptSpinLock(
   IN OUT PKINTERRUPT  Interrupt,
   IN KIRQL  OldIrql);
 
-#endif
+NTKERNELAPI
+PKDEVICE_QUEUE_ENTRY
+NTAPI
+KeRemoveByKeyDeviceQueueIfBusy(
+  IN OUT PKDEVICE_QUEUE DeviceQueue,
+  IN ULONG SortKey);
+
+//_DECL_HAL_KE_IMPORT
+VOID
+FASTCALL
+KeReleaseInStackQueuedSpinLock(
+  IN PKLOCK_QUEUE_HANDLE LockHandle);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
+
+#if (NTDDI_VERSION >= NTDDI_WINXPSP1)
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+KeDeregisterBugCheckReasonCallback(
+  IN OUT PKBUGCHECK_REASON_CALLBACK_RECORD CallbackRecord);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+KeRegisterBugCheckReasonCallback(
+  OUT PKBUGCHECK_REASON_CALLBACK_RECORD CallbackRecord,
+  IN PKBUGCHECK_REASON_CALLBACK_ROUTINE CallbackRoutine,
+  IN KBUGCHECK_CALLBACK_REASON Reason,
+  IN PUCHAR Component);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WINXPSP1) */
 
 #if (NTDDI_VERSION >= NTDDI_WINXPSP2)
 
@@ -1445,7 +1485,7 @@ NTAPI
 KeFlushQueuedDpcs(
   VOID);
 
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_WINXPSP2) */
 
 #if (NTDDI_VERSION >= NTDDI_WS03)
 
@@ -1460,18 +1500,302 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 KeDeregisterNmiCallback(
-  IN PVOID Handle
-);
+  IN PVOID Handle);
+
+NTKERNELAPI
+VOID
+NTAPI
+KeInitializeThreadedDpc(
+  OUT PRKDPC Dpc,
+  IN PKDEFERRED_ROUTINE DeferredRoutine,
+  IN PVOID DeferredContext OPTIONAL);
 
 NTKERNELAPI
 ULONG_PTR
 NTAPI
 KeIpiGenericCall(
-    IN PKIPI_BROADCAST_WORKER BroadcastFunction,
-    IN ULONG_PTR Context
+  IN PKIPI_BROADCAST_WORKER BroadcastFunction,
+  IN ULONG_PTR Context);
+
+NTKERNELAPI
+KIRQL
+FASTCALL
+KeAcquireSpinLockForDpc(
+  IN OUT PKSPIN_LOCK SpinLock);
+
+NTKERNELAPI
+VOID
+FASTCALL
+KeReleaseSpinLockForDpc(
+  IN OUT PKSPIN_LOCK SpinLock,
+  IN KIRQL OldIrql);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WS03) */
+
+#if (NTDDI_VERSION >= NTDDI_WS03SP1)
+
+NTKERNELAPI
+BOOLEAN
+FASTCALL
+KeTryToAcquireSpinLockAtDpcLevel(
+  IN OUT PKSPIN_LOCK SpinLock);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+KeAreAllApcsDisabled(
+  VOID);
+
+NTKERNELAPI
+VOID
+FASTCALL
+KeAcquireGuardedMutex(
+    IN OUT PKGUARDED_MUTEX GuardedMutex
 );
 
+NTKERNELAPI
+VOID
+FASTCALL
+KeAcquireGuardedMutexUnsafe(
+    IN OUT PKGUARDED_MUTEX GuardedMutex
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+KeEnterGuardedRegion(
+    VOID
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+KeLeaveGuardedRegion(
+    VOID
+);
+
+NTKERNELAPI
+VOID
+FASTCALL
+KeInitializeGuardedMutex(
+    OUT PKGUARDED_MUTEX GuardedMutex
+);
+
+NTKERNELAPI
+VOID
+FASTCALL
+KeReleaseGuardedMutexUnsafe(
+    IN OUT PKGUARDED_MUTEX GuardedMutex
+);
+
+NTKERNELAPI
+VOID
+FASTCALL
+KeReleaseGuardedMutex(
+    IN OUT PKGUARDED_MUTEX GuardedMutex
+);
+
+NTKERNELAPI
+BOOLEAN
+FASTCALL
+KeTryToAcquireGuardedMutex(
+    IN OUT PKGUARDED_MUTEX GuardedMutex
+);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WS03SP1) */
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+NTKERNELAPI
+VOID
+FASTCALL
+KeAcquireInStackQueuedSpinLockForDpc(
+  IN OUT PKSPIN_LOCK SpinLock,
+  OUT PKLOCK_QUEUE_HANDLE LockHandle);
+
+NTKERNELAPI
+VOID
+FASTCALL
+KeReleaseInStackQueuedSpinLockForDpc(
+  IN PKLOCK_QUEUE_HANDLE LockHandle);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+KeQueryDpcWatchdogInformation(
+  OUT PKDPC_WATCHDOG_INFORMATION WatchdogInformation);
+
+#if defined(SINGLE_GROUP_LEGACY_API)
+NTKERNELAPI
+KAFFINITY
+NTAPI
+KeSetSystemAffinityThreadEx(
+  IN KAFFINITY Affinity);
+
+NTKERNELAPI
+ULONG
+NTAPI
+KeQueryActiveProcessorCount(
+  OUT PKAFFINITY ActiveProcessors OPTIONAL);
+
+NTKERNELAPI
+ULONG
+NTAPI
+KeQueryMaximumProcessorCount(
+  VOID);
 #endif
+
+#endif /*  (NTDDI_VERSION >= NTDDI_VISTA) */
+
+#if (NTDDI_VERSION >= NTDDI_WS08)
+
+PVOID
+KeRegisterProcessorChangeCallback(
+  IN PPROCESSOR_CALLBACK_FUNCTION CallbackFunction,
+  IN PVOID CallbackContext OPTIONAL,
+  IN ULONG Flags);
+
+VOID
+KeDeregisterProcessorChangeCallback(
+  IN PVOID CallbackHandle);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WS08) */
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+
+ULONG64
+NTAPI
+KeQueryTotalCycleTimeProcess(
+  IN OUT PKPROCESS Process,
+  OUT PULONG64 CycleTimeStamp);
+
+ULONG64
+NTAPI
+KeQueryTotalCycleTimeThread(
+  IN OUT PKTHREAD Thread,
+  OUT PULONG64 CycleTimeStamp);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+KeSetTargetProcessorDpcEx(
+  IN OUT PKDPC Dpc,
+  IN PPROCESSOR_NUMBER ProcNumber);
+
+NTKERNELAPI
+VOID
+NTAPI
+KeSetSystemGroupAffinityThread(
+  IN PGROUP_AFFINITY Affinity,
+  OUT PGROUP_AFFINITY PreviousAffinity OPTIONAL);
+
+NTKERNELAPI
+VOID
+NTAPI
+KeRevertToUserGroupAffinityThread(
+  IN PGROUP_AFFINITY PreviousAffinity);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+KeSetCoalescableTimer(
+  IN OUT PKTIMER Timer,
+  IN LARGE_INTEGER DueTime,
+  IN ULONG Period,
+  IN ULONG TolerableDelay,
+  IN PKDPC Dpc OPTIONAL);
+
+NTKERNELAPI
+ULONGLONG
+NTAPI
+KeQueryUnbiasedInterruptTime(
+  VOID);
+
+NTKERNELAPI
+ULONG
+NTAPI
+KeQueryActiveProcessorCountEx(
+  IN USHORT GroupNumber);
+
+NTKERNELAPI
+ULONG
+NTAPI
+KeQueryMaximumProcessorCountEx(
+  IN USHORT GroupNumber);
+
+NTKERNELAPI
+USHORT
+NTAPI
+KeQueryActiveGroupCount(
+  VOID);
+
+NTKERNELAPI
+USHORT
+NTAPI
+KeQueryMaximumGroupCount(
+  VOID);
+
+NTKERNELAPI
+KAFFINITY
+NTAPI
+KeQueryGroupAffinity 
+  IN USHORT GroupNumber);
+
+NTKERNELAPI
+ULONG
+NTAPI
+KeGetCurrentProcessorNumberEx(
+  OUT PPROCESSOR_NUMBER ProcNumber OPTIONAL);
+
+NTKERNELAPI
+VOID
+NTAPI
+KeQueryNodeActiveAffinity(
+  IN USHORT NodeNumber,
+  OUT PGROUP_AFFINITY Affinity OPTIONAL,
+  OUT PUSHORT Count OPTIONAL);
+
+NTKERNELAPI
+USHORT
+NTAPI
+KeQueryNodeMaximumProcessorCount(
+  IN USHORT NodeNumber);
+
+NTKERNELAPI
+USHORT
+NTAPI
+KeQueryHighestNodeNumber(
+  VOID);
+
+NTKERNELAPI
+USHORT
+NTAPI
+KeGetCurrentNodeNumber(
+  VOID);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+KeQueryLogicalProcessorRelationship(
+  IN PPROCESSOR_NUMBER ProcessorNumber OPTIONAL,
+  IN LOGICAL_PROCESSOR_RELATIONSHIP RelationshipType,
+  OUT PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX Information OPTIONAL,
+  IN OUT PULONG Length);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+KeSaveExtendedProcessorState(
+  IN ULONG64 Mask,
+  OUT PXSTATE_SAVE XStateSave);
+
+NTKERNELAPI
+VOID
+NTAPI
+KeRestoreExtendedProcessorState(
+  IN PXSTATE_SAVE XStateSave);
+
+#endif /*  (NTDDI_VERSION >= NTDDI_WIN7) */
 
 #if defined(_X86_)
 NTKERNELAPI
@@ -1516,34 +1840,6 @@ KeFlushWriteBuffer(VOID);
 #define ExAcquireSpinLockAtDpcLevel(Lock) KeAcquireSpinLockAtDpcLevel(Lock)
 #define ExReleaseSpinLockFromDpcLevel(Lock) KeReleaseSpinLockFromDpcLevel(Lock)
 
-
-/* SPINLOCK FUNCTIONS */
-
-#if (NTDDI_VERSION >= NTDDI_WINXP)
-//_DECL_HAL_KE_IMPORT
-VOID
-FASTCALL
-KeAcquireInStackQueuedSpinLock(
-  IN OUT PKSPIN_LOCK SpinLock,
-  OUT PKLOCK_QUEUE_HANDLE LockHandle);
-
-//_DECL_HAL_KE_IMPORT
-VOID
-FASTCALL
-KeReleaseInStackQueuedSpinLock(
-  IN PKLOCK_QUEUE_HANDLE LockHandle);
-
-#endif
-
-/* FIXME : #if (NTDDI_VERSION >= NTDDI_WS03SP1) */
-NTKERNELAPI
-BOOLEAN
-FASTCALL
-KeTryToAcquireSpinLockAtDpcLevel(
-    IN OUT PKSPIN_LOCK SpinLock
-);
-/* #endif (NTDDI_VERSION >= NTDDI_WS03SP1) */
-
 #if (NTDDI_VERSION >= NTDDI_WS03)
 NTKERNELAPI
 BOOLEAN
@@ -1553,75 +1849,6 @@ KeTestSpinLock(
 );
 #endif
 
-/* FIXME : #if (NTDDI_VERSION >= NTDDI_WS03SP1) */
-NTKERNELAPI
-BOOLEAN
-NTAPI
-KeAreAllApcsDisabled(
-  VOID);
-/* #endif (NTDDI_VERSION >= NTDDI_WS03SP1) */
-
-#if (NTDDI_VERSION >= NTDDI_WS03SP1)
-
-/* Guarded Mutex routines */
-
-NTKERNELAPI
-VOID
-FASTCALL
-KeAcquireGuardedMutex(
-    IN OUT PKGUARDED_MUTEX GuardedMutex
-);
-
-NTKERNELAPI
-VOID
-FASTCALL
-KeAcquireGuardedMutexUnsafe(
-    IN OUT PKGUARDED_MUTEX GuardedMutex
-);
-
-NTKERNELAPI
-VOID
-KeEnterGuardedRegion(
-    VOID
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-KeLeaveGuardedRegion(
-    VOID
-);
-
-NTKERNELAPI
-VOID
-FASTCALL
-KeInitializeGuardedMutex(
-    OUT PKGUARDED_MUTEX GuardedMutex
-);
-
-NTKERNELAPI
-VOID
-FASTCALL
-KeReleaseGuardedMutexUnsafe(
-    IN OUT PKGUARDED_MUTEX GuardedMutex
-);
-
-NTKERNELAPI
-VOID
-FASTCALL
-KeReleaseGuardedMutex(
-    IN OUT PKGUARDED_MUTEX GuardedMutex
-);
-
-NTKERNELAPI
-BOOLEAN
-FASTCALL
-KeTryToAcquireGuardedMutex(
-    IN OUT PKGUARDED_MUTEX GuardedMutex
-);
-
-#endif
-
 NTHALAPI
 KIRQL
 NTAPI
@@ -1629,13 +1856,6 @@ KeGetCurrentIrql(
     VOID);
 
 #if defined(_M_AMD64)
-
-ULONG64
-__readgsqword (
-  IN ULONG Offset);
-
-#pragma intrinsic(__readgsqword)
-
 FORCEINLINE
 PKTHREAD
 KeGetCurrentThread (
@@ -1643,7 +1863,6 @@ KeGetCurrentThread (
 {
     return (struct _KTHREAD *)__readgsqword(0x188);
 }
-
 #endif
 
 #if defined(_M_IX86) || defined(_M_IA64)
@@ -1683,7 +1902,8 @@ KeGetCurrentThread(
 
 #endif
 
-#if defined(_NTDDK_) || defined(_NTIFS_)
+#define PAGED_CODE_LOCKED() NOP_FUNCTION;
+
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
@@ -1691,23 +1911,17 @@ NTKERNELAPI
 VOID
 NTAPI
 ProbeForRead(
-  IN CONST VOID  *Address,
-  IN SIZE_T  Length,
-  IN ULONG  Alignment);
-
-#endif
-
-#endif
-
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
+  IN PVOID Address,
+  IN SIZE_T Length,
+  IN ULONG Alignment);
 
 NTKERNELAPI
 VOID
 NTAPI
 ProbeForWrite(
-  IN PVOID  Address,
-  IN SIZE_T  Length,
-  IN ULONG  Alignment);
+  IN PVOID Address,
+  IN SIZE_T Length,
+  IN ULONG Alignment);
 
 #endif
 
@@ -2073,7 +2287,7 @@ NTKERNELAPI
 VOID
 NTAPI
 MmFreePagesFromMdl(
-  IN PMDL  MemoryDescriptorList);
+  IN PMDLX MemoryDescriptorList);
 
 NTKERNELAPI
 PVOID
@@ -2112,12 +2326,12 @@ NTKERNELAPI
 PVOID
 NTAPI
 MmMapLockedPagesSpecifyCache(
-  IN PMDL  MemoryDescriptorList,
-  IN KPROCESSOR_MODE  AccessMode,
-  IN MEMORY_CACHING_TYPE  CacheType,
-  IN PVOID  BaseAddress OPTIONAL,
-  IN ULONG  BugCheckOnFailure,
-  IN MM_PAGE_PRIORITY  Priority);
+  IN PMDLX MemoryDescriptorList,
+  IN KPROCESSOR_MODE AccessMode,
+  IN MEMORY_CACHING_TYPE CacheType,
+  IN PVOID BaseAddress OPTIONAL,
+  IN ULONG BugCheckOnFailure,
+  IN MM_PAGE_PRIORITY Priority);
 
 NTKERNELAPI
 PVOID
@@ -2520,14 +2734,83 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 SeDeassignSecurity(
-  IN OUT PSECURITY_DESCRIPTOR  *SecurityDescriptor);
+  IN OUT PSECURITY_DESCRIPTOR *SecurityDescriptor);
 
 NTKERNELAPI
 BOOLEAN
 NTAPI
 SeValidSecurityDescriptor(
-  IN ULONG  Length,
-  IN PSECURITY_DESCRIPTOR  SecurityDescriptor);
+  IN ULONG Length,
+  IN PSECURITY_DESCRIPTOR SecurityDescriptor);
+
+NTKERNELAPI
+ULONG
+NTAPI
+SeObjectCreateSaclAccessBits(
+  IN PSECURITY_DESCRIPTOR SecurityDescriptor);
+
+NTKERNELAPI
+VOID
+NTAPI
+SeReleaseSubjectContext(
+  IN OUT PSECURITY_SUBJECT_CONTEXT SubjectContext);
+
+NTKERNELAPI
+VOID
+NTAPI
+SeUnlockSubjectContext(
+  IN PSECURITY_SUBJECT_CONTEXT SubjectContext);
+
+NTKERNELAPI
+VOID
+SeCaptureSubjectContext(
+  OUT PSECURITY_SUBJECT_CONTEXT SubjectContext);
+
+NTKERNELAPI
+VOID
+SeLockSubjectContext(
+  IN PSECURITY_SUBJECT_CONTEXT SubjectContext);
+
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WS03SP1)
+
+NTSTATUS
+NTAPI
+SeSetAuditParameter(
+  IN OUT PSE_ADT_PARAMETER_ARRAY AuditParameters,
+  IN SE_ADT_PARAMETER_TYPE Type,
+  IN ULONG Index,
+  IN PVOID Data);
+
+NTSTATUS
+NTAPI
+SeReportSecurityEvent(
+  IN ULONG Flags,
+  IN PUNICODE_STRING SourceName,
+  IN PSID UserSid OPTIONAL,
+  IN PSE_ADT_PARAMETER_ARRAY AuditParameters);
+
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+NTKERNELAPI
+ULONG
+NTAPI
+SeComputeAutoInheritByObjectType(
+  IN PVOID ObjectType,
+  IN PSECURITY_DESCRIPTOR SecurityDescriptor OPTIONAL,
+  IN PSECURITY_DESCRIPTOR ParentSecurityDescriptor OPTIONAL);
+
+#ifdef SE_NTFS_WORLD_CACHE
+VOID
+NTAPI
+SeGetWorldRights(
+  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+  IN PGENERIC_MAPPING GenericMapping,
+  OUT PACCESS_MASK GrantedAccess);
+#endif
 
 #endif
 
@@ -2641,8 +2924,8 @@ NTKERNELAPI
 PVOID
 NTAPI
 PoRegisterSystemState(
-  IN PVOID  StateHandle OPTIONAL,
-  IN EXECUTION_STATE  Flags);
+  IN OUT PVOID StateHandle OPTIONAL,
+  IN EXECUTION_STATE Flags);
 
 NTKERNELAPI
 NTSTATUS
@@ -2673,13 +2956,106 @@ NTKERNELAPI
 VOID
 NTAPI
 PoStartNextPowerIrp(
-  IN OUT struct _IRP  *Irp);
+  IN OUT struct _IRP *Irp);
 
 NTKERNELAPI
 VOID
 NTAPI
 PoUnregisterSystemState(
-  IN OUT PVOID  StateHandle);
+  IN OUT PVOID StateHandle);
+
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+NTKERNELAPI
+VOID
+NTAPI
+PoSetSystemWake(
+  IN OUT PIRP Irp);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+PoGetSystemWake(
+  IN PIRP Irp);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PoRegisterPowerSettingCallback(
+  IN PDEVICE_OBJECT DeviceObject OPTIONAL,
+  IN LPCGUID SettingGuid,
+  IN PPOWER_SETTING_CALLBACK Callback,
+  IN PVOID Context OPTIONAL,
+  OUT PVOID *Handle OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PoUnregisterPowerSettingCallback(
+  IN OUT PVOID Handle);
+
+#endif
+
+
+#if (NTDDI_VERSION >= NTDDI_VISTASP1)
+
+NTKERNELAPI
+VOID
+NTAPI
+PoSetDeviceBusyEx(
+  IN OUT PULONG IdlePointer);
+
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+NTKERNELAPI
+VOID
+NTAPI
+PoStartDeviceBusy(
+  IN OUT PULONG IdlePointer);
+
+NTKERNELAPI
+VOID
+NTAPI
+PoEndDeviceBusy(
+  IN OUT PULONG IdlePointer);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+PoQueryWatchdogTime(
+  IN PDEVICE_OBJECT Pdo,
+  OUT PULONG SecondsRemaining);
+
+NTKERNELAPI
+VOID
+NTAPI
+PoDeletePowerRequest(
+  IN OUT PVOID PowerRequest);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PoSetPowerRequest(
+  IN OUT PVOID PowerRequest,
+  IN POWER_REQUEST_TYPE Type);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PoClearPowerRequest(
+  IN OUT PVOID PowerRequest,
+  IN POWER_REQUEST_TYPE Type);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PoCreatePowerRequest(
+  OUT PVOID *PowerRequest,
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PCOUNTED_REASON_CONTEXT Context);
 
 #endif
 
@@ -7985,14 +8361,6 @@ IoQueueWorkItem(
   IN PIO_WORKITEM_ROUTINE  WorkerRoutine,
   IN WORK_QUEUE_TYPE  QueueType,
   IN PVOID  Context OPTIONAL);
-
-NTKERNELAPI
-VOID
-NTAPI
-KeInitializeDpc(
-  OUT PRKDPC  Dpc,
-  IN PKDEFERRED_ROUTINE  DeferredRoutine,
-  IN PVOID  DeferredContext OPTIONAL);
 
 NTKERNELAPI
 VOID
