@@ -954,14 +954,14 @@ static void MENU_DrawBitmapItem( HDC hdc, MENUITEM *lpitem, const RECT *rect,
             /* draw the magic bitmaps using marlett font characters */
             /* FIXME: fontsize and the position (x,y) could probably be better */
             HFONT hfont, hfontsav;
-            LOGFONTW logfont = { 0, 0, 0, 0, FW_NORMAL,
-                0, 0, 0, SYMBOL_CHARSET, 0, 0, 0, 0,
+            LOGFONTW logfont = { 0, 0, 0, 0, FW_DONTCARE,
+                0, 0, 0, DEFAULT_CHARSET, 0, 0, 0, 0,
                 { 'M','a','r','l','e','t','t',0 } };
             logfont.lfHeight =  min( h, w) - 5 ;
             TRACE(" height %d rect %s\n", logfont.lfHeight, wine_dbgstr_rect( rect));
             hfont = CreateFontIndirectW( &logfont);
             hfontsav = SelectObject(hdc, hfont);
-            TextOutW( hdc,  rect->left, rect->top + 2, &bmchr, 1);
+            TextOutW( hdc,  rect->left, rect->top + 4, &bmchr, 1);
             SelectObject(hdc, hfontsav);
             DeleteObject( hfont);
         }
