@@ -40,7 +40,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(clusapi);
  */
 DWORD WINAPI GetNodeClusterState(LPCWSTR lpszNodeName, LPDWORD pdwClusterState)
 {
-    FIXME("(%s,%p,%u) stub!\n",debugstr_w(lpszNodeName),pdwClusterState, *pdwClusterState);
+    FIXME("(%s,%p) stub!\n",debugstr_w(lpszNodeName),pdwClusterState);
 
     *pdwClusterState = 0;
 
@@ -97,7 +97,7 @@ DWORD WINAPI ClusterCloseEnum(HCLUSENUM hEnum)
  */
 DWORD WINAPI ClusterEnum(HCLUSENUM hEnum, DWORD dwIndex, LPDWORD lpdwType, LPWSTR lpszName, LPDWORD lpcchName)
 {
-    FIXME("(%p, %u, %u, %p, %u) stub!\n", hEnum, dwIndex, *lpdwType, lpszName, *lpcchName);
+    FIXME("(%p, %u, %p, %p, %u) stub!\n", hEnum, dwIndex, lpdwType, lpszName, *lpcchName);
 
     return ERROR_NO_MORE_ITEMS;
 }
