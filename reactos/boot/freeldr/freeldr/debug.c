@@ -173,6 +173,12 @@ VOID DebugPrintHeader(ULONG Mask)
 	case DPRINT_HWDETECT:
 	    DbgPrint("HWDETECT: ");
 		break;
+	case DPRINT_PELOADER:
+	    DbgPrint("PELOADER: ");
+		break;
+	case DPRINT_SCSIPORT:
+	    DbgPrint("SCSIPORT: ");
+		break;
 	default:
 	    DbgPrint("UNKNOWN: ");
 		break;
@@ -192,6 +198,12 @@ VOID DbgPrintMask(ULONG Mask, char *format, ...)
 	if (!(Mask & DebugPrintMask))
 	{
 		return;
+	}
+
+	// Disable file/line for scsiport messages
+	if (Mask & DPRINT_SCSIPORT)
+	{
+		DebugStartOfLine = FALSE;
 	}
 
 	// Print the header if we have started a new line
