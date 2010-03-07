@@ -693,6 +693,261 @@ typedef struct _TOKEN_ACCESS_INFORMATION {
   ULONG Flags;
 } TOKEN_ACCESS_INFORMATION, *PTOKEN_ACCESS_INFORMATION;
 
+#define POLICY_AUDIT_SUBCATEGORY_COUNT (53)
+
+typedef struct _TOKEN_AUDIT_POLICY {
+  UCHAR PerUserPolicy[((POLICY_AUDIT_SUBCATEGORY_COUNT) >> 1) + 1];
+} TOKEN_AUDIT_POLICY, *PTOKEN_AUDIT_POLICY;
+
+#define TOKEN_SOURCE_LENGTH 8
+
+typedef struct _TOKEN_SOURCE {
+  CHAR SourceName[TOKEN_SOURCE_LENGTH];
+  LUID SourceIdentifier;
+} TOKEN_SOURCE,*PTOKEN_SOURCE;
+
+typedef struct _TOKEN_STATISTICS {
+  LUID TokenId;
+  LUID AuthenticationId;
+  LARGE_INTEGER ExpirationTime;
+  TOKEN_TYPE TokenType;
+  SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
+  ULONG DynamicCharged;
+  ULONG DynamicAvailable;
+  ULONG GroupCount;
+  ULONG PrivilegeCount;
+  LUID ModifiedId;
+} TOKEN_STATISTICS, *PTOKEN_STATISTICS;
+
+typedef struct _TOKEN_CONTROL {
+  LUID TokenId;
+  LUID AuthenticationId;
+  LUID ModifiedId;
+  TOKEN_SOURCE TokenSource;
+} TOKEN_CONTROL,*PTOKEN_CONTROL;
+
+typedef struct _TOKEN_ORIGIN {
+  LUID OriginatingLogonSession;
+} TOKEN_ORIGIN, *PTOKEN_ORIGIN;
+
+typedef enum _MANDATORY_LEVEL {
+  MandatoryLevelUntrusted = 0,
+  MandatoryLevelLow,
+  MandatoryLevelMedium,
+  MandatoryLevelHigh,
+  MandatoryLevelSystem,
+  MandatoryLevelSecureProcess,
+  MandatoryLevelCount
+} MANDATORY_LEVEL, *PMANDATORY_LEVEL;
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtOpenThreadToken(
+  IN HANDLE ThreadHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN BOOLEAN OpenAsSelf,
+  OUT PHANDLE TokenHandle);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtOpenProcessToken(
+  IN HANDLE ProcessHandle,
+  IN ACCESS_MASK DesiredAccess,
+  OUT PHANDLE TokenHandle);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtQueryInformationToken(
+  IN HANDLE TokenHandle,
+  IN TOKEN_INFORMATION_CLASS TokenInformationClass,
+  OUT PVOID TokenInformation OPTIONAL,
+  IN ULONG TokenInformationLength,
+  OUT PULONG ReturnLength);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtAdjustPrivilegesToken(
+  IN HANDLE TokenHandle,
+  IN BOOLEAN DisableAllPrivileges,
+  IN PTOKEN_PRIVILEGES NewState OPTIONAL,
+  IN ULONG BufferLength,
+  OUT PTOKEN_PRIVILEGES PreviousState,
+  OUT PULONG ReturnLength OPTIONAL);
+
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtOpenThreadTokenEx(
+  IN HANDLE ThreadHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN BOOLEAN OpenAsSelf,
+  IN ULONG HandleAttributes,
+  OUT PHANDLE TokenHandle);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtOpenProcessTokenEx(
+  IN HANDLE ProcessHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN ULONG HandleAttributes,
+  OUT PHANDLE TokenHandle);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+NtOpenJobObjectToken(
+  IN HANDLE JobHandle,
+  IN ACCESS_MASK DesiredAccess,
+  OUT PHANDLE TokenHandle);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtDuplicateToken(
+  IN HANDLE ExistingTokenHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes,
+  IN BOOLEAN EffectiveOnly,
+  IN TOKEN_TYPE TokenType,
+  OUT PHANDLE NewTokenHandle);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtFilterToken(
+  IN HANDLE ExistingTokenHandle,
+  IN ULONG Flags,
+  IN PTOKEN_GROUPS SidsToDisable OPTIONAL,
+  IN PTOKEN_PRIVILEGES PrivilegesToDelete OPTIONAL,
+  IN PTOKEN_GROUPS RestrictedSids OPTIONAL,
+  OUT PHANDLE NewTokenHandle);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtImpersonateAnonymousToken(
+  IN HANDLE ThreadHandle);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtSetInformationToken(
+  IN HANDLE TokenHandle,
+  IN TOKEN_INFORMATION_CLASS TokenInformationClass,
+  IN PVOID TokenInformation,
+  IN ULONG TokenInformationLength);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtAdjustGroupsToken(
+  IN HANDLE TokenHandle,
+  IN BOOLEAN ResetToDefault,
+  IN PTOKEN_GROUPS NewState OPTIONAL,
+  IN ULONG BufferLength OPTIONAL,
+  OUT PTOKEN_GROUPS PreviousState,
+  OUT PULONG ReturnLength);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtPrivilegeCheck(
+  IN HANDLE ClientToken,
+  IN OUT PPRIVILEGE_SET RequiredPrivileges,
+  OUT PBOOLEAN Result);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtAccessCheckAndAuditAlarm(
+  IN PUNICODE_STRING SubsystemName,
+  IN PVOID HandleId OPTIONAL,
+  IN PUNICODE_STRING ObjectTypeName,
+  IN PUNICODE_STRING ObjectName,
+  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+  IN ACCESS_MASK DesiredAccess,
+  IN PGENERIC_MAPPING GenericMapping,
+  IN BOOLEAN ObjectCreation,
+  OUT PACCESS_MASK GrantedAccess,
+  OUT PNTSTATUS AccessStatus,
+  OUT PBOOLEAN GenerateOnClose);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtAccessCheckByTypeAndAuditAlarm(
+  IN PUNICODE_STRING SubsystemName,
+  IN PVOID HandleId,
+  IN PUNICODE_STRING ObjectTypeName,
+  IN PUNICODE_STRING ObjectName,
+  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+  IN PSID PrincipalSelfSid OPTIONAL,
+  IN ACCESS_MASK DesiredAccess,
+  IN AUDIT_EVENT_TYPE AuditType,
+  IN ULONG Flags,
+  IN POBJECT_TYPE_LIST ObjectTypeList OPTIONAL,
+  IN ULONG ObjectTypeLength,
+  IN PGENERIC_MAPPING GenericMapping,
+  IN BOOLEAN ObjectCreation,
+  OUT PACCESS_MASK GrantedAccess,
+  OUT PNTSTATUS AccessStatus,
+  OUT PBOOLEAN GenerateOnClose);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtAccessCheckByTypeResultListAndAuditAlarm(
+  IN PUNICODE_STRING SubsystemName,
+  IN PVOID HandleId OPTIONAL,
+  IN PUNICODE_STRING ObjectTypeName,
+  IN PUNICODE_STRING ObjectName,
+  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+  IN PSID PrincipalSelfSid OPTIONAL,
+  IN ACCESS_MASK DesiredAccess,
+  IN AUDIT_EVENT_TYPE AuditType,
+  IN ULONG Flags,
+  IN POBJECT_TYPE_LIST ObjectTypeList OPTIONAL,
+  IN ULONG ObjectTypeLength,
+  IN PGENERIC_MAPPING GenericMapping,
+  IN BOOLEAN ObjectCreation,
+  OUT PACCESS_MASK GrantedAccess,
+  OUT PNTSTATUS AccessStatus,
+  OUT PBOOLEAN GenerateOnClose);
+
+NTSTATUS
+NTAPI
+NtAccessCheckByTypeResultListAndAuditAlarmByHandle(
+  IN PUNICODE_STRING SubsystemName,
+  IN PVOID HandleId OPTIONAL,
+  IN HANDLE ClientToken,
+  IN PUNICODE_STRING ObjectTypeName,
+  IN PUNICODE_STRING ObjectName,
+  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+  IN PSID PrincipalSelfSid OPTIONAL,
+  IN ACCESS_MASK DesiredAccess,
+  IN AUDIT_EVENT_TYPE AuditType,
+  IN ULONG Flags,
+  IN POBJECT_TYPE_LIST ObjectTypeList OPTIONAL,
+  IN ULONG ObjectTypeLength,
+  IN PGENERIC_MAPPING GenericMapping,
+  IN BOOLEAN ObjectCreation,
+  OUT PACCESS_MASK GrantedAccess,
+  OUT PNTSTATUS AccessStatus,
+  OUT PBOOLEAN GenerateOnClose);
+
+#endif
+
 #pragma pack(push,4)
 
 #ifndef VER_PRODUCTBUILD
@@ -985,7 +1240,6 @@ typedef enum _SECURITY_LOGON_TYPE
 #define SECURITY_WORLD_SID_AUTHORITY    {0,0,0,0,0,1}
 #define SECURITY_WORLD_RID              (0x00000000L)
 
-#define TOKEN_SOURCE_LENGTH 8
 /* end winnt.h */
 
 #define TOKEN_HAS_TRAVERSE_PRIVILEGE    0x01
@@ -1208,34 +1462,6 @@ typedef struct _COMPRESSED_DATA_INFO {
     USHORT  NumberOfChunks;
     ULONG   CompressedChunkSizes[ANYSIZE_ARRAY];
 } COMPRESSED_DATA_INFO, *PCOMPRESSED_DATA_INFO;
-
-typedef struct _TOKEN_SOURCE {
-	CHAR SourceName[TOKEN_SOURCE_LENGTH];
-	LUID SourceIdentifier;
-} TOKEN_SOURCE,*PTOKEN_SOURCE;
-typedef struct _TOKEN_CONTROL {
-	LUID TokenId;
-	LUID AuthenticationId;
-	LUID ModifiedId;
-	TOKEN_SOURCE TokenSource;
-} TOKEN_CONTROL,*PTOKEN_CONTROL;
-
-typedef struct _TOKEN_ORIGIN {
-	LUID OriginatingLogonSession;
-} TOKEN_ORIGIN, *PTOKEN_ORIGIN;
-
-typedef struct _TOKEN_STATISTICS {
-	LUID TokenId;
-	LUID AuthenticationId;
-	LARGE_INTEGER ExpirationTime;
-	TOKEN_TYPE TokenType;
-	SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
-	ULONG DynamicCharged;
-	ULONG DynamicAvailable;
-	ULONG GroupCount;
-	ULONG PrivilegeCount;
-	LUID ModifiedId;
-} TOKEN_STATISTICS, *PTOKEN_STATISTICS;
 
 #define SYMLINK_FLAG_RELATIVE   1
 
@@ -5885,70 +6111,6 @@ ZwAllocateVirtualMemory (
     IN ULONG        Protect
 );
 
-NTSTATUS
-NTAPI
-NtAccessCheckByTypeAndAuditAlarm(
-    IN PUNICODE_STRING SubsystemName,
-    IN HANDLE HandleId,
-    IN PUNICODE_STRING ObjectTypeName,
-    IN PUNICODE_STRING ObjectName,
-    IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-    IN PSID PrincipalSelfSid,
-    IN ACCESS_MASK DesiredAccess,
-    IN AUDIT_EVENT_TYPE AuditType,
-    IN ULONG Flags,
-    IN POBJECT_TYPE_LIST ObjectTypeList,
-    IN ULONG ObjectTypeLength,
-    IN PGENERIC_MAPPING GenericMapping,
-    IN BOOLEAN ObjectCreation,
-    OUT PACCESS_MASK GrantedAccess,
-    OUT PNTSTATUS AccessStatus,
-    OUT PBOOLEAN GenerateOnClose
-);
-
-NTSTATUS
-NTAPI
-NtAccessCheckByTypeResultListAndAuditAlarm(
-    IN PUNICODE_STRING SubsystemName,
-    IN HANDLE HandleId,
-    IN PUNICODE_STRING ObjectTypeName,
-    IN PUNICODE_STRING ObjectName,
-    IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-    IN PSID PrincipalSelfSid,
-    IN ACCESS_MASK DesiredAccess,
-    IN AUDIT_EVENT_TYPE AuditType,
-    IN ULONG Flags,
-    IN POBJECT_TYPE_LIST ObjectTypeList,
-    IN ULONG ObjectTypeLength,
-    IN PGENERIC_MAPPING GenericMapping,
-    IN BOOLEAN ObjectCreation,
-    OUT PACCESS_MASK GrantedAccess,
-    OUT PNTSTATUS AccessStatus,
-    OUT PBOOLEAN GenerateOnClose
-);
-
-NTSTATUS
-NTAPI
-NtAccessCheckByTypeResultListAndAuditAlarmByHandle(
-    IN PUNICODE_STRING SubsystemName,
-    IN HANDLE HandleId,
-    IN HANDLE ClientToken,
-    IN PUNICODE_STRING ObjectTypeName,
-    IN PUNICODE_STRING ObjectName,
-    IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-    IN PSID PrincipalSelfSid,
-    IN ACCESS_MASK DesiredAccess,
-    IN AUDIT_EVENT_TYPE AuditType,
-    IN ULONG Flags,
-    IN POBJECT_TYPE_LIST ObjectTypeList,
-    IN ULONG ObjectTypeLength,
-    IN PGENERIC_MAPPING GenericMapping,
-    IN BOOLEAN ObjectCreation,
-    OUT PACCESS_MASK GrantedAccess,
-    OUT PNTSTATUS AccessStatus,
-    OUT PBOOLEAN GenerateOnClose
-);
-
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -6080,17 +6242,6 @@ ZwDuplicateToken (
     IN BOOLEAN              EffectiveOnly,
     IN TOKEN_TYPE           TokenType,
     OUT PHANDLE             NewTokenHandle
-);
-
-NTSTATUS
-NTAPI
-NtFilterToken(
-    IN HANDLE ExistingTokenHandle,
-    IN ULONG Flags,
-    IN PTOKEN_GROUPS SidsToDisable OPTIONAL,
-    IN PTOKEN_PRIVILEGES PrivilegesToDelete OPTIONAL,
-    IN PTOKEN_GROUPS RestrictedSids OPTIONAL,
-    OUT PHANDLE NewTokenHandle
 );
 
 NTSYSAPI
