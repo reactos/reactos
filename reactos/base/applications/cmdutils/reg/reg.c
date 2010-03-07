@@ -124,6 +124,21 @@ static LPBYTE get_regdata(LPWSTR data, DWORD reg_type, WCHAR separator, DWORD *r
             lstrcpyW((LPWSTR)out_data,data);
             break;
         }
+        case REG_DWORD:
+        {
+            LPWSTR rest;
+            DWORD val;
+            val = strtolW(data, &rest, 0);
+            if (rest == data) {
+                static const WCHAR nonnumber[] = {'E','r','r','o','r',':',' ','/','d',' ','r','e','q','u','i','r','e','s',' ','n','u','m','b','e','r','.','\n',0};
+                reg_printfW(nonnumber);
+                break;
+            }
+            *reg_count = sizeof(DWORD);
+            out_data = HeapAlloc(GetProcessHeap(),0,*reg_count);
+            ((LPDWORD)out_data)[0] = val;
+            break;
+        }
         default:
         {
             static const WCHAR unhandled[] = {'U','n','h','a','n','d','l','e','d',' ','T','y','p','e',' ','0','x','%','x',' ',' ','d','a','t','a',' ','%','s','\n',0};

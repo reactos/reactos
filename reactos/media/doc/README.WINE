@@ -188,13 +188,13 @@ reactos/base/applications/cmdutils/xcopy  # Autosync
 reactos/base/applications/games/winemine  # Out of sync
 reactos/base/applications/iexplore        # Autosync
 reactos/base/applications/notepad         # Forked at Wine-20041201
-reactos/base/applications/reg             # Synced to Wine-1_1_31
+reactos/base/applications/reg             # Autosync
 reactos/base/applications/regedit         # Out of sync
 reactos/base/applications/winhlp32        # Autosync
 reactos/base/applications/wordpad         # Autosync
 reactos/base/services/rpcss               # Synced to Wine-20081105
-reactos/base/system/expand                # Synced to Wine-1_1_37
-reactos/base/system/msiexec               # Synced to Wine-1_1_23
+reactos/base/system/expand                # Autosync
+reactos/base/system/msiexec               # Autosync
 reactos/modules/rosapps/winfile           # Autosync
 
 In addition the following libs, dlls and source files are mostly based on code ported

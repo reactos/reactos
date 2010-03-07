@@ -35,6 +35,6 @@ STRINGTABLE
     STRING_SUCCESS, "Der Vorgang wurde erfolgreich abgeschlossen\n"
     STRING_INVALID_KEY, "Fehler: Ungültiger Schlüssel\n"
     STRING_INVALID_CMDLINE, "Fehler: Ungültige Befehlszeilenargumente\n"
-    STRING_NO_REMOTE, "Fehler: Konnte Schlüssel nicht zum entfernten Rechner hinzufügen\n"
+    STRING_NO_REMOTE, "Fehler: Konnte Schlüssel nicht zum remote Rechner hinzufügen\n"
     STRING_CANNOT_FIND, "Fehler: Der angegebene Schlüssel oder Wert konnte nicht gefunden werden\n"
 }
