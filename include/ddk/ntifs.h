@@ -38,9 +38,19 @@
 extern "C" {
 #endif
 
-#define NTKERNELAPI DECLSPEC_IMPORT
+#if !defined(_NTHALDLL_) && !defined(_BLDR_)
 #define NTHALAPI DECLSPEC_IMPORT
+#else
+#define NTHALAPI
+#endif
 
+#if !defined(_NTOSKRNL_) /* For ReactOS */
+#define NTKERNELAPI DECLSPEC_IMPORT
+#else
+#define NTKERNELAPI
+#endif
+
+/* Dependencies */
 #include <ntddk.h>
 #include <excpt.h>
 #include <ntdef.h>

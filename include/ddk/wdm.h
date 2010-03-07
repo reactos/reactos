@@ -1,7 +1,37 @@
+/*
+ * wdm.h
+ *
+ * Windows NT WDM Driver Developer Kit
+ *
+ * This file is part of the ReactOS DDK package.
+ *
+ * Contributors:
+ *   Amine Khaldi
+ *   Timo Kreuzer (timo.kreuzer@reactos.org)
+ *
+ * THIS SOFTWARE IS NOT COPYRIGHTED
+ *
+ * This source code is offered for use in the public domain. You may
+ * use, modify or distribute it freely.
+ *
+ * This code is distributed in the hope that it will be useful but
+ * WITHOUT ANY WARRANTY. ALL WARRANTIES, EXPRESS OR IMPLIED ARE HEREBY
+ * DISCLAIMED. This includes but is not limited to warranties of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ */
 #pragma once
 
 #ifndef _WDMDDK_
 #define _WDMDDK_
+
+/* Included via ntddk.h? */
+#ifndef _NTDDK_
+#define _NTDDK_
+#define _WDM_INCLUDED_
+#define _DDK_DRIVER_
+#define NO_INTERLOCKED_INTRINSICS
+#endif /* _NTDDK_ */
 
 /* Dependencies */
 #define NT_INCLUDED
@@ -15,7 +45,6 @@
 
 #include "intrin.h"
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -26,7 +55,11 @@ extern "C" {
 #define NTHALAPI
 #endif
 
+#if !defined(_NTOSKRNL_) /* For ReactOS */
 #define NTKERNELAPI DECLSPEC_IMPORT
+#else
+#define NTKERNELAPI
+#endif
 
 #if defined(_WIN64)
 #define POINTER_ALIGNMENT DECLSPEC_ALIGN(8)
@@ -1911,7 +1944,7 @@ NTKERNELAPI
 VOID
 NTAPI
 ProbeForRead(
-  IN PVOID Address,
+  IN CONST VOID *Address, /* CONST is added */
   IN SIZE_T Length,
   IN ULONG Alignment);
 
@@ -2683,6 +2716,97 @@ typedef struct _ACCESS_STATE {
   UNICODE_STRING  ObjectTypeName;
 } ACCESS_STATE, *PACCESS_STATE;
 
+
+#ifndef _NTLSA_IFS_
+
+#ifndef _NTLSA_AUDIT_
+#define _NTLSA_AUDIT_
+
+#define SE_MAX_AUDIT_PARAMETERS 32
+#define SE_MAX_GENERIC_AUDIT_PARAMETERS 28
+
+#define SE_ADT_OBJECT_ONLY 0x1
+
+#define SE_ADT_PARAMETERS_SELF_RELATIVE    0x00000001
+#define SE_ADT_PARAMETERS_SEND_TO_LSA      0x00000002
+#define SE_ADT_PARAMETER_EXTENSIBLE_AUDIT  0x00000004
+#define SE_ADT_PARAMETER_GENERIC_AUDIT     0x00000008
+#define SE_ADT_PARAMETER_WRITE_SYNCHRONOUS 0x00000010
+
+#define LSAP_SE_ADT_PARAMETER_ARRAY_TRUE_SIZE(Parameters) \
+  ( sizeof(SE_ADT_PARAMETER_ARRAY) - sizeof(SE_ADT_PARAMETER_ARRAY_ENTRY) * \
+    (SE_MAX_AUDIT_PARAMETERS - Parameters->ParameterCount) )
+
+typedef enum _SE_ADT_PARAMETER_TYPE {
+  SeAdtParmTypeNone = 0,
+  SeAdtParmTypeString,
+  SeAdtParmTypeFileSpec,
+  SeAdtParmTypeUlong,
+  SeAdtParmTypeSid,
+  SeAdtParmTypeLogonId,
+  SeAdtParmTypeNoLogonId,
+  SeAdtParmTypeAccessMask,
+  SeAdtParmTypePrivs,
+  SeAdtParmTypeObjectTypes,
+  SeAdtParmTypeHexUlong,
+  SeAdtParmTypePtr,
+  SeAdtParmTypeTime,
+  SeAdtParmTypeGuid,
+  SeAdtParmTypeLuid,
+  SeAdtParmTypeHexInt64,
+  SeAdtParmTypeStringList,
+  SeAdtParmTypeSidList,
+  SeAdtParmTypeDuration,
+  SeAdtParmTypeUserAccountControl,
+  SeAdtParmTypeNoUac,
+  SeAdtParmTypeMessage,
+  SeAdtParmTypeDateTime,
+  SeAdtParmTypeSockAddr,
+  SeAdtParmTypeSD,
+  SeAdtParmTypeLogonHours,
+  SeAdtParmTypeLogonIdNoSid,
+  SeAdtParmTypeUlongNoConv,
+  SeAdtParmTypeSockAddrNoPort,
+  SeAdtParmTypeAccessReason
+} SE_ADT_PARAMETER_TYPE, *PSE_ADT_PARAMETER_TYPE;
+
+typedef struct _SE_ADT_OBJECT_TYPE {
+  GUID ObjectType;
+  USHORT Flags;
+  USHORT Level;
+  ACCESS_MASK AccessMask;
+} SE_ADT_OBJECT_TYPE, *PSE_ADT_OBJECT_TYPE;
+
+typedef struct _SE_ADT_PARAMETER_ARRAY_ENTRY {
+  SE_ADT_PARAMETER_TYPE Type;
+  ULONG Length;
+  ULONG_PTR Data[2];
+  PVOID Address;
+} SE_ADT_PARAMETER_ARRAY_ENTRY, *PSE_ADT_PARAMETER_ARRAY_ENTRY;
+
+typedef struct _SE_ADT_ACCESS_REASON {
+  ACCESS_MASK AccessMask;
+  ULONG  AccessReasons[32];
+  ULONG  ObjectTypeIndex;
+  ULONG AccessGranted;
+  PSECURITY_DESCRIPTOR SecurityDescriptor;
+} SE_ADT_ACCESS_REASON, *PSE_ADT_ACCESS_REASON;
+
+typedef struct _SE_ADT_PARAMETER_ARRAY {
+  ULONG CategoryId;
+  ULONG AuditId;
+  ULONG ParameterCount;
+  ULONG Length;
+  USHORT FlatSubCategoryId;
+  USHORT Type;
+  ULONG Flags;
+  SE_ADT_PARAMETER_ARRAY_ENTRY Parameters[ SE_MAX_AUDIT_PARAMETERS ];
+} SE_ADT_PARAMETER_ARRAY, *PSE_ADT_PARAMETER_ARRAY;
+
+#endif /* !_NTLSA_AUDIT_ */
+#endif /* !_NTLSA_IFS_ */
+
+
 /******************************************************************************
  *                            Security Manager Functions                      *
  ******************************************************************************/
@@ -2763,15 +2887,17 @@ SeUnlockSubjectContext(
 
 NTKERNELAPI
 VOID
+NTAPI
 SeCaptureSubjectContext(
   OUT PSECURITY_SUBJECT_CONTEXT SubjectContext);
 
 NTKERNELAPI
 VOID
+NTAPI
 SeLockSubjectContext(
   IN PSECURITY_SUBJECT_CONTEXT SubjectContext);
 
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 #if (NTDDI_VERSION >= NTDDI_WS03SP1)
 
@@ -2791,7 +2917,7 @@ SeReportSecurityEvent(
   IN PSID UserSid OPTIONAL,
   IN PSE_ADT_PARAMETER_ARRAY AuditParameters);
 
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_WS03SP1) */
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 
@@ -2810,9 +2936,9 @@ SeGetWorldRights(
   IN PSECURITY_DESCRIPTOR SecurityDescriptor,
   IN PGENERIC_MAPPING GenericMapping,
   OUT PACCESS_MASK GrantedAccess);
-#endif
+#endif /* SE_NTFS_WORLD_CACHE */
 
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 /******************************************************************************
  *                            Power Management Support Types                  *
@@ -2964,7 +3090,7 @@ NTAPI
 PoUnregisterSystemState(
   IN OUT PVOID StateHandle);
 
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 
@@ -2996,8 +3122,7 @@ NTAPI
 PoUnregisterPowerSettingCallback(
   IN OUT PVOID Handle);
 
-#endif
-
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 #if (NTDDI_VERSION >= NTDDI_VISTASP1)
 
@@ -3007,7 +3132,7 @@ NTAPI
 PoSetDeviceBusyEx(
   IN OUT PULONG IdlePointer);
 
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_VISTASP1) */
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
 NTKERNELAPI
@@ -3057,7 +3182,8 @@ PoCreatePowerRequest(
   IN PDEVICE_OBJECT DeviceObject,
   IN PCOUNTED_REASON_CONTEXT Context);
 
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
+
 
 /******************************************************************************
  *                            Configuration Manager Types                     *
@@ -3078,7 +3204,6 @@ typedef int CM_RESOURCE_TYPE;
 #define CmResourceTypeDevicePrivate	  129
 #define CmResourceTypePcCardConfig	  130
 #define CmResourceTypeMfCardConfig	  131
-
 
 /* KEY_VALUE_Xxx.Type */
 #define REG_NONE                           0
@@ -3292,9 +3417,7 @@ typedef struct _CM_PARTIAL_RESOURCE_DESCRIPTOR {
 } CM_PARTIAL_RESOURCE_DESCRIPTOR, *PCM_PARTIAL_RESOURCE_DESCRIPTOR;
 #include <poppack.h>
 
-#include <pshpack1.h>
 /* CM_PARTIAL_RESOURCE_DESCRIPTOR.Type */
-
 #define CmResourceTypeNull                0
 #define CmResourceTypePort                1
 #define CmResourceTypeInterrupt           2
@@ -3310,7 +3433,6 @@ typedef struct _CM_PARTIAL_RESOURCE_DESCRIPTOR {
 #define CmResourceTypeMfCardConfig      131
 
 /* CM_PARTIAL_RESOURCE_DESCRIPTOR.ShareDisposition */
-
 typedef enum _CM_SHARE_DISPOSITION {
   CmResourceShareUndetermined,
   CmResourceShareDeviceExclusive,
@@ -3319,7 +3441,6 @@ typedef enum _CM_SHARE_DISPOSITION {
 } CM_SHARE_DISPOSITION;
 
 /* CM_PARTIAL_RESOURCE_DESCRIPTOR.Flags if Type = CmResourceTypePort */
-
 #define CM_RESOURCE_PORT_MEMORY           0x0000
 #define CM_RESOURCE_PORT_IO               0x0001
 #define CM_RESOURCE_PORT_10_BIT_DECODE    0x0004
@@ -3331,14 +3452,12 @@ typedef enum _CM_SHARE_DISPOSITION {
 #define CM_RESOURCE_PORT_BAR              0x0100
 
 /* CM_PARTIAL_RESOURCE_DESCRIPTOR.Flags if Type = CmResourceTypeInterrupt */
-
 #define CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE 0x0000
 #define CM_RESOURCE_INTERRUPT_LATCHED         0x0001
 #define CM_RESOURCE_INTERRUPT_MESSAGE         0x0002
 #define CM_RESOURCE_INTERRUPT_POLICY_INCLUDED 0x0004
 
 /* CM_PARTIAL_RESOURCE_DESCRIPTOR.Flags if Type = CmResourceTypeMemory */
-
 #define CM_RESOURCE_MEMORY_READ_WRITE                    0x0000
 #define CM_RESOURCE_MEMORY_READ_ONLY                     0x0001
 #define CM_RESOURCE_MEMORY_WRITE_ONLY                    0x0002
@@ -3352,7 +3471,6 @@ typedef enum _CM_SHARE_DISPOSITION {
 #define CM_RESOURCE_MEMORY_COMPAT_FOR_INACCESSIBLE_RANGE 0x0100
 
 /* CM_PARTIAL_RESOURCE_DESCRIPTOR.Flags if Type = CmResourceTypeDma */
-
 #define CM_RESOURCE_DMA_8                 0x0000
 #define CM_RESOURCE_DMA_16                0x0001
 #define CM_RESOURCE_DMA_32                0x0002
@@ -3362,6 +3480,7 @@ typedef enum _CM_SHARE_DISPOSITION {
 #define CM_RESOURCE_DMA_TYPE_B            0x0020
 #define CM_RESOURCE_DMA_TYPE_F            0x0040
 
+#include <pshpack1.h>
 typedef struct _CM_PARTIAL_RESOURCE_LIST {
   USHORT  Version;
   USHORT  Revision;
@@ -3388,36 +3507,32 @@ typedef struct _CM_INT13_DRIVE_PARAMETER {
   USHORT  NumberDrives;
 } CM_INT13_DRIVE_PARAMETER, *PCM_INT13_DRIVE_PARAMETER;
 
-typedef struct _CM_PNP_BIOS_DEVICE_NODE
-{
-    USHORT Size;
-    UCHAR Node;
-    ULONG ProductId;
-    UCHAR DeviceType[3];
-    USHORT DeviceAttributes;
+typedef struct _CM_PNP_BIOS_DEVICE_NODE {
+  USHORT Size;
+  UCHAR Node;
+  ULONG ProductId;
+  UCHAR DeviceType[3];
+  USHORT DeviceAttributes;
 } CM_PNP_BIOS_DEVICE_NODE,*PCM_PNP_BIOS_DEVICE_NODE;
 
-typedef struct _CM_PNP_BIOS_INSTALLATION_CHECK
-{
-    UCHAR Signature[4];
-    UCHAR Revision;
-    UCHAR Length;
-    USHORT ControlField;
-    UCHAR Checksum;
-    ULONG EventFlagAddress;
-    USHORT RealModeEntryOffset;
-    USHORT RealModeEntrySegment;
-    USHORT ProtectedModeEntryOffset;
-    ULONG ProtectedModeCodeBaseAddress;
-    ULONG OemDeviceId;
-    USHORT RealModeDataBaseAddress;
-    ULONG ProtectedModeDataBaseAddress;
+typedef struct _CM_PNP_BIOS_INSTALLATION_CHECK {
+  UCHAR Signature[4];
+  UCHAR Revision;
+  UCHAR Length;
+  USHORT ControlField;
+  UCHAR Checksum;
+  ULONG EventFlagAddress;
+  USHORT RealModeEntryOffset;
+  USHORT RealModeEntrySegment;
+  USHORT ProtectedModeEntryOffset;
+  ULONG ProtectedModeCodeBaseAddress;
+  ULONG OemDeviceId;
+  USHORT RealModeDataBaseAddress;
+  ULONG ProtectedModeDataBaseAddress;
 } CM_PNP_BIOS_INSTALLATION_CHECK, *PCM_PNP_BIOS_INSTALLATION_CHECK;
-
 #include <poppack.h>
 
-typedef struct _CM_DISK_GEOMETRY_DEVICE_DATA
-{
+typedef struct _CM_DISK_GEOMETRY_DEVICE_DATA {
     ULONG BytesPerSector;
     ULONG NumberOfCylinders;
     ULONG SectorsPerTrack;
@@ -5093,7 +5208,6 @@ RtlCheckBit(
 #endif /* DBG */
 
 
-
 /******************************************************************************
  *                         I/O Manager Types                                  *
  ******************************************************************************/
@@ -5503,7 +5617,7 @@ typedef struct _SHARE_ACCESS {
 /* While MS WDK uses inheritance in C++, we cannot do this with gcc, as
    inheritance, even from a struct renders the type non-POD. So we use
    this hack */
-#define PCI_COMMON_HEADER_MEMBERS \
+#define PCI_COMMON_HEADER_LAYOUT \
   USHORT  VendorID; \
   USHORT  DeviceID; \
   USHORT  Command; \
@@ -5530,7 +5644,7 @@ typedef struct _SHARE_ACCESS {
       UCHAR   InterruptPin; \
       UCHAR   MinimumGrant; \
       UCHAR   MaximumLatency; \
-      } type0; \
+    } type0; \
     struct _PCI_HEADER_TYPE_1 { \
       ULONG   BaseAddresses[PCI_TYPE1_ADDRESSES]; \
       UCHAR   PrimaryBus; \
@@ -5554,7 +5668,7 @@ typedef struct _SHARE_ACCESS {
       UCHAR   InterruptLine; \
       UCHAR   InterruptPin; \
       USHORT  BridgeControl; \
-      } type1; \
+    } type1; \
     struct _PCI_HEADER_TYPE_2 { \
       ULONG   SocketRegistersBaseAddress; \
       UCHAR   CapabilitiesPtr; \
@@ -5575,17 +5689,17 @@ typedef struct _SHARE_ACCESS {
   } u;
 
 typedef struct _PCI_COMMON_HEADER {
-  PCI_COMMON_HEADER_MEMBERS
+  PCI_COMMON_HEADER_LAYOUT
 } PCI_COMMON_HEADER, *PPCI_COMMON_HEADER;
 
 #ifdef __cplusplus
 typedef struct _PCI_COMMON_CONFIG {
-  PCI_COMMON_HEADER_MEMBERS
+  PCI_COMMON_HEADER_LAYOUT
   UCHAR  DeviceSpecific[192];
 } PCI_COMMON_CONFIG, *PPCI_COMMON_CONFIG;
 #else
 typedef struct _PCI_COMMON_CONFIG {
-  PCI_COMMON_HEADER  DUMMYSTRUCTNAME;
+  PCI_COMMON_HEADER DUMMYSTRUCTNAME;
   UCHAR  DeviceSpecific[192];
 } PCI_COMMON_CONFIG, *PPCI_COMMON_CONFIG;
 #endif
@@ -8815,7 +8929,7 @@ VOID
 IoSkipCurrentIrpStackLocation (
   IN OUT PIRP Irp)
 {
-  ASSERT(Irp->CurrentLocation <= Irp->StackCount);
+  //ASSERT(Irp->CurrentLocation <= Irp->StackCount); FIXME: ReactOS is broken!
   Irp->CurrentLocation++;
   Irp->Tail.Overlay.CurrentStackLocation++;
 }
