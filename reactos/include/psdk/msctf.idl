@@ -20,7 +20,7 @@
 import "oaidl.idl";
 import "comcat.idl";
 import "textstor.idl";
-/* import "ctfutb.idl"; */
+import "ctfutb.idl";
 #endif
 cpp_quote("#include <winuser.h>")
 
@@ -37,6 +37,7 @@ cpp_quote("#define TF_E_NOLOCK          MAKE_HRESULT(SEVERITY_ERROR, FACILITY_IT
 cpp_quote("HRESULT WINAPI TF_CreateThreadMgr(ITfThreadMgr **pptim);")
 cpp_quote("HRESULT WINAPI TF_GetThreadMgr(ITfThreadMgr **pptim);")
 cpp_quote("HRESULT WINAPI TF_CreateInputProcessorProfiles(ITfInputProcessorProfiles **ppipr);")
+cpp_quote("HRESULT WINAPI TF_CreateLangBarMgr(ITfLangBarMgr **pppbm);")
 
 cpp_quote("EXTERN_C const GUID GUID_PROP_TEXTOWNER;")
 cpp_quote("DEFINE_GUID(GUID_PROP_ATTRIBUTE,0x34b45670,0x7526,0x11d2,0xa1,0x47,0x00,0x10,0x5a,0x27,0x99,0xb5);")
@@ -46,6 +47,7 @@ cpp_quote("EXTERN_C const GUID GUID_PROP_COMPOSING;")
 
 cpp_quote("EXTERN_C const CLSID CLSID_TF_ThreadMgr;")
 cpp_quote("EXTERN_C const CLSID CLSID_TF_InputProcessorProfiles;")
+cpp_quote("EXTERN_C const CLSID CLSID_TF_LangBarMgr;")
 cpp_quote("EXTERN_C const CLSID CLSID_TF_CategoryMgr;")
 cpp_quote("DEFINE_GUID(CLSID_TF_DisplayAttributeMgr,0x3ce74de4,0x53d3,0x4d74,0x8b,0x83,0x43,0x1b,0x38,0x28,0xba,0x53);")
 
@@ -1348,4 +1350,17 @@ interface ITfSourceSingle : IUnknown
     HRESULT UnadviseSingleSink(
         [in] TfClientId tid,
         [in] REFIID riid);
+};
+
+[
+  object,
+  local,
+  uuid(c0f1db0c-3a20-405c-a303-96b6010a885f),
+  pointer_default(unique)
+]
+interface ITfThreadFocusSink : IUnknown
+{
+    HRESULT OnSetThreadFocus();
+
+    HRESULT OnKillThreadFocus();
 };

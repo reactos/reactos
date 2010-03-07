@@ -10,6 +10,7 @@
 	<file>bits.idl</file>
 	<file>commoncontrols.idl</file>
 	<file>control.idl</file>
+	<file>ctfutb.idl</file>
 	<file>ctxtcall.idl</file>
 	<file>dimm.idl</file>
 	<file>dispex.idl</file>

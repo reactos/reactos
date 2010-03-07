@@ -40,6 +40,7 @@ extern HRESULT CategoryMgr_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut);
 extern HRESULT Range_Constructor(ITfContext *context, ITextStoreACP *textstore, DWORD lockType, DWORD anchorStart, DWORD anchorEnd, ITfRange **ppOut);
 extern HRESULT CompartmentMgr_Constructor(IUnknown *pUnkOuter, REFIID riid, IUnknown **ppOut);
 extern HRESULT CompartmentMgr_Destructor(ITfCompartmentMgr *This);
+extern HRESULT LangBarMgr_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut);
 
 extern HRESULT Context_Initialize(ITfContext *cxt, ITfDocumentMgr *manager);
 extern HRESULT Context_Uninitialize(ITfContext *cxt);

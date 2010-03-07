@@ -1,0 +1,73 @@
+/*
+ * Copyright 2010 Justin Chevrier
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#ifndef DO_NO_IMPORTS
+import "oaidl.idl";
+#endif
+
+interface ITfLangBarEventSink;
+interface ITfLangBarItemMgr;
+interface ITfInputProcessorProfiles;
+
+[
+    object,
+    uuid(87955690-e627-11d2-8ddb-00105a2799b5),
+    pointer_default(unique)
+]
+interface ITfLangBarMgr: IUnknown
+{
+    HRESULT AdviseEventSink(
+        [in] ITfLangBarEventSink *pSink,
+        [in] HWND hwnd,
+        [in] DWORD dwflags,
+        [in] DWORD *pdwCookie);
+
+    HRESULT UnAdviseEventSink(
+        [in] DWORD dwCookie);
+
+    HRESULT GetThreadMarshalInterface(
+        [in] DWORD dwThreadId,
+        [in] DWORD dwType,
+        [in] REFIID riid,
+        [out] IUnknown **ppunk);
+
+    HRESULT GetThreadLangBarItemMgr(
+        [in] DWORD dwThreadId,
+        [out] ITfLangBarItemMgr **pplbie,
+        [out] DWORD *pdwThreadid);
+
+    HRESULT GetInputProcessorProfiles(
+        [in] DWORD dwThreadId,
+        [out] ITfInputProcessorProfiles **ppaip,
+        [out] DWORD *pdwThreadid);
+
+    HRESULT RestoreLastFocus(
+        [out] DWORD *dwThreadId,
+        [in] BOOL fPrev);
+
+    HRESULT SetModalInput(
+        [in] ITfLangBarEventSink *pSink,
+        [in] DWORD dwThreadId,
+        [in] DWORD dwFlags);
+
+    HRESULT ShowFloating(
+        [in] DWORD dwFlags);
+
+    HRESULT GetShowFloatingStatus(
+        [out] DWORD *pdwFlags);
+};
