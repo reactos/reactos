@@ -1,6 +1,5 @@
 /*
- * Copyright 2005 Dmitry Timoshkov
- * Copyright 2006 Mikolaj Zalewski
+ * Copyright 2009 Aric Stewart, CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,10 +18,13 @@
 
 #include "iccvid_private.h"
 
-LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_NAME "Kodek Cinepak Video"
-    IDS_DESCRIPTION "Kodek Cinepak Video"
+    IDS_NAME "Cinepak ビデオコーデック"
+    IDS_DESCRIPTION "Cinepak ビデオコーデック"
 }
