@@ -672,28 +672,28 @@ static int StrCmpPath(const char* s1, const char* s2)
     return 0;
 }
 
-static int _okChildString(const char* file, int line, const char* key, const char* expected)
+static void _okChildString(const char* file, int line, const char* key, const char* expected)
 {
     char* result;
     result=getChildString("Arguments", key);
-    return ok_(file, line)(lstrcmpiA(result, expected) == 0,
-               "%s expected '%s', got '%s'\n", key, expected, result);
+    ok_(file, line)(lstrcmpiA(result, expected) == 0,
+                    "%s expected '%s', got '%s'\n", key, expected, result);
 }
 
-static int _okChildPath(const char* file, int line, const char* key, const char* expected)
+static void _okChildPath(const char* file, int line, const char* key, const char* expected)
 {
     char* result;
     result=getChildString("Arguments", key);
-    return ok_(file, line)(StrCmpPath(result, expected) == 0,
-               "%s expected '%s', got '%s'\n", key, expected, result);
+    ok_(file, line)(StrCmpPath(result, expected) == 0,
+                    "%s expected '%s', got '%s'\n", key, expected, result);
 }
 
-static int _okChildInt(const char* file, int line, const char* key, int expected)
+static void _okChildInt(const char* file, int line, const char* key, int expected)
 {
     INT result;
     result=GetPrivateProfileIntA("Arguments", key, expected, child_file);
-    return ok_(file, line)(result == expected,
-               "%s expected %d, but got %d\n", key, expected, result);
+    ok_(file, line)(result == expected,
+                    "%s expected %d, but got %d\n", key, expected, result);
 }
 
 #define okChildString(key, expected) _okChildString(__FILE__, __LINE__, (key), (expected))

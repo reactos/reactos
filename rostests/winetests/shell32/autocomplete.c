@@ -126,9 +126,8 @@ START_TEST(autocomplete)
         return;
 
     createMainWnd();
-
-    if(!ok(hMainWnd != NULL, "Failed to create parent window. Tests aborted.\n"))
-        return;
+    ok(hMainWnd != NULL, "Failed to create parent window. Tests aborted.\n");
+    if (!hMainWnd) return;
 
     ac = test_init();
     if (!ac)

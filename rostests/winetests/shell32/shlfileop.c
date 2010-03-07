@@ -965,6 +965,26 @@ static void test_copy(void)
     ok(retval == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", retval);
     ok(file_exists("testdir2\\test1.txt"), "Expected testdir2\\test1 to exist\n");
 
+    /* try to overwrite an existing write protected file */
+    clean_after_shfo_tests();
+    init_shfo_tests();
+    tmp_flags = shfo.fFlags;
+    shfo.pFrom = "test1.txt\0";
+    shfo.pTo = "test2.txt\0";
+    /* suppress the error-dialog in win9x here */
+    shfo.fFlags = FOF_NOERRORUI | FOF_NOCONFIRMATION | FOF_SILENT;
+    ok(SetFileAttributesA(shfo.pTo, FILE_ATTRIBUTE_READONLY),
+        "Failure to set file attributes (error %x)\n", GetLastError());
+    retval = CopyFileA(shfo.pFrom, shfo.pTo, FALSE);
+    ok(!retval && GetLastError() == ERROR_ACCESS_DENIED, "CopyFileA should have fail with ERROR_ACCESS_DENIED\n");
+    retval = SHFileOperationA(&shfo);
+    /* Does not work on Win95, Win95B, NT4WS and NT4SRV */
+    ok(!retval || broken(retval == DE_OPCANCELLED), "SHFileOperationA failed to copy (error %x)\n", retval);
+    /* Set back normal attributes to make the file deletion succeed */
+    ok(SetFileAttributesA(shfo.pTo, FILE_ATTRIBUTE_NORMAL),
+        "Failure to set file attributes (error %x)\n", GetLastError());
+    shfo.fFlags = tmp_flags;
+
     /* try to copy files to a file */
     clean_after_shfo_tests();
     init_shfo_tests();
