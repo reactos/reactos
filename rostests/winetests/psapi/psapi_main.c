@@ -157,8 +157,12 @@ static void test_GetMappedFileName(void)
     
     w32_err(pGetMappedFileNameA(NULL, hMod, szMapPath, sizeof(szMapPath)), ERROR_INVALID_HANDLE);
     w32_err(pGetMappedFileNameA(hpSR, hMod, szMapPath, sizeof(szMapPath)), ERROR_ACCESS_DENIED);
-    if(!w32_suc(ret = pGetMappedFileNameA(hpQI, hMod, szMapPath, sizeof(szMapPath))))
-        return;
+
+    SetLastError( 0xdeadbeef );
+    ret = pGetMappedFileNameA(hpQI, hMod, szMapPath, sizeof(szMapPath));
+    ok( ret || broken(GetLastError() == ERROR_UNEXP_NET_ERR), /* win2k */
+        "GetMappedFileNameA failed with error %u\n", GetLastError() );
+    if (!ret) return;
     ok(ret == strlen(szMapPath), "szMapPath=\"%s\" ret=%d\n", szMapPath, ret);
     ok(szMapPath[0] == '\\', "szMapPath=\"%s\"\n", szMapPath);
     szMapBaseName = strrchr(szMapPath, '\\'); /* That's close enough for us */
