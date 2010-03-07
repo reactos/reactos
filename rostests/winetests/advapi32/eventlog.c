@@ -767,33 +767,38 @@ static void test_readwrite(void)
     {
         win_skip("Win7 fails when using incorrect event types\n");
         ret = ReportEvent(handle, 0, 0, 0, NULL, 0, 0, NULL, NULL);
+        ok(ret, "Expected success : %d\n", GetLastError());
     }
     else
     {
         void *buf;
-        DWORD read, needed;
+        DWORD read, needed = 0;
         EVENTLOGRECORD *record;
+
+        ok(ret, "Expected success : %d\n", GetLastError());
 
         /* Needed to catch earlier Vista (with no ServicePack for example) */
         buf = HeapAlloc(GetProcessHeap(), 0, sizeof(EVENTLOGRECORD));
-        ReadEventLogA(handle, EVENTLOG_SEQUENTIAL_READ | EVENTLOG_FORWARDS_READ,
-                      0, buf, sizeof(EVENTLOGRECORD), &read, &needed);
+        if (!(ret = ReadEventLogA(handle, EVENTLOG_SEQUENTIAL_READ | EVENTLOG_FORWARDS_READ,
+                                  0, buf, sizeof(EVENTLOGRECORD), &read, &needed)) &&
+            GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+        {
+            buf = HeapReAlloc(GetProcessHeap(), 0, buf, needed);
+            ret = ReadEventLogA(handle, EVENTLOG_SEQUENTIAL_READ | EVENTLOG_FORWARDS_READ,
+                                0, buf, needed, &read, &needed);
+        }
+        if (ret)
+        {
+            record = (EVENTLOGRECORD *)buf;
 
-        buf = HeapReAlloc(GetProcessHeap(), 0, buf, needed);
-        ReadEventLogA(handle, EVENTLOG_SEQUENTIAL_READ | EVENTLOG_FORWARDS_READ,
-                      0, buf, needed, &read, &needed);
-
-        record = (EVENTLOGRECORD *)buf;
-
-        /* Vista and W2K8 return EVENTLOG_SUCCESS, Windows versions before return
-         * the written eventtype (0x20 in this case).
-         */
-        if (record->EventType == EVENTLOG_SUCCESS)
-            on_vista = TRUE;
-
+            /* Vista and W2K8 return EVENTLOG_SUCCESS, Windows versions before return
+             * the written eventtype (0x20 in this case).
+             */
+            if (record->EventType == EVENTLOG_SUCCESS)
+                on_vista = TRUE;
+        }
         HeapFree(GetProcessHeap(), 0, buf);
     }
-    ok(ret, "Expected success : %d\n", GetLastError());
 
     /* This will clear the eventlog. The record numbering for new
      * events however differs on Vista SP1+. Before Vista the first

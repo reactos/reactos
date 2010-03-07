@@ -1315,10 +1315,10 @@ static void test_enum_svc(void)
          */
         if (status.dwServiceType & (SERVICE_WIN32_OWN_PROCESS | SERVICE_WIN32_SHARE_PROCESS))
         {
-            if (status.dwCurrentState == SERVICE_RUNNING)
-                servicecountactive--;
-            else
+            if (status.dwCurrentState == SERVICE_STOPPED)
                 servicecountinactive--;
+            else
+                servicecountactive--;
         }
     }
     HeapFree(GetProcessHeap(), 0, services);
@@ -1661,7 +1661,7 @@ static void test_enum_svc(void)
 
         if (status.dwServiceType & (SERVICE_WIN32_OWN_PROCESS | SERVICE_WIN32_SHARE_PROCESS))
         {
-            if (status.dwCurrentState == SERVICE_RUNNING)
+            if (status.dwCurrentState != SERVICE_STOPPED)
             {
                 /* We expect a process id for every running service */
                 ok(status.dwProcessId > 0, "Expected a process id for this running service (%s)\n",

@@ -64,6 +64,7 @@ static BOOL (WINAPI *pCryptSetHashParam)(HCRYPTKEY, DWORD, BYTE*, DWORD);
 static BOOL (WINAPI *pCryptSetKeyParam)(HCRYPTKEY, DWORD, BYTE*, DWORD);
 static BOOL (WINAPI *pCryptSetProvParam)(HCRYPTPROV, DWORD, BYTE*, DWORD);
 static BOOL (WINAPI *pCryptVerifySignatureW)(HCRYPTHASH, BYTE*, DWORD, HCRYPTKEY, LPCWSTR, DWORD);
+static BOOL (WINAPI *pSystemFunction036)(PVOID, ULONG);
 
 static void init_function_pointers(void)
 {
@@ -99,6 +100,7 @@ static void init_function_pointers(void)
     pCryptSetKeyParam = (void*)GetProcAddress(hadvapi32, "CryptSetKeyParam");
     pCryptSetProvParam = (void*)GetProcAddress(hadvapi32, "CryptSetProvParam");
     pCryptVerifySignatureW = (void*)GetProcAddress(hadvapi32, "CryptVerifySignatureW");
+    pSystemFunction036 = (void*)GetProcAddress(hadvapi32, "SystemFunction036");
 }
 
 static void init_environment(void)
@@ -1073,6 +1075,35 @@ static void test_rc2_keylen(void)
     }
 }
 
+static void test_SystemFunction036(void)
+{
+    BOOL ret;
+    int test;
+
+    if (!pSystemFunction036)
+    {
+        win_skip("SystemFunction036 is not available\n");
+        return;
+    }
+
+    ret = pSystemFunction036(NULL, 0);
+    ok(ret == TRUE, "Expected SystemFunction036 to return TRUE, got %d\n", ret);
+
+    /* Test crashes on Windows. */
+    if (0)
+    {
+        SetLastError(0xdeadbeef);
+        ret = pSystemFunction036(NULL, 5);
+        trace("ret = %d, GetLastError() = %d\n", ret, GetLastError());
+    }
+
+    ret = pSystemFunction036(&test, 0);
+    ok(ret == TRUE, "Expected SystemFunction036 to return TRUE, got %d\n", ret);
+
+    ret = pSystemFunction036(&test, sizeof(int));
+    ok(ret == TRUE, "Expected SystemFunction036 to return TRUE, got %d\n", ret);
+}
+
 START_TEST(crypt)
 {
     init_function_pointers();
@@ -1091,4 +1122,5 @@ START_TEST(crypt)
 	test_enum_provider_types();
 	test_get_default_provider();
 	test_set_provider_ex();
+	test_SystemFunction036();
 }

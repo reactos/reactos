@@ -1490,7 +1490,7 @@ static void test_CreateWellKnownSid(void)
         }
     }
 
-    LocalFree(domainsid);
+    FreeSid(domainsid);
 }
 
 static void test_LookupAccountSid(void)
@@ -1673,7 +1673,7 @@ static void test_LookupAccountSid(void)
      This assumes this process is running under the account of the current user.*/
     ret = OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY|TOKEN_DUPLICATE, &hToken);
     ret = GetTokenInformation(hToken, TokenUser, NULL, 0, &cbti);
-    ptiUser = (PTOKEN_USER) HeapAlloc(GetProcessHeap(), 0, cbti);
+    ptiUser = HeapAlloc(GetProcessHeap(), 0, cbti);
     if (GetTokenInformation(hToken, TokenUser, ptiUser, cbti, &cbti))
     {
         acc_sizeA = dom_sizeA = MAX_PATH;
@@ -1812,7 +1812,7 @@ static BOOL get_sid_info(PSID psid, LPSTR *user, LPSTR *dom)
 static void check_wellknown_name(const char* name, WELL_KNOWN_SID_TYPE result)
 {
     SID_IDENTIFIER_AUTHORITY ident = { SECURITY_NT_AUTHORITY };
-    PSID domainsid;
+    PSID domainsid = NULL;
     char wk_sid[SECURITY_MAX_SID_SIZE];
     DWORD cb;
 
@@ -1862,6 +1862,7 @@ static void check_wellknown_name(const char* name, WELL_KNOWN_SID_TYPE result)
     ok(sid_use == SidTypeWellKnownGroup , "Expected Use (5), got %d\n", sid_use);
 
 cleanup:
+    FreeSid(domainsid);
     HeapFree(GetProcessHeap(),0,psid);
     HeapFree(GetProcessHeap(),0,domain);
 }
@@ -2615,8 +2616,8 @@ static void test_SetEntriesInAcl(void)
     ok(NewAcl != NULL, "returned acl was NULL\n");
     LocalFree(NewAcl);
 
-    LocalFree(UsersSid);
-    LocalFree(EveryoneSid);
+    FreeSid(UsersSid);
+    FreeSid(EveryoneSid);
     HeapFree(GetProcessHeap(), 0, OldAcl);
 }
 
