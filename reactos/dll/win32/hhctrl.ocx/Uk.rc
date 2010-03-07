@@ -1,8 +1,10 @@
 /*
  * HTML Help resources
- * Hungarian Language Support
+ * Ukrainian Language Support
  *
- * Copyright 2006 Andras Kovacs
+ * Copyright 2005 James Hawkins
+ * Copyright 2007 Artem Reznikov
+ * Copyright 2010 Igor Paliychuk
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,28 +23,31 @@
 
 #include "resource.h"
 
-LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_CONTENTS     "&Tartalom"
-    IDS_INDEX        "I&ndex"
-    IDS_SEARCH       "&Keres�s"
-    IDS_FAVORITES    "Kedven&cek"
+    IDS_CONTENTS     "&Зміст"
+    IDS_INDEX        "&Вказівник"
+    IDS_SEARCH       "&Пошук"
+    IDS_FAVORITES    "&Обране"
 END
 
 STRINGTABLE
 BEGIN
-    IDTB_EXPAND      "Megjelen�t�s"
-    IDTB_CONTRACT    "Elrejt�s"
-    IDTB_STOP        "Meg�ll�t�s"
-    IDTB_REFRESH     "Friss�t�s"
-    IDTB_BACK        "Vissza"
-    IDTB_HOME        "Kezd�lap"
-    IDTB_SYNC        "Szink."
-    IDTB_PRINT       "Nyomtat�s"
-    IDTB_OPTIONS     "Opci�k"
-    IDTB_FORWARD     "El�re"
+    IDTB_EXPAND      "Показувати"
+    IDTB_CONTRACT    "Приховати"
+    IDTB_STOP        "Зупинити"
+    IDTB_REFRESH     "Оновити"
+    IDTB_BACK        "Назад"
+    IDTB_HOME        "Додому"
+    IDTB_SYNC        "Синхронізувати"
+    IDTB_PRINT       "Друк"
+    IDTB_OPTIONS     "Параметри"
+    IDTB_FORWARD     "Вперед"
     IDTB_NOTES       "IDTB_NOTES"
     IDTB_BROWSE_FWD  "IDTB_BROWSE_FWD"
     IDTB_BROWSE_BACK "IDT_BROWSE_BACK"
@@ -53,8 +58,18 @@ BEGIN
     IDTB_FAVORITES   "IDTB_FAVORITES"
     IDTB_JUMP1       "Jump1"
     IDTB_JUMP2       "Jump2"
-    IDTB_CUSTOMIZE   "Testreszab�s"
-    IDTB_ZOOM        "Zoom"
+    IDTB_CUSTOMIZE   "Налаштування"
+    IDTB_ZOOM        "Збільшення"
     IDTB_TOC_NEXT    "IDTB_TOC_NEXT"
     IDTB_TOC_PREV    "IDTB_TOC_PREV"
+END
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_CONTENTS     "&Зміст"
+    IDS_INDEX        "&Вказівник"
+    IDS_SEARCH       "&Пошук"
+    IDS_FAVORITES    "&Обране"
 END

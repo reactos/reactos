@@ -20,12 +20,11 @@
 #define NONAMELESSSTRUCT
 
 #include "hhctrl.h"
+#include "stream.h"
 
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(htmlhelp);
-
-#define BLOCK_SIZE 0x1000
 
 typedef enum {
     INSERT_NEXT,
@@ -48,134 +47,6 @@ static void free_content_item(ContentItem *item)
 
         item = next;
     }
-}
-
-typedef struct {
-    char *buf;
-    int size;
-    int len;
-} strbuf_t;
-
-static void strbuf_init(strbuf_t *buf)
-{
-    buf->size = 8;
-    buf->len = 0;
-    buf->buf = heap_alloc(buf->size);
-}
-
-static void strbuf_zero(strbuf_t *buf)
-{
-    buf->len = 0;
-}
-
-static void strbuf_free(strbuf_t *buf)
-{
-    heap_free(buf->buf);
-}
-
-static void strbuf_append(strbuf_t *buf, const char *data, int len)
-{
-    if(buf->len+len > buf->size) {
-        buf->size = buf->len+len;
-        buf->buf = heap_realloc(buf->buf, buf->size);
-    }
-
-    memcpy(buf->buf+buf->len, data, len);
-    buf->len += len;
-}
-
-typedef struct {
-    IStream *str;
-    char buf[BLOCK_SIZE];
-    ULONG size;
-    ULONG p;
-} stream_t;
-
-static void stream_init(stream_t *stream, IStream *str)
-{
-    memset(stream, 0, sizeof(stream_t));
-    stream->str = str;
-}
-
-static BOOL stream_chr(stream_t *stream, strbuf_t *buf, char c)
-{
-    BOOL b = TRUE;
-    ULONG i;
-
-    while(b) {
-        for(i=stream->p; i<stream->size; i++) {
-            if(stream->buf[i] == c) {
-                b = FALSE;
-                break;
-            }
-        }
-
-        if(buf && i > stream->p)
-            strbuf_append(buf, stream->buf+stream->p, i-stream->p);
-        stream->p = i;
-
-        if(stream->p == stream->size) {
-            stream->p = 0;
-            IStream_Read(stream->str, stream->buf, sizeof(stream->buf), &stream->size);
-            if(!stream->size)
-                break;
-        }
-    }
-
-    return stream->size != 0;
-}
-
-static void get_node_name(strbuf_t *node, strbuf_t *name)
-{
-    const char *ptr = node->buf+1;
-
-    strbuf_zero(name);
-
-    while(*ptr != '>' && !isspace(*ptr))
-        ptr++;
-
-    strbuf_append(name, node->buf+1, ptr-node->buf-1);
-    strbuf_append(name, "", 1);
-}
-
-static BOOL next_node(stream_t *stream, strbuf_t *buf)
-{
-    if(!stream_chr(stream, NULL, '<'))
-        return FALSE;
-
-    if(!stream_chr(stream, buf, '>'))
-        return FALSE;
-
-    strbuf_append(buf, ">", 2);
-
-    return TRUE;
-}
-
-static const char *get_attr(const char *node, const char *name, int *len)
-{
-    const char *ptr, *ptr2;
-    char name_buf[32];
-    int nlen;
-
-    nlen = strlen(name);
-    memcpy(name_buf, name, nlen);
-    name_buf[nlen++] = '=';
-    name_buf[nlen++] = '\"';
-    name_buf[nlen] = 0;
-
-    ptr = strstr(node, name_buf);
-    if(!ptr) {
-        WARN("name not found\n");
-        return NULL;
-    }
-
-    ptr += nlen;
-    ptr2 = strchr(ptr, '\"');
-    if(!ptr2)
-        return NULL;
-
-    *len = ptr2-ptr;
-    return ptr;
 }
 
 static void parse_obj_node_param(ContentItem *item, ContentItem *hhc_root, const char *text)

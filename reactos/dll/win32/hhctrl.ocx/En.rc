@@ -19,6 +19,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "resource.h"
+
 LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
@@ -55,4 +57,14 @@ BEGIN
     IDTB_ZOOM        "Zoom"
     IDTB_TOC_NEXT    "IDTB_TOC_NEXT"
     IDTB_TOC_PREV    "IDTB_TOC_PREV"
+END
+
+LANGUAGE LANG_ENGLISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_CONTENTS     "&Contents"
+    IDS_INDEX        "I&ndex"
+    IDS_SEARCH       "&Search"
+    IDS_FAVORITES    "Favour&ites"
 END
