@@ -482,6 +482,9 @@ drivers\base\beep\beep.sys                          2
 drivers\base\null\null.sys                          2
 drivers\base\nmidebug\nmidebug.sys                  2
 
+drivers\battery\cmbatt\cmbatt.sys                   2
+drivers\battery\battc\battc.sys                     2
+
 drivers\bus\isapnp\isapnp.sys                       2
 
 drivers\directx\dxapi\dxapi.sys                     2
@@ -628,6 +631,7 @@ media\nls\c_28606.nls                               1
 media\drivers\etc\services                          5
 media\inf\audio.inf                                 6
 media\inf\acpi.inf                                  6
+media\inf\battery.inf                               6
 media\inf\cdrom.inf                                 6
 media\inf\cpu.inf                                   6
 media\inf\display.inf                               6
