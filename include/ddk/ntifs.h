@@ -1406,6 +1406,84 @@ RtlInitializeSid(
   IN PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
   IN UCHAR SubAuthorityCount);
 
+NTSYSAPI
+PULONG
+NTAPI
+RtlSubAuthoritySid(
+  IN PSID Sid,
+  IN ULONG SubAuthority);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlLengthSid(
+  IN PSID Sid);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlCopySid(
+  IN ULONG Length,
+  IN PSID Destination,
+  IN PSID Source);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlConvertSidToUnicodeString(
+  IN OUT PUNICODE_STRING UnicodeString,
+  IN PSID Sid,
+  IN BOOLEAN AllocateDestinationString);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlCopyLuid(
+  OUT PLUID DestinationLuid,
+  IN PLUID SourceLuid);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlCreateAcl(
+  OUT PACL Acl,
+  IN ULONG AclLength,
+  IN ULONG AclRevision);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlAddAce(
+  IN OUT PACL Acl,
+  IN ULONG AceRevision,
+  IN ULONG StartingAceIndex,
+  IN PVOID AceList,
+  IN ULONG AceListLength);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlDeleteAce(
+  IN OUT PACL Acl,
+  IN ULONG AceIndex);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlGetAce(
+  IN PACL Acl,
+  IN ULONG AceIndex,
+  OUT PVOID *Ace);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlAddAccessAllowedAce(
+  IN OUT PACL Acl,
+  IN ULONG AceRevision,
+  IN ACCESS_MASK AccessMask,
+  IN PSID Sid);
+
 #endif
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
@@ -1559,6 +1637,12 @@ NTAPI
 RtlIdentifierAuthoritySid(
   IN PSID Sid);
 
+NTSYSAPI
+PUCHAR
+NTAPI
+RtlSubAuthorityCountSid(
+  IN PSID Sid);
+
 #endif
 
 #if defined(_M_AMD64)
@@ -1623,6 +1707,19 @@ RtlInitAnsiStringEx(
 
 #endif
 
+#if (NTDDI_VERSION >= NTDDI_WS03SP1)
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlGetSaclSecurityDescriptor(
+  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+  OUT PBOOLEAN SaclPresent,
+  OUT PACL *Sacl,
+  OUT PBOOLEAN SaclDefaulted);
+
+#endif
+
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 
 NTSYSAPI
@@ -1674,6 +1771,14 @@ RtlIdnToNameprepUnicode(
   OUT PWSTR DestinationString,
   IN OUT PLONG DestinationStringLength);
 
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlCreateServiceSid(
+  IN PUNICODE_STRING ServiceName,
+  OUT PSID ServiceSid,
+  IN OUT PULONG ServiceSidLength);
+
 #endif
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
@@ -1697,6 +1802,24 @@ RtlUTF8ToUnicodeN(
   OUT PULONG UnicodeStringActualByteCount,
   IN PCCH UTF8StringSource,
   IN ULONG UTF8StringByteCount);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlReplaceSidInSd(
+  IN OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
+  IN PSID OldSid,
+  IN PSID NewSid,
+  OUT ULONG *NumChanges);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlCreateVirtualAccountSid(
+  IN PCUNICODE_STRING Name,
+  IN ULONG BaseSubAuthority,
+  OUT PSID Sid,
+  IN OUT PULONG SidLength);
 
 #endif
 
@@ -1860,6 +1983,8 @@ typedef struct _COMPRESSED_DATA_INFO {
 
 #define RtlOffsetToPointer(B,O)  ((PCHAR)( ((PCHAR)(B)) + ((ULONG_PTR)(O))  ))
 #define RtlPointerToOffset(B,P)  ((ULONG)( ((PCHAR)(P)) - ((PCHAR)(B))  ))
+
+#define MAX_UNICODE_STACK_BUFFER_LENGTH 256
 
 #pragma pack(push,4)
 
@@ -5983,24 +6108,6 @@ RtlAbsoluteToSelfRelativeSD (
 );
 
 NTSYSAPI
-NTSTATUS
-NTAPI
-RtlConvertSidToUnicodeString (
-    OUT PUNICODE_STRING DestinationString,
-    IN PSID             Sid,
-    IN BOOLEAN          AllocateDestinationString
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlCopySid (
-    IN ULONG   Length,
-    IN PSID    Destination,
-    IN PSID    Source
-);
-
-NTSYSAPI
 VOID
 NTAPI
 RtlGenerate8dot3Name (
@@ -6036,13 +6143,6 @@ RtlGetOwnerSecurityDescriptor (
     IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     OUT PSID                *Owner,
     OUT PBOOLEAN            OwnerDefaulted
-);
-
-NTSYSAPI
-ULONG
-NTAPI
-RtlLengthSid (
-    IN PSID Sid
 );
 
 NTSYSAPI
@@ -6086,21 +6186,6 @@ RtlSetSaclSecurityDescriptor (
     IN BOOLEAN                  SaclPresent,
     IN PACL                     Sacl,
     IN BOOLEAN                  SaclDefaulted
-);
-
-NTSYSAPI
-PUCHAR
-NTAPI
-RtlSubAuthorityCountSid (
-    IN PSID Sid
-);
-
-NTSYSAPI
-PULONG
-NTAPI
-RtlSubAuthoritySid (
-    IN PSID    Sid,
-    IN ULONG   SubAuthority
 );
 
 NTSYSAPI
