@@ -73,6 +73,14 @@ VOID ReactOSRunSetupLoader(VOID);
 // ARC Path Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
+BOOLEAN
+DissectArcPath2(
+    IN CHAR* ArcPath,
+    OUT ULONG* x,
+    OUT ULONG* y,
+    OUT ULONG* z,
+    OUT ULONG* Partition,
+    OUT ULONG *PathSyntax);
 BOOLEAN DissectArcPath(CHAR *ArcPath, CHAR *BootPath, ULONG* BootDrive, ULONG* BootPartition);
 VOID ConstructArcPath(PCHAR ArcPath, PCHAR SystemFolder, ULONG Disk, ULONG Partition);
 ULONG ConvertArcNameToBiosDriveNumber(PCHAR ArcPath);

@@ -277,7 +277,7 @@ WinLdrLoadImage(IN PCHAR FileName,
 	Status = ArcOpen(FileName, OpenReadOnly, &FileId);
 	if (Status != ESUCCESS)
 	{
-		UiMessageBox("Can not open the file");
+		//UiMessageBox("Can not open the file");
 		return FALSE;
 	}
 
