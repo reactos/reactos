@@ -438,8 +438,10 @@
 		<file>obwait.c</file>
 	</directory>
 	<directory name="po">
+	    <file>events.c</file>
 		<file>power.c</file>
-		<file>events.c</file>
+		<file>poshtdwn.c</file>
+		<file>povolume.c</file>
 	</directory>
 	<directory name="ps">
 		<if property="ARCH" value="i386">
