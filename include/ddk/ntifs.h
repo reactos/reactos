@@ -1000,6 +1000,15 @@ NtPrivilegedServiceAuditAlarm(
   IN PPRIVILEGE_SET Privileges,
   IN BOOLEAN AccessGranted);
 
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtSetInformationThread(
+  IN HANDLE ThreadHandle,
+  IN THREADINFOCLASS ThreadInformationClass,
+  IN PVOID ThreadInformation,
+  IN ULONG ThreadInformationLength);
+
 #endif
 
 typedef NTSTATUS
@@ -2223,6 +2232,118 @@ typedef struct _COMPRESSED_DATA_INFO {
 #define FILE_READ_ACCESS                ( 0x0001 )
 #define FILE_WRITE_ACCESS               ( 0x0002 )
 
+typedef ULONG  LSA_OPERATIONAL_MODE, *PLSA_OPERATIONAL_MODE;
+
+typedef enum _SECURITY_LOGON_TYPE {
+  UndefinedLogonType = 0,
+  Interactive = 2,
+  Network,
+  Batch,
+  Service,
+  Proxy,
+  Unlock,
+  NetworkCleartext,
+  NewCredentials,
+#if (_WIN32_WINNT >= 0x0501)
+  RemoteInteractive,
+  CachedInteractive,
+#endif
+#if (_WIN32_WINNT >= 0x0502)
+  CachedRemoteInteractive,
+  CachedUnlock
+#endif
+} SECURITY_LOGON_TYPE, *PSECURITY_LOGON_TYPE;
+
+#ifndef _NTLSA_AUDIT_
+#define _NTLSA_AUDIT_
+
+typedef enum _SE_ADT_PARAMETER_TYPE {
+  SeAdtParmTypeNone = 0,
+  SeAdtParmTypeString,
+  SeAdtParmTypeFileSpec,
+  SeAdtParmTypeUlong,
+  SeAdtParmTypeSid,
+  SeAdtParmTypeLogonId,
+  SeAdtParmTypeNoLogonId,
+  SeAdtParmTypeAccessMask,
+  SeAdtParmTypePrivs,
+  SeAdtParmTypeObjectTypes,
+  SeAdtParmTypeHexUlong,
+  SeAdtParmTypePtr,
+  SeAdtParmTypeTime,
+  SeAdtParmTypeGuid,
+  SeAdtParmTypeLuid,
+  SeAdtParmTypeHexInt64,
+  SeAdtParmTypeStringList,
+  SeAdtParmTypeSidList,
+  SeAdtParmTypeDuration,
+  SeAdtParmTypeUserAccountControl,
+  SeAdtParmTypeNoUac,
+  SeAdtParmTypeMessage,
+  SeAdtParmTypeDateTime,
+  SeAdtParmTypeSockAddr,
+  SeAdtParmTypeSD,
+  SeAdtParmTypeLogonHours,
+  SeAdtParmTypeLogonIdNoSid,
+  SeAdtParmTypeUlongNoConv,
+  SeAdtParmTypeSockAddrNoPort,
+  SeAdtParmTypeAccessReason
+} SE_ADT_PARAMETER_TYPE, *PSE_ADT_PARAMETER_TYPE;
+
+#ifndef GUID_DEFINED
+#include <guiddef.h>
+#endif
+
+typedef struct _SE_ADT_OBJECT_TYPE {
+  GUID ObjectType;
+  USHORT Flags;
+#define SE_ADT_OBJECT_ONLY 0x1
+  USHORT Level;
+  ACCESS_MASK AccessMask;
+} SE_ADT_OBJECT_TYPE, *PSE_ADT_OBJECT_TYPE;
+
+typedef struct _SE_ADT_PARAMETER_ARRAY_ENTRY {
+  SE_ADT_PARAMETER_TYPE Type;
+  ULONG Length;
+  ULONG_PTR Data[2];
+  PVOID Address;
+} SE_ADT_PARAMETER_ARRAY_ENTRY, *PSE_ADT_PARAMETER_ARRAY_ENTRY;
+
+typedef struct _SE_ADT_ACCESS_REASON {
+  ACCESS_MASK AccessMask;
+  ULONG  AccessReasons[32];
+  ULONG  ObjectTypeIndex;
+  ULONG AccessGranted;
+  PSECURITY_DESCRIPTOR SecurityDescriptor;
+} SE_ADT_ACCESS_REASON, *PSE_ADT_ACCESS_REASON;
+
+#define SE_MAX_AUDIT_PARAMETERS 32
+#define SE_MAX_GENERIC_AUDIT_PARAMETERS 28
+
+typedef struct _SE_ADT_PARAMETER_ARRAY {
+  ULONG CategoryId;
+  ULONG AuditId;
+  ULONG ParameterCount;
+  ULONG Length;
+  USHORT FlatSubCategoryId;
+  USHORT Type;
+  ULONG Flags;
+  SE_ADT_PARAMETER_ARRAY_ENTRY Parameters[ SE_MAX_AUDIT_PARAMETERS ];
+} SE_ADT_PARAMETER_ARRAY, *PSE_ADT_PARAMETER_ARRAY;
+
+#define SE_ADT_PARAMETERS_SELF_RELATIVE     0x00000001
+#define SE_ADT_PARAMETERS_SEND_TO_LSA       0x00000002
+#define SE_ADT_PARAMETER_EXTENSIBLE_AUDIT   0x00000004
+#define SE_ADT_PARAMETER_GENERIC_AUDIT      0x00000008
+#define SE_ADT_PARAMETER_WRITE_SYNCHRONOUS  0x00000010
+
+#define LSAP_SE_ADT_PARAMETER_ARRAY_TRUE_SIZE(AuditParameters)    \
+     ( sizeof(SE_ADT_PARAMETER_ARRAY) -                           \
+       sizeof(SE_ADT_PARAMETER_ARRAY_ENTRY) *                     \
+       (SE_MAX_AUDIT_PARAMETERS - AuditParameters->ParameterCount) )
+
+#endif /* _NTLSA_AUDIT_ */
+
 #pragma pack(push,4)
 
 #ifndef VER_PRODUCTBUILD
@@ -2249,29 +2370,6 @@ extern ULONG                        IoOtherOperationCount;
 extern LARGE_INTEGER                IoReadTransferCount;
 extern LARGE_INTEGER                IoWriteTransferCount;
 extern LARGE_INTEGER                IoOtherTransferCount;
-
-typedef ULONG  LSA_OPERATIONAL_MODE, *PLSA_OPERATIONAL_MODE;
-
-typedef enum _SECURITY_LOGON_TYPE
-{
-    UndefinedLogonType = 0,
-    Interactive = 2,
-    Network,
-    Batch,
-    Service,
-    Proxy,
-    Unlock,
-    NetworkCleartext,
-    NewCredentials,
-#if (_WIN32_WINNT >= 0x0501)
-    RemoteInteractive,
-    CachedInteractive,
-#endif
-#if (_WIN32_WINNT >= 0x0502)
-    CachedRemoteInteractive,
-    CachedUnlock
-#endif
-} SECURITY_LOGON_TYPE, *PSECURITY_LOGON_TYPE;
 
 #define ANSI_DOS_STAR                   ('<')
 #define ANSI_DOS_QM                     ('>')
