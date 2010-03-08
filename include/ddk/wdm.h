@@ -8929,7 +8929,7 @@ VOID
 IoSkipCurrentIrpStackLocation (
   IN OUT PIRP Irp)
 {
-  //ASSERT(Irp->CurrentLocation <= Irp->StackCount); FIXME: ReactOS is broken!
+  ASSERT(Irp->CurrentLocation <= Irp->StackCount);
   Irp->CurrentLocation++;
   Irp->Tail.Overlay.CurrentStackLocation++;
 }
