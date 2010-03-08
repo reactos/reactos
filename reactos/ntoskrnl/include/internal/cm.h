@@ -1454,6 +1454,12 @@ CmShutdownSystem(
     VOID
 );
 
+VOID
+NTAPI
+CmSetLazyFlushState(
+    IN BOOLEAN Enable
+);
+
 //
 // Global variables accessible from all of Cm
 //

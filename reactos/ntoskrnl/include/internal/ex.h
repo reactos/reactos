@@ -26,6 +26,7 @@ extern ULONG NtGlobalFlag;
 extern ULONG ExpInitializationPhase;
 extern ULONG ExpAltTimeZoneBias;
 extern LIST_ENTRY ExSystemLookasideListHead;
+extern PCALLBACK_OBJECT PowerStateCallback;
 
 typedef struct _EXHANDLE
 {
@@ -157,6 +158,10 @@ ExRefreshTimeZoneInformation(
 VOID
 NTAPI
 ExpInitializeWorkerThreads(VOID);
+
+VOID
+NTAPI
+ExSwapinWorkerThreads(IN BOOLEAN AllowSwap);
 
 VOID
 NTAPI

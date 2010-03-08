@@ -53,6 +53,18 @@ xHalHaltSystem(
     VOID
 );
 
+VOID
+NTAPI
+xHalEndOfBoot(
+    VOID
+);
+
+VOID
+NTAPI
+xHalSetWakeEnable(
+    IN BOOLEAN Enable
+);
+
 UCHAR
 NTAPI
 xHalVectorToIDTEntry(
