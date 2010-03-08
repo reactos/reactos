@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="libcntpr" type="staticlibrary">
-	<include base="crt">.</include>
-	<include base="crt">include</include>
+	<include base="libcntpr">.</include>
+	<include base="libcntpr">include</include>
 	<define name="NO_RTL_INLINES" />
 	<define name="_NTSYSTEM_" />
 	<define name="_NTDLLBUILD_" />
