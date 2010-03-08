@@ -81,13 +81,13 @@ interface IDispatchEx : IDispatch
 
     [local]
     HRESULT InvokeEx(
-            [in] DISPID id,
-            [in] LCID lcid,
-            [in] WORD wFlags,
-            [in] DISPPARAMS *pdp,
-            [out] VARIANT *pvarRes,
-            [out] EXCEPINFO *pei,
-            [in, unique] IServiceProvider *pspCaller);
+            [in, annotation("__in")] DISPID id,
+            [in, annotation("__in")] LCID lcid,
+            [in, annotation("__in")] WORD wFlags,
+            [in, annotation("__in")] DISPPARAMS *pdp,
+            [out, annotation("__out_opt")] VARIANT *pvarRes,
+            [out, annotation("__out_opt")] EXCEPINFO *pei,
+            [in, unique, annotation("__in_opt")] IServiceProvider *pspCaller);
 
     [call_as(InvokeEx)]
     HRESULT RemoteInvokeEx(
@@ -190,4 +190,16 @@ interface ICanHandleException : IUnknown
     HRESULT CanHandleException(
             [in] EXCEPINFO *pExcepInfo,
             [in] VARIANT *pvar);
+}
+
+[
+    object,
+    uuid(10e2414a-ec59-49d2-bc51-5add2c36febc),
+    pointer_default(unique)
+]
+interface IProvideRuntimeContext : IUnknown
+{
+    HRESULT GetCurrentSourceContext(
+            [out] DWORD_PTR *pdwContext,
+            [out] VARIANT_BOOL *pfExecutingGlobalCode);
 }

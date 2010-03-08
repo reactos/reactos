@@ -24,11 +24,6 @@ import "ctfutb.idl";
 #endif
 cpp_quote("#include <winuser.h>")
 
-/* FIXME: LANGID is defined in winnt.h and mlang.h in the platform SDK */
-cpp_quote("#ifndef _WINNT_H")
-typedef WORD LANGID;
-cpp_quote("#endif")
-
 cpp_quote("#define TF_E_STACKFULL MAKE_HRESULT(SEVERITY_ERROR, FACILITY_ITF, 0x0501)")
 cpp_quote("#define TF_E_DISCONNECTED    MAKE_HRESULT(SEVERITY_ERROR, FACILITY_ITF, 0x0504)")
 cpp_quote("#define TF_E_ALREADY_EXISTS  MAKE_HRESULT(SEVERITY_ERROR, FACILITY_ITF, 0x0506)")

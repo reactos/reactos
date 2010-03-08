@@ -1,0 +1,58 @@
+/*
+ * Copyright (C) 2009 Huw Davies
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+[
+    object,
+    uuid(0c733a55-2a1c-11ce-ade5-00aa0044773d),
+    pointer_default(unique)
+]
+interface IRowsetInfo : IUnknown
+{
+    [local]
+    HRESULT GetProperties([in] const ULONG cPropertyIDSets,
+                          [in, size_is(cPropertyIDSets), annotation("__in_ecount_opt(cPropertyIDSets)")] const DBPROPIDSET rgPropertyIDSets[],
+                          [in, out, annotation("__out")] ULONG *pcPropertySets,
+                          [out, size_is(,*pcPropertySets), annotation("__deref_out_ecount_opt(*pcPropertySets)")] DBPROPSET **prgPropertySets);
+
+    [call_as(GetProperties)]
+    HRESULT RemoteGetProperties([in] ULONG cPropertyIDSets,
+                                [in, unique, size_is(cPropertyIDSets)] const DBPROPIDSET *rgPropertyIDSets,
+                                [in, out] ULONG *pcPropertySets,
+                                [out, size_is(,*pcPropertySets)] DBPROPSET **prgPropertySets,
+                                [out] IErrorInfo **ppErrorInfoRem);
+
+    [local]
+    HRESULT GetReferencedRowset([in] DBORDINAL iOrdinal,
+                                [in, annotation("__in")] REFIID riid,
+                                [out, iid_is(riid), annotation("deref_out_opt")] IUnknown **ppReferencedRowset);
+
+    [call_as(GetReferencedRowset)]
+    HRESULT RemoteGetReferencedRowset([in] DBORDINAL iOrdinal,
+                                      [in] REFIID riid,
+                                      [out, iid_is(riid)] IUnknown **ppReferencedRowset,
+                                      [out] IErrorInfo **ppErrorInfoRem);
+    [local]
+    HRESULT GetSpecification([in, annotation("__in")] REFIID riid,
+                             [out, iid_is(riid), annotation("__deref_out_opt")] IUnknown **ppSpecification);
+
+    [call_as(GetSpecification)]
+    HRESULT RemoteGetSpecification([in] REFIID riid,
+                                   [out, iid_is(riid)] IUnknown **ppSpecification,
+                                   [out] IErrorInfo **ppErrorInfoRem);
+
+}

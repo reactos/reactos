@@ -420,6 +420,10 @@ interface IOverlayNotify : IUnknown
 
 typedef IOverlayNotify *POVERLAYNOTIFY;
 
+cpp_quote("#if 0")
+typedef HANDLE HMONITOR;
+cpp_quote("#endif /* 0 */")
+
 [
 object,
 local,
