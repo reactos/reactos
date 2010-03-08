@@ -651,9 +651,18 @@ SetServiceStatus(SERVICE_STATUS_HANDLE hServiceStatus,
     TRACE("SetServiceStatus() called\n");
     TRACE("hServiceStatus %lu\n", hServiceStatus);
 
-    /* Call to services.exe using RPC */
-    dwError = RSetServiceStatus((RPC_SERVICE_STATUS_HANDLE)hServiceStatus,
-                                lpServiceStatus);
+    RpcTryExcept
+    {
+        /* Call to services.exe using RPC */
+        dwError = RSetServiceStatus((RPC_SERVICE_STATUS_HANDLE)hServiceStatus,
+                                    lpServiceStatus);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
     if (dwError != ERROR_SUCCESS)
     {
         ERR("ScmrSetServiceStatus() failed (Error %lu)\n", dwError);
