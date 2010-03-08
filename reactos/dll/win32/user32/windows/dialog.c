@@ -560,6 +560,12 @@ INT DIALOG_DoDialogBox( HWND hwnd, HWND owner )
                 DispatchMessageW( &msg );
             }
             if (dlgInfo->flags & DF_END) break;
+
+            if (bFirstEmpty && msg.message == WM_TIMER)
+            {
+                ShowWindow( hwnd, SW_SHOWNORMAL );
+                bFirstEmpty = FALSE;
+            }
         }
     }
     if (dlgInfo->flags & DF_OWNERENABLED) DIALOG_EnableOwner( owner );
@@ -968,10 +974,13 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
 
         if (dlgProc)
         {
-            if (SendMessageW( hwnd, WM_INITDIALOG, (WPARAM)dlgInfo->hwndFocus, param ) &&
+            HWND focus = GetNextDlgTabItem( hwnd, 0, FALSE );
+            if (SendMessageW( hwnd, WM_INITDIALOG, (WPARAM)focus, param ) &&
                 ((~template.style & DS_CONTROL) || (template.style & WS_VISIBLE)))
             {
-                /* By returning TRUE, app has requested a default focus assignment */
+                /* By returning TRUE, app has requested a default focus assignment.
+                 * WM_INITDIALOG may have changed the tab order, so find the first
+                 * tabstop control again. */
                 dlgInfo->hwndFocus = GetNextDlgTabItem( hwnd, 0, FALSE);
                 if( dlgInfo->hwndFocus )
                     SetFocus( dlgInfo->hwndFocus );
