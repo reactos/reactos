@@ -1,7 +1,7 @@
 #ifndef PRECOMP_H__
 #define PRECOMP_H__
 
-#define BDAPLGIN_TRACE
+//#define BDAPLGIN_TRACE
 #define BUILDING_KS
 #define _KSDDK_
 #include <dshow.h>
