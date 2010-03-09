@@ -41,7 +41,10 @@ RTL_CRITICAL_SECTION ConsoleLock;
 
 extern BOOL WINAPI DefaultConsoleCtrlHandler(DWORD Event);
 extern __declspec(noreturn) VOID CALLBACK ConsoleControlDispatcher(DWORD CodeAndFlag);
-
+extern PHANDLER_ROUTINE InitialHandler[1];
+extern PHANDLER_ROUTINE* CtrlHandlers;
+extern ULONG NrCtrlHandlers;
+extern ULONG NrAllocatedHandlers;
 extern BOOL FASTCALL NlsInit(VOID);
 extern VOID FASTCALL NlsUninit(VOID);
 BOOLEAN InWindows = FALSE;
@@ -178,7 +181,10 @@ BasepInitConsole(VOID)
     /* Initialize Console Ctrl Handler */
     ConsoleInitialized = TRUE;
     RtlInitializeCriticalSection(&ConsoleLock);
-    SetConsoleCtrlHandler(DefaultConsoleCtrlHandler, TRUE);
+    NrAllocatedHandlers = 1;
+    NrCtrlHandlers = 1;
+    CtrlHandlers = InitialHandler;
+    CtrlHandlers[0] = DefaultConsoleCtrlHandler;
 
     /* Now use the proper console handle */
     Request.Data.AllocConsoleRequest.Console = Parameters->ConsoleHandle;

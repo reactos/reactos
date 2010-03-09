@@ -19,16 +19,17 @@
 #define NDEBUG
 #include <debug.h>
 
-extern BOOL WINAPI DefaultConsoleCtrlHandler(DWORD Event);
-extern __declspec(noreturn) VOID CALLBACK ConsoleControlDispatcher(DWORD CodeAndFlag);
 extern RTL_CRITICAL_SECTION ConsoleLock;
 extern BOOL ConsoleInitialized;
 extern BOOL WINAPI IsDebuggerPresent(VOID);
 
 /* GLOBALS *******************************************************************/
 
-static PHANDLER_ROUTINE* CtrlHandlers = NULL;
-static ULONG NrCtrlHandlers = 0;
+PHANDLER_ROUTINE InitialHandler[1];
+PHANDLER_ROUTINE* CtrlHandlers;
+ULONG NrCtrlHandlers;
+ULONG NrAllocatedHandlers;
+
 #define INPUTEXENAME_BUFLEN 256
 static WCHAR InputExeName[INPUTEXENAME_BUFLEN] = L"";
 
@@ -49,7 +50,7 @@ DefaultConsoleCtrlHandler(DWORD Event)
             break;
 
         case CTRL_SHUTDOWN_EVENT:
-            DPRINT("Ctrl Shutdown Event\n");
+            DPRINT1("Ctrl Shutdown Event\n");
             break;
 
         case CTRL_CLOSE_EVENT:
@@ -57,14 +58,13 @@ DefaultConsoleCtrlHandler(DWORD Event)
             break;
 
         case CTRL_LOGOFF_EVENT:
-            DPRINT("Ctrl Logoff Event\n");
+            DPRINT1("Ctrl Logoff Event\n");
             break;
     }
 
-    ExitProcess(0);
+    ExitProcess(CONTROL_C_EXIT);
     return TRUE;
 }
-
 
 __declspec(noreturn)
 VOID
@@ -74,7 +74,8 @@ ConsoleControlDispatcher(DWORD CodeAndFlag)
     DWORD nExitCode = 0;
     DWORD nCode = CodeAndFlag & MAXLONG;
     UINT i;
-
+    EXCEPTION_RECORD erException;
+                
     SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
 
     switch(nCode)
@@ -82,51 +83,77 @@ ConsoleControlDispatcher(DWORD CodeAndFlag)
         case CTRL_C_EVENT:
         case CTRL_BREAK_EVENT:
         {
-            if(IsDebuggerPresent())
+            if (IsDebuggerPresent())
             {
-                EXCEPTION_RECORD erException;
-                erException.ExceptionCode =
-                    (nCode == CTRL_C_EVENT ? DBG_CONTROL_C : DBG_CONTROL_BREAK);
+                erException.ExceptionCode = (nCode == CTRL_C_EVENT ?
+                                             DBG_CONTROL_C : DBG_CONTROL_BREAK);
                 erException.ExceptionFlags = 0;
                 erException.ExceptionRecord = NULL;
-                erException.ExceptionAddress = &DefaultConsoleCtrlHandler;
+                erException.ExceptionAddress = DefaultConsoleCtrlHandler;
                 erException.NumberParameters = 0;
-                RtlRaiseException(&erException);
+                
+                _SEH2_TRY
+                {
+                    RtlRaiseException(&erException);
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    RtlEnterCriticalSection(&ConsoleLock);
+                    
+                    if ((nCode != CTRL_C_EVENT) ||
+                        (NtCurrentPeb()->ProcessParameters->ConsoleFlags != 1))
+                    {
+                        for (i = NrCtrlHandlers; i > 0; i--)
+                        {
+                            if (CtrlHandlers[i - 1](nCode)) break;
+                        }
+                    }
+                    
+                    RtlLeaveCriticalSection(&ConsoleLock);
+                }
+                _SEH2_END;
+                
+                ExitThread(0);
             }
-
-            if (!ConsoleInitialized) ExitThread(0);
-            RtlEnterCriticalSection(&ConsoleLock);
-
-            if (!(nCode == CTRL_C_EVENT &&
-                NtCurrentPeb()->ProcessParameters->ConsoleFlags & 1))
-            {
-                for(i = NrCtrlHandlers; i > 0; -- i)
-                    if(CtrlHandlers[i - 1](nCode)) break;
-            }
-            RtlLeaveCriticalSection(&ConsoleLock);
-            ExitThread(0);
+            
+            break;
         }
 
         case CTRL_CLOSE_EVENT:
         case CTRL_LOGOFF_EVENT:
         case CTRL_SHUTDOWN_EVENT:
             break;
+            
+        case 3:
+        
+            ExitThread(0);
+            break;
+        
+        case 4:
+        
+            ExitProcess(CONTROL_C_EXIT);
+            break;
 
-        default: ExitThread(0);
+        default:
+        
+            ASSERT(FALSE);
+            break;
     }
-
-    if (!ConsoleInitialized) ExitThread(0);
+    
+    ASSERT(ConsoleInitialized);
+    
     RtlEnterCriticalSection(&ConsoleLock);
-
-    if (!(nCode == CTRL_C_EVENT &&
-        NtCurrentPeb()->ProcessParameters->ConsoleFlags & 1))
+    nExitCode = 0;
+    if ((nCode != CTRL_C_EVENT) || (NtCurrentPeb()->ProcessParameters->ConsoleFlags != 1))
     {
-        i = NrCtrlHandlers;
-        while (i > 0)
+        for (i = NrCtrlHandlers; i > 0; i--)
         {
-            if (i == 1 && (CodeAndFlag & MINLONG) &&
-                (nCode == CTRL_LOGOFF_EVENT || nCode == CTRL_SHUTDOWN_EVENT))
+            if ((i == 1) &&
+                (CodeAndFlag & MINLONG) &&
+                ((nCode == CTRL_LOGOFF_EVENT) || (nCode == CTRL_SHUTDOWN_EVENT)))
+            {
                 break;
+            }
 
             if (CtrlHandlers[i - 1](nCode))
             {
@@ -135,14 +162,17 @@ ConsoleControlDispatcher(DWORD CodeAndFlag)
                     case CTRL_CLOSE_EVENT:
                     case CTRL_LOGOFF_EVENT:
                     case CTRL_SHUTDOWN_EVENT:
+                    case 3:
                         nExitCode = CodeAndFlag;
+                        break;
                 }
                 break;
             }
-            --i;
         }
     }
+    
     RtlLeaveCriticalSection(&ConsoleLock);
+
     ExitThread(nExitCode);
 }
 
@@ -3235,38 +3265,37 @@ static
 BOOL
 AddConsoleCtrlHandler(PHANDLER_ROUTINE HandlerRoutine)
 {
+    PHANDLER_ROUTINE* NewCtrlHandlers = NULL;
+
     if (HandlerRoutine == NULL)
     {
         NtCurrentPeb()->ProcessParameters->ConsoleFlags = TRUE;
-        return(TRUE);
+        return TRUE;
     }
-    else
+    
+    if (NrCtrlHandlers == NrAllocatedHandlers)
     {
-        NrCtrlHandlers++;
-        if (CtrlHandlers == NULL)
+        NewCtrlHandlers = RtlAllocateHeap(RtlGetProcessHeap(),
+                                          0,
+                                          (NrCtrlHandlers + 4) * sizeof(PHANDLER_ROUTINE));
+        if (NewCtrlHandlers == NULL)   
         {
-            CtrlHandlers = RtlAllocateHeap(RtlGetProcessHeap(),
-                                           HEAP_ZERO_MEMORY,
-                                           NrCtrlHandlers * sizeof(PHANDLER_ROUTINE));
-        }
-        else
-        {
-            CtrlHandlers = RtlReAllocateHeap(RtlGetProcessHeap(),
-                                             HEAP_ZERO_MEMORY,
-                                             (PVOID)CtrlHandlers,
-                                             NrCtrlHandlers * sizeof(PHANDLER_ROUTINE));
-        }
-
-        if (CtrlHandlers == NULL)
-        {
-            NrCtrlHandlers = 0;
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
             return FALSE;
         }
-
-        CtrlHandlers[NrCtrlHandlers - 1] = HandlerRoutine;
-        return TRUE;
+        
+        memmove(NewCtrlHandlers, CtrlHandlers, sizeof(PHANDLER_ROUTINE) * NrCtrlHandlers);
+        
+        if (NrAllocatedHandlers > 1) RtlFreeHeap(RtlGetProcessHeap(), 0, CtrlHandlers);
+        
+        CtrlHandlers = NewCtrlHandlers;
+        NrAllocatedHandlers += 4;
     }
+    
+    ASSERT(NrCtrlHandlers < NrAllocatedHandlers);
+
+    CtrlHandlers[NrCtrlHandlers++] = HandlerRoutine;
+    return TRUE;
 }
 
 
@@ -3279,30 +3308,27 @@ RemoveConsoleCtrlHandler(PHANDLER_ROUTINE HandlerRoutine)
     if (HandlerRoutine == NULL)
     {
         NtCurrentPeb()->ProcessParameters->ConsoleFlags = FALSE;
-        return(TRUE);
+        return TRUE;
     }
-    else
-    {
-        for (i = 0; i < NrCtrlHandlers; i++)
-        {
-            if ( ((void*)(CtrlHandlers[i])) == (void*)HandlerRoutine)
-            {
-                NrCtrlHandlers--;
-                memmove(CtrlHandlers + i,
-                        CtrlHandlers + i + 1,
-                        (NrCtrlHandlers - i) * sizeof(PHANDLER_ROUTINE));
 
-                CtrlHandlers = RtlReAllocateHeap(RtlGetProcessHeap(),
-                                                 HEAP_ZERO_MEMORY,
-                                                 (PVOID)CtrlHandlers,
-                                                 NrCtrlHandlers * sizeof(PHANDLER_ROUTINE));
-                return(TRUE);
+    for (i = 0; i < NrCtrlHandlers; i++)
+    {
+        if (CtrlHandlers[i] == HandlerRoutine)
+        {
+            if (i < (NrCtrlHandlers - 1))
+            {
+                memmove(&CtrlHandlers[i],
+                        &CtrlHandlers[i+1],
+                        (NrCtrlHandlers - i + 1) * sizeof(PHANDLER_ROUTINE));
             }
+
+            NrCtrlHandlers--;
+            return TRUE;
         }
     }
 
     SetLastError(ERROR_INVALID_PARAMETER);
-    return(FALSE);
+    return FALSE;
 }
 
 
