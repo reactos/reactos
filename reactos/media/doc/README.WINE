@@ -254,6 +254,7 @@ User32 -
   reactos/dll/win32/user32/windows/menu.c       # Forked
   reactos/dll/win32/user32/windows/messagebox.c # Forked
   reactos/dll/win32/user32/windows/rect.c       # Forked (uitools.c)
+  reactos/dll/win32/user32/windows/spy.c	# Synced to Wine-1_1_40
   reactos/dll/win32/user32/windows/text.c       # Forked (lstr.c)
   reactos/dll/win32/user32/windows/winpos.c     # Forked
 
