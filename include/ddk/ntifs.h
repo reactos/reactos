@@ -3834,6 +3834,304 @@ typedef struct _SI_COPYFILE {
 
 #endif /* (_WIN32_WINNT >= 0x0500) */
 
+#if (_WIN32_WINNT >= 0x0600)
+
+typedef struct _FILE_MAKE_COMPATIBLE_BUFFER {
+  BOOLEAN CloseDisc;
+} FILE_MAKE_COMPATIBLE_BUFFER, *PFILE_MAKE_COMPATIBLE_BUFFER;
+
+typedef struct _FILE_SET_DEFECT_MGMT_BUFFER {
+    BOOLEAN Disable;
+} FILE_SET_DEFECT_MGMT_BUFFER, *PFILE_SET_DEFECT_MGMT_BUFFER;
+
+typedef struct _FILE_QUERY_SPARING_BUFFER {
+  ULONG SparingUnitBytes;
+  BOOLEAN SoftwareSparing;
+  ULONG TotalSpareBlocks;
+  ULONG FreeSpareBlocks;
+} FILE_QUERY_SPARING_BUFFER, *PFILE_QUERY_SPARING_BUFFER;
+
+typedef struct _FILE_QUERY_ON_DISK_VOL_INFO_BUFFER {
+  LARGE_INTEGER DirectoryCount;
+  LARGE_INTEGER FileCount;
+  USHORT FsFormatMajVersion;
+  USHORT FsFormatMinVersion;
+  WCHAR FsFormatName[12];
+  LARGE_INTEGER FormatTime;
+  LARGE_INTEGER LastUpdateTime;
+  WCHAR CopyrightInfo[34];
+  WCHAR AbstractInfo[34];
+  WCHAR FormattingImplementationInfo[34];
+  WCHAR LastModifyingImplementationInfo[34];
+} FILE_QUERY_ON_DISK_VOL_INFO_BUFFER, *PFILE_QUERY_ON_DISK_VOL_INFO_BUFFER;
+
+#define SET_REPAIR_ENABLED                                      (0x00000001)
+#define SET_REPAIR_VOLUME_BITMAP_SCAN                           (0x00000002)
+#define SET_REPAIR_DELETE_CROSSLINK                             (0x00000004)
+#define SET_REPAIR_WARN_ABOUT_DATA_LOSS                         (0x00000008)
+#define SET_REPAIR_DISABLED_AND_BUGCHECK_ON_CORRUPT             (0x00000010)
+#define SET_REPAIR_VALID_MASK                                   (0x0000001F)
+
+typedef enum _SHRINK_VOLUME_REQUEST_TYPES {
+  ShrinkPrepare = 1,
+  ShrinkCommit,
+  ShrinkAbort
+} SHRINK_VOLUME_REQUEST_TYPES, *PSHRINK_VOLUME_REQUEST_TYPES;
+
+typedef struct _SHRINK_VOLUME_INFORMATION {
+  SHRINK_VOLUME_REQUEST_TYPES ShrinkRequestType;
+  ULONGLONG Flags;
+  LONGLONG NewNumberOfSectors;
+} SHRINK_VOLUME_INFORMATION, *PSHRINK_VOLUME_INFORMATION;
+
+#define TXFS_RM_FLAG_LOGGING_MODE                           0x00000001
+#define TXFS_RM_FLAG_RENAME_RM                              0x00000002
+#define TXFS_RM_FLAG_LOG_CONTAINER_COUNT_MAX                0x00000004
+#define TXFS_RM_FLAG_LOG_CONTAINER_COUNT_MIN                0x00000008
+#define TXFS_RM_FLAG_LOG_GROWTH_INCREMENT_NUM_CONTAINERS    0x00000010
+#define TXFS_RM_FLAG_LOG_GROWTH_INCREMENT_PERCENT           0x00000020
+#define TXFS_RM_FLAG_LOG_AUTO_SHRINK_PERCENTAGE             0x00000040
+#define TXFS_RM_FLAG_LOG_NO_CONTAINER_COUNT_MAX             0x00000080
+#define TXFS_RM_FLAG_LOG_NO_CONTAINER_COUNT_MIN             0x00000100
+#define TXFS_RM_FLAG_GROW_LOG                               0x00000400
+#define TXFS_RM_FLAG_SHRINK_LOG                             0x00000800
+#define TXFS_RM_FLAG_ENFORCE_MINIMUM_SIZE                   0x00001000
+#define TXFS_RM_FLAG_PRESERVE_CHANGES                       0x00002000
+#define TXFS_RM_FLAG_RESET_RM_AT_NEXT_START                 0x00004000
+#define TXFS_RM_FLAG_DO_NOT_RESET_RM_AT_NEXT_START          0x00008000
+#define TXFS_RM_FLAG_PREFER_CONSISTENCY                     0x00010000
+#define TXFS_RM_FLAG_PREFER_AVAILABILITY                    0x00020000
+
+#define TXFS_LOGGING_MODE_SIMPLE        (0x0001)
+#define TXFS_LOGGING_MODE_FULL          (0x0002)
+
+#define TXFS_TRANSACTION_STATE_NONE         0x00
+#define TXFS_TRANSACTION_STATE_ACTIVE       0x01
+#define TXFS_TRANSACTION_STATE_PREPARED     0x02
+#define TXFS_TRANSACTION_STATE_NOTACTIVE    0x03
+
+#define TXFS_MODIFY_RM_VALID_FLAGS                                      \
+                (TXFS_RM_FLAG_LOGGING_MODE                          |   \
+                 TXFS_RM_FLAG_RENAME_RM                             |   \
+                 TXFS_RM_FLAG_LOG_CONTAINER_COUNT_MAX               |   \
+                 TXFS_RM_FLAG_LOG_CONTAINER_COUNT_MIN               |   \
+                 TXFS_RM_FLAG_LOG_GROWTH_INCREMENT_NUM_CONTAINERS   |   \
+                 TXFS_RM_FLAG_LOG_GROWTH_INCREMENT_PERCENT          |   \
+                 TXFS_RM_FLAG_LOG_AUTO_SHRINK_PERCENTAGE            |   \
+                 TXFS_RM_FLAG_LOG_NO_CONTAINER_COUNT_MAX            |   \
+                 TXFS_RM_FLAG_LOG_NO_CONTAINER_COUNT_MIN            |   \
+                 TXFS_RM_FLAG_SHRINK_LOG                            |   \
+                 TXFS_RM_FLAG_GROW_LOG                              |   \
+                 TXFS_RM_FLAG_ENFORCE_MINIMUM_SIZE                  |   \
+                 TXFS_RM_FLAG_PRESERVE_CHANGES                      |   \
+                 TXFS_RM_FLAG_RESET_RM_AT_NEXT_START                |   \
+                 TXFS_RM_FLAG_DO_NOT_RESET_RM_AT_NEXT_START         |   \
+                 TXFS_RM_FLAG_PREFER_CONSISTENCY                    |   \
+                 TXFS_RM_FLAG_PREFER_AVAILABILITY)
+
+typedef struct _TXFS_MODIFY_RM {
+  ULONG Flags;
+  ULONG LogContainerCountMax;
+  ULONG LogContainerCountMin;
+  ULONG LogContainerCount;
+  ULONG LogGrowthIncrement;
+  ULONG LogAutoShrinkPercentage;
+  ULONGLONG Reserved;
+  USHORT LoggingMode;
+} TXFS_MODIFY_RM, *PTXFS_MODIFY_RM;
+
+#define TXFS_RM_STATE_NOT_STARTED       0
+#define TXFS_RM_STATE_STARTING          1
+#define TXFS_RM_STATE_ACTIVE            2
+#define TXFS_RM_STATE_SHUTTING_DOWN     3
+
+#define TXFS_QUERY_RM_INFORMATION_VALID_FLAGS                           \
+                (TXFS_RM_FLAG_LOG_GROWTH_INCREMENT_NUM_CONTAINERS   |   \
+                 TXFS_RM_FLAG_LOG_GROWTH_INCREMENT_PERCENT          |   \
+                 TXFS_RM_FLAG_LOG_NO_CONTAINER_COUNT_MAX            |   \
+                 TXFS_RM_FLAG_LOG_NO_CONTAINER_COUNT_MIN            |   \
+                 TXFS_RM_FLAG_RESET_RM_AT_NEXT_START                |   \
+                 TXFS_RM_FLAG_DO_NOT_RESET_RM_AT_NEXT_START         |   \
+                 TXFS_RM_FLAG_PREFER_CONSISTENCY                    |   \
+                 TXFS_RM_FLAG_PREFER_AVAILABILITY)
+
+typedef struct _TXFS_QUERY_RM_INFORMATION {
+  ULONG BytesRequired;
+  ULONGLONG TailLsn;
+  ULONGLONG CurrentLsn;
+  ULONGLONG ArchiveTailLsn;
+  ULONGLONG LogContainerSize;
+  LARGE_INTEGER HighestVirtualClock;
+  ULONG LogContainerCount;
+  ULONG LogContainerCountMax;
+  ULONG LogContainerCountMin;
+  ULONG LogGrowthIncrement;
+  ULONG LogAutoShrinkPercentage;
+  ULONG Flags;
+  USHORT LoggingMode;
+  USHORT Reserved;
+  ULONG RmState;
+  ULONGLONG LogCapacity;
+  ULONGLONG LogFree;
+  ULONGLONG TopsSize;
+  ULONGLONG TopsUsed;
+  ULONGLONG TransactionCount;
+  ULONGLONG OnePCCount;
+  ULONGLONG TwoPCCount;
+  ULONGLONG NumberLogFileFull;
+  ULONGLONG OldestTransactionAge;
+  GUID RMName;
+  ULONG TmLogPathOffset;
+} TXFS_QUERY_RM_INFORMATION, *PTXFS_QUERY_RM_INFORMATION;
+
+#define TXFS_ROLLFORWARD_REDO_FLAG_USE_LAST_REDO_LSN        0x01
+#define TXFS_ROLLFORWARD_REDO_FLAG_USE_LAST_VIRTUAL_CLOCK   0x02
+
+#define TXFS_ROLLFORWARD_REDO_VALID_FLAGS                               \
+                (TXFS_ROLLFORWARD_REDO_FLAG_USE_LAST_REDO_LSN |         \
+                 TXFS_ROLLFORWARD_REDO_FLAG_USE_LAST_VIRTUAL_CLOCK)
+
+typedef struct _TXFS_ROLLFORWARD_REDO_INFORMATION {
+  LARGE_INTEGER LastVirtualClock;
+  ULONGLONG LastRedoLsn;
+  ULONGLONG HighestRecoveryLsn;
+  ULONG Flags;
+} TXFS_ROLLFORWARD_REDO_INFORMATION, *PTXFS_ROLLFORWARD_REDO_INFORMATION;
+
+#define TXFS_START_RM_FLAG_LOG_CONTAINER_COUNT_MAX              0x00000001
+#define TXFS_START_RM_FLAG_LOG_CONTAINER_COUNT_MIN              0x00000002
+#define TXFS_START_RM_FLAG_LOG_CONTAINER_SIZE                   0x00000004
+#define TXFS_START_RM_FLAG_LOG_GROWTH_INCREMENT_NUM_CONTAINERS  0x00000008
+#define TXFS_START_RM_FLAG_LOG_GROWTH_INCREMENT_PERCENT         0x00000010
+#define TXFS_START_RM_FLAG_LOG_AUTO_SHRINK_PERCENTAGE           0x00000020
+#define TXFS_START_RM_FLAG_LOG_NO_CONTAINER_COUNT_MAX           0x00000040
+#define TXFS_START_RM_FLAG_LOG_NO_CONTAINER_COUNT_MIN           0x00000080
+
+#define TXFS_START_RM_FLAG_RECOVER_BEST_EFFORT                  0x00000200
+#define TXFS_START_RM_FLAG_LOGGING_MODE                         0x00000400
+#define TXFS_START_RM_FLAG_PRESERVE_CHANGES                     0x00000800
+
+#define TXFS_START_RM_FLAG_PREFER_CONSISTENCY                   0x00001000
+#define TXFS_START_RM_FLAG_PREFER_AVAILABILITY                  0x00002000
+
+#define TXFS_START_RM_VALID_FLAGS                                           \
+                (TXFS_START_RM_FLAG_LOG_CONTAINER_COUNT_MAX             |   \
+                 TXFS_START_RM_FLAG_LOG_CONTAINER_COUNT_MIN             |   \
+                 TXFS_START_RM_FLAG_LOG_CONTAINER_SIZE                  |   \
+                 TXFS_START_RM_FLAG_LOG_GROWTH_INCREMENT_NUM_CONTAINERS |   \
+                 TXFS_START_RM_FLAG_LOG_GROWTH_INCREMENT_PERCENT        |   \
+                 TXFS_START_RM_FLAG_LOG_AUTO_SHRINK_PERCENTAGE          |   \
+                 TXFS_START_RM_FLAG_RECOVER_BEST_EFFORT                 |   \
+                 TXFS_START_RM_FLAG_LOG_NO_CONTAINER_COUNT_MAX          |   \
+                 TXFS_START_RM_FLAG_LOGGING_MODE                        |   \
+                 TXFS_START_RM_FLAG_PRESERVE_CHANGES                    |   \
+                 TXFS_START_RM_FLAG_PREFER_CONSISTENCY                  |   \
+                 TXFS_START_RM_FLAG_PREFER_AVAILABILITY)
+
+typedef struct _TXFS_START_RM_INFORMATION {
+  ULONG Flags;
+  ULONGLONG LogContainerSize;
+  ULONG LogContainerCountMin;
+  ULONG LogContainerCountMax;
+  ULONG LogGrowthIncrement;
+  ULONG LogAutoShrinkPercentage;
+  ULONG TmLogPathOffset;
+  USHORT TmLogPathLength;
+  USHORT LoggingMode;
+  USHORT LogPathLength;
+  USHORT Reserved;
+  WCHAR LogPath[1];
+} TXFS_START_RM_INFORMATION, *PTXFS_START_RM_INFORMATION;
+
+typedef struct _TXFS_GET_METADATA_INFO_OUT {
+  struct {
+    LONGLONG LowPart;
+    LONGLONG HighPart;
+  } TxfFileId;
+  GUID LockingTransaction;
+  ULONGLONG LastLsn;
+  ULONG TransactionState;
+} TXFS_GET_METADATA_INFO_OUT, *PTXFS_GET_METADATA_INFO_OUT;
+
+#define TXFS_LIST_TRANSACTION_LOCKED_FILES_ENTRY_FLAG_CREATED   0x00000001
+#define TXFS_LIST_TRANSACTION_LOCKED_FILES_ENTRY_FLAG_DELETED   0x00000002
+
+typedef struct _TXFS_LIST_TRANSACTION_LOCKED_FILES_ENTRY {
+  ULONGLONG Offset;
+  ULONG NameFlags;
+  LONGLONG FileId;
+  ULONG Reserved1;
+  ULONG Reserved2;
+  LONGLONG Reserved3;
+  WCHAR FileName[1];
+} TXFS_LIST_TRANSACTION_LOCKED_FILES_ENTRY, *PTXFS_LIST_TRANSACTION_LOCKED_FILES_ENTRY;
+
+typedef struct _TXFS_LIST_TRANSACTION_LOCKED_FILES {
+  GUID KtmTransaction;
+  ULONGLONG NumberOfFiles;
+  ULONGLONG BufferSizeRequired;
+  ULONGLONG Offset;
+} TXFS_LIST_TRANSACTION_LOCKED_FILES, *PTXFS_LIST_TRANSACTION_LOCKED_FILES;
+
+typedef struct _TXFS_LIST_TRANSACTIONS_ENTRY {
+  GUID TransactionId;
+  ULONG TransactionState;
+  ULONG Reserved1;
+  ULONG Reserved2;
+  LONGLONG Reserved3;
+} TXFS_LIST_TRANSACTIONS_ENTRY, *PTXFS_LIST_TRANSACTIONS_ENTRY;
+
+typedef struct _TXFS_LIST_TRANSACTIONS {
+  ULONGLONG NumberOfTransactions;
+  ULONGLONG BufferSizeRequired;
+} TXFS_LIST_TRANSACTIONS, *PTXFS_LIST_TRANSACTIONS;
+
+typedef struct _TXFS_READ_BACKUP_INFORMATION_OUT {
+  union {
+    ULONG BufferLength;
+    UCHAR Buffer[1];
+  } DUMMYUNIONNAME;
+} TXFS_READ_BACKUP_INFORMATION_OUT, *PTXFS_READ_BACKUP_INFORMATION_OUT;
+
+typedef struct _TXFS_WRITE_BACKUP_INFORMATION {
+  UCHAR Buffer[1];
+} TXFS_WRITE_BACKUP_INFORMATION, *PTXFS_WRITE_BACKUP_INFORMATION;
+
+#define TXFS_TRANSACTED_VERSION_NONTRANSACTED   0xFFFFFFFE
+#define TXFS_TRANSACTED_VERSION_UNCOMMITTED     0xFFFFFFFF
+
+typedef struct _TXFS_GET_TRANSACTED_VERSION {
+  ULONG ThisBaseVersion;
+  ULONG LatestVersion;
+  USHORT ThisMiniVersion;
+  USHORT FirstMiniVersion;
+  USHORT LatestMiniVersion;
+} TXFS_GET_TRANSACTED_VERSION, *PTXFS_GET_TRANSACTED_VERSION;
+
+#define TXFS_SAVEPOINT_SET                      0x00000001
+#define TXFS_SAVEPOINT_ROLLBACK                 0x00000002
+#define TXFS_SAVEPOINT_CLEAR                    0x00000004
+#define TXFS_SAVEPOINT_CLEAR_ALL                0x00000010
+
+typedef struct _TXFS_SAVEPOINT_INFORMATION {
+  HANDLE KtmTransaction;
+  ULONG ActionCode;
+  ULONG SavepointId;
+} TXFS_SAVEPOINT_INFORMATION, *PTXFS_SAVEPOINT_INFORMATION;
+
+typedef struct _TXFS_CREATE_MINIVERSION_INFO {
+  USHORT StructureVersion;
+  USHORT StructureLength;
+  ULONG BaseVersion;
+  USHORT MiniVersion;
+} TXFS_CREATE_MINIVERSION_INFO, *PTXFS_CREATE_MINIVERSION_INFO;
+
+typedef struct _TXFS_TRANSACTION_ACTIVE_INFO {
+  BOOLEAN TransactionsActiveAtSnapshot;
+} TXFS_TRANSACTION_ACTIVE_INFO, *PTXFS_TRANSACTION_ACTIVE_INFO;
+
+#endif /* (_WIN32_WINNT >= 0x0600) */
+
 #if (_WIN32_WINNT >= 0x0601)
 
 #define MARK_HANDLE_REALTIME                (0x00000020)
