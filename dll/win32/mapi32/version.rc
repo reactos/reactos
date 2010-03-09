@@ -24,3 +24,10 @@
 #define WINE_PRODUCTVERSION_STR "1.0.0.0"
 
 #include "wine/wine_common_ver.rc"
+
+#include "De.rc"
+#include "En.rc"
+#include "Es.rc"
+#include "Fr.rc"
+#include "Lt.rc"
+#include "Ru.rc"

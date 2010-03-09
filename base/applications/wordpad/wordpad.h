@@ -80,6 +80,7 @@
 #define ID_FORMAT_BOLD 1400
 #define ID_FORMAT_ITALIC 1401
 #define ID_FORMAT_UNDERLINE 1402
+#define ID_FORMAT_COLOR 1403
 
 #define ID_TOGGLE_TOOLBAR 1500
 #define ID_TOGGLE_FORMATBAR 1501
@@ -133,6 +134,25 @@
 #define ID_ABOUT 1603
 #define ID_VIEWPROPERTIES 1604
 
+#define ID_COLOR_FIRST 1800
+#define ID_COLOR_BLACK 1800
+#define ID_COLOR_MAROON 1801
+#define ID_COLOR_GREEN 1802
+#define ID_COLOR_OLIVE 1803
+#define ID_COLOR_NAVY 1804
+#define ID_COLOR_PURPLE 1805
+#define ID_COLOR_TEAL 1806
+#define ID_COLOR_GRAY 1807
+#define ID_COLOR_SILVER 1808
+#define ID_COLOR_RED 1809
+#define ID_COLOR_LIME 1810
+#define ID_COLOR_YELLOW 1811
+#define ID_COLOR_BLUE 1812
+#define ID_COLOR_FUCHSIA 1813
+#define ID_COLOR_AQUA 1814
+#define ID_COLOR_WHITE 1815
+#define ID_COLOR_AUTOMATIC 1816
+
 #define IDC_STATUSBAR 2000
 #define IDC_EDITOR 2001
 #define IDC_TOOLBAR 2002
@@ -159,6 +179,7 @@
 
 #define IDM_MAINMENU 2200
 #define IDM_POPUP 2201
+#define IDM_COLOR_POPUP 2202
 
 #define IDB_TOOLBAR 100
 #define IDB_FORMATBAR 101
@@ -167,6 +188,8 @@
 #define IDI_RTF 103
 #define IDI_WRI 104
 #define IDI_TXT 105
+
+#define IDC_ZOOM 106
 
 #define STRING_ALL_FILES 1400
 #define STRING_TEXT_FILES_TXT 1401
@@ -195,8 +218,10 @@
 #define STRING_PREVIEW_ZOOMIN 1453
 #define STRING_PREVIEW_ZOOMOUT 1454
 #define STRING_PREVIEW_CLOSE 1455
+#define STRING_PREVIEW_PAGE 1456
+#define STRING_PREVIEW_PAGES 1457
 
-#define STRING_UNITS_CM 1456
+#define STRING_UNITS_CM 1458
 
 #define STRING_DEFAULT_FILENAME 1700
 #define STRING_PROMPT_SAVE_CHANGES 1701
@@ -217,7 +242,7 @@ LPWSTR file_basename(LPWSTR);
 void dialog_printsetup(HWND);
 void dialog_print(HWND, LPWSTR);
 void target_device(HWND, DWORD);
-void print_quick(LPWSTR);
+void print_quick(HWND, LPWSTR);
 LRESULT preview_command(HWND, WPARAM);
 void init_preview(HWND, LPWSTR);
 void close_preview(HWND);
@@ -226,6 +251,8 @@ LRESULT print_preview(HWND);
 void get_default_printer_opts(void);
 void registry_set_pagemargins(HKEY);
 void registry_read_pagemargins(HKEY);
+void registry_set_previewpages(HKEY hKey);
+void registry_read_previewpages(HKEY hKey);
 LRESULT CALLBACK ruler_proc(HWND, UINT, WPARAM, LPARAM);
 void redraw_ruler(HWND);
 

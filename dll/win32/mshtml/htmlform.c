@@ -343,10 +343,12 @@ static HRESULT HTMLFormElement_get_dispid(HTMLDOMNode *iface,
 {
     HTMLFormElement *This = HTMLFORM_NODE_THIS(iface);
     nsIDOMHTMLCollection *elements;
+    nsAString nsname, nsstr;
     PRUint32 len, i;
-    static const PRUnichar nameW[] = {'n','a','m','e',0};
-    nsAString nsname;
     nsresult nsres;
+    HRESULT hres = DISP_E_UNKNOWNNAME;
+
+    static const PRUnichar nameW[] = {'n','a','m','e',0};
 
     TRACE("(%p)->(%s %x %p)\n", This, wine_dbgstr_w(name), grfdex, pid);
 
@@ -363,72 +365,62 @@ static HRESULT HTMLFormElement_get_dispid(HTMLDOMNode *iface,
         return E_FAIL;
     }
 
-    nsAString_Init(&nsname, nameW);
+    nsAString_InitDepend(&nsname, nameW);
+    nsAString_Init(&nsstr, NULL);
     for(i = 0; i < len; ++i) {
         nsIDOMNode *nsitem;
         nsIDOMHTMLElement *nshtml_elem;
-        nsAString nsstr;
         const PRUnichar *str;
 
         nsres = nsIDOMHTMLCollection_Item(elements, i, &nsitem);
         if(NS_FAILED(nsres)) {
             FIXME("Item failed: 0x%08x\n", nsres);
-            nsAString_Finish(&nsname);
-            nsIDOMHTMLCollection_Release(elements);
-            return E_FAIL;
+            hres = E_FAIL;
+            break;
         }
 
         nsres = nsIDOMNode_QueryInterface(nsitem, &IID_nsIDOMHTMLElement, (void**)&nshtml_elem);
         nsIDOMNode_Release(nsitem);
         if(NS_FAILED(nsres)) {
             FIXME("Failed to get nsIDOMHTMLNode interface: 0x%08x\n", nsres);
-            nsAString_Finish(&nsname);
-            nsIDOMHTMLCollection_Release(elements);
-            return E_FAIL;
+            hres = E_FAIL;
+            break;
         }
 
         /* compare by id attr */
-        nsAString_Init(&nsstr, NULL);
         nsres = nsIDOMHTMLElement_GetId(nshtml_elem, &nsstr);
         if(NS_FAILED(nsres)) {
             FIXME("GetId failed: 0x%08x\n", nsres);
-            nsAString_Finish(&nsname);
             nsIDOMHTMLElement_Release(nshtml_elem);
-            nsIDOMHTMLCollection_Release(elements);
-            return E_FAIL;
+            hres = E_FAIL;
+            break;
         }
         nsAString_GetData(&nsstr, &str);
         if(!strcmpiW(str, name)) {
+            nsIDOMHTMLElement_Release(nshtml_elem);
             /* FIXME: using index for dispid */
             *pid = MSHTML_DISPID_CUSTOM_MIN + i;
-            nsAString_Finish(&nsname);
-            nsAString_Finish(&nsstr);
-            nsIDOMHTMLElement_Release(nshtml_elem);
-            nsIDOMHTMLCollection_Release(elements);
-            return S_OK;
+            hres = S_OK;
+            break;
         }
 
         /* compare by name attr */
         nsres = nsIDOMHTMLElement_GetAttribute(nshtml_elem, &nsname, &nsstr);
+        nsIDOMHTMLElement_Release(nshtml_elem);
         nsAString_GetData(&nsstr, &str);
         if(!strcmpiW(str, name)) {
             /* FIXME: using index for dispid */
             *pid = MSHTML_DISPID_CUSTOM_MIN + i;
-            nsAString_Finish(&nsname);
-            nsAString_Finish(&nsstr);
-            nsIDOMHTMLElement_Release(nshtml_elem);
-            nsIDOMHTMLCollection_Release(elements);
-            return S_OK;
+            hres = S_OK;
+            break;
         }
-        nsAString_Finish(&nsstr);
-
-        nsIDOMHTMLElement_Release(nshtml_elem);
     }
     nsAString_Finish(&nsname);
+    nsAString_Finish(&nsstr);
 
     nsIDOMHTMLCollection_Release(elements);
 
-    return DISP_E_UNKNOWNNAME;
+    return hres;
 }
 
 static HRESULT HTMLFormElement_invoke(HTMLDOMNode *iface,
@@ -483,11 +475,7 @@ static const NodeImplVtbl HTMLFormElementImplVtbl = {
 };
 
 static const tid_t HTMLFormElement_iface_tids[] = {
-    IHTMLDOMNode_tid,
-    IHTMLDOMNode2_tid,
-    IHTMLElement_tid,
-    IHTMLElement2_tid,
-    IHTMLElement3_tid,
+    HTMLELEMENT_TIDS,
     IHTMLFormElement_tid,
     0
 };

@@ -24,6 +24,8 @@ typedef struct _REQUEST_POWER_ITEM
 
 PDEVICE_NODE PopSystemPowerDeviceNode = NULL;
 BOOLEAN PopAcpiPresent = FALSE;
+POP_POWER_ACTION PopAction;
+WORK_QUEUE_ITEM PopShutdownWorkItem;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -165,6 +167,13 @@ PoInitSystem(IN ULONG BootPhase)
         PopAcpiPresent = KeLoaderBlock->Extension->AcpiTable != NULL ? TRUE : FALSE;
     }
 
+    
+    /* Initialize volume support */
+    InitializeListHead(&PopVolumeDevices);
+    KeInitializeGuardedMutex(&PopVolumeLock);
+    
+    /* Initialize support for dope */
+    KeInitializeSpinLock(&PopDopeGlobalLock);
     return TRUE;
 }
 
@@ -635,4 +644,139 @@ NtSetThreadExecutionState(IN EXECUTION_STATE esFlags,
 
     /* All is good */
     return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+NtSetSystemPowerState(IN POWER_ACTION SystemAction,
+		              IN SYSTEM_POWER_STATE MinSystemState,
+		              IN ULONG Flags)
+{
+    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
+    POP_POWER_ACTION Action = {0};
+    NTSTATUS Status;
+
+    /* Check for invalid parameter combinations */
+    if ((MinSystemState >= PowerSystemMaximum) ||
+        (MinSystemState <= PowerSystemUnspecified) ||
+        (SystemAction > PowerActionWarmEject) ||
+        (SystemAction < PowerActionReserved) ||
+        (Flags & ~(POWER_ACTION_QUERY_ALLOWED  |  
+                   POWER_ACTION_UI_ALLOWED     | 
+                   POWER_ACTION_OVERRIDE_APPS  | 
+                   POWER_ACTION_LIGHTEST_FIRST | 
+                   POWER_ACTION_LOCK_CONSOLE   | 
+                   POWER_ACTION_DISABLE_WAKES  | 
+                   POWER_ACTION_CRITICAL)))
+    {
+        DPRINT1("NtSetSystemPowerState: Bad parameters!\n");
+        DPRINT1("                       SystemAction: 0x%x\n", SystemAction);
+        DPRINT1("                       MinSystemState: 0x%x\n", MinSystemState);
+        DPRINT1("                       Flags: 0x%x\n", Flags);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Check for user caller */
+    if (PreviousMode != KernelMode)
+    {
+        /* Check for shutdown permission */
+        if (!SeSinglePrivilegeCheck(SeShutdownPrivilege, PreviousMode))
+        {
+            /* Not granted */
+            DPRINT1("ERROR: Privilege not held for shutdown\n");
+            //return STATUS_PRIVILEGE_NOT_HELD; HACK!
+        }
+
+        /* Do it as a kernel-mode caller for consistency with system state */
+        return ZwSetSystemPowerState (SystemAction, MinSystemState, Flags);
+    }
+
+    /* Read policy settings (partial shutdown vs. full shutdown) */
+    if (SystemAction == PowerActionShutdown) PopReadShutdownPolicy();
+
+    /* Disable lazy flushing of registry */
+    DPRINT1("Stopping lazy flush\n");
+    CmSetLazyFlushState(FALSE);
+
+    /* Setup the power action */
+    Action.Action = SystemAction;
+    Action.Flags = Flags;
+
+    /* Notify callbacks */
+    DPRINT1("Notifying callbacks\n");
+    ExNotifyCallback(PowerStateCallback, (PVOID)3, NULL);
+ 
+    /* Swap in any worker thread stacks */
+    DPRINT1("Swapping worker threads\n");
+    ExSwapinWorkerThreads(FALSE);
+    
+    /* Make our action global */
+    PopAction = Action;
+
+    /* Start power loop */
+    Status = STATUS_CANCELLED;
+    while (TRUE)
+    {
+        /* Break out if there's nothing to do */
+        if (Action.Action == PowerActionNone) break;
+
+        /* Check for first-pass or restart */
+        if (Status == STATUS_CANCELLED)
+        {
+            /* Check for shutdown action */
+            if ((PopAction.Action == PowerActionShutdown) ||
+                (PopAction.Action == PowerActionShutdownReset) ||
+                (PopAction.Action == PowerActionShutdownOff))
+            {
+                /* Set the action */
+                PopAction.Shutdown = TRUE;
+            }
+
+            /* Now we are good to go */
+            Status = STATUS_SUCCESS;
+        }
+
+        /* Check if we're still in an invalid status */
+        if (!NT_SUCCESS(Status)) break;
+
+        /* Flush all volumes and the registry */
+        DPRINT1("Flushing volumes\n");
+        PopFlushVolumes(PopAction.Shutdown);
+
+        /* Set IRP for drivers */
+        PopAction.IrpMinor = IRP_MN_SET_POWER;
+        if (PopAction.Shutdown)
+        {
+            DPRINT1("Queueing shutdown thread\n");
+            /* Check if we are running in the system context */
+            if (PsGetCurrentProcess() != PsInitialSystemProcess)
+            {
+                /* We're not, so use a worker thread for shutdown */
+                ExInitializeWorkItem(&PopShutdownWorkItem,
+                                     &PopGracefulShutdown,
+                                     NULL);
+
+                ExQueueWorkItem(&PopShutdownWorkItem, CriticalWorkQueue);
+                                
+                /* Spend us -- when we wake up, the system is good to go down */
+                KeSuspendThread(KeGetCurrentThread());
+                Status = STATUS_SYSTEM_SHUTDOWN;
+                goto Exit;
+
+            }
+            else
+            {
+                /* Do the shutdown inline */
+                PopGracefulShutdown(NULL);
+            }
+        }
+        
+        /* You should not have made it this far */
+        ASSERT(FALSE && "System is still up and running?!");
+        break;
+    }
+
+Exit:
+    /* We're done, return */
+    return Status;
 }

@@ -345,3 +345,54 @@ PPAGE_LOOKUP_TABLE_ITEM MmGetMemoryMap(ULONG *NoEntries)
 
 	return RealPageLookupTable;
 }
+
+#undef ExAllocatePoolWithTag
+NTKERNELAPI
+PVOID
+NTAPI
+ExAllocatePoolWithTag(
+    IN POOL_TYPE PoolType,
+    IN SIZE_T NumberOfBytes,
+    IN ULONG Tag)
+{
+    return MmHeapAlloc(NumberOfBytes);
+}
+
+#undef ExFreePool
+NTKERNELAPI
+VOID
+NTAPI
+ExFreePool(
+    IN PVOID P)
+{
+    MmHeapFree(P);
+}
+
+PVOID
+NTAPI
+RtlAllocateHeap(
+    IN PVOID HeapHandle,
+    IN ULONG Flags,
+    IN SIZE_T Size)
+{
+    PVOID ptr;
+
+    ptr = MmHeapAlloc(Size);
+    if (ptr && (Flags & HEAP_ZERO_MEMORY))
+    {
+        RtlZeroMemory(ptr, Size);
+    }
+
+    return ptr;
+}
+
+BOOLEAN
+NTAPI
+RtlFreeHeap(
+    IN PVOID HeapHandle,
+    IN ULONG Flags,
+    IN PVOID HeapBase)
+{
+    MmHeapFree(HeapBase);
+    return TRUE;
+}

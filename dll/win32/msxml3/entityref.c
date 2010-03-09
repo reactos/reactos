@@ -55,7 +55,7 @@ static HRESULT WINAPI entityref_QueryInterface(
     void** ppvObject )
 {
     entityref *This = impl_from_IXMLDOMEntityReference( iface );
-    TRACE("%p %s %p\n", This, debugstr_guid(riid), ppvObject);
+    TRACE("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppvObject);
 
     if ( IsEqualGUID( riid, &IID_IXMLDOMEntityReference ) ||
          IsEqualGUID( riid, &IID_IDispatch ) ||

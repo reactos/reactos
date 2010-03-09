@@ -413,7 +413,7 @@ HRESULT WINAPI SHILCreateFromPathAW (LPCVOID path, LPITEMIDLIST * ppidl, DWORD *
  *  Caller is responsible for deallocating the returned ItemIDList with the
  *  shells IMalloc interface, aka ILFree.
  */
-PIDLIST_ABSOLUTE WINAPI SHCloneSpecialIDList(HWND hwndOwner, int nFolder, BOOL fCreate)
+LPITEMIDLIST WINAPI SHCloneSpecialIDList(HWND hwndOwner, int nFolder, BOOL fCreate)
 {
     LPITEMIDLIST ppidl;
     TRACE_(shell)("(hwnd=%p,csidl=0x%x,%s).\n", hwndOwner, nFolder, fCreate ? "T" : "F");
@@ -696,7 +696,7 @@ HRESULT WINAPI SHGetRealIDL(LPSHELLFOLDER lpsf, LPCITEMIDLIST pidlSimple, LPITEM
         STGMEDIUM medium;
         FORMATETC fmt;
 
-        fmt.cfFormat = RegisterClipboardFormatA(CFSTR_SHELLIDLIST);
+        fmt.cfFormat = RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
         fmt.ptd = NULL;
         fmt.dwAspect = DVASPECT_CONTENT;
         fmt.lindex = -1;

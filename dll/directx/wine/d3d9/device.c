@@ -248,7 +248,7 @@ static ULONG WINAPI IDirect3DDevice9Impl_AddRef(LPDIRECT3DDEVICE9EX iface) {
     return ref;
 }
 
-static ULONG WINAPI  IDirect3DDevice9Impl_Release(LPDIRECT3DDEVICE9EX iface) {
+static ULONG WINAPI DECLSPEC_HOTPATCH IDirect3DDevice9Impl_Release(LPDIRECT3DDEVICE9EX iface) {
     IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
     ULONG ref;
 
@@ -452,7 +452,7 @@ static BOOL     WINAPI  IDirect3DDevice9Impl_ShowCursor(LPDIRECT3DDEVICE9EX ifac
     return ret;
 }
 
-static HRESULT WINAPI  IDirect3DDevice9Impl_CreateAdditionalSwapChain(IDirect3DDevice9Ex *iface,
+static HRESULT WINAPI DECLSPEC_HOTPATCH IDirect3DDevice9Impl_CreateAdditionalSwapChain(IDirect3DDevice9Ex *iface,
         D3DPRESENT_PARAMETERS *present_parameters, IDirect3DSwapChain9 **swapchain)
 {
     IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
@@ -541,7 +541,7 @@ static HRESULT WINAPI reset_enum_callback(IWineD3DResource *resource, void *data
     return ret;
 }
 
-static HRESULT WINAPI IDirect3DDevice9Impl_Reset(LPDIRECT3DDEVICE9EX iface, D3DPRESENT_PARAMETERS* pPresentationParameters) {
+static HRESULT  WINAPI DECLSPEC_HOTPATCH IDirect3DDevice9Impl_Reset(LPDIRECT3DDEVICE9EX iface, D3DPRESENT_PARAMETERS* pPresentationParameters) {
     IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
     WINED3DPRESENT_PARAMETERS localParameters;
     HRESULT hr;
@@ -619,7 +619,7 @@ static HRESULT WINAPI IDirect3DDevice9Impl_Reset(LPDIRECT3DDEVICE9EX iface, D3DP
     return hr;
 }
 
-static HRESULT  WINAPI IDirect3DDevice9Impl_Present(LPDIRECT3DDEVICE9EX iface, CONST RECT* pSourceRect,CONST RECT* pDestRect,HWND hDestWindowOverride,CONST RGNDATA*
+static HRESULT  WINAPI DECLSPEC_HOTPATCH IDirect3DDevice9Impl_Present(LPDIRECT3DDEVICE9EX iface, CONST RECT* pSourceRect,CONST RECT* pDestRect,HWND hDestWindowOverride,CONST RGNDATA*
  pDirtyRegion) {
     IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
     HRESULT hr;
@@ -1182,7 +1182,7 @@ static HRESULT  WINAPI  IDirect3DDevice9Impl_BeginScene(LPDIRECT3DDEVICE9EX ifac
     return hr;
 }
 
-static HRESULT WINAPI IDirect3DDevice9Impl_EndScene(LPDIRECT3DDEVICE9EX iface) {
+static HRESULT WINAPI DECLSPEC_HOTPATCH IDirect3DDevice9Impl_EndScene(LPDIRECT3DDEVICE9EX iface) {
     IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
     HRESULT hr;
 
@@ -1388,7 +1388,7 @@ static HRESULT  WINAPI  IDirect3DDevice9Impl_GetClipPlane(LPDIRECT3DDEVICE9EX if
     return hr;
 }
 
-static HRESULT  WINAPI IDirect3DDevice9Impl_SetRenderState(LPDIRECT3DDEVICE9EX iface, D3DRENDERSTATETYPE State, DWORD Value) {
+static HRESULT  WINAPI DECLSPEC_HOTPATCH IDirect3DDevice9Impl_SetRenderState(LPDIRECT3DDEVICE9EX iface, D3DRENDERSTATETYPE State, DWORD Value) {
     IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
     HRESULT hr;
 
@@ -1412,6 +1412,97 @@ static HRESULT  WINAPI  IDirect3DDevice9Impl_GetRenderState(LPDIRECT3DDEVICE9EX 
     wined3d_mutex_unlock();
 
     return hr;
+}
+
+static HRESULT WINAPI IDirect3DDevice9Impl_CreateStateBlock(IDirect3DDevice9Ex *iface,
+        D3DSTATEBLOCKTYPE type, IDirect3DStateBlock9 **stateblock)
+{
+    IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
+    IDirect3DStateBlock9Impl *object;
+    HRESULT hr;
+
+    TRACE("iface %p, type %#x, stateblock %p.\n", iface, type, stateblock);
+
+    if (type != D3DSBT_ALL && type != D3DSBT_PIXELSTATE && type != D3DSBT_VERTEXSTATE)
+    {
+        WARN("Unexpected stateblock type, returning D3DERR_INVALIDCALL.\n");
+        return D3DERR_INVALIDCALL;
+    }
+
+    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
+    if (!object)
+    {
+        ERR("Failed to allocate stateblock memory.\n");
+        return E_OUTOFMEMORY;
+    }
+
+    hr = stateblock_init(object, This, type, NULL);
+    if (FAILED(hr))
+    {
+        WARN("Failed to initialize stateblock, hr %#x.\n", hr);
+        HeapFree(GetProcessHeap(), 0, object);
+        return hr;
+    }
+
+    TRACE("Created stateblock %p.\n", object);
+    *stateblock = (IDirect3DStateBlock9 *)object;
+
+    return D3D_OK;
+}
+
+static HRESULT WINAPI IDirect3DDevice9Impl_BeginStateBlock(IDirect3DDevice9Ex *iface)
+{
+    IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
+    HRESULT hr;
+
+    TRACE("iface %p.\n", iface);
+
+    wined3d_mutex_lock();
+    hr = IWineD3DDevice_BeginStateBlock(This->WineD3DDevice);
+    wined3d_mutex_unlock();
+
+    return hr;
+}
+
+static HRESULT WINAPI IDirect3DDevice9Impl_EndStateBlock(IDirect3DDevice9Ex *iface, IDirect3DStateBlock9 **stateblock)
+{
+    IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
+    IWineD3DStateBlock *wined3d_stateblock;
+    IDirect3DStateBlock9Impl *object;
+    HRESULT hr;
+
+    TRACE("iface %p, stateblock %p.\n", iface, stateblock);
+
+    wined3d_mutex_lock();
+    hr = IWineD3DDevice_EndStateBlock(This->WineD3DDevice, &wined3d_stateblock);
+    wined3d_mutex_unlock();
+    if (FAILED(hr))
+    {
+       WARN("IWineD3DDevice_EndStateBlock() failed, hr %#x.\n", hr);
+       return hr;
+    }
+
+    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
+    if (!object)
+    {
+        ERR("Failed to allocate stateblock memory.\n");
+        IWineD3DStateBlock_Release(wined3d_stateblock);
+        return E_OUTOFMEMORY;
+    }
+
+    hr = stateblock_init(object, This, 0, wined3d_stateblock);
+    if (FAILED(hr))
+    {
+        WARN("Failed to initialize stateblock, hr %#x.\n", hr);
+        IWineD3DStateBlock_Release(wined3d_stateblock);
+        HeapFree(GetProcessHeap(), 0, object);
+        return hr;
+    }
+
+    TRACE("Created stateblock %p.\n", object);
+    *stateblock = (IDirect3DStateBlock9 *)object;
+
+    return D3D_OK;
 }
 
 static HRESULT  WINAPI  IDirect3DDevice9Impl_SetClipStatus(LPDIRECT3DDEVICE9EX iface, CONST D3DCLIPSTATUS9* pClipStatus) {
@@ -1559,7 +1650,7 @@ static HRESULT WINAPI IDirect3DDevice9Impl_GetSamplerState(IDirect3DDevice9Ex *i
     return hr;
 }
 
-static HRESULT WINAPI IDirect3DDevice9Impl_SetSamplerState(LPDIRECT3DDEVICE9EX iface, DWORD Sampler, D3DSAMPLERSTATETYPE Type, DWORD Value) {
+static HRESULT WINAPI DECLSPEC_HOTPATCH IDirect3DDevice9Impl_SetSamplerState(LPDIRECT3DDEVICE9EX iface, DWORD Sampler, D3DSAMPLERSTATETYPE Type, DWORD Value) {
     IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
     HRESULT hr;
 
@@ -2176,6 +2267,37 @@ static HRESULT  WINAPI  IDirect3DDevice9Impl_DeletePatch(LPDIRECT3DDEVICE9EX ifa
     wined3d_mutex_unlock();
 
     return hr;
+}
+
+static HRESULT WINAPI IDirect3DDevice9Impl_CreateQuery(IDirect3DDevice9Ex *iface,
+        D3DQUERYTYPE type, IDirect3DQuery9 **query)
+{
+    IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
+    IDirect3DQuery9Impl *object;
+    HRESULT hr;
+
+    TRACE("iface %p, type %#x, query %p.\n", iface, type, query);
+
+    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
+    if (!object)
+    {
+        ERR("Failed to allocate query memory.\n");
+        return E_OUTOFMEMORY;
+    }
+
+    hr = query_init(object, This, type);
+    if (FAILED(hr))
+    {
+        WARN("Failed to initialize query, hr %#x.\n", hr);
+        HeapFree(GetProcessHeap(), 0, object);
+        return hr;
+    }
+
+    TRACE("Created query %p.\n", object);
+    if (query) *query = (IDirect3DQuery9 *)object;
+    else IDirect3DQuery9_Release((IDirect3DQuery9 *)object);
+
+    return D3D_OK;
 }
 
 static HRESULT WINAPI IDirect3DDevice9ExImpl_SetConvolutionMonoKernel(IDirect3DDevice9Ex *iface,

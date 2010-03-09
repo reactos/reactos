@@ -51,7 +51,6 @@ typedef struct
 
     LPWSTR              FriendlyName;
     LPWSTR              Location;
-    LPWSTR              Target;
     LPWSTR              TargetFrameName;
     IMoniker            *Moniker;
     IHlinkSite          *Site;
@@ -155,7 +154,6 @@ static ULONG WINAPI IHlink_fnRelease (IHlink* iface)
 
     TRACE("-- destroying IHlink (%p)\n", This);
     heap_free(This->FriendlyName);
-    heap_free(This->Target);
     heap_free(This->TargetFrameName);
     heap_free(This->Location);
     if (This->Moniker)
@@ -206,24 +204,33 @@ static HRESULT WINAPI IHlink_fnSetMonikerReference( IHlink* iface,
 {
     HlinkImpl  *This = (HlinkImpl*)iface;
 
-    FIXME("(%p)->(%i %p %s)\n", This, rfHLSETF, pmkTarget,
+    TRACE("(%p)->(%i %p %s)\n", This, rfHLSETF, pmkTarget,
             debugstr_w(pwzLocation));
 
-    if (This->Moniker)
-        IMoniker_Release(This->Moniker);
+    if(rfHLSETF == 0)
+        return E_INVALIDARG;
+    if(!(rfHLSETF & (HLINKSETF_TARGET | HLINKSETF_LOCATION)))
+        return rfHLSETF;
 
-    This->Moniker = pmkTarget;
-    if (This->Moniker)
-    {
-        LPOLESTR display_name;
-        IMoniker_AddRef(This->Moniker);
-        IMoniker_GetDisplayName(This->Moniker, NULL, NULL, &display_name);
-        This->absolute = display_name && strchrW(display_name, ':');
-        CoTaskMemFree(display_name);
+    if(rfHLSETF & HLINKSETF_TARGET){
+        if (This->Moniker)
+            IMoniker_Release(This->Moniker);
+
+        This->Moniker = pmkTarget;
+        if (This->Moniker)
+        {
+            LPOLESTR display_name;
+            IMoniker_AddRef(This->Moniker);
+            IMoniker_GetDisplayName(This->Moniker, NULL, NULL, &display_name);
+            This->absolute = display_name && strchrW(display_name, ':');
+            CoTaskMemFree(display_name);
+        }
     }
 
-    heap_free(This->Location);
-    This->Location = hlink_strdupW( pwzLocation );
+    if(rfHLSETF & HLINKSETF_LOCATION){
+        heap_free(This->Location);
+        This->Location = hlink_strdupW( pwzLocation );
+    }
 
     return S_OK;
 }
@@ -236,11 +243,51 @@ static HRESULT WINAPI IHlink_fnSetStringReference(IHlink* iface,
     TRACE("(%p)->(%i %s %s)\n", This, grfHLSETF, debugstr_w(pwzTarget),
             debugstr_w(pwzLocation));
 
+    if(grfHLSETF > (HLINKSETF_TARGET | HLINKSETF_LOCATION) &&
+            grfHLSETF < -(HLINKSETF_TARGET | HLINKSETF_LOCATION))
+        return grfHLSETF;
+
     if (grfHLSETF & HLINKSETF_TARGET)
     {
-        heap_free(This->Target);
-        This->Target = hlink_strdupW( pwzTarget );
+        if (This->Moniker)
+        {
+            IMoniker_Release(This->Moniker);
+            This->Moniker = NULL;
+        }
+        if (pwzTarget && *pwzTarget)
+        {
+            IMoniker *pMon;
+            IBindCtx *pbc = NULL;
+            ULONG eaten;
+            HRESULT r;
+
+            r = CreateBindCtx(0, &pbc);
+            if (FAILED(r))
+                return E_OUTOFMEMORY;
+
+            r = MkParseDisplayName(pbc, pwzTarget, &eaten, &pMon);
+            IBindCtx_Release(pbc);
+
+            if (FAILED(r))
+            {
+                LPCWSTR p = strchrW(pwzTarget, ':');
+                if (p && (p - pwzTarget > 1))
+                    r = CreateURLMoniker(NULL, pwzTarget, &pMon);
+                else
+                    r = CreateFileMoniker(pwzTarget, &pMon);
+                if (FAILED(r))
+                {
+                    ERR("couldn't create moniker for %s, failed with error 0x%08x\n",
+                        debugstr_w(pwzTarget), r);
+                    return r;
+                }
+            }
+
+            IHlink_SetMonikerReference(iface, HLINKSETF_TARGET, pMon, NULL);
+            IMoniker_Release(pMon);
+        }
     }
+
     if (grfHLSETF & HLINKSETF_LOCATION)
     {
         heap_free(This->Location);
@@ -272,28 +319,36 @@ static HRESULT WINAPI IHlink_fnGetStringReference (IHlink* iface,
 {
     HlinkImpl  *This = (HlinkImpl*)iface;
 
-    FIXME("(%p) -> (%i %p %p)\n", This, dwWhichRef, ppwzTarget, ppwzLocation);
+    TRACE("(%p) -> (%i %p %p)\n", This, dwWhichRef, ppwzTarget, ppwzLocation);
+
+    /* note: undocumented behavior with dwWhichRef == -1 */
+    if(dwWhichRef != -1 && dwWhichRef & ~(HLINKGETREF_DEFAULT | HLINKGETREF_ABSOLUTE | HLINKGETREF_RELATIVE))
+    {
+        if(ppwzTarget)
+            *ppwzTarget = NULL;
+        if(ppwzLocation)
+            *ppwzLocation = NULL;
+        return E_INVALIDARG;
+    }
+
+    if(dwWhichRef != HLINKGETREF_DEFAULT)
+        FIXME("unhandled flags: 0x%x\n", dwWhichRef);
 
     if (ppwzTarget)
     {
-        *ppwzTarget = hlink_co_strdupW( This->Target );
-
-        if (!This->Target)
+        IMoniker* mon;
+        __GetMoniker(This, &mon);
+        if (mon)
         {
-            IMoniker* mon;
-            __GetMoniker(This, &mon);
-            if (mon)
-            {
-                IBindCtx *pbc;
+            IBindCtx *pbc;
 
-                CreateBindCtx( 0, &pbc);
-                IMoniker_GetDisplayName(mon, pbc, NULL, ppwzTarget);
-                IBindCtx_Release(pbc);
-                IMoniker_Release(mon);
-            }
-            else
-                FIXME("Unhandled case, no set Target and no moniker\n");
+            CreateBindCtx( 0, &pbc);
+            IMoniker_GetDisplayName(mon, pbc, NULL, ppwzTarget);
+            IBindCtx_Release(pbc);
+            IMoniker_Release(mon);
         }
+        else
+            *ppwzTarget = NULL;
     }
     if (ppwzLocation)
         *ppwzLocation = hlink_co_strdupW( This->Location );

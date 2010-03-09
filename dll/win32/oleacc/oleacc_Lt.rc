@@ -1,0 +1,95 @@
+/*
+ * Lithuanian resources for oleacc
+ *
+ * Copyright 2009 Aurimas Fišeras <aurimas@gmail.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "oleacc.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_LITHUANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+{
+    0 "nežinomas objektas" /* undocumented */
+    ROLE_SYSTEM_TITLEBAR    "lango antraštės juosta"
+    ROLE_SYSTEM_MENUBAR     "meniu juosta"
+    ROLE_SYSTEM_SCROLLBAR   "slankjuostė"
+    ROLE_SYSTEM_GRIP        "rankenėlė"
+    ROLE_SYSTEM_SOUND       "garsas"
+    ROLE_SYSTEM_CURSOR      "pelės žymeklis"
+    ROLE_SYSTEM_CARET       "žymeklis"
+    ROLE_SYSTEM_ALERT       "įspėjimas"
+    ROLE_SYSTEM_WINDOW      "langas"
+    ROLE_SYSTEM_CLIENT      "klientas"
+    ROLE_SYSTEM_MENUPOPUP   "iškylantis meniu"
+    ROLE_SYSTEM_MENUITEM    "meniu elementas"
+    ROLE_SYSTEM_TOOLTIP     "paaiškinimas"
+    ROLE_SYSTEM_APPLICATION "programa"
+    ROLE_SYSTEM_DOCUMENT    "dokumentas"
+    ROLE_SYSTEM_PANE        "polangis"
+    ROLE_SYSTEM_CHART       "diagrama"
+    ROLE_SYSTEM_DIALOG      "dialogo langas"
+    ROLE_SYSTEM_BORDER      "rėmelis"
+    ROLE_SYSTEM_GROUPING    "grupavimas"
+    ROLE_SYSTEM_SEPARATOR   "skirtukas"
+    ROLE_SYSTEM_TOOLBAR     "įrankių juosta"
+    ROLE_SYSTEM_STATUSBAR   "būsenos juosta"
+    ROLE_SYSTEM_TABLE        "lentelė"
+    ROLE_SYSTEM_COLUMNHEADER "stulpelio antraštė"
+    ROLE_SYSTEM_ROWHEADER    "eilutės antraštė"
+    ROLE_SYSTEM_COLUMN       "stulpelis"
+    ROLE_SYSTEM_ROW          "eilutė"
+    ROLE_SYSTEM_CELL         "langelis"
+    ROLE_SYSTEM_LINK         "nuoroda"
+    ROLE_SYSTEM_HELPBALLOON  "pagalbos balionas"
+    ROLE_SYSTEM_CHARACTER    "personažas"
+    ROLE_SYSTEM_LIST         "sąrašas"
+    ROLE_SYSTEM_LISTITEM     "sąrašo elementas"
+    ROLE_SYSTEM_OUTLINE      "planas"
+    ROLE_SYSTEM_OUTLINEITEM  "plano elementas"
+    ROLE_SYSTEM_PAGETAB      "kortelė"
+    ROLE_SYSTEM_PROPERTYPAGE "savybių lapas"
+    ROLE_SYSTEM_INDICATOR    "indikatorius"
+    ROLE_SYSTEM_GRAPHIC      "grafika"
+    ROLE_SYSTEM_STATICTEXT   "statinis tekstas"
+    ROLE_SYSTEM_TEXT         "tekstas"
+    ROLE_SYSTEM_PUSHBUTTON   "mygtukas"
+    ROLE_SYSTEM_CHECKBUTTON  "žymimasis langelis"
+    ROLE_SYSTEM_RADIOBUTTON  "akutė"
+    ROLE_SYSTEM_COMBOBOX     "jungtinis langelis"
+    ROLE_SYSTEM_DROPLIST     "išskleidžiamasis sąrašas"
+    ROLE_SYSTEM_PROGRESSBAR  "eigos juosta"
+    ROLE_SYSTEM_DIAL         "sukiojama rankenėlė"
+    ROLE_SYSTEM_HOTKEYFIELD  "sparčiojo klavišo laukas"
+    ROLE_SYSTEM_SLIDER       "šliaužiklis"
+    ROLE_SYSTEM_SPINBUTTON   "suktukas"
+    ROLE_SYSTEM_DIAGRAM      "schema"
+    ROLE_SYSTEM_ANIMATION    "animacija"
+    ROLE_SYSTEM_EQUATION     "lygtis"
+    ROLE_SYSTEM_BUTTONDROPDOWN "išskleidžiamasis mygtukas"
+    ROLE_SYSTEM_BUTTONMENU   "meniu mygtukas"
+    ROLE_SYSTEM_BUTTONDROPDOWNGRID "tinklelio išskleidžiamasis mygtukas"
+    ROLE_SYSTEM_WHITESPACE   "matomas tarpas"
+    ROLE_SYSTEM_PAGETABLIST  "kortelių sąrašas"
+    ROLE_SYSTEM_CLOCK        "laikrodis"
+    ROLE_SYSTEM_SPLITBUTTON  "išskleidimo mygtukas"
+    ROLE_SYSTEM_IPADDRESS    "IP adresas"
+    ROLE_SYSTEM_OUTLINEBUTTON "plano mygtukas"
+}

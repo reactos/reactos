@@ -35,6 +35,7 @@
 #define DPRINT_HWDETECT     0x00000400  // OR this with DebugPrintMask to enable hardware detection messages
 #define DPRINT_WINDOWS      0x00000800  // OR this with DebugPrintMask to enable messages from Windows loader
 #define DPRINT_PELOADER     0x00001000  // OR this with DebugPrintMask to enable messages from PE images loader
+#define DPRINT_SCSIPORT     0x00002000  // OR this with DebugPrintMask to enable messages from SCSI miniport
 
 extern char* g_file;
 extern int g_line;

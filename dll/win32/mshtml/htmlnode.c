@@ -645,7 +645,7 @@ static HRESULT WINAPI HTMLDOMNode_put_nodeValue(IHTMLDOMNode *iface, VARIANT v)
 
         TRACE("bstr %s\n", debugstr_w(V_BSTR(&v)));
 
-        nsAString_Init(&val_str, V_BSTR(&v));
+        nsAString_InitDepend(&val_str, V_BSTR(&v));
         nsIDOMNode_SetNodeValue(This->nsnode, &val_str);
         nsAString_Finish(&val_str);
 

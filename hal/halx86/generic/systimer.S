@@ -329,6 +329,7 @@ AndItsNotYou:
     ret
 .endfunc
 
+#ifndef _MINIHAL_
 .globl _KeStallExecutionProcessor@4
 .func KeStallExecutionProcessor@4
 _KeStallExecutionProcessor@4:
@@ -359,6 +360,7 @@ Done:
     /* Return */
     ret 4
 .endfunc
+#endif
 
 .global _KeQueryPerformanceCounter@4
 .func KeQueryPerformanceCounter@4

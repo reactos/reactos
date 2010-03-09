@@ -38,15 +38,15 @@ static HRESULT parse_schema(LPCWSTR url, DWORD flags, LPWSTR result, DWORD size,
     if(ptr)
         len = ptr-url;
 
+    if(rsize)
+        *rsize = len;
+
     if(len >= size)
         return E_POINTER;
 
     if(len)
         memcpy(result, url, len*sizeof(WCHAR));
     result[len] = 0;
-
-    if(rsize)
-        *rsize = len;
 
     return S_OK;
 }
@@ -170,6 +170,100 @@ static HRESULT parse_security_domain(LPCWSTR url, DWORD flags, LPWSTR result,
     return E_FAIL;
 }
 
+static HRESULT parse_domain(LPCWSTR url, DWORD flags, LPWSTR result,
+        DWORD size, DWORD *rsize)
+{
+    IInternetProtocolInfo *protocol_info;
+    HRESULT hres;
+
+    TRACE("(%s %08x %p %d %p)\n", debugstr_w(url), flags, result, size, rsize);
+
+    protocol_info = get_protocol_info(url);
+
+    if(protocol_info) {
+        hres = IInternetProtocolInfo_ParseUrl(protocol_info, url, PARSE_DOMAIN,
+                flags, result, size, rsize, 0);
+        IInternetProtocolInfo_Release(protocol_info);
+        if(SUCCEEDED(hres))
+            return hres;
+    }
+
+    hres = UrlGetPartW(url, result, &size, URL_PART_HOSTNAME, flags);
+    if(rsize)
+        *rsize = size;
+
+    if(hres == E_POINTER)
+        return S_FALSE;
+
+    if(FAILED(hres))
+        return E_FAIL;
+    return S_OK;
+}
+
+static HRESULT parse_rootdocument(LPCWSTR url, DWORD flags, LPWSTR result,
+        DWORD size, DWORD *rsize)
+{
+    IInternetProtocolInfo *protocol_info;
+    PARSEDURLW url_info;
+    HRESULT hres;
+
+    TRACE("(%s %08x %p %d %p)\n", debugstr_w(url), flags, result, size, rsize);
+
+    protocol_info = get_protocol_info(url);
+
+    if(protocol_info) {
+        hres = IInternetProtocolInfo_ParseUrl(protocol_info, url, PARSE_ROOTDOCUMENT,
+                flags, result, size, rsize, 0);
+        IInternetProtocolInfo_Release(protocol_info);
+        if(SUCCEEDED(hres))
+            return hres;
+    }
+
+    url_info.cbSize = sizeof(url_info);
+    if(FAILED(ParseURLW(url, &url_info)))
+        return E_FAIL;
+
+    switch(url_info.nScheme) {
+        case URL_SCHEME_FTP:
+        case URL_SCHEME_HTTP:
+        case URL_SCHEME_HTTPS:
+            if(url_info.cchSuffix<3 || *(url_info.pszSuffix)!='/'
+                    || *(url_info.pszSuffix+1)!='/')
+                return E_FAIL;
+
+            if(size < url_info.cchProtocol+3) {
+                size = 0;
+                hres = UrlGetPartW(url, result, &size, URL_PART_HOSTNAME, flags);
+
+                if(rsize)
+                    *rsize = size+url_info.cchProtocol+3;
+
+                if(hres == E_POINTER)
+                    return S_FALSE;
+
+                return hres;
+            }
+
+            size -= url_info.cchProtocol+3;
+            hres = UrlGetPartW(url, result+url_info.cchProtocol+3,
+                    &size, URL_PART_HOSTNAME, flags);
+
+            if(hres == E_POINTER)
+                return S_FALSE;
+
+            if(FAILED(hres))
+                return E_FAIL;
+
+            if(rsize)
+                *rsize = size+url_info.cchProtocol+3;
+
+            memcpy(result, url, (url_info.cchProtocol+3)*sizeof(WCHAR));
+            return hres;
+        default:
+            return E_FAIL;
+    }
+}
+
 /**************************************************************************
  *          CoInternetParseUrl    (URLMON.@)
  */
@@ -192,6 +286,10 @@ HRESULT WINAPI CoInternetParseUrl(LPCWSTR pwzUrl, PARSEACTION ParseAction, DWORD
         return parse_schema(pwzUrl, dwFlags, pszResult, cchResult, pcchResult);
     case PARSE_SECURITY_DOMAIN:
         return parse_security_domain(pwzUrl, dwFlags, pszResult, cchResult, pcchResult);
+    case PARSE_DOMAIN:
+        return parse_domain(pwzUrl, dwFlags, pszResult, cchResult, pcchResult);
+    case PARSE_ROOTDOCUMENT:
+        return parse_rootdocument(pwzUrl, dwFlags, pszResult, cchResult, pcchResult);
     default:
         FIXME("not supported action %d\n", ParseAction);
     }

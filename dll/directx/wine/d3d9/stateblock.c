@@ -123,87 +123,33 @@ static const IDirect3DStateBlock9Vtbl Direct3DStateBlock9_Vtbl =
     IDirect3DStateBlock9Impl_Apply
 };
 
-
-/* IDirect3DDevice9 IDirect3DStateBlock9 Methods follow: */
-HRESULT WINAPI IDirect3DDevice9Impl_CreateStateBlock(LPDIRECT3DDEVICE9EX iface, D3DSTATEBLOCKTYPE Type, IDirect3DStateBlock9** ppStateBlock) {
-   IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
-   IDirect3DStateBlock9Impl* object;
-   HRESULT hrc = D3D_OK;
-
-   TRACE("iface %p, type %#x, stateblock %p.\n", iface, Type, ppStateBlock);
-
-   if(Type != D3DSBT_ALL         && Type != D3DSBT_PIXELSTATE &&
-      Type != D3DSBT_VERTEXSTATE                              ) {
-       WARN("Unexpected stateblock type, returning D3DERR_INVALIDCALL\n");
-       return D3DERR_INVALIDCALL;
-   }
-
-   object  = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IDirect3DStateBlock9Impl));
-   if (NULL == object) return E_OUTOFMEMORY;
-   object->lpVtbl = &Direct3DStateBlock9_Vtbl;
-   object->ref = 1;
-
-   wined3d_mutex_lock();
-   hrc = IWineD3DDevice_CreateStateBlock(This->WineD3DDevice, (WINED3DSTATEBLOCKTYPE)Type, &object->wineD3DStateBlock, (IUnknown*)object);
-   wined3d_mutex_unlock();
-
-   if(hrc != D3D_OK){
-       FIXME("(%p) Call to IWineD3DDevice_CreateStateBlock failed.\n", This);
-       HeapFree(GetProcessHeap(), 0, object);
-   } else {
-        IDirect3DDevice9Ex_AddRef(iface);
-        object->parentDevice = iface;
-        *ppStateBlock = (IDirect3DStateBlock9*)object;
-        TRACE("(%p) : Created stateblock %p\n", This, object);
-   }
-   TRACE("(%p) returning token (ptr to stateblock) of %p\n", This, object);
-   return hrc;
-}
-
-HRESULT WINAPI IDirect3DDevice9Impl_BeginStateBlock(IDirect3DDevice9Ex *iface)
+HRESULT stateblock_init(IDirect3DStateBlock9Impl *stateblock, IDirect3DDevice9Impl *device,
+        D3DSTATEBLOCKTYPE type, IWineD3DStateBlock *wined3d_stateblock)
 {
-    IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
     HRESULT hr;
 
-    TRACE("iface %p.\n", iface);
+    stateblock->lpVtbl = &Direct3DStateBlock9_Vtbl;
+    stateblock->ref = 1;
 
-    wined3d_mutex_lock();
-    hr = IWineD3DDevice_BeginStateBlock(This->WineD3DDevice);
-    wined3d_mutex_unlock();
-
-    return hr;
-}
-
-HRESULT WINAPI IDirect3DDevice9Impl_EndStateBlock(IDirect3DDevice9Ex *iface, IDirect3DStateBlock9 **ppSB)
-{
-    IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
-    IWineD3DStateBlock *wineD3DStateBlock;
-    IDirect3DStateBlock9Impl *object;
-    HRESULT hr;
-
-    TRACE("iface %p, stateblock %p.\n", iface, ppSB);
-
-    /* Tell wineD3D to endstateblock before anything else (in case we run out
-     * of memory later and cause locking problems) */
-    wined3d_mutex_lock();
-    hr=IWineD3DDevice_EndStateBlock(This->WineD3DDevice,&wineD3DStateBlock);
-    wined3d_mutex_unlock();
-
-    if (hr!= D3D_OK)
+    if (wined3d_stateblock)
     {
-       WARN("IWineD3DDevice_EndStateBlock returned an error\n");
-       return hr;
+        stateblock->wineD3DStateBlock = wined3d_stateblock;
     }
-    /* allocate a new IDirectD3DStateBlock */
-    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IDirect3DStateBlock9Impl));
-    if (!object) return E_OUTOFMEMORY;
-    object->ref = 1;
-    object->lpVtbl = &Direct3DStateBlock9_Vtbl;
-    object->wineD3DStateBlock = wineD3DStateBlock;
+    else
+    {
+        wined3d_mutex_lock();
+        hr = IWineD3DDevice_CreateStateBlock(device->WineD3DDevice, (WINED3DSTATEBLOCKTYPE)type,
+                &stateblock->wineD3DStateBlock, (IUnknown *)stateblock);
+        wined3d_mutex_unlock();
+        if (FAILED(hr))
+        {
+            WARN("Failed to create wined3d stateblock, hr %#x.\n", hr);
+            return hr;
+        }
+    }
 
-    IDirect3DDevice9Ex_AddRef(iface);
-    object->parentDevice = iface;
-    *ppSB=(IDirect3DStateBlock9*)object;
-    TRACE("(%p) Returning *ppSB %p, wineD3DStateBlock %p\n", This, *ppSB, wineD3DStateBlock);
+    stateblock->parentDevice = (IDirect3DDevice9Ex *)device;
+    IDirect3DDevice9Ex_AddRef(stateblock->parentDevice);
+
     return D3D_OK;
 }

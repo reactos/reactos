@@ -7,6 +7,13 @@ typedef struct _InbvProgressState
     ULONG Bias;
 } INBV_PROGRESS_STATE;
 
+typedef struct _BT_PROGRESS_INDICATOR
+{
+    ULONG Count;
+    ULONG Expected;
+    ULONG Percentage;
+} BT_PROGRESS_INDICATOR, *PBT_PROGRESS_INDICATOR;
+
 typedef enum _ROT_BAR_TYPE
 {
     RB_UNSPECIFIED,
@@ -44,4 +51,24 @@ FinalizeBootLogo(
     VOID
 );
 
+PUCHAR
+NTAPI
+InbvGetResourceAddress(
+    IN ULONG ResourceNumber
+);
+
+VOID
+NTAPI
+InbvBitBlt(
+    IN PUCHAR Buffer,
+    IN ULONG X,
+    IN ULONG Y
+);
+
+VOID
+NTAPI
+InbvIndicateProgress(
+    VOID
+);
+           
 extern BOOLEAN InbvBootDriverInstalled;

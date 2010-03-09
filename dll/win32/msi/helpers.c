@@ -156,25 +156,6 @@ MSIFOLDER *get_loaded_folder( MSIPACKAGE *package, LPCWSTR dir )
     return NULL;
 }
 
-void msi_reset_folders( MSIPACKAGE *package, BOOL source )
-{
-    MSIFOLDER *folder;
-
-    LIST_FOR_EACH_ENTRY( folder, &package->folders, MSIFOLDER, entry )
-    {
-        if ( source )
-        {
-            msi_free( folder->ResolvedSource );
-            folder->ResolvedSource = NULL;
-        }
-        else
-        {
-            msi_free( folder->ResolvedTarget );
-            folder->ResolvedTarget = NULL;
-        }
-    }
-}
-
 static LPWSTR get_source_root( MSIPACKAGE *package )
 {
     LPWSTR path, p;
@@ -604,28 +585,6 @@ void ui_actiondata(MSIPACKAGE *package, LPCWSTR action, MSIRECORD * record)
     msiobj_release(&row->hdr);
 }
 
-BOOL ACTION_VerifyComponentForAction( const MSICOMPONENT* comp, INSTALLSTATE check )
-{
-    if (!comp)
-        return FALSE;
-
-    if (comp->ActionRequest == check)
-        return TRUE;
-    else
-        return FALSE;
-}
-
-BOOL ACTION_VerifyFeatureForAction( const MSIFEATURE* feature, INSTALLSTATE check )
-{
-    if (!feature)
-        return FALSE;
-
-    if (feature->ActionRequest == check)
-        return TRUE;
-    else
-        return FALSE;
-}
-
 void reduce_to_longfilename(WCHAR* filename)
 {
     LPWSTR p = strchrW(filename,'|');
@@ -754,7 +713,7 @@ UINT register_unique_action(MSIPACKAGE *package, LPCWSTR action)
     if (!package->script)
         return FALSE;
 
-    TRACE("Registering Action %s as having fun\n",debugstr_w(action));
+    TRACE("Registering %s as unique action\n", debugstr_w(action));
     
     count = package->script->UniqueActionsCount;
     package->script->UniqueActionsCount++;

@@ -789,6 +789,32 @@ DWORD WINAPI GetBestRoute(DWORD dwDestAddr, DWORD dwSourceAddr, PMIB_IPFORWARDRO
   return ret;
 }
 
+/******************************************************************
+ *    GetExtendedTcpTable (IPHLPAPI.@)
+ *
+ * Get the table of TCP endpoints available to the application.
+ *
+ * PARAMS
+ *  pTcpTable [Out]    table struct with the filtered TCP endpoints available to application
+ *  pdwSize   [In/Out] estimated size of the structure returned in pTcpTable, in bytes
+ *  bOrder    [In]     whether to order the table
+ *  ulAf	[in]	version of IP used by the TCP endpoints
+ *  TableClass [in]	type of the TCP table structure from TCP_TABLE_CLASS
+ *  Reserved [in]	reserved - this value must be zero
+ *
+ * RETURNS
+ *  Success: NO_ERROR
+ *  Failure: either ERROR_INSUFFICIENT_BUFFER or ERROR_INVALID_PARAMETER
+ *
+ * NOTES
+ */
+DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, ULONG ulAf, TCP_TABLE_CLASS TableClass, ULONG Reserved)
+{
+	DWORD ret = NO_ERROR;
+	UNIMPLEMENTED;
+	return ret;	
+}
+
 
 /******************************************************************
  *    GetFriendlyIfIndex (IPHLPAPI.@)
@@ -1476,6 +1502,33 @@ DWORD WINAPI GetNumberOfInterfaces(PDWORD pdwNumIf)
   }
   TRACE("returning %ld\n", ret);
   return ret;
+}
+
+
+/******************************************************************
+ *    GetOwnerModuleFromTcpEntry (IPHLPAPI.@)
+ *
+ * Get data about the module that issued the context bind for a specific IPv4 TCP endpoint in a MIB table row
+ *
+ * PARAMS
+ *  pTcpEntry [in]    pointer to a MIB_TCPROW_OWNER_MODULE structure
+ *  Class [in]    	TCPIP_OWNER_MODULE_INFO_CLASS enumeration value
+ *  Buffer [out]     	pointer a buffer containing a TCPIP_OWNER_MODULE_BASIC_INFO structure with the owner module data. 
+ *  pdwSize [in, out]	estimated size of the structure returned in Buffer, in bytes
+ *
+ * RETURNS
+ *  Success: NO_ERROR
+ *  Failure: ERROR_INSUFFICIENT_BUFFER, ERROR_INVALID_PARAMETER, ERROR_NOT_ENOUGH_MEMORY
+ * 	       ERROR_NOT_FOUND or ERROR_PARTIAL_COPY
+ *
+ * NOTES
+ * The type of data returned in Buffer is indicated by the value of the Class parameter.
+ */
+DWORD WINAPI GetOwnerModuleFromTcpEntry( PMIB_TCPROW_OWNER_MODULE pTcpEntry, TCPIP_OWNER_MODULE_INFO_CLASS Class, PVOID Buffer, PDWORD pdwSize)
+{
+	DWORD ret = NO_ERROR;
+	UNIMPLEMENTED;
+	return ret;	
 }
 
 

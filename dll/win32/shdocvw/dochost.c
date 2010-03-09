@@ -362,6 +362,29 @@ void deactivate_document(DocHost *This)
     This->document = NULL;
 }
 
+void release_dochost_client(DocHost *This)
+{
+    if(This->hwnd) {
+        DestroyWindow(This->hwnd);
+        This->hwnd = NULL;
+    }
+
+    if(This->hostui) {
+        IDocHostUIHandler_Release(This->hostui);
+        This->hostui = NULL;
+    }
+
+    if(This->client_disp) {
+        IDispatch_Release(This->client_disp);
+        This->client_disp = NULL;
+    }
+
+    if(This->frame) {
+        IOleInPlaceFrame_Release(This->frame);
+        This->frame = NULL;
+    }
+}
+
 #define OLECMD_THIS(iface) DEFINE_THIS(DocHost, OleCommandTarget, iface)
 
 static HRESULT WINAPI ClOleCommandTarget_QueryInterface(IOleCommandTarget *iface,
@@ -387,8 +410,13 @@ static HRESULT WINAPI ClOleCommandTarget_QueryStatus(IOleCommandTarget *iface,
         const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds[], OLECMDTEXT *pCmdText)
 {
     DocHost *This = OLECMD_THIS(iface);
+    ULONG i= 0;
     FIXME("(%p)->(%s %u %p %p)\n", This, debugstr_guid(pguidCmdGroup), cCmds, prgCmds,
           pCmdText);
+    while (prgCmds && (cCmds > i)) {
+        FIXME("command_%u: %u, 0x%x\n", i, prgCmds[i].cmdID, prgCmds[i].cmdf);
+        i++;
+    }
     return E_NOTIMPL;
 }
 
@@ -744,14 +772,10 @@ void DocHost_Init(DocHost *This, IDispatch *disp)
 
 void DocHost_Release(DocHost *This)
 {
-    if(This->client_disp)
-        IDispatch_Release(This->client_disp);
-    if(This->frame)
-        IOleInPlaceFrame_Release(This->frame);
-
+    release_dochost_client(This);
     DocHost_ClientSite_Release(This);
 
     ConnectionPointContainer_Destroy(&This->cps);
 
-    SysFreeString(This->url);
+    CoTaskMemFree(This->url);
 }

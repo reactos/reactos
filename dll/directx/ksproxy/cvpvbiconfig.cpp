@@ -8,8 +8,6 @@
  */
 #include "precomp.h"
 
-const GUID IID_IVPVBIConfig = {0xec529b00, 0x1a1f, 0x11d1, {0xba, 0xd9, 0x0, 0x60, 0x97, 0x44, 0x11, 0x1a}};
-
 class CVPVBIConfig : public IVPVBIConfig,
                      public IDistributorNotify
 {
@@ -274,6 +272,8 @@ CVPVBIConfig_Constructor(
     REFIID riid,
     LPVOID * ppv)
 {
+    OutputDebugStringW(L"CVPVBIConfig_Constructor\n");
+
     CVPVBIConfig * handler = new CVPVBIConfig();
 
     if (!handler)

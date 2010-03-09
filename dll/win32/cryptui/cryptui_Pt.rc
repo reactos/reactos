@@ -119,6 +119,7 @@ STRINGTABLE DISCARDABLE
     IDS_WARN_REMOVE_DEFAULT "Tem a certeza que deseja remover este certificado?"
     IDS_WARN_REMOVE_PLURAL_DEFAULT "Tem a certeza que deseja remover estes certificados?"
     IDS_CERT_MGR "Certificados"
+    IDS_FRIENDLY_NAME_NONE "<Nenhum>"
     IDS_PURPOSE_SERVER_AUTH "Assegura a identidade de um computador remoto"
     IDS_PURPOSE_CLIENT_AUTH "Prova a sua identidade a um computador remoto"
     IDS_PURPOSE_CODE_SIGNING "Assegura que o software veio de uma editora de software\nProtege o software de alterações após publicação"

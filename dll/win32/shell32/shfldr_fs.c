@@ -97,7 +97,7 @@ static void SF_RegisterClipFmt (IGenericSFImpl * This)
     TRACE ("(%p)\n", This);
 
     if (!This->cfShellIDList) {
-        This->cfShellIDList = RegisterClipboardFormatA (CFSTR_SHELLIDLIST);
+        This->cfShellIDList = RegisterClipboardFormatW (CFSTR_SHELLIDLIST);
     }
 }
 
@@ -1578,7 +1578,7 @@ IFSFldr_PersistFolder3_GetFolderTargetInfo (IPersistFolder3 * iface,
 {
     IGenericSFImpl *This = impl_from_IPersistFolder3(iface);
     FIXME ("(%p)->(%p)\n", This, ppfti);
-    ZeroMemory (ppfti, sizeof (ppfti));
+    ZeroMemory (ppfti, sizeof (*ppfti));
     return E_NOTIMPL;
 }
 

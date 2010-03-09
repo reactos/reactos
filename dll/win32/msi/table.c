@@ -1168,7 +1168,7 @@ static UINT TABLE_fetch_stream( struct tagMSIVIEW *view, UINT row, UINT col, ISt
 {
     MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
     UINT r;
-    LPWSTR full_name = NULL;
+    LPWSTR encname, full_name = NULL;
 
     if( !view->ops->fetch_int )
         return ERROR_INVALID_PARAMETER;
@@ -1180,11 +1180,13 @@ static UINT TABLE_fetch_stream( struct tagMSIVIEW *view, UINT row, UINT col, ISt
         return r;
     }
 
-    r = db_get_raw_stream( tv->db, full_name, stm );
+    encname = encode_streamname( FALSE, full_name );
+    r = db_get_raw_stream( tv->db, encname, stm );
     if( r )
         ERR("fetching stream %s, error = %d\n",debugstr_w(full_name), r);
-    msi_free( full_name );
 
+    msi_free( full_name );
+    msi_free( encname );
     return r;
 }
 

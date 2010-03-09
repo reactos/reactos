@@ -209,7 +209,7 @@ KdbpKdbTrapFrameFromKernelStack(
 
     RtlZeroMemory(KdbTrapFrame, sizeof(KDB_KTRAP_FRAME));
     StackPtr = (ULONG_PTR *) KernelStack;
-#if _M_X86_
+#ifdef _M_IX86
     KdbTrapFrame->Tf.Ebp = StackPtr[3];
     KdbTrapFrame->Tf.Edi = StackPtr[4];
     KdbTrapFrame->Tf.Esi = StackPtr[5];

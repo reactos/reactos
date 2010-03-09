@@ -8,13 +8,13 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
-STRING_ASSOC_HELP,    "Modify file extension associations.\n\n\
-assoc [.ext[=[FileType]]]\n\
+STRING_ASSOC_HELP,    "Modyfikuje skojarzenia rozszerzeñ plików.\n\n\
+assoc [.ext[=[typPliku]]]\n\
 \n\
-assoc (print all associations)\n\
-assoc .ext (print specific association)\n\
-assoc .ext= (remove specific association)\n\
-assoc .ext=FileType (add new association)\n"
+assoc (wyœwietla wszystkie skojarzenia)\n\
+assoc .ext (wyœwietla okreœlone skojarzenie)\n\
+assoc .ext= (usuwa okreœlone skojarzenie)\n\
+assoc .ext=typPliku (dodaje nowe skojarzenie)\n"
 
 STRING_ATTRIB_HELP,    "Wyœwietla lub zmienia atrybuty plików.\n\n\
 ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] nazwa_pliku ...\n\
@@ -298,12 +298,12 @@ STRING_LOCALE_HELP1, "Czas bie¿¹cy"
 STRING_MKDIR_HELP,   "Tworzy katalog.\n\n\
 MKDIR [napêd:]œcie¿ka\nMD [napêd:]œcie¿ka"
 
-STRING_MKLINK_HELP, "Creates a filesystem link object.\n\n\
-MKLINK [/D | /H | /J] linkname target\n\n\
-  /D  Indicates that the symbolic link target is a directory.\n\
-  /H  Create a hard link.\n\
-  /J  Create a directory junction.\n\n\
-If neither /H or /J is specified, a symbolic link is created."
+STRING_MKLINK_HELP, "Tworzy dowi¹zanie obiektu w systemie plików.\n\n\
+MKLINK [/D | /H | /J] nazwa_linku element_docelowy\n\n\
+  /D  Oznacza, ¿e dowi¹zanie symboliczne elementu docelowego jest katalogiem.\n\
+  /H  Tworzy dowi¹zanie twarde.\n\
+  /J  Tworzy punkt po³¹czenia katalogów.\n\n\
+Jeœli nie zosta³y u¿yte zarówno /H jak i /J, zostanie utworzone dowi¹zanie symboliczne."
 
 STRING_MEMMORY_HELP1, "Wyœwietla iloœæ pamiêci systemowej.\n\nMEMORY"
 
@@ -546,7 +546,7 @@ IF       Przetwarzanie warunkowe w programach wsadowych.\n\
 LABEL    Tworzy, zmienia lub kasuje etykietê woluminu w danym napêdzie.\n\
 MD       Tworzy katalog.\n\
 MKDIR    Tworzy katalog.\n\
-MKLINK   Creates a filesystem link object.\n\
+MKLINK   Tworzy dowi¹zanie obiektu w systemie plików.\n\
 MOVE     Przenosi jeden lub wiêcej plików z jednego katalogu do drugiego.\n\
 PATH     Wyœwietla lub ustawia œcie¿ki dostêpu dla programów.\n\
 PAUSE    Zawiesza przetwarzanie programu wsadowego i wyœwietla komunikat.\n\
@@ -656,11 +656,11 @@ STRING_FOR_ERROR,                  "z³e okreœlenie zmiennej."
 STRING_SCREEN_COL,                 "nieprawid³owy numer kolumny"
 STRING_SCREEN_ROW,                 "nieprawid³owy numer rzêdu"
 STRING_TIMER_TIME                  "Stoper %d czas - %s: "
-STRING_MKLINK_CREATED_SYMBOLIC,    "Symbolic link created for %s <<===>> %s\n"
-STRING_MKLINK_CREATED_HARD,        "Hard link created for %s <<===>> %s\n"
-STRING_MKLINK_CREATED_JUNCTION,    "Junction created for %s <<===>> %s\n"
-STRING_MORE,                       "More? "
-STRING_CANCEL_BATCH_FILE,          "\r\nCtrl-Break pressed.  Cancel batch file? (Tak/Nie/Zawsze) "
+STRING_MKLINK_CREATED_SYMBOLIC,    "Dowi¹zanie symboliczne utworzone dla %s <<===>> %s\n"
+STRING_MKLINK_CREATED_HARD,        "Dowi¹zanie twarde utworzone dla %s <<===>> %s\n"
+STRING_MKLINK_CREATED_JUNCTION,    "Punkt dowi¹zania katalogów utworzony dla %s <<===>> %s\n"
+STRING_MORE,                       "Wiêcej? "
+STRING_CANCEL_BATCH_FILE,          "\r\nWciœniêto Ctrl-Break.  Anulowaæ wykonanie pliku wsadowego? (Tak/Nie/Zawsze) "
 
 STRING_INVALID_OPERAND,            "Nieprawid³owy argument operatora."
 STRING_EXPECTED_CLOSE_PAREN,       "Oczekiwano ')'."

@@ -20,17 +20,23 @@
 #include "iccvid_private.h"
 
 #include "iccvid_Da.rc"
-#include "iccvid_De.rc"
 #include "iccvid_En.rc"
-#include "iccvid_Fr.rc"
 #include "iccvid_Hu.rc"
 #include "iccvid_Ko.rc"
 #include "iccvid_Nl.rc"
 #include "iccvid_No.rc"
 #include "iccvid_Pl.rc"
 #include "iccvid_Pt.rc"
+#include "iccvid_Sv.rc"
+#include "iccvid_Tr.rc"
+
+/* UTF-8 */
+#include "iccvid_De.rc"
+#include "iccvid_Es.rc"
+#include "iccvid_Fr.rc"
+#include "iccvid_Ja.rc"
+#include "iccvid_Lt.rc"
 #include "iccvid_Ro.rc"
 #include "iccvid_Ru.rc"
 #include "iccvid_Si.rc"
-#include "iccvid_Sv.rc"
-#include "iccvid_Tr.rc"
+

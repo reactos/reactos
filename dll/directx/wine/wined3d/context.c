@@ -114,7 +114,7 @@ static void context_destroy_fbo(struct wined3d_context *context, GLuint *fbo)
 }
 
 /* GL locking is done by the caller */
-static void context_apply_attachment_filter_states(IWineD3DSurface *surface, BOOL force_preload)
+static void context_apply_attachment_filter_states(IWineD3DSurface *surface)
 {
     const IWineD3DSurfaceImpl *surface_impl = (IWineD3DSurfaceImpl *)surface;
     IWineD3DDeviceImpl *device = surface_impl->resource.device;
@@ -148,7 +148,7 @@ static void context_apply_attachment_filter_states(IWineD3DSurface *surface, BOO
         IWineD3DBaseTexture_Release((IWineD3DBaseTexture *)texture_impl);
     }
 
-    if (update_minfilter || update_magfilter || force_preload)
+    if (update_minfilter || update_magfilter)
     {
         GLenum target, bind_target;
         GLint old_binding;
@@ -165,8 +165,6 @@ static void context_apply_attachment_filter_states(IWineD3DSurface *surface, BOO
             bind_target = GL_TEXTURE_CUBE_MAP_ARB;
             glGetIntegerv(GL_TEXTURE_BINDING_CUBE_MAP_ARB, &old_binding);
         }
-
-        surface_internal_preload(surface, SRGB_RGB);
 
         glBindTexture(bind_target, surface_impl->texture_name);
         if (update_minfilter) glTexParameteri(bind_target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -208,7 +206,8 @@ void context_attach_depth_stencil_fbo(struct wined3d_context *context,
         }
         else
         {
-            context_apply_attachment_filter_states(depth_stencil, TRUE);
+            surface_prepare_texture(depth_stencil_impl, FALSE);
+            context_apply_attachment_filter_states(depth_stencil);
 
             if (format_flags & WINED3DFMT_FLAG_DEPTH)
             {
@@ -253,14 +252,15 @@ void context_attach_depth_stencil_fbo(struct wined3d_context *context,
 void context_attach_surface_fbo(const struct wined3d_context *context,
         GLenum fbo_target, DWORD idx, IWineD3DSurface *surface)
 {
-    const IWineD3DSurfaceImpl *surface_impl = (IWineD3DSurfaceImpl *)surface;
+    IWineD3DSurfaceImpl *surface_impl = (IWineD3DSurfaceImpl *)surface;
     const struct wined3d_gl_info *gl_info = context->gl_info;
 
     TRACE("Attach surface %p to %u\n", surface, idx);
 
     if (surface)
     {
-        context_apply_attachment_filter_states(surface, TRUE);
+        surface_prepare_texture(surface_impl, FALSE);
+        context_apply_attachment_filter_states(surface);
 
         gl_info->fbo_ops.glFramebufferTexture2D(fbo_target, GL_COLOR_ATTACHMENT0 + idx, surface_impl->texture_target,
                 surface_impl->texture_name, surface_impl->texture_level);
@@ -431,10 +431,10 @@ static void context_apply_fbo_entry(struct wined3d_context *context, struct fbo_
         for (i = 0; i < gl_info->limits.buffers; ++i)
         {
             if (device->render_targets[i])
-                context_apply_attachment_filter_states(device->render_targets[i], FALSE);
+                context_apply_attachment_filter_states(device->render_targets[i]);
         }
         if (device->stencilBufferTarget)
-            context_apply_attachment_filter_states(device->stencilBufferTarget, FALSE);
+            context_apply_attachment_filter_states(device->stencilBufferTarget);
     }
 
     for (i = 0; i < gl_info->limits.buffers; ++i)
@@ -532,32 +532,38 @@ void context_alloc_event_query(struct wined3d_context *context, struct wined3d_e
 
     if (context->free_event_query_count)
     {
-        query->id = context->free_event_queries[--context->free_event_query_count];
+        query->object = context->free_event_queries[--context->free_event_query_count];
     }
     else
     {
-        if (gl_info->supported[APPLE_FENCE])
+        if (gl_info->supported[ARB_SYNC])
+        {
+            /* Using ARB_sync, not much to do here. */
+            query->object.sync = NULL;
+            TRACE("Allocated event query %p in context %p.\n", query->object.sync, context);
+        }
+        else if (gl_info->supported[APPLE_FENCE])
         {
             ENTER_GL();
-            GL_EXTCALL(glGenFencesAPPLE(1, &query->id));
+            GL_EXTCALL(glGenFencesAPPLE(1, &query->object.id));
             checkGLcall("glGenFencesAPPLE");
             LEAVE_GL();
 
-            TRACE("Allocated event query %u in context %p.\n", query->id, context);
+            TRACE("Allocated event query %u in context %p.\n", query->object.id, context);
         }
         else if(gl_info->supported[NV_FENCE])
         {
             ENTER_GL();
-            GL_EXTCALL(glGenFencesNV(1, &query->id));
+            GL_EXTCALL(glGenFencesNV(1, &query->object.id));
             checkGLcall("glGenFencesNV");
             LEAVE_GL();
 
-            TRACE("Allocated event query %u in context %p.\n", query->id, context);
+            TRACE("Allocated event query %u in context %p.\n", query->object.id, context);
         }
         else
         {
             WARN("Event queries not supported, not allocating query id.\n");
-            query->id = 0;
+            query->object.id = 0;
         }
     }
 
@@ -575,12 +581,12 @@ void context_free_event_query(struct wined3d_event_query *query)
     if (context->free_event_query_count >= context->free_event_query_size - 1)
     {
         UINT new_size = context->free_event_query_size << 1;
-        GLuint *new_data = HeapReAlloc(GetProcessHeap(), 0, context->free_event_queries,
+        union wined3d_gl_query_object *new_data = HeapReAlloc(GetProcessHeap(), 0, context->free_event_queries,
                 new_size * sizeof(*context->free_event_queries));
 
         if (!new_data)
         {
-            ERR("Failed to grow free list, leaking query %u in context %p.\n", query->id, context);
+            ERR("Failed to grow free list, leaking query %u in context %p.\n", query->object.id, context);
             return;
         }
 
@@ -588,7 +594,7 @@ void context_free_event_query(struct wined3d_event_query *query)
         context->free_event_queries = new_data;
     }
 
-    context->free_event_queries[context->free_event_query_count++] = query->id;
+    context->free_event_queries[context->free_event_query_count++] = query->object;
 }
 
 void context_resource_released(IWineD3DDevice *iface, IWineD3DResource *resource, WINED3DRESOURCETYPE type)
@@ -661,6 +667,7 @@ static void context_destroy_gl_resources(struct wined3d_context *context)
     struct fbo_entry *entry, *entry2;
     HGLRC restore_ctx;
     HDC restore_dc;
+    unsigned int i;
 
     restore_ctx = pwglGetCurrentContext();
     restore_dc = pwglGetCurrentDC();
@@ -682,8 +689,12 @@ static void context_destroy_gl_resources(struct wined3d_context *context)
     {
         if (context->valid)
         {
-            if (gl_info->supported[APPLE_FENCE]) GL_EXTCALL(glDeleteFencesAPPLE(1, &event_query->id));
-            else if (gl_info->supported[NV_FENCE]) GL_EXTCALL(glDeleteFencesNV(1, &event_query->id));
+            if (gl_info->supported[ARB_SYNC])
+            {
+                if (event_query->object.sync) GL_EXTCALL(glDeleteSync(event_query->object.sync));
+            }
+            else if (gl_info->supported[APPLE_FENCE]) GL_EXTCALL(glDeleteFencesAPPLE(1, &event_query->object.id));
+            else if (gl_info->supported[NV_FENCE]) GL_EXTCALL(glDeleteFencesNV(1, &event_query->object.id));
         }
         event_query->context = NULL;
     }
@@ -720,10 +731,24 @@ static void context_destroy_gl_resources(struct wined3d_context *context)
         if (gl_info->supported[ARB_OCCLUSION_QUERY])
             GL_EXTCALL(glDeleteQueriesARB(context->free_occlusion_query_count, context->free_occlusion_queries));
 
-        if (gl_info->supported[APPLE_FENCE])
-            GL_EXTCALL(glDeleteFencesAPPLE(context->free_event_query_count, context->free_event_queries));
+        if (gl_info->supported[ARB_SYNC])
+        {
+            if (event_query->object.sync) GL_EXTCALL(glDeleteSync(event_query->object.sync));
+        }
+        else if (gl_info->supported[APPLE_FENCE])
+        {
+            for (i = 0; i < context->free_event_query_count; ++i)
+            {
+                GL_EXTCALL(glDeleteFencesAPPLE(1, &context->free_event_queries[i].id));
+            }
+        }
         else if (gl_info->supported[NV_FENCE])
-            GL_EXTCALL(glDeleteFencesNV(context->free_event_query_count, context->free_event_queries));
+        {
+            for (i = 0; i < context->free_event_query_count; ++i)
+            {
+                GL_EXTCALL(glDeleteFencesNV(1, &context->free_event_queries[i].id));
+            }
+        }
 
         checkGLcall("context cleanup");
     }
@@ -2131,6 +2156,8 @@ static void context_apply_state(struct wined3d_context *context, IWineD3DDeviceI
                 if (context->render_offscreen)
                 {
                     FIXME("Activating for CTXUSAGE_BLIT for an offscreen target with ORM_FBO. This should be avoided.\n");
+                    surface_internal_preload(context->current_rt, SRGB_RGB);
+
                     ENTER_GL();
                     context_bind_fbo(context, GL_FRAMEBUFFER, &context->dst_fbo);
                     context_attach_surface_fbo(context, GL_FRAMEBUFFER, 0, context->current_rt);
@@ -2189,6 +2216,9 @@ static void context_apply_state(struct wined3d_context *context, IWineD3DDeviceI
             }
 
             IWineD3DDeviceImpl_FindTexUnitMap(device);
+            device_preload_textures(device);
+            if (isStateDirty(context, STATE_VDECL))
+                device_update_stream_info(device, context->gl_info);
 
             ENTER_GL();
             for (i = 0; i < context->numDirtyEntries; ++i)

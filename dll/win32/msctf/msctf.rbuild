@@ -13,6 +13,7 @@
 	<file>context.c</file>
 	<file>documentmgr.c</file>
 	<file>inputprocessor.c</file>
+	<file>langbarmgr.c</file>
 	<file>msctf.c</file>
 	<file>range.c</file>
 	<file>regsvr.c</file>
@@ -24,14 +25,6 @@
 	<library>oleaut32</library>
 	<library>user32</library>
 	<library>advapi32</library>
-	<library>msctf_local_interface</library>
-	<library>textstor_local_interface</library>
 	<library>ntdll</library>
-</module>
-<module name="msctf_local_interface" type="idlinterface">
-	<file>msctf_local.idl</file>
-</module>
-<module name="textstor_local_interface" type="idlinterface">
-	<file>textstor_local.idl</file>
 </module>
 </group>

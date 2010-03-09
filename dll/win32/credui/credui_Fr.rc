@@ -52,4 +52,3 @@ STRINGTABLE DISCARDABLE
     IDS_CAPSLOCKONTITLE "VERR.MAJ est activé"
     IDS_CAPSLOCKON      "Le verrouillage majuscule étant activé, cela pourrait provoquer une erreur lors de la saisie de votre mot de passe.\n\nAppuyez sur la touche VERR.MAJ de votre clavier afin de désactiver le verrouilage majuscule avant\nde saisir votre mot de passe."
 }
-#pragma code_page(default)

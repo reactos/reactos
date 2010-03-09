@@ -1026,13 +1026,15 @@ static UINT ACTION_AppSearchSigName(MSIPACKAGE *package, LPCWSTR sigName,
 static UINT iterate_appsearch(MSIRECORD *row, LPVOID param)
 {
     MSIPACKAGE *package = param;
-    LPWSTR propName, sigName, value = NULL;
+    LPCWSTR propName, sigName;
+    LPWSTR value = NULL;
     MSISIGNATURE sig;
+    MSIRECORD *uirow;
     UINT r;
 
     /* get property and signature */
-    propName = msi_dup_record_field(row,1);
-    sigName = msi_dup_record_field(row,2);
+    propName = MSI_RecordGetString(row, 1);
+    sigName = MSI_RecordGetString(row, 2);
 
     TRACE("%s %s\n", debugstr_w(propName), debugstr_w(sigName));
 
@@ -1043,8 +1045,12 @@ static UINT iterate_appsearch(MSIRECORD *row, LPVOID param)
         msi_free(value);
     }
     ACTION_FreeSignature(&sig);
-    msi_free(propName);
-    msi_free(sigName);
+
+    uirow = MSI_CreateRecord( 2 );
+    MSI_RecordSetStringW( uirow, 1, propName );
+    MSI_RecordSetStringW( uirow, 2, sigName );
+    ui_actiondata( package, szAppSearch, uirow );
+    msiobj_release( &uirow->hdr );
 
     return r;
 }

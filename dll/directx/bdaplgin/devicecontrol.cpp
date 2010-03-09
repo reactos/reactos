@@ -469,7 +469,7 @@ CBDADeviceControl::GetControlNode(ULONG ulInputPinId, ULONG ulOutputPinId, ULONG
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDADeviceControl::GetControlNode: hr %lx, BytesReturned %lu PinId %lu Dummy %lu\n", hr, BytesReturned, PinId, Dummy);
+    swprintf(Buffer, L"CBDADeviceControl::GetControlNode: hr %lx, BytesReturned %lu PinId %lu\n", hr, BytesReturned, PinId);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -497,6 +497,10 @@ CBDADeviceControl_fnConstructor(
     IKsObject *pObject = NULL;
     IBaseFilter *pFilter = NULL;
     HANDLE hFile;
+
+#ifdef BDAPLGIN_TRACE
+    OutputDebugStringW(L"CBDADeviceControl_fnConstructor\n");
+#endif
 
     //DebugBreak();
 
@@ -539,10 +543,6 @@ CBDADeviceControl_fnConstructor(
 
     // construct device control
     CBDADeviceControl * handler = new CBDADeviceControl(pUnkOuter, pFilter, hFile);
-
-#ifdef BDAPLGIN_TRACE
-    OutputDebugStringW(L"CBDADeviceControl_fnConstructor\n");
-#endif
 
     if (!handler)
         return E_OUTOFMEMORY;

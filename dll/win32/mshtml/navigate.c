@@ -717,8 +717,11 @@ HRESULT start_binding(HTMLWindow *window, HTMLDocumentNode *doc, BSCallback *bsc
 
     /* NOTE: IE7 calls IsSystemMoniker here*/
 
-    if(window)
+    if(window) {
+        if(bscallback->mon != window->mon)
+            set_current_mon(window, bscallback->mon);
         call_docview_84(window->doc_obj);
+    }
 
     if(bctx) {
         RegisterBindStatusCallback(bctx, STATUSCLB(bscallback), NULL, 0);
@@ -1087,7 +1090,7 @@ static HRESULT nsChannelBSC_on_progress(BSCallback *bsc, ULONG status_code, LPCW
         TRACE("redirect to %s\n", debugstr_w(status_text));
 
         /* FIXME: We should find a better way to handle this */
-        nsIWineURI_SetWineURL(This->nschannel->uri, status_text);
+        set_wine_url(This->nschannel->uri, status_text);
     }
 
     return S_OK;
@@ -1113,13 +1116,38 @@ static const BSCallbackVtbl nsChannelBSCVtbl = {
     nsChannelBSC_on_response
 };
 
-nsChannelBSC *create_channelbsc(IMoniker *mon)
+HRESULT create_channelbsc(IMoniker *mon, WCHAR *headers, BYTE *post_data, DWORD post_data_size, nsChannelBSC **retval)
 {
-    nsChannelBSC *ret = heap_alloc_zero(sizeof(*ret));
+    nsChannelBSC *ret;
+
+    ret = heap_alloc_zero(sizeof(*ret));
+    if(!ret)
+        return E_OUTOFMEMORY;
 
     init_bscallback(&ret->bsc, &nsChannelBSCVtbl, mon, BINDF_ASYNCHRONOUS | BINDF_ASYNCSTORAGE | BINDF_PULLDATA);
 
-    return ret;
+    if(headers) {
+        ret->bsc.headers = heap_strdupW(headers);
+        if(!ret->bsc.headers) {
+            IBindStatusCallback_Release(STATUSCLB(&ret->bsc));
+            return E_OUTOFMEMORY;
+        }
+    }
+
+    if(post_data) {
+        ret->bsc.post_data = GlobalAlloc(0, post_data_size);
+        if(!ret->bsc.post_data) {
+            heap_free(ret->bsc.headers);
+            IBindStatusCallback_Release(STATUSCLB(&ret->bsc));
+            return E_OUTOFMEMORY;
+        }
+
+        memcpy(ret->bsc.post_data, post_data, post_data_size);
+        ret->bsc.post_data_len = post_data_size;
+    }
+
+    *retval = ret;
+    return S_OK;
 }
 
 IMoniker *get_channelbsc_mon(nsChannelBSC *This)
@@ -1146,6 +1174,36 @@ void set_window_bscallback(HTMLWindow *window, nsChannelBSC *callback)
         IBindStatusCallback_AddRef(STATUSCLB(&callback->bsc));
         callback->bsc.doc = window->doc;
     }
+}
+
+typedef struct {
+    task_t header;
+    HTMLWindow *window;
+    nsChannelBSC *bscallback;
+} start_doc_binding_task_t;
+
+static void start_doc_binding_proc(task_t *_task)
+{
+    start_doc_binding_task_t *task = (start_doc_binding_task_t*)_task;
+
+    start_binding(task->window, NULL, (BSCallback*)task->bscallback, NULL);
+    IBindStatusCallback_Release(STATUSCLB(&task->bscallback->bsc));
+}
+
+HRESULT async_start_doc_binding(HTMLWindow *window, nsChannelBSC *bscallback)
+{
+    start_doc_binding_task_t *task;
+
+    task = heap_alloc(sizeof(start_doc_binding_task_t));
+    if(!task)
+        return E_OUTOFMEMORY;
+
+    task->window = window;
+    task->bscallback = bscallback;
+    IBindStatusCallback_AddRef(STATUSCLB(&bscallback->bsc));
+
+    push_task(&task->header, start_doc_binding_proc, window->task_magic);
+    return S_OK;
 }
 
 void abort_document_bindings(HTMLDocumentNode *doc)
@@ -1196,37 +1254,43 @@ void channelbsc_set_channel(nsChannelBSC *This, nsChannel *channel, nsIStreamLis
 }
 
 HRESULT hlink_frame_navigate(HTMLDocument *doc, LPCWSTR url,
-        nsIInputStream *post_data_stream, DWORD hlnf)
+        nsIInputStream *post_data_stream, DWORD hlnf, BOOL *cancel)
 {
     IHlinkFrame *hlink_frame;
+    nsChannelBSC *callback;
     IServiceProvider *sp;
-    BSCallback *callback;
     IBindCtx *bindctx;
     IMoniker *mon;
     IHlink *hlink;
     HRESULT hres;
 
+    *cancel = FALSE;
+
     hres = IOleClientSite_QueryInterface(doc->doc_obj->client, &IID_IServiceProvider,
             (void**)&sp);
     if(FAILED(hres))
-        return hres;
+        return S_OK;
 
     hres = IServiceProvider_QueryService(sp, &IID_IHlinkFrame, &IID_IHlinkFrame,
             (void**)&hlink_frame);
     IServiceProvider_Release(sp);
     if(FAILED(hres))
+        return S_OK;
+
+    hres = create_channelbsc(NULL, NULL, NULL, 0, &callback);
+    if(FAILED(hres)) {
+        IHlinkFrame_Release(hlink_frame);
         return hres;
-
-    callback = &create_channelbsc(NULL)->bsc;
-
-    if(post_data_stream) {
-        parse_post_data(post_data_stream, &callback->headers, &callback->post_data,
-                        &callback->post_data_len);
-        TRACE("headers = %s post_data = %s\n", debugstr_w(callback->headers),
-              debugstr_an(callback->post_data, callback->post_data_len));
     }
 
-    hres = CreateAsyncBindCtx(0, STATUSCLB(callback), NULL, &bindctx);
+    if(post_data_stream) {
+        parse_post_data(post_data_stream, &callback->bsc.headers, &callback->bsc.post_data,
+                        &callback->bsc.post_data_len);
+        TRACE("headers = %s post_data = %s\n", debugstr_w(callback->bsc.headers),
+              debugstr_an(callback->bsc.post_data, callback->bsc.post_data_len));
+    }
+
+    hres = CreateAsyncBindCtx(0, STATUSCLB(&callback->bsc), NULL, &bindctx);
     if(SUCCEEDED(hres))
         hres = CoCreateInstance(&CLSID_StdHlink, NULL, CLSCTX_INPROC_SERVER,
                 &IID_IHlink, (LPVOID*)&hlink);
@@ -1242,50 +1306,22 @@ HRESULT hlink_frame_navigate(HTMLDocument *doc, LPCWSTR url,
             IHlink_SetTargetFrameName(hlink, wszBlank); /* FIXME */
         }
 
-        hres = IHlinkFrame_Navigate(hlink_frame, hlnf, bindctx, STATUSCLB(callback), hlink);
-
+        hres = IHlinkFrame_Navigate(hlink_frame, hlnf, bindctx, STATUSCLB(&callback->bsc), hlink);
         IMoniker_Release(mon);
+        *cancel = hres == S_OK;
+        hres = S_OK;
     }
 
     IHlinkFrame_Release(hlink_frame);
     IBindCtx_Release(bindctx);
-    IBindStatusCallback_Release(STATUSCLB(callback));
+    IBindStatusCallback_Release(STATUSCLB(&callback->bsc));
     return hres;
-}
-
-HRESULT load_nsuri(HTMLWindow *window, nsIWineURI *uri, DWORD flags)
-{
-    nsIWebNavigation *web_navigation;
-    nsIDocShell *doc_shell;
-    nsresult nsres;
-
-    nsres = get_nsinterface((nsISupports*)window->nswindow, &IID_nsIWebNavigation, (void**)&web_navigation);
-    if(NS_FAILED(nsres)) {
-        ERR("Could not get nsIWebNavigation interface: %08x\n", nsres);
-        return E_FAIL;
-    }
-
-    nsres = nsIWebNavigation_QueryInterface(web_navigation, &IID_nsIDocShell, (void**)&doc_shell);
-    nsIWebNavigation_Release(web_navigation);
-    if(NS_FAILED(nsres)) {
-        ERR("Could not get nsIDocShell: %08x\n", nsres);
-        return E_FAIL;
-    }
-
-    nsres = nsIDocShell_LoadURI(doc_shell, (nsIURI*)uri, NULL, flags, FALSE);
-    nsIDocShell_Release(doc_shell);
-    if(NS_FAILED(nsres)) {
-        WARN("LoadURI failed: %08x\n", nsres);
-        return E_FAIL;
-    }
-
-    return S_OK;
 }
 
 HRESULT navigate_url(HTMLWindow *window, const WCHAR *new_url, const WCHAR *base_url)
 {
     WCHAR url[INTERNET_MAX_URL_LENGTH];
-    nsIWineURI *uri;
+    nsWineURI *uri;
     HRESULT hres;
 
     if(!new_url) {
@@ -1307,23 +1343,30 @@ HRESULT navigate_url(HTMLWindow *window, const WCHAR *new_url, const WCHAR *base
         hres = IDocHostUIHandler_TranslateUrl(window->doc_obj->hostui, 0, url,
                 &translated_url);
         if(hres == S_OK) {
+            TRACE("%08x %s -> %s\n", hres, debugstr_w(url), debugstr_w(translated_url));
             strcpyW(url, translated_url);
             CoTaskMemFree(translated_url);
         }
     }
 
     if(window->doc_obj && window == window->doc_obj->basedoc.window) {
-        hres = hlink_frame_navigate(&window->doc->basedoc, url, NULL, 0);
-        if(SUCCEEDED(hres))
+        BOOL cancel;
+
+        hres = hlink_frame_navigate(&window->doc->basedoc, url, NULL, 0, &cancel);
+        if(FAILED(hres))
+            return hres;
+
+        if(cancel) {
+            TRACE("Navigation handled by hlink frame\n");
             return S_OK;
-        TRACE("hlink_frame_navigate failed: %08x\n", hres);
+        }
     }
 
     hres = create_doc_uri(window, url, &uri);
     if(FAILED(hres))
         return hres;
 
-    hres = load_nsuri(window, uri, LOAD_FLAGS_NONE);
-    nsIWineURI_Release(uri);
+    hres = load_nsuri(window, uri, NULL, LOAD_FLAGS_NONE);
+    nsISupports_Release((nsISupports*)uri);
     return hres;
 }

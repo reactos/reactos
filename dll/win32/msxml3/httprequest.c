@@ -50,7 +50,7 @@ static inline httprequest *impl_from_IXMLHTTPRequest( IXMLHTTPRequest *iface )
 static HRESULT WINAPI httprequest_QueryInterface(IXMLHTTPRequest *iface, REFIID riid, void **ppvObject)
 {
     httprequest *This = impl_from_IXMLHTTPRequest( iface );
-    TRACE("%p %s %p\n", This, debugstr_guid(riid), ppvObject);
+    TRACE("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppvObject);
 
     if ( IsEqualGUID( riid, &IID_IXMLHTTPRequest) ||
          IsEqualGUID( riid, &IID_IDispatch) ||

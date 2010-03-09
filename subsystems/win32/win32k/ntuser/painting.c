@@ -502,7 +502,10 @@ IntIsWindowDrawable(PWINDOW_OBJECT Window)
    for (WndObject = Window; WndObject != NULL; WndObject = WndObject->spwndParent)
    {
       Wnd = WndObject->Wnd;
-      if (!(Wnd->style & WS_VISIBLE) ||
+      if ( Window->state & WINDOWSTATUS_DESTROYING || // state2
+           Window->state & WINDOWSTATUS_DESTROYED ||
+           !Wnd ||
+           !(Wnd->style & WS_VISIBLE) ||
             ((Wnd->style & WS_MINIMIZE) && (WndObject != Window)))
       {
          return FALSE;

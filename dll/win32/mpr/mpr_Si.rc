@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "mprres.h"
+
 #pragma code_page(65001)
 
 LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
@@ -46,5 +48,3 @@ FONT 8, "MS Shell Dlg"
  PUSHBUTTON "V redu", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "Prekliči", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
 }
-
-#pragma code_page(default)

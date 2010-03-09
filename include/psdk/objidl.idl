@@ -907,7 +907,7 @@ interface IStorage : IUnknown
   [call_as(OpenStream)]
   HRESULT RemoteOpenStream(
     [in] LPCOLESTR pwcsName,
-    [in] ULONG cbReserved1,
+    [in] unsigned long cbReserved1,
     [in, unique, size_is(cbReserved1)] byte *reserved1,
     [in] DWORD grfMode,
     [in] DWORD reserved2,
@@ -955,7 +955,7 @@ interface IStorage : IUnknown
   [call_as(EnumElements)]
   HRESULT RemoteEnumElements(
     [in] DWORD reserved1,
-    [in] ULONG cbReserved2,
+    [in] unsigned long cbReserved2,
     [in, unique, size_is(cbReserved2)] byte *reserved2,
     [in] DWORD reserved3,
     [out] IEnumSTATSTG **ppenum);
@@ -1949,6 +1949,9 @@ interface IClientSecurity : IUnknown
     DWORD dwAuthzSvc;
     void *pAuthInfo;
   } SOLE_AUTHENTICATION_INFO;
+
+  const OLECHAR *COLE_DEFAULT_PRINCIPAL = (OLECHAR*) -1;
+  const void *COLE_DEFAULT_AUTHINFO = (void*) -1;
 
   typedef struct tagSOLE_AUTHENTICATION_LIST {
     DWORD cAuthInfo;

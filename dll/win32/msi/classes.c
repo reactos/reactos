@@ -809,16 +809,17 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
             continue;
 
         feature = cls->Feature;
+        if (!feature)
+            continue;
 
         /*
          * MSDN says that these are based on Feature not on Component.
          */
-        if (!ACTION_VerifyFeatureForAction( feature, INSTALLSTATE_LOCAL ) &&
-            !ACTION_VerifyFeatureForAction( feature, INSTALLSTATE_ADVERTISED ))
+        if (feature->ActionRequest != INSTALLSTATE_LOCAL &&
+            feature->ActionRequest != INSTALLSTATE_ADVERTISED )
         {
-            TRACE("Skipping class %s reg due to disabled feature %s\n",
-                  debugstr_w(cls->clsid), debugstr_w(feature->Feature));
-
+            TRACE("Feature %s not scheduled for installation, skipping regstration of class %s\n",
+                  debugstr_w(feature->Feature), debugstr_w(cls->clsid));
             continue;
         }
 
@@ -1142,18 +1143,18 @@ UINT ACTION_RegisterExtensionInfo(MSIPACKAGE *package)
             continue;
 
         feature = ext->Feature;
+        if (!feature)
+            continue;
 
         /* 
          * yes. MSDN says that these are based on _Feature_ not on
          * Component.  So verify the feature is to be installed
          */
-        if ((!ACTION_VerifyFeatureForAction( feature, INSTALLSTATE_LOCAL )) &&
-             !(install_on_demand &&
-               ACTION_VerifyFeatureForAction( feature, INSTALLSTATE_ADVERTISED )))
+        if (feature->ActionRequest != INSTALLSTATE_LOCAL &&
+            !(install_on_demand && feature->ActionRequest == INSTALLSTATE_ADVERTISED))
         {
-            TRACE("Skipping extension %s reg due to disabled feature %s\n",
-                   debugstr_w(ext->Extension), debugstr_w(feature->Feature));
-
+            TRACE("Feature %s not scheduled for installation, skipping registration of extension %s\n",
+                   debugstr_w(feature->Feature), debugstr_w(ext->Extension));
             continue;
         }
 

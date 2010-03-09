@@ -32,7 +32,7 @@
 @ stub GetBestInterfaceFromStack
 @ stdcall GetBestRoute( long long long )
 @ stub GetBestRouteFromStack
-@ stub GetExtendedTcpTable
+@ stdcall GetExtendedTcpTable( ptr ptr long long long long )
 @ stub GetExtendedUdpTable
 @ stdcall GetFriendlyIfIndex( long )
 @ stdcall GetIcmpStatistics( ptr )
@@ -61,7 +61,7 @@
 @ stdcall GetNetworkParams( ptr ptr )
 @ stdcall GetNumberOfInterfaces( ptr )
 @ stub GetOwnerModuleFromTcp6Entry
-@ stub GetOwnerModuleFromTcpEntry
+@ stdcall GetOwnerModuleFromTcpEntry ( ptr long ptr ptr )
 @ stub GetOwnerModuleFromUdp6Entry
 @ stub GetOwnerModuleFromUdpEntry
 @ stdcall GetPerAdapterInfo( long ptr ptr )

@@ -1,0 +1,42 @@
+/*
+ * Copyright (C) 2009 Huw Davies
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+[
+    local,
+    object,
+    uuid(0c733ab4-2a1c-11ce-ade5-00aa0044773d),
+    pointer_default(unique)
+]
+interface IRow : IUnknown
+{
+    [local]
+    HRESULT GetColumns([in] DBORDINAL cColumns,
+                       [in, out, size_is(cColumns), annotation("__inout_ecount(cColumns)")] DBCOLUMNACCESS rgColumns[]);
+
+
+    HRESULT GetSourceRowset([in, annotation("__in")] REFIID riid,
+                            [out, iid_is(riid), annotation("__deref_opt_out_opt")] IUnknown **ppRowset,
+                            [out, annotation("__out_opt")] HROW *phRow);
+
+   HRESULT Open([in, unique, annotation("__in_opt")] IUnknown *pUnkOuter,
+                [in, annotation("__in")] DBID *pColumnID,
+                [in, annotation("__in")] REFGUID rguidColumnType,
+                [in] DWORD dwBindFlags,
+                [in, annotation("__in")] REFIID riid,
+                [out, iid_is(riid), annotation("__deref_opt_out")] IUnknown **ppUnk);
+}

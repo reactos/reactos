@@ -253,7 +253,7 @@ static HRESULT WINAPI HTMLSelectElement_put_value(IHTMLSelectElement *iface, BST
 
     TRACE("(%p)->(%s)\n", This, debugstr_w(v));
 
-    nsAString_Init(&value_str, v);
+    nsAString_InitDepend(&value_str, v);
     nsres = nsIDOMHTMLSelectElement_SetValue(This->nsselect, &value_str);
     nsAString_Finish(&value_str);
     if(NS_FAILED(nsres))
@@ -332,8 +332,26 @@ static HRESULT WINAPI HTMLSelectElement_add(IHTMLSelectElement *iface, IHTMLElem
                                             VARIANT before)
 {
     HTMLSelectElement *This = HTMLSELECT_THIS(iface);
-    FIXME("(%p)->(%p v)\n", This, element);
-    return E_NOTIMPL;
+    IHTMLDOMNode *node, *tmp;
+    HRESULT hres;
+
+    FIXME("(%p)->(%p %s): semi-stub\n", This, element, debugstr_variant(&before));
+
+    if(V_VT(&before) != VT_EMPTY) {
+        FIXME("unhandled before %s\n", debugstr_variant(&before));
+        return E_NOTIMPL;
+    }
+
+    hres = IHTMLElement_QueryInterface(element, &IID_IHTMLDOMNode, (void**)&node);
+    if(FAILED(hres))
+        return hres;
+
+    hres = IHTMLDOMNode_appendChild(HTMLDOMNODE(&This->element.node), node, &tmp);
+    IHTMLDOMNode_Release(node);
+    if(SUCCEEDED(hres) && tmp)
+        IHTMLDOMNode_Release(tmp);
+
+    return hres;
 }
 
 static HRESULT WINAPI HTMLSelectElement_remove(IHTMLSelectElement *iface, LONG index)
@@ -487,11 +505,7 @@ static const NodeImplVtbl HTMLSelectElementImplVtbl = {
 };
 
 static const tid_t HTMLSelectElement_tids[] = {
-    IHTMLDOMNode_tid,
-    IHTMLDOMNode2_tid,
-    IHTMLElement_tid,
-    IHTMLElement2_tid,
-    IHTMLElement3_tid,
+    HTMLELEMENT_TIDS,
     IHTMLSelectElement_tid,
     0
 };

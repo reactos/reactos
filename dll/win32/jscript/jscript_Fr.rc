@@ -46,6 +46,7 @@ STRINGTABLE DISCARDABLE
     IDS_NOT_BOOL            "Objet booléen attendu"
     IDS_JSCRIPT_EXPECTED    "Objet JScript attendu"
     IDS_REGEXP_SYNTAX_ERROR "Erreur de syntaxe dans l'expression rationnelle"
+    IDS_URI_INVALID_CHAR    "L'URI à coder contient des caractères invalides"
     IDS_INVALID_LENGTH      "La longueur d'un tableau doit être un entier positif"
     IDS_ARRAY_EXPECTED      "Objet tableau attendu"
 }

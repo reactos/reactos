@@ -113,6 +113,30 @@ BEGIN
     END
 END
 
+IDM_COLOR_POPUP MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "×îðíèé"       ID_COLOR_BLACK
+        MENUITEM "Áðóíàòíèé"    ID_COLOR_MAROON
+        MENUITEM "Çåëåíèé"      ID_COLOR_GREEN
+        MENUITEM "Îëèâêîâèé"    ID_COLOR_OLIVE
+        MENUITEM "Ñèí³é"        ID_COLOR_NAVY
+        MENUITEM "Ïóðïóðíèé"    ID_COLOR_PURPLE
+        MENUITEM "Çåëåíî-ñèí³é" ID_COLOR_TEAL
+        MENUITEM "Ñ³ðèé"        ID_COLOR_GRAY
+        MENUITEM "Ñð³áíèé"      ID_COLOR_SILVER
+        MENUITEM "×åðâîíèé"     ID_COLOR_RED
+        MENUITEM "Ñàëàòîâèé"    ID_COLOR_LIME
+        MENUITEM "Æîâòèé"       ID_COLOR_YELLOW
+        MENUITEM "Ãîëóáèé"      ID_COLOR_BLUE
+        MENUITEM "Ô³îëåòîâèé"   ID_COLOR_FUCHSIA
+        MENUITEM "Àêâàìàðèí"    ID_COLOR_AQUA
+        MENUITEM "Á³ëèé"        ID_COLOR_WHITE
+        MENUITEM "Automatic"    ID_COLOR_AUTOMATIC
+    END
+END
+
 IDD_DATETIME DIALOG DISCARDABLE 30, 20, 130, 80
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Дата та час"
@@ -220,6 +244,8 @@ BEGIN
     STRING_PREVIEW_ZOOMIN,           "Збільшити"
     STRING_PREVIEW_ZOOMOUT,          "Зменшити"
     STRING_PREVIEW_CLOSE,            "Закрити"
+    STRING_PREVIEW_PAGE,             "Page"
+    STRING_PREVIEW_PAGES,            "Pages"
     STRING_UNITS_CM,                 "cm"
 END
 
@@ -250,4 +276,3 @@ BEGIN
     STRING_ALIGN_RIGHT,           "По правому Краю"
     STRING_ALIGN_CENTER,          "По Центру"
 END
-#pragma code_page(default)

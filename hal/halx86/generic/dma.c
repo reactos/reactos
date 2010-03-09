@@ -75,11 +75,15 @@
 #define NDEBUG
 #include <debug.h>
 
+#ifndef _MINIHAL_
 static KEVENT HalpDmaLock;
 static LIST_ENTRY HalpDmaAdapterList;
 static PADAPTER_OBJECT HalpEisaAdapter[8];
+#endif
 static BOOLEAN HalpEisaDma;
+#ifndef _MINIHAL_
 static PADAPTER_OBJECT HalpMasterAdapter;
+#endif
 
 static const ULONG_PTR HalpEisaPortPage[8] = {
    FIELD_OFFSET(DMA_PAGE, Channel0),
@@ -92,6 +96,7 @@ static const ULONG_PTR HalpEisaPortPage[8] = {
    FIELD_OFFSET(DMA_PAGE, Channel7)
 };
 
+#ifndef _MINIHAL_
 static DMA_OPERATIONS HalpDmaOperations = {
    sizeof(DMA_OPERATIONS),
    (PPUT_DMA_ADAPTER)HalPutDmaAdapter,
@@ -111,6 +116,7 @@ static DMA_OPERATIONS HalpDmaOperations = {
    NULL /*(PBUILD_SCATTER_GATHER_LIST)HalBuildScatterGatherList*/,
    NULL /*(PBUILD_MDL_FROM_SCATTER_GATHER_LIST)HalBuildMdlFromScatterGatherList*/
 };
+#endif
 
 #define MAX_MAP_REGISTERS 64
 
@@ -118,6 +124,7 @@ static DMA_OPERATIONS HalpDmaOperations = {
 
 /* FUNCTIONS *****************************************************************/
 
+#ifndef _MINIHAL_
 VOID
 HalpInitDma(VOID)
 {
@@ -154,6 +161,7 @@ HalpInitDma(VOID)
      */
     HalGetDmaAdapter = HalpGetDmaAdapter;
 }
+#endif
 
 /**
  * @name HalpGetAdapterMaximumPhysicalAddress
@@ -185,6 +193,7 @@ HalpGetAdapterMaximumPhysicalAddress(IN PADAPTER_OBJECT AdapterObject)
     return HighestAddress;
 }
 
+#ifndef _MINIHAL_
 /**
  * @name HalpGrowMapBuffers
  *
@@ -428,6 +437,7 @@ HalpDmaAllocateChildAdapter(IN ULONG NumberOfMapRegisters,
 
     return AdapterObject;
 }
+#endif
 
 /**
  * @name HalpDmaInitializeEisaAdapter
@@ -564,6 +574,7 @@ HalpDmaInitializeEisaAdapter(IN PADAPTER_OBJECT AdapterObject,
     return TRUE;
 }
 
+#ifndef _MINIHAL_
 /**
  * @name HalGetAdapter
  *
@@ -896,6 +907,7 @@ HalFreeCommonBuffer(IN PADAPTER_OBJECT AdapterObject,
                                        Length,
                                        CacheEnabled ? MmCached : MmNonCached);
 }
+#endif
 
 /**
  * @name HalpDmaGetDmaAlignment
@@ -984,6 +996,7 @@ HalReadDmaCounter(IN PADAPTER_OBJECT AdapterObject)
     return Count;
 }
 
+#ifndef _MINIHAL_
 /**
  * @name HalpGrowMapBufferWorker
  *
@@ -1893,6 +1906,7 @@ IoMapTransfer(IN PADAPTER_OBJECT AdapterObject,
      */
      return PhysicalAddress;
 }
+#endif
 
 /**
  * @name HalFlushCommonBuffer

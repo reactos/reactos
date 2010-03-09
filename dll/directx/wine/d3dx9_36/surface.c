@@ -47,7 +47,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
  */
 HRESULT WINAPI D3DXGetImageInfoFromFileInMemory(LPCVOID data, UINT datasize, D3DXIMAGE_INFO *info)
 {
-    FIXME("stub\n");
+    FIXME("(%p, %d, %p): stub\n", data, datasize, info);
 
     if(data && datasize && !info) return D3D_OK;
     if( !data || !datasize ) return D3DERR_INVALIDCALL;
@@ -193,7 +193,9 @@ HRESULT WINAPI D3DXLoadSurfaceFromFileInMemory(LPDIRECT3DSURFACE9 pDestSurface,
                                                D3DCOLOR Colorkey,
                                                D3DXIMAGE_INFO *pSrcInfo)
 {
-    FIXME("stub\n");
+    FIXME("(%p, %p, %p, %p, %d, %p, %d, %x, %p): stub\n", pDestSurface, pDestPalette,
+        pDestRect, pSrcData, SrcDataSize, pSrcRect, dwFilter, Colorkey, pSrcInfo);
+
     if( !pDestSurface || !pSrcData | !SrcDataSize ) return D3DERR_INVALIDCALL;
     return E_NOTIMPL;
 }

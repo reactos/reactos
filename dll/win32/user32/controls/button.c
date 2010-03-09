@@ -102,8 +102,6 @@ static void GB_Paint( HWND hwnd, HDC hDC, UINT action );
 static void UB_Paint( HWND hwnd, HDC hDC, UINT action );
 static void OB_Paint( HWND hwnd, HDC hDC, UINT action );
 static void BUTTON_CheckAutoRadioButton( HWND hwnd );
-//static LRESULT WINAPI ButtonWndProcA( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
-//static LRESULT WINAPI ButtonWndProcW( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 
 #define MAX_BTN_TYPE  12
 
@@ -291,6 +289,13 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         }
         if (btn_type >= MAX_BTN_TYPE)
             return -1; /* abort */
+
+        /* XP turns a BS_USERBUTTON into BS_PUSHBUTTON */
+        if (btn_type == BS_USERBUTTON )
+        {
+            style = (style & ~0x0f) | BS_PUSHBUTTON;
+            SetWindowLongPtrW( hWnd, GWL_STYLE, style );
+        }
         set_button_state( hWnd, BUTTON_UNCHECKED );
         button_update_uistate( hWnd, unicode );
         return 0;
@@ -474,9 +479,6 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         InvalidateRect( hWnd, NULL, FALSE );
         break;
 
-#ifndef __REACTOS__
-    case BM_SETSTYLE16:
-#endif
     case BM_SETSTYLE:
         if ((wParam & 0x0f) >= MAX_BTN_TYPE) break;
         btn_type = wParam & 0x0f;
@@ -485,7 +487,7 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
 
         /* Only redraw if lParam flag is set.*/
         if (lParam)
-           paint_button( hWnd, btn_type, ODA_DRAWENTIRE );
+            InvalidateRect( hWnd, NULL, TRUE );
 
         break;
 
@@ -514,15 +516,9 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
     case BM_GETIMAGE:
         return GetWindowLongPtrW( hWnd, HIMAGE_GWL_OFFSET );
 
-#ifndef __REACTOS__
-    case BM_GETCHECK16:
-#endif
     case BM_GETCHECK:
         return get_button_state( hWnd ) & 3;
 
-#ifndef __REACTOS__
-    case BM_SETCHECK16:
-#endif
     case BM_SETCHECK:
         if (wParam > maxCheckState[btn_type]) wParam = maxCheckState[btn_type];
         state = get_button_state( hWnd );
@@ -541,15 +537,9 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
             BUTTON_CheckAutoRadioButton( hWnd );
         break;
 
-#ifndef __REACTOS__
-    case BM_GETSTATE16:
-#endif
     case BM_GETSTATE:
         return get_button_state( hWnd );
 
-#ifndef __REACTOS__
-    case BM_SETSTATE16:
-#endif
     case BM_SETSTATE:
         state = get_button_state( hWnd );
         if (wParam)
@@ -871,9 +861,15 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
 
     if (get_button_type(style) == BS_DEFPUSHBUTTON)
     {
-        Rectangle(hDC, rc.left, rc.top, rc.right, rc.bottom);
+        if (action != ODA_FOCUS)
+            Rectangle(hDC, rc.left, rc.top, rc.right, rc.bottom);
 	InflateRect( &rc, -1, -1 );
     }
+    
+    focus_rect = rc;
+
+    /* completely skip the drawing if only focus has changed */
+    if (action == ODA_FOCUS) goto draw_focus;
 
     uState = DFCS_BUTTONPUSH | DFCS_ADJUSTRECT;
 
@@ -891,8 +887,6 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
         uState |= DFCS_CHECKED;
 
     DrawFrameControl( hDC, &rc, DFC_BUTTON, uState );
-
-    focus_rect = rc;
 
     /* draw button label */
     r = rc;
@@ -912,7 +906,9 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
 
     SetTextColor( hDC, oldTxtColor );
 
-    if (state & BUTTON_HASFOCUS)
+draw_focus:
+    if ((action == ODA_FOCUS) ||
+        ((action == ODA_DRAWENTIRE) && (state & BUTTON_HASFOCUS)))
     {
         if (!(get_ui_state(hwnd) & UISF_HIDEFOCUS))
         {
@@ -1165,6 +1161,8 @@ static void UB_Paint( HWND hwnd, HDC hDC, UINT action )
         if (!(get_ui_state(hwnd) & UISF_HIDEFOCUS))
             DrawFocusRect( hDC, &rc );
     }
+
+    BUTTON_NOTIFY_PARENT( hwnd, BN_PAINT );
 }
 
 

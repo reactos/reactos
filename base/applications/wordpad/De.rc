@@ -108,6 +108,30 @@ BEGIN
     END
 END
 
+IDM_COLOR_POPUP MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Schwarz"        ID_COLOR_BLACK
+        MENUITEM "Kastanienbraun" ID_COLOR_MAROON
+        MENUITEM "Grün"           ID_COLOR_GREEN
+        MENUITEM "Olivgrün"       ID_COLOR_OLIVE
+        MENUITEM "Dunkelblau"     ID_COLOR_NAVY
+        MENUITEM "Lila"           ID_COLOR_PURPLE
+        MENUITEM "Blaugrün"       ID_COLOR_TEAL
+        MENUITEM "Grau"           ID_COLOR_GRAY
+        MENUITEM "Silber"         ID_COLOR_SILVER
+        MENUITEM "Rot"            ID_COLOR_RED
+        MENUITEM "Hellgrün"       ID_COLOR_LIME
+        MENUITEM "Gelb"           ID_COLOR_YELLOW
+        MENUITEM "Blau"           ID_COLOR_BLUE
+        MENUITEM "Pink"           ID_COLOR_FUCHSIA
+        MENUITEM "Aquamarin"      ID_COLOR_AQUA
+        MENUITEM "Weiß"           ID_COLOR_WHITE
+        MENUITEM "Automatic"      ID_COLOR_AUTOMATIC
+    END
+END
+
 IDD_DATETIME DIALOG DISCARDABLE 30, 20, 130, 80
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Datum und Uhrzeit"
@@ -218,9 +242,13 @@ BEGIN
     STRING_PREVIEW_PRINT,            "&Drucken"
     STRING_PREVIEW_NEXTPAGE,         "&Nächste"
     STRING_PREVIEW_PREVPAGE,         "&Vorherige"
-    STRING_PREVIEW_TWOPAGES,         "Zwei Seiten"
-    STRING_PREVIEW_ONEPAGE,          "Eine Seite"
+    STRING_PREVIEW_TWOPAGES,         "&Zwei Seiten"
+    STRING_PREVIEW_ONEPAGE,          "&Eine Seite"
+    STRING_PREVIEW_ZOOMIN,           "Ver&größern"
+    STRING_PREVIEW_ZOOMOUT,          "Ver&kleinern"
     STRING_PREVIEW_CLOSE,            "&Schließen"
+    STRING_PREVIEW_PAGE,             "Seite"
+    STRING_PREVIEW_PAGES,            "Seiten"
 END
 
 STRINGTABLE DISCARDABLE
@@ -246,4 +274,3 @@ BEGIN
     STRING_PRINTING_NOT_IMPLEMENTED, "Drucken ist nicht implementiert"
     STRING_MAX_TAB_STOPS,            "Es können nur maximal 32 Tabstopps definiert werden."
 END
-#pragma code_page(default)

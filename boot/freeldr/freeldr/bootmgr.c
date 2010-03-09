@@ -119,6 +119,12 @@ VOID RunLoader(VOID)
 		return;
 	}
 
+	// Load additional SCSI driver (if any)
+	if (LoadBootDeviceDriver() != ESUCCESS)
+	{
+		UiMessageBoxCritical("Unable to load additional boot device driver");
+	}
+
 	if (!IniFileInitialize())
 	{
 		UiMessageBoxCritical("Error initializing .ini file");

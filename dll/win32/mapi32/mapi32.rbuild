@@ -15,6 +15,7 @@
 	<library>wine</library>
 	<library>shlwapi</library>
 	<library>shell32</library>
+	<library>user32</library>
 	<library>advapi32</library>
 	<library>uuid</library>
 	<library>ntdll</library>

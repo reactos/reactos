@@ -386,9 +386,6 @@ static UINT ControlEvent_ReinstallMode(MSIPACKAGE *package, LPCWSTR argument,
 static UINT ControlEvent_ValidateProductID(MSIPACKAGE *package, LPCWSTR argument,
                                            msi_dialog *dialog)
 {
-    static const WCHAR szProductID[] = {'P','r','o','d','u','c','t','I','D',0};
-    static const WCHAR szPIDTemplate[] = {'P','I','D','T','e','m','p','l','a','t','e',0};
-    static const WCHAR szPIDKEY[] = {'P','I','D','K','E','Y',0};
     LPWSTR key, template;
     UINT ret = ERROR_SUCCESS;
 

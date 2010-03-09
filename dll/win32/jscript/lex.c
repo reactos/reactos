@@ -91,7 +91,6 @@ static const struct {
     {trueW,        kTRUE},
     {tryW,         kTRY},
     {typeofW,      kTYPEOF},
-    {undefinedW,   kUNDEFINED},
     {varW,         kVAR},
     {voidW,        kVOID},
     {whileW,       kWHILE},
@@ -369,7 +368,7 @@ static literal_t *alloc_int_literal(parser_ctx_t *ctx, LONG l)
 {
     literal_t *ret = parser_alloc(ctx, sizeof(literal_t));
 
-    ret->vt = VT_I4;
+    ret->type = LT_INT;
     ret->u.lval = l;
 
     return ret;
@@ -447,7 +446,7 @@ static int parse_double_literal(parser_ctx_t *ctx, LONG int_part, literal_t **li
     }
 
     *literal = parser_alloc(ctx, sizeof(literal_t));
-    (*literal)->vt = VT_R8;
+    (*literal)->type = LT_DOUBLE;
     (*literal)->u.dval = (double)d*pow(10, exp);
 
     return tNumericLiteral;
@@ -755,21 +754,11 @@ int parser_lex(void *lval, parser_ctx_t *ctx)
     return 0;
 }
 
-static void add_object_literal(parser_ctx_t *ctx, DispatchEx *obj)
-{
-    obj_literal_t *literal = parser_alloc(ctx, sizeof(obj_literal_t));
-
-    literal->obj = obj;
-    literal->next = ctx->obj_literals;
-    ctx->obj_literals = literal;
-}
-
 literal_t *parse_regexp(parser_ctx_t *ctx)
 {
-    const WCHAR *re, *flags;
-    DispatchEx *regexp;
+    const WCHAR *re, *flags_ptr;
+    DWORD re_len, flags;
     literal_t *ret;
-    DWORD re_len;
     HRESULT hres;
 
     TRACE("\n");
@@ -790,18 +779,18 @@ literal_t *parse_regexp(parser_ctx_t *ctx)
 
     re_len = ctx->ptr-re;
 
-    flags = ++ctx->ptr;
+    flags_ptr = ++ctx->ptr;
     while(ctx->ptr < ctx->end && isalnumW(*ctx->ptr))
         ctx->ptr++;
 
-    hres = create_regexp_str(ctx->script, re, re_len, flags, ctx->ptr-flags, &regexp);
+    hres = parse_regexp_flags(flags_ptr, ctx->ptr-flags_ptr, &flags);
     if(FAILED(hres))
         return NULL;
 
-    add_object_literal(ctx, regexp);
-
     ret = parser_alloc(ctx, sizeof(literal_t));
-    ret->vt = VT_DISPATCH;
-    ret->u.disp = (IDispatch*)_IDispatchEx_(regexp);
+    ret->type = LT_REGEXP;
+    ret->u.regexp.str = re;
+    ret->u.regexp.str_len = re_len;
+    ret->u.regexp.flags = flags;
     return ret;
 }

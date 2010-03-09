@@ -109,6 +109,30 @@ BEGIN
     END
 END
 
+IDM_COLOR_POPUP MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Noir"        ID_COLOR_BLACK
+        MENUITEM "Marron"      ID_COLOR_MAROON
+        MENUITEM "Vert"        ID_COLOR_GREEN
+        MENUITEM "Olive"       ID_COLOR_OLIVE
+        MENUITEM "Bleu marine" ID_COLOR_NAVY
+        MENUITEM "Pourpre"     ID_COLOR_PURPLE
+        MENUITEM "Sarcelle"    ID_COLOR_TEAL
+        MENUITEM "Gris"        ID_COLOR_GRAY
+        MENUITEM "Argent"      ID_COLOR_SILVER
+        MENUITEM "Rouge"       ID_COLOR_RED
+        MENUITEM "Citron vert" ID_COLOR_LIME
+        MENUITEM "Jaune"       ID_COLOR_YELLOW
+        MENUITEM "Bleu"        ID_COLOR_BLUE
+        MENUITEM "Fuchsia"     ID_COLOR_FUCHSIA
+        MENUITEM "Eau"         ID_COLOR_AQUA
+        MENUITEM "Blanc"       ID_COLOR_WHITE
+        MENUITEM "Automatic"   ID_COLOR_AUTOMATIC
+    END
+END
+
 IDD_DATETIME DIALOG DISCARDABLE 30, 20, 130, 80
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Date et heure"
@@ -224,6 +248,8 @@ BEGIN
     STRING_PREVIEW_ZOOMIN,           "Zoom avant"
     STRING_PREVIEW_ZOOMOUT,          "Zoom arrière"
     STRING_PREVIEW_CLOSE,            "Fermer"
+    STRING_PREVIEW_PAGE,             "Page"
+    STRING_PREVIEW_PAGES,            "Pages"
 END
 
 STRINGTABLE DISCARDABLE
@@ -249,4 +275,3 @@ BEGIN
     STRING_PRINTING_NOT_IMPLEMENTED, "L'impression n'est pas implémentée"
     STRING_MAX_TAB_STOPS,             "Impossible d'ajouter plus de 32 taquets de tabulation."
 END
-#pragma code_page(default)

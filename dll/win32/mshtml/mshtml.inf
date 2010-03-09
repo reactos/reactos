@@ -90,7 +90,7 @@ HKCR,"CLSID\%CLSID_CRecalcEngine%\InProcServer32","ThreadingModel",,"Apartment"
 
 ;; CrSource
 HKCR,"CLSID\%CLSID_CrSource%",,,"Microsoft CrSource 4.0"
-HKCR,"CLSID\%CLSID_CrSource%\BrowseInPlace",,,""
+HKCR,"CLSID\%CLSID_CrSource%\BrowseInPlace",,16
 ;; HKCR,"CLSID\%CLSID_CrSource%\DefaultIcon",,0x00020000,"%IEXPLORE%,1"
 HKCR,"CLSID\%CLSID_CrSource%\EnablePlugin\.css",,,"PointPlus plugin"
 HKCR,"CLSID\%CLSID_CrSource%\InProcServer32",,,"mshtml.dll"
@@ -113,7 +113,7 @@ HKCR,"ScriptBridge.ScriptBridge.1\CLSID",,,"%CLSID_Scriptlet%"
 
 ;; HTADocument
 HKCR,"CLSID\%CLSID_HTADocument%",,,"Microsoft HTA Document 6.0"
-HKCR,"CLSID\%CLSID_HTADocument%\BrowseInPlace",,,""
+HKCR,"CLSID\%CLSID_HTADocument%\BrowseInPlace",,16
 HKCR,"CLSID\%CLSID_HTADocument%\InProcServer32",,,"mshtml.dll"
 HKCR,"CLSID\%CLSID_HTADocument%\InProcServer32","ThreadingModel",,"Apartment"
 HKCR,"CLSID\%CLSID_HTADocument%\MiscStatus",,,"2228625"
@@ -121,7 +121,7 @@ HKCR,"CLSID\%CLSID_HTADocument%\Version",,,"6.0"
 
 ;; HTMLDocument
 HKCR,"CLSID\%CLSID_HTMLDocument%",,,"HTML Document"
-HKCR,"CLSID\%CLSID_HTMLDocument%\BrowseInPlace",,,""
+HKCR,"CLSID\%CLSID_HTMLDocument%\BrowseInPlace",,16
 ;; HKCR,"CLSID\%CLSID_HTMLDocument%\DefaultIcon",,0x00020000,"%IEXPLORE%,1"
 HKCR,"CLSID\%CLSID_HTMLDocument%\InProcServer32",,,"mshtml.dll"
 HKCR,"CLSID\%CLSID_HTMLDocument%\InProcServer32","ThreadingModel",,"Apartment"
@@ -132,7 +132,7 @@ HKCR,"CLSID\%CLSID_HTMLDocument%\EnablePlugin\.css",,,"PointPlus plugin"
 
 ;; HTMLPluginDocument
 HKCR,"CLSID\%CLSID_HTMLPluginDocument%",,,"Microsoft HTML Document 6.0"
-HKCR,"CLSID\%CLSID_HTMLPluginDocument%\BrowseInPlace",,,""
+HKCR,"CLSID\%CLSID_HTMLPluginDocument%\BrowseInPlace",,16
 HKCR,"CLSID\%CLSID_HTMLPluginDocument%\InProcServer32",,,"mshtml.dll"
 HKCR,"CLSID\%CLSID_HTMLPluginDocument%\InProcServer32","ThreadingModel",,"Apartment"
 HKCR,"CLSID\%CLSID_HTMLPluginDocument%\MiscStatus",,,"0"
@@ -159,7 +159,7 @@ HKCR,"CLSID\%CLSID_HTMLWindowProxy%\InProcServer32",,,"mshtml.dll"
 HKCR,"CLSID\%CLSID_HTMLWindowProxy%\InProcServer32","ThreadingModel",,"Apartment"
 
 ;; IImageDecodeFilter
-HKCR,"CLSID\%CLSID_IImageDecodeFilter%",,,""
+HKCR,"CLSID\%CLSID_IImageDecodeFilter%",,,"CoICOFilter Class"
 HKCR,"CLSID\%CLSID_IImageDecodeFilter%\InProcServer32",,,%_MOD_PATH%
 HKCR,"CLSID\%CLSID_IImageDecodeFilter%\InProcServer32","ThreadingModel",,"Apartment"
 HKCR,"MIME\Database\Content Type\image/x-wmf","Image Filter CLSID",,"%CLSID_IImageDecodeFilter%"
@@ -214,7 +214,7 @@ HKCR,"CLSID\%CLSID_MailtoProtocol%\InProcServer32","ThreadingModel",,"Apartment"
 
 ;; MHTMLDocument
 HKCR,"CLSID\%CLSID_MHTMLDocument%",,,"MHTML Document"
-HKCR,"CLSID\%CLSID_MHTMLDocument%\BrowseInPlace",,,""
+HKCR,"CLSID\%CLSID_MHTMLDocument%\BrowseInPlace",,16
 ;; HKCR,"CLSID\%CLSID_MHTMLDocument%\DefaultIcon",,0x00020000,"%IEXPLORE%,1"
 HKCR,"CLSID\%CLSID_MHTMLDocument%\InProcServer32",,,"mshtml.dll"
 HKCR,"CLSID\%CLSID_MHTMLDocument%\InProcServer32","ThreadingModel",,"Apartment"
@@ -229,13 +229,13 @@ HKCR,"CLSID\%CLSID_ResProtocol%\InProcServer32","ThreadingModel",,"Apartment"
 
 ;; Scriptlet
 HKCR,"CLSID\%CLSID_Scriptlet%",,,"Microsoft Scriptlet Component"
-HKCR,"CLSID\%CLSID_Scriptlet%\Control"
+HKCR,"CLSID\%CLSID_Scriptlet%\Control",,16
 HKCR,"CLSID\%CLSID_Scriptlet%\InProcServer32",,,"%_MOD_PATH%"
 HKCR,"CLSID\%CLSID_Scriptlet%\InProcServer32","ThreadingModel",,"Apartment"
 HKCR,"CLSID\%CLSID_Scriptlet%\MiscStatus",,,"0"
 HKCR,"CLSID\%CLSID_Scriptlet%\MiscStatus\1",,,"131473"
 HKCR,"CLSID\%CLSID_Scriptlet%\ProgID",,,"ScriptBridge.ScriptBridge.1"
-HKCR,"CLSID\%CLSID_Scriptlet%\Programmable"
+HKCR,"CLSID\%CLSID_Scriptlet%\Programmable",,16
 ;; HKCR,"CLSID\%CLSID_Scriptlet%\ToolboxBitmap32",,,"%IEXPLORE%,1"
 HKCR,"CLSID\%CLSID_Scriptlet%\TypeLib",,,"%LIBID_MSHTML%"
 HKCR,"CLSID\%CLSID_Scriptlet%\Version",,,"4.0"
@@ -337,11 +337,11 @@ HKCR,"InternetShortcut\shell\printto\command",,,"rundll32.exe mshtml.dll,PrintHT
 HKCR,"htmlfile\shell\print\command",,,"rundll32.exe mshtml.dll,PrintHTML ""%%1"""
 HKCR,"htmlfile\shell\printto\command",,,"rundll32.exe mshtml.dll,PrintHTML ""%%1"" ""%%2"" ""%%3"" ""%%4"""
 HKCR,"htmlfile",,,"HTML Document"
-HKCR,"htmlfile\BrowseInPlace",,,""
+HKCR,"htmlfile\BrowseInPlace",,16
 HKCR,"htmlfile\CLSID",,,"%CLSID_HTMLDocument%"
 ;; HKCR,"htmlfile\DefaultIcon",,0x00020000,"%IEXPLORE%,1"
 HKCR,"htmlfile_FullWindowEmbed",,,"HTML Plugin Document"
-HKCR,"htmlfile_FullWindowEmbed\BrowseInPlace",,,""
+HKCR,"htmlfile_FullWindowEmbed\BrowseInPlace",,16
 HKCR,"htmlfile_FullWindowEmbed\CLSID",,,"%CLSID_HTMLPluginDocument%"
 HKCR,".htm",,,"htmlfile"
 HKCR,".htm","Content Type",,"text/html"
@@ -398,7 +398,7 @@ HKCR,".mhtml","Content Type",,"message/rfc822"
 HKCR,".mht",,2,"mhtmlfile"
 HKCR,".mht","Content Type",,"message/rfc822"
 HKCR,"mhtmlfile",,,"MHTML Document"
-HKCR,"mhtmlfile\BrowseInPlace",,,""
+HKCR,"mhtmlfile\BrowseInPlace",,16
 HKCR,"mhtmlfile\CLSID",,,"%CLSID_MHTMLDocument%"
 
 ;; MPEG

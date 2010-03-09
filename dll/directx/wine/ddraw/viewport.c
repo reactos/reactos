@@ -255,14 +255,25 @@ IDirect3DViewportImpl_GetViewport(IDirect3DViewport3 *iface,
     TRACE("(%p/%p)->(%p)\n", This, iface, lpData);
 
     EnterCriticalSection(&ddraw_cs);
-    if (This->use_vp2 != 0) {
-        ERR("  Requesting to get a D3DVIEWPORT struct where a D3DVIEWPORT2 was set !\n");
-        LeaveCriticalSection(&ddraw_cs);
-        return DDERR_INVALIDPARAMS;
-    }
     dwSize = lpData->dwSize;
     memset(lpData, 0, dwSize);
-    memcpy(lpData, &(This->viewports.vp1), dwSize);
+    if (!This->use_vp2)
+        memcpy(lpData, &(This->viewports.vp1), dwSize);
+    else {
+        D3DVIEWPORT vp1;
+        vp1.dwSize = sizeof(vp1);
+        vp1.dwX = This->viewports.vp2.dwX;
+        vp1.dwY = This->viewports.vp2.dwY;
+        vp1.dwWidth = This->viewports.vp2.dwWidth;
+        vp1.dwHeight = This->viewports.vp2.dwHeight;
+        vp1.dvMaxX = 0.0;
+        vp1.dvMaxY = 0.0;
+        vp1.dvScaleX = 0.0;
+        vp1.dvScaleY = 0.0;
+        vp1.dvMinZ = This->viewports.vp2.dvMinZ;
+        vp1.dvMaxZ = This->viewports.vp2.dvMaxZ;
+        memcpy(lpData, &vp1, dwSize);
+    }
 
     if (TRACE_ON(d3d7)) {
         TRACE("  returning D3DVIEWPORT :\n");
@@ -908,14 +919,25 @@ IDirect3DViewportImpl_GetViewport2(IDirect3DViewport3 *iface,
     TRACE("(%p)->(%p)\n", This, lpData);
 
     EnterCriticalSection(&ddraw_cs);
-    if (This->use_vp2 != 1) {
-        ERR("  Requesting to get a D3DVIEWPORT2 struct where a D3DVIEWPORT was set !\n");
-        LeaveCriticalSection(&ddraw_cs);
-        return DDERR_INVALIDPARAMS;
-    }
     dwSize = lpData->dwSize;
     memset(lpData, 0, dwSize);
-    memcpy(lpData, &(This->viewports.vp2), dwSize);
+    if (This->use_vp2)
+        memcpy(lpData, &(This->viewports.vp2), dwSize);
+    else {
+        D3DVIEWPORT2 vp2;
+        vp2.dwSize = sizeof(vp2);
+        vp2.dwX = This->viewports.vp1.dwX;
+        vp2.dwY = This->viewports.vp1.dwY;
+        vp2.dwWidth = This->viewports.vp1.dwWidth;
+        vp2.dwHeight = This->viewports.vp1.dwHeight;
+        vp2.dvClipX = 0.0;
+        vp2.dvClipY = 0.0;
+        vp2.dvClipWidth = 0.0;
+        vp2.dvClipHeight = 0.0;
+        vp2.dvMinZ = This->viewports.vp1.dvMinZ;
+        vp2.dvMaxZ = This->viewports.vp1.dvMaxZ;
+        memcpy(lpData, &vp2, dwSize);
+    }
 
     if (TRACE_ON(d3d7)) {
         TRACE("  returning D3DVIEWPORT2 :\n");

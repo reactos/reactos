@@ -507,6 +507,7 @@ IopInitializeSystemDrivers(VOID)
                 {
                     DPRINT("  Path: %wZ\n", &CurrentService->RegistryPath);
                     Status = IopLoadDriver(CurrentService);
+                    InbvIndicateProgress();
                 }
             }
         }
@@ -538,7 +539,9 @@ IopInitializeSystemDrivers(VOID)
                 {
                     DPRINT("  Path: %wZ\n", &CurrentService->RegistryPath);
                     Status = IopLoadDriver(CurrentService);
+                    InbvIndicateProgress();
                 }
+                
             }
         }
     }

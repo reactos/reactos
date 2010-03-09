@@ -388,6 +388,5 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
 
 HRESULT WINAPI DllCanUnloadNow(void)
 {
-    FIXME("\n");
     return S_OK;
 }

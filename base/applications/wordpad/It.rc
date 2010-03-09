@@ -110,6 +110,30 @@ BEGIN
     END
 END
 
+IDM_COLOR_POPUP MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Nero"              ID_COLOR_BLACK
+        MENUITEM "Marrone rossiccio" ID_COLOR_MAROON
+        MENUITEM "Verde"             ID_COLOR_GREEN
+        MENUITEM "Verde oliva"       ID_COLOR_OLIVE
+        MENUITEM "Blu oltremare"     ID_COLOR_NAVY
+        MENUITEM "Propora"           ID_COLOR_PURPLE
+        MENUITEM "Teal"              ID_COLOR_TEAL
+        MENUITEM "Grigio"            ID_COLOR_GRAY
+        MENUITEM "Argento"           ID_COLOR_SILVER
+        MENUITEM "Rosso"             ID_COLOR_RED
+        MENUITEM "Verde cedro"       ID_COLOR_LIME
+        MENUITEM "Giallo"            ID_COLOR_YELLOW
+        MENUITEM "Blu"               ID_COLOR_BLUE
+        MENUITEM "Fucsia"            ID_COLOR_FUCHSIA
+        MENUITEM "Aqua"              ID_COLOR_AQUA
+        MENUITEM "Bianco"            ID_COLOR_WHITE
+        MENUITEM "Automatic"         ID_COLOR_AUTOMATIC
+    END
+END
+
 IDD_DATETIME DIALOG DISCARDABLE 30, 20, 130, 80
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Data e ora"
@@ -217,6 +241,8 @@ BEGIN
     STRING_PREVIEW_ZOOMIN,           "Ingrandisci"
     STRING_PREVIEW_ZOOMOUT,          "Rimpicciolisci"
     STRING_PREVIEW_CLOSE,            "Chiudi"
+    STRING_PREVIEW_PAGE,             "Page"
+    STRING_PREVIEW_PAGES,            "Pages"
     STRING_UNITS_CM,                 "cm"
 END
 
@@ -238,4 +264,3 @@ BEGIN
     STRING_PRINTING_NOT_IMPLEMENTED,  "Stampa non  implementata"
     STRING_MAX_TAB_STOPS,             "Non si possono aggiungere più di 32 punti di fermata delle tabulazioni."
 END
-#pragma code_page(default)

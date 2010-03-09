@@ -1,0 +1,52 @@
+; BATTERY.INF
+
+[Version]
+Signature  = "$Windows NT$"
+;Signature  = "$ReactOS$"
+LayoutFile = layout.inf
+Class      = Battery
+ClassGUID  = {72631E54-78A4-11D0-BCF7-00AA00B7B32A}
+Provider   = %ReactOS%
+DriverVer  = 02/28/2010,1.00
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+[ClassInstall32.NT]
+AddReg = BatteryClass.NT.AddReg
+
+[BatteryClass.NT.AddReg]
+HKR, , ,               0, %BatteryClassName%
+;FIXME: Add icon here
+
+[Manufacturer]
+%GenericMfg% = GenericMfg
+
+[GenericMfg]
+%ACPI\PNP0C0A.DeviceDesc% = CmBatt,ACPI\PNP0C0A
+%ACPI\ACPI0003.DeviceDesc% = CmBatt,ACPI\ACPI0003
+
+[CmBatt]
+CopyFiles = CmBatt_CopyFiles
+
+[CmBatt_CopyFiles]
+cmbatt.sys
+battc.sys
+
+[CmBatt.Services]
+AddService = cmbatt, 0x00000002, CmBatt_Service_Install
+
+[CmBatt_Service_Install]
+ServiceType   = 1
+StartType     = 3
+ErrorControl  = 1
+ServiceBinary = %12%\cmbatt.sys
+
+[Strings]
+ReactOS = "ReactOS Team"
+BatteryClassName = "Batteries"
+
+GenericMfg = "(Generic batteries)"
+ACPI\PNP0C0A.DeviceDesc = "ACPI-compliant control method battery"
+ACPI\ACPI0003.DeviceDesc = "AC adapter"
+

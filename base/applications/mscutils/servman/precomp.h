@@ -1,4 +1,5 @@
-#pragma once
+#ifndef __SERVMAN_PRECOMP_H
+#define __SERVMAN_PRECOMP_H
 
 //#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -184,3 +185,5 @@ HIMAGELIST InitImageList(UINT StartResource,
                          UINT Width,
                          UINT Height,
                          ULONG type);
+
+#endif /* __SERVMAN_PRECOMP_H */

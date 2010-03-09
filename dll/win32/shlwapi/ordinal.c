@@ -46,6 +46,7 @@
 #include "shlwapi.h"
 #include "shellapi.h"
 #include "commdlg.h"
+#include "mlang.h"
 #include "mshtmhst.h"
 #include "wine/unicode.h"
 #include "wine/debug.h"
@@ -450,14 +451,14 @@ RegisterDefaultAcceptHeaders_Exit:
  *
  * PARAMS
  *  langbuf [O] Destination for language string
- *  buflen  [I] Length of langbuf
+ *  buflen  [I] Length of langbuf in characters
  *          [0] Success: used length of langbuf
  *
  * RETURNS
  *  Success: S_OK.   langbuf is set to the language string found.
  *  Failure: E_FAIL, If any arguments are invalid, error occurred, or Explorer
  *           does not contain the setting.
- *           E_INVALIDARG, If the buffer is not big enough
+ *           HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER), If the buffer is not big enough
  */
 HRESULT WINAPI GetAcceptLanguagesW( LPWSTR langbuf, LPDWORD buflen)
 {
@@ -468,49 +469,50 @@ HRESULT WINAPI GetAcceptLanguagesW( LPWSTR langbuf, LPDWORD buflen)
 	'I','n','t','e','r','n','a','t','i','o','n','a','l',0};
     static const WCHAR valueW[] = {
 	'A','c','c','e','p','t','L','a','n','g','u','a','g','e',0};
-    static const WCHAR enusW[] = {'e','n','-','u','s',0};
     DWORD mystrlen, mytype;
+    DWORD len;
     HKEY mykey;
     HRESULT retval;
     LCID mylcid;
     WCHAR *mystr;
+    LONG lres;
+
+    TRACE("(%p, %p) *%p: %d\n", langbuf, buflen, buflen, buflen ? *buflen : -1);
 
     if(!langbuf || !buflen || !*buflen)
 	return E_FAIL;
 
     mystrlen = (*buflen > 20) ? *buflen : 20 ;
-    mystr = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR) * mystrlen);
+    len = mystrlen * sizeof(WCHAR);
+    mystr = HeapAlloc(GetProcessHeap(), 0, len);
+    mystr[0] = 0;
     RegOpenKeyW(HKEY_CURRENT_USER, szkeyW, &mykey);
-    if(RegQueryValueExW(mykey, valueW, 0, &mytype, (PBYTE)mystr, &mystrlen)) {
-        /* Did not find value */
-        mylcid = GetUserDefaultLCID();
-        /* somehow the mylcid translates into "en-us"
-         *  this is similar to "LOCALE_SABBREVLANGNAME"
-         *  which could be gotten via GetLocaleInfo.
-         *  The only problem is LOCALE_SABBREVLANGUAGE" is
-         *  a 3 char string (first 2 are country code and third is
-         *  letter for "sublanguage", which does not come close to
-         *  "en-us"
-         */
-        lstrcpyW(mystr, enusW);
-        mystrlen = lstrlenW(mystr);
-    } else {
-        /* handle returned string */
-        FIXME("missing code\n");
-    }
-    memcpy( langbuf, mystr, min(*buflen,strlenW(mystr)+1)*sizeof(WCHAR) );
-
-    if(*buflen > strlenW(mystr)) {
-	*buflen = strlenW(mystr);
-	retval = S_OK;
-    } else {
-	*buflen = 0;
-	retval = E_INVALIDARG;
-	SetLastError(ERROR_INSUFFICIENT_BUFFER);
-    }
+    lres = RegQueryValueExW(mykey, valueW, 0, &mytype, (PBYTE)mystr, &len);
     RegCloseKey(mykey);
+    len = lstrlenW(mystr);
+
+    if (!lres && (*buflen > len)) {
+        lstrcpyW(langbuf, mystr);
+        *buflen = len;
+        HeapFree(GetProcessHeap(), 0, mystr);
+        return S_OK;
+    }
+
+    /* Did not find a value in the registry or the user buffer is to small */
+    mylcid = GetUserDefaultLCID();
+    retval = LcidToRfc1766W(mylcid, mystr, mystrlen);
+    len = lstrlenW(mystr);
+
+    memcpy( langbuf, mystr, min(*buflen, len+1)*sizeof(WCHAR) );
     HeapFree(GetProcessHeap(), 0, mystr);
-    return retval;
+
+    if (*buflen > len) {
+        *buflen = len;
+        return S_OK;
+    }
+
+    *buflen = 0;
+    return __HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
 }
 
 /*************************************************************************
@@ -524,6 +526,8 @@ HRESULT WINAPI GetAcceptLanguagesA( LPSTR langbuf, LPDWORD buflen)
     DWORD buflenW, convlen;
     HRESULT retval;
 
+    TRACE("(%p, %p) *%p: %d\n", langbuf, buflen, buflen, buflen ? *buflen : -1);
+
     if(!langbuf || !buflen || !*buflen) return E_FAIL;
 
     buflenW = *buflen;
@@ -533,11 +537,20 @@ HRESULT WINAPI GetAcceptLanguagesA( LPSTR langbuf, LPDWORD buflen)
     if (retval == S_OK)
     {
         convlen = WideCharToMultiByte(CP_ACP, 0, langbufW, -1, langbuf, *buflen, NULL, NULL);
+        convlen--;  /* do not count the terminating 0 */
     }
     else  /* copy partial string anyway */
     {
         convlen = WideCharToMultiByte(CP_ACP, 0, langbufW, *buflen, langbuf, *buflen, NULL, NULL);
-        if (convlen < *buflen) langbuf[convlen] = 0;
+        if (convlen < *buflen)
+        {
+            langbuf[convlen] = 0;
+            convlen--;  /* do not count the terminating 0 */
+        }
+        else
+        {
+            convlen = *buflen;
+        }
     }
     *buflen = buflenW ? convlen : 0;
 
@@ -1069,23 +1082,25 @@ HRESULT WINAPI IUnknown_Exec(IUnknown* lpUnknown, REFGUID pguidCmdGroup,
  * PARAMS
  *  hWnd   [I] Window to get value from
  *  offset [I] Offset of value
- *  wMask  [I] Mask for uiFlags
- *  wFlags [I] Bits to set in window value
+ *  mask   [I] Mask for flags
+ *  flags  [I] Bits to set in window value
  *
  * RETURNS
  *  The new value as it was set, or 0 if any parameter is invalid.
  *
  * NOTES
- *  Any bits set in uiMask are cleared from the value, then any bits set in
- *  uiFlags are set in the value.
+ *  Only bits specified in mask are affected - set if present in flags and
+ *  reset otherwise.
  */
-LONG WINAPI SHSetWindowBits(HWND hwnd, INT offset, UINT wMask, UINT wFlags)
+LONG WINAPI SHSetWindowBits(HWND hwnd, INT offset, UINT mask, UINT flags)
 {
-  LONG ret = GetWindowLongA(hwnd, offset);
-  LONG newFlags = (wFlags & wMask) | (ret & ~wFlags);
+  LONG ret = GetWindowLongW(hwnd, offset);
+  LONG new_flags = (flags & mask) | (ret & ~mask);
 
-  if (newFlags != ret)
-    ret = SetWindowLongA(hwnd, offset, newFlags);
+  TRACE("%p %d %x %x\n", hwnd, offset, mask, flags);
+
+  if (new_flags != ret)
+    ret = SetWindowLongW(hwnd, offset, new_flags);
   return ret;
 }
 
@@ -1128,7 +1143,7 @@ HWND WINAPI SHSetParentHwnd(HWND hWnd, HWND hWndParent)
  * PARAMS
  *  lpUnkSink   [I] Sink for the connection point advise call
  *  riid        [I] REFIID of connection point to advise
- *  bAdviseOnly [I] TRUE = Advise only, FALSE = Unadvise first
+ *  fConnect    [I] TRUE = Connection being establisted, FALSE = broken
  *  lpUnknown   [I] Object supporting the IConnectionPointContainer interface
  *  lpCookie    [O] Pointer to connection point cookie
  *  lppCP       [O] Destination for the IConnectionPoint found
@@ -1140,7 +1155,7 @@ HWND WINAPI SHSetParentHwnd(HWND hWnd, HWND hWndParent)
  *           E_NOINTERFACE, if lpUnknown isn't an IConnectionPointContainer,
  *           Or an HRESULT error code if any call fails.
  */
-HRESULT WINAPI ConnectToConnectionPoint(IUnknown* lpUnkSink, REFIID riid, BOOL bAdviseOnly,
+HRESULT WINAPI ConnectToConnectionPoint(IUnknown* lpUnkSink, REFIID riid, BOOL fConnect,
                            IUnknown* lpUnknown, LPDWORD lpCookie,
                            IConnectionPoint **lppCP)
 {
@@ -1148,7 +1163,7 @@ HRESULT WINAPI ConnectToConnectionPoint(IUnknown* lpUnkSink, REFIID riid, BOOL b
   IConnectionPointContainer* lpContainer;
   IConnectionPoint *lpCP;
 
-  if(!lpUnknown || (bAdviseOnly && !lpUnkSink))
+  if(!lpUnknown || (fConnect && !lpUnkSink))
     return E_FAIL;
 
   if(lppCP)
@@ -1162,9 +1177,10 @@ HRESULT WINAPI ConnectToConnectionPoint(IUnknown* lpUnkSink, REFIID riid, BOOL b
 
     if (SUCCEEDED(hRet))
     {
-      if(!bAdviseOnly)
+      if(!fConnect)
         hRet = IConnectionPoint_Unadvise(lpCP, *lpCookie);
-      hRet = IConnectionPoint_Advise(lpCP, lpUnkSink, lpCookie);
+      else
+        hRet = IConnectionPoint_Advise(lpCP, lpUnkSink, lpCookie);
 
       if (FAILED(hRet))
         *lpCookie = 0;
@@ -2929,20 +2945,27 @@ static HRESULT SHLWAPI_InvokeByIID(
 {
   IEnumConnections *enumerator;
   CONNECTDATA rgcd;
+  static DISPPARAMS empty = {NULL, NULL, 0, 0};
+  DISPPARAMS* params = dispParams;
 
   HRESULT result = IConnectionPoint_EnumConnections(iCP, &enumerator);
   if (FAILED(result))
     return result;
 
+  /* Invoke is never happening with an NULL dispParams */
+  if (!params)
+    params = &empty;
+
   while(IEnumConnections_Next(enumerator, 1, &rgcd, NULL)==S_OK)
   {
     IDispatch *dispIface;
-    if (SUCCEEDED(IUnknown_QueryInterface(rgcd.pUnk, iid, (LPVOID*)&dispIface)) ||
+    if ((iid && SUCCEEDED(IUnknown_QueryInterface(rgcd.pUnk, iid, (LPVOID*)&dispIface))) ||
         SUCCEEDED(IUnknown_QueryInterface(rgcd.pUnk, &IID_IDispatch, (LPVOID*)&dispIface)))
     {
-      IDispatch_Invoke(dispIface, dispId, &IID_NULL, 0, DISPATCH_METHOD, dispParams, NULL, NULL, NULL);
+      IDispatch_Invoke(dispIface, dispId, &IID_NULL, 0, DISPATCH_METHOD, params, NULL, NULL, NULL);
       IDispatch_Release(dispIface);
     }
+    IUnknown_Release(rgcd.pUnk);
   }
 
   IEnumConnections_Release(enumerator);
@@ -2965,6 +2988,8 @@ HRESULT WINAPI IConnectionPoint_InvokeWithCancel( IConnectionPoint* iCP,
     result = IConnectionPoint_GetConnectionInterface(iCP, &iid);
     if (SUCCEEDED(result))
         result = SHLWAPI_InvokeByIID(iCP, &iid, dispId, dispParams);
+    else
+        result = SHLWAPI_InvokeByIID(iCP, NULL, dispId, dispParams);
 
     return result;
 }
@@ -2988,6 +3013,8 @@ HRESULT WINAPI IConnectionPoint_SimpleInvoke(
   result = IConnectionPoint_GetConnectionInterface(iCP, &iid);
   if (SUCCEEDED(result))
     result = SHLWAPI_InvokeByIID(iCP, &iid, dispId, dispParams);
+  else
+    result = SHLWAPI_InvokeByIID(iCP, NULL, dispId, dispParams);
 
   return result;
 }
@@ -3901,6 +3928,8 @@ BOOL WINAPI IsOS(DWORD feature)
     case OS_APPLIANCE:
         FIXME("(OS_APPLIANCE) What should we return here?\n");
         return FALSE;
+    case 0x25: /*OS_VISTAORGREATER*/
+        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT && majorv >= 6)
     }
 
 #undef ISOS_RETURN
@@ -4632,7 +4661,7 @@ HRESULT WINAPI SHGetViewStatePropertyBag(LPCITEMIDLIST pidl, LPWSTR bag_name,
  *  fileTime   [I] Pointer to FILETIME structure specifying the time
  *  flags      [I] Flags specifying the desired output
  *  buf        [O] Pointer to buffer for output
- *  bufSize    [I] Number of characters that can be contained in buffer
+ *  size       [I] Number of characters that can be contained in buffer
  *
  * RETURNS
  *  success: number of characters written to the buffer
@@ -4640,10 +4669,65 @@ HRESULT WINAPI SHGetViewStatePropertyBag(LPCITEMIDLIST pidl, LPWSTR bag_name,
  *
  */
 INT WINAPI SHFormatDateTimeW(const FILETIME UNALIGNED *fileTime, DWORD *flags,
-    LPWSTR buf, UINT bufSize)
+    LPWSTR buf, UINT size)
 {
-    FIXME("%p %p %s %d STUB\n", fileTime, flags, debugstr_w(buf), bufSize);
-    return 0;
+#define SHFORMATDT_UNSUPPORTED_FLAGS (FDTF_RELATIVE | FDTF_LTRDATE | FDTF_RTLDATE | FDTF_NOAUTOREADINGORDER)
+    DWORD fmt_flags = flags ? *flags : FDTF_DEFAULT;
+    SYSTEMTIME st;
+    FILETIME ft;
+    INT ret = 0;
+
+    TRACE("%p %p %p %u\n", fileTime, flags, buf, size);
+
+    if (!buf || !size)
+        return 0;
+
+    if (fmt_flags & SHFORMATDT_UNSUPPORTED_FLAGS)
+        FIXME("ignoring some flags - 0x%08x\n", fmt_flags & SHFORMATDT_UNSUPPORTED_FLAGS);
+
+    FileTimeToLocalFileTime(fileTime, &ft);
+    FileTimeToSystemTime(&ft, &st);
+
+    /* first of all date */
+    if (fmt_flags & (FDTF_LONGDATE | FDTF_SHORTDATE))
+    {
+        static const WCHAR sep1[] = {',',' ',0};
+        static const WCHAR sep2[] = {' ',0};
+
+        DWORD date = fmt_flags & FDTF_LONGDATE ? DATE_LONGDATE : DATE_SHORTDATE;
+        ret = GetDateFormatW(LOCALE_USER_DEFAULT, date, &st, NULL, buf, size);
+        if (ret >= size) return ret;
+
+        /* add separator */
+        if (ret < size && (fmt_flags & (FDTF_LONGTIME | FDTF_SHORTTIME)))
+        {
+            if ((fmt_flags & FDTF_LONGDATE) && (ret < size + 2))
+            {
+                if (ret < size + 2)
+                {
+                   lstrcatW(&buf[ret-1], sep1);
+                   ret += 2;
+                }
+            }
+            else
+            {
+                lstrcatW(&buf[ret-1], sep2);
+                ret++;
+            }
+        }
+    }
+    /* time part */
+    if (fmt_flags & (FDTF_LONGTIME | FDTF_SHORTTIME))
+    {
+        DWORD time = fmt_flags & FDTF_LONGTIME ? 0 : TIME_NOSECONDS;
+
+        if (ret) ret--;
+        ret += GetTimeFormatW(LOCALE_USER_DEFAULT, time, &st, NULL, &buf[ret], size - ret);
+    }
+
+    return ret;
+
+#undef SHFORMATDT_UNSUPPORTED_FLAGS
 }
 
 /***********************************************************************
@@ -4653,21 +4737,19 @@ INT WINAPI SHFormatDateTimeW(const FILETIME UNALIGNED *fileTime, DWORD *flags,
  *
  */
 INT WINAPI SHFormatDateTimeA(const FILETIME UNALIGNED *fileTime, DWORD *flags,
-    LPCSTR buf, UINT bufSize)
+    LPSTR buf, UINT size)
 {
     WCHAR *bufW;
-    DWORD buflenW, convlen;
     INT retval;
 
-    if (!buf || !bufSize)
+    if (!buf || !size)
         return 0;
 
-    buflenW = bufSize;
-    bufW = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR) * buflenW);
-    retval = SHFormatDateTimeW(fileTime, flags, bufW, buflenW);
+    bufW = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR) * size);
+    retval = SHFormatDateTimeW(fileTime, flags, bufW, size);
 
     if (retval != 0)
-        convlen = WideCharToMultiByte(CP_ACP, 0, bufW, -1, (LPSTR) buf, bufSize, NULL, NULL);
+        WideCharToMultiByte(CP_ACP, 0, bufW, -1, buf, size, NULL, NULL);
 
     HeapFree(GetProcessHeap(), 0, bufW);
     return retval;
@@ -4696,4 +4778,79 @@ INT WINAPI ZoneCheckUrlExW(LPWSTR szURL, PVOID pUnknown, DWORD dwUnknown2,
         dwUnknown3, dwUnknown4, dwUnknown5, dwUnknown6, dwUnknown7);
 
     return 0;
+}
+
+/***********************************************************************
+ *             SHVerbExistsNA [SHLWAPI.196]
+ *
+ *
+ * PARAMS
+ *
+ *  verb [I] a string, often appears to be an extension.
+ *
+ *  Other parameters currently unknown.
+ *
+ * RETURNS
+ *  unknown
+ */
+INT WINAPI SHVerbExistsNA(LPSTR verb, PVOID pUnknown, PVOID pUnknown2, DWORD dwUnknown3)
+{
+    FIXME("(%s, %p, %p, %i) STUB\n",verb, pUnknown, pUnknown2, dwUnknown3);
+    return 0;
+}
+
+/*************************************************************************
+ *      @	[SHLWAPI.538]
+ *
+ *  Undocumented:  Implementation guessed at via Name and behavior
+ *
+ * PARAMS
+ *  lpUnknown [I] Object to get an IServiceProvider interface from
+ *  riid      [I] Function requested for QueryService call
+ *  lppOut    [O] Destination for the service interface pointer
+ *
+ * RETURNS
+ *  Success: S_OK. lppOut contains an object providing the requested service
+ *  Failure: An HRESULT error code
+ *
+ * NOTES
+ *  lpUnknown is expected to support the IServiceProvider interface.
+ */
+HRESULT WINAPI IUnknown_QueryServiceForWebBrowserApp(IUnknown* lpUnknown,
+        REFGUID riid, LPVOID *lppOut)
+{
+    FIXME("%p %s %p semi-STUB\n", lpUnknown, debugstr_guid(riid), lppOut);
+    return IUnknown_QueryService(lpUnknown,&IID_IWebBrowserApp,riid,lppOut);
+}
+
+/**************************************************************************
+ *  SHPropertyBag_ReadLONG (SHLWAPI.496)
+ *
+ * This function asks a property bag to read a named property as a LONG.
+ *
+ * PARAMS
+ *  ppb: a IPropertyBag interface
+ *  pszPropName:  Unicode string that names the property
+ *  pValue: address to receive the property value as a 32-bit signed integer
+ *
+ * RETURNS
+ *  0 for Success
+ */
+BOOL WINAPI SHPropertyBag_ReadLONG(IPropertyBag *ppb, LPCWSTR pszPropName, LPLONG pValue)
+{
+    VARIANT var;
+    HRESULT hr;
+    TRACE("%p %s %p\n", ppb,debugstr_w(pszPropName),pValue);
+    if (!pszPropName || !ppb || !pValue)
+        return E_INVALIDARG;
+    V_VT(&var) = VT_I4;
+    hr = IPropertyBag_Read(ppb, pszPropName, &var, NULL);
+    if (SUCCEEDED(hr))
+    {
+        if (V_VT(&var) == VT_I4)
+            *pValue = V_I4(&var);
+        else
+            hr = DISP_E_BADVARTYPE;
+    }
+    return hr;
 }

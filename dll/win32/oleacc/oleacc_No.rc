@@ -1,0 +1,95 @@
+/*
+ * Norwegian Bokmål resources for oleacc
+ *
+ * Copyright 2009 Alexander N. Sørnes <alex@thehandofagony.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "oleacc.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
+
+STRINGTABLE DISCARDABLE
+{
+    0 "unknown object" /* undocumented */
+    ROLE_SYSTEM_TITLEBAR    "tittellinje"
+    ROLE_SYSTEM_MENUBAR     "menylinje"
+    ROLE_SYSTEM_SCROLLBAR   "rullefelt"
+    ROLE_SYSTEM_GRIP        "grip"
+    ROLE_SYSTEM_SOUND       "lyd"
+    ROLE_SYSTEM_CURSOR      "peker"
+    ROLE_SYSTEM_CARET       "markør"
+    ROLE_SYSTEM_ALERT       "varsel"
+    ROLE_SYSTEM_WINDOW      "vindu"
+    ROLE_SYSTEM_CLIENT      "klient"
+    ROLE_SYSTEM_MENUPOPUP   "sprettoppmeny"
+    ROLE_SYSTEM_MENUITEM    "menyelement"
+    ROLE_SYSTEM_TOOLTIP     "verktøytips"
+    ROLE_SYSTEM_APPLICATION "program"
+    ROLE_SYSTEM_DOCUMENT    "dokument"
+    ROLE_SYSTEM_PANE        "panel"
+    ROLE_SYSTEM_CHART       "diagram"
+    ROLE_SYSTEM_DIALOG      "meldingsvindu"
+    ROLE_SYSTEM_BORDER      "kant"
+    ROLE_SYSTEM_GROUPING    "gruppering"
+    ROLE_SYSTEM_SEPARATOR   "skille"
+    ROLE_SYSTEM_TOOLBAR     "verktøylinje"
+    ROLE_SYSTEM_STATUSBAR   "status bar"
+    ROLE_SYSTEM_TABLE        "tabell"
+    ROLE_SYSTEM_COLUMNHEADER "kolonneoverskrift"
+    ROLE_SYSTEM_ROWHEADER    "radoverskrift"
+    ROLE_SYSTEM_COLUMN       "kolonne"
+    ROLE_SYSTEM_ROW          "rad"
+    ROLE_SYSTEM_CELL         "celle"
+    ROLE_SYSTEM_LINK         "kobling"
+    ROLE_SYSTEM_HELPBALLOON  "hjelpetekst"
+    ROLE_SYSTEM_CHARACTER    "tegn"
+    ROLE_SYSTEM_LIST         "liste"
+    ROLE_SYSTEM_LISTITEM     "listeelement"
+    ROLE_SYSTEM_OUTLINE      "utheving"
+    ROLE_SYSTEM_OUTLINEITEM  "uthevet element"
+    ROLE_SYSTEM_PAGETAB      "sidefane"
+    ROLE_SYSTEM_PROPERTYPAGE "fane"
+    ROLE_SYSTEM_INDICATOR    "indikator"
+    ROLE_SYSTEM_GRAPHIC      "grafikk"
+    ROLE_SYSTEM_STATICTEXT   "statisk tekst"
+    ROLE_SYSTEM_TEXT         "tekst"
+    ROLE_SYSTEM_PUSHBUTTON   "knapp"
+    ROLE_SYSTEM_CHECKBUTTON  "avkrysningsboks"
+    ROLE_SYSTEM_RADIOBUTTON  "radioknapp"
+    ROLE_SYSTEM_COMBOBOX     "komboboks"
+    ROLE_SYSTEM_DROPLIST     "rullemeny"
+    ROLE_SYSTEM_PROGRESSBAR  "framgangsindikator"
+    ROLE_SYSTEM_DIAL         "hjul"
+    ROLE_SYSTEM_HOTKEYFIELD  "felt for hurtigtaster"
+    ROLE_SYSTEM_SLIDER       "rullefelt"
+    ROLE_SYSTEM_SPINBUTTON   "rullemeny"
+    ROLE_SYSTEM_DIAGRAM      "diagram"
+    ROLE_SYSTEM_ANIMATION    "animasjon"
+    ROLE_SYSTEM_EQUATION     "likning"
+    ROLE_SYSTEM_BUTTONDROPDOWN "knapp for rullemeny"
+    ROLE_SYSTEM_BUTTONMENU   "menyknapp"
+    ROLE_SYSTEM_BUTTONDROPDOWNGRID "felt for rullemeny-knapp"
+    ROLE_SYSTEM_WHITESPACE   "mellomrom"
+    ROLE_SYSTEM_PAGETABLIST  "faneliste"
+    ROLE_SYSTEM_CLOCK        "klokke"
+    ROLE_SYSTEM_SPLITBUTTON  "oppdelt knapp"
+    ROLE_SYSTEM_IPADDRESS    "IP-adresse"
+    ROLE_SYSTEM_OUTLINEBUTTON "utheving for knapp"
+}

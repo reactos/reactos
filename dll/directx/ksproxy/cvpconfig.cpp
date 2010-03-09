@@ -8,8 +8,6 @@
  */
 #include "precomp.h"
 
-const GUID IID_IVPConfig = {0xbc29a660, 0x30e3, 0x11d0, {0x9e, 0x69, 0x0, 0xc0, 0x4f, 0xd7, 0xc1, 0x5b}};
-
 class CVPConfig : public IVPConfig,
                   public IDistributorNotify
 {
@@ -302,6 +300,8 @@ CVPConfig_Constructor(
     REFIID riid,
     LPVOID * ppv)
 {
+    OutputDebugStringW(L"CVPConfig_Constructor\n");
+
     CVPConfig * handler = new CVPConfig();
 
     if (!handler)

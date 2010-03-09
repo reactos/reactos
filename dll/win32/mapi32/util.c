@@ -1037,7 +1037,7 @@ void load_mapi_providers(void)
     TRACE("appName: %s\n", debugstr_w(appName));
 
     appKey = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR) * (lstrlenW(regkey_mail) +
-        lstrlenW(regkey_backslash) + lstrlenW(appName)));
+        lstrlenW(regkey_backslash) + lstrlenW(appName) + 1));
 
     if (!appKey)
         goto cleanUp;

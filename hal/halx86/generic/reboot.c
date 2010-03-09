@@ -98,8 +98,10 @@ HalReturnToFirmware(IN FIRMWARE_REENTRY Action)
         case HalHaltRoutine:
         case HalRebootRoutine:
 
+#ifndef _MINIHAL_
             /* Acquire the display */
             InbvAcquireDisplayOwnership();
+#endif
 
             /* Call the internal reboot function */
             HalpReboot();

@@ -20,6 +20,9 @@
 #include <freeldr.h>
 #include <debug.h>
 
+VOID NTAPI HalpInitializePciStubs(VOID);
+VOID NTAPI HalpInitBusHandler(VOID);
+
 VOID BootMain(LPSTR CmdLine)
 {
 	CmdLineParse(CmdLine);
@@ -44,5 +47,7 @@ VOID BootMain(LPSTR CmdLine)
 		return;
 	}
 
+	HalpInitializePciStubs();
+	HalpInitBusHandler();
 	RunLoader();
 }

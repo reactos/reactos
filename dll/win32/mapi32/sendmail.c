@@ -30,6 +30,7 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winerror.h"
+#include "winuser.h"
 #include "objbase.h"
 #include "objidl.h"
 #include "mapi.h"
@@ -41,6 +42,7 @@
 #include "shlwapi.h"
 #include "wine/debug.h"
 #include "util.h"
+#include "res.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(mapi);
 
@@ -383,27 +385,11 @@ cleanup: ;
  *  Success: SUCCESS_SUCCESS
  *  Failure: MAPI_E_FAILURE
  *
- * NOTES
- *  The fallback procedure is a temporary hack.
  */
 ULONG WINAPI MAPISendMail( LHANDLE session, ULONG_PTR uiparam,
     lpMapiMessage message, FLAGS flags, ULONG reserved )
 {
-    ULONG ret = MAPI_E_FAILURE;
-    unsigned int i, to_count = 0, cc_count = 0, bcc_count = 0;
-    unsigned int to_size = 0, cc_size = 0, bcc_size = 0, subj_size, body_size;
-
-    char *to = NULL, *cc = NULL, *bcc = NULL;
-    const char *address, *subject, *body;
-    static const char format[] =
-        "mailto:\"%s\"?subject=\"%s\"&cc=\"%s\"&bcc=\"%s\"&body=\"%s\"";
-    char *mailto = NULL, *escape = NULL;
-    char empty_string[] = "";
-    HRESULT res;
-    DWORD size;
-
-    TRACE( "(0x%08x 0x%08lx %p 0x%08x 0x%08x)\n", session, uiparam,
-           message, flags, reserved );
+    WCHAR msg_title[READ_BUF_SIZE], error_msg[READ_BUF_SIZE];
 
     /* Check to see if we have a Simple MAPI provider loaded */
     if (mapiFunctions.MAPISendMail)
@@ -413,133 +399,13 @@ ULONG WINAPI MAPISendMail( LHANDLE session, ULONG_PTR uiparam,
     if (MAPIInitialize(NULL) == S_OK)
         return sendmail_extended_mapi(session, uiparam, message, flags, reserved);
 
-    /* Fall back on our own implementation */
-    if (!message) return MAPI_E_FAILURE;
+    /* Display an error message since we apparently have no mail clients */
+    LoadStringW(hInstMAPI32, IDS_NO_MAPI_CLIENT, error_msg, sizeof(error_msg) / sizeof(WCHAR));
+    LoadStringW(hInstMAPI32, IDS_SEND_MAIL, msg_title, sizeof(msg_title) / sizeof(WCHAR));
 
-    for (i = 0; i < message->nRecipCount; i++)
-    {
-        if (!message->lpRecips)
-        {
-            WARN("No recipients found\n");
-            return MAPI_E_FAILURE;
-        }
+    MessageBoxW((HWND) uiparam, error_msg, msg_title, MB_ICONEXCLAMATION);
 
-        address = message->lpRecips[i].lpszAddress;
-        if (address)
-        {
-            switch (message->lpRecips[i].ulRecipClass)
-            {
-            case MAPI_ORIG:
-                TRACE( "From: %s\n", debugstr_a(address) );
-                break;
-            case MAPI_TO:
-                TRACE( "To: %s\n", debugstr_a(address) );
-                to_size += lstrlenA( address ) + 1;
-                break;
-            case MAPI_CC:
-                TRACE( "Cc: %s\n", debugstr_a(address) );
-                cc_size += lstrlenA( address ) + 1;
-                break;
-            case MAPI_BCC:
-                TRACE( "Bcc: %s\n", debugstr_a(address) );
-                bcc_size += lstrlenA( address ) + 1;
-                break;
-            default:
-                TRACE( "Unknown recipient class: %d\n",
-                       message->lpRecips[i].ulRecipClass );
-            }
-        }
-        else
-            FIXME("Name resolution and entry identifiers not supported\n");
-    }
-    if (message->nFileCount) FIXME("Ignoring attachments\n");
-
-    subject = message->lpszSubject ? message->lpszSubject : "";
-    body = message->lpszNoteText ? message->lpszNoteText : "";
-
-    TRACE( "Subject: %s\n", debugstr_a(subject) );
-    TRACE( "Body: %s\n", debugstr_a(body) );
-
-    subj_size = lstrlenA( subject );
-    body_size = lstrlenA( body );
-
-    ret = MAPI_E_INSUFFICIENT_MEMORY;
-    if (to_size)
-    {
-        to = HeapAlloc( GetProcessHeap(), 0, to_size );
-        if (!to) goto exit;
-        to[0] = 0;
-    }
-    if (cc_size)
-    {
-        cc = HeapAlloc( GetProcessHeap(), 0, cc_size );
-        if (!cc) goto exit;
-        cc[0] = 0;
-    }
-    if (bcc_size)
-    {
-        bcc = HeapAlloc( GetProcessHeap(), 0, bcc_size );
-        if (!bcc) goto exit;
-        bcc[0] = 0;
-    }
-
-    if (message->lpOriginator)
-        TRACE( "From: %s\n", debugstr_a(message->lpOriginator->lpszAddress) );
-
-    for (i = 0; i < message->nRecipCount; i++)
-    {
-        address = message->lpRecips[i].lpszAddress;
-        if (address)
-        {
-            switch (message->lpRecips[i].ulRecipClass)
-            {
-            case MAPI_TO:
-                if (to_count) lstrcatA( to, "," );
-                lstrcatA( to, address );
-                to_count++;
-                break;
-            case MAPI_CC:
-                if (cc_count) lstrcatA( cc, "," );
-                lstrcatA( cc, address );
-                cc_count++;
-                break;
-            case MAPI_BCC:
-                if (bcc_count) lstrcatA( bcc, "," );
-                lstrcatA( bcc, address );
-                bcc_count++;
-                break;
-            }
-        }
-    }
-    ret = MAPI_E_FAILURE;
-    size = sizeof(format) + to_size + cc_size + bcc_size + subj_size + body_size;
-    
-    mailto = HeapAlloc( GetProcessHeap(), 0, size );
-    if (!mailto) goto exit;
-
-    sprintf( mailto, format, to ? to : "", subject, cc ? cc : "", bcc ? bcc : "", body );
-
-    size = 1;
-    res = UrlEscapeA( mailto, empty_string, &size, URL_ESCAPE_SPACES_ONLY );
-    if (res != E_POINTER) goto exit;
-
-    escape = HeapAlloc( GetProcessHeap(), 0, size );
-    if (!escape) goto exit;
-
-    res = UrlEscapeA( mailto, escape, &size, URL_ESCAPE_SPACES_ONLY );
-    if (res != S_OK) goto exit;
-
-    if ((UINT_PTR)ShellExecuteA( NULL, "open", escape, NULL, NULL, 0 ) > 32)
-        ret = SUCCESS_SUCCESS;
-
-exit:
-    HeapFree( GetProcessHeap(), 0, to );
-    HeapFree( GetProcessHeap(), 0, cc );
-    HeapFree( GetProcessHeap(), 0, bcc );
-    HeapFree( GetProcessHeap(), 0, mailto );
-    HeapFree( GetProcessHeap(), 0, escape );
-
-    return ret;
+    return MAPI_E_NOT_SUPPORTED;
 }
 
 ULONG WINAPI MAPISendDocuments(ULONG_PTR uiparam, LPSTR delim, LPSTR paths,

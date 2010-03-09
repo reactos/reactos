@@ -44,6 +44,7 @@ static struct cp_extra_info_t g_cpextrainfo[] =
     {936, {0x40, 0xfe, 0, 0}},
     {949, {0x41, 0xfe, 0, 0}},
     {950, {0x40, 0x7e, 0xa1, 0xfe, 0, 0}},
+    {1361, {0x31, 0x7e, 0x81, 0xfe, 0, 0}},
     {20932, {1, 255, 0, 0}},  /* seems to give different results on different systems */
     {0, {1, 255, 0, 0}}       /* match all with FIXME */
 };

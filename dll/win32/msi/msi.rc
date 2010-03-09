@@ -29,27 +29,30 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 #include "msi_Bg.rc"
 #include "msi_Da.rc"
-#include "msi_De.rc"
 #include "msi_En.rc"
 #include "msi_Eo.rc"
 #include "msi_Es.rc"
 #include "msi_Fi.rc"
-#include "msi_Fr.rc"
 #include "msi_Hu.rc"
-#include "msi_It.rc"
 #include "msi_Ko.rc"
-#include "msi_Lt.rc"
 #include "msi_Nl.rc"
 #include "msi_No.rc"
 #include "msi_Pl.rc"
 #include "msi_Pt.rc"
-#include "msi_Ro.rc"
-#include "msi_Ru.rc"
-#include "msi_Si.rc"
 #include "msi_Sv.rc"
 #include "msi_Tr.rc"
 #include "msi_Uk.rc"
 #include "msi_Zh.rc"
+
+/* UTF-8 */
+#include "msi_De.rc"
+#include "msi_Fr.rc"
+#include "msi_It.rc"
+#include "msi_Lt.rc"
+#include "msi_Ro.rc"
+#include "msi_Ru.rc"
+#include "msi_Si.rc"
+
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 

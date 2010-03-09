@@ -637,8 +637,12 @@ DWORD RControlService(
     {
         /* Send control code to the service */
         dwError = ScmControlService(lpService,
-                                    dwControl,
-                                    lpServiceStatus);
+                                    dwControl);
+
+        /* Return service status information */
+        RtlCopyMemory(lpServiceStatus,
+                      &lpService->Status,
+                      sizeof(SERVICE_STATUS));
     }
 
     if ((dwError == ERROR_SUCCESS) && (pcbBytesNeeded))
@@ -652,10 +656,6 @@ DWORD RControlService(
         lpService->ThreadId = 0;
     }
 
-    /* Return service status information */
-    RtlCopyMemory(lpServiceStatus,
-                  &lpService->Status,
-                  sizeof(SERVICE_STATUS));
 
     return dwError;
 }
@@ -978,10 +978,14 @@ DWORD RQueryServiceStatus(
         return ERROR_INVALID_HANDLE;
     }
 
+    ScmLockDatabaseShared();
+
     /* Return service status information */
     RtlCopyMemory(lpServiceStatus,
                   &lpService->Status,
                   sizeof(SERVICE_STATUS));
+
+    ScmUnlockDatabase();
 
     return ERROR_SUCCESS;
 }
@@ -1030,7 +1034,7 @@ DWORD RSetServiceStatus(
         return ERROR_INVALID_HANDLE;
     }
 
-    lpService = ScmGetServiceEntryByClientHandle((HANDLE)hServiceStatus);
+    lpService = (PSERVICE)hServiceStatus;
     if (lpService == NULL)
     {
         DPRINT("lpService == NULL!\n");
@@ -1059,10 +1063,13 @@ DWORD RSetServiceStatus(
         return ERROR_INVALID_DATA;
     }
 
+    ScmLockDatabaseExclusive();
 
     RtlCopyMemory(&lpService->Status,
                   lpServiceStatus,
                   sizeof(SERVICE_STATUS));
+
+    ScmUnlockDatabase();
 
     DPRINT("Set %S to %lu\n", lpService->lpDisplayName, lpService->Status.dwCurrentState);
     DPRINT("RSetServiceStatus() done\n");

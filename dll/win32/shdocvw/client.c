@@ -73,7 +73,7 @@ static HRESULT WINAPI ClientSite_QueryInterface(IOleClientSite *iface, REFIID ri
         return S_OK;
     }
 
-    WARN("Unsupported intrface %s\n", debugstr_guid(riid));
+    WARN("Unsupported interface %s\n", debugstr_guid(riid));
 
     return E_NOINTERFACE;
 }

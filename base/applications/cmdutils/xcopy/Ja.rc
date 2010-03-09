@@ -81,4 +81,3 @@ XCOPY 送り元 [送り先] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
 \t\tコピー先がコピー元より古いファイルだけコピーします。\n\n"
 
 }
-#pragma code_page(default)

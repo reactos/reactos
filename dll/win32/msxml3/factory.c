@@ -167,7 +167,8 @@ HRESULT WINAPI DllGetClassObject( REFCLSID rclsid, REFIID iid, LPVOID *ppv )
         cf = (IClassFactory*) &domdoccf.lpVtbl;
     }
     else if( IsEqualCLSID( rclsid, &CLSID_SAXXMLReader) ||
-             IsEqualCLSID( rclsid, &CLSID_SAXXMLReader30 ))
+             IsEqualCLSID( rclsid, &CLSID_SAXXMLReader30 ) ||
+             IsEqualCLSID( rclsid, &CLSID_SAXXMLReader40 ))
     {
         cf = (IClassFactory*) &saxreadcf.lpVtbl;
     }

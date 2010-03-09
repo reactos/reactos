@@ -55,7 +55,7 @@ static HRESULT WINAPI dom_pi_QueryInterface(
     void** ppvObject )
 {
     dom_pi *This = impl_from_IXMLDOMProcessingInstruction( iface );
-    TRACE("%p %s %p\n", This, debugstr_guid(riid), ppvObject);
+    TRACE("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppvObject);
 
     if ( IsEqualGUID( riid, &IID_IXMLDOMProcessingInstruction ) ||
          IsEqualGUID( riid, &IID_IDispatch ) ||
@@ -526,7 +526,7 @@ static HRESULT WINAPI dom_pi_put_data(
     BSTR sTarget;
     static const WCHAR szXML[] = {'x','m','l',0};
 
-    TRACE("%p %s\n", This, debugstr_w(data) );
+    TRACE("(%p)->(%s)\n", This, debugstr_w(data) );
 
     /* Cannot set data to a PI node whose target is 'xml' */
     hr = dom_pi_get_nodeName(iface, &sTarget);

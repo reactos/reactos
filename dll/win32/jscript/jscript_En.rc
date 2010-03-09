@@ -41,6 +41,7 @@ STRINGTABLE DISCARDABLE
     IDS_NOT_BOOL            "Boolean object expected"
     IDS_JSCRIPT_EXPECTED    "JScript object expected"
     IDS_REGEXP_SYNTAX_ERROR "Syntax error in regular expression"
+    IDS_URI_INVALID_CHAR    "URI to be encoded contains invalid characters"
     IDS_INVALID_LENGTH      "Array length must be a finite positive integer"
     IDS_ARRAY_EXPECTED      "Array object expected"
 }

@@ -23,7 +23,7 @@ HvpWriteLog(
    PVOID BlockPtr;
    BOOLEAN Success;
 
-   DPRINT1("FIXME: HvpWriteLog doesn't do anything atm\n");
+   UNIMPLEMENTED;
    return TRUE;
 
    ASSERT(RegistryHive->ReadOnly == FALSE);

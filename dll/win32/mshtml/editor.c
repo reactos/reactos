@@ -298,7 +298,7 @@ static void get_font_size(HTMLDocument *This, WCHAR *ret)
 
                 TRACE("found font tag %p\n", elem);
 
-                nsAString_Init(&size_str, sizeW);
+                nsAString_InitDepend(&size_str, sizeW);
                 nsAString_Init(&val_str, NULL);
 
                 nsIDOMElement_GetAttribute(elem, &size_str, &val_str);
@@ -360,10 +360,11 @@ static void set_font_size(HTMLDocument *This, LPCWSTR size)
 
     create_nselem(This->doc_node, fontW, &elem);
 
-    nsAString_Init(&size_str, sizeW);
-    nsAString_Init(&val_str, size);
+    nsAString_InitDepend(&size_str, sizeW);
+    nsAString_InitDepend(&val_str, size);
 
     nsIDOMElement_SetAttribute(elem, &size_str, &val_str);
+    nsAString_Finish(&val_str);
 
     nsISelection_GetRangeAt(nsselection, 0, &range);
     nsISelection_GetIsCollapsed(nsselection, &collapsed);
@@ -384,7 +385,6 @@ static void set_font_size(HTMLDocument *This, LPCWSTR size)
     nsIDOMElement_Release(elem);
 
     nsAString_Finish(&size_str);
-    nsAString_Finish(&val_str);
 
     set_dirty(This, VARIANT_TRUE);
 }
@@ -1167,8 +1167,8 @@ static HRESULT exec_hyperlink(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in,
     /* create an element for the link */
     create_nselem(This->doc_node, aW, &anchor_elem);
 
-    nsAString_Init(&href_str, hrefW);
-    nsAString_Init(&ns_url, url);
+    nsAString_InitDepend(&href_str, hrefW);
+    nsAString_InitDepend(&ns_url, url);
     nsIDOMElement_SetAttribute(anchor_elem, &href_str, &ns_url);
     nsAString_Finish(&href_str);
 

@@ -54,34 +54,33 @@
      kINSTANCEOF = 270,
      kNEW = 271,
      kNULL = 272,
-     kUNDEFINED = 273,
-     kRETURN = 274,
-     kSWITCH = 275,
-     kTHIS = 276,
-     kTHROW = 277,
-     kTRUE = 278,
-     kFALSE = 279,
-     kTRY = 280,
-     kTYPEOF = 281,
-     kVAR = 282,
-     kVOID = 283,
-     kWHILE = 284,
-     kWITH = 285,
-     tANDAND = 286,
-     tOROR = 287,
-     tINC = 288,
-     tDEC = 289,
-     tHTMLCOMMENT = 290,
-     kDIVEQ = 291,
-     kFUNCTION = 292,
-     tIdentifier = 293,
-     tAssignOper = 294,
-     tEqOper = 295,
-     tShiftOper = 296,
-     tRelOper = 297,
-     tNumericLiteral = 298,
-     tStringLiteral = 299,
-     LOWER_THAN_ELSE = 300
+     kRETURN = 273,
+     kSWITCH = 274,
+     kTHIS = 275,
+     kTHROW = 276,
+     kTRUE = 277,
+     kFALSE = 278,
+     kTRY = 279,
+     kTYPEOF = 280,
+     kVAR = 281,
+     kVOID = 282,
+     kWHILE = 283,
+     kWITH = 284,
+     tANDAND = 285,
+     tOROR = 286,
+     tINC = 287,
+     tDEC = 288,
+     tHTMLCOMMENT = 289,
+     kDIVEQ = 290,
+     kFUNCTION = 291,
+     tIdentifier = 292,
+     tAssignOper = 293,
+     tEqOper = 294,
+     tShiftOper = 295,
+     tRelOper = 296,
+     tNumericLiteral = 297,
+     tStringLiteral = 298,
+     LOWER_THAN_ELSE = 299
    };
 #endif
 
@@ -92,7 +91,7 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 151 "parser.y"
+#line 150 "parser.y"
 
     int                     ival;
     const WCHAR             *srcptr;
@@ -116,7 +115,7 @@ typedef union YYSTYPE
 
 
 /* Line 1676 of yacc.c  */
-#line 120 "parser.tab.h"
+#line 119 "parser.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

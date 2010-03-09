@@ -283,10 +283,10 @@ static HRESULT WINAPI HTMLFrameBase_put_scrolling(IHTMLFrameBase *iface, BSTR v)
         return E_INVALIDARG;
 
     if(This->nsframe) {
-        nsAString_Init(&nsstr, v);
+        nsAString_InitDepend(&nsstr, v);
         nsres = nsIDOMHTMLFrameElement_SetScrolling(This->nsframe, &nsstr);
     }else if(This->nsiframe) {
-        nsAString_Init(&nsstr, v);
+        nsAString_InitDepend(&nsstr, v);
         nsres = nsIDOMHTMLIFrameElement_SetScrolling(This->nsiframe, &nsstr);
     }else {
         ERR("No attached ns frame object\n");
@@ -561,109 +561,4 @@ void HTMLFrameBase_Init(HTMLFrameBase *This, HTMLDocumentNode *doc, nsIDOMHTMLEl
             ERR("Could not get nsIDOMHTML[I]Frame interface\n");
     }else
         This->nsiframe = NULL;
-}
-
-typedef struct {
-    HTMLFrameBase framebase;
-} HTMLFrameElement;
-
-#define HTMLFRAME_NODE_THIS(iface) DEFINE_THIS2(HTMLFrameElement, framebase.element.node, iface)
-
-static HRESULT HTMLFrameElement_QI(HTMLDOMNode *iface, REFIID riid, void **ppv)
-{
-    HTMLFrameElement *This = HTMLFRAME_NODE_THIS(iface);
-
-    return HTMLFrameBase_QI(&This->framebase, riid, ppv);
-}
-
-static void HTMLFrameElement_destructor(HTMLDOMNode *iface)
-{
-    HTMLFrameElement *This = HTMLFRAME_NODE_THIS(iface);
-
-    HTMLFrameBase_destructor(&This->framebase);
-}
-
-static HRESULT HTMLFrameElement_get_document(HTMLDOMNode *iface, IDispatch **p)
-{
-    HTMLFrameElement *This = HTMLFRAME_NODE_THIS(iface);
-
-    if(!This->framebase.content_window || !This->framebase.content_window->doc) {
-        *p = NULL;
-        return S_OK;
-    }
-
-    *p = (IDispatch*)HTMLDOC(&This->framebase.content_window->doc->basedoc);
-    IDispatch_AddRef(*p);
-    return S_OK;
-}
-
-static HRESULT HTMLFrameElement_get_dispid(HTMLDOMNode *iface, BSTR name,
-        DWORD grfdex, DISPID *pid)
-{
-    HTMLFrameElement *This = HTMLFRAME_NODE_THIS(iface);
-
-    if(!This->framebase.content_window)
-        return DISP_E_UNKNOWNNAME;
-
-    return search_window_props(This->framebase.content_window, name, grfdex, pid);
-}
-
-static HRESULT HTMLFrameElement_invoke(HTMLDOMNode *iface, DISPID id, LCID lcid,
-        WORD flags, DISPPARAMS *params, VARIANT *res, EXCEPINFO *ei, IServiceProvider *caller)
-{
-    HTMLFrameElement *This = HTMLFRAME_NODE_THIS(iface);
-
-    if(!This->framebase.content_window) {
-        ERR("no content window to invoke on\n");
-        return E_FAIL;
-    }
-
-    return IDispatchEx_InvokeEx(DISPATCHEX(This->framebase.content_window), id, lcid, flags, params, res, ei, caller);
-}
-
-static HRESULT HTMLFrameElement_bind_to_tree(HTMLDOMNode *iface)
-{
-    HTMLFrameElement *This = HTMLFRAME_NODE_THIS(iface);
-    nsIDOMDocument *nsdoc;
-    nsresult nsres;
-    HRESULT hres;
-
-    nsres = nsIDOMHTMLFrameElement_GetContentDocument(This->framebase.nsframe, &nsdoc);
-    if(NS_FAILED(nsres) || !nsdoc) {
-        ERR("GetContentDocument failed: %08x\n", nsres);
-        return E_FAIL;
-    }
-
-    hres = set_frame_doc(&This->framebase, nsdoc);
-    nsIDOMDocument_Release(nsdoc);
-    return hres;
-}
-
-#undef HTMLFRAME_NODE_THIS
-
-static const NodeImplVtbl HTMLFrameElementImplVtbl = {
-    HTMLFrameElement_QI,
-    HTMLFrameElement_destructor,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    HTMLFrameElement_get_document,
-    NULL,
-    HTMLFrameElement_get_dispid,
-    HTMLFrameElement_invoke,
-    HTMLFrameElement_bind_to_tree
-};
-
-HTMLElement *HTMLFrameElement_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem)
-{
-    HTMLFrameElement *ret;
-
-    ret = heap_alloc_zero(sizeof(HTMLFrameElement));
-
-    ret->framebase.element.node.vtbl = &HTMLFrameElementImplVtbl;
-
-    HTMLFrameBase_Init(&ret->framebase, doc, nselem, NULL);
-
-    return &ret->framebase.element;
 }

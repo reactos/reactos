@@ -1,5 +1,6 @@
 #pragma once
 
+#define _FORCENAMELESSUNION
 #define BUILDING_KS
 #define _KSDDK_
 #include <dshow.h>
@@ -14,8 +15,9 @@
 #include <dvp.h>
 #include <vptype.h>
 #include <vpconfig.h>
-
 #include <setupapi.h>
+#include <stdio.h>
+#include <vector>
 //#include <debug.h>
 
 typedef HRESULT (CALLBACK *LPFNCREATEINSTANCE)(IUnknown* pUnkOuter, REFIID riid, LPVOID* ppvObject);
@@ -96,3 +98,43 @@ CKsProxy_Constructor(
     IUnknown * pUnkOuter,
     REFIID riid,
     LPVOID * ppv);
+
+/* input_pin.cpp */
+HRESULT
+WINAPI
+CInputPin_Constructor(
+    IBaseFilter * ParentFilter,
+    LPCWSTR PinName,
+    HANDLE hFilter,
+    ULONG PinId,
+    KSPIN_COMMUNICATION Communication,
+    REFIID riid,
+    LPVOID * ppv);
+
+/* output_pin.cpp */
+HRESULT
+WINAPI
+COutputPin_Constructor(
+    IBaseFilter * ParentFilter,
+    LPCWSTR PinName,
+    REFIID riid,
+    LPVOID * ppv);
+
+/* enumpins.cpp */
+HRESULT
+WINAPI
+CEnumPins_fnConstructor(
+    std::vector<IPin*> Pins,
+    REFIID riid,
+    LPVOID * ppv);
+
+/* enum_mediatypes.cpp */
+HRESULT
+WINAPI
+CEnumMediaTypes_fnConstructor(
+    ULONG MediaTypeCount,
+    AM_MEDIA_TYPE * MediaTypes,
+    REFIID riid,
+    LPVOID * ppv);
+
+

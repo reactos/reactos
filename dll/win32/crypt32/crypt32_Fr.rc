@@ -242,4 +242,3 @@ STRINGTABLE DISCARDABLE
     IDS_NETSCAPE_SMIME_CA "AC S/MIME"
     IDS_NETSCAPE_SIGN_CA "Signature CA"
 }
-#pragma code_page(default)

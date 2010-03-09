@@ -914,7 +914,7 @@ static HRESULT ShellView_OpenSelectedItems(IShellViewImpl * This)
 
 	if (0 == CF_IDLIST)
 	{
-	  CF_IDLIST = RegisterClipboardFormatA(CFSTR_SHELLIDLIST);
+	  CF_IDLIST = RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
 	}
 	fetc.cfFormat = CF_IDLIST;
 	fetc.ptd = NULL;

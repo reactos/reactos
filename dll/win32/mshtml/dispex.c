@@ -92,6 +92,7 @@ static REFIID tid_ids[] = {
     &DIID_DispHTMLElementCollection,
     &DIID_DispHTMLFormElement,
     &DIID_DispHTMLGenericElement,
+    &DIID_DispHTMLFrameElement,
     &DIID_DispHTMLIFrame,
     &DIID_DispHTMLImg,
     &DIID_DispHTMLInputElement,
@@ -99,10 +100,12 @@ static REFIID tid_ids[] = {
     &DIID_DispHTMLNavigator,
     &DIID_DispHTMLOptionElement,
     &DIID_DispHTMLScreen,
+    &DIID_DispHTMLScriptElement,
     &DIID_DispHTMLSelectElement,
     &DIID_DispHTMLStyle,
     &DIID_DispHTMLTable,
     &DIID_DispHTMLTableRow,
+    &DIID_DispHTMLTextAreaElement,
     &DIID_DispHTMLUnknownElement,
     &DIID_DispHTMLWindow2,
     &DIID_HTMLDocumentEvents,
@@ -133,12 +136,15 @@ static REFIID tid_ids[] = {
     &IID_IHTMLFrameBase,
     &IID_IHTMLFrameBase2,
     &IID_IHTMLGenericElement,
+    &IID_IHTMLFrameElement3,
+    &IID_IHTMLIFrameElement,
     &IID_IHTMLImageElementFactory,
     &IID_IHTMLImgElement,
     &IID_IHTMLInputElement,
     &IID_IHTMLLocation,
     &IID_IHTMLOptionElement,
     &IID_IHTMLScreen,
+    &IID_IHTMLScriptElement,
     &IID_IHTMLSelectElement,
     &IID_IHTMLStyle,
     &IID_IHTMLStyle2,
@@ -146,6 +152,7 @@ static REFIID tid_ids[] = {
     &IID_IHTMLStyle4,
     &IID_IHTMLTable,
     &IID_IHTMLTableRow,
+    &IID_IHTMLTextAreaElement,
     &IID_IHTMLTextContainer,
     &IID_IHTMLUniqueName,
     &IID_IHTMLWindow2,
@@ -397,18 +404,19 @@ HRESULT call_disp_func(IDispatch *disp, DISPPARAMS *dp)
     VARIANT res;
     HRESULT hres;
 
-    hres = IDispatch_QueryInterface(disp, &IID_IDispatchEx, (void**)&dispex);
-    if(FAILED(hres)) {
-        FIXME("Could not get IDispatchEx interface: %08x\n", hres);
-        return hres;
-    }
-
     VariantInit(&res);
     memset(&ei, 0, sizeof(ei));
 
-    hres = IDispatchEx_InvokeEx(dispex, 0, GetUserDefaultLCID(), DISPATCH_METHOD, dp, &res, &ei, NULL);
+    hres = IDispatch_QueryInterface(disp, &IID_IDispatchEx, (void**)&dispex);
+    if(SUCCEEDED(hres)) {
+        hres = IDispatchEx_InvokeEx(dispex, 0, GetUserDefaultLCID(), DISPATCH_METHOD, dp, &res, &ei, NULL);
+        IDispatchEx_Release(dispex);
+    }else {
+        TRACE("Could not get IDispatchEx interface: %08x\n", hres);
+        hres = IDispatch_Invoke(disp, 0, &IID_NULL, GetUserDefaultLCID(), DISPATCH_METHOD,
+                dp, &res, &ei, NULL);
+    }
 
-    IDispatchEx_Release(dispex);
     VariantClear(&res);
     return hres;
 }
@@ -975,7 +983,10 @@ static HRESULT WINAPI DispatchEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
 static HRESULT WINAPI DispatchEx_DeleteMemberByName(IDispatchEx *iface, BSTR bstrName, DWORD grfdex)
 {
     DispatchEx *This = DISPATCHEX_THIS(iface);
-    FIXME("(%p)->(%s %x)\n", This, debugstr_w(bstrName), grfdex);
+
+    TRACE("(%p)->(%s %x)\n", This, debugstr_w(bstrName), grfdex);
+
+    /* Not implemented by IE */
     return E_NOTIMPL;
 }
 

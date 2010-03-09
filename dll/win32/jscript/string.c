@@ -656,7 +656,7 @@ static HRESULT String_match(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISP
         if(FAILED(hres))
             return hres;
 
-        hres = create_regexp_str(ctx, match_str, SysStringLen(match_str), NULL, 0, &regexp);
+        hres = create_regexp(ctx, match_str, SysStringLen(match_str), 0, &regexp);
         SysFreeString(match_str);
         if(FAILED(hres))
             return hres;
@@ -703,6 +703,7 @@ static HRESULT String_match(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISP
             break;
     }
 
+    heap_free(match_result);
     SysFreeString(val_str);
 
     if(SUCCEEDED(hres) && retv) {
@@ -795,7 +796,7 @@ static HRESULT rep_call(script_ctx_t *ctx, DispatchEx *func, const WCHAR *str, m
     if(SUCCEEDED(hres))
         hres = jsdisp_call_value(func, DISPATCH_METHOD, &dp, &var, ei, caller);
 
-    for(i=0; i < parens_cnt+1; i++) {
+    for(i=0; i < parens_cnt+3; i++) {
         if(i != parens_cnt+1)
             SysFreeString(V_BSTR(get_arg(&dp,i)));
     }
@@ -819,7 +820,7 @@ static HRESULT String_replace(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DI
     DispatchEx *rep_func = NULL, *regexp = NULL;
     match_result_t *parens = NULL, match, **parens_ptr = &parens;
     strbuf_t ret = {NULL,0,0};
-    BOOL gcheck = FALSE;
+    DWORD re_flags = 0;
     VARIANT *arg_var;
     HRESULT hres = S_OK;
 
@@ -896,9 +897,9 @@ static HRESULT String_replace(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DI
 
         while(1) {
             if(regexp) {
-                hres = regexp_match_next(ctx, regexp, gcheck, str, length, &cp, parens_ptr,
+                hres = regexp_match_next(ctx, regexp, re_flags, str, length, &cp, parens_ptr,
                         &parens_size, &parens_cnt, &match);
-                gcheck = TRUE;
+                re_flags = REM_CHECK_GLOBAL;
 
                 if(hres == S_FALSE) {
                     hres = S_OK;
@@ -965,7 +966,7 @@ static HRESULT String_replace(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DI
                         }
 
                         idx = ptr2[1] - '0';
-                        if(isdigitW(ptr[3]) && idx*10 + (ptr[2]-'0') <= parens_cnt) {
+                        if(isdigitW(ptr2[2]) && idx*10 + (ptr2[2]-'0') <= parens_cnt) {
                             idx = idx*10 + (ptr[2]-'0');
                             ptr = ptr2+3;
                         }else if(idx && idx <= parens_cnt) {
@@ -1031,8 +1032,58 @@ static HRESULT String_replace(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DI
 static HRESULT String_search(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    DispatchEx *regexp = NULL;
+    const WCHAR *str, *cp;
+    match_result_t match;
+    VARIANT *arg;
+    DWORD length;
+    BSTR val_str;
+    HRESULT hres;
+
+    TRACE("\n");
+
+    hres = get_string_val(ctx, jsthis, ei, &str, &length, &val_str);
+    if(FAILED(hres))
+        return hres;
+
+    if(!arg_cnt(dp)) {
+        if(retv)
+            V_VT(retv) = VT_NULL;
+        SysFreeString(val_str);
+        return S_OK;
+    }
+
+    arg = get_arg(dp,0);
+    if(V_VT(arg) == VT_DISPATCH) {
+        regexp = iface_to_jsdisp((IUnknown*)V_DISPATCH(arg));
+        if(regexp) {
+            if(!is_class(regexp, JSCLASS_REGEXP)) {
+                jsdisp_release(regexp);
+                regexp = NULL;
+            }
+        }
+    }
+
+    if(!regexp) {
+        hres = create_regexp_var(ctx, arg, NULL, &regexp);
+        if(FAILED(hres)) {
+            SysFreeString(val_str);
+            return hres;
+        }
+    }
+
+    cp = str;
+    hres = regexp_match_next(ctx, regexp, REM_RESET_INDEX, str, length, &cp, NULL, NULL, NULL, &match);
+    SysFreeString(val_str);
+    jsdisp_release(regexp);
+    if(FAILED(hres))
+        return hres;
+
+    if(retv) {
+        V_VT(retv) = VT_I4;
+        V_I4(retv) = hres == S_OK ? match.str-str : -1;
+    }
+    return S_OK;
 }
 
 /* ECMA-262 3rd Edition    15.5.4.13 */
@@ -1129,6 +1180,7 @@ static HRESULT String_split(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISP
     match_result_t *match_result = NULL;
     DWORD length, match_cnt, i, match_len = 0;
     const WCHAR *str, *ptr, *ptr2;
+    BOOL use_regexp = FALSE;
     VARIANT *arg, var;
     DispatchEx *array;
     BSTR val_str, match_str = NULL;
@@ -1153,6 +1205,7 @@ static HRESULT String_split(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISP
         regexp = iface_to_jsdisp((IUnknown*)V_DISPATCH(arg));
         if(regexp) {
             if(is_class(regexp, JSCLASS_REGEXP)) {
+                use_regexp = TRUE;
                 hres = regexp_match(ctx, regexp, str, length, TRUE, &match_result, &match_cnt);
                 jsdisp_release(regexp);
                 if(FAILED(hres)) {
@@ -1183,7 +1236,7 @@ static HRESULT String_split(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISP
     if(SUCCEEDED(hres)) {
         ptr = str;
         for(i=0;; i++) {
-            if(match_result) {
+            if(use_regexp) {
                 if(i == match_cnt)
                     break;
                 ptr2 = match_result[i].str;
@@ -1209,7 +1262,7 @@ static HRESULT String_split(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISP
             if(FAILED(hres))
                 break;
 
-            if(match_result)
+            if(use_regexp)
                 ptr = match_result[i].str + match_result[i].len;
             else if(match_str)
                 ptr = ptr2 + match_len;
@@ -1218,7 +1271,7 @@ static HRESULT String_split(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISP
         }
     }
 
-    if(SUCCEEDED(hres) && (match_str || match_result)) {
+    if(SUCCEEDED(hres) && (match_str || use_regexp)) {
         DWORD len = (str+length) - ptr;
 
         if(len || match_str) {
@@ -1705,7 +1758,7 @@ HRESULT create_string_constr(script_ctx_t *ctx, DispatchEx *object_prototype, Di
         return hres;
 
     hres = create_builtin_function(ctx, StringConstr_value, StringW, &StringConstr_info,
-            PROPF_CONSTR, &string->dispex, ret);
+            PROPF_CONSTR|1, &string->dispex, ret);
 
     jsdisp_release(&string->dispex);
     return hres;

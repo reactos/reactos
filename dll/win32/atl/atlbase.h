@@ -33,6 +33,28 @@ typedef LPCWSTR (WINAPI _ATL_DESCRIPTIONFUNCW)(void);
 typedef const struct _ATL_CATMAP_ENTRY* (_ATL_CATMAPFUNC)(void);
 typedef void (WINAPI _ATL_TERMFUNC)(DWORD dw);
 
+typedef struct _ATL_OBJMAP_ENTRYA_V1_TAG
+{
+    const CLSID* pclsid;
+    HRESULT (WINAPI *pfnUpdateRegistry)(BOOL bRegister);
+    _ATL_CREATORFUNC* pfnGetClassObject;
+    _ATL_CREATORFUNC* pfnCreateInstance;
+    IUnknown* pCF;
+    DWORD dwRegister;
+    _ATL_DESCRIPTIONFUNCA* pfnGetObjectDescription;
+}_ATL_OBJMAP_ENTRYA_V1;
+
+typedef struct _ATL_OBJMAP_ENTRYW_V1_TAG
+{
+    const CLSID* pclsid;
+    HRESULT (WINAPI *pfnUpdateRegistry)(BOOL bRegister);
+    _ATL_CREATORFUNC* pfnGetClassObject;
+    _ATL_CREATORFUNC* pfnCreateInstance;
+    IUnknown* pCF;
+    DWORD dwRegister;
+    _ATL_DESCRIPTIONFUNCW* pfnGetObjectDescription;
+} _ATL_OBJMAP_ENTRYW_V1;
+
 typedef struct _ATL_OBJMAP_ENTRYA_TAG
 {
     const CLSID* pclsid;

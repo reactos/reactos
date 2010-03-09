@@ -8,8 +8,6 @@
  */
 #include "precomp.h"
 
-const GUID IID_IBasicAudio = {0x56a868b3, 0x0ad4, 0x11ce, {0xb0, 0x3a, 0x00, 0x20, 0xaf, 0x0b, 0xa7, 0x70}};
-
 class CKsBasicAudio : public IBasicAudio,
                       public IDistributorNotify
 {
@@ -99,7 +97,7 @@ HRESULT
 STDMETHODCALLTYPE
 CKsBasicAudio::Stop()
 {
-    OutputDebugString("UNIMPLEMENTED\n");
+    OutputDebugStringW(L"UNIMPLEMENTED\n");
     return E_NOTIMPL;
 }
 
@@ -107,7 +105,7 @@ HRESULT
 STDMETHODCALLTYPE
 CKsBasicAudio::Pause()
 {
-    OutputDebugString("UNIMPLEMENTED\n");
+    OutputDebugStringW(L"UNIMPLEMENTED\n");
     return E_NOTIMPL;
 }
 
@@ -116,7 +114,7 @@ STDMETHODCALLTYPE
 CKsBasicAudio::Run(
     REFERENCE_TIME tStart)
 {
-    OutputDebugString("UNIMPLEMENTED\n");
+    OutputDebugStringW(L"UNIMPLEMENTED\n");
     return E_NOTIMPL;
 }
 
@@ -125,7 +123,7 @@ STDMETHODCALLTYPE
 CKsBasicAudio::SetSyncSource(
     IReferenceClock *pClock)
 {
-    OutputDebugString("UNIMPLEMENTED\n");
+    OutputDebugStringW(L"UNIMPLEMENTED\n");
     return E_NOTIMPL;
 }
 
@@ -133,7 +131,7 @@ HRESULT
 STDMETHODCALLTYPE
 CKsBasicAudio::NotifyGraphChange()
 {
-    OutputDebugString("UNIMPLEMENTED\n");
+    OutputDebugStringW(L"UNIMPLEMENTED\n");
     return E_NOTIMPL;
 }
 
@@ -146,7 +144,7 @@ STDMETHODCALLTYPE
 CKsBasicAudio::GetTypeInfoCount(
     UINT *pctinfo)
 {
-    OutputDebugString("UNIMPLEMENTED\n");
+    OutputDebugStringW(L"UNIMPLEMENTED\n");
     return E_NOTIMPL;
 }
 
@@ -157,7 +155,7 @@ CKsBasicAudio::GetTypeInfo(
     LCID lcid,
     ITypeInfo **ppTInfo)
 {
-    OutputDebugString("UNIMPLEMENTED\n");
+    OutputDebugStringW(L"UNIMPLEMENTED\n");
     return E_NOTIMPL;
 }
 
@@ -170,7 +168,7 @@ CKsBasicAudio::GetIDsOfNames(
     LCID lcid,
     DISPID *rgDispId)
 {
-    OutputDebugString("UNIMPLEMENTED\n");
+    OutputDebugStringW(L"UNIMPLEMENTED\n");
     return E_NOTIMPL;
 }
 
@@ -186,7 +184,7 @@ CKsBasicAudio::Invoke(
     EXCEPINFO *pExcepInfo,
     UINT *puArgErr)
 {
-    OutputDebugString("UNIMPLEMENTED\n");
+    OutputDebugStringW(L"UNIMPLEMENTED\n");
     return E_NOTIMPL;
 }
 
@@ -199,7 +197,7 @@ STDMETHODCALLTYPE
 CKsBasicAudio::put_Volume(
     long lVolume)
 {
-    OutputDebugString("UNIMPLEMENTED\n");
+    OutputDebugStringW(L"UNIMPLEMENTED\n");
     return E_NOTIMPL;
 }
 
@@ -209,7 +207,7 @@ STDMETHODCALLTYPE
 CKsBasicAudio::get_Volume(
     long *plVolume)
 {
-    OutputDebugString("UNIMPLEMENTED\n");
+    OutputDebugStringW(L"UNIMPLEMENTED\n");
     return E_NOTIMPL;
 }
 
@@ -219,7 +217,7 @@ STDMETHODCALLTYPE
 CKsBasicAudio::put_Balance(
     long lBalance)
 {
-    OutputDebugString("UNIMPLEMENTED\n");
+    OutputDebugStringW(L"UNIMPLEMENTED\n");
     return E_NOTIMPL;
 }
 
@@ -229,7 +227,7 @@ STDMETHODCALLTYPE
 CKsBasicAudio::get_Balance(
     long *plBalance)
 {
-    OutputDebugString("UNIMPLEMENTED\n");
+    OutputDebugStringW(L"UNIMPLEMENTED\n");
     return E_NOTIMPL;
 }
 
@@ -240,6 +238,8 @@ CKsBasicAudio_Constructor(
     REFIID riid,
     LPVOID * ppv)
 {
+    OutputDebugStringW(L"CKsBasicAudio_Constructor\n");
+
     CKsBasicAudio * handler = new CKsBasicAudio();
 
     if (!handler)

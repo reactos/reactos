@@ -449,10 +449,14 @@ HRESULT to_integer(script_ctx_t *ctx, VARIANT *v, jsexcept_t *ei, VARIANT *ret)
     if(FAILED(hres))
         return hres;
 
-    if(V_VT(&num) == VT_I4)
+    if(V_VT(&num) == VT_I4) {
         *ret = num;
-    else
+    }else if(isnan(V_R8(&num))) {
+        V_VT(ret) = VT_I4;
+        V_I4(ret) = 0;
+    }else {
         num_set_val(ret, V_R8(&num) >= 0.0 ? floor(V_R8(&num)) : -floor(-V_R8(&num)));
+    }
 
     return S_OK;
 }
@@ -467,7 +471,10 @@ HRESULT to_int32(script_ctx_t *ctx, VARIANT *v, jsexcept_t *ei, INT *ret)
     if(FAILED(hres))
         return hres;
 
-    *ret = V_VT(&num) == VT_I4 ? V_I4(&num) : (INT)V_R8(&num);
+    if(V_VT(&num) == VT_I4)
+        *ret = V_I4(&num);
+    else
+        *ret = isnan(V_R8(&num)) || isinf(V_R8(&num)) ? 0 : (INT)V_R8(&num);
     return S_OK;
 }
 
@@ -481,7 +488,10 @@ HRESULT to_uint32(script_ctx_t *ctx, VARIANT *v, jsexcept_t *ei, DWORD *ret)
     if(FAILED(hres))
         return hres;
 
-    *ret = V_VT(&num) == VT_I4 ? V_I4(&num) : (DWORD)V_R8(&num);
+    if(V_VT(&num) == VT_I4)
+        *ret = V_I4(&num);
+    else
+        *ret = isnan(V_R8(&num)) || isinf(V_R8(&num)) ? 0 : (DWORD)V_R8(&num);
     return S_OK;
 }
 

@@ -37,6 +37,7 @@ extern char reactos_arc_strings[32][256];
 
 extern BOOLEAN UseRealHeap;
 extern ULONG LoaderPagesSpanned;
+extern BOOLEAN AcpiPresent;
 
 BOOLEAN
 WinLdrCheckForLoadedDll(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
@@ -195,6 +196,13 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	Extension->MajorVersion = (VersionToBoot & 0xFF00) >> 8;
 	Extension->MinorVersion = VersionToBoot & 0xFF;
 	Extension->Profile.Status = 2;
+
+	/* Check if ACPI is present */
+	if (AcpiPresent)
+	{
+		/* See KiRosFrldrLpbToNtLpb for details */
+		Extension->AcpiTable = (PVOID)1;
+	}
 
 	/* Load drivers database */
 	strcpy(MiscFiles, BootPath);

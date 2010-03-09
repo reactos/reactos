@@ -49,7 +49,7 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "Powiêkszenie"
         BEGIN
-            POPUP "User defined"
+            POPUP "Zdefiniowane przez u¿ytkownika"
             BEGIN
                 MENUITEM "12,5%", IDM_VIEWZOOM125
                 MENUITEM "25%", IDM_VIEWZOOM25
@@ -60,8 +60,8 @@ BEGIN
                 MENUITEM "800%", IDM_VIEWZOOM800
             END
             MENUITEM SEPARATOR
-            MENUITEM "Show grid", IDM_VIEWSHOWGRID
-            MENUITEM "Show miniature", IDM_VIEWSHOWMINIATURE
+            MENUITEM "Poka¿ siatkê", IDM_VIEWSHOWGRID
+            MENUITEM "Poka¿ miniaturê", IDM_VIEWSHOWMINIATURE
         END
         MENUITEM "Pe³ny ekran\tCtrl+F", IDM_VIEWFULLSCREEN
     END
@@ -181,7 +181,7 @@ BEGIN
     IDS_INFOTEXT, "Paint dla ReactOS jest dostêpny na licencji GNU Lesser General Public License (LGPL) wersja 3 (www.gnu.org)"
     IDS_SAVEPROMPTTEXT, "Czy chcesz zapisaæ zmiany do %s?"
     IDS_DEFAULTFILENAME, "Nienazwany.bmp"
-    IDS_MINIATURETITLE, "Miniature"
+    IDS_MINIATURETITLE, "Miniatura"
     IDS_TOOLTIP1, "Zaznaczenie dowolne"
     IDS_TOOLTIP2, "Zaznaczenie"
     IDS_TOOLTIP3, "Gumka"
@@ -190,16 +190,16 @@ BEGIN
     IDS_TOOLTIP6, "Przybli¿enie"
     IDS_TOOLTIP7, "O³ówek"
     IDS_TOOLTIP8, "Pêdzel"
-    IDS_TOOLTIP9, "Spray"
+    IDS_TOOLTIP9, "Aerograf"
     IDS_TOOLTIP10, "Tekst"
     IDS_TOOLTIP11, "Linia"
     IDS_TOOLTIP12, "Krzywa Beziera"
     IDS_TOOLTIP13, "Prostok¹t"
-    IDS_TOOLTIP14, "Polygon"
+    IDS_TOOLTIP14, "Wielok¹t"
     IDS_TOOLTIP15, "Elipsa"
     IDS_TOOLTIP16, "Zaokr¹glony Prostok¹t"
     IDS_OPENFILTER, "Pliki Bitmapy (*.bmp;*.dib)\1*.bmp;*.dib\1Wszystkie pliki (*.*)\1*.*\1"
     IDS_SAVEFILTER, "Bitmapa 24 bit (*.bmp;*.dib)\1*.bmp;*.dib\1"
-    IDS_FILESIZE, "%d bytes"
-    IDS_PRINTRES, "%d x %d pixels per meter"
+    IDS_FILESIZE, "%d bajtów"
+    IDS_PRINTRES, "%d x %d pikseli na metr"
 END

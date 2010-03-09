@@ -109,6 +109,7 @@ HalpInitializeClock(VOID)
     HalpCurrentRollOver = RollOver;
 }
 
+#ifndef _MINIHAL_
 VOID
 FASTCALL
 HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)
@@ -160,6 +161,7 @@ HalpProfileInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     /* Spurious, just end the interrupt */
     KiEoiHelper(TrapFrame);
 }
+#endif
 
 
 /* PUBLIC FUNCTIONS ***********************************************************/

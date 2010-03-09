@@ -27,7 +27,7 @@ interface IMediaEvent;
 interface IMediaEventEx;
 interface IMediaPosition;
 
-typedef long OAFilterState;
+typedef LONG OAFilterState;
 typedef LONG_PTR OAHWND;
 typedef LONG_PTR OAEVENT;
 
@@ -68,10 +68,10 @@ interface IMediaControl : IDispatch
 ]
 interface IBasicAudio : IDispatch
 {
-    [propput] HRESULT Volume( [in] long lVolume );
-    [propget] HRESULT Volume( [out] long *plVolume );
-    [propput] HRESULT Balance( [in] long lBalance );
-    [propget] HRESULT Balance( [out] long *plBalance );
+    [propput] HRESULT Volume( [in] LONG lVolume );
+    [propget] HRESULT Volume( [out] LONG *plVolume );
+    [propput] HRESULT Balance( [in] LONG lBalance );
+    [propget] HRESULT Balance( [out] LONG *plBalance );
 }
 
 
@@ -87,43 +87,43 @@ interface IVideoWindow : IDispatch
 {
     [propput] HRESULT Caption( [in] BSTR strCaption );
     [propget] HRESULT Caption( [out] BSTR *strCaption );
-    [propput] HRESULT WindowStyle( [in] long WindowStyle );
-    [propget] HRESULT WindowStyle( [out] long *WindowStyle );
-    [propput] HRESULT WindowStyleEx( [in] long WindowStyleEx );
-    [propget] HRESULT WindowStyleEx( [out] long *WindowStyleEx );
-    [propput] HRESULT AutoShow( [in] long AutoShow );
-    [propget] HRESULT AutoShow( [out] long *AutoShow );
-    [propput] HRESULT WindowState( [in] long WindowState );
-    [propget] HRESULT WindowState( [out] long *WindowState );
-    [propput] HRESULT BackgroundPalette( [in] long BackgroundPalette );
-    [propget] HRESULT BackgroundPalette( [out] long *pBackgroundPalette );
-    [propput] HRESULT Visible( [in] long Visible );
-    [propget] HRESULT Visible( [out] long *pVisible );
-    [propput] HRESULT Left( [in] long Left );
-    [propget] HRESULT Left( [out] long *pLeft );
-    [propput] HRESULT Width( [in] long Width );
-    [propget] HRESULT Width( [out] long *pWidth );
-    [propput] HRESULT Top( [in] long Top );
-    [propget] HRESULT Top( [out] long *pTop );
-    [propput] HRESULT Height( [in] long Height );
-    [propget] HRESULT Height( [out] long *pHeight );
+    [propput] HRESULT WindowStyle( [in] LONG WindowStyle );
+    [propget] HRESULT WindowStyle( [out] LONG *WindowStyle );
+    [propput] HRESULT WindowStyleEx( [in] LONG WindowStyleEx );
+    [propget] HRESULT WindowStyleEx( [out] LONG *WindowStyleEx );
+    [propput] HRESULT AutoShow( [in] LONG AutoShow );
+    [propget] HRESULT AutoShow( [out] LONG *AutoShow );
+    [propput] HRESULT WindowState( [in] LONG WindowState );
+    [propget] HRESULT WindowState( [out] LONG *WindowState );
+    [propput] HRESULT BackgroundPalette( [in] LONG BackgroundPalette );
+    [propget] HRESULT BackgroundPalette( [out] LONG *pBackgroundPalette );
+    [propput] HRESULT Visible( [in] LONG Visible );
+    [propget] HRESULT Visible( [out] LONG *pVisible );
+    [propput] HRESULT Left( [in] LONG Left );
+    [propget] HRESULT Left( [out] LONG *pLeft );
+    [propput] HRESULT Width( [in] LONG Width );
+    [propget] HRESULT Width( [out] LONG *pWidth );
+    [propput] HRESULT Top( [in] LONG Top );
+    [propget] HRESULT Top( [out] LONG *pTop );
+    [propput] HRESULT Height( [in] LONG Height );
+    [propget] HRESULT Height( [out] LONG *pHeight );
     [propput] HRESULT Owner( [in] OAHWND Owner );
     [propget] HRESULT Owner( [out] OAHWND *Owner );
     [propput] HRESULT MessageDrain( [in] OAHWND Drain );
     [propget] HRESULT MessageDrain( [out] OAHWND *Drain );
-    [propget] HRESULT BorderColor( [out] long *Color );
-    [propput] HRESULT BorderColor( [in] long Color );
-    [propget] HRESULT FullScreenMode( [out] long *FullScreenMode );
-    [propput] HRESULT FullScreenMode( [in] long FullScreenMode );
-    HRESULT SetWindowForeground( [in] long Focus );
-    HRESULT NotifyOwnerMessage( [in] OAHWND hwnd, [in] long uMsg, [in] LONG_PTR wParam, [in] LONG_PTR lParam );
-    HRESULT SetWindowPosition( [in] long Left, [in] long Top, [in] long Width, [in] long Height );
-    HRESULT GetWindowPosition( [out] long *pLeft, [out] long *pTop, [out] long *pWidth, [out] long *pHeight );
-    HRESULT GetMinIdealImageSize( [out] long *pWidth, [out] long *pHeight );
-    HRESULT GetMaxIdealImageSize( [out] long *pWidth, [out] long *pHeight );
-    HRESULT GetRestorePosition( [out] long *pLeft, [out] long *pTop, [out] long *pWidth, [out] long *pHeight );
-    HRESULT HideCursor( [in] long HideCursor );
-    HRESULT IsCursorHidden( [out] long *CursorHidden );
+    [propget] HRESULT BorderColor( [out] LONG *Color );
+    [propput] HRESULT BorderColor( [in] LONG Color );
+    [propget] HRESULT FullScreenMode( [out] LONG *FullScreenMode );
+    [propput] HRESULT FullScreenMode( [in] LONG FullScreenMode );
+    HRESULT SetWindowForeground( [in] LONG Focus );
+    HRESULT NotifyOwnerMessage( [in] OAHWND hwnd, [in] LONG uMsg, [in] LONG_PTR wParam, [in] LONG_PTR lParam );
+    HRESULT SetWindowPosition( [in] LONG Left, [in] LONG Top, [in] LONG Width, [in] LONG Height );
+    HRESULT GetWindowPosition( [out] LONG *pLeft, [out] LONG *pTop, [out] LONG *pWidth, [out] LONG *pHeight );
+    HRESULT GetMinIdealImageSize( [out] LONG *pWidth, [out] LONG *pHeight );
+    HRESULT GetMaxIdealImageSize( [out] LONG *pWidth, [out] LONG *pHeight );
+    HRESULT GetRestorePosition( [out] LONG *pLeft, [out] LONG *pTop, [out] LONG *pWidth, [out] LONG *pHeight );
+    HRESULT HideCursor( [in] LONG HideCursor );
+    HRESULT IsCursorHidden( [out] LONG *CursorHidden );
 }
 
 
@@ -138,39 +138,39 @@ interface IVideoWindow : IDispatch
 interface IBasicVideo : IDispatch
 {
     [propget] HRESULT AvgTimePerFrame( [out] REFTIME *pAvgTimePerFrame );
-    [propget] HRESULT BitRate( [out] long *pBitRate );
-    [propget] HRESULT BitErrorRate( [out] long *pBitErrorRate );
-    [propget] HRESULT VideoWidth( [out] long *pVideoWidth );
-    [propget] HRESULT VideoHeight( [out] long *pVideoHeight );
-    [propput] HRESULT SourceLeft( [in] long SourceLeft );
-    [propget] HRESULT SourceLeft( [out] long *pSourceLeft );
-    [propput] HRESULT SourceWidth( [in] long SourceWidth );
-    [propget] HRESULT SourceWidth( [out] long *pSourceWidth );
-    [propput] HRESULT SourceTop( [in] long SourceTop );
-    [propget] HRESULT SourceTop( [out] long *pSourceTop );
-    [propput] HRESULT SourceHeight( [in] long SourceHeight );
-    [propget] HRESULT SourceHeight( [out] long *pSourceHeight );
-    [propput] HRESULT DestinationLeft( [in] long DestinationLeft );
-    [propget] HRESULT DestinationLeft( [out] long *pDestinationLeft );
-    [propput] HRESULT DestinationWidth( [in] long DestinationWidth );
-    [propget] HRESULT DestinationWidth( [out] long *pDestinationWidth );
-    [propput] HRESULT DestinationTop( [in] long DestinationTop );
-    [propget] HRESULT DestinationTop( [out] long *pDestinationTop );
-    [propput] HRESULT DestinationHeight( [in] long DestinationHeight );
-    [propget] HRESULT DestinationHeight( [out] long *pDestinationHeight );
-    HRESULT SetSourcePosition( [in] long Left, [in] long Top, [in] long Width, [in] long Height );
-    HRESULT GetSourcePosition( [out] long *pLeft, [out] long *pTop, [out] long *pWidth, [out] long *pHeight );
+    [propget] HRESULT BitRate( [out] LONG *pBitRate );
+    [propget] HRESULT BitErrorRate( [out] LONG *pBitErrorRate );
+    [propget] HRESULT VideoWidth( [out] LONG *pVideoWidth );
+    [propget] HRESULT VideoHeight( [out] LONG *pVideoHeight );
+    [propput] HRESULT SourceLeft( [in] LONG SourceLeft );
+    [propget] HRESULT SourceLeft( [out] LONG *pSourceLeft );
+    [propput] HRESULT SourceWidth( [in] LONG SourceWidth );
+    [propget] HRESULT SourceWidth( [out] LONG *pSourceWidth );
+    [propput] HRESULT SourceTop( [in] LONG SourceTop );
+    [propget] HRESULT SourceTop( [out] LONG *pSourceTop );
+    [propput] HRESULT SourceHeight( [in] LONG SourceHeight );
+    [propget] HRESULT SourceHeight( [out] LONG *pSourceHeight );
+    [propput] HRESULT DestinationLeft( [in] LONG DestinationLeft );
+    [propget] HRESULT DestinationLeft( [out] LONG *pDestinationLeft );
+    [propput] HRESULT DestinationWidth( [in] LONG DestinationWidth );
+    [propget] HRESULT DestinationWidth( [out] LONG *pDestinationWidth );
+    [propput] HRESULT DestinationTop( [in] LONG DestinationTop );
+    [propget] HRESULT DestinationTop( [out] LONG *pDestinationTop );
+    [propput] HRESULT DestinationHeight( [in] LONG DestinationHeight );
+    [propget] HRESULT DestinationHeight( [out] LONG *pDestinationHeight );
+    HRESULT SetSourcePosition( [in] LONG Left, [in] LONG Top, [in] LONG Width, [in] LONG Height );
+    HRESULT GetSourcePosition( [out] LONG *pLeft, [out] LONG *pTop, [out] LONG *pWidth, [out] LONG *pHeight );
     HRESULT SetDefaultSourcePosition();
-    HRESULT SetDestinationPosition( [in] long Left, [in] long Top, [in] long Width, [in] long Height );
-    HRESULT GetDestinationPosition( [out] long *pLeft, [out] long *pTop, [out] long *pWidth, [out] long *pHeight );
+    HRESULT SetDestinationPosition( [in] LONG Left, [in] LONG Top, [in] LONG Width, [in] LONG Height );
+    HRESULT GetDestinationPosition( [out] LONG *pLeft, [out] LONG *pTop, [out] LONG *pWidth, [out] LONG *pHeight );
     HRESULT SetDefaultDestinationPosition();
-    HRESULT GetVideoSize( [out] long *pWidth, [out] long *pHeight );
-    HRESULT GetVideoPaletteEntries( [in] long StartIndex,
-                                    [in] long Entries,
-                                    [out] long *pRetrieved,
-                                    [out, size_is(Entries), length_is(*pRetrieved)] long *pPalette );
-    HRESULT GetCurrentImage( [in, out] long *pBufferSize,
-                             [out, size_is(*pBufferSize), length_is(*pBufferSize)] long *pDIBImage );
+    HRESULT GetVideoSize( [out] LONG *pWidth, [out] LONG *pHeight );
+    HRESULT GetVideoPaletteEntries( [in] LONG StartIndex,
+                                    [in] LONG Entries,
+                                    [out] LONG *pRetrieved,
+                                    [out, size_is(Entries), length_is(*pRetrieved)] LONG *pPalette );
+    HRESULT GetCurrentImage( [in, out] LONG *pBufferSize,
+                             [out, size_is(*pBufferSize), length_is(*pBufferSize)] LONG *pDIBImage );
     HRESULT IsUsingDefaultSource();
     HRESULT IsUsingDefaultDestination();
 }
@@ -198,11 +198,11 @@ interface IBasicVideo2 : IBasicVideo
 interface IMediaEvent : IDispatch
 {
     HRESULT GetEventHandle( [out] OAEVENT *hEvent );
-    HRESULT GetEvent( [out] long *lEventCode, [out] LONG_PTR *lParam1, [out] LONG_PTR *lParam2, [in] long msTimeout );
-    HRESULT WaitForCompletion( [in] long msTimeout, [out] long *pEvCode );
-    HRESULT CancelDefaultHandling( [in] long lEvCode );
-    HRESULT RestoreDefaultHandling( [in] long lEvCode );
-    HRESULT FreeEventParams( [in] long lEvCode, [in] LONG_PTR lParam1, [in] LONG_PTR lParam2 );
+    HRESULT GetEvent( [out] LONG *lEventCode, [out] LONG_PTR *lParam1, [out] LONG_PTR *lParam2, [in] LONG msTimeout );
+    HRESULT WaitForCompletion( [in] LONG msTimeout, [out] LONG *pEvCode );
+    HRESULT CancelDefaultHandling( [in] LONG lEvCode );
+    HRESULT RestoreDefaultHandling( [in] LONG lEvCode );
+    HRESULT FreeEventParams( [in] LONG lEvCode, [in] LONG_PTR lParam1, [in] LONG_PTR lParam2 );
 }
 
 
@@ -216,9 +216,9 @@ interface IMediaEvent : IDispatch
 ]
 interface IMediaEventEx : IMediaEvent
 {
-    HRESULT SetNotifyWindow( [in] OAHWND hwnd, [in] long lMsg, [in] LONG_PTR lInstanceData );
-    HRESULT SetNotifyFlags( [in] long lNoNotifyFlags );
-    HRESULT GetNotifyFlags( [out] long *lplNoNotifyFlags );
+    HRESULT SetNotifyWindow( [in] OAHWND hwnd, [in] LONG lMsg, [in] LONG_PTR lInstanceData );
+    HRESULT SetNotifyFlags( [in] LONG lNoNotifyFlags );
+    HRESULT GetNotifyFlags( [out] LONG *lplNoNotifyFlags );
 }
 
 

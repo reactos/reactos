@@ -23,6 +23,7 @@
 #include "windef.h"
 #include "wingdi.h"
 #include "d3dx9.h"
+#include "d3dx9shader.h"
 #include "d3dx9_36_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
@@ -134,6 +135,41 @@ LPCSTR WINAPI D3DXGetVertexShaderProfile(LPDIRECT3DDEVICE9 device)
     return NULL;
 }
 
+HRESULT WINAPI D3DXFindShaderComment(CONST DWORD* byte_code, DWORD fourcc, LPCVOID* data, UINT* size)
+{
+    CONST DWORD *ptr = byte_code;
+
+    TRACE("(%p, %x, %p, %p)", byte_code, fourcc, data, size);
+
+    if (!byte_code)
+        return D3DERR_INVALIDCALL;
+
+    while (*++ptr != D3DSIO_END)
+    {
+        /* Check if it is a comment */
+        if ((*ptr & D3DSI_OPCODE_MASK) == D3DSIO_COMMENT)
+        {
+            DWORD comment_size = (*ptr & D3DSI_COMMENTSIZE_MASK) >> D3DSI_COMMENTSIZE_SHIFT;
+
+            /* Check if this is the comment we are looking for */
+            if (*(ptr + 1) == fourcc)
+            {
+                UINT ctab_size = (comment_size - 1) * sizeof(DWORD);
+                LPCVOID ctab_data = ptr + 2;
+                if (size)
+                    *size = ctab_size;
+                if (data)
+                    *data = ctab_data;
+                TRACE("Returning comment data at %p with size %d\n", ctab_data, ctab_size);
+                return D3D_OK;
+            }
+            ptr += comment_size;
+        }
+    }
+
+    return S_FALSE;
+}
+
 HRESULT WINAPI D3DXAssembleShader(LPCSTR data,
                                   UINT data_len,
                                   CONST D3DXMACRO* defines,
@@ -142,7 +178,7 @@ HRESULT WINAPI D3DXAssembleShader(LPCSTR data,
                                   LPD3DXBUFFER* shader,
                                   LPD3DXBUFFER* error_messages)
 {
-    FIXME("stub\n");
+    FIXME("(%p, %d, %p, %p, %x, %p, %p): stub\n", data, data_len, defines, include, flags, shader, error_messages);
     return D3DERR_INVALIDCALL;
 }
 
@@ -177,7 +213,7 @@ HRESULT WINAPI D3DXAssembleShaderFromFileW(LPCWSTR filename,
                                            LPD3DXBUFFER* shader,
                                            LPD3DXBUFFER* error_messages)
 {
-    FIXME("stub\n");
+    FIXME("(%s, %p, %p, %x, %p, %p): stub\n", debugstr_w(filename), defines, include, flags, shader, error_messages);
     return D3DERR_INVALIDCALL;
 }
 
@@ -219,4 +255,383 @@ HRESULT WINAPI D3DXAssembleShaderFromResourceW(HMODULE module,
         return D3DXERR_INVALIDDATA;
     return D3DXAssembleShader(buffer, len, defines, include, flags,
                               shader, error_messages);
+}
+
+HRESULT WINAPI D3DXCompileShader(LPCSTR pSrcData,
+                                 UINT srcDataLen,
+                                 CONST D3DXMACRO* pDefines,
+                                 LPD3DXINCLUDE pInclude,
+                                 LPCSTR pFunctionName,
+                                 LPCSTR pProfile,
+                                 DWORD Flags,
+                                 LPD3DXBUFFER* ppShader,
+                                 LPD3DXBUFFER* ppErrorMsgs,
+                                 LPD3DXCONSTANTTABLE * ppConstantTable)
+{
+    FIXME("(%p, %d, %p, %p, %p, %p, %d, %p, %p, %p): stub\n",
+          pSrcData, srcDataLen, pDefines, pInclude, pFunctionName,
+          pProfile, Flags, ppShader, ppErrorMsgs, ppConstantTable);
+    return D3DERR_INVALIDCALL;
+}
+
+static const struct ID3DXConstantTableVtbl ID3DXConstantTable_Vtbl;
+
+typedef struct ID3DXConstantTableImpl {
+    const ID3DXConstantTableVtbl *lpVtbl;
+    LONG ref;
+    LPVOID ctab;
+    DWORD size;
+} ID3DXConstantTableImpl;
+
+/*** IUnknown methods ***/
+static HRESULT WINAPI ID3DXConstantTableImpl_QueryInterface(ID3DXConstantTable* iface, REFIID riid, void** ppvObject)
+{
+    ID3DXConstantTableImpl *This = (ID3DXConstantTableImpl *)iface;
+
+    TRACE("(%p)->(%s, %p)\n", This, debugstr_guid(riid), ppvObject);
+
+    if (IsEqualGUID(riid, &IID_IUnknown) ||
+        IsEqualGUID(riid, &IID_ID3DXConstantTable))
+    {
+        ID3DXConstantTable_AddRef(iface);
+        *ppvObject = This;
+        return S_OK;
+    }
+
+    ERR("Interface %s not found\n", debugstr_guid(riid));
+
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI ID3DXConstantTableImpl_AddRef(ID3DXConstantTable* iface)
+{
+    ID3DXConstantTableImpl *This = (ID3DXConstantTableImpl *)iface;
+
+    TRACE("(%p)->(): AddRef from %d\n", This, This->ref);
+
+    return InterlockedIncrement(&This->ref);
+}
+
+static ULONG WINAPI ID3DXConstantTableImpl_Release(ID3DXConstantTable* iface)
+{
+    ID3DXConstantTableImpl *This = (ID3DXConstantTableImpl *)iface;
+    ULONG ref = InterlockedDecrement(&This->ref);
+
+    TRACE("(%p)->(): Release from %d\n", This, ref + 1);
+
+    if (!ref)
+    {
+        HeapFree(GetProcessHeap(), 0, This->ctab);
+        HeapFree(GetProcessHeap(), 0, This);
+    }
+
+    return ref;
+}
+
+/*** ID3DXBuffer methods ***/
+static LPVOID WINAPI ID3DXConstantTableImpl_GetBufferPointer(ID3DXConstantTable* iface)
+{
+    ID3DXConstantTableImpl *This = (ID3DXConstantTableImpl *)iface;
+
+    TRACE("(%p)->()\n", This);
+
+    return This->ctab;
+}
+
+static DWORD WINAPI ID3DXConstantTableImpl_GetBufferSize(ID3DXConstantTable* iface)
+{
+    ID3DXConstantTableImpl *This = (ID3DXConstantTableImpl *)iface;
+
+    TRACE("(%p)->()\n", This);
+
+    return This->size;
+}
+
+/*** ID3DXConstantTable methods ***/
+static HRESULT WINAPI ID3DXConstantTableImpl_GetDesc(ID3DXConstantTable* iface, D3DXCONSTANTTABLE_DESC *desc)
+{
+    ID3DXConstantTableImpl *This = (ID3DXConstantTableImpl *)iface;
+
+    FIXME("(%p)->(%p): stub\n", This, desc);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ID3DXConstantTableImpl_GetConstantDesc(ID3DXConstantTable* iface, D3DXHANDLE constant,
+                                                             D3DXCONSTANT_DESC *desc, UINT *count)
+{
+    ID3DXConstantTableImpl *This = (ID3DXConstantTableImpl *)iface;
+
+    FIXME("(%p)->(%p, %p, %p): stub\n", This, constant, desc, count);
+
+    return E_NOTIMPL;
+}
+
+static D3DXHANDLE WINAPI ID3DXConstantTableImpl_GetConstant(ID3DXConstantTable* iface, D3DXHANDLE constant, UINT index)
+{
+    ID3DXConstantTableImpl *This = (ID3DXConstantTableImpl *)iface;
+
+    FIXME("(%p)->(%p, %d): stub\n", This, constant, index);
+
+    return NULL;
+}
+
+static D3DXHANDLE WINAPI ID3DXConstantTableImpl_GetConstantByName(ID3DXConstantTable* iface, D3DXHANDLE constant, LPCSTR name)
+{
+    ID3DXConstantTableImpl *This = (ID3DXConstantTableImpl *)iface;
+
+    FIXME("(%p)->(%p, %s): stub\n", This, constant, name);
+
+    return NULL;
+}
+
+static D3DXHANDLE WINAPI ID3DXConstantTableImpl_GetConstantByElement(ID3DXConstantTable* iface, D3DXHANDLE constant, UINT index)
+{
+    ID3DXConstantTableImpl *This = (ID3DXConstantTableImpl *)iface;
+
+    FIXME("(%p)->(%p, %d): stub\n", This, constant, index);
+
+    return NULL;
+}
+
+static HRESULT WINAPI ID3DXConstantTableImpl_SetDefaults(ID3DXConstantTable* iface, LPDIRECT3DDEVICE9 device)
+{
+    ID3DXConstantTableImpl *This = (ID3DXConstantTableImpl *)iface;
+
+    FIXME("(%p)->(%p): stub\n", This, device);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ID3DXConstantTableImpl_SetValue(ID3DXConstantTable* iface, LPDIRECT3DDEVICE9 device,
+                                                      D3DXHANDLE constant, LPCVOID data, UINT bytes)
+{
+    ID3DXConstantTableImpl *This = (ID3DXConstantTableImpl *)iface;
+
+    FIXME("(%p)->(%p, %p, %p, %d): stub\n", This, device, constant, data, bytes);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ID3DXConstantTableImpl_SetBool(ID3DXConstantTable* iface, LPDIRECT3DDEVICE9 device,
+                                                     D3DXHANDLE constant, BOOL b)
+{
+    ID3DXConstantTableImpl *This = (ID3DXConstantTableImpl *)iface;
+
+    FIXME("(%p)->(%p, %p, %d): stub\n", This, device, constant, b);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ID3DXConstantTableImpl_SetBoolArray(ID3DXConstantTable* iface, LPDIRECT3DDEVICE9 device,
+                                                          D3DXHANDLE constant, CONST BOOL* b, UINT count)
+{
+    ID3DXConstantTableImpl *This = (ID3DXConstantTableImpl *)iface;
+
+    FIXME("(%p)->(%p, %p, %p, %d): stub\n", This, device, constant, b, count);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ID3DXConstantTableImpl_SetInt(ID3DXConstantTable* iface, LPDIRECT3DDEVICE9 device, D3DXHANDLE constant, INT n)
+{
+    ID3DXConstantTableImpl *This = (ID3DXConstantTableImpl *)iface;
+
+    FIXME("(%p)->(%p, %p, %d): stub\n", This, device, constant, n);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ID3DXConstantTableImpl_SetIntArray(ID3DXConstantTable* iface, LPDIRECT3DDEVICE9 device,
+                                                         D3DXHANDLE constant, CONST INT* n, UINT count)
+{
+    ID3DXConstantTableImpl *This = (ID3DXConstantTableImpl *)iface;
+
+    FIXME("(%p)->(%p, %p, %p, %d): stub\n", This, device, constant, n, count);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ID3DXConstantTableImpl_SetFloat(ID3DXConstantTable* iface, LPDIRECT3DDEVICE9 device,
+                                                      D3DXHANDLE constant, FLOAT f)
+{
+    ID3DXConstantTableImpl *This = (ID3DXConstantTableImpl *)iface;
+
+    FIXME("(%p)->(%p, %p, %f): stub\n", This, device, constant, f);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ID3DXConstantTableImpl_SetFloatArray(ID3DXConstantTable* iface, LPDIRECT3DDEVICE9 device,
+                                                           D3DXHANDLE constant, CONST FLOAT* f, UINT count)
+{
+    ID3DXConstantTableImpl *This = (ID3DXConstantTableImpl *)iface;
+
+    FIXME("(%p)->(%p, %p, %p, %d): stub\n", This, device, constant, f, count);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ID3DXConstantTableImpl_SetVector(ID3DXConstantTable* iface, LPDIRECT3DDEVICE9 device,
+                                                       D3DXHANDLE constant, CONST D3DXVECTOR4* vector)
+{
+    ID3DXConstantTableImpl *This = (ID3DXConstantTableImpl *)iface;
+
+    FIXME("(%p)->(%p, %p, %p): stub\n", This, device, constant, vector);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ID3DXConstantTableImpl_SetVectorArray(ID3DXConstantTable* iface, LPDIRECT3DDEVICE9 device,
+                                                            D3DXHANDLE constant, CONST D3DXVECTOR4* vector, UINT count)
+{
+    ID3DXConstantTableImpl *This = (ID3DXConstantTableImpl *)iface;
+
+    FIXME("(%p)->(%p, %p, %p, %d): stub\n", This, device, constant, vector, count);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ID3DXConstantTableImpl_SetMatrix(ID3DXConstantTable* iface, LPDIRECT3DDEVICE9 device,
+                                                       D3DXHANDLE constant, CONST D3DXMATRIX* matrix)
+{
+    ID3DXConstantTableImpl *This = (ID3DXConstantTableImpl *)iface;
+
+    FIXME("(%p)->(%p, %p, %p): stub\n", This, device, constant, matrix);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ID3DXConstantTableImpl_SetMatrixArray(ID3DXConstantTable* iface, LPDIRECT3DDEVICE9 device,
+                                                            D3DXHANDLE constant, CONST D3DXMATRIX* matrix, UINT count)
+{
+    ID3DXConstantTableImpl *This = (ID3DXConstantTableImpl *)iface;
+
+    FIXME("(%p)->(%p, %p, %p, %d): stub\n", This, device, constant, matrix, count);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ID3DXConstantTableImpl_SetMatrixPointerArray(ID3DXConstantTable* iface, LPDIRECT3DDEVICE9 device,
+                                                                   D3DXHANDLE constant, CONST D3DXMATRIX** matrix, UINT count)
+{
+    ID3DXConstantTableImpl *This = (ID3DXConstantTableImpl *)iface;
+
+    FIXME("(%p)->(%p, %p, %p, %d): stub\n", This, device, constant, matrix, count);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ID3DXConstantTableImpl_SetMatrixTranspose(ID3DXConstantTable* iface, LPDIRECT3DDEVICE9 device,
+                                                                D3DXHANDLE constant, CONST D3DXMATRIX* matrix)
+{
+    ID3DXConstantTableImpl *This = (ID3DXConstantTableImpl *)iface;
+
+    FIXME("(%p)->(%p, %p, %p): stub\n", This, device, constant, matrix);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ID3DXConstantTableImpl_SetMatrixTransposeArray(ID3DXConstantTable* iface, LPDIRECT3DDEVICE9 device,
+                                                                     D3DXHANDLE constant, CONST D3DXMATRIX* matrix, UINT count)
+{
+    ID3DXConstantTableImpl *This = (ID3DXConstantTableImpl *)iface;
+
+    FIXME("(%p)->(%p, %p, %p, %d): stub\n", This, device, constant, matrix, count);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI ID3DXConstantTableImpl_SetMatrixTransposePointerArray(ID3DXConstantTable* iface, LPDIRECT3DDEVICE9 device,
+                                                                            D3DXHANDLE constant, CONST D3DXMATRIX** matrix, UINT count)
+{
+    ID3DXConstantTableImpl *This = (ID3DXConstantTableImpl *)iface;
+
+    FIXME("(%p)->(%p, %p, %p, %d): stub\n", This, device, constant, matrix, count);
+
+    return E_NOTIMPL;
+}
+
+static const struct ID3DXConstantTableVtbl ID3DXConstantTable_Vtbl =
+{
+    /*** IUnknown methods ***/
+    ID3DXConstantTableImpl_QueryInterface,
+    ID3DXConstantTableImpl_AddRef,
+    ID3DXConstantTableImpl_Release,
+    /*** ID3DXBuffer methods ***/
+    ID3DXConstantTableImpl_GetBufferPointer,
+    ID3DXConstantTableImpl_GetBufferSize,
+    /*** ID3DXConstantTable methods ***/
+    ID3DXConstantTableImpl_GetDesc,
+    ID3DXConstantTableImpl_GetConstantDesc,
+    ID3DXConstantTableImpl_GetConstant,
+    ID3DXConstantTableImpl_GetConstantByName,
+    ID3DXConstantTableImpl_GetConstantByElement,
+    ID3DXConstantTableImpl_SetDefaults,
+    ID3DXConstantTableImpl_SetValue,
+    ID3DXConstantTableImpl_SetBool,
+    ID3DXConstantTableImpl_SetBoolArray,
+    ID3DXConstantTableImpl_SetInt,
+    ID3DXConstantTableImpl_SetIntArray,
+    ID3DXConstantTableImpl_SetFloat,
+    ID3DXConstantTableImpl_SetFloatArray,
+    ID3DXConstantTableImpl_SetVector,
+    ID3DXConstantTableImpl_SetVectorArray,
+    ID3DXConstantTableImpl_SetMatrix,
+    ID3DXConstantTableImpl_SetMatrixArray,
+    ID3DXConstantTableImpl_SetMatrixPointerArray,
+    ID3DXConstantTableImpl_SetMatrixTranspose,
+    ID3DXConstantTableImpl_SetMatrixTransposeArray,
+    ID3DXConstantTableImpl_SetMatrixTransposePointerArray
+};
+
+HRESULT WINAPI D3DXGetShaderConstantTableEx(CONST DWORD* pFunction,
+                                            DWORD flags,
+                                            LPD3DXCONSTANTTABLE* ppConstantTable)
+{
+    ID3DXConstantTableImpl* object;
+    HRESULT hr;
+    LPCVOID data;
+    UINT size;
+
+    FIXME("(%p, %x, %p): semi-stub\n", pFunction, flags, ppConstantTable);
+
+    if (!pFunction || !ppConstantTable)
+        return D3DERR_INVALIDCALL;
+
+    hr = D3DXFindShaderComment(pFunction, MAKEFOURCC('C','T','A','B'), &data, &size);
+    if (hr != D3D_OK)
+        return D3DXERR_INVALIDDATA;
+
+    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ID3DXConstantTableImpl));
+    if (!object)
+    {
+        ERR("Out of memory\n");
+        return E_OUTOFMEMORY;
+    }
+
+    object->lpVtbl = &ID3DXConstantTable_Vtbl;
+    object->ref = 1;
+
+    object->ctab = HeapAlloc(GetProcessHeap(), 0, size);
+    if (!object->ctab)
+    {
+        HeapFree(GetProcessHeap(), 0, object);
+        ERR("Out of memory\n");
+        return E_OUTOFMEMORY;
+    }
+    object->size = size;
+    memcpy(object->ctab, data, object->size);
+
+    *ppConstantTable = (LPD3DXCONSTANTTABLE)object;
+
+    return D3D_OK;
+}
+
+HRESULT WINAPI D3DXGetShaderConstantTable(CONST DWORD* pFunction,
+                                          LPD3DXCONSTANTTABLE* ppConstantTable)
+{
+    TRACE("(%p, %p): Forwarded to D3DXGetShaderConstantTableEx\n", pFunction, ppConstantTable);
+
+    return D3DXGetShaderConstantTableEx(pFunction, 0, ppConstantTable);
 }

@@ -150,49 +150,24 @@ static const IDirect3DQuery9Vtbl Direct3DQuery9_Vtbl =
     IDirect3DQuery9Impl_GetData
 };
 
+HRESULT query_init(IDirect3DQuery9Impl *query, IDirect3DDevice9Impl *device, D3DQUERYTYPE type)
+{
+    HRESULT hr;
 
-/* IDirect3DDevice9 IDirect3DQuery9 Methods follow: */
-HRESULT WINAPI IDirect3DDevice9Impl_CreateQuery(LPDIRECT3DDEVICE9EX iface, D3DQUERYTYPE Type, IDirect3DQuery9** ppQuery) {
-    IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
-    IDirect3DQuery9Impl *object = NULL;
-    HRESULT hr = D3D_OK;
+    query->lpVtbl = &Direct3DQuery9_Vtbl;
+    query->ref = 1;
 
-    TRACE("iface %p, type %#x, query %p.\n", iface, Type, ppQuery);
-
-    if (!ppQuery)
+    wined3d_mutex_lock();
+    hr = IWineD3DDevice_CreateQuery(device->WineD3DDevice, type, &query->wineD3DQuery, (IUnknown *)query);
+    wined3d_mutex_unlock();
+    if (FAILED(hr))
     {
-        wined3d_mutex_lock();
-        hr = IWineD3DDevice_CreateQuery(This->WineD3DDevice, Type, NULL, NULL);
-        wined3d_mutex_unlock();
-
+        WARN("Failed to create wined3d query, hr %#x.\n", hr);
         return hr;
     }
 
-    /* Allocate the storage for the device */
-    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IDirect3DQuery9Impl));
-    if (NULL == object) {
-        ERR("Allocation of memory failed, returning D3DERR_OUTOFVIDEOMEMORY\n");
-        return D3DERR_OUTOFVIDEOMEMORY;
-    }
+    query->parentDevice = (IDirect3DDevice9Ex *)device;
+    IDirect3DDevice9Ex_AddRef(query->parentDevice);
 
-    object->lpVtbl = &Direct3DQuery9_Vtbl;
-    object->ref = 1;
-
-    wined3d_mutex_lock();
-    hr = IWineD3DDevice_CreateQuery(This->WineD3DDevice, Type, &object->wineD3DQuery, (IUnknown *)object);
-    wined3d_mutex_unlock();
-
-    if (FAILED(hr)) {
-
-        /* free up object */
-        WARN("(%p) call to IWineD3DDevice_CreateQuery failed\n", This);
-        HeapFree(GetProcessHeap(), 0, object);
-    } else {
-        IDirect3DDevice9Ex_AddRef(iface);
-        object->parentDevice = iface;
-        *ppQuery = (LPDIRECT3DQUERY9) object;
-        TRACE("(%p) : Created query %p\n", This , object);
-    }
-    TRACE("(%p) : returning %x\n", This, hr);
-    return hr;
+    return D3D_OK;
 }

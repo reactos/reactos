@@ -107,6 +107,30 @@ BEGIN
     END
 END
 
+IDM_COLOR_POPUP MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "검정"          ID_COLOR_BLACK
+        MENUITEM "밤색"          ID_COLOR_MAROON
+        MENUITEM "녹색"          ID_COLOR_GREEN
+        MENUITEM "올리브색"      ID_COLOR_OLIVE
+        MENUITEM "짙은 남색"     ID_COLOR_NAVY
+        MENUITEM "심홍색"        ID_COLOR_PURPLE
+        MENUITEM "검은 물오리색" ID_COLOR_TEAL
+        MENUITEM "회색"          ID_COLOR_GRAY
+        MENUITEM "은색"          ID_COLOR_SILVER
+        MENUITEM "빨강"          ID_COLOR_RED
+        MENUITEM "라임색"        ID_COLOR_LIME
+        MENUITEM "노랑"          ID_COLOR_YELLOW
+        MENUITEM "파랑"          ID_COLOR_BLUE
+        MENUITEM "자홍색"        ID_COLOR_FUCHSIA
+        MENUITEM "물색"          ID_COLOR_AQUA
+        MENUITEM "하양"          ID_COLOR_WHITE
+        MENUITEM "자동"     ID_COLOR_AUTOMATIC
+    END
+END
+
 IDD_DATETIME DIALOG DISCARDABLE 30, 20, 130, 80
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "날짜와 시간"
@@ -212,10 +236,12 @@ BEGIN
     STRING_PREVIEW_PREVPAGE,         "이전 페이지"
     STRING_PREVIEW_TWOPAGES,         "두 페이지"
     STRING_PREVIEW_ONEPAGE,          "한 페이지"
-    STRING_PREVIEW_ZOOMIN,           "Zoom in"
-    STRING_PREVIEW_ZOOMOUT,          "Zoom out"
+    STRING_PREVIEW_ZOOMIN,           "확대"
+    STRING_PREVIEW_ZOOMOUT,          "축소"
     STRING_PREVIEW_CLOSE,            "닫기"
-    STRING_UNITS_CM,             "cm"
+    STRING_PREVIEW_PAGE,             "페이지"
+    STRING_PREVIEW_PAGES,            "페이지들"
+    STRING_UNITS_CM,                 "cm"
 END
 
 STRINGTABLE DISCARDABLE

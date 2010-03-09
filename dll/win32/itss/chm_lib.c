@@ -829,6 +829,38 @@ struct chmFile *chm_openW(const WCHAR *filename)
     return newHandle;
 }
 
+/* Duplicate an ITS archive handle */
+struct chmFile *chm_dup(struct chmFile *oldHandle)
+{
+    struct chmFile *newHandle=NULL;
+
+    newHandle = HeapAlloc(GetProcessHeap(), 0, sizeof(struct chmFile));
+    memcpy(newHandle, oldHandle, sizeof(struct chmFile));
+
+    /* duplicate fd handle */
+    DuplicateHandle(GetCurrentProcess(), oldHandle->fd,
+                    GetCurrentProcess(), &(newHandle->fd),
+                    0, FALSE, DUPLICATE_SAME_ACCESS);
+    newHandle->lzx_state = NULL;
+    newHandle->cache_blocks = NULL;
+    newHandle->cache_block_indices = NULL;
+    newHandle->cache_num_blocks = 0;
+
+    /* initialize mutexes, if needed */
+    InitializeCriticalSection(&newHandle->mutex);
+    newHandle->mutex.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": chmFile.mutex");
+    InitializeCriticalSection(&newHandle->lzx_mutex);
+    newHandle->lzx_mutex.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": chmFile.lzx_mutex");
+    InitializeCriticalSection(&newHandle->cache_mutex);
+    newHandle->cache_mutex.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": chmFile.cache_mutex");
+
+    /* initialize cache */
+    chm_set_param(newHandle, CHM_PARAM_MAX_BLOCKS_CACHED,
+                  CHM_MAX_BLOCKS_CACHED);
+
+    return newHandle;
+}
+
 /* close an ITS archive */
 void chm_close(struct chmFile *h)
 {

@@ -323,22 +323,6 @@ interface IEnumExtraSearch : IUnknown
 ]
 interface IShellFolder2 : IShellFolder
 {
-    typedef enum
-    {
-        SHCOLSTATE_TYPE_STR = 0x00000001,
-        SHCOLSTATE_TYPE_INT = 0x00000002,
-        SHCOLSTATE_TYPE_DATE = 0x00000003,
-        SHCOLSTATE_TYPEMASK = 0x0000000f,
-        SHCOLSTATE_ONBYDEFAULT = 0x00000010,
-        SHCOLSTATE_SLOW = 0x00000020,
-        SHCOLSTATE_EXTENDED = 0x00000040,
-        SHCOLSTATE_SECONDARYUI = 0x00000080,
-        SHCOLSTATE_HIDDEN = 0x00000100,
-        SHCOLSTATE_PREFER_VARCMP = 0x00000200
-    } SHCOLSTATE;
-
-    typedef DWORD SHCOLSTATEF;
-
     typedef struct
     {
         GUID    fmtid;
@@ -2309,6 +2293,10 @@ interface IBrowserService : IUnknown
 	typedef const BASEBROWSERDATA *LPCBASEBROWSERDATA;
 
 	typedef BASEBROWSERDATA *LPBASEBROWSERDATA;
+
+cpp_quote("#if 0")
+typedef HANDLE HMONITOR;
+cpp_quote("#endif /* 0 */")
 
 	typedef struct SToolbarItem
 	{

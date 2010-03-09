@@ -57,6 +57,7 @@
 #include <winsock2.h>
 #include "dhcpd.h"
 #include "privsep.h"
+#include "debug.h"
 
 #define	PERIOD 0x2e
 #define	hyphenchar(c) ((c) == 0x2d)
@@ -109,22 +110,106 @@ int              check_arp( struct interface_info *ip, struct client_lease *lp )
 
 time_t	scripttime;
 
+
+static VOID CALLBACK ServiceMain(DWORD argc, LPWSTR *argv);
+static WCHAR ServiceName[] = L"DHCP";
+static SERVICE_TABLE_ENTRYW ServiceTable[] =
+{
+    {ServiceName, ServiceMain},
+    {NULL, NULL}
+};
+
+SERVICE_STATUS_HANDLE ServiceStatusHandle;
+SERVICE_STATUS ServiceStatus;
+
+
 /* XXX Implement me */
 int check_arp( struct interface_info *ip, struct client_lease *lp ) {
     return 1;
 }
 
-static VOID CALLBACK
-DispatchMain(DWORD argc, LPTSTR *argv)
+
+static VOID
+UpdateServiceStatus(DWORD dwState)
 {
-	dispatch();
+    ServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
+    ServiceStatus.dwCurrentState = dwState;
+
+    ServiceStatus.dwControlsAccepted = 0;
+
+    ServiceStatus.dwWin32ExitCode = 0;
+    ServiceStatus.dwServiceSpecificExitCode = 0;
+    ServiceStatus.dwCheckPoint = 0;
+
+    if (dwState == SERVICE_START_PENDING ||
+        dwState == SERVICE_STOP_PENDING ||
+        dwState == SERVICE_PAUSE_PENDING ||
+        dwState == SERVICE_CONTINUE_PENDING)
+        ServiceStatus.dwWaitHint = 10000;
+    else
+        ServiceStatus.dwWaitHint = 0;
+
+    SetServiceStatus(ServiceStatusHandle,
+                     &ServiceStatus);
 }
 
-static SERVICE_TABLE_ENTRY ServiceTable[2] =
+
+static DWORD WINAPI
+ServiceControlHandler(DWORD dwControl,
+                      DWORD dwEventType,
+                      LPVOID lpEventData,
+                      LPVOID lpContext)
 {
-    {TEXT("DHCP"), DispatchMain},
-    {NULL, NULL}
-};
+    switch (dwControl)
+    {
+        case SERVICE_CONTROL_STOP:
+            UpdateServiceStatus(SERVICE_STOP_PENDING);
+            UpdateServiceStatus(SERVICE_STOPPED);
+            return ERROR_SUCCESS;
+
+        case SERVICE_CONTROL_PAUSE:
+            UpdateServiceStatus(SERVICE_PAUSED);
+            return ERROR_SUCCESS;
+
+        case SERVICE_CONTROL_CONTINUE:
+            UpdateServiceStatus(SERVICE_START_PENDING);
+            UpdateServiceStatus(SERVICE_RUNNING);
+            return ERROR_SUCCESS;
+
+        case SERVICE_CONTROL_INTERROGATE:
+            SetServiceStatus(ServiceStatusHandle,
+                             &ServiceStatus);
+            return ERROR_SUCCESS;
+
+        case SERVICE_CONTROL_SHUTDOWN:
+            UpdateServiceStatus(SERVICE_STOP_PENDING);
+            UpdateServiceStatus(SERVICE_STOPPED);
+            return ERROR_SUCCESS;
+
+        default :
+            return ERROR_CALL_NOT_IMPLEMENTED;
+    }
+}
+
+
+static VOID CALLBACK
+ServiceMain(DWORD argc, LPWSTR *argv)
+{
+    ServiceStatusHandle = RegisterServiceCtrlHandlerExW(ServiceName,
+                                                        ServiceControlHandler,
+                                                        NULL);
+    if (!ServiceStatusHandle)
+    {
+        return;
+    }
+
+    UpdateServiceStatus(SERVICE_START_PENDING);
+
+    UpdateServiceStatus(SERVICE_RUNNING);
+
+    dispatch();
+}
+
 
 int
 main(int argc, char *argv[])
@@ -147,7 +232,7 @@ main(int argc, char *argv[])
 
         DH_DbgPrint(MID_TRACE,("Going into dispatch()\n"));
 
-	StartServiceCtrlDispatcher(ServiceTable);
+	StartServiceCtrlDispatcherW(ServiceTable);
 
 	/* not reached */
 	return (0);

@@ -1621,6 +1621,25 @@ end:
     return r;
 }
 
+static void msi_reset_folders( MSIPACKAGE *package, BOOL source )
+{
+    MSIFOLDER *folder;
+
+    LIST_FOR_EACH_ENTRY( folder, &package->folders, MSIFOLDER, entry )
+    {
+        if ( source )
+        {
+            msi_free( folder->ResolvedSource );
+            folder->ResolvedSource = NULL;
+        }
+        else
+        {
+            msi_free( folder->ResolvedTarget );
+            folder->ResolvedTarget = NULL;
+        }
+    }
+}
+
 UINT MSI_SetPropertyW( MSIPACKAGE *package, LPCWSTR szName, LPCWSTR szValue)
 {
     MSIQUERY *view;
@@ -2104,6 +2123,13 @@ static HRESULT WINAPI mrp_GetMode( IWineMsiRemotePackage *iface, MSIRUNMODE mode
     return S_OK;
 }
 
+static HRESULT WINAPI mrp_SetMode( IWineMsiRemotePackage *iface, MSIRUNMODE mode, BOOL state )
+{
+    msi_remote_package_impl* This = mrp_from_IWineMsiRemotePackage( iface );
+    UINT r = MsiSetMode(This->package, mode, state);
+    return HRESULT_FROM_WIN32(r);
+}
+
 static HRESULT WINAPI mrp_GetFeatureState( IWineMsiRemotePackage *iface, BSTR feature,
                                     INSTALLSTATE *installed, INSTALLSTATE *action )
 {
@@ -2196,6 +2222,7 @@ static const IWineMsiRemotePackageVtbl msi_remote_package_vtbl =
     mrp_SetTargetPath,
     mrp_GetSourcePath,
     mrp_GetMode,
+    mrp_SetMode,
     mrp_GetFeatureState,
     mrp_SetFeatureState,
     mrp_GetComponentState,

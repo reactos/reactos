@@ -10,7 +10,8 @@
 	<library>ole32</library>
 	<library>setupapi</library>
 	<library>msvcrt</library>
-
+	<library>strmiids</library>
+	<library>ksuser</library>
 	<group compilerset="gcc">
 		<compilerflag compiler="cxx">-fno-exceptions</compilerflag>
 		<compilerflag compiler="cxx">-fno-rtti</compilerflag>
@@ -26,9 +27,13 @@
 	<file>cvpconfig.cpp</file>
 	<file>cvpvbiconfig.cpp</file>
 	<file>datatype.cpp</file>
+	<file>enum_mediatypes.cpp</file>
+	<file>enumpins.cpp</file>
+	<file>input_pin.cpp</file>
 	<file>interface.cpp</file>
 	<file>ksproxy.cpp</file>
 	<file>ksproxy.rc</file>
+	<file>output_pin.cpp</file>
 	<file>proxy.cpp</file>
 	<file>qualityforward.cpp</file>
 </module>

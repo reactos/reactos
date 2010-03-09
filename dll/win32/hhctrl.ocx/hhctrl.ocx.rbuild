@@ -14,7 +14,10 @@
 	<file>content.c</file>
 	<file>help.c</file>
 	<file>hhctrl.c</file>
+	<file>index.c</file>
 	<file>regsvr.c</file>
+	<file>search.c</file>
+	<file>stream.c</file>
 	<file>webbrowser.c</file>
 	<file>hhctrl.rc</file>
 	<library>wine</library>

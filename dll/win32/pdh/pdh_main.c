@@ -600,6 +600,24 @@ PDH_STATUS WINAPI PdhCollectQueryDataWithTime( PDH_HQUERY handle, LONGLONG *time
 }
 
 /***********************************************************************
+ *              PdhExpandWildCardPathA   (PDH.@)
+ */
+PDH_STATUS WINAPI PdhExpandWildCardPathA( LPCSTR szDataSource, LPCSTR szWildCardPath, LPSTR mszExpandedPathList, LPDWORD pcchPathListLength, DWORD dwFlags )
+{
+    FIXME("%s, %s, %p, %p, 0x%x: stub\n", debugstr_a(szDataSource), debugstr_a(szWildCardPath), mszExpandedPathList, pcchPathListLength, dwFlags);
+    return PDH_NOT_IMPLEMENTED;
+}
+
+/***********************************************************************
+ *              PdhExpandWildCardPathW   (PDH.@)
+ */
+PDH_STATUS WINAPI PdhExpandWildCardPathW( LPCWSTR szDataSource, LPCWSTR szWildCardPath, LPWSTR mszExpandedPathList, LPDWORD pcchPathListLength, DWORD dwFlags )
+{
+    FIXME("%s, %s, %p, %p, 0x%x: stub\n", debugstr_w(szDataSource), debugstr_w(szWildCardPath), mszExpandedPathList, pcchPathListLength, dwFlags);
+    return PDH_NOT_IMPLEMENTED;
+}
+
+/***********************************************************************
  *              PdhGetCounterInfoA   (PDH.@)
  */
 PDH_STATUS WINAPI PdhGetCounterInfoA( PDH_HCOUNTER handle, BOOLEAN text, LPDWORD size, PPDH_COUNTER_INFO_A info )
@@ -704,6 +722,19 @@ PDH_STATUS WINAPI PdhGetCounterTimeBase( PDH_HCOUNTER handle, LONGLONG *base )
     *base = counter->base;
 
     LeaveCriticalSection( &pdh_handle_cs );
+    return ERROR_SUCCESS;
+}
+
+/***********************************************************************
+ *              PdhGetDllVersion   (PDH.@)
+ */
+PDH_STATUS WINAPI PdhGetDllVersion( LPDWORD version )
+{
+    if (!version)
+        return PDH_INVALID_ARGUMENT;
+
+    *version = PDH_VERSION;
+
     return ERROR_SUCCESS;
 }
 
@@ -1192,4 +1223,13 @@ PDH_STATUS WINAPI PdhEnumObjectItemsW(LPCWSTR szDataSource, LPCWSTR szMachineNam
          pcchInstanceListLength, dwDetailLevel, dwFlags);
 
     return PDH_NOT_IMPLEMENTED;
+}
+
+/***********************************************************************
+ *              PdhSetDefaultRealTimeDataSource   (PDH.@)
+ */
+PDH_STATUS WINAPI PdhSetDefaultRealTimeDataSource( DWORD source )
+{
+    FIXME("%u\n", source);
+    return ERROR_SUCCESS;
 }

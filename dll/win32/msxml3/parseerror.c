@@ -56,7 +56,7 @@ static HRESULT WINAPI parseError_QueryInterface(
     REFIID riid,
     void** ppvObject )
 {
-    TRACE("%p %s %p\n", iface, debugstr_guid(riid), ppvObject);
+    TRACE("(%p)->(%s %p)\n", iface, debugstr_guid(riid), ppvObject);
 
     if ( IsEqualGUID( riid, &IID_IUnknown ) ||
          IsEqualGUID( riid, &IID_IDispatch ) ||
@@ -208,7 +208,8 @@ static HRESULT WINAPI parseError_get_url(
     IXMLDOMParseError *iface,
     BSTR *url )
 {
-    FIXME("\n");
+    parse_error_t *This = impl_from_IXMLDOMParseError( iface );
+    FIXME("(%p)->(%p)\n", This, url);
     return E_NOTIMPL;
 }
 
@@ -232,7 +233,8 @@ static HRESULT WINAPI parseError_get_srcText(
     IXMLDOMParseError *iface,
     BSTR *srcText )
 {
-    FIXME("\n");
+    parse_error_t *This = impl_from_IXMLDOMParseError( iface );
+    FIXME("(%p)->(%p)\n", This, srcText);
     return E_NOTIMPL;
 }
 
@@ -240,7 +242,8 @@ static HRESULT WINAPI parseError_get_line(
     IXMLDOMParseError *iface,
     LONG *line )
 {
-    FIXME("\n");
+    parse_error_t *This = impl_from_IXMLDOMParseError( iface );
+    FIXME("(%p)->(%p)\n", This, line);
     return E_NOTIMPL;
 }
 
@@ -248,7 +251,8 @@ static HRESULT WINAPI parseError_get_linepos(
     IXMLDOMParseError *iface,
     LONG *linepos )
 {
-    FIXME("\n");
+    parse_error_t *This = impl_from_IXMLDOMParseError( iface );
+    FIXME("(%p)->(%p)\n", This, linepos);
     return E_NOTIMPL;
 }
 
@@ -256,7 +260,8 @@ static HRESULT WINAPI parseError_get_filepos(
     IXMLDOMParseError *iface,
     LONG *filepos )
 {
-    FIXME("\n");
+    parse_error_t *This = impl_from_IXMLDOMParseError( iface );
+    FIXME("(%p)->(%p)\n", This, filepos);
     return E_NOTIMPL;
 }
 

@@ -272,11 +272,40 @@ HWND WINAPI HtmlHelpA(HWND caller, LPCSTR filename, UINT command, DWORD_PTR data
 int WINAPI doWinMain(HINSTANCE hInstance, LPSTR szCmdLine)
 {
     MSG msg;
-    int len, buflen;
+    int len, buflen, mapid = -1;
     WCHAR *filename;
     char *endq = NULL;
 
     hh_process = TRUE;
+
+    /* Parse command line option of the HTML Help command.
+     *
+     * Note: The only currently handled action is "mapid",
+     *  which corresponds to opening a specific page.
+     */
+    while(*szCmdLine == '-')
+    {
+        LPSTR space, ptr;
+
+        ptr = szCmdLine + 1;
+        space = strchr(ptr, ' ');
+        if(!strncmp(ptr, "mapid", space-ptr))
+        {
+            char idtxt[10];
+
+            ptr += strlen("mapid")+1;
+            space = strchr(ptr, ' ');
+            memcpy(idtxt, ptr, space-ptr);
+            idtxt[space-ptr] = '\0';
+            mapid = atoi(idtxt);
+            szCmdLine = space+1;
+        }
+        else
+        {
+            FIXME("Unhandled HTML Help command line parameter! (%.*s)\n", space-szCmdLine, szCmdLine);
+            return 0;
+        }
+    }
 
     /* FIXME: Check szCmdLine for bad arguments */
     if (*szCmdLine == '\"')
@@ -291,7 +320,11 @@ int WINAPI doWinMain(HINSTANCE hInstance, LPSTR szCmdLine)
     MultiByteToWideChar(CP_ACP, 0, szCmdLine, len, filename, buflen);
     filename[buflen-1] = 0;
 
-    HtmlHelpW(GetDesktopWindow(), filename, HH_DISPLAY_TOPIC, 0);
+    /* Open a specific help topic */
+    if(mapid != -1)
+        HtmlHelpW(GetDesktopWindow(), filename, HH_HELP_CONTEXT, mapid);
+    else
+        HtmlHelpW(GetDesktopWindow(), filename, HH_DISPLAY_TOPIC, 0);
 
     heap_free(filename);
 
