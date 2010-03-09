@@ -740,6 +740,20 @@ typedef enum _MANDATORY_LEVEL {
   MandatoryLevelCount
 } MANDATORY_LEVEL, *PMANDATORY_LEVEL;
 
+#if (NTDDI_VERSION >= NTDDI_NT4)
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtQueryObject(
+  IN HANDLE Handle OPTIONAL,
+  IN OBJECT_INFORMATION_CLASS ObjectInformationClass,
+  OUT PVOID ObjectInformation OPTIONAL,
+  IN ULONG ObjectInformationLength,
+  OUT PULONG ReturnLength OPTIONAL);
+
+#endif
+
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
 NTSYSCALLAPI
@@ -969,6 +983,50 @@ NtUnlockFile(
   IN PLARGE_INTEGER Length,
   IN ULONG Key);
 
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtSetSecurityObject(
+  IN HANDLE Handle,
+  IN SECURITY_INFORMATION SecurityInformation,
+  IN PSECURITY_DESCRIPTOR SecurityDescriptor);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtQuerySecurityObject(
+  IN HANDLE Handle,
+  IN SECURITY_INFORMATION SecurityInformation,
+  OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
+  IN ULONG Length,
+  OUT PULONG LengthNeeded);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtClose(
+  IN HANDLE Handle);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtAllocateVirtualMemory(
+  IN HANDLE ProcessHandle,
+  IN OUT PVOID *BaseAddress,
+  IN ULONG_PTR ZeroBits,
+  IN OUT PSIZE_T RegionSize,
+  IN ULONG AllocationType,
+  IN ULONG Protect);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtFreeVirtualMemory(
+  IN HANDLE ProcessHandle,
+  IN OUT PVOID *BaseAddress,
+  IN OUT PSIZE_T RegionSize,
+  IN ULONG FreeType);
+
 #endif
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
@@ -1197,6 +1255,18 @@ NtSetInformationThread(
   IN THREADINFOCLASS ThreadInformationClass,
   IN PVOID ThreadInformation,
   IN ULONG ThreadInformationLength);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtCreateSection(
+  OUT PHANDLE SectionHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+  IN PLARGE_INTEGER MaximumSize OPTIONAL,
+  IN ULONG SectionPageProtection,
+  IN ULONG AllocationAttributes,
+  IN HANDLE FileHandle OPTIONAL);
 
 #endif
 
@@ -4655,6 +4725,220 @@ typedef struct _PUBLIC_OBJECT_TYPE_INFORMATION {
   ULONG Reserved [22];
 } PUBLIC_OBJECT_TYPE_INFORMATION, *PPUBLIC_OBJECT_TYPE_INFORMATION;
 
+typedef struct _SECURITY_CLIENT_CONTEXT {
+  SECURITY_QUALITY_OF_SERVICE SecurityQos;
+  PACCESS_TOKEN ClientToken;
+  BOOLEAN DirectlyAccessClientToken;
+  BOOLEAN DirectAccessEffectiveOnly;
+  BOOLEAN ServerIsRemote;
+  TOKEN_CONTROL ClientTokenControl;
+} SECURITY_CLIENT_CONTEXT, *PSECURITY_CLIENT_CONTEXT;
+
+#define EVENT_INCREMENT                 1
+#define IO_NO_INCREMENT                 0
+#define IO_CD_ROM_INCREMENT             1
+#define IO_DISK_INCREMENT               1
+#define IO_MAILSLOT_INCREMENT           2
+#define IO_NAMED_PIPE_INCREMENT         2
+#define IO_NETWORK_INCREMENT            2
+#define SEMAPHORE_INCREMENT             1
+
+#define SYSTEM_PAGE_PRIORITY_BITS       3
+#define SYSTEM_PAGE_PRIORITY_LEVELS     (1 << SYSTEM_PAGE_PRIORITY_BITS)
+
+typedef struct _KAPC_STATE {
+  LIST_ENTRY ApcListHead[MaximumMode];
+  PKPROCESS Process;
+  BOOLEAN KernelApcInProgress;
+  BOOLEAN KernelApcPending;
+  BOOLEAN UserApcPending;
+} KAPC_STATE, *PKAPC_STATE, *RESTRICTED_POINTER PRKAPC_STATE;
+
+#define KAPC_STATE_ACTUAL_LENGTH (FIELD_OFFSET(KAPC_STATE, UserApcPending) + sizeof(BOOLEAN))
+
+typedef struct _KQUEUE {
+  DISPATCHER_HEADER Header;
+  LIST_ENTRY EntryListHead;
+  volatile ULONG CurrentCount;
+  ULONG MaximumCount;
+  LIST_ENTRY ThreadListHead;
+} KQUEUE, *PKQUEUE, *RESTRICTED_POINTER PRKQUEUE;
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTKERNELAPI
+VOID
+NTAPI
+KeInitializeMutant(
+  OUT PRKMUTANT Mutant,
+  IN BOOLEAN InitialOwner);
+
+NTKERNELAPI
+LONG
+NTAPI
+KeReadStateMutant(
+  IN PRKMUTANT Mutant);
+
+NTKERNELAPI
+LONG
+NTAPI
+KeReleaseMutant(
+  IN OUT PRKMUTANT Mutant,
+  IN KPRIORITY Increment,
+  IN BOOLEAN Abandoned,
+  IN BOOLEAN Wait);
+
+NTKERNELAPI
+VOID
+NTAPI
+KeInitializeQueue(
+  OUT PRKQUEUE Queue,
+  IN ULONG Count);
+
+NTKERNELAPI
+LONG
+NTAPI
+KeReadStateQueue(
+  IN PRKQUEUE Queue);
+
+NTKERNELAPI
+LONG
+NTAPI
+KeInsertQueue(
+  IN OUT PRKQUEUE Queue,
+  IN OUT PLIST_ENTRY Entry);
+
+NTKERNELAPI
+LONG
+NTAPI
+KeInsertHeadQueue(
+  IN OUT PRKQUEUE Queue,
+  IN OUT PLIST_ENTRY Entry);
+
+NTKERNELAPI
+PLIST_ENTRY
+NTAPI
+KeRemoveQueue(
+  IN OUT PRKQUEUE Queue,
+  IN KPROCESSOR_MODE WaitMode,
+  IN PLARGE_INTEGER Timeout OPTIONAL);
+
+NTKERNELAPI
+VOID
+NTAPI
+KeAttachProcess(
+  IN OUT PKPROCESS Process);
+
+NTKERNELAPI
+VOID
+NTAPI
+KeDetachProcess(
+  VOID);
+
+NTKERNELAPI
+PLIST_ENTRY
+NTAPI
+KeRundownQueue(
+  IN OUT PRKQUEUE Queue);
+
+NTKERNELAPI
+VOID
+NTAPI
+KeStackAttachProcess(
+  IN OUT PKPROCESS Process,
+  OUT PKAPC_STATE ApcState);
+
+NTKERNELAPI
+VOID
+NTAPI
+KeUnstackDetachProcess(
+  IN PKAPC_STATE ApcState);
+
+NTKERNELAPI
+UCHAR
+NTAPI
+KeSetIdealProcessorThread(
+  IN OUT PKTHREAD Thread,
+  IN UCHAR Processor);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+KeSetKernelStackSwapEnable(
+  IN BOOLEAN Enable);
+
+#if defined(_X86_)
+NTHALAPI
+KIRQL
+FASTCALL
+KeAcquireSpinLockRaiseToSynch(
+  IN OUT PKSPIN_LOCK SpinLock);
+#else
+NTKERNELAPI
+KIRQL
+KeAcquireSpinLockRaiseToSynch(
+  IN OUT PKSPIN_LOCK SpinLock);
+#endif
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+
+NTHALAPI
+KIRQL
+FASTCALL
+KeAcquireQueuedSpinLock(
+  IN OUT KSPIN_LOCK_QUEUE_NUMBER Number);
+
+NTHALAPI
+VOID
+FASTCALL
+KeReleaseQueuedSpinLock(
+  IN OUT KSPIN_LOCK_QUEUE_NUMBER Number,
+  IN KIRQL OldIrql);
+
+NTHALAPI
+LOGICAL
+FASTCALL
+KeTryToAcquireQueuedSpinLock(
+  IN KSPIN_LOCK_QUEUE_NUMBER Number,
+  OUT PKIRQL OldIrql);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+NTKERNELAPI
+VOID
+KeQueryOwnerMutant(
+  IN PKMUTANT Mutant,
+  OUT PCLIENT_ID ClientId);
+
+NTKERNELAPI
+ULONG
+KeRemoveQueueEx (
+  IN OUT PKQUEUE Queue,
+  IN KPROCESSOR_MODE WaitMode,
+  IN BOOLEAN Alertable,
+  IN PLARGE_INTEGER Timeout OPTIONAL,
+  OUT PLIST_ENTRY *EntryArray,
+  IN ULONG Count);
+
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+
+#define INVALID_PROCESSOR_INDEX     0xffffffff
+
+NTSTATUS
+NTAPI
+KeGetProcessorNumberFromIndex(
+  IN ULONG ProcIndex,
+  OUT PPROCESSOR_NUMBER ProcNumber);
+
+ULONG
+NTAPI
+KeGetProcessorIndexFromNumber(
+  IN PPROCESSOR_NUMBER ProcNumber);
+
 #pragma pack(push,4)
 
 #ifndef VER_PRODUCTBUILD
@@ -4891,15 +5175,6 @@ typedef struct _OBJECT_BASIC_INFORMATION
     ULONG SecurityDescriptorSize;
     LARGE_INTEGER CreationTime;
 } OBJECT_BASIC_INFORMATION, *POBJECT_BASIC_INFORMATION;
-
-typedef struct _KAPC_STATE {
-    LIST_ENTRY  ApcListHead[2];
-    PKPROCESS   Process;
-    BOOLEAN     KernelApcInProgress;
-    BOOLEAN     KernelApcPending;
-    BOOLEAN     UserApcPending;
-} KAPC_STATE, *PKAPC_STATE, *RESTRICTED_POINTER PRKAPC_STATE;
-#define KAPC_STATE_ACTUAL_LENGTH (FIELD_OFFSET(KAPC_STATE, UserApcPending) + sizeof(BOOLEAN))
 
 typedef struct _BITMAP_RANGE {
     LIST_ENTRY      Links;
@@ -5202,14 +5477,6 @@ typedef struct _GET_RETRIEVAL_DESCRIPTOR {
     ULONGLONG       StartVcn;
     MAPPING_PAIR    Pair[1];
 } GET_RETRIEVAL_DESCRIPTOR, *PGET_RETRIEVAL_DESCRIPTOR;
-
-typedef struct _KQUEUE {
-    DISPATCHER_HEADER   Header;
-    LIST_ENTRY          EntryListHead;
-    ULONG               CurrentCount;
-    ULONG               MaximumCount;
-    LIST_ENTRY          ThreadListHead;
-} KQUEUE, *PKQUEUE, *RESTRICTED_POINTER PRKQUEUE;
 
 #define ASSERT_QUEUE(Q) ASSERT(((Q)->Header.Type & KOBJECT_TYPE_MASK) == QueueObject);
 
@@ -5592,15 +5859,6 @@ typedef struct _SE_EXPORTS {
 } SE_EXPORTS, *PSE_EXPORTS;
 
 extern PSE_EXPORTS SeExports;
-
-typedef struct _SECURITY_CLIENT_CONTEXT {
-    SECURITY_QUALITY_OF_SERVICE SecurityQos;
-    PACCESS_TOKEN               ClientToken;
-    BOOLEAN                     DirectlyAccessClientToken;
-    BOOLEAN                     DirectAccessEffectiveOnly;
-    BOOLEAN                     ServerIsRemote;
-    TOKEN_CONTROL               ClientTokenControl;
-} SECURITY_CLIENT_CONTEXT, *PSECURITY_CLIENT_CONTEXT;
 
 typedef struct _TUNNEL {
     FAST_MUTEX          Mutex;
@@ -7349,14 +7607,6 @@ FsRtlUninitializeOplock (
 );
 
 NTKERNELAPI
-UCHAR
-NTAPI
-KeSetIdealProcessorThread(
-    IN OUT PKTHREAD Thread,
-    IN UCHAR Processor
-);
-
-NTKERNELAPI
 NTSTATUS
 NTAPI
 IoAttachDeviceToDeviceStackSafe(
@@ -7685,39 +7935,6 @@ IoVerifyVolume (
     IN BOOLEAN          AllowRawMount
 );
 
-#if !defined (_M_AMD64)
-
-NTHALAPI
-KIRQL
-FASTCALL
-KeAcquireQueuedSpinLock (
-    IN KSPIN_LOCK_QUEUE_NUMBER Number
-);
-
-NTHALAPI
-VOID
-FASTCALL
-KeReleaseQueuedSpinLock (
-    IN KSPIN_LOCK_QUEUE_NUMBER Number,
-    IN KIRQL OldIrql
-);
-
-NTHALAPI
-KIRQL
-FASTCALL
-KeAcquireSpinLockRaiseToSynch(
-    IN OUT PKSPIN_LOCK SpinLock
-);
-
-NTHALAPI
-LOGICAL
-FASTCALL
-KeTryToAcquireQueuedSpinLock(
-  KSPIN_LOCK_QUEUE_NUMBER Number,
-  PKIRQL OldIrql);
-
-#else
-
 NTKERNELAPI
 KIRQL
 FASTCALL
@@ -7734,130 +7951,10 @@ KeReleaseQueuedSpinLock (
 );
 
 NTKERNELAPI
-KIRQL
-KeAcquireSpinLockRaiseToSynch(
-    IN OUT PKSPIN_LOCK SpinLock
-);
-
-NTKERNELAPI
 LOGICAL
 KeTryToAcquireQueuedSpinLock(
   KSPIN_LOCK_QUEUE_NUMBER Number,
   PKIRQL OldIrql);
-
-#endif
-
-NTKERNELAPI
-VOID
-NTAPI
-KeAttachProcess (
-    IN PKPROCESS Process
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-KeDetachProcess (
-    VOID
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-KeInitializeQueue (
-    IN PRKQUEUE Queue,
-    IN ULONG    Count OPTIONAL
-);
-
-NTKERNELAPI
-LONG
-NTAPI
-KeInsertHeadQueue (
-    IN PRKQUEUE     Queue,
-    IN PLIST_ENTRY  Entry
-);
-
-NTKERNELAPI
-LONG
-NTAPI
-KeInsertQueue (
-    IN PRKQUEUE     Queue,
-    IN PLIST_ENTRY  Entry
-);
-
-NTKERNELAPI
-LONG
-NTAPI
-KeReadStateQueue (
-    IN PRKQUEUE Queue
-);
-
-NTKERNELAPI
-PLIST_ENTRY
-NTAPI
-KeRemoveQueue (
-    IN PRKQUEUE         Queue,
-    IN KPROCESSOR_MODE  WaitMode,
-    IN PLARGE_INTEGER   Timeout OPTIONAL
-);
-
-NTKERNELAPI
-PLIST_ENTRY
-NTAPI
-KeRundownQueue (
-    IN PRKQUEUE Queue
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-KeInitializeMutant (
-    IN PRKMUTANT  Mutant,
-    IN BOOLEAN    InitialOwner
-);
-
-NTKERNELAPI
-LONG
-NTAPI
-KeReadStateMutant (
-    IN PRKMUTANT  Mutant
-);
-
-NTKERNELAPI
-LONG
-NTAPI
-KeReleaseMutant (
-    IN PRKMUTANT  Mutant,
-    IN KPRIORITY  Increment,
-    IN BOOLEAN    Abandoned,
-    IN BOOLEAN    Wait
-);
-
-#if (VER_PRODUCTBUILD >= 2195)
-
-NTKERNELAPI
-VOID
-NTAPI
-KeStackAttachProcess (
-    IN PKPROCESS    Process,
-    OUT PKAPC_STATE ApcState
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-KeUnstackDetachProcess (
-    IN PKAPC_STATE ApcState
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-KeSetKernelStackSwapEnable(
-    IN BOOLEAN Enable
-);
 
 NTKERNELAPI
 BOOLEAN
