@@ -2956,6 +2956,76 @@ SeGetWorldRights(
  *                            Power Management Support Types                  *
  ******************************************************************************/
 
+/* Power States/Levels */
+typedef enum _SYSTEM_POWER_STATE {
+    PowerSystemUnspecified,
+    PowerSystemWorking,
+    PowerSystemSleeping1,
+    PowerSystemSleeping2,
+    PowerSystemSleeping3,
+    PowerSystemHibernate,
+    PowerSystemShutdown,
+    PowerSystemMaximum
+} SYSTEM_POWER_STATE, *PSYSTEM_POWER_STATE;
+
+#define POWER_SYSTEM_MAXIMUM PowerSystemMaximum
+
+typedef enum _POWER_INFORMATION_LEVEL {
+    SystemPowerPolicyAc,
+    SystemPowerPolicyDc,
+    VerifySystemPolicyAc,
+    VerifySystemPolicyDc,
+    SystemPowerCapabilities,
+    SystemBatteryState,
+    SystemPowerStateHandler,
+    ProcessorStateHandler,
+    SystemPowerPolicyCurrent,
+    AdministratorPowerPolicy,
+    SystemReserveHiberFile,
+    ProcessorInformation,
+    SystemPowerInformation,
+    ProcessorStateHandler2,
+    LastWakeTime,
+    LastSleepTime,
+    SystemExecutionState,
+    SystemPowerStateNotifyHandler,
+    ProcessorPowerPolicyAc,
+    ProcessorPowerPolicyDc,
+    VerifyProcessorPowerPolicyAc,
+    VerifyProcessorPowerPolicyDc,
+    ProcessorPowerPolicyCurrent
+} POWER_INFORMATION_LEVEL;
+
+typedef enum {
+    PowerActionNone,
+    PowerActionReserved,
+    PowerActionSleep,
+    PowerActionHibernate,
+    PowerActionShutdown,
+    PowerActionShutdownReset,
+    PowerActionShutdownOff,
+    PowerActionWarmEject
+} POWER_ACTION, *PPOWER_ACTION;
+
+typedef enum _DEVICE_POWER_STATE {
+    PowerDeviceUnspecified,
+    PowerDeviceD0,
+    PowerDeviceD1,
+    PowerDeviceD2,
+    PowerDeviceD3,
+    PowerDeviceMaximum
+} DEVICE_POWER_STATE, *PDEVICE_POWER_STATE;
+
+typedef union _POWER_STATE {
+  SYSTEM_POWER_STATE  SystemState;
+  DEVICE_POWER_STATE  DeviceState;
+} POWER_STATE, *PPOWER_STATE;
+
+typedef enum _POWER_STATE_TYPE {
+  SystemPowerState = 0,
+  DevicePowerState
+} POWER_STATE_TYPE, *PPOWER_STATE_TYPE;
+
 typedef VOID
 (DDKAPI *PREQUEST_POWER_COMPLETE)(
   IN struct _DEVICE_OBJECT  *DeviceObject,
