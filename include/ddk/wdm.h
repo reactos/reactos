@@ -2129,17 +2129,29 @@ typedef enum _MM_SYSTEM_SIZE {
 /*
  * Alignment Macros
  */
-#define ALIGN_DOWN(s, t) \
-    ((ULONG)(s) & ~(sizeof(t) - 1))
+#define ALIGN_DOWN_BY(size, align) \
+    ((ULONG_PTR)(size) & ~((ULONG_PTR)(align) - 1))
 
-#define ALIGN_UP(s, t) \
-    (ALIGN_DOWN(((ULONG)(s) + sizeof(t) - 1), t))
+#define ALIGN_UP_BY(size, align) \
+    (ALIGN_DOWN_BY(((ULONG_PTR)(size) + align - 1), align))
 
-#define ALIGN_DOWN_POINTER(p, t) \
-    ((PVOID)((ULONG_PTR)(p) & ~((ULONG_PTR)sizeof(t) - 1)))
+#define ALIGN_DOWN_POINTER_BY(ptr, align) \
+    ((PVOID)ALIGN_DOWN_BY(ptr, align))
 
-#define ALIGN_UP_POINTER(p, t) \
-    (ALIGN_DOWN_POINTER(((ULONG_PTR)(p) + sizeof(t) - 1), t))
+#define ALIGN_UP_POINTER_BY(ptr, alignment) \
+    ((PVOID)ALIGN_UP_BY(ptr, align))
+
+#define ALIGN_DOWN(size, type) \
+    ALIGN_DOWN_BY(size, sizeof(type))
+
+#define ALIGN_UP(size, type) \
+    ALIGN_UP_BY(size, sizeof(type))
+
+#define ALIGN_DOWN_POINTER(p, type) \
+    ALIGN_DOWN_POINTER_BY(p, sizeof(type))
+
+#define ALIGN_UP_POINTER(ptr, type) \
+    ALIGN_UP_POINTER_BY(ptr, sizeof(type))
 
 /* ULONG
  * BYTE_OFFSET(
@@ -2944,76 +2956,6 @@ SeGetWorldRights(
  *                            Power Management Support Types                  *
  ******************************************************************************/
 
-/* Power States/Levels */
-typedef enum _SYSTEM_POWER_STATE {
-    PowerSystemUnspecified,
-    PowerSystemWorking,
-    PowerSystemSleeping1,
-    PowerSystemSleeping2,
-    PowerSystemSleeping3,
-    PowerSystemHibernate,
-    PowerSystemShutdown,
-    PowerSystemMaximum
-} SYSTEM_POWER_STATE, *PSYSTEM_POWER_STATE;
-
-#define POWER_SYSTEM_MAXIMUM PowerSystemMaximum
-
-typedef enum _POWER_INFORMATION_LEVEL {
-    SystemPowerPolicyAc,
-    SystemPowerPolicyDc,
-    VerifySystemPolicyAc,
-    VerifySystemPolicyDc,
-    SystemPowerCapabilities,
-    SystemBatteryState,
-    SystemPowerStateHandler,
-    ProcessorStateHandler,
-    SystemPowerPolicyCurrent,
-    AdministratorPowerPolicy,
-    SystemReserveHiberFile,
-    ProcessorInformation,
-    SystemPowerInformation,
-    ProcessorStateHandler2,
-    LastWakeTime,
-    LastSleepTime,
-    SystemExecutionState,
-    SystemPowerStateNotifyHandler,
-    ProcessorPowerPolicyAc,
-    ProcessorPowerPolicyDc,
-    VerifyProcessorPowerPolicyAc,
-    VerifyProcessorPowerPolicyDc,
-    ProcessorPowerPolicyCurrent
-} POWER_INFORMATION_LEVEL;
-
-typedef enum {
-    PowerActionNone,
-    PowerActionReserved,
-    PowerActionSleep,
-    PowerActionHibernate,
-    PowerActionShutdown,
-    PowerActionShutdownReset,
-    PowerActionShutdownOff,
-    PowerActionWarmEject
-} POWER_ACTION, *PPOWER_ACTION;
-
-typedef enum _DEVICE_POWER_STATE {
-    PowerDeviceUnspecified,
-    PowerDeviceD0,
-    PowerDeviceD1,
-    PowerDeviceD2,
-    PowerDeviceD3,
-    PowerDeviceMaximum
-} DEVICE_POWER_STATE, *PDEVICE_POWER_STATE;
-
-typedef union _POWER_STATE {
-  SYSTEM_POWER_STATE  SystemState;
-  DEVICE_POWER_STATE  DeviceState;
-} POWER_STATE, *PPOWER_STATE;
-
-typedef enum _POWER_STATE_TYPE {
-  SystemPowerState = 0,
-  DevicePowerState
-} POWER_STATE_TYPE, *PPOWER_STATE_TYPE;
-
 typedef VOID
 (DDKAPI *PREQUEST_POWER_COMPLETE)(
   IN struct _DEVICE_OBJECT  *DeviceObject,
@@ -3480,7 +3422,6 @@ typedef enum _CM_SHARE_DISPOSITION {
 #define CM_RESOURCE_DMA_TYPE_B            0x0020
 #define CM_RESOURCE_DMA_TYPE_F            0x0040
 
-#include <pshpack1.h>
 typedef struct _CM_PARTIAL_RESOURCE_LIST {
   USHORT  Version;
   USHORT  Revision;
@@ -3499,6 +3440,7 @@ typedef struct _CM_RESOURCE_LIST {
   CM_FULL_RESOURCE_DESCRIPTOR  List[1];
 } CM_RESOURCE_LIST, *PCM_RESOURCE_LIST;
 
+#include <pshpack1.h>
 typedef struct _CM_INT13_DRIVE_PARAMETER {
   USHORT  DriveSelect;
   ULONG  MaxCylinders;
@@ -4145,7 +4087,7 @@ RtlAssert(
     IN PVOID FailedAssertion,
     IN PVOID FileName,
     IN ULONG LineNumber,
-    IN PCHAR Message);
+    IN PSTR Message);
 
 /* VOID
  * RtlCopyMemory(
@@ -4202,7 +4144,7 @@ NTSYSAPI
 VOID
 NTAPI
 RtlFreeUnicodeString(
-    IN PUNICODE_STRING UnicodeString);
+    IN OUT PUNICODE_STRING UnicodeString);
 
 NTSYSAPI
 NTSTATUS
@@ -4216,7 +4158,7 @@ VOID
 NTAPI
 RtlInitUnicodeString(
     IN OUT PUNICODE_STRING DestinationString,
-    IN PCWSTR SourceString);
+    IN PCWSTR SourceString OPTIONAL);
 
 /* VOID
  * RtlMoveMemory(
