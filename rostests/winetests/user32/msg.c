@@ -12424,7 +12424,7 @@ START_TEST(msg)
     test_interthread_messages();
     test_message_conversion();
     test_accelerators();
-//    test_timers();
+    test_timers();
     test_timers_no_wnd();
     if (hCBT_hook) test_set_hook();
     test_DestroyWindow();
