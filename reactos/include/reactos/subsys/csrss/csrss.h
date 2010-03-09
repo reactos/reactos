@@ -40,6 +40,12 @@ typedef struct
 
 typedef struct
 {
+    CLIENT_ID ClientId;
+    HANDLE ThreadHandle;
+} CSRSS_CREATE_THREAD, *PCSRSS_CREATE_THREAD;
+
+typedef struct
+{
     ULONG Dummy;
 } CSRSS_TERMINATE_PROCESS, *PCSRSS_TERMINATE_PROCESS;
 
@@ -544,6 +550,7 @@ typedef struct
 #define GET_CONSOLE_ALIASES_EXES      (0x3C)
 #define GET_CONSOLE_ALIASES_EXES_LENGTH (0x3D)
 #define GENERATE_CTRL_EVENT           (0x3E)
+#define CREATE_THREAD                 (0x3F)
 
 /* Keep in sync with definition below. */
 #define CSRSS_HEADER_SIZE (sizeof(PORT_MESSAGE) + sizeof(ULONG) + sizeof(NTSTATUS))
@@ -557,6 +564,7 @@ typedef struct _CSR_API_MESSAGE
     union
     {
         CSRSS_CREATE_PROCESS CreateProcessRequest;
+        CSRSS_CREATE_THREAD CreateThreadRequest;
         CSRSS_CONNECT_PROCESS ConnectRequest;
         CSRSS_WRITE_CONSOLE WriteConsoleRequest;
         CSRSS_READ_CONSOLE ReadConsoleRequest;

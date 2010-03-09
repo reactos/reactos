@@ -283,6 +283,7 @@ CsrpInitWin32Csr (int argc, char ** argv, char ** envp)
 CSRSS_API_DEFINITION NativeDefinitions[] =
   {
     CSRSS_DEFINE_API(CREATE_PROCESS,               CsrCreateProcess),
+    CSRSS_DEFINE_API(CREATE_THREAD,                CsrCreateThread),
     CSRSS_DEFINE_API(TERMINATE_PROCESS,            CsrTerminateProcess),
     CSRSS_DEFINE_API(CONNECT_PROCESS,              CsrConnectProcess),
     CSRSS_DEFINE_API(REGISTER_SERVICES_PROCESS,    CsrRegisterServicesProcess),
@@ -305,6 +306,8 @@ CsrpCreateListenPort (IN     LPWSTR  Name,
 	NTSTATUS           Status = STATUS_SUCCESS;
 	OBJECT_ATTRIBUTES  PortAttributes;
 	UNICODE_STRING     PortName;
+    HANDLE ServerThread;
+    CLIENT_ID ClientId;
 
 	DPRINT("CSR: %s called\n", __FUNCTION__);
 
@@ -327,14 +330,22 @@ CsrpCreateListenPort (IN     LPWSTR  Name,
 	}
 	Status = RtlCreateUserThread(NtCurrentProcess(),
                                NULL,
-                               FALSE,
+                               TRUE,
                                0,
                                0,
                                0,
                                (PTHREAD_START_ROUTINE) ListenThread,
                                *Port,
-                               NULL,
-                               NULL);
+                               &ServerThread,
+                               &ClientId);
+    
+    if (ListenThread == (PVOID)ClientConnectionThread)
+    {
+        CsrAddStaticServerThread(ServerThread, &ClientId, 0);
+    }
+    
+    NtResumeThread(ServerThread, NULL);
+    NtClose(ServerThread);
 	return Status;
 }
 

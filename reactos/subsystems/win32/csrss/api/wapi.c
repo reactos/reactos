@@ -126,6 +126,7 @@ CsrpHandleConnectionRequest (PPORT_MESSAGE Request,
     HANDLE ServerPort = NULL, ServerThread = NULL;
     PCSRSS_PROCESS_DATA ProcessData = NULL;
     REMOTE_PORT_VIEW LpcRead;
+    CLIENT_ID ClientId;
     LpcRead.Length = sizeof(LpcRead);
     ServerPort = NULL;
 
@@ -169,25 +170,76 @@ CsrpHandleConnectionRequest (PPORT_MESSAGE Request,
 
     Status = RtlCreateUserThread(NtCurrentProcess(),
                                  NULL,
-                                 FALSE,
+                                 TRUE,
                                  0,
                                  0,
                                  0,
                                  (PTHREAD_START_ROUTINE)ClientConnectionThread,
                                  ServerPort,
                                  & ServerThread,
-                                 NULL);
+                                 &ClientId);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("CSR: Unable to create server thread\n");
         return Status;
     }
+    
+    CsrAddStaticServerThread(ServerThread, &ClientId, 0);
+    
+    NtResumeThread(ServerThread, NULL);
 
     NtClose(ServerThread);
 
     Status = STATUS_SUCCESS;
     DPRINT("CSR: %s done\n", __FUNCTION__);
     return Status;
+}
+
+PCSR_THREAD
+NTAPI
+CsrConnectToUser(VOID)
+{
+    PTEB Teb = NtCurrentTeb();
+    PCSR_THREAD CsrThread;
+#if 0
+    NTSTATUS Status;
+    ANSI_STRING DllName;
+    UNICODE_STRING TempName;
+    HANDLE hUser32;
+    STRING StartupName;
+
+    /* Check if we didn't already find it */
+    if (!CsrClientThreadSetup)
+    {
+        /* Get the DLL Handle for user32.dll */
+        RtlInitAnsiString(&DllName, "user32");
+        RtlAnsiStringToUnicodeString(&TempName, &DllName, TRUE);
+        Status = LdrGetDllHandle(NULL,
+                                 NULL,
+                                 &TempName,
+                                 &hUser32);
+        RtlFreeUnicodeString(&TempName);
+
+        /* If we got teh handle, get the Client Thread Startup Entrypoint */
+        if (NT_SUCCESS(Status))
+        {
+            RtlInitAnsiString(&StartupName,"ClientThreadSetup");
+            Status = LdrGetProcedureAddress(hUser32,
+                                            &StartupName,
+                                            0,
+                                            (PVOID)&CsrClientThreadSetup);
+        }
+    }
+
+    /* Connect to user32 */
+    CsrClientThreadSetup();
+#endif
+    /* Save pointer to this thread in TEB */
+    CsrThread = CsrLocateThreadInProcess(NULL, &Teb->ClientId);
+    if (CsrThread) Teb->CsrClientThread = CsrThread;
+
+    /* Return it */
+    return CsrThread;
 }
 
 VOID
@@ -199,10 +251,20 @@ ClientConnectionThread(HANDLE ServerPort)
     PCSR_API_MESSAGE Request = (PCSR_API_MESSAGE)RawRequest;
     PCSR_API_MESSAGE Reply;
     PCSRSS_PROCESS_DATA ProcessData;
+    PCSR_THREAD ServerThread;
 
     DPRINT("CSR: %s called\n", __FUNCTION__);
+    
+    /* Connect to user32 */
+    while (!CsrConnectToUser())
+    {
+        /* Keep trying until we get a response */
+        NtCurrentTeb()->Win32ClientInfo[0] = 0;
+        //NtDelayExecution(FALSE, &TimeOut);
+    }
 
     /* Reply must be NULL at the first call to NtReplyWaitReceivePort */
+    ServerThread = NtCurrentTeb()->CsrClientThread;
     Reply = NULL;
 
     /* Loop and reply/wait for a new message */
@@ -271,7 +333,7 @@ ClientConnectionThread(HANDLE ServerPort)
         }
         if (ProcessData->Terminated)
         {
-            DPRINT1("Message %d: process %p already terminated\n",
+            DPRINT1("Message %d: process %d already terminated\n",
                     Request->Type, Request->Header.ClientId.UniqueProcess);
             continue;
         }
@@ -284,8 +346,17 @@ ClientConnectionThread(HANDLE ServerPort)
         }
         else
         {
+            PCSR_THREAD Thread;
+            PCSRSS_PROCESS_DATA Process = NULL;
+            
+            //DPRINT1("locate thread %lx/%lx\n", Request->Header.ClientId.UniqueProcess, Request->Header.ClientId.UniqueThread);
+            Thread = CsrLocateThreadByClientId(&Process, &Request->Header.ClientId);
+            //DPRINT1("Thread found: %p %p\n", Thread, Process);
+                                          
             /* Call the Handler */
+            if (Thread) NtCurrentTeb()->CsrClientThread = Thread;
             CsrApiCallHandler(ProcessData, Request);
+            if (Thread) NtCurrentTeb()->CsrClientThread = ServerThread;
         }
 
         /* Send back the reply */

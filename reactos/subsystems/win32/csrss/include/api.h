@@ -13,6 +13,29 @@
 
 #include <csrss/csrss.h>
 
+typedef enum _SHUTDOWN_RESULT
+{
+    CsrShutdownCsrProcess = 1,
+    CsrShutdownNonCsrProcess,
+    CsrShutdownCancelled
+} SHUTDOWN_RESULT, *PSHUTDOWN_RESULT;
+
+typedef enum _CSR_SHUTDOWN_FLAGS
+{
+    CsrShutdownSystem = 4,
+    CsrShutdownOther = 8
+} CSR_SHUTDOWN_FLAGS, *PCSR_SHUTDOWN_FLAGS;
+
+typedef enum _CSR_PROCESS_FLAGS
+{
+    CsrProcessTerminating = 0x1,
+    CsrProcessSkipShutdown = 0x2,
+    CsrProcessCreateNewGroup = 0x100,
+    CsrProcessTerminated = 0x200,
+    CsrProcessLastThreadTerminated = 0x400,
+    CsrProcessIsConsoleApp = 0x800
+} CSR_PROCESS_FLAGS, *PCSR_PROCESS_FLAGS;
+
 typedef struct Object_tt
 {
   LONG Type;
@@ -59,7 +82,24 @@ typedef struct _CSRSS_PROCESS_DATA
   LIST_ENTRY ProcessEntry;
   PCONTROLDISPATCHER CtrlDispatcher;
   BOOL Terminated;
+  ULONG Flags;
+  ULONG ThreadCount;
+  LIST_ENTRY ThreadList;
 } CSRSS_PROCESS_DATA, *PCSRSS_PROCESS_DATA;
+
+typedef struct _CSR_THREAD
+{
+    LARGE_INTEGER CreateTime;
+    LIST_ENTRY Link;
+    LIST_ENTRY HashLinks;
+    CLIENT_ID ClientId;
+    PCSRSS_PROCESS_DATA Process;
+    //struct _CSR_WAIT_BLOCK *WaitBlock;
+    HANDLE ThreadHandle;
+    ULONG Flags;
+    ULONG ReferenceCount;
+    ULONG ImpersonationCount;
+} CSR_THREAD, *PCSR_THREAD;
 
 typedef VOID (WINAPI *CSR_CLEANUP_OBJECT_PROC)(Object_t *Object);
 
@@ -100,6 +140,7 @@ extern HANDLE hBootstrapOk;
 CSR_API(CsrConnectProcess);
 CSR_API(CsrCreateProcess);
 CSR_API(CsrTerminateProcess);
+CSR_API(CsrCreateThread);
 
 /* print.c */
 VOID WINAPI DisplayString(LPCWSTR lpwString);
@@ -129,7 +170,10 @@ PCSRSS_PROCESS_DATA WINAPI CsrGetProcessData(HANDLE ProcessId);
 PCSRSS_PROCESS_DATA WINAPI CsrCreateProcessData(HANDLE ProcessId);
 NTSTATUS WINAPI CsrFreeProcessData( HANDLE Pid );
 NTSTATUS WINAPI CsrEnumProcesses(CSRSS_ENUM_PROCESS_PROC EnumProc, PVOID Context);
-
+PCSR_THREAD NTAPI CsrAddStaticServerThread(IN HANDLE hThread, IN PCLIENT_ID ClientId, IN  ULONG ThreadFlags);
+PCSR_THREAD NTAPI CsrLocateThreadInProcess(IN PCSRSS_PROCESS_DATA CsrProcess OPTIONAL, IN PCLIENT_ID Cid);
+PCSR_THREAD NTAPI CsrLocateThreadByClientId(OUT PCSRSS_PROCESS_DATA *Process OPTIONAL, IN PCLIENT_ID ClientId);
+                             
 /* api/handle.c */
 NTSTATUS FASTCALL CsrRegisterObjectDefinitions(PCSRSS_OBJECT_DEFINITION NewDefinitions);
 NTSTATUS WINAPI CsrInsertObject( PCSRSS_PROCESS_DATA ProcessData, PHANDLE Handle, Object_t *Object, DWORD Access, BOOL Inheritable );

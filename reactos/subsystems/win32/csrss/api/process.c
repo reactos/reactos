@@ -24,11 +24,241 @@ RTL_CRITICAL_SECTION ProcessDataLock;
 
 /* FUNCTIONS *****************************************************************/
 
+#define CsrHeap RtlGetProcessHeap()
+
+#define CsrHashThread(t) \
+    (HandleToUlong(t)&(256 - 1))
+    
+LIST_ENTRY CsrThreadHashTable[256];
+PCSRSS_PROCESS_DATA CsrRootProcess;
+
+PCSR_THREAD
+NTAPI
+CsrAllocateThread(IN PCSRSS_PROCESS_DATA CsrProcess)
+{
+    PCSR_THREAD CsrThread;
+
+    /* Allocate the structure */
+    CsrThread = RtlAllocateHeap(CsrHeap, HEAP_ZERO_MEMORY, sizeof(CSR_THREAD));
+    if (!CsrThread) return(NULL);
+
+    /* Reference the Thread and Process */
+    CsrThread->ReferenceCount++;
+   // CsrProcess->ReferenceCount++;
+
+    /* Set the Parent Process */
+    CsrThread->Process = CsrProcess;
+
+    /* Return Thread */
+    return CsrThread;
+}
+
+PCSR_THREAD
+NTAPI
+CsrLocateThreadByClientId(OUT PCSRSS_PROCESS_DATA *Process OPTIONAL,
+                          IN PCLIENT_ID ClientId)
+{
+    ULONG i;
+    PLIST_ENTRY ListHead, NextEntry;
+    PCSR_THREAD FoundThread;
+
+    /* Hash the Thread */
+    i = CsrHashThread(ClientId->UniqueThread);
+    
+    /* Set the list pointers */
+    ListHead = &CsrThreadHashTable[i];
+    NextEntry = ListHead->Flink;
+
+    /* Star the loop */
+    while (NextEntry != ListHead)
+    {
+        /* Get the thread */
+        FoundThread = CONTAINING_RECORD(NextEntry, CSR_THREAD, HashLinks);
+
+        /* Compare the CID */
+        if (FoundThread->ClientId.UniqueThread == ClientId->UniqueThread)
+        {
+            /* Match found, return the process */
+            *Process = FoundThread->Process;
+
+            /* Return thread too */
+//            DPRINT1("Found: %p %p\n", FoundThread, FoundThread->Process);
+            return FoundThread;
+        }
+
+        /* Next */
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Nothing found */
+    return NULL;
+}
+
+PCSR_THREAD
+NTAPI
+CsrLocateThreadInProcess(IN PCSRSS_PROCESS_DATA CsrProcess OPTIONAL,
+                         IN PCLIENT_ID Cid)
+{
+    PLIST_ENTRY ListHead, NextEntry;
+    PCSR_THREAD FoundThread = NULL;
+
+    /* Use the Root Process if none was specified */
+    if (!CsrProcess) CsrProcess = CsrRootProcess;
+
+    /* Save the List pointers */
+//    DPRINT1("Searching in: %p %d\n", CsrProcess, CsrProcess->ThreadCount);
+    ListHead = &CsrProcess->ThreadList;
+    NextEntry = ListHead->Flink;
+
+    /* Start the Loop */
+    while (NextEntry != ListHead)
+    {
+        /* Get Thread Entry */
+        FoundThread = CONTAINING_RECORD(NextEntry, CSR_THREAD, Link);
+
+        /* Check for TID Match */
+        if (FoundThread->ClientId.UniqueThread == Cid->UniqueThread) break;
+
+        /* Next entry */
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Return what we found */
+//    DPRINT1("Found: %p\n", FoundThread);
+    return FoundThread;
+}
+
+VOID
+NTAPI
+CsrInsertThread(IN PCSRSS_PROCESS_DATA Process,
+                IN PCSR_THREAD Thread)
+{
+    ULONG i;
+
+    /* Insert it into the Regular List */
+    InsertTailList(&Process->ThreadList, &Thread->Link);
+
+    /* Increase Thread Count */
+    Process->ThreadCount++;
+
+    /* Hash the Thread */
+    i = CsrHashThread(Thread->ClientId.UniqueThread);
+//    DPRINT1("TID %lx HASH: %lx\n", Thread->ClientId.UniqueThread, i);
+
+    /* Insert it there too */
+    InsertHeadList(&CsrThreadHashTable[i], &Thread->HashLinks);
+}
+
+
+#define CsrAcquireProcessLock() LOCK
+#define CsrReleaseProcessLock() UNLOCK
+
+NTSTATUS
+NTAPI
+CsrCreateThreadData(IN PCSRSS_PROCESS_DATA CsrProcess,
+                    IN HANDLE hThread,
+                    IN PCLIENT_ID ClientId)
+{
+    NTSTATUS Status;
+    PCSR_THREAD CsrThread;
+    //PCSRSS_PROCESS_DATA CurrentProcess;
+    PCSR_THREAD CurrentThread = NtCurrentTeb()->CsrClientThread;
+    CLIENT_ID CurrentCid;
+    KERNEL_USER_TIMES KernelTimes;
+
+//    DPRINT1("CSRSRV: %s called\n", __FUNCTION__);
+
+    /* Get the current thread and CID */
+    CurrentCid = CurrentThread->ClientId;
+//    DPRINT1("CALLER PID/TID: %lx/%lx\n", CurrentCid.UniqueProcess, CurrentCid.UniqueThread);
+
+    /* Acquire the Process Lock */
+    CsrAcquireProcessLock();
+#if 0
+    /* Get the current Process and make sure the Thread is valid with this CID */
+    CurrentThread = CsrLocateThreadByClientId(&CurrentProcess,
+                                              &CurrentCid);
+
+    /* Something is wrong if we get an empty thread back */
+    if (!CurrentThread)
+    {
+        DPRINT1("CSRSRV:%s: invalid thread!\n", __FUNCTION__);
+        CsrReleaseProcessLock();
+        return STATUS_THREAD_IS_TERMINATING;
+    }
+#endif
+    /* Get the Thread Create Time */
+    Status = NtQueryInformationThread(hThread,
+                                      ThreadTimes,
+                                      (PVOID)&KernelTimes,
+                                      sizeof(KernelTimes),
+                                      NULL);
+
+    /* Allocate a CSR Thread Structure */
+    if (!(CsrThread = CsrAllocateThread(CsrProcess)))
+    {
+        DPRINT1("CSRSRV:%s: out of memory!\n", __FUNCTION__);
+        CsrReleaseProcessLock();
+        return STATUS_NO_MEMORY;
+    }
+
+    /* Save the data we have */
+    CsrThread->CreateTime = KernelTimes.CreateTime;
+    CsrThread->ClientId = *ClientId;
+    CsrThread->ThreadHandle = hThread;
+    CsrThread->Flags = 0;
+
+    /* Insert the Thread into the Process */
+    CsrInsertThread(CsrProcess, CsrThread);
+
+    /* Release the lock and return */
+    CsrReleaseProcessLock();
+    return STATUS_SUCCESS;
+}
+
+PCSR_THREAD
+NTAPI
+CsrAddStaticServerThread(IN HANDLE hThread,
+                         IN PCLIENT_ID ClientId,
+                         IN ULONG ThreadFlags)
+{
+    PCSR_THREAD CsrThread;
+
+    /* Get the Lock */
+    CsrAcquireProcessLock();
+
+    /* Allocate the Server Thread */
+    if ((CsrThread = CsrAllocateThread(CsrRootProcess)))
+    {
+        /* Setup the Object */
+//        DPRINT1("New CSR thread created: %lx PID/TID: %lx/%lx\n", CsrThread, ClientId->UniqueProcess, ClientId->UniqueThread);
+        CsrThread->ThreadHandle = hThread;
+        CsrThread->ClientId = *ClientId;
+        CsrThread->Flags = ThreadFlags;
+
+        /* Insert it into the Thread List */
+        InsertTailList(&CsrRootProcess->ThreadList, &CsrThread->Link);
+
+        /* Increment the thread count */
+        CsrRootProcess->ThreadCount++;
+    }
+
+    /* Release the Process Lock and return */
+    CsrReleaseProcessLock();
+    return CsrThread;
+}
+
 VOID WINAPI CsrInitProcessData(VOID)
 {
+    ULONG i;
    RtlZeroMemory (ProcessData, sizeof ProcessData);
    NrProcess = sizeof ProcessData / sizeof ProcessData[0];
    RtlInitializeCriticalSection( &ProcessDataLock );
+   
+   CsrRootProcess = CsrCreateProcessData(NtCurrentTeb()->ClientId.UniqueProcess);
+   
+   /* Initialize the Thread Hash List */
+   for (i = 0; i < 256; i++) InitializeListHead(&CsrThreadHashTable[i]);
 }
 
 PCSRSS_PROCESS_DATA WINAPI CsrGetProcessData(HANDLE ProcessId)
@@ -89,8 +319,7 @@ PCSRSS_PROCESS_DATA WINAPI CsrCreateProcessData(HANDLE ProcessId)
 
          /* using OpenProcess is not optimal due to HANDLE vs. DWORD PIDs... */
          Status = NtOpenProcess(&pProcessData->Process,
-                                PROCESS_DUP_HANDLE | PROCESS_VM_OPERATION |
-                                PROCESS_VM_WRITE | PROCESS_CREATE_THREAD | SYNCHRONIZE,
+                                PROCESS_ALL_ACCESS,
                                 &ObjectAttributes,
                                 &ClientId);
          if (!NT_SUCCESS(Status))
@@ -122,6 +351,9 @@ PCSRSS_PROCESS_DATA WINAPI CsrCreateProcessData(HANDLE ProcessId)
       pProcessData->ShutdownLevel = 0x280;
       pProcessData->ShutdownFlags = 0;
    }
+   
+   pProcessData->ThreadCount = 0;
+   InitializeListHead(&pProcessData->ThreadList);
    return pProcessData;
 }
 
@@ -186,33 +418,406 @@ NTSTATUS WINAPI CsrFreeProcessData(HANDLE Pid)
    return STATUS_INVALID_PARAMETER;
 }
 
-NTSTATUS WINAPI
-CsrEnumProcesses(CSRSS_ENUM_PROCESS_PROC EnumProc, PVOID Context)
+VOID
+NTAPI
+CsrSetToNormalPriority(VOID)
 {
-  UINT Hash;
-  PCSRSS_PROCESS_DATA pProcessData;
-  NTSTATUS Status = STATUS_SUCCESS;
+    KPRIORITY BasePriority = (8 + 1) + 4;
 
-  LOCK;
+    /* Set the Priority */
+    NtSetInformationProcess(NtCurrentProcess(),
+                            ProcessBasePriority,
+                            &BasePriority,
+                            sizeof(KPRIORITY));
+}
 
-  for (Hash = 0; Hash < (sizeof(ProcessData) / sizeof(*ProcessData)); Hash++)
+VOID
+NTAPI
+CsrSetToShutdownPriority(VOID)
+{
+    KPRIORITY SetBasePriority = (8 + 1) + 6;
+    BOOLEAN Old;
+
+    /* Get the shutdown privilege */
+    if (NT_SUCCESS(RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE,
+                                      TRUE,
+                                      FALSE,
+                                      &Old)))
     {
-      pProcessData = ProcessData[Hash];
-      while (NULL != pProcessData)
+        /* Set the Priority */
+        NtSetInformationProcess(NtCurrentProcess(),
+                                ProcessBasePriority,
+                                &SetBasePriority,
+                                sizeof(KPRIORITY));
+    }
+}
+
+NTSTATUS
+NTAPI
+CsrGetProcessLuid(HANDLE hProcess OPTIONAL,
+                  PLUID Luid)
+{
+    HANDLE hToken = NULL;
+    NTSTATUS Status;
+    ULONG Length;
+    PTOKEN_STATISTICS TokenStats;
+
+    /* Check if we have a handle to a CSR Process */
+    if (!hProcess)
+    {
+        /* We don't, so try opening the Thread's Token */
+        Status = NtOpenThreadToken(NtCurrentThread(),
+                                   TOKEN_QUERY,
+                                   FALSE,
+                                   &hToken);
+
+        /* Check for success */
+        if (!NT_SUCCESS(Status))
         {
-          Status = EnumProc(pProcessData, Context);
-          if (STATUS_SUCCESS != Status)
-            {
-              UNLOCK;
-              return Status;
-            }
-          pProcessData = pProcessData->next;
+            /* If we got some other failure, then return and quit */
+            if (Status != STATUS_NO_TOKEN) return Status;
+
+            /* We don't have a Thread Token, use a Process Token */
+            hProcess = NtCurrentProcess();
+            hToken = NULL;
         }
     }
 
-  UNLOCK;
+    /* Check if we have a token by now */
+    if (!hToken)
+    {
+        /* No token yet, so open the Process Token */
+        Status = NtOpenProcessToken(hProcess,
+                                    TOKEN_QUERY,
+                                    &hToken);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Still no token, return the error */
+            return Status;
+        }
+    }
 
-  return Status;
+    /* Now get the size we'll need for the Token Information */
+    Status = NtQueryInformationToken(hToken,
+                                     TokenStatistics,
+                                     NULL,
+                                     0,
+                                     &Length);
+
+    /* Allocate memory for the Token Info */
+    if (!(TokenStats = RtlAllocateHeap(CsrHeap, 0, Length)))
+    {
+        /* Fail and close the token */
+        NtClose(hToken);
+        return STATUS_NO_MEMORY;
+    }
+
+    /* Now query the information */
+    Status = NtQueryInformationToken(hToken,
+                                     TokenStatistics,
+                                     TokenStats,
+                                     Length,
+                                     &Length);
+
+    /* Close the handle */
+    NtClose(hToken);
+
+    /* Check for success */
+    if (NT_SUCCESS(Status))
+    {
+        /* Return the LUID */
+        *Luid = TokenStats->AuthenticationId;
+    }
+
+    /* Free the query information */
+    RtlFreeHeap(CsrHeap, 0, TokenStats);
+
+    /* Return the Status */
+    return Status;
+}
+
+SECURITY_QUALITY_OF_SERVICE CsrSecurityQos =
+{
+    sizeof(SECURITY_QUALITY_OF_SERVICE),
+    SecurityImpersonation,
+    SECURITY_STATIC_TRACKING,
+    FALSE
+};
+
+BOOLEAN
+NTAPI
+CsrImpersonateClient(IN PCSR_THREAD CsrThread)
+{
+    NTSTATUS Status;
+    PCSR_THREAD CurrentThread = NtCurrentTeb()->CsrClientThread;
+
+    /* Use the current thread if none given */
+    if (!CsrThread) CsrThread = CurrentThread;
+
+    /* Still no thread, something is wrong */
+    if (!CsrThread)
+    {
+        /* Failure */
+        return FALSE;
+    }
+
+    /* Make the call */
+    Status = NtImpersonateThread(NtCurrentThread(),
+                                 CsrThread->ThreadHandle,
+                                 &CsrSecurityQos);
+
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failure */
+        return FALSE;
+    }
+
+    /* Increase the impersonation count for the current thread */
+    if (CurrentThread) ++CurrentThread->ImpersonationCount;
+
+    /* Return Success */
+    return TRUE;
+}
+
+BOOLEAN
+NTAPI
+CsrRevertToSelf(VOID)
+{
+    NTSTATUS Status;
+    PCSR_THREAD CurrentThread = NtCurrentTeb()->CsrClientThread;
+    HANDLE ImpersonationToken = NULL;
+
+    /* Check if we have a Current Thread */
+    if (CurrentThread)
+    {
+        /* Make sure impersonation is on */
+        if (!CurrentThread->ImpersonationCount)
+        {
+            return FALSE;
+        }
+        else if (--CurrentThread->ImpersonationCount > 0)
+        {
+            /* Success; impersonation count decreased but still not zero */
+            return TRUE;
+        }
+    }
+
+    /* Impersonation has been totally removed, revert to ourselves */
+    Status = NtSetInformationThread(NtCurrentThread(),
+                                    ThreadImpersonationToken,
+                                    &ImpersonationToken,
+                                    sizeof(HANDLE));
+
+    /* Return TRUE or FALSE */
+    return NT_SUCCESS(Status);
+}
+
+PCSRSS_PROCESS_DATA
+NTAPI
+FindProcessForShutdown(IN PLUID CallerLuid)
+{
+    ULONG Hash;
+    PCSRSS_PROCESS_DATA CsrProcess, ReturnCsrProcess = NULL;
+    NTSTATUS Status;
+    ULONG Level = 0;
+    LUID ProcessLuid;
+    LUID SystemLuid = SYSTEM_LUID;
+    BOOLEAN IsSystemLuid = FALSE, IsOurLuid = FALSE;
+    
+    for (Hash = 0; Hash < (sizeof(ProcessData) / sizeof(*ProcessData)); Hash++)
+    {
+        /* Get this process hash bucket */
+        CsrProcess = ProcessData[Hash];
+        while (CsrProcess)
+        {
+            /* Skip this process if it's already been processed*/
+            if (CsrProcess->Flags & CsrProcessSkipShutdown) goto Next;
+        
+            /* Get the LUID of this Process */
+            Status = CsrGetProcessLuid(CsrProcess->Process, &ProcessLuid);
+
+            /* Check if we didn't get access to the LUID */
+            if (Status == STATUS_ACCESS_DENIED)
+            {
+                /* FIXME:Check if we have any threads */
+            }
+            
+            if (!NT_SUCCESS(Status))
+            {
+                /* We didn't have access, so skip it */
+                CsrProcess->Flags |= CsrProcessSkipShutdown;
+                goto Next;
+            }
+            
+            /* Check if this is the System LUID */
+            if ((IsSystemLuid = RtlEqualLuid(&ProcessLuid, &SystemLuid)))
+            {
+                /* Mark this process */
+                CsrProcess->ShutdownFlags |= CsrShutdownSystem;
+            }
+            else if (!(IsOurLuid = RtlEqualLuid(&ProcessLuid, CallerLuid)))
+            {
+                /* Our LUID doesn't match with the caller's */
+                CsrProcess->ShutdownFlags |= CsrShutdownOther;
+            }
+            
+            /* Check if we're past the previous level */
+            if (CsrProcess->ShutdownLevel > Level)
+            {
+                /* Update the level */
+                Level = CsrProcess->ShutdownLevel;
+
+                /* Set the final process */
+                ReturnCsrProcess = CsrProcess;
+            }
+Next:
+            /* Next process */
+            CsrProcess = CsrProcess->next;
+        }
+    }
+    
+    /* Check if we found a process */
+    if (ReturnCsrProcess)
+    {
+        /* Skip this one next time */
+        ReturnCsrProcess->Flags |= CsrProcessSkipShutdown;
+    }
+    
+    return ReturnCsrProcess;
+}
+
+/* This is really "CsrShutdownProcess", mostly */
+NTSTATUS
+WINAPI
+CsrEnumProcesses(IN CSRSS_ENUM_PROCESS_PROC EnumProc,
+                 IN PVOID Context)
+{
+    PVOID* RealContext = (PVOID*)Context;
+    PLUID CallerLuid = RealContext[0];
+    PCSRSS_PROCESS_DATA CsrProcess = NULL;
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
+    BOOLEAN FirstTry = TRUE;
+    ULONG Result = 0;
+    ULONG Hash;
+
+    /* Acquire process lock */
+    CsrAcquireProcessLock();
+
+    /* Start the loop */
+    for (Hash = 0; Hash < (sizeof(ProcessData) / sizeof(*ProcessData)); Hash++)
+    {
+        /* Get the Process */
+        CsrProcess = ProcessData[Hash];
+        while (CsrProcess)
+        {
+           /* Remove the skip flag, set shutdown flags to 0*/
+            CsrProcess->Flags &= ~CsrProcessSkipShutdown;
+            CsrProcess->ShutdownFlags = 0;
+
+            /* Move to the next */
+            CsrProcess = CsrProcess->next;
+        }
+    }
+
+    /* Set shudown Priority */
+    CsrSetToShutdownPriority();
+
+    /* Loop all processes */
+    DPRINT1("Enumerating for LUID: %lx %lx\n", CallerLuid->HighPart, CallerLuid->LowPart);
+    
+    /* Start looping */
+    while (TRUE)
+    {
+        /* Find the next process to shutdown */
+        if (!(CsrProcess = FindProcessForShutdown(CallerLuid)))
+        {
+            /* Done, quit */
+            CsrReleaseProcessLock();
+            Status = STATUS_SUCCESS;
+            goto Quickie;
+        }
+
+LoopAgain:
+        /* Release the lock, make the callback, and acquire it back */
+        DPRINT1("Found process: %lx\n", CsrProcess->ProcessId);
+        CsrReleaseProcessLock();
+        Result = (ULONG)EnumProc(CsrProcess, Context);
+        CsrAcquireProcessLock();
+
+        /* Check the result */
+        DPRINT1("Result: %d\n", Result);
+        if (Result == CsrShutdownCsrProcess)
+        {
+            /* The callback unlocked the process */
+            break;
+        }
+        else if (Result == CsrShutdownNonCsrProcess)
+        {
+            /* A non-CSR process, the callback didn't touch it */
+            continue;
+        }
+        else if (Result == CsrShutdownCancelled)
+        {
+            /* Shutdown was cancelled, unlock and exit */
+            CsrReleaseProcessLock();
+            Status = STATUS_CANCELLED;
+            goto Quickie;
+        }
+
+        /* No matches during the first try, so loop again */
+        if (FirstTry && Result == CsrShutdownNonCsrProcess)
+        {
+            FirstTry = FALSE;
+            goto LoopAgain;
+        }
+    }
+
+Quickie:
+    /* Return to normal priority */
+    CsrSetToNormalPriority();
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+CsrLockProcessByClientId(IN HANDLE Pid,
+                         OUT PCSRSS_PROCESS_DATA *CsrProcess OPTIONAL)
+{
+    ULONG Hash;
+    PCSRSS_PROCESS_DATA CurrentProcess = NULL;
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
+
+    /* Acquire the lock */
+    CsrAcquireProcessLock();
+
+    /* Start the loop */
+    for (Hash = 0; Hash < (sizeof(ProcessData) / sizeof(*ProcessData)); Hash++)
+    {
+        /* Get the Process */
+        CurrentProcess = ProcessData[Hash];
+        while (CurrentProcess)
+        {
+            /* Check for PID match */
+            if (CurrentProcess->ProcessId == Pid)
+            {
+                /* Get out of here with success */
+//                DPRINT1("Found %p for PID %lx\n", CurrentProcess, Pid);
+                Status = STATUS_SUCCESS;
+                goto Found;
+            }
+            
+            /* Move to the next */
+            CurrentProcess = CurrentProcess->next;
+        }
+    }
+    
+    /* Nothing found, release the lock */
+Found:
+    if (!CurrentProcess) CsrReleaseProcessLock();
+
+    /* Return the status and process */
+    if (CsrProcess) *CsrProcess = CurrentProcess;
+    return Status;
 }
 
 /**********************************************************************
@@ -253,6 +858,76 @@ CSR_API(CsrCreateProcess)
      }
 
    return(STATUS_SUCCESS);
+}
+
+CSR_API(CsrCreateThread)
+{
+    PCSR_THREAD CurrentThread;
+    HANDLE ThreadHandle;
+    NTSTATUS Status;
+    PCSRSS_PROCESS_DATA CsrProcess;
+    
+    Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+    Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
+
+    CurrentThread = NtCurrentTeb()->CsrClientThread;
+    CsrProcess = CurrentThread->Process;
+//    DPRINT1("Current thread: %p %p\n", CurrentThread, CsrProcess);
+//    DPRINT1("Request CID: %lx %lx %lx\n", 
+//            CsrProcess->ProcessId, 
+//            NtCurrentTeb()->ClientId.UniqueProcess,
+ //           Request->Data.CreateThreadRequest.ClientId.UniqueProcess);
+    
+    if (CsrProcess->ProcessId != Request->Data.CreateThreadRequest.ClientId.UniqueProcess)
+    {
+        if (Request->Data.CreateThreadRequest.ClientId.UniqueProcess == NtCurrentTeb()->ClientId.UniqueProcess)
+        {
+            return STATUS_SUCCESS;
+        }
+        
+        Status = CsrLockProcessByClientId(Request->Data.CreateThreadRequest.ClientId.UniqueProcess,
+                                          &CsrProcess);
+  //      DPRINT1("Found matching process: %p\n", CsrProcess);
+        if (!NT_SUCCESS(Status)) return Status;
+    }
+    
+//    DPRINT1("PIDs: %lx %lx\n", CurrentThread->Process->ProcessId, CsrProcess->ProcessId);
+//    DPRINT1("Thread handle is: %lx Process Handle is: %lx %lx\n",
+       //     Request->Data.CreateThreadRequest.ThreadHandle,
+     //       CurrentThread->Process->Process,
+   //         CsrProcess->Process);
+    Status = NtDuplicateObject(CsrProcess->Process,
+                               Request->Data.CreateThreadRequest.ThreadHandle,
+                               NtCurrentProcess(),
+                               &ThreadHandle,
+                               0,
+                               0,
+                               DUPLICATE_SAME_ACCESS);
+    //DPRINT1("Duplicate status: %lx\n", Status);
+    if (!NT_SUCCESS(Status))
+    {
+        Status = NtDuplicateObject(CurrentThread->Process->Process,
+                                   Request->Data.CreateThreadRequest.ThreadHandle,
+                                   NtCurrentProcess(),
+                                   &ThreadHandle,
+                                   0,
+                                   0,
+                                   DUPLICATE_SAME_ACCESS);
+       // DPRINT1("Duplicate status: %lx\n", Status);
+    }
+
+    Status = STATUS_SUCCESS; // hack
+    if (NT_SUCCESS(Status))
+    {
+        Status = CsrCreateThreadData(CsrProcess,
+                                     ThreadHandle,
+                                     &Request->Data.CreateThreadRequest.ClientId);
+       // DPRINT1("Create status: %lx\n", Status);
+    }
+
+    if (CsrProcess != CurrentThread->Process) CsrReleaseProcessLock();
+    
+    return Status;
 }
 
 CSR_API(CsrTerminateProcess)
