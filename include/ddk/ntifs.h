@@ -2344,6 +2344,376 @@ typedef struct _SE_ADT_PARAMETER_ARRAY {
 
 #endif /* _NTLSA_AUDIT_ */
 
+NTSTATUS
+NTAPI
+LsaRegisterLogonProcess(
+  IN PLSA_STRING LogonProcessName,
+  OUT PHANDLE LsaHandle,
+  OUT PLSA_OPERATIONAL_MODE SecurityMode);
+
+NTSTATUS
+NTAPI
+LsaLogonUser(
+  IN HANDLE LsaHandle,
+  IN PLSA_STRING OriginName,
+  IN SECURITY_LOGON_TYPE LogonType,
+  IN ULONG AuthenticationPackage,
+  IN PVOID AuthenticationInformation,
+  IN ULONG AuthenticationInformationLength,
+  IN PTOKEN_GROUPS LocalGroups OPTIONAL,
+  IN PTOKEN_SOURCE SourceContext,
+  OUT PVOID *ProfileBuffer,
+  OUT PULONG ProfileBufferLength,
+  OUT PLUID LogonId,
+  OUT PHANDLE Token,
+  OUT PQUOTA_LIMITS Quotas,
+  OUT PNTSTATUS SubStatus);
+
+NTSTATUS
+NTAPI
+LsaFreeReturnBuffer(
+  IN PVOID Buffer);
+
+#ifndef _NTLSA_IFS_
+#define _NTLSA_IFS_
+#endif
+
+#define MSV1_0_PACKAGE_NAME     "MICROSOFT_AUTHENTICATION_PACKAGE_V1_0"
+#define MSV1_0_PACKAGE_NAMEW    L"MICROSOFT_AUTHENTICATION_PACKAGE_V1_0"
+#define MSV1_0_PACKAGE_NAMEW_LENGTH sizeof(MSV1_0_PACKAGE_NAMEW) - sizeof(WCHAR)
+
+#define MSV1_0_SUBAUTHENTICATION_KEY "SYSTEM\\CurrentControlSet\\Control\\Lsa\\MSV1_0"
+#define MSV1_0_SUBAUTHENTICATION_VALUE "Auth"
+
+#define MSV1_0_CHALLENGE_LENGTH 8
+#define MSV1_0_USER_SESSION_KEY_LENGTH 16
+#define MSV1_0_LANMAN_SESSION_KEY_LENGTH 8
+
+#define MSV1_0_CLEARTEXT_PASSWORD_ALLOWED    0x02
+#define MSV1_0_UPDATE_LOGON_STATISTICS       0x04
+#define MSV1_0_RETURN_USER_PARAMETERS        0x08
+#define MSV1_0_DONT_TRY_GUEST_ACCOUNT        0x10
+#define MSV1_0_ALLOW_SERVER_TRUST_ACCOUNT    0x20
+#define MSV1_0_RETURN_PASSWORD_EXPIRY        0x40
+#define MSV1_0_USE_CLIENT_CHALLENGE          0x80
+#define MSV1_0_TRY_GUEST_ACCOUNT_ONLY        0x100
+#define MSV1_0_RETURN_PROFILE_PATH           0x200
+#define MSV1_0_TRY_SPECIFIED_DOMAIN_ONLY     0x400
+#define MSV1_0_ALLOW_WORKSTATION_TRUST_ACCOUNT 0x800
+
+#define MSV1_0_DISABLE_PERSONAL_FALLBACK     0x00001000
+#define MSV1_0_ALLOW_FORCE_GUEST             0x00002000
+
+#if (_WIN32_WINNT >= 0x0502)
+#define MSV1_0_CLEARTEXT_PASSWORD_SUPPLIED   0x00004000
+#define MSV1_0_USE_DOMAIN_FOR_ROUTING_ONLY   0x00008000
+#endif
+
+#define MSV1_0_SUBAUTHENTICATION_DLL_EX      0x00100000
+#define MSV1_0_ALLOW_MSVCHAPV2               0x00010000
+
+#if (_WIN32_WINNT >= 0x0600)
+#define MSV1_0_S4U2SELF                      0x00020000
+#define MSV1_0_CHECK_LOGONHOURS_FOR_S4U      0x00040000
+#endif
+
+#define MSV1_0_SUBAUTHENTICATION_DLL         0xFF000000
+#define MSV1_0_SUBAUTHENTICATION_DLL_SHIFT   24
+#define MSV1_0_MNS_LOGON                     0x01000000
+
+#define MSV1_0_SUBAUTHENTICATION_DLL_RAS     2
+#define MSV1_0_SUBAUTHENTICATION_DLL_IIS     132
+
+#define LOGON_GUEST                 0x01
+#define LOGON_NOENCRYPTION          0x02
+#define LOGON_CACHED_ACCOUNT        0x04
+#define LOGON_USED_LM_PASSWORD      0x08
+#define LOGON_EXTRA_SIDS            0x20
+#define LOGON_SUBAUTH_SESSION_KEY   0x40
+#define LOGON_SERVER_TRUST_ACCOUNT  0x80
+#define LOGON_NTLMV2_ENABLED        0x100
+#define LOGON_RESOURCE_GROUPS       0x200
+#define LOGON_PROFILE_PATH_RETURNED 0x400
+#define LOGON_NT_V2                 0x800
+#define LOGON_LM_V2                 0x1000
+#define LOGON_NTLM_V2               0x2000
+
+#if (_WIN32_WINNT >= 0x0600)
+
+#define LOGON_OPTIMIZED             0x4000
+#define LOGON_WINLOGON              0x8000
+#define LOGON_PKINIT               0x10000
+#define LOGON_NO_OPTIMIZED         0x20000
+
+#endif
+
+#define MSV1_0_SUBAUTHENTICATION_FLAGS 0xFF000000
+
+#define LOGON_GRACE_LOGON              0x01000000
+
+#define MSV1_0_OWF_PASSWORD_LENGTH 16
+#define MSV1_0_CRED_LM_PRESENT 0x1
+#define MSV1_0_CRED_NT_PRESENT 0x2
+#define MSV1_0_CRED_VERSION 0
+
+#define MSV1_0_NTLM3_RESPONSE_LENGTH 16
+#define MSV1_0_NTLM3_OWF_LENGTH 16
+
+#if (_WIN32_WINNT == 0x0500)
+#define MSV1_0_MAX_NTLM3_LIFE 1800
+#else
+#define MSV1_0_MAX_NTLM3_LIFE 129600
+#endif
+#define MSV1_0_MAX_AVL_SIZE 64000
+
+#if (_WIN32_WINNT >= 0x0501)
+
+#define MSV1_0_AV_FLAG_FORCE_GUEST                  0x00000001
+
+#if (_WIN32_WINNT >= 0x0600)
+#define MSV1_0_AV_FLAG_MIC_HANDSHAKE_MESSAGES       0x00000002
+#endif
+
+#endif
+
+#define MSV1_0_NTLM3_INPUT_LENGTH (sizeof(MSV1_0_NTLM3_RESPONSE) - MSV1_0_NTLM3_RESPONSE_LENGTH)
+
+#if(_WIN32_WINNT >= 0x0502)
+#define MSV1_0_NTLM3_MIN_NT_RESPONSE_LENGTH RTL_SIZEOF_THROUGH_FIELD(MSV1_0_NTLM3_RESPONSE, AvPairsOff)
+#endif
+
+#define USE_PRIMARY_PASSWORD            0x01
+#define RETURN_PRIMARY_USERNAME         0x02
+#define RETURN_PRIMARY_LOGON_DOMAINNAME 0x04
+#define RETURN_NON_NT_USER_SESSION_KEY  0x08
+#define GENERATE_CLIENT_CHALLENGE       0x10
+#define GCR_NTLM3_PARMS                 0x20
+#define GCR_TARGET_INFO                 0x40
+#define RETURN_RESERVED_PARAMETER       0x80
+#define GCR_ALLOW_NTLM                 0x100
+#define GCR_USE_OEM_SET                0x200
+#define GCR_MACHINE_CREDENTIAL         0x400
+#define GCR_USE_OWF_PASSWORD           0x800
+#define GCR_ALLOW_LM                  0x1000
+#define GCR_ALLOW_NO_TARGET           0x2000
+
+typedef enum _MSV1_0_LOGON_SUBMIT_TYPE {
+  MsV1_0InteractiveLogon = 2,
+  MsV1_0Lm20Logon,
+  MsV1_0NetworkLogon,
+  MsV1_0SubAuthLogon,
+  MsV1_0WorkstationUnlockLogon = 7,
+  MsV1_0S4ULogon = 12,
+  MsV1_0VirtualLogon = 82
+} MSV1_0_LOGON_SUBMIT_TYPE, *PMSV1_0_LOGON_SUBMIT_TYPE;
+
+typedef enum _MSV1_0_PROFILE_BUFFER_TYPE {
+  MsV1_0InteractiveProfile = 2,
+  MsV1_0Lm20LogonProfile,
+  MsV1_0SmartCardProfile
+} MSV1_0_PROFILE_BUFFER_TYPE, *PMSV1_0_PROFILE_BUFFER_TYPE;
+
+typedef struct _MSV1_0_INTERACTIVE_LOGON {
+  MSV1_0_LOGON_SUBMIT_TYPE MessageType;
+  UNICODE_STRING LogonDomainName;
+  UNICODE_STRING UserName;
+  UNICODE_STRING Password;
+} MSV1_0_INTERACTIVE_LOGON, *PMSV1_0_INTERACTIVE_LOGON;
+
+typedef struct _MSV1_0_INTERACTIVE_PROFILE {
+  MSV1_0_PROFILE_BUFFER_TYPE MessageType;
+  USHORT LogonCount;
+  USHORT BadPasswordCount;
+  LARGE_INTEGER LogonTime;
+  LARGE_INTEGER LogoffTime;
+  LARGE_INTEGER KickOffTime;
+  LARGE_INTEGER PasswordLastSet;
+  LARGE_INTEGER PasswordCanChange;
+  LARGE_INTEGER PasswordMustChange;
+  UNICODE_STRING LogonScript;
+  UNICODE_STRING HomeDirectory;
+  UNICODE_STRING FullName;
+  UNICODE_STRING ProfilePath;
+  UNICODE_STRING HomeDirectoryDrive;
+  UNICODE_STRING LogonServer;
+  ULONG UserFlags;
+} MSV1_0_INTERACTIVE_PROFILE, *PMSV1_0_INTERACTIVE_PROFILE;
+
+typedef struct _MSV1_0_LM20_LOGON {
+  MSV1_0_LOGON_SUBMIT_TYPE MessageType;
+  UNICODE_STRING LogonDomainName;
+  UNICODE_STRING UserName;
+  UNICODE_STRING Workstation;
+  UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH];
+  STRING CaseSensitiveChallengeResponse;
+  STRING CaseInsensitiveChallengeResponse;
+  ULONG ParameterControl;
+} MSV1_0_LM20_LOGON, * PMSV1_0_LM20_LOGON;
+
+typedef struct _MSV1_0_SUBAUTH_LOGON {
+  MSV1_0_LOGON_SUBMIT_TYPE MessageType;
+  UNICODE_STRING LogonDomainName;
+  UNICODE_STRING UserName;
+  UNICODE_STRING Workstation;
+  UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH];
+  STRING AuthenticationInfo1;
+  STRING AuthenticationInfo2;
+  ULONG ParameterControl;
+  ULONG SubAuthPackageId;
+} MSV1_0_SUBAUTH_LOGON, * PMSV1_0_SUBAUTH_LOGON;
+
+#if (_WIN32_WINNT >= 0x0600)
+
+#define MSV1_0_S4U_LOGON_FLAG_CHECK_LOGONHOURS 0x2
+
+typedef struct _MSV1_0_S4U_LOGON {
+  MSV1_0_LOGON_SUBMIT_TYPE MessageType;
+  ULONG Flags;
+  UNICODE_STRING UserPrincipalName;
+  UNICODE_STRING DomainName;
+} MSV1_0_S4U_LOGON, *PMSV1_0_S4U_LOGON;
+
+#endif
+
+typedef struct _MSV1_0_LM20_LOGON_PROFILE {
+  MSV1_0_PROFILE_BUFFER_TYPE MessageType;
+  LARGE_INTEGER KickOffTime;
+  LARGE_INTEGER LogoffTime;
+  ULONG UserFlags;
+  UCHAR UserSessionKey[MSV1_0_USER_SESSION_KEY_LENGTH];
+  UNICODE_STRING LogonDomainName;
+  UCHAR LanmanSessionKey[MSV1_0_LANMAN_SESSION_KEY_LENGTH];
+  UNICODE_STRING LogonServer;
+  UNICODE_STRING UserParameters;
+} MSV1_0_LM20_LOGON_PROFILE, * PMSV1_0_LM20_LOGON_PROFILE;
+
+typedef struct _MSV1_0_SUPPLEMENTAL_CREDENTIAL {
+  ULONG Version;
+  ULONG Flags;
+  UCHAR LmPassword[MSV1_0_OWF_PASSWORD_LENGTH];
+  UCHAR NtPassword[MSV1_0_OWF_PASSWORD_LENGTH];
+} MSV1_0_SUPPLEMENTAL_CREDENTIAL, *PMSV1_0_SUPPLEMENTAL_CREDENTIAL;
+
+typedef struct _MSV1_0_NTLM3_RESPONSE {
+  UCHAR Response[MSV1_0_NTLM3_RESPONSE_LENGTH];
+  UCHAR RespType;
+  UCHAR HiRespType;
+  USHORT Flags;
+  ULONG MsgWord;
+  ULONGLONG TimeStamp;
+  UCHAR ChallengeFromClient[MSV1_0_CHALLENGE_LENGTH];
+  ULONG AvPairsOff;
+  UCHAR Buffer[1];
+} MSV1_0_NTLM3_RESPONSE, *PMSV1_0_NTLM3_RESPONSE;
+
+typedef enum _MSV1_0_AVID {
+  MsvAvEOL,
+  MsvAvNbComputerName,
+  MsvAvNbDomainName,
+  MsvAvDnsComputerName,
+  MsvAvDnsDomainName,
+#if (_WIN32_WINNT >= 0x0501)
+  MsvAvDnsTreeName,
+  MsvAvFlags,
+#if (_WIN32_WINNT >= 0x0600)
+  MsvAvTimestamp,
+  MsvAvRestrictions,
+  MsvAvTargetName,
+  MsvAvChannelBindings,
+#endif
+#endif
+} MSV1_0_AVID;
+
+typedef struct _MSV1_0_AV_PAIR {
+  USHORT AvId;
+  USHORT AvLen;
+} MSV1_0_AV_PAIR, *PMSV1_0_AV_PAIR;
+
+typedef enum _MSV1_0_PROTOCOL_MESSAGE_TYPE {
+  MsV1_0Lm20ChallengeRequest = 0,
+  MsV1_0Lm20GetChallengeResponse,
+  MsV1_0EnumerateUsers,
+  MsV1_0GetUserInfo,
+  MsV1_0ReLogonUsers,
+  MsV1_0ChangePassword,
+  MsV1_0ChangeCachedPassword,
+  MsV1_0GenericPassthrough,
+  MsV1_0CacheLogon,
+  MsV1_0SubAuth,
+  MsV1_0DeriveCredential,
+  MsV1_0CacheLookup,
+#if (_WIN32_WINNT >= 0x0501)
+  MsV1_0SetProcessOption,
+#endif
+#if (_WIN32_WINNT >= 0x0600)
+  MsV1_0ConfigLocalAliases,
+  MsV1_0ClearCachedCredentials,
+#endif
+} MSV1_0_PROTOCOL_MESSAGE_TYPE, *PMSV1_0_PROTOCOL_MESSAGE_TYPE;
+
+typedef struct _MSV1_0_LM20_CHALLENGE_REQUEST {
+  MSV1_0_PROTOCOL_MESSAGE_TYPE MessageType;
+} MSV1_0_LM20_CHALLENGE_REQUEST, *PMSV1_0_LM20_CHALLENGE_REQUEST;
+
+typedef struct _MSV1_0_LM20_CHALLENGE_RESPONSE {
+  MSV1_0_PROTOCOL_MESSAGE_TYPE MessageType;
+  UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH];
+} MSV1_0_LM20_CHALLENGE_RESPONSE, *PMSV1_0_LM20_CHALLENGE_RESPONSE;
+
+typedef struct _MSV1_0_GETCHALLENRESP_REQUEST_V1 {
+  MSV1_0_PROTOCOL_MESSAGE_TYPE MessageType;
+  ULONG ParameterControl;
+  LUID LogonId;
+  UNICODE_STRING Password;
+  UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH];
+} MSV1_0_GETCHALLENRESP_REQUEST_V1, *PMSV1_0_GETCHALLENRESP_REQUEST_V1;
+
+typedef struct _MSV1_0_GETCHALLENRESP_REQUEST {
+  MSV1_0_PROTOCOL_MESSAGE_TYPE MessageType;
+  ULONG ParameterControl;
+  LUID LogonId;
+  UNICODE_STRING Password;
+  UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH];
+  UNICODE_STRING UserName;
+  UNICODE_STRING LogonDomainName;
+  UNICODE_STRING ServerName;
+} MSV1_0_GETCHALLENRESP_REQUEST, *PMSV1_0_GETCHALLENRESP_REQUEST;
+
+typedef struct _MSV1_0_GETCHALLENRESP_RESPONSE {
+  MSV1_0_PROTOCOL_MESSAGE_TYPE MessageType;
+  STRING CaseSensitiveChallengeResponse;
+  STRING CaseInsensitiveChallengeResponse;
+  UNICODE_STRING UserName;
+  UNICODE_STRING LogonDomainName;
+  UCHAR UserSessionKey[MSV1_0_USER_SESSION_KEY_LENGTH];
+  UCHAR LanmanSessionKey[MSV1_0_LANMAN_SESSION_KEY_LENGTH];
+} MSV1_0_GETCHALLENRESP_RESPONSE, *PMSV1_0_GETCHALLENRESP_RESPONSE;
+
+typedef struct _MSV1_0_ENUMUSERS_REQUEST {
+  MSV1_0_PROTOCOL_MESSAGE_TYPE MessageType;
+} MSV1_0_ENUMUSERS_REQUEST, *PMSV1_0_ENUMUSERS_REQUEST;
+
+typedef struct _MSV1_0_ENUMUSERS_RESPONSE {
+  MSV1_0_PROTOCOL_MESSAGE_TYPE MessageType;
+  ULONG NumberOfLoggedOnUsers;
+  PLUID LogonIds;
+  PULONG EnumHandles;
+} MSV1_0_ENUMUSERS_RESPONSE, *PMSV1_0_ENUMUSERS_RESPONSE;
+
+typedef struct _MSV1_0_GETUSERINFO_REQUEST {
+  MSV1_0_PROTOCOL_MESSAGE_TYPE MessageType;
+  LUID LogonId;
+} MSV1_0_GETUSERINFO_REQUEST, *PMSV1_0_GETUSERINFO_REQUEST;
+
+typedef struct _MSV1_0_GETUSERINFO_RESPONSE {
+  MSV1_0_PROTOCOL_MESSAGE_TYPE MessageType;
+  PSID UserSid;
+  UNICODE_STRING UserName;
+  UNICODE_STRING LogonDomainName;
+  UNICODE_STRING LogonServer;
+  SECURITY_LOGON_TYPE LogonType;
+} MSV1_0_GETUSERINFO_RESPONSE, *PMSV1_0_GETUSERINFO_RESPONSE;
+
 #pragma pack(push,4)
 
 #ifndef VER_PRODUCTBUILD
