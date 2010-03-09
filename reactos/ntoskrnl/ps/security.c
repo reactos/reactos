@@ -965,32 +965,32 @@ NtImpersonateThread(IN HANDLE ThreadHandle,
 
     /* Reference the thread */
     Status = ObReferenceObjectByHandle(ThreadHandle,
-                                       THREAD_IMPERSONATE,
+                                       THREAD_DIRECT_IMPERSONATION,
                                        PsThreadType,
                                        PreviousMode,
                                        (PVOID*)&Thread,
                                        NULL);
-    if(NT_SUCCESS(Status))
+    if (NT_SUCCESS(Status))
     {
         /* Reference the impersonating thead */
         Status = ObReferenceObjectByHandle(ThreadToImpersonateHandle,
-                                           THREAD_DIRECT_IMPERSONATION,
+                                           THREAD_IMPERSONATE,
                                            PsThreadType,
                                            PreviousMode,
                                            (PVOID*)&ThreadToImpersonate,
                                            NULL);
-        if(NT_SUCCESS(Status))
+        if (NT_SUCCESS(Status))
         {
             /* Create a client security context */
             Status = SeCreateClientSecurity(ThreadToImpersonate,
                                             SecurityQualityOfService,
                                             0,
                                             &ClientContext);
-            if(NT_SUCCESS(Status))
+            if (NT_SUCCESS(Status))
             {
                 /* Do the impersonation */
                 SeImpersonateClient(&ClientContext, Thread);
-                if(ClientContext.ClientToken)
+                if (ClientContext.ClientToken)
                 {
                     /* Dereference the client token if we had one */
                     ObDereferenceObject(ClientContext.ClientToken);

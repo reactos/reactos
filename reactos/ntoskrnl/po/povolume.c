@@ -84,16 +84,13 @@ PoVolumeDevice(IN PDEVICE_OBJECT DeviceObject)
     PAGED_CODE();
 
     /* Get dope from the device (if the device has no dope, it will receive some) */
-    DPRINT1("New volume: %p\n", DeviceObject);
     Dope = PopGetDope(DeviceObject);
     if (Dope)
     {
         /* Make sure we can flush safely */
-        DPRINT1("Acquiring volume lock\n");
         KeAcquireGuardedMutex(&PopVolumeLock);
 
         /* Add this volume into the list of power-manager volumes */
-        DPRINT1("Got DOPE: %p\n", Dope);
         if (!Dope->Volume.Flink) InsertTailList(&PopVolumeDevices, &Dope->Volume);
         
         /* Allow flushes to go through */
