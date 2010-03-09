@@ -6,6 +6,21 @@ typedef struct _THREADINFO *PTHREADINFO;
 struct _DESKTOP;
 struct _WND;
 
+typedef enum _USERTHREADINFOCLASS
+{
+    UserThreadShutdownInformation,
+    UserThreadFlags,
+    UserThreadTaskName,
+    UserThreadWOWInformation,
+    UserThreadHungStatus,
+    UserThreadInitiateShutdown,
+    UserThreadEndShutdown,
+    UserThreadUseActiveDesktop,
+    UserThreadUseDesktop,
+    UserThreadRestoreDesktop,
+    UserThreadCsrApiPort,
+} USERTHREADINFOCLASS;
+
 typedef struct _LARGE_UNICODE_STRING
 {
   ULONG Length;
@@ -2618,13 +2633,14 @@ NtUserSetInformationProcess(
     DWORD dwUnknown3,
     DWORD dwUnknown4);
 
-DWORD
+NTSTATUS
 NTAPI
 NtUserSetInformationThread(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4);
+    IN HANDLE ThreadHandle,
+    IN USERTHREADINFOCLASS ThreadInformationClass,
+    IN PVOID ThreadInformation,
+    IN ULONG ThreadInformationLength
+);
 
 DWORD
 NTAPI
