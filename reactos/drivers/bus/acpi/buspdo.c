@@ -599,23 +599,23 @@ Bus_PDO_QueryResources(
     /* Get current resources */
     Buffer.Length = 0;
     AcpiStatus = AcpiGetCurrentResources(DeviceData->AcpiHandle, &Buffer);
+    if ((!ACPI_SUCCESS(AcpiStatus) && AcpiStatus != AE_BUFFER_OVERFLOW) ||
+        Buffer.Length == 0)
+    {
+      return Irp->IoStatus.Status;
+    }
+
+    Buffer.Pointer = ExAllocatePool(PagedPool, Buffer.Length);
+    if (!Buffer.Pointer)
+      return STATUS_INSUFFICIENT_RESOURCES;
+
+    AcpiStatus = AcpiGetCurrentResources(DeviceData->AcpiHandle, &Buffer);
     if (!ACPI_SUCCESS(AcpiStatus))
     {
-      return STATUS_SUCCESS;
+      DPRINT1("AcpiGetCurrentResources #2 failed (0x%x)\n", AcpiStatus);
+      ASSERT(FALSE);
+      return STATUS_UNSUCCESSFUL;
     }
-    if (Buffer.Length > 0)
-    {
-      Buffer.Pointer = ExAllocatePool(PagedPool, Buffer.Length);
-      if (!Buffer.Pointer)
-      {
-        ASSERT(FALSE);
-      }
-      AcpiStatus = AcpiGetCurrentResources(DeviceData->AcpiHandle, &Buffer);
-      if (!ACPI_SUCCESS(AcpiStatus))
-      {
-        ASSERT(FALSE);
-      }
-	}
 
 	resource= Buffer.Pointer;
 	/* Count number of resources */
@@ -776,23 +776,23 @@ Bus_PDO_QueryResourceRequirements(
     /* Get current resources */
     Buffer.Length = 0;
     AcpiStatus = AcpiGetCurrentResources(DeviceData->AcpiHandle, &Buffer);
+    if ((!ACPI_SUCCESS(AcpiStatus) && AcpiStatus != AE_BUFFER_OVERFLOW) ||
+        Buffer.Length == 0)
+    {
+      return Irp->IoStatus.Status;
+    }
+
+    Buffer.Pointer = ExAllocatePool(PagedPool, Buffer.Length);
+    if (!Buffer.Pointer)
+      return STATUS_INSUFFICIENT_RESOURCES;
+
+    AcpiStatus = AcpiGetCurrentResources(DeviceData->AcpiHandle, &Buffer);
     if (!ACPI_SUCCESS(AcpiStatus))
     {
-      return STATUS_SUCCESS;
+      DPRINT1("AcpiGetCurrentResources #2 failed (0x%x)\n", AcpiStatus);
+      ASSERT(FALSE);
+      return STATUS_UNSUCCESSFUL;
     }
-    if (Buffer.Length > 0)
-    {
-      Buffer.Pointer = ExAllocatePool(PagedPool, Buffer.Length);
-      if (!Buffer.Pointer)
-      {
-        ASSERT(FALSE);
-      }
-      AcpiStatus = AcpiGetCurrentResources(DeviceData->AcpiHandle, &Buffer);
-      if (!ACPI_SUCCESS(AcpiStatus))
-      {
-        ASSERT(FALSE);
-      }
-	}
 
 	resource= Buffer.Pointer;
 	/* Count number of resources */
