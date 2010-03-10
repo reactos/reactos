@@ -105,7 +105,7 @@ DWORD WINAPI XInputGetCapabilities(DWORD dwUserIndex, DWORD dwFlags, XINPUT_CAPA
 
 DWORD WINAPI XInputGetDSoundAudioDeviceGuids(DWORD dwUserIndex, GUID* pDSoundRenderGuid, GUID* pDSoundCaptureGuid)
 {
-    FIXME("(%d %s %s) Stub!\n", dwUserIndex, debugstr_guid(pDSoundRenderGuid), debugstr_guid(pDSoundCaptureGuid));
+    FIXME("(%d %p %p) Stub!\n", dwUserIndex, pDSoundRenderGuid, pDSoundCaptureGuid);
 
     if (dwUserIndex < XUSER_MAX_COUNT)
     {

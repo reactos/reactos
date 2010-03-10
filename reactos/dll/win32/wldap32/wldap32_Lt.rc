@@ -1,0 +1,128 @@
+/*
+ * Lithuanian resources for WLDAP32
+ *
+ * Copyright 2009 Aurimas Fišeras <aurimas@gmail.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "windef.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_LITHUANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+{
+    0 "Sėkmė"
+    1 "Operacijų klaida"
+    2 "Protokolo klaida"
+    3 "Viršytas skirtas laikas"
+    4 "Viršyta dydžio riba"
+    5 "Nelygu"
+    6 "Lygu"
+    7 "Tapatumo nustatymo metodas nerealizuotas"
+    8 "Reikalingas stiprus tapatumo nustatymas"
+    9 "Perdavimas (v2)"
+    10 "Perdavimas"
+    11 "Viršyta administravimo riba"
+    12 "Nepasiekiamas kritinis plėtinys"
+    13 "Reikalingas slaptumas"
+    14 ""
+    15 ""
+    16 "Nėra tokio atributo"
+    17 "Neapibrėžtas tipas"
+    18 "Netinkamas atitikimas"
+    19 "Ribojimų pažeidimas"
+    20 "Atributas ar reikšmė egzistuoja"
+    21 "Neteisinga sintaksė"
+    22 ""
+    23 ""
+    24 ""
+    25 ""
+    26 ""
+    27 ""
+    28 ""
+    29 ""
+    30 ""
+    31 ""
+    32 "Nėra tokio objekto"
+    33 "Alternatyviojo vardo problema"
+    34 "Neteisinga DN sintaksė"
+    35 "Objektas yra lapas"
+    36 "Alternatyviojo vardo reikšmės nustatymo problema"
+    37 ""
+    38 ""
+    39 ""
+    40 ""
+    41 ""
+    42 ""
+    43 ""
+    44 ""
+    45 ""
+    46 ""
+    47 ""
+    48 "Netinkamas tapatumo nustatymas"
+    49 "Neteisingi kredencialai"
+    50 "Nepakanka teisių"
+    51 "Užimtas"
+    52 "Nepasiekiamas"
+    53 "Nelinkęs aptarnauti"
+    54 "Aptiktas ciklas"
+    55 ""
+    56 ""
+    57 ""
+    58 ""
+    59 ""
+    60 "Trūksta rikiavimo valdiklio"
+    61 "Indekso rėžių klaida"
+    62 ""
+    63 ""
+    64 "Įvardijimo pažeidimas"
+    65 "Objekto klasės pažeidimas"
+    66 "Leistina tik su lapu"
+    67 "Neleistina su RDN"
+    68 "Jau yra"
+    69 "Negalimas objektų klasės modifikavimas"
+    70 "Rezultatai per dideli"
+    71 "Įtakoja daugelį DSA"
+    72 ""
+    73 ""
+    74 ""
+    75 ""
+    76 ""
+    77 ""
+    78 ""
+    79 ""
+    80 "Kita"
+    81 "Serveris nepasiekiamas"
+    82 "Vietinė klaida"
+    83 "Kodavimo klaida"
+    84 "Dekodavimo klaida"
+    85 "Baigėsi laikas"
+    86 "Nežinomas tapatumo nustatymas"
+    87 "Filtro klaida"
+    88 "Nutraukta naudotojo"
+    89 "Parametro klaida"
+    90 "Trūksta atminties"
+    91 "Nepavyko prisijungti prie LDAP serverio"
+    92 "Operacija nepalaikoma šioje LDAP protokolo versijoje"
+    93 "Nurodytas valdiklis nerastas pranešime"
+    94 "Pranešime nėra rezultato"
+    95 "Grąžinta daugiau rezultatų"
+    96 "Aptiktas ciklas apdorojant perdavimus"
+    97 "Viršyta perdavimo šuolių riba"
+}
