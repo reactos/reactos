@@ -39,7 +39,7 @@ BOOL
 WINAPI
 DefaultConsoleCtrlHandler(DWORD Event)
 {
-    DPRINT1("Default handler called: %lx\n", Event);
+    DPRINT("Default handler called: %lx\n", Event);
     switch(Event)
     {
         case CTRL_C_EVENT:
@@ -51,7 +51,7 @@ DefaultConsoleCtrlHandler(DWORD Event)
             break;
 
         case CTRL_SHUTDOWN_EVENT:
-            DPRINT1("Ctrl Shutdown Event\n");
+            DPRINT("Ctrl Shutdown Event\n");
             break;
 
         case CTRL_CLOSE_EVENT:
@@ -59,7 +59,7 @@ DefaultConsoleCtrlHandler(DWORD Event)
             break;
 
         case CTRL_LOGOFF_EVENT:
-            DPRINT1("Ctrl Logoff Event\n");
+            DPRINT("Ctrl Logoff Event\n");
             break;
     }
 
@@ -77,7 +77,7 @@ ConsoleControlDispatcher(DWORD CodeAndFlag)
     UINT i;
     EXCEPTION_RECORD erException;
     
-    DPRINT1("Console Dispatcher Active: %lx %lx\n", CodeAndFlag, nCode);
+    DPRINT("Console Dispatcher Active: %lx %lx\n", CodeAndFlag, nCode);
     SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
 
     switch(nCode)
@@ -154,7 +154,7 @@ ConsoleControlDispatcher(DWORD CodeAndFlag)
                 (CodeAndFlag & MINLONG) &&
                 ((nCode == CTRL_LOGOFF_EVENT) || (nCode == CTRL_SHUTDOWN_EVENT)))
             {
-                DPRINT1("Skipping system/service apps\n");
+                DPRINT("Skipping system/service apps\n");
                 break;
             }
 
