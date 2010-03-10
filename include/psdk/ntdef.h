@@ -670,6 +670,12 @@ typedef struct _SINGLE_LIST_ENTRY {
 } SINGLE_LIST_ENTRY, *PSINGLE_LIST_ENTRY;
 
 
+typedef struct _PROCESSOR_NUMBER {
+  USHORT Group;
+  UCHAR Number;
+  UCHAR Reserved;
+} PROCESSOR_NUMBER, *PPROCESSOR_NUMBER;
+
 
 //
 // Helper Macros

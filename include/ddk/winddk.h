@@ -369,12 +369,6 @@ typedef NTSTATUS
   IN struct _DRIVER_OBJECT  *DriverObject,
   IN PUNICODE_STRING  RegistryPath);
 
-typedef VOID
-(DDKAPI *PDRIVER_REINITIALIZE)(
-  IN struct _DRIVER_OBJECT  *DriverObject,
-  IN PVOID  Context,
-  IN ULONG  Count);
-
 typedef BOOLEAN
 (DDKAPI *PKTRANSFER_ROUTINE)(
   VOID);
@@ -461,15 +455,6 @@ typedef struct _POOLED_USAGE_AND_LIMITS
     SIZE_T PagefileUsage;
     SIZE_T PagefileLimit;
 } POOLED_USAGE_AND_LIMITS, *PPOOLED_USAGE_AND_LIMITS;
-
-typedef struct _CONTROLLER_OBJECT {
-  CSHORT  Type;
-  CSHORT  Size;
-  PVOID  ControllerExtension;
-  KDEVICE_QUEUE  DeviceWaitQueue;
-  ULONG  Spare1;
-  LARGE_INTEGER  Spare2;
-} CONTROLLER_OBJECT, *PCONTROLLER_OBJECT;
 
 /* DEVICE_OBJECT.Flags */
 
@@ -1091,72 +1076,6 @@ typedef struct _KEY_USER_FLAGS_INFORMATION {
 
 #define PCI_ADDRESS_MEMORY_SPACE            0x00000000
 
-typedef struct _OSVERSIONINFOA {
-    ULONG dwOSVersionInfoSize;
-    ULONG dwMajorVersion;
-    ULONG dwMinorVersion;
-    ULONG dwBuildNumber;
-    ULONG dwPlatformId;
-    CHAR   szCSDVersion[128];
-} OSVERSIONINFOA, *POSVERSIONINFOA, *LPOSVERSIONINFOA;
-
-typedef struct _OSVERSIONINFOW {
-    ULONG dwOSVersionInfoSize;
-    ULONG dwMajorVersion;
-    ULONG dwMinorVersion;
-    ULONG dwBuildNumber;
-    ULONG dwPlatformId;
-    WCHAR  szCSDVersion[128];
-} OSVERSIONINFOW, *POSVERSIONINFOW, *LPOSVERSIONINFOW, RTL_OSVERSIONINFOW, *PRTL_OSVERSIONINFOW;
-
-#ifdef UNICODE
-typedef OSVERSIONINFOW OSVERSIONINFO;
-typedef POSVERSIONINFOW POSVERSIONINFO;
-typedef LPOSVERSIONINFOW LPOSVERSIONINFO;
-#else
-typedef OSVERSIONINFOA OSVERSIONINFO;
-typedef POSVERSIONINFOA POSVERSIONINFO;
-typedef LPOSVERSIONINFOA LPOSVERSIONINFO;
-#endif // UNICODE
-
-typedef struct _OSVERSIONINFOEXA {
-    ULONG dwOSVersionInfoSize;
-    ULONG dwMajorVersion;
-    ULONG dwMinorVersion;
-    ULONG dwBuildNumber;
-    ULONG dwPlatformId;
-    CHAR   szCSDVersion[128];
-    USHORT wServicePackMajor;
-    USHORT wServicePackMinor;
-    USHORT wSuiteMask;
-    UCHAR wProductType;
-    UCHAR wReserved;
-} OSVERSIONINFOEXA, *POSVERSIONINFOEXA, *LPOSVERSIONINFOEXA;
-
-typedef struct _OSVERSIONINFOEXW {
-    ULONG dwOSVersionInfoSize;
-    ULONG dwMajorVersion;
-    ULONG dwMinorVersion;
-    ULONG dwBuildNumber;
-    ULONG dwPlatformId;
-    WCHAR  szCSDVersion[128];
-    USHORT wServicePackMajor;
-    USHORT wServicePackMinor;
-    USHORT wSuiteMask;
-    UCHAR wProductType;
-    UCHAR wReserved;
-} OSVERSIONINFOEXW, *POSVERSIONINFOEXW, *LPOSVERSIONINFOEXW, RTL_OSVERSIONINFOEXW, *PRTL_OSVERSIONINFOEXW;
-
-#ifdef UNICODE
-typedef OSVERSIONINFOEXW OSVERSIONINFOEX;
-typedef POSVERSIONINFOEXW POSVERSIONINFOEX;
-typedef LPOSVERSIONINFOEXW LPOSVERSIONINFOEX;
-#else
-typedef OSVERSIONINFOEXA OSVERSIONINFOEX;
-typedef POSVERSIONINFOEXA POSVERSIONINFOEX;
-typedef LPOSVERSIONINFOEXA LPOSVERSIONINFOEX;
-#endif // UNICODE
-
 NTSYSAPI
 ULONGLONG
 DDKAPI
@@ -1200,79 +1119,6 @@ typedef BOOLEAN
     PVOID Context,
     struct _RTL_RANGE *Range
 );
-
-typedef struct _CONFIGURATION_INFORMATION {
-  ULONG  DiskCount;
-  ULONG  FloppyCount;
-  ULONG  CdRomCount;
-  ULONG  TapeCount;
-  ULONG  ScsiPortCount;
-  ULONG  SerialCount;
-  ULONG  ParallelCount;
-  BOOLEAN  AtDiskPrimaryAddressClaimed;
-  BOOLEAN  AtDiskSecondaryAddressClaimed;
-  ULONG  Version;
-  ULONG  MediumChangerCount;
-} CONFIGURATION_INFORMATION, *PCONFIGURATION_INFORMATION;
-
-typedef enum _CONFIGURATION_TYPE {
-  ArcSystem,
-  CentralProcessor,
-  FloatingPointProcessor,
-  PrimaryIcache,
-  PrimaryDcache,
-  SecondaryIcache,
-  SecondaryDcache,
-  SecondaryCache,
-  EisaAdapter,
-  TcAdapter,
-  ScsiAdapter,
-  DtiAdapter,
-  MultiFunctionAdapter,
-  DiskController,
-  TapeController,
-  CdromController,
-  WormController,
-  SerialController,
-  NetworkController,
-  DisplayController,
-  ParallelController,
-  PointerController,
-  KeyboardController,
-  AudioController,
-  OtherController,
-  DiskPeripheral,
-  FloppyDiskPeripheral,
-  TapePeripheral,
-  ModemPeripheral,
-  MonitorPeripheral,
-  PrinterPeripheral,
-  PointerPeripheral,
-  KeyboardPeripheral,
-  TerminalPeripheral,
-  OtherPeripheral,
-  LinePeripheral,
-  NetworkPeripheral,
-  SystemMemory,
-  DockingInformation,
-  RealModeIrqRoutingTable,
-  RealModePCIEnumeration,
-  MaximumType
-} CONFIGURATION_TYPE, *PCONFIGURATION_TYPE;
-
-typedef NTSTATUS
-(DDKAPI *PIO_QUERY_DEVICE_ROUTINE)(
-  IN PVOID  Context,
-  IN PUNICODE_STRING  PathName,
-  IN INTERFACE_TYPE  BusType,
-  IN ULONG  BusNumber,
-  IN PKEY_VALUE_FULL_INFORMATION  *BusInformation,
-  IN CONFIGURATION_TYPE  ControllerType,
-  IN ULONG  ControllerNumber,
-  IN PKEY_VALUE_FULL_INFORMATION  *ControllerInformation,
-  IN CONFIGURATION_TYPE  PeripheralType,
-  IN ULONG  PeripheralNumber,
-  IN PKEY_VALUE_FULL_INFORMATION  *PeripheralInformation);
 
 typedef enum _IO_QUERY_DEVICE_DATA_FORMAT {
   IoQueryDeviceIdentifier = 0,
@@ -1544,11 +1390,6 @@ typedef VOID
 (FASTCALL*PTIME_UPDATE_NOTIFY_ROUTINE)(
   IN HANDLE  ThreadId,
   IN KPROCESSOR_MODE  Mode);
-
-typedef struct _PHYSICAL_MEMORY_RANGE {
-  PHYSICAL_ADDRESS  BaseAddress;
-  LARGE_INTEGER  NumberOfBytes;
-} PHYSICAL_MEMORY_RANGE, *PPHYSICAL_MEMORY_RANGE;
 
 typedef ULONG_PTR
 (NTAPI *PDRIVER_VERIFIER_THUNK_ROUTINE)(

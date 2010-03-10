@@ -109,10 +109,10 @@ typedef struct _CONTEXT {
   ULONG Esp;
   ULONG SegSs;
   UCHAR ExtendedRegisters[MAXIMUM_SUPPORTED_EXTENSION];
-} CONTEXT, *PCONTEXT;
+} CONTEXT;
 #include "poppack.h"
 
-#endif
+#endif /* _X86_ */
 
 #ifdef _AMD64_
 
@@ -136,13 +136,83 @@ typedef struct _CONTEXT {
 #define CONTEXT_EXCEPTION_REQUEST 0x40000000
 #define CONTEXT_EXCEPTION_REPORTING 0x80000000
 
-#endif
+#endif /* RC_INVOKED */
+
+#endif /* _AMD64_ */
 
 typedef enum _INTERLOCKED_RESULT {
   ResultNegative = RESULT_NEGATIVE,
   ResultZero = RESULT_ZERO,
   ResultPositive = RESULT_POSITIVE
 } INTERLOCKED_RESULT;
+
+typedef struct _OSVERSIONINFOA {
+  ULONG dwOSVersionInfoSize;
+  ULONG dwMajorVersion;
+  ULONG dwMinorVersion;
+  ULONG dwBuildNumber;
+  ULONG dwPlatformId;
+  CHAR szCSDVersion[128];
+} OSVERSIONINFOA, *POSVERSIONINFOA, *LPOSVERSIONINFOA;
+
+typedef struct _OSVERSIONINFOW {
+  ULONG dwOSVersionInfoSize;
+  ULONG dwMajorVersion;
+  ULONG dwMinorVersion;
+  ULONG dwBuildNumber;
+  ULONG dwPlatformId;
+  WCHAR szCSDVersion[128];
+} OSVERSIONINFOW, *POSVERSIONINFOW, *LPOSVERSIONINFOW, RTL_OSVERSIONINFOW, *PRTL_OSVERSIONINFOW;
+
+typedef struct _OSVERSIONINFOEXA {
+  ULONG dwOSVersionInfoSize;
+  ULONG dwMajorVersion;
+  ULONG dwMinorVersion;
+  ULONG dwBuildNumber;
+  ULONG dwPlatformId;
+  CHAR szCSDVersion[128];
+  USHORT wServicePackMajor;
+  USHORT wServicePackMinor;
+  USHORT wSuiteMask;
+  UCHAR wProductType;
+  UCHAR wReserved;
+} OSVERSIONINFOEXA, *POSVERSIONINFOEXA, *LPOSVERSIONINFOEXA;
+
+typedef struct _OSVERSIONINFOEXW {
+  ULONG dwOSVersionInfoSize;
+  ULONG dwMajorVersion;
+  ULONG dwMinorVersion;
+  ULONG dwBuildNumber;
+  ULONG dwPlatformId;
+  WCHAR szCSDVersion[128];
+  USHORT wServicePackMajor;
+  USHORT wServicePackMinor;
+  USHORT wSuiteMask;
+  UCHAR wProductType;
+  UCHAR wReserved;
+} OSVERSIONINFOEXW, *POSVERSIONINFOEXW, *LPOSVERSIONINFOEXW, RTL_OSVERSIONINFOEXW, *PRTL_OSVERSIONINFOEXW;
+
+#ifdef UNICODE
+typedef OSVERSIONINFOEXW OSVERSIONINFOEX;
+typedef POSVERSIONINFOEXW POSVERSIONINFOEX;
+typedef LPOSVERSIONINFOEXW LPOSVERSIONINFOEX;
+typedef OSVERSIONINFOW OSVERSIONINFO;
+typedef POSVERSIONINFOW POSVERSIONINFO;
+typedef LPOSVERSIONINFOW LPOSVERSIONINFO;
+#else
+typedef OSVERSIONINFOEXA OSVERSIONINFOEX;
+typedef POSVERSIONINFOEXA POSVERSIONINFOEX;
+typedef LPOSVERSIONINFOEXA LPOSVERSIONINFOEX;
+typedef OSVERSIONINFOA OSVERSIONINFO;
+typedef POSVERSIONINFOA POSVERSIONINFO;
+typedef LPOSVERSIONINFOA LPOSVERSIONINFO;
+#endif /* UNICODE */
+
+typedef struct _RTL_SPLAY_LINKS {
+  struct _RTL_SPLAY_LINKS *Parent;
+  struct _RTL_SPLAY_LINKS *LeftChild;
+  struct _RTL_SPLAY_LINKS *RightChild;
+} RTL_SPLAY_LINKS, *PRTL_SPLAY_LINKS;
 
 #if (defined(_M_AMD64) || defined(_M_IA64)) && !defined(_REALLY_GET_CALLERS_CALLER_)
 
@@ -354,6 +424,101 @@ ExUuidCreate(
 
 #endif
 
+#ifndef _ARC_DDK_
+#define _ARC_DDK_
+typedef enum _CONFIGURATION_TYPE {
+  ArcSystem,
+  CentralProcessor,
+  FloatingPointProcessor,
+  PrimaryIcache,
+  PrimaryDcache,
+  SecondaryIcache,
+  SecondaryDcache,
+  SecondaryCache,
+  EisaAdapter,
+  TcAdapter,
+  ScsiAdapter,
+  DtiAdapter,
+  MultiFunctionAdapter,
+  DiskController,
+  TapeController,
+  CdromController,
+  WormController,
+  SerialController,
+  NetworkController,
+  DisplayController,
+  ParallelController,
+  PointerController,
+  KeyboardController,
+  AudioController,
+  OtherController,
+  DiskPeripheral,
+  FloppyDiskPeripheral,
+  TapePeripheral,
+  ModemPeripheral,
+  MonitorPeripheral,
+  PrinterPeripheral,
+  PointerPeripheral,
+  KeyboardPeripheral,
+  TerminalPeripheral,
+  OtherPeripheral,
+  LinePeripheral,
+  NetworkPeripheral,
+  SystemMemory,
+  DockingInformation,
+  RealModeIrqRoutingTable,
+  RealModePCIEnumeration,
+  MaximumType
+} CONFIGURATION_TYPE, *PCONFIGURATION_TYPE;
+#endif /* !_ARC_DDK_ */
+
+typedef struct _CONTROLLER_OBJECT {
+  CSHORT Type;
+  CSHORT Size;
+  PVOID ControllerExtension;
+  KDEVICE_QUEUE DeviceWaitQueue;
+  ULONG Spare1;
+  LARGE_INTEGER Spare2;
+} CONTROLLER_OBJECT, *PCONTROLLER_OBJECT;
+
+typedef struct _CONFIGURATION_INFORMATION {
+  ULONG DiskCount;
+  ULONG FloppyCount;
+  ULONG CdRomCount;
+  ULONG TapeCount;
+  ULONG ScsiPortCount;
+  ULONG SerialCount;
+  ULONG ParallelCount;
+  BOOLEAN AtDiskPrimaryAddressClaimed;
+  BOOLEAN AtDiskSecondaryAddressClaimed;
+  ULONG Version;
+  ULONG MediumChangerCount;
+} CONFIGURATION_INFORMATION, *PCONFIGURATION_INFORMATION;
+
+typedef
+NTSTATUS
+(DDKAPI *PIO_QUERY_DEVICE_ROUTINE)(
+  IN PVOID Context,
+  IN PUNICODE_STRING PathName,
+  IN INTERFACE_TYPE BusType,
+  IN ULONG BusNumber,
+  IN PKEY_VALUE_FULL_INFORMATION *BusInformation,
+  IN CONFIGURATION_TYPE ControllerType,
+  IN ULONG ControllerNumber,
+  IN PKEY_VALUE_FULL_INFORMATION *ControllerInformation,
+  IN CONFIGURATION_TYPE PeripheralType,
+  IN ULONG PeripheralNumber,
+  IN PKEY_VALUE_FULL_INFORMATION *PeripheralInformation);
+
+typedef
+VOID
+(DDKAPI DRIVER_REINITIALIZE)(
+  IN struct _DRIVER_OBJECT *DriverObject,
+  IN PVOID Context,
+  IN ULONG Count);
+
+typedef DRIVER_REINITIALIZE *PDRIVER_REINITIALIZE;
+
 /* I/O Manager Functions */
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
@@ -494,6 +659,14 @@ IoAttachDeviceByPointer(
   IN PDEVICE_OBJECT TargetDevice);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
+
+/* Memory Manager Types */
+
+typedef struct _PHYSICAL_MEMORY_RANGE {
+  PHYSICAL_ADDRESS BaseAddress;
+  LARGE_INTEGER NumberOfBytes;
+} PHYSICAL_MEMORY_RANGE, *PPHYSICAL_MEMORY_RANGE;
 
 /* Memory Manager Functions */
 
