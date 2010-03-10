@@ -6,7 +6,7 @@
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
-#ifdef _MSC_VER
+#ifdef _USE_ML
 
 /* Allow ".name" identifiers */
 OPTION DOTNAME
