@@ -318,6 +318,7 @@ int acpi_bus_set_power(ACPI_HANDLE handle, int state);
 BOOLEAN acpi_bus_power_manageable(ACPI_HANDLE handle);
 BOOLEAN acpi_bus_can_wakeup(ACPI_HANDLE handle);
 int acpi_bus_generate_proc_event(struct acpi_device *device, UINT8 type, int data);
+int acpi_bus_generate_event(struct acpi_device *device, UINT8 type, int data);
 int acpi_bus_receive_event(struct acpi_bus_event *event);
 int acpi_bus_register_driver(struct acpi_driver *driver);
 void acpi_bus_unregister_driver(struct acpi_driver *driver);
@@ -328,6 +329,9 @@ int acpi_bus_start(struct acpi_device *device);
 ACPI_STATUS acpi_bus_get_ejd(ACPI_HANDLE handle, ACPI_HANDLE * ejd);
 int acpi_match_device_ids(struct acpi_device *device,
 			  const struct acpi_device_id *ids);
+int acpi_bus_get_device(ACPI_HANDLE handle, struct acpi_device **device);
+int acpi_init(void);
+ACPI_STATUS acpi_suspend (UINT32 state);
 
 /*
  * Bind physical devices with ACPI devices
