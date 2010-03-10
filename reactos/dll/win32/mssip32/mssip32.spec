@@ -5,5 +5,5 @@
 @ stub CryptSIPPutSignedDataMsg
 @ stub CryptSIPRemoveSignedDataMsg
 @ stub CryptSIPVerifyIndirectData
-@ stub DllRegisterServer
-@ stub DllUnregisterServer
+@ stdcall -private DllRegisterServer()
+@ stdcall -private DllUnregisterServer()

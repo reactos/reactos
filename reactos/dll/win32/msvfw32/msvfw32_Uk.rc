@@ -1,7 +1,6 @@
 /*
- * Turkish Resources
- *
- * Copyright 2006 Fatih A��c�
+ * Copyright 2005 Dmitry Timoshkov
+ * Copyright 2010 Igor Paliychuk
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,36 +19,39 @@
 
 #include "msvideo_private.h"
 
-LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 ICM_CHOOSE_COMPRESSOR DIALOG DISCARDABLE  36, 24, 187, 95
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Vidyo S�k��t�rma"
+CAPTION "Стиснення Відео"
 FONT 8, "MS Shell Dlg"
 {
-    DEFPUSHBUTTON "Tamam",IDOK,129,2,49,14
-    PUSHBUTTON "�ptal",IDCANCEL,129,18,49,14
+    DEFPUSHBUTTON "OK",IDOK,129,2,49,14
+    PUSHBUTTON "Скасувати",IDCANCEL,129,18,49,14
 
-    LTEXT "&S�k��t�r�c�:",-1,9,6,105,8
+    LTEXT "&Алгоритм стиснення:",-1,9,6,105,8
     COMBOBOX 880,9,16,111,67,CBS_DROPDOWNLIST|WS_VSCROLL|WS_TABSTOP
 
-    PUSHBUTTON "Ya&p�land�r...",882,129,36,49,14
-    PUSHBUTTON "&Hakk�nda...",883,129,52,49,14
+    PUSHBUTTON "Налаштува&ти...",882,129,36,49,14
+    PUSHBUTTON "&Інформація...",883,129,52,49,14
 
     SCROLLBAR 884,9,44,111,9,WS_TABSTOP
 
-    LTEXT "S�k��t�rma &Kalitesi:",886,9,34,80,8
+    LTEXT "&Якість Стиснення:",886,9,34,80,8
 
-    CONTROL "&Key Frame Every",887,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,60,66,12
+    CONTROL "&Ключовий кадр кожні",887,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,60,66,12
     EDITTEXT 888,78,60,22,12
-    LTEXT "frames",889,103,62,26,10
+    LTEXT "кадрів",889,103,62,26,10
 
-    CONTROL "&Veri Oran�",894,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,76,66,12
+    CONTROL "&Потік даних",894,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,76,66,12
     EDITTEXT 895,78,76,22,12
     LTEXT "KB/sec",896,102,78,26,10
 }
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_FULLFRAMES "T�m �er�eveler (S�k��t�r�lmam��)"
+    IDS_FULLFRAMES "Кадри повністю (Без стиснення)"
 }

@@ -1,7 +1,8 @@
 /*
- * German resource file for MS-RLE
+ * Ukrainian resource file for MS-RLE
  *
- * Copyright 2002 Michael Günnewig
+ * Copyright 2002 Michael GГјnnewig
+ * Copyright 2010 Igor Paliychuk
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,13 +21,14 @@
 
 #include "msrle_private.h"
 
+/* UTF-8 */
 #pragma code_page(65001)
 
-LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
 	IDS_NAME	"WINE-MS-RLE"
-	IDS_DESCRIPTION	"Wine MS-RLE Videodekoder"
-	IDS_ABOUT       "Wine MS-RLE Videodekoder\nCopyright 2002 by Michael Günnewig"
+	IDS_DESCRIPTION	"Відео кодек Wine MS-RLE"
+	IDS_ABOUT       "Відео кодек Wine MS-RLE\nCopyright 2002 by Michael GГјnnewig"
 }
