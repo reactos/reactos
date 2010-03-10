@@ -154,9 +154,6 @@ int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE hPrev, LPTSTR szCmdLine, int iCm
             DispatchMessage(&msg);
         }
     }
-
-    try { throw 0; } catch (int i) { } /* HACK */
-
     return msg.wParam;
 }
 

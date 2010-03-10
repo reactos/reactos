@@ -13,12 +13,8 @@
 	<define name="_KERNEL32_" />
 	<redefine name="_WIN32_WINNT">0x0600</redefine>
 	<dependency>errcodes</dependency>
-	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38269
 	<pch>k32.h</pch>
-	-->
 	<group compilerset="gcc">
-		<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
-		<compilerflag>-fno-unit-at-a-time</compilerflag>
 		<compilerflag compiler="cxx">-fno-exceptions</compilerflag>
 		<compilerflag compiler="cxx">-fno-rtti</compilerflag>
 	</group>

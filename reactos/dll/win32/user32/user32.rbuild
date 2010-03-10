@@ -12,11 +12,9 @@
 	<library>pseh</library>
 	<library>ntdll</library>
 	<compilerflag compilerset="gcc">-fms-extensions</compilerflag>
-	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38269
 	<directory name="include">
 		<pch>user32.h</pch>
 	</directory>
-	-->
 	<directory name="controls">
 		<file>button.c</file>
 		<file>combo.c</file>
@@ -77,6 +75,4 @@
 		<file>winpos.c</file>
 	</directory>
 	<file>user32.rc</file>
-	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
-	<compilerflag compilerset="gcc">-fno-unit-at-a-time</compilerflag>
 </module>
