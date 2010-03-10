@@ -595,10 +595,6 @@ Bus_PDO_QueryResources(
 	ULONG ResourceListSize;
 	ULONG i;
 
-	ULONG RequirementsListSize;
-	PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
-	PIO_RESOURCE_DESCRIPTOR RequirementDescriptor;
-
 
     /* Get current resources */
     Buffer.Length = 0;
@@ -672,24 +668,6 @@ Bus_PDO_QueryResources(
 	ResourceList->List[0].PartialResourceList.Count = NumberOfResources;
 	ResourceDescriptor = ResourceList->List[0].PartialResourceList.PartialDescriptors;
 
-	RequirementsListSize = sizeof(IO_RESOURCE_REQUIREMENTS_LIST) + sizeof(IO_RESOURCE_DESCRIPTOR) * (NumberOfResources - 1);
-	RequirementsList = (PIO_RESOURCE_REQUIREMENTS_LIST)ExAllocatePool(PagedPool, RequirementsListSize);
-
-	if (!RequirementsList)
-	{
-		ExFreePool(ResourceList);
-		return STATUS_SUCCESS;
-	}
-	RequirementsList->ListSize = RequirementsListSize;
-	RequirementsList->InterfaceType = Internal;
-	RequirementsList->BusNumber = 0;
-	RequirementsList->SlotNumber = 0; /* Not used by WDM drivers */
-	RequirementsList->AlternativeLists = 1;
-	RequirementsList->List[0].Version = 1;
-	RequirementsList->List[0].Revision = 1;
-	RequirementsList->List[0].Count = NumberOfResources;
-	RequirementDescriptor = RequirementsList->List[0].Descriptors;
-
 	/* Fill resources list structure */
 	Done = FALSE;
 	while (!Done)
@@ -711,15 +689,7 @@ Bus_PDO_QueryResources(
 					ResourceDescriptor->u.Interrupt.Vector = 0;
 					ResourceDescriptor->u.Interrupt.Affinity = (KAFFINITY)(-1);
 
-					RequirementDescriptor->Option = 0; /* Required */
-					RequirementDescriptor->Type = ResourceDescriptor->Type;
-					RequirementDescriptor->ShareDisposition = ResourceDescriptor->ShareDisposition;
-					RequirementDescriptor->Flags = ResourceDescriptor->Flags;
-					RequirementDescriptor->u.Interrupt.MinimumVector = RequirementDescriptor->u.Interrupt.MaximumVector
-					= irq_data->Interrupts[i];
-
 					ResourceDescriptor++;
-					RequirementDescriptor++;
 				}
 				break;
 			}
@@ -746,15 +716,7 @@ Bus_PDO_QueryResources(
 				}
 				ResourceDescriptor->u.Dma.Channel = dma_data->Channels[i];
 
-				RequirementDescriptor->Option = 0; /* Required */
-				RequirementDescriptor->Type = ResourceDescriptor->Type;
-				RequirementDescriptor->ShareDisposition = ResourceDescriptor->ShareDisposition;
-				RequirementDescriptor->Flags = ResourceDescriptor->Flags;
-				RequirementDescriptor->u.Dma.MinimumChannel = RequirementDescriptor->u.Dma.MaximumChannel
-				= ResourceDescriptor->u.Dma.Channel;
-
 				ResourceDescriptor++;
-				RequirementDescriptor++;
 			}
 			break;
 			}
@@ -772,17 +734,7 @@ Bus_PDO_QueryResources(
 				ResourceDescriptor->u.Port.Start.u.LowPart = io_data->Minimum;
 				ResourceDescriptor->u.Port.Length = io_data->AddressLength;
 
-				RequirementDescriptor->Option = 0; /* Required */
-				RequirementDescriptor->Type = ResourceDescriptor->Type;
-				RequirementDescriptor->ShareDisposition = ResourceDescriptor->ShareDisposition;
-				RequirementDescriptor->Flags = ResourceDescriptor->Flags;
-				RequirementDescriptor->u.Port.Length = ResourceDescriptor->u.Port.Length;
-				RequirementDescriptor->u.Port.Alignment = 1; /* Start address is specified, so it doesn't matter */
-				RequirementDescriptor->u.Port.MinimumAddress = RequirementDescriptor->u.Port.MaximumAddress
-				= ResourceDescriptor->u.Port.Start;
-
 				ResourceDescriptor++;
-				RequirementDescriptor++;
 				break;
 			}
 			case ACPI_RESOURCE_TYPE_END_TAG:
@@ -982,6 +934,8 @@ Bus_PDO_QueryResourceRequirements(
 		resource = ACPI_NEXT_RESOURCE(resource);
 	}
 	ExFreePool(Buffer.Pointer);
+
+    Irp->IoStatus.Information = (ULONG_PTR)RequirementsList;
 
     return STATUS_SUCCESS;
 }
