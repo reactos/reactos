@@ -1529,12 +1529,6 @@ NTAPI
 RtlIsValidOemCharacter(
   IN OUT PWCHAR Char);
 
-typedef struct _RTL_SPLAY_LINKS {
-    struct _RTL_SPLAY_LINKS *Parent;
-    struct _RTL_SPLAY_LINKS *LeftChild;
-    struct _RTL_SPLAY_LINKS *RightChild;
-} RTL_SPLAY_LINKS, *PRTL_SPLAY_LINKS;
-
 typedef struct _PREFIX_TABLE_ENTRY {
   CSHORT NodeTypeCode;
   CSHORT NameLength;
