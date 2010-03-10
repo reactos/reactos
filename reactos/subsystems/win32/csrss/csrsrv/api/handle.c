@@ -9,7 +9,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <csrss.h>
+#include <srv.h>
 
 #define NDEBUG
 #include <debug.h>

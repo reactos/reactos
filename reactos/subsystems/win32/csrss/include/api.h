@@ -13,6 +13,14 @@
 
 #include <csrss/csrss.h>
 
+typedef enum _CSR_THREAD_FLAGS
+{
+    CsrThreadAltertable = 0x1,
+    CsrThreadInTermination = 0x2,
+    CsrThreadTerminated = 0x4,
+    CsrThreadIsServerThread = 0x10
+} CSR_THREAD_FLAGS, *PCSR_THREAD_FLAGS;
+
 typedef enum _SHUTDOWN_RESULT
 {
     CsrShutdownCsrProcess = 1,
@@ -179,7 +187,7 @@ NTSTATUS FASTCALL CsrRegisterObjectDefinitions(PCSRSS_OBJECT_DEFINITION NewDefin
 NTSTATUS WINAPI CsrInsertObject( PCSRSS_PROCESS_DATA ProcessData, PHANDLE Handle, Object_t *Object, DWORD Access, BOOL Inheritable );
 NTSTATUS WINAPI CsrDuplicateHandleTable(PCSRSS_PROCESS_DATA SourceProcessData, PCSRSS_PROCESS_DATA TargetProcessData);
 NTSTATUS WINAPI CsrGetObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle, Object_t **Object, DWORD Access );
-BOOL WINAPI CsrServerInitialization (int,char**,char**);
+NTSTATUS NTAPI CsrServerInitialization(ULONG ArgumentCount, PCHAR Arguments[]);
 NTSTATUS WINAPI CsrReleaseObjectByPointer(Object_t *Object);
 NTSTATUS WINAPI CsrReleaseObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Object );
 NTSTATUS WINAPI CsrVerifyObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Object );

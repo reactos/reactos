@@ -8,7 +8,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <csrss.h>
+#include <srv.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -152,6 +152,65 @@ CsrInsertThread(IN PCSRSS_PROCESS_DATA Process,
 
 #define CsrAcquireProcessLock() LOCK
 #define CsrReleaseProcessLock() UNLOCK
+
+VOID
+NTAPI
+CsrDeallocateThread(IN PCSR_THREAD CsrThread)
+{
+    /* Free the process object from the heap */
+    RtlFreeHeap(CsrHeap, 0, CsrThread);
+}
+
+VOID
+NTAPI
+CsrRemoveThread(IN PCSR_THREAD CsrThread)
+{
+    /* Remove it from the List */
+    RemoveEntryList(&CsrThread->Link);
+
+    /* Decreate the thread count of the process */
+    CsrThread->Process->ThreadCount--;
+
+    /* Remove it from the Hash List as well */
+    if (CsrThread->HashLinks.Flink) RemoveEntryList(&CsrThread->HashLinks);
+
+    /* Check if this is the last Thread */
+    if (!CsrThread->Process->ThreadCount)
+    {
+        /* Check if it's not already been marked for deletion */
+        if (!(CsrThread->Process->Flags & CsrProcessLastThreadTerminated))
+        {
+            /* Let everyone know this process is about to lose the thread */
+            //CsrThread->Process->Flags |= CsrProcessLastThreadTerminated;
+
+            /* Reference the Process */
+            //CsrLockedDereferenceProcess(CsrThread->Process);
+        }
+    }
+
+    /* Mark the thread for deletion */
+    CsrThread->Flags |= CsrThreadInTermination;
+}
+
+VOID
+NTAPI
+CsrThreadRefcountZero(IN PCSR_THREAD CsrThread)
+{
+    /* Remove this thread */
+    CsrRemoveThread(CsrThread);
+
+    /* Release the Process Lock */
+    //CsrReleaseProcessLock();
+
+    /* Close the NT Thread Handle */
+    if (CsrThread->ThreadHandle) NtClose(CsrThread->ThreadHandle);
+    
+    /* De-allocate the CSR Thread Object */
+    CsrDeallocateThread(CsrThread);
+
+    /* Remove a reference from the process */
+    //CsrDereferenceProcess(CsrProcess);
+}
 
 NTSTATUS
 NTAPI
@@ -933,8 +992,21 @@ CSR_API(CsrCreateThread)
 
 CSR_API(CsrTerminateProcess)
 {
+   PLIST_ENTRY NextEntry;
+   PCSR_THREAD Thread;
    Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
    Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
+   
+   NextEntry = ProcessData->ThreadList.Flink;
+   while (NextEntry != &ProcessData->ThreadList)
+   {
+        Thread = CONTAINING_RECORD(NextEntry, CSR_THREAD, Link);
+        NextEntry = NextEntry->Flink;
+        
+        CsrThreadRefcountZero(Thread);
+        
+   }
+   
 
    ProcessData->Terminated = TRUE;
    return STATUS_SUCCESS;

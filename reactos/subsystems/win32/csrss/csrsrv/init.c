@@ -1,47 +1,128 @@
-/* $Id$
- *
- * reactos/subsys/csrss/init.c
- *
- * Initialize the CSRSS subsystem server process.
- *
- * ReactOS Operating System
- *
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS CSR Sub System
+ * FILE:            subsys/csr/csrsrv/init.c
+ * PURPOSE:         CSR Server DLL Initialization
+ * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
-#include <csrss.h>
-
+#include "srv.h"
 #define NDEBUG
 #include <debug.h>
 
-/* GLOBALS ******************************************************************/
+/* DATA ***********************************************************************/
 
 HANDLE CsrHeap = (HANDLE) 0;
-
 HANDLE CsrObjectDirectory = (HANDLE) 0;
-
 UNICODE_STRING CsrDirectoryName;
-
 extern HANDLE CsrssApiHeap;
-
 static unsigned InitCompleteProcCount;
 static CSRPLUGIN_INIT_COMPLETE_PROC *InitCompleteProcs = NULL;
-
 static unsigned HardErrorProcCount;
 static CSRPLUGIN_HARDERROR_PROC *HardErrorProcs = NULL;
-
 HANDLE hSbApiPort = (HANDLE) 0;
-
 HANDLE hBootstrapOk = (HANDLE) 0;
-
 HANDLE hSmApiPort = (HANDLE) 0;
-
 HANDLE hApiPort = (HANDLE) 0;
 
-/**********************************************************************
- * CsrpAddInitCompleteProc/1
- */
+/* PRIVATE FUNCTIONS **********************************************************/
+
+ULONG
+InitializeVideoAddressSpace(VOID)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING PhysMemName = RTL_CONSTANT_STRING(L"\\Device\\PhysicalMemory");
+    NTSTATUS Status;
+    HANDLE PhysMemHandle;
+    PVOID BaseAddress;
+    LARGE_INTEGER Offset;
+    SIZE_T ViewSize;
+    CHAR IVTAndBda[1024+256];
+
+    /* Open the physical memory section */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &PhysMemName,
+                               0,
+                               NULL,
+                               NULL);
+    Status = ZwOpenSection(&PhysMemHandle,
+                           SECTION_ALL_ACCESS,
+                           &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Couldn't open \\Device\\PhysicalMemory\n");
+        return 0;
+    }
+
+    /* Map the BIOS and device registers into the address space */
+    Offset.QuadPart = 0xa0000;
+    ViewSize = 0x100000 - 0xa0000;
+    BaseAddress = (PVOID)0xa0000;
+    Status = ZwMapViewOfSection(PhysMemHandle,
+                                NtCurrentProcess(),
+                                &BaseAddress,
+                                0,
+                                ViewSize,
+                                &Offset,
+                                &ViewSize,
+                                ViewUnmap,
+                                0,
+                                PAGE_EXECUTE_READWRITE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Couldn't map physical memory (%x)\n", Status);
+        ZwClose(PhysMemHandle);
+        return 0;
+    }
+
+    /* Close physical memory section handle */
+    ZwClose(PhysMemHandle);
+
+    if (BaseAddress != (PVOID)0xa0000)
+    {
+        DPRINT1("Couldn't map physical memory at the right address (was %x)\n",
+                BaseAddress);
+        return 0;
+    }
+
+    /* Allocate some low memory to use for the non-BIOS
+     * parts of the v86 mode address space
+     */
+    BaseAddress = (PVOID)0x1;
+    ViewSize = 0xa0000 - 0x1000;
+    Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
+                                     &BaseAddress,
+                                     0,
+                                     &ViewSize,
+                                     MEM_COMMIT,
+                                     PAGE_EXECUTE_READWRITE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to allocate virtual memory (Status %x)\n", Status);
+        return 0;
+    }
+    if (BaseAddress != (PVOID)0x0)
+    {
+        DPRINT1("Failed to allocate virtual memory at right address (was %x)\n",
+                BaseAddress);
+        return 0;
+    }
+
+    /* Get the real mode IVT and BDA from the kernel */
+    Status = NtVdmControl(VdmInitialize, IVTAndBda);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtVdmControl failed (status %x)\n", Status);
+        return 0;
+    }
+
+    /* Return success */
+    return 1;
+}
+
+
 static NTSTATUS FASTCALL
 CsrpAddInitCompleteProc(CSRPLUGIN_INIT_COMPLETE_PROC Proc)
 {
@@ -514,48 +595,6 @@ CsrpRegisterSubsystem (int argc, char ** argv, char ** envp)
 }
 
 /**********************************************************************
- * 	EnvpToUnicodeString/2
- */
-static ULONG FASTCALL
-EnvpToUnicodeString (char ** envp, PUNICODE_STRING UnicodeEnv)
-{
-	ULONG        CharCount = 0;
-	ULONG        Index = 0;
-	ANSI_STRING  AnsiEnv;
-
-	UnicodeEnv->Buffer = NULL;
-
-	for (Index=0; NULL != envp[Index]; Index++)
-	{
-		CharCount += strlen (envp[Index]);
-		++ CharCount;
-	}
-	++ CharCount;
-
-	AnsiEnv.Buffer = RtlAllocateHeap (RtlGetProcessHeap(), 0, CharCount);
-	if (NULL != AnsiEnv.Buffer)
-	{
-
-		PCHAR WritePos = AnsiEnv.Buffer;
-
-		for (Index=0; NULL != envp[Index]; Index++)
-		{
-			strcpy (WritePos, envp[Index]);
-			WritePos += strlen (envp[Index]) + 1;
-		}
-
-      /* FIXME: the last (double) nullterm should perhaps not be included in Length
-       * but only in MaximumLength. -Gunnar */
-		AnsiEnv.Buffer [CharCount-1] = '\0';
-		AnsiEnv.Length             = CharCount;
-		AnsiEnv.MaximumLength      = CharCount;
-
-		RtlAnsiStringToUnicodeString (UnicodeEnv, & AnsiEnv, TRUE);
-		RtlFreeHeap (RtlGetProcessHeap(), 0, AnsiEnv.Buffer);
-	}
-	return CharCount;
-}
-/**********************************************************************
  * 	CsrpLoadKernelModeDriver/3
  */
 static NTSTATUS
@@ -565,26 +604,26 @@ CsrpLoadKernelModeDriver (int argc, char ** argv, char ** envp)
 	WCHAR           Data [MAX_PATH + 1];
 	ULONG           DataLength = sizeof Data;
 	ULONG           DataType = 0;
-	UNICODE_STRING  Environment;
+	//UNICODE_STRING  Environment;
 
 
-	DPRINT("SM: %s called\n", __FUNCTION__);
+	DPRINT1("SM: %s called\n", __FUNCTION__);
 
 
-	EnvpToUnicodeString (envp, & Environment);
+	//EnvpToUnicodeString (envp, & Environment);
 	Status = SmLookupSubsystem (L"Kmode",
 				    Data,
 				    & DataLength,
 				    & DataType,
-				    Environment.Buffer);
-	RtlFreeUnicodeString (& Environment);
+				    NULL);
+	//RtlFreeUnicodeString (& Environment);
 	if((STATUS_SUCCESS == Status) && (DataLength > sizeof Data[0]))
 	{
 		WCHAR                      ImagePath [MAX_PATH + 1] = {0};
 		UNICODE_STRING             ModuleName;
 
-		wcscpy (ImagePath, L"\\??\\");
-		wcscat (ImagePath, Data);
+		wcscpy (ImagePath, L"\\??\\c:\\reactos\\system32\\win32k.sys");
+//		wcscat (ImagePath, Data);
 		RtlInitUnicodeString (& ModuleName, ImagePath);
 		Status = NtSetSystemInformation(/* FIXME: SystemLoadAndCallImage */
 		                                SystemExtendServiceTableInformation,
@@ -592,7 +631,7 @@ CsrpLoadKernelModeDriver (int argc, char ** argv, char ** envp)
 						sizeof ModuleName);
 		if(!NT_SUCCESS(Status))
 		{
-			DPRINT("WIN: %s: loading Kmode failed (Status=0x%08lx)\n",
+			DPRINT1("WIN: %s: loading Kmode failed (Status=0x%08lx)\n",
 				__FUNCTION__, Status);
 		}
 	}
@@ -718,22 +757,12 @@ struct {
 	{TRUE, CsrpRunWinlogon,          "run WinLogon"},
 };
 
-/**********************************************************************
- * NAME
- * 	CsrServerInitialization
- *
- * DESCRIPTION
- * 	Initialize the Win32 environment subsystem server.
- *
- * RETURN VALUE
- * 	TRUE: Initialization OK; otherwise FALSE.
- */
-BOOL WINAPI
-CsrServerInitialization (
-	int argc,
-	char ** argv,
-	char ** envp
-	)
+/* PUBLIC FUNCTIONS ***********************************************************/
+
+NTSTATUS
+NTAPI
+CsrServerInitialization(ULONG ArgumentCount,
+                        PCHAR Arguments[])
 {
 	UINT       i = 0;
 	NTSTATUS  Status = STATUS_SUCCESS;
@@ -742,7 +771,7 @@ CsrServerInitialization (
 
 	for (i=0; i < (sizeof InitRoutine / sizeof InitRoutine[0]); i++)
 	{
-		Status = InitRoutine[i].EntryPoint(argc,argv,envp);
+		Status = InitRoutine[i].EntryPoint(ArgumentCount,Arguments,NULL);
 		if(!NT_SUCCESS(Status))
 		{
 			DPRINT1("CSR: %s: failed to %s (Status=%08lx)\n",
@@ -758,9 +787,23 @@ CsrServerInitialization (
 	if (CallInitComplete())
 	{
 		Status = SmCompleteSession (hSmApiPort,hSbApiPort,hApiPort);
-		return TRUE;
+		return STATUS_SUCCESS;
 	}
-	return FALSE;
+    
+	return STATUS_UNSUCCESSFUL;
+}
+
+BOOL
+NTAPI
+DllMainCRTStartup(HANDLE hDll,
+                  DWORD dwReason,
+                  LPVOID lpReserved)
+{
+    /* We don't do much */
+    UNREFERENCED_PARAMETER(hDll);
+    UNREFERENCED_PARAMETER(dwReason);
+    UNREFERENCED_PARAMETER(lpReserved);
+    return TRUE;
 }
 
 /* EOF */
