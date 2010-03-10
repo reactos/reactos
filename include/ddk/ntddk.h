@@ -51,6 +51,9 @@
 #include <basetyps.h> // FIXME
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 //
 // GUID and UUID
@@ -688,6 +691,10 @@ MmGetPhysicalAddress(
 
 /* Windows Device Driver Kit */
 #include "winddk.h"
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif /* _NTDDK_ */
