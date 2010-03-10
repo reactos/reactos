@@ -1807,48 +1807,6 @@ KeGetCurrentProcessorNumber(VOID)
 #error Unknown architecture
 #endif
 
-typedef VOID
-(NTAPI *PciPin2Line)(
-    IN struct _BUS_HANDLER *BusHandler,
-    IN struct _BUS_HANDLER *RootHandler,
-    IN PCI_SLOT_NUMBER SlotNumber,
-    IN PPCI_COMMON_CONFIG PciData
-);
-
-typedef VOID
-(NTAPI *PciLine2Pin)(
-    IN struct _BUS_HANDLER *BusHandler,
-    IN struct _BUS_HANDLER *RootHandler,
-    IN PCI_SLOT_NUMBER SlotNumber,
-    IN PPCI_COMMON_CONFIG PciNewData,
-    IN PPCI_COMMON_CONFIG PciOldData
-);
-
-typedef VOID
-(NTAPI *PciReadWriteConfig)(
-    IN struct _BUS_HANDLER *BusHandler,
-    IN PCI_SLOT_NUMBER Slot,
-    IN PVOID Buffer,
-    IN ULONG Offset,
-    IN ULONG Length
-);
-
-#define PCI_DATA_TAG ' ICP'
-#define PCI_DATA_VERSION 1
-
-typedef struct _PCIBUSDATA
-{
-    ULONG Tag;
-    ULONG Version;
-    PciReadWriteConfig ReadConfig;
-    PciReadWriteConfig WriteConfig;
-    PciPin2Line Pin2Line;
-    PciLine2Pin Line2Pin;
-    PCI_SLOT_NUMBER ParentSlot;
-    PVOID Reserved[4];
-} PCIBUSDATA, *PPCIBUSDATA;
-
-
 /** SPINLOCK FUNCTIONS ********************************************************/
 
 #if defined (_X86_)
