@@ -743,7 +743,12 @@ typedef enum _MANDATORY_LEVEL {
 
 typedef enum _OBJECT_INFORMATION_CLASS {
   ObjectBasicInformation = 0,
-  ObjectTypeInformation = 2
+  ObjectNameInformation = 1, /* FIXME, not in WDK */
+  ObjectTypeInformation = 2,
+  ObjectTypesInformation = 3, /* FIXME, not in WDK */
+  ObjectHandleFlagInformation = 4, /* FIXME, not in WDK */
+  ObjectSessionInformation = 5, /* FIXME, not in WDK */
+  MaxObjectInfoClass /* FIXME, not in WDK */
 } OBJECT_INFORMATION_CLASS;
 
 #if (NTDDI_VERSION >= NTDDI_NT4)
