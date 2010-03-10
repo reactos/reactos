@@ -8,6 +8,7 @@
 	<library>advapi32</library>
 	<library>rpcrt4</library>
 	<library>pseh</library>
+	<library>iphlpapi</library>
 	<file>wlansvc.c</file>
 	<file>rpcserver.c</file>
 </module>
