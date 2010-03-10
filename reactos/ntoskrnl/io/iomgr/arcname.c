@@ -38,7 +38,7 @@ IopApplyRosCdromArcHack(IN ULONG i)
     extern BOOLEAN InitIsWinPEMode, ExpInTextModeSetup;
 
     /* Change this if you want ROS to boot properly from another directory */
-    sprintf(RosSysPath, "%s", "reactos");
+    sprintf(RosSysPath, "%s", "live");
 
     /* Only ARC Name left - Build full ARC Name */
     p = strstr(KeLoaderBlock->ArcBootDeviceName, "cdrom");
