@@ -28,6 +28,7 @@
 #include "windef.h"
 #include "winbase.h"
 #include "objbase.h"
+#include "initguid.h"
 #include "comcat.h"
 #include "olectl.h"
 
@@ -1142,7 +1143,7 @@ static void test_moniker(
     LPBYTE moniker_data;
     DWORD moniker_size;
     DWORD i;
-    BOOL same = TRUE;
+    BOOL same;
     BYTE buffer[128];
     IMoniker * moniker_proxy;
     LPOLESTR display_name;
@@ -1182,6 +1183,7 @@ static void test_moniker(
         testname, sizeof_expected_moniker_comparison_data, moniker_size);
 
     /* then do a byte-by-byte comparison */
+    same = TRUE;
     for (i = 0; i < min(moniker_size, sizeof_expected_moniker_comparison_data); i++)
     {
         if (expected_moniker_comparison_data[i] != buffer[i])
@@ -1225,6 +1227,7 @@ static void test_moniker(
         testname, (DWORD)round_global_size(sizeof_expected_moniker_saved_data), moniker_size);
 
     /* then do a byte-by-byte comparison */
+    same = TRUE;
     for (i = 0; i < min(moniker_size, round_global_size(sizeof_expected_moniker_saved_data)); i++)
     {
         if (expected_moniker_saved_data[i] != moniker_data[i])
@@ -1271,6 +1274,7 @@ static void test_moniker(
         testname, (DWORD)round_global_size(sizeof_expected_moniker_marshal_data), moniker_size);
 
     /* then do a byte-by-byte comparison */
+    same = TRUE;
     if (expected_moniker_marshal_data)
     {
         for (i = 0; i < min(moniker_size, round_global_size(sizeof_expected_moniker_marshal_data)); i++)
@@ -1428,6 +1432,16 @@ static void test_file_monikers(void)
     for (i = 0; i < COUNTOF(wszFile); ++i)
     {
         int j ;
+        if (i == 2)
+        {
+            BOOL used;
+            WideCharToMultiByte( CP_ACP, WC_NO_BEST_FIT_CHARS, wszFile[i], -1, NULL, 0, NULL, &used );
+            if (used)
+            {
+                skip("string 2 doesn't round trip in codepage %u\n", GetACP() );
+                continue;
+            }
+        }
         for (j = lstrlenW(wszFile[i]); j > 0; --j)
         {
             wszFile[i][j] = 0;
@@ -1481,7 +1495,6 @@ static void test_item_moniker(void)
 
     /* IsRunning test */
     hr = IMoniker_IsRunning(moniker, NULL, NULL, NULL);
-    todo_wine
     ok(hr == E_INVALIDARG, "IMoniker_IsRunning should return E_INVALIDARG, not 0x%08x\n", hr);
 
     hr = IMoniker_IsRunning(moniker, bindctx, NULL, NULL);
@@ -1617,7 +1630,6 @@ static void test_generic_composite_moniker(void)
 
     /* IsRunning test */
     hr = IMoniker_IsRunning(moniker, NULL, NULL, NULL);
-    todo_wine
     ok(hr == E_INVALIDARG, "IMoniker_IsRunning should return E_INVALIDARG, not 0x%08x\n", hr);
 
     hr = IMoniker_IsRunning(moniker, bindctx, NULL, NULL);
@@ -1631,7 +1643,6 @@ static void test_generic_composite_moniker(void)
     todo_wine
     ok(hr == E_INVALIDARG, "IMoniker_BindToObject should return E_INVALIDARG, not 0x%08x\n", hr);
 
-    todo_wine
     hr = IMoniker_BindToStorage(moniker, bindctx, NULL, &IID_IUnknown, (void **)&unknown);
     ok(hr == E_INVALIDARG, "IMoniker_BindToStorage should return E_INVALIDARG, not 0x%08x\n", hr);
 
@@ -1853,6 +1864,75 @@ static void test_bind_context(void)
     ok(!refs, "bound object should have been destroyed, instead of having %d refs\n", refs);
 }
 
+static void test_save_load_filemoniker(void)
+{
+    IMoniker* pMk;
+    IStream* pStm;
+    HRESULT hr;
+    ULARGE_INTEGER size;
+    LARGE_INTEGER zero_pos, dead_pos, nulls_pos;
+    DWORD some_val = 0xFEDCBA98;
+    int i;
+
+    /* see FileMonikerImpl_Save docs */
+    zero_pos.QuadPart = 0;
+    dead_pos.QuadPart = sizeof(WORD) + sizeof(DWORD) + (lstrlenW(wszFileName1) + 1) + sizeof(WORD);
+    nulls_pos.QuadPart = dead_pos.QuadPart + sizeof(WORD);
+
+    /* create the stream we're going to write to */
+    hr = CreateStreamOnHGlobal(NULL, TRUE, &pStm);
+    ok_ole_success(hr, "CreateStreamOnHGlobal");
+
+    size.u.LowPart = 128;
+    hr = IStream_SetSize(pStm, size);
+    ok_ole_success(hr, "IStream_SetSize");
+
+    /* create and save a moniker */
+    hr = CreateFileMoniker(wszFileName1, &pMk);
+    ok_ole_success(hr, "CreateFileMoniker");
+
+    hr = IMoniker_Save(pMk, pStm, TRUE);
+    ok_ole_success(hr, "IMoniker_Save");
+
+    hr = IMoniker_Release(pMk);
+    ok_ole_success(hr, "IMoniker_Release");
+
+    /* overwrite the constants with various values */
+    hr = IStream_Seek(pStm, zero_pos, STREAM_SEEK_SET, NULL);
+    ok_ole_success(hr, "IStream_Seek");
+    hr = IStream_Write(pStm, &some_val, sizeof(WORD), NULL);
+    ok_ole_success(hr, "IStream_Write");
+
+    hr = IStream_Seek(pStm, dead_pos, STREAM_SEEK_SET, NULL);
+    ok_ole_success(hr, "IStream_Seek");
+    hr = IStream_Write(pStm, &some_val, sizeof(WORD), NULL);
+    ok_ole_success(hr, "IStream_Write");
+
+    hr = IStream_Seek(pStm, nulls_pos, STREAM_SEEK_SET, NULL);
+    ok_ole_success(hr, "IStream_Seek");
+    for(i = 0; i < 5; ++i){
+        hr = IStream_Write(pStm, &some_val, sizeof(DWORD), NULL);
+        ok_ole_success(hr, "IStream_Write");
+    }
+
+    /* go back to the start of the stream */
+    hr = IStream_Seek(pStm, zero_pos, STREAM_SEEK_SET, NULL);
+    ok_ole_success(hr, "IStream_Seek");
+
+    /* create a new moniker and load into it */
+    hr = CreateFileMoniker(wszFileName1, &pMk);
+    ok_ole_success(hr, "CreateFileMoniker");
+
+    hr = IMoniker_Load(pMk, pStm);
+    ok_ole_success(hr, "IMoniker_Load");
+
+    hr = IMoniker_Release(pMk);
+    ok_ole_success(hr, "IMoniker_Release");
+
+    hr = IStream_Release(pStm);
+    ok_ole_success(hr, "IStream_Release");
+}
+
 START_TEST(moniker)
 {
     CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
@@ -1866,6 +1946,7 @@ START_TEST(moniker)
     test_anti_moniker();
     test_generic_composite_moniker();
     test_pointer_moniker();
+    test_save_load_filemoniker();
 
     /* FIXME: test moniker creation funcs and parsing other moniker formats */
 

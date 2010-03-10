@@ -178,6 +178,7 @@ static void testProps(void)
     ok(var.vt == VT_LPSTR && !lstrcmpA(U(var).pszVal, val),
      "Didn't get expected type or value for property (got type %d, value %s)\n",
      var.vt, U(var).pszVal);
+    PropVariantClear(&var);
 
     /* read clipboard format */
     spec.ulKind = PRSPEC_PROPID;
@@ -282,6 +283,7 @@ static void testProps(void)
     ok(var.vt == VT_LPSTR && !lstrcmpA(U(var).pszVal, val),
      "Didn't get expected type or value for property (got type %d, value %s)\n",
      var.vt, U(var).pszVal);
+    PropVariantClear(&var);
 
     IPropertyStorage_Release(propertyStorage);
     IPropertySetStorage_Release(propSetStorage);
@@ -364,11 +366,13 @@ static void testCodepage(void)
     ok(hr == S_OK, "ReadMultiple failed: 0x%08x\n", hr);
     ok(var.vt == VT_LPSTR && !strcmp(U(var).pszVal, "hi"),
      "Didn't get expected type or value for property\n");
+    PropVariantClear(&var);
     /* This seemingly non-sensical test is to show that the string is indeed
      * interpreted according to the current system code page, not according to
      * the property set's code page.  (If the latter were true, the whole
      * string would be maintained.  As it is, only the first character is.)
      */
+    var.vt = VT_LPSTR;
     U(var).pszVal = (LPSTR)wval;
     hr = IPropertyStorage_WriteMultiple(propertyStorage, 1, &spec, &var, 0);
     ok(hr == S_OK, "WriteMultiple failed: 0x%08x\n", hr);
@@ -376,6 +380,8 @@ static void testCodepage(void)
     ok(hr == S_OK, "ReadMultiple failed: 0x%08x\n", hr);
     ok(var.vt == VT_LPSTR && !strcmp(U(var).pszVal, "h"),
      "Didn't get expected type or value for property\n");
+    PropVariantClear(&var);
+
     /* now that a property's been set, you can't change the code page */
     spec.ulKind = PRSPEC_PROPID;
     U(spec).propid = PID_CODEPAGE;

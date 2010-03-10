@@ -27,11 +27,11 @@
 
 #include "windef.h"
 #include "winbase.h"
-#include "initguid.h"
 #include "objbase.h"
 #include "olectl.h"
 #include "shlguid.h"
 #include "shobjidl.h"
+#include "initguid.h"
 
 #include "wine/test.h"
 
@@ -276,7 +276,7 @@ static DWORD start_host_object2(IStream *stream, REFIID riid, IUnknown *object, 
     *thread = CreateThread(NULL, 0, host_object_proc, data, 0, &tid);
 
     /* wait for marshaling to complete before returning */
-    WaitForSingleObject(marshal_event, INFINITE);
+    ok( !WaitForSingleObject(marshal_event, 10000), "wait timed out\n" );
     CloseHandle(marshal_event);
 
     return tid;
@@ -293,7 +293,7 @@ static void release_host_object(DWORD tid)
 {
     HANDLE event = CreateEvent(NULL, FALSE, FALSE, NULL);
     PostThreadMessage(tid, RELEASEMARSHALDATA, 0, (LPARAM)event);
-    WaitForSingleObject(event, INFINITE);
+    ok( !WaitForSingleObject(event, 10000), "wait timed out\n" );
     CloseHandle(event);
 }
 
@@ -302,7 +302,7 @@ static void end_host_object(DWORD tid, HANDLE thread)
     BOOL ret = PostThreadMessage(tid, WM_QUIT, 0, 0);
     ok(ret, "PostThreadMessage failed with error %d\n", GetLastError());
     /* be careful of races - don't return until hosting thread has terminated */
-    WaitForSingleObject(thread, INFINITE);
+    ok( !WaitForSingleObject(thread, 10000), "wait timed out\n" );
     CloseHandle(thread);
 }
 
@@ -843,7 +843,7 @@ static DWORD CALLBACK no_couninitialize_server_proc(LPVOID p)
 
     SetEvent(ncu_params->marshal_event);
 
-    WaitForSingleObject(ncu_params->unmarshal_event, INFINITE);
+    ok( !WaitForSingleObject(ncu_params->unmarshal_event, 10000), "wait timed out\n" );
 
     /* die without calling CoUninitialize */
 
@@ -872,7 +872,7 @@ static void test_no_couninitialize_server(void)
 
     thread = CreateThread(NULL, 0, no_couninitialize_server_proc, &ncu_params, 0, &tid);
 
-    WaitForSingleObject(ncu_params.marshal_event, INFINITE);
+    ok( !WaitForSingleObject(ncu_params.marshal_event, 10000), "wait timed out\n" );
     ok_more_than_one_lock();
 
     IStream_Seek(pStream, ullZero, STREAM_SEEK_SET, NULL);
@@ -883,7 +883,7 @@ static void test_no_couninitialize_server(void)
     ok_more_than_one_lock();
 
     SetEvent(ncu_params.unmarshal_event);
-    WaitForSingleObject(thread, INFINITE);
+    ok( !WaitForSingleObject(thread, 10000), "wait timed out\n" );
 
     ok_no_locks();
 
@@ -942,7 +942,7 @@ static void test_no_couninitialize_client(void)
 
     thread = CreateThread(NULL, 0, no_couninitialize_client_proc, &ncu_params, 0, &tid);
 
-    WaitForSingleObject(thread, INFINITE);
+    ok( !WaitForSingleObject(thread, 10000), "wait timed out\n" );
     CloseHandle(thread);
 
     ok_no_locks();
@@ -1109,7 +1109,7 @@ static DWORD CALLBACK weak_and_normal_marshal_thread_proc(void *p)
 
     SetEvent(data->hReadyEvent);
 
-    while (WAIT_OBJECT_0 + 1 == MsgWaitForMultipleObjects(1, &hQuitEvent, FALSE, INFINITE, QS_ALLINPUT))
+    while (WAIT_OBJECT_0 + 1 == MsgWaitForMultipleObjects(1, &hQuitEvent, FALSE, 10000, QS_ALLINPUT))
     {
         while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
             DispatchMessage(&msg);
@@ -1141,7 +1141,7 @@ static void test_tableweak_and_normal_marshal_and_unmarshal(void)
     ok_ole_success(hr, CreateStreamOnHGlobal);
 
     thread = CreateThread(NULL, 0, weak_and_normal_marshal_thread_proc, &data, 0, &tid);
-    WaitForSingleObject(data.hReadyEvent, INFINITE);
+    ok( !WaitForSingleObject(data.hReadyEvent, 10000), "wait timed out\n" );
     CloseHandle(data.hReadyEvent);
 
     ok_more_than_one_lock();
@@ -1170,7 +1170,7 @@ static void test_tableweak_and_normal_marshal_and_unmarshal(void)
     IStream_Release(data.pStreamNormal);
 
     SetEvent(data.hQuitEvent);
-    WaitForSingleObject(thread, INFINITE);
+    ok( !WaitForSingleObject(thread, 10000), "wait timed out\n" );
     CloseHandle(thread);
 }
 
@@ -1257,7 +1257,7 @@ static void test_lock_object_external(void)
     IStream_Seek(pStream, ullZero, STREAM_SEEK_SET, NULL);
     hr = CoReleaseMarshalData(pStream);
     ok_ole_success(hr, CoReleaseMarshalData);
-    IStream_Release(pStream);
+    IStream_Seek(pStream, ullZero, STREAM_SEEK_SET, NULL);
 
     ok_more_than_one_lock();
 
@@ -1268,6 +1268,39 @@ static void test_lock_object_external(void)
     CoLockObjectExternal((IUnknown*)&Test_ClassFactory, FALSE, TRUE);
 
     ok_no_locks();
+
+    /* test CoLockObjectExternal releases reference to object with
+     * fLastUnlockReleases as TRUE and there are only strong references on
+     * the object */
+    CoLockObjectExternal((IUnknown*)&Test_ClassFactory, TRUE, FALSE);
+
+    ok_more_than_one_lock();
+
+    CoLockObjectExternal((IUnknown*)&Test_ClassFactory, FALSE, FALSE);
+
+    ok_no_locks();
+
+    /* test CoLockObjectExternal doesn't release the last reference to an
+     * object with fLastUnlockReleases as TRUE and there is a weak reference
+     * on the object */
+    hr = CoMarshalInterface(pStream, &IID_IClassFactory, (IUnknown*)&Test_ClassFactory, MSHCTX_INPROC, NULL, MSHLFLAGS_TABLEWEAK);
+    ok_ole_success(hr, CoMarshalInterface);
+
+    ok_more_than_one_lock();
+
+    CoLockObjectExternal((IUnknown*)&Test_ClassFactory, TRUE, FALSE);
+
+    ok_more_than_one_lock();
+
+    CoLockObjectExternal((IUnknown*)&Test_ClassFactory, FALSE, FALSE);
+
+    ok_more_than_one_lock();
+
+    CoDisconnectObject((IUnknown*)&Test_ClassFactory, 0);
+
+    ok_no_locks();
+
+    IStream_Release(pStream);
 }
 
 /* tests disconnecting stubs */
@@ -1449,7 +1482,7 @@ static void test_proxy_used_in_wrong_thread(void)
     /* create a thread that we can misbehave in */
     thread = CreateThread(NULL, 0, bad_thread_proc, pProxy, 0, &tid2);
 
-    WaitForSingleObject(thread, INFINITE);
+    ok( !WaitForSingleObject(thread, 10000), "wait timed out\n" );
     CloseHandle(thread);
 
     /* do release statement on Win9x that we should have done above */
@@ -1799,6 +1832,7 @@ static HRESULT WINAPI TestRE_IClassFactory_CreateInstance(
         BOOL ret = SendMessageTimeout(hwnd_app, WM_NULL, 0, 0, SMTO_BLOCK, 5000, &res);
         ok(ret, "Timed out sending a message to originating window during RPC call\n");
     }
+    *ppvObj = NULL;
     return S_FALSE;
 }
 
@@ -2071,7 +2105,7 @@ static void test_freethreadedmarshaldata(IStream *pStream, MSHCTX mshctx, void *
     {
         DWORD expected_size = round_global_size(3*sizeof(DWORD) + sizeof(GUID));
         ok(size == expected_size ||
-           broken(size == round_global_size(2*sizeof(DWORD))) /* Win9x & NT4 */,
+           broken(size == (2*sizeof(DWORD))) /* Win9x & NT4 */,
            "size should have been %d instead of %d\n", expected_size, size);
 
         ok(*(DWORD *)marshal_data == mshlflags, "expected 0x%x, but got 0x%x for mshctx\n", mshlflags, *(DWORD *)marshal_data);
@@ -2259,7 +2293,7 @@ static void reg_unreg_wine_test_class(BOOL Register)
     {
         error = RegCreateKeyEx(HKEY_CLASSES_ROOT, buffer, 0, NULL, 0, KEY_SET_VALUE, NULL, &hkey, &dwDisposition);
         ok(error == ERROR_SUCCESS, "RegCreateKeyEx failed with error %d\n", error);
-        error = RegSetValueEx(hkey, NULL, 0, REG_SZ, (const unsigned char *)"ole32.dll", strlen("ole32.dll") + 1);
+        error = RegSetValueEx(hkey, NULL, 0, REG_SZ, (const unsigned char *)"\"ole32.dll\"", strlen("\"ole32.dll\"") + 1);
         ok(error == ERROR_SUCCESS, "RegSetValueEx failed with error %d\n", error);
         RegCloseKey(hkey);
     }
@@ -2280,7 +2314,6 @@ static void test_inproc_handler(void)
     reg_unreg_wine_test_class(TRUE);
 
     hr = CoCreateInstance(&CLSID_WineTest, NULL, CLSCTX_INPROC_HANDLER, &IID_IUnknown, (void **)&pObject);
-    todo_wine
     ok_ole_success(hr, "CoCreateInstance");
 
     if (SUCCEEDED(hr))
@@ -2701,7 +2734,7 @@ static void test_local_server(void)
     ok(process != NULL, "couldn't start local server process, error was %d\n", GetLastError());
 
     ready_event = CreateEvent(NULL, FALSE, FALSE, "Wine COM Test Ready Event");
-    WaitForSingleObject(ready_event, INFINITE);
+    ok( !WaitForSingleObject(ready_event, 10000), "wait timed out\n" );
     CloseHandle(ready_event);
 
     hr = CoCreateInstance(&CLSID_WineOOPTest, NULL, CLSCTX_LOCAL_SERVER, &IID_IClassFactory, (void **)&cf);
@@ -2781,13 +2814,13 @@ static void test_globalinterfacetable(void)
 	 * to exit before we can return */
 	thread = CreateThread(NULL, 0, get_global_interface_proc, &params, 0, &tid);
 
-	ret = MsgWaitForMultipleObjects(1, &thread, FALSE, INFINITE, QS_ALLINPUT);
+	ret = MsgWaitForMultipleObjects(1, &thread, FALSE, 10000, QS_ALLINPUT);
 	while (ret == WAIT_OBJECT_0 + 1)
 	{
 		MSG msg;
 		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
 			DispatchMessage(&msg);
-		ret = MsgWaitForMultipleObjects(1, &thread, FALSE, INFINITE, QS_ALLINPUT);
+		ret = MsgWaitForMultipleObjects(1, &thread, FALSE, 10000, QS_ALLINPUT);
 	}
 
 	CloseHandle(thread);

@@ -1556,6 +1556,45 @@ static void test_runnable(void)
     g_showRunnable = TRUE;
 }
 
+static HRESULT WINAPI Unknown_QueryInterface(IUnknown *iface, REFIID riid, void **ppv)
+{
+    *ppv = NULL;
+    if (IsEqualIID(riid, &IID_IUnknown)) *ppv = iface;
+    if (*ppv)
+    {
+        IUnknown_AddRef((IUnknown *)*ppv);
+        return S_OK;
+    }
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI Unknown_AddRef(IUnknown *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI Unknown_Release(IUnknown *iface)
+{
+    return 1;
+}
+
+static const IUnknownVtbl UnknownVtbl =
+{
+    Unknown_QueryInterface,
+    Unknown_AddRef,
+    Unknown_Release
+};
+
+static IUnknown Unknown2 = { &UnknownVtbl };
+
+static void test_OleLockRunning(void)
+{
+    HRESULT hr;
+
+    hr = OleLockRunning((LPUNKNOWN)&Unknown2, TRUE, FALSE);
+    ok(hr == S_OK, "OleLockRunning failed 0x%08x\n", hr);
+}
+
 START_TEST(ole2)
 {
     DWORD dwRegister;
@@ -1587,6 +1626,7 @@ START_TEST(ole2)
     test_data_cache();
     test_default_handler();
     test_runnable();
+    test_OleLockRunning();
 
     CoUninitialize();
 }

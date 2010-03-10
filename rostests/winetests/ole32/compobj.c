@@ -25,11 +25,12 @@
 
 #include "windef.h"
 #include "winbase.h"
+#define USE_COM_CONTEXT_DEF
+#include "initguid.h"
 #include "objbase.h"
 #include "shlguid.h"
 #include "urlmon.h" /* for CLSID_FileProtocol */
 
-#include "initguid.h"
 #include "ctxtcall.h"
 
 #include "wine/test.h"
@@ -39,6 +40,7 @@ HRESULT (WINAPI * pCoInitializeEx)(LPVOID lpReserved, DWORD dwCoInit);
 HRESULT (WINAPI * pCoGetObjectContext)(REFIID riid, LPVOID *ppv);
 HRESULT (WINAPI * pCoSwitchCallContext)(IUnknown *pObject, IUnknown **ppOldObject);
 HRESULT (WINAPI * pCoGetTreatAsClass)(REFCLSID clsidOld, LPCLSID pClsidNew);
+HRESULT (WINAPI * pCoGetContextToken)(ULONG_PTR *token);
 
 #define ok_ole_success(hr, func) ok(hr == S_OK, func " failed with error 0x%08x\n", hr)
 #define ok_more_than_one_lock() ok(cLocks > 0, "Number of locks should be > 0, but actually is %d\n", cLocks)
@@ -201,6 +203,13 @@ static void test_StringFromGUID2(void)
 {
   WCHAR str[50];
   int len;
+
+  /* invalid pointer */
+  SetLastError(0xdeadbeef);
+  len = StringFromGUID2(NULL,str,50);
+  ok(len == 0, "len: %d (expected 0)\n", len);
+  ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got %x\n", GetLastError());
+
   /* Test corner cases for buffer size */
   len = StringFromGUID2(&CLSID_StdFont,str,50);
   ok(len == 39, "len: %d (expected 39)\n", len);
@@ -231,7 +240,7 @@ static DWORD CALLBACK ole_initialize_thread(LPVOID pv)
     hr = pCoInitializeEx(NULL, COINIT_MULTITHREADED);
 
     SetEvent(info->wait);
-    WaitForSingleObject(info->stop, INFINITE);
+    WaitForSingleObject(info->stop, 10000);
 
     CoUninitialize();
     return hr;
@@ -252,7 +261,25 @@ static void test_CoCreateInstance(void)
     ok(pUnk == NULL, "CoCreateInstance should have changed the passed in pointer to NULL, instead of %p\n", pUnk);
 
     OleInitialize(NULL);
+
+    /* test errors returned for non-registered clsids */
+    hr = CoCreateInstance(&CLSID_non_existent, NULL, CLSCTX_INPROC_SERVER, &IID_IUnknown, (void **)&pUnk);
+    ok(hr == REGDB_E_CLASSNOTREG, "CoCreateInstance for non-registered inproc server should have returned REGDB_E_CLASSNOTREG instead of 0x%08x\n", hr);
+    hr = CoCreateInstance(&CLSID_non_existent, NULL, CLSCTX_INPROC_HANDLER, &IID_IUnknown, (void **)&pUnk);
+    ok(hr == REGDB_E_CLASSNOTREG, "CoCreateInstance for non-registered inproc handler should have returned REGDB_E_CLASSNOTREG instead of 0x%08x\n", hr);
+    hr = CoCreateInstance(&CLSID_non_existent, NULL, CLSCTX_LOCAL_SERVER, &IID_IUnknown, (void **)&pUnk);
+    ok(hr == REGDB_E_CLASSNOTREG, "CoCreateInstance for non-registered local server should have returned REGDB_E_CLASSNOTREG instead of 0x%08x\n", hr);
+    hr = CoCreateInstance(&CLSID_non_existent, NULL, CLSCTX_REMOTE_SERVER, &IID_IUnknown, (void **)&pUnk);
+    ok(hr == REGDB_E_CLASSNOTREG, "CoCreateInstance for non-registered remote server should have returned REGDB_E_CLASSNOTREG instead of 0x%08x\n", hr);
+
     hr = CoCreateInstance(rclsid, NULL, CLSCTX_INPROC_SERVER, &IID_IUnknown, (void **)&pUnk);
+    if(hr == REGDB_E_CLASSNOTREG)
+    {
+        skip("IE not installed so can't test CoCreateInstance\n");
+        OleUninitialize();
+        return;
+    }
+
     ok_ole_success(hr, "CoCreateInstance");
     if(pUnk) IUnknown_Release(pUnk);
     OleUninitialize();
@@ -272,7 +299,7 @@ static void test_CoCreateInstance(void)
     thread = CreateThread(NULL, 0, ole_initialize_thread, &info, 0, &tid);
     ok(thread != NULL, "CreateThread failed with error %d\n", GetLastError());
 
-    WaitForSingleObject(info.wait, INFINITE);
+    ok( !WaitForSingleObject(info.wait, 10000 ), "wait timed out\n" );
 
     pUnk = (IUnknown *)0xdeadbeef;
     hr = CoCreateInstance(rclsid, NULL, CLSCTX_INPROC_SERVER, &IID_IUnknown, (void **)&pUnk);
@@ -280,7 +307,7 @@ static void test_CoCreateInstance(void)
     if (pUnk) IUnknown_Release(pUnk);
 
     SetEvent(info.stop);
-    WaitForSingleObject(thread, INFINITE);
+    ok( !WaitForSingleObject(thread, 10000), "wait timed out\n" );
 
     GetExitCodeThread(thread, &exitcode);
     hr = exitcode;
@@ -321,15 +348,20 @@ static void test_CoGetClassObject(void)
     thread = CreateThread(NULL, 0, ole_initialize_thread, &info, 0, &tid);
     ok(thread != NULL, "CreateThread failed with error %d\n", GetLastError());
 
-    WaitForSingleObject(info.wait, INFINITE);
+    ok( !WaitForSingleObject(info.wait, 10000), "wait timed out\n" );
 
     pUnk = (IUnknown *)0xdeadbeef;
     hr = CoGetClassObject(rclsid, CLSCTX_INPROC_SERVER, NULL, &IID_IUnknown, (void **)&pUnk);
-    ok(hr == S_OK, "CoGetClassObject should have returned S_OK instead of 0x%08x\n", hr);
-    if (pUnk) IUnknown_Release(pUnk);
+    if(hr == REGDB_E_CLASSNOTREG)
+        skip("IE not installed so can't test CoGetClassObject\n");
+    else
+    {
+        ok(hr == S_OK, "CoGetClassObject should have returned S_OK instead of 0x%08x\n", hr);
+        if (pUnk) IUnknown_Release(pUnk);
+    }
 
     SetEvent(info.stop);
-    WaitForSingleObject(thread, INFINITE);
+    ok( !WaitForSingleObject(thread, 10000), "wait timed out\n" );
 
     GetExitCodeThread(thread, &exitcode);
     hr = exitcode;
@@ -816,6 +848,14 @@ static void test_CoRegisterClassObject(void)
     hr = CoRevokeClassObject(cookie);
     ok_ole_success(hr, "CoRevokeClassObject");
 
+    /* test whether an object that doesn't support IClassFactory can be
+     * registered for CLSCTX_LOCAL_SERVER */
+    hr = CoRegisterClassObject(&CLSID_WineOOPTest, &Test_Unknown,
+                               CLSCTX_LOCAL_SERVER, REGCLS_SINGLEUSE, &cookie);
+    ok_ole_success(hr, "CoRegisterClassObject");
+    hr = CoRevokeClassObject(cookie);
+    ok_ole_success(hr, "CoRevokeClassObject");
+
     /* test whether registered class becomes invalid when apartment is destroyed */
     hr = CoRegisterClassObject(&CLSID_WineOOPTest, (IUnknown *)&Test_ClassFactory,
                                CLSCTX_INPROC_SERVER, REGCLS_SINGLEUSE, &cookie);
@@ -935,7 +975,7 @@ static void test_registered_object_thread_affinity(void)
 
     thread = CreateThread(NULL, 0, get_class_object_thread, (LPVOID)CLSCTX_INPROC_SERVER, 0, &tid);
     ok(thread != NULL, "CreateThread failed with error %d\n", GetLastError());
-    WaitForSingleObject(thread, INFINITE);
+    ok( !WaitForSingleObject(thread, 10000), "wait timed out\n" );
     GetExitCodeThread(thread, &exitcode);
     hr = exitcode;
     ok(hr == REGDB_E_CLASSNOTREG, "CoGetClassObject on inproc object "
@@ -948,7 +988,7 @@ static void test_registered_object_thread_affinity(void)
 
     thread = CreateThread(NULL, 0, register_class_object_thread, NULL, 0, &tid);
     ok(thread != NULL, "CreateThread failed with error %d\n", GetLastError());
-    WaitForSingleObject(thread, INFINITE);
+    ok ( !WaitForSingleObject(thread, 10000), "wait timed out\n" );
     GetExitCodeThread(thread, &exitcode);
     hr = exitcode;
     ok(hr == S_OK, "CoRegisterClassObject with same CLSID but in different thread should return S_OK instead of 0x%08x\n", hr);
@@ -964,7 +1004,7 @@ static void test_registered_object_thread_affinity(void)
 
     thread = CreateThread(NULL, 0, get_class_object_proxy_thread, (LPVOID)CLSCTX_LOCAL_SERVER, 0, &tid);
     ok(thread != NULL, "CreateThread failed with error %d\n", GetLastError());
-    while (MsgWaitForMultipleObjects(1, &thread, FALSE, INFINITE, QS_ALLINPUT) == WAIT_OBJECT_0 + 1)
+    while (MsgWaitForMultipleObjects(1, &thread, FALSE, 10000, QS_ALLINPUT) == WAIT_OBJECT_0 + 1)
     {
         MSG msg;
         while (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE))
@@ -985,7 +1025,7 @@ static void test_registered_object_thread_affinity(void)
 
     thread = CreateThread(NULL, 0, revoke_class_object_thread, (LPVOID)(DWORD_PTR)cookie, 0, &tid);
     ok(thread != NULL, "CreateThread failed with error %d\n", GetLastError());
-    WaitForSingleObject(thread, INFINITE);
+    ok( !WaitForSingleObject(thread, 10000), "wait timed out\n" );
     GetExitCodeThread(thread, &exitcode);
     hr = exitcode;
     ok(hr == RPC_E_WRONG_THREAD, "CoRevokeClassObject called from different "
@@ -993,7 +1033,7 @@ static void test_registered_object_thread_affinity(void)
 
     thread = CreateThread(NULL, 0, register_class_object_thread, NULL, 0, &tid);
     ok(thread != NULL, "CreateThread failed with error %d\n", GetLastError());
-    WaitForSingleObject(thread, INFINITE);
+    ok( !WaitForSingleObject(thread, 10000), "wait timed out\n" );
     GetExitCodeThread(thread, &exitcode);
     hr = exitcode;
     ok(hr == S_OK, "CoRegisterClassObject with same CLSID but in different "
@@ -1030,7 +1070,7 @@ static void test_CoFreeUnusedLibraries(void)
     hr = CoCreateInstance(&CLSID_FileProtocol, NULL, CLSCTX_INPROC_SERVER, &IID_IInternetProtocol, (void **)&pUnk);
     if (hr == REGDB_E_CLASSNOTREG)
     {
-        trace("IE not installed so can't run CoFreeUnusedLibraries test\n");
+        skip("IE not installed so can't run CoFreeUnusedLibraries test\n");
         CoUninitialize();
         return;
     }
@@ -1047,7 +1087,7 @@ static void test_CoFreeUnusedLibraries(void)
     ok(is_module_loaded("urlmon.dll"), "urlmon.dll should be loaded\n");
 
     thread = CreateThread(NULL, 0, free_libraries_thread, NULL, 0, &tid);
-    WaitForSingleObject(thread, INFINITE);
+    ok( !WaitForSingleObject(thread, 10000), "wait timed out\n" );
     CloseHandle(thread);
 
     ok(is_module_loaded("urlmon.dll"), "urlmon.dll should be loaded\n");
@@ -1065,8 +1105,12 @@ static void test_CoGetObjectContext(void)
     ULONG refs;
     IComThreadingInfo *pComThreadingInfo;
     IContextCallback *pContextCallback;
+    IObjContext *pObjContext;
     APTTYPE apttype;
     THDTYPE thdtype;
+    struct info info;
+    HANDLE thread;
+    DWORD tid, exitcode;
 
     if (!pCoGetObjectContext)
     {
@@ -1077,6 +1121,36 @@ static void test_CoGetObjectContext(void)
     hr = pCoGetObjectContext(&IID_IComThreadingInfo, (void **)&pComThreadingInfo);
     ok(hr == CO_E_NOTINITIALIZED, "CoGetObjectContext should have returned CO_E_NOTINITIALIZED instead of 0x%08x\n", hr);
     ok(pComThreadingInfo == NULL, "pComThreadingInfo should have been set to NULL\n");
+
+    /* show that COM doesn't have to be initialized for multi-threaded apartments if another
+       thread has already done so */
+
+    info.wait = CreateEvent(NULL, TRUE, FALSE, NULL);
+    ok(info.wait != NULL, "CreateEvent failed with error %d\n", GetLastError());
+
+    info.stop = CreateEvent(NULL, TRUE, FALSE, NULL);
+    ok(info.stop != NULL, "CreateEvent failed with error %d\n", GetLastError());
+
+    thread = CreateThread(NULL, 0, ole_initialize_thread, &info, 0, &tid);
+    ok(thread != NULL, "CreateThread failed with error %d\n", GetLastError());
+
+    ok( !WaitForSingleObject(info.wait, 10000), "wait timed out\n" );
+
+    pComThreadingInfo = NULL;
+    hr = pCoGetObjectContext(&IID_IComThreadingInfo, (void **)&pComThreadingInfo);
+    ok(hr == S_OK, "Expected S_OK, got 0x%08x\n", hr);
+    IComThreadingInfo_Release(pComThreadingInfo);
+
+    SetEvent(info.stop);
+    ok( !WaitForSingleObject(thread, 10000), "wait timed out\n" );
+
+    GetExitCodeThread(thread, &exitcode);
+    hr = exitcode;
+    ok(hr == S_OK, "thread should have returned S_OK instead of 0x%08x\n", hr);
+
+    CloseHandle(thread);
+    CloseHandle(info.wait);
+    CloseHandle(info.stop);
 
     pCoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 
@@ -1129,6 +1203,12 @@ static void test_CoGetObjectContext(void)
         refs = IContextCallback_Release(pContextCallback);
         ok(refs == 0, "pContextCallback should have 0 refs instead of %d refs\n", refs);
     }
+
+    hr = pCoGetObjectContext(&IID_IObjContext, (void **)&pObjContext);
+    ok_ole_success(hr, "CoGetObjectContext");
+
+    refs = IObjContext_Release(pObjContext);
+    ok(refs == 0, "pObjContext should have 0 refs instead of %d refs\n", refs);
 
     CoUninitialize();
 }
@@ -1233,6 +1313,101 @@ static void test_CoGetCallContext(void)
     CoUninitialize();
 }
 
+static void test_CoGetContextToken(void)
+{
+    HRESULT hr;
+    ULONG refs;
+    ULONG_PTR token;
+    IObjContext *ctx;
+    struct info info;
+    HANDLE thread;
+    DWORD tid, exitcode;
+
+    if (!pCoGetContextToken)
+    {
+        win_skip("CoGetContextToken not present\n");
+        return;
+    }
+
+    token = 0xdeadbeef;
+    hr = pCoGetContextToken(&token);
+    ok(hr == CO_E_NOTINITIALIZED, "Expected CO_E_NOTINITIALIZED, got 0x%08x\n", hr);
+    ok(token == 0xdeadbeef, "Expected 0, got 0x%lx\n", token);
+
+    /* show that COM doesn't have to be initialized for multi-threaded apartments if another
+       thread has already done so */
+
+    info.wait = CreateEvent(NULL, TRUE, FALSE, NULL);
+    ok(info.wait != NULL, "CreateEvent failed with error %d\n", GetLastError());
+
+    info.stop = CreateEvent(NULL, TRUE, FALSE, NULL);
+    ok(info.stop != NULL, "CreateEvent failed with error %d\n", GetLastError());
+
+    thread = CreateThread(NULL, 0, ole_initialize_thread, &info, 0, &tid);
+    ok(thread != NULL, "CreateThread failed with error %d\n", GetLastError());
+
+    ok( !WaitForSingleObject(info.wait, 10000), "wait timed out\n" );
+
+    token = 0;
+    hr = pCoGetContextToken(&token);
+    ok(hr == S_OK, "Expected S_OK, got 0x%08x\n", hr);
+
+    SetEvent(info.stop);
+    ok( !WaitForSingleObject(thread, 10000), "wait timed out\n" );
+
+    GetExitCodeThread(thread, &exitcode);
+    hr = exitcode;
+    ok(hr == S_OK, "thread should have returned S_OK instead of 0x%08x\n", hr);
+
+    CloseHandle(thread);
+    CloseHandle(info.wait);
+    CloseHandle(info.stop);
+
+    CoInitialize(NULL);
+
+    hr = pCoGetContextToken(NULL);
+    ok(hr == E_POINTER, "Expected E_POINTER, got 0x%08x\n", hr);
+
+    token = 0;
+    hr = pCoGetContextToken(&token);
+    ok(hr == S_OK, "Expected S_OK, got 0x%08x\n", hr);
+    ok(token, "Expected token != 0\n");
+
+    refs = IUnknown_AddRef((IUnknown *)token);
+    todo_wine ok(refs == 1, "Expected 1, got %u\n", refs);
+
+    hr = pCoGetObjectContext(&IID_IObjContext, (void **)&ctx);
+    ok(hr == S_OK, "Expected S_OK, got 0x%08x\n", hr);
+    todo_wine ok(ctx == (IObjContext *)token, "Expected interface pointers to be the same\n");
+
+    refs = IUnknown_AddRef((IUnknown *)ctx);
+    todo_wine ok(refs == 3, "Expected 3, got %u\n", refs);
+
+    refs = IUnknown_Release((IUnknown *)ctx);
+    todo_wine ok(refs == 2, "Expected 2, got %u\n", refs);
+
+    refs = IUnknown_Release((IUnknown *)token);
+    ok(refs == 1, "Expected 1, got %u\n", refs);
+
+    /* CoGetContextToken does not add a reference */
+    token = 0;
+    hr = pCoGetContextToken(&token);
+    ok(hr == S_OK, "Expected S_OK, got 0x%08x\n", hr);
+    ok(token, "Expected token != 0\n");
+    todo_wine ok(ctx == (IObjContext *)token, "Expected interface pointers to be the same\n");
+
+    refs = IUnknown_AddRef((IUnknown *)ctx);
+    ok(refs == 2, "Expected 1, got %u\n", refs);
+
+    refs = IUnknown_Release((IUnknown *)ctx);
+    ok(refs == 1, "Expected 0, got %u\n", refs);
+
+    refs = IUnknown_Release((IUnknown *)ctx);
+    ok(refs == 0, "Expected 0, got %u\n", refs);
+
+    CoUninitialize();
+}
+
 static void test_CoGetTreatAsClass(void)
 {
     HRESULT hr;
@@ -1259,7 +1434,7 @@ static void test_CoInitializeEx(void)
     /* Calling OleInitialize for the first time should yield S_OK even with
      * apartment already initialized by previous CoInitialize(Ex) calls. */
     hr = OleInitialize(NULL);
-    todo_wine ok(hr == S_OK, "OleInitialize failed with error 0x%08x\n", hr);
+    ok(hr == S_OK, "OleInitialize failed with error 0x%08x\n", hr);
 
     /* Subsequent calls to OleInitialize should return S_FALSE */
     hr = OleInitialize(NULL);
@@ -1276,6 +1451,7 @@ START_TEST(compobj)
     pCoGetObjectContext = (void*)GetProcAddress(hOle32, "CoGetObjectContext");
     pCoSwitchCallContext = (void*)GetProcAddress(hOle32, "CoSwitchCallContext");
     pCoGetTreatAsClass = (void*)GetProcAddress(hOle32,"CoGetTreatAsClass");
+    pCoGetContextToken = (void*)GetProcAddress(hOle32, "CoGetContextToken");
     if (!(pCoInitializeEx = (void*)GetProcAddress(hOle32, "CoInitializeEx")))
     {
         trace("You need DCOM95 installed to run this test\n");
@@ -1301,6 +1477,7 @@ START_TEST(compobj)
     test_CoFreeUnusedLibraries();
     test_CoGetObjectContext();
     test_CoGetCallContext();
+    test_CoGetContextToken();
     test_CoGetTreatAsClass();
     test_CoInitializeEx();
 }

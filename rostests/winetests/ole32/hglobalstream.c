@@ -75,6 +75,157 @@ static void test_streamonhglobal(IStream *pStream)
     hr = IStream_SetSize(pStream, ull);
     ok_ole_success(hr, "IStream_SetSize");
 
+    /* IStream_Seek -- NULL position argument */
+    ll.u.HighPart = 0;
+    ll.u.LowPart = 0;
+    hr = IStream_Seek(pStream, ll, STREAM_SEEK_CUR, NULL);
+    ok_ole_success(hr, "IStream_Seek");
+
+    /* IStream_Seek -- valid position argument (seek from current position) */
+    ull.u.HighPart = 0xCAFECAFE;
+    ull.u.LowPart = 0xCAFECAFE;
+    ll.u.HighPart = 0;
+    ll.u.LowPart = 0;
+    hr = IStream_Seek(pStream, ll, STREAM_SEEK_CUR, &ull);
+    ok_ole_success(hr, "IStream_Seek");
+    ok(ull.u.LowPart == sizeof(data), "LowPart set to %d\n", ull.u.LowPart);
+    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %d\n", ull.u.HighPart);
+
+    /* IStream_Seek -- invalid seek argument */
+    ull.u.HighPart = 0xCAFECAFE;
+    ull.u.LowPart = 0xCAFECAFE;
+    ll.u.HighPart = 0;
+    ll.u.LowPart = 123;
+    hr = IStream_Seek(pStream, ll, STREAM_SEEK_END+1, &ull);
+    ok(hr == STG_E_SEEKERROR, "IStream_Seek should have returned STG_E_SEEKERROR instead of 0x%08x\n", hr);
+    ok(ull.u.LowPart == sizeof(data), "LowPart set to %d\n", ull.u.LowPart);
+    ok(ull.u.HighPart == 0, "should not have changed HighPart, got %d\n", ull.u.HighPart);
+
+    /* IStream_Seek -- valid position argument (seek to beginning) */
+    ull.u.HighPart = 0xCAFECAFE;
+    ull.u.LowPart = 0xCAFECAFE;
+    ll.u.HighPart = 0;
+    ll.u.LowPart = 0;
+    hr = IStream_Seek(pStream, ll, STREAM_SEEK_SET, &ull);
+    ok_ole_success(hr, "IStream_Seek");
+    ok(ull.u.LowPart == 0, "should have set LowPart to 0 instead of %d\n", ull.u.LowPart);
+    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %d\n", ull.u.HighPart);
+
+    /* IStream_Seek -- valid position argument (seek to end) */
+    ull.u.HighPart = 0xCAFECAFE;
+    ull.u.LowPart = 0xCAFECAFE;
+    ll.u.HighPart = 0;
+    ll.u.LowPart = 0;
+    hr = IStream_Seek(pStream, ll, STREAM_SEEK_END, &ull);
+    ok_ole_success(hr, "IStream_Seek");
+    ok(ull.u.LowPart == 0, "should have set LowPart to 0 instead of %d\n", ull.u.LowPart);
+    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %d\n", ull.u.HighPart);
+
+    /* IStream_Seek -- ignore HighPart in the move value (seek from current position) */
+    ll.u.HighPart = 0;
+    ll.u.LowPart = sizeof(data);
+    hr = IStream_Seek(pStream, ll, STREAM_SEEK_SET, &ull);
+    ok_ole_success(hr, "IStream_Seek");
+
+    ull.u.HighPart = 0xCAFECAFE;
+    ull.u.LowPart = 0xCAFECAFE;
+    ll.u.HighPart = -1;
+    ll.u.LowPart = 0;
+    hr = IStream_Seek(pStream, ll, STREAM_SEEK_CUR, &ull);
+    ok_ole_success(hr, "IStream_Seek");
+    ok(ull.u.LowPart == sizeof(data), "LowPart set to %d\n", ull.u.LowPart);
+    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %d\n", ull.u.HighPart);
+
+    /* IStream_Seek -- ignore HighPart in the move value (seek to beginning) */
+    ll.u.HighPart = 0;
+    ll.u.LowPart = sizeof(data);
+    hr = IStream_Seek(pStream, ll, STREAM_SEEK_SET, &ull);
+    ok_ole_success(hr, "IStream_Seek");
+
+    ull.u.HighPart = 0xCAFECAFE;
+    ull.u.LowPart = 0xCAFECAFE;
+    ll.u.HighPart = -1;
+    ll.u.LowPart = 0;
+    hr = IStream_Seek(pStream, ll, STREAM_SEEK_SET, &ull);
+    ok_ole_success(hr, "IStream_Seek");
+    ok(ull.u.LowPart == 0, "should have set LowPart to 0 instead of %d\n", ull.u.LowPart);
+    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %d\n", ull.u.HighPart);
+
+    /* IStream_Seek -- invalid LowPart value (seek from current position) */
+    ll.u.HighPart = 0;
+    ll.u.LowPart = sizeof(data);
+    hr = IStream_Seek(pStream, ll, STREAM_SEEK_SET, &ull);
+    ok_ole_success(hr, "IStream_Seek");
+
+    ull.u.HighPart = 0xCAFECAFE;
+    ull.u.LowPart = 0xCAFECAFE;
+    ll.u.HighPart = 0;
+    ll.u.LowPart = 0x80000000;
+    hr = IStream_Seek(pStream, ll, STREAM_SEEK_CUR, &ull);
+    ok(hr == STG_E_SEEKERROR, "IStream_Seek should have returned STG_E_SEEKERROR instead of 0x%08x\n", hr);
+    ok(ull.u.LowPart == sizeof(data), "LowPart set to %d\n", ull.u.LowPart);
+    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %d\n", ull.u.HighPart);
+
+    /* IStream_Seek -- invalid LowPart value (seek to beginning) */
+    ll.u.HighPart = 0;
+    ll.u.LowPart = sizeof(data);
+    hr = IStream_Seek(pStream, ll, STREAM_SEEK_SET, &ull);
+    ok_ole_success(hr, "IStream_Seek");
+
+    ull.u.HighPart = 0xCAFECAFE;
+    ull.u.LowPart = 0xCAFECAFE;
+    ll.u.HighPart = 0;
+    ll.u.LowPart = 0x80000000;
+    hr = IStream_Seek(pStream, ll, STREAM_SEEK_SET, &ull);
+    ok(hr == STG_E_SEEKERROR, "IStream_Seek should have returned STG_E_SEEKERROR instead of 0x%08x\n", hr);
+    ok(ull.u.LowPart == sizeof(data), "LowPart set to %d\n", ull.u.LowPart);
+    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %d\n", ull.u.HighPart);
+
+    /* IStream_Seek -- valid LowPart value (seek to beginning) */
+    ull.u.HighPart = 0xCAFECAFE;
+    ull.u.LowPart = 0xCAFECAFE;
+    ll.u.HighPart = 0;
+    ll.u.LowPart = 0x7FFFFFFF;
+    hr = IStream_Seek(pStream, ll, STREAM_SEEK_SET, &ull);
+    ok_ole_success(hr, "IStream_Seek");
+    ok(ull.u.LowPart == 0x7FFFFFFF, "should have set LowPart to 0x7FFFFFFF instead of %08x\n", ull.u.LowPart);
+    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %d\n", ull.u.HighPart);
+
+    /* IStream_Seek -- valid LowPart value (seek from current position) */
+    ll.u.HighPart = 0;
+    ll.u.LowPart = 0;
+    hr = IStream_Seek(pStream, ll, STREAM_SEEK_SET, &ull);
+    ok_ole_success(hr, "IStream_Seek");
+
+    ull.u.HighPart = 0xCAFECAFE;
+    ull.u.LowPart = 0xCAFECAFE;
+    ll.u.HighPart = 0;
+    ll.u.LowPart = 0x7FFFFFFF;
+    hr = IStream_Seek(pStream, ll, STREAM_SEEK_CUR, &ull);
+    ok_ole_success(hr, "IStream_Seek");
+    ok(ull.u.LowPart == 0x7FFFFFFF, "should have set LowPart to 0x7FFFFFFF instead of %08x\n", ull.u.LowPart);
+    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %d\n", ull.u.HighPart);
+
+    /* IStream_Seek -- second seek allows you to go past 0x7FFFFFFF size */
+    ull.u.HighPart = 0xCAFECAFE;
+    ull.u.LowPart = 0xCAFECAFE;
+    ll.u.HighPart = 0;
+    ll.u.LowPart = 9;
+    hr = IStream_Seek(pStream, ll, STREAM_SEEK_CUR, &ull);
+    ok_ole_success(hr, "IStream_Seek");
+    ok(ull.u.LowPart == 0x80000008, "should have set LowPart to 0x80000008 instead of %08x\n", ull.u.LowPart);
+    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %d\n", ull.u.HighPart);
+
+    /* IStream_Seek -- seek wraps position/size on integer overflow */
+    ull.u.HighPart = 0xCAFECAFE;
+    ull.u.LowPart = 0xCAFECAFE;
+    ll.u.HighPart = 0;
+    ll.u.LowPart = 0x7FFFFFFF;
+    hr = IStream_Seek(pStream, ll, STREAM_SEEK_CUR, &ull);
+    ok_ole_success(hr, "IStream_Seek");
+    ok(ull.u.LowPart == 0x00000007, "should have set LowPart to 0x00000007 instead of %08x\n", ull.u.LowPart);
+    ok(ull.u.HighPart == 0, "should have set HighPart to 0 instead of %d\n", ull.u.HighPart);
+
     hr = IStream_Commit(pStream, STGC_DEFAULT);
     ok_ole_success(hr, "IStream_Commit");
 

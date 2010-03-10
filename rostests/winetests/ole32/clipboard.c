@@ -477,8 +477,6 @@ static void test_get_clipboard(void)
     hr = IDataObject_QueryGetData(data_obj, &fmtetc);
     ok(hr == DV_E_FORMATETC || broken(hr == S_OK),
         "IDataObject_QueryGetData should have failed with DV_E_FORMATETC instead of 0x%08x\n", hr);
-    if (hr == S_OK)
-        ReleaseStgMedium(&stgmedium);
 
     InitFormatEtc(fmtetc, CF_TEXT, TYMED_HGLOBAL);
     fmtetc.cfFormat = CF_RIFF;
@@ -499,19 +497,19 @@ static void test_get_clipboard(void)
     InitFormatEtc(fmtetc, CF_TEXT, TYMED_HGLOBAL);
     hr = IDataObject_GetData(data_obj, &fmtetc, &stgmedium);
     ok(hr == S_OK, "IDataObject_GetData failed with error 0x%08x\n", hr);
-    ReleaseStgMedium(&stgmedium);
+    if(SUCCEEDED(hr)) ReleaseStgMedium(&stgmedium);
 
     InitFormatEtc(fmtetc, CF_TEXT, TYMED_HGLOBAL);
     fmtetc.dwAspect = 0xdeadbeef;
     hr = IDataObject_GetData(data_obj, &fmtetc, &stgmedium);
     ok(hr == S_OK, "IDataObject_GetData failed with error 0x%08x\n", hr);
-    ReleaseStgMedium(&stgmedium);
+    if(SUCCEEDED(hr)) ReleaseStgMedium(&stgmedium);
 
     InitFormatEtc(fmtetc, CF_TEXT, TYMED_HGLOBAL);
     fmtetc.dwAspect = DVASPECT_THUMBNAIL;
     hr = IDataObject_GetData(data_obj, &fmtetc, &stgmedium);
     ok(hr == S_OK, "IDataObject_GetData failed with error 0x%08x\n", hr);
-    ReleaseStgMedium(&stgmedium);
+    if(SUCCEEDED(hr)) ReleaseStgMedium(&stgmedium);
 
     InitFormatEtc(fmtetc, CF_TEXT, TYMED_HGLOBAL);
     fmtetc.lindex = 256;
@@ -528,11 +526,13 @@ static void test_get_clipboard(void)
     fmtetc.cfFormat = CF_RIFF;
     hr = IDataObject_GetData(data_obj, &fmtetc, &stgmedium);
     ok(hr == DV_E_FORMATETC, "IDataObject_GetData should have failed with DV_E_FORMATETC instead of 0x%08x\n", hr);
+    if(SUCCEEDED(hr)) ReleaseStgMedium(&stgmedium);
 
     InitFormatEtc(fmtetc, CF_TEXT, TYMED_HGLOBAL);
     fmtetc.tymed = TYMED_FILE;
     hr = IDataObject_GetData(data_obj, &fmtetc, &stgmedium);
     ok(hr == DV_E_TYMED, "IDataObject_GetData should have failed with DV_E_TYMED instead of 0x%08x\n", hr);
+    if(SUCCEEDED(hr)) ReleaseStgMedium(&stgmedium);
 
     ok(DataObjectImpl_GetData_calls == 6, "DataObjectImpl_GetData should have been called 6 times instead of %d times\n", DataObjectImpl_GetData_calls);
 
@@ -735,7 +735,7 @@ static void test_cf_dataobject(IDataObject *data)
                             DVTARGETDEVICE *target;
 
                             ok(fmt_ptr->fmt.ptd != NULL, "target device offset zero\n");
-                            target = (DVTARGETDEVICE*)((char*)priv + (DWORD)fmt_ptr->fmt.ptd);
+                            target = (DVTARGETDEVICE*)((char*)priv + (DWORD_PTR)fmt_ptr->fmt.ptd);
                             ok(!memcmp(target, fmt.ptd, fmt.ptd->tdSize), "target devices differ\n");
                             CoTaskMemFree(fmt.ptd);
                         }
@@ -967,7 +967,7 @@ static void test_consumer_refs(void)
     hr = IDataObject_GetData(get1, &fmt, &med);
     ok(hr == S_OK, "got %08x\n", hr);
     ok(DataObjectImpl_GetData_calls == 0, "GetData called\n");
-    ReleaseStgMedium(&med);
+    if(SUCCEEDED(hr)) ReleaseStgMedium(&med);
 
     hr = OleGetClipboard(&get2);
     ok(hr == S_OK, "got %08x\n", hr);
@@ -1004,7 +1004,7 @@ static void test_consumer_refs(void)
     hr = IDataObject_GetData(get1, &fmt, &med);
     ok(hr == S_OK, "got %08x\n", hr);
     ok(DataObjectImpl_GetData_calls == 1, "GetData not called\n");
-    ReleaseStgMedium(&med);
+    if(SUCCEEDED(hr)) ReleaseStgMedium(&med);
     refs = count_refs(src);
     ok(refs == old_refs + 1, "%d %d\n", refs, old_refs);
 
@@ -1014,7 +1014,7 @@ static void test_consumer_refs(void)
     hr = IDataObject_GetData(get1, &fmt, &med);
     ok(hr == S_OK, "got %08x\n", hr);
     ok(DataObjectImpl_GetData_calls == 1, "GetData not called\n");
-    ReleaseStgMedium(&med);
+    if(SUCCEEDED(hr)) ReleaseStgMedium(&med);
 
     refs = count_refs(src);
     ok(refs == 2, "%d\n", refs);
@@ -1047,7 +1047,7 @@ static void test_consumer_refs(void)
     hr = IDataObject_GetData(get1, &fmt, &med);
     ok(hr == S_OK, "got %08x\n", hr);
     ok(DataObjectImpl_GetData_calls == 1, "GetData not called\n");
-    ReleaseStgMedium(&med);
+    if(SUCCEEDED(hr)) ReleaseStgMedium(&med);
 
     refs = count_refs(src);
     ok(refs == 1, "%d\n", refs);
@@ -1096,23 +1096,24 @@ static void test_flushed_getdata(void)
     hr = IDataObject_GetData(get, &fmt, &med);
     ok(hr == S_OK, "got %08x\n", hr);
     ok(med.tymed == TYMED_HGLOBAL, "got %x\n", med.tymed);
-    ReleaseStgMedium(&med);
+    if(SUCCEEDED(hr)) ReleaseStgMedium(&med);
 
     InitFormatEtc(fmt, CF_TEXT, TYMED_ISTREAM);
     hr = IDataObject_GetData(get, &fmt, &med);
     ok(hr == S_OK, "got %08x\n", hr);
     ok(med.tymed == TYMED_ISTREAM, "got %x\n", med.tymed);
-    ReleaseStgMedium(&med);
+    if(SUCCEEDED(hr)) ReleaseStgMedium(&med);
 
     InitFormatEtc(fmt, CF_TEXT, TYMED_ISTORAGE);
     hr = IDataObject_GetData(get, &fmt, &med);
     ok(hr == E_FAIL, "got %08x\n", hr);
+    if(SUCCEEDED(hr)) ReleaseStgMedium(&med);
 
     InitFormatEtc(fmt, CF_TEXT, 0xffff);
     hr = IDataObject_GetData(get, &fmt, &med);
     ok(hr == S_OK, "got %08x\n", hr);
     ok(med.tymed == TYMED_HGLOBAL, "got %x\n", med.tymed);
-    ReleaseStgMedium(&med);
+    if(SUCCEEDED(hr)) ReleaseStgMedium(&med);
 
     /* stream format -> global & stream */
 
@@ -1120,23 +1121,24 @@ static void test_flushed_getdata(void)
     hr = IDataObject_GetData(get, &fmt, &med);
     ok(hr == S_OK, "got %08x\n", hr);
     ok(med.tymed == TYMED_ISTREAM, "got %x\n", med.tymed);
-    ReleaseStgMedium(&med);
+    if(SUCCEEDED(hr)) ReleaseStgMedium(&med);
 
     InitFormatEtc(fmt, cf_stream, TYMED_ISTORAGE);
     hr = IDataObject_GetData(get, &fmt, &med);
     ok(hr == E_FAIL, "got %08x\n", hr);
+    if(SUCCEEDED(hr)) ReleaseStgMedium(&med);
 
     InitFormatEtc(fmt, cf_stream, TYMED_HGLOBAL);
     hr = IDataObject_GetData(get, &fmt, &med);
     ok(hr == S_OK, "got %08x\n", hr);
     ok(med.tymed == TYMED_HGLOBAL, "got %x\n", med.tymed);
-    ReleaseStgMedium(&med);
+    if(SUCCEEDED(hr)) ReleaseStgMedium(&med);
 
     InitFormatEtc(fmt, cf_stream, 0xffff);
     hr = IDataObject_GetData(get, &fmt, &med);
     ok(hr == S_OK, "got %08x\n", hr);
     ok(med.tymed == TYMED_ISTREAM, "got %x\n", med.tymed);
-    ReleaseStgMedium(&med);
+    if(SUCCEEDED(hr)) ReleaseStgMedium(&med);
 
     /* storage format -> global, stream & storage */
 
@@ -1144,34 +1146,36 @@ static void test_flushed_getdata(void)
     hr = IDataObject_GetData(get, &fmt, &med);
     ok(hr == S_OK, "got %08x\n", hr);
     ok(med.tymed == TYMED_ISTORAGE, "got %x\n", med.tymed);
-    hr = IStorage_Stat(med.u.pstg, &stat, STATFLAG_NONAME);
-    ok(hr == S_OK, "got %08x\n", hr);
-    ok(stat.grfMode == (STGM_SHARE_EXCLUSIVE | STGM_READWRITE), "got %08x\n", stat.grfMode);
-    ReleaseStgMedium(&med);
+    if(SUCCEEDED(hr)) {
+        hr = IStorage_Stat(med.u.pstg, &stat, STATFLAG_NONAME);
+        ok(hr == S_OK, "got %08x\n", hr);
+        ok(stat.grfMode == (STGM_SHARE_EXCLUSIVE | STGM_READWRITE), "got %08x\n", stat.grfMode);
+        ReleaseStgMedium(&med);
+    }
 
     InitFormatEtc(fmt, cf_storage, TYMED_ISTREAM);
     hr = IDataObject_GetData(get, &fmt, &med);
     ok(hr == S_OK, "got %08x\n", hr);
     ok(med.tymed == TYMED_ISTREAM, "got %x\n", med.tymed);
-    ReleaseStgMedium(&med);
+    if(SUCCEEDED(hr)) ReleaseStgMedium(&med);
 
     InitFormatEtc(fmt, cf_storage, TYMED_HGLOBAL);
     hr = IDataObject_GetData(get, &fmt, &med);
     ok(hr == S_OK, "got %08x\n", hr);
     ok(med.tymed == TYMED_HGLOBAL, "got %x\n", med.tymed);
-    ReleaseStgMedium(&med);
+    if(SUCCEEDED(hr)) ReleaseStgMedium(&med);
 
     InitFormatEtc(fmt, cf_storage, TYMED_HGLOBAL | TYMED_ISTREAM);
     hr = IDataObject_GetData(get, &fmt, &med);
     ok(hr == S_OK, "got %08x\n", hr);
     ok(med.tymed == TYMED_HGLOBAL, "got %x\n", med.tymed);
-    ReleaseStgMedium(&med);
+    if(SUCCEEDED(hr)) ReleaseStgMedium(&med);
 
     InitFormatEtc(fmt, cf_storage, 0xffff);
     hr = IDataObject_GetData(get, &fmt, &med);
     ok(hr == S_OK, "got %08x\n", hr);
     ok(med.tymed == TYMED_ISTORAGE, "got %x\n", med.tymed);
-    ReleaseStgMedium(&med);
+    if(SUCCEEDED(hr)) ReleaseStgMedium(&med);
 
     /* complex format with target device */
 
@@ -1180,7 +1184,7 @@ static void test_flushed_getdata(void)
     ok(hr == DV_E_FORMATETC ||
        broken(hr == S_OK), /* win9x, winme & nt4 */
        "got %08x\n", hr);
-    if(hr == S_OK) ReleaseStgMedium(&med);
+    if(SUCCEEDED(hr)) ReleaseStgMedium(&med);
 
     InitFormatEtc(fmt, cf_another, 0xffff);
     memset(&dm, 0, sizeof(dm));
@@ -1199,7 +1203,7 @@ static void test_flushed_getdata(void)
     hr = IDataObject_GetData(get, &fmt, &med);
     ok(hr == S_OK, "got %08x\n", hr);
     ok(med.tymed == TYMED_ISTORAGE, "got %x\n", med.tymed);
-    ReleaseStgMedium(&med);
+    if(SUCCEEDED(hr)) ReleaseStgMedium(&med);
 
     HeapFree(GetProcessHeap(), 0, fmt.ptd);
 
@@ -1235,6 +1239,8 @@ static void test_nonole_clipboard(void)
     FORMATETC fmt;
     HGLOBAL h, hblob, htext;
     HENHMETAFILE emf;
+    STGMEDIUM med;
+    DWORD obj_type;
 
     r = OpenClipboard(NULL);
     ok(r, "gle %d\n", GetLastError());
@@ -1348,6 +1354,13 @@ static void test_nonole_clipboard(void)
     hr = IEnumFORMATETC_Next(enum_fmt, 1, &fmt, NULL);
     ok(hr == S_FALSE, "got %08x\n", hr);
     IEnumFORMATETC_Release(enum_fmt);
+
+    InitFormatEtc(fmt, CF_ENHMETAFILE, TYMED_ENHMF);
+    hr = IDataObject_GetData(get, &fmt, &med);
+    ok(hr == S_OK, "got %08x\n", hr);
+    obj_type = GetObjectType(U(med).hEnhMetaFile);
+    ok(obj_type == OBJ_ENHMETAFILE, "got %d\n", obj_type);
+    if(SUCCEEDED(hr)) ReleaseStgMedium(&med);
 
     IDataObject_Release(get);
 
