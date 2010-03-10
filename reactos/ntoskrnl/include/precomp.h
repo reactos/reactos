@@ -63,6 +63,7 @@
 /* Internal Headers */
 #include "internal/ntoskrnl.h"
 #include "config.h"
+#include "resource.h"
 
 //
 // Define the internal versions of external and public global data

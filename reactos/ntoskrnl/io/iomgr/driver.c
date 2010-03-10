@@ -789,6 +789,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
     * Display 'Loading XXX...' message
     */
    IopDisplayLoadingMessage(ModuleName->Buffer, TRUE);
+   InbvIndicateProgress();
 
    /*
     * Generate filename without path (not needed by freeldr)

@@ -483,8 +483,8 @@ MmInitSystem(IN ULONG Phase,
         SharedUserData->NumberOfPhysicalPages = MmNumberOfPhysicalPages;
         SharedUserData->LargePageMinimum = 0;
         
-        /* For now, we assume that we're always Server */
-        SharedUserData->NtProductType = NtProductServer;
+        /* 0.3.11-CLT2010 backport: Assume that we're always a workstation! */
+        SharedUserData->NtProductType = NtProductWinNt;
     }
     else if (Phase == 1)
     {
