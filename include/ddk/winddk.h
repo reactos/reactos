@@ -1028,12 +1028,15 @@ typedef struct {
   pHalMirrorVerify  HalMirrorVerify;
 } HAL_DISPATCH, *PHAL_DISPATCH;
 
-#if defined(_NTDRIVER_) || defined(_NTDDK_) || defined(_NTHAL_)
-extern NTSYSAPI PHAL_DISPATCH HalDispatchTable;
-#define HALDISPATCH ((PHAL_DISPATCH)&HalDispatchTable)
-#else
-extern __declspec(dllexport) HAL_DISPATCH HalDispatchTable;
+/* GCC/MSVC and WDK compatible declaration */
+extern NTKERNELAPI HAL_DISPATCH HalDispatchTable;
+
+#if defined(_NTOSKRNL_) || defined(_BLDR_)
 #define HALDISPATCH (&HalDispatchTable)
+#else
+/* This is a WDK compatibility definition */
+#define HalDispatchTable (&HalDispatchTable)
+#define HALDISPATCH HalDispatchTable
 #endif
 
 #define HAL_DISPATCH_VERSION            3
@@ -2813,6 +2816,10 @@ IoWritePartitionTableEx(
   IN PDEVICE_OBJECT  DeviceObject,
   IN struct _DRIVE_LAYOUT_INFORMATION_EX  *PartitionBuffer);
 
+#if defined(USE_DMA_MACROS) && !defined(_NTHAL_) && (defined(_NTDDK_) || defined(_NTDRIVER_)) || defined(_WDM_INCLUDED_) 
+// nothing here
+#else
+
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 //DECLSPEC_DEPRECATED_DDK
 NTHALAPI
@@ -2882,7 +2889,17 @@ NTAPI
 HalReadDmaCounter(
   IN PADAPTER_OBJECT AdapterObject);
 
-#endif
+NTHALAPI
+NTSTATUS
+NTAPI
+HalAllocateAdapterChannel(
+  IN PADAPTER_OBJECT  AdapterObject,
+  IN PWAIT_CONTEXT_BLOCK  Wcb,
+  IN ULONG  NumberOfMapRegisters,
+  IN PDRIVER_CONTROL  ExecutionRoutine);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+#endif /* defined(USE_DMA_MACROS) && !defined(_NTHAL_) && (defined(_NTDDK_) || defined(_NTDRIVER_)) || defined(_WDM_INCLUDED_)  */
 
 /** Kernel routines **/
 
@@ -3750,15 +3767,6 @@ VOID
 NTAPI
 HalAcquireDisplayOwnership(
   IN PHAL_RESET_DISPLAY_PARAMETERS  ResetDisplayParameters);
-
-NTHALAPI
-NTSTATUS
-NTAPI
-HalAllocateAdapterChannel(
-  IN PADAPTER_OBJECT  AdapterObject,
-  IN PWAIT_CONTEXT_BLOCK  Wcb,
-  IN ULONG  NumberOfMapRegisters,
-  IN PDRIVER_CONTROL  ExecutionRoutine);
 
 NTHALAPI
 NTSTATUS

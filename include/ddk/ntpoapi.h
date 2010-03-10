@@ -27,14 +27,121 @@
 extern "C" {
 #endif
 
+#ifndef _PO_DDK_
+#define _PO_DDK_
+
+/* Power States/Levels */
+typedef enum _SYSTEM_POWER_STATE {
+    PowerSystemUnspecified,
+    PowerSystemWorking,
+    PowerSystemSleeping1,
+    PowerSystemSleeping2,
+    PowerSystemSleeping3,
+    PowerSystemHibernate,
+    PowerSystemShutdown,
+    PowerSystemMaximum
+} SYSTEM_POWER_STATE, *PSYSTEM_POWER_STATE;
+#define POWER_SYSTEM_MAXIMUM PowerSystemMaximum
+
+typedef enum _DEVICE_POWER_STATE {
+    PowerDeviceUnspecified,
+    PowerDeviceD0,
+    PowerDeviceD1,
+    PowerDeviceD2,
+    PowerDeviceD3,
+    PowerDeviceMaximum
+} DEVICE_POWER_STATE, *PDEVICE_POWER_STATE;
+
+typedef union _POWER_STATE {
+  SYSTEM_POWER_STATE  SystemState;
+  DEVICE_POWER_STATE  DeviceState;
+} POWER_STATE, *PPOWER_STATE;
+
+typedef enum _POWER_STATE_TYPE {
+  SystemPowerState = 0,
+  DevicePowerState
+} POWER_STATE_TYPE, *PPOWER_STATE_TYPE;
+
+typedef enum _POWER_INFORMATION_LEVEL {
+    SystemPowerPolicyAc,
+    SystemPowerPolicyDc,
+    VerifySystemPolicyAc,
+    VerifySystemPolicyDc,
+    SystemPowerCapabilities,
+    SystemBatteryState,
+    SystemPowerStateHandler,
+    ProcessorStateHandler,
+    SystemPowerPolicyCurrent,
+    AdministratorPowerPolicy,
+    SystemReserveHiberFile,
+    ProcessorInformation,
+    SystemPowerInformation,
+    ProcessorStateHandler2,
+    LastWakeTime,
+    LastSleepTime,
+    SystemExecutionState,
+    SystemPowerStateNotifyHandler,
+    ProcessorPowerPolicyAc,
+    ProcessorPowerPolicyDc,
+    VerifyProcessorPowerPolicyAc,
+    VerifyProcessorPowerPolicyDc,
+    ProcessorPowerPolicyCurrent,
+    SystemPowerStateLogging,
+    SystemPowerLoggingEntry,
+    SetPowerSettingValue,
+    NotifyUserPowerSetting,
+    PowerInformationLevelUnused0,
+    PowerInformationLevelUnused1,
+    SystemVideoState,
+    TraceApplicationPowerMessage,
+    TraceApplicationPowerMessageEnd,
+    ProcessorPerfStates,
+    ProcessorIdleStates,
+    ProcessorCap,
+    SystemWakeSource,
+    SystemHiberFileInformation,
+    TraceServicePowerMessage,
+    ProcessorLoad,
+    PowerShutdownNotification,
+    MonitorCapabilities,
+    SessionPowerInit,
+    SessionDisplayState,
+    PowerRequestCreate,
+    PowerRequestAction,
+    GetPowerRequestList,
+    ProcessorInformationEx,
+    NotifyUserModeLegacyPowerEvent,
+    GroupPark,
+    ProcessorIdleDomains,
+    WakeTimerList,
+    SystemHiberFileSize,
+    PowerInformationLevelMaximum
+} POWER_INFORMATION_LEVEL;
+
+typedef enum {
+    PowerActionNone,
+    PowerActionReserved,
+    PowerActionSleep,
+    PowerActionHibernate,
+    PowerActionShutdown,
+    PowerActionShutdownReset,
+    PowerActionShutdownOff,
+    PowerActionWarmEject
+} POWER_ACTION, *PPOWER_ACTION;
+
+#if (NTDDI_VERSION >= NTDDI_WINXP) || !defined(_BATCLASS_)
+typedef struct {
+    ULONG Granularity;
+    ULONG Capacity;
+} BATTERY_REPORTING_SCALE, *PBATTERY_REPORTING_SCALE;
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) || !defined(_BATCLASS_) */
+
+
+#endif /* _PO_DDK_ */
+
 #define POWER_PERF_SCALE                  100
 #define PERF_LEVEL_TO_PERCENT(x)          (((x) * 1000) / (POWER_PERF_SCALE * 10))
 #define PERCENT_TO_PERF_LEVEL(x)          (((x) * POWER_PERF_SCALE * 10) / 1000)
-
-typedef struct {
-    ULONG       Granularity;
-    ULONG       Capacity;
-} BATTERY_REPORTING_SCALE, *PBATTERY_REPORTING_SCALE;
 
 typedef struct _PROCESSOR_IDLE_TIMES {
 	ULONGLONG  StartTime;
@@ -152,108 +259,6 @@ typedef struct _PROCESSOR_STATE_HANDLER2 {
 	UCHAR  NumPerfStates;
 	PROCESSOR_PERF_LEVEL  PerfLevel[1];
 } PROCESSOR_STATE_HANDLER2, *PPROCESSOR_STATE_HANDLER2;
-
-/* Power States/Levels */
-typedef enum _SYSTEM_POWER_STATE {
-    PowerSystemUnspecified,
-    PowerSystemWorking,
-    PowerSystemSleeping1,
-    PowerSystemSleeping2,
-    PowerSystemSleeping3,
-    PowerSystemHibernate,
-    PowerSystemShutdown,
-    PowerSystemMaximum
-} SYSTEM_POWER_STATE, *PSYSTEM_POWER_STATE;
-#define POWER_SYSTEM_MAXIMUM PowerSystemMaximum
-
-typedef enum _DEVICE_POWER_STATE {
-    PowerDeviceUnspecified,
-    PowerDeviceD0,
-    PowerDeviceD1,
-    PowerDeviceD2,
-    PowerDeviceD3,
-    PowerDeviceMaximum
-} DEVICE_POWER_STATE, *PDEVICE_POWER_STATE;
-
-typedef union _POWER_STATE {
-  SYSTEM_POWER_STATE  SystemState;
-  DEVICE_POWER_STATE  DeviceState;
-} POWER_STATE, *PPOWER_STATE;
-
-typedef enum _POWER_STATE_TYPE {
-  SystemPowerState = 0,
-  DevicePowerState
-} POWER_STATE_TYPE, *PPOWER_STATE_TYPE;
-
-
-typedef enum _POWER_INFORMATION_LEVEL {
-    SystemPowerPolicyAc,
-    SystemPowerPolicyDc,
-    VerifySystemPolicyAc,
-    VerifySystemPolicyDc,
-    SystemPowerCapabilities,
-    SystemBatteryState,
-    SystemPowerStateHandler,
-    ProcessorStateHandler,
-    SystemPowerPolicyCurrent,
-    AdministratorPowerPolicy,
-    SystemReserveHiberFile,
-    ProcessorInformation,
-    SystemPowerInformation,
-    ProcessorStateHandler2,
-    LastWakeTime,
-    LastSleepTime,
-    SystemExecutionState,
-    SystemPowerStateNotifyHandler,
-    ProcessorPowerPolicyAc,
-    ProcessorPowerPolicyDc,
-    VerifyProcessorPowerPolicyAc,
-    VerifyProcessorPowerPolicyDc,
-    ProcessorPowerPolicyCurrent,
-    SystemPowerStateLogging,
-    SystemPowerLoggingEntry,
-    SetPowerSettingValue,
-    NotifyUserPowerSetting,
-    PowerInformationLevelUnused0,
-    PowerInformationLevelUnused1,
-    SystemVideoState,
-    TraceApplicationPowerMessage,
-    TraceApplicationPowerMessageEnd,
-    ProcessorPerfStates,
-    ProcessorIdleStates,
-    ProcessorCap,
-    SystemWakeSource,
-    SystemHiberFileInformation,
-    TraceServicePowerMessage,
-    ProcessorLoad,
-    PowerShutdownNotification,
-    MonitorCapabilities,
-    SessionPowerInit,
-    SessionDisplayState,
-    PowerRequestCreate,
-    PowerRequestAction,
-    GetPowerRequestList,
-    ProcessorInformationEx,
-    NotifyUserModeLegacyPowerEvent,
-    GroupPark,
-    ProcessorIdleDomains,
-    WakeTimerList,
-    SystemHiberFileSize,
-    PowerInformationLevelMaximum
-} POWER_INFORMATION_LEVEL;
-
-typedef enum {
-    PowerActionNone,
-    PowerActionReserved,
-    PowerActionSleep,
-    PowerActionHibernate,
-    PowerActionShutdown,
-    PowerActionShutdownReset,
-    PowerActionShutdownOff,
-    PowerActionWarmEject
-} POWER_ACTION, *PPOWER_ACTION;
-
-
 
 NTSYSCALLAPI
 NTSTATUS

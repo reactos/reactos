@@ -44,7 +44,8 @@ extern "C" {
 #define NTHALAPI
 #endif
 
-#if !defined(_NTOSKRNL_) /* For ReactOS */
+/* For ReactOS */
+#if !defined(_NTOSKRNL_) && !defined(_BLDR_)
 #define NTKERNELAPI DECLSPEC_IMPORT
 #else
 #define NTKERNELAPI
@@ -1484,6 +1485,16 @@ RtlUpcaseUnicodeToOemN(
   IN PCWCH UnicodeString,
   IN ULONG BytesInUnicodeString);
 
+typedef struct _GENERATE_NAME_CONTEXT {
+  USHORT Checksum;
+  BOOLEAN CheckSumInserted;
+  UCHAR NameLength;
+  WCHAR NameBuffer[8];
+  ULONG ExtensionLength;
+  WCHAR ExtensionBuffer[4];
+  ULONG LastIndexValue;
+} GENERATE_NAME_CONTEXT, *PGENERATE_NAME_CONTEXT;
+
 #if (NTDDI_VERSION >= NTDDI_VISTASP1)
 NTSYSAPI
 NTSTATUS
@@ -1518,6 +1529,26 @@ NTAPI
 RtlIsValidOemCharacter(
   IN OUT PWCHAR Char);
 
+typedef struct _RTL_SPLAY_LINKS {
+    struct _RTL_SPLAY_LINKS *Parent;
+    struct _RTL_SPLAY_LINKS *LeftChild;
+    struct _RTL_SPLAY_LINKS *RightChild;
+} RTL_SPLAY_LINKS, *PRTL_SPLAY_LINKS;
+
+typedef struct _PREFIX_TABLE_ENTRY {
+  CSHORT NodeTypeCode;
+  CSHORT NameLength;
+  struct _PREFIX_TABLE_ENTRY *NextPrefixTree;
+  RTL_SPLAY_LINKS Links;
+  PSTRING Prefix;
+} PREFIX_TABLE_ENTRY, *PPREFIX_TABLE_ENTRY;
+
+typedef struct _PREFIX_TABLE {
+  CSHORT NodeTypeCode;
+  CSHORT NameLength;
+  PPREFIX_TABLE_ENTRY NextPrefixTree;
+} PREFIX_TABLE, *PPREFIX_TABLE;
+
 NTSYSAPI
 VOID
 NTAPI
@@ -1545,6 +1576,22 @@ NTAPI
 PfxFindPrefix(
   IN PPREFIX_TABLE PrefixTable,
   IN PSTRING FullName);
+
+typedef struct _UNICODE_PREFIX_TABLE_ENTRY {
+  CSHORT NodeTypeCode;
+  CSHORT NameLength;
+  struct _UNICODE_PREFIX_TABLE_ENTRY *NextPrefixTree;
+  struct _UNICODE_PREFIX_TABLE_ENTRY *CaseMatch;
+  RTL_SPLAY_LINKS Links;
+  PUNICODE_STRING Prefix;
+} UNICODE_PREFIX_TABLE_ENTRY, *PUNICODE_PREFIX_TABLE_ENTRY;
+
+typedef struct _UNICODE_PREFIX_TABLE {
+  CSHORT NodeTypeCode;
+  CSHORT NameLength;
+  PUNICODE_PREFIX_TABLE_ENTRY NextPrefixTree;
+  PUNICODE_PREFIX_TABLE_ENTRY LastNextEntry;
+} UNICODE_PREFIX_TABLE, *PUNICODE_PREFIX_TABLE;
 
 NTSYSAPI
 VOID
@@ -1963,6 +2010,16 @@ RtlReserveChunk(
   OUT PUCHAR *ChunkBuffer,
   IN ULONG ChunkSize);
 
+typedef struct _COMPRESSED_DATA_INFO {
+  USHORT CompressionFormatAndEngine;
+  UCHAR CompressionUnitShift;
+  UCHAR ChunkShift;
+  UCHAR ClusterShift;
+  UCHAR Reserved;
+  USHORT NumberOfChunks;
+  ULONG CompressedChunkSizes[ANYSIZE_ARRAY];
+} COMPRESSED_DATA_INFO, *PCOMPRESSED_DATA_INFO;
+
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -2293,7 +2350,7 @@ HEAP_MAKE_TAG_FLAGS(
   IN ULONG TagBase,
   IN ULONG Tag)
 {
-  __assume_bound(TagBase);
+  //__assume_bound(TagBase); // FIXME
   return ((ULONG)((TagBase) + ((Tag) << HEAP_TAG_SHIFT)));
 }
 
@@ -2316,20 +2373,20 @@ HEAP_MAKE_TAG_FLAGS(
 )
 
 typedef PVOID
-(NTAPI *PRTL_ALLOCATE_STRING_ROUTINE (
+(NTAPI *PRTL_ALLOCATE_STRING_ROUTINE)(
   IN SIZE_T NumberOfBytes);
 
 #if _WIN32_WINNT >= 0x0600
 
 typedef PVOID
-(NTAPI *PRTL_REALLOCATE_STRING_ROUTINE (
+(NTAPI *PRTL_REALLOCATE_STRING_ROUTINE)(
   IN SIZE_T NumberOfBytes,
   IN PVOID Buffer);
 
 #endif
 
 typedef VOID
-(NTAPI *PRTL_FREE_STRING_ROUTINE (
+(NTAPI *PRTL_FREE_STRING_ROUTINE)(
   IN PVOID Buffer);
 
 extern const PRTL_ALLOCATE_STRING_ROUTINE RtlAllocateStringRoutine;
@@ -2339,62 +2396,12 @@ extern const PRTL_FREE_STRING_ROUTINE RtlFreeStringRoutine;
 extern const PRTL_REALLOCATE_STRING_ROUTINE RtlReallocateStringRoutine;
 #endif
 
-typedef struct _GENERATE_NAME_CONTEXT {
-  USHORT Checksum;
-  BOOLEAN CheckSumInserted;
-  UCHAR NameLength;
-  WCHAR NameBuffer[8];
-  ULONG ExtensionLength;
-  WCHAR ExtensionBuffer[4];
-  ULONG LastIndexValue;
-} GENERATE_NAME_CONTEXT, *PGENERATE_NAME_CONTEXT;
-
-typedef struct _PREFIX_TABLE_ENTRY {
-  CSHORT NodeTypeCode;
-  CSHORT NameLength;
-  struct _PREFIX_TABLE_ENTRY *NextPrefixTree;
-  RTL_SPLAY_LINKS Links;
-  PSTRING Prefix;
-} PREFIX_TABLE_ENTRY, *PPREFIX_TABLE_ENTRY;
-
-typedef struct _PREFIX_TABLE {
-  CSHORT NodeTypeCode;
-  CSHORT NameLength;
-  PPREFIX_TABLE_ENTRY NextPrefixTree;
-} PREFIX_TABLE, *PPREFIX_TABLE;
-
-typedef struct _UNICODE_PREFIX_TABLE_ENTRY {
-  CSHORT NodeTypeCode;
-  CSHORT NameLength;
-  struct _UNICODE_PREFIX_TABLE_ENTRY *NextPrefixTree;
-  struct _UNICODE_PREFIX_TABLE_ENTRY *CaseMatch;
-  RTL_SPLAY_LINKS Links;
-  PUNICODE_STRING Prefix;
-} UNICODE_PREFIX_TABLE_ENTRY, *PUNICODE_PREFIX_TABLE_ENTRY;
-
-typedef struct _UNICODE_PREFIX_TABLE {
-  CSHORT NodeTypeCode;
-  CSHORT NameLength;
-  PUNICODE_PREFIX_TABLE_ENTRY NextPrefixTree;
-  PUNICODE_PREFIX_TABLE_ENTRY LastNextEntry;
-} UNICODE_PREFIX_TABLE, *PUNICODE_PREFIX_TABLE;
-
 #define COMPRESSION_FORMAT_NONE         (0x0000)
 #define COMPRESSION_FORMAT_DEFAULT      (0x0001)
 #define COMPRESSION_FORMAT_LZNT1        (0x0002)
 #define COMPRESSION_ENGINE_STANDARD     (0x0000)
 #define COMPRESSION_ENGINE_MAXIMUM      (0x0100)
 #define COMPRESSION_ENGINE_HIBER        (0x0200)
-
-typedef struct _COMPRESSED_DATA_INFO {
-  USHORT CompressionFormatAndEngine;
-  UCHAR CompressionUnitShift;
-  UCHAR ChunkShift;
-  UCHAR ClusterShift;
-  UCHAR Reserved;
-  USHORT NumberOfChunks;
-  ULONG CompressedChunkSizes[ANYSIZE_ARRAY];
-} COMPRESSED_DATA_INFO, *PCOMPRESSED_DATA_INFO;
 
 #define RtlOffsetToPointer(B,O)  ((PCHAR)( ((PCHAR)(B)) + ((ULONG_PTR)(O))  ))
 #define RtlPointerToOffset(B,P)  ((ULONG)( ((PCHAR)(P)) - ((PCHAR)(B))  ))
@@ -2473,10 +2480,11 @@ typedef struct _COMPRESSED_DATA_INFO {
 #define FILE_DEVICE_BIOMETRIC           0x00000044
 #define FILE_DEVICE_PMI                 0x00000045
 
-#define CTL_CODE( DeviceType, Function, Method, Access ) (                 \
-    ((DeviceType) << 16) | ((Access) << 14) | ((Function) << 2) | (Method) \
-)
-#define DEVICE_TYPE_FROM_CTL_CODE(ctrlCode)     (((ULONG)(ctrlCode & 0xffff0000)) >> 16)
+#define CTL_CODE(DeviceType, Function, Method, Access) \
+  (((DeviceType) << 16) | ((Access) << 14) | ((Function) << 2) | (Method))
+
+#define DEVICE_TYPE_FROM_CTL_CODE(ctl) (((ULONG) (ctl & 0xffff0000)) >> 16)
+
 #define METHOD_FROM_CTL_CODE(ctrlCode)          ((ULONG)(ctrlCode & 3))
 
 #define METHOD_BUFFERED                 0
@@ -2486,10 +2494,10 @@ typedef struct _COMPRESSED_DATA_INFO {
 #define METHOD_DIRECT_TO_HARDWARE       METHOD_IN_DIRECT
 #define METHOD_DIRECT_FROM_HARDWARE     METHOD_OUT_DIRECT
 
-#define FILE_ANY_ACCESS                 0
-#define FILE_SPECIAL_ACCESS             (FILE_ANY_ACCESS)
-#define FILE_READ_ACCESS                ( 0x0001 )
-#define FILE_WRITE_ACCESS               ( 0x0002 )
+#define FILE_ANY_ACCESS                   0x00000000
+#define FILE_SPECIAL_ACCESS               FILE_ANY_ACCESS
+#define FILE_READ_ACCESS                  0x00000001
+#define FILE_WRITE_ACCESS                 0x00000002
 
 typedef ULONG  LSA_OPERATIONAL_MODE, *PLSA_OPERATIONAL_MODE;
 
@@ -5624,12 +5632,6 @@ typedef struct _QUERY_PATH_RESPONSE {
     ULONG LengthAccepted;
 } QUERY_PATH_RESPONSE, *PQUERY_PATH_RESPONSE;
 
-typedef struct _RTL_SPLAY_LINKS {
-    struct _RTL_SPLAY_LINKS *Parent;
-    struct _RTL_SPLAY_LINKS *LeftChild;
-    struct _RTL_SPLAY_LINKS *RightChild;
-} RTL_SPLAY_LINKS, *PRTL_SPLAY_LINKS;
-
 typedef struct _RTL_BALANCED_LINKS
 {
     struct _RTL_BALANCED_LINKS *Parent;
@@ -8238,16 +8240,6 @@ PsRevertToSelf (
 NTSYSAPI
 VOID
 NTAPI
-RtlGenerate8dot3Name (
-    IN PUNICODE_STRING              Name,
-    IN BOOLEAN                      AllowExtendedCharacters,
-    IN OUT PGENERATE_NAME_CONTEXT   Context,
-    OUT PUNICODE_STRING             Name8dot3
-);
-
-NTSYSAPI
-VOID
-NTAPI
 RtlSecondsSince1970ToTime (
     IN ULONG            SecondsSince1970,
     OUT PLARGE_INTEGER  Time
@@ -8944,15 +8936,6 @@ NTSTATUS
 NTAPI
 ZwOpenDirectoryObject (
     OUT PHANDLE             DirectoryHandle,
-    IN ACCESS_MASK          DesiredAccess,
-    IN POBJECT_ATTRIBUTES   ObjectAttributes
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwOpenEvent (
-    OUT PHANDLE             EventHandle,
     IN ACCESS_MASK          DesiredAccess,
     IN POBJECT_ATTRIBUTES   ObjectAttributes
 );

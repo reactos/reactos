@@ -6,6 +6,7 @@
 	<include base="ntoskrnl">include</include>
 	<include base="ReactOS">include/reactos/libs</include>
 	<include base="ReactOS">include/reactos/elf</include>
+	<define name="_BLDR_" />
 	<define name="_NTHAL_" />
 	<define name="_NTSYSTEM_" />
 	<directory name="arch">

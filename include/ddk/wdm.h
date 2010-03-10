@@ -55,7 +55,8 @@ extern "C" {
 #define NTHALAPI
 #endif
 
-#if !defined(_NTOSKRNL_) /* For ReactOS */
+/* For ReactOS */
+#if !defined(_NTOSKRNL_) && !defined(_BLDR_)
 #define NTKERNELAPI DECLSPEC_IMPORT
 #else
 #define NTKERNELAPI
@@ -847,6 +848,14 @@ typedef struct _KDPC
     PVOID SystemArgument2;
     volatile PVOID  DpcData;
 } KDPC, *PKDPC, *RESTRICTED_POINTER PRKDPC;
+
+typedef struct _KDPC_WATCHDOG_INFORMATION {
+  ULONG DpcTimeLimit;
+  ULONG DpcTimeCount;
+  ULONG DpcWatchdogLimit;
+  ULONG DpcWatchdogCount;
+  ULONG Reserved;
+} KDPC_WATCHDOG_INFORMATION, *PKDPC_WATCHDOG_INFORMATION;
 
 typedef struct _KDEVICE_QUEUE {
   CSHORT Type;
@@ -2138,7 +2147,7 @@ typedef enum _MM_SYSTEM_SIZE {
 #define ALIGN_DOWN_POINTER_BY(ptr, align) \
     ((PVOID)ALIGN_DOWN_BY(ptr, align))
 
-#define ALIGN_UP_POINTER_BY(ptr, alignment) \
+#define ALIGN_UP_POINTER_BY(ptr, align) \
     ((PVOID)ALIGN_UP_BY(ptr, align))
 
 #define ALIGN_DOWN(size, type) \
@@ -2147,8 +2156,8 @@ typedef enum _MM_SYSTEM_SIZE {
 #define ALIGN_UP(size, type) \
     ALIGN_UP_BY(size, sizeof(type))
 
-#define ALIGN_DOWN_POINTER(p, type) \
-    ALIGN_DOWN_POINTER_BY(p, sizeof(type))
+#define ALIGN_DOWN_POINTER(ptr, type) \
+    ALIGN_DOWN_POINTER_BY(ptr, sizeof(type))
 
 #define ALIGN_UP_POINTER(ptr, type) \
     ALIGN_UP_POINTER_BY(ptr, sizeof(type))
@@ -2952,9 +2961,14 @@ SeGetWorldRights(
 
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
+
+#if 1
 /******************************************************************************
  *                            Power Management Support Types                  *
  ******************************************************************************/
+
+#ifndef _PO_DDK_
+#define _PO_DDK_
 
 /* Power States/Levels */
 typedef enum _SYSTEM_POWER_STATE {
@@ -2993,7 +3007,37 @@ typedef enum _POWER_INFORMATION_LEVEL {
     ProcessorPowerPolicyDc,
     VerifyProcessorPowerPolicyAc,
     VerifyProcessorPowerPolicyDc,
-    ProcessorPowerPolicyCurrent
+    ProcessorPowerPolicyCurrent,
+    SystemPowerStateLogging,
+    SystemPowerLoggingEntry,
+    SetPowerSettingValue,
+    NotifyUserPowerSetting,
+    PowerInformationLevelUnused0,
+    PowerInformationLevelUnused1,
+    SystemVideoState,
+    TraceApplicationPowerMessage,
+    TraceApplicationPowerMessageEnd,
+    ProcessorPerfStates,
+    ProcessorIdleStates,
+    ProcessorCap,
+    SystemWakeSource,
+    SystemHiberFileInformation,
+    TraceServicePowerMessage,
+    ProcessorLoad,
+    PowerShutdownNotification,
+    MonitorCapabilities,
+    SessionPowerInit,
+    SessionDisplayState,
+    PowerRequestCreate,
+    PowerRequestAction,
+    GetPowerRequestList,
+    ProcessorInformationEx,
+    NotifyUserModeLegacyPowerEvent,
+    GroupPark,
+    ProcessorIdleDomains,
+    WakeTimerList,
+    SystemHiberFileSize,
+    PowerInformationLevelMaximum
 } POWER_INFORMATION_LEVEL;
 
 typedef enum {
@@ -3026,6 +3070,15 @@ typedef enum _POWER_STATE_TYPE {
   DevicePowerState
 } POWER_STATE_TYPE, *PPOWER_STATE_TYPE;
 
+#if (NTDDI_VERSION >= NTDDI_WINXP) || !defined(_BATCLASS_)
+typedef struct {
+    ULONG Granularity;
+    ULONG Capacity;
+} BATTERY_REPORTING_SCALE, *PBATTERY_REPORTING_SCALE;
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) || !defined(_BATCLASS_) */
+
+#endif /* !_PO_DDK_ */
+
 typedef VOID
 (DDKAPI *PREQUEST_POWER_COMPLETE)(
   IN struct _DEVICE_OBJECT  *DeviceObject,
@@ -3033,6 +3086,7 @@ typedef VOID
   IN POWER_STATE  PowerState,
   IN PVOID  Context,
   IN struct _IO_STATUS_BLOCK  *IoStatus);
+
 
 /******************************************************************************
  *                            Power Management Support Functions              *
@@ -3110,13 +3164,13 @@ NTKERNELAPI
 VOID
 NTAPI
 PoSetSystemWake(
-  IN OUT PIRP Irp);
+  IN OUT struct _IRP *Irp);
 
 NTKERNELAPI
 BOOLEAN
 NTAPI
 PoGetSystemWake(
-  IN PIRP Irp);
+  IN struct _IRP *Irp);
 
 NTKERNELAPI
 NTSTATUS
@@ -3195,7 +3249,7 @@ PoCreatePowerRequest(
   IN PCOUNTED_REASON_CONTEXT Context);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
-
+#endif
 
 /******************************************************************************
  *                            Configuration Manager Types                     *
@@ -5486,10 +5540,10 @@ RtlCheckBit(
 #define FILE_DEVICE_SERENUM               0x00000037
 #define FILE_DEVICE_TERMSRV               0x00000038
 #define FILE_DEVICE_KSEC                  0x00000039
-#define FILE_DEVICE_FIPS                  0x0000003a
-#define FILE_DEVICE_INFINIBAND            0x0000003b
-#define FILE_DEVICE_VMBUS                 0x0000003e
-#define FILE_DEVICE_CRYPT_PROVIDER        0x0000003f
+#define FILE_DEVICE_FIPS                  0x0000003A
+#define FILE_DEVICE_INFINIBAND            0x0000003B
+#define FILE_DEVICE_VMBUS                 0x0000003E
+#define FILE_DEVICE_CRYPT_PROVIDER        0x0000003F
 #define FILE_DEVICE_WPD                   0x00000040
 #define FILE_DEVICE_BLUETOOTH             0x00000041
 #define FILE_DEVICE_MT_COMPOSITE          0x00000042
@@ -6639,8 +6693,8 @@ typedef struct _IO_COMPLETION_CONTEXT {
 
 #define SL_ALLOW_RAW_MOUNT                0x01
 
-#define CTL_CODE(DeviceType, Function, Method, Access)( \
-  ((DeviceType) << 16) | ((Access) << 14) | ((Function) << 2) | (Method))
+#define CTL_CODE(DeviceType, Function, Method, Access) \
+  (((DeviceType) << 16) | ((Access) << 14) | ((Function) << 2) | (Method))
 
 #define DEVICE_TYPE_FROM_CTL_CODE(ctl) (((ULONG) (ctl & 0xffff0000)) >> 16)
 
@@ -11402,7 +11456,7 @@ FORCEINLINE
 PVOID
 NTAPI
 HalAllocateCommonBuffer(
-  IN PADAPTER_OBJECT  AdapterObject,
+  IN PDMA_ADAPTER DmaAdapter,
   IN ULONG  Length,
   OUT PPHYSICAL_ADDRESS  LogicalAddress,
   IN BOOLEAN  CacheEnabled)
