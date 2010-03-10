@@ -1,7 +1,7 @@
 /*
- * Russian resources for localspl
+ * Lithuanian resources for localspl
  *
- * Copyright 2008 Vitaliy Margolen
+ * Copyright 2009 Aurimas Fišeras <aurimas@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,10 +23,10 @@
 /* UTF-8 */
 #pragma code_page(65001)
 
-LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_LITHUANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_LOCALPORT "Локальный порт"
-    IDS_LOCALMONITOR "Локальный монитор"
+    IDS_LOCALPORT "Vietinis prievadas"
+    IDS_LOCALMONITOR "Vietinis monitorius"
 }

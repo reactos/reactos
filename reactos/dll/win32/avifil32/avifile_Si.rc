@@ -52,5 +52,3 @@ STRINGTABLE DISCARDABLE
   IDS_AVIFILETYPE	"Wine privzeti-upravljalec-AVI-datotek"
   IDS_UNCOMPRESSED      "nestisnjeno"
 }
-
-#pragma code_page(default)

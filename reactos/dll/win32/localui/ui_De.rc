@@ -18,14 +18,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "localui.h"
+
+#pragma code_page(65001)
+
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 ADDPORT_DIALOG DIALOG LOADONCALL MOVEABLE DISCARDABLE 6, 18, 245, 47
 STYLE DS_CONTEXTHELP | DS_MODALFRAME | DS_SETFONT | DS_SETFOREGROUND | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Lokalen Anschluss hinzufügen"
+CAPTION "Lokalen Anschluss hinzufÃ¼gen"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Lokaler Anschuss, der hinzugefügt werden soll:", -1, 7, 13, 194, 13, WS_VISIBLE
+    LTEXT "&Lokaler Anschuss, der hinzugefÃ¼gt werden soll:", -1, 7, 13, 194, 13, WS_VISIBLE
     EDITTEXT ADDPORT_EDIT, 6, 28, 174, 12, WS_VISIBLE | ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", IDOK, 188, 10, 50, 14, WS_VISIBLE
     PUSHBUTTON "Abbrechen", IDCANCEL, 188, 27, 50, 14, WS_VISIBLE
@@ -37,8 +41,8 @@ STYLE DS_CONTEXTHELP | DS_MODALFRAME | DS_SETFONT | DS_SETFOREGROUND | WS_POPUPW
 CAPTION "LPT-Anschluss konfigurieren"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Zeitüberschreitung (Sekunden)", LPTCONFIG_GROUP, 6, 6, 150, 35, BS_GROUPBOX
-    LTEXT "Ü&bertragung wiederholen:", -1, 14, 22, 90, 13, WS_VISIBLE
+    GROUPBOX "ZeitÃ¼berschreitung (Sekunden)", LPTCONFIG_GROUP, 6, 6, 150, 35, BS_GROUPBOX
+    LTEXT "Ãœ&bertragung wiederholen:", -1, 14, 22, 90, 13, WS_VISIBLE
     EDITTEXT LPTCONFIG_EDIT, 112, 20, 32, 13, WS_VISIBLE | ES_NUMBER
     DEFPUSHBUTTON "OK", IDOK, 164, 10, 50, 14, WS_VISIBLE
     PUSHBUTTON "Abbrechen", IDCANCEL, 164, 27, 50, 14, WS_VISIBLE
@@ -48,7 +52,7 @@ END
 STRINGTABLE DISCARDABLE
 {
     IDS_LOCALPORT "Lokaler Anschluss"
-    IDS_INVALIDNAME "'%s' ist kein gültiger Anschlussname"
+    IDS_INVALIDNAME "'%s' ist kein gÃ¼ltiger Anschlussname"
     IDS_PORTEXISTS "Der Anschluss %s existiert bereits"
     IDS_NOTHINGTOCONFIG "Dieser Anschluss hat keine Optionen zum Konfigurieren"
 }

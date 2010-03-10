@@ -55,4 +55,3 @@ STRINGTABLE DISCARDABLE
   IDS_AVIFILETYPE	"Обработчик по умолчанию avi-файлов в Wine"
   IDS_UNCOMPRESSED      "без сжатия"
 }
-#pragma code_page(default)
