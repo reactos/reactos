@@ -206,7 +206,7 @@ PspAssignPrimaryToken(IN PEPROCESS Process,
 
     /* Dereference Tokens and Return */
     if (NT_SUCCESS(Status)) ObDereferenceObject(OldToken);
-    if (AccessToken) ObDereferenceObject(NewToken);
+    if (!AccessToken) ObDereferenceObject(NewToken);
     return Status;
 }
 
