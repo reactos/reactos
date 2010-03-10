@@ -148,7 +148,7 @@ extern HANDLE hBootstrapOk;
 CSR_API(CsrConnectProcess);
 CSR_API(CsrCreateProcess);
 CSR_API(CsrTerminateProcess);
-CSR_API(CsrCreateThread);
+CSR_API(CsrSrvCreateThread);
 
 /* print.c */
 VOID WINAPI DisplayString(LPCWSTR lpwString);
@@ -181,7 +181,10 @@ NTSTATUS WINAPI CsrEnumProcesses(CSRSS_ENUM_PROCESS_PROC EnumProc, PVOID Context
 PCSR_THREAD NTAPI CsrAddStaticServerThread(IN HANDLE hThread, IN PCLIENT_ID ClientId, IN  ULONG ThreadFlags);
 PCSR_THREAD NTAPI CsrLocateThreadInProcess(IN PCSRSS_PROCESS_DATA CsrProcess OPTIONAL, IN PCLIENT_ID Cid);
 PCSR_THREAD NTAPI CsrLocateThreadByClientId(OUT PCSRSS_PROCESS_DATA *Process OPTIONAL, IN PCLIENT_ID ClientId);
-                             
+NTSTATUS NTAPI CsrLockProcessByClientId(IN HANDLE Pid, OUT PCSRSS_PROCESS_DATA *CsrProcess OPTIONAL);
+NTSTATUS NTAPI CsrCreateThread(IN PCSRSS_PROCESS_DATA CsrProcess, IN HANDLE hThread, IN PCLIENT_ID ClientId);
+NTSTATUS NTAPI CsrUnlockProcess(IN PCSRSS_PROCESS_DATA CsrProcess);
+
 /* api/handle.c */
 NTSTATUS FASTCALL CsrRegisterObjectDefinitions(PCSRSS_OBJECT_DEFINITION NewDefinitions);
 NTSTATUS WINAPI CsrInsertObject( PCSRSS_PROCESS_DATA ProcessData, PHANDLE Handle, Object_t *Object, DWORD Access, BOOL Inheritable );
@@ -191,6 +194,9 @@ NTSTATUS NTAPI CsrServerInitialization(ULONG ArgumentCount, PCHAR Arguments[]);
 NTSTATUS WINAPI CsrReleaseObjectByPointer(Object_t *Object);
 NTSTATUS WINAPI CsrReleaseObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Object );
 NTSTATUS WINAPI CsrVerifyObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Object );
+
+//hack
+VOID NTAPI CsrThreadRefcountZero(IN PCSR_THREAD CsrThread);
 
 CSR_API(CsrGetInputHandle);
 CSR_API(CsrGetOutputHandle);

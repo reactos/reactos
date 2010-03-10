@@ -15,6 +15,8 @@
 		<file>user.c</file>
 		<file>wapi.c</file>
 	</directory>
+	<file>procsup.c</file>
+	<file>thredsup.c</file>
 	<file>init.c</file>
 	<pch>srv.h</pch>
 </module>

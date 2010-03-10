@@ -364,7 +364,7 @@ CsrpInitWin32Csr (int argc, char ** argv, char ** envp)
 CSRSS_API_DEFINITION NativeDefinitions[] =
   {
     CSRSS_DEFINE_API(CREATE_PROCESS,               CsrCreateProcess),
-    CSRSS_DEFINE_API(CREATE_THREAD,                CsrCreateThread),
+    CSRSS_DEFINE_API(CREATE_THREAD,                CsrSrvCreateThread),
     CSRSS_DEFINE_API(TERMINATE_PROCESS,            CsrTerminateProcess),
     CSRSS_DEFINE_API(CONNECT_PROCESS,              CsrConnectProcess),
     CSRSS_DEFINE_API(REGISTER_SERVICES_PROCESS,    CsrRegisterServicesProcess),
