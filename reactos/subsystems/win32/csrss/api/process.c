@@ -696,7 +696,7 @@ CsrEnumProcesses(IN CSRSS_ENUM_PROCESS_PROC EnumProc,
     PLUID CallerLuid = RealContext[0];
     PCSRSS_PROCESS_DATA CsrProcess = NULL;
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
-    BOOLEAN FirstTry = TRUE;
+    BOOLEAN FirstTry;
     ULONG Result = 0;
     ULONG Hash;
 
@@ -729,6 +729,7 @@ CsrEnumProcesses(IN CSRSS_ENUM_PROCESS_PROC EnumProc,
     while (TRUE)
     {
         /* Find the next process to shutdown */
+        FirstTry = TRUE;
         if (!(CsrProcess = FindProcessForShutdown(CallerLuid)))
         {
             /* Done, quit */
@@ -741,7 +742,7 @@ LoopAgain:
         /* Release the lock, make the callback, and acquire it back */
         DPRINT1("Found process: %lx\n", CsrProcess->ProcessId);
         CsrReleaseProcessLock();
-        Result = (ULONG)EnumProc(CsrProcess, Context);
+        Result = (ULONG)EnumProc(CsrProcess, (PVOID)((ULONG_PTR)Context | FirstTry));
         CsrAcquireProcessLock();
 
         /* Check the result */
@@ -754,7 +755,7 @@ LoopAgain:
         else if (Result == CsrShutdownNonCsrProcess)
         {
             /* A non-CSR process, the callback didn't touch it */
-            continue;
+            //continue;
         }
         else if (Result == CsrShutdownCancelled)
         {
