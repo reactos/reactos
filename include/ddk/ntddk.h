@@ -343,7 +343,29 @@ RtlEqualString(
   IN const PSTRING String2,
   IN BOOLEAN CaseInSensitive);
 
-#endif
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlCharToInteger(
+  IN PCSZ String,
+  IN ULONG Base OPTIONAL,
+  OUT PULONG Value);
+
+NTSYSAPI
+CHAR
+NTAPI
+RtlUpperChar(
+  IN CHAR Character);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlWalkFrameChain(
+  OUT PVOID *Callers,
+  IN ULONG Count,
+  IN ULONG Flags);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 /* Executive Types */
 
@@ -362,6 +384,43 @@ typedef struct _ZONE_HEADER {
 } ZONE_HEADER, *PZONE_HEADER;
 
 /* Executive Functions */
+
+static __inline PVOID
+ExAllocateFromZone(
+  IN PZONE_HEADER Zone)
+{
+  if (Zone->FreeList.Next)
+    Zone->FreeList.Next = Zone->FreeList.Next->Next;
+  return (PVOID) Zone->FreeList.Next;
+}
+
+static __inline PVOID
+ExFreeToZone(
+  IN PZONE_HEADER  Zone,
+  IN PVOID  Block)
+{
+  ((PSINGLE_LIST_ENTRY) Block)->Next = Zone->FreeList.Next;
+  Zone->FreeList.Next = ((PSINGLE_LIST_ENTRY) Block);
+  return ((PSINGLE_LIST_ENTRY) Block)->Next;
+}
+
+/*
+ * PVOID
+ * ExInterlockedAllocateFromZone(
+ *   IN PZONE_HEADER  Zone,
+ *   IN PKSPIN_LOCK  Lock)
+ */
+#define ExInterlockedAllocateFromZone(Zone, Lock) \
+    ((PVOID) ExInterlockedPopEntryList(&Zone->FreeList, Lock))
+
+/* PVOID
+ * ExInterlockedFreeToZone(
+ *  IN PZONE_HEADER  Zone,
+ *  IN PVOID  Block,
+ *  IN PKSPIN_LOCK  Lock);
+ */
+#define ExInterlockedFreeToZone(Zone, Block, Lock) \
+    ExInterlockedPushEntryList(&(Zone)->FreeList, (PSINGLE_LIST_ENTRY)(Block), Lock)
 
 /*
  * BOOLEAN
@@ -423,7 +482,21 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 ExUuidCreate(
-  OUT UUID  *Uuid);
+  OUT UUID *Uuid);
+
+NTKERNELAPI
+DECLSPEC_NORETURN
+VOID
+NTAPI
+ExRaiseAccessViolation(
+  VOID);
+
+NTKERNELAPI
+DECLSPEC_NORETURN
+VOID
+NTAPI
+ExRaiseDatatypeMisalignment(
+  VOID);
 
 #endif
 
@@ -522,7 +595,31 @@ VOID
 
 typedef DRIVER_REINITIALIZE *PDRIVER_REINITIALIZE;
 
+/** Filesystem runtime library routines **/
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlIsTotalDeviceFailure(
+  IN NTSTATUS Status);
+#endif
+
 /* I/O Manager Functions */
+
+/*
+ * VOID IoAssignArcName(
+ *   IN PUNICODE_STRING  ArcName,
+ *   IN PUNICODE_STRING  DeviceName);
+ */
+#define IoAssignArcName(_ArcName, _DeviceName) ( \
+  IoCreateSymbolicLink((_ArcName), (_DeviceName)))
+
+/*
+ * VOID
+ * IoDeassignArcName(
+ *   IN PUNICODE_STRING  ArcName)
+ */
+#define IoDeassignArcName IoDeleteSymbolicLink
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
@@ -661,8 +758,176 @@ IoAttachDeviceByPointer(
   IN PDEVICE_OBJECT SourceDevice,
   IN PDEVICE_OBJECT TargetDevice);
 
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoReportDetectedDevice(
+  IN PDRIVER_OBJECT DriverObject,
+  IN INTERFACE_TYPE LegacyBusType,
+  IN ULONG BusNumber,
+  IN ULONG SlotNumber,
+  IN PCM_RESOURCE_LIST ResourceList OPTIONAL,
+  IN PIO_RESOURCE_REQUIREMENTS_LIST ResourceRequirements OPTIONAL,
+  IN BOOLEAN ResourceAssigned,
+  IN OUT PDEVICE_OBJECT *DeviceObject);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoReportResourceForDetection(
+  IN PDRIVER_OBJECT DriverObject,
+  IN PCM_RESOURCE_LIST DriverList OPTIONAL,
+  IN ULONG DriverListSize OPTIONAL,
+  IN PDEVICE_OBJECT DeviceObject OPTIONAL,
+  IN PCM_RESOURCE_LIST DeviceList OPTIONAL,
+  IN ULONG DeviceListSize OPTIONAL,
+  OUT PBOOLEAN ConflictDetected);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoReportResourceUsage(
+  IN PUNICODE_STRING DriverClassName OPTIONAL,
+  IN PDRIVER_OBJECT DriverObject,
+  IN PCM_RESOURCE_LIST DriverList OPTIONAL,
+  IN ULONG DriverListSize OPTIONAL,
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PCM_RESOURCE_LIST DeviceList OPTIONAL,
+  IN ULONG DeviceListSize OPTIONAL,
+  IN BOOLEAN OverrideConflict,
+  OUT PBOOLEAN ConflictDetected);
+
+NTKERNELAPI
+VOID
+NTAPI
+IoSetHardErrorOrVerifyDevice(
+  IN PIRP Irp,
+  IN PDEVICE_OBJECT DeviceObject);
+
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoCreateDisk(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PCREATE_DISK Disk OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoReadDiskSignature(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN ULONG BytesPerSector,
+  OUT PDISK_SIGNATURE Signature);
+
+NTKERNELAPI
+NTSTATUS
+FASTCALL
+IoReadPartitionTable(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN ULONG SectorSize,
+  IN BOOLEAN ReturnRecognizedPartitions,
+  OUT struct _DRIVE_LAYOUT_INFORMATION **PartitionBuffer);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoReadPartitionTableEx(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN struct _DRIVE_LAYOUT_INFORMATION_EX **PartitionBuffer);
+
+NTKERNELAPI
+NTSTATUS
+FASTCALL
+IoSetPartitionInformation(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN ULONG SectorSize,
+  IN ULONG PartitionNumber,
+  IN ULONG PartitionType);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoSetPartitionInformationEx(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN ULONG PartitionNumber,
+  IN struct _SET_PARTITION_INFORMATION_EX *PartitionInfo);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoSetSystemPartition(
+  IN PUNICODE_STRING VolumeNameString);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+IoSetThreadHardErrorMode(
+  IN BOOLEAN EnableHardErrors);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoVerifyPartitionTable(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN BOOLEAN FixErrors);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoVolumeDeviceToDosName(
+  IN PVOID VolumeDeviceObject,
+  OUT PUNICODE_STRING DosName);
+
+NTKERNELAPI
+NTSTATUS
+FASTCALL
+IoWritePartitionTable(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN ULONG SectorSize,
+  IN ULONG SectorsPerTrack,
+  IN ULONG NumberOfHeads,
+  IN struct _DRIVE_LAYOUT_INFORMATION *PartitionBuffer);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoWritePartitionTableEx(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN struct _DRIVE_LAYOUT_INFORMATION_EX *DriveLayout);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
+
+/* Kernel Functions */
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTKERNELAPI
+DECLSPEC_NORETURN
+VOID
+NTAPI
+KeBugCheck(
+  IN ULONG BugCheckCode);
+
+NTKERNELAPI
+LONG
+NTAPI
+KePulseEvent(
+  IN OUT PRKEVENT Event,
+  IN KPRIORITY Increment,
+  IN BOOLEAN Wait);
+
+NTKERNELAPI
+LONG
+NTAPI
+KeSetBasePriorityThread(
+  IN OUT PRKTHREAD Thread,
+  IN LONG Increment);
+
+#endif
 
 /* Memory Manager Types */
 
@@ -688,6 +953,279 @@ MmGetPhysicalAddress(
   IN PVOID BaseAddress);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
+/* Security reference monitor routines */
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+NTKERNELAPI
+BOOLEAN
+NTAPI
+SeSinglePrivilegeCheck(
+  IN LUID PrivilegeValue,
+  IN KPROCESSOR_MODE PreviousMode);
+#endif
+
+/* Hardware abstraction layer routines */
+
+#if !defined(NO_LEGACY_DRIVERS)
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+NTHALAPI
+NTSTATUS
+NTAPI
+HalAssignSlotResources(
+  IN PUNICODE_STRING RegistryPath,
+  IN PUNICODE_STRING DriverClassName,
+  IN PDRIVER_OBJECT DriverObject,
+  IN PDEVICE_OBJECT DeviceObject,
+  IN INTERFACE_TYPE BusType,
+  IN ULONG BusNumber,
+  IN ULONG SlotNumber,
+  IN OUT PCM_RESOURCE_LIST *AllocatedResources);
+#endif
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTHALAPI
+PADAPTER_OBJECT
+NTAPI
+HalGetAdapter(
+  IN PDEVICE_DESCRIPTION DeviceDescription,
+  IN OUT PULONG NumberOfMapRegisters);
+
+NTHALAPI
+BOOLEAN
+NTAPI
+HalMakeBeep(
+  IN ULONG Frequency);
+
+VOID
+NTAPI
+HalPutDmaAdapter(
+  IN PADAPTER_OBJECT DmaAdapter);
+
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+NTKERNELAPI
+VOID
+FASTCALL
+HalExamineMBR(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN ULONG SectorSize,
+  IN ULONG MBRTypeIdentifier,
+  OUT PVOID *Buffer);
+#endif
+
+/** Process manager routines **/
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PsSetLoadImageNotifyRoutine(
+  IN PLOAD_IMAGE_NOTIFY_ROUTINE NotifyRoutine);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PsSetCreateThreadNotifyRoutine(
+  IN PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PsSetCreateProcessNotifyRoutine(
+  IN PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine,
+  IN BOOLEAN Remove);
+
+NTKERNELAPI
+HANDLE
+NTAPI
+PsGetCurrentProcessId(
+  VOID);
+
+NTKERNELAPI
+HANDLE
+NTAPI
+PsGetCurrentThreadId(
+  VOID);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+PsGetVersion(
+  OUT PULONG MajorVersion OPTIONAL,
+  OUT PULONG MinorVersion OPTIONAL,
+  OUT PULONG BuildNumber OPTIONAL,
+  OUT PUNICODE_STRING CSDVersion OPTIONAL);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+
+NTKERNELAPI
+HANDLE
+NTAPI
+PsGetProcessId(
+  IN PEPROCESS Process);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PsRemoveCreateThreadNotifyRoutine(
+  IN PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PsRemoveLoadImageNotifyRoutine(
+  IN PLOAD_IMAGE_NOTIFY_ROUTINE NotifyRoutine);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
+
+extern NTKERNELAPI PEPROCESS PsInitialSystemProcess;
+
+#if defined(USE_DMA_MACROS) && !defined(_NTHAL_) && (defined(_NTDDK_) || defined(_NTDRIVER_)) || defined(_WDM_INCLUDED_) 
+// nothing here
+#else
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+//DECLSPEC_DEPRECATED_DDK
+NTHALAPI
+VOID
+NTAPI
+IoFreeAdapterChannel(
+  IN PADAPTER_OBJECT AdapterObject);
+
+//DECLSPEC_DEPRECATED_DDK
+NTHALAPI
+BOOLEAN
+NTAPI
+IoFlushAdapterBuffers(
+  IN PADAPTER_OBJECT AdapterObject,
+  IN PMDL Mdl,
+  IN PVOID MapRegisterBase,
+  IN PVOID CurrentVa,
+  IN ULONG Length,
+  IN BOOLEAN WriteToDevice);
+
+//DECLSPEC_DEPRECATED_DDK
+NTHALAPI
+VOID
+NTAPI
+IoFreeMapRegisters(
+  IN PADAPTER_OBJECT AdapterObject,
+  IN PVOID MapRegisterBase,
+  IN ULONG NumberOfMapRegisters);
+
+//DECLSPEC_DEPRECATED_DDK
+NTHALAPI
+PVOID
+NTAPI
+HalAllocateCommonBuffer(
+  IN PADAPTER_OBJECT AdapterObject,
+  IN ULONG Length,
+  OUT PPHYSICAL_ADDRESS LogicalAddress,
+  IN BOOLEAN CacheEnabled);
+
+//DECLSPEC_DEPRECATED_DDK
+NTHALAPI
+VOID
+NTAPI
+HalFreeCommonBuffer(
+  IN PADAPTER_OBJECT AdapterObject,
+  IN ULONG Length,
+  IN PHYSICAL_ADDRESS LogicalAddress,
+  IN PVOID VirtualAddress,
+  IN BOOLEAN CacheEnabled);
+
+//DECLSPEC_DEPRECATED_DDK
+NTHALAPI
+ULONG
+NTAPI
+HalReadDmaCounter(
+  IN PADAPTER_OBJECT AdapterObject);
+
+NTHALAPI
+NTSTATUS
+NTAPI
+HalAllocateAdapterChannel(
+  IN PADAPTER_OBJECT  AdapterObject,
+  IN PWAIT_CONTEXT_BLOCK  Wcb,
+  IN ULONG  NumberOfMapRegisters,
+  IN PDRIVER_CONTROL  ExecutionRoutine);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
+#endif /* defined(USE_DMA_MACROS) && !defined(_NTHAL_) && (defined(_NTDDK_) || defined(_NTDRIVER_)) || defined(_WDM_INCLUDED_)  */
+
+/** NtXxx and ZwXxx routines **/
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtOpenProcess(
+  OUT PHANDLE ProcessHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes,
+  IN PCLIENT_ID ClientId OPTIONAL);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtQueryInformationProcess(
+  IN HANDLE ProcessHandle,
+  IN PROCESSINFOCLASS ProcessInformationClass,
+  OUT PVOID ProcessInformation OPTIONAL,
+  IN ULONG ProcessInformationLength,
+  OUT PULONG ReturnLength OPTIONAL);
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTSTATUS
+NTAPI
+ZwCancelTimer(
+  IN HANDLE TimerHandle,
+  OUT PBOOLEAN CurrentState OPTIONAL);
+
+NTSTATUS
+NTAPI
+ZwCreateTimer(
+  OUT PHANDLE TimerHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+  IN TIMER_TYPE TimerType);
+
+NTSTATUS
+NTAPI
+ZwOpenTimer(
+  OUT PHANDLE TimerHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwSetInformationThread(
+  IN HANDLE ThreadHandle,
+  IN THREADINFOCLASS ThreadInformationClass,
+  IN PVOID ThreadInformation,
+  IN ULONG ThreadInformationLength);
+
+NTSTATUS
+NTAPI
+ZwSetTimer(
+  IN HANDLE TimerHandle,
+  IN PLARGE_INTEGER DueTime,
+  IN PTIMER_APC_ROUTINE TimerApcRoutine OPTIONAL,
+  IN PVOID TimerContext OPTIONAL,
+  IN BOOLEAN ResumeTimer,
+  IN LONG Period OPTIONAL,
+  OUT PBOOLEAN PreviousState OPTIONAL);
+
+#endif
 
 /* Windows Device Driver Kit */
 #include "winddk.h"
