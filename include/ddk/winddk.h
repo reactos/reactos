@@ -2203,57 +2203,6 @@ KeRaiseIrqlToSynchLevel(
 /** Memory manager routines **/
 
 NTKERNELAPI
-PVOID
-NTAPI
-MmAllocateNonCachedMemory(
-  IN ULONG  NumberOfBytes);
-
-NTKERNELAPI
-VOID
-NTAPI
-MmFreeNonCachedMemory(
-  IN PVOID  BaseAddress,
-  IN SIZE_T  NumberOfBytes);
-
-NTKERNELAPI
-PVOID
-NTAPI
-MmGetVirtualForPhysical(
-  IN PHYSICAL_ADDRESS  PhysicalAddress);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-MmMapUserAddressesToPage(
-  IN PVOID  BaseAddress,
-  IN SIZE_T  NumberOfBytes,
-  IN PVOID  PageAddress);
-
-NTKERNELAPI
-PVOID
-NTAPI
-MmMapVideoDisplay(
-  IN PHYSICAL_ADDRESS  PhysicalAddress,
-  IN SIZE_T  NumberOfBytes,
-  IN MEMORY_CACHING_TYPE  CacheType);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-MmMapViewInSessionSpace(
-  IN PVOID  Section,
-  OUT PVOID  *MappedBase,
-  IN OUT PSIZE_T  ViewSize);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-MmMapViewInSystemSpace(
-  IN PVOID  Section,
-  OUT PVOID  *MappedBase,
-  IN PSIZE_T  ViewSize);
-
-NTKERNELAPI
 NTSTATUS
 NTAPI
 MmMarkPhysicalMemoryAsBad(
@@ -2279,18 +2228,6 @@ MmMarkPhysicalMemoryAsGood(
     + (_Size) + (PAGE_SIZE - 1)) >> PAGE_SHIFT))
 
 NTKERNELAPI
-BOOLEAN
-NTAPI
-MmIsAddressValid(
-  IN PVOID  VirtualAddress);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-MmIsThisAnNtAsSystem(
-  VOID);
-
-NTKERNELAPI
 PVOID
 NTAPI
 MmLockPagableImageSection(
@@ -2302,12 +2239,6 @@ MmLockPagableImageSection(
  *   IN PVOID  AddressWithinSection)
  */
 #define MmLockPagableCodeSection(Address) MmLockPagableDataSection(Address)
-
-NTKERNELAPI
-VOID
-NTAPI
-MmLockPagableSectionByHandle(
-  IN PVOID  ImageSectionHandle);
 
 NTKERNELAPI
 PVOID
@@ -2322,46 +2253,6 @@ NTAPI
 MmUnlockPageableImageSection(
     IN PVOID ImageSectionHandle
 );
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-MmUnmapViewInSessionSpace(
-  IN PVOID  MappedBase);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-MmUnmapViewInSystemSpace(
-  IN PVOID MappedBase);
-
-NTKERNELAPI
-VOID
-NTAPI
-MmUnsecureVirtualMemory(
-  IN HANDLE  SecureHandle);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-MmRemovePhysicalMemory(
-  IN PPHYSICAL_ADDRESS  StartAddress,
-  IN OUT PLARGE_INTEGER  NumberOfBytes);
-
-NTKERNELAPI
-HANDLE
-NTAPI
-MmSecureVirtualMemory(
-  IN PVOID  Address,
-  IN SIZE_T  Size,
-  IN ULONG  ProbeMode);
-
-NTKERNELAPI
-VOID
-NTAPI
-MmUnmapVideoDisplay(
-  IN PVOID  BaseAddress,
-  IN SIZE_T  NumberOfBytes);
 
 /** Object manager routines **/
 
@@ -2611,60 +2502,7 @@ WmiSystemControl(
   IN PIRP  Irp,
   OUT PSYSCTL_IRP_DISPOSITION  IrpDisposition);
 
-/** Kernel debugger routines **/
-
-ULONG
-NTAPI
-DbgPrompt(
-    IN PCCH Prompt,
-    OUT PCH Response,
-    IN ULONG MaximumResponseLength
-);
-
 /** Stuff from winnt4.h */
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoAssignResources(
-  IN PUNICODE_STRING  RegistryPath,
-  IN PUNICODE_STRING  DriverClassName  OPTIONAL,
-  IN PDRIVER_OBJECT  DriverObject,
-  IN PDEVICE_OBJECT  DeviceObject  OPTIONAL,
-  IN PIO_RESOURCE_REQUIREMENTS_LIST  RequestedResources,
-  IN OUT PCM_RESOURCE_LIST  *AllocatedResources);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-MmIsNonPagedSystemAddressValid(
-  IN PVOID  VirtualAddress);
-
-#if defined(_AMD64_) || defined(_IA64_)
-//DECLSPEC_DEPRECATED_DDK_WINXP
-static __inline
-LARGE_INTEGER
-NTAPI_INLINE
-RtlLargeIntegerDivide(
-    IN LARGE_INTEGER Dividend,
-    IN LARGE_INTEGER Divisor,
-    IN OUT PLARGE_INTEGER Remainder)
-{
-    LARGE_INTEGER ret;
-    ret.QuadPart = Dividend.QuadPart / Divisor.QuadPart;
-    if (Remainder)
-        Remainder->QuadPart = Dividend.QuadPart % Divisor.QuadPart;
-    return ret;
-}
-#else
-NTSYSAPI
-LARGE_INTEGER
-NTAPI
-RtlLargeIntegerDivide(
-  IN LARGE_INTEGER  Dividend,
-  IN LARGE_INTEGER  Divisor,
-  IN OUT PLARGE_INTEGER  Remainder);
-#endif
 
 #ifndef _X86_
 NTKERNELAPI
@@ -2691,79 +2529,10 @@ ExInterlockedIncrementLong(
 #endif
 
 NTHALAPI
-VOID
-NTAPI
-HalAcquireDisplayOwnership(
-  IN PHAL_RESET_DISPLAY_PARAMETERS  ResetDisplayParameters);
-
-NTHALAPI
-ULONG
-NTAPI
-HalGetBusData(
-  IN BUS_DATA_TYPE  BusDataType,
-  IN ULONG  BusNumber,
-  IN ULONG  SlotNumber,
-  IN PVOID  Buffer,
-  IN ULONG  Length);
-
-NTHALAPI
-ULONG
-NTAPI
-HalGetBusDataByOffset(
-  IN BUS_DATA_TYPE  BusDataType,
-  IN ULONG  BusNumber,
-  IN ULONG  SlotNumber,
-  IN PVOID  Buffer,
-  IN ULONG  Offset,
-  IN ULONG  Length);
-
-NTHALAPI
 ULONG
 NTAPI
 HalGetDmaAlignmentRequirement(
   VOID);
-
-NTHALAPI
-ULONG
-NTAPI
-HalGetInterruptVector(
-  IN INTERFACE_TYPE  InterfaceType,
-  IN ULONG  BusNumber,
-  IN ULONG  BusInterruptLevel,
-  IN ULONG  BusInterruptVector,
-  OUT PKIRQL  Irql,
-  OUT PKAFFINITY  Affinity);
-
-NTHALAPI
-ULONG
-NTAPI
-HalSetBusData(
-  IN BUS_DATA_TYPE  BusDataType,
-  IN ULONG  BusNumber,
-  IN ULONG  SlotNumber,
-  IN PVOID  Buffer,
-  IN ULONG  Length);
-
-NTHALAPI
-ULONG
-NTAPI
-HalSetBusDataByOffset(
-  IN BUS_DATA_TYPE  BusDataType,
-  IN ULONG  BusNumber,
-  IN ULONG  SlotNumber,
-  IN PVOID  Buffer,
-  IN ULONG  Offset,
-  IN ULONG  Length);
-
-NTHALAPI
-BOOLEAN
-NTAPI
-HalTranslateBusAddress(
-  IN INTERFACE_TYPE  InterfaceType,
-  IN ULONG  BusNumber,
-  IN PHYSICAL_ADDRESS  BusAddress,
-  IN OUT PULONG  AddressSpace,
-  OUT PPHYSICAL_ADDRESS  TranslatedAddress);
 
 NTSYSAPI
 BOOLEAN

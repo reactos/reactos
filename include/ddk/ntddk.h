@@ -211,162 +211,6 @@ typedef POSVERSIONINFOA POSVERSIONINFO;
 typedef LPOSVERSIONINFOA LPOSVERSIONINFO;
 #endif /* UNICODE */
 
-typedef struct _RTL_SPLAY_LINKS {
-  struct _RTL_SPLAY_LINKS *Parent;
-  struct _RTL_SPLAY_LINKS *LeftChild;
-  struct _RTL_SPLAY_LINKS *RightChild;
-} RTL_SPLAY_LINKS, *PRTL_SPLAY_LINKS;
-
-#if (defined(_M_AMD64) || defined(_M_IA64)) && !defined(_REALLY_GET_CALLERS_CALLER_)
-
-#define RtlGetCallersAddress(CallersAddress, CallersCaller) \
-    *CallersAddress = (PVOID)_ReturnAddress(); \
-    *CallersCaller = NULL;
-#else
-
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
-NTSYSAPI
-VOID
-NTAPI
-RtlGetCallersAddress(
-  OUT PVOID *CallersAddress,
-  OUT PVOID *CallersCaller);
-#endif
-
-#endif
-
-#if !defined(MIDL_PASS)
-
-FORCEINLINE
-LUID
-NTAPI_INLINE
-RtlConvertLongToLuid(
-  IN LONG Val)
-{
-  LUID Luid;
-  LARGE_INTEGER Temp;
-
-  Temp.QuadPart = Val;
-  Luid.LowPart = Temp.u.LowPart;
-  Luid.HighPart = Temp.u.HighPart;
-  return Luid;
-}
-
-FORCEINLINE
-LUID
-NTAPI_INLINE
-RtlConvertUlongToLuid(
-  IN ULONG Val)
-{
-  LUID Luid;
-
-  Luid.LowPart = Val;
-  Luid.HighPart = 0;
-  return Luid;
-}
-
-#endif
-
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
-
-NTSYSAPI
-BOOLEAN
-NTAPI
-RtlPrefixUnicodeString(
-  IN PCUNICODE_STRING  String1,
-  IN PCUNICODE_STRING  String2,
-  IN BOOLEAN  CaseInSensitive);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlUpperString(
-  IN OUT PSTRING  DestinationString,
-  IN const PSTRING  SourceString);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlUpcaseUnicodeString(
-  IN OUT PUNICODE_STRING DestinationString,
-  IN PCUNICODE_STRING  SourceString,
-  IN BOOLEAN  AllocateDestinationString);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlMapGenericMask(
-  IN OUT PACCESS_MASK AccessMask,
-  IN PGENERIC_MAPPING GenericMapping);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlVolumeDeviceToDosName(
-  IN PVOID VolumeDeviceObject,
-  OUT PUNICODE_STRING DosName);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlGetVersion(
-  IN OUT PRTL_OSVERSIONINFOW lpVersionInformation);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlVerifyVersionInfo(
-  IN PRTL_OSVERSIONINFOEXW VersionInfo,
-  IN ULONG TypeMask,
-  IN ULONGLONG ConditionMask);
-
-NTSYSAPI
-LONG
-NTAPI
-RtlCompareString(
-  IN const PSTRING String1,
-  IN const PSTRING String2,
-  BOOLEAN CaseInSensitive);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlCopyString(
-  OUT PSTRING DestinationString,
-  IN const PSTRING SourceString OPTIONAL);
-
-NTSYSAPI
-BOOLEAN
-NTAPI
-RtlEqualString(
-  IN const PSTRING String1,
-  IN const PSTRING String2,
-  IN BOOLEAN CaseInSensitive);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlCharToInteger(
-  IN PCSZ String,
-  IN ULONG Base OPTIONAL,
-  OUT PULONG Value);
-
-NTSYSAPI
-CHAR
-NTAPI
-RtlUpperChar(
-  IN CHAR Character);
-
-NTSYSAPI
-ULONG
-NTAPI
-RtlWalkFrameChain(
-  OUT PVOID *Callers,
-  IN ULONG Count,
-  IN ULONG Flags);
-
-#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
-
 /* Executive Types */
 
 #define PROTECTED_POOL                    0x80000000
@@ -596,6 +440,7 @@ VOID
 typedef DRIVER_REINITIALIZE *PDRIVER_REINITIALIZE;
 
 /** Filesystem runtime library routines **/
+
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 NTKERNELAPI
 BOOLEAN
@@ -603,6 +448,205 @@ NTAPI
 FsRtlIsTotalDeviceFailure(
   IN NTSTATUS Status);
 #endif
+
+/* Hardware abstraction layer routines */
+
+#if !defined(NO_LEGACY_DRIVERS)
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTHALAPI
+NTSTATUS
+NTAPI
+HalAssignSlotResources(
+  IN PUNICODE_STRING RegistryPath,
+  IN PUNICODE_STRING DriverClassName,
+  IN PDRIVER_OBJECT DriverObject,
+  IN PDEVICE_OBJECT DeviceObject,
+  IN INTERFACE_TYPE BusType,
+  IN ULONG BusNumber,
+  IN ULONG SlotNumber,
+  IN OUT PCM_RESOURCE_LIST *AllocatedResources);
+
+NTHALAPI
+ULONG
+NTAPI
+HalGetInterruptVector(
+  IN INTERFACE_TYPE InterfaceType,
+  IN ULONG BusNumber,
+  IN ULONG BusInterruptLevel,
+  IN ULONG BusInterruptVector,
+  OUT PKIRQL Irql,
+  OUT PKAFFINITY Affinity);
+
+NTHALAPI
+ULONG
+NTAPI
+HalSetBusData(
+  IN BUS_DATA_TYPE BusDataType,
+  IN ULONG BusNumber,
+  IN ULONG SlotNumber,
+  IN PVOID Buffer,
+  IN ULONG Length);
+
+#endif
+
+#endif /* !defined(NO_LEGACY_DRIVERS) */
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTHALAPI
+PADAPTER_OBJECT
+NTAPI
+HalGetAdapter(
+  IN PDEVICE_DESCRIPTION DeviceDescription,
+  IN OUT PULONG NumberOfMapRegisters);
+
+NTHALAPI
+BOOLEAN
+NTAPI
+HalMakeBeep(
+  IN ULONG Frequency);
+
+VOID
+NTAPI
+HalPutDmaAdapter(
+  IN PADAPTER_OBJECT DmaAdapter);
+
+NTHALAPI
+VOID
+NTAPI
+HalAcquireDisplayOwnership(
+  IN PHAL_RESET_DISPLAY_PARAMETERS ResetDisplayParameters);
+
+NTHALAPI
+ULONG
+NTAPI
+HalGetBusData(
+  IN BUS_DATA_TYPE BusDataType,
+  IN ULONG BusNumber,
+  IN ULONG SlotNumber,
+  OUT PVOID Buffer,
+  IN ULONG Length);
+
+NTHALAPI
+ULONG
+NTAPI
+HalGetBusDataByOffset(
+  IN BUS_DATA_TYPE BusDataType,
+  IN ULONG BusNumber,
+  IN ULONG SlotNumber,
+  OUT PVOID Buffer,
+  IN ULONG Offset,
+  IN ULONG Length);
+
+NTHALAPI
+ULONG
+NTAPI
+HalSetBusDataByOffset(
+  IN BUS_DATA_TYPE BusDataType,
+  IN ULONG BusNumber,
+  IN ULONG SlotNumber,
+  IN PVOID Buffer,
+  IN ULONG Offset,
+  IN ULONG Length);
+
+NTHALAPI
+BOOLEAN
+NTAPI
+HalTranslateBusAddress(
+  IN INTERFACE_TYPE InterfaceType,
+  IN ULONG BusNumber,
+  IN PHYSICAL_ADDRESS BusAddress,
+  IN OUT PULONG AddressSpace,
+  OUT PPHYSICAL_ADDRESS TranslatedAddress);
+
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+NTKERNELAPI
+VOID
+FASTCALL
+HalExamineMBR(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN ULONG SectorSize,
+  IN ULONG MBRTypeIdentifier,
+  OUT PVOID *Buffer);
+#endif
+
+#if defined(USE_DMA_MACROS) && !defined(_NTHAL_) && (defined(_NTDDK_) || defined(_NTDRIVER_)) || defined(_WDM_INCLUDED_) 
+// nothing here
+#else
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+//DECLSPEC_DEPRECATED_DDK
+NTHALAPI
+VOID
+NTAPI
+IoFreeAdapterChannel(
+  IN PADAPTER_OBJECT AdapterObject);
+
+//DECLSPEC_DEPRECATED_DDK
+NTHALAPI
+BOOLEAN
+NTAPI
+IoFlushAdapterBuffers(
+  IN PADAPTER_OBJECT AdapterObject,
+  IN PMDL Mdl,
+  IN PVOID MapRegisterBase,
+  IN PVOID CurrentVa,
+  IN ULONG Length,
+  IN BOOLEAN WriteToDevice);
+
+//DECLSPEC_DEPRECATED_DDK
+NTHALAPI
+VOID
+NTAPI
+IoFreeMapRegisters(
+  IN PADAPTER_OBJECT AdapterObject,
+  IN PVOID MapRegisterBase,
+  IN ULONG NumberOfMapRegisters);
+
+//DECLSPEC_DEPRECATED_DDK
+NTHALAPI
+PVOID
+NTAPI
+HalAllocateCommonBuffer(
+  IN PADAPTER_OBJECT AdapterObject,
+  IN ULONG Length,
+  OUT PPHYSICAL_ADDRESS LogicalAddress,
+  IN BOOLEAN CacheEnabled);
+
+//DECLSPEC_DEPRECATED_DDK
+NTHALAPI
+VOID
+NTAPI
+HalFreeCommonBuffer(
+  IN PADAPTER_OBJECT AdapterObject,
+  IN ULONG Length,
+  IN PHYSICAL_ADDRESS LogicalAddress,
+  IN PVOID VirtualAddress,
+  IN BOOLEAN CacheEnabled);
+
+//DECLSPEC_DEPRECATED_DDK
+NTHALAPI
+ULONG
+NTAPI
+HalReadDmaCounter(
+  IN PADAPTER_OBJECT AdapterObject);
+
+NTHALAPI
+NTSTATUS
+NTAPI
+HalAllocateAdapterChannel(
+  IN PADAPTER_OBJECT  AdapterObject,
+  IN PWAIT_CONTEXT_BLOCK  Wcb,
+  IN ULONG  NumberOfMapRegisters,
+  IN PDRIVER_CONTROL  ExecutionRoutine);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
+#endif /* defined(USE_DMA_MACROS) && !defined(_NTHAL_) && (defined(_NTDDK_) || defined(_NTDRIVER_)) || defined(_WDM_INCLUDED_)  */
 
 /* I/O Manager Functions */
 
@@ -804,6 +848,17 @@ IoSetHardErrorOrVerifyDevice(
   IN PIRP Irp,
   IN PDEVICE_OBJECT DeviceObject);
 
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoAssignResources(
+  IN PUNICODE_STRING RegistryPath,
+  IN PUNICODE_STRING DriverClassName OPTIONAL,
+  IN PDRIVER_OBJECT DriverObject,
+  IN PDEVICE_OBJECT DeviceObject OPTIONAL,
+  IN PIO_RESOURCE_REQUIREMENTS_LIST RequestedResources OPTIONAL,
+  IN OUT PCM_RESOURCE_LIST *AllocatedResources);
+
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
@@ -901,6 +956,16 @@ IoWritePartitionTableEx(
 
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
+/** Kernel debugger routines **/
+
+NTSYSAPI
+ULONG
+NTAPI
+DbgPrompt(
+  IN PCCH Prompt,
+  OUT PCH Response,
+  IN ULONG MaximumResponseLength);
+
 /* Kernel Functions */
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
@@ -952,70 +1017,143 @@ NTAPI
 MmGetPhysicalAddress(
   IN PVOID BaseAddress);
 
-#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
-
-/* Security reference monitor routines */
-
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
 NTKERNELAPI
 BOOLEAN
 NTAPI
-SeSinglePrivilegeCheck(
-  IN LUID PrivilegeValue,
-  IN KPROCESSOR_MODE PreviousMode);
-#endif
+MmIsNonPagedSystemAddressValid(
+  IN PVOID VirtualAddress);
 
-/* Hardware abstraction layer routines */
+NTKERNELAPI
+PVOID
+NTAPI
+MmAllocateNonCachedMemory(
+  IN SIZE_T NumberOfBytes);
 
-#if !defined(NO_LEGACY_DRIVERS)
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
-NTHALAPI
+NTKERNELAPI
+VOID
+NTAPI
+MmFreeNonCachedMemory(
+  IN PVOID BaseAddress,
+  IN SIZE_T NumberOfBytes);
+
+NTKERNELAPI
+PVOID
+NTAPI
+MmGetVirtualForPhysical(
+  IN PHYSICAL_ADDRESS PhysicalAddress);
+
+NTKERNELAPI
 NTSTATUS
 NTAPI
-HalAssignSlotResources(
-  IN PUNICODE_STRING RegistryPath,
-  IN PUNICODE_STRING DriverClassName,
-  IN PDRIVER_OBJECT DriverObject,
-  IN PDEVICE_OBJECT DeviceObject,
-  IN INTERFACE_TYPE BusType,
-  IN ULONG BusNumber,
-  IN ULONG SlotNumber,
-  IN OUT PCM_RESOURCE_LIST *AllocatedResources);
-#endif
-#endif
+MmMapUserAddressesToPage(
+  IN PVOID BaseAddress,
+  IN SIZE_T NumberOfBytes,
+  IN PVOID PageAddress);
 
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
-
-NTHALAPI
-PADAPTER_OBJECT
+NTKERNELAPI
+PVOID
 NTAPI
-HalGetAdapter(
-  IN PDEVICE_DESCRIPTION DeviceDescription,
-  IN OUT PULONG NumberOfMapRegisters);
+MmMapVideoDisplay(
+  IN PHYSICAL_ADDRESS PhysicalAddress,
+  IN SIZE_T NumberOfBytes,
+  IN MEMORY_CACHING_TYPE CacheType);
 
-NTHALAPI
+NTKERNELAPI
+NTSTATUS
+NTAPI
+MmMapViewInSessionSpace(
+  IN PVOID Section,
+  OUT PVOID *MappedBase,
+  IN OUT PSIZE_T ViewSize);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+MmMapViewInSystemSpace(
+  IN PVOID Section,
+  OUT PVOID *MappedBase,
+  IN OUT PSIZE_T ViewSize);
+
+NTKERNELAPI
 BOOLEAN
 NTAPI
-HalMakeBeep(
-  IN ULONG Frequency);
+MmIsAddressValid(
+  IN PVOID VirtualAddress);
 
-VOID
+NTKERNELAPI
+BOOLEAN
 NTAPI
-HalPutDmaAdapter(
-  IN PADAPTER_OBJECT DmaAdapter);
+MmIsThisAnNtAsSystem(
+  VOID);
 
-#endif
-
-#if (NTDDI_VERSION >= NTDDI_WINXP)
 NTKERNELAPI
 VOID
-FASTCALL
-HalExamineMBR(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN ULONG SectorSize,
-  IN ULONG MBRTypeIdentifier,
-  OUT PVOID *Buffer);
-#endif
+NTAPI
+MmLockPagableSectionByHandle(
+  IN PVOID ImageSectionHandle);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+MmUnmapViewInSessionSpace(
+  IN PVOID MappedBase);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+MmUnmapViewInSystemSpace(
+  IN PVOID MappedBase);
+
+NTKERNELAPI
+VOID
+NTAPI
+MmUnsecureVirtualMemory(
+  IN HANDLE SecureHandle);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+MmRemovePhysicalMemory(
+  IN PPHYSICAL_ADDRESS StartAddress,
+  IN OUT PLARGE_INTEGER NumberOfBytes);
+
+NTKERNELAPI
+HANDLE
+NTAPI
+MmSecureVirtualMemory(
+  IN PVOID Address,
+  IN SIZE_T Size,
+  IN ULONG ProbeMode);
+
+NTKERNELAPI
+VOID
+NTAPI
+MmUnmapVideoDisplay(
+  IN PVOID BaseAddress,
+  IN SIZE_T NumberOfBytes);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
+/* NtXxx Functions */
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtOpenProcess(
+  OUT PHANDLE ProcessHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes,
+  IN PCLIENT_ID ClientId OPTIONAL);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtQueryInformationProcess(
+  IN HANDLE ProcessHandle,
+  IN PROCESSINFOCLASS ProcessInformationClass,
+  OUT PVOID ProcessInformation OPTIONAL,
+  IN ULONG ProcessInformationLength,
+  OUT PULONG ReturnLength OPTIONAL);
 
 /** Process manager routines **/
 
@@ -1087,100 +1225,209 @@ PsRemoveLoadImageNotifyRoutine(
 
 extern NTKERNELAPI PEPROCESS PsInitialSystemProcess;
 
-#if defined(USE_DMA_MACROS) && !defined(_NTHAL_) && (defined(_NTDDK_) || defined(_NTDRIVER_)) || defined(_WDM_INCLUDED_) 
-// nothing here
+/* RTL Types */
+
+typedef struct _RTL_SPLAY_LINKS {
+  struct _RTL_SPLAY_LINKS *Parent;
+  struct _RTL_SPLAY_LINKS *LeftChild;
+  struct _RTL_SPLAY_LINKS *RightChild;
+} RTL_SPLAY_LINKS, *PRTL_SPLAY_LINKS;
+
+/* RTL Functions */
+
+#if (defined(_M_AMD64) || defined(_M_IA64)) && !defined(_REALLY_GET_CALLERS_CALLER_)
+
+#define RtlGetCallersAddress(CallersAddress, CallersCaller) \
+    *CallersAddress = (PVOID)_ReturnAddress(); \
+    *CallersCaller = NULL;
 #else
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
-//DECLSPEC_DEPRECATED_DDK
-NTHALAPI
+NTSYSAPI
 VOID
 NTAPI
-IoFreeAdapterChannel(
-  IN PADAPTER_OBJECT AdapterObject);
+RtlGetCallersAddress(
+  OUT PVOID *CallersAddress,
+  OUT PVOID *CallersCaller);
+#endif
 
-//DECLSPEC_DEPRECATED_DDK
-NTHALAPI
+#endif
+
+#if !defined(MIDL_PASS)
+
+FORCEINLINE
+LUID
+NTAPI_INLINE
+RtlConvertLongToLuid(
+  IN LONG Val)
+{
+  LUID Luid;
+  LARGE_INTEGER Temp;
+
+  Temp.QuadPart = Val;
+  Luid.LowPart = Temp.u.LowPart;
+  Luid.HighPart = Temp.u.HighPart;
+  return Luid;
+}
+
+FORCEINLINE
+LUID
+NTAPI_INLINE
+RtlConvertUlongToLuid(
+  IN ULONG Val)
+{
+  LUID Luid;
+
+  Luid.LowPart = Val;
+  Luid.HighPart = 0;
+  return Luid;
+}
+
+#endif
+
+#if defined(_AMD64_) || defined(_IA64_)
+//DECLSPEC_DEPRECATED_DDK_WINXP
+__inline
+LARGE_INTEGER
+NTAPI_INLINE
+RtlLargeIntegerDivide(
+  IN LARGE_INTEGER Dividend,
+  IN LARGE_INTEGER Divisor,
+  OUT PLARGE_INTEGER Remainder OPTIONAL)
+{
+  LARGE_INTEGER ret;
+  ret.QuadPart = Dividend.QuadPart / Divisor.QuadPart;
+  if (Remainder)
+    Remainder->QuadPart = Dividend.QuadPart % Divisor.QuadPart;
+  return ret;
+}
+
+#else
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+NTSYSAPI
+LARGE_INTEGER
+NTAPI
+RtlLargeIntegerDivide(
+  IN LARGE_INTEGER Dividend,
+  IN LARGE_INTEGER Divisor,
+  OUT PLARGE_INTEGER Remainder OPTIONAL);
+#endif
+
+#endif /* defined(_AMD64_) || defined(_IA64_) */
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTSYSAPI
 BOOLEAN
 NTAPI
-IoFlushAdapterBuffers(
-  IN PADAPTER_OBJECT AdapterObject,
-  IN PMDL Mdl,
-  IN PVOID MapRegisterBase,
-  IN PVOID CurrentVa,
-  IN ULONG Length,
-  IN BOOLEAN WriteToDevice);
+RtlPrefixUnicodeString(
+  IN PCUNICODE_STRING  String1,
+  IN PCUNICODE_STRING  String2,
+  IN BOOLEAN  CaseInSensitive);
 
-//DECLSPEC_DEPRECATED_DDK
-NTHALAPI
+NTSYSAPI
 VOID
 NTAPI
-IoFreeMapRegisters(
-  IN PADAPTER_OBJECT AdapterObject,
-  IN PVOID MapRegisterBase,
-  IN ULONG NumberOfMapRegisters);
+RtlUpperString(
+  IN OUT PSTRING  DestinationString,
+  IN const PSTRING  SourceString);
 
-//DECLSPEC_DEPRECATED_DDK
-NTHALAPI
-PVOID
-NTAPI
-HalAllocateCommonBuffer(
-  IN PADAPTER_OBJECT AdapterObject,
-  IN ULONG Length,
-  OUT PPHYSICAL_ADDRESS LogicalAddress,
-  IN BOOLEAN CacheEnabled);
-
-//DECLSPEC_DEPRECATED_DDK
-NTHALAPI
-VOID
-NTAPI
-HalFreeCommonBuffer(
-  IN PADAPTER_OBJECT AdapterObject,
-  IN ULONG Length,
-  IN PHYSICAL_ADDRESS LogicalAddress,
-  IN PVOID VirtualAddress,
-  IN BOOLEAN CacheEnabled);
-
-//DECLSPEC_DEPRECATED_DDK
-NTHALAPI
-ULONG
-NTAPI
-HalReadDmaCounter(
-  IN PADAPTER_OBJECT AdapterObject);
-
-NTHALAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
-HalAllocateAdapterChannel(
-  IN PADAPTER_OBJECT  AdapterObject,
-  IN PWAIT_CONTEXT_BLOCK  Wcb,
-  IN ULONG  NumberOfMapRegisters,
-  IN PDRIVER_CONTROL  ExecutionRoutine);
+RtlUpcaseUnicodeString(
+  IN OUT PUNICODE_STRING DestinationString,
+  IN PCUNICODE_STRING  SourceString,
+  IN BOOLEAN  AllocateDestinationString);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlMapGenericMask(
+  IN OUT PACCESS_MASK AccessMask,
+  IN PGENERIC_MAPPING GenericMapping);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlVolumeDeviceToDosName(
+  IN PVOID VolumeDeviceObject,
+  OUT PUNICODE_STRING DosName);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlGetVersion(
+  IN OUT PRTL_OSVERSIONINFOW lpVersionInformation);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlVerifyVersionInfo(
+  IN PRTL_OSVERSIONINFOEXW VersionInfo,
+  IN ULONG TypeMask,
+  IN ULONGLONG ConditionMask);
+
+NTSYSAPI
+LONG
+NTAPI
+RtlCompareString(
+  IN const PSTRING String1,
+  IN const PSTRING String2,
+  BOOLEAN CaseInSensitive);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlCopyString(
+  OUT PSTRING DestinationString,
+  IN const PSTRING SourceString OPTIONAL);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlEqualString(
+  IN const PSTRING String1,
+  IN const PSTRING String2,
+  IN BOOLEAN CaseInSensitive);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlCharToInteger(
+  IN PCSZ String,
+  IN ULONG Base OPTIONAL,
+  OUT PULONG Value);
+
+NTSYSAPI
+CHAR
+NTAPI
+RtlUpperChar(
+  IN CHAR Character);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlWalkFrameChain(
+  OUT PVOID *Callers,
+  IN ULONG Count,
+  IN ULONG Flags);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
-#endif /* defined(USE_DMA_MACROS) && !defined(_NTHAL_) && (defined(_NTDDK_) || defined(_NTDRIVER_)) || defined(_WDM_INCLUDED_)  */
+/* Security reference monitor routines */
 
-/** NtXxx and ZwXxx routines **/
-
-NTSYSCALLAPI
-NTSTATUS
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+NTKERNELAPI
+BOOLEAN
 NTAPI
-NtOpenProcess(
-  OUT PHANDLE ProcessHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes,
-  IN PCLIENT_ID ClientId OPTIONAL);
+SeSinglePrivilegeCheck(
+  IN LUID PrivilegeValue,
+  IN KPROCESSOR_MODE PreviousMode);
+#endif
 
-NTSYSCALLAPI
-NTSTATUS
-NTAPI
-NtQueryInformationProcess(
-  IN HANDLE ProcessHandle,
-  IN PROCESSINFOCLASS ProcessInformationClass,
-  OUT PVOID ProcessInformation OPTIONAL,
-  IN ULONG ProcessInformationLength,
-  OUT PULONG ReturnLength OPTIONAL);
+/* ZwXxx Functions */
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
