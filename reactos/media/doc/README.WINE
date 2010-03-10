@@ -37,155 +37,158 @@ reactos/dll/directx/dmusic        # Synced to Wine-1_1_23
 reactos/dll/directx/dplay         # Synced to Wine-0_9_5
 reactos/dll/directx/dplayx        # Synced to Wine-0_9_5
 reactos/dll/directx/dxdiagn       # Synced to Wine-0_9_5
-reactos/dll/directx/msdmo         # Autosync
+reactos/dll/directx/msdmo         # Autosync*
 reactos/dll/directx/qedit         # Autosync
 reactos/dll/directx/quartz        # Autosync
-reactos/dll/win32/advpack         # Autosync
+reactos/dll/win32/advpack         # Autosync*
 reactos/dll/win32/atl             # Autosync
-reactos/dll/win32/avifil32        # Autosync
-reactos/dll/win32/bcrypt          # Autosync
+reactos/dll/win32/avifil32        # Autosync*
+reactos/dll/win32/bcrypt          # Autosync*
 reactos/dll/win32/browseui        # Out of sync
-reactos/dll/win32/cabinet         # Autosync
+reactos/dll/win32/cabinet         # Autosync*
 reactos/dll/win32/clusapi         # Autosync
-reactos/dll/win32/comcat          # Autosync
-reactos/dll/win32/comctl32        # Autosync
-reactos/dll/win32/comdlg32        # Autosync
-reactos/dll/win32/compstui        # Autosync
+reactos/dll/win32/comcat          # Autosync*
+reactos/dll/win32/comctl32        # Autosync*
+reactos/dll/win32/comdlg32        # Autosync*
+reactos/dll/win32/compstui        # Autosync*
 reactos/dll/win32/credui          # Autosync
-reactos/dll/win32/crypt32         # Synced to Wine-1_1_21
+reactos/dll/win32/crypt32         # Synced to Wine-1_1_40
 reactos/dll/win32/cryptdlg        # Autosync
-reactos/dll/win32/cryptdll        # Autosync
+reactos/dll/win32/cryptdll        # Autosync*
 reactos/dll/win32/cryptnet        # Autosync
 reactos/dll/win32/cryptui         # Autosync
 reactos/dll/win32/dbghelp         # Synced to Wine-20080802
 reactos/dll/win32/dciman32        # Synced to Wine-1_0-rc2
+reactos/dll/win32/dwmapi          # Autosync
+reactos/dll/win32/fusion          # Autosync
 reactos/dll/win32/gdiplus         # Autosync
 reactos/dll/win32/hhctrl.ocx      # Autosync
 reactos/dll/win32/hlink           # Autosync
-reactos/dll/win32/hnetcfg         # Autosync
-reactos/dll/win32/httpapi         # Autosync
+reactos/dll/win32/hnetcfg         # Autosync*
+reactos/dll/win32/httpapi         # Autosync*
 reactos/dll/win32/iccvid          # Autosync
 reactos/dll/win32/icmp            # Synced to Wine-0_9_10
-reactos/dll/win32/imaadp32.acm    # Autosync
+reactos/dll/win32/imaadp32.acm    # Autosync*
 reactos/dll/win32/imm32           # Autosync
 reactos/dll/win32/imagehlp        # Patches for BindImage need review and submission to winehq.
 reactos/dll/win32/inetcomm        # Autosync
 reactos/dll/win32/inetmib1        # Autosync
-reactos/dll/win32/initpki         # Autosync
-reactos/dll/win32/inseng          # Autosync
+reactos/dll/win32/initpki         # Autosync*
+reactos/dll/win32/inseng          # Autosync*
 reactos/dll/win32/iphlpapi        # Out of sync
 reactos/dll/win32/itircl          # Autosync
 reactos/dll/win32/itss            # Autosync
 reactos/dll/win32/jscript         # Autosync
-reactos/dll/win32/localspl        # Autosync
-reactos/dll/win32/localui         # Autosync
-reactos/dll/win32/lz32            # Autosync
+reactos/dll/win32/localspl        # Autosync*
+reactos/dll/win32/localui         # Autosync*
+reactos/dll/win32/lz32            # Autosync*
 reactos/dll/win32/mapi32          # Autosync
-reactos/dll/win32/mciavi32        # Autosync
-reactos/dll/win32/mcicda          # Autosync
-reactos/dll/win32/mciqtz32        # Autosync
-reactos/dll/win32/mciseq          # Autosync
+reactos/dll/win32/mciavi32        # Autosync*
+reactos/dll/win32/mcicda          # Autosync*
+reactos/dll/win32/mciqtz32        # Autosync*
+reactos/dll/win32/mciseq          # Autosync*
 reactos/dll/win32/mciwave         # Autosync
-reactos/dll/win32/mlang           # Autosync
+reactos/dll/win32/mlang           # Autosync*
 reactos/dll/win32/mpr             # Autosync
 reactos/dll/win32/msacm32         # Out of sync
-reactos/dll/win32/msadp32.acm     # Autosync
-reactos/dll/win32/mscat32         # Autosync
-reactos/dll/win32/mscms           # Autosync
+reactos/dll/win32/msadp32.acm     # Autosync*
+reactos/dll/win32/mscat32         # Autosync*
+reactos/dll/win32/mscms           # Autosync*
 reactos/dll/win32/mscoree         # Autosync
 reactos/dll/win32/msctf           # Autosync
-reactos/dll/win32/msftedit        # Autosync
-reactos/dll/win32/msg711.acm      # Autosync
-reactos/dll/win32/msgsm32.acm     # Autosync
+reactos/dll/win32/msftedit        # Autosync*
+reactos/dll/win32/msg711.acm      # Autosync*
+reactos/dll/win32/msgsm32.acm     # Autosync*
 reactos/dll/win32/mshtml          # Autosync
-reactos/dll/win32/msimg32         # Autosync
+reactos/dll/win32/msimg32         # Autosync*
 reactos/dll/win32/msi             # Autosync
-reactos/dll/win32/msimtf          # Autosync
-reactos/dll/win32/msisip          # Autosync
-reactos/dll/win32/msisys.ocx      # Autosync
-reactos/dll/win32/msnet32         # Autosync
-reactos/dll/win32/msrle32         # Autosync
-reactos/dll/win32/mssign32        # Autosync
-reactos/dll/win32/mssip32         # Autosync
-reactos/dll/win32/mstask          # Autosync
-reactos/dll/win32/msvcrt20        # Autosync
-reactos/dll/win32/msvfw32         # Autosync
-reactos/dll/win32/msvidc32        # Autosync
-reactos/dll/win32/msxml3          # Synced to Wine-1_1_20
-reactos/dll/win32/nddeapi         # Autosync
+reactos/dll/win32/msimtf          # Autosync*
+reactos/dll/win32/msisip          # Autosync*
+reactos/dll/win32/msisys.ocx      # Autosync*
+reactos/dll/win32/msnet32         # Autosync*
+reactos/dll/win32/msrle32         # Autosync*
+reactos/dll/win32/mssign32        # Autosync*
+reactos/dll/win32/mssip32         # Autosync*
+reactos/dll/win32/mstask          # Autosync*
+reactos/dll/win32/msvcrt20        # Autosync*
+reactos/dll/win32/msvfw32         # Autosync*
+reactos/dll/win32/msvidc32        # Autosync*
+reactos/dll/win32/msxml3          # Synced to Wine-1_1_40
+reactos/dll/win32/nddeapi         # Autosync*
 reactos/dll/win32/netapi32        # Autosync
-reactos/dll/win32/ntdsapi         # Autosync
-reactos/dll/win32/ntprint         # Autosync
+reactos/dll/win32/ntdsapi         # Autosync*
+reactos/dll/win32/ntprint         # Autosync*
 reactos/dll/win32/objsel          # Autosync
 reactos/dll/win32/odbc32          # Out of sync. Depends on port of Linux ODBC.
-reactos/dll/win32/odbccp32        # Autosync
+reactos/dll/win32/odbccp32        # Autosync*
 reactos/dll/win32/ole32           # Autosync
 reactos/dll/win32/oleacc          # Autosync
-reactos/dll/win32/oleaut32        # Autosync
-reactos/dll/win32/olecli32        # Autosync
+reactos/dll/win32/oleaut32        # Autosync*
+reactos/dll/win32/olecli32        # Autosync*
 reactos/dll/win32/oledlg          # Autosync
 reactos/dll/win32/olepro32        # Autosync
-reactos/dll/win32/olesvr32        # Autosync
-reactos/dll/win32/olethk32        # Autosync
+reactos/dll/win32/olesvr32        # Autosync*
+reactos/dll/win32/olethk32        # Autosync*
 reactos/dll/win32/pdh             # Autosync
-reactos/dll/win32/pidgen          # Autosync
+reactos/dll/win32/pidgen          # Autosync*
 reactos/dll/win32/powrprof        # Forked at Wine-1.0rc5
-reactos/dll/win32/printui         # Autosync
+reactos/dll/win32/printui         # Autosync*
 reactos/dll/win32/pstorec         # Autosync
 reactos/dll/win32/query           # Autosync
-reactos/dll/win32/rasapi32        # Autosync
-reactos/dll/win32/resutils        # Autosync
-reactos/dll/win32/riched20        # Autosync
-reactos/dll/win32/riched32        # Autosync
+reactos/dll/win32/rasapi32        # Autosync*
+reactos/dll/win32/resutils        # Autosync*
+reactos/dll/win32/riched20        # Autosync*
+reactos/dll/win32/riched32        # Autosync*
 reactos/dll/win32/rpcrt4          # Synced to Wine-0_9_55
-reactos/dll/win32/rsabase         # Autosync
+reactos/dll/win32/rsabase         # Autosync*
 reactos/dll/win32/rsaenh          # Autosync
-reactos/dll/win32/sccbase         # Autosync
-reactos/dll/win32/schannel        # Autosync
-reactos/dll/win32/sensapi         # Autosync
+reactos/dll/win32/sccbase         # Autosync*
+reactos/dll/win32/schannel        # Autosync*
+reactos/dll/win32/sensapi         # Autosync*
 reactos/dll/win32/setupapi        # Forked at Wine-20050524
 reactos/dll/win32/shell32         # Forked at Wine-20071011
-reactos/dll/win32/shdocvw         # Synced to Wine-1_1_20
-reactos/dll/win32/shfolder        # Autosync
+reactos/dll/win32/shdocvw         # Synced to Wine-1_1_40
+reactos/dll/win32/shfolder        # Autosync*
 reactos/dll/win32/shlwapi         # Autosync
-reactos/dll/win32/slbcsp          # Autosync
-reactos/dll/win32/softpub         # Autosync
-reactos/dll/win32/spoolss         # Autosync
-reactos/dll/win32/stdole2.tlb     # Autosync
-reactos/dll/win32/sti             # Autosync
-reactos/dll/win32/sxs             # Autosync
+reactos/dll/win32/slbcsp          # Autosync*
+reactos/dll/win32/softpub         # Autosync*
+reactos/dll/win32/spoolss         # Autosync*
+reactos/dll/win32/stdole2.tlb     # Autosync*
+reactos/dll/win32/sti             # Autosync*
+reactos/dll/win32/sxs             # Autosync*
 reactos/dll/win32/tapi32          # Autosync
-reactos/dll/win32/traffic         # Autosync
+reactos/dll/win32/traffic         # Autosync*
 reactos/dll/win32/twain_32        # Out of sync
-reactos/dll/win32/updspapi        # Autosync
-reactos/dll/win32/url             # Autosync
+reactos/dll/win32/updspapi        # Autosync*
+reactos/dll/win32/url             # Autosync*
 reactos/dll/win32/urlmon          # Autosync
-reactos/dll/win32/usp10           # Autosync
+reactos/dll/win32/usp10           # Autosync*
 reactos/dll/win32/uxtheme         # Autosync
-reactos/dll/win32/version         # Autosync
+reactos/dll/win32/version         # Autosync*
 reactos/dll/win32/windowscodecs   # Autosync
-reactos/dll/win32/winemp3.acm     # Autosync
-reactos/dll/win32/wininet         # Autosync
-reactos/dll/win32/winhttp         # Autosync
+reactos/dll/win32/winemp3.acm     # Autosync*
+reactos/dll/win32/wininet         # Autosync*
+reactos/dll/win32/winhttp         # Autosync*
 reactos/dll/win32/winmm           # Forked at Wine-20050628
 reactos/dll/win32/winmm/midimap   # Forked at Wine-20050628
 reactos/dll/win32/winmm/wavemap   # Forked at Wine-20050628
-reactos/dll/win32/wintab32        # Autosync
-reactos/dll/win32/wintrust        # Out of sync
-reactos/dll/win32/wldap32         # Autosync
-reactos/dll/win32/wmi             # Autosync
+reactos/dll/win32/wintab32        # Autosync*
+reactos/dll/win32/wintrust        # Autosync
+reactos/dll/win32/wldap32         # Autosync*
+reactos/dll/win32/wmi             # Autosync*
 reactos/dll/win32/wtsapi32        # Forked
-reactos/dll/win32/wuapi           # Autosync
-reactos/dll/win32/xinput1_1       # Autosync
-reactos/dll/win32/xinput1_2       # Autosync
-reactos/dll/win32/xinput1_3       # Autosync
-reactos/dll/win32/xinput9_1_0     # Autosync
+reactos/dll/win32/wuapi           # Autosync*
+reactos/dll/win32/xinput1_1       # Autosync*
+reactos/dll/win32/xinput1_2       # Autosync*
+reactos/dll/win32/xinput1_3       # Autosync*
+reactos/dll/win32/xinput9_1_0     # Autosync*
 reactos/dll/win32/xmllite         # Autosync
 
 ReactOS shares the following programs with Winehq.
 
 reactos/base/applications/cmdutils/xcopy  # Autosync
 reactos/base/applications/games/winemine  # Out of sync
+reactos/base/applications/extrac32        # Autosync
 reactos/base/applications/iexplore        # Autosync
 reactos/base/applications/notepad         # Forked at Wine-20041201
 reactos/base/applications/reg             # Autosync
