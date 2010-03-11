@@ -140,6 +140,4 @@ inline bool operator!=(const GUID& guidOne, const GUID& guidOther)
 #endif
 #endif
 
-extern const IID GUID_NULL;
-
 #endif /* _GUIDDEF_H_ */
