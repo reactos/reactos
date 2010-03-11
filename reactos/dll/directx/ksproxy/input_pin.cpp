@@ -9,8 +9,12 @@
 #include "precomp.h"
 
 const GUID IID_IKsPinEx = {0x7bb38260L, 0xd19c, 0x11d2, {0xb3, 0x8a, 0x00, 0xa0, 0xc9, 0x5e, 0xc2, 0x2e}};
-const GUID KSPROPSETID_Connection = {0x1D58C920L, 0xAC9B, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 
+#ifndef _MSC_VER
+const GUID KSPROPSETID_Connection = {0x1D58C920L, 0xAC9B, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
+#endif
+
+#ifndef _MSC_VER
 KSPIN_INTERFACE StandardPinInterface = 
 {
     {STATIC_KSINTERFACESETID_Standard},
@@ -25,6 +29,23 @@ KSPIN_MEDIUM StandardPinMedium =
     0
 };
 
+#else
+
+KSPIN_INTERFACE StandardPinInterface = 
+{
+    STATIC_KSINTERFACESETID_Standard,
+    KSINTERFACE_STANDARD_STREAMING,
+    0
+};
+
+KSPIN_MEDIUM StandardPinMedium =
+{
+    STATIC_KSMEDIUMSETID_Standard,
+    KSMEDIUM_TYPE_ANYINSTANCE,
+    0
+};
+
+#endif
 
 class CInputPin : public IPin,
                   public IKsPropertySet,
@@ -117,9 +138,9 @@ public:
 
     //---------------------------------------------------------------
     HRESULT STDMETHODCALLTYPE CheckFormat(const AM_MEDIA_TYPE *pmt);
-    HRESULT STDMETHODCALLTYPE CreatePin();
-    HRESULT STDMETHODCALLTYPE CreatePinHandle(PKSPIN_MEDIUM Medium, PKSPIN_INTERFACE Interface, PKSDATAFORMAT DataFormat);
-    CInputPin(IBaseFilter * ParentFilter, LPCWSTR PinName, HANDLE hFilter, ULONG PinId, KSPIN_COMMUNICATION Communication) : m_Ref(0), m_ParentFilter(ParentFilter), m_PinName(PinName), m_hFilter(hFilter), m_hPin(0), m_PinId(PinId), m_MemAllocator(0), m_IoCount(0), m_Communication(Communication), m_Pin(0){};
+    HRESULT STDMETHODCALLTYPE CreatePin(const AM_MEDIA_TYPE *pmt);
+    HRESULT STDMETHODCALLTYPE CreatePinHandle(PKSPIN_MEDIUM Medium, PKSPIN_INTERFACE Interface, const AM_MEDIA_TYPE *pmt);
+    CInputPin(IBaseFilter * ParentFilter, LPCWSTR PinName, HANDLE hFilter, ULONG PinId, KSPIN_COMMUNICATION Communication) : m_Ref(0), m_ParentFilter(ParentFilter), m_PinName(PinName), m_hFilter(hFilter), m_hPin(0), m_PinId(PinId), m_MemAllocator(0), m_IoCount(0), m_Communication(Communication), m_Pin(0), m_ReadOnly(0){};
     virtual ~CInputPin(){};
 
 protected:
@@ -135,6 +156,7 @@ protected:
     KSPIN_INTERFACE m_Interface;
     KSPIN_MEDIUM m_Medium;
     IPin * m_Pin;
+    BOOL m_ReadOnly;
 };
 
 HRESULT
@@ -160,39 +182,18 @@ CInputPin::QueryInterface(
     }
     else if (IsEqualGUID(refiid, IID_IKsObject))
     {
-        if (!m_hPin)
-        {
-            HRESULT hr = CreatePin();
-            if (FAILED(hr))
-                return hr;
-        }
-
         *Output = (IKsObject*)(this);
         reinterpret_cast<IKsObject*>(*Output)->AddRef();
         return NOERROR;
     }
     else if (IsEqualGUID(refiid, IID_IKsPropertySet))
     {
-        if (!m_hPin)
-        {
-            HRESULT hr = CreatePin();
-            if (FAILED(hr))
-                return hr;
-        }
-
         *Output = (IKsPropertySet*)(this);
         reinterpret_cast<IKsPropertySet*>(*Output)->AddRef();
         return NOERROR;
     }
     else if (IsEqualGUID(refiid, IID_IKsControl))
     {
-        if (!m_hPin)
-        {
-            HRESULT hr = CreatePin();
-            if (FAILED(hr))
-                return hr;
-        }
-
         *Output = (IKsControl*)(this);
         reinterpret_cast<IKsControl*>(*Output)->AddRef();
         return NOERROR;
@@ -200,13 +201,6 @@ CInputPin::QueryInterface(
     else if (IsEqualGUID(refiid, IID_IKsPin) ||
              IsEqualGUID(refiid, IID_IKsPinEx))
     {
-        if (!m_hPin)
-        {
-            HRESULT hr = CreatePin();
-            if (FAILED(hr))
-                return hr;
-        }
-
         *Output = (IKsPinEx*)(this);
         reinterpret_cast<IKsPinEx*>(*Output)->AddRef();
         return NOERROR;
@@ -227,7 +221,7 @@ CInputPin::QueryInterface(
 // IMemInputPin
 //
 
-    //
+
 HRESULT
 STDMETHODCALLTYPE
 CInputPin::GetAllocator(IMemAllocator **ppAllocator)
@@ -251,6 +245,7 @@ CInputPin::NotifyAllocator(IMemAllocator *pAllocator, BOOL bReadOnly)
     }
 
     m_MemAllocator = pAllocator;
+    m_ReadOnly = bReadOnly;
     return NOERROR;
 }
 
@@ -466,7 +461,7 @@ CInputPin::KsNotifyError(
 
 
 //-------------------------------------------------------------------
-// IKsPropertySet
+// IKsControl
 //
 HRESULT
 STDMETHODCALLTYPE
@@ -477,6 +472,7 @@ CInputPin::KsProperty(
     ULONG DataLength,
     ULONG* BytesReturned)
 {
+    assert(m_hPin != 0);
     return KsSynchronousDeviceControl(m_hPin, IOCTL_KS_PROPERTY, (PVOID)Property, PropertyLength, (PVOID)PropertyData, DataLength, BytesReturned);
 }
 
@@ -489,6 +485,7 @@ CInputPin::KsMethod(
     ULONG DataLength,
     ULONG* BytesReturned)
 {
+    assert(m_hPin != 0);
     return KsSynchronousDeviceControl(m_hPin, IOCTL_KS_METHOD, (PVOID)Method, MethodLength, (PVOID)MethodData, DataLength, BytesReturned);
 }
 
@@ -501,6 +498,8 @@ CInputPin::KsEvent(
     ULONG DataLength,
     ULONG* BytesReturned)
 {
+    assert(m_hPin != 0);
+
     if (EventLength)
         return KsSynchronousDeviceControl(m_hPin, IOCTL_KS_ENABLE_EVENT, (PVOID)Event, EventLength, (PVOID)EventData, DataLength, BytesReturned);
     else
@@ -619,10 +618,7 @@ HANDLE
 STDMETHODCALLTYPE
 CInputPin::KsGetObjectHandle()
 {
-    OutputDebugStringW(L"CInputPin::KsGetObjectHandle CALLED\n");
-
-    //FIXME
-    // return pin handle
+    assert(m_hPin);
     return m_hPin;
 }
 
@@ -645,7 +641,6 @@ CInputPin::ReceiveConnection(IPin *pConnector, const AM_MEDIA_TYPE *pmt)
 
     if (m_Pin)
     {
-        OutputDebugStringW(L"CInputPin::ReceiveConnection already connected\n");
         return VFW_E_ALREADY_CONNECTED;
     }
 
@@ -657,19 +652,36 @@ CInputPin::ReceiveConnection(IPin *pConnector, const AM_MEDIA_TYPE *pmt)
     if (FAILED(CheckFormat(pmt)))
         return hr;
 
+    hr = CreatePin(pmt);
+    if (FAILED(hr))
+    {
+        return hr;
+    }
+
     //FIXME create pin
    m_Pin = pConnector;
    m_Pin->AddRef();
 
-    OutputDebugStringW(L"CInputPin::ReceiveConnection NotImplemented\n");
     return S_OK;
 }
 HRESULT
 STDMETHODCALLTYPE
 CInputPin::Disconnect( void)
 {
-    OutputDebugStringW(L"CInputPin::Disconnect NotImplemented\n");
-    return E_NOTIMPL;
+    if (!m_Pin)
+    {
+        // pin was not connected
+        return S_FALSE;
+    }
+
+    //FIXME
+    //check if filter is active
+
+    m_Pin->Release();
+    m_Pin = NULL;
+
+    OutputDebugStringW(L"CInputPin::Disconnect\n");
+    return S_OK;
 }
 HRESULT
 STDMETHODCALLTYPE
@@ -693,6 +705,9 @@ HRESULT
 STDMETHODCALLTYPE
 CInputPin::ConnectionMediaType(AM_MEDIA_TYPE *pmt)
 {
+    if (!m_Pin)
+        return VFW_E_NOT_CONNECTED;
+
     OutputDebugStringW(L"CInputPin::ConnectionMediaType NotImplemented\n");
     return E_NOTIMPL;
 }
@@ -742,8 +757,41 @@ HRESULT
 STDMETHODCALLTYPE
 CInputPin::EnumMediaTypes(IEnumMediaTypes **ppEnum)
 {
-    return CEnumMediaTypes_fnConstructor(0, NULL, IID_IEnumMediaTypes, (void**)ppEnum);
+    HRESULT hr;
+    ULONG MediaTypeCount = 0, Index;
+    AM_MEDIA_TYPE * MediaTypes;
+
+    // query media type count
+    hr = KsGetMediaTypeCount(m_hFilter, m_PinId, &MediaTypeCount);
+    if (FAILED(hr) || !MediaTypeCount)
+        return hr;
+
+    // allocate media types
+    MediaTypes = (AM_MEDIA_TYPE*)CoTaskMemAlloc(sizeof(AM_MEDIA_TYPE) * MediaTypeCount);
+    if (!MediaTypes)
+    {
+        // not enough memory
+        return E_OUTOFMEMORY;
+    }
+
+    // zero media types
+    ZeroMemory(MediaTypes, sizeof(AM_MEDIA_TYPE) * MediaTypeCount);
+
+    for(Index = 0; Index < MediaTypeCount; Index++)
+    {
+        // get media type
+        hr = KsGetMediaType(Index, &MediaTypes[Index], m_hFilter, m_PinId);
+        if (FAILED(hr))
+        {
+            // failed
+            CoTaskMemFree(MediaTypes);
+            return hr;
+        }
+    }
+
+    return CEnumMediaTypes_fnConstructor(MediaTypeCount, MediaTypes, IID_IEnumMediaTypes, (void**)ppEnum);
 }
+
 HRESULT
 STDMETHODCALLTYPE
 CInputPin::QueryInternalConnections(IPin **apPin, ULONG *nPin)
@@ -799,6 +847,9 @@ CInputPin::CheckFormat(
     Property.PinId = m_PinId;
     Property.Reserved = 0;
 
+    if (!pmt)
+        return E_POINTER;
+
     // query for size of dataranges
     hr = KsSynchronousDeviceControl(m_hFilter, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSP_PIN), NULL, 0, &BytesReturned);
 
@@ -842,13 +893,12 @@ CInputPin::CheckFormat(
 
 HRESULT
 STDMETHODCALLTYPE
-CInputPin::CreatePin()
+CInputPin::CreatePin(
+    const AM_MEDIA_TYPE *pmt)
 {
     PKSMULTIPLE_ITEM MediumList;
     PKSMULTIPLE_ITEM InterfaceList;
-    PKSMULTIPLE_ITEM DataFormatList = NULL;
     PKSPIN_MEDIUM Medium;
-    PKSDATAFORMAT DataFormat;
     PKSPIN_INTERFACE Interface;
     HRESULT hr;
 
@@ -863,19 +913,6 @@ CInputPin::CreatePin()
     {
         // failed
         CoTaskMemFree(MediumList);
-        return hr;
-    }
-
-    // get data ranges
-    hr = KsGetMultiplePinFactoryItems(m_hFilter, m_PinId, KSPROPERTY_PIN_DATARANGES, (PVOID*)&DataFormatList);
-    if (FAILED(hr) || DataFormatList->Count == 0)
-    {
-        // failed
-        CoTaskMemFree(MediumList);
-        CoTaskMemFree(InterfaceList);
-        if (DataFormatList)
-            CoTaskMemFree(DataFormatList);
-
         return hr;
     }
 
@@ -901,15 +938,10 @@ CInputPin::CreatePin()
         Interface = &StandardPinInterface;
     }
 
-    //FIXME determine format
-    // use first available format
-    DataFormat = (PKSDATAFORMAT) (DataFormatList + 1);
-
     // now create pin
-    hr = CreatePinHandle(Medium, Interface, DataFormat);
+    hr = CreatePinHandle(Medium, Interface, pmt);
 
     // free medium / interface / dataformat
-    CoTaskMemFree(DataFormatList);
     CoTaskMemFree(MediumList);
     CoTaskMemFree(InterfaceList);
 
@@ -921,14 +953,15 @@ STDMETHODCALLTYPE
 CInputPin::CreatePinHandle(
     PKSPIN_MEDIUM Medium,
     PKSPIN_INTERFACE Interface,
-    PKSDATAFORMAT DataFormat)
+    const AM_MEDIA_TYPE *pmt)
 {
     PKSPIN_CONNECT PinConnect;
+    PKSDATAFORMAT DataFormat;
     ULONG Length;
     HRESULT hr;
 
     // calc format size
-    Length = sizeof(KSPIN_CONNECT) + DataFormat->FormatSize;
+    Length = sizeof(KSPIN_CONNECT) + sizeof(KSDATAFORMAT) + pmt->cbFormat;
 
     // allocate pin connect
     PinConnect = (PKSPIN_CONNECT)CoTaskMemAlloc(Length);
@@ -945,7 +978,24 @@ CInputPin::CreatePinHandle(
     PinConnect->PinToHandle = NULL;
     PinConnect->Priority.PriorityClass = KSPRIORITY_NORMAL;
     PinConnect->Priority.PrioritySubClass = KSPRIORITY_NORMAL;
-    CopyMemory((PinConnect + 1), DataFormat, DataFormat->FormatSize);
+
+    // get dataformat offset
+    DataFormat = (PKSDATAFORMAT)(PinConnect + 1);
+
+    // copy data format
+    DataFormat->FormatSize = sizeof(KSDATAFORMAT) + pmt->cbFormat;
+    DataFormat->Flags = 0;
+    DataFormat->SampleSize = pmt->lSampleSize;
+    DataFormat->Reserved = 0;
+    CopyMemory(&DataFormat->MajorFormat, &pmt->majortype, sizeof(GUID));
+    CopyMemory(&DataFormat->SubFormat,  &pmt->subtype, sizeof(GUID));
+    CopyMemory(&DataFormat->Specifier, &pmt->formattype, sizeof(GUID));
+
+    if (pmt->cbFormat)
+    {
+        // copy extended format
+        CopyMemory((DataFormat + 1), pmt->pbFormat, pmt->cbFormat);
+    }
 
     // create pin
     hr = KsCreatePin(m_hFilter, PinConnect, GENERIC_WRITE, &m_hPin);

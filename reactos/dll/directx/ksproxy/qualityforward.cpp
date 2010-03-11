@@ -8,7 +8,11 @@
  */
 #include "precomp.h"
 
+#ifndef _MSC_VER
 const GUID KSCATEGORY_QUALITY = {0x97EBAACB, 0x95BD, 0x11D0, {0xA3, 0xEA, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
+#endif
+
+#define IID_IKsQualityForwarder KSCATEGORY_QUALITY
 
 class CKsQualityForwarder : public IKsQualityForwarder
 {

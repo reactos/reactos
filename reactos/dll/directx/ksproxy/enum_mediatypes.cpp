@@ -103,7 +103,31 @@ CEnumMediaTypes::Next(
         if (!MediaType)
             break;
 
-        CopyMemory(MediaType, &m_MediaTypes[m_Index + i], sizeof(AM_MEDIA_TYPE));
+        if (m_MediaTypes[m_Index + i].cbFormat)
+        {
+            LPBYTE pFormat = (LPBYTE)CoTaskMemAlloc(m_MediaTypes[m_Index + i].cbFormat);
+            if (!pFormat)
+            {
+                CoTaskMemFree(MediaType);
+                break;
+            }
+
+            CopyMemory(MediaType, &m_MediaTypes[m_Index + i], sizeof(AM_MEDIA_TYPE));
+            MediaType->pbFormat = pFormat;
+            CopyMemory(MediaType->pbFormat, m_MediaTypes[m_Index + i].pbFormat, m_MediaTypes[m_Index + i].cbFormat);
+            MediaType->pUnk = (IUnknown *)this;
+            MediaType->pUnk->AddRef();
+        }
+        else
+        {
+            CopyMemory(MediaType, &m_MediaTypes[m_Index + i], sizeof(AM_MEDIA_TYPE));
+        }
+
+        if (MediaType->pUnk)
+        {
+            MediaType->pUnk->AddRef();
+        }
+
         ppMediaTypes[i] = MediaType;
         i++;
     }
@@ -114,7 +138,6 @@ CEnumMediaTypes::Next(
     }
 
     m_Index += i;
-
     if (i < cMediaTypes)
         return S_FALSE;
     else
