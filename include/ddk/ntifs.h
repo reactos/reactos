@@ -5252,12 +5252,99 @@ SeQuerySecurityDescriptorInfo(
   IN OUT PULONG Length,
   IN OUT PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor);
 
+NTKERNELAPI
+NTSTATUS
+NTAPI
+SeSetSecurityDescriptorInfo(
+  IN PVOID Object OPTIONAL,
+  IN PSECURITY_INFORMATION SecurityInformation,
+  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+  IN OUT PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor,
+  IN POOL_TYPE PoolType,
+  IN PGENERIC_MAPPING GenericMapping);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+SeSetSecurityDescriptorInfoEx(
+  IN PVOID Object OPTIONAL,
+  IN PSECURITY_INFORMATION SecurityInformation,
+  IN PSECURITY_DESCRIPTOR ModificationDescriptor,
+  IN OUT PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor,
+  IN ULONG AutoInheritFlags,
+  IN POOL_TYPE PoolType,
+  IN PGENERIC_MAPPING GenericMapping);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+SeAppendPrivileges(
+  IN OUT PACCESS_STATE AccessState,
+  IN PPRIVILEGE_SET Privileges);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+SeAuditingFileEvents(
+  IN BOOLEAN AccessGranted,
+  IN PSECURITY_DESCRIPTOR SecurityDescriptor);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+SeAuditingFileOrGlobalEvents(
+  IN BOOLEAN AccessGranted,
+  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+  IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext);
+
+VOID
+NTAPI
+SeSetAccessStateGenericMapping(
+  IN OUT PACCESS_STATE AccessState,
+  IN PGENERIC_MAPPING GenericMapping);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+SeRegisterLogonSessionTerminatedRoutine(
+  IN PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+SeUnregisterLogonSessionTerminatedRoutine(
+  IN PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+SeMarkLogonSessionForTerminationNotification(
+  IN PLUID LogonId);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+SeQueryInformationToken(
+  IN PACCESS_TOKEN Token,
+  IN TOKEN_INFORMATION_CLASS TokenInformationClass,
+  OUT PVOID *TokenInformation);
+
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
+#if (NTDDI_VERSION >= NTDDI_WIN2KSP3)
+NTKERNELAPI
+BOOLEAN
+NTAPI
+SeAuditingHardLinkEvents(
+  IN BOOLEAN AccessGranted,
+  IN PSECURITY_DESCRIPTOR SecurityDescriptor);
+#endif
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 
 NTKERNELAPI
 NTSTATUS
+NTAPI
 SeFilterToken(
   IN PACCESS_TOKEN ExistingToken,
   IN ULONG Flags,
@@ -5266,7 +5353,35 @@ SeFilterToken(
   IN PTOKEN_GROUPS RestrictedSids OPTIONAL,
   OUT PACCESS_TOKEN *FilteredToken);
 
+NTKERNELAPI
+VOID
+NTAPI
+SeAuditHardLinkCreation(
+  IN PUNICODE_STRING FileName,
+  IN PUNICODE_STRING LinkName,
+  IN BOOLEAN bSuccess);
+
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
+
+#if (NTDDI_VERSION >= NTDDI_WINXPSP2)
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+SeAuditingFileEventsWithContext(
+  IN BOOLEAN AccessGranted,
+  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+  IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext OPTIONAL);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+SeAuditingHardLinkEventsWithContext(
+  IN BOOLEAN AccessGranted,
+  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+  IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext OPTIONAL);
+
+#endif
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 
@@ -5333,13 +5448,62 @@ SeSetSessionIdToken(
   IN PACCESS_TOKEN Token,
   IN ULONG SessionId);
 
+NTKERNELAPI
+VOID
+NTAPI
+SeAuditHardLinkCreationWithTransaction(
+  IN PUNICODE_STRING FileName,
+  IN PUNICODE_STRING LinkName,
+  IN BOOLEAN bSuccess,
+  IN GUID *TransactionId OPTIONAL);
+
+NTKERNELAPI
+VOID
+NTAPI
+SeAuditTransactionStateChange(
+  IN GUID *TransactionId,
+  IN GUID *ResourceManagerId,
+  IN ULONG NewTransactionState);
+
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 #if (NTDDI_VERSION >= NTDDI_VISTA || (NTDDI_VERSION >= NTDDI_WINXPSP2 && NTDDI_VERSION < NTDDI_WS03))
 NTKERNELAPI
 BOOLEAN
+NTAPI
 SeTokenIsWriteRestricted(
   IN PACCESS_TOKEN Token);
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+SeAuditingAnyFileEventsWithContext(
+  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+  IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext OPTIONAL);
+
+NTKERNELAPI
+VOID
+NTAPI
+SeExamineGlobalSacl(
+  IN PUNICODE_STRING ObjectType,
+  IN PACCESS_TOKEN Token,
+  IN ACCESS_MASK DesiredAccess,
+  IN BOOLEAN AccessGranted,
+  IN OUT PBOOLEAN GenerateAudit,
+  IN OUT PBOOLEAN GenerateAlarm OPTIONAL);
+
+NTKERNELAPI
+VOID
+NTAPI
+SeMaximumAuditMaskFromGlobalSacl(
+  IN PUNICODE_STRING ObjectTypeName OPTIONAL,
+  IN ACCESS_MASK GrantedAccess,
+  IN PACCESS_TOKEN Token,
+  IN OUT PACCESS_MASK AuditMask);
+
 #endif
 
 NTSTATUS
@@ -5371,6 +5535,25 @@ NTAPI
 SeFreePrivileges(
   IN PPRIVILEGE_SET Privileges);
 
+NTSTATUS
+NTAPI
+SeLocateProcessImageName(
+  IN OUT PEPROCESS Process,
+  OUT PUNICODE_STRING *pImageFileName);
+
+extern NTKERNELAPI PSE_EXPORTS SeExports;
+
+#if !defined(_PSGETCURRENTTHREAD_)
+#define _PSGETCURRENTTHREAD_
+
+FORCEINLINE
+PETHREAD
+PsGetCurrentThread(
+  VOID)
+{
+  return (PETHREAD)KeGetCurrentThread();
+}
+#endif
 
 #pragma pack(push,4)
 
@@ -6209,8 +6392,6 @@ typedef struct _REMOTE_PORT_VIEW
     LPC_SIZE_T ViewSize;
     LPC_PVOID ViewBase;
 } REMOTE_PORT_VIEW, *PREMOTE_PORT_VIEW;
-
-extern PSE_EXPORTS SeExports;
 
 typedef struct _TUNNEL {
     FAST_MUTEX          Mutex;
@@ -8668,110 +8849,7 @@ RtlRealPredecessor(PRTL_SPLAY_LINKS Links);
 // RTL time functions
 //
 
-NTKERNELAPI
-NTSTATUS
-NTAPI
-SeAppendPrivileges (
-    PACCESS_STATE   AccessState,
-    PPRIVILEGE_SET  Privileges
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-SeAuditingFileEvents (
-    IN BOOLEAN              AccessGranted,
-    IN PSECURITY_DESCRIPTOR SecurityDescriptor
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-SeAuditingFileOrGlobalEvents (
-    IN BOOLEAN                      AccessGranted,
-    IN PSECURITY_DESCRIPTOR         SecurityDescriptor,
-    IN PSECURITY_SUBJECT_CONTEXT    SubjectContext
-);
-
 #define SeEnableAccessToExports() SeExports = *(PSE_EXPORTS *)SeExports;
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-SeMarkLogonSessionForTerminationNotification (
-    IN PLUID LogonId
-);
-
-#if (VER_PRODUCTBUILD >= 2195)
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-SeQueryInformationToken (
-    IN PACCESS_TOKEN           Token,
-    IN TOKEN_INFORMATION_CLASS TokenInformationClass,
-    OUT PVOID                  *TokenInformation
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-SeRegisterLogonSessionTerminatedRoutine (
-    IN PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-SeSetAccessStateGenericMapping (
-    PACCESS_STATE       AccessState,
-    PGENERIC_MAPPING    GenericMapping
-);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-SeSetSecurityDescriptorInfo (
-    IN PVOID                    Object OPTIONAL,
-    IN PSECURITY_INFORMATION    SecurityInformation,
-    IN PSECURITY_DESCRIPTOR     SecurityDescriptor,
-    IN OUT PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor,
-    IN POOL_TYPE                PoolType,
-    IN PGENERIC_MAPPING         GenericMapping
-);
-
-#if (VER_PRODUCTBUILD >= 2195)
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-SeSetSecurityDescriptorInfoEx (
-    IN PVOID                    Object OPTIONAL,
-    IN PSECURITY_INFORMATION    SecurityInformation,
-    IN PSECURITY_DESCRIPTOR     ModificationDescriptor,
-    IN OUT PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor,
-    IN ULONG                    AutoInheritFlags,
-    IN POOL_TYPE                PoolType,
-    IN PGENERIC_MAPPING         GenericMapping
-);
-
-NTSTATUS
-NTAPI
-SeLocateProcessImageName(
-    IN PEPROCESS Process,
-    OUT PUNICODE_STRING *pImageFileName
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-SeUnregisterLogonSessionTerminatedRoutine (
-    IN PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine
-);
 
 #if (VER_PRODUCTBUILD >= 2195)
 
