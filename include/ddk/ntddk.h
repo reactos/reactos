@@ -69,6 +69,548 @@ typedef struct _BUS_HANDLER *PBUS_HANDLER;
 #define KERNEL_LARGE_STACK_SIZE             61440
 #define KERNEL_LARGE_STACK_COMMIT           12288
 
+#define EXCEPTION_READ_FAULT    0
+#define EXCEPTION_WRITE_FAULT   1
+#define EXCEPTION_EXECUTE_FAULT 8
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+extern NTSYSAPI volatile CCHAR KeNumberProcessors;
+#elif (NTDDI_VERSION >= NTDDI_WINXP)
+extern NTSYSAPI CCHAR KeNumberProcessors;
+#else
+extern PCCHAR KeNumberProcessors;
+#endif
+
+#define MAX_WOW64_SHARED_ENTRIES 16
+
+#define NX_SUPPORT_POLICY_ALWAYSOFF 0
+#define NX_SUPPORT_POLICY_ALWAYSON 1
+#define NX_SUPPORT_POLICY_OPTIN 2
+#define NX_SUPPORT_POLICY_OPTOUT 3
+
+/*
+** IRP function codes
+*/
+
+#define IRP_MN_QUERY_DIRECTORY            0x01
+#define IRP_MN_NOTIFY_CHANGE_DIRECTORY    0x02
+
+#define IRP_MN_USER_FS_REQUEST            0x00
+#define IRP_MN_MOUNT_VOLUME               0x01
+#define IRP_MN_VERIFY_VOLUME              0x02
+#define IRP_MN_LOAD_FILE_SYSTEM           0x03
+#define IRP_MN_TRACK_LINK                 0x04
+#define IRP_MN_KERNEL_CALL                0x04
+
+#define IRP_MN_LOCK                       0x01
+#define IRP_MN_UNLOCK_SINGLE              0x02
+#define IRP_MN_UNLOCK_ALL                 0x03
+#define IRP_MN_UNLOCK_ALL_BY_KEY          0x04
+
+#define IRP_MN_FLUSH_AND_PURGE          0x01
+
+#define IRP_MN_NORMAL                     0x00
+#define IRP_MN_DPC                        0x01
+#define IRP_MN_MDL                        0x02
+#define IRP_MN_COMPLETE                   0x04
+#define IRP_MN_COMPRESSED                 0x08
+
+#define IRP_MN_MDL_DPC                    (IRP_MN_MDL | IRP_MN_DPC)
+#define IRP_MN_COMPLETE_MDL               (IRP_MN_COMPLETE | IRP_MN_MDL)
+#define IRP_MN_COMPLETE_MDL_DPC           (IRP_MN_COMPLETE_MDL | IRP_MN_DPC)
+
+#define IRP_MN_QUERY_LEGACY_BUS_INFORMATION 0x18
+
+typedef struct _IO_COUNTERS {
+  ULONGLONG ReadOperationCount;
+  ULONGLONG WriteOperationCount;
+  ULONGLONG OtherOperationCount;
+  ULONGLONG ReadTransferCount;
+  ULONGLONG WriteTransferCount;
+  ULONGLONG OtherTransferCount;
+} IO_COUNTERS, *PIO_COUNTERS;
+
+typedef struct _VM_COUNTERS {
+  SIZE_T PeakVirtualSize;
+  SIZE_T VirtualSize;
+  ULONG PageFaultCount;
+  SIZE_T PeakWorkingSetSize;
+  SIZE_T WorkingSetSize;
+  SIZE_T QuotaPeakPagedPoolUsage;
+  SIZE_T QuotaPagedPoolUsage;
+  SIZE_T QuotaPeakNonPagedPoolUsage;
+  SIZE_T QuotaNonPagedPoolUsage;
+  SIZE_T PagefileUsage;
+  SIZE_T PeakPagefileUsage;
+} VM_COUNTERS, *PVM_COUNTERS;
+
+typedef struct _VM_COUNTERS_EX
+{
+  SIZE_T PeakVirtualSize;
+  SIZE_T VirtualSize;
+  ULONG PageFaultCount;
+  SIZE_T PeakWorkingSetSize;
+  SIZE_T WorkingSetSize;
+  SIZE_T QuotaPeakPagedPoolUsage;
+  SIZE_T QuotaPagedPoolUsage;
+  SIZE_T QuotaPeakNonPagedPoolUsage;
+  SIZE_T QuotaNonPagedPoolUsage;
+  SIZE_T PagefileUsage;
+  SIZE_T PeakPagefileUsage;
+  SIZE_T PrivateUsage;
+} VM_COUNTERS_EX, *PVM_COUNTERS_EX;
+
+typedef struct _POOLED_USAGE_AND_LIMITS
+{
+  SIZE_T PeakPagedPoolUsage;
+  SIZE_T PagedPoolUsage;
+  SIZE_T PagedPoolLimit;
+  SIZE_T PeakNonPagedPoolUsage;
+  SIZE_T NonPagedPoolUsage;
+  SIZE_T NonPagedPoolLimit;
+  SIZE_T PeakPagefileUsage;
+  SIZE_T PagefileUsage;
+  SIZE_T PagefileLimit;
+} POOLED_USAGE_AND_LIMITS, *PPOOLED_USAGE_AND_LIMITS;
+
+/* DEVICE_OBJECT.Flags */
+
+#define DO_VERIFY_VOLUME                    0x00000002
+#define DO_BUFFERED_IO                      0x00000004
+#define DO_EXCLUSIVE                        0x00000008
+#define DO_DIRECT_IO                        0x00000010
+#define DO_MAP_IO_BUFFER                    0x00000020
+#define DO_DEVICE_HAS_NAME                  0x00000040
+#define DO_DEVICE_INITIALIZING              0x00000080
+#define DO_SYSTEM_BOOT_PARTITION            0x00000100
+#define DO_LONG_TERM_REQUESTS               0x00000200
+#define DO_NEVER_LAST_DEVICE                0x00000400
+#define DO_SHUTDOWN_REGISTERED              0x00000800
+#define DO_BUS_ENUMERATED_DEVICE            0x00001000
+#define DO_POWER_PAGABLE                    0x00002000
+#define DO_POWER_INRUSH                     0x00004000
+#define DO_LOW_PRIORITY_FILESYSTEM          0x00010000
+#define DO_SUPPORTS_TRANSACTIONS            0x00040000
+#define DO_FORCE_NEITHER_IO                 0x00080000
+#define DO_VOLUME_DEVICE_OBJECT             0x00100000
+#define DO_SYSTEM_SYSTEM_PARTITION          0x00200000
+#define DO_SYSTEM_CRITICAL_PARTITION        0x00400000
+#define DO_DISALLOW_EXECUTE                 0x00800000
+
+#define DRVO_REINIT_REGISTERED          0x00000008
+#define DRVO_INITIALIZED                0x00000010
+#define DRVO_BOOTREINIT_REGISTERED      0x00000020
+#define DRVO_LEGACY_RESOURCES           0x00000040
+
+typedef enum _ARBITER_REQUEST_SOURCE {
+  ArbiterRequestUndefined = -1,
+  ArbiterRequestLegacyReported,
+  ArbiterRequestHalReported,
+  ArbiterRequestLegacyAssigned,
+  ArbiterRequestPnpDetected,
+  ArbiterRequestPnpEnumerated
+} ARBITER_REQUEST_SOURCE;
+
+typedef enum _ARBITER_RESULT {
+  ArbiterResultUndefined = -1,
+  ArbiterResultSuccess,
+  ArbiterResultExternalConflict,
+  ArbiterResultNullRequest
+} ARBITER_RESULT;
+
+typedef enum _ARBITER_ACTION {
+  ArbiterActionTestAllocation,
+  ArbiterActionRetestAllocation,
+  ArbiterActionCommitAllocation,
+  ArbiterActionRollbackAllocation,
+  ArbiterActionQueryAllocatedResources,
+  ArbiterActionWriteReservedResources,
+  ArbiterActionQueryConflict,
+  ArbiterActionQueryArbitrate,
+  ArbiterActionAddReserved,
+  ArbiterActionBootAllocation
+} ARBITER_ACTION, *PARBITER_ACTION;
+
+typedef struct _ARBITER_CONFLICT_INFO {
+  PDEVICE_OBJECT OwningObject;
+  ULONGLONG Start;
+  ULONGLONG End;
+} ARBITER_CONFLICT_INFO, *PARBITER_CONFLICT_INFO;
+
+typedef struct _ARBITER_PARAMETERS {
+  union {
+    struct {
+      IN OUT PLIST_ENTRY ArbitrationList;
+      IN ULONG AllocateFromCount;
+      IN PCM_PARTIAL_RESOURCE_DESCRIPTOR AllocateFrom;
+    } TestAllocation;
+    struct {
+      IN OUT PLIST_ENTRY ArbitrationList;
+      IN ULONG AllocateFromCount;
+      IN PCM_PARTIAL_RESOURCE_DESCRIPTOR AllocateFrom;
+    } RetestAllocation;
+    struct {
+      IN OUT PLIST_ENTRY ArbitrationList;
+    } BootAllocation;
+    struct {
+      OUT PCM_PARTIAL_RESOURCE_LIST *AllocatedResources;
+    } QueryAllocatedResources;
+    struct {
+      IN PDEVICE_OBJECT PhysicalDeviceObject;
+      IN PIO_RESOURCE_DESCRIPTOR ConflictingResource;
+      OUT PULONG ConflictCount;
+      OUT PARBITER_CONFLICT_INFO *Conflicts;
+    } QueryConflict;
+    struct {
+      IN PLIST_ENTRY ArbitrationList;
+    } QueryArbitrate;
+    struct {
+      IN PDEVICE_OBJECT ReserveDevice;
+    } AddReserved;
+  } Parameters;
+} ARBITER_PARAMETERS, *PARBITER_PARAMETERS;
+
+#define ARBITER_FLAG_BOOT_CONFIG 0x00000001
+
+typedef struct _ARBITER_LIST_ENTRY {
+  LIST_ENTRY ListEntry;
+  ULONG AlternativeCount;
+  PIO_RESOURCE_DESCRIPTOR Alternatives;
+  PDEVICE_OBJECT PhysicalDeviceObject;
+  ARBITER_REQUEST_SOURCE RequestSource;
+  ULONG Flags;
+  LONG_PTR WorkSpace;
+  INTERFACE_TYPE InterfaceType;
+  ULONG SlotNumber;
+  ULONG BusNumber;
+  PCM_PARTIAL_RESOURCE_DESCRIPTOR Assignment;
+  PIO_RESOURCE_DESCRIPTOR SelectedAlternative;
+  ARBITER_RESULT Result;
+} ARBITER_LIST_ENTRY, *PARBITER_LIST_ENTRY;
+
+typedef NTSTATUS
+(DDKAPI *PARBITER_HANDLER)(
+  IN OUT PVOID Context,
+  IN ARBITER_ACTION Action,
+  IN OUT PARBITER_PARAMETERS Parameters);
+
+#define ARBITER_PARTIAL 0x00000001
+
+typedef struct _ARBITER_INTERFACE {
+  USHORT Size;
+  USHORT Version;
+  PVOID Context;
+  PINTERFACE_REFERENCE InterfaceReference;
+  PINTERFACE_DEREFERENCE InterfaceDereference;
+  PARBITER_HANDLER ArbiterHandler;
+  ULONG Flags;
+} ARBITER_INTERFACE, *PARBITER_INTERFACE;
+
+typedef enum _HAL_QUERY_INFORMATION_CLASS {
+  HalInstalledBusInformation,
+  HalProfileSourceInformation,
+  HalInformationClassUnused1,
+  HalPowerInformation,
+  HalProcessorSpeedInformation,
+  HalCallbackInformation,
+  HalMapRegisterInformation,
+  HalMcaLogInformation,
+  HalFrameBufferCachingInformation,
+  HalDisplayBiosInformation,
+  HalProcessorFeatureInformation,
+  HalNumaTopologyInterface,
+  HalErrorInformation,
+  HalCmcLogInformation,
+  HalCpeLogInformation,
+  HalQueryMcaInterface,
+  HalQueryAMLIIllegalIOPortAddresses,
+  HalQueryMaxHotPlugMemoryAddress,
+  HalPartitionIpiInterface,
+  HalPlatformInformation,
+  HalQueryProfileSourceList,
+  HalInitLogInformation,
+  HalFrequencyInformation,
+  HalProcessorBrandString,
+  HalHypervisorInformation,
+  HalPlatformTimerInformation,
+  HalAcpiAuditInformation
+} HAL_QUERY_INFORMATION_CLASS, *PHAL_QUERY_INFORMATION_CLASS;
+
+typedef enum _HAL_SET_INFORMATION_CLASS {
+  HalProfileSourceInterval,
+  HalProfileSourceInterruptHandler,
+  HalMcaRegisterDriver,
+  HalKernelErrorHandler,
+  HalCmcRegisterDriver,
+  HalCpeRegisterDriver,
+  HalMcaLog,
+  HalCmcLog,
+  HalCpeLog,
+  HalGenerateCmcInterrupt,
+  HalProfileSourceTimerHandler,
+  HalEnlightenment,
+  HalProfileDpgoSourceInterruptHandler
+} HAL_SET_INFORMATION_CLASS, *PHAL_SET_INFORMATION_CLASS;
+
+typedef struct _HAL_PROFILE_SOURCE_INTERVAL {
+  KPROFILE_SOURCE Source;
+  ULONG_PTR Interval;
+} HAL_PROFILE_SOURCE_INTERVAL, *PHAL_PROFILE_SOURCE_INTERVAL;
+
+typedef struct _HAL_PROFILE_SOURCE_INFORMATION {
+  KPROFILE_SOURCE Source;
+  BOOLEAN Supported;
+  ULONG Interval;
+} HAL_PROFILE_SOURCE_INFORMATION, *PHAL_PROFILE_SOURCE_INFORMATION;
+
+typedef struct _MAP_REGISTER_ENTRY {
+  PVOID MapRegister;
+  BOOLEAN WriteToDevice;
+} MAP_REGISTER_ENTRY, *PMAP_REGISTER_ENTRY;
+
+typedef struct _DEBUG_DEVICE_ADDRESS {
+  UCHAR Type;
+  BOOLEAN Valid;
+  UCHAR Reserved[2];
+  PUCHAR TranslatedAddress;
+  ULONG Length;
+} DEBUG_DEVICE_ADDRESS, *PDEBUG_DEVICE_ADDRESS;
+
+typedef struct _DEBUG_MEMORY_REQUIREMENTS {
+  PHYSICAL_ADDRESS Start;
+  PHYSICAL_ADDRESS MaxEnd;
+  PVOID VirtualAddress;
+  ULONG Length;
+  BOOLEAN Cached;
+  BOOLEAN Aligned;
+} DEBUG_MEMORY_REQUIREMENTS, *PDEBUG_MEMORY_REQUIREMENTS;
+
+typedef struct _DEBUG_DEVICE_DESCRIPTOR {
+  ULONG Bus;
+  ULONG Slot;
+  USHORT Segment;
+  USHORT VendorID;
+  USHORT DeviceID;
+  UCHAR BaseClass;
+  UCHAR SubClass;
+  UCHAR ProgIf;
+  BOOLEAN Initialized;
+  BOOLEAN Configured;
+  DEBUG_DEVICE_ADDRESS BaseAddress[6];
+  DEBUG_MEMORY_REQUIREMENTS Memory;
+} DEBUG_DEVICE_DESCRIPTOR, *PDEBUG_DEVICE_DESCRIPTOR;
+
+typedef struct _PM_DISPATCH_TABLE {
+  ULONG Signature;
+  ULONG Version;
+  PVOID Function[1];
+} PM_DISPATCH_TABLE, *PPM_DISPATCH_TABLE;
+
+typedef enum _RESOURCE_TRANSLATION_DIRECTION {
+  TranslateChildToParent,
+  TranslateParentToChild
+} RESOURCE_TRANSLATION_DIRECTION;
+
+typedef NTSTATUS
+(DDKAPI *PTRANSLATE_RESOURCE_HANDLER)(
+  IN OUT PVOID Context,
+  IN PCM_PARTIAL_RESOURCE_DESCRIPTOR Source,
+  IN RESOURCE_TRANSLATION_DIRECTION Direction,
+  IN ULONG AlternativesCount OPTIONAL,
+  IN IO_RESOURCE_DESCRIPTOR Alternatives[],
+  IN PDEVICE_OBJECT PhysicalDeviceObject,
+  OUT PCM_PARTIAL_RESOURCE_DESCRIPTOR Target);
+
+typedef NTSTATUS
+(DDKAPI *PTRANSLATE_RESOURCE_REQUIREMENTS_HANDLER)(
+  IN PVOID Context OPTIONAL,
+  IN PIO_RESOURCE_DESCRIPTOR Source,
+  IN PDEVICE_OBJECT PhysicalDeviceObject,
+  OUT PULONG TargetCount,
+  OUT PIO_RESOURCE_DESCRIPTOR *Target);
+
+typedef struct _TRANSLATOR_INTERFACE {
+  USHORT Size;
+  USHORT Version;
+  PVOID Context;
+  PINTERFACE_REFERENCE InterfaceReference;
+  PINTERFACE_DEREFERENCE InterfaceDereference;
+  PTRANSLATE_RESOURCE_HANDLER TranslateResources;
+  PTRANSLATE_RESOURCE_REQUIREMENTS_HANDLER TranslateResourceRequirements;
+} TRANSLATOR_INTERFACE, *PTRANSLATOR_INTERFACE;
+
+typedef VOID
+(FASTCALL *pHalExamineMBR)(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN ULONG SectorSize,
+  IN ULONG MBRTypeIdentifier,
+  OUT PVOID *Buffer);
+
+typedef NTSTATUS
+(FASTCALL *pHalIoReadPartitionTable)(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN ULONG SectorSize,
+  IN BOOLEAN ReturnRecognizedPartitions,
+  OUT struct _DRIVE_LAYOUT_INFORMATION **PartitionBuffer);
+
+typedef NTSTATUS
+(FASTCALL *pHalIoSetPartitionInformation)(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN ULONG SectorSize,
+  IN ULONG PartitionNumber,
+  IN ULONG PartitionType);
+
+typedef NTSTATUS
+(FASTCALL *pHalIoWritePartitionTable)(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN ULONG SectorSize,
+  IN ULONG SectorsPerTrack,
+  IN ULONG NumberOfHeads,
+  IN struct _DRIVE_LAYOUT_INFORMATION *PartitionBuffer);
+
+typedef PBUS_HANDLER
+(FASTCALL *pHalHandlerForBus)(
+  IN INTERFACE_TYPE InterfaceType,
+  IN ULONG BusNumber);
+
+typedef VOID
+(FASTCALL *pHalReferenceBusHandler)(
+  IN PBUS_HANDLER BusHandler);
+
+typedef NTSTATUS
+(DDKAPI *pHalQuerySystemInformation)(
+  IN HAL_QUERY_INFORMATION_CLASS InformationClass,
+  IN ULONG BufferSize,
+  IN OUT PVOID Buffer,
+  OUT PULONG ReturnedLength);
+
+typedef NTSTATUS
+(DDKAPI *pHalSetSystemInformation)(
+  IN HAL_SET_INFORMATION_CLASS InformationClass,
+  IN ULONG BufferSize,
+  IN PVOID Buffer);
+
+typedef NTSTATUS
+(DDKAPI *pHalQueryBusSlots)(
+  IN PBUS_HANDLER BusHandler,
+  IN ULONG BufferSize,
+  OUT PULONG SlotNumbers,
+  OUT PULONG ReturnedLength);
+
+typedef NTSTATUS
+(DDKAPI *pHalInitPnpDriver)(
+  VOID);
+
+typedef NTSTATUS
+(DDKAPI *pHalInitPowerManagement)(
+  IN PPM_DISPATCH_TABLE PmDriverDispatchTable,
+  OUT PPM_DISPATCH_TABLE *PmHalDispatchTable);
+
+typedef struct _DMA_ADAPTER*
+(DDKAPI *pHalGetDmaAdapter)(
+  IN PVOID Context,
+  IN struct _DEVICE_DESCRIPTION *DeviceDescriptor,
+  OUT PULONG NumberOfMapRegisters);
+
+typedef NTSTATUS
+(DDKAPI *pHalGetInterruptTranslator)(
+  IN INTERFACE_TYPE ParentInterfaceType,
+  IN ULONG ParentBusNumber,
+  IN INTERFACE_TYPE BridgeInterfaceType,
+  IN USHORT Size,
+  IN USHORT Version,
+  OUT PTRANSLATOR_INTERFACE Translator,
+  OUT PULONG BridgeBusNumber);
+
+typedef NTSTATUS
+(DDKAPI *pHalStartMirroring)(
+  VOID);
+
+typedef NTSTATUS
+(DDKAPI *pHalEndMirroring)(
+  IN ULONG PassNumber);
+
+typedef NTSTATUS
+(DDKAPI *pHalMirrorPhysicalMemory)(
+  IN PHYSICAL_ADDRESS PhysicalAddress,
+  IN LARGE_INTEGER NumberOfBytes);
+
+typedef NTSTATUS
+(DDKAPI *pHalMirrorVerify)(
+  IN PHYSICAL_ADDRESS PhysicalAddress,
+  IN LARGE_INTEGER NumberOfBytes);
+
+typedef VOID
+(DDKAPI *pHalEndOfBoot)(
+  VOID);
+
+typedef
+BOOLEAN
+(DDKAPI *pHalTranslateBusAddress)(
+  IN INTERFACE_TYPE InterfaceType,
+  IN ULONG BusNumber,
+  IN PHYSICAL_ADDRESS BusAddress,
+  IN OUT PULONG AddressSpace,
+  OUT PPHYSICAL_ADDRESS TranslatedAddress);
+
+typedef
+NTSTATUS
+(DDKAPI *pHalAssignSlotResources)(
+  IN PUNICODE_STRING RegistryPath,
+  IN PUNICODE_STRING DriverClassName OPTIONAL,
+  IN PDRIVER_OBJECT DriverObject,
+  IN PDEVICE_OBJECT DeviceObject,
+  IN INTERFACE_TYPE BusType,
+  IN ULONG BusNumber,
+  IN ULONG SlotNumber,
+  IN OUT PCM_RESOURCE_LIST *AllocatedResources);
+
+typedef
+VOID
+(DDKAPI *pHalHaltSystem)(
+  VOID);
+
+typedef
+BOOLEAN
+(DDKAPI *pHalResetDisplay)(
+  VOID);
+
+typedef
+UCHAR
+(DDKAPI *pHalVectorToIDTEntry)(
+  ULONG Vector);
+
+typedef
+BOOLEAN
+(DDKAPI *pHalFindBusAddressTranslation)(
+  IN PHYSICAL_ADDRESS BusAddress,
+  IN OUT PULONG AddressSpace,
+  OUT PPHYSICAL_ADDRESS TranslatedAddress,
+  IN OUT PULONG_PTR Context,
+  IN BOOLEAN NextBus);
+
+typedef
+NTSTATUS
+(DDKAPI *pKdSetupPciDeviceForDebugging)(
+  IN PVOID LoaderBlock OPTIONAL,
+  IN OUT PDEBUG_DEVICE_DESCRIPTOR PciDevice);
+
+typedef
+NTSTATUS
+(DDKAPI *pKdReleasePciDeviceForDebugging)(
+  IN OUT PDEBUG_DEVICE_DESCRIPTOR PciDevice);
+
+typedef
+PVOID
+(DDKAPI *pKdGetAcpiTablePhase0)(
+  IN struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
+  IN ULONG Signature);
+
+typedef
+VOID
+(DDKAPI *pKdCheckPowerButton)(
+  VOID);
+
 #ifdef _X86_
 
 #define SIZE_OF_80387_REGISTERS   80
