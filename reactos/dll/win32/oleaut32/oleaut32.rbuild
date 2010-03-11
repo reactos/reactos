@@ -9,7 +9,7 @@
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
 	<redefine name="_WIN32_WINNT">0x600</redefine>
-	<define name="PROXY_CLSID_IS">{0xb196b286,0xbab4,0x101a,{0xb6,0x9c,0x00,0xaa,0x00,0x34,0x1d,0x07}}</define>
+	<define name="PROXY_CLSID_IS">"{0xb196b286,0xbab4,0x101a,{0xb6,0x9c,0x00,0xaa,0x00,0x34,0x1d,0x07}}"</define>
 	<define name="COM_NO_WINDOWS_H"/>
 	<define name="_OLEAUT32_"/>
 	<define name="PROXY_DELEGATION"/>
@@ -54,7 +54,7 @@
 </module>
 <module name="oleaut32_proxy" type="rpcproxy" allowwarnings="true">
 	<define name="COM_NO_WINDOWS_H"/>
-	<define name="PROXY_CLSID_IS">{0xb196b286,0xbab4,0x101a,{0xb6,0x9c,0x00,0xaa,0x00,0x34,0x1d,0x07}}</define>
+	<define name="PROXY_CLSID_IS">"{0xb196b286,0xbab4,0x101a,{0xb6,0x9c,0x00,0xaa,0x00,0x34,0x1d,0x07}}"</define>
 	<define name="_OLEAUT32_"/>
 	<define name="PROXY_DELEGATION"/>
 	<define name="REGISTER_PROXY_DLL"/>
