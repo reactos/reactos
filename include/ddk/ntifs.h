@@ -4972,6 +4972,10 @@ ExDisableResourceBoostLite(
 #define EX_PUSH_LOCK ULONG_PTR
 #define PEX_PUSH_LOCK PULONG_PTR
 
+VOID
+ExInitializePushLock (
+  OUT PEX_PUSH_LOCK PushLock);
+
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 PSLIST_ENTRY
 FASTCALL
@@ -4999,6 +5003,176 @@ C_ASSERT(FIELD_OFFSET(ERESOURCE,Flag) == 0x0e);
 #endif
 /* #endif */
 
+#define TOKEN_HAS_TRAVERSE_PRIVILEGE    0x0001
+#define TOKEN_HAS_BACKUP_PRIVILEGE      0x0002
+#define TOKEN_HAS_RESTORE_PRIVILEGE     0x0004
+#define TOKEN_WRITE_RESTRICTED          0x0008
+#define TOKEN_IS_RESTRICTED             0x0010
+#define TOKEN_SESSION_NOT_REFERENCED    0x0020
+#define TOKEN_SANDBOX_INERT             0x0040
+#define TOKEN_HAS_IMPERSONATE_PRIVILEGE 0x0080
+#define SE_BACKUP_PRIVILEGES_CHECKED    0x0100
+#define TOKEN_VIRTUALIZE_ALLOWED        0x0200
+#define TOKEN_VIRTUALIZE_ENABLED        0x0400
+#define TOKEN_IS_FILTERED               0x0800
+#define TOKEN_UIACCESS                  0x1000
+#define TOKEN_NOT_LOW                   0x2000
+
+typedef struct _SE_EXPORTS {
+  LUID SeCreateTokenPrivilege;
+  LUID SeAssignPrimaryTokenPrivilege;
+  LUID SeLockMemoryPrivilege;
+  LUID SeIncreaseQuotaPrivilege;
+  LUID SeUnsolicitedInputPrivilege;
+  LUID SeTcbPrivilege;
+  LUID SeSecurityPrivilege;
+  LUID SeTakeOwnershipPrivilege;
+  LUID SeLoadDriverPrivilege;
+  LUID SeCreatePagefilePrivilege;
+  LUID SeIncreaseBasePriorityPrivilege;
+  LUID SeSystemProfilePrivilege;
+  LUID SeSystemtimePrivilege;
+  LUID SeProfileSingleProcessPrivilege;
+  LUID SeCreatePermanentPrivilege;
+  LUID SeBackupPrivilege;
+  LUID SeRestorePrivilege;
+  LUID SeShutdownPrivilege;
+  LUID SeDebugPrivilege;
+  LUID SeAuditPrivilege;
+  LUID SeSystemEnvironmentPrivilege;
+  LUID SeChangeNotifyPrivilege;
+  LUID SeRemoteShutdownPrivilege;
+  PSID SeNullSid;
+  PSID SeWorldSid;
+  PSID SeLocalSid;
+  PSID SeCreatorOwnerSid;
+  PSID SeCreatorGroupSid;
+  PSID SeNtAuthoritySid;
+  PSID SeDialupSid;
+  PSID SeNetworkSid;
+  PSID SeBatchSid;
+  PSID SeInteractiveSid;
+  PSID SeLocalSystemSid;
+  PSID SeAliasAdminsSid;
+  PSID SeAliasUsersSid;
+  PSID SeAliasGuestsSid;
+  PSID SeAliasPowerUsersSid;
+  PSID SeAliasAccountOpsSid;
+  PSID SeAliasSystemOpsSid;
+  PSID SeAliasPrintOpsSid;
+  PSID SeAliasBackupOpsSid;
+  PSID SeAuthenticatedUsersSid;
+  PSID SeRestrictedSid;
+  PSID SeAnonymousLogonSid;
+  LUID SeUndockPrivilege;
+  LUID SeSyncAgentPrivilege;
+  LUID SeEnableDelegationPrivilege;
+  PSID SeLocalServiceSid;
+  PSID SeNetworkServiceSid;
+  LUID SeManageVolumePrivilege;
+  LUID SeImpersonatePrivilege;
+  LUID SeCreateGlobalPrivilege;
+  LUID SeTrustedCredManAccessPrivilege;
+  LUID SeRelabelPrivilege;
+  LUID SeIncreaseWorkingSetPrivilege;
+  LUID SeTimeZonePrivilege;
+  LUID SeCreateSymbolicLinkPrivilege;
+  PSID SeIUserSid;
+  PSID SeUntrustedMandatorySid;
+  PSID SeLowMandatorySid;
+  PSID SeMediumMandatorySid;
+  PSID SeHighMandatorySid;
+  PSID SeSystemMandatorySid;
+  PSID SeOwnerRightsSid;
+} SE_EXPORTS, *PSE_EXPORTS;
+
+typedef NTSTATUS
+(NTAPI *PSE_LOGON_SESSION_TERMINATED_ROUTINE)(
+  IN PLUID LogonId);
+
+#define SeLengthSid( Sid ) \
+    (8 + (4 * ((SID *)Sid)->SubAuthorityCount))
+
+#define SeDeleteClientSecurity(C)  {                                           \
+            if (SeTokenType((C)->ClientToken) == TokenPrimary) {               \
+                PsDereferencePrimaryToken( (C)->ClientToken );                 \
+            } else {                                                           \
+                PsDereferenceImpersonationToken( (C)->ClientToken );           \
+            }                                                                  \
+}
+
+#define SeStopImpersonatingClient() PsRevertToSelf()
+
+#define SeQuerySubjectContextToken( SubjectContext )                \
+    ( ARGUMENT_PRESENT(                                             \
+        ((PSECURITY_SUBJECT_CONTEXT) SubjectContext)->ClientToken   \
+        ) ?                                                         \
+    ((PSECURITY_SUBJECT_CONTEXT) SubjectContext)->ClientToken :     \
+    ((PSECURITY_SUBJECT_CONTEXT) SubjectContext)->PrimaryToken )
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTKERNELAPI
+VOID
+NTAPI
+SeCaptureSubjectContext(
+  OUT PSECURITY_SUBJECT_CONTEXT SubjectContext);
+
+NTKERNELAPI
+VOID
+NTAPI
+SeLockSubjectContext(
+  IN PSECURITY_SUBJECT_CONTEXT SubjectContext);
+
+NTKERNELAPI
+VOID
+NTAPI
+SeUnlockSubjectContext(
+  IN PSECURITY_SUBJECT_CONTEXT SubjectContext);
+
+NTKERNELAPI
+VOID
+NTAPI
+SeReleaseSubjectContext(
+  IN PSECURITY_SUBJECT_CONTEXT SubjectContext);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+SePrivilegeCheck(
+  IN OUT PPRIVILEGE_SET RequiredPrivileges,
+  IN PSECURITY_SUBJECT_CONTEXT SubjectContext,
+  IN KPROCESSOR_MODE AccessMode);
+
+#endif
+
+NTSTATUS
+NTAPI
+SeReportSecurityEventWithSubCategory(
+  IN ULONG Flags,
+  IN PUNICODE_STRING SourceName,
+  IN PSID UserSid OPTIONAL,
+  IN PSE_ADT_PARAMETER_ARRAY AuditParameters,
+  IN ULONG AuditSubcategoryId);
+
+BOOLEAN
+SeAccessCheckFromState(
+  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+  IN PTOKEN_ACCESS_INFORMATION PrimaryTokenInformation,
+  IN PTOKEN_ACCESS_INFORMATION ClientTokenInformation OPTIONAL,
+  IN ACCESS_MASK DesiredAccess,
+  IN ACCESS_MASK PreviouslyGrantedAccess,
+  OUT PPRIVILEGE_SET *Privileges OPTIONAL,
+  IN PGENERIC_MAPPING GenericMapping,
+  IN KPROCESSOR_MODE AccessMode,
+  OUT PACCESS_MASK GrantedAccess,
+  OUT PNTSTATUS AccessStatus);
+
+NTKERNELAPI
+VOID
+NTAPI
+SeFreePrivileges(
+  IN PPRIVILEGE_SET Privileges);
 
 
 #pragma pack(push,4)
@@ -5147,13 +5321,7 @@ extern LARGE_INTEGER                IoOtherTransferCount;
 
 /* end winnt.h */
 
-#define TOKEN_HAS_TRAVERSE_PRIVILEGE    0x01
-#define TOKEN_HAS_BACKUP_PRIVILEGE      0x02
-#define TOKEN_HAS_RESTORE_PRIVILEGE     0x04
 #define TOKEN_HAS_ADMIN_GROUP           0x08
-#define TOKEN_WRITE_RESTRICTED          0x08
-#define TOKEN_IS_RESTRICTED             0x10
-#define SE_BACKUP_PRIVILEGES_CHECKED    0x0100
 
 #define VACB_MAPPING_GRANULARITY        (0x40000)
 #define VACB_OFFSET_SHIFT               (18)
@@ -5844,64 +6012,6 @@ typedef struct _REMOTE_PORT_VIEW
     LPC_SIZE_T ViewSize;
     LPC_PVOID ViewBase;
 } REMOTE_PORT_VIEW, *PREMOTE_PORT_VIEW;
-
-typedef struct _SE_EXPORTS {
-
-    LUID    SeCreateTokenPrivilege;
-    LUID    SeAssignPrimaryTokenPrivilege;
-    LUID    SeLockMemoryPrivilege;
-    LUID    SeIncreaseQuotaPrivilege;
-    LUID    SeUnsolicitedInputPrivilege;
-    LUID    SeTcbPrivilege;
-    LUID    SeSecurityPrivilege;
-    LUID    SeTakeOwnershipPrivilege;
-    LUID    SeLoadDriverPrivilege;
-    LUID    SeCreatePagefilePrivilege;
-    LUID    SeIncreaseBasePriorityPrivilege;
-    LUID    SeSystemProfilePrivilege;
-    LUID    SeSystemtimePrivilege;
-    LUID    SeProfileSingleProcessPrivilege;
-    LUID    SeCreatePermanentPrivilege;
-    LUID    SeBackupPrivilege;
-    LUID    SeRestorePrivilege;
-    LUID    SeShutdownPrivilege;
-    LUID    SeDebugPrivilege;
-    LUID    SeAuditPrivilege;
-    LUID    SeSystemEnvironmentPrivilege;
-    LUID    SeChangeNotifyPrivilege;
-    LUID    SeRemoteShutdownPrivilege;
-
-    PSID    SeNullSid;
-    PSID    SeWorldSid;
-    PSID    SeLocalSid;
-    PSID    SeCreatorOwnerSid;
-    PSID    SeCreatorGroupSid;
-
-    PSID    SeNtAuthoritySid;
-    PSID    SeDialupSid;
-    PSID    SeNetworkSid;
-    PSID    SeBatchSid;
-    PSID    SeInteractiveSid;
-    PSID    SeLocalSystemSid;
-    PSID    SeAliasAdminsSid;
-    PSID    SeAliasUsersSid;
-    PSID    SeAliasGuestsSid;
-    PSID    SeAliasPowerUsersSid;
-    PSID    SeAliasAccountOpsSid;
-    PSID    SeAliasSystemOpsSid;
-    PSID    SeAliasPrintOpsSid;
-    PSID    SeAliasBackupOpsSid;
-
-    PSID    SeAuthenticatedUsersSid;
-
-    PSID    SeRestrictedSid;
-    PSID    SeAnonymousLogonSid;
-
-    LUID    SeUndockPrivilege;
-    LUID    SeSyncAgentPrivilege;
-    LUID    SeEnableDelegationPrivilege;
-
-} SE_EXPORTS, *PSE_EXPORTS;
 
 extern PSE_EXPORTS SeExports;
 
@@ -8387,13 +8497,6 @@ SeAuditingFileOrGlobalEvents (
 );
 
 NTKERNELAPI
-VOID
-NTAPI
-SeCaptureSubjectContext (
-    OUT PSECURITY_SUBJECT_CONTEXT SubjectContext
-);
-
-NTKERNELAPI
 NTSTATUS
 NTAPI
 SeCreateClientSecurity (
@@ -8417,18 +8520,6 @@ SeCreateClientSecurityFromSubjectContext (
 
 #endif /* (VER_PRODUCTBUILD >= 2195) */
 
-
-#define SeLengthSid( Sid ) \
-    (8 + (4 * ((SID *)Sid)->SubAuthorityCount))
-
-#define SeDeleteClientSecurity(C)  {                                           \
-            if (SeTokenType((C)->ClientToken) == TokenPrimary) {               \
-                PsDereferencePrimaryToken( (C)->ClientToken );                 \
-            } else {                                                           \
-                PsDereferenceImpersonationToken( (C)->ClientToken );           \
-            }                                                                  \
-}
-
 NTKERNELAPI
 VOID
 NTAPI
@@ -8438,13 +8529,6 @@ SeDeleteObjectAuditAlarm (
 );
 
 #define SeEnableAccessToExports() SeExports = *(PSE_EXPORTS *)SeExports;
-
-NTKERNELAPI
-VOID
-NTAPI
-SeFreePrivileges (
-    IN PPRIVILEGE_SET Privileges
-);
 
 NTKERNELAPI
 VOID
@@ -8465,13 +8549,6 @@ SeImpersonateClientEx (
 );
 
 #endif /* (VER_PRODUCTBUILD >= 2195) */
-
-NTKERNELAPI
-VOID
-NTAPI
-SeLockSubjectContext (
-    IN PSECURITY_SUBJECT_CONTEXT SubjectContext
-);
 
 NTKERNELAPI
 NTSTATUS
@@ -8508,15 +8585,6 @@ SeOpenObjectForDeleteAuditAlarm (
     IN BOOLEAN              AccessGranted,
     IN KPROCESSOR_MODE      AccessMode,
     OUT PBOOLEAN            GenerateOnClose
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-SePrivilegeCheck (
-    IN OUT PPRIVILEGE_SET           RequiredPrivileges,
-    IN PSECURITY_SUBJECT_CONTEXT    SubjectContext,
-    IN KPROCESSOR_MODE              AccessMode
 );
 
 NTKERNELAPI
@@ -8562,29 +8630,11 @@ SeQuerySessionIdToken (
 
 #endif /* (VER_PRODUCTBUILD >= 2195) */
 
-#define SeQuerySubjectContextToken( SubjectContext )                \
-    ( ARGUMENT_PRESENT(                                             \
-        ((PSECURITY_SUBJECT_CONTEXT) SubjectContext)->ClientToken   \
-        ) ?                                                         \
-    ((PSECURITY_SUBJECT_CONTEXT) SubjectContext)->ClientToken :     \
-    ((PSECURITY_SUBJECT_CONTEXT) SubjectContext)->PrimaryToken )
-
-typedef NTSTATUS (NTAPI *PSE_LOGON_SESSION_TERMINATED_ROUTINE) (
-    IN PLUID LogonId
-);
-
 NTKERNELAPI
 NTSTATUS
 NTAPI
 SeRegisterLogonSessionTerminatedRoutine (
     IN PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-SeReleaseSubjectContext (
-    IN PSECURITY_SUBJECT_CONTEXT SubjectContext
 );
 
 NTKERNELAPI
@@ -8651,13 +8701,6 @@ TOKEN_TYPE
 NTAPI
 SeTokenType (
     IN PACCESS_TOKEN Token
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-SeUnlockSubjectContext (
-    IN PSECURITY_SUBJECT_CONTEXT SubjectContext
 );
 
 NTKERNELAPI
