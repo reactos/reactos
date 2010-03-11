@@ -5144,6 +5144,202 @@ SePrivilegeCheck(
   IN PSECURITY_SUBJECT_CONTEXT SubjectContext,
   IN KPROCESSOR_MODE AccessMode);
 
+NTKERNELAPI
+VOID
+NTAPI
+SeOpenObjectAuditAlarm(
+  IN PUNICODE_STRING ObjectTypeName,
+  IN PVOID Object OPTIONAL,
+  IN PUNICODE_STRING AbsoluteObjectName OPTIONAL,
+  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+  IN PACCESS_STATE AccessState,
+  IN BOOLEAN ObjectCreated,
+  IN BOOLEAN AccessGranted,
+  IN KPROCESSOR_MODE AccessMode,
+  OUT PBOOLEAN GenerateOnClose);
+
+NTKERNELAPI
+VOID
+NTAPI
+SeOpenObjectForDeleteAuditAlarm(
+  IN PUNICODE_STRING ObjectTypeName,
+  IN PVOID Object OPTIONAL,
+  IN PUNICODE_STRING AbsoluteObjectName OPTIONAL,
+  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+  IN PACCESS_STATE AccessState,
+  IN BOOLEAN ObjectCreated,
+  IN BOOLEAN AccessGranted,
+  IN KPROCESSOR_MODE AccessMode,
+  OUT PBOOLEAN GenerateOnClose);
+
+NTKERNELAPI
+VOID
+NTAPI
+SeDeleteObjectAuditAlarm(
+  IN PVOID Object,
+  IN HANDLE Handle);
+
+NTKERNELAPI
+TOKEN_TYPE
+NTAPI
+SeTokenType(
+  IN PACCESS_TOKEN Token);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+SeTokenIsAdmin(
+  IN PACCESS_TOKEN Token);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+SeTokenIsRestricted(
+  IN PACCESS_TOKEN Token);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+SeQueryAuthenticationIdToken(
+  IN PACCESS_TOKEN Token,
+  OUT PLUID AuthenticationId);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+SeQuerySessionIdToken(
+  IN PACCESS_TOKEN Token,
+  OUT PULONG SessionId);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+SeCreateClientSecurity(
+  IN PETHREAD ClientThread,
+  IN PSECURITY_QUALITY_OF_SERVICE ClientSecurityQos,
+  IN BOOLEAN RemoteSession,
+  OUT PSECURITY_CLIENT_CONTEXT ClientContext);
+
+NTKERNELAPI
+VOID
+NTAPI
+SeImpersonateClient(
+  IN PSECURITY_CLIENT_CONTEXT ClientContext,
+  IN PETHREAD ServerThread OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+SeImpersonateClientEx(
+  IN PSECURITY_CLIENT_CONTEXT ClientContext,
+  IN PETHREAD ServerThread OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+SeCreateClientSecurityFromSubjectContext(
+  IN PSECURITY_SUBJECT_CONTEXT SubjectContext,
+  IN PSECURITY_QUALITY_OF_SERVICE ClientSecurityQos,
+  IN BOOLEAN ServerIsRemote,
+  OUT PSECURITY_CLIENT_CONTEXT ClientContext);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+SeQuerySecurityDescriptorInfo(
+  IN PSECURITY_INFORMATION SecurityInformation,
+  OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
+  IN OUT PULONG Length,
+  IN OUT PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+
+NTKERNELAPI
+NTSTATUS
+SeFilterToken(
+  IN PACCESS_TOKEN ExistingToken,
+  IN ULONG Flags,
+  IN PTOKEN_GROUPS SidsToDisable OPTIONAL,
+  IN PTOKEN_PRIVILEGES PrivilegesToDelete OPTIONAL,
+  IN PTOKEN_GROUPS RestrictedSids OPTIONAL,
+  OUT PACCESS_TOKEN *FilteredToken);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+NTKERNELAPI
+VOID
+NTAPI
+SeOpenObjectAuditAlarmWithTransaction(
+  IN PUNICODE_STRING ObjectTypeName,
+  IN PVOID Object OPTIONAL,
+  IN PUNICODE_STRING AbsoluteObjectName OPTIONAL,
+  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+  IN PACCESS_STATE AccessState,
+  IN BOOLEAN ObjectCreated,
+  IN BOOLEAN AccessGranted,
+  IN KPROCESSOR_MODE AccessMode,
+  IN GUID *TransactionId OPTIONAL,
+  OUT PBOOLEAN GenerateOnClose);
+
+NTKERNELAPI
+VOID
+NTAPI
+SeOpenObjectForDeleteAuditAlarmWithTransaction(
+  IN PUNICODE_STRING ObjectTypeName,
+  IN PVOID Object OPTIONAL,
+  IN PUNICODE_STRING AbsoluteObjectName OPTIONAL,
+  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+  IN PACCESS_STATE AccessState,
+  IN BOOLEAN ObjectCreated,
+  IN BOOLEAN AccessGranted,
+  IN KPROCESSOR_MODE AccessMode,
+  IN GUID *TransactionId OPTIONAL,
+  OUT PBOOLEAN GenerateOnClose);
+
+NTKERNELAPI
+VOID
+NTAPI
+SeExamineSacl(
+  IN PACL Sacl,
+  IN PACCESS_TOKEN Token,
+  IN ACCESS_MASK DesiredAccess,
+  IN BOOLEAN AccessGranted,
+  OUT PBOOLEAN GenerateAudit,
+  OUT PBOOLEAN GenerateAlarm);
+
+NTKERNELAPI
+VOID
+NTAPI
+SeDeleteObjectAuditAlarmWithTransaction(
+  IN PVOID Object,
+  IN HANDLE Handle,
+  IN GUID *TransactionId OPTIONAL);
+
+NTKERNELAPI
+VOID
+NTAPI
+SeQueryTokenIntegrity(
+  IN PACCESS_TOKEN Token,
+  IN OUT PSID_AND_ATTRIBUTES IntegritySA);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+SeSetSessionIdToken(
+  IN PACCESS_TOKEN Token,
+  IN ULONG SessionId);
+
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+
+#if (NTDDI_VERSION >= NTDDI_VISTA || (NTDDI_VERSION >= NTDDI_WINXPSP2 && NTDDI_VERSION < NTDDI_WS03))
+NTKERNELAPI
+BOOLEAN
+SeTokenIsWriteRestricted(
+  IN PACCESS_TOKEN Token);
 #endif
 
 NTSTATUS
@@ -5156,6 +5352,7 @@ SeReportSecurityEventWithSubCategory(
   IN ULONG AuditSubcategoryId);
 
 BOOLEAN
+NTAPI
 SeAccessCheckFromState(
   IN PSECURITY_DESCRIPTOR SecurityDescriptor,
   IN PTOKEN_ACCESS_INFORMATION PrimaryTokenInformation,
@@ -8496,103 +8693,13 @@ SeAuditingFileOrGlobalEvents (
     IN PSECURITY_SUBJECT_CONTEXT    SubjectContext
 );
 
-NTKERNELAPI
-NTSTATUS
-NTAPI
-SeCreateClientSecurity (
-    IN PETHREAD                     Thread,
-    IN PSECURITY_QUALITY_OF_SERVICE QualityOfService,
-    IN BOOLEAN                      RemoteClient,
-    OUT PSECURITY_CLIENT_CONTEXT    ClientContext
-);
-
-#if (VER_PRODUCTBUILD >= 2195)
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-SeCreateClientSecurityFromSubjectContext (
-    IN PSECURITY_SUBJECT_CONTEXT    SubjectContext,
-    IN PSECURITY_QUALITY_OF_SERVICE QualityOfService,
-    IN BOOLEAN                      ServerIsRemote,
-    OUT PSECURITY_CLIENT_CONTEXT    ClientContext
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
-
-NTKERNELAPI
-VOID
-NTAPI
-SeDeleteObjectAuditAlarm (
-    IN PVOID    Object,
-    IN HANDLE   Handle
-);
-
 #define SeEnableAccessToExports() SeExports = *(PSE_EXPORTS *)SeExports;
-
-NTKERNELAPI
-VOID
-NTAPI
-SeImpersonateClient (
-    IN PSECURITY_CLIENT_CONTEXT ClientContext,
-    IN PETHREAD                 ServerThread OPTIONAL
-);
-
-#if (VER_PRODUCTBUILD >= 2195)
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-SeImpersonateClientEx (
-    IN PSECURITY_CLIENT_CONTEXT ClientContext,
-    IN PETHREAD                 ServerThread OPTIONAL
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 SeMarkLogonSessionForTerminationNotification (
     IN PLUID LogonId
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-SeOpenObjectAuditAlarm (
-    IN PUNICODE_STRING      ObjectTypeName,
-    IN PVOID                Object OPTIONAL,
-    IN PUNICODE_STRING      AbsoluteObjectName OPTIONAL,
-    IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-    IN PACCESS_STATE        AccessState,
-    IN BOOLEAN              ObjectCreated,
-    IN BOOLEAN              AccessGranted,
-    IN KPROCESSOR_MODE      AccessMode,
-    OUT PBOOLEAN            GenerateOnClose
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-SeOpenObjectForDeleteAuditAlarm (
-    IN PUNICODE_STRING      ObjectTypeName,
-    IN PVOID                Object OPTIONAL,
-    IN PUNICODE_STRING      AbsoluteObjectName OPTIONAL,
-    IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-    IN PACCESS_STATE        AccessState,
-    IN BOOLEAN              ObjectCreated,
-    IN BOOLEAN              AccessGranted,
-    IN KPROCESSOR_MODE      AccessMode,
-    OUT PBOOLEAN            GenerateOnClose
-);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-SeQueryAuthenticationIdToken (
-    IN PACCESS_TOKEN    Token,
-    OUT PLUID           LogonId
 );
 
 #if (VER_PRODUCTBUILD >= 2195)
@@ -8604,28 +8711,6 @@ SeQueryInformationToken (
     IN PACCESS_TOKEN           Token,
     IN TOKEN_INFORMATION_CLASS TokenInformationClass,
     OUT PVOID                  *TokenInformation
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-SeQuerySecurityDescriptorInfo (
-    IN PSECURITY_INFORMATION    SecurityInformation,
-    OUT PSECURITY_DESCRIPTOR    SecurityDescriptor,
-    IN OUT PULONG               Length,
-    IN PSECURITY_DESCRIPTOR     *ObjectsSecurityDescriptor
-);
-
-#if (VER_PRODUCTBUILD >= 2195)
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-SeQuerySessionIdToken (
-    IN PACCESS_TOKEN    Token,
-    IN PULONG           SessionId
 );
 
 #endif /* (VER_PRODUCTBUILD >= 2195) */
@@ -8672,21 +8757,6 @@ SeSetSecurityDescriptorInfoEx (
     IN PGENERIC_MAPPING         GenericMapping
 );
 
-NTKERNELAPI
-BOOLEAN
-NTAPI
-SeTokenIsAdmin (
-    IN PACCESS_TOKEN Token
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-SeTokenIsRestricted (
-    IN PACCESS_TOKEN Token
-);
-
-
 NTSTATUS
 NTAPI
 SeLocateProcessImageName(
@@ -8695,13 +8765,6 @@ SeLocateProcessImageName(
 );
 
 #endif /* (VER_PRODUCTBUILD >= 2195) */
-
-NTKERNELAPI
-TOKEN_TYPE
-NTAPI
-SeTokenType (
-    IN PACCESS_TOKEN Token
-);
 
 NTKERNELAPI
 NTSTATUS
