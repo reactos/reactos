@@ -466,6 +466,7 @@ SURFMEM_bCreateDib(IN PDEVBITMAPINFO BitmapInfo,
     SURFOBJ *pso;
     PSURFACE psurf;
     SIZEL LocalSize;
+    BOOLEAN AllocatedLocally = FALSE;
 
     /*
      * First, check the format so we can get the aligned scanline width.
@@ -526,7 +527,7 @@ SURFMEM_bCreateDib(IN PDEVBITMAPINFO BitmapInfo,
             Size = BitmapInfo->Height * ScanLine;
         }
         
-        if (Size) 
+        if (Size)
         {
             /* Check for allocation flag */
             if (BitmapInfo->Flags & BMF_USERMEM)
@@ -541,7 +542,7 @@ SURFMEM_bCreateDib(IN PDEVBITMAPINFO BitmapInfo,
                                    Size,
                                    TAG_DIB);
             }
-            
+            AllocatedLocally = TRUE;
             /* Bail out if that failed */
             if (!Bits) return NULL;
         }
@@ -554,14 +555,24 @@ SURFMEM_bCreateDib(IN PDEVBITMAPINFO BitmapInfo,
 
     /* Allocate the actual surface object structure */
     psurf = SURFACE_AllocSurfaceWithHandle();
-    if (!psurf) return NULL;
-    
+    if (!psurf)
+    {
+        if(Bits && AllocatedLocally)
+        {
+            if(BitmapInfo->Flags & BMF_USERMEM)
+                EngFreeUserMem(Bits);
+            else
+                EngFreeMem(Bits);
+        }
+        return NULL;
+    }
+
     /* Lock down the surface */
     if (!SURFACE_InitBitsLock(psurf))
     {
         /* Bail out if that failed */
         SURFACE_UnlockSurface(psurf);
-        SURFACE_FreeSurface(psurf);
+        SURFACE_FreeSurfaceByHandle(psurf->BaseObject.hHmgr);
         return NULL;
     }
 
