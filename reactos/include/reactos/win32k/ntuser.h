@@ -221,6 +221,57 @@ C_ASSERT(sizeof(CLIENTINFO) == FIELD_OFFSET(TEB, glDispatchTable) - FIELD_OFFSET
 
 #define GetWin32ClientInfo() ((PCLIENTINFO)(NtCurrentTeb()->Win32ClientInfo))
 
+typedef struct tagITEM
+{
+    UINT fType;
+    UINT fState;
+    UINT wID;
+    struct tagMENU* spSubMenu; /* Pop-up menu.  */
+    HANDLE hbmpChecked;
+    HANDLE hbmpUnchecked;
+    USHORT* lpstr; /* Item text pointer. */
+    ULONG cch;
+    DWORD_PTR dwItemData;
+    ULONG xItem;   /* Item position. left */
+    ULONG yItem;   /*     "          top */
+    ULONG cxItem;  /* Item Size Width */
+    ULONG cyItem;  /*     "     Height */
+    ULONG dxTab;   /* X position of text after Tab */
+    ULONG ulX;     /* underline.. start position */
+    ULONG ulWidth; /* underline.. width */
+    HBITMAP hbmp;  /* bitmap */
+    INT cxBmp;     /* Width Maximum size of the bitmap items in MIIM_BITMAP state */
+    INT cyBmp;     /* Height " */
+} ITEM, *PITEM;
+
+typedef struct tagMENULIST
+{
+   struct tagMENULIST* pNext;
+   struct tagMENU*     pMenu;
+} MENULIST, *PMENULIST;
+
+typedef struct tagMENU
+{
+    PROCDESKHEAD head;
+    ULONG fFlags;             /* Menu flags (MF_POPUP, MF_SYSMENU) */
+    INT iItem;                /* nPos of selected item, if -1 not selected. */
+    UINT cAlloced;            /* Number of allocated items. */
+    UINT cItems;              /* Number of items in the menu */
+    ULONG cxMenu;             /* Width of the whole menu */
+    ULONG cyMenu;             /* Height of the whole menu */
+    ULONG cxTextAlign;        /* Offset of text when items have both bitmaps and text */
+    struct _WND *spwndNotify; /* window receiving the messages for ownerdraw */
+    PITEM rgItems;            /* Array of menu items */
+    struct tagMENULIST* pParentMenus; /* If this is SubMenu, list of parents. */
+    DWORD dwContextHelpId;
+    ULONG cyMax;              /* max height of the whole menu, 0 is screen height */
+    DWORD_PTR dwMenuData;     /* application defined value */
+    HBRUSH hbrBack;           /* brush for menu background */
+    INT iTop;                 /* Current scroll position Top */
+    INT iMaxTop;              /* Current scroll position Max Top */
+    DWORD dwArrowsOn:2;       /* Arrows: 0 off, 1 on, 2 to the top, 3 to the bottom. */
+} MENU, *PMENU;
+
 typedef struct _REGISTER_SYSCLASS
 {
     /* This is a reactos specific class used to initialize the
