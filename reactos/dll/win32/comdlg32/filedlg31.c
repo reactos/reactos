@@ -109,7 +109,24 @@ static void FD31_StripEditControl(HWND hwnd)
 BOOL FD31_CallWindowProc(const FD31_DATA *lfs, UINT wMsg, WPARAM wParam,
                          LPARAM lParam)
 {
-    return lfs->callbacks->CWP(lfs, wMsg, wParam, lParam);
+    BOOL ret;
+
+    if (lfs->ofnA)
+    {
+        TRACE("Call hookA %p (%p, %04x, %08lx, %08lx)\n",
+               lfs->ofnA->lpfnHook, lfs->hwnd, wMsg, wParam, lParam);
+        ret = lfs->ofnA->lpfnHook(lfs->hwnd, wMsg, wParam, lParam);
+        TRACE("ret hookA %p (%p, %04x, %08lx, %08lx)\n",
+               lfs->ofnA->lpfnHook, lfs->hwnd, wMsg, wParam, lParam);
+        return ret;
+    }
+
+    TRACE("Call hookW %p (%p, %04x, %08lx, %08lx)\n",
+           lfs->ofnW->lpfnHook, lfs->hwnd, wMsg, wParam, lParam);
+    ret = lfs->ofnW->lpfnHook(lfs->hwnd, wMsg, wParam, lParam);
+    TRACE("Ret hookW %p (%p, %04x, %08lx, %08lx)\n",
+           lfs->ofnW->lpfnHook, lfs->hwnd, wMsg, wParam, lParam);
+    return ret;
 }
 
 /***********************************************************************
@@ -251,7 +268,7 @@ LONG FD31_WMDrawItem(HWND hWnd, WPARAM wParam, LPARAM lParam,
 	    SetBkColor( lpdis->hDC, oldBk );
 	    SetTextColor( lpdis->hDC, oldText );
 	}
-	DrawIcon(lpdis->hDC, lpdis->rcItem.left, lpdis->rcItem.top, hFolder);
+	DrawIconEx( lpdis->hDC, lpdis->rcItem.left, lpdis->rcItem.top, hFolder, 16, 16, 0, 0, DI_NORMAL );
         HeapFree(GetProcessHeap(), 0, str);
 	return TRUE;
     }
@@ -285,7 +302,7 @@ LONG FD31_WMDrawItem(HWND hWnd, WPARAM wParam, LPARAM lParam,
 	    SetBkColor( lpdis->hDC, oldBk );
 	    SetTextColor( lpdis->hDC, oldText );
 	}
-	DrawIcon(lpdis->hDC, lpdis->rcItem.left, lpdis->rcItem.top, hIcon);
+	DrawIconEx( lpdis->hDC, lpdis->rcItem.left, lpdis->rcItem.top, hIcon, 16, 16, 0, 0, DI_NORMAL );
         HeapFree(GetProcessHeap(), 0, str);
 	return TRUE;
     }
@@ -300,6 +317,7 @@ static void FD31_UpdateResult(const FD31_DATA *lfs, const WCHAR *tmpstr)
 {
     int lenstr2;
     LPOPENFILENAMEW ofnW = lfs->ofnW;
+    LPOPENFILENAMEA ofnA = lfs->ofnA;
     WCHAR tmpstr2[BUFFILE];
     WCHAR *p;
 
@@ -329,7 +347,23 @@ static void FD31_UpdateResult(const FD31_DATA *lfs, const WCHAR *tmpstr)
           debugstr_w(ofnW->lpstrFile), ofnW->nFileOffset, ofnW->nFileExtension);
 
     /* update the real client structures if any */
-    lfs->callbacks->UpdateResult(lfs);
+    if (ofnA)
+    {
+        LPSTR lpszTemp;
+        if (ofnW->nMaxFile &&
+            !WideCharToMultiByte( CP_ACP, 0, ofnW->lpstrFile, -1,
+                                  ofnA->lpstrFile, ofnA->nMaxFile, NULL, NULL ))
+            ofnA->lpstrFile[ofnA->nMaxFile-1] = 0;
+
+        /* offsets are not guaranteed to be the same in WCHAR to MULTIBYTE conversion */
+        /* set filename offset */
+        lpszTemp = PathFindFileNameA(ofnA->lpstrFile);
+        ofnA->nFileOffset = (lpszTemp - ofnA->lpstrFile);
+
+        /* set extension offset */
+        lpszTemp = PathFindExtensionA(ofnA->lpstrFile);
+        ofnA->nFileExtension = (*lpszTemp) ? (lpszTemp - ofnA->lpstrFile) + 1 : 0;
+    }
 }
 
 /***********************************************************************
@@ -340,12 +374,19 @@ static void FD31_UpdateFileTitle(const FD31_DATA *lfs)
 {
   LONG lRet;
   LPOPENFILENAMEW ofnW = lfs->ofnW;
+  LPOPENFILENAMEA ofnA = lfs->ofnA;
+
   if (ofnW->lpstrFileTitle != NULL)
   {
     lRet = SendDlgItemMessageW(lfs->hwnd, lst1, LB_GETCURSEL, 0, 0);
     SendDlgItemMessageW(lfs->hwnd, lst1, LB_GETTEXT, lRet,
                              (LPARAM)ofnW->lpstrFileTitle );
-    lfs->callbacks->UpdateFileTitle(lfs);
+    if (ofnA)
+    {
+        if (!WideCharToMultiByte( CP_ACP, 0, ofnW->lpstrFileTitle, -1,
+                                  ofnA->lpstrFileTitle, ofnA->nMaxFileTitle, NULL, NULL ))
+            ofnA->lpstrFileTitle[ofnA->nMaxFileTitle-1] = 0;
+    }
   }
 }
 
@@ -396,7 +437,7 @@ static LRESULT FD31_FileListSelect( const FD31_DATA *lfs )
     HWND hWnd = lfs->hwnd;
     LPWSTR pstr;
 
-    lRet = lfs->callbacks->SendLbGetCurSel(lfs);
+    lRet =  SendDlgItemMessageW(lfs->hwnd, lst1, LB_GETCURSEL, 0, 0);
     if (lRet == LB_ERR)
         return TRUE;
 
@@ -737,7 +778,7 @@ void FD31_MapOfnStructA(const OPENFILENAMEA *ofnA, LPOPENFILENAMEW ofnW, BOOL op
     ofnW->lpstrDefExt = FD31_DupToW(ofnA->lpstrDefExt, 3);
     if ((ofnA->Flags & OFN_ENABLETEMPLATE) && (ofnA->lpTemplateName))
     {
-        if (HIWORD(ofnA->lpTemplateName))
+        if (!IS_INTRESOURCE(ofnA->lpTemplateName))
         {
             RtlCreateUnicodeStringFromAsciiz (&usBuffer,ofnA->lpTemplateName);
             ofnW->lpTemplateName = usBuffer.Buffer;
@@ -760,7 +801,7 @@ void FD31_FreeOfnW(OPENFILENAMEW *ofnW)
    HeapFree(GetProcessHeap(), 0, ofnW->lpstrFileTitle);
    HeapFree(GetProcessHeap(), 0, (LPWSTR) ofnW->lpstrInitialDir);
    HeapFree(GetProcessHeap(), 0, (LPWSTR) ofnW->lpstrTitle);
-   if (HIWORD(ofnW->lpTemplateName))
+   if (!IS_INTRESOURCE(ofnW->lpTemplateName))
        HeapFree(GetProcessHeap(), 0, (LPWSTR) ofnW->lpTemplateName);
 }
 
@@ -774,7 +815,13 @@ void FD31_DestroyPrivate(PFD31_DATA lfs)
     if (!lfs) return;
     hwnd = lfs->hwnd;
     TRACE("destroying private allocation %p\n", lfs);
-    lfs->callbacks->Destroy(lfs);
+
+    /* if ofnW has been allocated, have to free everything in it */
+    if (lfs->ofnA)
+    {
+        FD31_FreeOfnW(lfs->ofnW);
+        HeapFree(GetProcessHeap(), 0, lfs->ofnW);
+    }
     HeapFree(GetProcessHeap(), 0, lfs);
     RemovePropA(hwnd, FD31_OFN_PROP);
 }
@@ -787,8 +834,7 @@ void FD31_DestroyPrivate(PFD31_DATA lfs)
  *      On entry : type = dialog procedure type (16,32A,32W)
  *                 dlgType = dialog type (open or save)
  */
-PFD31_DATA FD31_AllocPrivate(LPARAM lParam, UINT dlgType,
-                             PFD31_CALLBACKS callbacks, DWORD data)
+PFD31_DATA FD31_AllocPrivate(LPARAM lParam, UINT dlgType, BOOL IsUnicode)
 {
     PFD31_DATA lfs = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(FD31_DATA));
 
@@ -797,8 +843,26 @@ PFD31_DATA FD31_AllocPrivate(LPARAM lParam, UINT dlgType,
     lfs->hook = FALSE;
     lfs->lParam = lParam;
     lfs->open = (dlgType == OPEN_DIALOG);
-    lfs->callbacks = callbacks;
-    if (! lfs->callbacks->Init(lParam, lfs, data))
+
+    if (IsUnicode)
+    {
+        lfs->ofnA = NULL;
+        lfs->ofnW = (LPOPENFILENAMEW) lParam;
+        if (lfs->ofnW->Flags & OFN_ENABLEHOOK)
+            if (lfs->ofnW->lpfnHook)
+                lfs->hook = TRUE;
+    }
+    else
+    {
+        lfs->ofnA = (LPOPENFILENAMEA) lParam;
+        if (lfs->ofnA->Flags & OFN_ENABLEHOOK)
+            if (lfs->ofnA->lpfnHook)
+                lfs->hook = TRUE;
+        lfs->ofnW = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*lfs->ofnW));
+        FD31_MapOfnStructA(lfs->ofnA, lfs->ofnW, lfs->open);
+    }
+
+    if (! FD32_GetTemplate(lfs))
     {
         FD31_DestroyPrivate(lfs);
         return NULL;

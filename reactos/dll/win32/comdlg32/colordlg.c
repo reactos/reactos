@@ -93,7 +93,7 @@ typedef struct CCPRIVATE
 /***********************************************************************
  *                             CC_HSLtoRGB                    [internal]
  */
-int CC_HSLtoRGB(char c, int hue, int sat, int lum)
+static int CC_HSLtoRGB(char c, int hue, int sat, int lum)
 {
  int res = 0, maxrgb;
 
@@ -138,7 +138,7 @@ int CC_HSLtoRGB(char c, int hue, int sat, int lum)
 /***********************************************************************
  *                             CC_RGBtoHSL                    [internal]
  */
-int CC_RGBtoHSL(char c, int r, int g, int b)
+static int CC_RGBtoHSL(char c, int r, int g, int b)
 {
  WORD maxi, mini, mmsum, mmdif, result = 0;
  int iresult = 0;
@@ -365,7 +365,7 @@ static int CC_MouseCheckColorGraph( HWND hDlg, int dlgitem, int *hori, int *vert
  *                  CC_MouseCheckResultWindow                 [internal]
  *                  test if double click one of the result colors
  */
-int CC_MouseCheckResultWindow( HWND hDlg, LPARAM lParam )
+static int CC_MouseCheckResultWindow( HWND hDlg, LPARAM lParam )
 {
  HWND hwnd;
  POINT point;
@@ -386,7 +386,7 @@ int CC_MouseCheckResultWindow( HWND hDlg, LPARAM lParam )
 /***********************************************************************
  *                       CC_CheckDigitsInEdit                 [internal]
  */
-int CC_CheckDigitsInEdit( HWND hwnd, int maxval )
+static int CC_CheckDigitsInEdit( HWND hwnd, int maxval )
 {
  int i, k, m, result, value;
  long editpos;
@@ -428,7 +428,7 @@ int CC_CheckDigitsInEdit( HWND hwnd, int maxval )
 /***********************************************************************
  *                    CC_PaintSelectedColor                   [internal]
  */
-void CC_PaintSelectedColor( HWND hDlg, COLORREF cr )
+static void CC_PaintSelectedColor( HWND hDlg, COLORREF cr )
 {
  RECT rect;
  HDC  hdc;
@@ -452,7 +452,7 @@ void CC_PaintSelectedColor( HWND hDlg, COLORREF cr )
 /***********************************************************************
  *                    CC_PaintTriangle                        [internal]
  */
-void CC_PaintTriangle( HWND hDlg, int y)
+static void CC_PaintTriangle( HWND hDlg, int y)
 {
  HDC hDC;
  long temp;
@@ -503,7 +503,7 @@ void CC_PaintTriangle( HWND hDlg, int y)
 /***********************************************************************
  *                    CC_PaintCross                           [internal]
  */
-void CC_PaintCross( HWND hDlg, int x, int y)
+static void CC_PaintCross( HWND hDlg, int x, int y)
 {
  HDC hDC;
  int w = GetDialogBaseUnits() - 1;
@@ -660,7 +660,7 @@ static void CC_PaintLumBar( HWND hDlg, int hue, int sat )
 /***********************************************************************
  *                             CC_EditSetRGB                  [internal]
  */
-void CC_EditSetRGB( HWND hDlg, COLORREF cr )
+static void CC_EditSetRGB( HWND hDlg, COLORREF cr )
 {
  char buffer[10];
  LPCCPRIV lpp = GetPropW( hDlg, szColourDialogProp );
@@ -683,7 +683,7 @@ void CC_EditSetRGB( HWND hDlg, COLORREF cr )
 /***********************************************************************
  *                             CC_EditSetHSL                  [internal]
  */
-void CC_EditSetHSL( HWND hDlg, int h, int s, int l )
+static void CC_EditSetHSL( HWND hDlg, int h, int s, int l )
 {
  char buffer[10];
  LPCCPRIV lpp = GetPropW( hDlg, szColourDialogProp );
@@ -705,7 +705,7 @@ void CC_EditSetHSL( HWND hDlg, int h, int s, int l )
 /***********************************************************************
  *                       CC_SwitchToFullSize                  [internal]
  */
-void CC_SwitchToFullSize( HWND hDlg, COLORREF result, LPCRECT lprect )
+static void CC_SwitchToFullSize( HWND hDlg, COLORREF result, LPCRECT lprect )
 {
  int i;
  LPCCPRIV lpp = GetPropW( hDlg, szColourDialogProp );
@@ -784,7 +784,7 @@ static void CC_PaintPredefColorArray( HWND hDlg, int rows, int cols)
  *                             CC_PaintUserColorArray         [internal]
  *               Paint the 16 user-selected colors
  */
-void CC_PaintUserColorArray( HWND hDlg, int rows, int cols, const COLORREF *lpcr )
+static void CC_PaintUserColorArray( HWND hDlg, int rows, int cols, const COLORREF *lpcr )
 {
  HWND hwnd = GetDlgItem(hDlg, 0x2d1);
  RECT rect, blockrect;
@@ -835,7 +835,7 @@ void CC_PaintUserColorArray( HWND hDlg, int rows, int cols, const COLORREF *lpcr
 /***********************************************************************
  *                             CC_HookCallChk                 [internal]
  */
-BOOL CC_HookCallChk( const CHOOSECOLORW *lpcc )
+static BOOL CC_HookCallChk( const CHOOSECOLORW *lpcc )
 {
  if (lpcc)
   if(lpcc->Flags & CC_ENABLEHOOK)
@@ -847,7 +847,7 @@ BOOL CC_HookCallChk( const CHOOSECOLORW *lpcc )
 /***********************************************************************
  *                              CC_WMInitDialog                  [internal]
  */
-static LONG CC_WMInitDialog( HWND hDlg, WPARAM wParam, LPARAM lParam )
+static LRESULT CC_WMInitDialog( HWND hDlg, WPARAM wParam, LPARAM lParam )
 {
    int i, res;
    int r, g, b;
@@ -1081,7 +1081,7 @@ static LRESULT CC_WMCommand( HWND hDlg, WPARAM wParam, LPARAM lParam, WORD notif
 /***********************************************************************
  *                              CC_WMPaint                    [internal]
  */
-LRESULT CC_WMPaint( HWND hDlg, WPARAM wParam, LPARAM lParam )
+static LRESULT CC_WMPaint( HWND hDlg )
 {
     PAINTSTRUCT ps;
     LPCCPRIV lpp = GetPropW( hDlg, szColourDialogProp );
@@ -1103,7 +1103,7 @@ LRESULT CC_WMPaint( HWND hDlg, WPARAM wParam, LPARAM lParam )
 /***********************************************************************
  *                              CC_WMLButtonUp              [internal]
  */
-LRESULT CC_WMLButtonUp( HWND hDlg, WPARAM wParam, LPARAM lParam )
+static LRESULT CC_WMLButtonUp( HWND hDlg )
 {
    LPCCPRIV lpp = GetPropW( hDlg, szColourDialogProp );
 
@@ -1120,7 +1120,7 @@ LRESULT CC_WMLButtonUp( HWND hDlg, WPARAM wParam, LPARAM lParam )
 /***********************************************************************
  *                              CC_WMMouseMove              [internal]
  */
-LRESULT CC_WMMouseMove( HWND hDlg, LPARAM lParam )
+static LRESULT CC_WMMouseMove( HWND hDlg, LPARAM lParam )
 {
    LPCCPRIV lpp = GetPropW( hDlg, szColourDialogProp );
    int r, g, b;
@@ -1158,7 +1158,7 @@ LRESULT CC_WMMouseMove( HWND hDlg, LPARAM lParam )
 /***********************************************************************
  *                              CC_WMLButtonDown              [internal]
  */
-LRESULT CC_WMLButtonDown( HWND hDlg, WPARAM wParam, LPARAM lParam )
+static LRESULT CC_WMLButtonDown( HWND hDlg, LPARAM lParam )
 {
    LPCCPRIV lpp = GetPropW( hDlg, szColourDialogProp );
    int r, g, b, i;
@@ -1252,7 +1252,7 @@ static INT_PTR CALLBACK ColorDlgProc( HWND hDlg, UINT message,
 	                   return TRUE;
 	                break;
 	  case WM_PAINT:
-	                if ( CC_WMPaint(hDlg, wParam, lParam))
+	                if (CC_WMPaint(hDlg))
 	                   return TRUE;
 	                break;
 	  case WM_LBUTTONDBLCLK:
@@ -1264,11 +1264,11 @@ static INT_PTR CALLBACK ColorDlgProc( HWND hDlg, UINT message,
 			  return TRUE;
 			break;
 	  case WM_LBUTTONUP:  /* FIXME: ClipCursor off (if in color graph)*/
-                        if (CC_WMLButtonUp(hDlg, wParam, lParam))
+                        if (CC_WMLButtonUp(hDlg))
                            return TRUE;
 			break;
 	  case WM_LBUTTONDOWN:/* FIXME: ClipCursor on  (if in color graph)*/
-	                if (CC_WMLButtonDown(hDlg, wParam, lParam))
+	                if (CC_WMLButtonDown(hDlg, lParam))
 	                   return TRUE;
 	                break;
 	}
@@ -1366,7 +1366,7 @@ BOOL WINAPI ChooseColorA( LPCHOOSECOLORA lpChCol )
   lpcc->lCustData = lpChCol->lCustData;
   lpcc->lpfnHook = lpChCol->lpfnHook;
   if ((lpcc->Flags & CC_ENABLETEMPLATE) && (lpChCol->lpTemplateName)) {
-      if (HIWORD(lpChCol->lpTemplateName)) {
+      if (!IS_INTRESOURCE(lpChCol->lpTemplateName)) {
 	  INT len = MultiByteToWideChar( CP_ACP, 0, lpChCol->lpTemplateName, -1, NULL, 0);
           template_name = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) );
           MultiByteToWideChar( CP_ACP, 0, lpChCol->lpTemplateName, -1, template_name, len );
