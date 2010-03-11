@@ -232,78 +232,6 @@ extern POBJECT_TYPE NTSYSAPI IoDriverObjectType;
 extern POBJECT_TYPE NTSYSAPI LpcPortObjectType;
 extern POBJECT_TYPE NTSYSAPI PsProcessType;
 
-typedef struct _KUSER_SHARED_DATA
-{
-    ULONG TickCountLowDeprecated;
-    ULONG TickCountMultiplier;
-    volatile KSYSTEM_TIME InterruptTime;
-    volatile KSYSTEM_TIME SystemTime;
-    volatile KSYSTEM_TIME TimeZoneBias;
-    USHORT ImageNumberLow;
-    USHORT ImageNumberHigh;
-    WCHAR NtSystemRoot[260];
-    ULONG MaxStackTraceDepth;
-    ULONG CryptoExponent;
-    ULONG TimeZoneId;
-    ULONG LargePageMinimum;
-    ULONG Reserved2[7];
-    NT_PRODUCT_TYPE NtProductType;
-    BOOLEAN ProductTypeIsValid;
-    ULONG NtMajorVersion;
-    ULONG NtMinorVersion;
-    BOOLEAN ProcessorFeatures[PROCESSOR_FEATURE_MAX];
-    ULONG Reserved1;
-    ULONG Reserved3;
-    volatile ULONG TimeSlip;
-    ALTERNATIVE_ARCHITECTURE_TYPE AlternativeArchitecture;
-    LARGE_INTEGER SystemExpirationDate;
-    ULONG SuiteMask;
-    BOOLEAN KdDebuggerEnabled;
-#if (NTDDI_VERSION >= NTDDI_WINXPSP2)
-    UCHAR NXSupportPolicy;
-#endif
-    volatile ULONG ActiveConsoleId;
-    volatile ULONG DismountCount;
-    ULONG ComPlusPackage;
-    ULONG LastSystemRITEventTickCount;
-    ULONG NumberOfPhysicalPages;
-    BOOLEAN SafeBootMode;
-    ULONG TraceLogging;
-    ULONG Fill0;
-    ULONGLONG TestRetInstruction;
-    ULONG SystemCall;
-    ULONG SystemCallReturn;
-    ULONGLONG SystemCallPad[3];
-    __GNU_EXTENSION union {
-        volatile KSYSTEM_TIME TickCount;
-        volatile ULONG64 TickCountQuad;
-    };
-    ULONG Cookie;
-#if (NTDDI_VERSION >= NTDDI_WS03)
-    LONGLONG ConsoleSessionForegroundProcessId;
-    ULONG Wow64SharedInformation[MAX_WOW64_SHARED_ENTRIES];
-#endif
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
-    USHORT UserModeGlobalLogger[8];
-    ULONG HeapTracingPid[2];
-    ULONG CritSecTracingPid[2];
-    __GNU_EXTENSION union
-    {
-        ULONG SharedDataFlags;
-        __GNU_EXTENSION struct
-        {
-            ULONG DbgErrorPortPresent:1;
-            ULONG DbgElevationEnabled:1;
-            ULONG DbgVirtEnabled:1;
-            ULONG DbgInstallerDetectEnabled:1;
-            ULONG SpareBits:28;
-        };
-    };
-    ULONG ImageFileExecutionOptions;
-    KAFFINITY ActiveProcessorAffinity;
-#endif
-} KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
-
 typedef EXCEPTION_DISPOSITION
 (DDKAPI *PEXCEPTION_ROUTINE)(
   IN struct _EXCEPTION_RECORD *ExceptionRecord,
@@ -377,13 +305,6 @@ typedef NTSTATUS
   IN PVOID  Context,
   IN PDEVICE_CONTROL_COMPLETION  CompletionRoutine);
 
-typedef VOID
-(FASTCALL *pHalIoAssignDriveLetters)(
-  IN struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
-  IN PSTRING NtDeviceName,
-  OUT PUCHAR NtSystemPath,
-  OUT PSTRING NtSystemPathString);
-
 typedef
 ULONG
 (DDKAPI *pHalGetInterruptVector)(
@@ -437,64 +358,6 @@ ULONG
     IN ULONG Offset,
     IN ULONG Length
 );
-
-typedef BOOLEAN
-(DDKAPI *PHAL_RESET_DISPLAY_PARAMETERS)(
-  ULONG Columns, ULONG Rows);
-
-typedef struct {
-  ULONG  Version;
-  pHalQuerySystemInformation  HalQuerySystemInformation;
-  pHalSetSystemInformation  HalSetSystemInformation;
-  pHalQueryBusSlots  HalQueryBusSlots;
-  ULONG  Spare1;
-  pHalExamineMBR  HalExamineMBR;
-  pHalIoAssignDriveLetters  HalIoAssignDriveLetters;
-  pHalIoReadPartitionTable  HalIoReadPartitionTable;
-  pHalIoSetPartitionInformation  HalIoSetPartitionInformation;
-  pHalIoWritePartitionTable  HalIoWritePartitionTable;
-  pHalHandlerForBus  HalReferenceHandlerForBus;
-  pHalReferenceBusHandler  HalReferenceBusHandler;
-  pHalReferenceBusHandler  HalDereferenceBusHandler;
-  pHalInitPnpDriver  HalInitPnpDriver;
-  pHalInitPowerManagement  HalInitPowerManagement;
-  pHalGetDmaAdapter  HalGetDmaAdapter;
-  pHalGetInterruptTranslator  HalGetInterruptTranslator;
-  pHalStartMirroring  HalStartMirroring;
-  pHalEndMirroring  HalEndMirroring;
-  pHalMirrorPhysicalMemory  HalMirrorPhysicalMemory;
-  pHalEndOfBoot  HalEndOfBoot;
-  pHalMirrorVerify  HalMirrorVerify;
-} HAL_DISPATCH, *PHAL_DISPATCH;
-
-/* GCC/MSVC and WDK compatible declaration */
-extern NTKERNELAPI HAL_DISPATCH HalDispatchTable;
-
-#if defined(_NTOSKRNL_) || defined(_BLDR_)
-#define HALDISPATCH (&HalDispatchTable)
-#else
-/* This is a WDK compatibility definition */
-#define HalDispatchTable (&HalDispatchTable)
-#define HALDISPATCH HalDispatchTable
-#endif
-
-#define HAL_DISPATCH_VERSION            3
-#define HalDispatchTableVersion         HALDISPATCH->Version
-#define HalQuerySystemInformation       HALDISPATCH->HalQuerySystemInformation
-#define HalSetSystemInformation         HALDISPATCH->HalSetSystemInformation
-#define HalQueryBusSlots                HALDISPATCH->HalQueryBusSlots
-#define HalReferenceHandlerForBus       HALDISPATCH->HalReferenceHandlerForBus
-#define HalReferenceBusHandler          HALDISPATCH->HalReferenceBusHandler
-#define HalDereferenceBusHandler        HALDISPATCH->HalDereferenceBusHandler
-#define HalInitPnpDriver                HALDISPATCH->HalInitPnpDriver
-#define HalInitPowerManagement          HALDISPATCH->HalInitPowerManagement
-#define HalGetDmaAdapter                HALDISPATCH->HalGetDmaAdapter
-#define HalGetInterruptTranslator       HALDISPATCH->HalGetInterruptTranslator
-#define HalStartMirroring               HALDISPATCH->HalStartMirroring
-#define HalEndMirroring                 HALDISPATCH->HalEndMirroring
-#define HalMirrorPhysicalMemory         HALDISPATCH->HalMirrorPhysicalMemory
-#define HalEndOfBoot                    HALDISPATCH->HalEndOfBoot
-#define HalMirrorVerify                 HALDISPATCH->HalMirrorVerify
 
 typedef struct _FILE_ALIGNMENT_INFORMATION {
   ULONG  AlignmentRequirement;
@@ -587,60 +450,9 @@ typedef enum _IO_QUERY_DEVICE_DATA_FORMAT {
   IoQueryDeviceMaxData
 } IO_QUERY_DEVICE_DATA_FORMAT, *PIO_QUERY_DEVICE_DATA_FORMAT;
 
-typedef VOID
-(DDKAPI *PCREATE_PROCESS_NOTIFY_ROUTINE)(
-  IN HANDLE  ParentId,
-  IN HANDLE  ProcessId,
-  IN BOOLEAN  Create);
 
-typedef VOID
-(DDKAPI *PCREATE_THREAD_NOTIFY_ROUTINE)(
-  IN HANDLE  ProcessId,
-  IN HANDLE  ThreadId,
-  IN BOOLEAN  Create);
-
-typedef struct _IMAGE_INFO {
-  _ANONYMOUS_UNION union {
-    ULONG  Properties;
-    _ANONYMOUS_STRUCT struct {
-      ULONG  ImageAddressingMode  : 8;
-      ULONG  SystemModeImage      : 1;
-      ULONG  ImageMappedToAllPids : 1;
-      ULONG  Reserved             : 22;
-    } DUMMYSTRUCTNAME;
-  } DUMMYUNIONNAME;
-  PVOID  ImageBase;
-  ULONG  ImageSelector;
-  SIZE_T  ImageSize;
-  ULONG  ImageSectionNumber;
-} IMAGE_INFO, *PIMAGE_INFO;
 
 #define IMAGE_ADDRESSING_MODE_32BIT       3
-
-typedef VOID
-(DDKAPI *PLOAD_IMAGE_NOTIFY_ROUTINE)(
-  IN PUNICODE_STRING  FullImageName,
-  IN HANDLE  ProcessId,
-  IN PIMAGE_INFO  ImageInfo);
-
-#pragma pack(push,4)
-typedef enum _BUS_DATA_TYPE {
-    ConfigurationSpaceUndefined = -1,
-    Cmos,
-    EisaConfiguration,
-    Pos,
-    CbusConfiguration,
-    PCIConfiguration,
-    VMEConfiguration,
-    NuBusConfiguration,
-    PCMCIAConfiguration,
-    MPIConfiguration,
-    MPSAConfiguration,
-    PNPISAConfiguration,
-    SgiInternalConfiguration,
-    MaximumBusDataType
-} BUS_DATA_TYPE, *PBUS_DATA_TYPE;
-#pragma pack(pop)
 
 typedef struct _NT_TIB {
     struct _EXCEPTION_REGISTRATION_RECORD *ExceptionList;
@@ -680,81 +492,6 @@ typedef struct _NT_TIB64 {
 	ULONG64 ArbitraryUserPointer;
 	ULONG64 Self;
 } NT_TIB64,*PNT_TIB64;
-
-typedef enum _PROCESSINFOCLASS {
-  ProcessBasicInformation,
-  ProcessQuotaLimits,
-  ProcessIoCounters,
-  ProcessVmCounters,
-  ProcessTimes,
-  ProcessBasePriority,
-  ProcessRaisePriority,
-  ProcessDebugPort,
-  ProcessExceptionPort,
-  ProcessAccessToken,
-  ProcessLdtInformation,
-  ProcessLdtSize,
-  ProcessDefaultHardErrorMode,
-  ProcessIoPortHandlers,
-  ProcessPooledUsageAndLimits,
-  ProcessWorkingSetWatch,
-  ProcessUserModeIOPL,
-  ProcessEnableAlignmentFaultFixup,
-  ProcessPriorityClass,
-  ProcessWx86Information,
-  ProcessHandleCount,
-  ProcessAffinityMask,
-  ProcessPriorityBoost,
-  ProcessDeviceMap,
-  ProcessSessionInformation,
-  ProcessForegroundInformation,
-  ProcessWow64Information,
-  ProcessImageFileName,
-  ProcessLUIDDeviceMapsEnabled,
-  ProcessBreakOnTermination,
-  ProcessDebugObjectHandle,
-  ProcessDebugFlags,
-  ProcessHandleTracing,
-  ProcessIoPriority,
-  ProcessExecuteFlags,
-  ProcessTlsInformation,
-  ProcessCookie,
-  ProcessImageInformation,
-  ProcessCycleTime,
-  ProcessPagePriority,
-  ProcessInstrumentationCallback,
-  MaxProcessInfoClass
-} PROCESSINFOCLASS;
-
-typedef enum _THREADINFOCLASS {
-  ThreadBasicInformation,
-  ThreadTimes,
-  ThreadPriority,
-  ThreadBasePriority,
-  ThreadAffinityMask,
-  ThreadImpersonationToken,
-  ThreadDescriptorTableEntry,
-  ThreadEnableAlignmentFaultFixup,
-  ThreadEventPair_Reusable,
-  ThreadQuerySetWin32StartAddress,
-  ThreadZeroTlsCell,
-  ThreadPerformanceCount,
-  ThreadAmILastThread,
-  ThreadIdealProcessor,
-  ThreadPriorityBoost,
-  ThreadSetTlsArrayAddress,
-  ThreadIsIoPending,
-  ThreadHideFromDebugger,
-  ThreadBreakOnTermination,
-  ThreadSwitchLegacyState,
-  ThreadIsTerminated,
-  ThreadLastSystemCall,
-  ThreadIoPriority,
-  ThreadCycleTime,
-  ThreadPagePriority,
-  ThreadActualBasePriority,
-  MaxThreadInfoClass
-} THREADINFOCLASS;
 
 typedef struct _PROCESS_BASIC_INFORMATION
 {
@@ -833,19 +570,6 @@ typedef struct _CREATE_DISK {
   } DUMMYUNIONNAME;
 } CREATE_DISK, *PCREATE_DISK;
 
-typedef struct _DISK_SIGNATURE {
-  ULONG  PartitionStyle;
-  _ANONYMOUS_UNION union {
-    struct {
-      ULONG  Signature;
-      ULONG  CheckSum;
-    } Mbr;
-    struct {
-      GUID  DiskId;
-    } Gpt;
-  } DUMMYUNIONNAME;
-} DISK_SIGNATURE, *PDISK_SIGNATURE;
-
 typedef VOID
 (FASTCALL*PTIME_UPDATE_NOTIFY_ROUTINE)(
   IN HANDLE  ThreadId,
@@ -865,12 +589,6 @@ typedef struct _DRIVER_VERIFIER_THUNK_PAIRS {
 #define DRIVER_VERIFIER_INJECT_ALLOCATION_FAILURES  0x0004
 #define DRIVER_VERIFIER_TRACK_POOL_ALLOCATIONS      0x0008
 #define DRIVER_VERIFIER_IO_CHECKING                 0x0010
-
-typedef VOID
-(DDKAPI *PTIMER_APC_ROUTINE)(
-  IN PVOID  TimerContext,
-  IN ULONG  TimerLowValue,
-  IN LONG  TimerHighValue);
 
 /*
 ** Architecture specific structures
@@ -2066,28 +1784,6 @@ RtlLargeIntegerSubtract(
 ** Architecture specific structures
 */
 
-#ifdef _X86_
-
-NTKERNELAPI
-INTERLOCKED_RESULT
-FASTCALL
-Exfi386InterlockedIncrementLong(
-  IN OUT PLONG  volatile Addend);
-
-NTKERNELAPI
-INTERLOCKED_RESULT
-FASTCALL
-Exfi386InterlockedDecrementLong(
-  IN PLONG  Addend);
-
-NTKERNELAPI
-ULONG
-FASTCALL
-Exfi386InterlockedExchangeUlong(
-  IN PULONG  Target,
-  IN ULONG  Value);
-
-#endif /* _X86_ */
 
 #ifdef _M_ARM
 //

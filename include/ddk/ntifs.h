@@ -4891,7 +4891,7 @@ KeAcquireSpinLockRaiseToSynch(
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 
-NTHALAPI
+_DECL_HAL_KE_IMPORT
 KIRQL
 FASTCALL
 KeAcquireQueuedSpinLock(
@@ -4904,7 +4904,7 @@ KeReleaseQueuedSpinLock(
   IN OUT KSPIN_LOCK_QUEUE_NUMBER Number,
   IN KIRQL OldIrql);
 
-NTHALAPI // FIXME: _DECL_HAL_KE_IMPORT
+_DECL_HAL_KE_IMPORT
 LOGICAL
 FASTCALL
 KeTryToAcquireQueuedSpinLock(
@@ -7926,21 +7926,6 @@ NTAPI
 IoVerifyVolume (
     IN PDEVICE_OBJECT   DeviceObject,
     IN BOOLEAN          AllowRawMount
-);
-
-NTKERNELAPI
-KIRQL
-FASTCALL
-KeAcquireQueuedSpinLock (
-    IN KSPIN_LOCK_QUEUE_NUMBER Number
-);
-
-NTKERNELAPI
-VOID
-FASTCALL
-KeReleaseQueuedSpinLock (
-    IN KSPIN_LOCK_QUEUE_NUMBER Number,
-    IN KIRQL OldIrql
 );
 
 NTKERNELAPI

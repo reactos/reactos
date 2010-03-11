@@ -28,6 +28,8 @@
 #define NDEBUG
 #include <debug.h>
 
+#define DO_XIP   0x00020000
+
 /* GLOBALS ********************************************************************/
 
 #define RAMDISK_SESSION_SIZE \

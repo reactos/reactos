@@ -2652,6 +2652,7 @@ DbgPrintEx(
     IN ...
 );
 
+NTSYSAPI
 ULONG
 NTAPI
 DbgPrompt(

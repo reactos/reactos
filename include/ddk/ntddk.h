@@ -55,6 +55,11 @@
 extern "C" {
 #endif
 
+struct _LOADER_PARAMETER_BLOCK;
+struct _CREATE_DISK;
+struct _DRIVE_LAYOUT_INFORMATION_EX;
+struct _SET_PARTITION_INFORMATION_EX;
+
 //
 // GUID and UUID
 //
@@ -611,6 +616,121 @@ VOID
 (DDKAPI *pKdCheckPowerButton)(
   VOID);
 
+typedef struct _KUSER_SHARED_DATA
+{
+    ULONG TickCountLowDeprecated;
+    ULONG TickCountMultiplier;
+    volatile KSYSTEM_TIME InterruptTime;
+    volatile KSYSTEM_TIME SystemTime;
+    volatile KSYSTEM_TIME TimeZoneBias;
+    USHORT ImageNumberLow;
+    USHORT ImageNumberHigh;
+    WCHAR NtSystemRoot[260];
+    ULONG MaxStackTraceDepth;
+    ULONG CryptoExponent;
+    ULONG TimeZoneId;
+    ULONG LargePageMinimum;
+    ULONG Reserved2[7];
+    NT_PRODUCT_TYPE NtProductType;
+    BOOLEAN ProductTypeIsValid;
+    ULONG NtMajorVersion;
+    ULONG NtMinorVersion;
+    BOOLEAN ProcessorFeatures[PROCESSOR_FEATURE_MAX];
+    ULONG Reserved1;
+    ULONG Reserved3;
+    volatile ULONG TimeSlip;
+    ALTERNATIVE_ARCHITECTURE_TYPE AlternativeArchitecture;
+    ULONG AltArchitecturePad[1];
+    LARGE_INTEGER SystemExpirationDate;
+    ULONG SuiteMask;
+    BOOLEAN KdDebuggerEnabled;
+#if (NTDDI_VERSION >= NTDDI_WINXPSP2)
+    UCHAR NXSupportPolicy;
+#endif
+    volatile ULONG ActiveConsoleId;
+    volatile ULONG DismountCount;
+    ULONG ComPlusPackage;
+    ULONG LastSystemRITEventTickCount;
+    ULONG NumberOfPhysicalPages;
+    BOOLEAN SafeBootMode;
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+    union {
+        UCHAR TscQpcData;
+        struct {
+            UCHAR TscQpcEnabled:1;
+            UCHAR TscQpcSpareFlag:1;
+            UCHAR TscQpcShift:6;
+        } DUMMYSTRUCTNAME;
+    } DUMMYUNIONNAME;
+    UCHAR TscQpcPad[2];
+#endif
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+    union {
+        ULONG SharedDataFlags;
+        struct {
+            ULONG DbgErrorPortPresent:1;
+            ULONG DbgElevationEnabled:1;
+            ULONG DbgVirtEnabled:1;
+            ULONG DbgInstallerDetectEnabled:1;
+            ULONG DbgSystemDllRelocated:1;
+            ULONG DbgDynProcessorEnabled:1;
+            ULONG DbgSEHValidationEnabled:1;
+            ULONG SpareBits:25;
+        } DUMMYSTRUCTNAME2;
+    } DUMMYUNIONNAME2;
+#else
+    ULONG TraceLogging;
+#endif
+    ULONG DataFlagsPad[1];
+    ULONGLONG TestRetInstruction;
+    ULONG SystemCall;
+    ULONG SystemCallReturn;
+    ULONGLONG SystemCallPad[3];
+    _ANONYMOUS_UNION union {
+        volatile KSYSTEM_TIME TickCount;
+        volatile ULONG64 TickCountQuad;
+        _ANONYMOUS_STRUCT struct {
+            ULONG ReservedTickCountOverlay[3];
+            ULONG TickCountPad[1];
+        } DUMMYSTRUCTNAME;
+    } DUMMYUNIONNAME3;
+    ULONG Cookie;
+    ULONG CookiePad[1];
+#if (NTDDI_VERSION >= NTDDI_WS03)
+    LONGLONG ConsoleSessionForegroundProcessId;
+    ULONG Wow64SharedInformation[MAX_WOW64_SHARED_ENTRIES];
+#endif
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+    USHORT UserModeGlobalLogger[16];
+#else
+    USHORT UserModeGlobalLogger[8];
+    ULONG HeapTracingPid[2];
+    ULONG CritSecTracingPid[2];
+#endif
+    ULONG ImageFileExecutionOptions;
+#if (NTDDI_VERSION >= NTDDI_VISTASP1)
+    ULONG LangGenerationCount;
+#else
+    /* 4 bytes padding */
+#endif
+    ULONGLONG Reserved5;
+    volatile ULONG64 InterruptTimeBias;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+    volatile ULONG64 TscQpcBias;
+    volatile ULONG ActiveProcessorCount;
+    volatile USHORT ActiveGroupCount;
+    USHORT Reserved4;
+    volatile ULONG AitSamplingValue;
+    volatile ULONG AppCompatFlag;
+    ULONGLONG SystemDllNativeRelocation;
+    ULONG SystemDllWowRelocation;
+    ULONG XStatePad[1];
+    XSTATE_CONFIGURATION XState;
+#endif
+} KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
+
 #ifdef _X86_
 
 #define SIZE_OF_80387_REGISTERS   80
@@ -886,6 +1006,29 @@ ExRaiseDatatypeMisalignment(
 
 #endif
 
+#ifdef _X86_
+
+NTKERNELAPI
+INTERLOCKED_RESULT
+FASTCALL
+Exfi386InterlockedIncrementLong(
+  IN OUT LONG volatile *Addend);
+
+NTKERNELAPI
+INTERLOCKED_RESULT
+FASTCALL
+Exfi386InterlockedDecrementLong(
+  IN PLONG  Addend);
+
+NTKERNELAPI
+ULONG
+FASTCALL
+Exfi386InterlockedExchangeUlong(
+  IN PULONG  Target,
+  IN ULONG  Value);
+
+#endif /* _X86_ */
+
 #ifndef _ARC_DDK_
 #define _ARC_DDK_
 typedef enum _CONFIGURATION_TYPE {
@@ -1030,6 +1173,111 @@ typedef struct _PCIBUSDATA {
   PVOID Reserved[4];
 } PCIBUSDATA, *PPCIBUSDATA;
 
+typedef enum _BUS_DATA_TYPE {
+  ConfigurationSpaceUndefined = -1,
+  Cmos,
+  EisaConfiguration,
+  Pos,
+  CbusConfiguration,
+  PCIConfiguration,
+  VMEConfiguration,
+  NuBusConfiguration,
+  PCMCIAConfiguration,
+  MPIConfiguration,
+  MPSAConfiguration,
+  PNPISAConfiguration,
+  SgiInternalConfiguration,
+  MaximumBusDataType
+} BUS_DATA_TYPE, *PBUS_DATA_TYPE;
+
+typedef
+PVOID
+(NTAPI *pHalGetAcpiTable)(
+  IN ULONG Signature,
+  IN PCSTR OemId OPTIONAL,
+  IN PCSTR OemTableId OPTIONAL);
+
+typedef
+VOID
+(NTAPI *PCI_ERROR_HANDLER_CALLBACK)(
+  VOID);
+
+typedef
+VOID
+(NTAPI *pHalSetPciErrorHandlerCallback)(
+  IN PCI_ERROR_HANDLER_CALLBACK Callback);
+
+#if 1 /* Not present in WDK 7600 */
+typedef VOID
+(FASTCALL *pHalIoAssignDriveLetters)(
+  IN struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
+  IN PSTRING NtDeviceName,
+  OUT PUCHAR NtSystemPath,
+  OUT PSTRING NtSystemPathString);
+#endif
+
+typedef struct {
+  ULONG Version;
+  pHalQuerySystemInformation HalQuerySystemInformation;
+  pHalSetSystemInformation HalSetSystemInformation;
+  pHalQueryBusSlots HalQueryBusSlots;
+  ULONG Spare1;
+  pHalExamineMBR HalExamineMBR;
+#if 1 /* Not present in WDK 7600 */
+  pHalIoAssignDriveLetters HalIoAssignDriveLetters;
+#endif
+  pHalIoReadPartitionTable HalIoReadPartitionTable;
+  pHalIoSetPartitionInformation HalIoSetPartitionInformation;
+  pHalIoWritePartitionTable HalIoWritePartitionTable;
+  pHalHandlerForBus HalReferenceHandlerForBus;
+  pHalReferenceBusHandler HalReferenceBusHandler;
+  pHalReferenceBusHandler HalDereferenceBusHandler;
+  pHalInitPnpDriver HalInitPnpDriver;
+  pHalInitPowerManagement HalInitPowerManagement;
+  pHalGetDmaAdapter HalGetDmaAdapter;
+  pHalGetInterruptTranslator HalGetInterruptTranslator;
+  pHalStartMirroring HalStartMirroring;
+  pHalEndMirroring HalEndMirroring;
+  pHalMirrorPhysicalMemory HalMirrorPhysicalMemory;
+  pHalEndOfBoot HalEndOfBoot;
+  pHalMirrorVerify HalMirrorVerify;
+  pHalGetAcpiTable HalGetCachedAcpiTable;
+  pHalSetPciErrorHandlerCallback  HalSetPciErrorHandlerCallback;
+#if defined(_IA64_)
+  pHalGetErrorCapList HalGetErrorCapList;
+  pHalInjectError HalInjectError;
+#endif
+} HAL_DISPATCH, *PHAL_DISPATCH;
+
+/* GCC/MSVC and WDK compatible declaration */
+extern NTKERNELAPI HAL_DISPATCH HalDispatchTable;
+
+#if defined(_NTOSKRNL_) || defined(_BLDR_)
+#define HALDISPATCH (&HalDispatchTable)
+#else
+/* This is a WDK compatibility definition */
+#define HalDispatchTable (&HalDispatchTable)
+#define HALDISPATCH HalDispatchTable
+#endif
+
+#define HAL_DISPATCH_VERSION            3 // FIXME: when to use 4?
+#define HalDispatchTableVersion         HALDISPATCH->Version
+#define HalQuerySystemInformation       HALDISPATCH->HalQuerySystemInformation
+#define HalSetSystemInformation         HALDISPATCH->HalSetSystemInformation
+#define HalQueryBusSlots                HALDISPATCH->HalQueryBusSlots
+#define HalReferenceHandlerForBus       HALDISPATCH->HalReferenceHandlerForBus
+#define HalReferenceBusHandler          HALDISPATCH->HalReferenceBusHandler
+#define HalDereferenceBusHandler        HALDISPATCH->HalDereferenceBusHandler
+#define HalInitPnpDriver                HALDISPATCH->HalInitPnpDriver
+#define HalInitPowerManagement          HALDISPATCH->HalInitPowerManagement
+#define HalGetDmaAdapter                HALDISPATCH->HalGetDmaAdapter
+#define HalGetInterruptTranslator       HALDISPATCH->HalGetInterruptTranslator
+#define HalStartMirroring               HALDISPATCH->HalStartMirroring
+#define HalEndMirroring                 HALDISPATCH->HalEndMirroring
+#define HalMirrorPhysicalMemory         HALDISPATCH->HalMirrorPhysicalMemory
+#define HalEndOfBoot                    HALDISPATCH->HalEndOfBoot
+#define HalMirrorVerify                 HALDISPATCH->HalMirrorVerify
+
 /* Hardware Abstraction Layer Functions */
 
 #if !defined(NO_LEGACY_DRIVERS)
@@ -1094,6 +1342,12 @@ NTAPI
 HalPutDmaAdapter(
   IN PADAPTER_OBJECT DmaAdapter);
 
+typedef
+BOOLEAN
+(DDKAPI *PHAL_RESET_DISPLAY_PARAMETERS)(
+  ULONG Columns,
+  ULONG Rows);
+
 NTHALAPI
 VOID
 NTAPI
@@ -1154,6 +1408,19 @@ HalExamineMBR(
   IN ULONG MBRTypeIdentifier,
   OUT PVOID *Buffer);
 #endif
+
+typedef struct _DISK_SIGNATURE {
+  ULONG  PartitionStyle;
+  _ANONYMOUS_UNION union {
+    struct {
+      ULONG  Signature;
+      ULONG  CheckSum;
+    } Mbr;
+    struct {
+      GUID  DiskId;
+    } Gpt;
+  } DUMMYUNIONNAME;
+} DISK_SIGNATURE, *PDISK_SIGNATURE;
 
 #if defined(USE_DMA_MACROS) && !defined(_NTHAL_) && (defined(_NTDDK_) || defined(_NTDRIVER_)) || defined(_WDM_INCLUDED_) 
 // nothing here
@@ -1449,7 +1716,7 @@ NTSTATUS
 NTAPI
 IoCreateDisk(
   IN PDEVICE_OBJECT DeviceObject,
-  IN PCREATE_DISK Disk OPTIONAL);
+  IN struct _CREATE_DISK* Disk OPTIONAL);
 
 NTKERNELAPI
 NTSTATUS
@@ -1715,6 +1982,99 @@ MmUnmapVideoDisplay(
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
+typedef enum _PROCESSINFOCLASS {
+  ProcessBasicInformation,
+  ProcessQuotaLimits,
+  ProcessIoCounters,
+  ProcessVmCounters,
+  ProcessTimes,
+  ProcessBasePriority,
+  ProcessRaisePriority,
+  ProcessDebugPort,
+  ProcessExceptionPort,
+  ProcessAccessToken,
+  ProcessLdtInformation,
+  ProcessLdtSize,
+  ProcessDefaultHardErrorMode,
+  ProcessIoPortHandlers,
+  ProcessPooledUsageAndLimits,
+  ProcessWorkingSetWatch,
+  ProcessUserModeIOPL,
+  ProcessEnableAlignmentFaultFixup,
+  ProcessPriorityClass,
+  ProcessWx86Information,
+  ProcessHandleCount,
+  ProcessAffinityMask,
+  ProcessPriorityBoost,
+  ProcessDeviceMap,
+  ProcessSessionInformation,
+  ProcessForegroundInformation,
+  ProcessWow64Information,
+  ProcessImageFileName,
+  ProcessLUIDDeviceMapsEnabled,
+  ProcessBreakOnTermination,
+  ProcessDebugObjectHandle,
+  ProcessDebugFlags,
+  ProcessHandleTracing,
+  ProcessIoPriority,
+  ProcessExecuteFlags,
+  ProcessTlsInformation,
+  ProcessCookie,
+  ProcessImageInformation,
+  ProcessCycleTime,
+  ProcessPagePriority,
+  ProcessInstrumentationCallback,
+  ProcessThreadStackAllocation,
+  ProcessWorkingSetWatchEx,
+  ProcessImageFileNameWin32,
+  ProcessImageFileMapping,
+  ProcessAffinityUpdateMode,
+  ProcessMemoryAllocationMode,
+  ProcessGroupInformation,
+  ProcessTokenVirtualizationEnabled,
+  ProcessConsoleHostProcess,
+  ProcessWindowInformation,
+  MaxProcessInfoClass
+} PROCESSINFOCLASS;
+
+typedef enum _THREADINFOCLASS {
+  ThreadBasicInformation,
+  ThreadTimes,
+  ThreadPriority,
+  ThreadBasePriority,
+  ThreadAffinityMask,
+  ThreadImpersonationToken,
+  ThreadDescriptorTableEntry,
+  ThreadEnableAlignmentFaultFixup,
+  ThreadEventPair_Reusable,
+  ThreadQuerySetWin32StartAddress,
+  ThreadZeroTlsCell,
+  ThreadPerformanceCount,
+  ThreadAmILastThread,
+  ThreadIdealProcessor,
+  ThreadPriorityBoost,
+  ThreadSetTlsArrayAddress,
+  ThreadIsIoPending,
+  ThreadHideFromDebugger,
+  ThreadBreakOnTermination,
+  ThreadSwitchLegacyState,
+  ThreadIsTerminated,
+  ThreadLastSystemCall,
+  ThreadIoPriority,
+  ThreadCycleTime,
+  ThreadPagePriority,
+  ThreadActualBasePriority,
+  ThreadTebInformation,
+  ThreadCSwitchMon,
+  ThreadCSwitchPmu,
+  ThreadWow64Context,
+  ThreadGroupInformation,
+  ThreadUmsInformation,
+  ThreadCounterProfiling,
+  ThreadIdealProcessorEx,
+  MaxThreadInfoClass
+} THREADINFOCLASS;
+
 /* NtXxx Functions */
 
 NTSYSCALLAPI
@@ -1735,6 +2095,42 @@ NtQueryInformationProcess(
   OUT PVOID ProcessInformation OPTIONAL,
   IN ULONG ProcessInformationLength,
   OUT PULONG ReturnLength OPTIONAL);
+
+/** Process manager types **/
+
+typedef struct _IMAGE_INFO {
+  _ANONYMOUS_UNION union {
+    ULONG  Properties;
+    _ANONYMOUS_STRUCT struct {
+      ULONG  ImageAddressingMode  : 8;
+      ULONG  SystemModeImage      : 1;
+      ULONG  ImageMappedToAllPids : 1;
+      ULONG  Reserved             : 22;
+    } DUMMYSTRUCTNAME;
+  } DUMMYUNIONNAME;
+  PVOID  ImageBase;
+  ULONG  ImageSelector;
+  SIZE_T  ImageSize;
+  ULONG  ImageSectionNumber;
+} IMAGE_INFO, *PIMAGE_INFO;
+
+typedef VOID
+(DDKAPI *PCREATE_PROCESS_NOTIFY_ROUTINE)(
+  IN HANDLE ParentId,
+  IN HANDLE ProcessId,
+  IN BOOLEAN Create);
+
+typedef VOID
+(DDKAPI *PCREATE_THREAD_NOTIFY_ROUTINE)(
+  IN HANDLE ProcessId,
+  IN HANDLE ThreadId,
+  IN BOOLEAN Create);
+
+typedef VOID
+(DDKAPI *PLOAD_IMAGE_NOTIFY_ROUTINE)(
+  IN PUNICODE_STRING FullImageName,
+  IN HANDLE ProcessId,
+  IN PIMAGE_INFO ImageInfo);
 
 /** Process manager routines **/
 
@@ -2007,6 +2403,12 @@ SeSinglePrivilegeCheck(
   IN LUID PrivilegeValue,
   IN KPROCESSOR_MODE PreviousMode);
 #endif
+
+typedef VOID
+(DDKAPI *PTIMER_APC_ROUTINE)(
+  IN PVOID TimerContext,
+  IN ULONG TimerLowValue,
+  IN LONG TimerHighValue);
 
 /* ZwXxx Functions */
 
