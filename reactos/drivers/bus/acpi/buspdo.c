@@ -585,7 +585,6 @@ Bus_PDO_QueryResources(
      PPDO_DEVICE_DATA     DeviceData,
       PIRP   Irp )
 {
-	BOOLEAN Done;
 	ULONG NumberOfResources = 0;
 	PCM_RESOURCE_LIST ResourceList;
 	PCM_PARTIAL_RESOURCE_DESCRIPTOR ResourceDescriptor;
@@ -594,7 +593,6 @@ Bus_PDO_QueryResources(
 	ACPI_RESOURCE* resource;
 	ULONG ResourceListSize;
 	ULONG i;
-
 
     /* Get current resources */
     Buffer.Length = 0;
@@ -619,8 +617,7 @@ Bus_PDO_QueryResources(
 
 	resource= Buffer.Pointer;
 	/* Count number of resources */
-	Done = FALSE;
-	while (!Done)
+	while (resource->Type != ACPI_RESOURCE_TYPE_END_TAG)
 	{
 		switch (resource->Type)
 		{
@@ -641,13 +638,9 @@ Bus_PDO_QueryResources(
 				NumberOfResources++;
 				break;
 			}
-			case ACPI_RESOURCE_TYPE_END_TAG:
-			{
-				Done = TRUE;
-				break;
-			}
 			default:
 			{
+				DPRINT1("Unknown resource type: %d\n", resource->Type);
 				break;
 			}
 		}
@@ -659,7 +652,10 @@ Bus_PDO_QueryResources(
 	ResourceList = (PCM_RESOURCE_LIST)ExAllocatePool(PagedPool, ResourceListSize);
 
 	if (!ResourceList)
-		return FALSE;
+	{
+		ExFreePool(Buffer.Pointer);
+		return STATUS_INSUFFICIENT_RESOURCES;
+	}
 	ResourceList->Count = 1;
 	ResourceList->List[0].InterfaceType = Internal; /* FIXME */
 	ResourceList->List[0].BusNumber = 0; /* We're the only ACPI bus device in the system */
@@ -669,8 +665,7 @@ Bus_PDO_QueryResources(
 	ResourceDescriptor = ResourceList->List[0].PartialResourceList.PartialDescriptors;
 
 	/* Fill resources list structure */
-	Done = FALSE;
-	while (!Done)
+	while (resource->Type != ACPI_RESOURCE_TYPE_END_TAG)
 	{
 		switch (resource->Type)
 		{
@@ -737,14 +732,8 @@ Bus_PDO_QueryResources(
 				ResourceDescriptor++;
 				break;
 			}
-			case ACPI_RESOURCE_TYPE_END_TAG:
-			{
-				Done = TRUE;
-				break;
-			}
 			default:
 			{
-				DPRINT1("Unhandled resource type\n");
 				break;
 			}
 		}
@@ -761,7 +750,6 @@ Bus_PDO_QueryResourceRequirements(
      PPDO_DEVICE_DATA     DeviceData,
       PIRP   Irp )
 {
-	BOOLEAN Done;
 	ULONG NumberOfResources = 0;
 	ACPI_STATUS AcpiStatus;
 	ACPI_BUFFER Buffer;
@@ -796,8 +784,7 @@ Bus_PDO_QueryResourceRequirements(
 
 	resource= Buffer.Pointer;
 	/* Count number of resources */
-	Done = FALSE;
-	while (!Done)
+	while (resource->Type != ACPI_RESOURCE_TYPE_END_TAG)
 	{
 		switch (resource->Type)
 		{
@@ -818,11 +805,6 @@ Bus_PDO_QueryResourceRequirements(
 				NumberOfResources++;
 				break;
 			}
-			case ACPI_RESOURCE_TYPE_END_TAG:
-			{
-				Done = TRUE;
-				break;
-			}
 			default:
 			{
 				break;
@@ -837,7 +819,7 @@ Bus_PDO_QueryResourceRequirements(
 	if (!RequirementsList)
 	{
 		ExFreePool(Buffer.Pointer);
-		return STATUS_SUCCESS;
+		return STATUS_INSUFFICIENT_RESOURCES;
 	}
 	RequirementsList->ListSize = RequirementsListSize;
 	RequirementsList->InterfaceType = Internal;
@@ -850,8 +832,7 @@ Bus_PDO_QueryResourceRequirements(
 	RequirementDescriptor = RequirementsList->List[0].Descriptors;
 
 	/* Fill resources list structure */
-	Done = FALSE;
-	while (!Done)
+	while (resource->Type != ACPI_RESOURCE_TYPE_END_TAG)
 	{
 		switch (resource->Type)
 		{
@@ -920,14 +901,8 @@ Bus_PDO_QueryResourceRequirements(
 				RequirementDescriptor++;
 				break;
 			}
-			case ACPI_RESOURCE_TYPE_END_TAG:
-			{
-				Done = TRUE;
-				break;
-			}
 			default:
 			{
-				DPRINT1("Unhandled resource type\n");
 				break;
 			}
 		}
