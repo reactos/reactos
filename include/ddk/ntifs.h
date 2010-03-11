@@ -4946,14 +4946,66 @@ NTAPI
 KeGetProcessorIndexFromNumber(
   IN PPROCESSOR_NUMBER ProcNumber);
 
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTKERNELAPI
+SIZE_T
+NTAPI
+ExQueryPoolBlockSize(
+  IN PVOID PoolBlock,
+  OUT PBOOLEAN QuotaCharged);
+
+VOID
+ExAdjustLookasideDepth(
+  VOID);
+
+NTKERNELAPI
+VOID
+NTAPI
+ExDisableResourceBoostLite(
+  IN PERESOURCE Resource);
+
+#endif
+
+#define ExDisableResourceBoost ExDisableResourceBoostLite
+
+#define EX_PUSH_LOCK ULONG_PTR
+#define PEX_PUSH_LOCK PULONG_PTR
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+PSLIST_ENTRY
+FASTCALL
+InterlockedPushListSList(
+  IN OUT PSLIST_HEADER ListHead,
+  IN OUT PSLIST_ENTRY List,
+  IN OUT PSLIST_ENTRY ListEnd,
+  IN ULONG Count);
+
+#endif
+
+/* #if !defined(_X86AMD64_)  FIXME : WHAT ?! */
+#if defined(_WIN64)
+
+C_ASSERT(sizeof(ERESOURCE) == 0x68);
+C_ASSERT(FIELD_OFFSET(ERESOURCE,ActiveCount) == 0x18);
+C_ASSERT(FIELD_OFFSET(ERESOURCE,Flag) == 0x1a);
+
+#else
+
+C_ASSERT(sizeof(ERESOURCE) == 0x38);
+C_ASSERT(FIELD_OFFSET(ERESOURCE,ActiveCount) == 0x0c);
+C_ASSERT(FIELD_OFFSET(ERESOURCE,Flag) == 0x0e);
+
+#endif
+/* #endif */
+
+
+
 #pragma pack(push,4)
 
 #ifndef VER_PRODUCTBUILD
 #define VER_PRODUCTBUILD 10000
 #endif
-
-#define EX_PUSH_LOCK ULONG_PTR
-#define PEX_PUSH_LOCK PULONG_PTR
 
 #include "csq.h"
 
@@ -6409,21 +6461,6 @@ CcZeroData (
     IN PLARGE_INTEGER   StartOffset,
     IN PLARGE_INTEGER   EndOffset,
     IN BOOLEAN          Wait
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-ExDisableResourceBoostLite (
-    IN PERESOURCE  Resource
-);
-
-NTKERNELAPI
-SIZE_T
-NTAPI
-ExQueryPoolBlockSize (
-    IN PVOID      PoolBlock,
-    OUT PBOOLEAN  QuotaCharged
 );
 
 #if (VER_PRODUCTBUILD >= 2600)
