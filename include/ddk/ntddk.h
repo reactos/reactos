@@ -70,10 +70,6 @@ typedef GUID UUID;
 
 typedef struct _BUS_HANDLER *PBUS_HANDLER;
 
-#define KERNEL_STACK_SIZE                   12288
-#define KERNEL_LARGE_STACK_SIZE             61440
-#define KERNEL_LARGE_STACK_COMMIT           12288
-
 #define EXCEPTION_READ_FAULT    0
 #define EXCEPTION_WRITE_FAULT   1
 #define EXCEPTION_EXECUTE_FAULT 8
@@ -294,7 +290,7 @@ typedef struct _ARBITER_LIST_ENTRY {
 } ARBITER_LIST_ENTRY, *PARBITER_LIST_ENTRY;
 
 typedef NTSTATUS
-(DDKAPI *PARBITER_HANDLER)(
+(NTAPI *PARBITER_HANDLER)(
   IN OUT PVOID Context,
   IN ARBITER_ACTION Action,
   IN OUT PARBITER_PARAMETERS Parameters);
@@ -417,7 +413,7 @@ typedef enum _RESOURCE_TRANSLATION_DIRECTION {
 } RESOURCE_TRANSLATION_DIRECTION;
 
 typedef NTSTATUS
-(DDKAPI *PTRANSLATE_RESOURCE_HANDLER)(
+(NTAPI *PTRANSLATE_RESOURCE_HANDLER)(
   IN OUT PVOID Context,
   IN PCM_PARTIAL_RESOURCE_DESCRIPTOR Source,
   IN RESOURCE_TRANSLATION_DIRECTION Direction,
@@ -427,7 +423,7 @@ typedef NTSTATUS
   OUT PCM_PARTIAL_RESOURCE_DESCRIPTOR Target);
 
 typedef NTSTATUS
-(DDKAPI *PTRANSLATE_RESOURCE_REQUIREMENTS_HANDLER)(
+(NTAPI *PTRANSLATE_RESOURCE_REQUIREMENTS_HANDLER)(
   IN PVOID Context OPTIONAL,
   IN PIO_RESOURCE_DESCRIPTOR Source,
   IN PDEVICE_OBJECT PhysicalDeviceObject,
@@ -483,42 +479,42 @@ typedef VOID
   IN PBUS_HANDLER BusHandler);
 
 typedef NTSTATUS
-(DDKAPI *pHalQuerySystemInformation)(
+(NTAPI *pHalQuerySystemInformation)(
   IN HAL_QUERY_INFORMATION_CLASS InformationClass,
   IN ULONG BufferSize,
   IN OUT PVOID Buffer,
   OUT PULONG ReturnedLength);
 
 typedef NTSTATUS
-(DDKAPI *pHalSetSystemInformation)(
+(NTAPI *pHalSetSystemInformation)(
   IN HAL_SET_INFORMATION_CLASS InformationClass,
   IN ULONG BufferSize,
   IN PVOID Buffer);
 
 typedef NTSTATUS
-(DDKAPI *pHalQueryBusSlots)(
+(NTAPI *pHalQueryBusSlots)(
   IN PBUS_HANDLER BusHandler,
   IN ULONG BufferSize,
   OUT PULONG SlotNumbers,
   OUT PULONG ReturnedLength);
 
 typedef NTSTATUS
-(DDKAPI *pHalInitPnpDriver)(
+(NTAPI *pHalInitPnpDriver)(
   VOID);
 
 typedef NTSTATUS
-(DDKAPI *pHalInitPowerManagement)(
+(NTAPI *pHalInitPowerManagement)(
   IN PPM_DISPATCH_TABLE PmDriverDispatchTable,
   OUT PPM_DISPATCH_TABLE *PmHalDispatchTable);
 
 typedef struct _DMA_ADAPTER*
-(DDKAPI *pHalGetDmaAdapter)(
+(NTAPI *pHalGetDmaAdapter)(
   IN PVOID Context,
   IN struct _DEVICE_DESCRIPTION *DeviceDescriptor,
   OUT PULONG NumberOfMapRegisters);
 
 typedef NTSTATUS
-(DDKAPI *pHalGetInterruptTranslator)(
+(NTAPI *pHalGetInterruptTranslator)(
   IN INTERFACE_TYPE ParentInterfaceType,
   IN ULONG ParentBusNumber,
   IN INTERFACE_TYPE BridgeInterfaceType,
@@ -528,30 +524,30 @@ typedef NTSTATUS
   OUT PULONG BridgeBusNumber);
 
 typedef NTSTATUS
-(DDKAPI *pHalStartMirroring)(
+(NTAPI *pHalStartMirroring)(
   VOID);
 
 typedef NTSTATUS
-(DDKAPI *pHalEndMirroring)(
+(NTAPI *pHalEndMirroring)(
   IN ULONG PassNumber);
 
 typedef NTSTATUS
-(DDKAPI *pHalMirrorPhysicalMemory)(
+(NTAPI *pHalMirrorPhysicalMemory)(
   IN PHYSICAL_ADDRESS PhysicalAddress,
   IN LARGE_INTEGER NumberOfBytes);
 
 typedef NTSTATUS
-(DDKAPI *pHalMirrorVerify)(
+(NTAPI *pHalMirrorVerify)(
   IN PHYSICAL_ADDRESS PhysicalAddress,
   IN LARGE_INTEGER NumberOfBytes);
 
 typedef VOID
-(DDKAPI *pHalEndOfBoot)(
+(NTAPI *pHalEndOfBoot)(
   VOID);
 
 typedef
 BOOLEAN
-(DDKAPI *pHalTranslateBusAddress)(
+(NTAPI *pHalTranslateBusAddress)(
   IN INTERFACE_TYPE InterfaceType,
   IN ULONG BusNumber,
   IN PHYSICAL_ADDRESS BusAddress,
@@ -560,7 +556,7 @@ BOOLEAN
 
 typedef
 NTSTATUS
-(DDKAPI *pHalAssignSlotResources)(
+(NTAPI *pHalAssignSlotResources)(
   IN PUNICODE_STRING RegistryPath,
   IN PUNICODE_STRING DriverClassName OPTIONAL,
   IN PDRIVER_OBJECT DriverObject,
@@ -572,22 +568,22 @@ NTSTATUS
 
 typedef
 VOID
-(DDKAPI *pHalHaltSystem)(
+(NTAPI *pHalHaltSystem)(
   VOID);
 
 typedef
 BOOLEAN
-(DDKAPI *pHalResetDisplay)(
+(NTAPI *pHalResetDisplay)(
   VOID);
 
 typedef
 UCHAR
-(DDKAPI *pHalVectorToIDTEntry)(
+(NTAPI *pHalVectorToIDTEntry)(
   ULONG Vector);
 
 typedef
 BOOLEAN
-(DDKAPI *pHalFindBusAddressTranslation)(
+(NTAPI *pHalFindBusAddressTranslation)(
   IN PHYSICAL_ADDRESS BusAddress,
   IN OUT PULONG AddressSpace,
   OUT PPHYSICAL_ADDRESS TranslatedAddress,
@@ -596,25 +592,445 @@ BOOLEAN
 
 typedef
 NTSTATUS
-(DDKAPI *pKdSetupPciDeviceForDebugging)(
+(NTAPI *pKdSetupPciDeviceForDebugging)(
   IN PVOID LoaderBlock OPTIONAL,
   IN OUT PDEBUG_DEVICE_DESCRIPTOR PciDevice);
 
 typedef
 NTSTATUS
-(DDKAPI *pKdReleasePciDeviceForDebugging)(
+(NTAPI *pKdReleasePciDeviceForDebugging)(
   IN OUT PDEBUG_DEVICE_DESCRIPTOR PciDevice);
 
 typedef
 PVOID
-(DDKAPI *pKdGetAcpiTablePhase0)(
+(NTAPI *pKdGetAcpiTablePhase0)(
   IN struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
   IN ULONG Signature);
 
 typedef
 VOID
-(DDKAPI *pKdCheckPowerButton)(
+(NTAPI *pKdCheckPowerButton)(
   VOID);
+
+typedef
+PVOID
+(NTAPI *pKdMapPhysicalMemory64)(
+  IN PHYSICAL_ADDRESS PhysicalAddress,
+  IN ULONG NumberPages,
+  IN BOOLEAN FlushCurrentTLB);
+
+typedef
+VOID
+(NTAPI *pKdUnmapVirtualAddress)(
+  IN PVOID VirtualAddress,
+  IN ULONG NumberPages,
+  IN BOOLEAN FlushCurrentTLB);
+
+typedef
+ULONG
+(NTAPI *pKdGetPciDataByOffset)(
+  IN ULONG BusNumber,
+  IN ULONG SlotNumber,
+  OUT PVOID Buffer,
+  IN ULONG Offset,
+  IN ULONG Length);
+
+typedef
+ULONG
+(NTAPI *pKdSetPciDataByOffset)(
+  IN ULONG BusNumber,
+  IN ULONG SlotNumber,
+  IN PVOID Buffer,
+  IN ULONG Offset,
+  IN ULONG Length);
+
+typedef BOOLEAN
+(NTAPI *PHAL_RESET_DISPLAY_PARAMETERS)(
+  IN ULONG Columns,
+  IN ULONG Rows);
+
+typedef struct _HAL_DISPATCH {
+  ULONG Version;
+  pHalQuerySystemInformation HalQuerySystemInformation;
+  pHalSetSystemInformation HalSetSystemInformation;
+  pHalQueryBusSlots HalQueryBusSlots;
+  ULONG Spare1;
+  pHalExamineMBR HalExamineMBR;
+  pHalIoReadPartitionTable HalIoReadPartitionTable;
+  pHalIoSetPartitionInformation HalIoSetPartitionInformation;
+  pHalIoWritePartitionTable HalIoWritePartitionTable;
+  pHalHandlerForBus HalReferenceHandlerForBus;
+  pHalReferenceBusHandler HalReferenceBusHandler;
+  pHalReferenceBusHandler HalDereferenceBusHandler;
+  pHalInitPnpDriver HalInitPnpDriver;
+  pHalInitPowerManagement HalInitPowerManagement;
+  pHalGetDmaAdapter HalGetDmaAdapter;
+  pHalGetInterruptTranslator HalGetInterruptTranslator;
+  pHalStartMirroring HalStartMirroring;
+  pHalEndMirroring HalEndMirroring;
+  pHalMirrorPhysicalMemory HalMirrorPhysicalMemory;
+  pHalEndOfBoot HalEndOfBoot;
+  pHalMirrorVerify HalMirrorVerify;
+  pHalGetAcpiTable HalGetCachedAcpiTable;
+  pHalSetPciErrorHandlerCallback HalSetPciErrorHandlerCallback;
+#if defined(_IA64_)
+  pHalGetErrorCapList HalGetErrorCapList;
+  pHalInjectError HalInjectError;
+#endif
+} HAL_DISPATCH, *PHAL_DISPATCH;
+
+#if defined(_NTDRIVER_) || defined(_NTDDK_) || defined(_NTIFS_) || defined(_NTHAL_)
+
+extern PHAL_DISPATCH HalDispatchTable;
+#define HALDISPATCH HalDispatchTable
+
+#else
+
+extern HAL_DISPATCH HalDispatchTable;
+#define HALDISPATCH (&HalDispatchTable)
+
+#endif
+
+#define HAL_DISPATCH_VERSION            3
+#define HalDispatchTableVersion         HALDISPATCH->Version
+#define HalQuerySystemInformation       HALDISPATCH->HalQuerySystemInformation
+#define HalSetSystemInformation         HALDISPATCH->HalSetSystemInformation
+#define HalQueryBusSlots                HALDISPATCH->HalQueryBusSlots
+#define HalReferenceHandlerForBus       HALDISPATCH->HalReferenceHandlerForBus
+#define HalReferenceBusHandler          HALDISPATCH->HalReferenceBusHandler
+#define HalDereferenceBusHandler        HALDISPATCH->HalDereferenceBusHandler
+#define HalInitPnpDriver                HALDISPATCH->HalInitPnpDriver
+#define HalInitPowerManagement          HALDISPATCH->HalInitPowerManagement
+#define HalGetDmaAdapter                HALDISPATCH->HalGetDmaAdapter
+#define HalGetInterruptTranslator       HALDISPATCH->HalGetInterruptTranslator
+#define HalStartMirroring               HALDISPATCH->HalStartMirroring
+#define HalEndMirroring                 HALDISPATCH->HalEndMirroring
+#define HalMirrorPhysicalMemory         HALDISPATCH->HalMirrorPhysicalMemory
+#define HalEndOfBoot                    HALDISPATCH->HalEndOfBoot
+#define HalMirrorVerify                 HALDISPATCH->HalMirrorVerify
+
+typedef struct _FILE_ALIGNMENT_INFORMATION {
+  ULONG AlignmentRequirement;
+} FILE_ALIGNMENT_INFORMATION, *PFILE_ALIGNMENT_INFORMATION;
+
+typedef struct _FILE_NAME_INFORMATION {
+  ULONG FileNameLength;
+  WCHAR FileName[1];
+} FILE_NAME_INFORMATION, *PFILE_NAME_INFORMATION;
+
+
+typedef struct _FILE_ATTRIBUTE_TAG_INFORMATION {
+  ULONG FileAttributes;
+  ULONG ReparseTag;
+} FILE_ATTRIBUTE_TAG_INFORMATION, *PFILE_ATTRIBUTE_TAG_INFORMATION;
+
+typedef struct _FILE_DISPOSITION_INFORMATION {
+  BOOLEAN DeleteFile;
+} FILE_DISPOSITION_INFORMATION, *PFILE_DISPOSITION_INFORMATION;
+
+typedef struct _FILE_END_OF_FILE_INFORMATION {
+  LARGE_INTEGER EndOfFile;
+} FILE_END_OF_FILE_INFORMATION, *PFILE_END_OF_FILE_INFORMATION;
+
+typedef struct _FILE_VALID_DATA_LENGTH_INFORMATION {
+  LARGE_INTEGER ValidDataLength;
+} FILE_VALID_DATA_LENGTH_INFORMATION, *PFILE_VALID_DATA_LENGTH_INFORMATION;
+
+typedef union _FILE_SEGMENT_ELEMENT {
+  PVOID64 Buffer;
+  ULONGLONG Alignment;
+}FILE_SEGMENT_ELEMENT, *PFILE_SEGMENT_ELEMENT;
+
+#define SE_UNSOLICITED_INPUT_PRIVILEGE    6
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+NTSYSAPI
+ULONGLONG
+NTAPI
+VerSetConditionMask(
+  IN ULONGLONG ConditionMask,
+  IN ULONG TypeMask,
+  IN UCHAR Condition);
+#endif
+
+#define VER_SET_CONDITION(ConditionMask, TypeBitMask, ComparisonType)  \
+        ((ConditionMask) = VerSetConditionMask((ConditionMask), \
+        (TypeBitMask), (ComparisonType)))
+
+/* RtlVerifyVersionInfo() TypeMask */
+
+#define VER_MINORVERSION                  0x0000001
+#define VER_MAJORVERSION                  0x0000002
+#define VER_BUILDNUMBER                   0x0000004
+#define VER_PLATFORMID                    0x0000008
+#define VER_SERVICEPACKMINOR              0x0000010
+#define VER_SERVICEPACKMAJOR              0x0000020
+#define VER_SUITENAME                     0x0000040
+#define VER_PRODUCT_TYPE                  0x0000080
+
+/* RtlVerifyVersionInfo() ComparisonType */
+
+#define VER_EQUAL                       1
+#define VER_GREATER                     2
+#define VER_GREATER_EQUAL               3
+#define VER_LESS                        4
+#define VER_LESS_EQUAL                  5
+#define VER_AND                         6
+#define VER_OR                          7
+
+#define VER_CONDITION_MASK              7
+#define VER_NUM_BITS_PER_CONDITION_MASK 3
+
+typedef struct _IMAGE_INFO {
+  _ANONYMOUS_UNION union {
+    ULONG Properties;
+    _ANONYMOUS_STRUCT struct {
+      ULONG ImageAddressingMode:8;
+      ULONG SystemModeImage:1;
+      ULONG ImageMappedToAllPids:1;
+      ULONG ExtendedInfoPresent:1;
+      ULONG Reserved:22;
+    } DUMMYSTRUCTNAME;
+  } DUMMYUNIONNAME;
+  PVOID ImageBase;
+  ULONG ImageSelector;
+  SIZE_T ImageSize;
+  ULONG ImageSectionNumber;
+} IMAGE_INFO, *PIMAGE_INFO;
+
+#define IMAGE_ADDRESSING_MODE_32BIT       3
+
+typedef enum _BUS_DATA_TYPE {
+  ConfigurationSpaceUndefined = -1,
+  Cmos,
+  EisaConfiguration,
+  Pos,
+  CbusConfiguration,
+  PCIConfiguration,
+  VMEConfiguration,
+  NuBusConfiguration,
+  PCMCIAConfiguration,
+  MPIConfiguration,
+  MPSAConfiguration,
+  PNPISAConfiguration,
+  SgiInternalConfiguration,
+  MaximumBusDataType
+} BUS_DATA_TYPE, *PBUS_DATA_TYPE;
+
+typedef struct _NT_TIB {
+  struct _EXCEPTION_REGISTRATION_RECORD *ExceptionList;
+  PVOID StackBase;
+  PVOID StackLimit;
+  PVOID SubSystemTib;
+  _ANONYMOUS_UNION union {
+    PVOID FiberData;
+    ULONG Version;
+  } DUMMYUNIONNAME;
+  PVOID ArbitraryUserPointer;
+  struct _NT_TIB *Self;
+} NT_TIB, *PNT_TIB;
+
+typedef struct _NT_TIB32 {
+  ULONG ExceptionList;
+  ULONG StackBase;
+  ULONG StackLimit;
+  ULONG SubSystemTib;
+  __GNU_EXTENSION union {
+    ULONG FiberData;
+    ULONG Version;
+  };
+  ULONG ArbitraryUserPointer;
+  ULONG Self;
+} NT_TIB32,*PNT_TIB32;
+
+typedef struct _NT_TIB64 {
+  ULONG64 ExceptionList;
+  ULONG64 StackBase;
+  ULONG64 StackLimit;
+  ULONG64 SubSystemTib;
+  __GNU_EXTENSION union {
+    ULONG64 FiberData;
+    ULONG Version;
+  };
+  ULONG64 ArbitraryUserPointer;
+  ULONG64 Self;
+} NT_TIB64,*PNT_TIB64;
+
+typedef enum _PROCESSINFOCLASS {
+  ProcessBasicInformation,
+  ProcessQuotaLimits,
+  ProcessIoCounters,
+  ProcessVmCounters,
+  ProcessTimes,
+  ProcessBasePriority,
+  ProcessRaisePriority,
+  ProcessDebugPort,
+  ProcessExceptionPort,
+  ProcessAccessToken,
+  ProcessLdtInformation,
+  ProcessLdtSize,
+  ProcessDefaultHardErrorMode,
+  ProcessIoPortHandlers,
+  ProcessPooledUsageAndLimits,
+  ProcessWorkingSetWatch,
+  ProcessUserModeIOPL,
+  ProcessEnableAlignmentFaultFixup,
+  ProcessPriorityClass,
+  ProcessWx86Information,
+  ProcessHandleCount,
+  ProcessAffinityMask,
+  ProcessPriorityBoost,
+  ProcessDeviceMap,
+  ProcessSessionInformation,
+  ProcessForegroundInformation,
+  ProcessWow64Information,
+  ProcessImageFileName,
+  ProcessLUIDDeviceMapsEnabled,
+  ProcessBreakOnTermination,
+  ProcessDebugObjectHandle,
+  ProcessDebugFlags,
+  ProcessHandleTracing,
+  ProcessIoPriority,
+  ProcessExecuteFlags,
+  ProcessTlsInformation,
+  ProcessCookie,
+  ProcessImageInformation,
+  ProcessCycleTime,
+  ProcessPagePriority,
+  ProcessInstrumentationCallback,
+  ProcessThreadStackAllocation,
+  ProcessWorkingSetWatchEx,
+  ProcessImageFileNameWin32,
+  ProcessImageFileMapping,
+  ProcessAffinityUpdateMode,
+  ProcessMemoryAllocationMode,
+  ProcessGroupInformation,
+  ProcessTokenVirtualizationEnabled,
+  ProcessConsoleHostProcess,
+  ProcessWindowInformation,
+  MaxProcessInfoClass
+} PROCESSINFOCLASS;
+
+typedef enum _THREADINFOCLASS {
+  ThreadBasicInformation,
+  ThreadTimes,
+  ThreadPriority,
+  ThreadBasePriority,
+  ThreadAffinityMask,
+  ThreadImpersonationToken,
+  ThreadDescriptorTableEntry,
+  ThreadEnableAlignmentFaultFixup,
+  ThreadEventPair_Reusable,
+  ThreadQuerySetWin32StartAddress,
+  ThreadZeroTlsCell,
+  ThreadPerformanceCount,
+  ThreadAmILastThread,
+  ThreadIdealProcessor,
+  ThreadPriorityBoost,
+  ThreadSetTlsArrayAddress,
+  ThreadIsIoPending,
+  ThreadHideFromDebugger,
+  ThreadBreakOnTermination,
+  ThreadSwitchLegacyState,
+  ThreadIsTerminated,
+  ThreadLastSystemCall,
+  ThreadIoPriority,
+  ThreadCycleTime,
+  ThreadPagePriority,
+  ThreadActualBasePriority,
+  ThreadTebInformation,
+  ThreadCSwitchMon,
+  ThreadCSwitchPmu,
+  ThreadWow64Context,
+  ThreadGroupInformation,
+  ThreadUmsInformation,
+  ThreadCounterProfiling,
+  ThreadIdealProcessorEx,
+  MaxThreadInfoClass
+} THREADINFOCLASS;
+
+typedef struct _PROCESS_BASIC_INFORMATION {
+  NTSTATUS ExitStatus;
+  struct _PEB *PebBaseAddress;
+  ULONG_PTR AffinityMask;
+  KPRIORITY BasePriority;
+  ULONG_PTR UniqueProcessId;
+  ULONG_PTR InheritedFromUniqueProcessId;
+} PROCESS_BASIC_INFORMATION,*PPROCESS_BASIC_INFORMATION;
+
+typedef struct _PROCESS_WS_WATCH_INFORMATION {
+  PVOID FaultingPc;
+  PVOID FaultingVa;
+} PROCESS_WS_WATCH_INFORMATION, *PPROCESS_WS_WATCH_INFORMATION;
+
+typedef struct _PROCESS_DEVICEMAP_INFORMATION {
+  __GNU_EXTENSION union {
+    struct {
+      HANDLE DirectoryHandle;
+    } Set;
+    struct {
+      ULONG DriveMap;
+      UCHAR DriveType[32];
+    } Query;
+  };
+} PROCESS_DEVICEMAP_INFORMATION, *PPROCESS_DEVICEMAP_INFORMATION;
+
+typedef struct _KERNEL_USER_TIMES {
+  LARGE_INTEGER CreateTime;
+  LARGE_INTEGER ExitTime;
+  LARGE_INTEGER KernelTime;
+  LARGE_INTEGER UserTime;
+} KERNEL_USER_TIMES, *PKERNEL_USER_TIMES;
+
+typedef struct _PROCESS_ACCESS_TOKEN {
+  HANDLE Token;
+  HANDLE Thread;
+} PROCESS_ACCESS_TOKEN, *PPROCESS_ACCESS_TOKEN;
+
+typedef struct _PROCESS_SESSION_INFORMATION {
+  ULONG SessionId;
+} PROCESS_SESSION_INFORMATION, *PPROCESS_SESSION_INFORMATION;
+
+typedef enum _IO_QUERY_DEVICE_DATA_FORMAT {
+  IoQueryDeviceIdentifier = 0,
+  IoQueryDeviceConfigurationData,
+  IoQueryDeviceComponentInformation,
+  IoQueryDeviceMaxData
+} IO_QUERY_DEVICE_DATA_FORMAT, *PIO_QUERY_DEVICE_DATA_FORMAT;
+
+typedef struct _DISK_SIGNATURE {
+  ULONG PartitionStyle;
+  _ANONYMOUS_UNION union {
+    struct {
+      ULONG Signature;
+      ULONG CheckSum;
+    } Mbr;
+    struct {
+      GUID DiskId;
+    } Gpt;
+  } DUMMYUNIONNAME;
+} DISK_SIGNATURE, *PDISK_SIGNATURE;
+
+typedef ULONG_PTR
+(NTAPI *PDRIVER_VERIFIER_THUNK_ROUTINE)(
+  IN PVOID Context);
+
+typedef struct _DRIVER_VERIFIER_THUNK_PAIRS {
+  PDRIVER_VERIFIER_THUNK_ROUTINE PristineRoutine;
+  PDRIVER_VERIFIER_THUNK_ROUTINE NewRoutine;
+} DRIVER_VERIFIER_THUNK_PAIRS, *PDRIVER_VERIFIER_THUNK_PAIRS;
+
+#define DRIVER_VERIFIER_SPECIAL_POOLING             0x0001
+#define DRIVER_VERIFIER_FORCE_IRQL_CHECKING         0x0002
+#define DRIVER_VERIFIER_INJECT_ALLOCATION_FAILURES  0x0004
+#define DRIVER_VERIFIER_TRACK_POOL_ALLOCATIONS      0x0008
+#define DRIVER_VERIFIER_IO_CHECKING                 0x0010
+
+typedef VOID
+(NTAPI *PTIMER_APC_ROUTINE)(
+  IN PVOID TimerContext,
+  IN ULONG TimerLowValue,
+  IN LONG TimerHighValue);
 
 typedef struct _KUSER_SHARED_DATA
 {
@@ -733,7 +1149,66 @@ typedef struct _KUSER_SHARED_DATA
 
 #ifdef _X86_
 
+#define KERNEL_STACK_SIZE                   12288
+#define KERNEL_LARGE_STACK_SIZE             61440
+#define KERNEL_LARGE_STACK_COMMIT           12288
+
 #define SIZE_OF_80387_REGISTERS   80
+
+#define PCR_MINOR_VERSION 1
+#define PCR_MAJOR_VERSION 1
+
+#if !defined(RC_INVOKED)
+
+#define CONTEXT_i386               0x10000
+#define CONTEXT_i486               0x10000
+#define CONTEXT_CONTROL            (CONTEXT_i386|0x00000001L)
+#define CONTEXT_INTEGER            (CONTEXT_i386|0x00000002L)
+#define CONTEXT_SEGMENTS           (CONTEXT_i386|0x00000004L)
+#define CONTEXT_FLOATING_POINT     (CONTEXT_i386|0x00000008L)
+#define CONTEXT_DEBUG_REGISTERS    (CONTEXT_i386|0x00000010L)
+#define CONTEXT_EXTENDED_REGISTERS (CONTEXT_i386|0x00000020L)
+
+#define CONTEXT_FULL  (CONTEXT_CONTROL|CONTEXT_INTEGER|CONTEXT_SEGMENTS)
+
+#endif /* !defined(RC_INVOKED) */
+
+typedef struct _KPCR {
+  union {
+    NT_TIB NtTib;
+    struct {
+      struct _EXCEPTION_REGISTRATION_RECORD *Used_ExceptionList;
+      PVOID Used_StackBase;
+      PVOID Spare2;
+      PVOID TssCopy;
+      ULONG ContextSwitches;
+      KAFFINITY SetMemberCopy;
+      PVOID Used_Self;
+    };
+  };
+  struct _KPCR *SelfPcr;
+  struct _KPRCB *Prcb;
+  KIRQL Irql;
+  ULONG IRR;
+  ULONG IrrActive;
+  ULONG IDR;
+  PVOID KdVersionBlock;
+  struct _KIDTENTRY *IDT;
+  struct _KGDTENTRY *GDT;
+  struct _KTSS *TSS;
+  USHORT MajorVersion;
+  USHORT MinorVersion;
+  KAFFINITY SetMember;
+  ULONG StallScaleFactor;
+  UCHAR SpareUnused;
+  UCHAR Number;
+  UCHAR Spare0;
+  UCHAR SecondLevelCacheAssociativity;
+  ULONG VdmAlert;
+  ULONG KernelReserved[14];
+  ULONG SecondLevelCacheSize;
+  ULONG HalReserved[16];
+} KPCR, *PKPCR;
 
 typedef struct _FLOATING_SAVE_AREA {
   ULONG ControlWord;
@@ -1102,7 +1577,7 @@ typedef struct _CONFIGURATION_INFORMATION {
 
 typedef
 NTSTATUS
-(DDKAPI *PIO_QUERY_DEVICE_ROUTINE)(
+(NTAPI *PIO_QUERY_DEVICE_ROUTINE)(
   IN PVOID Context,
   IN PUNICODE_STRING PathName,
   IN INTERFACE_TYPE BusType,
@@ -1117,7 +1592,7 @@ NTSTATUS
 
 typedef
 VOID
-(DDKAPI DRIVER_REINITIALIZE)(
+(NTAPI DRIVER_REINITIALIZE)(
   IN struct _DRIVER_OBJECT *DriverObject,
   IN PVOID Context,
   IN ULONG Count);
@@ -1173,23 +1648,6 @@ typedef struct _PCIBUSDATA {
   PVOID Reserved[4];
 } PCIBUSDATA, *PPCIBUSDATA;
 
-typedef enum _BUS_DATA_TYPE {
-  ConfigurationSpaceUndefined = -1,
-  Cmos,
-  EisaConfiguration,
-  Pos,
-  CbusConfiguration,
-  PCIConfiguration,
-  VMEConfiguration,
-  NuBusConfiguration,
-  PCMCIAConfiguration,
-  MPIConfiguration,
-  MPSAConfiguration,
-  PNPISAConfiguration,
-  SgiInternalConfiguration,
-  MaximumBusDataType
-} BUS_DATA_TYPE, *PBUS_DATA_TYPE;
-
 typedef
 PVOID
 (NTAPI *pHalGetAcpiTable)(
@@ -1215,68 +1673,6 @@ typedef VOID
   OUT PUCHAR NtSystemPath,
   OUT PSTRING NtSystemPathString);
 #endif
-
-typedef struct {
-  ULONG Version;
-  pHalQuerySystemInformation HalQuerySystemInformation;
-  pHalSetSystemInformation HalSetSystemInformation;
-  pHalQueryBusSlots HalQueryBusSlots;
-  ULONG Spare1;
-  pHalExamineMBR HalExamineMBR;
-#if 1 /* Not present in WDK 7600 */
-  pHalIoAssignDriveLetters HalIoAssignDriveLetters;
-#endif
-  pHalIoReadPartitionTable HalIoReadPartitionTable;
-  pHalIoSetPartitionInformation HalIoSetPartitionInformation;
-  pHalIoWritePartitionTable HalIoWritePartitionTable;
-  pHalHandlerForBus HalReferenceHandlerForBus;
-  pHalReferenceBusHandler HalReferenceBusHandler;
-  pHalReferenceBusHandler HalDereferenceBusHandler;
-  pHalInitPnpDriver HalInitPnpDriver;
-  pHalInitPowerManagement HalInitPowerManagement;
-  pHalGetDmaAdapter HalGetDmaAdapter;
-  pHalGetInterruptTranslator HalGetInterruptTranslator;
-  pHalStartMirroring HalStartMirroring;
-  pHalEndMirroring HalEndMirroring;
-  pHalMirrorPhysicalMemory HalMirrorPhysicalMemory;
-  pHalEndOfBoot HalEndOfBoot;
-  pHalMirrorVerify HalMirrorVerify;
-  pHalGetAcpiTable HalGetCachedAcpiTable;
-  pHalSetPciErrorHandlerCallback  HalSetPciErrorHandlerCallback;
-#if defined(_IA64_)
-  pHalGetErrorCapList HalGetErrorCapList;
-  pHalInjectError HalInjectError;
-#endif
-} HAL_DISPATCH, *PHAL_DISPATCH;
-
-/* GCC/MSVC and WDK compatible declaration */
-extern NTKERNELAPI HAL_DISPATCH HalDispatchTable;
-
-#if defined(_NTOSKRNL_) || defined(_BLDR_)
-#define HALDISPATCH (&HalDispatchTable)
-#else
-/* This is a WDK compatibility definition */
-#define HalDispatchTable (&HalDispatchTable)
-#define HALDISPATCH HalDispatchTable
-#endif
-
-#define HAL_DISPATCH_VERSION            3 // FIXME: when to use 4?
-#define HalDispatchTableVersion         HALDISPATCH->Version
-#define HalQuerySystemInformation       HALDISPATCH->HalQuerySystemInformation
-#define HalSetSystemInformation         HALDISPATCH->HalSetSystemInformation
-#define HalQueryBusSlots                HALDISPATCH->HalQueryBusSlots
-#define HalReferenceHandlerForBus       HALDISPATCH->HalReferenceHandlerForBus
-#define HalReferenceBusHandler          HALDISPATCH->HalReferenceBusHandler
-#define HalDereferenceBusHandler        HALDISPATCH->HalDereferenceBusHandler
-#define HalInitPnpDriver                HALDISPATCH->HalInitPnpDriver
-#define HalInitPowerManagement          HALDISPATCH->HalInitPowerManagement
-#define HalGetDmaAdapter                HALDISPATCH->HalGetDmaAdapter
-#define HalGetInterruptTranslator       HALDISPATCH->HalGetInterruptTranslator
-#define HalStartMirroring               HALDISPATCH->HalStartMirroring
-#define HalEndMirroring                 HALDISPATCH->HalEndMirroring
-#define HalMirrorPhysicalMemory         HALDISPATCH->HalMirrorPhysicalMemory
-#define HalEndOfBoot                    HALDISPATCH->HalEndOfBoot
-#define HalMirrorVerify                 HALDISPATCH->HalMirrorVerify
 
 /* Hardware Abstraction Layer Functions */
 
@@ -1342,12 +1738,6 @@ NTAPI
 HalPutDmaAdapter(
   IN PADAPTER_OBJECT DmaAdapter);
 
-typedef
-BOOLEAN
-(DDKAPI *PHAL_RESET_DISPLAY_PARAMETERS)(
-  ULONG Columns,
-  ULONG Rows);
-
 NTHALAPI
 VOID
 NTAPI
@@ -1408,19 +1798,6 @@ HalExamineMBR(
   IN ULONG MBRTypeIdentifier,
   OUT PVOID *Buffer);
 #endif
-
-typedef struct _DISK_SIGNATURE {
-  ULONG  PartitionStyle;
-  _ANONYMOUS_UNION union {
-    struct {
-      ULONG  Signature;
-      ULONG  CheckSum;
-    } Mbr;
-    struct {
-      GUID  DiskId;
-    } Gpt;
-  } DUMMYUNIONNAME;
-} DISK_SIGNATURE, *PDISK_SIGNATURE;
 
 #if defined(USE_DMA_MACROS) && !defined(_NTHAL_) && (defined(_NTDDK_) || defined(_NTDRIVER_)) || defined(_WDM_INCLUDED_) 
 // nothing here
@@ -1982,99 +2359,6 @@ MmUnmapVideoDisplay(
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
-typedef enum _PROCESSINFOCLASS {
-  ProcessBasicInformation,
-  ProcessQuotaLimits,
-  ProcessIoCounters,
-  ProcessVmCounters,
-  ProcessTimes,
-  ProcessBasePriority,
-  ProcessRaisePriority,
-  ProcessDebugPort,
-  ProcessExceptionPort,
-  ProcessAccessToken,
-  ProcessLdtInformation,
-  ProcessLdtSize,
-  ProcessDefaultHardErrorMode,
-  ProcessIoPortHandlers,
-  ProcessPooledUsageAndLimits,
-  ProcessWorkingSetWatch,
-  ProcessUserModeIOPL,
-  ProcessEnableAlignmentFaultFixup,
-  ProcessPriorityClass,
-  ProcessWx86Information,
-  ProcessHandleCount,
-  ProcessAffinityMask,
-  ProcessPriorityBoost,
-  ProcessDeviceMap,
-  ProcessSessionInformation,
-  ProcessForegroundInformation,
-  ProcessWow64Information,
-  ProcessImageFileName,
-  ProcessLUIDDeviceMapsEnabled,
-  ProcessBreakOnTermination,
-  ProcessDebugObjectHandle,
-  ProcessDebugFlags,
-  ProcessHandleTracing,
-  ProcessIoPriority,
-  ProcessExecuteFlags,
-  ProcessTlsInformation,
-  ProcessCookie,
-  ProcessImageInformation,
-  ProcessCycleTime,
-  ProcessPagePriority,
-  ProcessInstrumentationCallback,
-  ProcessThreadStackAllocation,
-  ProcessWorkingSetWatchEx,
-  ProcessImageFileNameWin32,
-  ProcessImageFileMapping,
-  ProcessAffinityUpdateMode,
-  ProcessMemoryAllocationMode,
-  ProcessGroupInformation,
-  ProcessTokenVirtualizationEnabled,
-  ProcessConsoleHostProcess,
-  ProcessWindowInformation,
-  MaxProcessInfoClass
-} PROCESSINFOCLASS;
-
-typedef enum _THREADINFOCLASS {
-  ThreadBasicInformation,
-  ThreadTimes,
-  ThreadPriority,
-  ThreadBasePriority,
-  ThreadAffinityMask,
-  ThreadImpersonationToken,
-  ThreadDescriptorTableEntry,
-  ThreadEnableAlignmentFaultFixup,
-  ThreadEventPair_Reusable,
-  ThreadQuerySetWin32StartAddress,
-  ThreadZeroTlsCell,
-  ThreadPerformanceCount,
-  ThreadAmILastThread,
-  ThreadIdealProcessor,
-  ThreadPriorityBoost,
-  ThreadSetTlsArrayAddress,
-  ThreadIsIoPending,
-  ThreadHideFromDebugger,
-  ThreadBreakOnTermination,
-  ThreadSwitchLegacyState,
-  ThreadIsTerminated,
-  ThreadLastSystemCall,
-  ThreadIoPriority,
-  ThreadCycleTime,
-  ThreadPagePriority,
-  ThreadActualBasePriority,
-  ThreadTebInformation,
-  ThreadCSwitchMon,
-  ThreadCSwitchPmu,
-  ThreadWow64Context,
-  ThreadGroupInformation,
-  ThreadUmsInformation,
-  ThreadCounterProfiling,
-  ThreadIdealProcessorEx,
-  MaxThreadInfoClass
-} THREADINFOCLASS;
-
 /* NtXxx Functions */
 
 NTSYSCALLAPI
@@ -2098,36 +2382,20 @@ NtQueryInformationProcess(
 
 /** Process manager types **/
 
-typedef struct _IMAGE_INFO {
-  _ANONYMOUS_UNION union {
-    ULONG  Properties;
-    _ANONYMOUS_STRUCT struct {
-      ULONG  ImageAddressingMode  : 8;
-      ULONG  SystemModeImage      : 1;
-      ULONG  ImageMappedToAllPids : 1;
-      ULONG  Reserved             : 22;
-    } DUMMYSTRUCTNAME;
-  } DUMMYUNIONNAME;
-  PVOID  ImageBase;
-  ULONG  ImageSelector;
-  SIZE_T  ImageSize;
-  ULONG  ImageSectionNumber;
-} IMAGE_INFO, *PIMAGE_INFO;
-
 typedef VOID
-(DDKAPI *PCREATE_PROCESS_NOTIFY_ROUTINE)(
+(NTAPI *PCREATE_PROCESS_NOTIFY_ROUTINE)(
   IN HANDLE ParentId,
   IN HANDLE ProcessId,
   IN BOOLEAN Create);
 
 typedef VOID
-(DDKAPI *PCREATE_THREAD_NOTIFY_ROUTINE)(
+(NTAPI *PCREATE_THREAD_NOTIFY_ROUTINE)(
   IN HANDLE ProcessId,
   IN HANDLE ThreadId,
   IN BOOLEAN Create);
 
 typedef VOID
-(DDKAPI *PLOAD_IMAGE_NOTIFY_ROUTINE)(
+(NTAPI *PLOAD_IMAGE_NOTIFY_ROUTINE)(
   IN PUNICODE_STRING FullImageName,
   IN HANDLE ProcessId,
   IN PIMAGE_INFO ImageInfo);
@@ -2403,12 +2671,6 @@ SeSinglePrivilegeCheck(
   IN LUID PrivilegeValue,
   IN KPROCESSOR_MODE PreviousMode);
 #endif
-
-typedef VOID
-(DDKAPI *PTIMER_APC_ROUTINE)(
-  IN PVOID TimerContext,
-  IN ULONG TimerLowValue,
-  IN LONG TimerHighValue);
 
 /* ZwXxx Functions */
 

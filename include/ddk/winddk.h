@@ -325,115 +325,11 @@ NTSTATUS
     OUT PKINTERRUPT_POLARITY Polarity
 );
 
-typedef
-PVOID
-(DDKAPI *pKdMapPhysicalMemory64)(
-    IN PHYSICAL_ADDRESS PhysicalAddress,
-    IN ULONG NumberPages
-);
-
-typedef
-VOID
-(DDKAPI *pKdUnmapVirtualAddress)(
-    IN PVOID VirtualAddress,
-    IN ULONG NumberPages
-);
-
-typedef
-ULONG
-(DDKAPI *pKdGetPciDataByOffset)(
-    IN ULONG BusNumber,
-    IN ULONG SlotNumber,
-    OUT PVOID Buffer,
-    IN ULONG Offset,
-    IN ULONG Length
-);
-
-typedef
-ULONG
-(DDKAPI *pKdSetPciDataByOffset)(
-    IN ULONG BusNumber,
-    IN ULONG SlotNumber,
-    IN PVOID Buffer,
-    IN ULONG Offset,
-    IN ULONG Length
-);
-
-typedef struct _FILE_ALIGNMENT_INFORMATION {
-  ULONG  AlignmentRequirement;
-} FILE_ALIGNMENT_INFORMATION, *PFILE_ALIGNMENT_INFORMATION;
-
-typedef struct _FILE_NAME_INFORMATION {
-  ULONG  FileNameLength;
-  WCHAR  FileName[1];
-} FILE_NAME_INFORMATION, *PFILE_NAME_INFORMATION;
-
-
-typedef struct _FILE_ATTRIBUTE_TAG_INFORMATION {
-  ULONG  FileAttributes;
-  ULONG  ReparseTag;
-} FILE_ATTRIBUTE_TAG_INFORMATION, *PFILE_ATTRIBUTE_TAG_INFORMATION;
-
-typedef struct _FILE_DISPOSITION_INFORMATION {
-  BOOLEAN  DeleteFile;
-} FILE_DISPOSITION_INFORMATION, *PFILE_DISPOSITION_INFORMATION;
-
-typedef struct _FILE_END_OF_FILE_INFORMATION {
-  LARGE_INTEGER  EndOfFile;
-} FILE_END_OF_FILE_INFORMATION, *PFILE_END_OF_FILE_INFORMATION;
-
-typedef struct _FILE_VALID_DATA_LENGTH_INFORMATION {
-  LARGE_INTEGER  ValidDataLength;
-} FILE_VALID_DATA_LENGTH_INFORMATION, *PFILE_VALID_DATA_LENGTH_INFORMATION;
-
-typedef union _FILE_SEGMENT_ELEMENT {
-    PVOID64 Buffer;
-    ULONGLONG Alignment;
-}FILE_SEGMENT_ELEMENT, *PFILE_SEGMENT_ELEMENT;
-
-#define SE_UNSOLICITED_INPUT_PRIVILEGE    6
-
 typedef struct _KEY_USER_FLAGS_INFORMATION {
   ULONG  UserFlags;
 } KEY_USER_FLAGS_INFORMATION, *PKEY_USER_FLAGS_INFORMATION;
 
 #define PCI_ADDRESS_MEMORY_SPACE            0x00000000
-
-NTSYSAPI
-ULONGLONG
-DDKAPI
-VerSetConditionMask(
-  IN ULONGLONG  ConditionMask,
-  IN ULONG  TypeMask,
-  IN UCHAR  Condition);
-
-#define VER_SET_CONDITION(ConditionMask, TypeBitMask, ComparisonType)  \
-        ((ConditionMask) = VerSetConditionMask((ConditionMask), \
-        (TypeBitMask), (ComparisonType)))
-
-/* RtlVerifyVersionInfo() TypeMask */
-
-#define VER_MINORVERSION                  0x0000001
-#define VER_MAJORVERSION                  0x0000002
-#define VER_BUILDNUMBER                   0x0000004
-#define VER_PLATFORMID                    0x0000008
-#define VER_SERVICEPACKMINOR              0x0000010
-#define VER_SERVICEPACKMAJOR              0x0000020
-#define VER_SUITENAME                     0x0000040
-#define VER_PRODUCT_TYPE                  0x0000080
-
-/* RtlVerifyVersionInfo() ComparisonType */
-
-#define VER_EQUAL                       1
-#define VER_GREATER                     2
-#define VER_GREATER_EQUAL               3
-#define VER_LESS                        4
-#define VER_LESS_EQUAL                  5
-#define VER_AND                         6
-#define VER_OR                          7
-
-#define VER_CONDITION_MASK              7
-#define VER_NUM_BITS_PER_CONDITION_MASK 3
 
 struct _RTL_RANGE;
 
@@ -442,107 +338,6 @@ typedef BOOLEAN
     PVOID Context,
     struct _RTL_RANGE *Range
 );
-
-typedef enum _IO_QUERY_DEVICE_DATA_FORMAT {
-  IoQueryDeviceIdentifier = 0,
-  IoQueryDeviceConfigurationData,
-  IoQueryDeviceComponentInformation,
-  IoQueryDeviceMaxData
-} IO_QUERY_DEVICE_DATA_FORMAT, *PIO_QUERY_DEVICE_DATA_FORMAT;
-
-
-
-#define IMAGE_ADDRESSING_MODE_32BIT       3
-
-typedef struct _NT_TIB {
-    struct _EXCEPTION_REGISTRATION_RECORD *ExceptionList;
-    PVOID StackBase;
-    PVOID StackLimit;
-    PVOID SubSystemTib;
-	_ANONYMOUS_UNION union {
-		PVOID FiberData;
-		ULONG Version;
-	} DUMMYUNIONNAME;
-    PVOID ArbitraryUserPointer;
-    struct _NT_TIB *Self;
-} NT_TIB, *PNT_TIB;
-
-typedef struct _NT_TIB32 {
-	ULONG ExceptionList;
-	ULONG StackBase;
-	ULONG StackLimit;
-	ULONG SubSystemTib;
-	__GNU_EXTENSION union {
-		ULONG FiberData;
-		ULONG Version;
-	};
-	ULONG ArbitraryUserPointer;
-	ULONG Self;
-} NT_TIB32,*PNT_TIB32;
-
-typedef struct _NT_TIB64 {
-	ULONG64 ExceptionList;
-	ULONG64 StackBase;
-	ULONG64 StackLimit;
-	ULONG64 SubSystemTib;
-	__GNU_EXTENSION union {
-		ULONG64 FiberData;
-		ULONG Version;
-	};
-	ULONG64 ArbitraryUserPointer;
-	ULONG64 Self;
-} NT_TIB64,*PNT_TIB64;
-
-typedef struct _PROCESS_BASIC_INFORMATION
-{
-    NTSTATUS ExitStatus;
-    struct _PEB *PebBaseAddress;
-    ULONG_PTR AffinityMask;
-    KPRIORITY BasePriority;
-    ULONG_PTR UniqueProcessId;
-    ULONG_PTR InheritedFromUniqueProcessId;
-} PROCESS_BASIC_INFORMATION,*PPROCESS_BASIC_INFORMATION;
-
-typedef struct _PROCESS_WS_WATCH_INFORMATION
-{
-    PVOID FaultingPc;
-    PVOID FaultingVa;
-} PROCESS_WS_WATCH_INFORMATION, *PPROCESS_WS_WATCH_INFORMATION;
-
-typedef struct _PROCESS_DEVICEMAP_INFORMATION
-{
-    __GNU_EXTENSION union
-    {
-        struct
-        {
-            HANDLE DirectoryHandle;
-        } Set;
-        struct
-        {
-            ULONG DriveMap;
-            UCHAR DriveType[32];
-        } Query;
-    };
-} PROCESS_DEVICEMAP_INFORMATION, *PPROCESS_DEVICEMAP_INFORMATION;
-
-typedef struct _KERNEL_USER_TIMES
-{
-    LARGE_INTEGER CreateTime;
-    LARGE_INTEGER ExitTime;
-    LARGE_INTEGER KernelTime;
-    LARGE_INTEGER UserTime;
-} KERNEL_USER_TIMES, *PKERNEL_USER_TIMES;
-
-typedef struct _PROCESS_ACCESS_TOKEN
-{
-    HANDLE Token;
-    HANDLE Thread;
-} PROCESS_ACCESS_TOKEN, *PPROCESS_ACCESS_TOKEN;
-
-typedef struct _PROCESS_SESSION_INFORMATION
-{
-    ULONG SessionId;
-} PROCESS_SESSION_INFORMATION, *PPROCESS_SESSION_INFORMATION;
 
 /*
 ** Storage structures
@@ -575,38 +370,11 @@ typedef VOID
   IN HANDLE  ThreadId,
   IN KPROCESSOR_MODE  Mode);
 
-typedef ULONG_PTR
-(NTAPI *PDRIVER_VERIFIER_THUNK_ROUTINE)(
-  IN PVOID  Context);
-
-typedef struct _DRIVER_VERIFIER_THUNK_PAIRS {
-  PDRIVER_VERIFIER_THUNK_ROUTINE  PristineRoutine;
-  PDRIVER_VERIFIER_THUNK_ROUTINE  NewRoutine;
-} DRIVER_VERIFIER_THUNK_PAIRS, *PDRIVER_VERIFIER_THUNK_PAIRS;
-
-#define DRIVER_VERIFIER_SPECIAL_POOLING             0x0001
-#define DRIVER_VERIFIER_FORCE_IRQL_CHECKING         0x0002
-#define DRIVER_VERIFIER_INJECT_ALLOCATION_FAILURES  0x0004
-#define DRIVER_VERIFIER_TRACK_POOL_ALLOCATIONS      0x0008
-#define DRIVER_VERIFIER_IO_CHECKING                 0x0010
-
 /*
 ** Architecture specific structures
 */
-#define PCR_MINOR_VERSION 1
-#define PCR_MAJOR_VERSION 1
 
 #ifdef _X86_
-
-#define CONTEXT_i386	0x10000
-#define CONTEXT_i486	0x10000
-#define CONTEXT_CONTROL	(CONTEXT_i386|0x00000001L)
-#define CONTEXT_INTEGER	(CONTEXT_i386|0x00000002L)
-#define CONTEXT_SEGMENTS	(CONTEXT_i386|0x00000004L)
-#define CONTEXT_FLOATING_POINT	(CONTEXT_i386|0x00000008L)
-#define CONTEXT_DEBUG_REGISTERS	(CONTEXT_i386|0x00000010L)
-#define CONTEXT_EXTENDED_REGISTERS (CONTEXT_i386|0x00000020L)
-#define CONTEXT_FULL	(CONTEXT_CONTROL|CONTEXT_INTEGER|CONTEXT_SEGMENTS)
 
 typedef struct _KPCR_TIB {
   PVOID  ExceptionList;         /* 00 */
@@ -620,32 +388,6 @@ typedef struct _KPCR_TIB {
   PVOID  ArbitraryUserPointer;  /* 14 */
   struct _KPCR_TIB *Self;       /* 18 */
 } KPCR_TIB, *PKPCR_TIB;         /* 1C */
-
-typedef struct _KPCR {
-  KPCR_TIB  Tib;                /* 00 */
-  struct _KPCR  *Self;          /* 1C */
-  struct _KPRCB  *Prcb;         /* 20 */
-  KIRQL  Irql;                  /* 24 */
-  ULONG  IRR;                   /* 28 */
-  ULONG  IrrActive;             /* 2C */
-  ULONG  IDR;                   /* 30 */
-  PVOID  KdVersionBlock;        /* 34 */
-  PUSHORT  IDT;                 /* 38 */
-  PUSHORT  GDT;                 /* 3C */
-  struct _KTSS  *TSS;           /* 40 */
-  USHORT  MajorVersion;         /* 44 */
-  USHORT  MinorVersion;         /* 46 */
-  KAFFINITY  SetMember;         /* 48 */
-  ULONG  StallScaleFactor;      /* 4C */
-  UCHAR  SpareUnused;           /* 50 */
-  UCHAR  Number;                /* 51 */
-  UCHAR Spare0;
-  UCHAR SecondLevelCacheAssociativity;
-  ULONG VdmAlert;
-  ULONG KernelReserved[14];         // For use by the kernel
-  ULONG SecondLevelCacheSize;
-  ULONG HalReserved[16];            // For use by Hal
-} KPCR, *PKPCR;                 /* 54 */
 
 #define KeGetPcr()                      PCR
 
