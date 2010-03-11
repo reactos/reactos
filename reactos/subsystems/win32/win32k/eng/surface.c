@@ -475,27 +475,27 @@ SURFMEM_bCreateDib(IN PDEVBITMAPINFO BitmapInfo,
     switch (BitmapInfo->Format)
     {
         case BMF_1BPP:
-            //ScanLine = ((BitmapInfo->Width + 31) & ~31) / 8;
+            ScanLine = ((BitmapInfo->Width + 31) & ~31) >> 3;
             break;
 
         case BMF_4BPP:
-            //ScanLine = ((BitmapInfo->Width + 7) & ~7) / 2;
+            ScanLine = ((BitmapInfo->Width + 7) & ~7) >> 1;
             break;
 
         case BMF_8BPP:
-            //ScanLine = ((BitmapInfo->Width + 3) & ~3);
+            ScanLine = (BitmapInfo->Width + 3) & ~3;
             break;
 
         case BMF_16BPP:
-            //ScanLine = ((BitmapInfo->Width + 1) & ~1) * 2;
+            ScanLine = ((BitmapInfo->Width + 1) & ~1) << 1;
             break;
 
         case BMF_24BPP:
-            //ScanLine = ((BitmapInfo->Width * 3) + 3) & ~3;
+            ScanLine = ((BitmapInfo->Width * 3) + 3) & ~3;
             break;
 
         case BMF_32BPP:
-           // ScanLine = BitmapInfo->Width * 4;
+            ScanLine = BitmapInfo->Width << 2;
             break;
 
         case BMF_8RLE:
@@ -509,8 +509,6 @@ SURFMEM_bCreateDib(IN PDEVBITMAPINFO BitmapInfo,
             DPRINT1("Invalid bitmap format\n");
             return NULL;
     }
-
-    ScanLine = BitmapInfo->Width;
 
     /* Does the device manage its own surface? */
     if (!Bits)
@@ -604,6 +602,9 @@ SURFMEM_bCreateDib(IN PDEVBITMAPINFO BitmapInfo,
             /* For topdown, the base address starts with the bits */
             pso->pvScan0 = pso->pvBits;
             pso->lDelta = ScanLine;
+            
+            /* Hack for FreeType/Font Rendering, cannot use the Aligned ScanLine */
+            if (BitmapInfo->Format == BMF_1BPP) pso->lDelta = BitmapInfo->Width / 8;
         }
         else
         {
@@ -669,7 +670,6 @@ EngCreateBitmap(IN SIZEL Size,
      */
     if ((Bits) && (Width))
     {
-    #if 0
         switch (BitmapInfo.Format)
         {
             /* Do the conversion for each bit depth we support */
@@ -692,9 +692,6 @@ EngCreateBitmap(IN SIZEL Size,
                 BitmapInfo.Width = Width / 4;
                 break;
         }
-#endif
-        BitmapInfo.Width = Width;
-
     }
     
     /* Now create the surface */
