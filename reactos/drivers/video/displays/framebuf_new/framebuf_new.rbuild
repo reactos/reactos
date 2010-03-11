@@ -15,4 +15,5 @@
         <compilerflag>-fno-builtin</compilerflag>
 		<compilerflag>-Wno-unused-variable</compilerflag>
 	</group>
+	<pch>driver.h</pch>
 </module>
