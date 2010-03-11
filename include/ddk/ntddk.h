@@ -608,10 +608,18 @@ PVOID
   IN ULONG Signature);
 
 typedef
+PVOID
+(NTAPI *pHalGetAcpiTable)(
+  IN ULONG Signature,
+  IN PCSTR OemId OPTIONAL,
+  IN PCSTR OemTableId OPTIONAL);
+  
+typedef
 VOID
 (NTAPI *pKdCheckPowerButton)(
   VOID);
 
+#if (NTDDI_VERSION >= NTDDI_VISTA)
 typedef
 PVOID
 (NTAPI *pKdMapPhysicalMemory64)(
@@ -625,6 +633,20 @@ VOID
   IN PVOID VirtualAddress,
   IN ULONG NumberPages,
   IN BOOLEAN FlushCurrentTLB);
+#else
+typedef
+PVOID
+(NTAPI *pKdMapPhysicalMemory64)(
+  IN PHYSICAL_ADDRESS PhysicalAddress,
+  IN ULONG NumberPages);
+
+typedef
+VOID
+(NTAPI *pKdUnmapVirtualAddress)(
+  IN PVOID VirtualAddress,
+  IN ULONG NumberPages);
+#endif
+
 
 typedef
 ULONG
@@ -649,13 +671,35 @@ typedef BOOLEAN
   IN ULONG Columns,
   IN ULONG Rows);
 
-typedef struct _HAL_DISPATCH {
+typedef
+VOID
+(NTAPI *PCI_ERROR_HANDLER_CALLBACK)(
+  VOID);
+
+typedef
+VOID
+(NTAPI *pHalSetPciErrorHandlerCallback)(
+  IN PCI_ERROR_HANDLER_CALLBACK Callback);
+
+#if 1 /* Not present in WDK 7600 */
+typedef VOID
+(FASTCALL *pHalIoAssignDriveLetters)(
+  IN struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
+  IN PSTRING NtDeviceName,
+  OUT PUCHAR NtSystemPath,
+  OUT PSTRING NtSystemPathString);
+#endif
+
+typedef struct {
   ULONG Version;
   pHalQuerySystemInformation HalQuerySystemInformation;
   pHalSetSystemInformation HalSetSystemInformation;
   pHalQueryBusSlots HalQueryBusSlots;
   ULONG Spare1;
   pHalExamineMBR HalExamineMBR;
+#if 1 /* Not present in WDK 7600 */
+  pHalIoAssignDriveLetters HalIoAssignDriveLetters;
+#endif
   pHalIoReadPartitionTable HalIoReadPartitionTable;
   pHalIoSetPartitionInformation HalIoSetPartitionInformation;
   pHalIoWritePartitionTable HalIoWritePartitionTable;
@@ -672,26 +716,25 @@ typedef struct _HAL_DISPATCH {
   pHalEndOfBoot HalEndOfBoot;
   pHalMirrorVerify HalMirrorVerify;
   pHalGetAcpiTable HalGetCachedAcpiTable;
-  pHalSetPciErrorHandlerCallback HalSetPciErrorHandlerCallback;
+  pHalSetPciErrorHandlerCallback  HalSetPciErrorHandlerCallback;
 #if defined(_IA64_)
   pHalGetErrorCapList HalGetErrorCapList;
   pHalInjectError HalInjectError;
 #endif
 } HAL_DISPATCH, *PHAL_DISPATCH;
 
-#if defined(_NTDRIVER_) || defined(_NTDDK_) || defined(_NTIFS_) || defined(_NTHAL_)
+/* GCC/MSVC and WDK compatible declaration */
+extern NTKERNELAPI HAL_DISPATCH HalDispatchTable;
 
-extern PHAL_DISPATCH HalDispatchTable;
-#define HALDISPATCH HalDispatchTable
-
-#else
-
-extern HAL_DISPATCH HalDispatchTable;
+#if defined(_NTOSKRNL_) || defined(_BLDR_)
 #define HALDISPATCH (&HalDispatchTable)
-
+#else
+/* This is a WDK compatibility definition */
+#define HalDispatchTable (&HalDispatchTable)
+#define HALDISPATCH HalDispatchTable
 #endif
 
-#define HAL_DISPATCH_VERSION            3
+#define HAL_DISPATCH_VERSION            3 /* FIXME: when to use 4? */
 #define HalDispatchTableVersion         HALDISPATCH->Version
 #define HalQuerySystemInformation       HALDISPATCH->HalQuerySystemInformation
 #define HalSetSystemInformation         HALDISPATCH->HalSetSystemInformation
@@ -1647,32 +1690,6 @@ typedef struct _PCIBUSDATA {
   PCI_SLOT_NUMBER ParentSlot;
   PVOID Reserved[4];
 } PCIBUSDATA, *PPCIBUSDATA;
-
-typedef
-PVOID
-(NTAPI *pHalGetAcpiTable)(
-  IN ULONG Signature,
-  IN PCSTR OemId OPTIONAL,
-  IN PCSTR OemTableId OPTIONAL);
-
-typedef
-VOID
-(NTAPI *PCI_ERROR_HANDLER_CALLBACK)(
-  VOID);
-
-typedef
-VOID
-(NTAPI *pHalSetPciErrorHandlerCallback)(
-  IN PCI_ERROR_HANDLER_CALLBACK Callback);
-
-#if 1 /* Not present in WDK 7600 */
-typedef VOID
-(FASTCALL *pHalIoAssignDriveLetters)(
-  IN struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
-  IN PSTRING NtDeviceName,
-  OUT PUCHAR NtSystemPath,
-  OUT PSTRING NtSystemPathString);
-#endif
 
 /* Hardware Abstraction Layer Functions */
 
