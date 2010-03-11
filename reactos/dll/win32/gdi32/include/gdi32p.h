@@ -233,10 +233,6 @@ ConvertBitmapInfo(
     BOOL FollowedByData
 );
 
-DEVMODEW *
-NTAPI
-GdiConvertToDevmodeW(DEVMODEA *dm);
-
 DWORD
 WINAPI
 GetAndSetDCDWord( HDC, INT, DWORD, DWORD, DWORD, DWORD );
