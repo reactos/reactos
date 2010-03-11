@@ -3420,7 +3420,8 @@ static const int CY_Divisors[5] = { CY_MULTIPLIER/10000, CY_MULTIPLIER/1000,
  */
 HRESULT WINAPI VarCyFromUI1(BYTE bIn, CY* pCyOut)
 {
-  return VarCyFromR8(bIn, pCyOut);
+    pCyOut->int64 = (ULONG64)bIn * CY_MULTIPLIER;
+    return S_OK;
 }
 
 /************************************************************************
@@ -3440,7 +3441,8 @@ HRESULT WINAPI VarCyFromUI1(BYTE bIn, CY* pCyOut)
  */
 HRESULT WINAPI VarCyFromI2(SHORT sIn, CY* pCyOut)
 {
-  return VarCyFromR8(sIn, pCyOut);
+    pCyOut->int64 = (LONG64)sIn * CY_MULTIPLIER;
+    return S_OK;
 }
 
 /************************************************************************
@@ -3460,7 +3462,8 @@ HRESULT WINAPI VarCyFromI2(SHORT sIn, CY* pCyOut)
  */
 HRESULT WINAPI VarCyFromI4(LONG lIn, CY* pCyOut)
 {
-  return VarCyFromR8(lIn, pCyOut);
+    pCyOut->int64 = (LONG64)lIn * CY_MULTIPLIER;
+    return S_OK;
 }
 
 /************************************************************************
@@ -3617,7 +3620,8 @@ HRESULT WINAPI VarCyFromDisp(IDispatch* pdispIn, LCID lcid, CY* pCyOut)
  */
 HRESULT WINAPI VarCyFromBool(VARIANT_BOOL boolIn, CY* pCyOut)
 {
-  return VarCyFromR8(boolIn, pCyOut);
+    pCyOut->int64 = (LONG64)boolIn * CY_MULTIPLIER;
+    return S_OK;
 }
 
 /************************************************************************
@@ -3637,7 +3641,8 @@ HRESULT WINAPI VarCyFromBool(VARIANT_BOOL boolIn, CY* pCyOut)
  */
 HRESULT WINAPI VarCyFromI1(signed char cIn, CY* pCyOut)
 {
-  return VarCyFromR8(cIn, pCyOut);
+    pCyOut->int64 = (LONG64)cIn * CY_MULTIPLIER;
+    return S_OK;
 }
 
 /************************************************************************
@@ -3657,7 +3662,8 @@ HRESULT WINAPI VarCyFromI1(signed char cIn, CY* pCyOut)
  */
 HRESULT WINAPI VarCyFromUI2(USHORT usIn, CY* pCyOut)
 {
-  return VarCyFromR8(usIn, pCyOut);
+    pCyOut->int64 = (ULONG64)usIn * CY_MULTIPLIER;
+    return S_OK;
 }
 
 /************************************************************************
@@ -3677,7 +3683,8 @@ HRESULT WINAPI VarCyFromUI2(USHORT usIn, CY* pCyOut)
  */
 HRESULT WINAPI VarCyFromUI4(ULONG ulIn, CY* pCyOut)
 {
-  return VarCyFromR8(ulIn, pCyOut);
+    pCyOut->int64 = (ULONG64)ulIn * CY_MULTIPLIER;
+    return S_OK;
 }
 
 /************************************************************************
@@ -3757,7 +3764,9 @@ HRESULT WINAPI VarCyFromI8(LONG64 llIn, CY* pCyOut)
  */
 HRESULT WINAPI VarCyFromUI8(ULONG64 ullIn, CY* pCyOut)
 {
-  return VarCyFromR8(ullIn, pCyOut);
+    if (ullIn >= (I8_MAX/CY_MULTIPLIER)) return DISP_E_OVERFLOW;
+    pCyOut->int64 = ullIn * CY_MULTIPLIER;
+    return S_OK;
 }
 
 /************************************************************************
@@ -7598,6 +7607,14 @@ HRESULT WINAPI VarDateFromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, DATE* pd
       break;
 
     case 0x3: /* TTT TTTDD TTTDDD */
+      if (iDate && dp.dwCount == 3)
+        {
+          /* DDD */
+          if ((dp.dwFlags[0] & (DP_AM|DP_PM)) || (dp.dwFlags[1] & (DP_AM|DP_PM)) ||
+              (dp.dwFlags[2] & (DP_AM|DP_PM)))
+            hRet = DISP_E_TYPEMISMATCH;
+          break;
+        }
       if (dp.dwCount > 4 &&
           ((dp.dwFlags[3] & (DP_AM|DP_PM)) || (dp.dwFlags[4] & (DP_AM|DP_PM)) ||
           (dp.dwFlags[5] & (DP_AM|DP_PM))))
@@ -7690,6 +7707,13 @@ HRESULT WINAPI VarDateFromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, DATE* pd
       dp.dwCount -= 3;
       break;
 
+    case 0x1B: /* localized DDDTTT */
+      if (!iDate)
+        {
+          hRet = DISP_E_TYPEMISMATCH;
+          break;
+        }
+      /* .. fall through .. */
     case 0x18: /* DDDTTT */
       if ((dp.dwFlags[0] & (DP_AM|DP_PM)) || (dp.dwFlags[1] & (DP_AM|DP_PM)) ||
           (dp.dwFlags[2] & (DP_AM|DP_PM)))

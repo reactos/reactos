@@ -123,7 +123,7 @@ reactos/dll/win32/odbc32          # Out of sync. Depends on port of Linux ODBC.
 reactos/dll/win32/odbccp32        # Autosync
 reactos/dll/win32/ole32           # Autosync
 reactos/dll/win32/oleacc          # Autosync
-reactos/dll/win32/oleaut32        # Autosync ??
+reactos/dll/win32/oleaut32        # Autosync
 reactos/dll/win32/olecli32        # Autosync
 reactos/dll/win32/oledlg          # Autosync
 reactos/dll/win32/olepro32        # Autosync

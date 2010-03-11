@@ -18,14 +18,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "resource.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
-  IDS_TRUE  "Правда"
-  IDS_FALSE "Ложь"
-  IDS_YES   "Да"
-  IDS_NO    "Нет"
-  IDS_ON    "Включено"
-  IDS_OFF   "Выключено"
+  IDS_TRUE  "РџСЂР°РІРґР°"
+  IDS_FALSE "Р›РѕР¶СЊ"
+  IDS_YES   "Р”Р°"
+  IDS_NO    "РќРµС‚"
+  IDS_ON    "Р’РєР»СЋС‡РµРЅРѕ"
+  IDS_OFF   "Р’С‹РєР»СЋС‡РµРЅРѕ"
 }

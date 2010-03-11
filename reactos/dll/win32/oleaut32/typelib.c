@@ -552,7 +552,9 @@ HRESULT WINAPI RegisterTypeLib(
         LPOLESTR doc;
 
         /* Set the human-readable name of the typelib */
-        if (SUCCEEDED(ITypeLib_GetDocumentation(ptlib, -1, NULL, &doc, NULL, NULL)))
+        if (FAILED(ITypeLib_GetDocumentation(ptlib, -1, NULL, &doc, NULL, NULL)))
+            res = E_FAIL;
+        else if (doc)
         {
             if (RegSetValueExW(key, NULL, 0, REG_SZ,
                 (BYTE *)doc, (lstrlenW(doc)+1) * sizeof(OLECHAR)) != ERROR_SUCCESS)
@@ -560,8 +562,6 @@ HRESULT WINAPI RegisterTypeLib(
 
             SysFreeString(doc);
         }
-        else
-            res = E_FAIL;
 
         /* Make up the name of the typelib path subkey */
         if (!get_lcid_subkey( attr->lcid, attr->syskind, tmp )) res = E_FAIL;
@@ -1013,7 +1013,7 @@ typedef struct tagTLBFuncDesc
     int helpcontext;
     int HelpStringContext;
     BSTR HelpString;
-    BSTR Entry;            /* if its Hiword==0, it numeric; -1 is not present*/
+    BSTR Entry;            /* if IS_INTRESOURCE true, it's numeric; if -1 it isn't present */
     int ctCustData;
     TLBCustData * pCustData;        /* linked list to cust data; */
     struct tagTLBFuncDesc * next;
@@ -1048,7 +1048,7 @@ typedef struct tagITypeInfoImpl
     const ITypeInfo2Vtbl *lpVtbl;
     const ITypeCompVtbl  *lpVtblTypeComp;
     LONG ref;
-    BOOL no_free_data; /* don't free data structures */
+    BOOL not_attached_to_typelib;
     TYPEATTR TypeAttr ;         /* _lots_ of type information. */
     ITypeLibImpl * pTypeLib;        /* back pointer to typelib */
     int index;                  /* index in this typelib; */
@@ -1085,6 +1085,7 @@ static const ITypeInfo2Vtbl tinfvt;
 static const ITypeCompVtbl  tcompvt;
 
 static ITypeInfo2 * ITypeInfo_Constructor(void);
+static void ITypeInfo_fnDestroy(ITypeInfoImpl *This);
 
 typedef struct tagTLBContext
 {
@@ -1898,8 +1899,8 @@ MSFT_DoFuncs(TLBContext*     pcx,
                 {
                     if ( pFuncRec->FKCCIC & 0x2000 )
                     {
-                       if (HIWORD(pFuncRec->OptAttr[2]) != 0)
-                           ERR("ordinal 0x%08x invalid, HIWORD != 0\n", pFuncRec->OptAttr[2]);
+                       if (!IS_INTRESOURCE(pFuncRec->OptAttr[2]))
+                           ERR("ordinal 0x%08x invalid, IS_INTRESOURCE is false\n", pFuncRec->OptAttr[2]);
                        (*pptfd)->Entry = (BSTR)pFuncRec->OptAttr[2];
                     }
                     else
@@ -2492,7 +2493,7 @@ static BOOL find_ne_resource( HFILE lzfd, LPCSTR typeid, LPCSTR resid,
     /* Find resource */
     typeInfo = (NE_TYPEINFO *)(resTab + 2);
 
-    if (HIWORD(typeid) != 0)  /* named type */
+    if (!IS_INTRESOURCE(typeid))  /* named type */
     {
         BYTE len = strlen( typeid );
         while (typeInfo->type_id)
@@ -2523,7 +2524,7 @@ static BOOL find_ne_resource( HFILE lzfd, LPCSTR typeid, LPCSTR resid,
  found_type:
     nameInfo = (NE_NAMEINFO *)(typeInfo + 1);
 
-    if (HIWORD(resid) != 0)  /* named resource */
+    if (!IS_INTRESOURCE(resid))  /* named resource */
     {
         BYTE len = strlen( resid );
         for (count = typeInfo->count; count > 0; count--, nameInfo++)
@@ -2947,7 +2948,7 @@ static ITypeLib2* ITypeLib2_Constructor_MSFT(LPVOID pLib, DWORD dwTLBLength)
                 if(td[1]<0)
                     pTypeLibImpl->pTypeDesc[i].u.lpadesc->tdescElem.vt = td[0] & VT_TYPEMASK;
                 else
-                    pTypeLibImpl->pTypeDesc[i].u.lpadesc->tdescElem = stndTypeDesc[td[0]/8];
+                    pTypeLibImpl->pTypeDesc[i].u.lpadesc->tdescElem = cx.pLibInfo->pTypeDesc[td[0]/(2*sizeof(INT))];
 
                 pTypeLibImpl->pTypeDesc[i].u.lpadesc->cDims = td[2];
 
@@ -2991,6 +2992,7 @@ static ITypeLib2* ITypeLib2_Constructor_MSFT(LPVOID pLib, DWORD dwTLBLength)
             name = TLB_Alloc(size+1);
             MSFT_Read(name, size, &cx, DO_NOT_SEEK);
             (*ppImpLib)->name = TLB_MultiByteToBSTR(name);
+            TLB_Free(name);
 
             MSFT_ReadGuid(&(*ppImpLib)->guid, oGuid, &cx);
             offset = (offset + sizeof(INT) + sizeof(DWORD) + sizeof(LCID) + sizeof(UINT16) + size + 3) & ~3;
@@ -3676,6 +3678,9 @@ static void SLTG_ProcessDispatch(char *pBlk, ITypeInfoImpl *pTI,
   if (pTITail->funcs_off != 0xffff)
     SLTG_DoFuncs(pBlk, pBlk + pTITail->funcs_off, pTI, pTITail->cFuncs, pNameTable, ref_lookup);
 
+  if (pTITail->impls_off != 0xffff)
+    SLTG_DoImpls(pBlk + pTITail->impls_off, pTI, FALSE, ref_lookup);
+
   /* this is necessary to cope with MSFT typelibs that set cFuncs to the number
    * of dispinterface functions including the IDispatch ones, so
    * ITypeInfo::GetFuncDesc takes the real value for cFuncs from cbSizeVft */
@@ -3935,6 +3940,9 @@ static ITypeLib2* ITypeLib2_Constructor_SLTG(LPVOID pLib, DWORD dwTLBLength)
       (*ppTypeInfoImpl)->TypeAttr.wTypeFlags =
 	(pTIHeader->typeflags1 >> 3) | (pTIHeader->typeflags2 << 5);
 
+      if((*ppTypeInfoImpl)->TypeAttr.wTypeFlags & TYPEFLAG_FDUAL)
+	(*ppTypeInfoImpl)->TypeAttr.typekind = TKIND_DISPATCH;
+
       if((pTIHeader->typeflags1 & 7) != 2)
 	FIXME_(typelib)("typeflags1 = %02x\n", pTIHeader->typeflags1);
       if(pTIHeader->typeflags3 != 2)
@@ -4083,6 +4091,7 @@ static ULONG WINAPI ITypeLib2_fnRelease( ITypeLib2 *iface)
       TLBRefType *ref_type;
       void *cursor2;
       int i;
+      ITypeInfoImpl *pTI, *pTINext;
 
       /* remove cache entry */
       if(This->path)
@@ -4139,8 +4148,11 @@ static ULONG WINAPI ITypeLib2_fnRelease( ITypeLib2 *iface)
           TLB_Free(ref_type);
       }
 
-      if (This->pTypeInfo) /* can be NULL */
-      	  ITypeInfo_Release((ITypeInfo*) This->pTypeInfo);
+      for (pTI = This->pTypeInfo; pTI; pTI = pTINext)
+      {
+          pTINext = pTI->next;
+          ITypeInfo_fnDestroy(pTI);
+      }
       HeapFree(GetProcessHeap(),0,This);
       return 0;
     }
@@ -4835,8 +4847,29 @@ static HRESULT WINAPI ITypeLibComp_fnBindType(
     ITypeInfo ** ppTInfo,
     ITypeComp ** ppTComp)
 {
-    FIXME("(%s, %x, %p, %p): stub\n", debugstr_w(szName), lHash, ppTInfo, ppTComp);
-    return E_NOTIMPL;
+    ITypeLibImpl *This = impl_from_ITypeComp(iface);
+    ITypeInfoImpl *pTypeInfo;
+
+    TRACE("(%s, %x, %p, %p)\n", debugstr_w(szName), lHash, ppTInfo, ppTComp);
+
+    for (pTypeInfo = This->pTypeInfo; pTypeInfo; pTypeInfo = pTypeInfo->next)
+    {
+        /* FIXME: should use lHash to do the search */
+        if (pTypeInfo->Name && !strcmpW(pTypeInfo->Name, szName))
+        {
+            TRACE("returning %p\n", pTypeInfo);
+            *ppTInfo = (ITypeInfo *)&pTypeInfo->lpVtbl;
+            ITypeInfo_AddRef(*ppTInfo);
+            *ppTComp = (ITypeComp *)&pTypeInfo->lpVtblTypeComp;
+            ITypeComp_AddRef(*ppTComp);
+            return S_OK;
+        }
+    }
+
+    TRACE("not found\n");
+    *ppTInfo = NULL;
+    *ppTComp = NULL;
+    return S_OK;
 }
 
 static const ITypeCompVtbl tlbtcvt =
@@ -4860,7 +4893,7 @@ static ITypeInfo2 * ITypeInfo_Constructor(void)
     {
       pTypeInfoImpl->lpVtbl = &tinfvt;
       pTypeInfoImpl->lpVtblTypeComp = &tcompvt;
-      pTypeInfoImpl->ref=1;
+      pTypeInfoImpl->ref = 0;
       pTypeInfoImpl->hreftype = -1;
       pTypeInfoImpl->TypeAttr.memidConstructor = MEMBERID_NIL;
       pTypeInfoImpl->TypeAttr.memidDestructor = MEMBERID_NIL;
@@ -4902,10 +4935,76 @@ static ULONG WINAPI ITypeInfo_fnAddRef( ITypeInfo2 *iface)
     ITypeInfoImpl *This = (ITypeInfoImpl *)iface;
     ULONG ref = InterlockedIncrement(&This->ref);
 
-    ITypeLib2_AddRef((ITypeLib2*)This->pTypeLib);
-
     TRACE("(%p)->ref is %u\n",This, ref);
+
+    if (ref == 1 /* incremented from 0 */)
+        ITypeLib2_AddRef((ITypeLib2*)This->pTypeLib);
+
     return ref;
+}
+
+static void ITypeInfo_fnDestroy(ITypeInfoImpl *This)
+{
+    TLBFuncDesc *pFInfo, *pFInfoNext;
+    TLBVarDesc *pVInfo, *pVInfoNext;
+    TLBImplType *pImpl, *pImplNext;
+
+    TRACE("destroying ITypeInfo(%p)\n",This);
+
+    SysFreeString(This->Name);
+    This->Name = NULL;
+
+    SysFreeString(This->DocString);
+    This->DocString = NULL;
+
+    SysFreeString(This->DllName);
+    This->DllName = NULL;
+
+    for (pFInfo = This->funclist; pFInfo; pFInfo = pFInfoNext)
+    {
+        INT i;
+        for(i = 0;i < pFInfo->funcdesc.cParams; i++)
+        {
+            ELEMDESC *elemdesc = &pFInfo->funcdesc.lprgelemdescParam[i];
+            if (elemdesc->u.paramdesc.wParamFlags & PARAMFLAG_FHASDEFAULT)
+            {
+                VariantClear(&elemdesc->u.paramdesc.pparamdescex->varDefaultValue);
+                TLB_Free(elemdesc->u.paramdesc.pparamdescex);
+            }
+            SysFreeString(pFInfo->pParamDesc[i].Name);
+        }
+        TLB_Free(pFInfo->funcdesc.lprgelemdescParam);
+        TLB_Free(pFInfo->pParamDesc);
+        TLB_FreeCustData(pFInfo->pCustData);
+        if (!IS_INTRESOURCE(pFInfo->Entry) && pFInfo->Entry != (BSTR)-1)
+            SysFreeString(pFInfo->Entry);
+        SysFreeString(pFInfo->HelpString);
+        SysFreeString(pFInfo->Name);
+
+        pFInfoNext = pFInfo->next;
+        TLB_Free(pFInfo);
+    }
+    for (pVInfo = This->varlist; pVInfo; pVInfo = pVInfoNext)
+    {
+        if (pVInfo->vardesc.varkind == VAR_CONST)
+        {
+            VariantClear(pVInfo->vardesc.u.lpvarValue);
+            TLB_Free(pVInfo->vardesc.u.lpvarValue);
+        }
+        TLB_FreeCustData(pVInfo->pCustData);
+        SysFreeString(pVInfo->Name);
+        pVInfoNext = pVInfo->next;
+        TLB_Free(pVInfo);
+    }
+    for (pImpl = This->impltypelist; pImpl; pImpl = pImplNext)
+    {
+        TLB_FreeCustData(pImpl->pCustData);
+        pImplNext = pImpl->next;
+        TLB_Free(pImpl);
+    }
+    TLB_FreeCustData(This->pCustData);
+
+    HeapFree(GetProcessHeap(), 0, This);
 }
 
 /* ITypeInfo::Release
@@ -4917,82 +5016,15 @@ static ULONG WINAPI ITypeInfo_fnRelease(ITypeInfo2 *iface)
 
     TRACE("(%p)->(%u)\n",This, ref);
 
-    if (ref)   {
-      /* We don't release ITypeLib when ref=0 because
-         it means that function is called by ITypeLib2_Release */
-      ITypeLib2_Release((ITypeLib2*)This->pTypeLib);
-    } else   {
-      TLBFuncDesc *pFInfo, *pFInfoNext;
-      TLBVarDesc *pVInfo, *pVInfoNext;
-      TLBImplType *pImpl, *pImplNext;
-
-      TRACE("destroying ITypeInfo(%p)\n",This);
-
-      if (This->no_free_data)
-          goto finish_free;
-
-      SysFreeString(This->Name);
-      This->Name = NULL;
-
-      SysFreeString(This->DocString);
-      This->DocString = NULL;
-
-      SysFreeString(This->DllName);
-      This->DllName = NULL;
-
-      for (pFInfo = This->funclist; pFInfo; pFInfo = pFInfoNext)
-      {
-          INT i;
-          for(i = 0;i < pFInfo->funcdesc.cParams; i++)
-          {
-              ELEMDESC *elemdesc = &pFInfo->funcdesc.lprgelemdescParam[i];
-              if (elemdesc->u.paramdesc.wParamFlags & PARAMFLAG_FHASDEFAULT)
-              {
-                  VariantClear(&elemdesc->u.paramdesc.pparamdescex->varDefaultValue);
-                  TLB_Free(elemdesc->u.paramdesc.pparamdescex);
-              }
-              SysFreeString(pFInfo->pParamDesc[i].Name);
-          }
-          TLB_Free(pFInfo->funcdesc.lprgelemdescParam);
-          TLB_Free(pFInfo->pParamDesc);
-          TLB_FreeCustData(pFInfo->pCustData);
-          if (HIWORD(pFInfo->Entry) != 0 && pFInfo->Entry != (BSTR)-1) 
-              SysFreeString(pFInfo->Entry);
-          SysFreeString(pFInfo->HelpString);
-          SysFreeString(pFInfo->Name);
-
-          pFInfoNext = pFInfo->next;
-          TLB_Free(pFInfo);
-      }
-      for (pVInfo = This->varlist; pVInfo; pVInfo = pVInfoNext)
-      {
-          if (pVInfo->vardesc.varkind == VAR_CONST)
-          {
-              VariantClear(pVInfo->vardesc.u.lpvarValue);
-              TLB_Free(pVInfo->vardesc.u.lpvarValue);
-          }
-          TLB_FreeCustData(pVInfo->pCustData);
-          SysFreeString(pVInfo->Name);
-          pVInfoNext = pVInfo->next;
-          TLB_Free(pVInfo);
-      }
-      for(pImpl = This->impltypelist; pImpl; pImpl = pImplNext)
-      {
-          TLB_FreeCustData(pImpl->pCustData);
-          pImplNext = pImpl->next;
-          TLB_Free(pImpl);
-      }
-      TLB_FreeCustData(This->pCustData);
-
-finish_free:
-      if (This->next)
-      {
-        ITypeInfo_Release((ITypeInfo*)This->next);
-      }
-
-      HeapFree(GetProcessHeap(),0,This);
-      return 0;
+    if (!ref)
+    {
+        BOOL not_attached_to_typelib = This->not_attached_to_typelib;
+        ITypeLib2_Release((ITypeLib2*)This->pTypeLib);
+        if (not_attached_to_typelib)
+            HeapFree(GetProcessHeap(), 0, This);
+        /* otherwise This will be freed when typelib is freed */
     }
+
     return ref;
 }
 
@@ -5345,7 +5377,7 @@ static HRESULT TLB_AllocAndInitVarDesc( const VARDESC *src, VARDESC **dest_ptr )
         hr = VariantCopy(dest->u.lpvarValue, src->u.lpvarValue);
         if (FAILED(hr))
         {
-            SysFreeString((BSTR)dest_ptr);
+            SysFreeString((BSTR)dest);
             return hr;
         }
     }
@@ -5476,8 +5508,7 @@ static HRESULT WINAPI ITypeInfo_fnGetRefTypeOfImplType(
       */
       if( This->TypeAttr.typekind != TKIND_DISPATCH) return E_INVALIDARG;
 
-      if (This->TypeAttr.wTypeFlags & TYPEFLAG_FDISPATCHABLE &&
-          This->TypeAttr.wTypeFlags & TYPEFLAG_FDUAL )
+      if (This->TypeAttr.wTypeFlags & TYPEFLAG_FDUAL)
       {
         *pRefType = -1;
       }
@@ -5600,6 +5631,41 @@ static HRESULT WINAPI ITypeInfo_fnGetIDsOfNames( ITypeInfo2 *iface,
     return DISP_E_UNKNOWNNAME;
 }
 
+
+#ifdef __i386__
+
+extern DWORD CDECL call_method( void *func, int nb_args, const DWORD *args );
+__ASM_GLOBAL_FUNC( call_method,
+                   "pushl %ebp\n\t"
+                   __ASM_CFI(".cfi_adjust_cfa_offset 4\n\t")
+                   __ASM_CFI(".cfi_rel_offset %ebp,0\n\t")
+                   "movl %esp,%ebp\n\t"
+                   __ASM_CFI(".cfi_def_cfa_register %ebp\n\t")
+                   "pushl %esi\n\t"
+                  __ASM_CFI(".cfi_rel_offset %esi,-4\n\t")
+                   "pushl %edi\n\t"
+                  __ASM_CFI(".cfi_rel_offset %edi,-8\n\t")
+                   "movl 12(%ebp),%edx\n\t"
+                   "shll $2,%edx\n\t"
+                   "jz 1f\n\t"
+                   "subl %edx,%esp\n\t"
+                   "andl $~15,%esp\n\t"
+                   "movl 12(%ebp),%ecx\n\t"
+                   "movl 16(%ebp),%esi\n\t"
+                   "movl %esp,%edi\n\t"
+                   "cld\n\t"
+                   "rep; movsl\n"
+                   "1:\tcall *8(%ebp)\n\t"
+                   "leal -8(%ebp),%esp\n\t"
+                   "popl %edi\n\t"
+                   __ASM_CFI(".cfi_same_value %edi\n\t")
+                   "popl %esi\n\t"
+                   __ASM_CFI(".cfi_same_value %esi\n\t")
+                   "popl %ebp\n\t"
+                   __ASM_CFI(".cfi_def_cfa %esp,4\n\t")
+                   __ASM_CFI(".cfi_same_value %ebp\n\t")
+                   "ret" )
+
 /* ITypeInfo::Invoke
  *
  * Invokes a method, or accesses a property of an object, that implements the
@@ -5618,106 +5684,8 @@ _invoke(FARPROC func,CALLCONV callconv, int nrargs, DWORD *args) {
 
     switch (callconv) {
     case CC_STDCALL:
-
-	switch (nrargs) {
-	case 0:
-		res = func();
-		break;
-	case 1:
-		res = func(args[0]);
-		break;
-	case 2:
-		res = func(args[0],args[1]);
-		break;
-	case 3:
-		res = func(args[0],args[1],args[2]);
-		break;
-	case 4:
-		res = func(args[0],args[1],args[2],args[3]);
-		break;
-	case 5:
-		res = func(args[0],args[1],args[2],args[3],args[4]);
-		break;
-	case 6:
-		res = func(args[0],args[1],args[2],args[3],args[4],args[5]);
-		break;
-	case 7:
-		res = func(args[0],args[1],args[2],args[3],args[4],args[5],args[6]);
-		break;
-	case 8:
-		res = func(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7]);
-		break;
-	case 9:
-		res = func(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7],args[8]);
-		break;
-	case 10:
-		res = func(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7],args[8],args[9]);
-		break;
-	case 11:
-		res = func(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7],args[8],args[9],args[10]);
-		break;
-	case 12:
-		res = func(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7],args[8],args[9],args[10],args[11]);
-		break;
-	case 13:
-		res = func(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7],args[8],args[9],args[10],args[11],args[12]);
-		break;
-	case 14:
-		res = func(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7],args[8],args[9],args[10],args[11],args[12],args[13]);
-		break;
-	case 15:
-		res = func(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7],args[8],args[9],args[10],args[11],args[12],args[13],args[14]);
-		break;
-	case 16:
-		res = func(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7],args[8],args[9],args[10],args[11],args[12],args[13],args[14],args[15]);
-		break;
-	case 17:
-		res = func(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7],args[8],args[9],args[10],args[11],args[12],args[13],args[14],args[15],args[16]);
-		break;
-	case 18:
-		res = func(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7],args[8],args[9],args[10],args[11],args[12],args[13],args[14],args[15],args[16],args[17]);
-		break;
-	case 19:
-		res = func(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7],args[8],args[9],args[10],args[11],args[12],args[13],args[14],args[15],args[16],args[17],args[18]);
-		break;
-	case 20:
-		res = func(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7],args[8],args[9],args[10],args[11],args[12],args[13],args[14],args[15],args[16],args[17],args[18],args[19]);
-		break;
-	case 21:
-		res = func(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7],args[8],args[9],args[10],args[11],args[12],args[13],args[14],args[15],args[16],args[17],args[18],args[19],args[20]);
-		break;
-	case 22:
-		res = func(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7],args[8],args[9],args[10],args[11],args[12],args[13],args[14],args[15],args[16],args[17],args[18],args[19],args[20],args[21]);
-		break;
-	case 23:
-		res = func(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7],args[8],args[9],args[10],args[11],args[12],args[13],args[14],args[15],args[16],args[17],args[18],args[19],args[20],args[21],args[22]);
-		break;
-	case 24:
-                res = func(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7],args[8],args[9],args[10],args[11],args[12],args[13],args[14],args[15],args[16],args[17],args[18],args[19],args[20],args[21],args[22],args[23]);
-                break;
-	case 25:
-                res = func(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7],args[8],args[9],args[10],args[11],args[12],args[13],args[14],args[15],args[16],args[17],args[18],args[19],args[20],args[21],args[22],args[23],args[24]);
-                break;
-	case 26:
-                res = func(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7],args[8],args[9],args[10],args[11],args[12],args[13],args[14],args[15],args[16],args[17],args[18],args[19],args[20],args[21],args[22],args[23],args[24],args[25]);
-                break;
-	case 27:
-                res = func(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7],args[8],args[9],args[10],args[11],args[12],args[13],args[14],args[15],args[16],args[17],args[18],args[19],args[20],args[21],args[22],args[23],args[24],args[25],args[26]);
-                break;
-	case 28:
-                res = func(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7],args[8],args[9],args[10],args[11],args[12],args[13],args[14],args[15],args[16],args[17],args[18],args[19],args[20],args[21],args[22],args[23],args[24],args[25],args[26],args[27]);
-                break;
-	case 29:
-                res = func(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7],args[8],args[9],args[10],args[11],args[12],args[13],args[14],args[15],args[16],args[17],args[18],args[19],args[20],args[21],args[22],args[23],args[24],args[25],args[26],args[27],args[28]);
-                break;
-	case 30:
-                res = func(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7],args[8],args[9],args[10],args[11],args[12],args[13],args[14],args[15],args[16],args[17],args[18],args[19],args[20],args[21],args[22],args[23],args[24],args[25],args[26],args[27],args[28],args[29]);
-                break;
-	default:
-		FIXME("unsupported number of arguments %d in stdcall\n",nrargs);
-		res = -1;
-		break;
-	}
+    case CC_CDECL:
+        res = call_method( func, nrargs, args );
 	break;
     default:
 	FIXME("unsupported calling convention %d\n",callconv);
@@ -5754,6 +5722,7 @@ static int _dispargsize(VARTYPE vt)
 	return 1;
     }
 }
+#endif /* __i386__ */
 
 static HRESULT userdefined_to_variantvt(ITypeInfo *tinfo, const TYPEDESC *tdesc, VARTYPE *vt)
 {
@@ -5933,6 +5902,7 @@ DispCallFunc(
     void* pvInstance, ULONG_PTR oVft, CALLCONV cc, VARTYPE vtReturn, UINT cActuals,
     VARTYPE* prgvt, VARIANTARG** prgpvarg, VARIANT* pvargResult)
 {
+#ifdef __i386__
     int argsize, argspos;
     UINT i;
     DWORD *args;
@@ -5988,9 +5958,13 @@ DispCallFunc(
         V_VT(pvargResult) = vtReturn;
         V_UI4(pvargResult) = hres;
     }
-
     HeapFree(GetProcessHeap(),0,args);
     return S_OK;
+#else
+    FIXME( "(%p, %ld, %d, %d, %d, %p, %p, %p (vt=%d)): not implemented for this CPU\n",
+           pvInstance, oVft, cc, vtReturn, cActuals, prgvt, prgpvarg, pvargResult, V_VT(pvargResult));
+    return E_NOTIMPL;
+#endif
 }
 
 #define INVBUF_ELEMENT_SIZE \
@@ -6177,7 +6151,8 @@ static HRESULT WINAPI ITypeInfo_fnInvoke(
                         else
                         {
                             VARIANTARG *missing_arg = INVBUF_GET_MISSING_ARG_ARRAY(buffer, func_desc->cParams);
-                            hres = VariantCopy(&missing_arg[i], src_arg);
+                            if (wParamFlags & PARAMFLAG_FIN)
+                                hres = VariantCopy(&missing_arg[i], src_arg);
                             V_VARIANTREF(&rgvarg[i]) = &missing_arg[i];
                         }
                         V_VT(&rgvarg[i]) = rgvt[i];
@@ -6215,8 +6190,10 @@ static HRESULT WINAPI ITypeInfo_fnInvoke(
                     else if ((rgvt[i] & VT_BYREF) && !V_ISBYREF(src_arg))
                     {
                         VARIANTARG *missing_arg = INVBUF_GET_MISSING_ARG_ARRAY(buffer, func_desc->cParams);
-                        V_VT(&missing_arg[i]) = V_VT(src_arg);
-                        hres = VariantChangeType(&missing_arg[i], src_arg, 0, rgvt[i] & ~VT_BYREF);
+                        if (wParamFlags & PARAMFLAG_FIN)
+                            hres = VariantChangeType(&missing_arg[i], src_arg, 0, rgvt[i] & ~VT_BYREF);
+                        else
+                            V_VT(&missing_arg[i]) = rgvt[i] & ~VT_BYREF;
                         V_BYREF(&rgvarg[i]) = &V_NONE(&missing_arg[i]);
                         V_VT(&rgvarg[i]) = rgvt[i];
                     }
@@ -6299,6 +6276,7 @@ static HRESULT WINAPI ITypeInfo_fnInvoke(
             for (i = 0; i < func_desc->cParams; i++)
             {
                 USHORT wParamFlags = func_desc->lprgelemdescParam[i].u.paramdesc.wParamFlags;
+                VARIANTARG *missing_arg = INVBUF_GET_MISSING_ARG_ARRAY(buffer, func_desc->cParams);
 
                 if (wParamFlags & PARAMFLAG_FLCID)
                     continue;
@@ -6317,33 +6295,23 @@ static HRESULT WINAPI ITypeInfo_fnInvoke(
                         hres = VariantCopyInd(pVarResult, prgpvarg[i]);
                     }
 
-                    /* free data stored in varresult. Note that
-                     * VariantClear doesn't do what we want because we are
-                     * working with byref types. */
-                    /* FIXME: clear safearrays, bstrs, records and
-                     * variants here too */
-                    if ((V_VT(prgpvarg[i]) == (VT_UNKNOWN | VT_BYREF)) ||
-                         (V_VT(prgpvarg[i]) == (VT_DISPATCH | VT_BYREF)))
-                    {
-                        if(*V_UNKNOWNREF(prgpvarg[i]))
-                            IUnknown_Release(*V_UNKNOWNREF(prgpvarg[i]));
-                    }
-                    break;
+                    VARIANT_ClearInd(prgpvarg[i]);
                 }
                 else if (vargs_converted < pDispParams->cArgs)
                 {
+                    VARIANTARG *arg = &pDispParams->rgvarg[pDispParams->cArgs - 1 - vargs_converted];
                     if (wParamFlags & PARAMFLAG_FOUT)
                     {
-                        VARIANTARG *arg = &pDispParams->rgvarg[pDispParams->cArgs - 1 - vargs_converted];
-
-                        if ((rgvt[i] == VT_BYREF) && (V_VT(arg) != VT_BYREF))
+                        if ((rgvt[i] & VT_BYREF) && !(V_VT(arg) & VT_BYREF))
+                        {
                             hres = VariantChangeType(arg, &rgvarg[i], 0, V_VT(arg));
 
-                        if (FAILED(hres))
-                        {
-                            ERR("failed to convert param %d to vt %d\n", i,
-                                V_VT(&pDispParams->rgvarg[pDispParams->cArgs - 1 - vargs_converted]));
-                            break;
+                            if (FAILED(hres))
+                            {
+                                ERR("failed to convert param %d to vt %d\n", i,
+                                    V_VT(&pDispParams->rgvarg[pDispParams->cArgs - 1 - vargs_converted]));
+                                break;
+                            }
                         }
                     }
                     else if (V_VT(prgpvarg[i]) == (VT_VARIANT | VT_ARRAY) &&
@@ -6382,6 +6350,8 @@ static HRESULT WINAPI ITypeInfo_fnInvoke(
                     if (wParamFlags & PARAMFLAG_FHASDEFAULT)
                         VariantClear(&rgvarg[i]);
                 }
+
+                VariantClear(&missing_arg[i]);
             }
 
             if ((V_VT(&varresult) == VT_ERROR) && FAILED(V_ERROR(&varresult)))
@@ -6601,7 +6571,7 @@ static HRESULT WINAPI ITypeInfo_fnGetDllEntry( ITypeInfo2 *iface, MEMBERID memid
 	    if (pBstrDllName)
 		*pBstrDllName = SysAllocString(This->DllName);
 
-	    if (HIWORD(pFDesc->Entry) && (pFDesc->Entry != (void*)-1)) {
+            if (!IS_INTRESOURCE(pFDesc->Entry) && (pFDesc->Entry != (void*)-1)) {
 		if (pBstrName)
 		    *pBstrName = SysAllocString(pFDesc->Entry);
 		if (pwOrdinal)
@@ -6689,20 +6659,18 @@ static HRESULT WINAPI ITypeInfo_fnGetRefTypeInfo(
 
 	  *ppTInfo = (ITypeInfo*) pTypeInfoImpl;
 
-	  /* we use data structures from This, so we need to keep a reference
-	   * to it to stop it being destroyed and signal to the new instance to
+	  /* the AddRef implicitly adds a reference to the parent typelib, which
+	   * stops the copied data from being destroyed until the new typeinfo's
+	   * refcount goes to zero, but we need to signal to the new instance to
 	   * not free its data structures when it is destroyed */
-	  pTypeInfoImpl->no_free_data = TRUE;
-	  pTypeInfoImpl->next = This;
-	  ITypeInfo_AddRef((ITypeInfo*) This);
+	  pTypeInfoImpl->not_attached_to_typelib = TRUE;
 
 	  ITypeInfo_AddRef(*ppTInfo);
 
 	  result = S_OK;
 
     } else if ((hRefType != -1) && (hRefType & DISPATCH_HREF_MASK) &&
-        (This->TypeAttr.typekind   == TKIND_DISPATCH) &&
-	(This->TypeAttr.wTypeFlags &  TYPEFLAG_FDUAL))
+        (This->TypeAttr.typekind   == TKIND_DISPATCH))
     {
         HREFTYPE href_dispatch = hRefType;
         result = ITypeInfoImpl_GetDispatchRefTypeInfo((ITypeInfo *)iface, &href_dispatch, ppTInfo);
