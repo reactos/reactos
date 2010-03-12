@@ -43,6 +43,10 @@
 #include <guiddef.h>
 #endif /* GUID_DEFINED */
 
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+#include <dpfilter.h>
+#endif
+
 #include "intrin.h"
 
 #ifdef __cplusplus
@@ -493,8 +497,26 @@ typedef enum _MODE {
            ((Object)->Type == DpcObject) || \
            ((Object)->Type == ThreadedDpcObject))
 
+#define ASSERT_GATE(object) \
+    ASSERT((((object)->Header.Type & KOBJECT_TYPE_MASK) == GateObject) || \
+           (((object)->Header.Type & KOBJECT_TYPE_MASK) == EventSynchronizationObject))
+
 #define ASSERT_DEVICE_QUEUE(Object) \
     ASSERT((Object)->Type == DeviceQueueObject)
+
+#define ASSERT_TIMER(E) \
+    ASSERT(((E)->Header.Type == TimerNotificationObject) || \
+           ((E)->Header.Type == TimerSynchronizationObject))
+
+#define ASSERT_MUTANT(E) \
+    ASSERT((E)->Header.Type == MutantObject)
+
+#define ASSERT_SEMAPHORE(E) \
+    ASSERT((E)->Header.Type == SemaphoreObject)
+
+#define ASSERT_EVENT(E) \
+    ASSERT(((E)->Header.Type == NotificationEvent) || \
+           ((E)->Header.Type == SynchronizationEvent))
 
 #define DPC_NORMAL 0
 #define DPC_THREADED 1
@@ -519,89 +541,12 @@ typedef enum _MODE {
 #define DBG_STATUS_DEBUG_CONTROL          6
 #define DBG_STATUS_WORKER                 7
 
-#define KI_USER_SHARED_DATA               0xffdf0000
-#define SharedUserData                    ((KUSER_SHARED_DATA * CONST) KI_USER_SHARED_DATA)
-
-#define EFLAG_SIGN                        0x8000
-#define EFLAG_ZERO                        0x4000
-#define EFLAG_SELECT                      (EFLAG_SIGN | EFLAG_ZERO)
-
-#define RESULT_NEGATIVE                   ((EFLAG_SIGN & ~EFLAG_ZERO) & EFLAG_SELECT)
-#define RESULT_ZERO                       ((~EFLAG_SIGN & EFLAG_ZERO) & EFLAG_SELECT)
-#define RESULT_POSITIVE                   ((~EFLAG_SIGN & ~EFLAG_ZERO) & EFLAG_SELECT)
-
 #if defined(_WIN64)
 #define MAXIMUM_PROC_PER_GROUP 64
 #else
 #define MAXIMUM_PROC_PER_GROUP 32
 #endif
 #define MAXIMUM_PROCESSORS          MAXIMUM_PROC_PER_GROUP
-
-#if (_M_IX86)
-#define KIP0PCRADDRESS                      0xffdff000
-#endif
-
-#if defined(_X86_)
-
-#define PASSIVE_LEVEL           0
-#define LOW_LEVEL               0
-#define APC_LEVEL               1
-#define DISPATCH_LEVEL          2
-#define CMCI_LEVEL              5
-#define PROFILE_LEVEL           27
-#define CLOCK1_LEVEL            28
-#define CLOCK2_LEVEL            28
-#define IPI_LEVEL               29
-#define POWER_LEVEL             30
-#define HIGH_LEVEL              31
-#define CLOCK_LEVEL             (CLOCK2_LEVEL)
-
-typedef struct _KFLOATING_SAVE {
-  ULONG  ControlWord;
-  ULONG  StatusWord;
-  ULONG  ErrorOffset;
-  ULONG  ErrorSelector;
-  ULONG  DataOffset;
-  ULONG  DataSelector;
-  ULONG  Cr0NpxState;
-  ULONG  Spare1;
-} KFLOATING_SAVE, *PKFLOATING_SAVE;
-
-#endif
-
-#if defined(_AMD64_)
-
-#define PASSIVE_LEVEL           0
-#define LOW_LEVEL               0
-#define APC_LEVEL               1
-#define DISPATCH_LEVEL          2
-#define CMCI_LEVEL              5
-#define CLOCK_LEVEL             13
-#define IPI_LEVEL               14
-#define DRS_LEVEL               14
-#define POWER_LEVEL             14
-#define PROFILE_LEVEL           15
-#define HIGH_LEVEL              15
-
-#endif
-
-#if defined(_IA64_)
-
-#define PASSIVE_LEVEL           0
-#define LOW_LEVEL               0
-#define APC_LEVEL               1
-#define DISPATCH_LEVEL          2
-#define CMC_LEVEL               3
-#define DEVICE_LEVEL_BASE       4
-#define PC_LEVEL                12
-#define IPI_LEVEL               14
-#define DRS_LEVEL               14
-#define CLOCK_LEVEL             13
-#define POWER_LEVEL             15
-#define PROFILE_LEVEL           15
-#define HIGH_LEVEL              15
-
-#endif
 
 /* Exception Records */
 #define EXCEPTION_NONCONTINUABLE 1
@@ -694,13 +639,6 @@ typedef BOOLEAN
 (DDKAPI *PNMI_CALLBACK)(
     IN PVOID Context,
     IN BOOLEAN Handled);
-
-typedef enum _KDPC_IMPORTANCE {
-  LowImportance,
-  MediumImportance,
-  HighImportance,
-  MediumHighImportance
-} KDPC_IMPORTANCE;
 
 typedef enum _TRACE_INFORMATION_CLASS {
   TraceIdClass,
@@ -892,11 +830,10 @@ typedef PVOID PKIPI_CONTEXT;
 typedef
 VOID
 (NTAPI *PKIPI_WORKER)(
-    IN PKIPI_CONTEXT PacketContext,
-    IN PVOID Parameter1,
-    IN PVOID Parameter2,
-    IN PVOID Parameter3
-);
+  IN PKIPI_CONTEXT PacketContext,
+  IN PVOID Parameter1,
+  IN PVOID Parameter2,
+  IN PVOID Parameter3);
 
 typedef
 ULONG_PTR
@@ -971,6 +908,13 @@ typedef VOID
   IN PVOID  DeferredContext,
   IN PVOID  SystemArgument1,
   IN PVOID  SystemArgument2);
+
+typedef enum _KDPC_IMPORTANCE {
+  LowImportance,
+  MediumImportance,
+  HighImportance,
+  MediumHighImportance
+} KDPC_IMPORTANCE;
 
 typedef struct _KDPC
 {
@@ -1085,6 +1029,15 @@ typedef struct _DISPATCHER_HEADER {
     LIST_ENTRY WaitListHead;
 } DISPATCHER_HEADER, *PDISPATCHER_HEADER;
 
+typedef struct _KEVENT {
+  DISPATCHER_HEADER  Header;
+} KEVENT, *PKEVENT, *RESTRICTED_POINTER PRKEVENT;
+
+typedef struct _KSEMAPHORE {
+    DISPATCHER_HEADER Header;
+    LONG Limit;
+} KSEMAPHORE, *PKSEMAPHORE, *RESTRICTED_POINTER PRKSEMAPHORE;
+
 typedef struct _KGATE
 {
     DISPATCHER_HEADER Header;
@@ -1114,6 +1067,9 @@ typedef struct _KMUTANT {
   BOOLEAN  Abandoned;
   UCHAR  ApcDisable;
 } KMUTANT, *PKMUTANT, *RESTRICTED_POINTER PRKMUTANT, KMUTEX, *PKMUTEX, *RESTRICTED_POINTER PRKMUTEX;
+
+#define TIMER_TABLE_SIZE 512
+#define TIMER_TABLE_SHIFT 9
 
 typedef struct _KTIMER {
   DISPATCHER_HEADER Header;
@@ -1162,15 +1118,6 @@ typedef struct _KSYSTEM_TIME
     LONG High2Time;
 } KSYSTEM_TIME, *PKSYSTEM_TIME;
 
-typedef struct _KEVENT {
-  DISPATCHER_HEADER  Header;
-} KEVENT, *PKEVENT, *RESTRICTED_POINTER PRKEVENT;
-
-typedef struct _KSEMAPHORE {
-    DISPATCHER_HEADER Header;
-    LONG Limit;
-} KSEMAPHORE, *PKSEMAPHORE, *RESTRICTED_POINTER PRKSEMAPHORE;
-
 typedef struct _PNP_BUS_INFORMATION {
   GUID  BusTypeGuid;
   INTERFACE_TYPE  LegacyBusType;
@@ -1197,43 +1144,22 @@ typedef struct DECLSPEC_ALIGN(16) _XSAVE_FORMAT {
   ULONG MxCsr;
   ULONG MxCsr_Mask;
   M128A FloatRegisters[8];
-
 #if defined(_WIN64)
-
   M128A XmmRegisters[16];
   UCHAR Reserved4[96];
-
 #else
-
   M128A XmmRegisters[8];
   UCHAR Reserved4[192];
-
   ULONG StackControl[7];
   ULONG Cr0NpxState;
-
 #endif
-
 } XSAVE_FORMAT, *PXSAVE_FORMAT;
 
-#ifdef _AMD64_
-
-typedef XSAVE_FORMAT XMM_SAVE_AREA32, *PXMM_SAVE_AREA32;
-
-#endif // _AMD64_
-
-#if defined(_IA64_)
-extern volatile LARGE_INTEGER KeTickCount;
-#elif defined(_X86_)
-extern volatile KSYSTEM_TIME KeTickCount;
-#endif
 
 
 /******************************************************************************
  *                         Memory manager Types                               *
  ******************************************************************************/
-
-#define PAGE_SIZE                         0x1000
-#define PAGE_SHIFT                        12L
 
 #define MM_DONT_ZERO_ALLOCATION                 0x00000001
 #define MM_ALLOCATE_FROM_LOCAL_NODE_ONLY        0x00000002
@@ -5222,6 +5148,157 @@ typedef struct _QUOTA_LIMITS {
 #define HIGH_PRIORITY                     31
 #define MAXIMUM_PRIORITY                  32
 
+
+#ifdef _X86_
+/** Kernel definitions for x86 **/
+
+/* Interrupt request levels */
+#define PASSIVE_LEVEL           0
+#define LOW_LEVEL               0
+#define APC_LEVEL               1
+#define DISPATCH_LEVEL          2
+#define CMCI_LEVEL              5
+#define PROFILE_LEVEL           27
+#define CLOCK1_LEVEL            28
+#define CLOCK2_LEVEL            28
+#define IPI_LEVEL               29
+#define POWER_LEVEL             30
+#define HIGH_LEVEL              31
+#define CLOCK_LEVEL             (CLOCK2_LEVEL)
+
+#define KIP0PCRADDRESS          0xffdff000  
+#define KI_USER_SHARED_DATA     0xffdf0000
+#define SharedUserData          ((KUSER_SHARED_DATA * CONST) KI_USER_SHARED_DATA)
+
+#define PAGE_SIZE               0x1000
+#define PAGE_SHIFT              12L
+#define KeGetDcacheFillSize()   1L
+
+#define EFLAG_SIGN              0x8000
+#define EFLAG_ZERO              0x4000
+#define EFLAG_SELECT            (EFLAG_SIGN | EFLAG_ZERO)
+
+#define RESULT_NEGATIVE         ((EFLAG_SIGN & ~EFLAG_ZERO) & EFLAG_SELECT)
+#define RESULT_ZERO             ((~EFLAG_SIGN & EFLAG_ZERO) & EFLAG_SELECT)
+#define RESULT_POSITIVE         ((~EFLAG_SIGN & ~EFLAG_ZERO) & EFLAG_SELECT)
+
+
+typedef struct _KFLOATING_SAVE {
+  ULONG  ControlWord;
+  ULONG  StatusWord;
+  ULONG  ErrorOffset;
+  ULONG  ErrorSelector;
+  ULONG  DataOffset;
+  ULONG  DataSelector;
+  ULONG  Cr0NpxState;
+  ULONG  Spare1;
+} KFLOATING_SAVE, *PKFLOATING_SAVE;
+
+extern volatile KSYSTEM_TIME KeTickCount;
+
+#define YieldProcessor _mm_pause
+
+FORCEINLINE
+VOID
+KeMemoryBarrier(
+  VOID)
+{
+  volatile LONG Barrier;
+#if defined(__GNUC__)
+  __asm__ __volatile__ ("xchg %%eax, %0" : : "m" (Barrier) : "%eax");
+#elif defined(_MSC_VER)
+  __asm xchg [Barrier], eax
+#endif
+}
+
+NTHALAPI
+VOID
+FASTCALL
+KfLowerIrql(
+  IN KIRQL  NewIrql);
+#define KeLowerIrql(a) KfLowerIrql(a)
+
+NTHALAPI
+KIRQL
+FASTCALL
+KfRaiseIrql(
+  IN KIRQL  NewIrql);
+#define KeRaiseIrql(a,b) *(b) = KfRaiseIrql(a)
+
+NTHALAPI
+KIRQL
+DDKAPI
+KeRaiseIrqlToDpcLevel(
+  VOID);
+
+NTHALAPI
+KIRQL
+DDKAPI
+KeRaiseIrqlToSynchLevel(
+    VOID);
+
+NTHALAPI
+KIRQL
+FASTCALL
+KfAcquireSpinLock(
+  IN PKSPIN_LOCK SpinLock);
+#define KeAcquireSpinLock(a,b)  *(b) = KfAcquireSpinLock(a)
+
+NTHALAPI
+VOID
+FASTCALL
+KfReleaseSpinLock(
+  IN PKSPIN_LOCK SpinLock,
+  IN KIRQL NewIrql);
+#define KeReleaseSpinLock(a,b)  KfReleaseSpinLock(a,b)
+
+NTKERNELAPI
+VOID
+FASTCALL
+KefAcquireSpinLockAtDpcLevel(
+  IN PKSPIN_LOCK  SpinLock);
+#define KeAcquireSpinLockAtDpcLevel(SpinLock) KefAcquireSpinLockAtDpcLevel(SpinLock)
+
+NTKERNELAPI
+VOID
+FASTCALL
+KefReleaseSpinLockFromDpcLevel(
+  IN PKSPIN_LOCK  SpinLock);
+#define KeReleaseSpinLockFromDpcLevel(SpinLock) KefReleaseSpinLockFromDpcLevel(SpinLock)
+
+NTSYSAPI
+PKTHREAD
+NTAPI
+KeGetCurrentThread(
+  VOID);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+KeSaveFloatingPointState(
+  OUT PKFLOATING_SAVE  FloatSave);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+KeRestoreFloatingPointState(
+  IN PKFLOATING_SAVE  FloatSave);
+
+/* VOID
+ * KeFlushIoBuffers(
+ *   IN PMDL Mdl,
+ *   IN BOOLEAN ReadOperation,
+ *   IN BOOLEAN DmaOperation)
+ */
+#define KeFlushIoBuffers(_Mdl, _ReadOperation, _DmaOperation)
+
+/* x86 and x64 performs a 0x2C interrupt */
+#define DbgRaiseAssertionFailure __int2c
+
+#endif /* _X86_ */
+
+
+
 /******************************************************************************
  *                         Runtime Library Functions                          *
  ******************************************************************************/
@@ -6491,19 +6568,11 @@ InterlockedPushEntrySList(
  *                              Kernel Functions                              *
  ******************************************************************************/
 
-#if defined(_M_IX86)
-#define YieldProcessor _mm_pause
-#elif defined (_M_AMD64)
-#define YieldProcessor _mm_pause
-#elif defined(_M_PPC)
-#define YieldProcessor() __asm__ __volatile__("nop");
-#elif defined(_M_MIPS)
-#define YieldProcessor() __asm__ __volatile__("nop");
-#elif defined(_M_ARM)
-#define YieldProcessor()
-#else
-#error Unknown architecture
-#endif
+NTHALAPI
+KIRQL
+NTAPI
+KeGetCurrentIrql(
+    VOID);
 
 NTKERNELAPI
 VOID
@@ -6520,6 +6589,22 @@ KeClearEvent(
   IN OUT PRKEVENT Event);
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTKERNELAPI
+VOID
+NTAPI
+ProbeForRead(
+  IN CONST VOID *Address, /* CONST is added */
+  IN SIZE_T Length,
+  IN ULONG Alignment);
+
+NTKERNELAPI
+VOID
+NTAPI
+ProbeForWrite(
+  IN PVOID Address,
+  IN SIZE_T Length,
+  IN ULONG Alignment);
 
 #if defined(SINGLE_GROUP_LEGACY_API)
 NTKERNELAPI
@@ -6560,6 +6645,22 @@ NTAPI
 KeQuerySystemTime(
   OUT PLARGE_INTEGER  CurrentTime);
 #endif /* !_M_AMD64 */
+
+#if defined(_X86_) && (defined(_WDM_INCLUDED_) || defined(WIN9X_COMPAT_SPINLOCK))
+NTKERNELAPI
+VOID
+NTAPI
+KeInitializeSpinLock(
+    IN PKSPIN_LOCK SpinLock);
+#else
+FORCEINLINE
+VOID
+KeInitializeSpinLock(IN PKSPIN_LOCK SpinLock)
+{
+    /* Clear the lock */
+    *SpinLock = 0;
+}
+#endif
 
 NTKERNELAPI
 DECLSPEC_NORETURN
@@ -6850,7 +6951,7 @@ KeWaitForSingleObject(
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 
-// _DECL_HAL_KE_IMPORT
+_DECL_HAL_KE_IMPORT
 VOID
 FASTCALL
 KeAcquireInStackQueuedSpinLock(
@@ -6907,7 +7008,7 @@ KeRemoveByKeyDeviceQueueIfBusy(
   IN OUT PKDEVICE_QUEUE DeviceQueue,
   IN ULONG SortKey);
 
-//_DECL_HAL_KE_IMPORT
+_DECL_HAL_KE_IMPORT
 VOID
 FASTCALL
 KeReleaseInStackQueuedSpinLock(
@@ -6986,6 +7087,12 @@ FASTCALL
 KeReleaseSpinLockForDpc(
   IN OUT PKSPIN_LOCK SpinLock,
   IN KIRQL OldIrql);
+
+NTKERNELAPI
+BOOLEAN
+FASTCALL
+KeTestSpinLock(
+  IN PKSPIN_LOCK SpinLock);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WS03) */
 
@@ -7254,84 +7361,14 @@ KeRestoreExtendedProcessorState(
 
 #endif /*  (NTDDI_VERSION >= NTDDI_WIN7) */
 
-#if defined(_X86_)
-NTKERNELAPI
-NTSTATUS
-NTAPI
-KeSaveFloatingPointState(
-  OUT PKFLOATING_SAVE  FloatSave);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-KeRestoreFloatingPointState(
-  IN PKFLOATING_SAVE  FloatSave);
-#endif
-
-#if defined(_IA64_)
-FORCEINLINE
-VOID
-KeFlushWriteBuffer(VOID)
-{
-  __mf ();
-  return;
-}
-#else
+#if !defined(_IA64_)
 NTHALAPI
 VOID
 NTAPI
 KeFlushWriteBuffer(VOID);
 #endif
 
-/*
- * VOID
- * KeFlushIoBuffers(
- *   IN PMDL  Mdl,
- *   IN BOOLEAN  ReadOperation,
- *   IN BOOLEAN  DmaOperation)
- */
-#define KeFlushIoBuffers(_Mdl, _ReadOperation, _DmaOperation)
-
-#define ExAcquireSpinLock(Lock, OldIrql) KeAcquireSpinLock((Lock), (OldIrql))
-#define ExReleaseSpinLock(Lock, OldIrql) KeReleaseSpinLock((Lock), (OldIrql))
-#define ExAcquireSpinLockAtDpcLevel(Lock) KeAcquireSpinLockAtDpcLevel(Lock)
-#define ExReleaseSpinLockFromDpcLevel(Lock) KeReleaseSpinLockFromDpcLevel(Lock)
-
-#if (NTDDI_VERSION >= NTDDI_WS03)
-NTKERNELAPI
-BOOLEAN
-FASTCALL
-KeTestSpinLock(
-    IN PKSPIN_LOCK SpinLock
-);
-#endif
-
-NTHALAPI
-KIRQL
-NTAPI
-KeGetCurrentIrql(
-    VOID);
-
-#if defined(_M_AMD64)
-FORCEINLINE
-PKTHREAD
-KeGetCurrentThread (
-  VOID)
-{
-    return (struct _KTHREAD *)__readgsqword(0x188);
-}
-#endif
-
-#if defined(_M_IX86) || defined(_M_IA64)
-NTSYSAPI
-PKTHREAD
-NTAPI
-KeGetCurrentThread(
-  VOID);
-#endif
-
-/*
- * VOID
+/* VOID
  * KeInitializeCallbackRecord(
  *   IN PKBUGCHECK_CALLBACK_RECORD  CallbackRecord)
  */
@@ -7360,42 +7397,6 @@ KeGetCurrentThread(
 #endif
 
 #define PAGED_CODE_LOCKED() NOP_FUNCTION;
-
-
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
-
-NTKERNELAPI
-VOID
-NTAPI
-ProbeForRead(
-  IN CONST VOID *Address, /* CONST is added */
-  IN SIZE_T Length,
-  IN ULONG Alignment);
-
-NTKERNELAPI
-VOID
-NTAPI
-ProbeForWrite(
-  IN PVOID Address,
-  IN SIZE_T Length,
-  IN ULONG Alignment);
-
-#endif
-
-#if defined(_X86_) || defined(_AMD64_)
-
-/* x86 and x64 performs a 0x2C interrupt */
-#define DbgRaiseAssertionFailure __int2c
-
-#elif defined(_ARM_)
-
-//
-// TODO
-//
-
-#else
-#error Unsupported Architecture
-#endif
 
 /******************************************************************************
  *                       Memory manager Functions                             *
@@ -7430,31 +7431,40 @@ ProbeForWrite(
 
 /* ULONG
  * BYTE_OFFSET(
- *   IN PVOID  Va)
+ *   IN PVOID Va)
  */
 #define BYTE_OFFSET(Va) \
   ((ULONG) ((ULONG_PTR) (Va) & (PAGE_SIZE - 1)))
 
 /* ULONG
  * BYTES_TO_PAGES(
- *   IN ULONG  Size)
+ *   IN ULONG Size)
  */
 #define BYTES_TO_PAGES(Size) \
   (((Size) >> PAGE_SHIFT) + (((Size) & (PAGE_SIZE - 1)) != 0))
 
 /* PVOID
  * PAGE_ALIGN(
- *   IN PVOID  Va)
+ *   IN PVOID Va)
  */
 #define PAGE_ALIGN(Va) \
   ((PVOID) ((ULONG_PTR)(Va) & ~(PAGE_SIZE - 1)))
 
 /* ULONG_PTR
  * ROUND_TO_PAGES(
- *   IN ULONG_PTR  Size)
+ *   IN ULONG_PTR Size)
  */
 #define ROUND_TO_PAGES(Size) \
   (((ULONG_PTR) (Size) + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1))
+
+/* ULONG
+ * ADDRESS_AND_SIZE_TO_SPAN_PAGES(
+ *   IN PVOID Va,
+ *   IN ULONG Size)
+ */
+#define ADDRESS_AND_SIZE_TO_SPAN_PAGES(_Va, _Size) \
+  ((ULONG) ((((ULONG_PTR) (_Va) & (PAGE_SIZE - 1)) \
+    + (_Size) + (PAGE_SIZE - 1)) >> PAGE_SHIFT))
 
 /*
  * ULONG
@@ -9590,6 +9600,12 @@ NTAPI
 PoUnregisterSystemState(
   IN OUT PVOID StateHandle);
 
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PoRequestShutdownEvent(
+  OUT PVOID *Event);
+
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
@@ -9691,6 +9707,11 @@ PoCreatePowerRequest(
 #define ExInterlockedIncrementLong(Addend,Lock) Exfi386InterlockedIncrementLong(Addend)
 #define ExInterlockedDecrementLong(Addend,Lock) Exfi386InterlockedDecrementLong(Addend)
 #define ExInterlockedExchangeUlong(Target, Value, Lock) Exfi386InterlockedExchangeUlong(Target, Value)
+
+#define ExAcquireSpinLock(Lock, OldIrql) KeAcquireSpinLock((Lock), (OldIrql))
+#define ExReleaseSpinLock(Lock, OldIrql) KeReleaseSpinLock((Lock), (OldIrql))
+#define ExAcquireSpinLockAtDpcLevel(Lock) KeAcquireSpinLockAtDpcLevel(Lock)
+#define ExReleaseSpinLockFromDpcLevel(Lock) KeReleaseSpinLockFromDpcLevel(Lock)
 
 #define ExInitializeSListHead InitializeSListHead
 
@@ -11537,6 +11558,11 @@ extern ULONG NtGlobalFlag;
 #define SERVICE_AUTO_START             0x00000002
 #define SERVICE_DEMAND_START           0x00000003
 #define SERVICE_DISABLED               0x00000004
+
+#ifndef _TRACEHANDLE_DEFINED
+#define _TRACEHANDLE_DEFINED
+typedef ULONG64 TRACEHANDLE, *PTRACEHANDLE;
+#endif
 
 
 

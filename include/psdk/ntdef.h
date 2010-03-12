@@ -167,6 +167,10 @@ typedef enum _WAIT_TYPE {
 #define UNALIGNED
 #define RESTRICTED_POINTER
 
+
+#define ARGUMENT_PRESENT(ArgumentPointer) \
+  ((CHAR*)((ULONG_PTR)(ArgumentPointer)) != (CHAR*)NULL)
+
 //
 // Returns the base address of a structure from a structure member
 //
@@ -675,6 +679,13 @@ typedef struct _PROCESSOR_NUMBER {
   UCHAR Number;
   UCHAR Reserved;
 } PROCESSOR_NUMBER, *PPROCESSOR_NUMBER;
+
+typedef EXCEPTION_DISPOSITION
+(DDKAPI *PEXCEPTION_ROUTINE)(
+  IN struct _EXCEPTION_RECORD *ExceptionRecord,
+  IN PVOID EstablisherFrame,
+  IN OUT struct _CONTEXT *ContextRecord,
+  IN OUT PVOID DispatcherContext);
 
 
 //

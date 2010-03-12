@@ -1190,7 +1190,31 @@ typedef struct _KUSER_SHARED_DATA
 #endif
 } KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
 
+extern NTKERNELAPI PVOID MmHighestUserAddress;
+extern NTKERNELAPI PVOID MmSystemRangeStart;
+extern NTKERNELAPI ULONG MmUserProbeAddress;
+
+
 #ifdef _X86_
+
+#define MM_HIGHEST_USER_ADDRESS MmHighestUserAddress
+#define MM_SYSTEM_RANGE_START MmSystemRangeStart
+#if defined(_LOCAL_COPY_USER_PROBE_ADDRESS_)
+#define MM_USER_PROBE_ADDRESS _LOCAL_COPY_USER_PROBE_ADDRESS_
+extern ULONG _LOCAL_COPY_USER_PROBE_ADDRESS_;
+#else
+#define MM_USER_PROBE_ADDRESS MmUserProbeAddress
+#endif
+#define MM_LOWEST_USER_ADDRESS (PVOID)0x10000
+#define MM_KSEG0_BASE       MM_SYSTEM_RANGE_START
+#define MM_SYSTEM_SPACE_END 0xFFFFFFFF
+#if !defined (_X86PAE_)
+#define MM_LOWEST_SYSTEM_ADDRESS (PVOID)0xC0800000
+#else
+#define MM_LOWEST_SYSTEM_ADDRESS (PVOID)0xC0C00000
+#endif
+
+#define KeGetPcr()                      PCR
 
 #define KERNEL_STACK_SIZE                   12288
 #define KERNEL_LARGE_STACK_SIZE             61440
@@ -1253,6 +1277,13 @@ typedef struct _KPCR {
   ULONG HalReserved[16];
 } KPCR, *PKPCR;
 
+FORCEINLINE
+ULONG
+KeGetCurrentProcessorNumber(VOID)
+{
+    return (ULONG)__readfsbyte(FIELD_OFFSET(KPCR, Number));
+}
+
 typedef struct _FLOATING_SAVE_AREA {
   ULONG ControlWord;
   ULONG StatusWord;
@@ -1298,6 +1329,173 @@ typedef struct _CONTEXT {
 #endif /* _X86_ */
 
 #ifdef _AMD64_
+
+#define PTI_SHIFT  12L
+#define PDI_SHIFT  21L
+#define PPI_SHIFT  30L
+#define PXI_SHIFT  39L
+#define PTE_PER_PAGE 512
+#define PDE_PER_PAGE 512
+#define PPE_PER_PAGE 512
+#define PXE_PER_PAGE 512
+#define PTI_MASK_AMD64 (PTE_PER_PAGE - 1)
+#define PDI_MASK_AMD64 (PDE_PER_PAGE - 1)
+#define PPI_MASK (PPE_PER_PAGE - 1)
+#define PXI_MASK (PXE_PER_PAGE - 1)
+
+#define PXE_BASE    0xFFFFF6FB7DBED000ULL
+#define PXE_SELFMAP 0xFFFFF6FB7DBEDF68ULL
+#define PPE_BASE    0xFFFFF6FB7DA00000ULL
+#define PDE_BASE    0xFFFFF6FB40000000ULL
+#define PTE_BASE    0xFFFFF68000000000ULL
+#define PXE_TOP     0xFFFFF6FB7DBEDFFFULL
+#define PPE_TOP     0xFFFFF6FB7DBFFFFFULL
+#define PDE_TOP     0xFFFFF6FB7FFFFFFFULL
+#define PTE_TOP     0xFFFFF6FFFFFFFFFFULL
+
+#define MM_HIGHEST_USER_ADDRESS           MmHighestUserAddress
+#define MM_SYSTEM_RANGE_START             MmSystemRangeStart
+#define MM_USER_PROBE_ADDRESS             MmUserProbeAddress
+#define MM_LOWEST_USER_ADDRESS   (PVOID)0x10000
+#define MM_LOWEST_SYSTEM_ADDRESS (PVOID)0xFFFF080000000000ULL
+#define KI_USER_SHARED_DATA       0xFFFFF78000000000ULL
+
+typedef struct DECLSPEC_ALIGN(16) _CONTEXT {
+    ULONG64 P1Home;
+    ULONG64 P2Home;
+    ULONG64 P3Home;
+    ULONG64 P4Home;
+    ULONG64 P5Home;
+    ULONG64 P6Home;
+
+    /* Control flags */
+    ULONG ContextFlags;
+    ULONG MxCsr;
+
+    /* Segment */
+    USHORT SegCs;
+    USHORT SegDs;
+    USHORT SegEs;
+    USHORT SegFs;
+    USHORT SegGs;
+    USHORT SegSs;
+    ULONG EFlags;
+
+    /* Debug */
+    ULONG64 Dr0;
+    ULONG64 Dr1;
+    ULONG64 Dr2;
+    ULONG64 Dr3;
+    ULONG64 Dr6;
+    ULONG64 Dr7;
+
+    /* Integer */
+    ULONG64 Rax;
+    ULONG64 Rcx;
+    ULONG64 Rdx;
+    ULONG64 Rbx;
+    ULONG64 Rsp;
+    ULONG64 Rbp;
+    ULONG64 Rsi;
+    ULONG64 Rdi;
+    ULONG64 R8;
+    ULONG64 R9;
+    ULONG64 R10;
+    ULONG64 R11;
+    ULONG64 R12;
+    ULONG64 R13;
+    ULONG64 R14;
+    ULONG64 R15;
+
+    /* Counter */
+    ULONG64 Rip;
+
+   /* Floating point */
+   union {
+       XMM_SAVE_AREA32 FltSave;
+       struct {
+           M128A Header[2];
+           M128A Legacy[8];
+           M128A Xmm0;
+           M128A Xmm1;
+           M128A Xmm2;
+           M128A Xmm3;
+           M128A Xmm4;
+           M128A Xmm5;
+           M128A Xmm6;
+           M128A Xmm7;
+           M128A Xmm8;
+           M128A Xmm9;
+           M128A Xmm10;
+           M128A Xmm11;
+           M128A Xmm12;
+           M128A Xmm13;
+           M128A Xmm14;
+           M128A Xmm15;
+      } DUMMYSTRUCTNAME;
+    } DUMMYUNIONNAME;
+
+     /* Vector */
+    M128A VectorRegister[26];
+    ULONG64 VectorControl;
+
+    /* Debug control */
+    ULONG64 DebugControl;
+    ULONG64 LastBranchToRip;
+    ULONG64 LastBranchFromRip;
+    ULONG64 LastExceptionToRip;
+    ULONG64 LastExceptionFromRip;
+} CONTEXT;
+
+typedef struct _KPCR
+{
+    _ANONYMOUS_UNION union
+    {
+        NT_TIB NtTib;
+        _ANONYMOUS_STRUCT struct
+        {
+            union _KGDTENTRY64 *GdtBase;
+            struct _KTSS64 *TssBase;
+            ULONG64 UserRsp;
+            struct _KPCR *Self;
+            struct _KPRCB *CurrentPrcb;
+            PKSPIN_LOCK_QUEUE LockArray;
+            PVOID Used_Self;
+        };
+    };
+    union _KIDTENTRY64 *IdtBase;
+    ULONG64 Unused[2];
+    KIRQL Irql;
+    UCHAR SecondLevelCacheAssociativity;
+    UCHAR ObsoleteNumber;
+    UCHAR Fill0;
+    ULONG Unused0[3];
+    USHORT MajorVersion;
+    USHORT MinorVersion;
+    ULONG StallScaleFactor;
+    PVOID Unused1[3];
+    ULONG KernelReserved[15];
+    ULONG SecondLevelCacheSize;
+    ULONG HalReserved[16];
+    ULONG Unused2;
+    PVOID KdVersionBlock;
+    PVOID Unused3;
+    ULONG PcrAlign1[24];
+} KPCR, *PKPCR;
+
+FORCEINLINE
+PKPCR
+KeGetPcr(VOID)
+{
+    return (PKPCR)__readgsqword(FIELD_OFFSET(KPCR, Self));
+}
+
+FORCEINLINE
+ULONG
+KeGetCurrentProcessorNumber(VOID)
+{
+    return (ULONG)__readgsword(0x184);
+}
 
 #if !defined(RC_INVOKED)
 
@@ -2736,8 +2934,6 @@ ZwSetTimer(
 
 #endif
 
-/* Windows Device Driver Kit */
-#include "winddk.h"
 
 #ifdef __cplusplus
 }
