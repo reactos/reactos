@@ -46,10 +46,10 @@ BCLASSAPI
 NTSTATUS
 DDKAPI
 BatteryClassSystemControl(PVOID ClassData,
-                          PWMILIB_CONTEXT WmiLibContext,
+                          PVOID WmiLibContext,
                           PDEVICE_OBJECT DeviceObject,
                           PIRP Irp,
-                          PSYSCTL_IRP_DISPOSITION Disposition)
+                          PVOID Disposition)
 {
   NTSTATUS Status;
 
