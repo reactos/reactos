@@ -6394,6 +6394,226 @@ PoQueryWatchdogTime(
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
+#if defined(_IA64_)
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+//DECLSPEC_DEPRECATED_DDK
+NTHALAPI
+ULONG
+NTAPI
+HalGetDmaAlignmentRequirement(
+  VOID);
+#endif
+#endif
+
+#if defined(_M_IX86) || defined(_M_AMD64)
+#define HalGetDmaAlignmentRequirement() 1L
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+MmIsRecursiveIoFault(
+  VOID);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+MmForceSectionClosed(
+  IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
+  IN BOOLEAN DelayClose);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+MmFlushImageSection(
+  IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
+  IN MMFLUSH_TYPE FlushType);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+MmCanFileBeTruncated(
+  IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
+  IN PLARGE_INTEGER NewFileSize OPTIONAL);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+MmSetAddressRangeModified(
+  IN PVOID Address,
+  IN SIZE_T Length);
+
+#endif
+
+typedef enum _MMFLUSH_TYPE {
+  MmFlushForDelete,
+  MmFlushForWrite
+} MMFLUSH_TYPE;
+
+typedef struct _READ_LIST {
+  PFILE_OBJECT FileObject;
+  ULONG NumberOfEntries;
+  LOGICAL IsImage;
+  FILE_SEGMENT_ELEMENT List[ANYSIZE_ARRAY];
+} READ_LIST, *PREAD_LIST;
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+typedef union _MM_PREFETCH_FLAGS {
+  struct {
+    ULONG Priority : SYSTEM_PAGE_PRIORITY_BITS;
+    ULONG RepurposePriority : SYSTEM_PAGE_PRIORITY_BITS;
+  } Flags;
+  ULONG AllFlags;
+} MM_PREFETCH_FLAGS, *PMM_PREFETCH_FLAGS;
+
+#define MM_PREFETCH_FLAGS_MASK ((1 << (2*SYSTEM_PAGE_PRIORITY_BITS)) - 1)
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+MmPrefetchPages(
+  IN ULONG NumberOfLists,
+  IN PREAD_LIST *ReadLists);
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+NTKERNELAPI
+ULONG
+NTAPI
+MmDoesFileHaveUserWritableReferences(
+  IN PSECTION_OBJECT_POINTERS SectionPointer);
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+ObInsertObject(
+  IN PVOID Object,
+  IN OUT PACCESS_STATE PassedAccessState OPTIONAL,
+  IN ACCESS_MASK DesiredAccess OPTIONAL,
+  IN ULONG ObjectPointerBias,
+  OUT PVOID *NewObject OPTIONAL,
+  OUT PHANDLE Handle OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+ObOpenObjectByPointer(
+  IN PVOID Object,
+  IN ULONG HandleAttributes,
+  IN PACCESS_STATE PassedAccessState OPTIONAL,
+  IN ACCESS_MASK DesiredAccess OPTIONAL,
+  IN POBJECT_TYPE ObjectType OPTIONAL,
+  IN KPROCESSOR_MODE AccessMode,
+  OUT PHANDLE Handle);
+
+NTKERNELAPI
+VOID
+NTAPI
+ObMakeTemporaryObject(
+  IN PVOID Object);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+ObQueryNameString(
+  IN PVOID Object,
+  OUT POBJECT_NAME_INFORMATION ObjectNameInfo OPTIONAL,
+  IN ULONG Length,
+  OUT PULONG ReturnLength);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+ObQueryObjectAuditingByHandle(
+  IN HANDLE Handle,
+  OUT PBOOLEAN GenerateOnClose);
+
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+NTKERNELAPI
+BOOLEAN
+NTAPI
+ObIsKernelHandle(
+  IN HANDLE Handle);
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+NTKERNELAPI
+NTSTATUS
+NTAPI
+ObOpenObjectByPointerWithTag(
+  IN PVOID Object,
+  IN ULONG HandleAttributes,
+  IN PACCESS_STATE PassedAccessState OPTIONAL,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_TYPE ObjectType OPTIONAL,
+  IN KPROCESSOR_MODE AccessMode,
+  IN ULONG Tag,
+  OUT PHANDLE Handle);
+#endif
+
+typedef ULONG LBN;
+typedef LBN *PLBN;
+
+typedef ULONG VBN;
+typedef VBN *PVBN;
+
+typedef enum _FAST_IO_POSSIBLE {
+  FastIoIsNotPossible = 0,
+  FastIoIsPossible,
+  FastIoIsQuestionable
+} FAST_IO_POSSIBLE;
+
+#ifdef __cplusplus
+typedef struct _FSRTL_ADVANCED_FCB_HEADER:FSRTL_COMMON_FCB_HEADER {
+#else /* __cplusplus */
+typedef struct _FSRTL_ADVANCED_FCB_HEADER {
+  FSRTL_COMMON_FCB_HEADER DUMMYSTRUCTNAME;
+#endif  /* __cplusplus */
+  PFAST_MUTEX FastMutex;
+  LIST_ENTRY FilterContexts;
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+  EX_PUSH_LOCK PushLock;
+  PVOID *FileContextSupportPointer;
+#endif
+} FSRTL_ADVANCED_FCB_HEADER, *PFSRTL_ADVANCED_FCB_HEADER;
+
+#define FSRTL_FCB_HEADER_V0             (0x00)
+#define FSRTL_FCB_HEADER_V1             (0x01)
+
+#define FSRTL_FLAG_FILE_MODIFIED        (0x01)
+#define FSRTL_FLAG_FILE_LENGTH_CHANGED  (0x02)
+#define FSRTL_FLAG_LIMIT_MODIFIED_PAGES (0x04)
+#define FSRTL_FLAG_ACQUIRE_MAIN_RSRC_EX (0x08)
+#define FSRTL_FLAG_ACQUIRE_MAIN_RSRC_SH (0x10)
+#define FSRTL_FLAG_USER_MAPPED_FILE     (0x20)
+#define FSRTL_FLAG_ADVANCED_HEADER      (0x40)
+#define FSRTL_FLAG_EOF_ADVANCE_ACTIVE   (0x80)
+
+#define FSRTL_FLAG2_DO_MODIFIED_WRITE        (0x01)
+#define FSRTL_FLAG2_SUPPORTS_FILTER_CONTEXTS (0x02)
+#define FSRTL_FLAG2_PURGE_WHEN_MAPPED        (0x04)
+#define FSRTL_FLAG2_IS_PAGING_FILE           (0x08)
+
+#define FSRTL_FSP_TOP_LEVEL_IRP         (0x01)
+#define FSRTL_CACHE_TOP_LEVEL_IRP       (0x02)
+#define FSRTL_MOD_WRITE_TOP_LEVEL_IRP   (0x03)
+#define FSRTL_FAST_IO_TOP_LEVEL_IRP     (0x04)
+#define FSRTL_NETWORK1_TOP_LEVEL_IRP    ((LONG_PTR)0x05)
+#define FSRTL_NETWORK2_TOP_LEVEL_IRP    ((LONG_PTR)0x06)
+#define FSRTL_MAX_TOP_LEVEL_IRP_FLAG    ((LONG_PTR)0xFFFF)
+
+typedef struct _EOF_WAIT_BLOCK {
+  LIST_ENTRY EofWaitLinks;
+  KEVENT Event;
+} EOF_WAIT_BLOCK, *PEOF_WAIT_BLOCK;
+
 #pragma pack(push,4)
 
 #ifndef VER_PRODUCTBUILD
@@ -6428,26 +6648,6 @@ extern PACL                         SeSystemDefaultDacl;
 #define FILE_STORAGE_TYPE_SHIFT                 16
 
 #define FILE_VC_QUOTAS_LOG_VIOLATIONS   0x00000004
-
-#define FSRTL_FLAG_FILE_MODIFIED        (0x01)
-#define FSRTL_FLAG_FILE_LENGTH_CHANGED  (0x02)
-#define FSRTL_FLAG_LIMIT_MODIFIED_PAGES (0x04)
-#define FSRTL_FLAG_ACQUIRE_MAIN_RSRC_EX (0x08)
-#define FSRTL_FLAG_ACQUIRE_MAIN_RSRC_SH (0x10)
-#define FSRTL_FLAG_USER_MAPPED_FILE     (0x20)
-#define FSRTL_FLAG_ADVANCED_HEADER      (0x40)
-#define FSRTL_FLAG_EOF_ADVANCE_ACTIVE   (0x80)
-
-#define FSRTL_FLAG2_DO_MODIFIED_WRITE        (0x01)
-#define FSRTL_FLAG2_SUPPORTS_FILTER_CONTEXTS (0x02)
-#define FSRTL_FLAG2_PURGE_WHEN_MAPPED        (0x04)
-#define FSRTL_FLAG2_IS_PAGING_FILE           (0x08)
-
-#define FSRTL_FSP_TOP_LEVEL_IRP         (0x01)
-#define FSRTL_CACHE_TOP_LEVEL_IRP       (0x02)
-#define FSRTL_MOD_WRITE_TOP_LEVEL_IRP   (0x03)
-#define FSRTL_FAST_IO_TOP_LEVEL_IRP     (0x04)
-#define FSRTL_MAX_TOP_LEVEL_IRP_FLAG    (0x04)
 
 #define FSRTL_VOLUME_DISMOUNT           1
 #define FSRTL_VOLUME_DISMOUNT_FAILED    2
@@ -6570,19 +6770,7 @@ typedef PVOID OPLOCK, *POPLOCK;
 struct _RTL_AVL_TABLE;
 struct _RTL_GENERIC_TABLE;
 
-typedef ULONG LBN;
-typedef LBN *PLBN;
-
-typedef ULONG VBN;
-typedef VBN *PVBN;
-
 typedef PVOID PNOTIFY_SYNC;
-
-typedef enum _FAST_IO_POSSIBLE {
-    FastIoIsNotPossible,
-    FastIoIsPossible,
-    FastIoIsQuestionable
-} FAST_IO_POSSIBLE;
 
 typedef enum _FILE_STORAGE_TYPE {
     StorageTypeDefault = 1,
@@ -6810,24 +6998,19 @@ typedef struct _FILE_OLE_STATE_BITS_INFORMATION {
     ULONG StateBitsMask;
 } FILE_OLE_STATE_BITS_INFORMATION, *PFILE_OLE_STATE_BITS_INFORMATION;
 
-#define FSRTL_FCB_HEADER_V0             (0x00)
-#define FSRTL_FCB_HEADER_V1             (0x01)
-
-
 typedef struct _FSRTL_COMMON_FCB_HEADER {
-    CSHORT          NodeTypeCode;
-    CSHORT          NodeByteSize;
-    UCHAR           Flags;
-    UCHAR           IsFastIoPossible;
-#if (VER_PRODUCTBUILD >= 1381)
-    UCHAR           Flags2;
-    UCHAR           Reserved;
-#endif /* (VER_PRODUCTBUILD >= 1381) */
-    PERESOURCE      Resource;
-    PERESOURCE      PagingIoResource;
-    LARGE_INTEGER   AllocationSize;
-    LARGE_INTEGER   FileSize;
-    LARGE_INTEGER   ValidDataLength;
+  CSHORT NodeTypeCode;
+  CSHORT NodeByteSize;
+  UCHAR Flags;
+  UCHAR IsFastIoPossible;
+  UCHAR Flags2;
+  UCHAR Reserved:4;
+  UCHAR Version:4;
+  PERESOURCE Resource;
+  PERESOURCE PagingIoResource;
+  LARGE_INTEGER AllocationSize;
+  LARGE_INTEGER FileSize;
+  LARGE_INTEGER ValidDataLength;
 } FSRTL_COMMON_FCB_HEADER, *PFSRTL_COMMON_FCB_HEADER;
 
 typedef enum _FSRTL_COMPARISON_RESULT
@@ -6838,25 +7021,6 @@ typedef enum _FSRTL_COMPARISON_RESULT
 } FSRTL_COMPARISON_RESULT;
     
 #if (VER_PRODUCTBUILD >= 2600)
-
-typedef struct _FSRTL_ADVANCED_FCB_HEADER {
-    CSHORT          NodeTypeCode;
-    CSHORT          NodeByteSize;
-    UCHAR           Flags;
-    UCHAR           IsFastIoPossible;
-    UCHAR           Flags2;
-    UCHAR           Reserved: 4;
-    UCHAR           Version: 4;
-    PERESOURCE      Resource;
-    PERESOURCE      PagingIoResource;
-    LARGE_INTEGER   AllocationSize;
-    LARGE_INTEGER   FileSize;
-    LARGE_INTEGER   ValidDataLength;
-    PFAST_MUTEX     FastMutex;
-    LIST_ENTRY      FilterContexts;
-    EX_PUSH_LOCK    PushLock;
-    PVOID           *FileContextSupportPointer;
-} FSRTL_ADVANCED_FCB_HEADER, *PFSRTL_ADVANCED_FCB_HEADER;
 
 typedef struct _FSRTL_PER_STREAM_CONTEXT {
     LIST_ENTRY     Links;
@@ -6919,11 +7083,6 @@ typedef struct _MBCB {
     BITMAP_RANGE    BitmapRange2;
     BITMAP_RANGE    BitmapRange3;
 } MBCB, *PMBCB;
-
-typedef enum _MMFLUSH_TYPE {
-  MmFlushForDelete,
-  MmFlushForWrite
-} MMFLUSH_TYPE;
 
 typedef struct _MOVEFILE_DESCRIPTOR {
      HANDLE         FileHandle;
@@ -7249,13 +7408,6 @@ typedef BOOLEAN
     IN PVOID  NotifyContext,
     IN PVOID  FilterContext
 );
-
-typedef struct _READ_LIST {
-    PFILE_OBJECT          FileObject;
-    ULONG                 NumberOfEntries;
-    LOGICAL               IsImage;
-    FILE_SEGMENT_ELEMENT  List[ANYSIZE_ARRAY];
-} READ_LIST, *PREAD_LIST;
 
 #endif
 
@@ -8884,57 +9036,6 @@ IoAttachDeviceToDeviceStackSafe(
 );
 
 NTKERNELAPI
-BOOLEAN
-NTAPI
-MmCanFileBeTruncated (
-    IN PSECTION_OBJECT_POINTERS     SectionObjectPointer,
-    IN PLARGE_INTEGER               NewFileSize
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-MmFlushImageSection (
-    IN PSECTION_OBJECT_POINTERS     SectionObjectPointer,
-    IN MMFLUSH_TYPE                 FlushType
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-MmForceSectionClosed (
-    IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
-    IN BOOLEAN                  DelayClose
-);
-
-#if (VER_PRODUCTBUILD >= 1381)
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-MmIsRecursiveIoFault (
-    VOID
-);
-
-#else
-
-#define MmIsRecursiveIoFault() (                            \
-    (PsGetCurrentThread()->DisablePageFaultClustering) |    \
-    (PsGetCurrentThread()->ForwardClusterOnly)              \
-)
-
-#endif
-
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-MmSetAddressRangeModified (
-    IN PVOID    Address,
-    IN SIZE_T    Length
-);
-
-NTKERNELAPI
 NTSTATUS
 NTAPI
 ObCreateObject (
@@ -8954,56 +9055,6 @@ ULONG
 NTAPI
 ObGetObjectPointerCount (
     IN PVOID Object
-);
-
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-ObInsertObject (
-  IN PVOID Object,
-  IN PACCESS_STATE PassedAccessState OPTIONAL,
-  IN ACCESS_MASK DesiredAccess OPTIONAL,
-  IN ULONG ObjectPointerBias,
-  OUT PVOID *NewObject OPTIONAL,
-  OUT PHANDLE Handle OPTIONAL);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-ObOpenObjectByPointer (
-  IN PVOID Object,
-  IN ULONG HandleAttributes,
-  IN PACCESS_STATE PassedAccessState OPTIONAL,
-  IN ACCESS_MASK DesiredAccess OPTIONAL,
-  IN POBJECT_TYPE ObjectType OPTIONAL,
-  IN KPROCESSOR_MODE AccessMode,
-  OUT PHANDLE Handle);
-
-NTKERNELAPI
-VOID
-NTAPI
-ObMakeTemporaryObject (
-  IN PVOID Object);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-ObQueryObjectAuditingByHandle (
-  IN HANDLE Handle,
-  OUT PBOOLEAN GenerateOnClose);
-
-#endif
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-ObQueryNameString (
-    IN PVOID                        Object,
-    OUT POBJECT_NAME_INFORMATION    ObjectNameInfo,
-    IN ULONG                        Length,
-    OUT PULONG                      ReturnLength
 );
 
 NTKERNELAPI
