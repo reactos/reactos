@@ -221,12 +221,15 @@ C_ASSERT(sizeof(CLIENTINFO) == FIELD_OFFSET(TEB, glDispatchTable) - FIELD_OFFSET
 
 #define GetWin32ClientInfo() ((PCLIENTINFO)(NtCurrentTeb()->Win32ClientInfo))
 
+/* Menu Item fType. */
+#define MFT_RTOL 0x6000
+
 typedef struct tagITEM
 {
     UINT fType;
     UINT fState;
     UINT wID;
-    struct tagMENU* spSubMenu; /* Pop-up menu.  */
+    struct tagMENU* spSubMenu; /* Pop-up menu. */
     HANDLE hbmpChecked;
     HANDLE hbmpUnchecked;
     USHORT* lpstr; /* Item text pointer. */
@@ -250,12 +253,21 @@ typedef struct tagMENULIST
    struct tagMENU*     pMenu;
 } MENULIST, *PMENULIST;
 
+/* Menu fFlags, upper byte is MNS_X style flags. */
+#define MNF_POPUP       0x0001
+#define MNF_UNDERLINE   0x0004
+#define MNF_INACTIVE    0x0010
+#define MNF_RTOL        0x0020
+#define MNF_DESKTOPMN   0x0040
+#define MNF_SYSDESKMN   0x0080
+#define MNF_SYSSUBMENU  0x0100
+
 typedef struct tagMENU
 {
     PROCDESKHEAD head;
-    ULONG fFlags;             /* Menu flags (MF_POPUP, MF_SYSMENU) */
+    ULONG fFlags;             /* [Style flags | Menu flags] */
     INT iItem;                /* nPos of selected item, if -1 not selected. */
-    UINT cAlloced;            /* Number of allocated items. */
+    UINT cAlloced;            /* Number of allocated items. Inc's of 8 */
     UINT cItems;              /* Number of items in the menu */
     ULONG cxMenu;             /* Width of the whole menu */
     ULONG cyMenu;             /* Height of the whole menu */
