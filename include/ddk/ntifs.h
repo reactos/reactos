@@ -6245,6 +6245,155 @@ typedef struct _IO_PRIORITY_INFO {
 } IO_PRIORITY_INFO, *PIO_PRIORITY_INFO;
 #endif
 
+#define PoSetDeviceBusy(IdlePointer) *IdlePointer = 0
+
+typedef NTSTATUS
+(NTAPI *PPOWER_SETTING_CALLBACK) (
+  IN LPCGUID SettingGuid,
+  IN PVOID Value,
+  IN ULONG ValueLength,
+  IN OUT PVOID Context OPTIONAL);
+
+#define PO_CB_SYSTEM_POWER_POLICY       0
+#define PO_CB_AC_STATUS                 1
+#define PO_CB_BUTTON_COLLISION          2
+#define PO_CB_SYSTEM_STATE_LOCK         3
+#define PO_CB_LID_SWITCH_STATE          4
+#define PO_CB_PROCESSOR_POWER_POLICY    5
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTKERNELAPI
+PVOID
+NTAPI
+PoRegisterSystemState(
+  IN OUT PVOID StateHandle OPTIONAL,
+  IN EXECUTION_STATE Flags);
+
+NTKERNELAPI
+VOID
+NTAPI
+PoUnregisterSystemState(
+  IN OUT PVOID StateHandle);
+
+NTKERNELAPI
+POWER_STATE
+NTAPI
+PoSetPowerState(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN POWER_STATE_TYPE Type,
+  IN POWER_STATE State);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PoCallDriver(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN OUT PIRP Irp);
+
+NTKERNELAPI
+VOID
+NTAPI
+PoStartNextPowerIrp(
+  IN OUT PIRP Irp);
+
+NTKERNELAPI
+PULONG
+NTAPI
+PoRegisterDeviceForIdleDetection(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN ULONG ConservationIdleTime,
+  IN ULONG PerformanceIdleTime,
+  IN DEVICE_POWER_STATE State);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PoQueueShutdownWorkItem(
+  IN OUT PWORK_QUEUE_ITEM WorkItem);
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PoRegisterPowerSettingCallback(
+  IN PDEVICE_OBJECT DeviceObject OPTIONAL,
+  IN LPCGUID SettingGuid,
+  IN PPOWER_SETTING_CALLBACK Callback,
+  IN PVOID Context OPTIONAL,
+  OUT PVOID *Handle);
+
+NTKERNELAPI
+NTSTATUS
+PoUnregisterPowerSettingCallback(
+  IN OUT PVOID Handle);
+
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN6SP1)
+NTKERNELAPI
+VOID
+NTAPI
+PoSetDeviceBusyEx(
+  IN OUT PULONG IdlePointer);
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PoCreatePowerRequest(
+  OUT PVOID *PowerRequest,
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PCOUNTED_REASON_CONTEXT Context);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PoSetPowerRequest(
+  IN OUT PVOID PowerRequest,
+  IN POWER_REQUEST_TYPE Type);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PoClearPowerRequest(
+  IN OUT PVOID PowerRequest,
+  IN POWER_REQUEST_TYPE Type);
+
+NTKERNELAPI
+VOID
+NTAPI
+PoDeletePowerRequest(
+  IN OUT PVOID PowerRequest);
+
+NTKERNELAPI
+VOID
+NTAPI
+PoStartDeviceBusy(
+  IN OUT PULONG IdlePointer);
+
+NTKERNELAPI
+VOID
+NTAPI
+PoEndDeviceBusy(
+  IN OUT PULONG IdlePointer);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+PoQueryWatchdogTime(
+  IN PDEVICE_OBJECT Pdo,
+  OUT PULONG SecondsRemaining);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
+
 #pragma pack(push,4)
 
 #ifndef VER_PRODUCTBUILD
