@@ -6233,9 +6233,6 @@ IoReplaceFileObjectName(
     )                                           \
 )
 
-#define IoSizeOfIrp( StackSize ) \
-    ((USHORT) (sizeof( IRP ) + ((StackSize) * (sizeof( IO_STACK_LOCATION )))))
-
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 typedef struct _IO_PRIORITY_INFO {
   ULONG Size;
@@ -6244,15 +6241,6 @@ typedef struct _IO_PRIORITY_INFO {
   IO_PRIORITY_HINT IoPriority;
 } IO_PRIORITY_INFO, *PIO_PRIORITY_INFO;
 #endif
-
-#define PoSetDeviceBusy(IdlePointer) *IdlePointer = 0
-
-typedef NTSTATUS
-(NTAPI *PPOWER_SETTING_CALLBACK) (
-  IN LPCGUID SettingGuid,
-  IN PVOID Value,
-  IN ULONG ValueLength,
-  IN OUT PVOID Context OPTIONAL);
 
 #define PO_CB_SYSTEM_POWER_POLICY       0
 #define PO_CB_AC_STATUS                 1
