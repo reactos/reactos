@@ -53,8 +53,6 @@ static inline const char *wine_dbgstr_fcc( DWORD fcc )
                             LOBYTE(HIWORD(fcc)), HIBYTE(HIWORD(fcc)));
 }
 
-LRESULT (CALLBACK *pFnCallTo16)(HDRVR, HIC, UINT, LPARAM, LPARAM) = NULL;
-
 static WINE_HIC*        MSVIDEO_FirstHic /* = NULL */;
 
 typedef struct _reg_driver reg_driver;
@@ -91,6 +89,92 @@ BOOL WINAPI DllMain( HINSTANCE hinst, DWORD reason, LPVOID reserved )
             break;
     }
     return TRUE;
+}
+
+/******************************************************************
+ *		MSVIDEO_SendMessage
+ *
+ *
+ */
+static LRESULT MSVIDEO_SendMessage(WINE_HIC* whic, UINT msg, DWORD_PTR lParam1, DWORD_PTR lParam2)
+{
+    LRESULT     ret;
+
+#define XX(x) case x: TRACE("(%p,"#x",0x%08lx,0x%08lx)\n",whic,lParam1,lParam2); break
+
+    switch (msg) {
+        /* DRV_* */
+        XX(DRV_LOAD);
+        XX(DRV_ENABLE);
+        XX(DRV_OPEN);
+        XX(DRV_CLOSE);
+        XX(DRV_DISABLE);
+        XX(DRV_FREE);
+        /* ICM_RESERVED+X */
+        XX(ICM_ABOUT);
+        XX(ICM_CONFIGURE);
+        XX(ICM_GET);
+        XX(ICM_GETINFO);
+        XX(ICM_GETDEFAULTQUALITY);
+        XX(ICM_GETQUALITY);
+        XX(ICM_GETSTATE);
+        XX(ICM_SETQUALITY);
+        XX(ICM_SET);
+        XX(ICM_SETSTATE);
+        /* ICM_USER+X */
+        XX(ICM_COMPRESS_FRAMES_INFO);
+        XX(ICM_COMPRESS_GET_FORMAT);
+        XX(ICM_COMPRESS_GET_SIZE);
+        XX(ICM_COMPRESS_QUERY);
+        XX(ICM_COMPRESS_BEGIN);
+        XX(ICM_COMPRESS);
+        XX(ICM_COMPRESS_END);
+        XX(ICM_DECOMPRESS_GET_FORMAT);
+        XX(ICM_DECOMPRESS_QUERY);
+        XX(ICM_DECOMPRESS_BEGIN);
+        XX(ICM_DECOMPRESS);
+        XX(ICM_DECOMPRESS_END);
+        XX(ICM_DECOMPRESS_SET_PALETTE);
+        XX(ICM_DECOMPRESS_GET_PALETTE);
+        XX(ICM_DRAW_QUERY);
+        XX(ICM_DRAW_BEGIN);
+        XX(ICM_DRAW_GET_PALETTE);
+        XX(ICM_DRAW_START);
+        XX(ICM_DRAW_STOP);
+        XX(ICM_DRAW_END);
+        XX(ICM_DRAW_GETTIME);
+        XX(ICM_DRAW);
+        XX(ICM_DRAW_WINDOW);
+        XX(ICM_DRAW_SETTIME);
+        XX(ICM_DRAW_REALIZE);
+        XX(ICM_DRAW_FLUSH);
+        XX(ICM_DRAW_RENDERBUFFER);
+        XX(ICM_DRAW_START_PLAY);
+        XX(ICM_DRAW_STOP_PLAY);
+        XX(ICM_DRAW_SUGGESTFORMAT);
+        XX(ICM_DRAW_CHANGEPALETTE);
+        XX(ICM_GETBUFFERSWANTED);
+        XX(ICM_GETDEFAULTKEYFRAMERATE);
+        XX(ICM_DECOMPRESSEX_BEGIN);
+        XX(ICM_DECOMPRESSEX_QUERY);
+        XX(ICM_DECOMPRESSEX);
+        XX(ICM_DECOMPRESSEX_END);
+        XX(ICM_SET_STATUS_PROC);
+    default:
+        FIXME("(%p,0x%08x,0x%08lx,0x%08lx) unknown message\n",whic,msg,lParam1,lParam2);
+    }
+
+#undef XX
+
+    if (whic->driverproc) {
+	/* dwDriverId parameter is the value returned by the DRV_OPEN */
+        ret = whic->driverproc(whic->driverId, whic->hdrv, msg, lParam1, lParam2);
+    } else {
+        ret = SendDriverMessage(whic->hdrv, msg, lParam1, lParam2);
+    }
+
+    TRACE("	-> 0x%08lx\n", ret);
+    return ret;
 }
 
 static int compare_fourcc(DWORD fcc1, DWORD fcc2)
@@ -154,7 +238,7 @@ static BOOL enum_drivers(DWORD fccType, enum_handler_t handler, void* param)
  *
  *
  */
-WINE_HIC*   MSVIDEO_GetHicPtr(HIC hic)
+static WINE_HIC*   MSVIDEO_GetHicPtr(HIC hic)
 {
     WINE_HIC*   whic;
 
@@ -310,7 +394,6 @@ HIC VFWAPI ICOpen(DWORD fccType, DWORD fccHandler, UINT wMode)
     ICOPEN		icopen;
     HDRVR		hdrv;
     WINE_HIC*           whic;
-    BOOL                bIs16;
     static const WCHAR  drv32W[] = {'d','r','i','v','e','r','s','3','2','\0'};
     reg_driver*         driver;
 
@@ -327,7 +410,7 @@ HIC VFWAPI ICOpen(DWORD fccType, DWORD fccHandler, UINT wMode)
 
     if (driver && driver->proc)
 	/* The driver has been registered at runtime with its driverproc */
-        return MSVIDEO_OpenFunction(fccType, fccHandler, wMode, driver->proc, 0);
+        return ICOpenFunction(fccType, fccHandler, wMode, driver->proc);
   
     /* Well, lParam2 is in fact a LPVIDEO_OPEN_PARMS, but it has the
      * same layout as ICOPEN
@@ -358,13 +441,7 @@ HIC VFWAPI ICOpen(DWORD fccType, DWORD fccHandler, UINT wMode)
         if (!hdrv) 
             return 0; 
     }
-    bIs16 = GetDriverFlags(hdrv) & 0x10000000; /* undocumented flag: WINE_GDF_16BIT */
 
-    if (bIs16 && !pFnCallTo16)
-    {
-        FIXME("Got a 16 bit driver, but no 16 bit support in msvfw\n");
-        return 0;
-    }
     whic = HeapAlloc(GetProcessHeap(), 0, sizeof(WINE_HIC));
     if (!whic)
     {
@@ -372,13 +449,11 @@ HIC VFWAPI ICOpen(DWORD fccType, DWORD fccHandler, UINT wMode)
         return FALSE;
     }
     whic->hdrv          = hdrv;
-    /* FIXME: is the signature the real one ? */
-    whic->driverproc    = bIs16 ? (DRIVERPROC)pFnCallTo16 : NULL;
-    whic->driverproc16  = 0;
+    whic->driverproc    = NULL;
     whic->type          = fccType;
     whic->handler       = fccHandler;
-    while (MSVIDEO_GetHicPtr(HIC_32(IC_HandleRef)) != NULL) IC_HandleRef++;
-    whic->hic           = HIC_32(IC_HandleRef++);
+    while (MSVIDEO_GetHicPtr((HIC)(ULONG_PTR)IC_HandleRef) != NULL) IC_HandleRef++;
+    whic->hic           = (HIC)(ULONG_PTR)IC_HandleRef++;
     whic->next          = MSVIDEO_FirstHic;
     MSVIDEO_FirstHic = whic;
 
@@ -387,16 +462,15 @@ HIC VFWAPI ICOpen(DWORD fccType, DWORD fccHandler, UINT wMode)
 }
 
 /***********************************************************************
- *		MSVIDEO_OpenFunction
+ *		ICOpenFunction			[MSVFW32.@]
  */
-HIC MSVIDEO_OpenFunction(DWORD fccType, DWORD fccHandler, UINT wMode, 
-                         DRIVERPROC lpfnHandler, DWORD lpfnHandler16) 
+HIC VFWAPI ICOpenFunction(DWORD fccType, DWORD fccHandler, UINT wMode, DRIVERPROC lpfnHandler)
 {
     ICOPEN      icopen;
     WINE_HIC*   whic;
 
-    TRACE("(%s,%s,%d,%p,%08x)\n",
-          wine_dbgstr_fcc(fccType), wine_dbgstr_fcc(fccHandler), wMode, lpfnHandler, lpfnHandler16);
+    TRACE("(%s,%s,%d,%p)\n",
+          wine_dbgstr_fcc(fccType), wine_dbgstr_fcc(fccHandler), wMode, lpfnHandler);
 
     icopen.dwSize		= sizeof(ICOPEN);
     icopen.fccType		= fccType;
@@ -412,9 +486,8 @@ HIC MSVIDEO_OpenFunction(DWORD fccType, DWORD fccHandler, UINT wMode,
     if (!whic) return 0;
 
     whic->driverproc   = lpfnHandler;
-    whic->driverproc16 = lpfnHandler16;
-    while (MSVIDEO_GetHicPtr(HIC_32(IC_HandleRef)) != NULL) IC_HandleRef++;
-    whic->hic          = HIC_32(IC_HandleRef++);
+    while (MSVIDEO_GetHicPtr((HIC)(ULONG_PTR)IC_HandleRef) != NULL) IC_HandleRef++;
+    whic->hic          = (HIC)(ULONG_PTR)IC_HandleRef++;
     whic->next         = MSVIDEO_FirstHic;
     MSVIDEO_FirstHic = whic;
 
@@ -445,14 +518,6 @@ HIC MSVIDEO_OpenFunction(DWORD fccType, DWORD fccHandler, UINT wMode,
 
     TRACE("=> %p\n", whic->hic);
     return whic->hic;
-}
-
-/***********************************************************************
- *		ICOpenFunction			[MSVFW32.@]
- */
-HIC VFWAPI ICOpenFunction(DWORD fccType, DWORD fccHandler, UINT wMode, FARPROC lpfnHandler) 
-{
-    return MSVIDEO_OpenFunction(fccType, fccHandler, wMode, (DRIVERPROC)lpfnHandler, 0);
 }
 
 /***********************************************************************
@@ -680,8 +745,6 @@ DWORD VFWAPIV  ICDecompress(HIC hic,DWORD dwFlags,LPBITMAPINFOHEADER lpbiFormat,
 
 	TRACE("(%p,%d,%p,%p,%p,%p)\n",hic,dwFlags,lpbiFormat,lpData,lpbi,lpBits);
 
-	TRACE("lpBits[0] == %x\n",((LPDWORD)lpBits)[0]);
-
 	icd.dwFlags	= dwFlags;
 	icd.lpbiInput	= lpbiFormat;
 	icd.lpInput	= lpData;
@@ -690,8 +753,6 @@ DWORD VFWAPIV  ICDecompress(HIC hic,DWORD dwFlags,LPBITMAPINFOHEADER lpbiFormat,
 	icd.lpOutput	= lpBits;
 	icd.ckid	= 0;
 	ret = ICSendMessage(hic,ICM_DECOMPRESS,(DWORD_PTR)&icd,sizeof(ICDECOMPRESS));
-
-	TRACE("lpBits[0] == %x\n",((LPDWORD)lpBits)[0]);
 
 	TRACE("-> %d\n",ret);
 
@@ -1015,93 +1076,6 @@ void VFWAPI ICCompressorFree(PCOMPVARS pc)
     pc->lpState = NULL;
     pc->dwFlags = 0;
   }
-}
-
-
-/******************************************************************
- *		MSVIDEO_SendMessage
- *
- *
- */
-LRESULT MSVIDEO_SendMessage(WINE_HIC* whic, UINT msg, DWORD_PTR lParam1, DWORD_PTR lParam2)
-{
-    LRESULT     ret;
-
-#define XX(x) case x: TRACE("(%p,"#x",0x%08lx,0x%08lx)\n",whic,lParam1,lParam2); break
-
-    switch (msg) {
-        /* DRV_* */
-        XX(DRV_LOAD);
-        XX(DRV_ENABLE);
-        XX(DRV_OPEN);
-        XX(DRV_CLOSE);
-        XX(DRV_DISABLE);
-        XX(DRV_FREE);
-        /* ICM_RESERVED+X */
-        XX(ICM_ABOUT);
-        XX(ICM_CONFIGURE);
-        XX(ICM_GET);
-        XX(ICM_GETINFO);
-        XX(ICM_GETDEFAULTQUALITY);
-        XX(ICM_GETQUALITY);
-        XX(ICM_GETSTATE);
-        XX(ICM_SETQUALITY);
-        XX(ICM_SET);
-        XX(ICM_SETSTATE);
-        /* ICM_USER+X */
-        XX(ICM_COMPRESS_FRAMES_INFO);
-        XX(ICM_COMPRESS_GET_FORMAT);
-        XX(ICM_COMPRESS_GET_SIZE);
-        XX(ICM_COMPRESS_QUERY);
-        XX(ICM_COMPRESS_BEGIN);
-        XX(ICM_COMPRESS);
-        XX(ICM_COMPRESS_END);
-        XX(ICM_DECOMPRESS_GET_FORMAT);
-        XX(ICM_DECOMPRESS_QUERY);
-        XX(ICM_DECOMPRESS_BEGIN);
-        XX(ICM_DECOMPRESS);
-        XX(ICM_DECOMPRESS_END);
-        XX(ICM_DECOMPRESS_SET_PALETTE);
-        XX(ICM_DECOMPRESS_GET_PALETTE);
-        XX(ICM_DRAW_QUERY);
-        XX(ICM_DRAW_BEGIN);
-        XX(ICM_DRAW_GET_PALETTE);
-        XX(ICM_DRAW_START);
-        XX(ICM_DRAW_STOP);
-        XX(ICM_DRAW_END);
-        XX(ICM_DRAW_GETTIME);
-        XX(ICM_DRAW);
-        XX(ICM_DRAW_WINDOW);
-        XX(ICM_DRAW_SETTIME);
-        XX(ICM_DRAW_REALIZE);
-        XX(ICM_DRAW_FLUSH);
-        XX(ICM_DRAW_RENDERBUFFER);
-        XX(ICM_DRAW_START_PLAY);
-        XX(ICM_DRAW_STOP_PLAY);
-        XX(ICM_DRAW_SUGGESTFORMAT);
-        XX(ICM_DRAW_CHANGEPALETTE);
-        XX(ICM_GETBUFFERSWANTED);
-        XX(ICM_GETDEFAULTKEYFRAMERATE);
-        XX(ICM_DECOMPRESSEX_BEGIN);
-        XX(ICM_DECOMPRESSEX_QUERY);
-        XX(ICM_DECOMPRESSEX);
-        XX(ICM_DECOMPRESSEX_END);
-        XX(ICM_SET_STATUS_PROC);
-    default:
-        FIXME("(%p,0x%08x,0x%08lx,0x%08lx) unknown message\n",whic,msg,lParam1,lParam2);
-    }
-    
-#undef XX
-    
-    if (whic->driverproc) {
-	/* dwDriverId parameter is the value returned by the DRV_OPEN */
-        ret = whic->driverproc(whic->driverId, whic->hdrv, msg, lParam1, lParam2);
-    } else {
-        ret = SendDriverMessage(whic->hdrv, msg, lParam1, lParam2);
-    }
-
-    TRACE("	-> 0x%08lx\n", ret);
-    return ret;
 }
 
 /***********************************************************************

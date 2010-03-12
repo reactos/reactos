@@ -59,6 +59,14 @@ VgaQueryNumberOfAvailableModes(
     );
 
 VP_STATUS
+VgaQueryCurrentMode(
+    PHW_DEVICE_EXTENSION HwDeviceExtension,
+    PVIDEO_MODE_INFORMATION ModeInformation,
+    ULONG ModeInformationSize,
+    PULONG OutputSize
+    );
+
+VP_STATUS
 VgaSetMode(
     PHW_DEVICE_EXTENSION HwDeviceExtension,
     PVIDEO_MODE Mode,
@@ -79,6 +87,13 @@ VgaInterpretCmdStream(
     PUSHORT pusCmdStream
     );
 
+VP_STATUS
+VgaSetPaletteReg(
+    PHW_DEVICE_EXTENSION HwDeviceExtension,
+    PVIDEO_PALETTE_DATA PaletteBuffer,
+    ULONG PaletteBufferSize
+    );
+    
 VP_STATUS
 VgaSetColorLookup(
     PHW_DEVICE_EXTENSION HwDeviceExtension,
@@ -394,7 +409,7 @@ Return Value:
          VGA_MAX_IO_PORT - VGA_BASE_IO_PORT + 1,
          VgaAccessRange->RangeInIoSpace)) == NULL)
     {
-        VideoDebugPrint((2, "VgaFindAdapter - Fail to get io address\n"));
+        VideoDebugPrint((0, "VgaFindAdapter - Fail to get io address\n"));
 
         return ERROR_INVALID_PARAMETER;
     }
@@ -445,7 +460,7 @@ Return Value:
                                      VgaAccessRange[2].RangeLength,
                                      FALSE)) == NULL)
     {
-        VideoDebugPrint((1, "VgaFindAdapter - Fail to get memory address\n"));
+        VideoDebugPrint((0, "VgaFindAdapter - Fail to get memory address\n"));
 
         return ERROR_INVALID_PARAMETER;
     }
@@ -681,7 +696,10 @@ Return Value:
 
         VideoDebugPrint((2, "VgaStartIO - QueryCurrentMode\n"));
 
-        status = ERROR_INVALID_FUNCTION;
+        status = VgaQueryCurrentMode(HwDeviceExtension,
+                                     (PVIDEO_MODE_INFORMATION) RequestPacket->OutputBuffer,
+                                     RequestPacket->OutputBufferLength,
+                                     &RequestPacket->StatusBlock->Information);
 
         break;
 
@@ -775,7 +793,9 @@ Return Value:
 
         VideoDebugPrint((2, "VgaStartIO - SetPaletteRegs\n"));
 
-        status = ERROR_INVALID_FUNCTION;
+        status = VgaSetPaletteReg(HwDeviceExtension,
+                                  (PVIDEO_PALETTE_DATA) RequestPacket->InputBuffer,
+                                  RequestPacket->InputBufferLength);
 
         break;
 
@@ -825,8 +845,53 @@ Return Value:
         break;
 
     case IOCTL_VIDEO_QUERY_PUBLIC_ACCESS_RANGES:
+        {
+            VideoDebugPrint((2, "VgaStartIO - Query Public Address Ranges\n"));
+        
+            PVIDEO_PUBLIC_ACCESS_RANGES portAccess;
+            ULONG physicalPortLength;
+
+            if (RequestPacket->OutputBufferLength <
+                sizeof(VIDEO_PUBLIC_ACCESS_RANGES))
+            {
+                status = ERROR_INSUFFICIENT_BUFFER;
+                break;
+            }
+
+            RequestPacket->StatusBlock->Information =
+                sizeof(VIDEO_PUBLIC_ACCESS_RANGES);
+
+            portAccess = RequestPacket->OutputBuffer;
+
+            //
+            // The first public access range is the IO ports.
+            //
+
+            portAccess->VirtualAddress  = (PVOID) NULL;
+            portAccess->InIoSpace       = TRUE;
+            portAccess->MappedInIoSpace = portAccess->InIoSpace;
+            physicalPortLength = VGA_MAX_IO_PORT - VGA_BASE_IO_PORT + 1;
+
+            status =  VideoPortMapMemory(hwDeviceExtension,
+                                         VgaAccessRange->RangeStart,
+                                         &physicalPortLength,
+                                         &(portAccess->MappedInIoSpace),
+                                         &(portAccess->VirtualAddress));
+// eVb: 1.17 [GCG] - Fix lvalue error
+            portAccess->VirtualAddress = (PVOID)((ULONG_PTR)portAccess->VirtualAddress - VGA_BASE_IO_PORT);
+// eVb: 1.17 [END]
+            VideoDebugPrint((2, "VgaStartIO - mapping ports to (%x)\n", portAccess->VirtualAddress));
+        }
+        
+        break;
+
     case IOCTL_VIDEO_FREE_PUBLIC_ACCESS_RANGES:
 
+        VideoDebugPrint((2, "VgaStartIO - Free Public Access Ranges\n"));
+
+        status = ERROR_INVALID_FUNCTION;
+        break;
+        
     //
     // if we get here, an invalid IoControlCode was specified.
     //
@@ -1180,6 +1245,96 @@ Return Value:
 } // VgaIsPresent()
 
 
+//---------------------------------------------------------------------------
+VP_STATUS
+VgaSetPaletteReg(
+    PHW_DEVICE_EXTENSION HwDeviceExtension,
+    PVIDEO_PALETTE_DATA PaletteBuffer,
+    ULONG PaletteBufferSize
+    )
+
+/*++
+
+Routine Description:
+
+    This routine sets a specified portion of the EGA (not DAC) palette
+    registers.
+
+Arguments:
+
+    HwDeviceExtension - Pointer to the miniport driver's device extension.
+
+    PaletteBuffer - Pointer to the structure containing the palette data.
+
+    PaletteBufferSize - Length of the input buffer supplied by the user.
+
+Return Value:
+
+    NO_ERROR - information returned successfully
+
+    ERROR_INSUFFICIENT_BUFFER - input buffer not large enough for input data.
+
+    ERROR_INVALID_PARAMETER - invalid palette size.
+
+--*/
+
+{
+    USHORT i;
+
+    //
+    // Check if the size of the data in the input buffer is large enough.
+    //
+
+    if ((PaletteBufferSize) < (sizeof(VIDEO_PALETTE_DATA)) ||
+        (PaletteBufferSize < (sizeof(VIDEO_PALETTE_DATA) +
+                (sizeof(USHORT) * (PaletteBuffer->NumEntries -1)) ))) {
+
+        return ERROR_INSUFFICIENT_BUFFER;
+
+    }
+
+    //
+    // Check to see if the parameters are valid.
+    //
+
+    if ( (PaletteBuffer->FirstEntry > VIDEO_MAX_COLOR_REGISTER ) ||
+         (PaletteBuffer->NumEntries == 0) ||
+         (PaletteBuffer->FirstEntry + PaletteBuffer->NumEntries >
+             VIDEO_MAX_PALETTE_REGISTER + 1 ) ) {
+
+        return ERROR_INVALID_PARAMETER;
+
+    }
+
+    //
+    // Reset ATC to index mode
+    //
+
+    VideoPortReadPortUchar(HwDeviceExtension->IOAddress +
+                           ATT_INITIALIZE_PORT_COLOR);
+
+    //
+    // Blast out our palette values.
+    //
+
+    for (i = 0; i < PaletteBuffer->NumEntries; i++) {
+
+        VideoPortWritePortUchar(HwDeviceExtension->IOAddress + ATT_ADDRESS_PORT,
+                                (UCHAR)(i+PaletteBuffer->FirstEntry));
+
+        VideoPortWritePortUchar(HwDeviceExtension->IOAddress +
+                                    ATT_DATA_WRITE_PORT,
+                                (UCHAR)PaletteBuffer->Colors[i]);
+    }
+
+    VideoPortWritePortUchar(HwDeviceExtension->IOAddress + ATT_ADDRESS_PORT,
+                            VIDEO_ENABLE);
+
+    return NO_ERROR;
+
+} // end VgaSetPaletteReg()
+
+
 //---------------------------------------------------------------------------
 VP_STATUS
 VgaSetColorLookup(

@@ -256,20 +256,21 @@ static unsigned int get_type_alignment(ULONG *pFlags, VARTYPE vt)
 
 static unsigned interface_variant_size(const ULONG *pFlags, REFIID riid, IUnknown *punk)
 {
-  ULONG size;
-  HRESULT hr;
-  /* find the buffer size of the marshalled dispatch interface */
-  hr = CoGetMarshalSizeMax(&size, riid, punk, LOWORD(*pFlags), NULL, MSHLFLAGS_NORMAL);
-  if (FAILED(hr)) {
-    if (!punk)
-      WARN("NULL dispatch pointer\n");
-    else
-      ERR("Dispatch variant buffer size calculation failed, HRESULT=0x%x\n", hr);
-    return 0;
-  }
-  size += sizeof(ULONG); /* we have to store the buffersize in the stream */
-  TRACE("wire-size extra of dispatch variant is %d\n", size);
-  return size;
+    ULONG size = 0;
+    HRESULT hr;
+
+    if (punk)
+    {
+        hr = CoGetMarshalSizeMax(&size, riid, punk, LOWORD(*pFlags), NULL, MSHLFLAGS_NORMAL);
+        if (FAILED(hr))
+        {
+            ERR("interface variant buffer size calculation failed, HRESULT=0x%x\n", hr);
+            return 0;
+        }
+    }
+    size += sizeof(ULONG); /* we have to store the buffersize in the stream */
+    TRACE("wire-size extra of interface variant is %d\n", size);
+    return size;
 }
 
 static ULONG wire_extra_user_size(ULONG *pFlags, ULONG Start, VARIANT *pvar)
@@ -321,6 +322,12 @@ static unsigned char* interface_variant_marshal(const ULONG *pFlags, unsigned ch
   HRESULT hr;
   
   TRACE("pFlags=%d, Buffer=%p, pUnk=%p\n", *pFlags, Buffer, punk);
+
+  if(!punk)
+  {
+      memset(Buffer, 0, sizeof(ULONG));
+      return Buffer + sizeof(ULONG);
+  }
 
   oldpos = Buffer;
   
@@ -377,6 +384,12 @@ static unsigned char *interface_variant_unmarshal(const ULONG *pFlags, unsigned 
   /* get the buffersize */
   memcpy(&size, Buffer, sizeof(ULONG));
   TRACE("buffersize=%d\n", size);
+
+  if(!size)
+  {
+      *ppunk = NULL;
+      return Buffer + sizeof(ULONG);
+  }
 
   working_mem = GlobalAlloc(0, size);
   if (!working_mem) return oldpos;
@@ -552,14 +565,29 @@ unsigned char * WINAPI VARIANT_UserUnmarshal(ULONG *pFlags, unsigned char *Buffe
 
     if(header->vt & VT_BYREF)
     {
+        ULONG mem_size;
         Pos += 4;
+
+        switch (header->vt & ~VT_BYREF)
+        {
+        /* these types have a different memory size compared to wire size */
+        case VT_UNKNOWN:
+        case VT_DISPATCH:
+        case VT_BSTR:
+            mem_size = sizeof(void *);
+            break;
+        default:
+            mem_size = type_size;
+            break;
+        }
+
         if (V_VT(pvar) != header->vt)
         {
             VariantClear(pvar);
-            V_BYREF(pvar) = CoTaskMemAlloc(type_size);
+            V_BYREF(pvar) = CoTaskMemAlloc(mem_size);
         }
         else if (!V_BYREF(pvar))
-            V_BYREF(pvar) = CoTaskMemAlloc(type_size);
+            V_BYREF(pvar) = CoTaskMemAlloc(mem_size);
         memcpy(V_BYREF(pvar), Pos, type_size);
         if((header->vt & VT_TYPEMASK) != VT_VARIANT)
             Pos += type_size;
@@ -748,6 +776,26 @@ static inline SF_TYPE SAFEARRAY_GetUnionType(SAFEARRAY *psa)
     }
 }
 
+static DWORD elem_wire_size(LPSAFEARRAY lpsa, SF_TYPE sftype)
+{
+    if (sftype == SF_BSTR)
+        return sizeof(DWORD);
+    else if (sftype == SF_VARIANT)
+        return sizeof(variant_wire_t) - sizeof(DWORD);
+    else
+        return lpsa->cbElements;
+}
+
+static DWORD elem_mem_size(wireSAFEARRAY wiresa, SF_TYPE sftype)
+{
+    if (sftype == SF_BSTR)
+        return sizeof(BSTR);
+    else if (sftype == SF_VARIANT)
+        return sizeof(VARIANT);
+    else
+        return wiresa->cbElements;
+}
+
 ULONG WINAPI LPSAFEARRAY_UserSize(ULONG *pFlags, ULONG StartingSize, LPSAFEARRAY *ppsa)
 {
     ULONG size = StartingSize;
@@ -853,13 +901,15 @@ unsigned char * WINAPI LPSAFEARRAY_UserMarshal(ULONG *pFlags, unsigned char *Buf
         SF_TYPE sftype;
         GUID guid;
 
+        sftype = SAFEARRAY_GetUnionType(psa);
+
         *(ULONG *)Buffer = psa->cDims;
         Buffer += sizeof(ULONG);
         *(USHORT *)Buffer = psa->cDims;
         Buffer += sizeof(USHORT);
         *(USHORT *)Buffer = psa->fFeatures;
         Buffer += sizeof(USHORT);
-        *(ULONG *)Buffer = psa->cbElements;
+        *(ULONG *)Buffer = elem_wire_size(psa, sftype);
         Buffer += sizeof(ULONG);
 
         hr = SafeArrayGetVartype(psa, &vt);
@@ -868,7 +918,6 @@ unsigned char * WINAPI LPSAFEARRAY_UserMarshal(ULONG *pFlags, unsigned char *Buf
         *(ULONG *)Buffer = (USHORT)psa->cLocks | (vt << 16);
         Buffer += sizeof(ULONG);
 
-        sftype = SAFEARRAY_GetUnionType(psa);
         *(ULONG *)Buffer = sftype;
         Buffer += sizeof(ULONG);
 
@@ -1028,7 +1077,7 @@ unsigned char * WINAPI LPSAFEARRAY_UserUnmarshal(ULONG *pFlags, unsigned char *B
     (*ppsa)->fFeatures &= FADF_AUTOSETFLAGS;
     (*ppsa)->fFeatures |= (wiresa->fFeatures & ~(FADF_AUTOSETFLAGS));
     /* FIXME: there should be a limit on how large wiresa->cbElements can be */
-    (*ppsa)->cbElements = wiresa->cbElements;
+    (*ppsa)->cbElements = elem_mem_size(wiresa, sftype);
     (*ppsa)->cLocks = LOWORD(wiresa->cLocks);
 
     /* SafeArrayCreateEx allocates the data for us, but
@@ -1180,6 +1229,8 @@ HRESULT CALLBACK IDispatch_Invoke_Proxy(
       if (V_ISBYREF(arg)) {
 	rgVarRefIdx[cVarRef] = u;
 	VariantInit(&rgVarRef[cVarRef]);
+	VariantCopy(&rgVarRef[cVarRef], arg);
+	VariantClear(arg);
 	cVarRef++;
       }
     }
@@ -1265,6 +1316,12 @@ HRESULT __RPC_STUB IDispatch_Invoke_Stub(
   }
 
   if (SUCCEEDED(hr)) {
+    /* copy ref args to arg array */
+    for (u=0; u<cVarRef; u++) {
+      unsigned i = rgVarRefIdx[u];
+      VariantCopy(&arg[i], &rgVarRef[u]);
+    }
+
     pDispParams->rgvarg = arg;
 
     hr = IDispatch_Invoke(This,
@@ -1277,14 +1334,10 @@ HRESULT __RPC_STUB IDispatch_Invoke_Stub(
 			  pExcepInfo,
 			  pArgErr);
 
-    /* copy ref args to out list */
+    /* copy ref args from arg array */
     for (u=0; u<cVarRef; u++) {
       unsigned i = rgVarRefIdx[u];
-      VariantInit(&rgVarRef[u]);
       VariantCopy(&rgVarRef[u], &arg[i]);
-      /* clear original if equal, to avoid double-free */
-      if (V_BYREF(&rgVarRef[u]) == V_BYREF(&rgvarg[i]))
-        VariantClear(&rgvarg[i]);
     }
   }
 

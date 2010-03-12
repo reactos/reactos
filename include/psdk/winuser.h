@@ -2446,8 +2446,18 @@ extern "C" {
 #define ODS_DISABLED 4
 #define ODS_CHECKED 8
 #define ODS_FOCUS 16
+#if(WINVER >= 0x0400)
 #define ODS_DEFAULT 32
 #define ODS_COMBOBOXEDIT 4096
+#endif
+#if(WINVER >= 0x0500)
+#define ODS_HOTLIGHT        0x0040
+#define ODS_INACTIVE        0x0080
+#if(_WIN32_WINNT >= 0x0500)
+#define ODS_NOACCEL         0x0100
+#define ODS_NOFOCUSRECT     0x0200
+#endif
+#endif
 #define IDHOT_SNAPWINDOW (-1)
 #define IDHOT_SNAPDESKTOP (-2)
 #define DBWF_LPARAMPOINTER 0x8000

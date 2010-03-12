@@ -1,14 +1,16 @@
 /* PSDK/NDK Headers */
+#define NTOS_MODE_USER
 #include <stdio.h>
 #define WIN32_NO_STATUS
 #include <windows.h>
-#define NTOS_MODE_USER
+#include <winnt.h>
 #include <ndk/ntndk.h>
 
-#include <intrin.h>
+/* CSR Header */
+//#include <csr/server.h>
 
-/* Build Number */
-#include <reactos/buildno.h>
+/* PSEH for SEH Support */
+#include <pseh/pseh2.h>
 
 /* Subsystem Manager Header */
 #include <sm/helper.h>
@@ -17,5 +19,3 @@
 #include <api.h>
 #include <conio.h>
 #include <csrplugin.h>
-
-/* EOF */

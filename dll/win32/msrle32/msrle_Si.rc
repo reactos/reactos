@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "msrle_private.h"
+
 #pragma code_page(65001)
 
 LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
@@ -28,5 +30,3 @@ STRINGTABLE DISCARDABLE
 	IDS_DESCRIPTION	"Wine MS-RLE video kodek"
 	IDS_ABOUT       "Wine MS-RLE video kodek\nCopyright 2002 by Michael Günnewig"
 }
-
-#pragma code_page(default)

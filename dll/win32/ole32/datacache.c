@@ -234,6 +234,12 @@ static void DataCache_Destroy(
   LIST_FOR_EACH_ENTRY_SAFE(cache_entry, next_cache_entry, &ptrToDestroy->cache_list, DataCacheEntry, entry)
     DataCacheEntry_Destroy(cache_entry);
 
+  if (ptrToDestroy->presentationStorage != NULL)
+  {
+    IStorage_Release(ptrToDestroy->presentationStorage);
+    ptrToDestroy->presentationStorage = NULL;
+  }
+
   /*
    * Free the datacache pointer.
    */

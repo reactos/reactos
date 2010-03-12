@@ -10,13 +10,17 @@
 
 #include "precomp.h"
 
-const GUID KSPROPSETID_Pin                     = {0x8C134960, 0x51AD, 0x11CF, {0x87, 0x8A, 0x94, 0xF8, 0x01, 0xC1, 0x00, 0x00}};
-const GUID KSINTERFACESETID_Standard           = {STATIC_KSINTERFACESETID_Standard};
+
 const GUID CLSID_KsClockForwarder              = {0x877e4351, 0x6fea, 0x11d0, {0xb8, 0x63, 0x00, 0xaa, 0x00, 0xa2, 0x16, 0xa1}};
 const GUID CLSID_KsQualityForwarder            = {0xe05592e4, 0xc0b5, 0x11d0, {0xa4, 0x39, 0x00, 0xa0, 0xc9, 0x22, 0x31, 0x96}};
 const GUID CLSID_KsIBasicAudioInterfaceHandler = {0xb9f8ac3e, 0x0f71, 0x11d2, {0xb7, 0x2c, 0x00, 0xc0, 0x4f, 0xb6, 0xbd, 0x3d}};
-const GUID CLSID_Proxy                         = {0x17CCA71B, 0xECD7, 0x11D0, {0xB9, 0x08, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
 
+
+#ifndef _MSC_VER
+const GUID KSPROPSETID_Pin                     = {0x8C134960, 0x51AD, 0x11CF, {0x87, 0x8A, 0x94, 0xF8, 0x01, 0xC1, 0x00, 0x00}};
+const GUID KSINTERFACESETID_Standard           = {STATIC_KSINTERFACESETID_Standard};
+const GUID CLSID_Proxy                         = {0x17CCA71B, 0xECD7, 0x11D0, {0xB9, 0x08, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
+#endif
 
 static INTERFACE_TABLE InterfaceTable[] =
 {
@@ -258,7 +262,78 @@ KsGetMediaType(
     HANDLE         FilterHandle,
     ULONG          PinFactoryId)
 {
-    //UNIMPLEMENTED
+    HRESULT hr;
+    PKSMULTIPLE_ITEM ItemList;
+    int i = 0;
+    PKSDATAFORMAT DataFormat;
+
+    if (Position < 0)
+        return E_INVALIDARG;
+
+    // get current supported ranges
+    hr = KsGetMultiplePinFactoryItems(FilterHandle, PinFactoryId, KSPROPERTY_PIN_CONSTRAINEDDATARANGES, (PVOID*)&ItemList);
+    if (FAILED(hr))
+    {
+        // get standard dataranges
+        hr = KsGetMultiplePinFactoryItems(FilterHandle, PinFactoryId, KSPROPERTY_PIN_DATARANGES, (PVOID*)&ItemList);
+
+        //check for success
+        if (FAILED(hr))
+            return hr;
+    }
+
+    if ((ULONG)Position >= ItemList->Count)
+    {
+        // out of bounds
+        CoTaskMemFree(ItemList);
+        return MAKE_HRESULT(SEVERITY_ERROR, FACILITY_WIN32, ERROR_NO_MORE_ITEMS);
+    }
+
+    // goto first datarange
+    DataFormat = (PKSDATAFORMAT)(ItemList + 1);
+
+    while(i != Position)
+    {
+        // goto next format;
+        DataFormat = (PKSDATAFORMAT)(ULONG_PTR)(DataFormat + DataFormat->FormatSize);
+        i++;
+    }
+
+
+    DataFormat->FormatSize -= sizeof(KSDATAFORMAT);
+    if (DataFormat->FormatSize)
+    {
+         // copy extra format buffer
+        AmMediaType->pbFormat = (BYTE*)CoTaskMemAlloc(DataFormat->FormatSize);
+        if (!AmMediaType->pbFormat)
+        {
+            // not enough memory
+            CoTaskMemFree(ItemList);
+            return E_OUTOFMEMORY;
+        }
+        // copy format buffer
+        CopyMemory(AmMediaType->pbFormat, (DataFormat + 1), DataFormat->FormatSize);
+        AmMediaType->cbFormat = DataFormat->FormatSize;
+    }
+    else
+    {
+        // no format buffer
+        AmMediaType->pbFormat = NULL;
+        AmMediaType->cbFormat = 0;
+    }
+
+    // copy type info
+    CopyMemory(&AmMediaType->majortype, &DataFormat->MajorFormat, sizeof(GUID));
+    CopyMemory(&AmMediaType->subtype, &DataFormat->SubFormat, sizeof(GUID));
+    CopyMemory(&AmMediaType->formattype, &DataFormat->Specifier, sizeof(GUID));
+    AmMediaType->bTemporalCompression = FALSE; //FIXME verify
+    AmMediaType->pUnk = NULL; //FIXME
+    AmMediaType->lSampleSize = DataFormat->SampleSize;
+    AmMediaType->bFixedSizeSamples = (AmMediaType->lSampleSize) ? TRUE : FALSE;
+
+    // free dataformat list
+    CoTaskMemFree(ItemList);
+
     return NOERROR;
 }
 

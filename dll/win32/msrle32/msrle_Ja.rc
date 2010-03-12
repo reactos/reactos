@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "msrle_private.h"
+
 /* UTF-8 */
 #pragma code_page(65001)
 
@@ -29,5 +31,3 @@ STRINGTABLE DISCARDABLE
 	IDS_DESCRIPTION	"Wine MS-RLE ビデオコーデック"
 	IDS_ABOUT       "Wine MS-RLE ビデオコーデック\nCopyright 2002 by Michael Günewig"
 }
-
-#pragma code_page(default)

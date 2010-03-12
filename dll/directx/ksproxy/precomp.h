@@ -18,6 +18,7 @@
 #include <setupapi.h>
 #include <stdio.h>
 #include <vector>
+#include <assert.h>
 //#include <debug.h>
 
 typedef HRESULT (CALLBACK *LPFNCREATEINSTANCE)(IUnknown* pUnkOuter, REFIID riid, LPVOID* ppvObject);
@@ -117,6 +118,7 @@ WINAPI
 COutputPin_Constructor(
     IBaseFilter * ParentFilter,
     LPCWSTR PinName,
+    ULONG PinId,
     REFIID riid,
     LPVOID * ppv);
 
@@ -137,4 +139,4 @@ CEnumMediaTypes_fnConstructor(
     REFIID riid,
     LPVOID * ppv);
 
-
+extern const GUID IID_IKsObject;

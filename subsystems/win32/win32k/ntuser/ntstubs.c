@@ -1029,16 +1029,28 @@ NtUserSetInformationProcess(
     return 0;
 }
 
-DWORD
+NTSTATUS
 APIENTRY
-NtUserSetInformationThread(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4)
+NtUserSetInformationThread(IN HANDLE ThreadHandle,
+                           IN USERTHREADINFOCLASS ThreadInformationClass,
+                           IN PVOID ThreadInformation,
+                           IN ULONG ThreadInformationLength)
+
 {
-    UNIMPLEMENTED;
-    return 0;
+    if (ThreadInformationClass == UserThreadInitiateShutdown)
+    {
+        DPRINT1("Shutdown initiated\n");
+    }
+    else if (ThreadInformationClass == UserThreadEndShutdown)
+    {
+        DPRINT1("Shutdown ended\n");
+    }
+    else
+    {
+        UNIMPLEMENTED;
+    }
+
+    return STATUS_SUCCESS;
 }
 
 DWORD

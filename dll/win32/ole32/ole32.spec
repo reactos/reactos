@@ -70,7 +70,7 @@
 @ stdcall CoRevokeClassObject(long)
 @ stdcall CoRevokeInitializeSpy(double)
 @ stdcall CoRevokeMallocSpy()
-@ stdcall CoSetProxyBlanket(ptr long long wstr long long ptr long)
+@ stdcall CoSetProxyBlanket(ptr long long ptr long long ptr long)
 @ stdcall CoSetState(ptr)
 @ stdcall CoSuspendClassObjects()
 @ stdcall CoSwitchCallContext(ptr ptr)

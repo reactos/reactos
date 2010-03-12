@@ -585,7 +585,6 @@ Bus_PDO_QueryResources(
      PPDO_DEVICE_DATA     DeviceData,
       PIRP   Irp )
 {
-	BOOLEAN Done;
 	ULONG NumberOfResources = 0;
 	PCM_RESOURCE_LIST ResourceList;
 	PCM_PARTIAL_RESOURCE_DESCRIPTOR ResourceDescriptor;
@@ -595,36 +594,30 @@ Bus_PDO_QueryResources(
 	ULONG ResourceListSize;
 	ULONG i;
 
-	ULONG RequirementsListSize;
-	PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
-	PIO_RESOURCE_DESCRIPTOR RequirementDescriptor;
-
-
     /* Get current resources */
     Buffer.Length = 0;
     AcpiStatus = AcpiGetCurrentResources(DeviceData->AcpiHandle, &Buffer);
+    if ((!ACPI_SUCCESS(AcpiStatus) && AcpiStatus != AE_BUFFER_OVERFLOW) ||
+        Buffer.Length == 0)
+    {
+      return Irp->IoStatus.Status;
+    }
+
+    Buffer.Pointer = ExAllocatePool(PagedPool, Buffer.Length);
+    if (!Buffer.Pointer)
+      return STATUS_INSUFFICIENT_RESOURCES;
+
+    AcpiStatus = AcpiGetCurrentResources(DeviceData->AcpiHandle, &Buffer);
     if (!ACPI_SUCCESS(AcpiStatus))
     {
-      return STATUS_SUCCESS;
+      DPRINT1("AcpiGetCurrentResources #2 failed (0x%x)\n", AcpiStatus);
+      ASSERT(FALSE);
+      return STATUS_UNSUCCESSFUL;
     }
-    if (Buffer.Length > 0)
-    {
-      Buffer.Pointer = ExAllocatePool(PagedPool, Buffer.Length);
-      if (!Buffer.Pointer)
-      {
-        ASSERT(FALSE);
-      }
-      AcpiStatus = AcpiGetCurrentResources(DeviceData->AcpiHandle, &Buffer);
-      if (!ACPI_SUCCESS(AcpiStatus))
-      {
-        ASSERT(FALSE);
-      }
-	}
 
 	resource= Buffer.Pointer;
 	/* Count number of resources */
-	Done = FALSE;
-	while (!Done)
+	while (resource->Type != ACPI_RESOURCE_TYPE_END_TAG)
 	{
 		switch (resource->Type)
 		{
@@ -645,13 +638,9 @@ Bus_PDO_QueryResources(
 				NumberOfResources++;
 				break;
 			}
-			case ACPI_RESOURCE_TYPE_END_TAG:
-			{
-				Done = TRUE;
-				break;
-			}
 			default:
 			{
+				DPRINT1("Unknown resource type: %d\n", resource->Type);
 				break;
 			}
 		}
@@ -663,7 +652,10 @@ Bus_PDO_QueryResources(
 	ResourceList = (PCM_RESOURCE_LIST)ExAllocatePool(PagedPool, ResourceListSize);
 
 	if (!ResourceList)
-		return FALSE;
+	{
+		ExFreePool(Buffer.Pointer);
+		return STATUS_INSUFFICIENT_RESOURCES;
+	}
 	ResourceList->Count = 1;
 	ResourceList->List[0].InterfaceType = Internal; /* FIXME */
 	ResourceList->List[0].BusNumber = 0; /* We're the only ACPI bus device in the system */
@@ -672,27 +664,8 @@ Bus_PDO_QueryResources(
 	ResourceList->List[0].PartialResourceList.Count = NumberOfResources;
 	ResourceDescriptor = ResourceList->List[0].PartialResourceList.PartialDescriptors;
 
-	RequirementsListSize = sizeof(IO_RESOURCE_REQUIREMENTS_LIST) + sizeof(IO_RESOURCE_DESCRIPTOR) * (NumberOfResources - 1);
-	RequirementsList = (PIO_RESOURCE_REQUIREMENTS_LIST)ExAllocatePool(PagedPool, RequirementsListSize);
-
-	if (!RequirementsList)
-	{
-		ExFreePool(ResourceList);
-		return STATUS_SUCCESS;
-	}
-	RequirementsList->ListSize = RequirementsListSize;
-	RequirementsList->InterfaceType = Internal;
-	RequirementsList->BusNumber = 0;
-	RequirementsList->SlotNumber = 0; /* Not used by WDM drivers */
-	RequirementsList->AlternativeLists = 1;
-	RequirementsList->List[0].Version = 1;
-	RequirementsList->List[0].Revision = 1;
-	RequirementsList->List[0].Count = NumberOfResources;
-	RequirementDescriptor = RequirementsList->List[0].Descriptors;
-
 	/* Fill resources list structure */
-	Done = FALSE;
-	while (!Done)
+	while (resource->Type != ACPI_RESOURCE_TYPE_END_TAG)
 	{
 		switch (resource->Type)
 		{
@@ -711,15 +684,7 @@ Bus_PDO_QueryResources(
 					ResourceDescriptor->u.Interrupt.Vector = 0;
 					ResourceDescriptor->u.Interrupt.Affinity = (KAFFINITY)(-1);
 
-					RequirementDescriptor->Option = 0; /* Required */
-					RequirementDescriptor->Type = ResourceDescriptor->Type;
-					RequirementDescriptor->ShareDisposition = ResourceDescriptor->ShareDisposition;
-					RequirementDescriptor->Flags = ResourceDescriptor->Flags;
-					RequirementDescriptor->u.Interrupt.MinimumVector = RequirementDescriptor->u.Interrupt.MaximumVector
-					= irq_data->Interrupts[i];
-
 					ResourceDescriptor++;
-					RequirementDescriptor++;
 				}
 				break;
 			}
@@ -730,33 +695,25 @@ Bus_PDO_QueryResources(
 				{
 					ResourceDescriptor->Type = CmResourceTypeDma;
 					ResourceDescriptor->Flags = 0;
-				switch (dma_data->Type)
-				{
-					case ACPI_TYPE_A: ResourceDescriptor->Flags |= CM_RESOURCE_DMA_TYPE_A; break;
-					case ACPI_TYPE_B: ResourceDescriptor->Flags |= CM_RESOURCE_DMA_TYPE_B; break;
-					case ACPI_TYPE_F: ResourceDescriptor->Flags |= CM_RESOURCE_DMA_TYPE_F; break;
-				}
-				if (dma_data->BusMaster == ACPI_BUS_MASTER)
-					ResourceDescriptor->Flags |= CM_RESOURCE_DMA_BUS_MASTER;
-				switch (dma_data->Transfer)
-				{
-					case ACPI_TRANSFER_8: ResourceDescriptor->Flags |= CM_RESOURCE_DMA_8; break;
-					case ACPI_TRANSFER_16: ResourceDescriptor->Flags |= CM_RESOURCE_DMA_16; break;
-					case ACPI_TRANSFER_8_16: ResourceDescriptor->Flags |= CM_RESOURCE_DMA_8_AND_16; break;
-				}
-				ResourceDescriptor->u.Dma.Channel = dma_data->Channels[i];
+					switch (dma_data->Type)
+					{
+						case ACPI_TYPE_A: ResourceDescriptor->Flags |= CM_RESOURCE_DMA_TYPE_A; break;
+						case ACPI_TYPE_B: ResourceDescriptor->Flags |= CM_RESOURCE_DMA_TYPE_B; break;
+						case ACPI_TYPE_F: ResourceDescriptor->Flags |= CM_RESOURCE_DMA_TYPE_F; break;
+					}
+					if (dma_data->BusMaster == ACPI_BUS_MASTER)
+						ResourceDescriptor->Flags |= CM_RESOURCE_DMA_BUS_MASTER;
+					switch (dma_data->Transfer)
+					{
+						case ACPI_TRANSFER_8: ResourceDescriptor->Flags |= CM_RESOURCE_DMA_8; break;
+						case ACPI_TRANSFER_16: ResourceDescriptor->Flags |= CM_RESOURCE_DMA_16; break;
+						case ACPI_TRANSFER_8_16: ResourceDescriptor->Flags |= CM_RESOURCE_DMA_8_AND_16; break;
+					}
+					ResourceDescriptor->u.Dma.Channel = dma_data->Channels[i];
 
-				RequirementDescriptor->Option = 0; /* Required */
-				RequirementDescriptor->Type = ResourceDescriptor->Type;
-				RequirementDescriptor->ShareDisposition = ResourceDescriptor->ShareDisposition;
-				RequirementDescriptor->Flags = ResourceDescriptor->Flags;
-				RequirementDescriptor->u.Dma.MinimumChannel = RequirementDescriptor->u.Dma.MaximumChannel
-				= ResourceDescriptor->u.Dma.Channel;
-
-				ResourceDescriptor++;
-				RequirementDescriptor++;
-			}
-			break;
+					ResourceDescriptor++;
+				}
+				break;
 			}
 			case ACPI_RESOURCE_TYPE_IO:
 			{
@@ -772,27 +729,11 @@ Bus_PDO_QueryResources(
 				ResourceDescriptor->u.Port.Start.u.LowPart = io_data->Minimum;
 				ResourceDescriptor->u.Port.Length = io_data->AddressLength;
 
-				RequirementDescriptor->Option = 0; /* Required */
-				RequirementDescriptor->Type = ResourceDescriptor->Type;
-				RequirementDescriptor->ShareDisposition = ResourceDescriptor->ShareDisposition;
-				RequirementDescriptor->Flags = ResourceDescriptor->Flags;
-				RequirementDescriptor->u.Port.Length = ResourceDescriptor->u.Port.Length;
-				RequirementDescriptor->u.Port.Alignment = 1; /* Start address is specified, so it doesn't matter */
-				RequirementDescriptor->u.Port.MinimumAddress = RequirementDescriptor->u.Port.MaximumAddress
-				= ResourceDescriptor->u.Port.Start;
-
 				ResourceDescriptor++;
-				RequirementDescriptor++;
-				break;
-			}
-			case ACPI_RESOURCE_TYPE_END_TAG:
-			{
-				Done = TRUE;
 				break;
 			}
 			default:
 			{
-				DPRINT1("Unhandled resource type\n");
 				break;
 			}
 		}
@@ -809,7 +750,6 @@ Bus_PDO_QueryResourceRequirements(
      PPDO_DEVICE_DATA     DeviceData,
       PIRP   Irp )
 {
-	BOOLEAN Done;
 	ULONG NumberOfResources = 0;
 	ACPI_STATUS AcpiStatus;
 	ACPI_BUFFER Buffer;
@@ -817,35 +757,49 @@ Bus_PDO_QueryResourceRequirements(
 	ULONG i, RequirementsListSize;
 	PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
 	PIO_RESOURCE_DESCRIPTOR RequirementDescriptor;
+	BOOLEAN CurrentRes = FALSE;
 
     PAGED_CODE ();
 
 
     /* Get current resources */
-    Buffer.Length = 0;
-    AcpiStatus = AcpiGetCurrentResources(DeviceData->AcpiHandle, &Buffer);
+    while (TRUE)
+    {
+        Buffer.Length = 0;
+        if (CurrentRes)
+	    AcpiStatus = AcpiGetCurrentResources(DeviceData->AcpiHandle, &Buffer);
+        else
+            AcpiStatus = AcpiGetPossibleResources(DeviceData->AcpiHandle, &Buffer);
+        if ((!ACPI_SUCCESS(AcpiStatus) && AcpiStatus != AE_BUFFER_OVERFLOW) ||
+            Buffer.Length == 0)
+        {
+            if (!CurrentRes)
+                CurrentRes = TRUE;
+            else
+                return Irp->IoStatus.Status;
+        }
+        else
+            break;
+    }
+
+    Buffer.Pointer = ExAllocatePool(PagedPool, Buffer.Length);
+    if (!Buffer.Pointer)
+      return STATUS_INSUFFICIENT_RESOURCES;
+
+    if (CurrentRes)
+        AcpiStatus = AcpiGetCurrentResources(DeviceData->AcpiHandle, &Buffer);
+    else
+        AcpiStatus = AcpiGetPossibleResources(DeviceData->AcpiHandle, &Buffer);
     if (!ACPI_SUCCESS(AcpiStatus))
     {
-      return STATUS_SUCCESS;
+      DPRINT1("AcpiGetCurrentResources #2 failed (0x%x)\n", AcpiStatus);
+      ASSERT(FALSE);
+      return STATUS_UNSUCCESSFUL;
     }
-    if (Buffer.Length > 0)
-    {
-      Buffer.Pointer = ExAllocatePool(PagedPool, Buffer.Length);
-      if (!Buffer.Pointer)
-      {
-        ASSERT(FALSE);
-      }
-      AcpiStatus = AcpiGetCurrentResources(DeviceData->AcpiHandle, &Buffer);
-      if (!ACPI_SUCCESS(AcpiStatus))
-      {
-        ASSERT(FALSE);
-      }
-	}
 
 	resource= Buffer.Pointer;
 	/* Count number of resources */
-	Done = FALSE;
-	while (!Done)
+	while (resource->Type != ACPI_RESOURCE_TYPE_END_TAG)
 	{
 		switch (resource->Type)
 		{
@@ -866,11 +820,6 @@ Bus_PDO_QueryResourceRequirements(
 				NumberOfResources++;
 				break;
 			}
-			case ACPI_RESOURCE_TYPE_END_TAG:
-			{
-				Done = TRUE;
-				break;
-			}
 			default:
 			{
 				break;
@@ -885,7 +834,7 @@ Bus_PDO_QueryResourceRequirements(
 	if (!RequirementsList)
 	{
 		ExFreePool(Buffer.Pointer);
-		return STATUS_SUCCESS;
+		return STATUS_INSUFFICIENT_RESOURCES;
 	}
 	RequirementsList->ListSize = RequirementsListSize;
 	RequirementsList->InterfaceType = Internal;
@@ -898,8 +847,7 @@ Bus_PDO_QueryResourceRequirements(
 	RequirementDescriptor = RequirementsList->List[0].Descriptors;
 
 	/* Fill resources list structure */
-	Done = FALSE;
-	while (!Done)
+	while (resource->Type != ACPI_RESOURCE_TYPE_END_TAG)
 	{
 		switch (resource->Type)
 		{
@@ -908,11 +856,12 @@ Bus_PDO_QueryResourceRequirements(
 				ACPI_RESOURCE_IRQ *irq_data = (ACPI_RESOURCE_IRQ*) &resource->Data;
 				for (i = 0; i < irq_data->InterruptCount; i++)
 				{
-					RequirementDescriptor->Option = 0; /* Required */
+					RequirementDescriptor->Option = CurrentRes ? 0 : IO_RESOURCE_PREFERRED;
 					RequirementDescriptor->Type = CmResourceTypeInterrupt;
 					RequirementDescriptor->ShareDisposition = (irq_data->Sharable == ACPI_SHARED ? CmResourceShareShared : CmResourceShareDeviceExclusive);
 					RequirementDescriptor->Flags =(irq_data->Triggering == ACPI_LEVEL_SENSITIVE ? CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE : CM_RESOURCE_INTERRUPT_LATCHED);
-					RequirementDescriptor->u.Interrupt.MinimumVector =  irq_data->Interrupts[i];
+					RequirementDescriptor->u.Interrupt.MinimumVector =
+					RequirementDescriptor->u.Interrupt.MaximumVector = irq_data->Interrupts[i];
 
 					RequirementDescriptor++;
 				}
@@ -925,27 +874,28 @@ Bus_PDO_QueryResourceRequirements(
 				{
 					RequirementDescriptor->Type = CmResourceTypeDma;
 					RequirementDescriptor->Flags = 0;
-				switch (dma_data->Type)
-				{
-					case ACPI_TYPE_A: RequirementDescriptor->Flags |= CM_RESOURCE_DMA_TYPE_A; break;
-					case ACPI_TYPE_B: RequirementDescriptor->Flags |= CM_RESOURCE_DMA_TYPE_B; break;
-					case ACPI_TYPE_F: RequirementDescriptor->Flags |= CM_RESOURCE_DMA_TYPE_F; break;
-				}
-				if (dma_data->BusMaster == ACPI_BUS_MASTER)
-					RequirementDescriptor->Flags |= CM_RESOURCE_DMA_BUS_MASTER;
-				switch (dma_data->Transfer)
-				{
-					case ACPI_TRANSFER_8: RequirementDescriptor->Flags |= CM_RESOURCE_DMA_8; break;
-					case ACPI_TRANSFER_16: RequirementDescriptor->Flags |= CM_RESOURCE_DMA_16; break;
-					case ACPI_TRANSFER_8_16: RequirementDescriptor->Flags |= CM_RESOURCE_DMA_8_AND_16; break;
-				}
+					switch (dma_data->Type)
+					{
+						case ACPI_TYPE_A: RequirementDescriptor->Flags |= CM_RESOURCE_DMA_TYPE_A; break;
+						case ACPI_TYPE_B: RequirementDescriptor->Flags |= CM_RESOURCE_DMA_TYPE_B; break;
+						case ACPI_TYPE_F: RequirementDescriptor->Flags |= CM_RESOURCE_DMA_TYPE_F; break;
+					}
+					if (dma_data->BusMaster == ACPI_BUS_MASTER)
+						RequirementDescriptor->Flags |= CM_RESOURCE_DMA_BUS_MASTER;
+					switch (dma_data->Transfer)
+					{
+						case ACPI_TRANSFER_8: RequirementDescriptor->Flags |= CM_RESOURCE_DMA_8; break;
+						case ACPI_TRANSFER_16: RequirementDescriptor->Flags |= CM_RESOURCE_DMA_16; break;
+						case ACPI_TRANSFER_8_16: RequirementDescriptor->Flags |= CM_RESOURCE_DMA_8_AND_16; break;
+					}
 
-				RequirementDescriptor->Option = 0; /* Required */
-				RequirementDescriptor->ShareDisposition = CmResourceShareDriverExclusive;
-				RequirementDescriptor->u.Dma.MinimumChannel = dma_data->Channels[i];
-				RequirementDescriptor++;
-			}
-			break;
+					RequirementDescriptor->Option = CurrentRes ? 0 : IO_RESOURCE_PREFERRED;
+					RequirementDescriptor->ShareDisposition = CmResourceShareDriverExclusive;
+					RequirementDescriptor->u.Dma.MinimumChannel =
+					RequirementDescriptor->u.Dma.MaximumChannel = dma_data->Channels[i];
+					RequirementDescriptor++;
+				}
+				break;
 			}
 			case ACPI_RESOURCE_TYPE_IO:
 			{
@@ -958,30 +908,26 @@ Bus_PDO_QueryResourceRequirements(
 
 				RequirementDescriptor->u.Port.Length = io_data->AddressLength;
 
-				RequirementDescriptor->Option = 0; /* Required */
+				RequirementDescriptor->Option = CurrentRes ? 0 : IO_RESOURCE_PREFERRED;
 				RequirementDescriptor->Type = CmResourceTypePort;
 				RequirementDescriptor->ShareDisposition = CmResourceShareDriverExclusive;
-				RequirementDescriptor->u.Port.Alignment = 1; /* Start address is specified, so it doesn't matter */
+				RequirementDescriptor->u.Port.Alignment = io_data->Alignment;
 				RequirementDescriptor->u.Port.MinimumAddress.QuadPart = io_data->Minimum;
 				RequirementDescriptor->u.Port.MaximumAddress.QuadPart = io_data->Maximum;
 
 				RequirementDescriptor++;
 				break;
 			}
-			case ACPI_RESOURCE_TYPE_END_TAG:
-			{
-				Done = TRUE;
-				break;
-			}
 			default:
 			{
-				DPRINT1("Unhandled resource type\n");
 				break;
 			}
 		}
 		resource = ACPI_NEXT_RESOURCE(resource);
 	}
 	ExFreePool(Buffer.Pointer);
+
+    Irp->IoStatus.Information = (ULONG_PTR)RequirementsList;
 
     return STATUS_SUCCESS;
 }

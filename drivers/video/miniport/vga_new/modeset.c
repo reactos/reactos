@@ -41,6 +41,14 @@ VgaQueryNumberOfAvailableModes(
     PULONG OutputSize
     );
 
+VP_STATUS
+VgaQueryCurrentMode(
+    PHW_DEVICE_EXTENSION HwDeviceExtension,
+    PVIDEO_MODE_INFORMATION ModeInformation,
+    ULONG ModeInformationSize,
+    PULONG OutputSize
+    );
+
 VOID
 VgaZeroVideoMemory(
     PHW_DEVICE_EXTENSION HwDeviceExtension
@@ -696,6 +704,139 @@ Return Value:
     return NO_ERROR;
 
 } // end VgaGetNumberOfAvailableModes()
+
+VP_STATUS
+VgaQueryCurrentMode(
+    PHW_DEVICE_EXTENSION HwDeviceExtension,
+    PVIDEO_MODE_INFORMATION ModeInformation,
+    ULONG ModeInformationSize,
+    PULONG OutputSize
+    )
+
+/*++
+
+Routine Description:
+
+    This routine returns a description of the current video mode.
+
+Arguments:
+
+    HwDeviceExtension - Pointer to the miniport driver's device extension.
+
+    ModeInformation - Pointer to the output buffer supplied by the user.
+        This is where the current mode information is stored.
+
+    ModeInformationSize - Length of the output buffer supplied by the user.
+
+    OutputSize - Pointer to a buffer in which to return the actual size of
+        the data in the buffer. If the buffer was not large enough, this
+        contains the minimum required buffer size.
+
+Return Value:
+
+    ERROR_INSUFFICIENT_BUFFER if the output buffer was not large enough
+        for the data being returned.
+
+    NO_ERROR if the operation completed successfully.
+
+--*/
+
+{
+    //
+    // check if a mode has been set
+    //
+
+    if (HwDeviceExtension->CurrentMode == NULL ) {
+
+        return ERROR_INVALID_FUNCTION;
+
+    }
+
+    //
+    // Find out the size of the data to be put in the the buffer and return
+    // that in the status information (whether or not the information is
+    // there). If the buffer passed in is not large enough return an
+    // appropriate error code.
+    //
+
+    if (ModeInformationSize < (*OutputSize = sizeof(VIDEO_MODE_INFORMATION))) {
+
+        return ERROR_INSUFFICIENT_BUFFER;
+
+    }
+
+    //
+    // Store the characteristics of the current mode into the buffer.
+    //
+
+    ModeInformation->Length = sizeof(VIDEO_MODE_INFORMATION);
+    ModeInformation->ModeIndex = HwDeviceExtension->ModeIndex;
+    ModeInformation->VisScreenWidth = HwDeviceExtension->CurrentMode->hres;
+    ModeInformation->ScreenStride = HwDeviceExtension->CurrentMode->wbytes;
+    ModeInformation->VisScreenHeight = HwDeviceExtension->CurrentMode->vres;
+    ModeInformation->NumberOfPlanes = HwDeviceExtension->CurrentMode->numPlanes;
+    ModeInformation->BitsPerPlane = HwDeviceExtension->CurrentMode->bitsPerPlane;
+    ModeInformation->Frequency = HwDeviceExtension->CurrentMode->Frequency;
+    ModeInformation->XMillimeter = 320;        // temporary hardcoded constant
+    ModeInformation->YMillimeter = 240;        // temporary hardcoded constant
+
+    ModeInformation->AttributeFlags = HwDeviceExtension->CurrentMode->fbType;
+
+    if ((ModeInformation->BitsPerPlane == 32) ||
+        (ModeInformation->BitsPerPlane == 24))
+    {
+
+        ModeInformation->NumberRedBits = 8;
+        ModeInformation->NumberGreenBits = 8;
+        ModeInformation->NumberBlueBits = 8;
+        ModeInformation->RedMask = 0xff0000;
+        ModeInformation->GreenMask = 0x00ff00;
+        ModeInformation->BlueMask = 0x0000ff;
+
+    }
+    else if (ModeInformation->BitsPerPlane == 16)
+    {
+
+        ModeInformation->NumberRedBits = 6;
+        ModeInformation->NumberGreenBits = 6;
+        ModeInformation->NumberBlueBits = 6;
+        ModeInformation->RedMask = 0x1F << 11;
+        ModeInformation->GreenMask = 0x3F << 5;
+        ModeInformation->BlueMask = 0x1F;
+
+    }
+// eVb: 2.12 [VGA] - Add support for 15bpp modes, which Cirrus doesn't support
+    else if (ModeInformation->BitsPerPlane == 15)
+    {
+
+        ModeInformation->NumberRedBits = 6;
+        ModeInformation->NumberGreenBits = 6;
+        ModeInformation->NumberBlueBits = 6;
+        ModeInformation->RedMask = 0x3E << 9;
+        ModeInformation->GreenMask = 0x1F << 5;
+        ModeInformation->BlueMask = 0x1F;
+    }
+// eVb: 2.12 [END]
+    else
+    {
+
+        ModeInformation->NumberRedBits = 6;
+        ModeInformation->NumberGreenBits = 6;
+        ModeInformation->NumberBlueBits = 6;
+        ModeInformation->RedMask = 0;
+        ModeInformation->GreenMask = 0;
+        ModeInformation->BlueMask = 0;
+    }
+
+// eVb: 2.13 [VGA] - All modes are palette managed/driven, unlike Cirrus
+    ModeInformation->AttributeFlags |= VIDEO_MODE_PALETTE_DRIVEN |
+         VIDEO_MODE_MANAGED_PALETTE;
+// eVb: 2.13 [END]
+
+    return NO_ERROR;
+
+} // end VgaQueryCurrentMode()
+
 
 VOID
 VgaZeroVideoMemory(

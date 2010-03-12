@@ -16,36 +16,41 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "msvideo_private.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 ICM_CHOOSE_COMPRESSOR DIALOG DISCARDABLE  36, 24, 187, 95
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Сжатие видео"
+CAPTION "РЎР¶Р°С‚РёРµ РІРёРґРµРѕ"
 FONT 8, "MS Shell Dlg"
 {
     DEFPUSHBUTTON "OK",IDOK,129,2,49,14
-    PUSHBUTTON "Отмена",IDCANCEL,129,18,49,14
+    PUSHBUTTON "РћС‚РјРµРЅР°",IDCANCEL,129,18,49,14
 
-    LTEXT "&Алгоритм сжатия:",-1,9,6,105,8
+    LTEXT "&РђР»РіРѕСЂРёС‚Рј СЃР¶Р°С‚РёСЏ:",-1,9,6,105,8
     COMBOBOX 880,9,16,111,67,CBS_DROPDOWNLIST|WS_VSCROLL|WS_TABSTOP
 
-    PUSHBUTTON "&Настройки...",882,129,36,49,14
-    PUSHBUTTON "&Информация...",883,129,52,49,14
+    PUSHBUTTON "&РќР°СЃС‚СЂРѕР№РєРё...",882,129,36,49,14
+    PUSHBUTTON "&РРЅС„РѕСЂРјР°С†РёСЏ...",883,129,52,49,14
 
     SCROLLBAR 884,9,44,111,9,WS_TABSTOP
 
-    LTEXT "&Качество сжатия:",886,9,34,80,8
+    LTEXT "&РљР°С‡РµСЃС‚РІРѕ СЃР¶Р°С‚РёСЏ:",886,9,34,80,8
 
-    CONTROL "Кл&ючевой кадр каждые",887,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,60,66,12
+    CONTROL "РљР»&СЋС‡РµРІРѕР№ РєР°РґСЂ РєР°Р¶РґС‹Рµ",887,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,60,66,12
     EDITTEXT 888,78,60,22,12
-    LTEXT "кадров",889,103,62,26,10
+    LTEXT "РєР°РґСЂРѕРІ",889,103,62,26,10
 
-    CONTROL "&Поток данных",894,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,76,66,12
+    CONTROL "&РџРѕС‚РѕРє РґР°РЅРЅС‹С…",894,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,76,66,12
     EDITTEXT 895,78,76,22,12
-    LTEXT "КБ/сек",896,102,78,26,10
+    LTEXT "РљР‘/СЃРµРє",896,102,78,26,10
 }
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_FULLFRAMES "Кадры целиком (Без компрессии)"
+    IDS_FULLFRAMES "РљР°РґСЂС‹ С†РµР»РёРєРѕРј (Р‘РµР· РєРѕРјРїСЂРµСЃСЃРёРё)"
 }

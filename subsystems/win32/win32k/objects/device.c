@@ -59,12 +59,37 @@ GetRegistryPath(PUNICODE_STRING RegistryPath, ULONG DisplayNumber)
     return TRUE;
 }
 
+
+NTSTATUS
+NTAPI
+EnumDisplayQueryRoutine(IN PWSTR ValueName,
+                        IN ULONG ValueType,
+                        IN PVOID ValueData,
+                        IN ULONG ValueLength,
+                        IN PVOID Context,
+                        IN PVOID EntryContext)
+{
+    if ((Context == NULL) && ((ValueType == REG_SZ) || (ValueType == REG_MULTI_SZ)))
+    {
+        *(PULONG)EntryContext = ValueLength;
+    }
+    else
+    {
+        DPRINT1("Value data: %S %d\n", ValueData, ValueLength);
+        RtlCopyMemory(Context, ValueData, ValueLength);
+    }
+
+    return STATUS_SUCCESS;
+}
+
 static BOOL FASTCALL
 FindDriverFileNames(PUNICODE_STRING DriverFileNames, ULONG DisplayNumber)
 {
     RTL_QUERY_REGISTRY_TABLE QueryTable[2];
     UNICODE_STRING RegistryPath;
     NTSTATUS Status;
+    PWCHAR DriverNames = NULL;
+    ULONG Length = 0;
 
     if (! GetRegistryPath(&RegistryPath, DisplayNumber))
     {
@@ -73,23 +98,40 @@ FindDriverFileNames(PUNICODE_STRING DriverFileNames, ULONG DisplayNumber)
     }
 
     RtlZeroMemory(QueryTable, sizeof(QueryTable));
-    QueryTable[0].Flags = RTL_QUERY_REGISTRY_REQUIRED | RTL_QUERY_REGISTRY_DIRECT;
+    QueryTable[0].Flags = RTL_QUERY_REGISTRY_REQUIRED | RTL_QUERY_REGISTRY_NOEXPAND;
     QueryTable[0].Name = L"InstalledDisplayDrivers";
-    QueryTable[0].EntryContext = DriverFileNames;
+    QueryTable[0].EntryContext = &Length;
+    QueryTable[0].QueryRoutine = EnumDisplayQueryRoutine;
 
     Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
                                     RegistryPath.Buffer,
                                     QueryTable,
                                     NULL,
                                     NULL);
+ //   DPRINT1("Status: %lx\n", Status);
+    if (Length)
+    {
+        DriverNames = ExAllocatePool(PagedPool, Length);
+       // DPRINT1("Length allocated: %d\n", Length);
+        Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
+                                        RegistryPath.Buffer,
+                                        QueryTable,
+                                        DriverNames,
+                                        NULL);
+        if (!NT_SUCCESS(Status)) DriverNames = NULL;
+    }
+
     ExFreePoolWithTag(RegistryPath.Buffer, TAG_RTLREGISTRY);
     if (! NT_SUCCESS(Status))
     {
         DPRINT1("No InstalledDisplayDrivers value in service entry found\n");
         return FALSE;
     }
-
-    DPRINT("DriverFileNames %S\n", DriverFileNames->Buffer);
+    
+    RtlInitUnicodeString(DriverFileNames, DriverNames);
+    DriverFileNames->Length = Length;
+    DriverFileNames->MaximumLength = Length;
+    //DPRINT1("DriverFileNames %wZ\n", DriverFileNames);
 
     return TRUE;
 }
@@ -301,7 +343,7 @@ IntPrepareDriver(VOID)
             continue;
         }
 
-        DPRINT("Display driver %S loaded\n", CurrentName);
+        DPRINT1("Display driver %S loaded\n", CurrentName);
 
         ExFreePoolWithTag(DriverFileNames.Buffer, TAG_RTLREGISTRY);
 

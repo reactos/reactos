@@ -670,6 +670,7 @@ boot\bootdata\bootcdregtest\regtest.cmd             7   optional
 ; Subsystems
 subsystems\win32\csrss\csrss.exe                    1
 subsystems\win32\csrss\win32csr\win32csr.dll        1
+subsystems\win32\csrss\csrsrv\csrsrv.dll            1
 subsystems\ntvdm\ntvdm.exe                          1
 subsystems\win32\win32k\win32k.sys                  1
 

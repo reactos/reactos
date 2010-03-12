@@ -26,5 +26,7 @@ typedef int (*acpi_table_handler) (ACPI_TABLE_HEADER *table);
 
 typedef int (*acpi_table_entry_handler) (ACPI_SUBTABLE_HEADER *header, const unsigned long end);
 
+#define down(mutex) ExAcquireFastMutex(mutex)
+#define up(mutex) ExReleaseFastMutex(mutex)
 
 #endif

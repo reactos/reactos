@@ -128,10 +128,6 @@ typedef struct _USER32_THREAD_DATA
 
 PUSER32_THREAD_DATA User32GetThreadData();
 
-DEVMODEW *
-WINAPI
-GdiConvertToDevmodeW(DEVMODEA *dm);
-
 /* FIXME: Belongs to some header. */
 BOOL WINAPI GdiDllInitialize(HANDLE, DWORD, LPVOID);
 void InitStockObjects(void);

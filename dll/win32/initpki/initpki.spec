@@ -1,4 +1,4 @@
 @ stub DllInstall
-@ stub DllRegisterServer
-@ stub DllUnregisterServer
+@ stdcall -private DllRegisterServer()
+@ stdcall -private DllUnregisterServer()
 @ stub InitializePKI

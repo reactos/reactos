@@ -130,10 +130,14 @@ HRESULT WINAPI DispGetParam(
 
     TRACE("position=%d, cArgs=%d, cNamedArgs=%d\n",
           position, pdispparams->cArgs, pdispparams->cNamedArgs);
-    if (position < pdispparams->cArgs) {
+
+    if (position < pdispparams->cArgs)
+    {
       /* positional arg? */
       pos = pdispparams->cArgs - position - 1;
-    } else {
+    }
+    else
+    {
       /* FIXME: is this how to handle named args? */
       for (pos=0; pos<pdispparams->cNamedArgs; pos++)
         if (pdispparams->rgdispidNamedArgs[pos] == position) break;
@@ -141,10 +145,27 @@ HRESULT WINAPI DispGetParam(
       if (pos==pdispparams->cNamedArgs)
         return DISP_E_PARAMNOTFOUND;
     }
+
+    if (pdispparams->cArgs > 0 && !pdispparams->rgvarg)
+    {
+        hr = E_INVALIDARG;
+        goto done;
+    }
+
+    if (!pvarResult)
+    {
+        hr = E_INVALIDARG;
+        goto done;
+    }
+
     hr = VariantChangeType(pvarResult,
                            &pdispparams->rgvarg[pos],
                            0, vtTarg);
-    if (hr == DISP_E_TYPEMISMATCH) *puArgErr = pos;
+
+done:
+    if (FAILED(hr))
+        *puArgErr = pos;
+
     return hr;
 }
 
@@ -234,8 +255,8 @@ static HRESULT WINAPI StdDispatch_QueryInterface(
         IsEqualIID(riid, &IID_IUnknown))
     {
         *ppvObject = This;
-	IUnknown_AddRef((LPUNKNOWN)*ppvObject);
-	return S_OK;
+        IUnknown_AddRef((LPUNKNOWN)*ppvObject);
+        return S_OK;
     }
     return E_NOINTERFACE;
 }

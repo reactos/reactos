@@ -19,9 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "windef.h"
-#include "winbase.h"
-#include "winver.h"
+#include "cdlg.h"
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
@@ -72,9 +70,6 @@ PD32_PORTRAIT ICON pd32_portrait.ico
 
 /* @makedep: pd32_landscape.ico */
 PD32_LANDSCAPE ICON pd32_landscape.ico
-
-/* @makedep: 800.bmp */
-800 BITMAP DISCARDABLE LOADONCALL "800.bmp"
 
 /* @makedep: folder.ico */
 FOLDER ICON folder.ico

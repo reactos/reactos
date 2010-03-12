@@ -1,10 +1,12 @@
 <?xml version="1.0"?>
 <!DOCTYPE group SYSTEM "../../tools/rbuild/project.dtd">
 <group>
-	<installfile installbase="inf">audio.inf</installfile>
 	<installfile installbase="inf">acpi.inf</installfile>
+	<installfile installbase="inf">audio.inf</installfile>
+	<installfile installbase="inf">battery.inf</installfile>
 	<installfile installbase="inf">cdrom.inf</installfile>
 	<installfile installbase="inf">display.inf</installfile>
+	<installfile installbase="inf">fdc.inf</installfile>
 	<installfile installbase="inf">font.inf</installfile>
 	<installfile installbase="inf">hdc.inf</installfile>
 	<installfile installbase="inf">intl.inf</installfile>

@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "msvidc32_private.h"
+
 #pragma code_page(65001)
 
 LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
@@ -25,5 +27,3 @@ STRINGTABLE DISCARDABLE
     IDS_NAME "MS-CRAM"
     IDS_DESCRIPTION "Wine Video 1 video kodek"
 }
-
-#pragma code_page(default)

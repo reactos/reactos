@@ -53,5 +53,3 @@ STRINGTABLE DISCARDABLE
   IDS_AVIFILETYPE	"Wine AVI-default-filehandler"
   IDS_UNCOMPRESSED      "未圧縮"
 }
-
-#pragma code_page(default)

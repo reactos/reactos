@@ -53,8 +53,7 @@ END
 STRINGTABLE DISCARDABLE
 {
     IDS_LOCALPORT "Vietinis prievadas"
-    IDS_INVALIDNAME "'%s' yra netinkamas prievado vardas"
+    IDS_INVALIDNAME "„%s“ yra netinkamas prievado vardas"
     IDS_PORTEXISTS "Prievadas %s jau egzistuoja"
     IDS_NOTHINGTOCONFIG "Šis prievadas neturi parinkčių konfigūravimui"
 }
-#pragma code_page(default)

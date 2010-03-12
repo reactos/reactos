@@ -57,4 +57,3 @@ STRINGTABLE DISCARDABLE
   IDS_AVIFILETYPE	"Gestionnaire de fichiers AVI par défaut de Wine"
   IDS_UNCOMPRESSED      "non compressé"
 }
-#pragma code_page(default)

@@ -17,15 +17,18 @@
 
 const DEVINFO gDevInfoFrameBuffer = {
     ( GCAPS_OPAQUERECT
-    | GCAPS_MONO_DITHER
+// eVb: 2.8 [DDK CHANGE] - No dithering support
+// eVb: 2.8 [END]
                    ), /* Graphics capabilities         */
     SYSTM_LOGFONT,    /* Default font description */
     HELVE_LOGFONT,    /* ANSI variable font description   */
     COURI_LOGFONT,    /* ANSI fixed font description          */
     0,                /* Count of device fonts          */
     0,                /* Preferred DIB format          */
-    8,                /* Width of color dither          */
-    8,                /* Height of color dither   */
+// eVb: 2.9 [DDK CHANGE] - No dithering support
+    0,                /* Width of color dither          */
+    0,                /* Height of color dither   */
+// eVb: 2.9 [END]
     0                 /* Default palette to use for this device */
 };
 
@@ -449,9 +452,9 @@ DEVINFO *pDevInfo)
 
         pGdiInfo->ulNumColors = 20;
         pGdiInfo->ulNumPalReg = 1 << ppdev->ulBitCount;
-
-        pDevInfo->flGraphicsCaps |= (GCAPS_PALMANAGED | GCAPS_COLOR_DITHER);
-
+// eVb: 2.7 [DDK CHANGE] - No dithering support
+        pDevInfo->flGraphicsCaps |= GCAPS_PALMANAGED;
+// eVb: 2.7 [END]
         pGdiInfo->ulHTOutputFormat = HT_FORMAT_8BPP;
         pDevInfo->iDitherFormat = BMF_8BPP;
 

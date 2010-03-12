@@ -48,7 +48,7 @@ ACPI_MODULE_NAME		("acpi_bus")
 #define HAS_SIBLINGS(d)		(((d)->parent) && ((d)->node.next != &(d)->parent->children))
 #define NODE_TO_DEVICE(n)	(list_entry(n, struct acpi_device, node))
 
-extern int			event_is_open;
+int			event_is_open;
 extern void acpi_pic_sci_set_trigger(unsigned int irq, UINT16 trigger);
 
 typedef int (*acpi_bus_walk_callback)(struct acpi_device*, int, void*);
@@ -57,6 +57,7 @@ struct acpi_device		*acpi_root;
 KSPIN_LOCK	acpi_bus_event_lock;
 LIST_HEAD(acpi_bus_event_list);
 //DECLARE_WAIT_QUEUE_HEAD(acpi_bus_event_queue);
+KEVENT AcpiEventQueue;
 
 
 static int
@@ -463,6 +464,7 @@ acpi_bus_generate_event (
 {
 	struct acpi_bus_event	*event = NULL;
 	//unsigned long		flags = 0;
+	KIRQL OldIrql;
 
 	DPRINT1("acpi_bus_generate_event");
 
@@ -470,8 +472,8 @@ acpi_bus_generate_event (
 		return_VALUE(AE_BAD_PARAMETER);
 
 	/* drop event on the floor if no one's listening */
-	//if (!event_is_open)
-	//	return_VALUE(0);
+	if (!event_is_open)
+		return_VALUE(0);
 
 	event = ExAllocatePool(NonPagedPool,sizeof(struct acpi_bus_event));
 	if (!event)
@@ -483,9 +485,12 @@ acpi_bus_generate_event (
 	event->data = data;
 
 	//spin_lock_irqsave(&acpi_bus_event_lock, flags);
+	KeAcquireSpinLock(&acpi_bus_event_lock, &OldIrql);
 	list_add_tail(&event->node, &acpi_bus_event_list);
+	KeReleaseSpinLock(&acpi_bus_event_lock, OldIrql);
 	//spin_unlock_irqrestore(&acpi_bus_event_lock, flags);
 
+	KeSetEvent(&AcpiEventQueue, IO_NO_INCREMENT, FALSE);
 	//wake_up_interruptible(&acpi_bus_event_queue);
 
 	return_VALUE(0);
@@ -495,44 +500,43 @@ int
 acpi_bus_receive_event (
 	struct acpi_bus_event	*event)
 {
-	//unsigned long		flags = 0;
-	//struct acpi_bus_event	*entry = NULL;
+//	unsigned long		flags = 0;
+	struct acpi_bus_event	*entry = NULL;
+	KIRQL OldIrql;
 
 	//DECLARE_WAITQUEUE(wait, current);
 
 	DPRINT1("acpi_bus_receive_event");
 
-	//if (!event)
-	//	return AE_BAD_PARAMETER;
+	if (!event)
+		return AE_BAD_PARAMETER;
 
-	//if (list_empty(&acpi_bus_event_list)) {
+	event_is_open++;
+	KeWaitForSingleObject(&AcpiEventQueue,
+			      Executive,
+			      KernelMode,
+			      FALSE,
+			      NULL);
+	event_is_open--;
+	KeClearEvent(&AcpiEventQueue);
 
-	//	set_current_state(TASK_INTERRUPTIBLE);
-	//	add_wait_queue(&acpi_bus_event_queue, &wait);
+	if (list_empty(&acpi_bus_event_list))
+		return_VALUE(AE_NOT_FOUND);
 
-	//	if (list_empty(&acpi_bus_event_list))
-	//		schedule();
+//	spin_lock_irqsave(&acpi_bus_event_lock, flags);
+	KeAcquireSpinLock(&acpi_bus_event_lock, &OldIrql);
+	entry = list_entry(acpi_bus_event_list.next, struct acpi_bus_event, node);
+	if (entry)
+		list_del(&entry->node);
+	KeReleaseSpinLock(&acpi_bus_event_lock, OldIrql);
+//	spin_unlock_irqrestore(&acpi_bus_event_lock, flags);
 
-	//	remove_wait_queue(&acpi_bus_event_queue, &wait);
-	//	set_current_state(TASK_RUNNING);
+	if (!entry)
+		return_VALUE(AE_NOT_FOUND);
 
-	//	if (signal_pending(current))
-	//		return_VALUE(-ERESTARTSYS);
-	//}
+	memcpy(event, entry, sizeof(struct acpi_bus_event));
 
-	//spin_lock_irqsave(&acpi_bus_event_lock, flags);
-	//entry = list_entry(acpi_bus_event_list.next, struct acpi_bus_event, node);
-	//if (entry)
-	//	list_del(&entry->node);
-	//spin_unlock_irqrestore(&acpi_bus_event_lock, flags);
-
-	//if (!entry)
-	//	return_VALUE(AE_NOT_FOUND);
-
-	//memcpy(event, entry, sizeof(struct acpi_bus_event));
-
-	//kfree(entry);
-	UNIMPLEMENTED;
+	ExFreePool(entry);
 	return_VALUE(0);
 }
 
@@ -789,6 +793,7 @@ acpi_bus_notify (
 
 static LIST_HEAD(acpi_bus_drivers);
 //static DECLARE_MUTEX(acpi_bus_drivers_lock);
+static FAST_MUTEX acpi_bus_drivers_lock;
 
 
 /**
@@ -914,9 +919,9 @@ acpi_bus_attach (
 	if (result)
 		return_VALUE(result);
 
-	//down(&acpi_bus_drivers_lock);
+	down(&acpi_bus_drivers_lock);
 	++driver->references;
-	//up(&acpi_bus_drivers_lock);
+	up(&acpi_bus_drivers_lock);
 
 	return_VALUE(0);
 }
@@ -953,9 +958,9 @@ acpi_bus_unattach (
 	device->driver = NULL;
 	acpi_driver_data(device) = NULL;
 
-	//down(&acpi_bus_drivers_lock);
+	down(&acpi_bus_drivers_lock);
 	driver->references--;
-	//up(&acpi_bus_drivers_lock);
+	up(&acpi_bus_drivers_lock);
 
 	return_VALUE(0);
 }
@@ -978,7 +983,7 @@ acpi_bus_find_driver (
 	if (!device || device->driver)
 		return_VALUE(AE_BAD_PARAMETER);
 
-	//down(&acpi_bus_drivers_lock);
+	down(&acpi_bus_drivers_lock);
 
 	list_for_each(entry, &acpi_bus_drivers) {
 
@@ -994,7 +999,7 @@ acpi_bus_find_driver (
 		break;
 	}
 
-	//up(&acpi_bus_drivers_lock);
+	up(&acpi_bus_drivers_lock);
 
 	return_VALUE(result);
 }
@@ -1016,9 +1021,9 @@ acpi_bus_register_driver (
 	//if (acpi_disabled)
 	//	return_VALUE(AE_NOT_FOUND);
 
-	//down(&acpi_bus_drivers_lock);
+	down(&acpi_bus_drivers_lock);
 	list_add_tail(&driver->node, &acpi_bus_drivers);
-	//up(&acpi_bus_drivers_lock);
+	up(&acpi_bus_drivers_lock);
 
 	acpi_bus_walk(acpi_root, acpi_bus_attach, 
 		WALK_DOWN, driver);
@@ -1045,9 +1050,9 @@ acpi_bus_unregister_driver (
 	if (driver->references)
 		return;
 
-	//down(&acpi_bus_drivers_lock);
+	down(&acpi_bus_drivers_lock);
 	list_del(&driver->node);
-	//up(&acpi_bus_drivers_lock);
+	up(&acpi_bus_drivers_lock);
 
 	return;
 }
@@ -1785,6 +1790,10 @@ acpi_init (void)
 	DPRINT("acpi_init");
 
 	DPRINT("Subsystem revision %08x\n",ACPI_CA_VERSION);
+
+        KeInitializeSpinLock(&acpi_bus_event_lock);
+	KeInitializeEvent(&AcpiEventQueue, NotificationEvent, FALSE);
+	ExInitializeFastMutex(&acpi_bus_drivers_lock);
 
 	result = acpi_bus_init();
 

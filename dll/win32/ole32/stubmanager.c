@@ -406,13 +406,15 @@ ULONG stub_manager_ext_release(struct stub_manager *m, ULONG refs, BOOL tablewea
     rc = (m->extrefs -= refs);
 
     if (tableweak)
-        rc += --m->weakrefs;
+        --m->weakrefs;
+    if (!last_unlock_releases)
+        rc += m->weakrefs;
 
     LeaveCriticalSection(&m->lock);
     
     TRACE("removed %u refs from %p (oid %s), rc is now %u\n", refs, m, wine_dbgstr_longlong(m->oid), rc);
 
-    if (rc == 0 && last_unlock_releases)
+    if (rc == 0)
         stub_manager_int_release(m);
 
     return rc;
@@ -551,7 +553,7 @@ void stub_manager_release_marshal_data(struct stub_manager *m, ULONG refs, const
     else if (ifstub->flags & MSHLFLAGS_TABLESTRONG)
         refs = 1;
 
-    stub_manager_ext_release(m, refs, tableweak, TRUE);
+    stub_manager_ext_release(m, refs, tableweak, FALSE);
 }
 
 /* is an ifstub table marshaled? */

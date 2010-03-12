@@ -19,6 +19,11 @@
 #define HIGH_PRIORITY 31
 #define SXS_SUPPORT_FIXME
 
+NTSTATUS
+WINAPI
+BasepNotifyCsrOfThread(IN HANDLE ThreadHandle,
+                       IN PCLIENT_ID ClientId);
+
 /* FUNCTIONS *****************************************************************/
 static
 LONG BaseThreadExceptionFilter(EXCEPTION_POINTERS * ExceptionInfo)
@@ -219,8 +224,13 @@ CreateRemoteThread(HANDLE hProcess,
             DPRINT1("RtlAllocateActivationContextStack failed %x\n", Status);
     }
 
-    /* FIXME: Notify CSR */
-
+    /* Notify CSR */
+    Status = BasepNotifyCsrOfThread(hThread, &ClientId);
+    if (!NT_SUCCESS(Status))
+    {
+        ASSERT(FALSE);
+    }
+    
     /* Success */
     if(lpThreadId) *lpThreadId = (DWORD)ClientId.UniqueThread;
 

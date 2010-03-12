@@ -381,7 +381,7 @@ static	LRESULT	GSM_StreamOpen(PACMDRVSTREAMINSTANCE adsi)
         return MMSYSERR_NOMEM;
     if (pgsm_option(r, GSM_OPT_WAV49, &used) < 0)
     {
-        FIXME("Your libgsm library is doesn't support GSM_OPT_WAV49\n");
+        FIXME("Your libgsm library doesn't support GSM_OPT_WAV49\n");
         FIXME("Please recompile libgsm with WAV49 support\n");
         pgsm_destroy(r);
         return MMSYSERR_NOTSUPPORTED;

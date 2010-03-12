@@ -36,17 +36,21 @@
 
 #include "wine/wine_common_ver.rc"
 
-#include "spl_En.rc"
 #include "spl_Da.rc"
-#include "spl_De.rc"
+#include "spl_En.rc"
 #include "spl_Fr.rc"
 #include "spl_Ko.rc"
 #include "spl_Nl.rc"
 #include "spl_No.rc"
 #include "spl_Pl.rc"
 #include "spl_Pt.rc"
+#include "spl_Sv.rc"
+
+/* UTF-8 */
+#include "spl_De.rc"
+#include "spl_Es.rc"
+#include "spl_Lt.rc"
 #include "spl_Ro.rc"
 #include "spl_Ru.rc"
 #include "spl_Si.rc"
-#include "spl_Sv.rc"
 #include "spl_Zh.rc"

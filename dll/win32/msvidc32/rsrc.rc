@@ -20,8 +20,6 @@
 #include "msvidc32_private.h"
 
 #include "msvidc32_Da.rc"
-#include "msvidc32_De.rc"
-#include "msvidc32_Fr.rc"
 #include "msvidc32_En.rc"
 #include "msvidc32_Hu.rc"
 #include "msvidc32_Ko.rc"
@@ -29,8 +27,15 @@
 #include "msvidc32_No.rc"
 #include "msvidc32_Pl.rc"
 #include "msvidc32_Pt.rc"
+#include "msvidc32_Sv.rc"
+#include "msvidc32_Tr.rc"
+
+/* UTF-8 */
+#include "msvidc32_De.rc"
+#include "msvidc32_Fr.rc"
+#include "msvidc32_Ja.rc"
+#include "msvidc32_Lt.rc"
 #include "msvidc32_Ro.rc"
 #include "msvidc32_Ru.rc"
 #include "msvidc32_Si.rc"
-#include "msvidc32_Sv.rc"
-#include "msvidc32_Tr.rc"
+#include "msvidc32_Uk.rc"

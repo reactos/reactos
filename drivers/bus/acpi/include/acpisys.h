@@ -86,9 +86,9 @@ typedef struct _FDO_DEVICE_DATA
 
 /* acpienum.c */
 
-//NTSTATUS
-//ACPIEnumerateDevices(
-//  PFDO_DEVICE_EXTENSION DeviceExtension);
+NTSTATUS
+ACPIEnumerateDevices(
+  PFDO_DEVICE_DATA DeviceExtension);
 
 NTSTATUS
 NTAPI

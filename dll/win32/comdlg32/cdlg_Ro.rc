@@ -17,6 +17,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "cdlg.h"
+#include "filedlgbrowser.h"
+
 /*
  * WARNING: DO NOT CHANGE THE SIZE OF THE STANDARD DIALOG TEMPLATES.
  */
@@ -476,5 +479,3 @@ STRINGTABLE DISCARDABLE
     IDS_SAVE_AS     "Salvează ca"
     IDS_OPEN_FILE   "Deschide fișier"
 }
-
-#pragma code_page(default)

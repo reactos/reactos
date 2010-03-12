@@ -324,7 +324,7 @@
 @ stdcall GetConsoleMode(long ptr)
 @ stdcall GetConsoleNlsMode(long ptr)
 @ stdcall GetConsoleOutputCP()
-@ stub GetConsoleProcessList ; missing in XP SP3
+@ stdcall GetConsoleProcessList(ptr long) ; missing in XP SP3
 @ stdcall GetConsoleScreenBufferInfo(long ptr)
 @ stdcall GetConsoleSelectionInfo(ptr)
 @ stdcall GetConsoleTitleA(ptr long)
@@ -732,7 +732,7 @@
 @ stdcall RegisterConsoleIME(ptr ptr)
 @ stdcall RegisterConsoleOS2(long)
 @ stdcall RegisterConsoleVDM(long long long long long long long long long long long)
-@ stub RegisterServiceProcess ; missing in XP SP3
+;@ stub RegisterServiceProcess ; missing in XP SP3
 @ stub RegisterSysMsgHandler ; missing in XP SP3
 @ stdcall RegisterWaitForInputIdle(ptr)
 @ stdcall RegisterWaitForSingleObject(ptr long ptr ptr long long)
