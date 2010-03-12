@@ -184,7 +184,7 @@ NtRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
     
     /* Set exception list */
 #ifdef _M_IX86
-    KeGetPcr()->Tib.ExceptionList = TrapFrame->ExceptionList;
+    KeGetPcr()->NtTib.ExceptionList = TrapFrame->ExceptionList;
 #endif
     
     /* Raise the exception */

@@ -108,9 +108,9 @@ KiExitTrapDebugChecks(IN PKTRAP_FRAME TrapFrame,
     }
     
     /* Make sure we have a valid SEH chain */
-    if (KeGetPcr()->Tib.ExceptionList == 0)
+    if (KeGetPcr()->NtTib.ExceptionList == 0)
     {
-        DbgPrint("Exiting with NULL exception chain: %p\n", KeGetPcr()->Tib.ExceptionList);
+        DbgPrint("Exiting with NULL exception chain: %p\n", KeGetPcr()->NtTib.ExceptionList);
         while (TRUE);
     }
     
@@ -391,7 +391,7 @@ KiExitTrap(IN PKTRAP_FRAME TrapFrame,
     KiExitTrapDebugChecks(TrapFrame, SkipBits);
 
     /* Restore the SEH handler chain */
-    KeGetPcr()->Tib.ExceptionList = TrapFrame->ExceptionList;
+    KeGetPcr()->NtTib.ExceptionList = TrapFrame->ExceptionList;
     
     /* Check if the previous mode must be restored */
     if (__builtin_expect(!SkipBits.SkipPreviousMode, 0)) /* More INTS than SYSCALLs */
@@ -558,7 +558,7 @@ FORCEINLINE
 KiEnterV86Trap(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save exception list */
-    TrapFrame->ExceptionList = KeGetPcr()->Tib.ExceptionList;
+    TrapFrame->ExceptionList = KeGetPcr()->NtTib.ExceptionList;
 
     /* Save DR7 and check for debugging */
     TrapFrame->Dr7 = __readdr(7);
@@ -577,8 +577,8 @@ FORCEINLINE
 KiEnterInterruptTrap(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save exception list and terminate it */
-    TrapFrame->ExceptionList = KeGetPcr()->Tib.ExceptionList;
-    KeGetPcr()->Tib.ExceptionList = EXCEPTION_CHAIN_END;
+    TrapFrame->ExceptionList = KeGetPcr()->NtTib.ExceptionList;
+    KeGetPcr()->NtTib.ExceptionList = EXCEPTION_CHAIN_END;
 
     /* Flush DR7 and check for debugging */
     TrapFrame->Dr7 = 0;
@@ -600,7 +600,7 @@ FORCEINLINE
 KiEnterTrap(IN PKTRAP_FRAME TrapFrame)
 {
     /* Save exception list */
-    TrapFrame->ExceptionList = KeGetPcr()->Tib.ExceptionList;
+    TrapFrame->ExceptionList = KeGetPcr()->NtTib.ExceptionList;
     
     /* Flush DR7 and check for debugging */
     TrapFrame->Dr7 = 0;
