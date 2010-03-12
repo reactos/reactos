@@ -9204,7 +9204,6 @@ IoSetCompletionRoutineEx(
   IN BOOLEAN  InvokeOnError,
   IN BOOLEAN  InvokeOnCancel);
 
-NTKERNELAPI
 VOID
 NTAPI
 IoSetStartIoAttributes(

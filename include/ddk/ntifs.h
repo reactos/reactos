@@ -6409,6 +6409,11 @@ HalGetDmaAlignmentRequirement(
 #define HalGetDmaAlignmentRequirement() 1L
 #endif
 
+typedef enum _MMFLUSH_TYPE {
+  MmFlushForDelete,
+  MmFlushForWrite
+} MMFLUSH_TYPE;
+
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
 NTKERNELAPI
@@ -6446,11 +6451,6 @@ MmSetAddressRangeModified(
   IN SIZE_T Length);
 
 #endif
-
-typedef enum _MMFLUSH_TYPE {
-  MmFlushForDelete,
-  MmFlushForWrite
-} MMFLUSH_TYPE;
 
 typedef struct _READ_LIST {
   PFILE_OBJECT FileObject;
@@ -6628,6 +6628,46 @@ typedef struct _EOF_WAIT_BLOCK {
   LIST_ENTRY EofWaitLinks;
   KEVENT Event;
 } EOF_WAIT_BLOCK, *PEOF_WAIT_BLOCK;
+
+typedef struct _FSRTL_AUXILIARY_BUFFER {
+  PVOID Buffer;
+  ULONG Length;
+  ULONG Flags;
+  PMDL Mdl;
+} FSRTL_AUXILIARY_BUFFER, *PFSRTL_AUXILIARY_BUFFER;
+
+#define FSRTL_AUXILIARY_FLAG_DEALLOCATE 0x00000001
+
+typedef struct _FILE_LOCK_INFO {
+  LARGE_INTEGER StartingByte;
+  LARGE_INTEGER Length;
+  BOOLEAN ExclusiveLock;
+  ULONG Key;
+  PFILE_OBJECT FileObject;
+  PVOID ProcessId;
+  LARGE_INTEGER EndingByte;
+} FILE_LOCK_INFO, *PFILE_LOCK_INFO;
+
+typedef NTSTATUS
+(NTAPI *PCOMPLETE_LOCK_IRP_ROUTINE) (
+  IN PVOID Context,
+  IN PIRP Irp);
+
+typedef VOID
+(NTAPI *PUNLOCK_ROUTINE) (
+  IN PVOID Context,
+  IN PFILE_LOCK_INFO FileLockInfo);
+
+typedef struct _FILE_LOCK {
+  PCOMPLETE_LOCK_IRP_ROUTINE CompleteLockIrpRoutine;
+  PUNLOCK_ROUTINE UnlockRoutine;
+  BOOLEAN FastIoIsQuestionable;
+  BOOLEAN SpareC[3];
+  PVOID LockInformation;
+  FILE_LOCK_INFO LastReturnedLockInfo;
+  PVOID LastReturnedLock;
+  LONG volatile LockRequestsInProgress;
+} FILE_LOCK, *PFILE_LOCK;
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
@@ -6915,46 +6955,6 @@ NTAPI
 FsRtlAreThereCurrentOrInProgressFileLocks(
   IN PFILE_LOCK FileLock);
 #endif
-
-typedef struct _FSRTL_AUXILIARY_BUFFER {
-  PVOID Buffer;
-  ULONG Length;
-  ULONG Flags;
-  PMDL Mdl;
-} FSRTL_AUXILIARY_BUFFER, *PFSRTL_AUXILIARY_BUFFER;
-
-#define FSRTL_AUXILIARY_FLAG_DEALLOCATE 0x00000001
-
-typedef struct _FILE_LOCK_INFO {
-  LARGE_INTEGER StartingByte;
-  LARGE_INTEGER Length;
-  BOOLEAN ExclusiveLock;
-  ULONG Key;
-  PFILE_OBJECT FileObject;
-  PVOID ProcessId;
-  LARGE_INTEGER EndingByte;
-} FILE_LOCK_INFO, *PFILE_LOCK_INFO;
-
-typedef NTSTATUS
-(NTAPI *PCOMPLETE_LOCK_IRP_ROUTINE) (
-  IN PVOID Context,
-  IN PIRP Irp);
-
-typedef VOID
-(NTAPI *PUNLOCK_ROUTINE) (
-  IN PVOID Context,
-  IN PFILE_LOCK_INFO FileLockInfo);
-
-typedef struct _FILE_LOCK {
-  PCOMPLETE_LOCK_IRP_ROUTINE CompleteLockIrpRoutine;
-  PUNLOCK_ROUTINE UnlockRoutine;
-  BOOLEAN FastIoIsQuestionable;
-  BOOLEAN SpareC[3];
-  PVOID LockInformation;
-  FILE_LOCK_INFO LastReturnedLockInfo;
-  PVOID LastReturnedLock;
-  LONG volatile LockRequestsInProgress;
-} FILE_LOCK, *PFILE_LOCK;
 
 #pragma pack(push,4)
 
