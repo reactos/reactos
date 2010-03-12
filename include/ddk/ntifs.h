@@ -6057,6 +6057,7 @@ IoStartNextPacketByKey(
 
 NTKERNELAPI
 VOID
+NTAPI
 IoStartPacket(
   IN PDEVICE_OBJECT DeviceObject,
   IN PIRP Irp,
@@ -6085,12 +6086,52 @@ IoSynchronousPageWrite(
   IN PKEVENT Event,
   OUT PIO_STATUS_BLOCK IoStatusBlock);
 
+NTKERNELAPI
+PEPROCESS
+NTAPI
+IoThreadToProcess(
+  IN PETHREAD Thread);
+
+NTKERNELAPI
+VOID
+NTAPI
+IoUnregisterFileSystem(
+  IN PDEVICE_OBJECT DeviceObject);
+
+NTKERNELAPI
+VOID
+NTAPI
+IoUnregisterFsRegistrationChange(
+  IN PDRIVER_OBJECT DriverObject,
+  IN PDRIVER_FS_NOTIFICATION DriverNotificationRoutine);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoVerifyVolume(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN BOOLEAN AllowRawMount);
+
+NTKERNELAPI
+VOID
+NTAPI
+IoWriteErrorLogEntry(
+  IN PVOID ElEntry);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoGetRequestorSessionId(
+  IN PIRP Irp,
+  OUT PULONG pSessionId);
+
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 
 NTKERNELAPI
 PFILE_OBJECT
+NTAPI
 IoCreateStreamFileObjectEx(
   IN PFILE_OBJECT FileObject OPTIONAL,
   IN PDEVICE_OBJECT DeviceObject OPTIONAL,
@@ -6110,6 +6151,34 @@ IoSetStartIoAttributes(
   IN BOOLEAN DeferredStartIo,
   IN BOOLEAN NonCancelable);
 
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoEnumerateDeviceObjectList(
+  IN PDRIVER_OBJECT DriverObject,
+  OUT PDEVICE_OBJECT *DeviceObjectList,
+  IN ULONG DeviceObjectListSize,
+  OUT PULONG ActualNumberDeviceObjects);
+
+NTKERNELAPI
+PDEVICE_OBJECT
+NTAPI
+IoGetLowerDeviceObject(
+  IN PDEVICE_OBJECT DeviceObject);
+
+NTKERNELAPI
+PDEVICE_OBJECT
+NTAPI
+IoGetDeviceAttachmentBaseRef(
+  IN PDEVICE_OBJECT DeviceObject);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoGetDiskDeviceObject(
+  IN PDEVICE_OBJECT FileSystemDeviceObject,
+  OUT PDEVICE_OBJECT *DiskDeviceObject);
+
 #endif
 
 #if (NTDDI_VERSION >= NTDDI_WS03SP1)
@@ -6120,6 +6189,20 @@ IoEnumerateRegisteredFiltersList(
   OUT PDRIVER_OBJECT *DriverObjectList,
   IN ULONG DriverObjectListSize,
   OUT PULONG ActualNumberDriverObjects);
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+VOID
+FORCEINLINE
+NTAPI
+IoInitializePriorityInfo(
+  IN PIO_PRIORITY_INFO PriorityInfo)
+{
+  PriorityInfo->Size = sizeof(IO_PRIORITY_INFO);
+  PriorityInfo->ThreadPriority = 0xffff;
+  PriorityInfo->IoPriority = IoPriorityNormal;
+  PriorityInfo->PagePriority = 0;
+}
 #endif
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
@@ -6134,6 +6217,7 @@ IoRegisterFsRegistrationChangeMountAware(
 
 NTKERNELAPI
 NTSTATUS
+NTAPI
 IoReplaceFileObjectName(
   IN PFILE_OBJECT FileObject,
   IN PWSTR NewFileName,
@@ -6152,17 +6236,14 @@ IoReplaceFileObjectName(
 #define IoSizeOfIrp( StackSize ) \
     ((USHORT) (sizeof( IRP ) + ((StackSize) * (sizeof( IO_STACK_LOCATION )))))
 
-
-
-
-
-
-
-
-
-
-
-
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+typedef struct _IO_PRIORITY_INFO {
+  ULONG Size;
+  ULONG ThreadPriority;
+  ULONG PagePriority;
+  IO_PRIORITY_HINT IoPriority;
+} IO_PRIORITY_INFO, *PIO_PRIORITY_INFO;
+#endif
 
 #pragma pack(push,4)
 
@@ -8651,66 +8732,6 @@ IoAttachDeviceToDeviceStackSafe(
     IN PDEVICE_OBJECT   SourceDevice,
     IN PDEVICE_OBJECT   TargetDevice,
     OUT PDEVICE_OBJECT  *AttachedToDeviceObject
-);
-
-#if (VER_PRODUCTBUILD >= 2600)
-
-NTKERNELAPI
-PDEVICE_OBJECT
-NTAPI
-IoGetDeviceAttachmentBaseRef (
-    IN PDEVICE_OBJECT DeviceObject
-);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoGetDiskDeviceObject (
-    IN PDEVICE_OBJECT   FileSystemDeviceObject,
-    OUT PDEVICE_OBJECT  *DiskDeviceObject
-);
-
-NTKERNELAPI
-PDEVICE_OBJECT
-NTAPI
-IoGetLowerDeviceObject (
-    IN PDEVICE_OBJECT DeviceObject
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2600) */
-
-NTKERNELAPI
-PEPROCESS
-NTAPI
-IoThreadToProcess (
-    IN PETHREAD Thread
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoUnregisterFileSystem (
-    IN OUT PDEVICE_OBJECT DeviceObject
-);
-
-#if (VER_PRODUCTBUILD >= 1381)
-
-NTKERNELAPI
-VOID
-NTAPI
-IoUnregisterFsRegistrationChange (
-    IN PDRIVER_OBJECT           DriverObject,
-    IN PDRIVER_FS_NOTIFICATION  DriverNotificationRoutine
-);
-
-#endif /* (VER_PRODUCTBUILD >= 1381) */
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoVerifyVolume (
-    IN PDEVICE_OBJECT   DeviceObject,
-    IN BOOLEAN          AllowRawMount
 );
 
 NTKERNELAPI
