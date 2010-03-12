@@ -5758,6 +5758,410 @@ typedef struct _FS_FILTER_CALLBACKS {
   PFS_FILTER_COMPLETION_CALLBACK PostReleaseForModifiedPageWriter;
 } FS_FILTER_CALLBACKS, *PFS_FILTER_CALLBACKS;
 
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlRegisterFileSystemFilterCallbacks(
+  IN struct _DRIVER_OBJECT *FilterDriverObject,
+  IN PFS_FILTER_CALLBACKS Callbacks);
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlNotifyStreamFileObject(
+  IN struct _FILE_OBJECT * StreamFileObject,
+  IN struct _DEVICE_OBJECT *DeviceObjectHint OPTIONAL,
+  IN FS_FILTER_STREAM_FO_NOTIFICATION_TYPE NotificationType,
+  IN BOOLEAN SafeToRecurse);
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+
+#define DO_VERIFY_VOLUME                    0x00000002
+#define DO_BUFFERED_IO                      0x00000004
+#define DO_EXCLUSIVE                        0x00000008
+#define DO_DIRECT_IO                        0x00000010
+#define DO_MAP_IO_BUFFER                    0x00000020
+#define DO_DEVICE_HAS_NAME                  0x00000040
+#define DO_DEVICE_INITIALIZING              0x00000080
+#define DO_SYSTEM_BOOT_PARTITION            0x00000100
+#define DO_LONG_TERM_REQUESTS               0x00000200
+#define DO_NEVER_LAST_DEVICE                0x00000400
+#define DO_SHUTDOWN_REGISTERED              0x00000800
+#define DO_BUS_ENUMERATED_DEVICE            0x00001000
+#define DO_POWER_PAGABLE                    0x00002000
+#define DO_POWER_INRUSH                     0x00004000
+#define DO_LOW_PRIORITY_FILESYSTEM          0x00010000
+#define DO_SUPPORTS_TRANSACTIONS            0x00040000
+#define DO_FORCE_NEITHER_IO                 0x00080000
+#define DO_VOLUME_DEVICE_OBJECT             0x00100000
+#define DO_SYSTEM_SYSTEM_PARTITION          0x00200000
+#define DO_SYSTEM_CRITICAL_PARTITION        0x00400000
+#define DO_DISALLOW_EXECUTE                 0x00800000
+
+extern KSPIN_LOCK                   IoStatisticsLock;
+extern ULONG                        IoReadOperationCount;
+extern ULONG                        IoWriteOperationCount;
+extern ULONG                        IoOtherOperationCount;
+extern LARGE_INTEGER                IoReadTransferCount;
+extern LARGE_INTEGER                IoWriteTransferCount;
+extern LARGE_INTEGER                IoOtherTransferCount;
+
+#define IO_FILE_OBJECT_NON_PAGED_POOL_CHARGE    64
+#define IO_FILE_OBJECT_PAGED_POOL_CHARGE        1024
+
+#if (NTDDI_VERSION == NTDDI_WIN2K)
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoRegisterFsRegistrationChangeEx(
+  IN PDRIVER_OBJECT DriverObject,
+  IN PDRIVER_FS_NOTIFICATION DriverNotificationRoutine);
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTKERNELAPI
+VOID
+NTAPI
+IoAcquireVpbSpinLock(
+  OUT PKIRQL Irql);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoCheckDesiredAccess(
+  IN OUT PACCESS_MASK DesiredAccess,
+  IN ACCESS_MASK GrantedAccess);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoCheckEaBufferValidity(
+  IN PFILE_FULL_EA_INFORMATION EaBuffer,
+  IN ULONG EaLength,
+  OUT PULONG ErrorOffset);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoCheckFunctionAccess(
+  IN ACCESS_MASK GrantedAccess,
+  IN UCHAR MajorFunction,
+  IN UCHAR MinorFunction,
+  IN ULONG IoControlCode,
+  IN PVOID Argument1 OPTIONAL,
+  IN PVOID Argument2 OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoCheckQuerySetFileInformation(
+  IN FILE_INFORMATION_CLASS FileInformationClass,
+  IN ULONG Length,
+  IN BOOLEAN SetOperation);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoCheckQuerySetVolumeInformation(
+  IN FS_INFORMATION_CLASS FsInformationClass,
+  IN ULONG Length,
+  IN BOOLEAN SetOperation);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoCheckQuotaBufferValidity(
+  IN PFILE_QUOTA_INFORMATION QuotaBuffer,
+  IN ULONG QuotaLength,
+  OUT PULONG ErrorOffset);
+
+NTKERNELAPI
+PFILE_OBJECT
+NTAPI
+IoCreateStreamFileObject(
+  IN PFILE_OBJECT FileObject OPTIONAL,
+  IN PDEVICE_OBJECT DeviceObject OPTIONAL);
+
+NTKERNELAPI
+PFILE_OBJECT
+NTAPI
+IoCreateStreamFileObjectLite(
+  IN PFILE_OBJECT FileObject OPTIONAL,
+  IN PDEVICE_OBJECT DeviceObject OPTIONAL);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+IoFastQueryNetworkAttributes(
+  IN POBJECT_ATTRIBUTES ObjectAttributes,
+  IN ACCESS_MASK DesiredAccess,
+  IN ULONG OpenOptions,
+  OUT PIO_STATUS_BLOCK IoStatus,
+  OUT PFILE_NETWORK_OPEN_INFORMATION Buffer);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoPageRead(
+  IN PFILE_OBJECT FileObject,
+  IN PMDL Mdl,
+  IN PLARGE_INTEGER Offset,
+  IN PKEVENT Event,
+  OUT PIO_STATUS_BLOCK IoStatusBlock);
+
+NTKERNELAPI
+PDEVICE_OBJECT
+NTAPI
+IoGetAttachedDevice(
+  IN PDEVICE_OBJECT DeviceObject);
+
+NTKERNELAPI
+PDEVICE_OBJECT
+NTAPI
+IoGetAttachedDeviceReference(
+  IN PDEVICE_OBJECT DeviceObject);
+
+NTKERNELAPI
+PDEVICE_OBJECT
+NTAPI
+IoGetBaseFileSystemDeviceObject(
+  IN PFILE_OBJECT FileObject);
+
+NTKERNELAPI
+PCONFIGURATION_INFORMATION
+NTAPI
+IoGetConfigurationInformation(
+  VOID);
+
+NTKERNELAPI
+ULONG
+NTAPI
+IoGetRequestorProcessId(
+  IN PIRP Irp);
+
+NTKERNELAPI
+PEPROCESS
+NTAPI
+IoGetRequestorProcess(
+  IN PIRP Irp);
+
+NTKERNELAPI
+PIRP
+NTAPI
+IoGetTopLevelIrp(
+  VOID);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+IoIsOperationSynchronous(
+  IN PIRP Irp);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+IoIsSystemThread(
+  IN PETHREAD Thread);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+IoIsValidNameGraftingBuffer(
+  IN PIRP Irp,
+  IN PREPARSE_DATA_BUFFER ReparseBuffer);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoQueryFileInformation(
+  IN PFILE_OBJECT FileObject,
+  IN FILE_INFORMATION_CLASS FileInformationClass,
+  IN ULONG Length,
+  OUT PVOID FileInformation,
+  OUT PULONG ReturnedLength);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoQueryVolumeInformation(
+  IN PFILE_OBJECT FileObject,
+  IN FS_INFORMATION_CLASS FsInformationClass,
+  IN ULONG Length,
+  OUT PVOID FsInformation,
+  OUT PULONG ReturnedLength);
+
+NTKERNELAPI
+VOID
+NTAPI
+IoQueueThreadIrp(
+  IN PIRP Irp);
+
+NTKERNELAPI
+VOID
+NTAPI
+IoRegisterFileSystem(
+  IN PDEVICE_OBJECT DeviceObject);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoRegisterFsRegistrationChange(
+  IN PDRIVER_OBJECT DriverObject,
+  IN PDRIVER_FS_NOTIFICATION DriverNotificationRoutine);
+
+NTKERNELAPI
+VOID
+NTAPI
+IoReleaseVpbSpinLock(
+  IN KIRQL Irql);
+
+NTKERNELAPI
+VOID
+NTAPI
+IoSetDeviceToVerify(
+  IN PETHREAD Thread,
+  IN PDEVICE_OBJECT DeviceObject OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoSetInformation(
+  IN PFILE_OBJECT FileObject,
+  IN FILE_INFORMATION_CLASS FileInformationClass,
+  IN ULONG Length,
+  IN PVOID FileInformation);
+
+NTKERNELAPI
+VOID
+NTAPI
+IoSetTopLevelIrp(
+  IN PIRP Irp OPTIONAL);
+
+NTKERNELAPI
+VOID
+NTAPI
+IoStartNextPacket(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN BOOLEAN Cancelable);
+
+NTKERNELAPI
+VOID
+NTAPI
+IoStartNextPacketByKey(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN BOOLEAN Cancelable,
+  IN ULONG Key);
+
+NTKERNELAPI
+VOID
+IoStartPacket(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PIRP Irp,
+  IN PULONG Key OPTIONAL,
+  IN PDRIVER_CANCEL CancelFunction OPTIONAL);
+
+NTKERNELAPI
+VOID
+NTAPI
+IoStartTimer(
+  IN PDEVICE_OBJECT DeviceObject);
+
+NTKERNELAPI
+VOID
+NTAPI
+IoStopTimer(
+  IN PDEVICE_OBJECT DeviceObject);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoSynchronousPageWrite(
+  IN PFILE_OBJECT FileObject,
+  IN PMDL Mdl,
+  IN PLARGE_INTEGER FileOffset,
+  IN PKEVENT Event,
+  OUT PIO_STATUS_BLOCK IoStatusBlock);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+
+NTKERNELAPI
+PFILE_OBJECT
+IoCreateStreamFileObjectEx(
+  IN PFILE_OBJECT FileObject OPTIONAL,
+  IN PDEVICE_OBJECT DeviceObject OPTIONAL,
+  OUT PHANDLE FileObjectHandle OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoQueryFileDosDeviceName(
+  IN PFILE_OBJECT FileObject,
+  OUT POBJECT_NAME_INFORMATION *ObjectNameInformation);
+
+VOID
+NTAPI
+IoSetStartIoAttributes(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN BOOLEAN DeferredStartIo,
+  IN BOOLEAN NonCancelable);
+
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WS03SP1)
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoEnumerateRegisteredFiltersList(
+  OUT PDRIVER_OBJECT *DriverObjectList,
+  IN ULONG DriverObjectListSize,
+  OUT PULONG ActualNumberDriverObjects);
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoRegisterFsRegistrationChangeMountAware(
+  IN PDRIVER_OBJECT DriverObject,
+  IN PDRIVER_FS_NOTIFICATION DriverNotificationRoutine,
+  IN BOOLEAN SynchronizeWithMounts);
+
+NTKERNELAPI
+NTSTATUS
+IoReplaceFileObjectName(
+  IN PFILE_OBJECT FileObject,
+  IN PWSTR NewFileName,
+  IN USHORT FileNameLength);
+
+#endif
+
+#define IoIsFileOpenedExclusively(FileObject) ( \
+    (BOOLEAN) !(                                \
+    (FileObject)->SharedRead ||                 \
+    (FileObject)->SharedWrite ||                \
+    (FileObject)->SharedDelete                  \
+    )                                           \
+)
+
+#define IoSizeOfIrp( StackSize ) \
+    ((USHORT) (sizeof( IRP ) + ((StackSize) * (sizeof( IO_STACK_LOCATION )))))
+
+
+
+
+
+
+
+
+
+
+
 
 
 #pragma pack(push,4)
@@ -5775,14 +6179,6 @@ extern DECLSPEC_IMPORT PUCHAR       FsRtlLegalAnsiCharacterArray;
 #endif
 extern PACL                         SePublicDefaultDacl;
 extern PACL                         SeSystemDefaultDacl;
-
-extern KSPIN_LOCK                   IoStatisticsLock;
-extern ULONG                        IoReadOperationCount;
-extern ULONG                        IoWriteOperationCount;
-extern ULONG                        IoOtherOperationCount;
-extern LARGE_INTEGER                IoReadTransferCount;
-extern LARGE_INTEGER                IoWriteTransferCount;
-extern LARGE_INTEGER                IoOtherTransferCount;
 
 #define FS_LFN_APIS                     0x00004000
 
@@ -5848,9 +6244,6 @@ extern LARGE_INTEGER                IoOtherTransferCount;
 #define IO_ATTACH_DEVICE                0x0400
 
 #define IO_ATTACH_DEVICE_API            0x80000000
-
-#define IO_FILE_OBJECT_NON_PAGED_POOL_CHARGE    64
-#define IO_FILE_OBJECT_PAGED_POOL_CHARGE        1024
 
 #define IO_TYPE_APC                     18
 #define IO_TYPE_DPC                     19
@@ -8260,100 +8653,6 @@ IoAttachDeviceToDeviceStackSafe(
     OUT PDEVICE_OBJECT  *AttachedToDeviceObject
 );
 
-NTKERNELAPI
-VOID
-NTAPI
-IoAcquireVpbSpinLock (
-    OUT PKIRQL Irql
-);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoCheckDesiredAccess (
-    IN OUT PACCESS_MASK DesiredAccess,
-    IN ACCESS_MASK      GrantedAccess
-);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoCheckEaBufferValidity (
-    IN PFILE_FULL_EA_INFORMATION    EaBuffer,
-    IN ULONG                        EaLength,
-    OUT PULONG                      ErrorOffset
-);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoCheckFunctionAccess (
-    IN ACCESS_MASK              GrantedAccess,
-    IN UCHAR                    MajorFunction,
-    IN UCHAR                    MinorFunction,
-    IN ULONG                    IoControlCode,
-    IN PVOID                    Argument1 OPTIONAL,
-    IN PVOID                    Argument2 OPTIONAL
-);
-
-#if (VER_PRODUCTBUILD >= 2195)
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoCheckQuotaBufferValidity (
-    IN PFILE_QUOTA_INFORMATION  QuotaBuffer,
-    IN ULONG                    QuotaLength,
-    OUT PULONG                  ErrorOffset
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
-
-NTKERNELAPI
-PFILE_OBJECT
-NTAPI
-IoCreateStreamFileObject (
-    IN PFILE_OBJECT     FileObject OPTIONAL,
-    IN PDEVICE_OBJECT   DeviceObject OPTIONAL
-);
-
-#if (VER_PRODUCTBUILD >= 2195)
-
-NTKERNELAPI
-PFILE_OBJECT
-NTAPI
-IoCreateStreamFileObjectLite (
-    IN PFILE_OBJECT     FileObject OPTIONAL,
-    IN PDEVICE_OBJECT   DeviceObject OPTIONAL
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-IoFastQueryNetworkAttributes (
-    IN POBJECT_ATTRIBUTES               ObjectAttributes,
-    IN ACCESS_MASK                      DesiredAccess,
-    IN ULONG                            OpenOptions,
-    OUT PIO_STATUS_BLOCK                IoStatus,
-    OUT PFILE_NETWORK_OPEN_INFORMATION  Buffer
-);
-
-NTKERNELAPI
-PDEVICE_OBJECT
-NTAPI
-IoGetAttachedDevice (
-    IN PDEVICE_OBJECT DeviceObject
-);
-
-NTKERNELAPI
-PDEVICE_OBJECT
-NTAPI
-IoGetBaseFileSystemDeviceObject (
-    IN PFILE_OBJECT FileObject
-);
-
 #if (VER_PRODUCTBUILD >= 2600)
 
 NTKERNELAPI
@@ -8379,167 +8678,6 @@ IoGetLowerDeviceObject (
 );
 
 #endif /* (VER_PRODUCTBUILD >= 2600) */
-
-NTKERNELAPI
-PEPROCESS
-NTAPI
-IoGetRequestorProcess (
-    IN PIRP Irp
-);
-
-#if (VER_PRODUCTBUILD >= 2195)
-
-NTKERNELAPI
-ULONG
-NTAPI
-IoGetRequestorProcessId (
-    IN PIRP Irp
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
-
-NTKERNELAPI
-PIRP
-NTAPI
-IoGetTopLevelIrp (
-    VOID
-);
-
-#define IoIsFileOpenedExclusively(FileObject) ( \
-    (BOOLEAN) !(                                \
-    (FileObject)->SharedRead ||                 \
-    (FileObject)->SharedWrite ||                \
-    (FileObject)->SharedDelete                  \
-    )                                           \
-)
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-IoIsOperationSynchronous (
-    IN PIRP Irp
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-IoIsSystemThread (
-    IN PETHREAD Thread
-);
-
-#if (VER_PRODUCTBUILD >= 2195)
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-IoIsValidNameGraftingBuffer (
-    IN PIRP                 Irp,
-    IN PREPARSE_DATA_BUFFER ReparseBuffer
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoPageRead (
-    IN PFILE_OBJECT         FileObject,
-    IN PMDL                 Mdl,
-    IN PLARGE_INTEGER       Offset,
-    IN PKEVENT              Event,
-    OUT PIO_STATUS_BLOCK    IoStatusBlock
-);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoQueryFileInformation (
-    IN PFILE_OBJECT             FileObject,
-    IN FILE_INFORMATION_CLASS   FileInformationClass,
-    IN ULONG                    Length,
-    OUT PVOID                   FileInformation,
-    OUT PULONG                  ReturnedLength
-);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoQueryVolumeInformation (
-    IN PFILE_OBJECT         FileObject,
-    IN FS_INFORMATION_CLASS FsInformationClass,
-    IN ULONG                Length,
-    OUT PVOID               FsInformation,
-    OUT PULONG              ReturnedLength
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoQueueThreadIrp(
-    IN PIRP Irp
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoRegisterFileSystem (
-    IN OUT PDEVICE_OBJECT DeviceObject
-);
-
-#if (VER_PRODUCTBUILD >= 1381)
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoRegisterFsRegistrationChange (
-    IN PDRIVER_OBJECT           DriverObject,
-    IN PDRIVER_FS_NOTIFICATION  DriverNotificationRoutine
-);
-
-#endif /* (VER_PRODUCTBUILD >= 1381) */
-
-NTKERNELAPI
-VOID
-NTAPI
-IoReleaseVpbSpinLock (
-    IN KIRQL Irql
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoSetDeviceToVerify (
-    IN PETHREAD         Thread,
-    IN PDEVICE_OBJECT   DeviceObject
-);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoSetInformation (
-    IN PFILE_OBJECT             FileObject,
-    IN FILE_INFORMATION_CLASS   FileInformationClass,
-    IN ULONG                    Length,
-    IN PVOID                    FileInformation
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoSetTopLevelIrp (
-    IN PIRP Irp
-);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoSynchronousPageWrite (
-    IN PFILE_OBJECT         FileObject,
-    IN PMDL                 Mdl,
-    IN PLARGE_INTEGER       FileOffset,
-    IN PKEVENT              Event,
-    OUT PIO_STATUS_BLOCK    IoStatusBlock
-);
 
 NTKERNELAPI
 PEPROCESS
