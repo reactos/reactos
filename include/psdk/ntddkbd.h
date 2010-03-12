@@ -63,6 +63,13 @@ DEFINE_GUID(GUID_DEVINTERFACE_KEYBOARD, \
 #define KEY_E0                            2
 #define KEY_E1                            4
 
+#define KEYBOARD_LED_INJECTED     0x8000
+#define KEYBOARD_SHADOW           0x4000
+#define KEYBOARD_KANA_LOCK_ON     8
+#define KEYBOARD_CAPS_LOCK_ON     4
+#define KEYBOARD_NUM_LOCK_ON      2
+#define KEYBOARD_SCROLL_LOCK_ON   1
+
 typedef struct _KEYBOARD_INPUT_DATA {
   USHORT  UnitId;
   USHORT  MakeCode;
