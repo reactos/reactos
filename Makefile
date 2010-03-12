@@ -169,11 +169,7 @@ else
 endif
 
 ifeq ($(ROS_AUTOMAKE),)
-  ifeq ($(ARCH),i386)
-    ROS_AUTOMAKE=makefile.auto
-  else
-    ROS_AUTOMAKE=makefile-$(ARCH).auto
-  endif
+  ROS_AUTOMAKE=makefile-$(ARCH).auto
 endif
 
 all: $(ROS_AUTOMAKE)
@@ -329,10 +325,6 @@ endif
 ifeq ($(TARGET_CPP),)
   TARGET_CPP = $(PREFIX_)g++
 endif
-ifneq ($(ANALYZER),)
-  TARGET_CC = $(ANALYZER) $(TARGET_CC)
-endif
-
 gcc = $(Q)$(TARGET_CC)
 gpp = $(Q)$(TARGET_CPP)
 gas = $(Q)$(TARGET_CC) -x assembler-with-cpp
@@ -357,6 +349,7 @@ ifeq ($(HOST),mingw32-linux)
 	endif
 	export SEP = /
 	mkdir = -$(Q)mkdir -p
+	checkpoint = $(Q)touch
 	rm = $(Q)rm -f
 	cp = $(Q)cp
 	NUL = /dev/null
@@ -365,6 +358,7 @@ else # mingw32-windows
 	ROS_EMPTY =
 	export SEP = \$(ROS_EMPTY)
 	mkdir = -$(Q)mkdir
+	checkpoint = $(Q)copy /y NUL
 	rm = $(Q)del /f /q
 	cp = $(Q)copy /y
 	NUL = NUL
