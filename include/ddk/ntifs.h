@@ -6570,6 +6570,21 @@ typedef enum _FAST_IO_POSSIBLE {
   FastIoIsQuestionable
 } FAST_IO_POSSIBLE;
 
+typedef struct _FSRTL_COMMON_FCB_HEADER {
+  CSHORT NodeTypeCode;
+  CSHORT NodeByteSize;
+  UCHAR Flags;
+  UCHAR IsFastIoPossible;
+  UCHAR Flags2;
+  UCHAR Reserved:4;
+  UCHAR Version:4;
+  PERESOURCE Resource;
+  PERESOURCE PagingIoResource;
+  LARGE_INTEGER AllocationSize;
+  LARGE_INTEGER FileSize;
+  LARGE_INTEGER ValidDataLength;
+} FSRTL_COMMON_FCB_HEADER, *PFSRTL_COMMON_FCB_HEADER;
+
 #ifdef __cplusplus
 typedef struct _FSRTL_ADVANCED_FCB_HEADER:FSRTL_COMMON_FCB_HEADER {
 #else /* __cplusplus */
@@ -6613,6 +6628,333 @@ typedef struct _EOF_WAIT_BLOCK {
   LIST_ENTRY EofWaitLinks;
   KEVENT Event;
 } EOF_WAIT_BLOCK, *PEOF_WAIT_BLOCK;
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlCopyRead(
+  IN PFILE_OBJECT FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN ULONG Length,
+  IN BOOLEAN Wait,
+  IN ULONG LockKey,
+  OUT PVOID Buffer,
+  OUT PIO_STATUS_BLOCK IoStatus,
+  IN PDEVICE_OBJECT DeviceObject);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlCopyWrite(
+  IN PFILE_OBJECT FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN ULONG Length,
+  IN BOOLEAN Wait,
+  IN ULONG LockKey,
+  IN PVOID Buffer,
+  OUT PIO_STATUS_BLOCK IoStatus,
+  IN PDEVICE_OBJECT DeviceObject);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlMdlReadDev(
+  IN PFILE_OBJECT FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN ULONG Length,
+  IN ULONG LockKey,
+  OUT PMDL *MdlChain,
+  OUT PIO_STATUS_BLOCK IoStatus,
+  IN PDEVICE_OBJECT DeviceObject OPTIONAL);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlMdlReadCompleteDev(
+  IN PFILE_OBJECT FileObject,
+  IN PMDL MdlChain,
+  IN PDEVICE_OBJECT DeviceObject OPTIONAL);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlPrepareMdlWriteDev(
+  IN PFILE_OBJECT FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN ULONG Length,
+  IN ULONG LockKey,
+  OUT PMDL *MdlChain,
+  OUT PIO_STATUS_BLOCK IoStatus,
+  IN PDEVICE_OBJECT DeviceObject);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlMdlWriteCompleteDev(
+  IN PFILE_OBJECT FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN PMDL MdlChain,
+  IN PDEVICE_OBJECT DeviceObject);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlAcquireFileExclusive(
+  IN PFILE_OBJECT FileObject);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlReleaseFile(
+  IN PFILE_OBJECT FileObject);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlGetFileSize(
+  IN PFILE_OBJECT FileObject,
+  OUT PLARGE_INTEGER FileSize);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlIsTotalDeviceFailure(
+  IN NTSTATUS Status);
+
+NTKERNELAPI
+PFILE_LOCK
+NTAPI
+FsRtlAllocateFileLock(
+  IN PCOMPLETE_LOCK_IRP_ROUTINE CompleteLockIrpRoutine OPTIONAL,
+  IN PUNLOCK_ROUTINE UnlockRoutine OPTIONAL);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlFreeFileLock(
+  IN PFILE_LOCK FileLock);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlInitializeFileLock(
+  IN PFILE_LOCK FileLock,
+  IN PCOMPLETE_LOCK_IRP_ROUTINE CompleteLockIrpRoutine OPTIONAL,
+  IN PUNLOCK_ROUTINE UnlockRoutine OPTIONAL);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlUninitializeFileLock(
+  IN PFILE_LOCK FileLock);
+
+/*
+  FsRtlProcessFileLock:
+
+  ret:
+    -STATUS_INVALID_DEVICE_REQUEST
+    -STATUS_RANGE_NOT_LOCKED from unlock routines.
+    -STATUS_PENDING, STATUS_LOCK_NOT_GRANTED from FsRtlPrivateLock
+    (redirected IoStatus->Status).
+
+  Internals:
+    -switch ( Irp->CurrentStackLocation->MinorFunction )
+        lock: return FsRtlPrivateLock;
+        unlocksingle: return FsRtlFastUnlockSingle;
+        unlockall: return FsRtlFastUnlockAll;
+        unlockallbykey: return FsRtlFastUnlockAllByKey;
+        default: IofCompleteRequest with STATUS_INVALID_DEVICE_REQUEST;
+                 return STATUS_INVALID_DEVICE_REQUEST;
+
+    -'AllwaysZero' is passed thru as 'AllwaysZero' to lock / unlock routines.
+    -'Irp' is passet thru as 'Irp' to FsRtlPrivateLock.
+*/
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlProcessFileLock(
+  IN PFILE_LOCK FileLock,
+  IN PIRP Irp,
+  IN PVOID Context OPTIONAL);
+
+/*
+  FsRtlCheckLockForReadAccess:
+
+  All this really does is pick out the lock parameters from the irp (io stack
+  location?), get IoGetRequestorProcess, and pass values on to
+  FsRtlFastCheckLockForRead.
+*/
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlCheckLockForReadAccess(
+  IN PFILE_LOCK FileLock,
+  IN PIRP Irp);
+
+/*
+  FsRtlCheckLockForWriteAccess:
+
+  All this really does is pick out the lock parameters from the irp (io stack
+  location?), get IoGetRequestorProcess, and pass values on to
+  FsRtlFastCheckLockForWrite.
+*/
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlCheckLockForWriteAccess(
+  IN PFILE_LOCK FileLock,
+  IN PIRP Irp);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlFastCheckLockForRead(
+  IN PFILE_LOCK FileLock,
+  IN PLARGE_INTEGER FileOffset,
+  IN PLARGE_INTEGER Length,
+  IN ULONG Key,
+  IN PFILE_OBJECT FileObject,
+  IN PVOID Process);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlFastCheckLockForWrite(
+  IN PFILE_LOCK FileLock,
+  IN PLARGE_INTEGER FileOffset,
+  IN PLARGE_INTEGER Length,
+  IN ULONG Key,
+  IN PFILE_OBJECT FileObject,
+  IN PVOID Process);
+
+/*
+  FsRtlGetNextFileLock:
+
+  ret: NULL if no more locks
+
+  Internals:
+    FsRtlGetNextFileLock uses FileLock->LastReturnedLockInfo and
+    FileLock->LastReturnedLock as storage.
+    LastReturnedLock is a pointer to the 'raw' lock inkl. double linked
+    list, and FsRtlGetNextFileLock needs this to get next lock on subsequent
+    calls with Restart = FALSE.
+*/
+NTKERNELAPI
+PFILE_LOCK_INFO
+NTAPI
+FsRtlGetNextFileLock(
+  IN PFILE_LOCK FileLock,
+  IN BOOLEAN Restart);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlFastUnlockSingle(
+  IN PFILE_LOCK FileLock,
+  IN PFILE_OBJECT FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN PLARGE_INTEGER Length,
+  IN PEPROCESS Process,
+  IN ULONG Key,
+  IN PVOID Context OPTIONAL,
+  IN BOOLEAN AlreadySynchronized);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlFastUnlockAll(
+  IN PFILE_LOCK FileLock,
+  IN PFILE_OBJECT FileObject,
+  IN PEPROCESS Process,
+  IN PVOID Context OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlFastUnlockAllByKey(
+  IN PFILE_LOCK FileLock,
+  IN PFILE_OBJECT FileObject,
+  IN PEPROCESS Process,
+  IN ULONG Key,
+  IN PVOID Context OPTIONAL);
+
+/*
+  FsRtlPrivateLock:
+
+  ret: IoStatus->Status: STATUS_PENDING, STATUS_LOCK_NOT_GRANTED
+
+  Internals:
+    -Calls IoCompleteRequest if Irp
+    -Uses exception handling / ExRaiseStatus with STATUS_INSUFFICIENT_RESOURCES
+*/
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlPrivateLock(
+  IN PFILE_LOCK FileLock,
+  IN PFILE_OBJECT FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN PLARGE_INTEGER Length,
+  IN PEPROCESS Process,
+  IN ULONG Key,
+  IN BOOLEAN FailImmediately,
+  IN BOOLEAN ExclusiveLock,
+  OUT PIO_STATUS_BLOCK IoStatus,
+  IN PIRP Irp OPTIONAL,
+  IN PVOID Context,
+  IN BOOLEAN AlreadySynchronized);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlAreThereCurrentOrInProgressFileLocks(
+  IN PFILE_LOCK FileLock);
+#endif
+
+typedef struct _FSRTL_AUXILIARY_BUFFER {
+  PVOID Buffer;
+  ULONG Length;
+  ULONG Flags;
+  PMDL Mdl;
+} FSRTL_AUXILIARY_BUFFER, *PFSRTL_AUXILIARY_BUFFER;
+
+#define FSRTL_AUXILIARY_FLAG_DEALLOCATE 0x00000001
+
+typedef struct _FILE_LOCK_INFO {
+  LARGE_INTEGER StartingByte;
+  LARGE_INTEGER Length;
+  BOOLEAN ExclusiveLock;
+  ULONG Key;
+  PFILE_OBJECT FileObject;
+  PVOID ProcessId;
+  LARGE_INTEGER EndingByte;
+} FILE_LOCK_INFO, *PFILE_LOCK_INFO;
+
+typedef NTSTATUS
+(NTAPI *PCOMPLETE_LOCK_IRP_ROUTINE) (
+  IN PVOID Context,
+  IN PIRP Irp);
+
+typedef VOID
+(NTAPI *PUNLOCK_ROUTINE) (
+  IN PVOID Context,
+  IN PFILE_LOCK_INFO FileLockInfo);
+
+typedef struct _FILE_LOCK {
+  PCOMPLETE_LOCK_IRP_ROUTINE CompleteLockIrpRoutine;
+  PUNLOCK_ROUTINE UnlockRoutine;
+  BOOLEAN FastIoIsQuestionable;
+  BOOLEAN SpareC[3];
+  PVOID LockInformation;
+  FILE_LOCK_INFO LastReturnedLockInfo;
+  PVOID LastReturnedLock;
+  LONG volatile LockRequestsInProgress;
+} FILE_LOCK, *PFILE_LOCK;
 
 #pragma pack(push,4)
 
@@ -6883,17 +7225,6 @@ typedef struct _FILE_FS_OBJECTID_INFORMATION
     UCHAR ExtendedInfo[48];
 } FILE_FS_OBJECTID_INFORMATION, *PFILE_FS_OBJECTID_INFORMATION;
 
-typedef struct _FILE_LOCK_INFO
-{
-    LARGE_INTEGER StartingByte;
-    LARGE_INTEGER Length;
-    BOOLEAN ExclusiveLock;
-    ULONG Key;
-    PFILE_OBJECT FileObject;
-    PVOID ProcessId;
-    LARGE_INTEGER EndingByte;
-} FILE_LOCK_INFO, *PFILE_LOCK_INFO;
-
 /* raw internal file lock struct returned from FsRtlGetNextFileLock */
 typedef struct _FILE_SHARED_LOCK_ENTRY {
     PVOID           Unknown1;
@@ -6908,26 +7239,6 @@ typedef struct _FILE_EXCLUSIVE_LOCK_ENTRY {
     PVOID           Unknown2;
     FILE_LOCK_INFO  FileLock;
 } FILE_EXCLUSIVE_LOCK_ENTRY, *PFILE_EXCLUSIVE_LOCK_ENTRY;
-
-typedef NTSTATUS (NTAPI *PCOMPLETE_LOCK_IRP_ROUTINE) (
-    IN PVOID    Context,
-    IN PIRP     Irp
-);
-
-typedef VOID (NTAPI *PUNLOCK_ROUTINE) (
-    IN PVOID            Context,
-    IN PFILE_LOCK_INFO  FileLockInfo
-);
-
-typedef struct _FILE_LOCK {
-    PCOMPLETE_LOCK_IRP_ROUTINE  CompleteLockIrpRoutine;
-    PUNLOCK_ROUTINE             UnlockRoutine;
-    BOOLEAN                     FastIoIsQuestionable;
-    BOOLEAN                     Pad[3];
-    PVOID                       LockInformation;
-    FILE_LOCK_INFO              LastReturnedLockInfo;
-    PVOID                       LastReturnedLock;
-} FILE_LOCK, *PFILE_LOCK;
 
 typedef struct _FILE_MAILSLOT_PEEK_BUFFER {
     ULONG ReadDataAvailable;
@@ -6997,21 +7308,6 @@ typedef struct _FILE_OLE_STATE_BITS_INFORMATION {
     ULONG StateBits;
     ULONG StateBitsMask;
 } FILE_OLE_STATE_BITS_INFORMATION, *PFILE_OLE_STATE_BITS_INFORMATION;
-
-typedef struct _FSRTL_COMMON_FCB_HEADER {
-  CSHORT NodeTypeCode;
-  CSHORT NodeByteSize;
-  UCHAR Flags;
-  UCHAR IsFastIoPossible;
-  UCHAR Flags2;
-  UCHAR Reserved:4;
-  UCHAR Version:4;
-  PERESOURCE Resource;
-  PERESOURCE PagingIoResource;
-  LARGE_INTEGER AllocationSize;
-  LARGE_INTEGER FileSize;
-  LARGE_INTEGER ValidDataLength;
-} FSRTL_COMMON_FCB_HEADER, *PFSRTL_COMMON_FCB_HEADER;
 
 typedef enum _FSRTL_COMPARISON_RESULT
 {
@@ -7975,17 +8271,6 @@ FsRtlAddToTunnelCache (
     IN PVOID            Data
 );
 
-#if (VER_PRODUCTBUILD >= 2195)
-
-PFILE_LOCK
-NTAPI
-FsRtlAllocateFileLock (
-    IN PCOMPLETE_LOCK_IRP_ROUTINE   CompleteLockIrpRoutine OPTIONAL,
-    IN PUNLOCK_ROUTINE              UnlockRoutine OPTIONAL
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
-
 NTKERNELAPI
 PVOID
 NTAPI
@@ -8034,36 +8319,6 @@ FsRtlAreNamesEqual (
     ((FL)->FastIoIsQuestionable)            \
 )
 
-/*
-  FsRtlCheckLockForReadAccess:
-
-  All this really does is pick out the lock parameters from the irp (io stack
-  location?), get IoGetRequestorProcess, and pass values on to
-  FsRtlFastCheckLockForRead.
-*/
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlCheckLockForReadAccess (
-    IN PFILE_LOCK   FileLock,
-    IN PIRP         Irp
-);
-
-/*
-  FsRtlCheckLockForWriteAccess:
-
-  All this really does is pick out the lock parameters from the irp (io stack
-  location?), get IoGetRequestorProcess, and pass values on to
-  FsRtlFastCheckLockForWrite.
-*/
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlCheckLockForWriteAccess (
-    IN PFILE_LOCK   FileLock,
-    IN PIRP         Irp
-);
-
 typedef
 VOID
 (NTAPI*POPLOCK_WAIT_COMPLETE_ROUTINE) (
@@ -8087,34 +8342,6 @@ FsRtlCheckOplock (
     IN PVOID                            Context,
     IN POPLOCK_WAIT_COMPLETE_ROUTINE    CompletionRoutine OPTIONAL,
     IN POPLOCK_FS_PREPOST_IRP           PostIrpRoutine OPTIONAL
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlCopyRead (
-    IN PFILE_OBJECT         FileObject,
-    IN PLARGE_INTEGER       FileOffset,
-    IN ULONG                Length,
-    IN BOOLEAN              Wait,
-    IN ULONG                LockKey,
-    OUT PVOID               Buffer,
-    OUT PIO_STATUS_BLOCK    IoStatus,
-    IN PDEVICE_OBJECT       DeviceObject
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlCopyWrite (
-    IN PFILE_OBJECT         FileObject,
-    IN PLARGE_INTEGER       FileOffset,
-    IN ULONG                Length,
-    IN BOOLEAN              Wait,
-    IN ULONG                LockKey,
-    IN PVOID                Buffer,
-    OUT PIO_STATUS_BLOCK    IoStatus,
-    IN PDEVICE_OBJECT       DeviceObject
 );
 
 NTKERNELAPI
@@ -8198,71 +8425,9 @@ FsRtlIsFatDbcsLegal (
 
 #define FsRtlExitFileSystem     KeLeaveCriticalRegion
 
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlFastCheckLockForRead (
-    IN PFILE_LOCK           FileLock,
-    IN PLARGE_INTEGER       FileOffset,
-    IN PLARGE_INTEGER       Length,
-    IN ULONG                Key,
-    IN PFILE_OBJECT         FileObject,
-    IN PVOID                Process
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlFastCheckLockForWrite (
-    IN PFILE_LOCK           FileLock,
-    IN PLARGE_INTEGER       FileOffset,
-    IN PLARGE_INTEGER       Length,
-    IN ULONG                Key,
-    IN PFILE_OBJECT         FileObject,
-    IN PVOID                Process
-);
-
 #define FsRtlFastLock(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11) (       \
      FsRtlPrivateLock(A1, A2, A3, A4, A5, A6, A7, A8, A9, NULL, A10, A11)   \
 )
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-FsRtlFastUnlockAll (
-    IN PFILE_LOCK           FileLock,
-    IN PFILE_OBJECT         FileObject,
-    IN PEPROCESS            Process,
-    IN PVOID                Context OPTIONAL
-);
-/* ret: STATUS_RANGE_NOT_LOCKED */
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-FsRtlFastUnlockAllByKey (
-    IN PFILE_LOCK           FileLock,
-    IN PFILE_OBJECT         FileObject,
-    IN PEPROCESS            Process,
-    IN ULONG                Key,
-    IN PVOID                Context OPTIONAL
-);
-/* ret: STATUS_RANGE_NOT_LOCKED */
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-FsRtlFastUnlockSingle (
-    IN PFILE_LOCK           FileLock,
-    IN PFILE_OBJECT         FileObject,
-    IN PLARGE_INTEGER       FileOffset,
-    IN PLARGE_INTEGER       Length,
-    IN PEPROCESS            Process,
-    IN ULONG                Key,
-    IN PVOID                Context OPTIONAL,
-    IN BOOLEAN              AlreadySynchronized
-);
-/* ret:  STATUS_RANGE_NOT_LOCKED */
 
 NTKERNELAPI
 BOOLEAN
@@ -8277,25 +8442,6 @@ FsRtlFindInTunnelCache (
     OUT PVOID           Data
 );
 
-#if (VER_PRODUCTBUILD >= 2195)
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlFreeFileLock (
-    IN PFILE_LOCK FileLock
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-FsRtlGetFileSize (
-    IN PFILE_OBJECT         FileObject,
-    IN OUT PLARGE_INTEGER   FileSize
-);
-
 NTKERNELAPI
 BOOLEAN
 NTAPI
@@ -8305,26 +8451,6 @@ FsRtlGetNextBaseMcbEntry (
     OUT PLONGLONG  Vbn,
     OUT PLONGLONG  Lbn,
     OUT PLONGLONG  SectorCount
-);
-
-/*
-  FsRtlGetNextFileLock:
-
-  ret: NULL if no more locks
-
-  Internals:
-    FsRtlGetNextFileLock uses FileLock->LastReturnedLockInfo and
-    FileLock->LastReturnedLock as storage.
-    LastReturnedLock is a pointer to the 'raw' lock inkl. double linked
-    list, and FsRtlGetNextFileLock needs this to get next lock on subsequent
-    calls with Restart = FALSE.
-*/
-NTKERNELAPI
-PFILE_LOCK_INFO
-NTAPI
-FsRtlGetNextFileLock (
-    IN PFILE_LOCK   FileLock,
-    IN BOOLEAN      Restart
 );
 
 NTKERNELAPI
@@ -8359,15 +8485,6 @@ NTAPI
 FsRtlInitializeBaseMcb (
     IN PBASE_MCB  Mcb,
     IN POOL_TYPE  PoolType
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlInitializeFileLock (
-    IN PFILE_LOCK                   FileLock,
-    IN PCOMPLETE_LOCK_IRP_ROUTINE   CompleteLockIrpRoutine OPTIONAL,
-    IN PUNLOCK_ROUTINE              UnlockRoutine OPTIONAL
 );
 
 NTKERNELAPI
@@ -8582,44 +8699,9 @@ FsRtlLookupPerStreamContextInternal (
 NTKERNELAPI
 BOOLEAN
 NTAPI
-FsRtlMdlReadDev (
-    IN PFILE_OBJECT       FileObject,
-    IN PLARGE_INTEGER     FileOffset,
-    IN ULONG              Length,
-    IN ULONG              LockKey,
-    OUT PMDL              *MdlChain,
-    OUT PIO_STATUS_BLOCK  IoStatus,
-    IN PDEVICE_OBJECT     DeviceObject
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
 FsRtlMdlReadComplete (
     IN PFILE_OBJECT     FileObject,
     IN PMDL             MdlChain
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlMdlReadCompleteDev (
-    IN PFILE_OBJECT     FileObject,
-    IN PMDL             MdlChain,
-    IN PDEVICE_OBJECT   DeviceObject
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlPrepareMdlWriteDev (
-    IN PFILE_OBJECT       FileObject,
-    IN PLARGE_INTEGER     FileOffset,
-    IN ULONG              Length,
-    IN ULONG              LockKey,
-    OUT PMDL              *MdlChain,
-    OUT PIO_STATUS_BLOCK  IoStatus,
-    IN PDEVICE_OBJECT     DeviceObject
 );
 
 NTKERNELAPI
@@ -8629,16 +8711,6 @@ FsRtlMdlWriteComplete (
     IN PFILE_OBJECT     FileObject,
     IN PLARGE_INTEGER   FileOffset,
     IN PMDL             MdlChain
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlMdlWriteCompleteDev (
-    IN PFILE_OBJECT     FileObject,
-    IN PLARGE_INTEGER   FileOffset,
-    IN PMDL             MdlChain,
-    IN PDEVICE_OBJECT   DeviceObject
 );
 
 NTKERNELAPI
@@ -8826,63 +8898,6 @@ FsRtlPostStackOverflow (
     IN PFSRTL_STACK_OVERFLOW_ROUTINE  StackOverflowRoutine
 );
 
-/*
-  FsRtlPrivateLock:
-
-  ret: IoStatus->Status: STATUS_PENDING, STATUS_LOCK_NOT_GRANTED
-
-  Internals:
-    -Calls IoCompleteRequest if Irp
-    -Uses exception handling / ExRaiseStatus with STATUS_INSUFFICIENT_RESOURCES
-*/
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlPrivateLock (
-    IN PFILE_LOCK           FileLock,
-    IN PFILE_OBJECT         FileObject,
-    IN PLARGE_INTEGER       FileOffset,
-    IN PLARGE_INTEGER       Length,
-    IN PEPROCESS            Process,
-    IN ULONG                Key,
-    IN BOOLEAN              FailImmediately,
-    IN BOOLEAN              ExclusiveLock,
-    OUT PIO_STATUS_BLOCK    IoStatus,
-    IN PIRP                 Irp OPTIONAL,
-    IN PVOID                Context,
-    IN BOOLEAN              AlreadySynchronized
-);
-
-/*
-  FsRtlProcessFileLock:
-
-  ret:
-    -STATUS_INVALID_DEVICE_REQUEST
-    -STATUS_RANGE_NOT_LOCKED from unlock routines.
-    -STATUS_PENDING, STATUS_LOCK_NOT_GRANTED from FsRtlPrivateLock
-    (redirected IoStatus->Status).
-
-  Internals:
-    -switch ( Irp->CurrentStackLocation->MinorFunction )
-        lock: return FsRtlPrivateLock;
-        unlocksingle: return FsRtlFastUnlockSingle;
-        unlockall: return FsRtlFastUnlockAll;
-        unlockallbykey: return FsRtlFastUnlockAllByKey;
-        default: IofCompleteRequest with STATUS_INVALID_DEVICE_REQUEST;
-                 return STATUS_INVALID_DEVICE_REQUEST;
-
-    -'AllwaysZero' is passed thru as 'AllwaysZero' to lock / unlock routines.
-    -'Irp' is passet thru as 'Irp' to FsRtlPrivateLock.
-*/
-NTKERNELAPI
-NTSTATUS
-NTAPI
-FsRtlProcessFileLock (
-    IN PFILE_LOCK   FileLock,
-    IN PIRP         Irp,
-    IN PVOID        Context OPTIONAL
-);
-
 NTKERNELAPI
 NTSTATUS
 NTAPI
@@ -8996,13 +9011,6 @@ VOID
 NTAPI
 FsRtlUninitializeBaseMcb (
     IN PBASE_MCB Mcb
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlUninitializeFileLock (
-    IN PFILE_LOCK FileLock
 );
 
 NTKERNELAPI
