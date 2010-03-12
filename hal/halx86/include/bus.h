@@ -1,5 +1,7 @@
 #pragma once
 
+#define PCI_ADDRESS_MEMORY_SPACE            0x00000000
+
 //
 // Helper Macros
 //
