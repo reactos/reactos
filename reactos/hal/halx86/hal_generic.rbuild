@@ -4,6 +4,7 @@
 	<module name="hal_generic" type="objectlibrary">
 		<include>include</include>
 		<include base="ntoskrnl">include</include>
+		<define name="_NTHALDLL_" />
 		<define name="_NTHAL_" />
 		<directory name="generic">
 			<directory name="bus">
@@ -38,8 +39,9 @@
 	<module name="mini_hal" type="objectlibrary">
 		<include>include</include>
 		<include base="ntoskrnl">include</include>
+		<define name="_NTHALDLL_" />
 		<define name="_NTHAL_" />
-		<define name="_NTSYSTEM_" />
+		<define name="_BLDR_" />
 		<define name="_MINIHAL_" />
 		<directory name="generic">
 			<directory name="bus">

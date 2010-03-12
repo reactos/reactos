@@ -24,6 +24,7 @@ Abstract:
 #define _WIN32_WINNT_VISTA                  0x0600
 #define _WIN32_WINNT_WS08                   0x0600
 #define _WIN32_WINNT_LONGHORN               0x0600
+#define _WIN32_WINNT_WIN7                   0x0601
 
 /* _WIN32_IE */
 #define _WIN32_IE_IE20                      0x0200
@@ -38,6 +39,7 @@ Abstract:
 #define _WIN32_IE_IE60SP1                   0x0601
 #define _WIN32_IE_IE60SP2                   0x0603
 #define _WIN32_IE_IE70                      0x0700
+#define _WIN32_IE_IE80                      0x0800
 
 /* Mappings Between IE Version  and Windows Version */
 #define _WIN32_IE_NT4                       _WIN32_IE_IE20
@@ -62,6 +64,7 @@ Abstract:
 #define _WIN32_IE_WS03SP1                   _WIN32_IE_IE60SP2
 #define _WIN32_IE_WIN6                      _WIN32_IE_IE70
 #define _WIN32_IE_LONGHORN                  _WIN32_IE_IE70
+#define _WIN32_IE_WIN7                      _WIN32_IE_IE80
 
 /* NTDDI_VERSION */
 #define NTDDI_WIN2K                         0x05000000
@@ -94,6 +97,7 @@ Abstract:
 #define NTDDI_WS08SP2                       NTDDI_WIN6SP2
 #define NTDDI_WS08SP3                       NTDDI_WIN6SP3
 #define NTDDI_WS08SP4                       NTDDI_WIN6SP4
+#define NTDDI_WIN7                          0x06010000
 
 /* Version Fields in NTDDI_VERSION */
 #define OSVERSION_MASK                      0xFFFF0000

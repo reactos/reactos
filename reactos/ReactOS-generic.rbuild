@@ -88,6 +88,7 @@
 
 	<group compilerset="gcc">
 		<compilerflag>-Wall</compilerflag>
+		<compilerflag>-Wno-char-subscripts</compilerflag>
 		<compilerflag compiler="cxx">-Wno-non-virtual-dtor</compilerflag>
 	</group>
 

@@ -22,6 +22,15 @@
 #ifndef __DDRAWI_INCLUDED__
 #define __DDRAWI_INCLUDED__
 
+/* Helper macro to enable gcc's extension.  */
+#ifndef __GNU_EXTENSION
+#ifdef __GNUC__
+#define __GNU_EXTENSION __extension__
+#else
+#define __GNU_EXTENSION
+#endif
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -203,13 +212,13 @@ typedef struct _DDHALMODEINFO {
 typedef struct _VIDMEM {
     DWORD	dwFlags;
     FLATPTR	fpStart;
-    union {
+    __GNU_EXTENSION union {
 	FLATPTR		fpEnd;
 	DWORD		dwWidth;
     };
     DDSCAPS	ddsCaps;
     DDSCAPS	ddsCapsAlt;
-    union {
+    __GNU_EXTENSION union {
 	LPVMEMHEAP	lpHeap;
 	DWORD		dwHeight;
     };
@@ -1404,21 +1413,21 @@ typedef struct _DDRAWI_DDRAWSURFACE_INT {
 typedef struct _DDRAWI_DDRAWSURFACE_GBL {
     DWORD			dwRefCnt;
     DWORD			dwGlobalFlags;
-    union {
+    __GNU_EXTENSION union {
 	LPACCESSRECTLIST	lpRectList;
 	DWORD			    dwBlockSizeY;
 	LONG                lSlicePitch;
     };
-    union {
+    __GNU_EXTENSION union {
 	LPVMEMHEAP		lpVidMemHeap;
 	DWORD			dwBlockSizeX;
     };
-    union {
+    __GNU_EXTENSION union {
 	LPDDRAWI_DIRECTDRAW_GBL	lpDD;
 	LPVOID			lpDDHandle;
     };
     FLATPTR			fpVidMem;
-    union {
+    __GNU_EXTENSION union {
 	LONG			lPitch;
 	DWORD			dwLinearSize;
     };
@@ -1454,7 +1463,7 @@ typedef struct _DDRAWI_DDRAWSURFACE_GBL {
 
 typedef struct _DDRAWI_DDRAWSURFACE_GBL_MORE {
     DWORD			dwSize;
-    union {
+    __GNU_EXTENSION union {
 	DWORD			dwPhysicalPageTable;
 	FLATPTR			fpPhysicalVidMem;
     };
@@ -1551,15 +1560,15 @@ typedef struct _DDRAWI_DDRAWSURFACE_LCL {
     DWORD			dwProcessId;
     DWORD			dwFlags;
     DDSCAPS			ddsCaps;
-	union
+    __GNU_EXTENSION union
     {
-    LPDDRAWI_DDRAWPALETTE_INT	lpDDPalette;
+	LPDDRAWI_DDRAWPALETTE_INT	lpDDPalette;
 	LPDDRAWI_DDRAWPALETTE_INT   lp16DDPalette;
-	};
-	union
+    };
+    __GNU_EXTENSION union
     {
-    LPDDRAWI_DDRAWCLIPPER_LCL   lpDDClipper;
-    LPDDRAWI_DDRAWCLIPPER_INT   lp16DDClipper;
+	LPDDRAWI_DDRAWCLIPPER_LCL   lpDDClipper;
+	LPDDRAWI_DDRAWCLIPPER_INT   lp16DDClipper;
     };
     DWORD			dwModeCreatedIn;
     DWORD			dwBackBufferCount;
@@ -1628,7 +1637,7 @@ typedef struct _DDRAWI_DDRAWPALETTE_GBL {
     LPDDRAWI_DIRECTDRAW_LCL	lpDD_lcl;
     DWORD			dwProcessId;
     LPPALETTEENTRY		lpColorTable;
-    union {
+    __GNU_EXTENSION union {
 	ULONG_PTR		dwReserved1;
 	HPALETTE		hHELGDIPalette;
     };
@@ -1762,7 +1771,7 @@ typedef struct _DDMCBUFFERINFO
 
 typedef struct _DDHAL_GETDRIVERSTATEDATA {
     DWORD                       dwFlags;
-    union
+    __GNU_EXTENSION union
     {
         ULONG_PTR               dwhContext;
     };

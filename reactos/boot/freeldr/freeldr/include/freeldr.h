@@ -32,6 +32,7 @@
 #define NTOSAPI
 #define printf TuiPrintf
 #include <ntddk.h>
+#include <ntifs.h>
 #include <ioaccess.h>
 #include <arc/arc.h>
 #include <ketypes.h>

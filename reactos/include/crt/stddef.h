@@ -148,7 +148,7 @@ _TYPE_wchar_t;
 #endif
 #ifndef _PTRDIFF_T_DEFINED
 #define _PTRDIFF_T_DEFINED
-typedef __PTRDIFF_TYPE__ ptrdiff_t;
+__MINGW_EXTENSION typedef __PTRDIFF_TYPE__ ptrdiff_t;
 #endif
 #endif /* _GCC_PTRDIFF_T */
 #endif /* ___int_ptrdiff_t_h */
@@ -215,7 +215,7 @@ typedef __PTRDIFF_TYPE__ ptrdiff_t;
 #endif
 #endif
 #if !(defined (__GNUG__) && defined (size_t))
-typedef __SIZE_TYPE__ size_t;
+__MINGW_EXTENSION typedef __SIZE_TYPE__ size_t;
 #ifdef __BEOS__
 typedef long ssize_t;
 #endif /* __BEOS__ */

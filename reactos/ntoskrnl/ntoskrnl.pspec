@@ -1382,7 +1382,7 @@
 ;WmiStopTrace
 ;WmiTraceFastEvent
 @ cdecl WmiTraceMessage()
-@ stdcall WmiTraceMessageVa(ptr long ptr long long)
+@ stdcall WmiTraceMessageVa(double long ptr long long)
 ;WmiUpdateTrace
 ;XIPDispatch
 @ stdcall ZwAccessCheckAndAuditAlarm(ptr ptr ptr ptr ptr long ptr long ptr ptr ptr)

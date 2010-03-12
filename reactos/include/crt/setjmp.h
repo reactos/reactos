@@ -34,8 +34,8 @@ extern "C" {
   } _JUMP_BUFFER;
 #elif defined(__ia64__)
   typedef _CRT_ALIGN(16) struct _SETJMP_FLOAT128 {
-    __int64 LowPart;
-    __int64 HighPart;
+    __MINGW_EXTENSION __int64 LowPart;
+    __MINGW_EXTENSION __int64 HighPart;
   } SETJMP_FLOAT128;
 
 #define _JBLEN 33
@@ -72,47 +72,47 @@ extern "C" {
     SETJMP_FLOAT128 FltS17;
     SETJMP_FLOAT128 FltS18;
     SETJMP_FLOAT128 FltS19;
-    __int64 FPSR;
-    __int64 StIIP;
-    __int64 BrS0;
-    __int64 BrS1;
-    __int64 BrS2;
-    __int64 BrS3;
-    __int64 BrS4;
-    __int64 IntS0;
-    __int64 IntS1;
-    __int64 IntS2;
-    __int64 IntS3;
-    __int64 RsBSP;
-    __int64 RsPFS;
-    __int64 ApUNAT;
-    __int64 ApLC;
-    __int64 IntSp;
-    __int64 IntNats;
-    __int64 Preds;
+    __MINGW_EXTENSION __int64 FPSR;
+    __MINGW_EXTENSION __int64 StIIP;
+    __MINGW_EXTENSION __int64 BrS0;
+    __MINGW_EXTENSION __int64 BrS1;
+    __MINGW_EXTENSION __int64 BrS2;
+    __MINGW_EXTENSION __int64 BrS3;
+    __MINGW_EXTENSION __int64 BrS4;
+    __MINGW_EXTENSION __int64 IntS0;
+    __MINGW_EXTENSION __int64 IntS1;
+    __MINGW_EXTENSION __int64 IntS2;
+    __MINGW_EXTENSION __int64 IntS3;
+    __MINGW_EXTENSION __int64 RsBSP;
+    __MINGW_EXTENSION __int64 RsPFS;
+    __MINGW_EXTENSION __int64 ApUNAT;
+    __MINGW_EXTENSION __int64 ApLC;
+    __MINGW_EXTENSION __int64 IntSp;
+    __MINGW_EXTENSION __int64 IntNats;
+    __MINGW_EXTENSION __int64 Preds;
 
   } _JUMP_BUFFER;
 #elif defined(__x86_64)
   typedef _CRT_ALIGN(16) struct _SETJMP_FLOAT128 {
-    unsigned __int64 Part[2];
+    __MINGW_EXTENSION unsigned __int64 Part[2];
   } SETJMP_FLOAT128;
 
 #define _JBLEN 16
   typedef SETJMP_FLOAT128 _JBTYPE;
 
   typedef struct _JUMP_BUFFER {
-    unsigned __int64 Frame;
-    unsigned __int64 Rbx;
-    unsigned __int64 Rsp;
-    unsigned __int64 Rbp;
-    unsigned __int64 Rsi;
-    unsigned __int64 Rdi;
-    unsigned __int64 R12;
-    unsigned __int64 R13;
-    unsigned __int64 R14;
-    unsigned __int64 R15;
-    unsigned __int64 Rip;
-    unsigned __int64 Spare;
+    __MINGW_EXTENSION unsigned __int64 Frame;
+    __MINGW_EXTENSION unsigned __int64 Rbx;
+    __MINGW_EXTENSION unsigned __int64 Rsp;
+    __MINGW_EXTENSION unsigned __int64 Rbp;
+    __MINGW_EXTENSION unsigned __int64 Rsi;
+    __MINGW_EXTENSION unsigned __int64 Rdi;
+    __MINGW_EXTENSION unsigned __int64 R12;
+    __MINGW_EXTENSION unsigned __int64 R13;
+    __MINGW_EXTENSION unsigned __int64 R14;
+    __MINGW_EXTENSION unsigned __int64 R15;
+    __MINGW_EXTENSION unsigned __int64 Rip;
+    __MINGW_EXTENSION unsigned __int64 Spare;
     SETJMP_FLOAT128 Xmm6;
     SETJMP_FLOAT128 Xmm7;
     SETJMP_FLOAT128 Xmm8;

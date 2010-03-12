@@ -32,6 +32,15 @@
 #ifndef __NDIS_H
 #define __NDIS_H
 
+/* Helper macro to enable gcc's extension.  */
+#ifndef __GNU_EXTENSION
+#ifdef __GNUC__
+#define __GNU_EXTENSION __extension__
+#else
+#define __GNU_EXTENSION
+#endif
+#endif
+
 #include "ntddk.h"
 #include "ntddndis.h"
 #include "netpnp.h"
@@ -238,8 +247,8 @@ typedef union _NDIS_RW_LOCK_REFCOUNT {
 } NDIS_RW_LOCK_REFCOUNT;
 
 typedef struct _NDIS_RW_LOCK {
-  union {
-    struct {
+  __GNU_EXTENSION union {
+    __GNU_EXTENSION struct {
       KSPIN_LOCK  SpinLock;
       PVOID  Context;
     };
@@ -380,16 +389,16 @@ typedef struct _NDIS_PACKET_PRIVATE {
 
 typedef struct _NDIS_PACKET {
   NDIS_PACKET_PRIVATE  Private;
-  union {
-    struct {
+  __GNU_EXTENSION union {
+    __GNU_EXTENSION struct {
       UCHAR  MiniportReserved[2 * sizeof(PVOID)];
       UCHAR  WrapperReserved[2 * sizeof(PVOID)];
     };
-    struct {
+    __GNU_EXTENSION struct {
       UCHAR  MiniportReservedEx[3 * sizeof(PVOID)];
       UCHAR  WrapperReservedEx[sizeof(PVOID)];
     };
-    struct {
+    __GNU_EXTENSION struct {
       UCHAR  MacReserved[4 * sizeof(PVOID)];
     };
   };
@@ -474,7 +483,7 @@ typedef struct _NDIS_REQUEST {
  } DATA;
 #if (defined(NDIS50) || defined(NDIS51))
   UCHAR  NdisReserved[9 * sizeof(PVOID)];
-  union {
+  __GNU_EXTENSION union {
     UCHAR  CallMgrReserved[2 * sizeof(PVOID)];
     UCHAR  ProtocolReserved[2 * sizeof(PVOID)];
   };

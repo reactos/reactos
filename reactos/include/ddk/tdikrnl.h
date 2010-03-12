@@ -397,7 +397,9 @@ TdiDefaultSendPossibleHandler(
   bIrpSp->DeviceObject  = (bDevObj);                                      \
   bIrpSp->FileObject    = (bFileObj);                                     \
   if (bCompRoutine)                                                       \
-    IoSetCompletionRoutine(bIrp, bCompRoutine, bContxt, TRUE, TRUE, TRUE) \
+  {                                                                       \
+    IoSetCompletionRoutine(bIrp, bCompRoutine, bContxt, TRUE, TRUE, TRUE);\
+  }                                                                       \
   else                                                                    \
     IoSetCompletionRoutine(bIrp, NULL, NULL, FALSE, FALSE, FALSE);        \
 }

@@ -21,6 +21,7 @@ Author:
 
 #define TOKEN_SOURCE_LENGTH               8
 
+#ifndef _NTIFS_
 typedef enum _TOKEN_TYPE
 {
     TokenPrimary = 1,
@@ -280,6 +281,8 @@ typedef struct _TOKEN_DEFAULT_DACL
 #define HEAP_CREATE_ALIGN_16            0x00010000
 #define HEAP_CREATE_ENABLE_TRACING      0x00020000
 #define HEAP_CREATE_ENABLE_EXECUTE      0x00040000
+
+#endif
 
 #endif // !NTOS_MODE_USER
 #endif // _NTIFS_

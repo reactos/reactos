@@ -39,7 +39,7 @@ ExAcquireFastMutex(PFAST_MUTEX FastMutex)
     {
         /* Someone is still holding it, use slow path */
         FastMutex->Contention++;
-        KeWaitForSingleObject(&FastMutex->Gate,
+        KeWaitForSingleObject(&FastMutex->Event,
                               WrExecutive,
                               KernelMode,
                               FALSE,
@@ -65,7 +65,7 @@ ExReleaseFastMutex(PFAST_MUTEX FastMutex)
     if (InterlockedIncrement(&FastMutex->Count) <= 0)
     {
         /* Someone was waiting for it, signal the waiter */
-        KeSetEventBoostPriority(&FastMutex->Gate, IO_NO_INCREMENT);
+        KeSetEventBoostPriority(&FastMutex->Event, IO_NO_INCREMENT);
     }
 
     /* Lower IRQL back */

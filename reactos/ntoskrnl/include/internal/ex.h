@@ -878,10 +878,10 @@ ExWaitForUnblockPushLock(
 );
 
 /*++
- * @name ExInitializePushLock
+ * @name _ExInitializePushLock
  * INTERNAL MACRO
  *
- *     The ExInitializePushLock macro initializes a PushLock.
+ *     The _ExInitializePushLock macro initializes a PushLock.
  *
  * @params PushLock
  *         Pointer to the pushlock which is to be initialized.
@@ -893,11 +893,12 @@ ExWaitForUnblockPushLock(
  *--*/
 FORCEINLINE
 VOID
-ExInitializePushLock(IN PULONG_PTR PushLock)
+_ExInitializePushLock(IN PULONG_PTR PushLock)
 {
     /* Set the value to 0 */
     *PushLock = 0;
 }
+#define ExInitializePushLock _ExInitializePushLock
 
 /*++
  * @name ExAcquirePushLockExclusive
@@ -1256,7 +1257,7 @@ _ExReleaseFastMutexUnsafe(IN OUT PFAST_MUTEX FastMutex)
     if (InterlockedIncrement(&FastMutex->Count) <= 0)
     {
         /* Someone was waiting for it, signal the waiter */
-        KeSetEventBoostPriority(&FastMutex->Gate, NULL);
+        KeSetEventBoostPriority(&FastMutex->Event, NULL);
     }
 }
 
@@ -1297,7 +1298,7 @@ _ExReleaseFastMutex(IN OUT PFAST_MUTEX FastMutex)
     if (InterlockedIncrement(&FastMutex->Count) <= 0)
     {
         /* Someone was waiting for it, signal the waiter */
-        KeSetEventBoostPriority(&FastMutex->Gate, NULL);
+        KeSetEventBoostPriority(&FastMutex->Event, NULL);
     }
     
     /* Lower IRQL back */

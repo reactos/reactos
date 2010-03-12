@@ -170,14 +170,14 @@ HANDLE WINAPI CreateFileW (LPCWSTR			lpFileName,
    if(dwFlagsAndAttributes & FILE_FLAG_BACKUP_SEMANTICS)
    {
       if(dwDesiredAccess & GENERIC_ALL)
-         Flags |= FILE_OPEN_FOR_BACKUP_INTENT | FILE_OPEN_FOR_RECOVERY;
+         Flags |= FILE_OPEN_FOR_BACKUP_INTENT | FILE_OPEN_REMOTE_INSTANCE;
       else
       {
          if(dwDesiredAccess & GENERIC_READ)
             Flags |= FILE_OPEN_FOR_BACKUP_INTENT;
 
          if(dwDesiredAccess & GENERIC_WRITE)
-            Flags |= FILE_OPEN_FOR_RECOVERY;
+            Flags |= FILE_OPEN_REMOTE_INSTANCE;
       }
    }
    else

@@ -393,7 +393,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     DeviceExtension = DeviceObject->DeviceExtension;
     DeviceExtension->ReferenceCount = 0;
     DeviceExtension->TimerActive = FALSE;
-    IoInitializeDpcRequest(DeviceObject, BeepDPC);
+    IoInitializeDpcRequest(DeviceObject, (PIO_DPC_ROUTINE)BeepDPC);
     KeInitializeTimer(&DeviceExtension->Timer);
     ExInitializeFastMutex(&DeviceExtension->Mutex);
 

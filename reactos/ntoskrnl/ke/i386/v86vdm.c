@@ -471,7 +471,7 @@ KiExitV86Mode(IN PKTRAP_FRAME TrapFrame)
 
     /* Restore TEB addresses */
     Thread->Teb = V86Frame->ThreadTeb;
-    KeGetPcr()->Tib.Self = V86Frame->PcrTeb;
+    KeGetPcr()->NtTib.Self = V86Frame->PcrTeb;
     
     /* Setup real TEB descriptor */
     GdtEntry = &((PKIPCR)KeGetPcr())->GDT[KGDT_R3_TEB / sizeof(KGDTENTRY)];
@@ -505,7 +505,7 @@ KiEnterV86Mode(IN PKV8086_STACK_FRAME StackFrame)
     
     /* Save TEB addresses */
     V86Frame->ThreadTeb = Thread->Teb;
-    V86Frame->PcrTeb = KeGetPcr()->Tib.Self;
+    V86Frame->PcrTeb = KeGetPcr()->NtTib.Self;
     
     /* Save return EIP */
     TrapFrame->Eip = (ULONG_PTR)Ki386BiosCallReturnAddress;
@@ -533,7 +533,7 @@ KiEnterV86Mode(IN PKV8086_STACK_FRAME StackFrame)
     RtlCopyMemory(NpxFrame, V86Frame->ThreadStack, sizeof(FX_SAVE_AREA));
     
     /* Clear exception list */
-    KeGetPcr()->Tib.ExceptionList = EXCEPTION_CHAIN_END;
+    KeGetPcr()->NtTib.ExceptionList = EXCEPTION_CHAIN_END;
     
     /* Set new ESP0 */
     KeGetPcr()->TSS->Esp0 = (ULONG_PTR)&TrapFrame->V86Es;
@@ -543,7 +543,7 @@ KiEnterV86Mode(IN PKV8086_STACK_FRAME StackFrame)
         
     /* Set VDM TEB */
     Thread->Teb = (PTEB)TRAMPOLINE_TEB;
-    KeGetPcr()->Tib.Self = (PVOID)TRAMPOLINE_TEB;
+    KeGetPcr()->NtTib.Self = (PVOID)TRAMPOLINE_TEB;
     
     /* Setup VDM TEB descriptor */
     GdtEntry = &((PKIPCR)KeGetPcr())->GDT[KGDT_R3_TEB / sizeof(KGDTENTRY)];

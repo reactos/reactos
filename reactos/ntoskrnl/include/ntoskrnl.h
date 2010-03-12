@@ -19,10 +19,9 @@
 
 /* DDK/IFS/NDK Headers */
 #define _REALLY_GET_CALLERS_CALLER
+#define SINGLE_GROUP_LEGACY_API
 #include <excpt.h>
 #include <ntdef.h>
-#undef DECLSPEC_IMPORT
-#define DECLSPEC_IMPORT
 #include <ntifs.h>
 #include <wdmguid.h>
 #include <arc/arc.h>

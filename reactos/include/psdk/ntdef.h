@@ -13,6 +13,14 @@
 #include <stdarg.h>
 #include <string.h>
 
+/* Helper macro to enable gcc's extension.  */
+#ifndef __GNU_EXTENSION
+#ifdef __GNUC__
+#define __GNU_EXTENSION __extension__
+#else
+#define __GNU_EXTENSION
+#endif
+#endif
 
 typedef unsigned long POINTER_64; // FIXME! HACK!!!
 
@@ -79,22 +87,33 @@ typedef unsigned long POINTER_64; // FIXME! HACK!!!
 #endif
 #endif // NULL
 
+typedef enum _EVENT_TYPE {
+  NotificationEvent,
+  SynchronizationEvent
+} EVENT_TYPE;
+
+typedef enum _TIMER_TYPE {
+    NotificationTimer,
+    SynchronizationTimer
+} TIMER_TYPE;
+
+typedef enum _WAIT_TYPE {
+  WaitAll,
+  WaitAny
+} WAIT_TYPE;
 
 //
 // FIXME
 // We should use the -fms-extensions compiler flag for gcc,
 // and clean up the mess.
 //
+#ifndef __ANONYMOUS_DEFINED
+#define __ANONYMOUS_DEFINED
+
 #ifndef NONAMELESSUNION
 #ifdef __GNUC__
-#if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95)
-#define _ANONYMOUS_UNION __extension__
-#define _ANONYMOUS_STRUCT __extension__
-#else
-#if defined(__cplusplus)
-#define _ANONYMOUS_UNION __extension__
-#endif /* __cplusplus */
-#endif /* __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95) */
+#define _ANONYMOUS_UNION __GNU_EXTENSION
+#define _ANONYMOUS_STRUCT __GNU_EXTENSION
 #elif defined(__WATCOMC__) || defined(_MSC_VER)
 #define _ANONYMOUS_UNION
 #define _ANONYMOUS_STRUCT
@@ -130,19 +149,27 @@ typedef unsigned long POINTER_64; // FIXME! HACK!!!
 #define DUMMYSTRUCTNAME s
 #define DUMMYSTRUCTNAME2 s2
 #define DUMMYSTRUCTNAME3 s3
+#define DUMMYSTRUCTNAME4 s4
+#define DUMMYSTRUCTNAME5 s5
 #else
 #define _STRUCT_NAME(x)
 #define DUMMYSTRUCTNAME
 #define DUMMYSTRUCTNAME2
 #define DUMMYSTRUCTNAME3
+#define DUMMYSTRUCTNAME4
+#define DUMMYSTRUCTNAME5
 #endif
 
-
+#endif /* __ANONYMOUS_DEFINED */
 
 // FIXME
 #undef UNALIGNED
 #define UNALIGNED
 #define RESTRICTED_POINTER
+
+
+#define ARGUMENT_PRESENT(ArgumentPointer) \
+  ((CHAR*)((ULONG_PTR)(ArgumentPointer)) != (CHAR*)NULL)
 
 //
 // Returns the base address of a structure from a structure member
@@ -332,7 +359,7 @@ typedef struct _QUAD
 {
     _ANONYMOUS_UNION union
     {
-        __int64 UseThisFieldToCopy;
+        __GNU_EXTENSION __int64 UseThisFieldToCopy;
         double DoNotUseThisField;
     };
 } QUAD, *PQUAD, UQUAD, *PUQUAD;
@@ -354,6 +381,9 @@ typedef ULONG FLONG;
 typedef UCHAR BOOLEAN;
 typedef BOOLEAN *PBOOLEAN;
 
+typedef ULONG LOGICAL;
+typedef ULONG *PLOGICAL;
+
 //
 // Signed Types
 //
@@ -374,8 +404,8 @@ typedef LONG HRESULT;
 //
 // 64-bit types
 //
-typedef __int64 LONGLONG, *PLONGLONG;
-typedef unsigned __int64 ULONGLONG, *PULONGLONG;
+__GNU_EXTENSION typedef __int64 LONGLONG, *PLONGLONG;
+__GNU_EXTENSION typedef unsigned __int64 ULONGLONG, *PULONGLONG;
 typedef ULONGLONG DWORDLONG, *PDWORDLONG;
 
 //
@@ -643,6 +673,19 @@ typedef struct _SINGLE_LIST_ENTRY {
     struct _SINGLE_LIST_ENTRY *Next;
 } SINGLE_LIST_ENTRY, *PSINGLE_LIST_ENTRY;
 
+
+typedef struct _PROCESSOR_NUMBER {
+  USHORT Group;
+  UCHAR Number;
+  UCHAR Reserved;
+} PROCESSOR_NUMBER, *PPROCESSOR_NUMBER;
+
+typedef EXCEPTION_DISPOSITION
+(DDKAPI *PEXCEPTION_ROUTINE)(
+  IN struct _EXCEPTION_RECORD *ExceptionRecord,
+  IN PVOID EstablisherFrame,
+  IN OUT struct _CONTEXT *ContextRecord,
+  IN OUT PVOID DispatcherContext);
 
 
 //

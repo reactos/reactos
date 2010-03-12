@@ -5,6 +5,7 @@
 	<include base="freeldr_base">cache</include>
 	<include base="cmlib">.</include>
 	<include base="ntoskrnl">include</include>
+	<define name="_BLDR_" />
 	<define name="_NTHAL_" />
 	<define name="_NTSYSTEM_" />
 	<directory name="arcemul">

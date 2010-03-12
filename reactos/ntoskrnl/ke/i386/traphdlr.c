@@ -411,7 +411,7 @@ KiTrap02(VOID)
     TrapFrame.Esi = Tss->Esi;
     TrapFrame.Edi = Tss->Edi;
     TrapFrame.SegFs = Tss->Fs;
-    TrapFrame.ExceptionList = PCR->Tib.ExceptionList;
+    TrapFrame.ExceptionList = PCR->NtTib.ExceptionList;
     TrapFrame.PreviousPreviousMode = -1;
     TrapFrame.Eax = Tss->Eax;
     TrapFrame.Ecx = Tss->Ecx;
@@ -1486,8 +1486,8 @@ KiSystemCallHandler(IN PKTRAP_FRAME TrapFrame,
     TrapFrame->SegFs = SegFs;
         
     /* Save the SEH chain and terminate it for now */    
-    TrapFrame->ExceptionList = KeGetPcr()->Tib.ExceptionList;
-    KeGetPcr()->Tib.ExceptionList = EXCEPTION_CHAIN_END;
+    TrapFrame->ExceptionList = KeGetPcr()->NtTib.ExceptionList;
+    KeGetPcr()->NtTib.ExceptionList = EXCEPTION_CHAIN_END;
         
     /* Clear DR7 and check for debugging */
     TrapFrame->Dr7 = 0;

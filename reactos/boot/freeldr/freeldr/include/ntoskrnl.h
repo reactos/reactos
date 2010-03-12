@@ -1,17 +1,15 @@
 #include <ntdef.h>
 #undef _NTHAL_
-#undef DECLSPEC_IMPORT
-#define DECLSPEC_IMPORT
+//#undef DECLSPEC_IMPORT
+//#define DECLSPEC_IMPORT
 #undef NTSYSAPI
 #define NTSYSAPI
 
-#include <wdm.h>
-
-typedef GUID UUID;
-
 /* Windows Device Driver Kit */
-#include <winddk.h>
+#include <ntddk.h>
 #include <ndk/haltypes.h>
+
+//typedef GUID UUID;
 
 /* Disk stuff */
 typedef PVOID PLOADER_PARAMETER_BLOCK;
