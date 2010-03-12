@@ -111,6 +111,16 @@ typedef struct _WMILIB_CONTEXT {
   PWMI_FUNCTION_CONTROL WmiFunctionControl;
 } WMILIB_CONTEXT, *PWMILIB_CONTEXT;
 
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+NTSTATUS
+NTAPI
+WmiSystemControl(
+  IN PWMILIB_CONTEXT WmiLibInfo,
+  IN PDEVICE_OBJECT DeviceObject,
+  IN OUT PIRP Irp,
+  OUT PSYSCTL_IRP_DISPOSITION IrpDisposition);
+#endif
+
 #ifdef __cplusplus
 }
 #endif

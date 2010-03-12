@@ -30,7 +30,7 @@ Author:
 #define PCR                     ((KPCR * const)K0IPCR)
 #if defined(CONFIG_SMP) || defined(NT_BUILD)
 #undef  KeGetPcr
-#define KeGetPcr()              ((KPCR * const)__readfsdword(FIELD_OFFSET(KPCR, Self)))
+#define KeGetPcr()              ((KPCR * const)__readfsdword(FIELD_OFFSET(KPCR, SelfPcr)))
 #endif
 
 //
