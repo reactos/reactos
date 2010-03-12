@@ -5636,6 +5636,7 @@ PsDereferencePrimaryToken(
 
 NTKERNELAPI
 VOID
+NTAPI
 PsDereferenceImpersonationToken(
   IN PACCESS_TOKEN ImpersonationToken);
 
