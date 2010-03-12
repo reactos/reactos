@@ -2528,90 +2528,9 @@ typedef enum _SECURITY_LOGON_TYPE {
 #ifndef _NTLSA_AUDIT_
 #define _NTLSA_AUDIT_
 
-typedef enum _SE_ADT_PARAMETER_TYPE {
-  SeAdtParmTypeNone = 0,
-  SeAdtParmTypeString,
-  SeAdtParmTypeFileSpec,
-  SeAdtParmTypeUlong,
-  SeAdtParmTypeSid,
-  SeAdtParmTypeLogonId,
-  SeAdtParmTypeNoLogonId,
-  SeAdtParmTypeAccessMask,
-  SeAdtParmTypePrivs,
-  SeAdtParmTypeObjectTypes,
-  SeAdtParmTypeHexUlong,
-  SeAdtParmTypePtr,
-  SeAdtParmTypeTime,
-  SeAdtParmTypeGuid,
-  SeAdtParmTypeLuid,
-  SeAdtParmTypeHexInt64,
-  SeAdtParmTypeStringList,
-  SeAdtParmTypeSidList,
-  SeAdtParmTypeDuration,
-  SeAdtParmTypeUserAccountControl,
-  SeAdtParmTypeNoUac,
-  SeAdtParmTypeMessage,
-  SeAdtParmTypeDateTime,
-  SeAdtParmTypeSockAddr,
-  SeAdtParmTypeSD,
-  SeAdtParmTypeLogonHours,
-  SeAdtParmTypeLogonIdNoSid,
-  SeAdtParmTypeUlongNoConv,
-  SeAdtParmTypeSockAddrNoPort,
-  SeAdtParmTypeAccessReason
-} SE_ADT_PARAMETER_TYPE, *PSE_ADT_PARAMETER_TYPE;
-
 #ifndef GUID_DEFINED
 #include <guiddef.h>
 #endif
-
-typedef struct _SE_ADT_OBJECT_TYPE {
-  GUID ObjectType;
-  USHORT Flags;
-#define SE_ADT_OBJECT_ONLY 0x1
-  USHORT Level;
-  ACCESS_MASK AccessMask;
-} SE_ADT_OBJECT_TYPE, *PSE_ADT_OBJECT_TYPE;
-
-typedef struct _SE_ADT_PARAMETER_ARRAY_ENTRY {
-  SE_ADT_PARAMETER_TYPE Type;
-  ULONG Length;
-  ULONG_PTR Data[2];
-  PVOID Address;
-} SE_ADT_PARAMETER_ARRAY_ENTRY, *PSE_ADT_PARAMETER_ARRAY_ENTRY;
-
-typedef struct _SE_ADT_ACCESS_REASON {
-  ACCESS_MASK AccessMask;
-  ULONG  AccessReasons[32];
-  ULONG  ObjectTypeIndex;
-  ULONG AccessGranted;
-  PSECURITY_DESCRIPTOR SecurityDescriptor;
-} SE_ADT_ACCESS_REASON, *PSE_ADT_ACCESS_REASON;
-
-#define SE_MAX_AUDIT_PARAMETERS 32
-#define SE_MAX_GENERIC_AUDIT_PARAMETERS 28
-
-typedef struct _SE_ADT_PARAMETER_ARRAY {
-  ULONG CategoryId;
-  ULONG AuditId;
-  ULONG ParameterCount;
-  ULONG Length;
-  USHORT FlatSubCategoryId;
-  USHORT Type;
-  ULONG Flags;
-  SE_ADT_PARAMETER_ARRAY_ENTRY Parameters[ SE_MAX_AUDIT_PARAMETERS ];
-} SE_ADT_PARAMETER_ARRAY, *PSE_ADT_PARAMETER_ARRAY;
-
-#define SE_ADT_PARAMETERS_SELF_RELATIVE     0x00000001
-#define SE_ADT_PARAMETERS_SEND_TO_LSA       0x00000002
-#define SE_ADT_PARAMETER_EXTENSIBLE_AUDIT   0x00000004
-#define SE_ADT_PARAMETER_GENERIC_AUDIT      0x00000008
-#define SE_ADT_PARAMETER_WRITE_SYNCHRONOUS  0x00000010
-
-#define LSAP_SE_ADT_PARAMETER_ARRAY_TRUE_SIZE(AuditParameters)    \
-     ( sizeof(SE_ADT_PARAMETER_ARRAY) -                           \
-       sizeof(SE_ADT_PARAMETER_ARRAY_ENTRY) *                     \
-       (SE_MAX_AUDIT_PARAMETERS - AuditParameters->ParameterCount) )
 
 #endif /* _NTLSA_AUDIT_ */
 
@@ -4740,15 +4659,6 @@ typedef struct _SECURITY_CLIENT_CONTEXT {
   BOOLEAN ServerIsRemote;
   TOKEN_CONTROL ClientTokenControl;
 } SECURITY_CLIENT_CONTEXT, *PSECURITY_CLIENT_CONTEXT;
-
-#define EVENT_INCREMENT                 1
-#define IO_NO_INCREMENT                 0
-#define IO_CD_ROM_INCREMENT             1
-#define IO_DISK_INCREMENT               1
-#define IO_MAILSLOT_INCREMENT           2
-#define IO_NAMED_PIPE_INCREMENT         2
-#define IO_NETWORK_INCREMENT            2
-#define SEMAPHORE_INCREMENT             1
 
 #define SYSTEM_PAGE_PRIORITY_BITS       3
 #define SYSTEM_PAGE_PRIORITY_LEVELS     (1 << SYSTEM_PAGE_PRIORITY_BITS)
