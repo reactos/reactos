@@ -5194,7 +5194,7 @@ typedef struct _KFLOATING_SAVE {
   ULONG  Spare1;
 } KFLOATING_SAVE, *PKFLOATING_SAVE;
 
-extern volatile KSYSTEM_TIME KeTickCount;
+extern NTKERNELAPI volatile KSYSTEM_TIME KeTickCount;
 
 #define YieldProcessor _mm_pause
 
@@ -5294,6 +5294,21 @@ KeRestoreFloatingPointState(
 
 /* x86 and x64 performs a 0x2C interrupt */
 #define DbgRaiseAssertionFailure __int2c
+
+FORCEINLINE
+VOID
+_KeQueryTickCount(
+  OUT PLARGE_INTEGER CurrentCount)
+{
+    for (;;)
+    {
+        CurrentCount->HighPart = KeTickCount.High1Time;
+        CurrentCount->LowPart = KeTickCount.LowPart;
+        if (CurrentCount->HighPart == KeTickCount.High2Time) break;
+        YieldProcessor();
+    }
+}
+#define KeQueryTickCount(CurrentCount) _KeQueryTickCount(CurrentCount)
 
 #endif /* _X86_ */
 
