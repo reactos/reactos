@@ -37,17 +37,14 @@
 		<linkerflag>-section-alignment=0x1000</linkerflag>
 	</group>
 
-	<if property="USERMODE" value="1">
-		<directory name="base">
-			<xi:include href="base/base.rbuild" />
-		</directory>
-		<directory name="dll">
-			<xi:include href="dll/dll.rbuild" />
-		</directory>
-	</if>
-
+	<directory name="base">
+		<xi:include href="base/base.rbuild" />
+	</directory>
 	<directory name="boot">
 		<xi:include href="boot/boot.rbuild" />
+	</directory>
+	<directory name="dll">
+		<xi:include href="dll/dll.rbuild" />
 	</directory>
 	<directory name="drivers">
 		<xi:include href="drivers/drivers.rbuild" />

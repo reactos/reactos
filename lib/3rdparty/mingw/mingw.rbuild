@@ -4,9 +4,7 @@
 <module name="mingw_common" type="staticlibrary" isstartuplib="true" crt="dll">
 	<define name="_CRTBLD" />
 	<include base="ReactOS">include/reactos/mingw-w64</include>
-	<if property="USERMODE" value="1">
-		<library>kernel32</library>
-	</if>
+	<library>kernel32</library>
 	<file>_newmode.c</file>
 	<file>atonexit.c</file>
 	<file>charmax.c</file>
