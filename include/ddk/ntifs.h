@@ -5555,6 +5555,211 @@ PsGetCurrentThread(
 }
 #endif
 
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTKERNELAPI
+PACCESS_TOKEN
+NTAPI
+PsReferenceImpersonationToken(
+  IN OUT PETHREAD Thread,
+  OUT PBOOLEAN CopyOnOpen,
+  OUT PBOOLEAN EffectiveOnly,
+  OUT PSECURITY_IMPERSONATION_LEVEL ImpersonationLevel);
+
+NTKERNELAPI
+LARGE_INTEGER
+NTAPI
+PsGetProcessExitTime(
+  VOID);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+PsIsThreadTerminating(
+  IN PETHREAD Thread);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PsImpersonateClient(
+  IN OUT PETHREAD Thread,
+  IN PACCESS_TOKEN Token,
+  IN BOOLEAN CopyOnOpen,
+  IN BOOLEAN EffectiveOnly,
+  IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+PsDisableImpersonation(
+  IN OUT PETHREAD Thread,
+  IN OUT PSE_IMPERSONATION_STATE ImpersonationState);
+
+NTKERNELAPI
+VOID
+NTAPI
+PsRestoreImpersonation(
+  IN PETHREAD Thread,
+  IN PSE_IMPERSONATION_STATE ImpersonationState);
+
+NTKERNELAPI
+VOID
+NTAPI
+PsRevertToSelf(
+  VOID);
+
+NTKERNELAPI
+VOID
+NTAPI
+PsChargePoolQuota(
+  IN PEPROCESS Process,
+  IN POOL_TYPE PoolType,
+  IN ULONG_PTR Amount);
+
+NTKERNELAPI
+VOID
+NTAPI
+PsReturnPoolQuota(
+  IN PEPROCESS Process,
+  IN POOL_TYPE PoolType,
+  IN ULONG_PTR Amount);
+
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+
+NTKERNELAPI
+VOID
+NTAPI
+PsDereferencePrimaryToken(
+  IN PACCESS_TOKEN PrimaryToken);
+
+NTKERNELAPI
+VOID
+PsDereferenceImpersonationToken(
+  IN PACCESS_TOKEN ImpersonationToken);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PsChargeProcessPoolQuota(
+  IN PEPROCESS Process,
+  IN POOL_TYPE PoolType,
+  IN ULONG_PTR Amount);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+PsIsSystemThread(
+  IN PETHREAD Thread);
+
+#endif
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PsLookupProcessByProcessId(
+  IN HANDLE ProcessId,
+  OUT PEPROCESS *Process);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PsLookupThreadByThreadId(
+  IN HANDLE UniqueThreadId,
+  OUT PETHREAD *Thread);
+
+#define IO_OPEN_PAGING_FILE             0x0002
+#define IO_OPEN_TARGET_DIRECTORY        0x0004
+#define IO_STOP_ON_SYMLINK              0x0008
+#define IO_MM_PAGING_FILE               0x0010
+
+typedef VOID
+(NTAPI *PDRIVER_FS_NOTIFICATION) (
+  IN PDEVICE_OBJECT DeviceObject,
+  IN BOOLEAN FsActive);
+
+typedef enum _FS_FILTER_SECTION_SYNC_TYPE {
+  SyncTypeOther = 0,
+  SyncTypeCreateSection
+} FS_FILTER_SECTION_SYNC_TYPE, *PFS_FILTER_SECTION_SYNC_TYPE;
+
+typedef enum _FS_FILTER_STREAM_FO_NOTIFICATION_TYPE {
+  NotifyTypeCreate = 0,
+  NotifyTypeRetired
+} FS_FILTER_STREAM_FO_NOTIFICATION_TYPE, *PFS_FILTER_STREAM_FO_NOTIFICATION_TYPE;
+
+typedef union _FS_FILTER_PARAMETERS {
+  struct {
+    PLARGE_INTEGER EndingOffset;
+    PERESOURCE *ResourceToRelease;
+  } AcquireForModifiedPageWriter;
+  struct {
+    PERESOURCE ResourceToRelease;
+  } ReleaseForModifiedPageWriter;
+  struct {
+    FS_FILTER_SECTION_SYNC_TYPE SyncType;
+    ULONG PageProtection;
+  } AcquireForSectionSynchronization;
+  struct {
+    FS_FILTER_STREAM_FO_NOTIFICATION_TYPE NotificationType;
+    BOOLEAN POINTER_ALIGNMENT SafeToRecurse;
+  } NotifyStreamFileObject;
+  struct {
+    PVOID Argument1;
+    PVOID Argument2;
+    PVOID Argument3;
+    PVOID Argument4;
+    PVOID Argument5;
+  } Others;
+} FS_FILTER_PARAMETERS, *PFS_FILTER_PARAMETERS;
+
+#define FS_FILTER_ACQUIRE_FOR_SECTION_SYNCHRONIZATION      (UCHAR)-1
+#define FS_FILTER_RELEASE_FOR_SECTION_SYNCHRONIZATION      (UCHAR)-2
+#define FS_FILTER_ACQUIRE_FOR_MOD_WRITE                    (UCHAR)-3
+#define FS_FILTER_RELEASE_FOR_MOD_WRITE                    (UCHAR)-4
+#define FS_FILTER_ACQUIRE_FOR_CC_FLUSH                     (UCHAR)-5
+#define FS_FILTER_RELEASE_FOR_CC_FLUSH                     (UCHAR)-6
+
+typedef struct _FS_FILTER_CALLBACK_DATA {
+  ULONG SizeOfFsFilterCallbackData;
+  UCHAR Operation;
+  UCHAR Reserved;
+  struct _DEVICE_OBJECT *DeviceObject;
+  struct _FILE_OBJECT *FileObject;
+  FS_FILTER_PARAMETERS Parameters;
+} FS_FILTER_CALLBACK_DATA, *PFS_FILTER_CALLBACK_DATA;
+
+typedef NTSTATUS
+(NTAPI *PFS_FILTER_CALLBACK) (
+  IN PFS_FILTER_CALLBACK_DATA Data,
+  OUT PVOID *CompletionContext);
+
+typedef VOID
+(NTAPI *PFS_FILTER_COMPLETION_CALLBACK) (
+  IN PFS_FILTER_CALLBACK_DATA Data,
+  IN NTSTATUS OperationStatus,
+  IN PVOID CompletionContext);
+
+typedef struct _FS_FILTER_CALLBACKS {
+  ULONG SizeOfFsFilterCallbacks;
+  ULONG Reserved;
+  PFS_FILTER_CALLBACK PreAcquireForSectionSynchronization;
+  PFS_FILTER_COMPLETION_CALLBACK PostAcquireForSectionSynchronization;
+  PFS_FILTER_CALLBACK PreReleaseForSectionSynchronization;
+  PFS_FILTER_COMPLETION_CALLBACK PostReleaseForSectionSynchronization;
+  PFS_FILTER_CALLBACK PreAcquireForCcFlush;
+  PFS_FILTER_COMPLETION_CALLBACK PostAcquireForCcFlush;
+  PFS_FILTER_CALLBACK PreReleaseForCcFlush;
+  PFS_FILTER_COMPLETION_CALLBACK PostReleaseForCcFlush;
+  PFS_FILTER_CALLBACK PreAcquireForModifiedPageWriter;
+  PFS_FILTER_COMPLETION_CALLBACK PostAcquireForModifiedPageWriter;
+  PFS_FILTER_CALLBACK PreReleaseForModifiedPageWriter;
+  PFS_FILTER_COMPLETION_CALLBACK PostReleaseForModifiedPageWriter;
+} FS_FILTER_CALLBACKS, *PFS_FILTER_CALLBACKS;
+
+
+
 #pragma pack(push,4)
 
 #ifndef VER_PRODUCTBUILD
@@ -6421,84 +6626,6 @@ typedef BOOLEAN
     IN PVOID  NotifyContext,
     IN PVOID  FilterContext
 );
-
-typedef enum _FS_FILTER_SECTION_SYNC_TYPE {
-    SyncTypeOther = 0,
-    SyncTypeCreateSection
-} FS_FILTER_SECTION_SYNC_TYPE, *PFS_FILTER_SECTION_SYNC_TYPE;
-
-typedef enum _FS_FILTER_STREAM_FO_NOTIFICATION_TYPE {
-    NotifyTypeCreate = 0,
-    NotifyTypeRetired
-} FS_FILTER_STREAM_FO_NOTIFICATION_TYPE, *PFS_FILTER_STREAM_FO_NOTIFICATION_TYPE;
-
-typedef union _FS_FILTER_PARAMETERS {
-    struct {
-        PLARGE_INTEGER  EndingOffset;
-        PERESOURCE *ResourceToRelease;
-    } AcquireForModifiedPageWriter;
-
-    struct {
-        PERESOURCE  ResourceToRelease;
-    } ReleaseForModifiedPageWriter;
-
-    struct {
-        FS_FILTER_SECTION_SYNC_TYPE  SyncType;
-        ULONG  PageProtection;
-    } AcquireForSectionSynchronization;
-
-    struct {
-        FS_FILTER_STREAM_FO_NOTIFICATION_TYPE NotificationType;
-        BOOLEAN POINTER_ALIGNMENT SafeToRecurse;
-    } NotifyStreamFileObject;
-
-    struct {
-        PVOID  Argument1;
-        PVOID  Argument2;
-        PVOID  Argument3;
-        PVOID  Argument4;
-        PVOID  Argument5;
-    } Others;
-} FS_FILTER_PARAMETERS, *PFS_FILTER_PARAMETERS;
-
-typedef struct _FS_FILTER_CALLBACK_DATA {
-    ULONG                  SizeOfFsFilterCallbackData;
-    UCHAR                  Operation;
-    UCHAR                  Reserved;
-    struct _DEVICE_OBJECT  *DeviceObject;
-    struct _FILE_OBJECT    *FileObject;
-    FS_FILTER_PARAMETERS   Parameters;
-} FS_FILTER_CALLBACK_DATA, *PFS_FILTER_CALLBACK_DATA;
-
-typedef NTSTATUS
-(NTAPI *PFS_FILTER_CALLBACK) (
-    IN PFS_FILTER_CALLBACK_DATA  Data,
-    OUT PVOID                    *CompletionContext
-);
-
-typedef VOID
-(NTAPI *PFS_FILTER_COMPLETION_CALLBACK) (
-    IN PFS_FILTER_CALLBACK_DATA  Data,
-    IN NTSTATUS                  OperationStatus,
-    IN PVOID                     CompletionContext
-);
-
-typedef struct _FS_FILTER_CALLBACKS {
-    ULONG                           SizeOfFsFilterCallbacks;
-    ULONG                           Reserved;
-    PFS_FILTER_CALLBACK             PreAcquireForSectionSynchronization;
-    PFS_FILTER_COMPLETION_CALLBACK  PostAcquireForSectionSynchronization;
-    PFS_FILTER_CALLBACK             PreReleaseForSectionSynchronization;
-    PFS_FILTER_COMPLETION_CALLBACK  PostReleaseForSectionSynchronization;
-    PFS_FILTER_CALLBACK             PreAcquireForCcFlush;
-    PFS_FILTER_COMPLETION_CALLBACK  PostAcquireForCcFlush;
-    PFS_FILTER_CALLBACK             PreReleaseForCcFlush;
-    PFS_FILTER_COMPLETION_CALLBACK  PostReleaseForCcFlush;
-    PFS_FILTER_CALLBACK             PreAcquireForModifiedPageWriter;
-    PFS_FILTER_COMPLETION_CALLBACK  PostAcquireForModifiedPageWriter;
-    PFS_FILTER_CALLBACK             PreReleaseForModifiedPageWriter;
-    PFS_FILTER_COMPLETION_CALLBACK  PostReleaseForModifiedPageWriter;
-} FS_FILTER_CALLBACKS, *PFS_FILTER_CALLBACKS;
 
 typedef struct _READ_LIST {
     PFILE_OBJECT          FileObject;
@@ -8361,11 +8488,6 @@ IoRegisterFileSystem (
 
 #if (VER_PRODUCTBUILD >= 1381)
 
-typedef VOID (NTAPI *PDRIVER_FS_NOTIFICATION) (
-    IN PDEVICE_OBJECT DeviceObject,
-    IN BOOLEAN        DriverActive
-);
-
 NTKERNELAPI
 NTSTATUS
 NTAPI
@@ -8590,31 +8712,22 @@ ObReferenceObjectByName (
     OUT PVOID           *Object
 );
 
-NTKERNELAPI
-NTSTATUS
-NTAPI
-PsAssignImpersonationToken (
-    IN PETHREAD     Thread,
-    IN HANDLE       Token
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-PsChargePoolQuota (
-    IN PEPROCESS    Process,
-    IN POOL_TYPE    PoolType,
-    IN SIZE_T       Amount
-);
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
-PsChargeProcessPoolQuota (
-    IN PEPROCESS    Process,
-    IN POOL_TYPE    PoolType,
-    IN SIZE_T       Amount
-);
+PsAssignImpersonationToken(
+  IN PETHREAD Thread,
+  IN HANDLE Token OPTIONAL);
+
+NTKERNELAPI
+HANDLE
+NTAPI
+PsReferencePrimaryToken(
+  IN OUT PEPROCESS Process);
+
+#endif
 
 #define PsDereferenceImpersonationToken(T)  \
             {if (ARGUMENT_PRESENT(T)) {     \
@@ -8624,56 +8737,6 @@ PsChargeProcessPoolQuota (
             }                               \
 }
 
-#define PsDereferencePrimaryToken(T) (ObDereferenceObject((T)))
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-PsDisableImpersonation(
-    IN PETHREAD                 Thread,
-    IN PSE_IMPERSONATION_STATE  ImpersonationState
-);
-
-NTKERNELAPI
-LARGE_INTEGER
-NTAPI
-PsGetProcessExitTime (
-    VOID
-);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-PsImpersonateClient(
-    IN PETHREAD                      Thread,
-    IN PACCESS_TOKEN                 Token,
-    IN BOOLEAN                       CopyOnOpen,
-    IN BOOLEAN                       EffectiveOnly,
-    IN SECURITY_IMPERSONATION_LEVEL  ImpersonationLevel
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-PsIsSystemThread(
-    IN PETHREAD Thread
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-PsIsThreadTerminating (
-    IN PETHREAD Thread
-);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-PsLookupProcessByProcessId (
-    IN HANDLE       ProcessId,
-    OUT PEPROCESS   *Process
-);
-
 NTKERNELAPI
 NTSTATUS
 NTAPI
@@ -8681,55 +8744,6 @@ PsLookupProcessThreadByCid (
     IN PCLIENT_ID   Cid,
     OUT PEPROCESS   *Process OPTIONAL,
     OUT PETHREAD    *Thread
-);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-PsLookupThreadByThreadId (
-    IN HANDLE       UniqueThreadId,
-    OUT PETHREAD    *Thread
-);
-
-NTKERNELAPI
-PACCESS_TOKEN
-NTAPI
-PsReferenceImpersonationToken (
-    IN PETHREAD                         Thread,
-    OUT PBOOLEAN                        CopyOnUse,
-    OUT PBOOLEAN                        EffectiveOnly,
-    OUT PSECURITY_IMPERSONATION_LEVEL   Level
-);
-
-NTKERNELAPI
-HANDLE
-NTAPI
-PsReferencePrimaryToken (
-    IN PEPROCESS Process
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-PsRestoreImpersonation(
-    IN PETHREAD                 Thread,
-    IN PSE_IMPERSONATION_STATE  ImpersonationState
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-PsReturnPoolQuota (
-    IN PEPROCESS    Process,
-    IN POOL_TYPE    PoolType,
-    IN SIZE_T       Amount
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-PsRevertToSelf (
-    VOID
 );
 
 NTSYSAPI
