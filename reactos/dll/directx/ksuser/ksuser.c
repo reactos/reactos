@@ -92,7 +92,7 @@ KsiCreateObjectType( HANDLE hHandle,
 *
 *--*/
 KSDDKAPI
-NTSTATUS
+DWORD
 NTAPI
 KsCreateAllocator(HANDLE ConnectionHandle,
                   PKSALLOCATOR_FRAMING AllocatorFraming,
@@ -130,7 +130,7 @@ KsCreateAllocator(HANDLE ConnectionHandle,
 *
 *--*/
 KSDDKAPI
-NTSTATUS
+DWORD
 NTAPI
 KsCreateClock(HANDLE ConnectionHandle,
               PKSCLOCK_CREATE ClockCreate,
@@ -225,7 +225,7 @@ KsCreatePin(HANDLE FilterHandle,
 *
 *--*/
 KSDDKAPI
-NTSTATUS
+DWORD
 NTAPI
 KsCreateTopologyNode(HANDLE ParentHandle,
                      PKSNODE_CREATE NodeCreate,
