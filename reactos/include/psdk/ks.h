@@ -2091,18 +2091,6 @@ typedef struct {
 typedef struct _KSEVENT_ENTRY KSEVENT_ENTRY, *PKSEVENT_ENTRY;
 
 #if defined(_NTDDK_)
-typedef struct
-{
-    KSEVENTDATA     EventData;
-    LONGLONG        MarkTime;
-} KSEVENT_TIME_MARK, *PKSEVENT_TIME_MARK;
-
-typedef struct
-{
-    KSEVENTDATA     EventData;
-    LONGLONG        TimeBase;
-    LONGLONG        Interval;
-} KSEVENT_TIME_INTERVAL, *PKSEVENT_TIME_INTERVAL;
 
 typedef NTSTATUS (NTAPI *PFNKSADDEVENT)(
     IN  PIRP Irp,
