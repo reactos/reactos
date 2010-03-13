@@ -3867,6 +3867,26 @@ KsPinGetConnectedPinFileObject(
 
 #else
 
+#if !defined( KS_NO_CREATE_FUNCTIONS )
+
+KSDDKAPI
+DWORD
+WINAPI
+KsCreateAllocator(
+    IN HANDLE ConnectionHandle,
+    IN PKSALLOCATOR_FRAMING AllocatorFraming,
+    OUT PHANDLE AllocatorHandle
+    );
+
+KSDDKAPI
+DWORD
+NTAPI
+KsCreateClock(
+    IN HANDLE ConnectionHandle,
+    IN PKSCLOCK_CREATE ClockCreate,
+    OUT PHANDLE ClockHandle
+    );
+
 KSDDKAPI
 DWORD
 WINAPI
@@ -3877,6 +3897,17 @@ KsCreatePin(
     OUT PHANDLE ConnectionHandle
     );
 
+KSDDKAPI
+DWORD
+WINAPI
+KsCreateTopologyNode(
+    IN HANDLE ParentHandle,
+    IN PKSNODE_CREATE NodeCreate,
+    IN ACCESS_MASK DesiredAccess,
+    OUT PHANDLE NodeHandle
+    );
+    
+#endif
 
 #endif
 
