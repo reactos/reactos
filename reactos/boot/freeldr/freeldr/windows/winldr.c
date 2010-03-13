@@ -232,7 +232,7 @@ WinLdrLoadDeviceDriver(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	PVOID DriverBase;
 
 	// Separate the path to file name and directory path
-	sprintf(DriverPath, "%S", FilePath->Buffer);
+	snprintf(DriverPath, sizeof(DriverPath), "%wZ", FilePath);
 	DriverNamePos = strrchr(DriverPath, '\\');
 	if (DriverNamePos != NULL)
 	{
@@ -261,7 +261,7 @@ WinLdrLoadDeviceDriver(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	}
 
 	// It's not loaded, we have to load it
-	sprintf(FullPath,"%s%S", BootPath, FilePath->Buffer);
+	snprintf(FullPath, sizeof(FullPath), "%s%wZ", BootPath, FilePath);
 	Status = WinLdrLoadImage(FullPath, LoaderBootDriver, &DriverBase);
 	if (!Status)
 		return FALSE;
