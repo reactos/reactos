@@ -1,6 +1,7 @@
 #include <stdarg.h>
-#include <ntddk.h>
+#include <ntifs.h>
 #include <ndk/iotypes.h>
+#include <ndk/obfuncs.h>
 #include <windef.h>
 #define WINBASEAPI
 typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *PSECURITY_ATTRIBUTES;
