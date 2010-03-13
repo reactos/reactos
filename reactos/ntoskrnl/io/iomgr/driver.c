@@ -158,35 +158,22 @@ IopGetDriverObject(
 VOID 
 FASTCALL
 INIT_FUNCTION
-IopDisplayLoadingMessage(PVOID ServiceName, 
-                         BOOLEAN Unicode)
+IopDisplayLoadingMessage(PUNICODE_STRING ServiceName)
 {
     CHAR TextBuffer[256];
-    PCHAR Extra = ".sys";
 
     if (ExpInTextModeSetup) return;
-    if (Unicode)
-    {
-        if (wcsstr(_wcsupr(ServiceName), L".SYS")) Extra = "";
-        sprintf(TextBuffer,
-                "%s%s%s\\%S%s\n",
-                KeLoaderBlock->ArcBootDeviceName,
-                KeLoaderBlock->NtBootPathName,
-                "System32\\Drivers",
-                (PWCHAR)ServiceName,
-                Extra);
-    }
+    RtlUpcaseUnicodeString(ServiceName, ServiceName, FALSE);
+    snprintf(TextBuffer, sizeof(TextBuffer),
+            "%s%s%s\\%wZ",
+            KeLoaderBlock->ArcBootDeviceName,
+            KeLoaderBlock->NtBootPathName,
+            "System32\\Drivers",
+            ServiceName);
+    if (!strstr(TextBuffer, ".sys"))
+        strcat(TextBuffer, ".sys\n");
     else
-    {
-        if (strstr(_strupr(ServiceName), ".SYS")) Extra = "";
-        sprintf(TextBuffer,
-                "%s%s%s\\%s%s\n",
-                KeLoaderBlock->ArcBootDeviceName,
-                KeLoaderBlock->NtBootPathName,
-                "System32\\Drivers",
-                (PCHAR)ServiceName,
-                Extra);
-    }
+        strcat(TextBuffer, "\n");
     HalDisplayString(TextBuffer);
 }
 
@@ -788,7 +775,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
    /*
     * Display 'Loading XXX...' message
     */
-   IopDisplayLoadingMessage(ModuleName->Buffer, TRUE);
+   IopDisplayLoadingMessage(ModuleName);
    InbvIndicateProgress();
 
    /*
