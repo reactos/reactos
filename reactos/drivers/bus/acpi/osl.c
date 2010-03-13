@@ -470,7 +470,7 @@ AcpiOsReadPciConfiguration (
         return AE_ERROR;
 
     slot.u.AsULONG = 0;
-    slot.u.bits.DeviceNumber = PciId->Bus;
+    slot.u.bits.DeviceNumber = PciId->Device;
     slot.u.bits.FunctionNumber = PciId->Function;
 
     DPRINT("AcpiOsReadPciConfiguration, slot=0x%X, func=0x%X\n", slot.u.AsULONG, Register);
@@ -502,7 +502,7 @@ AcpiOsWritePciConfiguration (
         return AE_ERROR;
 
     slot.u.AsULONG = 0;
-    slot.u.bits.DeviceNumber = PciId->Bus;
+    slot.u.bits.DeviceNumber = PciId->Device;
     slot.u.bits.FunctionNumber = PciId->Function;
 
     DPRINT("AcpiOsWritePciConfiguration, slot=0x%x\n", slot.u.AsULONG);
