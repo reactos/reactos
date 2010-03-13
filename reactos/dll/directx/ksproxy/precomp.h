@@ -21,6 +21,20 @@
 #include <assert.h>
 //#include <debug.h>
 
+
+interface DECLSPEC_UUID("877E4351-6FEA-11D0-B863-00AA00A216A1") IKsClock;
+
+#undef INTERFACE
+#define INTERFACE IKsClock
+
+DECLARE_INTERFACE_(IKsClock, IUnknown)
+{
+    STDMETHOD_(HANDLE, KsGetClockHandle)(
+        THIS
+    ) PURE;
+};
+
+
 typedef HRESULT (CALLBACK *LPFNCREATEINSTANCE)(IUnknown* pUnkOuter, REFIID riid, LPVOID* ppvObject);
 
 typedef struct {
@@ -136,6 +150,17 @@ WINAPI
 CEnumMediaTypes_fnConstructor(
     ULONG MediaTypeCount,
     AM_MEDIA_TYPE * MediaTypes,
+    REFIID riid,
+    LPVOID * ppv);
+
+/* node.cpp */
+HRESULT
+WINAPI
+CKsNode_Constructor(
+    IUnknown * pUnkOuter,
+    HANDLE ParentHandle,
+    ULONG NodeId,
+    ACCESS_MASK DesiredAccess,
     REFIID riid,
     LPVOID * ppv);
 

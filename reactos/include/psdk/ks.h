@@ -724,8 +724,10 @@ typedef enum
     Properties/Methods/Events
 */
 
-#define KSPROPSETID_Stream \
+#define STATIC_KSPROPSETID_Stream\
     0x65aaba60L, 0x98ae, 0x11cf, 0xa1, 0x0d, 0x00, 0x20, 0xaf, 0xd1, 0x56, 0xe4
+DEFINE_GUIDSTRUCT("65aaba60-98ae-11cf-a10d-0020afd156e4", KSPROPSETID_Stream);
+#define KSPROPSETID_Stream DEFINE_GUIDNAMED(KSPROPSETID_Stream)
 
 typedef enum
 {
@@ -2091,7 +2093,7 @@ typedef struct {
 typedef struct _KSEVENT_ENTRY KSEVENT_ENTRY, *PKSEVENT_ENTRY;
 
 #if defined(_NTDDK_)
-
+	
 typedef NTSTATUS (NTAPI *PFNKSADDEVENT)(
     IN  PIRP Irp,
     IN  PKSEVENTDATA EventData,

@@ -123,7 +123,7 @@ COutputPin::~COutputPin()
 COutputPin::COutputPin(
     IBaseFilter * ParentFilter,
     LPCWSTR PinName,
-    ULONG PinId) : m_Ref(0), m_ParentFilter(ParentFilter), m_PinName(PinName), m_hPin(0), m_PinId(PinId), m_KsObjectParent(0), m_Pin(0)
+    ULONG PinId) : m_Ref(0), m_ParentFilter(ParentFilter), m_PinName(PinName), m_hPin(INVALID_HANDLE_VALUE), m_PinId(PinId), m_KsObjectParent(0), m_Pin(0)
 {
     HRESULT hr;
 
