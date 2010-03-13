@@ -1893,7 +1893,7 @@ IopActionConfigureChildServices(PDEVICE_NODE DeviceNode,
       RtlInitUnicodeString(&ClassGUID, NULL);
 
       QueryTable[0].Name = L"Service";
-      QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
+      QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
       QueryTable[0].EntryContext = Service;
 
       QueryTable[1].Name = L"ClassGUID";
