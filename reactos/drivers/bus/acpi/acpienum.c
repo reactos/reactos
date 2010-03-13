@@ -37,6 +37,10 @@ Bus_PlugInDevice (
 
     PAGED_CODE ();
 
+    //Don't enumerate the root device
+    if (Device->handle == ACPI_ROOT_OBJECT)
+        return STATUS_SUCCESS;
+
     /* Check we didnt add this already */
     for (entry = FdoData->ListOfPDOs.Flink;
         entry != &FdoData->ListOfPDOs; entry = entry->Flink)

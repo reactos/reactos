@@ -548,8 +548,6 @@ Bus_PDO_QueryDeviceText(
 			Buffer = L"ACPI Power Resource";
 		   else if (wcsstr(DeviceData->HardwareIDs, L"Processor") != 0)
 			Buffer = L"Processor";
-		   else if (wcsstr(DeviceData->HardwareIDs, L"ACPI_SYS") != 0)
-			Buffer = L"ACPI System";
 		   else if (wcsstr(DeviceData->HardwareIDs, L"ThermalZone") != 0)
 			Buffer = L"ACPI Thermal Zone";
 		   else if (wcsstr(DeviceData->HardwareIDs, L"ACPI0002") != 0)
