@@ -3395,6 +3395,90 @@ typedef struct _PCI_DEVICE_PRESENT_INTERFACE {
   PPCI_IS_DEVICE_PRESENT_EX  IsDevicePresentEx;
 } PCI_DEVICE_PRESENT_INTERFACE, *PPCI_DEVICE_PRESENT_INTERFACE;
 
+typedef
+BOOLEAN
+(*PGPE_SERVICE_ROUTINE2)(
+    PVOID ObjectContext,
+    PVOID ServiceContext
+);
+
+typedef
+NTSTATUS
+(*PGPE_CONNECT_VECTOR2)(
+    PVOID Context,
+    ULONG GpeNumber,
+    KINTERRUPT_MODE Mode,
+    BOOLEAN Shareable,
+    PGPE_SERVICE_ROUTINE2 ServiceRoutine,
+    PVOID ServiceContext,
+    PVOID *ObjectContext
+);
+
+typedef
+NTSTATUS
+(*PGPE_DISCONNECT_VECTOR2)(
+    PVOID Context,
+    PVOID ObjectContext
+);
+
+typedef
+NTSTATUS
+(*PGPE_ENABLE_EVENT2)(
+    PVOID Context,
+    PVOID ObjectContext
+);
+
+typedef
+NTSTATUS
+(*PGPE_DISABLE_EVENT2)(
+    PVOID Context,
+    PVOID ObjectContext
+);
+
+typedef
+NTSTATUS
+(*PGPE_CLEAR_STATUS2)(
+    PVOID Context,
+    PVOID ObjectContext
+);
+
+typedef
+VOID
+(*PDEVICE_NOTIFY_CALLBACK2)(
+    PVOID NotificationContext,
+    ULONG NotifyCode
+);
+
+typedef
+NTSTATUS
+(*PREGISTER_FOR_DEVICE_NOTIFICATIONS2)(
+    PVOID Context,
+    PDEVICE_NOTIFY_CALLBACK2 NotificationHandler,
+    PVOID NotificationContext
+);
+
+typedef
+VOID
+(*PUNREGISTER_FOR_DEVICE_NOTIFICATIONS2)(
+    PVOID Context
+);
+
+typedef struct
+{
+    USHORT Size;
+    USHORT Version;
+    PVOID Context;
+    PINTERFACE_REFERENCE InterfaceReference;
+    PINTERFACE_DEREFERENCE InterfaceDereference;
+    PGPE_CONNECT_VECTOR2 GpeConnectVector;
+    PGPE_DISCONNECT_VECTOR2 GpeDisconnectVector;
+    PGPE_ENABLE_EVENT2 GpeEnableEvent;
+    PGPE_DISABLE_EVENT2 GpeDisableEvent;
+    PGPE_CLEAR_STATUS2 GpeClearStatus;
+    PREGISTER_FOR_DEVICE_NOTIFICATIONS2 RegisterForDeviceNotifications;
+    PUNREGISTER_FOR_DEVICE_NOTIFICATIONS2 UnregisterForDeviceNotifications;
+} ACPI_INTERFACE_STANDARD2, *PACPI_INTERFACE_STANDARD2;
+
 typedef struct _DEVICE_CAPABILITIES {
   USHORT  Size;
   USHORT  Version;
