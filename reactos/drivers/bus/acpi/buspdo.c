@@ -325,6 +325,7 @@ Bus_PDO_QueryDeviceCaps(
        deviceCapabilities->UniqueID = device->flags.unique_id;
        deviceCapabilities->NoDisplayInUI = !device->status.show_in_ui;
        deviceCapabilities->Address = device->pnp.bus_address;
+       deviceCapabilities->RawDeviceOK = FALSE;
     }
     else
     {
@@ -335,6 +336,9 @@ Bus_PDO_QueryDeviceCaps(
        deviceCapabilities->UniqueID = FALSE;
        deviceCapabilities->NoDisplayInUI = FALSE;
        deviceCapabilities->Address = 0;
+
+       /* The ACPI driver will run fixed buttons */
+       deviceCapabilities->RawDeviceOK = TRUE;
     }
 
     deviceCapabilities->SilentInstall = FALSE;
