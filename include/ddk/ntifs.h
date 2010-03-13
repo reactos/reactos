@@ -8404,6 +8404,11 @@ typedef VOID
   IN PVOID LogHandle,
   IN LARGE_INTEGER Lsn);
 
+typedef VOID
+(NTAPI *PCC_POST_DEFERRED_WRITE) (
+  IN PVOID Context1,
+  IN PVOID Context2);
+
 #define CcIsFileCached(FO) (                                                         \
     ((FO)->SectionObjectPointer != NULL) &&                                          \
     (((PSECTION_OBJECT_POINTERS)(FO)->SectionObjectPointer)->SharedCacheMap != NULL) \
@@ -8490,15 +8495,291 @@ CcUnpinRepinnedBcb(
   IN BOOLEAN WriteThrough,
   OUT PIO_STATUS_BLOCK IoStatus);
 
+NTKERNELAPI
+PFILE_OBJECT
+NTAPI
+CcGetFileObjectFromSectionPtrs(
+  IN PSECTION_OBJECT_POINTERS SectionObjectPointer);
+
+NTKERNELAPI
+PFILE_OBJECT
+NTAPI
+CcGetFileObjectFromBcb(
+  IN PVOID Bcb);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+CcCanIWrite(
+  IN PFILE_OBJECT FileObject,
+  IN ULONG BytesToWrite,
+  IN BOOLEAN Wait,
+  IN BOOLEAN Retrying);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcDeferWrite(
+  IN PFILE_OBJECT FileObject,
+  IN PCC_POST_DEFERRED_WRITE PostRoutine,
+  IN PVOID Context1,
+  IN PVOID Context2,
+  IN ULONG BytesToWrite,
+  IN BOOLEAN Retrying);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+CcCopyRead(
+  IN PFILE_OBJECT FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN ULONG Length,
+  IN BOOLEAN Wait,
+  OUT PVOID Buffer,
+  OUT PIO_STATUS_BLOCK IoStatus);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcFastCopyRead(
+  IN PFILE_OBJECT FileObject,
+  IN ULONG FileOffset,
+  IN ULONG Length,
+  IN ULONG PageCount,
+  OUT PVOID Buffer,
+  OUT PIO_STATUS_BLOCK IoStatus);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+CcCopyWrite(
+  IN PFILE_OBJECT FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN ULONG Length,
+  IN BOOLEAN Wait,
+  IN PVOID Buffer);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcFastCopyWrite(
+  IN PFILE_OBJECT FileObject,
+  IN ULONG FileOffset,
+  IN ULONG Length,
+  IN PVOID Buffer);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcMdlRead(
+  IN PFILE_OBJECT FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN ULONG Length,
+  OUT PMDL *MdlChain,
+  OUT PIO_STATUS_BLOCK IoStatus);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcMdlReadComplete(
+  IN PFILE_OBJECT FileObject,
+  IN PMDL MdlChain);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcPrepareMdlWrite(
+  IN PFILE_OBJECT FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN ULONG Length,
+  OUT PMDL *MdlChain,
+  OUT PIO_STATUS_BLOCK IoStatus);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcMdlWriteComplete(
+  IN PFILE_OBJECT FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN PMDL MdlChain);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcScheduleReadAhead(
+  IN PFILE_OBJECT FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN ULONG Length);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+CcWaitForCurrentLazyWriterActivity(
+  VOID);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcSetReadAheadGranularity(
+  IN PFILE_OBJECT FileObject,
+  IN ULONG Granularity);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+CcPinRead(
+  IN PFILE_OBJECT FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN ULONG Length,
+  IN ULONG Flags,
+  OUT PVOID *Bcb,
+  OUT PVOID *Buffer);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+CcPinMappedData(
+  IN PFILE_OBJECT FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN ULONG Length,
+  IN ULONG Flags,
+  IN OUT PVOID *Bcb);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+CcPreparePinWrite(
+  IN PFILE_OBJECT FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN ULONG Length,
+  IN BOOLEAN Zero,
+  IN ULONG Flags,
+  OUT PVOID *Bcb,
+  OUT PVOID *Buffer);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcSetDirtyPinnedData(
+  IN PVOID BcbVoid,
+  IN PLARGE_INTEGER Lsn OPTIONAL);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcUnpinData(
+  IN PVOID Bcb);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcSetBcbOwnerPointer(
+  IN PVOID Bcb,
+  IN PVOID OwnerPointer);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcUnpinDataForThread(
+  IN PVOID Bcb,
+  IN ERESOURCE_THREAD ResourceThreadId);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcSetAdditionalCacheAttributes(
+  IN PFILE_OBJECT FileObject,
+  IN BOOLEAN DisableReadAhead,
+  IN BOOLEAN DisableWriteBehind);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+CcIsThereDirtyData(
+  IN PVPB Vpb);
+
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+
+NTKERNELAPI
+VOID
+NTAPI
+CcMdlWriteAbort(
+  IN PFILE_OBJECT FileObject,
+  IN PMDL MdlChain);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcSetLogHandleForFile(
+  IN PFILE_OBJECT FileObject,
+  IN PVOID LogHandle,
+  IN PFLUSH_TO_LSN FlushToLsnRoutine);
+
+NTKERNELAPI
+LARGE_INTEGER
+NTAPI
+CcGetDirtyPages(
+  IN PVOID LogHandle,
+  IN PDIRTY_PAGE_ROUTINE DirtyPageRoutine,
+  IN PVOID Context1,
+  IN PVOID Context2);
+
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+NTKERNELAPI
+BOOLEAN
+NTAPI
+CcMapData(
+  IN PFILE_OBJECT FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN ULONG Length,
+  IN ULONG Flags,
+  OUT PVOID *Bcb,
+  OUT PVOID *Buffer);
+#elif (NTDDI_VERSION >= NTDDI_WIN2K)
+NTKERNELAPI
+BOOLEAN
+NTAPI
+CcMapData(
+  IN PFILE_OBJECT FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN ULONG Length,
+  IN BOOLEAN Wait,
+  OUT PVOID *Bcb,
+  OUT PVOID *Buffer);
+#endif
+
 #if (NTDDI_VERSION >= NTDDI_VISTA)
+
 NTKERNELAPI
 NTSTATUS
 NTAPI
 CcSetFileSizesEx(
   IN PFILE_OBJECT FileObject,
   IN PCC_FILE_SIZES FileSizes);
+
+NTKERNELAPI
+PFILE_OBJECT
+NTAPI
+CcGetFileObjectFromSectionPtrsRef(
+  IN PSECTION_OBJECT_POINTERS SectionObjectPointer);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcSetParallelFlushFile(
+  IN PFILE_OBJECT FileObject,
+  IN BOOLEAN EnableParallelFlush);
+
+NTKERNELAPI
+BOOLEAN
+CcIsThereDirtyDataEx(
+  IN PVPB Vpb,
+  IN PULONG NumberOfDirtyPages OPTIONAL);
+
 #endif
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
@@ -8542,6 +8823,35 @@ CcPurgeCacheSection(
   IN ULONG Length,
   IN BOOLEAN UninitializeCacheMaps);
 #endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+NTKERNELAPI
+BOOLEAN
+NTAPI
+CcCopyWriteWontFlush(
+  IN PFILE_OBJECT FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN ULONG Length);
+#else
+#define CcCopyWriteWontFlush(FO, FOFF, LEN) ((LEN) <= 0x10000)
+#endif
+
+#define CcReadAhead(FO, FOFF, LEN) (                \
+    if ((LEN) >= 256) {                             \
+        CcScheduleReadAhead((FO), (FOFF), (LEN));   \
+    }                                               \
+)
+
+#define PIN_WAIT                        (1)
+#define PIN_EXCLUSIVE                   (2)
+#define PIN_NO_READ                     (4)
+#define PIN_IF_BCB                      (8)
+#define PIN_CALLER_TRACKS_DIRTY_DATA    (32)
+#define PIN_HIGH_PRIORITY               (64)
+
+#define MAP_WAIT                          1
+#define MAP_NO_READ                       (16)
+#define MAP_HIGH_PRIORITY                 (64)
 
 #pragma pack(push,4)
 
@@ -8629,11 +8939,6 @@ extern PACL                         SeSystemDefaultDacl;
 #define OB_TYPE_DRIVER                  21
 #define OB_TYPE_IO_COMPLETION           22
 #define OB_TYPE_FILE                    23
-
-#define PIN_WAIT                        (1)
-#define PIN_EXCLUSIVE                   (2)
-#define PIN_NO_READ                     (4)
-#define PIN_IF_BCB                      (8)
 
 #define SEC_BASED	0x00200000
 
@@ -9192,290 +9497,12 @@ typedef struct _VAD_HEADER {
 } VAD_HEADER, *PVAD_HEADER;
 
 NTKERNELAPI
-BOOLEAN
-NTAPI
-CcCanIWrite (
-    IN PFILE_OBJECT FileObject,
-    IN ULONG        BytesToWrite,
-    IN BOOLEAN      Wait,
-    IN BOOLEAN      Retrying
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-CcCopyRead (
-    IN PFILE_OBJECT         FileObject,
-    IN PLARGE_INTEGER       FileOffset,
-    IN ULONG                Length,
-    IN BOOLEAN              Wait,
-    OUT PVOID               Buffer,
-    OUT PIO_STATUS_BLOCK    IoStatus
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-CcCopyWrite (
-    IN PFILE_OBJECT     FileObject,
-    IN PLARGE_INTEGER   FileOffset,
-    IN ULONG            Length,
-    IN BOOLEAN          Wait,
-    IN PVOID            Buffer
-);
-
-#define CcCopyWriteWontFlush(FO, FOFF, LEN) ((LEN) <= 0x10000)
-
-typedef VOID (NTAPI *PCC_POST_DEFERRED_WRITE) (
-    IN PVOID Context1,
-    IN PVOID Context2
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-CcDeferWrite (
-    IN PFILE_OBJECT             FileObject,
-    IN PCC_POST_DEFERRED_WRITE  PostRoutine,
-    IN PVOID                    Context1,
-    IN PVOID                    Context2,
-    IN ULONG                    BytesToWrite,
-    IN BOOLEAN                  Retrying
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-CcFastCopyRead (
-    IN PFILE_OBJECT         FileObject,
-    IN ULONG                FileOffset,
-    IN ULONG                Length,
-    IN ULONG                PageCount,
-    OUT PVOID               Buffer,
-    OUT PIO_STATUS_BLOCK    IoStatus
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-CcFastCopyWrite (
-    IN PFILE_OBJECT FileObject,
-    IN ULONG        FileOffset,
-    IN ULONG        Length,
-    IN PVOID        Buffer
-);
-
-NTKERNELAPI
-LARGE_INTEGER
-NTAPI
-CcGetDirtyPages (
-    IN PVOID                LogHandle,
-    IN PDIRTY_PAGE_ROUTINE  DirtyPageRoutine,
-    IN PVOID                Context1,
-    IN PVOID                Context2
-);
-
-NTKERNELAPI
-PFILE_OBJECT
-NTAPI
-CcGetFileObjectFromBcb (
-    IN PVOID Bcb
-);
-
-NTKERNELAPI
-PFILE_OBJECT
-NTAPI
-CcGetFileObjectFromSectionPtrs (
-    IN PSECTION_OBJECT_POINTERS SectionObjectPointer
-);
-
-NTKERNELAPI
 LARGE_INTEGER
 NTAPI
 CcGetLsnForFileObject (
     IN PFILE_OBJECT     FileObject,
     OUT PLARGE_INTEGER  OldestLsn OPTIONAL
 );
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-CcIsThereDirtyData (
-    IN PVPB Vpb
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-CcMapData (
-    IN PFILE_OBJECT     FileObject,
-    IN PLARGE_INTEGER   FileOffset,
-    IN ULONG            Length,
-    IN ULONG            Flags,
-    OUT PVOID           *Bcb,
-    OUT PVOID           *Buffer
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-CcMdlRead (
-    IN PFILE_OBJECT         FileObject,
-    IN PLARGE_INTEGER       FileOffset,
-    IN ULONG                Length,
-    OUT PMDL                *MdlChain,
-    OUT PIO_STATUS_BLOCK    IoStatus
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-CcMdlReadComplete (
-    IN PFILE_OBJECT FileObject,
-    IN PMDL         MdlChain
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-CcMdlWriteComplete (
-    IN PFILE_OBJECT     FileObject,
-    IN PLARGE_INTEGER   FileOffset,
-    IN PMDL             MdlChain
-);
-
-#define MAP_WAIT        1
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-CcPinMappedData (
-    IN PFILE_OBJECT     FileObject,
-    IN PLARGE_INTEGER   FileOffset,
-    IN ULONG            Length,
-    IN ULONG            Flags,
-    IN OUT PVOID        *Bcb
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-CcPinRead (
-    IN PFILE_OBJECT     FileObject,
-    IN PLARGE_INTEGER   FileOffset,
-    IN ULONG            Length,
-    IN ULONG            Flags,
-    OUT PVOID           *Bcb,
-    OUT PVOID           *Buffer
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-CcPrepareMdlWrite (
-    IN PFILE_OBJECT         FileObject,
-    IN PLARGE_INTEGER       FileOffset,
-    IN ULONG                Length,
-    OUT PMDL                *MdlChain,
-    OUT PIO_STATUS_BLOCK    IoStatus
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-CcPreparePinWrite (
-    IN PFILE_OBJECT     FileObject,
-    IN PLARGE_INTEGER   FileOffset,
-    IN ULONG            Length,
-    IN BOOLEAN          Zero,
-    IN ULONG            Flags,
-    OUT PVOID           *Bcb,
-    OUT PVOID           *Buffer
-);
-
-#define CcReadAhead(FO, FOFF, LEN) (                \
-    if ((LEN) >= 256) {                             \
-        CcScheduleReadAhead((FO), (FOFF), (LEN));   \
-    }                                               \
-)
-
-NTKERNELAPI
-VOID
-NTAPI
-CcScheduleReadAhead (
-    IN PFILE_OBJECT     FileObject,
-    IN PLARGE_INTEGER   FileOffset,
-    IN ULONG            Length
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-CcSetAdditionalCacheAttributes (
-    IN PFILE_OBJECT FileObject,
-    IN BOOLEAN      DisableReadAhead,
-    IN BOOLEAN      DisableWriteBehind
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-CcSetBcbOwnerPointer (
-    IN PVOID Bcb,
-    IN PVOID OwnerPointer
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-CcSetDirtyPinnedData (
-    IN PVOID            BcbVoid,
-    IN PLARGE_INTEGER   Lsn OPTIONAL
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-CcSetLogHandleForFile (
-    IN PFILE_OBJECT     FileObject,
-    IN PVOID            LogHandle,
-    IN PFLUSH_TO_LSN    FlushToLsnRoutine
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-CcSetReadAheadGranularity (
-    IN PFILE_OBJECT FileObject,
-    IN ULONG        Granularity     /* default: PAGE_SIZE */
-                                    /* allowed: 2^n * PAGE_SIZE */
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-CcUnpinData (
-    IN PVOID Bcb
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-CcUnpinDataForThread (
-    IN PVOID            Bcb,
-    IN ERESOURCE_THREAD ResourceThreadId
-);
-
-#if (VER_PRODUCTBUILD >= 2195)
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-CcWaitForCurrentLazyWriterActivity (
-    VOID
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
 
 #if (VER_PRODUCTBUILD >= 2600)
 
