@@ -6215,25 +6215,6 @@ PoQueueShutdownWorkItem(
   IN OUT PWORK_QUEUE_ITEM WorkItem);
 #endif
 
-#if (NTDDI_VERSION >= NTDDI_VISTA)
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-PoRegisterPowerSettingCallback(
-  IN PDEVICE_OBJECT DeviceObject OPTIONAL,
-  IN LPCGUID SettingGuid,
-  IN PPOWER_SETTING_CALLBACK Callback,
-  IN PVOID Context OPTIONAL,
-  OUT PVOID *Handle);
-
-NTKERNELAPI
-NTSTATUS
-PoUnregisterPowerSettingCallback(
-  IN OUT PVOID Handle);
-
-#endif
-
 #if (NTDDI_VERSION >= NTDDI_WIN6SP1)
 NTKERNELAPI
 VOID
@@ -8430,6 +8411,138 @@ typedef VOID
 
 extern ULONG CcFastMdlReadWait;
 
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTKERNELAPI
+VOID
+NTAPI
+CcInitializeCacheMap(
+  IN PFILE_OBJECT FileObject,
+  IN PCC_FILE_SIZES FileSizes,
+  IN BOOLEAN PinAccess,
+  IN PCACHE_MANAGER_CALLBACKS Callbacks,
+  IN PVOID LazyWriteContext);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+CcUninitializeCacheMap(
+  IN PFILE_OBJECT FileObject,
+  IN PLARGE_INTEGER TruncateSize OPTIONAL,
+  IN PCACHE_UNINITIALIZE_EVENT UninitializeCompleteEvent OPTIONAL);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcSetFileSizes(
+  IN PFILE_OBJECT FileObject,
+  IN PCC_FILE_SIZES FileSizes);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcSetDirtyPageThreshold(
+  IN PFILE_OBJECT FileObject,
+  IN ULONG DirtyPageThreshold);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcFlushCache(
+  IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
+  IN PLARGE_INTEGER FileOffset OPTIONAL,
+  IN ULONG Length,
+  OUT PIO_STATUS_BLOCK IoStatus OPTIONAL);
+
+NTKERNELAPI
+LARGE_INTEGER
+NTAPI
+CcGetFlushedValidData(
+  IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
+  IN BOOLEAN BcbListHeld);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+CcZeroData(
+  IN PFILE_OBJECT FileObject,
+  IN PLARGE_INTEGER StartOffset,
+  IN PLARGE_INTEGER EndOffset,
+  IN BOOLEAN Wait);
+
+NTKERNELAPI
+PVOID
+NTAPI
+CcRemapBcb(
+  IN PVOID Bcb);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcRepinBcb(
+  IN PVOID Bcb);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcUnpinRepinnedBcb(
+  IN PVOID Bcb,
+  IN BOOLEAN WriteThrough,
+  OUT PIO_STATUS_BLOCK IoStatus);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+NTKERNELAPI
+NTSTATUS
+NTAPI
+CcSetFileSizesEx(
+  IN PFILE_OBJECT FileObject,
+  IN PCC_FILE_SIZES FileSizes);
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+NTKERNELAPI
+VOID
+NTAPI
+CcCoherencyFlushAndPurgeCache(
+  IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
+  IN PLARGE_INTEGER FileOffset OPTIONAL,
+  IN ULONG Length,
+  OUT PIO_STATUS_BLOCK IoStatus,
+  IN ULONG Flags OPTIONAL);
+#endif
+
+#define CcGetFileSizePointer(FO) (                                     \
+    ((PLARGE_INTEGER)((FO)->SectionObjectPointer->SharedCacheMap) + 1) \
+)
+
+#define UNINITIALIZE_CACHE_MAPS          (1)
+#define DO_NOT_RETRY_PURGE               (2)
+#define DO_NOT_PURGE_DIRTY_PAGES         (0x4)
+
+#define CC_FLUSH_AND_PURGE_NO_PURGE     (0x1)
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+NTKERNELAPI
+BOOLEAN
+NTAPI
+CcPurgeCacheSection(
+  IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
+  IN PLARGE_INTEGER FileOffset OPTIONAL,
+  IN ULONG Length,
+  IN ULONG Flags);
+#elif (NTDDI_VERSION >= NTDDI_WIN2K)
+NTKERNELAPI
+BOOLEAN
+NTAPI
+CcPurgeCacheSection(
+  IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
+  IN PLARGE_INTEGER FileOffset OPTIONAL,
+  IN ULONG Length,
+  IN BOOLEAN UninitializeCacheMaps);
+#endif
+
 #pragma pack(push,4)
 
 #ifndef VER_PRODUCTBUILD
@@ -9153,16 +9266,6 @@ CcFastCopyWrite (
 );
 
 NTKERNELAPI
-VOID
-NTAPI
-CcFlushCache (
-    IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
-    IN PLARGE_INTEGER           FileOffset OPTIONAL,
-    IN ULONG                    Length,
-    OUT PIO_STATUS_BLOCK        IoStatus OPTIONAL
-);
-
-NTKERNELAPI
 LARGE_INTEGER
 NTAPI
 CcGetDirtyPages (
@@ -9186,39 +9289,12 @@ CcGetFileObjectFromSectionPtrs (
     IN PSECTION_OBJECT_POINTERS SectionObjectPointer
 );
 
-#define CcGetFileSizePointer(FO) (                                     \
-    ((PLARGE_INTEGER)((FO)->SectionObjectPointer->SharedCacheMap) + 1) \
-)
-
-#if (VER_PRODUCTBUILD >= 2195)
-
-NTKERNELAPI
-LARGE_INTEGER
-NTAPI
-CcGetFlushedValidData (
-    IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
-    IN BOOLEAN                  BcbListHeld
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
-
 NTKERNELAPI
 LARGE_INTEGER
 NTAPI
 CcGetLsnForFileObject (
     IN PFILE_OBJECT     FileObject,
     OUT PLARGE_INTEGER  OldestLsn OPTIONAL
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-CcInitializeCacheMap (
-    IN PFILE_OBJECT             FileObject,
-    IN PCC_FILE_SIZES           FileSizes,
-    IN BOOLEAN                  PinAccess,
-    IN PCACHE_MANAGER_CALLBACKS Callbacks,
-    IN PVOID                    LazyWriteContext
 );
 
 NTKERNELAPI
@@ -9317,39 +9393,11 @@ CcPreparePinWrite (
     OUT PVOID           *Buffer
 );
 
-NTKERNELAPI
-BOOLEAN
-NTAPI
-CcPurgeCacheSection (
-    IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
-    IN PLARGE_INTEGER           FileOffset OPTIONAL,
-    IN ULONG                    Length,
-    IN BOOLEAN                  UninitializeCacheMaps
-);
-
 #define CcReadAhead(FO, FOFF, LEN) (                \
     if ((LEN) >= 256) {                             \
         CcScheduleReadAhead((FO), (FOFF), (LEN));   \
     }                                               \
 )
-
-#if (VER_PRODUCTBUILD >= 2195)
-
-NTKERNELAPI
-PVOID
-NTAPI
-CcRemapBcb (
-    IN PVOID Bcb
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
-
-NTKERNELAPI
-VOID
-NTAPI
-CcRepinBcb (
-    IN PVOID Bcb
-);
 
 NTKERNELAPI
 VOID
@@ -9380,25 +9428,9 @@ CcSetBcbOwnerPointer (
 NTKERNELAPI
 VOID
 NTAPI
-CcSetDirtyPageThreshold (
-    IN PFILE_OBJECT FileObject,
-    IN ULONG        DirtyPageThreshold
-);
-
-NTKERNELAPI
-VOID
-NTAPI
 CcSetDirtyPinnedData (
     IN PVOID            BcbVoid,
     IN PLARGE_INTEGER   Lsn OPTIONAL
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-CcSetFileSizes (
-    IN PFILE_OBJECT     FileObject,
-    IN PCC_FILE_SIZES   FileSizes
 );
 
 NTKERNELAPI
@@ -9420,15 +9452,6 @@ CcSetReadAheadGranularity (
 );
 
 NTKERNELAPI
-BOOLEAN
-NTAPI
-CcUninitializeCacheMap (
-    IN PFILE_OBJECT                 FileObject,
-    IN PLARGE_INTEGER               TruncateSize OPTIONAL,
-    IN PCACHE_UNINITIALIZE_EVENT    UninitializeCompleteEvent OPTIONAL
-);
-
-NTKERNELAPI
 VOID
 NTAPI
 CcUnpinData (
@@ -9443,15 +9466,6 @@ CcUnpinDataForThread (
     IN ERESOURCE_THREAD ResourceThreadId
 );
 
-NTKERNELAPI
-VOID
-NTAPI
-CcUnpinRepinnedBcb (
-    IN PVOID                Bcb,
-    IN BOOLEAN              WriteThrough,
-    OUT PIO_STATUS_BLOCK    IoStatus
-);
-
 #if (VER_PRODUCTBUILD >= 2195)
 
 NTKERNELAPI
@@ -9462,16 +9476,6 @@ CcWaitForCurrentLazyWriterActivity (
 );
 
 #endif /* (VER_PRODUCTBUILD >= 2195) */
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-CcZeroData (
-    IN PFILE_OBJECT     FileObject,
-    IN PLARGE_INTEGER   StartOffset,
-    IN PLARGE_INTEGER   EndOffset,
-    IN BOOLEAN          Wait
-);
 
 #if (VER_PRODUCTBUILD >= 2600)
 
