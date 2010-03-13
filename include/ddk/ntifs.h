@@ -7162,7 +7162,158 @@ NTAPI
 FsRtlCurrentBatchOplock(
   IN POPLOCK Oplock);
 
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlNotifyVolumeEvent(
+  IN PFILE_OBJECT FileObject,
+  IN ULONG EventCode);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlNotifyInitializeSync(
+  IN PNOTIFY_SYNC *NotifySync);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlNotifyUninitializeSync(
+  IN PNOTIFY_SYNC *NotifySync);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlNotifyFullChangeDirectory(
+  IN PNOTIFY_SYNC NotifySync,
+  IN PLIST_ENTRY NotifyList,
+  IN PVOID FsContext,
+  IN PSTRING FullDirectoryName,
+  IN BOOLEAN WatchTree,
+  IN BOOLEAN IgnoreBuffer,
+  IN ULONG CompletionFilter,
+  IN PIRP NotifyIrp OPTIONAL,
+  IN PCHECK_FOR_TRAVERSE_ACCESS TraverseCallback OPTIONAL,
+  IN PSECURITY_SUBJECT_CONTEXT SubjectContext OPTIONAL);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlNotifyFilterReportChange(
+  IN PNOTIFY_SYNC NotifySync,
+  IN PLIST_ENTRY NotifyList,
+  IN PSTRING FullTargetName,
+  IN USHORT TargetNameOffset,
+  IN PSTRING StreamName OPTIONAL,
+  IN PSTRING NormalizedParentName OPTIONAL,
+  IN ULONG FilterMatch,
+  IN ULONG Action,
+  IN PVOID TargetContext OPTIONAL,
+  IN PVOID FilterContext OPTIONAL);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlNotifyFullReportChange(
+  IN PNOTIFY_SYNC NotifySync,
+  IN PLIST_ENTRY NotifyList,
+  IN PSTRING FullTargetName,
+  IN USHORT TargetNameOffset,
+  IN PSTRING StreamName OPTIONAL,
+  IN PSTRING NormalizedParentName OPTIONAL,
+  IN ULONG FilterMatch,
+  IN ULONG Action,
+  IN PVOID TargetContext OPTIONAL);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlNotifyCleanup(
+  IN PNOTIFY_SYNC NotifySync,
+  IN PLIST_ENTRY NotifyList,
+  IN PVOID FsContext);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlDissectName(
+  IN UNICODE_STRING Name,
+  OUT PUNICODE_STRING FirstPart,
+  OUT PUNICODE_STRING RemainingPart);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlDoesNameContainWildCards(
+  IN PUNICODE_STRING Name);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlAreNamesEqual(
+  IN PCUNICODE_STRING Name1,
+  IN PCUNICODE_STRING Name2,
+  IN BOOLEAN IgnoreCase,
+  IN PCWCH UpcaseTable OPTIONAL);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlIsNameInExpression(
+  IN PUNICODE_STRING Expression,
+  IN PUNICODE_STRING Name,
+  IN BOOLEAN IgnoreCase,
+  IN PWCHAR UpcaseTable OPTIONAL);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlPostPagingFileStackOverflow(
+  IN PVOID Context,
+  IN PKEVENT Event,
+  IN PFSRTL_STACK_OVERFLOW_ROUTINE StackOverflowRoutine);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlPostStackOverflow (
+  IN PVOID Context,
+  IN PKEVENT Event,
+  IN PFSRTL_STACK_OVERFLOW_ROUTINE StackOverflowRoutine);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlRegisterUncProvider(
+  OUT PHANDLE MupHandle,
+  IN PUNICODE_STRING RedirectorDeviceName,
+  IN BOOLEAN MailslotsSupported);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlDeregisterUncProvider(
+  IN HANDLE Handle);
+
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlNotifyFilterChangeDirectory(
+  IN PNOTIFY_SYNC NotifySync,
+  IN PLIST_ENTRY NotifyList,
+  IN PVOID FsContext,
+  IN PSTRING FullDirectoryName,
+  IN BOOLEAN WatchTree,
+  IN BOOLEAN IgnoreBuffer,
+  IN ULONG CompletionFilter,
+  IN PIRP NotifyIrp OPTIONAL,
+  IN PCHECK_FOR_TRAVERSE_ACCESS TraverseCallback OPTIONAL,
+  IN PSECURITY_SUBJECT_CONTEXT SubjectContext OPTIONAL,
+  IN PFILTER_REPORT_CHANGE FilterCallback OPTIONAL);
+#endif
 
 #if (NTDDI_VERSION >= NTDDI_WS03)
 
@@ -7281,6 +7432,79 @@ FsRtlAddBaseMcbEntryEx(
   IN LONGLONG Lbn,
   IN LONGLONG SectorCount);
 
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlCurrentOplock(
+  IN POPLOCK Oplock);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlOplockBreakToNone(
+  IN OUT POPLOCK Oplock,
+  IN PIO_STACK_LOCATION IrpSp OPTIONAL,
+  IN PIRP Irp,
+  IN PVOID Context OPTIONAL,
+  IN POPLOCK_WAIT_COMPLETE_ROUTINE CompletionRoutine OPTIONAL,
+  IN POPLOCK_FS_PREPOST_IRP PostIrpRoutine OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlNotifyVolumeEventEx(
+  IN PFILE_OBJECT FileObject,
+  IN ULONG EventCode,
+  IN PTARGET_DEVICE_CUSTOM_NOTIFICATION Event);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlNotifyCleanupAll(
+  IN PNOTIFY_SYNC NotifySync,
+  IN PLIST_ENTRY NotifyList);
+
+NTSTATUS
+FsRtlRegisterUncProviderEx(
+  OUT PHANDLE MupHandle,
+  IN PUNICODE_STRING RedirDevName,
+  IN PDEVICE_OBJECT DeviceObject,
+  IN ULONG Flags);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlCancellableWaitForSingleObject(
+  IN PVOID Object,
+  IN PLARGE_INTEGER Timeout OPTIONAL,
+  IN PIRP Irp OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlCancellableWaitForMultipleObjects(
+  IN ULONG Count,
+  IN PVOID ObjectArray[],
+  IN WAIT_TYPE WaitType,
+  IN PLARGE_INTEGER Timeout OPTIONAL,
+  IN PKWAIT_BLOCK WaitBlockArray OPTIONAL,
+  IN PIRP Irp OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlMupGetProviderInfoFromFileObject(
+  IN PFILE_OBJECT pFileObject,
+  IN ULONG Level,
+  OUT PVOID pBuffer,
+  IN OUT PULONG pBufferSize);
+
+NTKERNELAPI
+NTSTATUS
+FsRtlMupGetProviderIdFromName(
+  IN PUNICODE_STRING pProviderName,
+  OUT PULONG32 pProviderId);
+
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 #if (NTDDI_VERSION >= NTDDI_VISTASP1)
@@ -7298,12 +7522,64 @@ FsRtlCheckOplockEx(
 #endif
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
+
 NTKERNELAPI
 BOOLEAN
 NTAPI
 FsRtlAreThereCurrentOrInProgressFileLocks(
   IN PFILE_LOCK FileLock);
-#endif
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlOplockIsSharedRequest(
+  IN PIRP Irp);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlOplockBreakH(
+  IN POPLOCK Oplock,
+  IN PIRP Irp,
+  IN ULONG Flags,
+  IN PVOID Context OPTIONAL,
+  IN POPLOCK_WAIT_COMPLETE_ROUTINE CompletionRoutine OPTIONAL,
+  IN POPLOCK_FS_PREPOST_IRP PostIrpRoutine OPTIONAL);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlCurrentOplockH(
+  IN POPLOCK Oplock);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlOplockBreakToNoneEx(
+  IN OUT POPLOCK Oplock,
+  IN PIRP Irp,
+  IN ULONG Flags,
+  IN PVOID Context OPTIONAL,
+  IN POPLOCK_WAIT_COMPLETE_ROUTINE CompletionRoutine OPTIONAL,
+  IN POPLOCK_FS_PREPOST_IRP PostIrpRoutine OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlOplockFsctrlEx(
+  IN POPLOCK Oplock,
+  IN PIRP Irp,
+  IN ULONG OpenCount,
+  IN ULONG Flags);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlOplockKeysEqual(
+  IN PFILE_OBJECT Fo1 OPTIONAL,
+  IN PFILE_OBJECT Fo2 OPTIONAL);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
 #define FsRtlFastLock(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11) (       \
      FsRtlPrivateLock(A1, A2, A3, A4, A5, A6, A7, A8, A9, NULL, A10, A11)   \
@@ -7438,6 +7714,95 @@ typedef VOID
 #define OPLOCK_FSCTRL_FLAG_ALL_KEYS_MATCH   0x00000001
 #endif
 
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+
+typedef struct _OPLOCK_KEY_ECP_CONTEXT {
+  GUID OplockKey;
+  ULONG Reserved;
+} OPLOCK_KEY_ECP_CONTEXT, *POPLOCK_KEY_ECP_CONTEXT;
+
+DEFINE_GUID( GUID_ECP_OPLOCK_KEY, 0x48850596, 0x3050, 0x4be7, 0x98, 0x63, 0xfe, 0xc3, 0x50, 0xce, 0x8d, 0x7f );
+
+#endif
+
+#define FSRTL_VOLUME_DISMOUNT           1
+#define FSRTL_VOLUME_DISMOUNT_FAILED    2
+#define FSRTL_VOLUME_LOCK               3
+#define FSRTL_VOLUME_LOCK_FAILED        4
+#define FSRTL_VOLUME_UNLOCK             5
+#define FSRTL_VOLUME_MOUNT              6
+#define FSRTL_VOLUME_NEEDS_CHKDSK       7
+#define FSRTL_VOLUME_WORM_NEAR_FULL     8
+#define FSRTL_VOLUME_WEARING_OUT        9
+#define FSRTL_VOLUME_FORCED_CLOSED      10
+#define FSRTL_VOLUME_INFO_MAKE_COMPAT   11
+#define FSRTL_VOLUME_PREPARING_EJECT    12
+#define FSRTL_VOLUME_CHANGE_SIZE        13
+#define FSRTL_VOLUME_BACKGROUND_FORMAT  14
+
+typedef PVOID PNOTIFY_SYNC;
+
+typedef BOOLEAN
+(NTAPI *PCHECK_FOR_TRAVERSE_ACCESS) (
+  IN PVOID NotifyContext,
+  IN PVOID TargetContext OPTIONAL,
+  IN PSECURITY_SUBJECT_CONTEXT SubjectContext);
+
+typedef BOOLEAN
+(NTAPI *PFILTER_REPORT_CHANGE) (
+  IN PVOID NotifyContext,
+  IN PVOID FilterContext);
+
+#define FsRtlIsUnicodeCharacterWild(C) (                                    \
+    (((C) >= 0x40) ?                                                        \
+    FALSE :                                                                 \
+    FlagOn(FsRtlLegalAnsiCharacterArray[(C)], FSRTL_WILD_CHARACTER ))       \
+)
+
+typedef VOID
+(NTAPI *PFSRTL_STACK_OVERFLOW_ROUTINE) (
+  IN PVOID Context,
+  IN PKEVENT Event);
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+#define FSRTL_UNC_PROVIDER_FLAGS_MAILSLOTS_SUPPORTED    0x00000001
+#define FSRTL_UNC_PROVIDER_FLAGS_CSC_ENABLED            0x00000002
+#define FSRTL_UNC_PROVIDER_FLAGS_DOMAIN_SVC_AWARE       0x00000004
+
+typedef struct _FSRTL_MUP_PROVIDER_INFO_LEVEL_1 {
+  ULONG32 ProviderId;
+} FSRTL_MUP_PROVIDER_INFO_LEVEL_1, *PFSRTL_MUP_PROVIDER_INFO_LEVEL_1;
+
+typedef struct _FSRTL_MUP_PROVIDER_INFO_LEVEL_2 {
+  ULONG32 ProviderId;
+  UNICODE_STRING ProviderName;
+} FSRTL_MUP_PROVIDER_INFO_LEVEL_2, *PFSRTL_MUP_PROVIDER_INFO_LEVEL_2;
+
+#endif
+
+typedef struct _FSRTL_PER_FILE_CONTEXT {
+  LIST_ENTRY Links;
+  PVOID OwnerId;
+  PVOID InstanceId;
+  PFREE_FUNCTION FreeCallback;
+} FSRTL_PER_FILE_CONTEXT, *PFSRTL_PER_FILE_CONTEXT;
+
+#define FsRtlInitPerFileContext( _fc, _owner, _inst, _cb)   \
+    ((_fc)->OwnerId = (_owner),                               \
+     (_fc)->InstanceId = (_inst),                             \
+     (_fc)->FreeCallback = (_cb))
+
+#define FsRtlGetPerFileContextPointer(_fo) \
+    (FsRtlSupportsPerFileContexts(_fo) ? \
+        FsRtlGetPerStreamContextPointer(_fo)->FileContextSupportPointer : \
+        NULL)
+
+#define FsRtlSupportsPerFileContexts(_fo)                     \
+    ((FsRtlGetPerStreamContextPointer(_fo) != NULL) &&        \
+     (FsRtlGetPerStreamContextPointer(_fo)->Version >= FSRTL_FCB_HEADER_V1) &&  \
+     (FsRtlGetPerStreamContextPointer(_fo)->FileContextSupportPointer != NULL))
+
 
 
 
@@ -7486,13 +7851,6 @@ extern PACL                         SeSystemDefaultDacl;
 #define FILE_STORAGE_TYPE_SHIFT                 16
 
 #define FILE_VC_QUOTAS_LOG_VIOLATIONS   0x00000004
-
-#define FSRTL_VOLUME_DISMOUNT           1
-#define FSRTL_VOLUME_DISMOUNT_FAILED    2
-#define FSRTL_VOLUME_LOCK               3
-#define FSRTL_VOLUME_LOCK_FAILED        4
-#define FSRTL_VOLUME_UNLOCK             5
-#define FSRTL_VOLUME_MOUNT              6
 
 #define FSRTL_WILD_CHARACTER            0x08
 
@@ -7596,8 +7954,6 @@ extern PACL                         SeSystemDefaultDacl;
 //
 struct _RTL_AVL_TABLE;
 struct _RTL_GENERIC_TABLE;
-
-typedef PVOID PNOTIFY_SYNC;
 
 typedef enum _FILE_STORAGE_TYPE {
     StorageTypeDefault = 1,
@@ -8147,16 +8503,6 @@ typedef struct _VAD_HEADER {
     ULONG       Unknown;
     LIST_ENTRY  Secured;
 } VAD_HEADER, *PVAD_HEADER;
-
-#if (VER_PRODUCTBUILD >= 2600)
-
-typedef BOOLEAN
-(NTAPI *PFILTER_REPORT_CHANGE) (
-    IN PVOID  NotifyContext,
-    IN PVOID  FilterContext
-);
-
-#endif
 
 NTKERNELAPI
 BOOLEAN
@@ -8713,39 +9059,6 @@ FsRtlAllocatePoolWithTag (
     IN ULONG        Tag
 );
 
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlAreNamesEqual (
-    IN PCUNICODE_STRING  Name1,
-    IN PCUNICODE_STRING  Name2,
-    IN BOOLEAN           IgnoreCase,
-    IN PCWCH             UpcaseTable OPTIONAL
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlDeregisterUncProvider (
-    IN HANDLE Handle
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlDissectName (
-    IN UNICODE_STRING    Name,
-    OUT PUNICODE_STRING  FirstPart,
-    OUT PUNICODE_STRING  RemainingPart
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlDoesNameContainWildCards (
-    IN PUNICODE_STRING Name
-);
-
 #define FsRtlCompleteRequest(IRP,STATUS) {         \
     (IRP)->IoStatus.Status = (STATUS);             \
     IoCompleteRequest( (IRP), IO_DISK_INCREMENT ); \
@@ -8783,23 +9096,7 @@ FsRtlIsFatDbcsLegal (
     IN BOOLEAN      LeadingBackslashPermissible
 );
 
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlIsNameInExpression (
-    IN PUNICODE_STRING  Expression,
-    IN PUNICODE_STRING  Name,
-    IN BOOLEAN          IgnoreCase,
-    IN PWCHAR           UpcaseTable OPTIONAL
-);
-
 extern PUSHORT NlsOemLeadByteInfo;
-
-#define FsRtlIsUnicodeCharacterWild(C) (                                    \
-    (((C) >= 0x40) ?                                                        \
-    FALSE :                                                                 \
-    FlagOn(FsRtlLegalAnsiCharacterArray[(C)], FSRTL_WILD_CHARACTER ))       \
-)
 
 NTKERNELAPI
 PFSRTL_PER_STREAM_CONTEXT
@@ -8838,142 +9135,6 @@ FsRtlNotifyChangeDirectory (
     IN BOOLEAN      WatchTree,
     IN ULONG        CompletionFilter,
     IN PIRP         NotifyIrp
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlNotifyCleanup (
-    IN PNOTIFY_SYNC NotifySync,
-    IN PLIST_ENTRY  NotifyList,
-    IN PVOID        FsContext
-);
-
-typedef BOOLEAN (NTAPI *PCHECK_FOR_TRAVERSE_ACCESS) (
-    IN PVOID                        NotifyContext,
-    IN PVOID                        TargetContext,
-    IN PSECURITY_SUBJECT_CONTEXT    SubjectContext
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlNotifyFilterChangeDirectory (
-    IN PNOTIFY_SYNC                 NotifySync,
-    IN PLIST_ENTRY                  NotifyList,
-    IN PVOID                        FsContext,
-    IN PSTRING                      FullDirectoryName,
-    IN BOOLEAN                      WatchTree,
-    IN BOOLEAN                      IgnoreBuffer,
-    IN ULONG                        CompletionFilter,
-    IN PIRP                         NotifyIrp,
-    IN PCHECK_FOR_TRAVERSE_ACCESS   TraverseCallback OPTIONAL,
-    IN PSECURITY_SUBJECT_CONTEXT    SubjectContext OPTIONAL,
-    IN PFILTER_REPORT_CHANGE        FilterCallback OPTIONAL);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlNotifyFilterReportChange (
-    IN PNOTIFY_SYNC   NotifySync,
-    IN PLIST_ENTRY    NotifyList,
-    IN PSTRING        FullTargetName,
-    IN USHORT         TargetNameOffset,
-    IN PSTRING        StreamName OPTIONAL,
-    IN PSTRING        NormalizedParentName OPTIONAL,
-    IN ULONG          FilterMatch,
-    IN ULONG          Action,
-    IN PVOID          TargetContext,
-    IN PVOID          FilterContext);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlNotifyFullChangeDirectory (
-    IN PNOTIFY_SYNC                 NotifySync,
-    IN PLIST_ENTRY                  NotifyList,
-    IN PVOID                        FsContext,
-    IN PSTRING                      FullDirectoryName,
-    IN BOOLEAN                      WatchTree,
-    IN BOOLEAN                      IgnoreBuffer,
-    IN ULONG                        CompletionFilter,
-    IN PIRP                         NotifyIrp,
-    IN PCHECK_FOR_TRAVERSE_ACCESS   TraverseCallback OPTIONAL,
-    IN PSECURITY_SUBJECT_CONTEXT    SubjectContext OPTIONAL
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlNotifyFullReportChange (
-    IN PNOTIFY_SYNC NotifySync,
-    IN PLIST_ENTRY  NotifyList,
-    IN PSTRING      FullTargetName,
-    IN USHORT       TargetNameOffset,
-    IN PSTRING      StreamName OPTIONAL,
-    IN PSTRING      NormalizedParentName OPTIONAL,
-    IN ULONG        FilterMatch,
-    IN ULONG        Action,
-    IN PVOID        TargetContext
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlNotifyInitializeSync (
-    IN PNOTIFY_SYNC *NotifySync
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlNotifyUninitializeSync (
-    IN PNOTIFY_SYNC *NotifySync
-);
-
-#if (VER_PRODUCTBUILD >= 2195)
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-FsRtlNotifyVolumeEvent (
-    IN PFILE_OBJECT FileObject,
-    IN ULONG        EventCode
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
-
-typedef VOID
-(NTAPI *PFSRTL_STACK_OVERFLOW_ROUTINE) (
-    IN PVOID    Context,
-    IN PKEVENT  Event
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlPostPagingFileStackOverflow (
-    IN PVOID                          Context,
-    IN PKEVENT                        Event,
-    IN PFSRTL_STACK_OVERFLOW_ROUTINE  StackOverflowRoutine
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlPostStackOverflow (
-    IN PVOID                          Context,
-    IN PKEVENT                        Event,
-    IN PFSRTL_STACK_OVERFLOW_ROUTINE  StackOverflowRoutine
-);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-FsRtlRegisterUncProvider (
-    IN OUT PHANDLE      MupHandle,
-    IN PUNICODE_STRING  RedirectorDeviceName,
-    IN BOOLEAN          MailslotsSupported
 );
 
 NTKERNELAPI
