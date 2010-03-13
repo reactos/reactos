@@ -19,9 +19,9 @@
 	<directory name="downloader">
 		<xi:include href="downloader/downloader.rbuild" />
 	</directory>	
-	<directory name="dxdiag">
+	<!--directory name="dxdiag">
 		<xi:include href="dxdiag/dxdiag.rbuild" />
-	</directory>
+	</directory-->
 	<directory name="fontview">
 		<xi:include href="fontview/fontview.rbuild" />
 	</directory>
