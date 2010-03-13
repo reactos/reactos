@@ -7727,6 +7727,45 @@ NTAPI
 FsRtlIsEcpFromUserMode(
   IN PVOID EcpContext);
 
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlChangeBackingFileObject(
+  IN PFILE_OBJECT CurrentFileObject OPTIONAL,
+  IN PFILE_OBJECT NewFileObject,
+  IN FSRTL_CHANGE_BACKING_TYPE ChangeBackingType,
+  IN ULONG Flags);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlLogCcFlushError(
+  IN PUNICODE_STRING FileName,
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
+  IN NTSTATUS FlushError,
+  IN ULONG Flags);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlAreVolumeStartupApplicationsComplete(
+  VOID);
+
+NTKERNELAPI
+ULONG
+NTAPI
+FsRtlQueryMaximumVirtualDiskNestingLevel(
+  VOID);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlGetVirtualDiskNestingLevel(
+  IN PDEVICE_OBJECT DeviceObject,
+  OUT PULONG NestingLevel,
+  OUT PULONG NestingFlags OPTIONAL);
+
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 #if (NTDDI_VERSION >= NTDDI_VISTASP1)
@@ -8068,6 +8107,9 @@ typedef VOID
 
 #define FSRTL_ECP_LOOKASIDE_FLAG_NONPAGED_POOL             0x00000002
 
+#define FSRTL_VIRTDISK_FULLY_ALLOCATED  0x00000001
+#define FSRTL_VIRTDISK_NO_DRIVE_LETTER  0x00000002
+
 typedef struct _FSRTL_MUP_PROVIDER_INFO_LEVEL_1 {
   ULONG32 ProviderId;
 } FSRTL_MUP_PROVIDER_INFO_LEVEL_1, *PFSRTL_MUP_PROVIDER_INFO_LEVEL_1;
@@ -8087,6 +8129,12 @@ typedef struct _ECP_LIST ECP_LIST, *PECP_LIST;
 typedef ULONG FSRTL_ALLOCATE_ECPLIST_FLAGS;
 typedef ULONG FSRTL_ALLOCATE_ECP_FLAGS;
 typedef ULONG FSRTL_ECP_LOOKASIDE_FLAGS;
+
+typedef enum _FSRTL_CHANGE_BACKING_TYPE {
+  ChangeDataControlArea,
+  ChangeImageControlArea,
+  ChangeSharedCacheMap
+} FSRTL_CHANGE_BACKING_TYPE, *PFSRTL_CHANGE_BACKING_TYPE;
 
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
@@ -8199,22 +8247,188 @@ typedef struct _FSRTL_PER_FILEOBJECT_CONTEXT {
 #define FsRtlEnterFileSystem    KeEnterCriticalRegion
 #define FsRtlExitFileSystem     KeLeaveCriticalRegion
 
+#define FSRTL_CC_FLUSH_ERROR_FLAG_NO_HARD_ERROR  0x1
+#define FSRTL_CC_FLUSH_ERROR_FLAG_NO_LOG_ENTRY   0x2
+
 #if (NTDDI_VERSION >= NTDDI_WIN7)
 typedef struct _ECP_HEADER ECP_HEADER, *PECP_HEADER;
 #endif
 
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+typedef enum _NETWORK_OPEN_LOCATION_QUALIFIER {
+  NetworkOpenLocationAny,
+  NetworkOpenLocationRemote,
+  NetworkOpenLocationLoopback
+} NETWORK_OPEN_LOCATION_QUALIFIER;
+
+typedef enum _NETWORK_OPEN_INTEGRITY_QUALIFIER {
+  NetworkOpenIntegrityAny,
+  NetworkOpenIntegrityNone,
+  NetworkOpenIntegritySigned,
+  NetworkOpenIntegrityEncrypted,
+  NetworkOpenIntegrityMaximum
+} NETWORK_OPEN_INTEGRITY_QUALIFIER;
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+
+#define NETWORK_OPEN_ECP_IN_FLAG_DISABLE_HANDLE_COLLAPSING 0x1
+#define NETWORK_OPEN_ECP_IN_FLAG_DISABLE_HANDLE_DURABILITY 0x2
+#define NETWORK_OPEN_ECP_IN_FLAG_FORCE_BUFFERED_SYNCHRONOUS_IO_HACK 0x80000000
+
+typedef struct _NETWORK_OPEN_ECP_CONTEXT {
+  USHORT Size;
+  USHORT Reserved;
+  struct {
+    struct {
+      NETWORK_OPEN_LOCATION_QUALIFIER Location;
+      NETWORK_OPEN_INTEGRITY_QUALIFIER Integrity;
+      ULONG Flags;
+    } in;
+    struct {
+      NETWORK_OPEN_LOCATION_QUALIFIER Location;
+      NETWORK_OPEN_INTEGRITY_QUALIFIER Integrity;
+      ULONG Flags;
+    } out;
+  } DUMMYSTRUCTNAME;
+} NETWORK_OPEN_ECP_CONTEXT, *PNETWORK_OPEN_ECP_CONTEXT;
+
+typedef struct _NETWORK_OPEN_ECP_CONTEXT_V0 {
+  USHORT Size;
+  USHORT Reserved;
+  struct {
+    struct {
+    NETWORK_OPEN_LOCATION_QUALIFIER Location;
+    NETWORK_OPEN_INTEGRITY_QUALIFIER Integrity;
+    } in;
+    struct {
+      NETWORK_OPEN_LOCATION_QUALIFIER Location;
+      NETWORK_OPEN_INTEGRITY_QUALIFIER Integrity;
+    } out;
+  } DUMMYSTRUCTNAME;
+} NETWORK_OPEN_ECP_CONTEXT_V0, *PNETWORK_OPEN_ECP_CONTEXT_V0;
+
+#elif (NTDDI_VERSION >= NTDDI_VISTA)
+typedef struct _NETWORK_OPEN_ECP_CONTEXT {
+  USHORT Size;
+  USHORT Reserved;
+  struct {
+    struct {
+      NETWORK_OPEN_LOCATION_QUALIFIER Location;
+      NETWORK_OPEN_INTEGRITY_QUALIFIER Integrity;
+    } in;
+    struct {
+      NETWORK_OPEN_LOCATION_QUALIFIER Location;
+      NETWORK_OPEN_INTEGRITY_QUALIFIER Integrity;
+    } out;
+  } DUMMYSTRUCTNAME;
+} NETWORK_OPEN_ECP_CONTEXT, *PNETWORK_OPEN_ECP_CONTEXT;
+#endif
+
+DEFINE_GUID(GUID_ECP_NETWORK_OPEN_CONTEXT, 0xc584edbf, 0x00df, 0x4d28, 0xb8, 0x84, 0x35, 0xba, 0xca, 0x89, 0x11, 0xe8 );
+
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 
+#if (NTDDI_VERSION >= NTDDI_VISTA)
 
+typedef struct _PREFETCH_OPEN_ECP_CONTEXT {
+  PVOID Context;
+} PREFETCH_OPEN_ECP_CONTEXT, *PPREFETCH_OPEN_ECP_CONTEXT;
 
+DEFINE_GUID(GUID_ECP_PREFETCH_OPEN, 0xe1777b21, 0x847e, 0x4837, 0xaa, 0x45, 0x64, 0x16, 0x1d, 0x28, 0x6, 0x55 );
 
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
+#if (NTDDI_VERSION >= NTDDI_WIN7)
 
+DEFINE_GUID (GUID_ECP_NFS_OPEN, 0xf326d30c, 0xe5f8, 0x4fe7, 0xab, 0x74, 0xf5, 0xa3, 0x19, 0x6d, 0x92, 0xdb);
+DEFINE_GUID(GUID_ECP_SRV_OPEN, 0xbebfaebc, 0xaabf, 0x489d, 0x9d, 0x2c, 0xe9, 0xe3, 0x61, 0x10, 0x28, 0x53 );
 
+typedef struct sockaddr_storage *PSOCKADDR_STORAGE_NFS;
 
+typedef struct _NFS_OPEN_ECP_CONTEXT {
+  PUNICODE_STRING ExportAlias;
+  PSOCKADDR_STORAGE_NFS ClientSocketAddress;
+} NFS_OPEN_ECP_CONTEXT, *PNFS_OPEN_ECP_CONTEXT, **PPNFS_OPEN_ECP_CONTEXT;
 
+typedef struct _SRV_OPEN_ECP_CONTEXT {
+  PUNICODE_STRING ShareName;
+  PSOCKADDR_STORAGE_NFS SocketAddress;
+  BOOLEAN OplockBlockState;
+  BOOLEAN OplockAppState;
+  BOOLEAN OplockFinalState;
+} SRV_OPEN_ECP_CONTEXT, *PSRV_OPEN_ECP_CONTEXT;
 
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
+#define VACB_MAPPING_GRANULARITY        (0x40000)
+#define VACB_OFFSET_SHIFT               (18)
+
+typedef struct _PUBLIC_BCB {
+  CSHORT NodeTypeCode;
+  CSHORT NodeByteSize;
+  ULONG MappedLength;
+  LARGE_INTEGER MappedFileOffset;
+} PUBLIC_BCB, *PPUBLIC_BCB;
+
+typedef struct _CC_FILE_SIZES {
+  LARGE_INTEGER AllocationSize;
+  LARGE_INTEGER FileSize;
+  LARGE_INTEGER ValidDataLength;
+} CC_FILE_SIZES, *PCC_FILE_SIZES;
+
+typedef BOOLEAN
+(NTAPI *PACQUIRE_FOR_LAZY_WRITE) (
+  IN PVOID Context,
+  IN BOOLEAN Wait);
+
+typedef VOID
+(NTAPI *PRELEASE_FROM_LAZY_WRITE) (
+  IN PVOID Context);
+
+typedef BOOLEAN
+(NTAPI *PACQUIRE_FOR_READ_AHEAD) (
+  IN PVOID Context,
+  IN BOOLEAN Wait);
+
+typedef VOID
+(NTAPI *PRELEASE_FROM_READ_AHEAD) (
+  IN PVOID Context);
+
+typedef struct _CACHE_MANAGER_CALLBACKS {
+  PACQUIRE_FOR_LAZY_WRITE AcquireForLazyWrite;
+  PRELEASE_FROM_LAZY_WRITE ReleaseFromLazyWrite;
+  PACQUIRE_FOR_READ_AHEAD AcquireForReadAhead;
+  PRELEASE_FROM_READ_AHEAD ReleaseFromReadAhead;
+} CACHE_MANAGER_CALLBACKS, *PCACHE_MANAGER_CALLBACKS;
+
+typedef struct _CACHE_UNINITIALIZE_EVENT {
+  struct _CACHE_UNINITIALIZE_EVENT *Next;
+  KEVENT Event;
+} CACHE_UNINITIALIZE_EVENT, *PCACHE_UNINITIALIZE_EVENT;
+
+typedef VOID
+(NTAPI *PDIRTY_PAGE_ROUTINE) (
+  IN PFILE_OBJECT FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN ULONG Length,
+  IN PLARGE_INTEGER OldestLsn,
+  IN PLARGE_INTEGER NewestLsn,
+  IN PVOID Context1,
+  IN PVOID Context2);
+
+typedef VOID
+(NTAPI *PFLUSH_TO_LSN) (
+  IN PVOID LogHandle,
+  IN LARGE_INTEGER Lsn);
+
+#define CcIsFileCached(FO) (                                                         \
+    ((FO)->SectionObjectPointer != NULL) &&                                          \
+    (((PSECTION_OBJECT_POINTERS)(FO)->SectionObjectPointer)->SharedCacheMap != NULL) \
+)
+
+extern ULONG CcFastMdlReadWait;
 
 #pragma pack(push,4)
 
@@ -8317,9 +8531,6 @@ extern PACL                         SeSystemDefaultDacl;
 
 #define TOKEN_HAS_ADMIN_GROUP           0x08
 
-#define VACB_MAPPING_GRANULARITY        (0x40000)
-#define VACB_OFFSET_SHIFT               (18)
-
 #if (VER_PRODUCTBUILD >= 1381)
 #define FSCTL_GET_HFS_INFORMATION       CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 31, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #endif /* (VER_PRODUCTBUILD >= 1381) */
@@ -8388,17 +8599,6 @@ typedef struct _BITMAP_RANGE {
     ULONG           DirtyPages;
     PULONG          Bitmap;
 } BITMAP_RANGE, *PBITMAP_RANGE;
-
-typedef struct _CACHE_UNINITIALIZE_EVENT {
-    struct _CACHE_UNINITIALIZE_EVENT    *Next;
-    KEVENT                              Event;
-} CACHE_UNINITIALIZE_EVENT, *PCACHE_UNINITIALIZE_EVENT;
-
-typedef struct _CC_FILE_SIZES {
-    LARGE_INTEGER AllocationSize;
-    LARGE_INTEGER FileSize;
-    LARGE_INTEGER ValidDataLength;
-} CC_FILE_SIZES, *PCC_FILE_SIZES;
 
 typedef struct _FILE_COPY_ON_WRITE_INFORMATION {
     BOOLEAN ReplaceIfExists;
@@ -8684,13 +8884,6 @@ typedef VOID
     PVOID Buffer
 );
 
-typedef struct _PUBLIC_BCB {
-    CSHORT          NodeTypeCode;
-    CSHORT          NodeByteSize;
-    ULONG           MappedLength;
-    LARGE_INTEGER   MappedFileOffset;
-} PUBLIC_BCB, *PPUBLIC_BCB;
-
 typedef struct _QUERY_PATH_REQUEST {
     ULONG                   PathNameLength;
     PIO_SECURITY_CONTEXT    SecurityContext;
@@ -8969,16 +9162,6 @@ CcFlushCache (
     OUT PIO_STATUS_BLOCK        IoStatus OPTIONAL
 );
 
-typedef VOID (NTAPI *PDIRTY_PAGE_ROUTINE) (
-    IN PFILE_OBJECT     FileObject,
-    IN PLARGE_INTEGER   FileOffset,
-    IN ULONG            Length,
-    IN PLARGE_INTEGER   OldestLsn,
-    IN PLARGE_INTEGER   NewestLsn,
-    IN PVOID            Context1,
-    IN PVOID            Context2
-);
-
 NTKERNELAPI
 LARGE_INTEGER
 NTAPI
@@ -9027,31 +9210,6 @@ CcGetLsnForFileObject (
     OUT PLARGE_INTEGER  OldestLsn OPTIONAL
 );
 
-typedef BOOLEAN (NTAPI *PACQUIRE_FOR_LAZY_WRITE) (
-    IN PVOID    Context,
-    IN BOOLEAN  Wait
-);
-
-typedef VOID (NTAPI *PRELEASE_FROM_LAZY_WRITE) (
-    IN PVOID Context
-);
-
-typedef BOOLEAN (NTAPI *PACQUIRE_FOR_READ_AHEAD) (
-    IN PVOID    Context,
-    IN BOOLEAN  Wait
-);
-
-typedef VOID (NTAPI *PRELEASE_FROM_READ_AHEAD) (
-    IN PVOID Context
-);
-
-typedef struct _CACHE_MANAGER_CALLBACKS {
-    PACQUIRE_FOR_LAZY_WRITE     AcquireForLazyWrite;
-    PRELEASE_FROM_LAZY_WRITE    ReleaseFromLazyWrite;
-    PACQUIRE_FOR_READ_AHEAD     AcquireForReadAhead;
-    PRELEASE_FROM_READ_AHEAD    ReleaseFromReadAhead;
-} CACHE_MANAGER_CALLBACKS, *PCACHE_MANAGER_CALLBACKS;
-
 NTKERNELAPI
 VOID
 NTAPI
@@ -9062,13 +9220,6 @@ CcInitializeCacheMap (
     IN PCACHE_MANAGER_CALLBACKS Callbacks,
     IN PVOID                    LazyWriteContext
 );
-
-#define CcIsFileCached(FO) (                                                         \
-    ((FO)->SectionObjectPointer != NULL) &&                                          \
-    (((PSECTION_OBJECT_POINTERS)(FO)->SectionObjectPointer)->SharedCacheMap != NULL) \
-)
-
-extern ULONG CcFastMdlReadWait;
 
 NTKERNELAPI
 BOOLEAN
@@ -9248,11 +9399,6 @@ NTAPI
 CcSetFileSizes (
     IN PFILE_OBJECT     FileObject,
     IN PCC_FILE_SIZES   FileSizes
-);
-
-typedef VOID (NTAPI *PFLUSH_TO_LSN) (
-    IN PVOID            LogHandle,
-    IN LARGE_INTEGER    Lsn
 );
 
 NTKERNELAPI
