@@ -7604,6 +7604,129 @@ FsRtlRemoveDotsFromPath(
   IN USHORT PathLength,
   OUT USHORT *NewLength);
 
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlAllocateExtraCreateParameterList(
+  IN FSRTL_ALLOCATE_ECPLIST_FLAGS Flags,
+  OUT PECP_LIST *EcpList);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlFreeExtraCreateParameterList(
+  IN PECP_LIST EcpList);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlAllocateExtraCreateParameter(
+  IN LPCGUID EcpType,
+  IN ULONG SizeOfContext,
+  IN FSRTL_ALLOCATE_ECP_FLAGS Flags,
+  IN PFSRTL_EXTRA_CREATE_PARAMETER_CLEANUP_CALLBACK CleanupCallback OPTIONAL,
+  IN ULONG PoolTag,
+  OUT PVOID *EcpContext);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlFreeExtraCreateParameter(
+  IN PVOID EcpContext);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlInitExtraCreateParameterLookasideList(
+  IN OUT PVOID Lookaside,
+  IN FSRTL_ECP_LOOKASIDE_FLAGS Flags,
+  IN SIZE_T Size,
+  IN ULONG Tag);
+
+VOID
+NTAPI
+FsRtlDeleteExtraCreateParameterLookasideList(
+  IN OUT PVOID Lookaside,
+  IN FSRTL_ECP_LOOKASIDE_FLAGS Flags);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlAllocateExtraCreateParameterFromLookasideList(
+  IN LPCGUID EcpType,
+  IN ULONG SizeOfContext,
+  IN FSRTL_ALLOCATE_ECP_FLAGS Flags,
+  IN PFSRTL_EXTRA_CREATE_PARAMETER_CLEANUP_CALLBACK CleanupCallback OPTIONAL,
+  IN OUT PVOID LookasideList,
+  OUT PVOID *EcpContext);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlInsertExtraCreateParameter(
+  IN OUT PECP_LIST EcpList,
+  IN OUT PVOID EcpContext);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlFindExtraCreateParameter(
+  IN PECP_LIST EcpList,
+  IN LPCGUID EcpType,
+  OUT PVOID *EcpContext OPTIONAL,
+  OUT ULONG *EcpContextSize OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlRemoveExtraCreateParameter(
+  IN OUT PECP_LIST EcpList,
+  IN LPCGUID EcpType,
+  OUT PVOID *EcpContext,
+  OUT ULONG *EcpContextSize OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlGetEcpListFromIrp(
+  IN PIRP Irp,
+  OUT PECP_LIST *EcpList OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlSetEcpListIntoIrp(
+  IN OUT PIRP Irp,
+  IN PECP_LIST EcpList);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlGetNextExtraCreateParameter(
+  IN PECP_LIST EcpList,
+  IN PVOID CurrentEcpContext OPTIONAL,
+  OUT LPGUID NextEcpType OPTIONAL,
+  OUT PVOID *NextEcpContext OPTIONAL,
+  OUT ULONG *NextEcpContextSize OPTIONAL);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlAcknowledgeEcp(
+  IN PVOID EcpContext);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlIsEcpAcknowledged(
+  IN PVOID EcpContext);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlIsEcpFromUserMode(
+  IN PVOID EcpContext);
+
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 #if (NTDDI_VERSION >= NTDDI_VISTASP1)
@@ -7677,6 +7800,23 @@ NTAPI
 FsRtlOplockKeysEqual(
   IN PFILE_OBJECT Fo1 OPTIONAL,
   IN PFILE_OBJECT Fo2 OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlInitializeExtraCreateParameterList(
+  IN OUT PECP_LIST EcpList);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlInitializeExtraCreateParameter(
+  IN PECP_HEADER Ecp,
+  IN ULONG EcpFlags,
+  IN PFSRTL_EXTRA_CREATE_PARAMETER_CLEANUP_CALLBACK CleanupCallback OPTIONAL,
+  IN ULONG TotalSize,
+  IN LPCGUID EcpType,
+  IN PVOID ListAllocatedFrom OPTIONAL);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
@@ -7921,6 +8061,13 @@ typedef VOID
 #define FSRTL_UNC_PROVIDER_FLAGS_CSC_ENABLED            0x00000002
 #define FSRTL_UNC_PROVIDER_FLAGS_DOMAIN_SVC_AWARE       0x00000004
 
+#define FSRTL_ALLOCATE_ECPLIST_FLAG_CHARGE_QUOTA           0x00000001
+
+#define FSRTL_ALLOCATE_ECP_FLAG_CHARGE_QUOTA               0x00000001
+#define FSRTL_ALLOCATE_ECP_FLAG_NONPAGED_POOL              0x00000002
+
+#define FSRTL_ECP_LOOKASIDE_FLAG_NONPAGED_POOL             0x00000002
+
 typedef struct _FSRTL_MUP_PROVIDER_INFO_LEVEL_1 {
   ULONG32 ProviderId;
 } FSRTL_MUP_PROVIDER_INFO_LEVEL_1, *PFSRTL_MUP_PROVIDER_INFO_LEVEL_1;
@@ -7935,9 +8082,11 @@ typedef VOID
   IN OUT PVOID EcpContext,
   IN LPCGUID EcpType);
 
-typedef ULONG FSRTL_ALLOCATE_ECPLIST_FLAGS;
+typedef struct _ECP_LIST ECP_LIST, *PECP_LIST;
 
-#define FSRTL_ALLOCATE_ECPLIST_FLAG_CHARGE_QUOTA           0x00000001
+typedef ULONG FSRTL_ALLOCATE_ECPLIST_FLAGS;
+typedef ULONG FSRTL_ALLOCATE_ECP_FLAGS;
+typedef ULONG FSRTL_ECP_LOOKASIDE_FLAGS;
 
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
@@ -8050,13 +8199,22 @@ typedef struct _FSRTL_PER_FILEOBJECT_CONTEXT {
 #define FsRtlEnterFileSystem    KeEnterCriticalRegion
 #define FsRtlExitFileSystem     KeLeaveCriticalRegion
 
-#if (NTDDI_VERSION >= NTDDI_VISTA)
-typedef struct _ECP_LIST ECP_LIST, *PECP_LIST;
-#endif
-
 #if (NTDDI_VERSION >= NTDDI_WIN7)
 typedef struct _ECP_HEADER ECP_HEADER, *PECP_HEADER;
 #endif
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #pragma pack(push,4)
 
