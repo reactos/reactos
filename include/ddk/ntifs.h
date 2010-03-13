@@ -7295,9 +7295,31 @@ NTAPI
 FsRtlDeregisterUncProvider(
   IN HANDLE Handle);
 
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlTeardownPerStreamContexts(
+  IN PFSRTL_ADVANCED_FCB_HEADER AdvancedHeader);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlCreateSectionForDataScan(
+  OUT PHANDLE SectionHandle,
+  OUT PVOID *SectionObject,
+  OUT PLARGE_INTEGER SectionFileSize OPTIONAL,
+  IN PFILE_OBJECT FileObject,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+  IN PLARGE_INTEGER MaximumSize OPTIONAL,
+  IN ULONG SectionPageProtection,
+  IN ULONG AllocationAttributes,
+  IN ULONG Flags);
+
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
+
 NTKERNELAPI
 VOID
 NTAPI
@@ -7313,7 +7335,61 @@ FsRtlNotifyFilterChangeDirectory(
   IN PCHECK_FOR_TRAVERSE_ACCESS TraverseCallback OPTIONAL,
   IN PSECURITY_SUBJECT_CONTEXT SubjectContext OPTIONAL,
   IN PFILTER_REPORT_CHANGE FilterCallback OPTIONAL);
-#endif
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlInsertPerStreamContext(
+  IN PFSRTL_ADVANCED_FCB_HEADER PerStreamContext,
+  IN PFSRTL_PER_STREAM_CONTEXT Ptr);
+
+NTKERNELAPI
+PFSRTL_PER_STREAM_CONTEXT
+NTAPI
+FsRtlLookupPerStreamContextInternal(
+  IN PFSRTL_ADVANCED_FCB_HEADER StreamContext,
+  IN PVOID OwnerId OPTIONAL,
+  IN PVOID InstanceId OPTIONAL);
+
+NTKERNELAPI
+PFSRTL_PER_STREAM_CONTEXT
+NTAPI
+FsRtlRemovePerStreamContext(
+  IN PFSRTL_ADVANCED_FCB_HEADER StreamContext,
+  IN PVOID OwnerId OPTIONAL,
+  IN PVOID InstanceId OPTIONAL);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlIncrementCcFastReadNotPossible(
+  VOID);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlIncrementCcFastReadWait(
+  VOID);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlIncrementCcFastReadNoWait(
+  VOID);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlIncrementCcFastReadResourceMiss(
+  VOID);
+
+NTKERNELAPI
+LOGICAL
+NTAPI
+FsRtlIsPagingFile(
+  IN PFILE_OBJECT FileObject);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
 #if (NTDDI_VERSION >= NTDDI_WS03)
 
@@ -7465,6 +7541,7 @@ FsRtlNotifyCleanupAll(
   IN PLIST_ENTRY NotifyList);
 
 NTSTATUS
+NTAPI
 FsRtlRegisterUncProviderEx(
   OUT PHANDLE MupHandle,
   IN PUNICODE_STRING RedirDevName,
@@ -7501,9 +7578,31 @@ FsRtlMupGetProviderInfoFromFileObject(
 
 NTKERNELAPI
 NTSTATUS
+NTAPI
 FsRtlMupGetProviderIdFromName(
   IN PUNICODE_STRING pProviderName,
   OUT PULONG32 pProviderId);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlIncrementCcFastMdlReadWait(
+  VOID);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlValidateReparsePointBuffer(
+  IN ULONG BufferLength,
+  IN PREPARSE_DATA_BUFFER ReparseBuffer);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlRemoveDotsFromPath(
+  IN OUT PWSTR OriginalString,
+  IN USHORT PathLength,
+  OUT USHORT *NewLength);
 
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
@@ -7580,6 +7679,58 @@ FsRtlOplockKeysEqual(
   IN PFILE_OBJECT Fo2 OPTIONAL);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlInsertPerFileContext(
+  IN PVOID* PerFileContextPointer,
+  IN PFSRTL_PER_FILE_CONTEXT Ptr);
+
+NTKERNELAPI
+PFSRTL_PER_FILE_CONTEXT
+NTAPI
+FsRtlLookupPerFileContext(
+  IN PVOID* PerFileContextPointer,
+  IN PVOID OwnerId OPTIONAL,
+  IN PVOID InstanceId OPTIONAL);
+
+NTKERNELAPI
+PFSRTL_PER_FILE_CONTEXT
+NTAPI
+FsRtlRemovePerFileContext(
+  IN PVOID* PerFileContextPointer,
+  IN PVOID OwnerId OPTIONAL,
+  IN PVOID InstanceId OPTIONAL);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlTeardownPerFileContexts(
+  IN PVOID* PerFileContextPointer);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlInsertPerFileObjectContext(
+  IN PFILE_OBJECT FileObject,
+  IN PFSRTL_PER_FILEOBJECT_CONTEXT Ptr);
+
+NTKERNELAPI
+PFSRTL_PER_FILEOBJECT_CONTEXT
+NTAPI
+FsRtlLookupPerFileObjectContext(
+  IN PFILE_OBJECT FileObject,
+  IN PVOID OwnerId OPTIONAL,
+  IN PVOID InstanceId OPTIONAL);
+
+NTKERNELAPI
+PFSRTL_PER_FILEOBJECT_CONTEXT
+NTAPI
+FsRtlRemovePerFileObjectContext(
+  IN PFILE_OBJECT FileObject,
+  IN PVOID OwnerId OPTIONAL,
+  IN PVOID InstanceId OPTIONAL);
 
 #define FsRtlFastLock(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11) (       \
      FsRtlPrivateLock(A1, A2, A3, A4, A5, A6, A7, A8, A9, NULL, A10, A11)   \
@@ -7779,7 +7930,16 @@ typedef struct _FSRTL_MUP_PROVIDER_INFO_LEVEL_2 {
   UNICODE_STRING ProviderName;
 } FSRTL_MUP_PROVIDER_INFO_LEVEL_2, *PFSRTL_MUP_PROVIDER_INFO_LEVEL_2;
 
-#endif
+typedef VOID
+(*PFSRTL_EXTRA_CREATE_PARAMETER_CLEANUP_CALLBACK) (
+  IN OUT PVOID EcpContext,
+  IN LPCGUID EcpType);
+
+typedef ULONG FSRTL_ALLOCATE_ECPLIST_FLAGS;
+
+#define FSRTL_ALLOCATE_ECPLIST_FLAG_CHARGE_QUOTA           0x00000001
+
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 typedef struct _FSRTL_PER_FILE_CONTEXT {
   LIST_ENTRY Links;
@@ -7803,19 +7963,100 @@ typedef struct _FSRTL_PER_FILE_CONTEXT {
      (FsRtlGetPerStreamContextPointer(_fo)->Version >= FSRTL_FCB_HEADER_V1) &&  \
      (FsRtlGetPerStreamContextPointer(_fo)->FileContextSupportPointer != NULL))
 
+#define FsRtlSetupAdvancedHeaderEx( _advhdr, _fmutx, _fctxptr )                     \
+{                                                                                   \
+    FsRtlSetupAdvancedHeader( _advhdr, _fmutx );                                    \
+    if ((_fctxptr) != NULL) {                                                       \
+        (_advhdr)->FileContextSupportPointer = (_fctxptr);                          \
+    }                                                                               \
+}
 
+typedef struct _FSRTL_PER_STREAM_CONTEXT {
+  LIST_ENTRY Links;
+  PVOID OwnerId;
+  PVOID InstanceId;
+  PFREE_FUNCTION FreeCallback;
+} FSRTL_PER_STREAM_CONTEXT, *PFSRTL_PER_STREAM_CONTEXT;
 
+#define FsRtlGetPerStreamContextPointer(FO) (   \
+    (PFSRTL_ADVANCED_FCB_HEADER)(FO)->FsContext \
+)
 
+#define FsRtlInitPerStreamContext(PSC, O, I, FC) ( \
+    (PSC)->OwnerId = (O),                          \
+    (PSC)->InstanceId = (I),                       \
+    (PSC)->FreeCallback = (FC)                     \
+)
 
+#define FsRtlSupportsPerStreamContexts(FO) (                       \
+    (BOOLEAN)((NULL != FsRtlGetPerStreamContextPointer(FO) &&     \
+              FlagOn(FsRtlGetPerStreamContextPointer(FO)->Flags2, \
+              FSRTL_FLAG2_SUPPORTS_FILTER_CONTEXTS))               \
+)
 
+#define FsRtlLookupPerStreamContext(_sc, _oid, _iid)                          \
+ (((NULL != (_sc)) &&                                                         \
+   FlagOn((_sc)->Flags2,FSRTL_FLAG2_SUPPORTS_FILTER_CONTEXTS) &&              \
+   !IsListEmpty(&(_sc)->FilterContexts)) ?                                    \
+        FsRtlLookupPerStreamContextInternal((_sc), (_oid), (_iid)) :          \
+        NULL)
 
+VOID
+FORCEINLINE
+NTAPI
+FsRtlSetupAdvancedHeader(
+  IN PVOID AdvHdr,
+  IN PFAST_MUTEX FMutex )
+{
+  PFSRTL_ADVANCED_FCB_HEADER localAdvHdr = (PFSRTL_ADVANCED_FCB_HEADER)AdvHdr;
 
+  localAdvHdr->Flags |= FSRTL_FLAG_ADVANCED_HEADER;
+  localAdvHdr->Flags2 |= FSRTL_FLAG2_SUPPORTS_FILTER_CONTEXTS;
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+  localAdvHdr->Version = FSRTL_FCB_HEADER_V1;
+#else
+  localAdvHdr->Version = FSRTL_FCB_HEADER_V0;
+#endif
+  InitializeListHead( &localAdvHdr->FilterContexts );
+  if (FMutex != NULL) {
+    localAdvHdr->FastMutex = FMutex;
+  }
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+  *((PULONG_PTR)(&localAdvHdr->PushLock)) = 0;
+  localAdvHdr->FileContextSupportPointer = NULL;
+#endif
+}
 
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+typedef VOID
+(*PFN_FSRTLTEARDOWNPERSTREAMCONTEXTS) (
+  IN PFSRTL_ADVANCED_FCB_HEADER AdvancedHeader);
+#endif
 
+typedef struct _FSRTL_PER_FILEOBJECT_CONTEXT {
+  LIST_ENTRY Links;
+  PVOID OwnerId;
+  PVOID InstanceId;
+} FSRTL_PER_FILEOBJECT_CONTEXT, *PFSRTL_PER_FILEOBJECT_CONTEXT;
 
+#define FsRtlInitPerFileObjectContext(_fc, _owner, _inst)         \
+           ((_fc)->OwnerId = (_owner), (_fc)->InstanceId = (_inst))
 
+#define FsRtlCompleteRequest(IRP,STATUS) {         \
+    (IRP)->IoStatus.Status = (STATUS);             \
+    IoCompleteRequest( (IRP), IO_DISK_INCREMENT ); \
+}
 
+#define FsRtlEnterFileSystem    KeEnterCriticalRegion
+#define FsRtlExitFileSystem     KeLeaveCriticalRegion
 
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+typedef struct _ECP_LIST ECP_LIST, *PECP_LIST;
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+typedef struct _ECP_HEADER ECP_HEADER, *PECP_HEADER;
+#endif
 
 #pragma pack(push,4)
 
@@ -8149,24 +8390,6 @@ typedef struct _FILE_OLE_STATE_BITS_INFORMATION {
     ULONG StateBits;
     ULONG StateBitsMask;
 } FILE_OLE_STATE_BITS_INFORMATION, *PFILE_OLE_STATE_BITS_INFORMATION;
-
-#if (VER_PRODUCTBUILD >= 2600)
-
-typedef struct _FSRTL_PER_STREAM_CONTEXT {
-    LIST_ENTRY     Links;
-    PVOID          OwnerId;
-    PVOID          InstanceId;
-    PFREE_FUNCTION FreeCallback;
-} FSRTL_PER_STREAM_CONTEXT, *PFSRTL_PER_STREAM_CONTEXT;
-
-typedef struct _FSRTL_PER_FILEOBJECT_CONTEXT
-{
-    LIST_ENTRY Links;
-    PVOID OwnerId;
-    PVOID InstanceId;
-} FSRTL_PER_FILEOBJECT_CONTEXT, *PFSRTL_PER_FILEOBJECT_CONTEXT;
-
-#endif /* (VER_PRODUCTBUILD >= 2600) */
 
 typedef struct _MAPPING_PAIR {
     ULONGLONG Vcn;
@@ -9010,21 +9233,6 @@ ExWaitForRundownProtectionRelease (
 #endif
 #endif /* (VER_PRODUCTBUILD >= 2600) */
 
-
-#define FsRtlSetupAdvancedHeader( _advhdr, _fmutx )                         \
-{                                                                           \
-    SetFlag( (_advhdr)->Flags, FSRTL_FLAG_ADVANCED_HEADER );                \
-    SetFlag( (_advhdr)->Flags2, FSRTL_FLAG2_SUPPORTS_FILTER_CONTEXTS );     \
-    (_advhdr)->Version = FSRTL_FCB_HEADER_V1;                               \
-    InitializeListHead( &(_advhdr)->FilterContexts );                       \
-    if ((_fmutx) != NULL) {                                                 \
-        (_advhdr)->FastMutex = (_fmutx);                                    \
-    }                                                                       \
-    *((PULONG_PTR)(&(_advhdr)->PushLock)) = 0;                              \
-    /*ExInitializePushLock( &(_advhdr)->PushLock ); API Not avaliable downlevel*/\
-    (_advhdr)->FileContextSupportPointer = NULL;                            \
-}
-
 NTKERNELAPI
 PVOID
 NTAPI
@@ -9059,33 +9267,6 @@ FsRtlAllocatePoolWithTag (
     IN ULONG        Tag
 );
 
-#define FsRtlCompleteRequest(IRP,STATUS) {         \
-    (IRP)->IoStatus.Status = (STATUS);             \
-    IoCompleteRequest( (IRP), IO_DISK_INCREMENT ); \
-}
-
-#define FsRtlEnterFileSystem    KeEnterCriticalRegion
-
-#define FsRtlExitFileSystem     KeLeaveCriticalRegion
-
-#define FsRtlGetPerStreamContextPointer(FO) (   \
-    (PFSRTL_ADVANCED_FCB_HEADER)(FO)->FsContext \
-)
-
-#define FsRtlInitPerStreamContext(PSC, O, I, FC) ( \
-    (PSC)->OwnerId = (O),                          \
-    (PSC)->InstanceId = (I),                       \
-    (PSC)->FreeCallback = (FC)                     \
-)
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-FsRtlInsertPerStreamContext (
-    IN PFSRTL_ADVANCED_FCB_HEADER  PerStreamContext,
-    IN PFSRTL_PER_STREAM_CONTEXT   Ptr
-);
-
 NTKERNELAPI
 BOOLEAN
 NTAPI
@@ -9097,15 +9278,6 @@ FsRtlIsFatDbcsLegal (
 );
 
 extern PUSHORT NlsOemLeadByteInfo;
-
-NTKERNELAPI
-PFSRTL_PER_STREAM_CONTEXT
-NTAPI
-FsRtlLookupPerStreamContextInternal (
-    IN PFSRTL_ADVANCED_FCB_HEADER  StreamContext,
-    IN PVOID                       OwnerId OPTIONAL,
-    IN PVOID                       InstanceId OPTIONAL
-);
 
 NTKERNELAPI
 BOOLEAN
@@ -9136,21 +9308,6 @@ FsRtlNotifyChangeDirectory (
     IN ULONG        CompletionFilter,
     IN PIRP         NotifyIrp
 );
-
-NTKERNELAPI
-PFSRTL_PER_STREAM_CONTEXT
-NTAPI
-FsRtlRemovePerStreamContext (
-    IN PFSRTL_ADVANCED_FCB_HEADER  StreamContext,
-    IN PVOID                       OwnerId OPTIONAL,
-    IN PVOID                       InstanceId OPTIONAL
-);
-
-#define FsRtlSupportsPerStreamContexts(FO) (                       \
-    (BOOLEAN)((NULL != FsRtlGetPerStreamContextPointer(FO) &&     \
-              FlagOn(FsRtlGetPerStreamContextPointer(FO)->Flags2, \
-              FSRTL_FLAG2_SUPPORTS_FILTER_CONTEXTS))               \
-)
 
 NTKERNELAPI
 NTSTATUS
