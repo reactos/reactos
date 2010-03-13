@@ -42,7 +42,7 @@ VOID IPSendComplete
         {
             FreeNdisPacket(IFC->NdisPacket);
             IFC->Complete(IFC->Context, IFC->Datagram, Status);
-            exFreePool(IFC);
+            ExFreePoolWithTag(IFC, IFC_TAG);
         }
     } else {
 	TI_DbgPrint(MAX_TRACE, ("Calling completion handler.\n"));
@@ -50,7 +50,7 @@ VOID IPSendComplete
 	/* There are no more fragments to transmit, so call completion handler */
 	FreeNdisPacket(IFC->NdisPacket);
 	IFC->Complete(IFC->Context, IFC->Datagram, NdisStatus);
-	exFreePool(IFC);
+	ExFreePoolWithTag(IFC, IFC_TAG);
     }
 }
 
@@ -178,7 +178,7 @@ NTSTATUS SendFragments(
 
     TI_DbgPrint(MAX_TRACE, ("Fragment buffer is %d bytes\n", BufferSize));
 
-    IFC = exAllocatePool(NonPagedPool, sizeof(IPFRAGMENT_CONTEXT));
+    IFC = ExAllocatePoolWithTag(NonPagedPool, sizeof(IPFRAGMENT_CONTEXT), IFC_TAG);
     if (IFC == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -187,7 +187,7 @@ NTSTATUS SendFragments(
 	( &IFC->NdisPacket, NULL, BufferSize );
 
     if( !NT_SUCCESS(NdisStatus) ) {
-	exFreePool( IFC );
+	ExFreePoolWithTag( IFC, IFC_TAG );
 	return NdisStatus;
     }
 
@@ -215,14 +215,14 @@ NTSTATUS SendFragments(
 
     if (!PrepareNextFragment(IFC)) {
         FreeNdisPacket(IFC->NdisPacket);
-        exFreePool(IFC);
+        ExFreePoolWithTag(IFC, IFC_TAG);
         return NDIS_STATUS_FAILURE;
     }
 
     if (!NT_SUCCESS((NdisStatus = IPSendFragment(IFC->NdisPacket, NCE, IFC))))
     {
         FreeNdisPacket(IFC->NdisPacket);
-        exFreePool(IFC);
+        ExFreePoolWithTag(IFC, IFC_TAG);
     }
 
     return NdisStatus;

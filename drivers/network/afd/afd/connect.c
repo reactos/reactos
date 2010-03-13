@@ -12,6 +12,179 @@
 #include "tdiconn.h"
 #include "debug.h"
 
+NTSTATUS NTAPI
+AfdGetConnectOptions(PDEVICE_OBJECT DeviceObject, PIRP Irp,
+	          PIO_STACK_LOCATION IrpSp)
+{
+    PFILE_OBJECT FileObject = IrpSp->FileObject;
+    PAFD_FCB FCB = FileObject->FsContext;
+    UINT BufferSize = IrpSp->Parameters.DeviceIoControl.OutputBufferLength;
+
+    if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
+
+    if (FCB->ConnectOptionsSize == 0)
+        return UnlockAndMaybeComplete(FCB, STATUS_INVALID_PARAMETER, Irp, 0);
+
+    ASSERT(FCB->ConnectOptions);
+
+    if (FCB->FilledConnectOptions < BufferSize) BufferSize = FCB->FilledConnectOptions;
+
+    RtlCopyMemory(Irp->UserBuffer,
+                  FCB->ConnectOptions,
+                  BufferSize);
+
+    return UnlockAndMaybeComplete(FCB, STATUS_SUCCESS, Irp, BufferSize);
+}
+
+NTSTATUS
+NTAPI
+AfdSetConnectOptions(PDEVICE_OBJECT DeviceObject, PIRP Irp,
+                  PIO_STACK_LOCATION IrpSp)
+{
+    PFILE_OBJECT FileObject = IrpSp->FileObject;
+    PAFD_FCB FCB = FileObject->FsContext;
+    PVOID ConnectOptions = IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
+    UINT ConnectOptionsSize = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
+
+    if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
+
+    if (FCB->ConnectOptions)
+    {
+        ExFreePool(FCB->ConnectOptions);
+        FCB->ConnectOptions = NULL;
+        FCB->ConnectOptionsSize = 0;
+        FCB->FilledConnectOptions = 0;
+    }
+
+    FCB->ConnectOptions = ExAllocatePool(PagedPool, ConnectOptionsSize);
+    if (!FCB->ConnectOptions) return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
+
+    RtlCopyMemory(FCB->ConnectOptions,
+                  ConnectOptions,
+                  ConnectOptionsSize);
+
+    FCB->ConnectOptionsSize = ConnectOptionsSize;
+
+    return UnlockAndMaybeComplete(FCB, STATUS_SUCCESS, Irp, 0);
+}
+
+NTSTATUS
+NTAPI
+AfdSetConnectOptionsSize(PDEVICE_OBJECT DeviceObject, PIRP Irp,
+                      PIO_STACK_LOCATION IrpSp)
+{
+    PFILE_OBJECT FileObject = IrpSp->FileObject;
+    PAFD_FCB FCB = FileObject->FsContext;
+    PUINT ConnectOptionsSize = IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
+    UINT BufferSize = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
+
+    if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
+
+    if (BufferSize < sizeof(UINT))
+        return UnlockAndMaybeComplete(FCB, STATUS_BUFFER_TOO_SMALL, Irp, 0);
+
+    if (FCB->ConnectOptions)
+    {
+        ExFreePool(FCB->ConnectOptions);
+        FCB->ConnectOptionsSize = 0;
+        FCB->FilledConnectOptions = 0;
+    }
+
+    FCB->ConnectOptions = ExAllocatePool(PagedPool, *ConnectOptionsSize);
+    if (!FCB->ConnectOptions) return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
+
+    FCB->ConnectOptionsSize = *ConnectOptionsSize;
+
+    return UnlockAndMaybeComplete(FCB, STATUS_SUCCESS, Irp, 0);
+}
+
+NTSTATUS NTAPI
+AfdGetConnectData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
+	          PIO_STACK_LOCATION IrpSp)
+{
+    PFILE_OBJECT FileObject = IrpSp->FileObject;
+    PAFD_FCB FCB = FileObject->FsContext;
+    UINT BufferSize = IrpSp->Parameters.DeviceIoControl.OutputBufferLength;
+
+    if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
+
+    if (FCB->ConnectDataSize == 0)
+        return UnlockAndMaybeComplete(FCB, STATUS_INVALID_PARAMETER, Irp, 0);
+
+    ASSERT(FCB->ConnectData);
+
+    if (FCB->FilledConnectData < BufferSize) BufferSize = FCB->FilledConnectData;
+
+    RtlCopyMemory(Irp->UserBuffer,
+                  FCB->ConnectData,
+                  BufferSize);
+
+    return UnlockAndMaybeComplete(FCB, STATUS_SUCCESS, Irp, BufferSize);
+}
+
+NTSTATUS
+NTAPI
+AfdSetConnectData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
+                  PIO_STACK_LOCATION IrpSp)
+{
+    PFILE_OBJECT FileObject = IrpSp->FileObject;
+    PAFD_FCB FCB = FileObject->FsContext;
+    PVOID ConnectData = IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
+    UINT ConnectDataSize = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
+
+    if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
+
+    if (FCB->ConnectData)
+    {
+        ExFreePool(FCB->ConnectData);
+        FCB->ConnectData = NULL;
+        FCB->ConnectDataSize = 0;
+        FCB->FilledConnectData = 0;
+    }
+
+    FCB->ConnectData = ExAllocatePool(PagedPool, ConnectDataSize);
+    if (!FCB->ConnectData) return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
+
+    RtlCopyMemory(FCB->ConnectData,
+                  ConnectData,
+                  ConnectDataSize);
+
+    FCB->ConnectDataSize = ConnectDataSize;
+
+    return UnlockAndMaybeComplete(FCB, STATUS_SUCCESS, Irp, 0);
+}
+
+NTSTATUS
+NTAPI
+AfdSetConnectDataSize(PDEVICE_OBJECT DeviceObject, PIRP Irp,
+                      PIO_STACK_LOCATION IrpSp)
+{
+    PFILE_OBJECT FileObject = IrpSp->FileObject;
+    PAFD_FCB FCB = FileObject->FsContext;
+    PUINT ConnectDataSize = IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
+    UINT BufferSize = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
+
+    if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
+
+    if (BufferSize < sizeof(UINT))
+        return UnlockAndMaybeComplete(FCB, STATUS_BUFFER_TOO_SMALL, Irp, 0);
+
+    if (FCB->ConnectData)
+    {
+        ExFreePool(FCB->ConnectData);
+        FCB->ConnectDataSize = 0;
+        FCB->FilledConnectData = 0;
+    }
+
+    FCB->ConnectData = ExAllocatePool(PagedPool, *ConnectDataSize);
+    if (!FCB->ConnectData) return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
+
+    FCB->ConnectDataSize = *ConnectDataSize;
+
+    return UnlockAndMaybeComplete(FCB, STATUS_SUCCESS, Irp, 0);
+}
+
+
 NTSTATUS WarmSocketForConnection( PAFD_FCB FCB ) {
     NTSTATUS Status;
 
@@ -35,14 +208,24 @@ NTSTATUS WarmSocketForConnection( PAFD_FCB FCB ) {
 NTSTATUS MakeSocketIntoConnection( PAFD_FCB FCB ) {
     NTSTATUS Status;
 
+    ASSERT(!FCB->Recv.Window);
+    ASSERT(!FCB->Send.Window);
+
+    Status = TdiQueryMaxDatagramLength(FCB->Connection.Object,
+                                       &FCB->Send.Size);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    FCB->Recv.Size = FCB->Send.Size;
+
     /* Allocate the receive area and start receiving */
     FCB->Recv.Window =
-	ExAllocatePool( NonPagedPool, FCB->Recv.Size );
+	ExAllocatePool( PagedPool, FCB->Recv.Size );
 
     if( !FCB->Recv.Window ) return STATUS_NO_MEMORY;
 
     FCB->Send.Window =
-	ExAllocatePool( NonPagedPool, FCB->Send.Size );
+	ExAllocatePool( PagedPool, FCB->Send.Size );
 
     if( !FCB->Send.Window ) {
 	ExFreePool( FCB->Recv.Window );
@@ -119,7 +302,7 @@ static NTSTATUS NTAPI StreamSocketConnectComplete
 	NextIrp = CONTAINING_RECORD(NextIrpEntry, IRP, Tail.Overlay.ListEntry);
 	AFD_DbgPrint(MID_TRACE,("Completing connect %x\n", NextIrp));
 	NextIrp->IoStatus.Status = Status;
-	NextIrp->IoStatus.Information = 0;
+	NextIrp->IoStatus.Information = NT_SUCCESS(Status) ? ((ULONG_PTR)FCB->Connection.Handle) : 0;
 	if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
         (void)IoSetCancelRoutine(NextIrp, NULL);
 	IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
@@ -132,6 +315,22 @@ static NTSTATUS NTAPI StreamSocketConnectComplete
 	    SocketStateUnlock( FCB );
 	    return Status;
 	}
+
+        FCB->FilledConnectData = MIN(FCB->ConnectInfo->UserDataLength, FCB->ConnectDataSize);
+        if (FCB->FilledConnectData)
+        {
+            RtlCopyMemory(FCB->ConnectData,
+                          FCB->ConnectInfo->UserData,
+                          FCB->FilledConnectData);
+        }
+
+        FCB->FilledConnectOptions = MIN(FCB->ConnectInfo->OptionsLength, FCB->ConnectOptionsSize);
+        if (FCB->FilledConnectOptions)
+        {
+            RtlCopyMemory(FCB->ConnectOptions,
+                          FCB->ConnectInfo->Options,
+                          FCB->FilledConnectOptions);
+        }
 
 	if( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_SEND] ) ) {
 	    NextIrpEntry = RemoveHeadList(&FCB->PendingIrpList[FUNCTION_SEND]);
@@ -162,10 +361,10 @@ NTSTATUS NTAPI
 AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		       PIO_STACK_LOCATION IrpSp) {
     NTSTATUS Status = STATUS_INVALID_PARAMETER;
-    PTDI_CONNECTION_INFORMATION TargetAddress;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
     PAFD_CONNECT_INFO ConnectReq;
+    PTDI_CONNECTION_INFORMATION TargetAddress;
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
@@ -179,6 +378,9 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	( (PCHAR)ConnectReq,
 	  IrpSp->Parameters.DeviceIoControl.InputBufferLength );
 #endif
+
+   if( FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS )
+       return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER, Irp, 0 );
 
     switch( FCB->State ) {
     case SOCKET_STATE_CONNECTED:
@@ -216,37 +418,42 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    break;
 	}
 
-	if( FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS )
-	{
-	    Status = STATUS_SUCCESS;
-	    break;
-	}
-
 	Status = WarmSocketForConnection( FCB );
 
 	if( !NT_SUCCESS(Status) )
 	    break;
 
-	FCB->State = SOCKET_STATE_CONNECTING;
-
 	TdiBuildConnectionInfo
-	    ( &TargetAddress,
+	    ( &FCB->ConnectInfo,
 	      &ConnectReq->RemoteAddress );
 
+        if( FCB->ConnectInfo )
+            TdiBuildConnectionInfo(&TargetAddress,
+                                   &ConnectReq->RemoteAddress);
+
+
 	if( TargetAddress ) {
+            TargetAddress->UserData = FCB->ConnectData;
+            TargetAddress->UserDataLength = FCB->ConnectDataSize;
+            TargetAddress->Options = FCB->ConnectOptions;
+            TargetAddress->OptionsLength = FCB->ConnectOptionsSize;
+
 	    Status = TdiConnect( &FCB->ConnectIrp.InFlightRequest,
 				 FCB->Connection.Object,
 				 TargetAddress,
+				 FCB->ConnectInfo,
 				 &FCB->ConnectIrp.Iosb,
 				 StreamSocketConnectComplete,
 				 FCB );
 
-	    ExFreePool( TargetAddress );
+            ExFreePool(TargetAddress);
 
 	    AFD_DbgPrint(MID_TRACE,("Queueing IRP %x\n", Irp));
 
-	    if( Status == STATUS_PENDING )
+	    if( Status == STATUS_PENDING ) {
+                FCB->State = SOCKET_STATE_CONNECTING;
 		return LeaveIrpUntilLater( FCB, Irp, FUNCTION_CONNECT );
+            }
 	} else Status = STATUS_NO_MEMORY;
 	break;
 

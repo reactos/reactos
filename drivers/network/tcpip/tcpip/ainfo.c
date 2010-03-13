@@ -13,16 +13,50 @@ TDI_STATUS SetAddressFileInfo(TDIObjectID *ID,
                               PVOID Buffer,
                               UINT BufferSize)
 {
+    KIRQL OldIrql;
+
     switch (ID->toi_id)
     {
-#if 0
       case AO_OPTION_TTL:
-         if (BufferSize < sizeof(UCHAR))
+         if (BufferSize < sizeof(UINT))
              return TDI_INVALID_PARAMETER;
 
+         LockObject(AddrFile, &OldIrql);
          AddrFile->TTL = *((PUCHAR)Buffer);
+         UnlockObject(AddrFile, OldIrql);
+
          return TDI_SUCCESS;
-#endif
+
+      case AO_OPTION_IP_DONTFRAGMENT:
+         if (BufferSize < sizeof(UINT))
+             return TDI_INVALID_PARAMETER;
+
+         LockObject(AddrFile, &OldIrql);
+         AddrFile->DF = *((PUINT)Buffer);
+         UnlockObject(AddrFile, OldIrql);
+
+         return TDI_SUCCESS;
+
+      case AO_OPTION_BROADCAST:
+         if (BufferSize < sizeof(UINT))
+             return TDI_INVALID_PARAMETER;
+
+         LockObject(AddrFile, &OldIrql);
+         AddrFile->BCast = *((PUINT)Buffer);
+         UnlockObject(AddrFile, OldIrql);
+
+         return TDI_SUCCESS;
+
+      case AO_OPTION_IP_HDRINCL:
+         if (BufferSize < sizeof(UINT))
+             return TDI_INVALID_PARAMETER;
+
+         LockObject(AddrFile, &OldIrql);
+         AddrFile->HeaderIncl = *((PUINT)Buffer);
+         UnlockObject(AddrFile, OldIrql);
+
+         return TDI_SUCCESS;
+
       default:
          DbgPrint("Unimplemented option %x\n", ID->toi_id);
 

@@ -44,16 +44,3 @@ VOID TcpipReleaseFastMutex( PFAST_MUTEX Mutex ) {
     ExReleaseFastMutex( Mutex );
 }
 
-VOID TcpipRecursiveMutexInit( PRECURSIVE_MUTEX RecMutex ) {
-    RecursiveMutexInit( RecMutex );
-}
-
-VOID TcpipRecursiveMutexEnter( PRECURSIVE_MUTEX RecMutex, BOOLEAN ToWrite ) {
-    //TI_DbgPrint(DEBUG_LOCK,("Locking\n"));
-    RecursiveMutexEnter( RecMutex );
-}
-
-VOID TcpipRecursiveMutexLeave( PRECURSIVE_MUTEX RecMutex ) {
-    //TI_DbgPrint(DEBUG_LOCK,("Unlocking\n"));
-    RecursiveMutexLeave( RecMutex );
-}

@@ -39,8 +39,8 @@ void wakeup( struct socket *so, void *token ) {
 	OS_DbgPrint(OSK_MID_TRACE,("Socket writeable\n"));
 	flags |= SEL_WRITE;
     }
-    if( so->so_state & SS_CANTRCVMORE ) {
-	OS_DbgPrint(OSK_MID_TRACE,("Socket can't be read any longer\n"));
+    if (!so->so_pcb) {
+	OS_DbgPrint(OSK_MID_TRACE,("Socket dying\n"));
 	flags |= SEL_FIN;
     }
 

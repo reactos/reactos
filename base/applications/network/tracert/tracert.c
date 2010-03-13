@@ -377,7 +377,6 @@ DecodeResponse(PAPPINFO pInfo)
 
     /* cast the recieved packet into an ECHO reply and a TTL Exceed and check the ID*/
     ECHO_REPLY_HEADER *IcmpHdr = (ECHO_REPLY_HEADER *)((char*)pInfo->RecvPacket + header_len);
-    TTL_EXCEED_HEADER *TTLExceedHdr = (TTL_EXCEED_HEADER *)((char *)pInfo->RecvPacket + header_len);
 
     /* Make sure the reply is ok */
     if (PACKET_SIZE < header_len + ICMP_MIN_SIZE)
@@ -389,13 +388,6 @@ DecodeResponse(PAPPINFO pInfo)
     switch (IcmpHdr->icmpheader.type)
     {
            case TTL_EXCEEDED :
-                if (TTLExceedHdr->OrigIcmpHeader.id != (USHORT)GetCurrentProcessId())
-                {
-                /* FIXME: our network stack shouldn't allow this... */
-                /* we've picked up a packet not related to this process probably from another local program. We ignore it */
-                    DebugPrint(_T("Rouge packet: header id,  process id  %d"), TTLExceedHdr->OrigIcmpHeader.id, GetCurrentProcessId());
-                    return -1;
-                }
                 _tprintf(_T("%3ld ms"), (ULONG)((pInfo->lTimeEnd - pInfo->lTimeStart) / pInfo->TicksPerMs.QuadPart));
                 return 0;
 
@@ -415,7 +407,7 @@ DecodeResponse(PAPPINFO pInfo)
                 return 2;
     }
 
-    return 0;
+    return -3;
 }
 
 
@@ -513,11 +505,9 @@ Driver(PAPPINFO pInfo)
 
                         if (iRecieveReturn)
                         {
-                            DecodeResponse(pInfo);
+                            if (DecodeResponse(pInfo) < 0)
+                                bAwaitPacket = TRUE;
                         }
-                        else
-                            /* packet timed out. Don't wait for it again */
-                            bAwaitPacket = FALSE;
 
                     } while (bAwaitPacket);
                 }
@@ -559,6 +549,7 @@ Driver(PAPPINFO pInfo)
                   {
                       DebugPrint(_T("error: %d"), WSAGetLastError());
                       DebugPrint(_T(" getnameinfo failed: %d"), iNameInfoRet);
+                      _tprintf(_T("%s"), inet_ntoa(pInfo->source.sin_addr));
                   }
 
             }

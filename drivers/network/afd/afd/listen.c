@@ -36,6 +36,9 @@ static NTSTATUS SatisfyAccept( PAFD_DEVICE_EXTENSION DeviceExt,
     else
 	Status = MakeSocketIntoConnection( FCB );
 
+    if (NT_SUCCESS(Status))
+        Status = TdiBuildConnectionInfo(&FCB->ConnectInfo, FCB->RemoteAddress);
+
     return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
 }
 
