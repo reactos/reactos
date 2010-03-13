@@ -8853,6 +8853,361 @@ CcCopyWriteWontFlush(
 #define MAP_NO_READ                       (16)
 #define MAP_HIGH_PRIORITY                 (64)
 
+#define IOCTL_REDIR_QUERY_PATH          CTL_CODE(FILE_DEVICE_NETWORK_FILE_SYSTEM, 99, METHOD_NEITHER, FILE_ANY_ACCESS)
+#define IOCTL_REDIR_QUERY_PATH_EX       CTL_CODE(FILE_DEVICE_NETWORK_FILE_SYSTEM, 100, METHOD_NEITHER, FILE_ANY_ACCESS)
+
+typedef struct _QUERY_PATH_REQUEST {
+  ULONG PathNameLength;
+  PIO_SECURITY_CONTEXT SecurityContext;
+  WCHAR FilePathName[1];
+} QUERY_PATH_REQUEST, *PQUERY_PATH_REQUEST;
+
+typedef struct _QUERY_PATH_REQUEST_EX {
+  PIO_SECURITY_CONTEXT pSecurityContext;
+  ULONG EaLength;
+  PVOID pEaBuffer;
+  UNICODE_STRING PathName;
+  UNICODE_STRING DomainServiceName;
+  ULONG_PTR Reserved[ 3 ];
+} QUERY_PATH_REQUEST_EX, *PQUERY_PATH_REQUEST_EX;
+
+typedef struct _QUERY_PATH_RESPONSE {
+  ULONG LengthAccepted;
+} QUERY_PATH_RESPONSE, *PQUERY_PATH_RESPONSE;
+
+#define VOLSNAPCONTROLTYPE                              0x00000053
+#define IOCTL_VOLSNAP_FLUSH_AND_HOLD_WRITES             CTL_CODE(VOLSNAPCONTROLTYPE, 0, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwQueryObject(
+  IN HANDLE Handle OPTIONAL,
+  IN OBJECT_INFORMATION_CLASS ObjectInformationClass,
+  OUT PVOID ObjectInformation OPTIONAL,
+  IN ULONG ObjectInformationLength,
+  OUT PULONG ReturnLength OPTIONAL);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwNotifyChangeKey(
+  IN HANDLE KeyHandle,
+  IN HANDLE EventHandle OPTIONAL,
+  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+  IN PVOID ApcContext OPTIONAL,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  IN ULONG NotifyFilter,
+  IN BOOLEAN WatchSubtree,
+  OUT PVOID Buffer,
+  IN ULONG BufferLength,
+  IN BOOLEAN Asynchronous);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwCreateEvent(
+  OUT PHANDLE EventHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+  IN EVENT_TYPE EventType,
+  IN BOOLEAN InitialState);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwDeleteFile(
+  IN POBJECT_ATTRIBUTES ObjectAttributes);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwDeviceIoControlFile(
+  IN HANDLE FileHandle,
+  IN HANDLE Event OPTIONAL,
+  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+  IN PVOID ApcContext OPTIONAL,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  IN ULONG IoControlCode,
+  IN PVOID InputBuffer OPTIONAL,
+  IN ULONG InputBufferLength,
+  OUT PVOID OutputBuffer OPTIONAL,
+  IN ULONG OutputBufferLength);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwQueryDirectoryFile(
+  IN HANDLE FileHandle,
+  IN HANDLE Event OPTIONAL,
+  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+  IN PVOID ApcContext OPTIONAL,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  OUT PVOID FileInformation,
+  IN ULONG Length,
+  IN FILE_INFORMATION_CLASS FileInformationClass,
+  IN BOOLEAN ReturnSingleEntry,
+  IN PUNICODE_STRING FileName OPTIONAL,
+  IN BOOLEAN RestartScan);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwQueryVolumeInformationFile(
+  IN HANDLE FileHandle,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  OUT PVOID FsInformation,
+  IN ULONG Length,
+  IN FS_INFORMATION_CLASS FsInformationClass);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwSetVolumeInformationFile(
+  IN HANDLE FileHandle,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  IN PVOID FsInformation,
+  IN ULONG Length,
+  IN FS_INFORMATION_CLASS FsInformationClass);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwFsControlFile(
+  IN HANDLE FileHandle,
+  IN HANDLE Event OPTIONAL,
+  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+  IN PVOID ApcContext OPTIONAL,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  IN ULONG FsControlCode,
+  IN PVOID InputBuffer OPTIONAL,
+  IN ULONG InputBufferLength,
+  OUT PVOID OutputBuffer OPTIONAL,
+  IN ULONG OutputBufferLength);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwDuplicateObject(
+  IN HANDLE SourceProcessHandle,
+  IN HANDLE SourceHandle,
+  IN HANDLE TargetProcessHandle OPTIONAL,
+  OUT PHANDLE TargetHandle OPTIONAL,
+  IN ACCESS_MASK DesiredAccess,
+  IN ULONG HandleAttributes,
+  IN ULONG Options);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwOpenDirectoryObject(
+  OUT PHANDLE DirectoryHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwAllocateVirtualMemory(
+  IN HANDLE ProcessHandle,
+  IN OUT PVOID *BaseAddress,
+  IN ULONG_PTR ZeroBits,
+  IN OUT PSIZE_T RegionSize,
+  IN ULONG AllocationType,
+  IN ULONG Protect);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwFreeVirtualMemory(
+  IN HANDLE ProcessHandle,
+  IN OUT PVOID *BaseAddress,
+  IN OUT PSIZE_T RegionSize,
+  IN ULONG FreeType);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwWaitForSingleObject(
+  IN HANDLE Handle,
+  IN BOOLEAN Alertable,
+  IN PLARGE_INTEGER Timeout OPTIONAL);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwSetEvent(
+  IN HANDLE EventHandle,
+  OUT PLONG PreviousState OPTIONAL);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwFlushVirtualMemory(
+  IN HANDLE ProcessHandle,
+  IN OUT PVOID *BaseAddress,
+  IN OUT PSIZE_T RegionSize,
+  OUT PIO_STATUS_BLOCK IoStatusBlock);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwQueryInformationToken(
+  IN HANDLE TokenHandle,
+  IN TOKEN_INFORMATION_CLASS TokenInformationClass,
+  OUT PVOID TokenInformation,
+  IN ULONG Length,
+  OUT PULONG ResultLength);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwSetSecurityObject(
+  IN HANDLE Handle,
+  IN SECURITY_INFORMATION SecurityInformation,
+  IN PSECURITY_DESCRIPTOR SecurityDescriptor);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwQuerySecurityObject(
+  IN HANDLE FileHandle,
+  IN SECURITY_INFORMATION SecurityInformation,
+  OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
+  IN ULONG Length,
+  OUT PULONG ResultLength);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwOpenProcessTokenEx(
+  IN HANDLE ProcessHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN ULONG HandleAttributes,
+  OUT PHANDLE TokenHandle);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwOpenThreadTokenEx(
+  IN HANDLE ThreadHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN BOOLEAN OpenAsSelf,
+  IN ULONG HandleAttributes,
+  OUT PHANDLE TokenHandle);
+
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwLockFile(
+  IN HANDLE FileHandle,
+  IN HANDLE Event OPTIONAL,
+  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+  IN PVOID ApcContext OPTIONAL,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  IN PLARGE_INTEGER ByteOffset,
+  IN PLARGE_INTEGER Length,
+  IN ULONG Key,
+  IN BOOLEAN FailImmediately,
+  IN BOOLEAN ExclusiveLock);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwUnlockFile(
+  IN HANDLE FileHandle,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  IN PLARGE_INTEGER ByteOffset,
+  IN PLARGE_INTEGER Length,
+  IN ULONG Key);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwQueryQuotaInformationFile(
+  IN HANDLE FileHandle,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  OUT PVOID Buffer,
+  IN ULONG Length,
+  IN BOOLEAN ReturnSingleEntry,
+  IN PVOID SidList,
+  IN ULONG SidListLength,
+  IN PSID StartSid OPTIONAL,
+  IN BOOLEAN RestartScan);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwSetQuotaInformationFile(
+  IN HANDLE FileHandle,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  IN PVOID Buffer,
+  IN ULONG Length);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwFlushBuffersFile(
+  IN HANDLE FileHandle,
+  OUT PIO_STATUS_BLOCK IoStatusBlock);
+
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwSetInformationToken(
+  IN HANDLE TokenHandle,
+  IN TOKEN_INFORMATION_CLASS TokenInformationClass,
+  IN PVOID TokenInformation,
+  IN ULONG TokenInformationLength);
+#endif
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwQueryEaFile(
+  IN HANDLE FileHandle,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  OUT PVOID Buffer,
+  IN ULONG Length,
+  IN BOOLEAN ReturnSingleEntry,
+  IN PVOID EaList OPTIONAL,
+  IN ULONG EaListLength,
+  IN PULONG EaIndex OPTIONAL,
+  IN BOOLEAN RestartScan);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwSetEaFile(
+  IN HANDLE FileHandle,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  OUT PVOID Buffer,
+  IN ULONG Length);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwDuplicateToken(
+  IN HANDLE ExistingTokenHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes,
+  IN BOOLEAN EffectiveOnly,
+  IN TOKEN_TYPE TokenType,
+  OUT PHANDLE NewTokenHandle);
+
 #pragma pack(push,4)
 
 #ifndef VER_PRODUCTBUILD
@@ -8974,8 +9329,6 @@ extern PACL                         SeSystemDefaultDacl;
 #define FSCTL_NETWORK_GET_STATISTICS            CTL_CODE(FILE_DEVICE_NETWORK_FILE_SYSTEM, 116, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define FSCTL_NETWORK_SET_DOMAIN_NAME           CTL_CODE(FILE_DEVICE_NETWORK_FILE_SYSTEM, 120, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define FSCTL_NETWORK_REMOTE_BOOT_INIT_SCRT     CTL_CODE(FILE_DEVICE_NETWORK_FILE_SYSTEM, 250, METHOD_BUFFERED, FILE_ANY_ACCESS)
-
-#define IOCTL_REDIR_QUERY_PATH          CTL_CODE(FILE_DEVICE_NETWORK_FILE_SYSTEM, 99, METHOD_NEITHER, FILE_ANY_ACCESS)
 
 //
 // Forwarders
@@ -9301,16 +9654,6 @@ typedef VOID
     struct _RTL_AVL_TABLE *Table,
     PVOID Buffer
 );
-
-typedef struct _QUERY_PATH_REQUEST {
-    ULONG                   PathNameLength;
-    PIO_SECURITY_CONTEXT    SecurityContext;
-    WCHAR                   FilePathName[1];
-} QUERY_PATH_REQUEST, *PQUERY_PATH_REQUEST;
-
-typedef struct _QUERY_PATH_RESPONSE {
-    ULONG LengthAccepted;
-} QUERY_PATH_RESPONSE, *PQUERY_PATH_RESPONSE;
 
 typedef struct _RTL_BALANCED_LINKS
 {
@@ -9868,18 +10211,6 @@ ZwAlertThread (
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwAllocateVirtualMemory (
-    IN HANDLE       ProcessHandle,
-    IN OUT PVOID    *BaseAddress,
-    IN ULONG_PTR    ZeroBits,
-    IN OUT PSIZE_T  RegionSize,
-    IN ULONG        AllocationType,
-    IN ULONG        Protect
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
 ZwAccessCheckAndAuditAlarm (
     IN PUNICODE_STRING      SubsystemName,
     IN PVOID                HandleId,
@@ -9948,66 +10279,17 @@ ZwCreateSymbolicLinkObject (
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwDeleteFile (
-    IN POBJECT_ATTRIBUTES ObjectAttributes
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
 ZwDeleteValueKey (
     IN HANDLE           Handle,
     IN PUNICODE_STRING  Name
 );
 
 
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwDeviceIoControlFile (
-  IN HANDLE FileHandle,
-  IN HANDLE Event OPTIONAL,
-  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
-  IN PVOID ApcContext OPTIONAL,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  IN ULONG IoControlCode,
-  IN PVOID InputBuffer OPTIONAL,
-  IN ULONG InputBufferLength,
-  OUT PVOID OutputBuffer OPTIONAL,
-  IN ULONG OutputBufferLength);
-#endif
-
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwDisplayString (
     IN PUNICODE_STRING String
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwDuplicateObject (
-    IN HANDLE       SourceProcessHandle,
-    IN HANDLE       SourceHandle,
-    IN HANDLE       TargetProcessHandle OPTIONAL,
-    OUT PHANDLE     TargetHandle OPTIONAL,
-    IN ACCESS_MASK  DesiredAccess,
-    IN ULONG        HandleAttributes,
-    IN ULONG        Options
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwDuplicateToken (
-    IN HANDLE               ExistingTokenHandle,
-    IN ACCESS_MASK          DesiredAccess,
-    IN POBJECT_ATTRIBUTES   ObjectAttributes,
-    IN BOOLEAN              EffectiveOnly,
-    IN TOKEN_TYPE           TokenType,
-    OUT PHANDLE             NewTokenHandle
 );
 
 NTSYSAPI
@@ -10025,46 +10307,6 @@ NTAPI
 ZwFlushBuffersFile(
     IN HANDLE FileHandle,
     OUT PIO_STATUS_BLOCK IoStatusBlock
-);
-
-#if (VER_PRODUCTBUILD >= 2195)
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwFlushVirtualMemory (
-    IN HANDLE               ProcessHandle,
-    IN OUT PVOID            *BaseAddress,
-    IN OUT PULONG           FlushSize,
-    OUT PIO_STATUS_BLOCK    IoStatusBlock
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwFreeVirtualMemory (
-    IN HANDLE       ProcessHandle,
-    IN OUT PVOID    *BaseAddress,
-    IN OUT PSIZE_T  RegionSize,
-    IN ULONG        FreeType
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwFsControlFile (
-    IN HANDLE               FileHandle,
-    IN HANDLE               Event OPTIONAL,
-    IN PIO_APC_ROUTINE      ApcRoutine OPTIONAL,
-    IN PVOID                ApcContext OPTIONAL,
-    OUT PIO_STATUS_BLOCK    IoStatusBlock,
-    IN ULONG                FsControlCode,
-    IN PVOID                InputBuffer OPTIONAL,
-    IN ULONG                InputBufferLength,
-    OUT PVOID               OutputBuffer OPTIONAL,
-    IN ULONG                OutputBufferLength
 );
 
 #if (VER_PRODUCTBUILD >= 2195)
@@ -10095,31 +10337,6 @@ NTAPI
 ZwLoadKey (
     IN POBJECT_ATTRIBUTES KeyObjectAttributes,
     IN POBJECT_ATTRIBUTES FileObjectAttributes
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwNotifyChangeKey (
-    IN HANDLE               KeyHandle,
-    IN HANDLE               EventHandle OPTIONAL,
-    IN PIO_APC_ROUTINE      ApcRoutine OPTIONAL,
-    IN PVOID                ApcContext OPTIONAL,
-    OUT PIO_STATUS_BLOCK    IoStatusBlock,
-    IN ULONG                NotifyFilter,
-    IN BOOLEAN              WatchSubtree,
-    IN PVOID                Buffer,
-    IN ULONG                BufferLength,
-    IN BOOLEAN              Asynchronous
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwOpenDirectoryObject (
-    OUT PHANDLE             DirectoryHandle,
-    IN ACCESS_MASK          DesiredAccess,
-    IN POBJECT_ATTRIBUTES   ObjectAttributes
 );
 
 NTSYSAPI
@@ -10192,23 +10409,6 @@ ZwQueryDefaultLocale (
     OUT PLCID   Locale
 );
 
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwQueryDirectoryFile (
-    IN HANDLE                   FileHandle,
-    IN HANDLE                   Event OPTIONAL,
-    IN PIO_APC_ROUTINE          ApcRoutine OPTIONAL,
-    IN PVOID                    ApcContext OPTIONAL,
-    OUT PIO_STATUS_BLOCK        IoStatusBlock,
-    OUT PVOID                   FileInformation,
-    IN ULONG                    Length,
-    IN FILE_INFORMATION_CLASS   FileInformationClass,
-    IN BOOLEAN                  ReturnSingleEntry,
-    IN PUNICODE_STRING          FileName OPTIONAL,
-    IN BOOLEAN                  RestartScan
-);
-
 #if (VER_PRODUCTBUILD >= 2195)
 
 NTSYSAPI
@@ -10224,21 +10424,6 @@ ZwQueryDirectoryObject (
     OUT PULONG      ReturnLength OPTIONAL
 );
 
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwQueryEaFile (
-    IN HANDLE               FileHandle,
-    OUT PIO_STATUS_BLOCK    IoStatusBlock,
-    OUT PVOID               Buffer,
-    IN ULONG                Length,
-    IN BOOLEAN              ReturnSingleEntry,
-    IN PVOID                EaList OPTIONAL,
-    IN ULONG                EaListLength,
-    IN PULONG               EaIndex OPTIONAL,
-    IN BOOLEAN              RestartScan
-);
-
 #endif /* (VER_PRODUCTBUILD >= 2195) */
 
 NTSYSAPI
@@ -10250,39 +10435,6 @@ ZwQueryInformationProcess (
     OUT PVOID           ProcessInformation,
     IN ULONG            ProcessInformationLength,
     OUT PULONG          ReturnLength OPTIONAL
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwQueryInformationToken (
-    IN HANDLE                   TokenHandle,
-    IN TOKEN_INFORMATION_CLASS  TokenInformationClass,
-    OUT PVOID                   TokenInformation,
-    IN ULONG                    Length,
-    OUT PULONG                  ResultLength
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwQuerySecurityObject (
-    IN HANDLE                   FileHandle,
-    IN SECURITY_INFORMATION     SecurityInformation,
-    OUT PSECURITY_DESCRIPTOR    SecurityDescriptor,
-    IN ULONG                    Length,
-    OUT PULONG                  ResultLength
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwQueryVolumeInformationFile (
-    IN HANDLE               FileHandle,
-    OUT PIO_STATUS_BLOCK    IoStatusBlock,
-    OUT PVOID               FsInformation,
-    IN ULONG                Length,
-    IN FS_INFORMATION_CLASS FsInformationClass
 );
 
 NTSYSAPI
@@ -10340,25 +10492,7 @@ ZwSetDefaultUILanguage (
     IN LANGID LanguageId
 );
 
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwSetEaFile (
-    IN HANDLE               FileHandle,
-    OUT PIO_STATUS_BLOCK    IoStatusBlock,
-    OUT PVOID               Buffer,
-    IN ULONG                Length
-);
-
 #endif /* (VER_PRODUCTBUILD >= 2195) */
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwSetEvent (
-    IN HANDLE   EventHandle,
-    OUT PLONG   PreviousState OPTIONAL
-);
 
 NTSYSAPI
 NTSTATUS
@@ -10370,19 +10504,6 @@ ZwSetInformationProcess (
     IN ULONG            ProcessInformationLength
 );
 
-#if (VER_PRODUCTBUILD >= 2195)
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwSetSecurityObject (
-    IN HANDLE               Handle,
-    IN SECURITY_INFORMATION SecurityInformation,
-    IN PSECURITY_DESCRIPTOR SecurityDescriptor
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
-
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -10390,21 +10511,6 @@ ZwSetSystemTime (
     IN PLARGE_INTEGER   NewTime,
     OUT PLARGE_INTEGER  OldTime OPTIONAL
 );
-
-#if (VER_PRODUCTBUILD >= 2195)
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwSetVolumeInformationFile (
-    IN HANDLE               FileHandle,
-    OUT PIO_STATUS_BLOCK    IoStatusBlock,
-    IN PVOID                FsInformation,
-    IN ULONG                Length,
-    IN FS_INFORMATION_CLASS FsInformationClass
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
 
 NTSYSAPI
 NTSTATUS
@@ -10428,16 +10534,6 @@ NTAPI
 ZwUnloadKey (
     IN POBJECT_ATTRIBUTES KeyObjectAttributes
 );
-
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwWaitForSingleObject (
-  IN HANDLE Handle,
-  IN BOOLEAN Alertable,
-  IN PLARGE_INTEGER Timeout OPTIONAL);
-#endif
 
 NTSYSAPI
 NTSTATUS
