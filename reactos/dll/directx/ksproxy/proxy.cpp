@@ -17,6 +17,7 @@ const GUID KSPROPSETID_MediaSeeking = {0xEE904F0CL, 0xD09B, 0x11D0, {0xAB, 0xE9,
 const GUID KSPROPSETID_Clock = {0xDF12A4C0L, 0xAC17, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 const GUID KSEVENTSETID_Clock = {0x364D8E20L, 0x62C7, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 const GUID KSPROPSETID_Stream = {0x65aaba60L, 0x98ae, 0x11cf, {0xa1, 0x0d, 0x00, 0x20, 0xaf, 0xd1, 0x56, 0xe4}};
+const GUID IID_IPersist = {0x0000010c, 0x0000, 0x0000, {0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}};
 #endif
 
 const GUID IID_IBDA_DeviceControl = {0xFD0A5AF3, 0xB41D, 0x11d2, {0x9C, 0x95, 0x00, 0xC0, 0x4F, 0x79, 0x71, 0xE0}};
@@ -234,6 +235,12 @@ CKsProxy::QueryInterface(
         reinterpret_cast<IPersistStream*>(*Output)->AddRef();
         return NOERROR;
     }
+    else if (IsEqualGUID(refiid, IID_IPersist))
+    {
+        *Output = (IPersistStream*)(this);
+        reinterpret_cast<IPersist*>(*Output)->AddRef();
+        return NOERROR;
+    }
     else if (IsEqualGUID(refiid, IID_IKsObject))
     {
         *Output = (IKsObject*)(this);
@@ -248,6 +255,13 @@ CKsProxy::QueryInterface(
     }
     else if (IsEqualGUID(refiid, IID_IReferenceClock))
     {
+        if (!m_hClock)
+        {
+            HRESULT hr = CreateClockInstance();
+            if (FAILED(hr))
+                return hr;
+        }
+
         *Output = (IReferenceClock*)(this);
         reinterpret_cast<IReferenceClock*>(*Output)->AddRef();
         return NOERROR;
@@ -290,6 +304,13 @@ CKsProxy::QueryInterface(
     }
     else if (IsEqualGUID(refiid, IID_IKsClockPropertySet))
     {
+        if (!m_hClock)
+        {
+            HRESULT hr = CreateClockInstance();
+            if (FAILED(hr))
+                return hr;
+        }
+
         *Output = (IKsClockPropertySet*)(this);
         reinterpret_cast<IKsClockPropertySet*>(*Output)->AddRef();
         return NOERROR;
@@ -890,7 +911,11 @@ CKsProxy::IsFormatSupported(
     ULONG Index;
     HRESULT hr = S_FALSE;
 
-    OutputDebugStringW(L"CKsProxy::IsFormatSupported\n");
+    WCHAR Buffer[100];
+    LPOLESTR pstr;
+    StringFromCLSID(*pFormat, &pstr);
+    swprintf(Buffer, L"CKsProxy::IsFormatSupported %s\n",pstr);
+    OutputDebugStringW(Buffer);
 
     if (!pFormat)
         return E_POINTER;
@@ -899,6 +924,9 @@ CKsProxy::IsFormatSupported(
     hr = GetMediaSeekingFormats(&FormatList);
     if (SUCCEEDED(hr))
     {
+        swprintf(Buffer, L"CKsProxy::IsFormatSupported NumFormat %lu\n",FormatList->Count);
+        OutputDebugStringW(Buffer);
+
         //iterate through format list
         pGuid = (LPGUID)(FormatList + 1);
         for(Index = 0; Index < FormatList->Count; Index++)
@@ -2447,8 +2475,10 @@ STDMETHODCALLTYPE
 CKsProxy::GetClassID(
     CLSID *pClassID)
 {
-    OutputDebugStringW(L"CKsProxy::GetClassID : NotImplemented\n");
-    return E_NOTIMPL;
+    OutputDebugStringW(L"CKsProxy::GetClassID\n");
+    CopyMemory(pClassID, &CLSID_Proxy, sizeof(GUID));
+
+    return S_OK;
 }
 
 HRESULT
@@ -2688,8 +2718,7 @@ STDMETHODCALLTYPE
 CKsProxy::QueryVendorInfo(
     LPWSTR *pVendorInfo)
 {
-    OutputDebugStringW(L"CKsProxy::QueryVendorInfo : NotImplemented\n");
-    return E_NOTIMPL;
+    return StringFromCLSID(CLSID_Proxy, pVendorInfo);
 }
 
 //-------------------------------------------------------------------
