@@ -6549,6 +6549,188 @@ typedef struct _FILE_LOCK {
   LONG volatile LockRequestsInProgress;
 } FILE_LOCK, *PFILE_LOCK;
 
+typedef struct _TUNNEL {
+  FAST_MUTEX Mutex;
+  PRTL_SPLAY_LINKS Cache;
+  LIST_ENTRY TimerQueue;
+  USHORT NumEntries;
+} TUNNEL, *PTUNNEL;
+
+typedef enum _FSRTL_COMPARISON_RESULT {
+  LessThan = -1,
+  EqualTo = 0,
+  GreaterThan = 1
+} FSRTL_COMPARISON_RESULT;
+
+#define FSRTL_FAT_LEGAL                 0x01
+#define FSRTL_HPFS_LEGAL                0x02
+#define FSRTL_NTFS_LEGAL                0x04
+#define FSRTL_WILD_CHARACTER            0x08
+#define FSRTL_OLE_LEGAL                 0x10
+#define FSRTL_NTFS_STREAM_LEGAL         (FSRTL_NTFS_LEGAL | FSRTL_OLE_LEGAL)
+
+typedef struct _BASE_MCB {
+  ULONG MaximumPairCount;
+  ULONG PairCount;
+  USHORT PoolType;
+  USHORT Flags;
+  PVOID Mapping;
+} BASE_MCB, *PBASE_MCB;
+
+typedef struct _LARGE_MCB {
+  PKGUARDED_MUTEX GuardedMutex;
+  BASE_MCB BaseMcb;
+} LARGE_MCB, *PLARGE_MCB;
+
+#define MCB_FLAG_RAISE_ON_ALLOCATION_FAILURE 1
+
+typedef struct _MCB {
+  LARGE_MCB DummyFieldThatSizesThisStructureCorrectly;
+} MCB, *PMCB;
+
+typedef PVOID OPLOCK, *POPLOCK;
+
+typedef VOID
+(NTAPI *POPLOCK_WAIT_COMPLETE_ROUTINE) (
+  IN PVOID Context,
+  IN PIRP Irp);
+
+typedef VOID
+(NTAPI *POPLOCK_FS_PREPOST_IRP) (
+  IN PVOID Context,
+  IN PIRP Irp);
+
+#if (NTDDI_VERSION >= NTDDI_VISTASP1)
+#define OPLOCK_FLAG_COMPLETE_IF_OPLOCKED    0x00000001
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+#define OPLOCK_FLAG_OPLOCK_KEY_CHECK_ONLY   0x00000002
+#define OPLOCK_FLAG_BACK_OUT_ATOMIC_OPLOCK  0x00000004
+#define OPLOCK_FLAG_IGNORE_OPLOCK_KEYS      0x00000008
+#define OPLOCK_FSCTRL_FLAG_ALL_KEYS_MATCH   0x00000001
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+
+typedef struct _OPLOCK_KEY_ECP_CONTEXT {
+  GUID OplockKey;
+  ULONG Reserved;
+} OPLOCK_KEY_ECP_CONTEXT, *POPLOCK_KEY_ECP_CONTEXT;
+
+DEFINE_GUID( GUID_ECP_OPLOCK_KEY, 0x48850596, 0x3050, 0x4be7, 0x98, 0x63, 0xfe, 0xc3, 0x50, 0xce, 0x8d, 0x7f );
+
+#endif
+
+#define FSRTL_VOLUME_DISMOUNT           1
+#define FSRTL_VOLUME_DISMOUNT_FAILED    2
+#define FSRTL_VOLUME_LOCK               3
+#define FSRTL_VOLUME_LOCK_FAILED        4
+#define FSRTL_VOLUME_UNLOCK             5
+#define FSRTL_VOLUME_MOUNT              6
+#define FSRTL_VOLUME_NEEDS_CHKDSK       7
+#define FSRTL_VOLUME_WORM_NEAR_FULL     8
+#define FSRTL_VOLUME_WEARING_OUT        9
+#define FSRTL_VOLUME_FORCED_CLOSED      10
+#define FSRTL_VOLUME_INFO_MAKE_COMPAT   11
+#define FSRTL_VOLUME_PREPARING_EJECT    12
+#define FSRTL_VOLUME_CHANGE_SIZE        13
+#define FSRTL_VOLUME_BACKGROUND_FORMAT  14
+
+typedef PVOID PNOTIFY_SYNC;
+
+typedef BOOLEAN
+(NTAPI *PCHECK_FOR_TRAVERSE_ACCESS) (
+  IN PVOID NotifyContext,
+  IN PVOID TargetContext OPTIONAL,
+  IN PSECURITY_SUBJECT_CONTEXT SubjectContext);
+
+typedef BOOLEAN
+(NTAPI *PFILTER_REPORT_CHANGE) (
+  IN PVOID NotifyContext,
+  IN PVOID FilterContext);
+
+typedef VOID
+(NTAPI *PFSRTL_STACK_OVERFLOW_ROUTINE) (
+  IN PVOID Context,
+  IN PKEVENT Event);
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+#define FSRTL_UNC_PROVIDER_FLAGS_MAILSLOTS_SUPPORTED    0x00000001
+#define FSRTL_UNC_PROVIDER_FLAGS_CSC_ENABLED            0x00000002
+#define FSRTL_UNC_PROVIDER_FLAGS_DOMAIN_SVC_AWARE       0x00000004
+
+#define FSRTL_ALLOCATE_ECPLIST_FLAG_CHARGE_QUOTA           0x00000001
+
+#define FSRTL_ALLOCATE_ECP_FLAG_CHARGE_QUOTA               0x00000001
+#define FSRTL_ALLOCATE_ECP_FLAG_NONPAGED_POOL              0x00000002
+
+#define FSRTL_ECP_LOOKASIDE_FLAG_NONPAGED_POOL             0x00000002
+
+#define FSRTL_VIRTDISK_FULLY_ALLOCATED  0x00000001
+#define FSRTL_VIRTDISK_NO_DRIVE_LETTER  0x00000002
+
+typedef struct _FSRTL_MUP_PROVIDER_INFO_LEVEL_1 {
+  ULONG32 ProviderId;
+} FSRTL_MUP_PROVIDER_INFO_LEVEL_1, *PFSRTL_MUP_PROVIDER_INFO_LEVEL_1;
+
+typedef struct _FSRTL_MUP_PROVIDER_INFO_LEVEL_2 {
+  ULONG32 ProviderId;
+  UNICODE_STRING ProviderName;
+} FSRTL_MUP_PROVIDER_INFO_LEVEL_2, *PFSRTL_MUP_PROVIDER_INFO_LEVEL_2;
+
+typedef VOID
+(*PFSRTL_EXTRA_CREATE_PARAMETER_CLEANUP_CALLBACK) (
+  IN OUT PVOID EcpContext,
+  IN LPCGUID EcpType);
+
+typedef struct _ECP_LIST ECP_LIST, *PECP_LIST;
+
+typedef ULONG FSRTL_ALLOCATE_ECPLIST_FLAGS;
+typedef ULONG FSRTL_ALLOCATE_ECP_FLAGS;
+typedef ULONG FSRTL_ECP_LOOKASIDE_FLAGS;
+
+typedef enum _FSRTL_CHANGE_BACKING_TYPE {
+  ChangeDataControlArea,
+  ChangeImageControlArea,
+  ChangeSharedCacheMap
+} FSRTL_CHANGE_BACKING_TYPE, *PFSRTL_CHANGE_BACKING_TYPE;
+
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+
+typedef struct _FSRTL_PER_FILE_CONTEXT {
+  LIST_ENTRY Links;
+  PVOID OwnerId;
+  PVOID InstanceId;
+  PFREE_FUNCTION FreeCallback;
+} FSRTL_PER_FILE_CONTEXT, *PFSRTL_PER_FILE_CONTEXT;
+
+typedef struct _FSRTL_PER_STREAM_CONTEXT {
+  LIST_ENTRY Links;
+  PVOID OwnerId;
+  PVOID InstanceId;
+  PFREE_FUNCTION FreeCallback;
+} FSRTL_PER_STREAM_CONTEXT, *PFSRTL_PER_STREAM_CONTEXT;
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+typedef VOID
+(*PFN_FSRTLTEARDOWNPERSTREAMCONTEXTS) (
+  IN PFSRTL_ADVANCED_FCB_HEADER AdvancedHeader);
+#endif
+
+typedef struct _FSRTL_PER_FILEOBJECT_CONTEXT {
+  LIST_ENTRY Links;
+  PVOID OwnerId;
+  PVOID InstanceId;
+} FSRTL_PER_FILEOBJECT_CONTEXT, *PFSRTL_PER_FILEOBJECT_CONTEXT;
+
+#define FsRtlEnterFileSystem    KeEnterCriticalRegion
+#define FsRtlExitFileSystem     KeLeaveCriticalRegion
+
+#define FSRTL_CC_FLUSH_ERROR_FLAG_NO_HARD_ERROR  0x1
+#define FSRTL_CC_FLUSH_ERROR_FLAG_NO_LOG_ENTRY   0x2
+
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
 NTKERNELAPI
@@ -7912,19 +8094,6 @@ FsRtlRemovePerFileObjectContext(
     (InterlockedDecrement((LONG volatile *)&((FL)->LockRequestsInProgress)));\
 }
 
-typedef struct _TUNNEL {
-  FAST_MUTEX Mutex;
-  PRTL_SPLAY_LINKS Cache;
-  LIST_ENTRY TimerQueue;
-  USHORT NumEntries;
-} TUNNEL, *PTUNNEL;
-
-typedef enum _FSRTL_COMPARISON_RESULT {
-  LessThan = -1,
-  EqualTo = 0,
-  GreaterThan = 1
-} FSRTL_COMPARISON_RESULT;
-
 #ifdef NLS_MB_CODE_PAGE_TAG
 #undef NLS_MB_CODE_PAGE_TAG
 #endif
@@ -7935,13 +8104,6 @@ typedef enum _FSRTL_COMPARISON_RESULT {
 
 extern UCHAR const* const LEGAL_ANSI_CHARACTER_ARRAY;
 extern PUSHORT NLS_OEM_LEAD_BYTE_INFO;
-
-#define FSRTL_FAT_LEGAL                 0x01
-#define FSRTL_HPFS_LEGAL                0x02
-#define FSRTL_NTFS_LEGAL                0x04
-#define FSRTL_WILD_CHARACTER            0x08
-#define FSRTL_OLE_LEGAL                 0x10
-#define FSRTL_NTFS_STREAM_LEGAL         (FSRTL_NTFS_LEGAL | FSRTL_OLE_LEGAL)
 
 #define FsRtlIsAnsiCharacterWild(C) (                                       \
     FlagOn(FsRtlLegalAnsiCharacterArray[(UCHAR)(C)], FSRTL_WILD_CHARACTER ) \
@@ -7983,148 +8145,11 @@ extern PUSHORT NLS_OEM_LEAD_BYTE_INFO;
                (NLS_OEM_LEAD_BYTE_INFO[(UCHAR)(DBCS_CHAR)] != 0)))          \
 )
 
-typedef struct _BASE_MCB {
-  ULONG MaximumPairCount;
-  ULONG PairCount;
-  USHORT PoolType;
-  USHORT Flags;
-  PVOID Mapping;
-} BASE_MCB, *PBASE_MCB;
-
-typedef struct _LARGE_MCB {
-  PKGUARDED_MUTEX GuardedMutex;
-  BASE_MCB BaseMcb;
-} LARGE_MCB, *PLARGE_MCB;
-
-#define MCB_FLAG_RAISE_ON_ALLOCATION_FAILURE 1
-
-typedef struct _MCB {
-  LARGE_MCB DummyFieldThatSizesThisStructureCorrectly;
-} MCB, *PMCB;
-
-typedef PVOID OPLOCK, *POPLOCK;
-
-typedef VOID
-(NTAPI *POPLOCK_WAIT_COMPLETE_ROUTINE) (
-  IN PVOID Context,
-  IN PIRP Irp);
-
-typedef VOID
-(NTAPI *POPLOCK_FS_PREPOST_IRP) (
-  IN PVOID Context,
-  IN PIRP Irp);
-
-#if (NTDDI_VERSION >= NTDDI_VISTASP1)
-#define OPLOCK_FLAG_COMPLETE_IF_OPLOCKED    0x00000001
-#endif
-
-#if (NTDDI_VERSION >= NTDDI_WIN7)
-#define OPLOCK_FLAG_OPLOCK_KEY_CHECK_ONLY   0x00000002
-#define OPLOCK_FLAG_BACK_OUT_ATOMIC_OPLOCK  0x00000004
-#define OPLOCK_FLAG_IGNORE_OPLOCK_KEYS      0x00000008
-#define OPLOCK_FSCTRL_FLAG_ALL_KEYS_MATCH   0x00000001
-#endif
-
-#if (NTDDI_VERSION >= NTDDI_WIN7)
-
-typedef struct _OPLOCK_KEY_ECP_CONTEXT {
-  GUID OplockKey;
-  ULONG Reserved;
-} OPLOCK_KEY_ECP_CONTEXT, *POPLOCK_KEY_ECP_CONTEXT;
-
-DEFINE_GUID( GUID_ECP_OPLOCK_KEY, 0x48850596, 0x3050, 0x4be7, 0x98, 0x63, 0xfe, 0xc3, 0x50, 0xce, 0x8d, 0x7f );
-
-#endif
-
-#define FSRTL_VOLUME_DISMOUNT           1
-#define FSRTL_VOLUME_DISMOUNT_FAILED    2
-#define FSRTL_VOLUME_LOCK               3
-#define FSRTL_VOLUME_LOCK_FAILED        4
-#define FSRTL_VOLUME_UNLOCK             5
-#define FSRTL_VOLUME_MOUNT              6
-#define FSRTL_VOLUME_NEEDS_CHKDSK       7
-#define FSRTL_VOLUME_WORM_NEAR_FULL     8
-#define FSRTL_VOLUME_WEARING_OUT        9
-#define FSRTL_VOLUME_FORCED_CLOSED      10
-#define FSRTL_VOLUME_INFO_MAKE_COMPAT   11
-#define FSRTL_VOLUME_PREPARING_EJECT    12
-#define FSRTL_VOLUME_CHANGE_SIZE        13
-#define FSRTL_VOLUME_BACKGROUND_FORMAT  14
-
-typedef PVOID PNOTIFY_SYNC;
-
-typedef BOOLEAN
-(NTAPI *PCHECK_FOR_TRAVERSE_ACCESS) (
-  IN PVOID NotifyContext,
-  IN PVOID TargetContext OPTIONAL,
-  IN PSECURITY_SUBJECT_CONTEXT SubjectContext);
-
-typedef BOOLEAN
-(NTAPI *PFILTER_REPORT_CHANGE) (
-  IN PVOID NotifyContext,
-  IN PVOID FilterContext);
-
 #define FsRtlIsUnicodeCharacterWild(C) (                                    \
     (((C) >= 0x40) ?                                                        \
     FALSE :                                                                 \
     FlagOn(FsRtlLegalAnsiCharacterArray[(C)], FSRTL_WILD_CHARACTER ))       \
 )
-
-typedef VOID
-(NTAPI *PFSRTL_STACK_OVERFLOW_ROUTINE) (
-  IN PVOID Context,
-  IN PKEVENT Event);
-
-#if (NTDDI_VERSION >= NTDDI_VISTA)
-
-#define FSRTL_UNC_PROVIDER_FLAGS_MAILSLOTS_SUPPORTED    0x00000001
-#define FSRTL_UNC_PROVIDER_FLAGS_CSC_ENABLED            0x00000002
-#define FSRTL_UNC_PROVIDER_FLAGS_DOMAIN_SVC_AWARE       0x00000004
-
-#define FSRTL_ALLOCATE_ECPLIST_FLAG_CHARGE_QUOTA           0x00000001
-
-#define FSRTL_ALLOCATE_ECP_FLAG_CHARGE_QUOTA               0x00000001
-#define FSRTL_ALLOCATE_ECP_FLAG_NONPAGED_POOL              0x00000002
-
-#define FSRTL_ECP_LOOKASIDE_FLAG_NONPAGED_POOL             0x00000002
-
-#define FSRTL_VIRTDISK_FULLY_ALLOCATED  0x00000001
-#define FSRTL_VIRTDISK_NO_DRIVE_LETTER  0x00000002
-
-typedef struct _FSRTL_MUP_PROVIDER_INFO_LEVEL_1 {
-  ULONG32 ProviderId;
-} FSRTL_MUP_PROVIDER_INFO_LEVEL_1, *PFSRTL_MUP_PROVIDER_INFO_LEVEL_1;
-
-typedef struct _FSRTL_MUP_PROVIDER_INFO_LEVEL_2 {
-  ULONG32 ProviderId;
-  UNICODE_STRING ProviderName;
-} FSRTL_MUP_PROVIDER_INFO_LEVEL_2, *PFSRTL_MUP_PROVIDER_INFO_LEVEL_2;
-
-typedef VOID
-(*PFSRTL_EXTRA_CREATE_PARAMETER_CLEANUP_CALLBACK) (
-  IN OUT PVOID EcpContext,
-  IN LPCGUID EcpType);
-
-typedef struct _ECP_LIST ECP_LIST, *PECP_LIST;
-
-typedef ULONG FSRTL_ALLOCATE_ECPLIST_FLAGS;
-typedef ULONG FSRTL_ALLOCATE_ECP_FLAGS;
-typedef ULONG FSRTL_ECP_LOOKASIDE_FLAGS;
-
-typedef enum _FSRTL_CHANGE_BACKING_TYPE {
-  ChangeDataControlArea,
-  ChangeImageControlArea,
-  ChangeSharedCacheMap
-} FSRTL_CHANGE_BACKING_TYPE, *PFSRTL_CHANGE_BACKING_TYPE;
-
-#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
-
-typedef struct _FSRTL_PER_FILE_CONTEXT {
-  LIST_ENTRY Links;
-  PVOID OwnerId;
-  PVOID InstanceId;
-  PFREE_FUNCTION FreeCallback;
-} FSRTL_PER_FILE_CONTEXT, *PFSRTL_PER_FILE_CONTEXT;
 
 #define FsRtlInitPerFileContext( _fc, _owner, _inst, _cb)   \
     ((_fc)->OwnerId = (_owner),                               \
@@ -8148,13 +8173,6 @@ typedef struct _FSRTL_PER_FILE_CONTEXT {
         (_advhdr)->FileContextSupportPointer = (_fctxptr);                          \
     }                                                                               \
 }
-
-typedef struct _FSRTL_PER_STREAM_CONTEXT {
-  LIST_ENTRY Links;
-  PVOID OwnerId;
-  PVOID InstanceId;
-  PFREE_FUNCTION FreeCallback;
-} FSRTL_PER_STREAM_CONTEXT, *PFSRTL_PER_STREAM_CONTEXT;
 
 #define FsRtlGetPerStreamContextPointer(FO) (   \
     (PFSRTL_ADVANCED_FCB_HEADER)(FO)->FsContext \
@@ -8205,18 +8223,6 @@ FsRtlSetupAdvancedHeader(
 #endif
 }
 
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
-typedef VOID
-(*PFN_FSRTLTEARDOWNPERSTREAMCONTEXTS) (
-  IN PFSRTL_ADVANCED_FCB_HEADER AdvancedHeader);
-#endif
-
-typedef struct _FSRTL_PER_FILEOBJECT_CONTEXT {
-  LIST_ENTRY Links;
-  PVOID OwnerId;
-  PVOID InstanceId;
-} FSRTL_PER_FILEOBJECT_CONTEXT, *PFSRTL_PER_FILEOBJECT_CONTEXT;
-
 #define FsRtlInitPerFileObjectContext(_fc, _owner, _inst)         \
            ((_fc)->OwnerId = (_owner), (_fc)->InstanceId = (_inst))
 
@@ -8224,12 +8230,6 @@ typedef struct _FSRTL_PER_FILEOBJECT_CONTEXT {
     (IRP)->IoStatus.Status = (STATUS);             \
     IoCompleteRequest( (IRP), IO_DISK_INCREMENT ); \
 }
-
-#define FsRtlEnterFileSystem    KeEnterCriticalRegion
-#define FsRtlExitFileSystem     KeLeaveCriticalRegion
-
-#define FSRTL_CC_FLUSH_ERROR_FLAG_NO_HARD_ERROR  0x1
-#define FSRTL_CC_FLUSH_ERROR_FLAG_NO_LOG_ENTRY   0x2
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
 typedef struct _ECP_HEADER ECP_HEADER, *PECP_HEADER;
