@@ -437,18 +437,11 @@ typedef union _SLIST_HEADER {
 
 #endif /* _SLIST_HEADER_ */
 
-
-/* HACK HACK HACK - GCC (or perhaps LD) is messing this up */
-#if defined(_NTSYSTEM_) || defined(__GNUC__)
+/* MS definition is broken! */
+extern BOOLEAN NTSYSAPI NlsMbCodePageTag;
+extern BOOLEAN NTSYSAPI NlsMbOemCodePageTag;
 #define NLS_MB_CODE_PAGE_TAG NlsMbCodePageTag
 #define NLS_MB_OEM_CODE_PAGE_TAG NlsMbOemCodePageTag
-#else
-#define NLS_MB_CODE_PAGE_TAG (*NlsMbCodePageTag)
-#define NLS_MB_OEM_CODE_PAGE_TAG (*NlsMbOemCodePageTag)
-#endif /* _NT_SYSTEM */
-extern BOOLEAN NTSYSAPI NLS_MB_CODE_PAGE_TAG;
-extern BOOLEAN NTSYSAPI NLS_MB_OEM_CODE_PAGE_TAG;
-
 
 /******************************************************************************
  *                              Kernel Types                                  *
@@ -1156,7 +1149,6 @@ typedef struct DECLSPEC_ALIGN(16) _XSAVE_FORMAT {
 } XSAVE_FORMAT, *PXSAVE_FORMAT;
 
 
-
 /******************************************************************************
  *                         Memory manager Types                               *
  ******************************************************************************/
@@ -1476,6 +1468,7 @@ typedef struct _WORK_QUEUE_ITEM {
   PWORKER_THREAD_ROUTINE  WorkerRoutine;
   volatile PVOID  Parameter;
 } WORK_QUEUE_ITEM, *PWORK_QUEUE_ITEM;
+
 
 
 /******************************************************************************
@@ -2614,6 +2607,8 @@ typedef struct _REG_KEY_HANDLE_CLOSE_INFORMATION {
   PVOID ObjectContext;
   PVOID Reserved;
 } REG_KEY_HANDLE_CLOSE_INFORMATION, *PREG_KEY_HANDLE_CLOSE_INFORMATION;
+
+
 
 /******************************************************************************
  *                         I/O Manager Types                                  *
@@ -5158,7 +5153,7 @@ typedef struct _QUOTA_LIMITS {
 #define MAXIMUM_PRIORITY                  32
 
 
-#ifdef _X86_
+#if defined(_M_IX86)
 /** Kernel definitions for x86 **/
 
 /* Interrupt request levels */
@@ -5173,11 +5168,11 @@ typedef struct _QUOTA_LIMITS {
 #define IPI_LEVEL               29
 #define POWER_LEVEL             30
 #define HIGH_LEVEL              31
-#define CLOCK_LEVEL             (CLOCK2_LEVEL)
+#define CLOCK_LEVEL             CLOCK2_LEVEL
 
 #define KIP0PCRADDRESS          0xffdff000  
 #define KI_USER_SHARED_DATA     0xffdf0000
-#define SharedUserData          ((KUSER_SHARED_DATA * CONST) KI_USER_SHARED_DATA)
+#define SharedUserData          ((KUSER_SHARED_DATA * CONST)KI_USER_SHARED_DATA)
 
 #define PAGE_SIZE               0x1000
 #define PAGE_SHIFT              12L
@@ -5319,9 +5314,319 @@ _KeQueryTickCount(
 }
 #define KeQueryTickCount(CurrentCount) _KeQueryTickCount(CurrentCount)
 
-#endif /* _X86_ */
 
 
+#elif defined(_M_AMD64)
+/** Kernel definitions for AMD64 **/
+
+/* Interrupt request levels */
+#define PASSIVE_LEVEL           0
+#define LOW_LEVEL               0
+#define APC_LEVEL               1
+#define DISPATCH_LEVEL          2
+#define CMCI_LEVEL              5
+#define CLOCK_LEVEL             13
+#define IPI_LEVEL               14
+#define DRS_LEVEL               14
+#define POWER_LEVEL             14
+#define PROFILE_LEVEL           15
+#define HIGH_LEVEL              15
+
+#define PAGE_SIZE               0x1000
+#define PAGE_SHIFT              12L
+
+#define KI_USER_SHARED_DATA     0xFFFFF78000000000UI64
+#define SharedUserData          ((PKUSER_SHARED_DATA const)KI_USER_SHARED_DATA)
+
+
+typedef struct _KFLOATING_SAVE {
+  ULONG Dummy;
+} KFLOATING_SAVE, *PKFLOATING_SAVE;
+
+typedef XSAVE_FORMAT XMM_SAVE_AREA32, *PXMM_SAVE_AREA32;
+
+#define KeQueryInterruptTime() \
+    (*(volatile ULONG64*)SharedInterruptTime)
+
+#define KeQuerySystemTime(CurrentCount) \
+    *(ULONG64*)(CurrentCount) = *(volatile ULONG64*)SharedSystemTime
+
+#define KeQueryTickCount(CurrentCount) \
+    *(ULONG64*)(CurrentCount) = *(volatile ULONG64*)SharedTickCount
+
+#define KeGetDcacheFillSize() 1L
+
+#define YieldProcessor _mm_pause
+
+FORCEINLINE
+KIRQL
+KeGetCurrentIrql(VOID)
+{
+    return (KIRQL)__readcr8();
+}
+
+FORCEINLINE
+VOID
+KeLowerIrql(IN KIRQL NewIrql)
+{
+    ASSERT(KeGetCurrentIrql() >= NewIrql);
+    __writecr8(NewIrql);
+}
+
+FORCEINLINE
+KIRQL
+KfRaiseIrql(IN KIRQL NewIrql)
+{
+    KIRQL OldIrql;
+
+    OldIrql = __readcr8();
+    ASSERT(OldIrql <= NewIrql);
+    __writecr8(NewIrql);
+    return OldIrql;
+}
+#define KeRaiseIrql(a,b) *(b) = KfRaiseIrql(a)
+
+FORCEINLINE
+KIRQL
+KeRaiseIrqlToDpcLevel(VOID)
+{
+    return KfRaiseIrql(DISPATCH_LEVEL);
+}
+
+FORCEINLINE
+KIRQL
+KeRaiseIrqlToSynchLevel(VOID)
+{
+    return KfRaiseIrql(12); // SYNCH_LEVEL = IPI_LEVEL - 2
+}
+
+FORCEINLINE
+PKTHREAD
+KeGetCurrentThread (
+  VOID)
+{
+    return (struct _KTHREAD *)__readgsqword(0x188);
+}
+
+/* x86 and x64 performs a 0x2C interrupt */
+#define DbgRaiseAssertionFailure __int2c
+
+#elif defined(_M_IA64)
+/** Kernel definitions for IA64 **/
+
+/* Interrupt request levels */
+#define PASSIVE_LEVEL           0
+#define LOW_LEVEL               0
+#define APC_LEVEL               1
+#define DISPATCH_LEVEL          2
+#define CMC_LEVEL               3
+#define DEVICE_LEVEL_BASE       4
+#define PC_LEVEL                12
+#define IPI_LEVEL               14
+#define DRS_LEVEL               14
+#define CLOCK_LEVEL             13
+#define POWER_LEVEL             15
+#define PROFILE_LEVEL           15
+#define HIGH_LEVEL              15
+
+#define KI_USER_SHARED_DATA ((ULONG_PTR)(KADDRESS_BASE + 0xFFFE0000))
+extern volatile LARGE_INTEGER KeTickCount;
+
+FORCEINLINE
+VOID
+KeFlushWriteBuffer(VOID)
+{
+  __mf ();
+  return;
+}
+
+NTSYSAPI
+PKTHREAD
+NTAPI
+KeGetCurrentThread(
+  VOID);
+
+
+#elif defined(_M_PPC)
+
+/* Interrupt request levels */
+#define PASSIVE_LEVEL                      0
+#define LOW_LEVEL                          0
+#define APC_LEVEL                          1
+#define DISPATCH_LEVEL                     2
+#define PROFILE_LEVEL                     27
+#define CLOCK1_LEVEL                      28
+#define CLOCK2_LEVEL                      28
+#define IPI_LEVEL                         29
+#define POWER_LEVEL                       30
+#define HIGH_LEVEL                        31
+
+//
+// Used to contain PFNs and PFN counts
+//
+typedef ULONG PFN_COUNT;
+typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
+typedef LONG SPFN_NUMBER, *PSPFN_NUMBER;
+
+
+typedef struct _KFLOATING_SAVE {
+  ULONG Dummy;
+} KFLOATING_SAVE, *PKFLOATING_SAVE;
+
+typedef struct _KPCR_TIB {
+  PVOID  ExceptionList;         /* 00 */
+  PVOID  StackBase;             /* 04 */
+  PVOID  StackLimit;            /* 08 */
+  PVOID  SubSystemTib;          /* 0C */
+  _ANONYMOUS_UNION union {
+    PVOID  FiberData;           /* 10 */
+    ULONG  Version;             /* 10 */
+  } DUMMYUNIONNAME;
+  PVOID  ArbitraryUserPointer;  /* 14 */
+  struct _KPCR_TIB *Self;       /* 18 */
+} KPCR_TIB, *PKPCR_TIB;         /* 1C */
+
+#define PCR_MINOR_VERSION 1
+#define PCR_MAJOR_VERSION 1
+
+typedef struct _KPCR {
+  KPCR_TIB  Tib;                /* 00 */
+  struct _KPCR  *Self;          /* 1C */
+  struct _KPRCB  *Prcb;         /* 20 */
+  KIRQL  Irql;                  /* 24 */
+  ULONG  IRR;                   /* 28 */
+  ULONG  IrrActive;             /* 2C */
+  ULONG  IDR;                   /* 30 */
+  PVOID  KdVersionBlock;        /* 34 */
+  PUSHORT  IDT;                 /* 38 */
+  PUSHORT  GDT;                 /* 3C */
+  struct _KTSS  *TSS;           /* 40 */
+  USHORT  MajorVersion;         /* 44 */
+  USHORT  MinorVersion;         /* 46 */
+  KAFFINITY  SetMember;         /* 48 */
+  ULONG  StallScaleFactor;      /* 4C */
+  UCHAR  SpareUnused;           /* 50 */
+  UCHAR  Number;                /* 51 */
+} KPCR, *PKPCR;                 /* 54 */
+
+#define KeGetPcr()                      PCR
+
+#define YieldProcessor() __asm__ __volatile__("nop");
+
+FORCEINLINE
+ULONG
+DDKAPI
+KeGetCurrentProcessorNumber(VOID)
+{
+    ULONG Number;
+  __asm__ __volatile__ (
+    "lwz %0, %c1(12)\n"
+    : "=r" (Number)
+    : "i" (FIELD_OFFSET(KPCR, Number))
+  );
+  return Number;
+}
+
+NTHALAPI
+VOID
+FASTCALL
+KfLowerIrql(
+  IN KIRQL  NewIrql);
+#define KeLowerIrql(a) KfLowerIrql(a)
+
+NTHALAPI
+KIRQL
+FASTCALL
+KfRaiseIrql(
+  IN KIRQL  NewIrql);
+#define KeRaiseIrql(a,b) *(b) = KfRaiseIrql(a)
+
+NTHALAPI
+KIRQL
+DDKAPI
+KeRaiseIrqlToDpcLevel(
+  VOID);
+
+NTHALAPI
+KIRQL
+DDKAPI
+KeRaiseIrqlToSynchLevel(
+    VOID);
+
+
+
+#elif defined(_M_MIPS)
+#error MIPS Headers are totally incorrect
+
+//
+// Used to contain PFNs and PFN counts
+//
+typedef ULONG PFN_COUNT;
+typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
+typedef LONG SPFN_NUMBER, *PSPFN_NUMBER;
+
+#define PASSIVE_LEVEL                      0
+#define APC_LEVEL                          1
+#define DISPATCH_LEVEL                     2
+#define PROFILE_LEVEL                     27
+#define IPI_LEVEL                         29
+#define HIGH_LEVEL                        31
+
+typedef struct _KPCR {
+    struct _KPRCB  *Prcb;         /* 20 */
+    KIRQL  Irql;                  /* 24 */
+    ULONG  IRR;                   /* 28 */
+    ULONG  IDR;                   /* 30 */
+} KPCR, *PKPCR;
+
+#define KeGetPcr()                      PCR
+
+typedef struct _KFLOATING_SAVE {
+} KFLOATING_SAVE, *PKFLOATING_SAVE;
+
+static __inline
+ULONG
+DDKAPI
+KeGetCurrentProcessorNumber(VOID)
+{
+    return 0;
+}
+
+#define YieldProcessor() __asm__ __volatile__("nop");
+
+#define KeLowerIrql(a) KfLowerIrql(a)
+#define KeRaiseIrql(a,b) *(b) = KfRaiseIrql(a)
+
+NTKERNELAPI
+VOID
+NTAPI
+KfLowerIrql(
+  IN KIRQL  NewIrql);
+
+NTKERNELAPI
+KIRQL
+NTAPI
+KfRaiseIrql(
+  IN KIRQL  NewIrql);
+
+NTKERNELAPI
+KIRQL
+NTAPI
+KeRaiseIrqlToDpcLevel(
+  VOID);
+
+NTKERNELAPI
+KIRQL
+DDKAPI
+KeRaiseIrqlToSynchLevel(
+    VOID);
+
+
+#elif defined(_M_ARM)
+#include <armddk.h>
+#else
+#error Unknown Architecture
+#endif
 
 /******************************************************************************
  *                         Runtime Library Functions                          *
@@ -5545,8 +5850,8 @@ RtlStringFromGUID(
 
 #define RtlZeroBytes RtlZeroMemory
 
-
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
+
 NTSYSAPI
 BOOLEAN
 NTAPI
@@ -10415,6 +10720,7 @@ ExFreeToPagedLookasideList(
 
 #endif // !defined(MIDL_PASS)
 
+
 /******************************************************************************
  *                          Object Manager Functions                          *
  ******************************************************************************/
@@ -10471,6 +10777,7 @@ ObReleaseObjectSecurity(
   IN BOOLEAN MemoryAllocated);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
 
 /******************************************************************************
  *                          Process Manager Functions                         *
@@ -10786,7 +11093,6 @@ HalReadDmaCounter(
 }
 
 #endif
-
 
 #ifndef _NTTMAPI_
 #define _NTTMAPI_

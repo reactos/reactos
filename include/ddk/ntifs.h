@@ -7813,16 +7813,17 @@ FsRtlRemovePerFileObjectContext(
     (InterlockedDecrement((LONG volatile *)&((FL)->LockRequestsInProgress)));\
 }
 
+extern NTKERNELAPI PUSHORT NlsOemLeadByteInfo;
+#define NLS_OEM_LEAD_BYTE_INFO            NlsOemLeadByteInfo
+
 #ifdef NLS_MB_CODE_PAGE_TAG
 #undef NLS_MB_CODE_PAGE_TAG
 #endif
-
-#define LEGAL_ANSI_CHARACTER_ARRAY        FsRtlLegalAnsiCharacterArray
 #define NLS_MB_CODE_PAGE_TAG              NlsMbOemCodePageTag
-#define NLS_OEM_LEAD_BYTE_INFO            NlsOemLeadByteInfo
 
-extern UCHAR const* const LEGAL_ANSI_CHARACTER_ARRAY;
-extern PUSHORT NLS_OEM_LEAD_BYTE_INFO;
+/* GCC compatible definition, MS one is retarded */
+extern NTKERNELAPI const UCHAR * const FsRtlLegalAnsiCharacterArray;
+#define LEGAL_ANSI_CHARACTER_ARRAY        FsRtlLegalAnsiCharacterArray
 
 #define FsRtlIsAnsiCharacterWild(C) (                                       \
     FlagOn(FsRtlLegalAnsiCharacterArray[(UCHAR)(C)], FSRTL_WILD_CHARACTER ) \
@@ -8935,11 +8936,6 @@ ZwDuplicateToken(
 
 #include "csq.h"
 
-#ifdef _NTOSKRNL_
-extern PUCHAR                       FsRtlLegalAnsiCharacterArray;
-#else
-extern DECLSPEC_IMPORT PUCHAR       FsRtlLegalAnsiCharacterArray;
-#endif
 extern PACL                         SePublicDefaultDacl;
 extern PACL                         SeSystemDefaultDacl;
 
@@ -9673,8 +9669,6 @@ FsRtlIsFatDbcsLegal (
     IN BOOLEAN      PathNamePermissible,
     IN BOOLEAN      LeadingBackslashPermissible
 );
-
-extern PUSHORT NlsOemLeadByteInfo;
 
 NTKERNELAPI
 BOOLEAN

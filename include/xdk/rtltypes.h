@@ -113,16 +113,9 @@ typedef union _SLIST_HEADER {
 
 #endif /* _SLIST_HEADER_ */
 
-
-/* HACK HACK HACK - GCC (or perhaps LD) is messing this up */
-#if defined(_NTSYSTEM_) || defined(__GNUC__)
+/* MS definition is broken! */
+extern BOOLEAN NTSYSAPI NlsMbCodePageTag;
+extern BOOLEAN NTSYSAPI NlsMbOemCodePageTag;
 #define NLS_MB_CODE_PAGE_TAG NlsMbCodePageTag
 #define NLS_MB_OEM_CODE_PAGE_TAG NlsMbOemCodePageTag
-#else
-#define NLS_MB_CODE_PAGE_TAG (*NlsMbCodePageTag)
-#define NLS_MB_OEM_CODE_PAGE_TAG (*NlsMbOemCodePageTag)
-#endif /* _NT_SYSTEM */
-extern BOOLEAN NTSYSAPI NLS_MB_CODE_PAGE_TAG;
-extern BOOLEAN NTSYSAPI NLS_MB_OEM_CODE_PAGE_TAG;
-
 

@@ -913,6 +913,15 @@ typedef enum _IO_NOTIFICATION_EVENT_CATEGORY {
   EventCategoryTargetDeviceChange
 } IO_NOTIFICATION_EVENT_CATEGORY;
 
+typedef enum _IO_PRIORITY_HINT {
+  IoPriorityVeryLow = 0,
+  IoPriorityLow,
+  IoPriorityNormal,
+  IoPriorityHigh,
+  IoPriorityCritical,
+  MaxIoPriorityTypes
+} IO_PRIORITY_HINT;
+
 #define PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES    0x00000001
 
 typedef NTSTATUS
