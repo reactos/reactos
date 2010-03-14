@@ -44,7 +44,8 @@ typedef struct _IO_ERROR_LPC
 #define ELF_LOGFILE_ARCHIVE_SET 8
 
 /* FIXME: MSDN reads that the following two structs are in winnt.h. Are they? */
-typedef struct _EVENTLOGHEADER {
+typedef struct _EVENTLOGHEADER
+{
     ULONG HeaderSize;
     ULONG Signature;
     ULONG MajorVersion;
@@ -59,7 +60,8 @@ typedef struct _EVENTLOGHEADER {
     ULONG EndHeaderSize;
 } EVENTLOGHEADER, *PEVENTLOGHEADER;
 
-typedef struct _EVENTLOGEOF {
+typedef struct _EVENTLOGEOF
+{
     ULONG RecordSizeBeginning;
     ULONG Ones;
     ULONG Twos;
@@ -72,13 +74,13 @@ typedef struct _EVENTLOGEOF {
     ULONG RecordSizeEnd;
 } EVENTLOGEOF, *PEVENTLOGEOF;
 
-typedef struct
+typedef struct _EVENT_OFFSET_INFO
 {
     ULONG EventNumber;
     ULONG EventOffset;
 } EVENT_OFFSET_INFO, *PEVENT_OFFSET_INFO;
 
-typedef struct
+typedef struct _LOGFILE
 {
     HANDLE hFile;
     EVENTLOGHEADER Header;

@@ -21,10 +21,35 @@ static SERVICE_TABLE_ENTRYW ServiceTable[2] =
     { NULL, NULL }
 };
 
+SERVICE_STATUS ServiceStatus;
+SERVICE_STATUS_HANDLE ServiceStatusHandle;
+
 BOOL onLiveCD = FALSE;  // On livecd events will go to debug output only
 HANDLE MyHeap = NULL;
 
 /* FUNCTIONS ****************************************************************/
+
+static VOID
+UpdateServiceStatus(DWORD dwState)
+{
+    ServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
+    ServiceStatus.dwCurrentState = dwState;
+    ServiceStatus.dwControlsAccepted = 0;
+    ServiceStatus.dwWin32ExitCode = 0;
+    ServiceStatus.dwServiceSpecificExitCode = 0;
+    ServiceStatus.dwCheckPoint = 0;
+
+    if (dwState == SERVICE_START_PENDING ||
+        dwState == SERVICE_STOP_PENDING ||
+        dwState == SERVICE_PAUSE_PENDING ||
+        dwState == SERVICE_CONTINUE_PENDING)
+        ServiceStatus.dwWaitHint = 10000;
+    else
+        ServiceStatus.dwWaitHint = 0;
+
+    SetServiceStatus(ServiceStatusHandle,
+                     &ServiceStatus);
+}
 
 static DWORD WINAPI
 ServiceControlHandler(DWORD dwControl,
@@ -32,9 +57,40 @@ ServiceControlHandler(DWORD dwControl,
                       LPVOID lpEventData,
                       LPVOID lpContext)
 {
-    /* FIXME */
-    DPRINT1("ServiceControlHandler() called (control code %lu)\n", dwControl);
-    return ERROR_SUCCESS;
+    DPRINT("ServiceControlHandler() called\n");
+
+    switch (dwControl)
+    {
+        case SERVICE_CONTROL_STOP:
+            DPRINT("  SERVICE_CONTROL_STOP received\n");
+            UpdateServiceStatus(SERVICE_STOPPED);
+            return ERROR_SUCCESS;
+
+        case SERVICE_CONTROL_PAUSE:
+            DPRINT("  SERVICE_CONTROL_PAUSE received\n");
+            UpdateServiceStatus(SERVICE_PAUSED);
+            return ERROR_SUCCESS;
+
+        case SERVICE_CONTROL_CONTINUE:
+            DPRINT("  SERVICE_CONTROL_CONTINUE received\n");
+            UpdateServiceStatus(SERVICE_RUNNING);
+            return ERROR_SUCCESS;
+
+        case SERVICE_CONTROL_INTERROGATE:
+            DPRINT("  SERVICE_CONTROL_INTERROGATE received\n");
+            SetServiceStatus(ServiceStatusHandle,
+                             &ServiceStatus);
+            return ERROR_SUCCESS;
+
+        case SERVICE_CONTROL_SHUTDOWN:
+            DPRINT("  SERVICE_CONTROL_SHUTDOWN received\n");
+            UpdateServiceStatus(SERVICE_STOPPED);
+            return ERROR_SUCCESS;
+
+        default :
+            DPRINT1("  Control %lu received\n");
+            return ERROR_CALL_NOT_IMPLEMENTED;
+    }
 }
 
 
@@ -83,8 +139,6 @@ static VOID CALLBACK
 ServiceMain(DWORD argc,
             LPWSTR *argv)
 {
-    SERVICE_STATUS ServiceStatus;
-    SERVICE_STATUS_HANDLE ServiceStatusHandle;
     DWORD dwError;
 
     UNREFERENCED_PARAMETER(argc);
@@ -102,30 +156,19 @@ ServiceMain(DWORD argc,
         return;
     }
 
-    ServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
-    ServiceStatus.dwCurrentState = SERVICE_START_PENDING;
-    ServiceStatus.dwControlsAccepted = 0;
-    ServiceStatus.dwWin32ExitCode = NO_ERROR;
-    ServiceStatus.dwServiceSpecificExitCode = 0;
-    ServiceStatus.dwCheckPoint = 0;
-    ServiceStatus.dwWaitHint = 2000;
-
-    SetServiceStatus(ServiceStatusHandle,
-                     &ServiceStatus);
+    UpdateServiceStatus(SERVICE_START_PENDING);
 
     dwError = ServiceInit();
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("Service stopped\n");
-        ServiceStatus.dwCurrentState = SERVICE_STOPPED;
+        DPRINT("Service stopped (dwError: %lu\n", dwError);
+        UpdateServiceStatus(SERVICE_START_PENDING);
     }
     else
     {
-        ServiceStatus.dwCurrentState = SERVICE_RUNNING;
+        DPRINT("Service started\n");
+        UpdateServiceStatus(SERVICE_RUNNING);
     }
-
-    SetServiceStatus(ServiceStatusHandle,
-                     &ServiceStatus);
 
     DPRINT("ServiceMain() done\n");
 }
