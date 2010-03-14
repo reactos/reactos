@@ -2414,26 +2414,10 @@ extern const PRTL_REALLOCATE_STRING_ROUTINE RtlReallocateStringRoutine;
 
 #define RTL_SYSTEM_VOLUME_INFORMATION_FOLDER    L"System Volume Information"
 
-#define DEVICE_TYPE ULONG
-
-#define CTL_CODE(DeviceType, Function, Method, Access) \
-  (((DeviceType) << 16) | ((Access) << 14) | ((Function) << 2) | (Method))
-
-#define DEVICE_TYPE_FROM_CTL_CODE(ctl) (((ULONG) (ctl & 0xffff0000)) >> 16)
-
 #define METHOD_FROM_CTL_CODE(ctrlCode)          ((ULONG)(ctrlCode & 3))
 
-#define METHOD_BUFFERED                 0
-#define METHOD_IN_DIRECT                1
-#define METHOD_OUT_DIRECT               2
-#define METHOD_NEITHER                  3
 #define METHOD_DIRECT_TO_HARDWARE       METHOD_IN_DIRECT
 #define METHOD_DIRECT_FROM_HARDWARE     METHOD_OUT_DIRECT
-
-#define FILE_ANY_ACCESS                   0x00000000
-#define FILE_SPECIAL_ACCESS               FILE_ANY_ACCESS
-#define FILE_READ_ACCESS                  0x00000001
-#define FILE_WRITE_ACCESS                 0x00000002
 
 typedef ULONG  LSA_OPERATIONAL_MODE, *PLSA_OPERATIONAL_MODE;
 
@@ -4957,24 +4941,6 @@ typedef NTSTATUS
 NTKERNELAPI
 VOID
 NTAPI
-SeCaptureSubjectContext(
-  OUT PSECURITY_SUBJECT_CONTEXT SubjectContext);
-
-NTKERNELAPI
-VOID
-NTAPI
-SeLockSubjectContext(
-  IN PSECURITY_SUBJECT_CONTEXT SubjectContext);
-
-NTKERNELAPI
-VOID
-NTAPI
-SeUnlockSubjectContext(
-  IN PSECURITY_SUBJECT_CONTEXT SubjectContext);
-
-NTKERNELAPI
-VOID
-NTAPI
 SeReleaseSubjectContext(
   IN PSECURITY_SUBJECT_CONTEXT SubjectContext);
 
@@ -5385,18 +5351,6 @@ SeLocateProcessImageName(
 
 extern NTKERNELAPI PSE_EXPORTS SeExports;
 
-#if !defined(_PSGETCURRENTTHREAD_)
-#define _PSGETCURRENTTHREAD_
-
-FORCEINLINE
-PETHREAD
-PsGetCurrentThread(
-  VOID)
-{
-  return (PETHREAD)KeGetCurrentThread();
-}
-#endif
-
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
 NTKERNELAPI
@@ -5758,18 +5712,6 @@ IoPageRead(
 NTKERNELAPI
 PDEVICE_OBJECT
 NTAPI
-IoGetAttachedDevice(
-  IN PDEVICE_OBJECT DeviceObject);
-
-NTKERNELAPI
-PDEVICE_OBJECT
-NTAPI
-IoGetAttachedDeviceReference(
-  IN PDEVICE_OBJECT DeviceObject);
-
-NTKERNELAPI
-PDEVICE_OBJECT
-NTAPI
 IoGetBaseFileSystemDeviceObject(
   IN PFILE_OBJECT FileObject);
 
@@ -5884,42 +5826,6 @@ IoSetTopLevelIrp(
   IN PIRP Irp OPTIONAL);
 
 NTKERNELAPI
-VOID
-NTAPI
-IoStartNextPacket(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN BOOLEAN Cancelable);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoStartNextPacketByKey(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN BOOLEAN Cancelable,
-  IN ULONG Key);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoStartPacket(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN PIRP Irp,
-  IN PULONG Key OPTIONAL,
-  IN PDRIVER_CANCEL CancelFunction OPTIONAL);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoStartTimer(
-  IN PDEVICE_OBJECT DeviceObject);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoStopTimer(
-  IN PDEVICE_OBJECT DeviceObject);
-
-NTKERNELAPI
 NTSTATUS
 NTAPI
 IoSynchronousPageWrite(
@@ -5956,12 +5862,6 @@ IoVerifyVolume(
   IN BOOLEAN AllowRawMount);
 
 NTKERNELAPI
-VOID
-NTAPI
-IoWriteErrorLogEntry(
-  IN PVOID ElEntry);
-
-NTKERNELAPI
 NTSTATUS
 NTAPI
 IoGetRequestorSessionId(
@@ -5986,13 +5886,6 @@ NTAPI
 IoQueryFileDosDeviceName(
   IN PFILE_OBJECT FileObject,
   OUT POBJECT_NAME_INFORMATION *ObjectNameInformation);
-
-VOID
-NTAPI
-IoSetStartIoAttributes(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN BOOLEAN DeferredStartIo,
-  IN BOOLEAN NonCancelable);
 
 NTKERNELAPI
 NTSTATUS
@@ -6092,53 +5985,6 @@ typedef struct _IO_PRIORITY_INFO {
 #define PO_CB_LID_SWITCH_STATE          4
 #define PO_CB_PROCESSOR_POWER_POLICY    5
 
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
-
-NTKERNELAPI
-PVOID
-NTAPI
-PoRegisterSystemState(
-  IN OUT PVOID StateHandle OPTIONAL,
-  IN EXECUTION_STATE Flags);
-
-NTKERNELAPI
-VOID
-NTAPI
-PoUnregisterSystemState(
-  IN OUT PVOID StateHandle);
-
-NTKERNELAPI
-POWER_STATE
-NTAPI
-PoSetPowerState(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN POWER_STATE_TYPE Type,
-  IN POWER_STATE State);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-PoCallDriver(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN OUT PIRP Irp);
-
-NTKERNELAPI
-VOID
-NTAPI
-PoStartNextPowerIrp(
-  IN OUT PIRP Irp);
-
-NTKERNELAPI
-PULONG
-NTAPI
-PoRegisterDeviceForIdleDetection(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN ULONG ConservationIdleTime,
-  IN ULONG PerformanceIdleTime,
-  IN DEVICE_POWER_STATE State);
-
-#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
-
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 NTKERNELAPI
 NTSTATUS
@@ -6146,65 +5992,6 @@ NTAPI
 PoQueueShutdownWorkItem(
   IN OUT PWORK_QUEUE_ITEM WorkItem);
 #endif
-
-#if (NTDDI_VERSION >= NTDDI_WIN6SP1)
-NTKERNELAPI
-VOID
-NTAPI
-PoSetDeviceBusyEx(
-  IN OUT PULONG IdlePointer);
-#endif
-
-#if (NTDDI_VERSION >= NTDDI_WIN7)
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-PoCreatePowerRequest(
-  OUT PVOID *PowerRequest,
-  IN PDEVICE_OBJECT DeviceObject,
-  IN PCOUNTED_REASON_CONTEXT Context);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-PoSetPowerRequest(
-  IN OUT PVOID PowerRequest,
-  IN POWER_REQUEST_TYPE Type);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-PoClearPowerRequest(
-  IN OUT PVOID PowerRequest,
-  IN POWER_REQUEST_TYPE Type);
-
-NTKERNELAPI
-VOID
-NTAPI
-PoDeletePowerRequest(
-  IN OUT PVOID PowerRequest);
-
-NTKERNELAPI
-VOID
-NTAPI
-PoStartDeviceBusy(
-  IN OUT PULONG IdlePointer);
-
-NTKERNELAPI
-VOID
-NTAPI
-PoEndDeviceBusy(
-  IN OUT PULONG IdlePointer);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-PoQueryWatchdogTime(
-  IN PDEVICE_OBJECT Pdo,
-  OUT PULONG SecondsRemaining);
-
-#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
 #if defined(_IA64_)
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
@@ -10188,34 +9975,12 @@ ZwCloseObjectAuditAlarm (
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwCreateSection (
-    OUT PHANDLE             SectionHandle,
-    IN ACCESS_MASK          DesiredAccess,
-    IN POBJECT_ATTRIBUTES   ObjectAttributes OPTIONAL,
-    IN PLARGE_INTEGER       MaximumSize OPTIONAL,
-    IN ULONG                SectionPageProtection,
-    IN ULONG                AllocationAttributes,
-    IN HANDLE               FileHandle OPTIONAL
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
 ZwCreateSymbolicLinkObject (
     OUT PHANDLE             SymbolicLinkHandle,
     IN ACCESS_MASK          DesiredAccess,
     IN POBJECT_ATTRIBUTES   ObjectAttributes,
     IN PUNICODE_STRING      TargetName
 );
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwDeleteValueKey (
-    IN HANDLE           Handle,
-    IN PUNICODE_STRING  Name
-);
-
 
 NTSYSAPI
 NTSTATUS
@@ -10254,14 +10019,6 @@ ZwInitiatePowerAction (
 );
 
 #endif /* (VER_PRODUCTBUILD >= 2195) */
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwLoadDriver (
-    /* "\\Registry\\Machine\\System\\CurrentControlSet\\Services\\<DriverName>" */
-    IN PUNICODE_STRING RegistryPath
-);
 
 NTSYSAPI
 NTSTATUS
@@ -10450,14 +10207,6 @@ NTAPI
 ZwTerminateProcess (
     IN HANDLE   ProcessHandle OPTIONAL,
     IN NTSTATUS ExitStatus
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwUnloadDriver (
-    /* "\\Registry\\Machine\\System\\CurrentControlSet\\Services\\<DriverName>" */
-    IN PUNICODE_STRING RegistryPath
 );
 
 NTSYSAPI
