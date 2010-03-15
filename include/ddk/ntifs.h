@@ -8644,21 +8644,6 @@ ZwDeleteFile(
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwDeviceIoControlFile(
-  IN HANDLE FileHandle,
-  IN HANDLE Event OPTIONAL,
-  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
-  IN PVOID ApcContext OPTIONAL,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  IN ULONG IoControlCode,
-  IN PVOID InputBuffer OPTIONAL,
-  IN ULONG InputBufferLength,
-  OUT PVOID OutputBuffer OPTIONAL,
-  IN ULONG OutputBufferLength);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
 ZwQueryDirectoryFile(
   IN HANDLE FileHandle,
   IN HANDLE Event OPTIONAL,
@@ -8671,16 +8656,6 @@ ZwQueryDirectoryFile(
   IN BOOLEAN ReturnSingleEntry,
   IN PUNICODE_STRING FileName OPTIONAL,
   IN BOOLEAN RestartScan);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwQueryVolumeInformationFile(
-  IN HANDLE FileHandle,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  OUT PVOID FsInformation,
-  IN ULONG Length,
-  IN FS_INFORMATION_CLASS FsInformationClass);
 
 NTSYSAPI
 NTSTATUS
@@ -9806,92 +9781,6 @@ RtlUnicodeStringToCountedOemString (
     IN BOOLEAN          AllocateDestinationString
 );
 
-/* RTL Splay Tree Functions */
-NTSYSAPI
-PRTL_SPLAY_LINKS
-NTAPI
-RtlSplay(PRTL_SPLAY_LINKS Links);
-
-NTSYSAPI
-PRTL_SPLAY_LINKS
-NTAPI
-RtlDelete(PRTL_SPLAY_LINKS Links);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlDeleteNoSplay(
-    PRTL_SPLAY_LINKS Links,
-    PRTL_SPLAY_LINKS *Root
-);
-
-NTSYSAPI
-PRTL_SPLAY_LINKS
-NTAPI
-RtlSubtreeSuccessor(PRTL_SPLAY_LINKS Links);
-
-NTSYSAPI
-PRTL_SPLAY_LINKS
-NTAPI
-RtlSubtreePredecessor(PRTL_SPLAY_LINKS Links);
-
-NTSYSAPI
-PRTL_SPLAY_LINKS
-NTAPI
-RtlRealSuccessor(PRTL_SPLAY_LINKS Links);
-
-NTSYSAPI
-PRTL_SPLAY_LINKS
-NTAPI
-RtlRealPredecessor(PRTL_SPLAY_LINKS Links);
-
-#define RtlIsLeftChild(Links) \
-    (RtlLeftChild(RtlParent(Links)) == (PRTL_SPLAY_LINKS)(Links))
-
-#define RtlIsRightChild(Links) \
-    (RtlRightChild(RtlParent(Links)) == (PRTL_SPLAY_LINKS)(Links))
-
-#define RtlRightChild(Links) \
-    ((PRTL_SPLAY_LINKS)(Links))->RightChild
-
-#define RtlIsRoot(Links) \
-    (RtlParent(Links) == (PRTL_SPLAY_LINKS)(Links))
-
-#define RtlLeftChild(Links) \
-    ((PRTL_SPLAY_LINKS)(Links))->LeftChild
-
-#define RtlParent(Links) \
-    ((PRTL_SPLAY_LINKS)(Links))->Parent
-
-#define RtlInitializeSplayLinks(Links)                  \
-    {                                                   \
-        PRTL_SPLAY_LINKS _SplayLinks;                   \
-        _SplayLinks = (PRTL_SPLAY_LINKS)(Links);        \
-        _SplayLinks->Parent = _SplayLinks;              \
-        _SplayLinks->LeftChild = NULL;                  \
-        _SplayLinks->RightChild = NULL;                 \
-    }
-
-#define RtlInsertAsLeftChild(ParentLinks,ChildLinks)    \
-    {                                                   \
-        PRTL_SPLAY_LINKS _SplayParent;                  \
-        PRTL_SPLAY_LINKS _SplayChild;                   \
-        _SplayParent = (PRTL_SPLAY_LINKS)(ParentLinks); \
-        _SplayChild = (PRTL_SPLAY_LINKS)(ChildLinks);   \
-        _SplayParent->LeftChild = _SplayChild;          \
-        _SplayChild->Parent = _SplayParent;             \
-    }
-
-#define RtlInsertAsRightChild(ParentLinks,ChildLinks)   \
-    {                                                   \
-        PRTL_SPLAY_LINKS _SplayParent;                  \
-        PRTL_SPLAY_LINKS _SplayChild;                   \
-        _SplayParent = (PRTL_SPLAY_LINKS)(ParentLinks); \
-        _SplayChild = (PRTL_SPLAY_LINKS)(ChildLinks);   \
-        _SplayParent->RightChild = _SplayChild;         \
-        _SplayChild->Parent = _SplayParent;             \
-    }
-
 //
 // RTL time functions
 //
@@ -9979,13 +9868,6 @@ ZwCreateSymbolicLinkObject (
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwDisplayString (
-    IN PUNICODE_STRING String
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
 ZwFlushInstructionCache (
     IN HANDLE   ProcessHandle,
     IN PVOID    BaseAddress OPTIONAL,
@@ -10025,16 +9907,6 @@ ZwLoadKey (
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwOpenProcess (
-    OUT PHANDLE             ProcessHandle,
-    IN ACCESS_MASK          DesiredAccess,
-    IN POBJECT_ATTRIBUTES   ObjectAttributes,
-    IN PCLIENT_ID           ClientId OPTIONAL
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
 ZwOpenProcessToken (
     IN HANDLE       ProcessHandle,
     IN ACCESS_MASK  DesiredAccess,
@@ -10060,21 +9932,6 @@ ZwOpenThreadToken (
     IN BOOLEAN      OpenAsSelf,
     OUT PHANDLE     TokenHandle
 );
-
-#if (VER_PRODUCTBUILD >= 2195)
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwPowerInformation (
-    IN POWER_INFORMATION_LEVEL  PowerInformationLevel,
-    IN PVOID                    InputBuffer OPTIONAL,
-    IN ULONG                    InputBufferLength,
-    OUT PVOID                   OutputBuffer OPTIONAL,
-    IN ULONG                    OutputBufferLength
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
 
 NTSYSAPI
 NTSTATUS
@@ -10193,14 +10050,6 @@ NTAPI
 ZwSetSystemTime (
     IN PLARGE_INTEGER   NewTime,
     OUT PLARGE_INTEGER  OldTime OPTIONAL
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwTerminateProcess (
-    IN HANDLE   ProcessHandle OPTIONAL,
-    IN NTSTATUS ExitStatus
 );
 
 NTSYSAPI

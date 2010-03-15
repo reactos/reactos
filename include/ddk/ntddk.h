@@ -451,7 +451,142 @@ typedef struct _RTL_AVL_TABLE {
   PVOID TableContext;
 } RTL_AVL_TABLE, *PRTL_AVL_TABLE;
 
+#ifdef RTL_USE_AVL_TABLES
+
+#undef PRTL_GENERIC_COMPARE_ROUTINE
+#undef RTL_GENERIC_COMPARE_ROUTINE
+#undef PRTL_GENERIC_ALLOCATE_ROUTINE
+#undef RTL_GENERIC_ALLOCATE_ROUTINE
+#undef PRTL_GENERIC_FREE_ROUTINE
+#undef RTL_GENERIC_FREE_ROUTINE
+#undef RTL_GENERIC_TABLE
+#undef PRTL_GENERIC_TABLE
+
+#define PRTL_GENERIC_COMPARE_ROUTINE PRTL_AVL_COMPARE_ROUTINE
+#define RTL_GENERIC_COMPARE_ROUTINE RTL_AVL_COMPARE_ROUTINE
+#define PRTL_GENERIC_ALLOCATE_ROUTINE PRTL_AVL_ALLOCATE_ROUTINE
+#define RTL_GENERIC_ALLOCATE_ROUTINE RTL_AVL_ALLOCATE_ROUTINE
+#define PRTL_GENERIC_FREE_ROUTINE PRTL_AVL_FREE_ROUTINE
+#define RTL_GENERIC_FREE_ROUTINE RTL_AVL_FREE_ROUTINE
+#define RTL_GENERIC_TABLE RTL_AVL_TABLE
+#define PRTL_GENERIC_TABLE PRTL_AVL_TABLE
+
+#define RtlInitializeGenericTable               RtlInitializeGenericTableAvl
+#define RtlInsertElementGenericTable            RtlInsertElementGenericTableAvl
+#define RtlInsertElementGenericTableFull        RtlInsertElementGenericTableFullAvl
+#define RtlDeleteElementGenericTable            RtlDeleteElementGenericTableAvl
+#define RtlLookupElementGenericTable            RtlLookupElementGenericTableAvl
+#define RtlLookupElementGenericTableFull        RtlLookupElementGenericTableFullAvl
+#define RtlEnumerateGenericTable                RtlEnumerateGenericTableAvl
+#define RtlEnumerateGenericTableWithoutSplaying RtlEnumerateGenericTableWithoutSplayingAvl
+#define RtlGetElementGenericTable               RtlGetElementGenericTableAvl
+#define RtlNumberGenericTableElements           RtlNumberGenericTableElementsAvl
+#define RtlIsGenericTableEmpty                  RtlIsGenericTableEmptyAvl
+
+#endif /* RTL_USE_AVL_TABLES */
+
+typedef struct _RTL_SPLAY_LINKS {
+  struct _RTL_SPLAY_LINKS *Parent;
+  struct _RTL_SPLAY_LINKS *LeftChild;
+  struct _RTL_SPLAY_LINKS *RightChild;
+} RTL_SPLAY_LINKS, *PRTL_SPLAY_LINKS;
+
+#define RtlInitializeSplayLinks(Links) {    \
+  PRTL_SPLAY_LINKS _SplayLinks;            \
+  _SplayLinks = (PRTL_SPLAY_LINKS)(Links); \
+  _SplayLinks->Parent = _SplayLinks;   \
+  _SplayLinks->LeftChild = NULL;       \
+  _SplayLinks->RightChild = NULL;      \
+}
+
+#define RtlIsLeftChild(Links) \
+    (RtlLeftChild(RtlParent(Links)) == (PRTL_SPLAY_LINKS)(Links))
+
+#define RtlIsRightChild(Links) \
+    (RtlRightChild(RtlParent(Links)) == (PRTL_SPLAY_LINKS)(Links))
+
+#define RtlRightChild(Links) \
+    ((PRTL_SPLAY_LINKS)(Links))->RightChild
+
+#define RtlIsRoot(Links) \
+    (RtlParent(Links) == (PRTL_SPLAY_LINKS)(Links))
+
+#define RtlLeftChild(Links) \
+    ((PRTL_SPLAY_LINKS)(Links))->LeftChild
+
+#define RtlParent(Links) \
+    ((PRTL_SPLAY_LINKS)(Links))->Parent
+
+#define RtlInsertAsLeftChild(ParentLinks,ChildLinks)    \
+    {                                                   \
+        PRTL_SPLAY_LINKS _SplayParent;                  \
+        PRTL_SPLAY_LINKS _SplayChild;                   \
+        _SplayParent = (PRTL_SPLAY_LINKS)(ParentLinks); \
+        _SplayChild = (PRTL_SPLAY_LINKS)(ChildLinks);   \
+        _SplayParent->LeftChild = _SplayChild;          \
+        _SplayChild->Parent = _SplayParent;             \
+    }
+
+#define RtlInsertAsRightChild(ParentLinks,ChildLinks)   \
+    {                                                   \
+        PRTL_SPLAY_LINKS _SplayParent;                  \
+        PRTL_SPLAY_LINKS _SplayChild;                   \
+        _SplayParent = (PRTL_SPLAY_LINKS)(ParentLinks); \
+        _SplayChild = (PRTL_SPLAY_LINKS)(ChildLinks);   \
+        _SplayParent->RightChild = _SplayChild;         \
+        _SplayChild->Parent = _SplayParent;             \
+    }
+
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTSYSAPI
+PRTL_SPLAY_LINKS
+NTAPI
+RtlSplay(
+  IN OUT PRTL_SPLAY_LINKS Links);
+
+NTSYSAPI
+PRTL_SPLAY_LINKS
+NTAPI
+RtlDelete(
+  IN PRTL_SPLAY_LINKS Links);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlDeleteNoSplay(
+  IN PRTL_SPLAY_LINKS Links,
+  IN OUT PRTL_SPLAY_LINKS *Root);
+
+NTSYSAPI
+PRTL_SPLAY_LINKS
+NTAPI
+RtlSubtreeSuccessor(
+  IN PRTL_SPLAY_LINKS Links);
+
+NTSYSAPI
+PRTL_SPLAY_LINKS
+NTAPI
+RtlSubtreePredecessor(
+  IN PRTL_SPLAY_LINKS Links);
+
+NTSYSAPI
+PRTL_SPLAY_LINKS
+NTAPI
+RtlRealSuccessor(
+  IN PRTL_SPLAY_LINKS Links);
+
+NTSYSAPI
+PRTL_SPLAY_LINKS
+NTAPI
+RtlRealPredecessor(
+  IN PRTL_SPLAY_LINKS Links);
+
+#endif
+
 #if (NTDDI_VERSION >= NTDDI_WINXP)
+
 NTSYSAPI
 VOID
 NTAPI
@@ -461,6 +596,104 @@ RtlInitializeGenericTableAvl(
   IN PRTL_AVL_ALLOCATE_ROUTINE AllocateRoutine,
   IN PRTL_AVL_FREE_ROUTINE FreeRoutine,
   IN PVOID TableContext OPTIONAL);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlInsertElementGenericTableAvl(
+  IN PRTL_AVL_TABLE Table,
+  IN PVOID Buffer,
+  IN CLONG BufferSize,
+  OUT PBOOLEAN NewElement OPTIONAL);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlInsertElementGenericTableFullAvl(
+  IN PRTL_AVL_TABLE Table,
+  IN PVOID Buffer,
+  IN CLONG BufferSize,
+  OUT PBOOLEAN NewElement OPTIONAL,
+  IN PVOID NodeOrParent,
+  IN TABLE_SEARCH_RESULT SearchResult);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlDeleteElementGenericTableAvl(
+  IN PRTL_AVL_TABLE Table,
+  IN PVOID Buffer);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlLookupElementGenericTableAvl(
+  IN PRTL_AVL_TABLE Table,
+  IN PVOID Buffer);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlLookupElementGenericTableFullAvl(
+  IN PRTL_AVL_TABLE Table,
+  IN PVOID Buffer,
+  OUT PVOID *NodeOrParent,
+  OUT TABLE_SEARCH_RESULT *SearchResult);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlEnumerateGenericTableAvl(
+  IN PRTL_AVL_TABLE Table,
+  IN BOOLEAN Restart);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlEnumerateGenericTableWithoutSplayingAvl(
+  IN PRTL_AVL_TABLE Table,
+  IN OUT PVOID *RestartKey);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlLookupFirstMatchingElementGenericTableAvl(
+  IN PRTL_AVL_TABLE Table,
+  IN PVOID Buffer,
+  OUT PVOID *RestartKey);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlEnumerateGenericTableLikeADirectory(
+  IN PRTL_AVL_TABLE Table,
+  IN PRTL_AVL_MATCH_FUNCTION MatchFunction OPTIONAL,
+  IN PVOID MatchData OPTIONAL,
+  IN ULONG NextFlag,
+  IN OUT PVOID *RestartKey,
+  IN OUT PULONG DeleteCount,
+  IN PVOID Buffer);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlGetElementGenericTableAvl(
+  IN PRTL_AVL_TABLE Table,
+  IN ULONG I);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlNumberGenericTableElementsAvl(
+  IN PRTL_AVL_TABLE Table);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlIsGenericTableEmptyAvl(
+  IN PRTL_AVL_TABLE Table);
+
+
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
 #if (NTDDI_VERSION >= NTDDI_WIN6)
@@ -2930,14 +3163,6 @@ PsRemoveLoadImageNotifyRoutine(
 
 extern NTKERNELAPI PEPROCESS PsInitialSystemProcess;
 
-/* RTL Types */
-
-typedef struct _RTL_SPLAY_LINKS {
-  struct _RTL_SPLAY_LINKS *Parent;
-  struct _RTL_SPLAY_LINKS *LeftChild;
-  struct _RTL_SPLAY_LINKS *RightChild;
-} RTL_SPLAY_LINKS, *PRTL_SPLAY_LINKS;
-
 /* RTL Functions */
 
 #if (defined(_M_AMD64) || defined(_M_IA64)) && !defined(_REALLY_GET_CALLERS_CALLER_)
@@ -3179,6 +3404,70 @@ ZwSetTimer(
 
 #endif
 
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwDisplayString (
+    IN PUNICODE_STRING String
+);
+
+#if (VER_PRODUCTBUILD >= 2195)
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwPowerInformation (
+    IN POWER_INFORMATION_LEVEL  PowerInformationLevel,
+    IN PVOID                    InputBuffer OPTIONAL,
+    IN ULONG                    InputBufferLength,
+    OUT PVOID                   OutputBuffer OPTIONAL,
+    IN ULONG                    OutputBufferLength
+);
+
+#endif /* (VER_PRODUCTBUILD >= 2195) */
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwTerminateProcess (
+    IN HANDLE   ProcessHandle OPTIONAL,
+    IN NTSTATUS ExitStatus
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwOpenProcess (
+    OUT PHANDLE             ProcessHandle,
+    IN ACCESS_MASK          DesiredAccess,
+    IN POBJECT_ATTRIBUTES   ObjectAttributes,
+    IN PCLIENT_ID           ClientId OPTIONAL
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwQueryVolumeInformationFile(
+  IN HANDLE FileHandle,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  OUT PVOID FsInformation,
+  IN ULONG Length,
+  IN FS_INFORMATION_CLASS FsInformationClass);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwDeviceIoControlFile(
+  IN HANDLE FileHandle,
+  IN HANDLE Event OPTIONAL,
+  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+  IN PVOID ApcContext OPTIONAL,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  IN ULONG IoControlCode,
+  IN PVOID InputBuffer OPTIONAL,
+  IN ULONG InputBufferLength,
+  OUT PVOID OutputBuffer OPTIONAL,
+  IN ULONG OutputBufferLength);
 
 #ifdef __cplusplus
 }
