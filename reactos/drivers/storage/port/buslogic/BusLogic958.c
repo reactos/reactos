@@ -79,40 +79,6 @@ v1.2.0.2  // Fix PR 40284 correctly, disable interrupts in the initialization ro
 
 #include "BusLogic958.h"
 
-int strcmp(const char* s1, const char* s2)
-{
- while(*s1 == *s2)
- {
-  if(*s1 == 0) return 0;
-
-  s1 ++;
-  s2 ++;
- }
-
- return *s1 - *s2;
-}
-
-char * strcat(char * s, const char * append)
-{
- char * save = s;
-
- for(; *s; ++s);
-
- while((*s++ = *append++));
-
- return save;
-}
-
-char * strcpy(char * to, const char * from)
-{
- char *save = to;
-
- for (; (*to = *from); ++from, ++to);
-
- return save;
-}
-
-
 ULONG
 NTAPI
 DriverEntry(IN PVOID DriverObject,
