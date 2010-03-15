@@ -23,6 +23,9 @@
 
 static NTSTATUS (WINAPI * pNtQuerySystemInformation)(SYSTEM_INFORMATION_CLASS, PVOID, ULONG, PULONG);
 static NTSTATUS (WINAPI * pNtQueryInformationProcess)(HANDLE, PROCESSINFOCLASS, PVOID, ULONG, PULONG);
+static NTSTATUS (WINAPI * pNtQueryInformationThread)(HANDLE, THREADINFOCLASS, PVOID, ULONG, PULONG);
+static NTSTATUS (WINAPI * pNtSetInformationProcess)(HANDLE, PROCESSINFOCLASS, PVOID, ULONG);
+static NTSTATUS (WINAPI * pNtSetInformationThread)(HANDLE, THREADINFOCLASS, PVOID, ULONG);
 static NTSTATUS (WINAPI * pNtReadVirtualMemory)(HANDLE, const void*, void*, SIZE_T, SIZE_T*);
 
 /* one_before_last_pid is used to be able to compare values of a still running process
@@ -44,12 +47,15 @@ static BOOL InitFunctionPtrs(void)
     HMODULE hntdll = GetModuleHandle("ntdll");
     if (!hntdll)
     {
-        skip("Not running on NT\n");
+        win_skip("Not running on NT\n");
         return FALSE;
     }
 
     NTDLL_GET_PROC(NtQuerySystemInformation);
     NTDLL_GET_PROC(NtQueryInformationProcess);
+    NTDLL_GET_PROC(NtQueryInformationThread);
+    NTDLL_GET_PROC(NtSetInformationProcess);
+    NTDLL_GET_PROC(NtSetInformationThread);
     NTDLL_GET_PROC(NtReadVirtualMemory);
 
     return TRUE;
@@ -122,18 +128,22 @@ static void test_query_performance(void)
 {
     NTSTATUS status;
     ULONG ReturnLength;
-    SYSTEM_PERFORMANCE_INFORMATION spi;
+    ULONGLONG buffer[sizeof(SYSTEM_PERFORMANCE_INFORMATION)/sizeof(ULONGLONG) + 1];
 
-    status = pNtQuerySystemInformation(SystemPerformanceInformation, &spi, 0, &ReturnLength);
+    status = pNtQuerySystemInformation(SystemPerformanceInformation, buffer, 0, &ReturnLength);
     ok( status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH, got %08x\n", status);
 
-    status = pNtQuerySystemInformation(SystemPerformanceInformation, &spi, sizeof(spi), &ReturnLength);
+    status = pNtQuerySystemInformation(SystemPerformanceInformation, buffer,
+                                       sizeof(SYSTEM_PERFORMANCE_INFORMATION), &ReturnLength);
     ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
-    ok( sizeof(spi) == ReturnLength, "Inconsistent length %d\n", ReturnLength);
+    ok( ReturnLength == sizeof(SYSTEM_PERFORMANCE_INFORMATION), "Inconsistent length %d\n", ReturnLength);
 
-    status = pNtQuerySystemInformation(SystemPerformanceInformation, &spi, sizeof(spi) + 2, &ReturnLength);
+    status = pNtQuerySystemInformation(SystemPerformanceInformation, buffer,
+                                       sizeof(SYSTEM_PERFORMANCE_INFORMATION) + 2, &ReturnLength);
     ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
-    ok( sizeof(spi) == ReturnLength, "Inconsistent length %d\n", ReturnLength);
+    ok( ReturnLength == sizeof(SYSTEM_PERFORMANCE_INFORMATION) ||
+        ReturnLength == sizeof(SYSTEM_PERFORMANCE_INFORMATION) + 2,
+        "Inconsistent length %d\n", ReturnLength);
 
     /* Not return values yet, as struct members are unknown */
 }
@@ -227,7 +237,7 @@ static void test_query_process(void)
 
     /* Copy of our winternl.h structure turned into a private one */
     typedef struct _SYSTEM_PROCESS_INFORMATION_PRIVATE {
-        DWORD dwOffset;
+        ULONG NextEntryOffset;
         DWORD dwThreadCount;
         DWORD dwUnknown1[6];
         FILETIME ftCreationTime;
@@ -235,9 +245,9 @@ static void test_query_process(void)
         FILETIME ftKernelTime;
         UNICODE_STRING ProcessName;
         DWORD dwBasePriority;
-        DWORD dwProcessID;
-        DWORD dwParentProcessID;
-        DWORD dwHandleCount;
+        HANDLE UniqueProcessId;
+        HANDLE ParentProcessId;
+        ULONG HandleCount;
         DWORD dwUnknown3;
         DWORD dwUnknown4;
         VM_COUNTERS vmCounters;
@@ -261,15 +271,15 @@ static void test_query_process(void)
     ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
     spi = spi_buf;
 
-    /* Get the first dwOffset, from this we can deduce the OS version we're running
+    /* Get the first NextEntryOffset, from this we can deduce the OS version we're running
      *
      * W2K/WinXP/W2K3:
-     *   dwOffset for a process is 184 + (no. of threads) * sizeof(SYSTEM_THREAD_INFORMATION)
+     *   NextEntryOffset for a process is 184 + (no. of threads) * sizeof(SYSTEM_THREAD_INFORMATION)
      * NT:
-     *   dwOffset for a process is 136 + (no. of threads) * sizeof(SYSTEM_THREAD_INFORMATION)
+     *   NextEntryOffset for a process is 136 + (no. of threads) * sizeof(SYSTEM_THREAD_INFORMATION)
      * Wine (with every windows version):
-     *   dwOffset for a process is 0 if just this test is running
-     *   dwOffset for a process is 184 + (no. of threads) * sizeof(SYSTEM_THREAD_INFORMATION) +
+     *   NextEntryOffset for a process is 0 if just this test is running
+     *   NextEntryOffset for a process is 184 + (no. of threads) * sizeof(SYSTEM_THREAD_INFORMATION) +
      *                             ProcessName.MaximumLength
      *     if more wine processes are running
      *
@@ -278,9 +288,9 @@ static void test_query_process(void)
 
     pNtQuerySystemInformation(SystemBasicInformation, &sbi, sizeof(sbi), &ReturnLength);
 
-    is_nt = ( spi->dwOffset - (sbi.NumberOfProcessors * sizeof(SYSTEM_THREAD_INFORMATION)) == 136);
+    is_nt = ( spi->NextEntryOffset - (sbi.NumberOfProcessors * sizeof(SYSTEM_THREAD_INFORMATION)) == 136);
 
-    if (is_nt) skip("Windows version is NT, we will skip thread tests\n");
+    if (is_nt) win_skip("Windows version is NT, we will skip thread tests\n");
 
     /* Check if we have some return values
      * 
@@ -294,7 +304,7 @@ static void test_query_process(void)
     {
         i++;
 
-        last_pid = spi->dwProcessID;
+        last_pid = (DWORD_PTR)spi->UniqueProcessId;
 
         ok( spi->dwThreadCount > 0, "Expected some threads for this process, got 0\n");
 
@@ -306,17 +316,17 @@ static void test_query_process(void)
             for ( j = 0; j < spi->dwThreadCount; j++) 
             {
                 k++;
-                ok ( spi->ti[j].dwOwningPID == spi->dwProcessID, 
-                     "The owning pid of the thread (%d) doesn't equal the pid (%d) of the process\n",
-                     spi->ti[j].dwOwningPID, spi->dwProcessID);
+                ok ( spi->ti[j].ClientId.UniqueProcess == spi->UniqueProcessId,
+                     "The owning pid of the thread (%p) doesn't equal the pid (%p) of the process\n",
+                     spi->ti[j].ClientId.UniqueProcess, spi->UniqueProcessId);
             }
         }
 
-        if (!spi->dwOffset) break;
+        if (!spi->NextEntryOffset) break;
 
         one_before_last_pid = last_pid;
 
-        spi = (SYSTEM_PROCESS_INFORMATION_PRIVATE*)((char*)spi + spi->dwOffset);
+        spi = (SYSTEM_PROCESS_INFORMATION_PRIVATE*)((char*)spi + spi->NextEntryOffset);
     }
     trace("Total number of running processes : %d\n", i);
     if (!is_nt) trace("Total number of running threads   : %d\n", k);
@@ -545,12 +555,12 @@ static void test_query_process_basic(void)
     ULONG ReturnLength;
 
     typedef struct _PROCESS_BASIC_INFORMATION_PRIVATE {
-        DWORD ExitStatus;
-        DWORD PebBaseAddress;
-        DWORD AffinityMask;
-        DWORD BasePriority;
-        ULONG UniqueProcessId;
-        ULONG InheritedFromUniqueProcessId;
+        DWORD_PTR ExitStatus;
+        PPEB      PebBaseAddress;
+        DWORD_PTR AffinityMask;
+        DWORD_PTR BasePriority;
+        ULONG_PTR UniqueProcessId;
+        ULONG_PTR InheritedFromUniqueProcessId;
     } PROCESS_BASIC_INFORMATION_PRIVATE, *PPROCESS_BASIC_INFORMATION_PRIVATE;
 
     PROCESS_BASIC_INFORMATION_PRIVATE pbi;
@@ -604,7 +614,7 @@ static void test_query_process_basic(void)
     ok( sizeof(pbi) == ReturnLength, "Inconsistent length %d\n", ReturnLength);
                                                                                                                                                
     /* Check if we have some return values */
-    trace("ProcessID : %d\n", pbi.UniqueProcessId);
+    trace("ProcessID : %lx\n", pbi.UniqueProcessId);
     ok( pbi.UniqueProcessId > 0, "Expected a ProcessID > 0, got 0\n");
 }
 
@@ -613,30 +623,30 @@ static void test_query_process_vm(void)
     NTSTATUS status;
     ULONG ReturnLength;
     VM_COUNTERS pvi;
+    ULONG old_size = FIELD_OFFSET(VM_COUNTERS,PrivatePageCount);
 
     status = pNtQueryInformationProcess(NULL, ProcessVmCounters, NULL, sizeof(pvi), NULL);
     ok( status == STATUS_ACCESS_VIOLATION || status == STATUS_INVALID_HANDLE,
         "Expected STATUS_ACCESS_VIOLATION or STATUS_INVALID_HANDLE(W2K3), got %08x\n", status);
 
-    status = pNtQueryInformationProcess(NULL, ProcessVmCounters, &pvi, sizeof(pvi), NULL);
+    status = pNtQueryInformationProcess(NULL, ProcessVmCounters, &pvi, old_size, NULL);
     ok( status == STATUS_INVALID_HANDLE, "Expected STATUS_INVALID_HANDLE, got %08x\n", status);
 
     /* Windows XP and W2K3 will report success for a size of 44 AND 48 !
        Windows W2K will only report success for 44.
-       For now we only care for 44, which is sizeof(VM_COUNTERS)
-       If an app depends on it, we have to implement this in ntdll/process.c
+       For now we only care for 44, which is FIELD_OFFSET(VM_COUNTERS,PrivatePageCount))
     */
 
     status = pNtQueryInformationProcess( GetCurrentProcess(), ProcessVmCounters, &pvi, 24, &ReturnLength);
     ok( status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH, got %08x\n", status);
 
-    status = pNtQueryInformationProcess( GetCurrentProcess(), ProcessVmCounters, &pvi, sizeof(pvi), &ReturnLength);
+    status = pNtQueryInformationProcess( GetCurrentProcess(), ProcessVmCounters, &pvi, old_size, &ReturnLength);
     ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
-    ok( sizeof(pvi) == ReturnLength, "Inconsistent length %d\n", ReturnLength);
+    ok( old_size == ReturnLength, "Inconsistent length %d\n", ReturnLength);
 
     status = pNtQueryInformationProcess( GetCurrentProcess(), ProcessVmCounters, &pvi, 46, &ReturnLength);
     ok( status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH, got %08x\n", status);
-    ok( sizeof(pvi) == ReturnLength, "Inconsistent length %d\n", ReturnLength);
+    ok( ReturnLength == old_size || ReturnLength == sizeof(pvi), "Inconsistent length %d\n", ReturnLength);
 
     /* Check if we have some return values */
     trace("WorkingSetSize : %ld\n", pvi.WorkingSetSize);
@@ -656,7 +666,7 @@ static void test_query_process_io(void)
     status = pNtQueryInformationProcess( GetCurrentProcess(), ProcessIoCounters, &pii, sizeof(pii), &ReturnLength);
     if (status == STATUS_NOT_SUPPORTED)
     {
-        skip("ProcessIoCounters information class is not supported\n");
+        win_skip("ProcessIoCounters information class is not supported\n");
         return;
     }
  
@@ -746,6 +756,7 @@ static void test_query_process_handlecount(void)
     NTSTATUS status;
     ULONG ReturnLength;
     DWORD handlecount;
+    BYTE buffer[2 * sizeof(DWORD)];
     HANDLE process;
 
     status = pNtQueryInformationProcess(NULL, ProcessHandleCount, NULL, sizeof(handlecount), NULL);
@@ -773,8 +784,9 @@ static void test_query_process_handlecount(void)
     ok( sizeof(handlecount) == ReturnLength, "Inconsistent length %d\n", ReturnLength);
     CloseHandle(process);
 
-    status = pNtQueryInformationProcess( GetCurrentProcess(), ProcessHandleCount, &handlecount, sizeof(handlecount) * 2, &ReturnLength);
-    ok( status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH, got %08x\n", status);
+    status = pNtQueryInformationProcess( GetCurrentProcess(), ProcessHandleCount, buffer, sizeof(buffer), &ReturnLength);
+    ok( status == STATUS_INFO_LENGTH_MISMATCH || status == STATUS_SUCCESS,
+        "Expected STATUS_INFO_LENGTH_MISMATCH or STATUS_SUCCESS, got %08x\n", status);
     ok( sizeof(handlecount) == ReturnLength, "Inconsistent length %d\n", ReturnLength);
 
     /* Check if we have some return values */
@@ -797,7 +809,7 @@ static void test_query_process_image_file_name(void)
     status = pNtQueryInformationProcess(NULL, ProcessImageFileName, &image_file_name, sizeof(image_file_name), NULL);
     if (status == STATUS_INVALID_INFO_CLASS)
     {
-        skip("ProcessImageFileName is not supported\n");
+        win_skip("ProcessImageFileName is not supported\n");
         return;
     }
     ok( status == STATUS_INVALID_HANDLE, "Expected STATUS_INVALID_HANDLE, got %08x\n", status);
@@ -818,6 +830,7 @@ static void test_query_process_image_file_name(void)
     file_nameA[len] = '\0';
     HeapFree(GetProcessHeap(), 0, buffer);
     trace("process image file name: %s\n", file_nameA);
+    todo_wine ok(strncmp(file_nameA, "\\Device\\", 8) == 0, "Process image name should be an NT path beginning with \\Device\\ (is %s)\n", file_nameA);
     HeapFree(GetProcessHeap(), 0, file_nameA);
 }
 
@@ -865,16 +878,102 @@ static void test_readvirtualmemory(void)
     ok( readcount == 12, "Expected to read 12 bytes, got %ld\n",readcount);
     ok( strcmp(teststring, buffer) == 0, "Expected read memory to be the same as original memory\n");
 
-    /* this test currently crashes wine with "wine client error:<process id>: read: Bad address"
-     * because the reply from wine server is directly read into the buffer and that fails with EFAULT
-     */
     /* illegal local address */
-    /*status = pNtReadVirtualMemory(process, teststring, (void *)0x1234, 12, &readcount);
-    ok( status == STATUS_ACCESS_VIOLATION, "Expected STATUS_ACCESS_VIOLATION, got %08lx\n", status);
+    status = pNtReadVirtualMemory(process, teststring, (void *)0x1234, 12, &readcount);
+    ok( status == STATUS_ACCESS_VIOLATION, "Expected STATUS_ACCESS_VIOLATION, got %08x\n", status);
     ok( readcount == 0, "Expected to read 0 bytes, got %ld\n",readcount);
-    */
 
     CloseHandle(process);
+}
+
+static void test_affinity(void)
+{
+    NTSTATUS status;
+    PROCESS_BASIC_INFORMATION pbi;
+    DWORD_PTR proc_affinity, thread_affinity;
+    THREAD_BASIC_INFORMATION tbi;
+    SYSTEM_INFO si;
+
+    GetSystemInfo(&si);
+    status = pNtQueryInformationProcess( GetCurrentProcess(), ProcessBasicInformation, &pbi, sizeof(pbi), NULL );
+    ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
+    proc_affinity = (DWORD_PTR)pbi.Reserved2[0];
+    ok( proc_affinity == (1 << si.dwNumberOfProcessors) - 1, "Unexpected process affinity\n" );
+    proc_affinity = 1 << si.dwNumberOfProcessors;
+    status = pNtSetInformationProcess( GetCurrentProcess(), ProcessAffinityMask, &proc_affinity, sizeof(proc_affinity) );
+    ok( status == STATUS_INVALID_PARAMETER,
+        "Expected STATUS_INVALID_PARAMETER, got %08x\n", status);
+
+    proc_affinity = 0;
+    status = pNtSetInformationProcess( GetCurrentProcess(), ProcessAffinityMask, &proc_affinity, sizeof(proc_affinity) );
+    ok( status == STATUS_INVALID_PARAMETER,
+        "Expected STATUS_INVALID_PARAMETER, got %08x\n", status);
+
+    status = pNtQueryInformationThread( GetCurrentThread(), ThreadBasicInformation, &tbi, sizeof(tbi), NULL );
+    ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
+    ok( tbi.AffinityMask == (1 << si.dwNumberOfProcessors) - 1, "Unexpected thread affinity\n" );
+    thread_affinity = 1 << si.dwNumberOfProcessors;
+    status = pNtSetInformationThread( GetCurrentThread(), ThreadAffinityMask, &thread_affinity, sizeof(thread_affinity) );
+    ok( status == STATUS_INVALID_PARAMETER,
+        "Expected STATUS_INVALID_PARAMETER, got %08x\n", status);
+    thread_affinity = 0;
+    status = pNtSetInformationThread( GetCurrentThread(), ThreadAffinityMask, &thread_affinity, sizeof(thread_affinity) );
+    ok( status == STATUS_INVALID_PARAMETER,
+        "Expected STATUS_INVALID_PARAMETER, got %08x\n", status);
+
+    thread_affinity = 1;
+    status = pNtSetInformationThread( GetCurrentThread(), ThreadAffinityMask, &thread_affinity, sizeof(thread_affinity) );
+    ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
+    status = pNtQueryInformationThread( GetCurrentThread(), ThreadBasicInformation, &tbi, sizeof(tbi), NULL );
+    ok( tbi.AffinityMask == 1, "Unexpected thread affinity\n" );
+
+    /* NOTE: Pre-Vista does not recognize the "all processors" flag (all bits set) */
+    thread_affinity = ~0UL;
+    status = pNtSetInformationThread( GetCurrentThread(), ThreadAffinityMask, &thread_affinity, sizeof(thread_affinity) );
+    ok( broken(status == STATUS_INVALID_PARAMETER) || status == STATUS_SUCCESS,
+        "Expected STATUS_SUCCESS, got %08x\n", status);
+
+    if (si.dwNumberOfProcessors <= 1)
+    {
+        skip("only one processor, skipping affinity testing\n");
+        return;
+    }
+
+    /* Test thread affinity mask resulting from "all processors" flag */
+    if (status == STATUS_SUCCESS)
+    {
+        status = pNtQueryInformationThread( GetCurrentThread(), ThreadBasicInformation, &tbi, sizeof(tbi), NULL );
+        ok( broken(tbi.AffinityMask == 1) || tbi.AffinityMask == (1 << si.dwNumberOfProcessors) - 1,
+            "Unexpected thread affinity\n" );
+    }
+    else
+        skip("Cannot test thread affinity mask for 'all processors' flag\n");
+
+    proc_affinity = 2;
+    status = pNtSetInformationProcess( GetCurrentProcess(), ProcessAffinityMask, &proc_affinity, sizeof(proc_affinity) );
+    ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
+    status = pNtQueryInformationProcess( GetCurrentProcess(), ProcessBasicInformation, &pbi, sizeof(pbi), NULL );
+    ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
+    proc_affinity = (DWORD_PTR)pbi.Reserved2[0];
+    ok( proc_affinity == 2, "Unexpected process affinity\n" );
+    /* Setting the process affinity changes the thread affinity to match */
+    status = pNtQueryInformationThread( GetCurrentThread(), ThreadBasicInformation, &tbi, sizeof(tbi), NULL );
+    ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
+    ok( tbi.AffinityMask == 2, "Unexpected thread affinity\n" );
+    /* The thread affinity is restricted to the process affinity */
+    thread_affinity = 1;
+    status = pNtSetInformationThread( GetCurrentThread(), ThreadAffinityMask, &thread_affinity, sizeof(thread_affinity) );
+    ok( status == STATUS_INVALID_PARAMETER,
+        "Expected STATUS_INVALID_PARAMETER, got %08x\n", status);
+
+    proc_affinity = (1 << si.dwNumberOfProcessors) - 1;
+    status = pNtSetInformationProcess( GetCurrentProcess(), ProcessAffinityMask, &proc_affinity, sizeof(proc_affinity) );
+    ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
+    /* Resetting the process affinity also resets the thread affinity */
+    status = pNtQueryInformationThread( GetCurrentThread(), ThreadBasicInformation, &tbi, sizeof(tbi), NULL );
+    ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
+    ok( tbi.AffinityMask == (1 << si.dwNumberOfProcessors) - 1,
+        "Unexpected thread affinity\n" );
 }
 
 START_TEST(info)
@@ -961,4 +1060,7 @@ START_TEST(info)
     /* belongs into it's own file */
     trace("Starting test_readvirtualmemory()\n");
     test_readvirtualmemory();
+
+    trace("Starting test_affinity()\n");
+    test_affinity();
 }
