@@ -159,8 +159,8 @@ protected:
     KSPIN_INTERFACE m_Interface;
     KSPIN_MEDIUM m_Medium;
     IPin * m_Pin;
-    IKsInterfaceHandler * m_InterfaceHandler;
     BOOL m_ReadOnly;
+    IKsInterfaceHandler * m_InterfaceHandler;
 };
 
 HRESULT
