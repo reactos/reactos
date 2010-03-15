@@ -247,12 +247,9 @@ CKsInterfaceHandler::KsProcessMediaSamples(
 
              //release IMediaSample2 interface
              MediaSample->Release();
-             if (FAILED(hr))
-				 OutputDebugStringW(L"CKsInterfaceHandler::KsProcessMediaSamples MediaSample::GetProperties failed\n");
          }
          else
          {
-				 OutputDebugStringW(L"CKsInterfaceHandler::KsProcessMediaSamples MediaSample:: only IMediaSample supported\n");
              // get properties
              hr = SampleList[Index]->GetPointer((BYTE**)&Properties.pbBuffer);
              assert(hr == NOERROR);
@@ -272,7 +269,7 @@ CKsInterfaceHandler::KsProcessMediaSamples(
          }
 
          WCHAR Buffer[100];
-		 swprintf(Buffer, L"BufferLength %lu Property Buffer %p ExtendedSize %u lActual %u\n", Properties.cbBuffer, Properties.pbBuffer, ExtendedSize, Properties.lActual);
+         swprintf(Buffer, L"BufferLength %lu Property Buffer %p ExtendedSize %u lActual %u\n", Properties.cbBuffer, Properties.pbBuffer, ExtendedSize, Properties.lActual);
          OutputDebugStringW(Buffer);
 
          CurStreamHeader->Size = sizeof(KSSTREAM_HEADER) + ExtendedSize;

@@ -21,6 +21,7 @@ class COutputPin : public IPin,
 //                   public IKsPinPipe,
                    public IKsControl
 /*
+                  public IAMBufferNegotiation,
                   public IQualityControl,
                   public IKsPinEx,
                   public IKsAggregateControl
@@ -142,50 +143,54 @@ COutputPin::QueryInterface(
     if (IsEqualGUID(refiid, IID_IUnknown) ||
         IsEqualGUID(refiid, IID_IPin))
     {
+        OutputDebugStringW(L"COutputPin::QueryInterface IID_IPin\n");
         *Output = PVOID(this);
         reinterpret_cast<IUnknown*>(*Output)->AddRef();
         return NOERROR;
     }
     else if (IsEqualGUID(refiid, IID_IKsObject))
     {
+        OutputDebugStringW(L"COutputPin::QueryInterface IID_IKsObject\n");
         *Output = (IKsObject*)(this);
         reinterpret_cast<IKsObject*>(*Output)->AddRef();
         return NOERROR;
     }
     else if (IsEqualGUID(refiid, IID_IKsPropertySet))
     {
+        OutputDebugStringW(L"COutputPin::QueryInterface IID_IKsPropertySet\n");
+        DebugBreak();
         *Output = (IKsPropertySet*)(this);
         reinterpret_cast<IKsPropertySet*>(*Output)->AddRef();
         return NOERROR;
     }
     else if (IsEqualGUID(refiid, IID_IKsControl))
     {
+        OutputDebugStringW(L"COutputPin::QueryInterface IID_IKsControl\n");
         *Output = (IKsControl*)(this);
         reinterpret_cast<IKsControl*>(*Output)->AddRef();
         return NOERROR;
     }
+#if 0
     else if (IsEqualGUID(refiid, IID_IStreamBuilder))
     {
         *Output = (IStreamBuilder*)(this);
         reinterpret_cast<IStreamBuilder*>(*Output)->AddRef();
         return NOERROR;
     }
+#endif
     else if (IsEqualGUID(refiid, IID_IKsPinFactory))
     {
+        OutputDebugStringW(L"COutputPin::QueryInterface IID_IKsPinFactory\n");
         *Output = (IKsPinFactory*)(this);
         reinterpret_cast<IKsPinFactory*>(*Output)->AddRef();
         return NOERROR;
     }
     else if (IsEqualGUID(refiid, IID_ISpecifyPropertyPages))
     {
+        OutputDebugStringW(L"COutputPin::QueryInterface IID_ISpecifyPropertyPages\n");
         *Output = (ISpecifyPropertyPages*)(this);
         reinterpret_cast<ISpecifyPropertyPages*>(*Output)->AddRef();
         return NOERROR;
-    }
-    else if (IsEqualGUID(refiid, IID_IBaseFilter))
-    {
-        OutputDebugStringW(L"COutputPin::QueryInterface query IID_IBaseFilter\n");
-        DebugBreak();
     }
 
     WCHAR Buffer[MAX_PATH];
@@ -226,6 +231,7 @@ STDMETHODCALLTYPE
 COutputPin::KsPinFactory(
     ULONG* PinFactory)
 {
+    OutputDebugStringW(L"COutputPin::KsPinFactory\n");
     *PinFactory = m_PinId;
     return S_OK;
 }
@@ -241,6 +247,7 @@ COutputPin::Render(
     IPin *ppinOut,
     IGraphBuilder *pGraph)
 {
+    OutputDebugStringW(L"COutputPin::Render\n");
     return S_OK;
 }
 
@@ -250,6 +257,7 @@ COutputPin::Backout(
     IPin *ppinOut, 
     IGraphBuilder *pGraph)
 {
+    OutputDebugStringW(L"COutputPin::Backout\n");
     return S_OK;
 }
 //-------------------------------------------------------------------
@@ -259,6 +267,7 @@ HANDLE
 STDMETHODCALLTYPE
 COutputPin::KsGetObjectHandle()
 {
+    OutputDebugStringW(L"COutputPin::KsGetObjectHandle\n");
     assert(m_hPin);
     return m_hPin;
 }
@@ -276,6 +285,7 @@ COutputPin::KsProperty(
     ULONG* BytesReturned)
 {
     assert(m_hPin != 0);
+    OutputDebugStringW(L"COutputPin::KsProperty\n");
     return KsSynchronousDeviceControl(m_hPin, IOCTL_KS_PROPERTY, (PVOID)Property, PropertyLength, (PVOID)PropertyData, DataLength, BytesReturned);
 }
 
@@ -289,6 +299,7 @@ COutputPin::KsMethod(
     ULONG* BytesReturned)
 {
     assert(m_hPin != 0);
+    OutputDebugStringW(L"COutputPin::KsMethod\n");
     return KsSynchronousDeviceControl(m_hPin, IOCTL_KS_METHOD, (PVOID)Method, MethodLength, (PVOID)MethodData, DataLength, BytesReturned);
 }
 
@@ -302,6 +313,8 @@ COutputPin::KsEvent(
     ULONG* BytesReturned)
 {
     assert(m_hPin != 0);
+
+    OutputDebugStringW(L"COutputPin::KsEvent\n");
 
     if (EventLength)
         return KsSynchronousDeviceControl(m_hPin, IOCTL_KS_ENABLE_EVENT, (PVOID)Event, EventLength, (PVOID)EventData, DataLength, BytesReturned);
@@ -324,6 +337,8 @@ COutputPin::Set(
     DWORD cbPropData)
 {
     ULONG BytesReturned;
+
+    OutputDebugStringW(L"COutputPin::Set\n");
 
     if (cbInstanceData)
     {
@@ -367,6 +382,8 @@ COutputPin::Get(
 {
     ULONG BytesReturned;
 
+    OutputDebugStringW(L"COutputPin::Get\n");
+
     if (cbInstanceData)
     {
         PKSPROPERTY Property = (PKSPROPERTY)CoTaskMemAlloc(sizeof(KSPROPERTY) + cbInstanceData);
@@ -405,6 +422,8 @@ COutputPin::QuerySupported(
 {
     KSPROPERTY Property;
     ULONG BytesReturned;
+
+    OutputDebugStringW(L"COutputPin::QuerySupported\n");
 
     Property.Set = guidPropSet;
     Property.Id = dwPropID;
@@ -470,12 +489,15 @@ HRESULT
 STDMETHODCALLTYPE
 COutputPin::ReceiveConnection(IPin *pConnector, const AM_MEDIA_TYPE *pmt)
 {
+    OutputDebugStringW(L"COutputPin::ReceiveConnection\n");
     return E_UNEXPECTED;
 }
 HRESULT
 STDMETHODCALLTYPE
 COutputPin::Disconnect( void)
 {
+   OutputDebugStringW(L"COutputPin::Disconnect\n");
+
     if (!m_Pin)
     {
         // pin was not connected
@@ -495,6 +517,8 @@ HRESULT
 STDMETHODCALLTYPE
 COutputPin::ConnectedTo(IPin **pPin)
 {
+   OutputDebugStringW(L"COutputPin::ConnectedTo\n");
+
     if (!pPin)
         return E_POINTER;
 
@@ -520,6 +544,8 @@ HRESULT
 STDMETHODCALLTYPE
 COutputPin::QueryPinInfo(PIN_INFO *pInfo)
 {
+    OutputDebugStringW(L"COutputPin::QueryPinInfo\n");
+
     wcscpy(pInfo->achName, m_PinName);
     pInfo->dir = PINDIR_OUTPUT;
     pInfo->pFilter = m_ParentFilter;
@@ -531,6 +557,8 @@ HRESULT
 STDMETHODCALLTYPE
 COutputPin::QueryDirection(PIN_DIRECTION *pPinDir)
 {
+    OutputDebugStringW(L"COutputPin::QueryDirection\n");
+
     if (pPinDir)
     {
         *pPinDir = PINDIR_OUTPUT;
@@ -543,6 +571,8 @@ HRESULT
 STDMETHODCALLTYPE
 COutputPin::QueryId(LPWSTR *Id)
 {
+    OutputDebugStringW(L"COutputPin::QueryId\n");
+
     *Id = (LPWSTR)CoTaskMemAlloc((wcslen(m_PinName)+1)*sizeof(WCHAR));
     if (!*Id)
         return E_OUTOFMEMORY;
@@ -580,10 +610,10 @@ COutputPin::EnumMediaTypes(IEnumMediaTypes **ppEnum)
     // query media type count
     hr = KsGetMediaTypeCount(hFilter, m_PinId, &MediaTypeCount);
     if (FAILED(hr) || !MediaTypeCount)
-	{
+    {
         OutputDebugStringW(L"COutputPin::EnumMediaTypes failed1\n");
         return hr;
-	}
+    }
 
     // allocate media types
     MediaTypes = (AM_MEDIA_TYPE*)CoTaskMemAlloc(sizeof(AM_MEDIA_TYPE) * MediaTypeCount);
@@ -605,7 +635,7 @@ COutputPin::EnumMediaTypes(IEnumMediaTypes **ppEnum)
         {
             // failed
             CoTaskMemFree(MediaTypes);
-        OutputDebugStringW(L"COutputPin::EnumMediaTypes failed2\n");
+            OutputDebugStringW(L"COutputPin::EnumMediaTypes failed\n");
             return hr;
         }
     }

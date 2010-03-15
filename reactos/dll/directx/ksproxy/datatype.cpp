@@ -42,12 +42,25 @@ public:
     HRESULT STDMETHODCALLTYPE KsQueryExtendedSize(OUT ULONG* ExtendedSize);
     HRESULT STDMETHODCALLTYPE KsSetMediaType(IN const AM_MEDIA_TYPE* AmMediaType);
 
-    CKsDataTypeHandler() : m_Ref(0){};
-    virtual ~CKsDataTypeHandler(){};
+    CKsDataTypeHandler() : m_Ref(0), m_Type(0){};
+    virtual ~CKsDataTypeHandler()
+    {
+        if (m_Type)
+        {
+            if (m_Type->pbFormat)
+                CoTaskMemFree(m_Type->pbFormat);
+
+            if (m_Type->pUnk)
+                m_Type->pUnk->Release();
+
+            CoTaskMemFree(m_Type);
+        }
+
+    };
 
 protected:
-    //CMediaType * m_Type;
     LONG m_Ref;
+    AM_MEDIA_TYPE * m_Type;
 };
 
 
@@ -85,8 +98,68 @@ STDMETHODCALLTYPE
 CKsDataTypeHandler::KsIsMediaTypeInRanges(
     IN PVOID DataRanges)
 {
-    OutputDebugString("UNIMPLEMENTED\n");
-    return E_NOTIMPL;
+    PKSMULTIPLE_ITEM DataList;
+    PKSDATARANGE DataRange;
+    ULONG Index;
+    HRESULT hr = S_FALSE;
+
+    OutputDebugStringW(L"CKsDataTypeHandler::KsIsMediaTypeInRanges\n");
+
+    DataList = (PKSMULTIPLE_ITEM)DataRanges;
+    DataRange = (PKSDATARANGE)(DataList + 1);
+
+    for(Index = 0; Index < DataList->Count; Index++)
+    {
+        BOOL bMatch = FALSE;
+
+        if (DataRange->FormatSize >= sizeof(KSDATARANGE))
+        {
+            bMatch = IsEqualGUID(DataRange->MajorFormat, GUID_NULL);
+        }
+
+        if (!bMatch && DataRange->FormatSize >= sizeof(KSDATARANGE_AUDIO))
+        {
+            bMatch = IsEqualGUID(DataRange->MajorFormat, MEDIATYPE_Audio);
+        }
+
+        if (bMatch)
+        {
+            if (IsEqualGUID(DataRange->SubFormat, m_Type->subtype) ||
+                IsEqualGUID(DataRange->SubFormat, GUID_NULL))
+            {
+                if (IsEqualGUID(DataRange->Specifier, m_Type->formattype) ||
+                    IsEqualGUID(DataRange->Specifier, GUID_NULL))
+                {
+                    if (!IsEqualGUID(m_Type->formattype, FORMAT_WaveFormatEx) && !IsEqualGUID(DataRange->Specifier, FORMAT_WaveFormatEx))
+                    {
+                        //found match
+                        hr = S_OK;
+                        break;
+                    }
+
+                    if (DataRange->FormatSize >= sizeof(KSDATARANGE_AUDIO) && m_Type->cbFormat >= sizeof(WAVEFORMATEX))
+                    {
+                        LPWAVEFORMATEX Format = (LPWAVEFORMATEX)m_Type->pbFormat;
+                        PKSDATARANGE_AUDIO AudioRange = (PKSDATARANGE_AUDIO)DataRange;
+
+                        if (Format->nSamplesPerSec >= AudioRange->MinimumSampleFrequency &&
+                            Format->nSamplesPerSec <= AudioRange->MaximumSampleFrequency &&
+                            Format->wBitsPerSample >= AudioRange->MinimumSampleFrequency &&
+                            Format->wBitsPerSample <= AudioRange->MaximumBitsPerSample && 
+                            Format->nChannels <= AudioRange->MaximumChannels)
+                        {
+                            // found match
+                            hr = S_OK;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        DataRange = (PKSDATARANGE)(((ULONG_PTR)DataRange + DataRange->FormatSize + 7) & ~7);
+    }
+    return S_OK;
 }
 
 HRESULT
@@ -106,7 +179,6 @@ CKsDataTypeHandler::KsQueryExtendedSize(
 {
     /* no header extension required */
     *ExtendedSize = 0;
-
     return NOERROR;
 }
 
@@ -115,19 +187,38 @@ STDMETHODCALLTYPE
 CKsDataTypeHandler::KsSetMediaType(
     IN const AM_MEDIA_TYPE* AmMediaType)
 {
-#if 0
+    OutputDebugString("CKsDataTypeHandler::KsSetMediaType\n");
+
     if (m_Type)
     {
         /* media type can only be set once */
         return E_FAIL;
     }
-#endif
 
-    /*
-     * TODO: allocate CMediaType and copy parameters
-     */
-    OutputDebugString("UNIMPLEMENTED\n");
-    return E_NOTIMPL;
+    m_Type = (AM_MEDIA_TYPE*)CoTaskMemAlloc(sizeof(AM_MEDIA_TYPE));
+    if (!m_Type)
+        return E_OUTOFMEMORY;
+
+    CopyMemory(m_Type, AmMediaType, sizeof(AM_MEDIA_TYPE));
+
+    if (m_Type->cbFormat)
+    {
+        m_Type->pbFormat = (BYTE*)CoTaskMemAlloc(m_Type->cbFormat);
+
+        if (!m_Type->pbFormat)
+        {
+            CoTaskMemFree(m_Type);
+            return E_OUTOFMEMORY;
+        }
+
+        CopyMemory(m_Type->pbFormat, AmMediaType->pbFormat, m_Type->cbFormat);
+    }
+
+    if (m_Type->pUnk)
+        m_Type->pUnk->AddRef();
+
+
+    return S_OK;
 }
 
 HRESULT
@@ -138,7 +229,6 @@ CKsDataTypeHandler_Constructor (
     LPVOID * ppv)
 {
     OutputDebugStringW(L"CKsDataTypeHandler_Constructor\n");
-
     CKsDataTypeHandler * handler = new CKsDataTypeHandler();
 
     if (!handler)

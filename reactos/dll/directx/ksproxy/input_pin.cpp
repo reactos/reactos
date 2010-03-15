@@ -143,7 +143,7 @@ public:
     HRESULT STDMETHODCALLTYPE CheckFormat(const AM_MEDIA_TYPE *pmt);
     HRESULT STDMETHODCALLTYPE CreatePin(const AM_MEDIA_TYPE *pmt);
     HRESULT STDMETHODCALLTYPE CreatePinHandle(PKSPIN_MEDIUM Medium, PKSPIN_INTERFACE Interface, const AM_MEDIA_TYPE *pmt);
-    CInputPin(IBaseFilter * ParentFilter, LPCWSTR PinName, HANDLE hFilter, ULONG PinId, KSPIN_COMMUNICATION Communication) : m_Ref(0), m_ParentFilter(ParentFilter), m_PinName(PinName), m_hFilter(hFilter), m_hPin(INVALID_HANDLE_VALUE), m_PinId(PinId), m_MemAllocator(0), m_IoCount(0), m_Communication(Communication), m_Pin(0), m_ReadOnly(0){};
+    CInputPin(IBaseFilter * ParentFilter, LPCWSTR PinName, HANDLE hFilter, ULONG PinId, KSPIN_COMMUNICATION Communication) : m_Ref(0), m_ParentFilter(ParentFilter), m_PinName(PinName), m_hFilter(hFilter), m_hPin(INVALID_HANDLE_VALUE), m_PinId(PinId), m_MemAllocator(0), m_IoCount(0), m_Communication(Communication), m_Pin(0), m_ReadOnly(0), m_InterfaceHandler(0){};
     virtual ~CInputPin(){};
 
 protected:
@@ -159,6 +159,7 @@ protected:
     KSPIN_INTERFACE m_Interface;
     KSPIN_MEDIUM m_Medium;
     IPin * m_Pin;
+    IKsInterfaceHandler * m_InterfaceHandler;
     BOOL m_ReadOnly;
 };
 
@@ -666,16 +667,17 @@ CInputPin::ReceiveConnection(IPin *pConnector, const AM_MEDIA_TYPE *pmt)
 
     if (m_Pin)
     {
+        // already connected
         return VFW_E_ALREADY_CONNECTED;
     }
 
     // first check format
     hr = CheckFormat(pmt);
     if (FAILED(hr))
+    {
+        // format is not supported
         return hr;
-
-    if (FAILED(CheckFormat(pmt)))
-        return hr;
+    }
 
     hr = CreatePin(pmt);
     if (FAILED(hr))
@@ -683,9 +685,8 @@ CInputPin::ReceiveConnection(IPin *pConnector, const AM_MEDIA_TYPE *pmt)
         return hr;
     }
 
-    //FIXME create pin
-   m_Pin = pConnector;
-   m_Pin->AddRef();
+    m_Pin = pConnector;
+    m_Pin->AddRef();
 
     return S_OK;
 }
@@ -925,6 +926,7 @@ CInputPin::CreatePin(
     PKSMULTIPLE_ITEM InterfaceList;
     PKSPIN_MEDIUM Medium;
     PKSPIN_INTERFACE Interface;
+    IKsInterfaceHandler * InterfaceHandler;
     HRESULT hr;
 
     // query for pin medium
@@ -963,8 +965,43 @@ CInputPin::CreatePin(
         Interface = &StandardPinInterface;
     }
 
-    // now create pin
-    hr = CreatePinHandle(Medium, Interface, pmt);
+    if (m_Communication != KSPIN_COMMUNICATION_BRIDGE && m_Communication != KSPIN_COMMUNICATION_NONE)
+    {
+        // now load the IKsInterfaceHandler plugin
+        hr = CoCreateInstance(Interface->Set, NULL, CLSCTX_INPROC_SERVER, IID_IKsInterfaceHandler, (void**)&InterfaceHandler);
+        if (FAILED(hr))
+        {
+            // failed to load interface handler plugin
+            OutputDebugStringW(L"CInputPin::CreatePin failed to load InterfaceHandlerPlugin\n");
+            CoTaskMemFree(MediumList);
+            CoTaskMemFree(InterfaceList);
+
+            return hr;
+        }
+
+        // now set the pin
+        hr = InterfaceHandler->KsSetPin((IKsPin*)this);
+        if (FAILED(hr))
+        {
+            // failed to load interface handler plugin
+            OutputDebugStringW(L"CInputPin::CreatePin failed to initialize InterfaceHandlerPlugin\n");
+            InterfaceHandler->Release();
+            CoTaskMemFree(MediumList);
+            CoTaskMemFree(InterfaceList);
+            return hr;
+        }
+
+        // store interface handler
+        m_InterfaceHandler = InterfaceHandler;
+
+        // now create pin
+        hr = CreatePinHandle(Medium, Interface, pmt);
+        if (FAILED(hr))
+        {
+            m_InterfaceHandler->Release();
+            m_InterfaceHandler = InterfaceHandler;
+        }
+    }
 
     // free medium / interface / dataformat
     CoTaskMemFree(MediumList);
