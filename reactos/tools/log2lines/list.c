@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "config.h"
 #include "compat.h"
 #include "list.h"
 #include "util.h"
@@ -162,6 +163,8 @@ cache_entry_create(char *Line)
         l2l_dbg(1, "ImageBase field missing\n");
         return entry_delete(pentry);
     }
+    pentry->RelBase = INVALID_BASE;
+    pentry->Size = 0;
     return pentry;
 }
 
@@ -212,3 +215,5 @@ sources_entry_create(PLIST list, char *path, char *prefix)
 
     return pentry;
 }
+
+/* EOF */

@@ -16,25 +16,25 @@
 #include "options.h"
 
 int
-set_LogFile(FILE *logFile)
+set_LogFile(FILE **plogFile)
 {
     if (*opt_logFile)
     {
-        if (logFile)
-            fclose(logFile);
-        logFile = NULL;
+        if (*plogFile)
+            fclose(*plogFile);
+        *plogFile = NULL;
 
         if (strcmp(opt_logFile,"none") == 0)
             return 0; //just close
 
-        logFile = fopen(opt_logFile, "a");
-        if (logFile)
+        *plogFile = fopen(opt_logFile, opt_mod ? opt_mod : "a");
+        if (*plogFile)
         {
             // disable buffering so fflush is not needed
             if (!opt_buffered)
             {
                 l2l_dbg(1, "Disabling log buffering on %s\n", opt_logFile);
-                setbuf(logFile, NULL);
+                setbuf(*plogFile, NULL);
             }
             else
                 l2l_dbg(1, "Enabling log buffering on %s\n", opt_logFile);
@@ -186,3 +186,5 @@ copy_file(char *src, char *dst)
     }
     return 0;
 }
+
+/* EOF */

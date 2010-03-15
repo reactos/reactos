@@ -10,6 +10,7 @@
 #include <stdio.h>
 
 #include "cmd.h"
+#include "options.h"
 
 #define log(outFile, fmt, ...)                          \
     {                                                   \
@@ -44,6 +45,6 @@ const char *getFmt(const char *a);
 long my_atoi(const char *a);
 int isOffset(const char *a);
 int copy_file(char *src, char *dst);
-int set_LogFile(FILE *logFile);
+int set_LogFile(FILE **plogFile);
 
 /* EOF */

@@ -4,11 +4,12 @@
  *
  * - Image functions for symbol info
  */
-#include <sys/stat.h>
+
 #include <errno.h>
 #include <string.h>
 #include <rsym.h>
 
+#include "compat.h"
 #include "util.h"
 #include "options.h"
 #include "log2lines.h"
@@ -163,3 +164,5 @@ get_ImageBase(char *fname, size_t *ImageBase)
     fclose(fr);
     return 0;
 }
+
+/* EOF */

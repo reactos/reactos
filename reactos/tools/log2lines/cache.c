@@ -4,6 +4,7 @@
  *
  * - Image directory caching
  */
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -63,6 +64,14 @@ unpack_iso(char *dir, char *iso)
     if (iso_copied)
         remove(iso_tmp);
     return res;
+}
+
+int
+cleanable(char *path)
+{
+	if (strcmp(basename(path),DEF_OPT_DIR) == 0)
+		return 1;
+	return 0;
 }
 
 int
@@ -135,7 +144,10 @@ check_directory(int force)
     cache_name = malloc(MAX_PATH);
     tmp_name = malloc(MAX_PATH);
     strcpy(cache_name, opt_dir);
-    strcat(cache_name, PATH_STR CACHEFILE);
+	if (cleanable(opt_dir))
+		strcat(cache_name, ALT_PATH_STR CACHEFILE);
+	else
+		strcat(cache_name, PATH_STR CACHEFILE);
     strcpy(tmp_name, cache_name);
     strcat(tmp_name, "~");
     return 0;
@@ -271,4 +283,4 @@ create_cache(int force, int skipImageBase)
     return 0;
 }
 
-
+/* EOF */

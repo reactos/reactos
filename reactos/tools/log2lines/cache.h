@@ -10,5 +10,6 @@
 int check_directory(int force);
 int read_cache(void);
 int create_cache(int force, int skipImageBase);
+int cleanable(char *path);
 
 /* EOF */

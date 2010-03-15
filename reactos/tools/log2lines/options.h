@@ -28,8 +28,10 @@ extern int   opt_Twice ;    // -T
 extern int   opt_undo ;     // -u
 extern int   opt_redo ;     // -U
 extern char *opt_Revision;  // -R
+extern int   opt_Revision_check; // -R check
 extern char  opt_dir[];     // -d <opt_dir>
 extern char  opt_logFile[]; // -l <opt_logFile>
+extern char *opt_mod;       // mod for opt_logFile
 extern char  opt_7z[];      // -z <opt_7z>
 extern char  opt_scanned[]; // all scanned options
 

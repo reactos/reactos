@@ -4,6 +4,7 @@
  *
  * - Cli for escape commands
  */
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -17,7 +18,7 @@
 /* When you edit the cmd line and/or use the history instead of just typing,
  * a bunch of editing BS and space characters
  * is inserted, so the string looks right on the console but still
- * starts with the original string:
+ * contains the original string, plus other garbage:
  */
 static char 
 *backSpaceEdit(char *s)
@@ -142,6 +143,39 @@ handle_switch_pstr(FILE *outFile, char **psw, char *arg, char *desc)
     return changed;
 }
 
+static int
+handle_address_cmd(FILE *outFile, char *arg)
+{
+    PLIST_MEMBER plm;
+    char Image[NAMESIZE];
+    DWORD Offset;
+    int cnt;
+    char *s;
+
+    if(( s = strchr(arg, ':') ))
+    {
+        *s = ' ';
+        if ( (cnt = sscanf(arg,"%20s %lx", Image, &Offset)) == 2)
+        {
+            if (( plm = entry_lookup(&cache, Image) ))
+            {
+                if (plm->RelBase != INVALID_BASE)
+					esclog(outFile, "Address: 0x%lx\n", plm->RelBase + Offset)
+                else
+                    esclog(outFile, "Relocated base missing for '%s' ('mod' will update)\n", Image);
+            }
+            else
+                esclog(outFile, "Image '%s' not found\n", Image);
+        }
+        else
+			esclog(outFile, "usage: `a <Image>:<offset>\n");
+    }
+    else
+        esclog(outFile, "':' expected\n");
+
+    return 1;
+}
+
 char
 handle_escape_cmd(FILE *outFile, char *Line, char *path, char *LineOut)
 {
@@ -177,12 +211,15 @@ handle_escape_cmd(FILE *outFile, char *Line, char *path, char *LineOut)
     opt_cli = 1;
     switch (cmd)
     {
+    case 'a':
+        handle_address_cmd(outFile, arg);
+        break;
     case 'h':
         usage(1);
         break;
     case 'b':
         if (handle_switch(outFile, &opt_buffered, arg, "-b Logfile buffering"))
-            set_LogFile(logFile); //re-open same logfile
+            set_LogFile(&logFile); //re-open same logfile
         break;
     case 'c':
         handle_switch(outFile, &opt_console, NULL, "-c Console option");
@@ -191,8 +228,18 @@ handle_escape_cmd(FILE *outFile, char *Line, char *path, char *LineOut)
         handle_switch_str(outFile, opt_dir, NULL, "-d Directory option");
         break;
     case 'l':
-        if (handle_switch_str(outFile, opt_logFile, arg, "-l logfile"))
-            set_LogFile(logFile); //open new logfile
+        if (handle_switch_str(outFile, opt_logFile, arg, "-l logfile") || (strcmp(opt_mod,"a")!=0))
+        {
+            opt_mod = "a";
+            set_LogFile(&logFile); //open new logfile
+        }
+        break;
+    case 'L':
+        if (handle_switch_str(outFile, opt_logFile, arg, "-L logfile") || (strcmp(opt_mod,"w")!=0))
+        {
+            opt_mod = "w";
+            set_LogFile(&logFile); //open new logfile
+        }
         break;
     case 'm':
         handle_switch(outFile, &opt_Mark, arg, "-m mark (*)");
@@ -212,8 +259,10 @@ handle_escape_cmd(FILE *outFile, char *Line, char *path, char *LineOut)
         break;
     case 'R':
         changed = handle_switch_pstr(outFile, &opt_Revision, arg, NULL);
+		opt_Revision_check = 0;
         if (opt_Revision)
         {
+			opt_Revision_check = 1;
             if (strstr(opt_Revision, "check") == opt_Revision)
             {
                 esclog(outFile, "-R is \"%s\" (%s)\n", opt_Revision, changed ? "changed":"unchanged");
@@ -253,6 +302,7 @@ handle_escape_cmd(FILE *outFile, char *Line, char *path, char *LineOut)
         {
             handle_switch(outFile, &opt_undo, "1", "-u Undo");
             handle_switch(outFile, &opt_redo, "1", "-U Undo and reprocess");
+			opt_Revision_check = 1;
         }
         esclog(outFile, "-S Sources option is %d+%d,\"%s\"\n", opt_Source, opt_SrcPlus, opt_SourcesPath);
         esclog(outFile, "(Setting source tree not implemented)\n");
@@ -289,3 +339,5 @@ handle_escape_cmd(FILE *outFile, char *Line, char *path, char *LineOut)
 
     return KDBG_ESC_CHAR; //handled escaped command
 }
+
+/* EOF */
