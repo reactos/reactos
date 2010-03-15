@@ -165,3 +165,4 @@ CKsNode_Constructor(
     LPVOID * ppv);
 
 extern const GUID IID_IKsObject;
+extern const GUID IID_IKsPinEx;

@@ -52,11 +52,11 @@ class CInputPin : public IPin,
                   public IKsControl,
                   public IKsObject,
                   public IKsPinEx,
-                  public IMemInputPin
+                  public IMemInputPin,
+                  public ISpecifyPropertyPages
 /*
                   public IQualityControl,
                   public IKsPinPipe,
-                  public ISpecifyPropertyPages,
                   public IStreamBuilder,
                   public IKsPinFactory,
                   public IKsAggregateControl
@@ -97,6 +97,9 @@ public:
     HRESULT STDMETHODCALLTYPE BeginFlush();
     HRESULT STDMETHODCALLTYPE EndFlush();
     HRESULT STDMETHODCALLTYPE NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate);
+
+    // ISpecifyPropertyPages
+    HRESULT STDMETHODCALLTYPE GetPages(CAUUID *pPages);
 
     //IKsObject methods
     HANDLE STDMETHODCALLTYPE KsGetObjectHandle();
@@ -205,7 +208,12 @@ CInputPin::QueryInterface(
         reinterpret_cast<IKsPinEx*>(*Output)->AddRef();
         return NOERROR;
     }
-
+    else if (IsEqualGUID(refiid, IID_ISpecifyPropertyPages))
+    {
+        *Output = (ISpecifyPropertyPages*)(this);
+        reinterpret_cast<ISpecifyPropertyPages*>(*Output)->AddRef();
+        return NOERROR;
+    }
 
     WCHAR Buffer[MAX_PATH];
     LPOLESTR lpstr;
@@ -215,6 +223,23 @@ CInputPin::QueryInterface(
     CoTaskMemFree(lpstr);
 
     return E_NOINTERFACE;
+}
+
+//-------------------------------------------------------------------
+// ISpecifyPropertyPages
+//
+
+HRESULT
+STDMETHODCALLTYPE
+CInputPin::GetPages(CAUUID *pPages)
+{
+    if (!pPages)
+        return E_POINTER;
+
+    pPages->cElems = 0;
+    pPages->pElems = NULL;
+
+    return S_OK;
 }
 
 //-------------------------------------------------------------------
