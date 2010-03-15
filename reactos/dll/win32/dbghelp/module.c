@@ -35,10 +35,10 @@ WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 const WCHAR        S_ElfW[]         = {'<','e','l','f','>','\0'};
 const WCHAR        S_WineLoaderW[]  = {'<','w','i','n','e','-','l','o','a','d','e','r','>','\0'};
 static const WCHAR S_DotSoW[]       = {'.','s','o','\0'};
+static const WCHAR S_DotDylibW[]    = {'.','d','y','l','i','b','\0'};
 static const WCHAR S_DotPdbW[]      = {'.','p','d','b','\0'};
 static const WCHAR S_DotDbgW[]      = {'.','d','b','g','\0'};
-const WCHAR        S_WinePThreadW[] = {'w','i','n','e','-','p','t','h','r','e','a','d','\0'};
-const WCHAR        S_WineKThreadW[] = {'w','i','n','e','-','k','t','h','r','e','a','d','\0'};
+const WCHAR        S_WineW[]        = {'w','i','n','e',0};
 const WCHAR        S_SlashW[]       = {'/','\0'};
 
 static const WCHAR S_AcmW[] = {'.','a','c','m','\0'};
@@ -87,9 +87,7 @@ static void module_fill_module(const WCHAR* in, WCHAR* out, size_t size)
     out[len] = '\0';
     if (len > 4 && (l = match_ext(out, len)))
         out[len - l] = '\0';
-    else if (len > 12 &&
-             (!strcmpiW(out + len - 12, S_WinePThreadW) ||
-              !strcmpiW(out + len - 12, S_WineKThreadW)))
+    else if (len > 4 && !strcmpiW(out + len - 4, S_WineW))
         lstrcpynW(out, S_WineLoaderW, size);
     else
     {
@@ -114,6 +112,7 @@ static const char*      get_module_type(enum module_type type, BOOL virtual)
     {
     case DMT_ELF: return virtual ? "Virtual ELF" : "ELF";
     case DMT_PE: return virtual ? "Virtual PE" : "PE";
+    case DMT_MACHO: return virtual ? "Virtual Mach-O" : "Mach-O";
     default: return "---";
     }
 }
@@ -123,20 +122,21 @@ static const char*      get_module_type(enum module_type type, BOOL virtual)
  */
 struct module* module_new(struct process* pcs, const WCHAR* name,
                           enum module_type type, BOOL virtual,
-                          unsigned long mod_addr, unsigned long size,
+                          DWORD64 mod_addr, DWORD64 size,
                           unsigned long stamp, unsigned long checksum)
 {
     struct module*      module;
 
-    assert(type == DMT_ELF || type == DMT_PE);
+    assert(type == DMT_ELF || type == DMT_PE || type == DMT_MACHO);
     if (!(module = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*module))))
 	return NULL;
 
     module->next = pcs->lmodules;
     pcs->lmodules = module;
 
-    TRACE("=> %s %08lx-%08lx %s\n",
-          get_module_type(type, virtual), mod_addr, mod_addr + size,
+    TRACE("=> %s %s-%s %s\n",
+          get_module_type(type, virtual),
+	  wine_dbgstr_longlong(mod_addr), wine_dbgstr_longlong(mod_addr + size),
           debugstr_w(name));
 
     pool_init(&module->pool, 65536);
@@ -169,7 +169,12 @@ struct module* module_new(struct process* pcs, const WCHAR* name,
     module->type              = type;
     module->is_virtual        = virtual ? TRUE : FALSE;
     module->sortlist_valid    = FALSE;
+    module->sorttab_size      = 0;
     module->addr_sorttab      = NULL;
+    module->num_sorttab       = 0;
+    module->num_symbols       = 0;
+
+    vector_init(&module->vsymt, sizeof(struct symt*), 128);
     /* FIXME: this seems a bit too high (on a per module basis)
      * need some statistics about this
      */
@@ -188,7 +193,7 @@ struct module* module_new(struct process* pcs, const WCHAR* name,
  *	module_find_by_name
  *
  */
-struct module* module_find_by_name(const struct process* pcs, const WCHAR* name)
+static struct module* module_find_by_name(const struct process* pcs, const WCHAR* name)
 {
     struct module*      module;
 
@@ -238,7 +243,7 @@ struct module* module_is_already_loaded(const struct process* pcs, const WCHAR* 
  *           module_get_container
  *
  */
-struct module* module_get_container(const struct process* pcs, 
+static struct module* module_get_container(const struct process* pcs,
                                     const struct module* inner)
 {
     struct module*      module;
@@ -319,6 +324,9 @@ BOOL module_get_debug(struct module_pair* pair)
                          ret ? CBA_DEFERRED_SYMBOL_LOAD_COMPLETE : CBA_DEFERRED_SYMBOL_LOAD_FAILURE,
                          &idslW64);
             break;
+        case DMT_MACHO:
+            ret = macho_load_debug_info(pair->effective, NULL);
+            break;
         default:
             ret = FALSE;
             break;
@@ -344,7 +352,8 @@ struct module* module_find_by_addr(const struct process* pcs, unsigned long addr
     if (type == DMT_UNKNOWN)
     {
         if ((module = module_find_by_addr(pcs, addr, DMT_PE)) ||
-            (module = module_find_by_addr(pcs, addr, DMT_ELF)))
+            (module = module_find_by_addr(pcs, addr, DMT_ELF)) ||
+            (module = module_find_by_addr(pcs, addr, DMT_MACHO)))
             return module;
     }
     else
@@ -361,13 +370,13 @@ struct module* module_find_by_addr(const struct process* pcs, unsigned long addr
 }
 
 /******************************************************************
- *		module_is_elf_container_loaded
+ *		module_is_container_loaded
  *
- * checks whether the ELF container, for a (supposed) PE builtin is
+ * checks whether the native container, for a (supposed) PE builtin is
  * already loaded
  */
-static BOOL module_is_elf_container_loaded(const struct process* pcs,
-                                           const WCHAR* ImageName, DWORD base)
+static BOOL module_is_container_loaded(const struct process* pcs,
+                                       const WCHAR* ImageName, DWORD64 base)
 {
     size_t              len;
     struct module*      module;
@@ -379,7 +388,7 @@ static BOOL module_is_elf_container_loaded(const struct process* pcs,
 
     for (module = pcs->lmodules; module; module = module->next)
     {
-        if (module->type == DMT_ELF &&
+        if ((module->type == DMT_ELF || module->type == DMT_MACHO) &&
             base >= module->module.BaseOfImage &&
             base < module->module.BaseOfImage + module->module.ImageSize)
         {
@@ -419,8 +428,17 @@ enum module_type module_get_type_by_name(const WCHAR* name)
     } while (len);
 
     /* check for terminating .so or .so.[digit] */
+    /* FIXME: Can't rely solely on extension; have to check magic or
+     *        stop using .so on Mac OS X.  For now, base on platform. */
     if (len > 3 && !memcmp(name + len - 3, S_DotSoW, 3))
+#ifdef __APPLE__
+        return DMT_MACHO;
+#else
         return DMT_ELF;
+#endif
+
+    if (len > 6 && !strncmpiW(name + len - 6, S_DotDylibW, 6))
+        return DMT_MACHO;
 
     if (len > 4 && !strncmpiW(name + len - 4, S_DotPdbW, 4))
         return DMT_PDB;
@@ -428,14 +446,25 @@ enum module_type module_get_type_by_name(const WCHAR* name)
     if (len > 4 && !strncmpiW(name + len - 4, S_DotDbgW, 4))
         return DMT_DBG;
 
-    /* wine-[kp]thread is also an ELF module */
-    if (((len > 12 && name[len - 13] == '/') || len == 12) &&
-        (!strncmpiW(name + len - 12, S_WinePThreadW, 12) ||
-         !strncmpiW(name + len - 12, S_WineKThreadW, 12)))
+    /* wine is also a native module (Mach-O on Mac OS X, ELF elsewhere) */
+    if (((len > 4 && name[len - 5] == '/') || len == 4) && !strcmpiW(name + len - 4, S_WineW))
     {
+#ifdef __APPLE__
+        return DMT_MACHO;
+#else
         return DMT_ELF;
+#endif
     }
     return DMT_PE;
+}
+
+/******************************************************************
+ *		                refresh_module_list
+ */
+static BOOL refresh_module_list(struct process* pcs)
+{
+    /* force transparent ELF and Mach-O loading / unloading */
+    return elf_synchronize_module_list(pcs) || macho_synchronize_module_list(pcs);
 }
 
 /***********************************************************************
@@ -508,8 +537,9 @@ DWORD64 WINAPI  SymLoadModuleExW(HANDLE hProcess, HANDLE hFile, PCWSTR wImageNam
 
     if (Flags & SLMFLAG_VIRTUAL)
     {
+        if (!wImageName) return FALSE;
         module = module_new(pcs, wImageName, module_get_type_by_name(wImageName),
-                            TRUE, (DWORD)BaseOfDll, SizeOfDll, 0, 0);
+                            TRUE, BaseOfDll, SizeOfDll, 0, 0);
         if (!module) return FALSE;
         if (wModuleName) module_set_module(module, wModuleName);
         module->module.SymType = SymVirtual;
@@ -519,8 +549,7 @@ DWORD64 WINAPI  SymLoadModuleExW(HANDLE hProcess, HANDLE hFile, PCWSTR wImageNam
     if (Flags & ~(SLMFLAG_VIRTUAL))
         FIXME("Unsupported Flags %08x for %s\n", Flags, debugstr_w(wImageName));
 
-    /* force transparent ELF loading / unloading */
-    elf_synchronize_module_list(pcs);
+    refresh_module_list(pcs);
 
     /* this is a Wine extension to the API just to redo the synchronisation */
     if (!wImageName && !hFile) return 0;
@@ -531,7 +560,7 @@ DWORD64 WINAPI  SymLoadModuleExW(HANDLE hProcess, HANDLE hFile, PCWSTR wImageNam
     if (wImageName)
     {
         module = module_is_already_loaded(pcs, wImageName);
-        if (!module && module_is_elf_container_loaded(pcs, wImageName, BaseOfDll))
+        if (!module && module_is_container_loaded(pcs, wImageName, BaseOfDll))
         {
             /* force the loading of DLL as builtin */
             module = pe_load_builtin_module(pcs, wImageName, BaseOfDll, SizeOfDll);
@@ -540,11 +569,22 @@ DWORD64 WINAPI  SymLoadModuleExW(HANDLE hProcess, HANDLE hFile, PCWSTR wImageNam
     if (!module)
     {
         /* otherwise, try a regular PE module */
-        if (!(module = pe_load_native_module(pcs, wImageName, hFile, BaseOfDll, SizeOfDll)))
+        if (!(module = pe_load_native_module(pcs, wImageName, hFile, BaseOfDll, SizeOfDll)) &&
+            wImageName)
         {
-            /* and finally and ELF module */
-            if (module_get_type_by_name(wImageName) == DMT_ELF)
-                module = elf_load_module(pcs, wImageName, BaseOfDll);
+            /* and finally an ELF or Mach-O module */
+            switch (module_get_type_by_name(wImageName))
+            {
+                case DMT_ELF:
+                    module = elf_load_module(pcs, wImageName, BaseOfDll);
+                    break;
+                case DMT_MACHO:
+                    module = macho_load_module(pcs, wImageName, BaseOfDll);
+                    break;
+                default:
+                    /* Ignored */
+                    break;
+            }
         }
     }
     if (!module)
@@ -558,7 +598,8 @@ DWORD64 WINAPI  SymLoadModuleExW(HANDLE hProcess, HANDLE hFile, PCWSTR wImageNam
      */
     if (wModuleName)
         module_set_module(module, wModuleName);
-    lstrcpynW(module->module.ImageName, wImageName,
+    if (wImageName)
+        lstrcpynW(module->module.ImageName, wImageName,
               sizeof(module->module.ImageName) / sizeof(WCHAR));
 
     return module->module.BaseOfImage;
@@ -715,7 +756,8 @@ BOOL  WINAPI SymEnumerateModulesW64(HANDLE hProcess,
     
     for (module = pcs->lmodules; module; module = module->next)
     {
-        if (!(dbghelp_options & SYMOPT_WINE_WITH_ELF_MODULES) && module->type == DMT_ELF)
+        if (!(dbghelp_options & SYMOPT_WINE_WITH_NATIVE_MODULES) &&
+            (module->type == DMT_ELF || module->type == DMT_MACHO))
             continue;
         if (!EnumModulesCallback(module->module.ModuleName,
                                  module->module.BaseOfImage, UserContext))
@@ -1008,7 +1050,9 @@ DWORD64 WINAPI SymGetModuleBase64(HANDLE hProcess, DWORD64 dwAddr)
 void module_reset_debug_info(struct module* module)
 {
     module->sortlist_valid = TRUE;
+    module->sorttab_size = 0;
     module->addr_sorttab = NULL;
+    module->num_sorttab = module->num_symbols = 0;
     hash_table_destroy(&module->ht_symbols);
     module->ht_symbols.num_buckets = 0;
     module->ht_symbols.buckets = NULL;
@@ -1019,4 +1063,18 @@ void module_reset_debug_info(struct module* module)
     hash_table_destroy(&module->ht_symbols);
     module->sources_used = module->sources_alloc = 0;
     module->sources = NULL;
+}
+
+/******************************************************************
+ *              SymRefreshModuleList (DBGHELP.@)
+ */
+BOOL WINAPI SymRefreshModuleList(HANDLE hProcess)
+{
+    struct process*     pcs;
+
+    TRACE("(%p)\n", hProcess);
+
+    if (!(pcs = process_find_by_handle(hProcess))) return FALSE;
+
+    return refresh_module_list(pcs);
 }

@@ -376,6 +376,18 @@ typedef enum dwarf_operation_e
   DW_OP_call2                           = 0x98,
   DW_OP_call4                           = 0x99,
   DW_OP_call_ref                        = 0x9a,
+  DW_OP_form_tls_address                = 0x9b,
+  DW_OP_call_frame_cfa                  = 0x9c,
+  DW_OP_bit_piece                       = 0x9d,
+
+  /* Implementation defined extensions */
+  DW_OP_lo_user                         = 0xe0,
+  DW_OP_hi_user                         = 0xff,
+
+  /* GNU extensions */
+  DW_OP_GNU_push_tls_address            = 0xe0,
+  DW_OP_GNU_uninit                      = 0xf0,
+  DW_OP_GNU_encoded_addr                = 0xf1,
 } dwarf_operation_t;
 
 enum dwarf_calling_convention
