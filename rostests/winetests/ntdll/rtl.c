@@ -67,6 +67,11 @@ static RTL_HANDLE * (WINAPI * pRtlAllocateHandle)(RTL_HANDLE_TABLE *, ULONG *);
 static BOOLEAN   (WINAPI * pRtlFreeHandle)(RTL_HANDLE_TABLE *, RTL_HANDLE *);
 static NTSTATUS  (WINAPI *pRtlAllocateAndInitializeSid)(PSID_IDENTIFIER_AUTHORITY,BYTE,DWORD,DWORD,DWORD,DWORD,DWORD,DWORD,DWORD,DWORD,PSID*);
 static NTSTATUS  (WINAPI *pRtlFreeSid)(PSID);
+static struct _TEB * (WINAPI *pNtCurrentTeb)(void);
+static DWORD     (WINAPI *pRtlGetThreadErrorMode)(void);
+static NTSTATUS  (WINAPI *pRtlSetThreadErrorMode)(DWORD, LPDWORD);
+static HMODULE hkernel32 = 0;
+static BOOL      (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
 #define LEN 16
 static const char* src_src = "This is a test!"; /* 16 bytes long, incl NUL */
 static ULONG src_aligned_block[4];
@@ -99,6 +104,14 @@ static void InitFunctionPtrs(void)
 	pRtlFreeHandle = (void *)GetProcAddress(hntdll, "RtlFreeHandle");
         pRtlAllocateAndInitializeSid = (void *)GetProcAddress(hntdll, "RtlAllocateAndInitializeSid");
         pRtlFreeSid = (void *)GetProcAddress(hntdll, "RtlFreeSid");
+        pNtCurrentTeb = (void *)GetProcAddress(hntdll, "NtCurrentTeb");
+        pRtlGetThreadErrorMode = (void *)GetProcAddress(hntdll, "RtlGetThreadErrorMode");
+        pRtlSetThreadErrorMode = (void *)GetProcAddress(hntdll, "RtlSetThreadErrorMode");
+    }
+    hkernel32 = LoadLibraryA("kernel32.dll");
+    ok(hkernel32 != 0, "LoadLibrary failed\n");
+    if (hkernel32) {
+        pIsWow64Process = (void *)GetProcAddress(hkernel32, "IsWow64Process");
     }
     strcpy((char*)src_aligned_block, src_src);
     ok(strlen(src) == 15, "Source must be 16 bytes long!\n");
@@ -112,7 +125,10 @@ static void test_RtlCompareMemory(void)
   SIZE_T size;
 
   if (!pRtlCompareMemory)
+  {
+    win_skip("RtlCompareMemory is not available\n");
     return;
+  }
 
   strcpy(dest, src);
 
@@ -126,6 +142,12 @@ static void test_RtlCompareMemoryUlong(void)
 {
     ULONG a[10];
     ULONG result;
+
+    if (!pRtlCompareMemoryUlong)
+    {
+        win_skip("RtlCompareMemoryUlong is not available\n");
+        return;
+    }
 
     a[0]= 0x0123;
     a[1]= 0x4567;
@@ -173,7 +195,10 @@ static void test_RtlCompareMemoryUlong(void)
 static void test_RtlMoveMemory(void)
 {
   if (!pRtlMoveMemory)
+  {
+    win_skip("RtlMoveMemory is not available\n");
     return;
+  }
 
   /* Length should be in bytes and not rounded. Use strcmp to ensure we
    * didn't write past the end (it checks for the final NUL left by memset)
@@ -201,7 +226,10 @@ static void test_RtlMoveMemory(void)
 static void test_RtlFillMemory(void)
 {
   if (!pRtlFillMemory)
+  {
+    win_skip("RtlFillMemory is not available\n");
     return;
+  }
 
   /* Length should be in bytes and not rounded. Use strcmp to ensure we
    * didn't write past the end (the remainder of the string should match)
@@ -224,7 +252,10 @@ static void test_RtlFillMemoryUlong(void)
 {
   ULONG val = ('x' << 24) | ('x' << 16) | ('x' << 8) | 'x';
   if (!pRtlFillMemoryUlong)
+  {
+    win_skip("RtlFillMemoryUlong is not available\n");
     return;
+  }
 
   /* Length should be in bytes and not rounded. Use strcmp to ensure we
    * didn't write past the end (the remainder of the string should match)
@@ -247,7 +278,10 @@ static void test_RtlFillMemoryUlong(void)
 static void test_RtlZeroMemory(void)
 {
   if (!pRtlZeroMemory)
+  {
+    win_skip("RtlZeroMemory is not available\n");
     return;
+  }
 
   /* Length should be in bytes and not rounded. */
   ZERO(0); MCMP("This is a test!");
@@ -265,6 +299,12 @@ static void test_RtlZeroMemory(void)
 static void test_RtlUlonglongByteSwap(void)
 {
     ULONGLONG result;
+
+    if ( !pRtlUlonglongByteSwap )
+    {
+        win_skip("RtlUlonglongByteSwap is not available\n");
+        return;
+    }
 
     if ( pRtlUlonglongByteSwap( 0 ) != 0 )
     {
@@ -286,6 +326,12 @@ static void test_RtlUniform(void)
     ULONG seed_bak;
     ULONG expected;
     ULONG result;
+
+    if (!pRtlUniform)
+    {
+        win_skip("RtlUniform is not available\n");
+        return;
+    }
 
 /*
  * According to the documentation RtlUniform is using D.H. Lehmer's 1948
@@ -612,6 +658,12 @@ static void test_RtlRandom(void)
     ULONG result;
     ULONG result_expected;
 
+    if (!pRtlRandom)
+    {
+        win_skip("RtlRandom is not available\n");
+        return;
+    }
+
 /*
  * Unlike RtlUniform, RtlRandom is not documented. We guess that for
  * RtlRandom D.H. Lehmer's 1948 algorithm is used like stated in
@@ -820,6 +872,12 @@ static void test_RtlAreAllAccessesGranted(void)
     unsigned int test_num;
     BOOLEAN result;
 
+    if (!pRtlAreAllAccessesGranted)
+    {
+        win_skip("RtlAreAllAccessesGranted is not available\n");
+        return;
+    }
+
     for (test_num = 0; test_num < NB_ALL_ACCESSES; test_num++) {
 	result = pRtlAreAllAccessesGranted(all_accesses[test_num].GrantedAccess,
 					   all_accesses[test_num].DesiredAccess);
@@ -857,6 +915,12 @@ static void test_RtlAreAnyAccessesGranted(void)
     unsigned int test_num;
     BOOLEAN result;
 
+    if (!pRtlAreAnyAccessesGranted)
+    {
+        win_skip("RtlAreAnyAccessesGranted is not available\n");
+        return;
+    }
+
     for (test_num = 0; test_num < NB_ANY_ACCESSES; test_num++) {
 	result = pRtlAreAnyAccessesGranted(any_accesses[test_num].GrantedAccess,
 					   any_accesses[test_num].DesiredAccess);
@@ -873,7 +937,10 @@ static void test_RtlComputeCrc32(void)
   DWORD crc = 0;
 
   if (!pRtlComputeCrc32)
+  {
+    win_skip("RtlComputeCrc32 is not available\n");
     return;
+  }
 
   crc = pRtlComputeCrc32(crc, (const BYTE *)src, LEN);
   ok(crc == 0x40861dc2,"Expected 0x40861dc2, got %8x\n", crc);
@@ -900,6 +967,12 @@ static void test_HandleTables(void)
     MY_HANDLE * MyHandle;
     RTL_HANDLE_TABLE HandleTable;
 
+    if (!pRtlInitializeHandleTable)
+    {
+        win_skip("RtlInitializeHandleTable is not available\n");
+        return;
+    }
+
     pRtlInitializeHandleTable(0x3FFF, sizeof(MY_HANDLE), &HandleTable);
     MyHandle = (MY_HANDLE *)pRtlAllocateHandle(&HandleTable, &Index);
     ok(MyHandle != NULL, "RtlAllocateHandle failed\n");
@@ -919,14 +992,23 @@ static void test_RtlAllocateAndInitializeSid(void)
     SID_IDENTIFIER_AUTHORITY sia = {{ 1, 2, 3, 4, 5, 6 }};
     PSID psid;
 
+    if (!pRtlAllocateAndInitializeSid)
+    {
+        win_skip("RtlAllocateAndInitializeSid is not available\n");
+        return;
+    }
+
     ret = pRtlAllocateAndInitializeSid(&sia, 0, 1, 2, 3, 4, 5, 6, 7, 8, &psid);
     ok(!ret, "RtlAllocateAndInitializeSid error %08x\n", ret);
     ret = pRtlFreeSid(psid);
     ok(!ret, "RtlFreeSid error %08x\n", ret);
 
-    /* these tests crash on XP
-    ret = pRtlAllocateAndInitializeSid(NULL, 0, 1, 2, 3, 4, 5, 6, 7, 8, &psid);
-    ret = pRtlAllocateAndInitializeSid(&sia, 0, 1, 2, 3, 4, 5, 6, 7, 8, NULL);*/
+    /* these tests crash on XP */
+    if (0)
+    {
+        ret = pRtlAllocateAndInitializeSid(NULL, 0, 1, 2, 3, 4, 5, 6, 7, 8, &psid);
+        ret = pRtlAllocateAndInitializeSid(&sia, 0, 1, 2, 3, 4, 5, 6, 7, 8, NULL);
+    }
 
     ret = pRtlAllocateAndInitializeSid(&sia, 9, 1, 2, 3, 4, 5, 6, 7, 8, &psid);
     ok(ret == STATUS_INVALID_SID, "wrong error %08x\n", ret);
@@ -935,44 +1017,101 @@ static void test_RtlAllocateAndInitializeSid(void)
 static void test_RtlDeleteTimer(void)
 {
     NTSTATUS ret;
+
+    if (!pRtlDeleteTimer)
+    {
+        win_skip("RtlDeleteTimer is not available\n");
+        return;
+    }
+
     ret = pRtlDeleteTimer(NULL, NULL, NULL);
     ok(ret == STATUS_INVALID_PARAMETER_1 ||
        ret == STATUS_INVALID_PARAMETER, /* W2K */
        "expected STATUS_INVALID_PARAMETER_1 or STATUS_INVALID_PARAMETER, got %x\n", ret);
 }
 
+static void test_RtlThreadErrorMode(void)
+{
+    DWORD oldmode;
+    BOOL is_wow64;
+    DWORD mode;
+    NTSTATUS status;
+
+    if (!pRtlGetThreadErrorMode || !pRtlSetThreadErrorMode)
+    {
+        win_skip("RtlGetThreadErrorMode and/or RtlSetThreadErrorMode not available\n");
+        return;
+    }
+
+    if (!pIsWow64Process || !pIsWow64Process(GetCurrentProcess(), &is_wow64))
+        is_wow64 = FALSE;
+
+    oldmode = pRtlGetThreadErrorMode();
+
+    status = pRtlSetThreadErrorMode(0x70, &mode);
+    ok(status == STATUS_SUCCESS ||
+       status == STATUS_WAIT_1, /* Vista */
+       "RtlSetThreadErrorMode failed with error 0x%08x\n", status);
+    ok(mode == oldmode,
+       "RtlSetThreadErrorMode returned mode 0x%x, expected 0x%x\n",
+       mode, oldmode);
+    ok(pRtlGetThreadErrorMode() == 0x70,
+       "RtlGetThreadErrorMode returned 0x%x, expected 0x%x\n", mode, 0x70);
+    if (!is_wow64 && pNtCurrentTeb)
+        ok(pNtCurrentTeb()->HardErrorDisabled == 0x70,
+           "The TEB contains 0x%x, expected 0x%x\n",
+           pNtCurrentTeb()->HardErrorDisabled, 0x70);
+
+    status = pRtlSetThreadErrorMode(0, &mode);
+    ok(status == STATUS_SUCCESS ||
+       status == STATUS_WAIT_1, /* Vista */
+       "RtlSetThreadErrorMode failed with error 0x%08x\n", status);
+    ok(mode == 0x70,
+       "RtlSetThreadErrorMode returned mode 0x%x, expected 0x%x\n",
+       mode, 0x70);
+    ok(pRtlGetThreadErrorMode() == 0,
+       "RtlGetThreadErrorMode returned 0x%x, expected 0x%x\n", mode, 0);
+    if (!is_wow64 && pNtCurrentTeb)
+        ok(pNtCurrentTeb()->HardErrorDisabled == 0,
+           "The TEB contains 0x%x, expected 0x%x\n",
+           pNtCurrentTeb()->HardErrorDisabled, 0);
+
+    for (mode = 1; mode; mode <<= 1)
+    {
+        status = pRtlSetThreadErrorMode(mode, NULL);
+        if (mode & 0x70)
+            ok(status == STATUS_SUCCESS ||
+               status == STATUS_WAIT_1, /* Vista */
+               "RtlSetThreadErrorMode(%x,NULL) failed with error 0x%08x\n",
+               mode, status);
+        else
+            ok(status == STATUS_INVALID_PARAMETER_1,
+               "RtlSetThreadErrorMode(%x,NULL) returns 0x%08x, "
+               "expected STATUS_INVALID_PARAMETER_1\n",
+               mode, status);
+    }
+
+    pRtlSetThreadErrorMode(oldmode, NULL);
+}
+
 START_TEST(rtl)
 {
     InitFunctionPtrs();
 
-    if (pRtlCompareMemory)
-        test_RtlCompareMemory();
-    if (pRtlCompareMemoryUlong)
-        test_RtlCompareMemoryUlong();
-    if (pRtlMoveMemory)
-        test_RtlMoveMemory();
-    if (pRtlFillMemory)
-        test_RtlFillMemory();
-    if (pRtlFillMemoryUlong)
-        test_RtlFillMemoryUlong();
-    if (pRtlZeroMemory)
-        test_RtlZeroMemory();
-    if (pRtlUlonglongByteSwap)
-        test_RtlUlonglongByteSwap();
-    if (pRtlUniform)
-        test_RtlUniform();
-    if (pRtlRandom)
-        test_RtlRandom();
-    if (pRtlAreAllAccessesGranted)
-        test_RtlAreAllAccessesGranted();
-    if (pRtlAreAnyAccessesGranted)
-        test_RtlAreAnyAccessesGranted();
-    if (pRtlComputeCrc32)
-        test_RtlComputeCrc32();
-    if (pRtlInitializeHandleTable)
-        test_HandleTables();
-    if (pRtlAllocateAndInitializeSid)
-        test_RtlAllocateAndInitializeSid();
-    if (pRtlDeleteTimer)
-        test_RtlDeleteTimer();
+    test_RtlCompareMemory();
+    test_RtlCompareMemoryUlong();
+    test_RtlMoveMemory();
+    test_RtlFillMemory();
+    test_RtlFillMemoryUlong();
+    test_RtlZeroMemory();
+    test_RtlUlonglongByteSwap();
+    test_RtlUniform();
+    test_RtlRandom();
+    test_RtlAreAllAccessesGranted();
+    test_RtlAreAnyAccessesGranted();
+    test_RtlComputeCrc32();
+    test_HandleTables();
+    test_RtlAllocateAndInitializeSid();
+    test_RtlDeleteTimer();
+    test_RtlThreadErrorMode();
 }

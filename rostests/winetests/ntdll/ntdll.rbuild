@@ -4,8 +4,10 @@
 	<include base="ntdll_winetest">.</include>
 	<define name="__ROS_LONG64__" />
 	<library>ntdll</library>
+	<library>user32</library>
 	<file>atom.c</file>
 	<file>change.c</file>
+	<file>directory.c</file>
 	<file>env.c</file>
 	<file>error.c</file>
 	<file>exception.c</file>

@@ -44,6 +44,7 @@ static NTSTATUS (WINAPI *pNtOpenDirectoryObject)(PHANDLE, ACCESS_MASK, POBJECT_A
 static NTSTATUS (WINAPI *pNtCreateDirectoryObject)(PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES);
 static NTSTATUS (WINAPI *pNtOpenSymbolicLinkObject)(PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES);
 static NTSTATUS (WINAPI *pNtCreateSymbolicLinkObject)(PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES, PUNICODE_STRING);
+static NTSTATUS (WINAPI *pNtQueryObject)(HANDLE,OBJECT_INFORMATION_CLASS,PVOID,ULONG,PULONG);
 
 
 static void test_case_sensitive (void)
@@ -617,6 +618,72 @@ static void test_symboliclink(void)
     pNtClose(dir);
 }
 
+static void test_query_object(void)
+{
+    static const WCHAR name[] = {'\\','B','a','s','e','N','a','m','e','d','O','b','j','e','c','t','s',
+                                 '\\','t','e','s','t','_','e','v','e','n','t'};
+    HANDLE handle;
+    char buffer[1024];
+    NTSTATUS status;
+    ULONG len;
+    UNICODE_STRING *str;
+    char dir[MAX_PATH];
+
+    handle = CreateEventA( NULL, FALSE, FALSE, "test_event" );
+
+    len = 0;
+    status = pNtQueryObject( handle, ObjectNameInformation, buffer, 0, &len );
+    ok( status == STATUS_INFO_LENGTH_MISMATCH, "NtQueryObject failed %x\n", status );
+    ok( len >= sizeof(UNICODE_STRING) + sizeof(name) + sizeof(WCHAR), "unexpected len %u\n", len );
+
+    len = 0;
+    status = pNtQueryObject( handle, ObjectNameInformation, buffer, sizeof(UNICODE_STRING), &len );
+    ok( status == STATUS_INFO_LENGTH_MISMATCH, "NtQueryObject failed %x\n", status );
+    ok( len >= sizeof(UNICODE_STRING) + sizeof(name) + sizeof(WCHAR), "unexpected len %u\n", len );
+
+    len = 0;
+    status = pNtQueryObject( handle, ObjectNameInformation, buffer, sizeof(buffer), &len );
+    ok( status == STATUS_SUCCESS, "NtQueryObject failed %x\n", status );
+    ok( len > sizeof(UNICODE_STRING), "unexpected len %u\n", len );
+    str = (UNICODE_STRING *)buffer;
+    ok( sizeof(UNICODE_STRING) + str->Length + sizeof(WCHAR) == len, "unexpected len %u\n", len );
+    ok( str->Length >= sizeof(name), "unexpected len %u\n", str->Length );
+    /* there can be a \\Sessions prefix in the name */
+    ok( !memcmp( str->Buffer + (str->Length - sizeof(name)) / sizeof(WCHAR), name, sizeof(name) ),
+        "wrong name %s\n", wine_dbgstr_w(str->Buffer) );
+
+    len -= sizeof(WCHAR);
+    status = pNtQueryObject( handle, ObjectNameInformation, buffer, len, &len );
+    ok( status == STATUS_INFO_LENGTH_MISMATCH, "NtQueryObject failed %x\n", status );
+    ok( len >= sizeof(UNICODE_STRING) + sizeof(name) + sizeof(WCHAR), "unexpected len %u\n", len );
+
+    pNtClose( handle );
+
+    handle = CreateEventA( NULL, FALSE, FALSE, NULL );
+    len = 0;
+    status = pNtQueryObject( handle, ObjectNameInformation, buffer, sizeof(buffer), &len );
+    ok( status == STATUS_SUCCESS, "NtQueryObject failed %x\n", status );
+    ok( len == sizeof(UNICODE_STRING), "unexpected len %u\n", len );
+    str = (UNICODE_STRING *)buffer;
+    ok( str->Length == 0, "unexpected len %u\n", len );
+    ok( str->Buffer == NULL, "unexpected ptr %p\n", str->Buffer );
+    pNtClose( handle );
+
+    GetWindowsDirectoryA( dir, MAX_PATH );
+    handle = CreateFileA( dir, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
+                          FILE_FLAG_BACKUP_SEMANTICS, 0 );
+    len = 0;
+    status = pNtQueryObject( handle, ObjectNameInformation, buffer, sizeof(buffer), &len );
+    ok( status == STATUS_SUCCESS, "NtQueryObject failed %x\n", status );
+    ok( len > sizeof(UNICODE_STRING), "unexpected len %u\n", len );
+    str = (UNICODE_STRING *)buffer;
+    ok( sizeof(UNICODE_STRING) + str->Length + sizeof(WCHAR) == len ||
+        broken(sizeof(UNICODE_STRING) + str->Length == len), /* NT4 */
+        "unexpected len %u\n", len );
+    trace( "got %s len %u\n", wine_dbgstr_w(str->Buffer), len );
+    pNtClose( handle );
+}
+
 START_TEST(om)
 {
     HMODULE hntdll = GetModuleHandleA("ntdll.dll");
@@ -646,10 +713,12 @@ START_TEST(om)
     pNtCreateSemaphore      =  (void *)GetProcAddress(hntdll, "NtCreateSemaphore");
     pNtCreateTimer          =  (void *)GetProcAddress(hntdll, "NtCreateTimer");
     pNtCreateSection        =  (void *)GetProcAddress(hntdll, "NtCreateSection");
+    pNtQueryObject          =  (void *)GetProcAddress(hntdll, "NtQueryObject");
 
     test_case_sensitive();
     test_namespace_pipe();
     test_name_collisions();
     test_directory();
     test_symboliclink();
+    test_query_object();
 }

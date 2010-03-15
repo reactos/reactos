@@ -295,15 +295,14 @@ static void test_ntncdf_async(void)
     ok(U(iosb).Status == 0x01234567, "status set too soon\n");
     ok(iosb.Information == 0x12345678, "info set too soon\n");
 
-    todo_wine {
     r = pNtCancelIoFile(hdir, &iosb);
     ok( r == STATUS_SUCCESS, "cancel failed\n");
 
     CloseHandle(hdir);
 
     ok(U(iosb).Status == STATUS_SUCCESS, "status wrong\n");
-    ok(U(iosb2).Status == STATUS_CANCELLED, "status wrong\n");
-    }
+    todo_wine ok(U(iosb2).Status == STATUS_CANCELLED, "status wrong\n");
+
     ok(iosb.Information == 0, "info wrong\n");
     ok(iosb2.Information == 0, "info wrong\n");
 

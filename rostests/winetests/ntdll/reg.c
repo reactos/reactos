@@ -116,22 +116,24 @@ typedef enum _KEY_VALUE_INFORMATION_CLASS {
 #endif
 
 static NTSTATUS (WINAPI * pRtlCreateUnicodeStringFromAsciiz)(PUNICODE_STRING, LPCSTR);
+static void     (WINAPI * pRtlInitUnicodeString)(PUNICODE_STRING,PCWSTR);
 static NTSTATUS (WINAPI * pRtlFreeUnicodeString)(PUNICODE_STRING);
 static NTSTATUS (WINAPI * pNtDeleteValueKey)(IN HANDLE, IN PUNICODE_STRING);
 static NTSTATUS (WINAPI * pRtlQueryRegistryValues)(IN ULONG, IN PCWSTR,IN PRTL_QUERY_REGISTRY_TABLE, IN PVOID,IN PVOID);
 static NTSTATUS (WINAPI * pRtlCheckRegistryKey)(IN ULONG,IN PWSTR);
-static NTSTATUS (WINAPI * pRtlOpenCurrentUser)(IN ACCESS_MASK, OUT PHKEY);
+static NTSTATUS (WINAPI * pRtlOpenCurrentUser)(IN ACCESS_MASK, PHANDLE);
 static NTSTATUS (WINAPI * pNtOpenKey)(PHANDLE, IN ACCESS_MASK, IN POBJECT_ATTRIBUTES);
 static NTSTATUS (WINAPI * pNtClose)(IN HANDLE);
 static NTSTATUS (WINAPI * pNtDeleteValueKey)(IN HANDLE, IN PUNICODE_STRING);
-static NTSTATUS (WINAPI * pNtFlushKey)(HKEY);
-static NTSTATUS (WINAPI * pNtDeleteKey)(HKEY);
-static NTSTATUS (WINAPI * pNtCreateKey)( PHKEY retkey, ACCESS_MASK access, const OBJECT_ATTRIBUTES *attr,
+static NTSTATUS (WINAPI * pNtFlushKey)(HANDLE);
+static NTSTATUS (WINAPI * pNtDeleteKey)(HANDLE);
+static NTSTATUS (WINAPI * pNtCreateKey)( PHANDLE retkey, ACCESS_MASK access, const OBJECT_ATTRIBUTES *attr,
                              ULONG TitleIndex, const UNICODE_STRING *class, ULONG options,
                              PULONG dispos );
 static NTSTATUS (WINAPI * pNtQueryValueKey)(HANDLE,const UNICODE_STRING *,KEY_VALUE_INFORMATION_CLASS,void *,DWORD,DWORD *);
-static NTSTATUS (WINAPI * pNtSetValueKey)( PHKEY, const PUNICODE_STRING, ULONG,
-                               ULONG, const PVOID, ULONG  );
+static NTSTATUS (WINAPI * pNtSetValueKey)(HANDLE, const PUNICODE_STRING, ULONG,
+                               ULONG, const void*, ULONG  );
+static NTSTATUS (WINAPI * pNtQueryInformationProcess)(HANDLE,PROCESSINFOCLASS,PVOID,ULONG,PULONG);
 static NTSTATUS (WINAPI * pRtlFormatCurrentUserKeyPath)(PUNICODE_STRING);
 static NTSTATUS (WINAPI * pRtlCreateUnicodeString)( PUNICODE_STRING, LPCWSTR);
 static LPVOID   (WINAPI * pRtlReAllocateHeap)(IN PVOID, IN ULONG, IN PVOID, IN ULONG);
@@ -140,7 +142,8 @@ static NTSTATUS (WINAPI * pRtlUnicodeStringToAnsiString)(PSTRING, PUNICODE_STRIN
 static NTSTATUS (WINAPI * pRtlFreeHeap)(PVOID, ULONG, PVOID);
 static LPVOID   (WINAPI * pRtlAllocateHeap)(PVOID,ULONG,ULONG);
 static NTSTATUS (WINAPI * pRtlZeroMemory)(PVOID, ULONG);
-static NTSTATUS (WINAPI * pRtlpNtQueryValueKey)(HANDLE,ULONG*,PBYTE,DWORD*);
+static NTSTATUS (WINAPI * pRtlpNtQueryValueKey)(HANDLE,ULONG*,PBYTE,DWORD*,void *);
+static NTSTATUS (WINAPI * pRtlOpenCurrentUser)(ACCESS_MASK,HANDLE*);
 
 static HMODULE hntdll = 0;
 static int CurrentTest = 0;
@@ -161,6 +164,7 @@ static BOOL InitFunctionPtrs(void)
         trace("Could not load ntdll.dll\n");
         return FALSE;
     }
+    NTDLL_GET_PROC(RtlInitUnicodeString)
     NTDLL_GET_PROC(RtlCreateUnicodeStringFromAsciiz)
     NTDLL_GET_PROC(RtlCreateUnicodeString)
     NTDLL_GET_PROC(RtlFreeUnicodeString)
@@ -174,6 +178,7 @@ static BOOL InitFunctionPtrs(void)
     NTDLL_GET_PROC(NtFlushKey)
     NTDLL_GET_PROC(NtDeleteKey)
     NTDLL_GET_PROC(NtQueryValueKey)
+    NTDLL_GET_PROC(NtQueryInformationProcess)
     NTDLL_GET_PROC(NtSetValueKey)
     NTDLL_GET_PROC(NtOpenKey)
     NTDLL_GET_PROC(RtlFormatCurrentUserKeyPath)
@@ -184,6 +189,7 @@ static BOOL InitFunctionPtrs(void)
     NTDLL_GET_PROC(RtlAllocateHeap)
     NTDLL_GET_PROC(RtlZeroMemory)
     NTDLL_GET_PROC(RtlpNtQueryValueKey)
+    NTDLL_GET_PROC(RtlOpenCurrentUser)
     return TRUE;
 }
 #undef NTDLL_GET_PROC
@@ -336,9 +342,6 @@ static void test_NtOpenKey(void)
     OBJECT_ATTRIBUTES attr;
     ACCESS_MASK am = KEY_READ;
 
-    if (0)
-    {
-    /* Crashes Wine */
     /* All NULL */
     status = pNtOpenKey(NULL, 0, NULL);
     ok(status == STATUS_ACCESS_VIOLATION, "Expected STATUS_ACCESS_VIOLATION, got: 0x%08x\n", status);
@@ -347,29 +350,27 @@ static void test_NtOpenKey(void)
     status = pNtOpenKey(&key, 0, NULL);
     ok(status == STATUS_ACCESS_VIOLATION /* W2K3/XP/W2K */ || status == STATUS_INVALID_PARAMETER /* NT4 */,
         "Expected STATUS_ACCESS_VIOLATION or STATUS_INVALID_PARAMETER(NT4), got: 0x%08x\n", status);
-    }
 
     InitializeObjectAttributes(&attr, &winetestpath, 0, 0, 0);
 
     /* NULL key */
-    status = pNtOpenKey(NULL, 0, &attr);
-    todo_wine
-        ok(status == STATUS_ACCESS_VIOLATION, "Expected STATUS_ACCESS_VIOLATION, got: 0x%08x\n", status);
+    status = pNtOpenKey(NULL, am, &attr);
+    ok(status == STATUS_ACCESS_VIOLATION, "Expected STATUS_ACCESS_VIOLATION, got: 0x%08x\n", status);
 
     /* Length > sizeof(OBJECT_ATTRIBUTES) */
     attr.Length *= 2;
     status = pNtOpenKey(&key, am, &attr);
-    todo_wine
-        ok(status == STATUS_INVALID_PARAMETER, "Expected STATUS_INVALID_PARAMETER, got: 0x%08x\n", status);
+    ok(status == STATUS_INVALID_PARAMETER, "Expected STATUS_INVALID_PARAMETER, got: 0x%08x\n", status);
 }
 
 static void test_NtCreateKey(void)
 {
     /*Create WineTest*/
     OBJECT_ATTRIBUTES attr;
-    HKEY key;
+    HANDLE key, subkey;
     ACCESS_MASK am = GENERIC_ALL;
     NTSTATUS status;
+    UNICODE_STRING str;
 
     /* All NULL */
     status = pNtCreateKey(NULL, 0, NULL, 0, 0, 0, 0);
@@ -397,13 +398,50 @@ static void test_NtCreateKey(void)
     status = pNtCreateKey(NULL, 0, &attr, 0, 0, 0, 0);
     ok(status == STATUS_ACCESS_VIOLATION, "Expected STATUS_ACCESS_VIOLATION, got: 0x%08x\n", status);
 
-    status = pNtCreateKey(&key, am, &attr, 0, 0, 0, 0);
-    ok(status == STATUS_SUCCESS, "NtCreateKey Failed: 0x%08x\n", status);
-
     /* Length > sizeof(OBJECT_ATTRIBUTES) */
     attr.Length *= 2;
     status = pNtCreateKey(&key, am, &attr, 0, 0, 0, 0);
     ok(status == STATUS_INVALID_PARAMETER, "Expected STATUS_INVALID_PARAMETER, got: 0x%08x\n", status);
+
+    attr.Length = sizeof(attr);
+    status = pNtCreateKey(&key, am, &attr, 0, 0, 0, 0);
+    ok(status == STATUS_SUCCESS, "NtCreateKey Failed: 0x%08x\n", status);
+
+    attr.RootDirectory = key;
+    attr.ObjectName = &str;
+
+    pRtlCreateUnicodeStringFromAsciiz( &str, "test\\sub\\key" );
+    status = pNtCreateKey( &subkey, am, &attr, 0, 0, 0, 0 );
+    ok( status == STATUS_OBJECT_NAME_NOT_FOUND, "NtCreateKey failed: 0x%08x\n", status );
+    pRtlFreeUnicodeString( &str );
+
+    pRtlCreateUnicodeStringFromAsciiz( &str, "test\\subkey" );
+    status = pNtCreateKey( &subkey, am, &attr, 0, 0, 0, 0 );
+    ok( status == STATUS_OBJECT_NAME_NOT_FOUND, "NtCreateKey failed: 0x%08x\n", status );
+    pRtlFreeUnicodeString( &str );
+
+    pRtlCreateUnicodeStringFromAsciiz( &str, "test\\subkey\\" );
+    status = pNtCreateKey( &subkey, am, &attr, 0, 0, 0, 0 );
+    ok( status == STATUS_OBJECT_NAME_NOT_FOUND, "NtCreateKey failed: 0x%08x\n", status );
+    pRtlFreeUnicodeString( &str );
+
+    pRtlCreateUnicodeStringFromAsciiz( &str, "test_subkey\\" );
+    status = pNtCreateKey( &subkey, am, &attr, 0, 0, 0, 0 );
+    ok( status == STATUS_SUCCESS || broken(status == STATUS_OBJECT_NAME_NOT_FOUND), /* nt4 */
+        "NtCreateKey failed: 0x%08x\n", status );
+    if (status == STATUS_SUCCESS)
+    {
+        pNtDeleteKey( subkey );
+        pNtClose( subkey );
+    }
+    pRtlFreeUnicodeString( &str );
+
+    pRtlCreateUnicodeStringFromAsciiz( &str, "test_subkey" );
+    status = pNtCreateKey( &subkey, am, &attr, 0, 0, 0, 0 );
+    ok( status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08x\n", status );
+    pRtlFreeUnicodeString( &str );
+    pNtDeleteKey( subkey );
+    pNtClose( subkey );
 
     pNtClose(key);
 }
@@ -437,7 +475,7 @@ static void test_NtSetValueKey(void)
 static void test_RtlOpenCurrentUser(void)
 {
     NTSTATUS status;
-    HKEY handle;
+    HANDLE handle;
     status=pRtlOpenCurrentUser(KEY_READ, &handle);
     ok(status == STATUS_SUCCESS, "RtlOpenCurrentUser Failed: 0x%08x\n", status);
     pNtClose(handle);
@@ -482,7 +520,7 @@ static void test_NtQueryValueKey(void)
     KEY_VALUE_BASIC_INFORMATION *basic_info;
     KEY_VALUE_PARTIAL_INFORMATION *partial_info;
     KEY_VALUE_FULL_INFORMATION *full_info;
-    DWORD len;
+    DWORD len, expected;
 
     pRtlCreateUnicodeStringFromAsciiz(&ValName, "deletetest");
 
@@ -556,7 +594,7 @@ static void test_NtQueryValueKey(void)
     pRtlCreateUnicodeStringFromAsciiz(&ValName, "stringtest");
 
     status = pNtQueryValueKey(key, &ValName, KeyValuePartialInformation, NULL, 0, &len);
-    todo_wine ok(status == STATUS_BUFFER_TOO_SMALL, "NtQueryValueKey should have returned STATUS_BUFFER_TOO_SMALL instead of 0x%08x\n", status);
+    ok(status == STATUS_BUFFER_TOO_SMALL, "NtQueryValueKey should have returned STATUS_BUFFER_TOO_SMALL instead of 0x%08x\n", status);
     partial_info = HeapAlloc(GetProcessHeap(), 0, len+1);
     memset(partial_info, 0xbd, len+1);
     status = pNtQueryValueKey(key, &ValName, KeyValuePartialInformation, partial_info, len, &len);
@@ -566,6 +604,21 @@ static void test_NtQueryValueKey(void)
     ok(partial_info->DataLength == STR_TRUNC_SIZE, "NtQueryValueKey returned wrong DataLength %d\n", partial_info->DataLength);
     ok(!memcmp(partial_info->Data, stringW, STR_TRUNC_SIZE), "incorrect Data returned\n");
     ok(*(partial_info->Data+STR_TRUNC_SIZE) == 0xbd, "string overflowed %02x\n", *(partial_info->Data+STR_TRUNC_SIZE));
+
+    expected = len;
+    status = pNtQueryValueKey(key, &ValName, KeyValuePartialInformation, partial_info, 0, &len);
+    ok(status == STATUS_BUFFER_TOO_SMALL, "NtQueryValueKey wrong status 0x%08x\n", status);
+    ok(len == expected, "NtQueryValueKey wrong len %u\n", len);
+    status = pNtQueryValueKey(key, &ValName, KeyValuePartialInformation, partial_info, 1, &len);
+    ok(status == STATUS_BUFFER_TOO_SMALL, "NtQueryValueKey wrong status 0x%08x\n", status);
+    ok(len == expected, "NtQueryValueKey wrong len %u\n", len);
+    status = pNtQueryValueKey(key, &ValName, KeyValuePartialInformation, partial_info, FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data) - 1, &len);
+    ok(status == STATUS_BUFFER_TOO_SMALL, "NtQueryValueKey wrong status 0x%08x\n", status);
+    ok(len == expected, "NtQueryValueKey wrong len %u\n", len);
+    status = pNtQueryValueKey(key, &ValName, KeyValuePartialInformation, partial_info, FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data), &len);
+    ok(status == STATUS_BUFFER_OVERFLOW, "NtQueryValueKey wrong status 0x%08x\n", status);
+    ok(len == expected, "NtQueryValueKey wrong len %u\n", len);
+
     HeapFree(GetProcessHeap(), 0, partial_info);
 
     pRtlFreeUnicodeString(&ValName);
@@ -593,8 +646,595 @@ static void test_RtlpNtQueryValueKey(void)
 {
     NTSTATUS status;
 
-    status = pRtlpNtQueryValueKey(NULL, NULL, NULL, NULL);
+    status = pRtlpNtQueryValueKey(NULL, NULL, NULL, NULL, NULL);
     ok(status == STATUS_INVALID_HANDLE, "Expected STATUS_INVALID_HANDLE, got: 0x%08x\n", status);
+}
+
+static void test_symlinks(void)
+{
+    static const WCHAR linkW[] = {'l','i','n','k',0};
+    static const WCHAR valueW[] = {'v','a','l','u','e',0};
+    static const WCHAR symlinkW[] = {'S','y','m','b','o','l','i','c','L','i','n','k','V','a','l','u','e',0};
+    static const WCHAR targetW[] = {'\\','t','a','r','g','e','t',0};
+    static UNICODE_STRING null_str;
+    char buffer[1024];
+    KEY_VALUE_PARTIAL_INFORMATION *info = (KEY_VALUE_PARTIAL_INFORMATION *)buffer;
+    WCHAR *target;
+    UNICODE_STRING symlink_str, link_str, target_str, value_str;
+    HANDLE root, key, link;
+    OBJECT_ATTRIBUTES attr;
+    NTSTATUS status;
+    DWORD target_len, len, dw;
+
+    pRtlInitUnicodeString( &link_str, linkW );
+    pRtlInitUnicodeString( &symlink_str, symlinkW );
+    pRtlInitUnicodeString( &target_str, targetW + 1 );
+    pRtlInitUnicodeString( &value_str, valueW );
+
+    target_len = winetestpath.Length + sizeof(targetW);
+    target = pRtlAllocateHeap( GetProcessHeap(), 0, target_len + sizeof(targetW) /*for loop test*/ );
+    memcpy( target, winetestpath.Buffer, winetestpath.Length );
+    memcpy( target + winetestpath.Length/sizeof(WCHAR), targetW, sizeof(targetW) );
+
+    attr.Length = sizeof(attr);
+    attr.RootDirectory = 0;
+    attr.Attributes = 0;
+    attr.ObjectName = &winetestpath;
+    attr.SecurityDescriptor = NULL;
+    attr.SecurityQualityOfService = NULL;
+
+    status = pNtCreateKey( &root, KEY_ALL_ACCESS, &attr, 0, 0, 0, 0 );
+    ok( status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08x\n", status );
+
+    attr.RootDirectory = root;
+    attr.ObjectName = &link_str;
+    status = pNtCreateKey( &link, KEY_ALL_ACCESS, &attr, 0, 0, REG_OPTION_CREATE_LINK, 0 );
+    ok( status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08x\n", status );
+
+    /* REG_SZ is not allowed */
+    status = pNtSetValueKey( link, &symlink_str, 0, REG_SZ, target, target_len );
+    ok( status == STATUS_ACCESS_DENIED, "NtSetValueKey wrong status 0x%08x\n", status );
+    status = pNtSetValueKey( link, &symlink_str, 0, REG_LINK, target, target_len - sizeof(WCHAR) );
+    ok( status == STATUS_SUCCESS, "NtSetValueKey failed: 0x%08x\n", status );
+    /* other values are not allowed */
+    status = pNtSetValueKey( link, &link_str, 0, REG_LINK, target, target_len - sizeof(WCHAR) );
+    ok( status == STATUS_ACCESS_DENIED, "NtSetValueKey wrong status 0x%08x\n", status );
+
+    /* try opening the target through the link */
+
+    attr.ObjectName = &link_str;
+    status = pNtOpenKey( &key, KEY_ALL_ACCESS, &attr );
+    ok( status == STATUS_OBJECT_NAME_NOT_FOUND, "NtOpenKey wrong status 0x%08x\n", status );
+
+    attr.ObjectName = &target_str;
+    status = pNtCreateKey( &key, KEY_ALL_ACCESS, &attr, 0, 0, 0, 0 );
+    ok( status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08x\n", status );
+
+    dw = 0xbeef;
+    status = pNtSetValueKey( key, &value_str, 0, REG_DWORD, &dw, sizeof(dw) );
+    ok( status == STATUS_SUCCESS, "NtSetValueKey failed: 0x%08x\n", status );
+    pNtClose( key );
+
+    attr.ObjectName = &link_str;
+    status = pNtOpenKey( &key, KEY_ALL_ACCESS, &attr );
+    ok( status == STATUS_SUCCESS, "NtOpenKey failed: 0x%08x\n", status );
+
+    len = sizeof(buffer);
+    status = pNtQueryValueKey( key, &value_str, KeyValuePartialInformation, info, len, &len );
+    ok( status == STATUS_SUCCESS, "NtQueryValueKey failed: 0x%08x\n", status );
+    ok( len == FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION,Data) + sizeof(DWORD), "wrong len %u\n", len );
+
+    status = pNtQueryValueKey( key, &symlink_str, KeyValuePartialInformation, info, len, &len );
+    ok( status == STATUS_OBJECT_NAME_NOT_FOUND, "NtQueryValueKey failed: 0x%08x\n", status );
+
+    /* REG_LINK can be created in non-link keys */
+    status = pNtSetValueKey( key, &symlink_str, 0, REG_LINK, target, target_len - sizeof(WCHAR) );
+    ok( status == STATUS_SUCCESS, "NtSetValueKey failed: 0x%08x\n", status );
+    len = sizeof(buffer);
+    status = pNtQueryValueKey( key, &symlink_str, KeyValuePartialInformation, info, len, &len );
+    ok( status == STATUS_SUCCESS, "NtQueryValueKey failed: 0x%08x\n", status );
+    ok( len == FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION,Data) + target_len - sizeof(WCHAR),
+        "wrong len %u\n", len );
+    status = pNtDeleteValueKey( key, &symlink_str );
+    ok( status == STATUS_SUCCESS, "NtDeleteValueKey failed: 0x%08x\n", status );
+
+    pNtClose( key );
+
+    attr.Attributes = 0;
+    status = pNtCreateKey( &key, KEY_ALL_ACCESS, &attr, 0, 0, 0, 0 );
+    ok( status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08x\n", status );
+
+    len = sizeof(buffer);
+    status = pNtQueryValueKey( key, &value_str, KeyValuePartialInformation, info, len, &len );
+    ok( status == STATUS_SUCCESS, "NtQueryValueKey failed: 0x%08x\n", status );
+    ok( len == FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION,Data) + sizeof(DWORD), "wrong len %u\n", len );
+
+    status = pNtQueryValueKey( key, &symlink_str, KeyValuePartialInformation, info, len, &len );
+    ok( status == STATUS_OBJECT_NAME_NOT_FOUND, "NtQueryValueKey failed: 0x%08x\n", status );
+    pNtClose( key );
+
+    /* now open the symlink itself */
+
+    attr.RootDirectory = root;
+    attr.Attributes = OBJ_OPENLINK;
+    attr.ObjectName = &link_str;
+    status = pNtOpenKey( &key, KEY_ALL_ACCESS, &attr );
+    ok( status == STATUS_SUCCESS, "NtOpenKey failed: 0x%08x\n", status );
+
+    len = sizeof(buffer);
+    status = pNtQueryValueKey( key, &symlink_str, KeyValuePartialInformation, info, len, &len );
+    ok( status == STATUS_SUCCESS, "NtQueryValueKey failed: 0x%08x\n", status );
+    ok( len == FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION,Data) + target_len - sizeof(WCHAR),
+        "wrong len %u\n", len );
+    pNtClose( key );
+
+    status = pNtCreateKey( &key, KEY_ALL_ACCESS, &attr, 0, 0, 0, 0 );
+    ok( status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08x\n", status );
+    len = sizeof(buffer);
+    status = pNtQueryValueKey( key, &symlink_str, KeyValuePartialInformation, info, len, &len );
+    ok( status == STATUS_SUCCESS, "NtQueryValueKey failed: 0x%08x\n", status );
+    ok( len == FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION,Data) + target_len - sizeof(WCHAR),
+        "wrong len %u\n", len );
+    pNtClose( key );
+
+    if (0)  /* crashes the Windows kernel on some Vista systems */
+    {
+        /* reopen the link from itself */
+
+        attr.RootDirectory = link;
+        attr.Attributes = OBJ_OPENLINK;
+        attr.ObjectName = &null_str;
+        status = pNtOpenKey( &key, KEY_ALL_ACCESS, &attr );
+        ok( status == STATUS_SUCCESS, "NtOpenKey failed: 0x%08x\n", status );
+        len = sizeof(buffer);
+        status = pNtQueryValueKey( key, &symlink_str, KeyValuePartialInformation, info, len, &len );
+        ok( status == STATUS_SUCCESS, "NtQueryValueKey failed: 0x%08x\n", status );
+        ok( len == FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION,Data) + target_len - sizeof(WCHAR),
+            "wrong len %u\n", len );
+        pNtClose( key );
+
+        status = pNtCreateKey( &key, KEY_ALL_ACCESS, &attr, 0, 0, 0, 0 );
+        ok( status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08x\n", status );
+        len = sizeof(buffer);
+        status = pNtQueryValueKey( key, &symlink_str, KeyValuePartialInformation, info, len, &len );
+        ok( status == STATUS_SUCCESS, "NtQueryValueKey failed: 0x%08x\n", status );
+        ok( len == FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION,Data) + target_len - sizeof(WCHAR),
+            "wrong len %u\n", len );
+        pNtClose( key );
+    }
+
+    if (0)  /* crashes the Windows kernel in most versions */
+    {
+        attr.RootDirectory = link;
+        attr.Attributes = 0;
+        attr.ObjectName = &null_str;
+        status = pNtOpenKey( &key, KEY_ALL_ACCESS, &attr );
+        ok( status == STATUS_SUCCESS, "NtOpenKey failed: 0x%08x\n", status );
+        len = sizeof(buffer);
+        status = pNtQueryValueKey( key, &symlink_str, KeyValuePartialInformation, info, len, &len );
+        ok( status == STATUS_OBJECT_NAME_NOT_FOUND, "NtQueryValueKey failed: 0x%08x\n", status );
+        pNtClose( key );
+
+        status = pNtCreateKey( &key, KEY_ALL_ACCESS, &attr, 0, 0, 0, 0 );
+        ok( status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08x\n", status );
+        len = sizeof(buffer);
+        status = pNtQueryValueKey( key, &symlink_str, KeyValuePartialInformation, info, len, &len );
+        ok( status == STATUS_OBJECT_NAME_NOT_FOUND, "NtQueryValueKey failed: 0x%08x\n", status );
+        pNtClose( key );
+    }
+
+    /* target with terminating null doesn't work */
+    status = pNtSetValueKey( link, &symlink_str, 0, REG_LINK, target, target_len );
+    ok( status == STATUS_SUCCESS, "NtSetValueKey failed: 0x%08x\n", status );
+    attr.RootDirectory = root;
+    attr.Attributes = 0;
+    attr.ObjectName = &link_str;
+    status = pNtOpenKey( &key, KEY_ALL_ACCESS, &attr );
+    ok( status == STATUS_OBJECT_NAME_NOT_FOUND, "NtOpenKey wrong status 0x%08x\n", status );
+
+    /* relative symlink, works only on win2k */
+    status = pNtSetValueKey( link, &symlink_str, 0, REG_LINK, targetW+1, sizeof(targetW)-2*sizeof(WCHAR) );
+    ok( status == STATUS_SUCCESS, "NtSetValueKey failed: 0x%08x\n", status );
+    attr.ObjectName = &link_str;
+    status = pNtOpenKey( &key, KEY_ALL_ACCESS, &attr );
+    ok( status == STATUS_SUCCESS || status == STATUS_OBJECT_NAME_NOT_FOUND,
+        "NtOpenKey wrong status 0x%08x\n", status );
+
+    status = pNtCreateKey( &key, KEY_ALL_ACCESS, &attr, 0, 0, REG_OPTION_CREATE_LINK, 0 );
+    ok( status == STATUS_OBJECT_NAME_COLLISION, "NtCreateKey failed: 0x%08x\n", status );
+
+    status = pNtDeleteKey( link );
+    ok( status == STATUS_SUCCESS, "NtDeleteKey failed: 0x%08x\n", status );
+    pNtClose( link );
+
+    attr.ObjectName = &target_str;
+    status = pNtOpenKey( &key, KEY_ALL_ACCESS, &attr );
+    ok( status == STATUS_SUCCESS, "NtOpenKey failed: 0x%08x\n", status );
+    status = pNtDeleteKey( key );
+    ok( status == STATUS_SUCCESS, "NtDeleteKey failed: 0x%08x\n", status );
+    pNtClose( key );
+
+    /* symlink loop */
+
+    status = pNtCreateKey( &link, KEY_ALL_ACCESS, &attr, 0, 0, REG_OPTION_CREATE_LINK, 0 );
+    ok( status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08x\n", status );
+    memcpy( target + target_len/sizeof(WCHAR) - 1, targetW, sizeof(targetW) );
+    status = pNtSetValueKey( link, &symlink_str, 0, REG_LINK,
+        target, target_len + sizeof(targetW) - sizeof(WCHAR) );
+    ok( status == STATUS_SUCCESS, "NtSetValueKey failed: 0x%08x\n", status );
+
+    status = pNtOpenKey( &key, KEY_ALL_ACCESS, &attr );
+    ok( status == STATUS_OBJECT_NAME_NOT_FOUND || status == STATUS_NAME_TOO_LONG,
+        "NtOpenKey failed: 0x%08x\n", status );
+
+    attr.Attributes = OBJ_OPENLINK;
+    status = pNtOpenKey( &key, KEY_ALL_ACCESS, &attr );
+    ok( status == STATUS_SUCCESS, "NtOpenKey failed: 0x%08x\n", status );
+    pNtClose( key );
+
+    status = pNtDeleteKey( link );
+    ok( status == STATUS_SUCCESS, "NtDeleteKey failed: 0x%08x\n", status );
+    pNtClose( link );
+
+    status = pNtDeleteKey( root );
+    ok( status == STATUS_SUCCESS, "NtDeleteKey failed: 0x%08x\n", status );
+    pNtClose( root );
+
+    pRtlFreeHeap(GetProcessHeap(), 0, target);
+}
+
+static WCHAR valueW[] = {'v','a','l','u','e'};
+static UNICODE_STRING value_str = { sizeof(valueW), sizeof(valueW), valueW };
+static const DWORD ptr_size = 8 * sizeof(void*);
+
+static DWORD get_key_value( HANDLE root, const char *name, DWORD flags )
+{
+    char tmp[32];
+    NTSTATUS status;
+    OBJECT_ATTRIBUTES attr;
+    UNICODE_STRING str;
+    HANDLE key;
+    KEY_VALUE_PARTIAL_INFORMATION *info = (KEY_VALUE_PARTIAL_INFORMATION *)tmp;
+    DWORD dw, len = sizeof(tmp);
+
+    attr.Length = sizeof(attr);
+    attr.RootDirectory = root;
+    attr.Attributes = OBJ_CASE_INSENSITIVE;
+    attr.ObjectName = &str;
+    attr.SecurityDescriptor = NULL;
+    attr.SecurityQualityOfService = NULL;
+    pRtlCreateUnicodeStringFromAsciiz( &str, name );
+
+    status = pNtCreateKey( &key, flags | KEY_ALL_ACCESS, &attr, 0, 0, 0, 0 );
+    if (status == STATUS_OBJECT_NAME_NOT_FOUND) return 0;
+    ok( status == STATUS_SUCCESS, "%08x: NtCreateKey failed: 0x%08x\n", flags, status );
+
+    status = pNtQueryValueKey( key, &value_str, KeyValuePartialInformation, info, len, &len );
+    if (status == STATUS_OBJECT_NAME_NOT_FOUND)
+        dw = 0;
+    else
+    {
+        ok( status == STATUS_SUCCESS, "%08x: NtQueryValueKey failed: 0x%08x\n", flags, status );
+        dw = *(DWORD *)info->Data;
+    }
+    pNtClose( key );
+    pRtlFreeUnicodeString( &str );
+    return dw;
+}
+
+static void _check_key_value( int line, HANDLE root, const char *name, DWORD flags, DWORD expect )
+{
+    DWORD dw = get_key_value( root, name, flags );
+    ok_(__FILE__,line)( dw == expect, "%08x: wrong value %u/%u\n", flags, dw, expect );
+}
+#define check_key_value(root,name,flags,expect) _check_key_value( __LINE__, root, name, flags, expect )
+
+static void test_redirection(void)
+{
+    static const WCHAR softwareW[] = {'\\','R','e','g','i','s','t','r','y','\\',
+                                      'M','a','c','h','i','n','e','\\',
+                                      'S','o','f','t','w','a','r','e',0};
+    static const WCHAR wownodeW[] = {'\\','R','e','g','i','s','t','r','y','\\',
+                                     'M','a','c','h','i','n','e','\\',
+                                     'S','o','f','t','w','a','r','e','\\',
+                                     'W','o','w','6','4','3','2','N','o','d','e',0};
+    static const WCHAR wine64W[] = {'\\','R','e','g','i','s','t','r','y','\\',
+                                    'M','a','c','h','i','n','e','\\',
+                                    'S','o','f','t','w','a','r','e','\\',
+                                    'W','i','n','e',0};
+    static const WCHAR wine32W[] = {'\\','R','e','g','i','s','t','r','y','\\',
+                                    'M','a','c','h','i','n','e','\\',
+                                    'S','o','f','t','w','a','r','e','\\',
+                                    'W','o','w','6','4','3','2','N','o','d','e','\\',
+                                    'W','i','n','e',0};
+    static const WCHAR key64W[] = {'\\','R','e','g','i','s','t','r','y','\\',
+                                   'M','a','c','h','i','n','e','\\',
+                                   'S','o','f','t','w','a','r','e','\\',
+                                   'W','i','n','e','\\','W','i','n','e','t','e','s','t',0};
+    static const WCHAR key32W[] = {'\\','R','e','g','i','s','t','r','y','\\',
+                                   'M','a','c','h','i','n','e','\\',
+                                   'S','o','f','t','w','a','r','e','\\',
+                                   'W','o','w','6','4','3','2','N','o','d','e','\\',
+                                   'W','i','n','e','\\', 'W','i','n','e','t','e','s','t',0};
+    static const WCHAR classes64W[] = {'\\','R','e','g','i','s','t','r','y','\\',
+                                       'M','a','c','h','i','n','e','\\',
+                                       'S','o','f','t','w','a','r','e','\\',
+                                       'C','l','a','s','s','e','s','\\',
+                                       'W','i','n','e',0};
+    static const WCHAR classes32W[] = {'\\','R','e','g','i','s','t','r','y','\\',
+                                       'M','a','c','h','i','n','e','\\',
+                                       'S','o','f','t','w','a','r','e','\\',
+                                       'C','l','a','s','s','e','s','\\',
+                                       'W','o','w','6','4','3','2','N','o','d','e','\\',
+                                       'W','i','n','e',0};
+    NTSTATUS status;
+    OBJECT_ATTRIBUTES attr;
+    UNICODE_STRING str;
+    char buffer[1024];
+    KEY_VALUE_PARTIAL_INFORMATION *info = (KEY_VALUE_PARTIAL_INFORMATION *)buffer;
+    DWORD dw, len;
+    HANDLE key, root32, root64, key32, key64;
+    BOOL is_vista = FALSE;
+
+    if (ptr_size != 64)
+    {
+        ULONG is_wow64, len;
+        if (pNtQueryInformationProcess( GetCurrentProcess(), ProcessWow64Information,
+                                        &is_wow64, sizeof(is_wow64), &len ) ||
+            !is_wow64)
+        {
+            trace( "Not on Wow64, no redirection\n" );
+            return;
+        }
+    }
+
+    attr.Length = sizeof(attr);
+    attr.RootDirectory = 0;
+    attr.Attributes = OBJ_CASE_INSENSITIVE;
+    attr.ObjectName = &str;
+    attr.SecurityDescriptor = NULL;
+    attr.SecurityQualityOfService = NULL;
+
+    pRtlInitUnicodeString( &str, wine64W );
+    status = pNtCreateKey( &root64, KEY_WOW64_64KEY | KEY_ALL_ACCESS, &attr, 0, 0, 0, 0 );
+    ok( status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08x\n", status );
+
+    pRtlInitUnicodeString( &str, wine32W );
+    status = pNtCreateKey( &root32, KEY_WOW64_32KEY | KEY_ALL_ACCESS, &attr, 0, 0, 0, 0 );
+    ok( status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08x\n", status );
+
+    pRtlInitUnicodeString( &str, key64W );
+    status = pNtCreateKey( &key64, KEY_WOW64_64KEY | KEY_ALL_ACCESS, &attr, 0, 0, 0, 0 );
+    ok( status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08x\n", status );
+
+    pRtlInitUnicodeString( &str, key32W );
+    status = pNtCreateKey( &key32, KEY_WOW64_32KEY | KEY_ALL_ACCESS, &attr, 0, 0, 0, 0 );
+    ok( status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08x\n", status );
+
+    dw = 64;
+    status = pNtSetValueKey( key64, &value_str, 0, REG_DWORD, &dw, sizeof(dw) );
+    ok( status == STATUS_SUCCESS, "NtSetValueKey failed: 0x%08x\n", status );
+
+    dw = 32;
+    status = pNtSetValueKey( key32, &value_str, 0, REG_DWORD, &dw, sizeof(dw) );
+    ok( status == STATUS_SUCCESS, "NtSetValueKey failed: 0x%08x\n", status );
+
+    len = sizeof(buffer);
+    status = pNtQueryValueKey( key32, &value_str, KeyValuePartialInformation, info, len, &len );
+    ok( status == STATUS_SUCCESS, "NtQueryValueKey failed: 0x%08x\n", status );
+    dw = *(DWORD *)info->Data;
+    ok( dw == 32, "wrong value %u\n", dw );
+
+    len = sizeof(buffer);
+    status = pNtQueryValueKey( key64, &value_str, KeyValuePartialInformation, info, len, &len );
+    ok( status == STATUS_SUCCESS, "NtQueryValueKey failed: 0x%08x\n", status );
+    dw = *(DWORD *)info->Data;
+    ok( dw == 64, "wrong value %u\n", dw );
+
+    pRtlInitUnicodeString( &str, softwareW );
+    status = pNtCreateKey( &key, KEY_ALL_ACCESS, &attr, 0, 0, 0, 0 );
+    ok( status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08x\n", status );
+
+    if (ptr_size == 32)
+    {
+        /* the Vista mechanism allows opening Wow6432Node from a 32-bit key too */
+        /* the new (and simpler) Win7 mechanism doesn't */
+        if (get_key_value( key, "Wow6432Node\\Wine\\Winetest", 0 ) == 32)
+        {
+            trace( "using Vista-style Wow6432Node handling\n" );
+            is_vista = TRUE;
+        }
+        check_key_value( key, "Wine\\Winetest", 0, 32 );
+        check_key_value( key, "Wine\\Winetest", KEY_WOW64_64KEY, is_vista ? 64 : 32 );
+        check_key_value( key, "Wine\\Winetest", KEY_WOW64_32KEY, 32 );
+        check_key_value( key, "Wow6432Node\\Wine\\Winetest", 0, is_vista ? 32 : 0 );
+        check_key_value( key, "Wow6432Node\\Wine\\Winetest", KEY_WOW64_64KEY, is_vista ? 64 : 0 );
+        check_key_value( key, "Wow6432Node\\Wine\\Winetest", KEY_WOW64_32KEY, is_vista ? 32 : 0 );
+    }
+    else
+    {
+        check_key_value( key, "Wine\\Winetest", 0, 64 );
+        check_key_value( key, "Wow6432Node\\Wine\\Winetest", 0, 32 );
+    }
+    pNtClose( key );
+
+    if (ptr_size == 32)
+    {
+        status = pNtCreateKey( &key, KEY_WOW64_64KEY | KEY_ALL_ACCESS, &attr, 0, 0, 0, 0 );
+        ok( status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08x\n", status );
+        dw = get_key_value( key, "Wine\\Winetest", 0 );
+        ok( dw == 64 || broken(dw == 32) /* xp64 */, "wrong value %u\n", dw );
+        check_key_value( key, "Wine\\Winetest", KEY_WOW64_64KEY, 64 );
+        check_key_value( key, "Wine\\Winetest", KEY_WOW64_32KEY, 32 );
+        check_key_value( key, "Wow6432Node\\Wine\\Winetest", 0, 32 );
+        dw = get_key_value( key, "Wow6432Node\\Wine\\Winetest", KEY_WOW64_64KEY );
+        ok( dw == 32 || broken(dw == 64) /* xp64 */, "wrong value %u\n", dw );
+        check_key_value( key, "Wow6432Node\\Wine\\Winetest", KEY_WOW64_32KEY, 32 );
+        pNtClose( key );
+
+        status = pNtCreateKey( &key, KEY_WOW64_32KEY | KEY_ALL_ACCESS, &attr, 0, 0, 0, 0 );
+        ok( status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08x\n", status );
+        check_key_value( key, "Wine\\Winetest", 0, 32 );
+        check_key_value( key, "Wine\\Winetest", KEY_WOW64_64KEY, is_vista ? 64 : 32 );
+        check_key_value( key, "Wine\\Winetest", KEY_WOW64_32KEY, 32 );
+        check_key_value( key, "Wow6432Node\\Wine\\Winetest", 0, is_vista ? 32 : 0 );
+        check_key_value( key, "Wow6432Node\\Wine\\Winetest", KEY_WOW64_64KEY, is_vista ? 64 : 0 );
+        check_key_value( key, "Wow6432Node\\Wine\\Winetest", KEY_WOW64_32KEY, is_vista ? 32 : 0 );
+        pNtClose( key );
+    }
+
+    check_key_value( 0, "\\Registry\\Machine\\Software\\Wine\\Winetest", 0, ptr_size );
+    check_key_value( 0, "\\Registry\\Machine\\Software\\Wow6432Node\\Wine\\Winetest", 0, 32 );
+    if (ptr_size == 64)
+    {
+        /* KEY_WOW64 flags have no effect on 64-bit */
+        check_key_value( 0, "\\Registry\\Machine\\Software\\Wine\\Winetest", KEY_WOW64_64KEY, 64 );
+        check_key_value( 0, "\\Registry\\Machine\\Software\\Wine\\Winetest", KEY_WOW64_32KEY, 64 );
+        check_key_value( 0, "\\Registry\\Machine\\Software\\Wow6432Node\\Wine\\Winetest", KEY_WOW64_64KEY, 32 );
+        check_key_value( 0, "\\Registry\\Machine\\Software\\Wow6432Node\\Wine\\Winetest", KEY_WOW64_32KEY, 32 );
+    }
+    else
+    {
+        check_key_value( 0, "\\Registry\\Machine\\Software\\Wine\\Winetest", KEY_WOW64_64KEY, 64 );
+        check_key_value( 0, "\\Registry\\Machine\\Software\\Wine\\Winetest", KEY_WOW64_32KEY, 32 );
+        check_key_value( 0, "\\Registry\\Machine\\Software\\Wow6432Node\\Wine\\Winetest", KEY_WOW64_64KEY, is_vista ? 64 : 32 );
+        check_key_value( 0, "\\Registry\\Machine\\Software\\Wow6432Node\\Wine\\Winetest", KEY_WOW64_32KEY, 32 );
+    }
+
+    pRtlInitUnicodeString( &str, wownodeW );
+    status = pNtCreateKey( &key, KEY_ALL_ACCESS, &attr, 0, 0, 0, 0 );
+    ok( status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08x\n", status );
+    check_key_value( key, "Wine\\Winetest", 0, 32 );
+    check_key_value( key, "Wine\\Winetest", KEY_WOW64_64KEY, (ptr_size == 64) ? 32 : (is_vista ? 64 : 32) );
+    check_key_value( key, "Wine\\Winetest", KEY_WOW64_32KEY, 32 );
+    pNtClose( key );
+
+    if (ptr_size == 32)
+    {
+        status = pNtCreateKey( &key, KEY_WOW64_64KEY | KEY_ALL_ACCESS, &attr, 0, 0, 0, 0 );
+        ok( status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08x\n", status );
+        dw = get_key_value( key, "Wine\\Winetest", 0 );
+        ok( dw == (is_vista ? 64 : 32) || broken(dw == 32) /* xp64 */, "wrong value %u\n", dw );
+        check_key_value( key, "Wine\\Winetest", KEY_WOW64_64KEY, is_vista ? 64 : 32 );
+        check_key_value( key, "Wine\\Winetest", KEY_WOW64_32KEY, 32 );
+        pNtClose( key );
+
+        status = pNtCreateKey( &key, KEY_WOW64_32KEY | KEY_ALL_ACCESS, &attr, 0, 0, 0, 0 );
+        ok( status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08x\n", status );
+        check_key_value( key, "Wine\\Winetest", 0, 32 );
+        check_key_value( key, "Wine\\Winetest", KEY_WOW64_64KEY, is_vista ? 64 : 32 );
+        check_key_value( key, "Wine\\Winetest", KEY_WOW64_32KEY, 32 );
+        pNtClose( key );
+    }
+
+    pRtlInitUnicodeString( &str, wine32W );
+    status = pNtCreateKey( &key, KEY_ALL_ACCESS, &attr, 0, 0, 0, 0 );
+    ok( status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08x\n", status );
+    check_key_value( key, "Winetest", 0, 32 );
+    check_key_value( key, "Winetest", KEY_WOW64_64KEY, (ptr_size == 32 && is_vista) ? 64 : 32 );
+    check_key_value( key, "Winetest", KEY_WOW64_32KEY, 32 );
+    pNtClose( key );
+
+    if (ptr_size == 32)
+    {
+        status = pNtCreateKey( &key, KEY_WOW64_64KEY | KEY_ALL_ACCESS, &attr, 0, 0, 0, 0 );
+        ok( status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08x\n", status );
+        dw = get_key_value( key, "Winetest", 0 );
+        ok( dw == 32 || (is_vista && dw == 64), "wrong value %u\n", dw );
+        check_key_value( key, "Winetest", KEY_WOW64_64KEY, is_vista ? 64 : 32 );
+        check_key_value( key, "Winetest", KEY_WOW64_32KEY, 32 );
+        pNtClose( key );
+
+        status = pNtCreateKey( &key, KEY_WOW64_32KEY | KEY_ALL_ACCESS, &attr, 0, 0, 0, 0 );
+        ok( status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08x\n", status );
+        check_key_value( key, "Winetest", 0, 32 );
+        check_key_value( key, "Winetest", KEY_WOW64_64KEY, is_vista ? 64 : 32 );
+        check_key_value( key, "Winetest", KEY_WOW64_32KEY, 32 );
+        pNtClose( key );
+    }
+
+    pRtlInitUnicodeString( &str, wine64W );
+    status = pNtCreateKey( &key, KEY_ALL_ACCESS, &attr, 0, 0, 0, 0 );
+    ok( status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08x\n", status );
+    check_key_value( key, "Winetest", 0, ptr_size );
+    check_key_value( key, "Winetest", KEY_WOW64_64KEY, is_vista ? 64 : ptr_size );
+    check_key_value( key, "Winetest", KEY_WOW64_32KEY, ptr_size );
+    pNtClose( key );
+
+    if (ptr_size == 32)
+    {
+        status = pNtCreateKey( &key, KEY_WOW64_64KEY | KEY_ALL_ACCESS, &attr, 0, 0, 0, 0 );
+        ok( status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08x\n", status );
+        dw = get_key_value( key, "Winetest", 0 );
+        ok( dw == 64 || broken(dw == 32) /* xp64 */, "wrong value %u\n", dw );
+        check_key_value( key, "Winetest", KEY_WOW64_64KEY, 64 );
+        dw = get_key_value( key, "Winetest", KEY_WOW64_32KEY );
+        todo_wine ok( dw == 32, "wrong value %u\n", dw );
+        pNtClose( key );
+
+        status = pNtCreateKey( &key, KEY_WOW64_32KEY | KEY_ALL_ACCESS, &attr, 0, 0, 0, 0 );
+        ok( status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08x\n", status );
+        check_key_value( key, "Winetest", 0, 32 );
+        check_key_value( key, "Winetest", KEY_WOW64_64KEY, is_vista ? 64 : 32 );
+        check_key_value( key, "Winetest", KEY_WOW64_32KEY, 32 );
+        pNtClose( key );
+    }
+
+    status = pNtDeleteKey( key32 );
+    ok( status == STATUS_SUCCESS, "NtDeleteKey failed: 0x%08x\n", status );
+    pNtClose( key32 );
+
+    status = pNtDeleteKey( key64 );
+    ok( status == STATUS_SUCCESS, "NtDeleteKey failed: 0x%08x\n", status );
+    pNtClose( key64 );
+
+    pNtDeleteKey( root32 );
+    pNtClose( root32 );
+    pNtDeleteKey( root64 );
+    pNtClose( root64 );
+
+    /* Software\Classes is shared/reflected so behavior is different */
+
+    pRtlInitUnicodeString( &str, classes64W );
+    status = pNtCreateKey( &key64, KEY_WOW64_64KEY | KEY_ALL_ACCESS, &attr, 0, 0, 0, 0 );
+    ok( status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08x\n", status );
+
+    pRtlInitUnicodeString( &str, classes32W );
+    status = pNtCreateKey( &key32, KEY_WOW64_32KEY | KEY_ALL_ACCESS, &attr, 0, 0, 0, 0 );
+    ok( status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08x\n", status );
+
+    dw = 64;
+    status = pNtSetValueKey( key64, &value_str, 0, REG_DWORD, &dw, sizeof(dw) );
+    ok( status == STATUS_SUCCESS, "NtSetValueKey failed: 0x%08x\n", status );
+    pNtClose( key64 );
+
+    dw = 32;
+    status = pNtSetValueKey( key32, &value_str, 0, REG_DWORD, &dw, sizeof(dw) );
+    ok( status == STATUS_SUCCESS, "NtSetValueKey failed: 0x%08x\n", status );
+    pNtClose( key32 );
+
+    pRtlInitUnicodeString( &str, classes64W );
+    status = pNtCreateKey( &key64, KEY_WOW64_64KEY | KEY_ALL_ACCESS, &attr, 0, 0, 0, 0 );
+    ok( status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08x\n", status );
+    len = sizeof(buffer);
+    status = pNtQueryValueKey( key64, &value_str, KeyValuePartialInformation, info, len, &len );
+    ok( status == STATUS_SUCCESS, "NtQueryValueKey failed: 0x%08x\n", status );
+    dw = *(DWORD *)info->Data;
+    ok( dw == ptr_size, "wrong value %u\n", dw );
+
+    pRtlInitUnicodeString( &str, classes32W );
+    status = pNtCreateKey( &key32, KEY_WOW64_32KEY | KEY_ALL_ACCESS, &attr, 0, 0, 0, 0 );
+    ok( status == STATUS_SUCCESS, "NtCreateKey failed: 0x%08x\n", status );
+    len = sizeof(buffer);
+    status = pNtQueryValueKey( key32, &value_str, KeyValuePartialInformation, info, len, &len );
+    ok( status == STATUS_SUCCESS, "NtQueryValueKey failed: 0x%08x\n", status );
+    dw = *(DWORD *)info->Data;
+    ok( dw == 32, "wrong value %u\n", dw );
+
+    pNtDeleteKey( key32 );
+    pNtClose( key32 );
+    pNtDeleteKey( key64 );
+    pNtClose( key64 );
 }
 
 START_TEST(reg)
@@ -609,8 +1249,8 @@ START_TEST(reg)
 
     pRtlAppendUnicodeToString(&winetestpath, winetest);
 
-    test_NtOpenKey();
     test_NtCreateKey();
+    test_NtOpenKey();
     test_NtSetValueKey();
     test_RtlCheckRegistryKey();
     test_RtlOpenCurrentUser();
@@ -619,6 +1259,8 @@ START_TEST(reg)
     test_NtFlushKey();
     test_NtQueryValueKey();
     test_NtDeleteKey();
+    test_symlinks();
+    test_redirection();
 
     pRtlFreeUnicodeString(&winetestpath);
 
