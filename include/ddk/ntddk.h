@@ -1893,6 +1893,546 @@ NtQueryInformationProcess(
   IN ULONG ProcessInformationLength,
   OUT PULONG ReturnLength OPTIONAL);
 
+typedef enum _SYSTEM_FIRMWARE_TABLE_ACTION {
+  SystemFirmwareTable_Enumerate,
+  SystemFirmwareTable_Get
+} SYSTEM_FIRMWARE_TABLE_ACTION;
+
+typedef struct _SYSTEM_FIRMWARE_TABLE_INFORMATION {
+  ULONG ProviderSignature;
+  SYSTEM_FIRMWARE_TABLE_ACTION Action;
+  ULONG TableID;
+  ULONG TableBufferLength;
+  UCHAR TableBuffer[ANYSIZE_ARRAY];
+} SYSTEM_FIRMWARE_TABLE_INFORMATION, *PSYSTEM_FIRMWARE_TABLE_INFORMATION;
+
+typedef NTSTATUS
+(__cdecl *PFNFTH) (
+  IN OUT PSYSTEM_FIRMWARE_TABLE_INFORMATION SystemFirmwareTableInfo);
+
+typedef struct _SYSTEM_FIRMWARE_TABLE_HANDLER {
+  ULONG ProviderSignature;
+  BOOLEAN Register;
+  PFNFTH FirmwareTableHandler;
+  PVOID DriverObject;
+} SYSTEM_FIRMWARE_TABLE_HANDLER, *PSYSTEM_FIRMWARE_TABLE_HANDLER;
+
+typedef VOID
+(NTAPI *PTIMER_APC_ROUTINE)(
+  IN PVOID TimerContext,
+  IN ULONG TimerLowValue,
+  IN LONG TimerHighValue);
+
+typedef enum _TIMER_SET_INFORMATION_CLASS {
+  TimerSetCoalescableTimer,
+  MaxTimerInfoClass 
+} TIMER_SET_INFORMATION_CLASS;
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+typedef struct _TIMER_SET_COALESCABLE_TIMER_INFO {
+  IN LARGE_INTEGER DueTime;
+  IN PTIMER_APC_ROUTINE TimerApcRoutine OPTIONAL;
+  IN PVOID TimerContext OPTIONAL;
+  IN struct _COUNTED_REASON_CONTEXT *WakeContext OPTIONAL;
+  IN ULONG Period OPTIONAL;
+  IN ULONG TolerableDelay;
+  OUT PBOOLEAN PreviousState OPTIONAL;
+} TIMER_SET_COALESCABLE_TIMER_INFO, *PTIMER_SET_COALESCABLE_TIMER_INFO;
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
+
+typedef ULONG_PTR
+(NTAPI *PDRIVER_VERIFIER_THUNK_ROUTINE)(
+  IN PVOID Context);
+
+typedef struct _DRIVER_VERIFIER_THUNK_PAIRS {
+  PDRIVER_VERIFIER_THUNK_ROUTINE PristineRoutine;
+  PDRIVER_VERIFIER_THUNK_ROUTINE NewRoutine;
+} DRIVER_VERIFIER_THUNK_PAIRS, *PDRIVER_VERIFIER_THUNK_PAIRS;
+
+#define DRIVER_VERIFIER_SPECIAL_POOLING             0x0001
+#define DRIVER_VERIFIER_FORCE_IRQL_CHECKING         0x0002
+#define DRIVER_VERIFIER_INJECT_ALLOCATION_FAILURES  0x0004
+#define DRIVER_VERIFIER_TRACK_POOL_ALLOCATIONS      0x0008
+#define DRIVER_VERIFIER_IO_CHECKING                 0x0010
+
+#define XSTATE_LEGACY_FLOATING_POINT        0
+#define XSTATE_LEGACY_SSE                   1
+#define XSTATE_GSSE                         2
+
+#define XSTATE_MASK_LEGACY_FLOATING_POINT   (1i64 << (XSTATE_LEGACY_FLOATING_POINT))
+#define XSTATE_MASK_LEGACY_SSE              (1i64 << (XSTATE_LEGACY_SSE))
+#define XSTATE_MASK_LEGACY                  (XSTATE_MASK_LEGACY_FLOATING_POINT | XSTATE_MASK_LEGACY_SSE)
+#define XSTATE_MASK_GSSE                    (1i64 << (XSTATE_GSSE))
+
+#define MAXIMUM_XSTATE_FEATURES             64
+
+typedef struct _XSTATE_FEATURE {
+  ULONG Offset;
+  ULONG Size;
+} XSTATE_FEATURE, *PXSTATE_FEATURE;
+
+typedef struct _XSTATE_CONFIGURATION {
+  ULONG64 EnabledFeatures;
+  ULONG Size;
+  ULONG OptimizedSave:1;
+  XSTATE_FEATURE Features[MAXIMUM_XSTATE_FEATURES];
+} XSTATE_CONFIGURATION, *PXSTATE_CONFIGURATION;
+
+#define MAX_WOW64_SHARED_ENTRIES 16
+
+#define NX_SUPPORT_POLICY_ALWAYSOFF 0
+#define NX_SUPPORT_POLICY_ALWAYSON 1
+#define NX_SUPPORT_POLICY_OPTIN 2
+#define NX_SUPPORT_POLICY_OPTOUT 3
+
+#define SHARED_GLOBAL_FLAGS_ERROR_PORT_V        0x0
+#define SHARED_GLOBAL_FLAGS_ERROR_PORT          (1UL << SHARED_GLOBAL_FLAGS_ERROR_PORT_V)
+
+#define SHARED_GLOBAL_FLAGS_ELEVATION_ENABLED_V 0x1
+#define SHARED_GLOBAL_FLAGS_ELEVATION_ENABLED   (1UL << SHARED_GLOBAL_FLAGS_ELEVATION_ENABLED_V)
+
+#define SHARED_GLOBAL_FLAGS_VIRT_ENABLED_V      0x2
+#define SHARED_GLOBAL_FLAGS_VIRT_ENABLED        (1UL << SHARED_GLOBAL_FLAGS_VIRT_ENABLED_V)
+
+#define SHARED_GLOBAL_FLAGS_INSTALLER_DETECT_ENABLED_V  0x3
+#define SHARED_GLOBAL_FLAGS_INSTALLER_DETECT_ENABLED    \
+    (1UL << SHARED_GLOBAL_FLAGS_INSTALLER_DETECT_ENABLED_V)
+
+#define SHARED_GLOBAL_FLAGS_SPARE_V                     0x4
+#define SHARED_GLOBAL_FLAGS_SPARE                       \
+    (1UL << SHARED_GLOBAL_FLAGS_SPARE_V)
+
+#define SHARED_GLOBAL_FLAGS_DYNAMIC_PROC_ENABLED_V      0x5
+#define SHARED_GLOBAL_FLAGS_DYNAMIC_PROC_ENABLED        \
+    (1UL << SHARED_GLOBAL_FLAGS_DYNAMIC_PROC_ENABLED_V)
+
+#define SHARED_GLOBAL_FLAGS_SEH_VALIDATION_ENABLED_V    0x6
+#define SHARED_GLOBAL_FLAGS_SEH_VALIDATION_ENABLED        \
+    (1UL << SHARED_GLOBAL_FLAGS_SEH_VALIDATION_ENABLED_V)
+
+#define EX_INIT_BITS(Flags, Bit) \
+    *((Flags)) |= (Bit)             // Safe to use before concurrently accessible
+
+#define EX_TEST_SET_BIT(Flags, Bit) \
+    InterlockedBitTestAndSet ((PLONG)(Flags), (Bit))
+
+#define EX_TEST_CLEAR_BIT(Flags, Bit) \
+    InterlockedBitTestAndReset ((PLONG)(Flags), (Bit))
+
+typedef struct _KUSER_SHARED_DATA {
+  ULONG TickCountLowDeprecated;
+  ULONG TickCountMultiplier;
+  volatile KSYSTEM_TIME InterruptTime;
+  volatile KSYSTEM_TIME SystemTime;
+  volatile KSYSTEM_TIME TimeZoneBias;
+  USHORT ImageNumberLow;
+  USHORT ImageNumberHigh;
+  WCHAR NtSystemRoot[260];
+  ULONG MaxStackTraceDepth;
+  ULONG CryptoExponent;
+  ULONG TimeZoneId;
+  ULONG LargePageMinimum;
+  ULONG Reserved2[7];
+  NT_PRODUCT_TYPE NtProductType;
+  BOOLEAN ProductTypeIsValid;
+  ULONG NtMajorVersion;
+  ULONG NtMinorVersion;
+  BOOLEAN ProcessorFeatures[PROCESSOR_FEATURE_MAX];
+  ULONG Reserved1;
+  ULONG Reserved3;
+  volatile ULONG TimeSlip;
+  ALTERNATIVE_ARCHITECTURE_TYPE AlternativeArchitecture;
+  ULONG AltArchitecturePad[1];
+  LARGE_INTEGER SystemExpirationDate;
+  ULONG SuiteMask;
+  BOOLEAN KdDebuggerEnabled;
+#if (NTDDI_VERSION >= NTDDI_WINXPSP2)
+  UCHAR NXSupportPolicy;
+#endif
+  volatile ULONG ActiveConsoleId;
+  volatile ULONG DismountCount;
+  ULONG ComPlusPackage;
+  ULONG LastSystemRITEventTickCount;
+  ULONG NumberOfPhysicalPages;
+  BOOLEAN SafeBootMode;
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+  union {
+    UCHAR TscQpcData;
+    struct {
+      UCHAR TscQpcEnabled:1;
+      UCHAR TscQpcSpareFlag:1;
+      UCHAR TscQpcShift:6;
+    } DUMMYSTRUCTNAME;
+  } DUMMYUNIONNAME;
+  UCHAR TscQpcPad[2];
+#endif
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+  union {
+    ULONG SharedDataFlags;
+    struct {
+      ULONG DbgErrorPortPresent:1;
+      ULONG DbgElevationEnabled:1;
+      ULONG DbgVirtEnabled:1;
+      ULONG DbgInstallerDetectEnabled:1;
+      ULONG DbgSystemDllRelocated:1;
+      ULONG DbgDynProcessorEnabled:1;
+      ULONG DbgSEHValidationEnabled:1;
+      ULONG SpareBits:25;
+    } DUMMYSTRUCTNAME2;
+  } DUMMYUNIONNAME2;
+#else
+  ULONG TraceLogging;
+#endif
+  ULONG DataFlagsPad[1];
+  ULONGLONG TestRetInstruction;
+  ULONG SystemCall;
+  ULONG SystemCallReturn;
+  ULONGLONG SystemCallPad[3];
+  _ANONYMOUS_UNION union {
+    volatile KSYSTEM_TIME TickCount;
+    volatile ULONG64 TickCountQuad;
+    _ANONYMOUS_STRUCT struct {
+      ULONG ReservedTickCountOverlay[3];
+      ULONG TickCountPad[1];
+    } DUMMYSTRUCTNAME;
+  } DUMMYUNIONNAME3;
+  ULONG Cookie;
+  ULONG CookiePad[1];
+#if (NTDDI_VERSION >= NTDDI_WS03)
+  LONGLONG ConsoleSessionForegroundProcessId;
+  ULONG Wow64SharedInformation[MAX_WOW64_SHARED_ENTRIES];
+#endif
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+  USHORT UserModeGlobalLogger[16];
+#else
+  USHORT UserModeGlobalLogger[8];
+  ULONG HeapTracingPid[2];
+  ULONG CritSecTracingPid[2];
+#endif
+  ULONG ImageFileExecutionOptions;
+#if (NTDDI_VERSION >= NTDDI_VISTASP1)
+  ULONG LangGenerationCount;
+#else
+  /* 4 bytes padding */
+#endif
+  ULONGLONG Reserved5;
+  volatile ULONG64 InterruptTimeBias;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+  volatile ULONG64 TscQpcBias;
+  volatile ULONG ActiveProcessorCount;
+  volatile USHORT ActiveGroupCount;
+  USHORT Reserved4;
+  volatile ULONG AitSamplingValue;
+  volatile ULONG AppCompatFlag;
+  ULONGLONG SystemDllNativeRelocation;
+  ULONG SystemDllWowRelocation;
+  ULONG XStatePad[1];
+  XSTATE_CONFIGURATION XState;
+#endif
+} KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
+
+#define CmResourceTypeMaximum             8
+
+typedef struct _CM_PCCARD_DEVICE_DATA {
+  UCHAR Flags;
+  UCHAR ErrorCode;
+  USHORT Reserved;
+  ULONG BusData;
+  ULONG DeviceId;
+  ULONG LegacyBaseAddress;
+  UCHAR IRQMap[16];
+} CM_PCCARD_DEVICE_DATA, *PCM_PCCARD_DEVICE_DATA;
+
+#define PCCARD_MAP_ERROR               0x01
+#define PCCARD_DEVICE_PCI              0x10
+
+#define PCCARD_SCAN_DISABLED           0x01
+#define PCCARD_MAP_ZERO                0x02
+#define PCCARD_NO_TIMER                0x03
+#define PCCARD_NO_PIC                  0x04
+#define PCCARD_NO_LEGACY_BASE          0x05
+#define PCCARD_DUP_LEGACY_BASE         0x06
+#define PCCARD_NO_CONTROLLERS          0x07
+
+#ifndef _ARC_DDK_
+#define _ARC_DDK_
+typedef enum _CONFIGURATION_TYPE {
+  ArcSystem,
+  CentralProcessor,
+  FloatingPointProcessor,
+  PrimaryIcache,
+  PrimaryDcache,
+  SecondaryIcache,
+  SecondaryDcache,
+  SecondaryCache,
+  EisaAdapter,
+  TcAdapter,
+  ScsiAdapter,
+  DtiAdapter,
+  MultiFunctionAdapter,
+  DiskController,
+  TapeController,
+  CdromController,
+  WormController,
+  SerialController,
+  NetworkController,
+  DisplayController,
+  ParallelController,
+  PointerController,
+  KeyboardController,
+  AudioController,
+  OtherController,
+  DiskPeripheral,
+  FloppyDiskPeripheral,
+  TapePeripheral,
+  ModemPeripheral,
+  MonitorPeripheral,
+  PrinterPeripheral,
+  PointerPeripheral,
+  KeyboardPeripheral,
+  TerminalPeripheral,
+  OtherPeripheral,
+  LinePeripheral,
+  NetworkPeripheral,
+  SystemMemory,
+  DockingInformation,
+  RealModeIrqRoutingTable,
+  RealModePCIEnumeration,
+  MaximumType
+} CONFIGURATION_TYPE, *PCONFIGURATION_TYPE;
+#endif /* !_ARC_DDK_ */
+
+#if (NTDDI_VERSION < NTDDI_WIN7) || defined(_X86_) || !defined(NT_PROCESSOR_GROUPS)
+#define SINGLE_GROUP_LEGACY_API           1
+#endif
+
+#if defined(_X86_) || defined(_AMD64_)
+#define PAUSE_PROCESSOR YieldProcessor();
+#elif defined(_IA64_)
+#define PAUSE_PROCESSOR __yield();
+#endif
+
+#define MAXIMUM_EXPANSION_SIZE (KERNEL_LARGE_STACK_SIZE - (PAGE_SIZE / 2))
+
+typedef VOID
+(NTAPI *PEXPAND_STACK_CALLOUT) (
+  IN PVOID Parameter OPTIONAL);
+
+
+
+
+
+
+
+
+
+/* Kernel Functions */
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K) && defined(SINGLE_GROUP_LEGACY_API)
+
+NTKERNELAPI
+VOID
+NTAPI
+KeSetTargetProcessorDpc(
+  IN OUT PRKDPC Dpc,
+  IN CCHAR Number);
+
+NTKERNELAPI
+KAFFINITY
+NTAPI
+KeQueryActiveProcessors(VOID);
+
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTKERNELAPI
+VOID
+NTAPI
+KeSetImportanceDpc(
+  IN OUT PRKDPC Dpc,
+  IN KDPC_IMPORTANCE Importance);
+
+NTKERNELAPI
+LONG
+NTAPI
+KePulseEvent(
+  IN OUT PRKEVENT Event,
+  IN KPRIORITY Increment,
+  IN BOOLEAN Wait);
+
+NTKERNELAPI
+LONG
+NTAPI
+KeSetBasePriorityThread(
+  IN OUT PRKTHREAD Thread,
+  IN LONG Increment);
+
+NTKERNELAPI
+VOID
+NTAPI
+KeEnterCriticalRegion(VOID);
+
+NTKERNELAPI
+VOID
+NTAPI
+KeLeaveCriticalRegion(VOID);
+
+NTKERNELAPI
+DECLSPEC_NORETURN
+VOID
+NTAPI
+KeBugCheck(
+  IN ULONG BugCheckCode);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+NTKERNELAPI
+BOOLEAN
+NTAPI
+KeAreApcsDisabled(VOID);
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WS03)
+NTKERNELAPI
+BOOLEAN
+NTAPI
+KeInvalidateAllCaches(VOID);
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WS03SP1)
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+KeExpandKernelStackAndCallout(
+  IN PEXPAND_STACK_CALLOUT Callout,
+  IN PVOID Parameter OPTIONAL,
+  IN SIZE_T Size);
+
+NTKERNELAPI
+VOID
+NTAPI
+KeEnterGuardedRegion(VOID);
+
+NTKERNELAPI
+VOID
+NTAPI
+KeLeaveGuardedRegion(VOID);
+
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_VISTA) && defined(SINGLE_GROUP_LEGACY_API)
+
+NTKERNELAPI
+ULONG
+NTAPI
+KeQueryActiveProcessorCount(
+  OUT PKAFFINITY ActiveProcessors OPTIONAL);
+
+NTKERNELAPI
+ULONG
+NTAPI
+KeQueryMaximumProcessorCount(VOID);
+
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+
+NTKERNELAPI
+ULONG
+NTAPI
+KeQueryActiveProcessorCountEx(
+  IN USHORT GroupNumber);
+
+NTKERNELAPI
+ULONG
+NTAPI
+KeQueryMaximumProcessorCountEx(
+  IN USHORT GroupNumber);
+
+NTKERNELAPI
+USHORT
+NTAPI
+KeQueryActiveGroupCount(VOID);
+
+NTKERNELAPI
+USHORT
+NTAPI
+KeQueryMaximumGroupCount(VOID);
+
+NTKERNELAPI
+KAFFINITY
+NTAPI
+KeQueryGroupAffinity(
+  IN USHORT GroupNumber);
+
+NTKERNELAPI
+ULONG
+NTAPI
+KeGetCurrentProcessorNumberEx(
+  OUT PPROCESSOR_NUMBER ProcNumber OPTIONAL);
+
+NTKERNELAPI
+VOID
+NTAPI
+KeQueryNodeActiveAffinity(
+  IN USHORT NodeNumber,
+  OUT PGROUP_AFFINITY Affinity OPTIONAL,
+  OUT PUSHORT Count OPTIONAL);
+
+NTKERNELAPI
+USHORT
+NTAPI
+KeQueryNodeMaximumProcessorCount(
+  IN USHORT NodeNumber);
+
+NTKERNELAPI
+USHORT
+NTAPI
+KeQueryHighestNodeNumber(VOID);
+
+NTKERNELAPI
+USHORT
+NTAPI
+KeGetCurrentNodeNumber(VOID);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+KeQueryLogicalProcessorRelationship(
+  IN PPROCESSOR_NUMBER ProcessorNumber OPTIONAL,
+  IN LOGICAL_PROCESSOR_RELATIONSHIP RelationshipType,
+  OUT PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX Information OPTIONAL,
+  IN OUT PULONG Length);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+KeSetHardwareCounterConfiguration(
+  IN PHARDWARE_COUNTER CounterArray,
+  IN ULONG Count);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+KeQueryHardwareCounterConfiguration(
+  OUT PHARDWARE_COUNTER CounterArray,
+  IN ULONG MaximumCount,
+  OUT PULONG Count);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
+
+NTKERNELAPI
+VOID
+FASTCALL
+KeInvalidateRangeAllCaches(
+  IN PVOID BaseAddress,
+  IN ULONG Length);
+
 struct _LOADER_PARAMETER_BLOCK;
 struct _CREATE_DISK;
 struct _DRIVE_LAYOUT_INFORMATION_EX;
@@ -1905,13 +2445,6 @@ struct _SET_PARTITION_INFORMATION_EX;
 #include <guiddef.h>
 #endif
 typedef GUID UUID;
-
-#define MAX_WOW64_SHARED_ENTRIES 16
-
-#define NX_SUPPORT_POLICY_ALWAYSOFF 0
-#define NX_SUPPORT_POLICY_ALWAYSON 1
-#define NX_SUPPORT_POLICY_OPTIN 2
-#define NX_SUPPORT_POLICY_OPTOUT 3
 
 /*
 ** IRP function codes
@@ -2553,142 +3086,6 @@ typedef struct _DISK_SIGNATURE {
   } DUMMYUNIONNAME;
 } DISK_SIGNATURE, *PDISK_SIGNATURE;
 
-typedef ULONG_PTR
-(NTAPI *PDRIVER_VERIFIER_THUNK_ROUTINE)(
-  IN PVOID Context);
-
-typedef struct _DRIVER_VERIFIER_THUNK_PAIRS {
-  PDRIVER_VERIFIER_THUNK_ROUTINE PristineRoutine;
-  PDRIVER_VERIFIER_THUNK_ROUTINE NewRoutine;
-} DRIVER_VERIFIER_THUNK_PAIRS, *PDRIVER_VERIFIER_THUNK_PAIRS;
-
-#define DRIVER_VERIFIER_SPECIAL_POOLING             0x0001
-#define DRIVER_VERIFIER_FORCE_IRQL_CHECKING         0x0002
-#define DRIVER_VERIFIER_INJECT_ALLOCATION_FAILURES  0x0004
-#define DRIVER_VERIFIER_TRACK_POOL_ALLOCATIONS      0x0008
-#define DRIVER_VERIFIER_IO_CHECKING                 0x0010
-
-typedef VOID
-(NTAPI *PTIMER_APC_ROUTINE)(
-  IN PVOID TimerContext,
-  IN ULONG TimerLowValue,
-  IN LONG TimerHighValue);
-
-typedef struct _KUSER_SHARED_DATA
-{
-    ULONG TickCountLowDeprecated;
-    ULONG TickCountMultiplier;
-    volatile KSYSTEM_TIME InterruptTime;
-    volatile KSYSTEM_TIME SystemTime;
-    volatile KSYSTEM_TIME TimeZoneBias;
-    USHORT ImageNumberLow;
-    USHORT ImageNumberHigh;
-    WCHAR NtSystemRoot[260];
-    ULONG MaxStackTraceDepth;
-    ULONG CryptoExponent;
-    ULONG TimeZoneId;
-    ULONG LargePageMinimum;
-    ULONG Reserved2[7];
-    NT_PRODUCT_TYPE NtProductType;
-    BOOLEAN ProductTypeIsValid;
-    ULONG NtMajorVersion;
-    ULONG NtMinorVersion;
-    BOOLEAN ProcessorFeatures[PROCESSOR_FEATURE_MAX];
-    ULONG Reserved1;
-    ULONG Reserved3;
-    volatile ULONG TimeSlip;
-    ALTERNATIVE_ARCHITECTURE_TYPE AlternativeArchitecture;
-    ULONG AltArchitecturePad[1];
-    LARGE_INTEGER SystemExpirationDate;
-    ULONG SuiteMask;
-    BOOLEAN KdDebuggerEnabled;
-#if (NTDDI_VERSION >= NTDDI_WINXPSP2)
-    UCHAR NXSupportPolicy;
-#endif
-    volatile ULONG ActiveConsoleId;
-    volatile ULONG DismountCount;
-    ULONG ComPlusPackage;
-    ULONG LastSystemRITEventTickCount;
-    ULONG NumberOfPhysicalPages;
-    BOOLEAN SafeBootMode;
-#if (NTDDI_VERSION >= NTDDI_WIN7)
-    union {
-        UCHAR TscQpcData;
-        struct {
-            UCHAR TscQpcEnabled:1;
-            UCHAR TscQpcSpareFlag:1;
-            UCHAR TscQpcShift:6;
-        } DUMMYSTRUCTNAME;
-    } DUMMYUNIONNAME;
-    UCHAR TscQpcPad[2];
-#endif
-#if (NTDDI_VERSION >= NTDDI_VISTA)
-    union {
-        ULONG SharedDataFlags;
-        struct {
-            ULONG DbgErrorPortPresent:1;
-            ULONG DbgElevationEnabled:1;
-            ULONG DbgVirtEnabled:1;
-            ULONG DbgInstallerDetectEnabled:1;
-            ULONG DbgSystemDllRelocated:1;
-            ULONG DbgDynProcessorEnabled:1;
-            ULONG DbgSEHValidationEnabled:1;
-            ULONG SpareBits:25;
-        } DUMMYSTRUCTNAME2;
-    } DUMMYUNIONNAME2;
-#else
-    ULONG TraceLogging;
-#endif
-    ULONG DataFlagsPad[1];
-    ULONGLONG TestRetInstruction;
-    ULONG SystemCall;
-    ULONG SystemCallReturn;
-    ULONGLONG SystemCallPad[3];
-    _ANONYMOUS_UNION union {
-        volatile KSYSTEM_TIME TickCount;
-        volatile ULONG64 TickCountQuad;
-        _ANONYMOUS_STRUCT struct {
-            ULONG ReservedTickCountOverlay[3];
-            ULONG TickCountPad[1];
-        } DUMMYSTRUCTNAME;
-    } DUMMYUNIONNAME3;
-    ULONG Cookie;
-    ULONG CookiePad[1];
-#if (NTDDI_VERSION >= NTDDI_WS03)
-    LONGLONG ConsoleSessionForegroundProcessId;
-    ULONG Wow64SharedInformation[MAX_WOW64_SHARED_ENTRIES];
-#endif
-#if (NTDDI_VERSION >= NTDDI_VISTA)
-#if (NTDDI_VERSION >= NTDDI_WIN7)
-    USHORT UserModeGlobalLogger[16];
-#else
-    USHORT UserModeGlobalLogger[8];
-    ULONG HeapTracingPid[2];
-    ULONG CritSecTracingPid[2];
-#endif
-    ULONG ImageFileExecutionOptions;
-#if (NTDDI_VERSION >= NTDDI_VISTASP1)
-    ULONG LangGenerationCount;
-#else
-    /* 4 bytes padding */
-#endif
-    ULONGLONG Reserved5;
-    volatile ULONG64 InterruptTimeBias;
-#endif
-#if (NTDDI_VERSION >= NTDDI_WIN7)
-    volatile ULONG64 TscQpcBias;
-    volatile ULONG ActiveProcessorCount;
-    volatile USHORT ActiveGroupCount;
-    USHORT Reserved4;
-    volatile ULONG AitSamplingValue;
-    volatile ULONG AppCompatFlag;
-    ULONGLONG SystemDllNativeRelocation;
-    ULONG SystemDllWowRelocation;
-    ULONG XStatePad[1];
-    XSTATE_CONFIGURATION XState;
-#endif
-} KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
-
 extern NTKERNELAPI PVOID MmHighestUserAddress;
 extern NTKERNELAPI PVOID MmSystemRangeStart;
 extern NTKERNELAPI ULONG MmUserProbeAddress;
@@ -3009,54 +3406,6 @@ Exfi386InterlockedExchangeUlong(
   IN ULONG  Value);
 
 #endif /* _X86_ */
-
-#ifndef _ARC_DDK_
-#define _ARC_DDK_
-typedef enum _CONFIGURATION_TYPE {
-  ArcSystem,
-  CentralProcessor,
-  FloatingPointProcessor,
-  PrimaryIcache,
-  PrimaryDcache,
-  SecondaryIcache,
-  SecondaryDcache,
-  SecondaryCache,
-  EisaAdapter,
-  TcAdapter,
-  ScsiAdapter,
-  DtiAdapter,
-  MultiFunctionAdapter,
-  DiskController,
-  TapeController,
-  CdromController,
-  WormController,
-  SerialController,
-  NetworkController,
-  DisplayController,
-  ParallelController,
-  PointerController,
-  KeyboardController,
-  AudioController,
-  OtherController,
-  DiskPeripheral,
-  FloppyDiskPeripheral,
-  TapePeripheral,
-  ModemPeripheral,
-  MonitorPeripheral,
-  PrinterPeripheral,
-  PointerPeripheral,
-  KeyboardPeripheral,
-  TerminalPeripheral,
-  OtherPeripheral,
-  LinePeripheral,
-  NetworkPeripheral,
-  SystemMemory,
-  DockingInformation,
-  RealModeIrqRoutingTable,
-  RealModePCIEnumeration,
-  MaximumType
-} CONFIGURATION_TYPE, *PCONFIGURATION_TYPE;
-#endif /* !_ARC_DDK_ */
 
 typedef struct _CONTROLLER_OBJECT {
   CSHORT Type;
@@ -3660,34 +4009,6 @@ IoWritePartitionTableEx(
   IN struct _DRIVE_LAYOUT_INFORMATION_EX *DriveLayout);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
-
-/* Kernel Functions */
-
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
-
-NTKERNELAPI
-DECLSPEC_NORETURN
-VOID
-NTAPI
-KeBugCheck(
-  IN ULONG BugCheckCode);
-
-NTKERNELAPI
-LONG
-NTAPI
-KePulseEvent(
-  IN OUT PRKEVENT Event,
-  IN KPRIORITY Increment,
-  IN BOOLEAN Wait);
-
-NTKERNELAPI
-LONG
-NTAPI
-KeSetBasePriorityThread(
-  IN OUT PRKTHREAD Thread,
-  IN LONG Increment);
-
-#endif
 
 /* Memory Manager Types */
 
