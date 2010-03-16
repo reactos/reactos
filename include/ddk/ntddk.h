@@ -383,6 +383,38 @@ typedef enum _WELL_KNOWN_SID_TYPE {
 
 #define RTL_HASH_RESERVED_SIGNATURE 0
 
+/* RtlVerifyVersionInfo() ComparisonType */
+
+#define VER_EQUAL                       1
+#define VER_GREATER                     2
+#define VER_GREATER_EQUAL               3
+#define VER_LESS                        4
+#define VER_LESS_EQUAL                  5
+#define VER_AND                         6
+#define VER_OR                          7
+
+#define VER_CONDITION_MASK              7
+#define VER_NUM_BITS_PER_CONDITION_MASK 3
+
+/* RtlVerifyVersionInfo() TypeMask */
+
+#define VER_MINORVERSION                  0x0000001
+#define VER_MAJORVERSION                  0x0000002
+#define VER_BUILDNUMBER                   0x0000004
+#define VER_PLATFORMID                    0x0000008
+#define VER_SERVICEPACKMINOR              0x0000010
+#define VER_SERVICEPACKMAJOR              0x0000020
+#define VER_SUITENAME                     0x0000040
+#define VER_PRODUCT_TYPE                  0x0000080
+
+#define VER_NT_WORKSTATION              0x0000001
+#define VER_NT_DOMAIN_CONTROLLER        0x0000002
+#define VER_NT_SERVER                   0x0000003
+
+#define VER_PLATFORM_WIN32s             0
+#define VER_PLATFORM_WIN32_WINDOWS      1
+#define VER_PLATFORM_WIN32_NT           2
+
 typedef union _RTL_RUN_ONCE {
   PVOID Ptr;
 } RTL_RUN_ONCE, *PRTL_RUN_ONCE;
@@ -648,6 +680,68 @@ typedef struct _RTL_DYNAMIC_HASH_TABLE {
   PVOID Directory;
 } RTL_DYNAMIC_HASH_TABLE, *PRTL_DYNAMIC_HASH_TABLE;
 
+typedef struct _OSVERSIONINFOA {
+  ULONG dwOSVersionInfoSize;
+  ULONG dwMajorVersion;
+  ULONG dwMinorVersion;
+  ULONG dwBuildNumber;
+  ULONG dwPlatformId;
+  CHAR szCSDVersion[128];
+} OSVERSIONINFOA, *POSVERSIONINFOA, *LPOSVERSIONINFOA;
+
+typedef struct _OSVERSIONINFOW {
+  ULONG dwOSVersionInfoSize;
+  ULONG dwMajorVersion;
+  ULONG dwMinorVersion;
+  ULONG dwBuildNumber;
+  ULONG dwPlatformId;
+  WCHAR szCSDVersion[128];
+} OSVERSIONINFOW, *POSVERSIONINFOW, *LPOSVERSIONINFOW, RTL_OSVERSIONINFOW, *PRTL_OSVERSIONINFOW;
+
+typedef struct _OSVERSIONINFOEXA {
+  ULONG dwOSVersionInfoSize;
+  ULONG dwMajorVersion;
+  ULONG dwMinorVersion;
+  ULONG dwBuildNumber;
+  ULONG dwPlatformId;
+  CHAR szCSDVersion[128];
+  USHORT wServicePackMajor;
+  USHORT wServicePackMinor;
+  USHORT wSuiteMask;
+  UCHAR wProductType;
+  UCHAR wReserved;
+} OSVERSIONINFOEXA, *POSVERSIONINFOEXA, *LPOSVERSIONINFOEXA;
+
+typedef struct _OSVERSIONINFOEXW {
+  ULONG dwOSVersionInfoSize;
+  ULONG dwMajorVersion;
+  ULONG dwMinorVersion;
+  ULONG dwBuildNumber;
+  ULONG dwPlatformId;
+  WCHAR szCSDVersion[128];
+  USHORT wServicePackMajor;
+  USHORT wServicePackMinor;
+  USHORT wSuiteMask;
+  UCHAR wProductType;
+  UCHAR wReserved;
+} OSVERSIONINFOEXW, *POSVERSIONINFOEXW, *LPOSVERSIONINFOEXW, RTL_OSVERSIONINFOEXW, *PRTL_OSVERSIONINFOEXW;
+
+#ifdef UNICODE
+typedef OSVERSIONINFOEXW OSVERSIONINFOEX;
+typedef POSVERSIONINFOEXW POSVERSIONINFOEX;
+typedef LPOSVERSIONINFOEXW LPOSVERSIONINFOEX;
+typedef OSVERSIONINFOW OSVERSIONINFO;
+typedef POSVERSIONINFOW POSVERSIONINFO;
+typedef LPOSVERSIONINFOW LPOSVERSIONINFO;
+#else
+typedef OSVERSIONINFOEXA OSVERSIONINFOEX;
+typedef POSVERSIONINFOEXA POSVERSIONINFOEX;
+typedef LPOSVERSIONINFOEXA LPOSVERSIONINFOEX;
+typedef OSVERSIONINFOA OSVERSIONINFO;
+typedef POSVERSIONINFOA POSVERSIONINFO;
+typedef LPOSVERSIONINFOA LPOSVERSIONINFO;
+#endif /* UNICODE */
+
 #define HASH_ENTRY_KEY(x)    ((x)->Signature)
 
 #define RtlInitializeSplayLinks(Links) {    \
@@ -695,6 +789,43 @@ typedef struct _RTL_DYNAMIC_HASH_TABLE {
         _SplayParent->RightChild = _SplayChild;         \
         _SplayChild->Parent = _SplayParent;             \
     }
+
+#define RtlEqualLuid(L1, L2) (((L1)->LowPart == (L2)->LowPart) && \
+                              ((L1)->HighPart  == (L2)->HighPart))
+
+#define RtlIsZeroLuid(L1) ((BOOLEAN) (((L1)->LowPart | (L1)->HighPart) == 0))
+
+#if !defined(MIDL_PASS)
+
+FORCEINLINE
+LUID
+NTAPI_INLINE
+RtlConvertLongToLuid(
+  IN LONG Val)
+{
+  LUID Luid;
+  LARGE_INTEGER Temp;
+
+  Temp.QuadPart = Val;
+  Luid.LowPart = Temp.u.LowPart;
+  Luid.HighPart = Temp.u.HighPart;
+  return Luid;
+}
+
+FORCEINLINE
+LUID
+NTAPI_INLINE
+RtlConvertUlongToLuid(
+  IN ULONG Val)
+{
+  LUID Luid;
+
+  Luid.LowPart = Val;
+  Luid.HighPart = 0;
+  return Luid;
+}
+
+#endif /* !defined(MIDL_PASS) */
 
 #if (defined(_M_AMD64) || defined(_M_IA64)) && !defined(_REALLY_GET_CALLERS_CALLER_)
 #define RtlGetCallersAddress(CallersAddress, CallersCaller) \
@@ -967,7 +1098,7 @@ RtlIsGenericTableEmptyAvl(
 
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
-#if (NTDDI_VERSION >= NTDDI_WIN6)
+#if (NTDDI_VERSION >= NTDDI_VISTA)
 
 NTSYSAPI
 VOID
@@ -1000,7 +1131,17 @@ RtlRunOnceComplete(
   IN ULONG Flags,
   IN PVOID Context OPTIONAL);
 
-#endif /* (NTDDI_VERSION >= NTDDI_WIN6) */
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlGetProductInfo(
+  IN ULONG OSMajorVersion,
+  IN ULONG OSMinorVersion,
+  IN ULONG SpMajorVersion,
+  IN ULONG SpMinorVersion,
+  OUT PULONG ReturnedProductType);
+
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 #if !defined(MIDL_PASS) && !defined(SORTPP_PASS)
 
@@ -1220,6 +1361,306 @@ RtlLargeIntegerDivide(
 #endif
 
 #endif /* defined(_AMD64_) || defined(_IA64_) */
+
+#define VER_SET_CONDITION(ConditionMask, TypeBitMask, ComparisonType)  \
+        ((ConditionMask) = VerSetConditionMask((ConditionMask), \
+        (TypeBitMask), (ComparisonType)))
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+NTSYSAPI
+ULONGLONG
+NTAPI
+VerSetConditionMask(
+  IN ULONGLONG ConditionMask,
+  IN ULONG TypeMask,
+  IN UCHAR Condition);
+#endif
+
+/** Kernel debugger routines **/
+
+NTSYSAPI
+ULONG
+NTAPI
+DbgPrompt(
+  IN PCCH Prompt,
+  OUT PCH Response,
+  IN ULONG MaximumResponseLength);
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+
+#define FILE_CHARACTERISTICS_EXPECT_ORDERLY_REMOVAL_EX     0x00004000
+#define FILE_CHARACTERISTICS_EXPECT_SURPRISE_REMOVAL_EX    0x00008000
+#define FILE_CHARACTERISTICS_REMOVAL_POLICY_MASK_EX \
+    (FILE_CHARACTERISTICS_EXPECT_ORDERLY_REMOVAL_EX | \
+     FILE_CHARACTERISTICS_EXPECT_SURPRISE_REMOVAL_EX)
+
+#define FILE_CHARACTERISTICS_EXPECT_ORDERLY_REMOVAL_DEPRECATED 0x00000200
+#define FILE_CHARACTERISTICS_EXPECT_SURPRISE_REMOVAL_DEPRECATED 0x00000300
+#define FILE_CHARACTERISTICS_REMOVAL_POLICY_MASK_DEPRECATED 0x00000300
+
+#else
+
+#define FILE_CHARACTERISTICS_EXPECT_ORDERLY_REMOVAL     0x00000200
+#define FILE_CHARACTERISTICS_EXPECT_SURPRISE_REMOVAL    0x00000300
+#define FILE_CHARACTERISTICS_REMOVAL_POLICY_MASK        0x00000300
+
+#define FILE_CHARACTERISTICS_EXPECT_ORDERLY_REMOVAL_EX FILE_CHARACTERISTICS_EXPECT_ORDERLY_REMOVAL
+#define FILE_CHARACTERISTICS_EXPECT_SURPRISE_REMOVAL_EX FILE_CHARACTERISTICS_EXPECT_SURPRISE_REMOVAL
+#define FILE_CHARACTERISTICS_REMOVAL_POLICY_MASK_EX FILE_CHARACTERISTICS_REMOVAL_POLICY_MASK
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
+
+#define FILE_CHARACTERISTICS_PROPAGATED (   FILE_REMOVABLE_MEDIA   | \
+                                            FILE_READ_ONLY_DEVICE  | \
+                                            FILE_FLOPPY_DISKETTE   | \
+                                            FILE_WRITE_ONCE_MEDIA  | \
+                                            FILE_DEVICE_SECURE_OPEN  )
+
+typedef struct _FILE_ALIGNMENT_INFORMATION {
+  ULONG AlignmentRequirement;
+} FILE_ALIGNMENT_INFORMATION, *PFILE_ALIGNMENT_INFORMATION;
+
+typedef struct _FILE_NAME_INFORMATION {
+  ULONG FileNameLength;
+  WCHAR FileName[1];
+} FILE_NAME_INFORMATION, *PFILE_NAME_INFORMATION;
+
+
+typedef struct _FILE_ATTRIBUTE_TAG_INFORMATION {
+  ULONG FileAttributes;
+  ULONG ReparseTag;
+} FILE_ATTRIBUTE_TAG_INFORMATION, *PFILE_ATTRIBUTE_TAG_INFORMATION;
+
+typedef struct _FILE_DISPOSITION_INFORMATION {
+  BOOLEAN DeleteFile;
+} FILE_DISPOSITION_INFORMATION, *PFILE_DISPOSITION_INFORMATION;
+
+typedef struct _FILE_END_OF_FILE_INFORMATION {
+  LARGE_INTEGER EndOfFile;
+} FILE_END_OF_FILE_INFORMATION, *PFILE_END_OF_FILE_INFORMATION;
+
+typedef struct _FILE_VALID_DATA_LENGTH_INFORMATION {
+  LARGE_INTEGER ValidDataLength;
+} FILE_VALID_DATA_LENGTH_INFORMATION, *PFILE_VALID_DATA_LENGTH_INFORMATION;
+
+typedef struct _FILE_FS_LABEL_INFORMATION {
+  ULONG VolumeLabelLength;
+  WCHAR VolumeLabel[1];
+} FILE_FS_LABEL_INFORMATION, *PFILE_FS_LABEL_INFORMATION;
+
+typedef struct _FILE_FS_VOLUME_INFORMATION {
+  LARGE_INTEGER VolumeCreationTime;
+  ULONG VolumeSerialNumber;
+  ULONG VolumeLabelLength;
+  BOOLEAN SupportsObjects;
+  WCHAR VolumeLabel[1];
+} FILE_FS_VOLUME_INFORMATION, *PFILE_FS_VOLUME_INFORMATION;
+
+typedef struct _FILE_FS_SIZE_INFORMATION {
+  LARGE_INTEGER TotalAllocationUnits;
+  LARGE_INTEGER AvailableAllocationUnits;
+  ULONG SectorsPerAllocationUnit;
+  ULONG BytesPerSector;
+} FILE_FS_SIZE_INFORMATION, *PFILE_FS_SIZE_INFORMATION;
+
+typedef struct _FILE_FS_FULL_SIZE_INFORMATION {
+  LARGE_INTEGER TotalAllocationUnits;
+  LARGE_INTEGER CallerAvailableAllocationUnits;
+  LARGE_INTEGER ActualAvailableAllocationUnits;
+  ULONG SectorsPerAllocationUnit;
+  ULONG BytesPerSector;
+} FILE_FS_FULL_SIZE_INFORMATION, *PFILE_FS_FULL_SIZE_INFORMATION;
+
+typedef struct _FILE_FS_OBJECTID_INFORMATION {
+  UCHAR ObjectId[16];
+  UCHAR ExtendedInfo[48];
+} FILE_FS_OBJECTID_INFORMATION, *PFILE_FS_OBJECTID_INFORMATION;
+
+typedef union _FILE_SEGMENT_ELEMENT {
+  PVOID64 Buffer;
+  ULONGLONG Alignment;
+}FILE_SEGMENT_ELEMENT, *PFILE_SEGMENT_ELEMENT;
+
+#define IOCTL_AVIO_ALLOCATE_STREAM      CTL_CODE(FILE_DEVICE_AVIO, 1, METHOD_BUFFERED, FILE_SPECIAL_ACCESS)
+#define IOCTL_AVIO_FREE_STREAM          CTL_CODE(FILE_DEVICE_AVIO, 2, METHOD_BUFFERED, FILE_SPECIAL_ACCESS)
+#define IOCTL_AVIO_MODIFY_STREAM        CTL_CODE(FILE_DEVICE_AVIO, 3, METHOD_BUFFERED, FILE_SPECIAL_ACCESS)
+
+typedef enum _BUS_DATA_TYPE {
+  ConfigurationSpaceUndefined = -1,
+  Cmos,
+  EisaConfiguration,
+  Pos,
+  CbusConfiguration,
+  PCIConfiguration,
+  VMEConfiguration,
+  NuBusConfiguration,
+  PCMCIAConfiguration,
+  MPIConfiguration,
+  MPSAConfiguration,
+  PNPISAConfiguration,
+  SgiInternalConfiguration,
+  MaximumBusDataType
+} BUS_DATA_TYPE, *PBUS_DATA_TYPE;
+
+typedef struct _KEY_NAME_INFORMATION {
+  ULONG NameLength;
+  WCHAR Name[1];
+} KEY_NAME_INFORMATION, *PKEY_NAME_INFORMATION;
+
+typedef struct _KEY_CACHED_INFORMATION {
+  LARGE_INTEGER LastWriteTime;
+  ULONG TitleIndex;
+  ULONG SubKeys;
+  ULONG MaxNameLen;
+  ULONG Values;
+  ULONG MaxValueNameLen;
+  ULONG MaxValueDataLen;
+  ULONG NameLength;
+} KEY_CACHED_INFORMATION, *PKEY_CACHED_INFORMATION;
+
+typedef struct _KEY_VIRTUALIZATION_INFORMATION {
+  ULONG VirtualizationCandidate:1;
+  ULONG VirtualizationEnabled:1;
+  ULONG VirtualTarget:1;
+  ULONG VirtualStore:1;
+  ULONG VirtualSource:1;
+  ULONG Reserved:27;
+} KEY_VIRTUALIZATION_INFORMATION, *PKEY_VIRTUALIZATION_INFORMATION;
+
+typedef struct _NT_TIB {
+  struct _EXCEPTION_REGISTRATION_RECORD *ExceptionList;
+  PVOID StackBase;
+  PVOID StackLimit;
+  PVOID SubSystemTib;
+  _ANONYMOUS_UNION union {
+    PVOID FiberData;
+    ULONG Version;
+  } DUMMYUNIONNAME;
+  PVOID ArbitraryUserPointer;
+  struct _NT_TIB *Self;
+} NT_TIB, *PNT_TIB;
+
+typedef struct _NT_TIB32 {
+  ULONG ExceptionList;
+  ULONG StackBase;
+  ULONG StackLimit;
+  ULONG SubSystemTib;
+  __GNU_EXTENSION union {
+    ULONG FiberData;
+    ULONG Version;
+  };
+  ULONG ArbitraryUserPointer;
+  ULONG Self;
+} NT_TIB32,*PNT_TIB32;
+
+typedef struct _NT_TIB64 {
+  ULONG64 ExceptionList;
+  ULONG64 StackBase;
+  ULONG64 StackLimit;
+  ULONG64 SubSystemTib;
+  __GNU_EXTENSION union {
+    ULONG64 FiberData;
+    ULONG Version;
+  };
+  ULONG64 ArbitraryUserPointer;
+  ULONG64 Self;
+} NT_TIB64,*PNT_TIB64;
+
+typedef enum _PROCESSINFOCLASS {
+  ProcessBasicInformation,
+  ProcessQuotaLimits,
+  ProcessIoCounters,
+  ProcessVmCounters,
+  ProcessTimes,
+  ProcessBasePriority,
+  ProcessRaisePriority,
+  ProcessDebugPort,
+  ProcessExceptionPort,
+  ProcessAccessToken,
+  ProcessLdtInformation,
+  ProcessLdtSize,
+  ProcessDefaultHardErrorMode,
+  ProcessIoPortHandlers,
+  ProcessPooledUsageAndLimits,
+  ProcessWorkingSetWatch,
+  ProcessUserModeIOPL,
+  ProcessEnableAlignmentFaultFixup,
+  ProcessPriorityClass,
+  ProcessWx86Information,
+  ProcessHandleCount,
+  ProcessAffinityMask,
+  ProcessPriorityBoost,
+  ProcessDeviceMap,
+  ProcessSessionInformation,
+  ProcessForegroundInformation,
+  ProcessWow64Information,
+  ProcessImageFileName,
+  ProcessLUIDDeviceMapsEnabled,
+  ProcessBreakOnTermination,
+  ProcessDebugObjectHandle,
+  ProcessDebugFlags,
+  ProcessHandleTracing,
+  ProcessIoPriority,
+  ProcessExecuteFlags,
+  ProcessTlsInformation,
+  ProcessCookie,
+  ProcessImageInformation,
+  ProcessCycleTime,
+  ProcessPagePriority,
+  ProcessInstrumentationCallback,
+  ProcessThreadStackAllocation,
+  ProcessWorkingSetWatchEx,
+  ProcessImageFileNameWin32,
+  ProcessImageFileMapping,
+  ProcessAffinityUpdateMode,
+  ProcessMemoryAllocationMode,
+  ProcessGroupInformation,
+  ProcessTokenVirtualizationEnabled,
+  ProcessConsoleHostProcess,
+  ProcessWindowInformation,
+  MaxProcessInfoClass
+} PROCESSINFOCLASS;
+
+typedef enum _THREADINFOCLASS {
+  ThreadBasicInformation,
+  ThreadTimes,
+  ThreadPriority,
+  ThreadBasePriority,
+  ThreadAffinityMask,
+  ThreadImpersonationToken,
+  ThreadDescriptorTableEntry,
+  ThreadEnableAlignmentFaultFixup,
+  ThreadEventPair_Reusable,
+  ThreadQuerySetWin32StartAddress,
+  ThreadZeroTlsCell,
+  ThreadPerformanceCount,
+  ThreadAmILastThread,
+  ThreadIdealProcessor,
+  ThreadPriorityBoost,
+  ThreadSetTlsArrayAddress,
+  ThreadIsIoPending,
+  ThreadHideFromDebugger,
+  ThreadBreakOnTermination,
+  ThreadSwitchLegacyState,
+  ThreadIsTerminated,
+  ThreadLastSystemCall,
+  ThreadIoPriority,
+  ThreadCycleTime,
+  ThreadPagePriority,
+  ThreadActualBasePriority,
+  ThreadTebInformation,
+  ThreadCSwitchMon,
+  ThreadCSwitchPmu,
+  ThreadWow64Context,
+  ThreadGroupInformation,
+  ThreadUmsInformation,
+  ThreadCounterProfiling,
+  ThreadIdealProcessorEx,
+  MaxThreadInfoClass
+} THREADINFOCLASS;
+
+#define THREAD_CSWITCH_PMU_DISABLE  FALSE
+#define THREAD_CSWITCH_PMU_ENABLE   TRUE
 
 struct _LOADER_PARAMETER_BLOCK;
 struct _CREATE_DISK;
@@ -1894,76 +2335,6 @@ extern NTKERNELAPI HAL_DISPATCH HalDispatchTable;
 #define HalEndOfBoot                    HALDISPATCH->HalEndOfBoot
 #define HalMirrorVerify                 HALDISPATCH->HalMirrorVerify
 
-typedef struct _FILE_ALIGNMENT_INFORMATION {
-  ULONG AlignmentRequirement;
-} FILE_ALIGNMENT_INFORMATION, *PFILE_ALIGNMENT_INFORMATION;
-
-typedef struct _FILE_NAME_INFORMATION {
-  ULONG FileNameLength;
-  WCHAR FileName[1];
-} FILE_NAME_INFORMATION, *PFILE_NAME_INFORMATION;
-
-
-typedef struct _FILE_ATTRIBUTE_TAG_INFORMATION {
-  ULONG FileAttributes;
-  ULONG ReparseTag;
-} FILE_ATTRIBUTE_TAG_INFORMATION, *PFILE_ATTRIBUTE_TAG_INFORMATION;
-
-typedef struct _FILE_DISPOSITION_INFORMATION {
-  BOOLEAN DeleteFile;
-} FILE_DISPOSITION_INFORMATION, *PFILE_DISPOSITION_INFORMATION;
-
-typedef struct _FILE_END_OF_FILE_INFORMATION {
-  LARGE_INTEGER EndOfFile;
-} FILE_END_OF_FILE_INFORMATION, *PFILE_END_OF_FILE_INFORMATION;
-
-typedef struct _FILE_VALID_DATA_LENGTH_INFORMATION {
-  LARGE_INTEGER ValidDataLength;
-} FILE_VALID_DATA_LENGTH_INFORMATION, *PFILE_VALID_DATA_LENGTH_INFORMATION;
-
-typedef union _FILE_SEGMENT_ELEMENT {
-  PVOID64 Buffer;
-  ULONGLONG Alignment;
-}FILE_SEGMENT_ELEMENT, *PFILE_SEGMENT_ELEMENT;
-
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
-NTSYSAPI
-ULONGLONG
-NTAPI
-VerSetConditionMask(
-  IN ULONGLONG ConditionMask,
-  IN ULONG TypeMask,
-  IN UCHAR Condition);
-#endif
-
-#define VER_SET_CONDITION(ConditionMask, TypeBitMask, ComparisonType)  \
-        ((ConditionMask) = VerSetConditionMask((ConditionMask), \
-        (TypeBitMask), (ComparisonType)))
-
-/* RtlVerifyVersionInfo() TypeMask */
-
-#define VER_MINORVERSION                  0x0000001
-#define VER_MAJORVERSION                  0x0000002
-#define VER_BUILDNUMBER                   0x0000004
-#define VER_PLATFORMID                    0x0000008
-#define VER_SERVICEPACKMINOR              0x0000010
-#define VER_SERVICEPACKMAJOR              0x0000020
-#define VER_SUITENAME                     0x0000040
-#define VER_PRODUCT_TYPE                  0x0000080
-
-/* RtlVerifyVersionInfo() ComparisonType */
-
-#define VER_EQUAL                       1
-#define VER_GREATER                     2
-#define VER_GREATER_EQUAL               3
-#define VER_LESS                        4
-#define VER_LESS_EQUAL                  5
-#define VER_AND                         6
-#define VER_OR                          7
-
-#define VER_CONDITION_MASK              7
-#define VER_NUM_BITS_PER_CONDITION_MASK 3
-
 typedef struct _IMAGE_INFO {
   _ANONYMOUS_UNION union {
     ULONG Properties;
@@ -1982,155 +2353,6 @@ typedef struct _IMAGE_INFO {
 } IMAGE_INFO, *PIMAGE_INFO;
 
 #define IMAGE_ADDRESSING_MODE_32BIT       3
-
-typedef enum _BUS_DATA_TYPE {
-  ConfigurationSpaceUndefined = -1,
-  Cmos,
-  EisaConfiguration,
-  Pos,
-  CbusConfiguration,
-  PCIConfiguration,
-  VMEConfiguration,
-  NuBusConfiguration,
-  PCMCIAConfiguration,
-  MPIConfiguration,
-  MPSAConfiguration,
-  PNPISAConfiguration,
-  SgiInternalConfiguration,
-  MaximumBusDataType
-} BUS_DATA_TYPE, *PBUS_DATA_TYPE;
-
-typedef struct _NT_TIB {
-  struct _EXCEPTION_REGISTRATION_RECORD *ExceptionList;
-  PVOID StackBase;
-  PVOID StackLimit;
-  PVOID SubSystemTib;
-  _ANONYMOUS_UNION union {
-    PVOID FiberData;
-    ULONG Version;
-  } DUMMYUNIONNAME;
-  PVOID ArbitraryUserPointer;
-  struct _NT_TIB *Self;
-} NT_TIB, *PNT_TIB;
-
-typedef struct _NT_TIB32 {
-  ULONG ExceptionList;
-  ULONG StackBase;
-  ULONG StackLimit;
-  ULONG SubSystemTib;
-  __GNU_EXTENSION union {
-    ULONG FiberData;
-    ULONG Version;
-  };
-  ULONG ArbitraryUserPointer;
-  ULONG Self;
-} NT_TIB32,*PNT_TIB32;
-
-typedef struct _NT_TIB64 {
-  ULONG64 ExceptionList;
-  ULONG64 StackBase;
-  ULONG64 StackLimit;
-  ULONG64 SubSystemTib;
-  __GNU_EXTENSION union {
-    ULONG64 FiberData;
-    ULONG Version;
-  };
-  ULONG64 ArbitraryUserPointer;
-  ULONG64 Self;
-} NT_TIB64,*PNT_TIB64;
-
-typedef enum _PROCESSINFOCLASS {
-  ProcessBasicInformation,
-  ProcessQuotaLimits,
-  ProcessIoCounters,
-  ProcessVmCounters,
-  ProcessTimes,
-  ProcessBasePriority,
-  ProcessRaisePriority,
-  ProcessDebugPort,
-  ProcessExceptionPort,
-  ProcessAccessToken,
-  ProcessLdtInformation,
-  ProcessLdtSize,
-  ProcessDefaultHardErrorMode,
-  ProcessIoPortHandlers,
-  ProcessPooledUsageAndLimits,
-  ProcessWorkingSetWatch,
-  ProcessUserModeIOPL,
-  ProcessEnableAlignmentFaultFixup,
-  ProcessPriorityClass,
-  ProcessWx86Information,
-  ProcessHandleCount,
-  ProcessAffinityMask,
-  ProcessPriorityBoost,
-  ProcessDeviceMap,
-  ProcessSessionInformation,
-  ProcessForegroundInformation,
-  ProcessWow64Information,
-  ProcessImageFileName,
-  ProcessLUIDDeviceMapsEnabled,
-  ProcessBreakOnTermination,
-  ProcessDebugObjectHandle,
-  ProcessDebugFlags,
-  ProcessHandleTracing,
-  ProcessIoPriority,
-  ProcessExecuteFlags,
-  ProcessTlsInformation,
-  ProcessCookie,
-  ProcessImageInformation,
-  ProcessCycleTime,
-  ProcessPagePriority,
-  ProcessInstrumentationCallback,
-  ProcessThreadStackAllocation,
-  ProcessWorkingSetWatchEx,
-  ProcessImageFileNameWin32,
-  ProcessImageFileMapping,
-  ProcessAffinityUpdateMode,
-  ProcessMemoryAllocationMode,
-  ProcessGroupInformation,
-  ProcessTokenVirtualizationEnabled,
-  ProcessConsoleHostProcess,
-  ProcessWindowInformation,
-  MaxProcessInfoClass
-} PROCESSINFOCLASS;
-
-typedef enum _THREADINFOCLASS {
-  ThreadBasicInformation,
-  ThreadTimes,
-  ThreadPriority,
-  ThreadBasePriority,
-  ThreadAffinityMask,
-  ThreadImpersonationToken,
-  ThreadDescriptorTableEntry,
-  ThreadEnableAlignmentFaultFixup,
-  ThreadEventPair_Reusable,
-  ThreadQuerySetWin32StartAddress,
-  ThreadZeroTlsCell,
-  ThreadPerformanceCount,
-  ThreadAmILastThread,
-  ThreadIdealProcessor,
-  ThreadPriorityBoost,
-  ThreadSetTlsArrayAddress,
-  ThreadIsIoPending,
-  ThreadHideFromDebugger,
-  ThreadBreakOnTermination,
-  ThreadSwitchLegacyState,
-  ThreadIsTerminated,
-  ThreadLastSystemCall,
-  ThreadIoPriority,
-  ThreadCycleTime,
-  ThreadPagePriority,
-  ThreadActualBasePriority,
-  ThreadTebInformation,
-  ThreadCSwitchMon,
-  ThreadCSwitchPmu,
-  ThreadWow64Context,
-  ThreadGroupInformation,
-  ThreadUmsInformation,
-  ThreadCounterProfiling,
-  ThreadIdealProcessorEx,
-  MaxThreadInfoClass
-} THREADINFOCLASS;
 
 typedef struct _PROCESS_BASIC_INFORMATION {
   NTSTATUS ExitStatus;
@@ -2494,68 +2716,6 @@ typedef enum _INTERLOCKED_RESULT {
   ResultZero = RESULT_ZERO,
   ResultPositive = RESULT_POSITIVE
 } INTERLOCKED_RESULT;
-
-typedef struct _OSVERSIONINFOA {
-  ULONG dwOSVersionInfoSize;
-  ULONG dwMajorVersion;
-  ULONG dwMinorVersion;
-  ULONG dwBuildNumber;
-  ULONG dwPlatformId;
-  CHAR szCSDVersion[128];
-} OSVERSIONINFOA, *POSVERSIONINFOA, *LPOSVERSIONINFOA;
-
-typedef struct _OSVERSIONINFOW {
-  ULONG dwOSVersionInfoSize;
-  ULONG dwMajorVersion;
-  ULONG dwMinorVersion;
-  ULONG dwBuildNumber;
-  ULONG dwPlatformId;
-  WCHAR szCSDVersion[128];
-} OSVERSIONINFOW, *POSVERSIONINFOW, *LPOSVERSIONINFOW, RTL_OSVERSIONINFOW, *PRTL_OSVERSIONINFOW;
-
-typedef struct _OSVERSIONINFOEXA {
-  ULONG dwOSVersionInfoSize;
-  ULONG dwMajorVersion;
-  ULONG dwMinorVersion;
-  ULONG dwBuildNumber;
-  ULONG dwPlatformId;
-  CHAR szCSDVersion[128];
-  USHORT wServicePackMajor;
-  USHORT wServicePackMinor;
-  USHORT wSuiteMask;
-  UCHAR wProductType;
-  UCHAR wReserved;
-} OSVERSIONINFOEXA, *POSVERSIONINFOEXA, *LPOSVERSIONINFOEXA;
-
-typedef struct _OSVERSIONINFOEXW {
-  ULONG dwOSVersionInfoSize;
-  ULONG dwMajorVersion;
-  ULONG dwMinorVersion;
-  ULONG dwBuildNumber;
-  ULONG dwPlatformId;
-  WCHAR szCSDVersion[128];
-  USHORT wServicePackMajor;
-  USHORT wServicePackMinor;
-  USHORT wSuiteMask;
-  UCHAR wProductType;
-  UCHAR wReserved;
-} OSVERSIONINFOEXW, *POSVERSIONINFOEXW, *LPOSVERSIONINFOEXW, RTL_OSVERSIONINFOEXW, *PRTL_OSVERSIONINFOEXW;
-
-#ifdef UNICODE
-typedef OSVERSIONINFOEXW OSVERSIONINFOEX;
-typedef POSVERSIONINFOEXW POSVERSIONINFOEX;
-typedef LPOSVERSIONINFOEXW LPOSVERSIONINFOEX;
-typedef OSVERSIONINFOW OSVERSIONINFO;
-typedef POSVERSIONINFOW POSVERSIONINFO;
-typedef LPOSVERSIONINFOW LPOSVERSIONINFO;
-#else
-typedef OSVERSIONINFOEXA OSVERSIONINFOEX;
-typedef POSVERSIONINFOEXA POSVERSIONINFOEX;
-typedef LPOSVERSIONINFOEXA LPOSVERSIONINFOEX;
-typedef OSVERSIONINFOA OSVERSIONINFO;
-typedef POSVERSIONINFOA POSVERSIONINFO;
-typedef LPOSVERSIONINFOA LPOSVERSIONINFO;
-#endif /* UNICODE */
 
 /* Executive Types */
 
@@ -3364,16 +3524,6 @@ IoWritePartitionTableEx(
 
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
-/** Kernel debugger routines **/
-
-NTSYSAPI
-ULONG
-NTAPI
-DbgPrompt(
-  IN PCCH Prompt,
-  OUT PCH Response,
-  IN ULONG MaximumResponseLength);
-
 /* Kernel Functions */
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
@@ -3652,40 +3802,6 @@ PsRemoveLoadImageNotifyRoutine(
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
 extern NTKERNELAPI PEPROCESS PsInitialSystemProcess;
-
-/* RTL Functions */
-
-#if !defined(MIDL_PASS)
-
-FORCEINLINE
-LUID
-NTAPI_INLINE
-RtlConvertLongToLuid(
-  IN LONG Val)
-{
-  LUID Luid;
-  LARGE_INTEGER Temp;
-
-  Temp.QuadPart = Val;
-  Luid.LowPart = Temp.u.LowPart;
-  Luid.HighPart = Temp.u.HighPart;
-  return Luid;
-}
-
-FORCEINLINE
-LUID
-NTAPI_INLINE
-RtlConvertUlongToLuid(
-  IN ULONG Val)
-{
-  LUID Luid;
-
-  Luid.LowPart = Val;
-  Luid.HighPart = 0;
-  return Luid;
-}
-
-#endif
 
 /* Security reference monitor routines */
 

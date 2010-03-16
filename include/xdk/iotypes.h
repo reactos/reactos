@@ -1423,6 +1423,8 @@ typedef struct _IO_COMPLETION_CONTEXT {
 
 #define DEVICE_TYPE_FROM_CTL_CODE(ctl) (((ULONG) (ctl & 0xffff0000)) >> 16)
 
+#define METHOD_FROM_CTL_CODE(ctrlCode)          ((ULONG)(ctrlCode & 3))
+
 #define IRP_NOCACHE                     0x00000001
 #define IRP_PAGING_IO                   0x00000002
 #define IRP_MOUNT_COMPLETION            0x00000002
@@ -2352,6 +2354,8 @@ typedef struct _IO_STACK_LOCATION {
 #define METHOD_OUT_DIRECT                 2
 #define METHOD_NEITHER                    3
 
+#define METHOD_DIRECT_TO_HARDWARE       METHOD_IN_DIRECT
+#define METHOD_DIRECT_FROM_HARDWARE     METHOD_OUT_DIRECT
 
 #define FILE_SUPERSEDED                   0x00000000
 #define FILE_OPENED                       0x00000001
