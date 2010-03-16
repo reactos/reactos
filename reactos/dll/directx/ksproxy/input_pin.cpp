@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS WDM Streaming ActiveMovie Proxy
- * FILE:            dll/directx/ksproxy/input_cpp.cpp
+ * FILE:            dll/directx/ksproxy/input_pin.cpp
  * PURPOSE:         InputPin of Proxy Filter
  *
  * PROGRAMMERS:     Johannes Anderwald (janderwald@reactos.org)
