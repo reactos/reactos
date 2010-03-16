@@ -8,13 +8,14 @@
  */
 #include "precomp.h"
 
-const GUID IID_IKsPinEx = {0x7bb38260L, 0xd19c, 0x11d2, {0xb3, 0x8a, 0x00, 0xa0, 0xc9, 0x5e, 0xc2, 0x2e}};
+const GUID IID_IKsPinPipe = {0xe539cd90, 0xa8b4, 0x11d1, {0x81, 0x89, 0x00, 0xa0, 0xc9, 0x06, 0x28, 0x02}};
+const GUID IID_IKsPinEx   = {0x7bb38260L, 0xd19c, 0x11d2, {0xb3, 0x8a, 0x00, 0xa0, 0xc9, 0x5e, 0xc2, 0x2e}};
+
 
 #ifndef _MSC_VER
+
 const GUID KSPROPSETID_Connection = {0x1D58C920L, 0xAC9B, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
-#endif
 
-#ifndef _MSC_VER
 KSPIN_INTERFACE StandardPinInterface = 
 {
     {STATIC_KSINTERFACESETID_Standard},
@@ -53,14 +54,12 @@ class CInputPin : public IPin,
                   public IKsObject,
                   public IKsPinEx,
                   public IMemInputPin,
-                  public ISpecifyPropertyPages
-/*
-                  public IQualityControl,
                   public IKsPinPipe,
-                  public IStreamBuilder,
                   public IKsPinFactory,
-                  public IKsAggregateControl
-*/
+                  public IStreamBuilder,
+                  public IKsAggregateControl,
+                  public IQualityControl,
+                  public ISpecifyPropertyPages
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
@@ -80,6 +79,19 @@ public:
         }
         return m_Ref;
     }
+
+    //IKsPinPipe
+    HRESULT STDMETHODCALLTYPE KsGetPinFramingCache(PKSALLOCATOR_FRAMING_EX *FramingEx, PFRAMING_PROP FramingProp, FRAMING_CACHE_OPS Option);
+    HRESULT STDMETHODCALLTYPE KsSetPinFramingCache(PKSALLOCATOR_FRAMING_EX FramingEx, PFRAMING_PROP FramingProp, FRAMING_CACHE_OPS Option);
+    IPin* STDMETHODCALLTYPE KsGetConnectedPin();
+    IKsAllocatorEx* STDMETHODCALLTYPE KsGetPipe(KSPEEKOPERATION Operation);
+    HRESULT STDMETHODCALLTYPE KsSetPipe(IKsAllocatorEx *KsAllocator);
+    ULONG STDMETHODCALLTYPE KsGetPipeAllocatorFlag();
+    HRESULT STDMETHODCALLTYPE KsSetPipeAllocatorFlag(ULONG Flag);
+    GUID STDMETHODCALLTYPE KsGetPinBusCache();
+    HRESULT STDMETHODCALLTYPE KsSetPinBusCache(GUID Bus);
+    PWCHAR STDMETHODCALLTYPE KsGetPinName();
+    PWCHAR STDMETHODCALLTYPE KsGetFilterName();
 
     //IPin methods
     HRESULT STDMETHODCALLTYPE Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt);
@@ -139,11 +151,26 @@ public:
     HRESULT STDMETHODCALLTYPE ReceiveMultiple(IMediaSample **pSamples, long nSamples, long *nSamplesProcessed);
     HRESULT STDMETHODCALLTYPE ReceiveCanBlock( void);
 
+    //IKsPinFactory
+    HRESULT STDMETHODCALLTYPE KsPinFactory(ULONG* PinFactory);
+
+    //IStreamBuilder
+    HRESULT STDMETHODCALLTYPE Render(IPin *ppinOut, IGraphBuilder *pGraph);
+    HRESULT STDMETHODCALLTYPE Backout(IPin *ppinOut, IGraphBuilder *pGraph);
+
+    //IKsAggregateControl
+    HRESULT STDMETHODCALLTYPE KsAddAggregate(IN REFGUID AggregateClass);
+    HRESULT STDMETHODCALLTYPE KsRemoveAggregate(REFGUID AggregateClass);
+
+    //IQualityControl
+    HRESULT STDMETHODCALLTYPE Notify(IBaseFilter *pSelf, Quality q);
+    HRESULT STDMETHODCALLTYPE SetSink(IQualityControl *piqc);
+
     //---------------------------------------------------------------
     HRESULT STDMETHODCALLTYPE CheckFormat(const AM_MEDIA_TYPE *pmt);
     HRESULT STDMETHODCALLTYPE CreatePin(const AM_MEDIA_TYPE *pmt);
     HRESULT STDMETHODCALLTYPE CreatePinHandle(PKSPIN_MEDIUM Medium, PKSPIN_INTERFACE Interface, const AM_MEDIA_TYPE *pmt);
-    CInputPin(IBaseFilter * ParentFilter, LPCWSTR PinName, HANDLE hFilter, ULONG PinId, KSPIN_COMMUNICATION Communication) : m_Ref(0), m_ParentFilter(ParentFilter), m_PinName(PinName), m_hFilter(hFilter), m_hPin(INVALID_HANDLE_VALUE), m_PinId(PinId), m_MemAllocator(0), m_IoCount(0), m_Communication(Communication), m_Pin(0), m_ReadOnly(0), m_InterfaceHandler(0){};
+    CInputPin(IBaseFilter * ParentFilter, LPCWSTR PinName, HANDLE hFilter, ULONG PinId, KSPIN_COMMUNICATION Communication);
     virtual ~CInputPin(){};
 
 protected:
@@ -161,7 +188,40 @@ protected:
     IPin * m_Pin;
     BOOL m_ReadOnly;
     IKsInterfaceHandler * m_InterfaceHandler;
+    IKsAllocatorEx * m_KsAllocatorEx;
+    ULONG m_PipeAllocatorFlag;
+    BOOL m_bPinBusCacheInitialized;
+    GUID m_PinBusCache;
+    LPWSTR m_FilterName;
+    FRAMING_PROP m_FramingProp[4];
+    PKSALLOCATOR_FRAMING_EX m_FramingEx[4];
 };
+
+CInputPin::CInputPin(
+    IBaseFilter * ParentFilter, 
+    LPCWSTR PinName,
+    HANDLE hFilter,
+    ULONG PinId,
+    KSPIN_COMMUNICATION Communication) : m_Ref(0),
+                                         m_ParentFilter(ParentFilter),
+                                         m_PinName(PinName),
+                                         m_hFilter(hFilter),
+                                         m_hPin(INVALID_HANDLE_VALUE),
+                                         m_PinId(PinId),
+                                         m_MemAllocator(0),
+                                         m_IoCount(0),
+                                         m_Communication(Communication),
+                                         m_Pin(0),
+                                         m_ReadOnly(0),
+                                         m_InterfaceHandler(0),
+                                         m_KsAllocatorEx(0),
+                                         m_PipeAllocatorFlag(0),
+                                         m_bPinBusCacheInitialized(0),
+                                         m_FilterName(0)
+{
+    ZeroMemory(m_FramingProp, sizeof(m_FramingProp));
+    ZeroMemory(m_FramingEx, sizeof(m_FramingEx));
+}
 
 HRESULT
 STDMETHODCALLTYPE
@@ -209,6 +269,38 @@ CInputPin::QueryInterface(
         reinterpret_cast<IKsPinEx*>(*Output)->AddRef();
         return NOERROR;
     }
+    else if (IsEqualGUID(refiid, IID_IKsPinPipe))
+    {
+        *Output = (IKsPinPipe*)(this);
+        reinterpret_cast<IKsPinPipe*>(*Output)->AddRef();
+        return NOERROR;
+    }
+    else if (IsEqualGUID(refiid, IID_IKsPinFactory))
+    {
+        *Output = (IKsPinFactory*)(this);
+        reinterpret_cast<IKsPinFactory*>(*Output)->AddRef();
+        return NOERROR;
+    }
+#if 0
+    else if (IsEqualGUID(refiid, IID_IStreamBuilder))
+    {
+        *Output = (IStreamBuilder*)(this);
+        reinterpret_cast<IStreamBuilder*>(*Output)->AddRef();
+        return NOERROR;
+    }
+#endif
+    else if (IsEqualGUID(refiid, IID_IKsAggregateControl))
+    {
+        *Output = (IKsAggregateControl*)(this);
+        reinterpret_cast<IKsAggregateControl*>(*Output)->AddRef();
+        return NOERROR;
+    }
+    else if (IsEqualGUID(refiid, IID_IQualityControl))
+    {
+        *Output = (IQualityControl*)(this);
+        reinterpret_cast<IQualityControl*>(*Output)->AddRef();
+        return NOERROR;
+    }
     else if (IsEqualGUID(refiid, IID_ISpecifyPropertyPages))
     {
         *Output = (ISpecifyPropertyPages*)(this);
@@ -224,6 +316,232 @@ CInputPin::QueryInterface(
     CoTaskMemFree(lpstr);
 
     return E_NOINTERFACE;
+}
+//-------------------------------------------------------------------
+// IQualityControl interface
+//
+HRESULT
+STDMETHODCALLTYPE
+CInputPin::Notify(
+    IBaseFilter *pSelf,
+    Quality q)
+{
+    OutputDebugStringW(L"CInputPin::Notify NotImplemented\n");
+    return E_NOTIMPL;
+}
+
+HRESULT
+STDMETHODCALLTYPE
+CInputPin::SetSink(
+    IQualityControl *piqc)
+{
+    OutputDebugStringW(L"CInputPin::SetSink NotImplemented\n");
+    return E_NOTIMPL;
+}
+
+
+//-------------------------------------------------------------------
+// IKsAggregateControl interface
+//
+HRESULT
+STDMETHODCALLTYPE
+CInputPin::KsAddAggregate(
+    IN REFGUID AggregateClass)
+{
+    OutputDebugStringW(L"CInputPin::KsAddAggregate NotImplemented\n");
+    return E_NOTIMPL;
+}
+
+HRESULT
+STDMETHODCALLTYPE
+CInputPin::KsRemoveAggregate(
+    REFGUID AggregateClass)
+{
+    OutputDebugStringW(L"CInputPin::KsRemoveAggregate NotImplemented\n");
+    return E_NOTIMPL;
+}
+
+//-------------------------------------------------------------------
+// IStreamBuilder
+//
+
+HRESULT
+STDMETHODCALLTYPE
+CInputPin::Render(
+    IPin *ppinOut,
+    IGraphBuilder *pGraph)
+{
+    OutputDebugStringW(L"CInputPin::Render\n");
+    return S_OK;
+}
+
+HRESULT
+STDMETHODCALLTYPE
+CInputPin::Backout(
+    IPin *ppinOut, 
+    IGraphBuilder *pGraph)
+{
+    OutputDebugStringW(L"CInputPin::Backout\n");
+    return S_OK;
+}
+
+//-------------------------------------------------------------------
+// IKsPinFactory
+//
+
+HRESULT
+STDMETHODCALLTYPE
+CInputPin::KsPinFactory(
+    ULONG* PinFactory)
+{
+    OutputDebugStringW(L"CInputPin::KsPinFactory\n");
+    *PinFactory = m_PinId;
+    return S_OK;
+}
+
+//-------------------------------------------------------------------
+// IKsPinPipe
+//
+
+HRESULT
+STDMETHODCALLTYPE
+CInputPin::KsGetPinFramingCache(
+    PKSALLOCATOR_FRAMING_EX *FramingEx,
+    PFRAMING_PROP FramingProp,
+    FRAMING_CACHE_OPS Option)
+{
+    if (Option > Framing_Cache_Write || Option < Framing_Cache_ReadLast)
+    {
+        // invalid argument
+        return E_INVALIDARG;
+    }
+
+    // get framing properties
+    *FramingProp = m_FramingProp[Option];
+    *FramingEx = m_FramingEx[Option];
+
+    return NOERROR;
+}
+
+HRESULT
+STDMETHODCALLTYPE
+CInputPin::KsSetPinFramingCache(
+    PKSALLOCATOR_FRAMING_EX FramingEx,
+    PFRAMING_PROP FramingProp,
+    FRAMING_CACHE_OPS Option)
+{
+    ULONG Index;
+    ULONG RefCount = 0;
+
+    if (m_FramingEx[Option])
+    {
+        for(Index = 1; Index < 4; Index++)
+        {
+            if (m_FramingEx[Index] == m_FramingEx[Option])
+                RefCount++;
+        }
+
+        if (RefCount == 1)
+        {
+            // existing framing is only used once
+            CoTaskMemFree(m_FramingEx[Option]);
+        }
+    }
+
+    // store framing
+    m_FramingEx[Option] = FramingEx;
+    m_FramingProp[Option] = *FramingProp;
+
+    return S_OK;
+}
+
+IPin*
+STDMETHODCALLTYPE
+CInputPin::KsGetConnectedPin()
+{
+    return m_Pin;
+}
+
+IKsAllocatorEx*
+STDMETHODCALLTYPE
+CInputPin::KsGetPipe(
+    KSPEEKOPERATION Operation)
+{
+    if (Operation == KsPeekOperation_AddRef)
+    {
+        if (m_KsAllocatorEx)
+            m_KsAllocatorEx->AddRef();
+    }
+    return m_KsAllocatorEx;
+}
+
+HRESULT
+STDMETHODCALLTYPE
+CInputPin::KsSetPipe(
+    IKsAllocatorEx *KsAllocator)
+{
+    if (KsAllocator)
+        KsAllocator->AddRef();
+
+    if (m_KsAllocatorEx)
+        m_KsAllocatorEx->Release();
+
+    m_KsAllocatorEx = KsAllocator;
+    return NOERROR;
+}
+
+ULONG
+STDMETHODCALLTYPE
+CInputPin::KsGetPipeAllocatorFlag()
+{
+    return m_PipeAllocatorFlag;
+}
+
+
+HRESULT
+STDMETHODCALLTYPE
+CInputPin::KsSetPipeAllocatorFlag(
+    ULONG Flag)
+{
+    m_PipeAllocatorFlag = Flag;
+    return NOERROR;
+}
+
+GUID
+STDMETHODCALLTYPE
+CInputPin::KsGetPinBusCache()
+{
+    if (!m_bPinBusCacheInitialized)
+    {
+        CopyMemory(&m_PinBusCache, &m_Medium.Set, sizeof(GUID));
+        m_bPinBusCacheInitialized = TRUE;
+    }
+
+    return m_PinBusCache;
+}
+
+HRESULT
+STDMETHODCALLTYPE
+CInputPin::KsSetPinBusCache(
+    GUID Bus)
+{
+    CopyMemory(&m_PinBusCache, &Bus, sizeof(GUID));
+    return NOERROR;
+}
+
+PWCHAR
+STDMETHODCALLTYPE
+CInputPin::KsGetPinName()
+{
+    return (PWCHAR)m_PinName;
+}
+
+
+PWCHAR
+STDMETHODCALLTYPE
+CInputPin::KsGetFilterName()
+{
+    return m_FilterName;
 }
 
 //-------------------------------------------------------------------
@@ -324,7 +642,6 @@ CInputPin::ReceiveCanBlock( void)
     OutputDebugStringW(L"CInputPin::ReceiveCanBlock NotImplemented\n");
     return S_FALSE;
 }
-
 
 //-------------------------------------------------------------------
 // IKsPin
@@ -853,6 +1170,7 @@ CInputPin::NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate)
     OutputDebugStringW(L"CInputPin::NewSegment NotImplemented\n");
     return E_NOTIMPL;
 }
+
 
 //-------------------------------------------------------------------
 HRESULT

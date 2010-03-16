@@ -167,3 +167,6 @@ CKsNode_Constructor(
 
 extern const GUID IID_IKsObject;
 extern const GUID IID_IKsPinEx;
+extern const GUID IID_IKsAggregateControl;
+extern const GUID IID_IKsPinPipe;
+extern const GUID IID_IKsPinFactory;

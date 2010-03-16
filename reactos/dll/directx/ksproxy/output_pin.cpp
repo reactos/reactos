@@ -1,16 +1,12 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS WDM Streaming ActiveMovie Proxy
- * FILE:            dll/directx/ksproxy/input_cpp.cpp
- * PURPOSE:         InputPin of Proxy Filter
+ * FILE:            dll/directx/ksproxy/Output_cpp.cpp
+ * PURPOSE:         OutputPin of Proxy Filter
  *
  * PROGRAMMERS:     Johannes Anderwald (janderwald@reactos.org)
  */
 #include "precomp.h"
-
-#ifndef _MSC_VER
-const GUID IID_IKsPinFactory = {0xCD5EBE6BL, 0x8B6E, 0x11D1, {0x8A, 0xE0, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
-#endif
 
 class COutputPin : public IPin,
                    public IKsObject,
@@ -18,17 +14,16 @@ class COutputPin : public IPin,
                    public IStreamBuilder,
                    public IKsPinFactory,
                    public ISpecifyPropertyPages,
-//                   public IKsPinPipe,
-                   public IKsControl
-/*
-                  public IAMBufferNegotiation,
-                  public IQualityControl,
-                  public IKsPinEx,
-                  public IKsAggregateControl
-                  public IMediaSeeking,
-                  public IAMStreamConfig,
-                  public IMemAllocatorNotifyCallbackTemp
-*/
+                   public IKsPinEx,
+                   public IKsPinPipe,
+                   public IKsControl,
+                   public IKsAggregateControl,
+                   public IQualityControl,
+                   public IMediaSeeking,
+                   public IAMBufferNegotiation,
+                   public IAMStreamConfig,
+                   public IMemAllocatorNotifyCallbackTemp
+
 {
 public:
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
@@ -48,6 +43,23 @@ public:
         }
         return m_Ref;
     }
+
+    //IKsPin
+    HRESULT STDMETHODCALLTYPE KsQueryMediums(PKSMULTIPLE_ITEM* MediumList);
+    HRESULT STDMETHODCALLTYPE KsQueryInterfaces(PKSMULTIPLE_ITEM* InterfaceList);
+    HRESULT STDMETHODCALLTYPE KsCreateSinkPinHandle(KSPIN_INTERFACE& Interface, KSPIN_MEDIUM& Medium);
+    HRESULT STDMETHODCALLTYPE KsGetCurrentCommunication(KSPIN_COMMUNICATION *Communication, KSPIN_INTERFACE *Interface, KSPIN_MEDIUM *Medium);
+    HRESULT STDMETHODCALLTYPE KsPropagateAcquire();
+    HRESULT STDMETHODCALLTYPE KsDeliver(IMediaSample* Sample, ULONG Flags);
+    HRESULT STDMETHODCALLTYPE KsMediaSamplesCompleted(PKSSTREAM_SEGMENT StreamSegment);
+    IMemAllocator * STDMETHODCALLTYPE KsPeekAllocator(KSPEEKOPERATION Operation);
+    HRESULT STDMETHODCALLTYPE KsReceiveAllocator(IMemAllocator *MemAllocator);
+    HRESULT STDMETHODCALLTYPE KsRenegotiateAllocator();
+    LONG STDMETHODCALLTYPE KsIncrementPendingIoCount();
+    LONG STDMETHODCALLTYPE KsDecrementPendingIoCount();
+    HRESULT STDMETHODCALLTYPE KsQualityNotify(ULONG Proportion, REFERENCE_TIME TimeDelta);
+    // IKsPinEx
+    VOID STDMETHODCALLTYPE KsNotifyError(IMediaSample* Sample, HRESULT hr);
 
     //IKsPinPipe
     HRESULT STDMETHODCALLTYPE KsGetPinFramingCache(PKSALLOCATOR_FRAMING_EX *FramingEx, PFRAMING_PROP FramingProp, FRAMING_CACHE_OPS Option);
@@ -102,6 +114,46 @@ public:
     //IKsPinFactory
     HRESULT STDMETHODCALLTYPE KsPinFactory(ULONG* PinFactory);
 
+    //IKsAggregateControl
+    HRESULT STDMETHODCALLTYPE KsAddAggregate(IN REFGUID AggregateClass);
+    HRESULT STDMETHODCALLTYPE KsRemoveAggregate(REFGUID AggregateClass);
+
+    //IQualityControl
+    HRESULT STDMETHODCALLTYPE Notify(IBaseFilter *pSelf, Quality q);
+    HRESULT STDMETHODCALLTYPE SetSink(IQualityControl *piqc);
+
+    //IMediaSeeking
+    HRESULT STDMETHODCALLTYPE GetCapabilities(DWORD *pCapabilities);
+    HRESULT STDMETHODCALLTYPE CheckCapabilities(DWORD *pCapabilities);
+    HRESULT STDMETHODCALLTYPE IsFormatSupported(const GUID *pFormat);
+    HRESULT STDMETHODCALLTYPE QueryPreferredFormat(GUID *pFormat);
+    HRESULT STDMETHODCALLTYPE GetTimeFormat(GUID *pFormat);
+    HRESULT STDMETHODCALLTYPE IsUsingTimeFormat(const GUID *pFormat);
+    HRESULT STDMETHODCALLTYPE SetTimeFormat(const GUID *pFormat);
+    HRESULT STDMETHODCALLTYPE GetDuration(LONGLONG *pDuration);
+    HRESULT STDMETHODCALLTYPE GetStopPosition(LONGLONG *pStop);
+    HRESULT STDMETHODCALLTYPE GetCurrentPosition(LONGLONG *pCurrent);
+    HRESULT STDMETHODCALLTYPE ConvertTimeFormat(LONGLONG *pTarget, const GUID *pTargetFormat, LONGLONG Source, const GUID *pSourceFormat);
+    HRESULT STDMETHODCALLTYPE SetPositions(LONGLONG *pCurrent, DWORD dwCurrentFlags, LONGLONG *pStop, DWORD dwStopFlags);
+    HRESULT STDMETHODCALLTYPE GetPositions(LONGLONG *pCurrent, LONGLONG *pStop);
+    HRESULT STDMETHODCALLTYPE GetAvailable(LONGLONG *pEarliest, LONGLONG *pLatest);
+    HRESULT STDMETHODCALLTYPE SetRate(double dRate);
+    HRESULT STDMETHODCALLTYPE GetRate(double *pdRate);
+    HRESULT STDMETHODCALLTYPE GetPreroll(LONGLONG *pllPreroll);
+
+    //IAMBufferNegotiation
+    HRESULT STDMETHODCALLTYPE SuggestAllocatorProperties(const ALLOCATOR_PROPERTIES *pprop);
+    HRESULT STDMETHODCALLTYPE GetAllocatorProperties(ALLOCATOR_PROPERTIES *pprop);
+
+    //IAMStreamConfig
+    HRESULT STDMETHODCALLTYPE SetFormat(AM_MEDIA_TYPE *pmt);
+    HRESULT STDMETHODCALLTYPE GetFormat(AM_MEDIA_TYPE **ppmt);
+    HRESULT STDMETHODCALLTYPE GetNumberOfCapabilities(int *piCount, int *piSize);
+    HRESULT STDMETHODCALLTYPE GetStreamCaps(int iIndex, AM_MEDIA_TYPE **ppmt, BYTE *pSCC);
+
+    //IMemAllocatorNotifyCallbackTemp
+    HRESULT STDMETHODCALLTYPE NotifyRelease();
+
     COutputPin(IBaseFilter * ParentFilter, LPCWSTR PinName, ULONG PinId);
     virtual ~COutputPin();
 
@@ -113,6 +165,20 @@ protected:
     ULONG m_PinId;
     IKsObject * m_KsObjectParent;
     IPin * m_Pin;
+    IKsAllocatorEx * m_KsAllocatorEx;
+    ULONG m_PipeAllocatorFlag;
+    BOOL m_bPinBusCacheInitialized;
+    GUID m_PinBusCache;
+    LPWSTR m_FilterName;
+    FRAMING_PROP m_FramingProp[4];
+    PKSALLOCATOR_FRAMING_EX m_FramingEx[4];
+
+    IMemAllocator * m_MemAllocator;
+    LONG m_IoCount;
+    KSPIN_COMMUNICATION m_Communication;
+    KSPIN_INTERFACE m_Interface;
+    KSPIN_MEDIUM m_Medium;
+    IMediaSeeking * m_FilterMediaSeeking;
 };
 
 COutputPin::~COutputPin()
@@ -124,13 +190,32 @@ COutputPin::~COutputPin()
 COutputPin::COutputPin(
     IBaseFilter * ParentFilter,
     LPCWSTR PinName,
-    ULONG PinId) : m_Ref(0), m_ParentFilter(ParentFilter), m_PinName(PinName), m_hPin(INVALID_HANDLE_VALUE), m_PinId(PinId), m_KsObjectParent(0), m_Pin(0)
+    ULONG PinId) : m_Ref(0),
+                   m_ParentFilter(ParentFilter),
+                   m_PinName(PinName),
+                   m_hPin(INVALID_HANDLE_VALUE),
+                   m_PinId(PinId),
+                   m_KsObjectParent(0),
+                   m_Pin(0),
+                   m_KsAllocatorEx(0),
+                   m_PipeAllocatorFlag(0),
+                   m_bPinBusCacheInitialized(0),
+                   m_FilterName(0),
+                   m_MemAllocator(0),
+                   m_IoCount(0),
+                   m_Communication(KSPIN_COMMUNICATION_NONE),
+                   m_FilterMediaSeeking(0)
 {
     HRESULT hr;
 
     hr = m_ParentFilter->QueryInterface(IID_IKsObject, (LPVOID*)&m_KsObjectParent);
     assert(hr == S_OK);
 
+    hr = m_ParentFilter->QueryInterface(IID_IMediaSeeking, (LPVOID*)&m_FilterMediaSeeking);
+    assert(hr == S_OK);
+
+    ZeroMemory(m_FramingProp, sizeof(m_FramingProp));
+    ZeroMemory(m_FramingEx, sizeof(m_FramingEx));
 };
 
 HRESULT
@@ -153,6 +238,30 @@ COutputPin::QueryInterface(
         OutputDebugStringW(L"COutputPin::QueryInterface IID_IKsObject\n");
         *Output = (IKsObject*)(this);
         reinterpret_cast<IKsObject*>(*Output)->AddRef();
+        return NOERROR;
+    }
+    else if (IsEqualGUID(refiid, IID_IKsPin) || IsEqualGUID(refiid, IID_IKsPinEx))
+    {
+        *Output = (IKsPinEx*)(this);
+        reinterpret_cast<IKsPinEx*>(*Output)->AddRef();
+        return NOERROR;
+    }
+    else if (IsEqualGUID(refiid, IID_IKsPinPipe))
+    {
+        *Output = (IKsPinPipe*)(this);
+        reinterpret_cast<IKsPinPipe*>(*Output)->AddRef();
+        return NOERROR;
+    }
+    else if (IsEqualGUID(refiid, IID_IKsAggregateControl))
+    {
+        *Output = (IKsAggregateControl*)(this);
+        reinterpret_cast<IKsAggregateControl*>(*Output)->AddRef();
+        return NOERROR;
+    }
+    else if (IsEqualGUID(refiid, IID_IQualityControl))
+    {
+        *Output = (IQualityControl*)(this);
+        reinterpret_cast<IQualityControl*>(*Output)->AddRef();
         return NOERROR;
     }
     else if (IsEqualGUID(refiid, IID_IKsPropertySet))
@@ -192,6 +301,30 @@ COutputPin::QueryInterface(
         reinterpret_cast<ISpecifyPropertyPages*>(*Output)->AddRef();
         return NOERROR;
     }
+    else if (IsEqualGUID(refiid, IID_IMediaSeeking))
+    {
+        *Output = (IMediaSeeking*)(this);
+        reinterpret_cast<IMediaSeeking*>(*Output)->AddRef();
+        return NOERROR;
+    }
+    else if (IsEqualGUID(refiid, IID_IAMBufferNegotiation))
+    {
+        *Output = (IAMBufferNegotiation*)(this);
+        reinterpret_cast<IAMBufferNegotiation*>(*Output)->AddRef();
+        return NOERROR;
+    }
+    else if (IsEqualGUID(refiid, IID_IAMStreamConfig))
+    {
+        *Output = (IAMStreamConfig*)(this);
+        reinterpret_cast<IAMStreamConfig*>(*Output)->AddRef();
+        return NOERROR;
+    }
+    else if (IsEqualGUID(refiid, IID_IMemAllocatorNotifyCallbackTemp))
+    {
+        *Output = (IMemAllocatorNotifyCallbackTemp*)(this);
+        reinterpret_cast<IMemAllocatorNotifyCallbackTemp*>(*Output)->AddRef();
+        return NOERROR;
+    }
 
     WCHAR Buffer[MAX_PATH];
     LPOLESTR lpstr;
@@ -201,6 +334,580 @@ COutputPin::QueryInterface(
     CoTaskMemFree(lpstr);
 
     return E_NOINTERFACE;
+}
+
+//-------------------------------------------------------------------
+// IAMBufferNegotiation interface
+//
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::SuggestAllocatorProperties(
+    const ALLOCATOR_PROPERTIES *pprop)
+{
+    OutputDebugStringW(L"COutputPin::SuggestAllocatorProperties NotImplemented\n");
+    return E_NOTIMPL;
+}
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::GetAllocatorProperties(
+    ALLOCATOR_PROPERTIES *pprop)
+{
+    OutputDebugStringW(L"COutputPin::GetAllocatorProperties NotImplemented\n");
+    return E_NOTIMPL;
+}
+
+//-------------------------------------------------------------------
+// IAMStreamConfig interface
+//
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::SetFormat(
+    AM_MEDIA_TYPE *pmt)
+{
+    OutputDebugStringW(L"COutputPin::SetFormat NotImplemented\n");
+    return E_NOTIMPL;
+}
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::GetFormat(AM_MEDIA_TYPE **ppmt)
+{
+    OutputDebugStringW(L"COutputPin::GetFormat NotImplemented\n");
+    return E_NOTIMPL;
+}
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::GetNumberOfCapabilities(
+    int *piCount,
+    int *piSize)
+{
+    OutputDebugStringW(L"COutputPin::GetNumberOfCapabilities NotImplemented\n");
+    return E_NOTIMPL;
+}
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::GetStreamCaps(
+    int iIndex,
+    AM_MEDIA_TYPE **ppmt,
+    BYTE *pSCC)
+{
+    OutputDebugStringW(L"COutputPin::GetStreamCaps NotImplemented\n");
+    return E_NOTIMPL;
+}
+
+//-------------------------------------------------------------------
+// IMemAllocatorNotifyCallbackTemp interface
+//
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::NotifyRelease()
+{
+    OutputDebugStringW(L"COutputPin::NotifyRelease NotImplemented\n");
+    return E_NOTIMPL;
+}
+
+//-------------------------------------------------------------------
+// IMediaSeeking interface
+//
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::GetCapabilities(
+    DWORD *pCapabilities)
+{
+    return m_FilterMediaSeeking->GetCapabilities(pCapabilities);
+}
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::CheckCapabilities(
+    DWORD *pCapabilities)
+{
+    return m_FilterMediaSeeking->CheckCapabilities(pCapabilities);
+}
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::IsFormatSupported(
+    const GUID *pFormat)
+{
+    return m_FilterMediaSeeking->IsFormatSupported(pFormat);
+}
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::QueryPreferredFormat(
+    GUID *pFormat)
+{
+    return m_FilterMediaSeeking->QueryPreferredFormat(pFormat);
+}
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::GetTimeFormat(
+    GUID *pFormat)
+{
+    return m_FilterMediaSeeking->GetTimeFormat(pFormat);
+}
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::IsUsingTimeFormat(
+    const GUID *pFormat)
+{
+    return m_FilterMediaSeeking->IsUsingTimeFormat(pFormat);
+}
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::SetTimeFormat(
+    const GUID *pFormat)
+{
+    return m_FilterMediaSeeking->SetTimeFormat(pFormat);
+}
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::GetDuration(
+    LONGLONG *pDuration)
+{
+    return m_FilterMediaSeeking->GetDuration(pDuration);
+}
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::GetStopPosition(
+    LONGLONG *pStop)
+{
+    return m_FilterMediaSeeking->GetStopPosition(pStop);
+}
+
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::GetCurrentPosition(
+    LONGLONG *pCurrent)
+{
+    return m_FilterMediaSeeking->GetCurrentPosition(pCurrent);
+}
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::ConvertTimeFormat(
+    LONGLONG *pTarget,
+    const GUID *pTargetFormat,
+    LONGLONG Source,
+    const GUID *pSourceFormat)
+{
+    return m_FilterMediaSeeking->ConvertTimeFormat(pTarget, pTargetFormat, Source, pSourceFormat);
+}
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::SetPositions(
+    LONGLONG *pCurrent,
+    DWORD dwCurrentFlags,
+    LONGLONG *pStop,
+    DWORD dwStopFlags)
+{
+    return m_FilterMediaSeeking->SetPositions(pCurrent, dwCurrentFlags, pStop, dwStopFlags);
+}
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::GetPositions(
+    LONGLONG *pCurrent,
+    LONGLONG *pStop)
+{
+    return m_FilterMediaSeeking->GetPositions(pCurrent, pStop);
+}
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::GetAvailable(
+    LONGLONG *pEarliest,
+    LONGLONG *pLatest)
+{
+    return m_FilterMediaSeeking->GetAvailable(pEarliest, pLatest);
+}
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::SetRate(
+    double dRate)
+{
+    return m_FilterMediaSeeking->SetRate(dRate);
+}
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::GetRate(
+    double *pdRate)
+{
+    return m_FilterMediaSeeking->GetRate(pdRate);
+}
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::GetPreroll(
+    LONGLONG *pllPreroll)
+{
+    return m_FilterMediaSeeking->GetPreroll(pllPreroll);
+}
+
+//-------------------------------------------------------------------
+// IQualityControl interface
+//
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::Notify(
+    IBaseFilter *pSelf,
+    Quality q)
+{
+    OutputDebugStringW(L"COutputPin::Notify NotImplemented\n");
+    return E_NOTIMPL;
+}
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::SetSink(
+    IQualityControl *piqc)
+{
+    OutputDebugStringW(L"COutputPin::SetSink NotImplemented\n");
+    return E_NOTIMPL;
+}
+
+
+//-------------------------------------------------------------------
+// IKsAggregateControl interface
+//
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::KsAddAggregate(
+    IN REFGUID AggregateClass)
+{
+    OutputDebugStringW(L"COutputPin::KsAddAggregate NotImplemented\n");
+    return E_NOTIMPL;
+}
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::KsRemoveAggregate(
+    REFGUID AggregateClass)
+{
+    OutputDebugStringW(L"COutputPin::KsRemoveAggregate NotImplemented\n");
+    return E_NOTIMPL;
+}
+
+
+//-------------------------------------------------------------------
+// IKsPin
+//
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::KsQueryMediums(
+    PKSMULTIPLE_ITEM* MediumList)
+{
+    HANDLE hFilter = m_KsObjectParent->KsGetObjectHandle();
+    return KsGetMultiplePinFactoryItems(hFilter, m_PinId, KSPROPERTY_PIN_MEDIUMS, (PVOID*)MediumList);
+}
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::KsQueryInterfaces(
+    PKSMULTIPLE_ITEM* InterfaceList)
+{
+    HANDLE hFilter = m_KsObjectParent->KsGetObjectHandle();
+
+    return KsGetMultiplePinFactoryItems(hFilter, m_PinId, KSPROPERTY_PIN_INTERFACES, (PVOID*)InterfaceList);
+}
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::KsCreateSinkPinHandle(
+    KSPIN_INTERFACE& Interface,
+    KSPIN_MEDIUM& Medium)
+{
+    OutputDebugStringW(L"COutputPin::KsCreateSinkPinHandle NotImplemented\n");
+    return E_NOTIMPL;
+}
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::KsGetCurrentCommunication(
+    KSPIN_COMMUNICATION *Communication,
+    KSPIN_INTERFACE *Interface,
+    KSPIN_MEDIUM *Medium)
+{
+    if (Communication)
+    {
+        *Communication = m_Communication;
+    }
+
+    if (Interface)
+    {
+        if (!m_hPin)
+            return VFW_E_NOT_CONNECTED;
+
+        CopyMemory(Interface, &m_Interface, sizeof(KSPIN_INTERFACE));
+    }
+
+    if (Medium)
+    {
+        if (!m_hPin)
+            return VFW_E_NOT_CONNECTED;
+
+        CopyMemory(Medium, &m_Medium, sizeof(KSPIN_MEDIUM));
+    }
+    return NOERROR;
+}
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::KsPropagateAcquire()
+{
+    OutputDebugStringW(L"COutputPin::KsPropagateAcquire NotImplemented\n");
+    return E_NOTIMPL;
+}
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::KsDeliver(
+    IMediaSample* Sample,
+    ULONG Flags)
+{
+    return E_FAIL;
+}
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::KsMediaSamplesCompleted(PKSSTREAM_SEGMENT StreamSegment)
+{
+    return NOERROR;
+}
+
+IMemAllocator * 
+STDMETHODCALLTYPE
+COutputPin::KsPeekAllocator(KSPEEKOPERATION Operation)
+{
+    if (Operation == KsPeekOperation_AddRef)
+    {
+        // add reference on allocator
+        m_MemAllocator->AddRef();
+    }
+
+    return m_MemAllocator;
+}
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::KsReceiveAllocator(IMemAllocator *MemAllocator)
+{
+    if (MemAllocator)
+    {
+        MemAllocator->AddRef();
+    }
+
+    if (m_MemAllocator)
+    {
+        m_MemAllocator->Release();
+    }
+
+    m_MemAllocator = MemAllocator;
+    return NOERROR;
+}
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::KsRenegotiateAllocator()
+{
+    return E_FAIL;
+}
+
+LONG
+STDMETHODCALLTYPE
+COutputPin::KsIncrementPendingIoCount()
+{
+    return InterlockedIncrement((volatile LONG*)&m_IoCount);
+}
+
+LONG
+STDMETHODCALLTYPE
+COutputPin::KsDecrementPendingIoCount()
+{
+    return InterlockedDecrement((volatile LONG*)&m_IoCount);
+}
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::KsQualityNotify(
+    ULONG Proportion,
+    REFERENCE_TIME TimeDelta)
+{
+    OutputDebugStringW(L"COutputPin::KsQualityNotify NotImplemented\n");
+    return E_NOTIMPL;
+}
+
+//-------------------------------------------------------------------
+// IKsPinEx
+//
+
+VOID
+STDMETHODCALLTYPE
+COutputPin::KsNotifyError(
+    IMediaSample* Sample,
+    HRESULT hr)
+{
+    OutputDebugStringW(L"COutputPin::KsNotifyError NotImplemented\n");
+}
+
+
+//-------------------------------------------------------------------
+// IKsPinPipe
+//
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::KsGetPinFramingCache(
+    PKSALLOCATOR_FRAMING_EX *FramingEx,
+    PFRAMING_PROP FramingProp,
+    FRAMING_CACHE_OPS Option)
+{
+    if (Option > Framing_Cache_Write || Option < Framing_Cache_ReadLast)
+    {
+        // invalid argument
+        return E_INVALIDARG;
+    }
+
+    // get framing properties
+    *FramingProp = m_FramingProp[Option];
+    *FramingEx = m_FramingEx[Option];
+
+    return NOERROR;
+}
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::KsSetPinFramingCache(
+    PKSALLOCATOR_FRAMING_EX FramingEx,
+    PFRAMING_PROP FramingProp,
+    FRAMING_CACHE_OPS Option)
+{
+    ULONG Index;
+    ULONG RefCount = 0;
+
+    if (m_FramingEx[Option])
+    {
+        for(Index = 1; Index < 4; Index++)
+        {
+            if (m_FramingEx[Index] == m_FramingEx[Option])
+                RefCount++;
+        }
+
+        if (RefCount == 1)
+        {
+            // existing framing is only used once
+            CoTaskMemFree(m_FramingEx[Option]);
+        }
+    }
+
+    // store framing
+    m_FramingEx[Option] = FramingEx;
+    m_FramingProp[Option] = *FramingProp;
+
+    return S_OK;
+}
+
+IPin*
+STDMETHODCALLTYPE
+COutputPin::KsGetConnectedPin()
+{
+    return m_Pin;
+}
+
+IKsAllocatorEx*
+STDMETHODCALLTYPE
+COutputPin::KsGetPipe(
+    KSPEEKOPERATION Operation)
+{
+    if (Operation == KsPeekOperation_AddRef)
+    {
+        if (m_KsAllocatorEx)
+            m_KsAllocatorEx->AddRef();
+    }
+    return m_KsAllocatorEx;
+}
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::KsSetPipe(
+    IKsAllocatorEx *KsAllocator)
+{
+    if (KsAllocator)
+        KsAllocator->AddRef();
+
+    if (m_KsAllocatorEx)
+        m_KsAllocatorEx->Release();
+
+    m_KsAllocatorEx = KsAllocator;
+    return NOERROR;
+}
+
+ULONG
+STDMETHODCALLTYPE
+COutputPin::KsGetPipeAllocatorFlag()
+{
+    return m_PipeAllocatorFlag;
+}
+
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::KsSetPipeAllocatorFlag(
+    ULONG Flag)
+{
+    m_PipeAllocatorFlag = Flag;
+    return NOERROR;
+}
+
+GUID
+STDMETHODCALLTYPE
+COutputPin::KsGetPinBusCache()
+{
+    if (!m_bPinBusCacheInitialized)
+    {
+        CopyMemory(&m_PinBusCache, &m_Medium.Set, sizeof(GUID));
+        m_bPinBusCacheInitialized = TRUE;
+    }
+
+    return m_PinBusCache;
+}
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::KsSetPinBusCache(
+    GUID Bus)
+{
+    CopyMemory(&m_PinBusCache, &Bus, sizeof(GUID));
+    return NOERROR;
+}
+
+PWCHAR
+STDMETHODCALLTYPE
+COutputPin::KsGetPinName()
+{
+    return (PWCHAR)m_PinName;
+}
+
+
+PWCHAR
+STDMETHODCALLTYPE
+COutputPin::KsGetFilterName()
+{
+    return m_FilterName;
 }
 
 //-------------------------------------------------------------------
