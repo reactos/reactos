@@ -131,61 +131,6 @@ SVCCTL_HANDLEW_unbind(SVCCTL_HANDLEW szMachineName,
 }
 
 
-handle_t __RPC_USER
-RPC_SERVICE_STATUS_HANDLE_bind(RPC_SERVICE_STATUS_HANDLE hServiceStatus)
-{
-    handle_t hBinding = NULL;
-    LPWSTR pszStringBinding;
-    RPC_STATUS status;
-
-    TRACE("RPC_SERVICE_STATUS_HANDLE_bind() called\n");
-
-    status = RpcStringBindingComposeW(NULL,
-                                      L"ncacn_np",
-                                      NULL,
-                                      L"\\pipe\\ntsvcs",
-                                      NULL,
-                                      &pszStringBinding);
-    if (status != RPC_S_OK)
-    {
-        ERR("RpcStringBindingCompose returned 0x%x\n", status);
-        return NULL;
-    }
-
-    /* Set the binding handle that will be used to bind to the server. */
-    status = RpcBindingFromStringBindingW(pszStringBinding,
-                                          &hBinding);
-    if (status != RPC_S_OK)
-    {
-        ERR("RpcBindingFromStringBinding returned 0x%x\n", status);
-    }
-
-    status = RpcStringFreeW(&pszStringBinding);
-    if (status != RPC_S_OK)
-    {
-        ERR("RpcStringFree returned 0x%x\n", status);
-    }
-
-    return hBinding;
-}
-
-
-void __RPC_USER
-RPC_SERVICE_STATUS_HANDLE_unbind(RPC_SERVICE_STATUS_HANDLE hServiceStatus,
-                                 handle_t hBinding)
-{
-    RPC_STATUS status;
-
-    TRACE("RPC_SERVICE_STATUS_HANDLE_unbind() called\n");
-
-    status = RpcBindingFree(&hBinding);
-    if (status != RPC_S_OK)
-    {
-        ERR("RpcBindingFree returned 0x%x\n", status);
-    }
-}
-
-
 DWORD
 ScmRpcStatusToWinError(RPC_STATUS Status)
 {
