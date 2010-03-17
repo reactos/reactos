@@ -679,6 +679,7 @@ Bus_PDO_QueryResources(
 	ResourceDescriptor = ResourceList->List[0].PartialResourceList.PartialDescriptors;
 
 	/* Fill resources list structure */
+        resource = Buffer.Pointer;
 	while (resource->Type != ACPI_RESOURCE_TYPE_END_TAG)
 	{
 		switch (resource->Type)
@@ -1093,6 +1094,7 @@ Bus_PDO_QueryResourceRequirements(
 	RequirementDescriptor = RequirementsList->List[0].Descriptors;
 
 	/* Fill resources list structure */
+        resource = Buffer.Pointer;
 	while (resource->Type != ACPI_RESOURCE_TYPE_END_TAG)
 	{
 		switch (resource->Type)

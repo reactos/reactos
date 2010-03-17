@@ -117,7 +117,9 @@ AcpiOsVprintf (
     const char              *Fmt,
     va_list                 Args)
 {
+#ifndef NDEBUG
     vDbgPrintEx (-1, DPFLTR_ERROR_LEVEL, Fmt, Args);
+#endif
     return;
 }
 

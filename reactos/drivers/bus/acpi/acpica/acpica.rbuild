@@ -83,9 +83,6 @@
 		<file>nsxfname.c</file>
 		<file>nsxfobj.c</file>
 	</directory>
-	<!--directory name="osl">
-		<file>osl.c</file>
-	</directory-->
 	<directory name="parser">
 		<file>psargs.c</file>
 		<file>psloop.c</file>
