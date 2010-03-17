@@ -44,6 +44,7 @@
 #include <freetype/tttables.h>
 #include <freetype/fttrigon.h>
 #include <freetype/ftglyph.h>
+#include <freetype/ftbitmap.h>
 #include <freetype/ftoutln.h>
 #include <freetype/ftwinfnt.h>
 
@@ -81,7 +82,7 @@ typedef struct _FONT_CACHE_ENTRY
     LIST_ENTRY ListEntry;
     int GlyphIndex;
     FT_Face Face;
-    FT_Glyph Glyph;
+    FT_BitmapGlyph BitmapGlyph;
     int Height;
 } FONT_CACHE_ENTRY, *PFONT_CACHE_ENTRY;
 static LIST_ENTRY FontCacheListHead;
@@ -1349,7 +1350,7 @@ ftGdiGetRasterizerCaps(LPRASTERIZER_STATUS lprs)
 }
 
 
-FT_Glyph APIENTRY
+FT_BitmapGlyph APIENTRY
 ftGdiGlyphCacheGet(
     FT_Face Face,
     INT GlyphIndex,
@@ -1376,10 +1377,10 @@ ftGdiGlyphCacheGet(
 
     RemoveEntryList(CurrentEntry);
     InsertHeadList(&FontCacheListHead, CurrentEntry);
-    return FontEntry->Glyph;
+    return FontEntry->BitmapGlyph;
 }
 
-FT_Glyph APIENTRY
+FT_BitmapGlyph APIENTRY
 ftGdiGlyphCacheSet(
     FT_Face Face,
     INT GlyphIndex,
@@ -1390,6 +1391,8 @@ ftGdiGlyphCacheSet(
     FT_Glyph GlyphCopy;
     INT error;
     PFONT_CACHE_ENTRY NewEntry;
+    FT_Bitmap AlignedBitmap;
+    FT_BitmapGlyph BitmapGlyph;
 
     error = FT_Get_Glyph(GlyphSlot, &GlyphCopy);
     if (error)
@@ -1397,6 +1400,7 @@ ftGdiGlyphCacheSet(
         DPRINT1("Failure caching glyph.\n");
         return NULL;
     };
+
     error = FT_Glyph_To_Bitmap(&GlyphCopy, RenderMode, 0, 1);
     if (error)
     {
@@ -1412,22 +1416,34 @@ ftGdiGlyphCacheSet(
         return NULL;
     }
 
+    BitmapGlyph = (FT_BitmapGlyph)GlyphCopy;
+    FT_Bitmap_New(&AlignedBitmap);
+    if(FT_Bitmap_Convert(GlyphSlot->library, &BitmapGlyph->bitmap, &AlignedBitmap, 4))
+    {
+        DPRINT1("Conversion failed\n");
+        FT_Done_Glyph((FT_Glyph)BitmapGlyph);
+        return NULL;
+    }
+
+    FT_Bitmap_Done(GlyphSlot->library, &BitmapGlyph->bitmap);
+    BitmapGlyph->bitmap = AlignedBitmap;
+
     NewEntry->GlyphIndex = GlyphIndex;
     NewEntry->Face = Face;
-    NewEntry->Glyph = GlyphCopy;
+    NewEntry->BitmapGlyph = BitmapGlyph;
     NewEntry->Height = Height;
 
     InsertHeadList(&FontCacheListHead, &NewEntry->ListEntry);
     if (FontCacheNumEntries++ > MAX_FONT_CACHE)
     {
         NewEntry = (PFONT_CACHE_ENTRY)FontCacheListHead.Blink;
-        FT_Done_Glyph(NewEntry->Glyph);
+        FT_Done_Glyph((FT_Glyph)NewEntry->BitmapGlyph);
         RemoveTailList(&FontCacheListHead);
         ExFreePool(NewEntry);
         FontCacheNumEntries--;
     }
 
-    return GlyphCopy;
+    return BitmapGlyph;
 }
 
 
@@ -2112,7 +2128,7 @@ TextIntGetTextExtentPoint(PDC dc,
     PFONTGDI FontGDI;
     FT_Face face;
     FT_GlyphSlot glyph;
-    FT_Glyph realglyph;
+    FT_BitmapGlyph realglyph;
     INT error, n, glyph_index, i, previous;
     ULONGLONG TotalWidth = 0;
     FT_CharMap charmap, found = NULL;
@@ -2208,7 +2224,7 @@ TextIntGetTextExtentPoint(PDC dc,
             TotalWidth += delta.x;
         }
 
-        TotalWidth += realglyph->advance.x >> 10;
+        TotalWidth += realglyph->root.advance.x >> 10;
 
         if (((TotalWidth + 32) >> 6) <= MaxExtent && NULL != Fit)
         {
@@ -3133,8 +3149,7 @@ GreExtTextOutW(
     int error, glyph_index, n, i;
     FT_Face face;
     FT_GlyphSlot glyph;
-    FT_Glyph realglyph;
-    FT_BitmapGlyph realglyph2;
+    FT_BitmapGlyph realglyph;
     LONGLONG TextLeft, RealXStart;
     ULONG TextTop, previous, BackgroundLeft;
     FT_Bool use_kerning;
@@ -3400,7 +3415,7 @@ GreExtTextOutW(
                 TextWidth += delta.x;
             }
 
-            TextWidth += realglyph->advance.x >> 10;
+            TextWidth += realglyph->root.advance.x >> 10;
 
             previous = glyph_index;
             TempText++;
@@ -3475,26 +3490,12 @@ GreExtTextOutW(
         }
         DPRINT("TextLeft: %d\n", TextLeft);
         DPRINT("TextTop: %d\n", TextTop);
-
-        if (realglyph->format == ft_glyph_format_outline)
-        {
-            DPRINT1("Should already be done\n");
-//         error = FT_Render_Glyph(glyph, RenderMode);
-            error = FT_Glyph_To_Bitmap(&realglyph, RenderMode, 0, 0);
-            if (error)
-            {
-                DPRINT1("WARNING: Failed to render glyph!\n");
-                goto fail2;
-            }
-        }
-        realglyph2 = (FT_BitmapGlyph)realglyph;
-
-        DPRINT("Advance: %d\n", realglyph->advance.x);
+        DPRINT("Advance: %d\n", realglyph->root.advance.x);
 
         if (fuOptions & ETO_OPAQUE)
         {
             DestRect.left = BackgroundLeft;
-            DestRect.right = (TextLeft + (realglyph->advance.x >> 10) + 32) >> 6;
+            DestRect.right = (TextLeft + (realglyph->root.advance.x >> 10) + 32) >> 6;
             DestRect.top = TextTop + yoff - ((face->size->metrics.ascender + 32) >> 6);
             DestRect.bottom = TextTop + yoff + ((32 - face->size->metrics.descender) >> 6);
             IntEngBitBlt(
@@ -3512,31 +3513,25 @@ GreExtTextOutW(
             BackgroundLeft = DestRect.right;
         }
 
-        DestRect.left = ((TextLeft + 32) >> 6) + realglyph2->left;
-        DestRect.right = DestRect.left + realglyph2->bitmap.width;
-        DestRect.top = TextTop + yoff - realglyph2->top;
-        DestRect.bottom = DestRect.top + realglyph2->bitmap.rows;
+        DestRect.left = ((TextLeft + 32) >> 6) + realglyph->left;
+        DestRect.right = DestRect.left + realglyph->bitmap.width;
+        DestRect.top = TextTop + yoff - realglyph->top;
+        DestRect.bottom = DestRect.top + realglyph->bitmap.rows;
 
-        bitSize.cx = realglyph2->bitmap.width;
-        bitSize.cy = realglyph2->bitmap.rows;
-        MaskRect.right = realglyph2->bitmap.width;
-        MaskRect.bottom = realglyph2->bitmap.rows;
+        bitSize.cx = realglyph->bitmap.width;
+        bitSize.cy = realglyph->bitmap.rows;
+        MaskRect.right = realglyph->bitmap.width;
+        MaskRect.bottom = realglyph->bitmap.rows;
 
         /*
          * We should create the bitmap out of the loop at the biggest possible
          * glyph size. Then use memset with 0 to clear it and sourcerect to
          * limit the work of the transbitblt.
-         *
-         * FIXME: DIB bitmaps should have an lDelta which is a multiple of 4.
-         * Here we pass in the pitch from the FreeType bitmap, which is not
-         * guaranteed to be a multiple of 4. If it's not, we should expand
-         * the FreeType bitmap to a temporary bitmap.
          */
 
-        HSourceGlyph = EngCreateBitmap(bitSize, realglyph2->bitmap.pitch,
-                                       (realglyph2->bitmap.pixel_mode == ft_pixel_mode_grays) ?
-                                       BMF_8BPP : BMF_1BPP, BMF_TOPDOWN,
-                                       realglyph2->bitmap.buffer);
+        HSourceGlyph = EngCreateBitmap(bitSize, realglyph->bitmap.pitch,
+                                       BMF_8BPP, BMF_TOPDOWN,
+                                       realglyph->bitmap.buffer);
         if ( !HSourceGlyph )
         {
             DPRINT1("WARNING: EngLockSurface() failed!\n");
@@ -3590,7 +3585,7 @@ GreExtTextOutW(
 
         if (NULL == Dx)
         {
-            TextLeft += realglyph->advance.x >> 10;
+            TextLeft += realglyph->root.advance.x >> 10;
              DPRINT("new TextLeft: %d\n", TextLeft);
         }
         else

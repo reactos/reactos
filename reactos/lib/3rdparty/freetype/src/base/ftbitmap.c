@@ -445,15 +445,15 @@
           {
             FT_Int  val = ss[0]; /* avoid a byte->int cast on each line */
 
+            tt[0] = (FT_Byte)( ( val & 0x80 ) ? 0xff : 0);
+            tt[1] = (FT_Byte)( ( val & 0x40 ) ? 0xff : 0);
+            tt[2] = (FT_Byte)( ( val & 0x20 ) ? 0xff : 0);
+            tt[3] = (FT_Byte)( ( val & 0x10 ) ? 0xff : 0);
+            tt[4] = (FT_Byte)( ( val & 0x08 ) ? 0xff : 0);
+            tt[5] = (FT_Byte)( ( val & 0x04 ) ? 0xff : 0);
+            tt[6] = (FT_Byte)( ( val & 0x02 ) ? 0xff : 0);
+            tt[7] = (FT_Byte)( ( val & 0x01 ) ? 0xff : 0);
 
-            tt[0] = (FT_Byte)( ( val & 0x80 ) >> 7 );
-            tt[1] = (FT_Byte)( ( val & 0x40 ) >> 6 );
-            tt[2] = (FT_Byte)( ( val & 0x20 ) >> 5 );
-            tt[3] = (FT_Byte)( ( val & 0x10 ) >> 4 );
-            tt[4] = (FT_Byte)( ( val & 0x08 ) >> 3 );
-            tt[5] = (FT_Byte)( ( val & 0x04 ) >> 2 );
-            tt[6] = (FT_Byte)( ( val & 0x02 ) >> 1 );
-            tt[7] = (FT_Byte)(   val & 0x01 );
 
             tt += 8;
             ss += 1;
@@ -468,7 +468,7 @@
 
             for ( ; j > 0; j-- )
             {
-              tt[0] = (FT_Byte)( ( val & 0x80 ) >> 7);
+              tt[0] = (FT_Byte)( ( val & 0x80 ) ? 0xff : 0);
               val <<= 1;
               tt   += 1;
             }
