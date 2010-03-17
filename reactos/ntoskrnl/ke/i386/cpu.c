@@ -1010,18 +1010,21 @@ KiRestoreFastSyscallReturnState(VOID)
 
             /* It's enabled, so use the proper exit stub */
             KiFastCallExitHandler = KiSystemCallSysExitReturn;
+            DPRINT1("Support for SYSENTER detected.\n");
         }
         else
         {
             /* Disable fast system call */
             KeFeatureBits &= ~KF_FAST_SYSCALL;
             KiFastCallExitHandler = KiSystemCallTrapReturn;
+            DPRINT1("Support for SYSENTER disabled.\n");
         }
     }
     else
     {
         /* Use the IRET handler */
         KiFastCallExitHandler = KiSystemCallTrapReturn;
+        DPRINT1("No support for SYSENTER detected.\n");
     }
 }
 
