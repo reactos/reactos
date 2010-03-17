@@ -466,7 +466,7 @@ AcpiOsReadPciConfiguration (
     NTSTATUS Status;
     PCI_SLOT_NUMBER slot;
 
-    if (Register == 0)
+    if (Register == 0 || PciId->Device == 0)
         return AE_ERROR;
 
     slot.u.AsULONG = 0;
@@ -498,7 +498,7 @@ AcpiOsWritePciConfiguration (
     ULONG buf = Value;
     PCI_SLOT_NUMBER slot;
 
-    if (Register == 0)
+    if (Register == 0 || PciId->Device == 0)
         return AE_ERROR;
 
     slot.u.AsULONG = 0;
