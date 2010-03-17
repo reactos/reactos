@@ -2220,14 +2220,6 @@ typedef VOID
 (NTAPI *PEXPAND_STACK_CALLOUT) (
   IN PVOID Parameter OPTIONAL);
 
-
-
-
-
-
-
-
-
 /* Kernel Functions */
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K) && defined(SINGLE_GROUP_LEGACY_API)
@@ -2433,6 +2425,377 @@ KeInvalidateRangeAllCaches(
   IN PVOID BaseAddress,
   IN ULONG Length);
 
+typedef GUID UUID;
+
+/* Executive Types */
+
+typedef struct _ZONE_SEGMENT_HEADER {
+  SINGLE_LIST_ENTRY SegmentList;
+  PVOID Reserved;
+} ZONE_SEGMENT_HEADER, *PZONE_SEGMENT_HEADER;
+
+typedef struct _ZONE_HEADER {
+  SINGLE_LIST_ENTRY FreeList;
+  SINGLE_LIST_ENTRY SegmentList;
+  ULONG BlockSize;
+  ULONG TotalSegmentSize;
+} ZONE_HEADER, *PZONE_HEADER;
+
+#if defined(POOL_TAGGING)
+#define ExFreePool(a) ExFreePoolWithTag(a,0)
+#endif
+
+#define PROTECTED_POOL                    0x80000000
+
+/* Executive Functions */
+
+static __inline PVOID
+ExAllocateFromZone(
+  IN PZONE_HEADER Zone)
+{
+  if (Zone->FreeList.Next)
+    Zone->FreeList.Next = Zone->FreeList.Next->Next;
+  return (PVOID) Zone->FreeList.Next;
+}
+
+static __inline PVOID
+ExFreeToZone(
+  IN PZONE_HEADER Zone,
+  IN PVOID Block)
+{
+  ((PSINGLE_LIST_ENTRY) Block)->Next = Zone->FreeList.Next;
+  Zone->FreeList.Next = ((PSINGLE_LIST_ENTRY) Block);
+  return ((PSINGLE_LIST_ENTRY) Block)->Next;
+}
+
+/*
+ * PVOID
+ * ExInterlockedAllocateFromZone(
+ *   IN PZONE_HEADER  Zone,
+ *   IN PKSPIN_LOCK  Lock)
+ */
+#define ExInterlockedAllocateFromZone(Zone, Lock) \
+    ((PVOID) ExInterlockedPopEntryList(&Zone->FreeList, Lock))
+
+/* PVOID
+ * ExInterlockedFreeToZone(
+ *  IN PZONE_HEADER  Zone,
+ *  IN PVOID  Block,
+ *  IN PKSPIN_LOCK  Lock);
+ */
+#define ExInterlockedFreeToZone(Zone, Block, Lock) \
+    ExInterlockedPushEntryList(&(Zone)->FreeList, (PSINGLE_LIST_ENTRY)(Block), Lock)
+
+/*
+ * BOOLEAN
+ * ExIsFullZone(
+ *  IN PZONE_HEADER  Zone)
+ */
+#define ExIsFullZone(Zone) \
+  ((Zone)->FreeList.Next == (PSINGLE_LIST_ENTRY) NULL)
+
+/* BOOLEAN
+ * ExIsObjectInFirstZoneSegment(
+ *     IN PZONE_HEADER Zone,
+ *     IN PVOID Object);
+ */
+#define ExIsObjectInFirstZoneSegment(Zone,Object) \
+    ((BOOLEAN)( ((PUCHAR)(Object) >= (PUCHAR)(Zone)->SegmentList.Next) && \
+                ((PUCHAR)(Object) <  (PUCHAR)(Zone)->SegmentList.Next + \
+                         (Zone)->TotalSegmentSize)) )
+
+#define ExAcquireResourceExclusive ExAcquireResourceExclusiveLite
+#define ExAcquireResourceShared ExAcquireResourceSharedLite
+#define ExConvertExclusiveToShared ExConvertExclusiveToSharedLite
+#define ExDeleteResource ExDeleteResourceLite
+#define ExInitializeResource ExInitializeResourceLite
+#define ExIsResourceAcquiredExclusive ExIsResourceAcquiredExclusiveLite
+#define ExIsResourceAcquiredShared ExIsResourceAcquiredSharedLite
+#define ExIsResourceAcquired ExIsResourceAcquiredSharedLite
+#define ExReleaseResourceForThread ExReleaseResourceForThreadLite
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+ExExtendZone(
+  IN OUT PZONE_HEADER Zone,
+  IN OUT PVOID Segment,
+  IN ULONG SegmentSize);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+ExInitializeZone(
+  OUT PZONE_HEADER Zone,
+  IN ULONG BlockSize,
+  IN OUT PVOID InitialSegment,
+  IN ULONG InitialSegmentSize);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+ExInterlockedExtendZone(
+  IN OUT PZONE_HEADER Zone,
+  IN OUT PVOID Segment,
+  IN ULONG SegmentSize,
+  IN OUT PKSPIN_LOCK Lock);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+ExUuidCreate(
+  OUT UUID *Uuid);
+
+NTKERNELAPI
+DECLSPEC_NORETURN
+VOID
+NTAPI
+ExRaiseAccessViolation(VOID);
+
+NTKERNELAPI
+DECLSPEC_NORETURN
+VOID
+NTAPI
+ExRaiseDatatypeMisalignment(VOID);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
+/* Memory Manager Types */
+
+typedef struct _PHYSICAL_MEMORY_RANGE {
+  PHYSICAL_ADDRESS BaseAddress;
+  LARGE_INTEGER NumberOfBytes;
+} PHYSICAL_MEMORY_RANGE, *PPHYSICAL_MEMORY_RANGE;
+
+typedef NTSTATUS
+(*PMM_ROTATE_COPY_CALLBACK_FUNCTION) (
+  IN PMDL DestinationMdl,
+  IN PMDL SourceMdl,
+  IN PVOID Context);
+
+typedef enum _MM_ROTATE_DIRECTION {
+  MmToFrameBuffer,
+  MmToFrameBufferNoCopy,
+  MmToRegularMemory,
+  MmToRegularMemoryNoCopy,
+  MmMaximumRotateDirection
+} MM_ROTATE_DIRECTION, *PMM_ROTATE_DIRECTION;
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+typedef ULONG NODE_REQUIREMENT;
+#define MM_ANY_NODE_OK          0x80000000
+#endif
+
+/* Memory Manager Functions */
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTKERNELAPI
+PPHYSICAL_MEMORY_RANGE
+NTAPI
+MmGetPhysicalMemoryRanges(VOID);
+
+NTKERNELAPI
+PHYSICAL_ADDRESS
+NTAPI
+MmGetPhysicalAddress(
+  IN PVOID BaseAddress);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+MmIsNonPagedSystemAddressValid(
+  IN PVOID VirtualAddress);
+
+NTKERNELAPI
+PVOID
+NTAPI
+MmAllocateNonCachedMemory(
+  IN SIZE_T NumberOfBytes);
+
+NTKERNELAPI
+VOID
+NTAPI
+MmFreeNonCachedMemory(
+  IN PVOID BaseAddress,
+  IN SIZE_T NumberOfBytes);
+
+NTKERNELAPI
+PVOID
+NTAPI
+MmGetVirtualForPhysical(
+  IN PHYSICAL_ADDRESS PhysicalAddress);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+MmMapUserAddressesToPage(
+  IN PVOID BaseAddress,
+  IN SIZE_T NumberOfBytes,
+  IN PVOID PageAddress);
+
+NTKERNELAPI
+PVOID
+NTAPI
+MmMapVideoDisplay(
+  IN PHYSICAL_ADDRESS PhysicalAddress,
+  IN SIZE_T NumberOfBytes,
+  IN MEMORY_CACHING_TYPE CacheType);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+MmMapViewInSessionSpace(
+  IN PVOID Section,
+  OUT PVOID *MappedBase,
+  IN OUT PSIZE_T ViewSize);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+MmMapViewInSystemSpace(
+  IN PVOID Section,
+  OUT PVOID *MappedBase,
+  IN OUT PSIZE_T ViewSize);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+MmIsAddressValid(
+  IN PVOID VirtualAddress);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+MmIsThisAnNtAsSystem(VOID);
+
+NTKERNELAPI
+VOID
+NTAPI
+MmLockPagableSectionByHandle(
+  IN PVOID ImageSectionHandle);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+MmUnmapViewInSessionSpace(
+  IN PVOID MappedBase);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+MmUnmapViewInSystemSpace(
+  IN PVOID MappedBase);
+
+NTKERNELAPI
+VOID
+NTAPI
+MmUnsecureVirtualMemory(
+  IN HANDLE SecureHandle);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+MmRemovePhysicalMemory(
+  IN PPHYSICAL_ADDRESS StartAddress,
+  IN OUT PLARGE_INTEGER NumberOfBytes);
+
+NTKERNELAPI
+HANDLE
+NTAPI
+MmSecureVirtualMemory(
+  IN PVOID Address,
+  IN SIZE_T Size,
+  IN ULONG ProbeMode);
+
+NTKERNELAPI
+VOID
+NTAPI
+MmUnmapVideoDisplay(
+  IN PVOID BaseAddress,
+  IN SIZE_T NumberOfBytes);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+MmAddPhysicalMemory(
+  IN PPHYSICAL_ADDRESS StartAddress,
+  IN OUT PLARGE_INTEGER NumberOfBytes);
+
+NTKERNELAPI
+PVOID
+NTAPI
+MmAllocateContiguousMemory(
+  IN SIZE_T NumberOfBytes,
+  IN PHYSICAL_ADDRESS HighestAcceptableAddress);
+
+NTKERNELAPI
+PVOID
+NTAPI
+MmAllocateContiguousMemorySpecifyCache(
+  IN SIZE_T NumberOfBytes,
+  IN PHYSICAL_ADDRESS LowestAcceptableAddress,
+  IN PHYSICAL_ADDRESS HighestAcceptableAddress,
+  IN PHYSICAL_ADDRESS BoundaryAddressMultiple OPTIONAL,
+  IN MEMORY_CACHING_TYPE CacheType);
+
+NTKERNELAPI
+PVOID
+NTAPI
+MmAllocateContiguousMemorySpecifyCacheNode(
+  IN SIZE_T NumberOfBytes,
+  IN PHYSICAL_ADDRESS LowestAcceptableAddress,
+  IN PHYSICAL_ADDRESS HighestAcceptableAddress,
+  IN PHYSICAL_ADDRESS BoundaryAddressMultiple OPTIONAL,
+  IN MEMORY_CACHING_TYPE CacheType,
+  IN NODE_REQUIREMENT PreferredNode);
+
+NTKERNELAPI
+VOID
+NTAPI
+MmFreeContiguousMemory(
+  IN PVOID BaseAddress);
+
+NTKERNELAPI
+VOID
+NTAPI
+MmFreeContiguousMemorySpecifyCache(
+  IN PVOID BaseAddress,
+  IN SIZE_T NumberOfBytes,
+  IN MEMORY_CACHING_TYPE CacheType);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
+#if (NTDDI_VERSION >= NTDDI_WS03)
+NTKERNELAPI
+NTSTATUS
+NTAPI
+MmCreateMirror(VOID);
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+NTSTATUS
+NTAPI
+MmRotatePhysicalView(
+  IN PVOID VirtualAddress,
+  IN OUT PSIZE_T NumberOfBytes,
+  IN PMDLX NewMdl OPTIONAL,
+  IN MM_ROTATE_DIRECTION Direction,
+  IN PMM_ROTATE_COPY_CALLBACK_FUNCTION CopyFunction,
+  IN PVOID Context OPTIONAL);
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+NTKERNELAPI
+BOOLEAN
+NTAPI
+SeSinglePrivilegeCheck(
+  IN LUID PrivilegeValue,
+  IN KPROCESSOR_MODE PreviousMode);
+#endif
+
 struct _LOADER_PARAMETER_BLOCK;
 struct _CREATE_DISK;
 struct _DRIVE_LAYOUT_INFORMATION_EX;
@@ -2444,7 +2807,6 @@ struct _SET_PARTITION_INFORMATION_EX;
 #ifndef GUID_DEFINED
 #include <guiddef.h>
 #endif
-typedef GUID UUID;
 
 /*
 ** IRP function codes
@@ -3251,139 +3613,6 @@ typedef enum _INTERLOCKED_RESULT {
   ResultPositive = RESULT_POSITIVE
 } INTERLOCKED_RESULT;
 
-/* Executive Types */
-
-#define PROTECTED_POOL                    0x80000000
-
-typedef struct _ZONE_SEGMENT_HEADER {
-  SINGLE_LIST_ENTRY SegmentList;
-  PVOID Reserved;
-} ZONE_SEGMENT_HEADER, *PZONE_SEGMENT_HEADER;
-
-typedef struct _ZONE_HEADER {
-  SINGLE_LIST_ENTRY FreeList;
-  SINGLE_LIST_ENTRY SegmentList;
-  ULONG BlockSize;
-  ULONG TotalSegmentSize;
-} ZONE_HEADER, *PZONE_HEADER;
-
-/* Executive Functions */
-
-static __inline PVOID
-ExAllocateFromZone(
-  IN PZONE_HEADER Zone)
-{
-  if (Zone->FreeList.Next)
-    Zone->FreeList.Next = Zone->FreeList.Next->Next;
-  return (PVOID) Zone->FreeList.Next;
-}
-
-static __inline PVOID
-ExFreeToZone(
-  IN PZONE_HEADER  Zone,
-  IN PVOID  Block)
-{
-  ((PSINGLE_LIST_ENTRY) Block)->Next = Zone->FreeList.Next;
-  Zone->FreeList.Next = ((PSINGLE_LIST_ENTRY) Block);
-  return ((PSINGLE_LIST_ENTRY) Block)->Next;
-}
-
-/*
- * PVOID
- * ExInterlockedAllocateFromZone(
- *   IN PZONE_HEADER  Zone,
- *   IN PKSPIN_LOCK  Lock)
- */
-#define ExInterlockedAllocateFromZone(Zone, Lock) \
-    ((PVOID) ExInterlockedPopEntryList(&Zone->FreeList, Lock))
-
-/* PVOID
- * ExInterlockedFreeToZone(
- *  IN PZONE_HEADER  Zone,
- *  IN PVOID  Block,
- *  IN PKSPIN_LOCK  Lock);
- */
-#define ExInterlockedFreeToZone(Zone, Block, Lock) \
-    ExInterlockedPushEntryList(&(Zone)->FreeList, (PSINGLE_LIST_ENTRY)(Block), Lock)
-
-/*
- * BOOLEAN
- * ExIsFullZone(
- *  IN PZONE_HEADER  Zone)
- */
-#define ExIsFullZone(Zone) \
-  ((Zone)->FreeList.Next == (PSINGLE_LIST_ENTRY) NULL)
-
-/* BOOLEAN
- * ExIsObjectInFirstZoneSegment(
- *     IN PZONE_HEADER Zone,
- *     IN PVOID Object);
- */
-#define ExIsObjectInFirstZoneSegment(Zone,Object) \
-    ((BOOLEAN)( ((PUCHAR)(Object) >= (PUCHAR)(Zone)->SegmentList.Next) && \
-                ((PUCHAR)(Object) <  (PUCHAR)(Zone)->SegmentList.Next + \
-                         (Zone)->TotalSegmentSize)) )
-
-#define ExAcquireResourceExclusive ExAcquireResourceExclusiveLite
-#define ExAcquireResourceShared ExAcquireResourceSharedLite
-#define ExConvertExclusiveToShared ExConvertExclusiveToSharedLite
-#define ExDeleteResource ExDeleteResourceLite
-#define ExInitializeResource ExInitializeResourceLite
-#define ExIsResourceAcquiredExclusive ExIsResourceAcquiredExclusiveLite
-#define ExIsResourceAcquiredShared ExIsResourceAcquiredSharedLite
-#define ExIsResourceAcquired ExIsResourceAcquiredSharedLite
-#define ExReleaseResourceForThread ExReleaseResourceForThreadLite
-
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-ExExtendZone(
-  IN OUT PZONE_HEADER Zone,
-  IN OUT PVOID Segment,
-  IN ULONG SegmentSize);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-ExInitializeZone(
-  OUT PZONE_HEADER Zone,
-  IN ULONG BlockSize,
-  IN OUT PVOID InitialSegment,
-  IN ULONG InitialSegmentSize);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-ExInterlockedExtendZone(
-  IN OUT PZONE_HEADER Zone,
-  IN OUT PVOID Segment,
-  IN ULONG SegmentSize,
-  IN OUT PKSPIN_LOCK Lock);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-ExUuidCreate(
-  OUT UUID *Uuid);
-
-NTKERNELAPI
-DECLSPEC_NORETURN
-VOID
-NTAPI
-ExRaiseAccessViolation(
-  VOID);
-
-NTKERNELAPI
-DECLSPEC_NORETURN
-VOID
-NTAPI
-ExRaiseDatatypeMisalignment(
-  VOID);
-
-#endif
-
 #ifdef _X86_
 
 NTKERNELAPI
@@ -4010,146 +4239,6 @@ IoWritePartitionTableEx(
 
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
-/* Memory Manager Types */
-
-typedef struct _PHYSICAL_MEMORY_RANGE {
-  PHYSICAL_ADDRESS BaseAddress;
-  LARGE_INTEGER NumberOfBytes;
-} PHYSICAL_MEMORY_RANGE, *PPHYSICAL_MEMORY_RANGE;
-
-/* Memory Manager Functions */
-
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
-
-NTKERNELAPI
-PPHYSICAL_MEMORY_RANGE
-NTAPI
-MmGetPhysicalMemoryRanges(
-  VOID);
-
-NTKERNELAPI
-PHYSICAL_ADDRESS
-NTAPI
-MmGetPhysicalAddress(
-  IN PVOID BaseAddress);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-MmIsNonPagedSystemAddressValid(
-  IN PVOID VirtualAddress);
-
-NTKERNELAPI
-PVOID
-NTAPI
-MmAllocateNonCachedMemory(
-  IN SIZE_T NumberOfBytes);
-
-NTKERNELAPI
-VOID
-NTAPI
-MmFreeNonCachedMemory(
-  IN PVOID BaseAddress,
-  IN SIZE_T NumberOfBytes);
-
-NTKERNELAPI
-PVOID
-NTAPI
-MmGetVirtualForPhysical(
-  IN PHYSICAL_ADDRESS PhysicalAddress);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-MmMapUserAddressesToPage(
-  IN PVOID BaseAddress,
-  IN SIZE_T NumberOfBytes,
-  IN PVOID PageAddress);
-
-NTKERNELAPI
-PVOID
-NTAPI
-MmMapVideoDisplay(
-  IN PHYSICAL_ADDRESS PhysicalAddress,
-  IN SIZE_T NumberOfBytes,
-  IN MEMORY_CACHING_TYPE CacheType);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-MmMapViewInSessionSpace(
-  IN PVOID Section,
-  OUT PVOID *MappedBase,
-  IN OUT PSIZE_T ViewSize);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-MmMapViewInSystemSpace(
-  IN PVOID Section,
-  OUT PVOID *MappedBase,
-  IN OUT PSIZE_T ViewSize);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-MmIsAddressValid(
-  IN PVOID VirtualAddress);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-MmIsThisAnNtAsSystem(
-  VOID);
-
-NTKERNELAPI
-VOID
-NTAPI
-MmLockPagableSectionByHandle(
-  IN PVOID ImageSectionHandle);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-MmUnmapViewInSessionSpace(
-  IN PVOID MappedBase);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-MmUnmapViewInSystemSpace(
-  IN PVOID MappedBase);
-
-NTKERNELAPI
-VOID
-NTAPI
-MmUnsecureVirtualMemory(
-  IN HANDLE SecureHandle);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-MmRemovePhysicalMemory(
-  IN PPHYSICAL_ADDRESS StartAddress,
-  IN OUT PLARGE_INTEGER NumberOfBytes);
-
-NTKERNELAPI
-HANDLE
-NTAPI
-MmSecureVirtualMemory(
-  IN PVOID Address,
-  IN SIZE_T Size,
-  IN ULONG ProbeMode);
-
-NTKERNELAPI
-VOID
-NTAPI
-MmUnmapVideoDisplay(
-  IN PVOID BaseAddress,
-  IN SIZE_T NumberOfBytes);
-
-#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
-
 /** Process manager types **/
 
 typedef VOID
@@ -4239,17 +4328,6 @@ PsRemoveLoadImageNotifyRoutine(
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
 extern NTKERNELAPI PEPROCESS PsInitialSystemProcess;
-
-/* Security reference monitor routines */
-
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
-NTKERNELAPI
-BOOLEAN
-NTAPI
-SeSinglePrivilegeCheck(
-  IN LUID PrivilegeValue,
-  IN KPROCESSOR_MODE PreviousMode);
-#endif
 
 /* ZwXxx Functions */
 
