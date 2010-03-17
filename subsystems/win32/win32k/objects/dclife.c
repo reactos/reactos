@@ -333,8 +333,6 @@ DC_vInitDc(
 	pdc->dcattr.iCS_CP = 0;
     pdc->pSurfInfo = NULL;
 
-    /* FIXME: HACK! */
-    DC_InitHack(pdc);
 }
 
 BOOL
@@ -480,6 +478,9 @@ GreOpenDCW(
     hdc = pdc->BaseObject.hHmgr;
 
     DC_vInitDc(pdc, iType, ppdev);
+    /* FIXME: HACK! */
+    DC_InitHack(pdc);
+
     DC_AllocDcAttr(pdc);
 
     DC_UnlockDc(pdc);
@@ -639,6 +640,8 @@ NtGdiCreateCompatibleDC(HDC hdc)
 
     /* Initialize the new DC */
     DC_vInitDc(pdcNew, DCTYPE_MEMORY, ppdev);
+    /* FIXME: HACK! */
+    DC_InitHack(pdc);
 
     /* Allocate a dc attribute */
     DC_AllocDcAttr(pdcNew);
