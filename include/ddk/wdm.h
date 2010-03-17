@@ -123,11 +123,18 @@ struct _IO_RESOURCE_DESCRIPTOR;
 typedef struct _OBJECT_TYPE *POBJECT_TYPE;
 typedef struct _HAL_DISPATCH_TABLE *PHAL_DISPATCH_TABLE;
 typedef struct _HAL_PRIVATE_DISPATCH_TABLE *PHAL_PRIVATE_DISPATCH_TABLE;
-typedef struct _DEVICE_HANDLER_OBJECT *PDEVICE_HANDLER_OBJECT;
 typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT; 
 typedef struct _CALLBACK_OBJECT *PCALLBACK_OBJECT;
+#if defined(_NTHAL_INCLUDED_)
+typedef struct _KPROCESS *PEPROCESS;
 typedef struct _ETHREAD *PETHREAD;
+#elif defined(_NTIFS_INCLUDED_)
+typedef struct _KPROCESS *PEPROCESS;
+typedef struct _KTHREAD *PETHREAD;
+#else
 typedef struct _EPROCESS *PEPROCESS;
+typedef struct _ETHREAD *PETHREAD;
+#endif
 typedef struct _IO_TIMER *PIO_TIMER;
 typedef struct _KINTERRUPT *PKINTERRUPT;
 typedef struct _KPROCESS *PKPROCESS;

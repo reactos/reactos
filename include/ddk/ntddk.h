@@ -57,23 +57,10 @@ extern "C" {
 #endif
 
 typedef struct _BUS_HANDLER *PBUS_HANDLER;
-typedef struct _CALLBACK_OBJECT *PCALLBACK_OBJECT;
 typedef struct _DEVICE_HANDLER_OBJECT *PDEVICE_HANDLER_OBJECT;
 #if defined(_NTHAL_INCLUDED_)
-typedef struct _KPROCESS *PEPROCESS;
-typedef struct _ETHREAD *PETHREAD;
 typedef struct _KAFFINITY_EX *PKAFFINITY_EX;
-#elif defined(_NTIFS_INCLUDED_)
-typedef struct _KPROCESS *PEPROCESS;
-typedef struct _KTHREAD *PETHREAD;
-#else
-typedef struct _EPROCESS *PEPROCESS;
-typedef struct _ETHREAD *PETHREAD;
 #endif
-typedef struct _IO_TIMER *PIO_TIMER;
-typedef struct _KINTERRUPT *PKINTERRUPT;
-typedef struct _KTHREAD *PKTHREAD, *PRKTHREAD;
-typedef struct _OBJECT_TYPE *POBJECT_TYPE;
 typedef struct _PEB *PPEB;
 typedef struct _IMAGE_NT_HEADERS *PIMAGE_NT_HEADERS32;
 typedef struct _IMAGE_NT_HEADERS64 *PIMAGE_NT_HEADERS64;
@@ -507,6 +494,12 @@ typedef VOID
   IN struct _RTL_GENERIC_TABLE *Table,
   IN PVOID Buffer);
 
+typedef struct _RTL_SPLAY_LINKS {
+  struct _RTL_SPLAY_LINKS *Parent;
+  struct _RTL_SPLAY_LINKS *LeftChild;
+  struct _RTL_SPLAY_LINKS *RightChild;
+} RTL_SPLAY_LINKS, *PRTL_SPLAY_LINKS;
+
 typedef struct _RTL_GENERIC_TABLE {
   PRTL_SPLAY_LINKS TableRoot;
   LIST_ENTRY InsertOrderList;
@@ -644,12 +637,6 @@ RtlIsGenericTableEmpty(
 #define RtlIsGenericTableEmpty                  RtlIsGenericTableEmptyAvl
 
 #endif /* RTL_USE_AVL_TABLES */
-
-typedef struct _RTL_SPLAY_LINKS {
-  struct _RTL_SPLAY_LINKS *Parent;
-  struct _RTL_SPLAY_LINKS *LeftChild;
-  struct _RTL_SPLAY_LINKS *RightChild;
-} RTL_SPLAY_LINKS, *PRTL_SPLAY_LINKS;
 
 typedef struct _RTL_DYNAMIC_HASH_TABLE_ENTRY {
   LIST_ENTRY Linkage;
@@ -789,11 +776,6 @@ typedef LPOSVERSIONINFOA LPOSVERSIONINFO;
         _SplayParent->RightChild = _SplayChild;         \
         _SplayChild->Parent = _SplayParent;             \
     }
-
-#define RtlEqualLuid(L1, L2) (((L1)->LowPart == (L2)->LowPart) && \
-                              ((L1)->HighPart  == (L2)->HighPart))
-
-#define RtlIsZeroLuid(L1) ((BOOLEAN) (((L1)->LowPart | (L1)->HighPart) == 0))
 
 #if !defined(MIDL_PASS)
 
