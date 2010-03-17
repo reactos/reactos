@@ -90,7 +90,7 @@ AcpiOsInitialize (void)
 ACPI_STATUS
 AcpiOsTerminate(void)
 {
-    DPRINT1("AcpiOsTerminate() called\n");
+    DPRINT("AcpiOsTerminate() called\n");
 
     if (AcpiInterruptHandlerRegistered)
         AcpiOsRemoveInterruptHandler(AcpiIrqNumber, AcpiIrqHandler);
@@ -329,7 +329,7 @@ AcpiOsRemoveInterruptHandler (
 void
 AcpiOsStall (UINT32 microseconds)
 {
-    DPRINT1("AcpiOsStall %d\n",microseconds);
+    DPRINT("AcpiOsStall %d\n",microseconds);
     KeStallExecutionProcessor(microseconds);
     return;
 }
@@ -337,7 +337,7 @@ AcpiOsStall (UINT32 microseconds)
 void
 AcpiOsSleep (ACPI_INTEGER milliseconds)
 {
-    DPRINT1("AcpiOsSleep %d\n", milliseconds);
+    DPRINT("AcpiOsSleep %d\n", milliseconds);
 	KeStallExecutionProcessor(milliseconds*1000);
     return;
 }
@@ -664,7 +664,7 @@ AcpiOsExecute (
     ACPI_OSD_EXEC_CALLBACK  Function,
     void                    *Context)
 {
-	DPRINT1("AcpiOsExecute\n");
+	DPRINT("AcpiOsExecute\n");
 
 	KeInsertQueueDpc(&AcpiDpc, (PVOID)Function, (PVOID)Context);
 

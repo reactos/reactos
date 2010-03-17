@@ -46,7 +46,7 @@
 #include <acpi_drivers.h>
 #include <glue.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 

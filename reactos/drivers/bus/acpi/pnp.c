@@ -7,7 +7,7 @@
 #include <acpi_drivers.h>
 
 #include <wdmguid.h>
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #ifdef ALLOC_PRAGMA

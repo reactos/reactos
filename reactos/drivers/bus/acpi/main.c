@@ -6,7 +6,7 @@
 #include <acpi_bus.h>
 #include <acpi_drivers.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #ifdef ALLOC_PRAGMA
@@ -35,7 +35,7 @@ Bus_AddDevice(
 
     DPRINT("Add Device: 0x%p\n",  PhysicalDeviceObject);
 
-    DPRINT1("#################### Bus_CreateClose Creating FDO Device ####################\n");
+    DPRINT("#################### Bus_CreateClose Creating FDO Device ####################\n");
     status = IoCreateDevice(DriverObject,
                       sizeof(FDO_DEVICE_DATA),
                       NULL,
@@ -134,7 +134,7 @@ Bus_AddDevice(
         goto End;
     }
 
-    DPRINT1("AddDevice: %p to %p->%p (%ws) \n",
+    DPRINT("AddDevice: %p to %p->%p (%ws) \n",
                    deviceObject,
                    deviceData->NextLowerDriver,
                    PhysicalDeviceObject,
