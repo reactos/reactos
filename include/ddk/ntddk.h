@@ -2779,17 +2779,200 @@ SeSinglePrivilegeCheck(
   IN KPROCESSOR_MODE PreviousMode);
 #endif
 
-struct _LOADER_PARAMETER_BLOCK;
-struct _CREATE_DISK;
-struct _DRIVE_LAYOUT_INFORMATION_EX;
-struct _SET_PARTITION_INFORMATION_EX;
+extern NTKERNELAPI PEPROCESS PsInitialSystemProcess;
 
-//
-// GUID and UUID
-//
-#ifndef GUID_DEFINED
-#include <guiddef.h>
+#if !defined(_PSGETCURRENTTHREAD_)
+#define _PSGETCURRENTTHREAD_
+
+FORCEINLINE
+PETHREAD
+NTAPI
+PsGetCurrentThread(VOID)
+{
+  return (PETHREAD)KeGetCurrentThread();
+}
+
 #endif
+
+/** Process Manager types **/
+
+typedef VOID
+(NTAPI *PCREATE_PROCESS_NOTIFY_ROUTINE)(
+  IN HANDLE ParentId,
+  IN HANDLE ProcessId,
+  IN BOOLEAN Create);
+
+typedef struct _PS_CREATE_NOTIFY_INFO {
+  IN SIZE_T Size;
+  union {
+    IN ULONG Flags;
+    struct {
+      IN ULONG FileOpenNameAvailable:1;
+      IN ULONG Reserved:31;
+    };
+  };
+  IN HANDLE ParentProcessId;
+  IN CLIENT_ID CreatingThreadId;
+  IN OUT struct _FILE_OBJECT *FileObject;
+  IN PCUNICODE_STRING ImageFileName;
+  IN PCUNICODE_STRING CommandLine OPTIONAL;
+  IN OUT NTSTATUS CreationStatus;
+} PS_CREATE_NOTIFY_INFO, *PPS_CREATE_NOTIFY_INFO;
+
+typedef VOID
+(NTAPI *PCREATE_PROCESS_NOTIFY_ROUTINE_EX)(
+  IN OUT PEPROCESS Process,
+  IN HANDLE ProcessId,
+  IN PPS_CREATE_NOTIFY_INFO CreateInfo OPTIONAL);
+
+typedef VOID
+(NTAPI *PCREATE_THREAD_NOTIFY_ROUTINE)(
+  IN HANDLE ProcessId,
+  IN HANDLE ThreadId,
+  IN BOOLEAN Create);
+
+#define IMAGE_ADDRESSING_MODE_32BIT       3
+
+typedef struct _IMAGE_INFO {
+  _ANONYMOUS_UNION union {
+    ULONG Properties;
+    _ANONYMOUS_STRUCT struct {
+      ULONG ImageAddressingMode:8;
+      ULONG SystemModeImage:1;
+      ULONG ImageMappedToAllPids:1;
+      ULONG ExtendedInfoPresent:1;
+      ULONG Reserved:21;
+    } DUMMYSTRUCTNAME;
+  } DUMMYUNIONNAME;
+  PVOID ImageBase;
+  ULONG ImageSelector;
+  SIZE_T ImageSize;
+  ULONG ImageSectionNumber;
+} IMAGE_INFO, *PIMAGE_INFO;
+
+typedef struct _IMAGE_INFO_EX {
+  SIZE_T Size;
+  IMAGE_INFO ImageInfo;
+  struct _FILE_OBJECT *FileObject;
+} IMAGE_INFO_EX, *PIMAGE_INFO_EX;
+
+typedef VOID
+(NTAPI *PLOAD_IMAGE_NOTIFY_ROUTINE)(
+  IN PUNICODE_STRING FullImageName,
+  IN HANDLE ProcessId,
+  IN PIMAGE_INFO ImageInfo);
+
+/** Process Manager functions **/
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PsSetCreateProcessNotifyRoutine(
+  IN PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine,
+  IN BOOLEAN Remove);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PsSetCreateThreadNotifyRoutine(
+  IN PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PsSetLoadImageNotifyRoutine(
+  IN PLOAD_IMAGE_NOTIFY_ROUTINE NotifyRoutine);
+
+NTKERNELAPI
+HANDLE
+NTAPI
+PsGetCurrentProcessId(VOID);
+
+NTKERNELAPI
+HANDLE
+NTAPI
+PsGetCurrentThreadId(VOID);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+PsGetVersion(
+  OUT PULONG MajorVersion OPTIONAL,
+  OUT PULONG MinorVersion OPTIONAL,
+  OUT PULONG BuildNumber OPTIONAL,
+  OUT PUNICODE_STRING CSDVersion OPTIONAL);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+
+NTKERNELAPI
+HANDLE
+NTAPI
+PsGetProcessId(
+  IN PEPROCESS Process);
+
+NTKERNELAPI
+HANDLE
+NTAPI
+PsGetThreadId(
+  IN PETHREAD Thread);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PsRemoveCreateThreadNotifyRoutine(
+  IN PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PsRemoveLoadImageNotifyRoutine(
+  IN PLOAD_IMAGE_NOTIFY_ROUTINE NotifyRoutine);
+
+NTKERNELAPI
+LONGLONG
+NTAPI
+PsGetProcessCreateTimeQuadPart(
+  IN PEPROCESS Process);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
+
+#if (NTDDI_VERSION >= NTDDI_WS03)
+NTKERNELAPI
+HANDLE
+NTAPI
+PsGetThreadProcessId(
+  IN PETHREAD Thread);
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+PsSetCurrentThreadPrefetching(
+  IN BOOLEAN Prefetching);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+PsIsCurrentThreadPrefetching(VOID);
+
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_VISTASP1)
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PsSetCreateProcessNotifyRoutineEx(
+  IN PCREATE_PROCESS_NOTIFY_ROUTINE_EX NotifyRoutine,
+  IN BOOLEAN Remove);
+#endif
+
+/* I/O Manager Types */
 
 /*
 ** IRP function codes
@@ -2824,12 +3007,63 @@ struct _SET_PARTITION_INFORMATION_EX;
 
 #define IRP_MN_QUERY_LEGACY_BUS_INFORMATION 0x18
 
+#define IO_CHECK_CREATE_PARAMETERS      0x0200
+#define IO_ATTACH_DEVICE                0x0400
+#define IO_IGNORE_SHARE_ACCESS_CHECK    0x0800
+
+typedef
+NTSTATUS
+(NTAPI *PIO_QUERY_DEVICE_ROUTINE)(
+  IN PVOID Context,
+  IN PUNICODE_STRING PathName,
+  IN INTERFACE_TYPE BusType,
+  IN ULONG BusNumber,
+  IN PKEY_VALUE_FULL_INFORMATION *BusInformation,
+  IN CONFIGURATION_TYPE ControllerType,
+  IN ULONG ControllerNumber,
+  IN PKEY_VALUE_FULL_INFORMATION *ControllerInformation,
+  IN CONFIGURATION_TYPE PeripheralType,
+  IN ULONG PeripheralNumber,
+  IN PKEY_VALUE_FULL_INFORMATION *PeripheralInformation);
+
+typedef enum _IO_QUERY_DEVICE_DATA_FORMAT {
+  IoQueryDeviceIdentifier = 0,
+  IoQueryDeviceConfigurationData,
+  IoQueryDeviceComponentInformation,
+  IoQueryDeviceMaxData
+} IO_QUERY_DEVICE_DATA_FORMAT, *PIO_QUERY_DEVICE_DATA_FORMAT;
+
+typedef VOID
+(NTAPI *PDRIVER_REINITIALIZE)(
+  IN struct _DRIVER_OBJECT *DriverObject,
+  IN PVOID Context OPTIONAL,
+  IN ULONG Count);
+
+typedef struct _CONTROLLER_OBJECT {
+  CSHORT Type;
+  CSHORT Size;
+  PVOID ControllerExtension;
+  KDEVICE_QUEUE DeviceWaitQueue;
+  ULONG Spare1;
+  LARGE_INTEGER Spare2;
+} CONTROLLER_OBJECT, *PCONTROLLER_OBJECT;
+
 /* DEVICE_OBJECT.Flags */
 
+#define DO_VERIFY_VOLUME                    0x00000002
+#define DO_BUFFERED_IO                      0x00000004
+#define DO_EXCLUSIVE                        0x00000008
+#define DO_DIRECT_IO                        0x00000010
+#define DO_MAP_IO_BUFFER                    0x00000020
 #define DO_DEVICE_HAS_NAME                  0x00000040
+#define DO_DEVICE_INITIALIZING              0x00000080
 #define DO_SYSTEM_BOOT_PARTITION            0x00000100
 #define DO_LONG_TERM_REQUESTS               0x00000200
 #define DO_NEVER_LAST_DEVICE                0x00000400
+#define DO_SHUTDOWN_REGISTERED              0x00000800
+#define DO_BUS_ENUMERATED_DEVICE            0x00001000
+#define DO_POWER_PAGABLE                    0x00002000
+#define DO_POWER_INRUSH                     0x00004000
 #define DO_LOW_PRIORITY_FILESYSTEM          0x00010000
 #define DO_SUPPORTS_TRANSACTIONS            0x00040000
 #define DO_FORCE_NEITHER_IO                 0x00080000
@@ -2843,21 +3077,72 @@ struct _SET_PARTITION_INFORMATION_EX;
 #define DRVO_BOOTREINIT_REGISTERED      0x00000020
 #define DRVO_LEGACY_RESOURCES           0x00000040
 
-typedef enum _ARBITER_REQUEST_SOURCE {
-  ArbiterRequestUndefined = -1,
-  ArbiterRequestLegacyReported,
-  ArbiterRequestHalReported,
-  ArbiterRequestLegacyAssigned,
-  ArbiterRequestPnpDetected,
-  ArbiterRequestPnpEnumerated
-} ARBITER_REQUEST_SOURCE;
+typedef struct _CONFIGURATION_INFORMATION {
+  ULONG DiskCount;
+  ULONG FloppyCount;
+  ULONG CdRomCount;
+  ULONG TapeCount;
+  ULONG ScsiPortCount;
+  ULONG SerialCount;
+  ULONG ParallelCount;
+  BOOLEAN AtDiskPrimaryAddressClaimed;
+  BOOLEAN AtDiskSecondaryAddressClaimed;
+  ULONG Version;
+  ULONG MediumChangerCount;
+} CONFIGURATION_INFORMATION, *PCONFIGURATION_INFORMATION;
 
-typedef enum _ARBITER_RESULT {
-  ArbiterResultUndefined = -1,
-  ArbiterResultSuccess,
-  ArbiterResultExternalConflict,
-  ArbiterResultNullRequest
-} ARBITER_RESULT;
+typedef struct _DISK_SIGNATURE {
+  ULONG PartitionStyle;
+  _ANONYMOUS_UNION union {
+    struct {
+      ULONG Signature;
+      ULONG CheckSum;
+    } Mbr;
+    struct {
+      GUID DiskId;
+    } Gpt;
+  } DUMMYUNIONNAME;
+} DISK_SIGNATURE, *PDISK_SIGNATURE;
+
+typedef struct _TXN_PARAMETER_BLOCK {
+  USHORT Length;
+  USHORT TxFsContext;
+  PVOID TransactionObject;
+} TXN_PARAMETER_BLOCK, *PTXN_PARAMETER_BLOCK;
+
+#define TXF_MINIVERSION_DEFAULT_VIEW        (0xFFFE)
+
+typedef struct _IO_DRIVER_CREATE_CONTEXT {
+  CSHORT Size;
+  struct _ECP_LIST *ExtraCreateParameter;
+  PVOID DeviceObjectHint;
+  PTXN_PARAMETER_BLOCK TxnParameters;
+} IO_DRIVER_CREATE_CONTEXT, *PIO_DRIVER_CREATE_CONTEXT;
+
+typedef struct _AGP_TARGET_BUS_INTERFACE_STANDARD {
+  USHORT Size;
+  USHORT Version;
+  PVOID Context;
+  PINTERFACE_REFERENCE InterfaceReference;
+  PINTERFACE_DEREFERENCE InterfaceDereference;
+  PGET_SET_DEVICE_DATA SetBusData;
+  PGET_SET_DEVICE_DATA GetBusData;
+  UCHAR CapabilityID;
+} AGP_TARGET_BUS_INTERFACE_STANDARD, *PAGP_TARGET_BUS_INTERFACE_STANDARD;
+
+typedef NTSTATUS
+(NTAPI *PGET_LOCATION_STRING)(
+  IN OUT PVOID Context OPTIONAL,
+  OUT PWCHAR *LocationStrings);
+
+typedef struct _PNP_LOCATION_INTERFACE {
+  USHORT Size;
+  USHORT Version;
+  PVOID Context;
+  PINTERFACE_REFERENCE InterfaceReference;
+  PINTERFACE_DEREFERENCE InterfaceDereference;
+  PGET_LOCATION_STRING GetLocationString;
+} PNP_LOCATION_INTERFACE, *PPNP_LOCATION_INTERFACE;
 
 typedef enum _ARBITER_ACTION {
   ArbiterActionTestAllocation,
@@ -2878,38 +3163,68 @@ typedef struct _ARBITER_CONFLICT_INFO {
   ULONGLONG End;
 } ARBITER_CONFLICT_INFO, *PARBITER_CONFLICT_INFO;
 
+typedef struct _ARBITER_TEST_ALLOCATION_PARAMETERS {
+  IN OUT PLIST_ENTRY ArbitrationList;
+  IN ULONG AllocateFromCount;
+  IN PCM_PARTIAL_RESOURCE_DESCRIPTOR AllocateFrom;
+} ARBITER_TEST_ALLOCATION_PARAMETERS, *PARBITER_TEST_ALLOCATION_PARAMETERS;
+
+typedef struct _ARBITER_RETEST_ALLOCATION_PARAMETERS {
+  IN OUT PLIST_ENTRY ArbitrationList;
+  IN ULONG AllocateFromCount;
+  IN PCM_PARTIAL_RESOURCE_DESCRIPTOR AllocateFrom;
+} ARBITER_RETEST_ALLOCATION_PARAMETERS, *PARBITER_RETEST_ALLOCATION_PARAMETERS;
+
+typedef struct _ARBITER_BOOT_ALLOCATION_PARAMETERS {
+  IN OUT PLIST_ENTRY ArbitrationList;
+} ARBITER_BOOT_ALLOCATION_PARAMETERS, *PARBITER_BOOT_ALLOCATION_PARAMETERS;
+
+typedef struct _ARBITER_QUERY_ALLOCATED_RESOURCES_PARAMETERS {
+  OUT PCM_PARTIAL_RESOURCE_LIST *AllocatedResources;
+} ARBITER_QUERY_ALLOCATED_RESOURCES_PARAMETERS, *PARBITER_QUERY_ALLOCATED_RESOURCES_PARAMETERS;
+
+typedef struct _ARBITER_QUERY_CONFLICT_PARAMETERS {
+  IN PDEVICE_OBJECT PhysicalDeviceObject;
+  IN PIO_RESOURCE_DESCRIPTOR ConflictingResource;
+  OUT PULONG ConflictCount;
+  OUT PARBITER_CONFLICT_INFO *Conflicts;
+} ARBITER_QUERY_CONFLICT_PARAMETERS, *PARBITER_QUERY_CONFLICT_PARAMETERS;
+
+typedef struct _ARBITER_QUERY_ARBITRATE_PARAMETERS {
+  IN PLIST_ENTRY ArbitrationList;
+} ARBITER_QUERY_ARBITRATE_PARAMETERS, *PARBITER_QUERY_ARBITRATE_PARAMETERS;
+
+typedef struct _ARBITER_ADD_RESERVED_PARAMETERS {
+  IN PDEVICE_OBJECT ReserveDevice;
+} ARBITER_ADD_RESERVED_PARAMETERS, *PARBITER_ADD_RESERVED_PARAMETERS;
+
 typedef struct _ARBITER_PARAMETERS {
   union {
-    struct {
-      IN OUT PLIST_ENTRY ArbitrationList;
-      IN ULONG AllocateFromCount;
-      IN PCM_PARTIAL_RESOURCE_DESCRIPTOR AllocateFrom;
-    } TestAllocation;
-    struct {
-      IN OUT PLIST_ENTRY ArbitrationList;
-      IN ULONG AllocateFromCount;
-      IN PCM_PARTIAL_RESOURCE_DESCRIPTOR AllocateFrom;
-    } RetestAllocation;
-    struct {
-      IN OUT PLIST_ENTRY ArbitrationList;
-    } BootAllocation;
-    struct {
-      OUT PCM_PARTIAL_RESOURCE_LIST *AllocatedResources;
-    } QueryAllocatedResources;
-    struct {
-      IN PDEVICE_OBJECT PhysicalDeviceObject;
-      IN PIO_RESOURCE_DESCRIPTOR ConflictingResource;
-      OUT PULONG ConflictCount;
-      OUT PARBITER_CONFLICT_INFO *Conflicts;
-    } QueryConflict;
-    struct {
-      IN PLIST_ENTRY ArbitrationList;
-    } QueryArbitrate;
-    struct {
-      IN PDEVICE_OBJECT ReserveDevice;
-    } AddReserved;
+    ARBITER_TEST_ALLOCATION_PARAMETERS TestAllocation;
+    ARBITER_RETEST_ALLOCATION_PARAMETERS RetestAllocation;
+    ARBITER_BOOT_ALLOCATION_PARAMETERS BootAllocation;
+    ARBITER_QUERY_ALLOCATED_RESOURCES_PARAMETERS QueryAllocatedResources;
+    ARBITER_QUERY_CONFLICT_PARAMETERS QueryConflict;
+    ARBITER_QUERY_ARBITRATE_PARAMETERS QueryArbitrate;
+    ARBITER_ADD_RESERVED_PARAMETERS AddReserved;
   } Parameters;
 } ARBITER_PARAMETERS, *PARBITER_PARAMETERS;
+
+typedef enum _ARBITER_REQUEST_SOURCE {
+  ArbiterRequestUndefined = -1,
+  ArbiterRequestLegacyReported,
+  ArbiterRequestHalReported,
+  ArbiterRequestLegacyAssigned,
+  ArbiterRequestPnpDetected,
+  ArbiterRequestPnpEnumerated
+} ARBITER_REQUEST_SOURCE;
+
+typedef enum _ARBITER_RESULT {
+  ArbiterResultUndefined = -1,
+  ArbiterResultSuccess,
+  ArbiterResultExternalConflict,
+  ArbiterResultNullRequest
+} ARBITER_RESULT;
 
 #define ARBITER_FLAG_BOOT_CONFIG 0x00000001
 
@@ -2946,6 +3261,510 @@ typedef struct _ARBITER_INTERFACE {
   PARBITER_HANDLER ArbiterHandler;
   ULONG Flags;
 } ARBITER_INTERFACE, *PARBITER_INTERFACE;
+
+typedef enum _RESOURCE_TRANSLATION_DIRECTION {
+  TranslateChildToParent,
+  TranslateParentToChild
+} RESOURCE_TRANSLATION_DIRECTION;
+
+typedef NTSTATUS
+(NTAPI *PTRANSLATE_RESOURCE_HANDLER)(
+  IN OUT PVOID Context OPTIONAL,
+  IN PCM_PARTIAL_RESOURCE_DESCRIPTOR Source,
+  IN RESOURCE_TRANSLATION_DIRECTION Direction,
+  IN ULONG AlternativesCount OPTIONAL,
+  IN IO_RESOURCE_DESCRIPTOR Alternatives[],
+  IN PDEVICE_OBJECT PhysicalDeviceObject,
+  OUT PCM_PARTIAL_RESOURCE_DESCRIPTOR Target);
+
+typedef NTSTATUS
+(NTAPI *PTRANSLATE_RESOURCE_REQUIREMENTS_HANDLER)(
+  IN OUT PVOID Context OPTIONAL,
+  IN PIO_RESOURCE_DESCRIPTOR Source,
+  IN PDEVICE_OBJECT PhysicalDeviceObject,
+  OUT PULONG TargetCount,
+  OUT PIO_RESOURCE_DESCRIPTOR *Target);
+
+typedef struct _TRANSLATOR_INTERFACE {
+  USHORT Size;
+  USHORT Version;
+  PVOID Context;
+  PINTERFACE_REFERENCE InterfaceReference;
+  PINTERFACE_DEREFERENCE InterfaceDereference;
+  PTRANSLATE_RESOURCE_HANDLER TranslateResources;
+  PTRANSLATE_RESOURCE_REQUIREMENTS_HANDLER TranslateResourceRequirements;
+} TRANSLATOR_INTERFACE, *PTRANSLATOR_INTERFACE;
+
+/* I/O Manager Functions */
+
+/*
+ * VOID IoAssignArcName(
+ *   IN PUNICODE_STRING  ArcName,
+ *   IN PUNICODE_STRING  DeviceName);
+ */
+#define IoAssignArcName(_ArcName, _DeviceName) ( \
+  IoCreateSymbolicLink((_ArcName), (_DeviceName)))
+
+/*
+ * VOID
+ * IoDeassignArcName(
+ *   IN PUNICODE_STRING  ArcName)
+ */
+#define IoDeassignArcName IoDeleteSymbolicLink
+
+VOID
+FORCEINLINE
+NTAPI
+IoInitializeDriverCreateContext(
+  PIO_DRIVER_CREATE_CONTEXT DriverContext)
+{
+  RtlZeroMemory(DriverContext, sizeof(IO_DRIVER_CREATE_CONTEXT));
+  DriverContext->Size = sizeof(IO_DRIVER_CREATE_CONTEXT);
+}
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+#if !(defined(USE_DMA_MACROS) && (defined(_NTDDK_) || defined(_NTDRIVER_)) || defined(_WDM_INCLUDED_))
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoAllocateAdapterChannel(
+  IN PADAPTER_OBJECT AdapterObject,
+  IN PDEVICE_OBJECT DeviceObject,
+  IN ULONG NumberOfMapRegisters,
+  IN PDRIVER_CONTROL ExecutionRoutine,
+  IN PVOID Context);
+#endif
+
+//DECLSPEC_DEPRECATED_DDK
+NTHALAPI
+PHYSICAL_ADDRESS
+NTAPI
+IoMapTransfer(
+  IN PADAPTER_OBJECT AdapterObject,
+  IN PMDL Mdl,
+  IN PVOID MapRegisterBase,
+  IN PVOID CurrentVa,
+  IN OUT PULONG Length,
+  IN BOOLEAN WriteToDevice);
+
+NTKERNELAPI
+VOID
+NTAPI
+IoAllocateController(
+  IN PCONTROLLER_OBJECT ControllerObject,
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PDRIVER_CONTROL ExecutionRoutine,
+  IN PVOID Context OPTIONAL);
+
+NTKERNELAPI
+PCONTROLLER_OBJECT
+NTAPI
+IoCreateController(
+  IN ULONG Size);
+
+NTKERNELAPI
+VOID
+NTAPI
+IoDeleteController(
+  IN PCONTROLLER_OBJECT ControllerObject);
+
+NTKERNELAPI
+VOID
+NTAPI
+IoFreeController(
+  IN PCONTROLLER_OBJECT ControllerObject);
+
+NTKERNELAPI
+PCONFIGURATION_INFORMATION
+NTAPI
+IoGetConfigurationInformation(VOID);
+
+NTKERNELAPI
+PDEVICE_OBJECT
+NTAPI
+IoGetDeviceToVerify(
+  IN PETHREAD Thread);
+
+NTKERNELAPI
+VOID
+NTAPI
+IoCancelFileOpen(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PFILE_OBJECT FileObject);
+
+NTKERNELAPI
+PGENERIC_MAPPING
+NTAPI
+IoGetFileObjectGenericMapping(VOID);
+
+NTKERNELAPI
+PIRP
+NTAPI
+IoMakeAssociatedIrp(
+  IN PIRP Irp,
+  IN CCHAR StackSize);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoQueryDeviceDescription(
+  IN PINTERFACE_TYPE BusType OPTIONAL,
+  IN PULONG BusNumber OPTIONAL,
+  IN PCONFIGURATION_TYPE ControllerType OPTIONAL,
+  IN PULONG ControllerNumber OPTIONAL,
+  IN PCONFIGURATION_TYPE PeripheralType OPTIONAL,
+  IN PULONG PeripheralNumber OPTIONAL,
+  IN PIO_QUERY_DEVICE_ROUTINE CalloutRoutine,
+  IN OUT PVOID Context OPTIONAL);
+
+NTKERNELAPI
+VOID
+NTAPI
+IoRaiseHardError(
+  IN PIRP Irp,
+  IN PVPB Vpb OPTIONAL,
+  IN PDEVICE_OBJECT RealDeviceObject);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+IoRaiseInformationalHardError(
+  IN NTSTATUS ErrorStatus,
+  IN PUNICODE_STRING String OPTIONAL,
+  IN PKTHREAD Thread OPTIONAL);
+
+NTKERNELAPI
+VOID
+NTAPI
+IoRegisterBootDriverReinitialization(
+  IN PDRIVER_OBJECT DriverObject,
+  IN PDRIVER_REINITIALIZE DriverReinitializationRoutine,
+  IN PVOID Context OPTIONAL);
+
+NTKERNELAPI
+VOID
+NTAPI
+IoRegisterDriverReinitialization(
+  IN PDRIVER_OBJECT DriverObject,
+  IN PDRIVER_REINITIALIZE DriverReinitializationRoutine,
+  IN PVOID Context OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoAttachDeviceByPointer(
+  IN PDEVICE_OBJECT SourceDevice,
+  IN PDEVICE_OBJECT TargetDevice);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoReportDetectedDevice(
+  IN PDRIVER_OBJECT DriverObject,
+  IN INTERFACE_TYPE LegacyBusType,
+  IN ULONG BusNumber,
+  IN ULONG SlotNumber,
+  IN PCM_RESOURCE_LIST ResourceList OPTIONAL,
+  IN PIO_RESOURCE_REQUIREMENTS_LIST ResourceRequirements OPTIONAL,
+  IN BOOLEAN ResourceAssigned,
+  IN OUT PDEVICE_OBJECT *DeviceObject OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoReportResourceForDetection(
+  IN PDRIVER_OBJECT DriverObject,
+  IN PCM_RESOURCE_LIST DriverList OPTIONAL,
+  IN ULONG DriverListSize OPTIONAL,
+  IN PDEVICE_OBJECT DeviceObject OPTIONAL,
+  IN PCM_RESOURCE_LIST DeviceList OPTIONAL,
+  IN ULONG DeviceListSize OPTIONAL,
+  OUT PBOOLEAN ConflictDetected);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoReportResourceUsage(
+  IN PUNICODE_STRING DriverClassName OPTIONAL,
+  IN PDRIVER_OBJECT DriverObject,
+  IN PCM_RESOURCE_LIST DriverList OPTIONAL,
+  IN ULONG DriverListSize OPTIONAL,
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PCM_RESOURCE_LIST DeviceList OPTIONAL,
+  IN ULONG DeviceListSize OPTIONAL,
+  IN BOOLEAN OverrideConflict,
+  OUT PBOOLEAN ConflictDetected);
+
+NTKERNELAPI
+VOID
+NTAPI
+IoSetHardErrorOrVerifyDevice(
+  IN PIRP Irp,
+  IN PDEVICE_OBJECT DeviceObject);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoAssignResources(
+  IN PUNICODE_STRING RegistryPath,
+  IN PUNICODE_STRING DriverClassName OPTIONAL,
+  IN PDRIVER_OBJECT DriverObject,
+  IN PDEVICE_OBJECT DeviceObject OPTIONAL,
+  IN PIO_RESOURCE_REQUIREMENTS_LIST RequestedResources OPTIONAL,
+  IN OUT PCM_RESOURCE_LIST *AllocatedResources);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+IoSetThreadHardErrorMode(
+  IN BOOLEAN EnableHardErrors);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
+#if (NTDDI_VERSION >= NTDDI_WIN2KSP3)
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+IoIsFileOriginRemote(
+  IN PFILE_OBJECT FileObject);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoSetFileOrigin(
+  IN PFILE_OBJECT FileObject,
+  IN BOOLEAN Remote);
+
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+
+NTKERNELAPI
+NTSTATUS
+FASTCALL
+IoReadPartitionTable(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN ULONG SectorSize,
+  IN BOOLEAN ReturnRecognizedPartitions,
+  OUT struct _DRIVE_LAYOUT_INFORMATION **PartitionBuffer);
+
+NTKERNELAPI
+NTSTATUS
+FASTCALL
+IoSetPartitionInformation(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN ULONG SectorSize,
+  IN ULONG PartitionNumber,
+  IN ULONG PartitionType);
+
+NTKERNELAPI
+NTSTATUS
+FASTCALL
+IoWritePartitionTable(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN ULONG SectorSize,
+  IN ULONG SectorsPerTrack,
+  IN ULONG NumberOfHeads,
+  IN struct _DRIVE_LAYOUT_INFORMATION *PartitionBuffer);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoCreateDisk(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN struct _CREATE_DISK* Disk OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoReadDiskSignature(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN ULONG BytesPerSector,
+  OUT PDISK_SIGNATURE Signature);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoReadPartitionTableEx(
+  IN PDEVICE_OBJECT DeviceObject,
+  OUT struct _DRIVE_LAYOUT_INFORMATION_EX **PartitionBuffer);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoSetPartitionInformationEx(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN ULONG PartitionNumber,
+  IN struct _SET_PARTITION_INFORMATION_EX *PartitionInfo);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoSetSystemPartition(
+  IN PUNICODE_STRING VolumeNameString);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoVerifyPartitionTable(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN BOOLEAN FixErrors);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoVolumeDeviceToDosName(
+  IN PVOID VolumeDeviceObject,
+  OUT PUNICODE_STRING DosName);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoWritePartitionTableEx(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN struct _DRIVE_LAYOUT_INFORMATION_EX *DriveLayout);
+
+NTKERNELAPI
+NTSTATUS
+IoCreateFileSpecifyDeviceObjectHint(
+  OUT PHANDLE FileHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  IN PLARGE_INTEGER AllocationSize OPTIONAL,
+  IN ULONG FileAttributes,
+  IN ULONG ShareAccess,
+  IN ULONG Disposition,
+  IN ULONG CreateOptions,
+  IN PVOID EaBuffer OPTIONAL,
+  IN ULONG EaLength,
+  IN CREATE_FILE_TYPE CreateFileType,
+  IN PVOID InternalParameters OPTIONAL,
+  IN ULONG Options,
+  IN PVOID DeviceObject OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoAttachDeviceToDeviceStackSafe(
+  IN PDEVICE_OBJECT SourceDevice,
+  IN PDEVICE_OBJECT TargetDevice,
+  OUT PDEVICE_OBJECT *AttachedToDeviceObject);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
+
+#if (NTDDI_VERSION >= NTDDI_WS03)
+NTKERNELAPI
+IO_PAGING_PRIORITY
+FASTCALL
+IoGetPagingIoPriority(
+  IN PIRP Irp);
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WS03SP1)
+BOOLEAN
+NTAPI
+IoTranslateBusAddress(
+  IN INTERFACE_TYPE InterfaceType,
+  IN ULONG BusNumber,
+  IN PHYSICAL_ADDRESS BusAddress,
+  IN OUT PULONG AddressSpace,
+  OUT PPHYSICAL_ADDRESS TranslatedAddress);
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoUpdateDiskGeometry(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN struct _DISK_GEOMETRY_EX* OldDiskGeometry,
+  IN struct _DISK_GEOMETRY_EX* NewDiskGeometry);
+
+PTXN_PARAMETER_BLOCK
+NTAPI
+IoGetTransactionParameterBlock(
+  IN PFILE_OBJECT FileObject);
+
+NTKERNELAPI
+NTSTATUS
+IoCreateFileEx(
+  OUT PHANDLE FileHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  IN PLARGE_INTEGER AllocationSize OPTIONAL,
+  IN ULONG FileAttributes,
+  IN ULONG ShareAccess,
+  IN ULONG Disposition,
+  IN ULONG CreateOptions,
+  IN PVOID EaBuffer OPTIONAL,
+  IN ULONG EaLength,
+  IN CREATE_FILE_TYPE CreateFileType,
+  IN PVOID InternalParameters OPTIONAL,
+  IN ULONG Options,
+  IN PIO_DRIVER_CREATE_CONTEXT DriverContext OPTIONAL);
+
+NTSTATUS
+NTAPI
+IoSetIrpExtraCreateParameter(
+  IN OUT PIRP Irp,
+  IN struct _ECP_LIST *ExtraCreateParameter);
+
+VOID
+NTAPI
+IoClearIrpExtraCreateParameter(
+  IN OUT PIRP Irp);
+
+NTSTATUS
+NTAPI
+IoGetIrpExtraCreateParameter(
+  IN PIRP Irp,
+  OUT struct _ECP_LIST **ExtraCreateParameter OPTIONAL);
+
+BOOLEAN
+NTAPI
+IoIsFileObjectIgnoringSharing(
+  IN PFILE_OBJECT FileObject);
+
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+NTSTATUS
+NTAPI
+IoSetFileObjectIgnoreSharing(
+  IN PFILE_OBJECT FileObject);
+#endif
+
+
+
+
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+NTKERNELAPI
+VOID
+FASTCALL
+HalExamineMBR(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN ULONG SectorSize,
+  IN ULONG MBRTypeIdentifier,
+  OUT PVOID *Buffer);
+#endif
+
+struct _LOADER_PARAMETER_BLOCK;
+struct _CREATE_DISK;
+struct _DRIVE_LAYOUT_INFORMATION_EX;
+struct _SET_PARTITION_INFORMATION_EX;
+
+//
+// GUID and UUID
+//
+#ifndef GUID_DEFINED
+#include <guiddef.h>
+#endif
 
 typedef enum _HAL_QUERY_INFORMATION_CLASS {
   HalInstalledBusInformation,
@@ -3046,39 +3865,6 @@ typedef struct _PM_DISPATCH_TABLE {
   ULONG Version;
   PVOID Function[1];
 } PM_DISPATCH_TABLE, *PPM_DISPATCH_TABLE;
-
-typedef enum _RESOURCE_TRANSLATION_DIRECTION {
-  TranslateChildToParent,
-  TranslateParentToChild
-} RESOURCE_TRANSLATION_DIRECTION;
-
-typedef NTSTATUS
-(NTAPI *PTRANSLATE_RESOURCE_HANDLER)(
-  IN OUT PVOID Context,
-  IN PCM_PARTIAL_RESOURCE_DESCRIPTOR Source,
-  IN RESOURCE_TRANSLATION_DIRECTION Direction,
-  IN ULONG AlternativesCount OPTIONAL,
-  IN IO_RESOURCE_DESCRIPTOR Alternatives[],
-  IN PDEVICE_OBJECT PhysicalDeviceObject,
-  OUT PCM_PARTIAL_RESOURCE_DESCRIPTOR Target);
-
-typedef NTSTATUS
-(NTAPI *PTRANSLATE_RESOURCE_REQUIREMENTS_HANDLER)(
-  IN PVOID Context OPTIONAL,
-  IN PIO_RESOURCE_DESCRIPTOR Source,
-  IN PDEVICE_OBJECT PhysicalDeviceObject,
-  OUT PULONG TargetCount,
-  OUT PIO_RESOURCE_DESCRIPTOR *Target);
-
-typedef struct _TRANSLATOR_INTERFACE {
-  USHORT Size;
-  USHORT Version;
-  PVOID Context;
-  PINTERFACE_REFERENCE InterfaceReference;
-  PINTERFACE_DEREFERENCE InterfaceDereference;
-  PTRANSLATE_RESOURCE_HANDLER TranslateResources;
-  PTRANSLATE_RESOURCE_REQUIREMENTS_HANDLER TranslateResourceRequirements;
-} TRANSLATOR_INTERFACE, *PTRANSLATOR_INTERFACE;
 
 typedef VOID
 (FASTCALL *pHalExamineMBR)(
@@ -3392,45 +4178,6 @@ extern NTKERNELAPI HAL_DISPATCH HalDispatchTable;
 #define HalEndOfBoot                    HALDISPATCH->HalEndOfBoot
 #define HalMirrorVerify                 HALDISPATCH->HalMirrorVerify
 
-typedef struct _IMAGE_INFO {
-  _ANONYMOUS_UNION union {
-    ULONG Properties;
-    _ANONYMOUS_STRUCT struct {
-      ULONG ImageAddressingMode:8;
-      ULONG SystemModeImage:1;
-      ULONG ImageMappedToAllPids:1;
-      ULONG ExtendedInfoPresent:1;
-      ULONG Reserved:22;
-    } DUMMYSTRUCTNAME;
-  } DUMMYUNIONNAME;
-  PVOID ImageBase;
-  ULONG ImageSelector;
-  SIZE_T ImageSize;
-  ULONG ImageSectionNumber;
-} IMAGE_INFO, *PIMAGE_INFO;
-
-#define IMAGE_ADDRESSING_MODE_32BIT       3
-
-typedef enum _IO_QUERY_DEVICE_DATA_FORMAT {
-  IoQueryDeviceIdentifier = 0,
-  IoQueryDeviceConfigurationData,
-  IoQueryDeviceComponentInformation,
-  IoQueryDeviceMaxData
-} IO_QUERY_DEVICE_DATA_FORMAT, *PIO_QUERY_DEVICE_DATA_FORMAT;
-
-typedef struct _DISK_SIGNATURE {
-  ULONG PartitionStyle;
-  _ANONYMOUS_UNION union {
-    struct {
-      ULONG Signature;
-      ULONG CheckSum;
-    } Mbr;
-    struct {
-      GUID DiskId;
-    } Gpt;
-  } DUMMYUNIONNAME;
-} DISK_SIGNATURE, *PDISK_SIGNATURE;
-
 extern NTKERNELAPI PVOID MmHighestUserAddress;
 extern NTKERNELAPI PVOID MmSystemRangeStart;
 extern NTKERNELAPI ULONG MmUserProbeAddress;
@@ -3619,53 +4366,6 @@ Exfi386InterlockedExchangeUlong(
 
 #endif /* _X86_ */
 
-typedef struct _CONTROLLER_OBJECT {
-  CSHORT Type;
-  CSHORT Size;
-  PVOID ControllerExtension;
-  KDEVICE_QUEUE DeviceWaitQueue;
-  ULONG Spare1;
-  LARGE_INTEGER Spare2;
-} CONTROLLER_OBJECT, *PCONTROLLER_OBJECT;
-
-typedef struct _CONFIGURATION_INFORMATION {
-  ULONG DiskCount;
-  ULONG FloppyCount;
-  ULONG CdRomCount;
-  ULONG TapeCount;
-  ULONG ScsiPortCount;
-  ULONG SerialCount;
-  ULONG ParallelCount;
-  BOOLEAN AtDiskPrimaryAddressClaimed;
-  BOOLEAN AtDiskSecondaryAddressClaimed;
-  ULONG Version;
-  ULONG MediumChangerCount;
-} CONFIGURATION_INFORMATION, *PCONFIGURATION_INFORMATION;
-
-typedef
-NTSTATUS
-(NTAPI *PIO_QUERY_DEVICE_ROUTINE)(
-  IN PVOID Context,
-  IN PUNICODE_STRING PathName,
-  IN INTERFACE_TYPE BusType,
-  IN ULONG BusNumber,
-  IN PKEY_VALUE_FULL_INFORMATION *BusInformation,
-  IN CONFIGURATION_TYPE ControllerType,
-  IN ULONG ControllerNumber,
-  IN PKEY_VALUE_FULL_INFORMATION *ControllerInformation,
-  IN CONFIGURATION_TYPE PeripheralType,
-  IN ULONG PeripheralNumber,
-  IN PKEY_VALUE_FULL_INFORMATION *PeripheralInformation);
-
-typedef
-VOID
-(NTAPI DRIVER_REINITIALIZE)(
-  IN struct _DRIVER_OBJECT *DriverObject,
-  IN PVOID Context,
-  IN ULONG Count);
-
-typedef DRIVER_REINITIALIZE *PDRIVER_REINITIALIZE;
-
 /** Filesystem runtime library routines **/
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
@@ -3829,17 +4529,6 @@ HalTranslateBusAddress(
 
 #endif
 
-#if (NTDDI_VERSION >= NTDDI_WINXP)
-NTKERNELAPI
-VOID
-FASTCALL
-HalExamineMBR(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN ULONG SectorSize,
-  IN ULONG MBRTypeIdentifier,
-  OUT PVOID *Buffer);
-#endif
-
 #if defined(USE_DMA_MACROS) && !defined(_NTHAL_) && (defined(_NTDDK_) || defined(_NTDRIVER_)) || defined(_WDM_INCLUDED_) 
 // nothing here
 #else
@@ -3914,403 +4603,7 @@ HalAllocateAdapterChannel(
 
 #endif /* defined(USE_DMA_MACROS) && !defined(_NTHAL_) && (defined(_NTDDK_) || defined(_NTDRIVER_)) || defined(_WDM_INCLUDED_)  */
 
-/* I/O Manager Functions */
-
-/*
- * VOID IoAssignArcName(
- *   IN PUNICODE_STRING  ArcName,
- *   IN PUNICODE_STRING  DeviceName);
- */
-#define IoAssignArcName(_ArcName, _DeviceName) ( \
-  IoCreateSymbolicLink((_ArcName), (_DeviceName)))
-
-/*
- * VOID
- * IoDeassignArcName(
- *   IN PUNICODE_STRING  ArcName)
- */
-#define IoDeassignArcName IoDeleteSymbolicLink
-
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
-
-#if !(defined(USE_DMA_MACROS) && (defined(_NTDDK_) || defined(_NTDRIVER_)) || defined(_WDM_INCLUDED_))
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoAllocateAdapterChannel(
-  IN PADAPTER_OBJECT AdapterObject,
-  IN PDEVICE_OBJECT DeviceObject,
-  IN ULONG NumberOfMapRegisters,
-  IN PDRIVER_CONTROL ExecutionRoutine,
-  IN PVOID Context);
-#endif
-
-//DECLSPEC_DEPRECATED_DDK
-NTHALAPI
-PHYSICAL_ADDRESS
-NTAPI
-IoMapTransfer(
-  IN PADAPTER_OBJECT AdapterObject,
-  IN PMDL Mdl,
-  IN PVOID MapRegisterBase,
-  IN PVOID CurrentVa,
-  IN OUT PULONG Length,
-  IN BOOLEAN WriteToDevice);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoAllocateController(
-  IN PCONTROLLER_OBJECT ControllerObject,
-  IN PDEVICE_OBJECT DeviceObject,
-  IN PDRIVER_CONTROL ExecutionRoutine,
-  IN PVOID Context OPTIONAL);
-
-NTKERNELAPI
-PCONTROLLER_OBJECT
-NTAPI
-IoCreateController(
-  IN ULONG Size);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoDeleteController(
-  IN PCONTROLLER_OBJECT ControllerObject);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoFreeController(
-  IN PCONTROLLER_OBJECT ControllerObject);
-
-NTKERNELAPI
-PCONFIGURATION_INFORMATION
-NTAPI
-IoGetConfigurationInformation(
-  VOID);
-
-NTKERNELAPI
-PDEVICE_OBJECT
-NTAPI
-IoGetDeviceToVerify(
-  IN PETHREAD Thread);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoCancelFileOpen(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN PFILE_OBJECT FileObject);
-
-NTKERNELAPI
-PGENERIC_MAPPING
-NTAPI
-IoGetFileObjectGenericMapping(
-  VOID);
-
-NTKERNELAPI
-PIRP
-NTAPI
-IoMakeAssociatedIrp(
-  IN PIRP Irp,
-  IN CCHAR StackSize);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoQueryDeviceDescription(
-  IN PINTERFACE_TYPE BusType OPTIONAL,
-  IN PULONG BusNumber OPTIONAL,
-  IN PCONFIGURATION_TYPE ControllerType OPTIONAL,
-  IN PULONG ControllerNumber OPTIONAL,
-  IN PCONFIGURATION_TYPE PeripheralType OPTIONAL,
-  IN PULONG PeripheralNumber OPTIONAL,
-  IN PIO_QUERY_DEVICE_ROUTINE CalloutRoutine,
-  IN OUT PVOID Context OPTIONAL);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoRaiseHardError(
-  IN PIRP Irp,
-  IN PVPB Vpb OPTIONAL,
-  IN PDEVICE_OBJECT RealDeviceObject);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-IoRaiseInformationalHardError(
-  IN NTSTATUS ErrorStatus,
-  IN PUNICODE_STRING String OPTIONAL,
-  IN PKTHREAD Thread OPTIONAL);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoRegisterBootDriverReinitialization(
-  IN PDRIVER_OBJECT DriverObject,
-  IN PDRIVER_REINITIALIZE DriverReinitializationRoutine,
-  IN PVOID Context OPTIONAL);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoRegisterDriverReinitialization(
-  IN PDRIVER_OBJECT DriverObject,
-  IN PDRIVER_REINITIALIZE DriverReinitializationRoutine,
-  IN PVOID Context OPTIONAL);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoAttachDeviceByPointer(
-  IN PDEVICE_OBJECT SourceDevice,
-  IN PDEVICE_OBJECT TargetDevice);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoReportDetectedDevice(
-  IN PDRIVER_OBJECT DriverObject,
-  IN INTERFACE_TYPE LegacyBusType,
-  IN ULONG BusNumber,
-  IN ULONG SlotNumber,
-  IN PCM_RESOURCE_LIST ResourceList OPTIONAL,
-  IN PIO_RESOURCE_REQUIREMENTS_LIST ResourceRequirements OPTIONAL,
-  IN BOOLEAN ResourceAssigned,
-  IN OUT PDEVICE_OBJECT *DeviceObject);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoReportResourceForDetection(
-  IN PDRIVER_OBJECT DriverObject,
-  IN PCM_RESOURCE_LIST DriverList OPTIONAL,
-  IN ULONG DriverListSize OPTIONAL,
-  IN PDEVICE_OBJECT DeviceObject OPTIONAL,
-  IN PCM_RESOURCE_LIST DeviceList OPTIONAL,
-  IN ULONG DeviceListSize OPTIONAL,
-  OUT PBOOLEAN ConflictDetected);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoReportResourceUsage(
-  IN PUNICODE_STRING DriverClassName OPTIONAL,
-  IN PDRIVER_OBJECT DriverObject,
-  IN PCM_RESOURCE_LIST DriverList OPTIONAL,
-  IN ULONG DriverListSize OPTIONAL,
-  IN PDEVICE_OBJECT DeviceObject,
-  IN PCM_RESOURCE_LIST DeviceList OPTIONAL,
-  IN ULONG DeviceListSize OPTIONAL,
-  IN BOOLEAN OverrideConflict,
-  OUT PBOOLEAN ConflictDetected);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoSetHardErrorOrVerifyDevice(
-  IN PIRP Irp,
-  IN PDEVICE_OBJECT DeviceObject);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoAssignResources(
-  IN PUNICODE_STRING RegistryPath,
-  IN PUNICODE_STRING DriverClassName OPTIONAL,
-  IN PDRIVER_OBJECT DriverObject,
-  IN PDEVICE_OBJECT DeviceObject OPTIONAL,
-  IN PIO_RESOURCE_REQUIREMENTS_LIST RequestedResources OPTIONAL,
-  IN OUT PCM_RESOURCE_LIST *AllocatedResources);
-
-#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
-
-#if (NTDDI_VERSION >= NTDDI_WINXP)
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoCreateDisk(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN struct _CREATE_DISK* Disk OPTIONAL);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoReadDiskSignature(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN ULONG BytesPerSector,
-  OUT PDISK_SIGNATURE Signature);
-
-NTKERNELAPI
-NTSTATUS
-FASTCALL
-IoReadPartitionTable(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN ULONG SectorSize,
-  IN BOOLEAN ReturnRecognizedPartitions,
-  OUT struct _DRIVE_LAYOUT_INFORMATION **PartitionBuffer);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoReadPartitionTableEx(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN struct _DRIVE_LAYOUT_INFORMATION_EX **PartitionBuffer);
-
-NTKERNELAPI
-NTSTATUS
-FASTCALL
-IoSetPartitionInformation(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN ULONG SectorSize,
-  IN ULONG PartitionNumber,
-  IN ULONG PartitionType);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoSetPartitionInformationEx(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN ULONG PartitionNumber,
-  IN struct _SET_PARTITION_INFORMATION_EX *PartitionInfo);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoSetSystemPartition(
-  IN PUNICODE_STRING VolumeNameString);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-IoSetThreadHardErrorMode(
-  IN BOOLEAN EnableHardErrors);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoVerifyPartitionTable(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN BOOLEAN FixErrors);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoVolumeDeviceToDosName(
-  IN PVOID VolumeDeviceObject,
-  OUT PUNICODE_STRING DosName);
-
-NTKERNELAPI
-NTSTATUS
-FASTCALL
-IoWritePartitionTable(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN ULONG SectorSize,
-  IN ULONG SectorsPerTrack,
-  IN ULONG NumberOfHeads,
-  IN struct _DRIVE_LAYOUT_INFORMATION *PartitionBuffer);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-IoWritePartitionTableEx(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN struct _DRIVE_LAYOUT_INFORMATION_EX *DriveLayout);
-
-#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
-
-/** Process manager types **/
-
-typedef VOID
-(NTAPI *PCREATE_PROCESS_NOTIFY_ROUTINE)(
-  IN HANDLE ParentId,
-  IN HANDLE ProcessId,
-  IN BOOLEAN Create);
-
-typedef VOID
-(NTAPI *PCREATE_THREAD_NOTIFY_ROUTINE)(
-  IN HANDLE ProcessId,
-  IN HANDLE ThreadId,
-  IN BOOLEAN Create);
-
-typedef VOID
-(NTAPI *PLOAD_IMAGE_NOTIFY_ROUTINE)(
-  IN PUNICODE_STRING FullImageName,
-  IN HANDLE ProcessId,
-  IN PIMAGE_INFO ImageInfo);
-
 /** Process manager routines **/
-
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-PsSetLoadImageNotifyRoutine(
-  IN PLOAD_IMAGE_NOTIFY_ROUTINE NotifyRoutine);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-PsSetCreateThreadNotifyRoutine(
-  IN PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-PsSetCreateProcessNotifyRoutine(
-  IN PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine,
-  IN BOOLEAN Remove);
-
-NTKERNELAPI
-HANDLE
-NTAPI
-PsGetCurrentProcessId(
-  VOID);
-
-NTKERNELAPI
-HANDLE
-NTAPI
-PsGetCurrentThreadId(
-  VOID);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-PsGetVersion(
-  OUT PULONG MajorVersion OPTIONAL,
-  OUT PULONG MinorVersion OPTIONAL,
-  OUT PULONG BuildNumber OPTIONAL,
-  OUT PUNICODE_STRING CSDVersion OPTIONAL);
-
-#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
-
-#if (NTDDI_VERSION >= NTDDI_WINXP)
-
-NTKERNELAPI
-HANDLE
-NTAPI
-PsGetProcessId(
-  IN PEPROCESS Process);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-PsRemoveCreateThreadNotifyRoutine(
-  IN PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-PsRemoveLoadImageNotifyRoutine(
-  IN PLOAD_IMAGE_NOTIFY_ROUTINE NotifyRoutine);
-
-#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
-
-extern NTKERNELAPI PEPROCESS PsInitialSystemProcess;
 
 /* ZwXxx Functions */
 
