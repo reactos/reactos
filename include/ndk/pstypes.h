@@ -731,7 +731,11 @@ typedef struct _PEB
     PVOID WerRegistrationData;
     PVOID WerShipAssertPtr;
 #endif
-} PEB, *PPEB;
+} PEB;
+
+#if !defined(_NTDDK_) && !defined(_NTIFS_INCLUDED_)
+typedef PEB *PPEB;
+#endif
 
 //
 // GDI Batch Descriptor
@@ -925,7 +929,7 @@ typedef struct _PROCESS_BASIC_INFORMATION
     KPRIORITY BasePriority;
     ULONG_PTR UniqueProcessId;
     ULONG_PTR InheritedFromUniqueProcessId;
-} PROCESS_BASIC_INFORMATION,*PPROCESS_BASIC_INFORMATION;
+} PROCESS_BASIC_INFORMATION, *PPROCESS_BASIC_INFORMATION;
 
 typedef struct _PROCESS_ACCESS_TOKEN
 {

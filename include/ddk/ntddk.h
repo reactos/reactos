@@ -62,6 +62,9 @@ typedef struct _DEVICE_HANDLER_OBJECT *PDEVICE_HANDLER_OBJECT;
 typedef struct _KAFFINITY_EX *PKAFFINITY_EX;
 #endif
 typedef struct _PEB *PPEB;
+
+#ifndef _NTIMAGE_
+
 typedef struct _IMAGE_NT_HEADERS *PIMAGE_NT_HEADERS32;
 typedef struct _IMAGE_NT_HEADERS64 *PIMAGE_NT_HEADERS64;
 
@@ -70,6 +73,8 @@ typedef PIMAGE_NT_HEADERS64 PIMAGE_NT_HEADERS;
 #else
 typedef PIMAGE_NT_HEADERS32 PIMAGE_NT_HEADERS;
 #endif
+
+#endif /* _NTIMAGE_ */
 
 #define PsGetCurrentProcess IoGetCurrentProcess
 
@@ -152,7 +157,7 @@ typedef struct _CONTEXT {
   ULONG Esp;
   ULONG SegSs;
   UCHAR ExtendedRegisters[MAXIMUM_SUPPORTED_EXTENSION];
-} CONTEXT, *PCONTEXT;
+} CONTEXT;
 #include "poppack.h"
 
 #endif /* _X86_ */
@@ -263,7 +268,7 @@ typedef struct DECLSPEC_ALIGN(16) _CONTEXT {
   ULONG64 LastBranchFromRip;
   ULONG64 LastExceptionToRip;
   ULONG64 LastExceptionFromRip;
-} CONTEXT, *PCONTEXT;
+} CONTEXT;
 
 #endif /* _AMD64_ */
 
@@ -2185,10 +2190,6 @@ typedef enum _CONFIGURATION_TYPE {
   MaximumType
 } CONFIGURATION_TYPE, *PCONFIGURATION_TYPE;
 #endif /* !_ARC_DDK_ */
-
-#if (NTDDI_VERSION < NTDDI_WIN7) || defined(_X86_) || !defined(NT_PROCESSOR_GROUPS)
-#define SINGLE_GROUP_LEGACY_API           1
-#endif
 
 #if defined(_X86_) || defined(_AMD64_)
 #define PAUSE_PROCESSOR YieldProcessor();
