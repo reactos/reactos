@@ -3739,32 +3739,19 @@ IoSetFileObjectIgnoreSharing(
   IN PFILE_OBJECT FileObject);
 #endif
 
+typedef BOOLEAN
+(NTAPI *PHAL_RESET_DISPLAY_PARAMETERS)(
+  IN ULONG Columns,
+  IN ULONG Rows);
 
+typedef PBUS_HANDLER
+(FASTCALL *pHalHandlerForBus)(
+  IN INTERFACE_TYPE InterfaceType,
+  IN ULONG BusNumber);
 
-
-
-#if (NTDDI_VERSION >= NTDDI_WINXP)
-NTKERNELAPI
-VOID
-FASTCALL
-HalExamineMBR(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN ULONG SectorSize,
-  IN ULONG MBRTypeIdentifier,
-  OUT PVOID *Buffer);
-#endif
-
-struct _LOADER_PARAMETER_BLOCK;
-struct _CREATE_DISK;
-struct _DRIVE_LAYOUT_INFORMATION_EX;
-struct _SET_PARTITION_INFORMATION_EX;
-
-//
-// GUID and UUID
-//
-#ifndef GUID_DEFINED
-#include <guiddef.h>
-#endif
+typedef VOID
+(FASTCALL *pHalReferenceBusHandler)(
+  IN PBUS_HANDLER BusHandler);
 
 typedef enum _HAL_QUERY_INFORMATION_CLASS {
   HalInstalledBusInformation,
@@ -3812,59 +3799,18 @@ typedef enum _HAL_SET_INFORMATION_CLASS {
   HalProfileDpgoSourceInterruptHandler
 } HAL_SET_INFORMATION_CLASS, *PHAL_SET_INFORMATION_CLASS;
 
-typedef struct _HAL_PROFILE_SOURCE_INTERVAL {
-  KPROFILE_SOURCE Source;
-  ULONG_PTR Interval;
-} HAL_PROFILE_SOURCE_INTERVAL, *PHAL_PROFILE_SOURCE_INTERVAL;
+typedef NTSTATUS
+(NTAPI *pHalQuerySystemInformation)(
+  IN HAL_QUERY_INFORMATION_CLASS InformationClass,
+  IN ULONG BufferSize,
+  IN OUT PVOID Buffer,
+  OUT PULONG ReturnedLength);
 
-typedef struct _HAL_PROFILE_SOURCE_INFORMATION {
-  KPROFILE_SOURCE Source;
-  BOOLEAN Supported;
-  ULONG Interval;
-} HAL_PROFILE_SOURCE_INFORMATION, *PHAL_PROFILE_SOURCE_INFORMATION;
-
-typedef struct _MAP_REGISTER_ENTRY {
-  PVOID MapRegister;
-  BOOLEAN WriteToDevice;
-} MAP_REGISTER_ENTRY, *PMAP_REGISTER_ENTRY;
-
-typedef struct _DEBUG_DEVICE_ADDRESS {
-  UCHAR Type;
-  BOOLEAN Valid;
-  UCHAR Reserved[2];
-  PUCHAR TranslatedAddress;
-  ULONG Length;
-} DEBUG_DEVICE_ADDRESS, *PDEBUG_DEVICE_ADDRESS;
-
-typedef struct _DEBUG_MEMORY_REQUIREMENTS {
-  PHYSICAL_ADDRESS Start;
-  PHYSICAL_ADDRESS MaxEnd;
-  PVOID VirtualAddress;
-  ULONG Length;
-  BOOLEAN Cached;
-  BOOLEAN Aligned;
-} DEBUG_MEMORY_REQUIREMENTS, *PDEBUG_MEMORY_REQUIREMENTS;
-
-typedef struct _DEBUG_DEVICE_DESCRIPTOR {
-  ULONG Bus;
-  ULONG Slot;
-  USHORT Segment;
-  USHORT VendorID;
-  USHORT DeviceID;
-  UCHAR BaseClass;
-  UCHAR SubClass;
-  UCHAR ProgIf;
-  BOOLEAN Initialized;
-  BOOLEAN Configured;
-  DEBUG_DEVICE_ADDRESS BaseAddress[6];
-  DEBUG_MEMORY_REQUIREMENTS Memory;
-} DEBUG_DEVICE_DESCRIPTOR, *PDEBUG_DEVICE_DESCRIPTOR;
-
-typedef struct _PM_DISPATCH_TABLE {
-  ULONG Signature;
-  ULONG Version;
-  PVOID Function[1];
-} PM_DISPATCH_TABLE, *PPM_DISPATCH_TABLE;
+typedef NTSTATUS
+(NTAPI *pHalSetSystemInformation)(
+  IN HAL_SET_INFORMATION_CLASS InformationClass,
+  IN ULONG BufferSize,
+  IN PVOID Buffer);
 
 typedef VOID
 (FASTCALL *pHalExamineMBR)(
@@ -3895,28 +3841,6 @@ typedef NTSTATUS
   IN ULONG NumberOfHeads,
   IN struct _DRIVE_LAYOUT_INFORMATION *PartitionBuffer);
 
-typedef PBUS_HANDLER
-(FASTCALL *pHalHandlerForBus)(
-  IN INTERFACE_TYPE InterfaceType,
-  IN ULONG BusNumber);
-
-typedef VOID
-(FASTCALL *pHalReferenceBusHandler)(
-  IN PBUS_HANDLER BusHandler);
-
-typedef NTSTATUS
-(NTAPI *pHalQuerySystemInformation)(
-  IN HAL_QUERY_INFORMATION_CLASS InformationClass,
-  IN ULONG BufferSize,
-  IN OUT PVOID Buffer,
-  OUT PULONG ReturnedLength);
-
-typedef NTSTATUS
-(NTAPI *pHalSetSystemInformation)(
-  IN HAL_SET_INFORMATION_CLASS InformationClass,
-  IN ULONG BufferSize,
-  IN PVOID Buffer);
-
 typedef NTSTATUS
 (NTAPI *pHalQueryBusSlots)(
   IN PBUS_HANDLER BusHandler,
@@ -3927,6 +3851,12 @@ typedef NTSTATUS
 typedef NTSTATUS
 (NTAPI *pHalInitPnpDriver)(
   VOID);
+
+typedef struct _PM_DISPATCH_TABLE {
+  ULONG Signature;
+  ULONG Version;
+  PVOID Function[1];
+} PM_DISPATCH_TABLE, *PPM_DISPATCH_TABLE;
 
 typedef NTSTATUS
 (NTAPI *pHalInitPowerManagement)(
@@ -3967,115 +3897,91 @@ typedef NTSTATUS
   IN PHYSICAL_ADDRESS PhysicalAddress,
   IN LARGE_INTEGER NumberOfBytes);
 
-typedef VOID
-(NTAPI *pHalEndOfBoot)(
-  VOID);
+typedef struct _DEBUG_DEVICE_ADDRESS {
+  UCHAR Type;
+  BOOLEAN Valid;
+  UCHAR Reserved[2];
+  PUCHAR TranslatedAddress;
+  ULONG Length;
+} DEBUG_DEVICE_ADDRESS, *PDEBUG_DEVICE_ADDRESS;
 
-typedef
-BOOLEAN
-(NTAPI *pHalTranslateBusAddress)(
-  IN INTERFACE_TYPE InterfaceType,
-  IN ULONG BusNumber,
-  IN PHYSICAL_ADDRESS BusAddress,
-  IN OUT PULONG AddressSpace,
-  OUT PPHYSICAL_ADDRESS TranslatedAddress);
+typedef struct _DEBUG_MEMORY_REQUIREMENTS {
+  PHYSICAL_ADDRESS Start;
+  PHYSICAL_ADDRESS MaxEnd;
+  PVOID VirtualAddress;
+  ULONG Length;
+  BOOLEAN Cached;
+  BOOLEAN Aligned;
+} DEBUG_MEMORY_REQUIREMENTS, *PDEBUG_MEMORY_REQUIREMENTS;
 
-typedef
-NTSTATUS
-(NTAPI *pHalAssignSlotResources)(
-  IN PUNICODE_STRING RegistryPath,
-  IN PUNICODE_STRING DriverClassName OPTIONAL,
-  IN PDRIVER_OBJECT DriverObject,
-  IN PDEVICE_OBJECT DeviceObject,
-  IN INTERFACE_TYPE BusType,
-  IN ULONG BusNumber,
-  IN ULONG SlotNumber,
-  IN OUT PCM_RESOURCE_LIST *AllocatedResources);
+typedef struct _DEBUG_DEVICE_DESCRIPTOR {
+  ULONG Bus;
+  ULONG Slot;
+  USHORT Segment;
+  USHORT VendorID;
+  USHORT DeviceID;
+  UCHAR BaseClass;
+  UCHAR SubClass;
+  UCHAR ProgIf;
+  BOOLEAN Initialized;
+  BOOLEAN Configured;
+  DEBUG_DEVICE_ADDRESS BaseAddress[6];
+  DEBUG_MEMORY_REQUIREMENTS Memory;
+} DEBUG_DEVICE_DESCRIPTOR, *PDEBUG_DEVICE_DESCRIPTOR;
 
-typedef
-VOID
-(NTAPI *pHalHaltSystem)(
-  VOID);
-
-typedef
-BOOLEAN
-(NTAPI *pHalResetDisplay)(
-  VOID);
-
-typedef
-UCHAR
-(NTAPI *pHalVectorToIDTEntry)(
-  ULONG Vector);
-
-typedef
-BOOLEAN
-(NTAPI *pHalFindBusAddressTranslation)(
-  IN PHYSICAL_ADDRESS BusAddress,
-  IN OUT PULONG AddressSpace,
-  OUT PPHYSICAL_ADDRESS TranslatedAddress,
-  IN OUT PULONG_PTR Context,
-  IN BOOLEAN NextBus);
-
-typedef
-NTSTATUS
+typedef NTSTATUS
 (NTAPI *pKdSetupPciDeviceForDebugging)(
   IN PVOID LoaderBlock OPTIONAL,
   IN OUT PDEBUG_DEVICE_DESCRIPTOR PciDevice);
 
-typedef
-NTSTATUS
+typedef NTSTATUS
 (NTAPI *pKdReleasePciDeviceForDebugging)(
   IN OUT PDEBUG_DEVICE_DESCRIPTOR PciDevice);
 
-typedef
-PVOID
+typedef PVOID
 (NTAPI *pKdGetAcpiTablePhase0)(
   IN struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
   IN ULONG Signature);
 
-typedef
-PVOID
-(NTAPI *pHalGetAcpiTable)(
-  IN ULONG Signature,
-  IN PCSTR OemId OPTIONAL,
-  IN PCSTR OemTableId OPTIONAL);
-  
-typedef
-VOID
+typedef VOID
 (NTAPI *pKdCheckPowerButton)(
   VOID);
 
+typedef VOID
+(NTAPI *pHalEndOfBoot)(
+  VOID);
+
 #if (NTDDI_VERSION >= NTDDI_VISTA)
-typedef
-PVOID
+typedef PVOID
 (NTAPI *pKdMapPhysicalMemory64)(
   IN PHYSICAL_ADDRESS PhysicalAddress,
   IN ULONG NumberPages,
   IN BOOLEAN FlushCurrentTLB);
 
-typedef
-VOID
+typedef VOID
 (NTAPI *pKdUnmapVirtualAddress)(
   IN PVOID VirtualAddress,
   IN ULONG NumberPages,
   IN BOOLEAN FlushCurrentTLB);
 #else
-typedef
-PVOID
+typedef PVOID
 (NTAPI *pKdMapPhysicalMemory64)(
   IN PHYSICAL_ADDRESS PhysicalAddress,
   IN ULONG NumberPages);
 
-typedef
-VOID
+typedef VOID
 (NTAPI *pKdUnmapVirtualAddress)(
   IN PVOID VirtualAddress,
   IN ULONG NumberPages);
 #endif
 
+typedef PVOID
+(NTAPI *pHalGetAcpiTable)(
+  IN ULONG Signature,
+  IN PCSTR OemId OPTIONAL,
+  IN PCSTR OemTableId OPTIONAL);
 
-typedef
-ULONG
+typedef ULONG
 (NTAPI *pKdGetPciDataByOffset)(
   IN ULONG BusNumber,
   IN ULONG SlotNumber,
@@ -4083,8 +3989,7 @@ ULONG
   IN ULONG Offset,
   IN ULONG Length);
 
-typedef
-ULONG
+typedef ULONG
 (NTAPI *pKdSetPciDataByOffset)(
   IN ULONG BusNumber,
   IN ULONG SlotNumber,
@@ -4092,29 +3997,25 @@ ULONG
   IN ULONG Offset,
   IN ULONG Length);
 
-typedef BOOLEAN
-(NTAPI *PHAL_RESET_DISPLAY_PARAMETERS)(
-  IN ULONG Columns,
-  IN ULONG Rows);
+#if defined(_IA64_)
+typedef NTSTATUS
+(*pHalGetErrorCapList)(
+  IN OUT PULONG CapsListLength,
+  IN OUT PUCHAR ErrorCapList);
 
-typedef
-VOID
+typedef NTSTATUS
+(*pHalInjectError)(
+  IN ULONG BufferLength,
+  IN PUCHAR Buffer);
+#endif
+
+typedef VOID
 (NTAPI *PCI_ERROR_HANDLER_CALLBACK)(
   VOID);
 
-typedef
-VOID
+typedef VOID
 (NTAPI *pHalSetPciErrorHandlerCallback)(
   IN PCI_ERROR_HANDLER_CALLBACK Callback);
-
-#if 1 /* Not present in WDK 7600 */
-typedef VOID
-(FASTCALL *pHalIoAssignDriveLetters)(
-  IN struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
-  IN PSTRING NtDeviceName,
-  OUT PUCHAR NtSystemPath,
-  OUT PSTRING NtSystemPathString);
-#endif
 
 typedef struct {
   ULONG Version;
@@ -4177,6 +4078,628 @@ extern NTKERNELAPI HAL_DISPATCH HalDispatchTable;
 #define HalMirrorPhysicalMemory         HALDISPATCH->HalMirrorPhysicalMemory
 #define HalEndOfBoot                    HALDISPATCH->HalEndOfBoot
 #define HalMirrorVerify                 HALDISPATCH->HalMirrorVerify
+#define HalGetCachedAcpiTable           HALDISPATCH->HalGetCachedAcpiTable
+#define HalSetPciErrorHandlerCallback   HALDISPATCH->HalSetPciErrorHandlerCallback
+#if defined(_IA64_)
+#define HalGetErrorCapList              HALDISPATCH->HalGetErrorCapList
+#define HalInjectError                  HALDISPATCH->HalInjectError
+#endif
+
+typedef struct _HAL_BUS_INFORMATION {
+  INTERFACE_TYPE BusType;
+  BUS_DATA_TYPE ConfigurationType;
+  ULONG BusNumber;
+  ULONG Reserved;
+} HAL_BUS_INFORMATION, *PHAL_BUS_INFORMATION;
+
+typedef struct _HAL_PROFILE_SOURCE_INFORMATION {
+  KPROFILE_SOURCE Source;
+  BOOLEAN Supported;
+  ULONG Interval;
+} HAL_PROFILE_SOURCE_INFORMATION, *PHAL_PROFILE_SOURCE_INFORMATION;
+
+typedef struct _HAL_PROFILE_SOURCE_INFORMATION_EX {
+  KPROFILE_SOURCE Source;
+  BOOLEAN Supported;
+  ULONG_PTR Interval;
+  ULONG_PTR DefInterval;
+  ULONG_PTR MaxInterval;
+  ULONG_PTR MinInterval;
+} HAL_PROFILE_SOURCE_INFORMATION_EX, *PHAL_PROFILE_SOURCE_INFORMATION_EX;
+
+typedef struct _HAL_PROFILE_SOURCE_INTERVAL {
+  KPROFILE_SOURCE Source;
+  ULONG_PTR Interval;
+} HAL_PROFILE_SOURCE_INTERVAL, *PHAL_PROFILE_SOURCE_INTERVAL;
+
+typedef struct _HAL_PROFILE_SOURCE_LIST {
+  KPROFILE_SOURCE Source;
+  PWSTR Description;
+} HAL_PROFILE_SOURCE_LIST, *PHAL_PROFILE_SOURCE_LIST;
+
+typedef enum _HAL_DISPLAY_BIOS_INFORMATION {
+  HalDisplayInt10Bios,
+  HalDisplayEmulatedBios,
+  HalDisplayNoBios
+} HAL_DISPLAY_BIOS_INFORMATION, *PHAL_DISPLAY_BIOS_INFORMATION;
+
+typedef struct _HAL_POWER_INFORMATION {
+  ULONG TBD;
+} HAL_POWER_INFORMATION, *PHAL_POWER_INFORMATION;
+
+typedef struct _HAL_PROCESSOR_SPEED_INFO {
+  ULONG ProcessorSpeed;
+} HAL_PROCESSOR_SPEED_INFORMATION, *PHAL_PROCESSOR_SPEED_INFORMATION;
+
+typedef struct _HAL_CALLBACKS {
+  PCALLBACK_OBJECT SetSystemInformation;
+  PCALLBACK_OBJECT BusCheck;
+} HAL_CALLBACKS, *PHAL_CALLBACKS;
+
+typedef struct _HAL_PROCESSOR_FEATURE {
+  ULONG UsableFeatureBits;
+} HAL_PROCESSOR_FEATURE;
+
+typedef NTSTATUS
+(NTAPI *PHALIOREADWRITEHANDLER)(
+  IN BOOLEAN fRead,
+  IN ULONG dwAddr,
+  IN ULONG dwSize,
+  IN OUT PULONG pdwData);
+
+typedef struct _HAL_AMLI_BAD_IO_ADDRESS_LIST {
+  ULONG BadAddrBegin;
+  ULONG BadAddrSize;
+  ULONG OSVersionTrigger;
+  PHALIOREADWRITEHANDLER IOHandler;
+} HAL_AMLI_BAD_IO_ADDRESS_LIST, *PHAL_AMLI_BAD_IO_ADDRESS_LIST;
+
+#if defined(_X86_) || defined(_IA64_) || defined(_AMD64_)
+
+typedef VOID
+(NTAPI *PHALMCAINTERFACELOCK)(
+  VOID);
+
+typedef VOID
+(NTAPI *PHALMCAINTERFACEUNLOCK)(
+  VOID);
+
+typedef NTSTATUS
+(NTAPI *PHALMCAINTERFACEREADREGISTER)(
+  IN UCHAR BankNumber,
+  IN OUT PVOID Exception);
+
+typedef struct _HAL_MCA_INTERFACE {
+  PHALMCAINTERFACELOCK Lock;
+  PHALMCAINTERFACEUNLOCK Unlock;
+  PHALMCAINTERFACEREADREGISTER ReadRegister;
+} HAL_MCA_INTERFACE;
+
+typedef enum {
+  ApicDestinationModePhysical = 1,
+  ApicDestinationModeLogicalFlat,
+  ApicDestinationModeLogicalClustered,
+  ApicDestinationModeUnknown
+} HAL_APIC_DESTINATION_MODE, *PHAL_APIC_DESTINATION_MODE;
+
+#if defined(_AMD64_)
+
+struct _KTRAP_FRAME;
+struct _KEXCEPTION_FRAME;
+
+typedef ERROR_SEVERITY
+(NTAPI *PDRIVER_EXCPTN_CALLBACK)(
+  IN PVOID Context,
+  IN struct _KTRAP_FRAME *TrapFrame,
+  IN struct _KEXCEPTION_FRAME *ExceptionFrame,
+  IN PMCA_EXCEPTION Exception);
+
+#endif
+
+#if defined(_X86_) || defined(_IA64_)
+typedef
+#if defined(_IA64_)
+ERROR_SEVERITY
+#else
+VOID
+#endif
+(NTAPI *PDRIVER_EXCPTN_CALLBACK)(
+  IN PVOID Context,
+  IN PMCA_EXCEPTION BankLog);
+#endif
+
+typedef PDRIVER_EXCPTN_CALLBACK PDRIVER_MCA_EXCEPTION_CALLBACK;
+
+typedef struct _MCA_DRIVER_INFO {
+  PDRIVER_MCA_EXCEPTION_CALLBACK ExceptionCallback;
+  PKDEFERRED_ROUTINE DpcCallback;
+  PVOID DeviceContext;
+} MCA_DRIVER_INFO, *PMCA_DRIVER_INFO;
+
+typedef struct _HAL_ERROR_INFO {
+  ULONG Version;
+  ULONG InitMaxSize;
+  ULONG McaMaxSize;
+  ULONG McaPreviousEventsCount;
+  ULONG McaCorrectedEventsCount;
+  ULONG McaKernelDeliveryFails;
+  ULONG McaDriverDpcQueueFails;
+  ULONG McaReserved;
+  ULONG CmcMaxSize;
+  ULONG CmcPollingInterval;
+  ULONG CmcInterruptsCount;
+  ULONG CmcKernelDeliveryFails;
+  ULONG CmcDriverDpcQueueFails;
+  ULONG CmcGetStateFails;
+  ULONG CmcClearStateFails;
+  ULONG CmcReserved;
+  ULONGLONG CmcLogId;
+  ULONG CpeMaxSize;
+  ULONG CpePollingInterval;
+  ULONG CpeInterruptsCount;
+  ULONG CpeKernelDeliveryFails;
+  ULONG CpeDriverDpcQueueFails;
+  ULONG CpeGetStateFails;
+  ULONG CpeClearStateFails;
+  ULONG CpeInterruptSources;
+  ULONGLONG CpeLogId;
+  ULONGLONG KernelReserved[4];
+} HAL_ERROR_INFO, *PHAL_ERROR_INFO;
+
+#define HAL_MCE_INTERRUPTS_BASED ((ULONG)-1)
+#define HAL_MCE_DISABLED          ((ULONG)0)
+
+#define HAL_CMC_INTERRUPTS_BASED  HAL_MCE_INTERRUPTS_BASED
+#define HAL_CMC_DISABLED          HAL_MCE_DISABLED
+
+#define HAL_CPE_INTERRUPTS_BASED  HAL_MCE_INTERRUPTS_BASED
+#define HAL_CPE_DISABLED          HAL_MCE_DISABLED
+
+#define HAL_MCA_INTERRUPTS_BASED  HAL_MCE_INTERRUPTS_BASED
+#define HAL_MCA_DISABLED          HAL_MCE_DISABLED
+
+typedef VOID
+(NTAPI *PDRIVER_CMC_EXCEPTION_CALLBACK)(
+  IN PVOID Context,
+  IN PCMC_EXCEPTION CmcLog);
+
+typedef VOID
+(NTAPI *PDRIVER_CPE_EXCEPTION_CALLBACK)(
+  IN PVOID Context,
+  IN PCPE_EXCEPTION CmcLog);
+
+typedef struct _CMC_DRIVER_INFO {
+  PDRIVER_CMC_EXCEPTION_CALLBACK ExceptionCallback;
+  PKDEFERRED_ROUTINE DpcCallback;
+  PVOID DeviceContext;
+} CMC_DRIVER_INFO, *PCMC_DRIVER_INFO;
+
+typedef struct _CPE_DRIVER_INFO {
+  PDRIVER_CPE_EXCEPTION_CALLBACK ExceptionCallback;
+  PKDEFERRED_ROUTINE DpcCallback;
+  PVOID DeviceContext;
+} CPE_DRIVER_INFO, *PCPE_DRIVER_INFO;
+
+#endif // defined(_X86_) || defined(_IA64_) || defined(_AMD64_)
+
+#if defined(_IA64_)
+
+typedef NTSTATUS
+(*HALSENDCROSSPARTITIONIPI)(
+  IN USHORT ProcessorID,
+  IN UCHAR HardwareVector);
+
+typedef NTSTATUS
+(*HALRESERVECROSSPARTITIONINTERRUPTVECTOR)(
+  OUT PULONG Vector,
+  OUT PKIRQL Irql,
+  IN OUT PGROUP_AFFINITY Affinity,
+  OUT PUCHAR HardwareVector);
+
+typedef VOID
+(*HALFREECROSSPARTITIONINTERRUPTVECTOR)(
+  IN ULONG Vector,
+  IN PGROUP_AFFINITY Affinity);
+
+typedef struct _HAL_CROSS_PARTITION_IPI_INTERFACE {
+  HALSENDCROSSPARTITIONIPI HalSendCrossPartitionIpi;
+  HALRESERVECROSSPARTITIONINTERRUPTVECTOR HalReserveCrossPartitionInterruptVector;
+  HALFREECROSSPARTITIONINTERRUPTVECTOR HalFreeCrossPartitionInterruptVector;
+} HAL_CROSS_PARTITION_IPI_INTERFACE;
+
+#define HAL_CROSS_PARTITION_IPI_INTERFACE_MINIMUM_SIZE \
+    FIELD_OFFSET(HAL_CROSS_PARTITION_IPI_INTERFACE,    \
+                 HalFreeCrossPartitionInterruptVector)
+
+#endif /* defined(_IA64_) */
+
+typedef struct _HAL_PLATFORM_INFORMATION {
+  ULONG PlatformFlags;
+} HAL_PLATFORM_INFORMATION, *PHAL_PLATFORM_INFORMATION;
+
+#define HAL_PLATFORM_DISABLE_WRITE_COMBINING      0x01L
+#define HAL_PLATFORM_DISABLE_PTCG                 0x04L
+#define HAL_PLATFORM_DISABLE_UC_MAIN_MEMORY       0x08L
+#define HAL_PLATFORM_ENABLE_WRITE_COMBINING_MMIO  0x10L
+#define HAL_PLATFORM_ACPI_TABLES_CACHED           0x20L
+
+#if defined(_WIN64)
+
+#ifndef USE_DMA_MACROS
+#define USE_DMA_MACROS
+#endif
+
+#ifndef NO_LEGACY_DRIVERS
+#define NO_LEGACY_DRIVERS
+#endif
+
+#endif /* defined(_WIN64) */
+
+typedef enum _PHYSICAL_COUNTER_RESOURCE_DESCRIPTOR_TYPE {
+  ResourceTypeSingle = 0,
+  ResourceTypeRange,
+  ResourceTypeExtendedCounterConfiguration,
+  ResourceTypeOverflow,
+  ResourceTypeMax
+} PHYSICAL_COUNTER_RESOURCE_DESCRIPTOR_TYPE;
+
+typedef struct _PHYSICAL_COUNTER_RESOURCE_DESCRIPTOR {
+  PHYSICAL_COUNTER_RESOURCE_DESCRIPTOR_TYPE Type;
+  ULONG Flags;
+  union {
+    ULONG CounterIndex;
+    ULONG ExtendedRegisterAddress;
+    struct {
+      ULONG Begin;
+      ULONG End;
+    } Range;
+  } u;
+} PHYSICAL_COUNTER_RESOURCE_DESCRIPTOR, *PPHYSICAL_COUNTER_RESOURCE_DESCRIPTOR;
+
+typedef struct _PHYSICAL_COUNTER_RESOURCE_LIST {
+  ULONG Count;
+  PHYSICAL_COUNTER_RESOURCE_DESCRIPTOR Descriptors[ANYSIZE_ARRAY];
+} PHYSICAL_COUNTER_RESOURCE_LIST, *PPHYSICAL_COUNTER_RESOURCE_LIST;
+
+/* Hardware Abstraction Layer Functions */
+
+NTSTATUS
+NTAPI
+HalAllocateHardwareCounters(
+  IN PGROUP_AFFINITY GroupAffinty,
+  IN ULONG GroupCount,
+  IN PPHYSICAL_COUNTER_RESOURCE_LIST ResourceList,
+  OUT PHANDLE CounterSetHandle);
+
+NTSTATUS
+NTAPI
+HalFreeHardwareCounters(
+  IN HANDLE CounterSetHandle);
+
+#if !defined(NO_LEGACY_DRIVERS)
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTHALAPI
+NTSTATUS
+NTAPI
+HalAssignSlotResources(
+  IN PUNICODE_STRING RegistryPath,
+  IN PUNICODE_STRING DriverClassName,
+  IN PDRIVER_OBJECT DriverObject,
+  IN PDEVICE_OBJECT DeviceObject,
+  IN INTERFACE_TYPE BusType,
+  IN ULONG BusNumber,
+  IN ULONG SlotNumber,
+  IN OUT PCM_RESOURCE_LIST *AllocatedResources);
+
+NTHALAPI
+ULONG
+NTAPI
+HalGetInterruptVector(
+  IN INTERFACE_TYPE InterfaceType,
+  IN ULONG BusNumber,
+  IN ULONG BusInterruptLevel,
+  IN ULONG BusInterruptVector,
+  OUT PKIRQL Irql,
+  OUT PKAFFINITY Affinity);
+
+NTHALAPI
+ULONG
+NTAPI
+HalSetBusData(
+  IN BUS_DATA_TYPE BusDataType,
+  IN ULONG BusNumber,
+  IN ULONG SlotNumber,
+  IN PVOID Buffer,
+  IN ULONG Length);
+
+NTHALAPI
+ULONG
+NTAPI
+HalGetBusData(
+  IN BUS_DATA_TYPE BusDataType,
+  IN ULONG BusNumber,
+  IN ULONG SlotNumber,
+  OUT PVOID Buffer,
+  IN ULONG Length);
+
+NTHALAPI
+BOOLEAN
+NTAPI
+HalMakeBeep(
+  IN ULONG Frequency);
+
+#endif
+
+#endif /* !defined(NO_LEGACY_DRIVERS) */
+
+#if defined(USE_DMA_MACROS) && !defined(_NTHAL_) && (defined(_NTDDK_) || defined(_NTDRIVER_)) || defined(_WDM_INCLUDED_) 
+// nothing here
+#else
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+//DECLSPEC_DEPRECATED_DDK
+NTHALAPI
+VOID
+NTAPI
+IoFreeAdapterChannel(
+  IN PADAPTER_OBJECT AdapterObject);
+
+//DECLSPEC_DEPRECATED_DDK
+NTHALAPI
+BOOLEAN
+NTAPI
+IoFlushAdapterBuffers(
+  IN PADAPTER_OBJECT AdapterObject,
+  IN PMDL Mdl,
+  IN PVOID MapRegisterBase,
+  IN PVOID CurrentVa,
+  IN ULONG Length,
+  IN BOOLEAN WriteToDevice);
+
+//DECLSPEC_DEPRECATED_DDK
+NTHALAPI
+VOID
+NTAPI
+IoFreeMapRegisters(
+  IN PADAPTER_OBJECT AdapterObject,
+  IN PVOID MapRegisterBase,
+  IN ULONG NumberOfMapRegisters);
+
+//DECLSPEC_DEPRECATED_DDK
+NTHALAPI
+PVOID
+NTAPI
+HalAllocateCommonBuffer(
+  IN PADAPTER_OBJECT AdapterObject,
+  IN ULONG Length,
+  OUT PPHYSICAL_ADDRESS LogicalAddress,
+  IN BOOLEAN CacheEnabled);
+
+//DECLSPEC_DEPRECATED_DDK
+NTHALAPI
+VOID
+NTAPI
+HalFreeCommonBuffer(
+  IN PADAPTER_OBJECT AdapterObject,
+  IN ULONG Length,
+  IN PHYSICAL_ADDRESS LogicalAddress,
+  IN PVOID VirtualAddress,
+  IN BOOLEAN CacheEnabled);
+
+//DECLSPEC_DEPRECATED_DDK
+NTHALAPI
+ULONG
+NTAPI
+HalReadDmaCounter(
+  IN PADAPTER_OBJECT AdapterObject);
+
+NTHALAPI
+NTSTATUS
+NTAPI
+HalAllocateAdapterChannel(
+  IN PADAPTER_OBJECT  AdapterObject,
+  IN PWAIT_CONTEXT_BLOCK  Wcb,
+  IN ULONG  NumberOfMapRegisters,
+  IN PDRIVER_CONTROL  ExecutionRoutine);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
+#endif /* defined(USE_DMA_MACROS) && !defined(_NTHAL_) && (defined(_NTDDK_) || defined(_NTDRIVER_)) || defined(_WDM_INCLUDED_) */
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTHALAPI
+PADAPTER_OBJECT
+NTAPI
+HalGetAdapter(
+  IN PDEVICE_DESCRIPTION DeviceDescription,
+  OUT PULONG NumberOfMapRegisters);
+
+VOID
+NTAPI
+HalPutDmaAdapter(
+  IN PADAPTER_OBJECT DmaAdapter);
+
+NTHALAPI
+VOID
+NTAPI
+HalAcquireDisplayOwnership(
+  IN PHAL_RESET_DISPLAY_PARAMETERS ResetDisplayParameters);
+
+NTHALAPI
+ULONG
+NTAPI
+HalGetBusDataByOffset(
+  IN BUS_DATA_TYPE BusDataType,
+  IN ULONG BusNumber,
+  IN ULONG SlotNumber,
+  OUT PVOID Buffer,
+  IN ULONG Offset,
+  IN ULONG Length);
+
+NTHALAPI
+ULONG
+NTAPI
+HalSetBusDataByOffset(
+  IN BUS_DATA_TYPE BusDataType,
+  IN ULONG BusNumber,
+  IN ULONG SlotNumber,
+  IN PVOID Buffer,
+  IN ULONG Offset,
+  IN ULONG Length);
+
+NTHALAPI
+BOOLEAN
+NTAPI
+HalTranslateBusAddress(
+  IN INTERFACE_TYPE InterfaceType,
+  IN ULONG BusNumber,
+  IN PHYSICAL_ADDRESS BusAddress,
+  IN OUT PULONG AddressSpace,
+  OUT PPHYSICAL_ADDRESS TranslatedAddress);
+
+NTHALAPI
+PVOID
+NTAPI
+HalAllocateCrashDumpRegisters(
+  IN PADAPTER_OBJECT AdapterObject,
+  IN OUT PULONG NumberOfMapRegisters);
+
+NTSTATUS
+NTAPI
+HalGetScatterGatherList(
+  IN PADAPTER_OBJECT DmaAdapter,
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PMDL Mdl,
+  IN PVOID CurrentVa,
+  IN ULONG Length,
+  IN PDRIVER_LIST_CONTROL ExecutionRoutine,
+  IN PVOID Context,
+  IN BOOLEAN WriteToDevice);
+
+VOID
+NTAPI
+HalPutScatterGatherList(
+  IN PADAPTER_OBJECT DmaAdapter,
+  IN PSCATTER_GATHER_LIST ScatterGather,
+  IN BOOLEAN WriteToDevice);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+NTKERNELAPI
+VOID
+FASTCALL
+HalExamineMBR(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN ULONG SectorSize,
+  IN ULONG MBRTypeIdentifier,
+  OUT PVOID *Buffer);
+#endif
+
+#if defined(_IA64_)
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+NTHALAPI
+ULONG
+NTAPI
+HalGetDmaAlignmentRequirement(VOID);
+#endif
+#endif /* defined(_IA64_) */
+
+#if defined(_M_IX86) || defined(_M_AMD64)
+#define HalGetDmaAlignmentRequirement() 1L
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+
+typedef struct _WHEA_ERROR_SOURCE_DESCRIPTOR *PWHEA_ERROR_SOURCE_DESCRIPTOR;
+typedef struct _WHEA_ERROR_RECORD *PWHEA_ERROR_RECORD;
+
+NTHALAPI
+VOID
+NTAPI
+HalBugCheckSystem(
+  IN PWHEA_ERROR_SOURCE_DESCRIPTOR ErrorSource,
+  IN PWHEA_ERROR_RECORD ErrorRecord);
+
+#else
+
+typedef struct _WHEA_ERROR_RECORD *PWHEA_ERROR_RECORD;
+
+NTHALAPI
+VOID
+NTAPI
+HalBugCheckSystem(
+  IN PWHEA_ERROR_RECORD ErrorRecord);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
+
+struct _LOADER_PARAMETER_BLOCK;
+struct _CREATE_DISK;
+struct _DRIVE_LAYOUT_INFORMATION_EX;
+struct _SET_PARTITION_INFORMATION_EX;
+
+//
+// GUID and UUID
+//
+#ifndef GUID_DEFINED
+#include <guiddef.h>
+#endif
+
+typedef struct _MAP_REGISTER_ENTRY {
+  PVOID MapRegister;
+  BOOLEAN WriteToDevice;
+} MAP_REGISTER_ENTRY, *PMAP_REGISTER_ENTRY;
+
+typedef BOOLEAN
+(NTAPI *pHalTranslateBusAddress)(
+  IN INTERFACE_TYPE InterfaceType,
+  IN ULONG BusNumber,
+  IN PHYSICAL_ADDRESS BusAddress,
+  IN OUT PULONG AddressSpace,
+  OUT PPHYSICAL_ADDRESS TranslatedAddress);
+
+typedef NTSTATUS
+(NTAPI *pHalAssignSlotResources)(
+  IN PUNICODE_STRING RegistryPath,
+  IN PUNICODE_STRING DriverClassName OPTIONAL,
+  IN PDRIVER_OBJECT DriverObject,
+  IN PDEVICE_OBJECT DeviceObject,
+  IN INTERFACE_TYPE BusType,
+  IN ULONG BusNumber,
+  IN ULONG SlotNumber,
+  IN OUT PCM_RESOURCE_LIST *AllocatedResources);
+
+typedef VOID
+(NTAPI *pHalHaltSystem)(
+  VOID);
+
+typedef BOOLEAN
+(NTAPI *pHalResetDisplay)(
+  VOID);
+
+typedef UCHAR
+(NTAPI *pHalVectorToIDTEntry)(
+  ULONG Vector);
+
+typedef BOOLEAN
+(NTAPI *pHalFindBusAddressTranslation)(
+  IN PHYSICAL_ADDRESS BusAddress,
+  IN OUT PULONG AddressSpace,
+  OUT PPHYSICAL_ADDRESS TranslatedAddress,
+  IN OUT PULONG_PTR Context,
+  IN BOOLEAN NextBus);
+
+#if 1 /* Not present in WDK 7600 */
+typedef VOID
+(FASTCALL *pHalIoAssignDriveLetters)(
+  IN struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
+  IN PSTRING NtDeviceName,
+  OUT PUCHAR NtSystemPath,
+  OUT PSTRING NtSystemPathString);
+#endif
 
 extern NTKERNELAPI PVOID MmHighestUserAddress;
 extern NTKERNELAPI PVOID MmSystemRangeStart;
@@ -4414,196 +4937,6 @@ typedef struct _PCIBUSDATA {
   PCI_SLOT_NUMBER ParentSlot;
   PVOID Reserved[4];
 } PCIBUSDATA, *PPCIBUSDATA;
-
-/* Hardware Abstraction Layer Functions */
-
-#if !defined(NO_LEGACY_DRIVERS)
-
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
-
-NTHALAPI
-NTSTATUS
-NTAPI
-HalAssignSlotResources(
-  IN PUNICODE_STRING RegistryPath,
-  IN PUNICODE_STRING DriverClassName,
-  IN PDRIVER_OBJECT DriverObject,
-  IN PDEVICE_OBJECT DeviceObject,
-  IN INTERFACE_TYPE BusType,
-  IN ULONG BusNumber,
-  IN ULONG SlotNumber,
-  IN OUT PCM_RESOURCE_LIST *AllocatedResources);
-
-NTHALAPI
-ULONG
-NTAPI
-HalGetInterruptVector(
-  IN INTERFACE_TYPE InterfaceType,
-  IN ULONG BusNumber,
-  IN ULONG BusInterruptLevel,
-  IN ULONG BusInterruptVector,
-  OUT PKIRQL Irql,
-  OUT PKAFFINITY Affinity);
-
-NTHALAPI
-ULONG
-NTAPI
-HalSetBusData(
-  IN BUS_DATA_TYPE BusDataType,
-  IN ULONG BusNumber,
-  IN ULONG SlotNumber,
-  IN PVOID Buffer,
-  IN ULONG Length);
-
-#endif
-
-#endif /* !defined(NO_LEGACY_DRIVERS) */
-
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
-
-NTHALAPI
-PADAPTER_OBJECT
-NTAPI
-HalGetAdapter(
-  IN PDEVICE_DESCRIPTION DeviceDescription,
-  IN OUT PULONG NumberOfMapRegisters);
-
-NTHALAPI
-BOOLEAN
-NTAPI
-HalMakeBeep(
-  IN ULONG Frequency);
-
-VOID
-NTAPI
-HalPutDmaAdapter(
-  IN PADAPTER_OBJECT DmaAdapter);
-
-NTHALAPI
-VOID
-NTAPI
-HalAcquireDisplayOwnership(
-  IN PHAL_RESET_DISPLAY_PARAMETERS ResetDisplayParameters);
-
-NTHALAPI
-ULONG
-NTAPI
-HalGetBusData(
-  IN BUS_DATA_TYPE BusDataType,
-  IN ULONG BusNumber,
-  IN ULONG SlotNumber,
-  OUT PVOID Buffer,
-  IN ULONG Length);
-
-NTHALAPI
-ULONG
-NTAPI
-HalGetBusDataByOffset(
-  IN BUS_DATA_TYPE BusDataType,
-  IN ULONG BusNumber,
-  IN ULONG SlotNumber,
-  OUT PVOID Buffer,
-  IN ULONG Offset,
-  IN ULONG Length);
-
-NTHALAPI
-ULONG
-NTAPI
-HalSetBusDataByOffset(
-  IN BUS_DATA_TYPE BusDataType,
-  IN ULONG BusNumber,
-  IN ULONG SlotNumber,
-  IN PVOID Buffer,
-  IN ULONG Offset,
-  IN ULONG Length);
-
-NTHALAPI
-BOOLEAN
-NTAPI
-HalTranslateBusAddress(
-  IN INTERFACE_TYPE InterfaceType,
-  IN ULONG BusNumber,
-  IN PHYSICAL_ADDRESS BusAddress,
-  IN OUT PULONG AddressSpace,
-  OUT PPHYSICAL_ADDRESS TranslatedAddress);
-
-#endif
-
-#if defined(USE_DMA_MACROS) && !defined(_NTHAL_) && (defined(_NTDDK_) || defined(_NTDRIVER_)) || defined(_WDM_INCLUDED_) 
-// nothing here
-#else
-
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
-//DECLSPEC_DEPRECATED_DDK
-NTHALAPI
-VOID
-NTAPI
-IoFreeAdapterChannel(
-  IN PADAPTER_OBJECT AdapterObject);
-
-//DECLSPEC_DEPRECATED_DDK
-NTHALAPI
-BOOLEAN
-NTAPI
-IoFlushAdapterBuffers(
-  IN PADAPTER_OBJECT AdapterObject,
-  IN PMDL Mdl,
-  IN PVOID MapRegisterBase,
-  IN PVOID CurrentVa,
-  IN ULONG Length,
-  IN BOOLEAN WriteToDevice);
-
-//DECLSPEC_DEPRECATED_DDK
-NTHALAPI
-VOID
-NTAPI
-IoFreeMapRegisters(
-  IN PADAPTER_OBJECT AdapterObject,
-  IN PVOID MapRegisterBase,
-  IN ULONG NumberOfMapRegisters);
-
-//DECLSPEC_DEPRECATED_DDK
-NTHALAPI
-PVOID
-NTAPI
-HalAllocateCommonBuffer(
-  IN PADAPTER_OBJECT AdapterObject,
-  IN ULONG Length,
-  OUT PPHYSICAL_ADDRESS LogicalAddress,
-  IN BOOLEAN CacheEnabled);
-
-//DECLSPEC_DEPRECATED_DDK
-NTHALAPI
-VOID
-NTAPI
-HalFreeCommonBuffer(
-  IN PADAPTER_OBJECT AdapterObject,
-  IN ULONG Length,
-  IN PHYSICAL_ADDRESS LogicalAddress,
-  IN PVOID VirtualAddress,
-  IN BOOLEAN CacheEnabled);
-
-//DECLSPEC_DEPRECATED_DDK
-NTHALAPI
-ULONG
-NTAPI
-HalReadDmaCounter(
-  IN PADAPTER_OBJECT AdapterObject);
-
-NTHALAPI
-NTSTATUS
-NTAPI
-HalAllocateAdapterChannel(
-  IN PADAPTER_OBJECT  AdapterObject,
-  IN PWAIT_CONTEXT_BLOCK  Wcb,
-  IN ULONG  NumberOfMapRegisters,
-  IN PDRIVER_CONTROL  ExecutionRoutine);
-
-#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
-
-#endif /* defined(USE_DMA_MACROS) && !defined(_NTHAL_) && (defined(_NTDDK_) || defined(_NTDRIVER_)) || defined(_WDM_INCLUDED_)  */
-
-/** Process manager routines **/
 
 /* ZwXxx Functions */
 
