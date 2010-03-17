@@ -1018,6 +1018,11 @@ KiRestoreFastSyscallReturnState(VOID)
             KiFastCallExitHandler = KiSystemCallTrapReturn;
         }
     }
+    else
+    {
+        /* Use the IRET handler */
+        KiFastCallExitHandler = KiSystemCallTrapReturn;
+    }
 }
 
 ULONG_PTR
