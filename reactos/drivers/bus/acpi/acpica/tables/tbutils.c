@@ -592,6 +592,7 @@ AcpiTbParseRootTable (
     UINT32                  Length;
     UINT8                   *TableEntry;
     ACPI_STATUS             Status;
+    ACPI_TABLE_HEADER       LocalHeader;
 
 
     ACPI_FUNCTION_TRACE (TbParseRootTable);
@@ -645,6 +646,14 @@ AcpiTbParseRootTable (
     }
 
     AcpiTbPrintTableHeader (Address, Table);
+
+    AcpiTbCleanupTableHeader (&LocalHeader, Table);
+    if (strstr(LocalHeader.AslCompilerId, "VMW"))
+    {
+        ACPI_ERROR ((AE_INFO, "VMware detected; ACPI has been disabled\n"));
+        AcpiOsUnmapMemory (Table, sizeof (ACPI_TABLE_HEADER));
+        return_ACPI_STATUS (AE_ERROR);
+    }
 
     /* Get the length of the full table, verify length and map entire table */
 
