@@ -8,16 +8,6 @@
 #define QUOTA_LIMITS_HARDWS_MAX_DISABLE 0x00000008
 #define QUOTA_LIMITS_USE_DEFAULT_LIMITS 0x00000010
 
-/* Process Qoutas */
-typedef struct _QUOTA_LIMITS {
-    SIZE_T PagedPoolLimit;
-    SIZE_T NonPagedPoolLimit;
-    SIZE_T MinimumWorkingSetSize;
-    SIZE_T MaximumWorkingSetSize;
-    SIZE_T PagefileLimit;
-    LARGE_INTEGER TimeLimit;
-} QUOTA_LIMITS, *PQUOTA_LIMITS;
-
 /* Thread Access Rights */
 #define THREAD_TERMINATE                 0x0001
 #define THREAD_SUSPEND_RESUME            0x0002
