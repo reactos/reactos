@@ -5533,6 +5533,12 @@ KeGetCurrentProcessorNumber(VOID)
     return (ULONG)__readfsbyte(FIELD_OFFSET(KPCR, Number));
 }
 
+typedef enum _INTERLOCKED_RESULT {
+  ResultNegative = RESULT_NEGATIVE,
+  ResultZero = RESULT_ZERO,
+  ResultPositive = RESULT_POSITIVE
+} INTERLOCKED_RESULT;
+
 NTKERNELAPI
 INTERLOCKED_RESULT
 FASTCALL
@@ -5637,12 +5643,6 @@ KeGetCurrentProcessorNumber(VOID)
 }
 
 #endif /* _AMD64_ */
-
-typedef enum _INTERLOCKED_RESULT {
-  ResultNegative = RESULT_NEGATIVE,
-  ResultZero = RESULT_ZERO,
-  ResultPositive = RESULT_POSITIVE
-} INTERLOCKED_RESULT;
 
 #ifdef __cplusplus
 }
