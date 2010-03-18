@@ -115,7 +115,7 @@ typedef struct {
 #endif /* !_PO_DDK_ */
 
 typedef VOID
-(DDKAPI *PREQUEST_POWER_COMPLETE)(
+(NTAPI *PREQUEST_POWER_COMPLETE)(
   IN struct _DEVICE_OBJECT *DeviceObject,
   IN UCHAR MinorFunction,
   IN POWER_STATE PowerState,
@@ -124,7 +124,7 @@ typedef VOID
 
 typedef
 NTSTATUS
-(DDKAPI *PPOWER_SETTING_CALLBACK)(
+(NTAPI *PPOWER_SETTING_CALLBACK)(
   IN LPCGUID SettingGuid,
   IN PVOID Value,
   IN ULONG ValueLength,

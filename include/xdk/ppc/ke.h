@@ -94,12 +94,12 @@ KfRaiseIrql(
 
 NTHALAPI
 KIRQL
-DDKAPI
+NTAPI
 KeRaiseIrqlToDpcLevel(VOID);
 
 NTHALAPI
 KIRQL
-DDKAPI
+NTAPI
 KeRaiseIrqlToSynchLevel(VOID);
 
 $endif

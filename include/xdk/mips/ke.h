@@ -29,7 +29,7 @@ typedef struct _KFLOATING_SAVE {
 
 static __inline
 ULONG
-DDKAPI
+NTAPI
 KeGetCurrentProcessorNumber(VOID)
 {
   return 0;
