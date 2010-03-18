@@ -56,6 +56,18 @@
 extern "C" {
 #endif
 
+/* GUID and UUID */
+#ifndef _NTLSA_IFS_
+#ifndef _NTLSA_AUDIT_
+#define _NTLSA_AUDIT_
+
+#ifndef GUID_DEFINED
+#include <guiddef.h>
+#endif
+
+#endif /* _NTLSA_AUDIT_ */
+#endif /* _NTLSA_IFS_ */
+
 struct _LOADER_PARAMETER_BLOCK;
 struct _CREATE_DISK;
 struct _DRIVE_LAYOUT_INFORMATION_EX;
@@ -4443,6 +4455,50 @@ typedef NTSTATUS
   IN PHYSICAL_ADDRESS PhysicalAddress,
   IN LARGE_INTEGER NumberOfBytes);
 
+typedef BOOLEAN
+(NTAPI *pHalTranslateBusAddress)(
+  IN INTERFACE_TYPE InterfaceType,
+  IN ULONG BusNumber,
+  IN PHYSICAL_ADDRESS BusAddress,
+  IN OUT PULONG AddressSpace,
+  OUT PPHYSICAL_ADDRESS TranslatedAddress);
+
+typedef NTSTATUS
+(NTAPI *pHalAssignSlotResources)(
+  IN PUNICODE_STRING RegistryPath,
+  IN PUNICODE_STRING DriverClassName OPTIONAL,
+  IN PDRIVER_OBJECT DriverObject,
+  IN PDEVICE_OBJECT DeviceObject,
+  IN INTERFACE_TYPE BusType,
+  IN ULONG BusNumber,
+  IN ULONG SlotNumber,
+  IN OUT PCM_RESOURCE_LIST *AllocatedResources);
+
+typedef VOID
+(NTAPI *pHalHaltSystem)(
+  VOID);
+
+typedef BOOLEAN
+(NTAPI *pHalResetDisplay)(
+  VOID);
+
+typedef struct _MAP_REGISTER_ENTRY {
+  PVOID MapRegister;
+  BOOLEAN WriteToDevice;
+} MAP_REGISTER_ENTRY, *PMAP_REGISTER_ENTRY;
+
+typedef UCHAR
+(NTAPI *pHalVectorToIDTEntry)(
+  ULONG Vector);
+
+typedef BOOLEAN
+(NTAPI *pHalFindBusAddressTranslation)(
+  IN PHYSICAL_ADDRESS BusAddress,
+  IN OUT PULONG AddressSpace,
+  OUT PPHYSICAL_ADDRESS TranslatedAddress,
+  IN OUT PULONG_PTR Context,
+  IN BOOLEAN NextBus);
+
 typedef struct _DEBUG_DEVICE_ADDRESS {
   UCHAR Type;
   BOOLEAN Valid;
@@ -5287,6 +5343,28 @@ HalBugCheckSystem(
 
 /* ZwXxx Functions */
 
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwAllocateLocallyUniqueId(
+  OUT PLUID Luid);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwTerminateProcess(
+  IN HANDLE ProcessHandle OPTIONAL,
+  IN NTSTATUS ExitStatus);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwOpenProcess(
+  OUT PHANDLE ProcessHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes,
+  IN PCLIENT_ID ClientId OPTIONAL);
+
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
 NTSTATUS
@@ -5346,79 +5424,48 @@ ZwPowerInformation(
   OUT PVOID OutputBuffer OPTIONAL,
   IN ULONG OutputBufferLength);
 
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwQueryVolumeInformationFile(
+  IN HANDLE FileHandle,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  OUT PVOID FsInformation,
+  IN ULONG Length,
+  IN FS_INFORMATION_CLASS FsInformationClass);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwDeviceIoControlFile(
+  IN HANDLE FileHandle,
+  IN HANDLE Event OPTIONAL,
+  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+  IN PVOID ApcContext OPTIONAL,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  IN ULONG IoControlCode,
+  IN PVOID InputBuffer OPTIONAL,
+  IN ULONG InputBufferLength,
+  OUT PVOID OutputBuffer OPTIONAL,
+  IN ULONG OutputBufferLength);
+
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//
-// GUID and UUID
-//
-#ifndef GUID_DEFINED
-#include <guiddef.h>
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+NTSTATUS
+NTAPI
+ZwSetTimerEx(
+  IN HANDLE TimerHandle,
+  IN TIMER_SET_INFORMATION_CLASS TimerSetInformationClass,
+  IN OUT PVOID TimerSetInformation,
+  IN ULONG TimerSetInformationLength);
 #endif
 
-typedef struct _MAP_REGISTER_ENTRY {
-  PVOID MapRegister;
-  BOOLEAN WriteToDevice;
-} MAP_REGISTER_ENTRY, *PMAP_REGISTER_ENTRY;
-
-typedef BOOLEAN
-(NTAPI *pHalTranslateBusAddress)(
-  IN INTERFACE_TYPE InterfaceType,
-  IN ULONG BusNumber,
-  IN PHYSICAL_ADDRESS BusAddress,
-  IN OUT PULONG AddressSpace,
-  OUT PPHYSICAL_ADDRESS TranslatedAddress);
-
-typedef NTSTATUS
-(NTAPI *pHalAssignSlotResources)(
-  IN PUNICODE_STRING RegistryPath,
-  IN PUNICODE_STRING DriverClassName OPTIONAL,
-  IN PDRIVER_OBJECT DriverObject,
-  IN PDEVICE_OBJECT DeviceObject,
-  IN INTERFACE_TYPE BusType,
-  IN ULONG BusNumber,
-  IN ULONG SlotNumber,
-  IN OUT PCM_RESOURCE_LIST *AllocatedResources);
-
-typedef VOID
-(NTAPI *pHalHaltSystem)(
-  VOID);
-
-typedef BOOLEAN
-(NTAPI *pHalResetDisplay)(
-  VOID);
-
-typedef UCHAR
-(NTAPI *pHalVectorToIDTEntry)(
-  ULONG Vector);
-
-typedef BOOLEAN
-(NTAPI *pHalFindBusAddressTranslation)(
-  IN PHYSICAL_ADDRESS BusAddress,
-  IN OUT PULONG AddressSpace,
-  OUT PPHYSICAL_ADDRESS TranslatedAddress,
-  IN OUT PULONG_PTR Context,
-  IN BOOLEAN NextBus);
+#ifdef _X86_
 
 extern NTKERNELAPI PVOID MmHighestUserAddress;
 extern NTKERNELAPI PVOID MmSystemRangeStart;
 extern NTKERNELAPI ULONG MmUserProbeAddress;
-
-
-#ifdef _X86_
 
 #define MM_HIGHEST_USER_ADDRESS MmHighestUserAddress
 #define MM_SYSTEM_RANGE_START MmSystemRangeStart
@@ -5485,6 +5532,25 @@ KeGetCurrentProcessorNumber(VOID)
 {
     return (ULONG)__readfsbyte(FIELD_OFFSET(KPCR, Number));
 }
+
+NTKERNELAPI
+INTERLOCKED_RESULT
+FASTCALL
+Exfi386InterlockedIncrementLong(
+  IN OUT LONG volatile *Addend);
+
+NTKERNELAPI
+INTERLOCKED_RESULT
+FASTCALL
+Exfi386InterlockedDecrementLong(
+  IN PLONG  Addend);
+
+NTKERNELAPI
+ULONG
+FASTCALL
+Exfi386InterlockedExchangeUlong(
+  IN PULONG  Target,
+  IN ULONG  Value);
 
 #endif /* _X86_ */
 
@@ -5577,74 +5643,6 @@ typedef enum _INTERLOCKED_RESULT {
   ResultZero = RESULT_ZERO,
   ResultPositive = RESULT_POSITIVE
 } INTERLOCKED_RESULT;
-
-#ifdef _X86_
-
-NTKERNELAPI
-INTERLOCKED_RESULT
-FASTCALL
-Exfi386InterlockedIncrementLong(
-  IN OUT LONG volatile *Addend);
-
-NTKERNELAPI
-INTERLOCKED_RESULT
-FASTCALL
-Exfi386InterlockedDecrementLong(
-  IN PLONG  Addend);
-
-NTKERNELAPI
-ULONG
-FASTCALL
-Exfi386InterlockedExchangeUlong(
-  IN PULONG  Target,
-  IN ULONG  Value);
-
-#endif /* _X86_ */
-
-/* ZwXxx Functions */
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwTerminateProcess (
-    IN HANDLE   ProcessHandle OPTIONAL,
-    IN NTSTATUS ExitStatus
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwOpenProcess (
-    OUT PHANDLE             ProcessHandle,
-    IN ACCESS_MASK          DesiredAccess,
-    IN POBJECT_ATTRIBUTES   ObjectAttributes,
-    IN PCLIENT_ID           ClientId OPTIONAL
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwQueryVolumeInformationFile(
-  IN HANDLE FileHandle,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  OUT PVOID FsInformation,
-  IN ULONG Length,
-  IN FS_INFORMATION_CLASS FsInformationClass);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwDeviceIoControlFile(
-  IN HANDLE FileHandle,
-  IN HANDLE Event OPTIONAL,
-  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
-  IN PVOID ApcContext OPTIONAL,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  IN ULONG IoControlCode,
-  IN PVOID InputBuffer OPTIONAL,
-  IN ULONG InputBufferLength,
-  OUT PVOID OutputBuffer OPTIONAL,
-  IN ULONG OutputBufferLength);
 
 #ifdef __cplusplus
 }
