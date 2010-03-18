@@ -13,11 +13,11 @@ typedef int CM_RESOURCE_TYPE;
 #define CmResourceTypeDma               4
 #define CmResourceTypeDeviceSpecific    5
 #define CmResourceTypeBusNumber         6
-#define CmResourceTypeNonArbitrated	  128
-#define CmResourceTypeConfigData	  128
-#define CmResourceTypeDevicePrivate	  129
-#define CmResourceTypePcCardConfig	  130
-#define CmResourceTypeMfCardConfig	  131
+#define CmResourceTypeNonArbitrated     128
+#define CmResourceTypeConfigData        128
+#define CmResourceTypeDevicePrivate     129
+#define CmResourceTypePcCardConfig      130
+#define CmResourceTypeMfCardConfig      131
 
 /* KEY_VALUE_Xxx.Type */
 #define REG_NONE                           0
@@ -31,9 +31,9 @@ typedef int CM_RESOURCE_TYPE;
 #define REG_MULTI_SZ                       7
 #define REG_RESOURCE_LIST                  8
 #define REG_FULL_RESOURCE_DESCRIPTOR       9
-#define REG_RESOURCE_REQUIREMENTS_LIST    10
-#define REG_QWORD                         11
-#define REG_QWORD_LITTLE_ENDIAN           11
+#define REG_RESOURCE_REQUIREMENTS_LIST     10
+#define REG_QWORD                          11
+#define REG_QWORD_LITTLE_ENDIAN            11
 
 /* Registry Access Rights */
 #define KEY_QUERY_VALUE         (0x0001)
@@ -121,24 +121,24 @@ typedef int CM_RESOURCE_TYPE;
                  REG_NOTIFY_CHANGE_SECURITY)
 
 typedef struct _CM_FLOPPY_DEVICE_DATA {
-  USHORT  Version;
-  USHORT  Revision;
-  CHAR  Size[8];
-  ULONG  MaxDensity;
-  ULONG  MountDensity;
-  UCHAR  StepRateHeadUnloadTime;
-  UCHAR  HeadLoadTime;
-  UCHAR  MotorOffTime;
-  UCHAR  SectorLengthCode;
-  UCHAR  SectorPerTrack;
-  UCHAR  ReadWriteGapLength;
-  UCHAR  DataTransferLength;
-  UCHAR  FormatGapLength;
-  UCHAR  FormatFillCharacter;
-  UCHAR  HeadSettleTime;
-  UCHAR  MotorSettleTime;
-  UCHAR  MaximumTrackValue;
-  UCHAR  DataTransferRate;
+  USHORT Version;
+  USHORT Revision;
+  CHAR Size[8];
+  ULONG MaxDensity;
+  ULONG MountDensity;
+  UCHAR StepRateHeadUnloadTime;
+  UCHAR HeadLoadTime;
+  UCHAR MotorOffTime;
+  UCHAR SectorLengthCode;
+  UCHAR SectorPerTrack;
+  UCHAR ReadWriteGapLength;
+  UCHAR DataTransferLength;
+  UCHAR FormatGapLength;
+  UCHAR FormatFillCharacter;
+  UCHAR HeadSettleTime;
+  UCHAR MotorSettleTime;
+  UCHAR MaximumTrackValue;
+  UCHAR DataTransferRate;
 } CM_FLOPPY_DEVICE_DATA, *PCM_FLOPPY_DEVICE_DATA;
 
 #include <pshpack4.h>
@@ -240,11 +240,11 @@ typedef struct _CM_PARTIAL_RESOURCE_DESCRIPTOR {
 #define CmResourceTypeDeviceSpecific      5
 #define CmResourceTypeBusNumber           6
 #define CmResourceTypeMemoryLarge         7
-#define CmResourceTypeNonArbitrated     128
-#define CmResourceTypeConfigData        128
-#define CmResourceTypeDevicePrivate     129
-#define CmResourceTypePcCardConfig      130
-#define CmResourceTypeMfCardConfig      131
+#define CmResourceTypeNonArbitrated       128
+#define CmResourceTypeConfigData          128
+#define CmResourceTypeDevicePrivate       129
+#define CmResourceTypePcCardConfig        130
+#define CmResourceTypeMfCardConfig        131
 
 /* CM_PARTIAL_RESOURCE_DESCRIPTOR.ShareDisposition */
 typedef enum _CM_SHARE_DISPOSITION {
@@ -295,30 +295,30 @@ typedef enum _CM_SHARE_DISPOSITION {
 #define CM_RESOURCE_DMA_TYPE_F            0x0040
 
 typedef struct _CM_PARTIAL_RESOURCE_LIST {
-  USHORT  Version;
-  USHORT  Revision;
-  ULONG  Count;
+  USHORT Version;
+  USHORT Revision;
+  ULONG Count;
   CM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptors[1];
 } CM_PARTIAL_RESOURCE_LIST, *PCM_PARTIAL_RESOURCE_LIST;
 
 typedef struct _CM_FULL_RESOURCE_DESCRIPTOR {
-  INTERFACE_TYPE  InterfaceType;
-  ULONG  BusNumber;
-  CM_PARTIAL_RESOURCE_LIST  PartialResourceList;
+  INTERFACE_TYPE InterfaceType;
+  ULONG BusNumber;
+  CM_PARTIAL_RESOURCE_LIST PartialResourceList;
 } CM_FULL_RESOURCE_DESCRIPTOR, *PCM_FULL_RESOURCE_DESCRIPTOR;
 
 typedef struct _CM_RESOURCE_LIST {
-  ULONG  Count;
-  CM_FULL_RESOURCE_DESCRIPTOR  List[1];
+  ULONG Count;
+  CM_FULL_RESOURCE_DESCRIPTOR List[1];
 } CM_RESOURCE_LIST, *PCM_RESOURCE_LIST;
 
 #include <pshpack1.h>
 typedef struct _CM_INT13_DRIVE_PARAMETER {
-  USHORT  DriveSelect;
-  ULONG  MaxCylinders;
-  USHORT  SectorsPerTrack;
-  USHORT  MaxHeads;
-  USHORT  NumberDrives;
+  USHORT DriveSelect;
+  ULONG MaxCylinders;
+  USHORT SectorsPerTrack;
+  USHORT MaxHeads;
+  USHORT NumberDrives;
 } CM_INT13_DRIVE_PARAMETER, *PCM_INT13_DRIVE_PARAMETER;
 
 typedef struct _CM_PNP_BIOS_DEVICE_NODE {
@@ -347,38 +347,38 @@ typedef struct _CM_PNP_BIOS_INSTALLATION_CHECK {
 #include <poppack.h>
 
 typedef struct _CM_DISK_GEOMETRY_DEVICE_DATA {
-    ULONG BytesPerSector;
-    ULONG NumberOfCylinders;
-    ULONG SectorsPerTrack;
-    ULONG NumberOfHeads;
+  ULONG BytesPerSector;
+  ULONG NumberOfCylinders;
+  ULONG SectorsPerTrack;
+  ULONG NumberOfHeads;
 } CM_DISK_GEOMETRY_DEVICE_DATA, *PCM_DISK_GEOMETRY_DEVICE_DATA;
 
 typedef struct _CM_KEYBOARD_DEVICE_DATA {
-  USHORT  Version;
-  USHORT  Revision;
-  UCHAR  Type;
-  UCHAR  Subtype;
-  USHORT  KeyboardFlags;
+  USHORT Version;
+  USHORT Revision;
+  UCHAR Type;
+  UCHAR Subtype;
+  USHORT KeyboardFlags;
 } CM_KEYBOARD_DEVICE_DATA, *PCM_KEYBOARD_DEVICE_DATA;
 
 typedef struct _CM_MCA_POS_DATA {
-  USHORT  AdapterId;
-  UCHAR  PosData1;
-  UCHAR  PosData2;
-  UCHAR  PosData3;
-  UCHAR  PosData4;
+  USHORT AdapterId;
+  UCHAR PosData1;
+  UCHAR PosData2;
+  UCHAR PosData3;
+  UCHAR PosData4;
 } CM_MCA_POS_DATA, *PCM_MCA_POS_DATA;
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 typedef struct CM_Power_Data_s {
-  ULONG  PD_Size;
-  DEVICE_POWER_STATE  PD_MostRecentPowerState;
-  ULONG  PD_Capabilities;
-  ULONG  PD_D1Latency;
-  ULONG  PD_D2Latency;
-  ULONG  PD_D3Latency;
-  DEVICE_POWER_STATE  PD_PowerStateMapping[PowerSystemMaximum];
-  SYSTEM_POWER_STATE  PD_DeepestSystemWake;
+  ULONG PD_Size;
+  DEVICE_POWER_STATE PD_MostRecentPowerState;
+  ULONG PD_Capabilities;
+  ULONG PD_D1Latency;
+  ULONG PD_D2Latency;
+  ULONG PD_D3Latency;
+  DEVICE_POWER_STATE PD_PowerStateMapping[PowerSystemMaximum];
+  SYSTEM_POWER_STATE PD_DeepestSystemWake;
 } CM_POWER_DATA, *PCM_POWER_DATA;
 
 #define PDCAP_D0_SUPPORTED                0x00000001
@@ -394,15 +394,15 @@ typedef struct CM_Power_Data_s {
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
 typedef struct _CM_SCSI_DEVICE_DATA {
-  USHORT  Version;
-  USHORT  Revision;
-  UCHAR  HostIdentifier;
+  USHORT Version;
+  USHORT Revision;
+  UCHAR HostIdentifier;
 } CM_SCSI_DEVICE_DATA, *PCM_SCSI_DEVICE_DATA;
 
 typedef struct _CM_SERIAL_DEVICE_DATA {
-  USHORT  Version;
-  USHORT  Revision;
-  ULONG  BaudClock;
+  USHORT Version;
+  USHORT Revision;
+  ULONG BaudClock;
 } CM_SERIAL_DEVICE_DATA, *PCM_SERIAL_DEVICE_DATA;
 
 typedef enum _KEY_INFORMATION_CLASS {
@@ -415,69 +415,69 @@ typedef enum _KEY_INFORMATION_CLASS {
 } KEY_INFORMATION_CLASS;
 
 typedef struct _KEY_BASIC_INFORMATION {
-  LARGE_INTEGER  LastWriteTime;
-  ULONG  TitleIndex;
-  ULONG  NameLength;
-  WCHAR  Name[1];
+  LARGE_INTEGER LastWriteTime;
+  ULONG TitleIndex;
+  ULONG NameLength;
+  WCHAR Name[1];
 } KEY_BASIC_INFORMATION, *PKEY_BASIC_INFORMATION;
 
 typedef struct _KEY_FULL_INFORMATION {
-  LARGE_INTEGER  LastWriteTime;
-  ULONG  TitleIndex;
-  ULONG  ClassOffset;
-  ULONG  ClassLength;
-  ULONG  SubKeys;
-  ULONG  MaxNameLen;
-  ULONG  MaxClassLen;
-  ULONG  Values;
-  ULONG  MaxValueNameLen;
-  ULONG  MaxValueDataLen;
-  WCHAR  Class[1];
+  LARGE_INTEGER LastWriteTime;
+  ULONG TitleIndex;
+  ULONG ClassOffset;
+  ULONG ClassLength;
+  ULONG SubKeys;
+  ULONG MaxNameLen;
+  ULONG MaxClassLen;
+  ULONG Values;
+  ULONG MaxValueNameLen;
+  ULONG MaxValueDataLen;
+  WCHAR Class[1];
 } KEY_FULL_INFORMATION, *PKEY_FULL_INFORMATION;
 
 typedef struct _KEY_NODE_INFORMATION {
-  LARGE_INTEGER  LastWriteTime;
-  ULONG  TitleIndex;
-  ULONG  ClassOffset;
-  ULONG  ClassLength;
-  ULONG  NameLength;
-  WCHAR  Name[1];
+  LARGE_INTEGER LastWriteTime;
+  ULONG TitleIndex;
+  ULONG ClassOffset;
+  ULONG ClassLength;
+  ULONG NameLength;
+  WCHAR Name[1];
 } KEY_NODE_INFORMATION, *PKEY_NODE_INFORMATION;
 
 typedef struct _KEY_VALUE_BASIC_INFORMATION {
-  ULONG  TitleIndex;
-  ULONG  Type;
-  ULONG  NameLength;
-  WCHAR  Name[1];
+  ULONG TitleIndex;
+  ULONG Type;
+  ULONG NameLength;
+  WCHAR Name[1];
 } KEY_VALUE_BASIC_INFORMATION, *PKEY_VALUE_BASIC_INFORMATION;
 
 typedef struct _KEY_VALUE_FULL_INFORMATION {
-  ULONG  TitleIndex;
-  ULONG  Type;
-  ULONG  DataOffset;
-  ULONG  DataLength;
-  ULONG  NameLength;
-  WCHAR  Name[1];
+  ULONG TitleIndex;
+  ULONG Type;
+  ULONG DataOffset;
+  ULONG DataLength;
+  ULONG NameLength;
+  WCHAR Name[1];
 } KEY_VALUE_FULL_INFORMATION, *PKEY_VALUE_FULL_INFORMATION;
 
 typedef struct _KEY_VALUE_PARTIAL_INFORMATION {
-  ULONG  TitleIndex;
-  ULONG  Type;
-  ULONG  DataLength;
-  UCHAR  Data[1];
+  ULONG TitleIndex;
+  ULONG Type;
+  ULONG DataLength;
+  UCHAR Data[1];
 } KEY_VALUE_PARTIAL_INFORMATION, *PKEY_VALUE_PARTIAL_INFORMATION;
 
 typedef struct _KEY_VALUE_PARTIAL_INFORMATION_ALIGN64 {
-  ULONG  Type;
-  ULONG  DataLength;
-  UCHAR  Data[1];
+  ULONG Type;
+  ULONG DataLength;
+  UCHAR Data[1];
 } KEY_VALUE_PARTIAL_INFORMATION_ALIGN64, *PKEY_VALUE_PARTIAL_INFORMATION_ALIGN64;
 
 typedef struct _KEY_VALUE_ENTRY {
-  PUNICODE_STRING  ValueName;
-  ULONG  DataLength;
-  ULONG  DataOffset;
-  ULONG  Type;
+  PUNICODE_STRING ValueName;
+  ULONG DataLength;
+  ULONG DataOffset;
+  ULONG Type;
 } KEY_VALUE_ENTRY, *PKEY_VALUE_ENTRY;
 
 typedef enum _KEY_VALUE_INFORMATION_CLASS {
@@ -489,7 +489,7 @@ typedef enum _KEY_VALUE_INFORMATION_CLASS {
 } KEY_VALUE_INFORMATION_CLASS;
 
 typedef struct _KEY_WRITE_TIME_INFORMATION {
-  LARGE_INTEGER  LastWriteTime;
+  LARGE_INTEGER LastWriteTime;
 } KEY_WRITE_TIME_INFORMATION, *PKEY_WRITE_TIME_INFORMATION;
 
 typedef enum _KEY_SET_INFORMATION_CLASS {
@@ -566,10 +566,9 @@ typedef enum _REG_NOTIFY_CLASS {
 
 typedef NTSTATUS
 (NTAPI *PEX_CALLBACK_FUNCTION)(
-    IN PVOID CallbackContext,
-    IN PVOID Argument1,
-    IN PVOID Argument2
-);
+  IN PVOID CallbackContext,
+  IN PVOID Argument1,
+  IN PVOID Argument2);
 
 typedef struct _REG_DELETE_KEY_INFORMATION {
   PVOID Object;

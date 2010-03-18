@@ -42,7 +42,7 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 ObReferenceObjectByPointer(
-  IN PVOID  Object,
+  IN PVOID Object,
   IN ACCESS_MASK DesiredAccess,
   IN POBJECT_TYPE ObjectType OPTIONAL,
   IN KPROCESSOR_MODE AccessMode);

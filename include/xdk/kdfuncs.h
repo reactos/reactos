@@ -6,7 +6,7 @@
 ULONG
 DDKCDECLAPI
 DbgPrint(
-  IN PCSTR  Format,
+  IN PCSTR Format,
   IN ...);
 #endif
 
@@ -32,21 +32,21 @@ DbgPrint(
 
 extern NTKERNELAPI BOOLEAN KdDebuggerNotPresent;
 extern NTKERNELAPI BOOLEAN KdDebuggerEnabled;
-#define KD_DEBUGGER_ENABLED     KdDebuggerEnabled
+#define KD_DEBUGGER_ENABLED KdDebuggerEnabled
 #define KD_DEBUGGER_NOT_PRESENT KdDebuggerNotPresent
 
 #elif defined(_NTDDK_) || defined(_NTIFS_) || defined(_NTHAL_) || defined(_WDMDDK_) || defined(_NTOSP_)
 
 extern NTKERNELAPI PBOOLEAN KdDebuggerNotPresent;
 extern NTKERNELAPI PBOOLEAN KdDebuggerEnabled;
-#define KD_DEBUGGER_ENABLED     *KdDebuggerEnabled
+#define KD_DEBUGGER_ENABLED *KdDebuggerEnabled
 #define KD_DEBUGGER_NOT_PRESENT *KdDebuggerNotPresent
 
 #else
 
 extern BOOLEAN KdDebuggerNotPresent;
 extern BOOLEAN KdDebuggerEnabled;
-#define KD_DEBUGGER_ENABLED     KdDebuggerEnabled
+#define KD_DEBUGGER_ENABLED KdDebuggerEnabled
 #define KD_DEBUGGER_NOT_PRESENT KdDebuggerNotPresent
 
 #endif
@@ -74,45 +74,42 @@ vDbgPrintExWithPrefix(
   IN va_list ap);
 
 #endif
-#endif // _VA_LIST_DEFINED
+#endif /* _VA_LIST_DEFINED */
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
-KdDisableDebugger(
-  VOID);
+KdDisableDebugger(VOID);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
-KdEnableDebugger(
-  VOID);
+KdEnableDebugger(VOID);
 
 #if (_MSC_FULL_VER >= 150030729) && !defined(IMPORT_NATIVE_DBG_BREAK)
 #define DbgBreakPoint __debugbreak
 #else
 VOID
 NTAPI
-DbgBreakPoint(
-  VOID);
+DbgBreakPoint(VOID);
 #endif
 
 NTSYSAPI
 VOID
 NTAPI
 DbgBreakPointWithStatus(
-  IN ULONG  Status);
+  IN ULONG Status);
 
 NTSYSAPI
 ULONG
 DDKCDECLAPI
 DbgPrintReturnControlC(
-  IN PCCH  Format,
+  IN PCCH Format,
   IN ...);
 
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 
@@ -120,37 +117,33 @@ NTSYSAPI
 ULONG
 DDKCDECLAPI
 DbgPrintEx(
-  IN ULONG  ComponentId,
-  IN ULONG  Level,
-  IN PCSTR  Format,
+  IN ULONG ComponentId,
+  IN ULONG Level,
+  IN PCSTR Format,
   IN ...);
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 DbgQueryDebugFilterState(
-  IN ULONG  ComponentId,
-  IN ULONG  Level);
+  IN ULONG ComponentId,
+  IN ULONG Level);
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 DbgSetDebugFilterState(
-  IN ULONG  ComponentId,
-  IN ULONG  Level,
-  IN BOOLEAN  State);
+  IN ULONG ComponentId,
+  IN ULONG Level,
+  IN BOOLEAN State);
 
 #endif
 
 #if (NTDDI_VERSION >= NTDDI_WS03)
-
 NTKERNELAPI
 BOOLEAN
 NTAPI
-KdRefreshDebuggerNotPresent(
-    VOID
-);
-
+KdRefreshDebuggerNotPresent(VOID);
 #endif
 
 #if (NTDDI_VERSION >= NTDDI_WS03SP1)

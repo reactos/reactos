@@ -44,27 +44,27 @@ FORCEINLINE
 KIRQL
 KeGetCurrentIrql(VOID)
 {
-    return (KIRQL)__readcr8();
+  return (KIRQL)__readcr8();
 }
 
 FORCEINLINE
 VOID
 KeLowerIrql(IN KIRQL NewIrql)
 {
-    ASSERT(KeGetCurrentIrql() >= NewIrql);
-    __writecr8(NewIrql);
+  ASSERT(KeGetCurrentIrql() >= NewIrql);
+  __writecr8(NewIrql);
 }
 
 FORCEINLINE
 KIRQL
 KfRaiseIrql(IN KIRQL NewIrql)
 {
-    KIRQL OldIrql;
+  KIRQL OldIrql;
 
-    OldIrql = __readcr8();
-    ASSERT(OldIrql <= NewIrql);
-    __writecr8(NewIrql);
-    return OldIrql;
+  OldIrql = __readcr8();
+  ASSERT(OldIrql <= NewIrql);
+  __writecr8(NewIrql);
+  return OldIrql;
 }
 #define KeRaiseIrql(a,b) *(b) = KfRaiseIrql(a)
 
@@ -72,22 +72,21 @@ FORCEINLINE
 KIRQL
 KeRaiseIrqlToDpcLevel(VOID)
 {
-    return KfRaiseIrql(DISPATCH_LEVEL);
+  return KfRaiseIrql(DISPATCH_LEVEL);
 }
 
 FORCEINLINE
 KIRQL
 KeRaiseIrqlToSynchLevel(VOID)
 {
-    return KfRaiseIrql(12); // SYNCH_LEVEL = IPI_LEVEL - 2
+  return KfRaiseIrql(12); // SYNCH_LEVEL = IPI_LEVEL - 2
 }
 
 FORCEINLINE
 PKTHREAD
-KeGetCurrentThread (
-  VOID)
+KeGetCurrentThread(VOID)
 {
-    return (struct _KTHREAD *)__readgsqword(0x188);
+  return (struct _KTHREAD *)__readgsqword(0x188);
 }
 
 /* x86 and x64 performs a 0x2C interrupt */

@@ -2,9 +2,7 @@
  *                       Memory manager Functions                             *
  ******************************************************************************/
 
-/*
- * Alignment Macros
- */
+/* Alignment Macros */
 #define ALIGN_DOWN_BY(size, align) \
     ((ULONG_PTR)(size) & ~((ULONG_PTR)(align) - 1))
 
@@ -162,56 +160,56 @@ NTKERNELAPI
 PVOID
 NTAPI
 MmAllocateContiguousMemory(
-  IN SIZE_T  NumberOfBytes,
-  IN PHYSICAL_ADDRESS  HighestAcceptableAddress);
+  IN SIZE_T NumberOfBytes,
+  IN PHYSICAL_ADDRESS HighestAcceptableAddress);
 
 NTKERNELAPI
 PVOID
 NTAPI
 MmAllocateContiguousMemorySpecifyCache(
-  IN SIZE_T  NumberOfBytes,
-  IN PHYSICAL_ADDRESS  LowestAcceptableAddress,
-  IN PHYSICAL_ADDRESS  HighestAcceptableAddress,
-  IN PHYSICAL_ADDRESS  BoundaryAddressMultiple  OPTIONAL,
-  IN MEMORY_CACHING_TYPE  CacheType);
+  IN SIZE_T NumberOfBytes,
+  IN PHYSICAL_ADDRESS LowestAcceptableAddress,
+  IN PHYSICAL_ADDRESS HighestAcceptableAddress,
+  IN PHYSICAL_ADDRESS BoundaryAddressMultiple OPTIONAL,
+  IN MEMORY_CACHING_TYPE CacheType);
 
 NTKERNELAPI
 PMDL
 NTAPI
 MmAllocatePagesForMdl(
-  IN PHYSICAL_ADDRESS  LowAddress,
-  IN PHYSICAL_ADDRESS  HighAddress,
-  IN PHYSICAL_ADDRESS  SkipBytes,
-  IN SIZE_T  TotalBytes);
+  IN PHYSICAL_ADDRESS LowAddress,
+  IN PHYSICAL_ADDRESS HighAddress,
+  IN PHYSICAL_ADDRESS SkipBytes,
+  IN SIZE_T TotalBytes);
 
 NTKERNELAPI
 VOID
 NTAPI
 MmBuildMdlForNonPagedPool(
-  IN OUT PMDLX  MemoryDescriptorList);
+  IN OUT PMDLX MemoryDescriptorList);
 
 //DECLSPEC_DEPRECATED_DDK
 NTKERNELAPI
 PMDL
 NTAPI
 MmCreateMdl(
-  IN PMDL  MemoryDescriptorList  OPTIONAL,
-  IN PVOID  Base,
-  IN SIZE_T  Length);
+  IN PMDL MemoryDescriptorList OPTIONAL,
+  IN PVOID Base,
+  IN SIZE_T Length);
 
 NTKERNELAPI
 VOID
 NTAPI
 MmFreeContiguousMemory(
-  IN PVOID  BaseAddress);
+  IN PVOID BaseAddress);
 
 NTKERNELAPI
 VOID
 NTAPI
 MmFreeContiguousMemorySpecifyCache(
-  IN PVOID  BaseAddress,
-  IN SIZE_T  NumberOfBytes,
-  IN MEMORY_CACHING_TYPE  CacheType);
+  IN PVOID BaseAddress,
+  IN SIZE_T NumberOfBytes,
+  IN MEMORY_CACHING_TYPE CacheType);
 
 NTKERNELAPI
 VOID
@@ -223,7 +221,7 @@ NTKERNELAPI
 PVOID
 NTAPI
 MmGetSystemRoutineAddress(
-  IN PUNICODE_STRING  SystemRoutineName);
+  IN PUNICODE_STRING SystemRoutineName);
 
 NTKERNELAPI
 LOGICAL
@@ -235,22 +233,22 @@ NTKERNELAPI
 PVOID
 NTAPI
 MmLockPagableDataSection(
-  IN PVOID  AddressWithinSection);
+  IN PVOID AddressWithinSection);
 
 NTKERNELAPI
 PVOID
 NTAPI
 MmMapIoSpace(
-  IN PHYSICAL_ADDRESS  PhysicalAddress,
-  IN SIZE_T  NumberOfBytes,
-  IN MEMORY_CACHING_TYPE  CacheEnable);
+  IN PHYSICAL_ADDRESS PhysicalAddress,
+  IN SIZE_T NumberOfBytes,
+  IN MEMORY_CACHING_TYPE CacheEnable);
 
 NTKERNELAPI
 PVOID
 NTAPI
 MmMapLockedPages(
-  IN PMDL  MemoryDescriptorList,
-  IN KPROCESSOR_MODE  AccessMode);
+  IN PMDL MemoryDescriptorList,
+  IN KPROCESSOR_MODE AccessMode);
 
 NTKERNELAPI
 PVOID
@@ -267,71 +265,70 @@ NTKERNELAPI
 PVOID
 NTAPI
 MmPageEntireDriver(
-  IN PVOID  AddressWithinSection);
+  IN PVOID AddressWithinSection);
 
 NTKERNELAPI
 VOID
 NTAPI
 MmProbeAndLockPages(
-  IN OUT PMDL  MemoryDescriptorList,
-  IN KPROCESSOR_MODE  AccessMode,
-  IN LOCK_OPERATION  Operation);
+  IN OUT PMDL MemoryDescriptorList,
+  IN KPROCESSOR_MODE AccessMode,
+  IN LOCK_OPERATION Operation);
 
 NTKERNELAPI
 MM_SYSTEMSIZE
 NTAPI
-MmQuerySystemSize(
-  VOID);
+MmQuerySystemSize(VOID);
 
 NTKERNELAPI
 VOID
 NTAPI
 MmResetDriverPaging(
-  IN PVOID  AddressWithinSection);
+  IN PVOID AddressWithinSection);
 
 NTKERNELAPI
 SIZE_T
 NTAPI
 MmSizeOfMdl(
-  IN PVOID  Base,
-  IN SIZE_T  Length);
+  IN PVOID Base,
+  IN SIZE_T Length);
 
 NTKERNELAPI
 VOID
 NTAPI
 MmUnlockPagableImageSection(
-  IN PVOID  ImageSectionHandle);
+  IN PVOID ImageSectionHandle);
 
 NTKERNELAPI
 VOID
 NTAPI
 MmUnlockPages(
-  IN OUT PMDL  MemoryDescriptorList);
+  IN OUT PMDL MemoryDescriptorList);
 
 NTKERNELAPI
 VOID
 NTAPI
 MmUnmapIoSpace(
-  IN PVOID  BaseAddress,
-  IN SIZE_T  NumberOfBytes);
+  IN PVOID BaseAddress,
+  IN SIZE_T NumberOfBytes);
 
 NTKERNELAPI
 VOID
 NTAPI
 MmProbeAndLockProcessPages(
-  IN OUT PMDL  MemoryDescriptorList,
-  IN PEPROCESS  Process,
-  IN KPROCESSOR_MODE  AccessMode,
-  IN LOCK_OPERATION  Operation);
+  IN OUT PMDL MemoryDescriptorList,
+  IN PEPROCESS Process,
+  IN KPROCESSOR_MODE AccessMode,
+  IN LOCK_OPERATION Operation);
 
 NTKERNELAPI
 VOID
 NTAPI
 MmUnmapLockedPages(
-  IN PVOID  BaseAddress,
-  IN PMDL  MemoryDescriptorList);
+  IN PVOID BaseAddress,
+  IN PMDL MemoryDescriptorList);
 
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 
@@ -339,54 +336,54 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 MmAdvanceMdl(
-  IN OUT PMDL  Mdl,
-  IN ULONG  NumberOfBytes);
+  IN OUT PMDL Mdl,
+  IN ULONG NumberOfBytes);
 
 NTKERNELAPI
 PVOID
 NTAPI
 MmAllocateMappingAddress(
-  IN SIZE_T  NumberOfBytes,
-  IN ULONG  PoolTag);
+  IN SIZE_T NumberOfBytes,
+  IN ULONG PoolTag);
 
 NTKERNELAPI
 VOID
 NTAPI
 MmFreeMappingAddress(
-  IN PVOID  BaseAddress,
-  IN ULONG  PoolTag);
+  IN PVOID BaseAddress,
+  IN ULONG PoolTag);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 MmIsVerifierEnabled(
-  OUT PULONG  VerifierFlags);
+  OUT PULONG VerifierFlags);
 
 NTKERNELAPI
 PVOID
 NTAPI
 MmMapLockedPagesWithReservedMapping(
-  IN PVOID  MappingAddress,
-  IN ULONG  PoolTag,
-  IN PMDL  MemoryDescriptorList,
-  IN MEMORY_CACHING_TYPE  CacheType);
+  IN PVOID MappingAddress,
+  IN ULONG PoolTag,
+  IN PMDL MemoryDescriptorList,
+  IN MEMORY_CACHING_TYPE CacheType);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 MmProtectMdlSystemAddress(
-  IN PMDL  MemoryDescriptorList,
-  IN ULONG  NewProtect);
+  IN PMDL MemoryDescriptorList,
+  IN ULONG NewProtect);
 
 NTKERNELAPI
 VOID
 NTAPI
 MmUnmapReservedMapping(
-  IN PVOID  BaseAddress,
-  IN ULONG  PoolTag,
-  IN PMDL  MemoryDescriptorList);
+  IN PVOID BaseAddress,
+  IN ULONG PoolTag,
+  IN PMDL MemoryDescriptorList);
 
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
 #if (NTDDI_VERSION >= NTDDI_WS03SP1)
 NTKERNELAPI

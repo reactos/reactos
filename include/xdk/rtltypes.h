@@ -26,43 +26,43 @@
 #define HASH_STRING_ALGORITHM_INVALID     0xffffffff
 
 typedef struct _RTL_BITMAP {
-    ULONG SizeOfBitMap;
-    PULONG Buffer;
+  ULONG SizeOfBitMap;
+  PULONG Buffer;
 } RTL_BITMAP, *PRTL_BITMAP;
 
 typedef struct _RTL_BITMAP_RUN {
-    ULONG StartingIndex;
-    ULONG NumberOfBits;
+  ULONG StartingIndex;
+  ULONG NumberOfBits;
 } RTL_BITMAP_RUN, *PRTL_BITMAP_RUN;
 
 typedef NTSTATUS
 (DDKAPI *PRTL_QUERY_REGISTRY_ROUTINE)(
-    IN PWSTR ValueName,
-    IN ULONG ValueType,
-    IN PVOID ValueData,
-    IN ULONG ValueLength,
-    IN PVOID Context,
-    IN PVOID EntryContext);
+  IN PWSTR ValueName,
+  IN ULONG ValueType,
+  IN PVOID ValueData,
+  IN ULONG ValueLength,
+  IN PVOID Context,
+  IN PVOID EntryContext);
 
 typedef struct _RTL_QUERY_REGISTRY_TABLE {
-    PRTL_QUERY_REGISTRY_ROUTINE QueryRoutine;
-    ULONG Flags;
-    PCWSTR Name;
-    PVOID EntryContext;
-    ULONG DefaultType;
-    PVOID DefaultData;
-    ULONG DefaultLength;
+  PRTL_QUERY_REGISTRY_ROUTINE QueryRoutine;
+  ULONG Flags;
+  PCWSTR Name;
+  PVOID EntryContext;
+  ULONG DefaultType;
+  PVOID DefaultData;
+  ULONG DefaultLength;
 } RTL_QUERY_REGISTRY_TABLE, *PRTL_QUERY_REGISTRY_TABLE;
 
 typedef struct _TIME_FIELDS {
-    CSHORT Year;
-    CSHORT Month;
-    CSHORT Day;
-    CSHORT Hour;
-    CSHORT Minute;
-    CSHORT Second;
-    CSHORT Milliseconds;
-    CSHORT Weekday;
+  CSHORT Year;
+  CSHORT Month;
+  CSHORT Day;
+  CSHORT Hour;
+  CSHORT Minute;
+  CSHORT Second;
+  CSHORT Milliseconds;
+  CSHORT Weekday;
 } TIME_FIELDS, *PTIME_FIELDS;
 
 /* Slist Header */
@@ -72,42 +72,42 @@ typedef struct _TIME_FIELDS {
 #if defined(_WIN64)
 typedef struct DECLSPEC_ALIGN(16) _SLIST_ENTRY *PSLIST_ENTRY;
 typedef struct DECLSPEC_ALIGN(16) _SLIST_ENTRY {
-	PSLIST_ENTRY Next;
+  PSLIST_ENTRY Next;
 } SLIST_ENTRY;
 typedef union DECLSPEC_ALIGN(16) _SLIST_HEADER {
-    struct {
-        ULONGLONG Alignment;
-        ULONGLONG Region;
-    } DUMMYSTRUCTNAME;
-    struct {
-        ULONGLONG Depth:16;
-        ULONGLONG Sequence:9;
-        ULONGLONG NextEntry:39;
-        ULONGLONG HeaderType:1;
-        ULONGLONG Init:1;
-        ULONGLONG Reserved:59;
-        ULONGLONG Region:3;
-    } Header8;
-    struct {
-        ULONGLONG Depth:16;
-        ULONGLONG Sequence:48;
-        ULONGLONG HeaderType:1;
-        ULONGLONG Init:1;
-        ULONGLONG Reserved:2;
-        ULONGLONG NextEntry:60;
-    } Header16;
+  struct {
+    ULONGLONG Alignment;
+    ULONGLONG Region;
+  } DUMMYSTRUCTNAME;
+  struct {
+    ULONGLONG Depth:16;
+    ULONGLONG Sequence:9;
+    ULONGLONG NextEntry:39;
+    ULONGLONG HeaderType:1;
+    ULONGLONG Init:1;
+    ULONGLONG Reserved:59;
+    ULONGLONG Region:3;
+  } Header8;
+  struct {
+    ULONGLONG Depth:16;
+    ULONGLONG Sequence:48;
+    ULONGLONG HeaderType:1;
+    ULONGLONG Init:1;
+    ULONGLONG Reserved:2;
+    ULONGLONG NextEntry:60;
+  } Header16;
 } SLIST_HEADER, *PSLIST_HEADER;
 #else
 #define SLIST_ENTRY SINGLE_LIST_ENTRY
 #define _SLIST_ENTRY _SINGLE_LIST_ENTRY
 #define PSLIST_ENTRY PSINGLE_LIST_ENTRY
 typedef union _SLIST_HEADER {
-    ULONGLONG Alignment;
-    struct {
-        SLIST_ENTRY Next;
-        USHORT Depth;
-        USHORT Sequence;
-    } DUMMYSTRUCTNAME;
+  ULONGLONG Alignment;
+  struct {
+    SLIST_ENTRY Next;
+    USHORT Depth;
+    USHORT Sequence;
+  } DUMMYSTRUCTNAME;
 } SLIST_HEADER, *PSLIST_HEADER;
 #endif
 

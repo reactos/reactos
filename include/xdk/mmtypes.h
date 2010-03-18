@@ -90,8 +90,8 @@
 
 /* Section map options */
 typedef enum _SECTION_INHERIT {
-    ViewShare = 1,
-    ViewUnmap = 2
+  ViewShare = 1,
+  ViewUnmap = 2
 } SECTION_INHERIT;
 
 typedef ULONG PFN_COUNT;
@@ -99,14 +99,14 @@ typedef LONG_PTR SPFN_NUMBER, *PSPFN_NUMBER;
 typedef ULONG_PTR PFN_NUMBER, *PPFN_NUMBER;
 
 typedef struct _MDL {
-    struct _MDL *Next;
-    CSHORT Size;
-    CSHORT MdlFlags;
-    struct _EPROCESS *Process;
-    PVOID MappedSystemVa;
-    PVOID StartVa;
-    ULONG ByteCount;
-    ULONG ByteOffset;
+  struct _MDL *Next;
+  CSHORT Size;
+  CSHORT MdlFlags;
+  struct _EPROCESS *Process;
+  PVOID MappedSystemVa;
+  PVOID StartVa;
+  ULONG ByteCount;
+  ULONG ByteOffset;
 } MDL, *PMDL;
 typedef MDL *PMDLX;
 

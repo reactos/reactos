@@ -14,43 +14,43 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwClose(
-  IN HANDLE  Handle);
+  IN HANDLE Handle);
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateDirectoryObject(
-  OUT PHANDLE  DirectoryHandle,
-  IN ACCESS_MASK  DesiredAccess,
-  IN POBJECT_ATTRIBUTES  ObjectAttributes);
+  OUT PHANDLE DirectoryHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes);
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateFile(
-  OUT PHANDLE  FileHandle,
-  IN ACCESS_MASK  DesiredAccess,
-  IN POBJECT_ATTRIBUTES  ObjectAttributes,
-  OUT PIO_STATUS_BLOCK  IoStatusBlock,
-  IN PLARGE_INTEGER  AllocationSize  OPTIONAL,
-  IN ULONG  FileAttributes,
-  IN ULONG  ShareAccess,
-  IN ULONG  CreateDisposition,
-  IN ULONG  CreateOptions,
-  IN PVOID  EaBuffer  OPTIONAL,
-  IN ULONG  EaLength);
+  OUT PHANDLE FileHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  IN PLARGE_INTEGER AllocationSize OPTIONAL,
+  IN ULONG FileAttributes,
+  IN ULONG ShareAccess,
+  IN ULONG CreateDisposition,
+  IN ULONG CreateOptions,
+  IN PVOID EaBuffer OPTIONAL,
+  IN ULONG EaLength);
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateKey(
-  OUT PHANDLE  KeyHandle,
-  IN ACCESS_MASK  DesiredAccess,
-  IN POBJECT_ATTRIBUTES  ObjectAttributes,
-  IN ULONG  TitleIndex,
-  IN PUNICODE_STRING  Class  OPTIONAL,
-  IN ULONG  CreateOptions,
-  OUT PULONG  Disposition  OPTIONAL);
+  OUT PHANDLE KeyHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes,
+  IN ULONG TitleIndex,
+  IN PUNICODE_STRING Class OPTIONAL,
+  IN ULONG CreateOptions,
+  OUT PULONG Disposition OPTIONAL);
 
 NTSYSAPI
 NTSTATUS
@@ -74,7 +74,7 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwDeleteValueKey(
-  IN HANDLE  KeyHandle,
+  IN HANDLE KeyHandle,
   IN PUNICODE_STRING ValueName);
 
 NTSYSAPI
@@ -103,7 +103,7 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwFlushKey(
-  IN HANDLE  KeyHandle);
+  IN HANDLE KeyHandle);
 
 NTSYSAPI
 NTSTATUS
@@ -115,22 +115,22 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwMakeTemporaryObject(
-  IN HANDLE  Handle);
+  IN HANDLE Handle);
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwMapViewOfSection(
-  IN HANDLE  SectionHandle,
-  IN HANDLE  ProcessHandle,
-  IN OUT PVOID  *BaseAddress,
-  IN ULONG_PTR  ZeroBits,
-  IN SIZE_T  CommitSize,
-  IN OUT PLARGE_INTEGER  SectionOffset  OPTIONAL,
-  IN OUT PSIZE_T  ViewSize,
-  IN SECTION_INHERIT  InheritDisposition,
-  IN ULONG  AllocationType,
-  IN ULONG  Protect);
+  IN HANDLE SectionHandle,
+  IN HANDLE ProcessHandle,
+  IN OUT PVOID *BaseAddress,
+  IN ULONG_PTR ZeroBits,
+  IN SIZE_T CommitSize,
+  IN OUT PLARGE_INTEGER SectionOffset OPTIONAL,
+  IN OUT PSIZE_T ViewSize,
+  IN SECTION_INHERIT InheritDisposition,
+  IN ULONG AllocationType,
+  IN ULONG Protect);
 
 NTSYSAPI
 NTSTATUS
@@ -147,35 +147,35 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenKey(
-  OUT PHANDLE  KeyHandle,
-  IN ACCESS_MASK  DesiredAccess,
-  IN POBJECT_ATTRIBUTES  ObjectAttributes);
+  OUT PHANDLE KeyHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes);
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenSection(
-  OUT PHANDLE  SectionHandle,
-  IN ACCESS_MASK  DesiredAccess,
-  IN POBJECT_ATTRIBUTES  ObjectAttributes);
+  OUT PHANDLE SectionHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes);
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenSymbolicLinkObject(
-  OUT PHANDLE  LinkHandle,
-  IN ACCESS_MASK  DesiredAccess,
-  IN POBJECT_ATTRIBUTES  ObjectAttributes);
+  OUT PHANDLE LinkHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes);
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryInformationFile(
-  IN HANDLE  FileHandle,
-  OUT PIO_STATUS_BLOCK  IoStatusBlock,
-  OUT PVOID  FileInformation,
-  IN ULONG  Length,
-  IN FILE_INFORMATION_CLASS  FileInformationClass);
+  IN HANDLE FileHandle,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  OUT PVOID FileInformation,
+  IN ULONG Length,
+  IN FILE_INFORMATION_CLASS FileInformationClass);
 
 NTSYSAPI
 NTSTATUS
@@ -191,9 +191,9 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQuerySymbolicLinkObject(
-  IN HANDLE  LinkHandle,
-  IN OUT PUNICODE_STRING  LinkTarget,
-  OUT PULONG  ReturnedLength  OPTIONAL);
+  IN HANDLE LinkHandle,
+  IN OUT PUNICODE_STRING LinkTarget,
+  OUT PULONG ReturnedLength OPTIONAL);
 
 NTSYSAPI
 NTSTATUS
@@ -210,36 +210,36 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwReadFile(
-  IN HANDLE  FileHandle,
-  IN HANDLE  Event  OPTIONAL,
-  IN PIO_APC_ROUTINE  ApcRoutine  OPTIONAL,
-  IN PVOID  ApcContext  OPTIONAL,
-  OUT PIO_STATUS_BLOCK  IoStatusBlock,
-  OUT PVOID  Buffer,
-  IN ULONG  Length,
-  IN PLARGE_INTEGER  ByteOffset  OPTIONAL,
-  IN PULONG  Key  OPTIONAL);
+  IN HANDLE FileHandle,
+  IN HANDLE Event OPTIONAL,
+  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+  IN PVOID ApcContext OPTIONAL,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  OUT PVOID Buffer,
+  IN ULONG Length,
+  IN PLARGE_INTEGER ByteOffset OPTIONAL,
+  IN PULONG Key OPTIONAL);
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetInformationFile(
-  IN HANDLE  FileHandle,
-  OUT PIO_STATUS_BLOCK  IoStatusBlock,
-  IN PVOID  FileInformation,
-  IN ULONG  Length,
-  IN FILE_INFORMATION_CLASS  FileInformationClass);
+  IN HANDLE FileHandle,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  IN PVOID FileInformation,
+  IN ULONG Length,
+  IN FILE_INFORMATION_CLASS FileInformationClass);
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetValueKey(
-  IN HANDLE  KeyHandle,
-  IN PUNICODE_STRING  ValueName,
-  IN ULONG  TitleIndex  OPTIONAL,
-  IN ULONG  Type,
-  IN PVOID  Data OPTIONAL,
-  IN ULONG  DataSize);
+  IN HANDLE KeyHandle,
+  IN PUNICODE_STRING ValueName,
+  IN ULONG TitleIndex OPTIONAL,
+  IN ULONG Type,
+  IN PVOID Data OPTIONAL,
+  IN ULONG DataSize);
 
 NTSYSAPI
 NTSTATUS
@@ -251,22 +251,22 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwUnmapViewOfSection(
-  IN HANDLE  ProcessHandle,
-  IN PVOID  BaseAddress OPTIONAL);
+  IN HANDLE ProcessHandle,
+  IN PVOID BaseAddress OPTIONAL);
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwWriteFile(
-  IN HANDLE  FileHandle,
-  IN HANDLE  Event  OPTIONAL,
-  IN PIO_APC_ROUTINE  ApcRoutine  OPTIONAL,
-  IN PVOID  ApcContext  OPTIONAL,
-  OUT PIO_STATUS_BLOCK  IoStatusBlock,
-  IN PVOID  Buffer,
-  IN ULONG  Length,
-  IN PLARGE_INTEGER  ByteOffset  OPTIONAL,
-  IN PULONG  Key  OPTIONAL);
+  IN HANDLE FileHandle,
+  IN HANDLE Event OPTIONAL,
+  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+  IN PVOID ApcContext OPTIONAL,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  IN PVOID Buffer,
+  IN ULONG Length,
+  IN PLARGE_INTEGER ByteOffset OPTIONAL,
+  IN PULONG Key OPTIONAL);
 
 NTSYSAPI
 NTSTATUS
@@ -275,10 +275,9 @@ ZwQueryFullAttributesFile(
   IN POBJECT_ATTRIBUTES ObjectAttributes,
   OUT PFILE_NETWORK_OPEN_INFORMATION FileInformation);
 
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 #if (NTDDI_VERSION >= NTDDI_WIN2003)
-
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
@@ -286,7 +285,6 @@ ZwOpenEvent(
   OUT PHANDLE EventHandle,
   IN ACCESS_MASK DesiredAccess,
   IN POBJECT_ATTRIBUTES ObjectAttributes);
-
 #endif
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
@@ -613,7 +611,7 @@ ZwSinglePhaseReject(
   IN PLARGE_INTEGER TmVirtualClock OPTIONAL);
 
 
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
 
@@ -680,4 +678,4 @@ ZwSetInformationKey(
   IN PVOID KeySetInformation,
   IN ULONG KeySetInformationLength);
 
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */

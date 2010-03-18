@@ -30,8 +30,7 @@ KeFlushWriteBuffer(VOID)
 NTSYSAPI
 PKTHREAD
 NTAPI
-KeGetCurrentThread(
-  VOID);
+KeGetCurrentThread(VOID);
 
 $endif
 

@@ -15,7 +15,7 @@ $if (_WDMDDK_)
 #define HIGH_LEVEL              31
 #define CLOCK_LEVEL             CLOCK2_LEVEL
 
-#define KIP0PCRADDRESS          0xffdff000  
+#define KIP0PCRADDRESS          0xffdff000
 #define KI_USER_SHARED_DATA     0xffdf0000
 #define SharedUserData          ((KUSER_SHARED_DATA * CONST)KI_USER_SHARED_DATA)
 
@@ -33,14 +33,14 @@ $if (_WDMDDK_)
 
 
 typedef struct _KFLOATING_SAVE {
-  ULONG  ControlWord;
-  ULONG  StatusWord;
-  ULONG  ErrorOffset;
-  ULONG  ErrorSelector;
-  ULONG  DataOffset;
-  ULONG  DataSelector;
-  ULONG  Cr0NpxState;
-  ULONG  Spare1;
+  ULONG ControlWord;
+  ULONG StatusWord;
+  ULONG ErrorOffset;
+  ULONG ErrorSelector;
+  ULONG DataOffset;
+  ULONG DataSelector;
+  ULONG Cr0NpxState;
+  ULONG Spare1;
 } KFLOATING_SAVE, *PKFLOATING_SAVE;
 
 extern NTKERNELAPI volatile KSYSTEM_TIME KeTickCount;
@@ -49,8 +49,7 @@ extern NTKERNELAPI volatile KSYSTEM_TIME KeTickCount;
 
 FORCEINLINE
 VOID
-KeMemoryBarrier(
-  VOID)
+KeMemoryBarrier(VOID)
 {
   volatile LONG Barrier;
 #if defined(__GNUC__)
@@ -64,34 +63,32 @@ NTHALAPI
 VOID
 FASTCALL
 KfLowerIrql(
-  IN KIRQL  NewIrql);
+  IN KIRQL NewIrql);
 #define KeLowerIrql(a) KfLowerIrql(a)
 
 NTHALAPI
 KIRQL
 FASTCALL
 KfRaiseIrql(
-  IN KIRQL  NewIrql);
+  IN KIRQL NewIrql);
 #define KeRaiseIrql(a,b) *(b) = KfRaiseIrql(a)
 
 NTHALAPI
 KIRQL
 DDKAPI
-KeRaiseIrqlToDpcLevel(
-  VOID);
+KeRaiseIrqlToDpcLevel(VOID);
 
 NTHALAPI
 KIRQL
 DDKAPI
-KeRaiseIrqlToSynchLevel(
-    VOID);
+KeRaiseIrqlToSynchLevel(VOID);
 
 NTHALAPI
 KIRQL
 FASTCALL
 KfAcquireSpinLock(
   IN PKSPIN_LOCK SpinLock);
-#define KeAcquireSpinLock(a,b)  *(b) = KfAcquireSpinLock(a)
+#define KeAcquireSpinLock(a,b) *(b) = KfAcquireSpinLock(a)
 
 NTHALAPI
 VOID
@@ -99,39 +96,38 @@ FASTCALL
 KfReleaseSpinLock(
   IN PKSPIN_LOCK SpinLock,
   IN KIRQL NewIrql);
-#define KeReleaseSpinLock(a,b)  KfReleaseSpinLock(a,b)
+#define KeReleaseSpinLock(a,b) KfReleaseSpinLock(a,b)
 
 NTKERNELAPI
 VOID
 FASTCALL
 KefAcquireSpinLockAtDpcLevel(
-  IN PKSPIN_LOCK  SpinLock);
+  IN PKSPIN_LOCK SpinLock);
 #define KeAcquireSpinLockAtDpcLevel(SpinLock) KefAcquireSpinLockAtDpcLevel(SpinLock)
 
 NTKERNELAPI
 VOID
 FASTCALL
 KefReleaseSpinLockFromDpcLevel(
-  IN PKSPIN_LOCK  SpinLock);
+  IN PKSPIN_LOCK SpinLock);
 #define KeReleaseSpinLockFromDpcLevel(SpinLock) KefReleaseSpinLockFromDpcLevel(SpinLock)
 
 NTSYSAPI
 PKTHREAD
 NTAPI
-KeGetCurrentThread(
-  VOID);
+KeGetCurrentThread(VOID);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 KeSaveFloatingPointState(
-  OUT PKFLOATING_SAVE  FloatSave);
+  OUT PKFLOATING_SAVE FloatSave);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 KeRestoreFloatingPointState(
-  IN PKFLOATING_SAVE  FloatSave);
+  IN PKFLOATING_SAVE FloatSave);
 
 /* VOID
  * KeFlushIoBuffers(
@@ -149,13 +145,12 @@ VOID
 _KeQueryTickCount(
   OUT PLARGE_INTEGER CurrentCount)
 {
-    for (;;)
-    {
-        CurrentCount->HighPart = KeTickCount.High1Time;
-        CurrentCount->LowPart = KeTickCount.LowPart;
-        if (CurrentCount->HighPart == KeTickCount.High2Time) break;
-        YieldProcessor();
-    }
+  for (;;) {
+    CurrentCount->HighPart = KeTickCount.High1Time;
+    CurrentCount->LowPart = KeTickCount.LowPart;
+    if (CurrentCount->HighPart == KeTickCount.High2Time) break;
+    YieldProcessor();
+  }
 }
 #define KeQueryTickCount(CurrentCount) _KeQueryTickCount(CurrentCount)
 

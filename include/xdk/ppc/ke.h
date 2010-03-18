@@ -25,15 +25,15 @@ typedef struct _KFLOATING_SAVE {
 } KFLOATING_SAVE, *PKFLOATING_SAVE;
 
 typedef struct _KPCR_TIB {
-  PVOID  ExceptionList;         /* 00 */
-  PVOID  StackBase;             /* 04 */
-  PVOID  StackLimit;            /* 08 */
-  PVOID  SubSystemTib;          /* 0C */
+  PVOID ExceptionList;         /* 00 */
+  PVOID StackBase;             /* 04 */
+  PVOID StackLimit;            /* 08 */
+  PVOID SubSystemTib;          /* 0C */
   _ANONYMOUS_UNION union {
-    PVOID  FiberData;           /* 10 */
-    ULONG  Version;             /* 10 */
+    PVOID FiberData;           /* 10 */
+    ULONG Version;             /* 10 */
   } DUMMYUNIONNAME;
-  PVOID  ArbitraryUserPointer;  /* 14 */
+  PVOID ArbitraryUserPointer;  /* 14 */
   struct _KPCR_TIB *Self;       /* 18 */
 } KPCR_TIB, *PKPCR_TIB;         /* 1C */
 
@@ -41,24 +41,24 @@ typedef struct _KPCR_TIB {
 #define PCR_MAJOR_VERSION 1
 
 typedef struct _KPCR {
-  KPCR_TIB  Tib;                /* 00 */
-  struct _KPCR  *Self;          /* 1C */
-  struct _KPRCB  *Prcb;         /* 20 */
-  KIRQL  Irql;                  /* 24 */
-  ULONG  IRR;                   /* 28 */
-  ULONG  IrrActive;             /* 2C */
-  ULONG  IDR;                   /* 30 */
-  PVOID  KdVersionBlock;        /* 34 */
-  PUSHORT  IDT;                 /* 38 */
-  PUSHORT  GDT;                 /* 3C */
-  struct _KTSS  *TSS;           /* 40 */
-  USHORT  MajorVersion;         /* 44 */
-  USHORT  MinorVersion;         /* 46 */
-  KAFFINITY  SetMember;         /* 48 */
-  ULONG  StallScaleFactor;      /* 4C */
-  UCHAR  SpareUnused;           /* 50 */
-  UCHAR  Number;                /* 51 */
-} KPCR, *PKPCR;                 /* 54 */
+  KPCR_TIB Tib;                /* 00 */
+  struct _KPCR *Self;          /* 1C */
+  struct _KPRCB *Prcb;         /* 20 */
+  KIRQL Irql;                  /* 24 */
+  ULONG IRR;                   /* 28 */
+  ULONG IrrActive;             /* 2C */
+  ULONG IDR;                   /* 30 */
+  PVOID KdVersionBlock;        /* 34 */
+  PUSHORT IDT;                 /* 38 */
+  PUSHORT GDT;                 /* 3C */
+  struct _KTSS *TSS;           /* 40 */
+  USHORT MajorVersion;         /* 44 */
+  USHORT MinorVersion;         /* 46 */
+  KAFFINITY SetMember;         /* 48 */
+  ULONG StallScaleFactor;      /* 4C */
+  UCHAR SpareUnused;           /* 50 */
+  UCHAR Number;                /* 51 */
+} KPCR, *PKPCR;                /* 54 */
 
 #define KeGetPcr()                      PCR
 
@@ -66,10 +66,10 @@ typedef struct _KPCR {
 
 FORCEINLINE
 ULONG
-DDKAPI
+NTAPI
 KeGetCurrentProcessorNumber(VOID)
 {
-    ULONG Number;
+  ULONG Number;
   __asm__ __volatile__ (
     "lwz %0, %c1(12)\n"
     : "=r" (Number)
@@ -82,27 +82,25 @@ NTHALAPI
 VOID
 FASTCALL
 KfLowerIrql(
-  IN KIRQL  NewIrql);
+  IN KIRQL NewIrql);
 #define KeLowerIrql(a) KfLowerIrql(a)
 
 NTHALAPI
 KIRQL
 FASTCALL
 KfRaiseIrql(
-  IN KIRQL  NewIrql);
+  IN KIRQL NewIrql);
 #define KeRaiseIrql(a,b) *(b) = KfRaiseIrql(a)
 
 NTHALAPI
 KIRQL
 DDKAPI
-KeRaiseIrqlToDpcLevel(
-  VOID);
+KeRaiseIrqlToDpcLevel(VOID);
 
 NTHALAPI
 KIRQL
 DDKAPI
-KeRaiseIrqlToSynchLevel(
-    VOID);
+KeRaiseIrqlToSynchLevel(VOID);
 
 $endif
 

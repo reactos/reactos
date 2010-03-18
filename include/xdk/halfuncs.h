@@ -5,9 +5,9 @@ PVOID
 NTAPI
 HalAllocateCommonBuffer(
   IN PDMA_ADAPTER DmaAdapter,
-  IN ULONG  Length,
-  OUT PPHYSICAL_ADDRESS  LogicalAddress,
-  IN BOOLEAN  CacheEnabled)
+  IN ULONG Length,
+  OUT PPHYSICAL_ADDRESS LogicalAddress,
+  IN BOOLEAN CacheEnabled)
 {
   PALLOCATE_COMMON_BUFFER allocateCommonBuffer;
   PVOID commonBuffer;
@@ -23,10 +23,10 @@ VOID
 NTAPI
 HalFreeCommonBuffer(
   IN PDMA_ADAPTER DmaAdapter,
-  IN ULONG  Length,
-  IN PHYSICAL_ADDRESS  LogicalAddress,
-  IN PVOID  VirtualAddress,
-  IN BOOLEAN  CacheEnabled)
+  IN ULONG Length,
+  IN PHYSICAL_ADDRESS LogicalAddress,
+  IN PVOID VirtualAddress,
+  IN BOOLEAN CacheEnabled)
 {
   PFREE_COMMON_BUFFER freeCommonBuffer;
 

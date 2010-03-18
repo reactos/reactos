@@ -16,10 +16,10 @@ typedef LONG SPFN_NUMBER, *PSPFN_NUMBER;
 #define HIGH_LEVEL                        31
 
 typedef struct _KPCR {
-    struct _KPRCB  *Prcb;         /* 20 */
-    KIRQL  Irql;                  /* 24 */
-    ULONG  IRR;                   /* 28 */
-    ULONG  IDR;                   /* 30 */
+  struct _KPRCB *Prcb;         /* 20 */
+  KIRQL Irql;                  /* 24 */
+  ULONG IRR;                   /* 28 */
+  ULONG IDR;                   /* 30 */
 } KPCR, *PKPCR;
 
 #define KeGetPcr()                      PCR
@@ -32,7 +32,7 @@ ULONG
 DDKAPI
 KeGetCurrentProcessorNumber(VOID)
 {
-    return 0;
+  return 0;
 }
 
 #define YieldProcessor() __asm__ __volatile__("nop");
@@ -44,25 +44,23 @@ NTKERNELAPI
 VOID
 NTAPI
 KfLowerIrql(
-  IN KIRQL  NewIrql);
+  IN KIRQL NewIrql);
 
 NTKERNELAPI
 KIRQL
 NTAPI
 KfRaiseIrql(
-  IN KIRQL  NewIrql);
+  IN KIRQL NewIrql);
 
 NTKERNELAPI
 KIRQL
 NTAPI
-KeRaiseIrqlToDpcLevel(
-  VOID);
+KeRaiseIrqlToDpcLevel(VOID);
 
 NTKERNELAPI
 KIRQL
-DDKAPI
-KeRaiseIrqlToSynchLevel(
-    VOID);
+NTAPI
+KeRaiseIrqlToSynchLevel(VOID);
 
 $endif
 

@@ -2,7 +2,7 @@
  *                         I/O Manager Types                                  *
  ******************************************************************************/
 
- /* PCI_COMMON_CONFIG.Command */
+/* PCI_COMMON_CONFIG.Command */
 #define PCI_ENABLE_IO_SPACE               0x0001
 #define PCI_ENABLE_MEMORY_SPACE           0x0002
 #define PCI_ENABLE_BUS_MASTER             0x0004
@@ -283,24 +283,24 @@ typedef struct _OBJECT_HANDLE_INFORMATION {
 } OBJECT_HANDLE_INFORMATION, *POBJECT_HANDLE_INFORMATION;
 
 typedef struct _CLIENT_ID {
-  HANDLE  UniqueProcess;
-  HANDLE  UniqueThread;
+  HANDLE UniqueProcess;
+  HANDLE UniqueThread;
 } CLIENT_ID, *PCLIENT_ID;
 
 typedef VOID
 (DDKAPI *PKSTART_ROUTINE)(
-  IN PVOID  StartContext);
+  IN PVOID StartContext);
 
 typedef struct _VPB {
-  CSHORT  Type;
-  CSHORT  Size;
-  USHORT  Flags;
-  USHORT  VolumeLabelLength;
-  struct _DEVICE_OBJECT  *DeviceObject;
-  struct _DEVICE_OBJECT  *RealDevice;
-  ULONG  SerialNumber;
-  ULONG  ReferenceCount;
-  WCHAR  VolumeLabel[MAXIMUM_VOLUME_LABEL_LENGTH / sizeof(WCHAR)];
+  CSHORT Type;
+  CSHORT Size;
+  USHORT Flags;
+  USHORT VolumeLabelLength;
+  struct _DEVICE_OBJECT *DeviceObject;
+  struct _DEVICE_OBJECT *RealDevice;
+  ULONG SerialNumber;
+  ULONG ReferenceCount;
+  WCHAR VolumeLabel[MAXIMUM_VOLUME_LABEL_LENGTH / sizeof(WCHAR)];
 } VPB, *PVPB;
 
 typedef enum _IO_ALLOCATION_ACTION {
@@ -311,78 +311,78 @@ typedef enum _IO_ALLOCATION_ACTION {
 
 typedef IO_ALLOCATION_ACTION
 (DDKAPI *PDRIVER_CONTROL)(
-  IN struct _DEVICE_OBJECT  *DeviceObject,
-  IN struct _IRP  *Irp,
-  IN PVOID  MapRegisterBase,
-  IN PVOID  Context);
+  IN struct _DEVICE_OBJECT *DeviceObject,
+  IN struct _IRP *Irp,
+  IN PVOID MapRegisterBase,
+  IN PVOID Context);
 
 typedef struct _WAIT_CONTEXT_BLOCK {
-  KDEVICE_QUEUE_ENTRY  WaitQueueEntry;
-  PDRIVER_CONTROL  DeviceRoutine;
-  PVOID  DeviceContext;
-  ULONG  NumberOfMapRegisters;
-  PVOID  DeviceObject;
-  PVOID  CurrentIrp;
-  PKDPC  BufferChainingDpc;
+  KDEVICE_QUEUE_ENTRY WaitQueueEntry;
+  PDRIVER_CONTROL DeviceRoutine;
+  PVOID DeviceContext;
+  ULONG NumberOfMapRegisters;
+  PVOID DeviceObject;
+  PVOID CurrentIrp;
+  PKDPC BufferChainingDpc;
 } WAIT_CONTEXT_BLOCK, *PWAIT_CONTEXT_BLOCK;
 
 typedef struct _DEVICE_OBJECT {
-  CSHORT  Type;
-  USHORT  Size;
-  LONG  ReferenceCount;
-  struct _DRIVER_OBJECT  *DriverObject;
-  struct _DEVICE_OBJECT  *NextDevice;
-  struct _DEVICE_OBJECT  *AttachedDevice;
-  struct _IRP  *CurrentIrp;
-  PIO_TIMER  Timer;
-  ULONG  Flags;
-  ULONG  Characteristics;
-  volatile PVPB  Vpb;
-  PVOID  DeviceExtension;
-  DEVICE_TYPE  DeviceType;
-  CCHAR  StackSize;
+  CSHORT Type;
+  USHORT Size;
+  LONG ReferenceCount;
+  struct _DRIVER_OBJECT *DriverObject;
+  struct _DEVICE_OBJECT *NextDevice;
+  struct _DEVICE_OBJECT *AttachedDevice;
+  struct _IRP *CurrentIrp;
+  PIO_TIMER Timer;
+  ULONG Flags;
+  ULONG Characteristics;
+  volatile PVPB Vpb;
+  PVOID DeviceExtension;
+  DEVICE_TYPE DeviceType;
+  CCHAR StackSize;
   union {
-    LIST_ENTRY  ListEntry;
-    WAIT_CONTEXT_BLOCK  Wcb;
+    LIST_ENTRY ListEntry;
+    WAIT_CONTEXT_BLOCK Wcb;
   } Queue;
-  ULONG  AlignmentRequirement;
-  KDEVICE_QUEUE  DeviceQueue;
-  KDPC  Dpc;
-  ULONG  ActiveThreadCount;
-  PSECURITY_DESCRIPTOR  SecurityDescriptor;
-  KEVENT  DeviceLock;
-  USHORT  SectorSize;
-  USHORT  Spare1;
-  struct _DEVOBJ_EXTENSION  *DeviceObjectExtension;
-  PVOID  Reserved;
+  ULONG AlignmentRequirement;
+  KDEVICE_QUEUE DeviceQueue;
+  KDPC Dpc;
+  ULONG ActiveThreadCount;
+  PSECURITY_DESCRIPTOR SecurityDescriptor;
+  KEVENT DeviceLock;
+  USHORT SectorSize;
+  USHORT Spare1;
+  struct _DEVOBJ_EXTENSION *DeviceObjectExtension;
+  PVOID Reserved;
 } DEVICE_OBJECT, *PDEVICE_OBJECT;
 
 typedef struct _IO_REMOVE_LOCK_TRACKING_BLOCK * PIO_REMOVE_LOCK_TRACKING_BLOCK;
 
 typedef struct _IO_REMOVE_LOCK_COMMON_BLOCK {
-  BOOLEAN  Removed;
-  BOOLEAN  Reserved[3];
-  volatile LONG  IoCount;
-  KEVENT  RemoveEvent;
+  BOOLEAN Removed;
+  BOOLEAN Reserved[3];
+  volatile LONG IoCount;
+  KEVENT RemoveEvent;
 } IO_REMOVE_LOCK_COMMON_BLOCK;
 
 typedef struct _IO_REMOVE_LOCK_DBG_BLOCK {
-  LONG  Signature;
-  LONG  HighWatermark;
-  LONGLONG  MaxLockedTicks;
-  LONG  AllocateTag;
-  LIST_ENTRY  LockList;
-  KSPIN_LOCK  Spin;
-  volatile LONG  LowMemoryCount;
-  ULONG  Reserved1[4];
-  PVOID  Reserved2;
-  PIO_REMOVE_LOCK_TRACKING_BLOCK  Blocks;
+  LONG Signature;
+  LONG HighWatermark;
+  LONGLONG MaxLockedTicks;
+  LONG AllocateTag;
+  LIST_ENTRY LockList;
+  KSPIN_LOCK Spin;
+  volatile LONG LowMemoryCount;
+  ULONG Reserved1[4];
+  PVOID Reserved2;
+  PIO_REMOVE_LOCK_TRACKING_BLOCK Blocks;
 } IO_REMOVE_LOCK_DBG_BLOCK;
 
 typedef struct _IO_REMOVE_LOCK {
-  IO_REMOVE_LOCK_COMMON_BLOCK  Common;
+  IO_REMOVE_LOCK_COMMON_BLOCK Common;
 #if DBG
-  IO_REMOVE_LOCK_DBG_BLOCK  Dbg;
+  IO_REMOVE_LOCK_DBG_BLOCK Dbg;
 #endif
 } IO_REMOVE_LOCK, *PIO_REMOVE_LOCK;
 
@@ -390,91 +390,91 @@ typedef struct _IO_WORKITEM *PIO_WORKITEM;
 
 typedef VOID
 (DDKAPI IO_WORKITEM_ROUTINE)(
-  IN PDEVICE_OBJECT  DeviceObject,
-  IN PVOID  Context);
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PVOID Context);
 typedef IO_WORKITEM_ROUTINE *PIO_WORKITEM_ROUTINE;
 
 typedef struct _SHARE_ACCESS {
-  ULONG  OpenCount;
-  ULONG  Readers;
-  ULONG  Writers;
-  ULONG  Deleters;
-  ULONG  SharedRead;
-  ULONG  SharedWrite;
-  ULONG  SharedDelete;
+  ULONG OpenCount;
+  ULONG Readers;
+  ULONG Writers;
+  ULONG Deleters;
+  ULONG SharedRead;
+  ULONG SharedWrite;
+  ULONG SharedDelete;
 } SHARE_ACCESS, *PSHARE_ACCESS;
 
 /* While MS WDK uses inheritance in C++, we cannot do this with gcc, as
    inheritance, even from a struct renders the type non-POD. So we use
    this hack */
 #define PCI_COMMON_HEADER_LAYOUT \
-  USHORT  VendorID; \
-  USHORT  DeviceID; \
-  USHORT  Command; \
-  USHORT  Status; \
-  UCHAR   RevisionID; \
-  UCHAR   ProgIf; \
-  UCHAR   SubClass; \
-  UCHAR   BaseClass; \
-  UCHAR   CacheLineSize; \
-  UCHAR   LatencyTimer; \
-  UCHAR   HeaderType; \
-  UCHAR   BIST; \
+  USHORT VendorID; \
+  USHORT DeviceID; \
+  USHORT Command; \
+  USHORT Status; \
+  UCHAR RevisionID; \
+  UCHAR ProgIf; \
+  UCHAR SubClass; \
+  UCHAR BaseClass; \
+  UCHAR CacheLineSize; \
+  UCHAR LatencyTimer; \
+  UCHAR HeaderType; \
+  UCHAR BIST; \
   union { \
     struct _PCI_HEADER_TYPE_0 { \
-      ULONG   BaseAddresses[PCI_TYPE0_ADDRESSES]; \
-      ULONG   CIS; \
-      USHORT  SubVendorID; \
-      USHORT  SubSystemID; \
-      ULONG   ROMBaseAddress; \
-      UCHAR   CapabilitiesPtr; \
-      UCHAR   Reserved1[3]; \
-      ULONG   Reserved2; \
-      UCHAR   InterruptLine; \
-      UCHAR   InterruptPin; \
-      UCHAR   MinimumGrant; \
-      UCHAR   MaximumLatency; \
+      ULONG BaseAddresses[PCI_TYPE0_ADDRESSES]; \
+      ULONG CIS; \
+      USHORT SubVendorID; \
+      USHORT SubSystemID; \
+      ULONG ROMBaseAddress; \
+      UCHAR CapabilitiesPtr; \
+      UCHAR Reserved1[3]; \
+      ULONG Reserved2; \
+      UCHAR InterruptLine; \
+      UCHAR InterruptPin; \
+      UCHAR MinimumGrant; \
+      UCHAR MaximumLatency; \
     } type0; \
     struct _PCI_HEADER_TYPE_1 { \
-      ULONG   BaseAddresses[PCI_TYPE1_ADDRESSES]; \
-      UCHAR   PrimaryBus; \
-      UCHAR   SecondaryBus; \
-      UCHAR   SubordinateBus; \
-      UCHAR   SecondaryLatency; \
-      UCHAR   IOBase; \
-      UCHAR   IOLimit; \
-      USHORT  SecondaryStatus; \
-      USHORT  MemoryBase; \
-      USHORT  MemoryLimit; \
-      USHORT  PrefetchBase; \
-      USHORT  PrefetchLimit; \
-      ULONG   PrefetchBaseUpper32; \
-      ULONG   PrefetchLimitUpper32; \
-      USHORT  IOBaseUpper16; \
-      USHORT  IOLimitUpper16; \
-      UCHAR   CapabilitiesPtr; \
-      UCHAR   Reserved1[3]; \
-      ULONG   ROMBaseAddress; \
-      UCHAR   InterruptLine; \
-      UCHAR   InterruptPin; \
-      USHORT  BridgeControl; \
+      ULONG BaseAddresses[PCI_TYPE1_ADDRESSES]; \
+      UCHAR PrimaryBus; \
+      UCHAR SecondaryBus; \
+      UCHAR SubordinateBus; \
+      UCHAR SecondaryLatency; \
+      UCHAR IOBase; \
+      UCHAR IOLimit; \
+      USHORT SecondaryStatus; \
+      USHORT MemoryBase; \
+      USHORT MemoryLimit; \
+      USHORT PrefetchBase; \
+      USHORT PrefetchLimit; \
+      ULONG PrefetchBaseUpper32; \
+      ULONG PrefetchLimitUpper32; \
+      USHORT IOBaseUpper16; \
+      USHORT IOLimitUpper16; \
+      UCHAR CapabilitiesPtr; \
+      UCHAR Reserved1[3]; \
+      ULONG ROMBaseAddress; \
+      UCHAR InterruptLine; \
+      UCHAR InterruptPin; \
+      USHORT BridgeControl; \
     } type1; \
     struct _PCI_HEADER_TYPE_2 { \
-      ULONG   SocketRegistersBaseAddress; \
-      UCHAR   CapabilitiesPtr; \
-      UCHAR   Reserved; \
-      USHORT  SecondaryStatus; \
-      UCHAR   PrimaryBus; \
-      UCHAR   SecondaryBus; \
-      UCHAR   SubordinateBus; \
-      UCHAR   SecondaryLatency; \
-      struct  { \
-        ULONG   Base; \
-        ULONG   Limit; \
+      ULONG SocketRegistersBaseAddress; \
+      UCHAR CapabilitiesPtr; \
+      UCHAR Reserved; \
+      USHORT SecondaryStatus; \
+      UCHAR PrimaryBus; \
+      UCHAR SecondaryBus; \
+      UCHAR SubordinateBus; \
+      UCHAR SecondaryLatency; \
+      struct { \
+        ULONG Base; \
+        ULONG Limit; \
       } Range[PCI_TYPE2_ADDRESSES-1]; \
-      UCHAR   InterruptLine; \
-      UCHAR   InterruptPin; \
-      USHORT  BridgeControl; \
+      UCHAR InterruptLine; \
+      UCHAR InterruptPin; \
+      USHORT BridgeControl; \
     } type2; \
   } u;
 
@@ -490,12 +490,12 @@ typedef struct _PCI_COMMON_HEADER {
 #ifdef __cplusplus
 typedef struct _PCI_COMMON_CONFIG {
   PCI_COMMON_HEADER_LAYOUT
-  UCHAR  DeviceSpecific[192];
+  UCHAR DeviceSpecific[192];
 } PCI_COMMON_CONFIG, *PPCI_COMMON_CONFIG;
 #else
 typedef struct _PCI_COMMON_CONFIG {
   PCI_COMMON_HEADER DUMMYSTRUCTNAME;
-  UCHAR  DeviceSpecific[192];
+  UCHAR DeviceSpecific[192];
 } PCI_COMMON_CONFIG, *PPCI_COMMON_CONFIG;
 #endif
 
@@ -513,20 +513,20 @@ typedef enum _CREATE_FILE_TYPE {
 
 typedef struct _IO_STATUS_BLOCK {
   _ANONYMOUS_UNION union {
-    NTSTATUS  Status;
-    PVOID  Pointer;
+    NTSTATUS Status;
+    PVOID Pointer;
   } DUMMYUNIONNAME;
-  ULONG_PTR  Information;
+  ULONG_PTR Information;
 } IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
 
 typedef struct _PCI_SLOT_NUMBER {
   union {
     struct {
-      ULONG  DeviceNumber : 5;
-      ULONG  FunctionNumber : 3;
-      ULONG  Reserved : 24;
+      ULONG DeviceNumber:5;
+      ULONG FunctionNumber:3;
+      ULONG Reserved:24;
     } bits;
-    ULONG  AsULONG;
+    ULONG AsULONG;
   } u;
 } PCI_SLOT_NUMBER, *PPCI_SLOT_NUMBER;
 
@@ -538,8 +538,8 @@ typedef VOID
 
 typedef VOID
 (DDKAPI *WMI_NOTIFICATION_CALLBACK)(
-  PVOID  Wnode,
-  PVOID  Context);
+  PVOID Wnode,
+  PVOID Context);
 
 #define EVENT_INCREMENT                   1
 #define IO_NO_INCREMENT                   0
@@ -559,103 +559,103 @@ typedef VOID
 #define MM_MAXIMUM_DISK_IO_SIZE          (0x10000)
 
 typedef struct _BOOTDISK_INFORMATION {
-  LONGLONG  BootPartitionOffset;
-  LONGLONG  SystemPartitionOffset;
-  ULONG  BootDeviceSignature;
-  ULONG  SystemDeviceSignature;
+  LONGLONG BootPartitionOffset;
+  LONGLONG SystemPartitionOffset;
+  ULONG BootDeviceSignature;
+  ULONG SystemDeviceSignature;
 } BOOTDISK_INFORMATION, *PBOOTDISK_INFORMATION;
 
 typedef struct _BOOTDISK_INFORMATION_EX {
-  LONGLONG  BootPartitionOffset;
-  LONGLONG  SystemPartitionOffset;
-  ULONG  BootDeviceSignature;
-  ULONG  SystemDeviceSignature;
-  GUID  BootDeviceGuid;
-  GUID  SystemDeviceGuid;
-  BOOLEAN  BootDeviceIsGpt;
-  BOOLEAN  SystemDeviceIsGpt;
+  LONGLONG BootPartitionOffset;
+  LONGLONG SystemPartitionOffset;
+  ULONG BootDeviceSignature;
+  ULONG SystemDeviceSignature;
+  GUID BootDeviceGuid;
+  GUID SystemDeviceGuid;
+  BOOLEAN BootDeviceIsGpt;
+  BOOLEAN SystemDeviceIsGpt;
 } BOOTDISK_INFORMATION_EX, *PBOOTDISK_INFORMATION_EX;
 
 typedef struct _EISA_MEMORY_TYPE {
-  UCHAR  ReadWrite : 1;
-  UCHAR  Cached : 1;
-  UCHAR  Reserved0 : 1;
-  UCHAR  Type : 2;
-  UCHAR  Shared : 1;
-  UCHAR  Reserved1 : 1;
-  UCHAR  MoreEntries : 1;
+  UCHAR ReadWrite:1;
+  UCHAR Cached:1;
+  UCHAR Reserved0:1;
+  UCHAR Type:2;
+  UCHAR Shared:1;
+  UCHAR Reserved1:1;
+  UCHAR MoreEntries:1;
 } EISA_MEMORY_TYPE, *PEISA_MEMORY_TYPE;
 
 #include <pshpack1.h>
 typedef struct _EISA_MEMORY_CONFIGURATION {
-  EISA_MEMORY_TYPE  ConfigurationByte;
-  UCHAR  DataSize;
-  USHORT  AddressLowWord;
-  UCHAR  AddressHighByte;
-  USHORT  MemorySize;
+  EISA_MEMORY_TYPE ConfigurationByte;
+  UCHAR DataSize;
+  USHORT AddressLowWord;
+  UCHAR AddressHighByte;
+  USHORT MemorySize;
 } EISA_MEMORY_CONFIGURATION, *PEISA_MEMORY_CONFIGURATION;
 #include <poppack.h>
 
 typedef struct _EISA_IRQ_DESCRIPTOR {
-  UCHAR  Interrupt : 4;
-  UCHAR  Reserved : 1;
-  UCHAR  LevelTriggered : 1;
-  UCHAR  Shared : 1;
-  UCHAR  MoreEntries : 1;
+  UCHAR Interrupt:4;
+  UCHAR Reserved:1;
+  UCHAR LevelTriggered:1;
+  UCHAR Shared:1;
+  UCHAR MoreEntries:1;
 } EISA_IRQ_DESCRIPTOR, *PEISA_IRQ_DESCRIPTOR;
 
 typedef struct _EISA_IRQ_CONFIGURATION {
-  EISA_IRQ_DESCRIPTOR  ConfigurationByte;
-  UCHAR  Reserved;
+  EISA_IRQ_DESCRIPTOR ConfigurationByte;
+  UCHAR Reserved;
 } EISA_IRQ_CONFIGURATION, *PEISA_IRQ_CONFIGURATION;
 
 typedef struct _DMA_CONFIGURATION_BYTE0 {
-  UCHAR Channel : 3;
-  UCHAR Reserved : 3;
-  UCHAR Shared : 1;
-  UCHAR MoreEntries : 1;
+  UCHAR Channel:3;
+  UCHAR Reserved:3;
+  UCHAR Shared:1;
+  UCHAR MoreEntries:1;
 } DMA_CONFIGURATION_BYTE0;
 
 typedef struct _DMA_CONFIGURATION_BYTE1 {
-  UCHAR  Reserved0 : 2;
-  UCHAR  TransferSize : 2;
-  UCHAR  Timing : 2;
-  UCHAR  Reserved1 : 2;
+  UCHAR Reserved0:2;
+  UCHAR TransferSize:2;
+  UCHAR Timing:2;
+  UCHAR Reserved1:2;
 } DMA_CONFIGURATION_BYTE1;
 
 typedef struct _EISA_DMA_CONFIGURATION {
-  DMA_CONFIGURATION_BYTE0  ConfigurationByte0;
-  DMA_CONFIGURATION_BYTE1  ConfigurationByte1;
+  DMA_CONFIGURATION_BYTE0 ConfigurationByte0;
+  DMA_CONFIGURATION_BYTE1 ConfigurationByte1;
 } EISA_DMA_CONFIGURATION, *PEISA_DMA_CONFIGURATION;
 
 #include <pshpack1.h>
 typedef struct _EISA_PORT_DESCRIPTOR {
-  UCHAR  NumberPorts : 5;
-  UCHAR  Reserved : 1;
-  UCHAR  Shared : 1;
-  UCHAR  MoreEntries : 1;
+  UCHAR NumberPorts:5;
+  UCHAR Reserved:1;
+  UCHAR Shared:1;
+  UCHAR MoreEntries:1;
 } EISA_PORT_DESCRIPTOR, *PEISA_PORT_DESCRIPTOR;
 
 typedef struct _EISA_PORT_CONFIGURATION {
-  EISA_PORT_DESCRIPTOR  Configuration;
-  USHORT  PortAddress;
+  EISA_PORT_DESCRIPTOR Configuration;
+  USHORT PortAddress;
 } EISA_PORT_CONFIGURATION, *PEISA_PORT_CONFIGURATION;
 #include <poppack.h>
 
 typedef struct _CM_EISA_FUNCTION_INFORMATION {
-  ULONG  CompressedId;
-  UCHAR  IdSlotFlags1;
-  UCHAR  IdSlotFlags2;
-  UCHAR  MinorRevision;
-  UCHAR  MajorRevision;
-  UCHAR  Selections[26];
-  UCHAR  FunctionFlags;
-  UCHAR  TypeString[80];
-  EISA_MEMORY_CONFIGURATION  EisaMemory[9];
-  EISA_IRQ_CONFIGURATION  EisaIrq[7];
-  EISA_DMA_CONFIGURATION  EisaDma[4];
-  EISA_PORT_CONFIGURATION  EisaPort[20];
-  UCHAR  InitializationData[60];
+  ULONG CompressedId;
+  UCHAR IdSlotFlags1;
+  UCHAR IdSlotFlags2;
+  UCHAR MinorRevision;
+  UCHAR MajorRevision;
+  UCHAR Selections[26];
+  UCHAR FunctionFlags;
+  UCHAR TypeString[80];
+  EISA_MEMORY_CONFIGURATION EisaMemory[9];
+  EISA_IRQ_CONFIGURATION EisaIrq[7];
+  EISA_DMA_CONFIGURATION EisaDma[4];
+  EISA_PORT_CONFIGURATION EisaPort[20];
+  UCHAR InitializationData[60];
 } CM_EISA_FUNCTION_INFORMATION, *PCM_EISA_FUNCTION_INFORMATION;
 
 /* CM_EISA_FUNCTION_INFORMATION.FunctionFlags */
@@ -673,14 +673,14 @@ typedef struct _CM_EISA_FUNCTION_INFORMATION {
   + EISA_HAS_MEMORY_ENTRY + EISA_HAS_TYPE_ENTRY)
 
 typedef struct _CM_EISA_SLOT_INFORMATION {
-  UCHAR  ReturnCode;
-  UCHAR  ReturnFlags;
-  UCHAR  MajorRevision;
-  UCHAR  MinorRevision;
-  USHORT  Checksum;
-  UCHAR  NumberFunctions;
-  UCHAR  FunctionInformation;
-  ULONG  CompressedId;
+  UCHAR ReturnCode;
+  UCHAR ReturnFlags;
+  UCHAR MajorRevision;
+  UCHAR MinorRevision;
+  USHORT Checksum;
+  UCHAR NumberFunctions;
+  UCHAR FunctionInformation;
+  ULONG CompressedId;
 } CM_EISA_SLOT_INFORMATION, *PCM_EISA_SLOT_INFORMATION;
 
 /* CM_EISA_SLOT_INFORMATION.ReturnCode */
@@ -697,7 +697,7 @@ typedef struct _CM_EISA_SLOT_INFORMATION {
 
 typedef VOID
 (DDKAPI *PINTERFACE_REFERENCE)(
-  PVOID  Context);
+  PVOID Context);
 
 typedef VOID
 (DDKAPI *PINTERFACE_DEREFERENCE)(
@@ -705,25 +705,25 @@ typedef VOID
 
 typedef BOOLEAN
 (DDKAPI *PTRANSLATE_BUS_ADDRESS)(
-  IN PVOID  Context,
-  IN PHYSICAL_ADDRESS  BusAddress,
-  IN ULONG  Length,
-  IN OUT PULONG  AddressSpace,
+  IN PVOID Context,
+  IN PHYSICAL_ADDRESS BusAddress,
+  IN ULONG Length,
+  IN OUT PULONG AddressSpace,
   OUT PPHYSICAL_ADDRESS  TranslatedAddress);
 
 typedef struct _DMA_ADAPTER*
 (DDKAPI *PGET_DMA_ADAPTER)(
-  IN PVOID  Context,
-  IN struct _DEVICE_DESCRIPTION  *DeviceDescriptor,
-  OUT PULONG  NumberOfMapRegisters);
+  IN PVOID Context,
+  IN struct _DEVICE_DESCRIPTION *DeviceDescriptor,
+  OUT PULONG NumberOfMapRegisters);
 
 typedef ULONG
 (DDKAPI *PGET_SET_DEVICE_DATA)(
-  IN PVOID  Context,
-  IN ULONG  DataType,
-  IN PVOID  Buffer,
-  IN ULONG  Offset,
-  IN ULONG  Length);
+  IN PVOID Context,
+  IN ULONG DataType,
+  IN PVOID Buffer,
+  IN ULONG Offset,
+  IN ULONG Length);
 
 /* PCI_DEVICE_PRESENCE_PARAMETERS.Flags */
 #define PCI_USE_SUBSYSTEM_IDS   0x00000001
@@ -735,26 +735,26 @@ typedef ULONG
 #define PCI_USE_LOCAL_DEVICE    0x00000040
 
 typedef struct _PCI_DEVICE_PRESENCE_PARAMETERS {
-  ULONG   Size;
-  ULONG   Flags;
-  USHORT  VendorID;
-  USHORT  DeviceID;
-  UCHAR   RevisionID;
-  USHORT  SubVendorID;
-  USHORT  SubSystemID;
-  UCHAR   BaseClass;
-  UCHAR   SubClass;
-  UCHAR   ProgIf;
+  ULONG Size;
+  ULONG Flags;
+  USHORT VendorID;
+  USHORT DeviceID;
+  UCHAR RevisionID;
+  USHORT SubVendorID;
+  USHORT SubSystemID;
+  UCHAR BaseClass;
+  UCHAR SubClass;
+  UCHAR ProgIf;
 } PCI_DEVICE_PRESENCE_PARAMETERS, *PPCI_DEVICE_PRESENCE_PARAMETERS;
 
 typedef BOOLEAN
 (DDKAPI *PPCI_IS_DEVICE_PRESENT)(
-  IN USHORT  VendorID,
-  IN USHORT  DeviceID,
-  IN UCHAR   RevisionID,
-  IN USHORT  SubVendorID,
-  IN USHORT  SubSystemID,
-  IN ULONG   Flags);
+  IN USHORT VendorID,
+  IN USHORT DeviceID,
+  IN UCHAR RevisionID,
+  IN USHORT SubVendorID,
+  IN USHORT SubSystemID,
+  IN ULONG Flags);
 
 typedef BOOLEAN
 (DDKAPI *PPCI_IS_DEVICE_PRESENT_EX)(
@@ -762,87 +762,87 @@ typedef BOOLEAN
   IN PPCI_DEVICE_PRESENCE_PARAMETERS Parameters);
 
 typedef struct _BUS_INTERFACE_STANDARD {
-  USHORT  Size;
-  USHORT  Version;
-  PVOID  Context;
-  PINTERFACE_REFERENCE  InterfaceReference;
-  PINTERFACE_DEREFERENCE  InterfaceDereference;
-  PTRANSLATE_BUS_ADDRESS  TranslateBusAddress;
-  PGET_DMA_ADAPTER  GetDmaAdapter;
-  PGET_SET_DEVICE_DATA  SetBusData;
-  PGET_SET_DEVICE_DATA  GetBusData;
+  USHORT Size;
+  USHORT Version;
+  PVOID Context;
+  PINTERFACE_REFERENCE InterfaceReference;
+  PINTERFACE_DEREFERENCE InterfaceDereference;
+  PTRANSLATE_BUS_ADDRESS TranslateBusAddress;
+  PGET_DMA_ADAPTER GetDmaAdapter;
+  PGET_SET_DEVICE_DATA SetBusData;
+  PGET_SET_DEVICE_DATA GetBusData;
 } BUS_INTERFACE_STANDARD, *PBUS_INTERFACE_STANDARD;
 
 typedef struct _PCI_DEVICE_PRESENT_INTERFACE {
-  USHORT  Size;
-  USHORT  Version;
-  PVOID  Context;
-  PINTERFACE_REFERENCE  InterfaceReference;
-  PINTERFACE_DEREFERENCE  InterfaceDereference;
-  PPCI_IS_DEVICE_PRESENT  IsDevicePresent;
-  PPCI_IS_DEVICE_PRESENT_EX  IsDevicePresentEx;
+  USHORT Size;
+  USHORT Version;
+  PVOID Context;
+  PINTERFACE_REFERENCE InterfaceReference;
+  PINTERFACE_DEREFERENCE InterfaceDereference;
+  PPCI_IS_DEVICE_PRESENT IsDevicePresent;
+  PPCI_IS_DEVICE_PRESENT_EX IsDevicePresentEx;
 } PCI_DEVICE_PRESENT_INTERFACE, *PPCI_DEVICE_PRESENT_INTERFACE;
 
 typedef struct _DEVICE_CAPABILITIES {
-  USHORT  Size;
-  USHORT  Version;
-  ULONG  DeviceD1 : 1;
-  ULONG  DeviceD2 : 1;
-  ULONG  LockSupported : 1;
-  ULONG  EjectSupported : 1;
-  ULONG  Removable : 1;
-  ULONG  DockDevice : 1;
-  ULONG  UniqueID : 1;
-  ULONG  SilentInstall : 1;
-  ULONG  RawDeviceOK : 1;
-  ULONG  SurpriseRemovalOK : 1;
-  ULONG  WakeFromD0 : 1;
-  ULONG  WakeFromD1 : 1;
-  ULONG  WakeFromD2 : 1;
-  ULONG  WakeFromD3 : 1;
-  ULONG  HardwareDisabled : 1;
-  ULONG  NonDynamic : 1;
-  ULONG  WarmEjectSupported : 1;
-  ULONG  NoDisplayInUI : 1;
-  ULONG  Reserved : 14;
-  ULONG  Address;
-  ULONG  UINumber;
-  DEVICE_POWER_STATE  DeviceState[PowerSystemMaximum];
-  SYSTEM_POWER_STATE  SystemWake;
-  DEVICE_POWER_STATE  DeviceWake;
-  ULONG  D1Latency;
-  ULONG  D2Latency;
-  ULONG  D3Latency;
+  USHORT Size;
+  USHORT Version;
+  ULONG DeviceD1:1;
+  ULONG DeviceD2:1;
+  ULONG LockSupported:1;
+  ULONG EjectSupported:1;
+  ULONG Removable:1;
+  ULONG DockDevice:1;
+  ULONG UniqueID:1;
+  ULONG SilentInstall:1;
+  ULONG RawDeviceOK:1;
+  ULONG SurpriseRemovalOK:1;
+  ULONG WakeFromD0:1;
+  ULONG WakeFromD1:1;
+  ULONG WakeFromD2:1;
+  ULONG WakeFromD3:1;
+  ULONG HardwareDisabled:1;
+  ULONG NonDynamic:1;
+  ULONG WarmEjectSupported:1;
+  ULONG NoDisplayInUI:1;
+  ULONG Reserved:14;
+  ULONG Address;
+  ULONG UINumber;
+  DEVICE_POWER_STATE DeviceState[PowerSystemMaximum];
+  SYSTEM_POWER_STATE SystemWake;
+  DEVICE_POWER_STATE DeviceWake;
+  ULONG D1Latency;
+  ULONG D2Latency;
+  ULONG D3Latency;
 } DEVICE_CAPABILITIES, *PDEVICE_CAPABILITIES;
 
 typedef struct _DEVICE_INTERFACE_CHANGE_NOTIFICATION {
-  USHORT  Version;
-  USHORT  Size;
-  GUID  Event;
-  GUID  InterfaceClassGuid;
-  PUNICODE_STRING  SymbolicLinkName;
+  USHORT Version;
+  USHORT Size;
+  GUID Event;
+  GUID InterfaceClassGuid;
+  PUNICODE_STRING SymbolicLinkName;
 } DEVICE_INTERFACE_CHANGE_NOTIFICATION, *PDEVICE_INTERFACE_CHANGE_NOTIFICATION;
 
 typedef struct _HWPROFILE_CHANGE_NOTIFICATION {
-  USHORT  Version;
-  USHORT  Size;
-  GUID  Event;
+  USHORT Version;
+  USHORT Size;
+  GUID Event;
 } HWPROFILE_CHANGE_NOTIFICATION, *PHWPROFILE_CHANGE_NOTIFICATION;
 
 #undef INTERFACE
 
 typedef struct _INTERFACE {
-  USHORT  Size;
-  USHORT  Version;
-  PVOID  Context;
-  PINTERFACE_REFERENCE  InterfaceReference;
-  PINTERFACE_DEREFERENCE  InterfaceDereference;
+  USHORT Size;
+  USHORT Version;
+  PVOID Context;
+  PINTERFACE_REFERENCE InterfaceReference;
+  PINTERFACE_DEREFERENCE InterfaceDereference;
 } INTERFACE, *PINTERFACE;
 
 typedef struct _PLUGPLAY_NOTIFICATION_HEADER {
-  USHORT  Version;
-  USHORT  Size;
-  GUID  Event;
+  USHORT Version;
+  USHORT Size;
+  GUID Event;
 } PLUGPLAY_NOTIFICATION_HEADER, *PPLUGPLAY_NOTIFICATION_HEADER;
 
 typedef ULONG PNP_DEVICE_STATE, *PPNP_DEVICE_STATE;
@@ -857,19 +857,19 @@ typedef ULONG PNP_DEVICE_STATE, *PPNP_DEVICE_STATE;
 #define PNP_DEVICE_NOT_DISABLEABLE               0x00000020
 
 typedef struct _TARGET_DEVICE_CUSTOM_NOTIFICATION {
-  USHORT  Version;
-  USHORT  Size;
-  GUID  Event;
-  struct _FILE_OBJECT  *FileObject;
-  LONG  NameBufferOffset;
-  UCHAR  CustomDataBuffer[1];
+  USHORT Version;
+  USHORT Size;
+  GUID Event;
+  struct _FILE_OBJECT *FileObject;
+  LONG NameBufferOffset;
+  UCHAR CustomDataBuffer[1];
 } TARGET_DEVICE_CUSTOM_NOTIFICATION, *PTARGET_DEVICE_CUSTOM_NOTIFICATION;
 
 typedef struct _TARGET_DEVICE_REMOVAL_NOTIFICATION {
-  USHORT  Version;
-  USHORT  Size;
-  GUID  Event;
-  struct _FILE_OBJECT  *FileObject;
+  USHORT Version;
+  USHORT Size;
+  GUID Event;
+  struct _FILE_OBJECT *FileObject;
 } TARGET_DEVICE_REMOVAL_NOTIFICATION, *PTARGET_DEVICE_REMOVAL_NOTIFICATION;
 
 typedef enum _DEVICE_USAGE_NOTIFICATION_TYPE {
@@ -880,9 +880,9 @@ typedef enum _DEVICE_USAGE_NOTIFICATION_TYPE {
 } DEVICE_USAGE_NOTIFICATION_TYPE;
 
 typedef struct _POWER_SEQUENCE {
-  ULONG  SequenceD1;
-  ULONG  SequenceD2;
-  ULONG  SequenceD3;
+  ULONG SequenceD1;
+  ULONG SequenceD2;
+  ULONG SequenceD3;
 } POWER_SEQUENCE, *PPOWER_SEQUENCE;
 
 typedef enum {
@@ -998,35 +998,35 @@ typedef enum _FILE_INFORMATION_CLASS {
 } FILE_INFORMATION_CLASS, *PFILE_INFORMATION_CLASS;
 
 typedef struct _FILE_POSITION_INFORMATION {
-  LARGE_INTEGER  CurrentByteOffset;
+  LARGE_INTEGER CurrentByteOffset;
 } FILE_POSITION_INFORMATION, *PFILE_POSITION_INFORMATION;
 
 #include <pshpack8.h>
 typedef struct _FILE_BASIC_INFORMATION {
-  LARGE_INTEGER  CreationTime;
-  LARGE_INTEGER  LastAccessTime;
-  LARGE_INTEGER  LastWriteTime;
-  LARGE_INTEGER  ChangeTime;
-  ULONG  FileAttributes;
+  LARGE_INTEGER CreationTime;
+  LARGE_INTEGER LastAccessTime;
+  LARGE_INTEGER LastWriteTime;
+  LARGE_INTEGER ChangeTime;
+  ULONG FileAttributes;
 } FILE_BASIC_INFORMATION, *PFILE_BASIC_INFORMATION;
 #include <poppack.h>
 
 typedef struct _FILE_STANDARD_INFORMATION {
-  LARGE_INTEGER  AllocationSize;
-  LARGE_INTEGER  EndOfFile;
-  ULONG  NumberOfLinks;
-  BOOLEAN  DeletePending;
-  BOOLEAN  Directory;
+  LARGE_INTEGER AllocationSize;
+  LARGE_INTEGER EndOfFile;
+  ULONG NumberOfLinks;
+  BOOLEAN DeletePending;
+  BOOLEAN Directory;
 } FILE_STANDARD_INFORMATION, *PFILE_STANDARD_INFORMATION;
 
 typedef struct _FILE_NETWORK_OPEN_INFORMATION {
-  LARGE_INTEGER  CreationTime;
-  LARGE_INTEGER  LastAccessTime;
-  LARGE_INTEGER  LastWriteTime;
-  LARGE_INTEGER  ChangeTime;
-  LARGE_INTEGER  AllocationSize;
-  LARGE_INTEGER  EndOfFile;
-  ULONG  FileAttributes;
+  LARGE_INTEGER CreationTime;
+  LARGE_INTEGER LastAccessTime;
+  LARGE_INTEGER LastWriteTime;
+  LARGE_INTEGER ChangeTime;
+  LARGE_INTEGER AllocationSize;
+  LARGE_INTEGER EndOfFile;
+  ULONG FileAttributes;
 } FILE_NETWORK_OPEN_INFORMATION, *PFILE_NETWORK_OPEN_INFORMATION;
 
 typedef enum _FSINFOCLASS {
@@ -1044,16 +1044,16 @@ typedef enum _FSINFOCLASS {
 } FS_INFORMATION_CLASS, *PFS_INFORMATION_CLASS;
 
 typedef struct _FILE_FS_DEVICE_INFORMATION {
-  DEVICE_TYPE  DeviceType;
-  ULONG  Characteristics;
+  DEVICE_TYPE DeviceType;
+  ULONG Characteristics;
 } FILE_FS_DEVICE_INFORMATION, *PFILE_FS_DEVICE_INFORMATION;
 
 typedef struct _FILE_FULL_EA_INFORMATION {
-  ULONG  NextEntryOffset;
-  UCHAR  Flags;
-  UCHAR  EaNameLength;
-  USHORT  EaValueLength;
-  CHAR  EaName[1];
+  ULONG NextEntryOffset;
+  UCHAR Flags;
+  UCHAR EaNameLength;
+  USHORT EaValueLength;
+  CHAR EaName[1];
 } FILE_FULL_EA_INFORMATION, *PFILE_FULL_EA_INFORMATION;
 
 #define FM_LOCK_BIT             (0x1)
@@ -1064,32 +1064,30 @@ typedef struct _FILE_FULL_EA_INFORMATION {
 typedef ULONG_PTR ERESOURCE_THREAD, *PERESOURCE_THREAD;
 
 typedef struct _OWNER_ENTRY {
-    ERESOURCE_THREAD OwnerThread;
-    _ANONYMOUS_UNION union {
-        LONG OwnerCount;
-        ULONG TableSize;
-    } DUMMYUNIONNAME;
+  ERESOURCE_THREAD OwnerThread;
+  _ANONYMOUS_UNION union {
+    LONG OwnerCount;
+    ULONG TableSize;
+  } DUMMYUNIONNAME;
 } OWNER_ENTRY, *POWNER_ENTRY;
 
-typedef struct _ERESOURCE
-{
-    LIST_ENTRY SystemResourcesList;
-    POWNER_ENTRY OwnerTable;
-    SHORT ActiveCount;
-    USHORT Flag;
-    volatile PKSEMAPHORE SharedWaiters;
-    volatile PKEVENT ExclusiveWaiters;
-    OWNER_ENTRY OwnerEntry;
-    ULONG ActiveEntries;
-    ULONG ContentionCount;
-    ULONG NumberOfSharedWaiters;
-    ULONG NumberOfExclusiveWaiters;
-    __GNU_EXTENSION union
-    {
-        PVOID Address;
-        ULONG_PTR CreatorBackTraceIndex;
-    };
-    KSPIN_LOCK SpinLock;
+typedef struct _ERESOURCE {
+  LIST_ENTRY SystemResourcesList;
+  POWNER_ENTRY OwnerTable;
+  SHORT ActiveCount;
+  USHORT Flag;
+  volatile PKSEMAPHORE SharedWaiters;
+  volatile PKEVENT ExclusiveWaiters;
+  OWNER_ENTRY OwnerEntry;
+  ULONG ActiveEntries;
+  ULONG ContentionCount;
+  ULONG NumberOfSharedWaiters;
+  ULONG NumberOfExclusiveWaiters;
+  __GNU_EXTENSION union {
+    PVOID Address;
+    ULONG_PTR CreatorBackTraceIndex;
+  };
+  KSPIN_LOCK SpinLock;
 } ERESOURCE, *PERESOURCE;
 
 /* ERESOURCE.Flag */
@@ -1101,139 +1099,139 @@ typedef struct _ERESOURCE
 
 typedef BOOLEAN
 (DDKAPI *PFAST_IO_CHECK_IF_POSSIBLE)(
-  IN struct _FILE_OBJECT  *FileObject,
-  IN PLARGE_INTEGER  FileOffset,
-  IN ULONG  Length,
-  IN BOOLEAN  Wait,
-  IN ULONG  LockKey,
-  IN BOOLEAN  CheckForReadOperation,
-  OUT PIO_STATUS_BLOCK  IoStatus,
-  IN struct _DEVICE_OBJECT  *DeviceObject);
+  IN struct _FILE_OBJECT *FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN ULONG Length,
+  IN BOOLEAN Wait,
+  IN ULONG LockKey,
+  IN BOOLEAN CheckForReadOperation,
+  OUT PIO_STATUS_BLOCK IoStatus,
+  IN struct _DEVICE_OBJECT *DeviceObject);
 
 typedef BOOLEAN
 (DDKAPI *PFAST_IO_READ)(
-  IN struct _FILE_OBJECT  *FileObject,
-  IN PLARGE_INTEGER  FileOffset,
-  IN ULONG  Length,
-  IN BOOLEAN  Wait,
-  IN ULONG  LockKey,
-  OUT PVOID  Buffer,
-  OUT PIO_STATUS_BLOCK  IoStatus,
-  IN struct _DEVICE_OBJECT  *DeviceObject);
+  IN struct _FILE_OBJECT *FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN ULONG Length,
+  IN BOOLEAN Wait,
+  IN ULONG LockKey,
+  OUT PVOID Buffer,
+  OUT PIO_STATUS_BLOCK IoStatus,
+  IN struct _DEVICE_OBJECT *DeviceObject);
 
 typedef BOOLEAN
 (DDKAPI *PFAST_IO_WRITE)(
-  IN struct _FILE_OBJECT  *FileObject,
-  IN PLARGE_INTEGER  FileOffset,
-  IN ULONG  Length,
-  IN BOOLEAN  Wait,
-  IN ULONG  LockKey,
-  IN PVOID  Buffer,
-  OUT PIO_STATUS_BLOCK  IoStatus,
-  IN struct _DEVICE_OBJECT  *DeviceObject);
+  IN struct _FILE_OBJECT *FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN ULONG Length,
+  IN BOOLEAN Wait,
+  IN ULONG LockKey,
+  IN PVOID Buffer,
+  OUT PIO_STATUS_BLOCK IoStatus,
+  IN struct _DEVICE_OBJECT *DeviceObject);
 
 typedef BOOLEAN
 (DDKAPI *PFAST_IO_QUERY_BASIC_INFO)(
-  IN struct _FILE_OBJECT  *FileObject,
-  IN BOOLEAN  Wait,
-  OUT PFILE_BASIC_INFORMATION  Buffer,
-  OUT PIO_STATUS_BLOCK  IoStatus,
-  IN struct _DEVICE_OBJECT  *DeviceObject);
+  IN struct _FILE_OBJECT *FileObject,
+  IN BOOLEAN Wait,
+  OUT PFILE_BASIC_INFORMATION Buffer,
+  OUT PIO_STATUS_BLOCK IoStatus,
+  IN struct _DEVICE_OBJECT *DeviceObject);
 
 typedef BOOLEAN
 (DDKAPI *PFAST_IO_QUERY_STANDARD_INFO)(
-  IN struct _FILE_OBJECT  *FileObject,
-  IN BOOLEAN  Wait,
-  OUT PFILE_STANDARD_INFORMATION  Buffer,
-  OUT PIO_STATUS_BLOCK  IoStatus,
-  IN struct _DEVICE_OBJECT  *DeviceObject);
+  IN struct _FILE_OBJECT *FileObject,
+  IN BOOLEAN Wait,
+  OUT PFILE_STANDARD_INFORMATION Buffer,
+  OUT PIO_STATUS_BLOCK IoStatus,
+  IN struct _DEVICE_OBJECT *DeviceObject);
 
 typedef BOOLEAN
 (DDKAPI *PFAST_IO_LOCK)(
-  IN struct _FILE_OBJECT  *FileObject,
-  IN PLARGE_INTEGER  FileOffset,
-  IN PLARGE_INTEGER  Length,
-  PEPROCESS  ProcessId,
-  ULONG  Key,
-  BOOLEAN  FailImmediately,
-  BOOLEAN  ExclusiveLock,
-  OUT PIO_STATUS_BLOCK  IoStatus,
-  IN struct _DEVICE_OBJECT  *DeviceObject);
+  IN struct _FILE_OBJECT *FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN PLARGE_INTEGER Length,
+  PEPROCESS ProcessId,
+  ULONG Key,
+  BOOLEAN FailImmediately,
+  BOOLEAN ExclusiveLock,
+  OUT PIO_STATUS_BLOCK IoStatus,
+  IN struct _DEVICE_OBJECT *DeviceObject);
 
 typedef BOOLEAN
 (DDKAPI *PFAST_IO_UNLOCK_SINGLE)(
-  IN struct _FILE_OBJECT  *FileObject,
-  IN PLARGE_INTEGER  FileOffset,
-  IN PLARGE_INTEGER  Length,
-  PEPROCESS  ProcessId,
-  ULONG  Key,
-  OUT PIO_STATUS_BLOCK  IoStatus,
-  IN struct _DEVICE_OBJECT  *DeviceObject);
+  IN struct _FILE_OBJECT *FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN PLARGE_INTEGER Length,
+  PEPROCESS ProcessId,
+  ULONG Key,
+  OUT PIO_STATUS_BLOCK IoStatus,
+  IN struct _DEVICE_OBJECT *DeviceObject);
 
 typedef BOOLEAN
 (DDKAPI *PFAST_IO_UNLOCK_ALL)(
-  IN struct _FILE_OBJECT  *FileObject,
-  PEPROCESS  ProcessId,
-  OUT PIO_STATUS_BLOCK  IoStatus,
-  IN struct _DEVICE_OBJECT  *DeviceObject);
+  IN struct _FILE_OBJECT *FileObject,
+  PEPROCESS ProcessId,
+  OUT PIO_STATUS_BLOCK IoStatus,
+  IN struct _DEVICE_OBJECT *DeviceObject);
 
 typedef BOOLEAN
 (DDKAPI *PFAST_IO_UNLOCK_ALL_BY_KEY)(
-  IN struct _FILE_OBJECT  *FileObject,
-  PVOID  ProcessId,
-  ULONG  Key,
-  OUT PIO_STATUS_BLOCK  IoStatus,
-  IN struct _DEVICE_OBJECT  *DeviceObject);
+  IN struct _FILE_OBJECT *FileObject,
+  PVOID ProcessId,
+  ULONG Key,
+  OUT PIO_STATUS_BLOCK IoStatus,
+  IN struct _DEVICE_OBJECT *DeviceObject);
 
 typedef BOOLEAN
 (DDKAPI *PFAST_IO_DEVICE_CONTROL)(
-  IN struct _FILE_OBJECT  *FileObject,
-  IN BOOLEAN  Wait,
-  IN PVOID  InputBuffer  OPTIONAL,
-  IN ULONG  InputBufferLength,
-  OUT PVOID  OutputBuffer  OPTIONAL,
-  IN ULONG  OutputBufferLength,
-  IN ULONG  IoControlCode,
-  OUT PIO_STATUS_BLOCK  IoStatus,
-  IN struct _DEVICE_OBJECT  *DeviceObject);
+  IN struct _FILE_OBJECT *FileObject,
+  IN BOOLEAN Wait,
+  IN PVOID InputBuffer OPTIONAL,
+  IN ULONG InputBufferLength,
+  OUT PVOID OutputBuffer OPTIONAL,
+  IN ULONG OutputBufferLength,
+  IN ULONG IoControlCode,
+  OUT PIO_STATUS_BLOCK IoStatus,
+  IN struct _DEVICE_OBJECT *DeviceObject);
 
 typedef VOID
 (DDKAPI *PFAST_IO_ACQUIRE_FILE)(
-  IN struct _FILE_OBJECT  *FileObject);
+  IN struct _FILE_OBJECT *FileObject);
 
 typedef VOID
 (DDKAPI *PFAST_IO_RELEASE_FILE)(
-  IN struct _FILE_OBJECT  *FileObject);
+  IN struct _FILE_OBJECT *FileObject);
 
 typedef VOID
 (DDKAPI *PFAST_IO_DETACH_DEVICE)(
-  IN struct _DEVICE_OBJECT  *SourceDevice,
-  IN struct _DEVICE_OBJECT  *TargetDevice);
+  IN struct _DEVICE_OBJECT *SourceDevice,
+  IN struct _DEVICE_OBJECT *TargetDevice);
 
 typedef BOOLEAN
 (DDKAPI *PFAST_IO_QUERY_NETWORK_OPEN_INFO)(
-  IN struct _FILE_OBJECT  *FileObject,
-  IN BOOLEAN  Wait,
-  OUT struct _FILE_NETWORK_OPEN_INFORMATION  *Buffer,
-  OUT struct _IO_STATUS_BLOCK  *IoStatus,
-  IN struct _DEVICE_OBJECT  *DeviceObject);
+  IN struct _FILE_OBJECT *FileObject,
+  IN BOOLEAN Wait,
+  OUT struct _FILE_NETWORK_OPEN_INFORMATION *Buffer,
+  OUT struct _IO_STATUS_BLOCK *IoStatus,
+  IN struct _DEVICE_OBJECT *DeviceObject);
 
 typedef NTSTATUS
 (DDKAPI *PFAST_IO_ACQUIRE_FOR_MOD_WRITE)(
-  IN struct _FILE_OBJECT  *FileObject,
-  IN PLARGE_INTEGER  EndingOffset,
-  OUT struct _ERESOURCE  **ResourceToRelease,
-  IN struct _DEVICE_OBJECT  *DeviceObject);
+  IN struct _FILE_OBJECT *FileObject,
+  IN PLARGE_INTEGER EndingOffset,
+  OUT struct _ERESOURCE **ResourceToRelease,
+  IN struct _DEVICE_OBJECT *DeviceObject);
 
 typedef BOOLEAN
 (DDKAPI *PFAST_IO_MDL_READ)(
-  IN struct _FILE_OBJECT  *FileObject,
-  IN PLARGE_INTEGER  FileOffset,
-  IN ULONG  Length,
-  IN ULONG  LockKey,
-  OUT PMDL  *MdlChain,
-  OUT PIO_STATUS_BLOCK  IoStatus,
-  IN struct _DEVICE_OBJECT  *DeviceObject);
+  IN struct _FILE_OBJECT *FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN ULONG Length,
+  IN ULONG LockKey,
+  OUT PMDL *MdlChain,
+  OUT PIO_STATUS_BLOCK IoStatus,
+  IN struct _DEVICE_OBJECT *DeviceObject);
 
 typedef BOOLEAN
 (DDKAPI *PFAST_IO_MDL_READ_COMPLETE)(
@@ -1243,122 +1241,122 @@ typedef BOOLEAN
 
 typedef BOOLEAN
 (DDKAPI *PFAST_IO_PREPARE_MDL_WRITE)(
-  IN struct _FILE_OBJECT  *FileObject,
-  IN PLARGE_INTEGER  FileOffset,
-  IN ULONG  Length,
-  IN ULONG  LockKey,
-  OUT PMDL  *MdlChain,
-  OUT PIO_STATUS_BLOCK  IoStatus,
-  IN struct _DEVICE_OBJECT  *DeviceObject);
+  IN struct _FILE_OBJECT *FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN ULONG Length,
+  IN ULONG LockKey,
+  OUT PMDL *MdlChain,
+  OUT PIO_STATUS_BLOCK IoStatus,
+  IN struct _DEVICE_OBJECT *DeviceObject);
 
 typedef BOOLEAN
 (DDKAPI *PFAST_IO_MDL_WRITE_COMPLETE)(
-  IN struct _FILE_OBJECT  *FileObject,
-  IN PLARGE_INTEGER  FileOffset,
-  IN PMDL  MdlChain,
-  IN struct _DEVICE_OBJECT  *DeviceObject);
+  IN struct _FILE_OBJECT *FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN PMDL MdlChain,
+  IN struct _DEVICE_OBJECT *DeviceObject);
 
 typedef BOOLEAN
 (DDKAPI *PFAST_IO_READ_COMPRESSED)(
-  IN struct _FILE_OBJECT  *FileObject,
-  IN PLARGE_INTEGER  FileOffset,
-  IN ULONG  Length,
-  IN ULONG  LockKey,
-  OUT PVOID  Buffer,
-  OUT PMDL  *MdlChain,
-  OUT PIO_STATUS_BLOCK  IoStatus,
-  OUT struct _COMPRESSED_DATA_INFO  *CompressedDataInfo,
-  IN ULONG  CompressedDataInfoLength,
-  IN struct _DEVICE_OBJECT  *DeviceObject);
+  IN struct _FILE_OBJECT *FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN ULONG Length,
+  IN ULONG LockKey,
+  OUT PVOID Buffer,
+  OUT PMDL *MdlChain,
+  OUT PIO_STATUS_BLOCK IoStatus,
+  OUT struct _COMPRESSED_DATA_INFO *CompressedDataInfo,
+  IN ULONG CompressedDataInfoLength,
+  IN struct _DEVICE_OBJECT *DeviceObject);
 
 typedef BOOLEAN
 (DDKAPI *PFAST_IO_WRITE_COMPRESSED)(
-  IN struct _FILE_OBJECT  *FileObject,
-  IN PLARGE_INTEGER  FileOffset,
-  IN ULONG  Length,
-  IN ULONG  LockKey,
-  IN PVOID  Buffer,
-  OUT PMDL  *MdlChain,
-  OUT PIO_STATUS_BLOCK  IoStatus,
-  IN struct _COMPRESSED_DATA_INFO  *CompressedDataInfo,
-  IN ULONG  CompressedDataInfoLength,
-  IN struct _DEVICE_OBJECT  *DeviceObject);
+  IN struct _FILE_OBJECT *FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN ULONG Length,
+  IN ULONG LockKey,
+  IN PVOID Buffer,
+  OUT PMDL *MdlChain,
+  OUT PIO_STATUS_BLOCK IoStatus,
+  IN struct _COMPRESSED_DATA_INFO *CompressedDataInfo,
+  IN ULONG CompressedDataInfoLength,
+  IN struct _DEVICE_OBJECT *DeviceObject);
 
 typedef BOOLEAN
 (DDKAPI *PFAST_IO_MDL_READ_COMPLETE_COMPRESSED)(
-  IN struct _FILE_OBJECT  *FileObject,
-  IN PMDL  MdlChain,
-  IN struct _DEVICE_OBJECT  *DeviceObject);
+  IN struct _FILE_OBJECT *FileObject,
+  IN PMDL MdlChain,
+  IN struct _DEVICE_OBJECT *DeviceObject);
 
 typedef BOOLEAN
 (DDKAPI *PFAST_IO_MDL_WRITE_COMPLETE_COMPRESSED)(
-  IN struct _FILE_OBJECT  *FileObject,
-  IN PLARGE_INTEGER  FileOffset,
-  IN PMDL  MdlChain,
-  IN struct _DEVICE_OBJECT  *DeviceObject);
+  IN struct _FILE_OBJECT *FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN PMDL MdlChain,
+  IN struct _DEVICE_OBJECT *DeviceObject);
 
 typedef BOOLEAN
 (DDKAPI *PFAST_IO_QUERY_OPEN)(
-  IN struct _IRP  *Irp,
-  OUT PFILE_NETWORK_OPEN_INFORMATION  NetworkInformation,
-  IN struct _DEVICE_OBJECT  *DeviceObject);
+  IN struct _IRP *Irp,
+  OUT PFILE_NETWORK_OPEN_INFORMATION NetworkInformation,
+  IN struct _DEVICE_OBJECT *DeviceObject);
 
 typedef NTSTATUS
 (DDKAPI *PFAST_IO_RELEASE_FOR_MOD_WRITE)(
-  IN struct _FILE_OBJECT  *FileObject,
-  IN struct _ERESOURCE  *ResourceToRelease,
-  IN struct _DEVICE_OBJECT  *DeviceObject);
+  IN struct _FILE_OBJECT *FileObject,
+  IN struct _ERESOURCE *ResourceToRelease,
+  IN struct _DEVICE_OBJECT *DeviceObject);
 
 typedef NTSTATUS
 (DDKAPI *PFAST_IO_ACQUIRE_FOR_CCFLUSH)(
-  IN struct _FILE_OBJECT  *FileObject,
-  IN struct _DEVICE_OBJECT  *DeviceObject);
+  IN struct _FILE_OBJECT *FileObject,
+  IN struct _DEVICE_OBJECT *DeviceObject);
 
 typedef NTSTATUS
 (DDKAPI *PFAST_IO_RELEASE_FOR_CCFLUSH) (
-  IN struct _FILE_OBJECT  *FileObject,
-  IN struct _DEVICE_OBJECT  *DeviceObject);
+  IN struct _FILE_OBJECT *FileObject,
+  IN struct _DEVICE_OBJECT *DeviceObject);
 
 typedef struct _FAST_IO_DISPATCH {
-  ULONG  SizeOfFastIoDispatch;
-  PFAST_IO_CHECK_IF_POSSIBLE  FastIoCheckIfPossible;
-  PFAST_IO_READ  FastIoRead;
-  PFAST_IO_WRITE  FastIoWrite;
-  PFAST_IO_QUERY_BASIC_INFO  FastIoQueryBasicInfo;
-  PFAST_IO_QUERY_STANDARD_INFO  FastIoQueryStandardInfo;
-  PFAST_IO_LOCK  FastIoLock;
-  PFAST_IO_UNLOCK_SINGLE  FastIoUnlockSingle;
-  PFAST_IO_UNLOCK_ALL  FastIoUnlockAll;
-  PFAST_IO_UNLOCK_ALL_BY_KEY  FastIoUnlockAllByKey;
-  PFAST_IO_DEVICE_CONTROL  FastIoDeviceControl;
-  PFAST_IO_ACQUIRE_FILE  AcquireFileForNtCreateSection;
-  PFAST_IO_RELEASE_FILE  ReleaseFileForNtCreateSection;
-  PFAST_IO_DETACH_DEVICE  FastIoDetachDevice;
-  PFAST_IO_QUERY_NETWORK_OPEN_INFO  FastIoQueryNetworkOpenInfo;
-  PFAST_IO_ACQUIRE_FOR_MOD_WRITE  AcquireForModWrite;
-  PFAST_IO_MDL_READ  MdlRead;
-  PFAST_IO_MDL_READ_COMPLETE  MdlReadComplete;
-  PFAST_IO_PREPARE_MDL_WRITE  PrepareMdlWrite;
-  PFAST_IO_MDL_WRITE_COMPLETE  MdlWriteComplete;
-  PFAST_IO_READ_COMPRESSED  FastIoReadCompressed;
-  PFAST_IO_WRITE_COMPRESSED  FastIoWriteCompressed;
-  PFAST_IO_MDL_READ_COMPLETE_COMPRESSED  MdlReadCompleteCompressed;
-  PFAST_IO_MDL_WRITE_COMPLETE_COMPRESSED  MdlWriteCompleteCompressed;
-  PFAST_IO_QUERY_OPEN  FastIoQueryOpen;
-  PFAST_IO_RELEASE_FOR_MOD_WRITE  ReleaseForModWrite;
-  PFAST_IO_ACQUIRE_FOR_CCFLUSH  AcquireForCcFlush;
-  PFAST_IO_RELEASE_FOR_CCFLUSH  ReleaseForCcFlush;
+  ULONG SizeOfFastIoDispatch;
+  PFAST_IO_CHECK_IF_POSSIBLE FastIoCheckIfPossible;
+  PFAST_IO_READ FastIoRead;
+  PFAST_IO_WRITE FastIoWrite;
+  PFAST_IO_QUERY_BASIC_INFO FastIoQueryBasicInfo;
+  PFAST_IO_QUERY_STANDARD_INFO FastIoQueryStandardInfo;
+  PFAST_IO_LOCK FastIoLock;
+  PFAST_IO_UNLOCK_SINGLE FastIoUnlockSingle;
+  PFAST_IO_UNLOCK_ALL FastIoUnlockAll;
+  PFAST_IO_UNLOCK_ALL_BY_KEY FastIoUnlockAllByKey;
+  PFAST_IO_DEVICE_CONTROL FastIoDeviceControl;
+  PFAST_IO_ACQUIRE_FILE AcquireFileForNtCreateSection;
+  PFAST_IO_RELEASE_FILE ReleaseFileForNtCreateSection;
+  PFAST_IO_DETACH_DEVICE FastIoDetachDevice;
+  PFAST_IO_QUERY_NETWORK_OPEN_INFO FastIoQueryNetworkOpenInfo;
+  PFAST_IO_ACQUIRE_FOR_MOD_WRITE AcquireForModWrite;
+  PFAST_IO_MDL_READ MdlRead;
+  PFAST_IO_MDL_READ_COMPLETE MdlReadComplete;
+  PFAST_IO_PREPARE_MDL_WRITE PrepareMdlWrite;
+  PFAST_IO_MDL_WRITE_COMPLETE MdlWriteComplete;
+  PFAST_IO_READ_COMPRESSED FastIoReadCompressed;
+  PFAST_IO_WRITE_COMPRESSED FastIoWriteCompressed;
+  PFAST_IO_MDL_READ_COMPLETE_COMPRESSED MdlReadCompleteCompressed;
+  PFAST_IO_MDL_WRITE_COMPLETE_COMPRESSED MdlWriteCompleteCompressed;
+  PFAST_IO_QUERY_OPEN FastIoQueryOpen;
+  PFAST_IO_RELEASE_FOR_MOD_WRITE ReleaseForModWrite;
+  PFAST_IO_ACQUIRE_FOR_CCFLUSH AcquireForCcFlush;
+  PFAST_IO_RELEASE_FOR_CCFLUSH ReleaseForCcFlush;
 } FAST_IO_DISPATCH, *PFAST_IO_DISPATCH;
 
 typedef struct _SECTION_OBJECT_POINTERS {
-  PVOID  DataSectionObject;
-  PVOID  SharedCacheMap;
-  PVOID  ImageSectionObject;
+  PVOID DataSectionObject;
+  PVOID SharedCacheMap;
+  PVOID ImageSectionObject;
 } SECTION_OBJECT_POINTERS, *PSECTION_OBJECT_POINTERS;
 
 typedef struct _IO_COMPLETION_CONTEXT {
-  PVOID  Port;
-  PVOID  Key;
+  PVOID Port;
+  PVOID Key;
 } IO_COMPLETION_CONTEXT, *PIO_COMPLETION_CONTEXT;
 
 /* FILE_OBJECT.Flags */
@@ -1534,63 +1532,62 @@ typedef struct _IO_COMPLETION_CONTEXT {
 
 #define IRP_MN_REGINFO_EX                 0x0b
 
-typedef struct _FILE_OBJECT
-{
-    CSHORT Type;
-    CSHORT Size;
-    PDEVICE_OBJECT DeviceObject;
-    PVPB Vpb;
-    PVOID FsContext;
-    PVOID FsContext2;
-    PSECTION_OBJECT_POINTERS SectionObjectPointer;
-    PVOID PrivateCacheMap;
-    NTSTATUS FinalStatus;
-    struct _FILE_OBJECT *RelatedFileObject;
-    BOOLEAN LockOperation;
-    BOOLEAN DeletePending;
-    BOOLEAN ReadAccess;
-    BOOLEAN WriteAccess;
-    BOOLEAN DeleteAccess;
-    BOOLEAN SharedRead;
-    BOOLEAN SharedWrite;
-    BOOLEAN SharedDelete;
-    ULONG Flags;
-    UNICODE_STRING FileName;
-    LARGE_INTEGER CurrentByteOffset;
-    volatile ULONG Waiters;
-    volatile ULONG Busy;
-    PVOID LastLock;
-    KEVENT Lock;
-    KEVENT Event;
-    volatile PIO_COMPLETION_CONTEXT CompletionContext;
-    KSPIN_LOCK IrpListLock;
-    LIST_ENTRY IrpList;
-    volatile PVOID FileObjectExtension;
+typedef struct _FILE_OBJECT {
+  CSHORT Type;
+  CSHORT Size;
+  PDEVICE_OBJECT DeviceObject;
+  PVPB Vpb;
+  PVOID FsContext;
+  PVOID FsContext2;
+  PSECTION_OBJECT_POINTERS SectionObjectPointer;
+  PVOID PrivateCacheMap;
+  NTSTATUS FinalStatus;
+  struct _FILE_OBJECT *RelatedFileObject;
+  BOOLEAN LockOperation;
+  BOOLEAN DeletePending;
+  BOOLEAN ReadAccess;
+  BOOLEAN WriteAccess;
+  BOOLEAN DeleteAccess;
+  BOOLEAN SharedRead;
+  BOOLEAN SharedWrite;
+  BOOLEAN SharedDelete;
+  ULONG Flags;
+  UNICODE_STRING FileName;
+  LARGE_INTEGER CurrentByteOffset;
+  volatile ULONG Waiters;
+  volatile ULONG Busy;
+  PVOID LastLock;
+  KEVENT Lock;
+  KEVENT Event;
+  volatile PIO_COMPLETION_CONTEXT CompletionContext;
+  KSPIN_LOCK IrpListLock;
+  LIST_ENTRY IrpList;
+  volatile PVOID FileObjectExtension;
 } FILE_OBJECT, *PFILE_OBJECT;
 
 typedef struct _IO_ERROR_LOG_PACKET {
-  UCHAR  MajorFunctionCode;
-  UCHAR  RetryCount;
-  USHORT  DumpDataSize;
-  USHORT  NumberOfStrings;
-  USHORT  StringOffset;
-  USHORT  EventCategory;
-  NTSTATUS  ErrorCode;
-  ULONG  UniqueErrorValue;
-  NTSTATUS  FinalStatus;
-  ULONG  SequenceNumber;
-  ULONG  IoControlCode;
-  LARGE_INTEGER  DeviceOffset;
-  ULONG  DumpData[1];
+  UCHAR MajorFunctionCode;
+  UCHAR RetryCount;
+  USHORT DumpDataSize;
+  USHORT NumberOfStrings;
+  USHORT StringOffset;
+  USHORT EventCategory;
+  NTSTATUS ErrorCode;
+  ULONG UniqueErrorValue;
+  NTSTATUS FinalStatus;
+  ULONG SequenceNumber;
+  ULONG IoControlCode;
+  LARGE_INTEGER DeviceOffset;
+  ULONG DumpData[1];
 } IO_ERROR_LOG_PACKET, *PIO_ERROR_LOG_PACKET;
 
 typedef struct _IO_ERROR_LOG_MESSAGE {
-  USHORT  Type;
-  USHORT  Size;
-  USHORT  DriverNameLength;
-  LARGE_INTEGER  TimeStamp;
-  ULONG  DriverNameOffset;
-  IO_ERROR_LOG_PACKET  EntryData;
+  USHORT Type;
+  USHORT Size;
+  USHORT DriverNameLength;
+  LARGE_INTEGER TimeStamp;
+  ULONG DriverNameOffset;
+  IO_ERROR_LOG_PACKET EntryData;
 } IO_ERROR_LOG_MESSAGE, *PIO_ERROR_LOG_MESSAGE;
 
 #define ERROR_LOG_LIMIT_SIZE               240
@@ -1629,22 +1626,22 @@ typedef enum _DMA_SPEED {
 #define DEVICE_DESCRIPTION_VERSION2       0x0002
 
 typedef struct _DEVICE_DESCRIPTION {
-  ULONG  Version;
-  BOOLEAN  Master;
-  BOOLEAN  ScatterGather;
-  BOOLEAN  DemandMode;
-  BOOLEAN  AutoInitialize;
-  BOOLEAN  Dma32BitAddresses;
-  BOOLEAN  IgnoreCount;
-  BOOLEAN  Reserved1;
-  BOOLEAN  Dma64BitAddresses;
-  ULONG  BusNumber;
-  ULONG  DmaChannel;
-  INTERFACE_TYPE  InterfaceType;
-  DMA_WIDTH  DmaWidth;
-  DMA_SPEED  DmaSpeed;
-  ULONG  MaximumLength;
-  ULONG  DmaPort;
+  ULONG Version;
+  BOOLEAN Master;
+  BOOLEAN ScatterGather;
+  BOOLEAN DemandMode;
+  BOOLEAN AutoInitialize;
+  BOOLEAN Dma32BitAddresses;
+  BOOLEAN IgnoreCount;
+  BOOLEAN Reserved1;
+  BOOLEAN Dma64BitAddresses;
+  ULONG BusNumber;
+  ULONG DmaChannel;
+  INTERFACE_TYPE InterfaceType;
+  DMA_WIDTH DmaWidth;
+  DMA_SPEED DmaSpeed;
+  ULONG MaximumLength;
+  ULONG DmaPort;
 } DEVICE_DESCRIPTION, *PDEVICE_DESCRIPTION;
 
 typedef enum _DEVICE_RELATION_TYPE {
@@ -1658,21 +1655,20 @@ typedef enum _DEVICE_RELATION_TYPE {
 } DEVICE_RELATION_TYPE, *PDEVICE_RELATION_TYPE;
 
 typedef struct _DEVICE_RELATIONS {
-  ULONG  Count;
+  ULONG Count;
   PDEVICE_OBJECT Objects[1];
 } DEVICE_RELATIONS, *PDEVICE_RELATIONS;
 
-typedef struct _DEVOBJ_EXTENSION
-{
-    CSHORT Type;
-    USHORT Size;
-    PDEVICE_OBJECT DeviceObject;
+typedef struct _DEVOBJ_EXTENSION {
+  CSHORT Type;
+  USHORT Size;
+  PDEVICE_OBJECT DeviceObject;
 } DEVOBJ_EXTENSION, *PDEVOBJ_EXTENSION;
 
 typedef struct _SCATTER_GATHER_ELEMENT {
-  PHYSICAL_ADDRESS  Address;
-  ULONG  Length;
-  ULONG_PTR  Reserved;
+  PHYSICAL_ADDRESS Address;
+  ULONG Length;
+  ULONG_PTR Reserved;
 } SCATTER_GATHER_ELEMENT, *PSCATTER_GATHER_ELEMENT;
 
 #if defined(_MSC_EXTENSIONS)
@@ -1682,9 +1678,9 @@ typedef struct _SCATTER_GATHER_ELEMENT {
 #endif
 #pragma warning(disable:4200)
 typedef struct _SCATTER_GATHER_LIST {
-  ULONG  NumberOfElements;
-  ULONG_PTR  Reserved;
-  SCATTER_GATHER_ELEMENT  Elements[1];
+  ULONG NumberOfElements;
+  ULONG_PTR Reserved;
+  SCATTER_GATHER_ELEMENT Elements[1];
 } SCATTER_GATHER_LIST, *PSCATTER_GATHER_LIST;
 
 #if _MSC_VER >= 1200
@@ -1701,16 +1697,15 @@ typedef struct _SCATTER_GATHER_LIST SCATTER_GATHER_LIST, *PSCATTER_GATHER_LIST;
 #endif
 
 typedef NTSTATUS
-(DDKAPI DRIVER_ADD_DEVICE)(
-  IN struct _DRIVER_OBJECT  *DriverObject,
-  IN struct _DEVICE_OBJECT  *PhysicalDeviceObject);
-typedef DRIVER_ADD_DEVICE *PDRIVER_ADD_DEVICE;
+(DDKAPI *PDRIVER_ADD_DEVICE)(
+  IN struct _DRIVER_OBJECT *DriverObject,
+  IN struct _DEVICE_OBJECT *PhysicalDeviceObject);
 
 typedef struct _DRIVER_EXTENSION {
-  struct _DRIVER_OBJECT  *DriverObject;
-  PDRIVER_ADD_DEVICE  AddDevice;
-  ULONG  Count;
-  UNICODE_STRING  ServiceKeyName;
+  struct _DRIVER_OBJECT *DriverObject;
+  PDRIVER_ADD_DEVICE AddDevice;
+  ULONG Count;
+  UNICODE_STRING ServiceKeyName;
 } DRIVER_EXTENSION, *PDRIVER_EXTENSION;
 
 #define DRVO_UNLOAD_INVOKED               0x00000001
@@ -1718,320 +1713,313 @@ typedef struct _DRIVER_EXTENSION {
 #define DRVO_BUILTIN_DRIVER               0x00000004
 
 typedef NTSTATUS
-(DDKAPI DRIVER_INITIALIZE)(
-  IN struct _DRIVER_OBJECT  *DriverObject,
-  IN PUNICODE_STRING  RegistryPath);
-typedef DRIVER_INITIALIZE *PDRIVER_INITIALIZE;
+(DDKAPI *PDRIVER_INITIALIZE)(
+  IN struct _DRIVER_OBJECT *DriverObject,
+  IN PUNICODE_STRING RegistryPath);
 
 typedef VOID
-(DDKAPI DRIVER_STARTIO)(
-  IN struct _DEVICE_OBJECT  *DeviceObject,
-  IN struct _IRP  *Irp);
-typedef DRIVER_STARTIO *PDRIVER_STARTIO;
+(DDKAPI *PDRIVER_STARTIO)(
+  IN struct _DEVICE_OBJECT *DeviceObject,
+  IN struct _IRP *Irp);
 
 typedef VOID
-(DDKAPI DRIVER_UNLOAD)(
-  IN struct _DRIVER_OBJECT  *DriverObject);
-typedef DRIVER_UNLOAD *PDRIVER_UNLOAD;
+(DDKAPI *PDRIVER_UNLOAD)(
+  IN struct _DRIVER_OBJECT *DriverObject);
 
 typedef NTSTATUS
-(DDKAPI DRIVER_DISPATCH)(
-  IN struct _DEVICE_OBJECT  *DeviceObject,
-  IN struct _IRP  *Irp);
-typedef DRIVER_DISPATCH *PDRIVER_DISPATCH;
+(DDKAPI *PDRIVER_DISPATCH)(
+  IN struct _DEVICE_OBJECT *DeviceObject,
+  IN struct _IRP *Irp);
 
 typedef struct _DRIVER_OBJECT {
-  CSHORT  Type;
-  CSHORT  Size;
-  PDEVICE_OBJECT  DeviceObject;
-  ULONG  Flags;
-  PVOID  DriverStart;
-  ULONG  DriverSize;
-  PVOID  DriverSection;
-  PDRIVER_EXTENSION  DriverExtension;
-  UNICODE_STRING  DriverName;
-  PUNICODE_STRING  HardwareDatabase;
+  CSHORT Type;
+  CSHORT Size;
+  PDEVICE_OBJECT DeviceObject;
+  ULONG Flags;
+  PVOID DriverStart;
+  ULONG DriverSize;
+  PVOID DriverSection;
+  PDRIVER_EXTENSION DriverExtension;
+  UNICODE_STRING DriverName;
+  PUNICODE_STRING HardwareDatabase;
   struct _FAST_IO_DISPATCH *FastIoDispatch;
-  PDRIVER_INITIALIZE  DriverInit;
-  PDRIVER_STARTIO  DriverStartIo;
-  PDRIVER_UNLOAD  DriverUnload;
-  PDRIVER_DISPATCH  MajorFunction[IRP_MJ_MAXIMUM_FUNCTION + 1];
-} DRIVER_OBJECT;
-typedef struct _DRIVER_OBJECT *PDRIVER_OBJECT;
+  PDRIVER_INITIALIZE DriverInit;
+  PDRIVER_STARTIO DriverStartIo;
+  PDRIVER_UNLOAD DriverUnload;
+  PDRIVER_DISPATCH MajorFunction[IRP_MJ_MAXIMUM_FUNCTION + 1];
+} DRIVER_OBJECT, *PDRIVER_OBJECT;
 
 typedef struct _DMA_ADAPTER {
-  USHORT  Version;
-  USHORT  Size;
-  struct _DMA_OPERATIONS*  DmaOperations;
+  USHORT Version;
+  USHORT Size;
+  struct _DMA_OPERATIONS* DmaOperations;
 } DMA_ADAPTER, *PDMA_ADAPTER;
 
 typedef VOID
 (DDKAPI *PPUT_DMA_ADAPTER)(
-  IN PDMA_ADAPTER  DmaAdapter);
+  IN PDMA_ADAPTER DmaAdapter);
 
 typedef PVOID
 (DDKAPI *PALLOCATE_COMMON_BUFFER)(
-  IN PDMA_ADAPTER  DmaAdapter,
-  IN ULONG  Length,
-  OUT PPHYSICAL_ADDRESS  LogicalAddress,
-  IN BOOLEAN  CacheEnabled);
+  IN PDMA_ADAPTER DmaAdapter,
+  IN ULONG Length,
+  OUT PPHYSICAL_ADDRESS LogicalAddress,
+  IN BOOLEAN CacheEnabled);
 
 typedef VOID
 (DDKAPI *PFREE_COMMON_BUFFER)(
-  IN PDMA_ADAPTER  DmaAdapter,
-  IN ULONG  Length,
-  IN PHYSICAL_ADDRESS  LogicalAddress,
-  IN PVOID  VirtualAddress,
-  IN BOOLEAN  CacheEnabled);
+  IN PDMA_ADAPTER DmaAdapter,
+  IN ULONG Length,
+  IN PHYSICAL_ADDRESS LogicalAddress,
+  IN PVOID VirtualAddress,
+  IN BOOLEAN CacheEnabled);
 
 typedef NTSTATUS
 (DDKAPI *PALLOCATE_ADAPTER_CHANNEL)(
-  IN PDMA_ADAPTER  DmaAdapter,
-  IN PDEVICE_OBJECT  DeviceObject,
-  IN ULONG  NumberOfMapRegisters,
-  IN PDRIVER_CONTROL  ExecutionRoutine,
-  IN PVOID  Context);
+  IN PDMA_ADAPTER DmaAdapter,
+  IN PDEVICE_OBJECT DeviceObject,
+  IN ULONG NumberOfMapRegisters,
+  IN PDRIVER_CONTROL ExecutionRoutine,
+  IN PVOID Context);
 
 typedef BOOLEAN
 (DDKAPI *PFLUSH_ADAPTER_BUFFERS)(
-  IN PDMA_ADAPTER  DmaAdapter,
-  IN PMDL  Mdl,
-  IN PVOID  MapRegisterBase,
-  IN PVOID  CurrentVa,
-  IN ULONG  Length,
-  IN BOOLEAN  WriteToDevice);
+  IN PDMA_ADAPTER DmaAdapter,
+  IN PMDL Mdl,
+  IN PVOID MapRegisterBase,
+  IN PVOID CurrentVa,
+  IN ULONG Length,
+  IN BOOLEAN WriteToDevice);
 
 typedef VOID
 (DDKAPI *PFREE_ADAPTER_CHANNEL)(
-  IN PDMA_ADAPTER  DmaAdapter);
+  IN PDMA_ADAPTER DmaAdapter);
 
 typedef VOID
 (DDKAPI *PFREE_MAP_REGISTERS)(
-  IN PDMA_ADAPTER  DmaAdapter,
-  PVOID  MapRegisterBase,
-  ULONG  NumberOfMapRegisters);
+  IN PDMA_ADAPTER DmaAdapter,
+  PVOID MapRegisterBase,
+  ULONG NumberOfMapRegisters);
 
 typedef PHYSICAL_ADDRESS
 (DDKAPI *PMAP_TRANSFER)(
-  IN PDMA_ADAPTER  DmaAdapter,
-  IN PMDL  Mdl,
-  IN PVOID  MapRegisterBase,
-  IN PVOID  CurrentVa,
-  IN OUT PULONG  Length,
-  IN BOOLEAN  WriteToDevice);
+  IN PDMA_ADAPTER DmaAdapter,
+  IN PMDL Mdl,
+  IN PVOID MapRegisterBase,
+  IN PVOID CurrentVa,
+  IN OUT PULONG Length,
+  IN BOOLEAN WriteToDevice);
 
 typedef ULONG
 (DDKAPI *PGET_DMA_ALIGNMENT)(
-  IN PDMA_ADAPTER  DmaAdapter);
+  IN PDMA_ADAPTER DmaAdapter);
 
 typedef ULONG
 (DDKAPI *PREAD_DMA_COUNTER)(
-  IN PDMA_ADAPTER  DmaAdapter);
+  IN PDMA_ADAPTER DmaAdapter);
 
 typedef VOID
 (DDKAPI *PDRIVER_LIST_CONTROL)(
-  IN struct _DEVICE_OBJECT  *DeviceObject,
-  IN struct _IRP  *Irp,
-  IN struct _SCATTER_GATHER_LIST  *ScatterGather,
-  IN PVOID  Context);
+  IN struct _DEVICE_OBJECT *DeviceObject,
+  IN struct _IRP *Irp,
+  IN struct _SCATTER_GATHER_LIST *ScatterGather,
+  IN PVOID Context);
 
 typedef NTSTATUS
 (DDKAPI *PGET_SCATTER_GATHER_LIST)(
-  IN PDMA_ADAPTER  DmaAdapter,
-  IN PDEVICE_OBJECT  DeviceObject,
-  IN PMDL  Mdl,
-  IN PVOID  CurrentVa,
-  IN ULONG  Length,
-  IN PDRIVER_LIST_CONTROL  ExecutionRoutine,
-  IN PVOID  Context,
-  IN BOOLEAN  WriteToDevice);
+  IN PDMA_ADAPTER DmaAdapter,
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PMDL Mdl,
+  IN PVOID CurrentVa,
+  IN ULONG Length,
+  IN PDRIVER_LIST_CONTROL ExecutionRoutine,
+  IN PVOID Context,
+  IN BOOLEAN WriteToDevice);
 
 typedef VOID
 (DDKAPI *PPUT_SCATTER_GATHER_LIST)(
-  IN PDMA_ADAPTER  DmaAdapter,
-  IN PSCATTER_GATHER_LIST  ScatterGather,
-  IN BOOLEAN  WriteToDevice);
+  IN PDMA_ADAPTER DmaAdapter,
+  IN PSCATTER_GATHER_LIST ScatterGather,
+  IN BOOLEAN WriteToDevice);
 
 typedef NTSTATUS
 (DDKAPI *PCALCULATE_SCATTER_GATHER_LIST_SIZE)(
-  IN PDMA_ADAPTER  DmaAdapter,
-  IN PMDL  Mdl  OPTIONAL,
-  IN PVOID  CurrentVa,
-  IN ULONG  Length,
-  OUT PULONG  ScatterGatherListSize,
-  OUT PULONG  pNumberOfMapRegisters  OPTIONAL);
+  IN PDMA_ADAPTER DmaAdapter,
+  IN PMDL Mdl OPTIONAL,
+  IN PVOID CurrentVa,
+  IN ULONG Length,
+  OUT PULONG ScatterGatherListSize,
+  OUT PULONG pNumberOfMapRegisters OPTIONAL);
 
 typedef NTSTATUS
 (DDKAPI *PBUILD_SCATTER_GATHER_LIST)(
-  IN PDMA_ADAPTER  DmaAdapter,
-  IN PDEVICE_OBJECT  DeviceObject,
-  IN PMDL  Mdl,
-  IN PVOID  CurrentVa,
-  IN ULONG  Length,
-  IN PDRIVER_LIST_CONTROL  ExecutionRoutine,
-  IN PVOID  Context,
-  IN BOOLEAN  WriteToDevice,
-  IN PVOID  ScatterGatherBuffer,
-  IN ULONG  ScatterGatherLength);
+  IN PDMA_ADAPTER DmaAdapter,
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PMDL Mdl,
+  IN PVOID CurrentVa,
+  IN ULONG Length,
+  IN PDRIVER_LIST_CONTROL ExecutionRoutine,
+  IN PVOID Context,
+  IN BOOLEAN WriteToDevice,
+  IN PVOID ScatterGatherBuffer,
+  IN ULONG ScatterGatherLength);
 
 typedef NTSTATUS
 (DDKAPI *PBUILD_MDL_FROM_SCATTER_GATHER_LIST)(
-  IN PDMA_ADAPTER  DmaAdapter,
-  IN PSCATTER_GATHER_LIST  ScatterGather,
-  IN PMDL  OriginalMdl,
-  OUT PMDL  *TargetMdl);
+  IN PDMA_ADAPTER DmaAdapter,
+  IN PSCATTER_GATHER_LIST ScatterGather,
+  IN PMDL OriginalMdl,
+  OUT PMDL *TargetMdl);
 
 typedef struct _DMA_OPERATIONS {
-  ULONG  Size;
-  PPUT_DMA_ADAPTER  PutDmaAdapter;
-  PALLOCATE_COMMON_BUFFER  AllocateCommonBuffer;
-  PFREE_COMMON_BUFFER  FreeCommonBuffer;
-  PALLOCATE_ADAPTER_CHANNEL  AllocateAdapterChannel;
-  PFLUSH_ADAPTER_BUFFERS  FlushAdapterBuffers;
-  PFREE_ADAPTER_CHANNEL  FreeAdapterChannel;
-  PFREE_MAP_REGISTERS  FreeMapRegisters;
-  PMAP_TRANSFER  MapTransfer;
-  PGET_DMA_ALIGNMENT  GetDmaAlignment;
-  PREAD_DMA_COUNTER  ReadDmaCounter;
-  PGET_SCATTER_GATHER_LIST  GetScatterGatherList;
-  PPUT_SCATTER_GATHER_LIST  PutScatterGatherList;
-  PCALCULATE_SCATTER_GATHER_LIST_SIZE  CalculateScatterGatherList;
-  PBUILD_SCATTER_GATHER_LIST  BuildScatterGatherList;
-  PBUILD_MDL_FROM_SCATTER_GATHER_LIST  BuildMdlFromScatterGatherList;
+  ULONG Size;
+  PPUT_DMA_ADAPTER PutDmaAdapter;
+  PALLOCATE_COMMON_BUFFER AllocateCommonBuffer;
+  PFREE_COMMON_BUFFER FreeCommonBuffer;
+  PALLOCATE_ADAPTER_CHANNEL AllocateAdapterChannel;
+  PFLUSH_ADAPTER_BUFFERS FlushAdapterBuffers;
+  PFREE_ADAPTER_CHANNEL FreeAdapterChannel;
+  PFREE_MAP_REGISTERS FreeMapRegisters;
+  PMAP_TRANSFER MapTransfer;
+  PGET_DMA_ALIGNMENT GetDmaAlignment;
+  PREAD_DMA_COUNTER ReadDmaCounter;
+  PGET_SCATTER_GATHER_LIST GetScatterGatherList;
+  PPUT_SCATTER_GATHER_LIST PutScatterGatherList;
+  PCALCULATE_SCATTER_GATHER_LIST_SIZE CalculateScatterGatherList;
+  PBUILD_SCATTER_GATHER_LIST BuildScatterGatherList;
+  PBUILD_MDL_FROM_SCATTER_GATHER_LIST BuildMdlFromScatterGatherList;
 } DMA_OPERATIONS, *PDMA_OPERATIONS;
 
 typedef struct _IO_RESOURCE_DESCRIPTOR {
-  UCHAR  Option;
-  UCHAR  Type;
-  UCHAR  ShareDisposition;
-  UCHAR  Spare1;
-  USHORT  Flags;
-  USHORT  Spare2;
+  UCHAR Option;
+  UCHAR Type;
+  UCHAR ShareDisposition;
+  UCHAR Spare1;
+  USHORT Flags;
+  USHORT Spare2;
   union {
     struct {
-      ULONG  Length;
-      ULONG  Alignment;
-      PHYSICAL_ADDRESS  MinimumAddress;
-      PHYSICAL_ADDRESS  MaximumAddress;
+      ULONG Length;
+      ULONG Alignment;
+      PHYSICAL_ADDRESS MinimumAddress;
+      PHYSICAL_ADDRESS MaximumAddress;
     } Port;
     struct {
-      ULONG  Length;
-      ULONG  Alignment;
-      PHYSICAL_ADDRESS  MinimumAddress;
-      PHYSICAL_ADDRESS  MaximumAddress;
+      ULONG Length;
+      ULONG Alignment;
+      PHYSICAL_ADDRESS MinimumAddress;
+      PHYSICAL_ADDRESS MaximumAddress;
     } Memory;
     struct {
-      ULONG  MinimumVector;
-      ULONG  MaximumVector;
+      ULONG MinimumVector;
+      ULONG MaximumVector;
     } Interrupt;
     struct {
-      ULONG  MinimumChannel;
-      ULONG  MaximumChannel;
+      ULONG MinimumChannel;
+      ULONG MaximumChannel;
     } Dma;
     struct {
-      ULONG  Length;
-      ULONG  Alignment;
-      PHYSICAL_ADDRESS  MinimumAddress;
-      PHYSICAL_ADDRESS  MaximumAddress;
+      ULONG Length;
+      ULONG Alignment;
+      PHYSICAL_ADDRESS MinimumAddress;
+      PHYSICAL_ADDRESS MaximumAddress;
     } Generic;
     struct {
-      ULONG  Data[3];
+      ULONG Data[3];
     } DevicePrivate;
     struct {
-      ULONG  Length;
-      ULONG  MinBusNumber;
-      ULONG  MaxBusNumber;
-      ULONG  Reserved;
+      ULONG Length;
+      ULONG MinBusNumber;
+      ULONG MaxBusNumber;
+      ULONG Reserved;
     } BusNumber;
     struct {
-      ULONG  Priority;
-      ULONG  Reserved1;
-      ULONG  Reserved2;
+      ULONG Priority;
+      ULONG Reserved1;
+      ULONG Reserved2;
     } ConfigData;
   } u;
 } IO_RESOURCE_DESCRIPTOR, *PIO_RESOURCE_DESCRIPTOR;
 
 typedef struct _IO_RESOURCE_LIST {
-  USHORT  Version;
-  USHORT  Revision;
-  ULONG  Count;
-  IO_RESOURCE_DESCRIPTOR  Descriptors[1];
+  USHORT Version;
+  USHORT Revision;
+  ULONG Count;
+  IO_RESOURCE_DESCRIPTOR Descriptors[1];
 } IO_RESOURCE_LIST, *PIO_RESOURCE_LIST;
 
 typedef struct _IO_RESOURCE_REQUIREMENTS_LIST {
-  ULONG  ListSize;
-  INTERFACE_TYPE  InterfaceType;
-  ULONG  BusNumber;
-  ULONG  SlotNumber;
-  ULONG  Reserved[3];
-  ULONG  AlternativeLists;
-  IO_RESOURCE_LIST  List[1];
+  ULONG ListSize;
+  INTERFACE_TYPE InterfaceType;
+  ULONG BusNumber;
+  ULONG SlotNumber;
+  ULONG Reserved[3];
+  ULONG AlternativeLists;
+  IO_RESOURCE_LIST List[1];
 } IO_RESOURCE_REQUIREMENTS_LIST, *PIO_RESOURCE_REQUIREMENTS_LIST;
 
 typedef VOID
-(DDKAPI DRIVER_CANCEL)(
-  IN struct _DEVICE_OBJECT  *DeviceObject,
-  IN struct _IRP  *Irp);
-typedef DRIVER_CANCEL *PDRIVER_CANCEL;
+(DDKAPI *PDRIVER_CANCEL)(
+  IN struct _DEVICE_OBJECT *DeviceObject,
+  IN struct _IRP *Irp);
 
 typedef struct _IRP {
-  CSHORT  Type;
-  USHORT  Size;
-  struct _MDL  *MdlAddress;
-  ULONG  Flags;
+  CSHORT Type;
+  USHORT Size;
+  struct _MDL *MdlAddress;
+  ULONG Flags;
   union {
-    struct _IRP  *MasterIrp;
-    volatile LONG  IrpCount;
-    PVOID  SystemBuffer;
+    struct _IRP *MasterIrp;
+    volatile LONG IrpCount;
+    PVOID SystemBuffer;
   } AssociatedIrp;
-  LIST_ENTRY  ThreadListEntry;
-  IO_STATUS_BLOCK  IoStatus;
-  KPROCESSOR_MODE  RequestorMode;
-  BOOLEAN  PendingReturned;
-  CHAR  StackCount;
-  CHAR  CurrentLocation;
-  BOOLEAN  Cancel;
-  KIRQL  CancelIrql;
-  CCHAR  ApcEnvironment;
-  UCHAR  AllocationFlags;
-  PIO_STATUS_BLOCK  UserIosb;
-  PKEVENT  UserEvent;
-  union {
-    struct {
-      _ANONYMOUS_UNION union {      
-        PIO_APC_ROUTINE  UserApcRoutine;
-        PVOID IssuingProcess;
-      } DUMMYUNIONNAME;
-      PVOID  UserApcContext;
-    } AsynchronousParameters;
-    LARGE_INTEGER  AllocationSize;
-  } Overlay;
-  volatile PDRIVER_CANCEL  CancelRoutine;
-  PVOID  UserBuffer;
+  LIST_ENTRY ThreadListEntry;
+  IO_STATUS_BLOCK IoStatus;
+  KPROCESSOR_MODE RequestorMode;
+  BOOLEAN PendingReturned;
+  CHAR StackCount;
+  CHAR CurrentLocation;
+  BOOLEAN Cancel;
+  KIRQL CancelIrql;
+  CCHAR ApcEnvironment;
+  UCHAR AllocationFlags;
+  PIO_STATUS_BLOCK UserIosb;
+  PKEVENT UserEvent;
   union {
     struct {
       _ANONYMOUS_UNION union {
-        KDEVICE_QUEUE_ENTRY  DeviceQueueEntry;
+        PIO_APC_ROUTINE UserApcRoutine;
+        PVOID IssuingProcess;
+      } DUMMYUNIONNAME;
+      PVOID UserApcContext;
+    } AsynchronousParameters;
+    LARGE_INTEGER AllocationSize;
+  } Overlay;
+  volatile PDRIVER_CANCEL CancelRoutine;
+  PVOID UserBuffer;
+  union {
+    struct {
+      _ANONYMOUS_UNION union {
+        KDEVICE_QUEUE_ENTRY DeviceQueueEntry;
         _ANONYMOUS_STRUCT struct {
-          PVOID  DriverContext[4];
+          PVOID DriverContext[4];
         } DUMMYSTRUCTNAME;
       } DUMMYUNIONNAME;
-      PETHREAD  Thread;
-      PCHAR  AuxiliaryBuffer;
+      PETHREAD Thread;
+      PCHAR AuxiliaryBuffer;
       _ANONYMOUS_STRUCT struct {
-        LIST_ENTRY  ListEntry;
+        LIST_ENTRY ListEntry;
         _ANONYMOUS_UNION union {
-          struct _IO_STACK_LOCATION  *CurrentStackLocation;
-          ULONG  PacketType;
+          struct _IO_STACK_LOCATION *CurrentStackLocation;
+          ULONG PacketType;
         } DUMMYUNIONNAME;
       } DUMMYSTRUCTNAME;
-      struct _FILE_OBJECT  *OriginalFileObject;
+      struct _FILE_OBJECT *OriginalFileObject;
     } Overlay;
-    KAPC  Apc;
-    PVOID  CompletionKey;
+    KAPC Apc;
+    PVOID CompletionKey;
   } Tail;
-} IRP;
-typedef struct _IRP *PIRP;
+} IRP, *PIRP;
 
 typedef enum _IO_PAGING_PRIORITY {
   IoPagingPriorityInvalid,
@@ -2042,93 +2030,91 @@ typedef enum _IO_PAGING_PRIORITY {
 } IO_PAGING_PRIORITY;
 
 typedef NTSTATUS
-(DDKAPI IO_COMPLETION_ROUTINE)(
-  IN struct _DEVICE_OBJECT  *DeviceObject,
-  IN struct _IRP  *Irp,
-  IN PVOID  Context);
-typedef IO_COMPLETION_ROUTINE *PIO_COMPLETION_ROUTINE;
+(DDKAPI *PIO_COMPLETION_ROUTINE)(
+  IN struct _DEVICE_OBJECT *DeviceObject,
+  IN struct _IRP *Irp,
+  IN PVOID Context);
 
 typedef VOID
 (DDKAPI *PIO_DPC_ROUTINE)(
-  IN struct _KDPC  *Dpc,
-  IN struct _DEVICE_OBJECT  *DeviceObject,
-  IN struct _IRP  *Irp,
-  IN PVOID  Context);
+  IN struct _KDPC *Dpc,
+  IN struct _DEVICE_OBJECT *DeviceObject,
+  IN struct _IRP *Irp,
+  IN PVOID Context);
 
 typedef NTSTATUS
 (DDKAPI *PMM_DLL_INITIALIZE)(
-  IN PUNICODE_STRING  RegistryPath);
+  IN PUNICODE_STRING RegistryPath);
 
 typedef NTSTATUS
 (DDKAPI *PMM_DLL_UNLOAD)(
   VOID);
 
 typedef BOOLEAN
-(DDKAPI KSERVICE_ROUTINE)(
-  IN struct _KINTERRUPT  *Interrupt,
-  IN PVOID  ServiceContext);
-typedef KSERVICE_ROUTINE *PKSERVICE_ROUTINE;
+(DDKAPI *PKSERVICE_ROUTINE)(
+  IN struct _KINTERRUPT *Interrupt,
+  IN PVOID ServiceContext);
 
 typedef VOID
 (DDKAPI *PIO_TIMER_ROUTINE)(
-  IN struct _DEVICE_OBJECT  *DeviceObject,
-  IN PVOID  Context);
+  IN struct _DEVICE_OBJECT *DeviceObject,
+  IN PVOID Context);
 
 typedef struct _IO_SECURITY_CONTEXT {
-  PSECURITY_QUALITY_OF_SERVICE  SecurityQos;
-  PACCESS_STATE  AccessState;
-  ACCESS_MASK  DesiredAccess;
-  ULONG  FullCreateOptions;
+  PSECURITY_QUALITY_OF_SERVICE SecurityQos;
+  PACCESS_STATE AccessState;
+  ACCESS_MASK DesiredAccess;
+  ULONG FullCreateOptions;
 } IO_SECURITY_CONTEXT, *PIO_SECURITY_CONTEXT;
 
 struct _IO_CSQ;
 
 typedef struct _IO_CSQ_IRP_CONTEXT {
-  ULONG  Type;
-  struct _IRP  *Irp;
-  struct _IO_CSQ  *Csq;
+  ULONG Type;
+  struct _IRP *Irp;
+  struct _IO_CSQ *Csq;
 } IO_CSQ_IRP_CONTEXT, *PIO_CSQ_IRP_CONTEXT;
 
 typedef VOID
 (DDKAPI *PIO_CSQ_INSERT_IRP)(
-  IN struct _IO_CSQ  *Csq,
-  IN PIRP  Irp);
+  IN struct _IO_CSQ *Csq,
+  IN PIRP Irp);
 
 typedef VOID
 (DDKAPI *PIO_CSQ_REMOVE_IRP)(
-  IN struct _IO_CSQ  *Csq,
-  IN PIRP  Irp);
+  IN struct _IO_CSQ *Csq,
+  IN PIRP Irp);
 
 typedef PIRP
 (DDKAPI *PIO_CSQ_PEEK_NEXT_IRP)(
-  IN struct _IO_CSQ  *Csq,
-  IN PIRP  Irp,
-  IN PVOID  PeekContext);
+  IN struct _IO_CSQ *Csq,
+  IN PIRP Irp,
+  IN PVOID PeekContext);
 
 typedef VOID
 (DDKAPI *PIO_CSQ_ACQUIRE_LOCK)(
-  IN  struct _IO_CSQ  *Csq,
-  OUT PKIRQL  Irql);
+  IN struct _IO_CSQ *Csq,
+  OUT PKIRQL Irql);
 
 typedef VOID
 (DDKAPI *PIO_CSQ_RELEASE_LOCK)(
-  IN struct _IO_CSQ  *Csq,
-  IN KIRQL  Irql);
+  IN struct _IO_CSQ *Csq,
+  IN KIRQL Irql);
 
 typedef VOID
 (DDKAPI *PIO_CSQ_COMPLETE_CANCELED_IRP)(
-  IN  struct _IO_CSQ  *Csq,
-  IN  PIRP  Irp);
+  IN struct _IO_CSQ *Csq,
+  IN PIRP Irp);
 
 typedef struct _IO_CSQ {
-  ULONG  Type;
-  PIO_CSQ_INSERT_IRP  CsqInsertIrp;
-  PIO_CSQ_REMOVE_IRP  CsqRemoveIrp;
-  PIO_CSQ_PEEK_NEXT_IRP  CsqPeekNextIrp;
-  PIO_CSQ_ACQUIRE_LOCK  CsqAcquireLock;
-  PIO_CSQ_RELEASE_LOCK  CsqReleaseLock;
-  PIO_CSQ_COMPLETE_CANCELED_IRP  CsqCompleteCanceledIrp;
-  PVOID  ReservePointer;
+  ULONG Type;
+  PIO_CSQ_INSERT_IRP CsqInsertIrp;
+  PIO_CSQ_REMOVE_IRP CsqRemoveIrp;
+  PIO_CSQ_PEEK_NEXT_IRP CsqPeekNextIrp;
+  PIO_CSQ_ACQUIRE_LOCK CsqAcquireLock;
+  PIO_CSQ_RELEASE_LOCK CsqReleaseLock;
+  PIO_CSQ_COMPLETE_CANCELED_IRP CsqCompleteCanceledIrp;
+  PVOID ReservePointer;
 } IO_CSQ, *PIO_CSQ;
 
 typedef enum _BUS_QUERY_ID_TYPE {
@@ -2220,187 +2206,187 @@ typedef struct _ACPI_INTERFACE_STANDARD2 {
 #include <pshpack4.h>
 #endif
 typedef struct _IO_STACK_LOCATION {
-  UCHAR  MajorFunction;
-  UCHAR  MinorFunction;
-  UCHAR  Flags;
-  UCHAR  Control;
+  UCHAR MajorFunction;
+  UCHAR MinorFunction;
+  UCHAR Flags;
+  UCHAR Control;
   union {
     struct {
-      PIO_SECURITY_CONTEXT  SecurityContext;
-      ULONG  Options;
-      USHORT POINTER_ALIGNMENT  FileAttributes;
-      USHORT  ShareAccess;
-      ULONG POINTER_ALIGNMENT  EaLength;
+      PIO_SECURITY_CONTEXT SecurityContext;
+      ULONG Options;
+      USHORT POINTER_ALIGNMENT FileAttributes;
+      USHORT ShareAccess;
+      ULONG POINTER_ALIGNMENT EaLength;
     } Create;
     struct {
-      ULONG  Length;
-      ULONG POINTER_ALIGNMENT  Key;
-      LARGE_INTEGER  ByteOffset;
+      ULONG Length;
+      ULONG POINTER_ALIGNMENT Key;
+      LARGE_INTEGER ByteOffset;
     } Read;
     struct {
-      ULONG  Length;
-      ULONG POINTER_ALIGNMENT  Key;
-      LARGE_INTEGER  ByteOffset;
+      ULONG Length;
+      ULONG POINTER_ALIGNMENT Key;
+      LARGE_INTEGER ByteOffset;
     } Write;
     struct {
-      ULONG  Length;
-      PUNICODE_STRING  FileName;
-      FILE_INFORMATION_CLASS  FileInformationClass;
-      ULONG  FileIndex;
+      ULONG Length;
+      PUNICODE_STRING FileName;
+      FILE_INFORMATION_CLASS FileInformationClass;
+      ULONG FileIndex;
     } QueryDirectory;
     struct {
-      ULONG  Length;
-      ULONG  CompletionFilter;
+      ULONG Length;
+      ULONG CompletionFilter;
     } NotifyDirectory;
     struct {
-      ULONG  Length;
-      FILE_INFORMATION_CLASS POINTER_ALIGNMENT  FileInformationClass;
+      ULONG Length;
+      FILE_INFORMATION_CLASS POINTER_ALIGNMENT FileInformationClass;
     } QueryFile;
     struct {
-      ULONG  Length;
-      FILE_INFORMATION_CLASS POINTER_ALIGNMENT  FileInformationClass;
-      PFILE_OBJECT  FileObject;
+      ULONG Length;
+      FILE_INFORMATION_CLASS POINTER_ALIGNMENT FileInformationClass;
+      PFILE_OBJECT FileObject;
       _ANONYMOUS_UNION union {
         _ANONYMOUS_STRUCT struct {
-          BOOLEAN  ReplaceIfExists;
-          BOOLEAN  AdvanceOnly;
+          BOOLEAN ReplaceIfExists;
+          BOOLEAN AdvanceOnly;
         } DUMMYSTRUCTNAME;
-        ULONG  ClusterCount;
-        HANDLE  DeleteHandle;
+        ULONG ClusterCount;
+        HANDLE DeleteHandle;
       } DUMMYUNIONNAME;
     } SetFile;
     struct {
-      ULONG  Length;
-      PVOID  EaList;
-      ULONG  EaListLength;
-      ULONG  EaIndex;
+      ULONG Length;
+      PVOID EaList;
+      ULONG EaListLength;
+      ULONG EaIndex;
     } QueryEa;
     struct {
-      ULONG  Length;
+      ULONG Length;
     } SetEa;
     struct {
-      ULONG  Length;
-      FS_INFORMATION_CLASS POINTER_ALIGNMENT  FsInformationClass;
+      ULONG Length;
+      FS_INFORMATION_CLASS POINTER_ALIGNMENT FsInformationClass;
     } QueryVolume;
     struct {
-      ULONG  Length;
-      FS_INFORMATION_CLASS  FsInformationClass;
+      ULONG Length;
+      FS_INFORMATION_CLASS FsInformationClass;
     } SetVolume;
     struct {
-      ULONG  OutputBufferLength;
-      ULONG  InputBufferLength;
-      ULONG  FsControlCode;
-      PVOID  Type3InputBuffer;
+      ULONG OutputBufferLength;
+      ULONG InputBufferLength;
+      ULONG FsControlCode;
+      PVOID Type3InputBuffer;
     } FileSystemControl;
     struct {
-      PLARGE_INTEGER  Length;
-      ULONG  Key;
-      LARGE_INTEGER  ByteOffset;
+      PLARGE_INTEGER Length;
+      ULONG Key;
+      LARGE_INTEGER ByteOffset;
     } LockControl;
     struct {
-      ULONG  OutputBufferLength;
-      ULONG POINTER_ALIGNMENT  InputBufferLength;
-      ULONG POINTER_ALIGNMENT  IoControlCode;
-      PVOID  Type3InputBuffer;
+      ULONG OutputBufferLength;
+      ULONG POINTER_ALIGNMENT InputBufferLength;
+      ULONG POINTER_ALIGNMENT IoControlCode;
+      PVOID Type3InputBuffer;
     } DeviceIoControl;
     struct {
-      SECURITY_INFORMATION  SecurityInformation;
-      ULONG POINTER_ALIGNMENT  Length;
+      SECURITY_INFORMATION SecurityInformation;
+      ULONG POINTER_ALIGNMENT Length;
     } QuerySecurity;
     struct {
-      SECURITY_INFORMATION  SecurityInformation;
-      PSECURITY_DESCRIPTOR  SecurityDescriptor;
+      SECURITY_INFORMATION SecurityInformation;
+      PSECURITY_DESCRIPTOR SecurityDescriptor;
     } SetSecurity;
     struct {
-      PVPB  Vpb;
-      PDEVICE_OBJECT  DeviceObject;
+      PVPB Vpb;
+      PDEVICE_OBJECT DeviceObject;
     } MountVolume;
     struct {
-      PVPB  Vpb;
-      PDEVICE_OBJECT  DeviceObject;
+      PVPB Vpb;
+      PDEVICE_OBJECT DeviceObject;
     } VerifyVolume;
     struct {
-      struct _SCSI_REQUEST_BLOCK  *Srb;
+      struct _SCSI_REQUEST_BLOCK *Srb;
     } Scsi;
     struct {
-      ULONG  Length;
-      PSID  StartSid;
-      struct _FILE_GET_QUOTA_INFORMATION  *SidList;
-      ULONG  SidListLength;
+      ULONG Length;
+      PSID StartSid;
+      struct _FILE_GET_QUOTA_INFORMATION *SidList;
+      ULONG SidListLength;
     } QueryQuota;
     struct {
-      ULONG  Length;
+      ULONG Length;
     } SetQuota;
     struct {
-      DEVICE_RELATION_TYPE  Type;
+      DEVICE_RELATION_TYPE Type;
     } QueryDeviceRelations;
     struct {
-      CONST GUID  *InterfaceType;
-      USHORT  Size;
-      USHORT  Version;
-      PINTERFACE  Interface;
-      PVOID  InterfaceSpecificData;
+      CONST GUID *InterfaceType;
+      USHORT Size;
+      USHORT Version;
+      PINTERFACE Interface;
+      PVOID InterfaceSpecificData;
     } QueryInterface;
     struct {
-      PDEVICE_CAPABILITIES  Capabilities;
+      PDEVICE_CAPABILITIES Capabilities;
     } DeviceCapabilities;
     struct {
-      PIO_RESOURCE_REQUIREMENTS_LIST  IoResourceRequirementList;
+      PIO_RESOURCE_REQUIREMENTS_LIST IoResourceRequirementList;
     } FilterResourceRequirements;
     struct {
-      ULONG  WhichSpace;
-      PVOID  Buffer;
-      ULONG  Offset;
-      ULONG POINTER_ALIGNMENT  Length;
+      ULONG WhichSpace;
+      PVOID Buffer;
+      ULONG Offset;
+      ULONG POINTER_ALIGNMENT Length;
     } ReadWriteConfig;
     struct {
-      BOOLEAN  Lock;
+      BOOLEAN Lock;
     } SetLock;
     struct {
-      BUS_QUERY_ID_TYPE  IdType;
+      BUS_QUERY_ID_TYPE IdType;
     } QueryId;
     struct {
-      DEVICE_TEXT_TYPE  DeviceTextType;
-      LCID POINTER_ALIGNMENT  LocaleId;
+      DEVICE_TEXT_TYPE DeviceTextType;
+      LCID POINTER_ALIGNMENT LocaleId;
     } QueryDeviceText;
     struct {
-      BOOLEAN  InPath;
-      BOOLEAN  Reserved[3];
-      DEVICE_USAGE_NOTIFICATION_TYPE POINTER_ALIGNMENT  Type;
+      BOOLEAN InPath;
+      BOOLEAN Reserved[3];
+      DEVICE_USAGE_NOTIFICATION_TYPE POINTER_ALIGNMENT Type;
     } UsageNotification;
     struct {
-      SYSTEM_POWER_STATE  PowerState;
+      SYSTEM_POWER_STATE PowerState;
     } WaitWake;
     struct {
-      PPOWER_SEQUENCE  PowerSequence;
+      PPOWER_SEQUENCE PowerSequence;
     } PowerSequence;
     struct {
-      ULONG  SystemContext;
-      POWER_STATE_TYPE POINTER_ALIGNMENT  Type;
-      POWER_STATE POINTER_ALIGNMENT  State;
-      POWER_ACTION POINTER_ALIGNMENT  ShutdownType;
+      ULONG SystemContext;
+      POWER_STATE_TYPE POINTER_ALIGNMENT Type;
+      POWER_STATE POINTER_ALIGNMENT State;
+      POWER_ACTION POINTER_ALIGNMENT ShutdownType;
     } Power;
     struct {
-      PCM_RESOURCE_LIST  AllocatedResources;
-      PCM_RESOURCE_LIST  AllocatedResourcesTranslated;
+      PCM_RESOURCE_LIST AllocatedResources;
+      PCM_RESOURCE_LIST AllocatedResourcesTranslated;
     } StartDevice;
     struct {
-      ULONG_PTR  ProviderId;
-      PVOID  DataPath;
-      ULONG  BufferSize;
-      PVOID  Buffer;
+      ULONG_PTR ProviderId;
+      PVOID DataPath;
+      ULONG BufferSize;
+      PVOID Buffer;
     } WMI;
     struct {
-      PVOID  Argument1;
-      PVOID  Argument2;
-      PVOID  Argument3;
-      PVOID  Argument4;
+      PVOID Argument1;
+      PVOID Argument2;
+      PVOID Argument3;
+      PVOID Argument4;
     } Others;
   } Parameters;
-  PDEVICE_OBJECT  DeviceObject;
-  PFILE_OBJECT  FileObject;
-  PIO_COMPLETION_ROUTINE  CompletionRoutine;
-  PVOID  Context;
+  PDEVICE_OBJECT DeviceObject;
+  PFILE_OBJECT FileObject;
+  PIO_COMPLETION_ROUTINE CompletionRoutine;
+  PVOID Context;
 } IO_STACK_LOCATION, *PIO_STACK_LOCATION;
 #if !defined(_AMD64_) && !defined(_IA64_)
 #include <poppack.h>

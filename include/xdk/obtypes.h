@@ -3,7 +3,7 @@
  ******************************************************************************/
 
 typedef struct _OBJECT_NAME_INFORMATION {
-  UNICODE_STRING  Name;
+  UNICODE_STRING Name;
 } OBJECT_NAME_INFORMATION, *POBJECT_NAME_INFORMATION;
 
 /* Exported object types */

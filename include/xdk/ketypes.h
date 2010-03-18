@@ -103,38 +103,37 @@ typedef enum _MODE {
 #define EXCEPTION_MAXIMUM_PARAMETERS 15
 
 typedef struct _EXCEPTION_RECORD {
-    NTSTATUS ExceptionCode;
-    ULONG ExceptionFlags;
-    struct _EXCEPTION_RECORD *ExceptionRecord;
-    PVOID ExceptionAddress;
-    ULONG NumberParameters;
-    ULONG_PTR ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
+  NTSTATUS ExceptionCode;
+  ULONG ExceptionFlags;
+  struct _EXCEPTION_RECORD *ExceptionRecord;
+  PVOID ExceptionAddress;
+  ULONG NumberParameters;
+  ULONG_PTR ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
 } EXCEPTION_RECORD, *PEXCEPTION_RECORD;
 
 typedef struct _EXCEPTION_RECORD32 {
-    NTSTATUS ExceptionCode;
-    ULONG ExceptionFlags;
-    ULONG ExceptionRecord;
-    ULONG ExceptionAddress;
-    ULONG NumberParameters;
-    ULONG ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
+  NTSTATUS ExceptionCode;
+  ULONG ExceptionFlags;
+  ULONG ExceptionRecord;
+  ULONG ExceptionAddress;
+  ULONG NumberParameters;
+  ULONG ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
 } EXCEPTION_RECORD32, *PEXCEPTION_RECORD32;
 
 typedef struct _EXCEPTION_RECORD64 {
-    NTSTATUS ExceptionCode;
-    ULONG ExceptionFlags;
-    ULONG64 ExceptionRecord;
-    ULONG64 ExceptionAddress;
-    ULONG NumberParameters;
-    ULONG __unusedAlignment;
-    ULONG64 ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
+  NTSTATUS ExceptionCode;
+  ULONG ExceptionFlags;
+  ULONG64 ExceptionRecord;
+  ULONG64 ExceptionAddress;
+  ULONG NumberParameters;
+  ULONG __unusedAlignment;
+  ULONG64 ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
 } EXCEPTION_RECORD64, *PEXCEPTION_RECORD64;
 
 typedef struct _EXCEPTION_POINTERS {
-    PEXCEPTION_RECORD ExceptionRecord;
-    PCONTEXT ContextRecord;
+  PEXCEPTION_RECORD ExceptionRecord;
+  PCONTEXT ContextRecord;
 } EXCEPTION_POINTERS, *PEXCEPTION_POINTERS;
-
 
 typedef enum _KBUGCHECK_CALLBACK_REASON {
   KbCallbackInvalid,
@@ -148,18 +147,18 @@ struct _KBUGCHECK_REASON_CALLBACK_RECORD;
 
 typedef VOID
 (DDKAPI *PKBUGCHECK_REASON_CALLBACK_ROUTINE)(
-  IN KBUGCHECK_CALLBACK_REASON  Reason,
-  IN struct _KBUGCHECK_REASON_CALLBACK_RECORD  *Record,
-  IN OUT PVOID  ReasonSpecificData,
-  IN ULONG  ReasonSpecificDataLength);
+  IN KBUGCHECK_CALLBACK_REASON Reason,
+  IN struct _KBUGCHECK_REASON_CALLBACK_RECORD *Record,
+  IN OUT PVOID ReasonSpecificData,
+  IN ULONG ReasonSpecificDataLength);
 
 typedef struct _KBUGCHECK_REASON_CALLBACK_RECORD {
-  LIST_ENTRY  Entry;
-  PKBUGCHECK_REASON_CALLBACK_ROUTINE  CallbackRoutine;
-  PUCHAR  Component;
-  ULONG_PTR  Checksum;
-  KBUGCHECK_CALLBACK_REASON  Reason;
-  UCHAR  State;
+  LIST_ENTRY Entry;
+  PKBUGCHECK_REASON_CALLBACK_ROUTINE CallbackRoutine;
+  PUCHAR Component;
+  ULONG_PTR Checksum;
+  KBUGCHECK_CALLBACK_REASON Reason;
+  UCHAR State;
 } KBUGCHECK_REASON_CALLBACK_RECORD, *PKBUGCHECK_REASON_CALLBACK_RECORD;
 
 typedef enum _KBUGCHECK_BUFFER_DUMP_STATE {
@@ -172,23 +171,23 @@ typedef enum _KBUGCHECK_BUFFER_DUMP_STATE {
 
 typedef VOID
 (DDKAPI *PKBUGCHECK_CALLBACK_ROUTINE)(
-  IN PVOID  Buffer,
-  IN ULONG  Length);
+  IN PVOID Buffer,
+  IN ULONG Length);
 
 typedef struct _KBUGCHECK_CALLBACK_RECORD {
-  LIST_ENTRY  Entry;
-  PKBUGCHECK_CALLBACK_ROUTINE  CallbackRoutine;
-  PVOID  Buffer;
-  ULONG  Length;
-  PUCHAR  Component;
-  ULONG_PTR  Checksum;
-  UCHAR  State;
+  LIST_ENTRY Entry;
+  PKBUGCHECK_CALLBACK_ROUTINE CallbackRoutine;
+  PVOID Buffer;
+  ULONG Length;
+  PUCHAR Component;
+  ULONG_PTR Checksum;
+  UCHAR State;
 } KBUGCHECK_CALLBACK_RECORD, *PKBUGCHECK_CALLBACK_RECORD;
 
 typedef BOOLEAN
 (DDKAPI *PNMI_CALLBACK)(
-    IN PVOID Context,
-    IN BOOLEAN Handled);
+  IN PVOID Context,
+  IN BOOLEAN Handled);
 
 typedef enum _TRACE_INFORMATION_CLASS {
   TraceIdClass,
@@ -305,7 +304,7 @@ typedef VOID
   VOID);
 
 typedef enum _KD_OPTION {
-    KD_OPTION_SET_BLOCK_ENABLE,
+  KD_OPTION_SET_BLOCK_ENABLE,
 } KD_OPTION;
 
 typedef enum _INTERFACE_TYPE {
@@ -332,24 +331,23 @@ typedef enum _INTERFACE_TYPE {
 
 typedef VOID
 (DDKAPI *PKNORMAL_ROUTINE)(
-  IN PVOID  NormalContext,
-  IN PVOID  SystemArgument1,
-  IN PVOID  SystemArgument2);
+  IN PVOID NormalContext,
+  IN PVOID SystemArgument1,
+  IN PVOID SystemArgument2);
 
 typedef VOID
 (DDKAPI *PKRUNDOWN_ROUTINE)(
-  IN struct _KAPC  *Apc);
+  IN struct _KAPC *Apc);
 
 typedef VOID
 (DDKAPI *PKKERNEL_ROUTINE)(
-  IN struct _KAPC  *Apc,
-  IN OUT PKNORMAL_ROUTINE  *NormalRoutine,
-  IN OUT PVOID  *NormalContext,
-  IN OUT PVOID  *SystemArgument1,
-  IN OUT PVOID  *SystemArgument2);
+  IN struct _KAPC *Apc,
+  IN OUT PKNORMAL_ROUTINE *NormalRoutine,
+  IN OUT PVOID *NormalContext,
+  IN OUT PVOID *SystemArgument1,
+  IN OUT PVOID *SystemArgument2);
 
-typedef struct _KAPC
-{
+typedef struct _KAPC {
   UCHAR Type;
   UCHAR SpareByte0;
   UCHAR Size;
@@ -369,26 +367,24 @@ typedef struct _KAPC
 } KAPC, *PKAPC, *RESTRICTED_POINTER PRKAPC;
 
 typedef struct _KDEVICE_QUEUE_ENTRY {
-  LIST_ENTRY  DeviceListEntry;
-  ULONG  SortKey;
-  BOOLEAN  Inserted;
+  LIST_ENTRY DeviceListEntry;
+  ULONG SortKey;
+  BOOLEAN Inserted;
 } KDEVICE_QUEUE_ENTRY, *PKDEVICE_QUEUE_ENTRY,
 *RESTRICTED_POINTER PRKDEVICE_QUEUE_ENTRY;
 
 typedef PVOID PKIPI_CONTEXT;
 
-typedef
-VOID
+typedef VOID
 (NTAPI *PKIPI_WORKER)(
   IN PKIPI_CONTEXT PacketContext,
   IN PVOID Parameter1,
   IN PVOID Parameter2,
   IN PVOID Parameter3);
 
-typedef
-ULONG_PTR
+typedef ULONG_PTR
 (NTAPI *PKIPI_BROADCAST_WORKER)(
-    IN ULONG_PTR Argument);
+  IN ULONG_PTR Argument);
 
 typedef ULONG_PTR KSPIN_LOCK, *PKSPIN_LOCK;
 
@@ -450,14 +446,14 @@ typedef enum _KSPIN_LOCK_QUEUE_NUMBER {
   LockQueueMaximumLock = LockQueueTimerTableLock + LOCK_QUEUE_TIMER_TABLE_LOCKS
 } KSPIN_LOCK_QUEUE_NUMBER, *PKSPIN_LOCK_QUEUE_NUMBER;
 
-#endif
+#endif /* defined(_AMD64_) */
 
 typedef VOID
 (DDKAPI *PKDEFERRED_ROUTINE)(
-  IN struct _KDPC  *Dpc,
-  IN PVOID  DeferredContext,
-  IN PVOID  SystemArgument1,
-  IN PVOID  SystemArgument2);
+  IN struct _KDPC *Dpc,
+  IN PVOID DeferredContext,
+  IN PVOID SystemArgument1,
+  IN PVOID SystemArgument2);
 
 typedef enum _KDPC_IMPORTANCE {
   LowImportance,
@@ -466,17 +462,16 @@ typedef enum _KDPC_IMPORTANCE {
   MediumHighImportance
 } KDPC_IMPORTANCE;
 
-typedef struct _KDPC
-{
-    UCHAR Type;
-    UCHAR Importance;
-    volatile USHORT Number;
-    LIST_ENTRY DpcListEntry;
-    PKDEFERRED_ROUTINE DeferredRoutine;
-    PVOID DeferredContext;
-    PVOID SystemArgument1;
-    PVOID SystemArgument2;
-    volatile PVOID  DpcData;
+typedef struct _KDPC {
+  UCHAR Type;
+  UCHAR Importance;
+  volatile USHORT Number;
+  LIST_ENTRY DpcListEntry;
+  PKDEFERRED_ROUTINE DeferredRoutine;
+  PVOID DeferredContext;
+  PVOID SystemArgument1;
+  PVOID SystemArgument2;
+  volatile PVOID  DpcData;
 } KDPC, *PKDPC, *RESTRICTED_POINTER PRKDPC;
 
 typedef struct _KDPC_WATCHDOG_INFORMATION {
@@ -496,126 +491,122 @@ typedef struct _KDEVICE_QUEUE {
   union {
     BOOLEAN Busy;
     struct {
-      LONG64 Reserved : 8;
-      LONG64 Hint : 56;
+      LONG64 Reserved:8;
+      LONG64 Hint:56;
     };
   };
   #else
   BOOLEAN Busy;
   #endif
-
 } KDEVICE_QUEUE, *PKDEVICE_QUEUE, *RESTRICTED_POINTER PRKDEVICE_QUEUE;
 
 #define TIMER_EXPIRED_INDEX_BITS        6
 #define TIMER_PROCESSOR_INDEX_BITS      5
+
 typedef struct _DISPATCHER_HEADER {
-    _ANONYMOUS_UNION union {
-        _ANONYMOUS_STRUCT struct {
-            UCHAR Type;
-            _ANONYMOUS_UNION union {
-                _ANONYMOUS_UNION union {
-                    UCHAR TimerControlFlags;
-                    _ANONYMOUS_STRUCT struct {
-                        UCHAR Absolute:1;
-                        UCHAR Coalescable:1;
-                        UCHAR KeepShifting:1;
-                        UCHAR EncodedTolerableDelay:5;
-                    } DUMMYSTRUCTNAME;
-                } DUMMYUNIONNAME;
-                UCHAR Abandoned;
+  _ANONYMOUS_UNION union {
+    _ANONYMOUS_STRUCT struct {
+      UCHAR Type;
+      _ANONYMOUS_UNION union {
+        _ANONYMOUS_UNION union {
+          UCHAR TimerControlFlags;
+          _ANONYMOUS_STRUCT struct {
+            UCHAR Absolute:1;
+            UCHAR Coalescable:1;
+            UCHAR KeepShifting:1;
+            UCHAR EncodedTolerableDelay:5;
+          } DUMMYSTRUCTNAME;
+        } DUMMYUNIONNAME;
+        UCHAR Abandoned;
 #if (NTDDI_VERSION < NTDDI_WIN7)
-                UCHAR NpxIrql;
+        UCHAR NpxIrql;
 #endif
-                BOOLEAN Signalling;
-            } DUMMYUNIONNAME;
-            _ANONYMOUS_UNION union {
-                _ANONYMOUS_UNION union {
-                    UCHAR ThreadControlFlags;
-                    _ANONYMOUS_STRUCT struct {
-                        UCHAR CpuThrottled:1;
-                        UCHAR CycleProfiling:1;
-                        UCHAR CounterProfiling:1;
-                        UCHAR Reserved:5;
-                    } DUMMYSTRUCTNAME;
-                } DUMMYUNIONNAME;
-                UCHAR Size;
-                UCHAR Hand;
-            } DUMMYUNIONNAME2;
-            _ANONYMOUS_UNION union {
+        BOOLEAN Signalling;
+      } DUMMYUNIONNAME;
+      _ANONYMOUS_UNION union {
+        _ANONYMOUS_UNION union {
+          UCHAR ThreadControlFlags;
+          _ANONYMOUS_STRUCT struct {
+            UCHAR CpuThrottled:1;
+            UCHAR CycleProfiling:1;
+            UCHAR CounterProfiling:1;
+            UCHAR Reserved:5;
+          } DUMMYSTRUCTNAME;
+        } DUMMYUNIONNAME;
+        UCHAR Size;
+        UCHAR Hand;
+      } DUMMYUNIONNAME2;
+      _ANONYMOUS_UNION union {
 #if (NTDDI_VERSION >= NTDDI_WIN7)
-                _ANONYMOUS_UNION union {
-                    UCHAR TimerMiscFlags;
-                    _ANONYMOUS_STRUCT struct {
+        _ANONYMOUS_UNION union {
+          UCHAR TimerMiscFlags;
+          _ANONYMOUS_STRUCT struct {
 #if !defined(_X86_)
-                        UCHAR Index:TIMER_EXPIRED_INDEX_BITS;
+            UCHAR Index:TIMER_EXPIRED_INDEX_BITS;
 #else
-                        UCHAR Index:1;
-                        UCHAR Processor:TIMER_PROCESSOR_INDEX_BITS;
+            UCHAR Index:1;
+            UCHAR Processor:TIMER_PROCESSOR_INDEX_BITS;
 #endif
-                        UCHAR Inserted:1;
-                        volatile UCHAR Expired:1;
-                    } DUMMYSTRUCTNAME;
-                } DUMMYUNIONNAME;
+            UCHAR Inserted:1;
+            volatile UCHAR Expired:1;
+          } DUMMYSTRUCTNAME;
+        } DUMMYUNIONNAME;
 #else
-                /* Pre Win7 compatibility fix to latest WDK */
-                UCHAR Inserted;
+        /* Pre Win7 compatibility fix to latest WDK */
+        UCHAR Inserted;
 #endif
-                _ANONYMOUS_UNION union {
-                    BOOLEAN DebugActive;
-                    _ANONYMOUS_STRUCT struct {
-                        BOOLEAN ActiveDR7:1;
-                        BOOLEAN Instrumented:1;
-                        BOOLEAN Reserved2:4;
-                        BOOLEAN UmsScheduled:1;
-                        BOOLEAN UmsPrimary:1;
-                    } DUMMYSTRUCTNAME;
-                } DUMMYUNIONNAME; /* should probably be DUMMYUNIONNAME2, but this is what WDK says */
-                BOOLEAN DpcActive;
-            } DUMMYUNIONNAME3;
-        } DUMMYSTRUCTNAME;
-        volatile LONG Lock;
-    } DUMMYUNIONNAME;
-    LONG SignalState;
-    LIST_ENTRY WaitListHead;
+        _ANONYMOUS_UNION union {
+          BOOLEAN DebugActive;
+          _ANONYMOUS_STRUCT struct {
+            BOOLEAN ActiveDR7:1;
+            BOOLEAN Instrumented:1;
+            BOOLEAN Reserved2:4;
+            BOOLEAN UmsScheduled:1;
+            BOOLEAN UmsPrimary:1;
+          } DUMMYSTRUCTNAME;
+        } DUMMYUNIONNAME; /* should probably be DUMMYUNIONNAME2, but this is what WDK says */
+        BOOLEAN DpcActive;
+      } DUMMYUNIONNAME3;
+    } DUMMYSTRUCTNAME;
+    volatile LONG Lock;
+  } DUMMYUNIONNAME;
+  LONG SignalState;
+  LIST_ENTRY WaitListHead;
 } DISPATCHER_HEADER, *PDISPATCHER_HEADER;
 
 typedef struct _KEVENT {
-  DISPATCHER_HEADER  Header;
+  DISPATCHER_HEADER Header;
 } KEVENT, *PKEVENT, *RESTRICTED_POINTER PRKEVENT;
 
 typedef struct _KSEMAPHORE {
-    DISPATCHER_HEADER Header;
-    LONG Limit;
+  DISPATCHER_HEADER Header;
+  LONG Limit;
 } KSEMAPHORE, *PKSEMAPHORE, *RESTRICTED_POINTER PRKSEMAPHORE;
 
-typedef struct _KGATE
-{
-    DISPATCHER_HEADER Header;
+typedef struct _KGATE {
+  DISPATCHER_HEADER Header;
 } KGATE, *PKGATE, *RESTRICTED_POINTER PRKGATE;
 
-typedef struct _KGUARDED_MUTEX
-{
-    volatile LONG Count;
-    PKTHREAD Owner;
-    ULONG Contention;
-    KGATE Gate;
-    __GNU_EXTENSION union
-    {
-        __GNU_EXTENSION struct
-        {
-            SHORT KernelApcDisable;
-            SHORT SpecialApcDisable;
-        };
-        ULONG CombinedApcDisable;
+typedef struct _KGUARDED_MUTEX {
+  volatile LONG Count;
+  PKTHREAD Owner;
+  ULONG Contention;
+  KGATE Gate;
+  __GNU_EXTENSION union {
+    __GNU_EXTENSION struct {
+      SHORT KernelApcDisable;
+      SHORT SpecialApcDisable;
     };
+    ULONG CombinedApcDisable;
+  };
 } KGUARDED_MUTEX, *PKGUARDED_MUTEX;
 
 typedef struct _KMUTANT {
-  DISPATCHER_HEADER  Header;
-  LIST_ENTRY  MutantListEntry;
-  struct _KTHREAD  *RESTRICTED_POINTER OwnerThread;
-  BOOLEAN  Abandoned;
-  UCHAR  ApcDisable;
+  DISPATCHER_HEADER Header;
+  LIST_ENTRY MutantListEntry;
+  struct _KTHREAD *RESTRICTED_POINTER OwnerThread;
+  BOOLEAN Abandoned;
+  UCHAR ApcDisable;
 } KMUTANT, *PKMUTANT, *RESTRICTED_POINTER PRKMUTANT, KMUTEX, *PKMUTEX, *RESTRICTED_POINTER PRKMUTEX;
 
 #define TIMER_TABLE_SIZE 512
@@ -634,7 +625,7 @@ typedef struct _KTIMER {
 
 typedef BOOLEAN
 (DDKAPI *PKSYNCHRONIZE_ROUTINE)(
-  IN PVOID  SynchronizeContext);
+  IN PVOID SynchronizeContext);
 
 typedef enum _POOL_TYPE {
   NonPagedPool,
@@ -654,11 +645,10 @@ typedef enum _POOL_TYPE {
   NonPagedPoolCacheAlignedMustSSession
 } POOL_TYPE;
 
-typedef enum _ALTERNATIVE_ARCHITECTURE_TYPE
-{
-    StandardDesign,
-    NEC98x86,
-    EndAlternatives
+typedef enum _ALTERNATIVE_ARCHITECTURE_TYPE {
+  StandardDesign,
+  NEC98x86,
+  EndAlternatives
 } ALTERNATIVE_ARCHITECTURE_TYPE;
 
 typedef struct _KSYSTEM_TIME {
@@ -668,9 +658,9 @@ typedef struct _KSYSTEM_TIME {
 } KSYSTEM_TIME, *PKSYSTEM_TIME;
 
 typedef struct _PNP_BUS_INFORMATION {
-  GUID  BusTypeGuid;
-  INTERFACE_TYPE  LegacyBusType;
-  ULONG  BusNumber;
+  GUID BusTypeGuid;
+  INTERFACE_TYPE LegacyBusType;
+  ULONG BusNumber;
 } PNP_BUS_INFORMATION, *PPNP_BUS_INFORMATION;
 
 typedef struct DECLSPEC_ALIGN(16) _M128A {

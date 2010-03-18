@@ -10,17 +10,17 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 PoCallDriver(
-  IN struct _DEVICE_OBJECT  *DeviceObject,
-  IN OUT struct _IRP  *Irp);
+  IN struct _DEVICE_OBJECT *DeviceObject,
+  IN OUT struct _IRP *Irp);
 
 NTKERNELAPI
 PULONG
 NTAPI
 PoRegisterDeviceForIdleDetection(
-  IN struct _DEVICE_OBJECT  *DeviceObject,
-  IN ULONG  ConservationIdleTime,
-  IN ULONG  PerformanceIdleTime,
-  IN DEVICE_POWER_STATE  State);
+  IN struct _DEVICE_OBJECT *DeviceObject,
+  IN ULONG ConservationIdleTime,
+  IN ULONG PerformanceIdleTime,
+  IN DEVICE_POWER_STATE State);
 
 NTKERNELAPI
 PVOID
@@ -33,26 +33,26 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 PoRequestPowerIrp(
-  IN struct _DEVICE_OBJECT  *DeviceObject,
-  IN UCHAR  MinorFunction,
-  IN POWER_STATE  PowerState,
-  IN PREQUEST_POWER_COMPLETE  CompletionFunction OPTIONAL,
-  IN PVOID  Context OPTIONAL,
-  OUT struct _IRP  **Irp OPTIONAL);
+  IN struct _DEVICE_OBJECT *DeviceObject,
+  IN UCHAR MinorFunction,
+  IN POWER_STATE PowerState,
+  IN PREQUEST_POWER_COMPLETE CompletionFunction OPTIONAL,
+  IN PVOID Context OPTIONAL,
+  OUT struct _IRP **Irp OPTIONAL);
 
 NTKERNELAPI
 POWER_STATE
 NTAPI
 PoSetPowerState(
-  IN struct _DEVICE_OBJECT  *DeviceObject,
-  IN POWER_STATE_TYPE  Type,
-  IN POWER_STATE  State);
+  IN struct _DEVICE_OBJECT *DeviceObject,
+  IN POWER_STATE_TYPE Type,
+  IN POWER_STATE State);
 
 NTKERNELAPI
 VOID
 NTAPI
 PoSetSystemState(
-  IN EXECUTION_STATE  Flags);
+  IN EXECUTION_STATE Flags);
 
 NTKERNELAPI
 VOID
@@ -107,16 +107,15 @@ PoUnregisterPowerSettingCallback(
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 #if (NTDDI_VERSION >= NTDDI_VISTASP1)
-
 NTKERNELAPI
 VOID
 NTAPI
 PoSetDeviceBusyEx(
   IN OUT PULONG IdlePointer);
-
 #endif /* (NTDDI_VERSION >= NTDDI_VISTASP1) */
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
+
 NTKERNELAPI
 VOID
 NTAPI

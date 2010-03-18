@@ -8,42 +8,44 @@
 #if defined(__GNUC__)
 
 static __inline__ BOOLEAN
-InterlockedBitTestAndSet(IN LONG volatile *Base,
-                         IN LONG Bit)
+InterlockedBitTestAndSet(
+  IN LONG volatile *Base,
+  IN LONG Bit)
 {
 #if defined(_M_IX86)
-	LONG OldBit;
-	__asm__ __volatile__("lock "
-	                     "btsl %2,%1\n\t"
-	                     "sbbl %0,%0\n\t"
-	                     :"=r" (OldBit),"+m" (*Base)
-	                     :"Ir" (Bit)
-	                     : "memory");
-	return OldBit;
+  LONG OldBit;
+  __asm__ __volatile__("lock "
+                       "btsl %2,%1\n\t"
+                       "sbbl %0,%0\n\t"
+                       :"=r" (OldBit),"+m" (*Base)
+                       :"Ir" (Bit)
+                       : "memory");
+  return OldBit;
 #else
-	return (_InterlockedOr(Base, 1 << Bit) >> Bit) & 1;
+  return (_InterlockedOr(Base, 1 << Bit) >> Bit) & 1;
 #endif
 }
 
 static __inline__ BOOLEAN
-InterlockedBitTestAndReset(IN LONG volatile *Base,
-                           IN LONG Bit)
+InterlockedBitTestAndReset(
+  IN LONG volatile *Base,
+  IN LONG Bit)
 {
 #if defined(_M_IX86)
-	LONG OldBit;
-	__asm__ __volatile__("lock "
-	                     "btrl %2,%1\n\t"
-	                     "sbbl %0,%0\n\t"
-	                     :"=r" (OldBit),"+m" (*Base)
-	                     :"Ir" (Bit)
-	                     : "memory");
-	return OldBit;
+  LONG OldBit;
+  __asm__ __volatile__("lock "
+                       "btrl %2,%1\n\t"
+                       "sbbl %0,%0\n\t"
+                       :"=r" (OldBit),"+m" (*Base)
+                       :"Ir" (Bit)
+                       : "memory");
+  return OldBit;
 #else
-	return (_InterlockedAnd(Base, ~(1 << Bit)) >> Bit) & 1;
+  return (_InterlockedAnd(Base, ~(1 << Bit)) >> Bit) & 1;
 #endif
 }
 
-#endif
+#endif /* defined(__GNUC__) */
 
 #define BitScanForward _BitScanForward
 #define BitScanReverse _BitScanReverse
@@ -81,8 +83,8 @@ LONG
 FASTCALL
 InterlockedCompareExchange(
   IN OUT LONG volatile *Destination,
-  IN LONG  Exchange,
-  IN LONG  Comparand);
+  IN LONG Exchange,
+  IN LONG Comparand);
 
 NTKERNELAPI
 LONG
@@ -98,7 +100,7 @@ InterlockedExchangeAdd(
   IN OUT LONG volatile *Addend,
   IN LONG  Value);
 
-#else // !defined(NO_INTERLOCKED_INTRINSICS)
+#else /* !defined(NO_INTERLOCKED_INTRINSICS) */
 
 #define InterlockedExchange _InterlockedExchange
 #define InterlockedIncrement _InterlockedIncrement
@@ -109,9 +111,9 @@ InterlockedExchangeAdd(
 #define InterlockedAnd _InterlockedAnd
 #define InterlockedXor _InterlockedXor
 
-#endif // !defined(NO_INTERLOCKED_INTRINSICS)
+#endif /* !defined(NO_INTERLOCKED_INTRINSICS) */
 
-#endif // defined (_X86_)
+#endif /* defined (_X86_) */
 
 #if !defined (_WIN64)
 /*
@@ -174,10 +176,10 @@ InterlockedExchangeAdd(
 FORCEINLINE
 LONG64
 InterlockedAdd64(
-    IN OUT LONG64 volatile *Addend,
-    IN LONG64 Value)
+  IN OUT LONG64 volatile *Addend,
+  IN LONG64 Value)
 {
-    return InterlockedExchangeAdd64(Addend, Value) + Value;
+  return InterlockedExchangeAdd64(Addend, Value) + Value;
 }
 //#endif
 #endif

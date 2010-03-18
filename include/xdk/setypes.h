@@ -28,10 +28,10 @@ typedef PVOID PSID;
 #define GENERIC_ALL                      0x10000000L
 
 typedef struct _GENERIC_MAPPING {
-    ACCESS_MASK GenericRead;
-    ACCESS_MASK GenericWrite;
-    ACCESS_MASK GenericExecute;
-    ACCESS_MASK GenericAll;
+  ACCESS_MASK GenericRead;
+  ACCESS_MASK GenericWrite;
+  ACCESS_MASK GenericExecute;
+  ACCESS_MASK GenericAll;
 } GENERIC_MAPPING, *PGENERIC_MAPPING;
 
 #define ACL_REVISION                      2
@@ -45,11 +45,11 @@ typedef struct _GENERIC_MAPPING {
 #define MAX_ACL_REVISION                  ACL_REVISION4
 
 typedef struct _ACL {
-    UCHAR AclRevision;
-    UCHAR Sbz1;
-    USHORT AclSize;
-    USHORT AceCount;
-    USHORT Sbz2;
+  UCHAR AclRevision;
+  UCHAR Sbz1;
+  USHORT AclSize;
+  USHORT AceCount;
+  USHORT Sbz2;
 } ACL, *PACL;
 
 /* Current security descriptor revision value */
@@ -69,8 +69,8 @@ typedef struct _ACL {
 
 #include <pshpack4.h>
 typedef struct _LUID_AND_ATTRIBUTES {
-    LUID Luid;
-    ULONG Attributes;
+  LUID Luid;
+  ULONG Attributes;
 } LUID_AND_ATTRIBUTES, *PLUID_AND_ATTRIBUTES;
 #include <poppack.h>
 
@@ -81,16 +81,16 @@ typedef LUID_AND_ATTRIBUTES_ARRAY *PLUID_AND_ATTRIBUTES_ARRAY;
 #define PRIVILEGE_SET_ALL_NECESSARY (1)
 
 typedef struct _PRIVILEGE_SET {
-    ULONG PrivilegeCount;
-    ULONG Control;
-    LUID_AND_ATTRIBUTES Privilege[ANYSIZE_ARRAY];
+  ULONG PrivilegeCount;
+  ULONG Control;
+  LUID_AND_ATTRIBUTES Privilege[ANYSIZE_ARRAY];
 } PRIVILEGE_SET,*PPRIVILEGE_SET;
 
 typedef enum _SECURITY_IMPERSONATION_LEVEL {
-    SecurityAnonymous,
-    SecurityIdentification,
-    SecurityImpersonation,
-    SecurityDelegation
+  SecurityAnonymous,
+  SecurityIdentification,
+  SecurityImpersonation,
+  SecurityDelegation
 } SECURITY_IMPERSONATION_LEVEL, * PSECURITY_IMPERSONATION_LEVEL;
 
 #define SECURITY_MAX_IMPERSONATION_LEVEL SecurityDelegation
@@ -104,17 +104,17 @@ typedef enum _SECURITY_IMPERSONATION_LEVEL {
 typedef BOOLEAN SECURITY_CONTEXT_TRACKING_MODE, *PSECURITY_CONTEXT_TRACKING_MODE;
 
 typedef struct _SECURITY_QUALITY_OF_SERVICE {
-    ULONG Length;
-    SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
-    SECURITY_CONTEXT_TRACKING_MODE ContextTrackingMode;
-    BOOLEAN EffectiveOnly;
+  ULONG Length;
+  SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
+  SECURITY_CONTEXT_TRACKING_MODE ContextTrackingMode;
+  BOOLEAN EffectiveOnly;
 } SECURITY_QUALITY_OF_SERVICE, *PSECURITY_QUALITY_OF_SERVICE;
 
 typedef struct _SE_IMPERSONATION_STATE {
-    PACCESS_TOKEN Token;
-    BOOLEAN CopyOnOpen;
-    BOOLEAN EffectiveOnly;
-    SECURITY_IMPERSONATION_LEVEL Level;
+  PACCESS_TOKEN Token;
+  BOOLEAN CopyOnOpen;
+  BOOLEAN EffectiveOnly;
+  SECURITY_IMPERSONATION_LEVEL Level;
 } SE_IMPERSONATION_STATE, *PSE_IMPERSONATION_STATE;
 
 #define OWNER_SECURITY_INFORMATION       (0x00000001L)
@@ -138,9 +138,9 @@ typedef enum _SECURITY_OPERATION_CODE {
 #define INITIAL_PRIVILEGE_COUNT           3
 
 typedef struct _INITIAL_PRIVILEGE_SET {
-  ULONG  PrivilegeCount;
-  ULONG  Control;
-  LUID_AND_ATTRIBUTES  Privilege[INITIAL_PRIVILEGE_COUNT];
+  ULONG PrivilegeCount;
+  ULONG Control;
+  LUID_AND_ATTRIBUTES Privilege[INITIAL_PRIVILEGE_COUNT];
 } INITIAL_PRIVILEGE_SET, * PINITIAL_PRIVILEGE_SET;
 
 #define SE_MIN_WELL_KNOWN_PRIVILEGE         2
@@ -181,35 +181,33 @@ typedef struct _INITIAL_PRIVILEGE_SET {
 #define SE_MAX_WELL_KNOWN_PRIVILEGE         SE_CREATE_SYMBOLIC_LINK_PRIVILEGE
 
 typedef struct _SECURITY_SUBJECT_CONTEXT {
-  PACCESS_TOKEN  ClientToken;
-  SECURITY_IMPERSONATION_LEVEL  ImpersonationLevel;
-  PACCESS_TOKEN  PrimaryToken;
-  PVOID  ProcessAuditId;
+  PACCESS_TOKEN ClientToken;
+  SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
+  PACCESS_TOKEN PrimaryToken;
+  PVOID ProcessAuditId;
 } SECURITY_SUBJECT_CONTEXT, *PSECURITY_SUBJECT_CONTEXT;
 
 typedef struct _ACCESS_STATE {
-  LUID  OperationID;
-  BOOLEAN  SecurityEvaluated;
-  BOOLEAN  GenerateAudit;
-  BOOLEAN  GenerateOnClose;
-  BOOLEAN  PrivilegesAllocated;
-  ULONG  Flags;
-  ACCESS_MASK  RemainingDesiredAccess;
-  ACCESS_MASK  PreviouslyGrantedAccess;
-  ACCESS_MASK  OriginalDesiredAccess;
-  SECURITY_SUBJECT_CONTEXT  SubjectSecurityContext;
-  PSECURITY_DESCRIPTOR  SecurityDescriptor;
-  PVOID  AuxData;
+  LUID OperationID;
+  BOOLEAN SecurityEvaluated;
+  BOOLEAN GenerateAudit;
+  BOOLEAN GenerateOnClose;
+  BOOLEAN PrivilegesAllocated;
+  ULONG Flags;
+  ACCESS_MASK RemainingDesiredAccess;
+  ACCESS_MASK PreviouslyGrantedAccess;
+  ACCESS_MASK OriginalDesiredAccess;
+  SECURITY_SUBJECT_CONTEXT SubjectSecurityContext;
+  PSECURITY_DESCRIPTOR SecurityDescriptor;
+  PVOID AuxData;
   union {
-    INITIAL_PRIVILEGE_SET  InitialPrivilegeSet;
-    PRIVILEGE_SET  PrivilegeSet;
+    INITIAL_PRIVILEGE_SET InitialPrivilegeSet;
+    PRIVILEGE_SET PrivilegeSet;
   } Privileges;
-
-  BOOLEAN  AuditPrivileges;
-  UNICODE_STRING  ObjectName;
-  UNICODE_STRING  ObjectTypeName;
+  BOOLEAN AuditPrivileges;
+  UNICODE_STRING ObjectName;
+  UNICODE_STRING ObjectTypeName;
 } ACCESS_STATE, *PACCESS_STATE;
-
 
 #ifndef _NTLSA_IFS_
 
@@ -280,8 +278,8 @@ typedef struct _SE_ADT_PARAMETER_ARRAY_ENTRY {
 
 typedef struct _SE_ADT_ACCESS_REASON {
   ACCESS_MASK AccessMask;
-  ULONG  AccessReasons[32];
-  ULONG  ObjectTypeIndex;
+  ULONG AccessReasons[32];
+  ULONG ObjectTypeIndex;
   ULONG AccessGranted;
   PSECURITY_DESCRIPTOR SecurityDescriptor;
 } SE_ADT_ACCESS_REASON, *PSE_ADT_ACCESS_REASON;

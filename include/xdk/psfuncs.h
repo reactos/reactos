@@ -15,8 +15,7 @@
 FORCEINLINE
 PETHREAD
 NTAPI
-PsGetCurrentThread (
-  VOID)
+PsGetCurrentThread(VOID)
 {
   return (PETHREAD)KeGetCurrentThread();
 }
@@ -29,19 +28,19 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 PsCreateSystemThread(
-  OUT PHANDLE  ThreadHandle,
-  IN ULONG  DesiredAccess,
-  IN POBJECT_ATTRIBUTES  ObjectAttributes  OPTIONAL,
-  IN HANDLE  ProcessHandle  OPTIONAL,
-  OUT PCLIENT_ID  ClientId  OPTIONAL,
-  IN PKSTART_ROUTINE  StartRoutine,
-  IN PVOID  StartContext OPTIONAL);
+  OUT PHANDLE ThreadHandle,
+  IN ULONG DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+  IN HANDLE ProcessHandle OPTIONAL,
+  OUT PCLIENT_ID ClientId OPTIONAL,
+  IN PKSTART_ROUTINE StartRoutine,
+  IN PVOID StartContext OPTIONAL);
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 PsTerminateSystemThread(
-  IN NTSTATUS  ExitStatus);
+  IN NTSTATUS ExitStatus);
 
 #endif
 
