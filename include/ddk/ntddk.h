@@ -56,6 +56,11 @@
 extern "C" {
 #endif
 
+struct _LOADER_PARAMETER_BLOCK;
+struct _CREATE_DISK;
+struct _DRIVE_LAYOUT_INFORMATION_EX;
+struct _SET_PARTITION_INFORMATION_EX;
+
 typedef struct _BUS_HANDLER *PBUS_HANDLER;
 typedef struct _DEVICE_HANDLER_OBJECT *PDEVICE_HANDLER_OBJECT;
 #if defined(_NTHAL_INCLUDED_)
@@ -86,9 +91,7 @@ extern NTSYSAPI CCHAR KeNumberProcessors;
 extern PCCHAR KeNumberProcessors;
 #endif
 
-/* FIXME
 #include <mce.h>
-*/
 
 #ifdef _X86_
 
@@ -3628,6 +3631,7 @@ IoWritePartitionTableEx(
 
 NTKERNELAPI
 NTSTATUS
+NTAPI
 IoCreateFileSpecifyDeviceObjectHint(
   OUT PHANDLE FileHandle,
   IN ACCESS_MASK DesiredAccess,
@@ -3691,6 +3695,7 @@ IoGetTransactionParameterBlock(
 
 NTKERNELAPI
 NTSTATUS
+NTAPI
 IoCreateFileEx(
   OUT PHANDLE FileHandle,
   IN ACCESS_MASK DesiredAccess,
@@ -4016,6 +4021,15 @@ typedef VOID
 typedef VOID
 (NTAPI *pHalSetPciErrorHandlerCallback)(
   IN PCI_ERROR_HANDLER_CALLBACK Callback);
+
+#if 1 /* Not present in WDK 7600 */
+typedef VOID
+(FASTCALL *pHalIoAssignDriveLetters)(
+  IN struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
+  IN PSTRING NtDeviceName,
+  OUT PUCHAR NtSystemPath,
+  OUT PSTRING NtSystemPathString);
+#endif
 
 typedef struct {
   ULONG Version;
@@ -4365,14 +4379,6 @@ typedef struct _PHYSICAL_COUNTER_RESOURCE_LIST {
 
 NTSTATUS
 NTAPI
-HalAllocateHardwareCounters(
-  IN PGROUP_AFFINITY GroupAffinty,
-  IN ULONG GroupCount,
-  IN PPHYSICAL_COUNTER_RESOURCE_LIST ResourceList,
-  OUT PHANDLE CounterSetHandle);
-
-NTSTATUS
-NTAPI
 HalFreeHardwareCounters(
   IN HANDLE CounterSetHandle);
 
@@ -4599,6 +4605,18 @@ HalExamineMBR(
   OUT PVOID *Buffer);
 #endif
 
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+NTSTATUS
+NTAPI
+HalAllocateHardwareCounters(
+  IN PGROUP_AFFINITY GroupAffinty,
+  IN ULONG GroupCount,
+  IN PPHYSICAL_COUNTER_RESOURCE_LIST ResourceList,
+  OUT PHANDLE CounterSetHandle);
+#endif
+
+
+
 #if defined(_IA64_)
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 NTHALAPI
@@ -4635,11 +4653,6 @@ HalBugCheckSystem(
   IN PWHEA_ERROR_RECORD ErrorRecord);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
-
-struct _LOADER_PARAMETER_BLOCK;
-struct _CREATE_DISK;
-struct _DRIVE_LAYOUT_INFORMATION_EX;
-struct _SET_PARTITION_INFORMATION_EX;
 
 //
 // GUID and UUID
@@ -4691,15 +4704,6 @@ typedef BOOLEAN
   OUT PPHYSICAL_ADDRESS TranslatedAddress,
   IN OUT PULONG_PTR Context,
   IN BOOLEAN NextBus);
-
-#if 1 /* Not present in WDK 7600 */
-typedef VOID
-(FASTCALL *pHalIoAssignDriveLetters)(
-  IN struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
-  IN PSTRING NtDeviceName,
-  OUT PUCHAR NtSystemPath,
-  OUT PSTRING NtSystemPathString);
-#endif
 
 extern NTKERNELAPI PVOID MmHighestUserAddress;
 extern NTKERNELAPI PVOID MmSystemRangeStart;
