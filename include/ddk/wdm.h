@@ -38,6 +38,7 @@
 #include <excpt.h>
 #include <ntdef.h>
 #include <ntstatus.h>
+#include <ntiologc.h>
 
 #ifndef GUID_DEFINED
 #include <guiddef.h>
