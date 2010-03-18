@@ -460,26 +460,25 @@ typedef enum _MODE {
 } MODE;
 
 /* Processor features */
-#define PF_FLOATING_POINT_PRECISION_ERRATA  0   
-#define PF_FLOATING_POINT_EMULATED          1   
-#define PF_COMPARE_EXCHANGE_DOUBLE          2   
-#define PF_MMX_INSTRUCTIONS_AVAILABLE       3   
-#define PF_PPC_MOVEMEM_64BIT_OK             4   
-#define PF_ALPHA_BYTE_INSTRUCTIONS          5   
-#define PF_XMMI_INSTRUCTIONS_AVAILABLE      6   
-#define PF_3DNOW_INSTRUCTIONS_AVAILABLE     7   
-#define PF_RDTSC_INSTRUCTION_AVAILABLE      8   
-#define PF_PAE_ENABLED                      9   
-#define PF_XMMI64_INSTRUCTIONS_AVAILABLE   10   
-#define PF_SSE_DAZ_MODE_AVAILABLE          11   
-#define PF_NX_ENABLED                      12   
-#define PF_SSE3_INSTRUCTIONS_AVAILABLE     13   
-#define PF_COMPARE_EXCHANGE128             14   
-#define PF_COMPARE64_EXCHANGE128           15   
-#define PF_CHANNELS_ENABLED                16   
-#define PF_XSAVE_ENABLED                   17   
+#define PF_FLOATING_POINT_PRECISION_ERRATA  0
+#define PF_FLOATING_POINT_EMULATED          1
+#define PF_COMPARE_EXCHANGE_DOUBLE          2
+#define PF_MMX_INSTRUCTIONS_AVAILABLE       3
+#define PF_PPC_MOVEMEM_64BIT_OK             4
+#define PF_ALPHA_BYTE_INSTRUCTIONS          5
+#define PF_XMMI_INSTRUCTIONS_AVAILABLE      6
+#define PF_3DNOW_INSTRUCTIONS_AVAILABLE     7
+#define PF_RDTSC_INSTRUCTION_AVAILABLE      8
+#define PF_PAE_ENABLED                      9
+#define PF_XMMI64_INSTRUCTIONS_AVAILABLE   10
+#define PF_SSE_DAZ_MODE_AVAILABLE          11
+#define PF_NX_ENABLED                      12
+#define PF_SSE3_INSTRUCTIONS_AVAILABLE     13
+#define PF_COMPARE_EXCHANGE128             14
+#define PF_COMPARE64_EXCHANGE128           15
+#define PF_CHANNELS_ENABLED                16
+#define PF_XSAVE_ENABLED                   17
 
-#define MAXIMUM_SUPPORTED_EXTENSION  512
 #define MAXIMUM_WAIT_OBJECTS              64
 
 #define ASSERT_APC(Object) \
@@ -518,6 +517,9 @@ typedef enum _MODE {
 #define GM_LOCK_BIT_V        0x0
 #define GM_LOCK_WAITER_WOKEN 0x2
 #define GM_LOCK_WAITER_INC   0x4
+
+#define LOCK_QUEUE_WAIT_BIT               0
+#define LOCK_QUEUE_OWNER_BIT              1
 
 #define LOCK_QUEUE_WAIT                   1
 #define LOCK_QUEUE_OWNER                  2
@@ -744,7 +746,7 @@ typedef enum _KINTERRUPT_MODE {
 #define THREAD_WAIT_OBJECTS 3
 
 typedef VOID
-(DDKAPI *PKINTERRUPT_ROUTINE)(
+(NTAPI *PKINTERRUPT_ROUTINE)(
   VOID);
 
 typedef enum _KD_OPTION {
@@ -836,13 +838,13 @@ ULONG_PTR
 typedef ULONG_PTR KSPIN_LOCK, *PKSPIN_LOCK;
 
 typedef struct _KSPIN_LOCK_QUEUE {
-  struct _KSPIN_LOCK_QUEUE  *volatile Next;
-  PKSPIN_LOCK volatile  Lock;
+  struct _KSPIN_LOCK_QUEUE *volatile Next;
+  PKSPIN_LOCK volatile Lock;
 } KSPIN_LOCK_QUEUE, *PKSPIN_LOCK_QUEUE;
 
 typedef struct _KLOCK_QUEUE_HANDLE {
-  KSPIN_LOCK_QUEUE  LockQueue;
-  KIRQL  OldIrql;
+  KSPIN_LOCK_QUEUE LockQueue;
+  KIRQL OldIrql;
 } KLOCK_QUEUE_HANDLE, *PKLOCK_QUEUE_HANDLE;
 
 #if defined(_AMD64_)
@@ -1104,11 +1106,10 @@ typedef enum _ALTERNATIVE_ARCHITECTURE_TYPE
     EndAlternatives
 } ALTERNATIVE_ARCHITECTURE_TYPE;
 
-typedef struct _KSYSTEM_TIME
-{
-    ULONG LowPart;
-    LONG High1Time;
-    LONG High2Time;
+typedef struct _KSYSTEM_TIME {
+  ULONG LowPart;
+  LONG High1Time;
+  LONG High2Time;
 } KSYSTEM_TIME, *PKSYSTEM_TIME;
 
 typedef struct _PNP_BUS_INFORMATION {
@@ -1118,8 +1119,8 @@ typedef struct _PNP_BUS_INFORMATION {
 } PNP_BUS_INFORMATION, *PPNP_BUS_INFORMATION;
 
 typedef struct DECLSPEC_ALIGN(16) _M128A {
-    ULONGLONG Low;
-    LONGLONG High;
+  ULONGLONG Low;
+  LONGLONG High;
 } M128A, *PM128A;
 
 typedef struct DECLSPEC_ALIGN(16) _XSAVE_FORMAT {
@@ -1148,6 +1149,69 @@ typedef struct DECLSPEC_ALIGN(16) _XSAVE_FORMAT {
 #endif
 } XSAVE_FORMAT, *PXSAVE_FORMAT;
 
+typedef struct DECLSPEC_ALIGN(8) _XSAVE_AREA_HEADER {
+  ULONG64 Mask;
+  ULONG64 Reserved[7];
+} XSAVE_AREA_HEADER, *PXSAVE_AREA_HEADER;
+
+typedef struct DECLSPEC_ALIGN(16) _XSAVE_AREA {
+  XSAVE_FORMAT LegacyState;
+  XSAVE_AREA_HEADER Header;
+} XSAVE_AREA, *PXSAVE_AREA;
+
+typedef struct _XSTATE_CONTEXT {
+  ULONG64 Mask;
+  ULONG Length;
+  ULONG Reserved1;
+  PXSAVE_AREA Area;
+#if defined(_X86_)
+  ULONG Reserved2;
+#endif
+  PVOID Buffer;
+#if defined(_X86_)
+  ULONG Reserved3;
+#endif
+} XSTATE_CONTEXT, *PXSTATE_CONTEXT;
+
+#ifdef _X86_
+
+#define MAXIMUM_SUPPORTED_EXTENSION  512
+
+#if !defined(__midl) && !defined(MIDL_PASS)
+C_ASSERT(sizeof(XSAVE_FORMAT) == MAXIMUM_SUPPORTED_EXTENSION);
+#endif
+
+#endif /* _X86_ */
+
+#define XSAVE_ALIGN                    64
+#define MINIMAL_XSTATE_AREA_LENGTH     sizeof(XSAVE_AREA)
+
+#if !defined(__midl) && !defined(MIDL_PASS)
+C_ASSERT((sizeof(XSAVE_FORMAT) & (XSAVE_ALIGN - 1)) == 0);
+C_ASSERT((FIELD_OFFSET(XSAVE_AREA, Header) & (XSAVE_ALIGN - 1)) == 0);
+C_ASSERT(MINIMAL_XSTATE_AREA_LENGTH == 512 + 64);
+#endif
+
+typedef struct _CONTEXT_CHUNK {
+  LONG Offset;
+  ULONG Length;
+} CONTEXT_CHUNK, *PCONTEXT_CHUNK;
+
+typedef struct _CONTEXT_EX {
+  CONTEXT_CHUNK All;
+  CONTEXT_CHUNK Legacy;
+  CONTEXT_CHUNK XState;
+} CONTEXT_EX, *PCONTEXT_EX;
+
+#define CONTEXT_EX_LENGTH         ALIGN_UP_BY(sizeof(CONTEXT_EX), STACK_ALIGN)
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+extern NTSYSAPI volatile CCHAR KeNumberProcessors;
+#elif (NTDDI_VERSION >= NTDDI_WINXP)
+extern NTSYSAPI CCHAR KeNumberProcessors;
+#else
+extern PCCHAR KeNumberProcessors;
+#endif
 
 /******************************************************************************
  *                         Memory manager Types                               *
@@ -6956,6 +7020,19 @@ InterlockedPushEntrySList(
 #endif /* !defined(_WIN64) */
 
 #endif /* !defined(_WINBASE_) */
+
+#define RTL_CONTEXT_EX_OFFSET(ContextEx, Chunk) ((ContextEx)->Chunk.Offset)
+#define RTL_CONTEXT_EX_LENGTH(ContextEx, Chunk) ((ContextEx)->Chunk.Length)
+#define RTL_CONTEXT_EX_CHUNK(Base, Layout, Chunk)       \
+    ((PVOID)((PCHAR)(Base) + RTL_CONTEXT_EX_OFFSET(Layout, Chunk)))
+#define RTL_CONTEXT_OFFSET(Context, Chunk)              \
+    RTL_CONTEXT_EX_OFFSET((PCONTEXT_EX)(Context + 1), Chunk)
+#define RTL_CONTEXT_LENGTH(Context, Chunk)              \
+    RTL_CONTEXT_EX_LENGTH((PCONTEXT_EX)(Context + 1), Chunk)
+#define RTL_CONTEXT_CHUNK(Context, Chunk)               \
+    RTL_CONTEXT_EX_CHUNK((PCONTEXT_EX)(Context + 1),    \
+                         (PCONTEXT_EX)(Context + 1),    \
+                         Chunk)
 
 /******************************************************************************
  *                              Kernel Functions                              *
