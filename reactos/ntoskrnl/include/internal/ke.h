@@ -1092,9 +1092,9 @@ KiIdleLoop(
     VOID
 );
 
+DECLSPEC_NORETURN
 VOID
 FASTCALL
-DECLSPEC_NORETURN
 KiSystemFatalException(
     IN ULONG ExceptionCode,
     IN PKTRAP_FRAME TrapFrame
