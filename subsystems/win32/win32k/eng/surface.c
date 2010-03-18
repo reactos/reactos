@@ -613,9 +613,6 @@ SURFMEM_bCreateDib(IN PDEVBITMAPINFO BitmapInfo,
             /* For topdown, the base address starts with the bits */
             pso->pvScan0 = pso->pvBits;
             pso->lDelta = ScanLine;
-            
-            /* Hack for FreeType/Font Rendering, cannot use the Aligned ScanLine */
-            if (BitmapInfo->Format == BMF_1BPP) pso->lDelta = BitmapInfo->Width / 8;
         }
         else
         {

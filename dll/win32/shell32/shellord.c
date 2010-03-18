@@ -1674,6 +1674,14 @@ UINT WINAPI SHAddFromPropSheetExtArray(HPSXA hpsxa, LPFNADDPROPSHEETPAGE lpfnAdd
 }
 
 /*************************************************************************
+ *      SHCreatePropSheetExtArray	[SHELL32.168]
+ */
+HPSXA WINAPI SHCreatePropSheetExtArray(HKEY hKey, LPCWSTR pszSubKey, UINT max_iface)
+{
+    return SHCreatePropSheetExtArrayEx(hKey, pszSubKey, max_iface, NULL);
+}
+
+/*************************************************************************
  *      SHCreatePropSheetExtArrayEx	[SHELL32.194]
  */
 HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY hKey, LPCWSTR pszSubKey, UINT max_iface, IDataObject *pDataObj)
@@ -1779,15 +1787,6 @@ HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY hKey, LPCWSTR pszSubKey, UINT max_
 
     return (HPSXA)psxa;
 }
-
-/*************************************************************************
- *      SHCreatePropSheetExtArray	[SHELL32.168]
- */
-HPSXA WINAPI SHCreatePropSheetExtArray(HKEY hKey, LPCWSTR pszSubKey, UINT max_iface)
-{
-    return SHCreatePropSheetExtArrayEx(hKey, pszSubKey, max_iface, NULL);
-}
-
 
 /*************************************************************************
  *      SHReplaceFromPropSheetExtArray	[SHELL32.170]

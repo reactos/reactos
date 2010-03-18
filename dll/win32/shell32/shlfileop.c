@@ -531,8 +531,14 @@ static DWORD SHNotifyMoveFileW(LPCWSTR src, LPCWSTR dest)
 static DWORD SHNotifyCopyFileW(LPCWSTR src, LPCWSTR dest, BOOL bFailIfExists)
 {
 	BOOL ret;
+	DWORD attribs;
 
 	TRACE("(%s %s %s)\n", debugstr_w(src), debugstr_w(dest), bFailIfExists ? "failIfExists" : "");
+
+        /* Destination file may already exist with read only attribute */
+        attribs = GetFileAttributesW(dest);
+        if (IsAttrib(attribs, FILE_ATTRIBUTE_READONLY))
+          SetFileAttributesW(dest, attribs & ~FILE_ATTRIBUTE_READONLY);
 
 	ret = CopyFileW(src, dest, bFailIfExists);
 	if (ret)
@@ -1479,7 +1485,7 @@ int WINAPI SHFileOperationW(LPSHFILEOPSTRUCTW lpFileOp)
 /*************************************************************************
  * SHFreeNameMappings      [shell32.246]
  *
- * Free the mapping handle returned by SHFileoperation if FOF_WANTSMAPPINGHANDLE
+ * Free the mapping handle returned by SHFileOperation if FOF_WANTSMAPPINGHANDLE
  * was specified.
  *
  * PARAMS
@@ -1496,12 +1502,12 @@ void WINAPI SHFreeNameMappings(HANDLE hNameMapping)
 
 	  for (; i>= 0; i--)
 	  {
-	    LPSHNAMEMAPPINGW lp = DSA_GetItemPtr((HDSA)hNameMapping, i);
+            LPSHNAMEMAPPINGW lp = DSA_GetItemPtr(hNameMapping, i);
 
 	    SHFree(lp->pszOldPath);
 	    SHFree(lp->pszNewPath);
 	  }
-	  DSA_Destroy((HDSA)hNameMapping);
+          DSA_Destroy(hNameMapping);
 	}
 }
 

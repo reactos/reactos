@@ -42,7 +42,7 @@ EVENTLOG_HANDLE_A_bind(EVENTLOG_HANDLE_A UNCServerName)
     status = RpcStringBindingComposeA(NULL,
                                       (UCHAR *)"ncacn_np",
                                       (UCHAR *)UNCServerName,
-                                      (UCHAR *)"\\pipe\\ntsvcs",
+                                      (UCHAR *)"\\pipe\\EventLog",
                                       NULL,
                                       (UCHAR **)&pszStringBinding);
     if (status)
@@ -147,20 +147,17 @@ BOOL WINAPI
 BackupEventLogA(IN HANDLE hEventLog,
                 IN LPCSTR lpBackupFileName)
 {
-    RPC_STRING BackupFileName;
+    ANSI_STRING BackupFileName;
     NTSTATUS Status;
 
     TRACE("%p, %s\n", hEventLog, lpBackupFileName);
 
-    BackupFileName.Buffer = (LPSTR)lpBackupFileName;
-    BackupFileName.Length = BackupFileName.MaximumLength =
-        lpBackupFileName ? strlen(lpBackupFileName) : 0;
-    BackupFileName.MaximumLength += sizeof(CHAR);
+    RtlInitAnsiString(&BackupFileName, lpBackupFileName);
 
     RpcTryExcept
     {
         Status = ElfrBackupELFA(hEventLog,
-                                &BackupFileName);
+                                (PRPC_STRING)&BackupFileName);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -188,20 +185,17 @@ BOOL WINAPI
 BackupEventLogW(IN HANDLE hEventLog,
                 IN LPCWSTR lpBackupFileName)
 {
-    RPC_UNICODE_STRING BackupFileName;
+    UNICODE_STRING BackupFileName;
     NTSTATUS Status;
 
     TRACE("%p, %s\n", hEventLog, debugstr_w(lpBackupFileName));
 
-    BackupFileName.Buffer = (LPWSTR)lpBackupFileName;
-    BackupFileName.Length = BackupFileName.MaximumLength =
-        lpBackupFileName ? wcslen(lpBackupFileName) * sizeof(WCHAR) : 0;
-    BackupFileName.MaximumLength += sizeof(WCHAR);
+    RtlInitUnicodeString(&BackupFileName, lpBackupFileName);
 
     RpcTryExcept
     {
         Status = ElfrBackupELFW(hEventLog,
-                                &BackupFileName);
+                                (PRPC_UNICODE_STRING)&BackupFileName);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -226,20 +220,17 @@ BOOL WINAPI
 ClearEventLogA(IN HANDLE hEventLog,
                IN LPCSTR lpBackupFileName)
 {
-    RPC_STRING BackupFileName;
+    ANSI_STRING BackupFileName;
     NTSTATUS Status;
 
     TRACE("%p, %s\n", hEventLog, lpBackupFileName);
 
-    BackupFileName.Buffer = (LPSTR)lpBackupFileName;
-    BackupFileName.Length = BackupFileName.MaximumLength =
-        lpBackupFileName ? strlen(lpBackupFileName) : 0;
-    BackupFileName.MaximumLength += sizeof(CHAR);
+    RtlInitAnsiString(&BackupFileName, lpBackupFileName);
 
     RpcTryExcept
     {
         Status = ElfrClearELFA(hEventLog,
-                               &BackupFileName);
+                               (PRPC_STRING)&BackupFileName);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -264,20 +255,17 @@ BOOL WINAPI
 ClearEventLogW(IN HANDLE hEventLog,
                IN LPCWSTR lpBackupFileName)
 {
-    RPC_UNICODE_STRING BackupFileName;
+    UNICODE_STRING BackupFileName;
     NTSTATUS Status;
 
     TRACE("%p, %s\n", hEventLog, debugstr_w(lpBackupFileName));
 
-    BackupFileName.Buffer = (LPWSTR)lpBackupFileName;
-    BackupFileName.Length = BackupFileName.MaximumLength =
-        lpBackupFileName ? wcslen(lpBackupFileName) * sizeof(WCHAR) : 0;
-    BackupFileName.MaximumLength += sizeof(WCHAR);
+    RtlInitUnicodeString(&BackupFileName,lpBackupFileName);
 
     RpcTryExcept
     {
         Status = ElfrClearELFW(hEventLog,
-                               &BackupFileName);
+                               (PRPC_UNICODE_STRING)&BackupFileName);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -379,6 +367,12 @@ GetEventLogInformation(IN HANDLE hEventLog,
                        OUT LPDWORD pcbBytesNeeded)
 {
     NTSTATUS Status;
+
+    if (dwInfoLevel != EVENTLOG_FULL_INFO)
+    {
+        SetLastError(ERROR_INVALID_LEVEL);
+        return FALSE;
+    }
 
     RpcTryExcept
     {
@@ -562,21 +556,18 @@ HANDLE WINAPI
 OpenBackupEventLogW(IN LPCWSTR lpUNCServerName,
                     IN LPCWSTR lpFileName)
 {
-    RPC_UNICODE_STRING FileName;
+    UNICODE_STRING FileName;
     IELF_HANDLE LogHandle;
     NTSTATUS Status;
 
     TRACE("%s, %s\n", debugstr_w(lpUNCServerName), debugstr_w(lpFileName));
 
-    FileName.Buffer = (LPWSTR)lpFileName;
-    FileName.Length = FileName.MaximumLength =
-        lpFileName ? wcslen(lpFileName) * sizeof(WCHAR) : 0;
-    FileName.MaximumLength += sizeof(WCHAR);
+    RtlInitUnicodeString(&FileName, lpFileName);
 
     RpcTryExcept
     {
         Status = ElfrOpenBELW((LPWSTR)lpUNCServerName,
-                              &FileName,
+                              (PRPC_UNICODE_STRING)&FileName,
                               1,
                               1,
                               &LogHandle);
@@ -903,21 +894,18 @@ HANDLE WINAPI
 RegisterEventSourceW(IN LPCWSTR lpUNCServerName,
                      IN LPCWSTR lpSourceName)
 {
-    RPC_UNICODE_STRING SourceName;
+    UNICODE_STRING SourceName;
     IELF_HANDLE LogHandle;
     NTSTATUS Status;
 
     TRACE("%s, %s\n", debugstr_w(lpUNCServerName), debugstr_w(lpSourceName));
 
-    SourceName.Buffer = (LPWSTR)lpSourceName;
-    SourceName.Length = SourceName.MaximumLength =
-        lpSourceName ? wcslen(lpSourceName) * sizeof(WCHAR) : 0;
-    SourceName.MaximumLength += sizeof(WCHAR);
+    RtlInitUnicodeString(&SourceName, lpSourceName);
 
     RpcTryExcept
     {
         Status = ElfrRegisterEventSourceW((LPWSTR)lpUNCServerName,
-                                          &SourceName,
+                                          (PRPC_UNICODE_STRING)&SourceName,
                                           &EmptyStringU,
                                           1,
                                           1,

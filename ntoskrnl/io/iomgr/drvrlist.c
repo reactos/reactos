@@ -48,8 +48,7 @@ extern BOOLEAN NoGuiBoot;
 VOID
 FASTCALL
 INIT_FUNCTION
-IopDisplayLoadingMessage(PVOID ServiceName,
-                         BOOLEAN Unicode);
+IopDisplayLoadingMessage(PUNICODE_STRING ServiceName);
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -416,7 +415,7 @@ IopLoadDriver(PSERVICE Service)
 {
    NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
-   IopDisplayLoadingMessage(Service->ServiceName.Buffer, TRUE);
+   IopDisplayLoadingMessage(&Service->ServiceName);
    Status = ZwLoadDriver(&Service->RegistryPath);
    IopBootLog(&Service->ImagePath, NT_SUCCESS(Status) ? TRUE : FALSE);
    if (!NT_SUCCESS(Status))

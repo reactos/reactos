@@ -90,7 +90,7 @@ AcpiOsInitialize (void)
 ACPI_STATUS
 AcpiOsTerminate(void)
 {
-    DPRINT1("AcpiOsTerminate() called\n");
+    DPRINT("AcpiOsTerminate() called\n");
 
     if (AcpiInterruptHandlerRegistered)
         AcpiOsRemoveInterruptHandler(AcpiIrqNumber, AcpiIrqHandler);
@@ -117,7 +117,9 @@ AcpiOsVprintf (
     const char              *Fmt,
     va_list                 Args)
 {
+#ifndef NDEBUG
     vDbgPrintEx (-1, DPFLTR_ERROR_LEVEL, Fmt, Args);
+#endif
     return;
 }
 
@@ -329,7 +331,7 @@ AcpiOsRemoveInterruptHandler (
 void
 AcpiOsStall (UINT32 microseconds)
 {
-    DPRINT1("AcpiOsStall %d\n",microseconds);
+    DPRINT("AcpiOsStall %d\n",microseconds);
     KeStallExecutionProcessor(microseconds);
     return;
 }
@@ -337,7 +339,7 @@ AcpiOsStall (UINT32 microseconds)
 void
 AcpiOsSleep (ACPI_INTEGER milliseconds)
 {
-    DPRINT1("AcpiOsSleep %d\n", milliseconds);
+    DPRINT("AcpiOsSleep %d\n", milliseconds);
 	KeStallExecutionProcessor(milliseconds*1000);
     return;
 }
@@ -466,11 +468,12 @@ AcpiOsReadPciConfiguration (
     NTSTATUS Status;
     PCI_SLOT_NUMBER slot;
 
-    if (Register == 0)
+    if (Register == 0 || PciId->Device == 0 ||
+        Register + Width > PCI_COMMON_HDR_LENGTH)
         return AE_ERROR;
 
     slot.u.AsULONG = 0;
-    slot.u.bits.DeviceNumber = PciId->Bus;
+    slot.u.bits.DeviceNumber = PciId->Device;
     slot.u.bits.FunctionNumber = PciId->Function;
 
     DPRINT("AcpiOsReadPciConfiguration, slot=0x%X, func=0x%X\n", slot.u.AsULONG, Register);
@@ -498,11 +501,12 @@ AcpiOsWritePciConfiguration (
     ULONG buf = Value;
     PCI_SLOT_NUMBER slot;
 
-    if (Register == 0)
+    if (Register == 0 || PciId->Device == 0 ||
+        Register + Width > PCI_COMMON_HDR_LENGTH)
         return AE_ERROR;
 
     slot.u.AsULONG = 0;
-    slot.u.bits.DeviceNumber = PciId->Bus;
+    slot.u.bits.DeviceNumber = PciId->Device;
     slot.u.bits.FunctionNumber = PciId->Function;
 
     DPRINT("AcpiOsWritePciConfiguration, slot=0x%x\n", slot.u.AsULONG);
@@ -664,7 +668,7 @@ AcpiOsExecute (
     ACPI_OSD_EXEC_CALLBACK  Function,
     void                    *Context)
 {
-	DPRINT1("AcpiOsExecute\n");
+	DPRINT("AcpiOsExecute\n");
 
 	KeInsertQueueDpc(&AcpiDpc, (PVOID)Function, (PVOID)Context);
 

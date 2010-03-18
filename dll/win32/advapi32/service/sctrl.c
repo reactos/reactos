@@ -41,9 +41,86 @@ typedef struct _ACTIVE_SERVICE
 
 static DWORD dwActiveServiceCount = 0;
 static PACTIVE_SERVICE lpActiveServices = NULL;
+static handle_t hStatusBinding = NULL;
 
 
 /* FUNCTIONS *****************************************************************/
+
+handle_t __RPC_USER
+RPC_SERVICE_STATUS_HANDLE_bind(RPC_SERVICE_STATUS_HANDLE hServiceStatus)
+{
+    return hStatusBinding;
+}
+
+
+void __RPC_USER
+RPC_SERVICE_STATUS_HANDLE_unbind(RPC_SERVICE_STATUS_HANDLE hServiceStatus,
+                                 handle_t hBinding)
+{
+}
+
+
+static RPC_STATUS
+ScCreateStatusBinding(VOID)
+{
+    LPWSTR pszStringBinding;
+    RPC_STATUS status;
+
+    TRACE("ScCreateStatusBinding() called\n");
+
+    status = RpcStringBindingComposeW(NULL,
+                                      L"ncacn_np",
+                                      NULL,
+                                      L"\\pipe\\ntsvcs",
+                                      NULL,
+                                      &pszStringBinding);
+    if (status != RPC_S_OK)
+    {
+        ERR("RpcStringBindingCompose returned 0x%x\n", status);
+        return status;
+    }
+
+    /* Set the binding handle that will be used to bind to the server. */
+    status = RpcBindingFromStringBindingW(pszStringBinding,
+                                          &hStatusBinding);
+    if (status != RPC_S_OK)
+    {
+        ERR("RpcBindingFromStringBinding returned 0x%x\n", status);
+    }
+
+    status = RpcStringFreeW(&pszStringBinding);
+    if (status != RPC_S_OK)
+    {
+        ERR("RpcStringFree returned 0x%x\n", status);
+    }
+
+    return status;
+}
+
+
+static RPC_STATUS
+ScDestroyStatusBinding(VOID)
+{
+    RPC_STATUS status;
+
+    TRACE("ScDestroyStatusBinding() called\n");
+
+    if (hStatusBinding == NULL)
+        return RPC_S_OK;
+
+    status = RpcBindingFree(&hStatusBinding);
+    if (status != RPC_S_OK)
+    {
+        ERR("RpcBindingFree returned 0x%x\n", status);
+    }
+    else
+    {
+        hStatusBinding = NULL;
+    }
+
+    return status;
+}
+
 
 static PACTIVE_SERVICE
 ScLookupServiceByServiceName(LPCWSTR lpServiceName)
@@ -259,7 +336,6 @@ ScConnectControlPipe(HANDLE *hPipe)
 
     TRACE("Sent Process ID %lu\n", dwProcessId);
 
-
     return ERROR_SUCCESS;
 }
 
@@ -403,7 +479,7 @@ ScServiceDispatcher(HANDLE hPipe,
         }
         else
         {
-            dwError = ERROR_NOT_FOUND;
+            dwError = ERROR_SERVICE_DOES_NOT_EXIST;
         }
 
         ReplyPacket.dwError = dwError;
@@ -747,7 +823,12 @@ StartServiceCtrlDispatcherA(const SERVICE_TABLE_ENTRYA * lpServiceStartTable)
         return FALSE;
     }
 
+    ScCreateStatusBinding();
+
     ScServiceDispatcher(hPipe, lpMessageBuffer, 256);
+
+    ScDestroyStatusBinding();
+
     CloseHandle(hPipe);
 
     /* Free the message buffer */
@@ -837,7 +918,12 @@ StartServiceCtrlDispatcherW(const SERVICE_TABLE_ENTRYW * lpServiceStartTable)
         return FALSE;
     }
 
+    ScCreateStatusBinding();
+
     ScServiceDispatcher(hPipe, lpMessageBuffer, 256);
+
+    ScDestroyStatusBinding();
+
     CloseHandle(hPipe);
 
     /* Free the message buffer */

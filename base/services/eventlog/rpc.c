@@ -480,45 +480,29 @@ NTSTATUS ElfrOpenELA(
     DWORD MinorVersion,
     IELF_HANDLE *LogHandle)
 {
-    UNICODE_STRING UNCServerNameW = { 0, 0, NULL };
-    UNICODE_STRING ModuleNameW    = { 0, 0, NULL };
-    UNICODE_STRING RegModuleNameW = { 0, 0, NULL };
-    NTSTATUS Status;
+    UNICODE_STRING ModuleNameW;
 
-    if (UNCServerName &&
-        !RtlCreateUnicodeStringFromAsciiz(&UNCServerNameW, UNCServerName))
-    {
-        return STATUS_NO_MEMORY;
-    }
+    if ((MajorVersion != 1) || (MinorVersion != 1))
+        return STATUS_INVALID_PARAMETER;
 
-    if (ModuleName &&
-        !RtlAnsiStringToUnicodeString(&ModuleNameW, (PANSI_STRING)ModuleName, TRUE))
-    {
-        RtlFreeUnicodeString(&UNCServerNameW);
-        return STATUS_NO_MEMORY;
-    }
+    /* RegModuleName must be an empty string */
+    if (RegModuleName->Length > 0)
+        return STATUS_INVALID_PARAMETER;
 
-    if (RegModuleName &&
-        !RtlAnsiStringToUnicodeString(&RegModuleNameW, (PANSI_STRING)RegModuleName, TRUE))
-    {
-        RtlFreeUnicodeString(&UNCServerNameW);
-        RtlFreeUnicodeString(&ModuleNameW);
-        return STATUS_NO_MEMORY;
-    }
+    RtlAnsiStringToUnicodeString(&ModuleNameW, (PANSI_STRING)ModuleName, TRUE);
 
-    Status = ElfrOpenELW(
-        UNCServerName ? UNCServerNameW.Buffer : NULL,
-        ModuleName ? (PRPC_UNICODE_STRING)&ModuleNameW : NULL,
-        RegModuleName ? (PRPC_UNICODE_STRING)&RegModuleNameW : NULL,
-        MajorVersion,
-        MinorVersion,
-        LogHandle);
+    /* FIXME: Must verify that caller has read access */
 
-    RtlFreeUnicodeString(&UNCServerNameW);
+    *LogHandle = ElfCreateEventLogHandle(ModuleNameW.Buffer, FALSE);
+
     RtlFreeUnicodeString(&ModuleNameW);
-    RtlFreeUnicodeString(&RegModuleNameW);
 
-    return Status;
+    if (*LogHandle == NULL)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    return STATUS_SUCCESS;
 }
 
 
@@ -531,45 +515,32 @@ NTSTATUS ElfrRegisterEventSourceA(
     DWORD MinorVersion,
     IELF_HANDLE *LogHandle)
 {
-    UNICODE_STRING UNCServerNameW = { 0, 0, NULL };
     UNICODE_STRING ModuleNameW    = { 0, 0, NULL };
-
-    if (UNCServerName &&
-        !RtlCreateUnicodeStringFromAsciiz(&UNCServerNameW, UNCServerName))
-    {
-        return STATUS_NO_MEMORY;
-    }
 
     if (ModuleName &&
         !RtlAnsiStringToUnicodeString(&ModuleNameW, (PANSI_STRING)ModuleName, TRUE))
     {
-        RtlFreeUnicodeString(&UNCServerNameW);
         return STATUS_NO_MEMORY;
     }
 
     /* RegModuleName must be an empty string */
     if (RegModuleName->Length > 0)
     {
-        RtlFreeUnicodeString(&UNCServerNameW);
         RtlFreeUnicodeString(&ModuleNameW);
         return STATUS_INVALID_PARAMETER;
     }
 
     if ((MajorVersion != 1) || (MinorVersion != 1))
     {
-        RtlFreeUnicodeString(&UNCServerNameW);
         RtlFreeUnicodeString(&ModuleNameW);
         return STATUS_INVALID_PARAMETER;
     }
 
-    /*FIXME: UNCServerName must specify the server or empty for local */
-
-    /*FIXME: Must verify that caller has write access */
+    /* FIXME: Must verify that caller has write access */
 
     *LogHandle = ElfCreateEventLogHandle(ModuleNameW.Buffer,
                                          TRUE);
 
-    RtlFreeUnicodeString(&UNCServerNameW);
     RtlFreeUnicodeString(&ModuleNameW);
 
     return STATUS_SUCCESS;
@@ -661,8 +632,32 @@ NTSTATUS ElfrGetLogInformation(
     DWORD cbBufSize,
     DWORD *pcbBytesNeeded)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    /* FIXME: check handle first */
+
+    switch (InfoLevel)
+    {
+        case EVENTLOG_FULL_INFO:
+            {
+                LPEVENTLOG_FULL_INFORMATION efi = (LPEVENTLOG_FULL_INFORMATION)Buffer;
+
+                *pcbBytesNeeded = sizeof(EVENTLOG_FULL_INFORMATION);
+                if (cbBufSize < sizeof(EVENTLOG_FULL_INFORMATION))
+                {
+                    return STATUS_BUFFER_TOO_SMALL;
+                }
+
+                efi->dwFull = 0; /* FIXME */
+            }
+            break;
+
+        default:
+            Status = STATUS_INVALID_LEVEL;
+            break;
+    }
+
+    return Status;
 }
 
 

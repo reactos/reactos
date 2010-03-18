@@ -8,23 +8,23 @@ Description = THE Open Source Office Suite.
 Size = 127MB
 Category = 6
 URLSite = http://www.openoffice.org/
-URLDownload = http://ftp.plusline.de/OpenOffice/stable/2.4.3/OOo_2.4.3_Win32Intel_install_en-US.exe
+URLDownload = ftp://archive.services.openoffice.org/pub/openoffice-archive/stable/2.4.3/OOo_2.4.3_Win32Intel_install_en-US.exe
 CDPath = none
 
 [Section.0407]
 Description = DIE Open Source Office Suite.
 URLSite = http://de.openoffice.org/
 Size = 114.2MB
-URLDownload = http://ftp.tu-chemnitz.de/pub/openoffice/localized/de/2.4.3/OOo_2.4.3_Win32Intel_install_de.exe
+URLDownload = ftp://archive.services.openoffice.org/pub/openoffice-archive/localized/de/2.4.3/OOo_2.4.3_Win32Intel_install_de.exe
 
 [Section.040a]
 Description = La suite de ofimática de código abierto.
 URLSite = http://es.openoffice.org/
 Size = 113.9MB
-URLDownload = http://ftp.tu-chemnitz.de/pub/openoffice/localized/es/2.4.3/OOo_2.4.3_Win32Intel_install_es.exe
+URLDownload = ftp://archive.services.openoffice.org/pub/openoffice-archive/localized/es/2.4.3/OOo_2.4.3_Win32Intel_install_es.exe
 
 [Section.0415]
 URLSite = http://pl.openoffice.org/
 Description = Otwarty pakiet biurowy.
-URLDownload = http://ftp.tu-chemnitz.de/pub/openoffice/localized/pl/2.4.2/OOo_2.4.2_Win32Intel_install_pl.exe
+URLDownload = ftp://archive.services.openoffice.org/pub/openoffice-archive/localized/pl/2.4.2/OOo_2.4.2_Win32Intel_install_pl.exe
 Size = 113.9M

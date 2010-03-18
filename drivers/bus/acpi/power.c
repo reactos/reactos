@@ -6,7 +6,7 @@
 #include <acpi_bus.h>
 #include <acpi_drivers.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 NTSTATUS

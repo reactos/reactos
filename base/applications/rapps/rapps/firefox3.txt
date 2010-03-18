@@ -8,35 +8,35 @@ Description = The most popular and one of the best free Web Browsers out there.
 Size = 7.1M
 Category = 5
 URLSite = http://www.mozilla.com/en-US/
-URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/latest-3.0/win32/en-US/Firefox%20Setup%203.0.17.exe
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/latest-3.0/win32/en-US/Firefox%20Setup%203.0.18.exe
 CDPath = none
 
 [Section.0407]
 Description = Der populärste und einer der besten freien Webbrowser.
 Size = 6.9M
 URLSite = http://www.mozilla-europe.org/de/
-URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/latest-3.0/win32/de/Firefox%20Setup%203.0.17.exe
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/latest-3.0/win32/de/Firefox%20Setup%203.0.18.exe
 
 [Section.040a]
 Description = El más popular y uno de los mejores navegadores web gratuitos que hay.
 Size = 7.0M
 URLSite = http://www.mozilla-europe.org/es/
-URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/latest-3.0/win32/es-ES/Firefox%20Setup%203.0.17.exe
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/latest-3.0/win32/es-ES/Firefox%20Setup%203.0.18.exe
 
 [Section.0414]
 Description = Mest populære og best også gratis nettleserene der ute.
 Size = 6.9M
 URLSite = http://www.mozilla-europe.org/no/
-URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/latest-3.0/win32/nb-NO/Firefox%20Setup%203.0.17.exe
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/latest-3.0/win32/nb-NO/Firefox%20Setup%203.0.18.exe
 
 [Section.0415]
 Description = Najpopularniejsza i jedna z najlepszych darmowych przeglądarek internetowych.
 Size = 7.8M
 URLSite = http://www.mozilla-europe.org/pl/
-URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/latest-3.0/win32/pl/Firefox%20Setup%203.0.17.exe
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/latest-3.0/win32/pl/Firefox%20Setup%203.0.18.exe
 
 [Section.0419]
 Description = Один из самых популярных и лучших бесплатных браузеров.
 Size = 7.4M
 URLSite = http://www.mozilla-europe.org/ru/
-URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/latest-3.0/win32/ru/Firefox%20Setup%203.0.17.exe
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/latest-3.0/win32/ru/Firefox%20Setup%203.0.18.exe

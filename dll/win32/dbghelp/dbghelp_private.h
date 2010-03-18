@@ -29,6 +29,7 @@
 #include "objbase.h"
 #include "oaidl.h"
 #include "winnls.h"
+#include "wine/list.h"
 #include "wine/unicode.h"
 
 #include "cvconst.h"
@@ -37,13 +38,14 @@
 
 struct pool /* poor's man */
 {
-    struct pool_arena*  first;
-    unsigned            arena_size;
+    struct list arena_list;
+    struct list arena_full;
+    size_t      arena_size;
 };
 
-void     pool_init(struct pool* a, unsigned arena_size);
+void     pool_init(struct pool* a, size_t arena_size);
 void     pool_destroy(struct pool* a);
-void*    pool_alloc(struct pool* a, unsigned len);
+void*    pool_alloc(struct pool* a, size_t len);
 char*    pool_strdup(struct pool* a, const char* str);
 
 struct vector
@@ -96,7 +98,6 @@ void     hash_table_init(struct pool* pool, struct hash_table* ht,
                          unsigned num_buckets);
 void     hash_table_destroy(struct hash_table* ht);
 void     hash_table_add(struct hash_table* ht, struct hash_table_elt* elt);
-unsigned hash_table_hash(const char* name, unsigned num_buckets);
 
 struct hash_table_iter
 {
@@ -116,7 +117,7 @@ void*    hash_table_iter_up(struct hash_table_iter* hti);
 
 extern unsigned dbghelp_options;
 /* some more Wine extensions */
-#define SYMOPT_WINE_WITH_ELF_MODULES 0x40000000
+#define SYMOPT_WINE_WITH_NATIVE_MODULES 0x40000000
 
 enum location_kind {loc_error,          /* reg is the error code */
                     loc_absolute,       /* offset is the location */
@@ -226,8 +227,6 @@ struct symt_public
     struct symt*                container;      /* compiland */
     unsigned long               address;
     unsigned long               size;
-    unsigned                    in_code : 1,
-                                is_function : 1;
 };
 
 struct symt_thunk
@@ -245,7 +244,7 @@ struct symt_array
 {
     struct symt                 symt;
     int		                start;
-    int		                end;
+    int		                end;            /* end index if > 0, or -array_len (in bytes) if < 0 */
     struct symt*                base_type;
     struct symt*                index_type;
 };
@@ -308,6 +307,7 @@ enum module_type
     DMT_UNKNOWN,        /* for lookup, not actually used for a module */
     DMT_ELF,            /* a real ELF shared module */
     DMT_PE,             /* a native or builtin PE module */
+    DMT_MACHO,          /* a real Mach-O shared module */
     DMT_PDB,            /* .PDB file */
     DMT_DBG,            /* .DBG file */
 };
@@ -327,12 +327,17 @@ struct module
     struct elf_module_info*	elf_info;
     struct dwarf2_module_info_s*dwarf2_info;
 
+    struct macho_module_info*	macho_info;
+
     /* memory allocation pool */
     struct pool                 pool;
 
     /* symbols & symbol tables */
+    struct vector               vsymt;
     int                         sortlist_valid;
     unsigned                    num_sorttab;    /* number of symbols with addresses */
+    unsigned                    num_symbols;
+    unsigned                    sorttab_size;
     struct symt_ht**            addr_sorttab;
     struct hash_table           ht_symbols;
     void                        (*loc_compute)(struct process* pcs,
@@ -355,8 +360,9 @@ struct process
     struct process*             next;
     HANDLE                      handle;
     WCHAR*                      search_path;
-    
+
     PSYMBOL_REGISTERED_CALLBACK64       reg_cb;
+    PSYMBOL_REGISTERED_CALLBACK reg_cb32;
     BOOL                        reg_is_unicode;
     DWORD64                     reg_user;
 
@@ -411,17 +417,62 @@ struct pdb_lookup
     } u;
 };
 
+struct cpu_stack_walk
+{
+    HANDLE                      hProcess;
+    HANDLE                      hThread;
+    BOOL                        is32;
+    union
+    {
+        struct
+        {
+            PREAD_PROCESS_MEMORY_ROUTINE        f_read_mem;
+            PTRANSLATE_ADDRESS_ROUTINE          f_xlat_adr;
+            PFUNCTION_TABLE_ACCESS_ROUTINE      f_tabl_acs;
+            PGET_MODULE_BASE_ROUTINE            f_modl_bas;
+        } s32;
+        struct
+        {
+            PREAD_PROCESS_MEMORY_ROUTINE64      f_read_mem;
+            PTRANSLATE_ADDRESS_ROUTINE64        f_xlat_adr;
+            PFUNCTION_TABLE_ACCESS_ROUTINE64    f_tabl_acs;
+            PGET_MODULE_BASE_ROUTINE64          f_modl_bas;
+        } s64;
+    } u;
+};
+
+enum cpu_addr {cpu_addr_pc, cpu_addr_stack, cpu_addr_frame};
+struct cpu
+{
+    DWORD       machine;
+    DWORD       word_size;
+    /* address manipulation */
+    unsigned    (*get_addr)(HANDLE hThread, const CONTEXT* ctx,
+                            enum cpu_addr, ADDRESS64* addr);
+
+    /* stack manipulation */
+    BOOL        (*stack_walk)(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame);
+};
+
+extern struct cpu*      dbghelp_current_cpu;
+
 /* dbghelp.c */
 extern struct process* process_find_by_handle(HANDLE hProcess);
 extern HANDLE hMsvcrt;
 extern BOOL         validate_addr64(DWORD64 addr);
 extern BOOL         pcs_callback(const struct process* pcs, ULONG action, void* data);
 extern void*        fetch_buffer(struct process* pcs, unsigned size);
+extern const char*  wine_dbgstr_addr(const ADDRESS64* addr);
+extern struct cpu*  cpu_find(DWORD);
+
+/* crc32.c */
+extern DWORD calc_crc32(int fd);
+
+typedef BOOL (*enum_modules_cb)(const WCHAR*, unsigned long addr, void* user);
 
 /* elf_module.c */
-#define ELF_NO_MAP      ((const void*)0xffffffff)
-typedef BOOL (*elf_enum_modules_cb)(const WCHAR*, unsigned long addr, void* user);
-extern BOOL         elf_enum_modules(HANDLE hProc, elf_enum_modules_cb, void*);
+#define ELF_NO_MAP      ((const void*)-1)
+extern BOOL         elf_enum_modules(HANDLE hProc, enum_modules_cb, void*);
 extern BOOL         elf_fetch_file_info(const WCHAR* name, DWORD* base, DWORD* size, DWORD* checksum);
 struct elf_file_map;
 extern BOOL         elf_load_debug_info(struct module* module, struct elf_file_map* fmap);
@@ -431,21 +482,27 @@ extern BOOL         elf_read_wine_loader_dbg_info(struct process* pcs);
 extern BOOL         elf_synchronize_module_list(struct process* pcs);
 struct elf_thunk_area;
 extern int          elf_is_in_thunk_area(unsigned long addr, const struct elf_thunk_area* thunks);
-extern DWORD WINAPI addr_to_linear(HANDLE hProcess, HANDLE hThread, ADDRESS* addr);
+
+/* macho_module.c */
+#define MACHO_NO_MAP    ((const void*)-1)
+extern BOOL         macho_enum_modules(HANDLE hProc, enum_modules_cb, void*);
+extern BOOL         macho_fetch_file_info(const WCHAR* name, DWORD* base, DWORD* size, DWORD* checksum);
+struct macho_file_map;
+extern BOOL         macho_load_debug_info(struct module* module, struct macho_file_map* fmap);
+extern struct module*
+                    macho_load_module(struct process* pcs, const WCHAR* name, unsigned long);
+extern BOOL         macho_read_wine_loader_dbg_info(struct process* pcs);
+extern BOOL         macho_synchronize_module_list(struct process* pcs);
 
 /* module.c */
 extern const WCHAR      S_ElfW[];
 extern const WCHAR      S_WineLoaderW[];
-extern const WCHAR      S_WinePThreadW[];
-extern const WCHAR      S_WineKThreadW[];
+extern const WCHAR      S_WineW[];
 extern const WCHAR      S_SlashW[];
 
 extern struct module*
                     module_find_by_addr(const struct process* pcs, unsigned long addr,
                                         enum module_type type);
-extern struct module*
-                    module_find_by_name(const struct process* pcs,
-                                        const WCHAR* name);
 extern struct module*
                     module_find_by_nameA(const struct process* pcs,
                                          const char* name);
@@ -456,11 +513,8 @@ extern BOOL         module_get_debug(struct module_pair*);
 extern struct module*
                     module_new(struct process* pcs, const WCHAR* name,
                                enum module_type type, BOOL virtual,
-                               unsigned long addr, unsigned long size,
+                               DWORD64 addr, DWORD64 size,
                                unsigned long stamp, unsigned long checksum);
-extern struct module*
-                    module_get_container(const struct process* pcs,
-                                         const struct module* inner);
 extern struct module*
                     module_get_containee(const struct process* pcs,
                                          const struct module* inner);
@@ -485,13 +539,13 @@ extern BOOL         path_find_symbol_file(const struct process* pcs, PCSTR full_
                                           BOOL* is_unmatched);
 
 /* pe_module.c */
-extern BOOL         pe_load_nt_header(HANDLE hProc, DWORD base, IMAGE_NT_HEADERS* nth);
+extern BOOL         pe_load_nt_header(HANDLE hProc, DWORD64 base, IMAGE_NT_HEADERS* nth);
 extern struct module*
                     pe_load_native_module(struct process* pcs, const WCHAR* name,
                                           HANDLE hFile, DWORD base, DWORD size);
 extern struct module*
                     pe_load_builtin_module(struct process* pcs, const WCHAR* name,
-                                           DWORD base, DWORD size);
+                                           DWORD64 base, DWORD64 size);
 extern BOOL         pe_load_debug_info(const struct process* pcs,
                                        struct module* module);
 /* source.c */
@@ -499,9 +553,14 @@ extern unsigned     source_new(struct module* module, const char* basedir, const
 extern const char*  source_get(const struct module* module, unsigned idx);
 
 /* stabs.c */
+typedef void (*stabs_def_cb)(struct module* module, unsigned long load_offset,
+                                const char* name, unsigned long offset,
+                                BOOL is_public, BOOL is_global, unsigned char other,
+                                struct symt_compiland* compiland, void* user);
 extern BOOL         stabs_parse(struct module* module, unsigned long load_offset,
                                 const void* stabs, int stablen,
-                                const char* strs, int strtablen);
+                                const char* strs, int strtablen,
+                                stabs_def_cb callback, void* user);
 
 /* dwarf.c */
 extern BOOL         dwarf2_parse(struct module* module, unsigned long load_offset,
@@ -512,12 +571,19 @@ extern BOOL         dwarf2_parse(struct module* module, unsigned long load_offse
                                  const unsigned char* line, unsigned int line_size,
                                  const unsigned char* loclist, unsigned int loclist_size);
 
+/* stack.c */
+extern BOOL         sw_read_mem(struct cpu_stack_walk* csw, DWORD64 addr, void* ptr, DWORD sz);
+extern DWORD64      sw_xlat_addr(struct cpu_stack_walk* csw, ADDRESS64* addr);
+extern void*        sw_table_access(struct cpu_stack_walk* csw, DWORD64 addr);
+extern DWORD64      sw_module_base(struct cpu_stack_walk* csw, DWORD64 addr);
+
 /* symbol.c */
 extern const char*  symt_get_name(const struct symt* sym);
+extern struct module* symt_cmp_addr_module;
 extern int          symt_cmp_addr(const void* p1, const void* p2);
 extern void         copy_symbolW(SYMBOL_INFOW* siw, const SYMBOL_INFO* si);
 extern struct symt_ht*
-                    symt_find_nearest(struct module* module, DWORD addr);
+                    symt_find_nearest(struct module* module, DWORD_PTR addr);
 extern struct symt_compiland*
                     symt_new_compiland(struct module* module, unsigned long address,
                                        unsigned src_idx);
@@ -525,8 +591,7 @@ extern struct symt_public*
                     symt_new_public(struct module* module, 
                                     struct symt_compiland* parent, 
                                     const char* typename,
-                                    unsigned long address, unsigned size,
-                                    BOOL in_code, BOOL is_func);
+                                    unsigned long address, unsigned size);
 extern struct symt_data*
                     symt_new_global_variable(struct module* module, 
                                              struct symt_compiland* parent,
@@ -540,7 +605,7 @@ extern struct symt_function*
                                       unsigned long addr, unsigned long size,
                                       struct symt* type);
 extern BOOL         symt_normalize_function(struct module* module, 
-                                            struct symt_function* func);
+                                            const struct symt_function* func);
 extern void         symt_add_func_line(struct module* module,
                                        struct symt_function* func, 
                                        unsigned source_idx, int line_num, 
@@ -558,7 +623,7 @@ extern struct symt_block*
                                          unsigned pc, unsigned len);
 extern struct symt_block*
                     symt_close_func_block(struct module* module, 
-                                          struct symt_function* func,
+                                          const struct symt_function* func,
                                           struct symt_block* block, unsigned pc);
 extern struct symt_hierarchy_point*
                     symt_add_function_point(struct module* module, 
@@ -568,8 +633,8 @@ extern struct symt_hierarchy_point*
                                             const char* name);
 extern BOOL         symt_fill_func_line_info(const struct module* module,
                                              const struct symt_function* func,
-                                             DWORD addr, IMAGEHLP_LINE* line);
-extern BOOL         symt_get_func_line_next(const struct module* module, PIMAGEHLP_LINE line);
+                                             DWORD64 addr, IMAGEHLP_LINE64* line);
+extern BOOL         symt_get_func_line_next(const struct module* module, PIMAGEHLP_LINE64 line);
 extern struct symt_thunk*
                     symt_new_thunk(struct module* module, 
                                    struct symt_compiland* parent,
@@ -584,10 +649,12 @@ extern struct symt_hierarchy_point*
                     symt_new_label(struct module* module,
                                    struct symt_compiland* compiland,
                                    const char* name, unsigned long address);
+extern struct symt* symt_index2ptr(struct module* module, DWORD id);
+extern DWORD        symt_ptr2index(struct module* module, const struct symt* sym);
 
 /* type.c */
 extern void         symt_init_basic(struct module* module);
-extern BOOL         symt_get_info(const struct symt* type,
+extern BOOL         symt_get_info(struct module* module, const struct symt* type,
                                   IMAGEHLP_SYMBOL_TYPE_INFO req, void* pInfo);
 extern struct symt_basic*
                     symt_new_basic(struct module* module, enum BasicType, 

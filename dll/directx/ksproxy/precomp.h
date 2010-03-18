@@ -19,7 +19,22 @@
 #include <stdio.h>
 #include <vector>
 #include <assert.h>
+#include <ksmedia.h>
 //#include <debug.h>
+
+
+interface DECLSPEC_UUID("877E4351-6FEA-11D0-B863-00AA00A216A1") IKsClock;
+
+#undef INTERFACE
+#define INTERFACE IKsClock
+
+DECLARE_INTERFACE_(IKsClock, IUnknown)
+{
+    STDMETHOD_(HANDLE, KsGetClockHandle)(
+        THIS
+    ) PURE;
+};
+
 
 typedef HRESULT (CALLBACK *LPFNCREATEINSTANCE)(IUnknown* pUnkOuter, REFIID riid, LPVOID* ppvObject);
 
@@ -139,4 +154,19 @@ CEnumMediaTypes_fnConstructor(
     REFIID riid,
     LPVOID * ppv);
 
+/* node.cpp */
+HRESULT
+WINAPI
+CKsNode_Constructor(
+    IUnknown * pUnkOuter,
+    HANDLE ParentHandle,
+    ULONG NodeId,
+    ACCESS_MASK DesiredAccess,
+    REFIID riid,
+    LPVOID * ppv);
+
 extern const GUID IID_IKsObject;
+extern const GUID IID_IKsPinEx;
+extern const GUID IID_IKsAggregateControl;
+extern const GUID IID_IKsPinPipe;
+extern const GUID IID_IKsPinFactory;

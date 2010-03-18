@@ -622,7 +622,7 @@ CsrpLoadKernelModeDriver (int argc, char ** argv, char ** envp)
 		WCHAR                      ImagePath [MAX_PATH + 1] = {0};
 		UNICODE_STRING             ModuleName;
 
-		wcscpy (ImagePath, L"\\??\\c:\\reactos\\system32\\win32k.sys");
+		wcscpy (ImagePath, L"\\SYSTEMROOT\\system32\\win32k.sys");
 //		wcscat (ImagePath, Data);
 		RtlInitUnicodeString (& ModuleName, ImagePath);
 		Status = NtSetSystemInformation(/* FIXME: SystemLoadAndCallImage */

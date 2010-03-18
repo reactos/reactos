@@ -26,9 +26,6 @@
 
 #include "dbghelp_private.h"
 #include "wine/debug.h"
-#ifdef HAVE_REGEX_H
-# include <regex.h>
-#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
@@ -79,13 +76,18 @@ unsigned source_new(struct module* module, const char* base, const char* name)
         int len = strlen(full) + 1;
         if (module->sources_used + len + 1 > module->sources_alloc)
         {
-            /* Alloc by block of 256 bytes */
-            module->sources_alloc = (module->sources_used + len + 1 + 255) & ~255;
             if (!module->sources)
+            {
+                module->sources_alloc = (module->sources_used + len + 1 + 255) & ~255;
                 module->sources = HeapAlloc(GetProcessHeap(), 0, module->sources_alloc);
+            }
             else
+            {
+                module->sources_alloc = max( module->sources_alloc * 2,
+                                             (module->sources_used + len + 1 + 255) & ~255 );
                 module->sources = HeapReAlloc(GetProcessHeap(), 0, module->sources,
                                               module->sources_alloc);
+            }
         }
         ret = module->sources_used;
         memcpy(module->sources + module->sources_used, full, len);
@@ -151,116 +153,6 @@ BOOL WINAPI SymEnumSourceFiles(HANDLE hProcess, ULONG64 ModBase, PCSTR Mask,
         if (!cbSrcFiles(&sf, UserContext)) break;
     }
 
-    return TRUE;
-}
-
-static inline void re_append(char** mask, unsigned* len, char ch)
-{
-    *mask = HeapReAlloc(GetProcessHeap(), 0, *mask, ++(*len));
-    (*mask)[*len - 2] = ch;
-}
-
-static BOOL compile_regex(regex_t* re, const char* srcfile)
-{
-    char*                       mask;
-    unsigned                    len = 1;
-
-    mask = HeapAlloc(GetProcessHeap(), 0, 1);
-    re_append(&mask, &len, '^');
-    if (!srcfile || !*srcfile) re_append(&mask, &len, '*');
-    else while (*srcfile)
-    {
-        switch (*srcfile)
-        {
-        case '\\':
-        case '/':
-            re_append(&mask, &len, '[');
-            re_append(&mask, &len, '\\');
-            re_append(&mask, &len, '\\');
-            re_append(&mask, &len, '/');
-            re_append(&mask, &len, ']');
-            break;
-        case '.':
-            re_append(&mask, &len, '\\');
-            re_append(&mask, &len, '.');
-            break;
-        default:
-            re_append(&mask, &len, *srcfile);
-            break;
-        }
-        srcfile++;
-    }
-    re_append(&mask, &len, '$');
-    mask[len - 1] = '\0';
-    len = regcomp(re, mask, REG_NOSUB);
-    HeapFree(GetProcessHeap(), 0, mask);
-    if (len)
-    {
-        FIXME("Couldn't compile %s\n", mask);
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-    return TRUE;
-}
-
-/******************************************************************
- *		SymEnumLines (DBGHELP.@)
- *
- */
-BOOL WINAPI SymEnumLines(HANDLE hProcess, ULONG64 base, PCSTR compiland,
-                         PCSTR srcfile, PSYM_ENUMLINES_CALLBACK cb, PVOID user)
-{
-    struct module_pair          pair;
-    struct hash_table_iter      hti;
-    struct symt_ht*             sym;
-    regex_t                     re;
-    struct line_info*           dli;
-    void*                       ptr;
-    SRCCODEINFO                 sci;
-    const char*                 file;
-
-    if (!cb) return FALSE;
-    if (!(dbghelp_options & SYMOPT_LOAD_LINES)) return TRUE;
-
-    pair.pcs = process_find_by_handle(hProcess);
-    if (!pair.pcs) return FALSE;
-    if (compiland) FIXME("Unsupported yet (filtering on compiland %s)\n", compiland);
-    pair.requested = module_find_by_addr(pair.pcs, base, DMT_UNKNOWN);
-    if (!module_get_debug(&pair)) return FALSE;
-    if (!compile_regex(&re, srcfile)) return FALSE;
-
-    sci.SizeOfStruct = sizeof(sci);
-    sci.ModBase      = base;
-
-    hash_table_iter_init(&pair.effective->ht_symbols, &hti, NULL);
-    while ((ptr = hash_table_iter_up(&hti)))
-    {
-        unsigned int    i;
-
-        sym = GET_ENTRY(ptr, struct symt_ht, hash_elt);
-        if (sym->symt.tag != SymTagFunction) continue;
-
-        sci.FileName[0] = '\0';
-        for (i=0; i<vector_length(&((struct symt_function*)sym)->vlines); i++)
-        {
-            dli = vector_at(&((struct symt_function*)sym)->vlines, i);
-            if (dli->is_source_file)
-            {
-                file = source_get(pair.effective, dli->u.source_file);
-                if (regexec(&re, file, 0, NULL, 0) != 0) file = "";
-                strcpy(sci.FileName, file);
-            }
-            else if (sci.FileName[0])
-            {
-                sci.Key = dli;
-                sci.Obj[0] = '\0'; /* FIXME */
-                sci.LineNumber = dli->line_number;
-                sci.Address = dli->u.pc_offset;
-                if (!cb(&sci, user)) break;
-            }
-        }
-    }
-    regfree(&re);
     return TRUE;
 }
 

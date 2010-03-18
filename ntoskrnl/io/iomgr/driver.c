@@ -150,6 +150,39 @@ IopGetDriverObject(
 }
 
 /*
+ * RETURNS
+ *  TRUE if String2 contains String1 as a suffix.
+ */
+BOOLEAN
+NTAPI
+IopSuffixUnicodeString(
+    IN PCUNICODE_STRING String1,
+    IN PCUNICODE_STRING String2)
+{
+    PWCHAR pc1;
+    PWCHAR pc2;
+    ULONG Length;
+
+    if (String2->Length < String1->Length)
+        return FALSE;
+
+    Length = String1->Length / 2;
+    pc1 = String1->Buffer;
+    pc2 = &String2->Buffer[String2->Length / sizeof(WCHAR) - Length];
+
+    if (pc1 && pc2)
+    {
+        while (Length--)
+        {
+            if( *pc1++ != *pc2++ )
+                return FALSE;
+        }
+        return TRUE;
+    }
+    return FALSE;
+}
+
+/*
  * IopDisplayLoadingMessage
  *
  * Display 'Loading XXX...' message.
@@ -158,35 +191,19 @@ IopGetDriverObject(
 VOID 
 FASTCALL
 INIT_FUNCTION
-IopDisplayLoadingMessage(PVOID ServiceName, 
-                         BOOLEAN Unicode)
+IopDisplayLoadingMessage(PUNICODE_STRING ServiceName)
 {
     CHAR TextBuffer[256];
-    PCHAR Extra = ".sys";
+    UNICODE_STRING DotSys = RTL_CONSTANT_STRING(L".SYS");
 
     if (ExpInTextModeSetup) return;
-    if (Unicode)
-    {
-        if (wcsstr(_wcsupr(ServiceName), L".SYS")) Extra = "";
-        sprintf(TextBuffer,
-                "%s%s%s\\%S%s\n",
-                KeLoaderBlock->ArcBootDeviceName,
-                KeLoaderBlock->NtBootPathName,
-                "System32\\Drivers",
-                (PWCHAR)ServiceName,
-                Extra);
-    }
-    else
-    {
-        if (strstr(_strupr(ServiceName), ".SYS")) Extra = "";
-        sprintf(TextBuffer,
-                "%s%s%s\\%s%s\n",
-                KeLoaderBlock->ArcBootDeviceName,
-                KeLoaderBlock->NtBootPathName,
-                "System32\\Drivers",
-                (PCHAR)ServiceName,
-                Extra);
-    }
+    RtlUpcaseUnicodeString(ServiceName, ServiceName, FALSE);
+    snprintf(TextBuffer, sizeof(TextBuffer),
+            "%s%sSystem32\\Drivers\\%wZ%s\n",
+            KeLoaderBlock->ArcBootDeviceName,
+            KeLoaderBlock->NtBootPathName,
+            ServiceName,
+            IopSuffixUnicodeString(&DotSys, ServiceName) ? "" : ".SYS");
     HalDisplayString(TextBuffer);
 }
 
@@ -788,7 +805,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
    /*
     * Display 'Loading XXX...' message
     */
-   IopDisplayLoadingMessage(ModuleName->Buffer, TRUE);
+   IopDisplayLoadingMessage(ModuleName);
    InbvIndicateProgress();
 
    /*

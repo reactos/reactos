@@ -505,7 +505,7 @@ AcpiEvGpeDetect (
     UINT8                   EnabledStatusByte;
     UINT32                  StatusReg;
     UINT32                  EnableReg;
-    ACPI_CPU_FLAGS          Flags;
+    //ACPI_CPU_FLAGS          Flags;
     UINT32                  i;
     UINT32                  j;
 
@@ -524,7 +524,7 @@ AcpiEvGpeDetect (
      * Note: Not necessary to obtain the hardware lock, since the GPE
      * registers are owned by the GpeLock.
      */
-    Flags = AcpiOsAcquireLock (AcpiGbl_GpeLock);
+    //Flags = AcpiOsAcquireLock (AcpiGbl_GpeLock);
 
     /* Examine all GPE blocks attached to this interrupt level */
 
@@ -596,7 +596,7 @@ AcpiEvGpeDetect (
 
 UnlockAndExit:
 
-    AcpiOsReleaseLock (AcpiGbl_GpeLock, Flags);
+    //AcpiOsReleaseLock (AcpiGbl_GpeLock, Flags);
     return (IntStatus);
 }
 

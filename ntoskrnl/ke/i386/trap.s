@@ -124,13 +124,13 @@ EXTERN @KiSystemServiceHandler@8:PROC
 PUBLIC _KiSystemService
 _KiSystemService:
     KiEnterTrap (KI_PUSH_FAKE_ERROR_CODE OR KI_NONVOLATILES_ONLY OR KI_DONT_SAVE_SEGS)
-    jmp @KiSystemServiceHandler@8
+    KiCallHandler @KiSystemServiceHandler@8
 
 EXTERN @KiFastCallEntryHandler@8:PROC
 PUBLIC _KiFastCallEntry
 _KiFastCallEntry:
     KiEnterTrap (KI_FAST_SYSTEM_CALL OR KI_NONVOLATILES_ONLY OR KI_DONT_SAVE_SEGS)
-    jmp @KiFastCallEntryHandler@8
+    KiCallHandler @KiFastCallEntryHandler@8
 
 PUBLIC _KiStartUnexpectedRange@0
 _KiStartUnexpectedRange@0:
@@ -142,5 +142,16 @@ i = 0
 PUBLIC _KiEndUnexpectedRange@0
 _KiEndUnexpectedRange@0:
     jmp _KiUnexpectedInterruptTail
+
+
+/* EXIT CODE *****************************************************************/
+
+KiTrapExitStub KiSystemCallReturn,        (KI_RESTORE_EAX OR KI_RESTORE_EFLAGS OR KI_EXIT_JMP)
+KiTrapExitStub KiSystemCallSysExitReturn, (KI_RESTORE_EAX OR KI_RESTORE_FS OR KI_RESTORE_EFLAGS OR KI_EXIT_SYSCALL)
+KiTrapExitStub KiSystemCallTrapReturn,    (KI_RESTORE_EAX OR KI_RESTORE_FS OR KI_EXIT_IRET)
+
+KiTrapExitStub KiEditedTrapReturn,        (KI_RESTORE_VOLATILES OR KI_RESTORE_EFLAGS OR KI_EDITED_FRAME OR KI_EXIT_RET)
+KiTrapExitStub KiTrapReturn,              (KI_RESTORE_VOLATILES OR KI_RESTORE_SEGMENTS OR KI_EXIT_IRET)
+KiTrapExitStub KiTrapReturnNoSegments,    (KI_RESTORE_VOLATILES OR KI_EXIT_IRET)
 
 END

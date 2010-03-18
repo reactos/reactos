@@ -1070,6 +1070,22 @@ interface IAMFilterMiscFlags : IUnknown
     ULONG GetMiscFlags();
 };
 
+[
+    local,
+    object,
+    uuid(56ED71A0-AF5F-11D0-B3F0-00AA003761C5),
+    pointer_default(unique)
+]
+interface IAMBufferNegotiation : IUnknown
+{
+     HRESULT SuggestAllocatorProperties (
+        [in] const ALLOCATOR_PROPERTIES *pprop);
+
+     HRESULT GetAllocatorProperties (
+        [out] ALLOCATOR_PROPERTIES *pprop);
+
+}
+
 #include <axextendenums.h>
 
 [

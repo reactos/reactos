@@ -2151,6 +2151,71 @@ typedef enum _WORK_QUEUE_TYPE {
   MaximumWorkQueue
 } WORK_QUEUE_TYPE;
 
+typedef BOOLEAN
+(*PGPE_SERVICE_ROUTINE2)(
+  PVOID ObjectContext,
+  PVOID ServiceContext);
+
+typedef NTSTATUS
+(*PGPE_CONNECT_VECTOR2)(
+  PVOID Context,
+  ULONG GpeNumber,
+  KINTERRUPT_MODE Mode,
+  BOOLEAN Shareable,
+  PGPE_SERVICE_ROUTINE2 ServiceRoutine,
+  PVOID ServiceContext,
+  PVOID *ObjectContext);
+
+typedef NTSTATUS
+(*PGPE_DISCONNECT_VECTOR2)(
+  PVOID Context,
+  PVOID ObjectContext);
+
+typedef NTSTATUS
+(*PGPE_ENABLE_EVENT2)(
+  PVOID Context,
+  PVOID ObjectContext);
+
+typedef NTSTATUS
+(*PGPE_DISABLE_EVENT2)(
+  PVOID Context,
+  PVOID ObjectContext);
+
+typedef NTSTATUS
+(*PGPE_CLEAR_STATUS2)(
+  PVOID Context,
+  PVOID ObjectContext);
+
+typedef VOID
+(*PDEVICE_NOTIFY_CALLBACK2)(
+  PVOID NotificationContext,
+  ULONG NotifyCode);
+
+typedef NTSTATUS
+(*PREGISTER_FOR_DEVICE_NOTIFICATIONS2)(
+  PVOID Context,
+  PDEVICE_NOTIFY_CALLBACK2 NotificationHandler,
+  PVOID NotificationContext);
+
+typedef VOID
+(*PUNREGISTER_FOR_DEVICE_NOTIFICATIONS2)(
+  PVOID Context);
+
+typedef struct _ACPI_INTERFACE_STANDARD2 {
+  USHORT Size;
+  USHORT Version;
+  PVOID Context;
+  PINTERFACE_REFERENCE InterfaceReference;
+  PINTERFACE_DEREFERENCE InterfaceDereference;
+  PGPE_CONNECT_VECTOR2 GpeConnectVector;
+  PGPE_DISCONNECT_VECTOR2 GpeDisconnectVector;
+  PGPE_ENABLE_EVENT2 GpeEnableEvent;
+  PGPE_DISABLE_EVENT2 GpeDisableEvent;
+  PGPE_CLEAR_STATUS2 GpeClearStatus;
+  PREGISTER_FOR_DEVICE_NOTIFICATIONS2 RegisterForDeviceNotifications;
+  PUNREGISTER_FOR_DEVICE_NOTIFICATIONS2 UnregisterForDeviceNotifications;
+} ACPI_INTERFACE_STANDARD2, *PACPI_INTERFACE_STANDARD2;
+
 #if !defined(_AMD64_) && !defined(_IA64_)
 #include <pshpack4.h>
 #endif

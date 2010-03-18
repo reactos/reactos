@@ -4,6 +4,9 @@
 <directory name="acpica">
 	<xi:include href="acpica/acpica.rbuild" />
 </directory>
+<directory name="cmbatt">
+	<xi:include href="cmbatt/cmbatt.rbuild" />
+</directory>
 </group>
 
 <module name="acpi" type="kernelmodedriver" installbase="system32/drivers" installname="acpi.sys" allowwarnings="true">
