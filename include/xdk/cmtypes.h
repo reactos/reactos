@@ -89,6 +89,15 @@ typedef int CM_RESOURCE_TYPE;
                  REG_OPTION_BACKUP_RESTORE      |\
                  REG_OPTION_OPEN_LINK)
 
+#define REG_OPEN_LEGAL_OPTION       \
+                (REG_OPTION_RESERVED            |\
+                 REG_OPTION_BACKUP_RESTORE      |\
+                 REG_OPTION_OPEN_LINK)
+
+#define REG_STANDARD_FORMAT            1
+#define REG_LATEST_FORMAT              2
+#define REG_NO_COMPRESSION             4
+
 /* Key creation/open disposition */
 #define REG_CREATED_NEW_KEY         (0x00000001L)
 #define REG_OPENED_EXISTING_KEY     (0x00000002L)
@@ -104,6 +113,7 @@ typedef int CM_RESOURCE_TYPE;
 #define REG_HIVE_EXACT_FILE_GROWTH      (0x00000080L)
 #define REG_HIVE_NO_RM                  (0x00000100L)
 #define REG_HIVE_SINGLE_LOG             (0x00000200L)
+#define REG_BOOT_HIVE                   (0x00000400L)
 
 /* Unload Flags */
 #define REG_FORCE_UNLOAD            1
@@ -411,7 +421,10 @@ typedef enum _KEY_INFORMATION_CLASS {
   KeyFullInformation,
   KeyNameInformation,
   KeyCachedInformation,
-  KeyFlagsInformation
+  KeyFlagsInformation,
+  KeyVirtualizationInformation,
+  KeyHandleTagsInformation,
+  MaxKeyInfoClass
 } KEY_INFORMATION_CLASS;
 
 typedef struct _KEY_BASIC_INFORMATION {

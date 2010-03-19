@@ -519,6 +519,13 @@ typedef struct _IO_STATUS_BLOCK {
   ULONG_PTR Information;
 } IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
 
+#if defined(_WIN64)
+typedef struct _IO_STATUS_BLOCK32 {
+  NTSTATUS Status;
+  ULONG Information;
+} IO_STATUS_BLOCK32, *PIO_STATUS_BLOCK32;
+#endif
+
 typedef struct _PCI_SLOT_NUMBER {
   union {
     struct {
@@ -535,6 +542,48 @@ typedef VOID
   IN PVOID ApcContext,
   IN PIO_STATUS_BLOCK IoStatusBlock,
   IN ULONG Reserved);
+
+#define PIO_APC_ROUTINE_DEFINED
+
+typedef enum _IO_SESSION_EVENT {
+  IoSessionEventIgnore = 0,
+  IoSessionEventCreated,
+  IoSessionEventTerminated,
+  IoSessionEventConnected,
+  IoSessionEventDisconnected,
+  IoSessionEventLogon,
+  IoSessionEventLogoff,
+  IoSessionEventMax
+} IO_SESSION_EVENT, *PIO_SESSION_EVENT;
+
+typedef enum _IO_SESSION_STATE {
+  IoSessionStateCreated = 1,
+  IoSessionStateInitialized,
+  IoSessionStateConnected,
+  IoSessionStateDisconnected,
+  IoSessionStateDisconnectedLoggedOn,
+  IoSessionStateLoggedOn,
+  IoSessionStateLoggedOff,
+  IoSessionStateTerminated,
+  IoSessionStateMax
+} IO_SESSION_STATE, *PIO_SESSION_STATE;
+
+#define IO_SESSION_STATE_ALL_EVENTS        0xffffffff
+#define IO_SESSION_STATE_CREATION_EVENT    0x00000001
+#define IO_SESSION_STATE_TERMINATION_EVENT 0x00000002
+#define IO_SESSION_STATE_CONNECT_EVENT     0x00000004
+#define IO_SESSION_STATE_DISCONNECT_EVENT  0x00000008
+#define IO_SESSION_STATE_LOGON_EVENT       0x00000010
+#define IO_SESSION_STATE_LOGOFF_EVENT      0x00000020
+
+#define IO_SESSION_STATE_VALID_EVENT_MASK  0x0000003f
+
+#define IO_SESSION_MAX_PAYLOAD_SIZE        256L
+
+typedef struct _IO_SESSION_CONNECT_INFO {
+  ULONG SessionId;
+  BOOLEAN LocalSession;
+} IO_SESSION_CONNECT_INFO, *PIO_SESSION_CONNECT_INFO;
 
 typedef VOID
 (NTAPI *WMI_NOTIFICATION_CALLBACK)(
@@ -1001,7 +1050,6 @@ typedef struct _FILE_POSITION_INFORMATION {
   LARGE_INTEGER CurrentByteOffset;
 } FILE_POSITION_INFORMATION, *PFILE_POSITION_INFORMATION;
 
-#include <pshpack8.h>
 typedef struct _FILE_BASIC_INFORMATION {
   LARGE_INTEGER CreationTime;
   LARGE_INTEGER LastAccessTime;
@@ -1009,7 +1057,32 @@ typedef struct _FILE_BASIC_INFORMATION {
   LARGE_INTEGER ChangeTime;
   ULONG FileAttributes;
 } FILE_BASIC_INFORMATION, *PFILE_BASIC_INFORMATION;
-#include <poppack.h>
+
+typedef struct _FILE_IO_PRIORITY_HINT_INFORMATION {
+  IO_PRIORITY_HINT PriorityHint;
+} FILE_IO_PRIORITY_HINT_INFORMATION, *PFILE_IO_PRIORITY_HINT_INFORMATION;
+
+typedef struct _FILE_IO_COMPLETION_NOTIFICATION_INFORMATION {
+  ULONG Flags;
+} FILE_IO_COMPLETION_NOTIFICATION_INFORMATION, *PFILE_IO_COMPLETION_NOTIFICATION_INFORMATION;
+
+typedef struct _FILE_IOSTATUSBLOCK_RANGE_INFORMATION {
+  PUCHAR IoStatusBlockRange;
+  ULONG Length;
+} FILE_IOSTATUSBLOCK_RANGE_INFORMATION, *PFILE_IOSTATUSBLOCK_RANGE_INFORMATION;
+
+typedef struct _FILE_IS_REMOTE_DEVICE_INFORMATION {
+  BOOLEAN IsRemote;
+} FILE_IS_REMOTE_DEVICE_INFORMATION, *PFILE_IS_REMOTE_DEVICE_INFORMATION;
+
+typedef struct _FILE_NUMA_NODE_INFORMATION {
+  USHORT NodeNumber;
+} FILE_NUMA_NODE_INFORMATION, *PFILE_NUMA_NODE_INFORMATION;
+
+typedef struct _FILE_PROCESS_IDS_USING_FILE_INFORMATION {
+  ULONG NumberOfProcessIdsInList;
+  ULONG_PTR ProcessIdList[1];
+} FILE_PROCESS_IDS_USING_FILE_INFORMATION, *PFILE_PROCESS_IDS_USING_FILE_INFORMATION;
 
 typedef struct _FILE_STANDARD_INFORMATION {
   LARGE_INTEGER AllocationSize;
@@ -1056,10 +1129,51 @@ typedef struct _FILE_FULL_EA_INFORMATION {
   CHAR EaName[1];
 } FILE_FULL_EA_INFORMATION, *PFILE_FULL_EA_INFORMATION;
 
+typedef struct _FILE_SFIO_RESERVE_INFORMATION {
+  ULONG RequestsPerPeriod;
+  ULONG Period;
+  BOOLEAN RetryFailures;
+  BOOLEAN Discardable;
+  ULONG RequestSize;
+  ULONG NumOutstandingRequests;
+} FILE_SFIO_RESERVE_INFORMATION, *PFILE_SFIO_RESERVE_INFORMATION;
+
+typedef struct _FILE_SFIO_VOLUME_INFORMATION {
+  ULONG MaximumRequestsPerPeriod;
+  ULONG MinimumPeriod;
+  ULONG MinimumTransferSize;
+} FILE_SFIO_VOLUME_INFORMATION, *PFILE_SFIO_VOLUME_INFORMATION;
+
+#define FILE_SKIP_COMPLETION_PORT_ON_SUCCESS     0x1
+#define FILE_SKIP_SET_EVENT_ON_HANDLE            0x2
+#define FILE_SKIP_SET_USER_EVENT_ON_FAST_IO      0x4
+
 #define FM_LOCK_BIT             (0x1)
 #define FM_LOCK_BIT_V           (0x0)
 #define FM_LOCK_WAITER_WOKEN    (0x2)
 #define FM_LOCK_WAITER_INC      (0x4)
+
+typedef enum _INTERFACE_TYPE {
+  InterfaceTypeUndefined = -1,
+  Internal,
+  Isa,
+  Eisa,
+  MicroChannel,
+  TurboChannel,
+  PCIBus,
+  VMEBus,
+  NuBus,
+  PCMCIABus,
+  CBus,
+  MPIBus,
+  MPSABus,
+  ProcessorInternal,
+  InternalPowerBus,
+  PNPISABus,
+  PNPBus,
+  Vmcs,
+  MaximumInterfaceType
+} INTERFACE_TYPE, *PINTERFACE_TYPE;
 
 typedef ULONG_PTR ERESOURCE_THREAD, *PERESOURCE_THREAD;
 
@@ -1602,6 +1716,12 @@ typedef struct _IO_ERROR_LOG_MESSAGE {
         PORT_MAXIMUM_MESSAGE_LENGTH)
 #define ERROR_LOG_MAXIMUM_SIZE (IO_ERROR_LOG_MESSAGE_LENGTH -                 \
                                 IO_ERROR_LOG_MESSAGE_HEADER_LENGTH)
+
+#ifdef _WIN64
+#define PORT_MAXIMUM_MESSAGE_LENGTH    512
+#else
+#define PORT_MAXIMUM_MESSAGE_LENGTH    256
+#endif
 
 typedef enum _DMA_WIDTH {
   Width8Bits,
@@ -2458,6 +2578,7 @@ typedef struct _IO_STACK_LOCATION {
 #define FILE_ATTRIBUTE_OFFLINE            0x00001000
 #define FILE_ATTRIBUTE_NOT_CONTENT_INDEXED 0x00002000
 #define FILE_ATTRIBUTE_ENCRYPTED          0x00004000
+#define FILE_ATTRIBUTE_VIRTUAL            0x00010000
 
 #define FILE_ATTRIBUTE_VALID_FLAGS        0x00007fb7
 #define FILE_ATTRIBUTE_VALID_SET_FLAGS    0x000031a7
@@ -2491,6 +2612,10 @@ typedef struct _IO_STACK_LOCATION {
 #define FILE_OPEN_BY_FILE_ID              0x00002000
 #define FILE_OPEN_FOR_BACKUP_INTENT       0x00004000
 #define FILE_NO_COMPRESSION               0x00008000
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+#define FILE_OPEN_REQUIRING_OPLOCK        0x00010000
+#define FILE_DISALLOW_EXCLUSIVE           0x00020000
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 #define FILE_RESERVE_OPFILTER             0x00100000
 #define FILE_OPEN_REPARSE_POINT           0x00200000
 #define FILE_OPEN_NO_RECALL               0x00400000

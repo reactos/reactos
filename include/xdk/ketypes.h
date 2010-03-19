@@ -307,28 +307,6 @@ typedef enum _KD_OPTION {
   KD_OPTION_SET_BLOCK_ENABLE,
 } KD_OPTION;
 
-typedef enum _INTERFACE_TYPE {
-  InterfaceTypeUndefined = -1,
-  Internal,
-  Isa,
-  Eisa,
-  MicroChannel,
-  TurboChannel,
-  PCIBus,
-  VMEBus,
-  NuBus,
-  PCMCIABus,
-  CBus,
-  MPIBus,
-  MPSABus,
-  ProcessorInternal,
-  InternalPowerBus,
-  PNPISABus,
-  PNPBus,
-  Vmcs,
-  MaximumInterfaceType
-} INTERFACE_TYPE, *PINTERFACE_TYPE;
-
 typedef VOID
 (NTAPI *PKNORMAL_ROUTINE)(
   IN PVOID NormalContext,

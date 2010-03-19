@@ -40,10 +40,6 @@
 #include <ntstatus.h>
 #include <ntiologc.h>
 
-#ifndef GUID_DEFINED
-#include <guiddef.h>
-#endif /* GUID_DEFINED */
-
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 #include <dpfilter.h>
 #endif

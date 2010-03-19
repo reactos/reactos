@@ -7,12 +7,6 @@ $if (_WDMDDK_)
 #define EX_RUNDOWN_COUNT_SHIFT            0x1
 #define EX_RUNDOWN_COUNT_INC              (1 << EX_RUNDOWN_COUNT_SHIFT)
 
-#ifdef _WIN64
-#define PORT_MAXIMUM_MESSAGE_LENGTH 512
-#else
-#define PORT_MAXIMUM_MESSAGE_LENGTH 256
-#endif
-
 typedef struct _FAST_MUTEX {
   volatile LONG Count;
   PKTHREAD Owner;
