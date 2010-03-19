@@ -505,7 +505,7 @@ STDMETHODCALLTYPE
 CKsProxy::KsSetPhysicalTime(
     LONGLONG Time)
 {
-    OutputDebugStringW(L"CKsProxy::KsSetPhysicalTime NotImplemented\n");
+    OutputDebugStringW(L"CKsProxy::KsSetPhysicalTime\n");
     return PerformClockProperty(KSPROPERTY_CLOCK_PHYSICALTIME, KSPROPERTY_TYPE_SET, (PVOID)&Time, sizeof(LONGLONG));
 }
 

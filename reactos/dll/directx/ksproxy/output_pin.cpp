@@ -1219,9 +1219,7 @@ HRESULT
 STDMETHODCALLTYPE
 COutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
 {
-    AM_MEDIA_TYPE MediaType;
     HRESULT hr;
-    HANDLE hFilter;
 
     OutputDebugStringW(L"COutputPin::Connect called\n");
     if (pmt)
