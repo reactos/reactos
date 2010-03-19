@@ -118,6 +118,7 @@
 	<property name="BASEADDRESS_CARDS"		value="0x701a0000" />
 	<property name="BASEADDRESS_WININET"		value="0x70200000" />
 	<property name="BASEADDRESS_WINHTTP"		value="0x70c60000" />
+	<property name="BASEADDRESS_BATT"		value="0x70cb0000" />
 	<property name="BASEADDRESS_AMSTREAM"		value="0x71030000" />
 	<property name="BASEADDRESS_ACLUI"		value="0x71550000" />
 	<property name="BASEADDRESS_DHCPCSVC"		value="0x71650000" />

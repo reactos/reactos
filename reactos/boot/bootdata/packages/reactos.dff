@@ -262,6 +262,7 @@ dll\win32\atl\atl.dll                               1
 dll\win32\authz\authz.dll                           1
 dll\win32\avicap32\avicap32.dll                     1
 dll\win32\avifil32\avifil32.dll                     1
+dll\win32\batt\batt.dll                             1
 dll\win32\bcrypt\bcrypt.dll                         1
 dll\win32\beepmidi\beepmidi.dll                     1
 dll\win32\browseui\browseui.dll                     1
