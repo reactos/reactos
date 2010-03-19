@@ -196,11 +196,6 @@ inline int IsEqualGUIDAligned(REFGUID guid1, REFGUID guid2)
 #endif /* __cplusplus */
 #endif /* !__IID_ALIGNED__ */
 
-typedef enum {
-    LT_DONT_CARE,
-    LT_LOWEST_LATENCY
-} LATENCY_TIME;
-
 #define MAXIMUM_SUSPEND_COUNT             MAXCHAR
 
 #define MAXIMUM_FILENAME_LENGTH           256

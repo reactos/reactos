@@ -6,8 +6,6 @@ typedef UCHAR KIRQL, *PKIRQL;
 typedef CCHAR KPROCESSOR_MODE;
 typedef LONG KPRIORITY;
 
-typedef ULONG EXECUTION_STATE;
-
 typedef enum _MODE {
   KernelMode,
   UserMode,

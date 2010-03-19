@@ -379,30 +379,6 @@ typedef struct _CM_MCA_POS_DATA {
   UCHAR PosData4;
 } CM_MCA_POS_DATA, *PCM_MCA_POS_DATA;
 
-#if (NTDDI_VERSION >= NTDDI_WINXP)
-typedef struct CM_Power_Data_s {
-  ULONG PD_Size;
-  DEVICE_POWER_STATE PD_MostRecentPowerState;
-  ULONG PD_Capabilities;
-  ULONG PD_D1Latency;
-  ULONG PD_D2Latency;
-  ULONG PD_D3Latency;
-  DEVICE_POWER_STATE PD_PowerStateMapping[PowerSystemMaximum];
-  SYSTEM_POWER_STATE PD_DeepestSystemWake;
-} CM_POWER_DATA, *PCM_POWER_DATA;
-
-#define PDCAP_D0_SUPPORTED                0x00000001
-#define PDCAP_D1_SUPPORTED                0x00000002
-#define PDCAP_D2_SUPPORTED                0x00000004
-#define PDCAP_D3_SUPPORTED                0x00000008
-#define PDCAP_WAKE_FROM_D0_SUPPORTED      0x00000010
-#define PDCAP_WAKE_FROM_D1_SUPPORTED      0x00000020
-#define PDCAP_WAKE_FROM_D2_SUPPORTED      0x00000040
-#define PDCAP_WAKE_FROM_D3_SUPPORTED      0x00000080
-#define PDCAP_WARM_EJECT_SUPPORTED        0x00000100
-
-#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
-
 typedef struct _CM_SCSI_DEVICE_DATA {
   USHORT Version;
   USHORT Revision;
@@ -434,6 +410,10 @@ typedef struct _KEY_BASIC_INFORMATION {
   WCHAR Name[1];
 } KEY_BASIC_INFORMATION, *PKEY_BASIC_INFORMATION;
 
+typedef struct _KEY_CONTROL_FLAGS_INFORMATION {
+  ULONG ControlFlags;
+} KEY_CONTROL_FLAGS_INFORMATION, *PKEY_CONTROL_FLAGS_INFORMATION;
+
 typedef struct _KEY_FULL_INFORMATION {
   LARGE_INTEGER LastWriteTime;
   ULONG TitleIndex;
@@ -448,6 +428,10 @@ typedef struct _KEY_FULL_INFORMATION {
   WCHAR Class[1];
 } KEY_FULL_INFORMATION, *PKEY_FULL_INFORMATION;
 
+typedef struct _KEY_HANDLE_TAGS_INFORMATION {
+  ULONG HandleTags;
+} KEY_HANDLE_TAGS_INFORMATION, *PKEY_HANDLE_TAGS_INFORMATION;
+
 typedef struct _KEY_NODE_INFORMATION {
   LARGE_INTEGER LastWriteTime;
   ULONG TitleIndex;
@@ -456,6 +440,23 @@ typedef struct _KEY_NODE_INFORMATION {
   ULONG NameLength;
   WCHAR Name[1];
 } KEY_NODE_INFORMATION, *PKEY_NODE_INFORMATION;
+
+typedef enum _KEY_SET_INFORMATION_CLASS {
+  KeyWriteTimeInformation,
+  KeyWow64FlagsInformation,
+  KeyControlFlagsInformation,
+  KeySetVirtualizationInformation,
+  KeySetDebugInformation,
+  KeySetHandleTagsInformation,
+  MaxKeySetInfoClass
+} KEY_SET_INFORMATION_CLASS;
+
+typedef struct _KEY_SET_VIRTUALIZATION_INFORMATION {
+  ULONG VirtualTarget:1;
+  ULONG VirtualStore:1;
+  ULONG VirtualSource:1;
+  ULONG Reserved:29;
+} KEY_SET_VIRTUALIZATION_INFORMATION, *PKEY_SET_VIRTUALIZATION_INFORMATION;
 
 typedef struct _KEY_VALUE_BASIC_INFORMATION {
   ULONG TitleIndex;
@@ -501,19 +502,13 @@ typedef enum _KEY_VALUE_INFORMATION_CLASS {
   KeyValuePartialInformationAlign64
 } KEY_VALUE_INFORMATION_CLASS;
 
+typedef struct _KEY_WOW64_FLAGS_INFORMATION {
+  ULONG UserFlags;
+} KEY_WOW64_FLAGS_INFORMATION, *PKEY_WOW64_FLAGS_INFORMATION;
+
 typedef struct _KEY_WRITE_TIME_INFORMATION {
   LARGE_INTEGER LastWriteTime;
 } KEY_WRITE_TIME_INFORMATION, *PKEY_WRITE_TIME_INFORMATION;
-
-typedef enum _KEY_SET_INFORMATION_CLASS {
-  KeyWriteTimeInformation,
-  KeyWow64FlagsInformation,
-  KeyControlFlagsInformation,
-  KeySetVirtualizationInformation,
-  KeySetDebugInformation,
-  KeySetHandleTagsInformation,
-  MaxKeySetInfoClass
-} KEY_SET_INFORMATION_CLASS;
 
 typedef enum _REG_NOTIFY_CLASS {
   RegNtDeleteKey,
