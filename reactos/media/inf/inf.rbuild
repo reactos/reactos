@@ -5,6 +5,7 @@
 	<installfile installbase="inf">audio.inf</installfile>
 	<installfile installbase="inf">battery.inf</installfile>
 	<installfile installbase="inf">cdrom.inf</installfile>
+	<installfile installbase="inf">cpu.inf</installfile>
 	<installfile installbase="inf">display.inf</installfile>
 	<installfile installbase="inf">fdc.inf</installfile>
 	<installfile installbase="inf">font.inf</installfile>
@@ -23,6 +24,7 @@
 	<installfile installbase="inf">ports.inf</installfile>
 	<installfile installbase="inf">scsi.inf</installfile>
 	<installfile installbase="inf" root="output">syssetup.inf</installfile>
+	<installfile installbase="inf">usb.inf</installfile>
 	<installfile installbase="inf">usbport.inf</installfile>
 	<installfile installbase="inf">usbstor.inf</installfile>
 	<installfile installbase="inf">xboxdisp.inf</installfile>
