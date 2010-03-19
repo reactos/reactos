@@ -275,6 +275,44 @@
 #define FILE_DEVICE_BIOMETRIC             0x00000044
 #define FILE_DEVICE_PMI                   0x00000045
 
+#if defined(NT_PROCESSOR_GROUPS)
+
+typedef USHORT IRQ_DEVICE_POLICY, *PIRQ_DEVICE_POLICY;
+
+typedef enum _IRQ_DEVICE_POLICY_USHORT {
+  IrqPolicyMachineDefault = 0,
+  IrqPolicyAllCloseProcessors = 1,
+  IrqPolicyOneCloseProcessor = 2,
+  IrqPolicyAllProcessorsInMachine = 3,
+  IrqPolicyAllProcessorsInGroup = 3,
+  IrqPolicySpecifiedProcessors = 4,
+  IrqPolicySpreadMessagesAcrossAllProcessors = 5};
+
+#else /* defined(NT_PROCESSOR_GROUPS) */
+
+typedef enum _IRQ_DEVICE_POLICY {
+  IrqPolicyMachineDefault = 0,
+  IrqPolicyAllCloseProcessors,
+  IrqPolicyOneCloseProcessor,
+  IrqPolicyAllProcessorsInMachine,
+  IrqPolicySpecifiedProcessors,
+  IrqPolicySpreadMessagesAcrossAllProcessors
+} IRQ_DEVICE_POLICY, *PIRQ_DEVICE_POLICY;
+
+#endif
+
+typedef enum _IRQ_PRIORITY {
+  IrqPriorityUndefined = 0,
+  IrqPriorityLow,
+  IrqPriorityNormal,
+  IrqPriorityHigh
+} IRQ_PRIORITY, *PIRQ_PRIORITY;
+
+typedef enum _IRQ_GROUP_POLICY {
+  GroupAffinityAllGroupZero = 0,
+  GroupAffinityDontCare
+} IRQ_GROUP_POLICY, *PIRQ_GROUP_POLICY;
+
 #define MAXIMUM_VOLUME_LABEL_LENGTH       (32 * sizeof(WCHAR))
 
 typedef struct _OBJECT_HANDLE_INFORMATION {
@@ -625,6 +663,8 @@ typedef struct _BOOTDISK_INFORMATION_EX {
   BOOLEAN SystemDeviceIsGpt;
 } BOOTDISK_INFORMATION_EX, *PBOOTDISK_INFORMATION_EX;
 
+#include <pshpack1.h>
+
 typedef struct _EISA_MEMORY_TYPE {
   UCHAR ReadWrite:1;
   UCHAR Cached:1;
@@ -635,7 +675,6 @@ typedef struct _EISA_MEMORY_TYPE {
   UCHAR MoreEntries:1;
 } EISA_MEMORY_TYPE, *PEISA_MEMORY_TYPE;
 
-#include <pshpack1.h>
 typedef struct _EISA_MEMORY_CONFIGURATION {
   EISA_MEMORY_TYPE ConfigurationByte;
   UCHAR DataSize;
@@ -643,7 +682,6 @@ typedef struct _EISA_MEMORY_CONFIGURATION {
   UCHAR AddressHighByte;
   USHORT MemorySize;
 } EISA_MEMORY_CONFIGURATION, *PEISA_MEMORY_CONFIGURATION;
-#include <poppack.h>
 
 typedef struct _EISA_IRQ_DESCRIPTOR {
   UCHAR Interrupt:4;
@@ -677,7 +715,6 @@ typedef struct _EISA_DMA_CONFIGURATION {
   DMA_CONFIGURATION_BYTE1 ConfigurationByte1;
 } EISA_DMA_CONFIGURATION, *PEISA_DMA_CONFIGURATION;
 
-#include <pshpack1.h>
 typedef struct _EISA_PORT_DESCRIPTOR {
   UCHAR NumberPorts:5;
   UCHAR Reserved:1;
@@ -689,7 +726,17 @@ typedef struct _EISA_PORT_CONFIGURATION {
   EISA_PORT_DESCRIPTOR Configuration;
   USHORT PortAddress;
 } EISA_PORT_CONFIGURATION, *PEISA_PORT_CONFIGURATION;
-#include <poppack.h>
+
+typedef struct _CM_EISA_SLOT_INFORMATION {
+  UCHAR ReturnCode;
+  UCHAR ReturnFlags;
+  UCHAR MajorRevision;
+  UCHAR MinorRevision;
+  USHORT Checksum;
+  UCHAR NumberFunctions;
+  UCHAR FunctionInformation;
+  ULONG CompressedId;
+} CM_EISA_SLOT_INFORMATION, *PCM_EISA_SLOT_INFORMATION;
 
 typedef struct _CM_EISA_FUNCTION_INFORMATION {
   ULONG CompressedId;
@@ -707,6 +754,8 @@ typedef struct _CM_EISA_FUNCTION_INFORMATION {
   UCHAR InitializationData[60];
 } CM_EISA_FUNCTION_INFORMATION, *PCM_EISA_FUNCTION_INFORMATION;
 
+#include <poppack.h>
+
 /* CM_EISA_FUNCTION_INFORMATION.FunctionFlags */
 
 #define EISA_FUNCTION_ENABLED           0x80
@@ -721,16 +770,9 @@ typedef struct _CM_EISA_FUNCTION_INFORMATION {
   (EISA_HAS_PORT_RANGE + EISA_HAS_DMA_ENTRY + EISA_HAS_IRQ_ENTRY \
   + EISA_HAS_MEMORY_ENTRY + EISA_HAS_TYPE_ENTRY)
 
-typedef struct _CM_EISA_SLOT_INFORMATION {
-  UCHAR ReturnCode;
-  UCHAR ReturnFlags;
-  UCHAR MajorRevision;
-  UCHAR MinorRevision;
-  USHORT Checksum;
-  UCHAR NumberFunctions;
-  UCHAR FunctionInformation;
-  ULONG CompressedId;
-} CM_EISA_SLOT_INFORMATION, *PCM_EISA_SLOT_INFORMATION;
+#define EISA_MORE_ENTRIES               0x80
+#define EISA_SYSTEM_MEMORY              0x00
+#define EISA_MEMORY_TYPE_RAM            0x01
 
 /* CM_EISA_SLOT_INFORMATION.ReturnCode */
 

@@ -3,6 +3,11 @@
  ******************************************************************************/
 
 $if (_WDMDDK_)
+
+#if !defined(MIDL_PASS) && !defined(SORTPP_PASS)
+
+#define RTL_STATIC_LIST_HEAD(x) LIST_ENTRY x = { &x, &x }
+
 FORCEINLINE
 VOID
 InitializeListHead(
@@ -11,63 +16,12 @@ InitializeListHead(
   ListHead->Flink = ListHead->Blink = ListHead;
 }
 
-FORCEINLINE
-VOID
-InsertHeadList(
-  IN OUT PLIST_ENTRY ListHead,
-  IN OUT PLIST_ENTRY Entry)
-{
-  PLIST_ENTRY OldFlink;
-  OldFlink = ListHead->Flink;
-  Entry->Flink = OldFlink;
-  Entry->Blink = ListHead;
-  OldFlink->Blink = Entry;
-  ListHead->Flink = Entry;
-}
-
-FORCEINLINE
-VOID
-InsertTailList(
-  IN OUT PLIST_ENTRY ListHead,
-  IN OUT PLIST_ENTRY Entry)
-{
-  PLIST_ENTRY OldBlink;
-  OldBlink = ListHead->Blink;
-  Entry->Flink = ListHead;
-  Entry->Blink = OldBlink;
-  OldBlink->Flink = Entry;
-  ListHead->Blink = Entry;
-}
-
 BOOLEAN
 FORCEINLINE
 IsListEmpty(
   IN CONST LIST_ENTRY * ListHead)
 {
   return (BOOLEAN)(ListHead->Flink == ListHead);
-}
-
-FORCEINLINE
-PSINGLE_LIST_ENTRY
-PopEntryList(
-  IN OUT PSINGLE_LIST_ENTRY ListHead)
-{
-  PSINGLE_LIST_ENTRY FirstEntry;
-  FirstEntry = ListHead->Next;
-  if (FirstEntry != NULL) {
-    ListHead->Next = FirstEntry->Next;
-  }
-  return FirstEntry;
-}
-
-FORCEINLINE
-VOID
-PushEntryList(
-  IN OUT PSINGLE_LIST_ENTRY ListHead,
-  IN OUT PSINGLE_LIST_ENTRY Entry)
-{
-  Entry->Next = ListHead->Next;
-  ListHead->Next = Entry;
 }
 
 FORCEINLINE
@@ -114,6 +68,73 @@ RemoveTailList(
   Blink->Flink = ListHead;
   return Entry;
 }
+
+FORCEINLINE
+VOID
+InsertTailList(
+  IN OUT PLIST_ENTRY ListHead,
+  IN OUT PLIST_ENTRY Entry)
+{
+  PLIST_ENTRY OldBlink;
+  OldBlink = ListHead->Blink;
+  Entry->Flink = ListHead;
+  Entry->Blink = OldBlink;
+  OldBlink->Flink = Entry;
+  ListHead->Blink = Entry;
+}
+
+FORCEINLINE
+VOID
+InsertHeadList(
+  IN OUT PLIST_ENTRY ListHead,
+  IN OUT PLIST_ENTRY Entry)
+{
+  PLIST_ENTRY OldFlink;
+  OldFlink = ListHead->Flink;
+  Entry->Flink = OldFlink;
+  Entry->Blink = ListHead;
+  OldFlink->Blink = Entry;
+  ListHead->Flink = Entry;
+}
+
+FORCEINLINE
+VOID
+AppendTailList(
+  IN OUT PLIST_ENTRY ListHead,
+  IN OUT PLIST_ENTRY ListToAppend)
+{
+  PLIST_ENTRY ListEnd = ListHead->Blink;
+
+  ListHead->Blink->Flink = ListToAppend;
+  ListHead->Blink = ListToAppend->Blink;
+  ListToAppend->Blink->Flink = ListHead;
+  ListToAppend->Blink = ListEnd;
+}
+
+FORCEINLINE
+PSINGLE_LIST_ENTRY
+PopEntryList(
+  IN OUT PSINGLE_LIST_ENTRY ListHead)
+{
+  PSINGLE_LIST_ENTRY FirstEntry;
+  FirstEntry = ListHead->Next;
+  if (FirstEntry != NULL) {
+    ListHead->Next = FirstEntry->Next;
+  }
+  return FirstEntry;
+}
+
+FORCEINLINE
+VOID
+PushEntryList(
+  IN OUT PSINGLE_LIST_ENTRY ListHead,
+  IN OUT PSINGLE_LIST_ENTRY Entry)
+{
+  Entry->Next = ListHead->Next;
+  ListHead->Next = Entry;
+}
+
+#endif /* !defined(MIDL_PASS) && !defined(SORTPP_PASS) */
 
 NTSYSAPI
 VOID
@@ -579,8 +600,8 @@ NTAPI
 RtlQueryRegistryValues(
   IN ULONG RelativeTo,
   IN PCWSTR Path,
-  IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
-  IN PVOID Context,
+  IN OUT PRTL_QUERY_REGISTRY_TABLE QueryTable,
+  IN PVOID Context OPTIONAL,
   IN PVOID Environment OPTIONAL);
 
 #define LONG_SIZE (sizeof(LONG))
@@ -1175,6 +1196,10 @@ RtlCheckBit(
         (__annotation(L"Debug", L"AssertFail", msg), \
          DbgRaiseAssertionFailure(), FALSE) : TRUE)
 
+#define NT_VERIFY     NT_ASSERT
+#define NT_VERIFYMSG  NT_ASSERTMSG
+#define NT_VERIFYMSGW NT_ASSERTMSGW
+
 #else
 
 /* GCC doesn't support __annotation (nor PDB) */
@@ -1200,11 +1225,18 @@ RtlCheckBit(
 #define RTL_SOFT_VERIFY(exp) ((exp) ? TRUE : FALSE)
 #define RTL_SOFT_VERIFYMSG(msg, exp) ((exp) ? TRUE : FALSE)
 
-#define NT_ASSERT(exp)     ((VOID)0)
-#define NT_ASSERTMSG(exp)  ((VOID)0)
-#define NT_ASSERTMSGW(exp) ((VOID)0)
+#define NT_ASSERT(exp)          ((VOID)0)
+#define NT_ASSERTMSG(msg, exp)  ((VOID)0)
+#define NT_ASSERTMSGW(msg, exp) ((VOID)0)
+
+#define NT_VERIFY(_exp)           ((_exp) ? TRUE : FALSE)
+#define NT_VERIFYMSG(_msg, _exp ) ((_exp) ? TRUE : FALSE)
+#define NT_VERIFYMSGW(_msg, _exp) ((_exp) ? TRUE : FALSE)
 
 #endif /* DBG */
+
+#define InitializeListHead32(ListHead) (\
+    (ListHead)->Flink = (ListHead)->Blink = PtrToUlong((ListHead)))
 
 #if !defined(_WINBASE_)
 

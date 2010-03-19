@@ -70,10 +70,15 @@ typedef struct _TIME_FIELDS {
 #define _SLIST_HEADER_
 
 #if defined(_WIN64)
-typedef struct DECLSPEC_ALIGN(16) _SLIST_ENTRY *PSLIST_ENTRY;
+
 typedef struct DECLSPEC_ALIGN(16) _SLIST_ENTRY {
   PSLIST_ENTRY Next;
-} SLIST_ENTRY;
+} SLIST_ENTRY, *PSLIST_ENTRY;
+
+typedef struct _SLIST_ENTRY32 {
+  ULONG Next;
+} SLIST_ENTRY32, *PSLIST_ENTRY32;
+
 typedef union DECLSPEC_ALIGN(16) _SLIST_HEADER {
   struct {
     ULONGLONG Alignment;
@@ -96,11 +101,32 @@ typedef union DECLSPEC_ALIGN(16) _SLIST_HEADER {
     ULONGLONG Reserved:2;
     ULONGLONG NextEntry:60;
   } Header16;
+  struct {
+    ULONGLONG Depth:16;
+    ULONGLONG Sequence:48;
+    ULONGLONG HeaderType:1;
+    ULONGLONG Reserved:3;
+    ULONGLONG NextEntry:60;
+  } HeaderX64;
 } SLIST_HEADER, *PSLIST_HEADER;
+
+typedef union _SLIST_HEADER32 {
+  ULONGLONG Alignment;
+  struct {
+    SLIST_ENTRY32 Next;
+    USHORT Depth;
+    USHORT Sequence;
+  } DUMMYSTRUCTNAME;
+} SLIST_HEADER32, *PSLIST_HEADER32;
+
 #else
+
 #define SLIST_ENTRY SINGLE_LIST_ENTRY
 #define _SLIST_ENTRY _SINGLE_LIST_ENTRY
 #define PSLIST_ENTRY PSINGLE_LIST_ENTRY
+
+typedef SLIST_ENTRY SLIST_ENTRY32, *PSLIST_ENTRY32;
+
 typedef union _SLIST_HEADER {
   ULONGLONG Alignment;
   struct {
@@ -109,7 +135,10 @@ typedef union _SLIST_HEADER {
     USHORT Sequence;
   } DUMMYSTRUCTNAME;
 } SLIST_HEADER, *PSLIST_HEADER;
-#endif
+
+typedef SLIST_HEADER SLIST_HEADER32, *PSLIST_HEADER32;
+
+#endif /* defined(_WIN64) */
 
 #endif /* _SLIST_HEADER_ */
 

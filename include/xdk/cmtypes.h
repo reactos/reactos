@@ -130,27 +130,6 @@ typedef int CM_RESOURCE_TYPE;
                  REG_NOTIFY_CHANGE_LAST_SET      |\
                  REG_NOTIFY_CHANGE_SECURITY)
 
-typedef struct _CM_FLOPPY_DEVICE_DATA {
-  USHORT Version;
-  USHORT Revision;
-  CHAR Size[8];
-  ULONG MaxDensity;
-  ULONG MountDensity;
-  UCHAR StepRateHeadUnloadTime;
-  UCHAR HeadLoadTime;
-  UCHAR MotorOffTime;
-  UCHAR SectorLengthCode;
-  UCHAR SectorPerTrack;
-  UCHAR ReadWriteGapLength;
-  UCHAR DataTransferLength;
-  UCHAR FormatGapLength;
-  UCHAR FormatFillCharacter;
-  UCHAR HeadSettleTime;
-  UCHAR MotorSettleTime;
-  UCHAR MaximumTrackValue;
-  UCHAR DataTransferRate;
-} CM_FLOPPY_DEVICE_DATA, *PCM_FLOPPY_DEVICE_DATA;
-
 #include <pshpack4.h>
 typedef struct _CM_PARTIAL_RESOURCE_DESCRIPTOR {
   UCHAR Type;
@@ -258,7 +237,7 @@ typedef struct _CM_PARTIAL_RESOURCE_DESCRIPTOR {
 
 /* CM_PARTIAL_RESOURCE_DESCRIPTOR.ShareDisposition */
 typedef enum _CM_SHARE_DISPOSITION {
-  CmResourceShareUndetermined,
+  CmResourceShareUndetermined = 0,
   CmResourceShareDeviceExclusive,
   CmResourceShareDriverExclusive,
   CmResourceShareShared
@@ -281,6 +260,10 @@ typedef enum _CM_SHARE_DISPOSITION {
 #define CM_RESOURCE_INTERRUPT_MESSAGE         0x0002
 #define CM_RESOURCE_INTERRUPT_POLICY_INCLUDED 0x0004
 
+#define CM_RESOURCE_INTERRUPT_LEVEL_LATCHED_BITS 0x0001
+
+#define CM_RESOURCE_INTERRUPT_MESSAGE_TOKEN   ((ULONG)-2)
+
 /* CM_PARTIAL_RESOURCE_DESCRIPTOR.Flags if Type = CmResourceTypeMemory */
 #define CM_RESOURCE_MEMORY_READ_WRITE                    0x0000
 #define CM_RESOURCE_MEMORY_READ_ONLY                     0x0001
@@ -294,6 +277,15 @@ typedef enum _CM_SHARE_DISPOSITION {
 #define CM_RESOURCE_MEMORY_BAR                           0x0080
 #define CM_RESOURCE_MEMORY_COMPAT_FOR_INACCESSIBLE_RANGE 0x0100
 
+#define CM_RESOURCE_MEMORY_LARGE                         0x0E00
+#define CM_RESOURCE_MEMORY_LARGE_40                      0x0200
+#define CM_RESOURCE_MEMORY_LARGE_48                      0x0400
+#define CM_RESOURCE_MEMORY_LARGE_64                      0x0800
+
+#define CM_RESOURCE_MEMORY_LARGE_40_MAXLEN               0x000000FFFFFFFF00
+#define CM_RESOURCE_MEMORY_LARGE_48_MAXLEN               0x0000FFFFFFFF0000
+#define CM_RESOURCE_MEMORY_LARGE_64_MAXLEN               0xFFFFFFFF00000000
+
 /* CM_PARTIAL_RESOURCE_DESCRIPTOR.Flags if Type = CmResourceTypeDma */
 #define CM_RESOURCE_DMA_8                 0x0000
 #define CM_RESOURCE_DMA_16                0x0001
@@ -303,6 +295,28 @@ typedef enum _CM_SHARE_DISPOSITION {
 #define CM_RESOURCE_DMA_TYPE_A            0x0010
 #define CM_RESOURCE_DMA_TYPE_B            0x0020
 #define CM_RESOURCE_DMA_TYPE_F            0x0040
+
+typedef struct _DEVICE_FLAGS {
+  ULONG Failed:1;
+  ULONG ReadOnly:1;
+  ULONG Removable:1;
+  ULONG ConsoleIn:1;
+  ULONG ConsoleOut:1;
+  ULONG Input:1;
+  ULONG Output:1;
+} DEVICE_FLAGS, *PDEVICE_FLAGS;
+
+typedef struct _CM_COMPONENT_INFORMATION {
+  DEVICE_FLAGS Flags;
+  ULONG Version;
+  ULONG Key;
+  KAFFINITY AffinityMask;
+} CM_COMPONENT_INFORMATION, *PCM_COMPONENT_INFORMATION;
+
+typedef struct _CM_ROM_BLOCK {
+  ULONG Address;
+  ULONG Size;
+} CM_ROM_BLOCK, *PCM_ROM_BLOCK;
 
 typedef struct _CM_PARTIAL_RESOURCE_LIST {
   USHORT Version;
@@ -323,6 +337,7 @@ typedef struct _CM_RESOURCE_LIST {
 } CM_RESOURCE_LIST, *PCM_RESOURCE_LIST;
 
 #include <pshpack1.h>
+
 typedef struct _CM_INT13_DRIVE_PARAMETER {
   USHORT DriveSelect;
   ULONG MaxCylinders;
@@ -330,6 +345,14 @@ typedef struct _CM_INT13_DRIVE_PARAMETER {
   USHORT MaxHeads;
   USHORT NumberDrives;
 } CM_INT13_DRIVE_PARAMETER, *PCM_INT13_DRIVE_PARAMETER;
+
+typedef struct _CM_MCA_POS_DATA {
+  USHORT AdapterId;
+  UCHAR PosData1;
+  UCHAR PosData2;
+  UCHAR PosData3;
+  UCHAR PosData4;
+} CM_MCA_POS_DATA, *PCM_MCA_POS_DATA;
 
 typedef struct _CM_PNP_BIOS_DEVICE_NODE {
   USHORT Size;
@@ -354,6 +377,7 @@ typedef struct _CM_PNP_BIOS_INSTALLATION_CHECK {
   USHORT RealModeDataBaseAddress;
   ULONG ProtectedModeDataBaseAddress;
 } CM_PNP_BIOS_INSTALLATION_CHECK, *PCM_PNP_BIOS_INSTALLATION_CHECK;
+
 #include <poppack.h>
 
 typedef struct _CM_DISK_GEOMETRY_DEVICE_DATA {
@@ -371,25 +395,81 @@ typedef struct _CM_KEYBOARD_DEVICE_DATA {
   USHORT KeyboardFlags;
 } CM_KEYBOARD_DEVICE_DATA, *PCM_KEYBOARD_DEVICE_DATA;
 
-typedef struct _CM_MCA_POS_DATA {
-  USHORT AdapterId;
-  UCHAR PosData1;
-  UCHAR PosData2;
-  UCHAR PosData3;
-  UCHAR PosData4;
-} CM_MCA_POS_DATA, *PCM_MCA_POS_DATA;
-
 typedef struct _CM_SCSI_DEVICE_DATA {
   USHORT Version;
   USHORT Revision;
   UCHAR HostIdentifier;
 } CM_SCSI_DEVICE_DATA, *PCM_SCSI_DEVICE_DATA;
 
+typedef struct _CM_VIDEO_DEVICE_DATA {
+  USHORT Version;
+  USHORT Revision;
+  ULONG VideoClock;
+} CM_VIDEO_DEVICE_DATA, *PCM_VIDEO_DEVICE_DATA;
+
+typedef struct _CM_SONIC_DEVICE_DATA {
+  USHORT Version;
+  USHORT Revision;
+  USHORT DataConfigurationRegister;
+  UCHAR EthernetAddress[8];
+} CM_SONIC_DEVICE_DATA, *PCM_SONIC_DEVICE_DATA;
+
 typedef struct _CM_SERIAL_DEVICE_DATA {
   USHORT Version;
   USHORT Revision;
   ULONG BaudClock;
 } CM_SERIAL_DEVICE_DATA, *PCM_SERIAL_DEVICE_DATA;
+
+typedef struct _CM_MONITOR_DEVICE_DATA {
+  USHORT Version;
+  USHORT Revision;
+  USHORT HorizontalScreenSize;
+  USHORT VerticalScreenSize;
+  USHORT HorizontalResolution;
+  USHORT VerticalResolution;
+  USHORT HorizontalDisplayTimeLow;
+  USHORT HorizontalDisplayTime;
+  USHORT HorizontalDisplayTimeHigh;
+  USHORT HorizontalBackPorchLow;
+  USHORT HorizontalBackPorch;
+  USHORT HorizontalBackPorchHigh;
+  USHORT HorizontalFrontPorchLow;
+  USHORT HorizontalFrontPorch;
+  USHORT HorizontalFrontPorchHigh;
+  USHORT HorizontalSyncLow;
+  USHORT HorizontalSync;
+  USHORT HorizontalSyncHigh;
+  USHORT VerticalBackPorchLow;
+  USHORT VerticalBackPorch;
+  USHORT VerticalBackPorchHigh;
+  USHORT VerticalFrontPorchLow;
+  USHORT VerticalFrontPorch;
+  USHORT VerticalFrontPorchHigh;
+  USHORT VerticalSyncLow;
+  USHORT VerticalSync;
+  USHORT VerticalSyncHigh;
+} CM_MONITOR_DEVICE_DATA, *PCM_MONITOR_DEVICE_DATA;
+
+typedef struct _CM_FLOPPY_DEVICE_DATA {
+  USHORT Version;
+  USHORT Revision;
+  CHAR Size[8];
+  ULONG MaxDensity;
+  ULONG MountDensity;
+  UCHAR StepRateHeadUnloadTime;
+  UCHAR HeadLoadTime;
+  UCHAR MotorOffTime;
+  UCHAR SectorLengthCode;
+  UCHAR SectorPerTrack;
+  UCHAR ReadWriteGapLength;
+  UCHAR DataTransferLength;
+  UCHAR FormatGapLength;
+  UCHAR FormatFillCharacter;
+  UCHAR HeadSettleTime;
+  UCHAR MotorSettleTime;
+  UCHAR MaximumTrackValue;
+  UCHAR DataTransferRate;
+} CM_FLOPPY_DEVICE_DATA, *PCM_FLOPPY_DEVICE_DATA;
 
 typedef enum _KEY_INFORMATION_CLASS {
   KeyBasicInformation,
@@ -704,6 +784,71 @@ typedef struct _REG_KEY_HANDLE_CLOSE_INFORMATION {
   PVOID ObjectContext;
   PVOID Reserved;
 } REG_KEY_HANDLE_CLOSE_INFORMATION, *PREG_KEY_HANDLE_CLOSE_INFORMATION;
+
+#define SERVICE_KERNEL_DRIVER          0x00000001
+#define SERVICE_FILE_SYSTEM_DRIVER     0x00000002
+#define SERVICE_ADAPTER                0x00000004
+#define SERVICE_RECOGNIZER_DRIVER      0x00000008
+
+#define SERVICE_DRIVER                 (SERVICE_KERNEL_DRIVER | \
+                                        SERVICE_FILE_SYSTEM_DRIVER | \
+                                        SERVICE_RECOGNIZER_DRIVER)
+
+#define SERVICE_WIN32_OWN_PROCESS      0x00000010
+#define SERVICE_WIN32_SHARE_PROCESS    0x00000020
+#define SERVICE_WIN32                  (SERVICE_WIN32_OWN_PROCESS | \
+                                        SERVICE_WIN32_SHARE_PROCESS)
+
+#define SERVICE_INTERACTIVE_PROCESS    0x00000100
+
+#define SERVICE_TYPE_ALL               (SERVICE_WIN32  | \
+                                        SERVICE_ADAPTER | \
+                                        SERVICE_DRIVER  | \
+                                        SERVICE_INTERACTIVE_PROCESS)
+
+/* Service Start Types */
+#define SERVICE_BOOT_START             0x00000000
+#define SERVICE_SYSTEM_START           0x00000001
+#define SERVICE_AUTO_START             0x00000002
+#define SERVICE_DEMAND_START           0x00000003
+#define SERVICE_DISABLED               0x00000004
+
+#define SERVICE_ERROR_IGNORE           0x00000000
+#define SERVICE_ERROR_NORMAL           0x00000001
+#define SERVICE_ERROR_SEVERE           0x00000002
+#define SERVICE_ERROR_CRITICAL         0x00000003
+
+typedef enum _CM_SERVICE_NODE_TYPE {
+  DriverType = SERVICE_KERNEL_DRIVER,
+  FileSystemType = SERVICE_FILE_SYSTEM_DRIVER,
+  Win32ServiceOwnProcess = SERVICE_WIN32_OWN_PROCESS,
+  Win32ServiceShareProcess = SERVICE_WIN32_SHARE_PROCESS,
+  AdapterType = SERVICE_ADAPTER,
+  RecognizerType = SERVICE_RECOGNIZER_DRIVER
+} SERVICE_NODE_TYPE;
+
+typedef enum _CM_SERVICE_LOAD_TYPE {
+  BootLoad = SERVICE_BOOT_START,
+  SystemLoad = SERVICE_SYSTEM_START,
+  AutoLoad = SERVICE_AUTO_START,
+  DemandLoad = SERVICE_DEMAND_START,
+  DisableLoad = SERVICE_DISABLED
+} SERVICE_LOAD_TYPE;
+
+typedef enum _CM_ERROR_CONTROL_TYPE {
+  IgnoreError = SERVICE_ERROR_IGNORE,
+  NormalError = SERVICE_ERROR_NORMAL,
+  SevereError = SERVICE_ERROR_SEVERE,
+  CriticalError = SERVICE_ERROR_CRITICAL
+} SERVICE_ERROR_TYPE;
+
+#define CM_SERVICE_NETWORK_BOOT_LOAD      0x00000001
+#define CM_SERVICE_VIRTUAL_DISK_BOOT_LOAD 0x00000002
+#define CM_SERVICE_USB_DISK_BOOT_LOAD     0x00000004
+
+#define CM_SERVICE_VALID_PROMOTION_MASK (CM_SERVICE_NETWORK_BOOT_LOAD |       \
+                                         CM_SERVICE_VIRTUAL_DISK_BOOT_LOAD |  \
+                                         CM_SERVICE_USB_DISK_BOOT_LOAD)
 
 $endif
 

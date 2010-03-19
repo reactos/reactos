@@ -392,10 +392,15 @@ typedef struct _TIME_FIELDS {
 #define _SLIST_HEADER_
 
 #if defined(_WIN64)
-typedef struct DECLSPEC_ALIGN(16) _SLIST_ENTRY *PSLIST_ENTRY;
+
 typedef struct DECLSPEC_ALIGN(16) _SLIST_ENTRY {
   PSLIST_ENTRY Next;
-} SLIST_ENTRY;
+} SLIST_ENTRY, *PSLIST_ENTRY;
+
+typedef struct _SLIST_ENTRY32 {
+  ULONG Next;
+} SLIST_ENTRY32, *PSLIST_ENTRY32;
+
 typedef union DECLSPEC_ALIGN(16) _SLIST_HEADER {
   struct {
     ULONGLONG Alignment;
@@ -418,11 +423,32 @@ typedef union DECLSPEC_ALIGN(16) _SLIST_HEADER {
     ULONGLONG Reserved:2;
     ULONGLONG NextEntry:60;
   } Header16;
+  struct {
+    ULONGLONG Depth:16;
+    ULONGLONG Sequence:48;
+    ULONGLONG HeaderType:1;
+    ULONGLONG Reserved:3;
+    ULONGLONG NextEntry:60;
+  } HeaderX64;
 } SLIST_HEADER, *PSLIST_HEADER;
+
+typedef union _SLIST_HEADER32 {
+  ULONGLONG Alignment;
+  struct {
+    SLIST_ENTRY32 Next;
+    USHORT Depth;
+    USHORT Sequence;
+  } DUMMYSTRUCTNAME;
+} SLIST_HEADER32, *PSLIST_HEADER32;
+
 #else
+
 #define SLIST_ENTRY SINGLE_LIST_ENTRY
 #define _SLIST_ENTRY _SINGLE_LIST_ENTRY
 #define PSLIST_ENTRY PSINGLE_LIST_ENTRY
+
+typedef SLIST_ENTRY SLIST_ENTRY32, *PSLIST_ENTRY32;
+
 typedef union _SLIST_HEADER {
   ULONGLONG Alignment;
   struct {
@@ -431,7 +457,10 @@ typedef union _SLIST_HEADER {
     USHORT Sequence;
   } DUMMYSTRUCTNAME;
 } SLIST_HEADER, *PSLIST_HEADER;
-#endif
+
+typedef SLIST_HEADER SLIST_HEADER32, *PSLIST_HEADER32;
+
+#endif /* defined(_WIN64) */
 
 #endif /* _SLIST_HEADER_ */
 
@@ -2332,27 +2361,6 @@ typedef int CM_RESOURCE_TYPE;
                  REG_NOTIFY_CHANGE_LAST_SET      |\
                  REG_NOTIFY_CHANGE_SECURITY)
 
-typedef struct _CM_FLOPPY_DEVICE_DATA {
-  USHORT Version;
-  USHORT Revision;
-  CHAR Size[8];
-  ULONG MaxDensity;
-  ULONG MountDensity;
-  UCHAR StepRateHeadUnloadTime;
-  UCHAR HeadLoadTime;
-  UCHAR MotorOffTime;
-  UCHAR SectorLengthCode;
-  UCHAR SectorPerTrack;
-  UCHAR ReadWriteGapLength;
-  UCHAR DataTransferLength;
-  UCHAR FormatGapLength;
-  UCHAR FormatFillCharacter;
-  UCHAR HeadSettleTime;
-  UCHAR MotorSettleTime;
-  UCHAR MaximumTrackValue;
-  UCHAR DataTransferRate;
-} CM_FLOPPY_DEVICE_DATA, *PCM_FLOPPY_DEVICE_DATA;
-
 #include <pshpack4.h>
 typedef struct _CM_PARTIAL_RESOURCE_DESCRIPTOR {
   UCHAR Type;
@@ -2460,7 +2468,7 @@ typedef struct _CM_PARTIAL_RESOURCE_DESCRIPTOR {
 
 /* CM_PARTIAL_RESOURCE_DESCRIPTOR.ShareDisposition */
 typedef enum _CM_SHARE_DISPOSITION {
-  CmResourceShareUndetermined,
+  CmResourceShareUndetermined = 0,
   CmResourceShareDeviceExclusive,
   CmResourceShareDriverExclusive,
   CmResourceShareShared
@@ -2483,6 +2491,10 @@ typedef enum _CM_SHARE_DISPOSITION {
 #define CM_RESOURCE_INTERRUPT_MESSAGE         0x0002
 #define CM_RESOURCE_INTERRUPT_POLICY_INCLUDED 0x0004
 
+#define CM_RESOURCE_INTERRUPT_LEVEL_LATCHED_BITS 0x0001
+
+#define CM_RESOURCE_INTERRUPT_MESSAGE_TOKEN   ((ULONG)-2)
+
 /* CM_PARTIAL_RESOURCE_DESCRIPTOR.Flags if Type = CmResourceTypeMemory */
 #define CM_RESOURCE_MEMORY_READ_WRITE                    0x0000
 #define CM_RESOURCE_MEMORY_READ_ONLY                     0x0001
@@ -2496,6 +2508,15 @@ typedef enum _CM_SHARE_DISPOSITION {
 #define CM_RESOURCE_MEMORY_BAR                           0x0080
 #define CM_RESOURCE_MEMORY_COMPAT_FOR_INACCESSIBLE_RANGE 0x0100
 
+#define CM_RESOURCE_MEMORY_LARGE                         0x0E00
+#define CM_RESOURCE_MEMORY_LARGE_40                      0x0200
+#define CM_RESOURCE_MEMORY_LARGE_48                      0x0400
+#define CM_RESOURCE_MEMORY_LARGE_64                      0x0800
+
+#define CM_RESOURCE_MEMORY_LARGE_40_MAXLEN               0x000000FFFFFFFF00
+#define CM_RESOURCE_MEMORY_LARGE_48_MAXLEN               0x0000FFFFFFFF0000
+#define CM_RESOURCE_MEMORY_LARGE_64_MAXLEN               0xFFFFFFFF00000000
+
 /* CM_PARTIAL_RESOURCE_DESCRIPTOR.Flags if Type = CmResourceTypeDma */
 #define CM_RESOURCE_DMA_8                 0x0000
 #define CM_RESOURCE_DMA_16                0x0001
@@ -2505,6 +2526,28 @@ typedef enum _CM_SHARE_DISPOSITION {
 #define CM_RESOURCE_DMA_TYPE_A            0x0010
 #define CM_RESOURCE_DMA_TYPE_B            0x0020
 #define CM_RESOURCE_DMA_TYPE_F            0x0040
+
+typedef struct _DEVICE_FLAGS {
+  ULONG Failed:1;
+  ULONG ReadOnly:1;
+  ULONG Removable:1;
+  ULONG ConsoleIn:1;
+  ULONG ConsoleOut:1;
+  ULONG Input:1;
+  ULONG Output:1;
+} DEVICE_FLAGS, *PDEVICE_FLAGS;
+
+typedef struct _CM_COMPONENT_INFORMATION {
+  DEVICE_FLAGS Flags;
+  ULONG Version;
+  ULONG Key;
+  KAFFINITY AffinityMask;
+} CM_COMPONENT_INFORMATION, *PCM_COMPONENT_INFORMATION;
+
+typedef struct _CM_ROM_BLOCK {
+  ULONG Address;
+  ULONG Size;
+} CM_ROM_BLOCK, *PCM_ROM_BLOCK;
 
 typedef struct _CM_PARTIAL_RESOURCE_LIST {
   USHORT Version;
@@ -2525,6 +2568,7 @@ typedef struct _CM_RESOURCE_LIST {
 } CM_RESOURCE_LIST, *PCM_RESOURCE_LIST;
 
 #include <pshpack1.h>
+
 typedef struct _CM_INT13_DRIVE_PARAMETER {
   USHORT DriveSelect;
   ULONG MaxCylinders;
@@ -2532,6 +2576,14 @@ typedef struct _CM_INT13_DRIVE_PARAMETER {
   USHORT MaxHeads;
   USHORT NumberDrives;
 } CM_INT13_DRIVE_PARAMETER, *PCM_INT13_DRIVE_PARAMETER;
+
+typedef struct _CM_MCA_POS_DATA {
+  USHORT AdapterId;
+  UCHAR PosData1;
+  UCHAR PosData2;
+  UCHAR PosData3;
+  UCHAR PosData4;
+} CM_MCA_POS_DATA, *PCM_MCA_POS_DATA;
 
 typedef struct _CM_PNP_BIOS_DEVICE_NODE {
   USHORT Size;
@@ -2556,6 +2608,7 @@ typedef struct _CM_PNP_BIOS_INSTALLATION_CHECK {
   USHORT RealModeDataBaseAddress;
   ULONG ProtectedModeDataBaseAddress;
 } CM_PNP_BIOS_INSTALLATION_CHECK, *PCM_PNP_BIOS_INSTALLATION_CHECK;
+
 #include <poppack.h>
 
 typedef struct _CM_DISK_GEOMETRY_DEVICE_DATA {
@@ -2573,25 +2626,81 @@ typedef struct _CM_KEYBOARD_DEVICE_DATA {
   USHORT KeyboardFlags;
 } CM_KEYBOARD_DEVICE_DATA, *PCM_KEYBOARD_DEVICE_DATA;
 
-typedef struct _CM_MCA_POS_DATA {
-  USHORT AdapterId;
-  UCHAR PosData1;
-  UCHAR PosData2;
-  UCHAR PosData3;
-  UCHAR PosData4;
-} CM_MCA_POS_DATA, *PCM_MCA_POS_DATA;
-
 typedef struct _CM_SCSI_DEVICE_DATA {
   USHORT Version;
   USHORT Revision;
   UCHAR HostIdentifier;
 } CM_SCSI_DEVICE_DATA, *PCM_SCSI_DEVICE_DATA;
 
+typedef struct _CM_VIDEO_DEVICE_DATA {
+  USHORT Version;
+  USHORT Revision;
+  ULONG VideoClock;
+} CM_VIDEO_DEVICE_DATA, *PCM_VIDEO_DEVICE_DATA;
+
+typedef struct _CM_SONIC_DEVICE_DATA {
+  USHORT Version;
+  USHORT Revision;
+  USHORT DataConfigurationRegister;
+  UCHAR EthernetAddress[8];
+} CM_SONIC_DEVICE_DATA, *PCM_SONIC_DEVICE_DATA;
+
 typedef struct _CM_SERIAL_DEVICE_DATA {
   USHORT Version;
   USHORT Revision;
   ULONG BaudClock;
 } CM_SERIAL_DEVICE_DATA, *PCM_SERIAL_DEVICE_DATA;
+
+typedef struct _CM_MONITOR_DEVICE_DATA {
+  USHORT Version;
+  USHORT Revision;
+  USHORT HorizontalScreenSize;
+  USHORT VerticalScreenSize;
+  USHORT HorizontalResolution;
+  USHORT VerticalResolution;
+  USHORT HorizontalDisplayTimeLow;
+  USHORT HorizontalDisplayTime;
+  USHORT HorizontalDisplayTimeHigh;
+  USHORT HorizontalBackPorchLow;
+  USHORT HorizontalBackPorch;
+  USHORT HorizontalBackPorchHigh;
+  USHORT HorizontalFrontPorchLow;
+  USHORT HorizontalFrontPorch;
+  USHORT HorizontalFrontPorchHigh;
+  USHORT HorizontalSyncLow;
+  USHORT HorizontalSync;
+  USHORT HorizontalSyncHigh;
+  USHORT VerticalBackPorchLow;
+  USHORT VerticalBackPorch;
+  USHORT VerticalBackPorchHigh;
+  USHORT VerticalFrontPorchLow;
+  USHORT VerticalFrontPorch;
+  USHORT VerticalFrontPorchHigh;
+  USHORT VerticalSyncLow;
+  USHORT VerticalSync;
+  USHORT VerticalSyncHigh;
+} CM_MONITOR_DEVICE_DATA, *PCM_MONITOR_DEVICE_DATA;
+
+typedef struct _CM_FLOPPY_DEVICE_DATA {
+  USHORT Version;
+  USHORT Revision;
+  CHAR Size[8];
+  ULONG MaxDensity;
+  ULONG MountDensity;
+  UCHAR StepRateHeadUnloadTime;
+  UCHAR HeadLoadTime;
+  UCHAR MotorOffTime;
+  UCHAR SectorLengthCode;
+  UCHAR SectorPerTrack;
+  UCHAR ReadWriteGapLength;
+  UCHAR DataTransferLength;
+  UCHAR FormatGapLength;
+  UCHAR FormatFillCharacter;
+  UCHAR HeadSettleTime;
+  UCHAR MotorSettleTime;
+  UCHAR MaximumTrackValue;
+  UCHAR DataTransferRate;
+} CM_FLOPPY_DEVICE_DATA, *PCM_FLOPPY_DEVICE_DATA;
 
 typedef enum _KEY_INFORMATION_CLASS {
   KeyBasicInformation,
@@ -2907,6 +3016,71 @@ typedef struct _REG_KEY_HANDLE_CLOSE_INFORMATION {
   PVOID Reserved;
 } REG_KEY_HANDLE_CLOSE_INFORMATION, *PREG_KEY_HANDLE_CLOSE_INFORMATION;
 
+#define SERVICE_KERNEL_DRIVER          0x00000001
+#define SERVICE_FILE_SYSTEM_DRIVER     0x00000002
+#define SERVICE_ADAPTER                0x00000004
+#define SERVICE_RECOGNIZER_DRIVER      0x00000008
+
+#define SERVICE_DRIVER                 (SERVICE_KERNEL_DRIVER | \
+                                        SERVICE_FILE_SYSTEM_DRIVER | \
+                                        SERVICE_RECOGNIZER_DRIVER)
+
+#define SERVICE_WIN32_OWN_PROCESS      0x00000010
+#define SERVICE_WIN32_SHARE_PROCESS    0x00000020
+#define SERVICE_WIN32                  (SERVICE_WIN32_OWN_PROCESS | \
+                                        SERVICE_WIN32_SHARE_PROCESS)
+
+#define SERVICE_INTERACTIVE_PROCESS    0x00000100
+
+#define SERVICE_TYPE_ALL               (SERVICE_WIN32  | \
+                                        SERVICE_ADAPTER | \
+                                        SERVICE_DRIVER  | \
+                                        SERVICE_INTERACTIVE_PROCESS)
+
+/* Service Start Types */
+#define SERVICE_BOOT_START             0x00000000
+#define SERVICE_SYSTEM_START           0x00000001
+#define SERVICE_AUTO_START             0x00000002
+#define SERVICE_DEMAND_START           0x00000003
+#define SERVICE_DISABLED               0x00000004
+
+#define SERVICE_ERROR_IGNORE           0x00000000
+#define SERVICE_ERROR_NORMAL           0x00000001
+#define SERVICE_ERROR_SEVERE           0x00000002
+#define SERVICE_ERROR_CRITICAL         0x00000003
+
+typedef enum _CM_SERVICE_NODE_TYPE {
+  DriverType = SERVICE_KERNEL_DRIVER,
+  FileSystemType = SERVICE_FILE_SYSTEM_DRIVER,
+  Win32ServiceOwnProcess = SERVICE_WIN32_OWN_PROCESS,
+  Win32ServiceShareProcess = SERVICE_WIN32_SHARE_PROCESS,
+  AdapterType = SERVICE_ADAPTER,
+  RecognizerType = SERVICE_RECOGNIZER_DRIVER
+} SERVICE_NODE_TYPE;
+
+typedef enum _CM_SERVICE_LOAD_TYPE {
+  BootLoad = SERVICE_BOOT_START,
+  SystemLoad = SERVICE_SYSTEM_START,
+  AutoLoad = SERVICE_AUTO_START,
+  DemandLoad = SERVICE_DEMAND_START,
+  DisableLoad = SERVICE_DISABLED
+} SERVICE_LOAD_TYPE;
+
+typedef enum _CM_ERROR_CONTROL_TYPE {
+  IgnoreError = SERVICE_ERROR_IGNORE,
+  NormalError = SERVICE_ERROR_NORMAL,
+  SevereError = SERVICE_ERROR_SEVERE,
+  CriticalError = SERVICE_ERROR_CRITICAL
+} SERVICE_ERROR_TYPE;
+
+#define CM_SERVICE_NETWORK_BOOT_LOAD      0x00000001
+#define CM_SERVICE_VIRTUAL_DISK_BOOT_LOAD 0x00000002
+#define CM_SERVICE_USB_DISK_BOOT_LOAD     0x00000004
+
+#define CM_SERVICE_VALID_PROMOTION_MASK (CM_SERVICE_NETWORK_BOOT_LOAD |       \
+                                         CM_SERVICE_VIRTUAL_DISK_BOOT_LOAD |  \
+                                         CM_SERVICE_USB_DISK_BOOT_LOAD)
+
 
 
 /******************************************************************************
@@ -3185,6 +3359,44 @@ typedef struct _REG_KEY_HANDLE_CLOSE_INFORMATION {
 #define FILE_DEVICE_MT_TRANSPORT          0x00000043
 #define FILE_DEVICE_BIOMETRIC             0x00000044
 #define FILE_DEVICE_PMI                   0x00000045
+
+#if defined(NT_PROCESSOR_GROUPS)
+
+typedef USHORT IRQ_DEVICE_POLICY, *PIRQ_DEVICE_POLICY;
+
+typedef enum _IRQ_DEVICE_POLICY_USHORT {
+  IrqPolicyMachineDefault = 0,
+  IrqPolicyAllCloseProcessors = 1,
+  IrqPolicyOneCloseProcessor = 2,
+  IrqPolicyAllProcessorsInMachine = 3,
+  IrqPolicyAllProcessorsInGroup = 3,
+  IrqPolicySpecifiedProcessors = 4,
+  IrqPolicySpreadMessagesAcrossAllProcessors = 5};
+
+#else /* defined(NT_PROCESSOR_GROUPS) */
+
+typedef enum _IRQ_DEVICE_POLICY {
+  IrqPolicyMachineDefault = 0,
+  IrqPolicyAllCloseProcessors,
+  IrqPolicyOneCloseProcessor,
+  IrqPolicyAllProcessorsInMachine,
+  IrqPolicySpecifiedProcessors,
+  IrqPolicySpreadMessagesAcrossAllProcessors
+} IRQ_DEVICE_POLICY, *PIRQ_DEVICE_POLICY;
+
+#endif
+
+typedef enum _IRQ_PRIORITY {
+  IrqPriorityUndefined = 0,
+  IrqPriorityLow,
+  IrqPriorityNormal,
+  IrqPriorityHigh
+} IRQ_PRIORITY, *PIRQ_PRIORITY;
+
+typedef enum _IRQ_GROUP_POLICY {
+  GroupAffinityAllGroupZero = 0,
+  GroupAffinityDontCare
+} IRQ_GROUP_POLICY, *PIRQ_GROUP_POLICY;
 
 #define MAXIMUM_VOLUME_LABEL_LENGTH       (32 * sizeof(WCHAR))
 
@@ -3536,6 +3748,8 @@ typedef struct _BOOTDISK_INFORMATION_EX {
   BOOLEAN SystemDeviceIsGpt;
 } BOOTDISK_INFORMATION_EX, *PBOOTDISK_INFORMATION_EX;
 
+#include <pshpack1.h>
+
 typedef struct _EISA_MEMORY_TYPE {
   UCHAR ReadWrite:1;
   UCHAR Cached:1;
@@ -3546,7 +3760,6 @@ typedef struct _EISA_MEMORY_TYPE {
   UCHAR MoreEntries:1;
 } EISA_MEMORY_TYPE, *PEISA_MEMORY_TYPE;
 
-#include <pshpack1.h>
 typedef struct _EISA_MEMORY_CONFIGURATION {
   EISA_MEMORY_TYPE ConfigurationByte;
   UCHAR DataSize;
@@ -3554,7 +3767,6 @@ typedef struct _EISA_MEMORY_CONFIGURATION {
   UCHAR AddressHighByte;
   USHORT MemorySize;
 } EISA_MEMORY_CONFIGURATION, *PEISA_MEMORY_CONFIGURATION;
-#include <poppack.h>
 
 typedef struct _EISA_IRQ_DESCRIPTOR {
   UCHAR Interrupt:4;
@@ -3588,7 +3800,6 @@ typedef struct _EISA_DMA_CONFIGURATION {
   DMA_CONFIGURATION_BYTE1 ConfigurationByte1;
 } EISA_DMA_CONFIGURATION, *PEISA_DMA_CONFIGURATION;
 
-#include <pshpack1.h>
 typedef struct _EISA_PORT_DESCRIPTOR {
   UCHAR NumberPorts:5;
   UCHAR Reserved:1;
@@ -3600,7 +3811,17 @@ typedef struct _EISA_PORT_CONFIGURATION {
   EISA_PORT_DESCRIPTOR Configuration;
   USHORT PortAddress;
 } EISA_PORT_CONFIGURATION, *PEISA_PORT_CONFIGURATION;
-#include <poppack.h>
+
+typedef struct _CM_EISA_SLOT_INFORMATION {
+  UCHAR ReturnCode;
+  UCHAR ReturnFlags;
+  UCHAR MajorRevision;
+  UCHAR MinorRevision;
+  USHORT Checksum;
+  UCHAR NumberFunctions;
+  UCHAR FunctionInformation;
+  ULONG CompressedId;
+} CM_EISA_SLOT_INFORMATION, *PCM_EISA_SLOT_INFORMATION;
 
 typedef struct _CM_EISA_FUNCTION_INFORMATION {
   ULONG CompressedId;
@@ -3618,6 +3839,8 @@ typedef struct _CM_EISA_FUNCTION_INFORMATION {
   UCHAR InitializationData[60];
 } CM_EISA_FUNCTION_INFORMATION, *PCM_EISA_FUNCTION_INFORMATION;
 
+#include <poppack.h>
+
 /* CM_EISA_FUNCTION_INFORMATION.FunctionFlags */
 
 #define EISA_FUNCTION_ENABLED           0x80
@@ -3632,16 +3855,9 @@ typedef struct _CM_EISA_FUNCTION_INFORMATION {
   (EISA_HAS_PORT_RANGE + EISA_HAS_DMA_ENTRY + EISA_HAS_IRQ_ENTRY \
   + EISA_HAS_MEMORY_ENTRY + EISA_HAS_TYPE_ENTRY)
 
-typedef struct _CM_EISA_SLOT_INFORMATION {
-  UCHAR ReturnCode;
-  UCHAR ReturnFlags;
-  UCHAR MajorRevision;
-  UCHAR MinorRevision;
-  USHORT Checksum;
-  UCHAR NumberFunctions;
-  UCHAR FunctionInformation;
-  ULONG CompressedId;
-} CM_EISA_SLOT_INFORMATION, *PCM_EISA_SLOT_INFORMATION;
+#define EISA_MORE_ENTRIES               0x80
+#define EISA_SYSTEM_MEMORY              0x00
+#define EISA_MEMORY_TYPE_RAM            0x01
 
 /* CM_EISA_SLOT_INFORMATION.ReturnCode */
 
@@ -6090,6 +6306,11 @@ KeRaiseIrqlToSynchLevel(VOID);
  *                         Runtime Library Functions                          *
  ******************************************************************************/
 
+
+#if !defined(MIDL_PASS) && !defined(SORTPP_PASS)
+
+#define RTL_STATIC_LIST_HEAD(x) LIST_ENTRY x = { &x, &x }
+
 FORCEINLINE
 VOID
 InitializeListHead(
@@ -6098,63 +6319,12 @@ InitializeListHead(
   ListHead->Flink = ListHead->Blink = ListHead;
 }
 
-FORCEINLINE
-VOID
-InsertHeadList(
-  IN OUT PLIST_ENTRY ListHead,
-  IN OUT PLIST_ENTRY Entry)
-{
-  PLIST_ENTRY OldFlink;
-  OldFlink = ListHead->Flink;
-  Entry->Flink = OldFlink;
-  Entry->Blink = ListHead;
-  OldFlink->Blink = Entry;
-  ListHead->Flink = Entry;
-}
-
-FORCEINLINE
-VOID
-InsertTailList(
-  IN OUT PLIST_ENTRY ListHead,
-  IN OUT PLIST_ENTRY Entry)
-{
-  PLIST_ENTRY OldBlink;
-  OldBlink = ListHead->Blink;
-  Entry->Flink = ListHead;
-  Entry->Blink = OldBlink;
-  OldBlink->Flink = Entry;
-  ListHead->Blink = Entry;
-}
-
 BOOLEAN
 FORCEINLINE
 IsListEmpty(
   IN CONST LIST_ENTRY * ListHead)
 {
   return (BOOLEAN)(ListHead->Flink == ListHead);
-}
-
-FORCEINLINE
-PSINGLE_LIST_ENTRY
-PopEntryList(
-  IN OUT PSINGLE_LIST_ENTRY ListHead)
-{
-  PSINGLE_LIST_ENTRY FirstEntry;
-  FirstEntry = ListHead->Next;
-  if (FirstEntry != NULL) {
-    ListHead->Next = FirstEntry->Next;
-  }
-  return FirstEntry;
-}
-
-FORCEINLINE
-VOID
-PushEntryList(
-  IN OUT PSINGLE_LIST_ENTRY ListHead,
-  IN OUT PSINGLE_LIST_ENTRY Entry)
-{
-  Entry->Next = ListHead->Next;
-  ListHead->Next = Entry;
 }
 
 FORCEINLINE
@@ -6201,6 +6371,73 @@ RemoveTailList(
   Blink->Flink = ListHead;
   return Entry;
 }
+
+FORCEINLINE
+VOID
+InsertTailList(
+  IN OUT PLIST_ENTRY ListHead,
+  IN OUT PLIST_ENTRY Entry)
+{
+  PLIST_ENTRY OldBlink;
+  OldBlink = ListHead->Blink;
+  Entry->Flink = ListHead;
+  Entry->Blink = OldBlink;
+  OldBlink->Flink = Entry;
+  ListHead->Blink = Entry;
+}
+
+FORCEINLINE
+VOID
+InsertHeadList(
+  IN OUT PLIST_ENTRY ListHead,
+  IN OUT PLIST_ENTRY Entry)
+{
+  PLIST_ENTRY OldFlink;
+  OldFlink = ListHead->Flink;
+  Entry->Flink = OldFlink;
+  Entry->Blink = ListHead;
+  OldFlink->Blink = Entry;
+  ListHead->Flink = Entry;
+}
+
+FORCEINLINE
+VOID
+AppendTailList(
+  IN OUT PLIST_ENTRY ListHead,
+  IN OUT PLIST_ENTRY ListToAppend)
+{
+  PLIST_ENTRY ListEnd = ListHead->Blink;
+
+  ListHead->Blink->Flink = ListToAppend;
+  ListHead->Blink = ListToAppend->Blink;
+  ListToAppend->Blink->Flink = ListHead;
+  ListToAppend->Blink = ListEnd;
+}
+
+FORCEINLINE
+PSINGLE_LIST_ENTRY
+PopEntryList(
+  IN OUT PSINGLE_LIST_ENTRY ListHead)
+{
+  PSINGLE_LIST_ENTRY FirstEntry;
+  FirstEntry = ListHead->Next;
+  if (FirstEntry != NULL) {
+    ListHead->Next = FirstEntry->Next;
+  }
+  return FirstEntry;
+}
+
+FORCEINLINE
+VOID
+PushEntryList(
+  IN OUT PSINGLE_LIST_ENTRY ListHead,
+  IN OUT PSINGLE_LIST_ENTRY Entry)
+{
+  Entry->Next = ListHead->Next;
+  ListHead->Next = Entry;
+}
+
+#endif /* !defined(MIDL_PASS) && !defined(SORTPP_PASS) */
 
 NTSYSAPI
 VOID
@@ -6646,8 +6883,8 @@ NTAPI
 RtlQueryRegistryValues(
   IN ULONG RelativeTo,
   IN PCWSTR Path,
-  IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
-  IN PVOID Context,
+  IN OUT PRTL_QUERY_REGISTRY_TABLE QueryTable,
+  IN PVOID Context OPTIONAL,
   IN PVOID Environment OPTIONAL);
 
 #define LONG_SIZE (sizeof(LONG))
@@ -7242,6 +7479,10 @@ RtlCheckBit(
         (__annotation(L"Debug", L"AssertFail", msg), \
          DbgRaiseAssertionFailure(), FALSE) : TRUE)
 
+#define NT_VERIFY     NT_ASSERT
+#define NT_VERIFYMSG  NT_ASSERTMSG
+#define NT_VERIFYMSGW NT_ASSERTMSGW
+
 #else
 
 /* GCC doesn't support __annotation (nor PDB) */
@@ -7267,11 +7508,18 @@ RtlCheckBit(
 #define RTL_SOFT_VERIFY(exp) ((exp) ? TRUE : FALSE)
 #define RTL_SOFT_VERIFYMSG(msg, exp) ((exp) ? TRUE : FALSE)
 
-#define NT_ASSERT(exp)     ((VOID)0)
-#define NT_ASSERTMSG(exp)  ((VOID)0)
-#define NT_ASSERTMSGW(exp) ((VOID)0)
+#define NT_ASSERT(exp)          ((VOID)0)
+#define NT_ASSERTMSG(msg, exp)  ((VOID)0)
+#define NT_ASSERTMSGW(msg, exp) ((VOID)0)
+
+#define NT_VERIFY(_exp)           ((_exp) ? TRUE : FALSE)
+#define NT_VERIFYMSG(_msg, _exp ) ((_exp) ? TRUE : FALSE)
+#define NT_VERIFYMSGW(_msg, _exp) ((_exp) ? TRUE : FALSE)
 
 #endif /* DBG */
+
+#define InitializeListHead32(ListHead) (\
+    (ListHead)->Flink = (ListHead)->Blink = PtrToUlong((ListHead)))
 
 #if !defined(_WINBASE_)
 
@@ -12266,6 +12514,16 @@ ZwSetInformationKey(
  *                          Unsorted                                          *
  ******************************************************************************/
 
+#ifdef _MAC
+
+#ifndef _INC_STRING
+#include <string.h>
+#endif
+
+#else
+#include <string.h>
+#endif /* _MAC */
+
 /* GUID Comparison */
 #ifndef __IID_ALIGNED__
 #define __IID_ALIGNED__
@@ -12314,13 +12572,6 @@ inline int IsEqualGUIDAligned(REFGUID guid1, REFGUID guid2)
 
 /* Global debug flag */
 extern ULONG NtGlobalFlag;
-
-/* Service Start Types */
-#define SERVICE_BOOT_START             0x00000000
-#define SERVICE_SYSTEM_START           0x00000001
-#define SERVICE_AUTO_START             0x00000002
-#define SERVICE_DEMAND_START           0x00000003
-#define SERVICE_DISABLED               0x00000004
 
 #ifndef _TRACEHANDLE_DEFINED
 #define _TRACEHANDLE_DEFINED

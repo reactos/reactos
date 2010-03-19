@@ -180,6 +180,16 @@ $include (zwfuncs.h)
  *                          Unsorted                                          *
  ******************************************************************************/
 
+#ifdef _MAC
+
+#ifndef _INC_STRING
+#include <string.h>
+#endif
+
+#else
+#include <string.h>
+#endif /* _MAC */
+
 /* GUID Comparison */
 #ifndef __IID_ALIGNED__
 #define __IID_ALIGNED__
@@ -228,13 +238,6 @@ inline int IsEqualGUIDAligned(REFGUID guid1, REFGUID guid2)
 
 /* Global debug flag */
 extern ULONG NtGlobalFlag;
-
-/* Service Start Types */
-#define SERVICE_BOOT_START             0x00000000
-#define SERVICE_SYSTEM_START           0x00000001
-#define SERVICE_AUTO_START             0x00000002
-#define SERVICE_DEMAND_START           0x00000003
-#define SERVICE_DISABLED               0x00000004
 
 #ifndef _TRACEHANDLE_DEFINED
 #define _TRACEHANDLE_DEFINED
