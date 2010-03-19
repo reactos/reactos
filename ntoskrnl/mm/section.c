@@ -792,7 +792,6 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
    PMM_REGION Region;
    BOOLEAN HasSwapEntry;
    PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
-   KIRQL OldIrql;
     
    /*
     * There is a window between taking the page fault and locking the
@@ -801,12 +800,6 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
     */
    if (MmIsPagePresent(Process, Address))
    {
-      if (Locked)
-      {
-         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-         MmLockPage(MmGetPfnForProcess(Process, Address));
-         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-      }
       return(STATUS_SUCCESS);
    }
 
@@ -930,12 +923,6 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
          }
          MmInsertRmap(Page, Process, (PVOID)PAddress);
       }
-      if (Locked)
-      {
-         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-         MmLockPage(Page);
-         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-      }
       MmUnlockSectionSegment(Segment);
       PageOp->Status = STATUS_SUCCESS;
       MmspCompleteAndReleasePageOp(PageOp);
@@ -1002,12 +989,6 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
       /*
        * Finish the operation
        */
-      if (Locked)
-      {
-         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-         MmLockPage(Page);
-         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-      }
       PageOp->Status = STATUS_SUCCESS;
       MmspCompleteAndReleasePageOp(PageOp);
       DPRINT("Address 0x%.8X\n", Address);
@@ -1034,16 +1015,6 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
          DPRINT("MmCreateVirtualMappingUnsafe failed, not out of memory\n");
           KeBugCheck(MEMORY_MANAGEMENT);
          return(Status);
-      }
-      /*
-       * Don't add an rmap entry since the page mapped could be for
-       * anything.
-       */
-      if (Locked)
-      {
-         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-         MmLockPage(Page);
-         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
       }
 
       /*
@@ -1084,12 +1055,6 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
          return(Status);
       }
       MmInsertRmap(Page, Process, (PVOID)PAddress);
-      if (Locked)
-      {
-         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-         MmLockPage(Page);
-         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-      }
 
       /*
        * Cleanup and release locks
@@ -1186,12 +1151,6 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
       }
       MmInsertRmap(Page, Process, (PVOID)PAddress);
 
-      if (Locked)
-      {
-         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-         MmLockPage(Page);
-         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-      }
       PageOp->Status = STATUS_SUCCESS;
       MmspCompleteAndReleasePageOp(PageOp);
       DPRINT("Address 0x%.8X\n", Address);
@@ -1262,12 +1221,6 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
           KeBugCheck(MEMORY_MANAGEMENT);
       }
       MmInsertRmap(Page, Process, (PVOID)PAddress);
-      if (Locked)
-      {
-         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-         MmLockPage(Page);
-         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-      }
       PageOp->Status = STATUS_SUCCESS;
       MmspCompleteAndReleasePageOp(PageOp);
       DPRINT("Address 0x%.8X\n", Address);
@@ -1296,12 +1249,6 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
           KeBugCheck(MEMORY_MANAGEMENT);
       }
       MmInsertRmap(Page, Process, (PVOID)PAddress);
-      if (Locked)
-      {
-         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-         MmLockPage(Page);
-         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-      }
       PageOp->Status = STATUS_SUCCESS;
       MmspCompleteAndReleasePageOp(PageOp);
       DPRINT("Address 0x%.8X\n", Address);
@@ -1327,7 +1274,6 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
    PMM_REGION Region;
    ULONG Entry;
    PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
-   KIRQL OldIrql;
     
    DPRINT("MmAccessFaultSectionView(%x, %x, %x, %x)\n", AddressSpace, MemoryArea, Address, Locked);
 
@@ -1465,13 +1411,6 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
    {
       DPRINT1("Unable to create virtual mapping\n");
        KeBugCheck(MEMORY_MANAGEMENT);
-   }
-   if (Locked)
-   {
-      OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-      MmLockPage(NewPage);
-      MmUnlockPage(OldPage);
-      KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
    }
 
    /*
@@ -4480,63 +4419,6 @@ NtExtendSection(IN HANDLE SectionHandle,
 
    return STATUS_NOT_IMPLEMENTED;
 }
-
-
-/**********************************************************************
- * NAME       INTERNAL
- *  MmAllocateSection@4
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *  Length
- *
- * RETURN VALUE
- *
- * NOTE
- *  Code taken from ntoskrnl/mm/special.c.
- *
- * REVISIONS
- */
-PVOID NTAPI
-MmAllocateSection (IN ULONG Length, PVOID BaseAddress)
-{
-   PVOID Result;
-   MEMORY_AREA* marea;
-   NTSTATUS Status;
-   PMMSUPPORT AddressSpace;
-   PHYSICAL_ADDRESS BoundaryAddressMultiple;
-
-   DPRINT("MmAllocateSection(Length %x)\n",Length);
-
-   BoundaryAddressMultiple.QuadPart = 0;
-
-   AddressSpace = MmGetKernelAddressSpace();
-   Result = BaseAddress;
-   MmLockAddressSpace(AddressSpace);
-   Status = MmCreateMemoryArea (AddressSpace,
-                                MEMORY_AREA_SYSTEM,
-                                &Result,
-                                Length,
-                                0,
-                                &marea,
-                                FALSE,
-                                0,
-                                BoundaryAddressMultiple);
-   MmUnlockAddressSpace(AddressSpace);
-
-   if (!NT_SUCCESS(Status))
-   {
-      return (NULL);
-   }
-   DPRINT("Result %p\n",Result);
-
-   /* Create a virtual mapping for this memory area */
-   MmMapMemoryArea(Result, Length, MC_NPPOOL, PAGE_READWRITE);
-
-   return ((PVOID)Result);
-}
-
 
 /**********************************************************************
  * NAME       EXPORTED

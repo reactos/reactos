@@ -20,11 +20,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __PROCLIST_H
-#define __PROCLIST_H
+#pragma once
 
 INT_PTR CALLBACK	ProcessListWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 extern	WNDPROC		OldProcessListWndProc;
-
-#endif /* __PROCLIST_H */

@@ -2,8 +2,38 @@
  *
  */
 
-#ifndef __INTERNAL_HAL_HAL_H
-#define __INTERNAL_HAL_HAL_H
+#pragma once
+
+typedef struct _HAL_BIOS_FRAME
+{
+    ULONG SegSs;
+    ULONG Esp;
+    ULONG EFlags;
+    ULONG SegCs;
+    ULONG Eip;
+    PKTRAP_FRAME TrapFrame;
+    ULONG CsLimit;
+    ULONG CsBase;
+    ULONG CsFlags;
+    ULONG SsLimit;
+    ULONG SsBase;
+    ULONG SsFlags;
+    ULONG Prefix;
+} HAL_BIOS_FRAME, *PHAL_BIOS_FRAME;
+
+typedef
+VOID
+(*PHAL_SW_INTERRUPT_HANDLER)(
+    VOID
+);
+
+typedef
+FASTCALL
+VOID
+DECLSPEC_NORETURN
+(*PHAL_SW_INTERRUPT_HANDLER_2ND_ENTRY)(
+    IN PKTRAP_FRAME TrapFrame
+);
 
 #define HAL_APC_REQUEST         0
 #define HAL_DPC_REQUEST         1
@@ -27,6 +57,21 @@
     (((bcd & 0xF0) >> 4) * 10 + (bcd & 0x0F))
 #define INT_BCD(int)            \
     (UCHAR)(((int / 10) << 4) + (int % 10))
+
+//
+// BIOS Interrupts
+//
+#define VIDEO_SERVICES   0x10
+
+//
+// Operations for INT 10h (in AH)
+//
+#define SET_VIDEO_MODE   0x00
+
+//
+// Video Modes for INT10h AH=00 (in AL)
+//
+#define GRAPHICS_MODE_12 0x12           /* 80x30	 8x16  640x480	 16/256K */
 
 //
 // Commonly stated as being 1.19318MHz
@@ -179,6 +224,26 @@ typedef enum _I8259_ICW4_BUFFERED_MODE
     BufferedMaster
 } I8259_ICW4_BUFFERED_MODE;
 
+typedef enum _I8259_READ_REQUEST
+{
+    InvalidRequest,
+    InvalidRequest2,
+    ReadIdr,
+    ReadIsr
+} I8259_READ_REQUEST;
+
+typedef enum _I8259_EOI_MODE
+{
+    RotateAutoEoiClear,
+    NonSpecificEoi,
+    InvalidEoiMode,
+    SpecificEoi,
+    RotateAutoEoiSet,
+    RotateNonSpecific,
+    SetPriority,
+    RotateSpecific
+} I8259_EOI_MODE;
+
 //
 // Definitions for ICW Registers
 //
@@ -243,6 +308,52 @@ typedef union _I8259_ICW4
     UCHAR Bits;
 } I8259_ICW4, *PI8259_ICW4;
 
+typedef union _I8259_OCW2
+{
+    struct
+    {
+        UCHAR IrqNumber:3;
+        UCHAR Sbz:2;
+        I8259_EOI_MODE EoiMode:3;
+    };
+    UCHAR Bits;
+} I8259_OCW2, *PI8259_OCW2;
+
+typedef union _I8259_OCW3
+{
+    struct
+    {
+        I8259_READ_REQUEST ReadRequest:2;
+        UCHAR PollCommand:1;
+        UCHAR Sbo:1;
+        UCHAR Sbz:1;
+        UCHAR SpecialMaskMode:2;
+        UCHAR Reserved:1;
+    };
+    UCHAR Bits;
+} I8259_OCW3, *PI8259_OCW3;
+
+typedef union _I8259_ISR
+{
+    union
+    {
+        struct
+        {
+            UCHAR Irq0:1;
+            UCHAR Irq1:1;
+            UCHAR Irq2:1;
+            UCHAR Irq3:1;
+            UCHAR Irq4:1;
+            UCHAR Irq5:1;
+            UCHAR Irq6:1;
+            UCHAR Irq7:1;
+        };
+    };
+    UCHAR Bits;
+} I8259_ISR, *PI8259_ISR;
+
+typedef I8259_ISR I8259_IDR, *PI8259_IDR;
+
 //
 // See EISA System Architecture 2nd Edition (Tom Shanley, Don Anderson, John Swindle)
 // P. 34, 35
@@ -281,6 +392,97 @@ typedef union _EISA_ELCR
     };
     USHORT Bits;
 } EISA_ELCR, *PEISA_ELCR;
+
+typedef struct _PIC_MASK
+{
+    union
+    {
+        struct
+        {
+            UCHAR Master;
+            UCHAR Slave;
+        };
+        USHORT Both;
+    };    
+} PIC_MASK, *PPIC_MASK;
+
+typedef
+BOOLEAN
+__attribute__((regparm(3)))
+(*PHAL_DISMISS_INTERRUPT)(
+    IN KIRQL Irql,
+    IN ULONG Irq,
+    OUT PKIRQL OldIrql
+);
+
+BOOLEAN
+__attribute__((regparm(3)))
+HalpDismissIrqGeneric(
+    IN KIRQL Irql,
+    IN ULONG Irq,
+    OUT PKIRQL OldIrql
+);
+
+BOOLEAN
+__attribute__((regparm(3)))
+HalpDismissIrq15(
+    IN KIRQL Irql,
+    IN ULONG Irq,
+    OUT PKIRQL OldIrql
+);
+
+BOOLEAN
+__attribute__((regparm(3)))
+HalpDismissIrq13(
+    IN KIRQL Irql,
+    IN ULONG Irq,
+    OUT PKIRQL OldIrql
+);
+
+BOOLEAN
+__attribute__((regparm(3)))
+HalpDismissIrq07(
+    IN KIRQL Irql,
+    IN ULONG Irq,
+    OUT PKIRQL OldIrql
+);
+
+BOOLEAN
+__attribute__((regparm(3)))
+HalpDismissIrqLevel(
+    IN KIRQL Irql,
+    IN ULONG Irq,
+    OUT PKIRQL OldIrql
+);
+
+BOOLEAN
+__attribute__((regparm(3)))
+HalpDismissIrq15Level(
+    IN KIRQL Irql,
+    IN ULONG Irq,
+    OUT PKIRQL OldIrql
+);
+
+BOOLEAN
+__attribute__((regparm(3)))
+HalpDismissIrq13Level(
+    IN KIRQL Irql,
+    IN ULONG Irq,
+    OUT PKIRQL OldIrql
+);
+
+BOOLEAN
+__attribute__((regparm(3)))
+HalpDismissIrq07Level(
+    IN KIRQL Irql,
+    IN ULONG Irq,
+    OUT PKIRQL OldIrql
+);
+
+VOID
+HalpHardwareInterruptLevel(
+    VOID
+);
 
 //
 // Mm PTE/PDE to Hal PTE/PDE
@@ -333,9 +535,16 @@ HalpEnableInterruptHandler(IN UCHAR Flags,
 
 /* pic.c */
 VOID NTAPI HalpInitializePICs(IN BOOLEAN EnableInterrupts);
+VOID HalpApcInterrupt(VOID);
+VOID HalpDispatchInterrupt(VOID);
+VOID HalpDispatchInterrupt2(VOID);
+VOID FASTCALL DECLSPEC_NORETURN HalpApcInterrupt2ndEntry(IN PKTRAP_FRAME TrapFrame);
+VOID FASTCALL DECLSPEC_NORETURN HalpDispatchInterrupt2ndEntry(IN PKTRAP_FRAME TrapFrame);
 
-/* udelay.c */
+/* timer.c */
 VOID NTAPI HalpInitializeClock(VOID);
+VOID HalpClockInterrupt(VOID);
+VOID HalpProfileInterrupt(VOID);
 
 VOID
 NTAPI
@@ -350,8 +559,6 @@ VOID HalpInitDma (VOID);
 /* Non-generic initialization */
 VOID HalpInitPhase0 (PLOADER_PARAMETER_BLOCK LoaderBlock);
 VOID HalpInitPhase1(VOID);
-VOID NTAPI HalpClockInterrupt(VOID);
-VOID NTAPI HalpProfileInterrupt(VOID);
 
 VOID
 NTAPI
@@ -430,20 +637,14 @@ HalpBiosDisplayReset(
 );
 
 VOID
-NTAPI
-HalpBiosCall(
-    VOID
+FASTCALL
+HalpExitToV86(
+    PKTRAP_FRAME TrapFrame
 );
 
 VOID
-NTAPI
-HalpTrap0D(
-    VOID
-);
-
-VOID
-NTAPI
-HalpTrap06(
+DECLSPEC_NORETURN
+HalpRealModeStart(
     VOID
 );
 
@@ -480,6 +681,109 @@ HalpReleaseCmosSpinLock(
     VOID
 );
 
+//
+// This is duplicated from ke_x.h
+//
+#ifdef CONFIG_SMP
+//
+// Spinlock Acquisition at IRQL >= DISPATCH_LEVEL
+//
+FORCEINLINE
+VOID
+KxAcquireSpinLock(IN PKSPIN_LOCK SpinLock)
+{
+    /* Make sure that we don't own the lock already */
+    if (((KSPIN_LOCK)KeGetCurrentThread() | 1) == *SpinLock)
+    {
+        /* We do, bugcheck! */
+        KeBugCheckEx(SPIN_LOCK_ALREADY_OWNED, (ULONG_PTR)SpinLock, 0, 0, 0);
+    }
+
+    for (;;)
+    {
+        /* Try to acquire it */
+        if (InterlockedBitTestAndSet((PLONG)SpinLock, 0))
+        {
+            /* Value changed... wait until it's locked */
+            while (*(volatile KSPIN_LOCK *)SpinLock == 1)
+            {
+#ifdef DBG
+                /* On debug builds, we use a much slower but useful routine */
+                //Kii386SpinOnSpinLock(SpinLock, 5);
+
+                /* FIXME: Do normal yield for now */
+                YieldProcessor();
+#else
+                /* Otherwise, just yield and keep looping */
+                YieldProcessor();
+#endif
+            }
+        }
+        else
+        {
+#ifdef DBG
+            /* On debug builds, we OR in the KTHREAD */
+            *SpinLock = (KSPIN_LOCK)KeGetCurrentThread() | 1;
+#endif
+            /* All is well, break out */
+            break;
+        }
+    }
+}
+
+//
+// Spinlock Release at IRQL >= DISPATCH_LEVEL
+//
+FORCEINLINE
+VOID
+KxReleaseSpinLock(IN PKSPIN_LOCK SpinLock)
+{
+#ifdef DBG
+    /* Make sure that the threads match */
+    if (((KSPIN_LOCK)KeGetCurrentThread() | 1) != *SpinLock)
+    {
+        /* They don't, bugcheck */
+        KeBugCheckEx(SPIN_LOCK_NOT_OWNED, (ULONG_PTR)SpinLock, 0, 0, 0);
+    }
+#endif
+    /* Clear the lock */
+    InterlockedAnd((PLONG)SpinLock, 0);
+}
+
+#else
+
+//
+// Spinlock Acquire at IRQL >= DISPATCH_LEVEL
+//
+FORCEINLINE
+VOID
+KxAcquireSpinLock(IN PKSPIN_LOCK SpinLock)
+{
+    /* On UP builds, spinlocks don't exist at IRQL >= DISPATCH */
+    UNREFERENCED_PARAMETER(SpinLock);
+}
+
+//
+// Spinlock Release at IRQL >= DISPATCH_LEVEL
+//
+FORCEINLINE
+VOID
+KxReleaseSpinLock(IN PKSPIN_LOCK SpinLock)
+{
+    /* On UP builds, spinlocks don't exist at IRQL >= DISPATCH */
+    UNREFERENCED_PARAMETER(SpinLock);
+}
+
+#endif
+
+VOID
+FASTCALL
+KeUpdateSystemTime(
+    IN PKTRAP_FRAME TrapFrame,
+    IN ULONG Increment,
+    IN KIRQL OldIrql
+);
+
 #ifdef _M_AMD64
 #define KfLowerIrql KeLowerIrql
 #ifndef CONFIG_SMP
@@ -493,13 +797,10 @@ HalpReleaseCmosSpinLock(
 
 extern BOOLEAN HalpNMIInProgress;
 
-extern PVOID HalpRealModeStart;
-extern PVOID HalpRealModeEnd;
-
 extern ADDRESS_USAGE HalpDefaultIoSpace;
 
 extern KSPIN_LOCK HalpSystemHardwareLock;
 
 extern PADDRESS_USAGE HalpAddressUsageList;
 
-#endif /* __INTERNAL_HAL_HAL_H */
+extern LARGE_INTEGER HalpPerfCounter;

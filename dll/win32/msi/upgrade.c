@@ -182,9 +182,10 @@ static UINT ITERATE_FindRelatedProducts(MSIRECORD *rec, LPVOID param)
                 continue;
             }
 
-            action_property = MSI_RecordGetString(rec,7);
-            append_productcode(package,action_property,productid);
-            ui_actiondata(package,szFindRelatedProducts,uirow);
+            action_property = MSI_RecordGetString(rec, 7);
+            append_productcode(package, action_property, productid);
+            MSI_RecordSetStringW(uirow, 1, productid);
+            ui_actiondata(package, szFindRelatedProducts, uirow);
         }
         index ++;
     }
@@ -201,6 +202,12 @@ UINT ACTION_FindRelatedProducts(MSIPACKAGE *package)
          ' ','`','U','p','g','r','a','d','e','`',0};
     UINT rc = ERROR_SUCCESS;
     MSIQUERY *view;
+
+    if (msi_get_property_int(package, szInstalled, 0))
+    {
+        TRACE("Skipping FindRelatedProducts action: product already installed\n");
+        return ERROR_SUCCESS;
+    }
 
     if (check_unique_action(package,szFindRelatedProducts))
     {

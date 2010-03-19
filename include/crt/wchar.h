@@ -93,7 +93,7 @@ extern "C" {
     time_t time_create;
     time_t time_access;
     time_t time_write;
-    __int64 size;
+    __MINGW_EXTENSION __int64 size;
     wchar_t name[260];
   };
 
@@ -102,7 +102,7 @@ extern "C" {
     __time32_t time_create;
     __time32_t time_access;
     __time32_t time_write;
-    __int64 size;
+    __MINGW_EXTENSION __int64 size;
     wchar_t name[260];
   };
 
@@ -120,7 +120,7 @@ extern "C" {
     __time64_t time_create;
     __time64_t time_access;
     __time64_t time_write;
-    __int64 size;
+    __MINGW_EXTENSION __int64 size;
     wchar_t name[260];
   };
 #endif
@@ -352,9 +352,9 @@ _CRTIMP int __cdecl iswblank(wint_t _C);
 
 #ifndef _OFF64_T_DEFINED
 #define _OFF64_T_DEFINED
-  typedef long long _off64_t;
+  __MINGW_EXTENSION typedef long long _off64_t;
 #ifndef NO_OLDNAMES
-  typedef long long off64_t;
+  __MINGW_EXTENSION typedef long long off64_t;
 #endif
 #endif
 
@@ -415,7 +415,7 @@ _CRTIMP int __cdecl iswblank(wint_t _C);
     short st_uid;
     short st_gid;
     _dev_t st_rdev;
-    __int64 st_size;
+    __MINGW_EXTENSION __int64 st_size;
     __time32_t st_atime;
     __time32_t st_mtime;
     __time32_t st_ctime;
@@ -443,7 +443,7 @@ _CRTIMP int __cdecl iswblank(wint_t _C);
     short st_uid;
     short st_gid;
     _dev_t st_rdev;
-    __int64 st_size;
+    __MINGW_EXTENSION __int64 st_size;
     __time64_t st_atime;
     __time64_t st_mtime;
     __time64_t st_ctime;
@@ -645,14 +645,14 @@ _CRTIMP int __cdecl iswblank(wint_t _C);
   _CRTIMP long __cdecl _wtol_l(const wchar_t *_Str,_locale_t _Locale);
 
 #if _INTEGRAL_MAX_BITS >= 64
-  _CRTIMP wchar_t *__cdecl _i64tow(__int64 _Val,wchar_t *_DstBuf,int _Radix);
-  _CRTIMP wchar_t *__cdecl _ui64tow(unsigned __int64 _Val,wchar_t *_DstBuf,int _Radix);
-  _CRTIMP __int64 __cdecl _wtoi64(const wchar_t *_Str);
-  _CRTIMP __int64 __cdecl _wtoi64_l(const wchar_t *_Str,_locale_t _Locale);
-  _CRTIMP __int64 __cdecl _wcstoi64(const wchar_t *_Str,wchar_t **_EndPtr,int _Radix);
-  _CRTIMP __int64 __cdecl _wcstoi64_l(const wchar_t *_Str,wchar_t **_EndPtr,int _Radix,_locale_t _Locale);
-  _CRTIMP unsigned __int64 __cdecl _wcstoui64(const wchar_t *_Str,wchar_t **_EndPtr,int _Radix);
-  _CRTIMP unsigned __int64 __cdecl _wcstoui64_l(const wchar_t *_Str,wchar_t **_EndPtr,int _Radix,_locale_t _Locale);
+  __MINGW_EXTENSION _CRTIMP wchar_t *__cdecl _i64tow(__int64 _Val,wchar_t *_DstBuf,int _Radix);
+  __MINGW_EXTENSION _CRTIMP wchar_t *__cdecl _ui64tow(unsigned __int64 _Val,wchar_t *_DstBuf,int _Radix);
+  __MINGW_EXTENSION _CRTIMP __int64 __cdecl _wtoi64(const wchar_t *_Str);
+  __MINGW_EXTENSION _CRTIMP __int64 __cdecl _wtoi64_l(const wchar_t *_Str,_locale_t _Locale);
+  __MINGW_EXTENSION _CRTIMP __int64 __cdecl _wcstoi64(const wchar_t *_Str,wchar_t **_EndPtr,int _Radix);
+  __MINGW_EXTENSION _CRTIMP __int64 __cdecl _wcstoi64_l(const wchar_t *_Str,wchar_t **_EndPtr,int _Radix,_locale_t _Locale);
+  __MINGW_EXTENSION _CRTIMP unsigned __int64 __cdecl _wcstoui64(const wchar_t *_Str,wchar_t **_EndPtr,int _Radix);
+  __MINGW_EXTENSION _CRTIMP unsigned __int64 __cdecl _wcstoui64_l(const wchar_t *_Str,wchar_t **_EndPtr,int _Radix,_locale_t _Locale);
 #endif
 #endif
 
@@ -782,8 +782,8 @@ __CRT_INLINE wchar_t *__cdecl _wctime(const time_t *_Time) { return _wctime64(_T
   int wmemcmp(const wchar_t *s1, const wchar_t *s2,size_t n);
   wchar_t *__cdecl wmemcpy(wchar_t *s1,const wchar_t *s2,size_t n);
   wchar_t *__cdecl wmemmove(wchar_t *s1, const wchar_t *s2, size_t n);
-  long long __cdecl wcstoll(const wchar_t *nptr,wchar_t **endptr, int base);
-  unsigned long long __cdecl wcstoull(const wchar_t *nptr,wchar_t **endptr, int base);
+  __MINGW_EXTENSION long long __cdecl wcstoll(const wchar_t *nptr,wchar_t **endptr, int base);
+  __MINGW_EXTENSION unsigned long long __cdecl wcstoull(const wchar_t *nptr,wchar_t **endptr, int base);
 #endif /* __NO_ISOCEXT */
 
   void *__cdecl memmove(void *_Dst,const void *_Src,size_t _MaxCount);

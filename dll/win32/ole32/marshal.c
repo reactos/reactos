@@ -553,9 +553,9 @@ static HRESULT WINAPI ProxyCliSec_SetBlanket(IClientSecurity *iface,
                                              void *pAuthInfo,
                                              DWORD Capabilities)
 {
-    FIXME("(%p, %d, %d, %s, %d, %d, %p, 0x%x): stub\n", pProxy, AuthnSvc,
-          AuthzSvc, debugstr_w(pServerPrincName), AuthnLevel, ImpLevel,
-          pAuthInfo, Capabilities);
+    FIXME("(%p, %d, %d, %s, %d, %d, %p, 0x%x): stub\n", pProxy, AuthnSvc, AuthzSvc,
+          pServerPrincName == COLE_DEFAULT_PRINCIPAL ? "<default principal>" : debugstr_w(pServerPrincName),
+          AuthnLevel, ImpLevel, pAuthInfo, Capabilities);
     return E_NOTIMPL;
 }
 
@@ -1336,7 +1336,7 @@ StdMarshalImpl_UnmarshalInterface(LPMARSHAL iface, IStream *pStm, REFIID riid, v
       
         /* unref the ifstub. FIXME: only do this on success? */
         if (!stub_manager_is_table_marshaled(stubmgr, &stdobjref.ipid))
-            stub_manager_ext_release(stubmgr, stdobjref.cPublicRefs, stdobjref.flags & SORFP_TABLEWEAK, TRUE);
+            stub_manager_ext_release(stubmgr, stdobjref.cPublicRefs, stdobjref.flags & SORFP_TABLEWEAK, FALSE);
 
         stub_manager_int_release(stubmgr);
         return hres;

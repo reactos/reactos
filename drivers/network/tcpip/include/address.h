@@ -4,8 +4,8 @@
  * FILE:        include/address.h
  * PURPOSE:     Address manipulation prototypes
  */
-#ifndef __ADDRESS_H
-#define __ADDRESS_H
+
+#pragma once
 
 /*
  * Initialize an IPv4 style address
@@ -74,7 +74,5 @@ UINT AddrCountPrefixBits( PIP_ADDRESS Netmask );
 
 VOID AddrWidenAddress( PIP_ADDRESS Network, PIP_ADDRESS Source,
 		       PIP_ADDRESS Netmask );
-
-#endif /* __ADDRESS_H */
 
 /* EOF */

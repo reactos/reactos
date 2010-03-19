@@ -4,8 +4,8 @@
  * FILE:        include/receive.h
  * PURPOSE:     Internet Protocol receive prototypes
  */
-#ifndef __RECEIVE_H
-#define __RECEIVE_H
+
+#pragma once
 
 #include <ip.h>
 
@@ -60,7 +60,5 @@ VOID IPDatagramReassemblyTimeout(
 VOID IPReceive(
     PIP_INTERFACE IF,
     PIP_PACKET IPPacket);
-
-#endif /* __RECEIVE_H */
 
 /* EOF */

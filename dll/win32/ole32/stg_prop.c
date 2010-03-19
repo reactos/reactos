@@ -236,7 +236,7 @@ static PROPVARIANT *PropertyStorage_FindProperty(PropertyStorage_impl *This,
 {
     PROPVARIANT *ret = NULL;
 
-    dictionary_find(This->propid_to_prop, (void *)propid, (void **)&ret);
+    dictionary_find(This->propid_to_prop, UlongToPtr(propid), (void **)&ret);
     TRACE("returning %p\n", ret);
     return ret;
 }
@@ -246,14 +246,14 @@ static PROPVARIANT *PropertyStorage_FindPropertyByName(
  PropertyStorage_impl *This, LPCWSTR name)
 {
     PROPVARIANT *ret = NULL;
-    PROPID propid;
+    void *propid;
 
     if (!name)
         return NULL;
     if (This->codePage == CP_UNICODE)
     {
-        if (dictionary_find(This->name_to_propid, name, (void **)&propid))
-            ret = PropertyStorage_FindProperty(This, propid);
+        if (dictionary_find(This->name_to_propid, name, &propid))
+            ret = PropertyStorage_FindProperty(This, PtrToUlong(propid));
     }
     else
     {
@@ -263,9 +263,8 @@ static PROPVARIANT *PropertyStorage_FindPropertyByName(
 
         if (SUCCEEDED(hr))
         {
-            if (dictionary_find(This->name_to_propid, ansiName,
-             (void **)&propid))
-                ret = PropertyStorage_FindProperty(This, propid);
+            if (dictionary_find(This->name_to_propid, ansiName, &propid))
+                ret = PropertyStorage_FindProperty(This, PtrToUlong(propid));
             CoTaskMemFree(ansiName);
         }
     }
@@ -278,7 +277,7 @@ static LPWSTR PropertyStorage_FindPropertyNameById(PropertyStorage_impl *This,
 {
     LPWSTR ret = NULL;
 
-    dictionary_find(This->propid_to_name, (void *)propid, (void **)&ret);
+    dictionary_find(This->propid_to_name, UlongToPtr(propid), (void **)&ret);
     TRACE("returning %p\n", ret);
     return ret;
 }
@@ -490,7 +489,7 @@ static HRESULT PropertyStorage_StorePropWithId(PropertyStorage_impl *This,
              lcid);
             if (SUCCEEDED(hr))
             {
-                dictionary_insert(This->propid_to_prop, (void *)propid, prop);
+                dictionary_insert(This->propid_to_prop, UlongToPtr(propid), prop);
                 if (propid > This->highestProp)
                     This->highestProp = propid;
             }
@@ -534,8 +533,8 @@ static HRESULT PropertyStorage_StoreNameWithId(PropertyStorage_impl *This,
         TRACE("Adding prop name %s, propid %d\n",
          This->codePage == CP_UNICODE ? debugstr_w((LPCWSTR)name) :
          debugstr_a(name), id);
-        dictionary_insert(This->name_to_propid, name, (void *)id);
-        dictionary_insert(This->propid_to_name, (void *)id, name);
+        dictionary_insert(This->name_to_propid, name, UlongToPtr(id));
+        dictionary_insert(This->propid_to_name, UlongToPtr(id), name);
     }
     return hr;
 }
@@ -666,18 +665,16 @@ static HRESULT WINAPI IPropertyStorage_fnDeleteMultiple(
     {
         if (rgpspec[i].ulKind == PRSPEC_LPWSTR)
         {
-            PROPID propid;
+            void *propid;
 
-            if (dictionary_find(This->name_to_propid,
-             (void *)rgpspec[i].u.lpwstr, (void **)&propid))
-                dictionary_remove(This->propid_to_prop, (void *)propid);
+            if (dictionary_find(This->name_to_propid, rgpspec[i].u.lpwstr, &propid))
+                dictionary_remove(This->propid_to_prop, propid);
         }
         else
         {
             if (rgpspec[i].u.propid >= PID_FIRST_USABLE &&
              rgpspec[i].u.propid < PID_MIN_READONLY)
-                dictionary_remove(This->propid_to_prop,
-                 (void *)rgpspec[i].u.propid);
+                dictionary_remove(This->propid_to_prop, UlongToPtr(rgpspec[i].u.propid));
             else
                 hr = STG_E_INVALIDPARAMETER;
         }
@@ -787,10 +784,9 @@ static HRESULT WINAPI IPropertyStorage_fnDeletePropertyNames(
     {
         LPWSTR name = NULL;
 
-        if (dictionary_find(This->propid_to_name, (void *)rgpropid[i],
-         (void **)&name))
+        if (dictionary_find(This->propid_to_name, UlongToPtr(rgpropid[i]), (void **)&name))
         {
-            dictionary_remove(This->propid_to_name, (void *)rgpropid[i]);
+            dictionary_remove(This->propid_to_name, UlongToPtr(rgpropid[i]));
             dictionary_remove(This->name_to_propid, name);
         }
     }
@@ -955,8 +951,8 @@ static void PropertyStorage_PropNameDestroy(void *k, void *d, void *extra)
 static int PropertyStorage_PropCompare(const void *a, const void *b,
  void *extra)
 {
-    TRACE("(%d, %d)\n", (PROPID)a, (PROPID)b);
-    return (PROPID)a - (PROPID)b;
+    TRACE("(%d, %d)\n", PtrToUlong(a), PtrToUlong(b));
+    return PtrToUlong(a) - PtrToUlong(b);
 }
 
 static void PropertyStorage_PropertyDestroy(void *k, void *d, void *extra)
@@ -1143,8 +1139,8 @@ static HRESULT PropertyStorage_ReadProperty(PropertyStorage_impl *This,
                 prop->u.pclipdata = CoTaskMemAlloc(sizeof (CLIPDATA));
                 prop->u.pclipdata->cbSize = len;
                 prop->u.pclipdata->ulClipFmt = tag;
-                prop->u.pclipdata->pClipData = CoTaskMemAlloc(len);
-                memcpy(prop->u.pclipdata->pClipData, data+8, len);
+                prop->u.pclipdata->pClipData = CoTaskMemAlloc(len - sizeof(prop->u.pclipdata->ulClipFmt));
+                memcpy(prop->u.pclipdata->pClipData, data+8, len - sizeof(prop->u.pclipdata->ulClipFmt));
             }
             else
                 hr = STG_E_INVALIDPARAMETER;
@@ -1406,6 +1402,7 @@ static HRESULT PropertyStorage_ReadFromStream(PropertyStorage_impl *This)
                          idOffset->propid, &prop, This->codePage);
                     }
                 }
+                PropVariantClear(&prop);
             }
         }
     }
@@ -1512,7 +1509,7 @@ static BOOL PropertyStorage_DictionaryWriter(const void *key,
 
     assert(key);
     assert(closure);
-    StorageUtl_WriteDWord((LPBYTE)&propid, 0, (DWORD)value);
+    StorageUtl_WriteDWord((LPBYTE)&propid, 0, PtrToUlong(value));
     c->hr = IStream_Write(This->stm, &propid, sizeof(propid), &count);
     if (FAILED(c->hr))
         goto end;
@@ -1735,7 +1732,8 @@ static HRESULT PropertyStorage_WritePropertyToStream(PropertyStorage_impl *This,
         hr = IStream_Write(This->stm, cf_hdr, sizeof(cf_hdr), &count);
         if (FAILED(hr))
             goto end;
-        hr = IStream_Write(This->stm, &var->u.pclipdata->pClipData, len, &count);
+        hr = IStream_Write(This->stm, var->u.pclipdata->pClipData,
+                           len - sizeof(var->u.pclipdata->ulClipFmt), &count);
         if (FAILED(hr))
             goto end;
         bytesWritten = count + sizeof cf_hdr;
@@ -1779,7 +1777,7 @@ static BOOL PropertyStorage_PropertiesWriter(const void *key, const void *value,
     assert(extra);
     assert(closure);
     c->hr = PropertyStorage_WritePropertyToStream(This, c->propNum++,
-     (DWORD)key, value, c->sectionOffset);
+                                                  PtrToUlong(key), value, c->sectionOffset);
     return SUCCEEDED(c->hr);
 }
 
@@ -2396,7 +2394,7 @@ static HRESULT WINAPI IEnumSTATPROPSTG_fnClone(
 static BOOL prop_enum_stat(const void *k, const void *v, void *extra, void *arg)
 {
     enumx_impl *enumx = arg;
-    PROPID propid = (PROPID) k;
+    PROPID propid = PtrToUlong(k);
     const PROPVARIANT *prop = v;
     STATPROPSTG stat;
 

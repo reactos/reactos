@@ -20,23 +20,14 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef XBOXVMP_H
-#define XBOXVMP_H
+#pragma once
 
 /* INCLUDES *******************************************************************/
 
-#ifdef _MSC_VER
-#pragma message ("INVESTIGATE ME")
-#endif
-
-#if 0 //#ifdef _MSC_VER
-#include "devioctl.h"
+#include "ntdef.h"
 #define PAGE_SIZE 4096
-#else
-#include <ntddk.h>
-#endif
-
 #include "dderror.h"
+#include "devioctl.h"
 #include "miniport.h"
 #include "ntddvdeo.h"
 #include "video.h"
@@ -156,7 +147,5 @@ XboxVmpSetColorRegisters(
    PXBOXVMP_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_CLUT ColorLookUpTable,
    PSTATUS_BLOCK StatusBlock);
-
-#endif /* XBOXVMP_H */
 
 /* EOF */

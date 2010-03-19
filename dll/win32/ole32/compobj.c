@@ -828,6 +828,16 @@ static DWORD COM_RegReadPath(HKEY hkeyroot, const WCHAR *keyname, const WCHAR *v
             if (keytype == REG_EXPAND_SZ) {
               if (dstlen <= ExpandEnvironmentStringsW(src, dst, dstlen)) ret = ERROR_MORE_DATA;
             } else {
+              const WCHAR *quote_start;
+              quote_start = strchrW(src, '\"');
+              if (quote_start) {
+                const WCHAR *quote_end = strchrW(quote_start + 1, '\"');
+                if (quote_end) {
+                  memmove(src, quote_start + 1,
+                          (quote_end - quote_start - 1) * sizeof(WCHAR));
+                  src[quote_end - quote_start - 1] = '\0';
+                }
+              }
               lstrcpynW(dst, src, dstlen);
             }
 	  }
@@ -1621,7 +1631,7 @@ INT WINAPI StringFromGUID2(REFGUID id, LPOLESTR str, INT cmax)
                                      '%','0','4','X','-','%','0','2','X','%','0','2','X','-',
                                      '%','0','2','X','%','0','2','X','%','0','2','X','%','0','2','X',
                                      '%','0','2','X','%','0','2','X','}',0 };
-    if (cmax < CHARS_IN_GUID) return 0;
+    if (!id || cmax < CHARS_IN_GUID) return 0;
     sprintfW( str, formatW, id->Data1, id->Data2, id->Data3,
               id->Data4[0], id->Data4[1], id->Data4[2], id->Data4[3],
               id->Data4[4], id->Data4[5], id->Data4[6], id->Data4[7] );
@@ -2052,6 +2062,7 @@ HRESULT WINAPI CoRegisterClassObject(
     DWORD flags,
     LPDWORD lpdwRegister)
 {
+  static LONG next_cookie;
   RegisteredClass* newClass;
   LPUNKNOWN        foundObject;
   HRESULT          hr;
@@ -2105,11 +2116,8 @@ HRESULT WINAPI CoRegisterClassObject(
   newClass->pMarshaledData  = NULL;
   newClass->RpcRegistration = NULL;
 
-  /*
-   * Use the address of the chain node as the cookie since we are sure it's
-   * unique. FIXME: not on 64-bit platforms.
-   */
-  newClass->dwCookie        = (DWORD)newClass;
+  if (!(newClass->dwCookie = InterlockedIncrement( &next_cookie )))
+      newClass->dwCookie = InterlockedIncrement( &next_cookie );
 
   /*
    * Since we're making a copy of the object pointer, we have to increase its
@@ -2130,7 +2138,7 @@ HRESULT WINAPI CoRegisterClassObject(
           FIXME("Failed to create stream on hglobal, %x\n", hr);
           return hr;
       }
-      hr = CoMarshalInterface(newClass->pMarshaledData, &IID_IClassFactory,
+      hr = CoMarshalInterface(newClass->pMarshaledData, &IID_IUnknown,
                               newClass->classObject, MSHCTX_LOCAL, NULL,
                               MSHLFLAGS_TABLESTRONG);
       if (hr) {
@@ -2380,7 +2388,7 @@ HRESULT WINAPI CoGetClassObject(
     if (CLSCTX_REMOTE_SERVER & dwClsContext)
     {
         FIXME ("CLSCTX_REMOTE_SERVER not supported\n");
-        hres = E_NOINTERFACE;
+        hres = REGDB_E_CLASSNOTREG;
     }
 
     if (FAILED(hres))
@@ -4106,6 +4114,33 @@ HRESULT WINAPI CoGetContextToken( ULONG_PTR *token )
     return S_OK;
 }
 
+HRESULT Handler_DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
+{
+    static const WCHAR wszInprocHandler32[] = {'I','n','p','r','o','c','H','a','n','d','l','e','r','3','2',0};
+    HKEY hkey;
+    HRESULT hres;
+
+    hres = COM_OpenKeyForCLSID(rclsid, wszInprocHandler32, KEY_READ, &hkey);
+    if (SUCCEEDED(hres))
+    {
+        WCHAR dllpath[MAX_PATH+1];
+
+        if (COM_RegReadPath(hkey, NULL, NULL, dllpath, ARRAYSIZE(dllpath)) == ERROR_SUCCESS)
+        {
+            static const WCHAR wszOle32[] = {'o','l','e','3','2','.','d','l','l',0};
+            if (!strcmpiW(dllpath, wszOle32))
+            {
+                RegCloseKey(hkey);
+                return HandlerCF_Create(rclsid, riid, ppv);
+            }
+        }
+        else
+            WARN("not creating object for inproc handler path %s\n", debugstr_w(dllpath));
+        RegCloseKey(hkey);
+    }
+
+    return CLASS_E_CLASSNOTAVAILABLE;
+}
 
 /***********************************************************************
  *		DllMain (OLE32.@)

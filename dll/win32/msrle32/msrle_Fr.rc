@@ -1,7 +1,7 @@
 /*
  * French resource file for MS-RLE
  *
- * Copyright 2002 Michael Günnewig
+ * Copyright 2002 Michael GÃ¼nnewig
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,11 +18,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "msrle_private.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
 {
 	IDS_NAME	"WINE-MS-RLE"
-	IDS_DESCRIPTION	"Wine: décodeur/encodeur vidéo MS-RLE"
-	IDS_ABOUT       "Wine: décodeur/encodeur vidéo MS-RLE\nCopyright 2002 par Michael Günnewig"
+	IDS_DESCRIPTION	"Wine : codec vidÃ©o MS-RLE"
+	IDS_ABOUT       "Wine : codec vidÃ©o MS-RLE\nCopyright 2002 par Michael GÃ¼nnewig"
 }

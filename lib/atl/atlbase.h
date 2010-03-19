@@ -18,8 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef _atlbase_h
-#define _atlbase_h
+#pragma once
 
 #include "atlcore.h"
 #include "statreg.h"
@@ -1004,5 +1003,3 @@ inline void *__stdcall AtlWinModuleExtractCreateWndData(_ATL_WIN_MODULE *pWinMod
 #ifndef _ATL_NO_AUTOMATIC_NAMESPACE
 using namespace ATL;
 #endif //!_ATL_NO_AUTOMATIC_NAMESPACE
-
-#endif // _atlbase_h

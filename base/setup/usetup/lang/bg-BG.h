@@ -1,5 +1,4 @@
-#ifndef LANG_BG_BG_H__
-#define LANG_BG_BG_H__
+#pragma once
 
 MUI_LAYOUTS bgBGLayouts[] =
 {
@@ -1706,5 +1705,3 @@ MUI_STRING bgBGStrings[] =
     "Добавяне на клавиатурни подредби"},
     {0, 0}
 };
-
-#endif

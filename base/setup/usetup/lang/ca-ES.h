@@ -1,5 +1,4 @@
-#ifndef LANG_CA_ES_H__
-#define LANG_CA_ES_H__
+#pragma once
 
 MUI_LAYOUTS caESLayouts[] =
 {
@@ -7,5 +6,3 @@ MUI_LAYOUTS caESLayouts[] =
     { L"0409", L"00000409" },
     { NULL, NULL }
 };
-
-#endif

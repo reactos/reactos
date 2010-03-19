@@ -51,6 +51,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(msi);
  *  Any binary data in a table is a reference to a stream.
  */
 
+#define IS_INTMSIDBOPEN(x)      (((ULONG_PTR)(x) >> 16) == 0)
+
 typedef struct tagMSITRANSFORM {
     struct list entry;
     IStorage *stg;
@@ -123,20 +125,14 @@ static UINT clone_open_stream( MSIDATABASE *db, LPCWSTR name, IStream **stm )
 
 UINT db_get_raw_stream( MSIDATABASE *db, LPCWSTR stname, IStream **stm )
 {
-    LPWSTR encname;
     HRESULT r;
 
-    encname = encode_streamname(FALSE, stname);
+    TRACE("%s\n", debugstr_w(stname));
 
-    TRACE("%s -> %s\n",debugstr_w(stname),debugstr_w(encname));
-
-    if (clone_open_stream( db, encname, stm ) == ERROR_SUCCESS)
-    {
-        msi_free( encname );
+    if (clone_open_stream( db, stname, stm ) == ERROR_SUCCESS)
         return ERROR_SUCCESS;
-    }
 
-    r = IStorage_OpenStream( db->storage, encname, NULL,
+    r = IStorage_OpenStream( db->storage, stname, NULL,
                              STGM_READ | STGM_SHARE_EXCLUSIVE, 0, stm );
     if( FAILED( r ) )
     {
@@ -145,14 +141,12 @@ UINT db_get_raw_stream( MSIDATABASE *db, LPCWSTR stname, IStream **stm )
         LIST_FOR_EACH_ENTRY( transform, &db->transforms, MSITRANSFORM, entry )
         {
             TRACE("looking for %s in transform storage\n", debugstr_w(stname) );
-            r = IStorage_OpenStream( transform->stg, encname, NULL,
+            r = IStorage_OpenStream( transform->stg, stname, NULL,
                                      STGM_READ | STGM_SHARE_EXCLUSIVE, 0, stm );
             if (SUCCEEDED(r))
                 break;
         }
     }
-
-    msi_free( encname );
 
     if( SUCCEEDED(r) )
     {
@@ -179,10 +173,15 @@ UINT read_raw_stream_data( MSIDATABASE *db, LPCWSTR stname,
     ULONG sz, count;
     IStream *stm = NULL;
     STATSTG stat;
+    LPWSTR encname;
 
-    r = db_get_raw_stream( db, stname, &stm );
+    encname = encode_streamname( FALSE, stname );
+    r = db_get_raw_stream( db, encname, &stm );
+    msi_free( encname );
+
     if( r != ERROR_SUCCESS)
         return ret;
+
     r = IStream_Stat(stm, &stat, STATFLAG_NONAME );
     if( FAILED( r ) )
     {
@@ -223,16 +222,6 @@ end:
     return ret;
 }
 
-void append_storage_to_db( MSIDATABASE *db, IStorage *stg )
-{
-    MSITRANSFORM *t;
-
-    t = msi_alloc( sizeof *t );
-    t->stg = stg;
-    IStorage_AddRef( stg );
-    list_add_tail( &db->transforms, &t->entry );
-}
-
 static void free_transforms( MSIDATABASE *db )
 {
     while( !list_empty( &db->transforms ) )
@@ -255,6 +244,19 @@ static void free_streams( MSIDATABASE *db )
         IStream_Release( s->stm );
         msi_free( s );
     }
+}
+
+void append_storage_to_db( MSIDATABASE *db, IStorage *stg )
+{
+    MSITRANSFORM *t;
+
+    t = msi_alloc( sizeof *t );
+    t->stg = stg;
+    IStorage_AddRef( stg );
+    list_add_tail( &db->transforms, &t->entry );
+
+    /* the transform may add or replace streams */
+    free_streams( db );
 }
 
 static VOID MSI_CloseDatabase( MSIOBJECTHDR *arg )
@@ -306,7 +308,7 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
 
     save_path = szDBPath;
     szMode = szPersist;
-    if( HIWORD( szPersist ) )
+    if( !IS_INTMSIDBOPEN(szPersist) )
     {
         if (!CopyFileW( szDBPath, szPersist, FALSE ))
             return ERROR_OPEN_FAILED;
@@ -459,7 +461,7 @@ UINT WINAPI MsiOpenDatabaseA(LPCSTR szDBPath, LPCSTR szPersist, MSIHANDLE *phDB)
             goto end;
     }
 
-    if( HIWORD(szPersist) )
+    if( !IS_INTMSIDBOPEN(szPersist) )
     {
         szwPersist = strdupAtoW( szPersist );
         if( !szwPersist )
@@ -471,7 +473,7 @@ UINT WINAPI MsiOpenDatabaseA(LPCSTR szDBPath, LPCSTR szPersist, MSIHANDLE *phDB)
     r = MsiOpenDatabaseW( szwDBPath, szwPersist, phDB );
 
 end:
-    if( HIWORD(szPersist) )
+    if( !IS_INTMSIDBOPEN(szPersist) )
         msi_free( szwPersist );
     msi_free( szwDBPath );
 

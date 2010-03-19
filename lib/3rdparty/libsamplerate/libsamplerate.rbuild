@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE module SYSTEM "../../tools/rbuild/project.dtd">
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="libsamplerate" type="staticlibrary" allowwarnings="true">
 	<define name="HAVE_LRINT" />
 	<define name="HAVE_LRINTF" />

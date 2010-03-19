@@ -136,7 +136,7 @@ static HRESULT WINAPI HTMLDocument5_createComment(IHTMLDocument5 *iface, BSTR bs
         return E_UNEXPECTED;
     }
 
-    nsAString_Init(&str, bstrdata);
+    nsAString_InitDepend(&str, bstrdata);
     nsres = nsIDOMHTMLDocument_CreateComment(This->doc_node->nsdoc, &str, &nscomment);
     nsAString_Finish(&str);
     if(NS_FAILED(nsres)) {

@@ -2,8 +2,7 @@
  *
  */
 
-#ifndef __INTERNAL_HAL_APIC_H
-#define __INTERNAL_HAL_APIC_H
+#pragma once
 
 #ifdef _M_AMD64
 #define APIC_DEFAULT_BASE     0xfffffffffee00000ULL;
@@ -250,7 +249,5 @@ static __inline VOID APICSendEOI(VOID)
     // Send the EOI
     APICWrite(APIC_EOI, 0);
 }
-
-#endif /* __INTERNAL_HAL_APIC_H */
 
 /* EOF */

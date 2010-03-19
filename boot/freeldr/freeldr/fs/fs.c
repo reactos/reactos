@@ -319,15 +319,26 @@ LONG ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
                     FileData[DeviceId].FuncTable = NULL;
                     return ret;
                 }
+                else if (!*FileName)
+                {
+                    /* Done, caller wanted to open the raw device */
+                    *FileId = DeviceId;
+                    pDevice->ReferenceCount++;
+                    return ESUCCESS;
+                }
 
                 /* Try to detect the file system */
+#ifndef _M_ARM
                 FileData[DeviceId].FileFuncTable = IsoMount(DeviceId);
                 if (!FileData[DeviceId].FileFuncTable)
+#endif
                     FileData[DeviceId].FileFuncTable = FatMount(DeviceId);
+#ifndef _M_ARM
                 if (!FileData[DeviceId].FileFuncTable)
                     FileData[DeviceId].FileFuncTable = NtfsMount(DeviceId);
                 if (!FileData[DeviceId].FileFuncTable)
                     FileData[DeviceId].FileFuncTable = Ext2Mount(DeviceId);
+#endif
                 if (!FileData[DeviceId].FileFuncTable)
                 {
                     /* Error, unable to detect file system */

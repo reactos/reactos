@@ -1807,9 +1807,7 @@ BOOL WINAPI InitializeCriticalSectionAndSpinCount(LPCRITICAL_SECTION,DWORD);
 DWORD WINAPI SetCriticalSectionSpinCount(LPCRITICAL_SECTION,DWORD);
 BOOL WINAPI InitializeSecurityDescriptor(PSECURITY_DESCRIPTOR,DWORD);
 BOOL WINAPI InitializeSid (PSID,PSID_IDENTIFIER_AUTHORITY,BYTE);
-#if !defined(__WINDDK_H) && _WIN32_WINNT >= 0x0501
-VOID WINAPI InitializeSListHead(PSLIST_HEADER);
-#endif
+
 #if (_WIN32_WINNT >= 0x0600)
 VOID WINAPI InitializeSRWLock(PSRWLOCK);
 #endif
@@ -1881,7 +1879,15 @@ PSLIST_ENTRY WINAPI InterlockedPushEntrySList(PSLIST_HEADER,PSLIST_ENTRY);
 
 #endif // !(defined (_M_AMD64) || defined (_M_IA64))
 
-VOID WINAPI InitializeSListHead(PSLIST_HEADER);
+#if defined(_SLIST_HEADER_) && !defined(_NTOSP_)
+
+WINBASEAPI
+VOID
+WINAPI
+InitializeSListHead (
+  IN OUT PSLIST_HEADER ListHead);
+#endif
+
 USHORT WINAPI QueryDepthSList(PSLIST_HEADER);
 
 #ifdef _MSC_VER

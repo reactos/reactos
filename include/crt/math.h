@@ -584,23 +584,23 @@ __CRT_INLINE int isinf (double d) {
     return retval;
   }
 
-  __CRT_INLINE long long __cdecl llrint (double x)
+  __MINGW_EXTENSION __CRT_INLINE long long __cdecl llrint (double x)
   {
-    long long retval;
+    __MINGW_EXTENSION long long retval;
     __fistpll(x, retval);
     return retval;
   }
 
-  __CRT_INLINE long long __cdecl llrintf (float x)
+  __MINGW_EXTENSION __CRT_INLINE long long __cdecl llrintf (float x)
   {
-    long long retval;
+    __MINGW_EXTENSION long long retval;
     __fistpll(x, retval);
     return retval;
   }
 
-  __CRT_INLINE long long __cdecl llrintl (long double x)
+  __MINGW_EXTENSION __CRT_INLINE long long __cdecl llrintl (long double x)
   {
-    long long retval;
+    __MINGW_EXTENSION long long retval;
     __fistpll(x, retval);
     return retval;
   }
@@ -616,9 +616,9 @@ __CRT_INLINE int isinf (double d) {
   extern long __cdecl lroundf (float);
   extern long __cdecl lroundl (long double);
 
-  extern long long __cdecl llround (double);
-  extern long long __cdecl llroundf (float);
-  extern long long __cdecl llroundl (long double);
+  __MINGW_EXTENSION extern long long __cdecl llround (double);
+  __MINGW_EXTENSION extern long long __cdecl llroundf (float);
+  __MINGW_EXTENSION extern long long __cdecl llroundl (long double);
 
   /* 7.12.9.8 */
   /* round towards zero, regardless of fpu control word settings */

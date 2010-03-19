@@ -1,5 +1,4 @@
-#ifndef _WIN32K_DESKTOP_H
-#define _WIN32K_DESKTOP_H
+#pragma once
 
 #include "msgqueue.h"
 #include "window.h"
@@ -251,7 +250,5 @@ DesktopHeapAddressToUser(PVOID lpMem)
 
     return NULL;
 }
-
-#endif /* _WIN32K_DESKTOP_H */
 
 /* EOF */

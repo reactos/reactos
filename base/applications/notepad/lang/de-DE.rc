@@ -127,7 +127,7 @@ FONT 8, "MS Shell Dlg"
 CAPTION "Enkodierung"
 BEGIN
 COMBOBOX        ID_ENCODING,54,0,156,80,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-LTEXT           "Enkodierung:",0x155,5,2,41,12
+LTEXT           "Kodierung:",0x155,5,2,41,12
 COMBOBOX        ID_EOLN,54,18,156,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 LTEXT           "Zeilenenden:",0x156,5,20,41,12
 END
@@ -161,7 +161,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  STRING_LICENSE, "Dieses Programm ist kostenlos; Sie können es frei verteilen mit od. ohne Änderungen unter der GNU Lesser General Public License wie es von der Free Software Foundation veröffentlicht wurde; entweder Version 2.1 der Lizenz, oder eine spätere Version (ihrer Wahl).\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+  STRING_LICENSE, "Dieses Programm ist kostenlos; Sie können es frei verteilen mit od. ohne Änderungen unter der GNU Lesser General Public License, wie es von der Free Software Foundation veröffentlicht wurde; entweder Version 2.1 der Lizenz, oder eine spätere Version (ihrer Wahl).\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 STRINGTABLE DISCARDABLE
@@ -183,7 +183,7 @@ STRING_UNTITLED,                                "(unbenannt)"
 STRING_ALL_FILES,                               "Alle Dateien (*.*)"
 STRING_TEXT_FILES_TXT,                  "Textdateien (*.txt)"
 
-STRING_TOOLARGE,                                "Die Datei '%s' ist zu groß für den Editor\n \
+STRING_TOOLARGE,                                "Die Datei '%s' ist zu groß für den Editor.\n \
 Benutzen Sie bitte einen anderen Editor, um diese Datei zu bearbeiten."
 STRING_NOTEXT,                                  "Sie haben keinen Text eingegeben, der \
 gespeichert\n werden könnte. Geben Sie Text ein, und versuchen Sie es \

@@ -2624,7 +2624,8 @@ HRESULT create_date_constr(script_ctx_t *ctx, DispatchEx *object_prototype, Disp
     if(FAILED(hres))
         return hres;
 
-    hres = create_builtin_function(ctx, DateConstr_value, DateW, &DateConstr_info, PROPF_CONSTR, date, ret);
+    hres = create_builtin_function(ctx, DateConstr_value, DateW, &DateConstr_info,
+            PROPF_CONSTR|7, date, ret);
 
     jsdisp_release(date);
     return hres;

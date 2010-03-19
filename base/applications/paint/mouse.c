@@ -251,15 +251,18 @@ endPaintingL(HDC hdc, short x, short y, int fg, int bg)
             resetToU1();
             if ((rectSel_src[2] != 0) && (rectSel_src[3] != 0))
             {
-                DeleteObject(SelectObject
-                             (hSelDC, hSelBm =
-                              (HBITMAP) CreateDIBWithProperties(rectSel_src[2], rectSel_src[3])));
                 DeleteObject(hSelMask);
+                hSelMask = CreateBitmap(rectSel_src[2], rectSel_src[3], 1, 1, NULL);
+                DeleteObject(SelectObject(hSelDC, hSelMask));
+                Rect(hSelDC, 0, 0, rectSel_src[2], rectSel_src[3], 0x00ffffff, 0x00ffffff, 1, 2);
+                SelectObject(hSelDC, hSelBm = CreateDIBWithProperties(rectSel_src[2], rectSel_src[3]));
+                resetToU1();
                 BitBlt(hSelDC, 0, 0, rectSel_src[2], rectSel_src[3], hDrawingDC, rectSel_src[0],
                        rectSel_src[1], SRCCOPY);
                 Rect(hdc, rectSel_src[0], rectSel_src[1], rectSel_src[0] + rectSel_src[2],
                      rectSel_src[1] + rectSel_src[3], bgColor, bgColor, 0, TRUE);
                 newReversible();
+
                 placeSelWin();
                 ShowWindow(hSelection, SW_SHOW);
             }

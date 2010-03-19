@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "resource.h"
+
 #pragma code_page(65001)
 
 LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
@@ -31,5 +33,3 @@ STRINGTABLE DISCARDABLE
   IDS_ON    "Vključeno"
   IDS_OFF   "Izključeno"
 }
-
-#pragma code_page(default)

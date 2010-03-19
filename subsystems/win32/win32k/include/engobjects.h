@@ -25,8 +25,8 @@
  * REVISION HISTORY:
  *                 21/8/1999: Created
  */
-#ifndef __ENG_OBJECTS_H
-#define __ENG_OBJECTS_H
+
+#pragma once
 
 #include <ft2build.h>
 #include <freetype/freetype.h>
@@ -42,6 +42,34 @@
 
 ---------------------------------------------------------------------------*/
 
+/* EXtended CLip and Window Region Object */
+typedef struct _XCLIPOBJ
+{
+  WNDOBJ;
+  PVOID   pClipRgn;    /* prgnRao_ or (prgnVis_ if (prgnRao_ == z)) */
+  RECTL   rclClipRgn;
+  PVOID   pscanClipRgn; /* Ptr to regions rect buffer based on iDirection. */
+  DWORD   cScan;
+  DWORD   reserved;
+  ULONG   ulBSize;
+  LONG    lscnSize;
+  ULONG   ulObjSize;
+  ULONG   iDirection;
+  ULONG   ulClipType;
+  DWORD   reserved1;
+  LONG    lUpDown;
+  DWORD   reserved2;
+  BOOL    bShouldDoAll;
+  DWORD   nComplexity; /* count/mode based on # of rect in regions scan. */
+  PVOID   pDDA;        /* Pointer to a large drawing structure. */
+} XCLIPOBJ, *PXCLIPOBJ;
+/*
+  EngCreateClip allocates XCLIPOBJ and RGNOBJ, pco->co.pClipRgn = &pco->ro.
+  {
+    XCLIPOBJ co;
+    RGNOBJ   ro;
+  }
+ */
 typedef struct _CLIPGDI {
   CLIPOBJ ClipObj;
   ULONG EnumPos;
@@ -105,6 +133,3 @@ typedef struct _XFORMGDI {
    we can simply typecast the pointer */
 #define ObjToGDI(ClipObj, Type) (Type##GDI *)(ClipObj)
 #define GDIToObj(ClipGDI, Type) (Type##OBJ *)(ClipGDI)
-
-
-#endif //__ENG_OBJECTS_H

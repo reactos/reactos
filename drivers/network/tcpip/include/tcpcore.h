@@ -24,8 +24,8 @@
  *		as published by the Free Software Foundation; either version
  *		2 of the License, or (at your option) any later version.
  */
-#ifndef __TCPCORE_H
-#define __TCPCORE_H
+
+#pragma once
 
 #include "tcpdef.h"
 
@@ -3852,5 +3852,4 @@ static __inline int tcp_paws_check(struct tcp_opt *tp, int rst)
 
 
 //
-#endif
 #endif

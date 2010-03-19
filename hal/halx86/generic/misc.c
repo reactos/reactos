@@ -28,6 +28,7 @@ HalpCheckPowerButton(VOID)
     return;
 }
 
+#ifndef _MINIHAL_
 PVOID
 NTAPI
 HalpMapPhysicalMemory64(IN PHYSICAL_ADDRESS PhysicalAddress,
@@ -51,6 +52,7 @@ HalpUnmapVirtualAddress(IN PVOID VirtualAddress,
     //
     MmUnmapIoSpace(VirtualAddress, NumberPages << PAGE_SHIFT);
 }
+#endif
 
 VOID
 NTAPI
@@ -102,6 +104,7 @@ HalpFlushTLB(VOID)
             // Restore interrupts
             //
             __writeeflags(Flags);
+            return;
         }
     }
 
@@ -121,6 +124,7 @@ VOID
 NTAPI
 HalHandleNMI(IN PVOID NmiInfo)
 {
+#ifndef _MINIHAL_
     SYSTEM_CONTROL_PORT_B_REGISTER SystemControl;
 
     //
@@ -201,6 +205,7 @@ HalHandleNMI(IN PVOID NmiInfo)
     // Halt the system
     //
     InbvDisplayString("\n*** The system has halted ***\n");
+#endif
 
     //
     // Enter the debugger if possible

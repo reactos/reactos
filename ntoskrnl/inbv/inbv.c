@@ -5,24 +5,6 @@
 #include <debug.h>
 #include "bootvid/bootvid.h"
 
-//
-// Bitmap Header
-//
-typedef struct tagBITMAPINFOHEADER
-{
-    ULONG biSize;
-    LONG biWidth;
-    LONG biHeight;
-    USHORT biPlanes;
-    USHORT biBitCount;
-    ULONG biCompression;
-    ULONG biSizeImage;
-    LONG biXPelsPerMeter;
-    LONG biYPelsPerMeter;
-    ULONG biClrUsed;
-    ULONG biClrImportant;
-} BITMAPINFOHEADER, *PBITMAPINFOHEADER;
-
 /* GLOBALS *******************************************************************/
 
 KSPIN_LOCK BootDriverLock;
@@ -40,6 +22,7 @@ PUCHAR ResourceList[64];
 BOOLEAN SysThreadCreated;
 ROT_BAR_TYPE RotBarSelection;
 ULONG PltRotBarStatus;
+BT_PROGRESS_INDICATOR InbvProgressIndicator = {0, 25, 0};
 
 /* FUNCTIONS *****************************************************************/
 
@@ -111,7 +94,6 @@ InbvDriverInitialize(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     PCHAR CommandLine;
     BOOLEAN CustomLogo = FALSE;
     ULONG i;
-    extern BOOLEAN ExpInTextModeSetup;
 
     /* Quit if we're already installed */
     if (InbvBootDriverInstalled) return TRUE;
@@ -125,13 +107,13 @@ InbvDriverInitialize(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         CustomLogo = strstr(CommandLine, "BOOTLOGO") ? TRUE: FALSE;
     }
 
-    /* For SetupLDR, don't reset the BIOS Display -- FIXME! */
-    if (ExpInTextModeSetup) CustomLogo = TRUE;
-
     /* Initialize the video */
-    InbvBootDriverInstalled = VidInitialize(!CustomLogo);
+    InbvBootDriverInstalled = VidInitialize(FALSE);
     if (InbvBootDriverInstalled)
     {
+        /* Now reset the display, but only if there's a custom boot logo */
+        VidResetDisplay(CustomLogo);
+        
         /* Find bitmap resources in the kernel */
         ResourceCount = Count;
         for (i = 0; i < Count; i++)
@@ -408,38 +390,29 @@ VOID
 NTAPI
 InbvUpdateProgressBar(IN ULONG Progress)
 {
-    ULONG FillCount, Left = 0;
+    ULONG FillCount, BoundedProgress;
 
     /* Make sure the progress bar is enabled, that we own and are installed */
     if ((ShowProgressBar) &&
         (InbvBootDriverInstalled) &&
         (InbvDisplayState == INBV_DISPLAY_STATE_OWNED))
     {
-        /* Calculate the fill count */
-        FillCount = InbvProgressState.Bias * Progress + InbvProgressState.Floor;
-        FillCount *= 18;
-        FillCount /= 10000;
+        /* Compute fill count */
+        BoundedProgress = (InbvProgressState.Floor / 100) + Progress;
+        FillCount = 121 * (InbvProgressState.Bias * BoundedProgress) / 1000000;
 
-        /* Start fill loop */
-        while (FillCount)
-        {
-            /* Acquire the lock */
-            InbvAcquireLock();
+        /* Acquire the lock */
+        InbvAcquireLock();
 
-            /* Fill the progress bar */
-            VidSolidColorFill(Left + ProgressBarLeft,
-                              ProgressBarTop,
-                              Left + ProgressBarLeft + 7,
-                              ProgressBarTop + 7,
-                              11);
+        /* Fill the progress bar */
+        VidSolidColorFill(ProgressBarLeft,
+                          ProgressBarTop,
+                          ProgressBarLeft + FillCount,
+                          ProgressBarTop + 12,
+                          15);
 
-            /* Release the lock */
-            InbvReleaseLock();
-
-            /* Update the X position */
-            Left += 9;
-            FillCount--;
-        }
+        /* Release the lock */
+        InbvReleaseLock();
     }
 }
 
@@ -528,6 +501,27 @@ InbvSetProgressBarSubset(IN ULONG Floor,
     InbvProgressState.Bias = (Ceiling * 100) - Floor;
 }
 
+VOID
+NTAPI
+InbvIndicateProgress(VOID)
+{
+    ULONG Percentage;
+
+    /* Increase progress */
+    InbvProgressIndicator.Count++;
+
+    /* Compute new percentage */
+    Percentage = min(100 * InbvProgressIndicator.Count /
+                           InbvProgressIndicator.Expected,
+                     99);
+    if (Percentage != InbvProgressIndicator.Percentage)
+    {
+        /* Percentage has moved, update the progress bar */
+        InbvProgressIndicator.Percentage = Percentage;
+        InbvUpdateProgressBar(Percentage);
+    }
+}
+
 PUCHAR
 NTAPI
 InbvGetResourceAddress(IN ULONG ResourceNumber)
@@ -558,9 +552,10 @@ VOID
 NTAPI
 DisplayBootBitmap(IN BOOLEAN SosMode)
 {
-    PVOID Bitmap, Header;
+    PVOID Header, Band, Bar, Text, Screen;
     ROT_BAR_TYPE TempRotBarSelection = RB_UNSPECIFIED;
-
+    UCHAR Buffer[64];
+    
     /* Check if the system thread has already been created */
     if (SysThreadCreated)
     {
@@ -581,10 +576,10 @@ DisplayBootBitmap(IN BOOLEAN SosMode)
             InbvSetTextColor(15);
             InbvSolidColorFill(0, 0, 639, 479, 7);
             InbvSolidColorFill(0, 421, 639, 479, 1);
-
+            
             /* Get resources */
-            Bitmap = InbvGetResourceAddress(6);
-            Header = InbvGetResourceAddress(7);
+            Header = InbvGetResourceAddress(IDB_LOGO_HEADER);
+            Band = InbvGetResourceAddress(IDB_LOGO_BAND);
         }
         else
         {
@@ -594,40 +589,87 @@ DisplayBootBitmap(IN BOOLEAN SosMode)
             InbvSolidColorFill(0, 421, 639, 479, 1);
 
             /* Get resources */
-            Bitmap = InbvGetResourceAddress(6);
-            Header = InbvGetResourceAddress(15);
+            Header = InbvGetResourceAddress(IDB_SERVER_HEADER);
+            Band = InbvGetResourceAddress(IDB_SERVER_BAND);
         }
 
         /* Set the scrolling region */
         InbvSetScrollRegion(32, 80, 631, 400);
 
         /* Make sure we have resources */
-        if ((Bitmap) && (Header))
+        if ((Header) && (Band))
         {
             /* BitBlt them on the screen */
-            InbvBitBlt(Header, 0, 419);
-            InbvBitBlt(Bitmap, 0, 0);
+            InbvBitBlt(Band, 0, 419);
+            InbvBitBlt(Header, 0, 0);
         }
     }
     else
     {
         /* Is the boot driver installed? */
+        Text = NULL;
         if (!InbvBootDriverInstalled) return;
 
-        /* FIXME: TODO, display full-screen bitmap */
-        Bitmap = InbvGetResourceAddress(5);
-        if (Bitmap)
+        /* Load the standard boot screen */
+        Screen = InbvGetResourceAddress(IDB_BOOT_LOGO);
+        if (SharedUserData->NtProductType == NtProductWinNt)
         {
-            PBITMAPINFOHEADER BitmapInfoHeader = (PBITMAPINFOHEADER)Bitmap;
-            ULONG Top, Left;
-
-            Left = (640 - BitmapInfoHeader->biWidth) / 2;
-            if (BitmapInfoHeader->biHeight < 0)
-                Top = (480 + BitmapInfoHeader->biHeight) / 2;
-            else
-                Top = (480 - BitmapInfoHeader->biHeight) / 2;
-            InbvBitBlt(Bitmap, Left, Top);
+            /* Workstation product, display appropriate status bar color */
+            Bar = InbvGetResourceAddress(IDB_BAR_PRO);
         }
+        else
+        {
+            /* Display correct branding based on server suite */
+            if (ExVerifySuite(StorageServer))
+            {
+                /* Storage Server Edition */
+                Text = InbvGetResourceAddress(IDB_STORAGE_SERVER);
+            }
+            else if (ExVerifySuite(ComputeServer))
+            {
+                /* Compute Cluster Edition */
+                Text = InbvGetResourceAddress(IDB_CLUSTER_SERVER);
+            }
+            else
+            {
+                /* Normal edition */
+                Text = InbvGetResourceAddress(IDB_SERVER_LOGO);
+            }
+            
+            /* Server product, display appropriate status bar color */
+            Bar = InbvGetResourceAddress(IDB_BAR_SERVER);
+        }
+        
+        /* Make sure we had a logo */
+        if (Screen)
+        {
+            /* Choose progress bar */
+            TempRotBarSelection = RB_SQUARE_CELLS;
+
+            /* Blit the background */
+            InbvBitBlt(Screen, 0, 0);
+
+            /* Set progress bar coordinates and display it */
+            InbvSetProgressBarCoordinates(257, 352);
+            
+            /* Check for non-workstation products */
+            if (SharedUserData->NtProductType != NtProductWinNt)
+            {
+                /* Overwrite part of the logo for a server product */
+                InbvScreenToBufferBlt(Buffer, 413, 237, 7, 7, 8);
+                InbvSolidColorFill(418, 230, 454, 256, 0);
+                InbvBufferToScreenBlt(Buffer, 413, 237, 7, 7, 8);
+                
+                /* In setup mode, you haven't selected a SKU yet */
+                if (ExpInTextModeSetup) Text = NULL;
+            }
+          }
+          
+          /* Draw the SKU text if it exits */
+          if (Text) InbvBitBlt(Text, 180, 121);
+          
+          /* Draw the progress bar bit */
+//          if (Bar) InbvBitBlt(Bar, 0, 0);
     }
 
     /* Do we have a system thread? */

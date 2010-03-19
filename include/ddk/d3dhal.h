@@ -22,6 +22,15 @@
 #ifndef _D3DHAL_H_
 #define _D3DHAL_H_
 
+/* Helper macro to enable gcc's extension.  */
+#ifndef __GNU_EXTENSION
+#ifdef __GNUC__
+#define __GNU_EXTENSION __extension__
+#else
+#define __GNU_EXTENSION
+#endif
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -787,7 +796,7 @@ typedef struct _DD_GETD3DQUERYCOUNTDATA
 typedef struct _DD_GETD3DQUERYDATA
 {
     DD_GETDRIVERINFO2DATA gdi2;
-    union
+    __GNU_EXTENSION union
     {
         DWORD dwQueryIndex;
         D3DQUERYTYPE QueryType;

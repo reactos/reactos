@@ -29,7 +29,7 @@ extern "C" {
 #if defined(__GNUC__) && defined(__STRICT_ANSI__)
   typedef unsigned int uintptr_t __attribute__ ((mode (DI)));
 #else
-  typedef unsigned __int64 uintptr_t;
+  __MINGW_EXTENSION typedef unsigned __int64 uintptr_t;
 #endif
 #else
   typedef unsigned long uintptr_t;

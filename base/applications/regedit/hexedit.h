@@ -1,5 +1,4 @@
-#ifndef __HEXEDIT_H
-#define __HEXEDIT_H
+#pragma once
 
 #define HEX_EDIT_CLASS_NAME _T("HexEdit32")
 
@@ -36,5 +35,3 @@ UnregisterHexEditorClass(HINSTANCE hInstance);
 
 #define HexEdit_SetMaxBufferSize(hWnd, Size) \
   SendMessage((hWnd), HEM_SETMAXBUFFERSIZE, 0, (LPARAM)(Size))
-
-#endif /* __HEXEDIT_H */

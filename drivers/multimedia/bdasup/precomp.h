@@ -1,5 +1,4 @@
-#ifndef PRECOMP_H__
-#define PRECOMP_H__
+#pragma once
 
 #include <ntddk.h>
 #include <windef.h>
@@ -38,7 +37,3 @@ AllocateItem(
 VOID
 FreeItem(
     IN PVOID Item);
-
-
-
-#endif

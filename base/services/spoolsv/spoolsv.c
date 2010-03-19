@@ -18,7 +18,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(spoolsv);
 
 /* GLOBALS ******************************************************************/
 
-#define SERVICE_NAME TEXT("Spooler")
+static VOID CALLBACK ServiceMain(DWORD argc, LPWSTR *argv);
+static WCHAR ServiceName[] = L"Spooler";
+static SERVICE_TABLE_ENTRYW ServiceTable[] =
+{
+    {ServiceName, ServiceMain},
+    {NULL, NULL}
+};
 
 SERVICE_STATUS_HANDLE ServiceStatusHandle;
 SERVICE_STATUS ServiceStatus;
@@ -100,14 +106,14 @@ ServiceControlHandler(DWORD dwControl,
 
 
 static VOID CALLBACK
-ServiceMain(DWORD argc, LPTSTR *argv)
+ServiceMain(DWORD argc, LPWSTR *argv)
 {
     UNREFERENCED_PARAMETER(argc);
     UNREFERENCED_PARAMETER(argv);
 
     TRACE("ServiceMain() called\n");
 
-    ServiceStatusHandle = RegisterServiceCtrlHandlerExW(SERVICE_NAME,
+    ServiceStatusHandle = RegisterServiceCtrlHandlerExW(ServiceName,
                                                         ServiceControlHandler,
                                                         NULL);
 
@@ -123,12 +129,6 @@ ServiceMain(DWORD argc, LPTSTR *argv)
 int
 wmain(int argc, WCHAR *argv[])
 {
-    SERVICE_TABLE_ENTRY ServiceTable[2] =
-    {
-        {SERVICE_NAME, ServiceMain},
-        {NULL, NULL}
-    };
-
     UNREFERENCED_PARAMETER(argc);
     UNREFERENCED_PARAMETER(argv);
 
@@ -137,8 +137,6 @@ wmain(int argc, WCHAR *argv[])
     StartServiceCtrlDispatcher(ServiceTable);
 
     TRACE("Spoolsv: main() done\n");
-
-    ExitThread(0);
 
     return 0;
 }

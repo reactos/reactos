@@ -334,7 +334,7 @@ static inline void send_attribute(IWineD3DDeviceImpl *This, WINED3DFORMAT format
             GL_EXTCALL(glVertexAttrib4ubvARB(index, ptr));
             break;
         case WINED3DFMT_B8G8R8A8_UNORM:
-            if (gl_info->supported[EXT_VERTEX_ARRAY_BGRA])
+            if (gl_info->supported[ARB_VERTEX_ARRAY_BGRA])
             {
                 const DWORD *src = ptr;
                 DWORD c = *src & 0xff00ff00;
@@ -690,6 +690,9 @@ void drawPrimitive(IWineD3DDevice *iface, UINT index_count, UINT StartIdx, UINT 
 
     /* Finished updating the screen, restore lock */
     LEAVE_GL();
+
+    wglFlush(); /* Flush to ensure ordering across contexts. */
+
     context_release(context);
 
     TRACE("Done all gl drawing\n");
@@ -1100,7 +1103,7 @@ HRESULT tesselate_rectpatch(IWineD3DDeviceImpl *This,
     if(patch->has_texcoords) {
         vtxStride += 4 * sizeof(float);
     }
-    memset(&patch->strided, 0, sizeof(&patch->strided));
+    memset(&patch->strided, 0, sizeof(patch->strided));
     patch->strided.position.format = WINED3DFMT_R32G32B32_FLOAT;
     patch->strided.position.lpData = (BYTE *) patch->mem;
     patch->strided.position.dwStride = vtxStride;

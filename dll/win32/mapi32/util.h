@@ -61,5 +61,6 @@ typedef struct MAPI_FUNCTIONS {
 } MAPI_FUNCTIONS;
 
 extern MAPI_FUNCTIONS mapiFunctions;
+extern HINSTANCE hInstMAPI32;
 
 #endif

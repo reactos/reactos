@@ -65,11 +65,37 @@ typedef struct ContentItem {
     ChmPath merge;
 } ContentItem;
 
+typedef struct IndexSubItem {
+    LPWSTR name;
+    LPWSTR local;
+} IndexSubItem;
+
+typedef struct IndexItem {
+    struct IndexItem *next;
+
+    HTREEITEM id;
+    LPWSTR keyword;
+    ChmPath merge;
+
+    int nItems;
+    int itemFlags;
+    int indentLevel;
+    IndexSubItem *items;
+} IndexItem;
+
+typedef struct SearchItem {
+    struct SearchItem *next;
+
+    HTREEITEM id;
+    LPWSTR title;
+    LPWSTR filename;
+} SearchItem;
+
 typedef struct CHMInfo
 {
     IITStorage *pITStorage;
     IStorage *pStorage;
-    LPCWSTR szFile;
+    WCHAR *szFile;
 
     IStream *strings_stream;
     char **strings;
@@ -89,6 +115,19 @@ typedef struct {
     HWND hwnd;
     DWORD id;
 } HHTab;
+
+typedef struct {
+    HWND hwndList;
+    HWND hwndPopup;
+    HWND hwndCallback;
+} IndexPopup;
+
+typedef struct {
+    SearchItem *root;
+    HWND hwndEdit;
+    HWND hwndList;
+    HWND hwndContainer;
+} SearchTab;
 
 typedef struct {
     IOleClientSite *client_site;
@@ -111,6 +150,9 @@ typedef struct {
 
     CHMInfo *pCHMInfo;
     ContentItem *content;
+    IndexItem *index;
+    IndexPopup popup;
+    SearchTab search;
     HWND hwndTabCtrl;
     HWND hwndSizeBar;
     HFONT hFont;
@@ -127,6 +169,9 @@ void DoPageAction(HHInfo*,DWORD);
 void InitContent(HHInfo*);
 void ReleaseContent(HHInfo*);
 
+void InitIndex(HHInfo*);
+void ReleaseIndex(HHInfo*);
+
 CHMInfo *OpenCHM(LPCWSTR szFile);
 BOOL LoadWinTypeFromCHM(HHInfo *info);
 CHMInfo *CloseCHM(CHMInfo *pCHMInfo);
@@ -138,6 +183,9 @@ HHInfo *CreateHelpViewer(LPCWSTR);
 void ReleaseHelpViewer(HHInfo*);
 BOOL NavigateToUrl(HHInfo*,LPCWSTR);
 BOOL NavigateToChm(HHInfo*,LPCWSTR,LPCWSTR);
+
+void InitSearch(HHInfo *info, const char *needle);
+void ReleaseSearch(HHInfo *info);
 
 /* memory allocation functions */
 

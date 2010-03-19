@@ -16,7 +16,6 @@
 
 	<file>ati_fragment_shader.c</file>
 	<file>arb_program_shader.c</file>
-	<file>baseshader.c</file>
 	<file>basetexture.c</file>
 	<file>buffer.c</file>
 	<file>clipper.c</file>

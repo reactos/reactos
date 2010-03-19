@@ -27,14 +27,121 @@
 extern "C" {
 #endif
 
+#ifndef _PO_DDK_
+#define _PO_DDK_
+
+/* Power States/Levels */
+typedef enum _SYSTEM_POWER_STATE {
+    PowerSystemUnspecified,
+    PowerSystemWorking,
+    PowerSystemSleeping1,
+    PowerSystemSleeping2,
+    PowerSystemSleeping3,
+    PowerSystemHibernate,
+    PowerSystemShutdown,
+    PowerSystemMaximum
+} SYSTEM_POWER_STATE, *PSYSTEM_POWER_STATE;
+#define POWER_SYSTEM_MAXIMUM PowerSystemMaximum
+
+typedef enum _DEVICE_POWER_STATE {
+    PowerDeviceUnspecified,
+    PowerDeviceD0,
+    PowerDeviceD1,
+    PowerDeviceD2,
+    PowerDeviceD3,
+    PowerDeviceMaximum
+} DEVICE_POWER_STATE, *PDEVICE_POWER_STATE;
+
+typedef union _POWER_STATE {
+  SYSTEM_POWER_STATE  SystemState;
+  DEVICE_POWER_STATE  DeviceState;
+} POWER_STATE, *PPOWER_STATE;
+
+typedef enum _POWER_STATE_TYPE {
+  SystemPowerState = 0,
+  DevicePowerState
+} POWER_STATE_TYPE, *PPOWER_STATE_TYPE;
+
+typedef enum _POWER_INFORMATION_LEVEL {
+    SystemPowerPolicyAc,
+    SystemPowerPolicyDc,
+    VerifySystemPolicyAc,
+    VerifySystemPolicyDc,
+    SystemPowerCapabilities,
+    SystemBatteryState,
+    SystemPowerStateHandler,
+    ProcessorStateHandler,
+    SystemPowerPolicyCurrent,
+    AdministratorPowerPolicy,
+    SystemReserveHiberFile,
+    ProcessorInformation,
+    SystemPowerInformation,
+    ProcessorStateHandler2,
+    LastWakeTime,
+    LastSleepTime,
+    SystemExecutionState,
+    SystemPowerStateNotifyHandler,
+    ProcessorPowerPolicyAc,
+    ProcessorPowerPolicyDc,
+    VerifyProcessorPowerPolicyAc,
+    VerifyProcessorPowerPolicyDc,
+    ProcessorPowerPolicyCurrent,
+    SystemPowerStateLogging,
+    SystemPowerLoggingEntry,
+    SetPowerSettingValue,
+    NotifyUserPowerSetting,
+    PowerInformationLevelUnused0,
+    PowerInformationLevelUnused1,
+    SystemVideoState,
+    TraceApplicationPowerMessage,
+    TraceApplicationPowerMessageEnd,
+    ProcessorPerfStates,
+    ProcessorIdleStates,
+    ProcessorCap,
+    SystemWakeSource,
+    SystemHiberFileInformation,
+    TraceServicePowerMessage,
+    ProcessorLoad,
+    PowerShutdownNotification,
+    MonitorCapabilities,
+    SessionPowerInit,
+    SessionDisplayState,
+    PowerRequestCreate,
+    PowerRequestAction,
+    GetPowerRequestList,
+    ProcessorInformationEx,
+    NotifyUserModeLegacyPowerEvent,
+    GroupPark,
+    ProcessorIdleDomains,
+    WakeTimerList,
+    SystemHiberFileSize,
+    PowerInformationLevelMaximum
+} POWER_INFORMATION_LEVEL;
+
+typedef enum {
+    PowerActionNone,
+    PowerActionReserved,
+    PowerActionSleep,
+    PowerActionHibernate,
+    PowerActionShutdown,
+    PowerActionShutdownReset,
+    PowerActionShutdownOff,
+    PowerActionWarmEject
+} POWER_ACTION, *PPOWER_ACTION;
+
+#if (NTDDI_VERSION >= NTDDI_WINXP) || !defined(_BATCLASS_)
+typedef struct {
+    ULONG Granularity;
+    ULONG Capacity;
+} BATTERY_REPORTING_SCALE, *PBATTERY_REPORTING_SCALE;
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) || !defined(_BATCLASS_) */
+
+
+#endif /* _PO_DDK_ */
+
 #define POWER_PERF_SCALE                  100
 #define PERF_LEVEL_TO_PERCENT(x)          (((x) * 1000) / (POWER_PERF_SCALE * 10))
 #define PERCENT_TO_PERF_LEVEL(x)          (((x) * POWER_PERF_SCALE * 10) / 1000)
-
-typedef struct {
-    ULONG       Granularity;
-    ULONG       Capacity;
-} BATTERY_REPORTING_SCALE, *PBATTERY_REPORTING_SCALE;
 
 typedef struct _PROCESSOR_IDLE_TIMES {
 	ULONGLONG  StartTime;
@@ -269,6 +376,39 @@ typedef struct _PROCESSOR_POWER_INFORMATION {
   ULONG  MaxIdleState;
   ULONG  CurrentIdleState;
 } PROCESSOR_POWER_INFORMATION, *PPROCESSOR_POWER_INFORMATION;
+
+typedef struct _POWER_ACTION_POLICY {
+    POWER_ACTION Action;
+    ULONG Flags;
+    ULONG EventCode;
+} POWER_ACTION_POLICY, *PPOWER_ACTION_POLICY;
+
+/* POWER_ACTION_POLICY.Flags constants */
+#define POWER_ACTION_QUERY_ALLOWED        0x00000001
+#define POWER_ACTION_UI_ALLOWED           0x00000002
+#define POWER_ACTION_OVERRIDE_APPS        0x00000004
+#define POWER_ACTION_LIGHTEST_FIRST       0x10000000
+#define POWER_ACTION_LOCK_CONSOLE         0x20000000
+#define POWER_ACTION_DISABLE_WAKES        0x40000000
+#define POWER_ACTION_CRITICAL             0x80000000
+
+/* POWER_ACTION_POLICY.EventCode constants */
+#define POWER_LEVEL_USER_NOTIFY_TEXT      0x00000001
+#define POWER_LEVEL_USER_NOTIFY_SOUND     0x00000002
+#define POWER_LEVEL_USER_NOTIFY_EXEC      0x00000004
+#define POWER_USER_NOTIFY_BUTTON          0x00000008
+#define POWER_USER_NOTIFY_SHUTDOWN        0x00000010
+#define POWER_FORCE_TRIGGER_RESET         0x80000000
+
+#define DISCHARGE_POLICY_CRITICAL	0
+#define DISCHARGE_POLICY_LOW		1
+#define NUM_DISCHARGE_POLICIES		4
+
+#define PO_THROTTLE_NONE	0
+#define PO_THROTTLE_CONSTANT	1
+#define PO_THROTTLE_DEGRADE	2
+#define PO_THROTTLE_ADAPTIVE	3
+#define PO_THROTTLE_MAXIMUM	4
 
 #ifdef __cplusplus
 }

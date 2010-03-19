@@ -346,7 +346,8 @@ HRESULT create_number_constr(script_ctx_t *ctx, DispatchEx *object_prototype, Di
         return hres;
 
     V_VT(&number->num) = VT_I4;
-    hres = create_builtin_function(ctx, NumberConstr_value, NumberW, NULL, PROPF_CONSTR, &number->dispex, ret);
+    hres = create_builtin_function(ctx, NumberConstr_value, NumberW, NULL,
+            PROPF_CONSTR|1, &number->dispex, ret);
 
     jsdisp_release(&number->dispex);
     return hres;

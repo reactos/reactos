@@ -1,5 +1,4 @@
-#ifndef __WIN32K_PEN_H
-#define __WIN32K_PEN_H
+#pragma once
 
 #include "gdiobj.h"
 #include "brush.h"
@@ -31,5 +30,3 @@ PBRUSH FASTCALL PEN_LockPen(HGDIOBJ);
 PBRUSH FASTCALL PEN_ShareLockPen(HGDIOBJ);
 
 INT APIENTRY PEN_GetObject(PBRUSH pPen, INT Count, PLOGPEN Buffer);
-
-#endif

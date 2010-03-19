@@ -391,10 +391,43 @@ static HRESULT WINAPI ITSS_IStorageImpl_OpenStorage(
     IStorage** ppstg)
 {
     ITSS_IStorageImpl *This = (ITSS_IStorageImpl *)iface;
+    static const WCHAR szRoot[] = { '/', 0 };
+    struct chmFile *chmfile;
+    WCHAR *path, *p;
+    DWORD len;
 
-    FIXME("%p %s %p %u %p %u %p\n", This, debugstr_w(pwcsName),
+    TRACE("%p %s %p %u %p %u %p\n", This, debugstr_w(pwcsName),
           pstgPriority, grfMode, snbExclude, reserved, ppstg);
-    return E_NOTIMPL;
+
+    chmfile = chm_dup( This->chmfile );
+    if( !chmfile )
+        return E_FAIL;
+
+    len = strlenW( This->dir ) + strlenW( pwcsName ) + 1;
+    path = HeapAlloc( GetProcessHeap(), 0, len*sizeof(WCHAR) );
+    strcpyW( path, This->dir );
+
+    if( pwcsName[0] == '/' || pwcsName[0] == '\\' )
+    {
+        p = &path[strlenW( path ) - 1];
+        while( ( path <= p ) && ( *p == '/' ) )
+            *p-- = 0;
+    }
+    strcatW( path, pwcsName );
+
+    for(p=path; *p; p++) {
+        if(*p == '\\')
+            *p = '/';
+    }
+
+    if(*--p == '/')
+        *p = 0;
+
+    strcatW( path, szRoot );
+
+    TRACE("Resolving %s\n", debugstr_w(path));
+
+    return ITSS_create_chm_storage(chmfile, path, ppstg);
 }
 
 static HRESULT WINAPI ITSS_IStorageImpl_CopyTo(

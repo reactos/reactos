@@ -380,6 +380,124 @@ WrongCpu:
     ret
 .endfunc
 
+/* DPC INTERRUPT HANDLER ******************************************************/
+
+.globl _KiDispatchInterrupt@0
+.func KiDispatchInterrupt@0
+_KiDispatchInterrupt@0:
+
+    /* Preserve EBX */
+    push ebx
+
+    /* Get the PCR  and disable interrupts */
+    mov ebx, PCR[KPCR_SELF]
+    cli
+
+    /* Check if we have to deliver DPCs, timers, or deferred threads */
+    mov eax, [ebx+KPCR_PRCB_DPC_QUEUE_DEPTH]
+    or eax, [ebx+KPCR_PRCB_TIMER_REQUEST]
+    or eax, [ebx+KPCR_PRCB_DEFERRED_READY_LIST_HEAD]
+    jz CheckQuantum
+
+    /* Save stack pointer and exception list, then clear it */
+    push ebp
+    push dword ptr [ebx+KPCR_EXCEPTION_LIST]
+    mov dword ptr [ebx+KPCR_EXCEPTION_LIST], -1
+
+    /* Save the stack and switch to the DPC Stack */
+    mov edx, esp
+    mov esp, [ebx+KPCR_PRCB_DPC_STACK]
+    push edx
+
+    /* Deliver DPCs */
+    mov ecx, [ebx+KPCR_PRCB]
+    call @KiRetireDpcList@4
+
+    /* Restore stack and exception list */
+    pop esp
+    pop dword ptr [ebx+KPCR_EXCEPTION_LIST]
+    pop ebp
+
+CheckQuantum:
+
+    /* Re-enable interrupts */
+    sti
+
+    /* Check if we have quantum end */
+    cmp byte ptr [ebx+KPCR_PRCB_QUANTUM_END], 0
+    jnz QuantumEnd
+
+    /* Check if we have a thread to swap to */
+    cmp byte ptr [ebx+KPCR_PRCB_NEXT_THREAD], 0
+    je Return
+
+    /* Make space on the stack to save registers */
+    sub esp, 3 * 4
+    mov [esp+8], esi
+    mov [esp+4], edi
+    mov [esp+0], ebp
+
+    /* Get the current thread */
+    mov edi, [ebx+KPCR_CURRENT_THREAD]
+
+#ifdef CONFIG_SMP
+    /* Raise to synch level */
+    call _KeRaiseIrqlToSynchLevel@0
+
+    /* Set context swap busy */
+    mov byte ptr [edi+KTHREAD_SWAP_BUSY], 1
+
+    /* Acquire the PRCB Lock */
+    lock bts dword ptr [ebx+KPCR_PRCB_PRCB_LOCK], 0
+    jnb GetNext
+    lea ecx, [ebx+KPCR_PRCB_PRCB_LOCK]
+    call @KefAcquireSpinLockAtDpcLevel@4
+#endif
+
+GetNext:
+    /* Get the next thread and clear it */
+    mov esi, [ebx+KPCR_PRCB_NEXT_THREAD]
+    and dword ptr [ebx+KPCR_PRCB_NEXT_THREAD], 0
+
+    /* Set us as the current running thread */
+    mov [ebx+KPCR_CURRENT_THREAD], esi
+    mov byte ptr [esi+KTHREAD_STATE_], Running
+    mov byte ptr [edi+KTHREAD_WAIT_REASON], WrDispatchInt
+
+    /* Put thread in ECX and get the PRCB in EDX */
+    mov ecx, edi
+    lea edx, [ebx+KPCR_PRCB_DATA]
+    call @KiQueueReadyThread@8
+
+    /* Set APC_LEVEL and do the swap */
+    mov cl, APC_LEVEL
+    call @KiSwapContextInternal@0
+
+#ifdef CONFIG_SMP
+    /* Lower IRQL back to dispatch */
+    mov cl, DISPATCH_LEVEL
+    call @KfLowerIrql@4
+#endif
+
+    /* Restore registers */
+    mov ebp, [esp+0]
+    mov edi, [esp+4]
+    mov esi, [esp+8]
+    add esp, 3*4
+
+Return:
+    /* All done */
+    pop ebx
+    ret
+
+QuantumEnd:
+    /* Disable quantum end and process it */
+    mov byte ptr [ebx+KPCR_PRCB_QUANTUM_END], 0
+    call _KiQuantumEnd@0
+    pop ebx
+    ret
+.endfunc
+
 .globl @KiIdleLoop@0
 .func @KiIdleLoop@0, @KiIdleLoop@0
 @KiIdleLoop@0:
@@ -507,6 +625,7 @@ NoNextThread:
 #endif
 .endfunc
 
+/* FIXFIX: Move to C code ****/
 .globl _Ki386SetupAndExitToV86Mode@4
 .func Ki386SetupAndExitToV86Mode@4
 _Ki386SetupAndExitToV86Mode@4:

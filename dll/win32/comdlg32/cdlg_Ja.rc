@@ -16,6 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "cdlg.h"
+#include "filedlgbrowser.h"
+
 /*
  * WARNING: DO NOT CHANGE THE SIZE OF THE STANDARD DIALOG TEMPLATES.
  */
@@ -483,5 +486,3 @@ STRINGTABLE DISCARDABLE
     IDS_SAVE_AS     "名前を付けて保存"
     IDS_OPEN_FILE   "ファイルを開く"
 }
-
-#pragma code_page(default)

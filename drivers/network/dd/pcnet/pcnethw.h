@@ -26,8 +26,7 @@
  *       PCNet II chip documentation (Am79C790A, pub# 19436).
  */
 
-#ifndef _PCNETHW_
-#define _PCNETHW_
+#pragma once
 
 /* when in 32-bit mode, most registers require the top 16 bits be 0. */
 #define MASK16(__x__) ((__x__) & 0x0000ffff)
@@ -414,5 +413,3 @@ typedef struct _TRANSMIT_DESCRIPTOR
 #define TD2_EXDEF       0x2000  /* excessive deferral */
 #define TD2_UFLO        0x4000  /* buffer underflow */
 #define TD2_BUFF        0x8000  /* buffer error */
-
-#endif /* _PCNETHW_ */

@@ -161,8 +161,13 @@ BOOL WINAPI I_CryptSetTls(DWORD dwTlsIndex, LPVOID lpTlsValue)
 
 BOOL WINAPI I_CryptFreeTls(DWORD dwTlsIndex, DWORD unknown)
 {
+    BOOL ret;
+
     TRACE("(%d, %d)\n", dwTlsIndex, unknown);
-    return TlsFree(dwTlsIndex);
+
+    ret = TlsFree(dwTlsIndex);
+    if (!ret) SetLastError( E_INVALIDARG );
+    return ret;
 }
 
 BOOL WINAPI I_CryptGetOssGlobal(DWORD x)

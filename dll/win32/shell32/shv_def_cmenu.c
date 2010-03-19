@@ -294,7 +294,7 @@ HasClipboardData()
       TRACE("pda=%p\n", pda);
 
       /* Set the FORMATETC structure*/
-      InitFormatEtc(formatetc, RegisterClipboardFormatA(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
+      InitFormatEtc(formatetc, RegisterClipboardFormatW(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
       if(SUCCEEDED(IDataObject_GetData(pda,&formatetc,&medium)))
       {
           ret = TRUE;
@@ -1018,7 +1018,7 @@ DoPaste(
     if (OleGetClipboard(&pda) != S_OK)
         return E_FAIL;
 
-    InitFormatEtc(formatetc, RegisterClipboardFormatA(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
+    InitFormatEtc(formatetc, RegisterClipboardFormatW(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
     hr = IDataObject_GetData(pda,&formatetc,&medium);
 
     if (FAILED(hr))

@@ -47,7 +47,7 @@ BEGIN
         MENUITEM "&Usuñ\tDel",                    ID_EDIT_CLEAR
         MENUITEM "&Zaznacz wszystko\tCtrl+A",         ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "Znaj&dŸ...\tCrtl+F",           ID_FIND
+        MENUITEM "Znaj&dŸ...\tCtrl+F",           ID_FIND
         MENUITEM "Z&najdŸ nastêpny\tF3",                ID_FIND_NEXT
         MENUITEM "Za&mieñ...\tCtrl+H",        ID_REPLACE
         MENUITEM SEPARATOR
@@ -104,6 +104,30 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Wypunktowanie"        ID_BULLET
         MENUITEM "&Akapit..."      ID_PARAFORMAT
+    END
+END
+
+IDM_COLOR_POPUP MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Czarny"       ID_COLOR_BLACK
+        MENUITEM "Kasztanowy"   ID_COLOR_MAROON
+        MENUITEM "Zielony"      ID_COLOR_GREEN
+        MENUITEM "Oliwkowy"     ID_COLOR_OLIVE
+        MENUITEM "Granatowy"    ID_COLOR_NAVY
+        MENUITEM "Purpurowy"    ID_COLOR_PURPLE
+        MENUITEM "Zielonomodry" ID_COLOR_TEAL
+        MENUITEM "Szary"        ID_COLOR_GRAY
+        MENUITEM "Srebrny"      ID_COLOR_SILVER
+        MENUITEM "Czerwony"     ID_COLOR_RED
+        MENUITEM "Limonowy"     ID_COLOR_LIME
+        MENUITEM "¯ó³ty"        ID_COLOR_YELLOW
+        MENUITEM "Niebieski"    ID_COLOR_BLUE
+        MENUITEM "Fuksja"       ID_COLOR_FUCHSIA
+        MENUITEM "Akwamaryna"   ID_COLOR_AQUA
+        MENUITEM "Bia³y"        ID_COLOR_WHITE
+        MENUITEM "Automatic"    ID_COLOR_AUTOMATIC
     END
 END
 
@@ -219,7 +243,11 @@ BEGIN
     STRING_PREVIEW_PREVPAGE,         "Poprz. strona"
     STRING_PREVIEW_TWOPAGES,         "Two pages"
     STRING_PREVIEW_ONEPAGE,          "One page"
+    STRING_PREVIEW_ZOOMIN,           "Zoom in"
+    STRING_PREVIEW_ZOOMOUT,          "Zoom out"
     STRING_PREVIEW_CLOSE,            "Zamknij"
+    STRING_PREVIEW_PAGE,             "Page"
+    STRING_PREVIEW_PAGES,            "Pages"
 END
 
 STRINGTABLE DISCARDABLE

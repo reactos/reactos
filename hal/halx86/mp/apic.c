@@ -1110,4 +1110,25 @@ HaliStartApplicationProcessor(ULONG Cpu, ULONG Stack)
 
 #endif
 
+VOID
+FASTCALL
+DECLSPEC_NORETURN
+HalpApcInterruptHandler(IN PKTRAP_FRAME TrapFrame)
+{
+    /* Set up a fake INT Stack */
+    TrapFrame->EFlags = __readeflags();
+    TrapFrame->SegCs = KGDT_R0_CODE;
+    TrapFrame->Eip = TrapFrame->Eax;
+    
+    /* Build the trap frame */
+    KiEnterInterruptTrap(TrapFrame);
+    
+    /* unimplemented */
+    UNIMPLEMENTED;
+    
+    /* Exit the interrupt */
+    KiEoiHelper(TrapFrame); 
+
+}
+
 /* EOF */

@@ -103,6 +103,9 @@
 <directory name="dnsapi">
 	<xi:include href="dnsapi/dnsapi.rbuild" />
 </directory>
+<directory name="faultrep">
+	<xi:include href="faultrep/faultrep.rbuild" />
+</directory>
 <directory name="fmifs">
 	<xi:include href="fmifs/fmifs.rbuild" />
 </directory>

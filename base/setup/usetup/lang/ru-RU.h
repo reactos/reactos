@@ -1,5 +1,4 @@
-#ifndef LANG_RU_RU_H__
-#define LANG_RU_RU_H__
+#pragma once
 
 MUI_LAYOUTS ruRULayouts[] =
 {
@@ -1695,5 +1694,3 @@ MUI_STRING ruRUStrings[] =
     "Adding keyboard layouts"},
     {0, 0}
 };
-
-#endif

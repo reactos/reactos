@@ -147,12 +147,18 @@ static HRESULT map_url_to_zone(LPCWSTR url, DWORD *zone, LPWSTR *ret_url)
     DWORD size=0;
     HRESULT hres;
 
-    secur_url = heap_alloc(INTERNET_MAX_URL_LENGTH*sizeof(WCHAR));
     *zone = -1;
 
-    hres = CoInternetParseUrl(url, PARSE_SECURITY_URL, 0, secur_url, INTERNET_MAX_URL_LENGTH, &size, 0);
-    if(hres != S_OK)
-        strcpyW(secur_url, url);
+    hres = CoInternetGetSecurityUrl(url, &secur_url, PSU_SECURITY_URL_ONLY, 0);
+    if(hres != S_OK) {
+        size = strlenW(url)*sizeof(WCHAR);
+
+        secur_url = heap_alloc(size);
+        if(!secur_url)
+            return E_OUTOFMEMORY;
+
+        memcpy(secur_url, url, size);
+    }
 
     hres = CoInternetParseUrl(secur_url, PARSE_SCHEMA, 0, schema, sizeof(schema)/sizeof(WCHAR), &size, 0);
     if(FAILED(hres) || !*schema) {
@@ -1227,4 +1233,85 @@ HRESULT WINAPI CoInternetCreateZoneManager(IServiceProvider* pSP, IInternetZoneM
 {
     TRACE("(%p %p %x)\n", pSP, ppZM, dwReserved);
     return ZoneMgrImpl_Construct(NULL, (void**)ppZM);
+}
+
+/********************************************************************
+ *      CoInternetGetSecurityUrl (URLMON.@)
+ */
+HRESULT WINAPI CoInternetGetSecurityUrl(LPCWSTR pwzUrl, LPWSTR *ppwzSecUrl, PSUACTION psuAction, DWORD dwReserved)
+{
+    WCHAR buf1[INTERNET_MAX_URL_LENGTH], buf2[INTERNET_MAX_URL_LENGTH];
+    LPWSTR url, domain;
+    DWORD len;
+    HRESULT hres;
+
+    TRACE("(%p,%p,%u,%u)\n", pwzUrl, ppwzSecUrl, psuAction, dwReserved);
+
+    url = buf1;
+    domain = buf2;
+    strcpyW(url, pwzUrl);
+
+    while(1) {
+        hres = CoInternetParseUrl(url, PARSE_SECURITY_URL, 0, domain, INTERNET_MAX_URL_LENGTH, &len, 0);
+        if(hres!=S_OK || !strcmpW(url, domain))
+            break;
+
+        if(url == buf1) {
+            url = buf2;
+            domain = buf1;
+        } else {
+            url = buf1;
+            domain = buf2;
+        }
+    }
+
+    if(psuAction==PSU_SECURITY_URL_ONLY) {
+        len = lstrlenW(url)+1;
+        *ppwzSecUrl = CoTaskMemAlloc(len*sizeof(WCHAR));
+        if(!*ppwzSecUrl)
+            return E_OUTOFMEMORY;
+
+        memcpy(*ppwzSecUrl, url, len*sizeof(WCHAR));
+        return S_OK;
+    }
+
+    hres = CoInternetParseUrl(url, PARSE_SECURITY_DOMAIN, 0, domain,
+            INTERNET_MAX_URL_LENGTH, &len, 0);
+    if(SUCCEEDED(hres)) {
+        len++;
+        *ppwzSecUrl = CoTaskMemAlloc(len*sizeof(WCHAR));
+        if(!*ppwzSecUrl)
+            return E_OUTOFMEMORY;
+
+        memcpy(*ppwzSecUrl, domain, len*sizeof(WCHAR));
+        return S_OK;
+    }
+
+    hres = CoInternetParseUrl(url, PARSE_ROOTDOCUMENT, 0, domain, 0, &len, 0);
+    if(hres == S_FALSE) {
+        hres = CoInternetParseUrl(url, PARSE_SCHEMA, 0, domain,
+                INTERNET_MAX_URL_LENGTH, &len, 0);
+        if(hres == S_OK) {
+            domain[len] = ':';
+            hres = CoInternetParseUrl(url, PARSE_DOMAIN, 0, domain+len+1,
+                    INTERNET_MAX_URL_LENGTH-len-1, &len, 0);
+            if(hres == S_OK) {
+                len = lstrlenW(domain)+1;
+                *ppwzSecUrl = CoTaskMemAlloc(len*sizeof(WCHAR));
+                if(!*ppwzSecUrl)
+                    return E_OUTOFMEMORY;
+
+                memcpy(*ppwzSecUrl, domain, len*sizeof(WCHAR));
+                return S_OK;
+            }
+        }
+    }
+
+    len = lstrlenW(url)+1;
+    *ppwzSecUrl = CoTaskMemAlloc(len*sizeof(WCHAR));
+    if(!*ppwzSecUrl)
+        return E_OUTOFMEMORY;
+
+    memcpy(*ppwzSecUrl, url, len*sizeof(WCHAR));
+    return S_OK;
 }

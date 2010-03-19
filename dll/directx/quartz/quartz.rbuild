@@ -61,3 +61,4 @@
 	<define name="PROXY_DELEGATION"/>
 	<file>quartz_strmif.idl</file>
 </module>
+</group>

@@ -26,6 +26,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(netbios);
 
 static HMODULE NETAPI32_hModule;
 
+BOOL NETAPI_IsLocalComputer(LMCSTR ServerName);
+
 BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
     TRACE("%p,%x,%p\n", hinstDLL, fdwReason, lpvReserved);
@@ -97,8 +99,59 @@ NET_API_STATUS WINAPI NetServerEnumEx(
  */
 NET_API_STATUS WINAPI NetServerGetInfo(LMSTR servername, DWORD level, LPBYTE* bufptr)
 {
-    FIXME("stub (%s, %d, %p)\n", debugstr_w(servername), level, bufptr);
-    return ERROR_ACCESS_DENIED;
+    NET_API_STATUS ret;
+
+    TRACE("%s %d %p\n", debugstr_w( servername ), level, bufptr );
+    if (servername)
+    {
+        if (!NETAPI_IsLocalComputer(servername))
+        {
+            FIXME("remote computers not supported\n");
+            return ERROR_INVALID_LEVEL;
+        }
+    }
+    if (!bufptr) return ERROR_INVALID_PARAMETER;
+
+    switch (level)
+    {
+        case 100:
+        case 101:
+        {
+            DWORD computerNameLen, size;
+            WCHAR computerName[MAX_COMPUTERNAME_LENGTH + 1];
+
+            computerNameLen = MAX_COMPUTERNAME_LENGTH + 1;
+            GetComputerNameW(computerName, &computerNameLen);
+            computerNameLen++; /* include NULL terminator */
+
+            size = sizeof(SERVER_INFO_101) + computerNameLen * sizeof(WCHAR);
+            ret = NetApiBufferAllocate(size, (LPVOID *)bufptr);
+            if (ret == NERR_Success)
+            {
+                /* INFO_100 structure is a subset of INFO_101 */
+                PSERVER_INFO_101 info = (PSERVER_INFO_101)*bufptr;
+                OSVERSIONINFOW verInfo;
+
+                info->sv101_platform_id = PLATFORM_ID_NT;
+                info->sv101_name = (LMSTR)(*bufptr + sizeof(SERVER_INFO_101));
+                memcpy(info->sv101_name, computerName,
+                       computerNameLen * sizeof(WCHAR));
+                verInfo.dwOSVersionInfoSize = sizeof(verInfo);
+                GetVersionExW(&verInfo);
+                info->sv101_version_major = verInfo.dwMajorVersion;
+                info->sv101_version_minor = verInfo.dwMinorVersion;
+                 /* Use generic type as no wine equivalent of DC / Server */
+                info->sv101_type = SV_TYPE_NT;
+                info->sv101_comment = NULL;
+            }
+            break;
+        }
+
+        default:
+            FIXME("level %d unimplemented\n", level);
+            ret = ERROR_INVALID_LEVEL;
+    }
+    return ret;
 }
 
 

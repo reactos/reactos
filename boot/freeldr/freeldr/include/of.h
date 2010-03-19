@@ -1,5 +1,4 @@
-#ifndef FREELDR_OF_H
-#define FREELDR_OF_H
+#pragma once
 
 #define OF_FAILED 0
 #define ERR_NOT_FOUND 0xc0000010
@@ -15,5 +14,3 @@ extern of_proxy ofproxy;
 int setjmp( jmp_buf buf );
 int longjmp( jmp_buf buf, int retval );
 int ofw_callmethod_ret(const char *method, int handle, int nargs, int *args, int ret);
-
-#endif/*FREELDR_OF_H*/

@@ -29,7 +29,7 @@ ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] Dateiname ...\n\
   /D  Verarbeitet auch die Ordner.\n\n\
 ATTRIB ohne Parameter zeigt die derzeit gesetzten Attribute aller Dateien an."
 
-STRING_ALIAS_HELP,  "Setzt, löscht oder zeigt Alias.\n\n\
+STRING_ALIAS_HELP,  "Setzt, löscht oder zeigt ein Alias.\n\n\
 ALIAS [alias=[command]]\n\n\
   alias    Name des Alias.\n\
   command  Text welcher für den Alias zugeordnet wird.\n\n\
@@ -40,7 +40,7 @@ Setzt ein neues oder überschreibt ein bestehendes Alias:\n\
 Löscht ein Alias von der Alias-Liste:\n\
   ALIAS da="
 
-STRING_BEEP_HELP, "Gibt einen beep-Ton durch den PC-Speaker aus.\n\nBEEP"
+STRING_BEEP_HELP, "Gibt einen Piepton durch den PC-Lautsprecher aus.\n\nBEEP"
 
 STRING_CALL_HELP, "Ruft eine Batchdatei von einer anderen aus auf.\n\n\
 CALL [Laufwerk:][Pfad]Dateiname [Batch-Parameter]\n\n\
@@ -54,7 +54,7 @@ CD [Laufwerk:][Pfad]\n\
 CD[..|.]\n\n\
   ..   übergeordnetes Verzeichnis\n\
   .    vorhergehende Verzeichnis\n\n\
-Geben Sie CD Laufwerk: ein, um das aktuelle Verzeichnis auf dem angegebenen\n\
+Geben Sie CD-Laufwerk: ein, um das aktuelle Verzeichnis auf dem angegebenen\n\
 Laufwerk anzuzeigen.\n\
 Mit CD ohne Parameter wird das aktuelle Laufwerk und Verzeichnis angezeigt."
 
@@ -66,7 +66,7 @@ Der Befehl CHCP ohne Parameter zeigt die Nummer der aktuellen Codepage an."
 STRING_CHOICE_HELP, "Wartet auf den Benutzer, welcher aus einer Auswahl eine Option wählen muss.\n\n\
 CHOICE  [/C[:]choices][/N][/S][/T[:]c,nn][text]\n\n\
   /C[:]choices  Die erlaubten Tasten festlegen. Standard-Tasten sind Y und N.\n\
-  /N            Zeigt choices und ? am ende des Promt-Strings NICHT an.\n\
+  /N            Zeigt choices und ? am ende des Prompt-Strings NICHT an.\n\
   /S            Groß- und Kleinschreibung wird beachtet.\n\
   /T[:]c,nn     Standard-Auswahl wird auf c gesetzt nach nn Sekunden.\n\
   text          Zeigt eine Beschreibung an.\n\n\
@@ -74,9 +74,9 @@ ERRORLEVEL wird auf den Offset der Taste welche der Benutzer gedrückt hat gesetz
 
 STRING_CLS_HELP, "Löscht den Bildschirminhalt.\n\nCLS"
 
-STRING_CMD_HELP1, "\nIntere Befehle verfügbar:\n"
+STRING_CMD_HELP1, "\nInterne Befehle verfügbar:\n"
 
-STRING_CMD_HELP2, "\nVerfügbare Features:"
+STRING_CMD_HELP2, "\nVerfügbare Funktionen:"
 
 STRING_CMD_HELP3,"  [aliases]"
 
@@ -96,11 +96,11 @@ CMD [/[C|K] command][/P][/Q][/T:bf]\n\n\
               (kann nicht beendet werden).\n\
   /T:bf       Setzt die Hintergrund- und Vordergrund-Farbe (siehe COLOR Befehl)."
 
-STRING_COLOR_HELP1, "Legt die standard Hinter- und Vordergrundfarben für die Konsole fest.\n\n\
+STRING_COLOR_HELP1, "Legt die Standardhinter- und Vordergrundfarben für die Konsole fest.\n\n\
 COLOR [attr [/F]] \n\n\
   attr        Gibt die Farbattribute für die Konsolenausgabe an.\n\
-  /F          füllt die Konsolenausgabe mit dem Farbattribut\n\n\
-Es gibt 3 Möglichkeiten die Farbe festzulegen:\n\
+  /F          Füllt die Konsolenausgabe mit dem Farbattribut\n\n\
+Es gibt 3 Möglichkeiten, um die Farbe festzulegen:\n\
 1) [bright] name on [bright] name  (Nur die 4 ersten Buchstaben sind nötig)\n\
 2) decimal on decimal\n\
 3) two hex digits\n\n\
@@ -129,7 +129,7 @@ COPY [/V][/Y|/-Y][/A|/B] Quelle [/A|/B]\n\
                vorhandener Zieldateien.\n\
   /-Y          Fordert beim Überschreiben vorhandener Zieldateien zum\n\
                Bestätigen auf.\n\n\
-Die Option /Y ist möglicherweise in der Umgebungsvariablen COPYCMD.\n\
+Die Option /Y ist möglicherweise in der Umgebungsvariablen COPYCMD definiert.\n\
 ..."
 
 STRING_DATE_HELP1, "\nGeben Sie das neue Datum ein (mm%cdd%cyyyy): "
@@ -148,22 +148,22 @@ STRING_DEL_HELP1,  "Löscht eine oder mehrere Dateien.\n\n\
 DEL [/N /P /T /Q /W /Y /Z] Dateinamen ...\n\
 DELETE [/N /P /T /Q /W /Y /Z] Dateinamen ...\n\
 ERASE [/N /P /T /Q /W /Y /Z] Dateinamen ...\n\n\
-  file  Geben Sie die Dateinamen an welche Sie löschen möchten\n\n\
+  file  Geben Sie die Dateinamen an, welche Sie löschen möchten\n\n\
   /N    Nichts.\n\
   /P    Fordert Sie vor dem Löschen jeder Datei zur Bestätigung auf.\n\
   /T    Zeigt die Anzahl der gelöschten Dateien und deren vorherigen Speicherplatzbedarf an.\n\
   /Q    Beenden.\n\
-  /W    Sicheres Löschen. Dateien werden mit Zufallszahlen überschrieben bevor sie gelöscht werden.\n\
+  /W    Sicheres Löschen. Dateien werden mit Zufallszahlen überschrieben, bevor sie gelöscht werden.\n\
   /Y    Löscht alles (*.*) ohne Vorwarnung.\n\
-  /Z    Löscht versteckte, mit nur leserechten und Systemdateien.\n"
+  /Z    Löscht versteckte Dateien mit Nur-Leserechten und Systemdateien.\n"
 
-STRING_DEL_HELP2, "Alle Dateien in diesem Verzeichnis werden gelöscht!\nSind Sie sicher (Y/N)?"
+STRING_DEL_HELP2, "Alle Dateien in diesem Verzeichnis werden gelöscht!\nSind Sie sich sicher (Y/N)?"
 STRING_DEL_HELP3, "    %lu Datei(en) gelöscht\n"
 STRING_DEL_HELP4, "    %lu Datei(en) gelöscht\n"
 
 STRING_DELAY_HELP, "Pause für n Sekunden oder Millisekunden\n\
 DELAY [/m]n\n\n\
-  /m          Millisekunden ansonsten Sekunden\n"
+  /m          Millisekunden, ansonsten Sekunden\n"
 
 STRING_DIR_HELP1, "Listet die Dateien und Unterverzeichnisse eines Verzeichnisses auf.\n\n\
 DIR [Laufwerk:][Pfad][Dateiname] [/A[[:]attributes]] [/B] [/C] [/D] [/L] [/N]\n\
@@ -199,7 +199,7 @@ DIR [Laufwerk:][Pfad][Dateiname] [/A[[:]attributes]] [/B] [/C] [/D] [/L] [/N]\n\
               werden Leerzeichen angezeigt.\n\
   /4          Zeigt das Jahr vierstellig an.\n\n\
 Optionen können in der Umgebungsvariablen DIRCMD voreingestellt werden.\n\
-""-"" vor einer Option setzt die Voreinstellung ausser Kraft, z.B. DIR /-W."
+""-"" vor einer Option setzt die Voreinstellung außer Kraft, z.B. DIR /-W."
 
 STRING_DIR_HELP2, " Datenträger in Laufwerk %c ist %s\n"
 STRING_DIR_HELP3, " Datenträger in Laufwerk %c hat keine Bezeichnung\n"
@@ -209,25 +209,25 @@ STRING_DIR_HELP6, "%16i Verzeichnis(se), % 15s Bytes frei\n"
 STRING_DIR_HELP7, "\n Verzeichnis von %s\n\n"
 STRING_DIR_HELP8, "%16i Datei(en)% 14s Bytes\n"
 
-STRING_DIRSTACK_HELP1, "Speichert das aktuelle Verzeichnis für den POPD Befehl, und\n\
-wechselt dann zu den festgelegten Verzeichnis.\n\n\
+STRING_DIRSTACK_HELP1, "Speichert das aktuelle Verzeichnis für den POPD-Befehl und\n\
+wechselt dann in das festgelegte Verzeichnis.\n\n\
 PUSHD [path | ..]\n\n\
-  path        Legt das Verzeichnis fest zu welchem gewechselt werden soll"
+  path        Legt das Verzeichnis fest, in das gewechselt werden soll"
 
-STRING_DIRSTACK_HELP2, "Wechselt zu dem Verzeichnis welches vom PUSHD Befehl gespeichert wurde.\n\nPOPD"
+STRING_DIRSTACK_HELP2, "Wechselt in das Verzeichnis, das vom PUSHD-Befehl gespeichert wurde.\n\nPOPD"
 
 STRING_DIRSTACK_HELP3, "Druckt den Inhalt des Verzeichnis-Stacks.\n\nDIRS"
 
 STRING_DIRSTACK_HELP4, "Verzeichnis-Stack ist leer"
 
-STRING_ECHO_HELP1,  "Sendet eine Nachricht ohne den Zeilenvorschub und Wagenrücklauf zu betätigen.\n\n\
+STRING_ECHO_HELP1,  "Sendet eine Nachricht, ohne den Zeilenvorschub und Wagenrücklauf zu betätigen.\n\n\
   ECHOS message"
 
-STRING_ECHO_HELP2,  "Sendet eine Nachricht zur Standard Fehlerausgabe.\n\n\
+STRING_ECHO_HELP2,  "Sendet eine Nachricht zur Standard-Fehlerausgabe.\n\n\
   ECHOERR Nachricht\n\
   ECHOERR.           gibt eine Leerzeile aus"
 
-STRING_ECHO_HELP3, "Sendet eine Nachricht zur Standard Fehlerausgabe ohne den Zeilenvorschub und Wagenrücklauf zu betätigen.\n\n\
+STRING_ECHO_HELP3, "Sendet eine Nachricht zur Standard-Fehlerausgabe, ohne den Zeilenvorschub und Wagenrücklauf zu betätigen.\n\n\
   ECHOSERR Nachricht"
 
 STRING_ECHO_HELP4, "Zeigt Meldungen an oder schaltet die Befehlsanzeige ein ""ON"" oder aus ""OFF"".\n\n\
@@ -252,11 +252,11 @@ statt %Variable an."
 
 STRING_FREE_HELP1, "\nVolume in Laufwerk %s ist %-11s\n\
  Volume-Seriennummer: %s\n\
-  %16s bytes Speicherkapazität\n\
-  %16s bytes belegter Speicher\n\
-  %16s bytes freier Speicher\n"
+  %16s Byte Speicherkapazität\n\
+  %16s Byte belegter Speicher\n\
+  %16s Byte freier Speicher\n"
 
-STRING_FREE_HELP2, "Zeigt die Volumesinformationen an.\n\nFREE [Laufwerk: ...]"
+STRING_FREE_HELP2, "Zeigt die Volumeinformationen an.\n\nFREE [Laufwerk: ...]"
 
 STRING_IF_HELP1, "Verarbeitet Ausdrücke in einer Batchdatei abhängig von Bedingungen.\n\n\
   IF [NOT] ERRORLEVEL Nummer Befehl\n\
@@ -292,12 +292,12 @@ STRING_LOCALE_HELP1, "Aktuelle Zeit: "
 STRING_MKDIR_HELP,   "Erzeugt ein Verzeichnis.\n\n\
 MKDIR [Laufwerk:]Pfad\nMD [Laufwerk:]Pfad"
 
-STRING_MKLINK_HELP, "Creates a filesystem link object.\n\n\
-MKLINK [/D | /H | /J] linkname target\n\n\
-  /D  Indicates that the symbolic link target is a directory.\n\
-  /H  Create a hard link.\n\
-  /J  Create a directory junction.\n\n\
-If neither /H or /J is specified, a symbolic link is created."
+STRING_MKLINK_HELP, "Erzeugt eine Dateisystemverknüpfung.\n\n\
+MKLINK [/D | /H | /J] Linkname Ziel\n\n\
+  /D  Gibt an, dass das Ziel der Verknüpfung ein Verzeichnis ist.\n\
+  /H  Erzeugt einen Hardlink.\n\
+  /J  Erzeugt einen Junction Point.\n\n\
+Wenn weder /H noch /J angegeben werden, wird eine symbolische Verknüpfung angelegt."
 
 STRING_MEMMORY_HELP1, "Zeigt die Größe des Systemspeicher an.\n\nMEMORY"
 
@@ -307,7 +307,7 @@ STRING_MEMMORY_HELP2, "\n  %12s%% Speicher geladen.\n\n\
   %13s bytes Auslagerungsdatei (insgesamt)\n\
   %13s bytes verfügbare Auslagerungsdatei\n\n\
   %13s bytes Virtueller Speicher (insgesamt)\n\
-  %13s bytes verfügbarer Virtueller Speicher\n"
+  %13s bytes verfügbarer virtueller Speicher\n"
 
 STRING_MISC_HELP1, "Drücken Sie eine beliebige Taste . . .\n"
 
@@ -320,9 +320,9 @@ Um ein Verzeichnis umzubenennen:\n\
 MOVE [/N][Laufwerk:][Pfad]Verzeichnis1 Verzeichnis2\n\n\
   [Laufwerk:][Pfad]Datei1  Bezeichnet den Pfad und den Namen der zu\n\
                            verschiebenden Datei(en).\n\
-  /N                 Nichts. Tut alles ausser Dateien/Verzeichnisse verschieben.\n\n\
+  /N                 Nichts. Tut alles außer Dateien/Verzeichnisse verschieben.\n\n\
 Derzeitige Einschränkung:\n\
-Es ist noch nicht möglich Objekte über die Laufwerksgrenzen hinaus zu verschieben.\n"
+Es ist noch nicht möglich, Objekte über die Laufwerksgrenzen hinaus zu verschieben.\n"
 
 STRING_MSGBOX_HELP, "Zeigt ein Fenster und wartet auf eine Eingabe vom Benutzer.\n\n\
 MSGBOX type ['title'] prompt\n\n\
@@ -331,7 +331,7 @@ type          Button anzeigen\n\
               YESNO, YESNOCANCEL\n\
 title         Titel des Fensters\n\
 prompt        Text der in dem Fenster angezeigt wird\n\n\n\
-ERRORLEVEL is set according the button pressed:\n\n\
+ERRORLEVEL wird je nach dem gedrückten Button gesetzt:\n\n\
 YES  :  10    |  NO      :  11\n\
 OK   :  10    |  CANCEL  :  12\n"
 
@@ -387,9 +387,9 @@ REN [/E /N /P /Q /S /T] alter_Name ... neuer_Name\n\n\
   /T    Zeigt die Anzahl der umbenannten Dateien an.\n\n\
 Nutzen Sie den 'move' Befehl falls Sie Objekte verschieben wollen.\n"
 
-STRING_REN_HELP2, "    %lu Datei umbennant\n"
+STRING_REN_HELP2, "    %lu Datei umbenannt\n"
 
-STRING_REN_HELP3, "    %lu Dateien umbennant\n"
+STRING_REN_HELP3, "    %lu Dateien umbenannt\n"
 
 STRING_REPLACE_HELP1, "Ersetzt Dateien.\n\n\
 REPLACE [Laufwerk1:][Pfad1]Dateiname [Laufwerk2:][Pfad2] [/A] [/P] [/R] [/W]\n\
@@ -405,7 +405,7 @@ REPLACE [Laufwerk1:][Pfad1]Dateiname [Laufwerk2:][Pfad2] [/P] [/R] [/S] [/W] [/U
   /S                           Ersetzt Dateien in allen Unterordnern des Ziel-\n\
                                pfades. Kann nicht mit Parameter /A genutzt\n\
                                werden.\n\
-  /W                           Wartet vor dem Start bis ein Datenträger\n\
+  /W                           Wartet vor dem Start, bis ein Datenträger\n\
                                eingelegt wurde.\n\
   /U                           Ersetzt (aktualisiert) nur Dateien, die älter\n\
                                sind als die Quelldaten. Kann nicht mit Paramater\n\
@@ -495,7 +495,7 @@ STRING_VERIFY_HELP2, "VERIFY ist %s.\n"
 
 STRING_VERIFY_HELP3, "VERIFY kann nur ON oder OFF sein"
 
-STRING_VERSION_HELP1, "Zeigt Shell Informationen an.\n\n\
+STRING_VERSION_HELP1, "Zeigt Shellinformationen an.\n\n\
 VER [/C][/R][/W]\n\n\
   /C  Zeigt die Credits an.\n\
   /R  Zeigt die Weitergabeinformationen an.\n\
@@ -521,9 +521,9 @@ STRING_VERSION_HELP5, "\nSenden Sie Bug-Reports an <ros-dev@reactos.org>.\n\
 Updates sind auf der offiziellen ReactOS-Webseite verfügbar:\n\
 http://www.reactos.org"
 
-STRING_VERSION_HELP6, "\nFreeDOS Version programmiert von:\n"
+STRING_VERSION_HELP6, "\nFreeDOS-Version programmiert von:\n"
 
-STRING_VERSION_HELP7, "\nReactOS Version programmiert von:\n"
+STRING_VERSION_HELP7, "\nReactOS-Version programmiert von:\n"
 
 STRING_VOL_HELP1, " Datenträger im Laufwerk %c ist %s\n"
 STRING_VOL_HELP2, " Datenträger im Laufwerk %c hat keine Bezeichnung.\n"
@@ -554,7 +554,7 @@ STRING_HELP1, "Übersicht aller verfügbaren Befehle und deren Kurzbeschreibungen\
 ?        Listet alle Befehle auf (ohne Erklärung).\n\
 ALIAS    Setzt, löscht oder zeigt den Alias.\n\
 ATTRIB   Zeigt Dateiattribute an bzw. ändert sie.\n\
-BEEP     Gibt einen piep-Ton durch den PC-Speaker aus.\n\
+BEEP     Gibt einen Piepton durch den PC-Speaker aus.\n\
 CALL     Ruft eine Batchdatei aus einer anderen Batchdatei heraus auf.\n\
 CD       Zeigt den Namen des aktuellen Verzeichnisses an bzw. ändert diesen.\n\
 CHCP     Zeigt die aktive Codepagenummer an bzw. legt diese fest.\n\
@@ -581,7 +581,7 @@ IF       Verarbeitet Ausdrücke in einer Batchdatei abhängig von Bedingungen.\n\
 LABEL    Erstellt, ändert oder löscht die Bezeichnung eines Volumes.\n\
 MD       Erstellt ein Verzeichnis.\n\
 MKDIR    Erstellt ein Verzeichnis.\n\
-MKLINK   Creates a filesystem link object.\n\
+MKLINK   Erzeugt eine Dateisystemverknüpfung.\n\
 MOVE     Verschiebt eine oder mehrere Dateien von einem Verzeichnis in\n\
          ein anderes.\n\
 PATH     Legt den Suchpfad für ausführbare Dateien fest oder zeigt diesen an.\n\
@@ -615,9 +615,9 @@ STRING_COPY_OPTION,           "JNA"
 
 STRING_ALIAS_ERROR,          "Die Befehlszeile ist zu lange nach der Alias-Erweiterung!\n"
 STRING_ASSOC_ERROR,          "Dateizuordnung für Erweiterung %s nicht gefunden\n"
-STRING_BATCH_ERROR,          "Es trat ein Fehler auf, während die Batch-Datei geöffnet wurde.\n"
-STRING_CHCP_ERROR1,          "Aktive Code-Page: %u\n"
-STRING_CHCP_ERROR4,          "Ungültige Code-Page\n"
+STRING_BATCH_ERROR,          "Es trat ein Fehler auf, während die Batchdatei geöffnet wurde.\n"
+STRING_CHCP_ERROR1,          "Aktive Codepage: %u\n"
+STRING_CHCP_ERROR4,          "Ungültige Codepage\n"
 STRING_CHOICE_ERROR,         "Ungültige Option. Erwartetes Format: /C[:]options"
 STRING_CHOICE_ERROR_TXT,     "Ungültige Option. Erwartetes Format: /T[:]c,nn"
 STRING_CHOICE_ERROR_OPTION,  "Ungültige Option: %s"
@@ -628,7 +628,7 @@ STRING_CMD_ERROR3,           "%s kann nicht in die Datei umgeleitet werden \n"
 STRING_CMD_ERROR4,           "Ausführend %s...\n"
 STRING_CMD_ERROR5,           "Ausführend cmdexit.bat...\n"
 STRING_COLOR_ERROR1,         "Fehler: Hinter- und Vordergrund können nicht die selben Farben haben!"
-STRING_COLOR_ERROR2,         "Fehler in der Farb-Angabe"
+STRING_COLOR_ERROR2,         "Fehler in der Farbangabe"
 STRING_COLOR_ERROR3,         "Farbe %x\n"
 STRING_COLOR_ERROR4,         "Fehler: Die selben Farben!"
 STRING_CONSOLE_ERROR,        "Unbekannter Fehler: %d\n"
@@ -679,19 +679,19 @@ STRING_REPLACE_ERROR5,             "Zugriff verweigert - %s\n"
 STRING_REPLACE_ERROR6,             "Keine Dateien gefunden - %s\n"
 STRING_REPLACE_ERROR7,             "Erweiterter Fehler 32\n"
 STRING_REACTOS_VERSION,            "ReactOS Operating System [Version %s-%s]\n"
-STRING_CMD_SHELLINFO,              "\nReactOS Befehlszeilen Interpreter\nVersion %s %s"
+STRING_CMD_SHELLINFO,              "\nReactOS-Befehlszeileninterpreter\nVersion %s %s"
 STRING_VERSION_RUNVER,             " läuft in %s"
 STRING_COPY_FILE ,                 "        %d Datei(en) kopiert\n"
-STRING_DELETE_WIPE,                "gewiped"
+STRING_DELETE_WIPE,                "sicher gelöscht"
 STRING_FOR_ERROR,                  "ungültige Variablenangabe."
 STRING_SCREEN_COL,                 "ungültige Spalten-Angabe"
 STRING_SCREEN_ROW,                 "ungültige Zeilen-Angabe"
 STRING_TIMER_TIME                  "Timer %d ist %s: "
-STRING_MKLINK_CREATED_SYMBOLIC,    "Symbolic link created for %s <<===>> %s\n"
-STRING_MKLINK_CREATED_HARD,        "Hard link created for %s <<===>> %s\n"
-STRING_MKLINK_CREATED_JUNCTION,    "Junction created for %s <<===>> %s\n"
-STRING_MORE,                       "More? "
-STRING_CANCEL_BATCH_FILE,          "\r\nCtrl-Break pressed.  Cancel batch file? (Ja/Nein/Alle) "
+STRING_MKLINK_CREATED_SYMBOLIC,    "Symbolische Verknüpfung erstellt für %s <<===>> %s\n"
+STRING_MKLINK_CREATED_HARD,        "Hardlink erstellt für %s <<===>> %s\n"
+STRING_MKLINK_CREATED_JUNCTION,    "Junction Point erstellt für %s <<===>> %s\n"
+STRING_MORE,                       "Mehr? "
+STRING_CANCEL_BATCH_FILE,          "\r\nStrg-Pause gedrückt. Batchvorgang abbrechen? (Ja/Nein/Alle) "
 STRING_INVALID_OPERAND,            "Ungültiger Operand."
 STRING_EXPECTED_CLOSE_PAREN,       "Erwartet ')'."
 STRING_EXPECTED_NUMBER_OR_VARIABLE,"Erwartet Nummer oder Variablennamen."

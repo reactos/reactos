@@ -97,6 +97,19 @@ HRESULT WINAPI AtlModuleInit(_ATL_MODULEW* pM, _ATL_OBJMAP_ENTRYW* p, HINSTANCE 
     return S_OK;
 }
 
+static _ATL_OBJMAP_ENTRYW_V1 *get_objmap_entry( _ATL_MODULEW *mod, unsigned int index )
+{
+    _ATL_OBJMAP_ENTRYW_V1 *ret;
+
+    if (mod->cbSize == ATLVer1Size)
+        ret = (_ATL_OBJMAP_ENTRYW_V1 *)mod->m_pObjMap + index;
+    else
+        ret = (_ATL_OBJMAP_ENTRYW_V1 *)(mod->m_pObjMap + index);
+
+    if (!ret->pclsid) ret = NULL;
+    return ret;
+}
+
 HRESULT WINAPI AtlModuleLoadTypeLib(_ATL_MODULEW *pM, LPCOLESTR lpszIndex,
                                     BSTR *pbstrPath, ITypeLib **ppTypeLib)
 {
@@ -158,6 +171,7 @@ HRESULT WINAPI AtlModuleAddTermFunc(_ATL_MODULEW *pM, _ATL_TERMFUNC *pFunc, DWOR
 HRESULT WINAPI AtlModuleRegisterClassObjects(_ATL_MODULEW *pM, DWORD dwClsContext,
                                              DWORD dwFlags)
 {
+    _ATL_OBJMAP_ENTRYW_V1 *obj;
     HRESULT hRes = S_OK;
     int i=0;
 
@@ -166,10 +180,9 @@ HRESULT WINAPI AtlModuleRegisterClassObjects(_ATL_MODULEW *pM, DWORD dwClsContex
     if (pM == NULL)
         return E_INVALIDARG;
 
-    while(pM->m_pObjMap[i].pclsid != NULL)
+    while ((obj = get_objmap_entry( pM, i++ )))
     {
         IUnknown* pUnknown;
-        _ATL_OBJMAP_ENTRYW *obj = &(pM->m_pObjMap[i]);
         HRESULT rc;
 
         TRACE("Registering object %i\n",i);
@@ -185,7 +198,6 @@ HRESULT WINAPI AtlModuleRegisterClassObjects(_ATL_MODULEW *pM, DWORD dwClsContex
                     IUnknown_Release(pUnknown);
             }
         }
-        i++;
     }
 
    return hRes;
@@ -269,6 +281,7 @@ HRESULT WINAPI AtlInternalQueryInterface(void* this, const _ATL_INTMAP_ENTRY* pE
  */
 HRESULT WINAPI AtlModuleRegisterServer(_ATL_MODULEW* pM, BOOL bRegTypeLib, const CLSID* clsid)
 {
+    const _ATL_OBJMAP_ENTRYW_V1 *obj;
     int i;
     HRESULT hRes;
 
@@ -277,12 +290,10 @@ HRESULT WINAPI AtlModuleRegisterServer(_ATL_MODULEW* pM, BOOL bRegTypeLib, const
     if (pM == NULL)
         return E_INVALIDARG;
 
-    for (i = 0; pM->m_pObjMap[i].pclsid != NULL; i++) /* register CLSIDs */
+    for (i = 0; (obj = get_objmap_entry( pM, i )) != NULL; i++) /* register CLSIDs */
     {
-        if (!clsid || IsEqualCLSID(pM->m_pObjMap[i].pclsid, clsid))
+        if (!clsid || IsEqualCLSID(obj->pclsid, clsid))
         {
-            const _ATL_OBJMAP_ENTRYW *obj = &pM->m_pObjMap[i];
-
             TRACE("Registering clsid %s\n", debugstr_guid(obj->pclsid));
             hRes = obj->pfnUpdateRegistry(TRUE); /* register */
             if (FAILED(hRes))
@@ -351,6 +362,7 @@ HRESULT WINAPI AtlUnmarshalPtr(IStream *stm, const IID *iid, IUnknown **ppUnk)
 HRESULT WINAPI AtlModuleGetClassObject(_ATL_MODULEW *pm, REFCLSID rclsid,
                                        REFIID riid, LPVOID *ppv)
 {
+    _ATL_OBJMAP_ENTRYW_V1 *obj;
     int i;
     HRESULT hres = CLASS_E_CLASSNOTAVAILABLE;
 
@@ -359,12 +371,10 @@ HRESULT WINAPI AtlModuleGetClassObject(_ATL_MODULEW *pm, REFCLSID rclsid,
     if (pm == NULL)
         return E_INVALIDARG;
 
-    for (i = 0; pm->m_pObjMap[i].pclsid != NULL; i++)
+    for (i = 0; (obj = get_objmap_entry( pm, i )) != NULL; i++)
     {
-        if (IsEqualCLSID(pm->m_pObjMap[i].pclsid, rclsid))
+        if (IsEqualCLSID(obj->pclsid, rclsid))
         {
-            _ATL_OBJMAP_ENTRYW *obj = &pm->m_pObjMap[i];
-
             TRACE("found object %i\n", i);
             if (obj->pfnGetClassObject)
             {

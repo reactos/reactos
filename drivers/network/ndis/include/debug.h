@@ -5,8 +5,8 @@
  * PURPOSE:     Debugging support macros
  * DEFINES:     DBG     - Enable debug output
  */
-#ifndef __DEBUG_H
-#define __DEBUG_H
+
+#pragma once
 
 #define NORMAL_MASK    0x000000FF
 #define SPECIAL_MASK   0xFFFFFF00
@@ -67,7 +67,5 @@ extern ULONG DebugTraceLevel;
     do { NDIS_DbgPrint(MIN_TRACE, ("\n")); } while(0);
 
 #define CP CHECKPOINT
-
-#endif /* __DEBUG_H */
 
 /* EOF */

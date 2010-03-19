@@ -1613,6 +1613,93 @@ done:
     return r;
 }
 
+UINT WINAPI MsiGetPatchInfoA( LPCSTR patch, LPCSTR attr, LPSTR buffer, LPDWORD buflen )
+{
+    UINT r = ERROR_OUTOFMEMORY;
+    DWORD size;
+    LPWSTR patchW = NULL, attrW = NULL, bufferW = NULL;
+
+    TRACE("%s %s %p %p\n", debugstr_a(patch), debugstr_a(attr), buffer, buflen);
+
+    if (!patch || !attr)
+        return ERROR_INVALID_PARAMETER;
+
+    if (!(patchW = strdupAtoW( patch )))
+        goto done;
+
+    if (!(attrW = strdupAtoW( attr )))
+        goto done;
+
+    size = 0;
+    r = MsiGetPatchInfoW( patchW, attrW, NULL, &size );
+    if (r != ERROR_SUCCESS)
+        goto done;
+
+    size++;
+    if (!(bufferW = msi_alloc( size * sizeof(WCHAR) )))
+    {
+        r = ERROR_OUTOFMEMORY;
+        goto done;
+    }
+
+    r = MsiGetPatchInfoW( patchW, attrW, bufferW, &size );
+    if (r == ERROR_SUCCESS)
+    {
+        int len = WideCharToMultiByte( CP_ACP, 0, bufferW, -1, NULL, 0, NULL, NULL );
+        if (len > *buflen)
+            r = ERROR_MORE_DATA;
+        else if (buffer)
+            WideCharToMultiByte( CP_ACP, 0, bufferW, -1, buffer, *buflen, NULL, NULL );
+
+        *buflen = len - 1;
+    }
+
+done:
+    msi_free( patchW );
+    msi_free( attrW );
+    msi_free( bufferW );
+    return r;
+}
+
+UINT WINAPI MsiGetPatchInfoW( LPCWSTR patch, LPCWSTR attr, LPWSTR buffer, LPDWORD buflen )
+{
+    UINT r;
+    WCHAR product[GUID_SIZE];
+    DWORD index;
+
+    TRACE("%s %s %p %p\n", debugstr_w(patch), debugstr_w(attr), buffer, buflen);
+
+    if (!patch || !attr)
+        return ERROR_INVALID_PARAMETER;
+
+    if (strcmpW( INSTALLPROPERTY_LOCALPACKAGEW, attr ))
+        return ERROR_UNKNOWN_PROPERTY;
+
+    index = 0;
+    while (1)
+    {
+        r = MsiEnumProductsW( index, product );
+        if (r != ERROR_SUCCESS)
+            break;
+
+        r = MsiGetPatchInfoExW( patch, product, NULL, MSIINSTALLCONTEXT_USERMANAGED, attr, buffer, buflen );
+        if (r == ERROR_SUCCESS || r == ERROR_MORE_DATA)
+            return r;
+
+        r = MsiGetPatchInfoExW( patch, product, NULL, MSIINSTALLCONTEXT_USERUNMANAGED, attr, buffer, buflen );
+        if (r == ERROR_SUCCESS || r == ERROR_MORE_DATA)
+            return r;
+
+        r = MsiGetPatchInfoExW( patch, product, NULL, MSIINSTALLCONTEXT_MACHINE, attr, buffer, buflen );
+        if (r == ERROR_SUCCESS || r == ERROR_MORE_DATA)
+            return r;
+
+        index++;
+    }
+
+    return ERROR_UNKNOWN_PRODUCT;
+}
+
 UINT WINAPI MsiEnableLogA(DWORD dwLogMode, LPCSTR szLogFile, DWORD attributes)
 {
     LPWSTR szwLogFile = NULL;

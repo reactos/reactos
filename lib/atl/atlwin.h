@@ -18,8 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef _atlin_h
-#define _atlwin_h
+#pragma once
 
 #ifdef __GNUC__
 #define GCCU(x)	x __attribute__((unused))
@@ -778,5 +777,3 @@ struct _ATL_WNDCLASSINFOW
 };
 
 }; // namespace ATL
-
-#endif // _atlwin_h

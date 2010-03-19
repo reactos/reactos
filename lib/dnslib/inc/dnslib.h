@@ -4,8 +4,8 @@
  * FILE:        include/mswsock.h
  * PURPOSE:     Ancillary Function Driver DLL header
  */
-#ifndef __DNSLIB_H
-#define __DNSLIB_H
+
+#pragma once
 
 /* INCLUDES ******************************************************************/
 #include <ws2atm.h>
@@ -339,5 +339,3 @@ Dns_Ip4ReverseNameToAddress_W(
     OUT PIN_ADDR Address,
     IN LPWSTR Name
 );
-
-#endif

@@ -24,8 +24,7 @@
  * PROGRAMMER:      Eric Kohl
  */
 
-#ifndef __CONSUP_H__
-#define __CONSUP_H__
+#pragma once
 
 #define FOREGROUND_WHITE (FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE)
 #define FOREGROUND_YELLOW (FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN)
@@ -186,7 +185,5 @@ CONSOLE_SetStyledText(
 	IN SHORT y,
 	IN INT Flags,
 	IN LPCSTR Text);
-
-#endif /* __CONSOLE_H__*/
 
 /* EOF */

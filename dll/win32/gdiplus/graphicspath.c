@@ -1380,6 +1380,8 @@ GpStatus WINGDIPAPI GdipIsOutlineVisiblePathPoint(GpPath* path, REAL x, REAL y,
 {
     static int calls;
 
+    TRACE("(%p,%0.2f,%0.2f,%p,%p,%p)\n", path, x, y, pen, graphics, result);
+
     if(!path || !pen)
         return InvalidParameter;
 

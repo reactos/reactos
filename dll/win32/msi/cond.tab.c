@@ -119,6 +119,7 @@
 #include "msiserver.h"
 #include "wine/debug.h"
 #include "wine/unicode.h"
+#include "wine/list.h"
 
 #define YYLEX_PARAM info
 #define YYPARSE_PARAM info
@@ -133,6 +134,7 @@ typedef struct tag_yyinput
     LPCWSTR str;
     INT    n;
     MSICONDITION result;
+    struct list mem;
 } COND_input;
 
 struct cond_str {
@@ -140,9 +142,13 @@ struct cond_str {
     INT len;
 };
 
-static LPWSTR COND_GetString( const struct cond_str *str );
-static LPWSTR COND_GetLiteral( const struct cond_str *str );
+static LPWSTR COND_GetString( COND_input *info, const struct cond_str *str );
+static LPWSTR COND_GetLiteral( COND_input *info, const struct cond_str *str );
 static int cond_lex( void *COND_lval, COND_input *info);
+
+static void *cond_alloc( COND_input *cond, unsigned int sz );
+static void *cond_track_mem( COND_input *cond, void *ptr, unsigned int sz );
+static void cond_free( void *ptr );
 
 static INT compare_int( INT a, INT operator, INT b );
 static INT compare_string( LPCWSTR a, INT operator, LPCWSTR b, BOOL convert );
@@ -152,8 +158,8 @@ static INT compare_and_free_strings( LPWSTR a, INT op, LPWSTR b, BOOL convert )
     INT r;
 
     r = compare_string( a, op, b, convert );
-    msi_free( a );
-    msi_free( b );
+    cond_free( a );
+    cond_free( b );
     return r;
 }
 
@@ -184,7 +190,7 @@ static BOOL num_from_prop( LPCWSTR p, INT *val )
 
 
 /* Line 189 of yacc.c  */
-#line 188 "cond.tab.c"
+#line 194 "cond.tab.c"
 
 /* Enabling traces.  */
 #ifndef YYDEBUG
@@ -259,7 +265,7 @@ typedef union YYSTYPE
 {
 
 /* Line 214 of yacc.c  */
-#line 110 "cond.y"
+#line 116 "cond.y"
 
     struct cond_str str;
     LPWSTR    string;
@@ -268,7 +274,7 @@ typedef union YYSTYPE
 
 
 /* Line 214 of yacc.c  */
-#line 272 "cond.tab.c"
+#line 278 "cond.tab.c"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -280,7 +286,7 @@ typedef union YYSTYPE
 
 
 /* Line 264 of yacc.c  */
-#line 284 "cond.tab.c"
+#line 290 "cond.tab.c"
 
 #ifdef short
 # undef short
@@ -584,12 +590,12 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   134,   134,   140,   147,   151,   155,   159,   163,   170,
-     174,   181,   185,   189,   194,   198,   207,   216,   220,   224,
-     228,   232,   237,   242,   250,   251,   252,   253,   254,   255,
-     256,   257,   258,   259,   260,   261,   262,   263,   264,   265,
-     266,   267,   271,   275,   282,   291,   295,   304,   313,   326,
-     338,   345,   359,   368
+       0,   140,   140,   146,   153,   157,   161,   165,   169,   176,
+     180,   187,   191,   195,   200,   204,   213,   222,   226,   230,
+     234,   238,   243,   248,   256,   257,   258,   259,   260,   261,
+     262,   263,   264,   265,   266,   267,   268,   269,   270,   271,
+     272,   273,   277,   281,   288,   298,   302,   311,   320,   333,
+     345,   358,   375,   385
 };
 #endif
 
@@ -1540,7 +1546,7 @@ yyreduce:
         case 2:
 
 /* Line 1455 of yacc.c  */
-#line 135 "cond.y"
+#line 141 "cond.y"
     {
             COND_input* cond = (COND_input*) info;
             cond->result = (yyvsp[(1) - (1)].value);
@@ -1550,7 +1556,7 @@ yyreduce:
   case 3:
 
 /* Line 1455 of yacc.c  */
-#line 140 "cond.y"
+#line 146 "cond.y"
     {
             COND_input* cond = (COND_input*) info;
             cond->result = MSICONDITION_NONE;
@@ -1560,7 +1566,7 @@ yyreduce:
   case 4:
 
 /* Line 1455 of yacc.c  */
-#line 148 "cond.y"
+#line 154 "cond.y"
     {
             (yyval.value) = (yyvsp[(1) - (1)].value);
         ;}
@@ -1569,7 +1575,7 @@ yyreduce:
   case 5:
 
 /* Line 1455 of yacc.c  */
-#line 152 "cond.y"
+#line 158 "cond.y"
     {
             (yyval.value) = (yyvsp[(1) - (3)].value) || (yyvsp[(3) - (3)].value);
         ;}
@@ -1578,7 +1584,7 @@ yyreduce:
   case 6:
 
 /* Line 1455 of yacc.c  */
-#line 156 "cond.y"
+#line 162 "cond.y"
     {
             (yyval.value) = !(yyvsp[(1) - (3)].value) || (yyvsp[(3) - (3)].value);
         ;}
@@ -1587,7 +1593,7 @@ yyreduce:
   case 7:
 
 /* Line 1455 of yacc.c  */
-#line 160 "cond.y"
+#line 166 "cond.y"
     {
             (yyval.value) = ( (yyvsp[(1) - (3)].value) || (yyvsp[(3) - (3)].value) ) && !( (yyvsp[(1) - (3)].value) && (yyvsp[(3) - (3)].value) );
         ;}
@@ -1596,7 +1602,7 @@ yyreduce:
   case 8:
 
 /* Line 1455 of yacc.c  */
-#line 164 "cond.y"
+#line 170 "cond.y"
     {
             (yyval.value) = ( (yyvsp[(1) - (3)].value) && (yyvsp[(3) - (3)].value) ) || ( !(yyvsp[(1) - (3)].value) && !(yyvsp[(3) - (3)].value) );
         ;}
@@ -1605,7 +1611,7 @@ yyreduce:
   case 9:
 
 /* Line 1455 of yacc.c  */
-#line 171 "cond.y"
+#line 177 "cond.y"
     {
             (yyval.value) = (yyvsp[(1) - (1)].value);
         ;}
@@ -1614,7 +1620,7 @@ yyreduce:
   case 10:
 
 /* Line 1455 of yacc.c  */
-#line 175 "cond.y"
+#line 181 "cond.y"
     {
             (yyval.value) = (yyvsp[(1) - (3)].value) && (yyvsp[(3) - (3)].value);
         ;}
@@ -1623,7 +1629,7 @@ yyreduce:
   case 11:
 
 /* Line 1455 of yacc.c  */
-#line 182 "cond.y"
+#line 188 "cond.y"
     {
             (yyval.value) = (yyvsp[(2) - (2)].value) ? 0 : 1;
         ;}
@@ -1632,7 +1638,7 @@ yyreduce:
   case 12:
 
 /* Line 1455 of yacc.c  */
-#line 186 "cond.y"
+#line 192 "cond.y"
     {
             (yyval.value) = (yyvsp[(1) - (1)].value) ? 1 : 0;
         ;}
@@ -1641,17 +1647,17 @@ yyreduce:
   case 13:
 
 /* Line 1455 of yacc.c  */
-#line 190 "cond.y"
+#line 196 "cond.y"
     {
             (yyval.value) = ((yyvsp[(1) - (1)].string) && (yyvsp[(1) - (1)].string)[0]) ? 1 : 0;
-            msi_free((yyvsp[(1) - (1)].string));
+            cond_free( (yyvsp[(1) - (1)].string) );
         ;}
     break;
 
   case 14:
 
 /* Line 1455 of yacc.c  */
-#line 195 "cond.y"
+#line 201 "cond.y"
     {
             (yyval.value) = compare_int( (yyvsp[(1) - (3)].value), (yyvsp[(2) - (3)].value), (yyvsp[(3) - (3)].value) );
         ;}
@@ -1660,35 +1666,35 @@ yyreduce:
   case 15:
 
 /* Line 1455 of yacc.c  */
-#line 199 "cond.y"
+#line 205 "cond.y"
     {
             int num;
             if (num_from_prop( (yyvsp[(1) - (3)].string), &num ))
                 (yyval.value) = compare_int( num, (yyvsp[(2) - (3)].value), (yyvsp[(3) - (3)].value) );
             else 
                 (yyval.value) = ((yyvsp[(2) - (3)].value) == COND_NE || (yyvsp[(2) - (3)].value) == COND_INE );
-            msi_free((yyvsp[(1) - (3)].string));
+            cond_free( (yyvsp[(1) - (3)].string) );
         ;}
     break;
 
   case 16:
 
 /* Line 1455 of yacc.c  */
-#line 208 "cond.y"
+#line 214 "cond.y"
     {
             int num;
             if (num_from_prop( (yyvsp[(3) - (3)].string), &num ))
                 (yyval.value) = compare_int( (yyvsp[(1) - (3)].value), (yyvsp[(2) - (3)].value), num );
             else 
                 (yyval.value) = ((yyvsp[(2) - (3)].value) == COND_NE || (yyvsp[(2) - (3)].value) == COND_INE );
-            msi_free((yyvsp[(3) - (3)].string));
+            cond_free( (yyvsp[(3) - (3)].string) );
         ;}
     break;
 
   case 17:
 
 /* Line 1455 of yacc.c  */
-#line 217 "cond.y"
+#line 223 "cond.y"
     {
             (yyval.value) = compare_and_free_strings( (yyvsp[(1) - (3)].string), (yyvsp[(2) - (3)].value), (yyvsp[(3) - (3)].string), TRUE );
         ;}
@@ -1697,7 +1703,7 @@ yyreduce:
   case 18:
 
 /* Line 1455 of yacc.c  */
-#line 221 "cond.y"
+#line 227 "cond.y"
     {
             (yyval.value) = compare_and_free_strings( (yyvsp[(1) - (3)].string), (yyvsp[(2) - (3)].value), (yyvsp[(3) - (3)].string), TRUE );
         ;}
@@ -1706,7 +1712,7 @@ yyreduce:
   case 19:
 
 /* Line 1455 of yacc.c  */
-#line 225 "cond.y"
+#line 231 "cond.y"
     {
             (yyval.value) = compare_and_free_strings( (yyvsp[(1) - (3)].string), (yyvsp[(2) - (3)].value), (yyvsp[(3) - (3)].string), TRUE );
         ;}
@@ -1715,7 +1721,7 @@ yyreduce:
   case 20:
 
 /* Line 1455 of yacc.c  */
-#line 229 "cond.y"
+#line 235 "cond.y"
     {
             (yyval.value) = compare_and_free_strings( (yyvsp[(1) - (3)].string), (yyvsp[(2) - (3)].value), (yyvsp[(3) - (3)].string), FALSE );
         ;}
@@ -1724,27 +1730,27 @@ yyreduce:
   case 21:
 
 /* Line 1455 of yacc.c  */
-#line 233 "cond.y"
+#line 239 "cond.y"
     {
             (yyval.value) = 0;
-            msi_free((yyvsp[(1) - (3)].string));
+            cond_free( (yyvsp[(1) - (3)].string) );
         ;}
     break;
 
   case 22:
 
 /* Line 1455 of yacc.c  */
-#line 238 "cond.y"
+#line 244 "cond.y"
     {
             (yyval.value) = 0;
-            msi_free((yyvsp[(3) - (3)].string));
+            cond_free( (yyvsp[(3) - (3)].string) );
         ;}
     break;
 
   case 23:
 
 /* Line 1455 of yacc.c  */
-#line 243 "cond.y"
+#line 249 "cond.y"
     {
             (yyval.value) = (yyvsp[(2) - (3)].value);
         ;}
@@ -1753,133 +1759,133 @@ yyreduce:
   case 24:
 
 /* Line 1455 of yacc.c  */
-#line 250 "cond.y"
+#line 256 "cond.y"
     { (yyval.value) = COND_EQ; ;}
     break;
 
   case 25:
 
 /* Line 1455 of yacc.c  */
-#line 251 "cond.y"
+#line 257 "cond.y"
     { (yyval.value) = COND_NE; ;}
     break;
 
   case 26:
 
 /* Line 1455 of yacc.c  */
-#line 252 "cond.y"
+#line 258 "cond.y"
     { (yyval.value) = COND_LT; ;}
     break;
 
   case 27:
 
 /* Line 1455 of yacc.c  */
-#line 253 "cond.y"
+#line 259 "cond.y"
     { (yyval.value) = COND_GT; ;}
     break;
 
   case 28:
 
 /* Line 1455 of yacc.c  */
-#line 254 "cond.y"
+#line 260 "cond.y"
     { (yyval.value) = COND_LE; ;}
     break;
 
   case 29:
 
 /* Line 1455 of yacc.c  */
-#line 255 "cond.y"
+#line 261 "cond.y"
     { (yyval.value) = COND_GE; ;}
     break;
 
   case 30:
 
 /* Line 1455 of yacc.c  */
-#line 256 "cond.y"
+#line 262 "cond.y"
     { (yyval.value) = COND_SS; ;}
     break;
 
   case 31:
 
 /* Line 1455 of yacc.c  */
-#line 257 "cond.y"
+#line 263 "cond.y"
     { (yyval.value) = COND_IEQ; ;}
     break;
 
   case 32:
 
 /* Line 1455 of yacc.c  */
-#line 258 "cond.y"
+#line 264 "cond.y"
     { (yyval.value) = COND_INE; ;}
     break;
 
   case 33:
 
 /* Line 1455 of yacc.c  */
-#line 259 "cond.y"
+#line 265 "cond.y"
     { (yyval.value) = COND_ILT; ;}
     break;
 
   case 34:
 
 /* Line 1455 of yacc.c  */
-#line 260 "cond.y"
+#line 266 "cond.y"
     { (yyval.value) = COND_IGT; ;}
     break;
 
   case 35:
 
 /* Line 1455 of yacc.c  */
-#line 261 "cond.y"
+#line 267 "cond.y"
     { (yyval.value) = COND_ILE; ;}
     break;
 
   case 36:
 
 /* Line 1455 of yacc.c  */
-#line 262 "cond.y"
+#line 268 "cond.y"
     { (yyval.value) = COND_IGE; ;}
     break;
 
   case 37:
 
 /* Line 1455 of yacc.c  */
-#line 263 "cond.y"
+#line 269 "cond.y"
     { (yyval.value) = COND_ISS; ;}
     break;
 
   case 38:
 
 /* Line 1455 of yacc.c  */
-#line 264 "cond.y"
+#line 270 "cond.y"
     { (yyval.value) = COND_LHS; ;}
     break;
 
   case 39:
 
 /* Line 1455 of yacc.c  */
-#line 265 "cond.y"
+#line 271 "cond.y"
     { (yyval.value) = COND_RHS; ;}
     break;
 
   case 40:
 
 /* Line 1455 of yacc.c  */
-#line 266 "cond.y"
+#line 272 "cond.y"
     { (yyval.value) = COND_ILHS; ;}
     break;
 
   case 41:
 
 /* Line 1455 of yacc.c  */
-#line 267 "cond.y"
+#line 273 "cond.y"
     { (yyval.value) = COND_IRHS; ;}
     break;
 
   case 42:
 
 /* Line 1455 of yacc.c  */
-#line 272 "cond.y"
+#line 278 "cond.y"
     {
         (yyval.string) = (yyvsp[(1) - (1)].string);
     ;}
@@ -1888,7 +1894,7 @@ yyreduce:
   case 43:
 
 /* Line 1455 of yacc.c  */
-#line 276 "cond.y"
+#line 282 "cond.y"
     {
         (yyval.string) = (yyvsp[(1) - (1)].string);
     ;}
@@ -1897,9 +1903,10 @@ yyreduce:
   case 44:
 
 /* Line 1455 of yacc.c  */
-#line 283 "cond.y"
+#line 289 "cond.y"
     {
-            (yyval.string) = COND_GetLiteral(&(yyvsp[(1) - (1)].str));
+            COND_input* cond = (COND_input*) info;
+            (yyval.string) = COND_GetLiteral( cond, &(yyvsp[(1) - (1)].str) );
             if( !(yyval.string) )
                 YYABORT;
         ;}
@@ -1908,7 +1915,7 @@ yyreduce:
   case 45:
 
 /* Line 1455 of yacc.c  */
-#line 292 "cond.y"
+#line 299 "cond.y"
     {
             (yyval.value) = (yyvsp[(1) - (1)].value);
         ;}
@@ -1917,35 +1924,35 @@ yyreduce:
   case 46:
 
 /* Line 1455 of yacc.c  */
-#line 296 "cond.y"
+#line 303 "cond.y"
     {
             COND_input* cond = (COND_input*) info;
             INSTALLSTATE install = INSTALLSTATE_UNKNOWN, action = INSTALLSTATE_UNKNOWN;
       
             MSI_GetComponentStateW(cond->package, (yyvsp[(2) - (2)].string), &install, &action );
             (yyval.value) = action;
-            msi_free( (yyvsp[(2) - (2)].string) );
+            cond_free( (yyvsp[(2) - (2)].string) );
         ;}
     break;
 
   case 47:
 
 /* Line 1455 of yacc.c  */
-#line 305 "cond.y"
+#line 312 "cond.y"
     {
             COND_input* cond = (COND_input*) info;
             INSTALLSTATE install = INSTALLSTATE_UNKNOWN, action = INSTALLSTATE_UNKNOWN;
       
             MSI_GetComponentStateW(cond->package, (yyvsp[(2) - (2)].string), &install, &action );
             (yyval.value) = install;
-            msi_free( (yyvsp[(2) - (2)].string) );
+            cond_free( (yyvsp[(2) - (2)].string) );
         ;}
     break;
 
   case 48:
 
 /* Line 1455 of yacc.c  */
-#line 314 "cond.y"
+#line 321 "cond.y"
     {
             COND_input* cond = (COND_input*) info;
             INSTALLSTATE install = INSTALLSTATE_UNKNOWN, action = INSTALLSTATE_UNKNOWN;
@@ -1956,58 +1963,68 @@ yyreduce:
             else
                 (yyval.value) = action;
 
-            msi_free( (yyvsp[(2) - (2)].string) );
+            cond_free( (yyvsp[(2) - (2)].string) );
         ;}
     break;
 
   case 49:
 
 /* Line 1455 of yacc.c  */
-#line 327 "cond.y"
+#line 334 "cond.y"
     {
             COND_input* cond = (COND_input*) info;
             INSTALLSTATE install = INSTALLSTATE_UNKNOWN, action = INSTALLSTATE_UNKNOWN;
       
             MSI_GetFeatureStateW(cond->package, (yyvsp[(2) - (2)].string), &install, &action );
             (yyval.value) = install;
-            msi_free( (yyvsp[(2) - (2)].string) );
+            cond_free( (yyvsp[(2) - (2)].string) );
         ;}
     break;
 
   case 50:
 
 /* Line 1455 of yacc.c  */
-#line 339 "cond.y"
+#line 346 "cond.y"
     {
             COND_input* cond = (COND_input*) info;
+            UINT len;
 
             (yyval.string) = msi_dup_property( cond->package, (yyvsp[(1) - (1)].string) );
-            msi_free( (yyvsp[(1) - (1)].string) );
+            if ((yyval.string))
+            {
+                len = (lstrlenW((yyval.string)) + 1) * sizeof (WCHAR);
+                (yyval.string) = cond_track_mem( cond, (yyval.string), len );
+            }
+            cond_free( (yyvsp[(1) - (1)].string) );
         ;}
     break;
 
   case 51:
 
 /* Line 1455 of yacc.c  */
-#line 346 "cond.y"
+#line 359 "cond.y"
     {
+            COND_input* cond = (COND_input*) info;
             UINT len = GetEnvironmentVariableW( (yyvsp[(2) - (2)].string), NULL, 0 );
             (yyval.string) = NULL;
             if (len++)
             {
-                (yyval.string) = msi_alloc( len*sizeof (WCHAR) );
+                (yyval.string) = cond_alloc( cond, len*sizeof (WCHAR) );
+                if( !(yyval.string) )
+                    YYABORT;
                 GetEnvironmentVariableW( (yyvsp[(2) - (2)].string), (yyval.string), len );
             }
-            msi_free( (yyvsp[(2) - (2)].string) );
+            cond_free( (yyvsp[(2) - (2)].string) );
         ;}
     break;
 
   case 52:
 
 /* Line 1455 of yacc.c  */
-#line 360 "cond.y"
+#line 376 "cond.y"
     {
-            (yyval.string) = COND_GetString(&(yyvsp[(1) - (1)].str));
+            COND_input* cond = (COND_input*) info;
+            (yyval.string) = COND_GetString( cond, &(yyvsp[(1) - (1)].str) );
             if( !(yyval.string) )
                 YYABORT;
         ;}
@@ -2016,20 +2033,21 @@ yyreduce:
   case 53:
 
 /* Line 1455 of yacc.c  */
-#line 369 "cond.y"
+#line 386 "cond.y"
     {
-            LPWSTR szNum = COND_GetString(&(yyvsp[(1) - (1)].str));
+            COND_input* cond = (COND_input*) info;
+            LPWSTR szNum = COND_GetString( cond, &(yyvsp[(1) - (1)].str) );
             if( !szNum )
                 YYABORT;
             (yyval.value) = atoiW( szNum );
-            msi_free( szNum );
+            cond_free( szNum );
         ;}
     break;
 
 
 
 /* Line 1455 of yacc.c  */
-#line 2033 "cond.tab.c"
+#line 2051 "cond.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -2241,7 +2259,7 @@ yyreturn:
 
 
 /* Line 1675 of yacc.c  */
-#line 378 "cond.y"
+#line 396 "cond.y"
 
 
 
@@ -2558,11 +2576,11 @@ static int cond_lex( void *COND_lval, COND_input *cond )
     return rc;
 }
 
-static LPWSTR COND_GetString( const struct cond_str *str )
+static LPWSTR COND_GetString( COND_input *cond, const struct cond_str *str )
 {
     LPWSTR ret;
 
-    ret = msi_alloc( (str->len+1) * sizeof (WCHAR) );
+    ret = cond_alloc( cond, (str->len+1) * sizeof (WCHAR) );
     if( ret )
     {
         memcpy( ret, str->data, str->len * sizeof(WCHAR));
@@ -2572,11 +2590,11 @@ static LPWSTR COND_GetString( const struct cond_str *str )
     return ret;
 }
 
-static LPWSTR COND_GetLiteral( const struct cond_str *str )
+static LPWSTR COND_GetLiteral( COND_input *cond, const struct cond_str *str )
 {
     LPWSTR ret;
 
-    ret = msi_alloc( (str->len-1) * sizeof (WCHAR) );
+    ret = cond_alloc( cond, (str->len-1) * sizeof (WCHAR) );
     if( ret )
     {
         memcpy( ret, str->data+1, (str->len-2) * sizeof(WCHAR) );
@@ -2584,6 +2602,48 @@ static LPWSTR COND_GetLiteral( const struct cond_str *str )
     }
     TRACE("Got literal %s\n",debugstr_w(ret));
     return ret;
+}
+
+static void *cond_alloc( COND_input *cond, unsigned int sz )
+{
+    struct list *mem;
+
+    mem = msi_alloc( sizeof (struct list) + sz );
+    if( !mem )
+        return NULL;
+
+    list_add_head( &(cond->mem), mem );
+    return mem + 1;
+}
+
+static void *cond_track_mem( COND_input *cond, void *ptr, unsigned int sz )
+{
+    void *new_ptr;
+
+    if( !ptr )
+        return ptr;
+
+    new_ptr = cond_alloc( cond, sz );
+    if( !new_ptr )
+    {
+        msi_free( ptr );
+        return NULL;
+    }
+
+    memcpy( new_ptr, ptr, sz );
+    msi_free( ptr );
+    return new_ptr;
+}
+
+static void cond_free( void *ptr )
+{
+    struct list *mem = (struct list *)ptr - 1;
+
+    if( ptr )
+    {
+        list_remove( mem );
+        msi_free( mem );
+    }
 }
 
 static int cond_error(const char *str)
@@ -2596,6 +2656,7 @@ MSICONDITION MSI_EvaluateConditionW( MSIPACKAGE *package, LPCWSTR szCondition )
 {
     COND_input cond;
     MSICONDITION r;
+    struct list *mem, *safety;
 
     TRACE("%s\n", debugstr_w( szCondition ) );
 
@@ -2606,11 +2667,22 @@ MSICONDITION MSI_EvaluateConditionW( MSIPACKAGE *package, LPCWSTR szCondition )
     cond.str   = szCondition;
     cond.n     = 0;
     cond.result = MSICONDITION_ERROR;
-    
+
+    list_init( &cond.mem );
+
     if ( !cond_parse( &cond ) )
         r = cond.result;
     else
         r = MSICONDITION_ERROR;
+
+    LIST_FOR_EACH_SAFE( mem, safety, &cond.mem )
+    {
+        /* The tracked memory lives directly after the list struct */
+        void *ptr = mem + 1;
+        if ( r != MSICONDITION_ERROR )
+            WARN( "condition parser failed to free up some memory: %p\n", ptr );
+        cond_free( ptr );
+    }
 
     TRACE("%i <- %s\n", r, debugstr_w(szCondition));
     return r;

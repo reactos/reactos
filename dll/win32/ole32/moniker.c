@@ -124,30 +124,18 @@ static BOOL start_rpcss(void)
 {
     PROCESS_INFORMATION pi;
     STARTUPINFOW si;
-    static WCHAR cmd[6];
-    static const WCHAR rpcss[] = {'r','p','c','s','s',0};
+    WCHAR cmd[MAX_PATH];
+    static const WCHAR rpcss[] = {'\\','r','p','c','s','s','.','e','x','e',0};
     BOOL rslt;
 
     TRACE("\n");
 
-    ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
     ZeroMemory(&si, sizeof(STARTUPINFOA));
     si.cb = sizeof(STARTUPINFOA);
+    GetSystemDirectoryW( cmd, MAX_PATH - sizeof(rpcss)/sizeof(WCHAR) );
+    strcatW( cmd, rpcss );
 
-    memcpy(cmd, rpcss, sizeof(rpcss));
-
-    rslt = CreateProcessW(
-                          NULL,           /* executable */
-                          cmd,            /* command line */
-                          NULL,           /* process security attributes */
-                          NULL,           /* primary thread security attributes */
-                          FALSE,          /* inherit handles */
-                          0,              /* creation flags */
-                          NULL,           /* use parent's environment */
-                          NULL,           /* use parent's current directory */
-                          &si,            /* STARTUPINFO pointer */
-                          &pi             /* PROCESS_INFORMATION */
-                          );
+    rslt = CreateProcessW( cmd, cmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi );
 
     if (rslt)
     {

@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+<!DOCTYPE module SYSTEM "../../tools/rbuild/project.dtd">
 <module name="dnslib" type="staticlibrary" unicode="yes">
 	<include base="dnslib">inc</include>
 	<file>addr.c</file>

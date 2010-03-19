@@ -217,7 +217,7 @@ LsaDeleteTrustedDomain(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 WINAPI
@@ -227,10 +227,35 @@ LsaEnumerateAccountRights(
     PLSA_UNICODE_STRING *UserRights,
     PULONG CountOfRights)
 {
-    FIXME("(%p,%p,%p,%p) stub\n", PolicyHandle, AccountSid, UserRights, CountOfRights);
-    *UserRights = 0;
-    *CountOfRights = 0;
-    return STATUS_OBJECT_NAME_NOT_FOUND;
+    LSAPR_USER_RIGHT_SET UserRightsSet;
+    NTSTATUS Status;
+
+    TRACE("(%p,%p,%p,%p) stub\n", PolicyHandle, AccountSid, UserRights, CountOfRights);
+
+    UserRightsSet.Entries = 0;
+    UserRightsSet.UserRights = NULL;
+
+    RpcTryExcept
+    {
+        Status = LsarEnmuerateAccountRights((LSAPR_HANDLE)PolicyHandle,
+                                            AccountSid,
+                                            &UserRightsSet);
+
+        *CountOfRights = UserRightsSet.Entries;
+        *UserRights = (PUNICODE_STRING)UserRightsSet.UserRights;
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+
+        if (UserRightsSet.UserRights != NULL)
+        {
+            MIDL_user_free(UserRightsSet.UserRights);
+        }
+    }
+    RpcEndExcept;
+
+    return Status;
 }
 
 /*
@@ -288,7 +313,8 @@ LsaEnumerateTrustedDomainsEx(
 /*
  * @implemented
  */
-NTSTATUS WINAPI
+NTSTATUS
+WINAPI
 LsaFreeMemory(PVOID Buffer)
 {
     TRACE("(%p)\n", Buffer);

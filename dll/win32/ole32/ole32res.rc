@@ -23,7 +23,10 @@
 #include "winuser.h"
 #include "winnls.h"
 
-#include "version.rc"
+#define WINE_OLESELFREGISTER
+#define WINE_FILENAME_STR "ole32.dll"
+
+#include <wine/wine_common_ver.rc>
 
 /*
  * Everything that does not depend on language,
@@ -44,12 +47,3 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 /* @makedep: drag_link.cur */
 3 CURSOR drag_link.cur
-
-
-/*
- * Everything specific to any language goes
- * in one of the specific files.
- * Note that you can and may override resources
- * which also have a neutral version. This is to
- * get localized bitmaps for example.
- */

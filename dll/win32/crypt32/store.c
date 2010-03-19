@@ -745,7 +745,7 @@ HCERTSTORE WINAPI CertOpenStore(LPCSTR lpszStoreProvider,
     TRACE("(%s, %08x, %08lx, %08x, %p)\n", debugstr_a(lpszStoreProvider),
           dwMsgAndCertEncodingType, hCryptProv, dwFlags, pvPara);
 
-    if (!HIWORD(lpszStoreProvider))
+    if (IS_INTOID(lpszStoreProvider))
     {
         switch (LOWORD(lpszStoreProvider))
         {

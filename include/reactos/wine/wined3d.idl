@@ -26,6 +26,7 @@
 import "unknwn.idl";
 
 cpp_quote("#if 0")
+typedef HANDLE HMONITOR;
 
 typedef struct _RGNDATAHEADER
 {

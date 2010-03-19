@@ -12,7 +12,6 @@
 	<library>ole32</library>
 	<library>msi</library>
 	<file>msiexec.c</file>
-	<file>rsrc.rc</file>
 	<file>service.c</file>
-	<file>version.rc</file>
+	<file>rsrc.rc</file>
 </module>

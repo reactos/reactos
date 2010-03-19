@@ -120,6 +120,7 @@ STRINGTABLE DISCARDABLE
     IDS_WARN_REMOVE_DEFAULT "Voulez-vous réellement supprimer ce certificat ?"
     IDS_WARN_REMOVE_PLURAL_DEFAULT "Voulez-vous réellement supprimer ces certificats ?"
     IDS_CERT_MGR "Certificats"
+    IDS_FRIENDLY_NAME_NONE "<Aucun>"
     IDS_PURPOSE_SERVER_AUTH "Prouve l'identité d'un ordinateur distant"
     IDS_PURPOSE_CLIENT_AUTH "Prouve votre identité à un ordinateur distant"
     IDS_PURPOSE_CODE_SIGNING "Garantit que des logiciels proviennent bien d'un éditeur de logiciels donné\nProtège le logiciel contre toute altération après publication"
@@ -464,4 +465,3 @@ BEGIN
     LVS_REPORT|LVS_NOCOLUMNHEADER|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER,
     115,67,174,100
 END
-#pragma code_page(default)

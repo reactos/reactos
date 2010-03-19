@@ -20,7 +20,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
  * PURPOSE:           System setup
- * FILE:              lib/syssetup/install.c
+ * FILE:              dll/win32/syssetup/install.c
  * PROGRAMER:         Eric Kohl
  */
 
@@ -481,14 +481,18 @@ EnableUserModePnpManager(VOID)
     if (hSCManager == NULL)
         goto cleanup;
 
-    hService = OpenServiceW(hSCManager, L"PlugPlay", SERVICE_CHANGE_CONFIG | SERVICE_START);
+    hService = OpenServiceW(hSCManager,
+                            L"PlugPlay",
+                            SERVICE_CHANGE_CONFIG | SERVICE_START);
     if (hService == NULL)
         goto cleanup;
 
-    ret = ChangeServiceConfigW(
-        hService,
-        SERVICE_NO_CHANGE, SERVICE_AUTO_START, SERVICE_NO_CHANGE,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+    ret = ChangeServiceConfigW(hService,
+                               SERVICE_NO_CHANGE,
+                               SERVICE_AUTO_START,
+                               SERVICE_NO_CHANGE,
+                               NULL, NULL, NULL,
+                               NULL, NULL, NULL, NULL);
     if (!ret)
         goto cleanup;
 

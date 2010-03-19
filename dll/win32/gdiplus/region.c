@@ -1306,3 +1306,15 @@ GpStatus WINGDIPAPI GdipTranslateRegionI(GpRegion *region, INT dx, INT dy)
 
     return GdipTranslateRegion(region, (REAL)dx, (REAL)dy);
 }
+
+GpStatus WINGDIPAPI GdipGetRegionScansCount(GpRegion *region, UINT *count, GpMatrix *matrix)
+{
+    static int calls;
+
+    TRACE("(%p, %p, %p)\n", region, count, matrix);
+
+    if (!(calls++))
+        FIXME("not implemented\n");
+
+    return NotImplemented;
+}

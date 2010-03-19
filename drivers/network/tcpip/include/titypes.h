@@ -4,8 +4,8 @@
  * FILE:        include/titypes.h
  * PURPOSE:     TCP/IP protocol driver types
  */
-#ifndef __TITYPES_H
-#define __TITYPES_H
+
+#pragma once
 
 /*
  * VOID ReferenceObject(
@@ -305,7 +305,5 @@ typedef struct _TI_QUERY_CONTEXT {
     PMDL OutputMdl;
     TCP_REQUEST_QUERY_INFORMATION_EX QueryInfo;
 } TI_QUERY_CONTEXT, *PTI_QUERY_CONTEXT;
-
-#endif /* __TITYPES_H */
 
 /* EOF */

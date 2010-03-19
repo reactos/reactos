@@ -5,8 +5,7 @@
  * PURPOSE:     WinSock 2.2 Main Header
  */
 
-#ifndef __WS2_32P_H
-#define __WS2_32P_H
+#pragma once
 
 #define WINSOCK_ROOT "System\\CurrentControlSet\\Services\\WinSock2\\Parameters"
 #define MAXALIASES 35
@@ -886,6 +885,3 @@ WsQuickPrologTid(LPWSATHREADID *Tid)
         return WsSlowPrologTid(Tid);
     }
 }
-
-#endif
-

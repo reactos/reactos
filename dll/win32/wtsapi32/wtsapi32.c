@@ -488,6 +488,36 @@ BOOL WINAPI WTSQuerySessionInformationW(
 }
 
 /************************************************************
+ *                WTSQueryUserToken (WTSAPI32.@)
+ *
+ *   Obtains the primary access token of the logged-on user specified by the session ID.
+ *
+ * PARAMS
+ * SessionId [in] -- RDP session identifier
+ * phToken [out] -- pointer to the token handle for the logged-on user
+ *
+ *
+ * RETURNS 
+ * - On success - pointer to the primary token of the user
+ * - On failure - zero
+ *
+ *
+ * NOTES
+ * - token handle should be closed after use with CloseHandle
+ * - on Failure, extended error information is available via GetLastError
+ * 
+ */
+BOOL WINAPI WTSQueryUserToken(
+    ULONG SessionId,
+    PHANDLE phToken)
+{
+    *phToken = (HANDLE)0;
+    SetLastError(ERROR_NO_TOKEN);
+    FIXME("Stub %d\n", SessionId);
+    return FALSE;
+}
+
+/************************************************************
  *                WTSWaitSystemEvent (WTSAPI32.@)
  */
 BOOL WINAPI WTSWaitSystemEvent(HANDLE hServer, DWORD Mask, DWORD* Flags)

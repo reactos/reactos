@@ -51,7 +51,7 @@ BEGIN
         MENUITEM "删除(&D)\tDEL", ID_EDIT_CLEAR
         MENUITEM "全选(&S)\tCtrl+A", ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "查找(&F)...\tCrtl+F", ID_FIND
+        MENUITEM "查找(&F)...\tCtrl+F", ID_FIND
         MENUITEM "找下一个(&N)\tF3", ID_FIND_NEXT
         MENUITEM "替换(&R)...\tCtrl+H", ID_REPLACE
         MENUITEM SEPARATOR
@@ -108,6 +108,30 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "子弹点(&B)"       ID_BULLET
         MENUITEM "段落(&P)..."        ID_PARAFORMAT
+    END
+END
+
+IDM_COLOR_POPUP MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Black",      ID_COLOR_BLACK
+        MENUITEM "Maroon",     ID_COLOR_MAROON
+        MENUITEM "Green",      ID_COLOR_GREEN
+        MENUITEM "Olive"       ID_COLOR_OLIVE
+        MENUITEM "Navy"        ID_COLOR_NAVY
+        MENUITEM "Purple"      ID_COLOR_PURPLE
+        MENUITEM "Teal"        ID_COLOR_TEAL
+        MENUITEM "Gray"        ID_COLOR_GRAY
+        MENUITEM "Silver"      ID_COLOR_SILVER
+        MENUITEM "Red"         ID_COLOR_RED
+        MENUITEM "Lime"        ID_COLOR_LIME
+        MENUITEM "Yellow"      ID_COLOR_YELLOW
+        MENUITEM "Blue"        ID_COLOR_BLUE
+        MENUITEM "Fuchsia"     ID_COLOR_FUCHSIA
+        MENUITEM "Aqua"        ID_COLOR_AQUA
+        MENUITEM "White"       ID_COLOR_WHITE
+        MENUITEM "Automatic"   ID_COLOR_AUTOMATIC
     END
 END
 
@@ -223,7 +247,11 @@ BEGIN
     STRING_PREVIEW_PREVPAGE,         "上一页"
     STRING_PREVIEW_TWOPAGES,         "双页"
     STRING_PREVIEW_ONEPAGE,          "单页"
+    STRING_PREVIEW_ZOOMIN,           "Zoom in"
+    STRING_PREVIEW_ZOOMOUT,          "Zoom out"
     STRING_PREVIEW_CLOSE,            "关闭"
+    STRING_PREVIEW_PAGE,             "Page"
+    STRING_PREVIEW_PAGES,            "Pages"
 END
 
 STRINGTABLE DISCARDABLE
@@ -276,7 +304,7 @@ BEGIN
         MENUITEM "刪除(&D)\tDEL", ID_EDIT_CLEAR
         MENUITEM "全選(&S)\tCtrl+A", ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "查找(&F)...\tCrtl+F", ID_FIND
+        MENUITEM "查找(&F)...\tCtrl+F", ID_FIND
         MENUITEM "找下一個(&N)\tF3", ID_FIND_NEXT
         MENUITEM "替換(&R)...\tCtrl+H", ID_REPLACE
         MENUITEM SEPARATOR
@@ -471,4 +499,3 @@ BEGIN
     STRING_OPEN_FAILED,               "不能開啟檔案."
     STRING_OPEN_ACCESS_DENIED,        "你沒有開啟檔案的權力."
 END
-#pragma code_page(default)

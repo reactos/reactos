@@ -36,7 +36,7 @@ HAL_DISPATCH HalDispatchTable =
     (pHalStartMirroring)NULL,
     (pHalEndMirroring)NULL,
     (pHalMirrorPhysicalMemory)NULL,
-    (pHalEndOfBoot)NULL,
+    xHalEndOfBoot,
     (pHalMirrorVerify)NULL
 };
 
@@ -47,7 +47,7 @@ HAL_PRIVATE_DISPATCH HalPrivateDispatchTable =
     (pHalHandlerForConfigSpace)NULL,
     (pHalLocateHiberRanges)NULL,
     (pHalRegisterBusHandler)NULL,
-    (pHalSetWakeEnable)NULL,
+    xHalSetWakeEnable,
     (pHalSetWakeAlarm)NULL,
     (pHalTranslateBusAddress)NULL,
     (pHalAssignSlotResources)NULL,
@@ -80,4 +80,20 @@ xHalHaltSystem(VOID)
 {
     /* Halt execution */
     while (TRUE);
+}
+
+VOID
+NTAPI
+xHalEndOfBoot(VOID)
+{
+    /* Nothing */
+    return;
+}
+
+VOID
+NTAPI
+xHalSetWakeEnable(IN BOOLEAN Enable)
+{
+    /* Nothing */
+    return;
 }

@@ -36,12 +36,18 @@ typedef struct {
 
 static const WCHAR descriptionW[] = {'d','e','s','c','r','i','p','t','i','o','n',0};
 static const WCHAR messageW[] = {'m','e','s','s','a','g','e',0};
+static const WCHAR nameW[] = {'n','a','m','e',0};
 static const WCHAR numberW[] = {'n','u','m','b','e','r',0};
 static const WCHAR toStringW[] = {'t','o','S','t','r','i','n','g',0};
 
 static inline ErrorInstance *error_from_vdisp(vdisp_t *vdisp)
 {
     return (ErrorInstance*)vdisp->u.jsdisp;
+}
+
+static inline ErrorInstance *error_this(vdisp_t *jsthis)
+{
+    return is_vclass(jsthis, JSCLASS_ERROR) ? error_from_vdisp(jsthis) : NULL;
 }
 
 static HRESULT Error_number(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
@@ -101,17 +107,77 @@ static HRESULT Error_message(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
 
 /* ECMA-262 3rd Edition    15.11.4.4 */
 static HRESULT Error_toString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
-        DISPPARAMS *dp, VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+        DISPPARAMS *dp, VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
 {
+    ErrorInstance *error;
+    BSTR name, msg = NULL, ret = NULL;
+    VARIANT v;
+    HRESULT hres;
+
     static const WCHAR str[] = {'[','o','b','j','e','c','t',' ','E','r','r','o','r',']',0};
 
     TRACE("\n");
 
+    error = error_this(jsthis);
+    if(ctx->version < 2 || !error) {
+        if(retv) {
+            V_VT(retv) = VT_BSTR;
+            V_BSTR(retv) = SysAllocString(str);
+            if(!V_BSTR(retv))
+                return E_OUTOFMEMORY;
+        }
+        return S_OK;
+    }
+
+    hres = jsdisp_propget_name(&error->dispex, nameW, &v, ei, caller);
+    if(FAILED(hres))
+        return hres;
+
+    hres = to_string(ctx, &v, ei, &name);
+    VariantClear(&v);
+    if(FAILED(hres))
+        return hres;
+
+    if(V_VT(&error->message) != VT_EMPTY) {
+        hres = to_string(ctx, &error->message, ei, &msg);
+        if(SUCCEEDED(hres) && !*msg) {
+            SysFreeString(msg);
+            msg = NULL;
+        }
+    }
+
+    if(SUCCEEDED(hres)) {
+        if(msg) {
+            DWORD name_len, msg_len;
+
+            name_len = SysStringLen(name);
+            msg_len = SysStringLen(msg);
+
+            ret = SysAllocStringLen(NULL, name_len + msg_len + 2);
+            if(ret) {
+                memcpy(ret, name, name_len*sizeof(WCHAR));
+                ret[name_len] = ':';
+                ret[name_len+1] = ' ';
+                memcpy(ret+name_len+2, msg, msg_len*sizeof(WCHAR));
+            }
+        }else {
+            ret = name;
+            name = NULL;
+        }
+    }
+
+    SysFreeString(msg);
+    SysFreeString(name);
+    if(FAILED(hres))
+        return hres;
+    if(!ret)
+        return E_OUTOFMEMORY;
+
     if(retv) {
         V_VT(retv) = VT_BSTR;
-        V_BSTR(retv) = SysAllocString(str);
-        if(!V_BSTR(retv))
-            return E_OUTOFMEMORY;
+        V_BSTR(retv) = ret;
+    }else {
+        SysFreeString(ret);
     }
 
     return S_OK;
@@ -264,6 +330,7 @@ static HRESULT error_constr(script_ctx_t *ctx, WORD flags, DISPPARAMS *dp,
             hres = create_error(ctx, constr, NULL, msg, &err);
         else
             hres = create_error(ctx, constr, &num, msg, &err);
+        SysFreeString(msg);
 
         if(FAILED(hres))
             return hres;
@@ -341,7 +408,6 @@ static HRESULT URIErrorConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD fla
 
 HRESULT init_error_constr(script_ctx_t *ctx, DispatchEx *object_prototype)
 {
-    static const WCHAR nameW[] = {'n','a','m','e',0};
     static const WCHAR ErrorW[] = {'E','r','r','o','r',0};
     static const WCHAR EvalErrorW[] = {'E','v','a','l','E','r','r','o','r',0};
     static const WCHAR RangeErrorW[] = {'R','a','n','g','e','E','r','r','o','r',0};
@@ -381,7 +447,7 @@ HRESULT init_error_constr(script_ctx_t *ctx, DispatchEx *object_prototype)
 
         if(SUCCEEDED(hres))
             hres = create_builtin_function(ctx, constr_val[i], names[i], NULL,
-                    PROPF_CONSTR, &err->dispex, constr_addr[i]);
+                    PROPF_CONSTR|1, &err->dispex, constr_addr[i]);
 
         jsdisp_release(&err->dispex);
         VariantClear(&v);
@@ -422,11 +488,6 @@ static HRESULT throw_error(script_ctx_t *ctx, jsexcept_t *ei, UINT id, const WCH
     V_DISPATCH(&ei->var) = (IDispatch*)_IDispatchEx_(err);
 
     return id;
-}
-
-HRESULT throw_eval_error(script_ctx_t *ctx, jsexcept_t *ei, UINT id, const WCHAR *str)
-{
-    return throw_error(ctx, ei, id, str, ctx->eval_error_constr);
 }
 
 HRESULT throw_generic_error(script_ctx_t *ctx, jsexcept_t *ei, UINT id, const WCHAR *str)

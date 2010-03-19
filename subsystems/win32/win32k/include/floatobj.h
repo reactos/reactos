@@ -1,5 +1,4 @@
-#ifndef _WIN32K_FLOATOBJ_H_
-#define _WIN32K_FLOATOBJ_H_
+#pragma once
 
 #if defined(_X86_)
 
@@ -71,5 +70,3 @@ _FLOATOBJ_Equal1(FLOATOBJ *pf)
 #define FLOATOBJ_Set1(fo) *(fo) = 1;
 
 #endif
-
-#endif /* not _WIN32K_FLOATOBJ_H_ */

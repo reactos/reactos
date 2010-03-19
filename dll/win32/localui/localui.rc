@@ -39,17 +39,19 @@
 
 
 #include "ui_Da.rc"
-#include "ui_De.rc"
 #include "ui_En.rc"
-#include "ui_Fr.rc"
 #include "ui_Ko.rc"
-#include "ui_Lt.rc"
 #include "ui_Nl.rc"
 #include "ui_No.rc"
 #include "ui_Pl.rc"
 #include "ui_Pt.rc"
+#include "ui_Sv.rc"
+
+/* UTF-8 */
+#include "ui_De.rc"
+#include "ui_Fr.rc"
+#include "ui_Lt.rc"
 #include "ui_Ro.rc"
 #include "ui_Ru.rc"
 #include "ui_Si.rc"
-#include "ui_Sv.rc"
 #include "ui_Zh.rc"

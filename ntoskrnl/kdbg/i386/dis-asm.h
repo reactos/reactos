@@ -23,8 +23,7 @@
    interface, for making instruction-processing programs more independent
    of the instruction set being processed.  */
 
-#ifndef DIS_ASM_H
-#define DIS_ASM_H
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -326,5 +325,3 @@ extern int generic_symbol_at_address
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* ! defined (DIS_ASM_H) */

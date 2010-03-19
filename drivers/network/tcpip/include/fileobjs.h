@@ -4,9 +4,8 @@
  * FILE:        include/fileobjs.h
  * PURPOSE:     File object routine prototypes
  */
-#ifndef __FILEOBJS_H
-#define __FILEOBJS_H
 
+#pragma once
 
 extern LIST_ENTRY AddressFileListHead;
 extern KSPIN_LOCK AddressFileListLock;
@@ -34,7 +33,5 @@ NTSTATUS FileOpenControlChannel(
 
 NTSTATUS FileCloseControlChannel(
   PTDI_REQUEST Request);
-
-#endif /* __FILEOBJS_H */
 
 /* EOF */

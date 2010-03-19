@@ -104,6 +104,62 @@ BOOLEAN DissectArcPath(CHAR *ArcPath, CHAR *BootPath, ULONG* BootDrive, ULONG* B
 	return TRUE;
 }
 
+/* PathSyntax: scsi() = 0, multi() = 1, ramdisk() = 2 */
+BOOLEAN
+DissectArcPath2(
+    IN CHAR* ArcPath,
+    OUT ULONG* x,
+    OUT ULONG* y,
+    OUT ULONG* z,
+    OUT ULONG* Partition,
+    OUT ULONG *PathSyntax)
+{
+    /* Detect ramdisk() */
+    if (_strnicmp(ArcPath, "ramdisk(0)", 10) == 0)
+    {
+        *x = *y = *z = 0;
+        *Partition = 1;
+        *PathSyntax = 2;
+        return TRUE;
+    }
+    /* Detect scsi()disk()rdisk()partition() */
+    else if (sscanf(ArcPath, "scsi(%lu)disk(%lu)rdisk(%lu)partition(%lu)", x, y, z, Partition) == 4)
+    {
+        *PathSyntax = 0;
+        return TRUE;
+    }
+    /* Detect scsi()cdrom()fdisk() */
+    else if (sscanf(ArcPath, "scsi(%lu)cdrom(%lu)fdisk(%lu)", x, y, z) == 3)
+    {
+        *Partition = 0;
+        *PathSyntax = 0;
+        return TRUE;
+    }
+    /* Detect multi()disk()rdisk()partition() */
+    else if (sscanf(ArcPath, "multi(%lu)disk(%lu)rdisk(%lu)partition(%lu)", x, y, z, Partition) == 4)
+    {
+        *PathSyntax = 1;
+        return TRUE;
+    }
+    /* Detect multi()disk()cdrom() */
+    else if (sscanf(ArcPath, "multi(%lu)disk(%lu)cdrom(%lu)", x, y, z) == 3)
+    {
+        *Partition = 1;
+        *PathSyntax = 1;
+        return TRUE;
+    }
+    /* Detect multi()disk()fdisk() */
+    else if (sscanf(ArcPath, "multi(%lu)disk(%lu)fdisk(%lu)", x, y, z) == 3)
+    {
+        *Partition = 1;
+        *PathSyntax = 1;
+        return TRUE;
+    }
+
+    /* Unknown syntax */
+    return FALSE;
+}
+
 VOID ConstructArcPath(PCHAR ArcPath, PCHAR SystemFolder, ULONG Disk, ULONG Partition)
 {
 	char	tmp[50];

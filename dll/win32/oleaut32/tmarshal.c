@@ -615,8 +615,6 @@ serialize_param(
         vartype = VT_SAFEARRAY;
 
     switch (vartype) {
-    case VT_EMPTY: /* nothing. empty variant for instance */
-	return S_OK;
     case VT_I8:
     case VT_UI8:
     case VT_R8:
@@ -652,56 +650,23 @@ serialize_param(
 	if (writeit)
 	    hres = xbuf_add(buf,(LPBYTE)arg,sizeof(DWORD));
 	return hres;
-    case VT_I4|VT_BYREF:
-	hres = S_OK;
-	if (debugout) TRACE_(olerelay)("&0x%x\n",*arg);
-	if (writeit)
-	    hres = xbuf_add(buf,(LPBYTE)(DWORD*)*arg,sizeof(DWORD));
-	/* do not dealloc at this time */
-	return hres;
     case VT_VARIANT: {
-	TYPEDESC	tdesc2;
-	VARIANT		*vt = (VARIANT*)arg;
-	DWORD		vttype = V_VT(vt);
-
-	if (debugout) TRACE_(olerelay)("Vt(%s%s)(",debugstr_vt(vttype),debugstr_vf(vttype));
-	tdesc2.vt = vttype;
-	if (writeit) {
-	    hres = xbuf_add(buf,(LPBYTE)&vttype,sizeof(vttype));
-	    if (hres) return hres;
-	}
-	/* need to recurse since we need to free the stuff */
-	hres = serialize_param(tinfo,writeit,debugout,dealloc,&tdesc2,(DWORD*)&(V_I4(vt)),buf);
-	if (debugout) TRACE_(olerelay)(")");
-	return hres;
-    }
-    case VT_BSTR|VT_BYREF: {
-	if (debugout) TRACE_(olerelay)("[byref]'%s'", *(BSTR*)*arg ? relaystr(*((BSTR*)*arg)) : "<bstr NULL>");
-        if (writeit) {
-            /* ptr to ptr to magic widestring, basically */
-            BSTR *bstr = (BSTR *) *arg;
-            DWORD len;
-            if (!*bstr) {
-                /* -1 means "null string" which is equivalent to empty string */
-                len = -1;     
-                hres = xbuf_add(buf, (LPBYTE)&len,sizeof(DWORD));
-		if (hres) return hres;
-            } else {
-		len = *((DWORD*)*bstr-1)/sizeof(WCHAR);
-		hres = xbuf_add(buf,(LPBYTE)&len,sizeof(DWORD));
-		if (hres) return hres;
-		hres = xbuf_add(buf,(LPBYTE)*bstr,len * sizeof(WCHAR));
-		if (hres) return hres;
-            }
+        if (debugout) TRACE_(olerelay)("Vt(%s%s)(",debugstr_vt(V_VT((VARIANT *)arg)),debugstr_vf(V_VT((VARIANT *)arg)));
+        if (writeit)
+        {
+            ULONG flags = MAKELONG(MSHCTX_DIFFERENTMACHINE, NDR_LOCAL_DATA_REPRESENTATION);
+            ULONG size = VARIANT_UserSize(&flags, buf->curoff, (VARIANT *)arg);
+            xbuf_resize(buf, size);
+            VARIANT_UserMarshal(&flags, buf->base + buf->curoff, (VARIANT *)arg);
+            buf->curoff = size;
         }
-
-        if (dealloc && arg) {
-            BSTR *str = *((BSTR **)arg);
-            SysFreeString(*str);
+        if (dealloc)
+        {
+            ULONG flags = MAKELONG(MSHCTX_DIFFERENTMACHINE, NDR_LOCAL_DATA_REPRESENTATION);
+            VARIANT_UserFree(&flags, (VARIANT *)arg);
         }
         return S_OK;
     }
-    
     case VT_BSTR: {
 	if (debugout) {
 	    if (*arg)
@@ -709,25 +674,20 @@ serialize_param(
 	    else
 		    TRACE_(olerelay)("<bstr NULL>");
 	}
-	if (writeit) {
-            BSTR bstr = (BSTR)*arg;
-            DWORD len;
-	    if (!bstr) {
-		len = -1;
-		hres = xbuf_add(buf,(LPBYTE)&len,sizeof(DWORD));
-		if (hres) return hres;
-	    } else {
-		len = *((DWORD*)bstr-1)/sizeof(WCHAR);
-		hres = xbuf_add(buf,(LPBYTE)&len,sizeof(DWORD));
-		if (hres) return hres;
-		hres = xbuf_add(buf,(LPBYTE)bstr,len * sizeof(WCHAR));
-		if (hres) return hres;
-	    }
-	}
-
-	if (dealloc && arg)
-	    SysFreeString((BSTR)*arg);
-	return S_OK;
+        if (writeit)
+        {
+            ULONG flags = MAKELONG(MSHCTX_DIFFERENTMACHINE, NDR_LOCAL_DATA_REPRESENTATION);
+            ULONG size = BSTR_UserSize(&flags, buf->curoff, (BSTR *)arg);
+            xbuf_resize(buf, size);
+            BSTR_UserMarshal(&flags, buf->base + buf->curoff, (BSTR *)arg);
+            buf->curoff = size;
+        }
+        if (dealloc)
+        {
+            ULONG flags = MAKELONG(MSHCTX_DIFFERENTMACHINE, NDR_LOCAL_DATA_REPRESENTATION);
+            BSTR_UserFree(&flags, (BSTR *)arg);
+        }
+        return S_OK;
     }
     case VT_PTR: {
 	DWORD cookie;
@@ -888,12 +848,14 @@ serialize_param(
 	if (debugout) TRACE_(olerelay)("(vt %s)",debugstr_vt(adesc->tdescElem.vt));
 	if (debugout) TRACE_(olerelay)("[");
 	for (i=0;i<arrsize;i++) {
-	    hres = serialize_param(tinfo, writeit, debugout, dealloc, &adesc->tdescElem, (DWORD*)((LPBYTE)arg+i*_xsize(&adesc->tdescElem, tinfo)), buf);
+	    hres = serialize_param(tinfo, writeit, debugout, dealloc, &adesc->tdescElem, (DWORD*)((LPBYTE)(*arg)+i*_xsize(&adesc->tdescElem, tinfo)), buf);
 	    if (hres)
 		return hres;
 	    if (debugout && (i<arrsize-1)) TRACE_(olerelay)(",");
 	}
 	if (debugout) TRACE_(olerelay)("]");
+	if (dealloc)
+	    HeapFree(GetProcessHeap(), 0, *(void **)arg);
 	return S_OK;
     }
     case VT_SAFEARRAY: {
@@ -904,6 +866,11 @@ serialize_param(
             xbuf_resize(buf, size);
             LPSAFEARRAY_UserMarshal(&flags, buf->base + buf->curoff, (LPSAFEARRAY *)arg);
             buf->curoff = size;
+        }
+        if (dealloc)
+        {
+            ULONG flags = MAKELONG(MSHCTX_DIFFERENTMACHINE, NDR_LOCAL_DATA_REPRESENTATION);
+            LPSAFEARRAY_UserFree(&flags, (LPSAFEARRAY *)arg);
         }
         return S_OK;
     }
@@ -934,34 +901,15 @@ deserialize_param(
 
     while (1) {
 	switch (vartype) {
-	case VT_EMPTY:
-	    if (debugout) TRACE_(olerelay)("<empty>\n");
-	    return S_OK;
-	case VT_NULL:
-	    if (debugout) TRACE_(olerelay)("<null>\n");
-	    return S_OK;
 	case VT_VARIANT: {
-	    VARIANT	*vt = (VARIANT*)arg;
-
-	    if (readit) {
-		DWORD	vttype;
-		TYPEDESC	tdesc2;
-		hres = xbuf_get(buf,(LPBYTE)&vttype,sizeof(vttype));
-		if (hres) {
-		    FIXME("vt type not read?\n");
-		    return hres;
-		}
-		memset(&tdesc2,0,sizeof(tdesc2));
-		tdesc2.vt = vttype;
-		V_VT(vt)  = vttype;
-	        if (debugout) TRACE_(olerelay)("Vt(%s%s)(",debugstr_vt(vttype),debugstr_vf(vttype));
-		hres = deserialize_param(tinfo, readit, debugout, alloc, &tdesc2, (DWORD*)&(V_I4(vt)), buf);
-		TRACE_(olerelay)(")");
-		return hres;
-	    } else {
-		VariantInit(vt);
-		return S_OK;
+	    if (readit)
+	    {
+		ULONG flags = MAKELONG(MSHCTX_DIFFERENTMACHINE, NDR_LOCAL_DATA_REPRESENTATION);
+		unsigned char *buffer;
+		buffer = VARIANT_UserUnmarshal(&flags, buf->base + buf->curoff, (VARIANT *)arg);
+		buf->curoff = buffer - buf->base;
 	    }
+	    return S_OK;
 	}
         case VT_I8:
         case VT_UI8:
@@ -1006,76 +954,14 @@ deserialize_param(
 	    }
 	    if (debugout) TRACE_(olerelay)("%02x",*arg & 0xff);
 	    return hres;
-        case VT_I4|VT_BYREF:
-	    hres = S_OK;
-	    if (alloc)
-		*arg = (DWORD)HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(DWORD));
-	    if (readit) {
-		hres = xbuf_get(buf,(LPBYTE)*arg,sizeof(DWORD));
-		if (hres) ERR("Failed to read integer 4 byte\n");
-	    }
-	    if (debugout) TRACE_(olerelay)("&0x%x",*(DWORD*)*arg);
-	    return hres;
-	case VT_BSTR|VT_BYREF: {
-	    BSTR **bstr = (BSTR **)arg;
-	    WCHAR	*str;
-	    DWORD	len;
-
-	    if (readit) {
-		hres = xbuf_get(buf,(LPBYTE)&len,sizeof(DWORD));
-		if (hres) {
-		    ERR("failed to read bstr klen\n");
-		    return hres;
-		}
-		if (len == -1) {
-                    *bstr = CoTaskMemAlloc(sizeof(BSTR *));
-		    **bstr = NULL;
-		    if (debugout) TRACE_(olerelay)("<bstr NULL>");
-		} else {
-		    str  = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,(len+1)*sizeof(WCHAR));
-		    hres = xbuf_get(buf,(LPBYTE)str,len*sizeof(WCHAR));
-		    if (hres) {
-			ERR("Failed to read BSTR.\n");
-			HeapFree(GetProcessHeap(),0,str);
-			return hres;
-		    }
-                    *bstr = CoTaskMemAlloc(sizeof(BSTR *));
-		    **bstr = SysAllocStringLen(str,len);
-		    if (debugout) TRACE_(olerelay)("%s",relaystr(str));
-		    HeapFree(GetProcessHeap(),0,str);
-		}
-	    } else {
-	        *bstr = NULL;
-	    }
-	    return S_OK;
-	}
 	case VT_BSTR: {
-	    WCHAR	*str;
-	    DWORD	len;
-
-	    if (readit) {
-		hres = xbuf_get(buf,(LPBYTE)&len,sizeof(DWORD));
-		if (hres) {
-		    ERR("failed to read bstr klen\n");
-		    return hres;
-		}
-		if (len == -1) {
-		    *arg = 0;
-		    if (debugout) TRACE_(olerelay)("<bstr NULL>");
-		} else {
-		    str  = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,(len+1)*sizeof(WCHAR));
-		    hres = xbuf_get(buf,(LPBYTE)str,len*sizeof(WCHAR));
-		    if (hres) {
-			ERR("Failed to read BSTR.\n");
-			HeapFree(GetProcessHeap(),0,str);
-			return hres;
-		    }
-		    *arg = (DWORD)SysAllocStringLen(str,len);
-		    if (debugout) TRACE_(olerelay)("%s",relaystr(str));
-		    HeapFree(GetProcessHeap(),0,str);
-		}
-	    } else {
-	        *arg = 0;
+	    if (readit)
+	    {
+		ULONG flags = MAKELONG(MSHCTX_DIFFERENTMACHINE, NDR_LOCAL_DATA_REPRESENTATION);
+		unsigned char *buffer;
+		buffer = BSTR_UserUnmarshal(&flags, buf->base + buf->curoff, (BSTR *)arg);
+		buf->curoff = buffer - buf->base;
+		if (debugout) TRACE_(olerelay)("%s",debugstr_w(*(BSTR *)arg));
 	    }
 	    return S_OK;
 	}
@@ -1247,6 +1133,7 @@ deserialize_param(
 	    if (adesc->cDims > 1) FIXME("cDims > 1 in VT_CARRAY. Does it work?\n");
 	    for (i=0;i<adesc->cDims;i++)
 		arrsize *= adesc->rgbounds[i].cElements;
+	    *arg=(DWORD)HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,_xsize(tdesc->u.lptdesc, tinfo) * arrsize);
 	    for (i=0;i<arrsize;i++)
 		deserialize_param(
 		    tinfo,
@@ -1254,7 +1141,7 @@ deserialize_param(
 		    debugout,
 		    alloc,
 		    &adesc->tdescElem,
-		    (DWORD*)((LPBYTE)(arg)+i*_xsize(&adesc->tdescElem, tinfo)),
+		    (DWORD*)((LPBYTE)(*arg)+i*_xsize(&adesc->tdescElem, tinfo)),
 		    buf
 		);
 	    return S_OK;
@@ -2037,6 +1924,7 @@ static HRESULT WINAPI
 TMStubImpl_Invoke(
     LPRPCSTUBBUFFER iface, RPCOLEMESSAGE* xmsg,IRpcChannelBuffer*rpcchanbuf)
 {
+#ifdef __i386__
     int		i;
     const FUNCDESC *fdesc;
     TMStubImpl *This = (TMStubImpl *)iface;
@@ -2103,7 +1991,7 @@ TMStubImpl_Invoke(
     nrofargs = 0;
     for (i=0;i<fdesc->cParams;i++)
 	nrofargs += _argsize(&fdesc->lprgelemdescParam[i].tdesc, tinfo);
-    args = HeapAlloc(GetProcessHeap(),0,(nrofargs+1)*sizeof(DWORD));
+    args = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,(nrofargs+1)*sizeof(DWORD));
     if (!args)
     {
         hres = E_OUTOFMEMORY;
@@ -2201,6 +2089,10 @@ exit:
 
     TRACE("returning\n");
     return hres;
+#else
+    FIXME( "not implemented on non-i386\n" );
+    return E_FAIL;
+#endif
 }
 
 static LPRPCSTUBBUFFER WINAPI

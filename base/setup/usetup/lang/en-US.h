@@ -1,5 +1,4 @@
-#ifndef LANG_EN_US_H__
-#define LANG_EN_US_H__
+#pragma once
 
 MUI_LAYOUTS enUSLayouts[] =
 {
@@ -1693,5 +1692,3 @@ MUI_STRING enUSStrings[] =
     "Adding keyboard layouts"},
     {0, 0}
 };
-
-#endif

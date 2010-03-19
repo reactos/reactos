@@ -166,6 +166,8 @@ static MSIFEATURE *msi_seltree_get_selected_feature( msi_control *control );
 #define WM_MSI_DIALOG_CREATE  (WM_USER+0x100)
 #define WM_MSI_DIALOG_DESTROY (WM_USER+0x101)
 
+#define USER_INSTALLSTATE_ALL 0x1000
+
 static DWORD uiThreadId;
 static HWND hMsiHiddenWindow;
 
@@ -799,11 +801,31 @@ static UINT msi_dialog_text_control( msi_dialog *dialog, MSIRECORD *rec )
     return ERROR_SUCCESS;
 }
 
+/* strip any leading text style label from text field */
+static WCHAR *msi_get_binary_name( MSIPACKAGE *package, MSIRECORD *rec )
+{
+    WCHAR *p, *text;
+
+    text = msi_get_deformatted_field( package, rec, 10 );
+    if (!text)
+        return NULL;
+
+    p = text;
+    while (*p && *p != '{') p++;
+    if (!*p++) return text;
+
+    while (*p && *p != '}') p++;
+    if (!*p++) return text;
+
+    p = strdupW( p );
+    msi_free( text );
+    return p;
+}
+
 static UINT msi_dialog_button_control( msi_dialog *dialog, MSIRECORD *rec )
 {
     msi_control *control;
     UINT attributes, style;
-    LPWSTR text;
 
     TRACE("%p %p\n", dialog, rec);
 
@@ -818,12 +840,19 @@ static UINT msi_dialog_button_control( msi_dialog *dialog, MSIRECORD *rec )
 
     control->handler = msi_dialog_button_handler;
 
-    /* set the icon */
-    text = msi_get_deformatted_field( dialog->package, rec, 10 );
-    control->hIcon = msi_load_icon( dialog->package->db, text, attributes );
-    if( attributes & msidbControlAttributesIcon )
-        SendMessageW( control->hwnd, BM_SETIMAGE, IMAGE_ICON, (LPARAM) control->hIcon );
-    msi_free( text );
+    if (attributes & msidbControlAttributesIcon)
+    {
+        /* set the icon */
+        LPWSTR name = msi_get_binary_name( dialog->package, rec );
+        control->hIcon = msi_load_icon( dialog->package->db, name, attributes );
+        if (control->hIcon)
+        {
+            SendMessageW( control->hwnd, BM_SETIMAGE, IMAGE_ICON, (LPARAM) control->hIcon );
+        }
+        else
+            ERR("Failed to load icon %s\n", debugstr_w(name));
+        msi_free( name );
+    }
 
     return ERROR_SUCCESS;
 }
@@ -1140,7 +1169,7 @@ static UINT msi_dialog_bitmap_control( msi_dialog *dialog, MSIRECORD *rec )
 {
     UINT cx, cy, flags, style, attributes;
     msi_control *control;
-    LPWSTR text;
+    LPWSTR name;
 
     flags = LR_LOADFROMFILE;
     style = SS_BITMAP | SS_LEFT | WS_GROUP;
@@ -1158,15 +1187,15 @@ static UINT msi_dialog_bitmap_control( msi_dialog *dialog, MSIRECORD *rec )
     cx = msi_dialog_scale_unit( dialog, cx );
     cy = msi_dialog_scale_unit( dialog, cy );
 
-    text = msi_get_deformatted_field( dialog->package, rec, 10 );
-    control->hBitmap = msi_load_picture( dialog->package->db, text, cx, cy, flags );
+    name = msi_get_binary_name( dialog->package, rec );
+    control->hBitmap = msi_load_picture( dialog->package->db, name, cx, cy, flags );
     if( control->hBitmap )
         SendMessageW( control->hwnd, STM_SETIMAGE,
                       IMAGE_BITMAP, (LPARAM) control->hBitmap );
     else
-        ERR("Failed to load bitmap %s\n", debugstr_w(text));
+        ERR("Failed to load bitmap %s\n", debugstr_w(name));
 
-    msi_free( text );
+    msi_free( name );
     
     return ERROR_SUCCESS;
 }
@@ -1175,7 +1204,7 @@ static UINT msi_dialog_icon_control( msi_dialog *dialog, MSIRECORD *rec )
 {
     msi_control *control;
     DWORD attributes;
-    LPWSTR text;
+    LPWSTR name;
 
     TRACE("\n");
 
@@ -1183,13 +1212,13 @@ static UINT msi_dialog_icon_control( msi_dialog *dialog, MSIRECORD *rec )
                             SS_ICON | SS_CENTERIMAGE | WS_GROUP );
             
     attributes = MSI_RecordGetInteger( rec, 8 );
-    text = msi_get_deformatted_field( dialog->package, rec, 10 );
-    control->hIcon = msi_load_icon( dialog->package->db, text, attributes );
+    name = msi_get_binary_name( dialog->package, rec );
+    control->hIcon = msi_load_icon( dialog->package->db, name, attributes );
     if( control->hIcon )
         SendMessageW( control->hwnd, STM_SETICON, (WPARAM) control->hIcon, 0 );
     else
-        ERR("Failed to load bitmap %s\n", debugstr_w(text));
-    msi_free( text );
+        ERR("Failed to load bitmap %s\n", debugstr_w(name));
+    msi_free( name );
     return ERROR_SUCCESS;
 }
 
@@ -1876,7 +1905,7 @@ msi_seltree_popup_menu( HWND hwnd, INT x, INT y )
 
     /* FIXME: load strings from resources */
     AppendMenuA( hMenu, MF_ENABLED, INSTALLSTATE_LOCAL, "Install feature locally");
-    AppendMenuA( hMenu, MF_GRAYED, 0x1000, "Install entire feature");
+    AppendMenuA( hMenu, MF_ENABLED, USER_INSTALLSTATE_ALL, "Install entire feature");
     AppendMenuA( hMenu, MF_ENABLED, INSTALLSTATE_ADVERTISED, "Install on demand");
     AppendMenuA( hMenu, MF_ENABLED, INSTALLSTATE_ABSENT, "Don't install");
     r = TrackPopupMenu( hMenu, TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RETURNCMD,
@@ -1897,6 +1926,37 @@ msi_seltree_feature_from_item( HWND hwnd, HTREEITEM hItem )
     SendMessageW( hwnd, TVM_GETITEMW, 0, (LPARAM) &tvi );
 
     return (MSIFEATURE*) tvi.lParam;
+}
+
+static void
+msi_seltree_update_feature_installstate( HWND hwnd, HTREEITEM hItem,
+        MSIPACKAGE *package, MSIFEATURE *feature, INSTALLSTATE state )
+{
+    msi_feature_set_state( package, feature, state );
+    msi_seltree_sync_item_state( hwnd, feature, hItem );
+    ACTION_UpdateComponentStates( package, feature->Feature );
+}
+
+static void
+msi_seltree_update_siblings_and_children_installstate( HWND hwnd, HTREEITEM curr,
+        MSIPACKAGE *package, INSTALLSTATE state)
+{
+    /* update all siblings */
+    do
+    {
+        MSIFEATURE *feature;
+        HTREEITEM child;
+
+        feature = msi_seltree_feature_from_item( hwnd, curr );
+        msi_seltree_update_feature_installstate( hwnd, curr, package, feature, state );
+
+        /* update this sibling's children */
+        child = (HTREEITEM)SendMessageW( hwnd, TVM_GETNEXTITEM, (WPARAM)TVGN_CHILD, (LPARAM)curr );
+        if (child)
+            msi_seltree_update_siblings_and_children_installstate( hwnd, child,
+                    package, state );
+    }
+    while ((curr = (HTREEITEM)SendMessageW( hwnd, TVM_GETNEXTITEM, (WPARAM)TVGN_NEXT, (LPARAM)curr )));
 }
 
 static LRESULT
@@ -1931,18 +1991,22 @@ msi_seltree_menu( HWND hwnd, HTREEITEM hItem )
 
     switch (r)
     {
-    case INSTALLSTATE_LOCAL:
+    case USER_INSTALLSTATE_ALL:
+        r = INSTALLSTATE_LOCAL;
+        /* fall-through */
     case INSTALLSTATE_ADVERTISED:
     case INSTALLSTATE_ABSENT:
-        msi_feature_set_state(package, feature, r);
+        {
+            HTREEITEM child;
+            child = (HTREEITEM)SendMessageW( hwnd, TVM_GETNEXTITEM, (WPARAM)TVGN_CHILD, (LPARAM)hItem );
+            if (child)
+                msi_seltree_update_siblings_and_children_installstate( hwnd, child, package, r );
+        }
+        /* fall-through */
+    case INSTALLSTATE_LOCAL:
+        msi_seltree_update_feature_installstate( hwnd, hItem, package, feature, r );
         break;
-    default:
-        FIXME("select feature and all children\n");
     }
-
-    /* update */
-    msi_seltree_sync_item_state( hwnd, feature, hItem );
-    ACTION_UpdateComponentStates( package, feature->Feature );
 
     return 0;
 }

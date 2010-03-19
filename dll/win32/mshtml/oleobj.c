@@ -34,8 +34,12 @@
 #include "wine/debug.h"
 
 #include "mshtml_private.h"
+#include "initguid.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
+
+DEFINE_OLEGUID(CGID_DocHostCmdPriv, 0x000214D4L, 0, 0);
+#define DOCHOST_DOCCANNAVIGATE  0
 
 /**********************************************************
  * IOleObject implementation
@@ -92,6 +96,7 @@ static HRESULT WINAPI OleObject_SetClientSite(IOleObject *iface, IOleClientSite 
     HTMLDocument *This = OLEOBJ_THIS(iface);
     IDocHostUIHandler *pDocHostUIHandler = NULL;
     IOleCommandTarget *cmdtrg = NULL;
+    BOOL hostui_setup;
     VARIANT silent;
     HRESULT hres;
 
@@ -116,6 +121,8 @@ static HRESULT WINAPI OleObject_SetClientSite(IOleObject *iface, IOleClientSite 
     if(!pClientSite)
         return S_OK;
 
+    hostui_setup = This->doc_obj->hostui_setup;
+
     hres = IOleObject_QueryInterface(pClientSite, &IID_IDocHostUIHandler, (void**)&pDocHostUIHandler);
     if(SUCCEEDED(hres)) {
         DOCHOSTUIINFO hostinfo;
@@ -133,7 +140,7 @@ static HRESULT WINAPI OleObject_SetClientSite(IOleObject *iface, IOleClientSite 
             This->doc_obj->hostinfo = hostinfo;
         }
 
-        if(!This->doc_obj->has_key_path) {
+        if(!hostui_setup) {
             hres = IDocHostUIHandler_GetOptionKeyPath(pDocHostUIHandler, &key_path, 0);
             if(hres == S_OK && key_path) {
                 if(key_path[0]) {
@@ -157,7 +164,7 @@ static HRESULT WINAPI OleObject_SetClientSite(IOleObject *iface, IOleClientSite 
                 IDocHostUIHandler2_Release(pDocHostUIHandler2);
             }
 
-            This->doc_obj->has_key_path = TRUE;
+            This->doc_obj->hostui_setup = TRUE;
         }
     }
 
@@ -178,6 +185,12 @@ static HRESULT WINAPI OleObject_SetClientSite(IOleObject *iface, IOleClientSite 
     if(SUCCEEDED(hres)) {
         VARIANT var;
         OLECMD cmd = {OLECMDID_SETPROGRESSTEXT, 0};
+
+        if(!hostui_setup) {
+            V_VT(&var) = VT_UNKNOWN;
+            V_UNKNOWN(&var) = (IUnknown*)HTMLWINDOW2(This->window);
+            IOleCommandTarget_Exec(cmdtrg, &CGID_DocHostCmdPriv, DOCHOST_DOCCANNAVIGATE, 0, &var, NULL);
+        }
 
         IOleCommandTarget_QueryStatus(cmdtrg, NULL, 1, &cmd, NULL);
 

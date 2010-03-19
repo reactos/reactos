@@ -1141,7 +1141,7 @@ static HRESULT WINAPI HTMLTxtRange_put_text(IHTMLTxtRange *iface, BSTR v)
     if(!This->doc)
         return MSHTML_E_NODOC;
 
-    nsAString_Init(&text_str, v);
+    nsAString_InitDepend(&text_str, v);
     nsres = nsIDOMHTMLDocument_CreateTextNode(This->doc->nsdoc, &text_str, &text_node);
     nsAString_Finish(&text_str);
     if(NS_FAILED(nsres)) {

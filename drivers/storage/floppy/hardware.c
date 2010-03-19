@@ -45,7 +45,6 @@
  *       with the bit position in the register, or they *might not*.  This should
  *       all be converted to standardize on absolute values or shifts.
  *       I prefer bit fields, but they break endianness.
- * TODO: Figure out the right delays in Send_Byte and Get_Byte
  */
 
 #include <ntddk.h>
@@ -53,13 +52,6 @@
 
 #include "floppy.h"
 #include "hardware.h"
-
-/*
- * Global variable that tracks the amount of time we've
- * been waiting on the controller
- */
-static ULONG TimeIncrement = 0;
-
 
 /*
  * Hardware Support Routines
@@ -131,60 +123,35 @@ static NTSTATUS NTAPI Send_Byte(PCONTROLLER_INFO ControllerInfo,
  *     - Function designed after flowchart in intel datasheet
  *     - 250us max delay.  Note that this is exactly 5 times longer
  *       than Microsoft recommends stalling the processor
- *     - Remember that we can be interrupted here, so this might
- *       take much more wall clock time than 250us
  *     - PAGED_CODE, because we spin for more than the Microsoft-recommended
  *       maximum.
  *     - This function is necessary because sometimes the FIFO reacts slowly
  *       and isn't yet ready to read or write the next byte
- * FIXME: time interval here and in Get_Byte
  */
 {
-  LARGE_INTEGER StartingTickCount;
-  LARGE_INTEGER CurrentTickCount;
-  PUCHAR Address;
+  int i;
 
   PAGED_CODE();
 
-  Address = ControllerInfo->BaseAddress + FIFO;
-
-  if(!TimeIncrement)
-    TimeIncrement = KeQueryTimeIncrement();
-
-  StartingTickCount.QuadPart = 0;
-
-  for(;;)
+  for(i = 0; i < 5; i++)
     {
-      if(!ReadyForWrite(ControllerInfo))
-	{
-	  ULONG64 ElapsedTicks;
-	  ULONG64 TimeUnits;
+      if(ReadyForWrite(ControllerInfo))
+         break;
 
-	  /* If this is the first time through... */
-	  if(!StartingTickCount.QuadPart)
-	    {
-              KeQueryTickCount(&StartingTickCount);
-	      continue;
-	    }
-
-	  /* Otherwise, only do this for 250 us == 2500 100ns units */
-	  KeQueryTickCount(&CurrentTickCount);
-	  ElapsedTicks = CurrentTickCount.QuadPart - StartingTickCount.QuadPart;
-	  TimeUnits = ElapsedTicks * TimeIncrement;
-
-	  if(TimeUnits > 25000000)
-	    break;
-
-          continue;
-	}
-
-      WRITE_PORT_UCHAR(Address, Byte);
-      return STATUS_SUCCESS;
+      KeStallExecutionProcessor(50);
     }
 
-  INFO_(FLOPPY, "Send_Byte: timed out trying to write\n");
-  HwDumpRegisters(ControllerInfo);
-  return STATUS_UNSUCCESSFUL;
+  if (i < 5)
+  {
+    WRITE_PORT_UCHAR(ControllerInfo->BaseAddress + FIFO, Byte);
+    return STATUS_SUCCESS;
+  }
+  else
+  {
+    INFO_(FLOPPY, "Send_Byte: timed out trying to write\n");
+    HwDumpRegisters(ControllerInfo);
+    return STATUS_UNSUCCESSFUL;
+  }
 }
 
 
@@ -208,52 +175,29 @@ static NTSTATUS NTAPI Get_Byte(PCONTROLLER_INFO ControllerInfo,
  *     - PAGED_CODE because we spin for longer than Microsoft recommends
  */
 {
-  LARGE_INTEGER StartingTickCount;
-  LARGE_INTEGER CurrentTickCount;
-  PUCHAR Address;
+  int i;
 
   PAGED_CODE();
 
-  Address = ControllerInfo->BaseAddress + FIFO;
-
-  if(!TimeIncrement)
-    TimeIncrement = KeQueryTimeIncrement();
-
-  StartingTickCount.QuadPart = 0;
-
-  for(;;)
+  for(i = 0; i < 5; i++)
     {
-      if(!ReadyForRead(ControllerInfo))
-	{
-	  ULONG64 ElapsedTicks;
-	  ULONG64 TimeUnits;
+      if(ReadyForRead(ControllerInfo))
+         break;
 
-	  /* if this is the first time through, start the timer */
-          if(!StartingTickCount.QuadPart)
-	    {
-              KeQueryTickCount(&StartingTickCount);
-	      continue;
-	    }
-
-	  /* Otherwise, only do this for 250 us == 2500 100ns units */
-	  KeQueryTickCount(&CurrentTickCount);
-	  ElapsedTicks = CurrentTickCount.QuadPart - StartingTickCount.QuadPart;
-	  TimeUnits = ElapsedTicks * TimeIncrement;
-
-	  if(TimeUnits > 25000000)
-	    break;
-
-          continue;
-	}
-
-      *Byte = READ_PORT_UCHAR(Address);
-
-      return STATUS_SUCCESS;
+      KeStallExecutionProcessor(50);
     }
 
-  WARN_(FLOPPY, "Get_Byte: timed out trying to read\n");
-  HwDumpRegisters(ControllerInfo);
-  return STATUS_UNSUCCESSFUL;
+  if (i < 5)
+  {
+    *Byte = READ_PORT_UCHAR(ControllerInfo->BaseAddress + FIFO);
+    return STATUS_SUCCESS;
+  }
+  else
+  {
+    INFO_(FLOPPY, "Get_Byte: timed out trying to write\n");
+    HwDumpRegisters(ControllerInfo);
+    return STATUS_UNSUCCESSFUL;
+  }
 }
 
 

@@ -1,0 +1,93 @@
+/*
+ * Copyright 2008 Nikolay Sivov
+ * Copyright 2009 Michael Stefaniuc
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "oleacc.h"
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+#pragma code_page(65001)
+
+STRINGTABLE DISCARDABLE
+{
+    0                              "obiect necunoscut" /* undocumented */
+    ROLE_SYSTEM_TITLEBAR           "bară de titlu"
+    ROLE_SYSTEM_MENUBAR            "bară de meniu"
+    ROLE_SYSTEM_SCROLLBAR          "bară de defilare"
+    ROLE_SYSTEM_GRIP               "ghidaj"
+    ROLE_SYSTEM_SOUND              "sunet"
+    ROLE_SYSTEM_CURSOR             "cursor"
+    ROLE_SYSTEM_CARET              "circumflex"
+    ROLE_SYSTEM_ALERT              "atenționare"
+    ROLE_SYSTEM_WINDOW             "fereastră"
+    ROLE_SYSTEM_CLIENT             "client"
+    ROLE_SYSTEM_MENUPOPUP          "meniu contextual"
+    ROLE_SYSTEM_MENUITEM           "element de meniu"
+    ROLE_SYSTEM_TOOLTIP            "indiciu"
+    ROLE_SYSTEM_APPLICATION        "aplicație"
+    ROLE_SYSTEM_DOCUMENT           "document"
+    ROLE_SYSTEM_PANE               "panou"
+    ROLE_SYSTEM_CHART              "diagramă"
+    ROLE_SYSTEM_DIALOG             "dialog"
+    ROLE_SYSTEM_BORDER             "margine"
+    ROLE_SYSTEM_GROUPING           "grupare"
+    ROLE_SYSTEM_SEPARATOR          "separator"
+    ROLE_SYSTEM_TOOLBAR            "bară de unelte"
+    ROLE_SYSTEM_STATUSBAR          "bară de stare"
+    ROLE_SYSTEM_TABLE              "tabel"
+    ROLE_SYSTEM_COLUMNHEADER       "antet de coloană"
+    ROLE_SYSTEM_ROWHEADER          "antet de rând"
+    ROLE_SYSTEM_COLUMN             "coloană"
+    ROLE_SYSTEM_ROW                "rând"
+    ROLE_SYSTEM_CELL               "celulă"
+    ROLE_SYSTEM_LINK               "legătură"
+    ROLE_SYSTEM_HELPBALLOON        "balon de ajutor"
+    ROLE_SYSTEM_CHARACTER          "caracter"
+    ROLE_SYSTEM_LIST               "listă"
+    ROLE_SYSTEM_LISTITEM           "element din listă"
+    ROLE_SYSTEM_OUTLINE            "contur"
+    ROLE_SYSTEM_OUTLINEITEM        "conturare element"
+    ROLE_SYSTEM_PAGETAB            "filă"
+    ROLE_SYSTEM_PROPERTYPAGE       "pagină de proprietăți"
+    ROLE_SYSTEM_INDICATOR          "indicator"
+    ROLE_SYSTEM_GRAPHIC            "grafică"
+    ROLE_SYSTEM_STATICTEXT         "text static"
+    ROLE_SYSTEM_TEXT               "text"
+    ROLE_SYSTEM_PUSHBUTTON         "buton de comandă"
+    ROLE_SYSTEM_CHECKBUTTON        "buton de bifare"
+    ROLE_SYSTEM_RADIOBUTTON        "buton radio"
+    ROLE_SYSTEM_COMBOBOX           "căsuță combinată"
+    ROLE_SYSTEM_DROPLIST           "listă verticală"
+    ROLE_SYSTEM_PROGRESSBAR        "bară de progres"
+    ROLE_SYSTEM_DIAL               "apelator"
+    ROLE_SYSTEM_HOTKEYFIELD        "câmp de tastă rapidă"
+    ROLE_SYSTEM_SLIDER             "glisor"
+    ROLE_SYSTEM_SPINBUTTON         "căsuță incrementală"
+    ROLE_SYSTEM_DIAGRAM            "diagramă"
+    ROLE_SYSTEM_ANIMATION          "animație"
+    ROLE_SYSTEM_EQUATION           "ecuație"
+    ROLE_SYSTEM_BUTTONDROPDOWN     "buton listă verticală"
+    ROLE_SYSTEM_BUTTONMENU         "buton meniu"
+    ROLE_SYSTEM_BUTTONDROPDOWNGRID "buton listă verticală de grilă"
+    ROLE_SYSTEM_WHITESPACE         "spațiu gol"
+    ROLE_SYSTEM_PAGETABLIST        "listă de file"
+    ROLE_SYSTEM_CLOCK              "ceas"
+    ROLE_SYSTEM_SPLITBUTTON        "buton separare"
+    ROLE_SYSTEM_IPADDRESS          "adresă IP"
+    ROLE_SYSTEM_OUTLINEBUTTON      "buton contur"
+}

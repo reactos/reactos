@@ -19,6 +19,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "resource.h"
+
 #pragma code_page(65001)
 
 LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
@@ -58,5 +60,3 @@ BEGIN
     IDTB_TOC_NEXT    "IDTB_TOC_NEXT"
     IDTB_TOC_PREV    "IDTB_TOC_PREV"
 END
-
-#pragma code_page(default)

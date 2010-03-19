@@ -5,8 +5,7 @@
  *            Copyright 2001 - 2005 Eric Kohl
  */
 
-#ifndef CMLIB_CMDATA_H
-#define CMLIB_CMDATA_H
+#pragma once
 
 #define  REG_INIT_BLOCK_LIST_SIZE      32
 #define  REG_INIT_HASH_TABLE_SIZE      3
@@ -209,5 +208,3 @@ typedef struct _CELL_DATA
         WCHAR KeyString[ANYSIZE_ARRAY];
     } u;
 } CELL_DATA, *PCELL_DATA;
-
-#endif /* CMLIB_CMDATA_H */

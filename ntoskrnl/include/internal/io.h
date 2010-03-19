@@ -743,14 +743,14 @@ IoInitShutdownNotification(
 
 VOID
 NTAPI
-IoShutdownRegisteredDevices(
-    VOID
+IoShutdownSystem(
+    IN ULONG Phase
 );
 
 VOID
 NTAPI
-IoShutdownRegisteredFileSystems(
-    VOID
+IopShutdownBaseFileSystems(
+    IN PLIST_ENTRY ListHead
 );
 
 //

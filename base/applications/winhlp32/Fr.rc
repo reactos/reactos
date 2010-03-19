@@ -131,4 +131,3 @@ BEGIN
 		MENUITEM "Utiliser les couleurs système", MNID_CTXT_SYSTEM_COLORS
 	END
 END
-#pragma code_page(default)

@@ -24,8 +24,7 @@
  * PROGRAMMER:      Eric Kohl
  */
 
-#ifndef __FILESUP_H__
-#define __FILESUP_H__
+#pragma once
 
 NTSTATUS
 SetupCreateDirectory(PWCHAR DirectoryName);
@@ -42,8 +41,5 @@ SetupExtractFile(PWCHAR CabinetFileName,
 BOOLEAN
 DoesFileExist(PWSTR PathName,
 	      PWSTR FileName);
-
-
-#endif /* __FILESUP_H__ */
 
 /* EOF */

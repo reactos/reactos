@@ -4,8 +4,7 @@
  * LastChange:  01-11-2009
  */
 
-#ifndef LANG_SK_SK_H__
-#define LANG_SK_SK_H__
+#pragma once
 
 MUI_LAYOUTS skSKLayouts[] =
 {
@@ -1705,5 +1704,3 @@ MUI_STRING skSKStrings[] =
     "Prid vam rozlo§enia kl vesnice"},
     {0, 0}
 };
-
-#endif

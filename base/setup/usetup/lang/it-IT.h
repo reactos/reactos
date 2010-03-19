@@ -1,5 +1,4 @@
-#ifndef LANG_IT_IT_H__
-#define LANG_IT_IT_H__
+#pragma once
 
 MUI_LAYOUTS itITLayouts[] =
 {
@@ -1695,5 +1694,3 @@ MUI_STRING itITStrings[] =
     "Aggiunta delle nazionalit… di tastiera"},
     {0, 0}
 };
-
-#endif

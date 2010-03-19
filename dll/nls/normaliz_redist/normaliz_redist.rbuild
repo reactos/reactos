@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+<group>
 <module name="normaliz_redist_data" type="staticlibrary">
 	<include base="icu4ros">icu/source/common</include>
 	<directory name="data"><file>icudt38.c</file></directory>
@@ -16,3 +17,4 @@
 	<importlibrary definition="normaliz.def" />
 	<file>normaliz.cpp</file>
 </module>
+</group>

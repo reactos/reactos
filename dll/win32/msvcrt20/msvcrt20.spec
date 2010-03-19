@@ -225,7 +225,7 @@
 @ stub ??_Gstrstream@@UAEPAXI@Z #
 @ stub ??_Gstrstreambuf@@UAEPAXI@Z #
 @ cdecl ?_query_new_handler@@YAP6AHI@ZXZ() msvcrt.?_query_new_handler@@YAP6AHI@ZXZ
-@ cdecl ?_query_new_mode@@YAHXZ()  msvcrt.?_query_new_mode@@YAHXZ
+@ cdecl ?_query_new_mode@@YAHXZ() msvcrt.?_query_new_mode@@YAHXZ
 @ cdecl ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z(ptr) msvcrt.?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z
 @ cdecl ?_set_new_mode@@YAHH@Z(long) msvcrt.?_set_new_mode@@YAHH@Z
 @ cdecl ?_set_se_translator@@YAP6AXIPAU_EXCEPTION_POINTERS@@@ZP6AXI0@Z@Z(ptr) msvcrt.?_set_se_translator@@YAP6AXIPAU_EXCEPTION_POINTERS@@@ZP6AXI0@Z@Z
@@ -436,7 +436,7 @@
 @ stub ?xalloc@ios@@SAHXZ #
 @ stub ?xsgetn@streambuf@@UAEHPADH@Z #
 @ stub ?xsputn@streambuf@@UAEHPBDH@Z #
-@ stub $I10_OUTPUT #
+@ cdecl $I10_OUTPUT() msvcrt.$I10_OUTPUT
 @ cdecl -arch=i386 _CIacos() msvcrt._CIacos
 @ cdecl -arch=i386 _CIasin() msvcrt._CIasin
 @ cdecl -arch=i386 _CIatan() msvcrt._CIatan
@@ -464,7 +464,7 @@
 @ cdecl __dllonexit(ptr ptr ptr) msvcrt.__dllonexit
 @ cdecl __doserrno() msvcrt.__doserrno
 @ cdecl __fpecode() msvcrt.__fpecode
-@ cdecl __getmainargs(ptr ptr ptr long ptr) MSVCRT20__getmainargs
+@ cdecl __getmainargs(ptr ptr ptr long long) MSVCRT20__getmainargs
 @ extern __initenv msvcrt.__initenv
 @ cdecl __isascii(long) msvcrt.__isascii
 @ cdecl __iscsym(long) msvcrt.__iscsym

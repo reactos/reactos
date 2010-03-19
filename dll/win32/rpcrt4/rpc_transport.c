@@ -207,7 +207,7 @@ static RPC_STATUS rpcrt4_conn_open_pipe(RpcConnection *Connection, LPCSTR pname,
                 dwFlags |= SECURITY_DELEGATION;
                 break;
         }
-        if (Connection->QOS->qos->IdentityTracking == RPC_C_QOS_IDENTIFY_DYNAMIC)
+        if (Connection->QOS->qos->IdentityTracking == RPC_C_QOS_IDENTITY_DYNAMIC)
             dwFlags |= SECURITY_CONTEXT_TRACKING;
     }
     pipe = CreateFileA(pname, GENERIC_READ|GENERIC_WRITE, 0, NULL,

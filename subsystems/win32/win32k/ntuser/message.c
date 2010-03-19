@@ -1053,9 +1053,11 @@ co_IntWaitMessage( PWINDOW_OBJECT Window,
    while ( (STATUS_WAIT_0 <= Status && Status <= STATUS_WAIT_63) ||
            STATUS_TIMEOUT == Status );
 
-   SetLastNtError(Status);
-
-   DPRINT1("Exit co_IntWaitMessage on error!\n");
+   if (!NT_SUCCESS(Status))
+   {
+      SetLastNtError(Status);
+      DPRINT1("Exit co_IntWaitMessage on error!\n");
+   }
 
    return FALSE;
 }
@@ -2626,7 +2628,7 @@ NtUserWaitForInputIdle(
 WaitExit:
   if (W32Process->InputIdleEvent)
   {
-     EngDeleteEvent((PEVENT)W32Process->InputIdleEvent);
+     EngFreeMem((PVOID)W32Process->InputIdleEvent);
      W32Process->InputIdleEvent = NULL;
   }
   ObDereferenceObject(Process);

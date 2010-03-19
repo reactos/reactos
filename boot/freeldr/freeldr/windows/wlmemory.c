@@ -198,6 +198,10 @@ MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	}
 }
 
+#ifdef _M_ARM
+#define PKTSS PVOID
+#endif
+
 BOOLEAN
 WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
                    ULONG PcrBasePage,

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE group SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="t2embed" type="win32dll" baseaddress="${BASEADDRESS_T2EMBED}" installbase="system32" installname="t2embed.dll" unicode="yes">
 	<importlibrary definition="t2embed.spec" />
 	<include base="t2embed">.</include>
@@ -9,3 +11,4 @@
 	<library>wine</library>
 	<file>t2embed.c</file>
 	<file>t2embed.rc</file>
+</module>

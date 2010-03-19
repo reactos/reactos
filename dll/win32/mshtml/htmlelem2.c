@@ -655,8 +655,10 @@ static HRESULT WINAPI HTMLElement2_attachEvent(IHTMLElement2 *iface, BSTR event,
 static HRESULT WINAPI HTMLElement2_detachEvent(IHTMLElement2 *iface, BSTR event, IDispatch *pDisp)
 {
     HTMLElement *This = HTMLELEM2_THIS(iface);
-    FIXME("(%p)->(%s %p)\n", This, debugstr_w(event), pDisp);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s %p)\n", This, debugstr_w(event), pDisp);
+
+    return detach_event(*get_node_event_target(&This->node), &This->node.doc->basedoc, event, pDisp);
 }
 
 static HRESULT WINAPI HTMLElement2_get_readyState(IHTMLElement2 *iface, VARIANT *p)
@@ -1087,7 +1089,7 @@ static HRESULT WINAPI HTMLElement2_getElementsByTagName(IHTMLElement2 *iface, BS
 
     TRACE("(%p)->(%s %p)\n", This, debugstr_w(v), pelColl);
 
-    nsAString_Init(&tag_str, v);
+    nsAString_InitDepend(&tag_str, v);
     nsres = nsIDOMHTMLElement_GetElementsByTagName(This->nselem, &tag_str, &nslist);
     nsAString_Finish(&tag_str);
     if(NS_FAILED(nsres)) {

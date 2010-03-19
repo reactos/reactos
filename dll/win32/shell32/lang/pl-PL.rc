@@ -755,5 +755,5 @@ BEGIN
 	IDS_INSTALLNEWFONT          "Zainstaluj Now¹ Czcionkê..."
 
 	IDS_DEFAULT_CLUSTER_SIZE    "Domyœlny rozmiar jednostki alokacji"
-	IDS_COPY_OF                 "Copy of"
+	IDS_COPY_OF                 "Kopia"
 END

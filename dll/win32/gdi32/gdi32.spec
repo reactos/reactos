@@ -605,7 +605,7 @@
 @ stdcall XFORMOBJ_iGetXform(ptr ptr) NtGdiXFORMOBJ_iGetXform
 @ stdcall XLATEOBJ_cGetPalette(ptr long long ptr) NtGdiXLATEOBJ_cGetPalette
 @ stdcall XLATEOBJ_hGetColorTransform(ptr) NtGdiXLATEOBJ_hGetColorTransform
-@ stdcall XLATEOBJ_iXlate(ptr long)
+@ stdcall XLATEOBJ_iXlate(ptr long) NtGdiXLATEOBJ_iXlate
 @ stdcall XLATEOBJ_piVector(ptr)
 @ stdcall bInitSystemAndFontsDirectoriesW(wstr wstr)
 @ stdcall bMakePathNameW(wstr wstr wstr long)

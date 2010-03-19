@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "localui.h"
+
 /* Chinese text is encoded in UTF-8 */
 #pragma code_page(65001)
 
@@ -90,5 +92,3 @@ STRINGTABLE DISCARDABLE
     IDS_PORTEXISTS "端口 %s 已經存在"
     IDS_NOTHINGTOCONFIG "這個端口沒有可設定選項"
 }
-
-#pragma code_page(default)

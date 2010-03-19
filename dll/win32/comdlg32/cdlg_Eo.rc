@@ -1,6 +1,6 @@
 /*
  * Copyright 1996 Duncan C Thomson
- * Copyright 1006 Antonio Codazzi
+ * Copyright 2006 Antonio Codazzi
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,6 +16,9 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+
+#include "cdlg.h"
+#include "filedlgbrowser.h"
 
 /*
  * WARNING: DO NOT CHANGE THE SIZE OF THE STANDARD DIALOG TEMPLATES.

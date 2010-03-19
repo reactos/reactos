@@ -30,7 +30,7 @@ Author:
 #define PCR                     ((KPCR * const)K0IPCR)
 #if defined(CONFIG_SMP) || defined(NT_BUILD)
 #undef  KeGetPcr
-#define KeGetPcr()              ((KPCR * const)__readfsdword(FIELD_OFFSET(KPCR, Self)))
+#define KeGetPcr()              ((KPCR * const)__readfsdword(FIELD_OFFSET(KPCR, SelfPcr)))
 #endif
 
 //
@@ -705,8 +705,8 @@ typedef struct _KIPCR
     ULONG StallScaleFactor;
     UCHAR SpareUnused;
     UCHAR Number;
-    UCHAR Reserved;
-    UCHAR L2CacheAssociativity;
+    UCHAR Spare0;
+    UCHAR SecondLevelCacheAssociativity;
     ULONG VdmAlert;
     ULONG KernelReserved[14];
     ULONG SecondLevelCacheSize;

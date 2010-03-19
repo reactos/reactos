@@ -25,9 +25,7 @@
  *                  Eric Kohl
  */
 
-#ifndef __INFCACHE_H__
-#define __INFCACHE_H__
-
+#pragma once
 
 #define STATUS_BAD_SECTION_NAME_LINE   (0xC0700001)
 #define STATUS_SECTION_NAME_TOO_LONG   (0xC0700002)
@@ -124,7 +122,5 @@ BOOLEAN
 InfGetDataField (PINFCONTEXT Context,
 		 ULONG FieldIndex,
 		 PCSTR *Data);
-
-#endif /* __INFCACHE_H__ */
 
 /* EOF */

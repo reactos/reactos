@@ -18,8 +18,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef FRAMEBUF_H
-#define FRAMEBUF_H
+#pragma once
 
 #include <stdarg.h>
 #include <windef.h>
@@ -197,5 +196,3 @@ CopyColorPointer(PPDEV ppdev,
                  SURFOBJ *psoMask,
                  SURFOBJ *psoColor,
                  XLATEOBJ *pxlo);
-
-#endif /* FRAMEBUF_H */

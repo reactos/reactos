@@ -42,7 +42,7 @@ BEGIN
 		MENUITEM "&Deinstallieren", ID_UNINSTALL
 		MENUITEM "&Ändern",    ID_MODIFY
 		MENUITEM SEPARATOR
-		MENUITEM "&Remove from Registry", ID_REGREMOVE
+		MENUITEM "Aus &Registry entfernen", ID_REGREMOVE
 		MENUITEM SEPARATOR
 		MENUITEM "&Aktualisieren",   ID_REFRESH
 	END
@@ -71,16 +71,16 @@ END
 
 IDD_INSTALL_DIALOG DIALOGEX DISCARDABLE  0, 0, 216, 97
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Program installation"
+CAPTION "Programminstallation"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
 
-	AUTORADIOBUTTON "&Install from a disk (CD or DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
-	AUTORADIOBUTTON "&Download and install", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
+	AUTORADIOBUTTON "&Installation von einem Datenträger (CD oder DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+	AUTORADIOBUTTON "Herunterla&den und installieren", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
 
 	PUSHBUTTON "OK", IDOK, 86, 78, 60, 14
-	PUSHBUTTON "Cancel", IDCANCEL, 150, 78, 60, 14
+	PUSHBUTTON "Abbrechen", IDCANCEL, 150, 78, 60, 14
 END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX LOADONCALL MOVEABLE DISCARDABLE  0, 0, 220, 76
@@ -98,7 +98,7 @@ STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 CAPTION "Über"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "ReactOS Anwendungsmanager\nCopyright (C) 2009\nby Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
+	LTEXT "ReactOS-Anwendungsmanager\nCopyright (C) 2009\nby Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
 	PUSHBUTTON "Schließen", IDOK, 133, 46, 50, 14
 	ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
 END
@@ -124,14 +124,14 @@ STRINGTABLE DISCARDABLE
 BEGIN
 	IDS_INFO_VERSION "\nVersion: "
 	IDS_INFO_DESCRIPTION "\nBeschreibung: "
-	IDS_INFO_PUBLISHER "\nPublisher: "
+	IDS_INFO_PUBLISHER "\nVertrieb: "
 	IDS_INFO_HELPLINK "\nHilfe-Link: "
 	IDS_INFO_HELPPHONE "\nHilfe-Telefonnr.: "
 	IDS_INFO_README "\nReadme: "
 	IDS_INFO_REGOWNER "\nregistrierter Eigentümer: "
 	IDS_INFO_PRODUCTID "\nProdukt-ID: "
-	IDS_INFO_CONTACT "\nKontaktt: "
-	IDS_INFO_UPDATEINFO "\nUpdate Information: "
+	IDS_INFO_CONTACT "\nKontakt: "
+	IDS_INFO_UPDATEINFO "\nUpdate-Informationen: "
 	IDS_INFO_INFOABOUT "\nInformation über: "
 	IDS_INFO_COMMENTS "\nKommentare: "
 	IDS_INFO_INSTLOCATION "\nInstallationsort: "
@@ -171,23 +171,23 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_APPTITLE "ReactOS Anwendungsmanager"
+	IDS_APPTITLE "ReactOS-Anwendungsmanager"
 	IDS_SEARCH_TEXT "Suche..."
 	IDS_INSTALL "Installieren"
 	IDS_UNINSTALL "Deinstallieren"
 	IDS_MODIFY "Ändern"
 	IDS_APPS_COUNT "Anzahl der Anwendungen: %d"
-	IDS_WELCOME_TITLE "Willkommen im ReactOS Anwendungsmanager!\n\n"
-	IDS_WELCOME_TEXT "Wählen Sie links eine Kategorie und dann eine Anwendung um sie zu installieren oder zu deinstallieren.\nReactOS Webseite: "
+	IDS_WELCOME_TITLE "Willkommen im ReactOS-Anwendungsmanager!\n\n"
+	IDS_WELCOME_TEXT "Wählen Sie links eine Kategorie und dann eine Anwendung um sie zu installieren oder zu deinstallieren.\nReactOS-Webseite: "
 	IDS_WELCOME_URL "http://www.reactos.org"
 	IDS_INSTALLED "Installiert"
 	IDS_AVAILABLEFORINST "Zur Installation verfügbar"
-	IDS_UPDATES "Updates"
+	IDS_UPDATES "Aktualisierungen"
 	IDS_APPLICATIONS "Anwendungen"
-	IDS_CHOOSE_FOLDER_TEXT "Choose a folder which will be used for downloading of programs:"
-	IDS_CHOOSE_FOLDER_ERROR "You have specified a nonexistent folder!"
-	IDS_USER_NOT_ADMIN "You should be administrator for start ""ReactOS Applications Manager""!"
-	IDS_APP_REG_REMOVE "Are you sure you want to delete the data on the installed program from the registry?"
-	IDS_INFORMATION "Information"
-	IDS_UNABLE_TO_REMOVE "Unable to remove data on the program from the registry!"
+	IDS_CHOOSE_FOLDER_TEXT "Wählen Sie ein Verzeichnis aus, das zum Herunterladen verwendet werden soll:"
+	IDS_CHOOSE_FOLDER_ERROR "Sie haben ein nicht existentes Verzeichnis angegeben!"
+	IDS_USER_NOT_ADMIN "Sie müssen als Administrator angemeldet sein, um den Anwendungsmanager zu starten!"
+	IDS_APP_REG_REMOVE "Sind Sie sich sicher, dass Sie die Daten dieses Programms aus der Registry entfernen möchten?"
+	IDS_INFORMATION "Informationen"
+	IDS_UNABLE_TO_REMOVE "Konnte die Daten nicht aus der Registry löschen!"
 END

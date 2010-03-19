@@ -42,12 +42,7 @@
 # include <sys/socket.h>
 #endif
 
-#if defined(__MINGW32__) || defined (_MSC_VER)
-#include "ws2tcpip.h"
-#ifndef MSG_WAITALL
-#define MSG_WAITALL 0
-#endif
-#else
+#if !defined(__MINGW32__) && !defined(_MSC_VER)
 #define closesocket close
 #define ioctlsocket ioctl
 #endif /* __MINGW32__ */
@@ -62,33 +57,51 @@ typedef struct
     BOOL useSSL;
     int socketFD;
     void *ssl_s;
-    char *peek_msg;
-    char *peek_msg_mem;
-    size_t peek_len;
 } WININET_NETCONNECTION;
 
-static inline LPWSTR WININET_strdupW( LPCWSTR str )
+static inline LPWSTR heap_strdupW(LPCWSTR str)
 {
-    LPWSTR ret = HeapAlloc( GetProcessHeap(), 0, (strlenW(str) + 1)*sizeof(WCHAR) );
-    if (ret) strcpyW( ret, str );
+    LPWSTR ret = NULL;
+
+    if(str) {
+        DWORD size;
+
+        size = (strlenW(str)+1)*sizeof(WCHAR);
+        ret = HeapAlloc(GetProcessHeap(), 0, size);
+        if(ret)
+            memcpy(ret, str, size);
+    }
+
     return ret;
 }
 
-static inline LPWSTR WININET_strdup_AtoW( LPCSTR str )
+static inline WCHAR *heap_strdupAtoW(const char *str)
 {
-    int len = MultiByteToWideChar( CP_ACP, 0, str, -1, NULL, 0);
-    LPWSTR ret = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) );
-    if (ret)
-        MultiByteToWideChar( CP_ACP, 0, str, -1, ret, len);
+    LPWSTR ret = NULL;
+
+    if(str) {
+        DWORD len;
+
+        len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
+        ret = HeapAlloc(GetProcessHeap(), 0, len*sizeof(WCHAR));
+        if(ret)
+            MultiByteToWideChar(CP_ACP, 0, str, -1, ret, len);
+    }
+
     return ret;
 }
 
-static inline LPSTR WININET_strdup_WtoA( LPCWSTR str )
+static inline char *heap_strdupWtoA(LPCWSTR str)
 {
-    int len = WideCharToMultiByte( CP_ACP, 0, str, -1, NULL, 0, NULL, NULL);
-    LPSTR ret = HeapAlloc( GetProcessHeap(), 0, len );
-    if (ret)
-        WideCharToMultiByte( CP_ACP, 0, str, -1, ret, len, NULL, NULL);
+    char *ret = NULL;
+
+    if(str) {
+        DWORD size = WideCharToMultiByte(CP_ACP, 0, str, -1, NULL, 0, NULL, NULL);
+        ret = HeapAlloc(GetProcessHeap(), 0, size);
+        if(ret)
+            WideCharToMultiByte(CP_ACP, 0, str, -1, ret, size, NULL, NULL);
+    }
+
     return ret;
 }
 
@@ -124,24 +137,25 @@ typedef enum
 #define INET_OPENURL 0x0001
 #define INET_CALLBACKW 0x0002
 
-typedef struct _WININETHANDLEHEADER WININETHANDLEHEADER, *LPWININETHANDLEHEADER;
+typedef struct _object_header_t object_header_t;
 
 typedef struct {
-    void (*Destroy)(WININETHANDLEHEADER*);
-    void (*CloseConnection)(WININETHANDLEHEADER*);
-    DWORD (*QueryOption)(WININETHANDLEHEADER*,DWORD,void*,DWORD*,BOOL);
-    DWORD (*SetOption)(WININETHANDLEHEADER*,DWORD,void*,DWORD);
-    DWORD (*ReadFile)(WININETHANDLEHEADER*,void*,DWORD,DWORD*);
-    DWORD (*ReadFileExA)(WININETHANDLEHEADER*,INTERNET_BUFFERSA*,DWORD,DWORD_PTR);
-    BOOL (*WriteFile)(WININETHANDLEHEADER*,const void*,DWORD,DWORD*);
-    DWORD (*QueryDataAvailable)(WININETHANDLEHEADER*,DWORD*,DWORD,DWORD_PTR);
-    DWORD (*FindNextFileW)(WININETHANDLEHEADER*,void*);
-} HANDLEHEADERVtbl;
+    void (*Destroy)(object_header_t*);
+    void (*CloseConnection)(object_header_t*);
+    DWORD (*QueryOption)(object_header_t*,DWORD,void*,DWORD*,BOOL);
+    DWORD (*SetOption)(object_header_t*,DWORD,void*,DWORD);
+    DWORD (*ReadFile)(object_header_t*,void*,DWORD,DWORD*);
+    DWORD (*ReadFileExA)(object_header_t*,INTERNET_BUFFERSA*,DWORD,DWORD_PTR);
+    DWORD (*ReadFileExW)(object_header_t*,INTERNET_BUFFERSW*,DWORD,DWORD_PTR);
+    DWORD (*WriteFile)(object_header_t*,const void*,DWORD,DWORD*);
+    DWORD (*QueryDataAvailable)(object_header_t*,DWORD*,DWORD,DWORD_PTR);
+    DWORD (*FindNextFileW)(object_header_t*,void*);
+} object_vtbl_t;
 
-struct _WININETHANDLEHEADER
+struct _object_header_t
 {
     WH_TYPE htype;
-    const HANDLEHEADERVtbl *vtbl;
+    const object_vtbl_t *vtbl;
     HINTERNET hInternet;
     DWORD  dwFlags;
     DWORD_PTR dwContext;
@@ -156,28 +170,29 @@ struct _WININETHANDLEHEADER
 
 typedef struct
 {
-    WININETHANDLEHEADER hdr;
+    object_header_t hdr;
     LPWSTR  lpszAgent;
     LPWSTR  lpszProxy;
     LPWSTR  lpszProxyBypass;
     LPWSTR  lpszProxyUsername;
     LPWSTR  lpszProxyPassword;
     DWORD   dwAccessType;
-} WININETAPPINFOW, *LPWININETAPPINFOW;
+} appinfo_t;
 
 
 typedef struct
 {
-    WININETHANDLEHEADER hdr;
-    WININETAPPINFOW *lpAppInfo;
+    object_header_t hdr;
+    appinfo_t *lpAppInfo;
     LPWSTR  lpszHostName; /* the final destination of the request */
     LPWSTR  lpszServerName; /* the name of the server we directly connect to */
     LPWSTR  lpszUserName;
     LPWSTR  lpszPassword;
     INTERNET_PORT nHostPort; /* the final destination port of the request */
     INTERNET_PORT nServerPort; /* the port of the server we directly connect to */
-    struct sockaddr_in socketAddress;
-} WININETHTTPSESSIONW, *LPWININETHTTPSESSIONW;
+    struct sockaddr_storage socketAddress;
+    socklen_t sa_len;
+} http_session_t;
 
 #define HDR_ISREQUEST		0x0001
 #define HDR_COMMADELIMITED	0x0002
@@ -194,25 +209,38 @@ typedef struct
 
 struct HttpAuthInfo;
 
+typedef struct gzip_stream_t gzip_stream_t;
+
 typedef struct
 {
-    WININETHANDLEHEADER hdr;
-    WININETHTTPSESSIONW *lpHttpSession;
+    object_header_t hdr;
+    http_session_t *lpHttpSession;
     LPWSTR lpszPath;
     LPWSTR lpszVerb;
     LPWSTR lpszRawHeaders;
     WININET_NETCONNECTION netConnection;
     LPWSTR lpszVersion;
     LPWSTR lpszStatusText;
-    DWORD dwContentLength; /* total number of bytes to be read */
-    DWORD dwContentRead; /* bytes of the content read so far */
+    DWORD dwBytesToWrite;
+    DWORD dwBytesWritten;
     HTTPHEADERW *pCustHeaders;
     DWORD nCustHeaders;
     HANDLE hCacheFile;
     LPWSTR lpszCacheFile;
     struct HttpAuthInfo *pAuthInfo;
     struct HttpAuthInfo *pProxyAuthInfo;
-} WININETHTTPREQW, *LPWININETHTTPREQW;
+
+    CRITICAL_SECTION read_section;  /* section to protect the following fields */
+    DWORD dwContentLength; /* total number of bytes to be read */
+    DWORD dwContentRead;  /* bytes of the content read so far */
+    BOOL  read_chunked;   /* are we reading in chunked mode? */
+    DWORD read_pos;       /* current read position in read_buf */
+    DWORD read_size;      /* valid data size in read_buf */
+    BYTE  read_buf[4096]; /* buffer for already read but not returned data */
+
+    BOOL decoding;
+    gzip_stream_t *gzip_stream;
+} http_request_t;
 
 
 
@@ -297,6 +325,12 @@ struct WORKREQ_HTTPSENDREQUESTW
     BOOL   bEndRequest;
 };
 
+struct WORKREQ_HTTPENDREQUESTW
+{
+    DWORD     dwFlags;
+    DWORD_PTR dwContext;
+};
+
 struct WORKREQ_SENDCALLBACK
 {
     DWORD_PTR dwContext;
@@ -320,10 +354,15 @@ struct WORKREQ_INTERNETREADFILEEXA
     LPINTERNET_BUFFERSA lpBuffersOut;
 };
 
+struct WORKREQ_INTERNETREADFILEEXW
+{
+    LPINTERNET_BUFFERSW lpBuffersOut;
+};
+
 typedef struct WORKREQ
 {
     void (*asyncproc)(struct WORKREQ*);
-    WININETHANDLEHEADER *hdr;
+    object_header_t *hdr;
 
     union {
         struct WORKREQ_FTPPUTFILEW              FtpPutFileW;
@@ -338,77 +377,69 @@ typedef struct WORKREQ
         struct WORKREQ_FTPRENAMEFILEW           FtpRenameFileW;
         struct WORKREQ_FTPFINDNEXTW             FtpFindNextW;
         struct WORKREQ_HTTPSENDREQUESTW         HttpSendRequestW;
+        struct WORKREQ_HTTPENDREQUESTW          HttpEndRequestW;
         struct WORKREQ_SENDCALLBACK             SendCallback;
-	struct WORKREQ_INTERNETOPENURLW         InternetOpenUrlW;
+        struct WORKREQ_INTERNETOPENURLW         InternetOpenUrlW;
         struct WORKREQ_INTERNETREADFILEEXA      InternetReadFileExA;
+        struct WORKREQ_INTERNETREADFILEEXW      InternetReadFileExW;
     } u;
 
 } WORKREQUEST, *LPWORKREQUEST;
 
-HINTERNET WININET_AllocHandle( LPWININETHANDLEHEADER info );
-LPWININETHANDLEHEADER WININET_GetObject( HINTERNET hinternet );
-LPWININETHANDLEHEADER WININET_AddRef( LPWININETHANDLEHEADER info );
-BOOL WININET_Release( LPWININETHANDLEHEADER info );
+HINTERNET WININET_AllocHandle( object_header_t *info );
+object_header_t *WININET_GetObject( HINTERNET hinternet );
+object_header_t *WININET_AddRef( object_header_t *info );
+BOOL WININET_Release( object_header_t *info );
 BOOL WININET_FreeHandle( HINTERNET hinternet );
 
 DWORD INET_QueryOption(DWORD,void*,DWORD*,BOOL);
 
 time_t ConvertTimeString(LPCWSTR asctime);
 
-HINTERNET FTP_Connect(LPWININETAPPINFOW hIC, LPCWSTR lpszServerName,
+HINTERNET FTP_Connect(appinfo_t *hIC, LPCWSTR lpszServerName,
 	INTERNET_PORT nServerPort, LPCWSTR lpszUserName,
 	LPCWSTR lpszPassword, DWORD dwFlags, DWORD_PTR dwContext,
 	DWORD dwInternalFlags);
 
-HINTERNET HTTP_Connect(LPWININETAPPINFOW hIC, LPCWSTR lpszServerName,
-	INTERNET_PORT nServerPort, LPCWSTR lpszUserName,
-	LPCWSTR lpszPassword, DWORD dwFlags, DWORD_PTR dwContext,
-	DWORD dwInternalFlags);
+DWORD HTTP_Connect(appinfo_t*,LPCWSTR,
+        INTERNET_PORT nServerPort, LPCWSTR lpszUserName,
+        LPCWSTR lpszPassword, DWORD dwFlags, DWORD_PTR dwContext,
+        DWORD dwInternalFlags, HINTERNET*);
 
 BOOL GetAddress(LPCWSTR lpszServerName, INTERNET_PORT nServerPort,
-	struct sockaddr_in *psa);
+	struct sockaddr *psa, socklen_t *sa_len);
 
 void INTERNET_SetLastError(DWORD dwError);
 DWORD INTERNET_GetLastError(void);
-BOOL INTERNET_AsyncCall(LPWORKREQUEST lpWorkRequest);
+DWORD INTERNET_AsyncCall(LPWORKREQUEST lpWorkRequest);
 LPSTR INTERNET_GetResponseBuffer(void);
 LPSTR INTERNET_GetNextLine(INT nSocket, LPDWORD dwLen);
 
-BOOLAPI HTTP_HttpSendRequestW(LPWININETHTTPREQW lpwhr, LPCWSTR lpszHeaders,
-	DWORD dwHeaderLength, LPVOID lpOptional, DWORD dwOptionalLength,
-	DWORD dwContentLength, BOOL bEndRequest);
-INTERNETAPI HINTERNET WINAPI HTTP_HttpOpenRequestW(LPWININETHTTPSESSIONW lpwhs,
-	LPCWSTR lpszVerb, LPCWSTR lpszObjectName, LPCWSTR lpszVersion,
-	LPCWSTR lpszReferrer , LPCWSTR *lpszAcceptTypes,
-	DWORD dwFlags, DWORD_PTR dwContext);
-BOOL HTTP_FinishedReading(LPWININETHTTPREQW lpwhr);
-
-VOID SendAsyncCallback(LPWININETHANDLEHEADER hdr, DWORD_PTR dwContext,
+VOID SendAsyncCallback(object_header_t *hdr, DWORD_PTR dwContext,
                        DWORD dwInternetStatus, LPVOID lpvStatusInfo,
                        DWORD dwStatusInfoLength);
 
-VOID INTERNET_SendCallback(LPWININETHANDLEHEADER hdr, DWORD_PTR dwContext,
+VOID INTERNET_SendCallback(object_header_t *hdr, DWORD_PTR dwContext,
                            DWORD dwInternetStatus, LPVOID lpvStatusInfo,
                            DWORD dwStatusInfoLength);
 
-LPHTTPHEADERW HTTP_GetHeader(LPWININETHTTPREQW lpwhr, LPCWSTR header);
-
 BOOL NETCON_connected(WININET_NETCONNECTION *connection);
-BOOL NETCON_init(WININET_NETCONNECTION *connnection, BOOL useSSL);
-BOOL NETCON_create(WININET_NETCONNECTION *connection, int domain,
+DWORD NETCON_init(WININET_NETCONNECTION *connnection, BOOL useSSL);
+void NETCON_unload(void);
+DWORD NETCON_create(WININET_NETCONNECTION *connection, int domain,
 	      int type, int protocol);
-BOOL NETCON_close(WININET_NETCONNECTION *connection);
-BOOL NETCON_connect(WININET_NETCONNECTION *connection, const struct sockaddr *serv_addr,
+DWORD NETCON_close(WININET_NETCONNECTION *connection);
+DWORD NETCON_connect(WININET_NETCONNECTION *connection, const struct sockaddr *serv_addr,
 		    unsigned int addrlen);
-BOOL NETCON_secure_connect(WININET_NETCONNECTION *connection, LPCWSTR hostname);
-BOOL NETCON_send(WININET_NETCONNECTION *connection, const void *msg, size_t len, int flags,
+DWORD NETCON_secure_connect(WININET_NETCONNECTION *connection, LPWSTR hostname);
+DWORD NETCON_send(WININET_NETCONNECTION *connection, const void *msg, size_t len, int flags,
 		int *sent /* out */);
-BOOL NETCON_recv(WININET_NETCONNECTION *connection, void *buf, size_t len, int flags,
+DWORD NETCON_recv(WININET_NETCONNECTION *connection, void *buf, size_t len, int flags,
 		int *recvd /* out */);
 BOOL NETCON_query_data_available(WININET_NETCONNECTION *connection, DWORD *available);
-BOOL NETCON_getNextLine(WININET_NETCONNECTION *connection, LPSTR lpszBuffer, LPDWORD dwBuffer);
 LPCVOID NETCON_GetCert(WININET_NETCONNECTION *connection);
 DWORD NETCON_set_timeout(WININET_NETCONNECTION *connection, BOOL send, int value);
+int sock_get_error(int);
 
 extern void URLCacheContainers_CreateDefaults(void);
 extern void URLCacheContainers_DeleteAll(void);

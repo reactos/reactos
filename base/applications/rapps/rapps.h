@@ -1,5 +1,4 @@
-#ifndef _RAPPS_H__
-#define _RAPPS_H__
+#pragma once
 
 #include <windows.h>
 #include <commctrl.h>
@@ -12,7 +11,7 @@
 
 #include "resource.h"
 
-#define APPLICATION_DATEBASE_URL L"http://opendn.org/rappmgr.cab"
+#define APPLICATION_DATEBASE_URL L"http://svn.reactos.org/packages/rappmgr.cab"
 
 #define SPLIT_WIDTH 4
 #define MAX_STR_LEN 256
@@ -185,5 +184,3 @@ VOID ToolBarOnGetDispInfo(LPTOOLTIPTEXT lpttt);
 extern HWND hTreeView;
 BOOL CreateTreeView(HWND hwnd);
 HTREEITEM TreeViewAddItem(HTREEITEM hParent, LPWSTR lpText, INT Image, INT SelectedImage, LPARAM lParam);
-
-#endif /* _RAPPS_H__ */

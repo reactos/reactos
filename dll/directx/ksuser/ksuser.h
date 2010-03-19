@@ -1,5 +1,4 @@
-#ifndef KSUSER_H__
-#define KSUSER_H__
+#pragma once
 
 #define _KSDDK_
 
@@ -15,5 +14,3 @@
 
 #define ROUND_UP(n, align) \
     ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
-
-#endif

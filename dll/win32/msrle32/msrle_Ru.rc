@@ -18,11 +18,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "msrle_private.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
 	IDS_NAME	"WINE-MS-RLE"
-	IDS_DESCRIPTION	"Видео кодек Wine MS-RLE"
-	IDS_ABOUT       "Видео кодек Wine MS-RLE\nCopyright 2002 by Michael Gьnnewig"
+	IDS_DESCRIPTION	"Р’РёРґРµРѕ РєРѕРґРµРє Wine MS-RLE"
+	IDS_ABOUT       "Р’РёРґРµРѕ РєРѕРґРµРє Wine MS-RLE\nCopyright 2002 by Michael GСЊnnewig"
 }

@@ -15,9 +15,12 @@
 
 #include "wdmaud.h"
 
+#include <stdio.h>
+
 #define KERNEL_DEVICE_NAME      L"\\\\.\\wdmaud"
-extern HANDLE KernelHandle;
-extern DWORD OpenCount;
+
+HANDLE KernelHandle = INVALID_HANDLE_VALUE;
+DWORD OpenCount = 0;
 
 DWORD
 WINAPI
@@ -77,14 +80,16 @@ MixerEventThreadRoutine(
     return 0;
 }
 
-VOID
-WdmAudCleanupLegacy()
+MMRESULT
+WdmAudCleanupByLegacy()
 {
-    if ( KernelHandle != INVALID_HANDLE_VALUE )
+    if (KernelHandle != INVALID_HANDLE_VALUE)
     {
         CloseHandle(KernelHandle);
         KernelHandle = INVALID_HANDLE_VALUE;
     }
+
+    return MMSYSERR_NOERROR;
 }
 
 MMRESULT
@@ -325,12 +330,11 @@ WdmAudSetMixerDeviceFormatByLegacy(
     WDMAUD_DEVICE_INFO DeviceInfo;
     HANDLE hThread;
 
-
     Instance->hNotifyEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
     if ( ! Instance->hNotifyEvent )
         return MMSYSERR_NOMEM;
 
-    if (Instance->Handle != KernelHandle)
+    if (Instance->Handle != NULL)
     {
         /* device is already open */
         return MMSYSERR_NOERROR;
@@ -399,7 +403,7 @@ WdmAudSetWaveDeviceFormatByLegacy(
         return TranslateInternalMmResult(Result);
     }
 
-    if (Instance->Handle != KernelHandle)
+    if (Instance->Handle != NULL)
     {
         /* device is already open */
         return MMSYSERR_NOERROR;
@@ -494,7 +498,7 @@ WdmAudSetWaveDeviceFormatByLegacy(
 }
 
 MMRESULT
-WriteFileEx_Committer2(
+WdmAudCommitWaveBufferByLegacy(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  PVOID OffsetPtr,
     IN  DWORD Length,
@@ -514,7 +518,7 @@ WriteFileEx_Committer2(
     VALIDATE_MMSYS_PARAMETER( CompletionRoutine );
 
     GetSoundDeviceInstanceHandle(SoundDeviceInstance, &Handle);
-
+    SND_ASSERT(Handle);
 
     Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
 
@@ -525,8 +529,6 @@ WriteFileEx_Committer2(
 
     Result = GetSoundDeviceType(SoundDevice, &DeviceType);
     SND_ASSERT( Result == MMSYSERR_NOERROR );
-
-    SND_ASSERT(Handle);
 
     ZeroMemory(&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO));
 
@@ -541,6 +543,8 @@ WriteFileEx_Committer2(
     DeviceInfo.Header.PresentationTime.Denominator = 1;
     DeviceInfo.hDevice = Handle;
     DeviceInfo.DeviceType = DeviceType;
+
+
 
     Overlap->Standard.hEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
 

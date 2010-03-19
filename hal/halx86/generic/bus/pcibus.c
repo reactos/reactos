@@ -614,7 +614,7 @@ HalpAssignPCISlotResources(IN PBUS_HANDLER BusHandler,
     {
         if (0 != PciConfig.u.type0.BaseAddresses[Address])
         {
-            if (/*PCI_BASE_ADDRESS_SPACE_MEMORY*/ 0 ==
+            if (PCI_ADDRESS_MEMORY_SPACE ==
                 (PciConfig.u.type0.BaseAddresses[Address] & 0x1))
             {
                 Descriptor->Type = CmResourceTypeMemory;
@@ -702,6 +702,7 @@ PPCI_REGISTRY_INFO_INTERNAL
 NTAPI
 HalpQueryPciRegistryInfo(VOID)
 {
+#ifndef _MINIHAL_
     WCHAR NameBuffer[8];
     OBJECT_ATTRIBUTES  ObjectAttributes;
     UNICODE_STRING KeyName, ConfigName, IdentName;
@@ -924,6 +925,9 @@ HalpQueryPciRegistryInfo(VOID)
 
     /* Return it */
     return PciRegistryInfo;
+#else
+    return NULL;
+#endif
 }
 
 VOID

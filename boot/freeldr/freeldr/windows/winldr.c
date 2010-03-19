@@ -37,6 +37,7 @@ extern char reactos_arc_strings[32][256];
 
 extern BOOLEAN UseRealHeap;
 extern ULONG LoaderPagesSpanned;
+extern BOOLEAN AcpiPresent;
 
 BOOLEAN
 WinLdrCheckForLoadedDll(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
@@ -196,6 +197,13 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	Extension->MinorVersion = VersionToBoot & 0xFF;
 	Extension->Profile.Status = 2;
 
+	/* Check if ACPI is present */
+	if (AcpiPresent)
+	{
+		/* See KiRosFrldrLpbToNtLpb for details */
+		Extension->AcpiTable = (PVOID)1;
+	}
+
 	/* Load drivers database */
 	strcpy(MiscFiles, BootPath);
 	strcat(MiscFiles, "AppPatch\\drvmain.sdb");
@@ -224,7 +232,7 @@ WinLdrLoadDeviceDriver(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	PVOID DriverBase;
 
 	// Separate the path to file name and directory path
-	sprintf(DriverPath, "%S", FilePath->Buffer);
+	snprintf(DriverPath, sizeof(DriverPath), "%wZ", FilePath);
 	DriverNamePos = strrchr(DriverPath, '\\');
 	if (DriverNamePos != NULL)
 	{
@@ -253,7 +261,7 @@ WinLdrLoadDeviceDriver(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	}
 
 	// It's not loaded, we have to load it
-	sprintf(FullPath,"%s%S", BootPath, FilePath->Buffer);
+	snprintf(FullPath, sizeof(FullPath), "%s%wZ", BootPath, FilePath);
 	Status = WinLdrLoadImage(FullPath, LoaderBootDriver, &DriverBase);
 	if (!Status)
 		return FALSE;
@@ -316,6 +324,7 @@ WinLdrLoadBootDrivers(PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 		// Convert the RegistryPath and DTE addresses to VA since we are not going to use it anymore
 		BootDriver->RegistryPath.Buffer = PaToVa(BootDriver->RegistryPath.Buffer);
+		BootDriver->FilePath.Buffer = PaToVa(BootDriver->FilePath.Buffer);
 		BootDriver->LdrEntry = PaToVa(BootDriver->LdrEntry);
 
 		NextBd = BootDriver->Link.Flink;
@@ -584,7 +593,7 @@ LoadAndBootWindows(PCSTR OperatingSystemName,
 	WinLdrTurnOnPaging(LoaderBlock, PcrBasePage, TssBasePage, GdtIdt);
 
 	/* Save final value of LoaderPagesSpanned */
-	LoaderBlock->Extension->LoaderPagesSpanned = LoaderPagesSpanned;
+	LoaderBlockVA->Extension->LoaderPagesSpanned = LoaderPagesSpanned;
 
 	DPRINTM(DPRINT_WINDOWS, "Hello from paged mode, KiSystemStartup %p, LoaderBlockVA %p!\n",
 		KiSystemStartup, LoaderBlockVA);

@@ -31,7 +31,97 @@ ULONG MmSpecialPoolTag;
 
 VOID
 NTAPI
-MiInitializeArmPool(VOID)
+MiInitializeNonPagedPoolThresholds(VOID)
+{
+    PFN_NUMBER Size = MmMaximumNonPagedPoolInPages;
+
+    /* Default low threshold of 8MB or one third of nonpaged pool */
+    MiLowNonPagedPoolThreshold = (8 * _1MB) >> PAGE_SHIFT;
+    MiLowNonPagedPoolThreshold = min(MiLowNonPagedPoolThreshold, Size / 3);
+
+    /* Default high threshold of 20MB or 50% */
+    MiHighNonPagedPoolThreshold = (20 * _1MB) >> PAGE_SHIFT;
+    MiHighNonPagedPoolThreshold = min(MiHighNonPagedPoolThreshold, Size / 2);
+    ASSERT(MiLowNonPagedPoolThreshold < MiHighNonPagedPoolThreshold);
+}
+
+VOID
+NTAPI
+MiInitializePoolEvents(VOID)
+{
+    KIRQL OldIrql;
+    PFN_NUMBER FreePoolInPages;
+
+    /* Lock paged pool */
+    KeAcquireGuardedMutex(&MmPagedPoolMutex);
+
+    /* Total size of the paged pool minus the allocated size, is free */
+    FreePoolInPages = MmSizeOfPagedPoolInPages - MmPagedPoolInfo.AllocatedPagedPool;
+
+    /* Check the initial state high state */
+    if (FreePoolInPages >= MiHighPagedPoolThreshold)
+    {
+        /* We have plenty of pool */
+        KeSetEvent(MiHighPagedPoolEvent, 0, FALSE);
+    }
+    else
+    {
+        /* We don't */
+        KeClearEvent(MiHighPagedPoolEvent);
+    }
+
+    /* Check the initial low state */
+    if (FreePoolInPages <= MiLowPagedPoolThreshold)
+    {
+        /* We're very low in free pool memory */
+        KeSetEvent(MiLowPagedPoolEvent, 0, FALSE);
+    }
+    else
+    {
+        /* We're not */
+        KeClearEvent(MiLowPagedPoolEvent);
+    }
+
+    /* Release the paged pool lock */
+    KeReleaseGuardedMutex(&MmPagedPoolMutex);
+
+    /* Now it's time for the nonpaged pool lock */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueueMmNonPagedPoolLock);
+
+    /* Free pages are the maximum minus what's been allocated */
+    FreePoolInPages = MmMaximumNonPagedPoolInPages - MmAllocatedNonPagedPool;
+
+    /* Check if we have plenty */
+    if (FreePoolInPages >= MiHighNonPagedPoolThreshold)
+    {
+        /* We do, set the event */
+        KeSetEvent(MiHighNonPagedPoolEvent, 0, FALSE);
+    }
+    else
+    {
+        /* We don't, clear the event */
+        KeClearEvent(MiHighNonPagedPoolEvent);
+    }
+
+    /* Check if we have very little */
+    if (FreePoolInPages <= MiLowNonPagedPoolThreshold)
+    {
+        /* We do, set the event */
+        KeSetEvent(MiLowNonPagedPoolEvent, 0, FALSE);
+    }
+    else
+    {
+        /* We don't, clear it */
+        KeClearEvent(MiLowNonPagedPoolEvent);
+    }
+
+    /* We're done, release the nonpaged pool lock */
+    KeReleaseQueuedSpinLock(LockQueueMmNonPagedPoolLock, OldIrql);
+}
+
+VOID
+NTAPI
+MiInitializeNonPagedPool(VOID)
 {
     ULONG i;
     PFN_NUMBER PoolPages;
@@ -213,7 +303,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
             //
             // Get the template PTE we'll use to expand
             //
-            TempPte = HyperTemplatePte;
+            TempPte = ValidKernelPte;
             
             //
             // Get the first PTE in expansion space
@@ -236,7 +326,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
                 //
                 // Request a paged pool page and write the PFN for it
                 //
-                PageFrameNumber = MmAllocPage(MC_PPOOL, 0);
+                PageFrameNumber = MmAllocPage(MC_PPOOL);
                 TempPte.u.Hard.PageFrameNumber = PageFrameNumber;
                 
                 //
@@ -493,13 +583,13 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
     //
     // Loop the pages
     //
-    TempPte = HyperTemplatePte;
+    TempPte = ValidKernelPte;
     do
     {
         //
         // Allocate a page
         //
-        PageFrameNumber = MmAllocPage(MC_NPPOOL, 0);
+        PageFrameNumber = MmAllocPage(MC_NPPOOL);
         
         //
         // Get the PFN entry for it

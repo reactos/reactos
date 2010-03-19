@@ -170,7 +170,7 @@ static char *CRYPT_GetKeyName(DWORD dwEncodingType, LPCSTR pszFuncName,
      * "EncodingType 2" would be expected if it were a mask.  Instead native
      * stores values in "EncodingType 3".
      */
-    if (!HIWORD(pszOID))
+    if (IS_INTOID(pszOID))
     {
         snprintf(numericOID, sizeof(numericOID), "#%d", LOWORD(pszOID));
         oid = numericOID;
@@ -255,7 +255,7 @@ BOOL WINAPI CryptInstallOIDFunctionAddress(HMODULE hModule,
         {
             struct OIDFunction *func;
 
-            if (HIWORD(rgFuncEntry[i].pszOID))
+            if (!IS_INTOID(rgFuncEntry[i].pszOID))
                 func = CryptMemAlloc(sizeof(struct OIDFunction)
                  + strlen(rgFuncEntry[i].pszOID) + 1);
             else
@@ -263,7 +263,7 @@ BOOL WINAPI CryptInstallOIDFunctionAddress(HMODULE hModule,
             if (func)
             {
                 func->encoding = GET_CERT_ENCODING_TYPE(dwEncodingType);
-                if (HIWORD(rgFuncEntry[i].pszOID))
+                if (!IS_INTOID(rgFuncEntry[i].pszOID))
                 {
                     LPSTR oid;
 
@@ -402,9 +402,9 @@ BOOL WINAPI CryptGetOIDFunctionAddress(HCRYPTOIDFUNCSET hFuncSet,
         {
             if (function->encoding == GET_CERT_ENCODING_TYPE(dwEncodingType))
             {
-                if (HIWORD(pszOID))
+                if (!IS_INTOID(pszOID))
                 {
-                    if (HIWORD(function->entry.pszOID) &&
+                    if (!IS_INTOID(function->entry.pszOID) &&
                      !strcasecmp(function->entry.pszOID, pszOID))
                     {
                         *ppvFuncAddr = function->entry.pvFuncAddr;
@@ -1398,7 +1398,7 @@ static void init_oid_info(void)
     for (i = 0; i < sizeof(oidInfoConstructors) /
      sizeof(oidInfoConstructors[0]); i++)
     {
-        if (HIWORD(oidInfoConstructors[i].pwszName))
+        if (!IS_INTRESOURCE(oidInfoConstructors[i].pwszName))
         {
             struct OIDInfo *info;
 

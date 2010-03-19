@@ -55,7 +55,7 @@ static HRESULT WINAPI domcomment_QueryInterface(
     void** ppvObject )
 {
     domcomment *This = impl_from_IXMLDOMComment( iface );
-    TRACE("%p %s %p\n", This, debugstr_guid(riid), ppvObject);
+    TRACE("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppvObject);
 
     if ( IsEqualGUID( riid, &IID_IXMLDOMComment ) ||
          IsEqualGUID( riid, &IID_IXMLDOMCharacterData) ||
@@ -95,7 +95,7 @@ static ULONG WINAPI domcomment_Release(
     if ( ref == 0 )
     {
         destroy_xmlnode(&This->node);
-        HeapFree( GetProcessHeap(), 0, This );
+        heap_free( This );
     }
 
     return ref;
@@ -474,8 +474,10 @@ static HRESULT WINAPI domcomment_get_data(
     BSTR *p)
 {
     domcomment *This = impl_from_IXMLDOMComment( iface );
-    HRESULT hr = E_FAIL;
+    HRESULT hr;
     VARIANT vRet;
+
+    TRACE("(%p)->(%p)\n", This, p);
 
     if(!p)
         return E_INVALIDARG;
@@ -494,17 +496,14 @@ static HRESULT WINAPI domcomment_put_data(
     BSTR data)
 {
     domcomment *This = impl_from_IXMLDOMComment( iface );
-    HRESULT hr = E_FAIL;
     VARIANT val;
 
-    TRACE("%p %s\n", This, debugstr_w(data) );
+    TRACE("(%p)->(%s)\n", This, debugstr_w(data) );
 
     V_VT(&val) = VT_BSTR;
     V_BSTR(&val) = data;
 
-    hr = IXMLDOMNode_put_nodeValue( IXMLDOMNode_from_impl(&This->node), val );
-
-    return hr;
+    return IXMLDOMNode_put_nodeValue( IXMLDOMNode_from_impl(&This->node), val );
 }
 
 static HRESULT WINAPI domcomment_get_length(
@@ -512,24 +511,22 @@ static HRESULT WINAPI domcomment_get_length(
     LONG *len)
 {
     domcomment *This = impl_from_IXMLDOMComment( iface );
-    xmlChar *pContent;
-    LONG nLength = 0;
+    HRESULT hr;
+    BSTR data;
 
-    TRACE("%p\n", iface);
+    TRACE("(%p)->(%p)\n", This, len);
 
     if(!len)
         return E_INVALIDARG;
 
-    pContent = xmlNodeGetContent(This->node.node);
-    if(pContent)
+    hr = IXMLDOMComment_get_data(iface, &data);
+    if(hr == S_OK)
     {
-        nLength = xmlStrlen(pContent);
-        xmlFree(pContent);
+        *len = SysStringLen(data);
+        SysFreeString(data);
     }
 
-    *len = nLength;
-
-    return S_OK;
+    return hr;
 }
 
 static HRESULT WINAPI domcomment_substringData(
@@ -537,11 +534,10 @@ static HRESULT WINAPI domcomment_substringData(
     LONG offset, LONG count, BSTR *p)
 {
     domcomment *This = impl_from_IXMLDOMComment( iface );
-    xmlChar *pContent;
-    LONG nLength = 0;
-    HRESULT hr = S_FALSE;
+    HRESULT hr;
+    BSTR data;
 
-    TRACE("%p\n", iface);
+    TRACE("(%p)->(%d %d %p)\n", This, offset, count, p);
 
     if(!p)
         return E_INVALIDARG;
@@ -551,26 +547,24 @@ static HRESULT WINAPI domcomment_substringData(
         return E_INVALIDARG;
 
     if(count == 0)
-        return hr;
+        return S_FALSE;
 
-    pContent = xmlNodeGetContent(This->node.node);
-    if(pContent)
+    hr = IXMLDOMComment_get_data(iface, &data);
+    if(hr == S_OK)
     {
-        nLength = xmlStrlen(pContent);
+        LONG len = SysStringLen(data);
 
-        if( offset < nLength)
+        if(offset < len)
         {
-            BSTR sContent = bstr_from_xmlChar(pContent);
-            if(offset + count > nLength)
-                *p = SysAllocString(&sContent[offset]);
+            if(offset + count > len)
+                *p = SysAllocString(&data[offset]);
             else
-                *p = SysAllocStringLen(&sContent[offset], count);
-
-            SysFreeString(sContent);
-            hr = S_OK;
+                *p = SysAllocStringLen(&data[offset], count);
         }
+        else
+            hr = S_FALSE;
 
-        xmlFree(pContent);
+        SysFreeString(data);
     }
 
     return hr;
@@ -581,40 +575,30 @@ static HRESULT WINAPI domcomment_appendData(
     BSTR p)
 {
     domcomment *This = impl_from_IXMLDOMComment( iface );
-    xmlChar *pContent;
-    HRESULT hr = S_FALSE;
+    HRESULT hr;
+    BSTR data;
+    LONG p_len;
 
-    TRACE("%p\n", iface);
+    TRACE("(%p)->(%s)\n", This, debugstr_w(p));
 
     /* Nothing to do if NULL or an Empty string passed in. */
-    if(p == NULL || SysStringLen(p) == 0)
-        return S_OK;
+    if((p_len = SysStringLen(p)) == 0) return S_OK;
 
-    pContent = xmlChar_from_wchar( p );
-    if(pContent)
+    hr = IXMLDOMComment_get_data(iface, &data);
+    if(hr == S_OK)
     {
-        /* Older versions of libxml < 2.6.27 didn't correctly support
-           xmlTextConcat on Comment nodes. Fallback to setting the
-           contents directly if xmlTextConcat fails.
-         */
-        if(xmlTextConcat(This->node.node, pContent, SysStringLen(p) ) == 0)
-            hr = S_OK;
-        else
-        {
-            xmlChar *pNew;
-            pNew = xmlStrcat(xmlNodeGetContent(This->node.node), pContent);
-            if(pNew)
-            {
-                xmlNodeSetContent(This->node.node, pNew);
-                hr = S_OK;
-            }
-            else
-                hr = E_FAIL;
-        }
-        HeapFree( GetProcessHeap(), 0, pContent );
+        LONG len = SysStringLen(data);
+        BSTR str = SysAllocStringLen(NULL, p_len + len);
+
+        memcpy(str, data, len*sizeof(WCHAR));
+        memcpy(&str[len], p, p_len*sizeof(WCHAR));
+        str[len+p_len] = 0;
+
+        hr = IXMLDOMComment_put_data(iface, str);
+
+        SysFreeString(str);
+        SysFreeString(data);
     }
-    else
-        hr = E_FAIL;
 
     return hr;
 }
@@ -624,16 +608,14 @@ static HRESULT WINAPI domcomment_insertData(
     LONG offset, BSTR p)
 {
     domcomment *This = impl_from_IXMLDOMComment( iface );
-    xmlChar *pXmlContent;
-    BSTR sNewString;
-    HRESULT hr = S_FALSE;
-    LONG nLength = 0, nLengthP = 0;
-    xmlChar *str = NULL;
+    HRESULT hr;
+    BSTR data;
+    LONG p_len;
 
-    TRACE("%p\n", This);
+    TRACE("(%p)->(%d %s)\n", This, offset, debugstr_w(p));
 
     /* If have a NULL or empty string, don't do anything. */
-    if(SysStringLen(p) == 0)
+    if((p_len = SysStringLen(p)) == 0)
         return S_OK;
 
     if(offset < 0)
@@ -641,48 +623,29 @@ static HRESULT WINAPI domcomment_insertData(
         return E_INVALIDARG;
     }
 
-    pXmlContent = xmlNodeGetContent(This->node.node);
-    if(pXmlContent)
+    hr = IXMLDOMComment_get_data(iface, &data);
+    if(hr == S_OK)
     {
-        BSTR sContent = bstr_from_xmlChar( pXmlContent );
-        nLength = SysStringLen(sContent);
-        nLengthP = SysStringLen(p);
+        LONG len = SysStringLen(data);
+        BSTR str;
 
-        if(nLength < offset)
+        if(len < offset)
         {
-            SysFreeString(sContent);
-            xmlFree(pXmlContent);
-
+            SysFreeString(data);
             return E_INVALIDARG;
         }
 
-        sNewString = SysAllocStringLen(NULL, nLength + nLengthP + 1);
-        if(sNewString)
-        {
-            if(offset > 0)
-                memcpy(sNewString, sContent, offset * sizeof(WCHAR));
+        str = SysAllocStringLen(NULL, len + p_len);
+        /* start part, supplied string and end part */
+        memcpy(str, data, offset*sizeof(WCHAR));
+        memcpy(&str[offset], p, p_len*sizeof(WCHAR));
+        memcpy(&str[offset+p_len], &data[offset], (len-offset)*sizeof(WCHAR));
+        str[len+p_len] = 0;
 
-            memcpy(&sNewString[offset], p, nLengthP * sizeof(WCHAR));
+        hr = IXMLDOMComment_put_data(iface, str);
 
-            if(offset+nLengthP < nLength)
-                memcpy(&sNewString[offset+nLengthP], &sContent[offset], (nLength-offset) * sizeof(WCHAR));
-
-            sNewString[nLengthP + nLength] = 0;
-
-            str = xmlChar_from_wchar(sNewString);
-            if(str)
-            {
-                xmlNodeSetContent(This->node.node, str);
-                hr = S_OK;
-            }
-            HeapFree( GetProcessHeap(), 0, str );
-
-            SysFreeString(sNewString);
-        }
-
-        SysFreeString(sContent);
-
-        xmlFree(pXmlContent);
+        SysFreeString(str);
+        SysFreeString(data);
     }
 
     return hr;
@@ -692,16 +655,64 @@ static HRESULT WINAPI domcomment_deleteData(
     IXMLDOMComment *iface,
     LONG offset, LONG count)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    HRESULT hr;
+    LONG len = -1;
+    BSTR str;
+
+    TRACE("(%p)->(%d %d)\n", iface, offset, count);
+
+    hr = IXMLDOMComment_get_length(iface, &len);
+    if(hr != S_OK) return hr;
+
+    if((offset < 0) || (offset > len) || (count < 0))
+        return E_INVALIDARG;
+
+    if(len == 0) return S_OK;
+
+    /* cutting start or end */
+    if((offset == 0) || ((count + offset) >= len))
+    {
+        if(offset == 0)
+            IXMLDOMComment_substringData(iface, count, len - count, &str);
+        else
+            IXMLDOMComment_substringData(iface, 0, offset, &str);
+        hr = IXMLDOMComment_put_data(iface, str);
+    }
+    else
+    /* cutting from the inside */
+    {
+        BSTR str_end;
+
+        IXMLDOMComment_substringData(iface, 0, offset, &str);
+        IXMLDOMComment_substringData(iface, offset + count, len - count, &str_end);
+
+        hr = IXMLDOMComment_put_data(iface, str);
+        if(hr == S_OK)
+            hr = IXMLDOMComment_appendData(iface, str_end);
+
+        SysFreeString(str_end);
+    }
+
+    SysFreeString(str);
+
+    return hr;
 }
 
 static HRESULT WINAPI domcomment_replaceData(
     IXMLDOMComment *iface,
     LONG offset, LONG count, BSTR p)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    domcomment *This = impl_from_IXMLDOMComment( iface );
+    HRESULT hr;
+
+    TRACE("(%p)->(%d %d %s)\n", This, offset, count, debugstr_w(p));
+
+    hr = IXMLDOMComment_deleteData(iface, offset, count);
+
+    if (hr == S_OK)
+       hr = IXMLDOMComment_insertData(iface, offset, p);
+
+    return hr;
 }
 
 static const struct IXMLDOMCommentVtbl domcomment_vtbl =
@@ -763,7 +774,7 @@ IUnknown* create_comment( xmlNodePtr comment )
 {
     domcomment *This;
 
-    This = HeapAlloc( GetProcessHeap(), 0, sizeof *This );
+    This = heap_alloc( sizeof *This );
     if ( !This )
         return NULL;
 

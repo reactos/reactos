@@ -23,6 +23,9 @@ import "oaidl.idl";
 import "servprov.idl";
 #endif
 
+cpp_quote("DEFINE_GUID(SID_VariantConversion, 0x1f101481,0xbccd,0x11d0,0x93,0x36,0x00,0xa0,0xc9,0xd,0xca,0xa9);")
+cpp_quote("DEFINE_GUID(SID_GetCaller, 0x4717cc40,0xbcb9,0x11d0,0x93,0x36,0x00,0xa0,0xc9,0xd,0xca,0xa9);")
+
 cpp_quote("#define fdexNameCaseSensitive       0x00000001L")
 cpp_quote("#define fdexNameEnsure              0x00000002L")
 cpp_quote("#define fdexNameImplicit            0x00000004L")
@@ -78,13 +81,13 @@ interface IDispatchEx : IDispatch
 
     [local]
     HRESULT InvokeEx(
-            [in] DISPID id,
-            [in] LCID lcid,
-            [in] WORD wFlags,
-            [in] DISPPARAMS *pdp,
-            [out] VARIANT *pvarRes,
-            [out] EXCEPINFO *pei,
-            [in, unique] IServiceProvider *pspCaller);
+            [in, annotation("__in")] DISPID id,
+            [in, annotation("__in")] LCID lcid,
+            [in, annotation("__in")] WORD wFlags,
+            [in, annotation("__in")] DISPPARAMS *pdp,
+            [out, annotation("__out_opt")] VARIANT *pvarRes,
+            [out, annotation("__out_opt")] EXCEPINFO *pei,
+            [in, unique, annotation("__in_opt")] IServiceProvider *pspCaller);
 
     [call_as(InvokeEx)]
     HRESULT RemoteInvokeEx(
@@ -187,4 +190,16 @@ interface ICanHandleException : IUnknown
     HRESULT CanHandleException(
             [in] EXCEPINFO *pExcepInfo,
             [in] VARIANT *pvar);
+}
+
+[
+    object,
+    uuid(10e2414a-ec59-49d2-bc51-5add2c36febc),
+    pointer_default(unique)
+]
+interface IProvideRuntimeContext : IUnknown
+{
+    HRESULT GetCurrentSourceContext(
+            [out] DWORD_PTR *pdwContext,
+            [out] VARIANT_BOOL *pfExecutingGlobalCode);
 }

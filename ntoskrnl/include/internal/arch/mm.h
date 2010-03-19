@@ -16,8 +16,8 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-#ifndef __NTOSKRNL_INCLUDE_INTERNAL_ARCH_MM_H
-#define __NTOSKRNL_INCLUDE_INTERNAL_ARCH_MM_H
+
+#pragma once
 
 #ifdef _M_IX86
 #include <internal/i386/mm.h>
@@ -30,5 +30,3 @@
 #else
 #error "Unknown processor"
 #endif
-
-#endif /* __NTOSKRNL_INCLUDE_INTERNAL_ARCH_MM_H */

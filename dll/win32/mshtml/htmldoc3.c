@@ -116,7 +116,7 @@ static HRESULT WINAPI HTMLDocument3_createTextNode(IHTMLDocument3 *iface, BSTR t
         return E_UNEXPECTED;
     }
 
-    nsAString_Init(&text_str, text);
+    nsAString_InitDepend(&text_str, text);
     nsres = nsIDOMHTMLDocument_CreateTextNode(This->doc_node->nsdoc, &text_str, &nstext);
     nsAString_Finish(&text_str);
     if(NS_FAILED(nsres)) {
@@ -443,7 +443,7 @@ static HRESULT WINAPI HTMLDocument3_getElementById(IHTMLDocument3 *iface, BSTR v
         return E_UNEXPECTED;
     }
 
-    nsAString_Init(&id_str, v);
+    nsAString_InitDepend(&id_str, v);
     /* get element by id attribute */
     nsres = nsIDOMHTMLDocument_GetElementById(This->doc_node->nsdoc, &id_str, &nselem);
     if(FAILED(nsres)) {
@@ -455,9 +455,9 @@ static HRESULT WINAPI HTMLDocument3_getElementById(IHTMLDocument3 *iface, BSTR v
 
     /* get first element by name attribute */
     nsres = nsIDOMHTMLDocument_GetElementsByName(This->doc_node->nsdoc, &id_str, &nsnode_list);
+    nsAString_Finish(&id_str);
     if(FAILED(nsres)) {
         ERR("getElementsByName failed: %08x\n", nsres);
-        nsAString_Finish(&id_str);
         if(nsnode_by_id)
             nsIDOMNode_Release(nsnode_by_id);
         return E_FAIL;
@@ -465,7 +465,6 @@ static HRESULT WINAPI HTMLDocument3_getElementById(IHTMLDocument3 *iface, BSTR v
     nsIDOMNodeList_Item(nsnode_list, 0, &nsnode_by_name);
     nsIDOMNodeList_Release(nsnode_list);
 
-    nsAString_Finish(&id_str);
 
     if(nsnode_by_name && nsnode_by_id) {
         nsIDOM3Node *node3;
@@ -528,8 +527,8 @@ static HRESULT WINAPI HTMLDocument3_getElementsByTagName(IHTMLDocument3 *iface, 
         return E_UNEXPECTED;
     }
 
-    nsAString_Init(&id_str, v);
-    nsAString_Init(&ns_str, str);
+    nsAString_InitDepend(&id_str, v);
+    nsAString_InitDepend(&ns_str, str);
     nsres = nsIDOMHTMLDocument_GetElementsByTagNameNS(This->doc_node->nsdoc, &ns_str, &id_str, &nslist);
     nsAString_Finish(&id_str);
     nsAString_Finish(&ns_str);

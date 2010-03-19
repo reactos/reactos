@@ -16,8 +16,7 @@
    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#ifndef __MULTIBOOT_H
-#define __MULTIBOOT_H
+#pragma once
 
 /* Macros. */
 
@@ -103,6 +102,3 @@ typedef struct memory_map
 } memory_map_t;
 
 #endif /* ! ASM */
-
-
-#endif // defined __MULTIBOOT_H

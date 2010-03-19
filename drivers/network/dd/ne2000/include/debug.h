@@ -6,8 +6,8 @@
  * DEFINES:     DBG     - Enable debug output
  *              NASSERT - Disable assertions
  */
-#ifndef __DEBUG_H
-#define __DEBUG_H
+
+#pragma once
 
 #define NORMAL_MASK    0x000000FF
 #define SPECIAL_MASK   0xFFFFFF00
@@ -78,7 +78,5 @@ extern ULONG DebugTraceLevel;
 
 #define CHECKPOINT \
     do { NDIS_DbgPrint(MIN_TRACE, ("%s:%d\n", __FILE__, __LINE__)); } while(0);
-
-#endif /* __DEBUG_H */
 
 /* EOF */

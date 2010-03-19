@@ -77,7 +77,7 @@
 
 struct elf_module_info
 {
-    unsigned long               elf_addr;
+    DWORD_PTR                   elf_addr;
     unsigned short	        elf_mark : 1,
                                 elf_loader : 1;
 };
@@ -93,22 +93,36 @@ WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 struct elf_info
 {
     unsigned                    flags;          /* IN  one (or several) of the ELF_INFO constants */
-    unsigned long               dbg_hdr_addr;   /* OUT address of debug header (if ELF_INFO_DEBUG_HEADER is set) */
+    DWORD_PTR                   dbg_hdr_addr;   /* OUT address of debug header (if ELF_INFO_DEBUG_HEADER is set) */
     struct module*              module;         /* OUT loaded module (if ELF_INFO_MODULE is set) */
     const WCHAR*                module_name;    /* OUT found module name (if ELF_INFO_NAME is set) */
 };
+
+#ifdef _WIN64
+#define         Elf_Ehdr        Elf64_Ehdr
+#define         Elf_Shdr        Elf64_Shdr
+#define         Elf_Phdr        Elf64_Phdr
+#define         Elf_Dyn         Elf64_Dyn
+#define         Elf_Sym         Elf64_Sym
+#else
+#define         Elf_Ehdr        Elf32_Ehdr
+#define         Elf_Shdr        Elf32_Shdr
+#define         Elf_Phdr        Elf32_Phdr
+#define         Elf_Dyn         Elf32_Dyn
+#define         Elf_Sym         Elf32_Sym
+#endif
 
 /* structure holding information while handling an ELF image
  * allows one by one section mapping for memory savings
  */
 struct elf_file_map
 {
-    Elf32_Ehdr                  elfhdr;
+    Elf_Ehdr                    elfhdr;
     size_t                      elf_size;
     size_t                      elf_start;
     struct
     {
-        Elf32_Shdr                      shdr;
+        Elf_Shdr                        shdr;
         const char*                     mapped;
     }*                          sect;
     int                         fd;
@@ -125,7 +139,7 @@ struct elf_section_map
 struct symtab_elt
 {
     struct hash_table_elt       ht_elt;
-    const Elf32_Sym*            symp;
+    const Elf_Sym*              symp;
     struct symt_compiland*      compiland;
     unsigned                    used;
 };
@@ -237,7 +251,7 @@ static void elf_end_find(struct elf_file_map* fmap)
  *
  * Get the size of an ELF section
  */
-static inline unsigned elf_get_map_size(struct elf_section_map* esm)
+static inline unsigned elf_get_map_size(const struct elf_section_map* esm)
 {
     if (esm->sidx < 0 || esm->sidx >= esm->fmap->elfhdr.e_shnum)
         return 0;
@@ -254,7 +268,7 @@ static BOOL elf_map_file(const WCHAR* filenameW, struct elf_file_map* fmap)
     static const BYTE   elf_signature[4] = { ELFMAG0, ELFMAG1, ELFMAG2, ELFMAG3 };
     struct stat	        statbuf;
     int                 i;
-    Elf32_Phdr          phdr;
+    Elf_Phdr            phdr;
     unsigned            tmp, page_mask = getpagesize() - 1;
     char*               filename;
     unsigned            len;
@@ -279,7 +293,12 @@ static BOOL elf_map_file(const WCHAR* filenameW, struct elf_file_map* fmap)
     /* and check for an ELF header */
     if (memcmp(fmap->elfhdr.e_ident, 
                elf_signature, sizeof(elf_signature))) goto done;
-
+    /* and check 32 vs 64 size according to current machine */
+#ifdef _WIN64
+    if (fmap->elfhdr.e_ident[EI_CLASS] != ELFCLASS64) goto done;
+#else
+    if (fmap->elfhdr.e_ident[EI_CLASS] != ELFCLASS32) goto done;
+#endif
     fmap->sect = HeapAlloc(GetProcessHeap(), 0,
                            fmap->elfhdr.e_shnum * sizeof(fmap->sect[0]));
     if (!fmap->sect) goto done;
@@ -350,7 +369,7 @@ int elf_is_in_thunk_area(unsigned long addr,
 {
     unsigned i;
 
-    for (i = 0; thunks[i].symname; i++)
+    if (thunks) for (i = 0; thunks[i].symname; i++)
     {
         if (addr >= thunks[i].rva_start && addr < thunks[i].rva_end)
             return i;
@@ -372,13 +391,13 @@ static void elf_hash_symtab(struct module* module, struct pool* pool,
     const char*                 symname;
     struct symt_compiland*      compiland = NULL;
     const char*                 ptr;
-    const Elf32_Sym*            symp;
+    const Elf_Sym*              symp;
     struct symtab_elt*          ste;
     struct elf_section_map      esm, esm_str;
 
     if (!elf_find_section(fmap, ".symtab", SHT_SYMTAB, &esm) &&
         !elf_find_section(fmap, ".dynsym", SHT_DYNSYM, &esm)) return;
-    if ((symp = (const Elf32_Sym*)elf_map_section(&esm)) == ELF_NO_MAP) return;
+    if ((symp = (const Elf_Sym*)elf_map_section(&esm)) == ELF_NO_MAP) return;
     esm_str.fmap = fmap;
     esm_str.sidx = fmap->sect[esm.sidx].shdr.sh_link;
     if ((strp = elf_map_section(&esm_str)) == ELF_NO_MAP) return;
@@ -471,9 +490,9 @@ static void elf_hash_symtab(struct module* module, struct pool* pool,
  *
  * lookup a symbol by name in our internal hash table for the symtab
  */
-static const Elf32_Sym* elf_lookup_symtab(const struct module* module,        
+static const Elf_Sym* elf_lookup_symtab(const struct module* module,
                                           const struct hash_table* ht_symtab,
-                                          const char* name, struct symt* compiland)
+                                          const char* name, const struct symt* compiland)
 {
     struct symtab_elt*          weak_result = NULL; /* without compiland name */
     struct symtab_elt*          result = NULL;
@@ -490,7 +509,7 @@ static const Elf32_Sym* elf_lookup_symtab(const struct module* module,
     if (compiland)
     {
         compiland_name = source_get(module,
-                                    ((struct symt_compiland*)compiland)->source);
+                                    ((const struct symt_compiland*)compiland)->source);
         compiland_basename = strrchr(compiland_name, '/');
         if (!compiland_basename++) compiland_basename = compiland_name;
     }
@@ -542,12 +561,12 @@ static const Elf32_Sym* elf_lookup_symtab(const struct module* module,
  * - get any relevant information (address & size) from the bits we got from the
  *   stabs debugging information
  */
-static void elf_finish_stabs_info(struct module* module, struct hash_table* symtab)
+static void elf_finish_stabs_info(struct module* module, const struct hash_table* symtab)
 {
     struct hash_table_iter      hti;
     void*                       ptr;
     struct symt_ht*             sym;
-    const Elf32_Sym*            symp;
+    const Elf_Sym*              symp;
 
     hash_table_iter_init(&module->ht_symbols, &hti, NULL);
     while ((ptr = hash_table_iter_up(&hti)))
@@ -623,13 +642,13 @@ static void elf_finish_stabs_info(struct module* module, struct hash_table* symt
  *
  * creating the thunk objects for a wine native DLL
  */
-static int elf_new_wine_thunks(struct module* module, struct hash_table* ht_symtab,
+static int elf_new_wine_thunks(struct module* module, const struct hash_table* ht_symtab,
                                const struct elf_thunk_area* thunks)
 {
     int		                j;
     struct hash_table_iter      hti;
     struct symtab_elt*          ste;
-    DWORD                       addr;
+    DWORD_PTR                   addr;
     struct symt_ht*             symt;
 
     hash_table_iter_init(ht_symtab, &hti, NULL);
@@ -650,8 +669,8 @@ static int elf_new_wine_thunks(struct module* module, struct hash_table* ht_symt
             ULONG64     ref_addr;
 
             symt = symt_find_nearest(module, addr);
-            if (symt)
-                symt_get_info(&symt->symt, TI_GET_ADDRESS, &ref_addr);
+            if (symt && !symt_get_info(module, &symt->symt, TI_GET_ADDRESS, &ref_addr))
+                ref_addr = addr;
             if (!symt || addr != ref_addr)
             {
                 /* creating public symbols for all the ELF symbols which haven't been
@@ -687,9 +706,9 @@ static int elf_new_wine_thunks(struct module* module, struct hash_table* ht_symt
                 ULONG64 xaddr = 0, xsize = 0;
                 DWORD   kind = -1;
 
-                symt_get_info(&symt->symt, TI_GET_ADDRESS,  &xaddr);
-                symt_get_info(&symt->symt, TI_GET_LENGTH,   &xsize);
-                symt_get_info(&symt->symt, TI_GET_DATAKIND, &kind);
+                symt_get_info(module, &symt->symt, TI_GET_ADDRESS,  &xaddr);
+                symt_get_info(module, &symt->symt, TI_GET_LENGTH,   &xsize);
+                symt_get_info(module, &symt->symt, TI_GET_DATAKIND, &kind);
 
                 /* If none of symbols has a correct size, we consider they are both markers
                  * Hence, we can silence this warning
@@ -698,7 +717,7 @@ static int elf_new_wine_thunks(struct module* module, struct hash_table* ht_symt
                  */
                 if ((xsize || ste->symp->st_size) &&
                     (kind == (ELF32_ST_BIND(ste->symp->st_info) == STB_LOCAL) ? DataIsFileStatic : DataIsGlobal))
-                    FIXME("Duplicate in %s: %s<%08x-%08x> %s<%s-%s>\n",
+                    FIXME("Duplicate in %s: %s<%08lx-%08x> %s<%s-%s>\n",
                           debugstr_w(module->module.ModuleName),
                           ste->ht_elt.name, addr, (unsigned int)ste->symp->st_size,
                           symt->hash_elt.name,
@@ -716,7 +735,7 @@ static int elf_new_wine_thunks(struct module* module, struct hash_table* ht_symt
  *
  * Creates a set of public symbols from an ELF symtab
  */
-static int elf_new_public_symbols(struct module* module, struct hash_table* symtab)
+static int elf_new_public_symbols(struct module* module, const struct hash_table* symtab)
 {
     struct hash_table_iter      hti;
     struct symtab_elt*          ste;
@@ -730,142 +749,19 @@ static int elf_new_public_symbols(struct module* module, struct hash_table* symt
     {
         symt_new_public(module, ste->compiland, ste->ht_elt.name,
                         module->elf_info->elf_addr + ste->symp->st_value,
-                        ste->symp->st_size, TRUE /* FIXME */, 
-                        ELF32_ST_TYPE(ste->symp->st_info) == STT_FUNC);
+                        ste->symp->st_size);
     }
     return TRUE;
-}
-
-/* Copyright (C) 1986 Gary S. Brown. Modified by Robert Shearman. You may use
-   the following calc_crc32 code or tables extracted from it, as desired without
-   restriction. */
-
-/**********************************************************************\
-|* Demonstration program to compute the 32-bit CRC used as the frame  *|
-|* check sequence in ADCCP (ANSI X3.66, also known as FIPS PUB 71     *|
-|* and FED-STD-1003, the U.S. versions of CCITT's X.25 link-level     *|
-|* protocol).  The 32-bit FCS was added via the Federal Register,     *|
-|* 1 June 1982, p.23798.  I presume but don't know for certain that   *|
-|* this polynomial is or will be included in CCITT V.41, which        *|
-|* defines the 16-bit CRC (often called CRC-CCITT) polynomial.  FIPS  *|
-|* PUB 78 says that the 32-bit FCS reduces otherwise undetected       *|
-|* errors by a factor of 10^-5 over 16-bit FCS.                       *|
-\**********************************************************************/
-
-/* First, the polynomial itself and its table of feedback terms.  The  */
-/* polynomial is                                                       */
-/* X^32+X^26+X^23+X^22+X^16+X^12+X^11+X^10+X^8+X^7+X^5+X^4+X^2+X^1+X^0 */
-/* Note that we take it "backwards" and put the highest-order term in  */
-/* the lowest-order bit.  The X^32 term is "implied"; the LSB is the   */
-/* X^31 term, etc.  The X^0 term (usually shown as "+1") results in    */
-/* the MSB being 1.                                                    */
-
-/* Note that the usual hardware shift register implementation, which   */
-/* is what we're using (we're merely optimizing it by doing eight-bit  */
-/* chunks at a time) shifts bits into the lowest-order term.  In our   */
-/* implementation, that means shifting towards the right.  Why do we   */
-/* do it this way?  Because the calculated CRC must be transmitted in  */
-/* order from highest-order term to lowest-order term.  UARTs transmit */
-/* characters in order from LSB to MSB.  By storing the CRC this way,  */
-/* we hand it to the UART in the order low-byte to high-byte; the UART */
-/* sends each low-bit to hight-bit; and the result is transmission bit */
-/* by bit from highest- to lowest-order term without requiring any bit */
-/* shuffling on our part.  Reception works similarly.                  */
-
-/* The feedback terms table consists of 256, 32-bit entries.  Notes:   */
-/*                                                                     */
-/*  1. The table can be generated at runtime if desired; code to do so */
-/*     is shown later.  It might not be obvious, but the feedback      */
-/*     terms simply represent the results of eight shift/xor opera-    */
-/*     tions for all combinations of data and CRC register values.     */
-/*                                                                     */
-/*  2. The CRC accumulation logic is the same for all CRC polynomials, */
-/*     be they sixteen or thirty-two bits wide.  You simply choose the */
-/*     appropriate table.  Alternatively, because the table can be     */
-/*     generated at runtime, you can start by generating the table for */
-/*     the polynomial in question and use exactly the same "updcrc",   */
-/*     if your application needn't simultaneously handle two CRC       */
-/*     polynomials.  (Note, however, that XMODEM is strange.)          */
-/*                                                                     */
-/*  3. For 16-bit CRCs, the table entries need be only 16 bits wide;   */
-/*     of course, 32-bit entries work OK if the high 16 bits are zero. */
-/*                                                                     */
-/*  4. The values must be right-shifted by eight bits by the "updcrc"  */
-/*     logic; the shift must be unsigned (bring in zeroes).  On some   */
-/*     hardware you could probably optimize the shift in assembler by  */
-/*     using byte-swap instructions.                                   */
-
-
-static DWORD calc_crc32(struct elf_file_map* fmap)
-{
-#define UPDC32(octet,crc) (crc_32_tab[((crc) ^ (octet)) & 0xff] ^ ((crc) >> 8))
-    static const DWORD crc_32_tab[] =
-    { /* CRC polynomial 0xedb88320 */
-        0x00000000, 0x77073096, 0xee0e612c, 0x990951ba, 0x076dc419, 0x706af48f,
-        0xe963a535, 0x9e6495a3, 0x0edb8832, 0x79dcb8a4, 0xe0d5e91e, 0x97d2d988,
-        0x09b64c2b, 0x7eb17cbd, 0xe7b82d07, 0x90bf1d91, 0x1db71064, 0x6ab020f2,
-        0xf3b97148, 0x84be41de, 0x1adad47d, 0x6ddde4eb, 0xf4d4b551, 0x83d385c7,
-        0x136c9856, 0x646ba8c0, 0xfd62f97a, 0x8a65c9ec, 0x14015c4f, 0x63066cd9,
-        0xfa0f3d63, 0x8d080df5, 0x3b6e20c8, 0x4c69105e, 0xd56041e4, 0xa2677172,
-        0x3c03e4d1, 0x4b04d447, 0xd20d85fd, 0xa50ab56b, 0x35b5a8fa, 0x42b2986c,
-        0xdbbbc9d6, 0xacbcf940, 0x32d86ce3, 0x45df5c75, 0xdcd60dcf, 0xabd13d59,
-        0x26d930ac, 0x51de003a, 0xc8d75180, 0xbfd06116, 0x21b4f4b5, 0x56b3c423,
-        0xcfba9599, 0xb8bda50f, 0x2802b89e, 0x5f058808, 0xc60cd9b2, 0xb10be924,
-        0x2f6f7c87, 0x58684c11, 0xc1611dab, 0xb6662d3d, 0x76dc4190, 0x01db7106,
-        0x98d220bc, 0xefd5102a, 0x71b18589, 0x06b6b51f, 0x9fbfe4a5, 0xe8b8d433,
-        0x7807c9a2, 0x0f00f934, 0x9609a88e, 0xe10e9818, 0x7f6a0dbb, 0x086d3d2d,
-        0x91646c97, 0xe6635c01, 0x6b6b51f4, 0x1c6c6162, 0x856530d8, 0xf262004e,
-        0x6c0695ed, 0x1b01a57b, 0x8208f4c1, 0xf50fc457, 0x65b0d9c6, 0x12b7e950,
-        0x8bbeb8ea, 0xfcb9887c, 0x62dd1ddf, 0x15da2d49, 0x8cd37cf3, 0xfbd44c65,
-        0x4db26158, 0x3ab551ce, 0xa3bc0074, 0xd4bb30e2, 0x4adfa541, 0x3dd895d7,
-        0xa4d1c46d, 0xd3d6f4fb, 0x4369e96a, 0x346ed9fc, 0xad678846, 0xda60b8d0,
-        0x44042d73, 0x33031de5, 0xaa0a4c5f, 0xdd0d7cc9, 0x5005713c, 0x270241aa,
-        0xbe0b1010, 0xc90c2086, 0x5768b525, 0x206f85b3, 0xb966d409, 0xce61e49f,
-        0x5edef90e, 0x29d9c998, 0xb0d09822, 0xc7d7a8b4, 0x59b33d17, 0x2eb40d81,
-        0xb7bd5c3b, 0xc0ba6cad, 0xedb88320, 0x9abfb3b6, 0x03b6e20c, 0x74b1d29a,
-        0xead54739, 0x9dd277af, 0x04db2615, 0x73dc1683, 0xe3630b12, 0x94643b84,
-        0x0d6d6a3e, 0x7a6a5aa8, 0xe40ecf0b, 0x9309ff9d, 0x0a00ae27, 0x7d079eb1,
-        0xf00f9344, 0x8708a3d2, 0x1e01f268, 0x6906c2fe, 0xf762575d, 0x806567cb,
-        0x196c3671, 0x6e6b06e7, 0xfed41b76, 0x89d32be0, 0x10da7a5a, 0x67dd4acc,
-        0xf9b9df6f, 0x8ebeeff9, 0x17b7be43, 0x60b08ed5, 0xd6d6a3e8, 0xa1d1937e,
-        0x38d8c2c4, 0x4fdff252, 0xd1bb67f1, 0xa6bc5767, 0x3fb506dd, 0x48b2364b,
-        0xd80d2bda, 0xaf0a1b4c, 0x36034af6, 0x41047a60, 0xdf60efc3, 0xa867df55,
-        0x316e8eef, 0x4669be79, 0xcb61b38c, 0xbc66831a, 0x256fd2a0, 0x5268e236,
-        0xcc0c7795, 0xbb0b4703, 0x220216b9, 0x5505262f, 0xc5ba3bbe, 0xb2bd0b28,
-        0x2bb45a92, 0x5cb36a04, 0xc2d7ffa7, 0xb5d0cf31, 0x2cd99e8b, 0x5bdeae1d,
-        0x9b64c2b0, 0xec63f226, 0x756aa39c, 0x026d930a, 0x9c0906a9, 0xeb0e363f,
-        0x72076785, 0x05005713, 0x95bf4a82, 0xe2b87a14, 0x7bb12bae, 0x0cb61b38,
-        0x92d28e9b, 0xe5d5be0d, 0x7cdcefb7, 0x0bdbdf21, 0x86d3d2d4, 0xf1d4e242,
-        0x68ddb3f8, 0x1fda836e, 0x81be16cd, 0xf6b9265b, 0x6fb077e1, 0x18b74777,
-        0x88085ae6, 0xff0f6a70, 0x66063bca, 0x11010b5c, 0x8f659eff, 0xf862ae69,
-        0x616bffd3, 0x166ccf45, 0xa00ae278, 0xd70dd2ee, 0x4e048354, 0x3903b3c2,
-        0xa7672661, 0xd06016f7, 0x4969474d, 0x3e6e77db, 0xaed16a4a, 0xd9d65adc,
-        0x40df0b66, 0x37d83bf0, 0xa9bcae53, 0xdebb9ec5, 0x47b2cf7f, 0x30b5ffe9,
-        0xbdbdf21c, 0xcabac28a, 0x53b39330, 0x24b4a3a6, 0xbad03605, 0xcdd70693,
-        0x54de5729, 0x23d967bf, 0xb3667a2e, 0xc4614ab8, 0x5d681b02, 0x2a6f2b94,
-        0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d
-    };
-    int                 i, r;
-    unsigned char       buffer[256];
-    DWORD               crc = ~0;
-
-    lseek(fmap->fd, 0, SEEK_SET);
-    while ((r = read(fmap->fd, buffer, sizeof(buffer))) > 0)
-    {
-        for (i = 0; i < r; i++) crc = UPDC32(buffer[i], crc);
-    }
-    return ~crc;
-#undef UPDC32
 }
 
 static BOOL elf_check_debug_link(const WCHAR* file, struct elf_file_map* fmap, DWORD crc)
 {
     BOOL        ret;
     if (!elf_map_file(file, fmap)) return FALSE;
-    if (!(ret = crc == calc_crc32(fmap)))
+    if (!(ret = crc == calc_crc32(fmap->fd)))
     {
         WARN("Bad CRC for file %s (got %08x while expecting %08x)\n",
-             debugstr_w(file), calc_crc32(fmap), crc);
+             debugstr_w(file), calc_crc32(fmap->fd), crc);
         elf_unmap_file(fmap);
     }
     return ret;
@@ -952,7 +848,7 @@ found:
  * Parses a .gnu_debuglink section and loads the debug info from
  * the external file specified there.
  */
-static BOOL elf_debuglink_parse(struct elf_file_map* fmap, struct module* module,
+static BOOL elf_debuglink_parse(struct elf_file_map* fmap, const struct module* module,
                                 const BYTE* debuglink)
 {
     /* The content of a debug link section is:
@@ -1039,7 +935,8 @@ static BOOL elf_load_debug_info_from_map(struct module* module,
                 /* OK, now just parse all of the stabs. */
                 lret = stabs_parse(module, module->elf_info->elf_addr,
                                    stab, elf_get_map_size(&stab_sect),
-                                   stabstr, elf_get_map_size(&stabstr_sect));
+                                   stabstr, elf_get_map_size(&stabstr_sect),
+                                   NULL, NULL);
                 if (lret)
                     /* and fill in the missing information for stabs */
                     elf_finish_stabs_info(module, ht_symtab);
@@ -1160,7 +1057,7 @@ BOOL elf_fetch_file_info(const WCHAR* name, DWORD* base,
     if (!elf_map_file(name, &fmap)) return FALSE;
     if (base) *base = fmap.elf_start;
     *size = fmap.elf_size;
-    *checksum = calc_crc32(&fmap);
+    *checksum = calc_crc32(fmap.fd);
     elf_unmap_file(&fmap);
     return TRUE;
 }
@@ -1184,7 +1081,7 @@ static BOOL elf_load_file(struct process* pcs, const WCHAR* filename,
 
     TRACE("Processing elf file '%s' at %08lx\n", debugstr_w(filename), load_offset);
 
-    if (!elf_map_file(filename, &fmap)) goto leave;
+    if (!elf_map_file(filename, &fmap)) return ret;
 
     /* Next, we need to find a few of the internal ELF headers within
      * this thing.  We need the main executable header, and the section
@@ -1206,7 +1103,7 @@ static BOOL elf_load_file(struct process* pcs, const WCHAR* filename,
 
         if (elf_find_section(&fmap, ".dynamic", SHT_DYNAMIC, &esm))
         {
-            Elf32_Dyn       dyn;
+            Elf_Dyn         dyn;
             char*           ptr = (char*)fmap.sect[esm.sidx].shdr.sh_addr;
             unsigned long   len;
 
@@ -1234,7 +1131,7 @@ static BOOL elf_load_file(struct process* pcs, const WCHAR* filename,
         if (!elf_module_info) goto leave;
         elf_info->module = module_new(pcs, filename, DMT_ELF, FALSE,
                                       (load_offset) ? load_offset : fmap.elf_start,
-                                      fmap.elf_size, 0, calc_crc32(&fmap));
+                                      fmap.elf_size, 0, calc_crc32(fmap.fd));
         if (!elf_info->module)
         {
             HeapFree(GetProcessHeap(), 0, elf_module_info);
@@ -1389,7 +1286,7 @@ static BOOL elf_search_and_load_file(struct process* pcs, const WCHAR* filename,
  */
 static BOOL elf_enum_modules_internal(const struct process* pcs,
                                       const WCHAR* main_name,
-                                      elf_enum_modules_cb cb, void* user)
+                                      enum_modules_cb cb, void* user)
 {
     struct r_debug      dbg_hdr;
     void*               lm_addr;
@@ -1492,9 +1389,7 @@ static BOOL elf_search_loader(struct process* pcs, struct elf_info* elf_info)
     const char*         ptr;
 
     /* All binaries are loaded with WINELOADER (if run from tree) or by the
-     * main executable (either wine-kthread or wine-pthread)
-     * FIXME: the heuristic used to know whether we need to load wine-pthread
-     * or wine-kthread is not 100% safe
+     * main executable
      */
     if ((ptr = getenv("WINELOADER")))
     {
@@ -1504,8 +1399,7 @@ static BOOL elf_search_loader(struct process* pcs, struct elf_info* elf_info)
     }
     else
     {
-        ret = elf_search_and_load_file(pcs, S_WineKThreadW, 0, elf_info) ||
-            elf_search_and_load_file(pcs, S_WinePThreadW, 0, elf_info);
+        ret = elf_search_and_load_file(pcs, S_WineW, 0, elf_info);
     }
     return ret;
 }
@@ -1533,7 +1427,7 @@ BOOL elf_read_wine_loader_dbg_info(struct process* pcs)
  * This function doesn't require that someone has called SymInitialize
  * on this very process.
  */
-BOOL elf_enum_modules(HANDLE hProc, elf_enum_modules_cb cb, void* user)
+BOOL elf_enum_modules(HANDLE hProc, enum_modules_cb cb, void* user)
 {
     struct process      pcs;
     struct elf_info     elf_info;
@@ -1638,7 +1532,7 @@ BOOL elf_read_wine_loader_dbg_info(struct process* pcs)
     return FALSE;
 }
 
-BOOL elf_enum_modules(HANDLE hProc, elf_enum_modules_cb cb, void* user)
+BOOL elf_enum_modules(HANDLE hProc, enum_modules_cb cb, void* user)
 {
     return FALSE;
 }

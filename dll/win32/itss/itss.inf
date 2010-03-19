@@ -16,7 +16,7 @@ DelReg=Classes.Reg, Misc.Reg
 HKCR,"CLSID\%CLSID_ITStorage%",,,"Microsoft InfoTech IStorage System"
 HKCR,"CLSID\%CLSID_ITStorage%\InProcServer32",,,"itss.dll"
 HKCR,"CLSID\%CLSID_ITStorage%\InProcServer32","ThreadingModel",,"Both"
-HKCR,"CLSID\%CLSID_ITStorage%\NotInsertable",,,""
+HKCR,"CLSID\%CLSID_ITStorage%\NotInsertable",,16
 HKCR,"CLSID\%CLSID_ITStorage%\ProgID",,,"MSITFS1.0"
 HKCR,"CLSID\%CLSID_ITStorage%\VersionIndependentProgID",,,"MSITFS"
 
@@ -28,7 +28,7 @@ HKCR,"MSITFS\CurVer",,,"MSITFS1.0"
 HKCR,"CLSID\%CLSID_MSITStore%",,,"Microsoft InfoTech Protocol for IE 3.0"
 HKCR,"CLSID\%CLSID_MSITStore%\InProcServer32",,,"itss.dll"
 HKCR,"CLSID\%CLSID_MSITStore%\InProcServer32","ThreadingModel",,"Both"
-HKCR,"CLSID\%CLSID_MSITStore%\NotInsertable",,,""
+HKCR,"CLSID\%CLSID_MSITStore%\NotInsertable",,16
 HKCR,"CLSID\%CLSID_MSITStore%\ProgID",,,"MSITFS1.0"
 HKCR,"CLSID\%CLSID_MSITStore%\VersionIndependentProgID",,,"MSITFS"
 
@@ -41,9 +41,9 @@ HKCR,"MSITStore\CurVer",,,"MSITStore1.0"
 HKCR,"CLSID\%CLSID_ITSProtocol%",,,"Microsoft InfoTech Protocol for IE 4.0"
 HKCR,"CLSID\%CLSID_ITSProtocol%\InProcServer32",,,"itss.dll"
 HKCR,"CLSID\%CLSID_ITSProtocol%\InProcServer32","ThreadingModel",,"Both"
-HKCR,"CLSID\%CLSID_ITSProtocol%\NotInsertable",,,""
+HKCR,"CLSID\%CLSID_ITSProtocol%\NotInsertable",,16
 HKCR,"CLSID\%CLSID_ITSProtocol%\ProgID",,,"MSITFS1.0"
-HKCR,"CLSID\%CLSID_ITSProtocol%%\VersionIndependentProgID",,,"MSITFS"
+HKCR,"CLSID\%CLSID_ITSProtocol%\VersionIndependentProgID",,,"MSITFS"
 
 HKCR,"ITSProtocol","Microsoft InfoTech Protocols for IE 4.0"
 HKCR,"ITSProtocol\CLSID",,,"%CLSID_ITSProtocol%"
@@ -54,7 +54,7 @@ HKCR,"ITSProtocol\CurVer",,,"ITSProtocol1.0"
 HKCR,"CLSID\%CLSID_MSFSStore%",,,"Microsoft InfoTech IStorage for Win32 Files"
 HKCR,"CLSID\%CLSID_MSFSStore%\InProcServer32",,,"itss.dll"
 HKCR,"CLSID\%CLSID_MSFSStore%\InProcServer32","ThreadingModel",,"Both"
-HKCR,"CLSID\%CLSID_MSFSStore%\NotInsertable",,,""
+HKCR,"CLSID\%CLSID_MSFSStore%\NotInsertable",,16
 HKCR,"CLSID\%CLSID_MSFSStore%\ProgID",,,"MSITFS1.0"
 HKCR,"CLSID\%CLSID_MSFSStore%\VersionIndependentProgID",,,"MSITFS"
 

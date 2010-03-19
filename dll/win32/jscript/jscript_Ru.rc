@@ -1,0 +1,50 @@
+/*
+ * Copyright 2009 Vladimir Pankratov
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "resource.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_TO_PRIMITIVE        "Ошибка конвертирования объекта в примитивный тип"
+    IDS_INVALID_CALL_ARG    "Неверный вызов процедуры или аргумент"
+    IDS_CREATE_OBJ_ERROR    "Сервер автоматизации не может создать объект"
+    IDS_NO_PROPERTY         "Объект не поддерживает это свойство или метод"
+    IDS_ARG_NOT_OPT         "Отсутствует обязательный аргумент"
+    IDS_SYNTAX_ERROR        "Синтаксическая ошибка"
+    IDS_SEMICOLON           "Ожидается ';'"
+    IDS_LBRACKET            "Ожидается '('"
+    IDS_RBRACKET            "Ожидается ')'"
+    IDS_UNTERMINATED_STR    "Незавершённая строковая константа"
+    IDS_NOT_FUNC            "Ожидается функция"
+    IDS_NOT_DATE            "'[object]' не объект типа 'date'"
+    IDS_NOT_NUM             "Ожидается число"
+    IDS_OBJECT_EXPECTED     "Ожидается объект"
+    IDS_ILLEGAL_ASSIGN      "Неверное присваивание"
+    IDS_UNDEFINED           "'|' не определён"
+    IDS_NOT_BOOL            "Ожидается объект типа 'bool'"
+    IDS_JSCRIPT_EXPECTED    "Ожидается объект типа 'JScript'"
+    IDS_REGEXP_SYNTAX_ERROR "Синтаксическая ошибка в регулярном выражении"
+    IDS_URI_INVALID_CHAR    "URI содержит неверные символы"
+    IDS_INVALID_LENGTH      "Длиной массива должно быть конечное положительное число"
+    IDS_ARRAY_EXPECTED      "Ожидается объект типа 'Array'"
+}

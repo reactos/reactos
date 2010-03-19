@@ -1,5 +1,4 @@
-#ifndef MIXER_H__
-#define MIXER_H__
+#pragma once
 
 typedef enum
 {
@@ -74,6 +73,15 @@ typedef PVOID (*PMIXER_ALLOC_EVENT_DATA)(
 
 typedef VOID (*PMIXER_FREE_EVENT_DATA)(
     IN PVOID EventData);
+
+typedef MIXER_STATUS (*PIN_CREATE_CALLBACK)(
+    IN PVOID Context,
+    IN ULONG DeviceId,
+    IN ULONG PinId,
+    IN HANDLE hFilter,
+    IN PKSPIN_CONNECT PinConnect,
+    IN ACCESS_MASK DesiredAccess,
+    OUT PHANDLE PinHandle);
 
 typedef struct
 {
@@ -172,6 +180,8 @@ MMixerOpenWave(
     IN ULONG DeviceIndex,
     IN ULONG bWaveIn,
     IN LPWAVEFORMATEX WaveFormat,
+    IN PIN_CREATE_CALLBACK CreateCallback,
+    IN PVOID Context,
     OUT PHANDLE PinHandle);
 
 MIXER_STATUS
@@ -180,4 +190,9 @@ MMixerSetWaveStatus(
     IN HANDLE PinHandle,
     IN KSSTATE State);
 
-#endif
+MIXER_STATUS
+MMixerGetWaveDevicePath(
+    IN PMIXER_CONTEXT MixerContext,
+    IN ULONG bWaveIn,
+    IN ULONG DeviceId,
+    OUT LPWSTR * DevicePath);

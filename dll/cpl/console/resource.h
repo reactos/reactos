@@ -1,5 +1,4 @@
-#ifndef RESOURCE_H__
-#define RESOURCE_H__
+#pragma once
 
 #define IDC_CPLICON				40
 #define IDS_CPLNAME				41
@@ -92,5 +91,3 @@
 //string ids
 #define IDS_SCREEN_TEXT					700
 #define IDS_RASTERFONTS					701
-
-#endif

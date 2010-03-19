@@ -301,11 +301,7 @@ static const NodeImplVtbl HTMLTableRowImplVtbl = {
 };
 
 static const tid_t HTMLTableRow_iface_tids[] = {
-    IHTMLDOMNode_tid,
-    IHTMLDOMNode2_tid,
-    IHTMLElement_tid,
-    IHTMLElement2_tid,
-    IHTMLElement3_tid,
+    HTMLELEMENT_TIDS,
     IHTMLTableRow_tid,
     0
 };

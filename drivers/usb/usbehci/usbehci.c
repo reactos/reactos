@@ -94,6 +94,7 @@ VOID NTAPI
 DriverUnload(PDRIVER_OBJECT DriverObject)
 {
     DPRINT1("Unloading Driver\n");
+    /* FIXME: Clean up */
 }
 
 NTSTATUS NTAPI

@@ -1,5 +1,4 @@
-#ifndef __MSGINA_H
-#define __MSGINA_H
+#pragma once
 
 #include <windows.h>
 #include <userenv.h>
@@ -59,7 +58,5 @@ DoLoginTasks(
 	IN PWSTR UserName,
 	IN PWSTR Domain,
 	IN PWSTR Password);
-
-#endif /* __MSGINA_H */
 
 /* EOF */

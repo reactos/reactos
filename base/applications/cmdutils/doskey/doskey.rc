@@ -7,5 +7,6 @@
 #include "doskey.h"
 
 #include "lang/bg-BG.rc"
+#include "lang/de-DE.rc"
 #include "lang/en-US.rc"
 #include "lang/uk-UA.rc"

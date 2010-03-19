@@ -4,8 +4,8 @@
  * FILE:        include/tcp.h
  * PURPOSE:     Transmission Control Protocol definitions
  */
-#ifndef __TCP_H
-#define __TCP_H
+
+#pragma once
 
 typedef VOID
 (*PTCP_COMPLETION_ROUTINE)( PVOID Context, NTSTATUS Status, ULONG Count );
@@ -181,5 +181,3 @@ NTSTATUS TCPShutdown(
   VOID);
 
 BOOLEAN TCPRemoveIRP( PCONNECTION_ENDPOINT Connection, PIRP Irp );
-
-#endif /* __TCP_H */

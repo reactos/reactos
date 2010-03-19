@@ -1,5 +1,4 @@
-#ifndef LANG_SR_SP_H__
-#define LANG_SR_SP_H__
+#pragma once
 
 MUI_LAYOUTS srSPLayouts[] =
 {
@@ -7,5 +6,3 @@ MUI_LAYOUTS srSPLayouts[] =
     { L"0409", L"00000409" },
     { NULL, NULL }
 };
-
-#endif

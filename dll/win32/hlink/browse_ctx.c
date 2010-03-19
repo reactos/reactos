@@ -223,8 +223,19 @@ static HRESULT WINAPI IHlinkBC_QueryHlink( IHlinkBrowseContext* iface,
 static HRESULT WINAPI IHlinkBC_GetHlink( IHlinkBrowseContext* iface,
         ULONG uHLID, IHlink** ppihl)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    HlinkBCImpl  *This = (HlinkBCImpl*)iface;
+
+    TRACE("(%p)->(%x %p)\n", This, uHLID, ppihl);
+
+    if(uHLID != HLID_CURRENT) {
+        FIXME("Only HLID_CURRENT implemented, given: %x\n", uHLID);
+        return E_NOTIMPL;
+    }
+
+    *ppihl = This->CurrentPage;
+    IHlink_AddRef(*ppihl);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI IHlinkBC_SetCurrentHlink( IHlinkBrowseContext* iface,

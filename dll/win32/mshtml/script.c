@@ -758,9 +758,9 @@ static BOOL get_script_guid(nsIDOMHTMLScriptElement *nsscript, GUID *guid)
         ERR("GetType failed: %08x\n", nsres);
     }
 
-    nsAString_Init(&attr_str, languageW);
-
+    nsAString_InitDepend(&attr_str, languageW);
     nsres = nsIDOMHTMLScriptElement_GetAttribute(nsscript, &attr_str, &val_str);
+    nsAString_Finish(&attr_str);
     if(NS_SUCCEEDED(nsres)) {
         const PRUnichar *language;
 
@@ -776,7 +776,6 @@ static BOOL get_script_guid(nsIDOMHTMLScriptElement *nsscript, GUID *guid)
         ERR("GetAttribute(language) failed: %08x\n", nsres);
     }
 
-    nsAString_Finish(&attr_str);
     nsAString_Finish(&val_str);
 
     return ret;

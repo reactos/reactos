@@ -17,9 +17,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-
-#ifndef __MEMORY_H
-#define __MEMORY_H
+#pragma once
 
 typedef enum
 {
@@ -119,4 +117,6 @@ PVOID	MmAllocateHighestMemoryBelowAddress(ULONG MemorySize, PVOID DesiredAddress
 PVOID	MmHeapAlloc(ULONG MemorySize);
 VOID	MmHeapFree(PVOID MemoryPointer);
 
-#endif // defined __MEMORY_H
+#define ExAllocatePool(pool, size) MmHeapAlloc(size)
+#define ExAllocatePoolWithTag(pool, size, tag) MmHeapAlloc(size)
+#define ExFreePool(p) MmHeapFree(p)

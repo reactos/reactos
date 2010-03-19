@@ -15,3 +15,4 @@
 	<library>ole32</library>
 	<library>ntdll</library>
 </module>
+</group>

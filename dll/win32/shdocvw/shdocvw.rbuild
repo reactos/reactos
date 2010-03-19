@@ -45,3 +45,4 @@
 	<dependency>stdole2</dependency>
 	<file>shdocvw_v1.idl</file>
 </module>
+</group>

@@ -167,6 +167,7 @@
 #define RPC_FC_PROC_OIF_OBJECT          0x04
 #define RPC_FC_PROC_OIF_RPCFLAGS        0x08
 #define RPC_FC_PROC_OIF_OBJ_V2          0x20
+#define RPC_FC_PROC_OIF_HAS_COMM_OR_FAULT 0x20
 #define RPC_FC_PROC_OIF_NEWINIT         0x40
 
 #define RPC_FC_PROC_PF_MUSTSIZE         0x0001

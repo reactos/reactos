@@ -153,12 +153,12 @@ ScmCreateManagerHandle(LPWSTR lpDatabaseName,
 
     if (_wcsicmp(lpDatabaseName,SERVICES_FAILED_DATABASEW)==0)
     {
-        DPRINT1("Database %S, does not exist\n",lpDatabaseName);
+        DPRINT("Database %S, does not exist\n",lpDatabaseName);
         return ERROR_DATABASE_DOES_NOT_EXIST;
     }
     else if (_wcsicmp(lpDatabaseName, SERVICES_ACTIVE_DATABASEW) != 0)
     {
-        DPRINT1("Invalid Database name %S.\n",lpDatabaseName);
+        DPRINT("Invalid Database name %S.\n",lpDatabaseName);
         return ERROR_INVALID_NAME;
     }
 
@@ -284,7 +284,7 @@ Int_EnumDependentServicesW(HKEY hServicesKey,
                                NULL);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("ERROR! Unable to get number of services keys.\n");
+        DPRINT("ERROR! Unable to get number of services keys.\n");
         return dwError;
     }
 
@@ -341,7 +341,7 @@ Int_EnumDependentServicesW(HKEY hServicesKey,
                     if (!lpCurrentService)
                     {
                         /* This should never happen! */
-                        DPRINT1("This should not happen at this point, report to Developer\n");
+                        DPRINT("This should not happen at this point, report to Developer\n");
                         return ERROR_NOT_FOUND;
                     }
 
@@ -473,7 +473,7 @@ DWORD RCloseServiceHandle(
                                         &hServicesKey);
                 if (dwError != ERROR_SUCCESS)
                 {
-                    DPRINT1("Failed to open services key\n");
+                    DPRINT("Failed to open services key\n");
                     return dwError;
                 }
 
@@ -488,7 +488,7 @@ DWORD RCloseServiceHandle(
                 /* if pcbBytesNeeded returned a value then there are services running that are dependent on this service*/
                 if (pcbBytesNeeded)
                 {
-                    DPRINT1("Deletion failed due to running dependencies.\n");
+                    DPRINT("Deletion failed due to running dependencies.\n");
                     RegCloseKey(hServicesKey);
                     return ERROR_SUCCESS;
                 }
@@ -504,7 +504,7 @@ DWORD RCloseServiceHandle(
 
                 if (dwError != ERROR_SUCCESS)
                 {
-                    DPRINT1("Failed to Delete the Service Registry key\n");
+                    DPRINT("Failed to Delete the Service Registry key\n");
                     return dwError;
                 }
 
@@ -517,7 +517,7 @@ DWORD RCloseServiceHandle(
         return ERROR_SUCCESS;
     }
 
-    DPRINT1("Invalid handle tag (Tag %lx)\n", hManager->Handle.Tag);
+    DPRINT("Invalid handle tag (Tag %lx)\n", hManager->Handle.Tag);
 
     return ERROR_INVALID_HANDLE;
 }
@@ -546,7 +546,7 @@ DWORD RControlService(
     hSvc = (PSERVICE_HANDLE)hService;
     if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
     {
-        DPRINT1("Invalid handle tag!\n");
+        DPRINT("Invalid handle tag!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -554,7 +554,7 @@ DWORD RControlService(
     lpService = hSvc->ServiceEntry;
     if (lpService == NULL)
     {
-        DPRINT1("lpService == NULL!\n"); 
+        DPRINT("lpService == NULL!\n"); 
         return ERROR_INVALID_HANDLE;
     }
 
@@ -603,7 +603,7 @@ DWORD RControlService(
                                 &hServicesKey);
         if (dwError != ERROR_SUCCESS)
         {
-            DPRINT1("Failed to open services key\n");
+            DPRINT("Failed to open services key\n");
             return dwError;
         }
 
@@ -637,17 +637,25 @@ DWORD RControlService(
     {
         /* Send control code to the service */
         dwError = ScmControlService(lpService,
-                                    dwControl,
-                                    lpServiceStatus);
+                                    dwControl);
+
+        /* Return service status information */
+        RtlCopyMemory(lpServiceStatus,
+                      &lpService->Status,
+                      sizeof(SERVICE_STATUS));
     }
 
     if ((dwError == ERROR_SUCCESS) && (pcbBytesNeeded))
         dwError = ERROR_DEPENDENT_SERVICES_RUNNING;
 
-    /* Return service status information */
-    RtlCopyMemory(lpServiceStatus,
-                  &lpService->Status,
-                  sizeof(SERVICE_STATUS));
+    if (dwError == ERROR_SUCCESS &&
+        dwControl == SERVICE_CONTROL_STOP && 
+        lpServiceStatus->dwCurrentState == SERVICE_STOPPED)
+    {
+        lpService->ProcessId = 0; /* FIXME */
+        lpService->ThreadId = 0;
+    }
+
 
     return dwError;
 }
@@ -677,7 +685,7 @@ DWORD RDeleteService(
     lpService = hSvc->ServiceEntry;
     if (lpService == NULL)
     {
-        DPRINT1("lpService == NULL!\n");
+        DPRINT("lpService == NULL!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -685,7 +693,7 @@ DWORD RDeleteService(
 
     if (lpService->bDeleted)
     {
-        DPRINT1("The service has already been marked for delete!\n");
+        DPRINT("The service has already been marked for delete!\n");
         return ERROR_SERVICE_MARKED_FOR_DELETE;
     }
 
@@ -753,7 +761,7 @@ DWORD RQueryServiceObjectSecurity(
     hSvc = (PSERVICE_HANDLE)hService;
     if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
     {
-        DPRINT1("Invalid handle tag!\n");
+        DPRINT("Invalid handle tag!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -768,14 +776,14 @@ DWORD RQueryServiceObjectSecurity(
     if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
                                   DesiredAccess))
     {
-        DPRINT1("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
+        DPRINT("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
         return ERROR_ACCESS_DENIED;
     }
 
     lpService = hSvc->ServiceEntry;
     if (lpService == NULL)
     {
-        DPRINT1("lpService == NULL!\n");
+        DPRINT("lpService == NULL!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -830,12 +838,12 @@ DWORD RSetServiceObjectSecurity(
     /* NTSTATUS Status; */
     DWORD dwError;
 
-    DPRINT1("RSetServiceObjectSecurity() called\n");
+    DPRINT("RSetServiceObjectSecurity() called\n");
 
     hSvc = (PSERVICE_HANDLE)hService;
     if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
     {
-        DPRINT1("Invalid handle tag!\n");
+        DPRINT("Invalid handle tag!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -867,14 +875,14 @@ DWORD RSetServiceObjectSecurity(
     if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
                                   DesiredAccess))
     {
-        DPRINT1("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
+        DPRINT("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
         return ERROR_ACCESS_DENIED;
     }
 
     lpService = hSvc->ServiceEntry;
     if (lpService == NULL)
     {
-        DPRINT1("lpService == NULL!\n");
+        DPRINT("lpService == NULL!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -952,28 +960,32 @@ DWORD RQueryServiceStatus(
     hSvc = (PSERVICE_HANDLE)hService;
     if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
     {
-        DPRINT1("Invalid handle tag!\n");
+        DPRINT("Invalid handle tag!\n");
         return ERROR_INVALID_HANDLE;
     }
 
     if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
                                   SERVICE_QUERY_STATUS))
     {
-        DPRINT1("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
+        DPRINT("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
         return ERROR_ACCESS_DENIED;
     }
 
     lpService = hSvc->ServiceEntry;
     if (lpService == NULL)
     {
-        DPRINT1("lpService == NULL!\n");
+        DPRINT("lpService == NULL!\n");
         return ERROR_INVALID_HANDLE;
     }
+
+    ScmLockDatabaseShared();
 
     /* Return service status information */
     RtlCopyMemory(lpServiceStatus,
                   &lpService->Status,
                   sizeof(SERVICE_STATUS));
+
+    ScmUnlockDatabase();
 
     return ERROR_SUCCESS;
 }
@@ -1018,21 +1030,21 @@ DWORD RSetServiceStatus(
 
     if (hServiceStatus == 0)
     {
-        DPRINT1("hServiceStatus == NULL!\n");
+        DPRINT("hServiceStatus == NULL!\n");
         return ERROR_INVALID_HANDLE;
     }
 
-    lpService = ScmGetServiceEntryByClientHandle((HANDLE)hServiceStatus);
+    lpService = (PSERVICE)hServiceStatus;
     if (lpService == NULL)
     {
-        DPRINT1("lpService == NULL!\n");
+        DPRINT("lpService == NULL!\n");
         return ERROR_INVALID_HANDLE;
     }
 
     /* Check current state */
     if (!ScmIsValidServiceState(lpServiceStatus->dwCurrentState))
     {
-        DPRINT1("Invalid service state!\n");
+        DPRINT("Invalid service state!\n");
         return ERROR_INVALID_DATA;
     }
 
@@ -1040,21 +1052,24 @@ DWORD RSetServiceStatus(
     if (!(lpServiceStatus->dwServiceType & SERVICE_WIN32) &&
          (lpServiceStatus->dwServiceType & SERVICE_DRIVER))
     {
-        DPRINT1("Invalid service type!\n");
+        DPRINT("Invalid service type!\n");
         return ERROR_INVALID_DATA;
     }
 
     /* Check accepted controls */
     if (lpServiceStatus->dwControlsAccepted & ~0xFF)
     {
-        DPRINT1("Invalid controls accepted!\n");
+        DPRINT("Invalid controls accepted!\n");
         return ERROR_INVALID_DATA;
     }
 
+    ScmLockDatabaseExclusive();
 
     RtlCopyMemory(&lpService->Status,
                   lpServiceStatus,
                   sizeof(SERVICE_STATUS));
+
+    ScmUnlockDatabase();
 
     DPRINT("Set %S to %lu\n", lpService->lpDisplayName, lpService->Status.dwCurrentState);
     DPRINT("RSetServiceStatus() done\n");
@@ -1131,21 +1146,21 @@ DWORD RChangeServiceConfigW(
     hSvc = (PSERVICE_HANDLE)hService;
     if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
     {
-        DPRINT1("Invalid handle tag!\n");
+        DPRINT("Invalid handle tag!\n");
         return ERROR_INVALID_HANDLE;
     }
 
     if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
                                   SERVICE_CHANGE_CONFIG))
     {
-        DPRINT1("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
+        DPRINT("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
         return ERROR_ACCESS_DENIED;
     }
 
     lpService = hSvc->ServiceEntry;
     if (lpService == NULL)
     {
-        DPRINT1("lpService == NULL!\n");
+        DPRINT("lpService == NULL!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -1154,7 +1169,7 @@ DWORD RChangeServiceConfigW(
     if (lpService->bDeleted)
     {
         /* FIXME: Unlock database */
-        DPRINT1("The service has already been marked for delete!\n");
+        DPRINT("The service has already been marked for delete!\n");
         return ERROR_SERVICE_MARKED_FOR_DELETE;
     }
 
@@ -1357,14 +1372,14 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
         *RelativeName = LocalAlloc(LMEM_ZEROINIT, ServiceNameLen * sizeof(WCHAR) + sizeof(WCHAR));
         if (*RelativeName == NULL)
         {
-            DPRINT1("Error allocating memory for boot driver name!\n");
+            DPRINT("Error allocating memory for boot driver name!\n");
             return ERROR_NOT_ENOUGH_MEMORY;
         }
 
         /* Copy it */
         wcscpy(*RelativeName, CanonName);
 
-        DPRINT1("Bootdriver name %S\n", *RelativeName);
+        DPRINT("Bootdriver name %S\n", *RelativeName);
         return ERROR_SUCCESS;
     }
 
@@ -1377,7 +1392,7 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
 
         if (*RelativeName == NULL)
         {
-            DPRINT1("Error allocating memory for boot driver name!\n");
+            DPRINT("Error allocating memory for boot driver name!\n");
             return ERROR_NOT_ENOUGH_MEMORY;
         }
 
@@ -1385,7 +1400,7 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
         wcscpy(*RelativeName, L"\\SystemRoot\\");
         wcscat(*RelativeName, CanonName + 13);
 
-        DPRINT1("Bootdriver name %S\n", *RelativeName);
+        DPRINT("Bootdriver name %S\n", *RelativeName);
         return ERROR_SUCCESS;
     }
 
@@ -1394,7 +1409,7 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
 
     if (BufferSize <= 1)
     {
-        DPRINT1("Error during a call to ExpandEnvironmentStringsW()\n");
+        DPRINT("Error during a call to ExpandEnvironmentStringsW()\n");
         return ERROR_INVALID_ENVIRONMENT;
     }
 
@@ -1402,7 +1417,7 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
     Expanded = LocalAlloc(LMEM_ZEROINIT, BufferSize * sizeof(WCHAR) + sizeof(WCHAR));
     if (!Expanded)
     {
-        DPRINT1("Error allocating memory for boot driver name!\n");
+        DPRINT("Error allocating memory for boot driver name!\n");
         return ERROR_NOT_ENOUGH_MEMORY;
     }
 
@@ -1410,7 +1425,7 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
     if (ExpandEnvironmentStringsW(L"%SystemRoot%\\", Expanded, BufferSize) >
         BufferSize)
     {
-        DPRINT1("Error during a call to ExpandEnvironmentStringsW()\n");
+        DPRINT("Error during a call to ExpandEnvironmentStringsW()\n");
         LocalFree(Expanded);
         return ERROR_NOT_ENOUGH_MEMORY;
     }
@@ -1418,7 +1433,7 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
     /* Convert to NY-style path */
     if (!RtlDosPathNameToNtPathName_U(Expanded, &NtPathName, NULL, NULL))
     {
-        DPRINT1("Error during a call to RtlDosPathNameToNtPathName_U()\n");
+        DPRINT("Error during a call to RtlDosPathNameToNtPathName_U()\n");
         return ERROR_INVALID_ENVIRONMENT;
     }
 
@@ -1431,7 +1446,7 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
     Expanded = LocalAlloc(LMEM_ZEROINIT, NtPathName.Length + sizeof(WCHAR));
     if (!Expanded)
     {
-            DPRINT1("Error allocating memory for boot driver name!\n");
+            DPRINT("Error allocating memory for boot driver name!\n");
             return ERROR_NOT_ENOUGH_MEMORY;
     }
 
@@ -1447,7 +1462,7 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
             (ServiceNameLen - ExpandedLen) * sizeof(WCHAR) + 13*sizeof(WCHAR));
         if (*RelativeName == NULL)
         {
-            DPRINT1("Error allocating memory for boot driver name!\n");
+            DPRINT("Error allocating memory for boot driver name!\n");
             LocalFree(Expanded);
             return ERROR_NOT_ENOUGH_MEMORY;
         }
@@ -1483,7 +1498,7 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
             /* Check if required buffer size is sane */
             if (BufferSize > 0xFFFD)
             {
-                DPRINT1("Too large buffer required\n");
+                DPRINT("Too large buffer required\n");
                 *RelativeName = 0;
 
                 if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
@@ -1495,7 +1510,7 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
             LinkTarget.Buffer = LocalAlloc(LMEM_ZEROINIT, BufferSize + sizeof(WCHAR));
             if (!LinkTarget.Buffer)
             {
-                DPRINT1("Unable to alloc buffer\n");
+                DPRINT("Unable to alloc buffer\n");
                 if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
                 LocalFree(Expanded);
                 return ERROR_NOT_ENOUGH_MEMORY;
@@ -1519,7 +1534,7 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
 
                     if (*RelativeName == NULL)
                     {
-                        DPRINT1("Unable to alloc buffer\n");
+                        DPRINT("Unable to alloc buffer\n");
                         if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
                         LocalFree(Expanded);
                         RtlFreeUnicodeString(&NtPathName);
@@ -1549,7 +1564,7 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
             }
             else
             {
-                DPRINT1("Error, Status = %08X\n", Status);
+                DPRINT("Error, Status = %08X\n", Status);
                 if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
                 LocalFree(Expanded);
                 RtlFreeUnicodeString(&NtPathName);
@@ -1558,7 +1573,7 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
         }
         else
         {
-            DPRINT1("Error, Status = %08X\n", Status);
+            DPRINT("Error, Status = %08X\n", Status);
             if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
             LocalFree(Expanded);
             RtlFreeUnicodeString(&NtPathName);
@@ -1567,7 +1582,7 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
     }
     else
     {
-        DPRINT1("Error, Status = %08X\n", Status);
+        DPRINT("Error, Status = %08X\n", Status);
         LocalFree(Expanded);
         return ERROR_INVALID_PARAMETER;
     }
@@ -1600,7 +1615,7 @@ ScmCanonDriverImagePath(DWORD dwStartType,
 
         if (*lpCanonName == NULL)
         {
-            DPRINT1("Error allocating memory for canonized service name!\n");
+            DPRINT("Error allocating memory for canonized service name!\n");
             return ERROR_NOT_ENOUGH_MEMORY;
         }
 
@@ -1624,7 +1639,7 @@ ScmCanonDriverImagePath(DWORD dwStartType,
 
         if (*lpCanonName == NULL)
         {
-            DPRINT1("Error allocating memory for canonized service name!\n");
+            DPRINT("Error allocating memory for canonized service name!\n");
             return ERROR_NOT_ENOUGH_MEMORY;
         }
 
@@ -1645,7 +1660,7 @@ ScmCanonDriverImagePath(DWORD dwStartType,
 
         if (*lpCanonName == NULL)
         {
-            DPRINT1("Error allocating memory for canonized service name!\n");
+            DPRINT("Error allocating memory for canonized service name!\n");
             return ERROR_NOT_ENOUGH_MEMORY;
         }
 
@@ -1658,7 +1673,7 @@ ScmCanonDriverImagePath(DWORD dwStartType,
     /* It seems to be a DOS path, convert it */
     if (!RtlDosPathNameToNtPathName_U(lpServiceName, &NtServiceName, NULL, NULL))
     {
-        DPRINT1("RtlDosPathNameToNtPathName_U() failed!\n");
+        DPRINT("RtlDosPathNameToNtPathName_U() failed!\n");
         return ERROR_INVALID_PARAMETER;
     }
 
@@ -1666,7 +1681,7 @@ ScmCanonDriverImagePath(DWORD dwStartType,
 
     if (*lpCanonName == NULL)
     {
-        DPRINT1("Error allocating memory for canonized service name!\n");
+        DPRINT("Error allocating memory for canonized service name!\n");
         RtlFreeUnicodeString(&NtServiceName);
         return ERROR_NOT_ENOUGH_MEMORY;
     }
@@ -1689,7 +1704,7 @@ ScmCanonDriverImagePath(DWORD dwStartType,
     {
         /* There is a problem, free name and return */
         LocalFree(*lpCanonName);
-        DPRINT1("Error converting named!\n");
+        DPRINT("Error converting named!\n");
         return Result;
     }
 
@@ -1751,7 +1766,7 @@ DWORD RCreateServiceW(
     hManager = (PMANAGER_HANDLE)hSCManager;
     if (!hManager || hManager->Handle.Tag != MANAGER_TAG)
     {
-        DPRINT1("Invalid manager handle!\n");
+        DPRINT("Invalid manager handle!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -1759,8 +1774,8 @@ DWORD RCreateServiceW(
     if (!RtlAreAllAccessesGranted(hManager->Handle.DesiredAccess,
                                   SC_MANAGER_CREATE_SERVICE))
     {
-        DPRINT1("Insufficient access rights! 0x%lx\n",
-                hManager->Handle.DesiredAccess);
+        DPRINT("Insufficient access rights! 0x%lx\n",
+               hManager->Handle.DesiredAccess);
         return ERROR_ACCESS_DENIED;
     }
 
@@ -2078,8 +2093,8 @@ DWORD REnumDependentServicesW(
     if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
                                   SC_MANAGER_ENUMERATE_SERVICE))
     {
-        DPRINT1("Insufficient access rights! 0x%lx\n",
-                hSvc->Handle.DesiredAccess);
+        DPRINT("Insufficient access rights! 0x%lx\n",
+               hSvc->Handle.DesiredAccess);
         return ERROR_ACCESS_DENIED;
     }
 
@@ -2115,7 +2130,7 @@ DWORD REnumDependentServicesW(
                                 (dwServicesReturned + 1) * sizeof(PSERVICE));
     if (!lpServicesArray)
     {
-        DPRINT1("Could not allocate a buffer!!\n");
+        DPRINT("Could not allocate a buffer!!\n");
         dwError = ERROR_NOT_ENOUGH_MEMORY;
         goto Done;
     }
@@ -2206,7 +2221,7 @@ DWORD REnumServicesStatusW(
     hManager = (PMANAGER_HANDLE)hSCManager;
     if (!hManager || hManager->Handle.Tag != MANAGER_TAG)
     {
-        DPRINT1("Invalid manager handle!\n");
+        DPRINT("Invalid manager handle!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -2229,7 +2244,7 @@ DWORD REnumServicesStatusW(
     if (!RtlAreAllAccessesGranted(hManager->Handle.DesiredAccess,
                                   SC_MANAGER_ENUMERATE_SERVICE))
     {
-        DPRINT1("Insufficient access rights! 0x%lx\n",
+        DPRINT("Insufficient access rights! 0x%lx\n",
                 hManager->Handle.DesiredAccess);
         return ERROR_ACCESS_DENIED;
     }
@@ -2410,7 +2425,7 @@ DWORD ROpenSCManagerW(
                                      &hHandle);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("ScmCreateManagerHandle() failed (Error %lu)\n", dwError);
+        DPRINT("ScmCreateManagerHandle() failed (Error %lu)\n", dwError);
         return dwError;
     }
 
@@ -2419,7 +2434,7 @@ DWORD ROpenSCManagerW(
                              dwDesiredAccess | SC_MANAGER_CONNECT);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("ScmCheckAccess() failed (Error %lu)\n", dwError);
+        DPRINT("ScmCheckAccess() failed (Error %lu)\n", dwError);
         HeapFree(GetProcessHeap(), 0, hHandle);
         return dwError;
     }
@@ -2457,7 +2472,7 @@ DWORD ROpenServiceW(
     hManager = (PMANAGER_HANDLE)hSCManager;
     if (!hManager || hManager->Handle.Tag != MANAGER_TAG)
     {
-        DPRINT1("Invalid manager handle!\n");
+        DPRINT("Invalid manager handle!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -2482,7 +2497,7 @@ DWORD ROpenServiceW(
                                      &hHandle);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("ScmCreateServiceHandle() failed (Error %lu)\n", dwError);
+        DPRINT("ScmCreateServiceHandle() failed (Error %lu)\n", dwError);
         return dwError;
     }
 
@@ -2491,7 +2506,7 @@ DWORD ROpenServiceW(
                              dwDesiredAccess);
     if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("ScmCheckAccess() failed (Error %lu)\n", dwError);
+        DPRINT("ScmCheckAccess() failed (Error %lu)\n", dwError);
         HeapFree(GetProcessHeap(), 0, hHandle);
         return dwError;
     }
@@ -2537,21 +2552,21 @@ DWORD RQueryServiceConfigW(
     hSvc = (PSERVICE_HANDLE)hService;
     if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
     {
-        DPRINT1("Invalid handle tag!\n");
+        DPRINT("Invalid handle tag!\n");
         return ERROR_INVALID_HANDLE;
     }
 
     if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
                                   SERVICE_QUERY_CONFIG))
     {
-        DPRINT1("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
+        DPRINT("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
         return ERROR_ACCESS_DENIED;
     }
 
     lpService = hSvc->ServiceEntry;
     if (lpService == NULL)
     {
-        DPRINT1("lpService == NULL!\n");
+        DPRINT("lpService == NULL!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -2745,21 +2760,21 @@ DWORD RStartServiceW(
     hSvc = (PSERVICE_HANDLE)hService;
     if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
     {
-        DPRINT1("Invalid handle tag!\n");
+        DPRINT("Invalid handle tag!\n");
         return ERROR_INVALID_HANDLE;
     }
 
     if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
                                   SERVICE_START))
     {
-        DPRINT1("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
+        DPRINT("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
         return ERROR_ACCESS_DENIED;
     }
 
     lpService = hSvc->ServiceEntry;
     if (lpService == NULL)
     {
-        DPRINT1("lpService == NULL!\n");
+        DPRINT("lpService == NULL!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -2802,7 +2817,7 @@ DWORD RGetServiceDisplayNameW(
 //    hManager = (PMANAGER_HANDLE)hSCManager;
 //    if (hManager->Handle.Tag != MANAGER_TAG)
 //    {
-//        DPRINT1("Invalid manager handle!\n");
+//        DPRINT("Invalid manager handle!\n");
 //        return ERROR_INVALID_HANDLE;
 //    }
 
@@ -2810,7 +2825,7 @@ DWORD RGetServiceDisplayNameW(
     lpService = ScmGetServiceEntryByName(lpServiceName);
     if (lpService == NULL)
     {
-        DPRINT1("Could not find a service!\n");
+        DPRINT("Could not find a service!\n");
 
         /* If the service could not be found and lpcchBuffer is less than 2, windows
            puts null in lpDisplayName and puts 2 in lpcchBuffer */
@@ -2876,7 +2891,7 @@ DWORD RGetServiceKeyNameW(
 //    hManager = (PMANAGER_HANDLE)hSCManager;
 //    if (hManager->Handle.Tag != MANAGER_TAG)
 //    {
-//        DPRINT1("Invalid manager handle!\n");
+//        DPRINT("Invalid manager handle!\n");
 //        return ERROR_INVALID_HANDLE;
 //    }
 
@@ -2884,7 +2899,7 @@ DWORD RGetServiceKeyNameW(
     lpService = ScmGetServiceEntryByDisplayName(lpDisplayName);
     if (lpService == NULL)
     {
-        DPRINT1("Could not find a service!\n");
+        DPRINT("Could not find a service!\n");
 
         /* If the service could not be found and lpcchBuffer is less than 2, windows
            puts null in lpDisplayName and puts 2 in lpcchBuffer */
@@ -2971,21 +2986,21 @@ DWORD RChangeServiceConfigA(
     hSvc = (PSERVICE_HANDLE)hService;
     if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
     {
-        DPRINT1("Invalid handle tag!\n");
+        DPRINT("Invalid handle tag!\n");
         return ERROR_INVALID_HANDLE;
     }
 
     if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
                                   SERVICE_CHANGE_CONFIG))
     {
-        DPRINT1("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
+        DPRINT("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
         return ERROR_ACCESS_DENIED;
     }
 
     lpService = hSvc->ServiceEntry;
     if (lpService == NULL)
     {
-        DPRINT1("lpService == NULL!\n");
+        DPRINT("lpService == NULL!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -2994,7 +3009,7 @@ DWORD RChangeServiceConfigA(
     if (lpService->bDeleted)
     {
         /* FIXME: Unlock database */
-        DPRINT1("The service has already been marked for delete!\n");
+        DPRINT("The service has already been marked for delete!\n");
         return ERROR_SERVICE_MARKED_FOR_DELETE;
     }
 
@@ -3241,8 +3256,135 @@ DWORD RCreateServiceA(
     DWORD dwPwSize,
     LPSC_RPC_HANDLE lpServiceHandle)
 {
-    UNIMPLEMENTED;
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    DWORD dwError = ERROR_SUCCESS;
+    LPWSTR lpServiceNameW = NULL;
+    LPWSTR lpDisplayNameW = NULL;
+    LPWSTR lpBinaryPathNameW = NULL;
+    LPWSTR lpLoadOrderGroupW = NULL;
+    LPWSTR lpDependenciesW = NULL;
+    LPWSTR lpServiceStartNameW = NULL;
+    DWORD dwDependenciesLength = 0;
+    DWORD dwLength;
+    int len;
+    LPSTR lpStr;
+
+    if (lpServiceName)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, lpServiceName, -1, NULL, 0);
+        lpServiceNameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (!lpServiceNameW)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        MultiByteToWideChar(CP_ACP, 0, lpServiceName, -1, lpServiceNameW, len);
+    }
+
+    if (lpDisplayName)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, lpDisplayName, -1, NULL, 0);
+        lpDisplayNameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (!lpDisplayNameW)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        MultiByteToWideChar(CP_ACP, 0, lpDisplayName, -1, lpDisplayNameW, len);
+    }
+
+    if (lpBinaryPathName)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, lpBinaryPathName, -1, NULL, 0);
+        lpBinaryPathNameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (!lpBinaryPathNameW)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        MultiByteToWideChar(CP_ACP, 0, lpBinaryPathName, -1, lpBinaryPathNameW, len);
+    }
+
+    if (lpLoadOrderGroup)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, lpLoadOrderGroup, -1, NULL, 0);
+        lpLoadOrderGroupW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (!lpLoadOrderGroupW)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        MultiByteToWideChar(CP_ACP, 0, lpLoadOrderGroup, -1, lpLoadOrderGroupW, len);
+    }
+
+    if (lpDependencies)
+    {
+        lpStr = (LPSTR)lpDependencies;
+        while (*lpStr)
+        {
+            dwLength = strlen(lpStr) + 1;
+            dwDependenciesLength += dwLength;
+            lpStr = lpStr + dwLength;
+        }
+        dwDependenciesLength++;
+
+        lpDependenciesW = HeapAlloc(GetProcessHeap(), 0, dwDependenciesLength * sizeof(WCHAR));
+        if (!lpDependenciesW)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        MultiByteToWideChar(CP_ACP, 0, (LPSTR)lpDependencies, dwDependenciesLength, lpDependenciesW, dwDependenciesLength);
+    }
+
+    if (lpServiceStartName)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, lpServiceStartName, -1, NULL, 0);
+        lpServiceStartNameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (!lpServiceStartNameW)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        MultiByteToWideChar(CP_ACP, 0, lpServiceStartName, -1, lpServiceStartNameW, len);
+    }
+
+    dwError = RCreateServiceW(hSCManager,
+                              lpServiceNameW,
+                              lpDisplayNameW,
+                              dwDesiredAccess,
+                              dwServiceType,
+                              dwStartType,
+                              dwErrorControl,
+                              lpBinaryPathNameW,
+                              lpLoadOrderGroupW,
+                              lpdwTagId,
+                              (LPBYTE)lpDependenciesW,
+                              dwDependenciesLength,
+                              lpServiceStartNameW,
+                              lpPassword,
+                              dwPwSize,
+                              lpServiceHandle);
+
+cleanup:
+    if (lpServiceNameW !=NULL)
+        HeapFree(GetProcessHeap(), 0, lpServiceNameW);
+
+    if (lpDisplayNameW != NULL)
+        HeapFree(GetProcessHeap(), 0, lpDisplayNameW);
+
+    if (lpBinaryPathNameW != NULL)
+        HeapFree(GetProcessHeap(), 0, lpBinaryPathNameW);
+
+    if (lpLoadOrderGroupW != NULL)
+        HeapFree(GetProcessHeap(), 0, lpLoadOrderGroupW);
+
+    if (lpDependenciesW != NULL)
+        HeapFree(GetProcessHeap(), 0, lpDependenciesW);
+
+    if (lpServiceStartNameW != NULL)
+        HeapFree(GetProcessHeap(), 0, lpServiceStartNameW);
+
+    return dwError;
 }
 
 
@@ -3279,8 +3421,8 @@ DWORD REnumDependentServicesA(
     if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
                                   SC_MANAGER_ENUMERATE_SERVICE))
     {
-        DPRINT1("Insufficient access rights! 0x%lx\n",
-                hSvc->Handle.DesiredAccess);
+        DPRINT("Insufficient access rights! 0x%lx\n",
+               hSvc->Handle.DesiredAccess);
         return ERROR_ACCESS_DENIED;
     }
 
@@ -3321,7 +3463,7 @@ DWORD REnumDependentServicesA(
                                 (dwServicesReturned + 1) * sizeof(PSERVICE));
     if (!lpServicesArray)
     {
-        DPRINT1("Could not allocate a buffer!!\n");
+        DPRINT("Could not allocate a buffer!!\n");
         dwError = ERROR_NOT_ENOUGH_MEMORY;
         goto Done;
     }
@@ -3419,7 +3561,7 @@ DWORD REnumServicesStatusA(
         lpStatusPtrW = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwBufSize);
         if (!lpStatusPtrW)
         {
-            DPRINT1("Failed to allocate buffer!\n");
+            DPRINT("Failed to allocate buffer!\n");
             return ERROR_NOT_ENOUGH_MEMORY;
         }
     }
@@ -3584,21 +3726,21 @@ DWORD RQueryServiceConfigA(
     hSvc = (PSERVICE_HANDLE)hService;
     if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
     {
-        DPRINT1("Invalid handle tag!\n");
+        DPRINT("Invalid handle tag!\n");
         return ERROR_INVALID_HANDLE;
     }
 
     if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
                                   SERVICE_QUERY_CONFIG))
     {
-        DPRINT1("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
+        DPRINT("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
         return ERROR_ACCESS_DENIED;
     }
 
     lpService = hSvc->ServiceEntry;
     if (lpService == NULL)
     {
-        DPRINT1("lpService == NULL!\n");
+        DPRINT("lpService == NULL!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -3817,7 +3959,7 @@ DWORD RStartServiceA(
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService = NULL;
 
-    DPRINT1("RStartServiceA() called\n");
+    DPRINT("RStartServiceA() called\n");
 
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
@@ -3825,21 +3967,21 @@ DWORD RStartServiceA(
     hSvc = (PSERVICE_HANDLE)hService;
     if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
     {
-        DPRINT1("Invalid handle tag!\n");
+        DPRINT("Invalid handle tag!\n");
         return ERROR_INVALID_HANDLE;
     }
 
     if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
                                   SERVICE_START))
     {
-        DPRINT1("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
+        DPRINT("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
         return ERROR_ACCESS_DENIED;
     }
 
     lpService = hSvc->ServiceEntry;
     if (lpService == NULL)
     {
-        DPRINT1("lpService == NULL!\n");
+        DPRINT("lpService == NULL!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -3882,7 +4024,7 @@ DWORD RGetServiceDisplayNameA(
 //    hManager = (PMANAGER_HANDLE)hSCManager;
 //    if (hManager->Handle.Tag != MANAGER_TAG)
 //    {
-//        DPRINT1("Invalid manager handle!\n");
+//        DPRINT("Invalid manager handle!\n");
 //        return ERROR_INVALID_HANDLE;
 //    }
 
@@ -3909,7 +4051,7 @@ DWORD RGetServiceDisplayNameA(
 
     if (lpService == NULL)
     {
-        DPRINT1("Could not find a service!\n");
+        DPRINT("Could not find a service!\n");
 
         /* If the service could not be found and lpcchBuffer is 0, windows
            puts null in lpDisplayName and puts 1 in lpcchBuffer */
@@ -4005,7 +4147,7 @@ DWORD RGetServiceKeyNameA(
 
     if (lpService == NULL)
     {
-        DPRINT1("Could not find the service!\n");
+        DPRINT("Could not find the service!\n");
 
         /* If the service could not be found and lpcchBuffer is 0,
            put null in lpDisplayName and puts 1 in lpcchBuffer, verified WINXP. */
@@ -4206,21 +4348,21 @@ DWORD RChangeServiceConfig2W(
     hSvc = (PSERVICE_HANDLE)hService;
     if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
     {
-        DPRINT1("Invalid handle tag!\n");
+        DPRINT("Invalid handle tag!\n");
         return ERROR_INVALID_HANDLE;
     }
 
     if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
                                   SERVICE_CHANGE_CONFIG))
     {
-        DPRINT1("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
+        DPRINT("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
         return ERROR_ACCESS_DENIED;
     }
 
     lpService = hSvc->ServiceEntry;
     if (lpService == NULL)
     {
-        DPRINT1("lpService == NULL!\n");
+        DPRINT("lpService == NULL!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -4229,7 +4371,7 @@ DWORD RChangeServiceConfig2W(
     if (lpService->bDeleted)
     {
         /* FIXME: Unlock database */
-        DPRINT1("The service has already been marked for delete!\n");
+        DPRINT("The service has already been marked for delete!\n");
         return ERROR_SERVICE_MARKED_FOR_DELETE;
     }
 
@@ -4250,7 +4392,7 @@ DWORD RChangeServiceConfig2W(
         if (lpServiceDescription != NULL &&
             lpServiceDescription->lpDescription != NULL)
         {
-            DPRINT1("Setting value %S\n", lpServiceDescription->lpDescription);
+            DPRINT("Setting value %S\n", lpServiceDescription->lpDescription);
             RegSetValueExW(hServiceKey,
                            L"Description",
                            0,
@@ -4295,8 +4437,8 @@ DWORD RQueryServiceConfig2A(
     LPWSTR lpDescriptionW = NULL;
     LPSTR lpDescription = NULL;
 
-    DPRINT1("RQueryServiceConfig2A() called hService %p dwInfoLevel %u, lpBuffer %p cbBufSize %u pcbBytesNeeded %p\n",
-            hService, dwInfoLevel, lpBuffer, cbBufSize, pcbBytesNeeded);
+    DPRINT("RQueryServiceConfig2A() called hService %p dwInfoLevel %u, lpBuffer %p cbBufSize %u pcbBytesNeeded %p\n",
+           hService, dwInfoLevel, lpBuffer, cbBufSize, pcbBytesNeeded);
 
     if (!lpBuffer)
         return ERROR_INVALID_ADDRESS;
@@ -4307,21 +4449,21 @@ DWORD RQueryServiceConfig2A(
     hSvc = (PSERVICE_HANDLE)hService;
     if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
     {
-        DPRINT1("Invalid handle tag!\n");
+        DPRINT("Invalid handle tag!\n");
         return ERROR_INVALID_HANDLE;
     }
 
     if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
                                   SERVICE_QUERY_CONFIG))
     {
-        DPRINT1("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
+        DPRINT("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
         return ERROR_ACCESS_DENIED;
     }
 
     lpService = hSvc->ServiceEntry;
     if (lpService == NULL)
     {
-        DPRINT1("lpService == NULL!\n");
+        DPRINT("lpService == NULL!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -4427,21 +4569,21 @@ DWORD RQueryServiceConfig2W(
     hSvc = (PSERVICE_HANDLE)hService;
     if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
     {
-        DPRINT1("Invalid handle tag!\n");
+        DPRINT("Invalid handle tag!\n");
         return ERROR_INVALID_HANDLE;
     }
 
     if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
                                   SERVICE_QUERY_CONFIG))
     {
-        DPRINT1("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
+        DPRINT("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
         return ERROR_ACCESS_DENIED;
     }
 
     lpService = hSvc->ServiceEntry;
     if (lpService == NULL)
     {
-        DPRINT1("lpService == NULL!\n");
+        DPRINT("lpService == NULL!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -4580,21 +4722,21 @@ DWORD RQueryServiceStatusEx(
     hSvc = (PSERVICE_HANDLE)hService;
     if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
     {
-        DPRINT1("Invalid handle tag!\n");
+        DPRINT("Invalid handle tag!\n");
         return ERROR_INVALID_HANDLE;
     }
 
     if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
                                   SERVICE_QUERY_STATUS))
     {
-        DPRINT1("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
+        DPRINT("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
         return ERROR_ACCESS_DENIED;
     }
 
     lpService = hSvc->ServiceEntry;
     if (lpService == NULL)
     {
-        DPRINT1("lpService == NULL!\n");
+        DPRINT("lpService == NULL!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -4640,7 +4782,7 @@ DWORD REnumServicesStatusExA(
         pszGroupNameW = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (strlen(pszGroupName) + 1) * sizeof(WCHAR));
         if (!pszGroupNameW)
         {
-             DPRINT1("Failed to allocate buffer!\n");
+             DPRINT("Failed to allocate buffer!\n");
              return ERROR_NOT_ENOUGH_MEMORY;
         }
 
@@ -4657,7 +4799,7 @@ DWORD REnumServicesStatusExA(
         lpStatusPtrW = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, cbBufSize);
         if (!lpStatusPtrW)
         {
-            DPRINT1("Failed to allocate buffer!\n");
+            DPRINT("Failed to allocate buffer!\n");
             return ERROR_NOT_ENOUGH_MEMORY;
         }
     }
@@ -4773,7 +4915,7 @@ DWORD REnumServicesStatusExW(
     hManager = (PMANAGER_HANDLE)hSCManager;
     if (!hManager || hManager->Handle.Tag != MANAGER_TAG)
     {
-        DPRINT1("Invalid manager handle!\n");
+        DPRINT("Invalid manager handle!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -4782,13 +4924,13 @@ DWORD REnumServicesStatusExW(
 
     if ((dwServiceType!=SERVICE_DRIVER) && (dwServiceType!=SERVICE_WIN32))
     {
-        DPRINT1("Not a valid Service Type!\n");
+        DPRINT("Not a valid Service Type!\n");
         return ERROR_INVALID_PARAMETER;
     }
 
     if ((dwServiceState<SERVICE_ACTIVE) || (dwServiceState>SERVICE_STATE_ALL))
     {
-        DPRINT1("Not a valid Service State!\n");
+        DPRINT("Not a valid Service State!\n");
         return ERROR_INVALID_PARAMETER;
     }
 
@@ -4796,8 +4938,8 @@ DWORD REnumServicesStatusExW(
     if (!RtlAreAllAccessesGranted(hManager->Handle.DesiredAccess,
                                   SC_MANAGER_ENUMERATE_SERVICE))
     {
-        DPRINT1("Insufficient access rights! 0x%lx\n",
-                hManager->Handle.DesiredAccess);
+        DPRINT("Insufficient access rights! 0x%lx\n",
+               hManager->Handle.DesiredAccess);
         return ERROR_ACCESS_DENIED;
     }
 

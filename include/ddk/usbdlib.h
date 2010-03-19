@@ -1,12 +1,9 @@
-#ifndef   USBDLIB_H__
-#define   USBDLIB_H__
+#pragma once
 
-
-typedef struct _USBD_INTERFACE_LIST_ENTRY
-{
-    PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
-    PUSBD_INTERFACE_INFORMATION Interface;
-}USBD_INTERFACE_LIST_ENTRY, *PUSBD_INTERFACE_LIST_ENTRY;
+typedef struct _USBD_INTERFACE_LIST_ENTRY {
+  PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
+  PUSBD_INTERFACE_INFORMATION Interface;
+} USBD_INTERFACE_LIST_ENTRY, *PUSBD_INTERFACE_LIST_ENTRY;
 
 #define UsbBuildInterruptOrBulkTransferRequest(urb,length, pipeHandle, transferBuffer, transferBufferMDL, transferBufferLength, transferFlags, link) \
 {                                                                                                                                                    \
@@ -43,7 +40,6 @@ typedef struct _USBD_INTERFACE_LIST_ENTRY
             (urb)->UrbControlGetStatusRequest.Index = (index);                                 \
             (urb)->UrbControlGetStatusRequest.UrbLink = (link);                                \
 }
-
 
 #define UsbBuildFeatureRequest(urb, op, featureSelector, index, link)              \
 {                                                                                  \
@@ -120,102 +116,87 @@ typedef struct _USBD_INTERFACE_LIST_ENTRY
 #define  GET_ISO_URB_SIZE(n) (sizeof(struct _URB_ISOCH_TRANSFER)+                   \
         sizeof(USBD_ISO_PACKET_DESCRIPTOR)*n)
 
-
 #ifndef _USBD_
 
 DECLSPEC_IMPORT
 VOID
 NTAPI
 USBD_GetUSBDIVersion(
-    OUT PUSBD_VERSION_INFORMATION VersionInformation
-);
-
+  OUT PUSBD_VERSION_INFORMATION VersionInformation);
 
 DECLSPEC_IMPORT
 PUSB_INTERFACE_DESCRIPTOR
 NTAPI
 USBD_ParseConfigurationDescriptor(
-    IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
-    IN UCHAR InterfaceNumber,
-    IN UCHAR AlternateSetting
-);
+  IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
+  IN UCHAR InterfaceNumber,
+  IN UCHAR AlternateSetting);
 
 DECLSPEC_IMPORT
 PURB
 NTAPI
 USBD_CreateConfigurationRequest(
-    IN  PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
-    OUT PUSHORT Siz
-);
+  IN  PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
+  OUT PUSHORT Siz);
 
 DECLSPEC_IMPORT
 PUSB_COMMON_DESCRIPTOR
 NTAPI
 USBD_ParseDescriptors(
-    IN PVOID DescriptorBuffer,
-    IN ULONG TotalLength,
-    IN PVOID StartPosition,
-    IN LONG DescriptorType
-);
+  IN PVOID DescriptorBuffer,
+  IN ULONG TotalLength,
+  IN PVOID StartPosition,
+  IN LONG DescriptorType);
 
 DECLSPEC_IMPORT
 PUSB_INTERFACE_DESCRIPTOR
 NTAPI
 USBD_ParseConfigurationDescriptorEx(
-    IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
-    IN PVOID StartPosition,
-    IN LONG InterfaceNumber,
-    IN LONG AlternateSetting,
-    IN LONG InterfaceClass,
-    IN LONG InterfaceSubClass,
-    IN LONG InterfaceProtocol
-);
+  IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
+  IN PVOID StartPosition,
+  IN LONG InterfaceNumber,
+  IN LONG AlternateSetting,
+  IN LONG InterfaceClass,
+  IN LONG InterfaceSubClass,
+  IN LONG InterfaceProtocol);
 
 DECLSPEC_IMPORT
 PURB
 NTAPI
 USBD_CreateConfigurationRequestEx(
-    IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
-    IN PUSBD_INTERFACE_LIST_ENTRY InterfaceList
-);
+  IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
+  IN PUSBD_INTERFACE_LIST_ENTRY InterfaceList);
 
-
-DECLSPEC_IMPORT
+DECLSPEC_EXPORT
 ULONG
 NTAPI
 USBD_GetInterfaceLength(
-    IN PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor,
-    IN PUCHAR BufferEnd
-);
+  IN PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor,
+  IN PUCHAR BufferEnd);
 
-DECLSPEC_IMPORT
+DECLSPEC_EXPORT
 VOID
 NTAPI
 USBD_RegisterHcFilter(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PDEVICE_OBJECT FilterDeviceObject
-);
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PDEVICE_OBJECT FilterDeviceObject);
 
-
-
-DECLSPEC_IMPORT
+DECLSPEC_EXPORT
 NTSTATUS
 NTAPI
 USBD_GetPdoRegistryParameter(
-    IN PDEVICE_OBJECT PhysicalDeviceObject,
-    IN PVOID Parameter,
-    IN ULONG ParameterLength,
-    IN PWSTR KeyName,
-    IN ULONG KeyNameLength
-);
+  IN PDEVICE_OBJECT PhysicalDeviceObject,
+  IN OUT PVOID Parameter,
+  IN ULONG ParameterLength,
+  IN PWSTR KeyName,
+  IN ULONG KeyNameLength);
 
-DECLSPEC_IMPORT
+DECLSPEC_EXPORT
 NTSTATUS
 NTAPI
 USBD_QueryBusTime(
-    IN PDEVICE_OBJECT RootHubPdo,
-    OUT PULONG CurrentFrame
-);
+  IN PDEVICE_OBJECT RootHubPdo,
+  OUT PULONG CurrentFrame);
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 
@@ -223,10 +204,9 @@ DECLSPEC_IMPORT
 ULONG
 NTAPI
 USBD_CalculateUsbBandwidth(
-    IN ULONG MaxPacketSize,
-    IN UCHAR EndpointType,
-    IN BOOLEAN LowSpeed
-);
+  IN ULONG MaxPacketSize,
+  IN UCHAR EndpointType,
+  IN BOOLEAN LowSpeed);
 
 #endif
 
@@ -236,15 +216,11 @@ DECLSPEC_IMPORT
 USBD_STATUS
 NTAPI
 USBD_ValidateConfigurationDescriptor(
-    IN PUSB_CONFIGURATION_DESCRIPTOR ConfigDesc,
-    IN ULONG BufferLength,
-    IN USHORT Level,
-    OUT PUCHAR *Offset,
-    IN ULONG Tag
-);
-
-
-#endif
+  IN PUSB_CONFIGURATION_DESCRIPTOR ConfigDesc,
+  IN ULONG BufferLength,
+  IN USHORT Level,
+  OUT PUCHAR *Offset,
+  IN ULONG Tag OPTIONAL);
 
 #endif
 

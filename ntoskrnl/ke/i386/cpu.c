@@ -27,7 +27,7 @@ ULONG KeProcessorArchitecture;
 ULONG KeProcessorLevel;
 ULONG KeProcessorRevision;
 ULONG KeFeatureBits;
-ULONG KiFastSystemCallDisable = 1;
+ULONG KiFastSystemCallDisable;
 ULONG KeI386NpxPresent = 0;
 ULONG KiMXCsrMask = 0;
 ULONG MxcsrFeatureMask = 0;
@@ -40,10 +40,20 @@ ULONG KeLargestCacheLine = 0x40;
 ULONG KeDcacheFlushCount = 0;
 ULONG KeIcacheFlushCount = 0;
 ULONG KiDmaIoCoherency = 0;
+ULONG KePrefetchNTAGranularity = 32;
 CHAR KeNumberProcessors;
 KAFFINITY KeActiveProcessors = 1;
 BOOLEAN KiI386PentiumLockErrataPresent;
 BOOLEAN KiSMTProcessorsPresent;
+
+/* The distance between SYSEXIT and IRETD return modes */
+UCHAR KiSystemCallExitAdjust;
+
+/* The offset that was applied -- either 0 or the value above */
+UCHAR KiSystemCallExitAdjusted;
+
+/* Whether the adjustment was already done once */
+BOOLEAN KiFastCallCopyDoneOnce;
 
 /* Flush data */
 volatile LONG KiTbFlushTimeStamp;
@@ -444,6 +454,7 @@ KiGetCacheInformation(VOID)
     ULONG CacheRequests = 0, i;
     ULONG CurrentRegister;
     UCHAR RegisterByte;
+    ULONG Size, Associativity = 0, CacheLine = 64, CurrentSize = 0;
     BOOLEAN FirstPass = TRUE;
 
     /* Set default L2 size */
@@ -508,17 +519,144 @@ KiGetCacheInformation(VOID)
                              * (32MB), or from 0x80 to 0x89 (same size but
                              * 8-way associative.
                              */
-                            if (((RegisterByte > 0x40) &&
-                                 (RegisterByte <= 0x49)) ||
-                                ((RegisterByte > 0x80) &&
-                                (RegisterByte <= 0x89)))
+                            if (((RegisterByte > 0x40) && (RegisterByte <= 0x47)) ||
+                                ((RegisterByte > 0x78) && (RegisterByte <= 0x7C)) ||
+                                ((RegisterByte > 0x80) && (RegisterByte <= 0x85)))
                             {
+                                /* Compute associativity */
+                                Associativity = 4;
+                                if (RegisterByte >= 0x79) Associativity = 8;
+                                
                                 /* Mask out only the first nibble */
-                                RegisterByte &= 0x0F;
+                                RegisterByte &= 0x07;
 
-                                /* Set the L2 Cache Size */
-                                Pcr->SecondLevelCacheSize = 0x10000 <<
-                                                            RegisterByte;
+                                /* Check if this cache is bigger than the last */
+                                Size = 0x10000 << RegisterByte;
+                                if ((Size / Associativity) > CurrentSize)
+                                {
+                                    /* Set the L2 Cache Size and Associativity */
+                                    CurrentSize = Size / Associativity;
+                                    Pcr->SecondLevelCacheSize = Size;
+                                    Pcr->SecondLevelCacheAssociativity = Associativity;
+                                }
+                            }
+                            else if ((RegisterByte > 0x21) && (RegisterByte <= 0x29))
+                            {
+                                /* Set minimum cache line size */
+                                if (CacheLine < 128) CacheLine = 128;
+                                
+                                /* Hard-code size/associativity */
+                                Associativity = 8;
+                                switch (RegisterByte)
+                                {
+                                    case 0x22:
+                                        Size = 512 * 1024;
+                                        Associativity = 4;
+                                        break;
+                                        
+                                    case 0x23:
+                                        Size = 1024 * 1024;
+                                        break;
+                                        
+                                    case 0x25:
+                                        Size = 2048 * 1024;
+                                        break;
+                                        
+                                    case 0x29:
+                                        Size = 4096 * 1024;
+                                        break;
+                                    
+                                    default:
+                                        Size = 0;
+                                        break;
+                                }
+                                
+                                /* Check if this cache is bigger than the last */
+                                if ((Size / Associativity) > CurrentSize)
+                                {
+                                    /* Set the L2 Cache Size and Associativity */
+                                    CurrentSize = Size / Associativity;
+                                    Pcr->SecondLevelCacheSize = Size;
+                                    Pcr->SecondLevelCacheAssociativity = Associativity;
+                                }
+                            }
+                            else if (((RegisterByte > 0x65) && (RegisterByte < 0x69)) ||
+                                      (RegisterByte == 0x2C) || (RegisterByte == 0xF0))
+                            {
+                                /* Indicates L1 cache line of 64 bytes */
+                                KePrefetchNTAGranularity = 64;
+                            }
+                            else if (RegisterByte == 0xF1)
+                            {
+                                /* Indicates L1 cache line of 128 bytes */
+                                KePrefetchNTAGranularity = 128;
+                            }
+                            else if (((RegisterByte >= 0x4A) && (RegisterByte <= 0x4C)) ||
+                                      (RegisterByte == 0x78) ||
+                                      (RegisterByte == 0x7D) ||
+                                      (RegisterByte == 0x7F) ||
+                                      (RegisterByte == 0x86) ||
+                                      (RegisterByte == 0x87))
+                            {
+                                /* Set minimum cache line size */
+                                if (CacheLine < 64) CacheLine = 64;
+                                
+                                /* Hard-code size/associativity */
+                                switch (RegisterByte)
+                                {
+                                    case 0x4A:
+                                        Size = 4 * 1024 * 1024;
+                                        Associativity = 8;
+                                        break;
+                                        
+                                    case 0x4B:
+                                        Size = 6 * 1024 * 1024;
+                                        Associativity = 12;
+                                        break;
+                                        
+                                    case 0x4C:
+                                        Size = 8 * 1024 * 1024;
+                                        Associativity = 16;
+                                        break;
+                                        
+                                    case 0x78:
+                                        Size = 1 * 1024 * 1024;
+                                        Associativity = 4;
+                                        break;
+                                        
+                                    case 0x7D:
+                                        Size = 2 * 1024 * 1024;
+                                        Associativity = 8;
+                                        break;
+                                            
+                                    case 0x7F:
+                                        Size = 512 * 1024;
+                                        Associativity = 2;
+                                        break;
+                                                
+                                    case 0x86:
+                                        Size = 512 * 1024;
+                                        Associativity = 4;
+                                        break;
+                                    
+                                    case 0x87:
+                                        Size = 1 * 1024 * 1024;
+                                        Associativity = 8;
+                                        break;
+
+                                    default:
+                                        Size = 0;
+                                        break;
+                                }
+                                
+                                /* Check if this cache is bigger than the last */
+                                if ((Size / Associativity) > CurrentSize)
+                                {
+                                    /* Set the L2 Cache Size and Associativity */
+                                    CurrentSize = Size / Associativity;
+                                    Pcr->SecondLevelCacheSize = Size;
+                                    Pcr->SecondLevelCacheAssociativity = Associativity;
+                                }
                             }
                         }
                     }
@@ -528,15 +666,65 @@ KiGetCacheInformation(VOID)
 
         case CPU_AMD:
 
-            /* Check if we support CPUID 0x80000006 */
-            CPUID(0x80000000, &Data[0], &Dummy, &Dummy, &Dummy);
-            if (Data[0] >= 6)
+            /* Check if we support CPUID 0x80000005 */
+            CPUID(0x80000000, &Data[0], &Data[1], &Data[2], &Data[3]);
+            if (Data[0] >= 0x80000006)
             {
-                /* Get 2nd level cache and tlb size */
-                CPUID(0x80000006, &Dummy, &Dummy, &Data[2], &Dummy);
+                /* Get L1 size first */
+                CPUID(0x80000005, &Data[0], &Data[1], &Data[2], &Data[3]);
+                KePrefetchNTAGranularity = Data[2] & 0xFF;
+                
+                /* Check if we support CPUID 0x80000006 */
+                CPUID(0x80000000, &Data[0], &Data[1], &Data[2], &Data[3]);
+                if (Data[0] >= 0x80000006)
+                {   
+                    /* Get 2nd level cache and tlb size */
+                    CPUID(0x80000006, &Data[0], &Data[1], &Data[2], &Data[3]);
+                    
+                    /* Cache line size */
+                    CacheLine = Data[2] & 0xFF;
+                    
+                    /* Hardcode associativity */
+                    RegisterByte = Data[2] >> 12;
+                    switch (RegisterByte)
+                    {
+                        case 2:
+                            Associativity = 2;
+                            break;
+                        
+                        case 4:
+                            Associativity = 4;
+                            break;
+                            
+                        case 6:
+                            Associativity = 8;
+                            break;
+                            
+                        case 8:
+                        case 15:
+                            Associativity = 16;
+                            break;
+                        
+                        default:
+                            Associativity = 1;
+                            break;
+                    }
+                    
+                    /* Compute size */
+                    Size = (Data[2] >> 16) << 10;
+                    
+                    /* Hack for Model 6, Steping 300 */
+                    if ((KeGetCurrentPrcb()->CpuType == 6) &&
+                        (KeGetCurrentPrcb()->CpuStep == 0x300))
+                    {
+                        /* Stick 64K in there */
+                        Size = 64 * 1024;
+                    }
 
-                /* Set the L2 Cache Size */
-                Pcr->SecondLevelCacheSize = (Data[2] & 0xFFFF0000) >> 6;
+                    /* Set the L2 Cache Size and associativity */
+                    Pcr->SecondLevelCacheSize = Size;
+                    Pcr->SecondLevelCacheAssociativity = Associativity;
+                }
             }
             break;
 
@@ -548,6 +736,14 @@ KiGetCacheInformation(VOID)
             /* FIXME */
             break;
     }
+    
+    /* Set the cache line */
+    if (CacheLine > KeLargestCacheLine) KeLargestCacheLine = CacheLine;
+    DPRINT1("Prefetch Cache: %d bytes\tL2 Cache: %d bytes\tL2 Cache Line: %d bytes\tL2 Cache Associativity: %d\n",
+            KePrefetchNTAGranularity,
+            Pcr->SecondLevelCacheSize,
+            KeLargestCacheLine,
+            Pcr->SecondLevelCacheAssociativity);
 }
 
 VOID
@@ -803,13 +999,32 @@ VOID
 NTAPI
 KiRestoreFastSyscallReturnState(VOID)
 {
-    /* FIXME: NT has support for SYSCALL, IA64-SYSENTER, etc. */
-
     /* Check if the CPU Supports fast system call */
     if (KeFeatureBits & KF_FAST_SYSCALL)
     {
-        /* Do an IPI to enable it */
-        KeIpiGenericCall(KiLoadFastSyscallMachineSpecificRegisters, 0);
+        /* Check if it has been disabled */
+        if (!KiFastSystemCallDisable)
+        {
+            /* Do an IPI to enable it */
+            KeIpiGenericCall(KiLoadFastSyscallMachineSpecificRegisters, 0);
+
+            /* It's enabled, so use the proper exit stub */
+            KiFastCallExitHandler = KiSystemCallSysExitReturn;
+            DPRINT1("Support for SYSENTER detected.\n");
+        }
+        else
+        {
+            /* Disable fast system call */
+            KeFeatureBits &= ~KF_FAST_SYSCALL;
+            KiFastCallExitHandler = KiSystemCallTrapReturn;
+            DPRINT1("Support for SYSENTER disabled.\n");
+        }
+    }
+    else
+    {
+        /* Use the IRET handler */
+        KiFastCallExitHandler = KiSystemCallTrapReturn;
+        DPRINT1("No support for SYSENTER detected.\n");
     }
 }
 

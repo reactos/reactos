@@ -217,6 +217,8 @@ static HRESULT WINAPI IWineD3DSwapChainImpl_Present(IWineD3DSwapChain *iface, CO
     unsigned int sync;
     int retval;
 
+    IWineD3DSwapChain_SetDestWindowOverride(iface, hDestWindowOverride);
+
     context = context_acquire(This->device, This->backBuffer[0], CTXUSAGE_RESOURCELOAD);
 
     /* Render the cursor onto the back buffer, using our nifty directdraw blitting code :-) */
@@ -272,12 +274,7 @@ static HRESULT WINAPI IWineD3DSwapChainImpl_Present(IWineD3DSwapChain *iface, CO
         IWineD3DSurface_BltFast(This->backBuffer[0], 0, 0, This->device->logo_surface, NULL, WINEDDBLTFAST_SRCCOLORKEY);
     }
 
-    TRACE("presetting HDC %p\n", This->context[0]->hdc);
-
-    /* Don't call checkGLcall, as glGetError is not applicable here */
-    if (hDestWindowOverride && This->win_handle != hDestWindowOverride) {
-        IWineD3DSwapChain_SetDestWindowOverride(iface, hDestWindowOverride);
-    }
+    TRACE("Presenting HDC %p.\n", context->hdc);
 
     render_to_fbo = This->render_to_fbo;
 
@@ -343,7 +340,8 @@ static HRESULT WINAPI IWineD3DSwapChainImpl_Present(IWineD3DSwapChain *iface, CO
         swapchain_blit(This, context, &src_rect, &dst_rect);
     }
 
-    SwapBuffers(This->context[0]->hdc); /* TODO: cycle through the swapchain buffers */
+    if (This->num_contexts > 1) wglFinish();
+    SwapBuffers(context->hdc); /* TODO: cycle through the swapchain buffers */
 
     TRACE("SwapBuffers called, Starting new frame\n");
     /* FPS support */
@@ -521,7 +519,7 @@ static HRESULT WINAPI IWineD3DSwapChainImpl_SetDestWindowOverride(IWineD3DSwapCh
     WINED3DLOCKED_RECT r;
     BYTE *mem;
 
-    if(window == This->win_handle) return WINED3D_OK;
+    if (!window || window == This->win_handle) return WINED3D_OK;
 
     TRACE("Performing dest override of swapchain %p from window %p to %p\n", This, This->win_handle, window);
     if (This->context[0] == This->device->contexts[0])
@@ -913,10 +911,15 @@ err:
         HeapFree(GetProcessHeap(), 0, swapchain->backBuffer);
     }
 
-    if (swapchain->context && swapchain->context[0])
+    if (swapchain->context)
     {
-        context_release(swapchain->context[0]);
-        context_destroy(device, swapchain->context[0]);
+        if (swapchain->context[0])
+        {
+            context_release(swapchain->context[0]);
+            context_destroy(device, swapchain->context[0]);
+            swapchain->num_contexts = 0;
+        }
+        HeapFree(GetProcessHeap(), 0, swapchain->context);
     }
 
     if (swapchain->frontBuffer) IWineD3DSurface_Release(swapchain->frontBuffer);

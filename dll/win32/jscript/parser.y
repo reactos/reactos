@@ -38,7 +38,6 @@ typedef struct _statement_list_t {
 
 static literal_t *new_string_literal(parser_ctx_t*,const WCHAR*);
 static literal_t *new_null_literal(parser_ctx_t*);
-static literal_t *new_undefined_literal(parser_ctx_t*);
 static literal_t *new_boolean_literal(parser_ctx_t*,VARIANT_BOOL);
 
 typedef struct _property_list_t {
@@ -171,7 +170,7 @@ static source_elements_t *source_elements_add_statement(source_elements_t*,state
 
 /* keywords */
 %token kBREAK kCASE kCATCH kCONTINUE kDEFAULT kDELETE kDO kELSE kIF kFINALLY kFOR kIN
-%token kINSTANCEOF kNEW kNULL kUNDEFINED kRETURN kSWITCH kTHIS kTHROW kTRUE kFALSE kTRY kTYPEOF kVAR kVOID kWHILE kWITH
+%token kINSTANCEOF kNEW kNULL kRETURN kSWITCH kTHIS kTHROW kTRUE kFALSE kTRY kTYPEOF kVAR kVOID kWHILE kWITH
 %token tANDAND tOROR tINC tDEC tHTMLCOMMENT kDIVEQ
 
 %token <srcptr> kFUNCTION '}'
@@ -800,7 +799,6 @@ Identifier_opt
 /* ECMA-262 3rd Edition    7.8 */
 Literal
         : kNULL                 { $$ = new_null_literal(ctx); }
-        | kUNDEFINED            { $$ = new_undefined_literal(ctx); }
         | BooleanLiteral        { $$ = $1; }
         | tNumericLiteral       { $$ = $1; }
         | tStringLiteral        { $$ = new_string_literal(ctx, $1); }
@@ -841,7 +839,7 @@ static literal_t *new_string_literal(parser_ctx_t *ctx, const WCHAR *str)
 {
     literal_t *ret = parser_alloc(ctx, sizeof(literal_t));
 
-    ret->vt = VT_BSTR;
+    ret->type = LT_STRING;
     ret->u.wstr = str;
 
     return ret;
@@ -851,16 +849,7 @@ static literal_t *new_null_literal(parser_ctx_t *ctx)
 {
     literal_t *ret = parser_alloc(ctx, sizeof(literal_t));
 
-    ret->vt = VT_NULL;
-
-    return ret;
-}
-
-static literal_t *new_undefined_literal(parser_ctx_t *ctx)
-{
-    literal_t *ret = parser_alloc(ctx, sizeof(literal_t));
-
-    ret->vt = VT_EMPTY;
+    ret->type = LT_NULL;
 
     return ret;
 }
@@ -869,7 +858,7 @@ static literal_t *new_boolean_literal(parser_ctx_t *ctx, VARIANT_BOOL bval)
 {
     literal_t *ret = parser_alloc(ctx, sizeof(literal_t));
 
-    ret->vt = VT_BOOL;
+    ret->type = LT_BOOL;
     ret->u.bval = bval;
 
     return ret;
@@ -1591,14 +1580,11 @@ static void program_parsed(parser_ctx_t *ctx, source_elements_t *source)
 
 void parser_release(parser_ctx_t *ctx)
 {
-    obj_literal_t *iter;
-
     if(--ctx->ref)
         return;
 
-    for(iter = ctx->obj_literals; iter; iter = iter->next)
-        jsdisp_release(iter->obj);
-
+    script_release(ctx->script);
+    heap_free(ctx->begin);
     jsheap_free(&ctx->heap);
     heap_free(ctx);
 }
@@ -1620,8 +1606,14 @@ HRESULT script_parse(script_ctx_t *ctx, const WCHAR *code, const WCHAR *delimite
     parser_ctx->hres = JSCRIPT_ERROR|IDS_SYNTAX_ERROR;
     parser_ctx->is_html = delimiter && !strcmpiW(delimiter, html_tagW);
 
-    parser_ctx->begin = parser_ctx->ptr = code;
-    parser_ctx->end = code + strlenW(code);
+    parser_ctx->begin = heap_strdupW(code);
+    if(!parser_ctx->begin) {
+        heap_free(parser_ctx);
+        return E_OUTOFMEMORY;
+    }
+
+    parser_ctx->ptr = parser_ctx->begin;
+    parser_ctx->end = parser_ctx->begin + strlenW(parser_ctx->begin);
 
     script_addref(ctx);
     parser_ctx->script = ctx;

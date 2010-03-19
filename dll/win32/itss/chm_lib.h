@@ -73,6 +73,7 @@ struct chmUnitInfo
 };
 
 struct chmFile* chm_openW(const WCHAR *filename);
+struct chmFile *chm_dup(struct chmFile *oldHandle);
 
 /* close an ITS archive */
 void chm_close(struct chmFile *h);

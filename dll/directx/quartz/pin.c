@@ -765,9 +765,6 @@ HRESULT WINAPI OutputPin_Connect(IPin * iface, IPin * pReceivePin, const AM_MEDI
                 {
                     assert(pmtCandidate);
                     dump_AM_MEDIA_TYPE(pmtCandidate);
-                    if (!IsEqualGUID(&FORMAT_None, &pmtCandidate->formattype)
-                        && !IsEqualGUID(&GUID_NULL, &pmtCandidate->formattype))
-                        assert(pmtCandidate->pbFormat);
                     if (( !pmt || CompareMediaTypes(pmt, pmtCandidate, TRUE) ) && 
                         (This->pConnectSpecific(iface, pReceivePin, pmtCandidate) == S_OK))
                     {

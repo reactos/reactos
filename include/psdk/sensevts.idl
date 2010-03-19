@@ -28,6 +28,7 @@ typedef struct SENS_QOCINFO
 
 [
   object,
+  uuid(d597bab1-5b9f-11d1-8dd2-00aa004abd5e),
   pointer_default(unique)
 ]
 interface ISensNetwork : IDispatch
@@ -55,6 +56,7 @@ interface ISensNetwork : IDispatch
 
 [
   object,
+  uuid(d597bab2-5b9f-11d1-8dd2-00aa004abd5e),
   pointer_default(unique)
 ]
 interface ISensOnNow : IDispatch
@@ -68,6 +70,7 @@ interface ISensOnNow : IDispatch
 
 [
   object,
+  uuid(d597bab3-5b9f-11d1-8dd2-00aa004abd5e),
   pointer_default(unique)
 ]
 interface ISensLogon : IDispatch
@@ -90,6 +93,7 @@ interface ISensLogon : IDispatch
 
 [
   object,
+  uuid(d597bab4-5b9f-11d1-8dd2-00aa004abd5e),
   pointer_default(unique)
 ]
 interface ISensLogon2 : IDispatch

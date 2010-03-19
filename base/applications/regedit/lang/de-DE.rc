@@ -54,8 +54,8 @@ BEGIN
         MENUITEM "&Exportieren...",    ID_REGISTRY_EXPORTREGISTRYFILE
 
         MENUITEM SEPARATOR
-		MENUITEM "Hive laden...",				ID_REGISTRY_LOADHIVE, GRAYED
-		MENUITEM "Hive entladen...",				ID_REGISTRY_UNLOADHIVE, GRAYED
+		MENUITEM "Zweig laden...",				ID_REGISTRY_LOADHIVE, GRAYED
+		MENUITEM "Zweig entladen...",				ID_REGISTRY_UNLOADHIVE, GRAYED
 		MENUITEM SEPARATOR
         MENUITEM "&Mit Netzwerkregistrierung verbinden...",
                                                 ID_REGISTRY_CONNECTNETWORKREGISTRY
@@ -78,7 +78,7 @@ BEGIN
             MENUITEM SEPARATOR
             MENUITEM "&Zeichenkette",               ID_EDIT_NEW_STRINGVALUE
             MENUITEM "&Binärwert",               ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "&DWORD Wert",                ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&DWORD-Wert",                ID_EDIT_NEW_DWORDVALUE
             MENUITEM "&Mehrteilige Zeichenkette",	ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "&Erweiterbare Zeichenkette",	ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
@@ -134,14 +134,14 @@ BEGIN
             MENUITEM SEPARATOR
             MENUITEM "&Zeichenkette",               ID_EDIT_NEW_STRINGVALUE
             MENUITEM "&Binärwert",                  ID_EDIT_NEW_BINARYVALUE
-            MENUITEM "&DWORD Wert",                 ID_EDIT_NEW_DWORDVALUE
+            MENUITEM "&DWORD-Wert",                 ID_EDIT_NEW_DWORDVALUE
             MENUITEM "&Mehrteilige Zeichenkette",	ID_EDIT_NEW_MULTISTRINGVALUE
             MENUITEM "&Erweiterbare Zeichenkette",	ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
   END
   POPUP ""
   BEGIN
-        MENUITEM "Expandieren/Schliessen",                 ID_TREE_EXPANDBRANCH
+        MENUITEM "Erweitern/Schließen",                 ID_TREE_EXPANDBRANCH
         POPUP "&Neu"
         BEGIN
             MENUITEM "&Schlüssel",                        ID_EDIT_NEW_KEY
@@ -160,7 +160,7 @@ BEGIN
         MENUITEM "&Exportieren",                         ID_TREE_EXPORT
         MENUITEM "&Berechtigungen...",                 ID_TREE_PERMISSIONS, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "S&chlüsselname kopieren",                  ID_EDIT_COPYKEYNAME
+        MENUITEM "S&chlüsselnamen kopieren",                  ID_EDIT_COPYKEYNAME
   END
 END
 
@@ -215,7 +215,7 @@ END
 IDD_EDIT_DWORD DIALOGEX  32, 24, 252, 104
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
     WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "DWORD Wert editieren"
+CAPTION "DWORD-Wert editieren"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "&Name:",IDC_STATIC,6,6,134,8
@@ -242,7 +242,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_APP_TITLE           "Registry Editor"
+    IDS_APP_TITLE           "Registry-Editor"
     IDC_REGEDIT             "REGEDIT"
     IDC_REGEDIT_FRAME       "REGEDIT_FRAME"
 END
@@ -253,7 +253,7 @@ BEGIN
     ID_EDIT_MENU            "Enthält Befehle für das Ändern von Schlüsseln oder Werten"
     ID_VIEW_MENU            "Enthält Befehle für das Anpassen des Registry Editor Fensters"
     ID_FAVOURITES_MENU      "Enthält Befehle um auf oft genutzte Schlüssel zuzugreifen"
-    ID_HELP_MENU            "Enthält Befehle um Hilfe und Informationen über den Registry Editor anzuzeigen"
+    ID_HELP_MENU            "Enthält Befehle um Hilfe und Informationen über den Registry-Editor anzuzeigen"
     ID_EDIT_NEW_MENU        "Enthält Befehle für das Erstellen von neuen Schlüsseln oder Werten"
 END
 
@@ -263,7 +263,7 @@ BEGIN
     ID_EDIT_NEW_KEY   "Fügt einen neuen Schlüssel hinzu"
     ID_EDIT_NEW_STRINGVALUE "Fügt eine neue Zeichenkette hinzu "
     ID_EDIT_NEW_BINARYVALUE "Fügt einen neuen Binärwärt hinzu"
-    ID_EDIT_NEW_DWORDVALUE  "Fügt einen neuen DWORD Wert hinzu"
+    ID_EDIT_NEW_DWORDVALUE  "Fügt einen neuen DWORD-Wert hinzu"
     ID_REGISTRY_IMPORTREGISTRYFILE "Importiert eine Textddatei in die Registry"
     ID_REGISTRY_EXPORTREGISTRYFILE
                             "Exportiert Teile oder die ganze Registry in eine Textdatei"
@@ -278,7 +278,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_REGISTRY_EXIT        "Beendet den Registry Editor"
+    ID_REGISTRY_EXIT        "Beendet den Registry-Editor"
     ID_FAVOURITES_ADDTOFAVOURITES "Fügt Schlüssel zu den Favoriten hinzu"
     ID_FAVOURITES_REMOVEFAVOURITE "Löscht Schlüssel aus den Favoriten"
     ID_VIEW_STATUSBAR       "Zeigt oder versteckt die Statusleiste"
@@ -297,7 +297,7 @@ BEGIN
     IDS_WARNING		    "Warnung"
     IDS_BAD_KEY             "Kann den Schlüssel '%s' nicht lesen"
     IDS_BAD_VALUE           "Kann den Wert '%s' nicht lesen"
-    IDS_UNSUPPORTED_TYPE    "Kann den Schlüssel des Typen (%ld) nicht ändern"
+    IDS_UNSUPPORTED_TYPE    "Kann den Schlüssel des Typs (%ld) nicht ändern"
     IDS_TOO_BIG_VALUE       "Der Wert (%ld) ist zu groß"
     IDS_MULTI_SZ_EMPTY_STRING "Daten vom Typ REG_MULTI_SZ können keine leere Zeichenkette enthalten.\nDie leere Zeichenkette wurde aus der Liste gelöscht."
     IDS_QUERY_DELETE_KEY_ONE    "Diesen Schlüssel wirklich löschen?"
@@ -323,7 +323,7 @@ BEGIN
     IDS_MY_COMPUTER         "Arbeitsplatz"
     IDS_IMPORT_REG_FILE     "Registry importieren"
     IDS_EXPORT_REG_FILE     "Registry exportieren"
-    IDS_INVALID_DWORD       "(ungültiger DWORD Wert)"
+    IDS_INVALID_DWORD       "(ungültiger DWORD-Wert)"
 END
 
 STRINGTABLE DISCARDABLE
@@ -331,7 +331,7 @@ BEGIN
     IDS_FLT_REGFILE         "Registrierungsdatei"
     IDS_FLT_REGFILES        "Registrierungsdateien"
     IDS_FLT_REGFILES_FLT    "*.reg"
-    IDS_FLT_REGEDIT4        "Win9x/NT4 Registrierungsdateien (REGEDIT4)"
+    IDS_FLT_REGEDIT4        "Win9x/NT4-Registrierungsdateien (REGEDIT4)"
     IDS_FLT_REGEDIT4_FLT    "*.reg"
     IDS_FLT_ALLFILES        "Alle Dateien (*.*)"
     IDS_FLT_ALLFILES_FLT    "*.*"

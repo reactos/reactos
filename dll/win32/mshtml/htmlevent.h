@@ -46,6 +46,7 @@ void fire_event(HTMLDocumentNode*,eventid_t,nsIDOMNode*,nsIDOMEvent*);
 HRESULT set_event_handler(event_target_t**,HTMLDocumentNode*,eventid_t,VARIANT*);
 HRESULT get_event_handler(event_target_t**,eventid_t,VARIANT*);
 HRESULT attach_event(event_target_t**,HTMLDocument*,BSTR,IDispatch*,VARIANT_BOOL*);
+HRESULT detach_event(event_target_t*,HTMLDocument*,BSTR,IDispatch*);
 HRESULT dispatch_event(HTMLDOMNode*,const WCHAR*,VARIANT*,VARIANT_BOOL*);
 HRESULT call_event(HTMLDOMNode*,eventid_t);
 void update_cp_events(HTMLWindow*,cp_static_data_t*);

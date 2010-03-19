@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="dxapi" type="kernelmodedriver"
 installbase="system32/drivers" installname="dxapi.sys">
 	<importlibrary definition="dxapi.spec" />

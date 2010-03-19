@@ -1,5 +1,4 @@
-#ifndef LANG_MN_MN_H__
-#define LANG_MN_MN_H__
+#pragma once
 
 MUI_LAYOUTS mnMNLayouts[] =
 {
@@ -7,5 +6,3 @@ MUI_LAYOUTS mnMNLayouts[] =
     { L"0409", L"00000409" },
     { NULL, NULL }
 };
-
-#endif

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="jscript" type="win32dll" baseaddress="${BASEADDRESS_JSCRIPT}" installbase="system32" installname="jscript.dll" allowwarnings="true" crt="msvcrt">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
@@ -38,3 +40,4 @@
 	<dependency>stdole2</dependency>
 	<file>jsglobal.idl</file>
 </module>
+</group>

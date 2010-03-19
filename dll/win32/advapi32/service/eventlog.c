@@ -26,20 +26,9 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
-static RPC_UNICODE_STRING EmptyString = { 0, 0, L"" };
+static RPC_UNICODE_STRING EmptyStringU = { 0, 0, L"" };
+static RPC_STRING EmptyStringA = { 0, 0, "" };
 
-static inline LPWSTR SERV_dup( LPCSTR str )
-{
-    UINT len;
-    LPWSTR wstr;
-
-    if( !str )
-        return NULL;
-    len = MultiByteToWideChar( CP_ACP, 0, str, -1, NULL, 0 );
-    wstr = HeapAlloc( GetProcessHeap(), 0, len*sizeof (WCHAR) );
-    MultiByteToWideChar( CP_ACP, 0, str, -1, wstr, len );
-    return wstr;
-}
 
 handle_t __RPC_USER
 EVENTLOG_HANDLE_A_bind(EVENTLOG_HANDLE_A UNCServerName)
@@ -53,7 +42,7 @@ EVENTLOG_HANDLE_A_bind(EVENTLOG_HANDLE_A UNCServerName)
     status = RpcStringBindingComposeA(NULL,
                                       (UCHAR *)"ncacn_np",
                                       (UCHAR *)UNCServerName,
-                                      (UCHAR *)"\\pipe\\ntsvcs",
+                                      (UCHAR *)"\\pipe\\EventLog",
                                       NULL,
                                       (UCHAR **)&pszStringBinding);
     if (status)
@@ -158,20 +147,17 @@ BOOL WINAPI
 BackupEventLogA(IN HANDLE hEventLog,
                 IN LPCSTR lpBackupFileName)
 {
-    RPC_STRING BackupFileName;
+    ANSI_STRING BackupFileName;
     NTSTATUS Status;
 
     TRACE("%p, %s\n", hEventLog, lpBackupFileName);
 
-    BackupFileName.Buffer = (LPSTR)lpBackupFileName;
-    BackupFileName.Length = BackupFileName.MaximumLength =
-        lpBackupFileName ? strlen(lpBackupFileName) : 0;
-	BackupFileName.MaximumLength += sizeof(CHAR);
+    RtlInitAnsiString(&BackupFileName, lpBackupFileName);
 
     RpcTryExcept
     {
         Status = ElfrBackupELFA(hEventLog,
-                                &BackupFileName);
+                                (PRPC_STRING)&BackupFileName);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -199,20 +185,17 @@ BOOL WINAPI
 BackupEventLogW(IN HANDLE hEventLog,
                 IN LPCWSTR lpBackupFileName)
 {
-    RPC_UNICODE_STRING BackupFileName;
+    UNICODE_STRING BackupFileName;
     NTSTATUS Status;
 
     TRACE("%p, %s\n", hEventLog, debugstr_w(lpBackupFileName));
 
-    BackupFileName.Buffer = (LPWSTR)lpBackupFileName;
-    BackupFileName.Length = BackupFileName.MaximumLength =
-        lpBackupFileName ? wcslen(lpBackupFileName) * sizeof(WCHAR) : 0;
-    BackupFileName.MaximumLength += sizeof(WCHAR);
+    RtlInitUnicodeString(&BackupFileName, lpBackupFileName);
 
     RpcTryExcept
     {
         Status = ElfrBackupELFW(hEventLog,
-                                &BackupFileName);
+                                (PRPC_UNICODE_STRING)&BackupFileName);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -237,20 +220,17 @@ BOOL WINAPI
 ClearEventLogA(IN HANDLE hEventLog,
                IN LPCSTR lpBackupFileName)
 {
-    RPC_STRING BackupFileName;
+    ANSI_STRING BackupFileName;
     NTSTATUS Status;
 
     TRACE("%p, %s\n", hEventLog, lpBackupFileName);
 
-    BackupFileName.Buffer = (LPSTR)lpBackupFileName;
-    BackupFileName.Length = BackupFileName.MaximumLength =
-        lpBackupFileName ? strlen(lpBackupFileName) : 0;
-    BackupFileName.MaximumLength += sizeof(CHAR);
+    RtlInitAnsiString(&BackupFileName, lpBackupFileName);
 
     RpcTryExcept
     {
         Status = ElfrClearELFA(hEventLog,
-                               &BackupFileName);
+                               (PRPC_STRING)&BackupFileName);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -275,20 +255,17 @@ BOOL WINAPI
 ClearEventLogW(IN HANDLE hEventLog,
                IN LPCWSTR lpBackupFileName)
 {
-    RPC_UNICODE_STRING BackupFileName;
+    UNICODE_STRING BackupFileName;
     NTSTATUS Status;
 
     TRACE("%p, %s\n", hEventLog, debugstr_w(lpBackupFileName));
 
-    BackupFileName.Buffer = (LPWSTR)lpBackupFileName;
-    BackupFileName.Length = BackupFileName.MaximumLength =
-        lpBackupFileName ? wcslen(lpBackupFileName) * sizeof(WCHAR) : 0;
-    BackupFileName.MaximumLength += sizeof(WCHAR);
+    RtlInitUnicodeString(&BackupFileName,lpBackupFileName);
 
     RpcTryExcept
     {
         Status = ElfrClearELFW(hEventLog,
-                               &BackupFileName);
+                               (PRPC_UNICODE_STRING)&BackupFileName);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -389,9 +366,35 @@ GetEventLogInformation(IN HANDLE hEventLog,
                        IN DWORD cbBufSize,
                        OUT LPDWORD pcbBytesNeeded)
 {
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    NTSTATUS Status;
+
+    if (dwInfoLevel != EVENTLOG_FULL_INFO)
+    {
+        SetLastError(ERROR_INVALID_LEVEL);
+        return FALSE;
+    }
+
+    RpcTryExcept
+    {
+        Status = ElfrGetLogInformation(hEventLog,
+                                       dwInfoLevel,
+                                       (LPBYTE)lpBuffer,
+                                       cbBufSize,
+                                       pcbBytesNeeded);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 
@@ -416,7 +419,7 @@ GetNumberOfEventLogRecords(IN HANDLE hEventLog,
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
-    
+
     RpcTryExcept
     {
         Status = ElfrNumberOfRecords(hEventLog,
@@ -461,7 +464,7 @@ GetOldestEventLogRecord(IN HANDLE hEventLog,
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
-    
+
     RpcTryExcept
     {
         Status = ElfrOldestRecord(hEventLog,
@@ -510,32 +513,35 @@ HANDLE WINAPI
 OpenBackupEventLogA(IN LPCSTR lpUNCServerName,
                     IN LPCSTR lpFileName)
 {
-    UNICODE_STRING UNCServerName;
-    UNICODE_STRING FileName;
-    HANDLE Handle;
+    ANSI_STRING FileName;
+    IELF_HANDLE LogHandle;
+    NTSTATUS Status;
 
     TRACE("%s, %s\n", lpUNCServerName, lpFileName);
 
-    if (!RtlCreateUnicodeStringFromAsciiz(&UNCServerName, lpUNCServerName))
+    RtlInitAnsiString(&FileName, lpFileName);
+
+    RpcTryExcept
     {
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        Status = ElfrOpenBELA((LPSTR)lpUNCServerName,
+                              (PRPC_STRING)&FileName,
+                              1,
+                              1,
+                              &LogHandle);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
         return NULL;
     }
 
-    if (!RtlCreateUnicodeStringFromAsciiz(&FileName, lpFileName))
-    {
-        RtlFreeUnicodeString(&UNCServerName);
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return NULL;
-    }
-
-    Handle = OpenBackupEventLogW(UNCServerName.Buffer,
-                                 FileName.Buffer);
-
-    RtlFreeUnicodeString(&UNCServerName);
-    RtlFreeUnicodeString(&FileName);
-
-    return Handle;
+    return (HANDLE)LogHandle;
 }
 
 
@@ -550,21 +556,18 @@ HANDLE WINAPI
 OpenBackupEventLogW(IN LPCWSTR lpUNCServerName,
                     IN LPCWSTR lpFileName)
 {
-    RPC_UNICODE_STRING FileName;
+    UNICODE_STRING FileName;
     IELF_HANDLE LogHandle;
     NTSTATUS Status;
 
     TRACE("%s, %s\n", debugstr_w(lpUNCServerName), debugstr_w(lpFileName));
 
-    FileName.Buffer = (LPWSTR)lpFileName;
-    FileName.Length = FileName.MaximumLength =
-        lpFileName ? wcslen(lpFileName) * sizeof(WCHAR) : 0;
-    FileName.MaximumLength += sizeof(WCHAR);
+    RtlInitUnicodeString(&FileName, lpFileName);
 
     RpcTryExcept
     {
         Status = ElfrOpenBELW((LPWSTR)lpUNCServerName,
-                              &FileName,
+                              (PRPC_UNICODE_STRING)&FileName,
                               1,
                               1,
                               &LogHandle);
@@ -600,19 +603,51 @@ OpenBackupEventLogW(IN LPCWSTR lpUNCServerName,
  *  Failure: NULL
  */
 HANDLE WINAPI
-OpenEventLogA(IN LPCSTR uncname,
-              IN LPCSTR source)
+OpenEventLogA(IN LPCSTR lpUNCServerName,
+              IN LPCSTR lpSourceName)
 {
-    LPWSTR uncnameW, sourceW;
-    HANDLE handle;
+    LPSTR UNCServerName;
+    ANSI_STRING SourceName;
+    IELF_HANDLE LogHandle = NULL;
+    NTSTATUS Status;
 
-    uncnameW = SERV_dup(uncname);
-    sourceW = SERV_dup(source);
-    handle = OpenEventLogW(uncnameW, sourceW);
-    HeapFree(GetProcessHeap(), 0, uncnameW);
-    HeapFree(GetProcessHeap(), 0, sourceW);
+    TRACE("%s, %s\n", lpUNCServerName, lpSourceName);
 
-    return handle;
+    if (lpSourceName == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
+
+    if (lpUNCServerName == NULL || *lpUNCServerName == 0)
+        UNCServerName = NULL;
+    else
+        UNCServerName = (LPSTR)lpUNCServerName;
+
+    RtlInitAnsiString(&SourceName, lpSourceName);
+
+    RpcTryExcept
+    {
+        Status = ElfrOpenELA(UNCServerName,
+                             (PRPC_STRING)&SourceName,
+                             &EmptyStringA,
+                             1,
+                             1,
+                             &LogHandle);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return NULL;
+    }
+
+    return (HANDLE)LogHandle;
 }
 
 
@@ -627,22 +662,31 @@ HANDLE WINAPI
 OpenEventLogW(IN LPCWSTR lpUNCServerName,
               IN LPCWSTR lpSourceName)
 {
-    RPC_UNICODE_STRING SourceName;
+    LPWSTR UNCServerName;
+    UNICODE_STRING SourceName;
     IELF_HANDLE LogHandle;
     NTSTATUS Status;
 
     TRACE("%s, %s\n", debugstr_w(lpUNCServerName), debugstr_w(lpSourceName));
 
-    SourceName.Buffer = (LPWSTR)lpSourceName;
-    SourceName.Length = SourceName.MaximumLength =
-        lpSourceName ? wcslen(lpSourceName) * sizeof(WCHAR) : 0;
-    SourceName.MaximumLength += sizeof(WCHAR);
+    if (lpSourceName == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
+
+    if (lpUNCServerName == NULL || *lpUNCServerName == 0)
+        UNCServerName = NULL;
+    else
+        UNCServerName = (LPWSTR)lpUNCServerName;
+
+    RtlInitUnicodeString(&SourceName, lpSourceName);
 
     RpcTryExcept
     {
-        Status = ElfrOpenELW((LPWSTR)lpUNCServerName,
-                             &SourceName,
-                             &EmptyString,
+        Status = ElfrOpenELW(UNCServerName,
+                             (PRPC_UNICODE_STRING)&SourceName,
+                             &EmptyStringU,
                              1,
                              1,
                              &LogHandle);
@@ -801,32 +845,36 @@ HANDLE WINAPI
 RegisterEventSourceA(IN LPCSTR lpUNCServerName,
                      IN LPCSTR lpSourceName)
 {
-    UNICODE_STRING UNCServerName;
-    UNICODE_STRING SourceName;
-    HANDLE Handle;
+    ANSI_STRING SourceName;
+    IELF_HANDLE LogHandle;
+    NTSTATUS Status;
 
     TRACE("%s, %s\n", lpUNCServerName, lpSourceName);
 
-    if (!RtlCreateUnicodeStringFromAsciiz(&UNCServerName, lpUNCServerName))
+    RtlInitAnsiString(&SourceName, lpSourceName);
+
+    RpcTryExcept
     {
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        Status = ElfrRegisterEventSourceA((LPSTR)lpUNCServerName,
+                                          (PRPC_STRING)&SourceName,
+                                          &EmptyStringA,
+                                          1,
+                                          1,
+                                          &LogHandle);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
         return NULL;
     }
 
-    if (!RtlCreateUnicodeStringFromAsciiz(&SourceName, lpSourceName))
-    {
-        RtlFreeUnicodeString(&UNCServerName);
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return NULL;
-    }
-
-    Handle = RegisterEventSourceW(UNCServerName.Buffer,
-                                  SourceName.Buffer);
-
-    RtlFreeUnicodeString(&UNCServerName);
-    RtlFreeUnicodeString(&SourceName);
-
-    return Handle;
+    return (HANDLE)LogHandle;
 }
 
 
@@ -846,22 +894,19 @@ HANDLE WINAPI
 RegisterEventSourceW(IN LPCWSTR lpUNCServerName,
                      IN LPCWSTR lpSourceName)
 {
-    RPC_UNICODE_STRING SourceName;
+    UNICODE_STRING SourceName;
     IELF_HANDLE LogHandle;
     NTSTATUS Status;
 
     TRACE("%s, %s\n", debugstr_w(lpUNCServerName), debugstr_w(lpSourceName));
 
-    SourceName.Buffer = (LPWSTR)lpSourceName;
-    SourceName.Length = SourceName.MaximumLength =
-        lpSourceName ? wcslen(lpSourceName) * sizeof(WCHAR) : 0;
-    SourceName.MaximumLength += sizeof(WCHAR);
+    RtlInitUnicodeString(&SourceName, lpSourceName);
 
     RpcTryExcept
     {
         Status = ElfrRegisterEventSourceW((LPWSTR)lpUNCServerName,
-                                          &SourceName,
-                                          &EmptyString,
+                                          (PRPC_UNICODE_STRING)&SourceName,
+                                          &EmptyStringU,
                                           1,
                                           1,
                                           &LogHandle);
@@ -896,61 +941,62 @@ ReportEventA(IN HANDLE hEventLog,
              IN LPCSTR *lpStrings,
              IN LPVOID lpRawData)
 {
-    LPCWSTR *wideStrArray;
-    UNICODE_STRING str;
+    NTSTATUS Status;
+    ANSI_STRING *Strings;
+    ANSI_STRING ComputerName;
     WORD i;
-    BOOL ret;
 
-    if (wNumStrings == 0)
-        return TRUE;
+    TRACE("%p, %u, %u, %lu, %p, %u, %lu, %p, %p\n",
+          hEventLog, wType, wCategory, dwEventID, lpUserSid,
+          wNumStrings, dwDataSize, lpStrings, lpRawData);
 
-    if (lpStrings == NULL)
-        return TRUE;
-
-    wideStrArray = HeapAlloc(GetProcessHeap(),
-                             HEAP_ZERO_MEMORY,
-                             sizeof(LPCWSTR) * wNumStrings);
-
-    for (i = 0; i < wNumStrings; i++)
-    {
-        if (!RtlCreateUnicodeStringFromAsciiz(&str, (PSTR)lpStrings[i]))
-            break;
-        wideStrArray[i] = str.Buffer;
-    }
-
-    if (i == wNumStrings)
-    {
-        ret = ReportEventW(hEventLog,
-                           wType,
-                           wCategory,
-                           dwEventID,
-                           lpUserSid,
-                           wNumStrings,
-                           dwDataSize,
-                           wideStrArray,
-                           lpRawData);
-    }
-    else
+    Strings = HeapAlloc(GetProcessHeap(),
+                        0,
+                        wNumStrings * sizeof(ANSI_STRING));
+    if (!Strings)
     {
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        ret = FALSE;
+        return FALSE;
     }
 
     for (i = 0; i < wNumStrings; i++)
+        RtlInitAnsiString(&Strings[i], lpStrings[i]);
+
+    /*FIXME: ComputerName */
+    RtlInitAnsiString(&ComputerName, "");
+
+    RpcTryExcept
     {
-        if (wideStrArray[i])
-        {
-            HeapFree(GetProcessHeap(),
-                     0,
-                     (PVOID)wideStrArray[i]);
-        }
+        Status = ElfrReportEventA(hEventLog,
+                                  0, /* FIXME: Time */
+                                  wType,
+                                  wCategory,
+                                  dwEventID,
+                                  wNumStrings,
+                                  dwDataSize,
+                                  (PRPC_STRING) &ComputerName,
+                                  lpUserSid,
+                                  (PRPC_STRING*) &Strings,
+                                  lpRawData,
+                                  0,
+                                  NULL,
+                                  NULL);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    HeapFree(GetProcessHeap(), 0, Strings);
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
     }
 
-    HeapFree(GetProcessHeap(),
-             0,
-             (PVOID)wideStrArray);
-
-    return ret;
+    return TRUE;
 }
 
 

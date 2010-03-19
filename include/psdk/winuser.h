@@ -1993,11 +1993,16 @@ extern "C" {
 #define SBM_ENABLE_ARROWS 228
 #define SBM_GETPOS 225
 #define SBM_GETRANGE 227
-#define SBM_GETSCROLLINFO 234
 #define SBM_SETPOS 224
 #define SBM_SETRANGE 226
 #define SBM_SETRANGEREDRAW 230
+#if (_WIN32_WINNT >= 0x0400)
+#define SBM_GETSCROLLINFO 234
 #define SBM_SETSCROLLINFO 233
+#endif
+#if (_WIN32_WINNT >= 0x0501)
+#define SBM_GETSCROLLBARINFO 235
+#endif
 #define STM_GETICON 369
 #define STM_GETIMAGE 371
 #define STM_SETICON 368
@@ -2441,8 +2446,18 @@ extern "C" {
 #define ODS_DISABLED 4
 #define ODS_CHECKED 8
 #define ODS_FOCUS 16
+#if(WINVER >= 0x0400)
 #define ODS_DEFAULT 32
 #define ODS_COMBOBOXEDIT 4096
+#endif
+#if(WINVER >= 0x0500)
+#define ODS_HOTLIGHT        0x0040
+#define ODS_INACTIVE        0x0080
+#if(_WIN32_WINNT >= 0x0500)
+#define ODS_NOACCEL         0x0100
+#define ODS_NOFOCUSRECT     0x0200
+#endif
+#endif
 #define IDHOT_SNAPWINDOW (-1)
 #define IDHOT_SNAPDESKTOP (-2)
 #define DBWF_LPARAMPOINTER 0x8000

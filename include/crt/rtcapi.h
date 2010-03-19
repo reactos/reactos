@@ -70,10 +70,10 @@ extern "C" {
 
   char __fastcall _RTC_Check_2_to_1(short _Src);
   char __fastcall _RTC_Check_4_to_1(int _Src);
-  char __fastcall _RTC_Check_8_to_1(__int64 _Src);
+  __MINGW_EXTENSION char __fastcall _RTC_Check_8_to_1(__int64 _Src);
   short __fastcall _RTC_Check_4_to_2(int _Src);
-  short __fastcall _RTC_Check_8_to_2(__int64 _Src);
-  int __fastcall _RTC_Check_8_to_4(__int64 _Src);
+  __MINGW_EXTENSION short __fastcall _RTC_Check_8_to_2(__int64 _Src);
+  __MINGW_EXTENSION int __fastcall _RTC_Check_8_to_4(__int64 _Src);
 
 #if (defined(_X86_) && !defined(__x86_64))
   void __cdecl _RTC_CheckEsp();

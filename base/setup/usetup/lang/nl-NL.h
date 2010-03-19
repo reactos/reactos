@@ -1,5 +1,4 @@
-#ifndef LANG_NL_NL_H__
-#define LANG_NL_NL_H__
+#pragma once
 
 MUI_LAYOUTS nlNLLayouts[] =
 {
@@ -1722,6 +1721,3 @@ MUI_STRING nlNLStrings[] =
     "Toevoegen toetsenbord indelingen"},
     {0, 0}
 };
-
-
-#endif

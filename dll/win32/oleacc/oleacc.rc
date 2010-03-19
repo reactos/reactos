@@ -22,7 +22,15 @@
 #include "oleacc.h"
 
 #include "oleacc_En.rc"
-#include "oleacc_Fr.rc"
 #include "oleacc_Ko.rc"
 #include "oleacc_Nl.rc"
 #include "oleacc_Pl.rc"
+
+/* UTF-8 */
+#include "oleacc_De.rc"
+#include "oleacc_Fr.rc"
+#include "oleacc_Lt.rc"
+#include "oleacc_No.rc"
+#include "oleacc_Pt.rc"
+#include "oleacc_Ro.rc"
+

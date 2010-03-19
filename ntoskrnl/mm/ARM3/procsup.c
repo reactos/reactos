@@ -134,7 +134,7 @@ MmCreateKernelStack(IN BOOLEAN GuiStack,
     //
     // Setup the template stack PTE
     //
-    TempPte = HyperTemplatePte;
+    TempPte = ValidKernelPte;
     MI_MAKE_LOCAL_PAGE(&TempPte);
     MI_MAKE_DIRTY_PAGE(&TempPte);
     TempPte.u.Hard.PageFrameNumber = 0;
@@ -158,7 +158,7 @@ MmCreateKernelStack(IN BOOLEAN GuiStack,
         //
         // Get a page
         //
-        PageFrameIndex = MmAllocPage(MC_NPPOOL, 0);
+        PageFrameIndex = MmAllocPage(MC_NPPOOL);
         TempPte.u.Hard.PageFrameNumber = PageFrameIndex;
         
         //
@@ -234,7 +234,7 @@ MmGrowKernelStackEx(IN PVOID StackPointer,
     //
     // Setup the template stack PTE
     //
-    TempPte = HyperTemplatePte;
+    TempPte = ValidKernelPte;
     MI_MAKE_LOCAL_PAGE(&TempPte);
     MI_MAKE_DIRTY_PAGE(&TempPte);
     TempPte.u.Hard.PageFrameNumber = 0;
@@ -257,7 +257,7 @@ MmGrowKernelStackEx(IN PVOID StackPointer,
         //
         // Get a page
         //
-        PageFrameIndex = MmAllocPage(MC_NPPOOL, 0);
+        PageFrameIndex = MmAllocPage(MC_NPPOOL);
         TempPte.u.Hard.PageFrameNumber = PageFrameIndex;
         
         //

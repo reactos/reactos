@@ -573,7 +573,7 @@ BEGIN
     ID_FILE_NEW             "Führt ein neues Programm aus."
     ID_OPTIONS_ALWAYSONTOP  "Task-Manager bleibt im Vordergrund, wenn nicht minimiert."
     ID_OPTIONS_MINIMIZEONUSE
-                            "Task-Manager wird minimiert wenn ein SwitchTo-Vorgang durchgeführt wird."
+                            "Task-Manager wird minimiert, wenn ein SwitchTo-Vorgang durchgeführt wird."
     ID_OPTIONS_HIDEWHENMINIMIZED "Blendet den Task-Manager aus, wenn er minimiert ist."
     ID_VIEW_REFRESH         "Veranlasst den Task-Manager zur sofortigen Aktualisierung, unabhängig von der Geschwindigkeitseinstellung."
     ID_VIEW_LARGE           "Zeigt Tasks als große Symbole an."
@@ -596,9 +596,9 @@ BEGIN
     ID_WINDOWS_BRINGTOFRONT "Zeigt das Fenster im Vordergrund an, aber wechselt nicht zu diesem."
     ID_HELP_TOPICS          "Zeigt die Hilfethemen des Taskmanagers an."
     ID_HELP_ABOUT           "Zeigt Programminformationen, Versionsnummer und Copyright an."
-    ID_FILE_EXIT            "Beendet den Task-Manager."
+    ID_FILE_EXIT            "Beendet den Taskmanager."
     ID_OPTIONS_SHOW16BITTASKS
-                            "Zeigt die 16-Bit Tasks unter der zugehörigen ntvdm.exe an."
+                            "Zeigt die 16-Bit-Tasks unter der zugehörigen ntvdm.exe an."
     ID_VIEW_SELECTCOLUMNS   "Legt fest welche Spalten auf der Registerkarte Prozesse angezeigt werden."
     ID_VIEW_SHOWKERNELTIMES "Zeigt die Kernel-Zeiten in den Systemmonitordiagrammen an."
     ID_VIEW_CPUHISTORY_ONEGRAPHALL
@@ -675,7 +675,7 @@ BEGIN
     IDS_MENU_SHOWKERNELTIMES      "&Kernel-Zeiten anzeigen"
     IDS_CREATENEWTASK             "Neuen Task erstellen"
     IDS_CREATENEWTASK_DESC        "Geben Sie Programme, Ordner, Dokumente oder Internetressourcen an, die geöffnet werden sollen."
-    IDS_MSG_ACCESSPROCESSAFF      "Zugriff auf die / Änderung der Prozess Affinität nicht möglich"
+    IDS_MSG_ACCESSPROCESSAFF      "Zugriff auf die / Änderung der Prozessaffinität nicht möglich"
     IDS_MSG_PROCESSONEPRO         "Der Prozess muss eine Zugehörigkeit zu mindestens einem Prozessor aufweisen."
     IDS_MSG_INVALIDOPTION         "Ungültige Auswahl"
     IDS_MSG_UNABLEDEBUGPROCESS    "Kann Prozess nicht debuggen"

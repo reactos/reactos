@@ -1,5 +1,4 @@
-#ifndef _WIN32K_ACCELERATOR_H
-#define _WIN32K_ACCELERATOR_H
+#pragma once
 
 #include <include/win32.h>
 #include <include/winsta.h>
@@ -19,5 +18,3 @@ NTSTATUS FASTCALL
 CleanupAcceleratorImpl(VOID);
 
 PACCELERATOR_TABLE FASTCALL UserGetAccelObject(HACCEL);
-
-#endif /* _WIN32K_ACCELERATOR_H */

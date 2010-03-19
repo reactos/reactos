@@ -19,14 +19,10 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __RS232_H
-#define __RS232_H
+#pragma once
 
 BOOLEAN Rs232PortInitialize(ULONG ComPort, ULONG BaudRate);
 BOOLEAN Rs232PortGetByte(PUCHAR ByteRecieved);
 BOOLEAN Rs232PortPollByte(PUCHAR ByteRecieved);
 VOID Rs232PortPutByte(UCHAR ByteToSend);
 BOOLEAN Rs232PortInUse(ULONG Base);
-
-
-#endif // defined __RS232_H

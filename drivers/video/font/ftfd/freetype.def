@@ -1,5 +1,8 @@
 LIBRARY ftfd.dll
 EXPORTS
+  FT_Bitmap_Convert
+  FT_Bitmap_Done
+  FT_Bitmap_New
   FT_Done_Face
   FT_Done_Glyph
   FT_Get_Char_Index

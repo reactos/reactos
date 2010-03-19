@@ -32,6 +32,7 @@
 #define NTOSAPI
 #define printf TuiPrintf
 #include <ntddk.h>
+#include <ntifs.h>
 #include <ioaccess.h>
 #include <arc/arc.h>
 #include <ketypes.h>
@@ -39,6 +40,7 @@
 #include <ndk/asm.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/ldrtypes.h>
+#include <ndk/halfuncs.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
@@ -60,6 +62,8 @@
 #include <reactos.h>
 #include <registry.h>
 #include <winldr.h>
+#include <ntdddisk.h>
+#include <internal/hal.h>
 /* file system headers */
 #include <fs/ext2.h>
 #include <fs/fat.h>

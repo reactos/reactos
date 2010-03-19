@@ -109,30 +109,39 @@ BOOL WINAPI
 EnableWindow(HWND hWnd,
 	     BOOL bEnable)
 {
+    // This will soon be moved to win32k.
+    BOOL Update;
     LONG Style = GetWindowLongPtrW(hWnd, GWL_STYLE);
     /* check if updating is needed */
     UINT bIsDisabled = (Style & WS_DISABLED);
-    if ( (bIsDisabled && bEnable) || (!bIsDisabled && !bEnable) )
-    {
-        if (bEnable)
-        {
-            Style &= ~WS_DISABLED;
-        }
-        else
-        {
-            Style |= WS_DISABLED;
-            /* Remove keyboard focus from that window if it had focus */
-            if (hWnd == GetFocus())
-            {
-               SetFocus(NULL);
-            }
-        }
-        NtUserSetWindowLong(hWnd, GWL_STYLE, Style, FALSE);
+    Update = bIsDisabled;
 
-        SendMessageA(hWnd, WM_ENABLE, (LPARAM) IsWindowEnabled(hWnd), 0);
+    if (bEnable)
+    {
+       Style &= ~WS_DISABLED;
+    }
+    else
+    {
+       Update = !bIsDisabled;
+
+       SendMessageW( hWnd, WM_CANCELMODE, 0, 0);
+
+       /* Remove keyboard focus from that window if it had focus */
+       if (hWnd == GetFocus())
+       {
+          SetFocus(NULL);
+       }
+       Style |= WS_DISABLED;
+    }
+
+    NtUserSetWindowLong(hWnd, GWL_STYLE, Style, FALSE);
+    
+    if (Update)
+    {
+        SendMessageW(hWnd, WM_ENABLE, (LPARAM)bEnable, 0);
     }
     // Return nonzero if it was disabled, or zero if it wasn't:
-    return IsWindowEnabled(hWnd);
+    return bIsDisabled;
 }
 
 

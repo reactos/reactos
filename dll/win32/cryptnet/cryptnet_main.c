@@ -40,6 +40,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(cryptnet);
 
+#define IS_INTOID(x)    (((ULONG_PTR)(x) >> 16) == 0)
+
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
    TRACE("(0x%p, %d, %p)\n", hinstDLL, fdwReason, lpvReserved);
@@ -92,9 +94,7 @@ HRESULT WINAPI DllUnregisterServer(void)
 
 static const char *url_oid_to_str(LPCSTR oid)
 {
-    if (HIWORD(oid))
-        return oid;
-    else
+    if (IS_INTOID(oid))
     {
         static char buf[10];
 
@@ -115,24 +115,14 @@ static const char *url_oid_to_str(LPCSTR oid)
             return buf;
         }
     }
+    else
+        return oid;
 }
 
 typedef BOOL (WINAPI *UrlDllGetObjectUrlFunc)(LPCSTR, LPVOID, DWORD,
  PCRYPT_URL_ARRAY, DWORD *, PCRYPT_URL_INFO, DWORD *, LPVOID);
 
 static BOOL WINAPI CRYPT_GetUrlFromCertificateIssuer(LPCSTR pszUrlOid,
- LPVOID pvPara, DWORD dwFlags, PCRYPT_URL_ARRAY pUrlArray, DWORD *pcbUrlArray,
- PCRYPT_URL_INFO pUrlInfo, DWORD *pcbUrlInfo, LPVOID pvReserved)
-{
-    /* FIXME: This depends on the AIA (authority info access) extension being
-     * supported in crypt32.
-     */
-    FIXME("\n");
-    SetLastError(CRYPT_E_NOT_FOUND);
-    return FALSE;
-}
-
-static BOOL WINAPI CRYPT_GetUrlFromCertificateCRLDistPoint(LPCSTR pszUrlOid,
  LPVOID pvPara, DWORD dwFlags, PCRYPT_URL_ARRAY pUrlArray, DWORD *pcbUrlArray,
  PCRYPT_URL_INFO pUrlInfo, DWORD *pcbUrlInfo, LPVOID pvReserved)
 {
@@ -146,39 +136,37 @@ static BOOL WINAPI CRYPT_GetUrlFromCertificateCRLDistPoint(LPCSTR pszUrlOid,
         SetLastError(CRYPT_E_NOT_FOUND);
         return FALSE;
     }
-    if ((ext = CertFindExtension(szOID_CRL_DIST_POINTS,
+    if ((ext = CertFindExtension(szOID_AUTHORITY_INFO_ACCESS,
      cert->pCertInfo->cExtension, cert->pCertInfo->rgExtension)))
     {
-        CRL_DIST_POINTS_INFO *info;
+        CERT_AUTHORITY_INFO_ACCESS *aia;
         DWORD size;
 
-        ret = CryptDecodeObjectEx(X509_ASN_ENCODING, X509_CRL_DIST_POINTS,
+        ret = CryptDecodeObjectEx(X509_ASN_ENCODING, X509_AUTHORITY_INFO_ACCESS,
          ext->Value.pbData, ext->Value.cbData, CRYPT_DECODE_ALLOC_FLAG, NULL,
-         &info, &size);
+         &aia, &size);
         if (ret)
         {
             DWORD i, cUrl, bytesNeeded = sizeof(CRYPT_URL_ARRAY);
 
-            for (i = 0, cUrl = 0; i < info->cDistPoint; i++)
-                if (info->rgDistPoint[i].DistPointName.dwDistPointNameChoice
-                 == CRL_DIST_POINT_FULL_NAME)
+            for (i = 0, cUrl = 0; i < aia->cAccDescr; i++)
+                if (!strcmp(aia->rgAccDescr[i].pszAccessMethod,
+                 szOID_PKIX_CA_ISSUERS))
                 {
-                    DWORD j;
-                    CERT_ALT_NAME_INFO *name =
-                     &info->rgDistPoint[i].DistPointName.u.FullName;
-
-                    for (j = 0; j < name->cAltEntry; j++)
-                        if (name->rgAltEntry[j].dwAltNameChoice ==
-                         CERT_ALT_NAME_URL)
+                    if (aia->rgAccDescr[i].AccessLocation.dwAltNameChoice ==
+                     CERT_ALT_NAME_URL)
+                    {
+                        if (aia->rgAccDescr[i].AccessLocation.u.pwszURL)
                         {
-                            if (name->rgAltEntry[j].u.pwszURL)
-                            {
-                                cUrl++;
-                                bytesNeeded += sizeof(LPWSTR) +
-                                 (lstrlenW(name->rgAltEntry[j].u.pwszURL) + 1)
-                                 * sizeof(WCHAR);
-                            }
+                            cUrl++;
+                            bytesNeeded += sizeof(LPWSTR) +
+                             (lstrlenW(aia->rgAccDescr[i].AccessLocation.u.
+                             pwszURL) + 1) * sizeof(WCHAR);
                         }
+                    }
+                    else
+                        FIXME("unsupported alt name type %d\n",
+                         aia->rgAccDescr[i].AccessLocation.dwAltNameChoice);
                 }
             if (!pcbUrlArray)
             {
@@ -203,28 +191,22 @@ static BOOL WINAPI CRYPT_GetUrlFromCertificateCRLDistPoint(LPCSTR pszUrlOid,
                  (LPWSTR *)((BYTE *)pUrlArray + sizeof(CRYPT_URL_ARRAY));
                 nextUrl = (LPWSTR)((BYTE *)pUrlArray + sizeof(CRYPT_URL_ARRAY)
                  + cUrl * sizeof(LPWSTR));
-                for (i = 0; i < info->cDistPoint; i++)
-                    if (info->rgDistPoint[i].DistPointName.dwDistPointNameChoice
-                     == CRL_DIST_POINT_FULL_NAME)
+                for (i = 0; i < aia->cAccDescr; i++)
+                    if (!strcmp(aia->rgAccDescr[i].pszAccessMethod,
+                     szOID_PKIX_CA_ISSUERS))
                     {
-                        DWORD j;
-                        CERT_ALT_NAME_INFO *name =
-                         &info->rgDistPoint[i].DistPointName.u.FullName;
-
-                        for (j = 0; j < name->cAltEntry; j++)
-                            if (name->rgAltEntry[j].dwAltNameChoice ==
-                             CERT_ALT_NAME_URL)
+                        if (aia->rgAccDescr[i].AccessLocation.dwAltNameChoice
+                         == CERT_ALT_NAME_URL)
+                        {
+                            if (aia->rgAccDescr[i].AccessLocation.u.pwszURL)
                             {
-                                if (name->rgAltEntry[j].u.pwszURL)
-                                {
-                                    lstrcpyW(nextUrl,
-                                     name->rgAltEntry[j].u.pwszURL);
-                                    pUrlArray->rgwszUrl[pUrlArray->cUrl++] =
-                                     nextUrl;
-                                    nextUrl +=
-                                     (lstrlenW(name->rgAltEntry[j].u.pwszURL) + 1);
-                                }
+                                lstrcpyW(nextUrl,
+                                 aia->rgAccDescr[i].AccessLocation.u.pwszURL);
+                                pUrlArray->rgwszUrl[pUrlArray->cUrl++] =
+                                 nextUrl;
+                                nextUrl += (lstrlenW(nextUrl) + 1);
                             }
+                        }
                     }
             }
             if (ret)
@@ -247,9 +229,139 @@ static BOOL WINAPI CRYPT_GetUrlFromCertificateCRLDistPoint(LPCSTR pszUrlOid,
                     }
                 }
             }
-            LocalFree(info);
+            LocalFree(aia);
         }
     }
+    else
+        SetLastError(CRYPT_E_NOT_FOUND);
+    return ret;
+}
+
+static BOOL CRYPT_GetUrlFromCRLDistPointsExt(const CRYPT_DATA_BLOB *value,
+ PCRYPT_URL_ARRAY pUrlArray, DWORD *pcbUrlArray, PCRYPT_URL_INFO pUrlInfo,
+ DWORD *pcbUrlInfo)
+{
+    BOOL ret;
+    CRL_DIST_POINTS_INFO *info;
+    DWORD size;
+
+    ret = CryptDecodeObjectEx(X509_ASN_ENCODING, X509_CRL_DIST_POINTS,
+     value->pbData, value->cbData, CRYPT_DECODE_ALLOC_FLAG, NULL, &info, &size);
+    if (ret)
+    {
+        DWORD i, cUrl, bytesNeeded = sizeof(CRYPT_URL_ARRAY);
+
+        for (i = 0, cUrl = 0; i < info->cDistPoint; i++)
+            if (info->rgDistPoint[i].DistPointName.dwDistPointNameChoice
+             == CRL_DIST_POINT_FULL_NAME)
+            {
+                DWORD j;
+                CERT_ALT_NAME_INFO *name =
+                 &info->rgDistPoint[i].DistPointName.u.FullName;
+
+                for (j = 0; j < name->cAltEntry; j++)
+                    if (name->rgAltEntry[j].dwAltNameChoice ==
+                     CERT_ALT_NAME_URL)
+                    {
+                        if (name->rgAltEntry[j].u.pwszURL)
+                        {
+                            cUrl++;
+                            bytesNeeded += sizeof(LPWSTR) +
+                             (lstrlenW(name->rgAltEntry[j].u.pwszURL) + 1)
+                             * sizeof(WCHAR);
+                        }
+                    }
+            }
+        if (!pcbUrlArray)
+        {
+            SetLastError(E_INVALIDARG);
+            ret = FALSE;
+        }
+        else if (!pUrlArray)
+            *pcbUrlArray = bytesNeeded;
+        else if (*pcbUrlArray < bytesNeeded)
+        {
+            SetLastError(ERROR_MORE_DATA);
+            *pcbUrlArray = bytesNeeded;
+            ret = FALSE;
+        }
+        else
+        {
+            LPWSTR nextUrl;
+
+            *pcbUrlArray = bytesNeeded;
+            pUrlArray->cUrl = 0;
+            pUrlArray->rgwszUrl =
+             (LPWSTR *)((BYTE *)pUrlArray + sizeof(CRYPT_URL_ARRAY));
+            nextUrl = (LPWSTR)((BYTE *)pUrlArray + sizeof(CRYPT_URL_ARRAY)
+             + cUrl * sizeof(LPWSTR));
+            for (i = 0; i < info->cDistPoint; i++)
+                if (info->rgDistPoint[i].DistPointName.dwDistPointNameChoice
+                 == CRL_DIST_POINT_FULL_NAME)
+                {
+                    DWORD j;
+                    CERT_ALT_NAME_INFO *name =
+                     &info->rgDistPoint[i].DistPointName.u.FullName;
+
+                    for (j = 0; j < name->cAltEntry; j++)
+                        if (name->rgAltEntry[j].dwAltNameChoice ==
+                         CERT_ALT_NAME_URL)
+                        {
+                            if (name->rgAltEntry[j].u.pwszURL)
+                            {
+                                lstrcpyW(nextUrl,
+                                 name->rgAltEntry[j].u.pwszURL);
+                                pUrlArray->rgwszUrl[pUrlArray->cUrl++] =
+                                 nextUrl;
+                                nextUrl +=
+                                 (lstrlenW(name->rgAltEntry[j].u.pwszURL) + 1);
+                            }
+                        }
+                }
+        }
+        if (ret)
+        {
+            if (pcbUrlInfo)
+            {
+                FIXME("url info: stub\n");
+                if (!pUrlInfo)
+                    *pcbUrlInfo = sizeof(CRYPT_URL_INFO);
+                else if (*pcbUrlInfo < sizeof(CRYPT_URL_INFO))
+                {
+                    *pcbUrlInfo = sizeof(CRYPT_URL_INFO);
+                    SetLastError(ERROR_MORE_DATA);
+                    ret = FALSE;
+                }
+                else
+                {
+                    *pcbUrlInfo = sizeof(CRYPT_URL_INFO);
+                    memset(pUrlInfo, 0, sizeof(CRYPT_URL_INFO));
+                }
+            }
+        }
+        LocalFree(info);
+    }
+    return ret;
+}
+
+static BOOL WINAPI CRYPT_GetUrlFromCertificateCRLDistPoint(LPCSTR pszUrlOid,
+ LPVOID pvPara, DWORD dwFlags, PCRYPT_URL_ARRAY pUrlArray, DWORD *pcbUrlArray,
+ PCRYPT_URL_INFO pUrlInfo, DWORD *pcbUrlInfo, LPVOID pvReserved)
+{
+    PCCERT_CONTEXT cert = pvPara;
+    PCERT_EXTENSION ext;
+    BOOL ret = FALSE;
+
+    /* The only applicable flag is CRYPT_GET_URL_FROM_EXTENSION */
+    if (dwFlags && !(dwFlags & CRYPT_GET_URL_FROM_EXTENSION))
+    {
+        SetLastError(CRYPT_E_NOT_FOUND);
+        return FALSE;
+    }
+    if ((ext = CertFindExtension(szOID_CRL_DIST_POINTS,
+     cert->pCertInfo->cExtension, cert->pCertInfo->rgExtension)))
+        ret = CRYPT_GetUrlFromCRLDistPointsExt(&ext->Value, pUrlArray,
+         pcbUrlArray, pUrlInfo, pcbUrlInfo);
     else
         SetLastError(CRYPT_E_NOT_FOUND);
     return ret;
@@ -269,7 +381,7 @@ BOOL WINAPI CryptGetObjectUrl(LPCSTR pszUrlOid, LPVOID pvPara, DWORD dwFlags,
     TRACE("(%s, %p, %08x, %p, %p, %p, %p, %p)\n", debugstr_a(pszUrlOid),
      pvPara, dwFlags, pUrlArray, pcbUrlArray, pUrlInfo, pcbUrlInfo, pvReserved);
 
-    if (!HIWORD(pszUrlOid))
+    if (IS_INTOID(pszUrlOid))
     {
         switch (LOWORD(pszUrlOid))
         {
@@ -566,7 +678,7 @@ static BOOL CRYPT_DownloadObject(DWORD dwRetrievalFlags, HINTERNET hHttp,
                         }
                     }
                     if (ret)
-                        object.cbData += bytesAvailable;
+                        object.cbData += buffer.dwBufferLength;
                 }
                 else
                 {
@@ -1246,20 +1358,24 @@ static BOOL WINAPI CRYPT_CreateAny(LPCSTR pszObjectOid,
                         if (!CertAddCertificateContextToStore(store,
                          context, CERT_STORE_ADD_ALWAYS, NULL))
                             ret = FALSE;
+                        CertFreeCertificateContext(context);
                         break;
                     case CERT_QUERY_CONTENT_CRL:
                         if (!CertAddCRLContextToStore(store,
                          context, CERT_STORE_ADD_ALWAYS, NULL))
                              ret = FALSE;
+                        CertFreeCRLContext(context);
                         break;
                     case CERT_QUERY_CONTENT_CTL:
                         if (!CertAddCTLContextToStore(store,
                          context, CERT_STORE_ADD_ALWAYS, NULL))
                              ret = FALSE;
+                        CertFreeCTLContext(context);
                         break;
                     default:
                         CertAddStoreToCollection(store, contextStore, 0, 0);
                     }
+                    CertCloseStore(contextStore, 0);
                 }
                 else
                     ret = FALSE;
@@ -1284,7 +1400,7 @@ static BOOL CRYPT_GetCreateFunction(LPCSTR pszObjectOid,
 
     *pFunc = NULL;
     *phFunc = 0;
-    if (!HIWORD(pszObjectOid))
+    if (IS_INTOID(pszObjectOid))
     {
         switch (LOWORD(pszObjectOid))
         {
@@ -1354,7 +1470,7 @@ static BOOL CRYPT_GetExpirationFunction(LPCSTR pszObjectOid,
 {
     BOOL ret;
 
-    if (!HIWORD(pszObjectOid))
+    if (IS_INTOID(pszObjectOid))
     {
         switch (LOWORD(pszObjectOid))
         {
@@ -1437,6 +1553,238 @@ BOOL WINAPI CryptRetrieveObjectByUrlW(LPCWSTR pszURL, LPCSTR pszObjectOid,
     return ret;
 }
 
+static DWORD verify_cert_revocation_with_crl(PCCERT_CONTEXT cert,
+ PCCRL_CONTEXT crl, DWORD index, FILETIME *pTime,
+ PCERT_REVOCATION_STATUS pRevStatus)
+{
+    DWORD error;
+
+    if (CertVerifyCRLTimeValidity(pTime, crl->pCrlInfo))
+    {
+        /* The CRL isn't time valid */
+        error = CRYPT_E_NO_REVOCATION_CHECK;
+    }
+    else
+    {
+        PCRL_ENTRY entry = NULL;
+
+        CertFindCertificateInCRL(cert, crl, 0, NULL, &entry);
+        if (entry)
+        {
+            error = CRYPT_E_REVOKED;
+            pRevStatus->dwIndex = index;
+        }
+        else
+            error = ERROR_SUCCESS;
+    }
+    return error;
+}
+
+static DWORD verify_cert_revocation_from_dist_points_ext(
+ const CRYPT_DATA_BLOB *value, PCCERT_CONTEXT cert, DWORD index,
+ FILETIME *pTime, DWORD dwFlags, PCERT_REVOCATION_PARA pRevPara,
+ PCERT_REVOCATION_STATUS pRevStatus)
+{
+    DWORD error = ERROR_SUCCESS, cbUrlArray;
+
+    if (CRYPT_GetUrlFromCRLDistPointsExt(value, NULL, &cbUrlArray, NULL, NULL))
+    {
+        CRYPT_URL_ARRAY *urlArray = CryptMemAlloc(cbUrlArray);
+
+        if (urlArray)
+        {
+            DWORD j, retrievalFlags = 0, startTime, endTime, timeout;
+            BOOL ret;
+
+            ret = CRYPT_GetUrlFromCRLDistPointsExt(value, urlArray,
+             &cbUrlArray, NULL, NULL);
+            if (dwFlags & CERT_VERIFY_CACHE_ONLY_BASED_REVOCATION)
+                retrievalFlags |= CRYPT_CACHE_ONLY_RETRIEVAL;
+            if (dwFlags & CERT_VERIFY_REV_ACCUMULATIVE_TIMEOUT_FLAG &&
+             pRevPara && pRevPara->cbSize >= offsetof(CERT_REVOCATION_PARA,
+             dwUrlRetrievalTimeout) + sizeof(DWORD))
+            {
+                startTime = GetTickCount();
+                endTime = startTime + pRevPara->dwUrlRetrievalTimeout;
+                timeout = pRevPara->dwUrlRetrievalTimeout;
+            }
+            else
+                endTime = timeout = 0;
+            if (!ret)
+                error = GetLastError();
+            for (j = 0; !error && j < urlArray->cUrl; j++)
+            {
+                PCCRL_CONTEXT crl;
+
+                ret = CryptRetrieveObjectByUrlW(urlArray->rgwszUrl[j],
+                 CONTEXT_OID_CRL, retrievalFlags, timeout, (void **)&crl,
+                 NULL, NULL, NULL, NULL);
+                if (ret)
+                {
+                    error = verify_cert_revocation_with_crl(cert, crl, index,
+                     pTime, pRevStatus);
+                    if (!error && timeout)
+                    {
+                        DWORD time = GetTickCount();
+
+                        if ((int)(endTime - time) <= 0)
+                        {
+                            error = ERROR_TIMEOUT;
+                            pRevStatus->dwIndex = index;
+                        }
+                        else
+                            timeout = endTime - time;
+                    }
+                    CertFreeCRLContext(crl);
+                }
+                else
+                    error = CRYPT_E_REVOCATION_OFFLINE;
+            }
+            CryptMemFree(urlArray);
+        }
+        else
+        {
+            error = ERROR_OUTOFMEMORY;
+            pRevStatus->dwIndex = index;
+        }
+    }
+    else
+    {
+        error = GetLastError();
+        pRevStatus->dwIndex = index;
+    }
+    return error;
+}
+
+static DWORD verify_cert_revocation_from_aia_ext(
+ const CRYPT_DATA_BLOB *value, PCCERT_CONTEXT cert, DWORD index,
+ FILETIME *pTime, DWORD dwFlags, PCERT_REVOCATION_PARA pRevPara,
+ PCERT_REVOCATION_STATUS pRevStatus)
+{
+    BOOL ret;
+    DWORD error, size;
+    CERT_AUTHORITY_INFO_ACCESS *aia;
+
+    ret = CryptDecodeObjectEx(X509_ASN_ENCODING, X509_AUTHORITY_INFO_ACCESS,
+     value->pbData, value->cbData, CRYPT_DECODE_ALLOC_FLAG, NULL, &aia, &size);
+    if (ret)
+    {
+        DWORD i;
+
+        for (i = 0; i < aia->cAccDescr; i++)
+            if (!strcmp(aia->rgAccDescr[i].pszAccessMethod,
+             szOID_PKIX_OCSP))
+            {
+                if (aia->rgAccDescr[i].AccessLocation.dwAltNameChoice ==
+                 CERT_ALT_NAME_URL)
+                    FIXME("OCSP URL = %s\n",
+                     debugstr_w(aia->rgAccDescr[i].AccessLocation.u.pwszURL));
+                else
+                    FIXME("unsupported AccessLocation type %d\n",
+                     aia->rgAccDescr[i].AccessLocation.dwAltNameChoice);
+            }
+        LocalFree(aia);
+        /* FIXME: lie and pretend OCSP validated the cert */
+        error = ERROR_SUCCESS;
+    }
+    else
+        error = GetLastError();
+    return error;
+}
+
+static DWORD verify_cert_revocation(PCCERT_CONTEXT cert, DWORD index,
+ FILETIME *pTime, DWORD dwFlags, PCERT_REVOCATION_PARA pRevPara,
+ PCERT_REVOCATION_STATUS pRevStatus)
+{
+    DWORD error = ERROR_SUCCESS;
+    PCERT_EXTENSION ext;
+
+    if ((ext = CertFindExtension(szOID_CRL_DIST_POINTS,
+     cert->pCertInfo->cExtension, cert->pCertInfo->rgExtension)))
+        error = verify_cert_revocation_from_dist_points_ext(&ext->Value, cert,
+         index, pTime, dwFlags, pRevPara, pRevStatus);
+    else if ((ext = CertFindExtension(szOID_AUTHORITY_INFO_ACCESS,
+     cert->pCertInfo->cExtension, cert->pCertInfo->rgExtension)))
+        error = verify_cert_revocation_from_aia_ext(&ext->Value, cert,
+         index, pTime, dwFlags, pRevPara, pRevStatus);
+    else
+    {
+        if (pRevPara && pRevPara->hCrlStore && pRevPara->pIssuerCert)
+        {
+            PCCRL_CONTEXT crl = NULL;
+            BOOL canSignCRLs;
+
+            /* If the caller told us about the issuer, make sure the issuer
+             * can sign CRLs before looking for one.
+             */
+            if ((ext = CertFindExtension(szOID_KEY_USAGE,
+             pRevPara->pIssuerCert->pCertInfo->cExtension,
+             pRevPara->pIssuerCert->pCertInfo->rgExtension)))
+            {
+                CRYPT_BIT_BLOB usage;
+                DWORD size = sizeof(usage);
+
+                if (!CryptDecodeObjectEx(cert->dwCertEncodingType, X509_BITS,
+                 ext->Value.pbData, ext->Value.cbData,
+                 CRYPT_DECODE_NOCOPY_FLAG, NULL, &usage, &size))
+                    canSignCRLs = FALSE;
+                else if (usage.cbData > 2)
+                {
+                    /* The key usage extension only defines 9 bits => no more
+                     * than 2 bytes are needed to encode all known usages.
+                     */
+                    canSignCRLs = FALSE;
+                }
+                else
+                {
+                    BYTE usageBits = usage.pbData[usage.cbData - 1];
+
+                    canSignCRLs = usageBits & CERT_CRL_SIGN_KEY_USAGE;
+                }
+            }
+            else
+                canSignCRLs = TRUE;
+            if (canSignCRLs)
+            {
+                /* If the caller was helpful enough to tell us where to find a
+                 * CRL for the cert, look for one and check it.
+                 */
+                crl = CertFindCRLInStore(pRevPara->hCrlStore,
+                 cert->dwCertEncodingType,
+                 CRL_FIND_ISSUED_BY_SIGNATURE_FLAG |
+                 CRL_FIND_ISSUED_BY_AKI_FLAG,
+                 CRL_FIND_ISSUED_BY, pRevPara->pIssuerCert, NULL);
+            }
+            if (crl)
+            {
+                error = verify_cert_revocation_with_crl(cert, crl, index,
+                 pTime, pRevStatus);
+                CertFreeCRLContext(crl);
+            }
+            else
+            {
+                error = CRYPT_E_NO_REVOCATION_CHECK;
+                pRevStatus->dwIndex = index;
+            }
+        }
+        else
+        {
+            error = CRYPT_E_NO_REVOCATION_CHECK;
+            pRevStatus->dwIndex = index;
+        }
+    }
+    return error;
+}
+
+typedef struct _CERT_REVOCATION_PARA_NO_EXTRA_FIELDS {
+    DWORD                     cbSize;
+    PCCERT_CONTEXT            pIssuerCert;
+    DWORD                     cCertStore;
+    HCERTSTORE               *rgCertStore;
+    HCERTSTORE                hCrlStore;
+    LPFILETIME                pftTimeToUse;
+} CERT_REVOCATION_PARA_NO_EXTRA_FIELDS, *PCERT_REVOCATION_PARA_NO_EXTRA_FIELDS;
+
 typedef struct _OLD_CERT_REVOCATION_STATUS {
     DWORD cbSize;
     DWORD dwIndex;
@@ -1452,7 +1800,8 @@ BOOL WINAPI CertDllVerifyRevocation(DWORD dwEncodingType, DWORD dwRevType,
  PCERT_REVOCATION_PARA pRevPara, PCERT_REVOCATION_STATUS pRevStatus)
 {
     DWORD error = 0, i;
-    BOOL ret;
+    FILETIME now;
+    LPFILETIME pTime = NULL;
 
     TRACE("(%08x, %d, %d, %p, %08x, %p, %p)\n", dwEncodingType, dwRevType,
      cContext, rgpvContext, dwFlags, pRevPara, pRevStatus);
@@ -1463,106 +1812,33 @@ BOOL WINAPI CertDllVerifyRevocation(DWORD dwEncodingType, DWORD dwRevType,
         SetLastError(E_INVALIDARG);
         return FALSE;
     }
+    if (!cContext)
+    {
+        SetLastError(E_INVALIDARG);
+        return FALSE;
+    }
+    if (pRevPara && pRevPara->cbSize >=
+     sizeof(CERT_REVOCATION_PARA_NO_EXTRA_FIELDS))
+        pTime = pRevPara->pftTimeToUse;
+    if (!pTime)
+    {
+        GetSystemTimeAsFileTime(&now);
+        pTime = &now;
+    }
     memset(&pRevStatus->dwIndex, 0, pRevStatus->cbSize - sizeof(DWORD));
     if (dwRevType != CERT_CONTEXT_REVOCATION_TYPE)
-    {
         error = CRYPT_E_NO_REVOCATION_CHECK;
-        ret = FALSE;
-    }
     else
     {
-        ret = TRUE;
-        for (i = 0; ret && i < cContext; i++)
-        {
-            DWORD cbUrlArray;
-
-            ret = CryptGetObjectUrl(URL_OID_CERTIFICATE_CRL_DIST_POINT,
-             rgpvContext[i], 0, NULL, &cbUrlArray, NULL, NULL, NULL);
-            if (!ret && GetLastError() == CRYPT_E_NOT_FOUND)
-            {
-                error = CRYPT_E_NO_REVOCATION_CHECK;
-                pRevStatus->dwIndex = i;
-            }
-            else if (ret)
-            {
-                CRYPT_URL_ARRAY *urlArray = CryptMemAlloc(cbUrlArray);
-
-                if (urlArray)
-                {
-                    DWORD j, retrievalFlags = 0, startTime, endTime, timeout;
-
-                    ret = CryptGetObjectUrl(URL_OID_CERTIFICATE_CRL_DIST_POINT,
-                     rgpvContext[i], 0, urlArray, &cbUrlArray, NULL, NULL,
-                     NULL);
-                    if (dwFlags & CERT_VERIFY_CACHE_ONLY_BASED_REVOCATION)
-                        retrievalFlags |= CRYPT_CACHE_ONLY_RETRIEVAL;
-                    if (dwFlags & CERT_VERIFY_REV_ACCUMULATIVE_TIMEOUT_FLAG &&
-                     pRevPara->cbSize >= offsetof(CERT_REVOCATION_PARA,
-                     dwUrlRetrievalTimeout) + sizeof(DWORD))
-                    {
-                        startTime = GetTickCount();
-                        endTime = startTime + pRevPara->dwUrlRetrievalTimeout;
-                        timeout = pRevPara->dwUrlRetrievalTimeout;
-                    }
-                    else
-                        endTime = timeout = 0;
-                    for (j = 0; ret && j < urlArray->cUrl; j++)
-                    {
-                        PCCRL_CONTEXT crl;
-
-                        ret = CryptRetrieveObjectByUrlW(urlArray->rgwszUrl[j],
-                         CONTEXT_OID_CRL, retrievalFlags, timeout,
-                         (void **)&crl, NULL, NULL, NULL, NULL);
-                        if (ret)
-                        {
-                            PCRL_ENTRY entry = NULL;
-
-                            CertFindCertificateInCRL(
-                             rgpvContext[i], crl, 0, NULL,
-                             &entry);
-                            if (entry)
-                            {
-                                error = CRYPT_E_REVOKED;
-                                pRevStatus->dwIndex = i;
-                                ret = FALSE;
-                            }
-                            else if (timeout)
-                            {
-                                DWORD time = GetTickCount();
-
-                                if ((int)(endTime - time) <= 0)
-                                {
-                                    error = ERROR_TIMEOUT;
-                                    pRevStatus->dwIndex = i;
-                                    ret = FALSE;
-                                }
-                                else
-                                    timeout = endTime - time;
-                            }
-                            CertFreeCRLContext(crl);
-                        }
-                        else
-                            error = CRYPT_E_REVOCATION_OFFLINE;
-                    }
-                    CryptMemFree(urlArray);
-                }
-                else
-                {
-                    error = ERROR_OUTOFMEMORY;
-                    pRevStatus->dwIndex = i;
-                    ret = FALSE;
-                }
-            }
-            else
-                pRevStatus->dwIndex = i;
-        }
+        for (i = 0; !error && i < cContext; i++)
+            error = verify_cert_revocation(rgpvContext[i], i, pTime, dwFlags,
+             pRevPara, pRevStatus);
     }
-
-    if (!ret)
+    if (error)
     {
         SetLastError(error);
         pRevStatus->dwError = error;
     }
-    TRACE("returning %d (%08x)\n", ret, error);
-    return ret;
+    TRACE("returning %d (%08x)\n", !error, error);
+    return !error;
 }

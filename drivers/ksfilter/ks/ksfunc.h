@@ -1,5 +1,4 @@
-#ifndef KSFUNC_H__
-#define KSFUNC_H__
+#pragma once
 
 #include "ksiface.h"
 #include "kstypes.h"
@@ -145,6 +144,3 @@ KspPropertyHandler(
     IN  const KSPROPERTY_SET* PropertySet,
     IN  PFNKSALLOCATOR Allocator OPTIONAL,
     IN  ULONG PropertyItemSize OPTIONAL);
-
-
-#endif

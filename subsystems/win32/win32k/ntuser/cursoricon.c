@@ -238,7 +238,7 @@ BOOL UserSetCursorPos( INT x, INT y)
  * User32 macro NtUserShowCursor */
 int UserShowCursor(BOOL bShow)
 {
-    PSYSTEM_CURSORINFO CurInfo = IntGetSysCursorInfo();;
+    PSYSTEM_CURSORINFO CurInfo = IntGetSysCursorInfo();
     HDC hdcScreen;
 
     if (!(hdcScreen = IntGetScreenDC()))
@@ -1563,8 +1563,8 @@ NtUserDrawIconEx(
     UINT istepIfAniCur,
     HBRUSH hbrFlickerFreeDraw,
     UINT diFlags,
-    DWORD Unknown0,
-    DWORD Unknown1)
+    BOOL bMetaHDC, // When TRUE, GDI functions need to be handled in User32!
+    PVOID pDIXData)
 {
     PCURICON_OBJECT pIcon;
     BOOL Ret;

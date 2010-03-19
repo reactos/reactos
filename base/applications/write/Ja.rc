@@ -29,4 +29,3 @@ STRINGTABLE
 {
     IDS_FAILED, "Wordpad の起動に失敗しました"
 }
-#pragma code_page(default)

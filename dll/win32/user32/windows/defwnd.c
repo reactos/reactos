@@ -1355,22 +1355,22 @@ User32DefWindowProc(HWND hWnd,
 
             if (Style & WS_CHILD)
             {
+                /* with the exception of the border around a resizable wnd,
+                 * give the parent first chance to set the cursor */
                 if (LOWORD(lParam) < HTLEFT || LOWORD(lParam) > HTBOTTOMRIGHT)
                 {
-                    BOOL bResult;
+                    HWND parent = GetParent( hWnd );
                     if (bUnicode)
                     {
-                        bResult = SendMessageW(GetParent(hWnd), WM_SETCURSOR,
-                                               wParam, lParam);
+                       if (parent != GetDesktopWindow() &&
+                           SendMessageW( parent, WM_SETCURSOR, wParam, lParam))
+                          return TRUE;
                     }
                     else
                     {
-                        bResult = SendMessageA(GetParent(hWnd), WM_SETCURSOR,
-                                               wParam, lParam);
-                    }
-                    if (bResult)
-                    {
-                        return(TRUE);
+                       if (parent != GetDesktopWindow() &&                    
+                           SendMessageA( parent, WM_SETCURSOR, wParam, lParam))
+                          return TRUE;
                     }
                 }
             }

@@ -1,0 +1,44 @@
+/*
+ * Copyright (C) 2009 Huw Davies
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+[
+    object,
+    uuid(0c733a27-2a1c-11ce-ade5-00aa0044773d),
+    pointer_default(unique)
+]
+interface ICommandText : ICommand
+{
+    [local]
+    HRESULT GetCommandText([in, out /*, annotation("__inout_opt")*/] GUID *pguidDialect,
+                           [out /*, annotation("__deref_out")*/] LPOLESTR *ppwszCommand);
+
+    [call_as(GetCommandText)]
+    HRESULT RemoteGetCommandText([in, out, unique] GUID *pguidDialect,
+                                 [out] LPOLESTR *ppwszCommand,
+                                 [out] IErrorInfo **ppErrorInfoRem);
+
+    [local]
+    HRESULT SetCommandText([in] REFGUID rguidDialect,
+                           [in, unique /*, annotation("__in_z_opt")*/] LPCOLESTR pwszCommand);
+
+    [call_as(SetCommandText)]
+    HRESULT RemoteSetCommandText([in] REFGUID rguidDialect,
+                                 [in, unique] LPCOLESTR pwszCommand,
+                                 [out] IErrorInfo **ppErrorInfoRem);
+
+};

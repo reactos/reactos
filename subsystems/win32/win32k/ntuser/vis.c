@@ -47,6 +47,8 @@ VIS_ComputeVisibleRegion(
       return NULL;
    }
 
+   VisRgn = NULL;
+
    if (ClientArea)
    {
       VisRgn = IntSysCreateRectRgnIndirect(&Window->Wnd->rcClient);
@@ -71,13 +73,14 @@ VIS_ComputeVisibleRegion(
            CurrentWindow->state & WINDOWSTATUS_DESTROYED )
       {
          DPRINT1("ATM the Current Window or Parent is dead!\n");
+         if (VisRgn) REGION_FreeRgnByHandle(VisRgn);
          return NULL;
       }
 
       CurrentWnd = CurrentWindow->Wnd;
       if (!CurrentWnd || !(CurrentWnd->style & WS_VISIBLE))
       {
-         REGION_FreeRgnByHandle(VisRgn);
+         if (VisRgn) REGION_FreeRgnByHandle(VisRgn);
          return NULL;
       }
 
@@ -89,7 +92,9 @@ VIS_ComputeVisibleRegion(
           (PreviousWnd == Wnd && ClipSiblings))
       {
          CurrentSibling = CurrentWindow->spwndChild;
-         while (CurrentSibling != NULL && CurrentSibling != PreviousWindow)
+         while ( CurrentSibling != NULL && 
+                 CurrentSibling != PreviousWindow &&
+                 CurrentSibling->Wnd )
          {
             CurrentSiblingWnd = CurrentSibling->Wnd;
             if ((CurrentSiblingWnd->style & WS_VISIBLE) &&
@@ -118,7 +123,7 @@ VIS_ComputeVisibleRegion(
    if (ClipChildren)
    {
       CurrentWindow = Window->spwndChild;
-      while (CurrentWindow)
+      while (CurrentWindow && CurrentWindow->Wnd)
       {
          CurrentWnd = CurrentWindow->Wnd;
          if ((CurrentWnd->style & WS_VISIBLE) &&

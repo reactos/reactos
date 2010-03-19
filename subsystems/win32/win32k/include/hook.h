@@ -1,5 +1,4 @@
-#ifndef _WIN32K_HOOK_H
-#define _WIN32K_HOOK_H
+#pragma once
 
 #define HOOK_THREAD_REFERENCED	(0x1)
 #define NB_HOOKS (WH_MAXHOOK-WH_MINHOOK+1)
@@ -39,7 +38,5 @@ VOID FASTCALL HOOK_DestroyThreadHooks(PETHREAD Thread);
 PHOOK FASTCALL IntGetHookObject(HHOOK);
 PHOOK FASTCALL IntGetNextHook(PHOOK Hook);
 LRESULT FASTCALL UserCallNextHookEx( PHOOK pHook, int Code, WPARAM wParam, LPARAM lParam, BOOL Ansi);
-
-#endif /* _WIN32K_HOOK_H */
 
 /* EOF */

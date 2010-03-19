@@ -7,8 +7,8 @@
  */
 
 /* INCLUDES ******************************************************************/
-#ifndef __WIN32K_H
-#define __WIN32K_H
+
+#pragma once
 #define INTERNAL_CALL APIENTRY
 
 /* Internal Win32k Headers */
@@ -81,5 +81,3 @@
 #include <include/ldevobj.h>
 #include <include/device.h>
 #include <dib/dib.h>
-
-#endif /* __WIN32K_H */

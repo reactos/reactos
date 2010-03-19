@@ -687,7 +687,7 @@ AtapiSoftReset(
     GetBaseStatus(chan, statusByte2);
     KdPrint2((PRINT_PREFIX "  statusByte2 %x:\n", statusByte2));
     SelectDrive(chan, DeviceNumber);
-    AtapiStallExecution(10000);
+    AtapiStallExecution(500);
     AtapiWritePort1(chan, IDX_IO1_o_Command, IDE_COMMAND_ATAPI_RESET);
 
     // ReactOS modification: Already stop looping when we know that the drive has finished resetting.

@@ -495,6 +495,12 @@ static struct regsvr_coclass const coclass_list[] = {
         "urlmon.dll",
         "Both"
     },
+    {   &CLSID_PSFactoryBuffer,
+        "URLMoniker ProxyStub Factory",
+        NULL,
+        "urlmon.dll",
+        "Apartment"
+    },
     { NULL }			/* list terminator */
 };
 
@@ -573,12 +579,14 @@ HRESULT WINAPI DllRegisterServer(void)
 
     TRACE("\n");
 
-    hr = register_coclasses(coclass_list);
-    if (SUCCEEDED(hr))
+    hr = URLMON_DllRegisterServer();
+    if(SUCCEEDED(hr))
+        hr = register_coclasses(coclass_list);
+    if(SUCCEEDED(hr))
 	hr = register_interfaces(interface_list);
-    if(FAILED(hr))
-        return hr;
-    return register_inf(TRUE);
+    if(SUCCEEDED(hr))
+        hr = register_inf(TRUE);
+    return hr;
 }
 
 /***********************************************************************
@@ -590,10 +598,12 @@ HRESULT WINAPI DllUnregisterServer(void)
 
     TRACE("\n");
 
-    hr = unregister_coclasses(coclass_list);
-    if (SUCCEEDED(hr))
+    hr = URLMON_DllUnregisterServer();
+    if(SUCCEEDED(hr))
+        hr = unregister_coclasses(coclass_list);
+    if(SUCCEEDED(hr))
 	hr = unregister_interfaces(interface_list);
-    if(FAILED(hr))
-        return hr;
-    return register_inf(FALSE);
+    if(SUCCEEDED(hr))
+        hr = register_inf(FALSE);
+    return hr;
 }

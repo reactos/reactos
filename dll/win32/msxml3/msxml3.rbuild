@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="msxml3" type="win32dll" baseaddress="${BASEADDRESS_MSXML3}" installbase="system32" installname="msxml3.dll" allowwarnings="true" crt="msvcrt">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
@@ -62,3 +64,4 @@
 	<dependency>stdole2</dependency>
 	<file>msxml3_v1.idl</file>
 </module>
+</group>

@@ -12,6 +12,8 @@
 	<file>hnetcfg.c</file>
 	<file>manager.c</file>
 	<file>policy.c</file>
+	<file>port.c</file>
 	<file>profile.c</file>
 	<file>regsvr.c</file>
+	<file>service.c</file>
 </module>

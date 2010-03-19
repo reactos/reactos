@@ -32,7 +32,7 @@ KeClearEvent(IN PKEVENT Event)
  */
 VOID
 NTAPI
-KeInitializeEvent(IN PKEVENT Event,
+KeInitializeEvent(OUT PKEVENT Event,
                   IN EVENT_TYPE Type,
                   IN BOOLEAN State)
 {

@@ -42,19 +42,53 @@
 #include "commdlg.h"
 #include "dlgs.h"
 #include "cderr.h"
+#include "cdlg.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
-
-#include "cdlg.h"
-#include "printdlg.h"
 
 /* Yes these constants are the same, but we're just copying win98 */
 #define UPDOWN_ID 0x270f
 #define MAX_COPIES 9999
 
-DEVMODEW* WINAPI GdiConvertToDevmodeW(const DEVMODEA*);
+/* This PRINTDLGA internal structure stores
+ * pointers to several throughout useful structures.
+ */
+
+typedef struct
+{
+  LPDEVMODEA        lpDevMode;
+  LPPRINTDLGA       lpPrintDlg;
+  LPPRINTER_INFO_2A lpPrinterInfo;
+  LPDRIVER_INFO_3A  lpDriverInfo;
+  UINT              HelpMessageID;
+  HICON             hCollateIcon;    /* PrintDlg only */
+  HICON             hNoCollateIcon;  /* PrintDlg only */
+  HICON             hPortraitIcon;   /* PrintSetupDlg only */
+  HICON             hLandscapeIcon;  /* PrintSetupDlg only */
+  HWND              hwndUpDown;
+} PRINT_PTRA;
+
+typedef struct
+{
+  LPDEVMODEW        lpDevMode;
+  LPPRINTDLGW       lpPrintDlg;
+  LPPRINTER_INFO_2W lpPrinterInfo;
+  LPDRIVER_INFO_3W  lpDriverInfo;
+  UINT              HelpMessageID;
+  HICON             hCollateIcon;    /* PrintDlg only */
+  HICON             hNoCollateIcon;  /* PrintDlg only */
+  HICON             hPortraitIcon;   /* PrintSetupDlg only */
+  HICON             hLandscapeIcon;  /* PrintSetupDlg only */
+  HWND              hwndUpDown;
+} PRINT_PTRW;
 
 /* Debugging info */
+struct pd_flags
+{
+  DWORD  flag;
+  LPCSTR name;
+};
+
 static const struct pd_flags psd_flags[] = {
   {PSD_MINMARGINS,"PSD_MINMARGINS"},
   {PSD_MARGINS,"PSD_MARGINS"},
@@ -75,6 +109,31 @@ static const struct pd_flags psd_flags[] = {
   {-1, NULL}
 };
 
+static const struct pd_flags pd_flags[] = {
+  {PD_SELECTION, "PD_SELECTION "},
+  {PD_PAGENUMS, "PD_PAGENUMS "},
+  {PD_NOSELECTION, "PD_NOSELECTION "},
+  {PD_NOPAGENUMS, "PD_NOPAGENUMS "},
+  {PD_COLLATE, "PD_COLLATE "},
+  {PD_PRINTTOFILE, "PD_PRINTTOFILE "},
+  {PD_PRINTSETUP, "PD_PRINTSETUP "},
+  {PD_NOWARNING, "PD_NOWARNING "},
+  {PD_RETURNDC, "PD_RETURNDC "},
+  {PD_RETURNIC, "PD_RETURNIC "},
+  {PD_RETURNDEFAULT, "PD_RETURNDEFAULT "},
+  {PD_SHOWHELP, "PD_SHOWHELP "},
+  {PD_ENABLEPRINTHOOK, "PD_ENABLEPRINTHOOK "},
+  {PD_ENABLESETUPHOOK, "PD_ENABLESETUPHOOK "},
+  {PD_ENABLEPRINTTEMPLATE, "PD_ENABLEPRINTTEMPLATE "},
+  {PD_ENABLESETUPTEMPLATE, "PD_ENABLESETUPTEMPLATE "},
+  {PD_ENABLEPRINTTEMPLATEHANDLE, "PD_ENABLEPRINTTEMPLATEHANDLE "},
+  {PD_ENABLESETUPTEMPLATEHANDLE, "PD_ENABLESETUPTEMPLATEHANDLE "},
+  {PD_USEDEVMODECOPIES, "PD_USEDEVMODECOPIES[ANDCOLLATE] "},
+  {PD_DISABLEPRINTTOFILE, "PD_DISABLEPRINTTOFILE "},
+  {PD_HIDEPRINTTOFILE, "PD_HIDEPRINTTOFILE "},
+  {PD_NONETWORKBUTTON, "PD_NONETWORKBUTTON "},
+  {-1, NULL}
+};
 /* address of wndproc for subclassed Static control */
 static WNDPROC lpfnStaticWndProc;
 static WNDPROC edit_wndproc;
@@ -149,7 +208,7 @@ static DEVMODEA *convert_to_devmodeA(const DEVMODEW *dmW)
  *
  * Returns TRUE on success else FALSE
  */
-BOOL PRINTDLG_OpenDefaultPrinter(HANDLE *hprn)
+static BOOL PRINTDLG_OpenDefaultPrinter(HANDLE *hprn)
 {
     WCHAR buf[260];
     DWORD dwBufLen = sizeof(buf) / sizeof(buf[0]);
@@ -175,7 +234,7 @@ BOOL PRINTDLG_OpenDefaultPrinter(HANDLE *hprn)
  *
  * Returns number of printers added to list.
  */
-INT PRINTDLG_SetUpPrinterListComboA(HWND hDlg, UINT id, LPCSTR name)
+static INT PRINTDLG_SetUpPrinterListComboA(HWND hDlg, UINT id, LPCSTR name)
 {
     DWORD needed, num;
     INT i;
@@ -839,8 +898,7 @@ static void PRINTDLG_UpdatePrinterInfoTextsW(HWND hDlg, const PRINTER_INFO_2W *p
  *                 PRINTDLG_ChangePrinter
  *
  */
-BOOL PRINTDLG_ChangePrinterA(HWND hDlg, char *name,
-				   PRINT_PTRA *PrintStructures)
+static BOOL PRINTDLG_ChangePrinterA(HWND hDlg, char *name, PRINT_PTRA *PrintStructures)
 {
     LPPRINTDLGA lppd = PrintStructures->lpPrintDlg;
     LPDEVMODEA lpdm = NULL;
@@ -921,11 +979,11 @@ BOOL PRINTDLG_ChangePrinterA(HWND hDlg, char *name,
 	 * FIXME: The ico3 is not displayed for some reason. I don't know why.
 	 */
 	if (lppd->Flags & PD_COLLATE) {
-	    SendDlgItemMessageA(hDlg, ico3, STM_SETIMAGE, (WPARAM) IMAGE_ICON,
+            SendDlgItemMessageA(hDlg, ico3, STM_SETIMAGE, IMAGE_ICON,
 				(LPARAM)PrintStructures->hCollateIcon);
 	    CheckDlgButton(hDlg, chx2, 1);
 	} else {
-	    SendDlgItemMessageA(hDlg, ico3, STM_SETIMAGE, (WPARAM) IMAGE_ICON,
+            SendDlgItemMessageA(hDlg, ico3, STM_SETIMAGE, IMAGE_ICON,
 				(LPARAM)PrintStructures->hNoCollateIcon);
 	    CheckDlgButton(hDlg, chx2, 0);
 	}
@@ -1032,7 +1090,7 @@ BOOL PRINTDLG_ChangePrinterA(HWND hDlg, char *name,
 				  PrintStructures->lpPrinterInfo->pPortName,
 				  lpdm);
       CheckRadioButton(hDlg, rad1, rad2, bPortrait ? rad1: rad2);
-      SendDlgItemMessageA(hDlg, ico1, STM_SETIMAGE, (WPARAM) IMAGE_ICON,
+      SendDlgItemMessageA(hDlg, ico1, STM_SETIMAGE, IMAGE_ICON,
                           (LPARAM)(bPortrait ? PrintStructures->hPortraitIcon :
                                    PrintStructures->hLandscapeIcon));
 
@@ -1128,11 +1186,11 @@ static BOOL PRINTDLG_ChangePrinterW(HWND hDlg, WCHAR *name,
 	 * FIXME: The ico3 is not displayed for some reason. I don't know why.
 	 */
 	if (lppd->Flags & PD_COLLATE) {
-	    SendDlgItemMessageW(hDlg, ico3, STM_SETIMAGE, (WPARAM) IMAGE_ICON,
+            SendDlgItemMessageW(hDlg, ico3, STM_SETIMAGE, IMAGE_ICON,
 				(LPARAM)PrintStructures->hCollateIcon);
 	    CheckDlgButton(hDlg, chx2, 1);
 	} else {
-	    SendDlgItemMessageW(hDlg, ico3, STM_SETIMAGE, (WPARAM) IMAGE_ICON,
+            SendDlgItemMessageW(hDlg, ico3, STM_SETIMAGE, IMAGE_ICON,
 				(LPARAM)PrintStructures->hNoCollateIcon);
 	    CheckDlgButton(hDlg, chx2, 0);
 	}
@@ -1184,7 +1242,7 @@ static BOOL PRINTDLG_ChangePrinterW(HWND hDlg, WCHAR *name,
 				  PrintStructures->lpPrinterInfo->pPortName,
 				  lpdm);
       CheckRadioButton(hDlg, rad1, rad2, bPortrait ? rad1: rad2);
-      SendDlgItemMessageW(hDlg, ico1, STM_SETIMAGE, (WPARAM) IMAGE_ICON,
+      SendDlgItemMessageW(hDlg, ico1, STM_SETIMAGE, IMAGE_ICON,
                           (LPARAM)(bPortrait ? PrintStructures->hPortraitIcon :
                                    PrintStructures->hLandscapeIcon));
 
@@ -1225,7 +1283,7 @@ static LRESULT check_printer_setup(HWND hDlg)
 /***********************************************************************
  *           PRINTDLG_WMInitDialog                      [internal]
  */
-static LRESULT PRINTDLG_WMInitDialog(HWND hDlg, WPARAM wParam,
+static LRESULT PRINTDLG_WMInitDialog(HWND hDlg,
 				     PRINT_PTRA* PrintStructures)
 {
     LPPRINTDLGA lppd = PrintStructures->lpPrintDlg;
@@ -1249,7 +1307,7 @@ static LRESULT PRINTDLG_WMInitDialog(HWND hDlg, WPARAM wParam,
       LoadIconA(COMDLG32_hInstance, "PD32_LANDSCAPE");
 
     /* display the collate/no_collate icon */
-    SendDlgItemMessageA(hDlg, ico3, STM_SETIMAGE, (WPARAM) IMAGE_ICON,
+    SendDlgItemMessageA(hDlg, ico3, STM_SETIMAGE, IMAGE_ICON,
                         (LPARAM)PrintStructures->hNoCollateIcon);
 
     if(PrintStructures->hCollateIcon == 0 ||
@@ -1333,7 +1391,7 @@ static LRESULT PRINTDLG_WMInitDialog(HWND hDlg, WPARAM wParam,
     return TRUE;
 }
 
-static LRESULT PRINTDLG_WMInitDialogW(HWND hDlg, WPARAM wParam,
+static LRESULT PRINTDLG_WMInitDialogW(HWND hDlg,
 				     PRINT_PTRW* PrintStructures)
 {
     LPPRINTDLGW lppd = PrintStructures->lpPrintDlg;
@@ -1357,7 +1415,7 @@ static LRESULT PRINTDLG_WMInitDialogW(HWND hDlg, WPARAM wParam,
       LoadIconW(COMDLG32_hInstance, pd32_landscapeW);
 
     /* display the collate/no_collate icon */
-    SendDlgItemMessageW(hDlg, ico3, STM_SETIMAGE, (WPARAM) IMAGE_ICON,
+    SendDlgItemMessageW(hDlg, ico3, STM_SETIMAGE, IMAGE_ICON,
                         (LPARAM)PrintStructures->hNoCollateIcon);
 
     if(PrintStructures->hCollateIcon == 0 ||
@@ -1445,8 +1503,8 @@ static LRESULT PRINTDLG_WMInitDialogW(HWND hDlg, WPARAM wParam,
 /***********************************************************************
  *                              PRINTDLG_WMCommand               [internal]
  */
-LRESULT PRINTDLG_WMCommandA(HWND hDlg, WPARAM wParam,
-			LPARAM lParam, PRINT_PTRA* PrintStructures)
+static LRESULT PRINTDLG_WMCommandA(HWND hDlg, WPARAM wParam,
+                                   LPARAM lParam, PRINT_PTRA* PrintStructures)
 {
     LPPRINTDLGA lppd = PrintStructures->lpPrintDlg;
     UINT PrinterComboID = (lppd->Flags & PD_PRINTSETUP) ? cmb1 : cmb4;
@@ -1475,10 +1533,10 @@ LRESULT PRINTDLG_WMCommandA(HWND hDlg, WPARAM wParam,
 
      case chx2:                         /* collate pages checkbox */
         if (IsDlgButtonChecked(hDlg, chx2) == BST_CHECKED)
-            SendDlgItemMessageA(hDlg, ico3, STM_SETIMAGE, (WPARAM) IMAGE_ICON,
+            SendDlgItemMessageA(hDlg, ico3, STM_SETIMAGE, IMAGE_ICON,
                                     (LPARAM)PrintStructures->hCollateIcon);
         else
-            SendDlgItemMessageA(hDlg, ico3, STM_SETIMAGE, (WPARAM) IMAGE_ICON,
+            SendDlgItemMessageA(hDlg, ico3, STM_SETIMAGE, IMAGE_ICON,
                                     (LPARAM)PrintStructures->hNoCollateIcon);
         break;
      case edt1:                         /* from page nr editbox */
@@ -1503,24 +1561,6 @@ LRESULT PRINTDLG_WMCommandA(HWND hDlg, WPARAM wParam,
 	}
 	break;
 
-#if 0
-     case psh1:                       /* Print Setup */
-	{
-	    PRINTDLG16	pdlg;
-
-	    if (!PrintStructures->dlg.lpPrintDlg16) {
-		FIXME("The 32bit print dialog does not have this button!?\n");
-		break;
-	    }
-
-	    memcpy(&pdlg,PrintStructures->dlg.lpPrintDlg16,sizeof(pdlg));
-	    pdlg.Flags |= PD_PRINTSETUP;
-	    pdlg.hwndOwner = HWND_16(hDlg);
-	    if (!PrintDlg16(&pdlg))
-		break;
-	}
-	break;
-#endif
      case psh2:                       /* Properties button */
        {
          HANDLE hPrinter;
@@ -1543,7 +1583,7 @@ LRESULT PRINTDLG_WMCommandA(HWND hDlg, WPARAM wParam,
         if (lppd->Flags & PD_PRINTSETUP)
         {
               lpdm->u1.s1.dmOrientation = DMORIENT_PORTRAIT;
-              SendDlgItemMessageA(hDlg, ico1, STM_SETIMAGE, (WPARAM) IMAGE_ICON,
+              SendDlgItemMessageA(hDlg, ico1, STM_SETIMAGE, IMAGE_ICON,
                           (LPARAM)(PrintStructures->hPortraitIcon));
         }
         break;
@@ -1552,7 +1592,7 @@ LRESULT PRINTDLG_WMCommandA(HWND hDlg, WPARAM wParam,
         if (lppd->Flags & PD_PRINTSETUP)
         {
               lpdm->u1.s1.dmOrientation = DMORIENT_LANDSCAPE;
-              SendDlgItemMessageA(hDlg, ico1, STM_SETIMAGE, (WPARAM) IMAGE_ICON,
+              SendDlgItemMessageA(hDlg, ico1, STM_SETIMAGE, IMAGE_ICON,
                           (LPARAM)(PrintStructures->hLandscapeIcon));
         }
         break;
@@ -1597,21 +1637,17 @@ LRESULT PRINTDLG_WMCommandA(HWND hDlg, WPARAM wParam,
 	    if (IsDlgButtonChecked(hDlg, rad1) == BST_CHECKED) {
 	        if(lpdm->u1.s1.dmOrientation != DMORIENT_PORTRAIT) {
 		    lpdm->u1.s1.dmOrientation = DMORIENT_PORTRAIT;
-		    SendDlgItemMessageA(hDlg, stc10, STM_SETIMAGE,
-					(WPARAM)IMAGE_ICON,
+                    SendDlgItemMessageA(hDlg, stc10, STM_SETIMAGE, IMAGE_ICON,
 					(LPARAM)PrintStructures->hPortraitIcon);
-		    SendDlgItemMessageA(hDlg, ico1, STM_SETIMAGE,
-					(WPARAM)IMAGE_ICON,
+                    SendDlgItemMessageA(hDlg, ico1, STM_SETIMAGE, IMAGE_ICON,
 					(LPARAM)PrintStructures->hPortraitIcon);
 		}
 	    } else {
 	        if(lpdm->u1.s1.dmOrientation != DMORIENT_LANDSCAPE) {
 	            lpdm->u1.s1.dmOrientation = DMORIENT_LANDSCAPE;
-		    SendDlgItemMessageA(hDlg, stc10, STM_SETIMAGE,
-					(WPARAM)IMAGE_ICON,
+                    SendDlgItemMessageA(hDlg, stc10, STM_SETIMAGE, IMAGE_ICON,
 					(LPARAM)PrintStructures->hLandscapeIcon);
-		    SendDlgItemMessageA(hDlg, ico1, STM_SETIMAGE,
-					(WPARAM)IMAGE_ICON,
+                    SendDlgItemMessageA(hDlg, ico1, STM_SETIMAGE, IMAGE_ICON,
 					(LPARAM)PrintStructures->hLandscapeIcon);
 		}
 	    }
@@ -1651,10 +1687,10 @@ static LRESULT PRINTDLG_WMCommandW(HWND hDlg, WPARAM wParam,
 
      case chx2:                         /* collate pages checkbox */
         if (IsDlgButtonChecked(hDlg, chx2) == BST_CHECKED)
-            SendDlgItemMessageW(hDlg, ico3, STM_SETIMAGE, (WPARAM) IMAGE_ICON,
+            SendDlgItemMessageW(hDlg, ico3, STM_SETIMAGE, IMAGE_ICON,
                                     (LPARAM)PrintStructures->hCollateIcon);
         else
-            SendDlgItemMessageW(hDlg, ico3, STM_SETIMAGE, (WPARAM) IMAGE_ICON,
+            SendDlgItemMessageW(hDlg, ico3, STM_SETIMAGE, IMAGE_ICON,
                                     (LPARAM)PrintStructures->hNoCollateIcon);
         break;
      case edt1:                         /* from page nr editbox */
@@ -1679,11 +1715,6 @@ static LRESULT PRINTDLG_WMCommandW(HWND hDlg, WPARAM wParam,
         }
         break;
 
-     case psh1:                       /* Print Setup */
-	{
-		ERR("psh1 is called from 16bit code only, we should not get here.\n");
-	}
-	break;
      case psh2:                       /* Properties button */
        {
          HANDLE hPrinter;
@@ -1706,7 +1737,7 @@ static LRESULT PRINTDLG_WMCommandW(HWND hDlg, WPARAM wParam,
         if (lppd->Flags & PD_PRINTSETUP)
         {
               lpdm->u1.s1.dmOrientation = DMORIENT_PORTRAIT;
-              SendDlgItemMessageW(hDlg, ico1, STM_SETIMAGE, (WPARAM) IMAGE_ICON,
+              SendDlgItemMessageW(hDlg, ico1, STM_SETIMAGE, IMAGE_ICON,
                           (LPARAM)(PrintStructures->hPortraitIcon));
         }
         break;
@@ -1715,7 +1746,7 @@ static LRESULT PRINTDLG_WMCommandW(HWND hDlg, WPARAM wParam,
         if (lppd->Flags & PD_PRINTSETUP)
         {
               lpdm->u1.s1.dmOrientation = DMORIENT_LANDSCAPE;
-              SendDlgItemMessageW(hDlg, ico1, STM_SETIMAGE, (WPARAM) IMAGE_ICON,
+              SendDlgItemMessageW(hDlg, ico1, STM_SETIMAGE, IMAGE_ICON,
                           (LPARAM)(PrintStructures->hLandscapeIcon));
         }
         break;
@@ -1757,21 +1788,17 @@ static LRESULT PRINTDLG_WMCommandW(HWND hDlg, WPARAM wParam,
 	    if (IsDlgButtonChecked(hDlg, rad1) == BST_CHECKED) {
 	        if(lpdm->u1.s1.dmOrientation != DMORIENT_PORTRAIT) {
 		    lpdm->u1.s1.dmOrientation = DMORIENT_PORTRAIT;
-		    SendDlgItemMessageW(hDlg, stc10, STM_SETIMAGE,
-					(WPARAM)IMAGE_ICON,
+                    SendDlgItemMessageW(hDlg, stc10, STM_SETIMAGE, IMAGE_ICON,
 					(LPARAM)PrintStructures->hPortraitIcon);
-		    SendDlgItemMessageW(hDlg, ico1, STM_SETIMAGE,
-					(WPARAM)IMAGE_ICON,
+                    SendDlgItemMessageW(hDlg, ico1, STM_SETIMAGE, IMAGE_ICON,
 					(LPARAM)PrintStructures->hPortraitIcon);
 		}
 	    } else {
 	        if(lpdm->u1.s1.dmOrientation != DMORIENT_LANDSCAPE) {
 	            lpdm->u1.s1.dmOrientation = DMORIENT_LANDSCAPE;
-		    SendDlgItemMessageW(hDlg, stc10, STM_SETIMAGE,
-					(WPARAM)IMAGE_ICON,
+                    SendDlgItemMessageW(hDlg, stc10, STM_SETIMAGE, IMAGE_ICON,
 					(LPARAM)PrintStructures->hLandscapeIcon);
-		    SendDlgItemMessageW(hDlg, ico1, STM_SETIMAGE,
-					(WPARAM)IMAGE_ICON,
+                    SendDlgItemMessageW(hDlg, ico1, STM_SETIMAGE, IMAGE_ICON,
 					(LPARAM)PrintStructures->hLandscapeIcon);
 		}
 	    }
@@ -1802,7 +1829,7 @@ static INT_PTR CALLBACK PrintDlgProcA(HWND hDlg, UINT uMsg, WPARAM wParam,
             EndDialog(hDlg,FALSE);
             return FALSE;
         }
-	res = PRINTDLG_WMInitDialog(hDlg, wParam, PrintStructures);
+	res = PRINTDLG_WMInitDialog(hDlg, PrintStructures);
 
 	if(PrintStructures->lpPrintDlg->Flags & PD_ENABLEPRINTHOOK)
 	    res = PrintStructures->lpPrintDlg->lpfnPrintHook(
@@ -1851,7 +1878,7 @@ static INT_PTR CALLBACK PrintDlgProcW(HWND hDlg, UINT uMsg, WPARAM wParam,
             EndDialog(hDlg,FALSE);
             return FALSE;
         }
-	res = PRINTDLG_WMInitDialogW(hDlg, wParam, PrintStructures);
+	res = PRINTDLG_WMInitDialogW(hDlg, PrintStructures);
 
 	if(PrintStructures->lpPrintDlg->Flags & PD_ENABLEPRINTHOOK)
 	    res = PrintStructures->lpPrintDlg->lpfnPrintHook(hDlg, uMsg, wParam, (LPARAM)PrintStructures->lpPrintDlg);
@@ -2030,7 +2057,6 @@ BOOL WINAPI PrintDlgA(LPPRINTDLGA lppd)
         return FALSE;
     }
 
-    hInst = (HINSTANCE)GetWindowLongPtrA( lppd->hwndOwner, GWLP_HINSTANCE );
     if(TRACE_ON(commdlg)) {
         char flagstr[1000] = "";
 	const struct pd_flags *pflag = pd_flags;
@@ -2123,6 +2149,8 @@ BOOL WINAPI PrintDlgA(LPPRINTDLGA lppd)
 	/* and create & process the dialog .
 	 * -1 is failure, 0 is broken hwnd, everything else is ok.
 	 */
+        hInst = COMDLG32_hInstance;
+	if (lppd->Flags & (PD_ENABLESETUPTEMPLATE | PD_ENABLEPRINTTEMPLATE)) hInst = lppd->hInstance;
 	bRet = (0<DialogBoxIndirectParamA(hInst, ptr, lppd->hwndOwner,
 					   PrintDlgProcA,
 					   (LPARAM)PrintStructures));
@@ -2180,7 +2208,6 @@ BOOL WINAPI PrintDlgW(LPPRINTDLGW lppd)
         return FALSE;
     }
 
-    hInst = (HINSTANCE)GetWindowLongPtrW( lppd->hwndOwner, GWLP_HINSTANCE );
     if(TRACE_ON(commdlg)) {
         char flagstr[1000] = "";
 	const struct pd_flags *pflag = pd_flags;
@@ -2273,6 +2300,8 @@ BOOL WINAPI PrintDlgW(LPPRINTDLGW lppd)
 	/* and create & process the dialog .
 	 * -1 is failure, 0 is broken hwnd, everything else is ok.
 	 */
+        hInst = COMDLG32_hInstance;
+	if (lppd->Flags & (PD_ENABLESETUPTEMPLATE | PD_ENABLEPRINTTEMPLATE)) hInst = lppd->hInstance;
 	bRet = (0<DialogBoxIndirectParamW(hInst, ptr, lppd->hwndOwner,
 					   PrintDlgProcW,
 					   (LPARAM)PrintStructures));

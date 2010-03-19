@@ -47,7 +47,7 @@ BEGIN
     CONTROL         "Slider1",IDC_ALARMBAR1,"msctls_trackbar32",TBS_HORZ |
                     TBS_AUTOTICKS | WS_TABSTOP,30,40,170,15
     LTEXT           "100%",-1,215,40,25,10
-    PUSHBUTTON      "Alar&m Action...",-1,20,70,70,15,WS_DISABLED
+    PUSHBUTTON      "Alar&maktion...",-1,20,70,70,15,WS_DISABLED
     LTEXT           "Benachrichtigung:",-1,95,70,60,10
     LTEXT           "Unbekannt",IDC_ALARMMSG1,155,70,95,10
     LTEXT           "Aktion:",-1,95,80,45,10
@@ -63,7 +63,7 @@ BEGIN
     CONTROL         "Slider1",IDC_ALARMBAR2,"msctls_trackbar32",TBS_HORZ |
                     TBS_AUTOTICKS | WS_TABSTOP,30,140,170,15
     LTEXT           "100%",-1,215,140,25,10
-    PUSHBUTTON      "Alar&m Action...",-1,20,170,70,15,WS_DISABLED
+    PUSHBUTTON      "Alar&maktion...",-1,20,170,70,15,WS_DISABLED
     LTEXT           "Benachrichtigung:",-1,95,170,60,10
     LTEXT           "Unbekannt",IDC_ALARMMSG2,155,170,95,10
     LTEXT           "Aktion:",-1,95,180,45,10
@@ -122,7 +122,7 @@ BEGIN
   IDS_CPLNAME_1 "Energieoptionen"
   IDS_CPLDESCRIPTION_1 "Konfiguriert die Energiespareinstellungen für den Computer."
   IDS_PROCENT "%i%%"
-  IDS_SOUND "Sound"
+  IDS_SOUND "Klang"
   IDS_TEXT "Text"
   IDS_CONFIG1 "Einstellungen für Energieschema %s."
   IDS_CONFIG2 "Erweiterte Einstellungen für %s."
@@ -134,7 +134,7 @@ BEGIN
 
   IDS_PowerActionNone1 "Keine Aktion"
   IDS_PowerActionUnknown "Unbekannt"
-  IDS_PowerActionSleep "In den Standbymodus wechseln"
+  IDS_PowerActionSleep "In den Stromsparmodus wechseln"
   IDS_PowerActionHibernate "In den Ruhezustand wechseln"
   IDS_PowerActionShutdown "Computer herunterfahren"
   IDS_PowerActionRestart "Computer neu starten"
@@ -159,6 +159,6 @@ BEGIN
   IDS_TIMEOUT15 "Nach 5 Stunden"
   IDS_TIMEOUT16 "Nie"
 
-  IDS_DEL_SCHEME "Sind Sie sicher, dass Sie das Energieschema löschen wollen?"
+  IDS_DEL_SCHEME "Sind Sie sich sicher, dass Sie das Energieschema löschen wollen?"
   IDS_DEL_SCHEME_TITLE "Schema löschen"
 END

@@ -24,11 +24,14 @@ int TCPSocketState(void *ClientData,
                NewState & SEL_ACCEPT  ? 'A' : 'a',
                NewState & SEL_WRITE   ? 'W' : 'w'));
 
+    /* If this socket is missing its socket context, that means that it
+     * has been created as a new connection in sonewconn but not accepted
+     * yet. We can safely ignore event notifications on these sockets.
+     * Once they are accepted, they will get a socket context and we will 
+     * be able to process them.
+     */
     if (!Connection)
-    {
-        //ASSERT(FALSE);
         return 0;
-    }
 
     TI_DbgPrint(DEBUG_TCP,("Called: NewState %x (Conn %x) (Change %x)\n",
                NewState, Connection,
@@ -104,11 +107,11 @@ int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
 
 /* Memory management routines
  *
- * By far the most requests for memory are either for 128 or 2048 byte blocks,
+ * By far the most requests for memory are either for 128 or 2049 byte blocks,
  * so we want to satisfy those from lookaside lists. Unfortunately, the
  * TCPFree() function doesn't pass the size of the block to be freed, so we
  * need to keep track of it ourselves. We do it by prepending each block with
- * 4 bytes, indicating if this is a 'L'arge (2048), 'S'mall (128) or 'O'ther
+ * 4 bytes, indicating if this is a 'L'arge (2049), 'S'mall (128) or 'O'ther
  * block.
  */
 
@@ -116,7 +119,7 @@ int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
 #define MEM_PROFILE 0
 
 #define SMALL_SIZE 128
-#define LARGE_SIZE 2048
+#define LARGE_SIZE 2049
 
 #define SIGNATURE_LARGE 'LLLL'
 #define SIGNATURE_SMALL 'SSSS'

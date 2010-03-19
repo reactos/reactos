@@ -1,5 +1,4 @@
-#ifndef __CPL_RESOURCE_H
-#define __CPL_RESOURCE_H
+#pragma once
 
 #define IDC_STATIC  -1
 
@@ -156,5 +155,4 @@
 #define RC_LICENSE                      1502
 #define RTDATA                          1503
 
-
-#endif /* __CPL_RESOURCE_H */
+#define IDS_DEVS                        2000

@@ -28,9 +28,9 @@ STRING_HELP,  "Syntax: %s Datenträger: [-FS:Dateisystem] [-V:Label] [-Q] [-A:Grö
 
 STRING_COMPLETE   "%lu Prozent komplett.\r"
 
-STRING_FORMAT_FAIL "FormatEx konnte Operation nicht erfolgreich beenden.\n\n"
+STRING_FORMAT_FAIL "FormatEx konnte Vorgang nicht erfolgreich beenden.\n\n"
 
-STRING_NO_SUPPORT  "Operation nicht unterstützt"
+STRING_NO_SUPPORT  "Vorgang nicht unterstützt"
 
 STRING_FMIFS_FAIL  "Kann FMIFS-Eingangspunkte nicht lokalisieren.\n\n"
 
@@ -40,11 +40,11 @@ STRING_DRIVE_PARM  "Benötigter Laufwerksparameter fehlt.\n\n"
 
 STRING_ERROR_DRIVE_TYPE  "Konnte den Laufwerkstyp nicht erhalten"
 
-STRING_INSERT_DISK       "Legen Sie eine neue Diskette in Laufwerk %C: ein\nund drücken Sie Enter wenn das Laufwerk bereit ist"
+STRING_INSERT_DISK       "Legen Sie eine neue Diskette in Laufwerk %C: ein\nund betätigen Sie die Eingabetaste, wenn das Laufwerk\nbereit ist."
 
 STRING_NO_VOLUME         "Kann Medium nicht abfragen"
 
-STRING_NO_VOLUME_SIZE    "Kann Mediumsgröße nicht abfragen"
+STRING_NO_VOLUME_SIZE    "Kann Mediengröße nicht abfragen"
 
 STRING_FILESYSTEM        "Der Typ des Dateisystems ist %s.\n"
 
@@ -70,7 +70,7 @@ STRING_ENTER_LABEL     "Datenträgerbezeichnung (11 Zeichen, Enter für keine)? "
 
 STRING_NO_LABEL        "Konnte Datenträger nicht benennen"
 
-STRING_FREE_SPACE     "\n%I64d bytes Speicherkapazität.\n%I64d bytes freier Speicher.\n"
+STRING_FREE_SPACE     "\n%I64d Byte Speicherkapazität.\n%I64d bytes freier Speicher.\n"
 
-STRING_SERIAL_NUMBER   "\nDatenträger Seriennummer ist %04X-%04X\n"
+STRING_SERIAL_NUMBER   "\nDatenträger-Seriennummer ist %04X-%04X\n"
 END

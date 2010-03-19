@@ -18,7 +18,16 @@
 
 #include <windows.h>
 
-#include "version.rc"
+#define WINE_FILEDESCRIPTION_STR "Wine Installer"
+#define WINE_FILENAME_STR "msiexec.exe"
+#define WINE_FILETYPE VFT_APP
+#define WINE_FILEVERSION 3,1,4000,1823
+#define WINE_FILEVERSION_STR "3.1.4000.1823"
+#define WINE_PRODUCTVERSION 3,1,4000,1823
+#define WINE_PRODUCTVERSION_STR "3.1.4000.1823"
+#define WINE_PRODUCTNAME_STR "Wine Installer"
+
+#include "wine/wine_common_ver.rc"
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 

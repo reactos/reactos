@@ -193,7 +193,7 @@ BEGIN
   IDS_NUM_SERVICES "Anzahl der Dienste: %d"
   IDS_STOP_DEPENDS "When %s stops, these other services will also stop"
   IDS_NO_DEPENDS "<No Dependencies>"
-  IDS_LICENSE "Dieses Programm ist kostenlos; Sie können es frei verteilen mit od. ohne Änderungen unter der GNU Lesser General Public License wie es von der Free Software Foundation veröffentlicht wurde; entweder Version 2.1 der Lizenz, oder eine spätere Version (ihrer Wahl).\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+  IDS_LICENSE "Dieses Programm ist kostenlos; Sie können es frei verteilen mit od. ohne Änderungen unter der GNU Lesser General Public License, wie es von der Free Software Foundation veröffentlicht wurde; entweder Version 2.1 der Lizenz, oder eine spätere Version (ihrer Wahl).\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 STRINGTABLE DISCARDABLE

@@ -11,10 +11,10 @@
 //
 // VIC Registers
 //
-#define VIC_BASE                (ULONG_PTR)0xE0040000 /* HACK: freeldr mapped it here */
+#define VIC_BASE                (ULONG_PTR)0x10140000
 
-#define VIC_INT_STATUS          (VIC_BASE + 0x00)
-#define VIC_INT_ENABLE          (VIC_BASE + 0x10)
-#define VIC_INT_CLEAR           (VIC_BASE + 0x14)
-#define VIC_SOFT_INT            (VIC_BASE + 0x18)
-#define VIC_SOFT_INT_CLEAR      (VIC_BASE + 0x1C)
+#define VIC_INT_STATUS          (PULONG)(VIC_BASE + 0x00)
+#define VIC_INT_ENABLE          (PULONG)(VIC_BASE + 0x10)
+#define VIC_INT_CLEAR           (PULONG)(VIC_BASE + 0x14)
+#define VIC_SOFT_INT            (PULONG)(VIC_BASE + 0x18)
+#define VIC_SOFT_INT_CLEAR      (PULONG)(VIC_BASE + 0x1C)

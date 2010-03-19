@@ -18,8 +18,7 @@
    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#ifndef __ORDERS_MSTSC_H
-#define __ORDERS_MSTSC_H
+#pragma once
 
 #define RDP_ORDER_STANDARD   0x01
 #define RDP_ORDER_SECONDARY  0x02
@@ -369,5 +368,3 @@ typedef struct _RDP_COLCACHE_ORDER
 
 }
 RDP_COLCACHE_ORDER;
-
-#endif /* __ORDERS_MSTSC_H */

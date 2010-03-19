@@ -107,7 +107,7 @@ extern POBJECT_TYPE NTSYSAPI IoDriverObjectType;
 #define FILE_CREATE_TREE_CONNECTION             0x00000080
 #define FILE_COMPLETE_IF_OPLOCKED               0x00000100
 #define FILE_NO_EA_KNOWLEDGE                    0x00000200
-#define FILE_OPEN_FOR_RECOVERY                  0x00000400
+#define FILE_OPEN_REMOTE_INSTANCE               0x00000400
 #define FILE_RANDOM_ACCESS                      0x00000800
 #define FILE_DELETE_ON_CLOSE                    0x00001000
 #define FILE_OPEN_BY_FILE_ID                    0x00002000

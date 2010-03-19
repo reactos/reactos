@@ -91,16 +91,13 @@ DECLARE_HANDLE(HWINSTA);
 DECLARE_HANDLE(HKL);
 DECLARE_HANDLE(HGDIOBJ);
 
-cpp_quote("#if 0")
-typedef HANDLE HMONITOR;
-cpp_quote("#endif /* 0 */")
-
 typedef HANDLE HDWP;
 
 typedef LONG_PTR LRESULT;
 
 typedef LONG HRESULT;
 typedef DWORD LCID;
+typedef USHORT LANGID;
 
 typedef unsigned __int64 DWORDLONG;
 typedef __int64 LONGLONG;
@@ -447,7 +444,7 @@ typedef struct tagRemHGLOBAL {
 typedef union _userHGLOBAL switch(long fContext) u {
   case WDT_INPROC_CALL: long               hInproc;
   case WDT_REMOTE_CALL: FLAGGED_BYTE_BLOB *hRemote;
-  default:              long               hGlobal;
+  case WDT_INPROC64_CALL: __int64          hInproc64;
 } userHGLOBAL;
 
 typedef [unique] userHGLOBAL *wireHGLOBAL;
@@ -463,7 +460,7 @@ typedef struct tagRemHMETAFILEPICT {
 typedef union _userHMETAFILE switch(long fContext) u {
   case WDT_INPROC_CALL: long       hInproc;
   case WDT_REMOTE_CALL: BYTE_BLOB *hRemote;
-  default:              long       hGlobal;
+  case WDT_INPROC64_CALL: __int64  hInproc64;
 } userHMETAFILE;
 
 typedef [unique] userHMETAFILE *wireHMETAFILE;
@@ -478,7 +475,7 @@ typedef struct _remoteMETAFILEPICT {
 typedef union _userHMETAFILEPICT switch(long fContext) u {
   case WDT_INPROC_CALL: long                hInproc;
   case WDT_REMOTE_CALL: remoteMETAFILEPICT *hRemote;
-  default:              long                hGlobal;
+  case WDT_INPROC64_CALL: __int64           hInproc64;
 } userHMETAFILEPICT;
 
 typedef [unique] userHMETAFILEPICT *wireHMETAFILEPICT;
@@ -491,7 +488,7 @@ typedef struct tagRemHENHMETAFILE {
 typedef union _userHENHMETAFILE switch(long fContext) u {
   case WDT_INPROC_CALL: long       hInproc;
   case WDT_REMOTE_CALL: BYTE_BLOB *hRemote;
-  default:              long       hGlobal;
+  case WDT_INPROC64_CALL: __int64  hInproc64;
 } userHENHMETAFILE;
 
 typedef [unique] userHENHMETAFILE *wireHENHMETAFILE;
@@ -516,7 +513,7 @@ typedef struct _userBITMAP {
 typedef union _userHBITMAP switch(long fContext) u {
   case WDT_INPROC_CALL: long        hInproc;
   case WDT_REMOTE_CALL: userBITMAP *hRemote;
-  default:              long        hGlobal;
+  case WDT_INPROC64_CALL: __int64   hInproc64;
 } userHBITMAP;
 
 typedef [unique] userHBITMAP *wireHBITMAP;
@@ -535,7 +532,7 @@ typedef struct tagrpcLOGPALETTE {
 typedef union _userHPALETTE switch(long fContext) u {
   case WDT_INPROC_CALL: long           hInproc;
   case WDT_REMOTE_CALL: rpcLOGPALETTE *hRemote;
-  default:              long           hGlobal;
+  case WDT_INPROC64_CALL: __int64      hInproc64;
 } userHPALETTE;
 
 typedef [unique] userHPALETTE *wireHPALETTE;
@@ -584,36 +581,6 @@ typedef struct tagMSG
     DWORD  time;
     POINT  pt;
 } MSG, *PMSG, *NPMSG, *LPMSG;
-
-typedef struct tagCREATESTRUCTA {
-    LPVOID      lpCreateParams;
-    HINSTANCE   hInstance;
-    HMENU       hMenu;
-    HWND        hwndParent;
-    int         cy;
-    int         cx;
-    int         y;
-    int         x;
-    LONG        style;
-    LPCSTR      lpszName;
-    LPCSTR      lpszClass;
-    DWORD       dwExStyle;
-} CREATESTRUCTA, *LPCREATESTRUCTA;
-
-typedef struct tagCREATESTRUCTW {
-    LPVOID      lpCreateParams;
-    HINSTANCE   hInstance;
-    HMENU       hMenu;
-    HWND        hwndParent;
-    int         cy;
-    int         cx;
-    int         y;
-    int         x;
-    LONG        style;
-    LPCWSTR     lpszName;
-    LPCWSTR     lpszClass;
-    DWORD       dwExStyle;
-} CREATESTRUCTW, *LPCREATESTRUCTW;
 
 cpp_quote("#endif")
 
@@ -869,6 +836,15 @@ typedef union switch(DWORD tyspec)
             GUID PolicyId;
         } ByObjectId;
 } uCLSSPEC;
+
+cpp_quote("#ifndef PROPERTYKEY_DEFINED")
+cpp_quote("#define PROPERTYKEY_DEFINED")
+typedef struct _tagpropertykey
+{
+    GUID fmtid;
+    DWORD pid;
+} PROPERTYKEY;
+cpp_quote("#endif /*PROPERTYKEY_DEFINED*/")
 
 } /* interface IWinTypes */
 

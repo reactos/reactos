@@ -127,4 +127,3 @@ BEGIN
 		MENUITEM "Gebruik systeem kleuren",   MNID_CTXT_SYSTEM_COLORS
 	END
 END
-#pragma code_page(default)

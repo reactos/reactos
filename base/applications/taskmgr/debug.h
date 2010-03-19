@@ -20,9 +20,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __DEBUG_H
-#define __DEBUG_H
+#pragma once
 
 void ProcessPage_OnDebug(void);
-
-#endif /* __DEBUG_H */

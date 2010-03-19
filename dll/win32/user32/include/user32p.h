@@ -8,8 +8,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#ifndef USER32_PRIVATE_H
-#define USER32_PRIVATE_H
+#pragma once
 
 /* Private User32 Headers */
 #include "accel.h"
@@ -129,10 +128,6 @@ typedef struct _USER32_THREAD_DATA
 
 PUSER32_THREAD_DATA User32GetThreadData();
 
-DEVMODEW *
-WINAPI
-GdiConvertToDevmodeW(DEVMODEA *dm);
-
 /* FIXME: Belongs to some header. */
 BOOL WINAPI GdiDllInitialize(HANDLE, DWORD, LPVOID);
 void InitStockObjects(void);
@@ -235,5 +230,4 @@ PVOID FASTCALL ValidateHandle(HANDLE, UINT);
 #define __EXCEPT_PAGE_FAULT else
 #define __ENDTRY
 
-#endif
 /* EOF */

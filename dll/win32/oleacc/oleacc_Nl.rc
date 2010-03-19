@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "oleacc.h"
+
 LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
@@ -76,8 +78,8 @@ STRINGTABLE DISCARDABLE
     ROLE_SYSTEM_SLIDER       "schuifknop"
     ROLE_SYSTEM_SPINBUTTON   "spin box"
     ROLE_SYSTEM_DIAGRAM      "diagram"
-    ROLE_SYSTEM_ANIMATION    "animation"
-    ROLE_SYSTEM_EQUATION     "formula"
+    ROLE_SYSTEM_ANIMATION    "animatie"
+    ROLE_SYSTEM_EQUATION     "formule"
     ROLE_SYSTEM_BUTTONDROPDOWN "dropdown knop"
     ROLE_SYSTEM_BUTTONMENU   "menu knop"
     ROLE_SYSTEM_BUTTONDROPDOWNGRID "dropdown grid knop"

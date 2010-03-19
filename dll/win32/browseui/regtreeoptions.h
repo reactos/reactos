@@ -18,8 +18,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef _regtreeoptions_h
-#define _regtreeoptions_h
+#pragma once
 
 class CRegTreeOptions :
 	public CComCoClass<CRegTreeOptions, &CLSID_ACLMulti>,
@@ -52,5 +51,3 @@ BEGIN_COM_MAP(CRegTreeOptions)
 	COM_INTERFACE_ENTRY_IID(IID_IObjectWithSite, IObjectWithSite)
 END_COM_MAP()
 };
-
-#endif // _regtreeoptions_h

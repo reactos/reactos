@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="std_ole_v1" type="embeddedtypelib">
 	<include base="std_ole_v1">.</include>
@@ -14,3 +16,4 @@
 	<define name="__WINESRC__" />
 	<file>rsrc.rc</file>
 </module>
+</group>

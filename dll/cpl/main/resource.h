@@ -1,5 +1,4 @@
-#ifndef __CPL_RESOURCE_H
-#define __CPL_RESOURCE_H
+#pragma once
 
 /* Icons */
 #define IDC_CPLICON_1                       100
@@ -101,7 +100,5 @@
 #define IDC_TEXT_CURSOR_BLINK               2056
 #define IDC_TEXT_TRAIL_SHORT                2057
 #define IDC_TEXT_TRAIL_LONG                 2058
-
-#endif /* __CPL_RESOURCE_H */
 
 /* EOF */

@@ -18,8 +18,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef _addressband_h
-#define _addressband_h
+#pragma once
 
 class CAddressBand :
 	public CWindowImpl<CAddressBand, CWindow, CControlWinTraits>,
@@ -131,5 +130,3 @@ BEGIN_COM_MAP(CAddressBand)
 	COM_INTERFACE_ENTRY_IID(IID_IPersistStream, IPersistStream)
 END_COM_MAP()
 };
-
-#endif // _addressband_h

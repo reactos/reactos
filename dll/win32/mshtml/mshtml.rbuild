@@ -30,6 +30,7 @@
 	<file>htmlelemcol.c</file>
 	<file>htmlevent.c</file>
 	<file>htmlform.c</file>
+	<file>htmlframe.c</file>
 	<file>htmlframebase.c</file>
 	<file>htmlgeneric.c</file>
 	<file>htmliframe.c</file>

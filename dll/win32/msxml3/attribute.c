@@ -55,7 +55,7 @@ static HRESULT WINAPI domattr_QueryInterface(
     void** ppvObject )
 {
     domattr *This = impl_from_IXMLDOMAttribute( iface );
-    TRACE("%p %s %p\n", This, debugstr_guid(riid), ppvObject);
+    TRACE("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppvObject);
 
     if ( IsEqualGUID( riid, &IID_IXMLDOMAttribute ) ||
          IsEqualGUID( riid, &IID_IDispatch ) ||
@@ -94,7 +94,7 @@ static ULONG WINAPI domattr_Release(
     if ( ref == 0 )
     {
         destroy_xmlnode(&This->node);
-        HeapFree( GetProcessHeap(), 0, This );
+        heap_free( This );
     }
 
     return ref;
@@ -213,7 +213,10 @@ static HRESULT WINAPI domattr_get_parentNode(
     IXMLDOMNode** parent )
 {
     domattr *This = impl_from_IXMLDOMAttribute( iface );
-    return IXMLDOMNode_get_parentNode( IXMLDOMNode_from_impl(&This->node), parent );
+    TRACE("(%p)->(%p)\n", This, parent);
+    if (!parent) return E_INVALIDARG;
+    *parent = NULL;
+    return S_FALSE;
 }
 
 static HRESULT WINAPI domattr_get_childNodes(
@@ -546,7 +549,7 @@ IUnknown* create_attribute( xmlNodePtr attribute )
 {
     domattr *This;
 
-    This = HeapAlloc( GetProcessHeap(), 0, sizeof *This );
+    This = heap_alloc( sizeof *This );
     if ( !This )
         return NULL;
 

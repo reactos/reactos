@@ -68,7 +68,7 @@ IntializeHeadQueueForStandardRequest(PQUEUE_HEAD QueueHead,
 
     /* Must be Page aligned */
     *CtrlSetup = (PEHCI_SETUP_FORMAT) (( (ULONG)(*CtrlTD3) + sizeof(QUEUE_TRANSFER_DESCRIPTOR) + 0xFFF)  & ~0xFFF);
-    *CtrlData = (PSTANDARD_DEVICE_DESC) (( (ULONG)(*CtrlSetup) + sizeof(EHCI_SETUP_FORMAT) + 0xFFF)  & ~0xFFF);
+    *CtrlData = (PUSB_DEVICE_DESCRIPTOR) (( (ULONG)(*CtrlSetup) + sizeof(EHCI_SETUP_FORMAT) + 0xFFF)  & ~0xFFF);
 
     (*CtrlTD1)->NextPointer = TERMINATE_POINTER;
     (*CtrlTD1)->AlternateNextPointer = TERMINATE_POINTER;
@@ -105,10 +105,10 @@ IntializeHeadQueueForStandardRequest(PQUEUE_HEAD QueueHead,
 }
 
 BOOLEAN
-GetDeviceDescriptor(PFDO_DEVICE_EXTENSION DeviceExtension, UCHAR Index)
+GetDeviceDescriptor(PFDO_DEVICE_EXTENSION DeviceExtension, UCHAR Index, PUSB_DEVICE_DESCRIPTOR OutBuffer, BOOLEAN Hub)
 {
     PEHCI_SETUP_FORMAT CtrlSetup = NULL;
-    PSTANDARD_DEVICE_DESC CtrlData = NULL;
+    PUSB_DEVICE_DESCRIPTOR CtrlData = NULL;
     PQUEUE_TRANSFER_DESCRIPTOR CtrlTD1 = NULL;
     PQUEUE_TRANSFER_DESCRIPTOR CtrlTD2 = NULL;
     PQUEUE_TRANSFER_DESCRIPTOR CtrlTD3 = NULL;
@@ -129,14 +129,22 @@ GetDeviceDescriptor(PFDO_DEVICE_EXTENSION DeviceExtension, UCHAR Index)
                                          &CtrlTD3,
                                          &CtrlSetup,
                                          (PVOID)&CtrlData,
-                                         sizeof(STANDARD_DEVICE_DESC));
+                                         sizeof(USB_DEVICE_DESCRIPTOR));
 
     /* FIXME: Use defines and handle other than Device Desciptors */
-    CtrlSetup->bmRequestType = 0x80;
+    if (Hub)
+    {
+        CtrlSetup->bmRequestType = 0x80;
+        CtrlSetup->wValue = 0x0600;
+    }
+    else
+    {
+        CtrlSetup->bmRequestType = 0x80;
+        CtrlSetup->wValue = 0x0100;
+    }
     CtrlSetup->bRequest = 0x06;
-    CtrlSetup->wValue = 0x0100;
     CtrlSetup->wIndex = 0;
-    CtrlSetup->wLength = sizeof(STANDARD_DEVICE_DESC);
+    CtrlSetup->wLength = sizeof(USB_DEVICE_DESCRIPTOR);
 
     tmp = READ_REGISTER_ULONG((PULONG) (Base + EHCI_USBCMD));
     UsbCmd = (PEHCI_USBCMD_CONTENT) &tmp;
@@ -182,13 +190,31 @@ GetDeviceDescriptor(PFDO_DEVICE_EXTENSION DeviceExtension, UCHAR Index)
             break;
     }
 
+    if (OutBuffer != NULL)
+    {
+        OutBuffer->bLength = CtrlData->bLength;
+        OutBuffer->bDescriptorType = CtrlData->bDescriptorType;
+        OutBuffer->bcdUSB = CtrlData->bcdUSB;
+        OutBuffer->bDeviceClass = CtrlData->bDeviceClass;
+        OutBuffer->bDeviceSubClass = CtrlData->bDeviceSubClass;
+        OutBuffer->bDeviceProtocol = CtrlData->bDeviceProtocol;
+        OutBuffer->bMaxPacketSize0 = CtrlData->bMaxPacketSize0;
+        OutBuffer->idVendor = CtrlData->idVendor;
+        OutBuffer->idProduct = CtrlData->idProduct;
+        OutBuffer->bcdDevice = CtrlData->bcdDevice;
+        OutBuffer->iManufacturer = CtrlData->iManufacturer;
+        OutBuffer->iProduct = CtrlData->iProduct;
+        OutBuffer->iSerialNumber = CtrlData->iSerialNumber;
+        OutBuffer->bNumConfigurations = CtrlData->bNumConfigurations;
+    }
+
     DPRINT1("bLength %d\n", CtrlData->bLength);
     DPRINT1("bDescriptorType %x\n", CtrlData->bDescriptorType);
     DPRINT1("bcdUSB %x\n", CtrlData->bcdUSB);
     DPRINT1("CtrlData->bDeviceClass %x\n", CtrlData->bDeviceClass);
     DPRINT1("CtrlData->bDeviceSubClass %x\n", CtrlData->bDeviceSubClass);
-    DPRINT1("CtrlData->bDeviceProtocal %x\n", CtrlData->bDeviceProtocal);
-    DPRINT1("CtrlData->bMaxPacketSize %x\n", CtrlData->bMaxPacketSize);
+    DPRINT1("CtrlData->bDeviceProtocal %x\n", CtrlData->bDeviceProtocol);
+    DPRINT1("CtrlData->bMaxPacketSize %x\n", CtrlData->bMaxPacketSize0);
     DPRINT1("CtrlData->idVendor %x\n", CtrlData->idVendor);
     DPRINT1("CtrlData->idProduct %x\n", CtrlData->idProduct);
     DPRINT1("CtrlData->bcdDevice %x\n", CtrlData->bcdDevice);
@@ -202,7 +228,7 @@ GetDeviceDescriptor(PFDO_DEVICE_EXTENSION DeviceExtension, UCHAR Index)
     {
         /* We got valid data, try for strings */
         UCHAR Manufacturer = CtrlData->iManufacturer;
-        UCHAR Product = CtrlData->iManufacturer;
+        UCHAR Product = CtrlData->iProduct;
         UCHAR SerialNumber = CtrlData->iSerialNumber;
 
         GetDeviceStringDescriptor(DeviceExtension, Manufacturer);
@@ -228,7 +254,7 @@ GetDeviceStringDescriptor(PFDO_DEVICE_EXTENSION DeviceExtension, UCHAR Index)
     LONG tmp;
 
     Base = (ULONG) DeviceExtension->ResourceMemory;
-DPRINT1("Index: %d\n", Index);
+
     /* Set up the QUEUE HEAD in memory */
     QueueHead = (PQUEUE_HEAD) ((ULONG)DeviceExtension->AsyncListQueueHeadPtr);
 

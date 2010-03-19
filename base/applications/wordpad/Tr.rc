@@ -48,7 +48,7 @@ BEGIN
         MENUITEM "&Sil\tDel",                   ID_EDIT_CLEAR
         MENUITEM "&Tümünü seç\tCtrl+A",         ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "&Find...\tCrtl+F",            ID_FIND
+        MENUITEM "&Find...\tCtrl+F",            ID_FIND
         MENUITEM "Find &next\tF3",              ID_FIND_NEXT
         MENUITEM "&Replace...\tCtrl+H",         ID_REPLACE
         MENUITEM SEPARATOR
@@ -105,6 +105,30 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Bullet points",       ID_BULLET
         MENUITEM "&Paragraph...",        ID_PARAFORMAT
+    END
+END
+
+IDM_COLOR_POPUP MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Siyah"        ID_COLOR_BLACK
+        MENUITEM "Koyu Kýrmýzý" ID_COLOR_MAROON
+        MENUITEM "Yeþil"        ID_COLOR_GREEN
+        MENUITEM "Koyu Sarý"    ID_COLOR_OLIVE
+        MENUITEM "Koyu Mavi"    ID_COLOR_NAVY
+        MENUITEM "Mor"          ID_COLOR_PURPLE
+        MENUITEM "Deniz Mavisi" ID_COLOR_TEAL
+        MENUITEM "Gri"          ID_COLOR_GRAY
+        MENUITEM "Gümüþ"        ID_COLOR_SILVER
+        MENUITEM "Kýrmýzý"      ID_COLOR_RED
+        MENUITEM "Parlak Yeþil" ID_COLOR_LIME
+        MENUITEM "Sarý"         ID_COLOR_YELLOW
+        MENUITEM "Mavi"         ID_COLOR_BLUE
+        MENUITEM "Pembe"        ID_COLOR_FUCHSIA
+        MENUITEM "Turkuaz"      ID_COLOR_AQUA
+        MENUITEM "Beyaz"        ID_COLOR_WHITE
+        MENUITEM "Automatic"    ID_COLOR_AUTOMATIC
     END
 END
 
@@ -220,7 +244,11 @@ BEGIN
     STRING_PREVIEW_PREVPAGE,         "Previous page"
     STRING_PREVIEW_TWOPAGES,         "Two pages"
     STRING_PREVIEW_ONEPAGE,          "One page"
+    STRING_PREVIEW_ZOOMIN,           "Zoom in"
+    STRING_PREVIEW_ZOOMOUT,          "Zoom out"
     STRING_PREVIEW_CLOSE,            "Close"
+    STRING_PREVIEW_PAGE,             "Page"
+    STRING_PREVIEW_PAGES,            "Pages"
 END
 
 STRINGTABLE DISCARDABLE

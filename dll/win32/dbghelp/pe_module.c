@@ -36,6 +36,141 @@
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
 /******************************************************************
+ *		pe_locate_with_coff_symbol_table
+ *
+ * Use the COFF symbol table (if any) from the IMAGE_FILE_HEADER to set the absolute address
+ * of global symbols.
+ * Mingw32 requires this for stabs debug information as address for global variables isn't filled in
+ * (this is similar to what is done in elf_module.c when using the .symtab ELF section)
+ */
+static BOOL pe_locate_with_coff_symbol_table(struct module* module, IMAGE_NT_HEADERS* nth, void* mapping)
+{
+    const IMAGE_SYMBOL* isym;
+    int                 i, numsym, naux;
+    const char*         strtable;
+    char                tmp[9];
+    const char*         name;
+    struct hash_table_iter      hti;
+    void*               ptr;
+    struct symt_data*   sym;
+    const IMAGE_SECTION_HEADER* sect;
+
+    numsym = nth->FileHeader.NumberOfSymbols;
+    if (!nth->FileHeader.PointerToSymbolTable || !numsym)
+        return TRUE;
+    isym = (const IMAGE_SYMBOL*)((char*)mapping + nth->FileHeader.PointerToSymbolTable);
+    /* FIXME: no way to get strtable size */
+    strtable = (const char*)&isym[numsym];
+    sect = IMAGE_FIRST_SECTION(nth);
+
+    for (i = 0; i < numsym; i+= naux, isym += naux)
+    {
+        if (isym->StorageClass == IMAGE_SYM_CLASS_EXTERNAL &&
+            isym->SectionNumber > 0 && isym->SectionNumber <= nth->FileHeader.NumberOfSections)
+        {
+            if (isym->N.Name.Short)
+            {
+                name = memcpy(tmp, isym->N.ShortName, 8);
+                tmp[8] = '\0';
+            }
+            else name = strtable + isym->N.Name.Long;
+            if (name[0] == '_') name++;
+            hash_table_iter_init(&module->ht_symbols, &hti, name);
+            while ((ptr = hash_table_iter_up(&hti)))
+            {
+                sym = GET_ENTRY(ptr, struct symt_data, hash_elt);
+                if (sym->symt.tag == SymTagData &&
+                    (sym->kind == DataIsGlobal || sym->kind == DataIsFileStatic) &&
+                    !strcmp(sym->hash_elt.name, name))
+                {
+                    TRACE("Changing absolute address for %d.%s: %lx -> %s\n",
+                          isym->SectionNumber, name, sym->u.var.offset,
+                          wine_dbgstr_longlong(module->module.BaseOfImage +
+                                               sect[isym->SectionNumber - 1].VirtualAddress + isym->Value));
+                    sym->u.var.offset = module->module.BaseOfImage +
+                        sect[isym->SectionNumber - 1].VirtualAddress + isym->Value;
+                    break;
+                }
+            }
+        }
+        naux = isym->NumberOfAuxSymbols + 1;
+    }
+    return TRUE;
+}
+
+/******************************************************************
+ *		pe_load_coff_symbol_table
+ *
+ * Load public symbols out of the COFF symbol table (if any).
+ */
+static BOOL pe_load_coff_symbol_table(struct module* module, IMAGE_NT_HEADERS* nth, void* mapping)
+{
+    const IMAGE_SYMBOL* isym;
+    int                 i, numsym, naux;
+    const char*         strtable;
+    char                tmp[9];
+    const char*         name;
+    const char*         lastfilename = NULL;
+    struct symt_compiland*   compiland = NULL;
+    const IMAGE_SECTION_HEADER* sect;
+
+    numsym = nth->FileHeader.NumberOfSymbols;
+    if (!nth->FileHeader.PointerToSymbolTable || !numsym)
+        return TRUE;
+    isym = (const IMAGE_SYMBOL*)((char*)mapping + nth->FileHeader.PointerToSymbolTable);
+    /* FIXME: no way to get strtable size */
+    strtable = (const char*)&isym[numsym];
+    sect = IMAGE_FIRST_SECTION(nth);
+
+    for (i = 0; i < numsym; i+= naux, isym += naux)
+    {
+        if (isym->StorageClass == IMAGE_SYM_CLASS_FILE)
+        {
+            lastfilename = (const char*)(isym + 1);
+            compiland = NULL;
+        }
+        if (isym->StorageClass == IMAGE_SYM_CLASS_EXTERNAL &&
+            isym->SectionNumber > 0 && isym->SectionNumber <= nth->FileHeader.NumberOfSections)
+        {
+            if (isym->N.Name.Short)
+            {
+                name = memcpy(tmp, isym->N.ShortName, 8);
+                tmp[8] = '\0';
+            }
+            else name = strtable + isym->N.Name.Long;
+            if (name[0] == '_') name++;
+
+            if (!compiland && lastfilename)
+                compiland = symt_new_compiland(module, 0,
+                                               source_new(module, NULL, lastfilename));
+            symt_new_public(module, compiland, name,
+                            module->module.BaseOfImage + sect[isym->SectionNumber - 1].VirtualAddress + isym->Value,
+                            1);
+        }
+        naux = isym->NumberOfAuxSymbols + 1;
+    }
+    module->module.SymType = SymCoff;
+    module->module.LineNumbers = FALSE;
+    module->module.GlobalSymbols = FALSE;
+    module->module.TypeInfo = FALSE;
+    module->module.SourceIndexed = FALSE;
+    module->module.Publics = TRUE;
+
+    return TRUE;
+}
+
+static inline void* pe_get_sect(IMAGE_NT_HEADERS* nth, void* mapping,
+                                IMAGE_SECTION_HEADER* sect)
+{
+    return (sect) ? RtlImageRvaToVa(nth, mapping, sect->VirtualAddress, NULL) : NULL;
+}
+
+static inline DWORD pe_get_sect_size(IMAGE_SECTION_HEADER* sect)
+{
+    return (sect) ? sect->SizeOfRawData : 0;
+}
+
+/******************************************************************
  *		pe_load_stabs
  *
  * look for stabs information in PE header (it's how the mingw compiler provides 
@@ -45,37 +180,85 @@ static BOOL pe_load_stabs(const struct process* pcs, struct module* module,
                           void* mapping, IMAGE_NT_HEADERS* nth)
 {
     IMAGE_SECTION_HEADER*       section;
-    int                         i, stabsize = 0, stabstrsize = 0;
-    unsigned int                stabs = 0, stabstr = 0;
+    IMAGE_SECTION_HEADER*       sect_stabs = NULL;
+    IMAGE_SECTION_HEADER*       sect_stabstr = NULL;
+    int                         i;
     BOOL                        ret = FALSE;
 
     section = (IMAGE_SECTION_HEADER*)
         ((char*)&nth->OptionalHeader + nth->FileHeader.SizeOfOptionalHeader);
     for (i = 0; i < nth->FileHeader.NumberOfSections; i++, section++)
     {
-        if (!strcasecmp((const char*)section->Name, ".stab"))
-        {
-            stabs = section->VirtualAddress;
-            stabsize = section->SizeOfRawData;
-        }
-        else if (!strncasecmp((const char*)section->Name, ".stabstr", 8))
-        {
-            stabstr = section->VirtualAddress;
-            stabstrsize = section->SizeOfRawData;
-        }
+        if (!strcasecmp((const char*)section->Name, ".stab"))              sect_stabs = section;
+        else if (!strncasecmp((const char*)section->Name, ".stabstr", 8))  sect_stabstr = section;
     }
-
-    if (stabstrsize && stabsize)
+    if (sect_stabs && sect_stabstr)
     {
-        ret = stabs_parse(module, 
-                          module->module.BaseOfImage - nth->OptionalHeader.ImageBase, 
-                          RtlImageRvaToVa(nth, mapping, stabs, NULL),
-                          stabsize,
-                          RtlImageRvaToVa(nth, mapping, stabstr, NULL),
-                          stabstrsize);
+        ret = stabs_parse(module,
+                          module->module.BaseOfImage - nth->OptionalHeader.ImageBase,
+                          pe_get_sect(nth, mapping, sect_stabs),   pe_get_sect_size(sect_stabs),
+                          pe_get_sect(nth, mapping, sect_stabstr), pe_get_sect_size(sect_stabstr),
+                          NULL, NULL);
+        if (ret) pe_locate_with_coff_symbol_table(module, nth, mapping);
     }
-
     TRACE("%s the STABS debug info\n", ret ? "successfully loaded" : "failed to load");
+
+    return ret;
+}
+
+/******************************************************************
+ *		pe_load_dwarf
+ *
+ * look for dwarf information in PE header (it's also a way for the mingw compiler
+ * to provide its debugging information)
+ */
+static BOOL pe_load_dwarf(const struct process* pcs, struct module* module,
+                          void* mapping, IMAGE_NT_HEADERS* nth)
+{
+    IMAGE_SECTION_HEADER*       section;
+    IMAGE_SECTION_HEADER*       sect_debuginfo = NULL;
+    IMAGE_SECTION_HEADER*       sect_debugstr = NULL;
+    IMAGE_SECTION_HEADER*       sect_debugabbrev = NULL;
+    IMAGE_SECTION_HEADER*       sect_debugline = NULL;
+    IMAGE_SECTION_HEADER*       sect_debugloc = NULL;
+    int                         i;
+    const char*                 strtable;
+    const char*                 sectname;
+    BOOL                        ret = FALSE;
+
+    if (nth->FileHeader.PointerToSymbolTable && nth->FileHeader.NumberOfSymbols)
+        /* FIXME: no way to get strtable size */
+        strtable = (const char*)mapping + nth->FileHeader.PointerToSymbolTable +
+             nth->FileHeader.NumberOfSymbols * sizeof(IMAGE_SYMBOL);
+    else strtable = NULL;
+
+    section = (IMAGE_SECTION_HEADER*)
+        ((char*)&nth->OptionalHeader + nth->FileHeader.SizeOfOptionalHeader);
+    for (i = 0; i < nth->FileHeader.NumberOfSections; i++, section++)
+    {
+        sectname = (const char*)section->Name;
+        /* long section names start with a '/' (at least on MinGW32) */
+        if (*sectname == '/' && strtable)
+            sectname = strtable + atoi(sectname + 1);
+        if (!strcasecmp(sectname, ".debug_info"))        sect_debuginfo = section;
+        else if (!strcasecmp(sectname, ".debug_str"))    sect_debugstr = section;
+        else if (!strcasecmp(sectname, ".debug_abbrev")) sect_debugabbrev = section;
+        else if (!strcasecmp(sectname, ".debug_line"))   sect_debugline = section;
+        else if (!strcasecmp(sectname, ".debug_loc"))    sect_debugloc = section;
+    }
+    if (sect_debuginfo)
+    {
+        ret = dwarf2_parse(module,
+                           module->module.BaseOfImage - nth->OptionalHeader.ImageBase,
+                           NULL, /* FIXME: some thunks to deal with ? */
+                           pe_get_sect(nth, mapping, sect_debuginfo),   pe_get_sect_size(sect_debuginfo),
+                           pe_get_sect(nth, mapping, sect_debugabbrev), pe_get_sect_size(sect_debugabbrev),
+                           pe_get_sect(nth, mapping, sect_debugstr),    pe_get_sect_size(sect_debugstr),
+                           pe_get_sect(nth, mapping, sect_debugline),   pe_get_sect_size(sect_debugline),
+                           pe_get_sect(nth, mapping, sect_debugloc),    pe_get_sect_size(sect_debugloc));
+    }
+    TRACE("%s the DWARF debug info\n", ret ? "successfully loaded" : "failed to load");
+
     return ret;
 }
 
@@ -133,7 +316,7 @@ static BOOL pe_load_dbg_file(const struct process* pcs, struct module* module,
  */
 static BOOL pe_load_msc_debug_info(const struct process* pcs, 
                                    struct module* module,
-                                   void* mapping, IMAGE_NT_HEADERS* nth)
+                                   void* mapping, const IMAGE_NT_HEADERS* nth)
 {
     BOOL                        ret = FALSE;
     const IMAGE_DATA_DIRECTORY* dir;
@@ -181,7 +364,7 @@ static BOOL pe_load_msc_debug_info(const struct process* pcs,
  */
 static BOOL pe_load_export_debug_info(const struct process* pcs, 
                                       struct module* module, 
-                                      void* mapping, IMAGE_NT_HEADERS* nth)
+                                      void* mapping, const IMAGE_NT_HEADERS* nth)
 {
     unsigned int 		        i;
     const IMAGE_EXPORT_DIRECTORY* 	exports;
@@ -193,14 +376,12 @@ static BOOL pe_load_export_debug_info(const struct process* pcs,
 #if 0
     /* Add start of DLL (better use the (yet unimplemented) Exe SymTag for this) */
     /* FIXME: module.ModuleName isn't correctly set yet if it's passed in SymLoadModule */
-    symt_new_public(module, NULL, module->module.ModuleName, base, 1,
-                    TRUE /* FIXME */, TRUE /* FIXME */);
+    symt_new_public(module, NULL, module->module.ModuleName, base, 1);
 #endif
     
     /* Add entry point */
     symt_new_public(module, NULL, "EntryPoint", 
-                    base + nth->OptionalHeader.AddressOfEntryPoint, 1,
-                    TRUE, TRUE);
+                    base + nth->OptionalHeader.AddressOfEntryPoint, 1);
 #if 0
     /* FIXME: we'd better store addresses linked to sections rather than 
        absolute values */
@@ -211,8 +392,7 @@ static BOOL pe_load_export_debug_info(const struct process* pcs,
     for (i = 0; i < nth->FileHeader.NumberOfSections; i++, section++) 
     {
 	symt_new_public(module, NULL, section->Name, 
-                        RtlImageRvaToVa(nth, mapping, section->VirtualAddress, NULL), 
-                        1, TRUE /* FIXME */, TRUE /* FIXME */);
+                        RtlImageRvaToVa(nth, mapping, section->VirtualAddress, NULL), 1);
     }
 #endif
 
@@ -237,8 +417,7 @@ static BOOL pe_load_export_debug_info(const struct process* pcs,
                 if (!names[i]) continue;
                 symt_new_public(module, NULL,
                                 RtlImageRvaToVa(nth, mapping, names[i], NULL),
-                                base + functions[ordinals[i]],
-                                1, TRUE /* FIXME */, TRUE /* FIXME */);
+                                base + functions[ordinals[i]], 1);
             }
 
             for (i = 0; i < exports->NumberOfFunctions; i++)
@@ -249,8 +428,7 @@ static BOOL pe_load_export_debug_info(const struct process* pcs,
                     if ((ordinals[j] == i) && names[j]) break;
                 if (j < exports->NumberOfNames) continue;
                 snprintf(buffer, sizeof(buffer), "%d", i + exports->Base);
-                symt_new_public(module, NULL, buffer, base + (DWORD)functions[i], 1,
-                                TRUE /* FIXME */, TRUE /* FIXME */);
+                symt_new_public(module, NULL, buffer, base + (DWORD)functions[i], 1);
             }
         }
     }
@@ -284,7 +462,9 @@ BOOL pe_load_debug_info(const struct process* pcs, struct module* module)
             if (!(dbghelp_options & SYMOPT_PUBLICS_ONLY))
             {
                 ret = pe_load_stabs(pcs, module, mapping, nth) ||
-                    pe_load_msc_debug_info(pcs, module, mapping, nth);
+                    pe_load_dwarf(pcs, module, mapping, nth) ||
+                    pe_load_msc_debug_info(pcs, module, mapping, nth) ||
+                    pe_load_coff_symbol_table(module, nth, mapping);
                 /* if we still have no debug info (we could only get SymExport at this
                  * point), then do the SymExport except if we have an ELF container, 
                  * in which case we'll rely on the export's on the ELF side
@@ -367,13 +547,13 @@ struct module* pe_load_native_module(struct process* pcs, const WCHAR* name,
  *		pe_load_nt_header
  *
  */
-BOOL pe_load_nt_header(HANDLE hProc, DWORD base, IMAGE_NT_HEADERS* nth)
+BOOL pe_load_nt_header(HANDLE hProc, DWORD64 base, IMAGE_NT_HEADERS* nth)
 {
     IMAGE_DOS_HEADER    dos;
 
-    return ReadProcessMemory(hProc, (char*)base, &dos, sizeof(dos), NULL) &&
+    return ReadProcessMemory(hProc, (char*)(DWORD_PTR)base, &dos, sizeof(dos), NULL) &&
         dos.e_magic == IMAGE_DOS_SIGNATURE &&
-        ReadProcessMemory(hProc, (char*)(base + dos.e_lfanew), 
+        ReadProcessMemory(hProc, (char*)(DWORD_PTR)(base + dos.e_lfanew),
                           nth, sizeof(*nth), NULL) &&
         nth->Signature == IMAGE_NT_SIGNATURE;
 }
@@ -383,7 +563,7 @@ BOOL pe_load_nt_header(HANDLE hProc, DWORD base, IMAGE_NT_HEADERS* nth)
  *
  */
 struct module* pe_load_builtin_module(struct process* pcs, const WCHAR* name,
-                                      DWORD base, DWORD size)
+                                      DWORD64 base, DWORD64 size)
 {
     struct module*      module = NULL;
 
@@ -435,7 +615,7 @@ PVOID WINAPI ImageDirectoryEntryToDataEx( PVOID base, BOOLEAN image, USHORT dir,
     *size = nt->OptionalHeader.DataDirectory[dir].Size;
     if (image || addr < nt->OptionalHeader.SizeOfHeaders) return (char *)base + addr;
 
-    return RtlImageRvaToVa( nt, (HMODULE)base, addr, section );
+    return RtlImageRvaToVa( nt, base, addr, section );
 }
 
 /***********************************************************************

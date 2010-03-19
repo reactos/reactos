@@ -5,6 +5,9 @@
 
 #define __WINE_CONFIG_H
 
+/* Define to a function attribute for Microsoft hotpatch assembly prefix. */
+#define DECLSPEC_HOTPATCH
+
 /* Specifies the compiler flag that forces a short wchar_t */
 #define CC_FLAG_SHORT_WCHAR "-fshort-wchar"
 

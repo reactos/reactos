@@ -21,8 +21,7 @@
  *        Thanks to Emanuele Aliberti!
  */
 
-#ifndef _CMD_H_INCLUDED_
-#define _CMD_H_INCLUDED_
+#pragma once
 
 #include "config.h"
 
@@ -492,5 +491,3 @@ INT CommandWindow (LPTSTR);
 int cmd_if(TCHAR *);
 int cmd_pause(TCHAR *);
 int cmd_shift(TCHAR *);
-
-#endif /* _CMD_H_INCLUDED_ */

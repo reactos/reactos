@@ -68,6 +68,7 @@ typedef enum {
     DispHTMLElementCollection_tid,
     DispHTMLFormElement_tid,
     DispHTMLGenericElement_tid,
+    DispHTMLFrameElement_tid,
     DispHTMLIFrame_tid,
     DispHTMLImg_tid,
     DispHTMLInputElement_tid,
@@ -75,10 +76,12 @@ typedef enum {
     DispHTMLNavigator_tid,
     DispHTMLOptionElement_tid,
     DispHTMLScreen_tid,
+    DispHTMLScriptElement_tid,
     DispHTMLSelectElement_tid,
     DispHTMLStyle_tid,
     DispHTMLTable_tid,
     DispHTMLTableRow_tid,
+    DispHTMLTextAreaElement_tid,
     DispHTMLUnknownElement_tid,
     DispHTMLWindow2_tid,
     HTMLDocumentEvents_tid,
@@ -108,13 +111,16 @@ typedef enum {
     IHTMLFormElement_tid,
     IHTMLFrameBase_tid,
     IHTMLFrameBase2_tid,
+    IHTMLFrameElement3_tid,
     IHTMLGenericElement_tid,
+    IHTMLIFrameElement_tid,
     IHTMLImageElementFactory_tid,
     IHTMLImgElement_tid,
     IHTMLInputElement_tid,
     IHTMLLocation_tid,
     IHTMLOptionElement_tid,
     IHTMLScreen_tid,
+    IHTMLScriptElement_tid,
     IHTMLSelectElement_tid,
     IHTMLStyle_tid,
     IHTMLStyle2_tid,
@@ -122,6 +128,7 @@ typedef enum {
     IHTMLStyle4_tid,
     IHTMLTable_tid,
     IHTMLTableRow_tid,
+    IHTMLTextAreaElement_tid,
     IHTMLTextContainer_tid,
     IHTMLUniqueName_tid,
     IHTMLWindow2_tid,
@@ -165,9 +172,11 @@ BOOL dispex_query_interface(DispatchEx*,REFIID,void**);
 HRESULT dispex_get_dprop_ref(DispatchEx*,const WCHAR*,BOOL,VARIANT**);
 HRESULT get_dispids(tid_t,DWORD*,DISPID**);
 
+typedef struct HTMLWindow HTMLWindow;
 typedef struct HTMLDocumentNode HTMLDocumentNode;
 typedef struct HTMLDocumentObj HTMLDocumentObj;
 typedef struct HTMLFrameBase HTMLFrameBase;
+typedef struct NSContainer NSContainer;
 
 typedef enum {
     SCRIPTMODE_GECKO,
@@ -219,11 +228,14 @@ typedef struct {
     LONG ref;
 }  windowref_t;
 
+typedef struct nsChannelBSC nsChannelBSC;
+
 struct HTMLWindow {
     DispatchEx dispex;
     const IHTMLWindow2Vtbl *lpHTMLWindow2Vtbl;
     const IHTMLWindow3Vtbl *lpHTMLWindow3Vtbl;
     const IHTMLWindow4Vtbl *lpHTMLWindow4Vtbl;
+    const IHTMLPrivateWindowVtbl *lpIHTMLPrivateWindowVtbl;
     const IDispatchExVtbl  *lpIDispatchExVtbl;
 
     LONG ref;
@@ -373,6 +385,7 @@ struct HTMLDocumentObj {
     IOleInPlaceSite *ipsite;
     IOleInPlaceFrame *frame;
     IOleInPlaceUIWindow *ip_window;
+    IAdviseSink *view_sink;
 
     DOCHOSTUIINFO hostinfo;
 
@@ -385,7 +398,7 @@ struct HTMLDocumentObj {
     BOOL in_place_active;
     BOOL ui_active;
     BOOL window_active;
-    BOOL has_key_path;
+    BOOL hostui_setup;
     BOOL container_locked;
     BOOL focus;
     INT download_state;
@@ -426,6 +439,11 @@ struct NSContainer {
     HWND reset_focus; /* hack */
 };
 
+typedef struct nsWineURI nsWineURI;
+
+HRESULT set_wine_url(nsWineURI*,LPCWSTR);
+nsresult on_start_uri_open(NSContainer*,nsIURI*,PRBool*);
+
 typedef struct {
     const nsIHttpChannelVtbl *lpHttpChannelVtbl;
     const nsIUploadChannelVtbl *lpUploadChannelVtbl;
@@ -433,7 +451,7 @@ typedef struct {
 
     LONG ref;
 
-    nsIWineURI *uri;
+    nsWineURI *uri;
     nsIInputStream *post_data_stream;
     nsILoadGroup *load_group;
     nsIInterfaceRequestor *notif_callback;
@@ -486,6 +504,14 @@ typedef struct {
 
     nsIDOMHTMLElement *nselem;
 } HTMLElement;
+
+#define HTMLELEMENT_TIDS    \
+    IHTMLDOMNode_tid,       \
+    IHTMLDOMNode2_tid,      \
+    IHTMLElement_tid,       \
+    IHTMLElement2_tid,      \
+    IHTMLElement3_tid,      \
+    IHTMLElement4_tid
 
 typedef struct {
     HTMLElement element;
@@ -680,12 +706,13 @@ void release_nsio(void);
 BOOL install_wine_gecko(BOOL);
 
 HRESULT nsuri_to_url(LPCWSTR,BOOL,BSTR*);
-HRESULT create_doc_uri(HTMLWindow*,WCHAR*,nsIWineURI**);
+HRESULT create_doc_uri(HTMLWindow*,WCHAR*,nsWineURI**);
+HRESULT load_nsuri(HTMLWindow*,nsWineURI*,nsChannelBSC*,DWORD);
 
-HRESULT hlink_frame_navigate(HTMLDocument*,LPCWSTR,nsIInputStream*,DWORD);
+HRESULT hlink_frame_navigate(HTMLDocument*,LPCWSTR,nsIInputStream*,DWORD,BOOL*);
 HRESULT navigate_url(HTMLWindow*,const WCHAR*,const WCHAR*);
 HRESULT set_frame_doc(HTMLFrameBase*,nsIDOMDocument*);
-HRESULT load_nsuri(HTMLWindow*,nsIWineURI*,DWORD);
+HRESULT set_moniker(HTMLDocument*,IMoniker*,IBindCtx*,nsChannelBSC*,BOOL);
 
 void call_property_onchanged(ConnectionPoint*,DISPID);
 HRESULT call_set_active_object(IOleInPlaceUIWindow*,IOleInPlaceActiveObject*);
@@ -696,7 +723,8 @@ void nsfree(void*);
 void nsACString_SetData(nsACString*,const char*);
 PRUint32 nsACString_GetData(const nsACString*,const char**);
 
-void nsAString_Init(nsAString*,const PRUnichar*);
+BOOL nsAString_Init(nsAString*,const PRUnichar*);
+void nsAString_InitDepend(nsAString*,const PRUnichar*);
 void nsAString_SetData(nsAString*,const PRUnichar*);
 PRUint32 nsAString_GetData(const nsAString*,const PRUnichar**);
 void nsAString_Finish(nsAString*);
@@ -713,11 +741,12 @@ void add_nsevent_listener(HTMLDocumentNode*,LPCWSTR);
 void set_window_bscallback(HTMLWindow*,nsChannelBSC*);
 void set_current_mon(HTMLWindow*,IMoniker*);
 HRESULT start_binding(HTMLWindow*,HTMLDocumentNode*,BSCallback*,IBindCtx*);
+HRESULT async_start_doc_binding(HTMLWindow*,nsChannelBSC*);
 void abort_document_bindings(HTMLDocumentNode*);
 
 HRESULT bind_mon_to_buffer(HTMLDocumentNode*,IMoniker*,void**,DWORD*);
 
-nsChannelBSC *create_channelbsc(IMoniker*);
+HRESULT create_channelbsc(IMoniker*,WCHAR*,BYTE*,DWORD,nsChannelBSC**);
 HRESULT channelbsc_load_stream(nsChannelBSC*,IStream*);
 void channelbsc_set_channel(nsChannelBSC*,nsChannel*,nsIStreamListener*,nsISupports*);
 IMoniker *get_channelbsc_mon(nsChannelBSC*);

@@ -43,7 +43,7 @@ ULONG ExpAdditionalDelayedWorkerThreads;
 /* Future support for stack swapping worker threads */
 BOOLEAN ExpWorkersCanSwap;
 LIST_ENTRY ExpWorkerListHead;
-KMUTANT ExpWorkerSwapinMutex;
+FAST_MUTEX ExpWorkerSwapinMutex;
 
 /* The worker balance set manager events */
 KEVENT ExpThreadSetManagerEvent;
@@ -513,7 +513,7 @@ ExpInitializeWorkerThreads(VOID)
     ULONG i;
 
     /* Setup the stack swap support */
-    KeInitializeMutex(&ExpWorkerSwapinMutex, FALSE);
+    ExInitializeFastMutex(&ExpWorkerSwapinMutex);
     InitializeListHead(&ExpWorkerListHead);
     ExpWorkersCanSwap = TRUE;
 
@@ -587,6 +587,89 @@ ExpInitializeWorkerThreads(VOID)
 
     /* Close the handle and return */
     ObCloseHandle(ThreadHandle, KernelMode);
+}
+
+VOID
+NTAPI
+ExpSetSwappingKernelApc(IN PKAPC Apc,
+                        OUT PKNORMAL_ROUTINE *NormalRoutine,
+                        IN OUT PVOID *NormalContext,
+                        IN OUT PVOID *SystemArgument1,
+                        IN OUT PVOID *SystemArgument2)
+{
+    PBOOLEAN AllowSwap;
+    PKEVENT Event = (PKEVENT)*SystemArgument1;
+
+    /* Make sure it's an active worker */
+    if (PsGetCurrentThread()->ActiveExWorker) 
+    {
+        /* Read the setting from the context flag */
+        AllowSwap = (PBOOLEAN)NormalContext;
+        KeSetKernelStackSwapEnable(*AllowSwap);
+    }
+
+    /* Let caller know that we're done */
+    KeSetEvent(Event, 0, FALSE);
+}
+
+VOID
+NTAPI
+ExSwapinWorkerThreads(IN BOOLEAN AllowSwap)
+{
+    KEVENT Event;
+    PETHREAD CurrentThread = PsGetCurrentThread(), Thread;
+    PEPROCESS Process = PsInitialSystemProcess;
+    KAPC Apc;
+    PAGED_CODE();
+
+    /* Initialize an event so we know when we're done */
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+
+    /* Lock this routine */
+    ExAcquireFastMutex(&ExpWorkerSwapinMutex);
+
+    /* New threads cannot swap anymore */
+    ExpWorkersCanSwap = AllowSwap;
+
+    /* Loop all threads in the system process */
+    Thread = PsGetNextProcessThread(Process, NULL);
+    while (Thread)
+    {
+        /* Skip threads with explicit permission to do this */
+        if (Thread->ExWorkerCanWaitUser) goto Next;
+
+        /* Check if we reached ourselves */
+        if (Thread == CurrentThread)
+        {
+            /* Do it inline */
+            KeSetKernelStackSwapEnable(AllowSwap);
+        }
+        else
+        {
+            /* Queue an APC */
+            KeInitializeApc(&Apc,
+                            &Thread->Tcb,
+                            InsertApcEnvironment,
+                            ExpSetSwappingKernelApc,
+                            NULL,
+                            NULL,
+                            KernelMode,
+                            &AllowSwap);
+            if (KeInsertQueueApc(&Apc, &Event, NULL, 3))
+            {
+                /* Wait for the APC to run */
+                KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+                KeClearEvent(&Event);
+            }
+        }
+        
+        /* Next thread */
+Next:
+        Thread = PsGetNextProcessThread(Process, Thread);
+    }
+
+    /* Release the lock */
+    ExReleaseFastMutex(&ExpWorkerSwapinMutex);
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/

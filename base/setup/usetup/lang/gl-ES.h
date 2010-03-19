@@ -1,5 +1,4 @@
-#ifndef LANG_GL_ES_H__
-#define LANG_GL_ES_H__
+#pragma once
 
 MUI_LAYOUTS glESLayouts[] =
 {
@@ -7,5 +6,3 @@ MUI_LAYOUTS glESLayouts[] =
     { L"0409", L"00000409" },
     { NULL, NULL }
 };
-
-#endif

@@ -25,6 +25,9 @@
 #define MAXLEN_IFDESCR 256
 #define MAXLEN_PHYSADDR 8
 
+//It should be 16 according to Lei Shen blog (http://www.mychinaworks.com/blog/lshen/2008/04/16/220/
+#define TCPIP_OWNING_MODULE_SIZE 16
+
 typedef struct _MIB_IFROW
 {
     WCHAR wszName[MAX_INTERFACE_NAME_LEN];
@@ -285,5 +288,32 @@ typedef struct _MIB_IPNETTABLE
     DWORD        dwNumEntries;
     MIB_IPNETROW table[1];
 } MIB_IPNETTABLE, *PMIB_IPNETTABLE;
+
+typedef struct _MIB_TCPROW_OWNER_MODULE {
+  DWORD         dwState;
+  DWORD         dwLocalAddr;
+  DWORD         dwLocalPort;
+  DWORD         dwRemoteAddr;
+  DWORD         dwRemotePort;
+  DWORD         dwOwningPid;
+  LARGE_INTEGER liCreateTimestamp;
+  ULONGLONG     OwningModuleInfo[TCPIP_OWNING_MODULE_SIZE];
+} MIB_TCPROW_OWNER_MODULE, *PMIB_TCPROW_OWNER_MODULE;
+
+typedef enum  {
+  TCPIP_OWNER_MODULE_INFO_BASIC 
+} TCPIP_OWNER_MODULE_INFO_CLASS, *PTCPIP_OWNER_MODULE_INFO_CLASS;
+
+typedef enum {
+    TCP_TABLE_BASIC_LISTENER,
+    TCP_TABLE_BASIC_CONNECTIONS,
+    TCP_TABLE_BASIC_ALL,
+    TCP_TABLE_OWNER_PID_LISTENER,
+    TCP_TABLE_OWNER_PID_CONNECTIONS,
+    TCP_TABLE_OWNER_PID_ALL,
+    TCP_TABLE_OWNER_MODULE_LISTENER,
+    TCP_TABLE_OWNER_MODULE_CONNECTIONS,
+    TCP_TABLE_OWNER_MODULE_ALL
+} TCP_TABLE_CLASS, *PTCP_TABLE_CLASS;
 
 #endif /* WINE_IPRTRMIB_H__ */

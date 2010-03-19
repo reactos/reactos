@@ -1,7 +1,17 @@
 /*
  * Cancel-Safe Queue Library
- * Copyright (c) 2004, Vizzini (vizzini@plasmic.com)
- * Licensed under the GNU GPL for the ReactOS project
+ * Created in 2004 by Vizzini (vizzini@plasmic.com)
+ *
+ * THIS SOFTWARE IS NOT COPYRIGHTED
+ *
+ * This source code is offered for use in the public domain. You may
+ * use, modify or distribute it freely.
+ *
+ * This code is distributed in the hope that it will be useful but
+ * WITHOUT ANY WARRANTY. ALL WARRANTIES, EXPRESS OR IMPLIED ARE HEREBY
+ * DISCLAIMED. This includes but is not limited to warranties of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
  *
  * This header defines the interface to the ReactOS Cancel-Safe Queue library.
  * This interface is based on and is similar to the Microsoft Cancel-Safe

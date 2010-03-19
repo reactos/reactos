@@ -1,5 +1,4 @@
-#ifndef __TELNETD_H
-#define __TELNETD_H
+#pragma once
 
 #define _CRT_SECURE_NO_WARNINGS
 
@@ -82,6 +81,3 @@ static DWORD WINAPI ReadFromPipeThread(LPVOID);
 static void TerminateShell(client_t *client);
 static VOID ErrorExit(LPTSTR);
 int kickoff_telnetd(void);
-
-#endif /* __TELNETD_H */
-

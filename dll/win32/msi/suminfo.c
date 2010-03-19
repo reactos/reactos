@@ -86,9 +86,6 @@ static HRESULT (WINAPI *pPropVariantChangeType)
 
 #define SECT_HDR_SIZE (sizeof(PROPERTYSECTIONHEADER))
 
-static const WCHAR szSumInfo[] = { 5 ,'S','u','m','m','a','r','y',
-                       'I','n','f','o','r','m','a','t','i','o','n',0 };
-
 static void free_prop( PROPVARIANT *prop )
 {
     if (prop->vt == VT_LPSTR )

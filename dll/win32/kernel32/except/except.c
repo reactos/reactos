@@ -204,6 +204,68 @@ BasepCheckForReadOnlyResource(IN PVOID Ptr)
     return Ret;
 }
 
+static VOID
+PrintStackTrace(struct _EXCEPTION_POINTERS *ExceptionInfo)
+{
+    PVOID StartAddr;
+    CHAR szMod[128] = "";
+    PEXCEPTION_RECORD ExceptionRecord = ExceptionInfo->ExceptionRecord;
+    PCONTEXT ContextRecord = ExceptionInfo->ContextRecord;
+
+    /* Print a stack trace. */
+    DbgPrint("Unhandled exception\n");
+    DbgPrint("ExceptionCode:    %8x\n", ExceptionRecord->ExceptionCode);
+
+    if ((NTSTATUS)ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION &&
+        ExceptionRecord->NumberParameters == 2)
+    {
+        DbgPrint("Faulting Address: %8x\n", ExceptionRecord->ExceptionInformation[1]);
+    }
+
+    _dump_context (ContextRecord);
+    _module_name_from_addr(ExceptionRecord->ExceptionAddress, &StartAddr, szMod, sizeof(szMod));
+    DbgPrint("Address:\n   %8x+%-8x   %s\n", 
+             (PVOID)StartAddr,
+             (ULONG_PTR)ExceptionRecord->ExceptionAddress - (ULONG_PTR)StartAddr,
+             szMod);
+#ifdef _M_IX86
+    DbgPrint("Frames:\n");
+
+    _SEH2_TRY
+    {
+        UINT i;
+        PULONG Frame = (PULONG)ContextRecord->Ebp;
+
+        for (i = 0; Frame[1] != 0 && Frame[1] != 0xdeadbeef && i < 128; i++)
+        {
+            if (IsBadReadPtr((PVOID)Frame[1], 4))
+            {
+                DbgPrint("   %8x%9s   %s\n", Frame[1], "<invalid address>"," ");
+            }
+            else
+            {
+                _module_name_from_addr((const void*)Frame[1], &StartAddr,
+                                       szMod, sizeof(szMod));
+                DbgPrint("   %8x+%-8x   %s\n",
+                         (PVOID)StartAddr,
+                         (ULONG_PTR)Frame[1] - (ULONG_PTR)StartAddr,
+                         szMod);
+            }
+
+            if (IsBadReadPtr((PVOID)Frame[0], sizeof(*Frame) * 2))
+                break;
+
+            Frame = (PULONG)Frame[0];
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        DbgPrint("<error dumping stack trace: 0x%x>\n", _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
+#endif
+}
+
 /*
  * @implemented
  */
@@ -215,17 +277,18 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
    NTSTATUS ErrCode;
    ULONG ErrorParameters[4];
    ULONG ErrorResponse;
+   PEXCEPTION_RECORD ExceptionRecord = ExceptionInfo->ExceptionRecord;
 
-   if ((NTSTATUS)ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION &&
-       ExceptionInfo->ExceptionRecord->NumberParameters >= 2)
+   if ((NTSTATUS)ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION &&
+       ExceptionRecord->NumberParameters >= 2)
    {
-      switch(ExceptionInfo->ExceptionRecord->ExceptionInformation[0])
+      switch(ExceptionRecord->ExceptionInformation[0])
       {
       case EXCEPTION_WRITE_FAULT:
          /* Change the protection on some write attempts, some InstallShield setups
             have this bug */
          RetValue = BasepCheckForReadOnlyResource(
-            (PVOID)ExceptionInfo->ExceptionRecord->ExceptionInformation[1]);
+            (PVOID)ExceptionRecord->ExceptionInformation[1]);
          if (RetValue == EXCEPTION_CONTINUE_EXECUTION)
             return EXCEPTION_CONTINUE_EXECUTION;
          break;
@@ -253,79 +316,30 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
 
    if (GlobalTopLevelExceptionFilter)
    {
-      LONG ret = GlobalTopLevelExceptionFilter( ExceptionInfo );
+      LONG ret = GlobalTopLevelExceptionFilter(ExceptionInfo);
       if (ret != EXCEPTION_CONTINUE_SEARCH)
          return ret;
    }
 
    if ((GetErrorMode() & SEM_NOGPFAULTERRORBOX) == 0)
-   {
-#ifdef _X86_
-      PULONG Frame;
-#endif
-      PVOID StartAddr;
-      CHAR szMod[128] = "";
-
-      /* Print a stack trace. */
-      DbgPrint("Unhandled exception\n");
-      DbgPrint("ExceptionCode:    %8x\n", ExceptionInfo->ExceptionRecord->ExceptionCode);
-      if ((NTSTATUS)ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION &&
-          ExceptionInfo->ExceptionRecord->NumberParameters == 2)
-      {
-         DbgPrint("Faulting Address: %8x\n", ExceptionInfo->ExceptionRecord->ExceptionInformation[1]);
-      }
-      _dump_context ( ExceptionInfo->ContextRecord );
-      _module_name_from_addr(ExceptionInfo->ExceptionRecord->ExceptionAddress, &StartAddr, szMod, sizeof(szMod));
-      DbgPrint("Address:\n   %8x+%-8x   %s\n", 
-               (PVOID)StartAddr, (ULONG_PTR)ExceptionInfo->ExceptionRecord->ExceptionAddress - 
-               (ULONG_PTR)StartAddr, szMod);
-
-#ifdef _X86_
-      DbgPrint("Frames:\n");
-      _SEH2_TRY
-      {
-         Frame = (PULONG)ExceptionInfo->ContextRecord->Ebp;
-         while (Frame[1] != 0 && Frame[1] != 0xdeadbeef)
-         {
-            if (IsBadReadPtr((PVOID)Frame[1], 4)) {
-              DbgPrint("   %8x%9s   %s\n", Frame[1], "<invalid address>"," ");
-            } else {
-              _module_name_from_addr((const void*)Frame[1], &StartAddr,
-                                     szMod, sizeof(szMod));
-              DbgPrint("   %8x+%-8x   %s\n",
-                      (PVOID)StartAddr,
-                      (ULONG_PTR)Frame[1] - (ULONG_PTR)StartAddr, szMod);
-            }
-            if (IsBadReadPtr((PVOID)Frame[0], sizeof(*Frame) * 2)) {
-              break;
-            }
-            Frame = (PULONG)Frame[0];
-         }
-      }
-      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-      {
-         DbgPrint("<error dumping stack trace: 0x%x>\n", _SEH2_GetExceptionCode());
-      }
-      _SEH2_END;
-#endif
-   }
+      PrintStackTrace(ExceptionInfo);
 
    /* Save exception code and address */
-   ErrorParameters[0] = (ULONG)ExceptionInfo->ExceptionRecord->ExceptionCode;
-   ErrorParameters[1] = (ULONG)ExceptionInfo->ExceptionRecord->ExceptionAddress;
+   ErrorParameters[0] = (ULONG)ExceptionRecord->ExceptionCode;
+   ErrorParameters[1] = (ULONG)ExceptionRecord->ExceptionAddress;
 
-   if ((NTSTATUS)ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION)
+   if ((NTSTATUS)ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION)
    {
        /* get the type of operation that caused the access violation */
-       ErrorParameters[2] = ExceptionInfo->ExceptionRecord->ExceptionInformation[0];
+       ErrorParameters[2] = ExceptionRecord->ExceptionInformation[0];
    }
    else
    {
-       ErrorParameters[2] = ExceptionInfo->ExceptionRecord->ExceptionInformation[2];
+       ErrorParameters[2] = ExceptionRecord->ExceptionInformation[2];
    }
 
    /* Save faulting address */
-   ErrorParameters[3] = ExceptionInfo->ExceptionRecord->ExceptionInformation[1];
+   ErrorParameters[3] = ExceptionRecord->ExceptionInformation[1];
 
    /* Raise the harderror */
    ErrCode = NtRaiseHardError(STATUS_UNHANDLED_EXCEPTION | 0x10000000,

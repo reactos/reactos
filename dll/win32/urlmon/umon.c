@@ -755,3 +755,14 @@ HRESULT WINAPI GetSoftwareUpdateInfo( LPCWSTR szDistUnit, LPSOFTDISTINFO psdi )
     FIXME("%s %p\n", debugstr_w(szDistUnit), psdi );
     return E_FAIL;
 }
+
+/***********************************************************************
+ *           AsyncInstallDistributionUnit (URLMON.@)
+ */
+HRESULT WINAPI AsyncInstallDistributionUnit( LPCWSTR szDistUnit, LPCWSTR szTYPE,
+                            LPCWSTR szExt, DWORD dwFileVersionMS, DWORD dwFileVersionLS,
+                            LPCWSTR szURL, IBindCtx *pbc, LPVOID pvReserved, DWORD flags )
+{
+    FIXME(": stub\n");
+    return E_NOTIMPL;
+}

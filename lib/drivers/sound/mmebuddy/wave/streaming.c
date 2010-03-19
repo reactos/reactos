@@ -77,6 +77,7 @@ DoWaveStreaming(
         {
             {
                 /* Move on to the next header */
+                SND_ASSERT(Header != Header->lpNext);
                 Header = Header->lpNext;
             }
         }
@@ -209,9 +210,9 @@ CompleteIO(
         }
 		else
 		{
-            SND_TRACE(L"%d/%d bytes of wavehdr completed\n", HdrExtension->BytesCompleted, WaveHdr->dwBufferLength);
             /* Partially completed */
             HdrExtension->BytesCompleted += dwNumberOfBytesTransferred;
+            SND_TRACE(L"%d/%d bytes of wavehdr completed\n", HdrExtension->BytesCompleted, WaveHdr->dwBufferLength);
             break;
 		}
 

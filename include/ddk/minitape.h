@@ -22,6 +22,15 @@
 #ifndef __MINITAPE_H
 #define __MINITAPE_H
 
+/* Helper macro to enable gcc's extension.  */
+#ifndef __GNU_EXTENSION
+#ifdef __GNUC__
+#define __GNU_EXTENSION __extension__
+#else
+#define __GNU_EXTENSION
+#endif
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -77,9 +86,9 @@ typedef struct _INQUIRYDATA {
 	UCHAR  DeviceTypeQualifier : 3;
 	UCHAR  DeviceTypeModifier : 7;
 	UCHAR  RemovableMedia : 1;
-	union {
+	__GNU_EXTENSION union {
 		UCHAR  Versions;
-		struct {
+		__GNU_EXTENSION struct {
 			UCHAR  ANSIVersion : 3;
 			UCHAR  ECMAVersion : 3;
 			UCHAR  ISOVersion : 2;

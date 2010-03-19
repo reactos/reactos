@@ -237,6 +237,10 @@ static ULONG WINAPI IErrorInfoImpl_Release(
 	if (!ref)
 	{
 	  TRACE("-- destroying IErrorInfo(%p)\n",This);
+
+          ERRORINFO_SysFreeString(This->bstrSource);
+          ERRORINFO_SysFreeString(This->bstrDescription);
+          ERRORINFO_SysFreeString(This->bstrHelpFile);
 	  HeapFree(GetProcessHeap(),0,This);
 	  return 0;
 	}

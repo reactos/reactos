@@ -7,8 +7,7 @@
  * PROGRAMMER:      Eric Kohl
  */
 
-#ifndef __INCLUDE_DDK_CLASS2_H
-#define __INCLUDE_DDK_CLASS2_H
+#pragma once
 
 #include "ntddscsi.h"
 #include "srb.h"
@@ -264,8 +263,5 @@ ScsiClassCheckVerifyComplete(
     IN PIRP Irp,
     IN PVOID Context
     );
-
-
-#endif /* __INCLUDE_DDK_CLASS2_H */
 
 /* EOF */

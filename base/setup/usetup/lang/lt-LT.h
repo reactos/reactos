@@ -7,8 +7,7 @@
  * DATE:        2008-01-06
  */
 
-#ifndef LANG_LT_LT_H__
-#define LANG_LT_LT_H__
+#pragma once
 
 MUI_LAYOUTS ltLTLayouts[] =
 {
@@ -1704,5 +1703,3 @@ MUI_STRING ltLTStrings[] =
     "Adding keyboard layouts"},
     {0, 0}
 };
-
-#endif

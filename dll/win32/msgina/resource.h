@@ -1,5 +1,4 @@
-#ifndef __MSGINA_RESOURCE_H
-#define __MSGINA_RESOURCE_H
+#pragma once
 
 #define IDC_STATIC                      -1
 #define IDD_STATUSWINDOW_DLG            100
@@ -27,7 +26,5 @@
 #define IDS_ASKFORUSER                  40003
 #define IDS_ASKFORPASSWORD              40004
 #define IDS_FORCELOGOFF                 40005
-
-#endif /* __MSGINA_RESOURCE_H */
 
 /* EOF */

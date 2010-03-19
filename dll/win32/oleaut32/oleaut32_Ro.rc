@@ -17,6 +17,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "resource.h"
+
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 #pragma code_page(65001)
@@ -30,5 +32,3 @@ STRINGTABLE DISCARDABLE
   IDS_ON    "Activat"
   IDS_OFF   "Dezactivat"
 }
-
-#pragma code_page(default)

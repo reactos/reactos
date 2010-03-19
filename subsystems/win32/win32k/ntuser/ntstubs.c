@@ -996,16 +996,28 @@ NtUserSetInformationProcess(
     return 0;
 }
 
-DWORD
+NTSTATUS
 APIENTRY
-NtUserSetInformationThread(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4)
+NtUserSetInformationThread(IN HANDLE ThreadHandle,
+                           IN USERTHREADINFOCLASS ThreadInformationClass,
+                           IN PVOID ThreadInformation,
+                           IN ULONG ThreadInformationLength)
+
 {
-    UNIMPLEMENTED;
-    return 0;
+    if (ThreadInformationClass == UserThreadInitiateShutdown)
+    {
+        DPRINT1("Shutdown initiated\n");
+    }
+    else if (ThreadInformationClass == UserThreadEndShutdown)
+    {
+        DPRINT1("Shutdown ended\n");
+    }
+    else
+    {
+        UNIMPLEMENTED;
+    }
+
+    return STATUS_SUCCESS;
 }
 
 DWORD
@@ -1078,18 +1090,6 @@ NtUserGetLayeredWindowAttributes(
     COLORREF *pcrKey,
     BYTE *pbAlpha,
     DWORD *pdwFlags)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-/* ValidateRect gets redirected to NtUserValidateRect:
-   http://blog.csdn.net/ntdll/archive/2005/10/19/509299.aspx */
-BOOL
-APIENTRY
-NtUserValidateRect(
-    HWND hWnd,
-    const RECT *lpRect)
 {
     UNIMPLEMENTED;
     return 0;
