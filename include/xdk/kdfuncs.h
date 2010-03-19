@@ -3,17 +3,97 @@
  ******************************************************************************/
 
 #ifndef _DBGNT_
+
 ULONG
 DDKCDECLAPI
 DbgPrint(
   IN PCSTR Format,
   IN ...);
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+NTSYSAPI
+ULONG
+DDKCDECLAPI
+DbgPrintReturnControlC(
+  IN PCCH Format,
+  IN ...);
 #endif
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+
+NTSYSAPI
+ULONG
+DDKCDECLAPI
+DbgPrintEx(
+  IN ULONG ComponentId,
+  IN ULONG Level,
+  IN PCSTR Format,
+  IN ...);
+
+#ifdef _VA_LIST_DEFINED
+
+NTSYSAPI
+ULONG
+NTAPI
+vDbgPrintEx(
+  IN ULONG ComponentId,
+  IN ULONG Level,
+  IN PCCH Format,
+  IN va_list ap);
+
+NTSYSAPI
+ULONG
+NTAPI
+vDbgPrintExWithPrefix(
+  IN PCCH Prefix,
+  IN ULONG ComponentId,
+  IN ULONG Level,
+  IN PCCH Format,
+  IN va_list ap);
+
+#endif /* _VA_LIST_DEFINED */
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+DbgQueryDebugFilterState(
+  IN ULONG ComponentId,
+  IN ULONG Level);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+DbgSetDebugFilterState(
+  IN ULONG ComponentId,
+  IN ULONG Level,
+  IN BOOLEAN State);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+typedef VOID
+(*PDEBUG_PRINT_CALLBACK)(
+  IN PSTRING Output,
+  IN ULONG ComponentId,
+  IN ULONG Level);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+DbgSetDebugPrintCallback(
+  IN PDEBUG_PRINT_CALLBACK DebugPrintCallback,
+  IN BOOLEAN Enable);
+
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+
+#endif /* _DBGNT_ */
 
 #if DBG
 
 #define KdPrint(_x_) DbgPrint _x_
 #define KdPrintEx(_x_) DbgPrintEx _x_
+#define vKdPrintEx(_x_) vDbgPrintEx _x_
 #define vKdPrintExWithPrefix(_x_) vDbgPrintExWithPrefix _x_
 #define KdBreakPoint() DbgBreakPoint()
 #define KdBreakPointWithStatus(s) DbgBreakPointWithStatus(s)
@@ -22,6 +102,7 @@ DbgPrint(
 
 #define KdPrint(_x_)
 #define KdPrintEx(_x_)
+#define vKdPrintEx(_x_)
 #define vKdPrintExWithPrefix(_x_)
 #define KdBreakPoint()
 #define KdBreakPointWithStatus(s)
@@ -51,31 +132,6 @@ extern BOOLEAN KdDebuggerEnabled;
 
 #endif
 
-#ifdef _VA_LIST_DEFINED
-#if (NTDDI_VERSION >= NTDDI_WINXP)
-
-NTSYSAPI
-ULONG
-NTAPI
-vDbgPrintEx(
-  IN ULONG ComponentId,
-  IN ULONG Level,
-  IN PCCH Format,
-  IN va_list ap);
-
-NTSYSAPI
-ULONG
-NTAPI
-vDbgPrintExWithPrefix(
-  IN PCCH Prefix,
-  IN ULONG ComponentId,
-  IN ULONG Level,
-  IN PCCH Format,
-  IN va_list ap);
-
-#endif
-#endif /* _VA_LIST_DEFINED */
-
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
 NTKERNELAPI
@@ -102,42 +158,7 @@ NTAPI
 DbgBreakPointWithStatus(
   IN ULONG Status);
 
-NTSYSAPI
-ULONG
-DDKCDECLAPI
-DbgPrintReturnControlC(
-  IN PCCH Format,
-  IN ...);
-
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
-
-#if (NTDDI_VERSION >= NTDDI_WINXP)
-
-NTSYSAPI
-ULONG
-DDKCDECLAPI
-DbgPrintEx(
-  IN ULONG ComponentId,
-  IN ULONG Level,
-  IN PCSTR Format,
-  IN ...);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-DbgQueryDebugFilterState(
-  IN ULONG ComponentId,
-  IN ULONG Level);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-DbgSetDebugFilterState(
-  IN ULONG ComponentId,
-  IN ULONG Level,
-  IN BOOLEAN State);
-
-#endif
 
 #if (NTDDI_VERSION >= NTDDI_WS03)
 NTKERNELAPI

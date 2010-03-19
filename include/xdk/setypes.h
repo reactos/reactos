@@ -214,10 +214,6 @@ typedef struct _ACCESS_STATE {
 #ifndef _NTLSA_AUDIT_
 #define _NTLSA_AUDIT_
 
-#ifndef GUID_DEFINED
-#include <guiddef.h>
-#endif
-
 #define SE_MAX_AUDIT_PARAMETERS 32
 #define SE_MAX_GENERIC_AUDIT_PARAMETERS 28
 

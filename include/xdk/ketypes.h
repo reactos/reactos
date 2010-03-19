@@ -633,12 +633,6 @@ typedef struct _KSYSTEM_TIME {
   LONG High2Time;
 } KSYSTEM_TIME, *PKSYSTEM_TIME;
 
-typedef struct _PNP_BUS_INFORMATION {
-  GUID BusTypeGuid;
-  INTERFACE_TYPE LegacyBusType;
-  ULONG BusNumber;
-} PNP_BUS_INFORMATION, *PPNP_BUS_INFORMATION;
-
 typedef struct DECLSPEC_ALIGN(16) _M128A {
   ULONGLONG Low;
   LONGLONG High;

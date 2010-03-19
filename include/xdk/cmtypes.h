@@ -306,6 +306,28 @@ typedef struct _DEVICE_FLAGS {
   ULONG Output:1;
 } DEVICE_FLAGS, *PDEVICE_FLAGS;
 
+typedef enum _INTERFACE_TYPE {
+  InterfaceTypeUndefined = -1,
+  Internal,
+  Isa,
+  Eisa,
+  MicroChannel,
+  TurboChannel,
+  PCIBus,
+  VMEBus,
+  NuBus,
+  PCMCIABus,
+  CBus,
+  MPIBus,
+  MPSABus,
+  ProcessorInternal,
+  InternalPowerBus,
+  PNPISABus,
+  PNPBus,
+  Vmcs,
+  MaximumInterfaceType
+} INTERFACE_TYPE, *PINTERFACE_TYPE;
+
 typedef struct _CM_COMPONENT_INFORMATION {
   DEVICE_FLAGS Flags;
   ULONG Version;
@@ -335,6 +357,12 @@ typedef struct _CM_RESOURCE_LIST {
   ULONG Count;
   CM_FULL_RESOURCE_DESCRIPTOR List[1];
 } CM_RESOURCE_LIST, *PCM_RESOURCE_LIST;
+
+typedef struct _PNP_BUS_INFORMATION {
+  GUID BusTypeGuid;
+  INTERFACE_TYPE LegacyBusType;
+  ULONG BusNumber;
+} PNP_BUS_INFORMATION, *PPNP_BUS_INFORMATION;
 
 #include <pshpack1.h>
 

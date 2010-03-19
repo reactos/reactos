@@ -40,6 +40,10 @@
 #include <ntstatus.h>
 #include <ntiologc.h>
 
+#ifndef GUID_DEFINED
+#include <guiddef.h>
+#endif
+
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 #include <dpfilter.h>
 #endif
@@ -189,6 +193,18 @@ $include (zwfuncs.h)
 #else
 #include <string.h>
 #endif /* _MAC */
+
+#ifndef DEFINE_GUIDEX
+#ifdef _MSC_VER
+#define DEFINE_GUIDEX(name) EXTERN_C const CDECL GUID name
+#else
+#define DEFINE_GUIDEX(name) EXTERN_C const GUID name
+#endif
+#endif /* DEFINE_GUIDEX */
+
+#ifndef STATICGUIDOF
+#define STATICGUIDOF(guid) STATIC_##guid
+#endif
 
 /* GUID Comparison */
 #ifndef __IID_ALIGNED__

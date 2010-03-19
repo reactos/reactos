@@ -1195,28 +1195,6 @@ typedef struct _FILE_SFIO_VOLUME_INFORMATION {
 #define FM_LOCK_WAITER_WOKEN    (0x2)
 #define FM_LOCK_WAITER_INC      (0x4)
 
-typedef enum _INTERFACE_TYPE {
-  InterfaceTypeUndefined = -1,
-  Internal,
-  Isa,
-  Eisa,
-  MicroChannel,
-  TurboChannel,
-  PCIBus,
-  VMEBus,
-  NuBus,
-  PCMCIABus,
-  CBus,
-  MPIBus,
-  MPSABus,
-  ProcessorInternal,
-  InternalPowerBus,
-  PNPISABus,
-  PNPBus,
-  Vmcs,
-  MaximumInterfaceType
-} INTERFACE_TYPE, *PINTERFACE_TYPE;
-
 typedef ULONG_PTR ERESOURCE_THREAD, *PERESOURCE_THREAD;
 
 typedef struct _OWNER_ENTRY {
@@ -1859,9 +1837,10 @@ typedef struct _SCATTER_GATHER_LIST SCATTER_GATHER_LIST, *PSCATTER_GATHER_LIST;
 #endif
 
 typedef NTSTATUS
-(NTAPI *PDRIVER_ADD_DEVICE)(
+(NTAPI DRIVER_ADD_DEVICE)(
   IN struct _DRIVER_OBJECT *DriverObject,
   IN struct _DEVICE_OBJECT *PhysicalDeviceObject);
+typedef DRIVER_ADD_DEVICE *PDRIVER_ADD_DEVICE;
 
 typedef struct _DRIVER_EXTENSION {
   struct _DRIVER_OBJECT *DriverObject;
@@ -1875,23 +1854,27 @@ typedef struct _DRIVER_EXTENSION {
 #define DRVO_BUILTIN_DRIVER               0x00000004
 
 typedef NTSTATUS
-(NTAPI *PDRIVER_INITIALIZE)(
+(NTAPI DRIVER_INITIALIZE)(
   IN struct _DRIVER_OBJECT *DriverObject,
   IN PUNICODE_STRING RegistryPath);
+typedef DRIVER_INITIALIZE *PDRIVER_INITIALIZE;
 
 typedef VOID
-(NTAPI *PDRIVER_STARTIO)(
+(NTAPI DRIVER_STARTIO)(
   IN struct _DEVICE_OBJECT *DeviceObject,
   IN struct _IRP *Irp);
+typedef DRIVER_STARTIO *PDRIVER_STARTIO;
 
 typedef VOID
-(NTAPI *PDRIVER_UNLOAD)(
+(NTAPI DRIVER_UNLOAD)(
   IN struct _DRIVER_OBJECT *DriverObject);
+typedef DRIVER_UNLOAD *PDRIVER_UNLOAD;
 
 typedef NTSTATUS
-(NTAPI *PDRIVER_DISPATCH)(
+(NTAPI DRIVER_DISPATCH)(
   IN struct _DEVICE_OBJECT *DeviceObject,
   IN struct _IRP *Irp);
+typedef DRIVER_DISPATCH *PDRIVER_DISPATCH;
 
 typedef struct _DRIVER_OBJECT {
   CSHORT Type;
@@ -2121,9 +2104,10 @@ typedef struct _IO_RESOURCE_REQUIREMENTS_LIST {
 } IO_RESOURCE_REQUIREMENTS_LIST, *PIO_RESOURCE_REQUIREMENTS_LIST;
 
 typedef VOID
-(NTAPI *PDRIVER_CANCEL)(
+(NTAPI DRIVER_CANCEL)(
   IN struct _DEVICE_OBJECT *DeviceObject,
   IN struct _IRP *Irp);
+typedef DRIVER_CANCEL *PDRIVER_CANCEL;
 
 typedef struct _IRP {
   CSHORT Type;
@@ -2192,10 +2176,11 @@ typedef enum _IO_PAGING_PRIORITY {
 } IO_PAGING_PRIORITY;
 
 typedef NTSTATUS
-(NTAPI *PIO_COMPLETION_ROUTINE)(
+(NTAPI IO_COMPLETION_ROUTINE)(
   IN struct _DEVICE_OBJECT *DeviceObject,
   IN struct _IRP *Irp,
   IN PVOID Context);
+typedef IO_COMPLETION_ROUTINE *PIO_COMPLETION_ROUTINE;
 
 typedef VOID
 (NTAPI *PIO_DPC_ROUTINE)(
@@ -2213,9 +2198,10 @@ typedef NTSTATUS
   VOID);
 
 typedef BOOLEAN
-(NTAPI *PKSERVICE_ROUTINE)(
+(NTAPI KSERVICE_ROUTINE)(
   IN struct _KINTERRUPT *Interrupt,
   IN PVOID ServiceContext);
+typedef KSERVICE_ROUTINE *PKSERVICE_ROUTINE;
 
 typedef VOID
 (NTAPI *PIO_TIMER_ROUTINE)(

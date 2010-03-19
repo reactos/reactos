@@ -40,6 +40,10 @@
 #include <ntstatus.h>
 #include <ntiologc.h>
 
+#ifndef GUID_DEFINED
+#include <guiddef.h>
+#endif
+
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 #include <dpfilter.h>
 #endif
@@ -469,6 +473,24 @@ extern BOOLEAN NTSYSAPI NlsMbCodePageTag;
 extern BOOLEAN NTSYSAPI NlsMbOemCodePageTag;
 #define NLS_MB_CODE_PAGE_TAG NlsMbCodePageTag
 #define NLS_MB_OEM_CODE_PAGE_TAG NlsMbOemCodePageTag
+
+#define SHORT_LEAST_SIGNIFICANT_BIT       0
+#define SHORT_MOST_SIGNIFICANT_BIT        1
+
+#define LONG_LEAST_SIGNIFICANT_BIT        0
+#define LONG_3RD_MOST_SIGNIFICANT_BIT     1
+#define LONG_2ND_MOST_SIGNIFICANT_BIT     2
+#define LONG_MOST_SIGNIFICANT_BIT         3
+
+#define RTLVERLIB_DDI(x) Wdmlib##x
+
+typedef BOOLEAN
+(*PFN_RTL_IS_NTDDI_VERSION_AVAILABLE)(
+  IN ULONG Version);
+
+typedef BOOLEAN
+(*PFN_RTL_IS_SERVICE_PACK_VERSION_INSTALLED)(
+  IN ULONG Version);
 
 /******************************************************************************
  *                              Kernel Types                                  *
@@ -1105,12 +1127,6 @@ typedef struct _KSYSTEM_TIME {
   LONG High2Time;
 } KSYSTEM_TIME, *PKSYSTEM_TIME;
 
-typedef struct _PNP_BUS_INFORMATION {
-  GUID BusTypeGuid;
-  INTERFACE_TYPE LegacyBusType;
-  ULONG BusNumber;
-} PNP_BUS_INFORMATION, *PPNP_BUS_INFORMATION;
-
 typedef struct DECLSPEC_ALIGN(16) _M128A {
   ULONGLONG Low;
   LONGLONG High;
@@ -1737,10 +1753,6 @@ typedef struct _ACCESS_STATE {
 
 #ifndef _NTLSA_AUDIT_
 #define _NTLSA_AUDIT_
-
-#ifndef GUID_DEFINED
-#include <guiddef.h>
-#endif
 
 #define SE_MAX_AUDIT_PARAMETERS 32
 #define SE_MAX_GENERIC_AUDIT_PARAMETERS 28
@@ -2537,6 +2549,28 @@ typedef struct _DEVICE_FLAGS {
   ULONG Output:1;
 } DEVICE_FLAGS, *PDEVICE_FLAGS;
 
+typedef enum _INTERFACE_TYPE {
+  InterfaceTypeUndefined = -1,
+  Internal,
+  Isa,
+  Eisa,
+  MicroChannel,
+  TurboChannel,
+  PCIBus,
+  VMEBus,
+  NuBus,
+  PCMCIABus,
+  CBus,
+  MPIBus,
+  MPSABus,
+  ProcessorInternal,
+  InternalPowerBus,
+  PNPISABus,
+  PNPBus,
+  Vmcs,
+  MaximumInterfaceType
+} INTERFACE_TYPE, *PINTERFACE_TYPE;
+
 typedef struct _CM_COMPONENT_INFORMATION {
   DEVICE_FLAGS Flags;
   ULONG Version;
@@ -2566,6 +2600,12 @@ typedef struct _CM_RESOURCE_LIST {
   ULONG Count;
   CM_FULL_RESOURCE_DESCRIPTOR List[1];
 } CM_RESOURCE_LIST, *PCM_RESOURCE_LIST;
+
+typedef struct _PNP_BUS_INFORMATION {
+  GUID BusTypeGuid;
+  INTERFACE_TYPE LegacyBusType;
+  ULONG BusNumber;
+} PNP_BUS_INFORMATION, *PPNP_BUS_INFORMATION;
 
 #include <pshpack1.h>
 
@@ -4280,28 +4320,6 @@ typedef struct _FILE_SFIO_VOLUME_INFORMATION {
 #define FM_LOCK_WAITER_WOKEN    (0x2)
 #define FM_LOCK_WAITER_INC      (0x4)
 
-typedef enum _INTERFACE_TYPE {
-  InterfaceTypeUndefined = -1,
-  Internal,
-  Isa,
-  Eisa,
-  MicroChannel,
-  TurboChannel,
-  PCIBus,
-  VMEBus,
-  NuBus,
-  PCMCIABus,
-  CBus,
-  MPIBus,
-  MPSABus,
-  ProcessorInternal,
-  InternalPowerBus,
-  PNPISABus,
-  PNPBus,
-  Vmcs,
-  MaximumInterfaceType
-} INTERFACE_TYPE, *PINTERFACE_TYPE;
-
 typedef ULONG_PTR ERESOURCE_THREAD, *PERESOURCE_THREAD;
 
 typedef struct _OWNER_ENTRY {
@@ -4944,9 +4962,10 @@ typedef struct _SCATTER_GATHER_LIST SCATTER_GATHER_LIST, *PSCATTER_GATHER_LIST;
 #endif
 
 typedef NTSTATUS
-(NTAPI *PDRIVER_ADD_DEVICE)(
+(NTAPI DRIVER_ADD_DEVICE)(
   IN struct _DRIVER_OBJECT *DriverObject,
   IN struct _DEVICE_OBJECT *PhysicalDeviceObject);
+typedef DRIVER_ADD_DEVICE *PDRIVER_ADD_DEVICE;
 
 typedef struct _DRIVER_EXTENSION {
   struct _DRIVER_OBJECT *DriverObject;
@@ -4960,23 +4979,27 @@ typedef struct _DRIVER_EXTENSION {
 #define DRVO_BUILTIN_DRIVER               0x00000004
 
 typedef NTSTATUS
-(NTAPI *PDRIVER_INITIALIZE)(
+(NTAPI DRIVER_INITIALIZE)(
   IN struct _DRIVER_OBJECT *DriverObject,
   IN PUNICODE_STRING RegistryPath);
+typedef DRIVER_INITIALIZE *PDRIVER_INITIALIZE;
 
 typedef VOID
-(NTAPI *PDRIVER_STARTIO)(
+(NTAPI DRIVER_STARTIO)(
   IN struct _DEVICE_OBJECT *DeviceObject,
   IN struct _IRP *Irp);
+typedef DRIVER_STARTIO *PDRIVER_STARTIO;
 
 typedef VOID
-(NTAPI *PDRIVER_UNLOAD)(
+(NTAPI DRIVER_UNLOAD)(
   IN struct _DRIVER_OBJECT *DriverObject);
+typedef DRIVER_UNLOAD *PDRIVER_UNLOAD;
 
 typedef NTSTATUS
-(NTAPI *PDRIVER_DISPATCH)(
+(NTAPI DRIVER_DISPATCH)(
   IN struct _DEVICE_OBJECT *DeviceObject,
   IN struct _IRP *Irp);
+typedef DRIVER_DISPATCH *PDRIVER_DISPATCH;
 
 typedef struct _DRIVER_OBJECT {
   CSHORT Type;
@@ -5206,9 +5229,10 @@ typedef struct _IO_RESOURCE_REQUIREMENTS_LIST {
 } IO_RESOURCE_REQUIREMENTS_LIST, *PIO_RESOURCE_REQUIREMENTS_LIST;
 
 typedef VOID
-(NTAPI *PDRIVER_CANCEL)(
+(NTAPI DRIVER_CANCEL)(
   IN struct _DEVICE_OBJECT *DeviceObject,
   IN struct _IRP *Irp);
+typedef DRIVER_CANCEL *PDRIVER_CANCEL;
 
 typedef struct _IRP {
   CSHORT Type;
@@ -5277,10 +5301,11 @@ typedef enum _IO_PAGING_PRIORITY {
 } IO_PAGING_PRIORITY;
 
 typedef NTSTATUS
-(NTAPI *PIO_COMPLETION_ROUTINE)(
+(NTAPI IO_COMPLETION_ROUTINE)(
   IN struct _DEVICE_OBJECT *DeviceObject,
   IN struct _IRP *Irp,
   IN PVOID Context);
+typedef IO_COMPLETION_ROUTINE *PIO_COMPLETION_ROUTINE;
 
 typedef VOID
 (NTAPI *PIO_DPC_ROUTINE)(
@@ -5298,9 +5323,10 @@ typedef NTSTATUS
   VOID);
 
 typedef BOOLEAN
-(NTAPI *PKSERVICE_ROUTINE)(
+(NTAPI KSERVICE_ROUTINE)(
   IN struct _KINTERRUPT *Interrupt,
   IN PVOID ServiceContext);
+typedef KSERVICE_ROUTINE *PKSERVICE_ROUTINE;
 
 typedef VOID
 (NTAPI *PIO_TIMER_ROUTINE)(
@@ -6649,7 +6675,7 @@ VOID
 NTAPI
 RtlCopyUnicodeString(
   IN OUT PUNICODE_STRING DestinationString,
-  IN PCUNICODE_STRING SourceString);
+  IN PCUNICODE_STRING SourceString OPTIONAL);
 
 NTSYSAPI
 NTSTATUS
@@ -6695,7 +6721,7 @@ NTAPI
 RtlExtendedLargeIntegerDivide(
   IN LARGE_INTEGER Dividend,
   IN ULONG Divisor,
-  IN OUT PULONG Remainder);
+  OUT PULONG Remainder OPTIONAL);
 #endif
 
 #if defined(_X86_) || defined(_IA64_)
@@ -6798,15 +6824,6 @@ RtlFindSetBitsAndClear(
   IN ULONG HintIndex);
 
 NTSYSAPI
-NTSTATUS
-NTAPI
-RtlHashUnicodeString(
-  IN CONST UNICODE_STRING *String,
-  IN BOOLEAN CaseInSensitive,
-  IN ULONG HashAlgorithm,
-  OUT PULONG HashValue);
-
-NTSYSAPI
 VOID
 NTAPI
 RtlInitAnsiString(
@@ -6887,52 +6904,18 @@ RtlQueryRegistryValues(
   IN PVOID Context OPTIONAL,
   IN PVOID Environment OPTIONAL);
 
+#define SHORT_SIZE  (sizeof(USHORT))
+#define SHORT_MASK  (SHORT_SIZE - 1)
 #define LONG_SIZE (sizeof(LONG))
+#define LONGLONG_SIZE   (sizeof(LONGLONG))
 #define LONG_MASK (LONG_SIZE - 1)
+#define LONGLONG_MASK   (LONGLONG_SIZE - 1)
+#define LOWBYTE_MASK 0x00FF
 
-/* VOID
- * RtlRetrieveUlong(
- *    PULONG DestinationAddress,
- *    PULONG SourceAddress);
- */
-#if defined(_AMD64_)
-#define RtlRetrieveUlong(DestAddress,SrcAddress) \
-    *(ULONG UNALIGNED *)(DestAddress) = *(PULONG)(SrcAddress)
-#else
-#define RtlRetrieveUlong(DestAddress,SrcAddress) \
-    if ((ULONG_PTR)(SrcAddress) & LONG_MASK) \
-    { \
-        ((PUCHAR)(DestAddress))[0]=((PUCHAR)(SrcAddress))[0]; \
-        ((PUCHAR)(DestAddress))[1]=((PUCHAR)(SrcAddress))[1]; \
-        ((PUCHAR)(DestAddress))[2]=((PUCHAR)(SrcAddress))[2]; \
-        ((PUCHAR)(DestAddress))[3]=((PUCHAR)(SrcAddress))[3]; \
-    } \
-    else \
-    { \
-        *((PULONG)(DestAddress))=*((PULONG)(SrcAddress)); \
-    }
-#endif
-
-/* VOID
- * RtlRetrieveUshort(
- *     PUSHORT DestinationAddress,
- *    PUSHORT SourceAddress);
- */
-#if defined(_AMD64_)
-#define RtlRetrieveUshort(DestAddress,SrcAddress) \
-    *(USHORT UNALIGNED *)(DestAddress) = *(USHORT)(SrcAddress)
-#else
-#define RtlRetrieveUshort(DestAddress,SrcAddress) \
-    if ((ULONG_PTR)(SrcAddress) & LONG_MASK) \
-    { \
-        ((PUCHAR)(DestAddress))[0]=((PUCHAR)(SrcAddress))[0]; \
-        ((PUCHAR)(DestAddress))[1]=((PUCHAR)(SrcAddress))[1]; \
-    } \
-    else \
-    { \
-        *((PUSHORT)(DestAddress))=*((PUSHORT)(SrcAddress)); \
-    }
-#endif
+#define FIRSTBYTE(VALUE)  ((VALUE) & LOWBYTE_MASK)
+#define SECONDBYTE(VALUE) (((VALUE) >> 8) & LOWBYTE_MASK)
+#define THIRDBYTE(VALUE)  (((VALUE) >> 16) & LOWBYTE_MASK)
+#define FOURTHBYTE(VALUE) (((VALUE) >> 24) & LOWBYTE_MASK)
 
 NTSYSAPI
 VOID
@@ -6957,15 +6940,50 @@ RtlSetDaclSecurityDescriptor(
   IN PACL Dacl OPTIONAL,
   IN BOOLEAN DaclDefaulted OPTIONAL);
 
+#if defined(_AMD64_)
+
 /* VOID
  * RtlStoreUlong(
  *     IN PULONG Address,
  *     IN ULONG Value);
  */
-#if defined(_AMD64_)
 #define RtlStoreUlong(Address,Value) \
     *(ULONG UNALIGNED *)(Address) = (Value)
+
+/* VOID
+ * RtlStoreUlonglong(
+ *     IN OUT PULONGLONG Address,
+ *     ULONGLONG Value);
+ */
+#define RtlStoreUlonglong(Address,Value) \
+    *(ULONGLONG UNALIGNED *)(Address) = (Value)
+
+/* VOID
+ * RtlStoreUshort(
+ *     IN PUSHORT Address,
+ *     IN USHORT Value);
+ */
+#define RtlStoreUshort(Address,Value) \
+    *(USHORT UNALIGNED *)(Address) = (Value)
+
+/* VOID
+ * RtlRetrieveUshort(
+ *     PUSHORT DestinationAddress,
+ *    PUSHORT SourceAddress);
+ */
+#define RtlRetrieveUshort(DestAddress,SrcAddress) \
+    *(USHORT UNALIGNED *)(DestAddress) = *(USHORT)(SrcAddress)
+
+/* VOID
+ * RtlRetrieveUlong(
+ *    PULONG DestinationAddress,
+ *    PULONG SourceAddress);
+ */
+#define RtlRetrieveUlong(DestAddress,SrcAddress) \
+    *(ULONG UNALIGNED *)(DestAddress) = *(PULONG)(SrcAddress)
+
 #else
+
 #define RtlStoreUlong(Address,Value)                      \
     if ((ULONG_PTR)(Address) & LONG_MASK) { \
         ((PUCHAR) (Address))[LONG_LEAST_SIGNIFICANT_BIT]    = (UCHAR)(FIRSTBYTE(Value)); \
@@ -6976,17 +6994,7 @@ RtlSetDaclSecurityDescriptor(
     else { \
         *((PULONG)(Address)) = (ULONG) (Value); \
     }
-#endif
 
-/* VOID
- * RtlStoreUlonglong(
- *     IN OUT PULONGLONG Address,
- *     ULONGLONG Value);
- */
-#if defined(_AMD64_)
-#define RtlStoreUlonglong(Address,Value) \
-    *(ULONGLONG UNALIGNED *)(Address) = (Value)
-#else
 #define RtlStoreUlonglong(Address,Value) \
     if ((ULONG_PTR)(Address) & LONGLONG_MASK) { \
         RtlStoreUlong((ULONG_PTR)(Address), \
@@ -6996,30 +7004,7 @@ RtlSetDaclSecurityDescriptor(
     } else { \
         *((PULONGLONG)(Address)) = (ULONGLONG)(Value); \
     }
-#endif
 
-/* VOID
- * RtlStoreUlongPtr(
- *     IN OUT PULONG_PTR Address,
- *     IN ULONG_PTR Value);
- */
-#ifdef _WIN64
-#define RtlStoreUlongPtr(Address,Value)                         \
-    RtlStoreUlonglong(Address,Value)
-#else
-#define RtlStoreUlongPtr(Address,Value)                         \
-    RtlStoreUlong(Address,Value)
-#endif
-
-/* VOID
- * RtlStoreUshort(
- *     IN PUSHORT Address,
- *     IN USHORT Value);
- */
-#if defined(_AMD64_)
-#define RtlStoreUshort(Address,Value) \
-    *(USHORT UNALIGNED *)(Address) = (Value)
-#else
 #define RtlStoreUshort(Address,Value) \
     if ((ULONG_PTR)(Address) & SHORT_MASK) { \
         ((PUCHAR) (Address))[SHORT_LEAST_SIGNIFICANT_BIT] = (UCHAR)(FIRSTBYTE(Value)); \
@@ -7028,7 +7013,44 @@ RtlSetDaclSecurityDescriptor(
     else { \
         *((PUSHORT) (Address)) = (USHORT)Value; \
     }
-#endif
+
+#define RtlRetrieveUshort(DestAddress,SrcAddress) \
+    if ((ULONG_PTR)(SrcAddress) & LONG_MASK) \
+    { \
+        ((PUCHAR)(DestAddress))[0]=((PUCHAR)(SrcAddress))[0]; \
+        ((PUCHAR)(DestAddress))[1]=((PUCHAR)(SrcAddress))[1]; \
+    } \
+    else \
+    { \
+        *((PUSHORT)(DestAddress))=*((PUSHORT)(SrcAddress)); \
+    }
+
+#define RtlRetrieveUlong(DestAddress,SrcAddress) \
+    if ((ULONG_PTR)(SrcAddress) & LONG_MASK) \
+    { \
+        ((PUCHAR)(DestAddress))[0]=((PUCHAR)(SrcAddress))[0]; \
+        ((PUCHAR)(DestAddress))[1]=((PUCHAR)(SrcAddress))[1]; \
+        ((PUCHAR)(DestAddress))[2]=((PUCHAR)(SrcAddress))[2]; \
+        ((PUCHAR)(DestAddress))[3]=((PUCHAR)(SrcAddress))[3]; \
+    } \
+    else \
+    { \
+        *((PULONG)(DestAddress))=*((PULONG)(SrcAddress)); \
+    }
+
+#endif /* defined(_AMD64_) */
+
+#ifdef _WIN64
+/* VOID
+ * RtlStoreUlongPtr(
+ *     IN OUT PULONG_PTR Address,
+ *     IN ULONG_PTR Value);
+ */
+#define RtlStoreUlongPtr(Address,Value) RtlStoreUlonglong(Address,Value)
+#else
+#define RtlStoreUlongPtr(Address,Value) RtlStoreUlong(Address,Value)
+#endif /* _WIN64 */
+
 
 NTSYSAPI
 BOOLEAN
@@ -7161,6 +7183,15 @@ RtlTestBit(
   IN PRTL_BITMAP BitMapHeader,
   IN ULONG BitNumber);
 
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlHashUnicodeString(
+  IN CONST UNICODE_STRING *String,
+  IN BOOLEAN CaseInSensitive,
+  IN ULONG HashAlgorithm,
+  OUT PULONG HashValue);
+
 #endif // (NTDDI_VERSION >= NTDDI_WINXP)
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
@@ -7174,7 +7205,7 @@ RtlNumberOfSetBitsUlongPtr(
 NTSYSAPI
 ULONGLONG
 NTAPI
-RtlIoDecodeMemIoResource (
+RtlIoDecodeMemIoResource(
   IN struct _IO_RESOURCE_DESCRIPTOR *Descriptor,
   OUT PULONGLONG Alignment OPTIONAL,
   OUT PULONGLONG MinimumAddress OPTIONAL,
@@ -7205,7 +7236,46 @@ RtlFindClosestEncodableLength(
   IN ULONGLONG SourceLength,
   OUT PULONGLONG TargetLength);
 
-#endif
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlCmEncodeMemIoResource(
+  IN PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor,
+  IN UCHAR Type,
+  IN ULONGLONG Length,
+  IN ULONGLONG Start);
+
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlUnicodeToUTF8N(
+  OUT PCHAR UTF8StringDestination,
+  IN ULONG UTF8StringMaxByteCount,
+  OUT PULONG UTF8StringActualByteCount,
+  IN PCWCH UnicodeStringSource,
+  IN ULONG UnicodeStringByteCount);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlUTF8ToUnicodeN(
+  OUT PWSTR UnicodeStringDestination,
+  IN ULONG UnicodeStringMaxByteCount,
+  OUT PULONG UnicodeStringActualByteCount,
+  IN PCCH UTF8StringSource,
+  IN ULONG UTF8StringByteCount);
+
+NTSYSAPI
+ULONG64
+NTAPI
+RtlGetEnabledExtendedFeatures(
+  IN ULONG64 FeatureMask);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
 #if !defined(MIDL_PASS)
 /* inline funftions */
@@ -7213,7 +7283,8 @@ RtlFindClosestEncodableLength(
 static __inline
 LARGE_INTEGER
 NTAPI_INLINE
-RtlConvertLongToLargeInteger(LONG SignedInteger)
+RtlConvertLongToLargeInteger(
+  IN LONG SignedInteger)
 {
   LARGE_INTEGER ret;
   ret.QuadPart = SignedInteger;
@@ -7225,11 +7296,39 @@ static __inline
 LARGE_INTEGER
 NTAPI_INLINE
 RtlConvertUlongToLargeInteger(
-  ULONG UnsignedInteger)
+  IN ULONG UnsignedInteger)
 {
   LARGE_INTEGER ret;
   ret.QuadPart = UnsignedInteger;
   return ret;
+}
+
+//DECLSPEC_DEPRECATED_DDK_WINXP
+static __inline
+LARGE_INTEGER
+NTAPI_INLINE
+RtlLargeIntegerShiftLeft(
+  IN LARGE_INTEGER LargeInteger,
+  IN CCHAR ShiftCount)
+{
+  LARGE_INTEGER Result;
+
+  Result.QuadPart = LargeInteger.QuadPart << ShiftCount;
+  return Result;
+}
+
+//DECLSPEC_DEPRECATED_DDK_WINXP
+static __inline
+LARGE_INTEGER
+NTAPI_INLINE
+RtlLargeIntegerShiftRight(
+  IN LARGE_INTEGER LargeInteger,
+  IN CCHAR ShiftCount)
+{
+  LARGE_INTEGER Result;
+
+  Result.QuadPart = (ULONG64)LargeInteger.QuadPart >> ShiftCount;
+  return Result;
 }
 
 //DECLSPEC_DEPRECATED_DDK
@@ -7244,6 +7343,33 @@ RtlEnlargedUnsignedDivide(
   if (Remainder)
     *Remainder = (ULONG)(Dividend.QuadPart % Divisor);
   return (ULONG)(Dividend.QuadPart / Divisor);
+}
+
+//DECLSPEC_DEPRECATED_DDK
+static __inline
+LARGE_INTEGER
+NTAPI_INLINE
+RtlLargeIntegerNegate(
+  IN LARGE_INTEGER Subtrahend)
+{
+  LARGE_INTEGER Difference;
+
+  Difference.QuadPart = -Subtrahend.QuadPart;
+  return Difference;
+}
+
+//DECLSPEC_DEPRECATED_DDK
+static __inline
+LARGE_INTEGER
+NTAPI_INLINE
+RtlLargeIntegerSubtract(
+  IN LARGE_INTEGER Minuend,
+  IN LARGE_INTEGER Subtrahend)
+{
+  LARGE_INTEGER Difference;
+
+  Difference.QuadPart = Minuend.QuadPart - Subtrahend.QuadPart;
+  return Difference;
 }
 
 //DECLSPEC_DEPRECATED_DDK
@@ -7301,8 +7427,8 @@ static __inline
 LARGE_INTEGER
 NTAPI_INLINE
 RtlExtendedIntegerMultiply(
-  LARGE_INTEGER Multiplicand,
-  LONG Multiplier)
+  IN LARGE_INTEGER Multiplicand,
+  IN LONG Multiplier)
 {
   LARGE_INTEGER ret;
   ret.QuadPart = Multiplicand.QuadPart * Multiplier;
@@ -7313,9 +7439,9 @@ static __inline
 LARGE_INTEGER
 NTAPI_INLINE
 RtlExtendedLargeIntegerDivide(
-  LARGE_INTEGER Dividend,
-  ULONG Divisor,
-  PULONG Remainder)
+  IN LARGE_INTEGER Dividend,
+  IN ULONG Divisor,
+  OUT PULONG Remainder OPTIONAL)
 {
   LARGE_INTEGER ret;
   ret.QuadPart = (ULONG64)Dividend.QuadPart / Divisor;
@@ -7414,16 +7540,55 @@ RtlSecureZeroMemory(
 
 #if defined(_M_AMD64)
 FORCEINLINE
-ULONG
+BOOLEAN
 RtlCheckBit(
   IN PRTL_BITMAP BitMapHeader,
   IN ULONG BitPosition)
 {
-  return BitTest((LONG CONST*)BitMapHeader->Buffer, BitPosition);
+  return BitTest64((LONG64 CONST*)BitMapHeader->Buffer, (LONG64)BitPosition);
 }
 #else
 #define RtlCheckBit(BMH,BP) (((((PLONG)(BMH)->Buffer)[(BP)/32]) >> ((BP)%32)) & 0x1)
 #endif /* defined(_M_AMD64) */
+
+#define RtlLargeIntegerGreaterThan(X,Y) (                              \
+    (((X).HighPart == (Y).HighPart) && ((X).LowPart > (Y).LowPart)) || \
+    ((X).HighPart > (Y).HighPart)                                      \
+)
+
+#define RtlLargeIntegerGreaterThanOrEqualTo(X,Y) (                      \
+    (((X).HighPart == (Y).HighPart) && ((X).LowPart >= (Y).LowPart)) || \
+    ((X).HighPart > (Y).HighPart)                                       \
+)
+
+#define RtlLargeIntegerNotEqualTo(X,Y) (                          \
+    (((X).LowPart ^ (Y).LowPart) | ((X).HighPart ^ (Y).HighPart)) \
+)
+
+#define RtlLargeIntegerLessThan(X,Y) (                                 \
+    (((X).HighPart == (Y).HighPart) && ((X).LowPart < (Y).LowPart)) || \
+    ((X).HighPart < (Y).HighPart)                                      \
+)
+
+#define RtlLargeIntegerLessThanOrEqualTo(X,Y) (                         \
+    (((X).HighPart == (Y).HighPart) && ((X).LowPart <= (Y).LowPart)) || \
+    ((X).HighPart < (Y).HighPart)                                       \
+)
+
+#define RtlLargeIntegerGreaterThanZero(X) (       \
+    (((X).HighPart == 0) && ((X).LowPart > 0)) || \
+    ((X).HighPart > 0 )                           \
+)
+
+#define RtlLargeIntegerGreaterOrEqualToZero(X) ( (X).HighPart >= 0 )
+
+#define RtlLargeIntegerEqualToZero(X) ( !((X).LowPart | (X).HighPart) )
+
+#define RtlLargeIntegerNotEqualToZero(X) ( ((X).LowPart | (X).HighPart) )
+
+#define RtlLargeIntegerLessThanZero(X) ( ((X).HighPart < 0) )
+
+#define RtlLargeIntegerLessOrEqualToZero(X) ( ((X).HighPart < 0) || !((X).LowPart | (X).HighPart) )
 
 #endif /* !defined(MIDL_PASS) */
 
@@ -7609,6 +7774,44 @@ InterlockedPushEntrySList(
     RTL_CONTEXT_EX_CHUNK((PCONTEXT_EX)(Context + 1),    \
                          (PCONTEXT_EX)(Context + 1),    \
                          Chunk)
+
+BOOLEAN
+RTLVERLIB_DDI(RtlIsNtDdiVersionAvailable)(
+  IN ULONG Version);
+
+BOOLEAN
+RTLVERLIB_DDI(RtlIsServicePackVersionInstalled)(
+  IN ULONG Version);
+
+#ifndef RtlIsNtDdiVersionAvailable
+#define RtlIsNtDdiVersionAvailable WdmlibRtlIsNtDdiVersionAvailable
+#endif
+
+#ifndef RtlIsServicePackVersionInstalled
+#define RtlIsServicePackVersionInstalled WdmlibRtlIsServicePackVersionInstalled
+#endif
+
+#define RtlInterlockedSetBits(Flags, Flag) \
+    InterlockedOr((PLONG)(Flags), Flag)
+
+#define RtlInterlockedAndBits(Flags, Flag) \
+    InterlockedAnd((PLONG)(Flags), Flag)
+
+#define RtlInterlockedClearBits(Flags, Flag) \
+    RtlInterlockedAndBits(Flags, ~(Flag))
+
+#define RtlInterlockedXorBits(Flags, Flag) \
+    InterlockedXor(Flags, Flag)
+
+#define RtlInterlockedSetBitsDiscardReturn(Flags, Flag) \
+    (VOID) RtlInterlockedSetBits(Flags, Flag)
+
+#define RtlInterlockedAndBitsDiscardReturn(Flags, Flag) \
+    (VOID) RtlInterlockedAndBits(Flags, Flag)
+
+#define RtlInterlockedClearBitsDiscardReturn(Flags, Flag) \
+    RtlInterlockedAndBitsDiscardReturn(Flags, ~(Flag))
+
 
 /******************************************************************************
  *                              Kernel Functions                              *
@@ -11574,17 +11777,97 @@ WmiTraceMessageVa(
  ******************************************************************************/
 
 #ifndef _DBGNT_
+
 ULONG
 DDKCDECLAPI
 DbgPrint(
   IN PCSTR Format,
   IN ...);
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+NTSYSAPI
+ULONG
+DDKCDECLAPI
+DbgPrintReturnControlC(
+  IN PCCH Format,
+  IN ...);
 #endif
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+
+NTSYSAPI
+ULONG
+DDKCDECLAPI
+DbgPrintEx(
+  IN ULONG ComponentId,
+  IN ULONG Level,
+  IN PCSTR Format,
+  IN ...);
+
+#ifdef _VA_LIST_DEFINED
+
+NTSYSAPI
+ULONG
+NTAPI
+vDbgPrintEx(
+  IN ULONG ComponentId,
+  IN ULONG Level,
+  IN PCCH Format,
+  IN va_list ap);
+
+NTSYSAPI
+ULONG
+NTAPI
+vDbgPrintExWithPrefix(
+  IN PCCH Prefix,
+  IN ULONG ComponentId,
+  IN ULONG Level,
+  IN PCCH Format,
+  IN va_list ap);
+
+#endif /* _VA_LIST_DEFINED */
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+DbgQueryDebugFilterState(
+  IN ULONG ComponentId,
+  IN ULONG Level);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+DbgSetDebugFilterState(
+  IN ULONG ComponentId,
+  IN ULONG Level,
+  IN BOOLEAN State);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+typedef VOID
+(*PDEBUG_PRINT_CALLBACK)(
+  IN PSTRING Output,
+  IN ULONG ComponentId,
+  IN ULONG Level);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+DbgSetDebugPrintCallback(
+  IN PDEBUG_PRINT_CALLBACK DebugPrintCallback,
+  IN BOOLEAN Enable);
+
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+
+#endif /* _DBGNT_ */
 
 #if DBG
 
 #define KdPrint(_x_) DbgPrint _x_
 #define KdPrintEx(_x_) DbgPrintEx _x_
+#define vKdPrintEx(_x_) vDbgPrintEx _x_
 #define vKdPrintExWithPrefix(_x_) vDbgPrintExWithPrefix _x_
 #define KdBreakPoint() DbgBreakPoint()
 #define KdBreakPointWithStatus(s) DbgBreakPointWithStatus(s)
@@ -11593,6 +11876,7 @@ DbgPrint(
 
 #define KdPrint(_x_)
 #define KdPrintEx(_x_)
+#define vKdPrintEx(_x_)
 #define vKdPrintExWithPrefix(_x_)
 #define KdBreakPoint()
 #define KdBreakPointWithStatus(s)
@@ -11622,31 +11906,6 @@ extern BOOLEAN KdDebuggerEnabled;
 
 #endif
 
-#ifdef _VA_LIST_DEFINED
-#if (NTDDI_VERSION >= NTDDI_WINXP)
-
-NTSYSAPI
-ULONG
-NTAPI
-vDbgPrintEx(
-  IN ULONG ComponentId,
-  IN ULONG Level,
-  IN PCCH Format,
-  IN va_list ap);
-
-NTSYSAPI
-ULONG
-NTAPI
-vDbgPrintExWithPrefix(
-  IN PCCH Prefix,
-  IN ULONG ComponentId,
-  IN ULONG Level,
-  IN PCCH Format,
-  IN va_list ap);
-
-#endif
-#endif /* _VA_LIST_DEFINED */
-
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
 NTKERNELAPI
@@ -11673,42 +11932,7 @@ NTAPI
 DbgBreakPointWithStatus(
   IN ULONG Status);
 
-NTSYSAPI
-ULONG
-DDKCDECLAPI
-DbgPrintReturnControlC(
-  IN PCCH Format,
-  IN ...);
-
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
-
-#if (NTDDI_VERSION >= NTDDI_WINXP)
-
-NTSYSAPI
-ULONG
-DDKCDECLAPI
-DbgPrintEx(
-  IN ULONG ComponentId,
-  IN ULONG Level,
-  IN PCSTR Format,
-  IN ...);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-DbgQueryDebugFilterState(
-  IN ULONG ComponentId,
-  IN ULONG Level);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-DbgSetDebugFilterState(
-  IN ULONG ComponentId,
-  IN ULONG Level,
-  IN BOOLEAN State);
-
-#endif
 
 #if (NTDDI_VERSION >= NTDDI_WS03)
 NTKERNELAPI
@@ -11788,6 +12012,202 @@ HalReadDmaCounter(
 
 #include <ktmtypes.h>
 
+#define TRANSACTIONMANAGER_QUERY_INFORMATION     (0x0001)
+#define TRANSACTIONMANAGER_SET_INFORMATION       (0x0002)
+#define TRANSACTIONMANAGER_RECOVER               (0x0004)
+#define TRANSACTIONMANAGER_RENAME                (0x0008)
+#define TRANSACTIONMANAGER_CREATE_RM             (0x0010)
+#define TRANSACTIONMANAGER_BIND_TRANSACTION      (0x0020)
+
+#define TRANSACTIONMANAGER_GENERIC_READ            (STANDARD_RIGHTS_READ            |\
+                                                    TRANSACTIONMANAGER_QUERY_INFORMATION)
+
+#define TRANSACTIONMANAGER_GENERIC_WRITE           (STANDARD_RIGHTS_WRITE           |\
+                                                    TRANSACTIONMANAGER_SET_INFORMATION     |\
+                                                    TRANSACTIONMANAGER_RECOVER             |\
+                                                    TRANSACTIONMANAGER_RENAME              |\
+                                                    TRANSACTIONMANAGER_CREATE_RM)
+
+#define TRANSACTIONMANAGER_GENERIC_EXECUTE         (STANDARD_RIGHTS_EXECUTE)
+
+#define TRANSACTIONMANAGER_ALL_ACCESS              (STANDARD_RIGHTS_REQUIRED        |\
+                                                    TRANSACTIONMANAGER_GENERIC_READ        |\
+                                                    TRANSACTIONMANAGER_GENERIC_WRITE       |\
+                                                    TRANSACTIONMANAGER_GENERIC_EXECUTE     |\
+                                                    TRANSACTIONMANAGER_BIND_TRANSACTION)
+
+#define TRANSACTION_QUERY_INFORMATION     (0x0001)
+#define TRANSACTION_SET_INFORMATION       (0x0002)
+#define TRANSACTION_ENLIST                (0x0004)
+#define TRANSACTION_COMMIT                (0x0008)
+#define TRANSACTION_ROLLBACK              (0x0010)
+#define TRANSACTION_PROPAGATE             (0x0020)
+#define TRANSACTION_RIGHT_RESERVED1       (0x0040)
+
+#define TRANSACTION_GENERIC_READ            (STANDARD_RIGHTS_READ            |\
+                                             TRANSACTION_QUERY_INFORMATION   |\
+                                             SYNCHRONIZE)
+
+#define TRANSACTION_GENERIC_WRITE           (STANDARD_RIGHTS_WRITE           |\
+                                             TRANSACTION_SET_INFORMATION     |\
+                                             TRANSACTION_COMMIT              |\
+                                             TRANSACTION_ENLIST              |\
+                                             TRANSACTION_ROLLBACK            |\
+                                             TRANSACTION_PROPAGATE           |\
+                                             SYNCHRONIZE)
+
+#define TRANSACTION_GENERIC_EXECUTE         (STANDARD_RIGHTS_EXECUTE         |\
+                                             TRANSACTION_COMMIT              |\
+                                             TRANSACTION_ROLLBACK            |\
+                                             SYNCHRONIZE)
+
+#define TRANSACTION_ALL_ACCESS              (STANDARD_RIGHTS_REQUIRED        |\
+                                             TRANSACTION_GENERIC_READ        |\
+                                             TRANSACTION_GENERIC_WRITE       |\
+                                             TRANSACTION_GENERIC_EXECUTE)
+
+#define TRANSACTION_RESOURCE_MANAGER_RIGHTS (TRANSACTION_GENERIC_READ        |\
+                                             STANDARD_RIGHTS_WRITE           |\
+                                             TRANSACTION_SET_INFORMATION     |\
+                                             TRANSACTION_ENLIST              |\
+                                             TRANSACTION_ROLLBACK            |\
+                                             TRANSACTION_PROPAGATE           |\
+                                             SYNCHRONIZE)
+
+#define RESOURCEMANAGER_QUERY_INFORMATION        (0x0001)
+#define RESOURCEMANAGER_SET_INFORMATION          (0x0002)
+#define RESOURCEMANAGER_RECOVER                  (0x0004)
+#define RESOURCEMANAGER_ENLIST                   (0x0008)
+#define RESOURCEMANAGER_GET_NOTIFICATION         (0x0010)
+#define RESOURCEMANAGER_REGISTER_PROTOCOL        (0x0020)
+#define RESOURCEMANAGER_COMPLETE_PROPAGATION     (0x0040)
+
+#define RESOURCEMANAGER_GENERIC_READ        (STANDARD_RIGHTS_READ                 |\
+                                             RESOURCEMANAGER_QUERY_INFORMATION    |\
+                                             SYNCHRONIZE)
+
+#define RESOURCEMANAGER_GENERIC_WRITE       (STANDARD_RIGHTS_WRITE                |\
+                                             RESOURCEMANAGER_SET_INFORMATION      |\
+                                             RESOURCEMANAGER_RECOVER              |\
+                                             RESOURCEMANAGER_ENLIST               |\
+                                             RESOURCEMANAGER_GET_NOTIFICATION     |\
+                                             RESOURCEMANAGER_REGISTER_PROTOCOL    |\
+                                             RESOURCEMANAGER_COMPLETE_PROPAGATION |\
+                                             SYNCHRONIZE)
+
+#define RESOURCEMANAGER_GENERIC_EXECUTE     (STANDARD_RIGHTS_EXECUTE              |\
+                                             RESOURCEMANAGER_RECOVER              |\
+                                             RESOURCEMANAGER_ENLIST               |\
+                                             RESOURCEMANAGER_GET_NOTIFICATION     |\
+                                             RESOURCEMANAGER_COMPLETE_PROPAGATION |\
+                                             SYNCHRONIZE)
+
+#define RESOURCEMANAGER_ALL_ACCESS          (STANDARD_RIGHTS_REQUIRED             |\
+                                             RESOURCEMANAGER_GENERIC_READ         |\
+                                             RESOURCEMANAGER_GENERIC_WRITE        |\
+                                             RESOURCEMANAGER_GENERIC_EXECUTE)
+
+#define ENLISTMENT_QUERY_INFORMATION             (0x0001)
+#define ENLISTMENT_SET_INFORMATION               (0x0002)
+#define ENLISTMENT_RECOVER                       (0x0004)
+#define ENLISTMENT_SUBORDINATE_RIGHTS            (0x0008)
+#define ENLISTMENT_SUPERIOR_RIGHTS               (0x0010)
+
+#define ENLISTMENT_GENERIC_READ        (STANDARD_RIGHTS_READ           |\
+                                        ENLISTMENT_QUERY_INFORMATION)
+
+#define ENLISTMENT_GENERIC_WRITE       (STANDARD_RIGHTS_WRITE          |\
+                                        ENLISTMENT_SET_INFORMATION     |\
+                                        ENLISTMENT_RECOVER             |\
+                                        ENLISTMENT_SUBORDINATE_RIGHTS  |\
+                                        ENLISTMENT_SUPERIOR_RIGHTS)
+
+#define ENLISTMENT_GENERIC_EXECUTE     (STANDARD_RIGHTS_EXECUTE        |\
+                                        ENLISTMENT_RECOVER             |\
+                                        ENLISTMENT_SUBORDINATE_RIGHTS  |\
+                                        ENLISTMENT_SUPERIOR_RIGHTS)
+
+#define ENLISTMENT_ALL_ACCESS          (STANDARD_RIGHTS_REQUIRED       |\
+                                        ENLISTMENT_GENERIC_READ        |\
+                                        ENLISTMENT_GENERIC_WRITE       |\
+                                        ENLISTMENT_GENERIC_EXECUTE)
+
+typedef enum _TRANSACTION_OUTCOME {
+  TransactionOutcomeUndetermined = 1,
+  TransactionOutcomeCommitted,
+  TransactionOutcomeAborted,
+} TRANSACTION_OUTCOME;
+
+
+typedef enum _TRANSACTION_STATE {
+  TransactionStateNormal = 1,
+  TransactionStateIndoubt,
+  TransactionStateCommittedNotify,
+} TRANSACTION_STATE;
+
+
+typedef struct _TRANSACTION_BASIC_INFORMATION {
+  GUID TransactionId;
+  ULONG State;
+  ULONG Outcome;
+} TRANSACTION_BASIC_INFORMATION, *PTRANSACTION_BASIC_INFORMATION;
+
+typedef struct _TRANSACTIONMANAGER_BASIC_INFORMATION {
+  GUID TmIdentity;
+  LARGE_INTEGER VirtualClock;
+} TRANSACTIONMANAGER_BASIC_INFORMATION, *PTRANSACTIONMANAGER_BASIC_INFORMATION;
+
+typedef struct _TRANSACTIONMANAGER_LOG_INFORMATION {
+  GUID LogIdentity;
+} TRANSACTIONMANAGER_LOG_INFORMATION, *PTRANSACTIONMANAGER_LOG_INFORMATION;
+
+typedef struct _TRANSACTIONMANAGER_LOGPATH_INFORMATION {
+  ULONG LogPathLength;
+  WCHAR LogPath[1];
+} TRANSACTIONMANAGER_LOGPATH_INFORMATION, *PTRANSACTIONMANAGER_LOGPATH_INFORMATION;
+
+typedef struct _TRANSACTIONMANAGER_RECOVERY_INFORMATION {
+  ULONGLONG LastRecoveredLsn;
+} TRANSACTIONMANAGER_RECOVERY_INFORMATION, *PTRANSACTIONMANAGER_RECOVERY_INFORMATION;
+
+typedef struct _TRANSACTION_PROPERTIES_INFORMATION {
+  ULONG IsolationLevel;
+  ULONG IsolationFlags;
+  LARGE_INTEGER Timeout;
+  ULONG Outcome;
+  ULONG DescriptionLength;
+  WCHAR Description[1];
+} TRANSACTION_PROPERTIES_INFORMATION, *PTRANSACTION_PROPERTIES_INFORMATION;
+
+typedef struct _TRANSACTION_BIND_INFORMATION {
+  HANDLE TmHandle;
+} TRANSACTION_BIND_INFORMATION, *PTRANSACTION_BIND_INFORMATION;
+
+typedef struct _TRANSACTION_ENLISTMENT_PAIR {
+  GUID EnlistmentId;
+  GUID ResourceManagerId;
+} TRANSACTION_ENLISTMENT_PAIR, *PTRANSACTION_ENLISTMENT_PAIR;
+
+typedef struct _TRANSACTION_ENLISTMENTS_INFORMATION {
+  ULONG NumberOfEnlistments;
+  TRANSACTION_ENLISTMENT_PAIR EnlistmentPair[1];
+} TRANSACTION_ENLISTMENTS_INFORMATION, *PTRANSACTION_ENLISTMENTS_INFORMATION;
+
+typedef struct _TRANSACTION_SUPERIOR_ENLISTMENT_INFORMATION {
+  TRANSACTION_ENLISTMENT_PAIR SuperiorEnlistmentPair;
+} TRANSACTION_SUPERIOR_ENLISTMENT_INFORMATION, *PTRANSACTION_SUPERIOR_ENLISTMENT_INFORMATION;
+
+typedef struct _RESOURCEMANAGER_BASIC_INFORMATION {
+  GUID ResourceManagerId;
+  ULONG DescriptionLength;
+  WCHAR Description[1];
+} RESOURCEMANAGER_BASIC_INFORMATION, *PRESOURCEMANAGER_BASIC_INFORMATION;
+
+typedef struct _RESOURCEMANAGER_COMPLETION_INFORMATION {
+  HANDLE IoCompletionPortHandle;
+  ULONG_PTR CompletionKey;
+} RESOURCEMANAGER_COMPLETION_INFORMATION, *PRESOURCEMANAGER_COMPLETION_INFORMATION;
+
 typedef enum _KTMOBJECT_TYPE {
   KTMOBJECT_TRANSACTION,
   KTMOBJECT_TRANSACTION_MANAGER,
@@ -11821,11 +12241,420 @@ typedef enum _RESOURCEMANAGER_INFORMATION_CLASS {
   ResourceManagerCompletionInformation,
 } RESOURCEMANAGER_INFORMATION_CLASS;
 
+typedef struct _ENLISTMENT_BASIC_INFORMATION {
+  GUID EnlistmentId;
+  GUID TransactionId;
+  GUID ResourceManagerId;
+} ENLISTMENT_BASIC_INFORMATION, *PENLISTMENT_BASIC_INFORMATION;
+
+typedef struct _ENLISTMENT_CRM_INFORMATION {
+  GUID CrmTransactionManagerId;
+  GUID CrmResourceManagerId;
+  GUID CrmEnlistmentId;
+} ENLISTMENT_CRM_INFORMATION, *PENLISTMENT_CRM_INFORMATION;
+
 typedef enum _ENLISTMENT_INFORMATION_CLASS {
   EnlistmentBasicInformation,
   EnlistmentRecoveryInformation,
   EnlistmentCrmInformation
 } ENLISTMENT_INFORMATION_CLASS;
+
+typedef struct _TRANSACTION_LIST_ENTRY {
+#if defined(__cplusplus)
+  ::UOW UOW;
+#else
+  UOW UOW;
+#endif
+} TRANSACTION_LIST_ENTRY, *PTRANSACTION_LIST_ENTRY;
+
+typedef struct _TRANSACTION_LIST_INFORMATION {
+  ULONG NumberOfTransactions;
+  TRANSACTION_LIST_ENTRY TransactionInformation[1];
+} TRANSACTION_LIST_INFORMATION, *PTRANSACTION_LIST_INFORMATION;
+
+typedef NTSTATUS
+(NTAPI *PFN_NT_CREATE_TRANSACTION)(
+  OUT PHANDLE TransactionHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+  IN LPGUID Uow OPTIONAL,
+  IN HANDLE TmHandle OPTIONAL,
+  IN ULONG CreateOptions OPTIONAL,
+  IN ULONG IsolationLevel OPTIONAL,
+  IN ULONG IsolationFlags OPTIONAL,
+  IN PLARGE_INTEGER Timeout OPTIONAL,
+  IN PUNICODE_STRING Description OPTIONAL);
+
+typedef NTSTATUS
+(NTAPI *PFN_NT_OPEN_TRANSACTION)(
+  OUT PHANDLE TransactionHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes,
+  IN LPGUID Uow OPTIONAL,
+  IN HANDLE TmHandle OPTIONAL);
+
+typedef NTSTATUS
+(NTAPI *PFN_NT_QUERY_INFORMATION_TRANSACTION)(
+  IN HANDLE TransactionHandle,
+  IN TRANSACTION_INFORMATION_CLASS TransactionInformationClass,
+  OUT PVOID TransactionInformation,
+  IN ULONG TransactionInformationLength,
+  OUT PULONG ReturnLength OPTIONAL);
+
+typedef NTSTATUS
+(NTAPI *PFN_NT_SET_INFORMATION_TRANSACTION)(
+  IN HANDLE TransactionHandle,
+  IN TRANSACTION_INFORMATION_CLASS TransactionInformationClass,
+  IN PVOID TransactionInformation,
+  IN ULONG TransactionInformationLength);
+
+typedef NTSTATUS
+(NTAPI *PFN_NT_COMMIT_TRANSACTION)(
+  IN HANDLE TransactionHandle,
+  IN BOOLEAN Wait);
+
+typedef NTSTATUS
+(NTAPI *PFN_NT_ROLLBACK_TRANSACTION)(
+  IN HANDLE TransactionHandle,
+  IN BOOLEAN Wait);
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtCreateTransactionManager(
+  OUT PHANDLE TmHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+  IN PUNICODE_STRING LogFileName OPTIONAL,
+  IN ULONG CreateOptions OPTIONAL,
+  IN ULONG CommitStrength OPTIONAL);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtOpenTransactionManager(
+  OUT PHANDLE TmHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+  IN PUNICODE_STRING LogFileName OPTIONAL,
+  IN LPGUID TmIdentity OPTIONAL,
+  IN ULONG OpenOptions OPTIONAL);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtRenameTransactionManager(
+  IN PUNICODE_STRING LogFileName,
+  IN LPGUID ExistingTransactionManagerGuid);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtRollforwardTransactionManager(
+  IN HANDLE TransactionManagerHandle,
+  IN PLARGE_INTEGER TmVirtualClock OPTIONAL);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtRecoverTransactionManager(
+  IN HANDLE TransactionManagerHandle);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtQueryInformationTransactionManager(
+  IN HANDLE TransactionManagerHandle,
+  IN TRANSACTIONMANAGER_INFORMATION_CLASS TransactionManagerInformationClass,
+  OUT PVOID TransactionManagerInformation,
+  IN ULONG TransactionManagerInformationLength,
+  OUT PULONG ReturnLength);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtSetInformationTransactionManager(
+  IN HANDLE TmHandle OPTIONAL,
+  IN TRANSACTIONMANAGER_INFORMATION_CLASS TransactionManagerInformationClass,
+  IN PVOID TransactionManagerInformation,
+  IN ULONG TransactionManagerInformationLength);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtEnumerateTransactionObject(
+  IN HANDLE RootObjectHandle OPTIONAL,
+  IN KTMOBJECT_TYPE QueryType,
+  IN OUT PKTMOBJECT_CURSOR ObjectCursor,
+  IN ULONG ObjectCursorLength,
+  OUT PULONG ReturnLength);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtCreateTransaction(
+  OUT PHANDLE TransactionHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+  IN LPGUID Uow OPTIONAL,
+  IN HANDLE TmHandle OPTIONAL,
+  IN ULONG CreateOptions OPTIONAL,
+  IN ULONG IsolationLevel OPTIONAL,
+  IN ULONG IsolationFlags OPTIONAL,
+  IN PLARGE_INTEGER Timeout OPTIONAL,
+  IN PUNICODE_STRING Description OPTIONAL);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtOpenTransaction(
+  OUT PHANDLE TransactionHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes,
+  IN LPGUID Uow,
+  IN HANDLE TmHandle OPTIONAL);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtQueryInformationTransaction(
+  IN HANDLE TransactionHandle,
+  IN TRANSACTION_INFORMATION_CLASS TransactionInformationClass,
+  OUT PVOID TransactionInformation,
+  IN ULONG TransactionInformationLength,
+  OUT PULONG ReturnLength OPTIONAL);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtSetInformationTransaction(
+  IN HANDLE TransactionHandle,
+  IN TRANSACTION_INFORMATION_CLASS TransactionInformationClass,
+  IN PVOID TransactionInformation,
+  IN ULONG TransactionInformationLength);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtCommitTransaction(
+  IN HANDLE TransactionHandle,
+  IN BOOLEAN Wait);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtRollbackTransaction(
+  IN HANDLE TransactionHandle,
+  IN BOOLEAN Wait);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtCreateEnlistment(
+  OUT PHANDLE EnlistmentHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN HANDLE ResourceManagerHandle,
+  IN HANDLE TransactionHandle,
+  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+  IN ULONG CreateOptions OPTIONAL,
+  IN NOTIFICATION_MASK NotificationMask,
+  IN PVOID EnlistmentKey OPTIONAL);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtOpenEnlistment(
+  OUT PHANDLE EnlistmentHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN HANDLE ResourceManagerHandle,
+  IN LPGUID EnlistmentGuid,
+  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtQueryInformationEnlistment(
+  IN HANDLE EnlistmentHandle,
+  IN ENLISTMENT_INFORMATION_CLASS EnlistmentInformationClass,
+  OUT PVOID EnlistmentInformation,
+  IN ULONG EnlistmentInformationLength,
+  OUT PULONG ReturnLength);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtSetInformationEnlistment(
+  IN HANDLE EnlistmentHandle OPTIONAL,
+  IN ENLISTMENT_INFORMATION_CLASS EnlistmentInformationClass,
+  IN PVOID EnlistmentInformation,
+  IN ULONG EnlistmentInformationLength);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtRecoverEnlistment(
+  IN HANDLE EnlistmentHandle,
+  IN PVOID EnlistmentKey OPTIONAL);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtPrePrepareEnlistment(
+  IN HANDLE EnlistmentHandle,
+  IN PLARGE_INTEGER TmVirtualClock OPTIONAL);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtPrepareEnlistment(
+  IN HANDLE EnlistmentHandle,
+  IN PLARGE_INTEGER TmVirtualClock OPTIONAL);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtCommitEnlistment(
+  IN HANDLE EnlistmentHandle,
+  IN PLARGE_INTEGER TmVirtualClock OPTIONAL);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtRollbackEnlistment(
+  IN HANDLE EnlistmentHandle,
+  IN PLARGE_INTEGER TmVirtualClock OPTIONAL);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtPrePrepareComplete(
+  IN HANDLE EnlistmentHandle,
+  IN PLARGE_INTEGER TmVirtualClock OPTIONAL);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtPrepareComplete(
+  IN HANDLE EnlistmentHandle,
+  IN PLARGE_INTEGER TmVirtualClock OPTIONAL);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtCommitComplete(
+  IN HANDLE EnlistmentHandle,
+  IN PLARGE_INTEGER TmVirtualClock OPTIONAL);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtReadOnlyEnlistment(
+  IN HANDLE EnlistmentHandle,
+  IN PLARGE_INTEGER TmVirtualClock OPTIONAL);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtRollbackComplete(
+  IN HANDLE EnlistmentHandle,
+  IN PLARGE_INTEGER TmVirtualClock OPTIONAL);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtSinglePhaseReject(
+  IN HANDLE EnlistmentHandle,
+  IN PLARGE_INTEGER TmVirtualClock OPTIONAL);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtCreateResourceManager(
+  OUT PHANDLE ResourceManagerHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN HANDLE TmHandle,
+  IN LPGUID RmGuid,
+  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+  IN ULONG CreateOptions OPTIONAL,
+  IN PUNICODE_STRING Description OPTIONAL);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtOpenResourceManager(
+  OUT PHANDLE ResourceManagerHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN HANDLE TmHandle,
+  IN LPGUID ResourceManagerGuid OPTIONAL,
+  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtRecoverResourceManager(
+  IN HANDLE ResourceManagerHandle);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtGetNotificationResourceManager(
+  IN HANDLE ResourceManagerHandle,
+  OUT PTRANSACTION_NOTIFICATION TransactionNotification,
+  IN ULONG NotificationLength,
+  IN PLARGE_INTEGER Timeout OPTIONAL,
+  OUT PULONG ReturnLength OPTIONAL,
+  IN ULONG Asynchronous,
+  IN ULONG_PTR AsynchronousContext OPTIONAL);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtQueryInformationResourceManager(
+  IN HANDLE ResourceManagerHandle,
+  IN RESOURCEMANAGER_INFORMATION_CLASS ResourceManagerInformationClass,
+  OUT PVOID ResourceManagerInformation,
+  IN ULONG ResourceManagerInformationLength,
+  OUT PULONG ReturnLength OPTIONAL);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtSetInformationResourceManager(
+  IN HANDLE ResourceManagerHandle,
+  IN RESOURCEMANAGER_INFORMATION_CLASS ResourceManagerInformationClass,
+  IN PVOID ResourceManagerInformation,
+  IN ULONG ResourceManagerInformationLength);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtRegisterProtocolAddressInformation(
+  IN HANDLE ResourceManager,
+  IN PCRM_PROTOCOL_ID ProtocolId,
+  IN ULONG ProtocolInformationSize,
+  IN PVOID ProtocolInformation,
+  IN ULONG CreateOptions OPTIONAL);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtPropagationComplete(
+  IN HANDLE ResourceManagerHandle,
+  IN ULONG RequestCookie,
+  IN ULONG BufferLength,
+  IN PVOID Buffer);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtPropagationFailed(
+  IN HANDLE ResourceManagerHandle,
+  IN ULONG RequestCookie,
+  IN NTSTATUS PropStatus);
+
+#endif /* NTDDI_VERSION >= NTDDI_VISTA */
 
 #endif /* !_NTTMAPI_ */
 /******************************************************************************
@@ -12523,6 +13352,18 @@ ZwSetInformationKey(
 #else
 #include <string.h>
 #endif /* _MAC */
+
+#ifndef DEFINE_GUIDEX
+#ifdef _MSC_VER
+#define DEFINE_GUIDEX(name) EXTERN_C const CDECL GUID name
+#else
+#define DEFINE_GUIDEX(name) EXTERN_C const GUID name
+#endif
+#endif /* DEFINE_GUIDEX */
+
+#ifndef STATICGUIDOF
+#define STATICGUIDOF(guid) STATIC_##guid
+#endif
 
 /* GUID Comparison */
 #ifndef __IID_ALIGNED__
