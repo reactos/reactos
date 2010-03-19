@@ -94,8 +94,10 @@ CmBattAddAcAdapter(PDRIVER_OBJECT DriverObject,
     return STATUS_NOT_IMPLEMENTED;
 }
 
-NTSTATUS NTAPI CmBattAddDevice(PDRIVER_OBJECT DriverObject,
-                               PDEVICE_OBJECT DeviceObject)
+NTSTATUS
+NTAPI
+CmBattAddDevice(PDRIVER_OBJECT DriverObject,
+                PDEVICE_OBJECT DeviceObject)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;

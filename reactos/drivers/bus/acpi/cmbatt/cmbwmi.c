@@ -85,7 +85,8 @@ CmBattWmiRegistration(PCMBATT_DEVICE_EXTENSION DeviceExtension)
 
 NTSTATUS
 NTAPI
-CmBattSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+CmBattSystemControl(PDEVICE_OBJECT DeviceObject,
+                    PIRP Irp)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;

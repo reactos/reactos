@@ -101,5 +101,33 @@ typedef struct _CMBATT_DEVICE_EXTENSION
     ULONG TripPointOld;
     ULONGLONG InterruptTime;
 } CMBATT_DEVICE_EXTENSION, *PCMBATT_DEVICE_EXTENSION;
+
+NTSTATUS
+NTAPI
+CmBattPowerDispatch(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp
+);
+
+NTSTATUS
+NTAPI
+CmBattPnpDispatch(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp
+);
+
+NTSTATUS
+NTAPI
+CmBattAddDevice(
+    PDRIVER_OBJECT DriverObject,
+    PDEVICE_OBJECT DeviceObject
+);
+
+NTSTATUS
+NTAPI
+CmBattSystemControl(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp
+);
  
 /* EOF */
