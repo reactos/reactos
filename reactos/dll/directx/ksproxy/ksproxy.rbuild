@@ -20,7 +20,7 @@
 	<group compilerset="msc">
 		<compilerflag compiler="cxx">/GR-</compilerflag>
 	</group>
-
+	<file>allocator.cpp</file>
 	<file>basicaudio.cpp</file>
 	<file>classfactory.cpp</file>
 	<file>clockforward.cpp</file>

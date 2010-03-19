@@ -134,6 +134,7 @@ COutputPin_Constructor(
     IBaseFilter * ParentFilter,
     LPCWSTR PinName,
     ULONG PinId,
+    KSPIN_COMMUNICATION Communication,
     REFIID riid,
     LPVOID * ppv);
 
@@ -170,3 +171,5 @@ extern const GUID IID_IKsPinEx;
 extern const GUID IID_IKsAggregateControl;
 extern const GUID IID_IKsPinPipe;
 extern const GUID IID_IKsPinFactory;
+extern KSPIN_INTERFACE StandardPinInterface;
+extern KSPIN_MEDIUM StandardPinMedium;

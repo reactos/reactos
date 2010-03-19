@@ -171,7 +171,7 @@ public:
     HRESULT STDMETHODCALLTYPE GetPages(CAUUID *pPages);
 
 
-    CKsProxy() : m_Ref(0), m_pGraph(0), m_ReferenceClock(0), m_FilterState(State_Stopped), m_hDevice(0), m_Plugins(), m_Pins(), m_DevicePath(0), m_hClock(0) {};
+    CKsProxy() : m_Ref(0), m_pGraph(0), m_ReferenceClock((IReferenceClock*)this), m_FilterState(State_Stopped), m_hDevice(0), m_Plugins(), m_Pins(), m_DevicePath(0), m_hClock(0) {};
     ~CKsProxy()
     {
         if (m_hDevice)
@@ -189,6 +189,9 @@ public:
     HRESULT STDMETHODCALLTYPE GetMediaSeekingFormats(PKSMULTIPLE_ITEM *FormatList);
     HRESULT STDMETHODCALLTYPE CreateClockInstance();
     HRESULT STDMETHODCALLTYPE PerformClockProperty(ULONG PropertyId, ULONG PropertyFlags, PVOID OutputBuffer, ULONG OutputBufferSize);
+    HRESULT STDMETHODCALLTYPE SetPinState(KSSTATE State);
+
+
 protected:
     LONG m_Ref;
     IFilterGraph *m_pGraph;
@@ -1581,6 +1584,7 @@ CKsProxy::GetMiscFlags()
     HRESULT hr;
     PIN_DIRECTION PinDirection;
     KSPIN_COMMUNICATION Communication;
+    WCHAR Buffer[100];
 
     for(Index = 0; Index < m_Pins.size(); Index++)
     {
@@ -1604,7 +1608,8 @@ CKsProxy::GetMiscFlags()
         }
     }
 
-    OutputDebugStringW(L"CKsProxy::GetMiscFlags stub\n");
+    swprintf(Buffer, L"CKsProxy::GetMiscFlags stub Flags %x\n", Flags);
+    OutputDebugStringW(Buffer);
     return Flags;
 }
 
@@ -2373,7 +2378,7 @@ CKsProxy::CreatePins()
         }
         else
         {
-            hr = COutputPin_Constructor((IBaseFilter*)this, PinName, Index, IID_IPin, (void**)&pPin);
+            hr = COutputPin_Constructor((IBaseFilter*)this, PinName, Index, Communication, IID_IPin, (void**)&pPin);
             if (FAILED(hr))
             {
                 CoTaskMemFree(PinName);
@@ -2519,8 +2524,21 @@ HRESULT
 STDMETHODCALLTYPE
 CKsProxy::Pause()
 {
-    OutputDebugStringW(L"CKsProxy::Pause : NotImplemented\n");
-    return E_NOTIMPL;
+    HRESULT hr = S_OK;
+
+    OutputDebugStringW(L"CKsProxy::Pause\n");
+
+    if (m_FilterState == State_Stopped)
+    {
+        hr = SetPinState(KSSTATE_PAUSE);
+        if (FAILED(hr))
+            return hr;
+
+    }
+
+    m_FilterState = State_Paused;
+    return hr;
+
 }
 
 HRESULT
@@ -2528,8 +2546,82 @@ STDMETHODCALLTYPE
 CKsProxy::Run(
     REFERENCE_TIME tStart)
 {
-    OutputDebugStringW(L"CKsProxy::Run : NotImplemented\n");
-    return E_NOTIMPL;
+    HRESULT hr;
+
+    OutputDebugStringW(L"CKsProxy::Run\n");
+
+    if (m_FilterState == State_Stopped)
+    {
+        // setting filter state to pause
+        hr = Pause();
+        if (FAILED(hr))
+            return hr;
+
+        assert(m_FilterState == State_Paused);
+    }
+
+    hr = SetPinState(KSSTATE_RUN);
+    if (FAILED(hr))
+        return hr;
+
+    m_FilterState = State_Running;
+    return hr;
+}
+
+HRESULT
+STDMETHODCALLTYPE
+CKsProxy::SetPinState(
+    KSSTATE State)
+{
+    HRESULT hr = S_OK;
+    ULONG Index;
+    IKsObject *pObject;
+    ULONG BytesReturned;
+    KSPROPERTY Property;
+
+    Property.Set = KSPROPSETID_Connection;
+    Property.Id = KSPROPERTY_CONNECTION_STATE;
+    Property.Flags = KSPROPERTY_TYPE_SET;
+
+    // set all pins to running state
+    for(Index = 0; Index < m_Pins.size(); Index++)
+    {
+        IPin * Pin = m_Pins[Index];
+        if (!Pin)
+            continue;
+
+        //check if the pin is connected
+        IPin * TempPin;
+        hr = Pin->ConnectedTo(&TempPin);
+        if (FAILED(hr))
+        {
+            // skip unconnected pins
+            continue;
+        }
+
+        // release connected pin
+        TempPin->Release();
+
+        //query IKsObject interface
+        hr = Pin->QueryInterface(IID_IKsObject, (void**)&pObject);
+
+        // get pin handle
+        HANDLE hPin = pObject->KsGetObjectHandle();
+
+        // sanity check
+        assert(hPin && hPin != INVALID_HANDLE_VALUE);
+
+        // now set state
+        hr = KsSynchronousDeviceControl(hPin, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)&State, sizeof(KSSTATE), &BytesReturned);
+
+        WCHAR Buffer[100];
+        swprintf(Buffer, L"CKsProxy::SetPinState Index %u State %u hr %lx\n", Index, State, hr);
+        OutputDebugStringW(Buffer);
+
+        if (FAILED(hr))
+            return hr;
+    }
+    return hr;
 }
 
 HRESULT
@@ -2563,21 +2655,29 @@ CKsProxy::SetSyncSource(
     // FIXME
     // need locks
 
-    if (!pClock)
-        return E_POINTER;
-
-    hr = pClock->QueryInterface(IID_IKsClock, (void**)&pKsClock);
-    if (FAILED(hr))
-        return hr;
-
-    // get clock handle
-    hClock = pKsClock->KsGetClockHandle();
-    if (!hClock || hClock == INVALID_HANDLE_VALUE)
+    if (pClock)
     {
-        // failed
+        hr = pClock->QueryInterface(IID_IKsClock, (void**)&pKsClock);
+        if (FAILED(hr))
+        {
+            hr = m_ReferenceClock->QueryInterface(IID_IKsClock, (void**)&pKsClock);
+            if (FAILED(hr))
+                return hr;
+        }
+
+        // get clock handle
+        hClock = pKsClock->KsGetClockHandle();
+
+        // release IKsClock interface
         pKsClock->Release();
-        return E_FAIL;
+        m_hClock = hClock;
     }
+    else
+    {
+        // no clock handle
+        m_hClock = NULL;
+    }
+
 
     // distribute clock to all pins
     for(Index = 0; Index < m_Pins.size(); Index++)
@@ -2601,7 +2701,7 @@ CKsProxy::SetSyncSource(
                 Property.Flags = KSPROPERTY_TYPE_SET;
 
                 // set master clock
-                hr = KsSynchronousDeviceControl(hPin, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)hClock, sizeof(HANDLE), &BytesReturned);
+                hr = KsSynchronousDeviceControl(hPin, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)&m_hClock, sizeof(HANDLE), &BytesReturned);
 
                 if (FAILED(hr))
                 {
@@ -2609,8 +2709,10 @@ CKsProxy::SetSyncSource(
                         hr != MAKE_HRESULT(SEVERITY_ERROR, FACILITY_WIN32, ERROR_NOT_FOUND))
                     {
                         // failed to set master clock
-                        pKsClock->Release();
                         pObject->Release();
+                        WCHAR Buffer[100];
+                        swprintf(Buffer, L"CKsProxy::SetSyncSource KSPROPERTY_STREAM_MASTERCLOCK failed with %lx\n", hr);
+                        OutputDebugStringW(Buffer);
                         return hr;
                     }
                 }
@@ -2642,6 +2744,7 @@ CKsProxy::SetSyncSource(
     }
 
     m_ReferenceClock = pClock;
+    OutputDebugStringW(L"CKsProxy::SetSyncSource done\n");
     return S_OK;
 }
 
