@@ -2187,7 +2187,7 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
 {
     PETHREAD Thread, NewThread;
     HANDLE hToken;
-    PTOKEN Token, NewToken, PrimaryToken;
+    PTOKEN Token, NewToken = NULL, PrimaryToken;
     BOOLEAN CopyOnOpen, EffectiveOnly;
     SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
     SE_IMPERSONATION_STATE ImpersonationState;
@@ -2313,9 +2313,9 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
     }
     
     if (NewToken) ObDereferenceObject(NewToken);
-    
+
     if (CopyOnOpen && NewThread) ObDereferenceObject(NewThread);
-        
+
     if(NT_SUCCESS(Status))
     {
         _SEH2_TRY
