@@ -27,6 +27,22 @@
 #define ALIGN_UP_POINTER(ptr, type) \
     ALIGN_UP_POINTER_BY(ptr, sizeof(type))
 
+#ifndef FIELD_OFFSET
+#define FIELD_OFFSET(type, field) ((ULONG)&(((type *)0)->field))
+#endif
+
+#ifndef FIELD_SIZE
+#define FIELD_SIZE(type, field) (sizeof(((type *)0)->field))
+#endif
+
+#define POOL_TAGGING                             1
+
+#if DBG
+#define IF_DEBUG if (TRUE)
+#else
+#define IF_DEBUG if (FALSE)
+#endif /* DBG */
+
 /* ULONG
  * BYTE_OFFSET(
  *   IN PVOID Va)

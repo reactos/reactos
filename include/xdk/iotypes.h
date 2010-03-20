@@ -325,10 +325,6 @@ typedef struct _CLIENT_ID {
   HANDLE UniqueThread;
 } CLIENT_ID, *PCLIENT_ID;
 
-typedef VOID
-(NTAPI *PKSTART_ROUTINE)(
-  IN PVOID StartContext);
-
 typedef struct _VPB {
   CSHORT Type;
   CSHORT Size;
@@ -2196,12 +2192,6 @@ typedef NTSTATUS
 typedef NTSTATUS
 (NTAPI *PMM_DLL_UNLOAD)(
   VOID);
-
-typedef BOOLEAN
-(NTAPI KSERVICE_ROUTINE)(
-  IN struct _KINTERRUPT *Interrupt,
-  IN PVOID ServiceContext);
-typedef KSERVICE_ROUTINE *PKSERVICE_ROUTINE;
 
 typedef VOID
 (NTAPI *PIO_TIMER_ROUTINE)(

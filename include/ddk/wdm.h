@@ -506,6 +506,109 @@ typedef enum _MODE {
   MaximumMode
 } MODE;
 
+#define CACHE_FULLY_ASSOCIATIVE 0xFF
+
+#define EVENT_QUERY_STATE (0x0001)
+#define EVENT_MODIFY_STATE (0x0002)
+#define EVENT_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x3)
+
+#define LTP_PC_SMT 0x1
+
+#if (NTDDI_VERSION < NTDDI_WIN7) || defined(_X86_) || !defined(NT_PROCESSOR_GROUPS)
+#define SINGLE_GROUP_LEGACY_API        1
+#endif
+
+#define SEMAPHORE_QUERY_STATE (0x0001)
+#define SEMAPHORE_MODIFY_STATE (0x0002)
+#define SEMAPHORE_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x3)
+
+typedef enum _LOGICAL_PROCESSOR_RELATIONSHIP {
+  RelationProcessorCore,
+  RelationNumaNode,
+  RelationCache,
+  RelationProcessorPackage,
+  RelationGroup,
+  RelationAll = 0xffff
+} LOGICAL_PROCESSOR_RELATIONSHIP;
+
+typedef enum _PROCESSOR_CACHE_TYPE {
+  CacheUnified,
+  CacheInstruction,
+  CacheData,
+  CacheTrace
+} PROCESSOR_CACHE_TYPE;
+
+typedef struct _CACHE_DESCRIPTOR {
+  UCHAR Level;
+  UCHAR Associativity;
+  USHORT LineSize;
+  ULONG Size;
+  PROCESSOR_CACHE_TYPE Type;
+} CACHE_DESCRIPTOR, *PCACHE_DESCRIPTOR;
+
+typedef struct _SYSTEM_LOGICAL_PROCESSOR_INFORMATION {
+  ULONG_PTR ProcessorMask;
+  LOGICAL_PROCESSOR_RELATIONSHIP Relationship;
+  union {
+    struct {
+      UCHAR Flags;
+    } ProcessorCore;
+    struct {
+      ULONG NodeNumber;
+    } NumaNode;
+    CACHE_DESCRIPTOR Cache;
+    ULONGLONG  Reserved[2];
+  } DUMMYUNIONNAME;
+} SYSTEM_LOGICAL_PROCESSOR_INFORMATION, *PSYSTEM_LOGICAL_PROCESSOR_INFORMATION;
+
+typedef struct _PROCESSOR_RELATIONSHIP {
+  UCHAR Flags;
+  UCHAR Reserved[21];
+  USHORT GroupCount;
+  GROUP_AFFINITY GroupMask[ANYSIZE_ARRAY];
+} PROCESSOR_RELATIONSHIP, *PPROCESSOR_RELATIONSHIP;
+
+typedef struct _NUMA_NODE_RELATIONSHIP {
+  ULONG NodeNumber;
+  UCHAR Reserved[20];
+  GROUP_AFFINITY GroupMask;
+} NUMA_NODE_RELATIONSHIP, *PNUMA_NODE_RELATIONSHIP;
+
+typedef struct _CACHE_RELATIONSHIP {
+  UCHAR Level;
+  UCHAR Associativity;
+  USHORT LineSize;
+  ULONG CacheSize;
+  PROCESSOR_CACHE_TYPE Type;
+  UCHAR Reserved[20];
+  GROUP_AFFINITY GroupMask;
+} CACHE_RELATIONSHIP, *PCACHE_RELATIONSHIP;
+
+typedef struct _PROCESSOR_GROUP_INFO {
+  UCHAR MaximumProcessorCount;
+  UCHAR ActiveProcessorCount;
+  UCHAR Reserved[38];
+  KAFFINITY ActiveProcessorMask;
+} PROCESSOR_GROUP_INFO, *PPROCESSOR_GROUP_INFO;
+
+typedef struct _GROUP_RELATIONSHIP {
+  USHORT MaximumGroupCount;
+  USHORT ActiveGroupCount;
+  UCHAR Reserved[20];
+  PROCESSOR_GROUP_INFO GroupInfo[ANYSIZE_ARRAY];
+} GROUP_RELATIONSHIP, *PGROUP_RELATIONSHIP;
+
+typedef struct _SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX {
+  LOGICAL_PROCESSOR_RELATIONSHIP Relationship;
+  ULONG Size;
+  union {
+    PROCESSOR_RELATIONSHIP Processor;
+    NUMA_NODE_RELATIONSHIP NumaNode;
+    CACHE_RELATIONSHIP Cache;
+    GROUP_RELATIONSHIP Group;
+  } DUMMYUNIONNAME;
+} SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX, *PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX;;
+
 /* Processor features */
 #define PF_FLOATING_POINT_PRECISION_ERRATA  0
 #define PF_FLOATING_POINT_EMULATED          1
@@ -528,8 +631,7 @@ typedef enum _MODE {
 
 #define MAXIMUM_WAIT_OBJECTS              64
 
-#define ASSERT_APC(Object) \
-    ASSERT((Object)->Type == ApcObject)
+#define ASSERT_APC(Object) NT_ASSERT((Object)->Type == ApcObject)
 
 #define ASSERT_DPC(Object) \
     ASSERT(((Object)->Type == 0) || \
@@ -537,25 +639,25 @@ typedef enum _MODE {
            ((Object)->Type == ThreadedDpcObject))
 
 #define ASSERT_GATE(object) \
-    ASSERT((((object)->Header.Type & KOBJECT_TYPE_MASK) == GateObject) || \
-           (((object)->Header.Type & KOBJECT_TYPE_MASK) == EventSynchronizationObject))
+    NT_ASSERT((((object)->Header.Type & KOBJECT_TYPE_MASK) == GateObject) || \
+              (((object)->Header.Type & KOBJECT_TYPE_MASK) == EventSynchronizationObject))
 
 #define ASSERT_DEVICE_QUEUE(Object) \
-    ASSERT((Object)->Type == DeviceQueueObject)
+    NT_ASSERT((Object)->Type == DeviceQueueObject)
 
 #define ASSERT_TIMER(E) \
-    ASSERT(((E)->Header.Type == TimerNotificationObject) || \
-           ((E)->Header.Type == TimerSynchronizationObject))
+    NT_ASSERT(((E)->Header.Type == TimerNotificationObject) || \
+              ((E)->Header.Type == TimerSynchronizationObject))
 
 #define ASSERT_MUTANT(E) \
-    ASSERT((E)->Header.Type == MutantObject)
+    NT_ASSERT((E)->Header.Type == MutantObject)
 
 #define ASSERT_SEMAPHORE(E) \
-    ASSERT((E)->Header.Type == SemaphoreObject)
+    NT_ASSERT((E)->Header.Type == SemaphoreObject)
 
 #define ASSERT_EVENT(E) \
-    ASSERT(((E)->Header.Type == NotificationEvent) || \
-           ((E)->Header.Type == SynchronizationEvent))
+    NT_ASSERT(((E)->Header.Type == NotificationEvent) || \
+              ((E)->Header.Type == SynchronizationEvent))
 
 #define DPC_NORMAL 0
 #define DPC_THREADED 1
@@ -591,7 +693,7 @@ typedef enum _MODE {
 #define MAXIMUM_PROCESSORS          MAXIMUM_PROC_PER_GROUP
 
 /* Exception Records */
-#define EXCEPTION_NONCONTINUABLE 1
+#define EXCEPTION_NONCONTINUABLE     1
 #define EXCEPTION_MAXIMUM_PARAMETERS 15
 
 typedef struct _EXCEPTION_RECORD {
@@ -792,8 +894,26 @@ typedef enum _KINTERRUPT_MODE {
 #define THREAD_WAIT_OBJECTS 3
 
 typedef VOID
+(NTAPI KSTART_ROUTINE)(
+  IN PVOID StartContext);
+typedef KSTART_ROUTINE *PKSTART_ROUTINE;
+
+typedef VOID
 (NTAPI *PKINTERRUPT_ROUTINE)(
   VOID);
+
+typedef BOOLEAN
+(NTAPI KSERVICE_ROUTINE)(
+  IN struct _KINTERRUPT *Interrupt,
+  IN PVOID ServiceContext);
+typedef KSERVICE_ROUTINE *PKSERVICE_ROUTINE;
+
+typedef BOOLEAN
+(NTAPI KMESSAGE_SERVICE_ROUTINE)(
+  IN struct _KINTERRUPT *Interrupt,
+  IN PVOID ServiceContext,
+  IN ULONG MessageID);
+typedef KMESSAGE_SERVICE_ROUTINE *PKMESSAGE_SERVICE_ROUTINE;
 
 typedef enum _KD_OPTION {
   KD_OPTION_SET_BLOCK_ENABLE,
@@ -801,9 +921,9 @@ typedef enum _KD_OPTION {
 
 typedef VOID
 (NTAPI *PKNORMAL_ROUTINE)(
-  IN PVOID NormalContext,
-  IN PVOID SystemArgument1,
-  IN PVOID SystemArgument2);
+  IN PVOID NormalContext OPTIONAL,
+  IN PVOID SystemArgument1 OPTIONAL,
+  IN PVOID SystemArgument2 OPTIONAL);
 
 typedef VOID
 (NTAPI *PKRUNDOWN_ROUTINE)(
@@ -812,10 +932,10 @@ typedef VOID
 typedef VOID
 (NTAPI *PKKERNEL_ROUTINE)(
   IN struct _KAPC *Apc,
-  IN OUT PKNORMAL_ROUTINE *NormalRoutine,
-  IN OUT PVOID *NormalContext,
-  IN OUT PVOID *SystemArgument1,
-  IN OUT PVOID *SystemArgument2);
+  IN OUT PKNORMAL_ROUTINE *NormalRoutine OPTIONAL,
+  IN OUT PVOID *NormalContext OPTIONAL,
+  IN OUT PVOID *SystemArgument1 OPTIONAL,
+  IN OUT PVOID *SystemArgument2 OPTIONAL);
 
 typedef struct _KAPC {
   UCHAR Type;
@@ -836,6 +956,14 @@ typedef struct _KAPC {
   BOOLEAN Inserted;
 } KAPC, *PKAPC, *RESTRICTED_POINTER PRKAPC;
 
+#define KAPC_OFFSET_TO_SPARE_BYTE0 FIELD_OFFSET(KAPC, SpareByte0)
+#define KAPC_OFFSET_TO_SPARE_BYTE1 FIELD_OFFSET(KAPC, SpareByte1)
+#define KAPC_OFFSET_TO_SPARE_LONG FIELD_OFFSET(KAPC, SpareLong0)
+#define KAPC_OFFSET_TO_SYSTEMARGUMENT1 FIELD_OFFSET(KAPC, SystemArgument1)
+#define KAPC_OFFSET_TO_SYSTEMARGUMENT2 FIELD_OFFSET(KAPC, SystemArgument2)
+#define KAPC_OFFSET_TO_APCSTATEINDEX FIELD_OFFSET(KAPC, ApcStateIndex)
+#define KAPC_ACTUAL_LENGTH (FIELD_OFFSET(KAPC, Inserted) + sizeof(BOOLEAN))
+
 typedef struct _KDEVICE_QUEUE_ENTRY {
   LIST_ENTRY DeviceListEntry;
   ULONG SortKey;
@@ -847,10 +975,27 @@ typedef PVOID PKIPI_CONTEXT;
 
 typedef VOID
 (NTAPI *PKIPI_WORKER)(
-  IN PKIPI_CONTEXT PacketContext,
-  IN PVOID Parameter1,
-  IN PVOID Parameter2,
-  IN PVOID Parameter3);
+  IN OUT PKIPI_CONTEXT PacketContext,
+  IN PVOID Parameter1 OPTIONAL,
+  IN PVOID Parameter2 OPTIONAL,
+  IN PVOID Parameter3 OPTIONAL);
+
+typedef struct _KIPI_COUNTS {
+  ULONG Freeze;
+  ULONG Packet;
+  ULONG DPC;
+  ULONG APC;
+  ULONG FlushSingleTb;
+  ULONG FlushMultipleTb;
+  ULONG FlushEntireTb;
+  ULONG GenericCall;
+  ULONG ChangeColor;
+  ULONG SweepDcache;
+  ULONG SweepIcache;
+  ULONG SweepIcacheRange;
+  ULONG FlushIoBuffers;
+  ULONG GratuitousDPC;
+} KIPI_COUNTS, *PKIPI_COUNTS;
 
 typedef ULONG_PTR
 (NTAPI *PKIPI_BROADCAST_WORKER)(
@@ -921,9 +1066,9 @@ typedef enum _KSPIN_LOCK_QUEUE_NUMBER {
 typedef VOID
 (NTAPI *PKDEFERRED_ROUTINE)(
   IN struct _KDPC *Dpc,
-  IN PVOID DeferredContext,
-  IN PVOID SystemArgument1,
-  IN PVOID SystemArgument2);
+  IN PVOID DeferredContext OPTIONAL,
+  IN PVOID SystemArgument1 OPTIONAL,
+  IN PVOID SystemArgument2 OPTIONAL);
 
 typedef enum _KDPC_IMPORTANCE {
   LowImportance,
@@ -941,7 +1086,7 @@ typedef struct _KDPC {
   PVOID DeferredContext;
   PVOID SystemArgument1;
   PVOID SystemArgument2;
-  volatile PVOID  DpcData;
+  volatile PVOID DpcData;
 } KDPC, *PKDPC, *RESTRICTED_POINTER PRKDPC;
 
 typedef struct _KDPC_WATCHDOG_INFORMATION {
@@ -1053,6 +1198,8 @@ typedef struct _KSEMAPHORE {
   LONG Limit;
 } KSEMAPHORE, *PKSEMAPHORE, *RESTRICTED_POINTER PRKSEMAPHORE;
 
+#define KSEMAPHORE_ACTUAL_LENGTH (FIELD_OFFSET(KSEMAPHORE, Limit) + sizeof(LONG))
+
 typedef struct _KGATE {
   DISPATCHER_HEADER Header;
 } KGATE, *PKGATE, *RESTRICTED_POINTER PRKGATE;
@@ -1093,6 +1240,14 @@ typedef struct _KTIMER {
   ULONG Period;
 } KTIMER, *PKTIMER, *RESTRICTED_POINTER PRKTIMER;
 
+typedef enum _LOCK_OPERATION {
+  IoReadAccess,
+  IoWriteAccess,
+  IoModifyAccess
+} LOCK_OPERATION;
+
+#define KTIMER_ACTUAL_LENGTH (FIELD_OFFSET(KTIMER, Period) + sizeof(LONG))
+
 typedef BOOLEAN
 (NTAPI *PKSYNCHRONIZE_ROUTINE)(
   IN PVOID SynchronizeContext);
@@ -1120,6 +1275,26 @@ typedef enum _ALTERNATIVE_ARCHITECTURE_TYPE {
   NEC98x86,
   EndAlternatives
 } ALTERNATIVE_ARCHITECTURE_TYPE;
+
+#ifndef _X86_
+
+#ifndef IsNEC_98
+#define IsNEC_98 (FALSE)
+#endif
+
+#ifndef IsNotNEC_98
+#define IsNotNEC_98 (TRUE)
+#endif
+
+#ifndef SetNEC_98
+#define SetNEC_98
+#endif
+
+#ifndef SetNotNEC_98
+#define SetNotNEC_98
+#endif
+
+#endif
 
 typedef struct _KSYSTEM_TIME {
   ULONG LowPart;
@@ -1354,12 +1529,6 @@ typedef enum _MM_PAGE_PRIORITY {
   HighPagePriority = 32
 } MM_PAGE_PRIORITY;
 
-typedef enum _LOCK_OPERATION {
-  IoReadAccess,
-  IoWriteAccess,
-  IoModifyAccess
-} LOCK_OPERATION;
-
 typedef enum _MM_SYSTEM_SIZE {
   MmSmallSystem,
   MmMediumSystem,
@@ -1498,6 +1667,13 @@ typedef struct LOOKASIDE_ALIGN _GENERAL_LOOKASIDE {
 typedef struct _GENERAL_LOOKASIDE_POOL {
   GENERAL_LOOKASIDE_LAYOUT
 } GENERAL_LOOKASIDE_POOL, *PGENERAL_LOOKASIDE_POOL;
+
+#define LOOKASIDE_CHECK(f)  \
+    C_ASSERT(FIELD_OFFSET(GENERAL_LOOKASIDE,f) == FIELD_OFFSET(GENERAL_LOOKASIDE_POOL,f))
+
+LOOKASIDE_CHECK(TotalFrees);
+LOOKASIDE_CHECK(Tag);
+LOOKASIDE_CHECK(Future);
 
 typedef struct _PAGED_LOOKASIDE_LIST {
   GENERAL_LOOKASIDE L;
@@ -3450,10 +3626,6 @@ typedef struct _CLIENT_ID {
   HANDLE UniqueThread;
 } CLIENT_ID, *PCLIENT_ID;
 
-typedef VOID
-(NTAPI *PKSTART_ROUTINE)(
-  IN PVOID StartContext);
-
 typedef struct _VPB {
   CSHORT Type;
   CSHORT Size;
@@ -5321,12 +5493,6 @@ typedef NTSTATUS
 typedef NTSTATUS
 (NTAPI *PMM_DLL_UNLOAD)(
   VOID);
-
-typedef BOOLEAN
-(NTAPI KSERVICE_ROUTINE)(
-  IN struct _KINTERRUPT *Interrupt,
-  IN PVOID ServiceContext);
-typedef KSERVICE_ROUTINE *PKSERVICE_ROUTINE;
 
 typedef VOID
 (NTAPI *PIO_TIMER_ROUTINE)(
@@ -8652,6 +8818,22 @@ KeFlushWriteBuffer(VOID);
 
 #define ALIGN_UP_POINTER(ptr, type) \
     ALIGN_UP_POINTER_BY(ptr, sizeof(type))
+
+#ifndef FIELD_OFFSET
+#define FIELD_OFFSET(type, field) ((ULONG)&(((type *)0)->field))
+#endif
+
+#ifndef FIELD_SIZE
+#define FIELD_SIZE(type, field) (sizeof(((type *)0)->field))
+#endif
+
+#define POOL_TAGGING                             1
+
+#if DBG
+#define IF_DEBUG if (TRUE)
+#else
+#define IF_DEBUG if (FALSE)
+#endif /* DBG */
 
 /* ULONG
  * BYTE_OFFSET(
@@ -13396,14 +13578,6 @@ inline int IsEqualGUIDAligned(REFGUID guid1, REFGUID guid2)
 #define DIRECTORY_CREATE_SUBDIRECTORY (0x0008)
 #define DIRECTORY_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0xF)
 
-#define EVENT_QUERY_STATE (0x0001)
-#define EVENT_MODIFY_STATE (0x0002)
-#define EVENT_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x3)
-
-#define SEMAPHORE_QUERY_STATE (0x0001)
-#define SEMAPHORE_MODIFY_STATE (0x0002)
-#define SEMAPHORE_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x3)
-
 #define SYMBOLIC_LINK_QUERY               0x0001
 #define SYMBOLIC_LINK_ALL_ACCESS          (STANDARD_RIGHTS_REQUIRED | 0x1)
 
@@ -13412,7 +13586,12 @@ inline int IsEqualGUIDAligned(REFGUID guid1, REFGUID guid2)
 #define DUPLICATE_SAME_ATTRIBUTES         0x00000004
 
 /* Global debug flag */
+#if DEVL
 extern ULONG NtGlobalFlag;
+#define IF_NTOS_DEBUG(FlagName) if (NtGlobalFlag & (FLG_ ## FlagName))
+#else
+#define IF_NTOS_DEBUG(FlagName) if(FALSE)
+#endif
 
 #ifndef _TRACEHANDLE_DEFINED
 #define _TRACEHANDLE_DEFINED

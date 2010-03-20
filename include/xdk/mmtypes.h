@@ -130,12 +130,6 @@ typedef enum _MM_PAGE_PRIORITY {
   HighPagePriority = 32
 } MM_PAGE_PRIORITY;
 
-typedef enum _LOCK_OPERATION {
-  IoReadAccess,
-  IoWriteAccess,
-  IoModifyAccess
-} LOCK_OPERATION;
-
 typedef enum _MM_SYSTEM_SIZE {
   MmSmallSystem,
   MmMediumSystem,
