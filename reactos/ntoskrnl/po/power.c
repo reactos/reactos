@@ -398,7 +398,7 @@ PoRequestPowerIrp(IN PDEVICE_OBJECT DeviceObject,
     else
     {
         Stack->Parameters.Power.Type = DevicePowerState;
-        Stack->Parameters.Power.State = PowerState.DeviceState;
+        Stack->Parameters.Power.State = PowerState;
     }
   
     RequestPowerItem->CompletionRoutine = CompletionFunction;
