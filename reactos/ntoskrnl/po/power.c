@@ -47,9 +47,10 @@ PopRequestPowerIrpCompletion(IN PDEVICE_OBJECT DeviceObject,
                                         RequestPowerItem->PowerState,
                                         RequestPowerItem->Context,
                                         &Irp->IoStatus);
-  
-    ExFreePool(&Irp->IoStatus);
+
     ExFreePool(Context);
+
+    IoFreeIrp(Irp);
 
     return STATUS_SUCCESS;
 }
@@ -358,7 +359,6 @@ PoRequestPowerIrp(IN PDEVICE_OBJECT DeviceObject,
     PDEVICE_OBJECT TopDeviceObject;
     PIO_STACK_LOCATION Stack;
     PIRP Irp;
-    PIO_STATUS_BLOCK IoStatusBlock;
     PREQUEST_POWER_ITEM RequestPowerItem;
     NTSTATUS Status;
   
@@ -370,27 +370,19 @@ PoRequestPowerIrp(IN PDEVICE_OBJECT DeviceObject,
     RequestPowerItem = ExAllocatePool(NonPagedPool, sizeof(REQUEST_POWER_ITEM));
     if (!RequestPowerItem)
         return STATUS_INSUFFICIENT_RESOURCES;
-    IoStatusBlock = ExAllocatePool(NonPagedPool, sizeof(IO_STATUS_BLOCK));
-    if (!IoStatusBlock)
-    {
-        ExFreePool(RequestPowerItem);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
   
     /* Always call the top of the device stack */
     TopDeviceObject = IoGetAttachedDeviceReference(DeviceObject);
   
-    Irp = IoBuildSynchronousFsdRequest(IRP_MJ_PNP,
-                                       TopDeviceObject,
-                                       NULL,
-                                       0,
-                                       NULL,
-                                       NULL,
-                                       IoStatusBlock);
+    Irp = IoBuildAsynchronousFsdRequest(IRP_MJ_POWER,
+                                        TopDeviceObject,
+                                        NULL,
+                                        0,
+                                        NULL,
+                                        NULL);
     if (!Irp)
     {
         ExFreePool(RequestPowerItem);
-        ExFreePool(IoStatusBlock);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
   
@@ -404,7 +396,10 @@ PoRequestPowerIrp(IN PDEVICE_OBJECT DeviceObject,
     if (MinorFunction == IRP_MN_WAIT_WAKE)
         Stack->Parameters.WaitWake.PowerState = PowerState.SystemState;
     else
-        Stack->Parameters.WaitWake.PowerState = PowerState.DeviceState;
+    {
+        Stack->Parameters.Power.Type = DevicePowerState;
+        Stack->Parameters.Power.State = PowerState.DeviceState;
+    }
   
     RequestPowerItem->CompletionRoutine = CompletionFunction;
     RequestPowerItem->PowerState = PowerState;
