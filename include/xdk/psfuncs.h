@@ -44,3 +44,10 @@ PsTerminateSystemThread(
 
 #endif
 
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PsWrapApcWow64Thread(
+  IN OUT PVOID *ApcContext,
+  IN OUT PVOID *ApcRoutine);
+

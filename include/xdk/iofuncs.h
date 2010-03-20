@@ -1174,13 +1174,30 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 IoWMIWriteEvent(
-  IN PVOID WnodeEventItem);
+  IN OUT PVOID WnodeEventItem);
 
 NTKERNELAPI
 VOID
 NTAPI
 IoWriteErrorLogEntry(
   IN PVOID ElEntry);
+
+NTKERNELAPI
+PIRP
+NTAPI
+IoGetTopLevelIrp(VOID);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoRegisterLastChanceShutdownNotification(
+  IN PDEVICE_OBJECT DeviceObject);
+
+NTKERNELAPI
+VOID
+NTAPI
+IoSetTopLevelIrp(
+  IN PIRP Irp OPTIONAL);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
@@ -1218,7 +1235,7 @@ PIRP
 NTAPI
 IoCsqRemoveNextIrp(
   IN PIO_CSQ Csq,
-  IN PVOID PeekContext);
+  IN PVOID PeekContext OPTIONAL);
 
 NTKERNELAPI
 BOOLEAN
@@ -1345,6 +1362,178 @@ IoWMISetSingleItem(
   IN PVOID ValueBuffer);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
+
+#if (NTDDI_VERSION >= NTDDI_WINXPSP1)
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoValidateDeviceIoControlAccess(
+  IN PIRP Irp,
+  IN ULONG RequiredAccess);
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WS03)
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoCsqInitializeEx(
+  IN PIO_CSQ Csq,
+  IN PIO_CSQ_INSERT_IRP_EX CsqInsertIrp,
+  IN PIO_CSQ_REMOVE_IRP CsqRemoveIrp,
+  IN PIO_CSQ_PEEK_NEXT_IRP CsqPeekNextIrp,
+  IN PIO_CSQ_ACQUIRE_LOCK CsqAcquireLock,
+  IN PIO_CSQ_RELEASE_LOCK CsqReleaseLock,
+  IN PIO_CSQ_COMPLETE_CANCELED_IRP CsqCompleteCanceledIrp);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoCsqInsertIrpEx(
+  IN PIO_CSQ Csq,
+  IN PIRP Irp,
+  IN PIO_CSQ_IRP_CONTEXT Context OPTIONAL,
+  IN PVOID InsertContext OPTIONAL);
+
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoGetBootDiskInformationLite(
+  OUT PBOOTDISK_INFORMATION_LITE *BootDiskInformation);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoCheckShareAccessEx(
+  IN ACCESS_MASK DesiredAccess,
+  IN ULONG DesiredShareAccess,
+  IN OUT PFILE_OBJECT FileObject,
+  IN OUT PSHARE_ACCESS ShareAccess,
+  IN BOOLEAN Update,
+  IN PBOOLEAN WritePermission);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoConnectInterruptEx(
+  IN OUT PIO_CONNECT_INTERRUPT_PARAMETERS Parameters);
+
+NTKERNELAPI
+VOID
+NTAPI
+IoDisconnectInterruptEx(
+  IN PIO_DISCONNECT_INTERRUPT_PARAMETERS Parameters);
+
+LOGICAL
+NTAPI
+IoWithinStackLimits(
+  IN ULONG_PTR RegionStart,
+  IN SIZE_T RegionSize);
+
+NTKERNELAPI
+VOID
+NTAPI
+IoSetShareAccessEx(
+  IN ACCESS_MASK DesiredAccess,
+  IN ULONG DesiredShareAccess,
+  IN OUT PFILE_OBJECT FileObject,
+  OUT PSHARE_ACCESS ShareAccess,
+  IN PBOOLEAN WritePermission);
+
+ULONG
+NTAPI
+IoSizeofWorkItem(VOID);
+
+VOID
+NTAPI
+IoInitializeWorkItem(
+  IN PVOID IoObject,
+  IN PIO_WORKITEM IoWorkItem);
+
+VOID
+NTAPI
+IoUninitializeWorkItem(
+  IN PIO_WORKITEM IoWorkItem);
+
+VOID
+NTAPI
+IoQueueWorkItemEx(
+  IN PIO_WORKITEM IoWorkItem,
+  IN PIO_WORKITEM_ROUTINE_EX WorkerRoutine,
+  IN WORK_QUEUE_TYPE QueueType,
+  IN PVOID Context OPTIONAL);
+
+IO_PRIORITY_HINT
+NTAPI
+IoGetIoPriorityHint(
+  IN PIRP Irp);
+
+NTSTATUS
+NTAPI
+IoSetIoPriorityHint(
+  IN PIRP Irp,
+  IN IO_PRIORITY_HINT PriorityHint);
+
+NTSTATUS
+NTAPI
+IoAllocateSfioStreamIdentifier(
+  IN PFILE_OBJECT FileObject,
+  IN ULONG Length,
+  IN PVOID Signature,
+  OUT PVOID *StreamIdentifier);
+
+PVOID
+NTAPI
+IoGetSfioStreamIdentifier(
+  IN PFILE_OBJECT FileObject,
+  IN PVOID Signature);
+
+NTSTATUS
+NTAPI
+IoFreeSfioStreamIdentifier(
+  IN PFILE_OBJECT FileObject,
+  IN PVOID Signature);
+
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+
+#define IoCallDriverStackSafeDefault(a, b) IoCallDriver(a, b)
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoGetAffinityInterrupt(
+  IN PKINTERRUPT InterruptObject,
+  OUT PGROUP_AFFINITY GroupAffinity);
+
+NTSTATUS
+NTAPI
+IoGetContainerInformation(
+  IN IO_CONTAINER_INFORMATION_CLASS InformationClass,
+  IN PVOID ContainerObject OPTIONAL,
+  IN OUT PVOID Buffer OPTIONAL,
+  IN ULONG BufferLength);
+
+NTSTATUS
+NTAPI
+IoRegisterContainerNotification(
+  IN IO_CONTAINER_NOTIFICATION_CLASS NotificationClass,
+  IN PIO_CONTAINER_NOTIFICATION_FUNCTION CallbackFunction,
+  IN PVOID NotificationInformation OPTIONAL,
+  IN ULONG NotificationInformationLength,
+  OUT PVOID CallbackRegistration);
+
+VOID
+NTAPI
+IoUnregisterContainerNotification(
+  IN PVOID CallbackRegistration);
+
+#endif
 
 #if defined(_WIN64)
 NTKERNELAPI
@@ -1542,7 +1731,7 @@ IoInitializeDpcRequest(
 FORCEINLINE
 VOID
 IoCopyCurrentIrpStackLocationToNext(
-  IN PIRP Irp)
+  IN OUT PIRP Irp)
 {
   PIO_STACK_LOCATION irpSp;
   PIO_STACK_LOCATION nextIrpSp;
@@ -1570,4 +1759,17 @@ IoGetRemainingStackSize(VOID)
   Result = (ULONG_PTR)(&End) - Begin;
   return Result;
 }
+
+#if (NTDDI_VERSION >= NTDDI_WS03)
+VOID
+FORCEINLINE
+IoInitializeThreadedDpcRequest(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PIO_DPC_ROUTINE DpcRoutine)
+{
+  KeInitializeThreadedDpc(&DeviceObject->Dpc,
+                          (PKDEFERRED_ROUTINE) DpcRoutine,
+                          DeviceObject );
+}
+#endif
 

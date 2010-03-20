@@ -124,7 +124,6 @@ struct _IO_RESOURCE_DESCRIPTOR;
 typedef struct _OBJECT_TYPE *POBJECT_TYPE;
 typedef struct _HAL_DISPATCH_TABLE *PHAL_DISPATCH_TABLE;
 typedef struct _HAL_PRIVATE_DISPATCH_TABLE *PHAL_PRIVATE_DISPATCH_TABLE;
-typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT; 
 typedef struct _CALLBACK_OBJECT *PCALLBACK_OBJECT;
 typedef struct _EPROCESS *PEPROCESS;
 typedef struct _ETHREAD *PETHREAD;
@@ -133,6 +132,14 @@ typedef struct _KINTERRUPT *PKINTERRUPT;
 typedef struct _KPROCESS *PKPROCESS;
 typedef struct _KTHREAD *PKTHREAD, *PRKTHREAD;
 typedef struct _CONTEXT *PCONTEXT;
+
+#if defined(USE_DMA_MACROS) && !defined(_NTHAL_) && ( defined(_NTDDK_) || defined(_NTDRIVER_) || defined(_NTOSP_))
+typedef struct _DMA_ADAPTER *PADAPTER_OBJECT;
+#elif defined(_WDM_INCLUDED_)
+typedef struct _DMA_ADAPTER *PADAPTER_OBJECT;
+#else
+typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT; 
+#endif
 
 
 /******************************************************************************
@@ -1508,12 +1515,17 @@ extern PCCHAR KeNumberProcessors;
  *                         Memory manager Types                               *
  ******************************************************************************/
 
-#define MM_DONT_ZERO_ALLOCATION                 0x00000001
-#define MM_ALLOCATE_FROM_LOCAL_NODE_ONLY        0x00000002
-#define MM_ALLOCATE_FULLY_REQUIRED              0x00000004
-#define MM_ALLOCATE_NO_WAIT                     0x00000008
-#define MM_ALLOCATE_PREFER_CONTIGUOUS           0x00000010
-#define MM_ALLOCATE_REQUIRE_CONTIGUOUS_CHUNKS   0x00000020
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+typedef ULONG NODE_REQUIREMENT;
+#define MM_ANY_NODE_OK                           0x80000000
+#endif
+
+#define MM_DONT_ZERO_ALLOCATION                  0x00000001
+#define MM_ALLOCATE_FROM_LOCAL_NODE_ONLY         0x00000002
+#define MM_ALLOCATE_FULLY_REQUIRED               0x00000004
+#define MM_ALLOCATE_NO_WAIT                      0x00000008
+#define MM_ALLOCATE_PREFER_CONTIGUOUS            0x00000010
+#define MM_ALLOCATE_REQUIRE_CONTIGUOUS_CHUNKS    0x00000020
 
 #define MDL_MAPPED_TO_SYSTEM_VA     0x0001
 #define MDL_PAGES_LOCKED            0x0002
@@ -1722,10 +1734,11 @@ typedef VOID
   IN OUT PLOOKASIDE_LIST_EX Lookaside);
 
 typedef VOID
-(NTAPI *PCALLBACK_FUNCTION)(
-  IN PVOID CallbackContext,
-  IN PVOID Argument1,
-  IN PVOID Argument2);
+(NTAPI CALLBACK_FUNCTION)(
+  IN PVOID CallbackContext OPTIONAL,
+  IN PVOID Argument1 OPTIONAL,
+  IN PVOID Argument2 OPTIONAL);
+typedef CALLBACK_FUNCTION *PCALLBACK_FUNCTION;
 
 #define GENERAL_LOOKASIDE_LAYOUT                \
     union {                                     \
@@ -2115,6 +2128,11 @@ typedef struct _ACCESS_STATE {
   UNICODE_STRING ObjectName;
   UNICODE_STRING ObjectTypeName;
 } ACCESS_STATE, *PACCESS_STATE;
+
+typedef VOID
+(NTAPI *PNTFS_DEREF_EXPORTED_SECURITY_DESCRIPTOR)(
+  IN PVOID Vcb,
+  IN PSECURITY_DESCRIPTOR SecurityDescriptor);
 
 #ifndef _NTLSA_IFS_
 
@@ -3291,10 +3309,11 @@ typedef enum _REG_NOTIFY_CLASS {
 } REG_NOTIFY_CLASS, *PREG_NOTIFY_CLASS;
 
 typedef NTSTATUS
-(NTAPI *PEX_CALLBACK_FUNCTION)(
+(NTAPI EX_CALLBACK_FUNCTION)(
   IN PVOID CallbackContext,
   IN PVOID Argument1,
   IN PVOID Argument2);
+typedef EX_CALLBACK_FUNCTION *PEX_CALLBACK_FUNCTION;
 
 typedef struct _REG_DELETE_KEY_INFORMATION {
   PVOID Object;
@@ -3396,6 +3415,54 @@ typedef struct _REG_QUERY_MULTIPLE_VALUE_KEY_INFORMATION {
   PVOID Reserved;
 } REG_QUERY_MULTIPLE_VALUE_KEY_INFORMATION, *PREG_QUERY_MULTIPLE_VALUE_KEY_INFORMATION;
 
+typedef struct _REG_RENAME_KEY_INFORMATION {
+  PVOID Object;
+  PUNICODE_STRING NewName;
+  PVOID CallContext;
+  PVOID ObjectContext;
+  PVOID Reserved;
+} REG_RENAME_KEY_INFORMATION, *PREG_RENAME_KEY_INFORMATION;
+
+typedef struct _REG_CREATE_KEY_INFORMATION {
+  PUNICODE_STRING CompleteName;
+  PVOID RootObject;
+  PVOID ObjectType;
+  ULONG CreateOptions;
+  PUNICODE_STRING Class;
+  PVOID SecurityDescriptor;
+  PVOID SecurityQualityOfService;
+  ACCESS_MASK DesiredAccess;
+  ACCESS_MASK GrantedAccess;
+  PULONG Disposition;
+  PVOID *ResultObject;
+  PVOID CallContext;
+  PVOID RootObjectContext;
+  PVOID Transaction;
+  PVOID Reserved;
+} REG_CREATE_KEY_INFORMATION, REG_OPEN_KEY_INFORMATION,*PREG_CREATE_KEY_INFORMATION, *PREG_OPEN_KEY_INFORMATION;
+
+typedef struct _REG_CREATE_KEY_INFORMATION_V1 {
+  PUNICODE_STRING CompleteName;
+  PVOID RootObject;
+  PVOID ObjectType;
+  ULONG Options;
+  PUNICODE_STRING Class;
+  PVOID SecurityDescriptor;
+  PVOID SecurityQualityOfService;
+  ACCESS_MASK DesiredAccess;
+  ACCESS_MASK GrantedAccess;
+  PULONG Disposition;
+  PVOID *ResultObject;
+  PVOID CallContext;
+  PVOID RootObjectContext;
+  PVOID Transaction;
+  ULONG_PTR Version;
+  PUNICODE_STRING RemainingName;
+  ULONG Wow64Flags;
+  ULONG Attributes;
+  KPROCESSOR_MODE CheckAccessMode;
+} REG_CREATE_KEY_INFORMATION_V1, REG_OPEN_KEY_INFORMATION_V1,*PREG_CREATE_KEY_INFORMATION_V1, *PREG_OPEN_KEY_INFORMATION_V1;
+
 typedef struct _REG_PRE_CREATE_KEY_INFORMATION {
   PUNICODE_STRING CompleteName;
 } REG_PRE_CREATE_KEY_INFORMATION, REG_PRE_OPEN_KEY_INFORMATION,*PREG_PRE_CREATE_KEY_INFORMATION, *PREG_PRE_OPEN_KEY_INFORMATION;;
@@ -3422,6 +3489,84 @@ typedef struct _REG_KEY_HANDLE_CLOSE_INFORMATION {
   PVOID ObjectContext;
   PVOID Reserved;
 } REG_KEY_HANDLE_CLOSE_INFORMATION, *PREG_KEY_HANDLE_CLOSE_INFORMATION;
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+typedef struct _REG_LOAD_KEY_INFORMATION {
+  PVOID Object;
+  PUNICODE_STRING KeyName;
+  PUNICODE_STRING SourceFile;
+  ULONG Flags;
+  PVOID TrustClassObject;
+  PVOID UserEvent;
+  ACCESS_MASK DesiredAccess;
+  PHANDLE RootHandle;
+  PVOID CallContext;
+  PVOID ObjectContext;
+  PVOID Reserved;
+} REG_LOAD_KEY_INFORMATION, *PREG_LOAD_KEY_INFORMATION;
+
+typedef struct _REG_UNLOAD_KEY_INFORMATION {
+  PVOID Object;
+  PVOID UserEvent;
+  PVOID CallContext;
+  PVOID ObjectContext;
+  PVOID Reserved;
+} REG_UNLOAD_KEY_INFORMATION, *PREG_UNLOAD_KEY_INFORMATION;
+
+typedef struct _REG_CALLBACK_CONTEXT_CLEANUP_INFORMATION {
+  PVOID Object;
+  PVOID ObjectContext;
+  PVOID Reserved;
+} REG_CALLBACK_CONTEXT_CLEANUP_INFORMATION, *PREG_CALLBACK_CONTEXT_CLEANUP_INFORMATION;
+
+typedef struct _REG_QUERY_KEY_SECURITY_INFORMATION {
+  PVOID Object;
+  PSECURITY_INFORMATION SecurityInformation;
+  PSECURITY_DESCRIPTOR SecurityDescriptor;
+  PULONG Length;
+  PVOID CallContext;
+  PVOID ObjectContext;
+  PVOID Reserved;
+} REG_QUERY_KEY_SECURITY_INFORMATION, *PREG_QUERY_KEY_SECURITY_INFORMATION;
+
+typedef struct _REG_SET_KEY_SECURITY_INFORMATION {
+  PVOID Object;
+  PSECURITY_INFORMATION SecurityInformation;
+  PSECURITY_DESCRIPTOR SecurityDescriptor;
+  PVOID CallContext;
+  PVOID ObjectContext;
+  PVOID Reserved;
+} REG_SET_KEY_SECURITY_INFORMATION, *PREG_SET_KEY_SECURITY_INFORMATION;
+
+typedef struct _REG_RESTORE_KEY_INFORMATION {
+  PVOID Object;
+  HANDLE FileHandle;
+  ULONG Flags;
+  PVOID CallContext;
+  PVOID ObjectContext;
+  PVOID Reserved;
+} REG_RESTORE_KEY_INFORMATION, *PREG_RESTORE_KEY_INFORMATION;
+
+typedef struct _REG_SAVE_KEY_INFORMATION {
+  PVOID Object;
+  HANDLE FileHandle;
+  ULONG Format;
+  PVOID CallContext;
+  PVOID ObjectContext;
+  PVOID Reserved;
+} REG_SAVE_KEY_INFORMATION, *PREG_SAVE_KEY_INFORMATION;
+
+typedef struct _REG_REPLACE_KEY_INFORMATION {
+  PVOID Object;
+  PUNICODE_STRING OldFileName;
+  PUNICODE_STRING NewFileName;
+  PVOID CallContext;
+  PVOID ObjectContext;
+  PVOID Reserved;
+} REG_REPLACE_KEY_INFORMATION, *PREG_REPLACE_KEY_INFORMATION;
+
+#endif /* NTDDI_VERSION >= NTDDI_VISTA */
 
 #define SERVICE_KERNEL_DRIVER          0x00000001
 #define SERVICE_FILE_SYSTEM_DRIVER     0x00000002
@@ -3493,6 +3638,29 @@ typedef enum _CM_ERROR_CONTROL_TYPE {
 /******************************************************************************
  *                         I/O Manager Types                                  *
  ******************************************************************************/
+
+#define WDM_MAJORVERSION        0x06
+#define WDM_MINORVERSION        0x00
+
+#if defined(_WIN64)
+
+#ifndef USE_DMA_MACROS
+#define USE_DMA_MACROS
+#endif
+
+#ifndef NO_LEGACY_DRIVERS
+#define NO_LEGACY_DRIVERS
+#endif
+
+#endif /* defined(_WIN64) */
+
+#define STATUS_CONTINUE_COMPLETION      STATUS_SUCCESS
+
+#define CONNECT_FULLY_SPECIFIED         0x1
+#define CONNECT_LINE_BASED              0x2
+#define CONNECT_MESSAGE_BASED           0x3
+#define CONNECT_FULLY_SPECIFIED_GROUP   0x4
+#define CONNECT_CURRENT_VERSION         0x4
 
 /* PCI_COMMON_CONFIG.Command */
 #define PCI_ENABLE_IO_SPACE               0x0001
@@ -3836,11 +4004,12 @@ typedef enum _IO_ALLOCATION_ACTION {
 } IO_ALLOCATION_ACTION, *PIO_ALLOCATION_ACTION;
 
 typedef IO_ALLOCATION_ACTION
-(NTAPI *PDRIVER_CONTROL)(
+(NTAPI DRIVER_CONTROL)(
   IN struct _DEVICE_OBJECT *DeviceObject,
   IN struct _IRP *Irp,
   IN PVOID MapRegisterBase,
   IN PVOID Context);
+typedef DRIVER_CONTROL *PDRIVER_CONTROL;
 
 typedef struct _WAIT_CONTEXT_BLOCK {
   KDEVICE_QUEUE_ENTRY WaitQueueEntry;
@@ -3883,6 +4052,153 @@ typedef struct _DEVICE_OBJECT {
   PVOID Reserved;
 } DEVICE_OBJECT, *PDEVICE_OBJECT;
 
+typedef enum _IO_SESSION_STATE {
+  IoSessionStateCreated = 1,
+  IoSessionStateInitialized,
+  IoSessionStateConnected,
+  IoSessionStateDisconnected,
+  IoSessionStateDisconnectedLoggedOn,
+  IoSessionStateLoggedOn,
+  IoSessionStateLoggedOff,
+  IoSessionStateTerminated,
+  IoSessionStateMax
+} IO_SESSION_STATE, *PIO_SESSION_STATE;
+
+typedef enum _IO_COMPLETION_ROUTINE_RESULT {
+  ContinueCompletion = STATUS_CONTINUE_COMPLETION,
+  StopCompletion = STATUS_MORE_PROCESSING_REQUIRED
+} IO_COMPLETION_ROUTINE_RESULT, *PIO_COMPLETION_ROUTINE_RESULT;
+
+typedef struct _IO_INTERRUPT_MESSAGE_INFO_ENTRY {
+  PHYSICAL_ADDRESS MessageAddress;
+  KAFFINITY TargetProcessorSet;
+  PKINTERRUPT InterruptObject;
+  ULONG MessageData;
+  ULONG Vector;
+  KIRQL Irql;
+  KINTERRUPT_MODE Mode;
+  KINTERRUPT_POLARITY Polarity;
+} IO_INTERRUPT_MESSAGE_INFO_ENTRY, *PIO_INTERRUPT_MESSAGE_INFO_ENTRY;
+
+typedef struct _IO_INTERRUPT_MESSAGE_INFO {
+  KIRQL UnifiedIrql;
+  ULONG MessageCount;
+  IO_INTERRUPT_MESSAGE_INFO_ENTRY MessageInfo[1];
+} IO_INTERRUPT_MESSAGE_INFO, *PIO_INTERRUPT_MESSAGE_INFO;
+
+typedef struct _IO_CONNECT_INTERRUPT_FULLY_SPECIFIED_PARAMETERS {
+  IN PDEVICE_OBJECT PhysicalDeviceObject;
+  OUT PKINTERRUPT *InterruptObject;
+  IN PKSERVICE_ROUTINE ServiceRoutine;
+  IN PVOID ServiceContext;
+  IN PKSPIN_LOCK SpinLock OPTIONAL;
+  IN KIRQL SynchronizeIrql;
+  IN BOOLEAN FloatingSave;
+  IN BOOLEAN ShareVector;
+  IN ULONG Vector;
+  IN KIRQL Irql;
+  IN KINTERRUPT_MODE InterruptMode;
+  IN KAFFINITY ProcessorEnableMask;
+  IN USHORT Group;
+} IO_CONNECT_INTERRUPT_FULLY_SPECIFIED_PARAMETERS, *PIO_CONNECT_INTERRUPT_FULLY_SPECIFIED_PARAMETERS;
+
+typedef struct _IO_CONNECT_INTERRUPT_LINE_BASED_PARAMETERS {
+  IN PDEVICE_OBJECT PhysicalDeviceObject;
+  OUT PKINTERRUPT *InterruptObject;
+  IN PKSERVICE_ROUTINE ServiceRoutine;
+  IN PVOID ServiceContext;
+  IN PKSPIN_LOCK SpinLock OPTIONAL;
+  IN KIRQL SynchronizeIrql OPTIONAL;
+  IN BOOLEAN FloatingSave;
+} IO_CONNECT_INTERRUPT_LINE_BASED_PARAMETERS, *PIO_CONNECT_INTERRUPT_LINE_BASED_PARAMETERS;
+
+typedef struct _IO_CONNECT_INTERRUPT_MESSAGE_BASED_PARAMETERS {
+  IN PDEVICE_OBJECT PhysicalDeviceObject;
+  union {
+    OUT PVOID *Generic;
+    OUT PIO_INTERRUPT_MESSAGE_INFO *InterruptMessageTable;
+    OUT PKINTERRUPT *InterruptObject;
+  } ConnectionContext;
+  IN PKMESSAGE_SERVICE_ROUTINE MessageServiceRoutine;
+  IN PVOID ServiceContext;
+  IN PKSPIN_LOCK SpinLock OPTIONAL;
+  IN KIRQL SynchronizeIrql OPTIONAL;
+  IN BOOLEAN FloatingSave;
+  IN PKSERVICE_ROUTINE FallBackServiceRoutine OPTIONAL;
+} IO_CONNECT_INTERRUPT_MESSAGE_BASED_PARAMETERS, *PIO_CONNECT_INTERRUPT_MESSAGE_BASED_PARAMETERS;
+
+typedef struct _IO_CONNECT_INTERRUPT_PARAMETERS {
+  IN OUT ULONG Version;
+  union {
+    IO_CONNECT_INTERRUPT_FULLY_SPECIFIED_PARAMETERS FullySpecified;
+    IO_CONNECT_INTERRUPT_LINE_BASED_PARAMETERS LineBased;
+    IO_CONNECT_INTERRUPT_MESSAGE_BASED_PARAMETERS MessageBased;
+  };
+} IO_CONNECT_INTERRUPT_PARAMETERS, *PIO_CONNECT_INTERRUPT_PARAMETERS;
+
+typedef struct _IO_DISCONNECT_INTERRUPT_PARAMETERS {
+  IN ULONG Version;
+  union {
+    IN PVOID Generic;
+    IN PKINTERRUPT InterruptObject;
+    IN PIO_INTERRUPT_MESSAGE_INFO InterruptMessageTable;
+  } ConnectionContext;
+} IO_DISCONNECT_INTERRUPT_PARAMETERS, *PIO_DISCONNECT_INTERRUPT_PARAMETERS;
+
+typedef enum _IO_ACCESS_TYPE {
+  ReadAccess,
+  WriteAccess,
+  ModifyAccess
+} IO_ACCESS_TYPE;
+
+typedef enum _IO_ACCESS_MODE {
+  SequentialAccess,
+  RandomAccess
+} IO_ACCESS_MODE;
+
+typedef enum _IO_CONTAINER_NOTIFICATION_CLASS {
+  IoSessionStateNotification,
+  IoMaxContainerNotificationClass
+} IO_CONTAINER_NOTIFICATION_CLASS;
+
+typedef struct _IO_SESSION_STATE_NOTIFICATION {
+  ULONG Size;
+  ULONG Flags;
+  PVOID IoObject;
+  ULONG EventMask;
+  PVOID Context;
+} IO_SESSION_STATE_NOTIFICATION, *PIO_SESSION_STATE_NOTIFICATION;
+
+typedef enum _IO_CONTAINER_INFORMATION_CLASS {
+  IoSessionStateInformation,
+  IoMaxContainerInformationClass
+} IO_CONTAINER_INFORMATION_CLASS;
+
+typedef struct _IO_SESSION_STATE_INFORMATION {
+  ULONG SessionId;
+  IO_SESSION_STATE SessionState;
+  BOOLEAN LocalSession;
+} IO_SESSION_STATE_INFORMATION, *PIO_SESSION_STATE_INFORMATION;
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+
+typedef NTSTATUS
+(NTAPI *PIO_CONTAINER_NOTIFICATION_FUNCTION)(
+  VOID);
+
+typedef NTSTATUS
+(NTAPI IO_SESSION_NOTIFICATION_FUNCTION)(
+  IN PVOID SessionObject,
+  IN PVOID IoObject,
+  IN ULONG Event,
+  IN PVOID Context,
+  IN PVOID NotificationPayload,
+  IN ULONG PayloadLength);
+
+typedef IO_SESSION_NOTIFICATION_FUNCTION *PIO_SESSION_NOTIFICATION_FUNCTION;
+
+#endif
+
 typedef struct _IO_REMOVE_LOCK_TRACKING_BLOCK * PIO_REMOVE_LOCK_TRACKING_BLOCK;
 
 typedef struct _IO_REMOVE_LOCK_COMMON_BLOCK {
@@ -3919,6 +4235,13 @@ typedef VOID
   IN PDEVICE_OBJECT DeviceObject,
   IN PVOID Context);
 typedef IO_WORKITEM_ROUTINE *PIO_WORKITEM_ROUTINE;
+
+typedef VOID
+(NTAPI IO_WORKITEM_ROUTINE_EX)(
+  IN PVOID IoObject,
+  IN PVOID Context OPTIONAL,
+  IN PIO_WORKITEM IoWorkItem);
+typedef IO_WORKITEM_ROUTINE_EX *PIO_WORKITEM_ROUTINE_EX;
 
 typedef struct _SHARE_ACCESS {
   ULONG OpenCount;
@@ -4082,18 +4405,6 @@ typedef enum _IO_SESSION_EVENT {
   IoSessionEventMax
 } IO_SESSION_EVENT, *PIO_SESSION_EVENT;
 
-typedef enum _IO_SESSION_STATE {
-  IoSessionStateCreated = 1,
-  IoSessionStateInitialized,
-  IoSessionStateConnected,
-  IoSessionStateDisconnected,
-  IoSessionStateDisconnectedLoggedOn,
-  IoSessionStateLoggedOn,
-  IoSessionStateLoggedOff,
-  IoSessionStateTerminated,
-  IoSessionStateMax
-} IO_SESSION_STATE, *PIO_SESSION_STATE;
-
 #define IO_SESSION_STATE_ALL_EVENTS        0xffffffff
 #define IO_SESSION_STATE_CREATION_EVENT    0x00000001
 #define IO_SESSION_STATE_TERMINATION_EVENT 0x00000002
@@ -4110,11 +4421,6 @@ typedef struct _IO_SESSION_CONNECT_INFO {
   ULONG SessionId;
   BOOLEAN LocalSession;
 } IO_SESSION_CONNECT_INFO, *PIO_SESSION_CONNECT_INFO;
-
-typedef VOID
-(NTAPI *WMI_NOTIFICATION_CALLBACK)(
-  PVOID Wnode,
-  PVOID Context);
 
 #define EVENT_INCREMENT                   1
 #define IO_NO_INCREMENT                   0
@@ -4150,6 +4456,38 @@ typedef struct _BOOTDISK_INFORMATION_EX {
   BOOLEAN BootDeviceIsGpt;
   BOOLEAN SystemDeviceIsGpt;
 } BOOTDISK_INFORMATION_EX, *PBOOTDISK_INFORMATION_EX;
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+
+typedef struct _LOADER_PARTITION_INFORMATION_EX {
+  ULONG PartitionStyle;
+  ULONG PartitionNumber;
+  union {
+    ULONG Signature;
+    GUID DeviceId;
+  };
+  ULONG Flags;
+} LOADER_PARTITION_INFORMATION_EX, *PLOADER_PARTITION_INFORMATION_EX;
+
+typedef struct _BOOTDISK_INFORMATION_LITE {
+  ULONG NumberEntries;
+  LOADER_PARTITION_INFORMATION_EX Entries[1];
+} BOOTDISK_INFORMATION_LITE, *PBOOTDISK_INFORMATION_LITE;
+
+#else
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+typedef struct _BOOTDISK_INFORMATION_LITE {
+  ULONG BootDeviceSignature;
+  ULONG SystemDeviceSignature;
+  GUID BootDeviceGuid;
+  GUID SystemDeviceGuid;
+  BOOLEAN BootDeviceIsGpt;
+  BOOLEAN SystemDeviceIsGpt;
+} BOOTDISK_INFORMATION_LITE, *PBOOTDISK_INFORMATION_LITE;
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
 #include <pshpack1.h>
 
@@ -4684,7 +5022,7 @@ typedef struct _FILE_SFIO_VOLUME_INFORMATION {
 #define FM_LOCK_WAITER_INC      (0x4)
 
 typedef BOOLEAN
-(NTAPI *PFAST_IO_CHECK_IF_POSSIBLE)(
+(NTAPI FAST_IO_CHECK_IF_POSSIBLE)(
   IN struct _FILE_OBJECT *FileObject,
   IN PLARGE_INTEGER FileOffset,
   IN ULONG Length,
@@ -4693,9 +5031,10 @@ typedef BOOLEAN
   IN BOOLEAN CheckForReadOperation,
   OUT PIO_STATUS_BLOCK IoStatus,
   IN struct _DEVICE_OBJECT *DeviceObject);
+typedef FAST_IO_CHECK_IF_POSSIBLE *PFAST_IO_CHECK_IF_POSSIBLE;
 
 typedef BOOLEAN
-(NTAPI *PFAST_IO_READ)(
+(NTAPI FAST_IO_READ)(
   IN struct _FILE_OBJECT *FileObject,
   IN PLARGE_INTEGER FileOffset,
   IN ULONG Length,
@@ -4704,9 +5043,10 @@ typedef BOOLEAN
   OUT PVOID Buffer,
   OUT PIO_STATUS_BLOCK IoStatus,
   IN struct _DEVICE_OBJECT *DeviceObject);
+typedef FAST_IO_READ *PFAST_IO_READ;
 
 typedef BOOLEAN
-(NTAPI *PFAST_IO_WRITE)(
+(NTAPI FAST_IO_WRITE)(
   IN struct _FILE_OBJECT *FileObject,
   IN PLARGE_INTEGER FileOffset,
   IN ULONG Length,
@@ -4715,25 +5055,28 @@ typedef BOOLEAN
   IN PVOID Buffer,
   OUT PIO_STATUS_BLOCK IoStatus,
   IN struct _DEVICE_OBJECT *DeviceObject);
+typedef FAST_IO_WRITE *PFAST_IO_WRITE;
 
 typedef BOOLEAN
-(NTAPI *PFAST_IO_QUERY_BASIC_INFO)(
+(NTAPI FAST_IO_QUERY_BASIC_INFO)(
   IN struct _FILE_OBJECT *FileObject,
   IN BOOLEAN Wait,
   OUT PFILE_BASIC_INFORMATION Buffer,
   OUT PIO_STATUS_BLOCK IoStatus,
   IN struct _DEVICE_OBJECT *DeviceObject);
+typedef FAST_IO_QUERY_BASIC_INFO *PFAST_IO_QUERY_BASIC_INFO;
 
 typedef BOOLEAN
-(NTAPI *PFAST_IO_QUERY_STANDARD_INFO)(
+(NTAPI FAST_IO_QUERY_STANDARD_INFO)(
   IN struct _FILE_OBJECT *FileObject,
   IN BOOLEAN Wait,
   OUT PFILE_STANDARD_INFORMATION Buffer,
   OUT PIO_STATUS_BLOCK IoStatus,
   IN struct _DEVICE_OBJECT *DeviceObject);
+typedef FAST_IO_QUERY_STANDARD_INFO *PFAST_IO_QUERY_STANDARD_INFO;
 
 typedef BOOLEAN
-(NTAPI *PFAST_IO_LOCK)(
+(NTAPI FAST_IO_LOCK)(
   IN struct _FILE_OBJECT *FileObject,
   IN PLARGE_INTEGER FileOffset,
   IN PLARGE_INTEGER Length,
@@ -4743,9 +5086,10 @@ typedef BOOLEAN
   BOOLEAN ExclusiveLock,
   OUT PIO_STATUS_BLOCK IoStatus,
   IN struct _DEVICE_OBJECT *DeviceObject);
+typedef FAST_IO_LOCK *PFAST_IO_LOCK;
 
 typedef BOOLEAN
-(NTAPI *PFAST_IO_UNLOCK_SINGLE)(
+(NTAPI FAST_IO_UNLOCK_SINGLE)(
   IN struct _FILE_OBJECT *FileObject,
   IN PLARGE_INTEGER FileOffset,
   IN PLARGE_INTEGER Length,
@@ -4753,24 +5097,27 @@ typedef BOOLEAN
   ULONG Key,
   OUT PIO_STATUS_BLOCK IoStatus,
   IN struct _DEVICE_OBJECT *DeviceObject);
+typedef FAST_IO_UNLOCK_SINGLE *PFAST_IO_UNLOCK_SINGLE;
 
 typedef BOOLEAN
-(NTAPI *PFAST_IO_UNLOCK_ALL)(
+(NTAPI FAST_IO_UNLOCK_ALL)(
   IN struct _FILE_OBJECT *FileObject,
   PEPROCESS ProcessId,
   OUT PIO_STATUS_BLOCK IoStatus,
   IN struct _DEVICE_OBJECT *DeviceObject);
+typedef FAST_IO_UNLOCK_ALL *PFAST_IO_UNLOCK_ALL;
 
 typedef BOOLEAN
-(NTAPI *PFAST_IO_UNLOCK_ALL_BY_KEY)(
+(NTAPI FAST_IO_UNLOCK_ALL_BY_KEY)(
   IN struct _FILE_OBJECT *FileObject,
   PVOID ProcessId,
   ULONG Key,
   OUT PIO_STATUS_BLOCK IoStatus,
   IN struct _DEVICE_OBJECT *DeviceObject);
+typedef FAST_IO_UNLOCK_ALL_BY_KEY *PFAST_IO_UNLOCK_ALL_BY_KEY;
 
 typedef BOOLEAN
-(NTAPI *PFAST_IO_DEVICE_CONTROL)(
+(NTAPI FAST_IO_DEVICE_CONTROL)(
   IN struct _FILE_OBJECT *FileObject,
   IN BOOLEAN Wait,
   IN PVOID InputBuffer OPTIONAL,
@@ -4780,37 +5127,43 @@ typedef BOOLEAN
   IN ULONG IoControlCode,
   OUT PIO_STATUS_BLOCK IoStatus,
   IN struct _DEVICE_OBJECT *DeviceObject);
+typedef FAST_IO_DEVICE_CONTROL *PFAST_IO_DEVICE_CONTROL;
 
 typedef VOID
-(NTAPI *PFAST_IO_ACQUIRE_FILE)(
+(NTAPI FAST_IO_ACQUIRE_FILE)(
   IN struct _FILE_OBJECT *FileObject);
+typedef FAST_IO_ACQUIRE_FILE *PFAST_IO_ACQUIRE_FILE;
 
 typedef VOID
-(NTAPI *PFAST_IO_RELEASE_FILE)(
+(NTAPI FAST_IO_RELEASE_FILE)(
   IN struct _FILE_OBJECT *FileObject);
+typedef FAST_IO_RELEASE_FILE *PFAST_IO_RELEASE_FILE;
 
 typedef VOID
-(NTAPI *PFAST_IO_DETACH_DEVICE)(
+(NTAPI FAST_IO_DETACH_DEVICE)(
   IN struct _DEVICE_OBJECT *SourceDevice,
   IN struct _DEVICE_OBJECT *TargetDevice);
+typedef FAST_IO_DETACH_DEVICE *PFAST_IO_DETACH_DEVICE;
 
 typedef BOOLEAN
-(NTAPI *PFAST_IO_QUERY_NETWORK_OPEN_INFO)(
+(NTAPI FAST_IO_QUERY_NETWORK_OPEN_INFO)(
   IN struct _FILE_OBJECT *FileObject,
   IN BOOLEAN Wait,
   OUT struct _FILE_NETWORK_OPEN_INFORMATION *Buffer,
   OUT struct _IO_STATUS_BLOCK *IoStatus,
   IN struct _DEVICE_OBJECT *DeviceObject);
+typedef FAST_IO_QUERY_NETWORK_OPEN_INFO *PFAST_IO_QUERY_NETWORK_OPEN_INFO;
 
 typedef NTSTATUS
-(NTAPI *PFAST_IO_ACQUIRE_FOR_MOD_WRITE)(
+(NTAPI FAST_IO_ACQUIRE_FOR_MOD_WRITE)(
   IN struct _FILE_OBJECT *FileObject,
   IN PLARGE_INTEGER EndingOffset,
   OUT struct _ERESOURCE **ResourceToRelease,
   IN struct _DEVICE_OBJECT *DeviceObject);
+typedef FAST_IO_ACQUIRE_FOR_MOD_WRITE *PFAST_IO_ACQUIRE_FOR_MOD_WRITE;
 
 typedef BOOLEAN
-(NTAPI *PFAST_IO_MDL_READ)(
+(NTAPI FAST_IO_MDL_READ)(
   IN struct _FILE_OBJECT *FileObject,
   IN PLARGE_INTEGER FileOffset,
   IN ULONG Length,
@@ -4818,15 +5171,17 @@ typedef BOOLEAN
   OUT PMDL *MdlChain,
   OUT PIO_STATUS_BLOCK IoStatus,
   IN struct _DEVICE_OBJECT *DeviceObject);
+typedef FAST_IO_MDL_READ *PFAST_IO_MDL_READ;
 
 typedef BOOLEAN
-(NTAPI *PFAST_IO_MDL_READ_COMPLETE)(
+(NTAPI FAST_IO_MDL_READ_COMPLETE)(
   IN struct _FILE_OBJECT *FileObject,
   IN PMDL MdlChain,
   IN struct _DEVICE_OBJECT *DeviceObject);
+typedef FAST_IO_MDL_READ_COMPLETE *PFAST_IO_MDL_READ_COMPLETE;
 
 typedef BOOLEAN
-(NTAPI *PFAST_IO_PREPARE_MDL_WRITE)(
+(NTAPI FAST_IO_PREPARE_MDL_WRITE)(
   IN struct _FILE_OBJECT *FileObject,
   IN PLARGE_INTEGER FileOffset,
   IN ULONG Length,
@@ -4834,16 +5189,18 @@ typedef BOOLEAN
   OUT PMDL *MdlChain,
   OUT PIO_STATUS_BLOCK IoStatus,
   IN struct _DEVICE_OBJECT *DeviceObject);
+typedef FAST_IO_PREPARE_MDL_WRITE *PFAST_IO_PREPARE_MDL_WRITE;
 
 typedef BOOLEAN
-(NTAPI *PFAST_IO_MDL_WRITE_COMPLETE)(
+(NTAPI FAST_IO_MDL_WRITE_COMPLETE)(
   IN struct _FILE_OBJECT *FileObject,
   IN PLARGE_INTEGER FileOffset,
   IN PMDL MdlChain,
   IN struct _DEVICE_OBJECT *DeviceObject);
+typedef FAST_IO_MDL_WRITE_COMPLETE *PFAST_IO_MDL_WRITE_COMPLETE;
 
 typedef BOOLEAN
-(NTAPI *PFAST_IO_READ_COMPRESSED)(
+(NTAPI FAST_IO_READ_COMPRESSED)(
   IN struct _FILE_OBJECT *FileObject,
   IN PLARGE_INTEGER FileOffset,
   IN ULONG Length,
@@ -4854,9 +5211,10 @@ typedef BOOLEAN
   OUT struct _COMPRESSED_DATA_INFO *CompressedDataInfo,
   IN ULONG CompressedDataInfoLength,
   IN struct _DEVICE_OBJECT *DeviceObject);
+typedef FAST_IO_READ_COMPRESSED *PFAST_IO_READ_COMPRESSED;
 
 typedef BOOLEAN
-(NTAPI *PFAST_IO_WRITE_COMPRESSED)(
+(NTAPI FAST_IO_WRITE_COMPRESSED)(
   IN struct _FILE_OBJECT *FileObject,
   IN PLARGE_INTEGER FileOffset,
   IN ULONG Length,
@@ -4867,41 +5225,48 @@ typedef BOOLEAN
   IN struct _COMPRESSED_DATA_INFO *CompressedDataInfo,
   IN ULONG CompressedDataInfoLength,
   IN struct _DEVICE_OBJECT *DeviceObject);
+typedef FAST_IO_WRITE_COMPRESSED *PFAST_IO_WRITE_COMPRESSED;
 
 typedef BOOLEAN
-(NTAPI *PFAST_IO_MDL_READ_COMPLETE_COMPRESSED)(
+(NTAPI FAST_IO_MDL_READ_COMPLETE_COMPRESSED)(
   IN struct _FILE_OBJECT *FileObject,
   IN PMDL MdlChain,
   IN struct _DEVICE_OBJECT *DeviceObject);
+typedef FAST_IO_MDL_READ_COMPLETE_COMPRESSED *PFAST_IO_MDL_READ_COMPLETE_COMPRESSED;
 
 typedef BOOLEAN
-(NTAPI *PFAST_IO_MDL_WRITE_COMPLETE_COMPRESSED)(
+(NTAPI FAST_IO_MDL_WRITE_COMPLETE_COMPRESSED)(
   IN struct _FILE_OBJECT *FileObject,
   IN PLARGE_INTEGER FileOffset,
   IN PMDL MdlChain,
   IN struct _DEVICE_OBJECT *DeviceObject);
+typedef FAST_IO_MDL_WRITE_COMPLETE_COMPRESSED *PFAST_IO_MDL_WRITE_COMPLETE_COMPRESSED;
 
 typedef BOOLEAN
-(NTAPI *PFAST_IO_QUERY_OPEN)(
+(NTAPI FAST_IO_QUERY_OPEN)(
   IN struct _IRP *Irp,
   OUT PFILE_NETWORK_OPEN_INFORMATION NetworkInformation,
   IN struct _DEVICE_OBJECT *DeviceObject);
+typedef FAST_IO_QUERY_OPEN *PFAST_IO_QUERY_OPEN;
 
 typedef NTSTATUS
-(NTAPI *PFAST_IO_RELEASE_FOR_MOD_WRITE)(
+(NTAPI FAST_IO_RELEASE_FOR_MOD_WRITE)(
   IN struct _FILE_OBJECT *FileObject,
   IN struct _ERESOURCE *ResourceToRelease,
   IN struct _DEVICE_OBJECT *DeviceObject);
+typedef FAST_IO_RELEASE_FOR_MOD_WRITE *PFAST_IO_RELEASE_FOR_MOD_WRITE;
 
 typedef NTSTATUS
-(NTAPI *PFAST_IO_ACQUIRE_FOR_CCFLUSH)(
+(NTAPI FAST_IO_ACQUIRE_FOR_CCFLUSH)(
   IN struct _FILE_OBJECT *FileObject,
   IN struct _DEVICE_OBJECT *DeviceObject);
+typedef FAST_IO_ACQUIRE_FOR_CCFLUSH *PFAST_IO_ACQUIRE_FOR_CCFLUSH;
 
 typedef NTSTATUS
-(NTAPI *PFAST_IO_RELEASE_FOR_CCFLUSH) (
+(NTAPI FAST_IO_RELEASE_FOR_CCFLUSH)(
   IN struct _FILE_OBJECT *FileObject,
   IN struct _DEVICE_OBJECT *DeviceObject);
+typedef FAST_IO_RELEASE_FOR_CCFLUSH *PFAST_IO_RELEASE_FOR_CCFLUSH;
 
 typedef struct _FAST_IO_DISPATCH {
   ULONG SizeOfFastIoDispatch;
@@ -4975,6 +5340,7 @@ typedef struct _IO_COMPLETION_CONTEXT {
 #define FO_SKIP_COMPLETION_PORT      0x02000000
 #define FO_SKIP_SET_EVENT            0x04000000
 #define FO_SKIP_SET_FAST_IO          0x08000000
+#define FO_FLAGS_VALID_ONLY_DURING_CREATE FO_DISALLOW_EXCLUSIVE
 
 /* VPB.Flags */
 #define VPB_MOUNTED                       0x0001
@@ -4989,12 +5355,18 @@ typedef struct _IO_COMPLETION_CONTEXT {
 #define SL_FORCE_ACCESS_CHECK             0x01
 #define SL_OPEN_PAGING_FILE               0x02
 #define SL_OPEN_TARGET_DIRECTORY          0x04
+#define SL_STOP_ON_SYMLINK                0x08
 #define SL_CASE_SENSITIVE                 0x80
 
 #define SL_KEY_SPECIFIED                  0x01
 #define SL_OVERRIDE_VERIFY_VOLUME         0x02
 #define SL_WRITE_THROUGH                  0x04
 #define SL_FT_SEQUENTIAL_WRITE            0x08
+#define SL_FORCE_DIRECT_WRITE             0x10
+#define SL_REALTIME_STREAM                0x20
+
+#define SL_READ_ACCESS_GRANTED            0x01
+#define SL_WRITE_ACCESS_GRANTED           0x04
 
 #define SL_FAIL_IMMEDIATELY               0x01
 #define SL_EXCLUSIVE_LOCK                 0x02
@@ -5099,6 +5471,9 @@ typedef struct _IO_COMPLETION_CONTEXT {
 #define IRP_MN_QUERY_BUS_INFORMATION        0x15
 #define IRP_MN_DEVICE_USAGE_NOTIFICATION    0x16
 #define IRP_MN_SURPRISE_REMOVAL             0x17
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+#define IRP_MN_DEVICE_ENUMERATED            0x19
+#endif
 
 #define IRP_MN_WAIT_WAKE                  0x00
 #define IRP_MN_POWER_SEQUENCE             0x01
@@ -5635,11 +6010,12 @@ typedef NTSTATUS
 typedef IO_COMPLETION_ROUTINE *PIO_COMPLETION_ROUTINE;
 
 typedef VOID
-(NTAPI *PIO_DPC_ROUTINE)(
+(NTAPI IO_DPC_ROUTINE)(
   IN struct _KDPC *Dpc,
   IN struct _DEVICE_OBJECT *DeviceObject,
   IN struct _IRP *Irp,
   IN PVOID Context);
+typedef IO_DPC_ROUTINE *PIO_DPC_ROUTINE;
 
 typedef NTSTATUS
 (NTAPI *PMM_DLL_INITIALIZE)(
@@ -5650,9 +6026,10 @@ typedef NTSTATUS
   VOID);
 
 typedef VOID
-(NTAPI *PIO_TIMER_ROUTINE)(
+(NTAPI IO_TIMER_ROUTINE)(
   IN struct _DEVICE_OBJECT *DeviceObject,
   IN PVOID Context);
+typedef IO_TIMER_ROUTINE *PIO_TIMER_ROUTINE;
 
 typedef struct _IO_SECURITY_CONTEXT {
   PSECURITY_QUALITY_OF_SERVICE SecurityQos;
@@ -5673,6 +6050,13 @@ typedef VOID
 (NTAPI *PIO_CSQ_INSERT_IRP)(
   IN struct _IO_CSQ *Csq,
   IN PIRP Irp);
+
+typedef NTSTATUS
+(NTAPI IO_CSQ_INSERT_IRP_EX)(
+  IN struct _IO_CSQ *Csq,
+  IN PIRP Irp,
+  IN PVOID InsertContext);
+typedef IO_CSQ_INSERT_IRP_EX *PIO_CSQ_INSERT_IRP_EX;
 
 typedef VOID
 (NTAPI *PIO_CSQ_REMOVE_IRP)(
@@ -6120,6 +6504,21 @@ typedef struct _IO_STACK_LOCATION {
    SYNCHRONIZE)
 
 /* end winnt.h */
+
+#define WMIREG_ACTION_REGISTER      1
+#define WMIREG_ACTION_DEREGISTER    2
+#define WMIREG_ACTION_REREGISTER    3
+#define WMIREG_ACTION_UPDATE_GUIDS  4
+#define WMIREG_ACTION_BLOCK_IRPS    5
+
+#define WMIREGISTER                 0
+#define WMIUPDATE                   1
+
+typedef VOID
+(NTAPI FWMI_NOTIFICATION_CALLBACK)(
+  PVOID Wnode,
+  PVOID Context);
+typedef FWMI_NOTIFICATION_CALLBACK *WMI_NOTIFICATION_CALLBACK;
 
 /******************************************************************************
  *                            Object Manager Types                            *
@@ -9039,6 +9438,9 @@ KeFlushWriteBuffer(VOID);
   ((ULONG) ((((ULONG_PTR) (_Va) & (PAGE_SIZE - 1)) \
     + (_Size) + (PAGE_SIZE - 1)) >> PAGE_SHIFT))
 
+#define COMPUTE_PAGES_SPANNED(Va, Size) \
+    ADDRESS_AND_SIZE_TO_SPAN_PAGES(Va,Size)
+
 /*
  * ULONG
  * MmGetMdlByteCount(
@@ -9054,6 +9456,8 @@ KeFlushWriteBuffer(VOID);
  */
 #define MmGetMdlByteOffset(_Mdl) \
   ((_Mdl)->ByteOffset)
+
+#define MmGetMdlBaseVa(Mdl) ((Mdl)->StartVa)
 
 /*
  * PPFN_NUMBER
@@ -9303,6 +9707,17 @@ MmUnmapLockedPages(
   IN PVOID BaseAddress,
   IN PMDL MemoryDescriptorList);
 
+NTKERNELAPI
+PVOID
+NTAPI
+MmAllocateContiguousMemorySpecifyCacheNode(
+  IN SIZE_T NumberOfBytes,
+  IN PHYSICAL_ADDRESS LowestAcceptableAddress,
+  IN PHYSICAL_ADDRESS HighestAcceptableAddress,
+  IN PHYSICAL_ADDRESS BoundaryAddressMultiple OPTIONAL,
+  IN MEMORY_CACHING_TYPE CacheType,
+  IN NODE_REQUIREMENT PreferredNode);
+
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
@@ -9358,7 +9773,23 @@ MmUnmapReservedMapping(
   IN ULONG PoolTag,
   IN PMDL MemoryDescriptorList);
 
+NTKERNELAPI
+NTSTATUS
+NTAPI
+MmAddVerifierThunks(
+  IN PVOID ThunkBuffer,
+  IN ULONG ThunkBufferSize);
+
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
+
+#if (NTDDI_VERSION >= NTDDI_WS03)
+NTKERNELAPI
+LOGICAL
+NTAPI
+MmIsIoSpaceActive(
+  IN PHYSICAL_ADDRESS StartAddress,
+  IN SIZE_T NumberOfBytes);
+#endif
 
 #if (NTDDI_VERSION >= NTDDI_WS03SP1)
 NTKERNELAPI
@@ -9371,6 +9802,14 @@ MmAllocatePagesForMdlEx(
   IN SIZE_T TotalBytes,
   IN MEMORY_CACHING_TYPE CacheType,
   IN ULONG Flags);
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+NTKERNELAPI
+LOGICAL
+NTAPI
+MmIsDriverVerifyingByAddress(
+  IN PVOID AddressWithinSection);
 #endif
 
 /******************************************************************************
@@ -9525,6 +9964,53 @@ NTAPI
 CmUnRegisterCallback(
   IN LARGE_INTEGER Cookie);
 #endif
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+CmRegisterCallbackEx(
+  PEX_CALLBACK_FUNCTION Function,
+  PCUNICODE_STRING Altitude,
+  PVOID Driver,
+  PVOID Context,
+  PLARGE_INTEGER Cookie,
+  PVOID Reserved);
+
+NTKERNELAPI
+VOID
+NTAPI
+CmGetCallbackVersion(
+  OUT PULONG Major OPTIONAL,
+  OUT PULONG Minor OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+CmSetCallbackObjectContext(
+  IN OUT PVOID Object,
+  IN PLARGE_INTEGER Cookie,
+  IN PVOID NewContext,
+  OUT PVOID *OldContext OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+CmCallbackGetKeyObjectID(
+  IN PLARGE_INTEGER Cookie,
+  IN PVOID Object,
+  OUT PULONG_PTR ObjectID OPTIONAL,
+  OUT PCUNICODE_STRING *ObjectName OPTIONAL);
+
+NTKERNELAPI
+PVOID
+NTAPI
+CmGetBoundTransaction(
+  IN PLARGE_INTEGER Cookie,
+  IN PVOID Object);
+
+#endif // NTDDI_VERSION >= NTDDI_VISTA
 
 
 /******************************************************************************
@@ -10703,13 +11189,30 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 IoWMIWriteEvent(
-  IN PVOID WnodeEventItem);
+  IN OUT PVOID WnodeEventItem);
 
 NTKERNELAPI
 VOID
 NTAPI
 IoWriteErrorLogEntry(
   IN PVOID ElEntry);
+
+NTKERNELAPI
+PIRP
+NTAPI
+IoGetTopLevelIrp(VOID);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoRegisterLastChanceShutdownNotification(
+  IN PDEVICE_OBJECT DeviceObject);
+
+NTKERNELAPI
+VOID
+NTAPI
+IoSetTopLevelIrp(
+  IN PIRP Irp OPTIONAL);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
@@ -10747,7 +11250,7 @@ PIRP
 NTAPI
 IoCsqRemoveNextIrp(
   IN PIO_CSQ Csq,
-  IN PVOID PeekContext);
+  IN PVOID PeekContext OPTIONAL);
 
 NTKERNELAPI
 BOOLEAN
@@ -10874,6 +11377,178 @@ IoWMISetSingleItem(
   IN PVOID ValueBuffer);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
+
+#if (NTDDI_VERSION >= NTDDI_WINXPSP1)
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoValidateDeviceIoControlAccess(
+  IN PIRP Irp,
+  IN ULONG RequiredAccess);
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WS03)
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoCsqInitializeEx(
+  IN PIO_CSQ Csq,
+  IN PIO_CSQ_INSERT_IRP_EX CsqInsertIrp,
+  IN PIO_CSQ_REMOVE_IRP CsqRemoveIrp,
+  IN PIO_CSQ_PEEK_NEXT_IRP CsqPeekNextIrp,
+  IN PIO_CSQ_ACQUIRE_LOCK CsqAcquireLock,
+  IN PIO_CSQ_RELEASE_LOCK CsqReleaseLock,
+  IN PIO_CSQ_COMPLETE_CANCELED_IRP CsqCompleteCanceledIrp);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoCsqInsertIrpEx(
+  IN PIO_CSQ Csq,
+  IN PIRP Irp,
+  IN PIO_CSQ_IRP_CONTEXT Context OPTIONAL,
+  IN PVOID InsertContext OPTIONAL);
+
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoGetBootDiskInformationLite(
+  OUT PBOOTDISK_INFORMATION_LITE *BootDiskInformation);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoCheckShareAccessEx(
+  IN ACCESS_MASK DesiredAccess,
+  IN ULONG DesiredShareAccess,
+  IN OUT PFILE_OBJECT FileObject,
+  IN OUT PSHARE_ACCESS ShareAccess,
+  IN BOOLEAN Update,
+  IN PBOOLEAN WritePermission);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoConnectInterruptEx(
+  IN OUT PIO_CONNECT_INTERRUPT_PARAMETERS Parameters);
+
+NTKERNELAPI
+VOID
+NTAPI
+IoDisconnectInterruptEx(
+  IN PIO_DISCONNECT_INTERRUPT_PARAMETERS Parameters);
+
+LOGICAL
+NTAPI
+IoWithinStackLimits(
+  IN ULONG_PTR RegionStart,
+  IN SIZE_T RegionSize);
+
+NTKERNELAPI
+VOID
+NTAPI
+IoSetShareAccessEx(
+  IN ACCESS_MASK DesiredAccess,
+  IN ULONG DesiredShareAccess,
+  IN OUT PFILE_OBJECT FileObject,
+  OUT PSHARE_ACCESS ShareAccess,
+  IN PBOOLEAN WritePermission);
+
+ULONG
+NTAPI
+IoSizeofWorkItem(VOID);
+
+VOID
+NTAPI
+IoInitializeWorkItem(
+  IN PVOID IoObject,
+  IN PIO_WORKITEM IoWorkItem);
+
+VOID
+NTAPI
+IoUninitializeWorkItem(
+  IN PIO_WORKITEM IoWorkItem);
+
+VOID
+NTAPI
+IoQueueWorkItemEx(
+  IN PIO_WORKITEM IoWorkItem,
+  IN PIO_WORKITEM_ROUTINE_EX WorkerRoutine,
+  IN WORK_QUEUE_TYPE QueueType,
+  IN PVOID Context OPTIONAL);
+
+IO_PRIORITY_HINT
+NTAPI
+IoGetIoPriorityHint(
+  IN PIRP Irp);
+
+NTSTATUS
+NTAPI
+IoSetIoPriorityHint(
+  IN PIRP Irp,
+  IN IO_PRIORITY_HINT PriorityHint);
+
+NTSTATUS
+NTAPI
+IoAllocateSfioStreamIdentifier(
+  IN PFILE_OBJECT FileObject,
+  IN ULONG Length,
+  IN PVOID Signature,
+  OUT PVOID *StreamIdentifier);
+
+PVOID
+NTAPI
+IoGetSfioStreamIdentifier(
+  IN PFILE_OBJECT FileObject,
+  IN PVOID Signature);
+
+NTSTATUS
+NTAPI
+IoFreeSfioStreamIdentifier(
+  IN PFILE_OBJECT FileObject,
+  IN PVOID Signature);
+
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+
+#define IoCallDriverStackSafeDefault(a, b) IoCallDriver(a, b)
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoGetAffinityInterrupt(
+  IN PKINTERRUPT InterruptObject,
+  OUT PGROUP_AFFINITY GroupAffinity);
+
+NTSTATUS
+NTAPI
+IoGetContainerInformation(
+  IN IO_CONTAINER_INFORMATION_CLASS InformationClass,
+  IN PVOID ContainerObject OPTIONAL,
+  IN OUT PVOID Buffer OPTIONAL,
+  IN ULONG BufferLength);
+
+NTSTATUS
+NTAPI
+IoRegisterContainerNotification(
+  IN IO_CONTAINER_NOTIFICATION_CLASS NotificationClass,
+  IN PIO_CONTAINER_NOTIFICATION_FUNCTION CallbackFunction,
+  IN PVOID NotificationInformation OPTIONAL,
+  IN ULONG NotificationInformationLength,
+  OUT PVOID CallbackRegistration);
+
+VOID
+NTAPI
+IoUnregisterContainerNotification(
+  IN PVOID CallbackRegistration);
+
+#endif
 
 #if defined(_WIN64)
 NTKERNELAPI
@@ -11071,7 +11746,7 @@ IoInitializeDpcRequest(
 FORCEINLINE
 VOID
 IoCopyCurrentIrpStackLocationToNext(
-  IN PIRP Irp)
+  IN OUT PIRP Irp)
 {
   PIO_STACK_LOCATION irpSp;
   PIO_STACK_LOCATION nextIrpSp;
@@ -11099,6 +11774,19 @@ IoGetRemainingStackSize(VOID)
   Result = (ULONG_PTR)(&End) - Begin;
   return Result;
 }
+
+#if (NTDDI_VERSION >= NTDDI_WS03)
+VOID
+FORCEINLINE
+IoInitializeThreadedDpcRequest(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PIO_DPC_ROUTINE DpcRoutine)
+{
+  KeInitializeThreadedDpc(&DeviceObject->Dpc,
+                          (PKDEFERRED_ROUTINE) DpcRoutine,
+                          DeviceObject );
+}
+#endif
 
 /******************************************************************************
  *                     Power Management Support Functions                     *
@@ -11468,7 +12156,7 @@ ExFreeToPagedLookasideList(
  * ExGetCurrentResourceThread(
  *     VOID);
  */
-#define ExGetCurrentResourceThread() ((ERESOURCE_THREAD)PsGetCurrentThread())
+#define ExGetCurrentResourceThread() ((ULONG_PTR)PsGetCurrentThread())
 
 #define ExReleaseResource(R) (ExReleaseResourceLite(R))
 
@@ -11515,7 +12203,7 @@ NTKERNELAPI
 BOOLEAN
 NTAPI
 ExAcquireResourceExclusiveLite(
-  IN PERESOURCE Resource,
+  IN OUT PERESOURCE Resource,
   IN BOOLEAN Wait);
 
 NTKERNELAPI
@@ -11529,14 +12217,14 @@ NTKERNELAPI
 BOOLEAN
 NTAPI
 ExAcquireSharedStarveExclusive(
-  IN PERESOURCE Resource,
+  IN OUT PERESOURCE Resource,
   IN BOOLEAN Wait);
 
 NTKERNELAPI
 BOOLEAN
 NTAPI
 ExAcquireSharedWaitForExclusive(
-  IN PERESOURCE Resource,
+  IN OUT PERESOURCE Resource,
   IN BOOLEAN Wait);
 
 NTKERNELAPI
@@ -11590,7 +12278,7 @@ NTKERNELAPI
 VOID
 NTAPI
 ExConvertExclusiveToSharedLite(
-  IN PERESOURCE Resource);
+  IN OUT PERESOURCE Resource);
 
 NTKERNELAPI
 NTSTATUS
@@ -11617,7 +12305,7 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 ExDeleteResourceLite(
-  IN PERESOURCE Resource);
+  IN OUT PERESOURCE Resource);
 
 NTKERNELAPI
 VOID
@@ -11804,8 +12492,8 @@ VOID
 NTAPI
 ExNotifyCallback(
   IN PCALLBACK_OBJECT CallbackObject,
-  IN PVOID Argument1,
-  IN PVOID Argument2);
+  IN PVOID Argument1 OPTIONAL,
+  IN PVOID Argument2 OPTIONAL);
 
 NTKERNELAPI
 VOID
@@ -11827,7 +12515,7 @@ NTAPI
 ExRegisterCallback(
   IN PCALLBACK_OBJECT CallbackObject,
   IN PCALLBACK_FUNCTION CallbackFunction,
-  IN PVOID CallbackContext);
+  IN PVOID CallbackContext OPTIONAL);
 
 NTKERNELAPI
 NTSTATUS
@@ -11839,20 +12527,20 @@ NTKERNELAPI
 VOID
 NTAPI
 ExReleaseResourceForThreadLite(
-  IN PERESOURCE Resource,
+  IN OUT PERESOURCE Resource,
   IN ERESOURCE_THREAD ResourceThreadId);
 
 NTKERNELAPI
 VOID
 FASTCALL
 ExReleaseResourceLite(
-  IN PERESOURCE Resource);
+  IN OUT PERESOURCE Resource);
 
 NTKERNELAPI
 VOID
 NTAPI
 ExSetResourceOwnerPointer(
-  IN PERESOURCE Resource,
+  IN OUT PERESOURCE Resource,
   IN PVOID OwnerPointer);
 
 NTKERNELAPI
@@ -11873,7 +12561,7 @@ NTKERNELAPI
 VOID
 NTAPI
 ExUnregisterCallback(
-  IN PVOID CbRegistration);
+  IN OUT PVOID CbRegistration);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
@@ -11895,7 +12583,7 @@ NTKERNELAPI
 VOID
 FASTCALL
 ExReInitializeRundownProtection(
-  OUT PEX_RUNDOWN_REF RunRef);
+  IN OUT PEX_RUNDOWN_REF RunRef);
 
 NTKERNELAPI
 VOID
@@ -11954,6 +12642,87 @@ NTKERNELAPI
 SIZE_T
 NTAPI
 ExSizeOfRundownProtectionCacheAware(VOID);
+
+NTKERNELAPI
+PVOID
+NTAPI
+ExEnterCriticalRegionAndAcquireResourceShared(
+  IN OUT PERESOURCE Resource);
+
+NTKERNELAPI
+PVOID
+NTAPI
+ExEnterCriticalRegionAndAcquireResourceExclusive(
+  IN OUT PERESOURCE Resource);
+
+NTKERNELAPI
+PVOID
+NTAPI
+ExEnterCriticalRegionAndAcquireSharedWaitForExclusive(
+  IN OUT PERESOURCE Resource);
+
+NTKERNELAPI
+VOID
+FASTCALL
+ExReleaseResourceAndLeaveCriticalRegion(
+  IN OUT PERESOURCE Resource);
+
+NTKERNELAPI
+VOID
+NTAPI
+ExInitializeRundownProtectionCacheAware(
+  OUT PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware,
+  IN SIZE_T RunRefSize);
+
+NTKERNELAPI
+VOID
+NTAPI
+ExFreeCacheAwareRundownProtection(
+  IN OUT PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware);
+
+NTKERNELAPI
+BOOLEAN
+FASTCALL
+ExAcquireRundownProtectionCacheAware(
+  IN OUT PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware);
+
+NTKERNELAPI
+VOID
+FASTCALL
+ExReleaseRundownProtectionCacheAware(
+  IN OUT PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware);
+
+NTKERNELAPI
+BOOLEAN
+FASTCALL
+ExAcquireRundownProtectionCacheAwareEx(
+  IN OUT PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware,
+  IN ULONG Count);
+
+NTKERNELAPI
+VOID
+FASTCALL
+ExReleaseRundownProtectionCacheAwareEx(
+  IN OUT PEX_RUNDOWN_REF_CACHE_AWARE RunRef,
+  IN ULONG Count);
+
+NTKERNELAPI
+VOID
+FASTCALL
+ExWaitForRundownProtectionReleaseCacheAware(
+  IN OUT PEX_RUNDOWN_REF_CACHE_AWARE RunRef);
+
+NTKERNELAPI
+VOID
+FASTCALL
+ExReInitializeRundownProtectionCacheAware(
+  IN OUT PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware);
+
+NTKERNELAPI
+VOID
+FASTCALL
+ExRundownCompletedCacheAware(
+  IN OUT PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WS03SP1) */
 
@@ -12020,6 +12789,20 @@ ExFreeToLookasideListEx(
 }
 
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+
+NTKERNELAPI
+VOID
+NTAPI
+ExSetResourceOwnerPointerEx(
+  IN OUT PERESOURCE Resource,
+  IN PVOID OwnerPointer,
+  IN ULONG Flags);
+
+#define FLAG_OWNER_POINTER_IS_THREAD 0x1
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
 static __inline PVOID
 ExAllocateFromNPagedLookasideList(
@@ -12167,6 +12950,13 @@ PsTerminateSystemThread(
   IN NTSTATUS ExitStatus);
 
 #endif
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PsWrapApcWow64Thread(
+  IN OUT PVOID *ApcContext,
+  IN OUT PVOID *ApcRoutine);
 
 /******************************************************************************
  *                          WMI Library Support Functions                     *
@@ -13859,6 +14649,9 @@ extern ULONG NtGlobalFlag;
 typedef ULONG64 TRACEHANDLE, *PTRACEHANDLE;
 #endif
 
+extern PBOOLEAN Mm64BitPhysicalAddress;
+
+extern PVOID MmBadPointer;
 
 
 #ifdef __cplusplus

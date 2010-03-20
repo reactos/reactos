@@ -78,10 +78,11 @@ typedef VOID
   IN OUT PLOOKASIDE_LIST_EX Lookaside);
 
 typedef VOID
-(NTAPI *PCALLBACK_FUNCTION)(
-  IN PVOID CallbackContext,
-  IN PVOID Argument1,
-  IN PVOID Argument2);
+(NTAPI CALLBACK_FUNCTION)(
+  IN PVOID CallbackContext OPTIONAL,
+  IN PVOID Argument1 OPTIONAL,
+  IN PVOID Argument2 OPTIONAL);
+typedef CALLBACK_FUNCTION *PCALLBACK_FUNCTION;
 
 #define GENERAL_LOOKASIDE_LAYOUT                \
     union {                                     \

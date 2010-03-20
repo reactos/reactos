@@ -200,7 +200,7 @@ ExFreeToPagedLookasideList(
  * ExGetCurrentResourceThread(
  *     VOID);
  */
-#define ExGetCurrentResourceThread() ((ERESOURCE_THREAD)PsGetCurrentThread())
+#define ExGetCurrentResourceThread() ((ULONG_PTR)PsGetCurrentThread())
 
 #define ExReleaseResource(R) (ExReleaseResourceLite(R))
 
@@ -247,7 +247,7 @@ NTKERNELAPI
 BOOLEAN
 NTAPI
 ExAcquireResourceExclusiveLite(
-  IN PERESOURCE Resource,
+  IN OUT PERESOURCE Resource,
   IN BOOLEAN Wait);
 
 NTKERNELAPI
@@ -261,14 +261,14 @@ NTKERNELAPI
 BOOLEAN
 NTAPI
 ExAcquireSharedStarveExclusive(
-  IN PERESOURCE Resource,
+  IN OUT PERESOURCE Resource,
   IN BOOLEAN Wait);
 
 NTKERNELAPI
 BOOLEAN
 NTAPI
 ExAcquireSharedWaitForExclusive(
-  IN PERESOURCE Resource,
+  IN OUT PERESOURCE Resource,
   IN BOOLEAN Wait);
 
 NTKERNELAPI
@@ -322,7 +322,7 @@ NTKERNELAPI
 VOID
 NTAPI
 ExConvertExclusiveToSharedLite(
-  IN PERESOURCE Resource);
+  IN OUT PERESOURCE Resource);
 
 NTKERNELAPI
 NTSTATUS
@@ -349,7 +349,7 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 ExDeleteResourceLite(
-  IN PERESOURCE Resource);
+  IN OUT PERESOURCE Resource);
 
 NTKERNELAPI
 VOID
@@ -536,8 +536,8 @@ VOID
 NTAPI
 ExNotifyCallback(
   IN PCALLBACK_OBJECT CallbackObject,
-  IN PVOID Argument1,
-  IN PVOID Argument2);
+  IN PVOID Argument1 OPTIONAL,
+  IN PVOID Argument2 OPTIONAL);
 
 NTKERNELAPI
 VOID
@@ -559,7 +559,7 @@ NTAPI
 ExRegisterCallback(
   IN PCALLBACK_OBJECT CallbackObject,
   IN PCALLBACK_FUNCTION CallbackFunction,
-  IN PVOID CallbackContext);
+  IN PVOID CallbackContext OPTIONAL);
 
 NTKERNELAPI
 NTSTATUS
@@ -571,20 +571,20 @@ NTKERNELAPI
 VOID
 NTAPI
 ExReleaseResourceForThreadLite(
-  IN PERESOURCE Resource,
+  IN OUT PERESOURCE Resource,
   IN ERESOURCE_THREAD ResourceThreadId);
 
 NTKERNELAPI
 VOID
 FASTCALL
 ExReleaseResourceLite(
-  IN PERESOURCE Resource);
+  IN OUT PERESOURCE Resource);
 
 NTKERNELAPI
 VOID
 NTAPI
 ExSetResourceOwnerPointer(
-  IN PERESOURCE Resource,
+  IN OUT PERESOURCE Resource,
   IN PVOID OwnerPointer);
 
 NTKERNELAPI
@@ -605,7 +605,7 @@ NTKERNELAPI
 VOID
 NTAPI
 ExUnregisterCallback(
-  IN PVOID CbRegistration);
+  IN OUT PVOID CbRegistration);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
@@ -627,7 +627,7 @@ NTKERNELAPI
 VOID
 FASTCALL
 ExReInitializeRundownProtection(
-  OUT PEX_RUNDOWN_REF RunRef);
+  IN OUT PEX_RUNDOWN_REF RunRef);
 
 NTKERNELAPI
 VOID
@@ -686,6 +686,87 @@ NTKERNELAPI
 SIZE_T
 NTAPI
 ExSizeOfRundownProtectionCacheAware(VOID);
+
+NTKERNELAPI
+PVOID
+NTAPI
+ExEnterCriticalRegionAndAcquireResourceShared(
+  IN OUT PERESOURCE Resource);
+
+NTKERNELAPI
+PVOID
+NTAPI
+ExEnterCriticalRegionAndAcquireResourceExclusive(
+  IN OUT PERESOURCE Resource);
+
+NTKERNELAPI
+PVOID
+NTAPI
+ExEnterCriticalRegionAndAcquireSharedWaitForExclusive(
+  IN OUT PERESOURCE Resource);
+
+NTKERNELAPI
+VOID
+FASTCALL
+ExReleaseResourceAndLeaveCriticalRegion(
+  IN OUT PERESOURCE Resource);
+
+NTKERNELAPI
+VOID
+NTAPI
+ExInitializeRundownProtectionCacheAware(
+  OUT PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware,
+  IN SIZE_T RunRefSize);
+
+NTKERNELAPI
+VOID
+NTAPI
+ExFreeCacheAwareRundownProtection(
+  IN OUT PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware);
+
+NTKERNELAPI
+BOOLEAN
+FASTCALL
+ExAcquireRundownProtectionCacheAware(
+  IN OUT PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware);
+
+NTKERNELAPI
+VOID
+FASTCALL
+ExReleaseRundownProtectionCacheAware(
+  IN OUT PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware);
+
+NTKERNELAPI
+BOOLEAN
+FASTCALL
+ExAcquireRundownProtectionCacheAwareEx(
+  IN OUT PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware,
+  IN ULONG Count);
+
+NTKERNELAPI
+VOID
+FASTCALL
+ExReleaseRundownProtectionCacheAwareEx(
+  IN OUT PEX_RUNDOWN_REF_CACHE_AWARE RunRef,
+  IN ULONG Count);
+
+NTKERNELAPI
+VOID
+FASTCALL
+ExWaitForRundownProtectionReleaseCacheAware(
+  IN OUT PEX_RUNDOWN_REF_CACHE_AWARE RunRef);
+
+NTKERNELAPI
+VOID
+FASTCALL
+ExReInitializeRundownProtectionCacheAware(
+  IN OUT PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware);
+
+NTKERNELAPI
+VOID
+FASTCALL
+ExRundownCompletedCacheAware(
+  IN OUT PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WS03SP1) */
 
@@ -752,6 +833,20 @@ ExFreeToLookasideListEx(
 }
 
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+
+NTKERNELAPI
+VOID
+NTAPI
+ExSetResourceOwnerPointerEx(
+  IN OUT PERESOURCE Resource,
+  IN PVOID OwnerPointer,
+  IN ULONG Flags);
+
+#define FLAG_OWNER_POINTER_IS_THREAD 0x1
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
 static __inline PVOID
 ExAllocateFromNPagedLookasideList(

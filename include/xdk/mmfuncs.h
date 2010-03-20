@@ -80,6 +80,9 @@
   ((ULONG) ((((ULONG_PTR) (_Va) & (PAGE_SIZE - 1)) \
     + (_Size) + (PAGE_SIZE - 1)) >> PAGE_SHIFT))
 
+#define COMPUTE_PAGES_SPANNED(Va, Size) \
+    ADDRESS_AND_SIZE_TO_SPAN_PAGES(Va,Size)
+
 /*
  * ULONG
  * MmGetMdlByteCount(
@@ -95,6 +98,8 @@
  */
 #define MmGetMdlByteOffset(_Mdl) \
   ((_Mdl)->ByteOffset)
+
+#define MmGetMdlBaseVa(Mdl) ((Mdl)->StartVa)
 
 /*
  * PPFN_NUMBER
@@ -344,6 +349,17 @@ MmUnmapLockedPages(
   IN PVOID BaseAddress,
   IN PMDL MemoryDescriptorList);
 
+NTKERNELAPI
+PVOID
+NTAPI
+MmAllocateContiguousMemorySpecifyCacheNode(
+  IN SIZE_T NumberOfBytes,
+  IN PHYSICAL_ADDRESS LowestAcceptableAddress,
+  IN PHYSICAL_ADDRESS HighestAcceptableAddress,
+  IN PHYSICAL_ADDRESS BoundaryAddressMultiple OPTIONAL,
+  IN MEMORY_CACHING_TYPE CacheType,
+  IN NODE_REQUIREMENT PreferredNode);
+
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
@@ -399,7 +415,23 @@ MmUnmapReservedMapping(
   IN ULONG PoolTag,
   IN PMDL MemoryDescriptorList);
 
+NTKERNELAPI
+NTSTATUS
+NTAPI
+MmAddVerifierThunks(
+  IN PVOID ThunkBuffer,
+  IN ULONG ThunkBufferSize);
+
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
+
+#if (NTDDI_VERSION >= NTDDI_WS03)
+NTKERNELAPI
+LOGICAL
+NTAPI
+MmIsIoSpaceActive(
+  IN PHYSICAL_ADDRESS StartAddress,
+  IN SIZE_T NumberOfBytes);
+#endif
 
 #if (NTDDI_VERSION >= NTDDI_WS03SP1)
 NTKERNELAPI
@@ -412,5 +444,13 @@ MmAllocatePagesForMdlEx(
   IN SIZE_T TotalBytes,
   IN MEMORY_CACHING_TYPE CacheType,
   IN ULONG Flags);
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+NTKERNELAPI
+LOGICAL
+NTAPI
+MmIsDriverVerifyingByAddress(
+  IN PVOID AddressWithinSection);
 #endif
 

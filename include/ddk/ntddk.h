@@ -2587,11 +2587,6 @@ typedef enum _MM_ROTATE_DIRECTION {
   MmMaximumRotateDirection
 } MM_ROTATE_DIRECTION, *PMM_ROTATE_DIRECTION;
 
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
-typedef ULONG NODE_REQUIREMENT;
-#define MM_ANY_NODE_OK          0x80000000
-#endif
-
 /* Memory Manager Functions */
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)

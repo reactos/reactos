@@ -124,7 +124,6 @@ struct _IO_RESOURCE_DESCRIPTOR;
 typedef struct _OBJECT_TYPE *POBJECT_TYPE;
 typedef struct _HAL_DISPATCH_TABLE *PHAL_DISPATCH_TABLE;
 typedef struct _HAL_PRIVATE_DISPATCH_TABLE *PHAL_PRIVATE_DISPATCH_TABLE;
-typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT; 
 typedef struct _CALLBACK_OBJECT *PCALLBACK_OBJECT;
 typedef struct _EPROCESS *PEPROCESS;
 typedef struct _ETHREAD *PETHREAD;
@@ -133,6 +132,14 @@ typedef struct _KINTERRUPT *PKINTERRUPT;
 typedef struct _KPROCESS *PKPROCESS;
 typedef struct _KTHREAD *PKTHREAD, *PRKTHREAD;
 typedef struct _CONTEXT *PCONTEXT;
+
+#if defined(USE_DMA_MACROS) && !defined(_NTHAL_) && ( defined(_NTDDK_) || defined(_NTDRIVER_) || defined(_NTOSP_))
+typedef struct _DMA_ADAPTER *PADAPTER_OBJECT;
+#elif defined(_WDM_INCLUDED_)
+typedef struct _DMA_ADAPTER *PADAPTER_OBJECT;
+#else
+typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT; 
+#endif
 
 
 $define (_WDMDDK_)
@@ -257,6 +264,9 @@ extern ULONG NtGlobalFlag;
 typedef ULONG64 TRACEHANDLE, *PTRACEHANDLE;
 #endif
 
+extern PBOOLEAN Mm64BitPhysicalAddress;
+
+extern PVOID MmBadPointer;
 
 
 #ifdef __cplusplus

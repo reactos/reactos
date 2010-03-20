@@ -2,12 +2,17 @@
  *                         Memory manager Types                               *
  ******************************************************************************/
 
-#define MM_DONT_ZERO_ALLOCATION                 0x00000001
-#define MM_ALLOCATE_FROM_LOCAL_NODE_ONLY        0x00000002
-#define MM_ALLOCATE_FULLY_REQUIRED              0x00000004
-#define MM_ALLOCATE_NO_WAIT                     0x00000008
-#define MM_ALLOCATE_PREFER_CONTIGUOUS           0x00000010
-#define MM_ALLOCATE_REQUIRE_CONTIGUOUS_CHUNKS   0x00000020
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+typedef ULONG NODE_REQUIREMENT;
+#define MM_ANY_NODE_OK                           0x80000000
+#endif
+
+#define MM_DONT_ZERO_ALLOCATION                  0x00000001
+#define MM_ALLOCATE_FROM_LOCAL_NODE_ONLY         0x00000002
+#define MM_ALLOCATE_FULLY_REQUIRED               0x00000004
+#define MM_ALLOCATE_NO_WAIT                      0x00000008
+#define MM_ALLOCATE_PREFER_CONTIGUOUS            0x00000010
+#define MM_ALLOCATE_REQUIRE_CONTIGUOUS_CHUNKS    0x00000020
 
 #define MDL_MAPPED_TO_SYSTEM_VA     0x0001
 #define MDL_PAGES_LOCKED            0x0002
