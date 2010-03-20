@@ -29,6 +29,12 @@ typedef enum _CMBATT_EXTENSION_TYPE
     CmBattBattery
 } CMBATT_EXTENSION_TYPE;
 
+#define ACPI_BATT_STAT_DISCHARG		0x0001
+#define ACPI_BATT_STAT_CHARGING		0x0002
+#define ACPI_BATT_STAT_CRITICAL		0x0004
+#define ACPI_BATT_STAT_NOT_PRESENT	0x0007
+#define ACPI_BATT_STAT_MAX		    0x0007
+
 typedef struct _ACPI_BST_DATA
 {
     ULONG State;
@@ -93,7 +99,7 @@ typedef struct _CMBATT_DEVICE_EXTENSION
     ULONG RemainingCapacity;
     ULONG PresentVoltage;
     ULONG Rate;
-    BATTERY_INFORMATION StaticBatteryInformation;
+    BATTERY_INFORMATION BatteryInformation;
     ULONG BatteryCapacityGranularity1;
     ULONG BatteryCapacityGranularity2;
     BOOLEAN TripPointSet;
