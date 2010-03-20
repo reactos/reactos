@@ -1191,42 +1191,6 @@ typedef struct _FILE_SFIO_VOLUME_INFORMATION {
 #define FM_LOCK_WAITER_WOKEN    (0x2)
 #define FM_LOCK_WAITER_INC      (0x4)
 
-typedef ULONG_PTR ERESOURCE_THREAD, *PERESOURCE_THREAD;
-
-typedef struct _OWNER_ENTRY {
-  ERESOURCE_THREAD OwnerThread;
-  _ANONYMOUS_UNION union {
-    LONG OwnerCount;
-    ULONG TableSize;
-  } DUMMYUNIONNAME;
-} OWNER_ENTRY, *POWNER_ENTRY;
-
-typedef struct _ERESOURCE {
-  LIST_ENTRY SystemResourcesList;
-  POWNER_ENTRY OwnerTable;
-  SHORT ActiveCount;
-  USHORT Flag;
-  volatile PKSEMAPHORE SharedWaiters;
-  volatile PKEVENT ExclusiveWaiters;
-  OWNER_ENTRY OwnerEntry;
-  ULONG ActiveEntries;
-  ULONG ContentionCount;
-  ULONG NumberOfSharedWaiters;
-  ULONG NumberOfExclusiveWaiters;
-  __GNU_EXTENSION union {
-    PVOID Address;
-    ULONG_PTR CreatorBackTraceIndex;
-  };
-  KSPIN_LOCK SpinLock;
-} ERESOURCE, *PERESOURCE;
-
-/* ERESOURCE.Flag */
-#define ResourceNeverExclusive            0x0010
-#define ResourceReleaseByOtherThread      0x0020
-#define ResourceOwnedExclusive            0x0080
-
-#define RESOURCE_HASH_TABLE_SIZE          64
-
 typedef BOOLEAN
 (NTAPI *PFAST_IO_CHECK_IF_POSSIBLE)(
   IN struct _FILE_OBJECT *FileObject,
@@ -2267,13 +2231,6 @@ typedef enum _DEVICE_TEXT_TYPE {
   DeviceTextDescription,
   DeviceTextLocationInformation
 } DEVICE_TEXT_TYPE, *PDEVICE_TEXT_TYPE;
-
-typedef enum _WORK_QUEUE_TYPE {
-  CriticalWorkQueue,
-  DelayedWorkQueue,
-  HyperCriticalWorkQueue,
-  MaximumWorkQueue
-} WORK_QUEUE_TYPE;
 
 typedef BOOLEAN
 (*PGPE_SERVICE_ROUTINE2)(

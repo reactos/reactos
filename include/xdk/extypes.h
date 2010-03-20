@@ -152,9 +152,21 @@ typedef struct LOOKASIDE_ALIGN _NPAGED_LOOKASIDE_LIST {
 #endif
 } NPAGED_LOOKASIDE_LIST, *PNPAGED_LOOKASIDE_LIST;
 
+#define LOOKASIDE_MINIMUM_BLOCK_SIZE (RTL_SIZEOF_THROUGH_FIELD (SLIST_ENTRY, Next))
+
 typedef struct _LOOKASIDE_LIST_EX {
   GENERAL_LOOKASIDE_POOL L;
 } LOOKASIDE_LIST_EX;
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+#define EX_LOOKASIDE_LIST_EX_FLAGS_RAISE_ON_FAIL 0x00000001UL
+#define EX_LOOKASIDE_LIST_EX_FLAGS_FAIL_NO_RAISE 0x00000002UL
+
+#define EX_MAXIMUM_LOOKASIDE_DEPTH_BASE          256
+#define EX_MAXIMUM_LOOKASIDE_DEPTH_LIMIT         1024
+
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 typedef struct _EX_RUNDOWN_REF {
   __GNU_EXTENSION union {
@@ -165,15 +177,87 @@ typedef struct _EX_RUNDOWN_REF {
 
 typedef struct _EX_RUNDOWN_REF_CACHE_AWARE *PEX_RUNDOWN_REF_CACHE_AWARE;
 
+typedef enum _WORK_QUEUE_TYPE {
+  CriticalWorkQueue,
+  DelayedWorkQueue,
+  HyperCriticalWorkQueue,
+  MaximumWorkQueue
+} WORK_QUEUE_TYPE;
+
 typedef VOID
-(NTAPI *PWORKER_THREAD_ROUTINE)(
+(NTAPI WORKER_THREAD_ROUTINE)(
   IN PVOID Parameter);
+typedef WORKER_THREAD_ROUTINE *PWORKER_THREAD_ROUTINE;
 
 typedef struct _WORK_QUEUE_ITEM {
   LIST_ENTRY List;
   PWORKER_THREAD_ROUTINE WorkerRoutine;
   volatile PVOID Parameter;
 } WORK_QUEUE_ITEM, *PWORK_QUEUE_ITEM;
+
+typedef ULONG_PTR ERESOURCE_THREAD, *PERESOURCE_THREAD;
+
+typedef struct _OWNER_ENTRY {
+  ERESOURCE_THREAD OwnerThread;
+  union {
+    struct {
+      ULONG IoPriorityBoosted:1;
+      ULONG OwnerReferenced:1;
+      ULONG OwnerCount:30;
+    };
+    ULONG TableSize;
+  };
+} OWNER_ENTRY, *POWNER_ENTRY;
+
+typedef struct _ERESOURCE {
+  LIST_ENTRY SystemResourcesList;
+  POWNER_ENTRY OwnerTable;
+  SHORT ActiveCount;
+  USHORT Flag;
+  volatile PKSEMAPHORE SharedWaiters;
+  volatile PKEVENT ExclusiveWaiters;
+  OWNER_ENTRY OwnerEntry;
+  ULONG ActiveEntries;
+  ULONG ContentionCount;
+  ULONG NumberOfSharedWaiters;
+  ULONG NumberOfExclusiveWaiters;
+#if defined(_WIN64)
+  PVOID Reserved2;
+#endif
+  __GNU_EXTENSION union {
+    PVOID Address;
+    ULONG_PTR CreatorBackTraceIndex;
+  };
+  KSPIN_LOCK SpinLock;
+} ERESOURCE, *PERESOURCE;
+
+/* ERESOURCE.Flag */
+#define ResourceNeverExclusive            0x0010
+#define ResourceReleaseByOtherThread      0x0020
+#define ResourceOwnedExclusive            0x0080
+
+#define RESOURCE_HASH_TABLE_SIZE          64
+
+typedef struct _RESOURCE_HASH_ENTRY {
+  LIST_ENTRY ListEntry;
+  PVOID Address;
+  ULONG ContentionCount;
+  ULONG Number;
+} RESOURCE_HASH_ENTRY, *PRESOURCE_HASH_ENTRY;
+
+typedef struct _RESOURCE_PERFORMANCE_DATA {
+  ULONG ActiveResourceCount;
+  ULONG TotalResourceCount;
+  ULONG ExclusiveAcquire;
+  ULONG SharedFirstLevel;
+  ULONG SharedSecondLevel;
+  ULONG StarveFirstLevel;
+  ULONG StarveSecondLevel;
+  ULONG WaitForExclusive;
+  ULONG OwnerTableExpands;
+  ULONG MaximumTableExpand;
+  LIST_ENTRY HashTable[RESOURCE_HASH_TABLE_SIZE];
+} RESOURCE_PERFORMANCE_DATA, *PRESOURCE_PERFORMANCE_DATA;
 
 $endif
 

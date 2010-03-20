@@ -14,19 +14,64 @@ $if (_WDMDDK_)
 
 #define ExInitializeSListHead InitializeSListHead
 
-#if defined(_X86_)
-#if defined(_NTHAL_)
+#if defined(_NTHAL_) && defined(_X86_)
+
+NTKERNELAPI
+VOID
+FASTCALL
+ExiAcquireFastMutex(
+  IN OUT PFAST_MUTEX FastMutex);
+
+NTKERNELAPI
+VOID
+FASTCALL
+ExiReleaseFastMutex(
+  IN OUT PFAST_MUTEX FastMutex);
+
+NTKERNELAPI
+BOOLEAN
+FASTCALL
+ExiTryToAcquireFastMutex(
+    IN OUT PFAST_MUTEX FastMutex);
+
 #define ExAcquireFastMutex ExiAcquireFastMutex
 #define ExReleaseFastMutex ExiReleaseFastMutex
 #define ExTryToAcquireFastMutex ExiTryToAcquireFastMutex
-#endif
+
+#else
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTKERNELAPI
+VOID
+FASTCALL
+ExAcquireFastMutex(
+  IN OUT PFAST_MUTEX FastMutex);
+
+NTKERNELAPI
+VOID
+FASTCALL
+ExReleaseFastMutex(
+  IN OUT PFAST_MUTEX FastMutex);
+
+NTKERNELAPI
+BOOLEAN
+FASTCALL
+ExTryToAcquireFastMutex(
+  IN OUT PFAST_MUTEX FastMutex);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
+#endif /* defined(_NTHAL_) && defined(_X86_) */
+
+#if defined(_X86_)
 #define ExInterlockedAddUlong ExfInterlockedAddUlong
 #define ExInterlockedInsertHeadList ExfInterlockedInsertHeadList
 #define ExInterlockedInsertTailList ExfInterlockedInsertTailList
 #define ExInterlockedRemoveHeadList ExfInterlockedRemoveHeadList
 #define ExInterlockedPopEntryList ExfInterlockedPopEntryList
 #define ExInterlockedPushEntryList ExfInterlockedPushEntryList
-#endif
+#endif /* defined(_X86_) */
 
 #if defined(_WIN64)
 
@@ -75,9 +120,10 @@ NTKERNELAPI
 PSINGLE_LIST_ENTRY
 FASTCALL
 ExInterlockedFlushSList(
-  IN PSLIST_HEADER ListHead);
+  IN OUT PSLIST_HEADER ListHead);
 
 #if defined(_WIN2K_COMPAT_SLIST_USAGE) && defined(_X86_)
+
 NTKERNELAPI
 PSINGLE_LIST_ENTRY 
 FASTCALL
@@ -92,11 +138,60 @@ ExInterlockedPushEntrySList(
   IN PSLIST_HEADER ListHead,
   IN PSINGLE_LIST_ENTRY ListEntry,
   IN PKSPIN_LOCK Lock);
+
+NTKERNELAPI
+PVOID
+NTAPI
+ExAllocateFromPagedLookasideList(
+  IN OUT PPAGED_LOOKASIDE_LIST Lookaside);
+
+NTKERNELAPI
+VOID
+NTAPI
+ExFreeToPagedLookasideList(
+  IN OUT PPAGED_LOOKASIDE_LIST Lookaside,
+  IN PVOID Entry);
+
 #else
+
 #define ExInterlockedPopEntrySList(_ListHead, _Lock) \
     InterlockedPopEntrySList(_ListHead)
 #define ExInterlockedPushEntrySList(_ListHead, _ListEntry, _Lock) \
     InterlockedPushEntrySList(_ListHead, _ListEntry)
+
+static __inline
+PVOID
+ExAllocateFromPagedLookasideList(
+  IN OUT PPAGED_LOOKASIDE_LIST Lookaside)
+{
+  PVOID Entry;
+
+  Lookaside->L.TotalAllocates++;
+  Entry = InterlockedPopEntrySList(&Lookaside->L.ListHead);
+  if (Entry == NULL) {
+    Lookaside->L.AllocateMisses++;
+    Entry = (Lookaside->L.Allocate)(Lookaside->L.Type,
+                                    Lookaside->L.Size,
+                                    Lookaside->L.Tag);
+  }
+  return Entry;
+}
+
+static __inline
+VOID
+ExFreeToPagedLookasideList(
+  IN OUT PPAGED_LOOKASIDE_LIST Lookaside,
+  IN PVOID Entry)
+{
+  Lookaside->L.TotalFrees++;
+  if (ExQueryDepthSList(&Lookaside->L.ListHead) >= Lookaside->L.Depth) {
+    Lookaside->L.FreeMisses++;
+    (Lookaside->L.Free)(Entry);
+  } else {
+    InterlockedPushEntrySList(&Lookaside->L.ListHead, (PSLIST_ENTRY)Entry);
+  }
+}
+
 #endif /* _WIN2K_COMPAT_SLIST_USAGE */
 
 #endif /* !defined(_WIN64) */
@@ -139,24 +234,6 @@ ExInitializeFastMutex(
 NTKERNELAPI
 VOID
 FASTCALL
-ExAcquireFastMutex(
-  IN OUT PFAST_MUTEX FastMutex);
-
-NTKERNELAPI
-VOID
-FASTCALL
-ExReleaseFastMutex(
-  IN OUT PFAST_MUTEX FastMutex);
-
-NTKERNELAPI
-BOOLEAN
-FASTCALL
-ExTryToAcquireFastMutex(
-  IN OUT PFAST_MUTEX FastMutex);
-
-NTKERNELAPI
-VOID
-FASTCALL
 ExAcquireFastMutexUnsafe(
   IN OUT PFAST_MUTEX FastMutex);
 
@@ -177,7 +254,7 @@ NTKERNELAPI
 BOOLEAN
 NTAPI
 ExAcquireResourceSharedLite(
-  IN PERESOURCE Resource,
+  IN OUT PERESOURCE Resource,
   IN BOOLEAN Wait);
 
 NTKERNELAPI
@@ -201,20 +278,12 @@ ExAllocatePool(
   IN POOL_TYPE PoolType,
   IN SIZE_T NumberOfBytes);
 
-#ifdef POOL_TAGGING
-#define ExAllocatePool(p,n) ExAllocatePoolWithTag(p,n,' kdD')
-#endif /* POOL_TAGGING */
-
 NTKERNELAPI
 PVOID
 NTAPI
 ExAllocatePoolWithQuota(
   IN POOL_TYPE PoolType,
   IN SIZE_T NumberOfBytes);
-
-#ifdef POOL_TAGGING
-#define ExAllocatePoolWithQuota(p,n) ExAllocatePoolWithQuotaTag(p,n,' kdD')
-#endif /* POOL_TAGGING */
 
 NTKERNELAPI
 PVOID
@@ -226,7 +295,7 @@ ExAllocatePoolWithQuotaTag(
 
 #ifndef POOL_TAGGING
 #define ExAllocatePoolWithQuotaTag(a,b,c) ExAllocatePoolWithQuota(a,b)
-#endif /* POOL_TAGGING */
+#endif
 
 NTKERNELAPI
 PVOID
@@ -235,6 +304,10 @@ ExAllocatePoolWithTag(
   IN POOL_TYPE PoolType,
   IN SIZE_T NumberOfBytes,
   IN ULONG Tag);
+
+#ifndef POOL_TAGGING
+#define ExAllocatePoolWithTag(a,b,c) ExAllocatePool(a,b)
+#endif
 
 NTKERNELAPI
 PVOID
@@ -264,7 +337,7 @@ NTKERNELAPI
 VOID
 NTAPI
 ExDeleteNPagedLookasideList(
-  IN PNPAGED_LOOKASIDE_LIST Lookaside);
+  IN OUT PNPAGED_LOOKASIDE_LIST Lookaside);
 
 NTKERNELAPI
 VOID
@@ -283,10 +356,6 @@ VOID
 NTAPI
 ExFreePool(
   IN PVOID P);
-
-#ifdef POOL_TAGGING
-#define ExFreePool(P) ExFreePoolWithTag(P, 0)
-#endif
 
 NTKERNELAPI
 VOID
@@ -340,7 +409,7 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 ExInitializeResourceLite(
-  IN PERESOURCE Resource);
+  OUT PERESOURCE Resource);
 
 NTKERNELAPI
 LARGE_INTEGER
@@ -364,7 +433,7 @@ FASTCALL
 ExInterlockedAddUlong(
   IN PULONG Addend,
   IN ULONG Increment,
-  PKSPIN_LOCK Lock);
+  IN OUT PKSPIN_LOCK Lock);
 
 #if defined(_AMD64_) || defined(_IA64_)
 
@@ -401,39 +470,39 @@ NTKERNELAPI
 PLIST_ENTRY
 FASTCALL
 ExInterlockedInsertHeadList(
-  IN PLIST_ENTRY ListHead,
-  IN PLIST_ENTRY ListEntry,
-  IN PKSPIN_LOCK Lock);
+  IN OUT PLIST_ENTRY ListHead,
+  IN OUT PLIST_ENTRY ListEntry,
+  IN OUT PKSPIN_LOCK Lock);
 
 NTKERNELAPI
 PLIST_ENTRY
 FASTCALL
 ExInterlockedInsertTailList(
-  IN PLIST_ENTRY ListHead,
-  IN PLIST_ENTRY ListEntry,
-  IN PKSPIN_LOCK Lock);
+  IN OUT PLIST_ENTRY ListHead,
+  IN OUT PLIST_ENTRY ListEntry,
+  IN OUT PKSPIN_LOCK Lock);
 
 NTKERNELAPI
 PSINGLE_LIST_ENTRY
 FASTCALL
 ExInterlockedPopEntryList(
-  IN PSINGLE_LIST_ENTRY ListHead,
-  IN PKSPIN_LOCK Lock);
+  IN OUT PSINGLE_LIST_ENTRY ListHead,
+  IN OUT PKSPIN_LOCK Lock);
 
 NTKERNELAPI
 PSINGLE_LIST_ENTRY
 FASTCALL
 ExInterlockedPushEntryList(
-  IN PSINGLE_LIST_ENTRY ListHead,
-  IN PSINGLE_LIST_ENTRY ListEntry,
-  IN PKSPIN_LOCK Lock);
+  IN OUT PSINGLE_LIST_ENTRY ListHead,
+  IN OUT PSINGLE_LIST_ENTRY ListEntry,
+  IN OUT PKSPIN_LOCK Lock);
 
 NTKERNELAPI
 PLIST_ENTRY
 FASTCALL
 ExInterlockedRemoveHeadList(
-  IN PLIST_ENTRY ListHead,
-  IN PKSPIN_LOCK Lock);
+  IN OUT PLIST_ENTRY ListHead,
+  IN OUT PKSPIN_LOCK Lock);
 
 NTKERNELAPI
 BOOLEAN
@@ -474,7 +543,7 @@ NTKERNELAPI
 VOID
 NTAPI
 ExQueueWorkItem(
-  IN PWORK_QUEUE_ITEM WorkItem,
+  IN OUT PWORK_QUEUE_ITEM WorkItem,
   IN WORK_QUEUE_TYPE QueueType);
 
 NTKERNELAPI
@@ -496,7 +565,7 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 ExReinitializeResourceLite(
-  IN PERESOURCE Resource);
+  IN OUT PERESOURCE Resource);
 
 NTKERNELAPI
 VOID
@@ -621,6 +690,7 @@ ExSizeOfRundownProtectionCacheAware(VOID);
 #endif /* (NTDDI_VERSION >= NTDDI_WS03SP1) */
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
+
 NTKERNELAPI
 NTSTATUS
 NTAPI
@@ -633,35 +703,69 @@ ExInitializeLookasideListEx(
   IN SIZE_T Size,
   IN ULONG Tag,
   IN USHORT Depth);
-#endif
 
-#if !defined(MIDL_PASS)
+NTKERNELAPI
+VOID
+NTAPI
+ExDeleteLookasideListEx(
+  IN OUT PLOOKASIDE_LIST_EX Lookaside);
 
-static __inline PVOID
-ExAllocateFromNPagedLookasideList(
-  IN PNPAGED_LOOKASIDE_LIST Lookaside)
+NTKERNELAPI
+VOID
+NTAPI
+ExFlushLookasideListEx(
+  IN OUT PLOOKASIDE_LIST_EX Lookaside);
+
+FORCEINLINE
+PVOID
+ExAllocateFromLookasideListEx(
+  IN OUT PLOOKASIDE_LIST_EX Lookaside)
 {
   PVOID Entry;
 
-  Lookaside->L.TotalAllocates++;
+  Lookaside->L.TotalAllocates += 1;
   Entry = InterlockedPopEntrySList(&Lookaside->L.ListHead);
   if (Entry == NULL) {
-    Lookaside->L.AllocateMisses++;
-    Entry = (Lookaside->L.Allocate)(Lookaside->L.Type,
-                                    Lookaside->L.Size,
-                                    Lookaside->L.Tag);
+    Lookaside->L.AllocateMisses += 1;
+    Entry = (Lookaside->L.AllocateEx)(Lookaside->L.Type,
+                                      Lookaside->L.Size,
+                                      Lookaside->L.Tag,
+                                      Lookaside);
   }
   return Entry;
 }
 
+FORCEINLINE
+VOID
+ExFreeToLookasideListEx(
+  IN OUT PLOOKASIDE_LIST_EX Lookaside,
+  IN PVOID Entry)
+{
+  Lookaside->L.TotalFrees += 1;
+  if (ExQueryDepthSList(&Lookaside->L.ListHead) >= Lookaside->L.Depth) {
+    Lookaside->L.FreeMisses += 1;
+    (Lookaside->L.FreeEx)(Entry, Lookaside);
+  } else {
+    InterlockedPushEntrySList(&Lookaside->L.ListHead, (PSLIST_ENTRY)Entry);
+  }
+  return;
+}
+
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+
 static __inline PVOID
-ExAllocateFromPagedLookasideList(
-  IN PPAGED_LOOKASIDE_LIST Lookaside)
+ExAllocateFromNPagedLookasideList(
+  IN OUT PNPAGED_LOOKASIDE_LIST Lookaside)
 {
   PVOID Entry;
 
   Lookaside->L.TotalAllocates++;
+#if defined(_WIN2K_COMPAT_SLIST_USAGE) && defined(_X86_)
+  Entry = ExInterlockedPopEntrySList(&Lookaside->L.ListHead,
+                                     &Lookaside->Lock__ObsoleteButDoNotDelete);
+#else
   Entry = InterlockedPopEntrySList(&Lookaside->L.ListHead);
+#endif
   if (Entry == NULL) {
     Lookaside->L.AllocateMisses++;
     Entry = (Lookaside->L.Allocate)(Lookaside->L.Type,
@@ -673,7 +777,7 @@ ExAllocateFromPagedLookasideList(
 
 static __inline VOID
 ExFreeToNPagedLookasideList(
-  IN PNPAGED_LOOKASIDE_LIST Lookaside,
+  IN OUT PNPAGED_LOOKASIDE_LIST Lookaside,
   IN PVOID Entry)
 {
   Lookaside->L.TotalFrees++;
@@ -681,25 +785,15 @@ ExFreeToNPagedLookasideList(
     Lookaside->L.FreeMisses++;
     (Lookaside->L.Free)(Entry);
   } else {
-    InterlockedPushEntrySList(&Lookaside->L.ListHead, (PSLIST_ENTRY)Entry);
-  }
+#if defined(_WIN2K_COMPAT_SLIST_USAGE) && defined(_X86_)
+      ExInterlockedPushEntrySList(&Lookaside->L.ListHead,
+                                  (PSLIST_ENTRY)Entry,
+                                  &Lookaside->Lock__ObsoleteButDoNotDelete);
+#else
+      InterlockedPushEntrySList(&Lookaside->L.ListHead, (PSLIST_ENTRY)Entry);
+#endif
+   }
 }
-
-static __inline VOID
-ExFreeToPagedLookasideList(
-  IN PPAGED_LOOKASIDE_LIST Lookaside,
-  IN PVOID Entry)
-{
-  Lookaside->L.TotalFrees++;
-  if (ExQueryDepthSList(&Lookaside->L.ListHead) >= Lookaside->L.Depth) {
-    Lookaside->L.FreeMisses++;
-    (Lookaside->L.Free)(Entry);
-  } else {
-    InterlockedPushEntrySList(&Lookaside->L.ListHead, (PSLIST_ENTRY)Entry);
-  }
-}
-
-#endif /* !defined(MIDL_PASS) */
 
 $endif
 

@@ -2439,10 +2439,6 @@ typedef struct _ZONE_HEADER {
   ULONG TotalSegmentSize;
 } ZONE_HEADER, *PZONE_HEADER;
 
-#if defined(POOL_TAGGING)
-#define ExFreePool(a) ExFreePoolWithTag(a,0)
-#endif
-
 #define PROTECTED_POOL                    0x80000000
 
 /* Executive Functions */

@@ -687,6 +687,11 @@ typedef EXCEPTION_DISPOSITION
   IN OUT struct _CONTEXT *ContextRecord,
   IN OUT PVOID DispatcherContext);
 
+typedef struct _GROUP_AFFINITY {
+  KAFFINITY Mask;
+  USHORT Group;
+  USHORT Reserved[3];
+} GROUP_AFFINITY, *PGROUP_AFFINITY;
 
 //
 // Helper Macros

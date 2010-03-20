@@ -19,7 +19,6 @@
 
 /* DDK/IFS/NDK Headers */
 #define _REALLY_GET_CALLERS_CALLER
-#define SINGLE_GROUP_LEGACY_API
 #include <excpt.h>
 #include <ntdef.h>
 #include <ntifs.h>

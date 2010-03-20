@@ -696,6 +696,23 @@ typedef struct _SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX {
 #define EXCEPTION_NONCONTINUABLE     1
 #define EXCEPTION_MAXIMUM_PARAMETERS 15
 
+#define EXCEPTION_DIVIDED_BY_ZERO       0
+#define EXCEPTION_DEBUG                 1
+#define EXCEPTION_NMI                   2
+#define EXCEPTION_INT3                  3
+#define EXCEPTION_BOUND_CHECK           5
+#define EXCEPTION_INVALID_OPCODE        6
+#define EXCEPTION_NPX_NOT_AVAILABLE     7
+#define EXCEPTION_DOUBLE_FAULT          8
+#define EXCEPTION_NPX_OVERRUN           9
+#define EXCEPTION_INVALID_TSS           0x0A
+#define EXCEPTION_SEGMENT_NOT_PRESENT   0x0B
+#define EXCEPTION_STACK_FAULT           0x0C
+#define EXCEPTION_GP_FAULT              0x0D
+#define EXCEPTION_RESERVED_TRAP         0x0F
+#define EXCEPTION_NPX_ERROR             0x010
+#define EXCEPTION_ALIGNMENT_CHECK       0x011
+
 typedef struct _EXCEPTION_RECORD {
   NTSTATUS ExceptionCode;
   ULONG ExceptionFlags;
@@ -740,11 +757,48 @@ typedef enum _KBUGCHECK_CALLBACK_REASON {
 struct _KBUGCHECK_REASON_CALLBACK_RECORD;
 
 typedef VOID
-(NTAPI *PKBUGCHECK_REASON_CALLBACK_ROUTINE)(
+(NTAPI KBUGCHECK_REASON_CALLBACK_ROUTINE)(
   IN KBUGCHECK_CALLBACK_REASON Reason,
   IN struct _KBUGCHECK_REASON_CALLBACK_RECORD *Record,
   IN OUT PVOID ReasonSpecificData,
   IN ULONG ReasonSpecificDataLength);
+typedef KBUGCHECK_REASON_CALLBACK_ROUTINE *PKBUGCHECK_REASON_CALLBACK_ROUTINE;
+
+typedef struct _KBUGCHECK_ADD_PAGES {
+  IN OUT PVOID Context;
+  IN OUT ULONG Flags;
+  IN ULONG BugCheckCode;
+  OUT ULONG_PTR Address;
+  OUT ULONG_PTR Count;
+} KBUGCHECK_ADD_PAGES, *PKBUGCHECK_ADD_PAGES;
+
+typedef struct _KBUGCHECK_SECONDARY_DUMP_DATA {
+  IN PVOID InBuffer;
+  IN ULONG InBufferLength;
+  IN ULONG MaximumAllowed;
+  OUT GUID Guid;
+  OUT PVOID OutBuffer;
+  OUT ULONG OutBufferLength;
+} KBUGCHECK_SECONDARY_DUMP_DATA, *PKBUGCHECK_SECONDARY_DUMP_DATA;
+
+typedef enum _KBUGCHECK_DUMP_IO_TYPE {
+  KbDumpIoInvalid,
+  KbDumpIoHeader,
+  KbDumpIoBody,
+  KbDumpIoSecondaryData,
+  KbDumpIoComplete
+} KBUGCHECK_DUMP_IO_TYPE;
+
+typedef struct _KBUGCHECK_DUMP_IO {
+  IN ULONG64 Offset;
+  IN PVOID Buffer;
+  IN ULONG BufferLength;
+  IN KBUGCHECK_DUMP_IO_TYPE Type;
+} KBUGCHECK_DUMP_IO, *PKBUGCHECK_DUMP_IO;
+
+#define KB_ADD_PAGES_FLAG_VIRTUAL_ADDRESS         0x00000001UL
+#define KB_ADD_PAGES_FLAG_PHYSICAL_ADDRESS        0x00000002UL
+#define KB_ADD_PAGES_FLAG_ADDITIONAL_RANGES_EXIST 0x80000000UL
 
 typedef struct _KBUGCHECK_REASON_CALLBACK_RECORD {
   LIST_ENTRY Entry;
@@ -764,9 +818,10 @@ typedef enum _KBUGCHECK_BUFFER_DUMP_STATE {
 } KBUGCHECK_BUFFER_DUMP_STATE;
 
 typedef VOID
-(NTAPI *PKBUGCHECK_CALLBACK_ROUTINE)(
+(NTAPI KBUGCHECK_CALLBACK_ROUTINE)(
   IN PVOID Buffer,
   IN ULONG Length);
+typedef KBUGCHECK_CALLBACK_ROUTINE *PKBUGCHECK_CALLBACK_ROUTINE;
 
 typedef struct _KBUGCHECK_CALLBACK_RECORD {
   LIST_ENTRY Entry;
@@ -779,9 +834,10 @@ typedef struct _KBUGCHECK_CALLBACK_RECORD {
 } KBUGCHECK_CALLBACK_RECORD, *PKBUGCHECK_CALLBACK_RECORD;
 
 typedef BOOLEAN
-(NTAPI *PNMI_CALLBACK)(
+(NTAPI NMI_CALLBACK)(
   IN PVOID Context,
   IN BOOLEAN Handled);
+typedef NMI_CALLBACK *PNMI_CALLBACK;
 
 typedef enum _TRACE_INFORMATION_CLASS {
   TraceIdClass,
@@ -797,6 +853,32 @@ typedef enum _TRACE_INFORMATION_CLASS {
   LoggerEventsLoggedClass,
   MaxTraceInformationClass
 } TRACE_INFORMATION_CLASS;
+
+typedef enum _KE_PROCESSOR_CHANGE_NOTIFY_STATE {
+  KeProcessorAddStartNotify = 0,
+  KeProcessorAddCompleteNotify,
+  KeProcessorAddFailureNotify
+} KE_PROCESSOR_CHANGE_NOTIFY_STATE;
+
+typedef struct _KE_PROCESSOR_CHANGE_NOTIFY_CONTEXT {
+  KE_PROCESSOR_CHANGE_NOTIFY_STATE State;
+  ULONG NtNumber;
+  NTSTATUS Status;
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+  PROCESSOR_NUMBER ProcNumber;
+#endif
+} KE_PROCESSOR_CHANGE_NOTIFY_CONTEXT, *PKE_PROCESSOR_CHANGE_NOTIFY_CONTEXT;
+
+typedef VOID
+(NTAPI PROCESSOR_CALLBACK_FUNCTION)(
+  IN PVOID CallbackContext,
+  IN PKE_PROCESSOR_CHANGE_NOTIFY_CONTEXT ChangeContext,
+  IN OUT PNTSTATUS OperationStatus);
+typedef PROCESSOR_CALLBACK_FUNCTION *PPROCESSOR_CALLBACK_FUNCTION;
+
+#define KE_PROCESSOR_CHANGE_ADD_EXISTING         1
+
+#define INVALID_PROCESSOR_INDEX     0xffffffff
 
 typedef enum _KINTERRUPT_POLARITY {
   InterruptPolarityUnknown,
@@ -998,8 +1080,9 @@ typedef struct _KIPI_COUNTS {
 } KIPI_COUNTS, *PKIPI_COUNTS;
 
 typedef ULONG_PTR
-(NTAPI *PKIPI_BROADCAST_WORKER)(
+(NTAPI KIPI_BROADCAST_WORKER)(
   IN ULONG_PTR Argument);
+typedef KIPI_BROADCAST_WORKER *PKIPI_BROADCAST_WORKER;
 
 typedef ULONG_PTR KSPIN_LOCK, *PKSPIN_LOCK;
 
@@ -1357,6 +1440,30 @@ typedef struct _XSTATE_CONTEXT {
 #endif
 } XSTATE_CONTEXT, *PXSTATE_CONTEXT;
 
+typedef struct _XSTATE_SAVE {
+#if defined(_AMD64_)
+  struct _XSTATE_SAVE* Prev;
+  struct _KTHREAD* Thread;
+  UCHAR Level;
+  XSTATE_CONTEXT XStateContext;
+#elif defined(_IA64_)
+  ULONG Dummy;
+#elif defined(_X86_)
+  union {
+    struct {
+      LONG64 Reserved1;
+      ULONG Reserved2;
+      struct _XSTATE_SAVE* Prev;
+      PXSAVE_AREA Reserved3;
+      struct _KTHREAD* Thread;
+      PVOID Reserved4;
+      UCHAR Level;
+    };
+    XSTATE_CONTEXT XStateContext;
+  };
+#endif
+} XSTATE_SAVE, *PXSTATE_SAVE;
+
 #ifdef _X86_
 
 #define MAXIMUM_SUPPORTED_EXTENSION  512
@@ -1689,9 +1796,21 @@ typedef struct LOOKASIDE_ALIGN _NPAGED_LOOKASIDE_LIST {
 #endif
 } NPAGED_LOOKASIDE_LIST, *PNPAGED_LOOKASIDE_LIST;
 
+#define LOOKASIDE_MINIMUM_BLOCK_SIZE (RTL_SIZEOF_THROUGH_FIELD (SLIST_ENTRY, Next))
+
 typedef struct _LOOKASIDE_LIST_EX {
   GENERAL_LOOKASIDE_POOL L;
 } LOOKASIDE_LIST_EX;
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+#define EX_LOOKASIDE_LIST_EX_FLAGS_RAISE_ON_FAIL 0x00000001UL
+#define EX_LOOKASIDE_LIST_EX_FLAGS_FAIL_NO_RAISE 0x00000002UL
+
+#define EX_MAXIMUM_LOOKASIDE_DEPTH_BASE          256
+#define EX_MAXIMUM_LOOKASIDE_DEPTH_LIMIT         1024
+
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 typedef struct _EX_RUNDOWN_REF {
   __GNU_EXTENSION union {
@@ -1702,15 +1821,87 @@ typedef struct _EX_RUNDOWN_REF {
 
 typedef struct _EX_RUNDOWN_REF_CACHE_AWARE *PEX_RUNDOWN_REF_CACHE_AWARE;
 
+typedef enum _WORK_QUEUE_TYPE {
+  CriticalWorkQueue,
+  DelayedWorkQueue,
+  HyperCriticalWorkQueue,
+  MaximumWorkQueue
+} WORK_QUEUE_TYPE;
+
 typedef VOID
-(NTAPI *PWORKER_THREAD_ROUTINE)(
+(NTAPI WORKER_THREAD_ROUTINE)(
   IN PVOID Parameter);
+typedef WORKER_THREAD_ROUTINE *PWORKER_THREAD_ROUTINE;
 
 typedef struct _WORK_QUEUE_ITEM {
   LIST_ENTRY List;
   PWORKER_THREAD_ROUTINE WorkerRoutine;
   volatile PVOID Parameter;
 } WORK_QUEUE_ITEM, *PWORK_QUEUE_ITEM;
+
+typedef ULONG_PTR ERESOURCE_THREAD, *PERESOURCE_THREAD;
+
+typedef struct _OWNER_ENTRY {
+  ERESOURCE_THREAD OwnerThread;
+  union {
+    struct {
+      ULONG IoPriorityBoosted:1;
+      ULONG OwnerReferenced:1;
+      ULONG OwnerCount:30;
+    };
+    ULONG TableSize;
+  };
+} OWNER_ENTRY, *POWNER_ENTRY;
+
+typedef struct _ERESOURCE {
+  LIST_ENTRY SystemResourcesList;
+  POWNER_ENTRY OwnerTable;
+  SHORT ActiveCount;
+  USHORT Flag;
+  volatile PKSEMAPHORE SharedWaiters;
+  volatile PKEVENT ExclusiveWaiters;
+  OWNER_ENTRY OwnerEntry;
+  ULONG ActiveEntries;
+  ULONG ContentionCount;
+  ULONG NumberOfSharedWaiters;
+  ULONG NumberOfExclusiveWaiters;
+#if defined(_WIN64)
+  PVOID Reserved2;
+#endif
+  __GNU_EXTENSION union {
+    PVOID Address;
+    ULONG_PTR CreatorBackTraceIndex;
+  };
+  KSPIN_LOCK SpinLock;
+} ERESOURCE, *PERESOURCE;
+
+/* ERESOURCE.Flag */
+#define ResourceNeverExclusive            0x0010
+#define ResourceReleaseByOtherThread      0x0020
+#define ResourceOwnedExclusive            0x0080
+
+#define RESOURCE_HASH_TABLE_SIZE          64
+
+typedef struct _RESOURCE_HASH_ENTRY {
+  LIST_ENTRY ListEntry;
+  PVOID Address;
+  ULONG ContentionCount;
+  ULONG Number;
+} RESOURCE_HASH_ENTRY, *PRESOURCE_HASH_ENTRY;
+
+typedef struct _RESOURCE_PERFORMANCE_DATA {
+  ULONG ActiveResourceCount;
+  ULONG TotalResourceCount;
+  ULONG ExclusiveAcquire;
+  ULONG SharedFirstLevel;
+  ULONG SharedSecondLevel;
+  ULONG StarveFirstLevel;
+  ULONG StarveSecondLevel;
+  ULONG WaitForExclusive;
+  ULONG OwnerTableExpands;
+  ULONG MaximumTableExpand;
+  LIST_ENTRY HashTable[RESOURCE_HASH_TABLE_SIZE];
+} RESOURCE_PERFORMANCE_DATA, *PRESOURCE_PERFORMANCE_DATA;
 
 
 
@@ -4492,42 +4683,6 @@ typedef struct _FILE_SFIO_VOLUME_INFORMATION {
 #define FM_LOCK_WAITER_WOKEN    (0x2)
 #define FM_LOCK_WAITER_INC      (0x4)
 
-typedef ULONG_PTR ERESOURCE_THREAD, *PERESOURCE_THREAD;
-
-typedef struct _OWNER_ENTRY {
-  ERESOURCE_THREAD OwnerThread;
-  _ANONYMOUS_UNION union {
-    LONG OwnerCount;
-    ULONG TableSize;
-  } DUMMYUNIONNAME;
-} OWNER_ENTRY, *POWNER_ENTRY;
-
-typedef struct _ERESOURCE {
-  LIST_ENTRY SystemResourcesList;
-  POWNER_ENTRY OwnerTable;
-  SHORT ActiveCount;
-  USHORT Flag;
-  volatile PKSEMAPHORE SharedWaiters;
-  volatile PKEVENT ExclusiveWaiters;
-  OWNER_ENTRY OwnerEntry;
-  ULONG ActiveEntries;
-  ULONG ContentionCount;
-  ULONG NumberOfSharedWaiters;
-  ULONG NumberOfExclusiveWaiters;
-  __GNU_EXTENSION union {
-    PVOID Address;
-    ULONG_PTR CreatorBackTraceIndex;
-  };
-  KSPIN_LOCK SpinLock;
-} ERESOURCE, *PERESOURCE;
-
-/* ERESOURCE.Flag */
-#define ResourceNeverExclusive            0x0010
-#define ResourceReleaseByOtherThread      0x0020
-#define ResourceOwnedExclusive            0x0080
-
-#define RESOURCE_HASH_TABLE_SIZE          64
-
 typedef BOOLEAN
 (NTAPI *PFAST_IO_CHECK_IF_POSSIBLE)(
   IN struct _FILE_OBJECT *FileObject,
@@ -5569,13 +5724,6 @@ typedef enum _DEVICE_TEXT_TYPE {
   DeviceTextLocationInformation
 } DEVICE_TEXT_TYPE, *PDEVICE_TEXT_TYPE;
 
-typedef enum _WORK_QUEUE_TYPE {
-  CriticalWorkQueue,
-  DelayedWorkQueue,
-  HyperCriticalWorkQueue,
-  MaximumWorkQueue
-} WORK_QUEUE_TYPE;
-
 typedef BOOLEAN
 (*PGPE_SERVICE_ROUTINE2)(
   PVOID ObjectContext,
@@ -6119,14 +6267,14 @@ NTHALAPI
 KIRQL
 FASTCALL
 KfAcquireSpinLock(
-  IN PKSPIN_LOCK SpinLock);
+  IN OUT PKSPIN_LOCK SpinLock);
 #define KeAcquireSpinLock(a,b) *(b) = KfAcquireSpinLock(a)
 
 NTHALAPI
 VOID
 FASTCALL
 KfReleaseSpinLock(
-  IN PKSPIN_LOCK SpinLock,
+  IN OUT PKSPIN_LOCK SpinLock,
   IN KIRQL NewIrql);
 #define KeReleaseSpinLock(a,b) KfReleaseSpinLock(a,b)
 
@@ -6134,14 +6282,14 @@ NTKERNELAPI
 VOID
 FASTCALL
 KefAcquireSpinLockAtDpcLevel(
-  IN PKSPIN_LOCK SpinLock);
+  IN OUT PKSPIN_LOCK SpinLock);
 #define KeAcquireSpinLockAtDpcLevel(SpinLock) KefAcquireSpinLockAtDpcLevel(SpinLock)
 
 NTKERNELAPI
 VOID
 FASTCALL
 KefReleaseSpinLockFromDpcLevel(
-  IN PKSPIN_LOCK SpinLock);
+  IN OUT PKSPIN_LOCK SpinLock);
 #define KeReleaseSpinLockFromDpcLevel(SpinLock) KefReleaseSpinLockFromDpcLevel(SpinLock)
 
 NTSYSAPI
@@ -8004,6 +8152,7 @@ KeClearEvent(
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
+#if defined(_NTDDK_) || defined(_NTIFS_)
 NTKERNELAPI
 VOID
 NTAPI
@@ -8011,6 +8160,7 @@ ProbeForRead(
   IN CONST VOID *Address, /* CONST is added */
   IN SIZE_T Length,
   IN ULONG Alignment);
+#endif /* defined(_NTDDK_) || defined(_NTIFS_) */
 
 NTKERNELAPI
 VOID
@@ -8595,6 +8745,12 @@ KeSetSystemAffinityThreadEx(
   IN KAFFINITY Affinity);
 
 NTKERNELAPI
+VOID
+NTAPI
+KeRevertToUserAffinityThreadEx(
+  IN KAFFINITY Affinity);
+
+NTKERNELAPI
 ULONG
 NTAPI
 KeQueryActiveProcessorCount(
@@ -8750,6 +8906,17 @@ VOID
 NTAPI
 KeRestoreExtendedProcessorState(
   IN PXSTATE_SAVE XStateSave);
+
+NTSTATUS
+NTAPI
+KeGetProcessorNumberFromIndex(
+  IN ULONG ProcIndex,
+  OUT PPROCESSOR_NUMBER ProcNumber);
+
+ULONG
+NTAPI
+KeGetProcessorIndexFromNumber(
+  IN PPROCESSOR_NUMBER ProcNumber);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
@@ -11115,19 +11282,64 @@ PoCreatePowerRequest(
 
 #define ExInitializeSListHead InitializeSListHead
 
-#if defined(_X86_)
-#if defined(_NTHAL_)
+#if defined(_NTHAL_) && defined(_X86_)
+
+NTKERNELAPI
+VOID
+FASTCALL
+ExiAcquireFastMutex(
+  IN OUT PFAST_MUTEX FastMutex);
+
+NTKERNELAPI
+VOID
+FASTCALL
+ExiReleaseFastMutex(
+  IN OUT PFAST_MUTEX FastMutex);
+
+NTKERNELAPI
+BOOLEAN
+FASTCALL
+ExiTryToAcquireFastMutex(
+    IN OUT PFAST_MUTEX FastMutex);
+
 #define ExAcquireFastMutex ExiAcquireFastMutex
 #define ExReleaseFastMutex ExiReleaseFastMutex
 #define ExTryToAcquireFastMutex ExiTryToAcquireFastMutex
-#endif
+
+#else
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTKERNELAPI
+VOID
+FASTCALL
+ExAcquireFastMutex(
+  IN OUT PFAST_MUTEX FastMutex);
+
+NTKERNELAPI
+VOID
+FASTCALL
+ExReleaseFastMutex(
+  IN OUT PFAST_MUTEX FastMutex);
+
+NTKERNELAPI
+BOOLEAN
+FASTCALL
+ExTryToAcquireFastMutex(
+  IN OUT PFAST_MUTEX FastMutex);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
+#endif /* defined(_NTHAL_) && defined(_X86_) */
+
+#if defined(_X86_)
 #define ExInterlockedAddUlong ExfInterlockedAddUlong
 #define ExInterlockedInsertHeadList ExfInterlockedInsertHeadList
 #define ExInterlockedInsertTailList ExfInterlockedInsertTailList
 #define ExInterlockedRemoveHeadList ExfInterlockedRemoveHeadList
 #define ExInterlockedPopEntryList ExfInterlockedPopEntryList
 #define ExInterlockedPushEntryList ExfInterlockedPushEntryList
-#endif
+#endif /* defined(_X86_) */
 
 #if defined(_WIN64)
 
@@ -11176,9 +11388,10 @@ NTKERNELAPI
 PSINGLE_LIST_ENTRY
 FASTCALL
 ExInterlockedFlushSList(
-  IN PSLIST_HEADER ListHead);
+  IN OUT PSLIST_HEADER ListHead);
 
 #if defined(_WIN2K_COMPAT_SLIST_USAGE) && defined(_X86_)
+
 NTKERNELAPI
 PSINGLE_LIST_ENTRY 
 FASTCALL
@@ -11193,11 +11406,60 @@ ExInterlockedPushEntrySList(
   IN PSLIST_HEADER ListHead,
   IN PSINGLE_LIST_ENTRY ListEntry,
   IN PKSPIN_LOCK Lock);
+
+NTKERNELAPI
+PVOID
+NTAPI
+ExAllocateFromPagedLookasideList(
+  IN OUT PPAGED_LOOKASIDE_LIST Lookaside);
+
+NTKERNELAPI
+VOID
+NTAPI
+ExFreeToPagedLookasideList(
+  IN OUT PPAGED_LOOKASIDE_LIST Lookaside,
+  IN PVOID Entry);
+
 #else
+
 #define ExInterlockedPopEntrySList(_ListHead, _Lock) \
     InterlockedPopEntrySList(_ListHead)
 #define ExInterlockedPushEntrySList(_ListHead, _ListEntry, _Lock) \
     InterlockedPushEntrySList(_ListHead, _ListEntry)
+
+static __inline
+PVOID
+ExAllocateFromPagedLookasideList(
+  IN OUT PPAGED_LOOKASIDE_LIST Lookaside)
+{
+  PVOID Entry;
+
+  Lookaside->L.TotalAllocates++;
+  Entry = InterlockedPopEntrySList(&Lookaside->L.ListHead);
+  if (Entry == NULL) {
+    Lookaside->L.AllocateMisses++;
+    Entry = (Lookaside->L.Allocate)(Lookaside->L.Type,
+                                    Lookaside->L.Size,
+                                    Lookaside->L.Tag);
+  }
+  return Entry;
+}
+
+static __inline
+VOID
+ExFreeToPagedLookasideList(
+  IN OUT PPAGED_LOOKASIDE_LIST Lookaside,
+  IN PVOID Entry)
+{
+  Lookaside->L.TotalFrees++;
+  if (ExQueryDepthSList(&Lookaside->L.ListHead) >= Lookaside->L.Depth) {
+    Lookaside->L.FreeMisses++;
+    (Lookaside->L.Free)(Entry);
+  } else {
+    InterlockedPushEntrySList(&Lookaside->L.ListHead, (PSLIST_ENTRY)Entry);
+  }
+}
+
 #endif /* _WIN2K_COMPAT_SLIST_USAGE */
 
 #endif /* !defined(_WIN64) */
@@ -11240,24 +11502,6 @@ ExInitializeFastMutex(
 NTKERNELAPI
 VOID
 FASTCALL
-ExAcquireFastMutex(
-  IN OUT PFAST_MUTEX FastMutex);
-
-NTKERNELAPI
-VOID
-FASTCALL
-ExReleaseFastMutex(
-  IN OUT PFAST_MUTEX FastMutex);
-
-NTKERNELAPI
-BOOLEAN
-FASTCALL
-ExTryToAcquireFastMutex(
-  IN OUT PFAST_MUTEX FastMutex);
-
-NTKERNELAPI
-VOID
-FASTCALL
 ExAcquireFastMutexUnsafe(
   IN OUT PFAST_MUTEX FastMutex);
 
@@ -11278,7 +11522,7 @@ NTKERNELAPI
 BOOLEAN
 NTAPI
 ExAcquireResourceSharedLite(
-  IN PERESOURCE Resource,
+  IN OUT PERESOURCE Resource,
   IN BOOLEAN Wait);
 
 NTKERNELAPI
@@ -11302,20 +11546,12 @@ ExAllocatePool(
   IN POOL_TYPE PoolType,
   IN SIZE_T NumberOfBytes);
 
-#ifdef POOL_TAGGING
-#define ExAllocatePool(p,n) ExAllocatePoolWithTag(p,n,' kdD')
-#endif /* POOL_TAGGING */
-
 NTKERNELAPI
 PVOID
 NTAPI
 ExAllocatePoolWithQuota(
   IN POOL_TYPE PoolType,
   IN SIZE_T NumberOfBytes);
-
-#ifdef POOL_TAGGING
-#define ExAllocatePoolWithQuota(p,n) ExAllocatePoolWithQuotaTag(p,n,' kdD')
-#endif /* POOL_TAGGING */
 
 NTKERNELAPI
 PVOID
@@ -11327,7 +11563,7 @@ ExAllocatePoolWithQuotaTag(
 
 #ifndef POOL_TAGGING
 #define ExAllocatePoolWithQuotaTag(a,b,c) ExAllocatePoolWithQuota(a,b)
-#endif /* POOL_TAGGING */
+#endif
 
 NTKERNELAPI
 PVOID
@@ -11336,6 +11572,10 @@ ExAllocatePoolWithTag(
   IN POOL_TYPE PoolType,
   IN SIZE_T NumberOfBytes,
   IN ULONG Tag);
+
+#ifndef POOL_TAGGING
+#define ExAllocatePoolWithTag(a,b,c) ExAllocatePool(a,b)
+#endif
 
 NTKERNELAPI
 PVOID
@@ -11365,7 +11605,7 @@ NTKERNELAPI
 VOID
 NTAPI
 ExDeleteNPagedLookasideList(
-  IN PNPAGED_LOOKASIDE_LIST Lookaside);
+  IN OUT PNPAGED_LOOKASIDE_LIST Lookaside);
 
 NTKERNELAPI
 VOID
@@ -11384,10 +11624,6 @@ VOID
 NTAPI
 ExFreePool(
   IN PVOID P);
-
-#ifdef POOL_TAGGING
-#define ExFreePool(P) ExFreePoolWithTag(P, 0)
-#endif
 
 NTKERNELAPI
 VOID
@@ -11441,7 +11677,7 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 ExInitializeResourceLite(
-  IN PERESOURCE Resource);
+  OUT PERESOURCE Resource);
 
 NTKERNELAPI
 LARGE_INTEGER
@@ -11465,7 +11701,7 @@ FASTCALL
 ExInterlockedAddUlong(
   IN PULONG Addend,
   IN ULONG Increment,
-  PKSPIN_LOCK Lock);
+  IN OUT PKSPIN_LOCK Lock);
 
 #if defined(_AMD64_) || defined(_IA64_)
 
@@ -11502,39 +11738,39 @@ NTKERNELAPI
 PLIST_ENTRY
 FASTCALL
 ExInterlockedInsertHeadList(
-  IN PLIST_ENTRY ListHead,
-  IN PLIST_ENTRY ListEntry,
-  IN PKSPIN_LOCK Lock);
+  IN OUT PLIST_ENTRY ListHead,
+  IN OUT PLIST_ENTRY ListEntry,
+  IN OUT PKSPIN_LOCK Lock);
 
 NTKERNELAPI
 PLIST_ENTRY
 FASTCALL
 ExInterlockedInsertTailList(
-  IN PLIST_ENTRY ListHead,
-  IN PLIST_ENTRY ListEntry,
-  IN PKSPIN_LOCK Lock);
+  IN OUT PLIST_ENTRY ListHead,
+  IN OUT PLIST_ENTRY ListEntry,
+  IN OUT PKSPIN_LOCK Lock);
 
 NTKERNELAPI
 PSINGLE_LIST_ENTRY
 FASTCALL
 ExInterlockedPopEntryList(
-  IN PSINGLE_LIST_ENTRY ListHead,
-  IN PKSPIN_LOCK Lock);
+  IN OUT PSINGLE_LIST_ENTRY ListHead,
+  IN OUT PKSPIN_LOCK Lock);
 
 NTKERNELAPI
 PSINGLE_LIST_ENTRY
 FASTCALL
 ExInterlockedPushEntryList(
-  IN PSINGLE_LIST_ENTRY ListHead,
-  IN PSINGLE_LIST_ENTRY ListEntry,
-  IN PKSPIN_LOCK Lock);
+  IN OUT PSINGLE_LIST_ENTRY ListHead,
+  IN OUT PSINGLE_LIST_ENTRY ListEntry,
+  IN OUT PKSPIN_LOCK Lock);
 
 NTKERNELAPI
 PLIST_ENTRY
 FASTCALL
 ExInterlockedRemoveHeadList(
-  IN PLIST_ENTRY ListHead,
-  IN PKSPIN_LOCK Lock);
+  IN OUT PLIST_ENTRY ListHead,
+  IN OUT PKSPIN_LOCK Lock);
 
 NTKERNELAPI
 BOOLEAN
@@ -11575,7 +11811,7 @@ NTKERNELAPI
 VOID
 NTAPI
 ExQueueWorkItem(
-  IN PWORK_QUEUE_ITEM WorkItem,
+  IN OUT PWORK_QUEUE_ITEM WorkItem,
   IN WORK_QUEUE_TYPE QueueType);
 
 NTKERNELAPI
@@ -11597,7 +11833,7 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 ExReinitializeResourceLite(
-  IN PERESOURCE Resource);
+  IN OUT PERESOURCE Resource);
 
 NTKERNELAPI
 VOID
@@ -11722,6 +11958,7 @@ ExSizeOfRundownProtectionCacheAware(VOID);
 #endif /* (NTDDI_VERSION >= NTDDI_WS03SP1) */
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
+
 NTKERNELAPI
 NTSTATUS
 NTAPI
@@ -11734,35 +11971,69 @@ ExInitializeLookasideListEx(
   IN SIZE_T Size,
   IN ULONG Tag,
   IN USHORT Depth);
-#endif
 
-#if !defined(MIDL_PASS)
+NTKERNELAPI
+VOID
+NTAPI
+ExDeleteLookasideListEx(
+  IN OUT PLOOKASIDE_LIST_EX Lookaside);
 
-static __inline PVOID
-ExAllocateFromNPagedLookasideList(
-  IN PNPAGED_LOOKASIDE_LIST Lookaside)
+NTKERNELAPI
+VOID
+NTAPI
+ExFlushLookasideListEx(
+  IN OUT PLOOKASIDE_LIST_EX Lookaside);
+
+FORCEINLINE
+PVOID
+ExAllocateFromLookasideListEx(
+  IN OUT PLOOKASIDE_LIST_EX Lookaside)
 {
   PVOID Entry;
 
-  Lookaside->L.TotalAllocates++;
+  Lookaside->L.TotalAllocates += 1;
   Entry = InterlockedPopEntrySList(&Lookaside->L.ListHead);
   if (Entry == NULL) {
-    Lookaside->L.AllocateMisses++;
-    Entry = (Lookaside->L.Allocate)(Lookaside->L.Type,
-                                    Lookaside->L.Size,
-                                    Lookaside->L.Tag);
+    Lookaside->L.AllocateMisses += 1;
+    Entry = (Lookaside->L.AllocateEx)(Lookaside->L.Type,
+                                      Lookaside->L.Size,
+                                      Lookaside->L.Tag,
+                                      Lookaside);
   }
   return Entry;
 }
 
+FORCEINLINE
+VOID
+ExFreeToLookasideListEx(
+  IN OUT PLOOKASIDE_LIST_EX Lookaside,
+  IN PVOID Entry)
+{
+  Lookaside->L.TotalFrees += 1;
+  if (ExQueryDepthSList(&Lookaside->L.ListHead) >= Lookaside->L.Depth) {
+    Lookaside->L.FreeMisses += 1;
+    (Lookaside->L.FreeEx)(Entry, Lookaside);
+  } else {
+    InterlockedPushEntrySList(&Lookaside->L.ListHead, (PSLIST_ENTRY)Entry);
+  }
+  return;
+}
+
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+
 static __inline PVOID
-ExAllocateFromPagedLookasideList(
-  IN PPAGED_LOOKASIDE_LIST Lookaside)
+ExAllocateFromNPagedLookasideList(
+  IN OUT PNPAGED_LOOKASIDE_LIST Lookaside)
 {
   PVOID Entry;
 
   Lookaside->L.TotalAllocates++;
+#if defined(_WIN2K_COMPAT_SLIST_USAGE) && defined(_X86_)
+  Entry = ExInterlockedPopEntrySList(&Lookaside->L.ListHead,
+                                     &Lookaside->Lock__ObsoleteButDoNotDelete);
+#else
   Entry = InterlockedPopEntrySList(&Lookaside->L.ListHead);
+#endif
   if (Entry == NULL) {
     Lookaside->L.AllocateMisses++;
     Entry = (Lookaside->L.Allocate)(Lookaside->L.Type,
@@ -11774,7 +12045,7 @@ ExAllocateFromPagedLookasideList(
 
 static __inline VOID
 ExFreeToNPagedLookasideList(
-  IN PNPAGED_LOOKASIDE_LIST Lookaside,
+  IN OUT PNPAGED_LOOKASIDE_LIST Lookaside,
   IN PVOID Entry)
 {
   Lookaside->L.TotalFrees++;
@@ -11782,25 +12053,15 @@ ExFreeToNPagedLookasideList(
     Lookaside->L.FreeMisses++;
     (Lookaside->L.Free)(Entry);
   } else {
-    InterlockedPushEntrySList(&Lookaside->L.ListHead, (PSLIST_ENTRY)Entry);
-  }
+#if defined(_WIN2K_COMPAT_SLIST_USAGE) && defined(_X86_)
+      ExInterlockedPushEntrySList(&Lookaside->L.ListHead,
+                                  (PSLIST_ENTRY)Entry,
+                                  &Lookaside->Lock__ObsoleteButDoNotDelete);
+#else
+      InterlockedPushEntrySList(&Lookaside->L.ListHead, (PSLIST_ENTRY)Entry);
+#endif
+   }
 }
-
-static __inline VOID
-ExFreeToPagedLookasideList(
-  IN PPAGED_LOOKASIDE_LIST Lookaside,
-  IN PVOID Entry)
-{
-  Lookaside->L.TotalFrees++;
-  if (ExQueryDepthSList(&Lookaside->L.ListHead) >= Lookaside->L.Depth) {
-    Lookaside->L.FreeMisses++;
-    (Lookaside->L.Free)(Entry);
-  } else {
-    InterlockedPushEntrySList(&Lookaside->L.ListHead, (PSLIST_ENTRY)Entry);
-  }
-}
-
-#endif /* !defined(MIDL_PASS) */
 
 
 /******************************************************************************

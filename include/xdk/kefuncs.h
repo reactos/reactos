@@ -23,6 +23,7 @@ KeClearEvent(
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
+#if defined(_NTDDK_) || defined(_NTIFS_)
 NTKERNELAPI
 VOID
 NTAPI
@@ -30,6 +31,7 @@ ProbeForRead(
   IN CONST VOID *Address, /* CONST is added */
   IN SIZE_T Length,
   IN ULONG Alignment);
+#endif /* defined(_NTDDK_) || defined(_NTIFS_) */
 
 NTKERNELAPI
 VOID
@@ -614,6 +616,12 @@ KeSetSystemAffinityThreadEx(
   IN KAFFINITY Affinity);
 
 NTKERNELAPI
+VOID
+NTAPI
+KeRevertToUserAffinityThreadEx(
+  IN KAFFINITY Affinity);
+
+NTKERNELAPI
 ULONG
 NTAPI
 KeQueryActiveProcessorCount(
@@ -769,6 +777,17 @@ VOID
 NTAPI
 KeRestoreExtendedProcessorState(
   IN PXSTATE_SAVE XStateSave);
+
+NTSTATUS
+NTAPI
+KeGetProcessorNumberFromIndex(
+  IN ULONG ProcIndex,
+  OUT PPROCESSOR_NUMBER ProcNumber);
+
+ULONG
+NTAPI
+KeGetProcessorIndexFromNumber(
+  IN PPROCESSOR_NUMBER ProcNumber);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
