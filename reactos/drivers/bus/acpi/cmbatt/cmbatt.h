@@ -29,6 +29,15 @@ typedef enum _CMBATT_EXTENSION_TYPE
     CmBattBattery
 } CMBATT_EXTENSION_TYPE;
 
+#define ACPI_BUS_CHECK              0x00
+#define ACPI_DEVICE_CHECK           0x01
+
+#define ACPI_STA_PRESENT            0x01
+#define ACPI_STA_ENABLED            0x02
+#define ACPI_STA_SHOW_UI            0x04
+#define ACPI_STA_FUNCTIONAL         0x08
+#define ACPI_STA_BATTERY_PRESENT    0x10
+
 #define ACPI_BATT_NOTIFY_STATUS     0x80
 #define ACPI_BATT_NOTIFY_INFO       0x81
 
@@ -67,6 +76,10 @@ typedef struct _ACPI_BIF_DATA
     CHAR OemInfo[256];
 } ACPI_BIF_DATA, *PACPI_BIF_DATA;
 
+#define CMBATT_AR_NOTIFY            0x01
+#define CMBATT_AR_INSERT            0x02
+#define CMBATT_AR_REMOVE            0x04
+
 typedef struct _CMBATT_DEVICE_EXTENSION
 {
     CMBATT_EXTENSION_TYPE FdoType;
@@ -85,11 +98,11 @@ typedef struct _CMBATT_DEVICE_EXTENSION
     ULONG DeviceId;
     PUNICODE_STRING DeviceName;
     ACPI_INTERFACE_STANDARD2 AcpiInterface;
-    BOOLEAN DelayAr;
-    BOOLEAN DelayedArFlag;
+    BOOLEAN DelayNotification;
+    BOOLEAN ArFlag;
     PVOID ClassData;
     BOOLEAN Started;
-    BOOLEAN DelayNotification;
+    BOOLEAN NotifySent;
     LONG ArLockValue;
     ULONG TagData;
     ULONG Tag;
@@ -155,6 +168,13 @@ NTAPI
 CmBattGetPsrData(
     PDEVICE_OBJECT DeviceObject,
     PULONG PsrData
+);
+
+NTSTATUS
+NTAPI
+CmBattGetStaData(
+    PDEVICE_OBJECT DeviceObject,
+    PULONG StaData
 );
 
 /* EOF */

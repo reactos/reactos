@@ -43,10 +43,117 @@ CmBattWakeDpc(PKDPC Dpc,
 
 VOID
 NTAPI
-CmBattNotifyHandler(PCMBATT_DEVICE_EXTENSION DeviceExtension,
-                    ULONG NotifyValue)
+CmBattNotifyHandler(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
+                    IN ULONG NotifyValue)
 {
-    UNIMPLEMENTED;
+    ULONG ArFlag;
+    PCMBATT_DEVICE_EXTENSION FdoExtension;
+    PDEVICE_OBJECT DeviceObject;
+    
+    if (CmBattDebug & (CMBATT_ACPI_ASSERT | CMBATT_PNP_INFO))
+        DbgPrint("CmBattNotifyHandler: CmBatt 0x%08x Type %d Number %d Notify Value: %x\n",
+                 DeviceExtension,
+                 DeviceExtension->FdoType,
+                 DeviceExtension->DeviceId,
+                 NotifyValue);
+    
+    /* Check what kind of notification was received */
+    switch (NotifyValue)
+    {
+        /* ACPI Specification says is sends a "Bus Check" when power source changes */
+        case ACPI_BUS_CHECK:
+        
+            /* We treat it as possible physical change */
+            DeviceExtension->ArFlag |= (CMBATT_AR_NOTIFY | CMBATT_AR_INSERT);
+            if ((DeviceExtension->Tag) &&
+                (CmBattDebug & (CMBATT_ACPI_WARNING | CMBATT_GENERIC_WARNING)))
+                DbgPrint("CmBattNotifyHandler: Received battery #%x insertion, but tag was not invalid.\n",
+                         DeviceExtension->DeviceId);
+            break;
+        
+        /* Status of the battery has changed */
+        case ACPI_BATT_NOTIFY_STATUS:
+        
+            /* All we'll do is notify the class driver */
+            DeviceExtension->ArFlag |= CMBATT_AR_NOTIFY;
+            break;
+        
+        /* Information on the battery has changed, such as physical presence */
+        case ACPI_DEVICE_CHECK:
+        case ACPI_BATT_NOTIFY_INFO:
+        
+            /* Reset all state and let the class driver re-evaluate it all */
+            DeviceExtension->ArFlag |= (CMBATT_AR_NOTIFY |
+                                        CMBATT_AR_INSERT |
+                                        CMBATT_AR_REMOVE);
+            break;
+            
+        default:
+        
+            if (CmBattDebug & CMBATT_PNP_INFO)
+                DbgPrint("CmBattNotifyHandler: Unknown Notify Value: %x\n", NotifyValue);
+    }
+
+    /* Check if we're supposed to delay the notification till later */
+    if (DeviceExtension->DelayNotification)
+    {
+        /* We'll handle this when we get a status query later on */
+        if (CmBattDebug & CMBATT_PNP_INFO)
+            DbgPrint("CmBattNotifyHandler: Notification delayed: ARs = %01x\n",
+                      DeviceExtension->ArFlag);
+        return;
+    }
+
+    /* We're going to handle this now */
+    if (CmBattDebug & CMBATT_PNP_INFO) 
+        DbgPrint("CmBattNotifyHandler: Performing ARs: %01x\n", DeviceExtension->ArFlag);
+
+    /* Check if this is a battery or AC adapter notification */
+    if (DeviceExtension->FdoType == CmBattBattery)
+    {
+        /* Reset the current trip point */
+        DeviceExtension->TripPointValue = 0xFFFFFFFF;
+        
+        /* Check what ARs have to be done */
+        ArFlag = DeviceExtension->ArFlag;
+        
+        /* New battery inserted, reset lock value */
+        if (ArFlag & CMBATT_AR_INSERT) InterlockedExchange(&DeviceExtension->ArLockValue, 0);
+
+        /* Check if the battery may have been removed */
+        if (ArFlag & CMBATT_AR_REMOVE) DeviceExtension->Tag = 0;
+        
+        /* Check if there's been any sort of change to the battery */
+        if (ArFlag & CMBATT_AR_NOTIFY)
+        {
+            /* We'll probably end up re-evaluating _BIF and _BST */
+            DeviceExtension->NotifySent = TRUE;
+            BatteryClassStatusNotify(DeviceExtension->ClassData);
+        }
+    }
+    else
+    {
+        /* The only known notification is AC/DC change */
+        if (DeviceExtension->ArFlag & CMBATT_AR_NOTIFY)
+        {
+            for (DeviceObject = DeviceExtension->FdoDeviceObject->DriverObject->DeviceObject;
+                 DeviceObject;
+                 DeviceObject = DeviceObject->NextDevice)
+            {
+                /* Is this a battery? */
+                FdoExtension = DeviceObject->DeviceExtension;
+                if (FdoExtension->FdoType == CmBattBattery)
+                {
+                    /* Send a notification to the class driver */
+                    FdoExtension->NotifySent = TRUE;
+                    BatteryClassStatusNotify(FdoExtension->ClassData);
+                }
+            }
+        }
+    }
+    
+    /* ARs have been processed */
+    DeviceExtension->ArFlag = 0;
 }
 
 VOID
@@ -156,11 +263,61 @@ CmBattIoctl(PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS
 NTAPI
-CmBattQueryTag(PCMBATT_DEVICE_EXTENSION DeviceExtension,
-               PULONG BatteryTag)
+CmBattQueryTag(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
+               OUT PULONG Tag)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;   
+    PDEVICE_OBJECT PdoDevice;
+    ULONG StaData;
+    ULONG NewTag;
+    NTSTATUS Status;
+    PAGED_CODE();
+    if (CmBattDebug & (CMBATT_ACPI_WARNING | CMBATT_GENERIC_INFO))
+      DbgPrint("CmBattQueryTag - Tag (%d), Battery %x, Device %d\n",
+                *Tag, DeviceExtension, DeviceExtension->DeviceId);
+    
+    /* Get PDO and clear notification flag */  
+    PdoDevice = DeviceExtension->PdoDeviceObject;
+    DeviceExtension->NotifySent = 0;
+    
+    /* Get _STA from PDO (we need the machine status, not the battery status) */
+    Status = CmBattGetStaData(PdoDevice, &StaData);
+    if (NT_SUCCESS(Status))
+    {
+        /* Is a battery present? */
+        if (StaData & ACPI_STA_BATTERY_PRESENT)
+        {
+            /* Do we not have a tag yet? */
+            if (!DeviceExtension->Tag)
+            {
+                /* Set the new tag value, reset tags if we reached the maximum */
+                NewTag = DeviceExtension->TagData;
+                if (DeviceExtension->TagData++ == 0xFFFFFFFF) NewTag = 1;
+                DeviceExtension->Tag = NewTag;
+                if (CmBattDebug & CMBATT_GENERIC_INFO)
+                    DbgPrint("CmBattQueryTag - New Tag: (%d)\n", DeviceExtension->Tag);
+                
+                /* Reset trip point data */
+                DeviceExtension->TripPointOld = 0;
+                DeviceExtension->TripPointValue = 0xFFFFFFFF;
+                                
+                /* Clear AR lock and set new interrupt time */
+                InterlockedExchange(&DeviceExtension->ArLockValue, 0);
+                DeviceExtension->InterruptTime = KeQueryInterruptTime();
+            }
+        }
+        else
+        {
+            /* No battery, so no tag */
+            DeviceExtension->Tag = 0;
+            Status = STATUS_NO_SUCH_DEVICE;
+        }
+    }
+    
+    /* Return the tag and status result */
+    *Tag = DeviceExtension->Tag;
+    if (CmBattDebug & CMBATT_ACPI_WARNING)
+      DbgPrint("CmBattQueryTag: Returning Tag: 0x%x, status 0x%x\n", *Tag, Status);
+    return Status;
 }
 
 NTSTATUS
