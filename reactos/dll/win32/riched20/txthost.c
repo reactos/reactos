@@ -42,9 +42,9 @@ typedef struct ITextHostImpl {
     BOOL bEmulateVersion10;
 } ITextHostImpl;
 
-static ITextHostVtbl textHostVtbl;
+static const ITextHostVtbl textHostVtbl;
 
-ITextHost *ME_CreateTextHost(HWND hwnd, BOOL bEmulateVersion10)
+ITextHost *ME_CreateTextHost(HWND hwnd, CREATESTRUCTW *cs, BOOL bEmulateVersion10)
 {
     ITextHostImpl *texthost;
     texthost = CoTaskMemAlloc(sizeof(*texthost));
@@ -59,7 +59,9 @@ ITextHost *ME_CreateTextHost(HWND hwnd, BOOL bEmulateVersion10)
 
         editor = ME_MakeEditor((ITextHost*)texthost, bEmulateVersion10);
         editor->exStyleFlags = GetWindowLongW(hwnd, GWL_EXSTYLE);
+        editor->styleFlags |= GetWindowLongW(hwnd, GWL_STYLE) & ES_WANTRETURN;
         editor->hWnd = hwnd; /* FIXME: Remove editor's dependence on hWnd */
+        editor->hwndParent = cs->hwndParent;
         SetWindowLongPtrW(hwnd, 0, (LONG_PTR)editor);
     }
 
@@ -448,9 +450,13 @@ HRESULT WINAPI ITextHostImpl_TxNotify(ITextHost *iface,
                                       void *pv)
 {
     ITextHostImpl *This = (ITextHostImpl *)iface;
+    ME_TextEditor *editor = (ME_TextEditor*)GetWindowLongPtrW(This->hWnd, 0);
     HWND hwnd = This->hWnd;
-    HWND parent = GetParent(hwnd);
-    UINT id = GetWindowLongW(hwnd, GWLP_ID);
+    UINT id;
+
+    if (!editor || !editor->hwndParent) return S_OK;
+
+    id = GetWindowLongW(hwnd, GWLP_ID);
 
     switch (iNotify)
     {
@@ -471,13 +477,13 @@ HRESULT WINAPI ITextHostImpl_TxNotify(ITextHost *iface,
             info->hwndFrom = hwnd;
             info->idFrom = id;
             info->code = iNotify;
-            SendMessageW(parent, WM_NOTIFY, id, (LPARAM)info);
+            SendMessageW(editor->hwndParent, WM_NOTIFY, id, (LPARAM)info);
             break;
         }
 
         case EN_UPDATE:
             /* Only sent when the window is visible. */
-            if (!IsWindowVisible(This->hWnd))
+            if (!IsWindowVisible(hwnd))
                 break;
             /* Fall through */
         case EN_CHANGE:
@@ -487,7 +493,7 @@ HRESULT WINAPI ITextHostImpl_TxNotify(ITextHost *iface,
         case EN_MAXTEXT:
         case EN_SETFOCUS:
         case EN_VSCROLL:
-            SendMessageW(parent, WM_COMMAND, MAKEWPARAM(id, iNotify), (LPARAM)hwnd);
+            SendMessageW(editor->hwndParent, WM_COMMAND, MAKEWPARAM(id, iNotify), (LPARAM)hwnd);
             break;
 
         case EN_MSGFILTER:
@@ -528,159 +534,114 @@ HRESULT WINAPI ITextHostImpl_TxGetSelectionBarWidth(ITextHost *iface,
 #ifdef __i386__  /* thiscall functions are i386-specific */
 
 #define THISCALL(func) __thiscall_ ## func
-#define DEFINE_THISCALL_WRAPPER(func) \
+#define DEFINE_THISCALL_WRAPPER(func,args) \
    extern typeof(func) THISCALL(func); \
-   __ASM_GLOBAL_FUNC(__thiscall_ ## func, \
+   __ASM_STDCALL_FUNC(__thiscall_ ## func, args, \
                    "popl %eax\n\t" \
                    "pushl %ecx\n\t" \
                    "pushl %eax\n\t" \
-                   "jmp " __ASM_NAME(#func) )
+                   "jmp " __ASM_NAME(#func) __ASM_STDCALL(args) )
 
 #else /* __i386__ */
 
 #define THISCALL(func) func
-#define DEFINE_THISCALL_WRAPPER(func) /* nothing */
+#define DEFINE_THISCALL_WRAPPER(func,args) /* nothing */
 
 #endif /* __i386__ */
 
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetDC);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxReleaseDC);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxShowScrollBar);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxEnableScrollBar);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxSetScrollRange);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxSetScrollPos);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxInvalidateRect);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxViewChange);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxCreateCaret);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxShowCaret);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxSetCaretPos);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxSetTimer);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxKillTimer);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxScrollWindowEx);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxSetCapture);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxSetFocus);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxSetCursor);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxScreenToClient);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxClientToScreen);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxActivate);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxDeactivate);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetClientRect);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetViewInset);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetCharFormat);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetParaFormat);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetSysColor);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetBackStyle);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetMaxLength);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetScrollBars);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetPasswordChar);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetAcceleratorPos);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetExtent);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_OnTxCharFormatChange);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_OnTxParaFormatChange);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetPropertyBits);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxNotify);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxImmGetContext);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxImmReleaseContext);
-DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetSelectionBarWidth);
-
-static ITextHostVtbl textHostVtbl = {
-    ITextHostImpl_QueryInterface,
-    ITextHostImpl_AddRef,
-    ITextHostImpl_Release,
-    THISCALL(ITextHostImpl_TxGetDC),
-    THISCALL(ITextHostImpl_TxReleaseDC),
-    THISCALL(ITextHostImpl_TxShowScrollBar),
-    THISCALL(ITextHostImpl_TxEnableScrollBar),
-    THISCALL(ITextHostImpl_TxSetScrollRange),
-    THISCALL(ITextHostImpl_TxSetScrollPos),
-    THISCALL(ITextHostImpl_TxInvalidateRect),
-    THISCALL(ITextHostImpl_TxViewChange),
-    THISCALL(ITextHostImpl_TxCreateCaret),
-    THISCALL(ITextHostImpl_TxShowCaret),
-    THISCALL(ITextHostImpl_TxSetCaretPos),
-    THISCALL(ITextHostImpl_TxSetTimer),
-    THISCALL(ITextHostImpl_TxKillTimer),
-    THISCALL(ITextHostImpl_TxScrollWindowEx),
-    THISCALL(ITextHostImpl_TxSetCapture),
-    THISCALL(ITextHostImpl_TxSetFocus),
-    THISCALL(ITextHostImpl_TxSetCursor),
-    THISCALL(ITextHostImpl_TxScreenToClient),
-    THISCALL(ITextHostImpl_TxClientToScreen),
-    THISCALL(ITextHostImpl_TxActivate),
-    THISCALL(ITextHostImpl_TxDeactivate),
-    THISCALL(ITextHostImpl_TxGetClientRect),
-    THISCALL(ITextHostImpl_TxGetViewInset),
-    THISCALL(ITextHostImpl_TxGetCharFormat),
-    THISCALL(ITextHostImpl_TxGetParaFormat),
-    THISCALL(ITextHostImpl_TxGetSysColor),
-    THISCALL(ITextHostImpl_TxGetBackStyle),
-    THISCALL(ITextHostImpl_TxGetMaxLength),
-    THISCALL(ITextHostImpl_TxGetScrollBars),
-    THISCALL(ITextHostImpl_TxGetPasswordChar),
-    THISCALL(ITextHostImpl_TxGetAcceleratorPos),
-    THISCALL(ITextHostImpl_TxGetExtent),
-    THISCALL(ITextHostImpl_OnTxCharFormatChange),
-    THISCALL(ITextHostImpl_OnTxParaFormatChange),
-    THISCALL(ITextHostImpl_TxGetPropertyBits),
-    THISCALL(ITextHostImpl_TxNotify),
-    THISCALL(ITextHostImpl_TxImmGetContext),
-    THISCALL(ITextHostImpl_TxImmReleaseContext),
-    THISCALL(ITextHostImpl_TxGetSelectionBarWidth),
-};
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetDC,4)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxReleaseDC,8)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxShowScrollBar,12)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxEnableScrollBar,12)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxSetScrollRange,20)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxSetScrollPos,16)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxInvalidateRect,12)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxViewChange,8)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxCreateCaret,16)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxShowCaret,8)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxSetCaretPos,12)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxSetTimer,12)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxKillTimer,8)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxScrollWindowEx,32)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxSetCapture,8)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxSetFocus,4)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxSetCursor,12)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxScreenToClient,8)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxClientToScreen,8)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxActivate,8)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxDeactivate,8)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetClientRect,8)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetViewInset,8)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetCharFormat,8)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetParaFormat,8)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetSysColor,8)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetBackStyle,8)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetMaxLength,8)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetScrollBars,8)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetPasswordChar,8)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetAcceleratorPos,8)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetExtent,8)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_OnTxCharFormatChange,8)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_OnTxParaFormatChange,8)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetPropertyBits,12)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxNotify,12)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxImmGetContext,4)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxImmReleaseContext,8)
+DEFINE_THISCALL_WRAPPER(ITextHostImpl_TxGetSelectionBarWidth,8)
 
 #ifdef __i386__  /* thiscall functions are i386-specific */
 
 #define STDCALL(func) __stdcall_ ## func
-#define DEFINE_STDCALL_WRAPPER(num,func) \
+#define DEFINE_STDCALL_WRAPPER(num,func,args) \
    extern typeof(func) __stdcall_ ## func; \
-   __ASM_GLOBAL_FUNC(__stdcall_ ## func, \
+   __ASM_STDCALL_FUNC(__stdcall_ ## func, args, \
                    "popl %eax\n\t" \
                    "popl %ecx\n\t" \
                    "pushl %eax\n\t" \
                    "movl (%ecx), %eax\n\t" \
                    "jmp *(4*(" #num "))(%eax)" )
 
-DEFINE_STDCALL_WRAPPER(3,ITextHostImpl_TxGetDC);
-DEFINE_STDCALL_WRAPPER(4,ITextHostImpl_TxReleaseDC);
-DEFINE_STDCALL_WRAPPER(5,ITextHostImpl_TxShowScrollBar);
-DEFINE_STDCALL_WRAPPER(6,ITextHostImpl_TxEnableScrollBar);
-DEFINE_STDCALL_WRAPPER(7,ITextHostImpl_TxSetScrollRange);
-DEFINE_STDCALL_WRAPPER(8,ITextHostImpl_TxSetScrollPos);
-DEFINE_STDCALL_WRAPPER(9,ITextHostImpl_TxInvalidateRect);
-DEFINE_STDCALL_WRAPPER(10,ITextHostImpl_TxViewChange);
-DEFINE_STDCALL_WRAPPER(11,ITextHostImpl_TxCreateCaret);
-DEFINE_STDCALL_WRAPPER(12,ITextHostImpl_TxShowCaret);
-DEFINE_STDCALL_WRAPPER(13,ITextHostImpl_TxSetCaretPos);
-DEFINE_STDCALL_WRAPPER(14,ITextHostImpl_TxSetTimer);
-DEFINE_STDCALL_WRAPPER(15,ITextHostImpl_TxKillTimer);
-DEFINE_STDCALL_WRAPPER(16,ITextHostImpl_TxScrollWindowEx);
-DEFINE_STDCALL_WRAPPER(17,ITextHostImpl_TxSetCapture);
-DEFINE_STDCALL_WRAPPER(18,ITextHostImpl_TxSetFocus);
-DEFINE_STDCALL_WRAPPER(19,ITextHostImpl_TxSetCursor);
-DEFINE_STDCALL_WRAPPER(20,ITextHostImpl_TxScreenToClient);
-DEFINE_STDCALL_WRAPPER(21,ITextHostImpl_TxClientToScreen);
-DEFINE_STDCALL_WRAPPER(22,ITextHostImpl_TxActivate);
-DEFINE_STDCALL_WRAPPER(23,ITextHostImpl_TxDeactivate);
-DEFINE_STDCALL_WRAPPER(24,ITextHostImpl_TxGetClientRect);
-DEFINE_STDCALL_WRAPPER(25,ITextHostImpl_TxGetViewInset);
-DEFINE_STDCALL_WRAPPER(26,ITextHostImpl_TxGetCharFormat);
-DEFINE_STDCALL_WRAPPER(27,ITextHostImpl_TxGetParaFormat);
-DEFINE_STDCALL_WRAPPER(28,ITextHostImpl_TxGetSysColor);
-DEFINE_STDCALL_WRAPPER(29,ITextHostImpl_TxGetBackStyle);
-DEFINE_STDCALL_WRAPPER(30,ITextHostImpl_TxGetMaxLength);
-DEFINE_STDCALL_WRAPPER(31,ITextHostImpl_TxGetScrollBars);
-DEFINE_STDCALL_WRAPPER(32,ITextHostImpl_TxGetPasswordChar);
-DEFINE_STDCALL_WRAPPER(33,ITextHostImpl_TxGetAcceleratorPos);
-DEFINE_STDCALL_WRAPPER(34,ITextHostImpl_TxGetExtent);
-DEFINE_STDCALL_WRAPPER(35,ITextHostImpl_OnTxCharFormatChange);
-DEFINE_STDCALL_WRAPPER(36,ITextHostImpl_OnTxParaFormatChange);
-DEFINE_STDCALL_WRAPPER(37,ITextHostImpl_TxGetPropertyBits);
-DEFINE_STDCALL_WRAPPER(38,ITextHostImpl_TxNotify);
-DEFINE_STDCALL_WRAPPER(39,ITextHostImpl_TxImmGetContext);
-DEFINE_STDCALL_WRAPPER(40,ITextHostImpl_TxImmReleaseContext);
-DEFINE_STDCALL_WRAPPER(41,ITextHostImpl_TxGetSelectionBarWidth);
+DEFINE_STDCALL_WRAPPER(3,ITextHostImpl_TxGetDC,4)
+DEFINE_STDCALL_WRAPPER(4,ITextHostImpl_TxReleaseDC,8)
+DEFINE_STDCALL_WRAPPER(5,ITextHostImpl_TxShowScrollBar,12)
+DEFINE_STDCALL_WRAPPER(6,ITextHostImpl_TxEnableScrollBar,12)
+DEFINE_STDCALL_WRAPPER(7,ITextHostImpl_TxSetScrollRange,20)
+DEFINE_STDCALL_WRAPPER(8,ITextHostImpl_TxSetScrollPos,16)
+DEFINE_STDCALL_WRAPPER(9,ITextHostImpl_TxInvalidateRect,12)
+DEFINE_STDCALL_WRAPPER(10,ITextHostImpl_TxViewChange,8)
+DEFINE_STDCALL_WRAPPER(11,ITextHostImpl_TxCreateCaret,16)
+DEFINE_STDCALL_WRAPPER(12,ITextHostImpl_TxShowCaret,8)
+DEFINE_STDCALL_WRAPPER(13,ITextHostImpl_TxSetCaretPos,12)
+DEFINE_STDCALL_WRAPPER(14,ITextHostImpl_TxSetTimer,12)
+DEFINE_STDCALL_WRAPPER(15,ITextHostImpl_TxKillTimer,8)
+DEFINE_STDCALL_WRAPPER(16,ITextHostImpl_TxScrollWindowEx,32)
+DEFINE_STDCALL_WRAPPER(17,ITextHostImpl_TxSetCapture,8)
+DEFINE_STDCALL_WRAPPER(18,ITextHostImpl_TxSetFocus,4)
+DEFINE_STDCALL_WRAPPER(19,ITextHostImpl_TxSetCursor,12)
+DEFINE_STDCALL_WRAPPER(20,ITextHostImpl_TxScreenToClient,8)
+DEFINE_STDCALL_WRAPPER(21,ITextHostImpl_TxClientToScreen,8)
+DEFINE_STDCALL_WRAPPER(22,ITextHostImpl_TxActivate,8)
+DEFINE_STDCALL_WRAPPER(23,ITextHostImpl_TxDeactivate,8)
+DEFINE_STDCALL_WRAPPER(24,ITextHostImpl_TxGetClientRect,8)
+DEFINE_STDCALL_WRAPPER(25,ITextHostImpl_TxGetViewInset,8)
+DEFINE_STDCALL_WRAPPER(26,ITextHostImpl_TxGetCharFormat,8)
+DEFINE_STDCALL_WRAPPER(27,ITextHostImpl_TxGetParaFormat,8)
+DEFINE_STDCALL_WRAPPER(28,ITextHostImpl_TxGetSysColor,8)
+DEFINE_STDCALL_WRAPPER(29,ITextHostImpl_TxGetBackStyle,8)
+DEFINE_STDCALL_WRAPPER(30,ITextHostImpl_TxGetMaxLength,8)
+DEFINE_STDCALL_WRAPPER(31,ITextHostImpl_TxGetScrollBars,8)
+DEFINE_STDCALL_WRAPPER(32,ITextHostImpl_TxGetPasswordChar,8)
+DEFINE_STDCALL_WRAPPER(33,ITextHostImpl_TxGetAcceleratorPos,8)
+DEFINE_STDCALL_WRAPPER(34,ITextHostImpl_TxGetExtent,8)
+DEFINE_STDCALL_WRAPPER(35,ITextHostImpl_OnTxCharFormatChange,8)
+DEFINE_STDCALL_WRAPPER(36,ITextHostImpl_OnTxParaFormatChange,8)
+DEFINE_STDCALL_WRAPPER(37,ITextHostImpl_TxGetPropertyBits,12)
+DEFINE_STDCALL_WRAPPER(38,ITextHostImpl_TxNotify,12)
+DEFINE_STDCALL_WRAPPER(39,ITextHostImpl_TxImmGetContext,4)
+DEFINE_STDCALL_WRAPPER(40,ITextHostImpl_TxImmReleaseContext,8)
+DEFINE_STDCALL_WRAPPER(41,ITextHostImpl_TxGetSelectionBarWidth,8)
 
-ITextHostVtbl itextHostStdcallVtbl = {
+const ITextHostVtbl itextHostStdcallVtbl = {
     NULL,
     NULL,
     NULL,
@@ -726,3 +687,48 @@ ITextHostVtbl itextHostStdcallVtbl = {
 };
 
 #endif /* __i386__ */
+
+static const ITextHostVtbl textHostVtbl = {
+    ITextHostImpl_QueryInterface,
+    ITextHostImpl_AddRef,
+    ITextHostImpl_Release,
+    THISCALL(ITextHostImpl_TxGetDC),
+    THISCALL(ITextHostImpl_TxReleaseDC),
+    THISCALL(ITextHostImpl_TxShowScrollBar),
+    THISCALL(ITextHostImpl_TxEnableScrollBar),
+    THISCALL(ITextHostImpl_TxSetScrollRange),
+    THISCALL(ITextHostImpl_TxSetScrollPos),
+    THISCALL(ITextHostImpl_TxInvalidateRect),
+    THISCALL(ITextHostImpl_TxViewChange),
+    THISCALL(ITextHostImpl_TxCreateCaret),
+    THISCALL(ITextHostImpl_TxShowCaret),
+    THISCALL(ITextHostImpl_TxSetCaretPos),
+    THISCALL(ITextHostImpl_TxSetTimer),
+    THISCALL(ITextHostImpl_TxKillTimer),
+    THISCALL(ITextHostImpl_TxScrollWindowEx),
+    THISCALL(ITextHostImpl_TxSetCapture),
+    THISCALL(ITextHostImpl_TxSetFocus),
+    THISCALL(ITextHostImpl_TxSetCursor),
+    THISCALL(ITextHostImpl_TxScreenToClient),
+    THISCALL(ITextHostImpl_TxClientToScreen),
+    THISCALL(ITextHostImpl_TxActivate),
+    THISCALL(ITextHostImpl_TxDeactivate),
+    THISCALL(ITextHostImpl_TxGetClientRect),
+    THISCALL(ITextHostImpl_TxGetViewInset),
+    THISCALL(ITextHostImpl_TxGetCharFormat),
+    THISCALL(ITextHostImpl_TxGetParaFormat),
+    THISCALL(ITextHostImpl_TxGetSysColor),
+    THISCALL(ITextHostImpl_TxGetBackStyle),
+    THISCALL(ITextHostImpl_TxGetMaxLength),
+    THISCALL(ITextHostImpl_TxGetScrollBars),
+    THISCALL(ITextHostImpl_TxGetPasswordChar),
+    THISCALL(ITextHostImpl_TxGetAcceleratorPos),
+    THISCALL(ITextHostImpl_TxGetExtent),
+    THISCALL(ITextHostImpl_OnTxCharFormatChange),
+    THISCALL(ITextHostImpl_OnTxParaFormatChange),
+    THISCALL(ITextHostImpl_TxGetPropertyBits),
+    THISCALL(ITextHostImpl_TxNotify),
+    THISCALL(ITextHostImpl_TxImmGetContext),
+    THISCALL(ITextHostImpl_TxImmReleaseContext),
+    THISCALL(ITextHostImpl_TxGetSelectionBarWidth),
+};

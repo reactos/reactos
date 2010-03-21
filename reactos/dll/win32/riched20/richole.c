@@ -315,16 +315,21 @@ IRichEditOle_fnGetClipboardData(IRichEditOle *me, CHARRANGE *lpchrg,
                DWORD reco, LPDATAOBJECT *lplpdataobj)
 {
     IRichEditOleImpl *This = impl_from_IRichEditOle(me);
-    CHARRANGE tmpchrg;
+    ME_Cursor start;
+    int nChars;
 
     TRACE("(%p,%p,%d)\n",This, lpchrg, reco);
     if(!lplpdataobj)
         return E_INVALIDARG;
     if(!lpchrg) {
-        ME_GetSelection(This->editor, &tmpchrg.cpMin, &tmpchrg.cpMax);
-        lpchrg = &tmpchrg;
+        int nFrom, nTo, nStartCur = ME_GetSelectionOfs(This->editor, &nFrom, &nTo);
+        start = This->editor->pCursors[nStartCur];
+        nChars = nTo - nFrom;
+    } else {
+        ME_CursorFromCharOfs(This->editor, lpchrg->cpMin, &start);
+        nChars = lpchrg->cpMax - lpchrg->cpMin;
     }
-    return ME_GetDataObject(This->editor, lpchrg, lplpdataobj);
+    return ME_GetDataObject(This->editor, &start, nChars, lplpdataobj);
 }
 
 static LONG WINAPI IRichEditOle_fnGetLinkCount(IRichEditOle *me)
@@ -383,11 +388,10 @@ IRichEditOle_fnInsertObject(IRichEditOle *me, REOBJECT *reo)
     TRACE("(%p,%p)\n", This, reo);
 
     if (reo->cbStruct < sizeof(*reo)) return STG_E_INVALIDPARAMETER;
-    if (reo->poleobj)   IOleObject_AddRef(reo->poleobj);
-    if (reo->pstg)      IStorage_AddRef(reo->pstg);
-    if (reo->polesite)  IOleClientSite_AddRef(reo->polesite);
 
     ME_InsertOLEFromCursor(This->editor, reo, 0);
+    ME_CommitUndo(This->editor);
+    ME_UpdateRepaint(This->editor);
     return S_OK;
 }
 
@@ -1725,6 +1729,11 @@ void ME_GetOLEObjectSize(ME_Context *c, ME_Run *run, SIZE *pSize)
   if (run->ole_obj->sizel.cx != 0 || run->ole_obj->sizel.cy != 0)
   {
     convert_sizel(c, &run->ole_obj->sizel, pSize);
+    if (c->editor->nZoomNumerator != 0)
+    {
+      pSize->cx = MulDiv(pSize->cx, c->editor->nZoomNumerator, c->editor->nZoomDenominator);
+      pSize->cy = MulDiv(pSize->cy, c->editor->nZoomNumerator, c->editor->nZoomDenominator);
+    }
     return;
   }
 
@@ -1815,53 +1824,45 @@ void ME_DrawOLE(ME_Context *c, int x, int y, ME_Run *run,
     GetObjectW(stgm.u.hBitmap, sizeof(dibsect), &dibsect);
     hMemDC = CreateCompatibleDC(c->hDC);
     SelectObject(hMemDC, stgm.u.hBitmap);
-    if (!has_size && c->editor->nZoomNumerator == 0)
+    if (has_size)
     {
-      sz.cx = dibsect.dsBm.bmWidth;
-      sz.cy = dibsect.dsBm.bmHeight;
-      BitBlt(c->hDC, x, y - dibsect.dsBm.bmHeight,
+      convert_sizel(c, &run->ole_obj->sizel, &sz);
+    } else {
+      sz.cx = MulDiv(dibsect.dsBm.bmWidth, c->dpi.cx, 96);
+      sz.cy = MulDiv(dibsect.dsBm.bmHeight, c->dpi.cy, 96);
+    }
+    if (c->editor->nZoomNumerator != 0)
+    {
+      sz.cx = MulDiv(sz.cx, c->editor->nZoomNumerator, c->editor->nZoomDenominator);
+      sz.cy = MulDiv(sz.cy, c->editor->nZoomNumerator, c->editor->nZoomDenominator);
+    }
+    if (sz.cx == dibsect.dsBm.bmWidth && sz.cy == dibsect.dsBm.bmHeight)
+    {
+      BitBlt(c->hDC, x, y - sz.cy,
              dibsect.dsBm.bmWidth, dibsect.dsBm.bmHeight,
              hMemDC, 0, 0, SRCCOPY);
-    }
-    else
-    {
-      if (has_size)
-      {
-        convert_sizel(c, &run->ole_obj->sizel, &sz);
-      }
-      else
-      {
-        sz.cx = MulDiv(dibsect.dsBm.bmWidth,
-                       c->editor->nZoomNumerator, c->editor->nZoomDenominator);
-        sz.cy = MulDiv(dibsect.dsBm.bmHeight,
-                       c->editor->nZoomNumerator, c->editor->nZoomDenominator);
-      }
+    } else {
       StretchBlt(c->hDC, x, y - sz.cy, sz.cx, sz.cy,
-                 hMemDC, 0, 0, dibsect.dsBm.bmWidth, dibsect.dsBm.bmHeight, SRCCOPY);
+                 hMemDC, 0, 0, dibsect.dsBm.bmWidth,
+                 dibsect.dsBm.bmHeight, SRCCOPY);
     }
     if (!stgm.pUnkForRelease) DeleteObject(stgm.u.hBitmap);
     break;
   case TYMED_ENHMF:
     GetEnhMetaFileHeader(stgm.u.hEnhMetaFile, sizeof(emh), &emh);
-    if (!has_size && c->editor->nZoomNumerator == 0)
+    if (has_size)
     {
-      sz.cy = emh.rclBounds.bottom - emh.rclBounds.top;
-      sz.cx = emh.rclBounds.right - emh.rclBounds.left;
+      convert_sizel(c, &run->ole_obj->sizel, &sz);
+    } else {
+      sz.cy = MulDiv(emh.rclBounds.bottom - emh.rclBounds.top, c->dpi.cx, 96);
+      sz.cx = MulDiv(emh.rclBounds.right - emh.rclBounds.left, c->dpi.cy, 96);
     }
-    else
+    if (c->editor->nZoomNumerator != 0)
     {
-      if (has_size)
-      {
-        convert_sizel(c, &run->ole_obj->sizel, &sz);
-      }
-      else
-      {
-        sz.cy = MulDiv(emh.rclBounds.bottom - emh.rclBounds.top,
-                       c->editor->nZoomNumerator, c->editor->nZoomDenominator);
-        sz.cx = MulDiv(emh.rclBounds.right - emh.rclBounds.left,
-                       c->editor->nZoomNumerator, c->editor->nZoomDenominator);
-      }
+      sz.cx = MulDiv(sz.cx, c->editor->nZoomNumerator, c->editor->nZoomDenominator);
+      sz.cy = MulDiv(sz.cy, c->editor->nZoomNumerator, c->editor->nZoomDenominator);
     }
+
     {
       RECT    rc;
 

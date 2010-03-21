@@ -156,6 +156,7 @@ ME_Style *ME_MakeStyle(CHARFORMAT2W *style) {
   s->hFont = NULL;
   s->tm.tmAscent = -1;
   all_refs++;
+  TRACE_(richedit_style)("ME_MakeStyle %p, total refs=%d\n", s, all_refs);
   return s;
 }
 
@@ -449,6 +450,7 @@ void ME_AddRefStyle(ME_Style *s)
   assert(s->nRefs>0); /* style with 0 references isn't supposed to exist */
   s->nRefs++;
   all_refs++;
+  TRACE_(richedit_style)("ME_AddRefStyle %p, new refs=%d, total refs=%d\n", s, s->nRefs, all_refs);
 }
 
 void ME_ReleaseStyle(ME_Style *s)
@@ -465,16 +467,15 @@ void ME_ReleaseStyle(ME_Style *s)
     ME_DestroyStyle(s);
 }
 
-ME_Style *ME_GetInsertStyle(ME_TextEditor *editor, int nCursor) {
+ME_Style *ME_GetInsertStyle(ME_TextEditor *editor, int nCursor)
+{
   if (ME_IsSelection(editor))
   {
-    ME_Cursor c;
-    int from, to;
-    
+    ME_Cursor *from, *to;
+
     ME_GetSelection(editor, &from, &to);
-    ME_CursorFromCharOfs(editor, from, &c);
-    ME_AddRefStyle(c.pRun->member.run.style);
-    return c.pRun->member.run.style;
+    ME_AddRefStyle(from->pRun->member.run.style);
+    return from->pRun->member.run.style;
   }
   if (editor->pBuffer->pCharStyle) {
     ME_AddRefStyle(editor->pBuffer->pCharStyle);

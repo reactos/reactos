@@ -37,17 +37,17 @@
 #ifdef __i386__  /* thiscall functions are i386-specific */
 
 #define THISCALL(func) __thiscall_ ## func
-#define DEFINE_THISCALL_WRAPPER(func) \
+#define DEFINE_THISCALL_WRAPPER(func,args) \
    extern typeof(func) THISCALL(func); \
-   __ASM_GLOBAL_FUNC(__thiscall_ ## func, \
+   __ASM_STDCALL_FUNC(__thiscall_ ## func, args, \
                    "popl %eax\n\t" \
                    "pushl %ecx\n\t" \
                    "pushl %eax\n\t" \
-                   "jmp " __ASM_NAME(#func) )
+                   "jmp " __ASM_NAME(#func) __ASM_STDCALL(args) )
 #else /* __i386__ */
 
 #define THISCALL(func) func
-#define DEFINE_THISCALL_WRAPPER(func) /* nothing */
+#define DEFINE_THISCALL_WRAPPER(func,args) /* nothing */
 
 #endif /* __i386__ */
 
@@ -87,6 +87,8 @@ HRESULT WINAPI CreateTextServices(IUnknown  * pUnkOuter,
    ITextImpl->pMyHost = pITextHost;
    ITextImpl->lpVtbl = &textservices_Vtbl;
    ITextImpl->editor = ME_MakeEditor(pITextHost, FALSE);
+   ITextImpl->editor->exStyleFlags = 0;
+   ITextImpl->editor->rcFormat = (RECT){0,0,0,0};
    ME_HandleMessage(ITextImpl->editor, WM_CREATE, 0, 0, TRUE, &hres);
 
    if (pUnkOuter)
@@ -292,12 +294,14 @@ HRESULT WINAPI fnTextSrv_TxGetText(ITextServices *iface,
    length = ME_GetTextLength(This->editor);
    if (length)
    {
+      ME_Cursor start;
       BSTR bstr;
       bstr = SysAllocStringByteLen(NULL, length * sizeof(WCHAR));
       if (bstr == NULL)
          return E_OUTOFMEMORY;
 
-      ME_GetTextW(This->editor, bstr , 0, length, FALSE);
+      ME_CursorFromCharOfs(This->editor, 0, &start);
+      ME_GetTextW(This->editor, bstr, length, &start, INT_MAX, FALSE);
       *pbstrText = bstr;
    } else {
       *pbstrText = NULL;
@@ -310,9 +314,11 @@ HRESULT WINAPI fnTextSrv_TxSetText(ITextServices *iface,
                                    LPCWSTR pszText)
 {
    ICOM_THIS_MULTI(ITextServicesImpl, lpVtbl, iface);
+   ME_Cursor cursor;
 
-   ME_InternalDeleteText(This->editor, 0, ME_GetTextLength(This->editor),
-                         FALSE);
+   ME_SetCursorToStart(This->editor, &cursor);
+   ME_InternalDeleteText(This->editor, &cursor,
+                         ME_GetTextLength(This->editor), FALSE);
    ME_InsertTextFromCursor(This->editor, 0, pszText, -1,
                            This->editor->pBuffer->pDefaultStyle);
    ME_SetSelection(This->editor, 0, 0);
@@ -387,24 +393,24 @@ HRESULT WINAPI fnTextSrv_TxGetCachedSize(ITextServices *iface,
    return E_NOTIMPL;
 }
 
-DEFINE_THISCALL_WRAPPER(fnTextSrv_TxSendMessage)
-DEFINE_THISCALL_WRAPPER(fnTextSrv_TxDraw)
-DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetHScroll)
-DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetVScroll)
-DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxSetCursor)
-DEFINE_THISCALL_WRAPPER(fnTextSrv_TxQueryHitPoint)
-DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxInplaceActivate)
-DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxInplaceDeactivate)
-DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxUIActivate)
-DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxUIDeactivate)
-DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetText)
-DEFINE_THISCALL_WRAPPER(fnTextSrv_TxSetText)
-DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetCurrentTargetX)
-DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetBaseLinePos)
-DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetNaturalSize)
-DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetDropTarget)
-DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxPropertyBitsChange)
-DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetCachedSize)
+DEFINE_THISCALL_WRAPPER(fnTextSrv_TxSendMessage,20)
+DEFINE_THISCALL_WRAPPER(fnTextSrv_TxDraw,52)
+DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetHScroll,24)
+DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetVScroll,24)
+DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxSetCursor,40)
+DEFINE_THISCALL_WRAPPER(fnTextSrv_TxQueryHitPoint,44)
+DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxInplaceActivate,8)
+DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxInplaceDeactivate,4)
+DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxUIActivate,4)
+DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxUIDeactivate,4)
+DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetText,8)
+DEFINE_THISCALL_WRAPPER(fnTextSrv_TxSetText,8)
+DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetCurrentTargetX,8)
+DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetBaseLinePos,8)
+DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetNaturalSize,36)
+DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetDropTarget,8)
+DEFINE_THISCALL_WRAPPER(fnTextSrv_OnTxPropertyBitsChange,12)
+DEFINE_THISCALL_WRAPPER(fnTextSrv_TxGetCachedSize,12)
 
 static const ITextServicesVtbl textservices_Vtbl =
 {
