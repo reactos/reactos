@@ -1,6 +1,6 @@
 @ stub CopyPDBs
 @ stdcall ClearDownloadCache()
-@ stub CreateApplicationContext
+@ stdcall CreateApplicationContext(ptr ptr)
 @ stdcall CreateAssemblyCache(ptr long)
 @ stdcall CreateAssemblyEnum(ptr ptr ptr long ptr)
 @ stdcall CreateAssemblyNameObject(ptr wstr long ptr)
