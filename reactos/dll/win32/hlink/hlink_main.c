@@ -99,6 +99,8 @@ HRESULT WINAPI HlinkCreateFromString( LPCWSTR pwzTarget, LPCWSTR pwzLocation,
 {
     IHlink *hl = NULL;
     HRESULT r = S_OK;
+    WCHAR *hash, *tgt;
+    const WCHAR *loc;
 
     TRACE("%s %s %s %p %i %p %s %p\n", debugstr_w(pwzTarget),
             debugstr_w(pwzLocation), debugstr_w(pwzFriendlyName), pihlsite,
@@ -108,8 +110,44 @@ HRESULT WINAPI HlinkCreateFromString( LPCWSTR pwzTarget, LPCWSTR pwzLocation,
     if (FAILED(r))
         return r;
 
-    IHlink_SetStringReference(hl, HLINKSETF_TARGET | HLINKSETF_LOCATION,
-            pwzTarget, pwzLocation);
+    if (pwzTarget)
+    {
+        hash = strchrW(pwzTarget, '#');
+        if (hash)
+        {
+            if (hash == pwzTarget)
+                tgt = NULL;
+            else
+            {
+                int tgt_len = hash - pwzTarget;
+                tgt = heap_alloc((tgt_len + 1) * sizeof(WCHAR));
+                if (!tgt)
+                    return E_OUTOFMEMORY;
+                memcpy(tgt, pwzTarget, tgt_len * sizeof(WCHAR));
+                tgt[tgt_len] = 0;
+            }
+            if (!pwzLocation)
+                loc = hash + 1;
+            else
+                loc = pwzLocation;
+        }
+        else
+        {
+            tgt = hlink_strdupW(pwzTarget);
+            if (!tgt)
+                return E_OUTOFMEMORY;
+            loc = pwzLocation;
+        }
+    }
+    else
+    {
+        tgt = NULL;
+        loc = pwzLocation;
+    }
+
+    IHlink_SetStringReference(hl, HLINKSETF_TARGET | HLINKSETF_LOCATION, tgt, loc);
+
+    heap_free(tgt);
 
     if (pwzFriendlyName)
         IHlink_SetFriendlyName(hl, pwzFriendlyName);
