@@ -2261,7 +2261,6 @@ static int is_allowed_conf_type(const type_t *type)
         case TYPE_BASIC_HYPER:
         case TYPE_BASIC_BYTE:
         case TYPE_BASIC_WCHAR:
-        case TYPE_BASIC_ERROR_STATUS_T:
             return TRUE;
         default:
             return FALSE;

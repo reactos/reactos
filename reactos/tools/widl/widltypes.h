@@ -44,15 +44,10 @@ typedef GUID UUID;
 #endif
 #define FALSE 0
 
-#define RPC_FC_MODULE   0xfc
-#define RPC_FC_COCLASS  0xfd
-#define RPC_FC_FUNCTION 0xfe
-
 typedef struct _loc_info_t loc_info_t;
 typedef struct _attr_t attr_t;
 typedef struct _expr_t expr_t;
 typedef struct _type_t type_t;
-typedef struct _typeref_t typeref_t;
 typedef struct _var_t var_t;
 typedef struct _declarator_t declarator_t;
 typedef struct _func_t func_t;
@@ -529,8 +524,6 @@ int is_ptr(const type_t *t);
 int is_array(const type_t *t);
 int is_var_ptr(const var_t *v);
 int cant_be_null(const var_t *v);
-int is_struct(unsigned char tc);
-int is_union(unsigned char tc);
 
 #define tsENUM   1
 #define tsSTRUCT 2
