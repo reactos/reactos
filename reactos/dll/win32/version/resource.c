@@ -36,14 +36,15 @@
 #include "windef.h"
 #include "winbase.h"
 #include "lzexpand.h"
+#include "winuser.h"
+#include "winver.h"
+#undef VS_FILE_INFO
+#define VS_FILE_INFO 16
 
 #include "wine/unicode.h"
 #include "wine/winbase16.h"
 
 #include "wine/debug.h"
-
-/* winnt.h */
-#define IMAGE_FILE_RESOURCE_DIRECTORY		2
 
 WINE_DEFAULT_DEBUG_CHANNEL(ver);
 
@@ -91,56 +92,6 @@ static const IMAGE_RESOURCE_DIRECTORY *find_entry_default( const IMAGE_RESOURCE_
 }
 
 
-/**********************************************************************
- *  find_entry_by_name
- *
- * Find an entry by name in a resource directory
- * Copied from loader/pe_resource.c
- */
-static const IMAGE_RESOURCE_DIRECTORY *find_entry_by_name( const IMAGE_RESOURCE_DIRECTORY *dir,
-                                                           LPCSTR name, const void *root )
-{
-    const IMAGE_RESOURCE_DIRECTORY *ret = NULL;
-    LPWSTR nameW;
-    DWORD namelen;
-
-    if (!HIWORD(name)) return find_entry_by_id( dir, LOWORD(name), root );
-    if (name[0] == '#')
-    {
-        return find_entry_by_id( dir, atoi(name+1), root );
-    }
-
-    namelen = MultiByteToWideChar( CP_ACP, 0, name, -1, NULL, 0 );
-    if ((nameW = HeapAlloc( GetProcessHeap(), 0, namelen * sizeof(WCHAR) )))
-    {
-        const IMAGE_RESOURCE_DIRECTORY_ENTRY *entry;
-        const IMAGE_RESOURCE_DIR_STRING_U *str;
-        int min, max, res, pos;
-
-        MultiByteToWideChar( CP_ACP, 0, name, -1, nameW, namelen );
-        namelen--;  /* remove terminating null */
-        entry = (const IMAGE_RESOURCE_DIRECTORY_ENTRY *)(dir + 1);
-        min = 0;
-        max = dir->NumberOfNamedEntries - 1;
-        while (min <= max)
-        {
-            pos = (min + max) / 2;
-            str = (const IMAGE_RESOURCE_DIR_STRING_U *)((const char *)root + entry[pos].u1.s1.NameOffset);
-            res = strncmpiW( nameW, str->NameString, str->Length );
-            if (!res && namelen == str->Length)
-            {
-                ret = (const IMAGE_RESOURCE_DIRECTORY *)((const char *)root + entry[pos].u2.s3.OffsetToDirectory);
-                break;
-            }
-            if (res < 0) max = pos - 1;
-            else min = pos + 1;
-        }
-        HeapFree( GetProcessHeap(), 0, nameW );
-    }
-    return ret;
-}
-
-
 /***********************************************************************
  *           read_xx_header         [internal]
  */
@@ -153,7 +104,11 @@ static int read_xx_header( HFILE lzfd )
     if ( sizeof(mzh) != LZRead( lzfd, (LPSTR)&mzh, sizeof(mzh) ) )
         return 0;
     if ( mzh.e_magic != IMAGE_DOS_SIGNATURE )
+    {
+        if (!memcmp( &mzh, "\177ELF", 4 )) return 1;  /* ELF */
+        if (*(UINT *)&mzh == 0xfeedface || *(UINT *)&mzh == 0xcefaedfe) return 1;  /* Mach-O */
         return 0;
+    }
 
     LZSeek( lzfd, mzh.e_lfanew, SEEK_SET );
     if ( 2 != LZRead( lzfd, magic, 2 ) )
@@ -171,13 +126,13 @@ static int read_xx_header( HFILE lzfd )
     return 0;
 }
 
-#ifndef __REACTOS__
 /***********************************************************************
  *           find_ne_resource         [internal]
  */
-static BOOL find_ne_resource( HFILE lzfd, LPCSTR typeid, LPCSTR resid,
-                                DWORD *resLen, DWORD *resOff )
+static BOOL find_ne_resource( HFILE lzfd, DWORD *resLen, DWORD *resOff )
 {
+    const WORD typeid = VS_FILE_INFO | 0x8000;
+    const WORD resid = VS_VERSION_INFO | 0x8000;
     IMAGE_OS2_HEADER nehd;
     NE_TYPEINFO *typeInfo;
     NE_NAMEINFO *nameInfo;
@@ -210,55 +165,23 @@ static BOOL find_ne_resource( HFILE lzfd, LPCSTR typeid, LPCSTR resid,
 
     /* Find resource */
     typeInfo = (NE_TYPEINFO *)(resTab + 2);
-
-    if (HIWORD(typeid) != 0)  /* named type */
+    while (typeInfo->type_id)
     {
-        BYTE len = strlen( typeid );
-        while (typeInfo->type_id)
-        {
-            if (!(typeInfo->type_id & 0x8000))
-            {
-                BYTE *p = resTab + typeInfo->type_id;
-                if ((*p == len) && !strncasecmp( (char*)p+1, typeid, len )) goto found_type;
-            }
-            typeInfo = (NE_TYPEINFO *)((char *)(typeInfo + 1) +
-                                       typeInfo->count * sizeof(NE_NAMEINFO));
-        }
+        if (typeInfo->type_id == typeid) goto found_type;
+        typeInfo = (NE_TYPEINFO *)((char *)(typeInfo + 1) +
+                                   typeInfo->count * sizeof(NE_NAMEINFO));
     }
-    else  /* numeric type id */
-    {
-        WORD id = LOWORD(typeid) | 0x8000;
-        while (typeInfo->type_id)
-        {
-            if (typeInfo->type_id == id) goto found_type;
-            typeInfo = (NE_TYPEINFO *)((char *)(typeInfo + 1) +
-                                       typeInfo->count * sizeof(NE_NAMEINFO));
-        }
-    }
-    TRACE("No typeid entry found for %p\n", typeid );
+    TRACE("No typeid entry found\n" );
     HeapFree( GetProcessHeap(), 0, resTab );
     return FALSE;
 
  found_type:
     nameInfo = (NE_NAMEINFO *)(typeInfo + 1);
 
-    if (HIWORD(resid) != 0)  /* named resource */
-    {
-        BYTE len = strlen( resid );
-        for (count = typeInfo->count; count > 0; count--, nameInfo++)
-        {
-            BYTE *p = resTab + nameInfo->id;
-            if (nameInfo->id & 0x8000) continue;
-            if ((*p == len) && !strncasecmp( (char*)p+1, resid, len )) goto found_name;
-        }
-    }
-    else  /* numeric resource id */
-    {
-        WORD id = LOWORD(resid) | 0x8000;
-        for (count = typeInfo->count; count > 0; count--, nameInfo++)
-            if (nameInfo->id == id) goto found_name;
-    }
-    TRACE("No resid entry found for %p\n", typeid );
+    for (count = typeInfo->count; count > 0; count--, nameInfo++)
+        if (nameInfo->id == resid) goto found_name;
+
+    TRACE("No resid entry found\n" );
     HeapFree( GetProcessHeap(), 0, resTab );
     return FALSE;
 
@@ -270,13 +193,11 @@ static BOOL find_ne_resource( HFILE lzfd, LPCSTR typeid, LPCSTR resid,
     HeapFree( GetProcessHeap(), 0, resTab );
     return TRUE;
 }
-#endif /* ! __REACTOS__ */
 
 /***********************************************************************
  *           find_pe_resource         [internal]
  */
-static BOOL find_pe_resource( HFILE lzfd, LPCSTR typeid, LPCSTR resid,
-                                DWORD *resLen, DWORD *resOff )
+static BOOL find_pe_resource( HFILE lzfd, DWORD *resLen, DWORD *resOff )
 {
     IMAGE_NT_HEADERS pehd;
     DWORD pehdoffset;
@@ -349,22 +270,22 @@ static BOOL find_pe_resource( HFILE lzfd, LPCSTR typeid, LPCSTR resid,
     resDir = resSection + (resDataDir->VirtualAddress - sections[i].VirtualAddress);
 
     resPtr = resDir;
-    resPtr = find_entry_by_name( resPtr, typeid, resDir );
+    resPtr = find_entry_by_id( resPtr, VS_FILE_INFO, resDir );
     if ( !resPtr )
     {
-        TRACE("No typeid entry found for %p\n", typeid );
+        TRACE("No typeid entry found\n" );
         goto done;
     }
-    resPtr = find_entry_by_name( resPtr, resid, resDir );
+    resPtr = find_entry_by_id( resPtr, VS_VERSION_INFO, resDir );
     if ( !resPtr )
     {
-        TRACE("No resid entry found for %p\n", resid );
+        TRACE("No resid entry found\n" );
         goto done;
     }
     resPtr = find_entry_default( resPtr, resDir );
     if ( !resPtr )
     {
-        TRACE("No default language entry found for %p\n", resid );
+        TRACE("No default language entry found\n" );
         goto done;
     }
 
@@ -395,95 +316,21 @@ static BOOL find_pe_resource( HFILE lzfd, LPCSTR typeid, LPCSTR resid,
 }
 
 
-/*************************************************************************
- * GetFileResourceSize                     [VER.2]
+/***********************************************************************
+ *           find_version_resource         [internal]
  */
-DWORD WINAPI GetFileResourceSize16( LPCSTR lpszFileName, LPCSTR lpszResType,
-                                    LPCSTR lpszResId, LPDWORD lpdwFileOffset )
+DWORD find_version_resource( HFILE lzfd, DWORD *reslen, DWORD *offset )
 {
-    BOOL retv = FALSE;
-    HFILE lzfd;
-    OFSTRUCT ofs;
-    DWORD reslen;
+    DWORD magic = read_xx_header( lzfd );
 
-    TRACE("(%s,type=%p,id=%p,off=%p)\n",
-          debugstr_a(lpszFileName), lpszResType, lpszResId, lpszResId );
-
-    lzfd = LZOpenFileA( (LPSTR)lpszFileName, &ofs, OF_READ );
-    if ( lzfd < 0 ) return 0;
-
-    switch ( read_xx_header( lzfd ) )
+    switch (magic)
     {
     case IMAGE_OS2_SIGNATURE:
-#ifdef __REACTOS__
-        ERR("OS2 Images not supported under ReactOS at this time.");
-        retv = 0;
-#else
-        retv = find_ne_resource( lzfd, lpszResType, lpszResId,
-                                 &reslen, lpdwFileOffset );
-#endif
+        if (!find_ne_resource( lzfd, reslen, offset )) magic = 0;
         break;
-
     case IMAGE_NT_SIGNATURE:
-        retv = find_pe_resource( lzfd, lpszResType, lpszResId,
-                                 &reslen, lpdwFileOffset );
+        if (!find_pe_resource( lzfd, reslen, offset )) magic = 0;
         break;
     }
-
-    LZClose( lzfd );
-    return retv? reslen : 0;
-}
-
-
-/*************************************************************************
- * GetFileResource                         [VER.3]
- */
-DWORD WINAPI GetFileResource16( LPCSTR lpszFileName, LPCSTR lpszResType,
-                                LPCSTR lpszResId, DWORD dwFileOffset,
-                                DWORD dwResLen, LPVOID lpvData )
-{
-    BOOL retv = FALSE;
-    HFILE lzfd;
-    OFSTRUCT ofs;
-    DWORD reslen = dwResLen;
-
-    TRACE("(%s,type=%p,id=%p,off=%d,len=%d,data=%p)\n",
-		debugstr_a(lpszFileName), lpszResType, lpszResId,
-                dwFileOffset, dwResLen, lpvData );
-
-    lzfd = LZOpenFileA( (LPSTR)lpszFileName, &ofs, OF_READ );
-    if ( lzfd < 0 ) return 0;
-
-    if ( !dwFileOffset )
-    {
-        switch ( read_xx_header( lzfd ) )
-        {
-        case IMAGE_OS2_SIGNATURE:
-#ifdef __REACTOS__
-            ERR("OS2 Images not supported under ReactOS at this time.");
-            retv = 0;
-#else
-            retv = find_ne_resource( lzfd, lpszResType, lpszResId,
-                                     &reslen, &dwFileOffset );
-#endif
-            break;
-
-        case IMAGE_NT_SIGNATURE:
-            retv = find_pe_resource( lzfd, lpszResType, lpszResId,
-                                     &reslen, &dwFileOffset );
-            break;
-        }
-
-        if ( !retv )
-        {
-            LZClose( lzfd );
-            return 0;
-        }
-    }
-
-    LZSeek( lzfd, dwFileOffset, SEEK_SET );
-    reslen = LZRead( lzfd, lpvData, min( reslen, dwResLen ) );
-    LZClose( lzfd );
-
-    return reslen;
+    return magic;
 }
