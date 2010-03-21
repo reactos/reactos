@@ -1320,13 +1320,13 @@ HRESULT PngEncoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
 
 HRESULT PngDecoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
 {
-    ERR("Trying to load PNG picture, but PNG supported not compiled in.\n");
+    ERR("Trying to load PNG picture, but PNG support is not compiled in.\n");
     return E_FAIL;
 }
 
 HRESULT PngEncoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
 {
-    ERR("Trying to save PNG picture, but PNG supported not compiled in.\n");
+    ERR("Trying to save PNG picture, but PNG support is not compiled in.\n");
     return E_FAIL;
 }
 
