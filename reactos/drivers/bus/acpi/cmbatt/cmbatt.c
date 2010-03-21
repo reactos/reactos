@@ -112,7 +112,7 @@ CmBattNotifyHandler(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
     if (DeviceExtension->FdoType == CmBattBattery)
     {
         /* Reset the current trip point */
-        DeviceExtension->TripPointValue = 0xFFFFFFFF;
+        DeviceExtension->TripPointValue = BATTERY_UNKNOWN_CAPACITY;
         
         /* Check what ARs have to be done */
         ArFlag = DeviceExtension->ArFlag;
@@ -298,7 +298,7 @@ CmBattQueryTag(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
                 
                 /* Reset trip point data */
                 DeviceExtension->TripPointOld = 0;
-                DeviceExtension->TripPointValue = 0xFFFFFFFF;
+                DeviceExtension->TripPointValue = BATTERY_UNKNOWN_CAPACITY;
                                 
                 /* Clear AR lock and set new interrupt time */
                 InterlockedExchange(&DeviceExtension->ArLockValue, 0);
@@ -322,20 +322,189 @@ CmBattQueryTag(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
 
 NTSTATUS
 NTAPI
-CmBattDisableStatusNotify(PCMBATT_DEVICE_EXTENSION DeviceExtension)
+CmBattDisableStatusNotify(IN PCMBATT_DEVICE_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    PAGED_CODE();
+    if (CmBattDebug & 0xA) DbgPrint("CmBattDisableStatusNotify\n");
+
+    /* Do we have a trip point */
+    if (DeviceExtension->TripPointSet)
+    {
+        /* Is there a current value set? */
+        if (DeviceExtension->TripPointValue)
+        {
+            /* Reset it back to 0 */
+            DeviceExtension->TripPointValue = 0;
+            Status = CmBattSetTripPpoint(DeviceExtension, 0);
+            if (!NT_SUCCESS(Status))
+            {
+                /* If it failed, set unknown/invalid value */
+                DeviceExtension->TripPointValue = BATTERY_UNKNOWN_CAPACITY;
+                if (CmBattDebug & 8)
+                    DbgPrint("CmBattDisableStatusNotify: SetTripPoint failed - %x\n", Status);
+            }
+        }
+        else
+        {
+            /* No trip point set, so this is a successful no-op */
+            Status = STATUS_SUCCESS;
+        }
+    }
+    else
+    {
+        /* Nothing we can do */
+        Status = STATUS_OBJECT_NAME_NOT_FOUND;
+    }
+    
+    /* Return status */
+    return Status;
 }
 
 NTSTATUS
 NTAPI
-CmBattSetStatusNotify(PCMBATT_DEVICE_EXTENSION DeviceExtension,
-                      ULONG BatteryTag,
-                      PBATTERY_NOTIFY BatteryNotify)
+CmBattSetStatusNotify(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
+                      IN ULONG BatteryTag,
+                      IN PBATTERY_NOTIFY BatteryNotify)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    ACPI_BST_DATA BstData;
+    ULONG Capacity, NewTripPoint, TripPoint, DesignVoltage;
+    BOOLEAN Charging;
+    PAGED_CODE();
+    if (CmBattDebug & (CMBATT_ACPI_WARNING | CMBATT_GENERIC_INFO))
+        DbgPrint("CmBattSetStatusNotify: Tag (%d) Target(0x%x)\n",
+                 BatteryTag, BatteryNotify->LowCapacity);
+    
+    /* Update any ACPI evaluations */    
+    Status = CmBattVerifyStaticInfo(DeviceExtension, BatteryTag);
+    if (!NT_SUCCESS(Status)) return Status;
+    
+    /* Trip point not supported, fail */
+    if (!DeviceExtension->TripPointSet) return STATUS_OBJECT_NAME_NOT_FOUND;
+    
+    /* Are both capacities known? */
+    if ((BatteryNotify->HighCapacity == BATTERY_UNKNOWN_CAPACITY) ||
+        (BatteryNotify->LowCapacity == BATTERY_UNKNOWN_CAPACITY))
+    {
+        /* We can't set trip points without these */
+        if (CmBattDebug & CMBATT_GENERIC_WARNING)
+            DbgPrint("CmBattSetStatusNotify: Failing request because of BATTERY_UNKNOWN_CAPACITY.\n");
+        return STATUS_NOT_SUPPORTED;
+    }
+    
+    /* Is the battery charging? */
+    Charging = DeviceExtension->BstData.State & ACPI_BATT_STAT_CHARGING;
+    if (Charging)
+    {
+        /* Then the trip point is when we hit the cap */
+        Capacity = BatteryNotify->HighCapacity;
+        NewTripPoint = BatteryNotify->HighCapacity;
+    }
+    else
+    {
+        /* Otherwise it's when we discharge to the bottom */
+        Capacity = BatteryNotify->LowCapacity;
+        NewTripPoint = BatteryNotify->LowCapacity;
+    }
+
+    /* Do we have data in Amps or Watts? */
+    if (DeviceExtension->BifData.PowerUnit == ACPI_BATT_POWER_UNIT_AMPS)
+    {
+        /* We need the voltage to do the conversion */
+        DesignVoltage = DeviceExtension->BifData.DesignVoltage;
+        if ((DesignVoltage != BATTERY_UNKNOWN_VOLTAGE) && (DesignVoltage))
+        {
+            /* Convert from mAh into Ah */
+            TripPoint = 1000 * NewTripPoint;
+            if (Charging)
+            {
+                /* Scale the high trip point */
+                NewTripPoint = (TripPoint + 500) / DesignVoltage + ((TripPoint + 500) % DesignVoltage != 0);
+            }
+            else
+            {
+                /* Scale the low trip point */
+                NewTripPoint = (TripPoint - 500) / DesignVoltage - ((TripPoint - 500) % DesignVoltage == 0);
+            }
+        }
+        else
+        {
+            /* Without knowing the voltage, Amps are not enough data on consumption */
+            Status = STATUS_NOT_SUPPORTED;
+            if (CmBattDebug & CMBATT_ACPI_WARNING)
+                DbgPrint("CmBattSetStatusNotify: Can't calculate BTP, DesignVoltage = 0x%08x\n",
+                        DesignVoltage);  
+        }
+    }
+    else if (Charging)
+    {
+        /* Make it trip just one past the charge cap */
+        ++NewTripPoint;
+    }
+    else if (NewTripPoint > 0)
+    {
+        /* Make it trip just one below the drain cap */
+        --NewTripPoint;
+    }
+
+    /* Do we actually have a new trip point? */
+    if (NewTripPoint == DeviceExtension->TripPointValue)
+    {
+        /* No, so there is no work to be done */
+        if (CmBattDebug & CMBATT_GENERIC_STATUS)
+            DbgPrint("CmBattSetStatusNotify: Keeping original setting: %X\n", DeviceExtension->TripPointValue);
+        return STATUS_SUCCESS;
+    }
+    
+    /* Set the trip point with ACPI and check for success */
+    DeviceExtension->TripPointValue = NewTripPoint;
+    Status = CmBattSetTripPpoint(DeviceExtension, NewTripPoint);
+    if (!(NewTripPoint) && (Capacity)) Status = STATUS_NOT_SUPPORTED;
+    if (!NT_SUCCESS(Status))
+    {
+        /* We failed to set the trip point, or there wasn't one settable */
+        DeviceExtension->TripPointValue = BATTERY_UNKNOWN_CAPACITY;
+        if (CmBattDebug & (CMBATT_GENERIC_WARNING | CMBATT_ACPI_WARNING))
+            DbgPrint("CmBattSetStatusNotify: SetTripPoint failed - %x\n", Status);
+        return Status;
+    }
+    
+    /* Read the new BST data to see the latest state */
+    Status = CmBattGetBstData(DeviceExtension, &BstData);
+    if (!NT_SUCCESS(Status))
+    {
+        /* We'll return failure to the caller */
+        if (CmBattDebug & (CMBATT_GENERIC_WARNING | CMBATT_ACPI_WARNING))
+            DbgPrint("CmBattSetStatusNotify: GetBstData - %x\n", Status);
+    }
+    else if ((Charging) && (BstData.RemainingCapacity >= NewTripPoint))
+    {
+        /* We are charging and our capacity is past the trip point, so trip now */
+        if (CmBattDebug & CMBATT_GENERIC_WARNING)
+            DbgPrint("CmBattSetStatusNotify: Trip point already crossed (1): TP = %08x, remaining capacity = %08x\n",
+                     NewTripPoint, BstData.RemainingCapacity);
+        CmBattNotifyHandler(DeviceExtension, ACPI_BATT_NOTIFY_STATUS);
+    }
+    else if ((BstData.RemainingCapacity) && (Capacity))
+    {
+        /* We are discharging, and our capacity is below the trip point, trip now */
+        if (CmBattDebug & CMBATT_GENERIC_WARNING)
+            DbgPrint("CmBattSetStatusNotify: Trip point already crossed (1): TP = %08x, remaining capacity = %08x\n",
+                     NewTripPoint, BstData.RemainingCapacity);
+        CmBattNotifyHandler(DeviceExtension, ACPI_BATT_NOTIFY_STATUS);        
+    }
+
+    /* All should've went well if we got here, unless BST failed... return! */
+    if (CmBattDebug & CMBATT_GENERIC_STATUS)
+          DbgPrint("CmBattSetStatusNotify: Want %X CurrentCap %X\n",
+                    Capacity, DeviceExtension->RemainingCapacity);
+    if (CmBattDebug & CMBATT_ACPI_WARNING)
+          DbgPrint("CmBattSetStatusNotify: Set to: [%#08lx][%#08lx][%#08lx] Status %x\n",
+                    BatteryNotify->PowerState,
+                    BatteryNotify->LowCapacity,
+                    BatteryNotify->HighCapacity);
+    return Status;
 }
 
 NTSTATUS

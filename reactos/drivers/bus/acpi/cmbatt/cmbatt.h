@@ -177,4 +177,11 @@ CmBattGetStaData(
     PULONG StaData
 );
 
+NTSTATUS
+NTAPI
+CmBattSetTripPpoint(
+    PCMBATT_DEVICE_EXTENSION DeviceExtension,
+    ULONG AlarmValue
+);
+
 /* EOF */
