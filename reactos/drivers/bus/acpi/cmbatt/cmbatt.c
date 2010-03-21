@@ -19,26 +19,120 @@ UNICODE_STRING GlobalRegistryPath;
 KTIMER CmBattWakeDpcTimerObject;
 KDPC CmBattWakeDpcObject;
 PDEVICE_OBJECT AcAdapterPdo;
+LARGE_INTEGER CmBattWakeDpcDelay;
  
 /* FUNCTIONS ******************************************************************/
 
 VOID
 NTAPI
-CmBattPowerCallBack(PCMBATT_DEVICE_EXTENSION DeviceExtension,
-                    PVOID Argument1,
-                    PVOID Argument2)
+CmBattPowerCallBack(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
+                    IN ULONG Action,
+                    IN ULONG Value)
 {
-    UNIMPLEMENTED;
+    BOOLEAN Cancelled;
+    PDEVICE_OBJECT DeviceObject;
+    if (CmBattDebug & 0x10)
+        DbgPrint("CmBattPowerCallBack: action: %d, value: %d \n", Action, Value);
+    
+    /* Check if a transition is going to happen */
+    if (Action == PO_CB_SYSTEM_STATE_LOCK)
+    {
+        /* We have just re-entered S0: call the wake DPC in 10 seconds */
+        if (Value == 0)
+        {
+            if (CmBattDebug & 0x10)
+                DbgPrint("CmBattPowerCallBack: Calling CmBattWakeDpc after 10 seconds.\n");
+            Cancelled = KeSetTimer(&CmBattWakeDpcTimerObject, CmBattWakeDpcDelay, &CmBattWakeDpcObject);
+            if (CmBattDebug & 0x10)
+                DbgPrint("CmBattPowerCallBack: timerCanceled = %d.\n", Cancelled);
+        }
+        else if (Value == 0)
+        {
+            /* We are exiting the S0 state: loop all devices to set the delay flag */
+            if (CmBattDebug & 0x10)
+                DbgPrint("CmBattPowerCallBack: Delaying Notifications\n");
+            for (DeviceObject = DeviceExtension->DeviceObject;
+                 DeviceObject;
+                 DeviceObject = DeviceObject->NextDevice)
+            {
+                /* Set the delay flag */
+                DeviceExtension = DeviceObject->DeviceExtension;
+                DeviceExtension->DelayNotification = TRUE;
+            }
+        }
+        else if (CmBattDebug & 0x10)
+        {
+            /* Unknown value */
+            DbgPrint("CmBattPowerCallBack: unknown argument2 = %08x\n");
+        }
+    }
 }
 
 VOID
 NTAPI
-CmBattWakeDpc(PKDPC Dpc,
-              PCMBATT_DEVICE_EXTENSION FdoExtension,
-              PVOID SystemArgument1,
-              PVOID SystemArgument2)
+CmBattWakeDpc(IN PKDPC Dpc,
+              IN PCMBATT_DEVICE_EXTENSION FdoExtension,
+              IN PVOID SystemArgument1,
+              IN PVOID SystemArgument2)
 {
+    PDEVICE_OBJECT CurrentObject;
+    BOOLEAN AcNotify = FALSE;
+    PCMBATT_DEVICE_EXTENSION DeviceExtension;
+    ULONG ArFlag;
+    if (CmBattDebug & 2) DbgPrint("CmBattWakeDpc: Entered.\n");
+    
+    /* Loop all device objects */
+    for (CurrentObject = FdoExtension->DeviceObject;
+         CurrentObject;
+         CurrentObject = CurrentObject->NextDevice)
+    {
+        /* Turn delay flag off, we're back in S0 */
+        DeviceExtension = CurrentObject->DeviceExtension;
+        DeviceExtension->DelayNotification = 0;
+        
+        /* Check if this is an AC adapter */
+        if (DeviceExtension->FdoType == CmBattAcAdapter)
+        {
+            /* Was there a pending notify? */
+            if (DeviceExtension->ArFlag & CMBATT_AR_NOTIFY)
+            {
+                /* We'll send a notify on the next pass */
+                AcNotify = TRUE;
+                DeviceExtension->ArFlag = 0;
+                if (CmBattDebug & 0x20)
+                    DbgPrint("CmBattWakeDpc: AC adapter notified\n");
+            }
+        }
+    }
 
+    /* Loop the device objects again */
+    for (CurrentObject = FdoExtension->DeviceObject;
+         CurrentObject;
+         CurrentObject = CurrentObject->NextDevice)
+    {
+        /* Check if this is a battery */
+        DeviceExtension = CurrentObject->DeviceExtension;
+        if (DeviceExtension->FdoType == CmBattBattery)
+        {
+            /* Check what ARs are pending */
+            ArFlag = DeviceExtension->ArFlag;
+            if (CmBattDebug & 0x20)
+                DbgPrint("CmBattWakeDpc: Performing delayed ARs: %01x\n", ArFlag);
+
+            /* Insert notification, clear the lock value */
+            if (ArFlag & CMBATT_AR_INSERT) InterlockedExchange(&DeviceExtension->ArLockValue, 0);
+
+            /* Removal, clear the battery tag */
+            if (ArFlag & CMBATT_AR_REMOVE) DeviceExtension->Tag = 0;
+
+            /* Notification (or AC/DC adapter change from first pass above) */
+            if ((ArFlag & CMBATT_AR_NOTIFY) || (AcNotify))
+            {
+                /* Notify the class driver */
+                BatteryClassStatusNotify(DeviceExtension->ClassData);
+            }
+        }
+    }
 }
 
 VOID
