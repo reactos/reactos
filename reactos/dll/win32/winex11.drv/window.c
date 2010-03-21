@@ -2090,20 +2090,24 @@ void CDECL X11DRV_SetFocus( HWND hwnd )
     Display *display = thread_display();
     struct x11drv_win_data *data;
     XWindowChanges changes;
+    DWORD timestamp;
 
     if (!(hwnd = GetAncestor( hwnd, GA_ROOT ))) return;
     if (!(data = X11DRV_get_win_data( hwnd ))) return;
     if (data->managed || !data->whole_window) return;
 
+    if (EVENT_x11_time_to_win32_time(0))
+        /* ICCCM says don't use CurrentTime, so try to use last message time if possible */
+        /* FIXME: this is not entirely correct */
+        timestamp = GetMessageTime() - EVENT_x11_time_to_win32_time(0);
+    else
+        timestamp = CurrentTime;
+
     /* Set X focus and install colormap */
     wine_tsx11_lock();
     changes.stack_mode = Above;
     XConfigureWindow( display, data->whole_window, CWStackMode, &changes );
-    /* we must not use CurrentTime (ICCCM), so try to use last message time instead */
-    /* FIXME: this is not entirely correct */
-    XSetInputFocus( display, data->whole_window, RevertToParent,
-                    /* CurrentTime */
-                    GetMessageTime() - EVENT_x11_time_to_win32_time(0));
+    XSetInputFocus( display, data->whole_window, RevertToParent, timestamp );
     wine_tsx11_unlock();
 }
 

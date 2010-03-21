@@ -375,6 +375,21 @@ static BOOL X11DRV_WineGL_InitOpenglInfo(void)
         if(!getsockname(fd, (struct sockaddr *)&uaddr, &uaddrlen) && uaddr.sun_family == AF_UNIX)
             ERR_(winediag)("Direct rendering is disabled, most likely your OpenGL drivers haven't been installed correctly\n");
     }
+    else
+    {
+        /* In general you would expect that if direct rendering is returned, that you receive hardware
+         * accelerated OpenGL rendering. The definition of direct rendering is that rendering is performed
+         * client side without sending all GL commands to X using the GLX protocol. When Mesa falls back to
+         * software rendering, it shows direct rendering.
+         *
+         * Depending on the cause of software rendering a different rendering string is shown. In case Mesa fails
+         * to load a DRI module 'Software Rasterizer' is returned. When Mesa is compiled as a OpenGL reference driver
+         * it shows 'Mesa X11'.
+         */
+        const char *gl_renderer = (const char *)pglGetString(GL_RENDERER);
+        if(!strcmp(gl_renderer, "Software Rasterizer") || !strcmp(gl_renderer, "Mesa X11"))
+            ERR_(winediag)("The Mesa OpenGL driver is using software rendering, most likely your OpenGL drivers haven't been installed correctly\n");
+    }
 
     if(vis) XFree(vis);
     if(ctx) {

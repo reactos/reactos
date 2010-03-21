@@ -765,6 +765,7 @@ static HICON CURSORICON_CreateIconFromBMI( BITMAPINFO *bmi,
     int sizeAnd, sizeXor;
     HBITMAP hAndBits = 0, hXorBits = 0; /* error condition for later */
     BITMAP bmpXor, bmpAnd;
+    BOOL do_stretch;
     INT size;
     BITMAPINFO *pSrcInfo, *pDestInfo;
 
@@ -788,10 +789,11 @@ static HICON CURSORICON_CreateIconFromBMI( BITMAPINFO *bmi,
 
     if (!width) width = bmi->bmiHeader.biWidth;
     if (!height) height = bmi->bmiHeader.biHeight/2;
+    do_stretch = (bmi->bmiHeader.biHeight/2 != height) ||
+                 (bmi->bmiHeader.biWidth != width);
 
     /* Scale the hotspot */
-    if (((bmi->bmiHeader.biHeight/2 != height) || (bmi->bmiHeader.biWidth != width)) &&
-        hotspot.x != ICON_HOTSPOT && hotspot.y != ICON_HOTSPOT)
+    if (do_stretch && hotspot.x != ICON_HOTSPOT && hotspot.y != ICON_HOTSPOT)
     {
         hotspot.x = (hotspot.x * width) / bmi->bmiHeader.biWidth;
         hotspot.y = (hotspot.y * height) / (bmi->bmiHeader.biHeight / 2);
@@ -842,15 +844,29 @@ static HICON CURSORICON_CreateIconFromBMI( BITMAPINFO *bmi,
             }
             else
             {
-                hXorBits = CreateCompatibleBitmap(screen_dc, width, height);
-
-                if(hXorBits)
+                if (do_stretch)
                 {
-                    if(!stretch_blt_icon(hXorBits, pDestInfo, pSrcInfo, (char*)bmi + size))
+                    hXorBits = CreateCompatibleBitmap(screen_dc, width, height);
+                    if (hXorBits)
                     {
-                        DeleteObject(hXorBits);
-                        hXorBits = 0;
+                        if (!stretch_blt_icon(hXorBits, pDestInfo, pSrcInfo, (char*)bmi + size))
+                        {
+                            DeleteObject(hXorBits);
+                            hXorBits = 0;
+                        }
                     }
+                }
+                else
+                {
+                    if (is_dib_monochrome(bmi))
+                    {
+                        hXorBits = CreateBitmap(width, height, 1, 1, NULL);
+                        SetDIBits(screen_dc, hXorBits, 0, height,
+                                  (char *)bmi + size, pSrcInfo, DIB_RGB_COLORS);
+                    }
+                    else
+                        hXorBits = CreateDIBitmap(screen_dc, &pSrcInfo->bmiHeader,
+                                        CBM_INIT, (char *)bmi + size, pSrcInfo, DIB_RGB_COLORS);
                 }
             }
 
@@ -879,12 +895,21 @@ static HICON CURSORICON_CreateIconFromBMI( BITMAPINFO *bmi,
                 }
 
                 /* Create the AND bitmap */
-                hAndBits = CreateBitmap(width, height, 1, 1, NULL);
-
-                if(!stretch_blt_icon(hAndBits, pDestInfo, pSrcInfo, xbits))
+                if (do_stretch)
                 {
-                    DeleteObject(hAndBits);
-                    hAndBits = 0;
+                    hAndBits = CreateBitmap(width, height, 1, 1, NULL);
+
+                    if (!stretch_blt_icon(hAndBits, pDestInfo, pSrcInfo, xbits))
+                    {
+                        DeleteObject(hAndBits);
+                        hAndBits = 0;
+                    }
+                }
+                else
+                {
+                    hAndBits = CreateBitmap(width, height, 1, 1, NULL);
+                    SetDIBits(screen_dc, hAndBits, 0, height,
+                              xbits, pSrcInfo, DIB_RGB_COLORS);
                 }
 
                 if( !hAndBits )

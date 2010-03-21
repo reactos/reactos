@@ -436,11 +436,13 @@ LONG WINAPI SetBitmapBits(
     LONG count,        /* [in] Number of bytes in bitmap array */
     LPCVOID bits)      /* [in] Address of array with bitmap bits */
 {
-    BITMAPOBJ *bmp = GDI_GetObjPtr( hbitmap, OBJ_BITMAP );
+    BITMAPOBJ *bmp;
     LONG height, ret;
 
-    if ((!bmp) || (!bits))
-	return 0;
+    if (!bits) return 0;
+
+    bmp = GDI_GetObjPtr( hbitmap, OBJ_BITMAP );
+    if (!bmp) return 0;
 
     if (count < 0) {
 	WARN("(%d): Negative number of bytes passed???\n", count );

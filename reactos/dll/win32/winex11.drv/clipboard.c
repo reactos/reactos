@@ -2200,7 +2200,10 @@ static BOOL X11DRV_CLIPBOARD_ReadSelectionData(Display *display, LPWINE_CLIPDATA
              HANDLE hData = lpData->lpFormat->lpDrvImportFunc(display, xe.xselection.requestor,
                  xe.xselection.property);
 
-             bRet = X11DRV_CLIPBOARD_InsertClipboardData(lpData->wFormatID, hData, 0, lpData->lpFormat, TRUE);
+             if (hData)
+                 bRet = X11DRV_CLIPBOARD_InsertClipboardData(lpData->wFormatID, hData, 0, lpData->lpFormat, TRUE);
+             else
+                 TRACE("Import function failed\n");
         }
         else
         {

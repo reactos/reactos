@@ -208,8 +208,8 @@ BOOL WINAPI DECLSPEC_HOTPATCH GetCursorPos( POINT *pt )
 BOOL WINAPI GetCursorInfo( PCURSORINFO pci )
 {
     if (!pci) return 0;
-    if (get_user_thread_info()->cursor_count >= 0) pci->flags = CURSOR_SHOWING;
-    else pci->flags = 0;
+    pci->hCursor = LoadCursorW( 0, (LPCWSTR)IDC_ARROW );
+    pci->flags = CURSOR_SHOWING;
     GetCursorPos(&pci->ptScreenPos);
     return 1;
 }
