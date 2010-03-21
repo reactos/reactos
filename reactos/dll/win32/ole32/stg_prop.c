@@ -181,7 +181,9 @@ static HRESULT WINAPI IPropertyStorage_fnQueryInterface(
 {
     PropertyStorage_impl *This = (PropertyStorage_impl *)iface;
 
-    if ( (This==0) || (ppvObject==0) )
+    TRACE("(%p, %s, %p)\n", This, debugstr_guid(riid), ppvObject);
+
+    if (!ppvObject)
         return E_INVALIDARG;
 
     *ppvObject = 0;
