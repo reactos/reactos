@@ -36,4 +36,3 @@ STRINGTABLE DISCARDABLE
 	14 "funkcija z:"
 	15 "izberite mapo, ki vsebuje %s"
 }
-#pragma code_page(default)

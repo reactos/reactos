@@ -36,4 +36,3 @@ STRINGTABLE DISCARDABLE
 	14 "Feature von:"
 	15 "Wählen Sie das Verzeichnis aus, dass %s enthält."
 }
-#pragma code_page(default)
