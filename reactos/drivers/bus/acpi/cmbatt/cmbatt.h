@@ -29,11 +29,15 @@ typedef enum _CMBATT_EXTENSION_TYPE
     CmBattBattery
 } CMBATT_EXTENSION_TYPE;
 
+#define ACPI_BATT_NOTIFY_STATUS     0x80
+#define ACPI_BATT_NOTIFY_INFO       0x81
+
 #define ACPI_BATT_STAT_DISCHARG		0x0001
 #define ACPI_BATT_STAT_CHARGING		0x0002
 #define ACPI_BATT_STAT_CRITICAL		0x0004
-#define ACPI_BATT_STAT_NOT_PRESENT	0x0007
-#define ACPI_BATT_STAT_MAX		    0x0007
+
+#define CM_MAX_VALUE                0x7FFFFFFF
+#define CM_UNKNOWN_VALUE            0xFFFFFFFF
 
 typedef struct _ACPI_BST_DATA
 {
@@ -42,6 +46,9 @@ typedef struct _ACPI_BST_DATA
     ULONG RemainingCapacity;
     ULONG PresentVoltage;
 } ACPI_BST_DATA, *PACPI_BST_DATA;
+
+#define ACPI_BATT_POWER_UNIT_WATTS  0x0
+#define ACPI_BATT_POWER_UNIT_AMPS   0x1
 
 typedef struct _ACPI_BIF_DATA
 {
@@ -82,8 +89,8 @@ typedef struct _CMBATT_DEVICE_EXTENSION
     BOOLEAN DelayedArFlag;
     PVOID ClassData;
     BOOLEAN Started;
-    BOOLEAN NotifySent;
-    ULONG ArLock;
+    BOOLEAN DelayNotification;
+    LONG ArLockValue;
     ULONG TagData;
     ULONG Tag;
     ULONG ModelNumberLength;
@@ -135,5 +142,19 @@ CmBattSystemControl(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp
 );
- 
+
+NTSTATUS
+NTAPI
+CmBattGetBstData(
+    PCMBATT_DEVICE_EXTENSION DeviceExtension,
+    PACPI_BST_DATA BstData
+);
+
+NTSTATUS
+NTAPI
+CmBattGetPsrData(
+    PDEVICE_OBJECT DeviceObject,
+    PULONG PsrData
+);
+
 /* EOF */

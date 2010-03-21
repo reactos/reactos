@@ -18,6 +18,7 @@ PVOID CmBattPowerCallBackRegistration;
 UNICODE_STRING GlobalRegistryPath;
 KTIMER CmBattWakeDpcTimerObject;
 KDPC CmBattWakeDpcObject;
+PDEVICE_OBJECT AcAdapterPdo;
  
 /* FUNCTIONS ******************************************************************/
 
@@ -182,11 +183,220 @@ CmBattSetStatusNotify(PCMBATT_DEVICE_EXTENSION DeviceExtension,
 
 NTSTATUS
 NTAPI
-CmBattGetBatteryStatus(PCMBATT_DEVICE_EXTENSION DeviceExtension,
-                       ULONG BatteryTag)
+CmBattGetBatteryStatus(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
+                       IN ULONG Tag)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    ULONG PsrData = 0;
+    NTSTATUS Status;
+    ULONG BstState;
+    ULONG DesignVoltage, PresentRate, RemainingCapacity;
+    PAGED_CODE();
+    if (CmBattDebug & CMBATT_GENERIC_INFO)
+        DbgPrint("CmBattGetBatteryStatus - CmBatt (%08x) Tag (%d)\n", DeviceExtension, Tag);
+    
+    /* Validate ACPI data */    
+    Status = CmBattVerifyStaticInfo(DeviceExtension, Tag);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Check for delayed status notifications */
+    if (DeviceExtension->DelayNotification)
+    {
+        /* Process them now and don't do any other work */
+        CmBattNotifyHandler(DeviceExtension, ACPI_BATT_NOTIFY_STATUS);
+        return Status;
+    }
+
+    /* Get _BST from ACPI */
+    Status = CmBattGetBstData(DeviceExtension, &DeviceExtension->BstData);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail */
+        InterlockedExchange(&DeviceExtension->ArLockValue, 0);
+        return Status;
+    }
+    
+    /* Clear current BST information */ 
+    DeviceExtension->State = 0;
+    DeviceExtension->RemainingCapacity = 0;
+    DeviceExtension->PresentVoltage = 0;
+    DeviceExtension->Rate = 0;
+
+    /* Get battery state */
+    BstState = DeviceExtension->BstData.State;
+    
+    /* Is the battery both charging and discharging? */
+    if ((BstState & ACPI_BATT_STAT_DISCHARG) && (BstState & ACPI_BATT_STAT_CHARGING) &&
+        (CmBattDebug & (CMBATT_ACPI_WARNING | CMBATT_GENERIC_WARNING)))
+            DbgPrint("************************ ACPI BIOS BUG ********************\n* "
+                     "CmBattGetBatteryStatus: Invalid state: _BST method returned 0x%08x for Battery State.\n"
+                     "* One battery cannot be charging and discharging at the same time.\n",
+                     BstState);
+    
+    /* Is the battery discharging? */   
+    if (BstState & ACPI_BATT_STAT_DISCHARG)
+    {
+        /* Set power state and check if it just started discharging now */
+        DeviceExtension->State |= BATTERY_DISCHARGING;
+        if (!(DeviceExtension->State & ACPI_BATT_STAT_DISCHARG))
+        {
+            /* Remember the time when the state changed */
+            DeviceExtension->InterruptTime = KeQueryInterruptTime();
+        }
+    }
+    else if (BstState & ACPI_BATT_STAT_CHARGING)
+    {
+        /* Battery is charging, update power state */
+        DeviceExtension->State |= (BATTERY_CHARGING | BATTERY_POWER_ON_LINE);
+    }
+    
+    /* Is the battery in a critical state? */
+    if (BstState & ACPI_BATT_STAT_CRITICAL) DeviceExtension->State |= BATTERY_CRITICAL;
+    
+    /* Read the voltage data */  
+    DeviceExtension->PresentVoltage = DeviceExtension->BstData.PresentVoltage;
+    
+    /* Check if we have an A/C adapter */
+    if (AcAdapterPdo)
+    {
+        /* Query information on it */
+        CmBattGetPsrData(AcAdapterPdo, &PsrData);
+    }
+    else
+    {
+        /* Otherwise, check if the battery is charging */
+        if (BstState & ACPI_BATT_STAT_CHARGING)
+        {
+            /* Then we'll assume there's a charger */
+            PsrData = 1;
+        }
+        else
+        {
+            /* Assume no charger */
+            PsrData = 0;        
+        }
+    }
+    
+    /* Is there a charger? */
+    if (PsrData)
+    {
+        /* Set the power state flag to reflect this */
+        DeviceExtension->State |= BATTERY_POWER_ON_LINE;
+        if (CmBattDebug & (CMBATT_GENERIC_INFO | CMBATT_GENERIC_STATUS))
+            DbgPrint("CmBattGetBatteryStatus: AC adapter is connected\n");
+    }
+    else if (CmBattDebug & (CMBATT_GENERIC_INFO | CMBATT_GENERIC_STATUS))
+    {
+        DbgPrint("CmBattGetBatteryStatus: AC adapter is NOT connected\n");        
+    }
+    
+    /* Get some data we'll need */
+    DesignVoltage = DeviceExtension->BifData.DesignVoltage;
+    PresentRate = DeviceExtension->BstData.PresentRate;
+    RemainingCapacity = DeviceExtension->BstData.RemainingCapacity;
+    
+    /* Check if we have battery data in Watts instead of Amps */
+    if (DeviceExtension->BifData.PowerUnit == ACPI_BATT_POWER_UNIT_WATTS)
+    {
+        /* Get the data from the BST */
+        DeviceExtension->RemainingCapacity = RemainingCapacity;
+        DeviceExtension->Rate = PresentRate;
+        
+        /* Check if the rate is invalid */
+        if (PresentRate > CM_MAX_VALUE)
+        {
+            /* Set an unknown rate and don't touch the old value */
+            DeviceExtension->Rate = BATTERY_UNKNOWN_RATE;
+            if ((PresentRate != CM_UNKNOWN_VALUE) && (CmBattDebug & CMBATT_ACPI_WARNING))
+            {
+                DbgPrint("CmBattGetBatteryStatus - Rate is greater than CM_MAX_VALUE\n");
+                DbgPrint("----------------------   PresentRate = 0x%08x\n", PresentRate);
+            }
+        }
+    }
+    else if ((DesignVoltage != CM_UNKNOWN_VALUE) && (DesignVoltage))
+    {
+        /* We have voltage data, what about capacity? */
+        if (RemainingCapacity == CM_UNKNOWN_VALUE)
+        {
+            /* Unable to calculate it */
+            DeviceExtension->RemainingCapacity = BATTERY_UNKNOWN_CAPACITY;
+            if (CmBattDebug & CMBATT_ACPI_WARNING)
+            {
+                DbgPrint("CmBattGetBatteryStatus - Can't calculate RemainingCapacity \n");
+                DbgPrint("----------------------   RemainingCapacity = CM_UNKNOWN_VALUE\n");
+            }
+        }
+        else
+        {
+            /* Compute the capacity with the information we have */
+            DeviceExtension->RemainingCapacity = (DesignVoltage * RemainingCapacity + 500) / 1000;
+        }
+        
+        /* Check if we have a rate */
+        if (PresentRate != CM_UNKNOWN_VALUE)
+        {
+            /* Make sure the rate isn't too large */
+            if (PresentRate > (-500 / DesignVoltage))
+            {
+                /* It is, so set unknown state */
+                DeviceExtension->Rate = BATTERY_UNKNOWN_RATE;
+                if (CmBattDebug & CMBATT_ACPI_WARNING)
+                {
+                    DbgPrint("CmBattGetBatteryStatus - Can't calculate Rate \n");
+                    DbgPrint("----------------------   Overflow: PresentRate = 0x%08x\n", PresentRate);
+                }
+            }
+            
+            /* Compute the rate */
+            DeviceExtension->Rate = (PresentRate * DesignVoltage + 500) / 1000;
+        }
+        else
+        {
+            /* We don't have a rate, so set unknown value */
+            DeviceExtension->Rate = BATTERY_UNKNOWN_RATE;        
+            if (CmBattDebug & CMBATT_ACPI_WARNING)
+            {
+                DbgPrint("CmBattGetBatteryStatus - Can't calculate Rate \n");
+                DbgPrint("----------------------   Present Rate = CM_UNKNOWN_VALUE\n");
+            }
+        }
+    }
+    else
+    {
+        /* We have no rate, and no capacity, set unknown values */
+        DeviceExtension->Rate = BATTERY_UNKNOWN_RATE;
+        DeviceExtension->RemainingCapacity = BATTERY_UNKNOWN_CAPACITY;
+        if (CmBattDebug & CMBATT_ACPI_WARNING)
+        {
+            DbgPrint("CmBattGetBatteryStatus - Can't calculate RemainingCapacity and Rate \n");
+            DbgPrint("----------------------   DesignVoltage = 0x%08x\n", DesignVoltage);
+        }
+    }
+    
+    /* Check if we have an unknown rate */
+    if (DeviceExtension->Rate == BATTERY_UNKNOWN_RATE)
+    {
+        /* The battery is discharging but we don't know by how much... this is bad! */
+        if ((BstState & ACPI_BATT_STAT_DISCHARG) &&
+            (CmBattDebug & (CMBATT_ACPI_WARNING | CMBATT_GENERIC_WARNING)))
+            DbgPrint("CmBattGetBatteryStatus: battery rate is unkown when battery is not charging!\n");
+    }
+    else if (DeviceExtension->State & BATTERY_DISCHARGING)
+    {
+        /* The battery is discharging, so treat the rate as a negative rate */
+        DeviceExtension->Rate = -DeviceExtension->Rate;
+    }
+    else if (!(DeviceExtension->State & BATTERY_CHARGING) && (DeviceExtension->Rate))
+    {
+        /* We are not charging, not discharging, but have a rate? Ignore it! */
+        if (CmBattDebug & CMBATT_GENERIC_WARNING)
+            DbgPrint("CmBattGetBatteryStatus: battery is not charging or discharging, but rate = %x\n",
+                     DeviceExtension->Rate);
+        DeviceExtension->Rate = 0;
+    }
+     
+    /* Done */
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
