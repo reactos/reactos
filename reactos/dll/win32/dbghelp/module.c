@@ -126,6 +126,7 @@ struct module* module_new(struct process* pcs, const WCHAR* name,
                           unsigned long stamp, unsigned long checksum)
 {
     struct module*      module;
+    unsigned            i;
 
     assert(type == DMT_ELF || type == DMT_PE || type == DMT_MACHO);
     if (!(module = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*module))))
@@ -168,6 +169,7 @@ struct module* module_new(struct process* pcs, const WCHAR* name,
 
     module->type              = type;
     module->is_virtual        = virtual ? TRUE : FALSE;
+    for (i = 0; i < DFI_LAST; i++) module->format_info[i] = NULL;
     module->sortlist_valid    = FALSE;
     module->sorttab_size      = 0;
     module->addr_sorttab      = NULL;
@@ -621,14 +623,21 @@ DWORD64 WINAPI SymLoadModule64(HANDLE hProcess, HANDLE hFile, PCSTR ImageName,
  */
 BOOL module_remove(struct process* pcs, struct module* module)
 {
+    struct module_format*modfmt;
     struct module**     p;
+    unsigned            i;
 
     TRACE("%s (%p)\n", debugstr_w(module->module.ModuleName), module);
+
+    for (i = 0; i < DFI_LAST; i++)
+    {
+        if ((modfmt = module->format_info[i]) && modfmt->remove)
+            modfmt->remove(pcs, module->format_info[i]);
+    }
     hash_table_destroy(&module->ht_symbols);
     hash_table_destroy(&module->ht_types);
     HeapFree(GetProcessHeap(), 0, module->sources);
     HeapFree(GetProcessHeap(), 0, module->addr_sorttab);
-    HeapFree(GetProcessHeap(), 0, module->dwarf2_info);
     pool_destroy(&module->pool);
     /* native dbghelp doesn't invoke registered callback(,CBA_SYMBOLS_UNLOADED,) here
      * so do we
