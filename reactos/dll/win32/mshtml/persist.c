@@ -108,6 +108,7 @@ static void set_progress_proc(task_t *_task)
         V_I4(&progress) = 0; /* FIXME */
         IOleCommandTarget_Exec(olecmd, NULL, OLECMDID_SETPROGRESSPOS, OLECMDEXECOPT_DONTPROMPTUSER,
                                &progress, NULL);
+        IOleCommandTarget_Release(olecmd);
     }
 
     if(doc->usermode == EDITMODE && doc->hostui) {
@@ -282,11 +283,15 @@ HRESULT set_moniker(HTMLDocument *This, IMoniker *mon, IBindCtx *pibc, nsChannel
 void set_ready_state(HTMLWindow *window, READYSTATE readystate)
 {
     window->readystate = readystate;
+
     if(window->doc_obj && window->doc_obj->basedoc.window == window)
         call_property_onchanged(&window->doc_obj->basedoc.cp_propnotif, DISPID_READYSTATE);
+
+    fire_event(window->doc, EVENTID_READYSTATECHANGE, FALSE, window->doc->node.nsnode, NULL);
+
     if(window->frame_element)
         fire_event(window->frame_element->element.node.doc, EVENTID_READYSTATECHANGE,
-                   window->frame_element->element.node.nsnode, NULL);
+                   TRUE, window->frame_element->element.node.nsnode, NULL);
 }
 
 static HRESULT get_doc_string(HTMLDocumentNode *This, char **str)

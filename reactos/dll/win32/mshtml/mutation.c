@@ -338,6 +338,9 @@ static void handle_end_load(HTMLDocumentNode *This)
 
     TRACE("\n");
 
+    if(!This->basedoc.doc_obj)
+        return;
+
     if(This != This->basedoc.doc_obj->basedoc.doc_node) {
         set_ready_state(This->basedoc.window, READYSTATE_INTERACTIVE);
         return;

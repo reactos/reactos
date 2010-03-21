@@ -736,7 +736,7 @@ nsresult get_nsinterface(nsISupports*,REFIID,void**);
 
 void init_nsevents(HTMLDocumentNode*);
 void release_nsevents(HTMLDocumentNode*);
-void add_nsevent_listener(HTMLDocumentNode*,LPCWSTR);
+void add_nsevent_listener(HTMLDocumentNode*,nsIDOMNode*,LPCWSTR);
 
 void set_window_bscallback(HTMLWindow*,nsChannelBSC*);
 void set_current_mon(HTMLWindow*,IMoniker*);

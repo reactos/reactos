@@ -904,7 +904,7 @@ static nsresult NSAPI nsChannel_AsyncOpen(nsIHttpChannel *iface, nsIStreamListen
 
             open = FALSE;
         }else {
-            open = before_async_open(This, window->doc_obj->nscontainer);
+            open = !before_async_open(This, window->doc_obj->nscontainer);
             if(!open) {
                 TRACE("canceled\n");
                 nsres = NS_ERROR_UNEXPECTED;

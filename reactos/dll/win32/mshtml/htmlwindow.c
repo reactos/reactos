@@ -126,7 +126,7 @@ static inline HRESULT set_window_event(HTMLWindow *window, eventid_t eid, VARIAN
         return E_FAIL;
     }
 
-    return set_event_handler(&window->doc->body_event_target, window->doc, eid, var);
+    return set_event_handler(&window->doc->body_event_target, NULL, window->doc, eid, var);
 }
 
 static inline HRESULT get_window_event(HTMLWindow *window, eventid_t eid, VARIANT *var)
@@ -1419,7 +1419,7 @@ static HRESULT WINAPI HTMLWindow3_attachEvent(IHTMLWindow3 *iface, BSTR event, I
         return E_FAIL;
     }
 
-    return attach_event(&This->doc->body_event_target, &This->doc->basedoc, event, pDisp, pfResult);
+    return attach_event(&This->doc->body_event_target, NULL, &This->doc->basedoc, event, pDisp, pfResult);
 }
 
 static HRESULT WINAPI HTMLWindow3_detachEvent(IHTMLWindow3 *iface, BSTR event, IDispatch *pDisp)

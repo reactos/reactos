@@ -649,7 +649,7 @@ static HRESULT WINAPI HTMLElement2_attachEvent(IHTMLElement2 *iface, BSTR event,
 
     TRACE("(%p)->(%s %p %p)\n", This, debugstr_w(event), pDisp, pfResult);
 
-    return attach_event(get_node_event_target(&This->node), &This->node.doc->basedoc, event, pDisp, pfResult);
+    return attach_event(get_node_event_target(&This->node), This->node.nsnode, &This->node.doc->basedoc, event, pDisp, pfResult);
 }
 
 static HRESULT WINAPI HTMLElement2_detachEvent(IHTMLElement2 *iface, BSTR event, IDispatch *pDisp)
