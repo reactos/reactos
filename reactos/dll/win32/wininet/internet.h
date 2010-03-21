@@ -422,6 +422,7 @@ VOID SendAsyncCallback(object_header_t *hdr, DWORD_PTR dwContext,
 VOID INTERNET_SendCallback(object_header_t *hdr, DWORD_PTR dwContext,
                            DWORD dwInternetStatus, LPVOID lpvStatusInfo,
                            DWORD dwStatusInfoLength);
+BOOL INTERNET_FindProxyForProtocol(LPCWSTR szProxy, LPCWSTR proto, WCHAR *foundProxy, DWORD *foundProxyLen);
 
 BOOL NETCON_connected(WININET_NETCONNECTION *connection);
 DWORD NETCON_init(WININET_NETCONNECTION *connnection, BOOL useSSL);

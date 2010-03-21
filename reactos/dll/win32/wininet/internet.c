@@ -363,6 +363,98 @@ static LONG INTERNET_SaveProxySettings( proxyinfo_t *lpwpi )
 }
 
 /***********************************************************************
+ *           INTERNET_FindProxyForProtocol
+ *
+ * Searches the proxy string for a proxy of the given protocol.
+ * Returns the found proxy, or the default proxy if none of the given
+ * protocol is found.
+ *
+ * PARAMETERS
+ *     szProxy       [In]     proxy string to search
+ *     proto         [In]     protocol to search for, e.g. "http"
+ *     foundProxy    [Out]    found proxy
+ *     foundProxyLen [In/Out] length of foundProxy buffer, in WCHARs
+ *
+ * RETURNS
+ *     TRUE if a proxy is found, FALSE if not.  If foundProxy is too short,
+ *     *foundProxyLen is set to the required size in WCHARs, including the
+ *     NULL terminator, and the last error is set to ERROR_INSUFFICIENT_BUFFER.
+ */
+BOOL INTERNET_FindProxyForProtocol(LPCWSTR szProxy, LPCWSTR proto, WCHAR *foundProxy, DWORD *foundProxyLen)
+{
+    LPCWSTR ptr;
+    BOOL ret = FALSE;
+
+    TRACE("(%s, %s)\n", debugstr_w(szProxy), debugstr_w(proto));
+
+    /* First, look for the specified protocol (proto=scheme://host:port) */
+    for (ptr = szProxy; !ret && ptr && *ptr; )
+    {
+        LPCWSTR end, equal;
+
+        if (!(end = strchrW(ptr, ' ')))
+            end = ptr + strlenW(ptr);
+        if ((equal = strchrW(ptr, '=')) && equal < end &&
+             equal - ptr == strlenW(proto) &&
+             !strncmpiW(proto, ptr, strlenW(proto)))
+        {
+            if (end - equal > *foundProxyLen)
+            {
+                WARN("buffer too short for %s\n",
+                     debugstr_wn(equal + 1, end - equal - 1));
+                *foundProxyLen = end - equal;
+                SetLastError(ERROR_INSUFFICIENT_BUFFER);
+            }
+            else
+            {
+                memcpy(foundProxy, equal + 1, (end - equal) * sizeof(WCHAR));
+                foundProxy[end - equal] = 0;
+                ret = TRUE;
+            }
+        }
+        if (*end == ' ')
+            ptr = end + 1;
+        else
+            ptr = end;
+    }
+    if (!ret)
+    {
+        /* It wasn't found: look for no protocol */
+        for (ptr = szProxy; !ret && ptr && *ptr; )
+        {
+            LPCWSTR end, equal;
+
+            if (!(end = strchrW(ptr, ' ')))
+                end = ptr + strlenW(ptr);
+            if (!(equal = strchrW(ptr, '=')))
+            {
+                if (end - ptr + 1 > *foundProxyLen)
+                {
+                    WARN("buffer too short for %s\n",
+                         debugstr_wn(ptr, end - ptr));
+                    *foundProxyLen = end - ptr + 1;
+                    SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                }
+                else
+                {
+                    memcpy(foundProxy, ptr, (end - ptr) * sizeof(WCHAR));
+                    foundProxy[end - ptr] = 0;
+                    ret = TRUE;
+                }
+            }
+            if (*end == ' ')
+                ptr = end + 1;
+            else
+                ptr = end;
+        }
+    }
+    if (ret)
+        TRACE("found proxy for %s: %s\n", debugstr_w(proto),
+              debugstr_w(foundProxy));
+    return ret;
+}
+
+/***********************************************************************
  *           InternetInitializeAutoProxyDll   (WININET.@)
  *
  * Setup the internal proxy
