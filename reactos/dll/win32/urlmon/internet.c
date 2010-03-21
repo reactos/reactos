@@ -405,3 +405,12 @@ HRESULT WINAPI CoInternetSetFeatureEnabled(INTERNETFEATURELIST feature, DWORD fl
     FIXME("%d, 0x%08x, %x, stub\n", feature, flags, enable);
     return E_NOTIMPL;
 }
+
+/***********************************************************************
+ *             CoInternetIsFeatureEnabled (URLMON.@)
+ */
+HRESULT WINAPI CoInternetIsFeatureEnabled(INTERNETFEATURELIST feature, DWORD flags)
+{
+    FIXME("%d, 0x%08x, stub\n", feature, flags);
+    return E_NOTIMPL;
+}

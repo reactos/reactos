@@ -1287,11 +1287,13 @@ HRESULT WINAPI CoInternetGetSecurityUrl(LPCWSTR pwzUrl, LPWSTR *ppwzSecUrl, PSUA
         return S_OK;
     }
 
-    hres = CoInternetParseUrl(url, PARSE_ROOTDOCUMENT, 0, domain, 0, &len, 0);
-    if(hres == S_FALSE) {
-        hres = CoInternetParseUrl(url, PARSE_SCHEMA, 0, domain,
-                INTERNET_MAX_URL_LENGTH, &len, 0);
-        if(hres == S_OK) {
+    hres = CoInternetParseUrl(url, PARSE_SCHEMA, 0, domain,
+            INTERNET_MAX_URL_LENGTH, &len, 0);
+    if(hres == S_OK){
+        const WCHAR fileW[] = {'f','i','l','e',0};
+        if(!strcmpW(domain, fileW)){
+            hres = CoInternetParseUrl(url, PARSE_ROOTDOCUMENT, 0, domain, INTERNET_MAX_URL_LENGTH, &len, 0);
+        }else{
             domain[len] = ':';
             hres = CoInternetParseUrl(url, PARSE_DOMAIN, 0, domain+len+1,
                     INTERNET_MAX_URL_LENGTH-len-1, &len, 0);
@@ -1305,7 +1307,8 @@ HRESULT WINAPI CoInternetGetSecurityUrl(LPCWSTR pwzUrl, LPWSTR *ppwzSecUrl, PSUA
                 return S_OK;
             }
         }
-    }
+    }else
+        return hres;
 
     len = lstrlenW(url)+1;
     *ppwzSecUrl = CoTaskMemAlloc(len*sizeof(WCHAR));
