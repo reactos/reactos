@@ -402,7 +402,9 @@ HRESULT WINAPI RegisterDefaultAcceptHeaders(LPBC lpBC, IUnknown *lpUnknown)
     V_VT(&var) = VT_UNKNOWN;
     V_UNKNOWN(&var) = (IUnknown*)pIEnumFormatEtc;
 
-    hRet = IWebBrowserApp_PutProperty(pBrowser, (BSTR)szProperty, var);
+    property = SysAllocString(szProperty);
+    hRet = IWebBrowserApp_PutProperty(pBrowser, property, var);
+    SysFreeString(property);
     if (FAILED(hRet))
     {
        IEnumFORMATETC_Release(pIEnumFormatEtc);
@@ -4853,4 +4855,128 @@ BOOL WINAPI SHPropertyBag_ReadLONG(IPropertyBag *ppb, LPCWSTR pszPropName, LPLON
             hr = DISP_E_BADVARTYPE;
     }
     return hr;
+}
+
+/* return flags for SHGetObjectCompatFlags, names derived from registry value names */
+#define OBJCOMPAT_OTNEEDSSFCACHE           0x00000001
+#define OBJCOMPAT_NO_WEBVIEW               0x00000002
+#define OBJCOMPAT_UNBINDABLE               0x00000004
+#define OBJCOMPAT_PINDLL                   0x00000008
+#define OBJCOMPAT_NEEDSFILESYSANCESTOR     0x00000010
+#define OBJCOMPAT_NOTAFILESYSTEM           0x00000020
+#define OBJCOMPAT_CTXMENU_NOVERBS          0x00000040
+#define OBJCOMPAT_CTXMENU_LIMITEDQI        0x00000080
+#define OBJCOMPAT_COCREATESHELLFOLDERONLY  0x00000100
+#define OBJCOMPAT_NEEDSSTORAGEANCESTOR     0x00000200
+#define OBJCOMPAT_NOLEGACYWEBVIEW          0x00000400
+#define OBJCOMPAT_CTXMENU_XPQCMFLAGS       0x00001000
+#define OBJCOMPAT_NOIPROPERTYSTORE         0x00002000
+
+/* a search table for compatibility flags */
+struct objcompat_entry {
+    const WCHAR name[30];
+    DWORD value;
+};
+
+/* expected to be sorted by name */
+static const struct objcompat_entry objcompat_table[] = {
+    { {'C','O','C','R','E','A','T','E','S','H','E','L','L','F','O','L','D','E','R','O','N','L','Y',0},
+      OBJCOMPAT_COCREATESHELLFOLDERONLY },
+    { {'C','T','X','M','E','N','U','_','L','I','M','I','T','E','D','Q','I',0},
+      OBJCOMPAT_CTXMENU_LIMITEDQI },
+    { {'C','T','X','M','E','N','U','_','N','O','V','E','R','B','S',0},
+      OBJCOMPAT_CTXMENU_LIMITEDQI },
+    { {'C','T','X','M','E','N','U','_','X','P','Q','C','M','F','L','A','G','S',0},
+      OBJCOMPAT_CTXMENU_XPQCMFLAGS },
+    { {'N','E','E','D','S','F','I','L','E','S','Y','S','A','N','C','E','S','T','O','R',0},
+      OBJCOMPAT_NEEDSFILESYSANCESTOR },
+    { {'N','E','E','D','S','S','T','O','R','A','G','E','A','N','C','E','S','T','O','R',0},
+      OBJCOMPAT_NEEDSSTORAGEANCESTOR },
+    { {'N','O','I','P','R','O','P','E','R','T','Y','S','T','O','R','E',0},
+      OBJCOMPAT_NOIPROPERTYSTORE },
+    { {'N','O','L','E','G','A','C','Y','W','E','B','V','I','E','W',0},
+      OBJCOMPAT_NOLEGACYWEBVIEW },
+    { {'N','O','T','A','F','I','L','E','S','Y','S','T','E','M',0},
+      OBJCOMPAT_NOTAFILESYSTEM },
+    { {'N','O','_','W','E','B','V','I','E','W',0},
+      OBJCOMPAT_NO_WEBVIEW },
+    { {'O','T','N','E','E','D','S','S','F','C','A','C','H','E',0},
+      OBJCOMPAT_OTNEEDSSFCACHE },
+    { {'P','I','N','D','L','L',0},
+      OBJCOMPAT_PINDLL },
+    { {'U','N','B','I','N','D','A','B','L','E',0},
+      OBJCOMPAT_UNBINDABLE }
+};
+
+/**************************************************************************
+ *  SHGetObjectCompatFlags (SHLWAPI.476)
+ *
+ * Function returns an integer representation of compatibility flags stored
+ * in registry for CLSID under ShellCompatibility subkey.
+ *
+ * PARAMS
+ *  pUnk:  pointer to object IUnknown interface, idetifies CLSID
+ *  clsid: pointer to CLSID to retrieve data for
+ *
+ * RETURNS
+ *  0 on failure, flags set on success
+ */
+DWORD WINAPI SHGetObjectCompatFlags(IUnknown *pUnk, const CLSID *clsid)
+{
+    static const WCHAR compatpathW[] =
+        {'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\',
+         'W','i','n','d','o','w','s','\\','C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
+         'S','h','e','l','l','C','o','m','p','a','t','i','b','i','l','i','t','y','\\',
+         'O','b','j','e','c','t','s','\\','%','s',0};
+    WCHAR strW[sizeof(compatpathW)/sizeof(WCHAR) + 38 /* { CLSID } */];
+    DWORD ret, length = sizeof(strW)/sizeof(WCHAR);
+    OLECHAR *clsid_str;
+    HKEY key;
+    INT i;
+
+    TRACE("%p %s\n", pUnk, debugstr_guid(clsid));
+
+    if (!pUnk && !clsid) return 0;
+
+    if (pUnk && !clsid)
+    {
+        FIXME("iface not handled\n");
+        return 0;
+    }
+
+    StringFromCLSID(clsid, &clsid_str);
+    sprintfW(strW, compatpathW, clsid_str);
+    CoTaskMemFree(clsid_str);
+
+    ret = RegOpenKeyW(HKEY_LOCAL_MACHINE, strW, &key);
+    if (ret != ERROR_SUCCESS) return 0;
+
+    /* now collect flag values */
+    ret = 0;
+    for (i = 0; RegEnumValueW(key, i, strW, &length, NULL, NULL, NULL, NULL) == ERROR_SUCCESS; i++)
+    {
+        INT left, right, res, x;
+
+        /* search in table */
+        left  = 0;
+        right = sizeof(objcompat_table) / sizeof(struct objcompat_entry) - 1;
+
+        while (right >= left) {
+            x = (left + right) / 2;
+            res = strcmpW(strW, objcompat_table[x].name);
+            if (res == 0)
+            {
+                ret |= objcompat_table[x].value;
+                break;
+            }
+            else if (res < 0)
+                right = x - 1;
+            else
+                left = x + 1;
+        }
+
+        length = sizeof(strW)/sizeof(WCHAR);
+    }
+
+    return ret;
 }
