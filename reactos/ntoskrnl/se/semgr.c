@@ -704,6 +704,27 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         return STATUS_SUCCESS;
     }
 
+    /* Protect probe in SEH */
+    _SEH2_TRY
+    {
+        /* Probe all pointers */
+        ProbeForRead(GenericMapping, sizeof(GENERIC_MAPPING), sizeof(ULONG));
+        ProbeForRead(PrivilegeSetLength, sizeof(ULONG), sizeof(ULONG));
+        ProbeForWrite(PrivilegeSet, *PrivilegeSetLength, sizeof(ULONG));
+        ProbeForWrite(GrantedAccess, sizeof(ACCESS_MASK), sizeof(ULONG));
+        ProbeForWrite(AccessStatus, sizeof(NTSTATUS), sizeof(ULONG));
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Return the exception code */
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
+
+    /* Check for unmapped access rights */
+    if (DesiredAccess & (GENERIC_READ | GENERIC_WRITE | GENERIC_EXECUTE | GENERIC_ALL))
+        return STATUS_GENERIC_NOT_MAPPED;
+
     /* Reference the token */
     Status = ObReferenceObjectByHandle(TokenHandle,
                                        TOKEN_QUERY,
