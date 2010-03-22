@@ -35,24 +35,25 @@ public:
     HRESULT STDMETHODCALLTYPE KsProcessMediaSamples(IKsDataTypeHandler *KsDataTypeHandler, IMediaSample** SampleList, PLONG SampleCount, KSIOOPERATION IoOperation, PKSSTREAM_SEGMENT *StreamSegment);
     HRESULT STDMETHODCALLTYPE KsCompleteIo(PKSSTREAM_SEGMENT StreamSegment);
 
-    CKsInterfaceHandler() : m_Ref(0), m_Handle(NULL), m_Pin(0){};
+    CKsInterfaceHandler() : m_Ref(0), m_Handle(NULL), m_Pin(0) {m_PinName[0] = L'\0';};
     virtual ~CKsInterfaceHandler(){};
 
 protected:
     LONG m_Ref;
     HANDLE m_Handle;
     IKsPinEx * m_Pin;
+    WCHAR m_PinName[129];
 };
 
 typedef struct
 {
     KSSTREAM_SEGMENT StreamSegment;
+    OVERLAPPED Overlapped;
     IMediaSample * MediaSample[64];
 
     ULONG SampleCount;
     ULONG ExtendedSize;
     PKSSTREAM_HEADER StreamHeader;
-    OVERLAPPED Overlapped;
 }KSSTREAM_SEGMENT_EXT, *PKSSTREAM_SEGMENT_EXT;
 
 
@@ -118,6 +119,38 @@ CKsInterfaceHandler::KsSetPin(
             Pin->Release();
         }
     }
+#if 1
+    //DBG code
+    PIN_INFO PinInfo;
+    IPin * pPin;
+    if (SUCCEEDED(KsPin->QueryInterface(IID_IPin, (void**)&pPin)))
+    {
+        if (SUCCEEDED(pPin->QueryPinInfo(&PinInfo)))
+        {
+            if (PinInfo.pFilter)
+                PinInfo.pFilter->Release();
+
+            wcscpy(m_PinName, PinInfo.achName);
+        }
+        pPin->Release();
+    }
+
+    IKsAllocatorEx * Allocator;
+
+    if (SUCCEEDED(KsPin->QueryInterface(IID_IKsAllocatorEx, (void**)&Allocator)))
+    {
+        PALLOCATOR_PROPERTIES_EX Properties = Allocator->KsGetProperties();
+
+        if (Properties)
+        {
+            WCHAR Buffer[100];
+            swprintf(Buffer, L"CKsInterfaceHandler::KsSetPin PinName %s Properties.cbAlign %u cbBuffer %u cbPrefix %u cBuffers %u\n", m_PinName, Properties->cbAlign, Properties->cbBuffer, Properties->cbPrefix, Properties->cBuffers);
+            OutputDebugStringW(Buffer);
+        }
+        Allocator->Release();
+    }
+
+#endif
 
     // done
     return hr;
@@ -135,8 +168,6 @@ CKsInterfaceHandler::KsProcessMediaSamples(
     PKSSTREAM_SEGMENT_EXT StreamSegment;
     ULONG ExtendedSize, Index, BytesReturned;
     HRESULT hr = S_OK;
-
-    OutputDebugString("CKsInterfaceHandler::KsProcessMediaSamples\n");
 
     // sanity check
     assert(*SampleCount);
@@ -256,6 +287,9 @@ CKsInterfaceHandler::KsProcessMediaSamples(
              hr = SampleList[Index]->GetTime(&Properties.tStart, &Properties.tStop);
              assert(hr == NOERROR);
 
+             Properties.cbBuffer = SampleList[Index]->GetSize();
+             assert(Properties.cbBuffer);
+
              Properties.dwSampleFlags = 0;
 
              if (SampleList[Index]->IsDiscontinuity() == S_OK)
@@ -268,9 +302,9 @@ CKsInterfaceHandler::KsProcessMediaSamples(
                  Properties.dwSampleFlags |= AM_SAMPLE_SPLICEPOINT;
          }
 
-         WCHAR Buffer[100];
-         swprintf(Buffer, L"BufferLength %lu Property Buffer %p ExtendedSize %u lActual %u\n", Properties.cbBuffer, Properties.pbBuffer, ExtendedSize, Properties.lActual);
-         OutputDebugStringW(Buffer);
+         WCHAR Buffer[200];
+         swprintf(Buffer, L"CKsInterfaceHandler::KsProcessMediaSamples PinName %s BufferLength %lu Property Buffer %p ExtendedSize %u lActual %u\n", m_PinName, Properties.cbBuffer, Properties.pbBuffer, ExtendedSize, Properties.lActual);
+         //OutputDebugStringW(Buffer);
 
          CurStreamHeader->Size = sizeof(KSSTREAM_HEADER) + ExtendedSize;
          CurStreamHeader->PresentationTime.Denominator = 1;
@@ -336,8 +370,6 @@ CKsInterfaceHandler::KsCompleteIo(
     AM_SAMPLE2_PROPERTIES Properties;
     REFERENCE_TIME Start, Stop;
 
-    OutputDebugStringW(L"CKsInterfaceHandler::KsCompleteIo\n");
-
     // get private stream segment
     StreamSegment = (PKSSTREAM_SEGMENT_EXT)InStreamSegment;
 
@@ -346,6 +378,10 @@ CKsInterfaceHandler::KsCompleteIo(
     dwError = GetLastError();
 
     CurStreamHeader = StreamSegment->StreamHeader;
+
+    WCHAR Buffer[100];
+    swprintf(Buffer, L"CKsInterfaceHandler::KsCompleteIo PinName %s bOverlapped %u hr %lx\n", m_PinName, bOverlapped, dwError);
+    //OutputDebugStringW(Buffer);
 
     //iterate through all stream headers
     for(Index = 0; Index < StreamSegment->SampleCount; Index++)

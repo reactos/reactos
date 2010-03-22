@@ -1599,7 +1599,7 @@ CKsProxy::GetMiscFlags()
                 if (SUCCEEDED(GetPinCommunication(Index, //FIXME verify PinId
                                         &Communication)))
                 {
-                    if (Communication == KSPIN_COMMUNICATION_NONE || Communication == KSPIN_COMMUNICATION_BRIDGE)
+                    if (Communication != KSPIN_COMMUNICATION_NONE && Communication != KSPIN_COMMUNICATION_BRIDGE)
                     {
                         Flags |= AM_FILTER_MISC_FLAGS_IS_SOURCE;
                     }
@@ -2578,6 +2578,7 @@ CKsProxy::SetPinState(
     IKsObject *pObject;
     ULONG BytesReturned;
     KSPROPERTY Property;
+    PIN_INFO PinInfo;
 
     Property.Set = KSPROPSETID_Connection;
     Property.Id = KSPROPERTY_CONNECTION_STATE;
@@ -2601,6 +2602,22 @@ CKsProxy::SetPinState(
 
         // release connected pin
         TempPin->Release();
+
+        // query for the pin info
+        hr = Pin->QueryPinInfo(&PinInfo);
+
+        if (SUCCEEDED(hr))
+        {
+            if (PinInfo.pFilter)
+                PinInfo.pFilter->Release();
+
+            if (PinInfo.dir == PINDIR_OUTPUT)
+            {
+                hr = COutputPin_SetState(Pin, State);
+                if (SUCCEEDED(hr))
+                    continue;
+            }
+        }
 
         //query IKsObject interface
         hr = Pin->QueryInterface(IID_IKsObject, (void**)&pObject);

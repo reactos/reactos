@@ -18,6 +18,7 @@
 #include <setupapi.h>
 #include <stdio.h>
 #include <vector>
+#include <stack>
 #include <assert.h>
 #include <ksmedia.h>
 //#include <debug.h>
@@ -138,6 +139,12 @@ COutputPin_Constructor(
     REFIID riid,
     LPVOID * ppv);
 
+HRESULT
+STDMETHODCALLTYPE
+COutputPin_SetState(
+    IPin * Pin,
+    KSSTATE State);
+
 /* enumpins.cpp */
 HRESULT
 WINAPI
@@ -166,10 +173,30 @@ CKsNode_Constructor(
     REFIID riid,
     LPVOID * ppv);
 
+/* allocator.cpp */
+HRESULT
+WINAPI
+CKsAllocator_Constructor(
+    IUnknown * pUnkOuter,
+    REFIID riid,
+    LPVOID * ppv);
+
+/* mediasample.cpp */
+HRESULT
+WINAPI
+CMediaSample_Constructor(
+    IMemAllocator* Allocator, 
+    BYTE* pBuffer,
+    ULONG BufferSize,
+    REFIID riid,
+    LPVOID * ppv);
+
+
 extern const GUID IID_IKsObject;
 extern const GUID IID_IKsPinEx;
 extern const GUID IID_IKsAggregateControl;
 extern const GUID IID_IKsPinPipe;
 extern const GUID IID_IKsPinFactory;
+extern const GUID IID_IKsAllocatorEx;
 extern KSPIN_INTERFACE StandardPinInterface;
 extern KSPIN_MEDIUM StandardPinMedium;
