@@ -58,4 +58,3 @@ STRINGTABLE DISCARDABLE
   IDS_NOTOLEMOD         "ファイルは有効なOLEモジュールではないようです。OLEコントロールを登録できません。"
   IDS_NOTOLEMODCAPTION  "コントロールを追加"
 }
-#pragma code_page(default)

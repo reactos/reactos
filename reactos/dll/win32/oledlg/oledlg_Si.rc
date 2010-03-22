@@ -97,4 +97,3 @@ STRINGTABLE DISCARDABLE
     IDS_PS_UNKNOWN_SRC                    "Neznan vir"
     IDS_PS_UNKNOWN_APP                    "Neznan program"
 }
-#pragma code_page(default)

@@ -102,4 +102,3 @@ STRINGTABLE DISCARDABLE
     IDS_PS_UNKNOWN_SRC                    "Source inconnue"
     IDS_PS_UNKNOWN_APP                    "le programme avec lequel il a été créé"
 }
-#pragma code_page(default)
