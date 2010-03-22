@@ -159,11 +159,65 @@ CmBattRemoveDevice(IN PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS
 NTAPI
-CmBattPowerDispatch(PDEVICE_OBJECT DeviceObject,
-                    PIRP Irp)
+CmBattPowerDispatch(IN PDEVICE_OBJECT DeviceObject,
+                    IN PIRP Irp)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PIO_STACK_LOCATION IoStackLocation;
+    PCMBATT_DEVICE_EXTENSION DeviceExtension;
+    NTSTATUS Status;
+    if (CmBattDebug & 0x210) DbgPrint("CmBattPowerDispatch\n");
+
+    /* Get stack location and device extension */
+    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+    DeviceExtension = DeviceObject->DeviceExtension;
+    switch (IoStackLocation->MinorFunction)
+    {
+        case IRP_MN_WAIT_WAKE:        
+            if (CmBattDebug & 0x10)
+                DbgPrint("CmBattPowerDispatch: IRP_MN_WAIT_WAKE\n");
+            break;
+        
+        case IRP_MN_POWER_SEQUENCE:
+            if (CmBattDebug & 0x10)
+                DbgPrint("CmBattPowerDispatch: IRP_MN_POWER_SEQUENCE\n");
+            break;
+        
+        case IRP_MN_QUERY_POWER:
+            if (CmBattDebug & 0x10)
+                DbgPrint("CmBattPowerDispatch: IRP_MN_WAIT_WAKE\n");
+            break;
+        
+        case IRP_MN_SET_POWER:
+            if (CmBattDebug & 0x10)
+                DbgPrint("CmBattPowerDispatch: IRP_MN_SET_POWER type: %d, State: %d \n",
+                         IoStackLocation->Parameters.Power.Type,
+                         IoStackLocation->Parameters.Power.State);
+            break;
+            
+        default:
+        
+            if (CmBattDebug & 1)
+                DbgPrint("CmBattPowerDispatch: minor %d\n", IoStackLocation->MinorFunction);
+            break;
+    }
+
+    /* Start the next IRP and see if we're attached */
+    PoStartNextPowerIrp(Irp);
+    if (DeviceExtension->AttachedDevice)
+    {
+        /* Call ACPI */
+        IoSkipCurrentIrpStackLocation(Irp);
+        Status = PoCallDriver(DeviceExtension->AttachedDevice, Irp);
+    }
+    else
+    {
+        /* Complete the request here */
+        Status = Irp->IoStatus.Status;
+        IofCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
+    
+    /* Return status */
+    return Status;
 }
 
 NTSTATUS
