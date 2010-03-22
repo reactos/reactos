@@ -38,7 +38,7 @@ CmBattPowerCallBack(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
     if (Action == PO_CB_SYSTEM_STATE_LOCK)
     {
         /* We have just re-entered S0: call the wake DPC in 10 seconds */
-        if (Value == 0)
+        if (Value == 1)
         {
             if (CmBattDebug & 0x10)
                 DbgPrint("CmBattPowerCallBack: Calling CmBattWakeDpc after 10 seconds.\n");
