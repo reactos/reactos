@@ -353,6 +353,8 @@ CmBattIoctl(IN PDEVICE_OBJECT DeviceObject,
 {
     PCMBATT_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
     NTSTATUS Status;
+    PIO_STACK_LOCATION IoStackLocation;
+    ULONG IoControlCode, OutputBufferLength, InputBufferLength;
     PAGED_CODE();
     if (CmBattDebug & 2) DbgPrint("CmBattIoctl\n");
 
@@ -380,11 +382,148 @@ CmBattIoctl(IN PDEVICE_OBJECT DeviceObject,
     Status = BatteryClassIoctl(DeviceExtension->ClassData, Irp);
     if (Status == STATUS_NOT_SUPPORTED)
     {
-        /* FIXME: Should handle custom codes here */
-        Irp->IoStatus.Status = Status;
-        Irp->IoStatus.Information = 0;
-
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        /* Read IOCTL information from IRP stack */
+        IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+        IoControlCode = IoStackLocation->Parameters.DeviceIoControl.IoControlCode;
+        OutputBufferLength = IoStackLocation->Parameters.DeviceIoControl.OutputBufferLength;
+        InputBufferLength = IoStackLocation->Parameters.DeviceIoControl.InputBufferLength;
+        if (CmBattDebug & 4)
+            DbgPrint("CmBattIoctl: Received  Direct Access IOCTL %x\n", IoControlCode);
+    
+        /* Handle internal IOCTLs */
+        switch (IoControlCode)
+        {
+            case IOCTL_BATTERY_QUERY_UNIQUE_ID:
+            
+                /* Data is 4 bytes long */
+                if (OutputBufferLength == sizeof(ULONG))
+                {
+                    /* Query it */
+                    Status = CmBattGetUniqueId(DeviceExtension->PdoDeviceObject,
+                                               Irp->AssociatedIrp.SystemBuffer);
+                    if (NT_SUCCESS(Status)) Irp->IoStatus.Information = sizeof(ULONG);
+                }
+                else
+                {
+                    /* Buffer size invalid */
+                    Status = STATUS_INVALID_BUFFER_SIZE;
+                }
+                break;
+            
+            case IOCTL_BATTERY_QUERY_STA:
+            
+                /* Data is 4 bytes long */
+                if (OutputBufferLength == sizeof(ULONG))
+                {
+                    /* Query it */
+                    Status = CmBattGetStaData(DeviceExtension->PdoDeviceObject,
+                                              Irp->AssociatedIrp.SystemBuffer);
+                    if (NT_SUCCESS(Status)) Irp->IoStatus.Information = sizeof(ULONG);
+                }
+                else
+                {
+                    /* Buffer size invalid */
+                    Status = STATUS_INVALID_BUFFER_SIZE;
+                }
+                break;
+            
+            case IOCTL_BATTERY_QUERY_PSR:
+            
+                /* Data is 4 bytes long */
+                if (OutputBufferLength == sizeof(ULONG))
+                {
+                    /* Do we have an AC adapter? */
+                    if (AcAdapterPdo)
+                    {
+                        /* Query it */
+                        Status = CmBattGetPsrData(AcAdapterPdo,
+                                                  Irp->AssociatedIrp.SystemBuffer);
+                        if (NT_SUCCESS(Status)) Irp->IoStatus.Information = sizeof(ULONG);
+                    }
+                    else
+                    {
+                        /* No adapter, just a battery, so fail */
+                        Status = STATUS_NO_SUCH_DEVICE;
+                    }
+                }
+                else
+                {
+                    /* Buffer size invalid */
+                    Status = STATUS_INVALID_BUFFER_SIZE;
+                }
+                break;
+                
+            case IOCTL_BATTERY_SET_TRIP_POINT:
+            
+                /* Data is 4 bytes long */
+                if (InputBufferLength == sizeof(ULONG))
+                {
+                    /* Query it */
+                    Status = CmBattSetTripPpoint(DeviceExtension,
+                                                 *(PULONG)Irp->AssociatedIrp.SystemBuffer);
+                    Irp->IoStatus.Information = 0;
+                }
+                else
+                {
+                    /* Buffer size invalid */
+                    Status = STATUS_INVALID_BUFFER_SIZE;                }
+                break;
+    
+            case IOCTL_BATTERY_QUERY_BIF:
+            
+                /* Data is 1060 bytes long */
+                if (OutputBufferLength == sizeof(ACPI_BIF_DATA))
+                {
+                    /* Query it */
+                    Status = CmBattGetBifData(DeviceExtension,
+                                              Irp->AssociatedIrp.SystemBuffer);
+                    if (NT_SUCCESS(Status)) Irp->IoStatus.Information = sizeof(ACPI_BIF_DATA);
+                }
+                else
+                {
+                    /* Buffer size invalid */
+                    Status = STATUS_INVALID_BUFFER_SIZE;
+                }
+                break;
+            
+            case IOCTL_BATTERY_QUERY_BST:
+            
+                /* Data is 16 bytes long */
+                if (OutputBufferLength == sizeof(ACPI_BST_DATA))
+                {
+                    /* Query it */
+                    Status = CmBattGetBstData(DeviceExtension,
+                                              Irp->AssociatedIrp.SystemBuffer);
+                    if (NT_SUCCESS(Status)) Irp->IoStatus.Information = sizeof(ACPI_BST_DATA);
+                }
+                else
+                {
+                    /* Buffer size invalid */
+                    Status = STATUS_INVALID_BUFFER_SIZE;
+                }
+                break;
+            
+            default:
+            
+                /* Unknown, let us pass it on to ACPI */
+                if (CmBattDebug & 0xC)
+                    DbgPrint("CmBattIoctl: Unknown IOCTL %x\n", IoControlCode);
+                break;
+        }
+        
+        /* Did someone pick it up? */
+        if (Status != STATUS_NOT_SUPPORTED)
+        {
+            /* Complete the request */
+            Irp->IoStatus.Status = Status;
+            IofCompleteRequest(Irp, IO_NO_INCREMENT);
+        }
+        else
+        {
+            /* Still unsupported, try ACPI */
+            IoSkipCurrentIrpStackLocation(Irp);
+            Status = IoCallDriver(DeviceExtension->AttachedDevice, Irp);
+        }
     }
 
     /* Release the remove lock and return status */
