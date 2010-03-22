@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
  * FILE:            user32/windows/menu.c
@@ -34,7 +33,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(menu);
 
 /* Internal MenuTrackMenu() flags */
 #define TPM_INTERNAL		0xF0000000
-#define TPM_ENTERIDLEEX	 	0x80000000		/* set owner window for WM_ENTERIDLE */
 #define TPM_BUTTONDOWN		0x40000000		/* menu was clicked before tracking */
 #define TPM_POPUPMENU           0x20000000              /* menu is a popup menu */
 
@@ -58,6 +56,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(menu);
 /* Use global popup window because there's no way 2 menus can
  * be tracked at the same time.  */
 static HWND top_popup;
+static HMENU top_popup_hmenu;
 
 /* Flag set by EndMenu() to force an exit from menu tracking */
 static BOOL fEndMenu = FALSE;
@@ -576,8 +575,7 @@ static UINT FASTCALL MenuFindItemByKey(HWND WndOwner, PROSMENUINFO MenuInfo,
  *
  * Get the size of a bitmap item.
  */
-static void FASTCALL MenuGetBitmapItemSize(PROSMENUITEMINFO lpitem, SIZE *size,
-										   HWND WndOwner)
+static void FASTCALL MenuGetBitmapItemSize(PROSMENUITEMINFO lpitem, SIZE *size, HWND WndOwner)
 {
     BITMAP bm;
     HBITMAP bmp = lpitem->hbmpItem;
@@ -1635,6 +1633,7 @@ static BOOL FASTCALL MenuShowPopup(HWND hwndOwner, HMENU hmenu, UINT id, UINT fl
     if ( !MenuInfo.Wnd || ! MenuSetRosMenuInfo(&MenuInfo)) return FALSE;
     if (!top_popup) {
         top_popup = MenuInfo.Wnd;
+        top_popup_hmenu = hmenu;
     }
 
     /* Display the window */
@@ -1644,6 +1643,7 @@ static BOOL FASTCALL MenuShowPopup(HWND hwndOwner, HMENU hmenu, UINT id, UINT fl
     UpdateWindow( MenuInfo.Wnd );
     return TRUE;
 }
+
 
 /***********************************************************************
  *           MenuSelectItem
@@ -1663,6 +1663,7 @@ static void FASTCALL MenuSelectItem(HWND hwndOwner, PROSMENUINFO hmenu, UINT wIn
     else hdc = GetDCEx(hmenu->Wnd, 0, DCX_CACHE | DCX_WINDOW);
     if (!top_popup) {
         top_popup = hmenu->Wnd;
+        top_popup_hmenu = hmenu->Self;
     }
 
     SelectObject( hdc, hMenuFont );
@@ -1834,6 +1835,7 @@ LRESULT WINAPI PopupMenuWndProcA(HWND Wnd, UINT Message, WPARAM wParam, LPARAM l
       if (Wnd == top_popup)
         {
           top_popup = NULL;
+          top_popup_hmenu = NULL;
         }
       break;
 
@@ -1906,6 +1908,7 @@ PopupMenuWndProcW(HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)
       if (Wnd == top_popup)
         {
           top_popup = NULL;
+          top_popup_hmenu = NULL;
         }
       break;
 
@@ -2354,13 +2357,30 @@ MenuShowSubPopup(HWND WndOwner, PROSMENUINFO MenuInfo, BOOL SelectFirst, UINT Fl
   return Ret;
 }
 
+/**********************************************************************
+ *         MENU_EndMenu
+ *
+ * Calls EndMenu() if the hwnd parameter belongs to the menu owner
+ *
+ * Does the (menu stuff) of the default window handling of WM_CANCELMODE
+ */
+void MENU_EndMenu( HWND hwnd )
+{
+    ROSMENUINFO MenuInfo;
+    BOOL Ret = FALSE;
+    if (top_popup_hmenu)
+       Ret = MenuGetRosMenuInfo(&MenuInfo, top_popup_hmenu);
+    if (Ret && hwnd == MenuInfo.WndOwner) EndMenu();
+}
+
 /***********************************************************************
  *           MenuHideSubPopups
  *
  * Hide the sub-popup menus of this menu.
  */
 static void FASTCALL
-MenuHideSubPopups(HWND WndOwner, PROSMENUINFO MenuInfo, BOOL SendMenuSelect)
+MenuHideSubPopups(HWND WndOwner, PROSMENUINFO MenuInfo,
+                               BOOL SendMenuSelect, UINT wFlags)
 {
   ROSMENUINFO SubMenuInfo;
   ROSMENUITEMINFO ItemInfo;
@@ -2368,28 +2388,32 @@ MenuHideSubPopups(HWND WndOwner, PROSMENUINFO MenuInfo, BOOL SendMenuSelect)
   TRACE("owner=%x menu=%x 0x%04x\n", WndOwner, MenuInfo, SendMenuSelect);
 
   if (NULL != MenuInfo && NULL != top_popup && NO_SELECTED_ITEM != MenuInfo->FocusedItem)
-    {
+  {
       MenuInitRosMenuItemInfo(&ItemInfo);
       ItemInfo.fMask |= MIIM_FTYPE | MIIM_STATE;
       if (! MenuGetRosMenuItemInfo(MenuInfo->Self, MenuInfo->FocusedItem, &ItemInfo)
           || 0 == (ItemInfo.fType & MF_POPUP)
           || 0 == (ItemInfo.fState & MF_MOUSESELECT))
-        {
+      {
           MenuCleanupRosMenuItemInfo(&ItemInfo);
           return;
-        }
+      }
       ItemInfo.fState &= ~MF_MOUSESELECT;
       ItemInfo.fMask |= MIIM_STATE;
       MenuSetRosMenuItemInfo(MenuInfo->Self, MenuInfo->FocusedItem, &ItemInfo);
       if (MenuGetRosMenuInfo(&SubMenuInfo, ItemInfo.hSubMenu))
-        {
-          MenuHideSubPopups(WndOwner, &SubMenuInfo, FALSE);
+      {
+          MenuHideSubPopups(WndOwner, &SubMenuInfo, FALSE, wFlags);
           MenuSelectItem(WndOwner, &SubMenuInfo, NO_SELECTED_ITEM, SendMenuSelect, NULL);
           DestroyWindow(SubMenuInfo.Wnd);
           SubMenuInfo.Wnd = NULL;
           MenuSetRosMenuInfo(&SubMenuInfo);
-        }
-    }
+
+          if (!(wFlags & TPM_NONOTIFY))
+             SendMessageW( WndOwner, WM_UNINITMENUPOPUP, (WPARAM)ItemInfo.hSubMenu,
+                                 MAKELPARAM(0, IS_SYSTEM_MENU(&SubMenuInfo)) );
+      }
+  }
 }
 
 /***********************************************************************
@@ -2398,7 +2422,7 @@ MenuHideSubPopups(HWND WndOwner, PROSMENUINFO MenuInfo, BOOL SendMenuSelect)
  * Helper function for menu navigation routines.
  */
 static void FASTCALL
-MenuSwitchTracking(MTRACKER* Mt, PROSMENUINFO PtMenuInfo, UINT Index)
+MenuSwitchTracking(MTRACKER* Mt, PROSMENUINFO PtMenuInfo, UINT Index, UINT wFlags)
 {
   ROSMENUINFO TopMenuInfo;
 
@@ -2409,13 +2433,13 @@ MenuSwitchTracking(MTRACKER* Mt, PROSMENUINFO PtMenuInfo, UINT Index)
       0 == ((PtMenuInfo->Flags | TopMenuInfo.Flags) & MF_POPUP))
     {
       /* both are top level menus (system and menu-bar) */
-      MenuHideSubPopups(Mt->OwnerWnd, &TopMenuInfo, FALSE);
+      MenuHideSubPopups(Mt->OwnerWnd, &TopMenuInfo, FALSE, wFlags);
       MenuSelectItem(Mt->OwnerWnd, &TopMenuInfo, NO_SELECTED_ITEM, FALSE, NULL);
       Mt->TopMenu = PtMenuInfo->Self;
     }
   else
     {
-      MenuHideSubPopups(Mt->OwnerWnd, PtMenuInfo, FALSE);
+      MenuHideSubPopups(Mt->OwnerWnd, PtMenuInfo, FALSE, wFlags);
     }
 
   MenuSelectItem(Mt->OwnerWnd, PtMenuInfo, Index, TRUE, NULL);
@@ -2531,7 +2555,7 @@ MenuButtonDown(MTRACKER* Mt, HMENU PtMenu, UINT Flags)
 	{
           if (MenuInfo.FocusedItem != Index)
             {
-              MenuSwitchTracking(Mt, &MenuInfo, Index);
+              MenuSwitchTracking(Mt, &MenuInfo, Index, Flags);
             }
 
           /* If the popup menu is not already "popped" */
@@ -2714,7 +2738,7 @@ MenuMouseMove(MTRACKER *Mt, HMENU PtMenu, UINT Flags)
 	if (MenuGetRosMenuItemInfo(MenuInfo.Self, Index, &ItemInfo) &&
            !(ItemInfo.fType & MF_SEPARATOR))
 	{
-	    MenuSwitchTracking(Mt, &MenuInfo, Index);
+	    MenuSwitchTracking(Mt, &MenuInfo, Index, Flags);
         if (!(ItemInfo.fState & (MFS_DISABLED | MFS_GRAYED)))
 	        Mt->CurrentMenu = MenuShowSubPopup(Mt->OwnerWnd, &MenuInfo, FALSE, Flags);
 	}
@@ -2763,7 +2787,7 @@ MenuGetSubPopup(HMENU Menu)
  * NOTE: WM_NEXTMENU documented in Win32 is a bit different.
  */
 static LRESULT FASTCALL
-MenuDoNextMenu(MTRACKER* Mt, UINT Vk)
+MenuDoNextMenu(MTRACKER* Mt, UINT Vk, UINT wFlags)
 {
   ROSMENUINFO TopMenuInfo;
   ROSMENUINFO MenuInfo;
@@ -2858,7 +2882,7 @@ MenuDoNextMenu(MTRACKER* Mt, UINT Vk)
                          FALSE, 0 );
           if (Mt->CurrentMenu != Mt->TopMenu)
             {
-              MenuHideSubPopups(Mt->OwnerWnd, &TopMenuInfo, FALSE);
+              MenuHideSubPopups(Mt->OwnerWnd, &TopMenuInfo, FALSE, wFlags);
             }
         }
 
@@ -2949,7 +2973,7 @@ MenuKeyEscape(MTRACKER *Mt, UINT Flags)
 
           if (MenuGetRosMenuInfo(&MenuInfo, MenuPrev))
             {
-              MenuHideSubPopups(Mt->OwnerWnd, &MenuInfo, TRUE);
+              MenuHideSubPopups(Mt->OwnerWnd, &MenuInfo, TRUE, Flags);
             }
           Mt->CurrentMenu = MenuPrev;
           EndMenu = FALSE;
@@ -3001,7 +3025,7 @@ MenuKeyLeft(MTRACKER* Mt, UINT Flags)
     {
       return;
     }
-  MenuHideSubPopups(Mt->OwnerWnd, &PrevMenuInfo, TRUE);
+  MenuHideSubPopups(Mt->OwnerWnd, &PrevMenuInfo, TRUE, Flags);
   Mt->CurrentMenu = MenuPrev;
 
   if (! MenuGetRosMenuInfo(&TopMenuInfo, Mt->TopMenu))
@@ -3012,7 +3036,7 @@ MenuKeyLeft(MTRACKER* Mt, UINT Flags)
     {
       /* move menu bar selection if no more popups are left */
 
-      if (! MenuDoNextMenu(Mt, VK_LEFT))
+      if (! MenuDoNextMenu(Mt, VK_LEFT, Flags))
         {
           MenuMoveSelection(Mt->OwnerWnd, &TopMenuInfo, ITEM_PREV);
         }
@@ -3082,7 +3106,7 @@ static void FASTCALL MenuKeyRight(MTRACKER *Mt, UINT Flags)
     {
       if (Mt->CurrentMenu != Mt->TopMenu)
         {
-          MenuHideSubPopups(Mt->OwnerWnd, &MenuInfo, FALSE );
+          MenuHideSubPopups(Mt->OwnerWnd, &MenuInfo, FALSE, Flags);
           hmenutmp = Mt->CurrentMenu = Mt->TopMenu;
         }
       else
@@ -3091,7 +3115,7 @@ static void FASTCALL MenuKeyRight(MTRACKER *Mt, UINT Flags)
         }
 
       /* try to move to the next item */
-      if ( !MenuDoNextMenu(Mt, VK_RIGHT))
+      if ( !MenuDoNextMenu(Mt, VK_RIGHT, Flags))
           MenuMoveSelection(Mt->OwnerWnd, &MenuInfo, ITEM_NEXT);
 
       if ( hmenutmp || Mt->TrackFlags & TF_SUSPENDPOPUP )
@@ -3135,6 +3159,7 @@ static INT FASTCALL MenuTrackMenu(HMENU hmenu, UINT wFlags, INT x, INT y,
 
     if (!IsMenu(hmenu))
     {
+        WARN("Invalid menu handle %p\n", hmenu);
         SetLastError( ERROR_INVALID_MENU_HANDLE );
         return FALSE;
     }
@@ -3177,7 +3202,7 @@ static INT FASTCALL MenuTrackMenu(HMENU hmenu, UINT wFlags, INT x, INT y,
             {
                 if (!enterIdleSent)
                 {
-                  HWND win = (wFlags & TPM_ENTERIDLEEX) && (MenuInfo.Flags & MF_POPUP) ? MenuInfo.Wnd : NULL;
+                  HWND win = MenuInfo.Flags & MF_POPUP ? MenuInfo.Wnd : NULL;
                   enterIdleSent = TRUE;
                   SendMessageW( mt.OwnerWnd, WM_ENTERIDLE, MSGF_MENU, (LPARAM) win);
                 }
@@ -3242,6 +3267,7 @@ static INT FASTCALL MenuTrackMenu(HMENU hmenu, UINT wFlags, INT x, INT y,
                     if (hmenu)
                     {
                         executedMenuId = MenuButtonUp( &mt, hmenu, wFlags);
+                        TRACE("executedMenuId %d\n", executedMenuId);
 
                     /* End the loop if executedMenuId is an item ID */
                     /* or if the job was done (executedMenuId = 0). */
@@ -3261,7 +3287,6 @@ static INT FASTCALL MenuTrackMenu(HMENU hmenu, UINT wFlags, INT x, INT y,
 
                     if (hmenu)
                         fEndMenu |= !MenuMouseMove( &mt, hmenu, wFlags );
-                    break;
 
 	        } /* switch(msg.message) - mouse */
 	    }
@@ -3401,6 +3426,7 @@ static INT FASTCALL MenuTrackMenu(HMENU hmenu, UINT wFlags, INT x, INT y,
             PeekMessageW( &msg, 0, msg.message, msg.message, PM_REMOVE );
         else mt.TrackFlags &= ~TF_SKIPREMOVE;
     }
+    ERR("MenuTrackMenu 2\n");
 
     (void)NtUserSetGUIThreadHandle(MSQ_STATE_MENUOWNER, NULL);
     SetCapture(NULL);  /* release the capture */
@@ -3415,7 +3441,7 @@ static INT FASTCALL MenuTrackMenu(HMENU hmenu, UINT wFlags, INT x, INT y,
         {
             if (MenuGetRosMenuInfo(&MenuInfo, mt.TopMenu))
             {
-                MenuHideSubPopups(mt.OwnerWnd, &MenuInfo, FALSE);
+                MenuHideSubPopups(mt.OwnerWnd, &MenuInfo, FALSE, wFlags);
 
                 if (MenuInfo.Flags & MF_POPUP)
                 {
@@ -3464,31 +3490,35 @@ static BOOL FASTCALL MenuInitTracking(HWND hWnd, HMENU hMenu, BOOL bPopup, UINT 
 
     SendMessageW( hWnd, WM_SETCURSOR, (WPARAM)hWnd, HTCAPTION );
 
+    MenuGetRosMenuInfo(&MenuInfo, hMenu);
+
     if (!(wFlags & TPM_NONOTIFY))
     {
        SendMessageW( hWnd, WM_INITMENU, (WPARAM)hMenu, 0 );
+       /* If an app changed/recreated menu bar entries in WM_INITMENU
+        * menu sizes will be recalculated once the menu created/shown.
+        */
 
-       MenuGetRosMenuInfo(&MenuInfo, hMenu);
-
-        if (!MenuInfo.Height)
-        {
-            /* app changed/recreated menu bar entries in WM_INITMENU
-               Recalculate menu sizes else clicks will not work */
-            SetWindowPos(hWnd, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
+       if (!MenuInfo.Height)
+       {
+          /* app changed/recreated menu bar entries in WM_INITMENU
+             Recalculate menu sizes else clicks will not work */
+             SetWindowPos(hWnd, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
                        SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED );
 
-        }
-        /* This makes the menus of applications built with Delphi work.
-         * It also enables menus to be displayed in more than one window,
-         * but there are some bugs left that need to be fixed in this case.
-         */
-        if(MenuInfo.Self == hMenu)
-        {
-            MenuInfo.Wnd = hWnd;
-            MenuSetRosMenuInfo(&MenuInfo);
-        }
+       }
     }
 
+    /* This makes the menus of applications built with Delphi work.
+     * It also enables menus to be displayed in more than one window,
+     * but there are some bugs left that need to be fixed in this case.
+     */
+    if(MenuInfo.Self == hMenu)
+    {
+        MenuInfo.Wnd = hWnd;
+        MenuSetRosMenuInfo(&MenuInfo);
+    }
+ 
     return TRUE;
 }
 /***********************************************************************
@@ -3501,6 +3531,7 @@ static BOOL FASTCALL MenuExitTracking(HWND hWnd)
     SendMessageW( hWnd, WM_EXITMENULOOP, 0, 0 );
     ShowCaret(0);
     top_popup = 0;
+    top_popup_hmenu = NULL;
     return TRUE;
 }
 
@@ -3512,7 +3543,7 @@ static BOOL FASTCALL MenuExitTracking(HWND hWnd)
 VOID MenuTrackMouseMenuBar( HWND hWnd, ULONG ht, POINT pt)
 {
     HMENU hMenu = (ht == HTSYSMENU) ? NtUserGetSystemMenu( hWnd, FALSE) : GetMenu(hWnd);
-    UINT wFlags = TPM_ENTERIDLEEX | TPM_BUTTONDOWN | TPM_LEFTALIGN | TPM_LEFTBUTTON;
+    UINT wFlags = TPM_BUTTONDOWN | TPM_LEFTALIGN | TPM_LEFTBUTTON;
 
     TRACE("wnd=%p ht=0x%04x (%ld,%ld)\n", hWnd, ht, pt.x, pt.y);
 
@@ -3542,7 +3573,7 @@ VOID MenuTrackKbdMenuBar(HWND hwnd, UINT wParam, WCHAR wChar)
     UINT uItem = NO_SELECTED_ITEM;
     HMENU hTrackMenu;
     ROSMENUINFO MenuInfo;
-    UINT wFlags = TPM_ENTERIDLEEX | TPM_LEFTALIGN | TPM_LEFTBUTTON;
+    UINT wFlags = TPM_LEFTALIGN | TPM_LEFTBUTTON;
 
     TRACE("hwnd %p wParam 0x%04x wChar 0x%04x\n", hwnd, wParam, wChar);
 
@@ -3612,17 +3643,6 @@ track_menu:
 BOOL WINAPI TrackPopupMenuEx( HMENU Menu, UINT Flags, int x, int y,
                               HWND Wnd, LPTPMPARAMS Tpm)
 {
-  /* Not fully implemented */
-  return TrackPopupMenu(Menu, Flags, x, y, 0, Wnd,
-                        NULL != Tpm ? &Tpm->rcExclude : NULL);
-}
-
-/**********************************************************************
- *           TrackPopupMenu     (USER32.@)
- */
-BOOL WINAPI TrackPopupMenu( HMENU Menu, UINT Flags, int x, int y,
-                            int Reserved, HWND Wnd, CONST RECT *Rect)
-{
     BOOL ret = FALSE;
 
     if (!IsMenu(Menu))
@@ -3638,9 +3658,19 @@ BOOL WINAPI TrackPopupMenu( HMENU Menu, UINT Flags, int x, int y,
         SendMessageW(Wnd, WM_INITMENUPOPUP, (WPARAM) Menu, 0);
 
     if (MenuShowPopup(Wnd, Menu, 0, Flags, x, y, 0, 0 ))
-        ret = MenuTrackMenu(Menu, Flags | TPM_POPUPMENU, 0, 0, Wnd, Rect);
+       ret = MenuTrackMenu(Menu, Flags | TPM_POPUPMENU, 0, 0, Wnd,
+                           Tpm ? &Tpm->rcExclude : NULL);
     MenuExitTracking(Wnd);
     return ret;
+}
+
+/**********************************************************************
+ *           TrackPopupMenu     (USER32.@)
+ */
+BOOL WINAPI TrackPopupMenu( HMENU Menu, UINT Flags, int x, int y,
+                            int Reserved, HWND Wnd, CONST RECT *Rect)
+{
+    return TrackPopupMenuEx( Menu, Flags, x, y, Wnd, NULL);
 }
 
 /*
@@ -4035,7 +4065,6 @@ DrawMenuBar(HWND hWnd)
   return TRUE;
 }
 
-
 /*
  * @implemented
  */
@@ -4057,11 +4086,48 @@ EndMenu(VOID)
   guii.cbSize = sizeof(GUITHREADINFO);
   if(GetGUIThreadInfo(GetCurrentThreadId(), &guii) && guii.hwndMenuOwner)
   {
-    PostMessageW(guii.hwndMenuOwner, WM_CANCELMODE, 0, 0);
+    if (!fEndMenu &&
+         top_popup &&
+         guii.hwndMenuOwner != top_popup )
+    {
+       ERR("Capture GUI pti hWnd does not match top_popup!\n");
+    }
+  }
+
+  /* if we are in the menu code, and it is active */
+  if (!fEndMenu && top_popup)
+  {
+      /* terminate the menu handling code */
+      fEndMenu = TRUE;
+
+      /* needs to be posted to wakeup the internal menu handler */
+      /* which will now terminate the menu, in the event that */
+      /* the main window was minimized, or lost focus, so we */
+      /* don't end up with an orphaned menu */
+      PostMessageW( top_popup, WM_CANCELMODE, 0, 0);
   }
   return TRUE;
 }
 
+// So this one maybe one day it will be a callback!
+BOOL WINAPI HiliteMenuItem( HWND hWnd, HMENU hMenu, UINT wItemID,
+                                UINT wHilite )
+{
+    ROSMENUINFO MenuInfo;
+    ROSMENUITEMINFO mii;
+    TRACE("(%p, %p, %04x, %04x);\n", hWnd, hMenu, wItemID, wHilite);
+    if (!hWnd)
+    {
+       SetLastError(ERROR_INVALID_WINDOW_HANDLE);
+       return FALSE;
+    }
+    if (!NtUserMenuItemInfo(hMenu, wItemID, wHilite, &mii, FALSE)) return FALSE;
+    if (!NtUserMenuInfo(hMenu, &MenuInfo, FALSE)) return FALSE;
+    if (MenuInfo.FocusedItem == wItemID) return TRUE;
+    MenuHideSubPopups( hWnd, &MenuInfo, FALSE, 0 );
+    MenuSelectItem( hWnd, &MenuInfo, wItemID, TRUE, 0 );
+    return TRUE;
+}
 
 /*
  * @implemented

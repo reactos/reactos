@@ -30,6 +30,7 @@ LRESULT DefWndNCHitTest(HWND hWnd, POINT Point);
 LRESULT DefWndNCLButtonDown(HWND hWnd, WPARAM wParam, LPARAM lParam);
 LRESULT DefWndNCLButtonDblClk(HWND hWnd, WPARAM wParam, LPARAM lParam);
 void FASTCALL MenuInitSysMenuPopup(HMENU Menu, DWORD Style, DWORD ClsStyle, LONG HitTest );
+void MENU_EndMenu( HWND );
 
 /* GLOBALS *******************************************************************/
 
@@ -1480,7 +1481,8 @@ User32DefWindowProc(HWND hWnd,
         {
             iMenuSysKey = 0;
             /* FIXME: Check for a desktop. */
-            if (!(GetWindowLongPtrW( hWnd, GWL_STYLE ) & WS_CHILD)) EndMenu();
+            //if (!(GetWindowLongPtrW( hWnd, GWL_STYLE ) & WS_CHILD)) EndMenu();
+            MENU_EndMenu( hWnd );
             if (GetCapture() == hWnd)
             {
                 ReleaseCapture();
@@ -2049,7 +2051,6 @@ RealDefWindowProcW(HWND hWnd,
                 LPCREATESTRUCTW cs = (LPCREATESTRUCTW)lParam;
                 /* check for string, as static icons, bitmaps (SS_ICON, SS_BITMAP)
                  * may have child window IDs instead of window name */
-
                 if (HIWORD(cs->lpszName))
                 {
                     DefSetText(hWnd, cs->lpszName, FALSE);
