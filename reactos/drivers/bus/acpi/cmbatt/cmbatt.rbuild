@@ -4,6 +4,7 @@
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<library>battc</library>
+	<library>wmilib</library>
 	<include base="cmbatt">.</include>
 	<file>cmbatt.c</file>
 	<file>cmexec.c</file>

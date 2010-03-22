@@ -312,6 +312,7 @@ CmBattAddBattery(IN PDRIVER_OBJECT DriverObject,
     if (CmBattDebug & 0x220)
         DbgPrint("CmBattAddBattery: pdo %x\n", DeviceObject);
 
+    /* Create the FDO */
     Status = CmBattCreateFdo(DriverObject,
                              DeviceObject,
                              sizeof(CMBATT_DEVICE_EXTENSION),

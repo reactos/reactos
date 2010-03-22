@@ -19,6 +19,37 @@ WMIGUIDREGINFO CmBattWmiGuidList[1] =
 
 /* FUNCTIONS ******************************************************************/
 
+PCHAR
+NTAPI
+WMIMinorFunctionString(IN UCHAR MinorFunction)
+{
+    switch (MinorFunction)
+    {
+        case IRP_MN_CHANGE_SINGLE_INSTANCE:
+            return "IRP_MN_CHANGE_SINGLE_INSTANCE";
+        case IRP_MN_CHANGE_SINGLE_ITEM:
+            return "IRP_MN_CHANGE_SINGLE_ITEM";
+        case IRP_MN_DISABLE_COLLECTION:
+            return "IRP_MN_DISABLE_COLLECTION";
+        case IRP_MN_DISABLE_EVENTS:
+            return "IRP_MN_DISABLE_EVENTS";
+        case IRP_MN_ENABLE_COLLECTION:
+            return "IRP_MN_ENABLE_COLLECTION";
+        case IRP_MN_ENABLE_EVENTS:
+            return "IRP_MN_ENABLE_EVENTS";
+        case IRP_MN_EXECUTE_METHOD:
+            return "IRP_MN_EXECUTE_METHOD";
+        case IRP_MN_QUERY_ALL_DATA:
+            return "IRP_MN_QUERY_ALL_DATA";
+        case IRP_MN_QUERY_SINGLE_INSTANCE:
+            return "IRP_MN_QUERY_SINGLE_INSTANCE";
+        case IRP_MN_REGINFO:
+            return "IRP_MN_REGINFO";
+        default:
+            return "IRP_MN_?????";
+    }
+}
+
 NTSTATUS
 NTAPI
 CmBattQueryWmiRegInfo(PDEVICE_OBJECT DeviceObject,
@@ -111,11 +142,80 @@ CmBattWmiRegistration(IN PCMBATT_DEVICE_EXTENSION DeviceExtension)
 
 NTSTATUS
 NTAPI
-CmBattSystemControl(PDEVICE_OBJECT DeviceObject,
-                    PIRP Irp)
+CmBattSystemControl(IN PDEVICE_OBJECT DeviceObject,
+                    IN PIRP Irp)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    PCMBATT_DEVICE_EXTENSION DeviceExtension;
+    PWMILIB_CONTEXT WmiLibContext;
+    SYSCTL_IRP_DISPOSITION Disposition = IrpForward;
+    PAGED_CODE();
+    if (CmBattDebug & 2)
+        DbgPrint("CmBatt: SystemControl: %s\n",
+                 WMIMinorFunctionString(IoGetCurrentIrpStackLocation(Irp)->MinorFunction));
+    
+    /* Acquire the remove lock */
+    DeviceExtension = DeviceObject->DeviceExtension;
+    Status = IoAcquireRemoveLock(&DeviceExtension->RemoveLock, 0);
+    if (!NT_SUCCESS(Status))
+    {
+        /* It's too late, fail */
+        Irp->IoStatus.Status = STATUS_DEVICE_REMOVED;
+        IofCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_DEVICE_REMOVED;
+    }
+    
+    /* What kind of device is this? */
+    WmiLibContext = &DeviceExtension->WmiLibInfo;
+    if (DeviceExtension->FdoType == CmBattBattery)
+    {
+        /* For batteries, let the class driver handle it */
+        Status = BatteryClassSystemControl(DeviceExtension->ClassData,
+                                           WmiLibContext,
+                                           DeviceObject,
+                                           Irp,
+                                           &Disposition);
+    }
+    else
+    {
+        /* Otherwise, call the wmi library directly */
+        Status = WmiSystemControl(WmiLibContext,
+                                  DeviceObject,
+                                  Irp,
+                                  &Disposition);
+    }
+
+    /* Check what happened */
+    switch (Disposition)
+    {
+        case IrpNotCompleted:
+        
+            /* Complete it here */
+            if (CmBattDebug & 2) DbgPrint("CmBatt: SystemControl: Irp Not Completed.\n");
+            IofCompleteRequest(Irp, IO_NO_INCREMENT);
+            break;
+            
+        case IrpForward:
+        
+            /* Forward it to ACPI */
+            if (CmBattDebug & 2) DbgPrint("CmBatt: SystemControl: Irp Forward.\n");
+            IoSkipCurrentIrpStackLocation(Irp);
+            Status = IoCallDriver(DeviceExtension->AttachedDevice, Irp);
+            break;
+            
+        case IrpProcessed:
+        
+            /* Nothing to do */
+            if (CmBattDebug & 2) DbgPrint("CmBatt: SystemControl: Irp Processed.\n");
+            break;
+            
+        default:
+            ASSERT(FALSE);
+    }
+
+    /* Release the lock and return */
+    IoReleaseRemoveLock(&DeviceExtension->RemoveLock, 0);
+    return Status;
 }
     
 /* EOF */
