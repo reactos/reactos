@@ -351,8 +351,21 @@ NTAPI
 CmBattIoctl(PDEVICE_OBJECT DeviceObject,
             PIRP Irp)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PCMBATT_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+    NTSTATUS Status;
+
+    Status = BatteryClassIoctl(DeviceExtension->ClassData,
+                               Irp);
+
+    if (Status == STATUS_NOT_SUPPORTED)
+    {
+        Irp->IoStatus.Status = Status;
+        Irp->IoStatus.Information = 0;
+
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
+
+    return Status;
 }
 
 NTSTATUS
