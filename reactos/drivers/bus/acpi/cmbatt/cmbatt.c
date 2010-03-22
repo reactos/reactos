@@ -1095,12 +1095,12 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
                  RegistryPath->Buffer);
     
     /* Setup the major dispatchers */
-    DriverObject->MajorFunction[0] = CmBattOpenClose;
-    DriverObject->MajorFunction[2] = CmBattOpenClose;
-    DriverObject->MajorFunction[14] = CmBattIoctl;
-    DriverObject->MajorFunction[22] = CmBattPowerDispatch;
-    DriverObject->MajorFunction[27] = CmBattPnpDispatch;
-    DriverObject->MajorFunction[23] = CmBattSystemControl;
+    DriverObject->MajorFunction[IRP_MJ_CREATE] = CmBattOpenClose;
+    DriverObject->MajorFunction[IRP_MJ_CLOSE] = CmBattOpenClose;
+    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = CmBattIoctl;
+    DriverObject->MajorFunction[IRP_MJ_POWER] = CmBattPowerDispatch;
+    DriverObject->MajorFunction[IRP_MJ_PNP] = CmBattPnpDispatch;
+    DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = CmBattSystemControl;
 
     /* And the unload routine */
     DriverObject->DriverUnload = CmBattUnload;
