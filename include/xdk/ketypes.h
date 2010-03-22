@@ -345,21 +345,6 @@ typedef BOOLEAN
   IN BOOLEAN Handled);
 typedef NMI_CALLBACK *PNMI_CALLBACK;
 
-typedef enum _TRACE_INFORMATION_CLASS {
-  TraceIdClass,
-  TraceHandleClass,
-  TraceEnableFlagsClass,
-  TraceEnableLevelClass,
-  GlobalLoggerHandleClass,
-  EventLoggerHandleClass,
-  AllLoggerHandlesClass,
-  TraceHandleByNameClass,
-  LoggerEventsLostClass,
-  TraceSessionSettingsClass,
-  LoggerEventsLoggedClass,
-  MaxTraceInformationClass
-} TRACE_INFORMATION_CLASS;
-
 typedef enum _KE_PROCESSOR_CHANGE_NOTIFY_STATE {
   KeProcessorAddStartNotify = 0,
   KeProcessorAddCompleteNotify,

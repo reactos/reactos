@@ -44,6 +44,12 @@
 #include <guiddef.h>
 #endif
 
+#ifndef _KTMTYPES_
+typedef GUID UOW, *PUOW;
+#endif
+
+typedef GUID *PGUID;
+
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 #include <dpfilter.h>
 #endif
@@ -154,6 +160,7 @@ $include (cmtypes.h)
 $include (iotypes.h)
 $include (obtypes.h)
 $include (pstypes.h)
+$include (wmitypes.h)
 
 #if defined(_M_IX86)
 $include(x86/ke.h)
@@ -267,7 +274,6 @@ typedef ULONG64 TRACEHANDLE, *PTRACEHANDLE;
 extern PBOOLEAN Mm64BitPhysicalAddress;
 
 extern PVOID MmBadPointer;
-
 
 #ifdef __cplusplus
 }

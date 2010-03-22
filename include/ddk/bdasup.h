@@ -12,7 +12,10 @@ extern "C" {
 #endif
 
 #define STDMETHODCALLTYPE __stdcall
+
+#ifndef _WDMDDK_
 typedef GUID *PGUID;
+#endif
 
 /* Types */
 

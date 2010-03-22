@@ -1498,9 +1498,53 @@ IoFreeSfioStreamIdentifier(
   IN PFILE_OBJECT FileObject,
   IN PVOID Signature);
 
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoRequestDeviceEjectEx(
+  IN PDEVICE_OBJECT PhysicalDeviceObject,
+  IN PIO_DEVICE_EJECT_CALLBACK Callback OPTIONAL,
+  IN PVOID Context OPTIONAL,
+  IN PDRIVER_OBJECT DriverObject OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoSetDevicePropertyData(
+  IN PDEVICE_OBJECT     Pdo,
+  IN CONST DEVPROPKEY   *PropertyKey,
+  IN LCID               Lcid,
+  IN ULONG              Flags,
+  IN DEVPROPTYPE        Type,
+  IN ULONG              Size,
+  IN PVOID          Data OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoGetDevicePropertyData(
+  PDEVICE_OBJECT Pdo,
+  CONST DEVPROPKEY *PropertyKey,
+  LCID Lcid,
+  ULONG Flags,
+  ULONG Size,
+  PVOID Data,
+  PULONG RequiredSize,
+  PDEVPROPTYPE Type);
+
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 #define IoCallDriverStackSafeDefault(a, b) IoCallDriver(a, b)
+
+#if (NTDDI_VERSION >= NTDDI_WS08)
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoReplacePartitionUnit(
+  IN PDEVICE_OBJECT TargetPdo,
+  IN PDEVICE_OBJECT SparePdo,
+  IN ULONG Flags);
+#endif
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
 
@@ -1533,7 +1577,20 @@ NTAPI
 IoUnregisterContainerNotification(
   IN PVOID CallbackRegistration);
 
-#endif
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoUnregisterPlugPlayNotificationEx(
+  IN PVOID NotificationEntry);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoGetDeviceNumaNode(
+  IN PDEVICE_OBJECT Pdo,
+  OUT PUSHORT NodeNumber);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
 #if defined(_WIN64)
 NTKERNELAPI

@@ -5,6 +5,13 @@
 #ifndef _PO_DDK_
 #define _PO_DDK_
 
+#define PO_CB_SYSTEM_POWER_POLICY                0
+#define PO_CB_AC_STATUS                          1
+#define PO_CB_BUTTON_COLLISION                   2
+#define PO_CB_SYSTEM_STATE_LOCK                  3
+#define PO_CB_LID_SWITCH_STATE                   4
+#define PO_CB_PROCESSOR_POWER_POLICY             5
+
 /* Power States/Levels */
 typedef enum _SYSTEM_POWER_STATE {
   PowerSystemUnspecified = 0,
@@ -385,19 +392,21 @@ DEFINE_GUID(GUID_ENABLE_SWITCH_FORCED_SHUTDOWN, 0x833a6b62, 0xdfa4, 0x46d1, 0x82
 #define POWER_DEVICE_IDLE_POLICY_CONSERVATIVE    1
 
 typedef VOID
-(NTAPI *PREQUEST_POWER_COMPLETE)(
+(NTAPI REQUEST_POWER_COMPLETE)(
   IN struct _DEVICE_OBJECT *DeviceObject,
   IN UCHAR MinorFunction,
   IN POWER_STATE PowerState,
   IN PVOID Context,
   IN struct _IO_STATUS_BLOCK *IoStatus);
+typedef REQUEST_POWER_COMPLETE *PREQUEST_POWER_COMPLETE;
 
 typedef
 NTSTATUS
-(NTAPI *PPOWER_SETTING_CALLBACK)(
+(NTAPI POWER_SETTING_CALLBACK)(
   IN LPCGUID SettingGuid,
   IN PVOID Value,
   IN ULONG ValueLength,
   IN OUT PVOID Context OPTIONAL);
+typedef POWER_SETTING_CALLBACK *PPOWER_SETTING_CALLBACK;
 
 

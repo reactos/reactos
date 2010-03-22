@@ -50,5 +50,19 @@ HalReadDmaCounter(
   return counter;
 }
 
+FORCEINLINE
+ULONG
+HalGetDmaAlignment(
+  IN PDMA_ADAPTER DmaAdapter)
+{
+  PGET_DMA_ALIGNMENT getDmaAlignment;
+  ULONG alignment;
+
+  getDmaAlignment = *(DmaAdapter)->DmaOperations->GetDmaAlignment;
+  ASSERT( getDmaAlignment != NULL );
+  alignment = getDmaAlignment( DmaAdapter );
+  return alignment;
+}
+
 #endif
 
