@@ -134,22 +134,6 @@ CKsInterfaceHandler::KsSetPin(
         }
         pPin->Release();
     }
-
-    IKsAllocatorEx * Allocator;
-
-    if (SUCCEEDED(KsPin->QueryInterface(IID_IKsAllocatorEx, (void**)&Allocator)))
-    {
-        PALLOCATOR_PROPERTIES_EX Properties = Allocator->KsGetProperties();
-
-        if (Properties)
-        {
-            WCHAR Buffer[100];
-            swprintf(Buffer, L"CKsInterfaceHandler::KsSetPin PinName %s Properties.cbAlign %u cbBuffer %u cbPrefix %u cBuffers %u\n", m_PinName, Properties->cbAlign, Properties->cbBuffer, Properties->cbPrefix, Properties->cBuffers);
-            OutputDebugStringW(Buffer);
-        }
-        Allocator->Release();
-    }
-
 #endif
 
     // done
@@ -268,6 +252,7 @@ CKsInterfaceHandler::KsProcessMediaSamples(
          // query for IMediaSample2 interface
          IMediaSample2 * MediaSample;
          AM_SAMPLE2_PROPERTIES Properties;
+         ZeroMemory(&Properties, sizeof(AM_SAMPLE2_PROPERTIES));
 
          hr = SampleList[Index]->QueryInterface(IID_IMediaSample2, (void**)&MediaSample);
          if (SUCCEEDED(hr))
@@ -285,7 +270,6 @@ CKsInterfaceHandler::KsProcessMediaSamples(
              hr = SampleList[Index]->GetPointer((BYTE**)&Properties.pbBuffer);
              assert(hr == NOERROR);
              hr = SampleList[Index]->GetTime(&Properties.tStart, &Properties.tStop);
-             assert(hr == NOERROR);
 
              Properties.cbBuffer = SampleList[Index]->GetSize();
              assert(Properties.cbBuffer);
@@ -303,7 +287,7 @@ CKsInterfaceHandler::KsProcessMediaSamples(
          }
 
          WCHAR Buffer[200];
-         swprintf(Buffer, L"CKsInterfaceHandler::KsProcessMediaSamples PinName %s BufferLength %lu Property Buffer %p ExtendedSize %u lActual %u\n", m_PinName, Properties.cbBuffer, Properties.pbBuffer, ExtendedSize, Properties.lActual);
+         swprintf(Buffer, L"CKsInterfaceHandler::KsProcessMediaSamples PinName %s BufferLength %lu Property Buffer %p ExtendedSize %u lActual %u dwSampleFlags %lx\n", m_PinName, Properties.cbBuffer, Properties.pbBuffer, ExtendedSize, Properties.lActual, Properties.dwSampleFlags);
          //OutputDebugStringW(Buffer);
 
          CurStreamHeader->Size = sizeof(KSSTREAM_HEADER) + ExtendedSize;
@@ -378,10 +362,6 @@ CKsInterfaceHandler::KsCompleteIo(
     dwError = GetLastError();
 
     CurStreamHeader = StreamSegment->StreamHeader;
-
-    WCHAR Buffer[100];
-    swprintf(Buffer, L"CKsInterfaceHandler::KsCompleteIo PinName %s bOverlapped %u hr %lx\n", m_PinName, bOverlapped, dwError);
-    //OutputDebugStringW(Buffer);
 
     //iterate through all stream headers
     for(Index = 0; Index < StreamSegment->SampleCount; Index++)

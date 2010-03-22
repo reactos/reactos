@@ -657,6 +657,7 @@ STDMETHODCALLTYPE
 CInputPin::Receive(IMediaSample *pSample)
 {
     OutputDebugStringW(L"CInputPin::Receive NotImplemented\n");
+    DebugBreak();
     return E_NOTIMPL;
 }
 
@@ -665,6 +666,7 @@ STDMETHODCALLTYPE
 CInputPin::ReceiveMultiple(IMediaSample **pSamples, long nSamples, long *nSamplesProcessed)
 {
     OutputDebugStringW(L"CInputPin::ReceiveMultiple NotImplemented\n");
+    DebugBreak();
     return E_NOTIMPL;
 }
 
@@ -673,6 +675,7 @@ STDMETHODCALLTYPE
 CInputPin::ReceiveCanBlock( void)
 {
     OutputDebugStringW(L"CInputPin::ReceiveCanBlock NotImplemented\n");
+    DebugBreak();
     return S_FALSE;
 }
 
@@ -743,8 +746,6 @@ CInputPin::KsPropagateAcquire()
     KSSTATE State;
     ULONG BytesReturned;
     HRESULT hr;
-
-    OutputDebugStringW(L"CInputPin::KsPropagateAcquire\n");
 
     assert(m_hPin != INVALID_HANDLE_VALUE);
 
@@ -838,6 +839,7 @@ CInputPin::KsQualityNotify(
     REFERENCE_TIME TimeDelta)
 {
     OutputDebugStringW(L"CInputPin::KsQualityNotify NotImplemented\n");
+    DebugBreak();
     return E_NOTIMPL;
 }
 
@@ -1025,6 +1027,7 @@ STDMETHODCALLTYPE
 CInputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
 {
     OutputDebugStringW(L"CInputPin::Connect NotImplemented\n");
+    DebugBreak();
     return NOERROR;
 }
 
@@ -1104,6 +1107,7 @@ CInputPin::ConnectionMediaType(AM_MEDIA_TYPE *pmt)
         return VFW_E_NOT_CONNECTED;
 
     OutputDebugStringW(L"CInputPin::ConnectionMediaType NotImplemented\n");
+    DebugBreak();
     return E_NOTIMPL;
 }
 HRESULT

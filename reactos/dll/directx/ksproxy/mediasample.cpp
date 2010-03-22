@@ -56,34 +56,47 @@ public:
     virtual ~CMediaSample(){}
 
 protected:
-    LONG m_Ref;
-    IMemAllocator * m_Allocator;
+    ULONG m_Flags;
+    ULONG m_TypeFlags;
     BYTE * m_Buffer;
-    LONG m_BufferSize;
     LONG m_ActualLength;
+    LONG m_BufferSize;
+    IMemAllocator * m_Allocator;
+    CMediaSample * m_Next;
     REFERENCE_TIME m_StartTime;
     REFERENCE_TIME m_StopTime;
-    ULONG m_Flags;
-    BOOL m_bMediaTimeValid;
     LONGLONG m_MediaStart;
     LONGLONG m_MediaStop;
+    AM_MEDIA_TYPE * m_MediaType;
+    ULONG m_StreamId;
+
+public:
+    LONG m_Ref;
+
+    BOOL m_bMediaTimeValid;
+
 
 };
 
 CMediaSample::CMediaSample(
     IMemAllocator * Allocator,
     BYTE * Buffer,
-    LONG BufferSize) : m_Ref(0),
-                       m_Allocator(Allocator),
+    LONG BufferSize) : 
+                       m_Flags(0),
+                       m_TypeFlags(0),
                        m_Buffer(Buffer),
-                       m_BufferSize(BufferSize),
                        m_ActualLength(BufferSize),
+                       m_BufferSize(BufferSize),
+                       m_Allocator(Allocator),
+                       m_Next(0),
                        m_StartTime(0),
                        m_StopTime(0),
-                       m_Flags(0),
-                       m_bMediaTimeValid(0),
                        m_MediaStart(0),
-                       m_MediaStop(0)
+                       m_MediaStop(0),
+                       m_MediaType(0),
+                       m_StreamId(0),
+                       m_Ref(0),
+                       m_bMediaTimeValid(0)
 {
 }
 
@@ -254,8 +267,15 @@ HRESULT
 STDMETHODCALLTYPE
 CMediaSample::GetMediaType(AM_MEDIA_TYPE **ppMediaType)
 {
-    OutputDebugStringW(L"CMediaSample::GetMediaType NotImplemented\n");
-    DebugBreak();
+    OutputDebugStringW(L"CMediaSample::GetMediaType\n");
+
+    if (!m_MediaType)
+    {
+        *ppMediaType = NULL;
+        return S_FALSE;
+    }
+
+    assert(0);
     return E_NOTIMPL;
 }
 

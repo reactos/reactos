@@ -12,6 +12,8 @@
 const GUID KSCATEGORY_CLOCK       = {0x53172480, 0x4791, 0x11D0, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 #endif
 
+DWORD WINAPI CKsClockForwarder_ThreadStartup(LPVOID lpParameter);
+
 class CKsClockForwarder : public IDistributorNotify,
                           public IKsObject
 {
@@ -45,13 +47,37 @@ public:
     // IKsObject interface
     HANDLE STDMETHODCALLTYPE KsGetObjectHandle();
 
-    CKsClockForwarder(HANDLE handle) : m_Ref(0), m_Handle(handle){}
-    virtual ~CKsClockForwarder(){ if (m_Handle) CloseHandle(m_Handle);}
-
+    CKsClockForwarder(HANDLE handle);
+    virtual ~CKsClockForwarder(){};
+    HRESULT STDMETHODCALLTYPE SetClockState(KSSTATE State);
 protected:
     LONG m_Ref;
     HANDLE m_Handle;
+    IReferenceClock * m_Clock;
+    HANDLE m_hEvent;
+    HANDLE m_hThread;
+    BOOL m_ThreadStarted;
+    BOOL m_PendingStop;
+    BOOL m_ForceStart;
+    KSSTATE m_State;
+    REFERENCE_TIME m_Time;
+
+    friend DWORD WINAPI CKsClockForwarder_ThreadStartup(LPVOID lpParameter);
 };
+
+CKsClockForwarder::CKsClockForwarder(
+    HANDLE handle) : m_Ref(0),
+                     m_Handle(handle),
+                     m_Clock(0),
+                     m_hEvent(NULL),
+                     m_hThread(NULL),
+                     m_ThreadStarted(FALSE),
+                     m_PendingStop(FALSE),
+                     m_ForceStart(FALSE),
+                     m_State(KSSTATE_STOP),
+                     m_Time(0)
+{
+}
 
 HRESULT
 STDMETHODCALLTYPE
@@ -100,16 +126,79 @@ HRESULT
 STDMETHODCALLTYPE
 CKsClockForwarder::Stop()
 {
-    OutputDebugString("UNIMPLEMENTED\n");
-    return E_NOTIMPL;
+    OutputDebugString("CKsClockForwarder::Stop\n");
+
+    if (m_ThreadStarted)
+    {
+        // signal pending stop
+        m_PendingStop = true;
+
+        assert(m_hThread);
+        assert(m_hEvent);
+
+        // set stop event
+        SetEvent(m_hEvent);
+
+        // wait untill the thread has finished
+        WaitForSingleObject(m_hThread, INFINITE);
+
+        // close thread handle
+        CloseHandle(m_hThread);
+
+        // zero handle
+        m_hThread = NULL;
+    }
+
+    if (m_hEvent)
+    {
+        // close stop event
+        CloseHandle(m_hEvent);
+        m_hEvent = NULL;
+    }
+
+    m_PendingStop = false;
+
+    SetClockState(KSSTATE_STOP);
+    return NOERROR;
 }
 
 HRESULT
 STDMETHODCALLTYPE
 CKsClockForwarder::Pause()
 {
-    OutputDebugString("UNIMPLEMENTED\n");
-    return E_NOTIMPL;
+    OutputDebugString("CKsClockForwarder::Pause\n");
+
+    if (!m_hEvent)
+    {
+        m_hEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
+        if (!m_hEvent)
+            return MAKE_HRESULT(SEVERITY_ERROR, FACILITY_WIN32, GetLastError());
+    }
+
+    if (m_State <= KSSTATE_PAUSE)
+    {
+        if (m_State == KSSTATE_STOP)
+            SetClockState(KSSTATE_ACQUIRE);
+
+        if (m_State == KSSTATE_ACQUIRE)
+            SetClockState(KSSTATE_PAUSE);
+    }
+    else
+    {
+        if (!m_ForceStart)
+        {
+            SetClockState(KSSTATE_PAUSE);
+        }
+    }
+
+    if (!m_hThread)
+    {
+        m_hThread = CreateThread(NULL, 0, CKsClockForwarder_ThreadStartup, (LPVOID)this, 0, NULL);
+        if (!m_hThread)
+            return MAKE_HRESULT(SEVERITY_ERROR, FACILITY_WIN32, GetLastError());
+    }
+
+    return NOERROR;
 }
 
 HRESULT
@@ -117,8 +206,26 @@ STDMETHODCALLTYPE
 CKsClockForwarder::Run(
     REFERENCE_TIME tStart)
 {
-    OutputDebugString("UNIMPLEMENTED\n");
-    return E_NOTIMPL;
+    OutputDebugString("CKsClockForwarder::Run\n");
+
+    m_Time = tStart;
+
+    if (!m_hEvent || !m_hThread)
+    {
+        m_ForceStart = TRUE;
+        HRESULT hr = Pause();
+        m_ForceStart = FALSE;
+
+        if (FAILED(hr))
+            return hr;
+    }
+
+    assert(m_hThread);
+
+    SetClockState(KSSTATE_RUN);
+    SetEvent(m_hEvent);
+
+    return NOERROR;
 }
 
 HRESULT
@@ -126,15 +233,25 @@ STDMETHODCALLTYPE
 CKsClockForwarder::SetSyncSource(
     IReferenceClock *pClock)
 {
-    OutputDebugString("UNIMPLEMENTED\n");
-    return E_NOTIMPL;
+    OutputDebugString("CKsClockForwarder::SetSyncSource\n");
+
+    if (pClock)
+        pClock->AddRef();
+
+    if (m_Clock)
+        m_Clock->Release();
+
+
+    m_Clock = pClock;
+    return NOERROR;
 }
 
 HRESULT
 STDMETHODCALLTYPE
 CKsClockForwarder::NotifyGraphChange()
 {
-    OutputDebugString("UNIMPLEMENTED\n");
+    OutputDebugString("CKsClockForwarder::NotifyGraphChange\n");
+    DebugBreak();
     return E_NOTIMPL;
 }
 
@@ -147,6 +264,60 @@ STDMETHODCALLTYPE
 CKsClockForwarder::KsGetObjectHandle()
 {
     return m_Handle;
+}
+
+//-------------------------------------------------------------------
+HRESULT
+STDMETHODCALLTYPE
+CKsClockForwarder::SetClockState(KSSTATE State)
+{
+    KSPROPERTY Property;
+    ULONG BytesReturned;
+
+    Property.Set = KSPROPSETID_Clock;
+    Property.Id = KSPROPERTY_CLOCK_STATE;
+    Property.Flags = KSPROPERTY_TYPE_SET;
+
+    HRESULT hr = KsSynchronousDeviceControl(m_Handle, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), &State, sizeof(KSSTATE), &BytesReturned);
+    if (SUCCEEDED(hr))
+        m_State = State;
+
+    return hr;
+}
+
+DWORD
+WINAPI
+CKsClockForwarder_ThreadStartup(LPVOID lpParameter)
+{
+    REFERENCE_TIME Time;
+    ULONG BytesReturned;
+
+    CKsClockForwarder * Fwd = (CKsClockForwarder*)lpParameter;
+
+    Fwd->m_ThreadStarted = TRUE;
+
+    do
+    {
+        if (Fwd->m_PendingStop)
+            break;
+
+        if (Fwd->m_State != KSSTATE_RUN)
+            WaitForSingleObject(Fwd->m_hEvent, INFINITE);
+
+        KSPROPERTY Property;
+        Property.Set = KSPROPSETID_Clock;
+        Property.Id = KSPROPERTY_CLOCK_TIME;
+        Property.Flags = KSPROPERTY_TYPE_SET;
+
+        Fwd->m_Clock->GetTime(&Time);
+        Time -= Fwd->m_Time;
+
+        KsSynchronousDeviceControl(Fwd->m_Handle, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), &Time, sizeof(REFERENCE_TIME), &BytesReturned);
+    }
+    while(TRUE);
+
+    Fwd->m_ThreadStarted = FALSE;
+    return NOERROR;
 }
 
 HRESULT

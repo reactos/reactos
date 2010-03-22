@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <vector>
 #include <stack>
+#include <list>
 #include <assert.h>
 #include <ksmedia.h>
 //#include <debug.h>

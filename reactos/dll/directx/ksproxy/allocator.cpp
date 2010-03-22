@@ -16,6 +16,7 @@ class CKsAllocator : public IKsAllocatorEx,
 {
 public:
     typedef std::stack<IMediaSample *>MediaSampleStack;
+    typedef std::list<IMediaSample *>MediaSampleList;
 
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
@@ -77,6 +78,7 @@ protected:
     BOOL m_Commited;
     CRITICAL_SECTION m_CriticalSection;
     MediaSampleStack m_FreeList;
+    MediaSampleList m_UsedList;
     LPVOID m_Buffer;
     BOOL m_FreeSamples;
 };
@@ -118,6 +120,7 @@ CKsAllocator::CKsAllocator() : m_Ref(0),
                                m_cbPrefix(0),
                                m_Commited(FALSE),
                                m_FreeList(),
+                               m_UsedList(),
                                m_Buffer(0),
                                m_FreeSamples(FALSE)
 {
@@ -362,11 +365,19 @@ CKsAllocator::GetBuffer(
     if (!Sample)
     {
         // no sample acquired
-        return VFW_E_TIMEOUT;
+        //HACKKKKKKK
+        Sample = m_UsedList.back();
+        m_UsedList.pop_back();
+
+        if (!Sample)
+            return VFW_E_TIMEOUT;
     }
 
     // store result
     *ppBuffer = Sample;
+
+   // store sample in used list
+   m_UsedList.push_front(Sample);
 
     // done
     return NOERROR;
@@ -386,6 +397,7 @@ CKsAllocator::ReleaseBuffer(
 
     // add the sample to the free list
     m_FreeList.push(pBuffer);
+
 
     if (m_FreeSamples)
     {

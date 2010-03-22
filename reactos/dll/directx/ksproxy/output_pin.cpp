@@ -1280,11 +1280,12 @@ COutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
     m_MemInputPin->GetAllocatorRequirements(&Properties);
 
     //FIXME determine allocator properties
-    Properties.cBuffers = 16;
+    Properties.cBuffers = 32;
     Properties.cbBuffer = 2048 * 188; //2048 frames * MPEG2 TS Payload size
     Properties.cbAlign = 4;
 
     // get input pin allocator
+#if 0
     hr = m_MemInputPin->GetAllocator(&m_MemAllocator);
     if (SUCCEEDED(hr))
     {
@@ -1293,8 +1294,9 @@ COutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
         if (FAILED(hr))
             m_MemAllocator->Release();
     }
+#endif
 
-    if (FAILED(hr))
+    if (1)
     {
         hr = CKsAllocator_Constructor(NULL, IID_IMemAllocator, (void**)&m_MemAllocator);
         if (FAILED(hr))
@@ -1444,8 +1446,6 @@ HRESULT
 STDMETHODCALLTYPE
 COutputPin::QueryPinInfo(PIN_INFO *pInfo)
 {
-    OutputDebugStringW(L"COutputPin::QueryPinInfo\n");
-
     wcscpy(pInfo->achName, m_PinName);
     pInfo->dir = PINDIR_OUTPUT;
     pInfo->pFilter = m_ParentFilter;
@@ -1457,8 +1457,6 @@ HRESULT
 STDMETHODCALLTYPE
 COutputPin::QueryDirection(PIN_DIRECTION *pPinDir)
 {
-    OutputDebugStringW(L"COutputPin::QueryDirection\n");
-
     if (pPinDir)
     {
         *pPinDir = PINDIR_OUTPUT;
@@ -1471,8 +1469,6 @@ HRESULT
 STDMETHODCALLTYPE
 COutputPin::QueryId(LPWSTR *Id)
 {
-    OutputDebugStringW(L"COutputPin::QueryId\n");
-
     *Id = (LPWSTR)CoTaskMemAlloc((wcslen(m_PinName)+1)*sizeof(WCHAR));
     if (!*Id)
         return E_OUTOFMEMORY;
@@ -1496,8 +1492,6 @@ COutputPin::EnumMediaTypes(IEnumMediaTypes **ppEnum)
     AM_MEDIA_TYPE * MediaTypes;
     HANDLE hFilter;
 
-    OutputDebugStringW(L"COutputPin::EnumMediaTypes called\n");
-
     if (!m_KsObjectParent)
     {
         // no interface
@@ -1511,7 +1505,6 @@ COutputPin::EnumMediaTypes(IEnumMediaTypes **ppEnum)
     hr = KsGetMediaTypeCount(hFilter, m_PinId, &MediaTypeCount);
     if (FAILED(hr) || !MediaTypeCount)
     {
-        OutputDebugStringW(L"COutputPin::EnumMediaTypes failed1\n");
         return hr;
     }
 
@@ -1520,7 +1513,6 @@ COutputPin::EnumMediaTypes(IEnumMediaTypes **ppEnum)
     if (!MediaTypes)
     {
         // not enough memory
-        OutputDebugStringW(L"COutputPin::EnumMediaTypes CoTaskMemAlloc\n");
         return E_OUTOFMEMORY;
     }
 
@@ -1535,7 +1527,6 @@ COutputPin::EnumMediaTypes(IEnumMediaTypes **ppEnum)
         {
             // failed
             CoTaskMemFree(MediaTypes);
-            OutputDebugStringW(L"COutputPin::EnumMediaTypes failed\n");
             return hr;
         }
     }
@@ -1546,7 +1537,6 @@ HRESULT
 STDMETHODCALLTYPE
 COutputPin::QueryInternalConnections(IPin **apPin, ULONG *nPin)
 {
-    OutputDebugStringW(L"COutputPin::QueryInternalConnections called\n");
     return E_NOTIMPL;
 }
 HRESULT
@@ -1612,7 +1602,6 @@ COutputPin::CheckFormat(
         {
             // format is supported
             CoTaskMemFree(MultipleItem);
-            OutputDebugStringW(L"COutputPin::CheckFormat format OK\n");
             return S_OK;
         }
         DataFormat = (PKSDATAFORMAT)((ULONG_PTR)DataFormat + DataFormat->FormatSize);
@@ -1687,7 +1676,6 @@ COutputPin::CreatePin(
             if (FAILED(hr))
             {
                 // failed to load interface handler plugin
-                OutputDebugStringW(L"COutputPin::CreatePin failed to load InterfaceHandlerPlugin\n");
                 CoTaskMemFree(MediumList);
                 CoTaskMemFree(InterfaceList);
 
@@ -1699,7 +1687,6 @@ COutputPin::CreatePin(
             if (FAILED(hr))
             {
                 // failed to load interface handler plugin
-                OutputDebugStringW(L"COutputPin::CreatePin failed to initialize InterfaceHandlerPlugin\n");
                 InterfaceHandler->Release();
                 CoTaskMemFree(MediumList);
                 CoTaskMemFree(InterfaceList);
@@ -1887,10 +1874,11 @@ COutputPin::IoProcessRoutine()
 
         if (FAILED(hr))
         {
+            OutputDebugStringW(L"OutOfSamples\n");
             m_Pin->BeginFlush();
-            OutputDebugStringW(L"Beginning flushing...\n");
             WaitForSingleObject(m_hBufferAvailable, INFINITE);
             m_Pin->EndFlush();
+            OutputDebugStringW(L"After Wait OutOfSamples\n");
             // now retry again
             continue;
         }
@@ -1899,8 +1887,7 @@ COutputPin::IoProcessRoutine()
         SampleCount = 1;
         Samples[0] = Sample;
 
-
-        Sample->SetTime(&Start, &Stop);
+        Sample->SetTime(NULL, NULL);
         hr = m_InterfaceHandler->KsProcessMediaSamples(NULL, /* FIXME */
                                                        Samples,
                                                        &SampleCount,
@@ -1908,9 +1895,11 @@ COutputPin::IoProcessRoutine()
                                                        &StreamSegment);
         if (FAILED(hr) || !StreamSegment)
         {
-            swprintf(Buffer, L"COutputPin::IoProcessRoutine KsProcessMediaSamples PinName %s hr %lx StreamSegment %p\n", m_PinName, hr, StreamSegment);
+            swprintf(Buffer, L"COutputPin::IoProcessRoutine KsProcessMediaSamples FAILED PinName %s hr %lx\n", m_PinName, hr);
             OutputDebugStringW(Buffer);
-            break;
+            SetEvent(m_hStopEvent);
+            m_IoThreadStarted = false;
+            ExitThread(0);
         }
 
         // get completion event
@@ -1927,15 +1916,19 @@ COutputPin::IoProcessRoutine()
 
         if (SUCCEEDED(hr))
         {
-            Sample->GetTime(&Start, &Stop);
+            LONG Length = Sample->GetActualDataLength();
+            Stop += Length;
+           // Sample->SetMediaTime(&Start, &Stop);
             Start = Stop;
-            Stop++;
 
             // now deliver the sample
             hr = m_MemInputPin->Receive(Sample);
 
-            swprintf(Buffer, L"COutputPin::IoProcessRoutine IMemInputPin::Receive hr %lx Start %I64u Stop %I64u\n", hr, Start, Stop);
+            swprintf(Buffer, L"COutputPin::IoProcessRoutine PinName %s IMemInputPin::Receive hr %lx Sample %p m_MemAllocator %p\n", m_PinName, hr, Sample, m_MemAllocator);
             OutputDebugStringW(Buffer);
+             if (FAILED(hr))
+				 DebugBreak();
+            Sample = NULL;
         }
     }while(TRUE);
 
@@ -2117,6 +2110,9 @@ COutputPin_SetState(
         OutputDebugStringW(Buffer);
         if (FAILED(hr))
             return hr;
+
+        // release any waiting threads
+        SetEvent(pPin->m_hBufferAvailable);
 
         // wait until i/o thread is done
         WaitForSingleObject(pPin->m_hStopEvent, INFINITE);

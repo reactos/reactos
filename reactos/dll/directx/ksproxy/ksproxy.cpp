@@ -117,7 +117,7 @@ KsOpenDefaultDevice(
     WCHAR Path[MAX_PATH+sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA_W)];
 
     /* open device list */
-    hList = SetupDiGetClassDevsW(&Category, NULL, NULL, DIGCF_DEVICEINTERFACE  /* | DIGCF_PRESENT*/);
+    hList = SetupDiGetClassDevsW(&Category, NULL, NULL, DIGCF_DEVICEINTERFACE  | DIGCF_PRESENT);
 
     if (hList == INVALID_HANDLE_VALUE)
     {
@@ -129,7 +129,7 @@ KsOpenDefaultDevice(
     DeviceInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
     DeviceInterfaceData.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
 
-    if (SetupDiEnumDeviceInterfaces(hList, &DeviceInfoData, &Category, 0, &DeviceInterfaceData))
+    if (SetupDiEnumDeviceInterfaces(hList, NULL, &Category, 0, &DeviceInterfaceData))
     {
         /* setup interface data struct */
         DeviceInterfaceDetailData = (PSP_DEVICE_INTERFACE_DETAIL_DATA_W)Path;
