@@ -92,12 +92,11 @@ typedef struct _CMBATT_DEVICE_EXTENSION
     PIRP PowerIrp;
     POWER_STATE PowerState;
     WMILIB_CONTEXT WmiLibInfo;
-    ULONG WaitWakeEnable;
-    ULONG WmiCount;
-    KEVENT WmiEvent;
+    BOOLEAN WaitWakeEnable;
+    IO_REMOVE_LOCK RemoveLock;
     ULONG DeviceId;
     PUNICODE_STRING DeviceName;
-    ACPI_INTERFACE_STANDARD2 AcpiInterface;
+    ACPI_INTERFACE_STANDARD AcpiInterface;
     BOOLEAN DelayNotification;
     BOOLEAN ArFlag;
     PVOID ClassData;
@@ -183,5 +182,75 @@ CmBattSetTripPpoint(
     PCMBATT_DEVICE_EXTENSION DeviceExtension,
     ULONG AlarmValue
 );
+
+VOID
+NTAPI
+CmBattNotifyHandler(
+    IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
+    IN ULONG NotifyValue
+);
+
+NTSTATUS
+NTAPI
+CmBattWmiDeRegistration(
+    PCMBATT_DEVICE_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+CmBattWmiRegistration(
+    PCMBATT_DEVICE_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+CmBattGetUniqueId(
+    PDEVICE_OBJECT DeviceObject,
+    PULONG UniqueId
+);
+
+NTSTATUS
+NTAPI
+CmBattQueryInformation(
+    IN PCMBATT_DEVICE_EXTENSION FdoExtension,
+    IN ULONG Tag,
+    IN BATTERY_QUERY_INFORMATION_LEVEL InfoLevel,
+    IN OPTIONAL LONG AtRate,
+    IN PVOID Buffer,
+    IN ULONG BufferLength,
+    OUT PULONG ReturnedLength
+);
+                       
+NTSTATUS
+NTAPI
+CmBattQueryStatus(
+    IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
+    IN ULONG Tag,
+    IN PBATTERY_STATUS BatteryStatus
+);
+
+NTSTATUS
+NTAPI
+CmBattSetStatusNotify(
+    IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
+    IN ULONG BatteryTag,
+    IN PBATTERY_NOTIFY BatteryNotify
+);
+
+NTSTATUS
+NTAPI
+CmBattDisableStatusNotify(
+    IN PCMBATT_DEVICE_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+CmBattQueryTag(
+    IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
+    OUT PULONG Tag
+);
+
+extern PDEVICE_OBJECT AcAdapterPdo;
+extern ULONG CmBattDebug;
 
 /* EOF */

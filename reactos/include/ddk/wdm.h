@@ -3485,6 +3485,91 @@ typedef struct
     PUNREGISTER_FOR_DEVICE_NOTIFICATIONS2 UnregisterForDeviceNotifications;
 } ACPI_INTERFACE_STANDARD2, *PACPI_INTERFACE_STANDARD2;
 
+typedef
+BOOLEAN
+(*PGPE_SERVICE_ROUTINE)(
+    PDEVICE_OBJECT ObjectContext,
+    PVOID ServiceContext
+);
+
+typedef
+NTSTATUS
+(*PGPE_CONNECT_VECTOR)(
+    PDEVICE_OBJECT Context,
+    ULONG GpeNumber,
+    KINTERRUPT_MODE Mode,
+    BOOLEAN Shareable,
+    PGPE_SERVICE_ROUTINE2 ServiceRoutine,
+    PVOID ServiceContext,
+    PVOID *ObjectContext
+);
+
+typedef
+NTSTATUS
+(*PGPE_DISCONNECT_VECTOR)(
+    PDEVICE_OBJECT Context,
+    PVOID ObjectContext
+);
+
+typedef
+NTSTATUS
+(*PGPE_ENABLE_EVENT)(
+    PDEVICE_OBJECT Context,
+    PVOID ObjectContext
+);
+
+typedef
+NTSTATUS
+(*PGPE_DISABLE_EVENT)(
+    PDEVICE_OBJECT Context,
+    PVOID ObjectContext
+);
+
+typedef
+NTSTATUS
+(*PGPE_CLEAR_STATUS)(
+    PDEVICE_OBJECT Context,
+    PVOID ObjectContext
+);
+
+typedef
+VOID
+(*PDEVICE_NOTIFY_CALLBACK)(
+    PVOID NotificationContext,
+    ULONG NotifyCode
+);
+
+typedef
+NTSTATUS
+(*PREGISTER_FOR_DEVICE_NOTIFICATIONS)(
+    PDEVICE_OBJECT Context,
+    PDEVICE_NOTIFY_CALLBACK NotificationHandler,
+    PVOID NotificationContext
+);
+
+typedef
+VOID
+(*PUNREGISTER_FOR_DEVICE_NOTIFICATIONS)(
+    PDEVICE_OBJECT Context,
+    PDEVICE_NOTIFY_CALLBACK NotificationHandler
+);
+
+typedef struct
+{
+    USHORT Size;
+    USHORT Version;
+    PVOID Context;
+    PINTERFACE_REFERENCE InterfaceReference;
+    PINTERFACE_DEREFERENCE InterfaceDereference;
+    PGPE_CONNECT_VECTOR GpeConnectVector;
+    PGPE_DISCONNECT_VECTOR GpeDisconnectVector;
+    PGPE_ENABLE_EVENT GpeEnableEvent;
+    PGPE_DISABLE_EVENT GpeDisableEvent;
+    PGPE_CLEAR_STATUS GpeClearStatus;
+    PREGISTER_FOR_DEVICE_NOTIFICATIONS RegisterForDeviceNotifications;
+    PUNREGISTER_FOR_DEVICE_NOTIFICATIONS UnregisterForDeviceNotifications;
+} ACPI_INTERFACE_STANDARD, *PACPI_INTERFACE_STANDARD;
+
 typedef struct _DEVICE_CAPABILITIES {
   USHORT  Size;
   USHORT  Version;
