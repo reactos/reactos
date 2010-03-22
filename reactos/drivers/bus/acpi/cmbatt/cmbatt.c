@@ -348,23 +348,47 @@ Complete:
 
 NTSTATUS
 NTAPI
-CmBattIoctl(PDEVICE_OBJECT DeviceObject,
-            PIRP Irp)
+CmBattIoctl(IN PDEVICE_OBJECT DeviceObject,
+            IN PIRP Irp)
 {
     PCMBATT_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
     NTSTATUS Status;
+    PAGED_CODE();
+    if (CmBattDebug & 2) DbgPrint("CmBattIoctl\n");
 
-    Status = BatteryClassIoctl(DeviceExtension->ClassData,
-                               Irp);
-
+    /* Acquire the remove lock */
+    Status = IoAcquireRemoveLock(&DeviceExtension->RemoveLock, 0);
+    if (!NT_SUCCESS(Status))
+    {
+        /* It's too late, fail */
+        Irp->IoStatus.Status = STATUS_DEVICE_REMOVED;
+        IofCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_DEVICE_REMOVED;
+    }
+    
+    /* There's nothing to do for an AC adapter */
+    if (DeviceExtension->FdoType == CmBattAcAdapter)
+    {
+        /* Pass it down, and release the remove lock */
+        IoSkipCurrentIrpStackLocation(Irp);
+        Status = IoCallDriver(DeviceExtension->AttachedDevice, Irp);
+        IoReleaseRemoveLock(&DeviceExtension->RemoveLock, Irp);
+        return Status;
+    }
+    
+    /* Send to class driver */
+    Status = BatteryClassIoctl(DeviceExtension->ClassData, Irp);
     if (Status == STATUS_NOT_SUPPORTED)
     {
+        /* FIXME: Should handle custom codes here */
         Irp->IoStatus.Status = Status;
         Irp->IoStatus.Information = 0;
 
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
 
+    /* Release the remove lock and return status */
+    IoReleaseRemoveLock(&DeviceExtension->RemoveLock, Irp);
     return Status;
 }
 
