@@ -10,6 +10,13 @@
 
 #include "cmbatt.h"
 
+/* GLOBALS ********************************************************************/
+
+WMIGUIDREGINFO CmBattWmiGuidList[1] =
+{
+    {&GUID_POWER_DEVICE_WAKE_ENABLE, 1, 0}
+};
+
 /* FUNCTIONS ******************************************************************/
 
 NTSTATUS
@@ -69,18 +76,37 @@ CmBattSetWmiDataItem(PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS
 NTAPI
-CmBattWmiDeRegistration(PCMBATT_DEVICE_EXTENSION DeviceExtension)
+CmBattWmiDeRegistration(IN PCMBATT_DEVICE_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PAGED_CODE();
+    
+    /* De-register */
+    return IoWMIRegistrationControl(DeviceExtension->FdoDeviceObject,
+                                    WMIREG_ACTION_DEREGISTER); 
 }
 
 NTSTATUS
 NTAPI
-CmBattWmiRegistration(PCMBATT_DEVICE_EXTENSION DeviceExtension)
+CmBattWmiRegistration(IN PCMBATT_DEVICE_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PAGED_CODE();
+    
+    /* GUID information */
+    DeviceExtension->WmiLibInfo.GuidCount = sizeof(CmBattWmiGuidList) /
+                                            sizeof(WMIGUIDREGINFO);
+    DeviceExtension->WmiLibInfo.GuidList = CmBattWmiGuidList;
+    
+    /* Callbacks */
+    DeviceExtension->WmiLibInfo.QueryWmiRegInfo = CmBattQueryWmiRegInfo;
+    DeviceExtension->WmiLibInfo.QueryWmiDataBlock = CmBattQueryWmiDataBlock;
+    DeviceExtension->WmiLibInfo.SetWmiDataBlock = CmBattSetWmiDataBlock;
+    DeviceExtension->WmiLibInfo.SetWmiDataItem = CmBattSetWmiDataItem;
+    DeviceExtension->WmiLibInfo.ExecuteWmiMethod = NULL;
+    DeviceExtension->WmiLibInfo.WmiFunctionControl = NULL;
+    
+    /* Register */
+    return IoWMIRegistrationControl(DeviceExtension->FdoDeviceObject,
+                                    WMIREG_ACTION_REGISTER);
 }
 
 NTSTATUS

@@ -11,6 +11,7 @@
 #include <batclass.h>
 #include <acpiioct.h>
 #include <wmilib.h>
+#include <wdmguid.h>
 #include <debug.h>
 
 #define CMBATT_GENERIC_STATUS   0x01

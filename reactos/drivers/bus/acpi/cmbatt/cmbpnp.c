@@ -14,21 +14,85 @@
 
 NTSTATUS
 NTAPI
-CmBattIoCompletion(PDEVICE_OBJECT DeviceObject,
-                   PIRP Irp,
-                   PKEVENT Event)
+CmBattIoCompletion(IN PDEVICE_OBJECT DeviceObject,
+                   IN PIRP Irp,
+                   IN PKEVENT Event)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    if (CmBattDebug & 2) DbgPrint("CmBattIoCompletion: Event (%x)\n", Event);
+
+    /* Set the completion event */
+    KeSetEvent(Event, IO_NO_INCREMENT, FALSE);
+    return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
 NTSTATUS
 NTAPI
-CmBattGetAcpiInterfaces(PDEVICE_OBJECT DeviceObject,
-                        PACPI_INTERFACE_STANDARD AcpiInterface)
+CmBattGetAcpiInterfaces(IN PDEVICE_OBJECT DeviceObject,
+                        IN OUT PACPI_INTERFACE_STANDARD AcpiInterface)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PIRP Irp;
+    NTSTATUS Status;
+    PIO_STACK_LOCATION IoStackLocation;
+    KEVENT Event;
+
+    /* Allocate the IRP */
+    Irp = IoAllocateIrp(DeviceObject->StackSize, 0);
+    if (!Irp)
+    {
+        /* Fail */
+        if (CmBattDebug & 0xC)
+          DbgPrint("CmBattGetAcpiInterfaces: Failed to allocate Irp\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Set default error code */
+    Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
+
+    /* Build the query */
+    IoStackLocation = IoGetNextIrpStackLocation(Irp);
+    IoStackLocation->MinorFunction = IRP_MN_QUERY_INTERFACE;
+    IoStackLocation->Parameters.QueryInterface.InterfaceType = &GUID_ACPI_INTERFACE_STANDARD;
+    IoStackLocation->Parameters.QueryInterface.Size = sizeof(ACPI_INTERFACE_STANDARD);
+    IoStackLocation->Parameters.QueryInterface.Version = 1;
+    IoStackLocation->Parameters.QueryInterface.Interface = (PINTERFACE)AcpiInterface;
+    IoStackLocation->Parameters.QueryInterface.InterfaceSpecificData = NULL;
+
+    /* Set default ACPI interface data */
+    AcpiInterface->Size = sizeof(ACPI_INTERFACE_STANDARD);
+    AcpiInterface->Version = 1;
+
+    /* Initialize our wait event */
+    KeInitializeEvent(&Event, SynchronizationEvent, 0);
+    
+    /* Set the completion routine */
+    IoCopyCurrentIrpStackLocationToNext(Irp);
+    IoSetCompletionRoutine(Irp,
+                           (PVOID)CmBattIoCompletion,
+                           &Event,
+                           TRUE,
+                           TRUE,
+                           TRUE);
+ 
+    /* Now call ACPI */
+    Status = IoCallDriver(DeviceObject, Irp);
+    if (Status == STATUS_PENDING)
+    {
+        /* Wait for completion */
+        KeWaitForSingleObject(&Event,
+                              Executive,
+                              KernelMode,
+                              FALSE,
+                              NULL);
+        Status = Irp->IoStatus.Status;
+    }
+    
+    /* Free the IRP */
+    IoFreeIrp(Irp);
+    
+    /* Return status */
+    if (!(NT_SUCCESS(Status)) && (CmBattDebug & 0xC))
+        DbgPrint("CmBattGetAcpiInterfaces: Could not get ACPI driver interfaces, status = %x\n", Status);
+    return Status;
 }
 
 VOID

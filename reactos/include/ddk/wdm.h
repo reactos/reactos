@@ -3158,6 +3158,12 @@ typedef VOID
 (DDKAPI *WMI_NOTIFICATION_CALLBACK)(
   PVOID  Wnode,
   PVOID  Context);
+  
+#define WMIREG_ACTION_REGISTER      1
+#define WMIREG_ACTION_DEREGISTER    2
+#define WMIREG_ACTION_REREGISTER    3
+#define WMIREG_ACTION_UPDATE_GUIDS  4
+#define WMIREG_ACTION_BLOCK_IRPS    5
 
 #define EVENT_INCREMENT                   1
 #define IO_NO_INCREMENT                   0
