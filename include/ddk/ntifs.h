@@ -25,30 +25,8 @@
 #define _NTIFS_INCLUDED_
 #define _GNU_NTIFS_
 
-/* Helper macro to enable gcc's extension.  */
-#ifndef __GNU_EXTENSION
-#ifdef __GNUC__
-#define __GNU_EXTENSION __extension__
-#else
-#define __GNU_EXTENSION
-#endif
-#endif
-
 #ifdef __cplusplus
 extern "C" {
-#endif
-
-#if !defined(_NTHALDLL_) && !defined(_BLDR_)
-#define NTHALAPI DECLSPEC_IMPORT
-#else
-#define NTHALAPI
-#endif
-
-/* For ReactOS */
-#if !defined(_NTOSKRNL_) && !defined(_BLDR_)
-#define NTKERNELAPI DECLSPEC_IMPORT
-#else
-#define NTKERNELAPI
 #endif
 
 /* Dependencies */
@@ -74,16 +52,6 @@ extern "C" {
 
 #ifndef ClearFlag
 #define ClearFlag(_F,_SF)     ((_F) &= ~(_SF))
-#endif
-
-#define PsGetCurrentProcess IoGetCurrentProcess
-
-#if (NTDDI_VERSION >= NTDDI_VISTA)
-extern NTSYSAPI volatile CCHAR KeNumberProcessors;
-#elif (NTDDI_VERSION >= NTDDI_WINXP)
-extern NTSYSAPI CCHAR KeNumberProcessors;
-#else
-extern PCCHAR KeNumberProcessors;
 #endif
 
 typedef UNICODE_STRING LSA_UNICODE_STRING, *PLSA_UNICODE_STRING;
@@ -4589,6 +4557,8 @@ typedef struct _KAPC_STATE {
 
 #define KAPC_STATE_ACTUAL_LENGTH (FIELD_OFFSET(KAPC_STATE, UserApcPending) + sizeof(BOOLEAN))
 
+#define ASSERT_QUEUE(Q) ASSERT(((Q)->Header.Type & KOBJECT_TYPE_MASK) == QueueObject);
+
 typedef struct _KQUEUE {
   DISPATCHER_HEADER Header;
   LIST_ENTRY EntryListHead;
@@ -5420,7 +5390,20 @@ PsReturnPoolQuota(
   IN POOL_TYPE PoolType,
   IN ULONG_PTR Amount);
 
-#endif
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PsAssignImpersonationToken(
+  IN PETHREAD Thread,
+  IN HANDLE Token OPTIONAL);
+
+NTKERNELAPI
+HANDLE
+NTAPI
+PsReferencePrimaryToken(
+  IN OUT PEPROCESS Process);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 
@@ -8933,15 +8916,10 @@ extern PACL                         SeSystemDefaultDacl;
 
 #define FILE_VC_QUOTAS_LOG_VIOLATIONS   0x00000004
 
-#define FSRTL_WILD_CHARACTER            0x08
-
 #ifdef _X86_
 #define HARDWARE_PTE    HARDWARE_PTE_X86
 #define PHARDWARE_PTE   PHARDWARE_PTE_X86
 #endif
-
-#define IO_CHECK_CREATE_PARAMETERS      0x0200
-#define IO_ATTACH_DEVICE                0x0400
 
 #define IO_ATTACH_DEVICE_API            0x80000000
 
@@ -8986,9 +8964,6 @@ extern PACL                         SeSystemDefaultDacl;
 #define OB_TYPE_FILE                    23
 
 #define SEC_BASED	0x00200000
-
-#define SECURITY_WORLD_SID_AUTHORITY    {0,0,0,0,0,1}
-#define SECURITY_WORLD_RID              (0x00000000L)
 
 /* end winnt.h */
 
@@ -9172,8 +9147,6 @@ typedef struct _GET_RETRIEVAL_DESCRIPTOR {
     MAPPING_PAIR    Pair[1];
 } GET_RETRIEVAL_DESCRIPTOR, *PGET_RETRIEVAL_DESCRIPTOR;
 
-#define ASSERT_QUEUE(Q) ASSERT(((Q)->Header.Type & KOBJECT_TYPE_MASK) == QueueObject);
-
 typedef struct _MBCB {
     CSHORT          NodeTypeCode;
     CSHORT          NodeIsInZone;
@@ -9322,70 +9295,6 @@ CcGetLsnForFileObject (
     OUT PLARGE_INTEGER  OldestLsn OPTIONAL
 );
 
-#if (VER_PRODUCTBUILD >= 2600)
-
-#ifndef __NTOSKRNL__
-NTKERNELAPI
-VOID
-FASTCALL
-ExInitializeRundownProtection (
-    IN PEX_RUNDOWN_REF  RunRef
-);
-
-NTKERNELAPI
-VOID
-FASTCALL
-ExReInitializeRundownProtection (
-    IN PEX_RUNDOWN_REF  RunRef
-);
-
-NTKERNELAPI
-BOOLEAN
-FASTCALL
-ExAcquireRundownProtection (
-    IN PEX_RUNDOWN_REF  RunRef
-);
-
-NTKERNELAPI
-BOOLEAN
-FASTCALL
-ExAcquireRundownProtectionEx (
-    IN PEX_RUNDOWN_REF  RunRef,
-    IN ULONG            Count
-);
-
-NTKERNELAPI
-VOID
-FASTCALL
-ExReleaseRundownProtection (
-    IN PEX_RUNDOWN_REF  RunRef
-);
-
-NTKERNELAPI
-VOID
-FASTCALL
-ExReleaseRundownProtectionEx (
-    IN PEX_RUNDOWN_REF  RunRef,
-    IN ULONG            Count
-);
-
-NTKERNELAPI
-VOID
-FASTCALL
-ExRundownCompleted (
-    IN PEX_RUNDOWN_REF  RunRef
-);
-
-NTKERNELAPI
-VOID
-FASTCALL
-ExWaitForRundownProtectionRelease (
-    IN PEX_RUNDOWN_REF  RunRef
-);
-
-#endif
-#endif /* (VER_PRODUCTBUILD >= 2600) */
-
 NTKERNELAPI
 PVOID
 NTAPI
@@ -9463,15 +9372,6 @@ FsRtlNotifyChangeDirectory (
 NTKERNELAPI
 NTSTATUS
 NTAPI
-IoAttachDeviceToDeviceStackSafe(
-    IN PDEVICE_OBJECT   SourceDevice,
-    IN PDEVICE_OBJECT   TargetDevice,
-    OUT PDEVICE_OBJECT  *AttachedToDeviceObject
-);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
 ObCreateObject (
     IN KPROCESSOR_MODE      ObjectAttributesAccessMode OPTIONAL,
     IN POBJECT_TYPE         ObjectType,
@@ -9505,23 +9405,6 @@ ObReferenceObjectByName (
     OUT PVOID           *Object
 );
 
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-PsAssignImpersonationToken(
-  IN PETHREAD Thread,
-  IN HANDLE Token OPTIONAL);
-
-NTKERNELAPI
-HANDLE
-NTAPI
-PsReferencePrimaryToken(
-  IN OUT PEPROCESS Process);
-
-#endif
-
 #define PsDereferenceImpersonationToken(T)  \
             {if (ARGUMENT_PRESENT(T)) {     \
                 (ObDereferenceObject((T))); \
@@ -9540,14 +9423,6 @@ PsLookupProcessThreadByCid (
 );
 
 NTSYSAPI
-VOID
-NTAPI
-RtlSecondsSince1970ToTime (
-    IN ULONG            SecondsSince1970,
-    OUT PLARGE_INTEGER  Time
-);
-
-NTSYSAPI
 NTSTATUS
 NTAPI
 RtlSetSaclSecurityDescriptor (
@@ -9556,19 +9431,6 @@ RtlSetSaclSecurityDescriptor (
     IN PACL                     Sacl,
     IN BOOLEAN                  SaclDefaulted
 );
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlUnicodeStringToCountedOemString (
-    IN OUT POEM_STRING  DestinationString,
-    IN PCUNICODE_STRING SourceString,
-    IN BOOLEAN          AllocateDestinationString
-);
-
-//
-// RTL time functions
-//
 
 #define SeEnableAccessToExports() SeExports = *(PSE_EXPORTS *)SeExports;
 
