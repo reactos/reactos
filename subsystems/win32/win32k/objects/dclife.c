@@ -90,7 +90,7 @@ void
 DC_InitHack(PDC pdc)
 {
     HRGN hVisRgn;
-    if (!pdc) return;
+
     TextIntRealizeFont(pdc->pdcattr->hlfntNew,NULL);
     pdc->pdcattr->iCS_CP = ftGdiGetTextCharsetInfo(pdc,NULL,0);
 
@@ -594,7 +594,7 @@ NtGdiCreateCompatibleDC(HDC hdc)
 {
     HDC hdcNew;
     PPDEVOBJ ppdev;
-    PDC pdc = NULL, pdcNew;
+    PDC pdc, pdcNew;
 
     DPRINT("NtGdiCreateCompatibleDC(0x%p)\n", hdc);
 
