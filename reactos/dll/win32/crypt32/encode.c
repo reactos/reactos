@@ -4305,7 +4305,7 @@ static CryptEncodeObjectExFunc CRYPT_GetBuiltinEncoder(DWORD dwCertEncodingType,
         return NULL;
     }
 
-    if (!HIWORD(lpszStructType))
+    if (IS_INTOID(lpszStructType))
     {
         switch (LOWORD(lpszStructType))
         {
