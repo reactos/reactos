@@ -1,1138 +1,6 @@
 /******************************************************************************
  *                         I/O Manager Types                                  *
  ******************************************************************************/
-$if (_NTDDK_)
-
-#ifndef _ARC_DDK_
-#define _ARC_DDK_
-typedef enum _CONFIGURATION_TYPE {
-  ArcSystem,
-  CentralProcessor,
-  FloatingPointProcessor,
-  PrimaryIcache,
-  PrimaryDcache,
-  SecondaryIcache,
-  SecondaryDcache,
-  SecondaryCache,
-  EisaAdapter,
-  TcAdapter,
-  ScsiAdapter,
-  DtiAdapter,
-  MultiFunctionAdapter,
-  DiskController,
-  TapeController,
-  CdromController,
-  WormController,
-  SerialController,
-  NetworkController,
-  DisplayController,
-  ParallelController,
-  PointerController,
-  KeyboardController,
-  AudioController,
-  OtherController,
-  DiskPeripheral,
-  FloppyDiskPeripheral,
-  TapePeripheral,
-  ModemPeripheral,
-  MonitorPeripheral,
-  PrinterPeripheral,
-  PointerPeripheral,
-  KeyboardPeripheral,
-  TerminalPeripheral,
-  OtherPeripheral,
-  LinePeripheral,
-  NetworkPeripheral,
-  SystemMemory,
-  DockingInformation,
-  RealModeIrqRoutingTable,
-  RealModePCIEnumeration,
-  MaximumType
-} CONFIGURATION_TYPE, *PCONFIGURATION_TYPE;
-#endif /* !_ARC_DDK_ */
-
-/*
-** IRP function codes
-*/
-
-#define IRP_MN_QUERY_DIRECTORY            0x01
-#define IRP_MN_NOTIFY_CHANGE_DIRECTORY    0x02
-
-#define IRP_MN_USER_FS_REQUEST            0x00
-#define IRP_MN_MOUNT_VOLUME               0x01
-#define IRP_MN_VERIFY_VOLUME              0x02
-#define IRP_MN_LOAD_FILE_SYSTEM           0x03
-#define IRP_MN_TRACK_LINK                 0x04
-#define IRP_MN_KERNEL_CALL                0x04
-
-#define IRP_MN_LOCK                       0x01
-#define IRP_MN_UNLOCK_SINGLE              0x02
-#define IRP_MN_UNLOCK_ALL                 0x03
-#define IRP_MN_UNLOCK_ALL_BY_KEY          0x04
-
-#define IRP_MN_FLUSH_AND_PURGE          0x01
-
-#define IRP_MN_NORMAL                     0x00
-#define IRP_MN_DPC                        0x01
-#define IRP_MN_MDL                        0x02
-#define IRP_MN_COMPLETE                   0x04
-#define IRP_MN_COMPRESSED                 0x08
-
-#define IRP_MN_MDL_DPC                    (IRP_MN_MDL | IRP_MN_DPC)
-#define IRP_MN_COMPLETE_MDL               (IRP_MN_COMPLETE | IRP_MN_MDL)
-#define IRP_MN_COMPLETE_MDL_DPC           (IRP_MN_COMPLETE_MDL | IRP_MN_DPC)
-
-#define IRP_MN_QUERY_LEGACY_BUS_INFORMATION 0x18
-
-#define IO_CHECK_CREATE_PARAMETERS      0x0200
-#define IO_ATTACH_DEVICE                0x0400
-#define IO_IGNORE_SHARE_ACCESS_CHECK    0x0800
-
-typedef
-NTSTATUS
-(NTAPI *PIO_QUERY_DEVICE_ROUTINE)(
-  IN PVOID Context,
-  IN PUNICODE_STRING PathName,
-  IN INTERFACE_TYPE BusType,
-  IN ULONG BusNumber,
-  IN PKEY_VALUE_FULL_INFORMATION *BusInformation,
-  IN CONFIGURATION_TYPE ControllerType,
-  IN ULONG ControllerNumber,
-  IN PKEY_VALUE_FULL_INFORMATION *ControllerInformation,
-  IN CONFIGURATION_TYPE PeripheralType,
-  IN ULONG PeripheralNumber,
-  IN PKEY_VALUE_FULL_INFORMATION *PeripheralInformation);
-
-typedef enum _IO_QUERY_DEVICE_DATA_FORMAT {
-  IoQueryDeviceIdentifier = 0,
-  IoQueryDeviceConfigurationData,
-  IoQueryDeviceComponentInformation,
-  IoQueryDeviceMaxData
-} IO_QUERY_DEVICE_DATA_FORMAT, *PIO_QUERY_DEVICE_DATA_FORMAT;
-
-typedef VOID
-(NTAPI *PDRIVER_REINITIALIZE)(
-  IN struct _DRIVER_OBJECT *DriverObject,
-  IN PVOID Context OPTIONAL,
-  IN ULONG Count);
-
-typedef struct _CONTROLLER_OBJECT {
-  CSHORT Type;
-  CSHORT Size;
-  PVOID ControllerExtension;
-  KDEVICE_QUEUE DeviceWaitQueue;
-  ULONG Spare1;
-  LARGE_INTEGER Spare2;
-} CONTROLLER_OBJECT, *PCONTROLLER_OBJECT;
-
-/* DEVICE_OBJECT.Flags */
-
-#define DO_DEVICE_HAS_NAME                  0x00000040
-#define DO_SYSTEM_BOOT_PARTITION            0x00000100
-#define DO_LONG_TERM_REQUESTS               0x00000200
-#define DO_NEVER_LAST_DEVICE                0x00000400
-#define DO_LOW_PRIORITY_FILESYSTEM          0x00010000
-#define DO_SUPPORTS_TRANSACTIONS            0x00040000
-#define DO_FORCE_NEITHER_IO                 0x00080000
-#define DO_VOLUME_DEVICE_OBJECT             0x00100000
-#define DO_SYSTEM_SYSTEM_PARTITION          0x00200000
-#define DO_SYSTEM_CRITICAL_PARTITION        0x00400000
-#define DO_DISALLOW_EXECUTE                 0x00800000
-
-#define DRVO_REINIT_REGISTERED          0x00000008
-#define DRVO_INITIALIZED                0x00000010
-#define DRVO_BOOTREINIT_REGISTERED      0x00000020
-#define DRVO_LEGACY_RESOURCES           0x00000040
-
-typedef struct _CONFIGURATION_INFORMATION {
-  ULONG DiskCount;
-  ULONG FloppyCount;
-  ULONG CdRomCount;
-  ULONG TapeCount;
-  ULONG ScsiPortCount;
-  ULONG SerialCount;
-  ULONG ParallelCount;
-  BOOLEAN AtDiskPrimaryAddressClaimed;
-  BOOLEAN AtDiskSecondaryAddressClaimed;
-  ULONG Version;
-  ULONG MediumChangerCount;
-} CONFIGURATION_INFORMATION, *PCONFIGURATION_INFORMATION;
-
-typedef struct _DISK_SIGNATURE {
-  ULONG PartitionStyle;
-  _ANONYMOUS_UNION union {
-    struct {
-      ULONG Signature;
-      ULONG CheckSum;
-    } Mbr;
-    struct {
-      GUID DiskId;
-    } Gpt;
-  } DUMMYUNIONNAME;
-} DISK_SIGNATURE, *PDISK_SIGNATURE;
-
-typedef struct _TXN_PARAMETER_BLOCK {
-  USHORT Length;
-  USHORT TxFsContext;
-  PVOID TransactionObject;
-} TXN_PARAMETER_BLOCK, *PTXN_PARAMETER_BLOCK;
-
-#define TXF_MINIVERSION_DEFAULT_VIEW        (0xFFFE)
-
-typedef struct _IO_DRIVER_CREATE_CONTEXT {
-  CSHORT Size;
-  struct _ECP_LIST *ExtraCreateParameter;
-  PVOID DeviceObjectHint;
-  PTXN_PARAMETER_BLOCK TxnParameters;
-} IO_DRIVER_CREATE_CONTEXT, *PIO_DRIVER_CREATE_CONTEXT;
-
-typedef struct _AGP_TARGET_BUS_INTERFACE_STANDARD {
-  USHORT Size;
-  USHORT Version;
-  PVOID Context;
-  PINTERFACE_REFERENCE InterfaceReference;
-  PINTERFACE_DEREFERENCE InterfaceDereference;
-  PGET_SET_DEVICE_DATA SetBusData;
-  PGET_SET_DEVICE_DATA GetBusData;
-  UCHAR CapabilityID;
-} AGP_TARGET_BUS_INTERFACE_STANDARD, *PAGP_TARGET_BUS_INTERFACE_STANDARD;
-
-typedef NTSTATUS
-(NTAPI *PGET_LOCATION_STRING)(
-  IN OUT PVOID Context OPTIONAL,
-  OUT PWCHAR *LocationStrings);
-
-typedef struct _PNP_LOCATION_INTERFACE {
-  USHORT Size;
-  USHORT Version;
-  PVOID Context;
-  PINTERFACE_REFERENCE InterfaceReference;
-  PINTERFACE_DEREFERENCE InterfaceDereference;
-  PGET_LOCATION_STRING GetLocationString;
-} PNP_LOCATION_INTERFACE, *PPNP_LOCATION_INTERFACE;
-
-typedef enum _ARBITER_ACTION {
-  ArbiterActionTestAllocation,
-  ArbiterActionRetestAllocation,
-  ArbiterActionCommitAllocation,
-  ArbiterActionRollbackAllocation,
-  ArbiterActionQueryAllocatedResources,
-  ArbiterActionWriteReservedResources,
-  ArbiterActionQueryConflict,
-  ArbiterActionQueryArbitrate,
-  ArbiterActionAddReserved,
-  ArbiterActionBootAllocation
-} ARBITER_ACTION, *PARBITER_ACTION;
-
-typedef struct _ARBITER_CONFLICT_INFO {
-  PDEVICE_OBJECT OwningObject;
-  ULONGLONG Start;
-  ULONGLONG End;
-} ARBITER_CONFLICT_INFO, *PARBITER_CONFLICT_INFO;
-
-typedef struct _ARBITER_TEST_ALLOCATION_PARAMETERS {
-  IN OUT PLIST_ENTRY ArbitrationList;
-  IN ULONG AllocateFromCount;
-  IN PCM_PARTIAL_RESOURCE_DESCRIPTOR AllocateFrom;
-} ARBITER_TEST_ALLOCATION_PARAMETERS, *PARBITER_TEST_ALLOCATION_PARAMETERS;
-
-typedef struct _ARBITER_RETEST_ALLOCATION_PARAMETERS {
-  IN OUT PLIST_ENTRY ArbitrationList;
-  IN ULONG AllocateFromCount;
-  IN PCM_PARTIAL_RESOURCE_DESCRIPTOR AllocateFrom;
-} ARBITER_RETEST_ALLOCATION_PARAMETERS, *PARBITER_RETEST_ALLOCATION_PARAMETERS;
-
-typedef struct _ARBITER_BOOT_ALLOCATION_PARAMETERS {
-  IN OUT PLIST_ENTRY ArbitrationList;
-} ARBITER_BOOT_ALLOCATION_PARAMETERS, *PARBITER_BOOT_ALLOCATION_PARAMETERS;
-
-typedef struct _ARBITER_QUERY_ALLOCATED_RESOURCES_PARAMETERS {
-  OUT PCM_PARTIAL_RESOURCE_LIST *AllocatedResources;
-} ARBITER_QUERY_ALLOCATED_RESOURCES_PARAMETERS, *PARBITER_QUERY_ALLOCATED_RESOURCES_PARAMETERS;
-
-typedef struct _ARBITER_QUERY_CONFLICT_PARAMETERS {
-  IN PDEVICE_OBJECT PhysicalDeviceObject;
-  IN PIO_RESOURCE_DESCRIPTOR ConflictingResource;
-  OUT PULONG ConflictCount;
-  OUT PARBITER_CONFLICT_INFO *Conflicts;
-} ARBITER_QUERY_CONFLICT_PARAMETERS, *PARBITER_QUERY_CONFLICT_PARAMETERS;
-
-typedef struct _ARBITER_QUERY_ARBITRATE_PARAMETERS {
-  IN PLIST_ENTRY ArbitrationList;
-} ARBITER_QUERY_ARBITRATE_PARAMETERS, *PARBITER_QUERY_ARBITRATE_PARAMETERS;
-
-typedef struct _ARBITER_ADD_RESERVED_PARAMETERS {
-  IN PDEVICE_OBJECT ReserveDevice;
-} ARBITER_ADD_RESERVED_PARAMETERS, *PARBITER_ADD_RESERVED_PARAMETERS;
-
-typedef struct _ARBITER_PARAMETERS {
-  union {
-    ARBITER_TEST_ALLOCATION_PARAMETERS TestAllocation;
-    ARBITER_RETEST_ALLOCATION_PARAMETERS RetestAllocation;
-    ARBITER_BOOT_ALLOCATION_PARAMETERS BootAllocation;
-    ARBITER_QUERY_ALLOCATED_RESOURCES_PARAMETERS QueryAllocatedResources;
-    ARBITER_QUERY_CONFLICT_PARAMETERS QueryConflict;
-    ARBITER_QUERY_ARBITRATE_PARAMETERS QueryArbitrate;
-    ARBITER_ADD_RESERVED_PARAMETERS AddReserved;
-  } Parameters;
-} ARBITER_PARAMETERS, *PARBITER_PARAMETERS;
-
-typedef enum _ARBITER_REQUEST_SOURCE {
-  ArbiterRequestUndefined = -1,
-  ArbiterRequestLegacyReported,
-  ArbiterRequestHalReported,
-  ArbiterRequestLegacyAssigned,
-  ArbiterRequestPnpDetected,
-  ArbiterRequestPnpEnumerated
-} ARBITER_REQUEST_SOURCE;
-
-typedef enum _ARBITER_RESULT {
-  ArbiterResultUndefined = -1,
-  ArbiterResultSuccess,
-  ArbiterResultExternalConflict,
-  ArbiterResultNullRequest
-} ARBITER_RESULT;
-
-#define ARBITER_FLAG_BOOT_CONFIG 0x00000001
-
-typedef struct _ARBITER_LIST_ENTRY {
-  LIST_ENTRY ListEntry;
-  ULONG AlternativeCount;
-  PIO_RESOURCE_DESCRIPTOR Alternatives;
-  PDEVICE_OBJECT PhysicalDeviceObject;
-  ARBITER_REQUEST_SOURCE RequestSource;
-  ULONG Flags;
-  LONG_PTR WorkSpace;
-  INTERFACE_TYPE InterfaceType;
-  ULONG SlotNumber;
-  ULONG BusNumber;
-  PCM_PARTIAL_RESOURCE_DESCRIPTOR Assignment;
-  PIO_RESOURCE_DESCRIPTOR SelectedAlternative;
-  ARBITER_RESULT Result;
-} ARBITER_LIST_ENTRY, *PARBITER_LIST_ENTRY;
-
-typedef NTSTATUS
-(NTAPI *PARBITER_HANDLER)(
-  IN OUT PVOID Context,
-  IN ARBITER_ACTION Action,
-  IN OUT PARBITER_PARAMETERS Parameters);
-
-#define ARBITER_PARTIAL 0x00000001
-
-typedef struct _ARBITER_INTERFACE {
-  USHORT Size;
-  USHORT Version;
-  PVOID Context;
-  PINTERFACE_REFERENCE InterfaceReference;
-  PINTERFACE_DEREFERENCE InterfaceDereference;
-  PARBITER_HANDLER ArbiterHandler;
-  ULONG Flags;
-} ARBITER_INTERFACE, *PARBITER_INTERFACE;
-
-typedef enum _RESOURCE_TRANSLATION_DIRECTION {
-  TranslateChildToParent,
-  TranslateParentToChild
-} RESOURCE_TRANSLATION_DIRECTION;
-
-typedef NTSTATUS
-(NTAPI *PTRANSLATE_RESOURCE_HANDLER)(
-  IN OUT PVOID Context OPTIONAL,
-  IN PCM_PARTIAL_RESOURCE_DESCRIPTOR Source,
-  IN RESOURCE_TRANSLATION_DIRECTION Direction,
-  IN ULONG AlternativesCount OPTIONAL,
-  IN IO_RESOURCE_DESCRIPTOR Alternatives[],
-  IN PDEVICE_OBJECT PhysicalDeviceObject,
-  OUT PCM_PARTIAL_RESOURCE_DESCRIPTOR Target);
-
-typedef NTSTATUS
-(NTAPI *PTRANSLATE_RESOURCE_REQUIREMENTS_HANDLER)(
-  IN OUT PVOID Context OPTIONAL,
-  IN PIO_RESOURCE_DESCRIPTOR Source,
-  IN PDEVICE_OBJECT PhysicalDeviceObject,
-  OUT PULONG TargetCount,
-  OUT PIO_RESOURCE_DESCRIPTOR *Target);
-
-typedef struct _TRANSLATOR_INTERFACE {
-  USHORT Size;
-  USHORT Version;
-  PVOID Context;
-  PINTERFACE_REFERENCE InterfaceReference;
-  PINTERFACE_DEREFERENCE InterfaceDereference;
-  PTRANSLATE_RESOURCE_HANDLER TranslateResources;
-  PTRANSLATE_RESOURCE_REQUIREMENTS_HANDLER TranslateResourceRequirements;
-} TRANSLATOR_INTERFACE, *PTRANSLATOR_INTERFACE;
-
-typedef struct _PCI_AGP_CAPABILITY {
-  PCI_CAPABILITIES_HEADER Header;
-  USHORT Minor:4;
-  USHORT Major:4;
-  USHORT Rsvd1:8;
-  struct _PCI_AGP_STATUS {
-    ULONG Rate:3;
-    ULONG Agp3Mode:1;
-    ULONG FastWrite:1;
-    ULONG FourGB:1;
-    ULONG HostTransDisable:1;
-    ULONG Gart64:1;
-    ULONG ITA_Coherent:1;
-    ULONG SideBandAddressing:1;
-    ULONG CalibrationCycle:3;
-    ULONG AsyncRequestSize:3;
-    ULONG Rsvd1:1;
-    ULONG Isoch:1;
-    ULONG Rsvd2:6;
-    ULONG RequestQueueDepthMaximum:8;
-  } AGPStatus;
-  struct _PCI_AGP_COMMAND {
-    ULONG Rate:3;
-    ULONG Rsvd1:1;
-    ULONG FastWriteEnable:1;
-    ULONG FourGBEnable:1;
-    ULONG Rsvd2:1;
-    ULONG Gart64:1;
-    ULONG AGPEnable:1;
-    ULONG SBAEnable:1;
-    ULONG CalibrationCycle:3;
-    ULONG AsyncReqSize:3;
-    ULONG Rsvd3:8;
-    ULONG RequestQueueDepth:8;
-  } AGPCommand;
-} PCI_AGP_CAPABILITY, *PPCI_AGP_CAPABILITY;
-
-typedef enum _EXTENDED_AGP_REGISTER {
-  IsochStatus,
-  AgpControl,
-  ApertureSize,
-  AperturePageSize,
-  GartLow,
-  GartHigh,
-  IsochCommand
-} EXTENDED_AGP_REGISTER, *PEXTENDED_AGP_REGISTER;
-
-typedef struct _PCI_AGP_ISOCH_STATUS {
-  ULONG ErrorCode:2;
-  ULONG Rsvd1:1;
-  ULONG Isoch_L:3;
-  ULONG Isoch_Y:2;
-  ULONG Isoch_N:8;
-  ULONG Rsvd2:16;
-} PCI_AGP_ISOCH_STATUS, *PPCI_AGP_ISOCH_STATUS;
-
-typedef struct _PCI_AGP_CONTROL {
-  ULONG Rsvd1:7;
-  ULONG GTLB_Enable:1;
-  ULONG AP_Enable:1;
-  ULONG CAL_Disable:1;
-  ULONG Rsvd2:22;
-} PCI_AGP_CONTROL, *PPCI_AGP_CONTROL;
-
-typedef struct _PCI_AGP_APERTURE_PAGE_SIZE {
-  USHORT PageSizeMask:11;
-  USHORT Rsvd1:1;
-  USHORT PageSizeSelect:4;
-} PCI_AGP_APERTURE_PAGE_SIZE, *PPCI_AGP_APERTURE_PAGE_SIZE;
-
-typedef struct _PCI_AGP_ISOCH_COMMAND {
-  USHORT Rsvd1:6;
-  USHORT Isoch_Y:2;
-  USHORT Isoch_N:8;
-} PCI_AGP_ISOCH_COMMAND, *PPCI_AGP_ISOCH_COMMAND;
-
-typedef struct PCI_AGP_EXTENDED_CAPABILITY {
-  PCI_AGP_ISOCH_STATUS IsochStatus;
-  PCI_AGP_CONTROL AgpControl;
-  USHORT ApertureSize;
-  PCI_AGP_APERTURE_PAGE_SIZE AperturePageSize;
-  ULONG GartLow;
-  ULONG GartHigh;
-  PCI_AGP_ISOCH_COMMAND IsochCommand;
-} PCI_AGP_EXTENDED_CAPABILITY, *PPCI_AGP_EXTENDED_CAPABILITY;
-
-#define PCI_AGP_RATE_1X     0x1
-#define PCI_AGP_RATE_2X     0x2
-#define PCI_AGP_RATE_4X     0x4
-
-#define PCIX_MODE_CONVENTIONAL_PCI  0x0
-#define PCIX_MODE1_66MHZ            0x1
-#define PCIX_MODE1_100MHZ           0x2
-#define PCIX_MODE1_133MHZ           0x3
-#define PCIX_MODE2_266_66MHZ        0x9
-#define PCIX_MODE2_266_100MHZ       0xA
-#define PCIX_MODE2_266_133MHZ       0xB
-#define PCIX_MODE2_533_66MHZ        0xD
-#define PCIX_MODE2_533_100MHZ       0xE
-#define PCIX_MODE2_533_133MHZ       0xF
-
-#define PCIX_VERSION_MODE1_ONLY     0x0
-#define PCIX_VERSION_MODE2_ECC      0x1
-#define PCIX_VERSION_DUAL_MODE_ECC  0x2
-
-typedef struct _PCIX_BRIDGE_CAPABILITY {
-  PCI_CAPABILITIES_HEADER Header;
-  union {
-    struct {
-      USHORT Bus64Bit:1;
-      USHORT Bus133MHzCapable:1;
-      USHORT SplitCompletionDiscarded:1;
-      USHORT UnexpectedSplitCompletion:1;
-      USHORT SplitCompletionOverrun:1;
-      USHORT SplitRequestDelayed:1;
-      USHORT BusModeFrequency:4;
-      USHORT Rsvd:2;
-      USHORT Version:2;
-      USHORT Bus266MHzCapable:1;
-      USHORT Bus533MHzCapable:1;
-    } DUMMYSTRUCTNAME;
-  USHORT AsUSHORT;
-  } SecondaryStatus;
-  union {
-    struct {
-      ULONG FunctionNumber:3;
-      ULONG DeviceNumber:5;
-      ULONG BusNumber:8;
-      ULONG Device64Bit:1;
-      ULONG Device133MHzCapable:1;
-      ULONG SplitCompletionDiscarded:1;
-      ULONG UnexpectedSplitCompletion:1;
-      ULONG SplitCompletionOverrun:1;
-      ULONG SplitRequestDelayed:1;
-      ULONG Rsvd:7;
-      ULONG DIMCapable:1;
-      ULONG Device266MHzCapable:1;
-      ULONG Device533MHzCapable:1;
-    } DUMMYSTRUCTNAME;
-    ULONG AsULONG;
-  } BridgeStatus;
-  USHORT UpstreamSplitTransactionCapacity;
-  USHORT UpstreamSplitTransactionLimit;
-  USHORT DownstreamSplitTransactionCapacity;
-  USHORT DownstreamSplitTransactionLimit;
-  union {
-    struct {
-      ULONG SelectSecondaryRegisters:1;
-      ULONG ErrorPresentInOtherBank:1;
-      ULONG AdditionalCorrectableError:1;
-      ULONG AdditionalUncorrectableError:1;
-      ULONG ErrorPhase:3;
-      ULONG ErrorCorrected:1;
-      ULONG Syndrome:8;
-      ULONG ErrorFirstCommand:4;
-      ULONG ErrorSecondCommand:4;
-      ULONG ErrorUpperAttributes:4;
-      ULONG ControlUpdateEnable:1;
-      ULONG Rsvd:1;
-      ULONG DisableSingleBitCorrection:1;
-      ULONG EccMode:1;
-    } DUMMYSTRUCTNAME;
-  ULONG AsULONG;
-  } EccControlStatus;
-  ULONG EccFirstAddress;
-  ULONG EccSecondAddress;
-  ULONG EccAttribute;
-} PCIX_BRIDGE_CAPABILITY, *PPCIX_BRIDGE_CAPABILITY;
-
-typedef struct _PCI_SUBSYSTEM_IDS_CAPABILITY {
-  PCI_CAPABILITIES_HEADER Header;
-  USHORT Reserved;
-  USHORT SubVendorID;
-  USHORT SubSystemID;
-} PCI_SUBSYSTEM_IDS_CAPABILITY, *PPCI_SUBSYSTEM_IDS_CAPABILITY;
-
-#define OSC_FIRMWARE_FAILURE                            0x02
-#define OSC_UNRECOGNIZED_UUID                           0x04
-#define OSC_UNRECOGNIZED_REVISION                       0x08
-#define OSC_CAPABILITIES_MASKED                         0x10
-
-#define PCI_ROOT_BUS_OSC_METHOD_CAPABILITY_REVISION     0x01
-
-typedef struct _PCI_ROOT_BUS_OSC_SUPPORT_FIELD {
-  union {
-    struct {
-      ULONG ExtendedConfigOpRegions:1;
-      ULONG ActiveStatePowerManagement:1;
-      ULONG ClockPowerManagement:1;
-      ULONG SegmentGroups:1;
-      ULONG MessageSignaledInterrupts:1;
-      ULONG WindowsHardwareErrorArchitecture:1;
-      ULONG Reserved:26;
-    } DUMMYSTRUCTNAME;
-    ULONG AsULONG;
-  } u;
-} PCI_ROOT_BUS_OSC_SUPPORT_FIELD, *PPCI_ROOT_BUS_OSC_SUPPORT_FIELD;
-
-typedef struct _PCI_ROOT_BUS_OSC_CONTROL_FIELD {
-  union {
-    struct {
-      ULONG ExpressNativeHotPlug:1;
-      ULONG ShpcNativeHotPlug:1;
-      ULONG ExpressNativePME:1;
-      ULONG ExpressAdvancedErrorReporting:1;
-      ULONG ExpressCapabilityStructure:1;
-      ULONG Reserved:27;
-    } DUMMYSTRUCTNAME;
-  ULONG AsULONG;
-  } u;
-} PCI_ROOT_BUS_OSC_CONTROL_FIELD, *PPCI_ROOT_BUS_OSC_CONTROL_FIELD;
-
-typedef enum _PCI_HARDWARE_INTERFACE {
-  PciConventional,
-  PciXMode1,
-  PciXMode2,
-  PciExpress
-} PCI_HARDWARE_INTERFACE, *PPCI_HARDWARE_INTERFACE;
-
-typedef enum {
-  BusWidth32Bits,
-  BusWidth64Bits
-} PCI_BUS_WIDTH;
-
-typedef struct _PCI_ROOT_BUS_HARDWARE_CAPABILITY {
-  PCI_HARDWARE_INTERFACE SecondaryInterface;
-  struct {
-    BOOLEAN BusCapabilitiesFound;
-    ULONG CurrentSpeedAndMode;
-    ULONG SupportedSpeedsAndModes;
-    BOOLEAN DeviceIDMessagingCapable;
-    PCI_BUS_WIDTH SecondaryBusWidth;
-  } DUMMYSTRUCTNAME;
-  PCI_ROOT_BUS_OSC_SUPPORT_FIELD OscFeatureSupport;
-  PCI_ROOT_BUS_OSC_CONTROL_FIELD OscControlRequest;
-  PCI_ROOT_BUS_OSC_CONTROL_FIELD OscControlGranted;
-} PCI_ROOT_BUS_HARDWARE_CAPABILITY, *PPCI_ROOT_BUS_HARDWARE_CAPABILITY;
-
-typedef union _PCI_EXPRESS_CAPABILITIES_REGISTER {
-  struct {
-    USHORT CapabilityVersion:4;
-    USHORT DeviceType:4;
-    USHORT SlotImplemented:1;
-    USHORT InterruptMessageNumber:5;
-    USHORT Rsvd:2;
-  } DUMMYSTRUCTNAME;
-  USHORT AsUSHORT;
-} PCI_EXPRESS_CAPABILITIES_REGISTER, *PPCI_EXPRESS_CAPABILITIES_REGISTER;
-
-typedef union _PCI_EXPRESS_DEVICE_CAPABILITIES_REGISTER {
-  struct {
-    ULONG MaxPayloadSizeSupported:3;
-    ULONG PhantomFunctionsSupported:2;
-    ULONG ExtendedTagSupported:1;
-    ULONG L0sAcceptableLatency:3;
-    ULONG L1AcceptableLatency:3;
-    ULONG Undefined:3;
-    ULONG RoleBasedErrorReporting:1;
-    ULONG Rsvd1:2;
-    ULONG CapturedSlotPowerLimit:8;
-    ULONG CapturedSlotPowerLimitScale:2;
-    ULONG Rsvd2:4;
-  } DUMMYSTRUCTNAME;
-  ULONG AsULONG;
-} PCI_EXPRESS_DEVICE_CAPABILITIES_REGISTER, *PPCI_EXPRESS_DEVICE_CAPABILITIES_REGISTER;
-
-#define PCI_EXPRESS_AER_DEVICE_CONTROL_MASK 0x07;
-
-typedef union _PCI_EXPRESS_DEVICE_CONTROL_REGISTER {
-  struct {
-    USHORT CorrectableErrorEnable:1;
-    USHORT NonFatalErrorEnable:1;
-    USHORT FatalErrorEnable:1;
-    USHORT UnsupportedRequestErrorEnable:1;
-    USHORT EnableRelaxedOrder:1;
-    USHORT MaxPayloadSize:3;
-    USHORT ExtendedTagEnable:1;
-    USHORT PhantomFunctionsEnable:1;
-    USHORT AuxPowerEnable:1;
-    USHORT NoSnoopEnable:1;
-    USHORT MaxReadRequestSize:3;
-    USHORT BridgeConfigRetryEnable:1;
-  } DUMMYSTRUCTNAME;
-  USHORT AsUSHORT;
-} PCI_EXPRESS_DEVICE_CONTROL_REGISTER, *PPCI_EXPRESS_DEVICE_CONTROL_REGISTER;
-
-#define PCI_EXPRESS_AER_DEVICE_STATUS_MASK 0x0F;
-
-typedef union _PCI_EXPRESS_DEVICE_STATUS_REGISTER {
-  struct {
-    USHORT CorrectableErrorDetected:1;
-    USHORT NonFatalErrorDetected:1;
-    USHORT FatalErrorDetected:1;
-    USHORT UnsupportedRequestDetected:1;
-    USHORT AuxPowerDetected:1;
-    USHORT TransactionsPending:1;
-    USHORT Rsvd:10;
-  } DUMMYSTRUCTNAME;
-  USHORT AsUSHORT;
-} PCI_EXPRESS_DEVICE_STATUS_REGISTER, *PPCI_EXPRESS_DEVICE_STATUS_REGISTER;
-
-typedef union _PCI_EXPRESS_LINK_CAPABILITIES_REGISTER {
-  struct {
-    ULONG MaximumLinkSpeed:4;
-    ULONG MaximumLinkWidth:6;
-    ULONG ActiveStatePMSupport:2;
-    ULONG L0sExitLatency:3;
-    ULONG L1ExitLatency:3;
-    ULONG ClockPowerManagement:1;
-    ULONG SurpriseDownErrorReportingCapable:1;
-    ULONG DataLinkLayerActiveReportingCapable:1;
-    ULONG Rsvd:3;
-    ULONG PortNumber:8;
-  } DUMMYSTRUCTNAME;
-  ULONG AsULONG;
-} PCI_EXPRESS_LINK_CAPABILITIES_REGISTER, *PPCI_EXPRESS_LINK_CAPABILITIES_REGISTER;
-
-typedef union _PCI_EXPRESS_LINK_CONTROL_REGISTER {
-  struct {
-    USHORT ActiveStatePMControl:2;
-    USHORT Rsvd1:1;
-    USHORT ReadCompletionBoundary:1;
-    USHORT LinkDisable:1;
-    USHORT RetrainLink:1;
-    USHORT CommonClockConfig:1;
-    USHORT ExtendedSynch:1;
-    USHORT EnableClockPowerManagement:1;
-    USHORT Rsvd2:7;
-  } DUMMYSTRUCTNAME;
-  USHORT AsUSHORT;
-} PCI_EXPRESS_LINK_CONTROL_REGISTER, *PPCI_EXPRESS_LINK_CONTROL_REGISTER;
-
-typedef union _PCI_EXPRESS_LINK_STATUS_REGISTER {
-  struct {
-    USHORT LinkSpeed:4;
-    USHORT LinkWidth:6;
-    USHORT Undefined:1;
-    USHORT LinkTraining:1;
-    USHORT SlotClockConfig:1;
-    USHORT DataLinkLayerActive:1;
-    USHORT Rsvd:2;
-  } DUMMYSTRUCTNAME;
-  USHORT AsUSHORT;
-} PCI_EXPRESS_LINK_STATUS_REGISTER, *PPCI_EXPRESS_LINK_STATUS_REGISTER;
-
-typedef union _PCI_EXPRESS_SLOT_CAPABILITIES_REGISTER {
-  struct {
-    ULONG AttentionButtonPresent:1;
-    ULONG PowerControllerPresent:1;
-    ULONG MRLSensorPresent:1;
-    ULONG AttentionIndicatorPresent:1;
-    ULONG PowerIndicatorPresent:1;
-    ULONG HotPlugSurprise:1;
-    ULONG HotPlugCapable:1;
-    ULONG SlotPowerLimit:8;
-    ULONG SlotPowerLimitScale:2;
-    ULONG ElectromechanicalLockPresent:1;
-    ULONG NoCommandCompletedSupport:1;
-    ULONG PhysicalSlotNumber:13;
-  } DUMMYSTRUCTNAME;
-  ULONG AsULONG;
-} PCI_EXPRESS_SLOT_CAPABILITIES_REGISTER, *PPCI_EXPRESS_SLOT_CAPABILITIES_REGISTER;
-
-typedef union _PCI_EXPRESS_SLOT_CONTROL_REGISTER {
-  struct {
-    USHORT AttentionButtonEnable:1;
-    USHORT PowerFaultDetectEnable:1;
-    USHORT MRLSensorEnable:1;
-    USHORT PresenceDetectEnable:1;
-    USHORT CommandCompletedEnable:1;
-    USHORT HotPlugInterruptEnable:1;
-    USHORT AttentionIndicatorControl:2;
-    USHORT PowerIndicatorControl:2;
-    USHORT PowerControllerControl:1;
-    USHORT ElectromechanicalLockControl:1;
-    USHORT DataLinkStateChangeEnable:1;
-    USHORT Rsvd:3;
-  } DUMMYSTRUCTNAME;
-  USHORT AsUSHORT;
-} PCI_EXPRESS_SLOT_CONTROL_REGISTER, *PPCI_EXPRESS_SLOT_CONTROL_REGISTER;
-
-typedef union _PCI_EXPRESS_SLOT_STATUS_REGISTER {
-  struct {
-    USHORT AttentionButtonPressed:1;
-    USHORT PowerFaultDetected:1;
-    USHORT MRLSensorChanged:1;
-    USHORT PresenceDetectChanged:1;
-    USHORT CommandCompleted:1;
-    USHORT MRLSensorState:1;
-    USHORT PresenceDetectState:1;
-    USHORT ElectromechanicalLockEngaged:1;
-    USHORT DataLinkStateChanged:1;
-    USHORT Rsvd:7;
-  } DUMMYSTRUCTNAME;
-  USHORT AsUSHORT;
-} PCI_EXPRESS_SLOT_STATUS_REGISTER, *PPCI_EXPRESS_SLOT_STATUS_REGISTER;
-
-typedef union _PCI_EXPRESS_ROOT_CONTROL_REGISTER {
-  struct {
-    USHORT CorrectableSerrEnable:1;
-    USHORT NonFatalSerrEnable:1;
-    USHORT FatalSerrEnable:1;
-    USHORT PMEInterruptEnable:1;
-    USHORT CRSSoftwareVisibilityEnable:1;
-    USHORT Rsvd:11;
-  } DUMMYSTRUCTNAME;
-  USHORT AsUSHORT;
-} PCI_EXPRESS_ROOT_CONTROL_REGISTER, *PPCI_EXPRESS_ROOT_CONTROL_REGISTER;
-
-typedef union _PCI_EXPRESS_ROOT_CAPABILITIES_REGISTER {
-  struct {
-    USHORT CRSSoftwareVisibility:1;
-    USHORT Rsvd:15;
-  } DUMMYSTRUCTNAME;
-  USHORT AsUSHORT;
-} PCI_EXPRESS_ROOT_CAPABILITIES_REGISTER, *PPCI_EXPRESS_ROOT_CAPABILITIES_REGISTER;
-
-typedef union _PCI_EXPRESS_ROOT_STATUS_REGISTER {
-  struct {
-    ULONG PMERequestorId:16;
-    ULONG PMEStatus:1;
-    ULONG PMEPending:1;
-    ULONG Rsvd:14;
-  } DUMMYSTRUCTNAME;
-  ULONG AsULONG;
-} PCI_EXPRESS_ROOT_STATUS_REGISTER, *PPCI_EXPRESS_ROOT_STATUS_REGISTER;
-
-typedef struct _PCI_EXPRESS_CAPABILITY {
-  PCI_CAPABILITIES_HEADER Header;
-  PCI_EXPRESS_CAPABILITIES_REGISTER ExpressCapabilities;
-  PCI_EXPRESS_DEVICE_CAPABILITIES_REGISTER DeviceCapabilities;
-  PCI_EXPRESS_DEVICE_CONTROL_REGISTER DeviceControl;
-  PCI_EXPRESS_DEVICE_STATUS_REGISTER DeviceStatus;
-  PCI_EXPRESS_LINK_CAPABILITIES_REGISTER LinkCapabilities;
-  PCI_EXPRESS_LINK_CONTROL_REGISTER LinkControl;
-  PCI_EXPRESS_LINK_STATUS_REGISTER LinkStatus;
-  PCI_EXPRESS_SLOT_CAPABILITIES_REGISTER SlotCapabilities;
-  PCI_EXPRESS_SLOT_CONTROL_REGISTER SlotControl;
-  PCI_EXPRESS_SLOT_STATUS_REGISTER SlotStatus;
-  PCI_EXPRESS_ROOT_CONTROL_REGISTER RootControl;
-  PCI_EXPRESS_ROOT_CAPABILITIES_REGISTER RootCapabilities;
-  PCI_EXPRESS_ROOT_STATUS_REGISTER RootStatus;
-} PCI_EXPRESS_CAPABILITY, *PPCI_EXPRESS_CAPABILITY;
-
-typedef enum {
-  MRLClosed = 0,
-  MRLOpen
-} PCI_EXPRESS_MRL_STATE;
-
-typedef enum {
-  SlotEmpty = 0,
-  CardPresent
-} PCI_EXPRESS_CARD_PRESENCE;
-
-typedef enum {
-  IndicatorOn = 1,
-  IndicatorBlink,
-  IndicatorOff
-} PCI_EXPRESS_INDICATOR_STATE;
-
-typedef enum {
-  PowerOn = 0,
-  PowerOff
-} PCI_EXPRESS_POWER_STATE;
-
-typedef enum {
-  L0sEntrySupport = 1,
-  L0sAndL1EntrySupport = 3
-} PCI_EXPRESS_ASPM_SUPPORT;
-
-typedef enum {
-  L0sAndL1EntryDisabled,
-  L0sEntryEnabled,
-  L1EntryEnabled,
-  L0sAndL1EntryEnabled
-} PCI_EXPRESS_ASPM_CONTROL;
-
-typedef enum {
-  L0s_Below64ns = 0,
-  L0s_64ns_128ns,
-  L0s_128ns_256ns,
-  L0s_256ns_512ns,
-  L0s_512ns_1us,
-  L0s_1us_2us,
-  L0s_2us_4us,
-  L0s_Above4us
-} PCI_EXPRESS_L0s_EXIT_LATENCY;
-
-typedef enum {
-  L1_Below1us = 0,
-  L1_1us_2us,
-  L1_2us_4us,
-  L1_4us_8us,
-  L1_8us_16us,
-  L1_16us_32us,
-  L1_32us_64us,
-  L1_Above64us
-} PCI_EXPRESS_L1_EXIT_LATENCY;
-
-typedef enum {
-  PciExpressEndpoint = 0,
-  PciExpressLegacyEndpoint,
-  PciExpressRootPort = 4,
-  PciExpressUpstreamSwitchPort,
-  PciExpressDownstreamSwitchPort,
-  PciExpressToPciXBridge,
-  PciXToExpressBridge,
-  PciExpressRootComplexIntegratedEndpoint,
-  PciExpressRootComplexEventCollector
-} PCI_EXPRESS_DEVICE_TYPE;
-
-typedef enum {
-  MaxPayload128Bytes = 0,
-  MaxPayload256Bytes,
-  MaxPayload512Bytes,
-  MaxPayload1024Bytes,
-  MaxPayload2048Bytes,
-  MaxPayload4096Bytes
-} PCI_EXPRESS_MAX_PAYLOAD_SIZE;
-
-typedef union _PCI_EXPRESS_PME_REQUESTOR_ID {
-  struct {
-    USHORT FunctionNumber:3;
-    USHORT DeviceNumber:5;
-    USHORT BusNumber:8;
-  } DUMMYSTRUCTNAME;
-  USHORT AsUSHORT;
-} PCI_EXPRESS_PME_REQUESTOR_ID, *PPCI_EXPRESS_PME_REQUESTOR_ID;
-
-#if defined(_WIN64)
-
-#ifndef USE_DMA_MACROS
-#define USE_DMA_MACROS
-#endif
-
-#ifndef NO_LEGACY_DRIVERS
-#define NO_LEGACY_DRIVERS
-#endif
-
-#endif /* defined(_WIN64) */
-
-typedef enum _PHYSICAL_COUNTER_RESOURCE_DESCRIPTOR_TYPE {
-  ResourceTypeSingle = 0,
-  ResourceTypeRange,
-  ResourceTypeExtendedCounterConfiguration,
-  ResourceTypeOverflow,
-  ResourceTypeMax
-} PHYSICAL_COUNTER_RESOURCE_DESCRIPTOR_TYPE;
-
-typedef struct _PHYSICAL_COUNTER_RESOURCE_DESCRIPTOR {
-  PHYSICAL_COUNTER_RESOURCE_DESCRIPTOR_TYPE Type;
-  ULONG Flags;
-  union {
-    ULONG CounterIndex;
-    ULONG ExtendedRegisterAddress;
-    struct {
-      ULONG Begin;
-      ULONG End;
-    } Range;
-  } u;
-} PHYSICAL_COUNTER_RESOURCE_DESCRIPTOR, *PPHYSICAL_COUNTER_RESOURCE_DESCRIPTOR;
-
-typedef struct _PHYSICAL_COUNTER_RESOURCE_LIST {
-  ULONG Count;
-  PHYSICAL_COUNTER_RESOURCE_DESCRIPTOR Descriptors[ANYSIZE_ARRAY];
-} PHYSICAL_COUNTER_RESOURCE_LIST, *PPHYSICAL_COUNTER_RESOURCE_LIST;
-
-typedef VOID
-(NTAPI *PciPin2Line)(
-  IN struct _BUS_HANDLER *BusHandler,
-  IN struct _BUS_HANDLER *RootHandler,
-  IN PCI_SLOT_NUMBER SlotNumber,
-  IN PPCI_COMMON_CONFIG PciData);
-
-typedef VOID
-(NTAPI *PciLine2Pin)(
-  IN struct _BUS_HANDLER *BusHandler,
-  IN struct _BUS_HANDLER *RootHandler,
-  IN PCI_SLOT_NUMBER SlotNumber,
-  IN PPCI_COMMON_CONFIG PciNewData,
-  IN PPCI_COMMON_CONFIG PciOldData);
-
-typedef VOID
-(NTAPI *PciReadWriteConfig)(
-  IN struct _BUS_HANDLER *BusHandler,
-  IN PCI_SLOT_NUMBER Slot,
-  IN PVOID Buffer,
-  IN ULONG Offset,
-  IN ULONG Length);
-
-#define PCI_DATA_TAG ' ICP'
-#define PCI_DATA_VERSION 1
-
-typedef struct _PCIBUSDATA {
-  ULONG Tag;
-  ULONG Version;
-  PciReadWriteConfig ReadConfig;
-  PciReadWriteConfig WriteConfig;
-  PciPin2Line Pin2Line;
-  PciLine2Pin Line2Pin;
-  PCI_SLOT_NUMBER ParentSlot;
-  PVOID Reserved[4];
-} PCIBUSDATA, *PPCIBUSDATA;
-
-#ifndef _PCIINTRF_X_
-#define _PCIINTRF_X_
-
-typedef ULONG
-(NTAPI *PCI_READ_WRITE_CONFIG)(
-  IN PVOID Context,
-  IN ULONG BusOffset,
-  IN ULONG Slot,
-  IN PVOID Buffer,
-  IN ULONG Offset,
-  IN ULONG Length);
-
-typedef VOID
-(NTAPI *PCI_PIN_TO_LINE)(
-  IN PVOID Context,
-  IN PPCI_COMMON_CONFIG PciData);
-
-typedef VOID
-(NTAPI *PCI_LINE_TO_PIN)(
-  IN PVOID Context,
-  IN PPCI_COMMON_CONFIG PciNewData,
-  IN PPCI_COMMON_CONFIG PciOldData);
-
-typedef VOID
-(NTAPI *PCI_ROOT_BUS_CAPABILITY)(
-  IN PVOID Context,
-  OUT PPCI_ROOT_BUS_HARDWARE_CAPABILITY HardwareCapability);
-
-typedef VOID
-(NTAPI *PCI_EXPRESS_WAKE_CONTROL)(
-  IN PVOID Context,
-  IN BOOLEAN EnableWake);
-
-typedef struct _PCI_BUS_INTERFACE_STANDARD {
-  USHORT Size;
-  USHORT Version;
-  PVOID Context;
-  PINTERFACE_REFERENCE InterfaceReference;
-  PINTERFACE_DEREFERENCE InterfaceDereference;
-  PCI_READ_WRITE_CONFIG ReadConfig;
-  PCI_READ_WRITE_CONFIG WriteConfig;
-  PCI_PIN_TO_LINE PinToLine;
-  PCI_LINE_TO_PIN LineToPin;
-  PCI_ROOT_BUS_CAPABILITY RootBusCapability;
-  PCI_EXPRESS_WAKE_CONTROL ExpressWakeControl;
-} PCI_BUS_INTERFACE_STANDARD, *PPCI_BUS_INTERFACE_STANDARD;
-
-#define PCI_BUS_INTERFACE_STANDARD_VERSION 1
-
-#endif /* _PCIINTRF_X_ */
-
-#if (NTDDI_VERSION >= NTDDI_WIN7)
-
-#define FILE_CHARACTERISTICS_EXPECT_ORDERLY_REMOVAL_EX     0x00004000
-#define FILE_CHARACTERISTICS_EXPECT_SURPRISE_REMOVAL_EX    0x00008000
-#define FILE_CHARACTERISTICS_REMOVAL_POLICY_MASK_EX \
-    (FILE_CHARACTERISTICS_EXPECT_ORDERLY_REMOVAL_EX | \
-     FILE_CHARACTERISTICS_EXPECT_SURPRISE_REMOVAL_EX)
-
-#define FILE_CHARACTERISTICS_EXPECT_ORDERLY_REMOVAL_DEPRECATED 0x00000200
-#define FILE_CHARACTERISTICS_EXPECT_SURPRISE_REMOVAL_DEPRECATED 0x00000300
-#define FILE_CHARACTERISTICS_REMOVAL_POLICY_MASK_DEPRECATED 0x00000300
-
-#else
-
-#define FILE_CHARACTERISTICS_EXPECT_ORDERLY_REMOVAL     0x00000200
-#define FILE_CHARACTERISTICS_EXPECT_SURPRISE_REMOVAL    0x00000300
-#define FILE_CHARACTERISTICS_REMOVAL_POLICY_MASK        0x00000300
-
-#define FILE_CHARACTERISTICS_EXPECT_ORDERLY_REMOVAL_EX FILE_CHARACTERISTICS_EXPECT_ORDERLY_REMOVAL
-#define FILE_CHARACTERISTICS_EXPECT_SURPRISE_REMOVAL_EX FILE_CHARACTERISTICS_EXPECT_SURPRISE_REMOVAL
-#define FILE_CHARACTERISTICS_REMOVAL_POLICY_MASK_EX FILE_CHARACTERISTICS_REMOVAL_POLICY_MASK
-
-#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
-
-#define FILE_CHARACTERISTICS_PROPAGATED (   FILE_REMOVABLE_MEDIA   | \
-                                            FILE_READ_ONLY_DEVICE  | \
-                                            FILE_FLOPPY_DISKETTE   | \
-                                            FILE_WRITE_ONCE_MEDIA  | \
-                                            FILE_DEVICE_SECURE_OPEN  )
-
-typedef struct _FILE_ALIGNMENT_INFORMATION {
-  ULONG AlignmentRequirement;
-} FILE_ALIGNMENT_INFORMATION, *PFILE_ALIGNMENT_INFORMATION;
-
-typedef struct _FILE_NAME_INFORMATION {
-  ULONG FileNameLength;
-  WCHAR FileName[1];
-} FILE_NAME_INFORMATION, *PFILE_NAME_INFORMATION;
-
-
-typedef struct _FILE_ATTRIBUTE_TAG_INFORMATION {
-  ULONG FileAttributes;
-  ULONG ReparseTag;
-} FILE_ATTRIBUTE_TAG_INFORMATION, *PFILE_ATTRIBUTE_TAG_INFORMATION;
-
-typedef struct _FILE_DISPOSITION_INFORMATION {
-  BOOLEAN DeleteFile;
-} FILE_DISPOSITION_INFORMATION, *PFILE_DISPOSITION_INFORMATION;
-
-typedef struct _FILE_END_OF_FILE_INFORMATION {
-  LARGE_INTEGER EndOfFile;
-} FILE_END_OF_FILE_INFORMATION, *PFILE_END_OF_FILE_INFORMATION;
-
-typedef struct _FILE_VALID_DATA_LENGTH_INFORMATION {
-  LARGE_INTEGER ValidDataLength;
-} FILE_VALID_DATA_LENGTH_INFORMATION, *PFILE_VALID_DATA_LENGTH_INFORMATION;
-
-typedef struct _FILE_FS_LABEL_INFORMATION {
-  ULONG VolumeLabelLength;
-  WCHAR VolumeLabel[1];
-} FILE_FS_LABEL_INFORMATION, *PFILE_FS_LABEL_INFORMATION;
-
-typedef struct _FILE_FS_VOLUME_INFORMATION {
-  LARGE_INTEGER VolumeCreationTime;
-  ULONG VolumeSerialNumber;
-  ULONG VolumeLabelLength;
-  BOOLEAN SupportsObjects;
-  WCHAR VolumeLabel[1];
-} FILE_FS_VOLUME_INFORMATION, *PFILE_FS_VOLUME_INFORMATION;
-
-typedef struct _FILE_FS_SIZE_INFORMATION {
-  LARGE_INTEGER TotalAllocationUnits;
-  LARGE_INTEGER AvailableAllocationUnits;
-  ULONG SectorsPerAllocationUnit;
-  ULONG BytesPerSector;
-} FILE_FS_SIZE_INFORMATION, *PFILE_FS_SIZE_INFORMATION;
-
-typedef struct _FILE_FS_FULL_SIZE_INFORMATION {
-  LARGE_INTEGER TotalAllocationUnits;
-  LARGE_INTEGER CallerAvailableAllocationUnits;
-  LARGE_INTEGER ActualAvailableAllocationUnits;
-  ULONG SectorsPerAllocationUnit;
-  ULONG BytesPerSector;
-} FILE_FS_FULL_SIZE_INFORMATION, *PFILE_FS_FULL_SIZE_INFORMATION;
-
-typedef struct _FILE_FS_OBJECTID_INFORMATION {
-  UCHAR ObjectId[16];
-  UCHAR ExtendedInfo[48];
-} FILE_FS_OBJECTID_INFORMATION, *PFILE_FS_OBJECTID_INFORMATION;
-
-typedef union _FILE_SEGMENT_ELEMENT {
-  PVOID64 Buffer;
-  ULONGLONG Alignment;
-}FILE_SEGMENT_ELEMENT, *PFILE_SEGMENT_ELEMENT;
-
-#define IOCTL_AVIO_ALLOCATE_STREAM      CTL_CODE(FILE_DEVICE_AVIO, 1, METHOD_BUFFERED, FILE_SPECIAL_ACCESS)
-#define IOCTL_AVIO_FREE_STREAM          CTL_CODE(FILE_DEVICE_AVIO, 2, METHOD_BUFFERED, FILE_SPECIAL_ACCESS)
-#define IOCTL_AVIO_MODIFY_STREAM        CTL_CODE(FILE_DEVICE_AVIO, 3, METHOD_BUFFERED, FILE_SPECIAL_ACCESS)
-
-typedef enum _BUS_DATA_TYPE {
-  ConfigurationSpaceUndefined = -1,
-  Cmos,
-  EisaConfiguration,
-  Pos,
-  CbusConfiguration,
-  PCIConfiguration,
-  VMEConfiguration,
-  NuBusConfiguration,
-  PCMCIAConfiguration,
-  MPIConfiguration,
-  MPSAConfiguration,
-  PNPISAConfiguration,
-  SgiInternalConfiguration,
-  MaximumBusDataType
-} BUS_DATA_TYPE, *PBUS_DATA_TYPE;
-$endif
 
 $if (_WDMDDK_)
 #define WDM_MAJORVERSION        0x06
@@ -1184,47 +52,6 @@ $if (_WDMDDK_)
 #define IO_RESOURCE_PREFERRED             0x01
 #define IO_RESOURCE_DEFAULT               0x02
 #define IO_RESOURCE_ALTERNATIVE           0x08
-
-/* DEVICE_OBJECT.Flags */
-#define DO_VERIFY_VOLUME                  0x00000002
-#define DO_BUFFERED_IO                    0x00000004
-#define DO_EXCLUSIVE                      0x00000008
-#define DO_DIRECT_IO                      0x00000010
-#define DO_MAP_IO_BUFFER                  0x00000020
-#define DO_DEVICE_INITIALIZING            0x00000080
-#define DO_SHUTDOWN_REGISTERED            0x00000800
-#define DO_BUS_ENUMERATED_DEVICE          0x00001000
-#define DO_POWER_PAGABLE                  0x00002000
-#define DO_POWER_INRUSH                   0x00004000
-
-/* DEVICE_OBJECT.Characteristics */
-#define FILE_REMOVABLE_MEDIA              0x00000001
-#define FILE_READ_ONLY_DEVICE             0x00000002
-#define FILE_FLOPPY_DISKETTE              0x00000004
-#define FILE_WRITE_ONCE_MEDIA             0x00000008
-#define FILE_REMOTE_DEVICE                0x00000010
-#define FILE_DEVICE_IS_MOUNTED            0x00000020
-#define FILE_VIRTUAL_VOLUME               0x00000040
-#define FILE_AUTOGENERATED_DEVICE_NAME    0x00000080
-#define FILE_DEVICE_SECURE_OPEN           0x00000100
-#define FILE_CHARACTERISTIC_PNP_DEVICE    0x00000800
-#define FILE_CHARACTERISTIC_TS_DEVICE     0x00001000
-#define FILE_CHARACTERISTIC_WEBDAV_DEVICE 0x00002000
-
-/* DEVICE_OBJECT.AlignmentRequirement */
-#define FILE_BYTE_ALIGNMENT             0x00000000
-#define FILE_WORD_ALIGNMENT             0x00000001
-#define FILE_LONG_ALIGNMENT             0x00000003
-#define FILE_QUAD_ALIGNMENT             0x00000007
-#define FILE_OCTA_ALIGNMENT             0x0000000f
-#define FILE_32_BYTE_ALIGNMENT          0x0000001f
-#define FILE_64_BYTE_ALIGNMENT          0x0000003f
-#define FILE_128_BYTE_ALIGNMENT         0x0000007f
-#define FILE_256_BYTE_ALIGNMENT         0x000000ff
-#define FILE_512_BYTE_ALIGNMENT         0x000001ff
-
-/* DEVICE_OBJECT.DeviceType */
-#define DEVICE_TYPE ULONG
 
 #define FILE_DEVICE_BEEP                  0x00000001
 #define FILE_DEVICE_CD_ROM                0x00000002
@@ -1379,6 +206,62 @@ typedef struct _WAIT_CONTEXT_BLOCK {
   PVOID CurrentIrp;
   PKDPC BufferChainingDpc;
 } WAIT_CONTEXT_BLOCK, *PWAIT_CONTEXT_BLOCK;
+
+$endif
+/* DEVICE_OBJECT.Flags */
+$if (_NTDDK_)
+#define DO_DEVICE_HAS_NAME                0x00000040
+#define DO_SYSTEM_BOOT_PARTITION          0x00000100
+#define DO_LONG_TERM_REQUESTS             0x00000200
+#define DO_NEVER_LAST_DEVICE              0x00000400
+#define DO_LOW_PRIORITY_FILESYSTEM        0x00010000
+#define DO_SUPPORTS_TRANSACTIONS          0x00040000
+#define DO_FORCE_NEITHER_IO               0x00080000
+#define DO_VOLUME_DEVICE_OBJECT           0x00100000
+#define DO_SYSTEM_SYSTEM_PARTITION        0x00200000
+#define DO_SYSTEM_CRITICAL_PARTITION      0x00400000
+#define DO_DISALLOW_EXECUTE               0x00800000
+$endif
+$if (_WDMDDK_)
+#define DO_VERIFY_VOLUME                  0x00000002
+#define DO_BUFFERED_IO                    0x00000004
+#define DO_EXCLUSIVE                      0x00000008
+#define DO_DIRECT_IO                      0x00000010
+#define DO_MAP_IO_BUFFER                  0x00000020
+#define DO_DEVICE_INITIALIZING            0x00000080
+#define DO_SHUTDOWN_REGISTERED            0x00000800
+#define DO_BUS_ENUMERATED_DEVICE          0x00001000
+#define DO_POWER_PAGABLE                  0x00002000
+#define DO_POWER_INRUSH                   0x00004000
+
+/* DEVICE_OBJECT.Characteristics */
+#define FILE_REMOVABLE_MEDIA              0x00000001
+#define FILE_READ_ONLY_DEVICE             0x00000002
+#define FILE_FLOPPY_DISKETTE              0x00000004
+#define FILE_WRITE_ONCE_MEDIA             0x00000008
+#define FILE_REMOTE_DEVICE                0x00000010
+#define FILE_DEVICE_IS_MOUNTED            0x00000020
+#define FILE_VIRTUAL_VOLUME               0x00000040
+#define FILE_AUTOGENERATED_DEVICE_NAME    0x00000080
+#define FILE_DEVICE_SECURE_OPEN           0x00000100
+#define FILE_CHARACTERISTIC_PNP_DEVICE    0x00000800
+#define FILE_CHARACTERISTIC_TS_DEVICE     0x00001000
+#define FILE_CHARACTERISTIC_WEBDAV_DEVICE 0x00002000
+
+/* DEVICE_OBJECT.AlignmentRequirement */
+#define FILE_BYTE_ALIGNMENT             0x00000000
+#define FILE_WORD_ALIGNMENT             0x00000001
+#define FILE_LONG_ALIGNMENT             0x00000003
+#define FILE_QUAD_ALIGNMENT             0x00000007
+#define FILE_OCTA_ALIGNMENT             0x0000000f
+#define FILE_32_BYTE_ALIGNMENT          0x0000001f
+#define FILE_64_BYTE_ALIGNMENT          0x0000003f
+#define FILE_128_BYTE_ALIGNMENT         0x0000007f
+#define FILE_256_BYTE_ALIGNMENT         0x000000ff
+#define FILE_512_BYTE_ALIGNMENT         0x000001ff
+
+/* DEVICE_OBJECT.DeviceType */
+#define DEVICE_TYPE ULONG
 
 typedef struct _DEVICE_OBJECT {
   CSHORT Type;
@@ -4864,5 +3747,1123 @@ typedef struct _PCI_MSIX_TABLE_CONFIG_INTERFACE {
 
 #define PCI_MSIX_TABLE_CONFIG_MINIMUM_SIZE \
         RTL_SIZEOF_THROUGH_FIELD(PCI_MSIX_TABLE_CONFIG_INTERFACE, UnmaskTableEntry)
+$endif
+$if (_NTDDK_)
+
+#ifndef _ARC_DDK_
+#define _ARC_DDK_
+typedef enum _CONFIGURATION_TYPE {
+  ArcSystem,
+  CentralProcessor,
+  FloatingPointProcessor,
+  PrimaryIcache,
+  PrimaryDcache,
+  SecondaryIcache,
+  SecondaryDcache,
+  SecondaryCache,
+  EisaAdapter,
+  TcAdapter,
+  ScsiAdapter,
+  DtiAdapter,
+  MultiFunctionAdapter,
+  DiskController,
+  TapeController,
+  CdromController,
+  WormController,
+  SerialController,
+  NetworkController,
+  DisplayController,
+  ParallelController,
+  PointerController,
+  KeyboardController,
+  AudioController,
+  OtherController,
+  DiskPeripheral,
+  FloppyDiskPeripheral,
+  TapePeripheral,
+  ModemPeripheral,
+  MonitorPeripheral,
+  PrinterPeripheral,
+  PointerPeripheral,
+  KeyboardPeripheral,
+  TerminalPeripheral,
+  OtherPeripheral,
+  LinePeripheral,
+  NetworkPeripheral,
+  SystemMemory,
+  DockingInformation,
+  RealModeIrqRoutingTable,
+  RealModePCIEnumeration,
+  MaximumType
+} CONFIGURATION_TYPE, *PCONFIGURATION_TYPE;
+#endif /* !_ARC_DDK_ */
+
+/*
+** IRP function codes
+*/
+
+#define IRP_MN_QUERY_DIRECTORY            0x01
+#define IRP_MN_NOTIFY_CHANGE_DIRECTORY    0x02
+
+#define IRP_MN_USER_FS_REQUEST            0x00
+#define IRP_MN_MOUNT_VOLUME               0x01
+#define IRP_MN_VERIFY_VOLUME              0x02
+#define IRP_MN_LOAD_FILE_SYSTEM           0x03
+#define IRP_MN_TRACK_LINK                 0x04
+#define IRP_MN_KERNEL_CALL                0x04
+
+#define IRP_MN_LOCK                       0x01
+#define IRP_MN_UNLOCK_SINGLE              0x02
+#define IRP_MN_UNLOCK_ALL                 0x03
+#define IRP_MN_UNLOCK_ALL_BY_KEY          0x04
+
+#define IRP_MN_FLUSH_AND_PURGE          0x01
+
+#define IRP_MN_NORMAL                     0x00
+#define IRP_MN_DPC                        0x01
+#define IRP_MN_MDL                        0x02
+#define IRP_MN_COMPLETE                   0x04
+#define IRP_MN_COMPRESSED                 0x08
+
+#define IRP_MN_MDL_DPC                    (IRP_MN_MDL | IRP_MN_DPC)
+#define IRP_MN_COMPLETE_MDL               (IRP_MN_COMPLETE | IRP_MN_MDL)
+#define IRP_MN_COMPLETE_MDL_DPC           (IRP_MN_COMPLETE_MDL | IRP_MN_DPC)
+
+#define IRP_MN_QUERY_LEGACY_BUS_INFORMATION 0x18
+
+#define IO_CHECK_CREATE_PARAMETERS      0x0200
+#define IO_ATTACH_DEVICE                0x0400
+#define IO_IGNORE_SHARE_ACCESS_CHECK    0x0800
+
+typedef
+NTSTATUS
+(NTAPI *PIO_QUERY_DEVICE_ROUTINE)(
+  IN PVOID Context,
+  IN PUNICODE_STRING PathName,
+  IN INTERFACE_TYPE BusType,
+  IN ULONG BusNumber,
+  IN PKEY_VALUE_FULL_INFORMATION *BusInformation,
+  IN CONFIGURATION_TYPE ControllerType,
+  IN ULONG ControllerNumber,
+  IN PKEY_VALUE_FULL_INFORMATION *ControllerInformation,
+  IN CONFIGURATION_TYPE PeripheralType,
+  IN ULONG PeripheralNumber,
+  IN PKEY_VALUE_FULL_INFORMATION *PeripheralInformation);
+
+typedef enum _IO_QUERY_DEVICE_DATA_FORMAT {
+  IoQueryDeviceIdentifier = 0,
+  IoQueryDeviceConfigurationData,
+  IoQueryDeviceComponentInformation,
+  IoQueryDeviceMaxData
+} IO_QUERY_DEVICE_DATA_FORMAT, *PIO_QUERY_DEVICE_DATA_FORMAT;
+
+typedef VOID
+(NTAPI *PDRIVER_REINITIALIZE)(
+  IN struct _DRIVER_OBJECT *DriverObject,
+  IN PVOID Context OPTIONAL,
+  IN ULONG Count);
+
+typedef struct _CONTROLLER_OBJECT {
+  CSHORT Type;
+  CSHORT Size;
+  PVOID ControllerExtension;
+  KDEVICE_QUEUE DeviceWaitQueue;
+  ULONG Spare1;
+  LARGE_INTEGER Spare2;
+} CONTROLLER_OBJECT, *PCONTROLLER_OBJECT;
+
+#define DRVO_REINIT_REGISTERED          0x00000008
+#define DRVO_INITIALIZED                0x00000010
+#define DRVO_BOOTREINIT_REGISTERED      0x00000020
+#define DRVO_LEGACY_RESOURCES           0x00000040
+
+typedef struct _CONFIGURATION_INFORMATION {
+  ULONG DiskCount;
+  ULONG FloppyCount;
+  ULONG CdRomCount;
+  ULONG TapeCount;
+  ULONG ScsiPortCount;
+  ULONG SerialCount;
+  ULONG ParallelCount;
+  BOOLEAN AtDiskPrimaryAddressClaimed;
+  BOOLEAN AtDiskSecondaryAddressClaimed;
+  ULONG Version;
+  ULONG MediumChangerCount;
+} CONFIGURATION_INFORMATION, *PCONFIGURATION_INFORMATION;
+
+typedef struct _DISK_SIGNATURE {
+  ULONG PartitionStyle;
+  _ANONYMOUS_UNION union {
+    struct {
+      ULONG Signature;
+      ULONG CheckSum;
+    } Mbr;
+    struct {
+      GUID DiskId;
+    } Gpt;
+  } DUMMYUNIONNAME;
+} DISK_SIGNATURE, *PDISK_SIGNATURE;
+
+typedef struct _TXN_PARAMETER_BLOCK {
+  USHORT Length;
+  USHORT TxFsContext;
+  PVOID TransactionObject;
+} TXN_PARAMETER_BLOCK, *PTXN_PARAMETER_BLOCK;
+
+#define TXF_MINIVERSION_DEFAULT_VIEW        (0xFFFE)
+
+typedef struct _IO_DRIVER_CREATE_CONTEXT {
+  CSHORT Size;
+  struct _ECP_LIST *ExtraCreateParameter;
+  PVOID DeviceObjectHint;
+  PTXN_PARAMETER_BLOCK TxnParameters;
+} IO_DRIVER_CREATE_CONTEXT, *PIO_DRIVER_CREATE_CONTEXT;
+
+typedef struct _AGP_TARGET_BUS_INTERFACE_STANDARD {
+  USHORT Size;
+  USHORT Version;
+  PVOID Context;
+  PINTERFACE_REFERENCE InterfaceReference;
+  PINTERFACE_DEREFERENCE InterfaceDereference;
+  PGET_SET_DEVICE_DATA SetBusData;
+  PGET_SET_DEVICE_DATA GetBusData;
+  UCHAR CapabilityID;
+} AGP_TARGET_BUS_INTERFACE_STANDARD, *PAGP_TARGET_BUS_INTERFACE_STANDARD;
+
+typedef NTSTATUS
+(NTAPI *PGET_LOCATION_STRING)(
+  IN OUT PVOID Context OPTIONAL,
+  OUT PWCHAR *LocationStrings);
+
+typedef struct _PNP_LOCATION_INTERFACE {
+  USHORT Size;
+  USHORT Version;
+  PVOID Context;
+  PINTERFACE_REFERENCE InterfaceReference;
+  PINTERFACE_DEREFERENCE InterfaceDereference;
+  PGET_LOCATION_STRING GetLocationString;
+} PNP_LOCATION_INTERFACE, *PPNP_LOCATION_INTERFACE;
+
+typedef enum _ARBITER_ACTION {
+  ArbiterActionTestAllocation,
+  ArbiterActionRetestAllocation,
+  ArbiterActionCommitAllocation,
+  ArbiterActionRollbackAllocation,
+  ArbiterActionQueryAllocatedResources,
+  ArbiterActionWriteReservedResources,
+  ArbiterActionQueryConflict,
+  ArbiterActionQueryArbitrate,
+  ArbiterActionAddReserved,
+  ArbiterActionBootAllocation
+} ARBITER_ACTION, *PARBITER_ACTION;
+
+typedef struct _ARBITER_CONFLICT_INFO {
+  PDEVICE_OBJECT OwningObject;
+  ULONGLONG Start;
+  ULONGLONG End;
+} ARBITER_CONFLICT_INFO, *PARBITER_CONFLICT_INFO;
+
+typedef struct _ARBITER_TEST_ALLOCATION_PARAMETERS {
+  IN OUT PLIST_ENTRY ArbitrationList;
+  IN ULONG AllocateFromCount;
+  IN PCM_PARTIAL_RESOURCE_DESCRIPTOR AllocateFrom;
+} ARBITER_TEST_ALLOCATION_PARAMETERS, *PARBITER_TEST_ALLOCATION_PARAMETERS;
+
+typedef struct _ARBITER_RETEST_ALLOCATION_PARAMETERS {
+  IN OUT PLIST_ENTRY ArbitrationList;
+  IN ULONG AllocateFromCount;
+  IN PCM_PARTIAL_RESOURCE_DESCRIPTOR AllocateFrom;
+} ARBITER_RETEST_ALLOCATION_PARAMETERS, *PARBITER_RETEST_ALLOCATION_PARAMETERS;
+
+typedef struct _ARBITER_BOOT_ALLOCATION_PARAMETERS {
+  IN OUT PLIST_ENTRY ArbitrationList;
+} ARBITER_BOOT_ALLOCATION_PARAMETERS, *PARBITER_BOOT_ALLOCATION_PARAMETERS;
+
+typedef struct _ARBITER_QUERY_ALLOCATED_RESOURCES_PARAMETERS {
+  OUT PCM_PARTIAL_RESOURCE_LIST *AllocatedResources;
+} ARBITER_QUERY_ALLOCATED_RESOURCES_PARAMETERS, *PARBITER_QUERY_ALLOCATED_RESOURCES_PARAMETERS;
+
+typedef struct _ARBITER_QUERY_CONFLICT_PARAMETERS {
+  IN PDEVICE_OBJECT PhysicalDeviceObject;
+  IN PIO_RESOURCE_DESCRIPTOR ConflictingResource;
+  OUT PULONG ConflictCount;
+  OUT PARBITER_CONFLICT_INFO *Conflicts;
+} ARBITER_QUERY_CONFLICT_PARAMETERS, *PARBITER_QUERY_CONFLICT_PARAMETERS;
+
+typedef struct _ARBITER_QUERY_ARBITRATE_PARAMETERS {
+  IN PLIST_ENTRY ArbitrationList;
+} ARBITER_QUERY_ARBITRATE_PARAMETERS, *PARBITER_QUERY_ARBITRATE_PARAMETERS;
+
+typedef struct _ARBITER_ADD_RESERVED_PARAMETERS {
+  IN PDEVICE_OBJECT ReserveDevice;
+} ARBITER_ADD_RESERVED_PARAMETERS, *PARBITER_ADD_RESERVED_PARAMETERS;
+
+typedef struct _ARBITER_PARAMETERS {
+  union {
+    ARBITER_TEST_ALLOCATION_PARAMETERS TestAllocation;
+    ARBITER_RETEST_ALLOCATION_PARAMETERS RetestAllocation;
+    ARBITER_BOOT_ALLOCATION_PARAMETERS BootAllocation;
+    ARBITER_QUERY_ALLOCATED_RESOURCES_PARAMETERS QueryAllocatedResources;
+    ARBITER_QUERY_CONFLICT_PARAMETERS QueryConflict;
+    ARBITER_QUERY_ARBITRATE_PARAMETERS QueryArbitrate;
+    ARBITER_ADD_RESERVED_PARAMETERS AddReserved;
+  } Parameters;
+} ARBITER_PARAMETERS, *PARBITER_PARAMETERS;
+
+typedef enum _ARBITER_REQUEST_SOURCE {
+  ArbiterRequestUndefined = -1,
+  ArbiterRequestLegacyReported,
+  ArbiterRequestHalReported,
+  ArbiterRequestLegacyAssigned,
+  ArbiterRequestPnpDetected,
+  ArbiterRequestPnpEnumerated
+} ARBITER_REQUEST_SOURCE;
+
+typedef enum _ARBITER_RESULT {
+  ArbiterResultUndefined = -1,
+  ArbiterResultSuccess,
+  ArbiterResultExternalConflict,
+  ArbiterResultNullRequest
+} ARBITER_RESULT;
+
+#define ARBITER_FLAG_BOOT_CONFIG 0x00000001
+
+typedef struct _ARBITER_LIST_ENTRY {
+  LIST_ENTRY ListEntry;
+  ULONG AlternativeCount;
+  PIO_RESOURCE_DESCRIPTOR Alternatives;
+  PDEVICE_OBJECT PhysicalDeviceObject;
+  ARBITER_REQUEST_SOURCE RequestSource;
+  ULONG Flags;
+  LONG_PTR WorkSpace;
+  INTERFACE_TYPE InterfaceType;
+  ULONG SlotNumber;
+  ULONG BusNumber;
+  PCM_PARTIAL_RESOURCE_DESCRIPTOR Assignment;
+  PIO_RESOURCE_DESCRIPTOR SelectedAlternative;
+  ARBITER_RESULT Result;
+} ARBITER_LIST_ENTRY, *PARBITER_LIST_ENTRY;
+
+typedef NTSTATUS
+(NTAPI *PARBITER_HANDLER)(
+  IN OUT PVOID Context,
+  IN ARBITER_ACTION Action,
+  IN OUT PARBITER_PARAMETERS Parameters);
+
+#define ARBITER_PARTIAL 0x00000001
+
+typedef struct _ARBITER_INTERFACE {
+  USHORT Size;
+  USHORT Version;
+  PVOID Context;
+  PINTERFACE_REFERENCE InterfaceReference;
+  PINTERFACE_DEREFERENCE InterfaceDereference;
+  PARBITER_HANDLER ArbiterHandler;
+  ULONG Flags;
+} ARBITER_INTERFACE, *PARBITER_INTERFACE;
+
+typedef enum _RESOURCE_TRANSLATION_DIRECTION {
+  TranslateChildToParent,
+  TranslateParentToChild
+} RESOURCE_TRANSLATION_DIRECTION;
+
+typedef NTSTATUS
+(NTAPI *PTRANSLATE_RESOURCE_HANDLER)(
+  IN OUT PVOID Context OPTIONAL,
+  IN PCM_PARTIAL_RESOURCE_DESCRIPTOR Source,
+  IN RESOURCE_TRANSLATION_DIRECTION Direction,
+  IN ULONG AlternativesCount OPTIONAL,
+  IN IO_RESOURCE_DESCRIPTOR Alternatives[],
+  IN PDEVICE_OBJECT PhysicalDeviceObject,
+  OUT PCM_PARTIAL_RESOURCE_DESCRIPTOR Target);
+
+typedef NTSTATUS
+(NTAPI *PTRANSLATE_RESOURCE_REQUIREMENTS_HANDLER)(
+  IN OUT PVOID Context OPTIONAL,
+  IN PIO_RESOURCE_DESCRIPTOR Source,
+  IN PDEVICE_OBJECT PhysicalDeviceObject,
+  OUT PULONG TargetCount,
+  OUT PIO_RESOURCE_DESCRIPTOR *Target);
+
+typedef struct _TRANSLATOR_INTERFACE {
+  USHORT Size;
+  USHORT Version;
+  PVOID Context;
+  PINTERFACE_REFERENCE InterfaceReference;
+  PINTERFACE_DEREFERENCE InterfaceDereference;
+  PTRANSLATE_RESOURCE_HANDLER TranslateResources;
+  PTRANSLATE_RESOURCE_REQUIREMENTS_HANDLER TranslateResourceRequirements;
+} TRANSLATOR_INTERFACE, *PTRANSLATOR_INTERFACE;
+
+typedef struct _PCI_AGP_CAPABILITY {
+  PCI_CAPABILITIES_HEADER Header;
+  USHORT Minor:4;
+  USHORT Major:4;
+  USHORT Rsvd1:8;
+  struct _PCI_AGP_STATUS {
+    ULONG Rate:3;
+    ULONG Agp3Mode:1;
+    ULONG FastWrite:1;
+    ULONG FourGB:1;
+    ULONG HostTransDisable:1;
+    ULONG Gart64:1;
+    ULONG ITA_Coherent:1;
+    ULONG SideBandAddressing:1;
+    ULONG CalibrationCycle:3;
+    ULONG AsyncRequestSize:3;
+    ULONG Rsvd1:1;
+    ULONG Isoch:1;
+    ULONG Rsvd2:6;
+    ULONG RequestQueueDepthMaximum:8;
+  } AGPStatus;
+  struct _PCI_AGP_COMMAND {
+    ULONG Rate:3;
+    ULONG Rsvd1:1;
+    ULONG FastWriteEnable:1;
+    ULONG FourGBEnable:1;
+    ULONG Rsvd2:1;
+    ULONG Gart64:1;
+    ULONG AGPEnable:1;
+    ULONG SBAEnable:1;
+    ULONG CalibrationCycle:3;
+    ULONG AsyncReqSize:3;
+    ULONG Rsvd3:8;
+    ULONG RequestQueueDepth:8;
+  } AGPCommand;
+} PCI_AGP_CAPABILITY, *PPCI_AGP_CAPABILITY;
+
+typedef enum _EXTENDED_AGP_REGISTER {
+  IsochStatus,
+  AgpControl,
+  ApertureSize,
+  AperturePageSize,
+  GartLow,
+  GartHigh,
+  IsochCommand
+} EXTENDED_AGP_REGISTER, *PEXTENDED_AGP_REGISTER;
+
+typedef struct _PCI_AGP_ISOCH_STATUS {
+  ULONG ErrorCode:2;
+  ULONG Rsvd1:1;
+  ULONG Isoch_L:3;
+  ULONG Isoch_Y:2;
+  ULONG Isoch_N:8;
+  ULONG Rsvd2:16;
+} PCI_AGP_ISOCH_STATUS, *PPCI_AGP_ISOCH_STATUS;
+
+typedef struct _PCI_AGP_CONTROL {
+  ULONG Rsvd1:7;
+  ULONG GTLB_Enable:1;
+  ULONG AP_Enable:1;
+  ULONG CAL_Disable:1;
+  ULONG Rsvd2:22;
+} PCI_AGP_CONTROL, *PPCI_AGP_CONTROL;
+
+typedef struct _PCI_AGP_APERTURE_PAGE_SIZE {
+  USHORT PageSizeMask:11;
+  USHORT Rsvd1:1;
+  USHORT PageSizeSelect:4;
+} PCI_AGP_APERTURE_PAGE_SIZE, *PPCI_AGP_APERTURE_PAGE_SIZE;
+
+typedef struct _PCI_AGP_ISOCH_COMMAND {
+  USHORT Rsvd1:6;
+  USHORT Isoch_Y:2;
+  USHORT Isoch_N:8;
+} PCI_AGP_ISOCH_COMMAND, *PPCI_AGP_ISOCH_COMMAND;
+
+typedef struct PCI_AGP_EXTENDED_CAPABILITY {
+  PCI_AGP_ISOCH_STATUS IsochStatus;
+  PCI_AGP_CONTROL AgpControl;
+  USHORT ApertureSize;
+  PCI_AGP_APERTURE_PAGE_SIZE AperturePageSize;
+  ULONG GartLow;
+  ULONG GartHigh;
+  PCI_AGP_ISOCH_COMMAND IsochCommand;
+} PCI_AGP_EXTENDED_CAPABILITY, *PPCI_AGP_EXTENDED_CAPABILITY;
+
+#define PCI_AGP_RATE_1X     0x1
+#define PCI_AGP_RATE_2X     0x2
+#define PCI_AGP_RATE_4X     0x4
+
+#define PCIX_MODE_CONVENTIONAL_PCI  0x0
+#define PCIX_MODE1_66MHZ            0x1
+#define PCIX_MODE1_100MHZ           0x2
+#define PCIX_MODE1_133MHZ           0x3
+#define PCIX_MODE2_266_66MHZ        0x9
+#define PCIX_MODE2_266_100MHZ       0xA
+#define PCIX_MODE2_266_133MHZ       0xB
+#define PCIX_MODE2_533_66MHZ        0xD
+#define PCIX_MODE2_533_100MHZ       0xE
+#define PCIX_MODE2_533_133MHZ       0xF
+
+#define PCIX_VERSION_MODE1_ONLY     0x0
+#define PCIX_VERSION_MODE2_ECC      0x1
+#define PCIX_VERSION_DUAL_MODE_ECC  0x2
+
+typedef struct _PCIX_BRIDGE_CAPABILITY {
+  PCI_CAPABILITIES_HEADER Header;
+  union {
+    struct {
+      USHORT Bus64Bit:1;
+      USHORT Bus133MHzCapable:1;
+      USHORT SplitCompletionDiscarded:1;
+      USHORT UnexpectedSplitCompletion:1;
+      USHORT SplitCompletionOverrun:1;
+      USHORT SplitRequestDelayed:1;
+      USHORT BusModeFrequency:4;
+      USHORT Rsvd:2;
+      USHORT Version:2;
+      USHORT Bus266MHzCapable:1;
+      USHORT Bus533MHzCapable:1;
+    } DUMMYSTRUCTNAME;
+  USHORT AsUSHORT;
+  } SecondaryStatus;
+  union {
+    struct {
+      ULONG FunctionNumber:3;
+      ULONG DeviceNumber:5;
+      ULONG BusNumber:8;
+      ULONG Device64Bit:1;
+      ULONG Device133MHzCapable:1;
+      ULONG SplitCompletionDiscarded:1;
+      ULONG UnexpectedSplitCompletion:1;
+      ULONG SplitCompletionOverrun:1;
+      ULONG SplitRequestDelayed:1;
+      ULONG Rsvd:7;
+      ULONG DIMCapable:1;
+      ULONG Device266MHzCapable:1;
+      ULONG Device533MHzCapable:1;
+    } DUMMYSTRUCTNAME;
+    ULONG AsULONG;
+  } BridgeStatus;
+  USHORT UpstreamSplitTransactionCapacity;
+  USHORT UpstreamSplitTransactionLimit;
+  USHORT DownstreamSplitTransactionCapacity;
+  USHORT DownstreamSplitTransactionLimit;
+  union {
+    struct {
+      ULONG SelectSecondaryRegisters:1;
+      ULONG ErrorPresentInOtherBank:1;
+      ULONG AdditionalCorrectableError:1;
+      ULONG AdditionalUncorrectableError:1;
+      ULONG ErrorPhase:3;
+      ULONG ErrorCorrected:1;
+      ULONG Syndrome:8;
+      ULONG ErrorFirstCommand:4;
+      ULONG ErrorSecondCommand:4;
+      ULONG ErrorUpperAttributes:4;
+      ULONG ControlUpdateEnable:1;
+      ULONG Rsvd:1;
+      ULONG DisableSingleBitCorrection:1;
+      ULONG EccMode:1;
+    } DUMMYSTRUCTNAME;
+  ULONG AsULONG;
+  } EccControlStatus;
+  ULONG EccFirstAddress;
+  ULONG EccSecondAddress;
+  ULONG EccAttribute;
+} PCIX_BRIDGE_CAPABILITY, *PPCIX_BRIDGE_CAPABILITY;
+
+typedef struct _PCI_SUBSYSTEM_IDS_CAPABILITY {
+  PCI_CAPABILITIES_HEADER Header;
+  USHORT Reserved;
+  USHORT SubVendorID;
+  USHORT SubSystemID;
+} PCI_SUBSYSTEM_IDS_CAPABILITY, *PPCI_SUBSYSTEM_IDS_CAPABILITY;
+
+#define OSC_FIRMWARE_FAILURE                            0x02
+#define OSC_UNRECOGNIZED_UUID                           0x04
+#define OSC_UNRECOGNIZED_REVISION                       0x08
+#define OSC_CAPABILITIES_MASKED                         0x10
+
+#define PCI_ROOT_BUS_OSC_METHOD_CAPABILITY_REVISION     0x01
+
+typedef struct _PCI_ROOT_BUS_OSC_SUPPORT_FIELD {
+  union {
+    struct {
+      ULONG ExtendedConfigOpRegions:1;
+      ULONG ActiveStatePowerManagement:1;
+      ULONG ClockPowerManagement:1;
+      ULONG SegmentGroups:1;
+      ULONG MessageSignaledInterrupts:1;
+      ULONG WindowsHardwareErrorArchitecture:1;
+      ULONG Reserved:26;
+    } DUMMYSTRUCTNAME;
+    ULONG AsULONG;
+  } u;
+} PCI_ROOT_BUS_OSC_SUPPORT_FIELD, *PPCI_ROOT_BUS_OSC_SUPPORT_FIELD;
+
+typedef struct _PCI_ROOT_BUS_OSC_CONTROL_FIELD {
+  union {
+    struct {
+      ULONG ExpressNativeHotPlug:1;
+      ULONG ShpcNativeHotPlug:1;
+      ULONG ExpressNativePME:1;
+      ULONG ExpressAdvancedErrorReporting:1;
+      ULONG ExpressCapabilityStructure:1;
+      ULONG Reserved:27;
+    } DUMMYSTRUCTNAME;
+  ULONG AsULONG;
+  } u;
+} PCI_ROOT_BUS_OSC_CONTROL_FIELD, *PPCI_ROOT_BUS_OSC_CONTROL_FIELD;
+
+typedef enum _PCI_HARDWARE_INTERFACE {
+  PciConventional,
+  PciXMode1,
+  PciXMode2,
+  PciExpress
+} PCI_HARDWARE_INTERFACE, *PPCI_HARDWARE_INTERFACE;
+
+typedef enum {
+  BusWidth32Bits,
+  BusWidth64Bits
+} PCI_BUS_WIDTH;
+
+typedef struct _PCI_ROOT_BUS_HARDWARE_CAPABILITY {
+  PCI_HARDWARE_INTERFACE SecondaryInterface;
+  struct {
+    BOOLEAN BusCapabilitiesFound;
+    ULONG CurrentSpeedAndMode;
+    ULONG SupportedSpeedsAndModes;
+    BOOLEAN DeviceIDMessagingCapable;
+    PCI_BUS_WIDTH SecondaryBusWidth;
+  } DUMMYSTRUCTNAME;
+  PCI_ROOT_BUS_OSC_SUPPORT_FIELD OscFeatureSupport;
+  PCI_ROOT_BUS_OSC_CONTROL_FIELD OscControlRequest;
+  PCI_ROOT_BUS_OSC_CONTROL_FIELD OscControlGranted;
+} PCI_ROOT_BUS_HARDWARE_CAPABILITY, *PPCI_ROOT_BUS_HARDWARE_CAPABILITY;
+
+typedef union _PCI_EXPRESS_CAPABILITIES_REGISTER {
+  struct {
+    USHORT CapabilityVersion:4;
+    USHORT DeviceType:4;
+    USHORT SlotImplemented:1;
+    USHORT InterruptMessageNumber:5;
+    USHORT Rsvd:2;
+  } DUMMYSTRUCTNAME;
+  USHORT AsUSHORT;
+} PCI_EXPRESS_CAPABILITIES_REGISTER, *PPCI_EXPRESS_CAPABILITIES_REGISTER;
+
+typedef union _PCI_EXPRESS_DEVICE_CAPABILITIES_REGISTER {
+  struct {
+    ULONG MaxPayloadSizeSupported:3;
+    ULONG PhantomFunctionsSupported:2;
+    ULONG ExtendedTagSupported:1;
+    ULONG L0sAcceptableLatency:3;
+    ULONG L1AcceptableLatency:3;
+    ULONG Undefined:3;
+    ULONG RoleBasedErrorReporting:1;
+    ULONG Rsvd1:2;
+    ULONG CapturedSlotPowerLimit:8;
+    ULONG CapturedSlotPowerLimitScale:2;
+    ULONG Rsvd2:4;
+  } DUMMYSTRUCTNAME;
+  ULONG AsULONG;
+} PCI_EXPRESS_DEVICE_CAPABILITIES_REGISTER, *PPCI_EXPRESS_DEVICE_CAPABILITIES_REGISTER;
+
+#define PCI_EXPRESS_AER_DEVICE_CONTROL_MASK 0x07;
+
+typedef union _PCI_EXPRESS_DEVICE_CONTROL_REGISTER {
+  struct {
+    USHORT CorrectableErrorEnable:1;
+    USHORT NonFatalErrorEnable:1;
+    USHORT FatalErrorEnable:1;
+    USHORT UnsupportedRequestErrorEnable:1;
+    USHORT EnableRelaxedOrder:1;
+    USHORT MaxPayloadSize:3;
+    USHORT ExtendedTagEnable:1;
+    USHORT PhantomFunctionsEnable:1;
+    USHORT AuxPowerEnable:1;
+    USHORT NoSnoopEnable:1;
+    USHORT MaxReadRequestSize:3;
+    USHORT BridgeConfigRetryEnable:1;
+  } DUMMYSTRUCTNAME;
+  USHORT AsUSHORT;
+} PCI_EXPRESS_DEVICE_CONTROL_REGISTER, *PPCI_EXPRESS_DEVICE_CONTROL_REGISTER;
+
+#define PCI_EXPRESS_AER_DEVICE_STATUS_MASK 0x0F;
+
+typedef union _PCI_EXPRESS_DEVICE_STATUS_REGISTER {
+  struct {
+    USHORT CorrectableErrorDetected:1;
+    USHORT NonFatalErrorDetected:1;
+    USHORT FatalErrorDetected:1;
+    USHORT UnsupportedRequestDetected:1;
+    USHORT AuxPowerDetected:1;
+    USHORT TransactionsPending:1;
+    USHORT Rsvd:10;
+  } DUMMYSTRUCTNAME;
+  USHORT AsUSHORT;
+} PCI_EXPRESS_DEVICE_STATUS_REGISTER, *PPCI_EXPRESS_DEVICE_STATUS_REGISTER;
+
+typedef union _PCI_EXPRESS_LINK_CAPABILITIES_REGISTER {
+  struct {
+    ULONG MaximumLinkSpeed:4;
+    ULONG MaximumLinkWidth:6;
+    ULONG ActiveStatePMSupport:2;
+    ULONG L0sExitLatency:3;
+    ULONG L1ExitLatency:3;
+    ULONG ClockPowerManagement:1;
+    ULONG SurpriseDownErrorReportingCapable:1;
+    ULONG DataLinkLayerActiveReportingCapable:1;
+    ULONG Rsvd:3;
+    ULONG PortNumber:8;
+  } DUMMYSTRUCTNAME;
+  ULONG AsULONG;
+} PCI_EXPRESS_LINK_CAPABILITIES_REGISTER, *PPCI_EXPRESS_LINK_CAPABILITIES_REGISTER;
+
+typedef union _PCI_EXPRESS_LINK_CONTROL_REGISTER {
+  struct {
+    USHORT ActiveStatePMControl:2;
+    USHORT Rsvd1:1;
+    USHORT ReadCompletionBoundary:1;
+    USHORT LinkDisable:1;
+    USHORT RetrainLink:1;
+    USHORT CommonClockConfig:1;
+    USHORT ExtendedSynch:1;
+    USHORT EnableClockPowerManagement:1;
+    USHORT Rsvd2:7;
+  } DUMMYSTRUCTNAME;
+  USHORT AsUSHORT;
+} PCI_EXPRESS_LINK_CONTROL_REGISTER, *PPCI_EXPRESS_LINK_CONTROL_REGISTER;
+
+typedef union _PCI_EXPRESS_LINK_STATUS_REGISTER {
+  struct {
+    USHORT LinkSpeed:4;
+    USHORT LinkWidth:6;
+    USHORT Undefined:1;
+    USHORT LinkTraining:1;
+    USHORT SlotClockConfig:1;
+    USHORT DataLinkLayerActive:1;
+    USHORT Rsvd:2;
+  } DUMMYSTRUCTNAME;
+  USHORT AsUSHORT;
+} PCI_EXPRESS_LINK_STATUS_REGISTER, *PPCI_EXPRESS_LINK_STATUS_REGISTER;
+
+typedef union _PCI_EXPRESS_SLOT_CAPABILITIES_REGISTER {
+  struct {
+    ULONG AttentionButtonPresent:1;
+    ULONG PowerControllerPresent:1;
+    ULONG MRLSensorPresent:1;
+    ULONG AttentionIndicatorPresent:1;
+    ULONG PowerIndicatorPresent:1;
+    ULONG HotPlugSurprise:1;
+    ULONG HotPlugCapable:1;
+    ULONG SlotPowerLimit:8;
+    ULONG SlotPowerLimitScale:2;
+    ULONG ElectromechanicalLockPresent:1;
+    ULONG NoCommandCompletedSupport:1;
+    ULONG PhysicalSlotNumber:13;
+  } DUMMYSTRUCTNAME;
+  ULONG AsULONG;
+} PCI_EXPRESS_SLOT_CAPABILITIES_REGISTER, *PPCI_EXPRESS_SLOT_CAPABILITIES_REGISTER;
+
+typedef union _PCI_EXPRESS_SLOT_CONTROL_REGISTER {
+  struct {
+    USHORT AttentionButtonEnable:1;
+    USHORT PowerFaultDetectEnable:1;
+    USHORT MRLSensorEnable:1;
+    USHORT PresenceDetectEnable:1;
+    USHORT CommandCompletedEnable:1;
+    USHORT HotPlugInterruptEnable:1;
+    USHORT AttentionIndicatorControl:2;
+    USHORT PowerIndicatorControl:2;
+    USHORT PowerControllerControl:1;
+    USHORT ElectromechanicalLockControl:1;
+    USHORT DataLinkStateChangeEnable:1;
+    USHORT Rsvd:3;
+  } DUMMYSTRUCTNAME;
+  USHORT AsUSHORT;
+} PCI_EXPRESS_SLOT_CONTROL_REGISTER, *PPCI_EXPRESS_SLOT_CONTROL_REGISTER;
+
+typedef union _PCI_EXPRESS_SLOT_STATUS_REGISTER {
+  struct {
+    USHORT AttentionButtonPressed:1;
+    USHORT PowerFaultDetected:1;
+    USHORT MRLSensorChanged:1;
+    USHORT PresenceDetectChanged:1;
+    USHORT CommandCompleted:1;
+    USHORT MRLSensorState:1;
+    USHORT PresenceDetectState:1;
+    USHORT ElectromechanicalLockEngaged:1;
+    USHORT DataLinkStateChanged:1;
+    USHORT Rsvd:7;
+  } DUMMYSTRUCTNAME;
+  USHORT AsUSHORT;
+} PCI_EXPRESS_SLOT_STATUS_REGISTER, *PPCI_EXPRESS_SLOT_STATUS_REGISTER;
+
+typedef union _PCI_EXPRESS_ROOT_CONTROL_REGISTER {
+  struct {
+    USHORT CorrectableSerrEnable:1;
+    USHORT NonFatalSerrEnable:1;
+    USHORT FatalSerrEnable:1;
+    USHORT PMEInterruptEnable:1;
+    USHORT CRSSoftwareVisibilityEnable:1;
+    USHORT Rsvd:11;
+  } DUMMYSTRUCTNAME;
+  USHORT AsUSHORT;
+} PCI_EXPRESS_ROOT_CONTROL_REGISTER, *PPCI_EXPRESS_ROOT_CONTROL_REGISTER;
+
+typedef union _PCI_EXPRESS_ROOT_CAPABILITIES_REGISTER {
+  struct {
+    USHORT CRSSoftwareVisibility:1;
+    USHORT Rsvd:15;
+  } DUMMYSTRUCTNAME;
+  USHORT AsUSHORT;
+} PCI_EXPRESS_ROOT_CAPABILITIES_REGISTER, *PPCI_EXPRESS_ROOT_CAPABILITIES_REGISTER;
+
+typedef union _PCI_EXPRESS_ROOT_STATUS_REGISTER {
+  struct {
+    ULONG PMERequestorId:16;
+    ULONG PMEStatus:1;
+    ULONG PMEPending:1;
+    ULONG Rsvd:14;
+  } DUMMYSTRUCTNAME;
+  ULONG AsULONG;
+} PCI_EXPRESS_ROOT_STATUS_REGISTER, *PPCI_EXPRESS_ROOT_STATUS_REGISTER;
+
+typedef struct _PCI_EXPRESS_CAPABILITY {
+  PCI_CAPABILITIES_HEADER Header;
+  PCI_EXPRESS_CAPABILITIES_REGISTER ExpressCapabilities;
+  PCI_EXPRESS_DEVICE_CAPABILITIES_REGISTER DeviceCapabilities;
+  PCI_EXPRESS_DEVICE_CONTROL_REGISTER DeviceControl;
+  PCI_EXPRESS_DEVICE_STATUS_REGISTER DeviceStatus;
+  PCI_EXPRESS_LINK_CAPABILITIES_REGISTER LinkCapabilities;
+  PCI_EXPRESS_LINK_CONTROL_REGISTER LinkControl;
+  PCI_EXPRESS_LINK_STATUS_REGISTER LinkStatus;
+  PCI_EXPRESS_SLOT_CAPABILITIES_REGISTER SlotCapabilities;
+  PCI_EXPRESS_SLOT_CONTROL_REGISTER SlotControl;
+  PCI_EXPRESS_SLOT_STATUS_REGISTER SlotStatus;
+  PCI_EXPRESS_ROOT_CONTROL_REGISTER RootControl;
+  PCI_EXPRESS_ROOT_CAPABILITIES_REGISTER RootCapabilities;
+  PCI_EXPRESS_ROOT_STATUS_REGISTER RootStatus;
+} PCI_EXPRESS_CAPABILITY, *PPCI_EXPRESS_CAPABILITY;
+
+typedef enum {
+  MRLClosed = 0,
+  MRLOpen
+} PCI_EXPRESS_MRL_STATE;
+
+typedef enum {
+  SlotEmpty = 0,
+  CardPresent
+} PCI_EXPRESS_CARD_PRESENCE;
+
+typedef enum {
+  IndicatorOn = 1,
+  IndicatorBlink,
+  IndicatorOff
+} PCI_EXPRESS_INDICATOR_STATE;
+
+typedef enum {
+  PowerOn = 0,
+  PowerOff
+} PCI_EXPRESS_POWER_STATE;
+
+typedef enum {
+  L0sEntrySupport = 1,
+  L0sAndL1EntrySupport = 3
+} PCI_EXPRESS_ASPM_SUPPORT;
+
+typedef enum {
+  L0sAndL1EntryDisabled,
+  L0sEntryEnabled,
+  L1EntryEnabled,
+  L0sAndL1EntryEnabled
+} PCI_EXPRESS_ASPM_CONTROL;
+
+typedef enum {
+  L0s_Below64ns = 0,
+  L0s_64ns_128ns,
+  L0s_128ns_256ns,
+  L0s_256ns_512ns,
+  L0s_512ns_1us,
+  L0s_1us_2us,
+  L0s_2us_4us,
+  L0s_Above4us
+} PCI_EXPRESS_L0s_EXIT_LATENCY;
+
+typedef enum {
+  L1_Below1us = 0,
+  L1_1us_2us,
+  L1_2us_4us,
+  L1_4us_8us,
+  L1_8us_16us,
+  L1_16us_32us,
+  L1_32us_64us,
+  L1_Above64us
+} PCI_EXPRESS_L1_EXIT_LATENCY;
+
+typedef enum {
+  PciExpressEndpoint = 0,
+  PciExpressLegacyEndpoint,
+  PciExpressRootPort = 4,
+  PciExpressUpstreamSwitchPort,
+  PciExpressDownstreamSwitchPort,
+  PciExpressToPciXBridge,
+  PciXToExpressBridge,
+  PciExpressRootComplexIntegratedEndpoint,
+  PciExpressRootComplexEventCollector
+} PCI_EXPRESS_DEVICE_TYPE;
+
+typedef enum {
+  MaxPayload128Bytes = 0,
+  MaxPayload256Bytes,
+  MaxPayload512Bytes,
+  MaxPayload1024Bytes,
+  MaxPayload2048Bytes,
+  MaxPayload4096Bytes
+} PCI_EXPRESS_MAX_PAYLOAD_SIZE;
+
+typedef union _PCI_EXPRESS_PME_REQUESTOR_ID {
+  struct {
+    USHORT FunctionNumber:3;
+    USHORT DeviceNumber:5;
+    USHORT BusNumber:8;
+  } DUMMYSTRUCTNAME;
+  USHORT AsUSHORT;
+} PCI_EXPRESS_PME_REQUESTOR_ID, *PPCI_EXPRESS_PME_REQUESTOR_ID;
+
+#if defined(_WIN64)
+
+#ifndef USE_DMA_MACROS
+#define USE_DMA_MACROS
+#endif
+
+#ifndef NO_LEGACY_DRIVERS
+#define NO_LEGACY_DRIVERS
+#endif
+
+#endif /* defined(_WIN64) */
+
+typedef enum _PHYSICAL_COUNTER_RESOURCE_DESCRIPTOR_TYPE {
+  ResourceTypeSingle = 0,
+  ResourceTypeRange,
+  ResourceTypeExtendedCounterConfiguration,
+  ResourceTypeOverflow,
+  ResourceTypeMax
+} PHYSICAL_COUNTER_RESOURCE_DESCRIPTOR_TYPE;
+
+typedef struct _PHYSICAL_COUNTER_RESOURCE_DESCRIPTOR {
+  PHYSICAL_COUNTER_RESOURCE_DESCRIPTOR_TYPE Type;
+  ULONG Flags;
+  union {
+    ULONG CounterIndex;
+    ULONG ExtendedRegisterAddress;
+    struct {
+      ULONG Begin;
+      ULONG End;
+    } Range;
+  } u;
+} PHYSICAL_COUNTER_RESOURCE_DESCRIPTOR, *PPHYSICAL_COUNTER_RESOURCE_DESCRIPTOR;
+
+typedef struct _PHYSICAL_COUNTER_RESOURCE_LIST {
+  ULONG Count;
+  PHYSICAL_COUNTER_RESOURCE_DESCRIPTOR Descriptors[ANYSIZE_ARRAY];
+} PHYSICAL_COUNTER_RESOURCE_LIST, *PPHYSICAL_COUNTER_RESOURCE_LIST;
+
+typedef VOID
+(NTAPI *PciPin2Line)(
+  IN struct _BUS_HANDLER *BusHandler,
+  IN struct _BUS_HANDLER *RootHandler,
+  IN PCI_SLOT_NUMBER SlotNumber,
+  IN PPCI_COMMON_CONFIG PciData);
+
+typedef VOID
+(NTAPI *PciLine2Pin)(
+  IN struct _BUS_HANDLER *BusHandler,
+  IN struct _BUS_HANDLER *RootHandler,
+  IN PCI_SLOT_NUMBER SlotNumber,
+  IN PPCI_COMMON_CONFIG PciNewData,
+  IN PPCI_COMMON_CONFIG PciOldData);
+
+typedef VOID
+(NTAPI *PciReadWriteConfig)(
+  IN struct _BUS_HANDLER *BusHandler,
+  IN PCI_SLOT_NUMBER Slot,
+  IN PVOID Buffer,
+  IN ULONG Offset,
+  IN ULONG Length);
+
+#define PCI_DATA_TAG ' ICP'
+#define PCI_DATA_VERSION 1
+
+typedef struct _PCIBUSDATA {
+  ULONG Tag;
+  ULONG Version;
+  PciReadWriteConfig ReadConfig;
+  PciReadWriteConfig WriteConfig;
+  PciPin2Line Pin2Line;
+  PciLine2Pin Line2Pin;
+  PCI_SLOT_NUMBER ParentSlot;
+  PVOID Reserved[4];
+} PCIBUSDATA, *PPCIBUSDATA;
+
+#ifndef _PCIINTRF_X_
+#define _PCIINTRF_X_
+
+typedef ULONG
+(NTAPI *PCI_READ_WRITE_CONFIG)(
+  IN PVOID Context,
+  IN ULONG BusOffset,
+  IN ULONG Slot,
+  IN PVOID Buffer,
+  IN ULONG Offset,
+  IN ULONG Length);
+
+typedef VOID
+(NTAPI *PCI_PIN_TO_LINE)(
+  IN PVOID Context,
+  IN PPCI_COMMON_CONFIG PciData);
+
+typedef VOID
+(NTAPI *PCI_LINE_TO_PIN)(
+  IN PVOID Context,
+  IN PPCI_COMMON_CONFIG PciNewData,
+  IN PPCI_COMMON_CONFIG PciOldData);
+
+typedef VOID
+(NTAPI *PCI_ROOT_BUS_CAPABILITY)(
+  IN PVOID Context,
+  OUT PPCI_ROOT_BUS_HARDWARE_CAPABILITY HardwareCapability);
+
+typedef VOID
+(NTAPI *PCI_EXPRESS_WAKE_CONTROL)(
+  IN PVOID Context,
+  IN BOOLEAN EnableWake);
+
+typedef struct _PCI_BUS_INTERFACE_STANDARD {
+  USHORT Size;
+  USHORT Version;
+  PVOID Context;
+  PINTERFACE_REFERENCE InterfaceReference;
+  PINTERFACE_DEREFERENCE InterfaceDereference;
+  PCI_READ_WRITE_CONFIG ReadConfig;
+  PCI_READ_WRITE_CONFIG WriteConfig;
+  PCI_PIN_TO_LINE PinToLine;
+  PCI_LINE_TO_PIN LineToPin;
+  PCI_ROOT_BUS_CAPABILITY RootBusCapability;
+  PCI_EXPRESS_WAKE_CONTROL ExpressWakeControl;
+} PCI_BUS_INTERFACE_STANDARD, *PPCI_BUS_INTERFACE_STANDARD;
+
+#define PCI_BUS_INTERFACE_STANDARD_VERSION 1
+
+#endif /* _PCIINTRF_X_ */
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+
+#define FILE_CHARACTERISTICS_EXPECT_ORDERLY_REMOVAL_EX     0x00004000
+#define FILE_CHARACTERISTICS_EXPECT_SURPRISE_REMOVAL_EX    0x00008000
+#define FILE_CHARACTERISTICS_REMOVAL_POLICY_MASK_EX \
+    (FILE_CHARACTERISTICS_EXPECT_ORDERLY_REMOVAL_EX | \
+     FILE_CHARACTERISTICS_EXPECT_SURPRISE_REMOVAL_EX)
+
+#define FILE_CHARACTERISTICS_EXPECT_ORDERLY_REMOVAL_DEPRECATED 0x00000200
+#define FILE_CHARACTERISTICS_EXPECT_SURPRISE_REMOVAL_DEPRECATED 0x00000300
+#define FILE_CHARACTERISTICS_REMOVAL_POLICY_MASK_DEPRECATED 0x00000300
+
+#else
+
+#define FILE_CHARACTERISTICS_EXPECT_ORDERLY_REMOVAL     0x00000200
+#define FILE_CHARACTERISTICS_EXPECT_SURPRISE_REMOVAL    0x00000300
+#define FILE_CHARACTERISTICS_REMOVAL_POLICY_MASK        0x00000300
+
+#define FILE_CHARACTERISTICS_EXPECT_ORDERLY_REMOVAL_EX FILE_CHARACTERISTICS_EXPECT_ORDERLY_REMOVAL
+#define FILE_CHARACTERISTICS_EXPECT_SURPRISE_REMOVAL_EX FILE_CHARACTERISTICS_EXPECT_SURPRISE_REMOVAL
+#define FILE_CHARACTERISTICS_REMOVAL_POLICY_MASK_EX FILE_CHARACTERISTICS_REMOVAL_POLICY_MASK
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
+
+#define FILE_CHARACTERISTICS_PROPAGATED (   FILE_REMOVABLE_MEDIA   | \
+                                            FILE_READ_ONLY_DEVICE  | \
+                                            FILE_FLOPPY_DISKETTE   | \
+                                            FILE_WRITE_ONCE_MEDIA  | \
+                                            FILE_DEVICE_SECURE_OPEN  )
+
+typedef struct _FILE_ALIGNMENT_INFORMATION {
+  ULONG AlignmentRequirement;
+} FILE_ALIGNMENT_INFORMATION, *PFILE_ALIGNMENT_INFORMATION;
+
+typedef struct _FILE_NAME_INFORMATION {
+  ULONG FileNameLength;
+  WCHAR FileName[1];
+} FILE_NAME_INFORMATION, *PFILE_NAME_INFORMATION;
+
+
+typedef struct _FILE_ATTRIBUTE_TAG_INFORMATION {
+  ULONG FileAttributes;
+  ULONG ReparseTag;
+} FILE_ATTRIBUTE_TAG_INFORMATION, *PFILE_ATTRIBUTE_TAG_INFORMATION;
+
+typedef struct _FILE_DISPOSITION_INFORMATION {
+  BOOLEAN DeleteFile;
+} FILE_DISPOSITION_INFORMATION, *PFILE_DISPOSITION_INFORMATION;
+
+typedef struct _FILE_END_OF_FILE_INFORMATION {
+  LARGE_INTEGER EndOfFile;
+} FILE_END_OF_FILE_INFORMATION, *PFILE_END_OF_FILE_INFORMATION;
+
+typedef struct _FILE_VALID_DATA_LENGTH_INFORMATION {
+  LARGE_INTEGER ValidDataLength;
+} FILE_VALID_DATA_LENGTH_INFORMATION, *PFILE_VALID_DATA_LENGTH_INFORMATION;
+
+typedef struct _FILE_FS_LABEL_INFORMATION {
+  ULONG VolumeLabelLength;
+  WCHAR VolumeLabel[1];
+} FILE_FS_LABEL_INFORMATION, *PFILE_FS_LABEL_INFORMATION;
+
+typedef struct _FILE_FS_VOLUME_INFORMATION {
+  LARGE_INTEGER VolumeCreationTime;
+  ULONG VolumeSerialNumber;
+  ULONG VolumeLabelLength;
+  BOOLEAN SupportsObjects;
+  WCHAR VolumeLabel[1];
+} FILE_FS_VOLUME_INFORMATION, *PFILE_FS_VOLUME_INFORMATION;
+
+typedef struct _FILE_FS_SIZE_INFORMATION {
+  LARGE_INTEGER TotalAllocationUnits;
+  LARGE_INTEGER AvailableAllocationUnits;
+  ULONG SectorsPerAllocationUnit;
+  ULONG BytesPerSector;
+} FILE_FS_SIZE_INFORMATION, *PFILE_FS_SIZE_INFORMATION;
+
+typedef struct _FILE_FS_FULL_SIZE_INFORMATION {
+  LARGE_INTEGER TotalAllocationUnits;
+  LARGE_INTEGER CallerAvailableAllocationUnits;
+  LARGE_INTEGER ActualAvailableAllocationUnits;
+  ULONG SectorsPerAllocationUnit;
+  ULONG BytesPerSector;
+} FILE_FS_FULL_SIZE_INFORMATION, *PFILE_FS_FULL_SIZE_INFORMATION;
+
+typedef struct _FILE_FS_OBJECTID_INFORMATION {
+  UCHAR ObjectId[16];
+  UCHAR ExtendedInfo[48];
+} FILE_FS_OBJECTID_INFORMATION, *PFILE_FS_OBJECTID_INFORMATION;
+
+typedef union _FILE_SEGMENT_ELEMENT {
+  PVOID64 Buffer;
+  ULONGLONG Alignment;
+}FILE_SEGMENT_ELEMENT, *PFILE_SEGMENT_ELEMENT;
+
+#define IOCTL_AVIO_ALLOCATE_STREAM      CTL_CODE(FILE_DEVICE_AVIO, 1, METHOD_BUFFERED, FILE_SPECIAL_ACCESS)
+#define IOCTL_AVIO_FREE_STREAM          CTL_CODE(FILE_DEVICE_AVIO, 2, METHOD_BUFFERED, FILE_SPECIAL_ACCESS)
+#define IOCTL_AVIO_MODIFY_STREAM        CTL_CODE(FILE_DEVICE_AVIO, 3, METHOD_BUFFERED, FILE_SPECIAL_ACCESS)
+
+typedef enum _BUS_DATA_TYPE {
+  ConfigurationSpaceUndefined = -1,
+  Cmos,
+  EisaConfiguration,
+  Pos,
+  CbusConfiguration,
+  PCIConfiguration,
+  VMEConfiguration,
+  NuBusConfiguration,
+  PCMCIAConfiguration,
+  MPIConfiguration,
+  MPSAConfiguration,
+  PNPISAConfiguration,
+  SgiInternalConfiguration,
+  MaximumBusDataType
+} BUS_DATA_TYPE, *PBUS_DATA_TYPE;
 $endif
 

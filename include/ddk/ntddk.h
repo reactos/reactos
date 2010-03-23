@@ -309,6 +309,19 @@ typedef struct _ZONE_HEADER {
  *                         I/O Manager Types                                  *
  ******************************************************************************/
 
+/* DEVICE_OBJECT.Flags */
+#define DO_DEVICE_HAS_NAME                0x00000040
+#define DO_SYSTEM_BOOT_PARTITION          0x00000100
+#define DO_LONG_TERM_REQUESTS             0x00000200
+#define DO_NEVER_LAST_DEVICE              0x00000400
+#define DO_LOW_PRIORITY_FILESYSTEM        0x00010000
+#define DO_SUPPORTS_TRANSACTIONS          0x00040000
+#define DO_FORCE_NEITHER_IO               0x00080000
+#define DO_VOLUME_DEVICE_OBJECT           0x00100000
+#define DO_SYSTEM_SYSTEM_PARTITION        0x00200000
+#define DO_SYSTEM_CRITICAL_PARTITION      0x00400000
+#define DO_DISALLOW_EXECUTE               0x00800000
+
 #ifndef _ARC_DDK_
 #define _ARC_DDK_
 typedef enum _CONFIGURATION_TYPE {
@@ -430,20 +443,6 @@ typedef struct _CONTROLLER_OBJECT {
   ULONG Spare1;
   LARGE_INTEGER Spare2;
 } CONTROLLER_OBJECT, *PCONTROLLER_OBJECT;
-
-/* DEVICE_OBJECT.Flags */
-
-#define DO_DEVICE_HAS_NAME                  0x00000040
-#define DO_SYSTEM_BOOT_PARTITION            0x00000100
-#define DO_LONG_TERM_REQUESTS               0x00000200
-#define DO_NEVER_LAST_DEVICE                0x00000400
-#define DO_LOW_PRIORITY_FILESYSTEM          0x00010000
-#define DO_SUPPORTS_TRANSACTIONS            0x00040000
-#define DO_FORCE_NEITHER_IO                 0x00080000
-#define DO_VOLUME_DEVICE_OBJECT             0x00100000
-#define DO_SYSTEM_SYSTEM_PARTITION          0x00200000
-#define DO_SYSTEM_CRITICAL_PARTITION        0x00400000
-#define DO_DISALLOW_EXECUTE                 0x00800000
 
 #define DRVO_REINIT_REGISTERED          0x00000008
 #define DRVO_INITIALIZED                0x00000010
@@ -1438,7 +1437,6 @@ typedef enum _BUS_DATA_TYPE {
   SgiInternalConfiguration,
   MaximumBusDataType
 } BUS_DATA_TYPE, *PBUS_DATA_TYPE;
-
 
 /* Hardware Abstraction Layer Types */
 
