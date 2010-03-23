@@ -1,7 +1,17 @@
 /******************************************************************************
  *                          Kernel Debugger Functions                         *
  ******************************************************************************/
+$if (_NTDDK_)
+NTSYSAPI
+ULONG
+NTAPI
+DbgPrompt(
+  IN PCCH Prompt,
+  OUT PCH Response,
+  IN ULONG MaximumResponseLength);
+$endif
 
+$if (_WDMDDK_)
 #ifndef _DBGNT_
 
 ULONG
@@ -179,3 +189,4 @@ KdChangeOption(
   OUT PVOID OutBuffer,
   OUT PULONG OutBufferNeeded OPTIONAL);
 #endif
+$endif

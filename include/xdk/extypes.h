@@ -1,6 +1,21 @@
 /******************************************************************************
  *                            Executive Types                                 *
  ******************************************************************************/
+$if (_NTDDK_)
+typedef struct _ZONE_SEGMENT_HEADER {
+  SINGLE_LIST_ENTRY SegmentList;
+  PVOID Reserved;
+} ZONE_SEGMENT_HEADER, *PZONE_SEGMENT_HEADER;
+
+typedef struct _ZONE_HEADER {
+  SINGLE_LIST_ENTRY FreeList;
+  SINGLE_LIST_ENTRY SegmentList;
+  ULONG BlockSize;
+  ULONG TotalSegmentSize;
+} ZONE_HEADER, *PZONE_HEADER;
+
+#define PROTECTED_POOL                    0x80000000
+$endif
 
 $if (_WDMDDK_)
 #define EX_RUNDOWN_ACTIVE                 0x1

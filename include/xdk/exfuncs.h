@@ -1,6 +1,72 @@
 /******************************************************************************
  *                          Executive Functions                               *
  ******************************************************************************/
+$if (_NTDDK_)
+static __inline PVOID
+ExAllocateFromZone(
+  IN PZONE_HEADER Zone)
+{
+  if (Zone->FreeList.Next)
+    Zone->FreeList.Next = Zone->FreeList.Next->Next;
+  return (PVOID) Zone->FreeList.Next;
+}
+
+static __inline PVOID
+ExFreeToZone(
+  IN PZONE_HEADER Zone,
+  IN PVOID Block)
+{
+  ((PSINGLE_LIST_ENTRY) Block)->Next = Zone->FreeList.Next;
+  Zone->FreeList.Next = ((PSINGLE_LIST_ENTRY) Block);
+  return ((PSINGLE_LIST_ENTRY) Block)->Next;
+}
+
+/*
+ * PVOID
+ * ExInterlockedAllocateFromZone(
+ *   IN PZONE_HEADER  Zone,
+ *   IN PKSPIN_LOCK  Lock)
+ */
+#define ExInterlockedAllocateFromZone(Zone, Lock) \
+    ((PVOID) ExInterlockedPopEntryList(&Zone->FreeList, Lock))
+
+/* PVOID
+ * ExInterlockedFreeToZone(
+ *  IN PZONE_HEADER  Zone,
+ *  IN PVOID  Block,
+ *  IN PKSPIN_LOCK  Lock);
+ */
+#define ExInterlockedFreeToZone(Zone, Block, Lock) \
+    ExInterlockedPushEntryList(&(Zone)->FreeList, (PSINGLE_LIST_ENTRY)(Block), Lock)
+
+/*
+ * BOOLEAN
+ * ExIsFullZone(
+ *  IN PZONE_HEADER  Zone)
+ */
+#define ExIsFullZone(Zone) \
+  ((Zone)->FreeList.Next == (PSINGLE_LIST_ENTRY) NULL)
+
+/* BOOLEAN
+ * ExIsObjectInFirstZoneSegment(
+ *     IN PZONE_HEADER Zone,
+ *     IN PVOID Object);
+ */
+#define ExIsObjectInFirstZoneSegment(Zone,Object) \
+    ((BOOLEAN)( ((PUCHAR)(Object) >= (PUCHAR)(Zone)->SegmentList.Next) && \
+                ((PUCHAR)(Object) <  (PUCHAR)(Zone)->SegmentList.Next + \
+                         (Zone)->TotalSegmentSize)) )
+
+#define ExAcquireResourceExclusive ExAcquireResourceExclusiveLite
+#define ExAcquireResourceShared ExAcquireResourceSharedLite
+#define ExConvertExclusiveToShared ExConvertExclusiveToSharedLite
+#define ExDeleteResource ExDeleteResourceLite
+#define ExInitializeResource ExInitializeResourceLite
+#define ExIsResourceAcquiredExclusive ExIsResourceAcquiredExclusiveLite
+#define ExIsResourceAcquiredShared ExIsResourceAcquiredSharedLite
+#define ExIsResourceAcquired ExIsResourceAcquiredSharedLite
+#define ExReleaseResourceForThread ExReleaseResourceForThreadLite
+$endif
 
 $if (_WDMDDK_)
 #define ExInterlockedIncrementLong(Addend,Lock) Exfi386InterlockedIncrementLong(Addend)
@@ -228,9 +294,56 @@ ExInitializeFastMutex(
   KeInitializeEvent(&FastMutex->Event, SynchronizationEvent, FALSE);
   return;
 }
+$endif
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
+$if (_NTDDK_)
+NTKERNELAPI
+NTSTATUS
+NTAPI
+ExExtendZone(
+  IN OUT PZONE_HEADER Zone,
+  IN OUT PVOID Segment,
+  IN ULONG SegmentSize);
 
+NTKERNELAPI
+NTSTATUS
+NTAPI
+ExInitializeZone(
+  OUT PZONE_HEADER Zone,
+  IN ULONG BlockSize,
+  IN OUT PVOID InitialSegment,
+  IN ULONG InitialSegmentSize);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+ExInterlockedExtendZone(
+  IN OUT PZONE_HEADER Zone,
+  IN OUT PVOID Segment,
+  IN ULONG SegmentSize,
+  IN OUT PKSPIN_LOCK Lock);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+ExUuidCreate(
+  OUT UUID *Uuid);
+
+NTKERNELAPI
+DECLSPEC_NORETURN
+VOID
+NTAPI
+ExRaiseAccessViolation(VOID);
+
+NTKERNELAPI
+DECLSPEC_NORETURN
+VOID
+NTAPI
+ExRaiseDatatypeMisalignment(VOID);
+$endif
+
+$if (_WDMDDK_)
 NTKERNELAPI
 VOID
 FASTCALL
@@ -606,9 +719,11 @@ VOID
 NTAPI
 ExUnregisterCallback(
   IN OUT PVOID CbRegistration);
+$endif
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
+$if (_WDMDDK_)
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 
 NTKERNELAPI

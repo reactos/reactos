@@ -1,7 +1,28 @@
 /******************************************************************************
  *                         Memory manager Types                               *
  ******************************************************************************/
+$if (_NTDDK_)
+typedef struct _PHYSICAL_MEMORY_RANGE {
+  PHYSICAL_ADDRESS BaseAddress;
+  LARGE_INTEGER NumberOfBytes;
+} PHYSICAL_MEMORY_RANGE, *PPHYSICAL_MEMORY_RANGE;
 
+typedef NTSTATUS
+(NTAPI *PMM_ROTATE_COPY_CALLBACK_FUNCTION)(
+  IN PMDL DestinationMdl,
+  IN PMDL SourceMdl,
+  IN PVOID Context);
+
+typedef enum _MM_ROTATE_DIRECTION {
+  MmToFrameBuffer,
+  MmToFrameBufferNoCopy,
+  MmToRegularMemory,
+  MmToRegularMemoryNoCopy,
+  MmMaximumRotateDirection
+} MM_ROTATE_DIRECTION, *PMM_ROTATE_DIRECTION;
+$endif
+
+$if (_WDMDDK_)
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 typedef ULONG NODE_REQUIREMENT;
 #define MM_ANY_NODE_OK                           0x80000000
@@ -140,5 +161,5 @@ typedef enum _MM_SYSTEM_SIZE {
   MmMediumSystem,
   MmLargeSystem
 } MM_SYSTEMSIZE;
-
+$endif
 

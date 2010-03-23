@@ -263,6 +263,242 @@ RtlFreeHeap(
   IN PVOID BaseAddress);
 
 $endif
+
+$if (_NTDDK_)
+
+#ifndef RTL_USE_AVL_TABLES
+
+NTSYSAPI
+VOID
+NTAPI
+RtlInitializeGenericTable(
+  OUT PRTL_GENERIC_TABLE Table,
+  IN PRTL_GENERIC_COMPARE_ROUTINE CompareRoutine,
+  IN PRTL_GENERIC_ALLOCATE_ROUTINE AllocateRoutine,
+  IN PRTL_GENERIC_FREE_ROUTINE FreeRoutine,
+  IN PVOID TableContext OPTIONAL);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlInsertElementGenericTable(
+  IN PRTL_GENERIC_TABLE Table,
+  IN PVOID Buffer,
+  IN CLONG BufferSize,
+  OUT PBOOLEAN NewElement OPTIONAL);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlInsertElementGenericTableFull(
+  IN PRTL_GENERIC_TABLE Table,
+  IN PVOID Buffer,
+  IN CLONG BufferSize,
+  OUT PBOOLEAN NewElement OPTIONAL,
+  IN PVOID NodeOrParent,
+  IN TABLE_SEARCH_RESULT SearchResult);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlDeleteElementGenericTable(
+  IN PRTL_GENERIC_TABLE Table,
+  IN PVOID Buffer);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlLookupElementGenericTable(
+  IN PRTL_GENERIC_TABLE Table,
+  IN PVOID Buffer);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlLookupElementGenericTableFull(
+  IN PRTL_GENERIC_TABLE Table,
+  IN PVOID Buffer,
+  OUT PVOID *NodeOrParent,
+  OUT TABLE_SEARCH_RESULT *SearchResult);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlEnumerateGenericTable(
+  IN PRTL_GENERIC_TABLE Table,
+  IN BOOLEAN Restart);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlEnumerateGenericTableWithoutSplaying(
+  IN PRTL_GENERIC_TABLE Table,
+  IN OUT PVOID *RestartKey);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlGetElementGenericTable(
+  IN PRTL_GENERIC_TABLE Table,
+  IN ULONG I);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlNumberGenericTableElements(
+  IN PRTL_GENERIC_TABLE Table);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlIsGenericTableEmpty(
+  IN PRTL_GENERIC_TABLE Table);
+
+#endif /* !RTL_USE_AVL_TABLES */
+
+#define RTL_STACK_WALKING_MODE_FRAMES_TO_SKIP_SHIFT     8
+
+NTSYSAPI
+PRTL_SPLAY_LINKS
+NTAPI
+RtlSplay(
+  IN OUT PRTL_SPLAY_LINKS Links);
+
+NTSYSAPI
+PRTL_SPLAY_LINKS
+NTAPI
+RtlDelete(
+  IN PRTL_SPLAY_LINKS Links);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlDeleteNoSplay(
+  IN PRTL_SPLAY_LINKS Links,
+  IN OUT PRTL_SPLAY_LINKS *Root);
+
+NTSYSAPI
+PRTL_SPLAY_LINKS
+NTAPI
+RtlSubtreeSuccessor(
+  IN PRTL_SPLAY_LINKS Links);
+
+NTSYSAPI
+PRTL_SPLAY_LINKS
+NTAPI
+RtlSubtreePredecessor(
+  IN PRTL_SPLAY_LINKS Links);
+
+NTSYSAPI
+PRTL_SPLAY_LINKS
+NTAPI
+RtlRealSuccessor(
+  IN PRTL_SPLAY_LINKS Links);
+
+NTSYSAPI
+PRTL_SPLAY_LINKS
+NTAPI
+RtlRealPredecessor(
+  IN PRTL_SPLAY_LINKS Links);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlPrefixUnicodeString(
+  IN PCUNICODE_STRING  String1,
+  IN PCUNICODE_STRING  String2,
+  IN BOOLEAN  CaseInSensitive);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlUpperString(
+  IN OUT PSTRING  DestinationString,
+  IN const PSTRING  SourceString);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlUpcaseUnicodeString(
+  IN OUT PUNICODE_STRING DestinationString,
+  IN PCUNICODE_STRING  SourceString,
+  IN BOOLEAN  AllocateDestinationString);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlMapGenericMask(
+  IN OUT PACCESS_MASK AccessMask,
+  IN PGENERIC_MAPPING GenericMapping);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlVolumeDeviceToDosName(
+  IN PVOID VolumeDeviceObject,
+  OUT PUNICODE_STRING DosName);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlGetVersion(
+  IN OUT PRTL_OSVERSIONINFOW lpVersionInformation);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlVerifyVersionInfo(
+  IN PRTL_OSVERSIONINFOEXW VersionInfo,
+  IN ULONG TypeMask,
+  IN ULONGLONG ConditionMask);
+
+NTSYSAPI
+LONG
+NTAPI
+RtlCompareString(
+  IN const PSTRING String1,
+  IN const PSTRING String2,
+  IN BOOLEAN CaseInSensitive);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlCopyString(
+  OUT PSTRING DestinationString,
+  IN const PSTRING SourceString OPTIONAL);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlEqualString(
+  IN const PSTRING String1,
+  IN const PSTRING String2,
+  IN BOOLEAN CaseInSensitive);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlCharToInteger(
+  IN PCSZ String,
+  IN ULONG Base OPTIONAL,
+  OUT PULONG Value);
+
+NTSYSAPI
+CHAR
+NTAPI
+RtlUpperChar(
+  IN CHAR Character);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlWalkFrameChain(
+  OUT PVOID *Callers,
+  IN ULONG Count,
+  IN ULONG Flags);
+
+$endif
+
 $if (_WDMDDK_)
 NTSYSAPI
 BOOLEAN
@@ -834,7 +1070,11 @@ RtlWriteRegistryValue(
   IN PVOID ValueData,
   IN ULONG ValueLength);
 
-#endif // (NTDDI_VERSION >= NTDDI_WIN2K)
+$endif
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
+$if (_WDMDDK_)
 
 #if (NTDDI_VERSION >= NTDDI_WIN2KSP3)
 NTSYSAPI
@@ -845,7 +1085,121 @@ RtlPrefetchMemoryNonTemporal(
   IN SIZE_T Length);
 #endif
 
+$endif
+
 #if (NTDDI_VERSION >= NTDDI_WINXP)
+
+$if (_NTDDK_)
+
+NTSYSAPI
+VOID
+NTAPI
+RtlInitializeGenericTableAvl(
+  OUT PRTL_AVL_TABLE Table,
+  IN PRTL_AVL_COMPARE_ROUTINE CompareRoutine,
+  IN PRTL_AVL_ALLOCATE_ROUTINE AllocateRoutine,
+  IN PRTL_AVL_FREE_ROUTINE FreeRoutine,
+  IN PVOID TableContext OPTIONAL);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlInsertElementGenericTableAvl(
+  IN PRTL_AVL_TABLE Table,
+  IN PVOID Buffer,
+  IN CLONG BufferSize,
+  OUT PBOOLEAN NewElement OPTIONAL);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlInsertElementGenericTableFullAvl(
+  IN PRTL_AVL_TABLE Table,
+  IN PVOID Buffer,
+  IN CLONG BufferSize,
+  OUT PBOOLEAN NewElement OPTIONAL,
+  IN PVOID NodeOrParent,
+  IN TABLE_SEARCH_RESULT SearchResult);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlDeleteElementGenericTableAvl(
+  IN PRTL_AVL_TABLE Table,
+  IN PVOID Buffer);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlLookupElementGenericTableAvl(
+  IN PRTL_AVL_TABLE Table,
+  IN PVOID Buffer);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlLookupElementGenericTableFullAvl(
+  IN PRTL_AVL_TABLE Table,
+  IN PVOID Buffer,
+  OUT PVOID *NodeOrParent,
+  OUT TABLE_SEARCH_RESULT *SearchResult);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlEnumerateGenericTableAvl(
+  IN PRTL_AVL_TABLE Table,
+  IN BOOLEAN Restart);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlEnumerateGenericTableWithoutSplayingAvl(
+  IN PRTL_AVL_TABLE Table,
+  IN OUT PVOID *RestartKey);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlLookupFirstMatchingElementGenericTableAvl(
+  IN PRTL_AVL_TABLE Table,
+  IN PVOID Buffer,
+  OUT PVOID *RestartKey);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlEnumerateGenericTableLikeADirectory(
+  IN PRTL_AVL_TABLE Table,
+  IN PRTL_AVL_MATCH_FUNCTION MatchFunction OPTIONAL,
+  IN PVOID MatchData OPTIONAL,
+  IN ULONG NextFlag,
+  IN OUT PVOID *RestartKey,
+  IN OUT PULONG DeleteCount,
+  IN PVOID Buffer);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlGetElementGenericTableAvl(
+  IN PRTL_AVL_TABLE Table,
+  IN ULONG I);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlNumberGenericTableElementsAvl(
+  IN PRTL_AVL_TABLE Table);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlIsGenericTableEmptyAvl(
+  IN PRTL_AVL_TABLE Table);
+
+$endif
+
+$if (_WDMDDK_)
 
 NTSYSAPI
 VOID
@@ -883,9 +1237,58 @@ RtlHashUnicodeString(
   IN ULONG HashAlgorithm,
   OUT PULONG HashValue);
 
-#endif // (NTDDI_VERSION >= NTDDI_WINXP)
+$endif
+
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
+
+$if (_NTDDK_)
+
+NTSYSAPI
+VOID
+NTAPI
+RtlRunOnceInitialize(
+  OUT PRTL_RUN_ONCE RunOnce);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlRunOnceExecuteOnce(
+  IN OUT PRTL_RUN_ONCE RunOnce,
+  IN PRTL_RUN_ONCE_INIT_FN InitFn,
+  IN OUT PVOID Parameter OPTIONAL,
+  OUT PVOID *Context OPTIONAL);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlRunOnceBeginInitialize(
+  IN OUT PRTL_RUN_ONCE RunOnce,
+  IN ULONG Flags,
+  OUT PVOID *Context OPTIONAL);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlRunOnceComplete(
+  IN OUT PRTL_RUN_ONCE RunOnce,
+  IN ULONG Flags,
+  IN PVOID Context OPTIONAL);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlGetProductInfo(
+  IN ULONG OSMajorVersion,
+  IN ULONG OSMinorVersion,
+  IN ULONG SpMajorVersion,
+  IN ULONG SpMinorVersion,
+  OUT PULONG ReturnedProductType);
+
+$endif
+
+$if (_WDMDDK_)
 
 NTSYSAPI
 ULONG
@@ -936,9 +1339,117 @@ RtlCmEncodeMemIoResource(
   IN ULONGLONG Length,
   IN ULONGLONG Start);
 
+$endif
+
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
+
+$if (_NTDDK_)
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlCreateHashTable(
+  IN OUT PRTL_DYNAMIC_HASH_TABLE *HashTable OPTIONAL,
+  IN ULONG Shift,
+  IN ULONG Flags);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlDeleteHashTable(
+  IN PRTL_DYNAMIC_HASH_TABLE HashTable);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlInsertEntryHashTable(
+  IN PRTL_DYNAMIC_HASH_TABLE HashTable,
+  IN PRTL_DYNAMIC_HASH_TABLE_ENTRY Entry,
+  IN ULONG_PTR Signature,
+  IN OUT PRTL_DYNAMIC_HASH_TABLE_CONTEXT Context OPTIONAL);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlRemoveEntryHashTable(
+  IN PRTL_DYNAMIC_HASH_TABLE HashTable,
+  IN PRTL_DYNAMIC_HASH_TABLE_ENTRY Entry,
+  IN OUT PRTL_DYNAMIC_HASH_TABLE_CONTEXT Context OPTIONAL);
+
+NTSYSAPI
+PRTL_DYNAMIC_HASH_TABLE_ENTRY
+NTAPI
+RtlLookupEntryHashTable(
+  IN PRTL_DYNAMIC_HASH_TABLE HashTable,
+  IN ULONG_PTR Signature,
+  OUT PRTL_DYNAMIC_HASH_TABLE_CONTEXT Context OPTIONAL);
+
+NTSYSAPI
+PRTL_DYNAMIC_HASH_TABLE_ENTRY
+NTAPI
+RtlGetNextEntryHashTable(
+  IN PRTL_DYNAMIC_HASH_TABLE HashTable,
+  IN PRTL_DYNAMIC_HASH_TABLE_CONTEXT Context);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlInitEnumerationHashTable(
+  IN PRTL_DYNAMIC_HASH_TABLE HashTable,
+  OUT PRTL_DYNAMIC_HASH_TABLE_ENUMERATOR Enumerator);
+
+NTSYSAPI
+PRTL_DYNAMIC_HASH_TABLE_ENTRY
+NTAPI
+RtlEnumerateEntryHashTable(
+  IN PRTL_DYNAMIC_HASH_TABLE HashTable,
+  IN OUT PRTL_DYNAMIC_HASH_TABLE_ENUMERATOR Enumerator);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlEndEnumerationHashTable(
+  IN PRTL_DYNAMIC_HASH_TABLE HashTable,
+  IN OUT PRTL_DYNAMIC_HASH_TABLE_ENUMERATOR Enumerator);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlInitWeakEnumerationHashTable(
+  IN PRTL_DYNAMIC_HASH_TABLE HashTable,
+  OUT PRTL_DYNAMIC_HASH_TABLE_ENUMERATOR Enumerator);
+
+NTSYSAPI
+PRTL_DYNAMIC_HASH_TABLE_ENTRY
+NTAPI
+RtlWeaklyEnumerateEntryHashTable(
+  IN PRTL_DYNAMIC_HASH_TABLE HashTable,
+  IN OUT PRTL_DYNAMIC_HASH_TABLE_ENUMERATOR Enumerator);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlEndWeakEnumerationHashTable(
+  IN PRTL_DYNAMIC_HASH_TABLE HashTable,
+  IN OUT PRTL_DYNAMIC_HASH_TABLE_ENUMERATOR Enumerator);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlExpandHashTable(
+  IN PRTL_DYNAMIC_HASH_TABLE HashTable);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlContractHashTable(
+  IN PRTL_DYNAMIC_HASH_TABLE HashTable);
+
+$endif
+
+$if (_WDMDDK_)
 
 NTSYSAPI
 NTSTATUS
@@ -966,7 +1477,11 @@ NTAPI
 RtlGetEnabledExtendedFeatures(
   IN ULONG64 FeatureMask);
 
+$endif
+
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
+
+$if (_WDMDDK_)
 
 #if !defined(MIDL_PASS)
 /* inline funftions */
@@ -1112,8 +1627,12 @@ RtlInitEmptyUnicodeString(
   UnicodeString->MaximumLength = BufferSize;
   UnicodeString->Buffer = Buffer;
 }
+$endif
 
 #if defined(_AMD64_) || defined(_IA64_)
+
+$if (_WDMDDK_)
+
 static __inline
 LARGE_INTEGER
 NTAPI_INLINE
@@ -1140,7 +1659,44 @@ RtlExtendedLargeIntegerDivide(
     *Remainder = (ULONG)(Dividend.QuadPart % Divisor);
   return ret;
 }
+
+$endif
+
+$if (_NTDDK_)
+
+//DECLSPEC_DEPRECATED_DDK_WINXP
+FORCEINLINE
+LARGE_INTEGER
+NTAPI_INLINE
+RtlLargeIntegerDivide(
+  IN LARGE_INTEGER Dividend,
+  IN LARGE_INTEGER Divisor,
+  OUT PLARGE_INTEGER Remainder OPTIONAL)
+{
+  LARGE_INTEGER ret;
+  ret.QuadPart = Dividend.QuadPart / Divisor.QuadPart;
+  if (Remainder)
+    Remainder->QuadPart = Dividend.QuadPart % Divisor.QuadPart;
+  return ret;
+}
+
+#else
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+NTSYSAPI
+LARGE_INTEGER
+NTAPI
+RtlLargeIntegerDivide(
+  IN LARGE_INTEGER Dividend,
+  IN LARGE_INTEGER Divisor,
+  OUT PLARGE_INTEGER Remainder OPTIONAL);
 #endif
+
+$endif
+
+#endif /* defined(_AMD64_) || defined(_IA64_) */
+
+$if (_WDMDDK_)
 
 #if defined(_AMD64_)
 
@@ -1503,4 +2059,201 @@ RTLVERLIB_DDI(RtlIsServicePackVersionInstalled)(
 #define RtlInterlockedClearBitsDiscardReturn(Flags, Flag) \
     RtlInterlockedAndBitsDiscardReturn(Flags, ~(Flag))
 
+$endif
 
+$if (_NTDDK_)
+
+#ifdef RTL_USE_AVL_TABLES
+
+#define RtlInitializeGenericTable               RtlInitializeGenericTableAvl
+#define RtlInsertElementGenericTable            RtlInsertElementGenericTableAvl
+#define RtlInsertElementGenericTableFull        RtlInsertElementGenericTableFullAvl
+#define RtlDeleteElementGenericTable            RtlDeleteElementGenericTableAvl
+#define RtlLookupElementGenericTable            RtlLookupElementGenericTableAvl
+#define RtlLookupElementGenericTableFull        RtlLookupElementGenericTableFullAvl
+#define RtlEnumerateGenericTable                RtlEnumerateGenericTableAvl
+#define RtlEnumerateGenericTableWithoutSplaying RtlEnumerateGenericTableWithoutSplayingAvl
+#define RtlGetElementGenericTable               RtlGetElementGenericTableAvl
+#define RtlNumberGenericTableElements           RtlNumberGenericTableElementsAvl
+#define RtlIsGenericTableEmpty                  RtlIsGenericTableEmptyAvl
+
+#endif /* RTL_USE_AVL_TABLES */
+
+#define RtlInitializeSplayLinks(Links) {    \
+  PRTL_SPLAY_LINKS _SplayLinks;            \
+  _SplayLinks = (PRTL_SPLAY_LINKS)(Links); \
+  _SplayLinks->Parent = _SplayLinks;   \
+  _SplayLinks->LeftChild = NULL;       \
+  _SplayLinks->RightChild = NULL;      \
+}
+
+#define RtlIsLeftChild(Links) \
+    (RtlLeftChild(RtlParent(Links)) == (PRTL_SPLAY_LINKS)(Links))
+
+#define RtlIsRightChild(Links) \
+    (RtlRightChild(RtlParent(Links)) == (PRTL_SPLAY_LINKS)(Links))
+
+#define RtlRightChild(Links) \
+    ((PRTL_SPLAY_LINKS)(Links))->RightChild
+
+#define RtlIsRoot(Links) \
+    (RtlParent(Links) == (PRTL_SPLAY_LINKS)(Links))
+
+#define RtlLeftChild(Links) \
+    ((PRTL_SPLAY_LINKS)(Links))->LeftChild
+
+#define RtlParent(Links) \
+    ((PRTL_SPLAY_LINKS)(Links))->Parent
+
+#define RtlInsertAsLeftChild(ParentLinks,ChildLinks)    \
+    {                                                   \
+        PRTL_SPLAY_LINKS _SplayParent;                  \
+        PRTL_SPLAY_LINKS _SplayChild;                   \
+        _SplayParent = (PRTL_SPLAY_LINKS)(ParentLinks); \
+        _SplayChild = (PRTL_SPLAY_LINKS)(ChildLinks);   \
+        _SplayParent->LeftChild = _SplayChild;          \
+        _SplayChild->Parent = _SplayParent;             \
+    }
+
+#define RtlInsertAsRightChild(ParentLinks,ChildLinks)   \
+    {                                                   \
+        PRTL_SPLAY_LINKS _SplayParent;                  \
+        PRTL_SPLAY_LINKS _SplayChild;                   \
+        _SplayParent = (PRTL_SPLAY_LINKS)(ParentLinks); \
+        _SplayChild = (PRTL_SPLAY_LINKS)(ChildLinks);   \
+        _SplayParent->RightChild = _SplayChild;         \
+        _SplayChild->Parent = _SplayParent;             \
+    }
+
+#if !defined(MIDL_PASS)
+
+FORCEINLINE
+LUID
+NTAPI_INLINE
+RtlConvertLongToLuid(
+  IN LONG Val)
+{
+  LUID Luid;
+  LARGE_INTEGER Temp;
+
+  Temp.QuadPart = Val;
+  Luid.LowPart = Temp.u.LowPart;
+  Luid.HighPart = Temp.u.HighPart;
+  return Luid;
+}
+
+FORCEINLINE
+LUID
+NTAPI_INLINE
+RtlConvertUlongToLuid(
+  IN ULONG Val)
+{
+  LUID Luid;
+
+  Luid.LowPart = Val;
+  Luid.HighPart = 0;
+  return Luid;
+}
+
+#endif /* !defined(MIDL_PASS) */
+
+#if (defined(_M_AMD64) || defined(_M_IA64)) && !defined(_REALLY_GET_CALLERS_CALLER_)
+#define RtlGetCallersAddress(CallersAddress, CallersCaller) \
+    *CallersAddress = (PVOID)_ReturnAddress(); \
+    *CallersCaller = NULL;
+#else
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+NTSYSAPI
+VOID
+NTAPI
+RtlGetCallersAddress(
+  OUT PVOID *CallersAddress,
+  OUT PVOID *CallersCaller);
+#endif
+#endif
+
+#if !defined(MIDL_PASS) && !defined(SORTPP_PASS)
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+
+FORCEINLINE
+VOID
+NTAPI
+RtlInitHashTableContext(
+  IN OUT PRTL_DYNAMIC_HASH_TABLE_CONTEXT Context)
+{
+  Context->ChainHead = NULL;
+  Context->PrevLinkage = NULL;
+}
+
+FORCEINLINE
+VOID
+NTAPI
+RtlInitHashTableContextFromEnumerator(
+  IN OUT PRTL_DYNAMIC_HASH_TABLE_CONTEXT Context,
+  IN PRTL_DYNAMIC_HASH_TABLE_ENUMERATOR Enumerator)
+{
+  Context->ChainHead = Enumerator->ChainHead;
+  Context->PrevLinkage = Enumerator->HashEntry.Linkage.Blink;
+}
+
+FORCEINLINE
+VOID
+NTAPI
+RtlReleaseHashTableContext(
+  IN OUT PRTL_DYNAMIC_HASH_TABLE_CONTEXT Context)
+{
+  UNREFERENCED_PARAMETER(Context);
+  return;
+}
+
+FORCEINLINE
+ULONG
+NTAPI
+RtlTotalBucketsHashTable(
+  IN PRTL_DYNAMIC_HASH_TABLE HashTable)
+{
+  return HashTable->TableSize;
+}
+
+FORCEINLINE
+ULONG
+NTAPI
+RtlNonEmptyBucketsHashTable(
+  IN PRTL_DYNAMIC_HASH_TABLE HashTable)
+{
+  return HashTable->NonEmptyBuckets;
+}
+
+FORCEINLINE
+ULONG
+NTAPI
+RtlEmptyBucketsHashTable(
+  IN PRTL_DYNAMIC_HASH_TABLE HashTable)
+{
+  return HashTable->TableSize - HashTable->NonEmptyBuckets;
+}
+
+FORCEINLINE
+ULONG
+NTAPI
+RtlTotalEntriesHashTable(
+  IN PRTL_DYNAMIC_HASH_TABLE HashTable)
+{
+  return HashTable->NumEntries;
+}
+
+FORCEINLINE
+ULONG
+NTAPI
+RtlActiveEnumeratorsHashTable(
+  IN PRTL_DYNAMIC_HASH_TABLE HashTable)
+{
+  return HashTable->NumEnumerators;
+}
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
+
+#endif /* !defined(MIDL_PASS) && !defined(SORTPP_PASS) */
+
+$endif

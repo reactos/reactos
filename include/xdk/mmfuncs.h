@@ -1,7 +1,7 @@
 /******************************************************************************
  *                       Memory manager Functions                             *
  ******************************************************************************/
-
+$if (_WDMDDK_)
 /* Alignment Macros */
 #define ALIGN_DOWN_BY(size, align) \
     ((ULONG_PTR)(size) & ~((ULONG_PTR)(align) - 1))
@@ -174,9 +174,186 @@
     ASSERT(((_Mdl)->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA) == 0); \
   } \
 }
+$endif
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
+$if (_NTDDK_)
+NTKERNELAPI
+PPHYSICAL_MEMORY_RANGE
+NTAPI
+MmGetPhysicalMemoryRanges(VOID);
 
+NTKERNELAPI
+PHYSICAL_ADDRESS
+NTAPI
+MmGetPhysicalAddress(
+  IN PVOID BaseAddress);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+MmIsNonPagedSystemAddressValid(
+  IN PVOID VirtualAddress);
+
+NTKERNELAPI
+PVOID
+NTAPI
+MmAllocateNonCachedMemory(
+  IN SIZE_T NumberOfBytes);
+
+NTKERNELAPI
+VOID
+NTAPI
+MmFreeNonCachedMemory(
+  IN PVOID BaseAddress,
+  IN SIZE_T NumberOfBytes);
+
+NTKERNELAPI
+PVOID
+NTAPI
+MmGetVirtualForPhysical(
+  IN PHYSICAL_ADDRESS PhysicalAddress);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+MmMapUserAddressesToPage(
+  IN PVOID BaseAddress,
+  IN SIZE_T NumberOfBytes,
+  IN PVOID PageAddress);
+
+NTKERNELAPI
+PVOID
+NTAPI
+MmMapVideoDisplay(
+  IN PHYSICAL_ADDRESS PhysicalAddress,
+  IN SIZE_T NumberOfBytes,
+  IN MEMORY_CACHING_TYPE CacheType);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+MmMapViewInSessionSpace(
+  IN PVOID Section,
+  OUT PVOID *MappedBase,
+  IN OUT PSIZE_T ViewSize);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+MmMapViewInSystemSpace(
+  IN PVOID Section,
+  OUT PVOID *MappedBase,
+  IN OUT PSIZE_T ViewSize);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+MmIsAddressValid(
+  IN PVOID VirtualAddress);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+MmIsThisAnNtAsSystem(VOID);
+
+NTKERNELAPI
+VOID
+NTAPI
+MmLockPagableSectionByHandle(
+  IN PVOID ImageSectionHandle);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+MmUnmapViewInSessionSpace(
+  IN PVOID MappedBase);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+MmUnmapViewInSystemSpace(
+  IN PVOID MappedBase);
+
+NTKERNELAPI
+VOID
+NTAPI
+MmUnsecureVirtualMemory(
+  IN HANDLE SecureHandle);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+MmRemovePhysicalMemory(
+  IN PPHYSICAL_ADDRESS StartAddress,
+  IN OUT PLARGE_INTEGER NumberOfBytes);
+
+NTKERNELAPI
+HANDLE
+NTAPI
+MmSecureVirtualMemory(
+  IN PVOID Address,
+  IN SIZE_T Size,
+  IN ULONG ProbeMode);
+
+NTKERNELAPI
+VOID
+NTAPI
+MmUnmapVideoDisplay(
+  IN PVOID BaseAddress,
+  IN SIZE_T NumberOfBytes);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+MmAddPhysicalMemory(
+  IN PPHYSICAL_ADDRESS StartAddress,
+  IN OUT PLARGE_INTEGER NumberOfBytes);
+
+NTKERNELAPI
+PVOID
+NTAPI
+MmAllocateContiguousMemory(
+  IN SIZE_T NumberOfBytes,
+  IN PHYSICAL_ADDRESS HighestAcceptableAddress);
+
+NTKERNELAPI
+PVOID
+NTAPI
+MmAllocateContiguousMemorySpecifyCache(
+  IN SIZE_T NumberOfBytes,
+  IN PHYSICAL_ADDRESS LowestAcceptableAddress,
+  IN PHYSICAL_ADDRESS HighestAcceptableAddress,
+  IN PHYSICAL_ADDRESS BoundaryAddressMultiple OPTIONAL,
+  IN MEMORY_CACHING_TYPE CacheType);
+
+NTKERNELAPI
+PVOID
+NTAPI
+MmAllocateContiguousMemorySpecifyCacheNode(
+  IN SIZE_T NumberOfBytes,
+  IN PHYSICAL_ADDRESS LowestAcceptableAddress,
+  IN PHYSICAL_ADDRESS HighestAcceptableAddress,
+  IN PHYSICAL_ADDRESS BoundaryAddressMultiple OPTIONAL,
+  IN MEMORY_CACHING_TYPE CacheType,
+  IN NODE_REQUIREMENT PreferredNode);
+
+NTKERNELAPI
+VOID
+NTAPI
+MmFreeContiguousMemory(
+  IN PVOID BaseAddress);
+
+NTKERNELAPI
+VOID
+NTAPI
+MmFreeContiguousMemorySpecifyCache(
+  IN PVOID BaseAddress,
+  IN SIZE_T NumberOfBytes,
+  IN MEMORY_CACHING_TYPE CacheType);
+$endif
+
+$if (_WDMDDK_)
 NTKERNELAPI
 PVOID
 NTAPI
@@ -359,6 +536,7 @@ MmAllocateContiguousMemorySpecifyCacheNode(
   IN PHYSICAL_ADDRESS BoundaryAddressMultiple OPTIONAL,
   IN MEMORY_CACHING_TYPE CacheType,
   IN NODE_REQUIREMENT PreferredNode);
+$endif
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
@@ -425,14 +603,23 @@ MmAddVerifierThunks(
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
 #if (NTDDI_VERSION >= NTDDI_WS03)
+$if (_NTDDK_)
+NTKERNELAPI
+NTSTATUS
+NTAPI
+MmCreateMirror(VOID);
+$endif
+$if (_WDMDDK_)
 NTKERNELAPI
 LOGICAL
 NTAPI
 MmIsIoSpaceActive(
   IN PHYSICAL_ADDRESS StartAddress,
   IN SIZE_T NumberOfBytes);
+$endif
 #endif
 
+$if (_WDMDDK_)
 #if (NTDDI_VERSION >= NTDDI_WS03SP1)
 NTKERNELAPI
 PMDL
@@ -445,12 +632,27 @@ MmAllocatePagesForMdlEx(
   IN MEMORY_CACHING_TYPE CacheType,
   IN ULONG Flags);
 #endif
+$endif
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
+$if (_NTDDK_)
+NTSTATUS
+NTAPI
+MmRotatePhysicalView(
+  IN PVOID VirtualAddress,
+  IN OUT PSIZE_T NumberOfBytes,
+  IN PMDLX NewMdl OPTIONAL,
+  IN MM_ROTATE_DIRECTION Direction,
+  IN PMM_ROTATE_COPY_CALLBACK_FUNCTION CopyFunction,
+  IN PVOID Context OPTIONAL);
+$endif
+
+$if (_WDMDDK_)
 NTKERNELAPI
 LOGICAL
 NTAPI
 MmIsDriverVerifyingByAddress(
   IN PVOID AddressWithinSection);
+$endif
 #endif
 

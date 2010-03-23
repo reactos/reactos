@@ -1,7 +1,16 @@
 /******************************************************************************
  *                              Kernel Functions                              *
  ******************************************************************************/
+$if (_NTDDK_)
+NTKERNELAPI
+VOID
+FASTCALL
+KeInvalidateRangeAllCaches(
+  IN PVOID BaseAddress,
+  IN ULONG Length);
+$endif
 
+$if (_WDMDDK_)
 NTHALAPI
 KIRQL
 NTAPI
@@ -20,8 +29,54 @@ VOID
 NTAPI
 KeClearEvent(
   IN OUT PRKEVENT Event);
+$endif
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+$if (_NTDDK_)
+
+NTKERNELAPI
+VOID
+NTAPI
+KeSetImportanceDpc(
+  IN OUT PRKDPC Dpc,
+  IN KDPC_IMPORTANCE Importance);
+
+NTKERNELAPI
+LONG
+NTAPI
+KePulseEvent(
+  IN OUT PRKEVENT Event,
+  IN KPRIORITY Increment,
+  IN BOOLEAN Wait);
+
+NTKERNELAPI
+LONG
+NTAPI
+KeSetBasePriorityThread(
+  IN OUT PRKTHREAD Thread,
+  IN LONG Increment);
+
+NTKERNELAPI
+VOID
+NTAPI
+KeEnterCriticalRegion(VOID);
+
+NTKERNELAPI
+VOID
+NTAPI
+KeLeaveCriticalRegion(VOID);
+
+NTKERNELAPI
+DECLSPEC_NORETURN
+VOID
+NTAPI
+KeBugCheck(
+  IN ULONG BugCheckCode);
+
+$endif
+
+$if (_WDMDDK_)
 
 #if defined(_NTDDK_) || defined(_NTIFS_)
 NTKERNELAPI
@@ -41,7 +96,11 @@ ProbeForWrite(
   IN SIZE_T Length,
   IN ULONG Alignment);
 
+$endif
+
 #if defined(SINGLE_GROUP_LEGACY_API)
+
+$if (_WDMDDK_)
 NTKERNELAPI
 VOID
 NTAPI
@@ -64,8 +123,25 @@ NTKERNELAPI
 KAFFINITY
 NTAPI
 KeQueryActiveProcessors(VOID);
-#endif
+$endif
 
+$if (_NTDDK_)
+NTKERNELAPI
+VOID
+NTAPI
+KeSetTargetProcessorDpc(
+  IN OUT PRKDPC Dpc,
+  IN CCHAR Number);
+
+NTKERNELAPI
+KAFFINITY
+NTAPI
+KeQueryActiveProcessors(VOID);
+$endif
+
+#endif /* defined(SINGLE_GROUP_LEGACY_API) */
+
+$if (_WDMDDK_)
 #if !defined(_M_AMD64)
 
 NTKERNELAPI
@@ -379,11 +455,19 @@ KeWaitForSingleObject(
   IN KPROCESSOR_MODE WaitMode,
   IN BOOLEAN Alertable,
   IN PLARGE_INTEGER Timeout OPTIONAL);
+$endif
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
+$if (_NTDDK_)
+NTKERNELAPI
+BOOLEAN
+NTAPI
+KeAreApcsDisabled(VOID);
+$endif
 
+$if (_WDMDDK_)
 _DECL_HAL_KE_IMPORT
 VOID
 FASTCALL
@@ -446,9 +530,11 @@ VOID
 FASTCALL
 KeReleaseInStackQueuedSpinLock(
   IN PKLOCK_QUEUE_HANDLE LockHandle);
+$endif
 
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
+$if (_WDMDDK_)
 #if (NTDDI_VERSION >= NTDDI_WINXPSP1)
 
 NTKERNELAPI
@@ -474,9 +560,17 @@ VOID
 NTAPI
 KeFlushQueuedDpcs(VOID);
 #endif /* (NTDDI_VERSION >= NTDDI_WINXPSP2) */
+$endif
 
 #if (NTDDI_VERSION >= NTDDI_WS03)
+$if (_NTDDK_)
+NTKERNELAPI
+BOOLEAN
+NTAPI
+KeInvalidateAllCaches(VOID);
+$endif
 
+$if (_WDMDDK_)
 NTKERNELAPI
 PVOID
 NTAPI
@@ -523,11 +617,32 @@ BOOLEAN
 FASTCALL
 KeTestSpinLock(
   IN PKSPIN_LOCK SpinLock);
+$endif
 
 #endif /* (NTDDI_VERSION >= NTDDI_WS03) */
 
 #if (NTDDI_VERSION >= NTDDI_WS03SP1)
+$if (_NTDDK_)
+NTKERNELAPI
+NTSTATUS
+NTAPI
+KeExpandKernelStackAndCallout(
+  IN PEXPAND_STACK_CALLOUT Callout,
+  IN PVOID Parameter OPTIONAL,
+  IN SIZE_T Size);
 
+NTKERNELAPI
+VOID
+NTAPI
+KeEnterGuardedRegion(VOID);
+
+NTKERNELAPI
+VOID
+NTAPI
+KeLeaveGuardedRegion(VOID);
+$endif
+
+$if (_WDMDDK_)
 NTKERNELAPI
 BOOLEAN
 FASTCALL
@@ -584,11 +699,12 @@ BOOLEAN
 FASTCALL
 KeTryToAcquireGuardedMutex(
   IN OUT PKGUARDED_MUTEX GuardedMutex);
+$endif
 
 #endif /* (NTDDI_VERSION >= NTDDI_WS03SP1) */
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
-
+$if (_WDMDDK_)
 NTKERNELAPI
 VOID
 FASTCALL
@@ -607,8 +723,23 @@ NTSTATUS
 NTAPI
 KeQueryDpcWatchdogInformation(
   OUT PKDPC_WATCHDOG_INFORMATION WatchdogInformation);
+$endif
 
 #if defined(SINGLE_GROUP_LEGACY_API)
+$if (_NTDDK_)
+NTKERNELAPI
+ULONG
+NTAPI
+KeQueryActiveProcessorCount(
+  OUT PKAFFINITY ActiveProcessors OPTIONAL);
+
+NTKERNELAPI
+ULONG
+NTAPI
+KeQueryMaximumProcessorCount(VOID);
+$endif
+
+$if (_WDMDDK_)
 NTKERNELAPI
 KAFFINITY
 NTAPI
@@ -631,10 +762,12 @@ NTKERNELAPI
 ULONG
 NTAPI
 KeQueryMaximumProcessorCount(VOID);
+$endif
 #endif
 
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
+$if (_WDMDDK_)
 #if (NTDDI_VERSION >= NTDDI_WS08)
 
 PVOID
@@ -648,9 +781,95 @@ KeDeregisterProcessorChangeCallback(
   IN PVOID CallbackHandle);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WS08) */
+$endif
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
 
+$if (_NTDDK_)
+NTKERNELAPI
+ULONG
+NTAPI
+KeQueryActiveProcessorCountEx(
+  IN USHORT GroupNumber);
+
+NTKERNELAPI
+ULONG
+NTAPI
+KeQueryMaximumProcessorCountEx(
+  IN USHORT GroupNumber);
+
+NTKERNELAPI
+USHORT
+NTAPI
+KeQueryActiveGroupCount(VOID);
+
+NTKERNELAPI
+USHORT
+NTAPI
+KeQueryMaximumGroupCount(VOID);
+
+NTKERNELAPI
+KAFFINITY
+NTAPI
+KeQueryGroupAffinity(
+  IN USHORT GroupNumber);
+
+NTKERNELAPI
+ULONG
+NTAPI
+KeGetCurrentProcessorNumberEx(
+  OUT PPROCESSOR_NUMBER ProcNumber OPTIONAL);
+
+NTKERNELAPI
+VOID
+NTAPI
+KeQueryNodeActiveAffinity(
+  IN USHORT NodeNumber,
+  OUT PGROUP_AFFINITY Affinity OPTIONAL,
+  OUT PUSHORT Count OPTIONAL);
+
+NTKERNELAPI
+USHORT
+NTAPI
+KeQueryNodeMaximumProcessorCount(
+  IN USHORT NodeNumber);
+
+NTKERNELAPI
+USHORT
+NTAPI
+KeQueryHighestNodeNumber(VOID);
+
+NTKERNELAPI
+USHORT
+NTAPI
+KeGetCurrentNodeNumber(VOID);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+KeQueryLogicalProcessorRelationship(
+  IN PPROCESSOR_NUMBER ProcessorNumber OPTIONAL,
+  IN LOGICAL_PROCESSOR_RELATIONSHIP RelationshipType,
+  OUT PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX Information OPTIONAL,
+  IN OUT PULONG Length);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+KeSetHardwareCounterConfiguration(
+  IN PHARDWARE_COUNTER CounterArray,
+  IN ULONG Count);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+KeQueryHardwareCounterConfiguration(
+  OUT PHARDWARE_COUNTER CounterArray,
+  IN ULONG MaximumCount,
+  OUT PULONG Count);
+$endif
+
+$if (_WDMDDK_)
 ULONG64
 NTAPI
 KeQueryTotalCycleTimeProcess(
@@ -788,9 +1007,11 @@ ULONG
 NTAPI
 KeGetProcessorIndexFromNumber(
   IN PPROCESSOR_NUMBER ProcNumber);
+$endif
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
+$if (_WDMDDK_)
 #if !defined(_IA64_)
 NTHALAPI
 VOID
@@ -827,4 +1048,5 @@ KeFlushWriteBuffer(VOID);
 #endif /* DBG */
 
 #define PAGED_CODE_LOCKED() NOP_FUNCTION;
+$endif
 

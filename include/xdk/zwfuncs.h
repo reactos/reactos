@@ -2,13 +2,131 @@
  *                            ZwXxx Functions                                 *
  ******************************************************************************/
 
+$if (_WDMDDK_)
+
 /* Constants */
 #define NtCurrentProcess() ( (HANDLE)(LONG_PTR) -1 )
 #define ZwCurrentProcess() NtCurrentProcess()
 #define NtCurrentThread() ( (HANDLE)(LONG_PTR) -2 )
 #define ZwCurrentThread() NtCurrentThread()
 
+$endif
+
+$if (_NTDDK_)
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwAllocateLocallyUniqueId(
+  OUT PLUID Luid);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwTerminateProcess(
+  IN HANDLE ProcessHandle OPTIONAL,
+  IN NTSTATUS ExitStatus);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwOpenProcess(
+  OUT PHANDLE ProcessHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes,
+  IN PCLIENT_ID ClientId OPTIONAL);
+
+$endif
+
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+$if (_NTDDK_)
+
+NTSTATUS
+NTAPI
+ZwCancelTimer(
+  IN HANDLE TimerHandle,
+  OUT PBOOLEAN CurrentState OPTIONAL);
+
+NTSTATUS
+NTAPI
+ZwCreateTimer(
+  OUT PHANDLE TimerHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+  IN TIMER_TYPE TimerType);
+
+NTSTATUS
+NTAPI
+ZwOpenTimer(
+  OUT PHANDLE TimerHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwSetInformationThread(
+  IN HANDLE ThreadHandle,
+  IN THREADINFOCLASS ThreadInformationClass,
+  IN PVOID ThreadInformation,
+  IN ULONG ThreadInformationLength);
+
+NTSTATUS
+NTAPI
+ZwSetTimer(
+  IN HANDLE TimerHandle,
+  IN PLARGE_INTEGER DueTime,
+  IN PTIMER_APC_ROUTINE TimerApcRoutine OPTIONAL,
+  IN PVOID TimerContext OPTIONAL,
+  IN BOOLEAN ResumeTimer,
+  IN LONG Period OPTIONAL,
+  OUT PBOOLEAN PreviousState OPTIONAL);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwDisplayString(
+  IN PUNICODE_STRING String);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwPowerInformation(
+  IN POWER_INFORMATION_LEVEL PowerInformationLevel,
+  IN PVOID InputBuffer OPTIONAL,
+  IN ULONG InputBufferLength,
+  OUT PVOID OutputBuffer OPTIONAL,
+  IN ULONG OutputBufferLength);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwQueryVolumeInformationFile(
+  IN HANDLE FileHandle,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  OUT PVOID FsInformation,
+  IN ULONG Length,
+  IN FS_INFORMATION_CLASS FsInformationClass);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwDeviceIoControlFile(
+  IN HANDLE FileHandle,
+  IN HANDLE Event OPTIONAL,
+  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+  IN PVOID ApcContext OPTIONAL,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  IN ULONG IoControlCode,
+  IN PVOID InputBuffer OPTIONAL,
+  IN ULONG InputBufferLength,
+  OUT PVOID OutputBuffer OPTIONAL,
+  IN ULONG OutputBufferLength);
+
+$endif
+
+$if (_WDMDDK_)
 
 NTSYSAPI
 NTSTATUS
@@ -275,7 +393,11 @@ ZwQueryFullAttributesFile(
   IN POBJECT_ATTRIBUTES ObjectAttributes,
   OUT PFILE_NETWORK_OPEN_INFORMATION FileInformation);
 
+$endif
+
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
+$if (_WDMDDK_)
 
 #if (NTDDI_VERSION >= NTDDI_WIN2003)
 NTSYSCALLAPI
@@ -613,7 +735,21 @@ ZwSinglePhaseReject(
 
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
+$endif
+
 #if (NTDDI_VERSION >= NTDDI_WIN7)
+
+$if (_NTDDK_)
+NTSTATUS
+NTAPI
+ZwSetTimerEx(
+  IN HANDLE TimerHandle,
+  IN TIMER_SET_INFORMATION_CLASS TimerSetInformationClass,
+  IN OUT PVOID TimerSetInformation,
+  IN ULONG TimerSetInformationLength);
+$endif
+
+$if (_WDMDDK_)
 
 NTSYSAPI
 NTSTATUS
@@ -678,4 +814,7 @@ ZwSetInformationKey(
   IN PVOID KeySetInformation,
   IN ULONG KeySetInformationLength);
 
+$endif
+
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
+

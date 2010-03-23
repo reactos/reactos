@@ -3,7 +3,16 @@
  ******************************************************************************/
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
+$if (_NTDDK_)
+NTKERNELAPI
+BOOLEAN
+NTAPI
+SeSinglePrivilegeCheck(
+  IN LUID PrivilegeValue,
+  IN KPROCESSOR_MODE PreviousMode);
+$endif
 
+$if (_WDMDDK_)
 NTKERNELAPI
 BOOLEAN
 NTAPI
@@ -87,9 +96,11 @@ VOID
 NTAPI
 SeLockSubjectContext(
   IN PSECURITY_SUBJECT_CONTEXT SubjectContext);
+$endif
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
+$if (_WDMDDK_)
 #if (NTDDI_VERSION >= NTDDI_WS03SP1)
 
 NTSTATUS
@@ -130,4 +141,4 @@ SeGetWorldRights(
 #endif /* SE_NTFS_WORLD_CACHE */
 
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
-
+$endif

@@ -2,6 +2,59 @@
  *                              Kernel Types                                  *
  ******************************************************************************/
 
+$if (_NTDDK_)
+typedef VOID
+(NTAPI *PEXPAND_STACK_CALLOUT)(
+  IN PVOID Parameter OPTIONAL);
+
+typedef VOID
+(NTAPI *PTIMER_APC_ROUTINE)(
+  IN PVOID TimerContext,
+  IN ULONG TimerLowValue,
+  IN LONG TimerHighValue);
+
+typedef enum _TIMER_SET_INFORMATION_CLASS {
+  TimerSetCoalescableTimer,
+  MaxTimerInfoClass 
+} TIMER_SET_INFORMATION_CLASS;
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+typedef struct _TIMER_SET_COALESCABLE_TIMER_INFO {
+  IN LARGE_INTEGER DueTime;
+  IN PTIMER_APC_ROUTINE TimerApcRoutine OPTIONAL;
+  IN PVOID TimerContext OPTIONAL;
+  IN struct _COUNTED_REASON_CONTEXT *WakeContext OPTIONAL;
+  IN ULONG Period OPTIONAL;
+  IN ULONG TolerableDelay;
+  OUT PBOOLEAN PreviousState OPTIONAL;
+} TIMER_SET_COALESCABLE_TIMER_INFO, *PTIMER_SET_COALESCABLE_TIMER_INFO;
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
+
+#define XSTATE_LEGACY_FLOATING_POINT        0
+#define XSTATE_LEGACY_SSE                   1
+#define XSTATE_GSSE                         2
+
+#define XSTATE_MASK_LEGACY_FLOATING_POINT   (1i64 << (XSTATE_LEGACY_FLOATING_POINT))
+#define XSTATE_MASK_LEGACY_SSE              (1i64 << (XSTATE_LEGACY_SSE))
+#define XSTATE_MASK_LEGACY                  (XSTATE_MASK_LEGACY_FLOATING_POINT | XSTATE_MASK_LEGACY_SSE)
+#define XSTATE_MASK_GSSE                    (1i64 << (XSTATE_GSSE))
+
+#define MAXIMUM_XSTATE_FEATURES             64
+
+typedef struct _XSTATE_FEATURE {
+  ULONG Offset;
+  ULONG Size;
+} XSTATE_FEATURE, *PXSTATE_FEATURE;
+
+typedef struct _XSTATE_CONFIGURATION {
+  ULONG64 EnabledFeatures;
+  ULONG Size;
+  ULONG OptimizedSave:1;
+  XSTATE_FEATURE Features[MAXIMUM_XSTATE_FEATURES];
+} XSTATE_CONFIGURATION, *PXSTATE_CONFIGURATION;
+$endif
+
+$if (_WDMDDK_)
 typedef UCHAR KIRQL, *PKIRQL;
 typedef CCHAR KPROCESSOR_MODE;
 typedef LONG KPRIORITY;
@@ -994,4 +1047,6 @@ extern NTSYSAPI CCHAR KeNumberProcessors;
 #else
 extern PCCHAR KeNumberProcessors;
 #endif
+
+$endif
 

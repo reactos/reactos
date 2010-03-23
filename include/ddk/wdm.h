@@ -505,9 +505,11 @@ typedef BOOLEAN
 (*PFN_RTL_IS_SERVICE_PACK_VERSION_INSTALLED)(
   IN ULONG Version);
 
+
 /******************************************************************************
  *                              Kernel Types                                  *
  ******************************************************************************/
+
 
 typedef UCHAR KIRQL, *PKIRQL;
 typedef CCHAR KPROCESSOR_MODE;
@@ -1502,6 +1504,7 @@ extern NTSYSAPI CCHAR KeNumberProcessors;
 extern PCCHAR KeNumberProcessors;
 #endif
 
+
 /******************************************************************************
  *                         Memory manager Types                               *
  ******************************************************************************/
@@ -1644,7 +1647,6 @@ typedef enum _MM_SYSTEM_SIZE {
   MmMediumSystem,
   MmLargeSystem
 } MM_SYSTEMSIZE;
-
 
 /******************************************************************************
  *                            Executive Types                                 *
@@ -2213,7 +2215,6 @@ typedef struct _SE_ADT_PARAMETER_ARRAY {
 
 #endif /* !_NTLSA_AUDIT_ */
 #endif /* !_NTLSA_IFS_ */
-
 
 /******************************************************************************
  *                            Power Management Support Types                  *
@@ -7489,6 +7490,7 @@ extern POBJECT_TYPE NTSYSAPI PsProcessType;
  *                           Process Manager Types                            *
  ******************************************************************************/
 
+
 #define QUOTA_LIMITS_HARDWS_MIN_ENABLE  0x00000001
 #define QUOTA_LIMITS_HARDWS_MIN_DISABLE 0x00000002
 #define QUOTA_LIMITS_HARDWS_MAX_ENABLE  0x00000004
@@ -8291,6 +8293,8 @@ RtlStringFromGUID(
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
+
+
 NTSYSAPI
 BOOLEAN
 NTAPI
@@ -8861,7 +8865,9 @@ RtlWriteRegistryValue(
   IN PVOID ValueData,
   IN ULONG ValueLength);
 
-#endif // (NTDDI_VERSION >= NTDDI_WIN2K)
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
 
 #if (NTDDI_VERSION >= NTDDI_WIN2KSP3)
 NTSYSAPI
@@ -8872,7 +8878,10 @@ RtlPrefetchMemoryNonTemporal(
   IN SIZE_T Length);
 #endif
 
+
 #if (NTDDI_VERSION >= NTDDI_WINXP)
+
+
 
 NTSYSAPI
 VOID
@@ -8910,9 +8919,12 @@ RtlHashUnicodeString(
   IN ULONG HashAlgorithm,
   OUT PULONG HashValue);
 
-#endif // (NTDDI_VERSION >= NTDDI_WINXP)
+
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
+
+
 
 NTSYSAPI
 ULONG
@@ -8963,9 +8975,12 @@ RtlCmEncodeMemIoResource(
   IN ULONGLONG Length,
   IN ULONGLONG Start);
 
+
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
+
+
 
 NTSYSAPI
 NTSTATUS
@@ -8993,7 +9008,9 @@ NTAPI
 RtlGetEnabledExtendedFeatures(
   IN ULONG64 FeatureMask);
 
+
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
+
 
 #if !defined(MIDL_PASS)
 /* inline funftions */
@@ -9141,6 +9158,8 @@ RtlInitEmptyUnicodeString(
 }
 
 #if defined(_AMD64_) || defined(_IA64_)
+
+
 static __inline
 LARGE_INTEGER
 NTAPI_INLINE
@@ -9167,7 +9186,11 @@ RtlExtendedLargeIntegerDivide(
     *Remainder = (ULONG)(Dividend.QuadPart % Divisor);
   return ret;
 }
-#endif
+
+
+
+#endif /* defined(_AMD64_) || defined(_IA64_) */
+
 
 #if defined(_AMD64_)
 
@@ -9556,6 +9579,8 @@ KeClearEvent(
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
+
+
 #if defined(_NTDDK_) || defined(_NTIFS_)
 NTKERNELAPI
 VOID
@@ -9574,7 +9599,9 @@ ProbeForWrite(
   IN SIZE_T Length,
   IN ULONG Alignment);
 
+
 #if defined(SINGLE_GROUP_LEGACY_API)
+
 NTKERNELAPI
 VOID
 NTAPI
@@ -9597,7 +9624,9 @@ NTKERNELAPI
 KAFFINITY
 NTAPI
 KeQueryActiveProcessors(VOID);
-#endif
+
+
+#endif /* defined(SINGLE_GROUP_LEGACY_API) */
 
 #if !defined(_M_AMD64)
 
@@ -10121,7 +10150,6 @@ KeTryToAcquireGuardedMutex(
 #endif /* (NTDDI_VERSION >= NTDDI_WS03SP1) */
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
-
 NTKERNELAPI
 VOID
 FASTCALL
@@ -10142,6 +10170,7 @@ KeQueryDpcWatchdogInformation(
   OUT PKDPC_WATCHDOG_INFORMATION WatchdogInformation);
 
 #if defined(SINGLE_GROUP_LEGACY_API)
+
 NTKERNELAPI
 KAFFINITY
 NTAPI
@@ -10183,6 +10212,7 @@ KeDeregisterProcessorChangeCallback(
 #endif /* (NTDDI_VERSION >= NTDDI_WS08) */
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
+
 
 ULONG64
 NTAPI
@@ -10364,7 +10394,6 @@ KeFlushWriteBuffer(VOID);
 /******************************************************************************
  *                       Memory manager Functions                             *
  ******************************************************************************/
-
 /* Alignment Macros */
 #define ALIGN_DOWN_BY(size, align) \
     ((ULONG_PTR)(size) & ~((ULONG_PTR)(align) - 1))
@@ -10810,6 +10839,7 @@ MmAllocatePagesForMdlEx(
 #endif
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
+
 NTKERNELAPI
 LOGICAL
 NTAPI
@@ -10949,7 +10979,6 @@ SeGetWorldRights(
 #endif /* SE_NTFS_WORLD_CACHE */
 
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
-
 /******************************************************************************
  *                         Configuration Manager Functions                    *
  ******************************************************************************/
@@ -11021,6 +11050,40 @@ CmGetBoundTransaction(
 /******************************************************************************
  *                         I/O Manager Functions                              *
  ******************************************************************************/
+
+
+/*
+ * NTSTATUS
+ * IoAcquireRemoveLock(
+ *   IN PIO_REMOVE_LOCK  RemoveLock,
+ *   IN OPTIONAL PVOID  Tag)
+ */
+#if DBG
+#define IoAcquireRemoveLock(RemoveLock, Tag) \
+  IoAcquireRemoveLockEx(RemoveLock, Tag, __FILE__, __LINE__, sizeof (IO_REMOVE_LOCK))
+#else
+#define IoAcquireRemoveLock(RemoveLock, Tag) \
+  IoAcquireRemoveLockEx(RemoveLock, Tag, "", 1, sizeof (IO_REMOVE_LOCK))
+#endif
+
+/*
+ * VOID
+ * IoAdjustPagingPathCount(
+ *   IN PLONG  Count,
+ *   IN BOOLEAN  Increment)
+ */
+#define IoAdjustPagingPathCount(_Count, \
+                                _Increment) \
+{ \
+  if (_Increment) \
+    { \
+      InterlockedIncrement(_Count); \
+    } \
+  else \
+    { \
+      InterlockedDecrement(_Count); \
+    } \
+}
 
 #if !defined(_M_AMD64)
 NTHALAPI
@@ -11548,44 +11611,6 @@ IoAcquireRemoveLockEx(
   IN PCSTR File,
   IN ULONG Line,
   IN ULONG RemlockSize);
-
-#endif
-
-/*
- * NTSTATUS
- * IoAcquireRemoveLock(
- *   IN PIO_REMOVE_LOCK  RemoveLock,
- *   IN OPTIONAL PVOID  Tag)
- */
-#if DBG
-#define IoAcquireRemoveLock(RemoveLock, Tag) \
-  IoAcquireRemoveLockEx(RemoveLock, Tag, __FILE__, __LINE__, sizeof (IO_REMOVE_LOCK))
-#else
-#define IoAcquireRemoveLock(RemoveLock, Tag) \
-  IoAcquireRemoveLockEx(RemoveLock, Tag, "", 1, sizeof (IO_REMOVE_LOCK))
-#endif
-
-/*
- * VOID
- * IoAdjustPagingPathCount(
- *   IN PLONG  Count,
- *   IN BOOLEAN  Increment)
- */
-#define IoAdjustPagingPathCount(_Count, \
-                                _Increment) \
-{ \
-  if (_Increment) \
-    { \
-      InterlockedIncrement(_Count); \
-    } \
-  else \
-    { \
-      InterlockedDecrement(_Count); \
-    } \
-}
-
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
-
 NTKERNELAPI
 NTSTATUS
 NTAPI
@@ -12221,6 +12246,7 @@ IoSetTopLevelIrp(
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
+
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 
 NTKERNELAPI
@@ -12380,7 +12406,6 @@ IoWMISetSingleItem(
   IN ULONG Version,
   IN ULONG ValueBufferSize,
   IN PVOID ValueBuffer);
-
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
 #if (NTDDI_VERSION >= NTDDI_WINXPSP1)
@@ -12414,8 +12439,8 @@ IoCsqInsertIrpEx(
   IN PIRP Irp,
   IN PIO_CSQ_IRP_CONTEXT Context OPTIONAL,
   IN PVOID InsertContext OPTIONAL);
+#endif /* (NTDDI_VERSION >= NTDDI_WS03) */
 
-#endif
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 
@@ -14059,7 +14084,6 @@ ObDereferenceObjectDeferDeleteWithTag(
 #define PsGetCurrentProcess IoGetCurrentProcess
 
 #if !defined(_PSGETCURRENTTHREAD_)
-
 #define _PSGETCURRENTTHREAD_
 
 FORCEINLINE
@@ -14073,6 +14097,7 @@ PsGetCurrentThread(VOID)
 #endif
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
+
 
 NTKERNELAPI
 NTSTATUS
@@ -14093,6 +14118,7 @@ PsTerminateSystemThread(
   IN NTSTATUS ExitStatus);
 
 #endif
+
 
 NTKERNELAPI
 NTSTATUS
@@ -14434,8 +14460,11 @@ KdChangeOption(
   OUT PVOID OutBuffer,
   OUT PULONG OutBufferNeeded OPTIONAL);
 #endif
+/* Hardware Abstraction Layer Functions */
 
 #if defined(USE_DMA_MACROS) && !defined(_NTHAL_) && (defined(_NTDDK_) || defined(_NTDRIVER_)) || defined(_WDM_INCLUDED_)
+
+
 FORCEINLINE
 PVOID
 NTAPI
@@ -14499,6 +14528,8 @@ HalGetDmaAlignment(
   alignment = getDmaAlignment( DmaAdapter );
   return alignment;
 }
+
+
 
 #endif
 
@@ -15156,13 +15187,18 @@ NtPropagationFailed(
  *                            ZwXxx Functions                                 *
  ******************************************************************************/
 
+
 /* Constants */
 #define NtCurrentProcess() ( (HANDLE)(LONG_PTR) -1 )
 #define ZwCurrentProcess() NtCurrentProcess()
 #define NtCurrentThread() ( (HANDLE)(LONG_PTR) -2 )
 #define ZwCurrentThread() NtCurrentThread()
 
+
+
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+
 
 NTSYSAPI
 NTSTATUS
@@ -15429,7 +15465,9 @@ ZwQueryFullAttributesFile(
   IN POBJECT_ATTRIBUTES ObjectAttributes,
   OUT PFILE_NETWORK_OPEN_INFORMATION FileInformation);
 
+
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
 
 #if (NTDDI_VERSION >= NTDDI_WIN2003)
 NTSYSCALLAPI
@@ -15767,7 +15805,10 @@ ZwSinglePhaseReject(
 
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
+
 #if (NTDDI_VERSION >= NTDDI_WIN7)
+
+
 
 NTSYSAPI
 NTSTATUS
@@ -15832,7 +15873,9 @@ ZwSetInformationKey(
   IN PVOID KeySetInformation,
   IN ULONG KeySetInformationLength);
 
+
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
+
 
 /******************************************************************************
  *                          Unsorted                                          *
