@@ -719,8 +719,6 @@ typedef enum _OBJECT_INFORMATION_CLASS {
   MaxObjectInfoClass /* FIXME, not in WDK */
 } OBJECT_INFORMATION_CLASS;
 
-#if (NTDDI_VERSION >= NTDDI_NT4)
-
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
@@ -730,8 +728,6 @@ NtQueryObject(
   OUT PVOID ObjectInformation OPTIONAL,
   IN ULONG ObjectInformationLength,
   OUT PULONG ReturnLength OPTIONAL);
-
-#endif
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
