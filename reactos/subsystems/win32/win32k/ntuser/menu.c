@@ -690,8 +690,8 @@ IntGetMenuItemInfo(PMENU_OBJECT Menu, /* UNUSED PARAM!! */
    if (sizeof(ROSMENUITEMINFO) == lpmii->cbSize)
    {
       lpmii->Rect = MenuItem->Rect;
-      lpmii->XTab = MenuItem->XTab;
-      lpmii->Text = MenuItem->Text.Buffer;
+      lpmii->dxTab = MenuItem->dxTab;
+      lpmii->lpstr = MenuItem->Text.Buffer; // Use DesktopHeap!
    }
 
    return TRUE;
@@ -842,8 +842,8 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
    if (sizeof(ROSMENUITEMINFO) == lpmii->cbSize)
    {
       MenuItem->Rect = lpmii->Rect;
-      MenuItem->XTab = lpmii->XTab;
-      lpmii->Text = MenuItem->Text.Buffer; /* Send back new allocated string or zero */
+      MenuItem->dxTab = lpmii->dxTab;
+      lpmii->lpstr = MenuItem->Text.Buffer; /* Use DesktopHeap! Send back new allocated string or zero */
    }
 
    return TRUE;
@@ -1002,8 +1002,8 @@ IntBuildMenuItemList(PMENU_OBJECT MenuObject, PVOID Buffer, ULONG nMax)
          mii.hbmpUnchecked = CurItem->hbmpUnchecked;
          mii.hSubMenu = CurItem->hSubMenu;
          mii.Rect = CurItem->Rect;
-         mii.XTab = CurItem->XTab;
-         mii.Text = CurItem->Text.Buffer;
+         mii.dxTab = CurItem->dxTab;
+         mii.lpstr = CurItem->Text.Buffer; // Use DesktopHeap!
 
          Status = MmCopyToCaller(Buf, &mii, sizeof(ROSMENUITEMINFO));
          if (! NT_SUCCESS(Status))

@@ -23,7 +23,7 @@ typedef struct _MENU_ITEM
   UNICODE_STRING Text;
   HBITMAP hbmpItem;
   RECTL Rect;
-  UINT XTab;
+  UINT dxTab;
 } MENU_ITEM, *PMENU_ITEM;
 
 typedef struct _MENU_OBJECT

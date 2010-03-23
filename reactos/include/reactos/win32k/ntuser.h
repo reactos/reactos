@@ -3279,8 +3279,8 @@ typedef struct tagROSMENUITEMINFO
     HBITMAP hbmpItem;
     /* ----------- Extra ----------- */
     RECT Rect;      /* Item area (relative to menu window) */
-    UINT XTab;      /* X position of text after Tab */
-    LPWSTR Text;    /* Copy of the text pointer in MenuItem->Text */
+    UINT dxTab;      /* X position of text after Tab */
+    LPWSTR lpstr;    /* Copy of the text pointer in MenuItem->Text */
 } ROSMENUITEMINFO, *PROSMENUITEMINFO;
 
 BOOL

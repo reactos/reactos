@@ -539,7 +539,7 @@ static UINT FASTCALL MenuFindItemByKey(HWND WndOwner, PROSMENUINFO MenuInfo,
           ItemInfo = Items;
           for (i = 0; i < MenuInfo->MenuItemCount; i++, ItemInfo++)
             {
-              if ((ItemInfo->Text) && NULL != ItemInfo->dwTypeData)
+              if ((ItemInfo->lpstr) && NULL != ItemInfo->dwTypeData)
                 {
                   WCHAR *p = (WCHAR *) ItemInfo->dwTypeData - 2;
                   do
@@ -806,7 +806,7 @@ static void FASTCALL MenuCalcItemSize( HDC hdc, PROSMENUITEMINFO lpitem, PROSMEN
         return;
     }
 
-    lpitem->XTab = 0;
+    lpitem->dxTab = 0;
 
     if (lpitem->hbmpItem)
     {
@@ -829,12 +829,12 @@ static void FASTCALL MenuCalcItemSize( HDC hdc, PROSMENUITEMINFO lpitem, PROSMEN
             if( !(MenuInfo->dwStyle & MNS_NOCHECK))
                 lpitem->Rect.right += 2 * check_bitmap_width;
             lpitem->Rect.right += 4 + MenuCharSize.cx;
-            lpitem->XTab = lpitem->Rect.right;
+            lpitem->dxTab = lpitem->Rect.right;
             lpitem->Rect.right += check_bitmap_width;
         } else /* hbmpItem & MenuBar */ {
             MenuGetBitmapItemSize(lpitem, &size, hwndOwner );
             lpitem->Rect.right  += size.cx;
-            if( lpitem->Text) lpitem->Rect.right  += 2;
+            if( lpitem->lpstr) lpitem->Rect.right  += 2;
             itemheight = size.cy;
 
             /* Special case: Minimize button doesn't have a space behind it. */
@@ -847,12 +847,12 @@ static void FASTCALL MenuCalcItemSize( HDC hdc, PROSMENUITEMINFO lpitem, PROSMEN
         if( !(MenuInfo->dwStyle & MNS_NOCHECK))
              lpitem->Rect.right += check_bitmap_width;
         lpitem->Rect.right += 4 + MenuCharSize.cx;
-        lpitem->XTab = lpitem->Rect.right;
+        lpitem->dxTab = lpitem->Rect.right;
         lpitem->Rect.right += check_bitmap_width;
     }
 
     /* it must be a text item - unless it's the system menu */
-    if (!(lpitem->fType & MF_SYSMENU) && lpitem->Text) {
+    if (!(lpitem->fType & MF_SYSMENU) && lpitem->lpstr) {
         HFONT hfontOld = NULL;
         RECT rc = lpitem->Rect;
         LONG txtheight, txtwidth;
@@ -881,7 +881,7 @@ static void FASTCALL MenuCalcItemSize( HDC hdc, PROSMENUITEMINFO lpitem, PROSMEN
                 /* get text size after the tab */
                 tmpheight = DrawTextW( hdc, p, -1, &tmprc,
                         DT_SINGLELINE|DT_CALCRECT);
-                lpitem->XTab += txtwidth;
+                lpitem->dxTab += txtwidth;
                 txtheight = max( txtheight, tmpheight);
                 txtwidth += MenuCharSize.cx + /* space for the tab */
                     tmprc.right - tmprc.left; /* space for the short cut */
@@ -889,7 +889,7 @@ static void FASTCALL MenuCalcItemSize( HDC hdc, PROSMENUITEMINFO lpitem, PROSMEN
                 txtheight = DrawTextW( hdc, lpitem->dwTypeData, -1, &rc,
                         DT_SINGLELINE|DT_CALCRECT);
                 txtwidth = rc.right - rc.left;
-                lpitem->XTab += txtwidth;
+                lpitem->dxTab += txtwidth;
             }
             lpitem->Rect.right  += 2 + txtwidth;
             itemheight = max( itemheight,
@@ -965,10 +965,10 @@ static void FASTCALL MenuPopupMenuCalcSize(PROSMENUINFO MenuInfo, HWND WndOwner)
 //        }
           maxX = max(maxX, lpitem.Rect.right);
           orgY = lpitem.Rect.bottom;
-          if ((lpitem.Text) && lpitem.XTab )
+          if ((lpitem.lpstr) && lpitem.dxTab )
 	      {
-              maxTab = max( maxTab, lpitem.XTab );
-              maxTabWidth = max(maxTabWidth, lpitem.Rect.right - lpitem.XTab);
+              maxTab = max( maxTab, lpitem.dxTab );
+              maxTabWidth = max(maxTabWidth, lpitem.Rect.right - lpitem.dxTab);
           }
         }
 
@@ -979,9 +979,9 @@ static void FASTCALL MenuPopupMenuCalcSize(PROSMENUINFO MenuInfo, HWND WndOwner)
             if (MenuGetRosMenuItemInfo(MenuInfo->Self, start, &lpitem))
             {
                 lpitem.Rect.right = maxX;
-                if ((lpitem.Text) && 0 != lpitem.XTab)
+                if ((lpitem.lpstr) && 0 != lpitem.dxTab)
                 {
-                    lpitem.XTab = maxTab;
+                    lpitem.dxTab = maxTab;
                 }
                 MenuSetRosMenuItemInfo(MenuInfo->Self, start, &lpitem);
             }
@@ -1379,7 +1379,7 @@ static void FASTCALL MenuDrawMenuItem(HWND hWnd, PROSMENUINFO MenuInfo, HWND Wnd
     }
 
     /* process text if present */
-    if (lpitem->Text)
+    if (lpitem->lpstr)
     {
         register int i = 0;
         HFONT hfontOld = 0;
@@ -1429,12 +1429,12 @@ static void FASTCALL MenuDrawMenuItem(HWND hWnd, PROSMENUINFO MenuInfo, HWND Wnd
         {
             if (L'\t' == Text[i])
             {
-                rect.left = lpitem->XTab;
+                rect.left = lpitem->dxTab;
                 uFormat = DT_LEFT | DT_VCENTER | DT_SINGLELINE;
             }
             else
             {
-                rect.right = lpitem->XTab;
+                rect.right = lpitem->dxTab;
                 uFormat = DT_RIGHT | DT_VCENTER | DT_SINGLELINE;
             }
 
