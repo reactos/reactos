@@ -154,6 +154,130 @@ _KeQueryTickCount(
 }
 #define KeQueryTickCount(CurrentCount) _KeQueryTickCount(CurrentCount)
 
-$endif
+$endif /* _WDMDDK_ */
+$if (_NTDDK_)
+
+#define PAUSE_PROCESSOR YieldProcessor();
+
+#define KERNEL_STACK_SIZE                   12288
+#define KERNEL_LARGE_STACK_SIZE             61440
+#define KERNEL_LARGE_STACK_COMMIT           12288
+
+#define SIZE_OF_80387_REGISTERS   80
+
+#if !defined(RC_INVOKED)
+
+#define CONTEXT_i386               0x10000
+#define CONTEXT_i486               0x10000
+#define CONTEXT_CONTROL            (CONTEXT_i386|0x00000001L)
+#define CONTEXT_INTEGER            (CONTEXT_i386|0x00000002L)
+#define CONTEXT_SEGMENTS           (CONTEXT_i386|0x00000004L)
+#define CONTEXT_FLOATING_POINT     (CONTEXT_i386|0x00000008L)
+#define CONTEXT_DEBUG_REGISTERS    (CONTEXT_i386|0x00000010L)
+#define CONTEXT_EXTENDED_REGISTERS (CONTEXT_i386|0x00000020L)
+
+#define CONTEXT_FULL (CONTEXT_CONTROL|CONTEXT_INTEGER|CONTEXT_SEGMENTS)
+#define CONTEXT_ALL (CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_SEGMENTS |  \
+                     CONTEXT_FLOATING_POINT | CONTEXT_DEBUG_REGISTERS |      \
+                     CONTEXT_EXTENDED_REGISTERS)
+
+#define CONTEXT_XSTATE          (CONTEXT_i386 | 0x00000040L)
+
+#endif /* !defined(RC_INVOKED) */
+
+typedef struct _FLOATING_SAVE_AREA {
+  ULONG ControlWord;
+  ULONG StatusWord;
+  ULONG TagWord;
+  ULONG ErrorOffset;
+  ULONG ErrorSelector;
+  ULONG DataOffset;
+  ULONG DataSelector;
+  UCHAR RegisterArea[SIZE_OF_80387_REGISTERS];
+  ULONG Cr0NpxState;
+} FLOATING_SAVE_AREA, *PFLOATING_SAVE_AREA;
+
+#include "pshpack4.h"
+typedef struct _CONTEXT {
+  ULONG ContextFlags;
+  ULONG Dr0;
+  ULONG Dr1;
+  ULONG Dr2;
+  ULONG Dr3;
+  ULONG Dr6;
+  ULONG Dr7;
+  FLOATING_SAVE_AREA FloatSave;
+  ULONG SegGs;
+  ULONG SegFs;
+  ULONG SegEs;
+  ULONG SegDs;
+  ULONG Edi;
+  ULONG Esi;
+  ULONG Ebx;
+  ULONG Edx;
+  ULONG Ecx;
+  ULONG Eax;
+  ULONG Ebp;
+  ULONG Eip;
+  ULONG SegCs;
+  ULONG EFlags;
+  ULONG Esp;
+  ULONG SegSs;
+  UCHAR ExtendedRegisters[MAXIMUM_SUPPORTED_EXTENSION];
+} CONTEXT;
+#include "poppack.h"
+
+#define KeGetPcr()                      PCR
+
+#define PCR_MINOR_VERSION 1
+#define PCR_MAJOR_VERSION 1
+
+typedef struct _KPCR {
+  union {
+    NT_TIB NtTib;
+    struct {
+      struct _EXCEPTION_REGISTRATION_RECORD *Used_ExceptionList;
+      PVOID Used_StackBase;
+      PVOID Spare2;
+      PVOID TssCopy;
+      ULONG ContextSwitches;
+      KAFFINITY SetMemberCopy;
+      PVOID Used_Self;
+    };
+  };
+  struct _KPCR *SelfPcr;
+  struct _KPRCB *Prcb;
+  KIRQL Irql;
+  ULONG IRR;
+  ULONG IrrActive;
+  ULONG IDR;
+  PVOID KdVersionBlock;
+  struct _KIDTENTRY *IDT;
+  struct _KGDTENTRY *GDT;
+  struct _KTSS *TSS;
+  USHORT MajorVersion;
+  USHORT MinorVersion;
+  KAFFINITY SetMember;
+  ULONG StallScaleFactor;
+  UCHAR SpareUnused;
+  UCHAR Number;
+  UCHAR Spare0;
+  UCHAR SecondLevelCacheAssociativity;
+  ULONG VdmAlert;
+  ULONG KernelReserved[14];
+  ULONG SecondLevelCacheSize;
+  ULONG HalReserved[16];
+} KPCR, *PKPCR;
+
+FORCEINLINE
+ULONG
+KeGetCurrentProcessorNumber(VOID)
+{
+    return (ULONG)__readfsbyte(FIELD_OFFSET(KPCR, Number));
+}
+
+$endif /* _NTDDK_ */
+
+
 
 

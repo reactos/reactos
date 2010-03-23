@@ -552,7 +552,6 @@ typedef BOOLEAN
  *                              Kernel Types                                  *
  ******************************************************************************/
 
-
 typedef UCHAR KIRQL, *PKIRQL;
 typedef CCHAR KPROCESSOR_MODE;
 typedef LONG KPRIORITY;
@@ -7710,6 +7709,7 @@ typedef struct _KFLOATING_SAVE {
 extern NTKERNELAPI volatile KSYSTEM_TIME KeTickCount;
 
 #define YieldProcessor _mm_pause
+#define PAUSE_PROCESSOR YieldProcessor();
 
 FORCEINLINE
 VOID
@@ -7820,6 +7820,8 @@ _KeQueryTickCount(
 
 
 
+
+
 #elif defined(_M_AMD64)
 /** Kernel definitions for AMD64 **/
 
@@ -7861,6 +7863,7 @@ typedef XSAVE_FORMAT XMM_SAVE_AREA32, *PXMM_SAVE_AREA32;
 #define KeGetDcacheFillSize() 1L
 
 #define YieldProcessor _mm_pause
+#define PAUSE_PROCESSOR YieldProcessor();
 
 FORCEINLINE
 KIRQL
@@ -7934,6 +7937,8 @@ KeGetCurrentThread(VOID)
 
 #define KI_USER_SHARED_DATA ((ULONG_PTR)(KADDRESS_BASE + 0xFFFE0000))
 extern volatile LARGE_INTEGER KeTickCount;
+
+#define PAUSE_PROCESSOR __yield();
 
 FORCEINLINE
 VOID

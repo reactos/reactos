@@ -39,6 +39,7 @@
 #include <excpt.h>
 #include <ntdef.h>
 #include <ntstatus.h>
+#include <mce.h>
 
 /* FIXME
 #include <bugcodes.h>
@@ -91,200 +92,6 @@ typedef PIMAGE_NT_HEADERS32 PIMAGE_NT_HEADERS;
 #endif
 
 #endif /* _NTIMAGE_ */
-
-#define PsGetCurrentProcess IoGetCurrentProcess
-
-#if (NTDDI_VERSION >= NTDDI_VISTA)
-extern NTSYSAPI volatile CCHAR KeNumberProcessors;
-#elif (NTDDI_VERSION >= NTDDI_WINXP)
-extern NTSYSAPI CCHAR KeNumberProcessors;
-#else
-extern PCCHAR KeNumberProcessors;
-#endif
-
-#include <mce.h>
-
-#ifdef _X86_
-
-#define KERNEL_STACK_SIZE                   12288
-#define KERNEL_LARGE_STACK_SIZE             61440
-#define KERNEL_LARGE_STACK_COMMIT           12288
-
-#define SIZE_OF_80387_REGISTERS   80
-
-#if !defined(RC_INVOKED)
-
-#define CONTEXT_i386               0x10000
-#define CONTEXT_i486               0x10000
-#define CONTEXT_CONTROL            (CONTEXT_i386|0x00000001L)
-#define CONTEXT_INTEGER            (CONTEXT_i386|0x00000002L)
-#define CONTEXT_SEGMENTS           (CONTEXT_i386|0x00000004L)
-#define CONTEXT_FLOATING_POINT     (CONTEXT_i386|0x00000008L)
-#define CONTEXT_DEBUG_REGISTERS    (CONTEXT_i386|0x00000010L)
-#define CONTEXT_EXTENDED_REGISTERS (CONTEXT_i386|0x00000020L)
-
-#define CONTEXT_FULL (CONTEXT_CONTROL|CONTEXT_INTEGER|CONTEXT_SEGMENTS)
-#define CONTEXT_ALL (CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_SEGMENTS |  \
-                     CONTEXT_FLOATING_POINT | CONTEXT_DEBUG_REGISTERS |      \
-                     CONTEXT_EXTENDED_REGISTERS)
-
-#define CONTEXT_XSTATE          (CONTEXT_i386 | 0x00000040L)
-
-#endif /* !defined(RC_INVOKED) */
-
-typedef struct _FLOATING_SAVE_AREA {
-  ULONG ControlWord;
-  ULONG StatusWord;
-  ULONG TagWord;
-  ULONG ErrorOffset;
-  ULONG ErrorSelector;
-  ULONG DataOffset;
-  ULONG DataSelector;
-  UCHAR RegisterArea[SIZE_OF_80387_REGISTERS];
-  ULONG Cr0NpxState;
-} FLOATING_SAVE_AREA, *PFLOATING_SAVE_AREA;
-
-#include "pshpack4.h"
-typedef struct _CONTEXT {
-  ULONG ContextFlags;
-  ULONG Dr0;
-  ULONG Dr1;
-  ULONG Dr2;
-  ULONG Dr3;
-  ULONG Dr6;
-  ULONG Dr7;
-  FLOATING_SAVE_AREA FloatSave;
-  ULONG SegGs;
-  ULONG SegFs;
-  ULONG SegEs;
-  ULONG SegDs;
-  ULONG Edi;
-  ULONG Esi;
-  ULONG Ebx;
-  ULONG Edx;
-  ULONG Ecx;
-  ULONG Eax;
-  ULONG Ebp;
-  ULONG Eip;
-  ULONG SegCs;
-  ULONG EFlags;
-  ULONG Esp;
-  ULONG SegSs;
-  UCHAR ExtendedRegisters[MAXIMUM_SUPPORTED_EXTENSION];
-} CONTEXT;
-#include "poppack.h"
-
-#endif /* _X86_ */
-
-#ifdef _AMD64_
-
-#define KERNEL_STACK_SIZE 0x6000
-#define KERNEL_LARGE_STACK_SIZE 0x12000
-#define KERNEL_LARGE_STACK_COMMIT KERNEL_STACK_SIZE
-
-#define KERNEL_MCA_EXCEPTION_STACK_SIZE 0x2000
-
-#define EXCEPTION_READ_FAULT    0
-#define EXCEPTION_WRITE_FAULT   1
-#define EXCEPTION_EXECUTE_FAULT 8
-
-#if !defined(RC_INVOKED)
-
-#define CONTEXT_AMD64 0x100000
-
-#define CONTEXT_CONTROL (CONTEXT_AMD64 | 0x1L)
-#define CONTEXT_INTEGER (CONTEXT_AMD64 | 0x2L)
-#define CONTEXT_SEGMENTS (CONTEXT_AMD64 | 0x4L)
-#define CONTEXT_FLOATING_POINT (CONTEXT_AMD64 | 0x8L)
-#define CONTEXT_DEBUG_REGISTERS (CONTEXT_AMD64 | 0x10L)
-
-#define CONTEXT_FULL (CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_FLOATING_POINT)
-#define CONTEXT_ALL (CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_SEGMENTS | CONTEXT_FLOATING_POINT | CONTEXT_DEBUG_REGISTERS)
-
-#define CONTEXT_XSTATE (CONTEXT_AMD64 | 0x20L)
-
-#define CONTEXT_EXCEPTION_ACTIVE 0x8000000
-#define CONTEXT_SERVICE_ACTIVE 0x10000000
-#define CONTEXT_EXCEPTION_REQUEST 0x40000000
-#define CONTEXT_EXCEPTION_REPORTING 0x80000000
-
-#endif /* !defined(RC_INVOKED) */
-
-#define INITIAL_MXCSR                  0x1f80
-#define INITIAL_FPCSR                  0x027f
-
-typedef struct DECLSPEC_ALIGN(16) _CONTEXT {
-  ULONG64 P1Home;
-  ULONG64 P2Home;
-  ULONG64 P3Home;
-  ULONG64 P4Home;
-  ULONG64 P5Home;
-  ULONG64 P6Home;
-  ULONG ContextFlags;
-  ULONG MxCsr;
-  USHORT SegCs;
-  USHORT SegDs;
-  USHORT SegEs;
-  USHORT SegFs;
-  USHORT SegGs;
-  USHORT SegSs;
-  ULONG EFlags;
-  ULONG64 Dr0;
-  ULONG64 Dr1;
-  ULONG64 Dr2;
-  ULONG64 Dr3;
-  ULONG64 Dr6;
-  ULONG64 Dr7;
-  ULONG64 Rax;
-  ULONG64 Rcx;
-  ULONG64 Rdx;
-  ULONG64 Rbx;
-  ULONG64 Rsp;
-  ULONG64 Rbp;
-  ULONG64 Rsi;
-  ULONG64 Rdi;
-  ULONG64 R8;
-  ULONG64 R9;
-  ULONG64 R10;
-  ULONG64 R11;
-  ULONG64 R12;
-  ULONG64 R13;
-  ULONG64 R14;
-  ULONG64 R15;
-  ULONG64 Rip;
-  union {
-    XMM_SAVE_AREA32 FltSave;
-    struct {
-      M128A Header[2];
-      M128A Legacy[8];
-      M128A Xmm0;
-      M128A Xmm1;
-      M128A Xmm2;
-      M128A Xmm3;
-      M128A Xmm4;
-      M128A Xmm5;
-      M128A Xmm6;
-      M128A Xmm7;
-      M128A Xmm8;
-      M128A Xmm9;
-      M128A Xmm10;
-      M128A Xmm11;
-      M128A Xmm12;
-      M128A Xmm13;
-      M128A Xmm14;
-      M128A Xmm15;
-    } DUMMYSTRUCTNAME;
-  } DUMMYUNIONNAME;
-  M128A VectorRegister[26];
-  ULONG64 VectorControl;
-  ULONG64 DebugControl;
-  ULONG64 LastBranchToRip;
-  ULONG64 LastBranchFromRip;
-  ULONG64 LastExceptionToRip;
-  ULONG64 LastExceptionFromRip;
-} CONTEXT;
-
-#endif /* _AMD64_ */
 
 /******************************************************************************
  *                            Executive Types                                 *
@@ -2041,6 +1848,130 @@ typedef struct _XSTATE_CONFIGURATION {
   XSTATE_FEATURE Features[MAXIMUM_XSTATE_FEATURES];
 } XSTATE_CONFIGURATION, *PXSTATE_CONFIGURATION;
 
+#define MAX_WOW64_SHARED_ENTRIES 16
+
+typedef struct _KUSER_SHARED_DATA {
+  ULONG TickCountLowDeprecated;
+  ULONG TickCountMultiplier;
+  volatile KSYSTEM_TIME InterruptTime;
+  volatile KSYSTEM_TIME SystemTime;
+  volatile KSYSTEM_TIME TimeZoneBias;
+  USHORT ImageNumberLow;
+  USHORT ImageNumberHigh;
+  WCHAR NtSystemRoot[260];
+  ULONG MaxStackTraceDepth;
+  ULONG CryptoExponent;
+  ULONG TimeZoneId;
+  ULONG LargePageMinimum;
+  ULONG Reserved2[7];
+  NT_PRODUCT_TYPE NtProductType;
+  BOOLEAN ProductTypeIsValid;
+  ULONG NtMajorVersion;
+  ULONG NtMinorVersion;
+  BOOLEAN ProcessorFeatures[PROCESSOR_FEATURE_MAX];
+  ULONG Reserved1;
+  ULONG Reserved3;
+  volatile ULONG TimeSlip;
+  ALTERNATIVE_ARCHITECTURE_TYPE AlternativeArchitecture;
+  ULONG AltArchitecturePad[1];
+  LARGE_INTEGER SystemExpirationDate;
+  ULONG SuiteMask;
+  BOOLEAN KdDebuggerEnabled;
+#if (NTDDI_VERSION >= NTDDI_WINXPSP2)
+  UCHAR NXSupportPolicy;
+#endif
+  volatile ULONG ActiveConsoleId;
+  volatile ULONG DismountCount;
+  ULONG ComPlusPackage;
+  ULONG LastSystemRITEventTickCount;
+  ULONG NumberOfPhysicalPages;
+  BOOLEAN SafeBootMode;
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+  union {
+    UCHAR TscQpcData;
+    struct {
+      UCHAR TscQpcEnabled:1;
+      UCHAR TscQpcSpareFlag:1;
+      UCHAR TscQpcShift:6;
+    } DUMMYSTRUCTNAME;
+  } DUMMYUNIONNAME;
+  UCHAR TscQpcPad[2];
+#endif
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+  union {
+    ULONG SharedDataFlags;
+    struct {
+      ULONG DbgErrorPortPresent:1;
+      ULONG DbgElevationEnabled:1;
+      ULONG DbgVirtEnabled:1;
+      ULONG DbgInstallerDetectEnabled:1;
+      ULONG DbgSystemDllRelocated:1;
+      ULONG DbgDynProcessorEnabled:1;
+      ULONG DbgSEHValidationEnabled:1;
+      ULONG SpareBits:25;
+    } DUMMYSTRUCTNAME2;
+  } DUMMYUNIONNAME2;
+#else
+  ULONG TraceLogging;
+#endif
+  ULONG DataFlagsPad[1];
+  ULONGLONG TestRetInstruction;
+  ULONG SystemCall;
+  ULONG SystemCallReturn;
+  ULONGLONG SystemCallPad[3];
+  _ANONYMOUS_UNION union {
+    volatile KSYSTEM_TIME TickCount;
+    volatile ULONG64 TickCountQuad;
+    _ANONYMOUS_STRUCT struct {
+      ULONG ReservedTickCountOverlay[3];
+      ULONG TickCountPad[1];
+    } DUMMYSTRUCTNAME;
+  } DUMMYUNIONNAME3;
+  ULONG Cookie;
+  ULONG CookiePad[1];
+#if (NTDDI_VERSION >= NTDDI_WS03)
+  LONGLONG ConsoleSessionForegroundProcessId;
+  ULONG Wow64SharedInformation[MAX_WOW64_SHARED_ENTRIES];
+#endif
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+  USHORT UserModeGlobalLogger[16];
+#else
+  USHORT UserModeGlobalLogger[8];
+  ULONG HeapTracingPid[2];
+  ULONG CritSecTracingPid[2];
+#endif
+  ULONG ImageFileExecutionOptions;
+#if (NTDDI_VERSION >= NTDDI_VISTASP1)
+  ULONG LangGenerationCount;
+#else
+  /* 4 bytes padding */
+#endif
+  ULONGLONG Reserved5;
+  volatile ULONG64 InterruptTimeBias;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+  volatile ULONG64 TscQpcBias;
+  volatile ULONG ActiveProcessorCount;
+  volatile USHORT ActiveGroupCount;
+  USHORT Reserved4;
+  volatile ULONG AitSamplingValue;
+  volatile ULONG AppCompatFlag;
+  ULONGLONG SystemDllNativeRelocation;
+  ULONG SystemDllWowRelocation;
+  ULONG XStatePad[1];
+  XSTATE_CONFIGURATION XState;
+#endif
+} KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+extern NTSYSAPI volatile CCHAR KeNumberProcessors;
+#elif (NTDDI_VERSION >= NTDDI_WINXP)
+extern NTSYSAPI CCHAR KeNumberProcessors;
+#else
+extern PCCHAR KeNumberProcessors;
+#endif
+
 
 /******************************************************************************
  *                          Kernel Debugger Types                             *
@@ -2827,6 +2758,353 @@ typedef enum _WELL_KNOWN_SID_TYPE {
 
 
 
+#if defined(_M_IX86)
+
+#define KERNEL_STACK_SIZE                   12288
+#define KERNEL_LARGE_STACK_SIZE             61440
+#define KERNEL_LARGE_STACK_COMMIT           12288
+
+#define SIZE_OF_80387_REGISTERS   80
+
+#if !defined(RC_INVOKED)
+
+#define CONTEXT_i386               0x10000
+#define CONTEXT_i486               0x10000
+#define CONTEXT_CONTROL            (CONTEXT_i386|0x00000001L)
+#define CONTEXT_INTEGER            (CONTEXT_i386|0x00000002L)
+#define CONTEXT_SEGMENTS           (CONTEXT_i386|0x00000004L)
+#define CONTEXT_FLOATING_POINT     (CONTEXT_i386|0x00000008L)
+#define CONTEXT_DEBUG_REGISTERS    (CONTEXT_i386|0x00000010L)
+#define CONTEXT_EXTENDED_REGISTERS (CONTEXT_i386|0x00000020L)
+
+#define CONTEXT_FULL (CONTEXT_CONTROL|CONTEXT_INTEGER|CONTEXT_SEGMENTS)
+#define CONTEXT_ALL (CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_SEGMENTS |  \
+                     CONTEXT_FLOATING_POINT | CONTEXT_DEBUG_REGISTERS |      \
+                     CONTEXT_EXTENDED_REGISTERS)
+
+#define CONTEXT_XSTATE          (CONTEXT_i386 | 0x00000040L)
+
+#endif /* !defined(RC_INVOKED) */
+
+typedef struct _FLOATING_SAVE_AREA {
+  ULONG ControlWord;
+  ULONG StatusWord;
+  ULONG TagWord;
+  ULONG ErrorOffset;
+  ULONG ErrorSelector;
+  ULONG DataOffset;
+  ULONG DataSelector;
+  UCHAR RegisterArea[SIZE_OF_80387_REGISTERS];
+  ULONG Cr0NpxState;
+} FLOATING_SAVE_AREA, *PFLOATING_SAVE_AREA;
+
+#include "pshpack4.h"
+typedef struct _CONTEXT {
+  ULONG ContextFlags;
+  ULONG Dr0;
+  ULONG Dr1;
+  ULONG Dr2;
+  ULONG Dr3;
+  ULONG Dr6;
+  ULONG Dr7;
+  FLOATING_SAVE_AREA FloatSave;
+  ULONG SegGs;
+  ULONG SegFs;
+  ULONG SegEs;
+  ULONG SegDs;
+  ULONG Edi;
+  ULONG Esi;
+  ULONG Ebx;
+  ULONG Edx;
+  ULONG Ecx;
+  ULONG Eax;
+  ULONG Ebp;
+  ULONG Eip;
+  ULONG SegCs;
+  ULONG EFlags;
+  ULONG Esp;
+  ULONG SegSs;
+  UCHAR ExtendedRegisters[MAXIMUM_SUPPORTED_EXTENSION];
+} CONTEXT;
+#include "poppack.h"
+
+#define KeGetPcr()                      PCR
+
+#define PCR_MINOR_VERSION 1
+#define PCR_MAJOR_VERSION 1
+
+typedef struct _KPCR {
+  union {
+    NT_TIB NtTib;
+    struct {
+      struct _EXCEPTION_REGISTRATION_RECORD *Used_ExceptionList;
+      PVOID Used_StackBase;
+      PVOID Spare2;
+      PVOID TssCopy;
+      ULONG ContextSwitches;
+      KAFFINITY SetMemberCopy;
+      PVOID Used_Self;
+    };
+  };
+  struct _KPCR *SelfPcr;
+  struct _KPRCB *Prcb;
+  KIRQL Irql;
+  ULONG IRR;
+  ULONG IrrActive;
+  ULONG IDR;
+  PVOID KdVersionBlock;
+  struct _KIDTENTRY *IDT;
+  struct _KGDTENTRY *GDT;
+  struct _KTSS *TSS;
+  USHORT MajorVersion;
+  USHORT MinorVersion;
+  KAFFINITY SetMember;
+  ULONG StallScaleFactor;
+  UCHAR SpareUnused;
+  UCHAR Number;
+  UCHAR Spare0;
+  UCHAR SecondLevelCacheAssociativity;
+  ULONG VdmAlert;
+  ULONG KernelReserved[14];
+  ULONG SecondLevelCacheSize;
+  ULONG HalReserved[16];
+} KPCR, *PKPCR;
+
+FORCEINLINE
+ULONG
+KeGetCurrentProcessorNumber(VOID)
+{
+    return (ULONG)__readfsbyte(FIELD_OFFSET(KPCR, Number));
+}
+
+
+
+
+
+
+extern NTKERNELAPI PVOID MmHighestUserAddress;
+extern NTKERNELAPI PVOID MmSystemRangeStart;
+extern NTKERNELAPI ULONG MmUserProbeAddress;
+
+#define MM_HIGHEST_USER_ADDRESS MmHighestUserAddress
+#define MM_SYSTEM_RANGE_START MmSystemRangeStart
+#if defined(_LOCAL_COPY_USER_PROBE_ADDRESS_)
+#define MM_USER_PROBE_ADDRESS _LOCAL_COPY_USER_PROBE_ADDRESS_
+extern ULONG _LOCAL_COPY_USER_PROBE_ADDRESS_;
+#else
+#define MM_USER_PROBE_ADDRESS MmUserProbeAddress
+#endif
+#define MM_LOWEST_USER_ADDRESS (PVOID)0x10000
+#define MM_KSEG0_BASE       MM_SYSTEM_RANGE_START
+#define MM_SYSTEM_SPACE_END 0xFFFFFFFF
+#if !defined (_X86PAE_)
+#define MM_LOWEST_SYSTEM_ADDRESS (PVOID)0xC0800000
+#else
+#define MM_LOWEST_SYSTEM_ADDRESS (PVOID)0xC0C00000
+#endif
+
+#elif defined(_M_AMD64)
+
+#define KERNEL_STACK_SIZE 0x6000
+#define KERNEL_LARGE_STACK_SIZE 0x12000
+#define KERNEL_LARGE_STACK_COMMIT KERNEL_STACK_SIZE
+
+#define KERNEL_MCA_EXCEPTION_STACK_SIZE 0x2000
+
+#define EXCEPTION_READ_FAULT    0
+#define EXCEPTION_WRITE_FAULT   1
+#define EXCEPTION_EXECUTE_FAULT 8
+
+#if !defined(RC_INVOKED)
+
+#define CONTEXT_AMD64 0x100000
+
+#define CONTEXT_CONTROL (CONTEXT_AMD64 | 0x1L)
+#define CONTEXT_INTEGER (CONTEXT_AMD64 | 0x2L)
+#define CONTEXT_SEGMENTS (CONTEXT_AMD64 | 0x4L)
+#define CONTEXT_FLOATING_POINT (CONTEXT_AMD64 | 0x8L)
+#define CONTEXT_DEBUG_REGISTERS (CONTEXT_AMD64 | 0x10L)
+
+#define CONTEXT_FULL (CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_FLOATING_POINT)
+#define CONTEXT_ALL (CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_SEGMENTS | CONTEXT_FLOATING_POINT | CONTEXT_DEBUG_REGISTERS)
+
+#define CONTEXT_XSTATE (CONTEXT_AMD64 | 0x20L)
+
+#define CONTEXT_EXCEPTION_ACTIVE 0x8000000
+#define CONTEXT_SERVICE_ACTIVE 0x10000000
+#define CONTEXT_EXCEPTION_REQUEST 0x40000000
+#define CONTEXT_EXCEPTION_REPORTING 0x80000000
+
+#endif /* !defined(RC_INVOKED) */
+
+#define INITIAL_MXCSR                  0x1f80
+#define INITIAL_FPCSR                  0x027f
+
+typedef struct DECLSPEC_ALIGN(16) _CONTEXT {
+  ULONG64 P1Home;
+  ULONG64 P2Home;
+  ULONG64 P3Home;
+  ULONG64 P4Home;
+  ULONG64 P5Home;
+  ULONG64 P6Home;
+  ULONG ContextFlags;
+  ULONG MxCsr;
+  USHORT SegCs;
+  USHORT SegDs;
+  USHORT SegEs;
+  USHORT SegFs;
+  USHORT SegGs;
+  USHORT SegSs;
+  ULONG EFlags;
+  ULONG64 Dr0;
+  ULONG64 Dr1;
+  ULONG64 Dr2;
+  ULONG64 Dr3;
+  ULONG64 Dr6;
+  ULONG64 Dr7;
+  ULONG64 Rax;
+  ULONG64 Rcx;
+  ULONG64 Rdx;
+  ULONG64 Rbx;
+  ULONG64 Rsp;
+  ULONG64 Rbp;
+  ULONG64 Rsi;
+  ULONG64 Rdi;
+  ULONG64 R8;
+  ULONG64 R9;
+  ULONG64 R10;
+  ULONG64 R11;
+  ULONG64 R12;
+  ULONG64 R13;
+  ULONG64 R14;
+  ULONG64 R15;
+  ULONG64 Rip;
+  union {
+    XMM_SAVE_AREA32 FltSave;
+    struct {
+      M128A Header[2];
+      M128A Legacy[8];
+      M128A Xmm0;
+      M128A Xmm1;
+      M128A Xmm2;
+      M128A Xmm3;
+      M128A Xmm4;
+      M128A Xmm5;
+      M128A Xmm6;
+      M128A Xmm7;
+      M128A Xmm8;
+      M128A Xmm9;
+      M128A Xmm10;
+      M128A Xmm11;
+      M128A Xmm12;
+      M128A Xmm13;
+      M128A Xmm14;
+      M128A Xmm15;
+    } DUMMYSTRUCTNAME;
+  } DUMMYUNIONNAME;
+  M128A VectorRegister[26];
+  ULONG64 VectorControl;
+  ULONG64 DebugControl;
+  ULONG64 LastBranchToRip;
+  ULONG64 LastBranchFromRip;
+  ULONG64 LastExceptionToRip;
+  ULONG64 LastExceptionFromRip;
+} CONTEXT;
+
+typedef struct _KPCR
+{
+    _ANONYMOUS_UNION union
+    {
+        NT_TIB NtTib;
+        _ANONYMOUS_STRUCT struct
+        {
+            union _KGDTENTRY64 *GdtBase;
+            struct _KTSS64 *TssBase;
+            ULONG64 UserRsp;
+            struct _KPCR *Self;
+            struct _KPRCB *CurrentPrcb;
+            PKSPIN_LOCK_QUEUE LockArray;
+            PVOID Used_Self;
+        };
+    };
+    union _KIDTENTRY64 *IdtBase;
+    ULONG64 Unused[2];
+    KIRQL Irql;
+    UCHAR SecondLevelCacheAssociativity;
+    UCHAR ObsoleteNumber;
+    UCHAR Fill0;
+    ULONG Unused0[3];
+    USHORT MajorVersion;
+    USHORT MinorVersion;
+    ULONG StallScaleFactor;
+    PVOID Unused1[3];
+    ULONG KernelReserved[15];
+    ULONG SecondLevelCacheSize;
+    ULONG HalReserved[16];
+    ULONG Unused2;
+    PVOID KdVersionBlock;
+    PVOID Unused3;
+    ULONG PcrAlign1[24];
+} KPCR, *PKPCR;
+
+FORCEINLINE
+PKPCR
+KeGetPcr(VOID)
+{
+    return (PKPCR)__readgsqword(FIELD_OFFSET(KPCR, Self));
+}
+
+FORCEINLINE
+ULONG
+KeGetCurrentProcessorNumber(VOID)
+{
+    return (ULONG)__readgsword(0x184);
+}
+
+
+#define PTI_SHIFT  12L
+#define PDI_SHIFT  21L
+#define PPI_SHIFT  30L
+#define PXI_SHIFT  39L
+#define PTE_PER_PAGE 512
+#define PDE_PER_PAGE 512
+#define PPE_PER_PAGE 512
+#define PXE_PER_PAGE 512
+#define PTI_MASK_AMD64 (PTE_PER_PAGE - 1)
+#define PDI_MASK_AMD64 (PDE_PER_PAGE - 1)
+#define PPI_MASK (PPE_PER_PAGE - 1)
+#define PXI_MASK (PXE_PER_PAGE - 1)
+
+#define PXE_BASE    0xFFFFF6FB7DBED000ULL
+#define PXE_SELFMAP 0xFFFFF6FB7DBEDF68ULL
+#define PPE_BASE    0xFFFFF6FB7DA00000ULL
+#define PDE_BASE    0xFFFFF6FB40000000ULL
+#define PTE_BASE    0xFFFFF68000000000ULL
+#define PXE_TOP     0xFFFFF6FB7DBEDFFFULL
+#define PPE_TOP     0xFFFFF6FB7DBFFFFFULL
+#define PDE_TOP     0xFFFFF6FB7FFFFFFFULL
+#define PTE_TOP     0xFFFFF6FFFFFFFFFFULL
+
+#define MM_HIGHEST_USER_ADDRESS           MmHighestUserAddress
+#define MM_SYSTEM_RANGE_START             MmSystemRangeStart
+#define MM_USER_PROBE_ADDRESS             MmUserProbeAddress
+#define MM_LOWEST_USER_ADDRESS   (PVOID)0x10000
+#define MM_LOWEST_SYSTEM_ADDRESS (PVOID)0xFFFF080000000000ULL
+#define KI_USER_SHARED_DATA       0xFFFFF78000000000ULL
+
+
+#elif defined(_M_IA64)
+
+#elif defined(_M_PPC)
+
+
+#elif defined(_M_MIPS)
+
+#elif defined(_M_ARM)
+#else
+#error Unknown Architecture
+#endif
+
 /******************************************************************************
  *                          Executive Functions                               *
  ******************************************************************************/
@@ -2894,6 +3172,34 @@ ExFreeToZone(
 #define ExIsResourceAcquiredShared ExIsResourceAcquiredSharedLite
 #define ExIsResourceAcquired ExIsResourceAcquiredSharedLite
 #define ExReleaseResourceForThread ExReleaseResourceForThreadLite
+
+typedef enum _INTERLOCKED_RESULT {
+  ResultNegative = RESULT_NEGATIVE,
+  ResultZero = RESULT_ZERO,
+  ResultPositive = RESULT_POSITIVE
+} INTERLOCKED_RESULT;
+
+#ifdef _X86_
+NTKERNELAPI
+INTERLOCKED_RESULT
+FASTCALL
+Exfi386InterlockedIncrementLong(
+  IN OUT LONG volatile *Addend);
+
+NTKERNELAPI
+INTERLOCKED_RESULT
+FASTCALL
+Exfi386InterlockedDecrementLong(
+  IN PLONG  Addend);
+
+NTKERNELAPI
+ULONG
+FASTCALL
+Exfi386InterlockedExchangeUlong(
+  IN PULONG  Target,
+  IN ULONG  Value);
+#endif
+
 
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
@@ -5411,8 +5717,6 @@ typedef struct _DRIVER_VERIFIER_THUNK_PAIRS {
 #define DRIVER_VERIFIER_TRACK_POOL_ALLOCATIONS      0x0008
 #define DRIVER_VERIFIER_IO_CHECKING                 0x0010
 
-#define MAX_WOW64_SHARED_ENTRIES 16
-
 #define NX_SUPPORT_POLICY_ALWAYSOFF 0
 #define NX_SUPPORT_POLICY_ALWAYSON 1
 #define NX_SUPPORT_POLICY_OPTIN 2
@@ -5452,120 +5756,6 @@ typedef struct _DRIVER_VERIFIER_THUNK_PAIRS {
 #define EX_TEST_CLEAR_BIT(Flags, Bit) \
     InterlockedBitTestAndReset ((PLONG)(Flags), (Bit))
 
-typedef struct _KUSER_SHARED_DATA {
-  ULONG TickCountLowDeprecated;
-  ULONG TickCountMultiplier;
-  volatile KSYSTEM_TIME InterruptTime;
-  volatile KSYSTEM_TIME SystemTime;
-  volatile KSYSTEM_TIME TimeZoneBias;
-  USHORT ImageNumberLow;
-  USHORT ImageNumberHigh;
-  WCHAR NtSystemRoot[260];
-  ULONG MaxStackTraceDepth;
-  ULONG CryptoExponent;
-  ULONG TimeZoneId;
-  ULONG LargePageMinimum;
-  ULONG Reserved2[7];
-  NT_PRODUCT_TYPE NtProductType;
-  BOOLEAN ProductTypeIsValid;
-  ULONG NtMajorVersion;
-  ULONG NtMinorVersion;
-  BOOLEAN ProcessorFeatures[PROCESSOR_FEATURE_MAX];
-  ULONG Reserved1;
-  ULONG Reserved3;
-  volatile ULONG TimeSlip;
-  ALTERNATIVE_ARCHITECTURE_TYPE AlternativeArchitecture;
-  ULONG AltArchitecturePad[1];
-  LARGE_INTEGER SystemExpirationDate;
-  ULONG SuiteMask;
-  BOOLEAN KdDebuggerEnabled;
-#if (NTDDI_VERSION >= NTDDI_WINXPSP2)
-  UCHAR NXSupportPolicy;
-#endif
-  volatile ULONG ActiveConsoleId;
-  volatile ULONG DismountCount;
-  ULONG ComPlusPackage;
-  ULONG LastSystemRITEventTickCount;
-  ULONG NumberOfPhysicalPages;
-  BOOLEAN SafeBootMode;
-#if (NTDDI_VERSION >= NTDDI_WIN7)
-  union {
-    UCHAR TscQpcData;
-    struct {
-      UCHAR TscQpcEnabled:1;
-      UCHAR TscQpcSpareFlag:1;
-      UCHAR TscQpcShift:6;
-    } DUMMYSTRUCTNAME;
-  } DUMMYUNIONNAME;
-  UCHAR TscQpcPad[2];
-#endif
-#if (NTDDI_VERSION >= NTDDI_VISTA)
-  union {
-    ULONG SharedDataFlags;
-    struct {
-      ULONG DbgErrorPortPresent:1;
-      ULONG DbgElevationEnabled:1;
-      ULONG DbgVirtEnabled:1;
-      ULONG DbgInstallerDetectEnabled:1;
-      ULONG DbgSystemDllRelocated:1;
-      ULONG DbgDynProcessorEnabled:1;
-      ULONG DbgSEHValidationEnabled:1;
-      ULONG SpareBits:25;
-    } DUMMYSTRUCTNAME2;
-  } DUMMYUNIONNAME2;
-#else
-  ULONG TraceLogging;
-#endif
-  ULONG DataFlagsPad[1];
-  ULONGLONG TestRetInstruction;
-  ULONG SystemCall;
-  ULONG SystemCallReturn;
-  ULONGLONG SystemCallPad[3];
-  _ANONYMOUS_UNION union {
-    volatile KSYSTEM_TIME TickCount;
-    volatile ULONG64 TickCountQuad;
-    _ANONYMOUS_STRUCT struct {
-      ULONG ReservedTickCountOverlay[3];
-      ULONG TickCountPad[1];
-    } DUMMYSTRUCTNAME;
-  } DUMMYUNIONNAME3;
-  ULONG Cookie;
-  ULONG CookiePad[1];
-#if (NTDDI_VERSION >= NTDDI_WS03)
-  LONGLONG ConsoleSessionForegroundProcessId;
-  ULONG Wow64SharedInformation[MAX_WOW64_SHARED_ENTRIES];
-#endif
-#if (NTDDI_VERSION >= NTDDI_VISTA)
-#if (NTDDI_VERSION >= NTDDI_WIN7)
-  USHORT UserModeGlobalLogger[16];
-#else
-  USHORT UserModeGlobalLogger[8];
-  ULONG HeapTracingPid[2];
-  ULONG CritSecTracingPid[2];
-#endif
-  ULONG ImageFileExecutionOptions;
-#if (NTDDI_VERSION >= NTDDI_VISTASP1)
-  ULONG LangGenerationCount;
-#else
-  /* 4 bytes padding */
-#endif
-  ULONGLONG Reserved5;
-  volatile ULONG64 InterruptTimeBias;
-#endif
-#if (NTDDI_VERSION >= NTDDI_WIN7)
-  volatile ULONG64 TscQpcBias;
-  volatile ULONG ActiveProcessorCount;
-  volatile USHORT ActiveGroupCount;
-  USHORT Reserved4;
-  volatile ULONG AitSamplingValue;
-  volatile ULONG AppCompatFlag;
-  ULONGLONG SystemDllNativeRelocation;
-  ULONG SystemDllWowRelocation;
-  ULONG XStatePad[1];
-  XSTATE_CONFIGURATION XState;
-#endif
-} KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
-
 #define CmResourceTypeMaximum             8
 
 typedef struct _CM_PCCARD_DEVICE_DATA {
@@ -5589,12 +5779,6 @@ typedef struct _CM_PCCARD_DEVICE_DATA {
 #define PCCARD_DUP_LEGACY_BASE         0x06
 #define PCCARD_NO_CONTROLLERS          0x07
 
-#if defined(_X86_) || defined(_AMD64_)
-#define PAUSE_PROCESSOR YieldProcessor();
-#elif defined(_IA64_)
-#define PAUSE_PROCESSOR __yield();
-#endif
-
 #define MAXIMUM_EXPANSION_SIZE (KERNEL_LARGE_STACK_SIZE - (PAGE_SIZE / 2))
 
 /* Filesystem runtime library routines */
@@ -5608,189 +5792,6 @@ FsRtlIsTotalDeviceFailure(
 #endif
 
 /* FIXME : These definitions below doesn't belong to NTDDK */
-
-#ifdef _X86_
-
-extern NTKERNELAPI PVOID MmHighestUserAddress;
-extern NTKERNELAPI PVOID MmSystemRangeStart;
-extern NTKERNELAPI ULONG MmUserProbeAddress;
-
-#define MM_HIGHEST_USER_ADDRESS MmHighestUserAddress
-#define MM_SYSTEM_RANGE_START MmSystemRangeStart
-#if defined(_LOCAL_COPY_USER_PROBE_ADDRESS_)
-#define MM_USER_PROBE_ADDRESS _LOCAL_COPY_USER_PROBE_ADDRESS_
-extern ULONG _LOCAL_COPY_USER_PROBE_ADDRESS_;
-#else
-#define MM_USER_PROBE_ADDRESS MmUserProbeAddress
-#endif
-#define MM_LOWEST_USER_ADDRESS (PVOID)0x10000
-#define MM_KSEG0_BASE       MM_SYSTEM_RANGE_START
-#define MM_SYSTEM_SPACE_END 0xFFFFFFFF
-#if !defined (_X86PAE_)
-#define MM_LOWEST_SYSTEM_ADDRESS (PVOID)0xC0800000
-#else
-#define MM_LOWEST_SYSTEM_ADDRESS (PVOID)0xC0C00000
-#endif
-
-#define KeGetPcr()                      PCR
-
-#define PCR_MINOR_VERSION 1
-#define PCR_MAJOR_VERSION 1
-
-typedef struct _KPCR {
-  union {
-    NT_TIB NtTib;
-    struct {
-      struct _EXCEPTION_REGISTRATION_RECORD *Used_ExceptionList;
-      PVOID Used_StackBase;
-      PVOID Spare2;
-      PVOID TssCopy;
-      ULONG ContextSwitches;
-      KAFFINITY SetMemberCopy;
-      PVOID Used_Self;
-    };
-  };
-  struct _KPCR *SelfPcr;
-  struct _KPRCB *Prcb;
-  KIRQL Irql;
-  ULONG IRR;
-  ULONG IrrActive;
-  ULONG IDR;
-  PVOID KdVersionBlock;
-  struct _KIDTENTRY *IDT;
-  struct _KGDTENTRY *GDT;
-  struct _KTSS *TSS;
-  USHORT MajorVersion;
-  USHORT MinorVersion;
-  KAFFINITY SetMember;
-  ULONG StallScaleFactor;
-  UCHAR SpareUnused;
-  UCHAR Number;
-  UCHAR Spare0;
-  UCHAR SecondLevelCacheAssociativity;
-  ULONG VdmAlert;
-  ULONG KernelReserved[14];
-  ULONG SecondLevelCacheSize;
-  ULONG HalReserved[16];
-} KPCR, *PKPCR;
-
-FORCEINLINE
-ULONG
-KeGetCurrentProcessorNumber(VOID)
-{
-    return (ULONG)__readfsbyte(FIELD_OFFSET(KPCR, Number));
-}
-
-typedef enum _INTERLOCKED_RESULT {
-  ResultNegative = RESULT_NEGATIVE,
-  ResultZero = RESULT_ZERO,
-  ResultPositive = RESULT_POSITIVE
-} INTERLOCKED_RESULT;
-
-NTKERNELAPI
-INTERLOCKED_RESULT
-FASTCALL
-Exfi386InterlockedIncrementLong(
-  IN OUT LONG volatile *Addend);
-
-NTKERNELAPI
-INTERLOCKED_RESULT
-FASTCALL
-Exfi386InterlockedDecrementLong(
-  IN PLONG  Addend);
-
-NTKERNELAPI
-ULONG
-FASTCALL
-Exfi386InterlockedExchangeUlong(
-  IN PULONG  Target,
-  IN ULONG  Value);
-
-#endif /* _X86_ */
-
-#ifdef _AMD64_
-
-#define PTI_SHIFT  12L
-#define PDI_SHIFT  21L
-#define PPI_SHIFT  30L
-#define PXI_SHIFT  39L
-#define PTE_PER_PAGE 512
-#define PDE_PER_PAGE 512
-#define PPE_PER_PAGE 512
-#define PXE_PER_PAGE 512
-#define PTI_MASK_AMD64 (PTE_PER_PAGE - 1)
-#define PDI_MASK_AMD64 (PDE_PER_PAGE - 1)
-#define PPI_MASK (PPE_PER_PAGE - 1)
-#define PXI_MASK (PXE_PER_PAGE - 1)
-
-#define PXE_BASE    0xFFFFF6FB7DBED000ULL
-#define PXE_SELFMAP 0xFFFFF6FB7DBEDF68ULL
-#define PPE_BASE    0xFFFFF6FB7DA00000ULL
-#define PDE_BASE    0xFFFFF6FB40000000ULL
-#define PTE_BASE    0xFFFFF68000000000ULL
-#define PXE_TOP     0xFFFFF6FB7DBEDFFFULL
-#define PPE_TOP     0xFFFFF6FB7DBFFFFFULL
-#define PDE_TOP     0xFFFFF6FB7FFFFFFFULL
-#define PTE_TOP     0xFFFFF6FFFFFFFFFFULL
-
-#define MM_HIGHEST_USER_ADDRESS           MmHighestUserAddress
-#define MM_SYSTEM_RANGE_START             MmSystemRangeStart
-#define MM_USER_PROBE_ADDRESS             MmUserProbeAddress
-#define MM_LOWEST_USER_ADDRESS   (PVOID)0x10000
-#define MM_LOWEST_SYSTEM_ADDRESS (PVOID)0xFFFF080000000000ULL
-#define KI_USER_SHARED_DATA       0xFFFFF78000000000ULL
-
-typedef struct _KPCR
-{
-    _ANONYMOUS_UNION union
-    {
-        NT_TIB NtTib;
-        _ANONYMOUS_STRUCT struct
-        {
-            union _KGDTENTRY64 *GdtBase;
-            struct _KTSS64 *TssBase;
-            ULONG64 UserRsp;
-            struct _KPCR *Self;
-            struct _KPRCB *CurrentPrcb;
-            PKSPIN_LOCK_QUEUE LockArray;
-            PVOID Used_Self;
-        };
-    };
-    union _KIDTENTRY64 *IdtBase;
-    ULONG64 Unused[2];
-    KIRQL Irql;
-    UCHAR SecondLevelCacheAssociativity;
-    UCHAR ObsoleteNumber;
-    UCHAR Fill0;
-    ULONG Unused0[3];
-    USHORT MajorVersion;
-    USHORT MinorVersion;
-    ULONG StallScaleFactor;
-    PVOID Unused1[3];
-    ULONG KernelReserved[15];
-    ULONG SecondLevelCacheSize;
-    ULONG HalReserved[16];
-    ULONG Unused2;
-    PVOID KdVersionBlock;
-    PVOID Unused3;
-    ULONG PcrAlign1[24];
-} KPCR, *PKPCR;
-
-FORCEINLINE
-PKPCR
-KeGetPcr(VOID)
-{
-    return (PKPCR)__readgsqword(FIELD_OFFSET(KPCR, Self));
-}
-
-FORCEINLINE
-ULONG
-KeGetCurrentProcessorNumber(VOID)
-{
-    return (ULONG)__readgsword(0x184);
-}
-
-#endif /* _AMD64_ */
 
 #ifdef __cplusplus
 }

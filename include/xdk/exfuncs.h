@@ -66,6 +66,34 @@ ExFreeToZone(
 #define ExIsResourceAcquiredShared ExIsResourceAcquiredSharedLite
 #define ExIsResourceAcquired ExIsResourceAcquiredSharedLite
 #define ExReleaseResourceForThread ExReleaseResourceForThreadLite
+
+typedef enum _INTERLOCKED_RESULT {
+  ResultNegative = RESULT_NEGATIVE,
+  ResultZero = RESULT_ZERO,
+  ResultPositive = RESULT_POSITIVE
+} INTERLOCKED_RESULT;
+
+#ifdef _X86_
+NTKERNELAPI
+INTERLOCKED_RESULT
+FASTCALL
+Exfi386InterlockedIncrementLong(
+  IN OUT LONG volatile *Addend);
+
+NTKERNELAPI
+INTERLOCKED_RESULT
+FASTCALL
+Exfi386InterlockedDecrementLong(
+  IN PLONG  Addend);
+
+NTKERNELAPI
+ULONG
+FASTCALL
+Exfi386InterlockedExchangeUlong(
+  IN PULONG  Target,
+  IN ULONG  Value);
+#endif
+
 $endif
 
 $if (_WDMDDK_)

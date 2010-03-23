@@ -1,60 +1,8 @@
 /******************************************************************************
  *                              Kernel Types                                  *
  ******************************************************************************/
-
-$if (_NTDDK_)
-typedef VOID
-(NTAPI *PEXPAND_STACK_CALLOUT)(
-  IN PVOID Parameter OPTIONAL);
-
-typedef VOID
-(NTAPI *PTIMER_APC_ROUTINE)(
-  IN PVOID TimerContext,
-  IN ULONG TimerLowValue,
-  IN LONG TimerHighValue);
-
-typedef enum _TIMER_SET_INFORMATION_CLASS {
-  TimerSetCoalescableTimer,
-  MaxTimerInfoClass 
-} TIMER_SET_INFORMATION_CLASS;
-
-#if (NTDDI_VERSION >= NTDDI_WIN7)
-typedef struct _TIMER_SET_COALESCABLE_TIMER_INFO {
-  IN LARGE_INTEGER DueTime;
-  IN PTIMER_APC_ROUTINE TimerApcRoutine OPTIONAL;
-  IN PVOID TimerContext OPTIONAL;
-  IN struct _COUNTED_REASON_CONTEXT *WakeContext OPTIONAL;
-  IN ULONG Period OPTIONAL;
-  IN ULONG TolerableDelay;
-  OUT PBOOLEAN PreviousState OPTIONAL;
-} TIMER_SET_COALESCABLE_TIMER_INFO, *PTIMER_SET_COALESCABLE_TIMER_INFO;
-#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
-
-#define XSTATE_LEGACY_FLOATING_POINT        0
-#define XSTATE_LEGACY_SSE                   1
-#define XSTATE_GSSE                         2
-
-#define XSTATE_MASK_LEGACY_FLOATING_POINT   (1i64 << (XSTATE_LEGACY_FLOATING_POINT))
-#define XSTATE_MASK_LEGACY_SSE              (1i64 << (XSTATE_LEGACY_SSE))
-#define XSTATE_MASK_LEGACY                  (XSTATE_MASK_LEGACY_FLOATING_POINT | XSTATE_MASK_LEGACY_SSE)
-#define XSTATE_MASK_GSSE                    (1i64 << (XSTATE_GSSE))
-
-#define MAXIMUM_XSTATE_FEATURES             64
-
-typedef struct _XSTATE_FEATURE {
-  ULONG Offset;
-  ULONG Size;
-} XSTATE_FEATURE, *PXSTATE_FEATURE;
-
-typedef struct _XSTATE_CONFIGURATION {
-  ULONG64 EnabledFeatures;
-  ULONG Size;
-  ULONG OptimizedSave:1;
-  XSTATE_FEATURE Features[MAXIMUM_XSTATE_FEATURES];
-} XSTATE_CONFIGURATION, *PXSTATE_CONFIGURATION;
-$endif
-
 $if (_WDMDDK_)
+
 typedef UCHAR KIRQL, *PKIRQL;
 typedef CCHAR KPROCESSOR_MODE;
 typedef LONG KPRIORITY;
@@ -1049,5 +997,182 @@ extern NTSYSAPI CCHAR KeNumberProcessors;
 extern PCCHAR KeNumberProcessors;
 #endif
 
-$endif
+$endif /* _WDMDDK_ */
+$if (_NTDDK_)
+
+typedef VOID
+(NTAPI *PEXPAND_STACK_CALLOUT)(
+  IN PVOID Parameter OPTIONAL);
+
+typedef VOID
+(NTAPI *PTIMER_APC_ROUTINE)(
+  IN PVOID TimerContext,
+  IN ULONG TimerLowValue,
+  IN LONG TimerHighValue);
+
+typedef enum _TIMER_SET_INFORMATION_CLASS {
+  TimerSetCoalescableTimer,
+  MaxTimerInfoClass 
+} TIMER_SET_INFORMATION_CLASS;
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+typedef struct _TIMER_SET_COALESCABLE_TIMER_INFO {
+  IN LARGE_INTEGER DueTime;
+  IN PTIMER_APC_ROUTINE TimerApcRoutine OPTIONAL;
+  IN PVOID TimerContext OPTIONAL;
+  IN struct _COUNTED_REASON_CONTEXT *WakeContext OPTIONAL;
+  IN ULONG Period OPTIONAL;
+  IN ULONG TolerableDelay;
+  OUT PBOOLEAN PreviousState OPTIONAL;
+} TIMER_SET_COALESCABLE_TIMER_INFO, *PTIMER_SET_COALESCABLE_TIMER_INFO;
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
+
+#define XSTATE_LEGACY_FLOATING_POINT        0
+#define XSTATE_LEGACY_SSE                   1
+#define XSTATE_GSSE                         2
+
+#define XSTATE_MASK_LEGACY_FLOATING_POINT   (1i64 << (XSTATE_LEGACY_FLOATING_POINT))
+#define XSTATE_MASK_LEGACY_SSE              (1i64 << (XSTATE_LEGACY_SSE))
+#define XSTATE_MASK_LEGACY                  (XSTATE_MASK_LEGACY_FLOATING_POINT | XSTATE_MASK_LEGACY_SSE)
+#define XSTATE_MASK_GSSE                    (1i64 << (XSTATE_GSSE))
+
+#define MAXIMUM_XSTATE_FEATURES             64
+
+typedef struct _XSTATE_FEATURE {
+  ULONG Offset;
+  ULONG Size;
+} XSTATE_FEATURE, *PXSTATE_FEATURE;
+
+typedef struct _XSTATE_CONFIGURATION {
+  ULONG64 EnabledFeatures;
+  ULONG Size;
+  ULONG OptimizedSave:1;
+  XSTATE_FEATURE Features[MAXIMUM_XSTATE_FEATURES];
+} XSTATE_CONFIGURATION, *PXSTATE_CONFIGURATION;
+
+#define MAX_WOW64_SHARED_ENTRIES 16
+
+typedef struct _KUSER_SHARED_DATA {
+  ULONG TickCountLowDeprecated;
+  ULONG TickCountMultiplier;
+  volatile KSYSTEM_TIME InterruptTime;
+  volatile KSYSTEM_TIME SystemTime;
+  volatile KSYSTEM_TIME TimeZoneBias;
+  USHORT ImageNumberLow;
+  USHORT ImageNumberHigh;
+  WCHAR NtSystemRoot[260];
+  ULONG MaxStackTraceDepth;
+  ULONG CryptoExponent;
+  ULONG TimeZoneId;
+  ULONG LargePageMinimum;
+  ULONG Reserved2[7];
+  NT_PRODUCT_TYPE NtProductType;
+  BOOLEAN ProductTypeIsValid;
+  ULONG NtMajorVersion;
+  ULONG NtMinorVersion;
+  BOOLEAN ProcessorFeatures[PROCESSOR_FEATURE_MAX];
+  ULONG Reserved1;
+  ULONG Reserved3;
+  volatile ULONG TimeSlip;
+  ALTERNATIVE_ARCHITECTURE_TYPE AlternativeArchitecture;
+  ULONG AltArchitecturePad[1];
+  LARGE_INTEGER SystemExpirationDate;
+  ULONG SuiteMask;
+  BOOLEAN KdDebuggerEnabled;
+#if (NTDDI_VERSION >= NTDDI_WINXPSP2)
+  UCHAR NXSupportPolicy;
+#endif
+  volatile ULONG ActiveConsoleId;
+  volatile ULONG DismountCount;
+  ULONG ComPlusPackage;
+  ULONG LastSystemRITEventTickCount;
+  ULONG NumberOfPhysicalPages;
+  BOOLEAN SafeBootMode;
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+  union {
+    UCHAR TscQpcData;
+    struct {
+      UCHAR TscQpcEnabled:1;
+      UCHAR TscQpcSpareFlag:1;
+      UCHAR TscQpcShift:6;
+    } DUMMYSTRUCTNAME;
+  } DUMMYUNIONNAME;
+  UCHAR TscQpcPad[2];
+#endif
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+  union {
+    ULONG SharedDataFlags;
+    struct {
+      ULONG DbgErrorPortPresent:1;
+      ULONG DbgElevationEnabled:1;
+      ULONG DbgVirtEnabled:1;
+      ULONG DbgInstallerDetectEnabled:1;
+      ULONG DbgSystemDllRelocated:1;
+      ULONG DbgDynProcessorEnabled:1;
+      ULONG DbgSEHValidationEnabled:1;
+      ULONG SpareBits:25;
+    } DUMMYSTRUCTNAME2;
+  } DUMMYUNIONNAME2;
+#else
+  ULONG TraceLogging;
+#endif
+  ULONG DataFlagsPad[1];
+  ULONGLONG TestRetInstruction;
+  ULONG SystemCall;
+  ULONG SystemCallReturn;
+  ULONGLONG SystemCallPad[3];
+  _ANONYMOUS_UNION union {
+    volatile KSYSTEM_TIME TickCount;
+    volatile ULONG64 TickCountQuad;
+    _ANONYMOUS_STRUCT struct {
+      ULONG ReservedTickCountOverlay[3];
+      ULONG TickCountPad[1];
+    } DUMMYSTRUCTNAME;
+  } DUMMYUNIONNAME3;
+  ULONG Cookie;
+  ULONG CookiePad[1];
+#if (NTDDI_VERSION >= NTDDI_WS03)
+  LONGLONG ConsoleSessionForegroundProcessId;
+  ULONG Wow64SharedInformation[MAX_WOW64_SHARED_ENTRIES];
+#endif
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+  USHORT UserModeGlobalLogger[16];
+#else
+  USHORT UserModeGlobalLogger[8];
+  ULONG HeapTracingPid[2];
+  ULONG CritSecTracingPid[2];
+#endif
+  ULONG ImageFileExecutionOptions;
+#if (NTDDI_VERSION >= NTDDI_VISTASP1)
+  ULONG LangGenerationCount;
+#else
+  /* 4 bytes padding */
+#endif
+  ULONGLONG Reserved5;
+  volatile ULONG64 InterruptTimeBias;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+  volatile ULONG64 TscQpcBias;
+  volatile ULONG ActiveProcessorCount;
+  volatile USHORT ActiveGroupCount;
+  USHORT Reserved4;
+  volatile ULONG AitSamplingValue;
+  volatile ULONG AppCompatFlag;
+  ULONGLONG SystemDllNativeRelocation;
+  ULONG SystemDllWowRelocation;
+  ULONG XStatePad[1];
+  XSTATE_CONFIGURATION XState;
+#endif
+} KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+extern NTSYSAPI volatile CCHAR KeNumberProcessors;
+#elif (NTDDI_VERSION >= NTDDI_WINXP)
+extern NTSYSAPI CCHAR KeNumberProcessors;
+#else
+extern PCCHAR KeNumberProcessors;
+#endif
+
+$endif /* _NTDDK_ */
 
