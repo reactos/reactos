@@ -3505,7 +3505,7 @@ NTSTATUS
     ULONG GpeNumber,
     KINTERRUPT_MODE Mode,
     BOOLEAN Shareable,
-    PGPE_SERVICE_ROUTINE2 ServiceRoutine,
+    PGPE_SERVICE_ROUTINE ServiceRoutine,
     PVOID ServiceContext,
     PVOID *ObjectContext
 );
