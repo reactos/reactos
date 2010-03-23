@@ -268,7 +268,7 @@ typedef struct _LOCK_STATE {
 /* Timer */
 
 typedef VOID
-(DDKAPI *PNDIS_TIMER_FUNCTION)(
+(NTAPI *PNDIS_TIMER_FUNCTION)(
 	IN PVOID  SystemSpecific1,
 	IN PVOID  FunctionContext,
 	IN PVOID  SystemSpecific2,
@@ -626,16 +626,16 @@ typedef struct _NDIS_WAN_LINE_UP {
 
 
 typedef VOID
-(DDKAPI *ADAPTER_SHUTDOWN_HANDLER)(
+(NTAPI *ADAPTER_SHUTDOWN_HANDLER)(
   IN PVOID  ShutdownContext);
 
 typedef NTSTATUS
-(DDKAPI *TDI_REGISTER_CALLBACK)(
+(NTAPI *TDI_REGISTER_CALLBACK)(
     IN  PUNICODE_STRING         DeviceName,
     OUT HANDLE*                 TdiHandle);
 
 typedef NTSTATUS
-(DDKAPI *TDI_PNP_HANDLER)(
+(NTAPI *TDI_PNP_HANDLER)(
     IN  PUNICODE_STRING         UpperComponent,
     IN  PUNICODE_STRING         LowerComponent,
     IN  PUNICODE_STRING         BindList,
@@ -1057,88 +1057,88 @@ typedef struct _WAN_CO_LINKPARAMS {
 /* Call Manager */
 
 typedef VOID
-(DDKAPI *CM_ACTIVATE_VC_COMPLETE_HANDLER)(
+(NTAPI *CM_ACTIVATE_VC_COMPLETE_HANDLER)(
   IN NDIS_STATUS  Status,
   IN NDIS_HANDLE  CallMgrVcContext,
   IN PCO_CALL_PARAMETERS  CallParameters);
 
 typedef NDIS_STATUS
-(DDKAPI *CM_ADD_PARTY_HANDLER)(
+(NTAPI *CM_ADD_PARTY_HANDLER)(
   IN NDIS_HANDLE  CallMgrVcContext,
   IN OUT PCO_CALL_PARAMETERS  CallParameters,
   IN NDIS_HANDLE  NdisPartyHandle,
   OUT PNDIS_HANDLE  CallMgrPartyContext);
 
 typedef NDIS_STATUS
-(DDKAPI *CM_CLOSE_AF_HANDLER)(
+(NTAPI *CM_CLOSE_AF_HANDLER)(
   IN NDIS_HANDLE  CallMgrAfContext);
 
 typedef NDIS_STATUS
-(DDKAPI *CM_CLOSE_CALL_HANDLER)(
+(NTAPI *CM_CLOSE_CALL_HANDLER)(
   IN NDIS_HANDLE  CallMgrVcContext,
   IN NDIS_HANDLE  CallMgrPartyContext  OPTIONAL,
   IN PVOID  CloseData  OPTIONAL,
   IN UINT  Size  OPTIONAL);
 
 typedef NDIS_STATUS
-(DDKAPI *CM_DEREG_SAP_HANDLER)(
+(NTAPI *CM_DEREG_SAP_HANDLER)(
   IN NDIS_HANDLE  CallMgrSapContext);
 
 typedef VOID
-(DDKAPI *CM_DEACTIVATE_VC_COMPLETE_HANDLER)(
+(NTAPI *CM_DEACTIVATE_VC_COMPLETE_HANDLER)(
 	IN NDIS_STATUS  Status,
 	IN NDIS_HANDLE  CallMgrVcContext);
 
 typedef NDIS_STATUS
-(DDKAPI *CM_DROP_PARTY_HANDLER)(
+(NTAPI *CM_DROP_PARTY_HANDLER)(
   IN NDIS_HANDLE  CallMgrPartyContext,
   IN PVOID  CloseData  OPTIONAL,
   IN UINT  Size  OPTIONAL);
 
 typedef VOID
-(DDKAPI *CM_INCOMING_CALL_COMPLETE_HANDLER)(
+(NTAPI *CM_INCOMING_CALL_COMPLETE_HANDLER)(
   IN NDIS_STATUS  Status,
   IN NDIS_HANDLE  CallMgrVcContext,
   IN PCO_CALL_PARAMETERS  CallParameters);
 
 typedef NDIS_STATUS
-(DDKAPI *CM_MAKE_CALL_HANDLER)(
+(NTAPI *CM_MAKE_CALL_HANDLER)(
   IN NDIS_HANDLE  CallMgrVcContext,
   IN OUT PCO_CALL_PARAMETERS  CallParameters,
   IN NDIS_HANDLE  NdisPartyHandle	OPTIONAL,
   OUT PNDIS_HANDLE  CallMgrPartyContext  OPTIONAL);
 
 typedef NDIS_STATUS
-(DDKAPI *CM_MODIFY_CALL_QOS_HANDLER)(
+(NTAPI *CM_MODIFY_CALL_QOS_HANDLER)(
   IN NDIS_HANDLE  CallMgrVcContext,
   IN PCO_CALL_PARAMETERS  CallParameters);
 
 typedef NDIS_STATUS
-(DDKAPI *CM_OPEN_AF_HANDLER)(
+(NTAPI *CM_OPEN_AF_HANDLER)(
 	IN NDIS_HANDLE  CallMgrBindingContext,
 	IN PCO_ADDRESS_FAMILY  AddressFamily,
 	IN NDIS_HANDLE  NdisAfHandle,
 	OUT PNDIS_HANDLE  CallMgrAfContext);
 
 typedef NDIS_STATUS
-(DDKAPI *CM_REG_SAP_HANDLER)(
+(NTAPI *CM_REG_SAP_HANDLER)(
   IN NDIS_HANDLE  CallMgrAfContext,
   IN PCO_SAP  Sap,
   IN NDIS_HANDLE  NdisSapHandle,
   OUT	PNDIS_HANDLE  CallMgrSapContext);
 
 typedef NDIS_STATUS
-(DDKAPI *CO_CREATE_VC_HANDLER)(
+(NTAPI *CO_CREATE_VC_HANDLER)(
   IN NDIS_HANDLE  ProtocolAfContext,
   IN NDIS_HANDLE  NdisVcHandle,
   OUT PNDIS_HANDLE  ProtocolVcContext);
 
 typedef NDIS_STATUS
-(DDKAPI *CO_DELETE_VC_HANDLER)(
+(NTAPI *CO_DELETE_VC_HANDLER)(
   IN NDIS_HANDLE  ProtocolVcContext);
 
 typedef VOID
-(DDKAPI *CO_REQUEST_COMPLETE_HANDLER)(
+(NTAPI *CO_REQUEST_COMPLETE_HANDLER)(
   IN NDIS_STATUS  Status,
   IN NDIS_HANDLE  ProtocolAfContext  OPTIONAL,
   IN NDIS_HANDLE  ProtocolVcContext  OPTIONAL,
@@ -1146,7 +1146,7 @@ typedef VOID
   IN PNDIS_REQUEST  NdisRequest);
 
 typedef NDIS_STATUS
-(DDKAPI *CO_REQUEST_HANDLER)(
+(NTAPI *CO_REQUEST_HANDLER)(
   IN NDIS_HANDLE  ProtocolAfContext,
   IN NDIS_HANDLE  ProtocolVcContext  OPTIONAL,
   IN NDIS_HANDLE	ProtocolPartyContext  OPTIONAL,
@@ -1185,80 +1185,80 @@ typedef VOID (*CL_OPEN_AF_COMPLETE_HANDLER)(
   IN NDIS_HANDLE NdisAfHandle);
 
 typedef VOID
-(DDKAPI *CL_CLOSE_AF_COMPLETE_HANDLER)(
+(NTAPI *CL_CLOSE_AF_COMPLETE_HANDLER)(
   IN NDIS_STATUS  Status,
   IN NDIS_HANDLE  ProtocolAfContext);
 
 typedef VOID
-(DDKAPI *CL_REG_SAP_COMPLETE_HANDLER)(
+(NTAPI *CL_REG_SAP_COMPLETE_HANDLER)(
   IN NDIS_STATUS  Status,
   IN NDIS_HANDLE  ProtocolSapContext,
   IN PCO_SAP  Sap,
   IN NDIS_HANDLE  NdisSapHandle);
 
 typedef VOID
-(DDKAPI *CL_DEREG_SAP_COMPLETE_HANDLER)(
+(NTAPI *CL_DEREG_SAP_COMPLETE_HANDLER)(
   IN NDIS_STATUS  Status,
   IN NDIS_HANDLE  ProtocolSapContext);
 
 typedef VOID
-(DDKAPI *CL_MAKE_CALL_COMPLETE_HANDLER)(
+(NTAPI *CL_MAKE_CALL_COMPLETE_HANDLER)(
   IN NDIS_STATUS  Status,
   IN NDIS_HANDLE  ProtocolVcContext,
   IN NDIS_HANDLE  NdisPartyHandle  OPTIONAL,
   IN PCO_CALL_PARAMETERS  CallParameters);
 
 typedef VOID
-(DDKAPI *CL_MODIFY_CALL_QOS_COMPLETE_HANDLER)(
+(NTAPI *CL_MODIFY_CALL_QOS_COMPLETE_HANDLER)(
   IN NDIS_STATUS  Status,
   IN NDIS_HANDLE  ProtocolVcContext,
   IN PCO_CALL_PARAMETERS  CallParameters);
 
 typedef VOID
-(DDKAPI *CL_CLOSE_CALL_COMPLETE_HANDLER)(
+(NTAPI *CL_CLOSE_CALL_COMPLETE_HANDLER)(
   IN NDIS_STATUS  Status,
   IN NDIS_HANDLE  ProtocolVcContext,
   IN NDIS_HANDLE  ProtocolPartyContext  OPTIONAL);
 
 typedef VOID
-(DDKAPI *CL_ADD_PARTY_COMPLETE_HANDLER)(
+(NTAPI *CL_ADD_PARTY_COMPLETE_HANDLER)(
   IN NDIS_STATUS  Status,
   IN NDIS_HANDLE  ProtocolPartyContext,
   IN NDIS_HANDLE  NdisPartyHandle,
   IN PCO_CALL_PARAMETERS  CallParameters);
 
 typedef VOID
-(DDKAPI *CL_DROP_PARTY_COMPLETE_HANDLER)(
+(NTAPI *CL_DROP_PARTY_COMPLETE_HANDLER)(
   IN NDIS_STATUS  Status,
   IN NDIS_HANDLE  ProtocolPartyContext);
 
 typedef NDIS_STATUS
-(DDKAPI *CL_INCOMING_CALL_HANDLER)(
+(NTAPI *CL_INCOMING_CALL_HANDLER)(
   IN NDIS_HANDLE  ProtocolSapContext,
   IN NDIS_HANDLE  ProtocolVcContext,
   IN OUT PCO_CALL_PARAMETERS  CallParameters);
 
 typedef VOID
-(DDKAPI *CL_INCOMING_CALL_QOS_CHANGE_HANDLER)(
+(NTAPI *CL_INCOMING_CALL_QOS_CHANGE_HANDLER)(
   IN NDIS_HANDLE  ProtocolVcContext,
   IN PCO_CALL_PARAMETERS  CallParameters);
 
 typedef VOID
-(DDKAPI *CL_INCOMING_CLOSE_CALL_HANDLER)(
+(NTAPI *CL_INCOMING_CLOSE_CALL_HANDLER)(
   IN NDIS_STATUS  CloseStatus,
   IN NDIS_HANDLE  ProtocolVcContext,
   IN PVOID  CloseData  OPTIONAL,
   IN UINT  Size  OPTIONAL);
 
 typedef VOID
-(DDKAPI *CL_INCOMING_DROP_PARTY_HANDLER)(
+(NTAPI *CL_INCOMING_DROP_PARTY_HANDLER)(
   IN NDIS_STATUS  DropStatus,
   IN NDIS_HANDLE  ProtocolPartyContext,
   IN PVOID  CloseData  OPTIONAL,
   IN UINT  Size  OPTIONAL);
 
 typedef VOID
-(DDKAPI *CL_CALL_CONNECTED_HANDLER)(
+(NTAPI *CL_CALL_CONNECTED_HANDLER)(
   IN NDIS_HANDLE  ProtocolVcContext);
 
 
@@ -1293,64 +1293,64 @@ typedef struct _NDIS_CLIENT_CHARACTERISTICS {
 /* Prototypes for NDIS 3.0 protocol characteristics */
 
 typedef VOID
-(DDKAPI *OPEN_ADAPTER_COMPLETE_HANDLER)(
+(NTAPI *OPEN_ADAPTER_COMPLETE_HANDLER)(
   IN NDIS_HANDLE  ProtocolBindingContext,
   IN NDIS_STATUS  Status,
   IN NDIS_STATUS  OpenErrorStatus);
 
 typedef VOID
-(DDKAPI *CLOSE_ADAPTER_COMPLETE_HANDLER)(
+(NTAPI *CLOSE_ADAPTER_COMPLETE_HANDLER)(
   IN NDIS_HANDLE  ProtocolBindingContext,
   IN NDIS_STATUS  Status);
 
 typedef VOID
-(DDKAPI *RESET_COMPLETE_HANDLER)(
+(NTAPI *RESET_COMPLETE_HANDLER)(
   IN NDIS_HANDLE  ProtocolBindingContext,
   IN NDIS_STATUS  Status);
 
 typedef VOID
-(DDKAPI *REQUEST_COMPLETE_HANDLER)(
+(NTAPI *REQUEST_COMPLETE_HANDLER)(
   IN NDIS_HANDLE  ProtocolBindingContext,
   IN PNDIS_REQUEST  NdisRequest,
   IN NDIS_STATUS  Status);
 
 typedef VOID
-(DDKAPI *STATUS_HANDLER)(
+(NTAPI *STATUS_HANDLER)(
   IN NDIS_HANDLE  ProtocolBindingContext,
   IN NDIS_STATUS  GeneralStatus,
   IN PVOID  StatusBuffer,
   IN UINT  StatusBufferSize);
 
 typedef VOID
-(DDKAPI *STATUS_COMPLETE_HANDLER)(
+(NTAPI *STATUS_COMPLETE_HANDLER)(
   IN NDIS_HANDLE  ProtocolBindingContext);
 
 typedef VOID
-(DDKAPI *SEND_COMPLETE_HANDLER)(
+(NTAPI *SEND_COMPLETE_HANDLER)(
   IN NDIS_HANDLE  ProtocolBindingContext,
   IN PNDIS_PACKET  Packet,
   IN NDIS_STATUS  Status);
 
 typedef VOID
-(DDKAPI *WAN_SEND_COMPLETE_HANDLER)(
+(NTAPI *WAN_SEND_COMPLETE_HANDLER)(
   IN NDIS_HANDLE  ProtocolBindingContext,
   IN PNDIS_WAN_PACKET  Packet,
   IN NDIS_STATUS  Status);
 
 typedef VOID
-(DDKAPI *TRANSFER_DATA_COMPLETE_HANDLER)(
+(NTAPI *TRANSFER_DATA_COMPLETE_HANDLER)(
   IN NDIS_HANDLE  ProtocolBindingContext,
   IN PNDIS_PACKET  Packet,
   IN NDIS_STATUS  Status,
   IN UINT  BytesTransferred);
 
 typedef VOID
-(DDKAPI *WAN_TRANSFER_DATA_COMPLETE_HANDLER)(
+(NTAPI *WAN_TRANSFER_DATA_COMPLETE_HANDLER)(
     VOID);
 
 
 typedef NDIS_STATUS
-(DDKAPI *RECEIVE_HANDLER)(
+(NTAPI *RECEIVE_HANDLER)(
   IN NDIS_HANDLE  ProtocolBindingContext,
   IN NDIS_HANDLE  MacReceiveContext,
   IN PVOID  HeaderBuffer,
@@ -1360,13 +1360,13 @@ typedef NDIS_STATUS
   IN UINT  PacketSize);
 
 typedef NDIS_STATUS
-(DDKAPI *WAN_RECEIVE_HANDLER)(
+(NTAPI *WAN_RECEIVE_HANDLER)(
   IN NDIS_HANDLE  NdisLinkHandle,
   IN PUCHAR  Packet,
   IN ULONG  PacketSize);
 
 typedef VOID
-(DDKAPI *RECEIVE_COMPLETE_HANDLER)(
+(NTAPI *RECEIVE_COMPLETE_HANDLER)(
   IN NDIS_HANDLE  ProtocolBindingContext);
 
 
@@ -1409,12 +1409,12 @@ typedef struct _NDIS30_PROTOCOL_CHARACTERISTICS {
 /* Prototypes for NDIS 4.0 protocol characteristics */
 
 typedef INT
-(DDKAPI *RECEIVE_PACKET_HANDLER)(
+(NTAPI *RECEIVE_PACKET_HANDLER)(
   IN NDIS_HANDLE  ProtocolBindingContext,
   IN PNDIS_PACKET  Packet);
 
 typedef VOID
-(DDKAPI *BIND_HANDLER)(
+(NTAPI *BIND_HANDLER)(
   OUT PNDIS_STATUS  Status,
   IN NDIS_HANDLE  BindContext,
   IN PNDIS_STRING  DeviceName,
@@ -1422,18 +1422,18 @@ typedef VOID
   IN PVOID  SystemSpecific2);
 
 typedef VOID
-(DDKAPI *UNBIND_HANDLER)(
+(NTAPI *UNBIND_HANDLER)(
   OUT PNDIS_STATUS  Status,
   IN NDIS_HANDLE  ProtocolBindingContext,
   IN NDIS_HANDLE  UnbindContext);
 
 typedef NDIS_STATUS
-(DDKAPI *PNP_EVENT_HANDLER)(
+(NTAPI *PNP_EVENT_HANDLER)(
   IN NDIS_HANDLE  ProtocolBindingContext,
   IN PNET_PNP_EVENT  NetPnPEvent);
 
 typedef VOID
-(DDKAPI *UNLOAD_PROTOCOL_HANDLER)(
+(NTAPI *UNLOAD_PROTOCOL_HANDLER)(
   VOID);
 
 
@@ -1468,13 +1468,13 @@ typedef struct _NDIS40_PROTOCOL_CHARACTERISTICS {
 /* Prototypes for NDIS 5.0 protocol characteristics */
 
 typedef VOID
-(DDKAPI *CO_SEND_COMPLETE_HANDLER)(
+(NTAPI *CO_SEND_COMPLETE_HANDLER)(
   IN NDIS_STATUS  Status,
   IN NDIS_HANDLE  ProtocolVcContext,
   IN PNDIS_PACKET  Packet);
 
 typedef VOID
-(DDKAPI *CO_STATUS_HANDLER)(
+(NTAPI *CO_STATUS_HANDLER)(
 	IN NDIS_HANDLE  ProtocolBindingContext,
 	IN NDIS_HANDLE  ProtocolVcContext  OPTIONAL,
 	IN NDIS_STATUS  GeneralStatus,
@@ -1482,13 +1482,13 @@ typedef VOID
 	IN UINT  StatusBufferSize);
 
 typedef UINT
-(DDKAPI *CO_RECEIVE_PACKET_HANDLER)(
+(NTAPI *CO_RECEIVE_PACKET_HANDLER)(
   IN NDIS_HANDLE  ProtocolBindingContext,
   IN NDIS_HANDLE  ProtocolVcContext,
   IN PNDIS_PACKET  Packet);
 
 typedef VOID
-(DDKAPI *CO_AF_REGISTER_NOTIFY_HANDLER)(
+(NTAPI *CO_AF_REGISTER_NOTIFY_HANDLER)(
   IN NDIS_HANDLE  ProtocolBindingContext,
   IN PCO_ADDRESS_FAMILY  AddressFamily);
 
@@ -1538,7 +1538,7 @@ typedef struct _NDIS_PROTOCOL_CHARACTERISTICS {
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisAllocateBuffer(
   OUT PNDIS_STATUS  Status,
   OUT PNDIS_BUFFER  *Buffer,
@@ -1549,7 +1549,7 @@ NdisAllocateBuffer(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisAllocateBufferPool(
   OUT PNDIS_STATUS  Status,
   OUT PNDIS_HANDLE  PoolHandle,
@@ -1557,7 +1557,7 @@ NdisAllocateBufferPool(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisAllocatePacket(
   OUT PNDIS_STATUS  Status,
   OUT PNDIS_PACKET  *Packet,
@@ -1565,7 +1565,7 @@ NdisAllocatePacket(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisAllocatePacketPool(
   OUT PNDIS_STATUS  Status,
   OUT PNDIS_HANDLE  PoolHandle,
@@ -1574,7 +1574,7 @@ NdisAllocatePacketPool(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisCopyBuffer(
   OUT PNDIS_STATUS  Status,
   OUT PNDIS_BUFFER  *Buffer,
@@ -1585,7 +1585,7 @@ NdisCopyBuffer(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisCopyFromPacketToPacket(
   IN PNDIS_PACKET  Destination,
   IN UINT  DestinationOffset,
@@ -1626,7 +1626,7 @@ NdisCopyFromPacketToPacket(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisDprAllocatePacket(
   OUT PNDIS_STATUS  Status,
   OUT PNDIS_PACKET  *Packet,
@@ -1634,7 +1634,7 @@ NdisDprAllocatePacket(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisDprAllocatePacketNonInterlocked(
   OUT PNDIS_STATUS  Status,
   OUT PNDIS_PACKET  *Packet,
@@ -1642,96 +1642,96 @@ NdisDprAllocatePacketNonInterlocked(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisDprFreePacket(
   IN PNDIS_PACKET  Packet);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisDprFreePacketNonInterlocked(
   IN PNDIS_PACKET  Packet);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisFreeBufferPool(
   IN NDIS_HANDLE  PoolHandle);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisFreePacket(
   IN PNDIS_PACKET  Packet);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisFreePacketPool(
   IN NDIS_HANDLE  PoolHandle);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisReturnPackets(
   IN PNDIS_PACKET  *PacketsToReturn,
   IN UINT  NumberOfPackets);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisUnchainBufferAtBack(
   IN OUT PNDIS_PACKET  Packet,
   OUT PNDIS_BUFFER  *Buffer);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisUnchainBufferAtFront(
   IN OUT PNDIS_PACKET  Packet,
   OUT PNDIS_BUFFER  *Buffer);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisAdjustBufferLength(
   IN PNDIS_BUFFER  Buffer,
   IN UINT  Length);
 
 NDISAPI
 ULONG
-DDKAPI
+NTAPI
 NdisBufferLength(
   IN PNDIS_BUFFER  Buffer);
 
 NDISAPI
 PVOID
-DDKAPI
+NTAPI
 NdisBufferVirtualAddress(
   IN PNDIS_BUFFER  Buffer);
 
 NDISAPI
 ULONG
-DDKAPI
+NTAPI
 NDIS_BUFFER_TO_SPAN_PAGES(
   IN PNDIS_BUFFER  Buffer);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisFreeBuffer(
   IN PNDIS_BUFFER  Buffer);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisGetBufferPhysicalArraySize(
   IN PNDIS_BUFFER  Buffer,
   OUT PUINT  ArraySize);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisGetFirstBufferFromPacket(
   IN PNDIS_PACKET  _Packet,
   OUT PNDIS_BUFFER  *_FirstBuffer,
@@ -1741,7 +1741,7 @@ NdisGetFirstBufferFromPacket(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisQueryBuffer(
   IN PNDIS_BUFFER  Buffer,
   OUT PVOID  *VirtualAddress OPTIONAL,
@@ -1749,7 +1749,7 @@ NdisQueryBuffer(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisQueryBufferOffset(
   IN PNDIS_BUFFER  Buffer,
   OUT PUINT  Offset,
@@ -2152,7 +2152,7 @@ NdisQueryPacketLength(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisCreateLookaheadBufferFromSharedMemory(
   IN PVOID  pSharedMemory,
   IN UINT  LookaheadLength,
@@ -2160,7 +2160,7 @@ NdisCreateLookaheadBufferFromSharedMemory(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisDestroyLookaheadBufferFromSharedMemory(
   IN PVOID  pLookaheadBuffer);
 
@@ -2236,7 +2236,7 @@ NdisDestroyLookaheadBufferFromSharedMemory(
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisAllocateMemory(
   OUT  PVOID  *VirtualAddress,
   IN UINT  Length,
@@ -2245,7 +2245,7 @@ NdisAllocateMemory(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisFreeMemory(
   IN PVOID  VirtualAddress,
   IN UINT  Length,
@@ -2253,7 +2253,7 @@ NdisFreeMemory(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisImmediateReadSharedMemory(
   IN NDIS_HANDLE WrapperConfigurationContext,
   IN ULONG       SharedMemoryAddress,
@@ -2262,7 +2262,7 @@ NdisImmediateReadSharedMemory(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisImmediateWriteSharedMemory(
   IN NDIS_HANDLE WrapperConfigurationContext,
   IN ULONG       SharedMemoryAddress,
@@ -2271,7 +2271,7 @@ NdisImmediateWriteSharedMemory(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisMAllocateSharedMemory(
   IN	NDIS_HANDLE  MiniportAdapterHandle,
   IN	ULONG  Length,
@@ -2281,7 +2281,7 @@ NdisMAllocateSharedMemory(
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisMAllocateSharedMemoryAsync(
   IN NDIS_HANDLE  MiniportAdapterHandle,
   IN ULONG  Length,
@@ -2299,7 +2299,7 @@ NdisMAllocateSharedMemoryAsync(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisUpdateSharedMemory(
   IN NDIS_HANDLE             NdisAdapterHandle,
   IN ULONG                   Length,
@@ -2413,7 +2413,7 @@ NdisUpdateSharedMemory(
   RtlZeroMemory(Destination, Length)
 
 typedef VOID
-(DDKAPI *NDIS_BLOCK_INITIALIZER) (
+(NTAPI *NDIS_BLOCK_INITIALIZER) (
     IN  PUCHAR  Block,
     IN  SIZE_T  NumberOfBytes
     );
@@ -2422,7 +2422,7 @@ typedef VOID
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisOpenConfiguration(
   OUT  PNDIS_STATUS  Status,
   OUT  PNDIS_HANDLE  ConfigurationHandle,
@@ -2430,7 +2430,7 @@ NdisOpenConfiguration(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisReadNetworkAddress(
   OUT PNDIS_STATUS  Status,
   OUT PVOID  *NetworkAddress,
@@ -2439,7 +2439,7 @@ NdisReadNetworkAddress(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisReadEisaSlotInformation(
   OUT PNDIS_STATUS  Status,
   IN NDIS_HANDLE  WrapperConfigurationContext,
@@ -2448,7 +2448,7 @@ NdisReadEisaSlotInformation(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisReadEisaSlotInformationEx(
   OUT PNDIS_STATUS  Status,
   IN NDIS_HANDLE  WrapperConfigurationContext,
@@ -2458,7 +2458,7 @@ NdisReadEisaSlotInformationEx(
 
 NDISAPI
 ULONG
-DDKAPI
+NTAPI
 NdisReadPciSlotInformation(
   IN NDIS_HANDLE  NdisAdapterHandle,
   IN ULONG  SlotNumber,
@@ -2468,7 +2468,7 @@ NdisReadPciSlotInformation(
 
 NDISAPI
 ULONG
-DDKAPI
+NTAPI
 NdisWritePciSlotInformation(
   IN NDIS_HANDLE  NdisAdapterHandle,
   IN ULONG  SlotNumber,
@@ -2482,7 +2482,7 @@ NdisWritePciSlotInformation(
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisAnsiStringToUnicodeString(
   IN OUT PNDIS_STRING  DestinationString,
   IN PNDIS_ANSI_STRING  SourceString);
@@ -2499,21 +2499,21 @@ NdisAnsiStringToUnicodeString(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisInitAnsiString(
   IN OUT PNDIS_ANSI_STRING  DestinationString,
   IN PCSTR  SourceString);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisInitUnicodeString(
   IN OUT PNDIS_STRING  DestinationString,
   IN PCWSTR  SourceString);
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisUnicodeStringToAnsiString(
   IN OUT PNDIS_ANSI_STRING  DestinationString,
   IN PNDIS_STRING  SourceString);
@@ -2526,37 +2526,37 @@ NdisUnicodeStringToAnsiString(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisAllocateSpinLock(
   IN PNDIS_SPIN_LOCK  SpinLock);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisFreeSpinLock(
   IN PNDIS_SPIN_LOCK  SpinLock);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisAcquireSpinLock(
   IN PNDIS_SPIN_LOCK  SpinLock);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisReleaseSpinLock(
   IN PNDIS_SPIN_LOCK  SpinLock);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisDprAcquireSpinLock(
   IN PNDIS_SPIN_LOCK  SpinLock);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisDprReleaseSpinLock(
   IN PNDIS_SPIN_LOCK  SpinLock);
 
@@ -2821,13 +2821,13 @@ NdisDprReleaseSpinLock(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisCloseConfiguration(
   IN NDIS_HANDLE  ConfigurationHandle);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisReadConfiguration(
   OUT  PNDIS_STATUS  Status,
   OUT  PNDIS_CONFIGURATION_PARAMETER  *ParameterValue,
@@ -2837,7 +2837,7 @@ NdisReadConfiguration(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisWriteConfiguration(
   OUT  PNDIS_STATUS  Status,
   IN NDIS_HANDLE  WrapperConfigurationContext,
@@ -2846,7 +2846,7 @@ NdisWriteConfiguration(
 
 NDISAPI
 VOID
-DDKCDECLAPI
+__cdecl
 NdisWriteErrorLogEntry(
 	IN NDIS_HANDLE  NdisAdapterHandle,
 	IN NDIS_ERROR_CODE  ErrorCode,
@@ -2862,18 +2862,18 @@ NdisWriteErrorLogEntry(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisGetCurrentSystemTime(
   IN PLARGE_INTEGER  pSystemTime);
 
 NDISAPI
 CCHAR
-DDKAPI
+NTAPI
 NdisSystemProcessorCount(VOID);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisGetCurrentProcessorCpuUsage(
   OUT PULONG  pCpuUsage);
 
@@ -2902,7 +2902,7 @@ NdisGetCurrentProcessorCpuUsage(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisMFreeSharedMemory(
 	IN NDIS_HANDLE  MiniportAdapterHandle,
 	IN ULONG  Length,
@@ -2912,7 +2912,7 @@ NdisMFreeSharedMemory(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisMWanIndicateReceive(
 	OUT PNDIS_STATUS  Status,
 	IN NDIS_HANDLE  MiniportAdapterHandle,
@@ -2922,13 +2922,13 @@ NdisMWanIndicateReceive(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisMWanIndicateReceiveComplete(
   IN NDIS_HANDLE  MiniportAdapterHandle);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisMWanSendComplete(
 	IN NDIS_HANDLE  MiniportAdapterHandle,
 	IN PNDIS_WAN_PACKET  Packet,
@@ -2936,7 +2936,7 @@ NdisMWanSendComplete(
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisPciAssignResources(
 	IN NDIS_HANDLE  NdisMacHandle,
 	IN NDIS_HANDLE  NdisWrapperHandle,
@@ -2949,7 +2949,7 @@ NdisPciAssignResources(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisAcquireReadWriteLock(
   IN PNDIS_RW_LOCK  Lock,
   IN BOOLEAN  fWrite,
@@ -2957,7 +2957,7 @@ NdisAcquireReadWriteLock(
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisAllocateMemoryWithTag(
   OUT PVOID  *VirtualAddress,
   IN UINT  Length,
@@ -2965,7 +2965,7 @@ NdisAllocateMemoryWithTag(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisAllocatePacketPoolEx(
   OUT PNDIS_STATUS  Status,
   OUT PNDIS_HANDLE  PoolHandle,
@@ -2975,7 +2975,7 @@ NdisAllocatePacketPoolEx(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisCompletePnPEvent(
   IN NDIS_STATUS  Status,
   IN NDIS_HANDLE  NdisBindingHandle,
@@ -2983,7 +2983,7 @@ NdisCompletePnPEvent(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisGetCurrentProcessorCounts(
   OUT PULONG  pIdleCount,
   OUT PULONG  pKernelAndUser,
@@ -2991,39 +2991,39 @@ NdisGetCurrentProcessorCounts(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisGetDriverHandle(
   IN PNDIS_HANDLE  NdisBindingHandle,
   OUT PNDIS_HANDLE  NdisDriverHandle);
 
 NDISAPI
 PNDIS_PACKET
-DDKAPI
+NTAPI
 NdisGetReceivedPacket(
   IN PNDIS_HANDLE  NdisBindingHandle,
   IN PNDIS_HANDLE  MacContext);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisGetSystemUpTime(
   OUT PULONG  pSystemUpTime);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisInitializeReadWriteLock(
   IN PNDIS_RW_LOCK  Lock);
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisMDeregisterDevice(
   IN NDIS_HANDLE  NdisDeviceHandle);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisMGetDeviceProperty(
   IN NDIS_HANDLE  MiniportAdapterHandle,
   IN OUT PDEVICE_OBJECT  *PhysicalDeviceObject  OPTIONAL,
@@ -3034,7 +3034,7 @@ NdisMGetDeviceProperty(
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisMInitializeScatterGatherDma(
   IN NDIS_HANDLE  MiniportAdapterHandle,
   IN BOOLEAN  Dma64BitAddresses,
@@ -3042,20 +3042,20 @@ NdisMInitializeScatterGatherDma(
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisMPromoteMiniport(
   IN NDIS_HANDLE  MiniportAdapterHandle);
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisMQueryAdapterInstanceName(
   OUT PNDIS_STRING  AdapterInstanceName,
   IN NDIS_HANDLE  MiniportAdapterHandle);
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisMRegisterDevice(
   IN NDIS_HANDLE  NdisWrapperHandle,
   IN PNDIS_STRING  DeviceName,
@@ -3066,27 +3066,27 @@ NdisMRegisterDevice(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisMRegisterUnloadHandler(
   IN NDIS_HANDLE  NdisWrapperHandle,
   IN PDRIVER_UNLOAD  UnloadHandler);
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisMRemoveMiniport(
   IN NDIS_HANDLE  MiniportAdapterHandle);
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisMSetMiniportSecondary(
   IN NDIS_HANDLE  MiniportAdapterHandle,
   IN NDIS_HANDLE  PrimaryMiniportAdapterHandle);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisOpenConfigurationKeyByIndex(
   OUT PNDIS_STATUS  Status,
   IN NDIS_HANDLE  ConfigurationHandle,
@@ -3096,7 +3096,7 @@ NdisOpenConfigurationKeyByIndex(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisOpenConfigurationKeyByName(
   OUT PNDIS_STATUS  Status,
   IN NDIS_HANDLE  ConfigurationHandle,
@@ -3105,20 +3105,20 @@ NdisOpenConfigurationKeyByName(
 
 NDISAPI
 UINT
-DDKAPI
+NTAPI
 NdisPacketPoolUsage(
   IN NDIS_HANDLE  PoolHandle);
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisQueryAdapterInstanceName(
   OUT PNDIS_STRING  AdapterInstanceName,
   IN NDIS_HANDLE  NdisBindingHandle);
 
 NDISAPI
 ULONG
-DDKAPI
+NTAPI
 NdisReadPcmciaAttributeMemory(
   IN NDIS_HANDLE  NdisAdapterHandle,
   IN ULONG  Offset,
@@ -3127,14 +3127,14 @@ NdisReadPcmciaAttributeMemory(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisReleaseReadWriteLock(
   IN PNDIS_RW_LOCK  Lock,
   IN PLOCK_STATE  LockState);
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisWriteEventLogEntry(
   IN PVOID  LogHandle,
   IN NDIS_STATUS  EventCode,
@@ -3146,7 +3146,7 @@ NdisWriteEventLogEntry(
 
 NDISAPI
 ULONG
-DDKAPI
+NTAPI
 NdisWritePcmciaAttributeMemory(
   IN NDIS_HANDLE  NdisAdapterHandle,
   IN ULONG  Offset,
@@ -3158,7 +3158,7 @@ NdisWritePcmciaAttributeMemory(
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisClAddParty(
   IN NDIS_HANDLE  NdisVcHandle,
   IN NDIS_HANDLE  ProtocolPartyContext,
@@ -3167,13 +3167,13 @@ NdisClAddParty(
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisClCloseAddressFamily(
   IN NDIS_HANDLE  NdisAfHandle);
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisClCloseCall(
   IN NDIS_HANDLE NdisVcHandle,
   IN NDIS_HANDLE NdisPartyHandle  OPTIONAL,
@@ -3182,13 +3182,13 @@ NdisClCloseCall(
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisClDeregisterSap(
   IN NDIS_HANDLE  NdisSapHandle);
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisClDropParty(
   IN NDIS_HANDLE  NdisPartyHandle,
   IN PVOID  Buffer  OPTIONAL,
@@ -3196,7 +3196,7 @@ NdisClDropParty(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisClIncomingCallComplete(
   IN NDIS_STATUS  Status,
   IN NDIS_HANDLE  NdisVcHandle,
@@ -3204,7 +3204,7 @@ NdisClIncomingCallComplete(
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisClMakeCall(
   IN NDIS_HANDLE  NdisVcHandle,
   IN OUT PCO_CALL_PARAMETERS  CallParameters,
@@ -3213,7 +3213,7 @@ NdisClMakeCall(
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisClModifyCallQoS(
   IN NDIS_HANDLE  NdisVcHandle,
   IN PCO_CALL_PARAMETERS  CallParameters);
@@ -3221,7 +3221,7 @@ NdisClModifyCallQoS(
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisClOpenAddressFamily(
   IN NDIS_HANDLE  NdisBindingHandle,
   IN PCO_ADDRESS_FAMILY  AddressFamily,
@@ -3232,7 +3232,7 @@ NdisClOpenAddressFamily(
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisClRegisterSap(
   IN NDIS_HANDLE  NdisAfHandle,
   IN NDIS_HANDLE  ProtocolSapContext,
@@ -3244,14 +3244,14 @@ NdisClRegisterSap(
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisCmActivateVc(
   IN NDIS_HANDLE  NdisVcHandle,
   IN OUT PCO_CALL_PARAMETERS  CallParameters);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisCmAddPartyComplete(
   IN NDIS_STATUS  Status,
   IN NDIS_HANDLE  NdisPartyHandle,
@@ -3260,14 +3260,14 @@ NdisCmAddPartyComplete(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisCmCloseAddressFamilyComplete(
   IN NDIS_STATUS Status,
   IN NDIS_HANDLE NdisAfHandle);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisCmCloseCallComplete(
   IN NDIS_STATUS  Status,
   IN NDIS_HANDLE  NdisVcHandle,
@@ -3275,26 +3275,26 @@ NdisCmCloseCallComplete(
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisCmDeactivateVc(
   IN NDIS_HANDLE  NdisVcHandle);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisCmDeregisterSapComplete(
   IN NDIS_STATUS  Status,
   IN NDIS_HANDLE  NdisSapHandle);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisCmDispatchCallConnected(
   IN NDIS_HANDLE  NdisVcHandle);
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisCmDispatchIncomingCall(
   IN NDIS_HANDLE  NdisSapHandle,
   IN NDIS_HANDLE  NdisVcHandle,
@@ -3302,14 +3302,14 @@ NdisCmDispatchIncomingCall(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisCmDispatchIncomingCallQoSChange(
   IN NDIS_HANDLE  NdisVcHandle,
   IN PCO_CALL_PARAMETERS  CallParameters);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisCmDispatchIncomingCloseCall(
   IN NDIS_STATUS  CloseStatus,
   IN NDIS_HANDLE  NdisVcHandle,
@@ -3318,7 +3318,7 @@ NdisCmDispatchIncomingCloseCall(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisCmDispatchIncomingDropParty(
   IN NDIS_STATUS  DropStatus,
   IN NDIS_HANDLE  NdisPartyHandle,
@@ -3327,14 +3327,14 @@ NdisCmDispatchIncomingDropParty(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisCmDropPartyComplete(
   IN NDIS_STATUS  Status,
   IN NDIS_HANDLE  NdisPartyHandle);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisCmMakeCallComplete(
   IN NDIS_STATUS  Status,
   IN NDIS_HANDLE  NdisVcHandle,
@@ -3344,7 +3344,7 @@ NdisCmMakeCallComplete(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisCmModifyCallQoSComplete(
   IN NDIS_STATUS  Status,
   IN NDIS_HANDLE  NdisVcHandle,
@@ -3352,7 +3352,7 @@ NdisCmModifyCallQoSComplete(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisCmOpenAddressFamilyComplete(
   IN NDIS_STATUS Status,
   IN NDIS_HANDLE NdisAfHandle,
@@ -3360,7 +3360,7 @@ NdisCmOpenAddressFamilyComplete(
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisCmRegisterAddressFamily(
   IN NDIS_HANDLE  NdisBindingHandle,
   IN PCO_ADDRESS_FAMILY  AddressFamily,
@@ -3369,7 +3369,7 @@ NdisCmRegisterAddressFamily(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisCmRegisterSapComplete(
   IN NDIS_STATUS  Status,
   IN NDIS_HANDLE  NdisSapHandle,
@@ -3378,14 +3378,14 @@ NdisCmRegisterSapComplete(
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisMCmActivateVc(
   IN NDIS_HANDLE  NdisVcHandle,
   IN PCO_CALL_PARAMETERS  CallParameters);
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisMCmCreateVc(
   IN NDIS_HANDLE  MiniportAdapterHandle,
   IN NDIS_HANDLE  NdisAfHandle,
@@ -3394,19 +3394,19 @@ NdisMCmCreateVc(
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisMCmDeactivateVc(
   IN NDIS_HANDLE  NdisVcHandle);
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisMCmDeleteVc(
   IN NDIS_HANDLE  NdisVcHandle);
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisMCmRegisterAddressFamily(
   IN NDIS_HANDLE  MiniportAdapterHandle,
   IN PCO_ADDRESS_FAMILY  AddressFamily,
@@ -3415,7 +3415,7 @@ NdisMCmRegisterAddressFamily(
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisMCmRequest(
   IN NDIS_HANDLE  NdisAfHandle,
   IN NDIS_HANDLE  NdisVcHandle  OPTIONAL,
@@ -3427,7 +3427,7 @@ NdisMCmRequest(
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisCoCreateVc(
   IN NDIS_HANDLE  NdisBindingHandle,
   IN NDIS_HANDLE  NdisAfHandle  OPTIONAL,
@@ -3436,13 +3436,13 @@ NdisCoCreateVc(
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisCoDeleteVc(
   IN NDIS_HANDLE  NdisVcHandle);
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisCoRequest(
   IN NDIS_HANDLE  NdisBindingHandle,
   IN NDIS_HANDLE  NdisAfHandle  OPTIONAL,
@@ -3452,7 +3452,7 @@ NdisCoRequest(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisCoRequestComplete(
   IN NDIS_STATUS  Status,
   IN NDIS_HANDLE  NdisAfHandle,
@@ -3462,7 +3462,7 @@ NdisCoRequestComplete(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisCoSendPackets(
   IN NDIS_HANDLE  NdisVcHandle,
   IN PPNDIS_PACKET  PacketArray,
@@ -3470,7 +3470,7 @@ NdisCoSendPackets(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisMCoActivateVcComplete(
   IN NDIS_STATUS  Status,
   IN NDIS_HANDLE  NdisVcHandle,
@@ -3478,14 +3478,14 @@ NdisMCoActivateVcComplete(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisMCoDeactivateVcComplete(
   IN NDIS_STATUS  Status,
   IN NDIS_HANDLE  NdisVcHandle);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisMCoIndicateReceivePacket(
   IN NDIS_HANDLE  NdisVcHandle,
   IN PPNDIS_PACKET  PacketArray,
@@ -3493,7 +3493,7 @@ NdisMCoIndicateReceivePacket(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisMCoIndicateStatus(
   IN NDIS_HANDLE  MiniportAdapterHandle,
   IN NDIS_HANDLE  NdisVcHandle  OPTIONAL,
@@ -3503,13 +3503,13 @@ NdisMCoIndicateStatus(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisMCoReceiveComplete(
   IN NDIS_HANDLE  MiniportAdapterHandle);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisMCoRequestComplete(
   IN NDIS_STATUS  Status,
   IN NDIS_HANDLE  MiniportAdapterHandle,
@@ -3517,7 +3517,7 @@ NdisMCoRequestComplete(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisMCoSendComplete(
   IN NDIS_STATUS  Status,
   IN NDIS_HANDLE  NdisVcHandle,
@@ -3528,53 +3528,53 @@ NdisMCoSendComplete(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisIMAssociateMiniport(
   IN NDIS_HANDLE  DriverHandle,
   IN NDIS_HANDLE  ProtocolHandle);
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisIMCancelInitializeDeviceInstance(
   IN NDIS_HANDLE  DriverHandle,
   IN PNDIS_STRING  DeviceInstance);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisIMCopySendCompletePerPacketInfo(
   IN PNDIS_PACKET  DstPacket,
   IN PNDIS_PACKET  SrcPacket);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisIMCopySendPerPacketInfo(
   IN PNDIS_PACKET  DstPacket,
   IN PNDIS_PACKET  SrcPacket);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisIMDeregisterLayeredMiniport(
   IN NDIS_HANDLE  DriverHandle);
 
 NDISAPI
 NDIS_HANDLE
-DDKAPI
+NTAPI
 NdisIMGetBindingContext(
   IN NDIS_HANDLE  NdisBindingHandle);
 
 NDISAPI
 NDIS_HANDLE
-DDKAPI
+NTAPI
 NdisIMGetDeviceContext(
   IN NDIS_HANDLE  MiniportAdapterHandle);
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisIMInitializeDeviceInstanceEx(
   IN NDIS_HANDLE  DriverHandle,
   IN PNDIS_STRING  DriverInstance,
@@ -3582,14 +3582,14 @@ NdisIMInitializeDeviceInstanceEx(
 
 NDISAPI
 PSINGLE_LIST_ENTRY
-DDKAPI
+NTAPI
 NdisInterlockedPopEntrySList(
   IN PSLIST_HEADER  ListHead,
   IN PKSPIN_LOCK  Lock);
 
 NDISAPI
 PSINGLE_LIST_ENTRY
-DDKAPI
+NTAPI
 NdisInterlockedPushEntrySList(
   IN PSLIST_HEADER  ListHead,
   IN PSINGLE_LIST_ENTRY  ListEntry,
@@ -3597,7 +3597,7 @@ NdisInterlockedPushEntrySList(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisQueryBufferSafe(
   IN PNDIS_BUFFER  Buffer,
   OUT PVOID  *VirtualAddress  OPTIONAL,
@@ -3607,27 +3607,27 @@ NdisQueryBufferSafe(
 /* Prototypes for NDIS_MINIPORT_CHARACTERISTICS */
 
 typedef BOOLEAN
-(DDKAPI *W_CHECK_FOR_HANG_HANDLER)(
+(NTAPI *W_CHECK_FOR_HANG_HANDLER)(
   IN NDIS_HANDLE  MiniportAdapterContext);
 
 typedef VOID
-(DDKAPI *W_DISABLE_INTERRUPT_HANDLER)(
+(NTAPI *W_DISABLE_INTERRUPT_HANDLER)(
   IN NDIS_HANDLE  MiniportAdapterContext);
 
 typedef VOID
-(DDKAPI *W_ENABLE_INTERRUPT_HANDLER)(
+(NTAPI *W_ENABLE_INTERRUPT_HANDLER)(
   IN NDIS_HANDLE  MiniportAdapterContext);
 
 typedef VOID
-(DDKAPI *W_HALT_HANDLER)(
+(NTAPI *W_HALT_HANDLER)(
   IN NDIS_HANDLE  MiniportAdapterContext);
 
 typedef VOID
-(DDKAPI *W_HANDLE_INTERRUPT_HANDLER)(
+(NTAPI *W_HANDLE_INTERRUPT_HANDLER)(
   IN NDIS_HANDLE  MiniportAdapterContext);
 
 typedef NDIS_STATUS
-(DDKAPI *W_INITIALIZE_HANDLER)(
+(NTAPI *W_INITIALIZE_HANDLER)(
   OUT PNDIS_STATUS  OpenErrorStatus,
   OUT PUINT  SelectedMediumIndex,
   IN PNDIS_MEDIUM  MediumArray,
@@ -3636,13 +3636,13 @@ typedef NDIS_STATUS
   IN NDIS_HANDLE  WrapperConfigurationContext);
 
 typedef VOID
-(DDKAPI *W_ISR_HANDLER)(
+(NTAPI *W_ISR_HANDLER)(
   OUT PBOOLEAN  InterruptRecognized,
   OUT PBOOLEAN  QueueMiniportHandleInterrupt,
   IN	NDIS_HANDLE  MiniportAdapterContext);
 
 typedef NDIS_STATUS
-(DDKAPI *W_QUERY_INFORMATION_HANDLER)(
+(NTAPI *W_QUERY_INFORMATION_HANDLER)(
   IN NDIS_HANDLE  MiniportAdapterContext,
   IN NDIS_OID  Oid,
   IN PVOID  InformationBuffer,
@@ -3651,30 +3651,30 @@ typedef NDIS_STATUS
   OUT PULONG  BytesNeeded);
 
 typedef NDIS_STATUS
-(DDKAPI *W_RECONFIGURE_HANDLER)(
+(NTAPI *W_RECONFIGURE_HANDLER)(
   OUT PNDIS_STATUS  OpenErrorStatus,
   IN NDIS_HANDLE  MiniportAdapterContext,
   IN NDIS_HANDLE	WrapperConfigurationContext);
 
 typedef NDIS_STATUS
-(DDKAPI *W_RESET_HANDLER)(
+(NTAPI *W_RESET_HANDLER)(
   OUT PBOOLEAN  AddressingReset,
   IN NDIS_HANDLE  MiniportAdapterContext);
 
 typedef NDIS_STATUS
-(DDKAPI *W_SEND_HANDLER)(
+(NTAPI *W_SEND_HANDLER)(
   IN NDIS_HANDLE  MiniportAdapterContext,
   IN PNDIS_PACKET  Packet,
   IN UINT  Flags);
 
 typedef NDIS_STATUS
-(DDKAPI *WM_SEND_HANDLER)(
+(NTAPI *WM_SEND_HANDLER)(
   IN NDIS_HANDLE  MiniportAdapterContext,
   IN NDIS_HANDLE  NdisLinkHandle,
   IN PNDIS_WAN_PACKET  Packet);
 
 typedef NDIS_STATUS
-(DDKAPI *W_SET_INFORMATION_HANDLER)(
+(NTAPI *W_SET_INFORMATION_HANDLER)(
   IN NDIS_HANDLE  MiniportAdapterContext,
   IN NDIS_OID  Oid,
   IN PVOID  InformationBuffer,
@@ -3683,7 +3683,7 @@ typedef NDIS_STATUS
   OUT PULONG  BytesNeeded);
 
 typedef NDIS_STATUS
-(DDKAPI *W_TRANSFER_DATA_HANDLER)(
+(NTAPI *W_TRANSFER_DATA_HANDLER)(
   OUT PNDIS_PACKET  Packet,
   OUT PUINT  BytesTransferred,
   IN NDIS_HANDLE  MiniportAdapterContext,
@@ -3692,7 +3692,7 @@ typedef NDIS_STATUS
   IN UINT  BytesToTransfer);
 
 typedef NDIS_STATUS
-(DDKAPI *WM_TRANSFER_DATA_HANDLER)(
+(NTAPI *WM_TRANSFER_DATA_HANDLER)(
   VOID);
 
 
@@ -3724,18 +3724,18 @@ typedef struct _NDIS30_MINIPORT_CHARACTERISTICS {
 /* Extensions for NDIS 4.0 miniports */
 
 typedef VOID
-(DDKAPI *W_SEND_PACKETS_HANDLER)(
+(NTAPI *W_SEND_PACKETS_HANDLER)(
   IN NDIS_HANDLE  MiniportAdapterContext,
   IN PPNDIS_PACKET  PacketArray,
   IN UINT  NumberOfPackets);
 
 typedef VOID
-(DDKAPI *W_RETURN_PACKET_HANDLER)(
+(NTAPI *W_RETURN_PACKET_HANDLER)(
   IN NDIS_HANDLE  MiniportAdapterContext,
   IN PNDIS_PACKET  Packet);
 
 typedef VOID
-(DDKAPI *W_ALLOCATE_COMPLETE_HANDLER)(
+(NTAPI *W_ALLOCATE_COMPLETE_HANDLER)(
   IN NDIS_HANDLE  MiniportAdapterContext,
   IN PVOID  VirtualAddress,
   IN PNDIS_PHYSICAL_ADDRESS  PhysicalAddress,
@@ -3768,32 +3768,32 @@ typedef struct _NDIS40_MINIPORT_CHARACTERISTICS {
 /* Extensions for NDIS 5.0 miniports */
 
 typedef NDIS_STATUS
-(DDKAPI *W_CO_CREATE_VC_HANDLER)(
+(NTAPI *W_CO_CREATE_VC_HANDLER)(
   IN NDIS_HANDLE  MiniportAdapterContext,
   IN NDIS_HANDLE  NdisVcHandle,
   OUT PNDIS_HANDLE  MiniportVcContext);
 
 typedef NDIS_STATUS
-(DDKAPI *W_CO_DELETE_VC_HANDLER)(
+(NTAPI *W_CO_DELETE_VC_HANDLER)(
   IN NDIS_HANDLE  MiniportVcContext);
 
 typedef NDIS_STATUS
-(DDKAPI *W_CO_ACTIVATE_VC_HANDLER)(
+(NTAPI *W_CO_ACTIVATE_VC_HANDLER)(
   IN NDIS_HANDLE  MiniportVcContext,
   IN OUT PCO_CALL_PARAMETERS  CallParameters);
 
 typedef NDIS_STATUS
-(DDKAPI *W_CO_DEACTIVATE_VC_HANDLER)(
+(NTAPI *W_CO_DEACTIVATE_VC_HANDLER)(
   IN NDIS_HANDLE  MiniportVcContext);
 
 typedef VOID
-(DDKAPI *W_CO_SEND_PACKETS_HANDLER)(
+(NTAPI *W_CO_SEND_PACKETS_HANDLER)(
   IN NDIS_HANDLE  MiniportVcContext,
   IN PPNDIS_PACKET  PacketArray,
   IN UINT  NumberOfPackets);
 
 typedef NDIS_STATUS
-(DDKAPI *W_CO_REQUEST_HANDLER)(
+(NTAPI *W_CO_REQUEST_HANDLER)(
   IN NDIS_HANDLE  MiniportAdapterContext,
   IN NDIS_HANDLE  MiniportVcContext  OPTIONAL,
   IN OUT PNDIS_REQUEST  NdisRequest);
@@ -3830,19 +3830,19 @@ typedef struct _NDIS50_MINIPORT_CHARACTERISTICS {
 /* Extensions for NDIS 5.1 miniports */
 
 typedef VOID
-(DDKAPI *W_CANCEL_SEND_PACKETS_HANDLER)(
+(NTAPI *W_CANCEL_SEND_PACKETS_HANDLER)(
   IN NDIS_HANDLE  MiniportAdapterContext,
   IN PVOID  CancelId);
 
 typedef VOID
-(DDKAPI *W_PNP_EVENT_NOTIFY_HANDLER)(
+(NTAPI *W_PNP_EVENT_NOTIFY_HANDLER)(
   IN NDIS_HANDLE  MiniportAdapterContext,
   IN NDIS_DEVICE_PNP_EVENT  PnPEvent,
   IN PVOID  InformationBuffer,
   IN ULONG  InformationBufferLength);
 
 typedef VOID
-(DDKAPI *W_MINIPORT_SHUTDOWN_HANDLER)(
+(NTAPI *W_MINIPORT_SHUTDOWN_HANDLER)(
   IN PVOID  ShutdownContext);
 
 #ifdef __cplusplus
@@ -3887,12 +3887,12 @@ typedef struct _NDIS_MINIPORT_CHARACTERISTICS {
 
 
 typedef NDIS_STATUS
-(DDKAPI *SEND_HANDLER)(
+(NTAPI *SEND_HANDLER)(
   IN NDIS_HANDLE  MacBindingHandle,
   IN PNDIS_PACKET  Packet);
 
 typedef NDIS_STATUS
-(DDKAPI *TRANSFER_DATA_HANDLER)(
+(NTAPI *TRANSFER_DATA_HANDLER)(
   IN NDIS_HANDLE  MacBindingHandle,
   IN NDIS_HANDLE  MacReceiveContext,
   IN UINT  ByteOffset,
@@ -3901,11 +3901,11 @@ typedef NDIS_STATUS
   OUT PUINT  BytesTransferred);
 
 typedef NDIS_STATUS
-(DDKAPI *RESET_HANDLER)(
+(NTAPI *RESET_HANDLER)(
   IN NDIS_HANDLE  MacBindingHandle);
 
 typedef NDIS_STATUS
-(DDKAPI *REQUEST_HANDLER)(
+(NTAPI *REQUEST_HANDLER)(
   IN NDIS_HANDLE   MacBindingHandle,
   IN PNDIS_REQUEST   NdisRequest);
 
@@ -3914,11 +3914,11 @@ typedef NDIS_STATUS
 /* Structures available only to full MAC drivers */
 
 typedef BOOLEAN
-(DDKAPI *PNDIS_INTERRUPT_SERVICE)(
+(NTAPI *PNDIS_INTERRUPT_SERVICE)(
   IN PVOID  InterruptContext);
 
 typedef VOID
-(DDKAPI *PNDIS_DEFERRED_PROCESSING)(
+(NTAPI *PNDIS_DEFERRED_PROCESSING)(
   IN PVOID  SystemSpecific1,
   IN PVOID  InterruptContext,
   IN PVOID  SystemSpecific2,
@@ -4012,11 +4012,11 @@ typedef struct _NDIS_BIND_PATHS {
 
 
 typedef VOID
-(DDKAPI *ETH_RCV_COMPLETE_HANDLER)(
+(NTAPI *ETH_RCV_COMPLETE_HANDLER)(
   IN PETH_FILTER  Filter);
 
 typedef VOID
-(DDKAPI *ETH_RCV_INDICATE_HANDLER)(
+(NTAPI *ETH_RCV_INDICATE_HANDLER)(
   IN PETH_FILTER  Filter,
   IN NDIS_HANDLE  MacReceiveContext,
   IN PCHAR  Address,
@@ -4027,11 +4027,11 @@ typedef VOID
   IN UINT  PacketSize);
 
 typedef VOID
-(DDKAPI *FDDI_RCV_COMPLETE_HANDLER)(
+(NTAPI *FDDI_RCV_COMPLETE_HANDLER)(
   IN PFDDI_FILTER  Filter);
 
 typedef VOID
-(DDKAPI *FDDI_RCV_INDICATE_HANDLER)(
+(NTAPI *FDDI_RCV_INDICATE_HANDLER)(
   IN PFDDI_FILTER  Filter,
   IN NDIS_HANDLE  MacReceiveContext,
   IN PCHAR  Address,
@@ -4043,17 +4043,17 @@ typedef VOID
   IN UINT  PacketSize);
 
 typedef VOID
-(DDKAPI *FILTER_PACKET_INDICATION_HANDLER)(
+(NTAPI *FILTER_PACKET_INDICATION_HANDLER)(
   IN NDIS_HANDLE  Miniport,
   IN PPNDIS_PACKET  PacketArray,
   IN UINT  NumberOfPackets);
 
 typedef VOID
-(DDKAPI *TR_RCV_COMPLETE_HANDLER)(
+(NTAPI *TR_RCV_COMPLETE_HANDLER)(
   IN PTR_FILTER  Filter);
 
 typedef VOID
-(DDKAPI *TR_RCV_INDICATE_HANDLER)(
+(NTAPI *TR_RCV_INDICATE_HANDLER)(
   IN PTR_FILTER  Filter,
   IN NDIS_HANDLE  MacReceiveContext,
   IN PVOID  HeaderBuffer,
@@ -4063,12 +4063,12 @@ typedef VOID
   IN UINT  PacketSize);
 
 typedef VOID
-(DDKAPI *WAN_RCV_COMPLETE_HANDLER)(
+(NTAPI *WAN_RCV_COMPLETE_HANDLER)(
   IN NDIS_HANDLE  MiniportAdapterHandle,
   IN NDIS_HANDLE  NdisLinkContext);
 
 typedef VOID
-(DDKAPI *WAN_RCV_HANDLER)(
+(NTAPI *WAN_RCV_HANDLER)(
   OUT PNDIS_STATUS  Status,
   IN NDIS_HANDLE  MiniportAdapterHandle,
   IN NDIS_HANDLE  NdisLinkContext,
@@ -4094,24 +4094,24 @@ typedef NDIS_STATUS
   IN PVOID  WorkItemContext);
 
 typedef VOID
-(DDKAPI *NDIS_M_REQ_COMPLETE_HANDLER)(
+(NTAPI *NDIS_M_REQ_COMPLETE_HANDLER)(
   IN NDIS_HANDLE  MiniportAdapterHandle,
   IN NDIS_STATUS  Status);
 
 typedef VOID
-(DDKAPI *NDIS_M_RESET_COMPLETE_HANDLER)(
+(NTAPI *NDIS_M_RESET_COMPLETE_HANDLER)(
   IN NDIS_HANDLE  MiniportAdapterHandle,
   IN NDIS_STATUS  Status,
   IN BOOLEAN  AddressingReset);
 
 typedef VOID
-(DDKAPI *NDIS_M_SEND_COMPLETE_HANDLER)(
+(NTAPI *NDIS_M_SEND_COMPLETE_HANDLER)(
   IN NDIS_HANDLE  MiniportAdapterHandle,
   IN PNDIS_PACKET  Packet,
   IN NDIS_STATUS  Status);
 
 typedef VOID
-(DDKAPI *NDIS_M_SEND_RESOURCES_HANDLER)(
+(NTAPI *NDIS_M_SEND_RESOURCES_HANDLER)(
   IN NDIS_HANDLE  MiniportAdapterHandle);
 
 typedef BOOLEAN
@@ -4119,24 +4119,24 @@ typedef BOOLEAN
   IN PNDIS_MINIPORT_BLOCK  Miniport);
 
 typedef VOID
-(DDKAPI *NDIS_M_STATUS_HANDLER)(
+(NTAPI *NDIS_M_STATUS_HANDLER)(
   IN NDIS_HANDLE  MiniportHandle,
   IN NDIS_STATUS  GeneralStatus,
   IN PVOID  StatusBuffer,
   IN UINT  StatusBufferSize);
 
 typedef VOID
-(DDKAPI *NDIS_M_STS_COMPLETE_HANDLER)(
+(NTAPI *NDIS_M_STS_COMPLETE_HANDLER)(
   IN NDIS_HANDLE  MiniportAdapterHandle);
 
 typedef VOID
-(DDKAPI *NDIS_M_TD_COMPLETE_HANDLER)(
+(NTAPI *NDIS_M_TD_COMPLETE_HANDLER)(
   IN NDIS_HANDLE  MiniportAdapterHandle,
   IN PNDIS_PACKET  Packet,
   IN NDIS_STATUS  Status,
   IN UINT  BytesTransferred);
 
-typedef VOID (DDKAPI *NDIS_WM_SEND_COMPLETE_HANDLER)(
+typedef VOID (NTAPI *NDIS_WM_SEND_COMPLETE_HANDLER)(
   IN NDIS_HANDLE  MiniportAdapterHandle,
   IN PVOID  Packet,
   IN NDIS_STATUS  Status);
@@ -4376,14 +4376,14 @@ struct _NDIS_MINIPORT_BLOCK {
 
 /* Handler prototypes for NDIS_OPEN_BLOCK */
 
-typedef NDIS_STATUS (DDKAPI *WAN_SEND_HANDLER)(
+typedef NDIS_STATUS (NTAPI *WAN_SEND_HANDLER)(
   IN NDIS_HANDLE  MacBindingHandle,
   IN NDIS_HANDLE  LinkHandle,
   IN PVOID  Packet);
 
 /* NDIS 4.0 extension */
 
-typedef VOID (DDKAPI *SEND_PACKETS_HANDLER)(
+typedef VOID (NTAPI *SEND_PACKETS_HANDLER)(
   IN NDIS_HANDLE  MiniportAdapterContext,
   IN PPNDIS_PACKET  PacketArray,
   IN UINT  NumberOfPackets);
@@ -4466,7 +4466,7 @@ struct _NDIS_OPEN_BLOCK
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisInitializeWrapper(
   OUT PNDIS_HANDLE  NdisWrapperHandle,
   IN PVOID  SystemSpecific1,
@@ -4475,7 +4475,7 @@ NdisInitializeWrapper(
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisMAllocateMapRegisters(
   IN NDIS_HANDLE  MiniportAdapterHandle,
   IN UINT  DmaChannel,
@@ -4521,13 +4521,13 @@ NdisMAllocateMapRegisters(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisMCloseLog(
   IN NDIS_HANDLE  LogHandle);
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisMCreateLog(
   IN NDIS_HANDLE  MiniportAdapterHandle,
   IN UINT  Size,
@@ -4535,19 +4535,19 @@ NdisMCreateLog(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisMDeregisterAdapterShutdownHandler(
   IN NDIS_HANDLE  MiniportHandle);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisMDeregisterInterrupt(
   IN PNDIS_MINIPORT_INTERRUPT  Interrupt);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisMDeregisterIoPortRange(
   IN NDIS_HANDLE  MiniportAdapterHandle,
   IN UINT  InitialPort,
@@ -4643,13 +4643,13 @@ NdisMDeregisterIoPortRange(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisMFlushLog(
   IN NDIS_HANDLE  LogHandle);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisMFreeMapRegisters(
   IN NDIS_HANDLE  MiniportAdapterHandle);
 
@@ -4708,7 +4708,7 @@ NdisMFreeMapRegisters(
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisMMapIoSpace(
   OUT PVOID  *VirtualAddress,
   IN NDIS_HANDLE  MiniportAdapterHandle,
@@ -4726,7 +4726,7 @@ NdisMMapIoSpace(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisMRegisterAdapterShutdownHandler(
   IN NDIS_HANDLE  MiniportHandle,
   IN PVOID  ShutdownContext,
@@ -4734,7 +4734,7 @@ NdisMRegisterAdapterShutdownHandler(
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisMRegisterInterrupt(
   OUT PNDIS_MINIPORT_INTERRUPT  Interrupt,
   IN NDIS_HANDLE  MiniportAdapterHandle,
@@ -4746,7 +4746,7 @@ NdisMRegisterInterrupt(
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisMRegisterIoPortRange(
   OUT PVOID  *PortOffset,
   IN NDIS_HANDLE  MiniportAdapterHandle,
@@ -4755,7 +4755,7 @@ NdisMRegisterIoPortRange(
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisMRegisterMiniport(
   IN NDIS_HANDLE  NdisWrapperHandle,
   IN PNDIS_MINIPORT_CHARACTERISTICS  MiniportCharacteristics,
@@ -4763,14 +4763,14 @@ NdisMRegisterMiniport(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisMSetTimer(
   IN PNDIS_MINIPORT_TIMER  Timer,
   IN UINT  MillisecondsToDelay);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisMInitializeTimer(
   IN OUT PNDIS_MINIPORT_TIMER Timer,
   IN NDIS_HANDLE MiniportAdapterHandle,
@@ -4779,14 +4779,14 @@ NdisMInitializeTimer(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisMSetPeriodicTimer(
   IN PNDIS_MINIPORT_TIMER  Timer,
   IN UINT  MillisecondPeriod);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisMCancelTimer(
   IN PNDIS_MINIPORT_TIMER  Timer,
   OUT PBOOLEAN  TimerCancelled);
@@ -4874,7 +4874,7 @@ NdisMCancelTimer(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisMSetAttributesEx(
   IN NDIS_HANDLE  MiniportAdapterHandle,
   IN NDIS_HANDLE  MiniportAdapterContext,
@@ -4895,13 +4895,13 @@ NdisMSetAttributesEx(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisMSleep(
   IN ULONG  MicrosecondsToSleep);
 
 NDISAPI
 BOOLEAN
-DDKAPI
+NTAPI
 NdisMSynchronizeWithInterrupt(
   IN PNDIS_MINIPORT_INTERRUPT  Interrupt,
   IN PVOID  SynchronizeFunction,
@@ -4950,7 +4950,7 @@ NdisMSynchronizeWithInterrupt(
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisMWriteLogData(
   IN NDIS_HANDLE  LogHandle,
   IN PVOID  LogBuffer,
@@ -4958,7 +4958,7 @@ NdisMWriteLogData(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisMQueryAdapterResources(
   OUT PNDIS_STATUS  Status,
   IN NDIS_HANDLE  WrapperConfigurationContext,
@@ -4967,14 +4967,14 @@ NdisMQueryAdapterResources(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisTerminateWrapper(
   IN NDIS_HANDLE  NdisWrapperHandle,
   IN PVOID  SystemSpecific);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisMUnmapIoSpace(
   IN NDIS_HANDLE  MiniportAdapterHandle,
   IN PVOID  VirtualAddress,
@@ -4986,25 +4986,25 @@ NdisMUnmapIoSpace(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisInitializeEvent(
   IN PNDIS_EVENT  Event);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisSetEvent(
   IN PNDIS_EVENT  Event);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisResetEvent(
   IN PNDIS_EVENT  Event);
 
 NDISAPI
 BOOLEAN
-DDKAPI
+NTAPI
 NdisWaitEvent(
   IN PNDIS_EVENT  Event,
   IN UINT  Timeout);
@@ -5013,7 +5013,7 @@ NdisWaitEvent(
 
 /* NDIS intermediate miniport structures */
 
-typedef VOID (DDKAPI *W_MINIPORT_CALLBACK)(
+typedef VOID (NTAPI *W_MINIPORT_CALLBACK)(
   IN NDIS_HANDLE  MiniportAdapterContext,
   IN PVOID  CallbackContext);
 
@@ -5023,7 +5023,7 @@ typedef VOID (DDKAPI *W_MINIPORT_CALLBACK)(
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisIMDeInitializeDeviceInstance(
   IN NDIS_HANDLE NdisMiniportHandle);
 
@@ -5038,7 +5038,7 @@ NdisIMDeInitializeDeviceInstance(
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisIMRegisterLayeredMiniport(
   IN NDIS_HANDLE  NdisWrapperHandle,
   IN PNDIS_MINIPORT_CHARACTERISTICS  MiniportCharacteristics,
@@ -5050,13 +5050,13 @@ NdisIMRegisterLayeredMiniport(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisFreeDmaChannel(
   IN PNDIS_HANDLE  NdisDmaHandle);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisSetupDmaTransfer(
   OUT PNDIS_STATUS  Status,
   IN PNDIS_HANDLE  NdisDmaHandle,
@@ -5067,7 +5067,7 @@ NdisSetupDmaTransfer(
 
 NDISAPI
 NTSTATUS
-DDKAPI
+NTAPI
 NdisUpcaseUnicodeString(
   OUT PUNICODE_STRING  DestinationString,
   IN PUNICODE_STRING  SourceString);
@@ -5077,7 +5077,7 @@ NdisUpcaseUnicodeString(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisRequest(
   OUT PNDIS_STATUS  Status,
   IN NDIS_HANDLE  NdisBindingHandle,
@@ -5085,14 +5085,14 @@ NdisRequest(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisReset(
   OUT PNDIS_STATUS  Status,
   IN NDIS_HANDLE  NdisBindingHandle);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisSend(
   OUT PNDIS_STATUS  Status,
   IN NDIS_HANDLE  NdisBindingHandle,
@@ -5100,7 +5100,7 @@ NdisSend(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisSendPackets(
   IN NDIS_HANDLE  NdisBindingHandle,
   IN PPNDIS_PACKET  PacketArray,
@@ -5108,7 +5108,7 @@ NdisSendPackets(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisTransferData(
   OUT PNDIS_STATUS        Status,
   IN NDIS_HANDLE  NdisBindingHandle,
@@ -5120,14 +5120,14 @@ NdisTransferData(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisCloseAdapter(
   OUT PNDIS_STATUS  Status,
   IN NDIS_HANDLE  NdisBindingHandle);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisCompleteBindAdapter(
   IN NDIS_HANDLE  BindAdapterContext,
   IN NDIS_STATUS  Status,
@@ -5135,21 +5135,21 @@ NdisCompleteBindAdapter(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisCompleteUnbindAdapter(
   IN NDIS_HANDLE  UnbindAdapterContext,
   IN NDIS_STATUS  Status);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisDeregisterProtocol(
   OUT PNDIS_STATUS  Status,
   IN NDIS_HANDLE  NdisProtocolHandle);
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisOpenAdapter(
   OUT PNDIS_STATUS  Status,
   OUT PNDIS_STATUS  OpenErrorStatus,
@@ -5165,7 +5165,7 @@ NdisOpenAdapter(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisOpenProtocolConfiguration(
   OUT PNDIS_STATUS  Status,
   OUT PNDIS_HANDLE  ConfigurationHandle,
@@ -5173,7 +5173,7 @@ NdisOpenProtocolConfiguration(
 
 NDISAPI
 VOID
-DDKAPI
+NTAPI
 NdisRegisterProtocol(
   OUT PNDIS_STATUS  Status,
   OUT PNDIS_HANDLE  NdisProtocolHandle,
@@ -5182,7 +5182,7 @@ NdisRegisterProtocol(
 
 NDISAPI
 NDIS_STATUS
-DDKAPI
+NTAPI
 NdisScheduleWorkItem(
   IN  PNDIS_WORK_ITEM WorkItem);
 
@@ -5201,20 +5201,20 @@ typedef NDIS_STATUS (*OPEN_ADAPTER_HANDLER)(
   IN UINT  OpenOptions,
   IN PSTRING  AddressingInformation  OPTIONAL);
 
-typedef NDIS_STATUS (DDKAPI *CLOSE_ADAPTER_HANDLER)(
+typedef NDIS_STATUS (NTAPI *CLOSE_ADAPTER_HANDLER)(
   IN NDIS_HANDLE  MacBindingHandle);
 
-typedef NDIS_STATUS (DDKAPI *WAN_TRANSFER_DATA_HANDLER)(
+typedef NDIS_STATUS (NTAPI *WAN_TRANSFER_DATA_HANDLER)(
   VOID);
 
-typedef NDIS_STATUS (DDKAPI *QUERY_GLOBAL_STATISTICS_HANDLER)(
+typedef NDIS_STATUS (NTAPI *QUERY_GLOBAL_STATISTICS_HANDLER)(
   IN NDIS_HANDLE  MacAdapterContext,
   IN PNDIS_REQUEST  NdisRequest);
 
-typedef VOID (DDKAPI *UNLOAD_MAC_HANDLER)(
+typedef VOID (NTAPI *UNLOAD_MAC_HANDLER)(
   IN NDIS_HANDLE  MacMacContext);
 
-typedef NDIS_STATUS (DDKAPI *ADD_ADAPTER_HANDLER)(
+typedef NDIS_STATUS (NTAPI *ADD_ADAPTER_HANDLER)(
   IN NDIS_HANDLE  MacMacContext,
   IN NDIS_HANDLE  WrapperConfigurationContext,
   IN PNDIS_STRING  AdapterName);

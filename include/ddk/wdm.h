@@ -6196,7 +6196,7 @@ typedef NTSTATUS
   ULONG GpeNumber,
   KINTERRUPT_MODE Mode,
   BOOLEAN Shareable,
-  PGPE_SERVICE_ROUTINE2 ServiceRoutine,
+  PGPE_SERVICE_ROUTINE ServiceRoutine,
   PVOID ServiceContext,
   PVOID *ObjectContext);
 
@@ -10447,7 +10447,7 @@ KeFlushWriteBuffer(VOID);
  *   IN ULONG Size)
  */
 #define BYTES_TO_PAGES(Size) \
-  (((Size) >> PAGE_SHIFT) + (((Size) & (PAGE_SIZE - 1)) != 0))
+  (((Size) + PAGE_SIZE - 1) >> PAGE_SHIFT)
 
 /* PVOID
  * PAGE_ALIGN(
@@ -15469,7 +15469,7 @@ ZwQueryFullAttributesFile(
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 
-#if (NTDDI_VERSION >= NTDDI_WIN2003)
+#if (NTDDI_VERSION >= NTDDI_WS03)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
