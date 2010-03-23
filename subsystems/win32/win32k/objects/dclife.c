@@ -105,7 +105,7 @@ DC_InitHack(PDC pdc)
     ASSERT(hVisRgn);
     GdiSelectVisRgn(pdc->BaseObject.hHmgr, hVisRgn);
     GreDeleteObject(hVisRgn);
-    ASSERT(pdc->rosdc.hVisRgn);
+    ASSERT(pdc->prgnVis);
     pdc->rosdc.bitsPerPixel = pdc->ppdev->gdiinfo.cBitsPixel *
                               pdc->ppdev->gdiinfo.cPlanes;
 }
@@ -362,8 +362,8 @@ DC_Cleanup(PVOID ObjectBody)
     /*  Free regions */
     if (pdc->rosdc.hClipRgn)
         GreDeleteObject(pdc->rosdc.hClipRgn);
-    if (pdc->rosdc.hVisRgn)
-        GreDeleteObject(pdc->rosdc.hVisRgn);
+    if (pdc->prgnVis)
+        REGION_FreeRgnByHandle(((PROSRGNDATA)pdc->prgnVis)->BaseObject.hHmgr);
 ASSERT(pdc->rosdc.hGCClipRgn);
     if (pdc->rosdc.hGCClipRgn)
         GreDeleteObject(pdc->rosdc.hGCClipRgn);
@@ -412,14 +412,14 @@ DC_SetOwnership(HDC hDC, PEPROCESS Owner)
             //
             if (!GDIOBJ_SetOwnership(pDC->rosdc.hClipRgn, Owner)) return FALSE;
         }
-        if (pDC->rosdc.hVisRgn)
+        if (pDC->prgnVis)
         {   // FIXME! HAX!!!
-            Index = GDI_HANDLE_GET_INDEX(pDC->rosdc.hVisRgn);
+            Index = GDI_HANDLE_GET_INDEX(((PROSRGNDATA)pDC->prgnVis)->BaseObject.hHmgr);
             Entry = &GdiHandleTable->Entries[Index];
             if (Entry->UserData) FreeObjectAttr(Entry->UserData);
             Entry->UserData = NULL;
             //
-            if (!GDIOBJ_SetOwnership(pDC->rosdc.hVisRgn, Owner)) return FALSE;
+            if (!GDIOBJ_SetOwnership(((PROSRGNDATA)pDC->prgnVis)->BaseObject.hHmgr, Owner)) return FALSE;
         }
         if (pDC->rosdc.hGCClipRgn)
         {   // FIXME! HAX!!!

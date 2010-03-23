@@ -184,8 +184,8 @@ IntAttachMonitor(IN PDEVOBJ *pGdiDevice,
 
    Monitor->GdiDevice = pGdiDevice;
    Monitor->rcMonitor.left  = 0;
-   Monitor->rcMonitor.top   = 0;   
-   Monitor->rcMonitor.right  = Monitor->rcMonitor.left + pGdiDevice->gdiinfo.ulHorzRes; 
+   Monitor->rcMonitor.top   = 0;
+   Monitor->rcMonitor.right  = Monitor->rcMonitor.left + pGdiDevice->gdiinfo.ulHorzRes;
    Monitor->rcMonitor.bottom = Monitor->rcMonitor.top + pGdiDevice->gdiinfo.ulVertRes;
    Monitor->rcWork = Monitor->rcMonitor;
    Monitor->cWndStack = 0;
@@ -506,7 +506,7 @@ NtUserEnumDisplayMonitors(
          /* FIXME: setlasterror? */
          return -1;
       }
-      dcVisRgn = dc->rosdc.hVisRgn;
+      dcVisRgn = ((PROSRGNDATA)dc->prgnVis)->BaseObject.hHmgr;
       DC_UnlockDc(dc);
 
       regionType = NtGdiGetRgnBox(dcVisRgn, &dcRect);

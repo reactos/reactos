@@ -2035,13 +2035,13 @@ REGION_AllocRgnWithHandle(INT nReg)
 {
     HRGN hReg;
     PROSRGNDATA pReg;
-    
+
     pReg = (PROSRGNDATA)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_REGION);
     if(!pReg)
     {
         return NULL;
     }
-    
+
     hReg = pReg->BaseObject.hHmgr;
 
     if (nReg == 0 || nReg == 1)
@@ -2419,7 +2419,7 @@ IntGdiPaintRgn(
     if (!(tmpVisRgn = IntSysCreateRectRgn(0, 0, 0, 0))) return FALSE;
 
     // Transform region into device co-ords
-    if (!REGION_LPTODP(dc, tmpVisRgn, hRgn) || 
+    if (!REGION_LPTODP(dc, tmpVisRgn, hRgn) ||
          NtGdiOffsetRgn(tmpVisRgn, dc->ptlDCOrig.x, dc->ptlDCOrig.y) == ERROR)
     {
         REGION_FreeRgnByHandle(tmpVisRgn);
@@ -2552,13 +2552,13 @@ REGION_SetRectRgn(
     }
 }
 
-INT  
+INT
 FASTCALL
 IntGdiOffsetRgn(
     PROSRGNDATA rgn,
     INT XOffset,
     INT YOffset )
-{            
+{
     if (XOffset || YOffset)
     {
         int nbox = rgn->rdh.nCount;
@@ -3444,7 +3444,7 @@ NtGdiEqualRgn(
     if ( rgn1->rdh.nCount == 0 )
     {
        bRet = TRUE;
-       goto exit;  
+       goto exit;
     }
 
     if ( rgn1->rdh.rcBound.left   != rgn2->rdh.rcBound.left  ||
@@ -3691,8 +3691,7 @@ NtGdiGetRandomRgn(
         else if (pDC->dclevel.prgnMeta) hSrc = ((PROSRGNDATA)pDC->dclevel.prgnMeta)->BaseObject.hHmgr;
         break;
     case SYSRGN:
-        hSrc = pDC->rosdc.hVisRgn;
-//        if (pDC->prgnVis) hSrc = ((PROSRGNDATA)pDC->prgnVis)->BaseObject.hHmgr;
+        if (pDC->prgnVis) hSrc = ((PROSRGNDATA)pDC->prgnVis)->BaseObject.hHmgr;
         break;
     default:
         hSrc = 0;

@@ -51,7 +51,6 @@ typedef enum
 typedef struct _ROS_DC_INFO
 {
   HRGN     hClipRgn;     /* Clip region (may be 0) */
-  HRGN     hVisRgn;      /* Visible region (must never be 0) */
   HRGN     hGCClipRgn;   /* GC clip region (ClipRgn AND VisRgn) */
 
   BYTE   bitsPerPixel;
@@ -129,7 +128,7 @@ typedef struct _DC
   RECTL       erclBounds;
   RECTL       erclBoundsApp;
   PVOID       prgnAPI; /* PROSRGNDATA */
-  PVOID       prgnVis;
+  PVOID       prgnVis; /* Visible region (must never be 0) */
   PVOID       prgnRao;
   POINTL      ptlFillOrigin;
   EBRUSHOBJ   eboFill;

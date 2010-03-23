@@ -26,22 +26,28 @@ int FASTCALL
 CLIPPING_UpdateGCRegion(DC* Dc)
 {
    PROSRGNDATA CombinedRegion;
+   HRGN hRgnVis = NULL;
 
     // would prefer this, but the rest of the code sucks
 //    ASSERT(Dc->rosdc.hGCClipRgn);
 //    ASSERT(Dc->rosdc.hClipRgn);
-   if (!Dc->rosdc.hVisRgn)
+   if (!Dc->prgnVis)
    {
-      DPRINT1("Warning, hVisRgn is NULL!\n");
+      DPRINT1("Warning, prgnVis is NULL!\n");
    }
+   else
+   {
+       hRgnVis = ((PROSRGNDATA)Dc->prgnVis)->BaseObject.hHmgr ;
+   }
+
 
    if (Dc->rosdc.hGCClipRgn == NULL)
       Dc->rosdc.hGCClipRgn = IntSysCreateRectRgn(0, 0, 0, 0);
 
    if (Dc->rosdc.hClipRgn == NULL)
-      NtGdiCombineRgn(Dc->rosdc.hGCClipRgn, Dc->rosdc.hVisRgn, 0, RGN_COPY);
+      NtGdiCombineRgn(Dc->rosdc.hGCClipRgn, ((PROSRGNDATA)Dc->prgnVis)->BaseObject.hHmgr, 0, RGN_COPY);
    else // FYI: Vis == NULL! source of "IntGdiCombineRgn requires hSrc2 != NULL for combine mode 1!"
-      NtGdiCombineRgn(Dc->rosdc.hGCClipRgn, Dc->rosdc.hClipRgn, Dc->rosdc.hVisRgn, RGN_AND);
+      NtGdiCombineRgn(Dc->rosdc.hGCClipRgn, Dc->rosdc.hClipRgn, hRgnVis, RGN_AND);
    NtGdiOffsetRgn(Dc->rosdc.hGCClipRgn, Dc->ptlDCOrig.x, Dc->ptlDCOrig.y);
 
    if((CombinedRegion = RGNOBJAPI_Lock(Dc->rosdc.hGCClipRgn, NULL)))
@@ -84,17 +90,17 @@ GdiSelectVisRgn(HDC hdc, HRGN hrgn)
   }
 
   dc->fs &= ~DC_FLAG_DIRTY_RAO;
-  
-  if (dc->rosdc.hVisRgn == NULL)
+
+  if (dc->prgnVis == NULL)
   {
-    dc->rosdc.hVisRgn = IntSysCreateRectRgn(0, 0, 0, 0);
-    GDIOBJ_CopyOwnership(hdc, dc->rosdc.hVisRgn);
+    dc->prgnVis = IntSysCreateRectpRgn(0, 0, 0, 0);
+    GDIOBJ_CopyOwnership(hdc, ((PROSRGNDATA)dc->prgnVis)->BaseObject.hHmgr);
   }
 
-  retval = NtGdiCombineRgn(dc->rosdc.hVisRgn, hrgn, 0, RGN_COPY);
+  retval = NtGdiCombineRgn(((PROSRGNDATA)dc->prgnVis)->BaseObject.hHmgr, hrgn, 0, RGN_COPY);
   if ( retval != ERROR )
   {
-    NtGdiOffsetRgn(dc->rosdc.hVisRgn, -dc->ptlDCOrig.x, -dc->ptlDCOrig.y);
+    NtGdiOffsetRgn(((PROSRGNDATA)dc->prgnVis)->BaseObject.hHmgr, -dc->ptlDCOrig.x, -dc->ptlDCOrig.y);
     CLIPPING_UpdateGCRegion(dc);
   }
   DC_UnlockDc(dc);
@@ -131,7 +137,7 @@ int FASTCALL GdiExtSelectClipRgn(PDC dc,
     {
       PROSRGNDATA Rgn;
       RECTL rect;
-      if((Rgn = RGNOBJAPI_Lock(dc->rosdc.hVisRgn, NULL)))
+      if((Rgn = RGNOBJAPI_Lock(((PROSRGNDATA)dc->prgnVis)->BaseObject.hHmgr, NULL)))
       {
         REGION_GetRgnBox(Rgn, &rect);
         RGNOBJAPI_Unlock(Rgn);
@@ -263,7 +269,7 @@ int APIENTRY NtGdiExcludeClipRect(HDC  hDC,
       if (!dc->rosdc.hClipRgn)
       {
          dc->rosdc.hClipRgn = IntSysCreateRectRgn(0, 0, 0, 0);
-         NtGdiCombineRgn(dc->rosdc.hClipRgn, dc->rosdc.hVisRgn, NewRgn, RGN_DIFF);
+         NtGdiCombineRgn(dc->rosdc.hClipRgn, ((PROSRGNDATA)dc->prgnVis)->BaseObject.hHmgr, NewRgn, RGN_DIFF);
          Result = SIMPLEREGION;
       }
       else
@@ -428,7 +434,7 @@ BOOL APIENTRY NtGdiRectVisible(HDC  hDC,
 }
 
 int
-FASTCALL 
+FASTCALL
 IntGdiSetMetaRgn(PDC pDC)
 {
   INT Ret = ERROR;
@@ -440,7 +446,7 @@ IntGdiSetMetaRgn(PDC pDC)
      {
         TempRgn = IntSysCreateRectRgn(0,0,0,0);
         if (TempRgn)
-        {        
+        {
            Ret = IntGdiCombineRgn( TempRgn,
                      pDC->dclevel.prgnMeta,
                      pDC->dclevel.prgnClip,
@@ -476,7 +482,7 @@ IntGdiSetMetaRgn(PDC pDC)
         pDC->dclevel.prgnMeta = pDC->dclevel.prgnClip;
         pDC->dclevel.prgnClip = NULL;
      }
-     else 
+     else
        Ret = SIMPLEREGION;
   }
   return Ret;
@@ -517,7 +523,7 @@ NEW_CLIPPING_UpdateGCRegion(PDC pDC)
      REGION_Delete(pDC->prgnRao);
      pDC->prgnRao = IntSysCreateRectRgn(0,0,0,0);
   }
-  
+
   if (pDC->dclevel.prgnMeta && pDC->dclevel.prgnClip)
   {
      IntGdiCombineRgn( pDC->prgnAPI,
@@ -548,7 +554,7 @@ NEW_CLIPPING_UpdateGCRegion(PDC pDC)
   pDC->fs &= ~DC_FLAG_DIRTY_RAO;
 
 //  if (Dc->CombinedClip != NULL) IntEngDeleteClipRegion(Dc->CombinedClip);
-  
+
   co = IntEngCreateClipRegion( ((PROSRGNDATA)pDC->prgnRao)->rdh.nCount,
                            ((PROSRGNDATA)pDC->prgnRao)->Buffer,
                                  &pDC->erclClip);
