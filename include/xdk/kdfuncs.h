@@ -15,7 +15,7 @@ $if (_WDMDDK_)
 #ifndef _DBGNT_
 
 ULONG
-DDKCDECLAPI
+__cdecl
 DbgPrint(
   IN PCSTR Format,
   IN ...);
@@ -23,7 +23,7 @@ DbgPrint(
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 NTSYSAPI
 ULONG
-DDKCDECLAPI
+__cdecl
 DbgPrintReturnControlC(
   IN PCCH Format,
   IN ...);
@@ -33,7 +33,7 @@ DbgPrintReturnControlC(
 
 NTSYSAPI
 ULONG
-DDKCDECLAPI
+__cdecl
 DbgPrintEx(
   IN ULONG ComponentId,
   IN ULONG Level,

@@ -6,7 +6,7 @@
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 NTKERNELAPI
 NTSTATUS
-DDKCDECLAPI
+__cdecl
 WmiTraceMessage(
   IN TRACEHANDLE LoggerHandle,
   IN ULONG MessageFlags,
@@ -32,7 +32,7 @@ WmiQueryTraceInformation(
 /* FIXME: Get va_list from where? */
 NTKERNELAPI
 NTSTATUS
-DDKCDECLAPI
+__cdecl
 WmiTraceMessageVa(
   IN TRACEHANDLE LoggerHandle,
   IN ULONG MessageFlags,
