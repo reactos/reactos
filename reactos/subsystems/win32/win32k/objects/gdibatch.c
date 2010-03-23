@@ -72,7 +72,7 @@ GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
   {
     pdcattr = dc->pdcattr;
   }
-  // The thread is approaching the end of sunset.
+  // FYI! The thread is approaching the end of sunset.
   switch(pHdr->Cmd)
   {
      case GdiBCPatBlt: // Highest pri first!
@@ -139,6 +139,7 @@ NTSTATUS
 APIENTRY
 NtGdiFlushUserBatch(VOID)
 {
+  BOOL Hit;
   PTEB pTeb = NtCurrentTeb();
   ULONG GdiBatchCount = pTeb->GdiBatchCount;
 
@@ -160,8 +161,26 @@ NtGdiFlushUserBatch(VOID)
       }
 
        // No need to init anything, just go!
-       for (; GdiBatchCount > 0; GdiBatchCount--)
-       {
+       for (Hit = FALSE; GdiBatchCount > 0; GdiBatchCount--)
+       {   /*
+              Looks like a hack,
+              feels like a hack,
+              you're right it's a hack,
+              due to the lack,
+              of kernel thread locking when it is in sunset!
+            */
+           _SEH2_TRY
+           {
+              ((PGDIBATCHHDR)pHdr)->Cmd = ((PGDIBATCHHDR)pHdr)->Cmd;
+           }
+           _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+           {
+              Hit = TRUE;
+           }
+           _SEH2_END;
+
+           if (Hit) break;
+
            // Process Gdi Batch!
            pHdr += GdiFlushUserBatch(pDC, (PGDIBATCHHDR) pHdr);
        }
