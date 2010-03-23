@@ -21,20 +21,22 @@ void _ReadBarrier(void);
 void _WriteBarrier(void);
 #pragma intrinsic(_WriteBarrier)
 
-char _InterlockedCompareExchange8(volatile char * const Destination, const char Exchange, const char Comperand);
-#pragma intrinsic(_InterlockedCompareExchange8)
 short _InterlockedCompareExchange16(volatile short * const Destination, const short Exchange, const short Comperand);
 #pragma intrinsic(_InterlockedCompareExchange16)
 long _InterlockedCompareExchange(volatile long * const Destination, const long Exchange, const long Comperand);
 #pragma intrinsic(_InterlockedCompareExchange)
+#if defined(_AMD64_) || defined(_IA64_)
 void * _InterlockedCompareExchangePointer(void * volatile * const Destination, void * const Exchange, void * const Comperand);
 #pragma intrinsic(_InterlockedCompareExchangePointer)
-long _InterlockedExchange(volatile long * const Target, const long Value);
-#pragma intrinsic(_InterlockedExchange)
 void * _InterlockedExchangePointer(void * volatile * const Target, void * const Value);
 #pragma intrinsic(_InterlockedExchangePointer)
-long _InterlockedExchangeAdd16(volatile short * const Addend, const short Value);
-#pragma intrinsic(_InterlockedExchangeAdd16)
+#else
+#define _InterlockedCompareExchangePointer _InterlockedCompareExchange
+#define _InterlockedExchangePointer _InterlockedExchange
+#endif
+long _InterlockedExchange(volatile long * const Target, const long Value);
+#pragma intrinsic(_InterlockedExchange)
+
 long _InterlockedExchangeAdd(volatile long * const Addend, const long Value);
 #pragma intrinsic(_InterlockedExchangeAdd)
 char _InterlockedAnd8(volatile char * const value, const char mask);
