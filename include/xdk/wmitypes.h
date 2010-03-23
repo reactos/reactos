@@ -7,6 +7,11 @@
 #include <stdarg.h>
 #endif
 
+#ifndef _TRACEHANDLE_DEFINED
+#define _TRACEHANDLE_DEFINED
+typedef ULONG64 TRACEHANDLE, *PTRACEHANDLE;
+#endif
+
 #ifndef TRACE_INFORMATION_CLASS_DEFINE
 
 typedef struct _ETW_TRACE_SESSION_SETTINGS {

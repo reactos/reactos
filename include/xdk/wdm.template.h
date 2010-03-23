@@ -44,6 +44,14 @@
 #include <guiddef.h>
 #endif
 
+#ifdef _MAC
+#ifndef _INC_STRING
+#include <string.h>
+#endif /* _INC_STRING */
+#else
+#include <string.h>
+#endif /* _MAC */
+
 #ifndef _KTMTYPES_
 typedef GUID UOW, *PUOW;
 #endif
@@ -153,6 +161,34 @@ typedef struct _DMA_ADAPTER *PADAPTER_OBJECT;
 typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT; 
 #endif
 
+#ifndef DEFINE_GUIDEX
+#ifdef _MSC_VER
+#define DEFINE_GUIDEX(name) EXTERN_C const CDECL GUID name
+#else
+#define DEFINE_GUIDEX(name) EXTERN_C const GUID name
+#endif
+#endif /* DEFINE_GUIDEX */
+
+#ifndef STATICGUIDOF
+#define STATICGUIDOF(guid) STATIC_##guid
+#endif
+
+/* GUID Comparison */
+#ifndef __IID_ALIGNED__
+#define __IID_ALIGNED__
+#ifdef __cplusplus
+inline int IsEqualGUIDAligned(REFGUID guid1, REFGUID guid2)
+{
+    return ( (*(PLONGLONG)(&guid1) == *(PLONGLONG)(&guid2)) && 
+             (*((PLONGLONG)(&guid1) + 1) == *((PLONGLONG)(&guid2) + 1)) );
+}
+#else
+#define IsEqualGUIDAligned(guid1, guid2) \
+           ( (*(PLONGLONG)(guid1) == *(PLONGLONG)(guid2)) && \
+             (*((PLONGLONG)(guid1) + 1) == *((PLONGLONG)(guid2) + 1)) )
+#endif /* __cplusplus */
+#endif /* !__IID_ALIGNED__ */
+
 
 $define (_WDMDDK_)
 $include (interlocked.h)
@@ -199,87 +235,6 @@ $include (kdfuncs.h)
 $include (halfuncs.h)
 $include (nttmapi.h)
 $include (zwfuncs.h)
-
-/******************************************************************************
- *                          Unsorted                                          *
- ******************************************************************************/
-
-#ifdef _MAC
-
-#ifndef _INC_STRING
-#include <string.h>
-#endif
-
-#else
-#include <string.h>
-#endif /* _MAC */
-
-#ifndef DEFINE_GUIDEX
-#ifdef _MSC_VER
-#define DEFINE_GUIDEX(name) EXTERN_C const CDECL GUID name
-#else
-#define DEFINE_GUIDEX(name) EXTERN_C const GUID name
-#endif
-#endif /* DEFINE_GUIDEX */
-
-#ifndef STATICGUIDOF
-#define STATICGUIDOF(guid) STATIC_##guid
-#endif
-
-/* GUID Comparison */
-#ifndef __IID_ALIGNED__
-#define __IID_ALIGNED__
-#ifdef __cplusplus
-inline int IsEqualGUIDAligned(REFGUID guid1, REFGUID guid2)
-{
-    return ( (*(PLONGLONG)(&guid1) == *(PLONGLONG)(&guid2)) && 
-             (*((PLONGLONG)(&guid1) + 1) == *((PLONGLONG)(&guid2) + 1)) );
-}
-#else
-#define IsEqualGUIDAligned(guid1, guid2) \
-           ( (*(PLONGLONG)(guid1) == *(PLONGLONG)(guid2)) && \
-             (*((PLONGLONG)(guid1) + 1) == *((PLONGLONG)(guid2) + 1)) )
-#endif /* __cplusplus */
-#endif /* !__IID_ALIGNED__ */
-
-#define MAXIMUM_SUSPEND_COUNT             MAXCHAR
-
-#define MAXIMUM_FILENAME_LENGTH           256
-
-#define OBJ_NAME_PATH_SEPARATOR     ((WCHAR)L'\\')
-
-#define OBJECT_TYPE_CREATE (0x0001)
-#define OBJECT_TYPE_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0x1)
-
-#define DIRECTORY_QUERY (0x0001)
-#define DIRECTORY_TRAVERSE (0x0002)
-#define DIRECTORY_CREATE_OBJECT (0x0004)
-#define DIRECTORY_CREATE_SUBDIRECTORY (0x0008)
-#define DIRECTORY_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0xF)
-
-#define SYMBOLIC_LINK_QUERY               0x0001
-#define SYMBOLIC_LINK_ALL_ACCESS          (STANDARD_RIGHTS_REQUIRED | 0x1)
-
-#define DUPLICATE_CLOSE_SOURCE            0x00000001
-#define DUPLICATE_SAME_ACCESS             0x00000002
-#define DUPLICATE_SAME_ATTRIBUTES         0x00000004
-
-/* Global debug flag */
-#if DEVL
-extern ULONG NtGlobalFlag;
-#define IF_NTOS_DEBUG(FlagName) if (NtGlobalFlag & (FLG_ ## FlagName))
-#else
-#define IF_NTOS_DEBUG(FlagName) if(FALSE)
-#endif
-
-#ifndef _TRACEHANDLE_DEFINED
-#define _TRACEHANDLE_DEFINED
-typedef ULONG64 TRACEHANDLE, *PTRACEHANDLE;
-#endif
-
-extern PBOOLEAN Mm64BitPhysicalAddress;
-
-extern PVOID MmBadPointer;
 
 #ifdef __cplusplus
 }

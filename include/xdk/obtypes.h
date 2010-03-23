@@ -2,6 +2,25 @@
  *                            Object Manager Types                            *
  ******************************************************************************/
 
+#define MAXIMUM_FILENAME_LENGTH           256
+#define OBJ_NAME_PATH_SEPARATOR     ((WCHAR)L'\\')
+
+#define OBJECT_TYPE_CREATE 0x0001
+#define OBJECT_TYPE_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0x1)
+
+#define DIRECTORY_QUERY 0x0001
+#define DIRECTORY_TRAVERSE 0x0002
+#define DIRECTORY_CREATE_OBJECT 0x0004
+#define DIRECTORY_CREATE_SUBDIRECTORY 0x0008
+#define DIRECTORY_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0xF)
+
+#define SYMBOLIC_LINK_QUERY               0x0001
+#define SYMBOLIC_LINK_ALL_ACCESS          (STANDARD_RIGHTS_REQUIRED | 0x1)
+
+#define DUPLICATE_CLOSE_SOURCE            0x00000001
+#define DUPLICATE_SAME_ACCESS             0x00000002
+#define DUPLICATE_SAME_ATTRIBUTES         0x00000004
+
 #define OB_FLT_REGISTRATION_VERSION_0100         0x0100
 #define OB_FLT_REGISTRATION_VERSION OB_FLT_REGISTRATION_VERSION_0100
 

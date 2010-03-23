@@ -289,6 +289,7 @@ typedef struct DECLSPEC_ALIGN(16) _CONTEXT {
 /******************************************************************************
  *                            Executive Types                                 *
  ******************************************************************************/
+
 typedef struct _ZONE_SEGMENT_HEADER {
   SINGLE_LIST_ENTRY SegmentList;
   PVOID Reserved;
@@ -302,7 +303,6 @@ typedef struct _ZONE_HEADER {
 } ZONE_HEADER, *PZONE_HEADER;
 
 #define PROTECTED_POOL                    0x80000000
-
 
 
 /******************************************************************************
@@ -2137,6 +2137,7 @@ typedef ULONG
 /******************************************************************************
  *                         Memory manager Types                               *
  ******************************************************************************/
+
 typedef struct _PHYSICAL_MEMORY_RANGE {
   PHYSICAL_ADDRESS BaseAddress;
   LARGE_INTEGER NumberOfBytes;

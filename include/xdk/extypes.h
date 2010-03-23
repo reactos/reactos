@@ -1,23 +1,8 @@
 /******************************************************************************
  *                            Executive Types                                 *
  ******************************************************************************/
-$if (_NTDDK_)
-typedef struct _ZONE_SEGMENT_HEADER {
-  SINGLE_LIST_ENTRY SegmentList;
-  PVOID Reserved;
-} ZONE_SEGMENT_HEADER, *PZONE_SEGMENT_HEADER;
-
-typedef struct _ZONE_HEADER {
-  SINGLE_LIST_ENTRY FreeList;
-  SINGLE_LIST_ENTRY SegmentList;
-  ULONG BlockSize;
-  ULONG TotalSegmentSize;
-} ZONE_HEADER, *PZONE_HEADER;
-
-#define PROTECTED_POOL                    0x80000000
-$endif
-
 $if (_WDMDDK_)
+
 #define EX_RUNDOWN_ACTIVE                 0x1
 #define EX_RUNDOWN_COUNT_SHIFT            0x1
 #define EX_RUNDOWN_COUNT_INC              (1 << EX_RUNDOWN_COUNT_SHIFT)
@@ -275,6 +260,30 @@ typedef struct _RESOURCE_PERFORMANCE_DATA {
   LIST_ENTRY HashTable[RESOURCE_HASH_TABLE_SIZE];
 } RESOURCE_PERFORMANCE_DATA, *PRESOURCE_PERFORMANCE_DATA;
 
-$endif
+/* Global debug flag */
+#if DEVL
+extern ULONG NtGlobalFlag;
+#define IF_NTOS_DEBUG(FlagName) if (NtGlobalFlag & (FLG_##FlagName))
+#else
+#define IF_NTOS_DEBUG(FlagName) if(FALSE)
+#endif
 
+$endif /* _WDMDDK_ */
+$if (_NTDDK_)
+
+typedef struct _ZONE_SEGMENT_HEADER {
+  SINGLE_LIST_ENTRY SegmentList;
+  PVOID Reserved;
+} ZONE_SEGMENT_HEADER, *PZONE_SEGMENT_HEADER;
+
+typedef struct _ZONE_HEADER {
+  SINGLE_LIST_ENTRY FreeList;
+  SINGLE_LIST_ENTRY SegmentList;
+  ULONG BlockSize;
+  ULONG TotalSegmentSize;
+} ZONE_HEADER, *PZONE_HEADER;
+
+#define PROTECTED_POOL                    0x80000000
+
+$endif /* _NTDDK_ */
 

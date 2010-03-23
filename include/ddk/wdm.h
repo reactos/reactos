@@ -44,6 +44,14 @@
 #include <guiddef.h>
 #endif
 
+#ifdef _MAC
+#ifndef _INC_STRING
+#include <string.h>
+#endif /* _INC_STRING */
+#else
+#include <string.h>
+#endif /* _MAC */
+
 #ifndef _KTMTYPES_
 typedef GUID UOW, *PUOW;
 #endif
@@ -98,6 +106,12 @@ extern "C" {
 
 #if defined(_MSC_VER)
 
+/* Disable some warnings */
+#pragma warning(disable:4115) /* Named type definition in parentheses */
+#pragma warning(disable:4201) /* Nameless unions and structs */
+#pragma warning(disable:4214) /* Bit fields of other types than int */
+#pragma warning(disable:4820) /* Padding added, due to alignemnet requirement */
+
 /* Indicate if #pragma alloc_text() is supported */
 #if defined(_M_IX86) || defined(_M_AMD64) || defined(_M_IA64)
 #define ALLOC_PRAGMA 1
@@ -146,6 +160,34 @@ typedef struct _DMA_ADAPTER *PADAPTER_OBJECT;
 #else
 typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT; 
 #endif
+
+#ifndef DEFINE_GUIDEX
+#ifdef _MSC_VER
+#define DEFINE_GUIDEX(name) EXTERN_C const CDECL GUID name
+#else
+#define DEFINE_GUIDEX(name) EXTERN_C const GUID name
+#endif
+#endif /* DEFINE_GUIDEX */
+
+#ifndef STATICGUIDOF
+#define STATICGUIDOF(guid) STATIC_##guid
+#endif
+
+/* GUID Comparison */
+#ifndef __IID_ALIGNED__
+#define __IID_ALIGNED__
+#ifdef __cplusplus
+inline int IsEqualGUIDAligned(REFGUID guid1, REFGUID guid2)
+{
+    return ( (*(PLONGLONG)(&guid1) == *(PLONGLONG)(&guid2)) && 
+             (*((PLONGLONG)(&guid1) + 1) == *((PLONGLONG)(&guid2) + 1)) );
+}
+#else
+#define IsEqualGUIDAligned(guid1, guid2) \
+           ( (*(PLONGLONG)(guid1) == *(PLONGLONG)(guid2)) && \
+             (*((PLONGLONG)(guid1) + 1) == *((PLONGLONG)(guid2) + 1)) )
+#endif /* __cplusplus */
+#endif /* !__IID_ALIGNED__ */
 
 
 /******************************************************************************
@@ -522,6 +564,7 @@ typedef enum _MODE {
 } MODE;
 
 #define CACHE_FULLY_ASSOCIATIVE 0xFF
+#define MAXIMUM_SUSPEND_COUNT   MAXCHAR
 
 #define EVENT_QUERY_STATE (0x0001)
 #define EVENT_MODIFY_STATE (0x0002)
@@ -1648,6 +1691,10 @@ typedef enum _MM_SYSTEM_SIZE {
   MmLargeSystem
 } MM_SYSTEMSIZE;
 
+extern PBOOLEAN Mm64BitPhysicalAddress;
+extern PVOID MmBadPointer;
+
+
 /******************************************************************************
  *                            Executive Types                                 *
  ******************************************************************************/
@@ -1909,6 +1956,13 @@ typedef struct _RESOURCE_PERFORMANCE_DATA {
   LIST_ENTRY HashTable[RESOURCE_HASH_TABLE_SIZE];
 } RESOURCE_PERFORMANCE_DATA, *PRESOURCE_PERFORMANCE_DATA;
 
+/* Global debug flag */
+#if DEVL
+extern ULONG NtGlobalFlag;
+#define IF_NTOS_DEBUG(FlagName) if (NtGlobalFlag & (FLG_##FlagName))
+#else
+#define IF_NTOS_DEBUG(FlagName) if(FALSE)
+#endif
 
 
 /******************************************************************************
@@ -7374,6 +7428,25 @@ typedef struct _PCI_MSIX_TABLE_CONFIG_INTERFACE {
  *                            Object Manager Types                            *
  ******************************************************************************/
 
+#define MAXIMUM_FILENAME_LENGTH           256
+#define OBJ_NAME_PATH_SEPARATOR     ((WCHAR)L'\\')
+
+#define OBJECT_TYPE_CREATE 0x0001
+#define OBJECT_TYPE_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0x1)
+
+#define DIRECTORY_QUERY 0x0001
+#define DIRECTORY_TRAVERSE 0x0002
+#define DIRECTORY_CREATE_OBJECT 0x0004
+#define DIRECTORY_CREATE_SUBDIRECTORY 0x0008
+#define DIRECTORY_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0xF)
+
+#define SYMBOLIC_LINK_QUERY               0x0001
+#define SYMBOLIC_LINK_ALL_ACCESS          (STANDARD_RIGHTS_REQUIRED | 0x1)
+
+#define DUPLICATE_CLOSE_SOURCE            0x00000001
+#define DUPLICATE_SAME_ACCESS             0x00000002
+#define DUPLICATE_SAME_ATTRIBUTES         0x00000004
+
 #define OB_FLT_REGISTRATION_VERSION_0100         0x0100
 #define OB_FLT_REGISTRATION_VERSION OB_FLT_REGISTRATION_VERSION_0100
 
@@ -7533,6 +7606,11 @@ extern POBJECT_TYPE NTSYSAPI PsProcessType;
 #ifdef RUN_WPP
 #include <evntrace.h>
 #include <stdarg.h>
+#endif
+
+#ifndef _TRACEHANDLE_DEFINED
+#define _TRACEHANDLE_DEFINED
+typedef ULONG64 TRACEHANDLE, *PTRACEHANDLE;
 #endif
 
 #ifndef TRACE_INFORMATION_CLASS_DEFINE
@@ -15876,87 +15954,6 @@ ZwSetInformationKey(
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
-
-/******************************************************************************
- *                          Unsorted                                          *
- ******************************************************************************/
-
-#ifdef _MAC
-
-#ifndef _INC_STRING
-#include <string.h>
-#endif
-
-#else
-#include <string.h>
-#endif /* _MAC */
-
-#ifndef DEFINE_GUIDEX
-#ifdef _MSC_VER
-#define DEFINE_GUIDEX(name) EXTERN_C const CDECL GUID name
-#else
-#define DEFINE_GUIDEX(name) EXTERN_C const GUID name
-#endif
-#endif /* DEFINE_GUIDEX */
-
-#ifndef STATICGUIDOF
-#define STATICGUIDOF(guid) STATIC_##guid
-#endif
-
-/* GUID Comparison */
-#ifndef __IID_ALIGNED__
-#define __IID_ALIGNED__
-#ifdef __cplusplus
-inline int IsEqualGUIDAligned(REFGUID guid1, REFGUID guid2)
-{
-    return ( (*(PLONGLONG)(&guid1) == *(PLONGLONG)(&guid2)) && 
-             (*((PLONGLONG)(&guid1) + 1) == *((PLONGLONG)(&guid2) + 1)) );
-}
-#else
-#define IsEqualGUIDAligned(guid1, guid2) \
-           ( (*(PLONGLONG)(guid1) == *(PLONGLONG)(guid2)) && \
-             (*((PLONGLONG)(guid1) + 1) == *((PLONGLONG)(guid2) + 1)) )
-#endif /* __cplusplus */
-#endif /* !__IID_ALIGNED__ */
-
-#define MAXIMUM_SUSPEND_COUNT             MAXCHAR
-
-#define MAXIMUM_FILENAME_LENGTH           256
-
-#define OBJ_NAME_PATH_SEPARATOR     ((WCHAR)L'\\')
-
-#define OBJECT_TYPE_CREATE (0x0001)
-#define OBJECT_TYPE_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0x1)
-
-#define DIRECTORY_QUERY (0x0001)
-#define DIRECTORY_TRAVERSE (0x0002)
-#define DIRECTORY_CREATE_OBJECT (0x0004)
-#define DIRECTORY_CREATE_SUBDIRECTORY (0x0008)
-#define DIRECTORY_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0xF)
-
-#define SYMBOLIC_LINK_QUERY               0x0001
-#define SYMBOLIC_LINK_ALL_ACCESS          (STANDARD_RIGHTS_REQUIRED | 0x1)
-
-#define DUPLICATE_CLOSE_SOURCE            0x00000001
-#define DUPLICATE_SAME_ACCESS             0x00000002
-#define DUPLICATE_SAME_ATTRIBUTES         0x00000004
-
-/* Global debug flag */
-#if DEVL
-extern ULONG NtGlobalFlag;
-#define IF_NTOS_DEBUG(FlagName) if (NtGlobalFlag & (FLG_ ## FlagName))
-#else
-#define IF_NTOS_DEBUG(FlagName) if(FALSE)
-#endif
-
-#ifndef _TRACEHANDLE_DEFINED
-#define _TRACEHANDLE_DEFINED
-typedef ULONG64 TRACEHANDLE, *PTRACEHANDLE;
-#endif
-
-extern PBOOLEAN Mm64BitPhysicalAddress;
-
-extern PVOID MmBadPointer;
 
 #ifdef __cplusplus
 }
