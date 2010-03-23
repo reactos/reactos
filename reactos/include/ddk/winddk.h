@@ -43,7 +43,7 @@ extern "C" {
 #define IN
 #define OUT
 #define OPTIONAL
-#define UNALLIGNED
+#define UNALIGNED
 
 #define CONST const
 
