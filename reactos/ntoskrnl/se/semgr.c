@@ -743,7 +743,15 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     {
         DPRINT1("No impersonation token\n");
         ObDereferenceObject(Token);
-        return STATUS_ACCESS_DENIED;
+        return STATUS_NO_IMPERSONATION_TOKEN;
+    }
+
+    /* Check the impersonation level */
+    if (Token->ImpersonationLevel < SecurityIdentification)
+    {
+        DPRINT1("Impersonation level < SecurityIdentification\n");
+        ObDereferenceObject(Token);
+        return STATUS_BAD_IMPERSONATION_LEVEL;
     }
 
     /* Set up the subject context, and lock it */
