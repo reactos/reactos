@@ -1006,5 +1006,43 @@ typedef enum _CM_ERROR_CONTROL_TYPE {
                                          CM_SERVICE_USB_DISK_BOOT_LOAD)
 
 $endif
+$if (_NTDDK_)
 
+typedef struct _KEY_NAME_INFORMATION {
+  ULONG NameLength;
+  WCHAR Name[1];
+} KEY_NAME_INFORMATION, *PKEY_NAME_INFORMATION;
 
+typedef struct _KEY_CACHED_INFORMATION {
+  LARGE_INTEGER LastWriteTime;
+  ULONG TitleIndex;
+  ULONG SubKeys;
+  ULONG MaxNameLen;
+  ULONG Values;
+  ULONG MaxValueNameLen;
+  ULONG MaxValueDataLen;
+  ULONG NameLength;
+} KEY_CACHED_INFORMATION, *PKEY_CACHED_INFORMATION;
+
+typedef struct _KEY_VIRTUALIZATION_INFORMATION {
+  ULONG VirtualizationCandidate:1;
+  ULONG VirtualizationEnabled:1;
+  ULONG VirtualTarget:1;
+  ULONG VirtualStore:1;
+  ULONG VirtualSource:1;
+  ULONG Reserved:27;
+} KEY_VIRTUALIZATION_INFORMATION, *PKEY_VIRTUALIZATION_INFORMATION;
+
+#define CmResourceTypeMaximum             8
+
+typedef struct _CM_PCCARD_DEVICE_DATA {
+  UCHAR Flags;
+  UCHAR ErrorCode;
+  USHORT Reserved;
+  ULONG BusData;
+  ULONG DeviceId;
+  ULONG LegacyBaseAddress;
+  UCHAR IRQMap[16];
+} CM_PCCARD_DEVICE_DATA, *PCM_PCCARD_DEVICE_DATA;
+
+$endif /* _NTDDK_ */

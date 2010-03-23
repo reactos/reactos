@@ -3687,8 +3687,6 @@ typedef enum _CM_ERROR_CONTROL_TYPE {
                                          CM_SERVICE_VIRTUAL_DISK_BOOT_LOAD |  \
                                          CM_SERVICE_USB_DISK_BOOT_LOAD)
 
-
-
 /******************************************************************************
  *                         I/O Manager Types                                  *
  ******************************************************************************/
@@ -7562,7 +7560,6 @@ extern POBJECT_TYPE NTSYSAPI PsProcessType;
  *                           Process Manager Types                            *
  ******************************************************************************/
 
-
 #define QUOTA_LIMITS_HARDWS_MIN_ENABLE  0x00000001
 #define QUOTA_LIMITS_HARDWS_MIN_DISABLE 0x00000002
 #define QUOTA_LIMITS_HARDWS_MAX_ENABLE  0x00000004
@@ -7597,6 +7594,7 @@ extern POBJECT_TYPE NTSYSAPI PsProcessType;
 #define LOW_REALTIME_PRIORITY             16
 #define HIGH_PRIORITY                     31
 #define MAXIMUM_PRIORITY                  32
+
 
 /******************************************************************************
  *                          WMI Library Support Types                         *
@@ -7709,7 +7707,6 @@ typedef struct _KFLOATING_SAVE {
 extern NTKERNELAPI volatile KSYSTEM_TIME KeTickCount;
 
 #define YieldProcessor _mm_pause
-#define PAUSE_PROCESSOR YieldProcessor();
 
 FORCEINLINE
 VOID
@@ -7863,7 +7860,6 @@ typedef XSAVE_FORMAT XMM_SAVE_AREA32, *PXMM_SAVE_AREA32;
 #define KeGetDcacheFillSize() 1L
 
 #define YieldProcessor _mm_pause
-#define PAUSE_PROCESSOR YieldProcessor();
 
 FORCEINLINE
 KIRQL
@@ -14160,6 +14156,13 @@ ObDereferenceObjectDeferDeleteWithTag(
  *                          Process Manager Functions                         *
  ******************************************************************************/
 
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PsWrapApcWow64Thread(
+  IN OUT PVOID *ApcContext,
+  IN OUT PVOID *ApcRoutine);
+
 /*
  * PEPROCESS
  * PsGetCurrentProcess(VOID)
@@ -14168,7 +14171,6 @@ ObDereferenceObjectDeferDeleteWithTag(
 
 #if !defined(_PSGETCURRENTTHREAD_)
 #define _PSGETCURRENTTHREAD_
-
 FORCEINLINE
 PETHREAD
 NTAPI
@@ -14176,11 +14178,10 @@ PsGetCurrentThread(VOID)
 {
   return (PETHREAD)KeGetCurrentThread();
 }
+#endif /* !_PSGETCURRENTTHREAD_ */
 
-#endif
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
-
 
 NTKERNELAPI
 NTSTATUS
@@ -14200,15 +14201,8 @@ NTAPI
 PsTerminateSystemThread(
   IN NTSTATUS ExitStatus);
 
-#endif
 
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-PsWrapApcWow64Thread(
-  IN OUT PVOID *ApcContext,
-  IN OUT PVOID *ApcRoutine);
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 /******************************************************************************
  *                          WMI Library Support Functions                     *

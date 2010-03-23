@@ -1,11 +1,15 @@
 /******************************************************************************
  *                          Process Manager Functions                         *
  ******************************************************************************/
-$if (_NTDDK_)
-extern NTKERNELAPI PEPROCESS PsInitialSystemProcess;
-$endif
-
 $if (_WDMDDK_)
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PsWrapApcWow64Thread(
+  IN OUT PVOID *ApcContext,
+  IN OUT PVOID *ApcRoutine);
+
 /*
  * PEPROCESS
  * PsGetCurrentProcess(VOID)
@@ -14,7 +18,6 @@ $if (_WDMDDK_)
 
 #if !defined(_PSGETCURRENTTHREAD_)
 #define _PSGETCURRENTTHREAD_
-
 FORCEINLINE
 PETHREAD
 NTAPI
@@ -22,13 +25,55 @@ PsGetCurrentThread(VOID)
 {
   return (PETHREAD)KeGetCurrentThread();
 }
+#endif /* !_PSGETCURRENTTHREAD_ */
 
-#endif
-$endif
+$endif /* _WDMDDK_ */
+$if (_NTDDK_)
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtOpenProcess(
+  OUT PHANDLE ProcessHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes,
+  IN PCLIENT_ID ClientId OPTIONAL);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtQueryInformationProcess(
+  IN HANDLE ProcessHandle,
+  IN PROCESSINFOCLASS ProcessInformationClass,
+  OUT PVOID ProcessInformation OPTIONAL,
+  IN ULONG ProcessInformationLength,
+  OUT PULONG ReturnLength OPTIONAL);
+$endif /* _NTDDK_ */
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
+$if (_WDMDDK_)
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PsCreateSystemThread(
+  OUT PHANDLE ThreadHandle,
+  IN ULONG DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+  IN HANDLE ProcessHandle OPTIONAL,
+  OUT PCLIENT_ID ClientId OPTIONAL,
+  IN PKSTART_ROUTINE StartRoutine,
+  IN PVOID StartContext OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PsTerminateSystemThread(
+  IN NTSTATUS ExitStatus);
+
+$endif /* _WDMDDK_ */
 $if (_NTDDK_)
+
 NTKERNELAPI
 NTSTATUS
 NTAPI
@@ -66,29 +111,9 @@ PsGetVersion(
   OUT PULONG MinorVersion OPTIONAL,
   OUT PULONG BuildNumber OPTIONAL,
   OUT PUNICODE_STRING CSDVersion OPTIONAL);
-$endif
+$endif /* _NTDDK_ */
 
-$if (_WDMDDK_)
-NTKERNELAPI
-NTSTATUS
-NTAPI
-PsCreateSystemThread(
-  OUT PHANDLE ThreadHandle,
-  IN ULONG DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-  IN HANDLE ProcessHandle OPTIONAL,
-  OUT PCLIENT_ID ClientId OPTIONAL,
-  IN PKSTART_ROUTINE StartRoutine,
-  IN PVOID StartContext OPTIONAL);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-PsTerminateSystemThread(
-  IN NTSTATUS ExitStatus);
-$endif
-
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 $if (_NTDDK_)
 #if (NTDDI_VERSION >= NTDDI_WINXP)
@@ -131,7 +156,7 @@ HANDLE
 NTAPI
 PsGetThreadProcessId(
   IN PETHREAD Thread);
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_WS03) */
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 
@@ -146,7 +171,7 @@ BOOLEAN
 NTAPI
 PsIsCurrentThreadPrefetching(VOID);
 
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 #if (NTDDI_VERSION >= NTDDI_VISTASP1)
 NTKERNELAPI
@@ -155,15 +180,5 @@ NTAPI
 PsSetCreateProcessNotifyRoutineEx(
   IN PCREATE_PROCESS_NOTIFY_ROUTINE_EX NotifyRoutine,
   IN BOOLEAN Remove);
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_VISTASP1) */
 $endif
-
-$if (_WDMDDK_)
-NTKERNELAPI
-NTSTATUS
-NTAPI
-PsWrapApcWow64Thread(
-  IN OUT PVOID *ApcContext,
-  IN OUT PVOID *ApcRoutine);
-$end
-

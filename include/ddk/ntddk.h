@@ -1798,6 +1798,11 @@ typedef struct _HAL_PLATFORM_INFORMATION {
  *                              Kernel Types                                  *
  ******************************************************************************/
 
+#define NX_SUPPORT_POLICY_ALWAYSOFF 0
+#define NX_SUPPORT_POLICY_ALWAYSON 1
+#define NX_SUPPORT_POLICY_OPTIN 2
+#define NX_SUPPORT_POLICY_OPTOUT 3
+
 typedef VOID
 (NTAPI *PEXPAND_STACK_CALLOUT)(
   IN PVOID Parameter OPTIONAL);
@@ -2093,6 +2098,120 @@ typedef enum _MM_ROTATE_DIRECTION {
  *                           Process Manager Types                            *
  ******************************************************************************/
 
+#define QUOTA_LIMITS_HARDWS_MIN_ENABLE  0x00000001
+#define QUOTA_LIMITS_HARDWS_MIN_DISABLE 0x00000002
+#define QUOTA_LIMITS_HARDWS_MAX_ENABLE  0x00000004
+#define QUOTA_LIMITS_HARDWS_MAX_DISABLE 0x00000008
+#define QUOTA_LIMITS_USE_DEFAULT_LIMITS 0x00000010
+
+typedef struct _QUOTA_LIMITS {
+  SIZE_T PagedPoolLimit;
+  SIZE_T NonPagedPoolLimit;
+  SIZE_T MinimumWorkingSetSize;
+  SIZE_T MaximumWorkingSetSize;
+  SIZE_T PagefileLimit;
+  LARGE_INTEGER TimeLimit;
+} QUOTA_LIMITS, *PQUOTA_LIMITS;
+
+typedef union _RATE_QUOTA_LIMIT {
+  ULONG RateData;
+  struct {
+    ULONG RatePercent:7;
+    ULONG Reserved0:25;
+  } DUMMYSTRUCTNAME;
+} RATE_QUOTA_LIMIT, *PRATE_QUOTA_LIMIT;
+
+typedef struct _QUOTA_LIMITS_EX {
+  SIZE_T PagedPoolLimit;
+  SIZE_T NonPagedPoolLimit;
+  SIZE_T MinimumWorkingSetSize;
+  SIZE_T MaximumWorkingSetSize;
+  SIZE_T PagefileLimit;
+  LARGE_INTEGER TimeLimit;
+  SIZE_T WorkingSetLimit;
+  SIZE_T Reserved2;
+  SIZE_T Reserved3;
+  SIZE_T Reserved4;
+  ULONG Flags;
+  RATE_QUOTA_LIMIT CpuRateLimit;
+} QUOTA_LIMITS_EX, *PQUOTA_LIMITS_EX;
+
+typedef struct _IO_COUNTERS {
+  ULONGLONG ReadOperationCount;
+  ULONGLONG WriteOperationCount;
+  ULONGLONG OtherOperationCount;
+  ULONGLONG ReadTransferCount;
+  ULONGLONG WriteTransferCount;
+  ULONGLONG OtherTransferCount;
+} IO_COUNTERS, *PIO_COUNTERS;
+
+typedef struct _VM_COUNTERS {
+  SIZE_T PeakVirtualSize;
+  SIZE_T VirtualSize;
+  ULONG PageFaultCount;
+  SIZE_T PeakWorkingSetSize;
+  SIZE_T WorkingSetSize;
+  SIZE_T QuotaPeakPagedPoolUsage;
+  SIZE_T QuotaPagedPoolUsage;
+  SIZE_T QuotaPeakNonPagedPoolUsage;
+  SIZE_T QuotaNonPagedPoolUsage;
+  SIZE_T PagefileUsage;
+  SIZE_T PeakPagefileUsage;
+} VM_COUNTERS, *PVM_COUNTERS;
+
+typedef struct _VM_COUNTERS_EX {
+  SIZE_T PeakVirtualSize;
+  SIZE_T VirtualSize;
+  ULONG PageFaultCount;
+  SIZE_T PeakWorkingSetSize;
+  SIZE_T WorkingSetSize;
+  SIZE_T QuotaPeakPagedPoolUsage;
+  SIZE_T QuotaPagedPoolUsage;
+  SIZE_T QuotaPeakNonPagedPoolUsage;
+  SIZE_T QuotaNonPagedPoolUsage;
+  SIZE_T PagefileUsage;
+  SIZE_T PeakPagefileUsage;
+  SIZE_T PrivateUsage;
+} VM_COUNTERS_EX, *PVM_COUNTERS_EX;
+
+#define MAX_HW_COUNTERS 16
+#define THREAD_PROFILING_FLAG_DISPATCH  0x00000001
+
+typedef enum _HARDWARE_COUNTER_TYPE {
+  PMCCounter,
+  MaxHardwareCounterType
+} HARDWARE_COUNTER_TYPE, *PHARDWARE_COUNTER_TYPE;
+
+typedef struct _HARDWARE_COUNTER {
+  HARDWARE_COUNTER_TYPE Type;
+  ULONG Reserved;
+  ULONG64 Index;
+} HARDWARE_COUNTER, *PHARDWARE_COUNTER;
+
+typedef struct _POOLED_USAGE_AND_LIMITS {
+  SIZE_T PeakPagedPoolUsage;
+  SIZE_T PagedPoolUsage;
+  SIZE_T PagedPoolLimit;
+  SIZE_T PeakNonPagedPoolUsage;
+  SIZE_T NonPagedPoolUsage;
+  SIZE_T NonPagedPoolLimit;
+  SIZE_T PeakPagefileUsage;
+  SIZE_T PagefileUsage;
+  SIZE_T PagefileLimit;
+} POOLED_USAGE_AND_LIMITS, *PPOOLED_USAGE_AND_LIMITS;
+
+typedef struct _PROCESS_ACCESS_TOKEN {
+  HANDLE Token;
+  HANDLE Thread;
+} PROCESS_ACCESS_TOKEN, *PPROCESS_ACCESS_TOKEN;
+
+#define PROCESS_EXCEPTION_PORT_ALL_STATE_BITS     0x00000003UL
+#define PROCESS_EXCEPTION_PORT_ALL_STATE_FLAGS    ((ULONG_PTR)((1UL << PROCESS_EXCEPTION_PORT_ALL_STATE_BITS) - 1))
+
+typedef struct _PROCESS_EXCEPTION_PORT {
+  IN HANDLE ExceptionPortHandle;
+  IN OUT ULONG StateFlags;
+} PROCESS_EXCEPTION_PORT, *PPROCESS_EXCEPTION_PORT;
 
 typedef VOID
 (NTAPI *PCREATE_PROCESS_NOTIFY_ROUTINE)(
@@ -2383,6 +2502,7 @@ typedef struct _PROCESS_HANDLE_TRACING_QUERY {
   PROCESS_HANDLE_TRACING_ENTRY HandleTrace[1];
 } PROCESS_HANDLE_TRACING_QUERY, *PPROCESS_HANDLE_TRACING_QUERY;
 
+extern NTKERNELAPI PEPROCESS PsInitialSystemProcess;
 
 
 /******************************************************************************
@@ -2760,6 +2880,8 @@ typedef enum _WELL_KNOWN_SID_TYPE {
 
 #if defined(_M_IX86)
 
+#define PAUSE_PROCESSOR YieldProcessor();
+
 #define KERNEL_STACK_SIZE                   12288
 #define KERNEL_LARGE_STACK_SIZE             61440
 #define KERNEL_LARGE_STACK_COMMIT           12288
@@ -2904,6 +3026,8 @@ extern ULONG _LOCAL_COPY_USER_PROBE_ADDRESS_;
 #endif
 
 #elif defined(_M_AMD64)
+
+#define PAUSE_PROCESSOR YieldProcessor();
 
 #define KERNEL_STACK_SIZE 0x6000
 #define KERNEL_LARGE_STACK_SIZE 0x12000
@@ -4490,10 +4614,28 @@ MmRotatePhysicalView(
 /******************************************************************************
  *                          Process Manager Functions                         *
  ******************************************************************************/
-extern NTKERNELAPI PEPROCESS PsInitialSystemProcess;
 
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtOpenProcess(
+  OUT PHANDLE ProcessHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes,
+  IN PCLIENT_ID ClientId OPTIONAL);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtQueryInformationProcess(
+  IN HANDLE ProcessHandle,
+  IN PROCESSINFOCLASS ProcessInformationClass,
+  OUT PVOID ProcessInformation OPTIONAL,
+  IN ULONG ProcessInformationLength,
+  OUT PULONG ReturnLength OPTIONAL);
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
+
 
 NTKERNELAPI
 NTSTATUS
@@ -4533,8 +4675,7 @@ PsGetVersion(
   OUT PULONG BuildNumber OPTIONAL,
   OUT PUNICODE_STRING CSDVersion OPTIONAL);
 
-
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 
@@ -4576,7 +4717,7 @@ HANDLE
 NTAPI
 PsGetThreadProcessId(
   IN PETHREAD Thread);
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_WS03) */
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 
@@ -4591,7 +4732,7 @@ BOOLEAN
 NTAPI
 PsIsCurrentThreadPrefetching(VOID);
 
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 #if (NTDDI_VERSION >= NTDDI_VISTASP1)
 NTKERNELAPI
@@ -4600,8 +4741,7 @@ NTAPI
 PsSetCreateProcessNotifyRoutineEx(
   IN PCREATE_PROCESS_NOTIFY_ROUTINE_EX NotifyRoutine,
   IN BOOLEAN Remove);
-#endif
-
+#endif /* (NTDDI_VERSION >= NTDDI_VISTASP1) */
 /******************************************************************************
  *                         Runtime Library Functions                          *
  ******************************************************************************/
@@ -5510,146 +5650,6 @@ VerSetConditionMask(
   IN UCHAR Condition);
 #endif
 
-typedef struct _KEY_NAME_INFORMATION {
-  ULONG NameLength;
-  WCHAR Name[1];
-} KEY_NAME_INFORMATION, *PKEY_NAME_INFORMATION;
-
-typedef struct _KEY_CACHED_INFORMATION {
-  LARGE_INTEGER LastWriteTime;
-  ULONG TitleIndex;
-  ULONG SubKeys;
-  ULONG MaxNameLen;
-  ULONG Values;
-  ULONG MaxValueNameLen;
-  ULONG MaxValueDataLen;
-  ULONG NameLength;
-} KEY_CACHED_INFORMATION, *PKEY_CACHED_INFORMATION;
-
-typedef struct _KEY_VIRTUALIZATION_INFORMATION {
-  ULONG VirtualizationCandidate:1;
-  ULONG VirtualizationEnabled:1;
-  ULONG VirtualTarget:1;
-  ULONG VirtualStore:1;
-  ULONG VirtualSource:1;
-  ULONG Reserved:27;
-} KEY_VIRTUALIZATION_INFORMATION, *PKEY_VIRTUALIZATION_INFORMATION;
-
-#define QUOTA_LIMITS_HARDWS_MIN_ENABLE  0x00000001
-#define QUOTA_LIMITS_HARDWS_MIN_DISABLE 0x00000002
-#define QUOTA_LIMITS_HARDWS_MAX_ENABLE  0x00000004
-#define QUOTA_LIMITS_HARDWS_MAX_DISABLE 0x00000008
-#define QUOTA_LIMITS_USE_DEFAULT_LIMITS 0x00000010
-
-typedef struct _QUOTA_LIMITS {
-  SIZE_T PagedPoolLimit;
-  SIZE_T NonPagedPoolLimit;
-  SIZE_T MinimumWorkingSetSize;
-  SIZE_T MaximumWorkingSetSize;
-  SIZE_T PagefileLimit;
-  LARGE_INTEGER TimeLimit;
-} QUOTA_LIMITS, *PQUOTA_LIMITS;
-
-typedef union _RATE_QUOTA_LIMIT {
-  ULONG RateData;
-  struct {
-    ULONG RatePercent:7;
-    ULONG Reserved0:25;
-  } DUMMYSTRUCTNAME;
-} RATE_QUOTA_LIMIT, *PRATE_QUOTA_LIMIT;
-
-typedef struct _QUOTA_LIMITS_EX {
-  SIZE_T PagedPoolLimit;
-  SIZE_T NonPagedPoolLimit;
-  SIZE_T MinimumWorkingSetSize;
-  SIZE_T MaximumWorkingSetSize;
-  SIZE_T PagefileLimit;
-  LARGE_INTEGER TimeLimit;
-  SIZE_T WorkingSetLimit;
-  SIZE_T Reserved2;
-  SIZE_T Reserved3;
-  SIZE_T Reserved4;
-  ULONG Flags;
-  RATE_QUOTA_LIMIT CpuRateLimit;
-} QUOTA_LIMITS_EX, *PQUOTA_LIMITS_EX;
-
-typedef struct _IO_COUNTERS {
-  ULONGLONG ReadOperationCount;
-  ULONGLONG WriteOperationCount;
-  ULONGLONG OtherOperationCount;
-  ULONGLONG ReadTransferCount;
-  ULONGLONG WriteTransferCount;
-  ULONGLONG OtherTransferCount;
-} IO_COUNTERS, *PIO_COUNTERS;
-
-typedef struct _VM_COUNTERS {
-  SIZE_T PeakVirtualSize;
-  SIZE_T VirtualSize;
-  ULONG PageFaultCount;
-  SIZE_T PeakWorkingSetSize;
-  SIZE_T WorkingSetSize;
-  SIZE_T QuotaPeakPagedPoolUsage;
-  SIZE_T QuotaPagedPoolUsage;
-  SIZE_T QuotaPeakNonPagedPoolUsage;
-  SIZE_T QuotaNonPagedPoolUsage;
-  SIZE_T PagefileUsage;
-  SIZE_T PeakPagefileUsage;
-} VM_COUNTERS, *PVM_COUNTERS;
-
-typedef struct _VM_COUNTERS_EX {
-  SIZE_T PeakVirtualSize;
-  SIZE_T VirtualSize;
-  ULONG PageFaultCount;
-  SIZE_T PeakWorkingSetSize;
-  SIZE_T WorkingSetSize;
-  SIZE_T QuotaPeakPagedPoolUsage;
-  SIZE_T QuotaPagedPoolUsage;
-  SIZE_T QuotaPeakNonPagedPoolUsage;
-  SIZE_T QuotaNonPagedPoolUsage;
-  SIZE_T PagefileUsage;
-  SIZE_T PeakPagefileUsage;
-  SIZE_T PrivateUsage;
-} VM_COUNTERS_EX, *PVM_COUNTERS_EX;
-
-#define MAX_HW_COUNTERS 16
-#define THREAD_PROFILING_FLAG_DISPATCH  0x00000001
-
-typedef enum _HARDWARE_COUNTER_TYPE {
-  PMCCounter,
-  MaxHardwareCounterType
-} HARDWARE_COUNTER_TYPE, *PHARDWARE_COUNTER_TYPE;
-
-typedef struct _HARDWARE_COUNTER {
-  HARDWARE_COUNTER_TYPE Type;
-  ULONG Reserved;
-  ULONG64 Index;
-} HARDWARE_COUNTER, *PHARDWARE_COUNTER;
-
-typedef struct _POOLED_USAGE_AND_LIMITS {
-  SIZE_T PeakPagedPoolUsage;
-  SIZE_T PagedPoolUsage;
-  SIZE_T PagedPoolLimit;
-  SIZE_T PeakNonPagedPoolUsage;
-  SIZE_T NonPagedPoolUsage;
-  SIZE_T NonPagedPoolLimit;
-  SIZE_T PeakPagefileUsage;
-  SIZE_T PagefileUsage;
-  SIZE_T PagefileLimit;
-} POOLED_USAGE_AND_LIMITS, *PPOOLED_USAGE_AND_LIMITS;
-
-typedef struct _PROCESS_ACCESS_TOKEN {
-  HANDLE Token;
-  HANDLE Thread;
-} PROCESS_ACCESS_TOKEN, *PPROCESS_ACCESS_TOKEN;
-
-#define PROCESS_EXCEPTION_PORT_ALL_STATE_BITS     0x00000003UL
-#define PROCESS_EXCEPTION_PORT_ALL_STATE_FLAGS    ((ULONG_PTR)((1UL << PROCESS_EXCEPTION_PORT_ALL_STATE_BITS) - 1))
-
-typedef struct _PROCESS_EXCEPTION_PORT {
-  IN HANDLE ExceptionPortHandle;
-  IN OUT ULONG StateFlags;
-} PROCESS_EXCEPTION_PORT, *PPROCESS_EXCEPTION_PORT;
-
 typedef struct _KERNEL_USER_TIMES {
   LARGE_INTEGER CreateTime;
   LARGE_INTEGER ExitTime;
@@ -5658,25 +5658,6 @@ typedef struct _KERNEL_USER_TIMES {
 } KERNEL_USER_TIMES, *PKERNEL_USER_TIMES;
 
 /* NtXxx Functions */
-
-NTSYSCALLAPI
-NTSTATUS
-NTAPI
-NtOpenProcess(
-  OUT PHANDLE ProcessHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes,
-  IN PCLIENT_ID ClientId OPTIONAL);
-
-NTSYSCALLAPI
-NTSTATUS
-NTAPI
-NtQueryInformationProcess(
-  IN HANDLE ProcessHandle,
-  IN PROCESSINFOCLASS ProcessInformationClass,
-  OUT PVOID ProcessInformation OPTIONAL,
-  IN ULONG ProcessInformationLength,
-  OUT PULONG ReturnLength OPTIONAL);
 
 typedef enum _SYSTEM_FIRMWARE_TABLE_ACTION {
   SystemFirmwareTable_Enumerate,
@@ -5717,11 +5698,6 @@ typedef struct _DRIVER_VERIFIER_THUNK_PAIRS {
 #define DRIVER_VERIFIER_TRACK_POOL_ALLOCATIONS      0x0008
 #define DRIVER_VERIFIER_IO_CHECKING                 0x0010
 
-#define NX_SUPPORT_POLICY_ALWAYSOFF 0
-#define NX_SUPPORT_POLICY_ALWAYSON 1
-#define NX_SUPPORT_POLICY_OPTIN 2
-#define NX_SUPPORT_POLICY_OPTOUT 3
-
 #define SHARED_GLOBAL_FLAGS_ERROR_PORT_V        0x0
 #define SHARED_GLOBAL_FLAGS_ERROR_PORT          (1UL << SHARED_GLOBAL_FLAGS_ERROR_PORT_V)
 
@@ -5755,18 +5731,6 @@ typedef struct _DRIVER_VERIFIER_THUNK_PAIRS {
 
 #define EX_TEST_CLEAR_BIT(Flags, Bit) \
     InterlockedBitTestAndReset ((PLONG)(Flags), (Bit))
-
-#define CmResourceTypeMaximum             8
-
-typedef struct _CM_PCCARD_DEVICE_DATA {
-  UCHAR Flags;
-  UCHAR ErrorCode;
-  USHORT Reserved;
-  ULONG BusData;
-  ULONG DeviceId;
-  ULONG LegacyBaseAddress;
-  UCHAR IRQMap[16];
-} CM_PCCARD_DEVICE_DATA, *PCM_PCCARD_DEVICE_DATA;
 
 #define PCCARD_MAP_ERROR               0x01
 #define PCCARD_DEVICE_PCI              0x10
