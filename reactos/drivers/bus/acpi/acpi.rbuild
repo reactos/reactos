@@ -26,6 +26,7 @@
 	</directory>
 	<file>osl.c</file>
 	<file>acpienum.c</file>
+	<file>interface.c</file>
 	<file>pnp.c</file>
 	<file>power.c</file>
 	<file>buspdo.c</file>

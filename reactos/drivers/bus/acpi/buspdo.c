@@ -176,6 +176,12 @@ Bus_PDO_PnP (
 
         break;
 
+    case IRP_MN_QUERY_INTERFACE:
+
+        status = Bus_PDO_QueryInterface(DeviceData, Irp);
+
+        break;
+
 
     case IRP_MN_FILTER_RESOURCE_REQUIREMENTS:
 
