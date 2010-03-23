@@ -641,7 +641,7 @@ NtGdiCreateCompatibleDC(HDC hdc)
     /* Initialize the new DC */
     DC_vInitDc(pdcNew, DCTYPE_MEMORY, ppdev);
     /* FIXME: HACK! */
-    DC_InitHack(pdc);
+    DC_InitHack(pdcNew);
 
     /* Allocate a dc attribute */
     DC_AllocDcAttr(pdcNew);
