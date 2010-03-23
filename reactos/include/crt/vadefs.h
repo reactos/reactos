@@ -81,7 +81,7 @@ extern "C" {
 #define __va_copy(d,s)	__builtin_va_copy(d,s)
 #elif defined(_MSC_VER)
 
-#if defiend(_M_IX86)
+#if defined(_M_IX86)
 #define _crt_va_start(v,l)	((void)((v) = (va_list)_ADDRESSOF(l) + _INTSIZEOF(l)))
 #define _crt_va_arg(v,l)	(*(l *)(((v) += _INTSIZEOF(l)) - _INTSIZEOF(l)))
 #define _crt_va_end(v)	((void)((v) = (va_list)0))
