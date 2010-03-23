@@ -79,7 +79,7 @@ DC_AllocDcWithHandle()
 {
     PDC pdc;
     pdc = (PDC)GDIOBJ_AllocObjWithHandle(GDILoObjType_LO_DC_TYPE);
-    
+
     pdc->pdcattr = &pdc->dcattr;
 
     return pdc;
@@ -90,7 +90,7 @@ void
 DC_InitHack(PDC pdc)
 {
     HRGN hVisRgn;
-
+    if (!pdc) return;
     TextIntRealizeFont(pdc->pdcattr->hlfntNew,NULL);
     pdc->pdcattr->iCS_CP = ftGdiGetTextCharsetInfo(pdc,NULL,0);
 
@@ -302,7 +302,7 @@ DC_vInitDc(
     pdc->dcattr.hColorSpace = NULL; // FIXME: 0189001f
 	pdc->dclevel.pColorSpace = NULL; // FIXME
     pdc->pClrxFormLnk = NULL;
-//	pdc->dclevel.ca = 
+//	pdc->dclevel.ca =
 
 	/* Setup font data */
     pdc->hlfntCur = NULL; // FIXME: 2f0a0cf8
@@ -455,7 +455,7 @@ GreOpenDCW(
     PDC pdc;
     HDC hdc;
 
-    DPRINT("GreOpenDCW(%S, iType=%ld)\n", 
+    DPRINT("GreOpenDCW(%S, iType=%ld)\n",
            pustrDevice ? pustrDevice->Buffer : NULL, iType);
 
     /* Get a PDEVOBJ for the device */
@@ -594,7 +594,7 @@ NtGdiCreateCompatibleDC(HDC hdc)
 {
     HDC hdcNew;
     PPDEVOBJ ppdev;
-    PDC pdc, pdcNew;
+    PDC pdc = NULL, pdcNew;
 
     DPRINT("NtGdiCreateCompatibleDC(0x%p)\n", hdc);
 
@@ -681,7 +681,7 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
     }
 
     DC_UnlockDc(DCToDelete);
-    
+
     if (!IsObjectDead(hDC))
     {
         if (!GDIOBJ_FreeObjByHandle(hDC, GDI_OBJECT_TYPE_DC))
@@ -745,7 +745,7 @@ IntGdiCreateDC(
     hdc = GreOpenDCW(pustrDevice,
                      pdmInit,
                      NULL,
-                     CreateAsIC ? DCTYPE_INFO : 
+                     CreateAsIC ? DCTYPE_INFO :
                           (Driver ? DC_TYPE_DIRECT : DC_TYPE_DIRECT),
                      TRUE,
                      NULL,
