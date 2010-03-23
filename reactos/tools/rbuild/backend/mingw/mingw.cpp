@@ -487,8 +487,11 @@ MingwBackend::GenerateGlobalVariables () const
 		fputs ( "BUILTIN_CXXINCLUDES+= $(TARGET_CPPFLAGS)\n", fMakefile );
 
 		fprintf ( fMakefile, "PROJECT_CCLIBS := \"$(shell ${TARGET_CC} -print-libgcc-file-name)\"\n" );
-        fprintf ( fMakefile, "PROJECT_CXXLIBS := \"$(shell ${TARGET_CPP} -print-file-name=libstdc++.a)\" \"$(shell ${TARGET_CPP} -print-libgcc-file-name)\" \"$(shell ${TARGET_CPP} -print-file-name=libmingw32.a)\" \"$(shell ${TARGET_CPP} -print-file-name=libmingwex.a)\" " );
 
+		// We use our proprietary "ofmt_stub.a" to implement a stub for "_get_output_format" required by "libmingwex.a".
+		// This archive just contains the compiled "ofmt_stub.s" supplied with the MinGW Runtime sources.
+		fprintf ( fMakefile, "PROJECT_CXXLIBS := \"$(shell ${TARGET_CPP} -print-file-name=libstdc++.a)\" \"$(shell ${TARGET_CPP} -print-libgcc-file-name)\" \"$(shell ${TARGET_CPP} -print-file-name=libmingw32.a)\" \"$(shell ${TARGET_CPP} -print-file-name=libmingwex.a)\" \"$(shell ${TARGET_CPP} -print-file-name=ofmt_stub.a)\" \"$(shell ${TARGET_CPP} -print-file-name=libcoldname.a)\"\n" );
+		
 		/* hack to get libgcc_eh.a, should check mingw version or something */
 		if (Environment::GetArch() == "amd64")
 			fprintf ( fMakefile, " \"$(shell ${TARGET_CPP} -print-file-name=libgcc_eh.a)\"" );

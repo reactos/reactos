@@ -15,8 +15,8 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-#ifndef MINGW_MODULEHANDLER_H
-#define MINGW_MODULEHANDLER_H
+
+#pragma once
 
 #include "../backend.h"
 #include "mingw.h"
@@ -370,5 +370,3 @@ public:
 	MingwElfExecutableModuleHandler ( const Module& module );
 	virtual void Process ();
 };
-
-#endif /* MINGW_MODULEHANDLER_H */

@@ -16,8 +16,8 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-#ifndef __CODEBLOCKS_H__
-#define __CODEBLOCKS_H__
+
+#pragma once
 
 #include <fstream>
 #include <vector>
@@ -98,7 +98,3 @@ class CBBackend : public Backend
 		bool _copy_file ( const std::string& inputname, const std::string& targetname ) const;
 		const Property* _lookup_property ( const Module& module, const std::string& name ) const;
 };
-
-
-#endif // __MSVC_H__
-
