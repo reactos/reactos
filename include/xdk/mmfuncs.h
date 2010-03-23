@@ -55,7 +55,7 @@ $if (_WDMDDK_)
  *   IN ULONG Size)
  */
 #define BYTES_TO_PAGES(Size) \
-  (((Size) >> PAGE_SHIFT) + (((Size) & (PAGE_SIZE - 1)) != 0))
+  (((Size) + PAGE_SIZE - 1) >> PAGE_SHIFT)
 
 /* PVOID
  * PAGE_ALIGN(
