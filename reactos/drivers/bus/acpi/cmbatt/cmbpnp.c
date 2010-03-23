@@ -12,6 +12,43 @@
 
 /* FUNCTIONS ******************************************************************/
 
+VOID
+NTAPI
+CmBattWaitWakeLoop(IN PDEVICE_OBJECT DeviceObject,
+                   IN UCHAR MinorFunction,
+                   IN POWER_STATE PowerState,
+                   IN PVOID Context,
+                   IN PIO_STATUS_BLOCK IoStatusBlock)
+{
+    NTSTATUS Status;
+    PCMBATT_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+    if (CmBattDebug & 0x20) DbgPrint("CmBattWaitWakeLoop: Entered.\n");
+    
+    /* Check for success */
+    if ((NT_SUCCESS(IoStatusBlock->Status)) && (DeviceExtension->WaitWakeEnable))
+    {
+        /* Request a new power IRP */
+        if (CmBattDebug & 2) DbgPrint("CmBattWaitWakeLoop: completed successfully\n");
+        Status = PoRequestPowerIrp(DeviceObject,
+                                   MinorFunction,
+                                   PowerState,
+                                   CmBattWaitWakeLoop,
+                                   Context,
+                                   &DeviceExtension->PowerIrp);
+        if (CmBattDebug & 2)
+            DbgPrint("CmBattWaitWakeLoop: PoRequestPowerIrp: status = 0x%08x.\n",
+                     Status);
+    }
+    else
+    {
+        /* Clear the power IRP, we failed */
+        if (CmBattDebug & 0xC)
+            DbgPrint("CmBattWaitWakeLoop: failed: status = 0x%08x.\n",
+                     IoStatusBlock->Status);
+        DeviceExtension->PowerIrp = NULL;
+    }
+}
+ 
 NTSTATUS
 NTAPI
 CmBattIoCompletion(IN PDEVICE_OBJECT DeviceObject,
@@ -222,11 +259,266 @@ CmBattPowerDispatch(IN PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS
 NTAPI
-CmBattPnpDispatch(PDEVICE_OBJECT DeviceObject,
-                  PIRP Irp)
+CmBattPnpDispatch(IN PDEVICE_OBJECT DeviceObject,
+                  IN PIRP Irp)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PIO_STACK_LOCATION IoStackLocation;
+    PCMBATT_DEVICE_EXTENSION DeviceExtension;
+    NTSTATUS Status;
+    KEVENT Event;
+    PAGED_CODE();
+
+    /* Get stack location and device extension */
+    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+    DeviceExtension = DeviceObject->DeviceExtension;
+    
+    /* Set default error */
+    Status = STATUS_NOT_SUPPORTED;
+
+    /* Try to acquire the lock before doing anything */
+    Status = IoAcquireRemoveLock(&DeviceExtension->RemoveLock, 0);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Complete the request */
+        Irp->IoStatus.Status = STATUS_DEVICE_REMOVED;
+        IofCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_DEVICE_REMOVED;
+    }
+
+    /* What's the operation? */
+    switch (IoStackLocation->MinorFunction)
+    {            
+        case IRP_MN_QUERY_PNP_DEVICE_STATE:
+        
+            /* Initialize our wait event */
+            KeInitializeEvent(&Event, SynchronizationEvent, 0);
+
+            /* Set the completion routine */
+            IoCopyCurrentIrpStackLocationToNext(Irp);
+            IoSetCompletionRoutine(Irp,
+                                   (PVOID)CmBattIoCompletion,
+                                   &Event,
+                                   TRUE,
+                                   TRUE,
+                                   TRUE);
+
+            /* Now call ACPI to inherit its PnP Device State */
+            Status = IoCallDriver(DeviceObject, Irp);
+            if (Status == STATUS_PENDING)
+            {
+                /* Wait for completion */
+                KeWaitForSingleObject(&Event,
+                                      Executive,
+                                      KernelMode,
+                                      FALSE,
+                                      NULL);
+                Status = Irp->IoStatus.Status;
+            }
+
+            /* However, a battery CAN be disabled */
+            Irp->IoStatus.Information &= ~PNP_DEVICE_NOT_DISABLEABLE;
+
+            /* Release the remove lock and complete the request */
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            IoReleaseRemoveLock(&DeviceExtension->RemoveLock, Irp);
+            return Status;
+        
+        case IRP_MN_SURPRISE_REMOVAL:
+            if (CmBattDebug & 0x20)
+                DbgPrint("CmBattPnpDispatch: IRP_MN_SURPRISE_REMOVAL\n");
+                
+            /* Lock the device extension and set the handle count to invalid */
+            ExAcquireFastMutex(&DeviceExtension->FastMutex);
+            DeviceExtension->HandleCount = -1;
+            ExReleaseFastMutex(&DeviceExtension->FastMutex);
+            Status = STATUS_SUCCESS;
+            break;
+        
+        case IRP_MN_START_DEVICE:
+            if (CmBattDebug & 0x20)
+                DbgPrint("CmBattPnpDispatch: IRP_MN_START_DEVICE\n");
+          
+            /* Mark the extension as started */
+            if (DeviceExtension->FdoType == CmBattBattery) DeviceExtension->Started = TRUE;
+            Status = STATUS_SUCCESS;
+            break;
+        
+        case IRP_MN_STOP_DEVICE:        
+            if (CmBattDebug & 0x20)
+                DbgPrint("CmBattPnpDispatch: IRP_MN_STOP_DEVICE\n");
+
+            /* Mark the extension as stopped */
+            if (DeviceExtension->FdoType == CmBattBattery) DeviceExtension->Started = FALSE;
+            Status = STATUS_SUCCESS;
+            break;
+        
+        case IRP_MN_QUERY_REMOVE_DEVICE:
+            if (CmBattDebug & 0x20)
+                DbgPrint("CmBattPnpDispatch: IRP_MN_QUERY_REMOVE_DEVICE\n");
+
+            /* Lock the extension and get the current handle count */
+            ExAcquireFastMutex(&DeviceExtension->FastMutex);
+            if (DeviceExtension->HandleCount == 0)
+            {
+                /* No handles. Mark it as invalid since it'll be removed */
+                DeviceExtension->HandleCount = -1;
+                Status = STATUS_SUCCESS;
+            }
+            else if (DeviceExtension->HandleCount == -1)
+            {
+                /* Don't do anything, but this is strange since it's already removed */
+                Status = STATUS_SUCCESS;
+                if (CmBattDebug & 4)
+                    DbgPrint("CmBattPnpDispatch: Recieved two consecutive QUERY_REMOVE requests.\n");
+            }
+            else
+            {
+                /* Fail because there's still open handles */
+                Status = STATUS_UNSUCCESSFUL;
+            }
+            
+            /* Release the lock and return */
+            ExReleaseFastMutex(&DeviceExtension->FastMutex);
+            break;
+        
+        case IRP_MN_REMOVE_DEVICE:
+            if (CmBattDebug & 0x20)
+                DbgPrint("CmBattPnpDispatch: IRP_MN_REMOVE_DEVICE\n");
+             
+            /* Call the remove code */
+            Status = CmBattRemoveDevice(DeviceObject, Irp);
+            break;
+        
+        case IRP_MN_CANCEL_REMOVE_DEVICE:
+            if (CmBattDebug & 0x20)
+                DbgPrint("CmBattPnpDispatch: IRP_MN_CANCEL_REMOVE_DEVICE\n");
+            
+            /* Lock the extension and get the handle count */
+            ExAcquireFastMutex(&DeviceExtension->FastMutex);
+            if (DeviceExtension->HandleCount == -1)
+            {
+                /* A remove was in progress, set the handle count back to 0 */
+                DeviceExtension->HandleCount = 0;
+            }
+            else if (CmBattDebug & 2)
+            {
+                /* Nop, but warn about it */
+                DbgPrint("CmBattPnpDispatch: Received CANCEL_REMOVE when OpenCount == %x\n", 
+                         DeviceExtension->HandleCount);
+            }
+            
+            /* Return success in all cases, and release the lock */
+            Status = STATUS_SUCCESS;
+            ExReleaseFastMutex(&DeviceExtension->FastMutex);
+            break;
+        
+        case IRP_MN_QUERY_STOP_DEVICE:
+            if (CmBattDebug & 0x20)
+                DbgPrint("CmBattPnpDispatch: IRP_MN_QUERY_STOP_DEVICE\n");
+            
+            /* There's no real support for this */    
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        case IRP_MN_CANCEL_STOP_DEVICE:
+            if (CmBattDebug & 0x20)
+                DbgPrint("CmBattPnpDispatch: IRP_MN_CANCEL_STOP_DEVICE\n");
+        
+            /* There's no real support for this */    
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+        
+        case IRP_MN_QUERY_CAPABILITIES:
+        
+            /* Initialize our wait event */
+            KeInitializeEvent(&Event, SynchronizationEvent, 0);
+
+            /* Set the completion routine */
+            IoCopyCurrentIrpStackLocationToNext(Irp);
+            IoSetCompletionRoutine(Irp,
+                                   (PVOID)CmBattIoCompletion,
+                                   &Event,
+                                   TRUE,
+                                   TRUE,
+                                   TRUE);
+
+            /* Now call ACPI */
+            Status = IoCallDriver(DeviceObject, Irp);
+            if (Status == STATUS_PENDING)
+            {
+                /* Wait for completion */
+                KeWaitForSingleObject(&Event,
+                                      Executive,
+                                      KernelMode,
+                                      FALSE,
+                                      NULL);
+                Status = Irp->IoStatus.Status;
+            }
+
+            /* Get the wake power state */
+            DeviceExtension->PowerState.SystemState = IoStackLocation->Parameters.DeviceCapabilities.Capabilities->SystemWake;
+            if (CmBattDebug & 0x20)
+                DbgPrint("CmBattPnpDispatch: IRP_MN_QUERY_CAPABILITIES %d Capabilities->SystemWake = %x\n",
+                         DeviceExtension->FdoType,
+                         DeviceExtension->PowerState);
+
+            /* Check if it's invalid */
+            if (DeviceExtension->PowerState.SystemState == PowerSystemUnspecified)
+            {
+                /* Wait wake is not supported in this scenario */
+                DeviceExtension->WaitWakeEnable = FALSE;
+                if (CmBattDebug & 0x20)
+                    DbgPrint("CmBattPnpDispatch: IRP_MN_QUERY_CAPABILITIES Wake not supported.\n");
+            }
+            else if (!(DeviceExtension->PowerIrp) &&
+                     (DeviceExtension->WaitWakeEnable))
+            {
+                /* If it was requested in the registry, request the power IRP for it */
+                PoRequestPowerIrp(DeviceExtension->DeviceObject,
+                                  0,
+                                  DeviceExtension->PowerState,
+                                  CmBattWaitWakeLoop,
+                                  0,
+                                  &DeviceExtension->PowerIrp);
+                if (CmBattDebug & 0x20)
+                    DbgPrint("CmBattPnpDispatch: IRP_MN_QUERY_CAPABILITIES wait/Wake irp sent.\n");
+            }
+
+            /* Release the remove lock and complete the request */
+            IofCompleteRequest(Irp, IO_NO_INCREMENT);
+            IoReleaseRemoveLock(&DeviceExtension->RemoveLock, Irp);
+            return Status;
+
+        default:
+            /* Unsupported */
+            if (CmBattDebug & 0x20)
+                DbgPrint("CmBattPnpDispatch: Unimplemented minor %0x\n",
+                         IoStackLocation->MinorFunction);
+            break;
+    }
+    
+    /* Release the remove lock */  
+    IoReleaseRemoveLock(&DeviceExtension->RemoveLock, Irp);
+
+    /* Set IRP status if we have one */
+    if (Status != STATUS_NOT_SUPPORTED) Irp->IoStatus.Status = Status;
+
+    /* Did someone pick it up? */    
+    if ((NT_SUCCESS(Status)) || (Status == STATUS_NOT_SUPPORTED))
+    {
+        /* Still unsupported, try ACPI */
+        IoSkipCurrentIrpStackLocation(Irp);
+        Status = IoCallDriver(DeviceExtension->AttachedDevice, Irp);
+    }
+    else
+    {
+        /* Complete the request */
+        Status = Irp->IoStatus.Status;
+        IofCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
+
+    /* Release the remove lock and return status */
+    return Status;
 }
 
 NTSTATUS

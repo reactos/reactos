@@ -225,23 +225,20 @@ CmBattNotifyHandler(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
             BatteryClassStatusNotify(DeviceExtension->ClassData);
         }
     }
-    else
+    else if (DeviceExtension->ArFlag & CMBATT_AR_NOTIFY)
     {
-        /* The only known notification is AC/DC change */
-        if (DeviceExtension->ArFlag & CMBATT_AR_NOTIFY)
+        /* The only known notification is AC/DC change. Loop device objects. */
+        for (DeviceObject = DeviceExtension->FdoDeviceObject->DriverObject->DeviceObject;
+             DeviceObject;
+             DeviceObject = DeviceObject->NextDevice)
         {
-            for (DeviceObject = DeviceExtension->FdoDeviceObject->DriverObject->DeviceObject;
-                 DeviceObject;
-                 DeviceObject = DeviceObject->NextDevice)
+            /* Is this a battery? */
+            FdoExtension = DeviceObject->DeviceExtension;
+            if (FdoExtension->FdoType == CmBattBattery)
             {
-                /* Is this a battery? */
-                FdoExtension = DeviceObject->DeviceExtension;
-                if (FdoExtension->FdoType == CmBattBattery)
-                {
-                    /* Send a notification to the class driver */
-                    FdoExtension->NotifySent = TRUE;
-                    BatteryClassStatusNotify(FdoExtension->ClassData);
-                }
+                /* Send a notification to the class driver */
+                FdoExtension->NotifySent = TRUE;
+                BatteryClassStatusNotify(FdoExtension->ClassData);
             }
         }
     }
@@ -466,7 +463,8 @@ CmBattIoctl(IN PDEVICE_OBJECT DeviceObject,
                 else
                 {
                     /* Buffer size invalid */
-                    Status = STATUS_INVALID_BUFFER_SIZE;                }
+                    Status = STATUS_INVALID_BUFFER_SIZE;
+                }
                 break;
     
             case IOCTL_BATTERY_QUERY_BIF:
