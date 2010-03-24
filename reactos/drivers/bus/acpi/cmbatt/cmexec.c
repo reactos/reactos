@@ -9,7 +9,6 @@
 /* INCLUDES *******************************************************************/
 
 #include "cmbatt.h"
-#include "ntstatus.h"
 
 /* FUNCTIONS ******************************************************************/
 
@@ -151,8 +150,8 @@ CmBattSendDownStreamIrp(IN PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS
 NTAPI
-CmBattGetPsrData(PDEVICE_OBJECT DeviceObject,
-                 PULONG PsrData)
+CmBattGetPsrData(INP DEVICE_OBJECT DeviceObject,
+                 OUT PULONG PsrData)
 {
     NTSTATUS Status;
     ACPI_EVAL_OUTPUT_BUFFER OutputBuffer;
@@ -174,9 +173,9 @@ CmBattGetPsrData(PDEVICE_OBJECT DeviceObject,
     Status = CmBattSendDownStreamIrp(DeviceObject,
                                      IOCTL_ACPI_EVAL_METHOD,
                                      &InputBuffer,
-                                     sizeof(ACPI_EVAL_INPUT_BUFFER),
+                                     sizeof(InputBuffer),
                                      &OutputBuffer,
-                                     sizeof(ACPI_EVAL_OUTPUT_BUFFER));
+                                     sizeof(OutputBuffer));
     if (NT_SUCCESS(Status))
     {
         /* Read the result */
@@ -189,6 +188,130 @@ CmBattGetPsrData(PDEVICE_OBJECT DeviceObject,
         /* Failure */
         DbgPrint("CmBattGetPsrData: Failed _PSR method - Status (0x%x)\n", Status);
     }
+    
+    /* Return status */
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+CmBattGetStaData(IN PDEVICE_OBJECT DeviceObject,
+                 OUT PULONG StaData)
+{
+    NTSTATUS Status;
+    ACPI_EVAL_OUTPUT_BUFFER OutputBuffer;
+    ACPI_EVAL_INPUT_BUFFER InputBuffer;
+    PAGED_CODE();
+    if (CmBattDebug & 0x40)
+        DbgPrint("CmBattGetStaData: Entered with Pdo %x Tid %x\n",
+                 DeviceObject, KeGetCurrentThread());
+    
+    /* Initialize to zero */
+    ASSERT(StaData != NULL);
+    *StaData = 0;
+      
+    /* Request the _PSR method */
+    *(PULONG)InputBuffer.MethodName = 'ATS_';
+    InputBuffer.Signature = ACPI_EVAL_INPUT_BUFFER_SIGNATURE;
+
+    /* Send it to ACPI */
+    Status = CmBattSendDownStreamIrp(DeviceObject,
+                                     IOCTL_ACPI_EVAL_METHOD,
+                                     &InputBuffer,
+                                     sizeof(InputBuffer),
+                                     &OutputBuffer,
+                                     sizeof(OutputBuffer));
+    if (NT_SUCCESS(Status))
+    {
+        /* Read the result */
+        Status = GetDwordElement(OutputBuffer.Argument, StaData);
+        if (CmBattDebug & 0x440)
+            DbgPrint("CmBattGetStaData: _STA method returned %x \n", *StaData);
+    }
+    else if (CmBattDebug & 0x44C)
+    {
+        /* Failure */
+        DbgPrint("CmBattGetStaData: Failed _STA method - Status (0x%x)\n", Status);
+        Status = STATUS_NO_SUCH_DEVICE;
+    }
+    
+    /* Return status */
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+CmBattGetUniqueId(IN PDEVICE_OBJECT DeviceObject,
+                  OUT PULONG UniqueId)
+{
+    NTSTATUS Status;
+    ACPI_EVAL_OUTPUT_BUFFER OutputBuffer;
+    ACPI_EVAL_INPUT_BUFFER InputBuffer;
+    PAGED_CODE();
+    if (CmBattDebug & 0x40)
+        DbgPrint("CmBattGetUniqueId: Entered with Pdo %x Tid %x\n",
+                 DeviceObject, KeGetCurrentThread());
+    
+    /* Initialize to zero */
+    ASSERT(UniqueId != NULL);
+    *UniqueId = 0;
+      
+    /* Request the _PSR method */
+    *(PULONG)InputBuffer.MethodName = 'DIU_';
+    InputBuffer.Signature = ACPI_EVAL_INPUT_BUFFER_SIGNATURE;
+
+    /* Send it to ACPI */
+    Status = CmBattSendDownStreamIrp(DeviceObject,
+                                     IOCTL_ACPI_EVAL_METHOD,
+                                     &InputBuffer,
+                                     sizeof(InputBuffer),
+                                     &OutputBuffer,
+                                     sizeof(OutputBuffer));
+    if (NT_SUCCESS(Status))
+    {
+        /* Read the result */
+        Status = GetDwordElement(OutputBuffer.Argument, UniqueId);
+        if (CmBattDebug & 0x440)
+            DbgPrint("CmBattGetUniqueId: _UID method returned %x \n", *UniqueId);
+    }
+    else if (CmBattDebug & 0x44C)
+    {
+        /* Failure */
+        DbgPrint("CmBattGetUniqueId: Failed _UID method - Status (0x%x)\n", Status);
+        Status = STATUS_NO_SUCH_DEVICE;
+    }
+    
+    /* Return status */
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+CmBattSetTripPpoint(IN PCMBATT_DEVICE_EXTENSION DeviceExtension,
+                    IN ULONG AlarmValue)
+{
+    NTSTATUS Status;
+    ACPI_EVAL_INPUT_BUFFER_SIMPLE_INTEGER InputBuffer;
+    PAGED_CODE();
+    if (CmBattDebug & 0x440)
+        DbgPrint("CmBattSetTripPpoint: _BTP Alarm Value %x Device %x Tid %x\n",
+                 AlarmValue, DeviceExtension->DeviceId, KeGetCurrentThread);
+    
+    /* Request the _BTP method */
+    *(PULONG)InputBuffer.MethodName = 'PTB_';
+    InputBuffer.Signature = ACPI_EVAL_INPUT_BUFFER_SIMPLE_INTEGER_SIGNATURE;
+    InputBuffer.IntegerArgument = AlarmValue;
+
+    /* Send it to ACPI */
+    Status = CmBattSendDownStreamIrp(DeviceExtension->AttachedDevice,
+                                     IOCTL_ACPI_EVAL_METHOD,
+                                     &InputBuffer,
+                                     sizeof(InputBuffer),
+                                     NULL,
+                                     0);
+    if (!(NT_SUCCESS(Status)) && (CmBattDebug & 0x440))
+        DbgPrint("CmBattSetTripPpoint: Failed _BTP method on device %x - Status (0x%x)\n",
+                 DeviceExtension->DeviceId, Status);
     
     /* Return status */
     return Status;
@@ -210,70 +333,6 @@ CmBattGetBstData(PCMBATT_DEVICE_EXTENSION DeviceExtension,
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
-}   
-
-NTSTATUS
-NTAPI
-CmBattGetStaData(PDEVICE_OBJECT DeviceObject,
-                 PULONG StaData)
-{
-    NTSTATUS Status;
-    ACPI_EVAL_OUTPUT_BUFFER OutputBuffer;
-    ACPI_EVAL_INPUT_BUFFER InputBuffer;
-    PAGED_CODE();
-    if (CmBattDebug & 0x40)
-        DbgPrint("CmBattGetPsrData: Entered with Pdo %x Tid %x\n",
-                 DeviceObject, KeGetCurrentThread());
-    
-    /* Initialize to zero */
-    ASSERT(StaData != NULL);
-    *StaData = 0;
-      
-    /* Request the _PSR method */
-    *(PULONG)InputBuffer.MethodName = 'ATS_';
-    InputBuffer.Signature = ACPI_EVAL_INPUT_BUFFER_SIGNATURE;
-
-    /* Send it to ACPI */
-    Status = CmBattSendDownStreamIrp(DeviceObject,
-                                     IOCTL_ACPI_EVAL_METHOD,
-                                     &InputBuffer,
-                                     sizeof(ACPI_EVAL_INPUT_BUFFER),
-                                     &OutputBuffer,
-                                     sizeof(ACPI_EVAL_OUTPUT_BUFFER));
-    if (NT_SUCCESS(Status))
-    {
-        /* Read the result */
-        Status = GetDwordElement(OutputBuffer.Argument, StaData);
-        if (CmBattDebug & 0x440)
-            DbgPrint("CmBattGetPsrData: _STA method returned %x \n", *StaData);
-    }
-    else if (CmBattDebug & 0x44C)
-    {
-        /* Failure */
-        DbgPrint("CmBattGetPsrData: Failed _STA method - Status (0x%x)\n", Status);
-        Status = STATUS_NO_SUCH_DEVICE;
-    }
-    
-    /* Return status */
-    return Status;
 }
 
-NTSTATUS
-NTAPI
-CmBattGetUniqueId(PDEVICE_OBJECT DeviceObject,
-                  PULONG UniqueId)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;  
-}
-
-NTSTATUS
-NTAPI
-CmBattSetTripPpoint(PCMBATT_DEVICE_EXTENSION DeviceExtension,
-                    ULONG AlarmValue)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-     
 /* EOF */
