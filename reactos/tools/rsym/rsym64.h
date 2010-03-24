@@ -2,7 +2,13 @@
 
 //C_ASSERT(sizeof(ULONG) == 4);
 typedef unsigned char UBYTE;
+#if defined(_MSC_VER) || defined(__MINGW32__)
 typedef unsigned __int64 ULONG64;
+#else
+#include <stdint.h>
+typedef uint64_t ULONG64;
+#endif
+
 
 #define IMAGE_FILE_MACHINE_AMD64 0x8664
 #define IMAGE_DIRECTORY_ENTRY_IMPORT 1
