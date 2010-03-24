@@ -12,6 +12,8 @@
 const GUID KSCATEGORY_CLOCK       = {0x53172480, 0x4791, 0x11D0, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 #endif
 
+const GUID IID_IKsClockForwarder              = {0x877e4352, 0x6fea, 0x11d0, {0xb8, 0x63, 0x00, 0xaa, 0x00, 0xa2, 0x16, 0xa1}};
+
 DWORD WINAPI CKsClockForwarder_ThreadStartup(LPVOID lpParameter);
 
 class CKsClockForwarder : public IDistributorNotify,
@@ -91,7 +93,8 @@ CKsClockForwarder::QueryInterface(
         reinterpret_cast<IUnknown*>(*Output)->AddRef();
         return NOERROR;
     }
-    if (IsEqualGUID(refiid, IID_IKsObject))
+    if (IsEqualGUID(refiid, IID_IKsObject) ||
+        IsEqualGUID(refiid, IID_IKsClockForwarder))
     {
         *Output = (IKsObject*)(this);
         reinterpret_cast<IKsObject*>(*Output)->AddRef();
@@ -105,15 +108,6 @@ CKsClockForwarder::QueryInterface(
         return NOERROR;
     }
 
-#if 0
-    if (IsEqualGUID(refiid, IID_IKsClockForwarder))
-    {
-        *Output = PVOID(this);
-        reinterpret_cast<IKsObject*>(*Output)->AddRef();
-        return NOERROR;
-    }
-#endif
-
     return E_NOINTERFACE;
 }
 
@@ -126,8 +120,12 @@ HRESULT
 STDMETHODCALLTYPE
 CKsClockForwarder::Stop()
 {
-    OutputDebugString("CKsClockForwarder::Stop\n");
+    WCHAR Buffer[200];
 
+    swprintf(Buffer, L"CKsClockForwarder::Stop m_ThreadStarted %u m_PendingStop %u m_hThread %p m_hEvent %p m_Handle %p\n", m_ThreadStarted, m_PendingStop, m_hThread, m_hEvent, m_Handle);
+    OutputDebugStringW(Buffer);
+
+    m_Time = 0;
     if (m_ThreadStarted)
     {
         // signal pending stop
@@ -251,8 +249,7 @@ STDMETHODCALLTYPE
 CKsClockForwarder::NotifyGraphChange()
 {
     OutputDebugString("CKsClockForwarder::NotifyGraphChange\n");
-    DebugBreak();
-    return E_NOTIMPL;
+    return NOERROR;
 }
 
 //-------------------------------------------------------------------
@@ -281,6 +278,10 @@ CKsClockForwarder::SetClockState(KSSTATE State)
     HRESULT hr = KsSynchronousDeviceControl(m_Handle, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), &State, sizeof(KSSTATE), &BytesReturned);
     if (SUCCEEDED(hr))
         m_State = State;
+
+    WCHAR Buffer[100];
+    swprintf(Buffer, L"CKsClockForwarder::SetClockState m_State %u State %u hr %lx\n", m_State, State, hr);
+    OutputDebugStringW(Buffer);
 
     return hr;
 }
