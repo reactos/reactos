@@ -394,21 +394,32 @@ typedef struct _IMAGE_NT_HEADERS64 {
     ULONG Signature;
     IMAGE_FILE_HEADER FileHeader;
     IMAGE_OPTIONAL_HEADER64 OptionalHeader;
-} IMAGE_NT_HEADERS64, *PIMAGE_NT_HEADERS64;
+} IMAGE_NT_HEADERS64;
 
 typedef struct _IMAGE_NT_HEADERS {
     ULONG Signature;
     IMAGE_FILE_HEADER FileHeader;
     IMAGE_OPTIONAL_HEADER32 OptionalHeader;
-} IMAGE_NT_HEADERS32, *PIMAGE_NT_HEADERS32;
+} IMAGE_NT_HEADERS32;
 
 #ifdef _WIN64
 typedef IMAGE_NT_HEADERS64                  IMAGE_NT_HEADERS;
-typedef PIMAGE_NT_HEADERS64                 PIMAGE_NT_HEADERS;
 #else
 typedef IMAGE_NT_HEADERS32                  IMAGE_NT_HEADERS;
+#endif
+
+#ifndef _NTDDK_
+
+typedef struct _IMAGE_NT_HEADERS *PIMAGE_NT_HEADERS32;
+typedef struct _IMAGE_NT_HEADERS64 *PIMAGE_NT_HEADERS64;
+
+#ifdef _WIN64
+typedef PIMAGE_NT_HEADERS64                 PIMAGE_NT_HEADERS;
+#else
 typedef PIMAGE_NT_HEADERS32                 PIMAGE_NT_HEADERS;
 #endif
+
+#endif /* _NTDDK_ */
 
 //
 // Retreives the first image section header from the Nt Header
