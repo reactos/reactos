@@ -37,5 +37,6 @@
 #define IDS_NOT_BOOL                        0x1392
 #define IDS_JSCRIPT_EXPECTED                0x1396
 #define IDS_REGEXP_SYNTAX_ERROR             0x1399
+#define IDS_URI_INVALID_CHAR                0x13A0
 #define IDS_INVALID_LENGTH                  0x13A5
 #define IDS_ARRAY_EXPECTED                  0x13A7

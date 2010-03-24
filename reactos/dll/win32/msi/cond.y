@@ -40,6 +40,7 @@
 #include "msiserver.h"
 #include "wine/debug.h"
 #include "wine/unicode.h"
+#include "wine/list.h"
 
 #define YYLEX_PARAM info
 #define YYPARSE_PARAM info
@@ -54,6 +55,7 @@ typedef struct tag_yyinput
     LPCWSTR str;
     INT    n;
     MSICONDITION result;
+    struct list mem;
 } COND_input;
 
 struct cond_str {
@@ -61,9 +63,13 @@ struct cond_str {
     INT len;
 };
 
-static LPWSTR COND_GetString( const struct cond_str *str );
-static LPWSTR COND_GetLiteral( const struct cond_str *str );
+static LPWSTR COND_GetString( COND_input *info, const struct cond_str *str );
+static LPWSTR COND_GetLiteral( COND_input *info, const struct cond_str *str );
 static int cond_lex( void *COND_lval, COND_input *info);
+
+static void *cond_alloc( COND_input *cond, unsigned int sz );
+static void *cond_track_mem( COND_input *cond, void *ptr, unsigned int sz );
+static void cond_free( void *ptr );
 
 static INT compare_int( INT a, INT operator, INT b );
 static INT compare_string( LPCWSTR a, INT operator, LPCWSTR b, BOOL convert );
@@ -73,8 +79,8 @@ static INT compare_and_free_strings( LPWSTR a, INT op, LPWSTR b, BOOL convert )
     INT r;
 
     r = compare_string( a, op, b, convert );
-    msi_free( a );
-    msi_free( b );
+    cond_free( a );
+    cond_free( b );
     return r;
 }
 
@@ -189,7 +195,7 @@ boolean_factor:
   | value_s
         {
             $$ = ($1 && $1[0]) ? 1 : 0;
-            msi_free($1);
+            cond_free( $1 );
         }
   | value_i operator value_i
         {
@@ -202,7 +208,7 @@ boolean_factor:
                 $$ = compare_int( num, $2, $3 );
             else 
                 $$ = ($2 == COND_NE || $2 == COND_INE );
-            msi_free($1);
+            cond_free( $1 );
         }
   | value_i operator symbol_s
         {
@@ -211,7 +217,7 @@ boolean_factor:
                 $$ = compare_int( $1, $2, num );
             else 
                 $$ = ($2 == COND_NE || $2 == COND_INE );
-            msi_free($3);
+            cond_free( $3 );
         }
   | symbol_s operator symbol_s
         {
@@ -232,12 +238,12 @@ boolean_factor:
   | literal operator value_i
         {
             $$ = 0;
-            msi_free($1);
+            cond_free( $1 );
         }
   | value_i operator literal
         {
             $$ = 0;
-            msi_free($3);
+            cond_free( $3 );
         }
   | COND_LPAR expression COND_RPAR
         {
@@ -281,7 +287,8 @@ value_s:
 literal:
     COND_LITER
         {
-            $$ = COND_GetLiteral(&$1);
+            COND_input* cond = (COND_input*) info;
+            $$ = COND_GetLiteral( cond, &$1 );
             if( !$$ )
                 YYABORT;
         }
@@ -299,7 +306,7 @@ value_i:
       
             MSI_GetComponentStateW(cond->package, $2, &install, &action );
             $$ = action;
-            msi_free( $2 );
+            cond_free( $2 );
         }
   | COND_QUESTION identifier
         {
@@ -308,7 +315,7 @@ value_i:
       
             MSI_GetComponentStateW(cond->package, $2, &install, &action );
             $$ = install;
-            msi_free( $2 );
+            cond_free( $2 );
         }
   | COND_AMPER identifier
         {
@@ -321,7 +328,7 @@ value_i:
             else
                 $$ = action;
 
-            msi_free( $2 );
+            cond_free( $2 );
         }
   | COND_EXCLAM identifier
         {
@@ -330,7 +337,7 @@ value_i:
       
             MSI_GetFeatureStateW(cond->package, $2, &install, &action );
             $$ = install;
-            msi_free( $2 );
+            cond_free( $2 );
         }
     ;
 
@@ -338,27 +345,37 @@ symbol_s:
     identifier
         {
             COND_input* cond = (COND_input*) info;
+            UINT len;
 
             $$ = msi_dup_property( cond->package, $1 );
-            msi_free( $1 );
+            if ($$)
+            {
+                len = (lstrlenW($$) + 1) * sizeof (WCHAR);
+                $$ = cond_track_mem( cond, $$, len );
+            }
+            cond_free( $1 );
         }
     | COND_PERCENT identifier
         {
+            COND_input* cond = (COND_input*) info;
             UINT len = GetEnvironmentVariableW( $2, NULL, 0 );
             $$ = NULL;
             if (len++)
             {
-                $$ = msi_alloc( len*sizeof (WCHAR) );
+                $$ = cond_alloc( cond, len*sizeof (WCHAR) );
+                if( !$$ )
+                    YYABORT;
                 GetEnvironmentVariableW( $2, $$, len );
             }
-            msi_free( $2 );
+            cond_free( $2 );
         }
     ;
 
 identifier:
     COND_IDENT
         {
-            $$ = COND_GetString(&$1);
+            COND_input* cond = (COND_input*) info;
+            $$ = COND_GetString( cond, &$1 );
             if( !$$ )
                 YYABORT;
         }
@@ -367,11 +384,12 @@ identifier:
 integer:
     COND_NUMBER
         {
-            LPWSTR szNum = COND_GetString(&$1);
+            COND_input* cond = (COND_input*) info;
+            LPWSTR szNum = COND_GetString( cond, &$1 );
             if( !szNum )
                 YYABORT;
             $$ = atoiW( szNum );
-            msi_free( szNum );
+            cond_free( szNum );
         }
     ;
 
@@ -691,11 +709,11 @@ static int cond_lex( void *COND_lval, COND_input *cond )
     return rc;
 }
 
-static LPWSTR COND_GetString( const struct cond_str *str )
+static LPWSTR COND_GetString( COND_input *cond, const struct cond_str *str )
 {
     LPWSTR ret;
 
-    ret = msi_alloc( (str->len+1) * sizeof (WCHAR) );
+    ret = cond_alloc( cond, (str->len+1) * sizeof (WCHAR) );
     if( ret )
     {
         memcpy( ret, str->data, str->len * sizeof(WCHAR));
@@ -705,11 +723,11 @@ static LPWSTR COND_GetString( const struct cond_str *str )
     return ret;
 }
 
-static LPWSTR COND_GetLiteral( const struct cond_str *str )
+static LPWSTR COND_GetLiteral( COND_input *cond, const struct cond_str *str )
 {
     LPWSTR ret;
 
-    ret = msi_alloc( (str->len-1) * sizeof (WCHAR) );
+    ret = cond_alloc( cond, (str->len-1) * sizeof (WCHAR) );
     if( ret )
     {
         memcpy( ret, str->data+1, (str->len-2) * sizeof(WCHAR) );
@@ -717,6 +735,48 @@ static LPWSTR COND_GetLiteral( const struct cond_str *str )
     }
     TRACE("Got literal %s\n",debugstr_w(ret));
     return ret;
+}
+
+static void *cond_alloc( COND_input *cond, unsigned int sz )
+{
+    struct list *mem;
+
+    mem = msi_alloc( sizeof (struct list) + sz );
+    if( !mem )
+        return NULL;
+
+    list_add_head( &(cond->mem), mem );
+    return mem + 1;
+}
+
+static void *cond_track_mem( COND_input *cond, void *ptr, unsigned int sz )
+{
+    void *new_ptr;
+
+    if( !ptr )
+        return ptr;
+
+    new_ptr = cond_alloc( cond, sz );
+    if( !new_ptr )
+    {
+        msi_free( ptr );
+        return NULL;
+    }
+
+    memcpy( new_ptr, ptr, sz );
+    msi_free( ptr );
+    return new_ptr;
+}
+
+static void cond_free( void *ptr )
+{
+    struct list *mem = (struct list *)ptr - 1;
+
+    if( ptr )
+    {
+        list_remove( mem );
+        msi_free( mem );
+    }
 }
 
 static int cond_error(const char *str)
@@ -729,6 +789,7 @@ MSICONDITION MSI_EvaluateConditionW( MSIPACKAGE *package, LPCWSTR szCondition )
 {
     COND_input cond;
     MSICONDITION r;
+    struct list *mem, *safety;
 
     TRACE("%s\n", debugstr_w( szCondition ) );
 
@@ -739,11 +800,22 @@ MSICONDITION MSI_EvaluateConditionW( MSIPACKAGE *package, LPCWSTR szCondition )
     cond.str   = szCondition;
     cond.n     = 0;
     cond.result = MSICONDITION_ERROR;
-    
+
+    list_init( &cond.mem );
+
     if ( !cond_parse( &cond ) )
         r = cond.result;
     else
         r = MSICONDITION_ERROR;
+
+    LIST_FOR_EACH_SAFE( mem, safety, &cond.mem )
+    {
+        /* The tracked memory lives directly after the list struct */
+        void *ptr = mem + 1;
+        if ( r != MSICONDITION_ERROR )
+            WARN( "condition parser failed to free up some memory: %p\n", ptr );
+        cond_free( ptr );
+    }
 
     TRACE("%i <- %s\n", r, debugstr_w(szCondition));
     return r;

@@ -205,7 +205,7 @@ HRESULT jsdisp_propget(DispatchEx*,DISPID,VARIANT*,jsexcept_t*,IServiceProvider*
 HRESULT jsdisp_propput_name(DispatchEx*,const WCHAR*,VARIANT*,jsexcept_t*,IServiceProvider*);
 HRESULT jsdisp_propput_idx(DispatchEx*,DWORD,VARIANT*,jsexcept_t*,IServiceProvider*);
 HRESULT jsdisp_propget_name(DispatchEx*,LPCWSTR,VARIANT*,jsexcept_t*,IServiceProvider*);
-HRESULT jsdisp_propget_idx(DispatchEx*,DWORD,VARIANT*,jsexcept_t*,IServiceProvider*);
+HRESULT jsdisp_get_idx(DispatchEx*,DWORD,VARIANT*,jsexcept_t*,IServiceProvider*);
 HRESULT jsdisp_get_id(DispatchEx*,const WCHAR*,DWORD,DISPID*);
 HRESULT jsdisp_delete_idx(DispatchEx*,DWORD);
 
@@ -225,7 +225,8 @@ HRESULT throw_uri_error(script_ctx_t*,jsexcept_t*,UINT,const WCHAR*);
 HRESULT create_object(script_ctx_t*,DispatchEx*,DispatchEx**);
 HRESULT create_math(script_ctx_t*,DispatchEx**);
 HRESULT create_array(script_ctx_t*,DWORD,DispatchEx**);
-HRESULT create_regexp_str(script_ctx_t*,const WCHAR*,DWORD,const WCHAR*,DWORD,DispatchEx**);
+HRESULT create_regexp(script_ctx_t*,const WCHAR *,int,DWORD,DispatchEx**);
+HRESULT create_regexp_var(script_ctx_t*,VARIANT*,VARIANT*,DispatchEx**);
 HRESULT create_string(script_ctx_t*,const WCHAR*,DWORD,DispatchEx**);
 HRESULT create_bool(script_ctx_t*,VARIANT_BOOL,DispatchEx**);
 HRESULT create_number(script_ctx_t*,VARIANT*,DispatchEx**);
@@ -262,6 +263,7 @@ struct _script_ctx_t {
     IActiveScriptSite *site;
     IInternetHostSecurityManager *secmgr;
     DWORD safeopt;
+    DWORD version;
     LCID lcid;
 
     jsheap_t tmp_heap;
@@ -316,9 +318,12 @@ typedef struct {
     DWORD len;
 } match_result_t;
 
-HRESULT regexp_match_next(script_ctx_t*,DispatchEx*,BOOL,const WCHAR*,DWORD,const WCHAR**,match_result_t**,
+#define REM_CHECK_GLOBAL 0x0001
+#define REM_RESET_INDEX  0x0002
+HRESULT regexp_match_next(script_ctx_t*,DispatchEx*,DWORD,const WCHAR*,DWORD,const WCHAR**,match_result_t**,
         DWORD*,DWORD*,match_result_t*);
 HRESULT regexp_match(script_ctx_t*,DispatchEx*,const WCHAR*,DWORD,BOOL,match_result_t**,DWORD*);
+HRESULT parse_regexp_flags(const WCHAR*,DWORD,DWORD*);
 
 static inline VARIANT *get_arg(DISPPARAMS *dp, DWORD i)
 {
@@ -388,6 +393,11 @@ static inline void num_set_inf(VARIANT *v, BOOL positive)
     if(!positive)
         V_R8(v) = -V_R8(v);
 #endif
+}
+
+static inline DWORD make_grfdex(script_ctx_t *ctx, DWORD flags)
+{
+    return (ctx->version << 28) | flags;
 }
 
 const char *debugstr_variant(const VARIANT*);

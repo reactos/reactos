@@ -131,61 +131,6 @@ SVCCTL_HANDLEW_unbind(SVCCTL_HANDLEW szMachineName,
 }
 
 
-handle_t __RPC_USER
-RPC_SERVICE_STATUS_HANDLE_bind(RPC_SERVICE_STATUS_HANDLE hServiceStatus)
-{
-    handle_t hBinding = NULL;
-    LPWSTR pszStringBinding;
-    RPC_STATUS status;
-
-    TRACE("RPC_SERVICE_STATUS_HANDLE_bind() called\n");
-
-    status = RpcStringBindingComposeW(NULL,
-                                      L"ncacn_np",
-                                      NULL,
-                                      L"\\pipe\\ntsvcs",
-                                      NULL,
-                                      &pszStringBinding);
-    if (status != RPC_S_OK)
-    {
-        ERR("RpcStringBindingCompose returned 0x%x\n", status);
-        return NULL;
-    }
-
-    /* Set the binding handle that will be used to bind to the server. */
-    status = RpcBindingFromStringBindingW(pszStringBinding,
-                                          &hBinding);
-    if (status != RPC_S_OK)
-    {
-        ERR("RpcBindingFromStringBinding returned 0x%x\n", status);
-    }
-
-    status = RpcStringFreeW(&pszStringBinding);
-    if (status != RPC_S_OK)
-    {
-        ERR("RpcStringFree returned 0x%x\n", status);
-    }
-
-    return hBinding;
-}
-
-
-void __RPC_USER
-RPC_SERVICE_STATUS_HANDLE_unbind(RPC_SERVICE_STATUS_HANDLE hServiceStatus,
-                                 handle_t hBinding)
-{
-    RPC_STATUS status;
-
-    TRACE("RPC_SERVICE_STATUS_HANDLE_unbind() called\n");
-
-    status = RpcBindingFree(&hBinding);
-    if (status != RPC_S_OK)
-    {
-        ERR("RpcBindingFree returned 0x%x\n", status);
-    }
-}
-
-
 DWORD
 ScmRpcStatusToWinError(RPC_STATUS Status)
 {
@@ -258,7 +203,7 @@ ChangeServiceConfig2A(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RChangeServiceConfig2A() failed (Error %lu)\n", dwError);
+        TRACE("RChangeServiceConfig2A() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -316,7 +261,7 @@ ChangeServiceConfig2W(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RChangeServiceConfig2W() failed (Error %lu)\n", dwError);
+        TRACE("RChangeServiceConfig2W() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -390,7 +335,7 @@ ChangeServiceConfigA(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RChangeServiceConfigA() failed (Error %lu)\n", dwError);
+        TRACE("RChangeServiceConfigA() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -464,7 +409,7 @@ ChangeServiceConfigW(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RChangeServiceConfigW() failed (Error %lu)\n", dwError);
+        TRACE("RChangeServiceConfigW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -504,7 +449,7 @@ CloseServiceHandle(SC_HANDLE hSCObject)
 
     if (dwError)
     {
-        ERR("RCloseServiceHandle() failed (Error %lu)\n", dwError);
+        TRACE("RCloseServiceHandle() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -545,7 +490,7 @@ ControlService(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RControlService() failed (Error %lu)\n", dwError);
+        TRACE("RControlService() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -653,7 +598,7 @@ CreateServiceA(SC_HANDLE hSCManager,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RCreateServiceA() failed (Error %lu)\n", dwError);
+        TRACE("RCreateServiceA() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return NULL;
     }
@@ -743,7 +688,7 @@ CreateServiceW(SC_HANDLE hSCManager,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RCreateServiceW() failed (Error %lu)\n", dwError);
+        TRACE("RCreateServiceW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return NULL;
     }
@@ -777,7 +722,7 @@ DeleteService(SC_HANDLE hService)
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RDeleteService() failed (Error %lu)\n", dwError);
+        TRACE("RDeleteService() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -839,7 +784,7 @@ EnumDependentServicesA(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("REnumDependentServicesA() failed (Error %lu)\n", dwError);
+        TRACE("REnumDependentServicesA() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -903,7 +848,7 @@ EnumDependentServicesW(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("REnumDependentServicesW() failed (Error %lu)\n", dwError);
+        TRACE("REnumDependentServicesW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -1037,7 +982,7 @@ EnumServicesStatusA(SC_HANDLE hSCManager,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("REnumServicesStatusA() failed (Error %lu)\n", dwError);
+        TRACE("REnumServicesStatusA() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -1111,7 +1056,7 @@ EnumServicesStatusW(SC_HANDLE hSCManager,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("REnumServicesStatusW() failed (Error %lu)\n", dwError);
+        TRACE("REnumServicesStatusW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -1195,7 +1140,7 @@ EnumServicesStatusExA(SC_HANDLE hSCManager,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("REnumServicesStatusExA() failed (Error %lu)\n", dwError);
+        TRACE("REnumServicesStatusExA() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -1267,7 +1212,7 @@ EnumServicesStatusExW(SC_HANDLE hSCManager,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("REnumServicesStatusExW() failed (Error %lu)\n", dwError);
+        TRACE("REnumServicesStatusExW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -1329,7 +1274,7 @@ GetServiceDisplayNameA(SC_HANDLE hSCManager,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RGetServiceDisplayNameA() failed (Error %lu)\n", dwError);
+        TRACE("RGetServiceDisplayNameA() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -1386,7 +1331,7 @@ GetServiceDisplayNameW(SC_HANDLE hSCManager,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RGetServiceDisplayNameW() failed (Error %lu)\n", dwError);
+        TRACE("RGetServiceDisplayNameW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -1443,7 +1388,7 @@ GetServiceKeyNameA(SC_HANDLE hSCManager,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RGetServiceKeyNameA() failed (Error %lu)\n", dwError);
+        TRACE("RGetServiceKeyNameA() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -1500,7 +1445,7 @@ GetServiceKeyNameW(SC_HANDLE hSCManager,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RGetServiceKeyNameW() failed (Error %lu)\n", dwError);
+        TRACE("RGetServiceKeyNameW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -1536,7 +1481,7 @@ LockServiceDatabase(SC_HANDLE hSCManager)
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RLockServiceDatabase() failed (Error %lu)\n", dwError);
+        TRACE("RLockServiceDatabase() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return NULL;
     }
@@ -1621,7 +1566,7 @@ OpenSCManagerA(LPCSTR lpMachineName,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("ROpenSCManagerA() failed (Error %lu)\n", dwError);
+        TRACE("ROpenSCManagerA() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return NULL;
     }
@@ -1666,7 +1611,7 @@ OpenSCManagerW(LPCWSTR lpMachineName,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("ROpenSCManagerW() failed (Error %lu)\n", dwError);
+        TRACE("ROpenSCManagerW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return NULL;
     }
@@ -1715,7 +1660,7 @@ OpenServiceA(SC_HANDLE hSCManager,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("ROpenServiceA() failed (Error %lu)\n", dwError);
+        TRACE("ROpenServiceA() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return NULL;
     }
@@ -1764,10 +1709,7 @@ OpenServiceW(SC_HANDLE hSCManager,
 
     if (dwError != ERROR_SUCCESS)
     {
-        if (dwError == ERROR_SERVICE_DOES_NOT_EXIST)
-            WARN("ROpenServiceW() failed (Error %lu)\n", dwError);
-        else
-            ERR("ROpenServiceW() failed (Error %lu)\n", dwError);
+        TRACE("ROpenServiceW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return NULL;
     }
@@ -1810,7 +1752,7 @@ QueryServiceConfigA(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RQueryServiceConfigA() failed (Error %lu)\n", dwError);
+        TRACE("RQueryServiceConfigA() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -1879,10 +1821,7 @@ QueryServiceConfigW(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        if (dwError == ERROR_INSUFFICIENT_BUFFER)
-            WARN("RQueryServiceConfigW() failed (Error %lu)\n", dwError);
-        else
-            ERR("RQueryServiceConfigW() failed (Error %lu)\n", dwError);
+        TRACE("RQueryServiceConfigW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -1933,8 +1872,8 @@ QueryServiceConfig2A(SC_HANDLE hService,
 {
     DWORD dwError;
 
-    DbgPrint("QueryServiceConfig2A(hService %p, dwInfoLevel %lu, lpBuffer %p, cbBufSize %lu, pcbBytesNeeded %p)\n",
-           hService, dwInfoLevel, lpBuffer, cbBufSize, pcbBytesNeeded);
+    TRACE("QueryServiceConfig2A(hService %p, dwInfoLevel %lu, lpBuffer %p, cbBufSize %lu, pcbBytesNeeded %p)\n",
+          hService, dwInfoLevel, lpBuffer, cbBufSize, pcbBytesNeeded);
 
     if (dwInfoLevel != SERVICE_CONFIG_DESCRIPTION &&
         dwInfoLevel != SERVICE_CONFIG_FAILURE_ACTIONS)
@@ -1967,7 +1906,7 @@ QueryServiceConfig2A(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RQueryServiceConfig2A() failed (Error %lu)\n", dwError);
+        TRACE("RQueryServiceConfig2A() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -2062,7 +2001,7 @@ QueryServiceConfig2W(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RQueryServiceConfig2W() failed (Error %lu)\n", dwError);
+        TRACE("RQueryServiceConfig2W() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -2140,7 +2079,7 @@ QueryServiceLockStatusA(SC_HANDLE hSCManager,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RQueryServiceLockStatusA() failed (Error %lu)\n", dwError);
+        TRACE("RQueryServiceLockStatusA() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -2188,7 +2127,7 @@ QueryServiceLockStatusW(SC_HANDLE hSCManager,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RQueryServiceLockStatusW() failed (Error %lu)\n", dwError);
+        TRACE("RQueryServiceLockStatusW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -2239,7 +2178,7 @@ QueryServiceObjectSecurity(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("QueryServiceObjectSecurity() failed (Error %lu)\n", dwError);
+        TRACE("QueryServiceObjectSecurity() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -2307,7 +2246,7 @@ SetServiceObjectSecurity(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RServiceObjectSecurity() failed (Error %lu)\n", dwError);
+        TRACE("RServiceObjectSecurity() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -2350,7 +2289,7 @@ QueryServiceStatus(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RQueryServiceStatus() failed (Error %lu)\n", dwError);
+        TRACE("RQueryServiceStatus() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -2398,7 +2337,7 @@ QueryServiceStatusEx(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RQueryServiceStatusEx() failed (Error %lu)\n", dwError);
+        TRACE("RQueryServiceStatusEx() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -2433,7 +2372,7 @@ StartServiceA(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RStartServiceA() failed (Error %lu)\n", dwError);
+        TRACE("RStartServiceA() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -2468,7 +2407,7 @@ StartServiceW(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RStartServiceW() failed (Error %lu)\n", dwError);
+        TRACE("RStartServiceW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -2502,7 +2441,7 @@ UnlockServiceDatabase(SC_LOCK ScLock)
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RUnlockServiceDatabase() failed (Error %lu)\n", dwError);
+        TRACE("RUnlockServiceDatabase() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -2537,7 +2476,7 @@ NotifyBootConfigStatus(BOOL BootAcceptable)
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("NotifyBootConfigStatus() failed (Error %lu)\n", dwError);
+        TRACE("NotifyBootConfigStatus() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }

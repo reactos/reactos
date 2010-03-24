@@ -19,8 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef _bandsitemenu_h
-#define _bandsitemenu_h
+#pragma once
 
 // oddly, this class also responds to QueryInterface for CLSID_BandSiteMenu by returning the vtable at offset 0
 class CBandSiteMenu :
@@ -56,5 +55,3 @@ BEGIN_COM_MAP(CBandSiteMenu)
 END_COM_MAP()
 
 };
-
-#endif // _bandsitemenu_h

@@ -531,8 +531,14 @@ static DWORD SHNotifyMoveFileW(LPCWSTR src, LPCWSTR dest)
 static DWORD SHNotifyCopyFileW(LPCWSTR src, LPCWSTR dest, BOOL bFailIfExists)
 {
 	BOOL ret;
+	DWORD attribs;
 
 	TRACE("(%s %s %s)\n", debugstr_w(src), debugstr_w(dest), bFailIfExists ? "failIfExists" : "");
+
+        /* Destination file may already exist with read only attribute */
+        attribs = GetFileAttributesW(dest);
+        if (IsAttrib(attribs, FILE_ATTRIBUTE_READONLY))
+          SetFileAttributesW(dest, attribs & ~FILE_ATTRIBUTE_READONLY);
 
 	ret = CopyFileW(src, dest, bFailIfExists);
 	if (ret)
@@ -1087,6 +1093,20 @@ static HRESULT copy_files(FILE_OPERATION *op, const FILE_LIST *flFrom, FILE_LIST
     if (flFrom->bAnyDontExist)
         return ERROR_SHELL_INTERNAL_FILE_NOT_FOUND;
 
+    if (flTo->dwNumFiles == 0)
+    {
+        /* If the destination is empty, SHFileOperation should use the current directory */
+        WCHAR curdir[MAX_PATH+1];
+
+        GetCurrentDirectoryW(MAX_PATH, curdir);
+        curdir[lstrlenW(curdir)+1] = 0;
+
+        destroy_file_list(flTo);
+        ZeroMemory(flTo, sizeof(FILE_LIST));
+        parse_file_list(flTo, curdir);
+        fileDest = &flTo->feFiles[0];
+    }
+
     if (op->req->fFlags & FOF_MULTIDESTFILES)
     {
         if (flFrom->bAnyFromWildcard)
@@ -1096,6 +1116,14 @@ static HRESULT copy_files(FILE_OPERATION *op, const FILE_LIST *flFrom, FILE_LIST
         {
             if (flFrom->dwNumFiles != 1 && !IsAttribDir(fileDest->attributes))
                 return ERROR_CANCELLED;
+
+            /* Free all but the first entry. */
+            for (i = 1; i < flTo->dwNumFiles; i++)
+            {
+                HeapFree(GetProcessHeap(), 0, flTo->feFiles[i].szDirectory);
+                HeapFree(GetProcessHeap(), 0, flTo->feFiles[i].szFilename);
+                HeapFree(GetProcessHeap(), 0, flTo->feFiles[i].szFullPath);
+            }
 
             flTo->dwNumFiles = 1;
         }
@@ -1457,7 +1485,7 @@ int WINAPI SHFileOperationW(LPSHFILEOPSTRUCTW lpFileOp)
 /*************************************************************************
  * SHFreeNameMappings      [shell32.246]
  *
- * Free the mapping handle returned by SHFileoperation if FOF_WANTSMAPPINGHANDLE
+ * Free the mapping handle returned by SHFileOperation if FOF_WANTSMAPPINGHANDLE
  * was specified.
  *
  * PARAMS
@@ -1474,12 +1502,12 @@ void WINAPI SHFreeNameMappings(HANDLE hNameMapping)
 
 	  for (; i>= 0; i--)
 	  {
-	    LPSHNAMEMAPPINGW lp = DSA_GetItemPtr((HDSA)hNameMapping, i);
+            LPSHNAMEMAPPINGW lp = DSA_GetItemPtr(hNameMapping, i);
 
 	    SHFree(lp->pszOldPath);
 	    SHFree(lp->pszNewPath);
 	  }
-	  DSA_Destroy((HDSA)hNameMapping);
+          DSA_Destroy(hNameMapping);
 	}
 }
 

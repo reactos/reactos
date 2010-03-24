@@ -1,3 +1,6 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+<group>
 <module name="rpcrt4" type="win32dll" baseaddress="${BASEADDRESS_RPCRT4}" installbase="system32" installname="rpcrt4.dll" allowwarnings="true" crt="msvcrt">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="rpcrt4.spec" />
@@ -43,3 +46,4 @@
 <module name="rpcrt4_epm_client" type="rpcclient">
 	<file>epm.idl</file>
 </module>
+</group>

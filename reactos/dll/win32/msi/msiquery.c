@@ -262,7 +262,7 @@ UINT WINAPI MsiDatabaseOpenViewW(MSIHANDLE hdb,
         if ( !remote_database )
             return ERROR_INVALID_HANDLE;
 
-        hr = IWineMsiRemoteDatabase_OpenView( remote_database, (BSTR)szQuery, phView );
+        hr = IWineMsiRemoteDatabase_OpenView( remote_database, szQuery, phView );
         IWineMsiRemoteDatabase_Release( remote_database );
 
         if (FAILED(hr))
@@ -831,7 +831,7 @@ UINT WINAPI MsiDatabaseCommit( MSIHANDLE hdb )
             return ERROR_INVALID_HANDLE;
 
         IWineMsiRemoteDatabase_Release( remote_database );
-        WARN("MsiDatabaseCommit not allowed during a custom action!\n");
+        WARN("not allowed during a custom action!\n");
 
         return ERROR_SUCCESS;
     }
@@ -943,7 +943,7 @@ UINT WINAPI MsiDatabaseGetPrimaryKeysW( MSIHANDLE hdb,
         if ( !remote_database )
             return ERROR_INVALID_HANDLE;
 
-        hr = IWineMsiRemoteDatabase_GetPrimaryKeys( remote_database, (BSTR)table, phRec );
+        hr = IWineMsiRemoteDatabase_GetPrimaryKeys( remote_database, table, phRec );
         IWineMsiRemoteDatabase_Release( remote_database );
 
         if (FAILED(hr))
@@ -1030,7 +1030,7 @@ MSICONDITION WINAPI MsiDatabaseIsTablePersistentW(
             return MSICONDITION_ERROR;
 
         hr = IWineMsiRemoteDatabase_IsTablePersistent( remote_database,
-                                                       (BSTR)szTableName, &condition );
+                                                       szTableName, &condition );
         IWineMsiRemoteDatabase_Release( remote_database );
 
         if (FAILED(hr))

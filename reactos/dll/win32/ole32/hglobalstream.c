@@ -365,10 +365,17 @@ static HRESULT WINAPI HGLOBALStreamImpl_Seek(
 {
   HGLOBALStreamImpl* const This=(HGLOBALStreamImpl*)iface;
 
-  ULARGE_INTEGER newPosition;
+  ULARGE_INTEGER newPosition = This->currentPosition;
+  HRESULT hr = S_OK;
 
   TRACE("(%p, %x%08x, %d, %p)\n", iface, dlibMove.u.HighPart,
 	dlibMove.u.LowPart, dwOrigin, plibNewPosition);
+
+  if (dlibMove.u.LowPart >= 0x80000000)
+  {
+    hr = STG_E_SEEKERROR;
+    goto end;
+  }
 
   /*
    * The file pointer is moved depending on the given "function"
@@ -381,13 +388,13 @@ static HRESULT WINAPI HGLOBALStreamImpl_Seek(
       newPosition.u.LowPart = 0;
       break;
     case STREAM_SEEK_CUR:
-      newPosition = This->currentPosition;
       break;
     case STREAM_SEEK_END:
       newPosition = This->streamSize;
       break;
     default:
-      return STG_E_INVALIDFUNCTION;
+      hr = STG_E_SEEKERROR;
+      goto end;
   }
 
   /*
@@ -395,14 +402,14 @@ static HRESULT WINAPI HGLOBALStreamImpl_Seek(
    * If the file pointer ends-up after the end of the stream, the next Write operation will
    * make the file larger. This is how it is documented.
    */
-  if (dlibMove.QuadPart < 0 && newPosition.QuadPart < -dlibMove.QuadPart) return STG_E_INVALIDFUNCTION;
+  newPosition.u.HighPart = 0;
+  newPosition.u.LowPart += dlibMove.QuadPart;
 
-  newPosition.QuadPart += dlibMove.QuadPart;
-
+end:
   if (plibNewPosition) *plibNewPosition = newPosition;
   This->currentPosition = newPosition;
 
-  return S_OK;
+  return hr;
 }
 
 /***

@@ -6,10 +6,7 @@
  * PROGRAMMER:      Dmitry Chapyshev (dmitry@reactos.org)
  */
 
-#ifndef __LCFORMAT_PRIVATE_H
-#define __LCFORMAT_PRIVATE_H
+#pragma once
 
 /*lcformat.c */
 extern BOOL NLS_IsUnicodeOnlyLcid(LCID);
-
-#endif /* __LCFORMAT_PRIVATE_H */

@@ -6,7 +6,6 @@
 	<library>pseh</library>
 	<library>ntdll</library>
 	<pch>precomp.h</pch>
-
 	<file>malloc.c</file>
 	<file>psapi.c</file>
 	<file>psapi.rc</file>

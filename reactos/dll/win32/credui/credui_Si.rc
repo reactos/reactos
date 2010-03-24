@@ -52,5 +52,3 @@ STRINGTABLE DISCARDABLE
     IDS_CAPSLOCKONTITLE "Caps Lock je vključen"
     IDS_CAPSLOCKON      "Vključen Caps Lock je lahko vzrok nepravilnega vnosa gesla.\n\nPritisnite tipko Caps Lock, s čimer ga izklopite\nin ponovno vnesite geslo."
 }
-
-#pragma code_page(default)

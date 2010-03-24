@@ -81,9 +81,9 @@ static ULONG STDMETHODCALLTYPE taskbar_list_Release(ITaskbarList *iface)
 
 static HRESULT STDMETHODCALLTYPE taskbar_list_HrInit(ITaskbarList *iface)
 {
-    FIXME("iface %p stub!\n", iface);
+    TRACE("iface %p\n", iface);
 
-    return E_NOTIMPL;
+    return S_OK;
 }
 
 static HRESULT STDMETHODCALLTYPE taskbar_list_AddTab(ITaskbarList *iface, HWND hwnd)

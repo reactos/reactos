@@ -37,4 +37,3 @@ STRINGTABLE DISCARDABLE
 	14 "fonctionnalité depuis :"
 	15 "sélectionnez le dossier contenant %s"
 }
-#pragma code_page(default)

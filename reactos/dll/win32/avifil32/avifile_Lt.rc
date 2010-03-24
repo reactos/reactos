@@ -53,4 +53,3 @@ STRINGTABLE DISCARDABLE
   IDS_AVIFILETYPE      "Wine numatyta-AVI-doroklė"
   IDS_UNCOMPRESSED     "neglaudintas"
 }
-#pragma code_page(default)

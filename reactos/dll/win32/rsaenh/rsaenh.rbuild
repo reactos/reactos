@@ -17,6 +17,7 @@
 	<file>rc4.c</file>
 	<file>rsa.c</file>
 	<file>rsaenh.c</file>
+	<file>sha2.c</file>
 	<file>version.rc</file>
 	<library>wine</library>
 	<library>crypt32</library>

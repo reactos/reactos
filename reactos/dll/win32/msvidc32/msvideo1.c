@@ -132,7 +132,7 @@ msvideo1_decode_8bit( int width, int height, const unsigned char *buf, int buf_s
                 for (pixel_y = 0; pixel_y < 4; pixel_y++) {
                     for (pixel_x = 0; pixel_x < 4; pixel_x++, flags >>= 1)
                     {
-#if ORIGINAL
+#ifdef ORIGINAL
                         pixels[pixel_ptr++] = colors[(flags & 0x1) ^ 1];
 #else
                         pixels[width*(height-(pixel_ptr/width)-1) + 
@@ -154,7 +154,7 @@ msvideo1_decode_8bit( int width, int height, const unsigned char *buf, int buf_s
                 for (pixel_y = 0; pixel_y < 4; pixel_y++) {
                     for (pixel_x = 0; pixel_x < 4; pixel_x++, flags >>= 1)
                     {
-#if ORIGINAL
+#ifdef ORIGINAL
                         pixels[pixel_ptr++] = 
                             colors[((pixel_y & 0x2) << 1) + 
                                 (pixel_x & 0x2) + ((flags & 0x1) ^ 1)];
@@ -175,7 +175,7 @@ msvideo1_decode_8bit( int width, int height, const unsigned char *buf, int buf_s
                 for (pixel_y = 0; pixel_y < 4; pixel_y++) {
                     for (pixel_x = 0; pixel_x < 4; pixel_x++)
                     {
-#if ORIGINAL
+#ifdef ORIGINAL
                         pixels[pixel_ptr++] = colors[0];
 #else
                         pixels[width*(height-(pixel_ptr/width)-1) + 
@@ -508,7 +508,7 @@ LRESULT WINAPI CRAM_DriverProc( DWORD_PTR dwDriverId, HDRVR hdrvr, UINT msg,
         info = HeapAlloc( GetProcessHeap(), 0, sizeof (Msvideo1Context) );
         if( info )
         {
-            memset( info, 0, sizeof info );
+            memset( info, 0, sizeof *info );
             info->dwMagic = CRAM_MAGIC;
         }
         r = (LRESULT) info;

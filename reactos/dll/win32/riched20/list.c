@@ -44,22 +44,63 @@ void ME_Remove(ME_DisplayItem *diWhere)
 
 static BOOL ME_DITypesEqual(ME_DIType type, ME_DIType nTypeOrClass)
 {
-  if (type==nTypeOrClass)
-    return TRUE;
-  if (nTypeOrClass==diRunOrParagraph && (type==diRun || type==diParagraph))
-    return TRUE;
-  if (nTypeOrClass==diRunOrStartRow && (type==diRun || type==diStartRow))
-    return TRUE;
-  if (nTypeOrClass==diParagraphOrEnd && (type==diTextEnd || type==diParagraph))
-    return TRUE;
-  if (nTypeOrClass==diStartRowOrParagraph && (type==diStartRow || type==diParagraph))
-    return TRUE;
-  if (nTypeOrClass==diStartRowOrParagraphOrEnd
-    && (type==diStartRow || type==diParagraph || type==diTextEnd))
-    return TRUE;
-  if (nTypeOrClass==diRunOrParagraphOrEnd
-    && (type==diRun || type==diParagraph || type==diTextEnd))
-    return TRUE;
+  switch (nTypeOrClass)
+  {
+    case diRunOrParagraph:
+      return type == diRun || type == diParagraph;
+    case diRunOrStartRow:
+      return type == diRun || type == diStartRow;
+    case diParagraphOrEnd:
+      return type == diTextEnd || type == diParagraph;
+    case diStartRowOrParagraph:
+      return type == diStartRow || type == diParagraph;
+    case diStartRowOrParagraphOrEnd:
+      return type == diStartRow || type == diParagraph || type == diTextEnd;
+    case diRunOrParagraphOrEnd:
+      return type == diRun || type == diParagraph || type == diTextEnd;
+    default:
+      return type == nTypeOrClass;
+  }
+}
+
+/* Modifies run pointer to point to the next run, and modify the
+ * paragraph pointer if moving into the next paragraph.
+ *
+ * Returns TRUE if next run is found, otherwise returns FALSE. */
+BOOL ME_NextRun(ME_DisplayItem **para, ME_DisplayItem **run)
+{
+  ME_DisplayItem *p = (*run)->next;
+  while (p->type != diTextEnd)
+  {
+    if (p->type == diParagraph) {
+      *para = p;
+    } else if (p->type == diRun) {
+      *run = p;
+      return TRUE;
+    }
+    p = p->next;
+  }
+  return FALSE;
+}
+
+/* Modifies run pointer to point to the previous run, and modify the
+ * paragraph pointer if moving into the previous paragraph.
+ *
+ * Returns TRUE if previous run is found, otherwise returns FALSE. */
+BOOL ME_PrevRun(ME_DisplayItem **para, ME_DisplayItem **run)
+{
+  ME_DisplayItem *p = (*run)->prev;
+  while (p->type != diTextStart)
+  {
+    if (p->type == diParagraph) {
+      if (p->member.para.prev_para->type == diParagraph)
+        *para = p->member.para.prev_para;
+    } else if (p->type == diRun) {
+      *run = p;
+      return TRUE;
+    }
+    p = p->prev;
+  }
   return FALSE;
 }
 

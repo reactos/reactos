@@ -101,6 +101,8 @@ GpStatus WINGDIPAPI GdipClonePen(GpPen *pen, GpPen **clonepen)
     GdipCloneCustomLineCap(pen->customend, &(*clonepen)->customend);
     GdipCloneBrush(pen->brush, &(*clonepen)->brush);
 
+    TRACE("<-- %p\n", *clonepen);
+
     return Ok;
 }
 
@@ -153,6 +155,8 @@ GpStatus WINGDIPAPI GdipCreatePen2(GpBrush *brush, REAL width, GpUnit unit,
     gp_pen->brush = clone_brush;
 
     *pen = gp_pen;
+
+    TRACE("<-- %p\n", *pen);
 
     return Ok;
 }
@@ -389,6 +393,8 @@ GpStatus WINGDIPAPI GdipResetPenTransform(GpPen *pen)
 {
     static int calls;
 
+    TRACE("(%p)\n", pen);
+
     if(!pen)
         return InvalidParameter;
 
@@ -401,6 +407,8 @@ GpStatus WINGDIPAPI GdipResetPenTransform(GpPen *pen)
 GpStatus WINGDIPAPI GdipScalePenTransform(GpPen *pen, REAL sx, REAL sy, GpMatrixOrder order)
 {
     static int calls;
+
+    TRACE("(%p,%0.2f,%0.2f,%u)\n", pen, sx, sy, order);
 
     if(!pen)
         return InvalidParameter;

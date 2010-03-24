@@ -106,17 +106,6 @@ SwitchToThisWindow(HWND hwnd, BOOL fUnknown)
 /*
  * @implemented
  */
-WORD
-WINAPI
-CascadeChildWindows ( HWND hWndParent, WORD wFlags )
-{
-  return CascadeWindows(hWndParent, wFlags, NULL, 0, NULL);
-}
-
-
-/*
- * @implemented
- */
 HWND WINAPI
 ChildWindowFromPoint(HWND hWndParent,
                      POINT Point)
@@ -1980,16 +1969,6 @@ ScrollWindowEx(HWND hWnd,
                                 hrgnUpdate,
                                 prcUpdate,
                                 flags);
-}
-
-/*
- * @implemented
- */
-WORD
-WINAPI
-TileChildWindows(HWND hWndParent, WORD wFlags)
-{
-    return TileWindows(hWndParent, wFlags, NULL, 0, NULL);
 }
 
 /*

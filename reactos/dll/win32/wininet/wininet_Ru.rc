@@ -18,29 +18,54 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "resource.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 IDD_PROXYDLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 250, 154
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Ввод сетевого пароля"
+CAPTION "Р’РІРѕРґ СЃРµС‚РµРІРѕРіРѕ РїР°СЂРѕР»СЏ"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "Введите имя пользователя и пароль:", -1, 40, 6, 150, 15
- LTEXT "Прокси", -1, 40, 26, 50, 10
- LTEXT "Домен", -1, 40, 46, 50, 10
- LTEXT "Пользователь", -1, 40, 66, 50, 10
- LTEXT "Пароль", -1, 40, 86, 50, 10
+ LTEXT "Р’РІРµРґРёС‚Рµ РёРјСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ Рё РїР°СЂРѕР»СЊ:", -1, 40, 6, 150, 15
+ LTEXT "РџСЂРѕРєСЃРё", -1, 40, 26, 50, 10
+ LTEXT "Р”РѕРјРµРЅ", -1, 40, 46, 50, 10
+ LTEXT "РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ", -1, 40, 66, 50, 10
+ LTEXT "РџР°СЂРѕР»СЊ", -1, 40, 86, 50, 10
  LTEXT "" IDC_PROXY, 80, 26, 150, 14, 0
  LTEXT "" IDC_REALM, 80, 46, 150, 14, 0
  EDITTEXT IDC_USERNAME, 80, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
  EDITTEXT IDC_PASSWORD, 80, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
- CHECKBOX "&Сохранить этот пароль (небезопасно)", IDC_SAVEPASSWORD,
+ CHECKBOX "&РЎРѕС…СЂР°РЅРёС‚СЊ СЌС‚РѕС‚ РїР°СЂРѕР»СЊ (РЅРµР±РµР·РѕРїР°СЃРЅРѕ)", IDC_SAVEPASSWORD,
            80, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "OK", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "Отмена", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "РћС‚РјРµРЅР°", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
+}
+
+IDD_AUTHDLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 250, 154
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "РўСЂРµР±СѓРµС‚СЃСЏ РёРґРµРЅС‚РёС„РёРєР°С†РёСЏ"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "Р’РІРµРґРёС‚Рµ РёРјСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ Рё РїР°СЂРѕР»СЊ:", -1, 40, 6, 150, 15
+ LTEXT "РЎРµСЂРІРµСЂ", -1, 40, 26, 50, 10
+ LTEXT "Р”РѕРјРµРЅ", -1, 40, 46, 50, 10
+ LTEXT "РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ", -1, 40, 66, 50, 10
+ LTEXT "РџР°СЂРѕР»СЊ", -1, 40, 86, 50, 10
+ LTEXT "" IDC_SERVER, 80, 26, 150, 14, 0
+ LTEXT "" IDC_REALM, 80, 46, 150, 14, 0
+ EDITTEXT IDC_USERNAME, 80, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
+ EDITTEXT IDC_PASSWORD, 80, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
+ CHECKBOX "&РЎРѕС…СЂР°РЅРёС‚СЊ СЌС‚РѕС‚ РїР°СЂРѕР»СЊ (РЅРµР±РµР·РѕРїР°СЃРЅРѕ)", IDC_SAVEPASSWORD,
+           80, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "OK", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "РћС‚РјРµРЅР°", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
 }
 
 STRINGTABLE DISCARDABLE
 {
-  IDS_LANCONNECTION "Сетевое подключение"
+  IDS_LANCONNECTION "РЎРµС‚РµРІРѕРµ РїРѕРґРєР»СЋС‡РµРЅРёРµ"
 }

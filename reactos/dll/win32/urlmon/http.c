@@ -17,11 +17,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/*
- * TODO:
- * - Handle redirects as native.
- */
-
 #include "urlmon_main.h"
 #include "wininet.h"
 
@@ -84,7 +79,7 @@ static HRESULT HttpProtocol_open_request(Protocol *prot, LPCWSTR url, DWORD requ
     URL_COMPONENTSW url_comp;
     BYTE security_id[512];
     DWORD len = 0;
-    ULONG num = 0;
+    ULONG num;
     BOOL res, b;
     HRESULT hres;
 
@@ -95,7 +90,7 @@ static HRESULT HttpProtocol_open_request(Protocol *prot, LPCWSTR url, DWORD requ
 
     memset(&url_comp, 0, sizeof(url_comp));
     url_comp.dwStructSize = sizeof(url_comp);
-    url_comp.dwSchemeLength = url_comp.dwHostNameLength = url_comp.dwUrlPathLength =
+    url_comp.dwSchemeLength = url_comp.dwHostNameLength = url_comp.dwUrlPathLength = url_comp.dwExtraInfoLength =
         url_comp.dwUserNameLength = url_comp.dwPasswordLength = 1;
     if (!InternetCrackUrlW(url, 0, 0, &url_comp))
         return MK_E_SYNTAX;
@@ -124,7 +119,12 @@ static HRESULT HttpProtocol_open_request(Protocol *prot, LPCWSTR url, DWORD requ
     }
     accept_mimes[num] = 0;
 
-    path = heap_strndupW(url_comp.lpszUrlPath, url_comp.dwUrlPathLength);
+    path = heap_alloc((url_comp.dwUrlPathLength+url_comp.dwExtraInfoLength+1)*sizeof(WCHAR));
+    if(url_comp.dwUrlPathLength)
+        memcpy(path, url_comp.lpszUrlPath, url_comp.dwUrlPathLength*sizeof(WCHAR));
+    if(url_comp.dwExtraInfoLength)
+        memcpy(path+url_comp.dwUrlPathLength, url_comp.lpszExtraInfo, url_comp.dwExtraInfoLength*sizeof(WCHAR));
+    path[url_comp.dwUrlPathLength+url_comp.dwExtraInfoLength] = 0;
     if(This->https)
         request_flags |= INTERNET_FLAG_SECURE;
     This->base.request = HttpOpenRequestW(This->base.connection,
@@ -132,8 +132,8 @@ static HRESULT HttpProtocol_open_request(Protocol *prot, LPCWSTR url, DWORD requ
                 ? wszBindVerb[This->base.bind_info.dwBindVerb] : This->base.bind_info.szCustomVerb,
             path, NULL, NULL, (LPCWSTR *)accept_mimes, request_flags, (DWORD_PTR)&This->base);
     heap_free(path);
-    while (num<sizeof(accept_mimes)/sizeof(accept_mimes[0]) && accept_mimes[num])
-        CoTaskMemFree(accept_mimes[num++]);
+    while(num--)
+        CoTaskMemFree(accept_mimes[num]);
     if (!This->base.request) {
         WARN("HttpOpenRequest failed: %d\n", GetLastError());
         return INET_E_RESOURCE_NOT_FOUND;
@@ -227,7 +227,7 @@ static HRESULT HttpProtocol_open_request(Protocol *prot, LPCWSTR url, DWORD requ
 static HRESULT HttpProtocol_start_downloading(Protocol *prot)
 {
     HttpProtocol *This = ASYNCPROTOCOL_THIS(prot);
-    LPWSTR content_type = 0, content_length = 0;
+    LPWSTR content_type, content_length, ranges;
     DWORD len = sizeof(DWORD);
     DWORD status_code;
     BOOL res;
@@ -258,8 +258,11 @@ static HRESULT HttpProtocol_start_downloading(Protocol *prot)
         WARN("HttpQueryInfo failed: %d\n", GetLastError());
     }
 
-    if(This->https)
+    ranges = query_http_info(This, HTTP_QUERY_ACCEPT_RANGES);
+    if(ranges) {
         IInternetProtocolSink_ReportProgress(This->base.protocol_sink, BINDSTATUS_ACCEPTRANGES, NULL);
+        heap_free(ranges);
+    }
 
     content_type = query_http_info(This, HTTP_QUERY_CONTENT_TYPE);
     if(content_type) {

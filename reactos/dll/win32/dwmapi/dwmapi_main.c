@@ -54,7 +54,14 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
  */
 HRESULT WINAPI DwmIsCompositionEnabled(BOOL *enabled)
 {
-    FIXME("%p\n", enabled);
+    static int once;
+    if (!once)
+    {
+        FIXME("%p\n", enabled);
+        once = 1;
+    }
+    else
+        TRACE("%p\n", enabled);
 
     *enabled = FALSE;
     return S_OK;

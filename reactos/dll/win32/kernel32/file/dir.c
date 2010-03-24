@@ -837,6 +837,12 @@ SearchPathA (
         DWORD RetValue = 0;
         NTSTATUS Status = STATUS_SUCCESS;
 
+        if (!lpFileName)
+        {
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return 0;
+        }
+
         RtlInitAnsiString (&Path,
                            (LPSTR)lpPath);
         RtlInitAnsiString (&FileName,
@@ -984,6 +990,12 @@ SearchPathW(LPCWSTR lpPath,
             LPWSTR *lpFilePart)
 {
     DWORD ret = 0;
+
+    if (!lpFileName || !lpFileName[0])
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
 
     /* If the name contains an explicit path, ignore the path */
     if (ContainsPath(lpFileName))

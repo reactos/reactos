@@ -1185,7 +1185,7 @@ SHEOW_LoadOpenWithItems(SHEOWImpl *This, IDataObject *pdtobj)
     LPWSTR szPtr;
     static const WCHAR szShortCut[] = { '.','l','n','k', 0 };
 
-    fmt.cfFormat = RegisterClipboardFormatA(CFSTR_SHELLIDLIST);
+    fmt.cfFormat = RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
     fmt.ptd = NULL;
     fmt.dwAspect = DVASPECT_CONTENT;
     fmt.lindex = -1;

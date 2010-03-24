@@ -17,6 +17,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "cdlg.h"
+#include "filedlgbrowser.h"
+
 /*
  * WARNING: DO NOT CHANGE THE SIZE OF THE STANDARD DIALOG TEMPLATES.
  */
@@ -237,7 +240,7 @@ FONT 8, "MS Shell Dlg"
     LTEXT	"Bestands&typen:",IDC_FILETYPESTATIC,5,128,48,8, SS_NOTIFY
     COMBOBOX	IDC_FILETYPE,54,126,155,53,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 
-    CONTROL	"Openen met als kenmerk &Alleen-lezen",IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,54,145,100,10
+    CONTROL	"Openen met als kenmerk &Alleen-lezen",IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,54,145,140,10
 
     DEFPUSHBUTTON	"&Openen",		 IDOK,222,110,50,14
     PUSHBUTTON		"Annuleren",		 IDCANCEL,222,128,50,14

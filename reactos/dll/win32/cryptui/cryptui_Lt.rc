@@ -120,6 +120,7 @@ STRINGTABLE DISCARDABLE
     IDS_WARN_REMOVE_DEFAULT                 "Ar tikrai norite pašalinti šį liudijimą?"
     IDS_WARN_REMOVE_PLURAL_DEFAULT          "Ar tikrai norite pašalinti šiuos liudijimus?"
     IDS_CERT_MGR                            "Liudijimai"
+    IDS_FRIENDLY_NAME_NONE                  "<joks>"
     IDS_PURPOSE_SERVER_AUTH                 "Garantuoja nutolusio kompiuterio tapatumą"
     IDS_PURPOSE_CLIENT_AUTH                 "Įrodo jūsų tapatumą nutolusiam kompiuteriui"
     IDS_PURPOSE_CODE_SIGNING                "Garantuoja, kad programinė įranga yra iš šio leidėjo\nApsaugo programinę įrangą nuo pakeitimų po išleidimo"

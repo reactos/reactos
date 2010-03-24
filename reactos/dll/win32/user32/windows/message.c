@@ -1211,7 +1211,14 @@ IntCallWindowProcW(BOOL IsAnsiProc,
 
       if (PreResult) goto Exit;
 
-      Result = WndProc(AnsiMsg.hwnd, AnsiMsg.message, AnsiMsg.wParam, AnsiMsg.lParam);
+      _SEH2_TRY // wine does this.
+      {
+         Result = WndProc(AnsiMsg.hwnd, AnsiMsg.message, AnsiMsg.wParam, AnsiMsg.lParam);
+      }
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+      {
+      }
+      _SEH2_END;
 
       if (Hook && MsgOverride)
       {
@@ -1252,7 +1259,14 @@ IntCallWindowProcW(BOOL IsAnsiProc,
 
       if (PreResult) goto Exit;
 
-      Result = WndProc(hWnd, Msg, wParam, lParam);
+      _SEH2_TRY
+      {
+         Result = WndProc(hWnd, Msg, wParam, lParam);
+      }
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+      {
+      }
+      _SEH2_END;
 
       if (Hook && MsgOverride)
       {
@@ -1329,7 +1343,14 @@ IntCallWindowProcA(BOOL IsAnsiProc,
 
       if (PreResult) goto Exit;
 
-      Result = WndProc(hWnd, Msg, wParam, lParam);
+      _SEH2_TRY
+      {
+         Result = WndProc(hWnd, Msg, wParam, lParam);
+      }
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+      {
+      }
+      _SEH2_END;
 
       if (Hook && MsgOverride)
       {
@@ -1374,8 +1395,15 @@ IntCallWindowProcA(BOOL IsAnsiProc,
 
       if (PreResult) goto Exit;
 
-      Result = WndProc(UnicodeMsg.hwnd, UnicodeMsg.message,
-                       UnicodeMsg.wParam, UnicodeMsg.lParam);
+      _SEH2_TRY
+      {
+         Result = WndProc(UnicodeMsg.hwnd, UnicodeMsg.message,
+                          UnicodeMsg.wParam, UnicodeMsg.lParam);
+      }
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+      {
+      }
+      _SEH2_END;
 
       if (Hook && MsgOverride)
       {
@@ -1573,10 +1601,18 @@ DispatchMessageA(CONST MSG *lpmsg)
         if ( lpmsg->message == WM_SYSTIMER )
            return NtUserDispatchMessage( (PMSG)lpmsg );
 
-        Ret = WndProc(lpmsg->hwnd,
-                      lpmsg->message,
-                      lpmsg->wParam,
-                      GetTickCount());
+       _SEH2_TRY // wine does this.
+       {
+           Ret = WndProc(lpmsg->hwnd,
+                         lpmsg->message,
+                         lpmsg->wParam,
+                         GetTickCount());
+       }
+       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+       {
+       }
+       _SEH2_END;
+
     }
     else if (Wnd != NULL)
     {
@@ -1633,10 +1669,17 @@ DispatchMessageW(CONST MSG *lpmsg)
         if ( lpmsg->message == WM_SYSTIMER )
            return NtUserDispatchMessage( (PMSG) lpmsg );
 
-        Ret = WndProc(lpmsg->hwnd,
-                      lpmsg->message,
-                      lpmsg->wParam,
-                      GetTickCount());
+       _SEH2_TRY
+       {
+           Ret = WndProc(lpmsg->hwnd,
+                         lpmsg->message,
+                         lpmsg->wParam,
+                         GetTickCount());
+       }
+       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+       {
+       }
+       _SEH2_END;
     }
     else if (Wnd != NULL)
     {

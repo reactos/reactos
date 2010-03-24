@@ -33,6 +33,24 @@ WINE_DEFAULT_DEBUG_CHANNEL(message);
 
 #define DEBUG_SPY 0
 
+static const char * const ClassLongOffsetNames[] =
+{
+    "GCLP_MENUNAME",      /*  -8 */
+    "GCLP_HBRBACKGROUND", /* -10 */
+    "GCLP_HCURSOR",       /* -12 */
+    "GCLP_HICON",         /* -14 */
+    "GCLP_HMODULE",       /* -16 */
+    "GCL_CBWNDEXTRA",     /* -18 */
+    "GCL_CBCLSEXTRA",     /* -20 */
+    "?",
+    "GCLP_WNDPROC",       /* -24 */
+    "GCL_STYLE",          /* -26 */
+    "?",
+    "?",
+    "GCW_ATOM",           /* -32 */
+    "GCLP_HICONSM",       /* -34 */
+};
+
 static const char * const MessageTypeNames[SPY_MAX_MSGNUM + 1] =
 {
     "WM_NULL",                  /* 0x00 */
@@ -208,7 +226,9 @@ static const char * const MessageTypeNames[SPY_MAX_MSGNUM + 1] =
     "EM_GETLIMITTEXT",          /* 0x00d5 */
     "EM_POSFROMCHAR",           /* 0x00d6 */
     "EM_CHARFROMPOS",           /* 0x00d7 */
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    "EM_SETIMESTATUS",          /* 0x00d8 */
+    "EM_GETIMESTATUS",          /* 0x00d9 */
+    NULL, NULL, NULL, NULL, NULL, NULL,
 
     /* 0x00E0 - Win32 Scrollbars */
     "SBM_SETPOS",               /* 0x00e0 */
@@ -232,7 +252,9 @@ static const char * const MessageTypeNames[SPY_MAX_MSGNUM + 1] =
     "BM_CLICK",                 /* 0x00f5 */
     "BM_GETIMAGE",              /* 0x00f6 */
     "BM_SETIMAGE",              /* 0x00f7 */
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    NULL, NULL, NULL, NULL, NULL, NULL,
+    "WM_INPUT_DEVICE_CHANGE",   /* 0x00fe */
+    "WM_INPUT",                 /* 0x00ff */
 
     "WM_KEYDOWN",               /* 0x0100 */
     "WM_KEYUP",                 /* 0x0101 */
@@ -243,10 +265,10 @@ static const char * const MessageTypeNames[SPY_MAX_MSGNUM + 1] =
     "WM_SYSCHAR",               /* 0x0106 */
     "WM_SYSDEADCHAR",           /* 0x0107 */
     "WM_KEYLAST",               /* 0x0108 */
-    NULL,
-    "WM_CONVERTREQUEST",
-    "WM_CONVERTRESULT",
-    "WM_INTERIM",
+    "WM_UNICHAR",               /* 0x0109 */
+    "WM_CONVERTREQUEST",        /* 0x010a */
+    "WM_CONVERTRESULT",         /* 0x010b */
+    "WM_INTERIM",               /* 0x010c */
     "WM_IME_STARTCOMPOSITION",  /* 0x010d */
     "WM_IME_ENDCOMPOSITION",    /* 0x010e */
     "WM_IME_COMPOSITION",       /* 0x010f */
@@ -399,7 +421,9 @@ static const char * const MessageTypeNames[SPY_MAX_MSGNUM + 1] =
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 
     /* 0x01E0 */
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    NULL,
+    "MN_GETHMENU",              /* 0x01E1 */
+    NULL, NULL, NULL, NULL, NULL, NULL,
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 
     /* 0x01F0 */
@@ -420,7 +444,8 @@ static const char * const MessageTypeNames[SPY_MAX_MSGNUM + 1] =
     "WM_XBUTTONDOWN",           /* 0x020B */
     "WM_XBUTTONUP",             /* 0x020C */
     "WM_XBUTTONDBLCLK",         /* 0x020D */
-    NULL, NULL,
+    "WM_MOUSEHWHEEL",           /* 0x020E */
+    NULL,
 
     "WM_PARENTNOTIFY",          /* 0x0210 */
     "WM_ENTERMENULOOP",         /* 0x0211 */
@@ -561,22 +586,39 @@ static const char * const MessageTypeNames[SPY_MAX_MSGNUM + 1] =
     "WM_HOTKEY",                /* 0x0312 */
     "WM_POPUPSYSTEMMENU",       /* 0x0313 */
     NULL, NULL, NULL,
-    "WM_PRINT",
-    "WM_PRINTCLIENT",
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    "WM_PRINT",                 /* 0x0317 */
+    "WM_PRINTCLIENT",           /* 0x0318 */
+    "WM_APPCOMMAND",            /* 0x0319 */
+    "WM_THEMECHANGED",          /* 0x031A */
+    NULL, NULL,
+    "WM_CLIPBOARDUPDATE",       /* 0x031D */
+    "WM_DWMCOMPOSITIONCHANGED", /* 0x031E */
+    "WM_DWMNCRENDERINGCHANGED", /* 0x031F */
+
+    "WM_DWMCOLORIZATIONCOLORCHANGED", /* 0x0320 */
+    "WM_DWMWINDOWMAXIMIZEDCHANGE", /* 0x0321 */
+    NULL, NULL, NULL, NULL, NULL, NULL,
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    "WM_GETTITLEBARINFOEX",     /* 0x033F */
 
     /* 0x0340 */
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    /* 0x0350 */
     NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    "WM_HANDHELDFIRST",     /* 0x0358 */
+    "WM_HANDHELDFIRST+1",   /* 0x0359 */
+    "WM_HANDHELDFIRST+2",   /* 0x035A */
+    "WM_HANDHELDFIRST+3",   /* 0x035B */
+    "WM_HANDHELDFIRST+4",   /* 0x035C */
+    "WM_HANDHELDFIRST+5",   /* 0x035D */
+    "WM_HANDHELDFIRST+6",   /* 0x035E */
+    "WM_HANDHELDLAST",      /* 0x035F */
 
-    "WM_QUERYAFXWNDPROC",   /*  0x0360 */
+    "WM_QUERYAFXWNDPROC",   /*  0x0360 WM_AFXFIRST */
     "WM_SIZEPARENT",        /*  0x0361 */
     "WM_SETMESSAGESTRING",  /*  0x0362 */
     "WM_IDLEUPDATECMDUI",   /*  0x0363 */
@@ -603,7 +645,8 @@ static const char * const MessageTypeNames[SPY_MAX_MSGNUM + 1] =
     "WM_OCC_LOADFROMSTREAM_EX",  /* 0x037A */
     "WM_OCC_LOADFROMSTORAGE_EX", /* 0x037B */
 
-    NULL,NULL,NULL,NULL,
+    NULL,NULL,NULL,
+    "WM_AFXLAST",               /* 0x037F */
 
     "WM_PENWINFIRST",           /* 0x0380 */
     "WM_RCRESULT",              /* 0x0381 */
@@ -678,7 +721,7 @@ static const char * const MessageTypeNames[SPY_MAX_MSGNUM + 1] =
 };
 
 
-#define SPY_MAX_LVMMSGNUM   140
+#define SPY_MAX_LVMMSGNUM   182
 static const char * const LVMMessageTypeNames[SPY_MAX_LVMMSGNUM + 1] =
 {
     "LVM_GETBKCOLOR",           /* 1000 */
@@ -822,6 +865,49 @@ static const char * const LVMMessageTypeNames[SPY_MAX_LVMMSGNUM + 1] =
     NULL,
     "LVM_SETBKIMAGEW",
     "LVM_GETBKIMAGEW"   /* 0x108B */
+    "LVM_SETSELECTEDCOLUMN",
+    "LVM_SETTILEWIDTH",
+    "LVM_SETVIEW",
+    "LVM_GETVIEW",
+    NULL,
+    "LVM_INSERTGROUP",
+    NULL,
+    "LVM_SETGROUPINFO",
+    NULL,
+    "LVM_GETGROUPINFO",
+    "LVM_REMOVEGROUP",
+    "LVM_MOVEGROUP",
+    NULL,
+    NULL,
+    "LVM_MOVEITEMTOGROUP",
+    "LVM_SETGROUPMETRICS",
+    "LVM_GETGROUPMETRICS",
+    "LVM_ENABLEGROUPVIEW",
+    "LVM_SORTGROUPS",
+    "LVM_INSERTGROUPSORTED",
+    "LVM_REMOVEALLGROUPS",
+    "LVM_HASGROUP",
+    "LVM_SETTILEVIEWINFO",
+    "LVM_GETTILEVIEWINFO",
+    "LVM_SETTILEINFO",
+    "LVM_GETTILEINFO",
+    "LVM_SETINSERTMARK",
+    "LVM_GETINSERTMARK",
+    "LVM_INSERTMARKHITTEST",
+    "LVM_GETINSERTMARKRECT",
+    "LVM_SETINSERTMARKCOLOR",
+    "LVM_GETINSERTMARKCOLOR",
+    NULL,
+    "LVM_SETINFOTIP",
+    "LVM_GETSELECTEDCOLUMN",
+    "LVM_ISGROUPVIEWENABLED",
+    "LVM_GETOUTLINECOLOR",
+    "LVM_SETOUTLINECOLOR",
+    NULL,
+    "LVM_CANCELEDITLABEL",
+    "LVM_MAPINDEXTOID",
+    "LVM_MAPIDTOINDEX",
+    "LVM_ISITEMVISIBLE"
 };
 
 
@@ -1026,7 +1112,7 @@ static const char * const CCMMessageTypeNames[SPY_MAX_CCMMSGNUM + 1] =
     "CCM_SETNOTIFYWINDOW"
 };
 
-#define SPY_MAX_WINEMSGNUM   6
+#define SPY_MAX_WINEMSGNUM   9
 static const char * const WINEMessageTypeNames[SPY_MAX_WINEMSGNUM + 1] =
 {
     "WM_WINE_DESTROYWINDOW",
@@ -1035,6 +1121,9 @@ static const char * const WINEMessageTypeNames[SPY_MAX_WINEMSGNUM + 1] =
     "WM_WINE_SETPARENT",
     "WM_WINE_SETWINDOWLONG",
     "WM_WINE_ENABLEWINDOW"
+    "WM_WINE_SETACTIVEWINDOW",
+    "WM_WINE_KEYBOARD_LL_HOOK",
+    "WM_WINE_MOUSE_LL_HOOK",
 };
 
 /* Virtual key names */
@@ -1069,10 +1158,10 @@ static const char * const VK_KeyNames[SPY_MAX_VKKEYSNUM + 1] =
     NULL,               /* 0x19 */
     NULL,               /* 0x1A */
     "VK_ESCAPE",        /* 0x1B */
-    NULL,               /* 0x1C */
-    NULL,               /* 0x1D */
-    NULL,               /* 0x1E */
-    NULL,               /* 0x1F */
+    "VK_CONVERT",       /* 0x1C */
+    "VK_NONCONVERT",    /* 0x1D */
+    "VK_ACCEPT",        /* 0x1E */
+    "VK_MODECHANGE",    /* 0x1F */
     "VK_SPACE",         /* 0x20 */
     "VK_PRIOR",         /* 0x21 */
     "VK_NEXT",          /* 0x22 */
@@ -1136,7 +1225,7 @@ static const char * const VK_KeyNames[SPY_MAX_VKKEYSNUM + 1] =
     "VK_RWIN",          /* 0x5C */
     "VK_APPS",          /* 0x5D */
     NULL,               /* 0x5E */
-    NULL,               /* 0x5F */
+    "VK_SLEEP",         /* 0x5F */
     "VK_NUMPAD0",       /* 0x60 */
     "VK_NUMPAD1",       /* 0x61 */
     "VK_NUMPAD2",       /* 0x62 */
@@ -1187,11 +1276,11 @@ static const char * const VK_KeyNames[SPY_MAX_VKKEYSNUM + 1] =
     NULL,               /* 0x8F */
     "VK_NUMLOCK",       /* 0x90 */
     "VK_SCROLL",        /* 0x91 */
-    NULL,               /* 0x92 */
-    NULL,               /* 0x93 */
-    NULL,               /* 0x94 */
-    NULL,               /* 0x95 */
-    NULL,               /* 0x96 */
+    "VK_OEM_NEC_EQUAL",       /* 0x92 aka. VK_OEM_FJ_JISHO */
+    "VK_OEM_FJ_MASSHOU",      /* 0x93 */
+    "VK_OEM_FJ_TOUROKU",      /* 0x94 */
+    "VK_OEM_FJ_LOYA",         /* 0x95 */
+    "VK_OEM_FJ_ROYA",         /* 0x96 */
     NULL,               /* 0x97 */
     NULL,               /* 0x98 */
     NULL,               /* 0x99 */
@@ -1207,24 +1296,24 @@ static const char * const VK_KeyNames[SPY_MAX_VKKEYSNUM + 1] =
     "VK_RCONTROL",      /* 0xA3 */
     "VK_LMENU",         /* 0xA4 */
     "VK_RMENU",         /* 0xA5 */
-    NULL,               /* 0xA6 */
-    NULL,               /* 0xA7 */
-    NULL,               /* 0xA8 */
-    NULL,               /* 0xA9 */
-    NULL,               /* 0xAA */
-    NULL,               /* 0xAB */
-    NULL,               /* 0xAC */
-    NULL,               /* 0xAD */
-    NULL,               /* 0xAE */
-    NULL,               /* 0xAF */
-    NULL,               /* 0xB0 */
-    NULL,               /* 0xB1 */
-    NULL,               /* 0xB2 */
-    NULL,               /* 0xB3 */
-    NULL,               /* 0xB4 */
-    NULL,               /* 0xB5 */
-    NULL,               /* 0xB6 */
-    NULL,               /* 0xB7 */
+    "VK_BROWSER_BACK",        /* 0xA6 */
+    "VK_BROWSER_FORWARD",     /* 0xA7 */
+    "VK_BROWSER_REFRESH",     /* 0xA8 */
+    "VK_BROWSER_STOP",        /* 0xA9 */
+    "VK_BROWSER_SEARCH",      /* 0xAA */
+    "VK_BROWSER_FAVORITES",   /* 0xAB */
+    "VK_BROWSER_HOME",        /* 0xAC */
+    "VK_VOLUME_MUTE",         /* 0xAD */
+    "VK_VOLUME_DOWN",         /* 0xAE */
+    "VK_VOLUME_UP",           /* 0xAF */
+    "VK_MEDIA_NEXT_TRACK",    /* 0xB0 */
+    "VK_MEDIA_PREV_TRACK",    /* 0xB1 */
+    "VK_MEDIA_STOP",          /* 0xB2 */
+    "VK_MEDIA_PLAY_PAUSE",    /* 0xB3 */
+    "VK_LAUNCH_MAIL",         /* 0xB4 */
+    "VK_LAUNCH_MEDIA_SELECT", /* 0xB5 */
+    "VK_LAUNCH_APP1",         /* 0xB6 */
+    "VK_LAUNCH_APP2",         /* 0xB7 */
     NULL,               /* 0xB8 */
     NULL,               /* 0xB9 */
     "VK_OEM_1",         /* 0xBA */
@@ -1272,7 +1361,7 @@ static const char * const VK_KeyNames[SPY_MAX_VKKEYSNUM + 1] =
     "VK_ICO_00",        /* 0xE4 */
     "VK_PROCESSKEY",    /* 0xE5 */
     NULL,               /* 0xE6 */
-    NULL,               /* 0xE7 */
+    "VK_PACKET",        /* 0xE7 */
     NULL,               /* 0xE8 */
     NULL,               /* 0xE9 */
     NULL,               /* 0xEA */
@@ -1459,6 +1548,7 @@ static const USER_MSG toolbar_array[] = {
           USM(TB_SETLISTGAP            ,0),
           USM(TB_GETIMAGELISTCOUNT     ,0),
           USM(TB_GETIDEALSIZE          ,0),
+          USM(TB_UNKWN464              ,0),
           {0,0,0} };
 
 static const USER_MSG tooltips_array[] = {
@@ -1999,6 +2089,23 @@ static const USER_MSG *SPY_Bsearch_Msg( const USER_MSG *first, const USER_MSG *l
 }
 
 /***********************************************************************
+ *           SPY_GetClassLongOffsetName
+ *
+ * Gets the name of a class long offset.
+ */
+const char *SPY_GetClassLongOffsetName( INT offset )
+{
+    INT index;
+    if (offset < 0 && offset % 2 == 0 && ((index = -(offset + 8) / 2) <
+        sizeof(ClassLongOffsetNames) / sizeof(*ClassLongOffsetNames))) 
+    {
+        return ClassLongOffsetNames[index];
+    }
+
+    return "?";
+}
+
+/***********************************************************************
  *           SPY_GetClassName
  *
  *  Sets the value of "wnd_class" member of the instance structure.
@@ -2349,6 +2456,23 @@ static void SPY_DumpStructure(const SPY_INSTANCE *sp_e, BOOL enter)
                 TRACE("itemData=0x%08lx\n", lpmis->itemData);
             }
             break;
+        case WM_NCCREATE:
+        case WM_CREATE:
+        {
+            BOOL unicode;
+            CREATESTRUCTA *cs;
+
+            if (!enter) break;
+
+            unicode = IsWindowUnicode(sp_e->msg_hwnd);
+            cs = (CREATESTRUCTA *)sp_e->lParam;
+            TRACE("%s %s ex=%08x style=%08x %d,%d %dx%d parent=%p menu=%p inst=%p params=%p\n",
+                  unicode ? debugstr_w((LPCWSTR)cs->lpszName) : debugstr_a(cs->lpszName),
+                  unicode ? debugstr_w((LPCWSTR)cs->lpszClass) : debugstr_a(cs->lpszClass),
+                  cs->dwExStyle, cs->style, cs->x, cs->y, cs->cx, cs->cy,
+                  cs->hwndParent, cs->hMenu, cs->hInstance, cs->lpCreateParams);
+            break;
+        }
         case WM_SIZE:
             if (!enter) break;
             TRACE("cx=%d cy=%d\n", LOWORD(sp_e->lParam), HIWORD(sp_e->lParam));
@@ -2445,20 +2569,12 @@ void SPY_EnterMessage( INT iFlag, HWND hWnd, UINT msg,
     /* each SPY_SENDMESSAGE must be complemented by call to SPY_ExitMessage */
     switch(iFlag)
     {
-#ifndef __REACTOS__
-    case SPY_DISPATCHMESSAGE16:
-        TRACE("%*s(%04x) %-16s message [%04x] %s dispatched  wp=%04lx lp=%08lx\n",
-              indent, "", HWND_16(hWnd),
-              debugstr_w(sp_e.wnd_name), msg, sp_e.msg_name, wParam, lParam);
-        break;
-#endif
     case SPY_DISPATCHMESSAGE:
         TRACE("%*s(%p) %-16s message [%04x] %s dispatched  wp=%08lx lp=%08lx\n",
                         indent, "", hWnd, debugstr_w(sp_e.wnd_name), msg,
                         sp_e.msg_name, wParam, lParam);
         break;
 
-//    case SPY_SENDMESSAGE16:
     case SPY_SENDMESSAGE:
         {
             char taskName[20];
@@ -2466,28 +2582,13 @@ void SPY_EnterMessage( INT iFlag, HWND hWnd, UINT msg,
 
             if (tid == GetCurrentThreadId()) strcpy( taskName, "self" );
             else sprintf( taskName, "tid %04lx", GetCurrentThreadId() );
-#ifndef __REACTOS__
-            if (iFlag == SPY_SENDMESSAGE16)
-                TRACE("%*s(%04x) %-16s message [%04x] %s sent from %s wp=%04lx lp=%08lx\n",
-                      indent, "", HWND_16(hWnd), debugstr_w(sp_e.wnd_name), msg,
-                      sp_e.msg_name, taskName, wParam, lParam );
-            else
-#endif
-            {   TRACE("%*s(%p) %-16s message [%04x] %s sent from %s wp=%08lx lp=%08lx\n",
+
+            TRACE("%*s(%p) %-16s message [%04x] %s sent from %s wp=%08lx lp=%08lx\n",
                              indent, "", hWnd, debugstr_w(sp_e.wnd_name), msg,
                              sp_e.msg_name, taskName, wParam, lParam );
                 SPY_DumpStructure(&sp_e, TRUE);
-            }
         }
         break;
-
-#ifndef __REACTOS__
-    case SPY_DEFWNDPROC16:
-        if( SPY_ExcludeDWP ) return;
-        TRACE("%*s(%04x)  DefWindowProc16: %s [%04x]  wp=%04lx lp=%08lx\n",
-              indent, "", HWND_16(hWnd), sp_e.msg_name, msg, wParam, lParam );
-        break;
-#endif
 
     case SPY_DEFWNDPROC:
         if( SPY_ExcludeDWP ) return;
@@ -2508,6 +2609,7 @@ void SPY_ExitMessage( INT iFlag, HWND hWnd, UINT msg, LRESULT lReturn,
 {
     SPY_INSTANCE sp_e;
     int indent;
+    DWORD save_error = GetLastError();
 
     if (!TRACE_ON(message) || SPY_EXCLUDE(msg) ||
         (SPY_ExcludeDWP && (/*iFlag == SPY_RESULT_DEFWND16 || */iFlag == SPY_RESULT_DEFWND)) )
@@ -2528,25 +2630,10 @@ void SPY_ExitMessage( INT iFlag, HWND hWnd, UINT msg, LRESULT lReturn,
 
     switch(iFlag)
     {
-#ifndef __REACTOS__
-    case SPY_RESULT_DEFWND16:
-        TRACE(" %*s(%04x)  DefWindowProc16: %s [%04x] returned %08lx\n",
-              indent, "", HWND_16(hWnd), sp_e.msg_name, msg, lReturn );
-        break;
-#endif
-
     case SPY_RESULT_DEFWND:
         TRACE(" %*s(%p)  DefWindowProc32: %s [%04x] returned %08lx\n",
                         indent, "", hWnd, sp_e.msg_name, msg, lReturn );
         break;
-
-#ifndef __REACTOS__
-    case SPY_RESULT_OK16:
-        TRACE(" %*s(%04x) %-16s message [%04x] %s returned %08lx\n",
-              indent, "", HWND_16(hWnd), debugstr_w(sp_e.wnd_name), msg,
-              sp_e.msg_name, lReturn );
-        break;
-#endif
 
     case SPY_RESULT_OK:
         TRACE(" %*s(%p) %-16s message [%04x] %s returned %08lx\n",
@@ -2554,20 +2641,8 @@ void SPY_ExitMessage( INT iFlag, HWND hWnd, UINT msg, LRESULT lReturn,
                         sp_e.msg_name, lReturn );
         SPY_DumpStructure(&sp_e, FALSE);
         break;
-
-#ifndef __REACTOS__
-    case SPY_RESULT_INVALIDHWND16:
-        WARN(" %*s(%04x) %-16s message [%04x] %s HAS INVALID HWND\n",
-             indent, "", HWND_16(hWnd), debugstr_w(sp_e.wnd_name), msg, sp_e.msg_name );
-        break;
-#endif
-
-    case SPY_RESULT_INVALIDHWND:
-        WARN(" %*s(%p) %-16s message [%04x] %s HAS INVALID HWND\n",
-                        indent, "", hWnd, debugstr_w(sp_e.wnd_name), msg,
-                        sp_e.msg_name );
-        break;
    }
+   SetLastError( save_error );
 }
 
 
@@ -2576,7 +2651,8 @@ void SPY_ExitMessage( INT iFlag, HWND hWnd, UINT msg, LRESULT lReturn,
  */
 int SPY_Init(void)
 {
-    int i, j;
+    int i;
+    UINT j;
     char buffer[1024];
     const SPY_NOTIFY *p;
     const USER_MSG *q;

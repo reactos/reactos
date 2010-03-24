@@ -241,6 +241,9 @@ static const PROV_ENUMALGS_EX aProvEnumAlgsEx[5][RSAENH_MAX_ENUMALGS+1] =
   {CALG_AES_192,  192,192,  192,0,                    8,"AES-192", 39,"Advanced Encryption Standard (AES-192)"},
   {CALG_AES_256,  256,256,  256,0,                    8,"AES-256", 39,"Advanced Encryption Standard (AES-256)"},
   {CALG_SHA,      160,160,  160,CRYPT_FLAG_SIGNING,   6,"SHA-1",   30,"Secure Hash Algorithm (SHA-1)"},
+  {CALG_SHA_256,  256,256,  256,CRYPT_FLAG_SIGNING,   6,"SHA-256", 30,"Secure Hash Algorithm (SHA-256)"},
+  {CALG_SHA_384,  384,384,  384,CRYPT_FLAG_SIGNING,   6,"SHA-384", 30,"Secure Hash Algorithm (SHA-284)"},
+  {CALG_SHA_512,  512,512,  512,CRYPT_FLAG_SIGNING,   6,"SHA-512", 30,"Secure Hash Algorithm (SHA-512)"},
   {CALG_MD2,      128,128,  128,CRYPT_FLAG_SIGNING,   4,"MD2",     23,"Message Digest 2 (MD2)"},
   {CALG_MD4,      128,128,  128,CRYPT_FLAG_SIGNING,   4,"MD4",     23,"Message Digest 4 (MD4)"},
   {CALG_MD5,      128,128,  128,CRYPT_FLAG_SIGNING,   4,"MD5",     23,"Message Digest 5 (MD5)"},
@@ -1219,6 +1222,8 @@ static void destroy_key_container(OBJECTHDR *pObjectHdr)
         store_key_container_permissions(pKeyContainer);
         release_key_container_keys(pKeyContainer);
     }
+    else
+        release_key_container_keys(pKeyContainer);
     HeapFree( GetProcessHeap(), 0, pKeyContainer );
 }
 
@@ -1378,12 +1383,18 @@ static HCRYPTPROV read_key_container(PCHAR pszContainerName, DWORD dwFlags, cons
                            (OBJECTHDR**)&pKeyContainer))
             return (HCRYPTPROV)INVALID_HANDLE_VALUE;
     
+        /* read_key_value calls import_key, which calls import_private_key,
+         * which implicitly installs the key value into the appropriate key
+         * container key.  Thus the ref count is incremented twice, once for
+         * the output key value, and once for the implicit install, and needs
+         * to be decremented to balance the two.
+         */
         if (read_key_value(hKeyContainer, hKey, AT_KEYEXCHANGE,
             dwProtectFlags, &hCryptKey))
-            pKeyContainer->hKeyExchangeKeyPair = hCryptKey;
+            release_handle(&handle_table, hCryptKey, RSAENH_MAGIC_KEY);
         if (read_key_value(hKeyContainer, hKey, AT_SIGNATURE,
             dwProtectFlags, &hCryptKey))
-            pKeyContainer->hSignatureKeyPair = hCryptKey;
+            release_handle(&handle_table, hCryptKey, RSAENH_MAGIC_KEY);
     }
 
     return hKeyContainer;
@@ -1414,8 +1425,8 @@ static BOOL build_hash_signature(BYTE *pbSignature, DWORD dwLen, ALG_ID aiAlgid,
     static const struct tagOIDDescriptor {
         ALG_ID aiAlgid;
         DWORD dwLen;
-        CONST BYTE abOID[18];
-    } aOIDDescriptor[5] = {
+        CONST BYTE abOID[19];
+    } aOIDDescriptor[8] = {
         { CALG_MD2, 18, { 0x30, 0x20, 0x30, 0x0c, 0x06, 0x08, 0x2a, 0x86, 0x48,
                           0x86, 0xf7, 0x0d, 0x02, 0x02, 0x05, 0x00, 0x04, 0x10 } },
         { CALG_MD4, 18, { 0x30, 0x20, 0x30, 0x0c, 0x06, 0x08, 0x2a, 0x86, 0x48, 
@@ -1424,6 +1435,15 @@ static BOOL build_hash_signature(BYTE *pbSignature, DWORD dwLen, ALG_ID aiAlgid,
                           0x86, 0xf7, 0x0d, 0x02, 0x05, 0x05, 0x00, 0x04, 0x10 } },
         { CALG_SHA, 15, { 0x30, 0x21, 0x30, 0x09, 0x06, 0x05, 0x2b, 0x0e, 0x03, 
                           0x02, 0x1a, 0x05, 0x00, 0x04, 0x14 } },
+        { CALG_SHA_256, 19, { 0x30, 0x31, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86,
+                              0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01,
+                              0x05, 0x00, 0x04, 0x20 } },
+        { CALG_SHA_384, 19, { 0x30, 0x41, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86,
+                              0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01,
+                              0x05, 0x00, 0x04, 0x30 } },
+        { CALG_SHA_384, 19, { 0x30, 0x51, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86,
+                              0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01,
+                              0x05, 0x00, 0x04, 0x40 } },
         { 0,        0,  { 0 } }
     };
     DWORD dwIdxOID, i, j;
@@ -3065,9 +3085,9 @@ BOOL WINAPI RSAENH_CPGenKey(HCRYPTPROV hProv, ALG_ID Algid, DWORD dwFlags, HCRYP
             if (pCryptKey) { 
                 new_key_impl(pCryptKey->aiAlgid, &pCryptKey->context, pCryptKey->dwKeyLen);
                 setup_key(pCryptKey);
-                RSAENH_CPDestroyKey(hProv, pKeyContainer->hSignatureKeyPair);
-                copy_handle(&handle_table, *phKey, RSAENH_MAGIC_KEY,
-                            &pKeyContainer->hSignatureKeyPair);
+                release_and_install_key(hProv, *phKey,
+                                        &pKeyContainer->hSignatureKeyPair,
+                                        FALSE);
             }
             break;
 
@@ -3077,9 +3097,9 @@ BOOL WINAPI RSAENH_CPGenKey(HCRYPTPROV hProv, ALG_ID Algid, DWORD dwFlags, HCRYP
             if (pCryptKey) { 
                 new_key_impl(pCryptKey->aiAlgid, &pCryptKey->context, pCryptKey->dwKeyLen);
                 setup_key(pCryptKey);
-                RSAENH_CPDestroyKey(hProv, pKeyContainer->hKeyExchangeKeyPair);
-                copy_handle(&handle_table, *phKey, RSAENH_MAGIC_KEY,
-                            &pKeyContainer->hKeyExchangeKeyPair);
+                release_and_install_key(hProv, *phKey,
+                                        &pKeyContainer->hKeyExchangeKeyPair,
+                                        FALSE);
             }
             break;
             
@@ -4162,11 +4182,12 @@ BOOL WINAPI RSAENH_CPSignHash(HCRYPTPROV hProv, HCRYPTHASH hHash, DWORD dwKeySpe
                               LPCWSTR sDescription, DWORD dwFlags, BYTE *pbSignature, 
                               DWORD *pdwSigLen)
 {
-    HCRYPTKEY hCryptKey;
+    HCRYPTKEY hCryptKey = (HCRYPTKEY)INVALID_HANDLE_VALUE;
     CRYPTKEY *pCryptKey;
     DWORD dwHashLen;
     BYTE abHashValue[RSAENH_MAX_HASH_SIZE];
     ALG_ID aiAlgid;
+    BOOL ret = FALSE;
 
     TRACE("(hProv=%08lx, hHash=%08lx, dwKeySpec=%08x, sDescription=%s, dwFlags=%08x, "
         "pbSignature=%p, pdwSigLen=%p)\n", hProv, hHash, dwKeySpec, debugstr_w(sDescription),
@@ -4183,18 +4204,19 @@ BOOL WINAPI RSAENH_CPSignHash(HCRYPTPROV hProv, HCRYPTHASH hHash, DWORD dwKeySpe
                        (OBJECTHDR**)&pCryptKey))
     {
         SetLastError(NTE_NO_KEY);
-        return FALSE;
+        goto out;
     }
 
     if (!pbSignature) {
         *pdwSigLen = pCryptKey->dwKeyLen;
-        return TRUE;
+        ret = TRUE;
+        goto out;
     }
     if (pCryptKey->dwKeyLen > *pdwSigLen)
     {
         SetLastError(ERROR_MORE_DATA);
         *pdwSigLen = pCryptKey->dwKeyLen;
-        return FALSE;
+        goto out;
     }
     *pdwSigLen = pCryptKey->dwKeyLen;
 
@@ -4202,22 +4224,25 @@ BOOL WINAPI RSAENH_CPSignHash(HCRYPTPROV hProv, HCRYPTHASH hHash, DWORD dwKeySpe
         if (!RSAENH_CPHashData(hProv, hHash, (CONST BYTE*)sDescription, 
                                 (DWORD)lstrlenW(sDescription)*sizeof(WCHAR), 0))
         {
-            return FALSE;
+            goto out;
         }
     }
     
     dwHashLen = sizeof(DWORD);
-    if (!RSAENH_CPGetHashParam(hProv, hHash, HP_ALGID, (BYTE*)&aiAlgid, &dwHashLen, 0)) return FALSE;
+    if (!RSAENH_CPGetHashParam(hProv, hHash, HP_ALGID, (BYTE*)&aiAlgid, &dwHashLen, 0)) goto out;
     
     dwHashLen = RSAENH_MAX_HASH_SIZE;
-    if (!RSAENH_CPGetHashParam(hProv, hHash, HP_HASHVAL, abHashValue, &dwHashLen, 0)) return FALSE;
+    if (!RSAENH_CPGetHashParam(hProv, hHash, HP_HASHVAL, abHashValue, &dwHashLen, 0)) goto out;
  
 
     if (!build_hash_signature(pbSignature, *pdwSigLen, aiAlgid, abHashValue, dwHashLen, dwFlags)) {
-        return FALSE;
+        goto out;
     }
 
-    return encrypt_block_impl(pCryptKey->aiAlgid, PK_PRIVATE, &pCryptKey->context, pbSignature, pbSignature, RSAENH_ENCRYPT);
+    ret = encrypt_block_impl(pCryptKey->aiAlgid, PK_PRIVATE, &pCryptKey->context, pbSignature, pbSignature, RSAENH_ENCRYPT);
+out:
+    RSAENH_CPDestroyKey(hProv, hCryptKey);
+    return ret;
 }
 
 /******************************************************************************

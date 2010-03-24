@@ -18,8 +18,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef _globalfoldersettings_h
-#define _globalfoldersettings_h
+#pragma once
 
 class CGlobalFolderSettings :
 	public CComCoClass<CGlobalFolderSettings, &CLSID_ACLMulti>,
@@ -44,5 +43,3 @@ BEGIN_COM_MAP(CGlobalFolderSettings)
 	COM_INTERFACE_ENTRY_IID(IID_IGlobalFolderSettings, IGlobalFolderSettings)
 END_COM_MAP()
 };
-
-#endif // _globalfoldersettings_h

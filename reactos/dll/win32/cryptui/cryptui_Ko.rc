@@ -118,6 +118,7 @@ STRINGTABLE DISCARDABLE
     IDS_WARN_REMOVE_DEFAULT "이 인증거를 제거하기를 원합니까?"
     IDS_WARN_REMOVE_PLURAL_DEFAULT "이 인증서들를 제거하기를 원합니까?"
     IDS_CERT_MGR "인증서"
+    IDS_FRIENDLY_NAME_NONE "<없음>"
     IDS_PURPOSE_SERVER_AUTH "원격 컴퓨터의 동일성 보증"
     IDS_PURPOSE_CLIENT_AUTH "당신의 신원을 원격컴퓨터로 인증"
     IDS_PURPOSE_CODE_SIGNING "소프트웨어 발행자로부터 온 소프트웨어 보증\n발행된 후의 소프트웨어를 개조로부터 보호"

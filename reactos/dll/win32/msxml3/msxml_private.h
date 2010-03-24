@@ -1,5 +1,5 @@
 /*
- *    MSXML Class Factory
+ *    Common definitions
  *
  * Copyright 2005 Mike McCormack
  *
@@ -135,7 +135,7 @@ extern LONG xmldoc_release( xmlDocPtr doc );
 extern HRESULT xmldoc_add_orphan( xmlDocPtr doc, xmlNodePtr node );
 extern HRESULT xmldoc_remove_orphan( xmlDocPtr doc, xmlNodePtr node );
 
-extern HRESULT XMLElement_create( IUnknown *pUnkOuter, xmlNodePtr node, LPVOID *ppObj );
+extern HRESULT XMLElement_create( IUnknown *pUnkOuter, xmlNodePtr node, LPVOID *ppObj, BOOL own );
 
 extern xmlDocPtr parse_xml(char *ptr, int len);
 
@@ -174,6 +174,8 @@ static inline BSTR bstr_from_xmlChar(const xmlChar *str)
         if(ret)
             MultiByteToWideChar( CP_UTF8, 0, (LPCSTR)str, -1, ret, len);
     }
+    else
+        ret = SysAllocStringLen(NULL, 0);
 
     return ret;
 }

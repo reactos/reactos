@@ -1,0 +1,94 @@
+/*
+ * German resources for oleacc
+ *
+ * Copyright 2009 André Hentschel
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "oleacc.h"
+
+#pragma code_page(65001)
+
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+{
+    0 "unbekanntes Objekt" /* undocumented */
+    ROLE_SYSTEM_TITLEBAR    "Titelleiste"
+    ROLE_SYSTEM_MENUBAR     "Menüleiste"
+    ROLE_SYSTEM_SCROLLBAR   "Bildlaufleiste"
+    ROLE_SYSTEM_GRIP        "Fangpunkt"
+    ROLE_SYSTEM_SOUND       "Audio"
+    ROLE_SYSTEM_CURSOR      "Cursor"
+    ROLE_SYSTEM_CARET       "Caret-Zeichen"
+    ROLE_SYSTEM_ALERT       "Warnung"
+    ROLE_SYSTEM_WINDOW      "Fenster"
+    ROLE_SYSTEM_CLIENT      "Client"
+    ROLE_SYSTEM_MENUPOPUP   "Kontextmenü"
+    ROLE_SYSTEM_MENUITEM    "Menübefehl"
+    ROLE_SYSTEM_TOOLTIP     "Tooltip"
+    ROLE_SYSTEM_APPLICATION "Anwendung"
+    ROLE_SYSTEM_DOCUMENT    "Dokument"
+    ROLE_SYSTEM_PANE        "Ausschnitt"
+    ROLE_SYSTEM_CHART       "Diagramm"
+    ROLE_SYSTEM_DIALOG      "Dialog"
+    ROLE_SYSTEM_BORDER      "Rahmen"
+    ROLE_SYSTEM_GROUPING    "Gruppierung"
+    ROLE_SYSTEM_SEPARATOR   "Trennlinie"
+    ROLE_SYSTEM_TOOLBAR     "Symbolleiste"
+    ROLE_SYSTEM_STATUSBAR   "Statusleiste"
+    ROLE_SYSTEM_TABLE        "Tabelle"
+    ROLE_SYSTEM_COLUMNHEADER "Spaltenkopf"
+    ROLE_SYSTEM_ROWHEADER    "Zeilenkopf"
+    ROLE_SYSTEM_COLUMN       "Spalte"
+    ROLE_SYSTEM_ROW          "Zeile"
+    ROLE_SYSTEM_CELL         "Zelle"
+    ROLE_SYSTEM_LINK         "Link"
+    ROLE_SYSTEM_HELPBALLOON  "Hilfesprechblase"
+    ROLE_SYSTEM_CHARACTER    "Assistent"
+    ROLE_SYSTEM_LIST         "Liste"
+    ROLE_SYSTEM_LISTITEM     "Listenelement"
+    ROLE_SYSTEM_OUTLINE      "Gliederung"
+    ROLE_SYSTEM_OUTLINEITEM  "Gliederungselement"
+    ROLE_SYSTEM_PAGETAB      "Registerkarte"
+    ROLE_SYSTEM_PROPERTYPAGE "Eigenschaftenseite"
+    ROLE_SYSTEM_INDICATOR    "Anzeige"
+    ROLE_SYSTEM_GRAPHIC      "Grafik"
+    ROLE_SYSTEM_STATICTEXT   "Text"
+    ROLE_SYSTEM_TEXT         "Text"
+    ROLE_SYSTEM_PUSHBUTTON   "Schaltfläche"
+    ROLE_SYSTEM_CHECKBUTTON  "Kontrollkästchen"
+    ROLE_SYSTEM_RADIOBUTTON  "Optionskästchen"
+    ROLE_SYSTEM_COMBOBOX     "Kombinationsfeld"
+    ROLE_SYSTEM_DROPLIST     "Drop Down"
+    ROLE_SYSTEM_PROGRESSBAR  "Fortschrittsanzeige"
+    ROLE_SYSTEM_DIAL         "wählen"
+    ROLE_SYSTEM_HOTKEYFIELD  "Schnellzugriffsfeld"
+    ROLE_SYSTEM_SLIDER       "Schieberegler"
+    ROLE_SYSTEM_SPINBUTTON   "Drehfeld"
+    ROLE_SYSTEM_DIAGRAM      "Diagramm"
+    ROLE_SYSTEM_ANIMATION    "Animation"
+    ROLE_SYSTEM_EQUATION     "Gleichung"
+    ROLE_SYSTEM_BUTTONDROPDOWN "Dropdown Schaltfläche"
+    ROLE_SYSTEM_BUTTONMENU   "Menü Schaltfläche"
+    ROLE_SYSTEM_BUTTONDROPDOWNGRID "Raster Dropdown Schaltfläche"
+    ROLE_SYSTEM_WHITESPACE   "Leerzeichen"
+    ROLE_SYSTEM_PAGETABLIST  "Register"
+    ROLE_SYSTEM_CLOCK        "Uhr"
+    ROLE_SYSTEM_SPLITBUTTON  "Trenn Schaltfläche"
+    ROLE_SYSTEM_IPADDRESS    "IP Addresse"
+    ROLE_SYSTEM_OUTLINEBUTTON "Gliederung Schaltfläche"
+}

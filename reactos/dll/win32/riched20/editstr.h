@@ -29,6 +29,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 
 #define COBJMACROS
 #define NONAMELESSUNION
@@ -50,7 +51,7 @@
 #include "wine/debug.h"
 
 #ifdef __i386__
-extern struct ITextHostVtbl itextHostStdcallVtbl;
+extern const struct ITextHostVtbl itextHostStdcallVtbl;
 #endif /* __i386__ */
 
 typedef struct tagME_String
@@ -325,7 +326,7 @@ typedef struct tagME_FontCacheItem
 
 typedef struct tagME_TextEditor
 {
-  HWND hWnd;
+  HWND hWnd, hwndParent;
   ITextHost *texthost;
   BOOL bEmulateVersion10;
   ME_TextBuffer *pBuffer;
@@ -369,6 +370,7 @@ typedef struct tagME_TextEditor
   BOOL AutoURLDetect_bEnable;
   WCHAR cPasswordMask;
   BOOL bHaveFocus;
+  BOOL bDialogMode; /* Indicates that we are inside a dialog window */
   /*for IME */
   int imeStartIndex;
   DWORD selofs; /* The size of the selection bar on the left side of control */

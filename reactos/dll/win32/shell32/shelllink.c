@@ -734,30 +734,30 @@ static HRESULT Stream_LoadAdvertiseInfo( IStream* stm, LPWSTR *str )
 
     TRACE("%p\n",stm);
 
-    r = IStream_Read( stm, &buffer.cbSize, sizeof (DWORD), &count );
+    r = IStream_Read( stm, &buffer.dbh.cbSize, sizeof (DWORD), &count );
     if( FAILED( r ) )
         return r;
 
     /* make sure that we read the size of the structure even on error */
     size = sizeof buffer - sizeof (DWORD);
-    if( buffer.cbSize != sizeof buffer )
+    if( buffer.dbh.cbSize != sizeof buffer )
     {
         ERR("Ooops.  This structure is not as expected...\n");
         return E_FAIL;
     }
 
-    r = IStream_Read( stm, &buffer.dwSignature, size, &count );
+    r = IStream_Read( stm, &buffer.dbh.dwSignature, size, &count );
     if( FAILED( r ) )
         return r;
 
     if( count != size )
         return E_FAIL;
 
-    TRACE("magic %08x  string = %s\n", buffer.dwSignature, debugstr_w(buffer.szwDarwinID));
+    TRACE("magic %08x  string = %s\n", buffer.dbh.dwSignature, debugstr_w(buffer.szwDarwinID));
 
-    if( (buffer.dwSignature&0xffff0000) != 0xa0000000 )
+    if( (buffer.dbh.dwSignature&0xffff0000) != 0xa0000000 )
     {
-        ERR("Unknown magic number %08x in advertised shortcut\n", buffer.dwSignature);
+        ERR("Unknown magic number %08x in advertised shortcut\n", buffer.dbh.dwSignature);
         return E_FAIL;
     }
 
@@ -1031,8 +1031,8 @@ static EXP_DARWIN_LINK* shelllink_build_darwinid( LPCWSTR string, DWORD magic )
     EXP_DARWIN_LINK *buffer;
 
     buffer = LocalAlloc( LMEM_ZEROINIT, sizeof *buffer );
-    buffer->cbSize = sizeof *buffer;
-    buffer->dwSignature = magic;
+    buffer->dbh.cbSize = sizeof *buffer;
+    buffer->dbh.dwSignature = magic;
     lstrcpynW( buffer->szwDarwinID, string, MAX_PATH );
     WideCharToMultiByte(CP_ACP, 0, string, -1, buffer->szDarwinID, MAX_PATH, NULL, NULL );
 
@@ -1048,7 +1048,7 @@ static HRESULT Stream_WriteAdvertiseInfo( IStream* stm, LPCWSTR string, DWORD ma
 
     buffer = shelllink_build_darwinid( string, magic );
 
-    return IStream_Write( stm, buffer, buffer->cbSize, &count );
+    return IStream_Write( stm, buffer, buffer->dbh.cbSize, &count );
 }
 
 /************************************************************************

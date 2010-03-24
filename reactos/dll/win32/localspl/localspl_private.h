@@ -21,6 +21,7 @@
 #ifndef __WINE_LOCALSPL_PRIVATE__
 #define __WINE_LOCALSPL_PRIVATE__
 
+#include <windef.h>
 
 /* ## DLL-wide Globals ## */
 extern HINSTANCE LOCALSPL_hInstance;

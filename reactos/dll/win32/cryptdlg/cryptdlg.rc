@@ -22,11 +22,15 @@
 #include "winuser.h"
 #include "cryptres.h"
 
-#include "cryptdlg_De.rc"
 #include "cryptdlg_En.rc"
-#include "cryptdlg_Fr.rc"
 #include "cryptdlg_Ko.rc"
-#include "cryptdlg_Lt.rc"
 #include "cryptdlg_Nl.rc"
+
+/* UTF-8 */
+#include "cryptdlg_De.rc"
+#include "cryptdlg_Fr.rc"
+#include "cryptdlg_Lt.rc"
+#include "cryptdlg_Uk.rc"
 #include "cryptdlg_Pt.rc"
 #include "cryptdlg_Ro.rc"
+

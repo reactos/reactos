@@ -151,6 +151,11 @@ static void WINAPI internet_status_callback(HINTERNET internet, DWORD_PTR contex
         report_progress(protocol, BINDSTATUS_SENDINGREQUEST, (LPWSTR)status_info);
         break;
 
+    case INTERNET_STATUS_REDIRECT:
+        TRACE("%p INTERNET_STATUS_REDIRECT\n", protocol);
+        report_progress(protocol, BINDSTATUS_REDIRECTING, (LPWSTR)status_info);
+        break;
+
     case INTERNET_STATUS_REQUEST_COMPLETE:
         request_complete(protocol, status_info);
         break;

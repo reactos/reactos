@@ -495,7 +495,7 @@ DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
                 static const WCHAR p1W[] = {'%','1',0};
                 WCHAR sTemp [MAX_PATH];
 
-                szExt = (LPWSTR) PathFindExtensionW(szFullPath);
+                szExt = PathFindExtensionW(szFullPath);
                 TRACE("szExt=%s\n", debugstr_w(szExt));
                 if ( szExt &&
                      HCR_MapTypeToValueW(szExt, sTemp, MAX_PATH, TRUE) &&

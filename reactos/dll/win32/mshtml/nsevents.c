@@ -216,7 +216,7 @@ static nsresult NSAPI handle_load(nsIDOMEventListener *iface, nsIDOMEvent *event
 
     TRACE("(%p)\n", doc);
 
-    if(!doc)
+    if(!doc || !doc->basedoc.window)
         return NS_ERROR_FAILURE;
     doc_obj = doc->basedoc.doc_obj;
 
@@ -236,6 +236,9 @@ static nsresult NSAPI handle_load(nsIDOMEventListener *iface, nsIDOMEvent *event
     set_ready_state(doc->basedoc.window, READYSTATE_COMPLETE);
 
     if(doc == doc_obj->basedoc.doc_node) {
+        if(doc_obj->view_sink)
+            IAdviseSink_OnViewChange(doc_obj->view_sink, DVASPECT_CONTENT, -1);
+
         if(doc_obj->frame) {
             static const WCHAR wszDone[] = {'D','o','n','e',0};
             IOleInPlaceFrame_SetStatusText(doc_obj->frame, wszDone);
@@ -251,7 +254,7 @@ static nsresult NSAPI handle_load(nsIDOMEventListener *iface, nsIDOMEvent *event
 
     nsIDOMHTMLDocument_GetBody(doc->nsdoc, &nsbody);
     if(nsbody) {
-        fire_event(doc, EVENTID_LOAD, (nsIDOMNode*)nsbody, event);
+        fire_event(doc, EVENTID_LOAD, TRUE, (nsIDOMNode*)nsbody, event);
         nsIDOMHTMLElement_Release(nsbody);
     }
 
@@ -267,6 +270,8 @@ static nsresult NSAPI handle_htmlevent(nsIDOMEventListener *iface, nsIDOMEvent *
     nsAString type_str;
     eventid_t eid;
     nsresult nsres;
+
+    TRACE("\n");
 
     nsAString_Init(&type_str, NULL);
     nsIDOMEvent_GetType(event, &type_str);
@@ -287,7 +292,7 @@ static nsresult NSAPI handle_htmlevent(nsIDOMEventListener *iface, nsIDOMEvent *
         return NS_OK;
     }
 
-    fire_event(doc, eid, nsnode, event);
+    fire_event(doc, eid, TRUE, nsnode, event);
 
     nsIDOMNode_Release(nsnode);
 
@@ -316,7 +321,7 @@ static void init_event(nsIDOMEventTarget *target, const PRUnichar *type,
     nsAString type_str;
     nsresult nsres;
 
-    nsAString_Init(&type_str, type);
+    nsAString_InitDepend(&type_str, type);
     nsres = nsIDOMEventTarget_AddEventListener(target, &type_str, listener, capture);
     nsAString_Finish(&type_str);
     if(NS_FAILED(nsres))
@@ -331,12 +336,15 @@ static void init_listener(nsEventListener *This, nsDocumentEventListener *listen
     This->This = listener;
 }
 
-void add_nsevent_listener(HTMLDocumentNode *doc, LPCWSTR type)
+void add_nsevent_listener(HTMLDocumentNode *doc, nsIDOMNode *nsnode, LPCWSTR type)
 {
     nsIDOMEventTarget *target;
     nsresult nsres;
 
-    nsres = nsIDOMWindow_QueryInterface(doc->basedoc.window->nswindow, &IID_nsIDOMEventTarget, (void**)&target);
+    if(nsnode)
+        nsres = nsIDOMNode_QueryInterface(nsnode, &IID_nsIDOMEventTarget, (void**)&target);
+    else
+        nsres = nsIDOMWindow_QueryInterface(doc->basedoc.window->nswindow, &IID_nsIDOMEventTarget, (void**)&target);
     if(NS_FAILED(nsres)) {
         ERR("Could not get nsIDOMEventTarget interface: %08x\n", nsres);
         return;

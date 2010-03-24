@@ -34,6 +34,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(mapi);
 
 LONG MAPI_ObjectCount = 0;
+HINSTANCE hInstMAPI32;
 
 /***********************************************************************
  *              DllMain (MAPI32.init)
@@ -45,6 +46,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
     switch (fdwReason)
     {
     case DLL_PROCESS_ATTACH:
+        hInstMAPI32 = hinstDLL;
         DisableThreadLibraryCalls(hinstDLL);
         load_mapi_providers();
         break;

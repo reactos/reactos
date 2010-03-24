@@ -1835,7 +1835,7 @@ IMAPIProp_fnSetProps(LPMAPIPROP iface, ULONG ulValues,
         else
         {
             /* Add new value */
-            if (!(item = IMAPIPROP_AddValue(This, &lpProps[i])))
+            if (!IMAPIPROP_AddValue(This, &lpProps[i]))
                 hRet = MAPI_E_NOT_ENOUGH_MEMORY;
         }
     }

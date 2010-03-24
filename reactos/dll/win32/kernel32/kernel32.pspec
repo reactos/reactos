@@ -445,7 +445,7 @@
 ;@ stdcall GetConsoleOriginalTitleA ; Win 7
 ;@ stdcall GetConsoleOriginalTitleW ; Win 7
 @ stdcall GetConsoleOutputCP()
-@ stub GetConsoleProcessList ; missing in XP SP3, present in Win 7
+@ stdcall GetConsoleProcessList(ptr long) ; missing in XP SP3
 @ stdcall GetConsoleScreenBufferInfo(long ptr)
 ;@ stdcall GetConsoleScreenBufferInfoEx ; Win 7
 @ stdcall GetConsoleSelectionInfo(ptr)
@@ -1055,8 +1055,8 @@
 @ stdcall RegisterConsoleIME(ptr ptr)
 @ stdcall RegisterConsoleOS2(long)
 @ stdcall RegisterConsoleVDM(long long long long long long long long long long long)
-@ stub RegisterServiceProcess ; missing in XP SP3 and Win 7
-@ stub RegisterSysMsgHandler ; missing in XP SP3 and win 7
+;@ stub RegisterServiceProcess ; missing in XP SP3
+@ stub RegisterSysMsgHandler ; missing in XP SP3
 @ stdcall RegisterWaitForInputIdle(ptr)
 @ stdcall RegisterWaitForSingleObject(ptr long ptr ptr long long)
 @ stdcall RegisterWaitForSingleObjectEx(long ptr ptr long long)

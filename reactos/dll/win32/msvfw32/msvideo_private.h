@@ -19,6 +19,9 @@
 #ifndef __WINE_MSVIDEO_PRIVATE_H
 #define __WINE_MSVIDEO_PRIVATE_H
 
+#include <windef.h>
+#include <winuser.h>
+
 #define ICM_CHOOSE_COMPRESSOR 1
 #define IDC_COMP_LIST 880
 #define IDS_FULLFRAMES 901
@@ -36,26 +39,11 @@ typedef struct tagWINE_HIC {
     WORD		x2;		/* 20: */
     DWORD		x3;		/* 22: */
 					/* 26: */
-    DWORD               driverproc16;   /* Wine specific flags */
     HIC                 hic;
     DWORD               driverId;
     struct tagWINE_HIC* next;
 } WINE_HIC;
 
-HIC             MSVIDEO_OpenFunction(DWORD, DWORD, UINT, DRIVERPROC, DWORD);
-LRESULT         MSVIDEO_SendMessage(WINE_HIC*, UINT, DWORD_PTR, DWORD_PTR);
-WINE_HIC*       MSVIDEO_GetHicPtr(HIC);
-
-extern LRESULT  (CALLBACK *pFnCallTo16)(HDRVR, HIC, UINT, LPARAM, LPARAM);
-
-/* handle16 --> handle conversions */
-#define HDRAWDIB_32(h16)	((HDRAWDIB)(ULONG_PTR)(h16))
-#define HIC_32(h16)		((HIC)(ULONG_PTR)(h16))
-
-/* handle --> handle16 conversions */
-#define HDRVR_16(h32)		(LOWORD(h32))
-#define HDRAWDIB_16(h32)	(LOWORD(h32))
-#define HIC_16(h32)		(LOWORD(h32))
 
 #define IDC_CONFIGURE 882
 #define IDC_ABOUT 883

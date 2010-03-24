@@ -32,10 +32,11 @@ WINE_DEFAULT_DEBUG_CHANNEL(inetmib1);
 /**
  * Utility functions
  */
-static void copyInt(AsnAny *value, void *src)
+static DWORD copyInt(AsnAny *value, void *src)
 {
     value->asnType = ASN_INTEGER;
     value->asnValue.number = *(DWORD *)src;
+    return SNMP_ERRORSTATUS_NOERROR;
 }
 
 static void setStringValue(AsnAny *value, BYTE type, DWORD len, BYTE *str)
@@ -45,18 +46,11 @@ static void setStringValue(AsnAny *value, BYTE type, DWORD len, BYTE *str)
     strValue.asnType = type;
     strValue.asnValue.string.stream = str;
     strValue.asnValue.string.length = len;
-    strValue.asnValue.string.dynamic = TRUE;
+    strValue.asnValue.string.dynamic = FALSE;
     SnmpUtilAsnAnyCpy(value, &strValue);
 }
 
-static void copyLengthPrecededString(AsnAny *value, void *src)
-{
-    DWORD len = *(DWORD *)src;
-
-    setStringValue(value, ASN_OCTETSTRING, len, (BYTE *)src + sizeof(DWORD));
-}
-
-typedef void (*copyValueFunc)(AsnAny *value, void *src);
+typedef DWORD (*copyValueFunc)(AsnAny *value, void *src);
 
 struct structToAsnValue
 {
@@ -75,13 +69,13 @@ static AsnInteger32 mapStructEntryToValue(struct structToAsnValue *map,
         return SNMP_ERRORSTATUS_NOSUCHNAME;
     if (!map[id].copy)
         return SNMP_ERRORSTATUS_NOSUCHNAME;
-    map[id].copy(&pVarBind->value, (BYTE *)record + map[id].offset);
-    return SNMP_ERRORSTATUS_NOERROR;
+    return map[id].copy(&pVarBind->value, (BYTE *)record + map[id].offset);
 }
 
-static void copyIpAddr(AsnAny *value, void *src)
+static DWORD copyIpAddr(AsnAny *value, void *src)
 {
     setStringValue(value, ASN_IPADDRESS, sizeof(DWORD), src);
+    return SNMP_ERRORSTATUS_NOERROR;
 }
 
 static UINT mib2[] = { 1,3,6,1,2,1 };
@@ -168,7 +162,7 @@ static BOOL mib2IfNumberQuery(BYTE bPduType, SnmpVarBind *pVarBind,
     return ret;
 }
 
-static void copyOperStatus(AsnAny *value, void *src)
+static DWORD copyOperStatus(AsnAny *value, void *src)
 {
     value->asnType = ASN_INTEGER;
     /* The IPHlpApi definition of operational status differs from the MIB2 one,
@@ -186,6 +180,7 @@ static void copyOperStatus(AsnAny *value, void *src)
     default:
         value->asnValue.number = MIB_IF_ADMIN_STATUS_DOWN;
     };
+    return SNMP_ERRORSTATUS_NOERROR;
 }
 
 /* Given an OID and a base OID that it must begin with, finds the item and
@@ -393,7 +388,7 @@ static UINT findNextOidInTable(AsnObjectIdentifier *oid,
              * an infinite loop.
              */
             for (++index; index <= table->numEntries && compare(key,
-                &table->entries[tableEntrySize * index]) == 0; ++index)
+                &table->entries[tableEntrySize * (index - 1)]) == 0; ++index)
                 ;
         }
         HeapFree(GetProcessHeap(), 0, key);
@@ -550,13 +545,46 @@ static INT setOidWithItemAndInteger(AsnObjectIdentifier *dst,
     return ret;
 }
 
+static DWORD copyIfRowDescr(AsnAny *value, void *src)
+{
+    PMIB_IFROW row = (PMIB_IFROW)((BYTE *)src -
+                                  FIELD_OFFSET(MIB_IFROW, dwDescrLen));
+    DWORD ret;
+
+    if (row->dwDescrLen)
+    {
+        setStringValue(value, ASN_OCTETSTRING, row->dwDescrLen, row->bDescr);
+        ret = SNMP_ERRORSTATUS_NOERROR;
+    }
+    else
+        ret = SNMP_ERRORSTATUS_NOSUCHNAME;
+    return ret;
+}
+
+static DWORD copyIfRowPhysAddr(AsnAny *value, void *src)
+{
+    PMIB_IFROW row = (PMIB_IFROW)((BYTE *)src -
+                                  FIELD_OFFSET(MIB_IFROW, dwPhysAddrLen));
+    DWORD ret;
+
+    if (row->dwPhysAddrLen)
+    {
+        setStringValue(value, ASN_OCTETSTRING, row->dwPhysAddrLen,
+                       row->bPhysAddr);
+        ret = SNMP_ERRORSTATUS_NOERROR;
+    }
+    else
+        ret = SNMP_ERRORSTATUS_NOSUCHNAME;
+    return ret;
+}
+
 static struct structToAsnValue mib2IfEntryMap[] = {
     { FIELD_OFFSET(MIB_IFROW, dwIndex), copyInt },
-    { FIELD_OFFSET(MIB_IFROW, dwDescrLen), copyLengthPrecededString },
+    { FIELD_OFFSET(MIB_IFROW, dwDescrLen), copyIfRowDescr },
     { FIELD_OFFSET(MIB_IFROW, dwType), copyInt },
     { FIELD_OFFSET(MIB_IFROW, dwMtu), copyInt },
     { FIELD_OFFSET(MIB_IFROW, dwSpeed), copyInt },
-    { FIELD_OFFSET(MIB_IFROW, dwPhysAddrLen), copyLengthPrecededString },
+    { FIELD_OFFSET(MIB_IFROW, dwPhysAddrLen), copyIfRowPhysAddr },
     { FIELD_OFFSET(MIB_IFROW, dwAdminStatus), copyInt },
     { FIELD_OFFSET(MIB_IFROW, dwOperStatus), copyOperStatus },
     { FIELD_OFFSET(MIB_IFROW, dwLastChange), copyInt },
@@ -883,9 +911,18 @@ static BOOL mib2IpRouteQuery(BYTE bPduType, SnmpVarBind *pVarBind,
 static UINT mib2IpNet[] = { 1,3,6,1,2,1,4,22,1 };
 static PMIB_IPNETTABLE ipNetTable;
 
+static DWORD copyIpNetPhysAddr(AsnAny *value, void *src)
+{
+    PMIB_IPNETROW row = (PMIB_IPNETROW)((BYTE *)src - FIELD_OFFSET(MIB_IPNETROW,
+                                        dwPhysAddrLen));
+
+    setStringValue(value, ASN_OCTETSTRING, row->dwPhysAddrLen, row->bPhysAddr);
+    return SNMP_ERRORSTATUS_NOERROR;
+}
+
 static struct structToAsnValue mib2IpNetMap[] = {
     { FIELD_OFFSET(MIB_IPNETROW, dwIndex), copyInt },
-    { FIELD_OFFSET(MIB_IPNETROW, dwPhysAddrLen), copyLengthPrecededString },
+    { FIELD_OFFSET(MIB_IPNETROW, dwPhysAddrLen), copyIpNetPhysAddr },
     { FIELD_OFFSET(MIB_IPNETROW, dwAddr), copyIpAddr },
     { FIELD_OFFSET(MIB_IPNETROW, dwType), copyInt },
 };

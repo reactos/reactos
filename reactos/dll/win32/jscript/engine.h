@@ -19,11 +19,6 @@
 typedef struct _source_elements_t source_elements_t;
 typedef struct _function_expression_t function_expression_t;
 
-typedef struct _obj_literal_t {
-    DispatchEx *obj;
-    struct _obj_literal_t *next;
-} obj_literal_t;
-
 typedef struct _function_declaration_t {
     function_expression_t *expr;
 
@@ -48,9 +43,9 @@ typedef struct _func_stack {
 typedef struct _parser_ctx_t {
     LONG ref;
 
-    const WCHAR *ptr;
-    const WCHAR *begin;
+    WCHAR *begin;
     const WCHAR *end;
+    const WCHAR *ptr;
 
     script_ctx_t *script;
     source_elements_t *source;
@@ -61,7 +56,6 @@ typedef struct _parser_ctx_t {
 
     jsheap_t heap;
 
-    obj_literal_t *obj_literals;
     func_stack_t *func_stack;
 
     struct _parser_ctx_t *next;
@@ -115,9 +109,15 @@ static inline void exec_addref(exec_ctx_t *ctx)
     ctx->ref++;
 }
 
+typedef enum {
+    EXECT_PROGRAM,
+    EXECT_FUNCTION,
+    EXECT_EVAL
+} exec_type_t;
+
 void exec_release(exec_ctx_t*);
 HRESULT create_exec_ctx(script_ctx_t*,IDispatch*,DispatchEx*,scope_chain_t*,exec_ctx_t**);
-HRESULT exec_source(exec_ctx_t*,parser_ctx_t*,source_elements_t*,jsexcept_t*,VARIANT*);
+HRESULT exec_source(exec_ctx_t*,parser_ctx_t*,source_elements_t*,exec_type_t,jsexcept_t*,VARIANT*);
 
 typedef struct _statement_t statement_t;
 typedef struct _expression_t expression_t;
@@ -126,14 +126,28 @@ typedef struct _parameter_t parameter_t;
 HRESULT create_source_function(parser_ctx_t*,parameter_t*,source_elements_t*,scope_chain_t*,
         const WCHAR*,DWORD,DispatchEx**);
 
+typedef enum {
+    LT_INT,
+    LT_DOUBLE,
+    LT_STRING,
+    LT_BOOL,
+    LT_NULL,
+    LT_REGEXP
+}literal_type_t;
+
 typedef struct {
-    VARTYPE vt;
+    literal_type_t type;
     union {
         LONG lval;
         double dval;
         const WCHAR *wstr;
         VARIANT_BOOL bval;
         IDispatch *disp;
+        struct {
+            const WCHAR *str;
+            DWORD str_len;
+            DWORD flags;
+        } regexp;
     } u;
 } literal_t;
 

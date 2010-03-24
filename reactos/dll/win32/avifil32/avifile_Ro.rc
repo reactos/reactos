@@ -55,4 +55,3 @@ STRINGTABLE DISCARDABLE
   IDS_AVIFILETYPE	"Tratare implicită Wine pentru AVI"
   IDS_UNCOMPRESSED	"necomprimat"
 }
-#pragma code_page(default)

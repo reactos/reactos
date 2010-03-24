@@ -507,22 +507,32 @@ LPWSTR WINAPI StrCpyW(LPWSTR lpszStr, LPCWSTR lpszSrc)
  * Copy a string to another string, up to a maximum number of characters.
  *
  * PARAMS
- *  lpszStr  [O] Destination string
- *  lpszSrc  [I] Source string
- *  iLen     [I] Maximum number of chars to copy
+ *  dst    [O] Destination string
+ *  src    [I] Source string
+ *  count  [I] Maximum number of chars to copy
  *
  * RETURNS
- *  lpszStr.
+ *  dst.
  */
-LPWSTR WINAPI StrCpyNW(LPWSTR lpszStr, LPCWSTR lpszSrc, int iLen)
+LPWSTR WINAPI StrCpyNW(LPWSTR dst, LPCWSTR src, int count)
 {
-  TRACE("(%p,%s,%i)\n", lpszStr, debugstr_w(lpszSrc), iLen);
+  LPWSTR d = dst;
+  LPCWSTR s = src;
 
-  lstrcpynW(lpszStr, lpszSrc, iLen);
-  return lpszStr;
+  TRACE("(%p,%s,%i)\n", dst, debugstr_w(src), count);
+
+  if (s)
+  {
+    while ((count > 1) && *s)
+    {
+      count--;
+      *d++ = *s++;
+    }
+  }
+  if (count) *d = 0;
+
+  return dst;
 }
-
-
 
 /*************************************************************************
  * SHLWAPI_StrStrHelperA

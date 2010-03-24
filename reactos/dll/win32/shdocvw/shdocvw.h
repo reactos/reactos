@@ -92,6 +92,7 @@ struct DocHost {
 
     IUnknown *document;
     IOleDocumentView *view;
+    IUnknown *doc_navigate;
 
     HWND hwnd;
     HWND frame_hwnd;
@@ -103,6 +104,7 @@ struct DocHost {
     VARIANT_BOOL busy;
 
     READYSTATE ready_state;
+    READYSTATE doc_state;
     DWORD prop_notif_cookie;
     BOOL is_prop_notif;
 
@@ -205,6 +207,7 @@ void WebBrowser_OleObject_Destroy(WebBrowser*);
 void DocHost_Init(DocHost*,IDispatch*);
 void DocHost_ClientSite_Init(DocHost*);
 void DocHost_Frame_Init(DocHost*);
+void release_dochost_client(DocHost*);
 
 void DocHost_Release(DocHost*);
 void DocHost_ClientSite_Release(DocHost*);
@@ -221,6 +224,7 @@ HRESULT dochost_object_available(DocHost*,IUnknown*);
 void call_sink(ConnectionPoint*,DISPID,DISPPARAMS*);
 HRESULT navigate_url(DocHost*,LPCWSTR,const VARIANT*,const VARIANT*,VARIANT*,VARIANT*);
 HRESULT go_home(DocHost*);
+void set_doc_state(DocHost*,READYSTATE);
 
 #define WM_DOCHOSTTASK (WM_USER+0x300)
 void push_dochost_task(DocHost*,task_header_t*,task_proc_t,BOOL);
@@ -252,11 +256,18 @@ HRESULT register_class_object(BOOL);
 HRESULT get_typeinfo(ITypeInfo**);
 DWORD register_iexplore(BOOL);
 
+const char *debugstr_variant(const VARIANT*);
+
 /* memory allocation functions */
 
 static inline void *heap_alloc(size_t len)
 {
     return HeapAlloc(GetProcessHeap(), 0, len);
+}
+
+static inline void *heap_alloc_zero(size_t len)
+{
+    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
 }
 
 static inline void *heap_realloc(void *mem, size_t len)

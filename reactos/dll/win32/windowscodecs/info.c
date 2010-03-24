@@ -726,6 +726,7 @@ typedef struct {
     LONG ref;
     struct list objects;
     struct list *cursor;
+    CRITICAL_SECTION lock; /* Must be held when reading or writing cursor */
 } ComponentEnum;
 
 typedef struct {
@@ -783,6 +784,8 @@ static ULONG WINAPI ComponentEnum_Release(IEnumUnknown *iface)
             list_remove(&cursor->entry);
             HeapFree(GetProcessHeap(), 0, cursor);
         }
+        This->lock.DebugInfo->Spare[0] = 0;
+        DeleteCriticalSection(&This->lock);
         HeapFree(GetProcessHeap(), 0, This);
     }
 
@@ -795,15 +798,17 @@ static HRESULT WINAPI ComponentEnum_Next(IEnumUnknown *iface, ULONG celt,
     ComponentEnum *This = (ComponentEnum*)iface;
     int num_fetched=0;
     ComponentEnumItem *item;
+    HRESULT hr=S_OK;
 
     TRACE("(%p,%u,%p,%p)\n", iface, celt, rgelt, pceltFetched);
 
+    EnterCriticalSection(&This->lock);
     while (num_fetched<celt)
     {
         if (!This->cursor)
         {
-            *pceltFetched = num_fetched;
-            return S_FALSE;
+            hr = S_FALSE;
+            break;
         }
         item = LIST_ENTRY(This->cursor, ComponentEnumItem, entry);
         IUnknown_AddRef(item->unk);
@@ -811,24 +816,31 @@ static HRESULT WINAPI ComponentEnum_Next(IEnumUnknown *iface, ULONG celt,
         num_fetched++;
         This->cursor = list_next(&This->objects, This->cursor);
     }
+    LeaveCriticalSection(&This->lock);
     *pceltFetched = num_fetched;
-    return S_OK;
+    return hr;
 }
 
 static HRESULT WINAPI ComponentEnum_Skip(IEnumUnknown *iface, ULONG celt)
 {
     ComponentEnum *This = (ComponentEnum*)iface;
     int i;
+    HRESULT hr=S_OK;
 
     TRACE("(%p,%u)\n", iface, celt);
 
+    EnterCriticalSection(&This->lock);
     for (i=0; i<celt; i++)
     {
         if (!This->cursor)
-            return S_FALSE;
+        {
+            hr = S_FALSE;
+            break;
+        }
         This->cursor = list_next(&This->objects, This->cursor);
     }
-    return S_OK;
+    LeaveCriticalSection(&This->lock);
+    return hr;
 }
 
 static HRESULT WINAPI ComponentEnum_Reset(IEnumUnknown *iface)
@@ -837,7 +849,9 @@ static HRESULT WINAPI ComponentEnum_Reset(IEnumUnknown *iface)
 
     TRACE("(%p)\n", iface);
 
+    EnterCriticalSection(&This->lock);
     This->cursor = list_head(&This->objects);
+    LeaveCriticalSection(&This->lock);
     return S_OK;
 }
 
@@ -847,6 +861,7 @@ static HRESULT WINAPI ComponentEnum_Clone(IEnumUnknown *iface, IEnumUnknown **pp
     ComponentEnum *new_enum;
     ComponentEnumItem *old_item, *new_item;
     HRESULT ret=S_OK;
+    struct list *old_cursor;
 
     new_enum = HeapAlloc(GetProcessHeap(), 0, sizeof(ComponentEnum));
     if (!new_enum)
@@ -858,8 +873,14 @@ static HRESULT WINAPI ComponentEnum_Clone(IEnumUnknown *iface, IEnumUnknown **pp
     new_enum->IEnumUnknown_Vtbl = &ComponentEnumVtbl;
     new_enum->ref = 1;
     new_enum->cursor = NULL;
-
     list_init(&new_enum->objects);
+    InitializeCriticalSection(&new_enum->lock);
+    new_enum->lock.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": ComponentEnum.lock");
+
+    EnterCriticalSection(&This->lock);
+    old_cursor = This->cursor;
+    LeaveCriticalSection(&This->lock);
+
     LIST_FOR_EACH_ENTRY(old_item, &This->objects, ComponentEnumItem, entry)
     {
         new_item = HeapAlloc(GetProcessHeap(), 0, sizeof(ComponentEnumItem));
@@ -871,7 +892,7 @@ static HRESULT WINAPI ComponentEnum_Clone(IEnumUnknown *iface, IEnumUnknown **pp
         new_item->unk = old_item->unk;
         list_add_tail(&new_enum->objects, &new_item->entry);
         IUnknown_AddRef(new_item->unk);
-        if (&old_item->entry == This->cursor) new_enum->cursor = &new_item->entry;
+        if (&old_item->entry == old_cursor) new_enum->cursor = &new_item->entry;
     }
 
     if (FAILED(ret))
@@ -923,6 +944,8 @@ HRESULT CreateComponentEnumerator(DWORD componentTypes, DWORD options, IEnumUnkn
     This->IEnumUnknown_Vtbl = &ComponentEnumVtbl;
     This->ref = 1;
     list_init(&This->objects);
+    InitializeCriticalSection(&This->lock);
+    This->lock.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": ComponentEnum.lock");
 
     for (category=categories; category->type && hr == S_OK; category++)
     {

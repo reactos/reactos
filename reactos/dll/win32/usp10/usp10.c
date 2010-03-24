@@ -592,8 +592,6 @@ HRESULT WINAPI ScriptItemize(const WCHAR *pwcInChars, int cInChars, int cMaxItem
                 pItems[index].a.s.uBidiLevel = 1;
 
             pItems[index].a.eScript = New_Script;
-            if  (New_Script == Script_Arabic)
-                pItems[index].a.s.uBidiLevel = 1;
 
             TRACE("index=%d cnt=%d iCharPos=%d\n", index, cnt, pItems[index].iCharPos);
         }
@@ -604,7 +602,7 @@ HRESULT WINAPI ScriptItemize(const WCHAR *pwcInChars, int cInChars, int cMaxItem
      * checks the n+1 structure                                              */
     memset(&pItems[index+1].a, 0, sizeof(SCRIPT_ANALYSIS));
 
-    TRACE("index=%d cnt=%d iCharPos=%d\n", index+1, cnt, pItems[index+1].iCharPos = cnt);
+    TRACE("index=%d cnt=%d iCharPos=%d\n", index+1, cnt, pItems[index+1].iCharPos);
 
     /*  Set one SCRIPT_STATE item being returned  */
     if (pcItems) *pcItems = index + 1;
@@ -1310,7 +1308,7 @@ HRESULT WINAPI ScriptShape(HDC hdc, SCRIPT_CACHE *psc, const WCHAR *pwcChars,
             {
                 WORD glyph;
                 if (!hdc) return E_PENDING;
-                if (GetGlyphIndicesW(hdc, &pwcChars[i], 1, &glyph, GGI_MARK_NONEXISTING_GLYPHS) == GDI_ERROR) return S_FALSE;
+                if (GetGlyphIndicesW(hdc, &pwcChars[i], 1, &glyph, 0) == GDI_ERROR) return S_FALSE;
                 pwOutGlyphs[i] = set_cache_glyph(psc, pwcChars[i], glyph);
             }
         }

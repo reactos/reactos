@@ -77,6 +77,8 @@ void ME_CharFormatFromLogFont(HDC hDC, const LOGFONTW *lf, CHARFORMAT2W *fmt); /
 /* list.c */
 void ME_InsertBefore(ME_DisplayItem *diWhere, ME_DisplayItem *diWhat);
 void ME_Remove(ME_DisplayItem *diWhere);
+BOOL ME_NextRun(ME_DisplayItem **para, ME_DisplayItem **run);
+BOOL ME_PrevRun(ME_DisplayItem **para, ME_DisplayItem **run);
 ME_DisplayItem *ME_FindItemBack(ME_DisplayItem *di, ME_DIType nTypeOrClass);
 ME_DisplayItem *ME_FindItemFwd(ME_DisplayItem *di, ME_DIType nTypeOrClass);
 ME_DisplayItem *ME_FindItemBackOrHere(ME_DisplayItem *di, ME_DIType nTypeOrClass);
@@ -95,7 +97,6 @@ ME_String *ME_VSplitString(ME_String *orig, int nVPos);
 int ME_IsWhitespaces(const ME_String *s);
 int ME_IsSplitable(const ME_String *s);
 int ME_FindNonWhitespaceV(const ME_String *s, int nVChar);
-int ME_FindWhitespaceV(ME_String *s, int nVChar);
 int ME_CallWordBreakProc(ME_TextEditor *editor, ME_String *str, INT start, INT code);
 void ME_StrDeleteV(ME_String *s, int nVChar, int nChars);
 /* smart helpers for A<->W conversions, they reserve/free memory and call MultiByte<->WideChar functions */
@@ -120,14 +121,11 @@ int ME_ReverseFindWhitespaceV(const ME_String *s, int nVChar);
 /* row.c */
 ME_DisplayItem *ME_RowStart(ME_DisplayItem *item);
 /* ME_DisplayItem *ME_RowEnd(ME_DisplayItem *item); */
-void ME_RenumberParagraphs(ME_DisplayItem *item); /* TODO */
 ME_DisplayItem *ME_FindRowWithNumber(ME_TextEditor *editor, int nRow);
 int ME_RowNumberFromCharOfs(ME_TextEditor *editor, int nOfs);
 
 /* run.c */
 ME_DisplayItem *ME_MakeRun(ME_Style *s, ME_String *strData, int nFlags);
-/* note: ME_InsertRun inserts a copy of the specified run - so you need to destroy the original */
-ME_DisplayItem *ME_InsertRun(ME_TextEditor *editor, int nCharOfs, ME_DisplayItem *pItem);
 ME_DisplayItem *ME_InsertRunAtCursor(ME_TextEditor *editor, ME_Cursor *cursor,
                                      ME_Style *style, const WCHAR *str, int len, int flags);
 void ME_CheckCharOffsets(ME_TextEditor *editor);
@@ -136,49 +134,49 @@ int ME_CharFromPoint(ME_Context *c, int cx, ME_Run *run);
 /* this one accounts for 1/2 char tolerance */
 int ME_CharFromPointCursor(ME_TextEditor *editor, int cx, ME_Run *run);
 int ME_PointFromChar(ME_TextEditor *editor, ME_Run *pRun, int nOffset);
-int ME_GetLastSplittablePlace(ME_Context *c, ME_Run *run);
 int ME_CanJoinRuns(const ME_Run *run1, const ME_Run *run2);
 void ME_JoinRuns(ME_TextEditor *editor, ME_DisplayItem *p);
 ME_DisplayItem *ME_SplitRun(ME_WrapContext *wc, ME_DisplayItem *item, int nChar);
 ME_DisplayItem *ME_SplitRunSimple(ME_TextEditor *editor, ME_DisplayItem *item, int nChar);
-int ME_FindSplitPoint(ME_Context *c, POINT *pt, ME_Run *run, int desperate);
 void ME_UpdateRunFlags(ME_TextEditor *editor, ME_Run *run);
-ME_DisplayItem *ME_SplitFurther(ME_TextEditor *editor, ME_DisplayItem *run);
 void ME_CalcRunExtent(ME_Context *c, const ME_Paragraph *para, int startx, ME_Run *run);
 SIZE ME_GetRunSize(ME_Context *c, const ME_Paragraph *para, ME_Run *run, int nLen, int startx);
 void ME_CursorFromCharOfs(ME_TextEditor *editor, int nCharOfs, ME_Cursor *pCursor);
 void ME_RunOfsFromCharOfs(ME_TextEditor *editor, int nCharOfs, ME_DisplayItem **ppPara, ME_DisplayItem **ppRun, int *pOfs);
 int ME_CharOfsFromRunOfs(ME_TextEditor *editor, const ME_DisplayItem *pPara, const ME_DisplayItem *pRun, int nOfs);
 void ME_SkipAndPropagateCharOffset(ME_DisplayItem *p, int shift);
-void ME_SetCharFormat(ME_TextEditor *editor, int nFrom, int nLen, CHARFORMAT2W *pFmt);
+void ME_SetCharFormat(ME_TextEditor *editor, ME_Cursor *start, ME_Cursor *end, CHARFORMAT2W *pFmt);
 void ME_SetSelectionCharFormat(ME_TextEditor *editor, CHARFORMAT2W *pFmt);
-void ME_GetCharFormat(ME_TextEditor *editor, int nFrom, int nLen, CHARFORMAT2W *pFmt);
+void ME_GetCharFormat(ME_TextEditor *editor, const ME_Cursor *from,
+                      const ME_Cursor *to, CHARFORMAT2W *pFmt);
 void ME_GetSelectionCharFormat(ME_TextEditor *editor, CHARFORMAT2W *pFmt);
 void ME_GetDefaultCharFormat(ME_TextEditor *editor, CHARFORMAT2W *pFmt);
 void ME_SetDefaultCharFormat(ME_TextEditor *editor, CHARFORMAT2W *mod);
 
 /* caret.c */
+void ME_SetCursorToStart(ME_TextEditor *editor, ME_Cursor *cursor);
 int ME_SetSelection(ME_TextEditor *editor, int from, int to);
 void ME_HideCaret(ME_TextEditor *ed);
 void ME_ShowCaret(ME_TextEditor *ed);
 void ME_MoveCaret(ME_TextEditor *ed);
-int ME_CharFromPos(ME_TextEditor *editor, int x, int y, BOOL *isExact);
+BOOL ME_CharFromPos(ME_TextEditor *editor, int x, int y, ME_Cursor *cursor, BOOL *isExact);
 void ME_LButtonDown(ME_TextEditor *editor, int x, int y, int clickNum);
 void ME_MouseMove(ME_TextEditor *editor, int x, int y);
 BOOL ME_DeleteTextAtCursor(ME_TextEditor *editor, int nCursor, int nChars);
 void ME_InsertTextFromCursor(ME_TextEditor *editor, int nCursor, 
                              const WCHAR *str, int len, ME_Style *style);
 void ME_InsertEndRowFromCursor(ME_TextEditor *editor, int nCursor);
+int ME_MoveCursorChars(ME_TextEditor *editor, ME_Cursor *cursor, int nRelOfs);
 BOOL ME_ArrowKey(ME_TextEditor *ed, int nVKey, BOOL extend, BOOL ctrl);
 
-int ME_GetCursorOfs(ME_TextEditor *editor, int nCursor);
-void ME_GetSelection(ME_TextEditor *editor, int *from, int *to);
-int ME_CountParagraphsBetween(ME_TextEditor *editor, int from, int to);
+int ME_GetCursorOfs(const ME_Cursor *cursor);
+int ME_GetSelectionOfs(ME_TextEditor *editor, int *from, int *to);
+int ME_GetSelection(ME_TextEditor *editor, ME_Cursor **from, ME_Cursor **to);
 BOOL ME_IsSelection(ME_TextEditor *editor);
 void ME_DeleteSelection(ME_TextEditor *editor);
 void ME_SendSelChange(ME_TextEditor *editor);
 void ME_InsertOLEFromCursor(ME_TextEditor *editor, const REOBJECT* reo, int nCursor);
-BOOL ME_InternalDeleteText(ME_TextEditor *editor, int nOfs, int nChars, BOOL bForce);
+BOOL ME_InternalDeleteText(ME_TextEditor *editor, ME_Cursor *start, int nChars, BOOL bForce);
 int ME_GetTextLength(ME_TextEditor *editor);
 int ME_GetTextLengthEx(ME_TextEditor *editor, const GETTEXTLENGTHEX *how);
 ME_Style *ME_GetSelectionInsertStyle(ME_TextEditor *editor);
@@ -231,8 +229,7 @@ void ME_ScrollRight(ME_TextEditor *editor, int cx);
 void ME_UpdateScrollBar(ME_TextEditor *editor);
 
 /* other functions in paint.c */
-int  ME_GetParaBorderWidth(ME_TextEditor *editor, int);
-int  ME_GetParaLineSpace(ME_Context *c, ME_Paragraph*);
+int ME_GetParaBorderWidth(ME_Context *c, int flags);
 
 /* richole.c */
 LRESULT CreateIRichEditOle(ME_TextEditor *editor, LPVOID *);
@@ -246,14 +243,14 @@ ME_TextEditor *ME_MakeEditor(ITextHost *texthost, BOOL bEmulateVersion10);
 LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
                          LPARAM lParam, BOOL unicode, HRESULT* phresult);
 void ME_SendOldNotify(ME_TextEditor *editor, int nCode);
-int ME_GetTextW(ME_TextEditor *editor, WCHAR *buffer, int nStart, int nChars, BOOL bCRLF);
+int ME_GetTextW(ME_TextEditor *editor, WCHAR *buffer, int buflen,
+                const ME_Cursor *start, int srcChars, BOOL bCRLF);
 void ME_RTFCharAttrHook(struct _RTF_Info *info);
 void ME_RTFParAttrHook(struct _RTF_Info *info);
 void ME_RTFTblAttrHook(struct _RTF_Info *info);
 void ME_RTFSpecialCharHook(struct _RTF_Info *info);
 void ME_StreamInFill(ME_InStream *stream);
 extern int me_debug;
-extern void DoWrap(ME_TextEditor *editor);
 
 /* table.c */
 BOOL ME_IsInTable(ME_DisplayItem *pItem);
@@ -265,7 +262,7 @@ ME_DisplayItem *ME_InsertTableRowEndFromCursor(ME_TextEditor *editor);
 ME_DisplayItem *ME_GetTableRowEnd(ME_DisplayItem *para);
 ME_DisplayItem *ME_GetTableRowStart(ME_DisplayItem *para);
 void ME_CheckTablesForCorruption(ME_TextEditor *editor);
-void ME_ProtectPartialTableDeletion(ME_TextEditor *editor, int nOfs,int *nChars);
+void ME_ProtectPartialTableDeletion(ME_TextEditor *editor, ME_Cursor *c, int *nChars);
 ME_DisplayItem* ME_AppendTableRow(ME_TextEditor *editor, ME_DisplayItem *table_row);
 void ME_TabPressedInTable(ME_TextEditor *editor, BOOL bSelectedRow);
 void ME_MoveCursorFromTableRowStartParagraph(ME_TextEditor *editor);
@@ -273,7 +270,7 @@ struct RTFTable *ME_MakeTableDef(ME_TextEditor *editor);
 void ME_InitTableDef(ME_TextEditor *editor, struct RTFTable *tableDef);
 
 /* txthost.c */
-ITextHost *ME_CreateTextHost(HWND hwnd, BOOL bEmulateVersion10);
+ITextHost *ME_CreateTextHost(HWND hwnd, CREATESTRUCTW *cs, BOOL bEmulateVersion10);
 #ifdef __i386__ /* Use wrappers to perform thiscall on i386 */
 #define TXTHOST_VTABLE(This) (&itextHostStdcallVtbl)
 #else /* __i386__ */
@@ -330,8 +327,8 @@ BOOL ME_Redo(ME_TextEditor *editor);
 void ME_EmptyUndoStack(ME_TextEditor *editor);
 
 /* writer.c */
-LRESULT ME_StreamOutRange(ME_TextEditor *editor, DWORD dwFormat, int nStart, int nTo, EDITSTREAM *stream);
+LRESULT ME_StreamOutRange(ME_TextEditor *editor, DWORD dwFormat, const ME_Cursor *start, int nChars, EDITSTREAM *stream);
 LRESULT ME_StreamOut(ME_TextEditor *editor, DWORD dwFormat, EDITSTREAM *stream);
 
 /* clipboard.c */
-HRESULT ME_GetDataObject(ME_TextEditor *editor, const CHARRANGE *lpchrg, LPDATAOBJECT *lplpdataobj);
+HRESULT ME_GetDataObject(ME_TextEditor *editor, const ME_Cursor *start, int nChars, LPDATAOBJECT *lplpdataobj);

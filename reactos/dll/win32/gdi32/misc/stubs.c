@@ -1353,7 +1353,7 @@ GdiConvertMetaFilePict(HGLOBAL hMem)
  */
 DEVMODEW *
 WINAPI
-GdiConvertToDevmodeW(DEVMODEA *dmA)
+GdiConvertToDevmodeW(const DEVMODEA *dmA)
 {
     DEVMODEW *dmW;
     WORD dmW_size, dmA_size;

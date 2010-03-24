@@ -1208,7 +1208,7 @@ HWND WINAPI AtlAxCreateDialogA(HINSTANCE hInst, LPCSTR name, HWND owner, DLGPROC
     int length;
     WCHAR *nameW;
 
-    if ( HIWORD(name) == 0 )
+    if (IS_INTRESOURCE(name))
         return AtlAxCreateDialogW( hInst, (LPCWSTR) name, owner, dlgProc, param );
 
     length = MultiByteToWideChar( CP_ACP, 0, name, -1, NULL, 0 );

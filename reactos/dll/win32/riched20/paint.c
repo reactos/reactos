@@ -413,7 +413,7 @@ static void ME_DrawRun(ME_Context *c, int x, int y, ME_DisplayItem *rundi, ME_Pa
     return;
 
   start = ME_FindItemBack(rundi, diStartRow);
-  ME_GetSelection(c->editor, &nSelFrom, &nSelTo);
+  ME_GetSelectionOfs(c->editor, &nSelFrom, &nSelTo);
 
   /* Draw selected end-of-paragraph mark */
   if (run->nFlags & MERF_ENDPARA)
@@ -461,19 +461,21 @@ static void ME_DrawRun(ME_Context *c, int x, int y, ME_DisplayItem *rundi, ME_Pa
   }
 }
 
-static const struct {unsigned width_num : 4, width_den : 4, pen_style : 4, dble : 1;} border_details[] = {
-  /* none */            {0, 1, PS_SOLID, FALSE},
-  /* 3/4 */             {3, 4, PS_SOLID, FALSE},
-  /* 1 1/2 */           {3, 2, PS_SOLID, FALSE},
-  /* 2 1/4 */           {9, 4, PS_SOLID, FALSE},
-  /* 3 */               {3, 1, PS_SOLID, FALSE},
-  /* 4 1/2 */           {9, 2, PS_SOLID, FALSE},
-  /* 6 */               {6, 1, PS_SOLID, FALSE},
-  /* 3/4 double */      {3, 4, PS_SOLID, TRUE},
-  /* 1 1/2 double */    {3, 2, PS_SOLID, TRUE},
-  /* 2 1/4 double */    {9, 4, PS_SOLID, TRUE},
-  /* 3/4 gray */        {3, 4, PS_DOT /* FIXME */, FALSE},
-  /* 1 1/2 dashed */    {3, 2, PS_DASH, FALSE},
+/* The documented widths are in points (72 dpi), but converting them to
+ * 96 dpi (standard display resolution) avoids dealing with fractions. */
+static const struct {unsigned width : 8, pen_style : 4, dble : 1;} border_details[] = {
+  /* none */            {0, PS_SOLID, FALSE},
+  /* 3/4 */             {1, PS_SOLID, FALSE},
+  /* 1 1/2 */           {2, PS_SOLID, FALSE},
+  /* 2 1/4 */           {3, PS_SOLID, FALSE},
+  /* 3 */               {4, PS_SOLID, FALSE},
+  /* 4 1/2 */           {6, PS_SOLID, FALSE},
+  /* 6 */               {8, PS_SOLID, FALSE},
+  /* 3/4 double */      {1, PS_SOLID, TRUE},
+  /* 1 1/2 double */    {2, PS_SOLID, TRUE},
+  /* 2 1/4 double */    {3, PS_SOLID, TRUE},
+  /* 3/4 gray */        {1, PS_DOT /* FIXME */, FALSE},
+  /* 1 1/2 dashed */    {2, PS_DASH, FALSE},
 };
 
 static const COLORREF pen_colors[16] = {
@@ -487,25 +489,20 @@ static const COLORREF pen_colors[16] = {
   /* Dark gray */       RGB(0x80, 0x80, 0x80),  /* Light gray */      RGB(0xc0, 0xc0, 0xc0),
 };
 
-static int ME_GetBorderPenWidth(ME_TextEditor* editor, int idx)
+static int ME_GetBorderPenWidth(ME_Context* c, int idx)
 {
-  int width;
+  int width = border_details[idx].width;
 
-  if (editor->nZoomNumerator == 0)
-  {
-      width = border_details[idx].width_num + border_details[idx].width_den / 2;
-      width /= border_details[idx].width_den;
-  }
-  else
-  {
-      width = border_details[idx].width_num * editor->nZoomNumerator;
-      width += border_details[idx].width_den * editor->nZoomNumerator / 2;
-      width /= border_details[idx].width_den * editor->nZoomDenominator;
-  }
+  if (c->dpi.cx != 96)
+    width = MulDiv(width, c->dpi.cx, 96);
+
+  if (c->editor->nZoomNumerator != 0)
+    width = MulDiv(width, c->editor->nZoomNumerator, c->editor->nZoomDenominator);
+
   return width;
 }
 
-int  ME_GetParaBorderWidth(ME_TextEditor* editor, int flags)
+int ME_GetParaBorderWidth(ME_Context* c, int flags)
 {
   int idx = (flags >> 8) & 0xF;
   int width;
@@ -515,32 +512,9 @@ int  ME_GetParaBorderWidth(ME_TextEditor* editor, int flags)
       FIXME("Unsupported border value %d\n", idx);
       return 0;
   }
-  width = ME_GetBorderPenWidth(editor, idx);
+  width = ME_GetBorderPenWidth(c, idx);
   if (border_details[idx].dble) width = width * 2 + 1;
   return width;
-}
-
-int  ME_GetParaLineSpace(ME_Context* c, ME_Paragraph* para)
-{
-  int   sp = 0, ls = 0;
-  if (!(para->pFmt->dwMask & PFM_LINESPACING)) return 0;
-
-  /* FIXME: how to compute simply the line space in ls ??? */
-  /* FIXME: does line spacing include the line itself ??? */
-  switch (para->pFmt->bLineSpacingRule)
-  {
-  case 0:       sp = ls; break;
-  case 1:       sp = (3 * ls) / 2; break;
-  case 2:       sp = 2 * ls; break;
-  case 3:       sp = ME_twips2pointsY(c, para->pFmt->dyLineSpacing); if (sp < ls) sp = ls; break;
-  case 4:       sp = ME_twips2pointsY(c, para->pFmt->dyLineSpacing); break;
-  case 5:       sp = para->pFmt->dyLineSpacing / 20; break;
-  default: FIXME("Unsupported spacing rule value %d\n", para->pFmt->bLineSpacingRule);
-  }
-  if (c->editor->nZoomNumerator == 0)
-    return sp;
-  else
-    return sp * c->editor->nZoomNumerator / c->editor->nZoomDenominator;
 }
 
 static void ME_DrawParaDecoration(ME_Context* c, ME_Paragraph* para, int y, RECT* bounds)
@@ -588,7 +562,7 @@ static void ME_DrawParaDecoration(ME_Context* c, ME_Paragraph* para, int y, RECT
      */
     if (para->pFmt->wBorders & 0x00B0)
       FIXME("Unsupported border flags %x\n", para->pFmt->wBorders);
-    border_width = ME_GetParaBorderWidth(c->editor, para->pFmt->wBorders);
+    border_width = ME_GetParaBorderWidth(c, para->pFmt->wBorders);
     if (para->pFmt->wBorders & 4)       top_border = border_width;
     if (para->pFmt->wBorders & 8)       bottom_border = border_width;
   }
@@ -630,7 +604,7 @@ static void ME_DrawParaDecoration(ME_Context* c, ME_Paragraph* para, int y, RECT
     rightEdge = c->pt.x + max(c->editor->sizeWindow.cx,
                               c->editor->nTotalWidth);
 
-    pen_width = ME_GetBorderPenWidth(c->editor, idx);
+    pen_width = ME_GetBorderPenWidth(c, idx);
     pen = CreatePen(border_details[idx].pen_style, pen_width, pencr);
     oldpen = SelectObject(c->hDC, pen);
     MoveToEx(c->hDC, 0, 0, &pt);
@@ -1036,17 +1010,21 @@ void ME_ScrollAbs(ME_TextEditor *editor, int x, int y)
   if (editor->horz_si.nPos != x) {
     x = min(x, editor->horz_si.nMax);
     x = max(x, editor->horz_si.nMin);
-    ITextHost_TxSetScrollPos(editor->texthost, SB_HORZ, x, TRUE);
     scrollX = editor->horz_si.nPos - x;
     editor->horz_si.nPos = x;
+    if (editor->horz_si.nMax > 0xFFFF) /* scale to 16-bit value */
+      x = MulDiv(x, 0xFFFF, editor->horz_si.nMax);
+    ITextHost_TxSetScrollPos(editor->texthost, SB_HORZ, x, TRUE);
   }
 
   if (editor->vert_si.nPos != y) {
     y = min(y, editor->vert_si.nMax - (int)editor->vert_si.nPage);
     y = max(y, editor->vert_si.nMin);
-    ITextHost_TxSetScrollPos(editor->texthost, SB_VERT, y, TRUE);
     scrollY = editor->vert_si.nPos - y;
     editor->vert_si.nPos = y;
+    if (editor->vert_si.nMax > 0xFFFF) /* scale to 16-bit value */
+      y = MulDiv(y, 0xFFFF, editor->vert_si.nMax);
+    ITextHost_TxSetScrollPos(editor->texthost, SB_VERT, y, TRUE);
   }
 
   if (abs(scrollX) > editor->sizeWindow.cx ||
@@ -1061,22 +1039,28 @@ void ME_ScrollAbs(ME_TextEditor *editor, int x, int y)
   if (editor->hWnd)
   {
     LONG winStyle = GetWindowLongW(editor->hWnd, GWL_STYLE);
-    bScrollBarIsVisible = (winStyle & WS_HSCROLL) != 0;
-    bScrollBarWillBeVisible = (editor->nTotalWidth > editor->sizeWindow.cx
-                               && (editor->styleFlags & WS_HSCROLL))
-                              || (editor->styleFlags & ES_DISABLENOSCROLL);
-    if (bScrollBarIsVisible != bScrollBarWillBeVisible)
-      ITextHost_TxShowScrollBar(editor->texthost, SB_HORZ,
-                                bScrollBarWillBeVisible);
+    if (editor->styleFlags & WS_HSCROLL)
+    {
+      bScrollBarIsVisible = (winStyle & WS_HSCROLL) != 0;
+      bScrollBarWillBeVisible = (editor->nTotalWidth > editor->sizeWindow.cx
+                                 && (editor->styleFlags & WS_HSCROLL))
+                                || (editor->styleFlags & ES_DISABLENOSCROLL);
+      if (bScrollBarIsVisible != bScrollBarWillBeVisible)
+        ITextHost_TxShowScrollBar(editor->texthost, SB_HORZ,
+                                  bScrollBarWillBeVisible);
+    }
 
-    bScrollBarIsVisible = (winStyle & WS_VSCROLL) != 0;
-    bScrollBarWillBeVisible = (editor->nTotalLength > editor->sizeWindow.cy
-                               && (editor->styleFlags & WS_VSCROLL)
-                               && (editor->styleFlags & ES_MULTILINE))
-                              || (editor->styleFlags & ES_DISABLENOSCROLL);
-    if (bScrollBarIsVisible != bScrollBarWillBeVisible)
-      ITextHost_TxShowScrollBar(editor->texthost, SB_VERT,
-                                bScrollBarWillBeVisible);
+    if (editor->styleFlags & WS_VSCROLL)
+    {
+      bScrollBarIsVisible = (winStyle & WS_VSCROLL) != 0;
+      bScrollBarWillBeVisible = (editor->nTotalLength > editor->sizeWindow.cy
+                                 && (editor->styleFlags & WS_VSCROLL)
+                                 && (editor->styleFlags & ES_MULTILINE))
+                                || (editor->styleFlags & ES_DISABLENOSCROLL);
+      if (bScrollBarIsVisible != bScrollBarWillBeVisible)
+        ITextHost_TxShowScrollBar(editor->texthost, SB_VERT,
+                                  bScrollBarWillBeVisible);
+    }
   }
   ME_UpdateScrollBar(editor);
 }
@@ -1136,6 +1120,7 @@ void ME_UpdateScrollBar(ME_TextEditor *editor)
 
   si.cbSize = sizeof(si);
   si.fMask = SIF_PAGE | SIF_RANGE | SIF_POS;
+  si.nMin = 0;
   if (editor->styleFlags & ES_DISABLENOSCROLL)
     si.fMask |= SIF_DISABLENOSCROLL;
 
@@ -1150,20 +1135,25 @@ void ME_UpdateScrollBar(ME_TextEditor *editor)
     return;
   }
 
-  si.nMin = 0;
   si.nMax = editor->nTotalWidth;
   si.nPos = editor->horz_si.nPos;
   si.nPage = editor->sizeWindow.cx;
 
-  if (si.nMin != editor->horz_si.nMin ||
-      si.nMax != editor->horz_si.nMax ||
+  if (si.nMax != editor->horz_si.nMax ||
       si.nPage != editor->horz_si.nPage)
   {
     TRACE("min=%d max=%d page=%d\n", si.nMin, si.nMax, si.nPage);
-    editor->horz_si.nMin = si.nMin;
     editor->horz_si.nMax = si.nMax;
     editor->horz_si.nPage = si.nPage;
-    if (bScrollBarWillBeVisible || bScrollBarWasVisible) {
+    if ((bScrollBarWillBeVisible || bScrollBarWasVisible) &&
+        editor->styleFlags & WS_HSCROLL)
+    {
+      if (si.nMax > 0xFFFF)
+      {
+        /* Native scales the scrollbar info to 16-bit external values. */
+        si.nPos = MulDiv(si.nPos, 0xFFFF, si.nMax);
+        si.nMax = 0xFFFF;
+      }
       if (editor->hWnd) {
         SetScrollInfo(editor->hWnd, SB_HORZ, &si, TRUE);
       } else {
@@ -1175,14 +1165,17 @@ void ME_UpdateScrollBar(ME_TextEditor *editor)
     }
   }
 
-  if (si.fMask & SIF_DISABLENOSCROLL) {
-    bScrollBarWillBeVisible = TRUE;
-  } else if (!(editor->styleFlags & WS_HSCROLL)) {
-    bScrollBarWillBeVisible = FALSE;
-  }
+  if (editor->styleFlags & WS_HSCROLL)
+  {
+    if (si.fMask & SIF_DISABLENOSCROLL) {
+      bScrollBarWillBeVisible = TRUE;
+    } else if (!(editor->styleFlags & WS_HSCROLL)) {
+      bScrollBarWillBeVisible = FALSE;
+    }
 
-  if (bScrollBarWasVisible != bScrollBarWillBeVisible)
-    ITextHost_TxShowScrollBar(editor->texthost, SB_HORZ, bScrollBarWillBeVisible);
+    if (bScrollBarWasVisible != bScrollBarWillBeVisible)
+      ITextHost_TxShowScrollBar(editor->texthost, SB_HORZ, bScrollBarWillBeVisible);
+  }
 
   /* Update vertical scrollbar */
   bScrollBarWasVisible = editor->vert_si.nMax > editor->vert_si.nPage;
@@ -1201,15 +1194,21 @@ void ME_UpdateScrollBar(ME_TextEditor *editor)
   si.nPos = editor->vert_si.nPos;
   si.nPage = editor->sizeWindow.cy;
 
-  if (si.nMin != editor->vert_si.nMin ||
-      si.nMax != editor->vert_si.nMax ||
+  if (si.nMax != editor->vert_si.nMax ||
       si.nPage != editor->vert_si.nPage)
   {
     TRACE("min=%d max=%d page=%d\n", si.nMin, si.nMax, si.nPage);
-    editor->vert_si.nMin = si.nMin;
     editor->vert_si.nMax = si.nMax;
     editor->vert_si.nPage = si.nPage;
-    if (bScrollBarWillBeVisible || bScrollBarWasVisible) {
+    if ((bScrollBarWillBeVisible || bScrollBarWasVisible) &&
+        editor->styleFlags & WS_VSCROLL)
+    {
+      if (si.nMax > 0xFFFF)
+      {
+        /* Native scales the scrollbar info to 16-bit external values. */
+        si.nPos = MulDiv(si.nPos, 0xFFFF, si.nMax);
+        si.nMax = 0xFFFF;
+      }
       if (editor->hWnd) {
         SetScrollInfo(editor->hWnd, SB_VERT, &si, TRUE);
       } else {
@@ -1221,15 +1220,18 @@ void ME_UpdateScrollBar(ME_TextEditor *editor)
     }
   }
 
-  if (si.fMask & SIF_DISABLENOSCROLL) {
-    bScrollBarWillBeVisible = TRUE;
-  } else if (!(editor->styleFlags & WS_VSCROLL)) {
-    bScrollBarWillBeVisible = FALSE;
-  }
+  if (editor->styleFlags & WS_VSCROLL)
+  {
+    if (si.fMask & SIF_DISABLENOSCROLL) {
+      bScrollBarWillBeVisible = TRUE;
+    } else if (!(editor->styleFlags & WS_VSCROLL)) {
+      bScrollBarWillBeVisible = FALSE;
+    }
 
-  if (bScrollBarWasVisible != bScrollBarWillBeVisible)
-    ITextHost_TxShowScrollBar(editor->texthost, SB_VERT,
-                              bScrollBarWillBeVisible);
+    if (bScrollBarWasVisible != bScrollBarWillBeVisible)
+      ITextHost_TxShowScrollBar(editor->texthost, SB_VERT,
+                                bScrollBarWillBeVisible);
+  }
 }
 
 void ME_EnsureVisible(ME_TextEditor *editor, ME_Cursor *pCursor)
@@ -1242,11 +1244,24 @@ void ME_EnsureVisible(ME_TextEditor *editor, ME_Cursor *pCursor)
   assert(pRow);
   assert(pPara);
 
-  x = pRun->pt.x + ME_PointFromChar(editor, pRun, pCursor->nOffset);
-  if (x > editor->horz_si.nPos + editor->sizeWindow.cx)
-    x = x + 1 - editor->sizeWindow.cx;
-  else if (x > editor->horz_si.nPos)
+  if (editor->styleFlags & ES_AUTOHSCROLL)
+  {
+    x = pRun->pt.x + ME_PointFromChar(editor, pRun, pCursor->nOffset);
+    if (x > editor->horz_si.nPos + editor->sizeWindow.cx)
+      x = x + 1 - editor->sizeWindow.cx;
+    else if (x > editor->horz_si.nPos)
+      x = editor->horz_si.nPos;
+
+    if (~editor->styleFlags & ES_AUTOVSCROLL)
+    {
+      ME_HScrollAbs(editor, x);
+      return;
+    }
+  } else {
+    if (~editor->styleFlags & ES_AUTOVSCROLL)
+      return;
     x = editor->horz_si.nPos;
+  }
 
   y = pPara->member.para.pt.y + pRow->member.row.pt.y;
   yheight = pRow->member.row.nHeight;
@@ -1267,7 +1282,7 @@ ME_InvalidateSelection(ME_TextEditor *editor)
   int nStart, nEnd;
   int len = ME_GetTextLength(editor);
 
-  ME_GetSelection(editor, &nStart, &nEnd);
+  ME_GetSelectionOfs(editor, &nStart, &nEnd);
   /* if both old and new selection are 0-char (= caret only), then
   there's no (inverted) area to be repainted, neither old nor new */
   if (nStart == nEnd && editor->nLastSelStart == editor->nLastSelEnd)
@@ -1300,7 +1315,7 @@ ME_InvalidateSelection(ME_TextEditor *editor)
 
   ME_InvalidateMarkedParagraphs(editor);
   /* remember the last invalidated position */
-  ME_GetSelection(editor, &editor->nLastSelStart, &editor->nLastSelEnd);
+  ME_GetSelectionOfs(editor, &editor->nLastSelStart, &editor->nLastSelEnd);
   ME_GetSelectionParas(editor, &editor->pLastSelStartPara, &editor->pLastSelEndPara);
   assert(editor->pLastSelStartPara->type == diParagraph);
   assert(editor->pLastSelEndPara->type == diParagraph);

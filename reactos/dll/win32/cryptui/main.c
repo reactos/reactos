@@ -104,6 +104,7 @@ static void add_cert_to_view(HWND lv, PCCERT_CONTEXT cert, DWORD *allocatedLen,
     WCHAR dateFmt[80]; /* sufficient for LOCALE_SSHORTDATE */
     WCHAR date[80];
     SYSTEMTIME sysTime;
+    LPWSTR none;
 
     item.mask = LVIF_IMAGE | LVIF_PARAM | LVIF_TEXT;
     item.iItem = SendMessageW(lv, LVM_GETITEMCOUNT, 0, 0);
@@ -155,8 +156,9 @@ static void add_cert_to_view(HWND lv, PCCERT_CONTEXT cert, DWORD *allocatedLen,
     item.iSubItem = 2;
     SendMessageW(lv, LVM_SETITEMTEXTW, item.iItem, (LPARAM)&item);
 
-    len = CertGetNameStringW(cert, CERT_NAME_FRIENDLY_DISPLAY_TYPE, 0, NULL,
-     NULL, 0);
+    if (!CertGetCertificateContextProperty(cert, CERT_FRIENDLY_NAME_PROP_ID,
+     NULL, &len))
+        len = LoadStringW(hInstance, IDS_FRIENDLY_NAME_NONE, (LPWSTR)&none, 0);
     if (len > *allocatedLen)
     {
         HeapFree(GetProcessHeap(), 0, *str);
@@ -166,9 +168,11 @@ static void add_cert_to_view(HWND lv, PCCERT_CONTEXT cert, DWORD *allocatedLen,
     }
     if (*str)
     {
-        CertGetNameStringW(cert, CERT_NAME_FRIENDLY_DISPLAY_TYPE, 0, NULL,
-         *str, len);
-        item.pszText = *str;
+        if (!CertGetCertificateContextProperty(cert, CERT_FRIENDLY_NAME_PROP_ID,
+         *str, &len))
+            item.pszText = none;
+        else
+            item.pszText = *str;
         item.iSubItem = 3;
         SendMessageW(lv, LVM_SETITEMTEXTW, item.iItem, (LPARAM)&item);
     }
@@ -348,6 +352,8 @@ static CERT_ENHKEY_USAGE *create_advanced_filter(void)
     return advancedUsage;
 }
 
+static int CALLBACK cert_mgr_sort_by_subject(LPARAM lp1, LPARAM lp2, LPARAM lp);
+
 static void show_store_certs(HWND hwnd, HCERTSTORE store)
 {
     HWND lv = GetDlgItem(hwnd, IDC_MGR_CERTS);
@@ -443,6 +449,8 @@ static void show_store_certs(HWND hwnd, HCERTSTORE store)
         HeapFree(GetProcessHeap(), 0, advanced->rgpszUsageIdentifier);
         HeapFree(GetProcessHeap(), 0, advanced);
     }
+    SendMessageW(lv, LVM_SORTITEMSEX, (WPARAM)lv,
+     (LPARAM)cert_mgr_sort_by_subject);
 }
 
 static const WCHAR my[] = { 'M','y',0 };
@@ -1062,6 +1070,48 @@ static void cert_mgr_do_export(HWND hwnd)
     }
 }
 
+static int cert_mgr_sort_by_text(HWND lv, int col, int index1, int index2)
+{
+    LVITEMW item;
+    WCHAR buf1[MAX_STRING_LEN];
+    WCHAR buf2[MAX_STRING_LEN];
+
+    item.cchTextMax = sizeof(buf1) / sizeof(buf1[0]);
+    item.mask = LVIF_TEXT;
+    item.pszText = buf1;
+    item.iItem = index1;
+    item.iSubItem = col;
+    SendMessageW(lv, LVM_GETITEMW, 0, (LPARAM)&item);
+    item.pszText = buf2;
+    item.iItem = index2;
+    SendMessageW(lv, LVM_GETITEMW, 0, (LPARAM)&item);
+    return strcmpW(buf1, buf2);
+}
+
+static int CALLBACK cert_mgr_sort_by_subject(LPARAM lp1, LPARAM lp2, LPARAM lp)
+{
+    return cert_mgr_sort_by_text((HWND)lp, 0, lp1, lp2);
+}
+
+static int CALLBACK cert_mgr_sort_by_issuer(LPARAM lp1, LPARAM lp2, LPARAM lp)
+{
+    return cert_mgr_sort_by_text((HWND)lp, 1, lp1, lp2);
+}
+
+static int CALLBACK cert_mgr_sort_by_date(LPARAM lp1, LPARAM lp2, LPARAM lp)
+{
+    PCCERT_CONTEXT cert1 = (PCCERT_CONTEXT)lp1;
+    PCCERT_CONTEXT cert2 = (PCCERT_CONTEXT)lp2;
+    return CompareFileTime(&cert1->pCertInfo->NotAfter,
+     &cert2->pCertInfo->NotAfter);
+}
+
+static int CALLBACK cert_mgr_sort_by_friendly_name(LPARAM lp1, LPARAM lp2,
+ LPARAM lp)
+{
+    return cert_mgr_sort_by_text((HWND)lp, 3, lp1, lp2);
+}
+
 static LRESULT CALLBACK cert_mgr_dlg_proc(HWND hwnd, UINT msg, WPARAM wp,
  LPARAM lp)
 {
@@ -1139,6 +1189,35 @@ static LRESULT CALLBACK cert_mgr_dlg_proc(HWND hwnd, UINT msg, WPARAM wp,
 
             if (lvk->wVKey == VK_DELETE)
                 cert_mgr_do_remove(hwnd);
+            break;
+        }
+        case LVN_COLUMNCLICK:
+        {
+            NMLISTVIEW *nmlv = (NMLISTVIEW *)lp;
+            HWND lv = GetDlgItem(hwnd, IDC_MGR_CERTS);
+
+            /* FIXME: doesn't support swapping sort order between ascending
+             * and descending.
+             */
+            switch (nmlv->iSubItem)
+            {
+            case 0:
+                SendMessageW(lv, LVM_SORTITEMSEX, (WPARAM)lv,
+                 (LPARAM)cert_mgr_sort_by_subject);
+                break;
+            case 1:
+                SendMessageW(lv, LVM_SORTITEMSEX, (WPARAM)lv,
+                (LPARAM)cert_mgr_sort_by_issuer);
+                break;
+            case 2:
+                SendMessageW(lv, LVM_SORTITEMS, 0,
+                 (LPARAM)cert_mgr_sort_by_date);
+                break;
+            case 3:
+                SendMessageW(lv, LVM_SORTITEMSEX, (WPARAM)lv,
+                 (LPARAM)cert_mgr_sort_by_friendly_name);
+                break;
+            }
             break;
         }
         }
@@ -1385,7 +1464,7 @@ static void enumerate_stores(HWND hwnd, CRYPTUI_ENUM_DATA *pEnumData)
 static void free_store_info(HWND tree)
 {
     HTREEITEM next = (HTREEITEM)SendMessageW(tree, TVM_GETNEXTITEM, TVGN_CHILD,
-     (LPARAM)NULL);
+     0);
 
     while (next)
     {
@@ -1473,7 +1552,7 @@ static LRESULT CALLBACK select_store_dlg_proc(HWND hwnd, UINT msg, WPARAM wp,
         {
             HWND tree = GetDlgItem(hwnd, IDC_STORE_LIST);
             HTREEITEM selection = (HTREEITEM)SendMessageW(tree,
-             TVM_GETNEXTITEM, TVGN_CARET, (LPARAM)NULL);
+             TVM_GETNEXTITEM, TVGN_CARET, 0);
 
             selectInfo = (struct SelectStoreInfo *)GetWindowLongPtrW(hwnd,
              DWLP_USER);
@@ -4034,8 +4113,7 @@ static void show_dialog_for_selected_cert(HWND hwnd)
 
     memset(&item, 0, sizeof(item));
     item.mask = TVIF_HANDLE | TVIF_PARAM;
-    item.hItem = (HTREEITEM)SendMessageW(tree, TVM_GETNEXTITEM, TVGN_CARET,
-     (LPARAM)NULL);
+    item.hItem = (HTREEITEM)SendMessageW(tree, TVM_GETNEXTITEM, TVGN_CARET, 0);
     SendMessageW(tree, TVM_GETITEMW, 0, (LPARAM)&item);
     data = get_hierarchy_data_from_tree_item(tree, item.hItem);
     selection = lparam_to_index(data, item.lParam);
@@ -4137,7 +4215,7 @@ static LRESULT CALLBACK hierarchy_dlg_proc(HWND hwnd, UINT msg, WPARAM wp,
         memset(&item, 0, sizeof(item));
         item.mask = TVIF_HANDLE | TVIF_PARAM;
         item.hItem = (HTREEITEM)SendMessageW(tree, TVM_GETNEXTITEM, TVGN_ROOT,
-         (LPARAM)NULL);
+         0);
         data = get_hierarchy_data_from_tree_item(tree, item.hItem);
         /* Delete the contents of the tree */
         SendMessageW(tree, TVM_DELETEITEM, 0, (LPARAM)TVI_ROOT);

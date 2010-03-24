@@ -44,6 +44,7 @@ STRINGTABLE DISCARDABLE
     IDS_NOT_BOOL            "Tikėtasi loginio objekto"
     IDS_JSCRIPT_EXPECTED    "Tikėtasi JScript objekto"
     IDS_REGEXP_SYNTAX_ERROR "Sintaksės klaida reguliariajame reiškinyje"
+    IDS_URI_INVALID_CHAR    "Koduotiname URI yra netinkamų simbolių"
     IDS_INVALID_LENGTH      "Masyvo dydis turi būti teigiamas sveikasis skaičius"
     IDS_ARRAY_EXPECTED      "Tikėtasi masyvo objekto"
 }

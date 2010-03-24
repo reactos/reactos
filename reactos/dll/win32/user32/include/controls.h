@@ -1,5 +1,4 @@
-#ifndef _ROS_CONTROLS_H
-#define _ROS_CONTROLS_H
+#pragma once
 
 /* Missing from Winuser.h */
 #define ES_COMBO        0x00000200   /* Undocumented. Parent is a combobox */
@@ -74,6 +73,7 @@
 #define CBF_SELCHANGE           0x0400
 #define CBF_NOEDITNOTIFY        0x1000
 #define CBF_NOLBSELECT          0x2000  /* do not change current selection */
+#define CBF_BEENFOCUSED         0x4000  /* has it ever had focus           */
 #define CBF_EUI                 0x8000
 
 /* combo state struct */
@@ -129,5 +129,3 @@ LRESULT WINAPI MDIClientWndProc_common( HWND hwnd, UINT message, WPARAM wParam, 
 LRESULT WINAPI StaticWndProcA( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 LRESULT WINAPI StaticWndProcW( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 LRESULT WINAPI StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL unicode);
-
-#endif /* _ROS_CONTROLS_H */

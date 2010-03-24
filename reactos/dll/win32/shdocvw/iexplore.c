@@ -163,7 +163,7 @@ HRESULT InternetExplorer_Create(IUnknown *pOuter, REFIID riid, void **ppv)
 
     TRACE("(%p %s %p)\n", pOuter, debugstr_guid(riid), ppv);
 
-    ret = heap_alloc(sizeof(InternetExplorer));
+    ret = heap_alloc_zero(sizeof(InternetExplorer));
     ret->ref = 0;
 
     ret->doc_host.disp = (IDispatch*)WEBBROWSER2(ret);

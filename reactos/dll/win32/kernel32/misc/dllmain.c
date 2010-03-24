@@ -41,7 +41,10 @@ RTL_CRITICAL_SECTION ConsoleLock;
 
 extern BOOL WINAPI DefaultConsoleCtrlHandler(DWORD Event);
 extern __declspec(noreturn) VOID CALLBACK ConsoleControlDispatcher(DWORD CodeAndFlag);
-
+extern PHANDLER_ROUTINE InitialHandler[1];
+extern PHANDLER_ROUTINE* CtrlHandlers;
+extern ULONG NrCtrlHandlers;
+extern ULONG NrAllocatedHandlers;
 extern BOOL FASTCALL NlsInit(VOID);
 extern VOID FASTCALL NlsUninit(VOID);
 BOOLEAN InWindows = FALSE;
@@ -125,6 +128,7 @@ BasepInitConsole(VOID)
     CSR_API_MESSAGE Request;
     ULONG CsrRequest;
     NTSTATUS Status;
+    BOOLEAN NotConsole = FALSE;
     PRTL_USER_PROCESS_PARAMETERS Parameters = NtCurrentPeb()->ProcessParameters;
 
     WCHAR lpTest[MAX_PATH];
@@ -140,46 +144,51 @@ BasepInitConsole(VOID)
     {
         DPRINT("Image is not a console application\n");
         Parameters->ConsoleHandle = NULL;
-        return TRUE;
-    }
-
-    /* Assume one is needed */
-    Request.Data.AllocConsoleRequest.ConsoleNeeded = TRUE;
-
-    /* Handle the special flags given to us by BasepInitializeEnvironment */
-    if (Parameters->ConsoleHandle == HANDLE_DETACHED_PROCESS)
-    {
-        /* No console to create */
-        DPRINT("No console to create\n");
-        Parameters->ConsoleHandle = NULL;
         Request.Data.AllocConsoleRequest.ConsoleNeeded = FALSE;
-    }
-    else if (Parameters->ConsoleHandle == HANDLE_CREATE_NEW_CONSOLE)
-    {
-        /* We'll get the real one soon */
-        DPRINT("Creating new console\n");
-        Parameters->ConsoleHandle = NULL;
-    }
-    else if (Parameters->ConsoleHandle == HANDLE_CREATE_NO_WINDOW)
-    {
-        /* We'll get the real one soon */
-        DPRINT1("NOT SUPPORTED: HANDLE_CREATE_NO_WINDOW\n");
-        Parameters->ConsoleHandle = NULL;
     }
     else
     {
-        if (Parameters->ConsoleHandle == INVALID_HANDLE_VALUE)
+        /* Assume one is needed */
+        Request.Data.AllocConsoleRequest.ConsoleNeeded = TRUE;
+
+        /* Handle the special flags given to us by BasepInitializeEnvironment */
+        if (Parameters->ConsoleHandle == HANDLE_DETACHED_PROCESS)
         {
-            Parameters->ConsoleHandle = 0;
+            /* No console to create */
+            DPRINT("No console to create\n");
+            Parameters->ConsoleHandle = NULL;
+            Request.Data.AllocConsoleRequest.ConsoleNeeded = FALSE;
         }
-        DPRINT("Using existing console: %x\n", Parameters->ConsoleHandle);
+        else if (Parameters->ConsoleHandle == HANDLE_CREATE_NEW_CONSOLE)
+        {
+            /* We'll get the real one soon */
+            DPRINT("Creating new console\n");
+            Parameters->ConsoleHandle = NULL;
+        }
+        else if (Parameters->ConsoleHandle == HANDLE_CREATE_NO_WINDOW)
+        {
+            /* We'll get the real one soon */
+            DPRINT1("NOT SUPPORTED: HANDLE_CREATE_NO_WINDOW\n");
+            Parameters->ConsoleHandle = NULL;
+        }
+        else
+        {
+            if (Parameters->ConsoleHandle == INVALID_HANDLE_VALUE)
+            {
+                Parameters->ConsoleHandle = 0;
+            }
+            DPRINT("Using existing console: %x\n", Parameters->ConsoleHandle);
+        }
     }
 
     /* Initialize Console Ctrl Handler */
     ConsoleInitialized = TRUE;
     RtlInitializeCriticalSection(&ConsoleLock);
-    SetConsoleCtrlHandler(DefaultConsoleCtrlHandler, TRUE);
-
+    NrAllocatedHandlers = 1;
+    NrCtrlHandlers = 1;
+    CtrlHandlers = InitialHandler;
+    CtrlHandlers[0] = DefaultConsoleCtrlHandler;
+    
     /* Now use the proper console handle */
     Request.Data.AllocConsoleRequest.Console = Parameters->ConsoleHandle;
 
@@ -188,9 +197,6 @@ BasepInitConsole(VOID)
      * but we don't have one yet, so we will instead simply send a create
      * console message to the Base Server. When we finally have a Console
      * Server, this code should be changed to send connection data instead.
-     *
-     * Also note that this connection should be made for any console app, even
-     * in the case above where -we- return.
      */
     CsrRequest = MAKE_CSR_API(ALLOC_CONSOLE, CSR_CONSOLE);
     Request.Data.AllocConsoleRequest.CtrlDispatcher = ConsoleControlDispatcher;
@@ -204,6 +210,8 @@ BasepInitConsole(VOID)
         /* We're lying here, so at least the process can load... */
         return TRUE;
     }
+    
+    if (NotConsole) return TRUE;
 
     /* We got the handles, let's set them */
     if ((Parameters->ConsoleHandle = Request.Data.AllocConsoleRequest.Console))

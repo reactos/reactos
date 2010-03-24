@@ -14,6 +14,7 @@
 @ stdcall WTSQuerySessionInformationW(long long long ptr ptr)
 @ stub WTSQueryUserConfigA
 @ stub WTSQueryUserConfigW
+@ stdcall WTSQueryUserToken(long ptr)
 @ stdcall WTSRegisterSessionNotification(long long)
 @ stub WTSSendMessageA
 @ stub WTSSendMessageW

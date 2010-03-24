@@ -471,6 +471,11 @@ static HRESULT parse_display_name(IAssemblyNameImpl *name, LPCWSTR szAssemblyNam
 
 done:
     HeapFree(GetProcessHeap(), 0, save);
+    if (FAILED(hr))
+    {
+        HeapFree(GetProcessHeap(), 0, name->displayname);
+        HeapFree(GetProcessHeap(), 0, name->name);
+    }
     return hr;
 }
 

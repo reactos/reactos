@@ -670,7 +670,7 @@ CompositeMonikerImpl_IsRunning(IMoniker* iface, IBindCtx* pbc,
         else{
 
             if (pbc==NULL)
-                return E_POINTER;
+                return E_INVALIDARG;
 
             /* If pmkToLeft and pmkNewlyRunning are both NULL, this method checks the ROT to see whether */
             /* the moniker is running. If so, the method returns S_OK; otherwise, it recursively calls   */

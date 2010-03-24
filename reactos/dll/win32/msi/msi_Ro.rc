@@ -35,4 +35,3 @@ STRINGTABLE DISCARDABLE
         14 "caracteristică de la:"
         15 "selectați fișierul care conține %s"
 }
-#pragma code_page(default)

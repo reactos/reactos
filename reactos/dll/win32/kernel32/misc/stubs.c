@@ -1158,14 +1158,6 @@ OpenDataFile(HANDLE hFile, DWORD dwUnused)
 
 BOOL
 WINAPI
-OpenProfileUserMapping(VOID)
-{
-    STUB;
-    return FALSE;
-}
-
-BOOL
-WINAPI
 PrivMoveFileIdentityW(DWORD Unknown1, DWORD Unknown2, DWORD Unknown3)
 {
     STUB;

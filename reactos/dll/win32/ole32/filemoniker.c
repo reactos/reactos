@@ -198,9 +198,9 @@ FileMonikerImpl_Load(IMoniker* iface, IStream* pStm)
 
     TRACE("(%p,%p)\n",iface,pStm);
 
-    /* first WORD must be 0 */
+    /* first WORD */
     res=IStream_Read(pStm,&wbuffer,sizeof(WORD),&bread);
-    if (bread!=sizeof(WORD) || wbuffer!=0)
+    if (bread!=sizeof(WORD))
     {
         WARN("Couldn't read 0 word\n");
         goto fail;
@@ -229,18 +229,26 @@ FileMonikerImpl_Load(IMoniker* iface, IStream* pStm)
         goto fail;
     }
 
-    /* read the first constant */
-    IStream_Read(pStm,&dwbuffer,sizeof(DWORD),&bread);
-    if (bread != sizeof(DWORD) || dwbuffer != 0xDEADFFFF)
+    /* read the unknown value */
+    IStream_Read(pStm,&wbuffer,sizeof(WORD),&bread);
+    if (bread != sizeof(WORD))
     {
-        WARN("Couldn't read 0xDEADFFFF constant\n");
+        WARN("Couldn't read unknown value\n");
+        goto fail;
+    }
+
+    /* read the DEAD constant */
+    IStream_Read(pStm,&wbuffer,sizeof(WORD),&bread);
+    if (bread != sizeof(WORD))
+    {
+        WARN("Couldn't read DEAD constant\n");
         goto fail;
     }
 
     for(i=0;i<5;i++)
     {
         res=IStream_Read(pStm,&dwbuffer,sizeof(DWORD),&bread);
-        if (bread!=sizeof(DWORD) || dwbuffer!=0)
+        if (bread!=sizeof(DWORD))
         {
             WARN("Couldn't read 0 padding\n");
             goto fail;
@@ -320,18 +328,20 @@ FileMonikerImpl_Load(IMoniker* iface, IStream* pStm)
  * of Windows have minor variations.
  *
  * Data which must be written on stream is:
- * 1) WORD constant:zero
+ * 1) WORD constant: zero (not validated by Windows)
  * 2) length of the path string ("\0" included)
  * 3) path string type A
- * 4) DWORD constant : 0xDEADFFFF
- * 5) five DWORD constant: zero
- * 6) If we're only writing the multibyte version, 
+ * 4) Unknown WORD value: Frequently 0xFFFF, but not always. If set very large,
+ *     Windows returns E_OUTOFMEMORY
+ * 5) WORD Constant: 0xDEAD (not validated by Windows)
+ * 6) five DWORD constant: zero (not validated by Windows)
+ * 7) If we're only writing the multibyte version,
  *     write a zero DWORD and finish.
  *
- * 7) DWORD: double-length of the path string type W ("\0" not
+ * 8) DWORD: double-length of the path string type W ("\0" not
  *    included)
- * 8) WORD constant: 0x3
- * 9) filePath unicode string.
+ * 9) WORD constant: 0x3
+ * 10) filePath unicode string.
  *
  */
 static HRESULT WINAPI
@@ -344,7 +354,8 @@ FileMonikerImpl_Save(IMoniker* iface, IStream* pStm, BOOL fClearDirty)
     CHAR*    filePathA;
     DWORD bytesA, bytesW, len;
 
-    static const DWORD DEADFFFF = 0xDEADFFFF;  /* Constants */
+    static const WORD FFFF = 0xFFFF; /* Constants */
+    static const WORD DEAD = 0xDEAD;
     static const DWORD ZERO     = 0;
     static const WORD  THREE    = 0x3;
 
@@ -374,8 +385,12 @@ FileMonikerImpl_Save(IMoniker* iface, IStream* pStm, BOOL fClearDirty)
     HeapFree(GetProcessHeap(),0,filePathA);
     if (FAILED(res)) return res;
 
-    /* write a DWORD 0xDEADFFFF */
-    res=IStream_Write(pStm,&DEADFFFF,sizeof(DWORD),NULL);
+    /* write a WORD 0xFFFF */
+    res=IStream_Write(pStm,&FFFF,sizeof(WORD),NULL);
+    if (FAILED(res)) return res;
+
+    /* write a WORD 0xDEAD */
+    res=IStream_Write(pStm,&DEAD,sizeof(WORD),NULL);
     if (FAILED(res)) return res;
 
     /* write 5 zero DWORDs */
@@ -945,20 +960,32 @@ FileMonikerImpl_CommonPrefixWith(IMoniker* iface,IMoniker* pmkOther,IMoniker** p
     if(mkSys==MKSYS_FILEMONIKER){
         HRESULT ret;
 
-        CreateBindCtx(0,&pbind);
+        ret = CreateBindCtx(0,&pbind);
+        if (FAILED(ret))
+            return ret;
 
         /* create a string based on common part of the two paths */
 
-        IMoniker_GetDisplayName(iface,pbind,NULL,&pathThis);
-        IMoniker_GetDisplayName(pmkOther,pbind,NULL,&pathOther);
+        ret = IMoniker_GetDisplayName(iface,pbind,NULL,&pathThis);
+        if (FAILED(ret))
+            return ret;
+        ret = IMoniker_GetDisplayName(pmkOther,pbind,NULL,&pathOther);
+        if (FAILED(ret))
+            return ret;
 
         nb1=FileMonikerImpl_DecomposePath(pathThis,&stringTable1);
+        if (FAILED(nb1))
+            return nb1;
         nb2=FileMonikerImpl_DecomposePath(pathOther,&stringTable2);
+        if (FAILED(nb2))
+            return nb2;
 
         if (nb1==0 || nb2==0)
             return MK_E_NOPREFIX;
 
         commonPath=HeapAlloc(GetProcessHeap(),0,sizeof(WCHAR)*(min(lstrlenW(pathThis),lstrlenW(pathOther))+1));
+        if (!commonPath)
+            return E_OUTOFMEMORY;
 
         *commonPath=0;
 
@@ -1021,7 +1048,7 @@ int FileMonikerImpl_DecomposePath(LPCOLESTR str, LPOLESTR** stringTable)
 
     TRACE("%s, %p\n", debugstr_w(str), *stringTable);
 
-    strgtable = CoTaskMemAlloc(len*sizeof(WCHAR));
+    strgtable = CoTaskMemAlloc((len + 1)*sizeof(*strgtable));
 
     if (strgtable==NULL)
 	return E_OUTOFMEMORY;

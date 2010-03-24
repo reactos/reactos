@@ -244,7 +244,7 @@ HRESULT WINAPI AVIFileOpenW(PAVIFILE *ppfile, LPCWSTR szFile, UINT uMode,
   /* if no handler then try guessing it by extension */
   if (lpHandler == NULL) {
     if (! AVIFILE_GetFileHandlerByExtension(szFile, &clsidHandler))
-      return AVIERR_UNSUPPORTED;
+      clsidHandler = CLSID_AVIFile;
   } else
     clsidHandler = *lpHandler;
 
@@ -1030,14 +1030,14 @@ HRESULT WINAPI AVIBuildFilterW(LPWSTR szFilter, LONG cbFilter, BOOL fSaving)
    * First filter is named "All multimedia files" and its filter is a
    * collection of all possible extensions except "*.*".
    */
-  if (RegOpenKeyW(HKEY_CLASSES_ROOT, szAVIFileExtensions, &hKey) != S_OK) {
+  if (RegOpenKeyW(HKEY_CLASSES_ROOT, szAVIFileExtensions, &hKey) != ERROR_SUCCESS) {
     HeapFree(GetProcessHeap(), 0, lp);
     return AVIERR_ERROR;
   }
-  for (n = 0;RegEnumKeyW(hKey, n, szFileExt, sizeof(szFileExt)/sizeof(szFileExt[0])) == S_OK;n++) {
+  for (n = 0;RegEnumKeyW(hKey, n, szFileExt, sizeof(szFileExt)/sizeof(szFileExt[0])) == ERROR_SUCCESS;n++) {
     /* get CLSID to extension */
     size = sizeof(szValue);
-    if (RegQueryValueW(hKey, szFileExt, szValue, &size) != S_OK)
+    if (RegQueryValueW(hKey, szFileExt, szValue, &size) != ERROR_SUCCESS)
       break;
 
     /* search if the CLSID is already known */
@@ -1078,7 +1078,7 @@ HRESULT WINAPI AVIBuildFilterW(LPWSTR szFilter, LONG cbFilter, BOOL fSaving)
   RegCloseKey(hKey);
 
   /* 2. get descriptions for the CLSIDs and fill out szFilter */
-  if (RegOpenKeyW(HKEY_CLASSES_ROOT, szClsid, &hKey) != S_OK) {
+  if (RegOpenKeyW(HKEY_CLASSES_ROOT, szClsid, &hKey) != ERROR_SUCCESS) {
     HeapFree(GetProcessHeap(), 0, lp);
     return AVIERR_ERROR;
   }
@@ -1086,7 +1086,7 @@ HRESULT WINAPI AVIBuildFilterW(LPWSTR szFilter, LONG cbFilter, BOOL fSaving)
     /* first the description */
     if (n != 0) {
       size = sizeof(szValue);
-      if (RegQueryValueW(hKey, lp[n].szClsid, szValue, &size) == S_OK) {
+      if (RegQueryValueW(hKey, lp[n].szClsid, szValue, &size) == ERROR_SUCCESS) {
 	size = lstrlenW(szValue);
 	lstrcpynW(szFilter, szValue, cbFilter);
       }
@@ -1225,13 +1225,14 @@ static BOOL AVISaveOptionsFmtChoose(HWND hWnd)
     acmMetrics(NULL, ACM_METRIC_MAX_SIZE_FORMAT, &size);
     if ((pOptions->cbFormat == 0 || pOptions->lpFormat == NULL) && size != 0) {
       pOptions->lpFormat = HeapAlloc(GetProcessHeap(), 0, size);
+      if (!pOptions->lpFormat) return FALSE;
       pOptions->cbFormat = size;
     } else if (pOptions->cbFormat < (DWORD)size) {
-      pOptions->lpFormat = HeapReAlloc(GetProcessHeap(), 0, pOptions->lpFormat, size);
+      void *new_buffer = HeapReAlloc(GetProcessHeap(), 0, pOptions->lpFormat, size);
+      if (!new_buffer) return FALSE;
+      pOptions->lpFormat = new_buffer;
       pOptions->cbFormat = size;
     }
-    if (pOptions->lpFormat == NULL)
-      return FALSE;
     afmtc.pwfx  = pOptions->lpFormat;
     afmtc.cbwfx = pOptions->cbFormat;
 

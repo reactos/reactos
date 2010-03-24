@@ -55,7 +55,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
  */
 HRESULT WINAPI DllCanUnloadNow( void )
 {
-    FIXME("\n");
     return S_OK;
 }
 
@@ -77,14 +76,12 @@ HRESULT WINAPI HlinkCreateFromMoniker( IMoniker *pimkTrgt, LPCWSTR pwzLocation,
     if (FAILED(r))
         return r;
 
-    if (pwzLocation)
-        IHlink_SetStringReference(hl, HLINKSETF_LOCATION, NULL, pwzLocation);
+    IHlink_SetMonikerReference(hl, HLINKSETF_LOCATION | HLINKSETF_TARGET, pimkTrgt, pwzLocation);
+
     if (pwzFriendlyName)
         IHlink_SetFriendlyName(hl, pwzFriendlyName);
     if (pihlsite)
         IHlink_SetHlinkSite(hl, pihlsite, dwSiteData);
-    if (pimkTrgt)
-        IHlink_SetMonikerReference(hl, 0, pimkTrgt, pwzLocation);
 
     *ppvObj = hl;
 
@@ -102,6 +99,8 @@ HRESULT WINAPI HlinkCreateFromString( LPCWSTR pwzTarget, LPCWSTR pwzLocation,
 {
     IHlink *hl = NULL;
     HRESULT r = S_OK;
+    WCHAR *hash, *tgt;
+    const WCHAR *loc;
 
     TRACE("%s %s %s %p %i %p %s %p\n", debugstr_w(pwzTarget),
             debugstr_w(pwzLocation), debugstr_w(pwzFriendlyName), pihlsite,
@@ -111,43 +110,48 @@ HRESULT WINAPI HlinkCreateFromString( LPCWSTR pwzTarget, LPCWSTR pwzLocation,
     if (FAILED(r))
         return r;
 
-    if (pwzLocation)
-        IHlink_SetStringReference(hl, HLINKSETF_LOCATION, NULL, pwzLocation);
-
     if (pwzTarget)
     {
-        IMoniker *pTgtMk = NULL;
-        IBindCtx *pbc = NULL;
-        ULONG eaten;
-
-        CreateBindCtx(0, &pbc);
-        r = MkParseDisplayName(pbc, pwzTarget, &eaten, &pTgtMk);
-        IBindCtx_Release(pbc);
-
-        if (FAILED(r))
+        hash = strchrW(pwzTarget, '#');
+        if (hash)
         {
-            LPCWSTR p = strchrW(pwzTarget, ':');
-            if (p && (p - pwzTarget > 1))
-                r = CreateURLMoniker(NULL, pwzTarget, &pTgtMk);
+            if (hash == pwzTarget)
+                tgt = NULL;
             else
-                r = CreateFileMoniker(pwzTarget,&pTgtMk);
+            {
+                int tgt_len = hash - pwzTarget;
+                tgt = heap_alloc((tgt_len + 1) * sizeof(WCHAR));
+                if (!tgt)
+                    return E_OUTOFMEMORY;
+                memcpy(tgt, pwzTarget, tgt_len * sizeof(WCHAR));
+                tgt[tgt_len] = 0;
+            }
+            if (!pwzLocation)
+                loc = hash + 1;
+            else
+                loc = pwzLocation;
         }
-
-        if (FAILED(r))
+        else
         {
-            ERR("couldn't create moniker for %s, failed with error 0x%08x\n",
-                debugstr_w(pwzTarget), r);
-            return r;
+            tgt = hlink_strdupW(pwzTarget);
+            if (!tgt)
+                return E_OUTOFMEMORY;
+            loc = pwzLocation;
         }
-
-        IHlink_SetMonikerReference(hl, 0, pTgtMk, pwzLocation);
-        IMoniker_Release(pTgtMk);
-
-        IHlink_SetStringReference(hl, HLINKSETF_TARGET, pwzTarget, NULL);
     }
+    else
+    {
+        tgt = NULL;
+        loc = pwzLocation;
+    }
+
+    IHlink_SetStringReference(hl, HLINKSETF_TARGET | HLINKSETF_LOCATION, tgt, loc);
+
+    heap_free(tgt);
 
     if (pwzFriendlyName)
         IHlink_SetFriendlyName(hl, pwzFriendlyName);
+
     if (pihlsite)
         IHlink_SetHlinkSite(hl, pihlsite, dwSiteData);
 
@@ -159,7 +163,7 @@ HRESULT WINAPI HlinkCreateFromString( LPCWSTR pwzTarget, LPCWSTR pwzLocation,
 
 
 /***********************************************************************
- *             HlinkNavigate (HLINK.@)
+ *             HlinkCreateBrowseContext (HLINK.@)
  */
 HRESULT WINAPI HlinkCreateBrowseContext( IUnknown* piunkOuter, REFIID riid, void** ppvObj)
 {

@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "avifile_private.h"
+
 /* UTF-8 */
 #pragma code_page(65001)
 
@@ -51,5 +53,3 @@ STRINGTABLE DISCARDABLE
   IDS_AVIFILETYPE	"Wine AVI-default-filehandler"
   IDS_UNCOMPRESSED      "未圧縮"
 }
-
-#pragma code_page(default)

@@ -193,7 +193,7 @@
 193 stdcall -noname SHGetCurColorRes()
 194 stdcall -noname SHWaitForSendMessageThread(ptr long)
 195 stdcall -noname SHIsExpandableFolder(ptr ptr)
-196 stdcall -noname DnsRecordSetCompare(ptr ptr ptr ptr) dnsapi.DnsRecordSetCompare
+196 stdcall -noname SHVerbExistsNA(str ptr ptr long)
 197 stdcall -noname SHFillRectClr(long ptr long)
 198 stdcall -noname SHSearchMapInt(ptr ptr long long)
 199 stdcall -noname IUnknown_Set(ptr ptr)
@@ -460,8 +460,8 @@
 460 stdcall -noname SHExpandEnvironmentStringsW(wstr ptr long) kernel32.ExpandEnvironmentStringsW
 461 stdcall -noname SHGetAppCompatFlags(long)
 462 stdcall -noname UrlFixupW(wstr wstr long)
-463 stub -noname SHExpandEnvironmentStringsForUserA
-464 stub -noname SHExpandEnvironmentStringsForUserW
+463 stdcall -noname SHExpandEnvironmentStringsForUserA(ptr str ptr long) userenv.ExpandEnvironmentStringsForUserA
+464 stdcall -noname SHExpandEnvironmentStringsForUserW(ptr wstr ptr long) userenv.ExpandEnvironmentStringsForUserW
 465 stub -noname PathUnExpandEnvStringsForUserA
 466 stub -noname PathUnExpandEnvStringsForUserW
 467 stub -noname SHRunIndirectRegClientCommand
@@ -473,7 +473,7 @@
 473 stub -noname SHGetIniStringUTF7W
 474 stub -noname SHSetIniStringUTF7W
 475 stdcall -noname GetShellSecurityDescriptor(ptr long)
-476 stub -noname SHGetObjectCompatFlags
+476 stdcall -noname SHGetObjectCompatFlags(ptr ptr)
 477 stub -noname SHCreatePropertyBagOnMemory
 478 stdcall -noname IUnknown_TranslateAcceleratorIO(ptr ptr)
 479 stdcall -noname IUnknown_UIActivateIO(ptr long ptr)
@@ -493,7 +493,7 @@
 493 stub -noname SHPropertyBag_ReadType
 494 stub -noname SHPropertyBag_ReadStr
 495 stub -noname SHPropertyBag_WriteStr
-496 stub -noname SHPropertyBag_ReadLONG
+496 stdcall -noname SHPropertyBag_ReadLONG(ptr wstr ptr)
 497 stub -noname SHPropertyBag_WriteLONG
 498 stub -noname SHPropertyBag_ReadBOOLOld
 499 stub -noname SHPropertyBag_WriteBOOL
@@ -531,7 +531,7 @@
 535 stub -noname SHPropertyBag_Delete
 536 stub -noname IUnknown_QueryServicePropertyBag
 537 stub -noname SHBoolSystemParametersInfo
-538 stub -noname IUnknown_QueryServiceForWebBrowserApp
+538 stdcall -noname IUnknown_QueryServiceForWebBrowserApp(ptr ptr ptr)
 539 stub -noname IUnknown_ShowBrowserBar
 540 stub -noname SHInvokeCommandOnContextMenu
 541 stub -noname SHInvokeCommandsOnContextMen
@@ -559,6 +559,7 @@
 @ stdcall ColorAdjustLuma(long long long)
 @ stdcall ColorHLSToRGB(long long long)
 @ stdcall ColorRGBToHLS(long ptr ptr ptr)
+@ stdcall DelayLoadFailureHook(str str) kernel32.DelayLoadFailureHook
 @ stdcall -private DllGetVersion(ptr)
 @ stdcall GetMenuPosFromID(ptr long)
 @ stdcall HashData (ptr long ptr long)
@@ -725,8 +726,8 @@
 @ stdcall SHRegGetPathW(long wstr wstr ptr long)
 @ stdcall SHRegGetUSValueA ( str str ptr ptr ptr long ptr long )
 @ stdcall SHRegGetUSValueW ( wstr wstr ptr ptr ptr long ptr long )
-@ stdcall SHRegGetValueA ( long str str long ptr ptr ptr )
-@ stdcall SHRegGetValueW ( long wstr wstr long ptr ptr ptr )
+@ stdcall SHRegGetValueA ( long str str long ptr ptr ptr ) advapi32.RegGetValueA
+@ stdcall SHRegGetValueW ( long wstr wstr long ptr ptr ptr ) advapi32.RegGetValueW
 @ stdcall SHRegOpenUSKeyA ( str long long long long )
 @ stdcall SHRegOpenUSKeyW ( wstr long long long long )
 @ stdcall SHRegQueryInfoUSKeyA ( long ptr ptr ptr ptr long )

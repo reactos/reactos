@@ -1,0 +1,94 @@
+/*
+ * Portuguese resources for oleacc
+ *
+ * Copyright 2009 Ricardo Filipe
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "oleacc.h"
+
+#pragma code_page(65001)
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
+
+STRINGTABLE DISCARDABLE
+{
+    0 "objecto desconhecido" /* undocumented */
+    ROLE_SYSTEM_TITLEBAR    "barra de título"
+    ROLE_SYSTEM_MENUBAR     "barra de menu"
+    ROLE_SYSTEM_SCROLLBAR   "barra de scroll"
+    ROLE_SYSTEM_GRIP        "grip"
+    ROLE_SYSTEM_SOUND       "som"
+    ROLE_SYSTEM_CURSOR      "cursor"
+    ROLE_SYSTEM_CARET       "caret"
+    ROLE_SYSTEM_ALERT       "alerta"
+    ROLE_SYSTEM_WINDOW      "janela"
+    ROLE_SYSTEM_CLIENT      "cliente"
+    ROLE_SYSTEM_MENUPOPUP   "popup menu"
+    ROLE_SYSTEM_MENUITEM    "item do menu"
+    ROLE_SYSTEM_TOOLTIP     "dica"
+    ROLE_SYSTEM_APPLICATION "aplicação"
+    ROLE_SYSTEM_DOCUMENT    "documento"
+    ROLE_SYSTEM_PANE        "painel"
+    ROLE_SYSTEM_CHART       "gráfico"
+    ROLE_SYSTEM_DIALOG      "diálogo"
+    ROLE_SYSTEM_BORDER      "margem"
+    ROLE_SYSTEM_GROUPING    "agrupamento"
+    ROLE_SYSTEM_SEPARATOR   "separador"
+    ROLE_SYSTEM_TOOLBAR     "barra de ferramentas"
+    ROLE_SYSTEM_STATUSBAR   "barra de estado"
+    ROLE_SYSTEM_TABLE        "tabela"
+    ROLE_SYSTEM_COLUMNHEADER "cabeçalho da coluna"
+    ROLE_SYSTEM_ROWHEADER    "cabeçalho da linha"
+    ROLE_SYSTEM_COLUMN       "coluna"
+    ROLE_SYSTEM_ROW          "linha"
+    ROLE_SYSTEM_CELL         "célula"
+    ROLE_SYSTEM_LINK         "ligação"
+    ROLE_SYSTEM_HELPBALLOON  "balão de ajuda"
+    ROLE_SYSTEM_CHARACTER    "caracter"
+    ROLE_SYSTEM_LIST         "lista"
+    ROLE_SYSTEM_LISTITEM     "item da lista"
+    ROLE_SYSTEM_OUTLINE      "delinear"
+    ROLE_SYSTEM_OUTLINEITEM  "item delinear"
+    ROLE_SYSTEM_PAGETAB      "tab de página"
+    ROLE_SYSTEM_PROPERTYPAGE "página de propriedades"
+    ROLE_SYSTEM_INDICATOR    "indicador"
+    ROLE_SYSTEM_GRAPHIC      "gráfico"
+    ROLE_SYSTEM_STATICTEXT   "texto estático"
+    ROLE_SYSTEM_TEXT         "texto"
+    ROLE_SYSTEM_PUSHBUTTON   "push button"
+    ROLE_SYSTEM_CHECKBUTTON  "check button"
+    ROLE_SYSTEM_RADIOBUTTON  "radio button"
+    ROLE_SYSTEM_COMBOBOX     "combo box"
+    ROLE_SYSTEM_DROPLIST     "drop down"
+    ROLE_SYSTEM_PROGRESSBAR  "barra de progresso"
+    ROLE_SYSTEM_DIAL         "dial"
+    ROLE_SYSTEM_HOTKEYFIELD  "hot key field"
+    ROLE_SYSTEM_SLIDER       "slider"
+    ROLE_SYSTEM_SPINBUTTON   "spin box"
+    ROLE_SYSTEM_DIAGRAM      "diagrama"
+    ROLE_SYSTEM_ANIMATION    "animação"
+    ROLE_SYSTEM_EQUATION     "equação"
+    ROLE_SYSTEM_BUTTONDROPDOWN "drop down button"
+    ROLE_SYSTEM_BUTTONMENU   "menu button"
+    ROLE_SYSTEM_BUTTONDROPDOWNGRID "grid drop down button"
+    ROLE_SYSTEM_WHITESPACE   "espaço em branco"
+    ROLE_SYSTEM_PAGETABLIST  "page tab list"
+    ROLE_SYSTEM_CLOCK        "relógio"
+    ROLE_SYSTEM_SPLITBUTTON  "split button"
+    ROLE_SYSTEM_IPADDRESS    "endereço IP"
+    ROLE_SYSTEM_OUTLINEBUTTON "outline button"
+}

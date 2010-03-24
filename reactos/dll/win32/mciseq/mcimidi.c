@@ -113,9 +113,6 @@ static DWORD CALLBACK	MCI_SCAStarter(LPVOID arg)
     TRACE("In thread after async command (%08x,%u,%08lx,%08lx)\n",
 	  sca->wDevID, sca->wMsg, sca->dwParam1, sca->dwParam2);
     HeapFree(GetProcessHeap(), 0, sca);
-    ExitThread(ret);
-    WARN("Should not happen ? what's wrong\n");
-    /* should not go after this point */
     return ret;
 }
 
@@ -147,7 +144,7 @@ static	DWORD MCI_SendCommandAsync(UINT wDevID, UINT wMsg, DWORD_PTR dwParam1,
 
     if ((handle = CreateThread(NULL, 0, MCI_SCAStarter, sca, 0, NULL)) == 0) {
 	WARN("Couldn't allocate thread for async command handling, sending synchronously\n");
-	return MCI_SCAStarter(&sca);
+	return MCI_SCAStarter(sca);
     }
     SetThreadPriority(handle, THREAD_PRIORITY_TIME_CRITICAL);
     CloseHandle(handle);
@@ -412,7 +409,7 @@ static DWORD MIDI_mciReadMTrk(WINE_MCIMIDI* wmm, MCI_MIDITRACK* mmt)
 		    } else {
                         len = MultiByteToWideChar( CP_ACP, 0, buf, -1, NULL, 0 );
                         wmm->lpstrCopyright = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) );
-                        len = MultiByteToWideChar( CP_ACP, 0, buf, -1, wmm->lpstrCopyright, len );
+                        MultiByteToWideChar( CP_ACP, 0, buf, -1, wmm->lpstrCopyright, len );
 		    }
 		    break;
 		case 0x03:
@@ -421,7 +418,7 @@ static DWORD MIDI_mciReadMTrk(WINE_MCIMIDI* wmm, MCI_MIDITRACK* mmt)
 		    } else {
                         len = MultiByteToWideChar( CP_ACP, 0, buf, -1, NULL, 0 );
                         wmm->lpstrName = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) );
-                        len = MultiByteToWideChar( CP_ACP, 0, buf, -1, wmm->lpstrName, len );
+                        MultiByteToWideChar( CP_ACP, 0, buf, -1, wmm->lpstrName, len );
 		    }
 		    break;
 		}

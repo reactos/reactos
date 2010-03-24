@@ -16,36 +16,41 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "msvideo_private.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
-ICM_CHOOSE_COMPRESSOR DIALOG DISCARDABLE  36, 24, 187, 95
+ICM_CHOOSE_COMPRESSOR DIALOG DISCARDABLE  36, 24, 208, 95
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Compression vidéo"
+CAPTION "Compression vidÃ©o"
 FONT 8, "MS Shell Dlg"
 {
-    DEFPUSHBUTTON "OK",IDOK,129,2,49,14
-    PUSHBUTTON "Annuler",IDCANCEL,129,18,49,14
+    DEFPUSHBUTTON "OK",IDOK,150,2,49,14
+    PUSHBUTTON "Annuler",IDCANCEL,150,18,49,14
 
-    LTEXT "&Compresseur :",-1,9,6,105,8
-    COMBOBOX 880,9,16,111,67,CBS_DROPDOWNLIST|WS_VSCROLL|WS_TABSTOP
+    LTEXT "&CompresseurÂ :",-1,9,6,131,8
+    COMBOBOX 880,9,16,135,15,CBS_DROPDOWNLIST|WS_VSCROLL|WS_TABSTOP
 
-    PUSHBUTTON "Con&figurer...",882,129,36,49,14
-    PUSHBUTTON "À &propos",883,129,52,49,14
+    PUSHBUTTON "Con&figurer...",882,150,36,49,14
+    PUSHBUTTON "Ã€ &propos",883,150,52,49,14
 
-    SCROLLBAR 884,9,44,111,9,WS_TABSTOP
+    SCROLLBAR 884,9,44,133,9,WS_TABSTOP
 
-    LTEXT "&Qualité de compression :",886,9,34,80,8
+    LTEXT "&QualitÃ© de compressionÂ :",886,9,34,131,8
 
-    CONTROL "Image &clé toutes les",887,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,60,66,12
-    EDITTEXT 888,78,60,22,12
-    LTEXT "images",889,103,62,26,10
+    CONTROL "Image &clÃ© toutes les",887,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,60,77,12
+    EDITTEXT 888,89,60,22,12
+    LTEXT "images",889,115,63,26,10
 
-    CONTROL "&Débit de données",894,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,76,66,12
-    EDITTEXT 895,78,76,22,12
-    LTEXT "Kio/sec",896,102,78,26,10
+    CONTROL "&DÃ©bit de donnÃ©es",894,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,76,77,12
+    EDITTEXT 895,89,76,22,12
+    LTEXT "Kio/sec",896,115,78,26,10
 }
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_FULLFRAMES "Images complètes (non compressées)"
+    IDS_FULLFRAMES "Images complÃ¨tes (non compressÃ©es)"
 }

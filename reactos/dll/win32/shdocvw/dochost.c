@@ -21,8 +21,13 @@
 #include "hlink.h"
 #include "exdispid.h"
 #include "mshtml.h"
+#include "initguid.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
+
+DEFINE_OLEGUID(CGID_DocHostCmdPriv, 0x000214D4L, 0, 0);
+
+#define DOCHOST_DOCCANNAVIGATE  0
 
 static ATOM doc_view_atom = 0;
 
@@ -154,16 +159,23 @@ static void advise_prop_notif(DocHost *This, BOOL set)
         This->is_prop_notif = set;
 }
 
+void set_doc_state(DocHost *This, READYSTATE doc_state)
+{
+    This->doc_state = doc_state;
+    if(doc_state > This->ready_state)
+        This->ready_state = doc_state;
+}
+
 static void update_ready_state(DocHost *This, READYSTATE ready_state)
 {
-    if(ready_state > READYSTATE_LOADING && This->ready_state <= READYSTATE_LOADING) {
+    if(ready_state > READYSTATE_LOADING && This->doc_state <= READYSTATE_LOADING)
         notif_complete(This, DISPID_NAVIGATECOMPLETE2);
-        This->ready_state = ready_state;
-    }
 
-    if(ready_state == READYSTATE_COMPLETE && This->ready_state < READYSTATE_COMPLETE) {
-        This->ready_state = READYSTATE_COMPLETE;
+    if(ready_state == READYSTATE_COMPLETE && This->doc_state < READYSTATE_COMPLETE) {
+        set_doc_state(This, READYSTATE_COMPLETE);
         notif_complete(This, DISPID_DOCUMENTCOMPLETE);
+    }else {
+        set_doc_state(This, ready_state);
     }
 }
 
@@ -236,7 +248,7 @@ HRESULT dochost_object_available(DocHost *This, IUnknown *doc)
     if(SUCCEEDED(hres)) {
         if(ready_state == READYSTATE_COMPLETE)
             push_ready_state_task(This, READYSTATE_COMPLETE);
-        else
+        if(ready_state != READYSTATE_COMPLETE || This->doc_navigate)
             advise_prop_notif(This, TRUE);
     }
 
@@ -314,6 +326,11 @@ void deactivate_document(DocHost *This)
     IHlinkTarget *hlink = NULL;
     HRESULT hres;
 
+    if(This->doc_navigate) {
+        IUnknown_Release(This->doc_navigate);
+        This->doc_navigate = NULL;
+    }
+
     if(This->is_prop_notif)
         advise_prop_notif(This, FALSE);
 
@@ -362,6 +379,29 @@ void deactivate_document(DocHost *This)
     This->document = NULL;
 }
 
+void release_dochost_client(DocHost *This)
+{
+    if(This->hwnd) {
+        DestroyWindow(This->hwnd);
+        This->hwnd = NULL;
+    }
+
+    if(This->hostui) {
+        IDocHostUIHandler_Release(This->hostui);
+        This->hostui = NULL;
+    }
+
+    if(This->client_disp) {
+        IDispatch_Release(This->client_disp);
+        This->client_disp = NULL;
+    }
+
+    if(This->frame) {
+        IOleInPlaceFrame_Release(This->frame);
+        This->frame = NULL;
+    }
+}
+
 #define OLECMD_THIS(iface) DEFINE_THIS(DocHost, OleCommandTarget, iface)
 
 static HRESULT WINAPI ClOleCommandTarget_QueryInterface(IOleCommandTarget *iface,
@@ -387,8 +427,13 @@ static HRESULT WINAPI ClOleCommandTarget_QueryStatus(IOleCommandTarget *iface,
         const GUID *pguidCmdGroup, ULONG cCmds, OLECMD prgCmds[], OLECMDTEXT *pCmdText)
 {
     DocHost *This = OLECMD_THIS(iface);
+    ULONG i= 0;
     FIXME("(%p)->(%s %u %p %p)\n", This, debugstr_guid(pguidCmdGroup), cCmds, prgCmds,
           pCmdText);
+    while (prgCmds && (cCmds > i)) {
+        FIXME("command_%u: %u, 0x%x\n", i, prgCmds[i].cmdID, prgCmds[i].cmdf);
+        i++;
+    }
     return E_NOTIMPL;
 }
 
@@ -397,8 +442,34 @@ static HRESULT WINAPI ClOleCommandTarget_Exec(IOleCommandTarget *iface,
         VARIANT *pvaOut)
 {
     DocHost *This = OLECMD_THIS(iface);
-    FIXME("(%p)->(%s %d %d %p %p)\n", This, debugstr_guid(pguidCmdGroup), nCmdID,
-          nCmdexecopt, pvaIn, pvaOut);
+
+    TRACE("(%p)->(%s %d %d %p %p)\n", This, debugstr_guid(pguidCmdGroup), nCmdID,
+          nCmdexecopt, debugstr_variant(pvaIn), debugstr_variant(pvaOut));
+
+    if(!pguidCmdGroup) {
+        FIXME("Unimplemented cmdid %d\n", nCmdID);
+        return E_NOTIMPL;
+    }
+
+    if(IsEqualGUID(pguidCmdGroup, &CGID_DocHostCmdPriv)) {
+        switch(nCmdID) {
+        case DOCHOST_DOCCANNAVIGATE:
+            if(!pvaIn || V_VT(pvaIn) != VT_UNKNOWN)
+                return E_INVALIDARG;
+
+            if(This->doc_navigate)
+                IUnknown_Release(This->doc_navigate);
+            IUnknown_AddRef(V_UNKNOWN(pvaIn));
+            This->doc_navigate = V_UNKNOWN(pvaIn);
+            return S_OK;
+
+        default:
+            FIXME("unsupported command %d of CGID_DocHostCmdPriv\n", nCmdID);
+            return E_NOTIMPL;
+        }
+    }
+
+    FIXME("Unimplemented group %s\n", debugstr_guid(pguidCmdGroup));
     return E_NOTIMPL;
 }
 
@@ -681,7 +752,7 @@ static HRESULT WINAPI PropertyNotifySink_OnChanged(IPropertyNotifySink *iface, D
         if(FAILED(hres))
             return hres;
 
-        if(ready_state == READYSTATE_COMPLETE)
+        if(ready_state == READYSTATE_COMPLETE && !This->doc_navigate)
             advise_prop_notif(This, FALSE);
 
         push_ready_state_task(This, ready_state);
@@ -744,14 +815,10 @@ void DocHost_Init(DocHost *This, IDispatch *disp)
 
 void DocHost_Release(DocHost *This)
 {
-    if(This->client_disp)
-        IDispatch_Release(This->client_disp);
-    if(This->frame)
-        IOleInPlaceFrame_Release(This->frame);
-
+    release_dochost_client(This);
     DocHost_ClientSite_Release(This);
 
     ConnectionPointContainer_Destroy(&This->cps);
 
-    SysFreeString(This->url);
+    CoTaskMemFree(This->url);
 }

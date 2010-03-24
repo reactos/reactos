@@ -86,7 +86,7 @@ static IUnknown *create_activex_object(script_ctx_t *ctx, const WCHAR *progid)
     if(FAILED(hres) || policy != URLPOLICY_ALLOW)
         return NULL;
 
-    hres = CoGetClassObject(&guid, CLSCTX_INPROC_SERVER|CLSCTX_INPROC_HANDLER, NULL, &IID_IClassFactory, (void**)&cf);
+    hres = CoGetClassObject(&guid, CLSCTX_INPROC_SERVER|CLSCTX_LOCAL_SERVER, NULL, &IID_IClassFactory, (void**)&cf);
     if(FAILED(hres))
         return NULL;
 
@@ -192,7 +192,8 @@ HRESULT create_activex_constr(script_ctx_t *ctx, DispatchEx **ret)
     if(FAILED(hres))
         return hres;
 
-    hres = create_builtin_function(ctx, ActiveXObject_value, ActiveXObjectW, NULL, PROPF_CONSTR, prototype, ret);
+    hres = create_builtin_function(ctx, ActiveXObject_value, ActiveXObjectW, NULL,
+            PROPF_CONSTR|1, prototype, ret);
 
     jsdisp_release(prototype);
     return hres;

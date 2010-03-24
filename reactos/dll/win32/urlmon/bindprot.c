@@ -205,7 +205,7 @@ static void push_task(BindProtocol *This, task_header_t *task, task_proc_t proc)
         This->task_queue_tail = task;
     }else {
         This->task_queue_tail = This->task_queue_head = task;
-        do_post = TRUE;
+        do_post = !This->continue_call;
     }
 
     LeaveCriticalSection(&This->section);
@@ -960,6 +960,7 @@ static void report_progress(BindProtocol *This, ULONG status_code, LPCWSTR statu
     switch(status_code) {
     case BINDSTATUS_FINDINGRESOURCE:
     case BINDSTATUS_CONNECTING:
+    case BINDSTATUS_REDIRECTING:
     case BINDSTATUS_BEGINDOWNLOADDATA:
     case BINDSTATUS_SENDINGREQUEST:
     case BINDSTATUS_CACHEFILENAMEAVAILABLE:

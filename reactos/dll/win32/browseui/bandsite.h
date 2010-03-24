@@ -19,8 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef _bandsite_h
-#define _bandsite_h
+#pragma once
 
 class CBandSiteBase :
 	public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -150,5 +149,3 @@ DECLARE_NOT_AGGREGATABLE(CBandSite)
 DECLARE_PROTECT_FINAL_CONSTRUCT()
 
 };
-
-#endif // _bandsite_h

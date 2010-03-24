@@ -40,4 +40,3 @@ STRINGTABLE DISCARDABLE
     IDS_NOTICE_NUM "Numéro de l'avis ="
     IDS_NOTICE_TEXT "Texte de l'avis ="
 }
-#pragma code_page(default)

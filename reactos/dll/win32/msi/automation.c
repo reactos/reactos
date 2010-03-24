@@ -1138,6 +1138,21 @@ static HRESULT WINAPI ViewImpl_Invoke(
     return S_OK;
 }
 
+static HRESULT DatabaseImpl_LastErrorRecord(WORD wFlags,
+                                            DISPPARAMS* pDispParams,
+                                            VARIANT* pVarResult,
+                                            EXCEPINFO* pExcepInfo,
+                                            UINT* puArgErr)
+{
+    if (!(wFlags & DISPATCH_METHOD))
+        return DISP_E_MEMBERNOTFOUND;
+
+    FIXME("\n");
+
+    VariantInit(pVarResult);
+    return S_OK;
+}
+
 static HRESULT WINAPI DatabaseImpl_Invoke(
         AutomationObject* This,
         DISPID dispIdMember,
@@ -1207,6 +1222,11 @@ static HRESULT WINAPI DatabaseImpl_Invoke(
             }
             else return DISP_E_MEMBERNOTFOUND;
             break;
+
+        case DISPID_INSTALLER_LASTERRORRECORD:
+            return DatabaseImpl_LastErrorRecord(wFlags, pDispParams,
+                                                pVarResult, pExcepInfo,
+                                                puArgErr);
 
          default:
             return DISP_E_MEMBERNOTFOUND;

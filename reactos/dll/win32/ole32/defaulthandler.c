@@ -1960,9 +1960,21 @@ static DefaultHandler* DefaultHandler_Construct(
                        &IID_IUnknown,
                        (void**)&This->dataCache);
   if(SUCCEEDED(hr))
+  {
     hr = IUnknown_QueryInterface(This->dataCache, &IID_IPersistStorage, (void**)&This->dataCache_PersistStg);
+    /* keeping a reference to This->dataCache_PersistStg causes us to keep a
+     * reference on the outer object */
+    if (SUCCEEDED(hr))
+        IUnknown_Release(This->outerUnknown);
+    else
+        IUnknown_Release(This->dataCache);
+  }
   if(FAILED(hr))
+  {
     ERR("Unexpected error creating data cache\n");
+    HeapFree(GetProcessHeap(), 0, This);
+    return NULL;
+  }
 
   This->clsid = *clsid;
   This->clientSite = NULL;
@@ -2009,6 +2021,13 @@ static DefaultHandler* DefaultHandler_Construct(
 static void DefaultHandler_Destroy(
   DefaultHandler* This)
 {
+  TRACE("(%p)\n", This);
+
+  /* AddRef/Release may be called on this object during destruction.
+   * Prevent the object being destroyed recursively by artificially raising
+   * the reference count. */
+  This->ref = 10000;
+
   /* release delegates */
   DefaultHandler_Stop(This);
   release_delegates(This);
@@ -2020,6 +2039,9 @@ static void DefaultHandler_Destroy(
 
   if (This->dataCache)
   {
+    /* to balance out the release of dataCache_PersistStg which will result
+     * in a reference being released from the outer unknown */
+    IUnknown_AddRef(This->outerUnknown);
     IPersistStorage_Release(This->dataCache_PersistStg);
     IUnknown_Release(This->dataCache);
     This->dataCache_PersistStg = NULL;
@@ -2121,4 +2143,78 @@ HRESULT WINAPI OleCreateDefaultHandler(REFCLSID clsid, LPUNKNOWN pUnkOuter,
     TRACE("(%s, %p, %s, %p)\n", debugstr_guid(clsid), pUnkOuter,debugstr_guid(riid), ppvObj);
     return OleCreateEmbeddingHelper(clsid, pUnkOuter, EMBDHLP_INPROC_HANDLER | EMBDHLP_CREATENOW,
                                     NULL, riid, ppvObj);
+}
+
+typedef struct HandlerCF
+{
+    const IClassFactoryVtbl *lpVtbl;
+    LONG refs;
+    CLSID clsid;
+} HandlerCF;
+
+static HRESULT WINAPI
+HandlerCF_QueryInterface(LPCLASSFACTORY iface,REFIID riid, LPVOID *ppv)
+{
+    *ppv = NULL;
+    if (IsEqualIID(riid,&IID_IUnknown) ||
+        IsEqualIID(riid,&IID_IClassFactory))
+    {
+        *ppv = iface;
+        IClassFactory_AddRef(iface);
+        return S_OK;
+    }
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI HandlerCF_AddRef(LPCLASSFACTORY iface)
+{
+    HandlerCF *This = (HandlerCF *)iface;
+    return InterlockedIncrement(&This->refs);
+}
+
+static ULONG WINAPI HandlerCF_Release(LPCLASSFACTORY iface)
+{
+    HandlerCF *This = (HandlerCF *)iface;
+    ULONG refs = InterlockedDecrement(&This->refs);
+    if (!refs)
+        HeapFree(GetProcessHeap(), 0, This);
+    return refs;
+}
+
+static HRESULT WINAPI
+HandlerCF_CreateInstance(LPCLASSFACTORY iface, LPUNKNOWN pUnk,
+                         REFIID riid, LPVOID *ppv)
+{
+    HandlerCF *This = (HandlerCF *)iface;
+    return OleCreateDefaultHandler(&This->clsid, pUnk, riid, ppv);
+}
+
+static HRESULT WINAPI HandlerCF_LockServer(LPCLASSFACTORY iface, BOOL fLock)
+{
+    FIXME("(%d), stub!\n",fLock);
+    return S_OK;
+}
+
+static const IClassFactoryVtbl HandlerClassFactoryVtbl = {
+    HandlerCF_QueryInterface,
+    HandlerCF_AddRef,
+    HandlerCF_Release,
+    HandlerCF_CreateInstance,
+    HandlerCF_LockServer
+};
+
+HRESULT HandlerCF_Create(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
+{
+    HRESULT hr;
+    HandlerCF *This = HeapAlloc(GetProcessHeap(), 0, sizeof(*This));
+    if (!This) return E_OUTOFMEMORY;
+    This->lpVtbl = &HandlerClassFactoryVtbl;
+    This->refs = 0;
+    This->clsid = *rclsid;
+
+    hr = IUnknown_QueryInterface((IUnknown *)&This->lpVtbl, riid, ppv);
+    if (FAILED(hr))
+        HeapFree(GetProcessHeap(), 0, This);
+
+    return hr;
 }

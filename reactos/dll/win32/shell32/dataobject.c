@@ -428,9 +428,9 @@ LPDATAOBJECT IDataObject_Constructor(HWND hwndOwner,
         dto->apidl = _ILCopyaPidl(apidl, cidl);
         dto->cidl = cidl;
 
-        dto->cfShellIDList = RegisterClipboardFormatA(CFSTR_SHELLIDLIST);
+        dto->cfShellIDList = RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
         dto->cfFileNameA = RegisterClipboardFormatA(CFSTR_FILENAMEA);
-        dto->cfFileNameW = RegisterClipboardFormatA(CFSTR_FILENAMEW);
+        dto->cfFileNameW = RegisterClipboardFormatW(CFSTR_FILENAMEW);
         InitFormatEtc(dto->pFormatEtc[0], dto->cfShellIDList, TYMED_HGLOBAL);
         InitFormatEtc(dto->pFormatEtc[1], CF_HDROP, TYMED_HGLOBAL);
         InitFormatEtc(dto->pFormatEtc[2], dto->cfFileNameA, TYMED_HGLOBAL);
