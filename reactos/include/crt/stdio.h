@@ -87,9 +87,9 @@ extern "C" {
 
 #ifndef _OFF64_T_DEFINED
 #define _OFF64_T_DEFINED
-  typedef long long _off64_t;
+  __MINGW_EXTENSION typedef long long _off64_t;
 #if !defined(NO_OLDNAMES) || defined(_POSIX)
-  typedef long long off64_t;
+  __MINGW_EXTENSION typedef long long off64_t;
 #endif
 #endif
 
@@ -106,10 +106,10 @@ extern "C" {
 #undef _FPOSOFF
 
 #if (!defined(NO_OLDNAMES) || defined(__GNUC__)) && _INTEGRAL_MAX_BITS >= 64
-  typedef __int64 fpos_t;
+  __MINGW_EXTENSION typedef __int64 fpos_t;
 #define _FPOSOFF(fp) ((long)(fp))
 #else
-  typedef long long fpos_t;
+  __MINGW_EXTENSION typedef long long fpos_t;
 #define _FPOSOFF(fp) ((long)(fp))
 #endif
 
@@ -179,8 +179,8 @@ extern "C" {
   _CRTIMP int __cdecl fsetpos(FILE *_File,const fpos_t *_Pos);
   _CRTIMP int __cdecl fseek(FILE *_File,long _Offset,int _Origin);
   _CRTIMP long __cdecl ftell(FILE *_File);
-  _CRTIMP int __cdecl _fseeki64(FILE *_File,__int64 _Offset,int _Origin);
-  _CRTIMP __int64 __cdecl _ftelli64(FILE *_File);
+  __MINGW_EXTENSION _CRTIMP int __cdecl _fseeki64(FILE *_File,__int64 _Offset,int _Origin);
+  __MINGW_EXTENSION _CRTIMP __int64 __cdecl _ftelli64(FILE *_File);
   _CRTIMP size_t __cdecl fwrite(const void *_Str,size_t _Size,size_t _Count,FILE *_File);
   _CRTIMP int __cdecl getc(FILE *_File);
   _CRTIMP int __cdecl getchar(void);
@@ -381,8 +381,8 @@ extern "C" {
   _CRTIMP size_t __cdecl _fread_nolock(void *_DstBuf,size_t _ElementSize,size_t _Count,FILE *_File);
   _CRTIMP int __cdecl _fseek_nolock(FILE *_File,long _Offset,int _Origin);
   _CRTIMP long __cdecl _ftell_nolock(FILE *_File);
-  _CRTIMP int __cdecl _fseeki64_nolock(FILE *_File,__int64 _Offset,int _Origin);
-  _CRTIMP __int64 __cdecl _ftelli64_nolock(FILE *_File);
+  __MINGW_EXTENSION _CRTIMP int __cdecl _fseeki64_nolock(FILE *_File,__int64 _Offset,int _Origin);
+  __MINGW_EXTENSION _CRTIMP __int64 __cdecl _ftelli64_nolock(FILE *_File);
   _CRTIMP size_t __cdecl _fwrite_nolock(const void *_DstBuf,size_t _Size,size_t _Count,FILE *_File);
   _CRTIMP int __cdecl _ungetc_nolock(int _Ch,FILE *_File);
 

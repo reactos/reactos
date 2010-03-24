@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="libcntpr" type="staticlibrary">
-	<include base="crt">.</include>
-	<include base="crt">include</include>
+	<include base="libcntpr">.</include>
+	<include base="libcntpr">include</include>
 	<define name="NO_RTL_INLINES" />
 	<define name="_NTSYSTEM_" />
 	<define name="_NTDLLBUILD_" />
@@ -108,6 +108,11 @@
 	</directory>
 
 	<directory name="setjmp">
+		<if property="ARCH" value="i386">
+			<directory name="i386">
+				<file>setjmp.s</file>
+			</directory>
+		</if>
 		<if property="ARCH" value="amd64">
 			<directory name="amd64">
 				<file>setjmp.s</file>

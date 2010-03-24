@@ -282,7 +282,7 @@ Index: spec32.c
              if (!kill_at && target_cpu == CPU_x86) output( "@%d", at_param );
              if  (odp->flags & FLAG_FORWARD)
              {
-@@ -825,6 +883,51 @@
+@@ -825,6 +883,50 @@
              }
              break;
          }
@@ -296,7 +296,6 @@ Index: spec32.c
 +            if  (odp->flags & FLAG_FORWARD)
 +            {
 +                output( "=" );
-+                if (!kill_at) output( "@" );
 +                output( "%s", odp->link_name );
 +            }
 +            else if (strcmp(name, odp->link_name)) /* try to reduce output */

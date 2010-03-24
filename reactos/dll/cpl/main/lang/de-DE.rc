@@ -91,7 +91,7 @@ STYLE DS_SHELLFONT | WS_CAPTION | WS_SYSMENU
 CAPTION "Schema speichern"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Cursorschema speichern unter:", -1, 5, 5, 100, 10
+  LTEXT "Zeigerschema speichern unter:", -1, 5, 5, 100, 10
   EDITTEXT IDC_EDIT_SCHEME_NAME, 5, 15, 180, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
   PUSHBUTTON "&OK", IDOK, 60, 45, 50, 15
   PUSHBUTTON "&Abbrechen", IDCANCEL, 115, 45, 50, 15
@@ -169,7 +169,7 @@ BEGIN
   IDS_REMOVE_TITLE "Löschen des Cursorschemas bestätigen"
   IDS_REMOVE_TEXT "Soll das Cursorschema '%s' wirklich gelöscht werden?"
   IDS_OVERWRITE_TITLE "Cursorschema überscheiben"
-  IDS_OVERWRITE_TEXT "Ein Cursorschema mit diesem Namen existiert bereits. Möchen Sie das existierende Cursorschema überscheiben?"
+  IDS_OVERWRITE_TEXT "Ein Cursorschema mit diesem Namen existiert bereits. Möchten Sie das existierende Cursorschema überscheiben?"
   IDS_ANIMATE_CURSOR "Animierter Cursor"
 END
 

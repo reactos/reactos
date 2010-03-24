@@ -49,10 +49,20 @@ WINE_DEFAULT_DEBUG_CHANNEL(d3d_shader);
 enum wined3d_sm4_opcode
 {
     WINED3D_SM4_OP_ADD      = 0x00,
+    WINED3D_SM4_OP_BREAK    = 0x02,
+    WINED3D_SM4_OP_BREAKC   = 0x03,
+    WINED3D_SM4_OP_CUT      = 0x09,
     WINED3D_SM4_OP_DP3      = 0x10,
     WINED3D_SM4_OP_DP4      = 0x11,
+    WINED3D_SM4_OP_EMIT     = 0x13,
+    WINED3D_SM4_OP_ENDIF    = 0x15,
+    WINED3D_SM4_OP_ENDLOOP  = 0x16,
     WINED3D_SM4_OP_EXP      = 0x19,
+    WINED3D_SM4_OP_IADD     = 0x1e,
+    WINED3D_SM4_OP_IF       = 0x1f,
+    WINED3D_SM4_OP_IGE      = 0x21,
     WINED3D_SM4_OP_LOG      = 0x2f,
+    WINED3D_SM4_OP_LT       = 0x31,
     WINED3D_SM4_OP_MIN      = 0x33,
     WINED3D_SM4_OP_MAX      = 0x34,
     WINED3D_SM4_OP_MOV      = 0x36,
@@ -102,10 +112,20 @@ struct sysval_map
 static const struct wined3d_sm4_opcode_info opcode_table[] =
 {
     {WINED3D_SM4_OP_ADD,    WINED3DSIH_ADD,         1,  2},
+    {WINED3D_SM4_OP_BREAK,  WINED3DSIH_BREAK,       0,  0},
+    {WINED3D_SM4_OP_BREAKC, WINED3DSIH_BREAKP,      0,  1},
+    {WINED3D_SM4_OP_CUT,    WINED3DSIH_CUT,         0,  0},
     {WINED3D_SM4_OP_DP3,    WINED3DSIH_DP3,         1,  2},
     {WINED3D_SM4_OP_DP4,    WINED3DSIH_DP4,         1,  2},
+    {WINED3D_SM4_OP_EMIT,   WINED3DSIH_EMIT,        0,  0},
+    {WINED3D_SM4_OP_ENDIF,  WINED3DSIH_ENDIF,       0,  0},
+    {WINED3D_SM4_OP_ENDLOOP,WINED3DSIH_ENDLOOP,     0,  0},
     {WINED3D_SM4_OP_EXP,    WINED3DSIH_EXP,         1,  1},
+    {WINED3D_SM4_OP_IADD,   WINED3DSIH_IADD,        1,  2},
+    {WINED3D_SM4_OP_IF,     WINED3DSIH_IF,          0,  1},
+    {WINED3D_SM4_OP_IGE,    WINED3DSIH_IGE,         1,  2},
     {WINED3D_SM4_OP_LOG,    WINED3DSIH_LOG,         1,  1},
+    {WINED3D_SM4_OP_LT,     WINED3DSIH_LT,          1,  2},
     {WINED3D_SM4_OP_MIN,    WINED3DSIH_MIN,         1,  2},
     {WINED3D_SM4_OP_MAX,    WINED3DSIH_MAX,         1,  2},
     {WINED3D_SM4_OP_MOV,    WINED3DSIH_MOV,         1,  1},
@@ -386,9 +406,9 @@ static void shader_sm4_read_semantic(const DWORD **ptr, struct wined3d_shader_se
     FIXME("ptr %p, semantic %p stub!\n", ptr, semantic);
 }
 
-static void shader_sm4_read_comment(const DWORD **ptr, const char **comment)
+static void shader_sm4_read_comment(const DWORD **ptr, const char **comment, UINT *comment_size)
 {
-    FIXME("ptr %p, comment %p stub!\n", ptr, comment);
+    FIXME("ptr %p, comment %p, comment_size %p stub!\n", ptr, comment, comment_size);
     *comment = NULL;
 }
 

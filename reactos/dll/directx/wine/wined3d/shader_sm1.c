@@ -641,9 +641,10 @@ static void shader_sm1_read_semantic(const DWORD **ptr, struct wined3d_shader_se
     shader_parse_dst_param(dst_token, NULL, &semantic->reg);
 }
 
-static void shader_sm1_read_comment(const DWORD **ptr, const char **comment)
+static void shader_sm1_read_comment(const DWORD **ptr, const char **comment, UINT *comment_size)
 {
     DWORD token = **ptr;
+    UINT size;
 
     if ((token & WINED3DSI_OPCODE_MASK) != WINED3D_SM1_OP_COMMENT)
     {
@@ -651,8 +652,10 @@ static void shader_sm1_read_comment(const DWORD **ptr, const char **comment)
         return;
     }
 
+    size = (token & WINED3DSI_COMMENTSIZE_MASK) >> WINED3DSI_COMMENTSIZE_SHIFT;
     *comment = (const char *)++(*ptr);
-    *ptr += (token & WINED3DSI_COMMENTSIZE_MASK) >> WINED3DSI_COMMENTSIZE_SHIFT;
+    *comment_size = size * sizeof(DWORD);
+    *ptr += size;
 }
 
 static BOOL shader_sm1_is_end(void *data, const DWORD **ptr)

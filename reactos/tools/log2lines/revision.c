@@ -29,7 +29,7 @@ log_rev_check(FILE *outFile, char *fileName, int showfile)
     if (revinfo.opt_verbose)
         log(outFile, "| R--- %s Last Changed Rev: %d\n", s, rev);
 
-    if (rev && opt_Revision)
+    if (rev && opt_Revision_check)
     {
         if (revinfo.rev < revinfo.buildrev)
         {
@@ -128,9 +128,7 @@ getTBRevision(char *fileName)
 void
 reportRevision(FILE *outFile)
 {
-    if (!opt_Revision)
-        return;
-    if (strcmp(opt_Revision, "check") == 0)
+    if (opt_Revision_check)
     {
         if (lastLine.valid)
             logRevCheck(outFile);
@@ -297,3 +295,5 @@ updateSvnlog(void)
 
     return res;
 }
+
+/* EOF */

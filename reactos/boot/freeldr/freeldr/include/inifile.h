@@ -17,12 +17,9 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __PARSEINI_H
-#define __PARSEINI_H
+#pragma once
 
 #define INI_FILE_COMMENT_CHAR	';'
-
-
 
 // This structure describes a single .ini file item
 // The item format in the .ini file is:
@@ -78,6 +75,3 @@ BOOLEAN	IniReadSettingByNumber(ULONG_PTR SectionId, ULONG SettingNumber, PCHAR S
 BOOLEAN	IniReadSettingByName(ULONG_PTR SectionId, PCSTR SettingName, PCHAR Buffer, ULONG BufferSize);
 BOOLEAN	IniAddSection(PCSTR SectionName, ULONG_PTR* SectionId);
 BOOLEAN	IniAddSettingValueToSection(ULONG_PTR SectionId, PCSTR SettingName, PCSTR SettingValue);
-
-
-#endif // defined __PARSEINI_H

@@ -124,7 +124,7 @@ MiInitSystemMemoryAreas()
     //
     // Protect the PFN database
     //
-    BaseAddress = MmPfnDatabase;
+    BaseAddress = MmPfnDatabase[0];
     Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
                                 MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
                                 &BaseAddress,
@@ -308,8 +308,8 @@ MiDbgDumpAddressSpace(VOID)
             (ULONG_PTR)MmPagedPoolBase + MmPagedPoolSize,
             "Paged Pool");
     DPRINT1("          0x%p - 0x%p\t%s\n",
-            MmPfnDatabase,
-            (ULONG_PTR)MmPfnDatabase + (MxPfnAllocation << PAGE_SHIFT),
+            MmPfnDatabase[0],
+            (ULONG_PTR)MmPfnDatabase[0] + (MxPfnAllocation << PAGE_SHIFT),
             "PFN Database");
     DPRINT1("          0x%p - 0x%p\t%s\n",
             MmNonPagedPoolStart,
@@ -365,14 +365,16 @@ MiDbgDumpMemoryDescriptors(VOID)
     DPRINT1("Total: %08lX (%d MB)\n", TotalPages, (TotalPages * PAGE_SIZE) / 1024 / 1024);
 }
 
+VOID NTAPI MiInitializeUserPfnBitmap(VOID);
+
 BOOLEAN
 NTAPI
 MmInitSystem(IN ULONG Phase,
              IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    extern MMPTE HyperTemplatePte;
+    extern MMPTE ValidKernelPte;
     PMMPTE PointerPte;
-    MMPTE TempPte = HyperTemplatePte;
+    MMPTE TempPte = ValidKernelPte;
     PFN_NUMBER PageFrameNumber;
     
     if (Phase == 0)
@@ -389,14 +391,6 @@ MmInitSystem(IN ULONG Phase,
         // Initialize ARM³ in phase 0
         //
         MmArmInitSystem(0, KeLoaderBlock);    
-        
-        /* Initialize the page list */
-        MmInitializePageList();
-        
-        //
-        // Initialize ARM³ in phase 1
-        //
-        MmArmInitSystem(1, KeLoaderBlock);
 
 #if defined(_WINKD_)
         //
@@ -423,27 +417,14 @@ MmInitSystem(IN ULONG Phase,
 #endif
         
         /* Initialize working sets */
+        MiInitializeUserPfnBitmap();
         MmInitializeMemoryConsumer(MC_USER, MmTrimUserMemory);
-
-        /* Initialize the user mode image list */
-        InitializeListHead(&MmLoadedUserImageList);
-
-        /* Initialize the Loader Lock */
-        KeInitializeMutant(&MmSystemLoadLock, FALSE);
 
         /* Reload boot drivers */
         MiReloadBootLoadedDrivers(LoaderBlock);
 
         /* Initialize the loaded module list */
         MiInitializeLoadedModuleList(LoaderBlock);
-
-        /* Setup shared user data settings that NT does as well */
-        ASSERT(SharedUserData->NumberOfPhysicalPages == 0);
-        SharedUserData->NumberOfPhysicalPages = MmNumberOfPhysicalPages;
-        SharedUserData->LargePageMinimum = 0;
-        
-        /* For now, we assume that we're always Server */
-        SharedUserData->NtProductType = NtProductServer;
     }
     else if (Phase == 1)
     {
@@ -476,6 +457,9 @@ MmInitSystem(IN ULONG Phase,
         MI_MAKE_OWNER_PAGE(&TempPte);
         TempPte.u.Hard.PageFrameNumber = PageFrameNumber;
         *MmSharedUserDataPte = TempPte;
+        
+        /* Setup the memory threshold events */
+        if (!MiInitializeMemoryEvents()) return FALSE;
         
         /*
          * Unmap low memory

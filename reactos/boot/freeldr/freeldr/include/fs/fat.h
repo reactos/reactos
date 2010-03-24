@@ -17,8 +17,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __FAT_H
-#define __FAT_H
+#pragma once
 
 #include <pshpack1.h>
 typedef struct _FAT_BOOTSECTOR
@@ -174,5 +173,3 @@ typedef struct
 #define ISFATX(FT) ((FT) == FATX16 || (FT) == FATX32)
 
 const DEVVTBL* FatMount(ULONG DeviceId);
-
-#endif // #defined __FAT_H

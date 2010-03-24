@@ -24,9 +24,7 @@
  * PROGRAMMER:      Eric Kohl
  */
 
-#ifndef __FILEQUEUE_H__
-#define __FILEQUEUE_H__
-
+#pragma once
 
 #define SPFILENOTIFY_STARTQUEUE       0x1
 #define SPFILENOTIFY_ENDQUEUE         0x2
@@ -103,7 +101,5 @@ SetupCommitFileQueueW(HWND Owner,
 		     HSPFILEQ QueueHandle,
 		     PSP_FILE_CALLBACK_W MsgHandler,
 		     PVOID Context);
-
-#endif /* __FILEQUEUE_H__ */
 
 /* EOF */

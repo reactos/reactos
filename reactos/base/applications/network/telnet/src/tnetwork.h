@@ -1,8 +1,7 @@
 // This is a simple class to handle socket connections
 // (Paul Brannan 6/15/98)
 
-#ifndef __TNETWORK_H
-#define __TNETWORK_H
+#pragma once
 
 #include <windows.h>
 
@@ -46,5 +45,3 @@ public:
 
 	void do_naws(int width, int height);
 };
-
-#endif

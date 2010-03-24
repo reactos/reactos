@@ -1,5 +1,4 @@
-#ifndef LANG_JA_JP_H__
-#define LANG_JA_JP_H__
+#pragma once
 
 MUI_LAYOUTS jaJPLayouts[] =
 {
@@ -1694,5 +1693,3 @@ MUI_STRING jaJPStrings[] =
     "·°ÎÞ°ÄÞ Ú²±³ÄÉ Â²¶ Á­³"},
     {0, 0}
 };
-
-#endif

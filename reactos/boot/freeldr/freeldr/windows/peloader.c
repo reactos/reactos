@@ -56,7 +56,7 @@ WinLdrCheckForLoadedDll(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 	PLDR_DATA_TABLE_ENTRY DataTableEntry;
 	LIST_ENTRY *ModuleEntry;
 
-	DPRINTM(DPRINT_PELOADER, "WinLdrCheckForLoadedDll: DllName %X, LoadedEntry: %X\n",
+	DPRINTM(DPRINT_PELOADER, "WinLdrCheckForLoadedDll: DllName %s, LoadedEntry: %X\n",
 		DllName, LoadedEntry);
 
 	/* Just go through each entry in the LoadOrderList and compare loaded module's
@@ -277,7 +277,7 @@ WinLdrLoadImage(IN PCHAR FileName,
 	Status = ArcOpen(FileName, OpenReadOnly, &FileId);
 	if (Status != ESUCCESS)
 	{
-		UiMessageBox("Can not open the file");
+		//UiMessageBox("Can not open the file");
 		return FALSE;
 	}
 

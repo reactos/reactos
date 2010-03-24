@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+<!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="xcopy" type="win32cui" installbase="system32" installname="xcopy.exe" unicode="true">
 	<include base="xcopy">.</include>
 	<library>wine</library>

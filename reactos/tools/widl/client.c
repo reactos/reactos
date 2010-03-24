@@ -126,8 +126,6 @@ static void write_function_stubs(type_t *iface, unsigned int *proc_offset)
         print_client( " struct __frame_%s%s *__frame )\n{\n", prefix_client, get_name(func) );
         indent++;
 
-        /* FIXME: emit client finally code */
-
         if (has_full_pointer)
             write_full_pointer_free(client, indent, func);
 

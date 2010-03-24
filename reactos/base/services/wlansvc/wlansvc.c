@@ -21,6 +21,7 @@
 
 SERVICE_STATUS_HANDLE ServiceStatusHandle;
 SERVICE_STATUS SvcStatus;
+static WCHAR ServiceName[] = L"WlanSvc";
 
 /* FUNCTIONS *****************************************************************/
 static DWORD WINAPI RpcThreadRoutine(LPVOID lpParameter)
@@ -94,13 +95,14 @@ ServiceMain(DWORD argc, LPWSTR *argv)
     DPRINT("ServiceMain() called\n");
 
     SvcStatus.dwServiceType             = SERVICE_WIN32_OWN_PROCESS;
+    SvcStatus.dwCurrentState            = SERVICE_START_PENDING;
     SvcStatus.dwControlsAccepted        = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
     SvcStatus.dwCheckPoint              = 0;
-    SvcStatus.dwWin32ExitCode           = 0;
+    SvcStatus.dwWin32ExitCode           = NO_ERROR;
     SvcStatus.dwServiceSpecificExitCode = 0;
     SvcStatus.dwWaitHint                = 4000;
 
-    ServiceStatusHandle = RegisterServiceCtrlHandlerExW(SERVICE_NAME,
+    ServiceStatusHandle = RegisterServiceCtrlHandlerExW(ServiceName,
                                                         ServiceControlHandler,
                                                         NULL);
 
@@ -115,14 +117,14 @@ ServiceMain(DWORD argc, LPWSTR *argv)
                            NULL);
 
     if (!hThread)
+    {
         DPRINT("Can't create RpcThread\n");
+        UpdateServiceStatus(ServiceStatusHandle, SERVICE_STOPPED, 0);
+    }
     else
     {
-        WaitForSingleObject(hThread, INFINITE);
         CloseHandle(hThread);
     }
-
-    UpdateServiceStatus(ServiceStatusHandle, SERVICE_STOPPED, 0);
 
     DPRINT("ServiceMain() done\n");
 }
@@ -132,7 +134,7 @@ wmain(int argc, WCHAR *argv[])
 {
     SERVICE_TABLE_ENTRYW ServiceTable[2] =
     {
-        {SERVICE_NAME, ServiceMain},
+        {ServiceName, ServiceMain},
         {NULL, NULL}
     };
 

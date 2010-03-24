@@ -1,4 +1,5 @@
 #include "ntddk.h"
+#include "ntifs.h"
 #include "arc/arc.h"
 #include "halfuncs.h"
 #include "drivers/bootvid/bootvid.h"

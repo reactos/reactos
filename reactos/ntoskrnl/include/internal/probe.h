@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_INTERNAL_PROBE_H
-#define __INCLUDE_INTERNAL_PROBE_H
+#pragma once
 
 #include <reactos/probe.h>
 
@@ -118,5 +117,3 @@ DefaultQueryInfoBufferCheck(ULONG Class,
 
     return Status;
 }
-
-#endif

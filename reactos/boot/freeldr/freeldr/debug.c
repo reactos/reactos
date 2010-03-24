@@ -21,7 +21,7 @@
 
 #include <debug.h>
 
-#if DBG
+#if DBG && !defined(_M_ARM)
 
 //#define DEBUG_ALL
 //#define DEBUG_INIFILE
@@ -171,6 +171,12 @@ VOID DebugPrintHeader(ULONG Mask)
 	case DPRINT_HWDETECT:
 	    DbgPrint("HWDETECT: ");
 		break;
+	case DPRINT_PELOADER:
+	    DbgPrint("PELOADER: ");
+		break;
+	case DPRINT_SCSIPORT:
+	    DbgPrint("SCSIPORT: ");
+		break;
 	default:
 	    DbgPrint("UNKNOWN: ");
 		break;
@@ -190,6 +196,12 @@ VOID DbgPrintMask(ULONG Mask, char *format, ...)
 	if (!(Mask & DebugPrintMask))
 	{
 		return;
+	}
+
+	// Disable file/line for scsiport messages
+	if (Mask & DPRINT_SCSIPORT)
+	{
+		DebugStartOfLine = FALSE;
 	}
 
 	// Print the header if we have started a new line
@@ -326,3 +338,22 @@ MsgBoxPrint(const char *Format, ...)
 	return 0;
 }
 
+NTKERNELAPI
+DECLSPEC_NORETURN
+VOID
+NTAPI
+KeBugCheckEx(
+    IN ULONG  BugCheckCode,
+    IN ULONG_PTR  BugCheckParameter1,
+    IN ULONG_PTR  BugCheckParameter2,
+    IN ULONG_PTR  BugCheckParameter3,
+    IN ULONG_PTR  BugCheckParameter4)
+{
+    char Buffer[70];
+    sprintf(Buffer, "*** STOP: 0x%08lX (0x%08lX, 0x%08lX, 0x%08lX, 0x%08lX)",
+        BugCheckCode, BugCheckParameter1, BugCheckParameter2,
+        BugCheckParameter3, BugCheckParameter4);
+    UiMessageBoxCritical(Buffer);
+    assert(FALSE);
+    for (;;);
+}

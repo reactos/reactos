@@ -23,14 +23,11 @@
  * PROGRAMMER:      Hervé Poussineau (hpoussin@reactos.org)
  */
 
-#ifndef __CHKDSK_H__
-#define __CHKDSK_H__
+#pragma once
 
 NTSTATUS
 ChkdskPartition(
     IN PUNICODE_STRING DriveRoot,
     IN PFILE_SYSTEM_ITEM FileSystem);
-
-#endif /* __CHKDSK_H__ */
 
 /* EOF */

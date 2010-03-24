@@ -1,5 +1,4 @@
-#ifndef _WIN32K_WINSTA_H
-#define _WIN32K_WINSTA_H
+#pragma once
 
 #include "window.h"
 #include "clipboard.h"
@@ -103,7 +102,5 @@ IntGetFullWindowStationName(
    IN OPTIONAL PUNICODE_STRING DesktopName);
 
 PWINSTATION_OBJECT FASTCALL IntGetWinStaObj(VOID);
-
-#endif /* _WIN32K_WINSTA_H */
 
 /* EOF */

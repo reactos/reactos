@@ -37,7 +37,7 @@ interface ISampleGrabberCB : IUnknown
     HRESULT BufferCB(
         double SampleTime,
         BYTE * pBuffer,
-        long BufferLen
+        LONG BufferLen
     );
 }
 
@@ -66,8 +66,8 @@ interface ISampleGrabber: IUnknown
     );
 
     HRESULT GetCurrentBuffer(
-        [in,out] long * pBufferSize,
-        [out] long * pBuffer
+        [in,out] LONG * pBufferSize,
+        [out] LONG * pBuffer
     );
 
     HRESULT GetCurrentSample(
@@ -76,7 +76,7 @@ interface ISampleGrabber: IUnknown
 
     HRESULT SetCallback(
         ISampleGrabberCB * pCallback,
-        long WhichMethodToCallback
+        LONG WhichMethodToCallback
     );
 };
 
@@ -96,15 +96,15 @@ interface IMediaDet : IUnknown
     );
 
     HRESULT get_OutputStreams(
-        [out] long *pVal
+        [out] LONG *pVal
     );
 
     HRESULT get_CurrentStream(
-        [out] long *pVal
+        [out] LONG *pVal
     );
 
     HRESULT put_CurrentStream(
-        long newVal
+        LONG newVal
     );
 
     HRESULT get_StreamType(
@@ -129,16 +129,16 @@ interface IMediaDet : IUnknown
 
     HRESULT GetBitmapBits(
         double StreamTime,
-        long * pBufferSize,
+        LONG * pBufferSize,
         char * pBuffer,
-        long Width,
-        long Height
+        LONG Width,
+        LONG Height
     );
 
     HRESULT WriteBitmapBits(
         double StreamTime,
-        long Width,
-        long Height,
+        LONG Width,
+        LONG Height,
         BSTR Filename
     );
 

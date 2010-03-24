@@ -17,8 +17,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __ISO_H
-#define __ISO_H
+#pragma once
 
 #include <pshpack1.h>
 struct _DIR_RECORD
@@ -100,5 +99,3 @@ typedef struct
 } ISO_FILE_INFO, * PISO_FILE_INFO;
 
 const DEVVTBL* IsoMount(ULONG DeviceId);
-
-#endif // #defined __FAT_H

@@ -46,7 +46,7 @@ BEGIN
         MENUITEM "&Fjern\tDEL",               ID_EDIT_CLEAR
         MENUITEM "&Marker alt\tCtrl+A",       ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "&Søg efter...\tCrtl+F",     ID_FIND
+        MENUITEM "&Søg efter...\tCtrl+F",     ID_FIND
         MENUITEM "Søg efter &næste\tF3",      ID_FIND_NEXT
         MENUITEM "E&rstat...\tCtrl+H",        ID_REPLACE
         MENUITEM SEPARATOR
@@ -103,6 +103,30 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Bullets"             ID_BULLET
         MENUITEM "&Afsnit..."           ID_PARAFORMAT
+    END
+END
+
+IDM_COLOR_POPUP MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Sort",      ID_COLOR_BLACK
+        MENUITEM "Mørkerød",  ID_COLOR_MAROON
+        MENUITEM "Grøn",      ID_COLOR_GREEN
+        MENUITEM "Oliven"     ID_COLOR_OLIVE
+        MENUITEM "Navy"       ID_COLOR_NAVY
+        MENUITEM "Lilla"      ID_COLOR_PURPLE
+        MENUITEM "Teal"       ID_COLOR_TEAL
+        MENUITEM "Grå"        ID_COLOR_GRAY
+        MENUITEM "Sølv"       ID_COLOR_SILVER
+        MENUITEM "Rød"        ID_COLOR_RED
+        MENUITEM "Lime"       ID_COLOR_LIME
+        MENUITEM "Gul"        ID_COLOR_YELLOW
+        MENUITEM "Blå"        ID_COLOR_BLUE
+        MENUITEM "Violet"     ID_COLOR_FUCHSIA
+        MENUITEM "Cyan"       ID_COLOR_AQUA
+        MENUITEM "Hvid"       ID_COLOR_WHITE
+        MENUITEM "Automatic"  ID_COLOR_AUTOMATIC
     END
 END
 
@@ -218,7 +242,11 @@ BEGIN
     STRING_PREVIEW_PREVPAGE,         "Forrige side"
     STRING_PREVIEW_TWOPAGES,         "To sider"
     STRING_PREVIEW_ONEPAGE,          "Én side"
+    STRING_PREVIEW_ZOOMIN,           "Zoom in"
+    STRING_PREVIEW_ZOOMOUT,          "Zoom out"
     STRING_PREVIEW_CLOSE,            "Luk"
+    STRING_PREVIEW_PAGE,             "Page"
+    STRING_PREVIEW_PAGES,            "Pages"
 END
 
 STRINGTABLE DISCARDABLE

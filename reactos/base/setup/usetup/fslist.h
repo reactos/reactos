@@ -24,8 +24,7 @@
  *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
-#ifndef __FSLIST_H__
-#define __FSLIST_H__
+#pragma once
 
 #include <fmifs/fmifs.h>
 
@@ -75,7 +74,5 @@ ScrollDownFileSystemList(
 VOID
 ScrollUpFileSystemList(
     IN PFILE_SYSTEM_LIST List);
-
-#endif /* __FSLIST_H__ */
 
 /* EOF */

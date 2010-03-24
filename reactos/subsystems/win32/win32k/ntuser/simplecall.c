@@ -490,28 +490,17 @@ NtUserCallHwndLock(
 
       case HWNDLOCK_ROUTINE_DRAWMENUBAR:
          {
-            PMENU_OBJECT Menu;
             DPRINT("HWNDLOCK_ROUTINE_DRAWMENUBAR\n");
-            Ret = FALSE;
-            if (!((Wnd->style & (WS_CHILD | WS_POPUP)) != WS_CHILD))
-               break;
-
-            if(!(Menu = UserGetMenuObject((HMENU)(DWORD_PTR) Wnd->IDMenu)))
-               break;
-
-            Menu->MenuInfo.WndOwner = hWnd;
-            Menu->MenuInfo.Height = 0;
-
-            co_WinPosSetWindowPos( Window,
-                                   HWND_DESKTOP,
-                                   0,0,0,0,
-                                   SWP_NOSIZE|
-                                   SWP_NOMOVE|
-                                   SWP_NOZORDER|
-                                   SWP_NOACTIVATE|
-                                   SWP_FRAMECHANGED );
-
             Ret = TRUE;
+            if ((Wnd->style & (WS_CHILD | WS_POPUP)) != WS_CHILD)
+               co_WinPosSetWindowPos( Window,
+                                      HWND_DESKTOP,
+                                      0,0,0,0,
+                                      SWP_NOSIZE|
+                                      SWP_NOMOVE|
+                                      SWP_NOZORDER|
+                                      SWP_NOACTIVATE|
+                                      SWP_FRAMECHANGED );
             break;
          }
 

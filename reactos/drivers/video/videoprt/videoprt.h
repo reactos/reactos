@@ -24,6 +24,7 @@
 
 #include <stdio.h>
 #include <ntddk.h>
+#define __BROKEN__
 #include <miniport.h>
 #include <video.h>
 #include <ntddvdeo.h>

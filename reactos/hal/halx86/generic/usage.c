@@ -63,6 +63,7 @@ HalpRegisterVector(IN UCHAR Flags,
     HalpIDTUsage[SystemVector].BusReleativeVector = BusVector;
 }
 
+#ifndef _MINIHAL_
 VOID
 NTAPI
 HalpEnableInterruptHandler(IN UCHAR Flags,
@@ -87,6 +88,7 @@ HalpEnableInterruptHandler(IN UCHAR Flags,
     /* Enable the interrupt */
     HalEnableSystemInterrupt(SystemVector, Irql, Mode);
 }
+#endif
 
 /*
  * @unimplemented

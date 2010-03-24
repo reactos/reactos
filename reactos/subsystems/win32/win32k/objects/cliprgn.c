@@ -202,6 +202,7 @@ GdiGetClipBox(HDC hDC, PRECTL rc)
       return ERROR;
    }
 
+   /* FIXME! Rao and Vis only! */
    if (dc->prgnAPI) // APIRGN
    {
       hRgn = ((PROSRGNDATA)dc->prgnAPI)->BaseObject.hHmgr;

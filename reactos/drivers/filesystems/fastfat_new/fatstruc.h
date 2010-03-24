@@ -1,5 +1,4 @@
-#ifndef __STRUCT_H__
-#define __STRUCT_H__
+#pragma once
 
 typedef struct _FAT_SCAN_CONTEXT *PFAT_SCAN_CONTEXT;
 typedef struct _FAT_IO_CONTEXT *PFAT_IO_CONTEXT;
@@ -404,5 +403,3 @@ typedef enum _FILE_TIME_INDEX
 #define CCB_SEARCH_PATTERN_HAS_WILD_CARD    0x04
 #define CCB_DASD_IO                         0x10
 extern FAT_GLOBAL_DATA FatGlobalData;
-
-#endif//__STRUCT_H__ 

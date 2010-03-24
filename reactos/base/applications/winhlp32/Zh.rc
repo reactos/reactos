@@ -160,4 +160,3 @@ STID_FILE_NOT_FOUND_s	"不能開啟檔案 '%s'. 你想要自己找這個檔案�
 STID_NO_RICHEDIT	"找不到 richedit... 終止"
 STID_PSH_INDEX,		"幫助內容: "
 }
-#pragma code_page(default)

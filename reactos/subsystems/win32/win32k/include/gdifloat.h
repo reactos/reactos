@@ -1,6 +1,4 @@
-#ifndef __WIN32K_FLOAT_H
-#define __WIN32K_FLOAT_H
-
+#pragma once
 
 #include <reactos/win32k/ntgdityp.h>
 #include <reactos/win32k/ntgdihdl.h>
@@ -108,7 +106,3 @@ static __inline void INTERNAL_LPTODP(DC *dc, LPPOINT point)
     MulDiv((tx), (pdcattr)->szlViewportExt.cx, (pdcattr)->szlWindowExt.cx)
 #define YLSTODS(pdcattr,ty) \
     MulDiv((ty), (pdcattr)->szlViewportExt.cy, (pdcattr)->szlWindowExt.cy)
-
-#endif
-
-

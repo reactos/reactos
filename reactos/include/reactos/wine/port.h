@@ -148,29 +148,6 @@ struct statfs;
 #endif
 
 
-/* Macros to define assembler functions somewhat portably */
-
-#if defined(__GNUC__) && !defined(__INTERIX) && !defined(__MINGW32__) && !defined(__CYGWIN__) && !defined(__APPLE__)
-# define __ASM_GLOBAL_FUNC(name,code) \
-      __asm__( ".text\n\t" \
-               ".align 4\n\t" \
-               ".globl " __ASM_NAME(#name) "\n\t" \
-               __ASM_FUNC(#name) "\n" \
-               __ASM_NAME(#name) ":\n\t" \
-               code \
-               "\n\t.previous" );
-#else  /* defined(__GNUC__) && !defined(__MINGW32__) && !defined(__APPLE__)  */
-# define __ASM_GLOBAL_FUNC(name,code) \
-      void __asm_dummy_##name(void) { \
-          asm( ".align 4\n\t" \
-               ".globl " __ASM_NAME(#name) "\n\t" \
-               __ASM_FUNC(#name) "\n" \
-               __ASM_NAME(#name) ":\n\t" \
-               code ); \
-      }
-#endif  /* __GNUC__ */
-
-
 /* Constructor functions */
 
 #ifdef __GNUC__

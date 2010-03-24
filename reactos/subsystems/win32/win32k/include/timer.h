@@ -1,5 +1,4 @@
-#ifndef _WIN32K_TIMER_H
-#define _WIN32K_TIMER_H
+#pragma once
 
 typedef struct _TIMER
 {
@@ -37,5 +36,3 @@ UINT_PTR FASTCALL SetSystemTimer(PWINDOW_OBJECT,UINT_PTR,UINT,TIMERPROC);
 BOOL FASTCALL PostTimerMessages(PWINDOW_OBJECT);
 VOID FASTCALL ProcessTimers(VOID);
 VOID FASTCALL StartTheTimers(VOID);
-
-#endif /* _WIN32K_TIMER_H */

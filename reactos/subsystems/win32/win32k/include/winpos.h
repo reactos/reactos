@@ -1,5 +1,4 @@
-#ifndef _WIN32K_WINPOS_H
-#define _WIN32K_WINPOS_H
+#pragma once
 
 /* Undocumented flags. */
 #define SWP_NOCLIENTMOVE          0x0800
@@ -37,5 +36,3 @@ VOID FASTCALL co_WinPosActivateOtherWindow(PWINDOW_OBJECT Window);
 
 VOID FASTCALL WinPosInitInternalPos(PWINDOW_OBJECT WindowObject,
                                     POINT *pt, RECTL *RestoreRect);
-
-#endif /* _WIN32K_WINPOS_H */

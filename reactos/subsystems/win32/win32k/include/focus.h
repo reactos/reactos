@@ -1,5 +1,4 @@
-#ifndef _WIN32K_FOCUS_H
-#define _WIN32K_FOCUS_H
+#pragma once
 
 /*
  * These functions take the window handles from current message queue.
@@ -23,5 +22,3 @@ BOOL FASTCALL
 co_IntSetForegroundWindow(PWINDOW_OBJECT Window);
 HWND FASTCALL
 co_IntSetActiveWindow(PWINDOW_OBJECT Window);
-
-#endif /* _WIN32K_FOCUS_H */

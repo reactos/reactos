@@ -18,8 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef _atlcom_h
-#define _atlcom_h
+#pragma once
 
 namespace ATL
 {
@@ -1129,5 +1128,3 @@ public:
 	offsetofclass(ATL::IConnectionPointContainerImpl<_atl_conn_classtype>, _atl_conn_classtype)},
 
 }; // namespace ATL
-
-#endif // _atlcom_h

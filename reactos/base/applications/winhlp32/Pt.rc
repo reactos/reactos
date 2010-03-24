@@ -204,4 +204,3 @@ BEGIN
 		MENUITEM "Usar cores do sistema",   MNID_CTXT_SYSTEM_COLORS
 	END
 END
-#pragma code_page(default)

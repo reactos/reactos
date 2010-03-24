@@ -1,5 +1,4 @@
-#ifndef __NTOSKRNL_INCLUDE_INTERNAL_ARM_KE_H
-#define __NTOSKRNL_INCLUDE_INTERNAL_ARM_KE_H
+#pragma once
 
 #include "intrin_i.h"
 
@@ -54,7 +53,7 @@
 // All architectures but x86 have it in the PRCB's KeContextSwitches
 //
 #define KeGetContextSwitches(Prcb)  \
-    Prcb->KeContextSwitches
+    CONTAINING_RECORD(Prcb, KIPCR, PrcbData)->ContextSwitches
 
 //
 // Returns the Interrupt State from a Trap Frame.
@@ -77,10 +76,7 @@ FORCEINLINE
 VOID
 KeFlushProcessTb(VOID)
 {
-    //
-    // We need to implement this!
-    //
-    ASSERTMSG("Need ARM flush routine\n", FALSE);
+    KeArmFlushTlb();
 }
 
 FORCEINLINE
@@ -108,13 +104,6 @@ KiApcInterrupt(
 #include "mm.h"
 
 VOID
-KeFillFixedEntryTb(
-    IN ARM_PTE Pte,
-    IN PVOID Virtual,
-    IN ULONG Index
-);
-
-VOID
 KeFlushTb(
     VOID
 );
@@ -127,5 +116,3 @@ KeFlushTb(
 
 #define KiGetPreviousMode(tf) \
     ((tf->Spsr & CPSR_MODES) == CPSR_USER_MODE) ? UserMode: KernelMode
-
-#endif

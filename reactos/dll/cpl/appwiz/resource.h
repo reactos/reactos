@@ -1,5 +1,4 @@
-#ifndef __CPL_RESOURCE_H
-#define __CPL_RESOURCE_H
+#pragma once
 
 /* metrics */
 #define PROPSHEETWIDTH  	380
@@ -31,7 +30,5 @@
 #define IDC_SHORTCUT_LOCATION	107
 #define IDC_SHORTCUT_BROWSE		108
 #define IDC_SHORTCUT_NAME		109
-
-#endif /* __CPL_RESOURCE_H */
 
 /* EOF */

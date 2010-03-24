@@ -28,9 +28,7 @@ VOID
 NTAPI
 KiInitMachineDependent(VOID)
 {
-    //
-    // There is nothing to do on ARM
-    //
+    /* There is nothing to do on ARM */
     return;
 }
 
@@ -43,169 +41,55 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
                    IN CCHAR Number,
                    IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+    PKIPCR Pcr = (PKIPCR)KeGetPcr();
     ULONG PageDirectory[2];
-    PKPCR Pcr;
     ULONG i;
-
-    //
-    // Initialize the platform
-    //
-    HalInitializeProcessor(Number, LoaderBlock);
     
-    //
-    // Save loader block
-    //
-    KeLoaderBlock = LoaderBlock;
+    /* Set the default NX policy (opt-in) */
+    SharedUserData->NXSupportPolicy = NX_SUPPORT_POLICY_OPTIN;
 
-    //
-    // Setup KPRCB
-    //
-    Prcb->MajorVersion = 1;
-    Prcb->MinorVersion = 1;
-    Prcb->BuildType = 0;
-#ifndef CONFIG_SMP
-    Prcb->BuildType |= PRCB_BUILD_UNIPROCESSOR;
-#endif
-#if DBG
-    Prcb->BuildType |= PRCB_BUILD_DEBUG;
-#endif
-    Prcb->CurrentThread = InitThread;
-    Prcb->NextThread = NULL;
-    Prcb->IdleThread = InitThread;
-    Prcb->Number = Number;
-    Prcb->SetMember = 1 << Number;
-    Prcb->PcrPage = LoaderBlock->u.Arm.PcrPage;
-
-    //
-    // Initialize spinlocks and DPC data
-    //
+    /* Initialize spinlocks and DPC data */
     KiInitSpinLocks(Prcb, Number);
-
-    //
-    // Set the PRCB in the processor block
-    //
-    KiProcessorBlock[(ULONG)Number] = Prcb;
-    Pcr = (PKPCR)KeGetPcr();
-
-    //
-    // Set processor information
-    //
-    KeProcessorArchitecture = PROCESSOR_ARCHITECTURE_ARM;
-    KeFeatureBits = 0;
-    KeProcessorLevel = (USHORT)(Pcr->ProcessorId >> 8);
-    KeProcessorRevision = (USHORT)(Pcr->ProcessorId & 0xFF);
-
-    //
-    // Set stack pointers
-    //
+    
+    /* Set stack pointers */
     Pcr->InitialStack = IdleStack;
-    Pcr->StackLimit = (PVOID)((ULONG_PTR)IdleStack - KERNEL_STACK_SIZE);
 
-    //
-    // Check if this is the Boot CPU
-    //
+    /* Check if this is the Boot CPU */
     if (!Number)
     {
-        //
-        // Setup the unexpected interrupt
-        //
+        /* Setup the unexpected interrupt */
         KxUnexpectedInterrupt.DispatchAddress = KiUnexpectedInterrupt;
         for (i = 0; i < 4; i++)
         {
-            //
-            // Copy the template code
-            //
+            /* Copy the template code */
             KxUnexpectedInterrupt.DispatchCode[i] = ((PULONG)KiInterruptTemplate)[i];
         }
         
-        //
-        // Set DMA coherency
-        //
+        /* Set DMA coherency */
         KiDmaIoCoherency = 0;
         
-        //
-        // Sweep D-Cache
-        //
+        /* Sweep D-Cache */
         HalSweepDcache();
-    }
-    
-    //
-    // Set all interrupt routines to unexpected interrupts as well
-    //
-    for (i = 0; i < MAXIMUM_VECTOR; i++)
-    {
-        //
-        // Point to the same template
-        //
-        Pcr->InterruptRoutine[i] = (PVOID)&KxUnexpectedInterrupt.DispatchCode;
-    }
-    
-    //
-    // Setup profiling
-    //
-    Pcr->ProfileCount = 0;
-    Pcr->ProfileInterval = 0x200000;
-    Pcr->StallScaleFactor = 50;
-    
-    //
-    // Setup software interrupts
-    //
-    Pcr->InterruptRoutine[PASSIVE_LEVEL] = KiPassiveRelease;
-    Pcr->InterruptRoutine[APC_LEVEL] = KiApcInterrupt;
-    Pcr->InterruptRoutine[DISPATCH_LEVEL] = KiDispatchInterrupt;
-    Pcr->ReservedVectors = (1 << PASSIVE_LEVEL) |
-                           (1 << APC_LEVEL) |
-                           (1 << DISPATCH_LEVEL) |
-                           (1 << IPI_LEVEL);
+        
+        /* Set boot-level flags */
+        KeProcessorArchitecture = PROCESSOR_ARCHITECTURE_ARM;
+        KeFeatureBits = 0;
+        KeProcessorLevel = (USHORT)(Pcr->ProcessorId >> 8);
+        KeProcessorRevision = (USHORT)(Pcr->ProcessorId & 0xFF);
 
-    //
-    // Set IRQL and prcessor member/number
-    //
-    Pcr->CurrentIrql = APC_LEVEL;
-    Pcr->SetMember = 1 << Number;
-    Pcr->NotMember = -Pcr->SetMember;
-    Pcr->Number = Number;
+        /* Set the current MP Master KPRCB to the Boot PRCB */
+        Prcb->MultiThreadSetMaster = Prcb;
 
-    //
-    // Remember our parent
-    //
-    InitThread->ApcState.Process = InitProcess;
+        /* Lower to APC_LEVEL */
+        KeLowerIrql(APC_LEVEL);
 
-    //
-    // Setup the active processor numbers
-    //
-    KeActiveProcessors |= 1 << Number;
-    KeNumberProcessors = Number + 1;
-
-    //
-    // Check if this is the boot CPU
-    //
-    if (!Number)
-    {
-        //
-        // Setup KD
-        //
-        KdInitSystem(0, LoaderBlock);
-
-        //
-        // Check for break-in
-        //
-        if (KdPollBreakIn()) DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
-
-        //
-        // Cleanup the rest of the processor block array
-        //
-        for (i = 1; i < MAXIMUM_PROCESSORS; i++) KiProcessorBlock[i] = NULL;
-
-        //
-        // Initialize portable parts of the OS
-        //
+        /* Initialize portable parts of the OS */
         KiInitSystem();
 
-        //
-        // Initialize the Idle Process and the Process Listhead
-        //
+        /* Initialize the Idle Process and the Process Listhead */
         InitializeListHead(&KiProcessListHead);
+        PageDirectory[0] = 0;
+        PageDirectory[1] = 0;
         KeInitializeProcess(InitProcess,
                             0,
                             0xFFFFFFFF,
@@ -215,15 +99,11 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     }
     else
     {
-        //
-        // FIXME-V6: See if we want to support MP
-        //
+        /* FIXME-V6: See if we want to support MP */
         DPRINT1("ARM MPCore not supported\n");
     }
-    
-    //
-    // Setup the Idle Thread
-    //
+
+    /* Setup the Idle Thread */
     KeInitializeThread(InitProcess,
                        InitThread,
                        NULL,
@@ -239,253 +119,310 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     InitThread->WaitIrql = DISPATCH_LEVEL;
     InitProcess->ActiveProcessors = 1 << Number;
 
-    //
-    // HACK for MmUpdatePageDir
-    //
+    /* HACK for MmUpdatePageDir */
     ((PETHREAD)InitThread)->ThreadsProcess = (PEPROCESS)InitProcess;
 
-    //
-    // Initialize the Kernel Executive
-    //
+    /* Set up the thread-related fields in the PRCB */
+    Prcb->CurrentThread = InitThread;
+    Prcb->NextThread = NULL;
+    Prcb->IdleThread = InitThread;
+
+    /* Initialize the Kernel Executive */
     ExpInitializeExecutive(Number, LoaderBlock);
-    
-    //
-    // Only do this on the boot CPU
-    //
+
+    /* Only do this on the boot CPU */
     if (!Number)
     {
-        //
-        // Calculate the time reciprocal
-        //
+        /* Calculate the time reciprocal */
         KiTimeIncrementReciprocal =
-        KiComputeReciprocal(KeMaximumIncrement,
-                            &KiTimeIncrementShiftCount);
-        
-        //
-        // Update DPC Values in case they got updated by the executive
-        //
+            KiComputeReciprocal(KeMaximumIncrement,
+                                &KiTimeIncrementShiftCount);
+
+        /* Update DPC Values in case they got updated by the executive */
         Prcb->MaximumDpcQueueDepth = KiMaximumDpcQueueDepth;
         Prcb->MinimumDpcRate = KiMinimumDpcRate;
         Prcb->AdjustDpcThreshold = KiAdjustDpcThreshold;
     }
-    
-    //
-    // Raise to Dispatch
-    //
+
+    /* Raise to Dispatch */
     KfRaiseIrql(DISPATCH_LEVEL);
-    
-    //
-    // Set the Idle Priority to 0. This will jump into Phase 1
-    //
+
+    /* Set the Idle Priority to 0. This will jump into Phase 1 */
     KeSetPriorityThread(InitThread, 0);
-    
-    //
-    // If there's no thread scheduled, put this CPU in the Idle summary
-    //
+
+    /* If there's no thread scheduled, put this CPU in the Idle summary */
     KiAcquirePrcbLock(Prcb);
     if (!Prcb->NextThread) KiIdleSummary |= 1 << Number;
     KiReleasePrcbLock(Prcb);
-    
-    //
-    // Raise back to HIGH_LEVEL
-    //
+
+    /* Raise back to HIGH_LEVEL and clear the PRCB for the loader block */
     KfRaiseIrql(HIGH_LEVEL);
+    LoaderBlock->Prcb = 0;
 }
 
+C_ASSERT((PKIPCR)KeGetPcr() == (PKIPCR)0xFFDFF000);
+C_ASSERT((FIELD_OFFSET(KIPCR, FirstLevelDcacheSize) & 4) == 0);
+C_ASSERT(sizeof(KIPCR) <= PAGE_SIZE);
+
 VOID
-KiInitializeSystem(IN ULONG Magic,
-                   IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+NTAPI
+KiInitializePcr(IN ULONG ProcessorNumber,
+                IN PKIPCR Pcr,
+                IN PKTHREAD IdleThread,
+                IN PVOID PanicStack,
+                IN PVOID InterruptStack)
 {
-    ARM_PTE Pte;
-    PKPCR Pcr;
-    ARM_CONTROL_REGISTER ControlRegister;
+    ULONG i;
+    
+    /* Set the Current Thread */
+    Pcr->PrcbData.CurrentThread = IdleThread;
 
-    //
-    // Detect ARM version (Architecture 6 is the ARMv5TE-J, go figure!)
-    //
-    KeIsArmV6 = KeArmIdCodeRegisterGet().Architecture == 7;
-    
-    //
-    // Set the number of TLB entries and ASIDs
-    //
-    KeNumberTbEntries = 64;
-    if (__ARMV6__)
-    {
-        //
-        // 256 ASIDs on v6/v7
-        //
-        KeNumberProcessIds = 256;
-    }
-    else
-    {
-        //
-        // The TLB is VIVT on v4/v5
-        //
-        KeNumberProcessIds = 0;
-    }
-    
-    //
-    // Flush the TLB
-    //
-    KeFlushTb();
-    
-    //
-    // Build the KIPCR pte
-    //
-    Pte.L1.Section.Type = SectionPte;
-    Pte.L1.Section.Buffered = FALSE;
-    Pte.L1.Section.Cached = FALSE;
-    Pte.L1.Section.Reserved = 1; // ARM926EJ-S manual recommends setting to 1
-    Pte.L1.Section.Domain = Domain0;
-    Pte.L1.Section.Access = SupervisorAccess;
-    Pte.L1.Section.BaseAddress = LoaderBlock->u.Arm.PcrPage;
-    Pte.L1.Section.Ignored = Pte.L1.Section.Ignored1 = 0;
-    
-    //
-    // Map it into kernel address space by locking it into the TLB
-    //
-    KeFillFixedEntryTb(Pte, (PVOID)KIPCR, PCR_ENTRY);
+    /* Set pointers to ourselves */
+    Pcr->Self = (PKPCR)Pcr;
+    Pcr->Prcb = &Pcr->PrcbData;
 
-    //
-    // Now map the PCR into user address space as well (read-only)
-    //
-    Pte.L1.Section.Access = SharedAccess;
-    KeFillFixedEntryTb(Pte, (PVOID)USPCR, PCR_ENTRY + 1);
-    
-    //
-    // Now we should be able to use the PCR...
-    //
-    Pcr = (PKPCR)KeGetPcr();
-    
-    //
-    // Set the cache policy (HACK)
-    //
-    Pcr->CachePolicy = 0;
-    Pcr->AlignedCachePolicy = 0;
-    
-    //
-    // Copy cache information from the loader block
-    //
-    Pcr->FirstLevelDcacheSize = LoaderBlock->u.Arm.FirstLevelDcacheSize;
-    Pcr->SecondLevelDcacheSize = LoaderBlock->u.Arm.SecondLevelDcacheSize;
-    Pcr->FirstLevelIcacheSize = LoaderBlock->u.Arm.FirstLevelIcacheSize;
-    Pcr->SecondLevelIcacheSize = LoaderBlock->u.Arm.SecondLevelIcacheSize;
-    Pcr->FirstLevelDcacheFillSize = LoaderBlock->u.Arm.FirstLevelDcacheFillSize;
-    Pcr->SecondLevelDcacheFillSize = LoaderBlock->u.Arm.SecondLevelDcacheFillSize;
-    Pcr->FirstLevelIcacheFillSize = LoaderBlock->u.Arm.FirstLevelIcacheFillSize;
-    Pcr->SecondLevelIcacheFillSize = LoaderBlock->u.Arm.SecondLevelIcacheFillSize;
+    /* Set the PCR Version */
+    Pcr->MajorVersion = PCR_MAJOR_VERSION;
+    Pcr->MinorVersion = PCR_MINOR_VERSION;
 
-    //
-    // Set global d-cache fill and alignment values
-    //
+    /* Set the PCRB Version */
+    Pcr->PrcbData.MajorVersion = 1;
+    Pcr->PrcbData.MinorVersion = 1;
+
+    /* Set the Build Type */
+    Pcr->PrcbData.BuildType = 0;
+#ifndef CONFIG_SMP
+    Pcr->PrcbData.BuildType |= PRCB_BUILD_UNIPROCESSOR;
+#endif
+#if DBG
+    Pcr->PrcbData.BuildType |= PRCB_BUILD_DEBUG;
+#endif
+
+    /* Set the Processor Number and current Processor Mask */
+    Pcr->PrcbData.Number = (UCHAR)ProcessorNumber;
+    Pcr->PrcbData.SetMember = 1 << ProcessorNumber;
+
+    /* Set the PRCB for this Processor */
+    KiProcessorBlock[ProcessorNumber] = Pcr->Prcb;
+
+    /* Start us out at PASSIVE_LEVEL */
+    Pcr->Irql = PASSIVE_LEVEL;
+
+    /* Set the stacks */
+    Pcr->PanicStack = PanicStack;
+    Pcr->InterruptStack = InterruptStack;
+
+    /* Setup the processor set */
+    Pcr->PrcbData.MultiThreadProcessorSet = Pcr->PrcbData.SetMember;
+    
+    /* Copy cache information from the loader block */
+    Pcr->FirstLevelDcacheSize = KeLoaderBlock->u.Arm.FirstLevelDcacheSize;
+    Pcr->SecondLevelDcacheSize = KeLoaderBlock->u.Arm.SecondLevelDcacheSize;
+    Pcr->FirstLevelIcacheSize = KeLoaderBlock->u.Arm.FirstLevelIcacheSize;
+    Pcr->SecondLevelIcacheSize = KeLoaderBlock->u.Arm.SecondLevelIcacheSize;
+    Pcr->FirstLevelDcacheFillSize = KeLoaderBlock->u.Arm.FirstLevelDcacheFillSize;
+    Pcr->SecondLevelDcacheFillSize = KeLoaderBlock->u.Arm.SecondLevelDcacheFillSize;
+    Pcr->FirstLevelIcacheFillSize = KeLoaderBlock->u.Arm.FirstLevelIcacheFillSize;
+    Pcr->SecondLevelIcacheFillSize = KeLoaderBlock->u.Arm.SecondLevelIcacheFillSize;
+
+    /* Set global d-cache fill and alignment values */
     if (!Pcr->SecondLevelDcacheSize)
     {
-        //
-        // Use the first level
-        //
+        /* Use the first level */
         Pcr->DcacheFillSize = Pcr->FirstLevelDcacheSize;
     }
     else
     {
-        //
-        // Use the second level
-        //
+        /* Use the second level */
         Pcr->DcacheFillSize = Pcr->SecondLevelDcacheSize;
     }
     
-    //
-    // Set the alignment
-    //
+    /* Set the alignment */
     Pcr->DcacheAlignment = Pcr->DcacheFillSize - 1;
     
-    //
-    // Set global i-cache fill and alignment values
-    //
+    /* Set global i-cache fill and alignment values */
     if (!Pcr->SecondLevelIcacheSize)
     {
-        //
-        // Use the first level
-        //
+        /* Use the first level */
         Pcr->IcacheFillSize = Pcr->FirstLevelIcacheSize;
     }
     else
     {
-        //
-        // Use the second level
-        //
+        /* Use the second level */
         Pcr->IcacheFillSize = Pcr->SecondLevelIcacheSize;
     }
     
-    //
-    // Set the alignment
-    //
+    /* Set the alignment */
     Pcr->IcacheAlignment = Pcr->IcacheFillSize - 1;
     
-    //
-    // Now sweep caches
-    //
+    /* Set processor information */
+    Pcr->ProcessorId = KeArmIdCodeRegisterGet().AsUlong;
+    
+    /* Set all interrupt routines to unexpected interrupts as well */
+    for (i = 0; i < MAXIMUM_VECTOR; i++)
+    {
+        /* Point to the same template */
+        Pcr->InterruptRoutine[i] = (PVOID)&KxUnexpectedInterrupt.DispatchCode;
+    }
+
+    /* Set default stall factor */
+    Pcr->StallScaleFactor = 50;
+    
+    /* Setup software interrupts */
+    Pcr->InterruptRoutine[PASSIVE_LEVEL] = KiPassiveRelease;
+    Pcr->InterruptRoutine[APC_LEVEL] = KiApcInterrupt;
+    Pcr->InterruptRoutine[DISPATCH_LEVEL] = KiDispatchInterrupt;
+    Pcr->ReservedVectors = (1 << PASSIVE_LEVEL) |
+                           (1 << APC_LEVEL) |
+                           (1 << DISPATCH_LEVEL) |
+                           (1 << IPI_LEVEL);
+}
+
+VOID
+KiInitializeMachineType(VOID)
+{
+    /* Detect ARM version */
+    KeIsArmV6 = KeArmIdCodeRegisterGet().Architecture >= 7;
+    
+    /* Set the number of TLB entries and ASIDs */
+    KeNumberTbEntries = 64;
+    if (__ARMV6__)
+    {
+        /* 256 ASIDs on v6/v7 */
+        KeNumberProcessIds = 256;
+    }
+    else
+    {
+        /* The TLB is VIVT on v4/v5 */
+        KeNumberProcessIds = 0;
+    }
+}
+
+VOID
+KiInitializeSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    ULONG Cpu;
+    PKTHREAD InitialThread;
+    PKPROCESS InitialProcess;
+    ARM_CONTROL_REGISTER ControlRegister;
+    PKIPCR Pcr = (PKIPCR)KeGetPcr();
+    PKTHREAD Thread;
+
+    /* Flush the TLB */
+    KeFlushTb();
+    
+    /* Save the loader block and get the current CPU */
+    KeLoaderBlock = LoaderBlock;
+    Cpu = KeNumberProcessors;
+
+    /* Save the initial thread and process */
+    InitialThread = (PKTHREAD)LoaderBlock->Thread;
+    InitialProcess = (PKPROCESS)LoaderBlock->Process;
+
+    /* Clean the APC List Head */
+    InitializeListHead(&InitialThread->ApcState.ApcListHead[KernelMode]);
+
+    /* Initialize the machine type */
+    KiInitializeMachineType();
+
+    /* Skip initial setup if this isn't the Boot CPU */
+    if (Cpu) goto AppCpuInit;
+    
+    /* Initialize the PCR */
+    RtlZeroMemory(Pcr, PAGE_SIZE);
+    KiInitializePcr(Cpu,
+                    Pcr,
+                    InitialThread,
+                    (PVOID)LoaderBlock->u.Arm.PanicStack,
+                    (PVOID)LoaderBlock->u.Arm.InterruptStack);
+
+    /* Now sweep caches */
     HalSweepIcache();
     HalSweepDcache();
     
-    //
-    // Set PCR version
-    //
-    Pcr->MinorVersion = PCR_MINOR_VERSION;
-    Pcr->MajorVersion = PCR_MAJOR_VERSION;
+    /* Set us as the current process */
+    InitialThread->ApcState.Process = InitialProcess;
     
-    //
-    // Set boot PRCB
-    //
-    Pcr->Prcb = (PKPRCB)LoaderBlock->Prcb;
+AppCpuInit:
+    /* Setup CPU-related fields */
+    Pcr->Number = Cpu;
+    Pcr->SetMember = 1 << Cpu;
+    Pcr->SetMemberCopy = 1 << Cpu;
+    Pcr->PrcbData.SetMember = 1 << Cpu;
     
-    //
-    // Set the different stacks
-    //
-    Pcr->InitialStack = (PVOID)LoaderBlock->KernelStack;
-    Pcr->PanicStack = (PVOID)LoaderBlock->u.Arm.PanicStack;
-    Pcr->InterruptStack = (PVOID)LoaderBlock->u.Arm.InterruptStack;
+    /* Initialize the Processor with HAL */
+    HalInitializeProcessor(Cpu, KeLoaderBlock);
+
+    /* Set active processors */
+    KeActiveProcessors |= Pcr->SetMember;
+    KeNumberProcessors++;
+
+    /* Check if this is the boot CPU */
+    if (!Cpu)
+    {
+        /* Initialize debugging system */
+        KdInitSystem(0, KeLoaderBlock);
+
+        /* Check for break-in */
+        if (KdPollBreakIn()) DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
+    }
+
+    /* Raise to HIGH_LEVEL */
+    KfRaiseIrql(HIGH_LEVEL);
     
-    //
-    // Set the current thread
-    //
-    Pcr->CurrentThread = (PKTHREAD)LoaderBlock->Thread;
-    
-    //
-    // Set the current IRQL to high
-    //
-    Pcr->CurrentIrql = HIGH_LEVEL;
-    
-    //
-    // Set processor information
-    //
-    Pcr->ProcessorId = KeArmIdCodeRegisterGet().AsUlong;
-    Pcr->SystemReserved[0] = KeArmControlRegisterGet().AsUlong;
-    
-    //
-    // Set the exception address to high
-    //
+    /* Set the exception address to high */
     ControlRegister = KeArmControlRegisterGet();
     ControlRegister.HighVectors = TRUE;
     KeArmControlRegisterSet(ControlRegister);
     
-    //
-    // Setup the exception vector table
-    //
+    /* Setup the exception vector table */
     RtlCopyMemory((PVOID)0xFFFF0000, &KiArmVectorTable, 14 * sizeof(PVOID));
 
-    //
-    // Initialize the rest of the kernel now
-    //
+    /* Initialize the rest of the kernel now */
     KiInitializeKernel((PKPROCESS)LoaderBlock->Process,
                        (PKTHREAD)LoaderBlock->Thread,
                        (PVOID)LoaderBlock->KernelStack,
-                       (PKPRCB)LoaderBlock->Prcb,
+                       Pcr->Prcb,
                        Pcr->Prcb->Number,
-                       LoaderBlock);
-    
-    
-    //
-    // Jump to idle loop
-    //
+                       KeLoaderBlock);
+
+    /* Set the priority of this thread to 0 */
+    Thread = KeGetCurrentThread();
+    Thread->Priority = 0;
+
+    /* Force interrupts enabled and lower IRQL back to DISPATCH_LEVEL */
+    _enable();
+    KfLowerIrql(DISPATCH_LEVEL);
+
+    /* Set the right wait IRQL */
+    Thread->WaitIrql = DISPATCH_LEVEL;
+
+    /* Jump into the idle loop */
     KiIdleLoop();
+}
+
+ULONG
+DbgPrintEarly(const char *fmt, ...)
+{
+    va_list args;
+    unsigned int i;
+    char Buffer[1024];
+    PCHAR String = Buffer;
+
+    va_start(args, fmt);
+    i = vsprintf(Buffer, fmt, args);
+    va_end(args);
+    
+    /* Output the message */
+    while (*String != 0)
+    {
+        if (*String == '\n')
+        {
+            KdPortPutByteEx(NULL, '\r');
+        }
+        KdPortPutByteEx(NULL, *String);
+        String++;
+    }
+    
+    return STATUS_SUCCESS;
 }

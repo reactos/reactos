@@ -119,6 +119,12 @@ VOID RunLoader(VOID)
 		return;
 	}
 
+	// Load additional SCSI driver (if any)
+	if (LoadBootDeviceDriver() != ESUCCESS)
+	{
+		UiMessageBoxCritical("Unable to load additional boot device driver");
+	}
+
 	if (!IniFileInitialize())
 	{
 		UiMessageBoxCritical("Error initializing .ini file");
@@ -218,6 +224,7 @@ VOID RunLoader(VOID)
 		IniOpenSection("Operating Systems", &SectionId);
 		IniReadSettingByName(SectionId, SectionName, SettingValue, sizeof(SettingValue));
 
+#ifndef _M_ARM
 		// Install the drive mapper according to this sections drive mappings
 #ifdef __i386__
 		DriveMapMapDrivesInSection(SectionName);
@@ -270,6 +277,9 @@ VOID RunLoader(VOID)
 		{
 			LoadAndBootDrive(SectionName);
 		}
+#endif
+#else
+        LoadAndBootWindows(SectionName, SettingValue, _WIN32_WINNT_WS03);
 #endif
 	}
 

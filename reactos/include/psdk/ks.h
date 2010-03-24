@@ -290,7 +290,6 @@ typedef struct
 #if 0
 #define KSINTERFACESETID_Media
 
-#define KSINTERFACESETID_Standard
 #define KSINTERFACE_STANDARD_STREAMING
 #define KSINTERFACE_STANDARD_LOOPED_STREAMING
 #define KSINTERFACE_STANDARD_CONTROL
@@ -337,22 +336,28 @@ DEFINE_GUIDSTRUCT("4747B320-62CE-11CF-A5D6-28DB04C10000", KSMEDIUMSETID_Standard
     Clock Properties/Methods/Events
 */
 
-#define KSPROPSETID_Clock \
+#define STATIC_KSPROPSETID_Clock \
     0xDF12A4C0L, 0xAC17, 0x11CF, 0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00
+DEFINE_GUIDSTRUCT("DF12A4C0-AC17-11CF-A5D6-28DB04C10000", KSPROPSETID_Clock);
+#define KSPROPSETID_Clock DEFINE_GUIDNAMED(KSPROPSETID_Clock)
 
 typedef enum
 {
     KSPROPERTY_CLOCK_TIME,
     KSPROPERTY_CLOCK_PHYSICALTIME,
-    KSPROPERTY_CORRELATEDTIME,
-    KSPROPERTY_CORRELATEDPHYSICALTIME,
+    KSPROPERTY_CLOCK_CORRELATEDTIME,
+    KSPROPERTY_CLOCK_CORRELATEDPHYSICALTIME,
     KSPROPERTY_CLOCK_RESOLUTION,
     KSPROPERTY_CLOCK_STATE,
+#if defined(_NTDDK_)
     KSPROPERTY_CLOCK_FUNCTIONTABLE
+#endif // defined(_NTDDK_)
 } KSPROPERTY_CLOCK;
 
-#define KSEVENTSETID_Clock \
+#define STATIC_KSEVENTSETID_Clock \
     0x364D8E20L, 0x62C7, 0x11CF, 0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00
+DEFINE_GUIDSTRUCT("364D8E20-62C7-11CF-A5D6-28DB04C10000", KSEVENTSETID_Clock);
+#define KSEVENTSETID_Clock DEFINE_GUIDNAMED(KSEVENTSETID_Clock)
 
 typedef enum
 {
@@ -502,11 +507,12 @@ typedef enum
     Properties/Methods/Events
 */
 
-#define KSPROPSETID_MediaSeeking \
+#define STATIC_KSPROPSETID_MediaSeeking\
     0xEE904F0CL, 0xD09B, 0x11D0, 0xAB, 0xE9, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96
+DEFINE_GUIDSTRUCT("EE904F0C-D09B-11D0-ABE9-00A0C9223196", KSPROPSETID_MediaSeeking);
+#define KSPROPSETID_MediaSeeking DEFINE_GUIDNAMED(KSPROPSETID_MediaSeeking)
 
-typedef enum
-{
+typedef enum {
     KSPROPERTY_MEDIASEEKING_CAPABILITIES,
     KSPROPERTY_MEDIASEEKING_FORMATS,
     KSPROPERTY_MEDIASEEKING_TIMEFORMAT,
@@ -519,6 +525,126 @@ typedef enum
     KSPROPERTY_MEDIASEEKING_CONVERTTIMEFORMAT
 } KSPROPERTY_MEDIASEEKING;
 
+typedef enum {
+    KS_SEEKING_NoPositioning,
+    KS_SEEKING_AbsolutePositioning,
+    KS_SEEKING_RelativePositioning,
+    KS_SEEKING_IncrementalPositioning,
+    KS_SEEKING_PositioningBitsMask = 0x3,
+    KS_SEEKING_SeekToKeyFrame,
+    KS_SEEKING_ReturnTime = 0x8
+} KS_SEEKING_FLAGS;
+
+typedef enum {
+    KS_SEEKING_CanSeekAbsolute = 0x1,
+    KS_SEEKING_CanSeekForwards = 0x2,
+    KS_SEEKING_CanSeekBackwards = 0x4,
+    KS_SEEKING_CanGetCurrentPos = 0x8,
+    KS_SEEKING_CanGetStopPos = 0x10,
+    KS_SEEKING_CanGetDuration = 0x20,
+    KS_SEEKING_CanPlayBackwards = 0x40
+} KS_SEEKING_CAPABILITIES;
+
+typedef struct {
+    LONGLONG            Current;
+    LONGLONG            Stop;
+    KS_SEEKING_FLAGS    CurrentFlags;
+    KS_SEEKING_FLAGS    StopFlags;
+} KSPROPERTY_POSITIONS, *PKSPROPERTY_POSITIONS;
+
+typedef struct {
+    LONGLONG    Earliest;
+    LONGLONG    Latest;
+} KSPROPERTY_MEDIAAVAILABLE, *PKSPROPERTY_MEDIAAVAILABLE;
+
+typedef struct {
+    KSPROPERTY  Property;
+    GUID        SourceFormat;
+    GUID        TargetFormat;
+    LONGLONG    Time;
+} KSP_TIMEFORMAT, *PKSP_TIMEFORMAT;
+
+#define DEFINE_KSPROPERTY_ITEM_MEDIASEEKING_CAPABILITIES(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_MEDIASEEKING_CAPABILITIES,\
+        (Handler),\
+        sizeof(KSPROPERTY),\
+        sizeof(KS_SEEKING_CAPABILITIES),\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_MEDIASEEKING_FORMATS(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_MEDIASEEKING_FORMATS,\
+        (Handler),\
+        sizeof(KSPROPERTY),\
+        0,\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_MEDIASEEKING_TIMEFORMAT(GetHandler, SetHandler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_MEDIASEEKING_TIMEFORMAT,\
+        (GetHandler),\
+        sizeof(KSPROPERTY),\
+        sizeof(GUID),\
+        (SetHandler),\
+        NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_MEDIASEEKING_POSITION(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_MEDIASEEKING_POSITION,\
+        (Handler),\
+        sizeof(KSPROPERTY),\
+        sizeof(LONGLONG),\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_MEDIASEEKING_STOPPOSITION(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_MEDIASEEKING_STOPPOSITION,\
+        (Handler),\
+        sizeof(KSPROPERTY),\
+        sizeof(LONGLONG),\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_MEDIASEEKING_POSITIONS(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_MEDIASEEKING_POSITIONS,\
+        NULL,\
+        sizeof(KSPROPERTY),\
+        sizeof(KSPROPERTY_POSITIONS),\
+        (Handler),\
+        NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_MEDIASEEKING_DURATION(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_MEDIASEEKING_DURATION,\
+        (Handler),\
+        sizeof(KSPROPERTY),\
+        sizeof(LONGLONG),\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_MEDIASEEKING_AVAILABLE(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_MEDIASEEKING_AVAILABLE,\
+        (Handler),\
+        sizeof(KSPROPERTY),\
+        sizeof(KSPROPERTY_MEDIAAVAILABLE),\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_MEDIASEEKING_PREROLL(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_MEDIASEEKING_PREROLL,\
+        (Handler),\
+        sizeof(KSPROPERTY),\
+        sizeof(LONGLONG),\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_MEDIASEEKING_CONVERTTIMEFORMAT(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_MEDIASEEKING_CONVERTTIMEFORMAT,\
+        (Handler),\
+        sizeof(KSP_TIMEFORMAT),\
+        sizeof(LONGLONG),\
+        NULL, NULL, 0, NULL, NULL, 0)
 
 /* ===============================================================
     Pin
@@ -598,8 +724,10 @@ typedef enum
     Properties/Methods/Events
 */
 
-#define KSPROPSETID_Stream \
+#define STATIC_KSPROPSETID_Stream\
     0x65aaba60L, 0x98ae, 0x11cf, 0xa1, 0x0d, 0x00, 0x20, 0xaf, 0xd1, 0x56, 0xe4
+DEFINE_GUIDSTRUCT("65aaba60-98ae-11cf-a10d-0020afd156e4", KSPROPSETID_Stream);
+#define KSPROPSETID_Stream DEFINE_GUIDNAMED(KSPROPSETID_Stream)
 
 typedef enum
 {
@@ -1384,24 +1512,6 @@ typedef struct
 #define KSPROPERTY_MEMBER_VALUES        0x00000003
 #define KSPROPERTY_MEMBER_FLAG_DEFAULT  KSPROPERTY_MEMBER_RANGES
 
-typedef enum {
-    KS_SEEKING_NoPositioning,
-    KS_SEEKING_AbsolutePositioning,
-    KS_SEEKING_RelativePositioning,
-    KS_SEEKING_IncrementalPositioning,
-    KS_SEEKING_PositioningBitsMask = 0x3,
-    KS_SEEKING_SeekToKeyFrame,
-    KS_SEEKING_ReturnTime = 0x8
-} KS_SEEKING_FLAGS;
-
-typedef struct
-{
-    LONGLONG            Current;
-    LONGLONG            Stop;
-    KS_SEEKING_FLAGS    CurrentFlags;
-    KS_SEEKING_FLAGS    StopFlags;
-} KSPROPERTY_POSITIONS, *PKSPROPERTY_POSITIONS;
-
 typedef struct
 {
     GUID            PropertySet;
@@ -1473,13 +1583,6 @@ typedef struct
     ULONG           MembersListCount;
     ULONG           Reserved;
 } KSPROPERTY_DESCRIPTION, *PKSPROPERTY_DESCRIPTION;
-
-typedef struct
-{
-    LONGLONG    Earliest;
-    LONGLONG    Latest;
-} KSPROPERTY_MEDIAAVAILABLE, *PKSPROPERTY_MEDIAAVAILABLE;
-
 
 typedef struct
 {
@@ -1743,10 +1846,31 @@ typedef struct
     KSEVENTDATA EventData;
 } KSRELATIVEEVENT, *PKSRELATIVEEVENT;
 
+#define KSRELATIVEEVENT_FLAG_HANDLE 0x00000001
+#define KSRELATIVEEVENT_FLAG_POINTER 0x00000002
 
 /* ===============================================================
     Timing
 */
+
+
+typedef struct {
+    KSEVENTDATA     EventData;
+    LONGLONG        MarkTime;
+} KSEVENT_TIME_MARK, *PKSEVENT_TIME_MARK;
+
+typedef struct {
+    KSEVENTDATA     EventData;
+    LONGLONG        TimeBase;
+    LONGLONG        Interval;
+} KSEVENT_TIME_INTERVAL, *PKSEVENT_TIME_INTERVAL;
+
+typedef struct {
+    LONGLONG        TimeBase;
+    LONGLONG        Interval;
+} KSINTERVAL, *PKSINTERVAL;
+
+
 
 typedef struct
 {
@@ -1760,20 +1884,6 @@ typedef struct
     LONGLONG    Time;
     LONGLONG    SystemTime;
 } KSCORRELATED_TIME, *PKSCORRELATED_TIME;
-
-typedef struct
-{
-    KSPROPERTY Property;
-    GUID SourceFormat;
-    GUID TargetFormat;
-    LONGLONG Time;
-} KSP_TIMEFORMAT, *PKSP_TIMEFORMAT;
-
-typedef struct
-{
-    LONGLONG        TimeBase;
-    LONGLONG        Interval;
-} KSINTERVAL, *PKSINTERVAL;
 
 typedef struct
 {
@@ -1983,19 +2093,7 @@ typedef struct {
 typedef struct _KSEVENT_ENTRY KSEVENT_ENTRY, *PKSEVENT_ENTRY;
 
 #if defined(_NTDDK_)
-typedef struct
-{
-    KSEVENTDATA     EventData;
-    LONGLONG        MarkTime;
-} KSEVENT_TIME_MARK, *PKSEVENT_TIME_MARK;
-
-typedef struct
-{
-    KSEVENTDATA     EventData;
-    LONGLONG        TimeBase;
-    LONGLONG        Interval;
-} KSEVENT_TIME_INTERVAL, *PKSEVENT_TIME_INTERVAL;
-
+	
 typedef NTSTATUS (NTAPI *PFNKSADDEVENT)(
     IN  PIRP Irp,
     IN  PKSEVENTDATA EventData,
@@ -3780,6 +3878,26 @@ KsPinGetConnectedPinFileObject(
 
 #else
 
+#if !defined( KS_NO_CREATE_FUNCTIONS )
+
+KSDDKAPI
+DWORD
+WINAPI
+KsCreateAllocator(
+    IN HANDLE ConnectionHandle,
+    IN PKSALLOCATOR_FRAMING AllocatorFraming,
+    OUT PHANDLE AllocatorHandle
+    );
+
+KSDDKAPI
+DWORD
+NTAPI
+KsCreateClock(
+    IN HANDLE ConnectionHandle,
+    IN PKSCLOCK_CREATE ClockCreate,
+    OUT PHANDLE ClockHandle
+    );
+
 KSDDKAPI
 DWORD
 WINAPI
@@ -3790,6 +3908,17 @@ KsCreatePin(
     OUT PHANDLE ConnectionHandle
     );
 
+KSDDKAPI
+DWORD
+WINAPI
+KsCreateTopologyNode(
+    IN HANDLE ParentHandle,
+    IN PKSNODE_CREATE NodeCreate,
+    IN ACCESS_MASK DesiredAccess,
+    OUT PHANDLE NodeHandle
+    );
+    
+#endif
 
 #endif
 

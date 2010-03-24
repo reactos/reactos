@@ -1,5 +1,4 @@
-#ifndef __TNCLASS_H_
-#define __TNCLASS_H_
+#pragma once
 
 #include <windows.h>
 #include "tnconfig.h"
@@ -69,6 +68,3 @@ private:
 	void NewProcess();					// Paul Brannan 9/13/98
 	void SetLocalAddress(SOCKET s);
 };
-
-#endif
-

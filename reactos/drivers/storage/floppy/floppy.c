@@ -686,19 +686,20 @@ static NTSTATUS NTAPI InitController(PCONTROLLER_INFO ControllerInfo)
       return STATUS_IO_DEVICE_ERROR;
     }
 
-  /* Check if floppy drive exists */
-  if(HwSenseInterruptStatus(ControllerInfo) != STATUS_SUCCESS)
+  /* All controllers should support this so
+   * if we get something strange back then we
+   * know that this isn't a floppy controller
+   */
+  if (HwGetVersion(ControllerInfo) <= 0)
     {
-      WARN_(FLOPPY, "Floppy drive not detected!\n");
+      WARN_(FLOPPY, "InitController: unable to contact controller\n");
       return STATUS_NO_SUCH_DEVICE;
     }
 
-  INFO_(FLOPPY, "InitController: resetting the controller after floppy detection\n");
-
-  /* Reset the controller again after drive detection */
+  /* Reset the controller to avoid interrupt garbage on certain controllers */
   if(HwReset(ControllerInfo) != STATUS_SUCCESS)
     {
-      WARN_(FLOPPY, "InitController: unable to reset controller\n");
+      WARN_(FLOPPY, "InitController: unable to reset controller #2\n");
       return STATUS_IO_DEVICE_ERROR;
     }
 
@@ -971,7 +972,7 @@ static BOOLEAN NTAPI AddControllers(PDRIVER_OBJECT DriverObject)
 	    }
 
 	  /* 3e: Set up the DPC */
-	  IoInitializeDpcRequest(gControllerInfo[i].DriveInfo[j].DeviceObject, DpcForIsr);
+	  IoInitializeDpcRequest(gControllerInfo[i].DriveInfo[j].DeviceObject, (PIO_DPC_ROUTINE)DpcForIsr);
 
 	  /* 3f: Point the device extension at our DriveInfo struct */
 	  gControllerInfo[i].DriveInfo[j].DeviceObject->DeviceExtension = &gControllerInfo[i].DriveInfo[j];

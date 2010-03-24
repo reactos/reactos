@@ -1,5 +1,4 @@
-#ifndef LANG_AR_BH_H__
-#define LANG_AR_BH_H__
+#pragma once
 
 MUI_LAYOUTS arBHLayouts[] =
 {
@@ -7,5 +6,3 @@ MUI_LAYOUTS arBHLayouts[] =
     { L"3C01", L"00000401" },
     { NULL, NULL }
 };
-
-#endif

@@ -42,3 +42,5 @@ stat_clear(PSUMM psumm)
 {
     memset(psumm, 0, sizeof(SUMM));
 }
+
+/* EOF */

@@ -4,6 +4,7 @@
  *
  * - Help text and functions
  */
+
 #include <stdio.h>
 
 #include "version.h"
@@ -50,6 +51,9 @@ char *verboseUsage =
 "  -h   This text.\n\n"
 "  -l <logFile>\n"
 "       <logFile>: Append copy to specified logFile.\n"
+"       Default: no logFile\n\n"
+"  -L <logFile>\n"
+"       <logFile>: (Over)write copy to specified logFile.\n"
 "       Default: no logFile\n\n"
 "  -m   Prefix (mark) each translated line with '* '.\n\n"
 "  -M   Prefix (mark) each NOT translated line with '? '.\n"
@@ -112,7 +116,7 @@ char *verboseUsage =
 "       For a reliable result, these sources should be up to date with\n"
 "       the tested revision (or try '-R check').\n"
 "       Can be combined with -tTR.\n"
-"       Implies -U (For retrieving source info).\n\n"
+"       Implies -U (For retrieving source info) and -R check.\n\n"
 "  -t   Translate twice. The address itself and for (address-1).\n"
 "       Show extra filename, func and linenumber between [..] if they differ\n"
 "       So if only the linenumbers differ, then only show the extra\n"
@@ -139,7 +143,10 @@ char *verboseUsage =
 "  Options accepting a string as argument can be cleared by the value '" KDBG_ESC_OFF "'.\n"
 "  Some ClI commands are read only or not (entirely) implemented.\n"
 "  If no value is provided, the current one is printed.\n"
-"  There are only a few extra ClI commands or with different behaviour:\n"
+"  There are a few extra ClI commands or with different behaviour:\n"
+"  - `a <module>:<reladdress>:\n"
+"    - Outputs absolute address e.g. for setting breakpoints.\n"
+"    - Do a 'mod' first to retrieve relocation info.\n"
 "  - `h : shows this helptext (without exiting)\n"
 "  - `q : quits log2lines\n"
 "  - `R regscan : the output is printed immediately (do a 'bt' first)\n"
@@ -233,7 +240,14 @@ char *verboseUsage =
 "       | L2L- -l logfile is \"new.log\" (changed)\n"
 "       kdb:> `l off\n"
 "       | L2L- -l logfile is "" (changed)\n"
-"       kdb:>\n"
+"       kdb:>\n\n"
+"  Set a breakpoint with help of 'mod' and '`a':\n"
+"       <msi.dll:2e35d (dll/win32/msi/msiquery.c:189 (MSI_IterateRecords))>\n"
+"       kdb:> mod (for kernel tracing usually only needed once)\n"
+"       -- mod output with reloc info\n"
+"       kdb:> `a msi.dll:2e35d\n"
+"       | L2L- Address: 0x00096ca0\n"
+"       kdb:> bpx 0x00096ca0\n\n"
 "\n";
 
 void
@@ -246,3 +260,5 @@ usage(int verbose)
     else
         fprintf(stderr, "Try log2lines -h\n");
 }
+
+/* EOF */

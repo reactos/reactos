@@ -372,7 +372,7 @@ MmMapLockedPagesSpecifyCache(IN PMDL Mdl,
         //
         // Get the template
         //
-        TempPte = HyperTemplatePte;
+        TempPte = ValidKernelPte;
         switch (CacheAttribute)
         {
             case MiNonCached:
@@ -579,7 +579,8 @@ MmProbeAndLockPages(IN PMDL Mdl,
     PETHREAD Thread;
     PMMSUPPORT AddressSpace;
     NTSTATUS ProbeStatus;
-    PMMPTE PointerPte, PointerPde, LastPte;
+    PMMPTE PointerPte, LastPte;
+    PMMPDE PointerPde;
     PFN_NUMBER PageFrameIndex;
     BOOLEAN UsePfnLock;
     KIRQL OldIrql;
@@ -952,7 +953,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
         // Grab the PFN
         //
         PageFrameIndex = PFN_FROM_PTE(PointerPte);
-        if (PageFrameIndex < MmHighestPhysicalPage)
+        if (PageFrameIndex <= MmHighestPhysicalPage)
         {
             //
             // Get the PFN entry
@@ -963,7 +964,6 @@ MmProbeAndLockPages(IN PMDL Mdl,
             // Now lock the page
             //
             MmReferencePage(PageFrameIndex);
-            MmLockPage(PageFrameIndex);
         }
         else
         {
@@ -1121,7 +1121,6 @@ MmUnlockPages(IN PMDL Mdl)
                 //
                 // Unlock and dereference
                 //
-                MmUnlockPage(*MdlPages);
                 MmDereferencePage(*MdlPages);
             }
         } while (++MdlPages < LastPage);
@@ -1215,7 +1214,6 @@ MmUnlockPages(IN PMDL Mdl)
         //
         // Unlock and dereference
         //
-        MmUnlockPage(*MdlPages);
         MmDereferencePage(*MdlPages);
     } while (++MdlPages < LastPage);
     

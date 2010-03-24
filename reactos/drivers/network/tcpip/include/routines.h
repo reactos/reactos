@@ -4,9 +4,8 @@
  * FILE:        include/routines.h
  * PURPOSE:     Common routine prototypes
  */
-#ifndef __ROUTINES_H
-#define __ROUTINES_H
 
+#pragma once
 
 UINT Random(VOID);
 
@@ -70,7 +69,5 @@ VOID DisplayTCPPacket(
 #define DISPLAY_IP_PACKET(x)
 #define DISPLAY_TCP_PACKET(x)
 #endif /* DBG */
-
-#endif /* __ROUTINES_H */
 
 /* EOF */

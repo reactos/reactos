@@ -13,8 +13,8 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-#ifndef SSPRINTF_H
-#define SSPRINTF_H
+
+#pragma once
 
 #include <string>
 #include <stdarg.h>
@@ -37,6 +37,4 @@ std::wstring sswvprintf ( const wchar_t* fmt, va_list args );
 #else
 #define sstprintf ssprintf
 #define sstvprintf ssvprintf
-#endif
-
 #endif

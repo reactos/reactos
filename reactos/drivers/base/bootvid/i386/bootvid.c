@@ -394,6 +394,7 @@ VidInitialize(IN BOOLEAN SetMode)
         {
             /* Translate the VGA Memory Address */
             VgaAddress.LowPart = 0xA0000;
+            VgaAddress.HighPart = 0;
             AddressSpace = 0;
             Result = HalFindBusAddressTranslation(VgaAddress,
                                                   &AddressSpace,

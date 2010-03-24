@@ -84,8 +84,6 @@ unsigned int type_memsize(const type_t *t, unsigned int *align);
 int decl_indirect(const type_t *t);
 void write_parameters_init(FILE *file, int indent, const var_t *func, const char *local_var_prefix);
 void print(FILE *file, int indent, const char *format, va_list ap);
-int get_padding(const var_list_t *fields);
-int is_user_type(const type_t *t);
 expr_t *get_size_is_expr(const type_t *t, const char *name);
 int is_full_pointer_function(const var_t *func);
 void write_full_pointer_init(FILE *file, int indent, const var_t *func, int is_server);

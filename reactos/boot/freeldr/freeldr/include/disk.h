@@ -17,8 +17,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __DISK_H
-#define __DISK_H
+#pragma once
 
 #include <reactos/rosioctl.h>
 
@@ -142,4 +141,4 @@ BOOLEAN	DiskGetFirstPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTIT
 BOOLEAN	DiskGetFirstExtendedPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry);
 BOOLEAN	DiskReadBootRecord(ULONG DriveNumber, ULONGLONG LogicalSectorNumber, PMASTER_BOOT_RECORD BootRecord);
 
-#endif  // defined __DISK_H
+ULONG LoadBootDeviceDriver(VOID);

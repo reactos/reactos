@@ -38,8 +38,7 @@
 /* This file is shared between GCC and GDB, and should not contain
    prototypes.  */
 
-#ifndef GCC_DWARF2_H
-#define GCC_DWARF2_H
+#pragma once
 
 //#include "list.h"
 
@@ -838,7 +837,3 @@ typedef struct _CFSTATE
 } DW2CFSTATE, *PDW2CFSTATE;
 
 #define NextCIE(p) ((void*)((char*)p + p->Length + 4))
-
-
-
-#endif /* dwarf2.h */

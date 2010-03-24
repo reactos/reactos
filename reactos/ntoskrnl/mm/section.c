@@ -793,7 +793,6 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
    PMM_REGION Region;
    BOOLEAN HasSwapEntry;
    PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
-   KIRQL OldIrql;
     
    /*
     * There is a window between taking the page fault and locking the
@@ -802,12 +801,6 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
     */
    if (MmIsPagePresent(Process, Address))
    {
-      if (Locked)
-      {
-         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-         MmLockPage(MmGetPfnForProcess(Process, Address));
-         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-      }
       return(STATUS_SUCCESS);
    }
 
@@ -931,12 +924,6 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
          }
          MmInsertRmap(Page, Process, (PVOID)PAddress);
       }
-      if (Locked)
-      {
-         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-         MmLockPage(Page);
-         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-      }
       MmUnlockSectionSegment(Segment);
       PageOp->Status = STATUS_SUCCESS;
       MmspCompleteAndReleasePageOp(PageOp);
@@ -1003,12 +990,6 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
       /*
        * Finish the operation
        */
-      if (Locked)
-      {
-         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-         MmLockPage(Page);
-         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-      }
       PageOp->Status = STATUS_SUCCESS;
       MmspCompleteAndReleasePageOp(PageOp);
       DPRINT("Address 0x%.8X\n", Address);
@@ -1035,16 +1016,6 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
          DPRINT("MmCreateVirtualMappingUnsafe failed, not out of memory\n");
           KeBugCheck(MEMORY_MANAGEMENT);
          return(Status);
-      }
-      /*
-       * Don't add an rmap entry since the page mapped could be for
-       * anything.
-       */
-      if (Locked)
-      {
-         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-         MmLockPage(Page);
-         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
       }
 
       /*
@@ -1085,12 +1056,6 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
          return(Status);
       }
       MmInsertRmap(Page, Process, (PVOID)PAddress);
-      if (Locked)
-      {
-         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-         MmLockPage(Page);
-         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-      }
 
       /*
        * Cleanup and release locks
@@ -1187,12 +1152,6 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
       }
       MmInsertRmap(Page, Process, (PVOID)PAddress);
 
-      if (Locked)
-      {
-         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-         MmLockPage(Page);
-         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-      }
       PageOp->Status = STATUS_SUCCESS;
       MmspCompleteAndReleasePageOp(PageOp);
       DPRINT("Address 0x%.8X\n", Address);
@@ -1263,12 +1222,6 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
           KeBugCheck(MEMORY_MANAGEMENT);
       }
       MmInsertRmap(Page, Process, (PVOID)PAddress);
-      if (Locked)
-      {
-         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-         MmLockPage(Page);
-         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-      }
       PageOp->Status = STATUS_SUCCESS;
       MmspCompleteAndReleasePageOp(PageOp);
       DPRINT("Address 0x%.8X\n", Address);
@@ -1297,12 +1250,6 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
           KeBugCheck(MEMORY_MANAGEMENT);
       }
       MmInsertRmap(Page, Process, (PVOID)PAddress);
-      if (Locked)
-      {
-         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-         MmLockPage(Page);
-         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-      }
       PageOp->Status = STATUS_SUCCESS;
       MmspCompleteAndReleasePageOp(PageOp);
       DPRINT("Address 0x%.8X\n", Address);
@@ -1328,7 +1275,6 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
    PMM_REGION Region;
    ULONG Entry;
    PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
-   KIRQL OldIrql;
     
    DPRINT("MmAccessFaultSectionView(%x, %x, %x, %x)\n", AddressSpace, MemoryArea, Address, Locked);
 
@@ -1466,13 +1412,6 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
    {
       DPRINT1("Unable to create virtual mapping\n");
        KeBugCheck(MEMORY_MANAGEMENT);
-   }
-   if (Locked)
-   {
-      OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-      MmLockPage(NewPage);
-      MmUnlockPage(OldPage);
-      KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
    }
 
    /*
@@ -4480,138 +4419,6 @@ NtExtendSection(IN HANDLE SectionHandle,
    ObDereferenceObject(Section);
 
    return STATUS_NOT_IMPLEMENTED;
-}
-
-
-/**********************************************************************
- * NAME       INTERNAL
- *  MmAllocateSection@4
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *  Length
- *
- * RETURN VALUE
- *
- * NOTE
- *  Code taken from ntoskrnl/mm/special.c.
- *
- * REVISIONS
- */
-PVOID NTAPI
-MmAllocateSection (IN ULONG Length, PVOID BaseAddress)
-{
-    PHYSICAL_ADDRESS LowAddress, HighAddress, SkipBytes;
-    PMDL Mdl;
-    PFN_COUNT PageCount;
-    PPFN_NUMBER MdlPages;
-    MMPTE TempPte, *PointerPte;
-    PMMPFN Pfn;
-
-    /* Allocate an MDL */
-    LowAddress.QuadPart = 0;
-    HighAddress.QuadPart = -1;
-    SkipBytes.QuadPart = 0;
-    Mdl = MiAllocatePagesForMdl(LowAddress,
-                                HighAddress,
-                                SkipBytes,
-                                Length,
-                                MiPlatformCacheAttributes[0][MmCached],
-                                0); // use MM_ALLOCATE_FULLY_REQUIRED
-    if (!Mdl)
-    {
-        /* Fail */
-        return NULL;
-    }
-
-    /* Check if we got all we need */
-    if (Mdl->ByteCount < Length)
-    {
-        /* We didn't get enough */
-        MmFreePagesFromMdl(Mdl);
-        ExFreePool(Mdl);
-        return NULL;
-    }
-
-    /* Calculate how many pages we should have */
-    PageCount = BYTES_TO_PAGES(Length);
-
-    /* Reserve system PTEs */
-    PointerPte = MiReserveSystemPtes(PageCount, SystemPteSpace);
-    if (!PointerPte)
-    {
-        /* Free the MDL and fail */
-        MmFreePagesFromMdl(Mdl);
-        ExFreePool(Mdl);
-        return NULL;
-    }
-
-    /* Safe the base address */
-    BaseAddress = MiPteToAddress(PointerPte);
-
-    /* Get a pointer to the page array */
-    MdlPages = (PPFN_NUMBER)(Mdl + 1);
-
-    /* Get the first page's PFN entry */
-    Pfn = MI_PFN_ELEMENT(*MdlPages);
-
-    /* Save the pointer to the MDL in the PFN entry */
-    *(PMDL*)&Pfn->OriginalPte = Mdl;
-
-    /* Setup template PTE */
-    TempPte = HyperTemplatePte;
-
-    /* Map the PTEs */
-    do
-    {
-        /* Sanity checks */
-        ASSERT(PointerPte->u.Hard.Valid == 0);
-        ASSERT(PointerPte->u.Soft.Transition == 0);
-
-        /* Get the PFN */
-        TempPte.u.Hard.PageFrameNumber = *MdlPages++;
-
-        /* Write the PTE */
-        *PointerPte++ = TempPte;
-    } while (--PageCount);
-
-    /* Return the base address */
-    return BaseAddress;
-}
-
-VOID
-NTAPI
-MmFreeSection(PVOID BaseAddress)
-{
-    PMMPTE PointerPte;
-    PFN_NUMBER *MdlPages, PageFrameNumber, PageCount;
-    PMMPFN Pfn;
-    PMDL Mdl;
-
-    /* Get a pointer to the first PTE */
-    PointerPte = MiAddressToPte(BaseAddress);
-
-    /* Get the page frame number of the first page */
-    PageFrameNumber = PFN_FROM_PTE(PointerPte);
-
-    /* Get the first pages's PFN entry */
-    Pfn = MI_PFN_ELEMENT(PageFrameNumber);
-
-    /* Get the MDL from the PFN */
-    Mdl = *(PMDL*)&Pfn->OriginalPte;
-    *(PMDL*)&Pfn->OriginalPte = NULL;
-
-    /* Get the page array and count from the MDL */
-    MdlPages = (PPFN_NUMBER)(Mdl + 1);
-    PageCount = BYTES_TO_PAGES(Mdl->ByteCount);
-
-    /* Release the system PTEs */
-    MiReleaseSystemPtes(PointerPte, PageCount, SystemPteSpace);
-
-    /* Free the pages and the MDL */
-    MmFreePagesFromMdl(Mdl);
-    ExFreePool(Mdl);
 }
 
 /**********************************************************************

@@ -7,10 +7,12 @@
 		<include>include</include>
 		<include base="ntoskrnl">include</include>
 		<define name="CONFIG_SMP" />
+		<define name="_NTHALDLL_" />
 		<define name="_NTHAL_" />
 		<library>hal_generic</library>
 		<library>hal_generic_mp</library>
 		<library>ntoskrnl</library>
+		<library>libcntpr</library>
 		<directory name="mp">
 			<file>mpsirql.c</file>
 			<directory name="i386">

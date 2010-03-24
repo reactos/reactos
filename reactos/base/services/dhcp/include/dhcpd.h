@@ -39,8 +39,7 @@
  * Enterprises, see ``http://www.vix.com''.
  */
 
-#ifndef DHCPD_H
-#define DHCPD_H
+#pragma once
 
 #include <winsock2.h>
 #include <iphlpapi.h>
@@ -484,5 +483,3 @@ int		 buf_add(struct buf *, void *, size_t);
 int		 buf_close(int, struct buf *);
 ssize_t		 buf_read(int, void *, size_t);
 void		 dispatch_imsg(int);
-
-#endif/*DHCPD_H*/

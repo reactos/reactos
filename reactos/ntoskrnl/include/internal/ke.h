@@ -1,5 +1,4 @@
-#ifndef __NTOSKRNL_INCLUDE_INTERNAL_KE_H
-#define __NTOSKRNL_INCLUDE_INTERNAL_KE_H
+#pragma once
 
 /* INCLUDES *****************************************************************/
 
@@ -1093,9 +1092,9 @@ KiIdleLoop(
     VOID
 );
 
+DECLSPEC_NORETURN
 VOID
 FASTCALL
-DECLSPEC_NORETURN
 KiSystemFatalException(
     IN ULONG ExceptionCode,
     IN PKTRAP_FRAME TrapFrame
@@ -1114,5 +1113,3 @@ KiRosPcToUserFileHeader(IN PVOID Eip,
                         OUT PLDR_DATA_TABLE_ENTRY *LdrEntry);
 
 #include "ke_x.h"
-
-#endif /* __NTOSKRNL_INCLUDE_INTERNAL_KE_H */

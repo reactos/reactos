@@ -53,12 +53,12 @@ END
 
 IDD_SYSSETTINGS DIALOGEX 0, 0, 221, 106
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
-CAPTION "System Einstellungen"
+CAPTION "Systemeinstellungen"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    GROUPBOX        "Versions Info",IDC_STATIC,6,3,210,73
+    GROUPBOX        "Versionsinfo",IDC_STATIC,6,3,210,73
     CONTROL         "Als Workstation identifizieren",IDC_REPORTASWORKSTATION,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,57,110,10
-    LTEXT           "ReactOS ist als Server OS konzipiert und identifiziert sich auch als solches. Diese Einstellung ändert das Verhalten für Anwendungen.",IDC_STATIC,15,15,183,41
+    LTEXT           "ReactOS ist als Serversystem konzipiert worden und identifiziert sich auch als solches. Diese Einstellung ändert das Verhalten für Anwendungen.",IDC_STATIC,15,15,183,41
     PUSHBUTTON      "OK",IDOK,166,83,50,14
 END
 
@@ -68,9 +68,9 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Erweitert"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT       "Administrator-Rechte werden für die meisten dieser Einstellungen benötigt.", IDC_STATIC, 12, 5, 242, 8
+    LTEXT       "Administratorrechte werden für die meisten dieser Einstellungen benötigt.", IDC_STATIC, 12, 5, 242, 8
     GROUPBOX    "Leistung", IDC_STATIC, 6, 18, 244, 50
-    LTEXT       "Mit Leistungs-Optionen können Sie einstellen, wie Programme Speicher benutzen sollen. Diese Einstellungen beeinflussen die Leistung ihres Computers.", IDC_STATIC, 16, 29, 210, 24
+    LTEXT       "Mit Leistungsoptionen können Sie einstellen, wie Programme Speicher benutzen sollen. Diese Einstellungen beeinflussen die Leistung ihres Computers.", IDC_STATIC, 16, 29, 210, 24
     PUSHBUTTON  "Einstellungen", IDC_PERFOR, 194, 48, 50, 14
 
     GROUPBOX    "Benutzerprofile", IDC_STATIC, 6,75,244,48
@@ -78,7 +78,7 @@ BEGIN
     PUSHBUTTON  "Einstellungen", IDC_USERPROFILE, 194, 103, 50, 14
 
     GROUPBOX    "Starten und Wiederherstellen", IDC_STATIC, 6, 131, 244, 52
-    LTEXT       "Start- und Wiederherstellungs-Einstellungen regeln, wie der Computer gestartet werden soll und was passieren soll, wenn ein Fehler auftritt.", IDC_STATIC, 16, 144, 210, 27
+    LTEXT       "Start- und Wiederherstellungseinstellungen regeln, wie der Computer gestartet werden soll und was passieren soll, wenn ein Fehler auftritt.", IDC_STATIC, 16, 144, 210, 27
     PUSHBUTTON  "Einstellungen", IDC_STAREC, 194, 162, 50, 14
 
     PUSHBUTTON  "Umgebungsvariablen", IDC_ENVVAR, 84, 192, 80, 14
@@ -88,12 +88,12 @@ END
 
 IDD_HARDWAREPROFILES DIALOGEX 6, 18, 254, 234
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Hardware-Profile"
+CAPTION "Hardwareprofile"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON        IDI_HARDPROF, IDC_STATIC, 8, 11, 18, 20, SS_ICON
-    LTEXT       "Sie können Hardware-Profile für verschiedene Hardware-Konfigurationen einrichten. Beim Starten können Sie dann das Profil auswählen, welches benutzt werden soll.", IDC_STATIC, 46, 11, 200, 25
-    LTEXT       "Verfügbare Hardware-Profile:", IDC_STATIC, 8, 41, 120, 8
+    LTEXT       "Sie können Hardwareprofile für verschiedene Hardware-Konfigurationen einrichten. Beim Starten können Sie dann das Profil auswählen, welches benutzt werden soll.", IDC_STATIC, 46, 11, 200, 25
+    LTEXT       "Verfügbare Hardwareprofile:", IDC_STATIC, 8, 41, 120, 8
     LISTBOX     IDC_HRDPROFLSTBOX, 8, 52, 215, 54, LBS_NOTIFY
     PUSHBUTTON  "", IDC_HRDPROFUP, 232, 59, 15, 14, BS_ICON
     PUSHBUTTON  "", IDC_HRDPROFDWN, 232, 79, 15, 14, BS_ICON
@@ -102,11 +102,11 @@ BEGIN
     PUSHBUTTON  "&Umbenennen", IDC_HRDPROFRENAME, 118, 106, 50, 14
     PUSHBUTTON  "&Löschen", IDC_HRDPROFDEL, 173, 106, 50, 14
 
-    GROUPBOX    "Hardware-Profil Auswahl", IDC_STATIC, 7, 130, 240, 75
+    GROUPBOX    "Hardwareprofil-Auswahl", IDC_STATIC, 7, 130, 240, 75
     LTEXT       "Wenn ReactOS startet:", IDC_STATIC, 14, 142, 210, 8
-    AUTORADIOBUTTON "&Warten, bis ein Hardware-Profil gewählt wird", IDC_HRDPROFWAIT, 14, 158, 170, 8, WS_GROUP
-    AUTORADIOBUTTON "&Das erste Profil aus der Liste wählen, wenn ich kein Profil innerhalb von", IDC_HRDPROFSELECT, 14, 173, 200, 8
-    LTEXT       "Sekunden gewählt wird", IDC_STATIC, 65, 187, 80, 8
+    AUTORADIOBUTTON "&Warten, bis ein Hardwareprofil gewählt wird", IDC_HRDPROFWAIT, 14, 158, 170, 8, WS_GROUP
+    AUTORADIOBUTTON "&Das erste Profil aus der Liste auswählen, wenn ich kein Profil innerhalb von", IDC_HRDPROFSELECT, 14, 173, 200, 8
+    LTEXT       "Sekunden gewählt habe", IDC_STATIC, 65, 187, 80, 8
     EDITTEXT    IDC_HRDPROFEDIT, 25, 185, 35, 12
     CONTROL     "", IDC_HRDPROFUPDWN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 25, 185, 7, 10
 
@@ -136,7 +136,7 @@ CAPTION "Benutzerprofile"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON        IDI_USERPROF, IDC_STATIC, 6, 11, 16, 16, SS_ICON
-    LTEXT       "Benutzerprofile enthalten Desktop-Einstellungen und andere Informationen bezüglich ihrer Anmeldung. Sie können unterschiedliche Profile, für jeden Computer, den Sie benutzen, einrichten, oder aber auch ein einziges Profil wählen, welches auf jedem Computer gleich ist.",
+    LTEXT       "Benutzerprofile enthalten Desktopeinstellungen und andere Informationen bezüglich ihrer Anmeldung. Sie können unterschiedliche Profile, für jeden Computer, den Sie benutzen, einrichten, oder aber auch ein einziges Profil wählen, welches auf jedem Computer gleich ist.",
                     IDC_STATIC, 40, 7, 204, 40
     LTEXT       "Auf diesem Computer gespeicherte Profile:", IDC_STATIC, 16, 51, 204, 9
     CONTROL     "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP,
@@ -157,8 +157,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS
 CAPTION "Starten und Wiederherstellen"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX    "System-Start", IDC_STATIC, 7, 12, 238, 95
-    LTEXT       "Standard Betriebs&system:", IDC_STATIC, 14, 26, 100, 8
+    GROUPBOX    "Systemstart", IDC_STATIC, 7, 12, 238, 95
+    LTEXT       "Standard-Betriebs&system:", IDC_STATIC, 14, 26, 100, 8
     COMBOBOX    IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST
     AUTOCHECKBOX "&Anzeigedauer der Betriebssystem-Liste:", IDC_STRECLIST, 14, 56, 150, 8
     EDITTEXT    IDC_STRRECLISTEDIT, 185, 54, 30, 12, ES_NUMBER
@@ -168,10 +168,10 @@ BEGIN
     EDITTEXT    IDC_STRRECRECEDIT, 185, 68, 30, 12, ES_NUMBER
     CONTROL     "", IDC_STRRECRECUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT       "Sek.", IDC_STATIC, 221, 70, 14, 8
-    LTEXT       "Um die Start-Optionen manuell zu bearbeiten, klicken Sie auf ""Bearbeiten"".", IDC_STATIC, 14, 84, 170, 18
+    LTEXT       "Um die Startoptionen manuell zu bearbeiten, klicken Sie auf ""Bearbeiten"".", IDC_STATIC, 14, 84, 170, 18
     PUSHBUTTON  "Be&arbeiten", IDC_STRRECEDIT, 188, 87, 50, 14
 
-    GROUPBOX    "System-Fehler", IDC_STATIC, 7, 111, 238, 140
+    GROUPBOX    "Systemfehler", IDC_STATIC, 7, 111, 238, 140
     AUTOCHECKBOX "Ereignis in das Systemprotokoll &eintragen", IDC_STRRECWRITEEVENT, 14, 124, 148, 10
     AUTOCHECKBOX "Administrator-Warnmeldung &senden", IDC_STRRECSENDALERT, 14, 138, 148, 10
     AUTOCHECKBOX "Automatisch &neu starten", IDC_STRRECRESTART, 14, 152, 145, 10
@@ -234,7 +234,7 @@ BEGIN
     PUSHBUTTON  "&Neu...", IDC_USER_VARIABLE_NEW, 80, 90, 50, 14
     PUSHBUTTON  "Be&arbeiten...", IDC_USER_VARIABLE_EDIT, 134, 90, 50, 14
     PUSHBUTTON  "&Löschen", IDC_USER_VARIABLE_DELETE, 188, 90, 50, 14
-    GROUPBOX    "System-Variablen", IDC_STATIC, 7, 116, 238, 100
+    GROUPBOX    "Systemvariablen", IDC_STATIC, 7, 116, 238, 100
     CONTROL     "", IDC_SYSTEM_VARIABLE_LIST, "SysListView32",
                     LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_NOSORTHEADER |
                     WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 14, 129, 224, 58, WS_EX_CLIENTEDGE

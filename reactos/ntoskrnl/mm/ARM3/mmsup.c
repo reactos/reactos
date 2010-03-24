@@ -16,11 +16,6 @@
 #define MODULE_INVOLVED_IN_ARM3
 #include "../ARM3/miarm.h"
 
-/* GLOBALS ********************************************************************/
-
-BOOLEAN IsThisAnNtAsSystem = FALSE;
-MM_SYSTEMSIZE MmSystemSize = MmSmallSystem;
-
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
@@ -139,10 +134,8 @@ BOOLEAN
 NTAPI
 MmIsThisAnNtAsSystem(VOID)
 {
-    //
-    // Return if this is a server system
-    //
-    return IsThisAnNtAsSystem;
+    /* Return if this is a server system */
+    return MmProductType;
 }
 
 /*
@@ -152,9 +145,7 @@ MM_SYSTEMSIZE
 NTAPI
 MmQuerySystemSize(VOID)
 {
-    //
-    // Return the low, medium or high memory system type
-    //
+    /* Return the low, medium or high memory system type */
     return MmSystemSize;
 }
 

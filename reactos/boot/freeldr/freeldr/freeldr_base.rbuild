@@ -5,12 +5,9 @@
 	<include base="freeldr_base">cache</include>
 	<include base="cmlib">.</include>
 	<include base="ntoskrnl">include</include>
+	<define name="_BLDR_" />
 	<define name="_NTHAL_" />
 	<define name="_NTSYSTEM_" />
-	<group compilerset="gcc">
-		<compilerflag>-fno-inline</compilerflag>
-		<compilerflag>-fno-zero-initialized-in-bss</compilerflag>
-	</group>
 	<directory name="arcemul">
 		<file>mm.c</file>
 		<file>time.c</file>
@@ -26,6 +23,7 @@
 		<file>disk.c</file>
 		<file>partition.c</file>
 		<file>ramdisk.c</file>
+		<file>scsiport.c</file>
 	</directory>
 	<directory name="fs">
 		<file>ext2.c</file>
@@ -56,6 +54,7 @@
 		<file>libsupp.c</file>
 	</directory>
 	<directory name="ui">
+	    <file>directui.c</file>
 		<file>gui.c</file>
 		<file>minitui.c</file>
 		<file>noui.c</file>
@@ -68,24 +67,13 @@
 		<file>palette.c</file>
 		<file>video.c</file>
 	</directory>
-	<if property="ARCH" value="i386">
-		<directory name="windows">
-			<file>conversion.c</file>
-			<file>peloader.c</file>
-			<file>winldr.c</file>
-			<file>wlmemory.c</file>
-			<file>wlregistry.c</file>
-		</directory>
-	</if>
-	<if property="ARCH" value="amd64">
-		<directory name="windows">
-			<file>conversion.c</file>
-			<file>peloader.c</file>
-			<file>winldr.c</file>
-			<file>wlmemory.c</file>
-			<file>wlregistry.c</file>
-		</directory>
-	</if>
+	<directory name="windows">
+		<file>conversion.c</file>
+		<file>peloader.c</file>
+		<file>winldr.c</file>
+		<file>wlmemory.c</file>
+		<file>wlregistry.c</file>
+	</directory>
 	<file>freeldr.c</file>
 	<file>debug.c</file>
 	<file>version.c</file>

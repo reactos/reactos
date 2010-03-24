@@ -18,8 +18,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __POWERPC_HARDWARE_H_
-#define __POWERPC_HARDWARE_H_
+#pragma once
 
 #ifndef __REGISTRY_H
 #include "../../reactos/registry.h"
@@ -67,7 +66,5 @@ VOID StallExecutionProcessor(ULONG Microseconds);
 VOID HalpCalibrateStallExecution(VOID);
 
 ULONGLONG RDTSC(VOID);
-
-#endif /* __POWERPC_HARDWARE_H_ */
 
 /* EOF */

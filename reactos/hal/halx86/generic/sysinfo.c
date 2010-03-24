@@ -49,6 +49,12 @@ HaliQuerySystemInformation(IN HAL_QUERY_INFORMATION_CLASS InformationClass,
 		REPORT_THIS_CASE(HalPartitionIpiInterface);
 		REPORT_THIS_CASE(HalPlatformInformation);
 		REPORT_THIS_CASE(HalQueryProfileSourceList);
+		REPORT_THIS_CASE(HalInitLogInformation);
+		REPORT_THIS_CASE(HalFrequencyInformation);
+		REPORT_THIS_CASE(HalProcessorBrandString);
+		REPORT_THIS_CASE(HalHypervisorInformation);
+		REPORT_THIS_CASE(HalPlatformTimerInformation);
+		REPORT_THIS_CASE(HalAcpiAuditInformation);
 	}
 #undef REPORT_THIS_CASE
 

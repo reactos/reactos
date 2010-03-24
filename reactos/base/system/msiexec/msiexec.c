@@ -47,6 +47,7 @@ static const char UsageStr[] =
 "  Install a product:\n"
 "    msiexec {package|productcode} [property]\n"
 "    msiexec /i {package|productcode} [property]\n"
+"    msiexec /package {package|productcode} [property]\n"
 "    msiexec /a package [property]\n"
 "  Repair an installation:\n"
 "    msiexec /f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\n"
@@ -562,12 +563,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		{
 			FunctionUnregServer = TRUE;
 		}
-		else if(msi_option_prefix(argvW[i], "i"))
+		else if(msi_option_prefix(argvW[i], "i") || msi_option_prefix(argvW[i], "package"))
 		{
 			LPWSTR argvWi = argvW[i];
+			int argLen = (msi_option_prefix(argvW[i], "i") ? 2 : 8);
 			FunctionInstall = TRUE;
-			if(lstrlenW(argvWi) > 2)
-				argvWi += 2;
+			if(lstrlenW(argvW[i]) > argLen)
+				argvWi += argLen;
 			else
 			{
 				i++;

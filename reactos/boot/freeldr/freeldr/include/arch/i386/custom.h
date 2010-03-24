@@ -17,8 +17,7 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef __I386_OPTIONS_H
-#define __I386_OPTIONS_H
+#pragma once
 
 #define HAS_OPTION_MENU_CUSTOM_BOOT
 #define HAS_OPTION_MENU_REBOOT
@@ -31,5 +30,3 @@ VOID	OptionMenuCustomBootPartition(VOID);
 VOID	OptionMenuCustomBootBootSectorFile(VOID);
 VOID	OptionMenuCustomBootReactOS(VOID);
 VOID	OptionMenuCustomBootLinux(VOID);
-
-#endif // #defined __I386_OPTIONS_H

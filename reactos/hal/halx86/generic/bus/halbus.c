@@ -27,8 +27,10 @@ HalpRegisterKdSupportFunctions(VOID)
     KdReleasePciDeviceforDebugging = HalpReleasePciDeviceForDebugging;
 
     /* Register memory functions */
+#ifndef _MINIHAL_
     KdMapPhysicalMemory64 = HalpMapPhysicalMemory64;
     KdUnmapVirtualAddress = HalpUnmapVirtualAddress;
+#endif
 
     /* Register ACPI stub */
     KdCheckPowerButton = HalpCheckPowerButton;

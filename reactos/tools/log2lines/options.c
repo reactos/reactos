@@ -4,6 +4,7 @@
  *
  * - Option init and parsing
  */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,7 +17,7 @@
 #include "log2lines.h"
 #include "options.h"
 
-char *optchars       = "bcd:fFhl:mMP:rR:sS:tTuUvz:";
+char *optchars       = "bcd:fFhl:L:mMP:rR:sS:tTuUvz:";
 int   opt_buffered   = 0;        // -b
 int   opt_help       = 0;        // -h
 int   opt_force      = 0;        // -f
@@ -37,8 +38,10 @@ int   opt_Twice      = 0;        // -T
 int   opt_undo       = 0;        // -u
 int   opt_redo       = 0;        // -U
 char *opt_Revision   = NULL;     // -R
+int   opt_Revision_check = 0;    // -R check
 char  opt_dir[MAX_PATH];         // -d <opt_dir>
-char  opt_logFile[MAX_PATH];     // -l <opt_logFile>
+char  opt_logFile[MAX_PATH];     // -l|L <opt_logFile>
+char *opt_mod        = NULL;     // -mod for opt_logFile
 char  opt_7z[MAX_PATH];          // -z <opt_7z>
 char  opt_scanned[LINESIZE];     // all scanned options
 char  opt_SourcesPath[LINESIZE]; //sources path
@@ -48,6 +51,7 @@ int optionInit(int argc, const char **argv)
     int i;
     char *s;
 
+    opt_mod = "a";
     strcpy(opt_dir, "");
     strcpy(opt_logFile, "");
     strcpy(opt_7z, CMD_7Z);
@@ -70,6 +74,9 @@ int optionInit(int argc, const char **argv)
             case 'd':
                 strcpy(opt_dir, argv[i+1]);
                 break;
+            case 'L':
+                opt_mod = "w";
+                //fall through
             case 'l':
                 strcpy(opt_logFile, argv[i+1]);
                 break;
@@ -146,6 +153,8 @@ int optionParse(int argc, const char **argv)
             free(opt_Revision);
             opt_Revision = malloc(LINESIZE);
             sscanf(optarg, "%s", opt_Revision);
+			if (strcmp(opt_Revision, "check") == 0)
+				opt_Revision_check ++;
             break;
         case 's':
             opt_stats++;
@@ -161,6 +170,7 @@ int optionParse(int argc, const char **argv)
                 /* need to retranslate for source info: */
                 opt_undo++;
                 opt_redo++;
+				opt_Revision_check ++;
             }
             break;
         case 't':
@@ -208,3 +218,5 @@ int optionParse(int argc, const char **argv)
 
     return optCount;
 }
+
+/* EOF */

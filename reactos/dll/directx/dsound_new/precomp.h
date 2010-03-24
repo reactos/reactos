@@ -1,5 +1,4 @@
-#ifndef PRECOMP_H__
-#define PRECOMP_H__
+#pragma once
 
 #define COBJMACROS
 #define NONAMELESSUNION
@@ -15,7 +14,7 @@
 #include <dsconf.h>
 #include <vfwmsgs.h>
 #include <setupapi.h>
-#define NDEBUG
+#define YDEBUG
 #include <debug.h>
 #include <ks.h>
 #include <ksmedia.h>
@@ -201,7 +200,8 @@ HRESULT
 NewPrimarySoundBuffer(
     LPDIRECTSOUNDBUFFER8 *OutBuffer,
     LPFILTERINFO Filter,
-    DWORD dwLevel);
+    DWORD dwLevel,
+    DWORD dwFlags);
 
 HRESULT
 PrimaryDirectSoundBuffer_SetFormat(
@@ -266,5 +266,3 @@ NewDirectSoundNotify(
     BOOL bMix,
     HANDLE hPin,
     DWORD BufferSize);
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef __WIN32K_BITMAPS_H
-#define __WIN32K_BITMAPS_H
+#pragma once
 
 #include "surface.h"
 
@@ -11,5 +10,3 @@ HBITMAP FASTCALL IntCreateBitmap(IN SIZEL Size, IN LONG Width, IN ULONG Format, 
 HBITMAP FASTCALL BITMAP_CopyBitmap (HBITMAP  hBitmap);
 UINT    FASTCALL BITMAP_GetRealBitsPixel(UINT nBitsPixel);
 INT     FASTCALL BITMAP_GetWidthBytes (INT bmWidth, INT bpp);
-
-#endif

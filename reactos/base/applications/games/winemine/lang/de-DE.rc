@@ -56,7 +56,7 @@ STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHEL
 CAPTION "Glückwunsch!"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT           "Bitte geben Sie ihren Namen ein", IDIGNORE,      25,  10, 150,  10
+	LTEXT           "Bitte geben Sie Ihren Namen ein", IDIGNORE,      25,  10, 150,  10
 	EDITTEXT                                           IDC_EDITNAME,  25,  20, 110,  12
 	DEFPUSHBUTTON   "OK",                              IDOK,          60,  40,  40,  15
 END

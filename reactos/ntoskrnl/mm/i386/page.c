@@ -284,10 +284,6 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
                     KeBugCheck(MEMORY_MANAGEMENT);
                 }
                 Entry = PFN_TO_PTE(Pfn) | PA_PRESENT | PA_READWRITE;
-                if (Ke386GlobalPagesEnabled)
-                {
-                    Entry |= PA_GLOBAL;
-                }
                 if(0 != InterlockedCompareExchangePte(&MmGlobalKernelPageDirectory[PdeOffset], Entry, 0))
                 {
                     MmReleasePageMemoryConsumer(MC_SYSTEM, Pfn);
@@ -758,10 +754,6 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
     if (Address >= MmSystemRangeStart)
     {
         Attributes &= ~PA_USER;
-        if (Ke386GlobalPagesEnabled)
-        {
-            Attributes |= PA_GLOBAL;
-        }
     }
     else
     {
@@ -907,10 +899,6 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
     if (Address >= MmSystemRangeStart)
     {
         Attributes &= ~PA_USER;
-        if (Ke386GlobalPagesEnabled)
-        {
-            Attributes |= PA_GLOBAL;
-        }
     }
     else
     {
@@ -1000,8 +988,6 @@ MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
     }
 }
 
-extern MMPTE HyperTemplatePte;
-
 VOID
 INIT_FUNCTION
 NTAPI
@@ -1012,12 +998,6 @@ MmInitGlobalKernelPageDirectory(VOID)
     
     DPRINT("MmInitGlobalKernelPageDirectory()\n");
     
-    //
-    // Setup template
-    //
-    HyperTemplatePte.u.Long = (PA_PRESENT | PA_READWRITE | PA_DIRTY | PA_ACCESSED);
-    if (Ke386GlobalPagesEnabled) HyperTemplatePte.u.Long |= PA_GLOBAL;
-    
     for (i = ADDR_TO_PDE_OFFSET(MmSystemRangeStart); i < 1024; i++)
     {
         if (i != ADDR_TO_PDE_OFFSET(PAGETABLE_MAP) &&
@@ -1025,11 +1005,6 @@ MmInitGlobalKernelPageDirectory(VOID)
             0 == MmGlobalKernelPageDirectory[i] && 0 != CurrentPageDirectory[i])
         {
             MmGlobalKernelPageDirectory[i] = CurrentPageDirectory[i];
-            if (Ke386GlobalPagesEnabled)
-            {
-                MmGlobalKernelPageDirectory[i] |= PA_GLOBAL;
-                CurrentPageDirectory[i] |= PA_GLOBAL;
-            }
         }
     }
 }

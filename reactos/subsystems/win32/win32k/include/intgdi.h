@@ -1,5 +1,4 @@
-#ifndef _WIN32K_INTGDI_H
-#define _WIN32K_INTGDI_H
+#pragma once
 
 #include "region.h"
 
@@ -261,6 +260,3 @@ GreStretchBltMask(IN HDC hdcDst,
                   IN HDC hdcMask,
                   IN INT xMask,
                   IN INT yMask);
-
-#endif /* _WIN32K_INTGDI_H */
-

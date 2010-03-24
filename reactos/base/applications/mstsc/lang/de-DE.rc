@@ -15,18 +15,18 @@ BEGIN
     PUSHBUTTON      "Speichern unter",IDC_SAVEAS,120,139,55,14
     PUSHBUTTON      "Öffnen...",IDC_OPEN,177,139,50,14
     ICON            "", IDC_CONNICON, 16,114,20,20
-    LTEXT           "Die derzeitigen Verbindungseinstellungen speichern oder vohandene Einstellungen laden.",IDC_STATIC,50,115,172,20
+    LTEXT           "Die derzeitigen Verbindungseinstellungen speichern oder vorhandene Einstellungen laden.",IDC_STATIC,50,115,172,20
 END
 
 IDD_DISPLAY DIALOGEX 0, 0, 242, 175
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX        "Remotedesktop Größe",IDC_STATIC,7,7,228,68
+    GROUPBOX        "Remotedesktop-Größe",IDC_STATIC,7,7,228,68
     GROUPBOX        "Farben",IDC_STATIC,7,83,228,85
     ICON            "", IDC_REMICON, 15,19,20,20
     ICON            "", IDC_COLORSICON, 15,98,20,20
-    LTEXT           "Wählen Sie die Bildschirmgröße von Ihrem Remote- desktop. Stellen Sie den Regler für Vollbild nach rechts",IDC_STATIC,53,22,175,21
+    LTEXT           "Wählen Sie die Bildschirmgröße Ihres Remotedesktops. Stellen Sie den Regler für Vollbild nach rechts",IDC_STATIC,53,22,175,21
     CONTROL         "", IDC_GEOSLIDER, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 56, 42, 124, 17
     COMBOBOX        IDC_BPPCOMBO,56,102,128,80, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
     CONTROL         "",IDC_COLORIMAGE,"Static",SS_OWNERDRAW | SS_SUNKEN, 56,121,127,10
@@ -38,7 +38,7 @@ END
 
 IDD_CONNECTDIALOG DIALOGEX 0, 0, 260, 262
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Remotedesktop Verbindung"
+CAPTION "Remotedesktop-Verbindung"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "Verbinden",IDOK,147,245,50,14
@@ -58,6 +58,6 @@ BEGIN
     IDS_PIXEL               "%lux%lu Pixel"
     IDS_FULLSCREEN          "Vollbild"
     IDS_BROWSESERVER        "<Nach mehr suchen...>"
-    IDS_HEADERTEXT1         "Remote Desktop"
+    IDS_HEADERTEXT1         "Remotedesktop"
     IDS_HEADERTEXT2         "Verbindung"
 END

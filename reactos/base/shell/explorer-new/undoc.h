@@ -1,5 +1,4 @@
-#ifndef _EXPLORER_UNDOC__H
-#define _EXPLORER_UNDOC__H
+#pragma once
 
 /*
  * Undocumented stuff
@@ -53,5 +52,3 @@ EXTERN_C const GUID CLSID_RebarBandSite;
 HRESULT WINAPI SHInvokeDefaultCommand(HWND,IShellFolder*,LPCITEMIDLIST);
 
 HRESULT WINAPI SHPropertyBag_ReadPOINTL(IPropertyBag*,LPCWSTR,POINTL*);
-
-#endif /* _EXPLORER_UNDOC__H */

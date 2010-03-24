@@ -1,5 +1,4 @@
-#ifndef _WIN32K_MONITOR_H
-#define _WIN32K_MONITOR_H
+#pragma once
 
 /* monitor object */
 typedef struct _MONITOR
@@ -40,7 +39,5 @@ NTSTATUS IntAttachMonitor(PDEVOBJ *pGdiDevice, ULONG DisplayNumber);
 NTSTATUS IntDetachMonitor(PDEVOBJ *pGdiDevice);
 PMONITOR FASTCALL UserGetMonitorObject(IN HMONITOR);
 PMONITOR FASTCALL IntGetPrimaryMonitor(VOID);
-
-#endif /* _WIN32K_MONITOR_H */
 
 /* EOF */

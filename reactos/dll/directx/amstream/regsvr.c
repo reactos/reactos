@@ -456,6 +456,13 @@ static struct regsvr_coclass const coclass_list[] = {
 	"Both"
     },
 
+    {   &CLSID_MediaStreamFilter,
+	"SFilter Class",
+	NULL,
+	"amstream.dll",
+	"Both"
+    },
+
     { NULL }			/* list terminator */
 };
 

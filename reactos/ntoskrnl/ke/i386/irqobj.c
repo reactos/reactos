@@ -168,7 +168,7 @@ KiUnexpectedInterruptTailHandler(IN PKTRAP_FRAME TrapFrame)
     KeGetCurrentPrcb()->InterruptCount++;
     
     /* Start the interrupt */
-    if (HalBeginSystemInterrupt(HIGH_LEVEL, TrapFrame->Eax, &OldIrql))
+    if (HalBeginSystemInterrupt(HIGH_LEVEL, TrapFrame->ErrCode, &OldIrql))
     {
         /* Warn user */
         DPRINT1("\n\x7\x7!!! Unexpected Interrupt %02lx !!!\n");
@@ -233,7 +233,7 @@ KiChainedDispatch(IN PKTRAP_FRAME TrapFrame,
     KIRQL OldIrql;
     BOOLEAN Handled;
     PLIST_ENTRY NextEntry, ListHead;
-    
+
     /* Increase interrupt count */
     KeGetCurrentPrcb()->InterruptCount++;
 
@@ -299,7 +299,7 @@ KiChainedDispatch(IN PKTRAP_FRAME TrapFrame,
         /* Now call the epilogue code */
         KiExitInterrupt(TrapFrame, OldIrql, TRUE);
     }
- }
+}
 
 VOID
 FASTCALL
@@ -313,8 +313,6 @@ KiInterruptTemplateHandler(IN PKTRAP_FRAME TrapFrame,
     ((PKI_INTERRUPT_DISPATCH*)Interrupt->DispatchAddress)(TrapFrame, Interrupt);
 }
 
-KiTrap(KiInterruptTemplate,         KI_PUSH_FAKE_ERROR_CODE | KI_HARDWARE_INT);
-KiTrap(KiUnexpectedInterruptTail,   KI_PUSH_FAKE_ERROR_CODE);
 
 /* PUBLIC FUNCTIONS **********************************************************/
 

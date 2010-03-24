@@ -5,8 +5,7 @@
  * - Option parsing
  */
 
-#ifndef __L2L_OPTIONS_H__
-#define __L2L_OPTIONS_H__
+#pragma once
 
 extern char *optchars;
 extern int   opt_buffered;  // -b
@@ -29,8 +28,10 @@ extern int   opt_Twice ;    // -T
 extern int   opt_undo ;     // -u
 extern int   opt_redo ;     // -U
 extern char *opt_Revision;  // -R
+extern int   opt_Revision_check; // -R check
 extern char  opt_dir[];     // -d <opt_dir>
 extern char  opt_logFile[]; // -l <opt_logFile>
+extern char *opt_mod;       // mod for opt_logFile
 extern char  opt_7z[];      // -z <opt_7z>
 extern char  opt_scanned[]; // all scanned options
 
@@ -38,7 +39,5 @@ extern char  opt_SourcesPath[];    //sources path
 
 int optionInit(int argc, const char **argv);
 int optionParse(int argc, const char **argv);
-
-#endif /* __L2L_OPTIONS_H__ */
 
 /* EOF */

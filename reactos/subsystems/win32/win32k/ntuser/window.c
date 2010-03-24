@@ -2057,9 +2057,7 @@ AllocErr:
    }
    else if ( Wnd->pcls->style & CS_OWNDC)
    {  /* Allocate a DCE for this window. */
-      PDCE pDce = DceAllocDCE(Window, DCE_WINDOW_DC);
-      if (!Wnd->pcls->pdce)
-         Wnd->pcls->pdce = pDce;
+      DceAllocDCE(Window, DCE_WINDOW_DC);
    }
 
    Pos.x = x;

@@ -1217,13 +1217,15 @@ IofCompleteRequest(IN PIRP Irp,
         ErrorCode = PtrToUlong(LastStackPtr->Parameters.Others.Argument4);
     }
 
-    /* Get the Current Stack and skip it */
+    /* Get the Current Stack */
     StackPtr = IoGetCurrentIrpStackLocation(Irp);
-    IoSkipCurrentIrpStackLocation(Irp);
 
     /* Loop the Stacks and complete the IRPs */
     do
     {
+        /* Skip current stack location */
+        IoSkipCurrentIrpStackLocation(Irp);
+
         /* Set Pending Returned */
         Irp->PendingReturned = StackPtr->Control & SL_PENDING_RETURNED;
 
@@ -1286,10 +1288,9 @@ IofCompleteRequest(IN PIRP Irp,
             IopClearStackLocation(StackPtr);
         }
 
-        /* Move to next stack location and pointer */
-        IoSkipCurrentIrpStackLocation(Irp);
+        /* Move pointer to next stack location */
         StackPtr++;
-    } while (Irp->CurrentLocation <= (Irp->StackCount + 1));
+    } while (Irp->CurrentLocation <= Irp->StackCount);
 
     /* Check if the IRP is an associated IRP */
     if (Irp->Flags & IRP_ASSOCIATED_IRP)

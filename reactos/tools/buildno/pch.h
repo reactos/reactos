@@ -1,7 +1,6 @@
 // pre-compiled header stuff
 
-#ifndef PCH_H
-#define PCH_H
+#pragma once
 
 #ifdef _MSC_VER
 #pragma warning ( disable : 4786 ) // identifier was truncated to '255' characters in the debug information
@@ -43,5 +42,3 @@ inline char * strlwr(char *x)
 #define MAX_PATH PATH_MAX
 #define _MAX_PATH PATH_MAX
 #endif
-
-#endif//PCH_H

@@ -20,9 +20,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-
-#ifndef _BT958dt_h_
-#define _BT958dt_h_
+#pragma once
 
 // BT958ExtendedSetupInfoGuid - BT958ExtendedSetupInfo
 // BT958 Extended Setup Information (Operation Code 8Dh)
@@ -101,5 +99,3 @@ typedef struct _BT958ExtendedSetupInfo
     #define BT958ExtendedSetupInfo_HostSmartTermination_ID 13
 
 } BT958ExtendedSetupInfo, *PBT958ExtendedSetupInfo;
-
-#endif

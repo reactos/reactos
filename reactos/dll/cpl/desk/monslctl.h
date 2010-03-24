@@ -1,5 +1,4 @@
-#ifndef __MONSLCTL__H
-#define __MONSLCTL__H
+#pragma once
 
 /* Control extended styles */
 #define MSLM_EX_ALLOWSELECTNONE 0x1
@@ -214,5 +213,3 @@ typedef struct _MONSL_MONNMMONITORCHANGING
 
 BOOL RegisterMonitorSelectionControl(IN HINSTANCE hInstance);
 VOID UnregisterMonitorSelectionControl(IN HINSTANCE hInstance);
-
-#endif /* __MONSLCTL__H */

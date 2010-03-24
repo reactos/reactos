@@ -2723,6 +2723,7 @@ CheckDevice(
                          signatureHigh;
     UCHAR                statusByte;
     ULONG                RetVal=0;
+    ULONG                waitCount = 10000;
 
     KdPrint2((PRINT_PREFIX "CheckDevice: Device %#x\n",
                deviceNumber));
@@ -2745,7 +2746,22 @@ CheckDevice(
             // Perform hard-reset.
             KdPrint2((PRINT_PREFIX
                         "CheckDevice: BUSY\n"));
+
+            AtapiWritePort1(chan, IDX_IO2_o_Control, IDE_DC_RESET_CONTROLLER );
+            AtapiStallExecution(500 * 1000);
+            AtapiWritePort1(chan, IDX_IO2_o_Control, IDE_DC_REENABLE_CONTROLLER);
+            SelectDrive(chan, deviceNumber & 0x01);
+
+            do {
+                // Wait for Busy to drop.
+                AtapiStallExecution(100);
+                GetStatus(chan, statusByte);
+
+            } while ((statusByte & IDE_STATUS_BUSY) && waitCount--);
+
             GetBaseStatus(chan, statusByte);
+            KdPrint2((PRINT_PREFIX
+                        "CheckDevice: status after hard reset %x\n", statusByte));
         }
 
         if((statusByte | IDE_STATUS_BUSY) == 0xff) {

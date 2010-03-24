@@ -1,5 +1,4 @@
-#ifndef LANG_SV_FI_H__
-#define LANG_SV_FI_H__
+#pragma once
 
 MUI_LAYOUTS svFILayouts[] =
 {
@@ -7,5 +6,3 @@ MUI_LAYOUTS svFILayouts[] =
     { L"0409", L"00000409" },
     { NULL, NULL }
 };
-
-#endif

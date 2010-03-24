@@ -17,8 +17,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __REACTOS_H
-#define __REACTOS_H
+#pragma once
 
 /* Base Addres of Kernel in Physical Memory */
 #define KERNEL_BASE_PHYS 0x800000
@@ -74,6 +73,14 @@ VOID ReactOSRunSetupLoader(VOID);
 // ARC Path Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
+BOOLEAN
+DissectArcPath2(
+    IN CHAR* ArcPath,
+    OUT ULONG* x,
+    OUT ULONG* y,
+    OUT ULONG* z,
+    OUT ULONG* Partition,
+    OUT ULONG *PathSyntax);
 BOOLEAN DissectArcPath(CHAR *ArcPath, CHAR *BootPath, ULONG* BootDrive, ULONG* BootPartition);
 VOID ConstructArcPath(PCHAR ArcPath, PCHAR SystemFolder, ULONG Disk, ULONG Partition);
 ULONG ConvertArcNameToBiosDriveNumber(PCHAR ArcPath);
@@ -128,5 +135,3 @@ FrLdrLoadImage(
     IN INT nPos,
     IN ULONG ImageType
 );
-
-#endif // defined __REACTOS_H

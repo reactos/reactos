@@ -2,6 +2,15 @@
 extern "C" {
 #endif
 
+/* Helper macro to enable gcc's extension.  */
+#ifndef __GNU_EXTENSION
+#ifdef __GNUC__
+#define __GNU_EXTENSION __extension__
+#else
+#define __GNU_EXTENSION
+#endif
+#endif
+
 #define STDMETHODCALLTYPE __stdcall
 typedef GUID *PGUID;
 
@@ -25,6 +34,18 @@ typedef struct _BDA_FILTER_TEMPLATE
     ULONG ulcPinPairs;
     const BDA_PIN_PAIRING *pPinPairs;
 } BDA_FILTER_TEMPLATE, *PBDA_FILTER_TEMPLATE;
+
+
+typedef struct _KSM_PIN
+{
+    KSMETHOD    Method;
+    __GNU_EXTENSION union
+    {
+        ULONG       PinId;
+        ULONG       PinType;
+    };
+    ULONG       Reserved;
+} KSM_PIN, * PKSM_PIN;
 
 /* Functions */
 

@@ -2,13 +2,13 @@
 
 [Section]
 Name = VLC media player
-Version = 1.0.3
+Version = 1.0.5
 Licence = GPL
 Description = A media player.
 Size = 17.2MB
 Category = 1
 URLSite = http://www.videolan.org/vlc/
-URLDownload = http://mirror.services.wisc.edu/mirrors/videolan/vlc/1.0.3/win32/vlc-1.0.3-win32.exe
+URLDownload = http://mirror.services.wisc.edu/mirrors/videolan/vlc/1.0.5/win32/vlc-1.0.5-win32.exe
 CDPath = none
 
 [Section.0407]

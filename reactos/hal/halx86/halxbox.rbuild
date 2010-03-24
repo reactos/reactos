@@ -5,11 +5,13 @@
 		<importlibrary base="hal" definition="../hal.pspec" />
 		<include>include</include>
 		<include base="ntoskrnl">include</include>
+		<define name="_NTHALDLL_" />
 		<define name="_NTHAL_" />
 		<define name="SARCH_XBOX" />
 		<library>hal_generic</library>
 		<library>hal_generic_up</library>
 		<library>ntoskrnl</library>
+		<library>libcntpr</library>
 		<directory name="xbox">
 			<file>halinit_xbox.c</file>
 			<file>part_xbox.c</file>

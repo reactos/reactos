@@ -17,8 +17,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __GUI_H
-#define __GUI_H
+#pragma once
 
 #define	TUI_SCREEN_MEM				0xB8000
 #define TITLE_BOX_CHAR_HEIGHT		5
@@ -52,5 +51,3 @@ UCHAR	GuiTextToFillStyle(PCSTR FillStyleText);				// Converts the text fill into
 BOOLEAN	GuiDisplayMenu(PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem);
 
 extern const UIVTBL GuiVtbl;
-
-#endif // #defined __GUI_H

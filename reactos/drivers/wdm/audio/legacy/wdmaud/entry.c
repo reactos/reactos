@@ -80,9 +80,7 @@ WdmAudInstallDevice(
     }
 
     Status = WdmAudMixerInitialize(DeviceObject);
-    DPRINT("WdmAudMixerInitialize Status %x\n", Status);
-    Status = WdmAudWaveInitialize(DeviceObject);
-    DPRINT("WdmAudWaveInitialize Status %x\n", Status);
+    DPRINT("WdmAudMixerInitialize Status %x WaveIn %lu WaveOut %lu Mixer %lu\n", Status, WdmAudGetWaveInDeviceCount(), WdmAudGetWaveOutDeviceCount(), WdmAudGetMixerDeviceCount());
 
     DeviceObject->Flags |= DO_DIRECT_IO | DO_POWER_PAGABLE;
     DeviceObject->Flags &= ~ DO_DEVICE_INITIALIZING;

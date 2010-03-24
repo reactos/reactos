@@ -23,12 +23,9 @@
  * PROGRAMMER:      Hervé Poussineau
  */
 
-#ifndef __REGINF_H__
-#define __REGINF_H__
+#pragma once
 
 BOOL
 ImportRegistryFile(PCHAR Filename);
-
-#endif /* __REGINF_H__ */
 
 /* EOF */

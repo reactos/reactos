@@ -24,8 +24,7 @@
  * PROGRAMMER:      Eric Kohl
  */
 
-#ifndef __BOOTSUP_H__
-#define __BOOTSUP_H__
+#pragma once
 
 NTSTATUS
 CreateFreeLoaderIniForDos(PWCHAR IniPath,
@@ -82,7 +81,5 @@ InstallFatBootcodeToPartition(PUNICODE_STRING SystemRootPath,
 NTSTATUS
 InstallFatBootcodeToFloppy(PUNICODE_STRING SourceRootPath,
 			   PUNICODE_STRING DestinationArcPath);
-
-#endif /* __BOOTSUP_H__ */
 
 /* EOF */

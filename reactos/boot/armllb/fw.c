@@ -8,6 +8,26 @@
 
 #include "precomp.h"
 
+USHORT ColorPalette[16][3] =
+{
+    {0x00, 0x00, 0x00},
+    {0x00, 0x00, 0xAA},
+    {0x00, 0xAA, 0x00},
+    {0x00, 0xAA, 0xAA},
+    {0xAA, 0x00, 0x00},
+    {0xAA, 0x00, 0xAA},
+    {0xAA, 0x55, 0x00},
+    {0xAA, 0xAA, 0xAA},
+    {0x55, 0x55, 0x55},
+    {0x55, 0x55, 0xFF},
+    {0x55, 0xFF, 0x55},
+    {0x55, 0xFF, 0xFF},
+    {0xFF, 0x55, 0x55},
+    {0xFF, 0x55, 0xFF},
+    {0xFF, 0xFF, 0x55},
+    {0xFF, 0xFF, 0xFF},
+};
+
 VOID
 LlbFwPutChar(INT Ch)
 {
@@ -53,55 +73,6 @@ LlbFwVideoGetDisplaySize(OUT PULONG Width,
     *Depth = 16;
 }
 
-ULONG
-LlbFwVideoGetBufferSize(VOID)
-{
-    /* X * Y * BPP */
-    return LlbHwGetScreenWidth() * LlbHwGetScreenHeight() * 2;
-}
-
-VOID
-LlbFwVideoSetTextCursorPosition(IN ULONG X,
-                                IN ULONG Y)
-{
-    printf("%s is UNIMPLEMENTED", __FUNCTION__);
-    while (TRUE);
-}
-
-VOID
-LlbFwVideoHideShowTextCursor(IN BOOLEAN Show)
-{
-    /* Nothing to do */
-    return;
-}
-
-USHORT ColorPalette[16][3] =
-{
-    {0x00, 0x00, 0x00},
-    {0x00, 0x00, 0xAA},
-    {0x00, 0xAA, 0x00},
-    {0x00, 0xAA, 0xAA},
-    {0xAA, 0x00, 0x00},
-    {0xAA, 0x00, 0xAA},
-    {0xAA, 0x55, 0x00},
-    {0xAA, 0xAA, 0xAA},
-    {0x55, 0x55, 0x55},
-    {0x55, 0x55, 0xFF},
-    {0x55, 0xFF, 0x55},
-    {0x55, 0xFF, 0xFF},
-    {0xFF, 0x55, 0x55},
-    {0xFF, 0x55, 0xFF},
-    {0xFF, 0xFF, 0x55},
-    {0xFF, 0xFF, 0xFF},
-};
-
-VOID
-LlbFwVideoCopyOffScreenBufferToVRAM(IN PVOID Buffer)
-{
-    /* No double-buffer is used on ARM */
-    return;
-}
-
 VOID
 LlbFwVideoClearScreen(IN UCHAR Attr)
 {
@@ -133,43 +104,6 @@ LlbFwVideoPutChar(IN INT c,
     LlbVideoDrawChar(c, Buffer, Color, BackColor);
 }
 
-BOOLEAN
-LlbFwVideoIsPaletteFixed(VOID)
-{
-    printf("%s is UNIMPLEMENTED", __FUNCTION__);
-    while (TRUE);
-    return TRUE;
-}
-
-VOID
-LlbFwVideoSetPaletteColor(IN UCHAR Color,
-                          IN UCHAR Red,
-                          IN UCHAR Green,
-                          IN UCHAR Blue)
-{
-    printf("%s is UNIMPLEMENTED", __FUNCTION__);
-    while (TRUE);
-    return;
-}
-
-VOID
-LlbFwVideoGetPaletteColor(IN UCHAR Color,
-                          OUT PUCHAR Red,
-                          OUT PUCHAR Green,
-                          OUT PUCHAR Blue)
-{
-    printf("%s is UNIMPLEMENTED", __FUNCTION__);
-    while (TRUE);
-    return;
-}
-
-VOID
-LlbFwVideoSync(VOID)
-{
-    printf("%s is UNIMPLEMENTED", __FUNCTION__);
-    while (TRUE);
-    return;
-}
 
 TIMEINFO*
 LlbFwGetTime(VOID)

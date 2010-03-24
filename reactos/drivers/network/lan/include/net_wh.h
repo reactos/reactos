@@ -1,5 +1,4 @@
-#ifndef _NET_WH_H
-#define _NET_WH_H
+#pragma once
 
 #ifdef i386
 
@@ -46,5 +45,3 @@
     (w)
 
 #endif /* i386 */
-
-#endif/*_NET_WH_H*/

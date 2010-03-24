@@ -1,5 +1,4 @@
-#ifndef HALDMA_H
-#define HALDMA_H
+#pragma once
 
 /*
  * DMA Page Register Structure
@@ -379,5 +378,3 @@ HalpGetDmaAdapter(
 ULONG NTAPI
 HalpDmaGetDmaAlignment(
    PADAPTER_OBJECT AdapterObject);
-
-#endif /* HALDMA_H */

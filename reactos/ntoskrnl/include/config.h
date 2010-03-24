@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_NTOSKRNL_CONFIG_H
-#define __INCLUDE_NTOSKRNL_CONFIG_H
+#pragma once
 
 /********** dbg/print.c **********/
 
@@ -39,6 +38,3 @@
      */
     #undef WHOLE_PAGE_ALLOCATIONS
 #endif
-
-#endif /* __INCLUDE_NTOSKRNL_CONFIG_H */
-

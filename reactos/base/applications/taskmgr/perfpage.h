@@ -20,8 +20,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __PERFORMANCEPAGE_H
-#define __PERFORMANCEPAGE_H
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,5 +36,3 @@ void	PerformancePage_OnViewCPUHistoryOneGraphPerCPU(void);
 #ifdef __cplusplus
 };
 #endif
-
-#endif /* __PERFORMANCEPAGE_H */

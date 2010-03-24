@@ -1,5 +1,4 @@
-#ifndef __SLAYER_RESOURCE_H
-#define __SLAYER_RESOURCE_H
+#pragma once
 
 #define IDD_SLAYERSHEET 100
 #define IDD_EDITCOMPATIBILITYMODES 101
@@ -18,7 +17,5 @@
 
 #define IDS_SLAYER 100
 #define IDS_DESCRIPTION 101
-
-#endif /* __SLAYER_RESOURCE_H */
 
 /* EOF */

@@ -34,6 +34,18 @@ typedef DWORD PST_KEY;
 typedef DWORD PST_PROVIDERCAPABILITIES;
 typedef GUID PST_PROVIDERID, *PPST_PROVIDERID;
 
+/*****************************************************************************
+ * PSTOREC library
+ */
+[
+    uuid(5a6f1ebd-2db1-11d0-8c39-00c04fd9126b),
+    version(1.0),
+    helpstring("PStore 1.0 Type Library")
+]
+library PSTORECLib
+{
+    importlib("stdole2.tlb");
+
 typedef struct _PST_PROVIDERINFO
 {
     DWORD cbSize;
@@ -50,27 +62,27 @@ typedef struct _PST_PROMPTINFO
     LPCWSTR szPrompt;
 } PST_PROMPTINFO, *PPST_PROMPTINFO;
 
-typedef struct {
+typedef struct _PST_ACCESSCLAUSE {
     DWORD cbSize;
     PST_ACCESSCLAUSETYPE ClauseType;
     DWORD cbClauseData;
     BYTE* pbClauseData;
 } PST_ACCESSCLAUSE, *PPST_ACCESSCLAUSE;
 
-typedef struct {
+typedef struct _PST_ACCESSRULE {
     DWORD cbSize;
     PST_ACCESSMODE AccessModeFlags;
     DWORD cClauses;
     PST_ACCESSCLAUSE* rgClauses;
 } PST_ACCESSRULE, *PPST_ACCESSRULE;
 
-typedef struct {
+typedef struct _PST_ACCESSRULESET {
     DWORD cbSize;
     DWORD cClause;
     PST_ACCESSRULE* rgRules;
 } PST_ACCESSRULESET, *PPST_ACCESSRULESET;
 
-typedef struct {
+typedef struct _PST_TYPEINFO {
     DWORD cbSize;
     LPWSTR szDisplayName;
 } PST_TYPEINFO, *PPST_TYPEINFO;
@@ -259,3 +271,5 @@ interface IPStore : IUnknown
         [in] DWORD dwFlags,
         [in] IEnumPStoreItems** ppenum );
 }
+
+};

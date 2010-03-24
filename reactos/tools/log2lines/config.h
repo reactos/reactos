@@ -1,5 +1,4 @@
-#ifndef __L2L_CONFIG_H__
-#define __L2L_CONFIG_H__
+#pragma once
 
 /* Assume if an offset > ABS_TRESHOLD, then it must be absolute */
 #define ABS_TRESHOLD    0x00400000L
@@ -27,9 +26,12 @@
 "%s x -y -r %s" PATH_STR "reactos" PATH_STR "reactos.cab -o%s" \
 PATH_STR "reactos" PATH_STR "reactos > " DEV_NULL
 
+/* When we can't use a normal path, because it gets cleaned,
+ * fallback to name mangling: 
+ */ 
+#define ALT_PATH_STR    "#"
+
 #define LINESIZE        1024
 #define NAMESIZE        80
-
-#endif /* __L2L_CONFIG_H__ */
 
 /* EOF */

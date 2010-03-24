@@ -24,8 +24,7 @@
  * PROGRAMMER:      Eric Kohl
  */
 
-#ifndef __REGISTRY_H__
-#define __REGISTRY_H__
+#pragma once
 
 BOOLEAN
 ImportRegistryFile(PWSTR Filename,
@@ -37,7 +36,5 @@ SetInstallPathValue(PUNICODE_STRING InstallPath);
 
 BOOLEAN
 SetMountedDeviceValue(CHAR Letter, ULONG Signature, LARGE_INTEGER StartingOffset);
-
-#endif /* __REGISTRY_H__ */
 
 /* EOF */

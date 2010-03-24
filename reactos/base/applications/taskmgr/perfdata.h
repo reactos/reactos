@@ -20,8 +20,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __PERFDATA_H
-#define __PERFDATA_H
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -106,5 +105,3 @@ ULONG	PerfDataGetTotalThreadCount(void);
 #ifdef __cplusplus
 };
 #endif
-
-#endif /* __PERFDATA_H */

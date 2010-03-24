@@ -846,10 +846,10 @@ AddDiskToList (HANDLE FileHandle,
   DiskEntry->SectorsPerTrack = DiskGeometry.SectorsPerTrack;
   DiskEntry->BytesPerSector = DiskGeometry.BytesPerSector;
 
-  DPRINT ("Cylinders %d\n", DiskEntry->Cylinders);
-  DPRINT ("TracksPerCylinder %d\n", DiskEntry->TracksPerCylinder);
-  DPRINT ("SectorsPerTrack %d\n", DiskEntry->SectorsPerTrack);
-  DPRINT ("BytesPerSector %d\n", DiskEntry->BytesPerSector);
+  DPRINT ("Cylinders %I64u\n", DiskEntry->Cylinders);
+  DPRINT ("TracksPerCylinder %I64u\n", DiskEntry->TracksPerCylinder);
+  DPRINT ("SectorsPerTrack %I64u\n", DiskEntry->SectorsPerTrack);
+  DPRINT ("BytesPerSector %I64u\n", DiskEntry->BytesPerSector);
 
   DiskEntry->TrackSize =
     (ULONGLONG)DiskGeometry.SectorsPerTrack *

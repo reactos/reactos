@@ -1,5 +1,4 @@
-#ifndef __CPL_APPWIZ_H
-#define __CPL_APPWIZ_H
+#pragma once
 
 #define COBJMACROS
 #include <windows.h>
@@ -40,7 +39,5 @@ LONG CALLBACK
 NewLinkHere(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2);
 
 void ShowLastWin32Error(HWND hWndOwner);
-
-#endif /* __CPL_APPWIZ_H */
 
 /* EOF */

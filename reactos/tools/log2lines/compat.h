@@ -1,5 +1,4 @@
-#ifndef __L2L_COMPAT_H__
-#define __L2L_COMPAT_H__
+#pragma once
 
 #if defined (__DJGPP__) || defined (__WIN32__)
 
@@ -34,8 +33,5 @@
 #define DIR_FMT         "find %s -type f > %s"
 
 #endif /* not defined (__DJGPP__) || defined (__WIN32__) */
-
-
-#endif /* __L2L_COMPAT_H__ */
 
 /* EOF */

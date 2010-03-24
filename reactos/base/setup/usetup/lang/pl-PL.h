@@ -5,8 +5,7 @@
  *      IRC: irc.freenode.net #reactos-pl;
  */
 
-#ifndef LANG_PL_PL_H__
-#define LANG_PL_PL_H__
+#pragma once
 
 MUI_LAYOUTS plPLLayouts[] =
 {
@@ -1703,5 +1702,3 @@ MUI_STRING plPLStrings[] =
     "Dodawanie ukˆad¢w klawiatury"},
     {0, 0}
 };
-
-#endif

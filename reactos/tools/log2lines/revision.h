@@ -5,8 +5,7 @@
  * - SVN interface and revision analysis
  */
 
-#ifndef __L2L_REVISION_H__
-#define __L2L_REVISION_H__
+#pragma once
 
 #include <stdio.h>
 
@@ -24,7 +23,5 @@ void reportRevision(FILE *outFile);
 unsigned long findRev(FILE *finx, int *rev);
 int regscan(FILE *outFile);
 int updateSvnlog(void);
-
-#endif /* __L2L_REVISION_H__ */
 
 /* EOF */

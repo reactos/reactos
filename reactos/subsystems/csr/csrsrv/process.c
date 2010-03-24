@@ -916,7 +916,7 @@ CsrGetProcessLuid(HANDLE hProcess OPTIONAL,
     /* Now query the information */
     Status = NtQueryInformationToken(hToken,
                                      TokenStatistics,
-                                     &TokenStats,
+                                     TokenStats,
                                      Length,
                                      &Length);
 

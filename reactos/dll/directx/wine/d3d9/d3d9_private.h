@@ -187,11 +187,6 @@ HRESULT device_init(IDirect3DDevice9Impl *device, IWineD3D *wined3d, UINT adapte
 extern HRESULT WINAPI IDirect3DDevice9Impl_GetSwapChain(IDirect3DDevice9Ex *iface,
         UINT iSwapChain, IDirect3DSwapChain9 **pSwapChain) DECLSPEC_HIDDEN;
 extern UINT WINAPI IDirect3DDevice9Impl_GetNumberOfSwapChains(IDirect3DDevice9Ex *iface) DECLSPEC_HIDDEN;
-extern HRESULT WINAPI IDirect3DDevice9Impl_CreateStateBlock(IDirect3DDevice9Ex *iface,
-        D3DSTATEBLOCKTYPE Type, IDirect3DStateBlock9 **ppSB) DECLSPEC_HIDDEN;
-extern HRESULT WINAPI IDirect3DDevice9Impl_BeginStateBlock(IDirect3DDevice9Ex *iface) DECLSPEC_HIDDEN;
-extern HRESULT WINAPI IDirect3DDevice9Impl_EndStateBlock(IDirect3DDevice9Ex *iface,
-        IDirect3DStateBlock9 **ppSB) DECLSPEC_HIDDEN;
 extern HRESULT WINAPI IDirect3DDevice9Impl_SetVertexDeclaration(IDirect3DDevice9Ex *iface,
         IDirect3DVertexDeclaration9 *pDecl) DECLSPEC_HIDDEN;
 extern HRESULT WINAPI IDirect3DDevice9Impl_GetVertexDeclaration(IDirect3DDevice9Ex *iface,
@@ -228,9 +223,6 @@ extern HRESULT WINAPI IDirect3DDevice9Impl_SetPixelShaderConstantB(IDirect3DDevi
         UINT StartRegister, const BOOL *pConstantData, UINT BoolCount) DECLSPEC_HIDDEN;
 extern HRESULT WINAPI IDirect3DDevice9Impl_GetPixelShaderConstantB(IDirect3DDevice9Ex *iface,
         UINT StartRegister, BOOL *pConstantData, UINT BoolCount) DECLSPEC_HIDDEN;
-extern HRESULT WINAPI IDirect3DDevice9Impl_CreateQuery(IDirect3DDevice9Ex *iface,
-        D3DQUERYTYPE Type, IDirect3DQuery9 **ppQuery) DECLSPEC_HIDDEN;
-
 
 /* ---------------- */
 /* IDirect3DVolume9 */
@@ -470,6 +462,8 @@ typedef struct  IDirect3DStateBlock9Impl {
     LPDIRECT3DDEVICE9EX       parentDevice;
 } IDirect3DStateBlock9Impl;
 
+HRESULT stateblock_init(IDirect3DStateBlock9Impl *stateblock, IDirect3DDevice9Impl *device,
+        D3DSTATEBLOCKTYPE type, IWineD3DStateBlock *wined3d_stateblock) DECLSPEC_HIDDEN;
 
 /* --------------------------- */
 /* IDirect3DVertexDeclaration9 */
@@ -563,5 +557,8 @@ typedef struct IDirect3DQuery9Impl {
     /* Parent reference */
     LPDIRECT3DDEVICE9EX    parentDevice;
 } IDirect3DQuery9Impl;
+
+HRESULT query_init(IDirect3DQuery9Impl *query, IDirect3DDevice9Impl *device,
+        D3DQUERYTYPE type) DECLSPEC_HIDDEN;
 
 #endif /* __WINE_D3D9_PRIVATE_H */

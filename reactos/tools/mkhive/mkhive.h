@@ -24,8 +24,7 @@
  *                  Hervé Poussineau
  */
 
-#ifndef __MKHIVE_H__
-#define __MKHIVE_H__
+#pragma once
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -102,7 +101,5 @@ extern LIST_ENTRY CmiHiveListHead;
 #else//_MSC_VER
 #define GCC_PACKED __attribute__((packed))
 #endif//_MSC_VER
-
-#endif /* __MKHIVE_H__ */
 
 /* EOF */

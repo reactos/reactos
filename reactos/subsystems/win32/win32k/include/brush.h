@@ -1,5 +1,4 @@
-#ifndef __WIN32K_BRUSH_H
-#define __WIN32K_BRUSH_H
+#pragma once
 
 #include "gdiobj.h"
 
@@ -133,5 +132,3 @@ PVOID FASTCALL AllocateObjectAttr(VOID);
 VOID FASTCALL FreeObjectAttr(PVOID);
 
 BOOL FASTCALL IntGdiSetBrushOwner(PBRUSH,DWORD);
-
-#endif

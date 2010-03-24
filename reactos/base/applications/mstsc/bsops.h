@@ -18,8 +18,7 @@
    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#ifndef __BSOPS_MSTSC_H
-#define __BSOPS_MSTSC_H
+#pragma once
 
 int bs_get_pixel(int x, int y);
 void bs_set_pixel(int x, int y, int pixel, int rop, int use_clip);
@@ -50,5 +49,3 @@ void bs_patblt(int opcode, int x, int y, int cx, int cy,
                int brush_style, char * brush_pattern,
                int brush_x_org, int brush_y_org,
                int bgcolour, int fgcolour);
-
-#endif /* __BSOPS_MSTSC_H */

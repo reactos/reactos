@@ -1,5 +1,4 @@
-#ifndef _WIN32K_MSGQUEUE_H
-#define _WIN32K_MSGQUEUE_H
+#pragma once
 
 #include "hook.h"
 
@@ -278,7 +277,5 @@ MsqCalculateMessageTime(IN PLARGE_INTEGER TickCount)
 {
     return (LONG)(TickCount->QuadPart * (KeQueryTimeIncrement() / 10000));
 }
-
-#endif /* _WIN32K_MSGQUEUE_H */
 
 /* EOF */

@@ -120,6 +120,7 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PFN_NUMBER Page)
       if (IsListEmpty(&AllocationListHead) || MmAvailablePages < MiMinimumAvailablePages)
       {
          KeReleaseSpinLock(&AllocationListLock, OldIrql);
+         if(Consumer == MC_USER) MmRemoveLRUUserPage(Page);
          OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
          MmDereferencePage(Page);
          KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
@@ -188,11 +189,6 @@ MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages)
             Target--;
             (*NrFreedPages)++;
         }
-        else if (Status == STATUS_PAGEFILE_QUOTA)
-        {
-            MmRemoveLRUUserPage(CurrentPage);
-            MmInsertLRULastUserPage(CurrentPage);
-        }
         
         CurrentPage = NextPage;
     }
@@ -232,6 +228,8 @@ MiIsBalancerThread(VOID)
           PsGetCurrentThread() == MiBalancerThreadId.UniqueThread;
 }
 
+VOID NTAPI MiSetConsumer(IN PFN_TYPE Pfn, IN ULONG Consumer);
+
 NTSTATUS
 NTAPI
 MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
@@ -262,7 +260,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
    if ((Consumer == MC_NPPOOL) || (Consumer == MC_SYSTEM) || MiIsBalancerThread())
    {
       OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-      Page = MmAllocPage(Consumer, 0);
+      Page = MmAllocPage(Consumer);
       KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
       if (Page == 0)
       {
@@ -316,8 +314,8 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
       {
          KeBugCheck(NO_PAGES_AVAILABLE);
       }
-      /* Update the Consumer */
-      MiGetPfnEntry(Page)->u3.e1.PageLocation = Consumer;
+      /* Update the Consumer and make the page active */
+      MiSetConsumer(Page, Consumer);
       if(Consumer == MC_USER) MmInsertLRULastUserPage(Page);
       *AllocatedPage = Page;
       (void)InterlockedDecrementUL(&MiPagesRequired);
@@ -328,7 +326,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
     * Actually allocate the page.
     */
    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-   Page = MmAllocPage(Consumer, 0);
+   Page = MmAllocPage(Consumer);
    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
    if (Page == 0)
    {

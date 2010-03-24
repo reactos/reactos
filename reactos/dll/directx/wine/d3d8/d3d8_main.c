@@ -35,7 +35,7 @@ void WINAPI DebugSetMute(void) {
     /* nothing to do */
 }
 
-IDirect3D8* WINAPI Direct3DCreate8(UINT SDKVersion) {
+IDirect3D8* WINAPI DECLSPEC_HOTPATCH Direct3DCreate8(UINT SDKVersion) {
     IDirect3D8Impl* object;
     TRACE("SDKVersion = %x\n", SDKVersion);
 
@@ -79,7 +79,12 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
 HRESULT WINAPI ValidateVertexShader(DWORD* vertexshader, DWORD* reserved1, DWORD* reserved2, BOOL bool, DWORD* toto)
 {
   HRESULT ret;
-  FIXME("(%p %p %p %d %p): stub\n", vertexshader, reserved1, reserved2, bool, toto);
+  static BOOL warned;
+
+  if (TRACE_ON(d3d8) || !warned) {
+      FIXME("(%p %p %p %d %p): stub\n", vertexshader, reserved1, reserved2, bool, toto);
+      warned = TRUE;
+  }
 
   if (!vertexshader)
       return E_FAIL;
@@ -109,7 +114,12 @@ HRESULT WINAPI ValidateVertexShader(DWORD* vertexshader, DWORD* reserved1, DWORD
 HRESULT WINAPI ValidatePixelShader(DWORD* pixelshader, DWORD* reserved1, BOOL bool, DWORD* toto)
 {
   HRESULT ret;
-  FIXME("(%p %p %d %p): stub\n", pixelshader, reserved1, bool, toto);
+  static BOOL warned;
+
+  if (TRACE_ON(d3d8) || !warned) {
+      FIXME("(%p %p %d %p): stub\n", pixelshader, reserved1, bool, toto);
+      warned = TRUE;
+  }
 
   if (!pixelshader)
       return E_FAIL;

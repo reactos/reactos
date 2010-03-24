@@ -80,4 +80,3 @@ Mit:\n\
 \t\tQuelldateien kopiert, die neuer sind als die Zieldatei\n\n"
 
 }
-#pragma code_page(default)

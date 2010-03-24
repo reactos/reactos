@@ -100,7 +100,7 @@ int parser_debug, yy_flex_debug;
 
 int pedantic = 0;
 int do_everything = 1;
-int preprocess_only = 0;
+static int preprocess_only = 0;
 int do_header = 0;
 int do_typelib = 0;
 int do_proxies = 0;
@@ -108,7 +108,7 @@ int do_client = 0;
 int do_server = 0;
 int do_idfile = 0;
 int do_dlldata = 0;
-int no_preprocess = 0;
+static int no_preprocess = 0;
 int old_names = 0;
 int do_win32 = 1;
 int do_win64 = 1;
@@ -127,16 +127,15 @@ char *client_name;
 char *client_token;
 char *server_name;
 char *server_token;
-char *idfile_name;
-char *idfile_token;
+static char *idfile_name;
+static char *idfile_token;
 char *temp_name;
 const char *prefix_client = "";
 const char *prefix_server = "";
 
 int line_number = 1;
 
-FILE *header;
-FILE *idfile;
+static FILE *idfile;
 
 size_t pointer_size = 0;
 syskind_t typelib_kind = sizeof(void*) == 8 ? SYS_WIN64 : SYS_WIN32;
@@ -160,18 +159,18 @@ enum {
 static const char short_options[] =
     "b:cC:d:D:EhH:I:m:NpP:sS:tT:uU:VW";
 static const struct option long_options[] = {
-    { "dlldata", 1, 0, DLLDATA_OPTION },
-    { "dlldata-only", 0, 0, DLLDATA_ONLY_OPTION },
-    { "local-stubs", 1, 0, LOCAL_STUBS_OPTION },
-    { "oldnames", 0, 0, OLDNAMES_OPTION },
-    { "prefix-all", 1, 0, PREFIX_ALL_OPTION },
-    { "prefix-client", 1, 0, PREFIX_CLIENT_OPTION },
-    { "prefix-server", 1, 0, PREFIX_SERVER_OPTION },
-    { "win32", 0, 0, WIN32_OPTION },
-    { "win64", 0, 0, WIN64_OPTION },
-    { "win32-align", 1, 0, WIN32_ALIGN_OPTION },
-    { "win64-align", 1, 0, WIN64_ALIGN_OPTION },
-    { 0, 0, 0, 0 }
+    { "dlldata", 1, NULL, DLLDATA_OPTION },
+    { "dlldata-only", 0, NULL, DLLDATA_ONLY_OPTION },
+    { "local-stubs", 1, NULL, LOCAL_STUBS_OPTION },
+    { "oldnames", 0, NULL, OLDNAMES_OPTION },
+    { "prefix-all", 1, NULL, PREFIX_ALL_OPTION },
+    { "prefix-client", 1, NULL, PREFIX_CLIENT_OPTION },
+    { "prefix-server", 1, NULL, PREFIX_SERVER_OPTION },
+    { "win32", 0, NULL, WIN32_OPTION },
+    { "win64", 0, NULL, WIN64_OPTION },
+    { "win32-align", 1, NULL, WIN32_ALIGN_OPTION },
+    { "win64-align", 1, NULL, WIN64_ALIGN_OPTION },
+    { NULL, 0, NULL, 0 }
 };
 
 static void rm_tempfile(void);
@@ -431,7 +430,7 @@ static void write_id_data_stmts(const statement_list_t *stmts)
       if (type_get_type(type) == TYPE_INTERFACE)
       {
         const UUID *uuid;
-        if (!is_object(type->attrs) && !is_attr(type->attrs, ATTR_DISPINTERFACE))
+        if (!is_object(type) && !is_attr(type->attrs, ATTR_DISPINTERFACE))
           continue;
         uuid = get_attrp(type->attrs, ATTR_UUID);
         write_guid(idfile, is_attr(type->attrs, ATTR_DISPINTERFACE) ? "DIID" : "IID",
@@ -648,8 +647,8 @@ int main(int argc,char *argv[])
 
   if(debuglevel)
   {
-    setbuf(stdout,0);
-    setbuf(stderr,0);
+    setbuf(stdout, NULL);
+    setbuf(stderr, NULL);
   }
 
   parser_debug = debuglevel & DEBUGLEVEL_TRACE ? 1 : 0;

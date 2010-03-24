@@ -4,8 +4,8 @@
  * FILE:        include/8390.h
  * PURPOSE:     National Semiconductor 8390 NIC definitions
  */
-#ifndef __8390_H
-#define __8390_H
+
+#pragma once
 
 /* Page 0 register layout (PS1 = 0, PS0 = 0) */
 #define PG0_CR      0x00    /* Command Register (R/W) */
@@ -168,7 +168,5 @@ typedef struct _DISCARD_HEADER {
 
 VOID NTAPI MiniportHandleInterrupt(
     IN  NDIS_HANDLE MiniportAdapterContext);
-
-#endif /* __8390_H */
 
 /* EOF */

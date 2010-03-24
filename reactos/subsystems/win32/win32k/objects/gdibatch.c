@@ -72,7 +72,7 @@ GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
   {
     pdcattr = dc->pdcattr;
   }
-  // The thread is approaching the end of sunset.
+  // FYI! The thread is approaching the end of sunset.
   switch(pHdr->Cmd)
   {
      case GdiBCPatBlt: // Highest pri first!
@@ -101,8 +101,9 @@ GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
         TextIntRealizeFont((HFONT) pgO->hgdiobj, NULL);
         pdcattr->ulDirty_ &= ~(DIRTY_CHARSET);
      }
-     case GdiBCDelObj:
      case GdiBCDelRgn:
+        DPRINT("Delete Region Object!\n");
+     case GdiBCDelObj:
      {
         PGDIBSOBJECT pgO = (PGDIBSOBJECT) pHdr;
         GreDeleteObject( pgO->hgdiobj );
@@ -138,6 +139,7 @@ NTSTATUS
 APIENTRY
 NtGdiFlushUserBatch(VOID)
 {
+  BOOL Hit;
   PTEB pTeb = NtCurrentTeb();
   ULONG GdiBatchCount = pTeb->GdiBatchCount;
 
@@ -146,8 +148,9 @@ NtGdiFlushUserBatch(VOID)
     HDC hDC = (HDC) pTeb->GdiTebBatch.HDC;
 
     /*  If hDC is zero and the buffer fills up with delete objects we need
-        to run anyway. So, hard code to the system batch limit. */
-    if ((hDC) || (GdiBatchCount >= GDI_BATCH_LIMIT))
+        to run anyway.
+     */
+    if (hDC || GdiBatchCount)
     {
       PCHAR pHdr = (PCHAR)&pTeb->GdiTebBatch.Buffer[0];
       PDC pDC = NULL;
@@ -158,8 +161,26 @@ NtGdiFlushUserBatch(VOID)
       }
 
        // No need to init anything, just go!
-       for (; GdiBatchCount > 0; GdiBatchCount--)
-       {
+       for (Hit = FALSE; GdiBatchCount > 0; GdiBatchCount--)
+       {   /*
+              Looks like a hack,
+              feels like a hack,
+              you're right it's a hack,
+              due to the lack,
+              of kernel thread locking when it is in sunset!
+            */
+           _SEH2_TRY
+           {
+              ((PGDIBATCHHDR)pHdr)->Cmd = ((PGDIBATCHHDR)pHdr)->Cmd;
+           }
+           _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+           {
+              Hit = TRUE;
+           }
+           _SEH2_END;
+
+           if (Hit) break;
+
            // Process Gdi Batch!
            pHdr += GdiFlushUserBatch(pDC, (PGDIBATCHHDR) pHdr);
        }

@@ -5,8 +5,8 @@
  * PURPOSE:     Shared TDI library header
  */
 
-#ifndef TDILIB_H
-#define TDILIB_H
+#pragma once
+
 NTSTATUS openTcpFile(PHANDLE tcpFile);
 VOID closeTcpFile(HANDLE tcpFile);
 NTSTATUS tdiGetEntityIDSet( HANDLE tcpFile, TDIEntityID **entitySet,
@@ -17,4 +17,3 @@ NTSTATUS tdiGetSetOfThings( HANDLE tcpFile, DWORD toiClass, DWORD toiType,
 			    DWORD entrySize, PVOID *tdiEntitySet,
 			    PDWORD numEntries );
 VOID tdiFreeThingSet( PVOID things );
-#endif

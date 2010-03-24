@@ -1,5 +1,4 @@
-#ifndef _INT_W32k_DDRAW
-#define _INT_W32k_DDRAW
+#pragma once
 
 #include <ddrawint.h>
 #include <ddkernel.h>
@@ -136,5 +135,3 @@ void dump_halinfo(DD_HALINFO *pHalInfo);
         DPRINT1("\n");\
     if (flag != 0) \
         DPRINT1("undoc value in %s flags value %08lx\n",text, (ULONG) dwflag);
-
-#endif /* _INT_W32k_DDRAW */

@@ -6,20 +6,9 @@
 	<include base="ntoskrnl">include</include>
 	<include base="ReactOS">include/reactos/libs</include>
 	<include base="ReactOS">include/reactos/elf</include>
+	<define name="_BLDR_" />
 	<define name="_NTHAL_" />
-	<group compilerset="gcc">
-		<compilerflag>-fno-inline</compilerflag>
-		<compilerflag>-fno-zero-initialized-in-bss</compilerflag>
-	</group>
-
-	<if property="ARCH" value="arm">
-		<group compilerset="gcc">
-			<compilerflag>-ffreestanding</compilerflag>
-			<compilerflag>-fno-builtin</compilerflag>
-			<compilerflag>-Os</compilerflag>
-		</group>
-	</if>
-
+	<define name="_NTSYSTEM_" />
 	<directory name="arch">
 		<directory name="i386">
 			<if property="ARCH" value="i386">
@@ -27,6 +16,7 @@
 				<file>archmach.c</file>
 				<file>custom.c</file>
 				<file>drivemap.c</file>
+				<file>halstub.c</file>
 				<file>hardware.c</file>
 				<file>hwacpi.c</file>
 				<file>hwapm.c</file>
@@ -37,6 +27,7 @@
 				<file>loader.c</file>
 				<file>machpc.c</file>
 				<file>miscboot.c</file>
+				<file>ntoskrnl.c</file>
 				<file>pccons.c</file>
 				<file>pcdisk.c</file>
 				<file>pcmem.c</file>
@@ -73,7 +64,6 @@
 		<directory name="arm">
 			<if property="ARCH" value="arm">
 				<file first="true">boot.s</file>
-				<file>loader.c</file>
 				<file>macharm.c</file>
 			</if>
 		</directory>
@@ -102,6 +92,11 @@
 	</directory>
 
 	<directory name="windows">
+    	<if property="ARCH" value="arm">
+    		<directory name="arm">
+    			<file>wlmemory.c</file>
+    		</directory>
+    	</if>
 		<if property="ARCH" value="i386">
 			<directory name="i386">
 				<file>ntsetup.c</file>

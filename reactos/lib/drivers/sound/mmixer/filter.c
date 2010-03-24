@@ -203,7 +203,9 @@ MMixerGetControlTypeFromTopologyNode(
         UNIMPLEMENTED;
         return MIXERCONTROL_CONTROLTYPE_VOLUME;
     }
-    UNIMPLEMENTED
+    //TODO
+    //check for other supported node types
+    //UNIMPLEMENTED
     return 0;
 }
 

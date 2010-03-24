@@ -19,10 +19,13 @@
 #include "log2lines.h"
 #include "help.h"
 #include "cmd.h"
+#include "match.h"
 
 
-static FILE *stdIn          = NULL;
-static FILE *stdOut         = NULL;
+static FILE *dbgIn          = NULL;
+static FILE *dbgOut         = NULL;
+static FILE *conIn          = NULL;
+static FILE *conOut         = NULL;
 static const char *kdbg_prompt = KDBG_PROMPT;
 static const char *kdbg_cont   = KDBG_CONT;
 
@@ -443,15 +446,18 @@ translate_files(FILE *inFile, FILE *outFile)
                             {
                                 if (p == p_eos)
                                 {
-                                    //kdbg prompt, so already echoed char by char 
+                                    // kdbg prompt, so already echoed char by char
                                     memset(Line, '\0', LINESIZE);
                                     translate_char(c, outFile);
                                 }
                                 else
                                 {
-                                    translate_line(outFile, Line, path, LineOut);
-                                    translate_char(c, outFile);
-                                    report(outFile);
+                                    if (match_line(outFile, Line))
+                                    {
+                                        translate_line(outFile, Line, path, LineOut);
+                                        translate_char(c, outFile);
+                                        report(outFile);
+                                    }
                                 }
                             }
                         }
@@ -562,8 +568,10 @@ main(int argc, const char **argv)
     int res = 0;
     int optCount = 0;
 
-    stdIn = stdin;
-    stdOut = stdout;
+    dbgIn = stdin;
+    conOut = stdout;
+    (void)conIn;
+    (void)dbgOut;
 
     memset(&cache, 0, sizeof(LIST));
     memset(&sources, 0, sizeof(LIST));
@@ -596,7 +604,7 @@ main(int argc, const char **argv)
     read_cache();
     l2l_dbg(4, "Cache read complete\n");
 
-    if (set_LogFile(logFile))
+    if (set_LogFile(&logFile))
         return 2;
     l2l_dbg(4, "opt_logFile processed\n");
 
@@ -604,9 +612,9 @@ main(int argc, const char **argv)
     {
         l2l_dbg(3, "Command line: \"%s\"\n",opt_Pipe);
 
-        if (!(stdIn = POPEN(opt_Pipe, "r")))
+        if (!(dbgIn = POPEN(opt_Pipe, "r")))
         {
-            stdIn = stdin; //restore
+            dbgIn = stdin; //restore
             l2l_dbg(0, "Could not popen '%s' (%s)\n", opt_Pipe, strerror(errno));
             free(opt_Pipe); opt_Pipe = NULL;
         }
@@ -631,7 +639,7 @@ main(int argc, const char **argv)
                     l2l_dbg(2, "translating %s %s\n", exefile, offset);
                     translate_file(exefile, my_atoi(offset), Line);
                     printf("%s\n", Line);
-                    report(stdOut);
+                    report(conOut);
                 }
                 else
                 {
@@ -649,14 +657,16 @@ main(int argc, const char **argv)
     }
     else
     {   // translate logging from stdin
-        translate_files(stdIn, stdOut);
+        translate_files(dbgIn, conOut);
     }
 
     if (logFile)
         fclose(logFile);
 
     if (opt_Pipe)
-        PCLOSE(stdIn);
+        PCLOSE(dbgIn);
 
     return res;
 }
+
+/* EOF */

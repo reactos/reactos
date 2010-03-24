@@ -1,5 +1,4 @@
-#ifndef __PCI_H
-#define __PCI_H
+#pragma once
 
 #include <ntifs.h>
 #include <wdmguid.h>
@@ -175,5 +174,3 @@ NTAPI
 DriverEntry(
   IN PDRIVER_OBJECT DriverObject,
   IN PUNICODE_STRING RegistryPath);
-
-#endif  /*  __PCI_H  */

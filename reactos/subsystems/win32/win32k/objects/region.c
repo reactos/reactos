@@ -3439,27 +3439,33 @@ NtGdiEqualRgn(
         return ERROR;
     }
 
-    if (rgn1->rdh.nCount != rgn2->rdh.nCount ||
-            rgn1->rdh.nCount == 0 ||
-            rgn1->rdh.rcBound.left   != rgn2->rdh.rcBound.left ||
-            rgn1->rdh.rcBound.right  != rgn2->rdh.rcBound.right ||
-            rgn1->rdh.rcBound.top    != rgn2->rdh.rcBound.top ||
-            rgn1->rdh.rcBound.bottom != rgn2->rdh.rcBound.bottom)
-        goto exit;
+    if ( rgn1->rdh.nCount != rgn2->rdh.nCount ) goto exit;
+
+    if ( rgn1->rdh.nCount == 0 )
+    {
+       bRet = TRUE;
+       goto exit;  
+    }
+
+    if ( rgn1->rdh.rcBound.left   != rgn2->rdh.rcBound.left  ||
+         rgn1->rdh.rcBound.right  != rgn2->rdh.rcBound.right ||
+         rgn1->rdh.rcBound.top    != rgn2->rdh.rcBound.top   ||
+         rgn1->rdh.rcBound.bottom != rgn2->rdh.rcBound.bottom )
+       goto exit;
 
     tRect1 = rgn1->Buffer;
     tRect2 = rgn2->Buffer;
 
     if (!tRect1 || !tRect2)
-        goto exit;
+       goto exit;
 
     for (i=0; i < rgn1->rdh.nCount; i++)
     {
-        if (tRect1[i].left   != tRect2[i].left ||
-                tRect1[i].right  != tRect2[i].right ||
-                tRect1[i].top    != tRect2[i].top ||
-                tRect1[i].bottom != tRect2[i].bottom)
-            goto exit;
+        if ( tRect1[i].left   != tRect2[i].left  ||
+             tRect1[i].right  != tRect2[i].right ||
+             tRect1[i].top    != tRect2[i].top   ||
+             tRect1[i].bottom != tRect2[i].bottom )
+           goto exit;
     }
     bRet = TRUE;
 

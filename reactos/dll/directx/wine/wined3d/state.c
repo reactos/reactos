@@ -584,6 +584,10 @@ static void state_clipping(DWORD state, IWineD3DStateBlockImpl *stateblock, stru
             glEnable(GL_DEPTH_CLAMP);
             checkGLcall("glEnable(GL_DEPTH_CLAMP)");
         }
+        else
+        {
+            FIXME("Clipping disabled, but ARB_depth_clamp isn't supported.\n");
+        }
     }
 
     if (enable & WINED3DCLIPPLANE0)  { glEnable(GL_CLIP_PLANE0);  checkGLcall("glEnable(clip plane 0)"); }
@@ -3523,7 +3527,6 @@ static void sampler(DWORD state, IWineD3DStateBlockImpl *stateblock, struct wine
     if(stateblock->textures[sampler]) {
         BOOL srgb = stateblock->samplerState[sampler][WINED3DSAMP_SRGBTEXTURE];
         IWineD3DBaseTextureImpl *tex_impl = (IWineD3DBaseTextureImpl *) stateblock->textures[sampler];
-        tex_impl->baseTexture.internal_preload(stateblock->textures[sampler], srgb ? SRGB_SRGB : SRGB_RGB);
         IWineD3DBaseTexture_BindTexture(stateblock->textures[sampler], srgb);
         basetexture_apply_state_changes(stateblock->textures[sampler],
                 stateblock->textureState[sampler], stateblock->samplerState[sampler], gl_info);
@@ -3597,9 +3600,9 @@ void apply_pixelshader(DWORD state, IWineD3DStateBlockImpl *stateblock, struct w
         }
     } else {
         /* Disabled the pixel shader - color ops weren't applied
-         * while it was enabled, so re-apply them.
-         */
-        for(i=0; i < MAX_TEXTURES; i++) {
+         * while it was enabled, so re-apply them. */
+        for (i = 0; i < context->gl_info->limits.texture_stages; ++i)
+        {
             if(!isStateDirty(context, STATE_TEXTURESTAGE(i, WINED3DTSS_COLOROP))) {
                 device->StateTable[STATE_TEXTURESTAGE(i, WINED3DTSS_COLOROP)].apply
                         (STATE_TEXTURESTAGE(i, WINED3DTSS_COLOROP), stateblock, context);
@@ -3880,62 +3883,18 @@ static void transform_projection(DWORD state, IWineD3DStateBlockImpl *stateblock
     glLoadIdentity();
     checkGLcall("glLoadIdentity");
 
-    if(context->last_was_rhw) {
-        double X, Y, height, width, minZ, maxZ;
+    if (context->last_was_rhw)
+    {
+        double x = stateblock->viewport.X;
+        double y = stateblock->viewport.Y;
+        double w = stateblock->viewport.Width;
+        double h = stateblock->viewport.Height;
 
-        X      = stateblock->viewport.X;
-        Y      = stateblock->viewport.Y;
-        height = stateblock->viewport.Height;
-        width  = stateblock->viewport.Width;
-        minZ   = stateblock->viewport.MinZ;
-        maxZ   = stateblock->viewport.MaxZ;
-
-        if (!stateblock->device->untransformed)
-        {
-            /* Transformed vertices are supposed to bypass the whole transform pipeline including
-             * frustum clipping. This can't be done in opengl, so this code adjusts the Z range to
-             * suppress depth clipping. This can be done because it is an orthogonal projection and
-             * the Z coordinate does not affect the size of the primitives. Half Life 1 and Prince of
-             * Persia 3D need this.
-             *
-             * Note that using minZ and maxZ here doesn't entirely fix the problem, since view frustum
-             * clipping is still enabled, but it seems to fix it for all apps tested so far. A minor
-             * problem can be witnessed in half-life 1 engine based games, the weapon is clipped close
-             * to the viewer.
-             *
-             * Also note that this breaks z comparison against z values filled in with clear,
-             * but no app depending on that and disabled clipping has been found yet. Comparing
-             * primitives against themselves works, so the Z buffer is still intact for normal hidden
-             * surface removal.
-             *
-             * We could disable clipping entirely by setting the near to infinity and far to -infinity,
-             * but this would break Z buffer operation. Raising the range to something less than
-             * infinity would help a bit at the cost of Z precision, but it wouldn't eliminate the
-             * problem either.
-             */
-            TRACE("Calling glOrtho with %f, %f, %f, %f\n", width, height, -minZ, -maxZ);
-            if (context->render_offscreen)
-            {
-                glOrtho(X, X + width, -Y, -Y - height, -minZ, -maxZ);
-            } else {
-                glOrtho(X, X + width, Y + height, Y, -minZ, -maxZ);
-            }
-        } else {
-            /* If the app mixes transformed and untransformed primitives we can't use the coordinate system
-             * trick above because this would mess up transformed and untransformed Z order. Pass the z position
-             * unmodified to opengl.
-             *
-             * If the app depends on mixed types and disabled clipping we're out of luck without a pipeline
-             * replacement shader.
-             */
-            TRACE("Calling glOrtho with %f, %f, %f, %f\n", width, height, 1.0, -1.0);
-            if (context->render_offscreen)
-            {
-                glOrtho(X, X + width, -Y, -Y - height, 0.0, -1.0);
-            } else {
-                glOrtho(X, X + width, Y + height, Y, 0.0, -1.0);
-            }
-        }
+        TRACE("Calling glOrtho with x %.8e, y %.8e, w %.8e, h %.8e.\n", x, y, w, h);
+        if (context->render_offscreen)
+            glOrtho(x, x + w, -y, -y - h, 0.0, -1.0);
+        else
+            glOrtho(x, x + w, y + h, y, 0.0, -1.0);
         checkGLcall("glOrtho");
 
         /* Window Coord 0 is the middle of the first pixel, so translate by 1/2 pixels */
@@ -4167,7 +4126,7 @@ static inline void loadNumberedArrays(IWineD3DStateBlockImpl *stateblock,
                     GL_EXTCALL(glVertexAttrib4NubvARB(i, ptr));
                     break;
                 case WINED3DFMT_B8G8R8A8_UNORM:
-                    if (gl_info->supported[EXT_VERTEX_ARRAY_BGRA])
+                    if (gl_info->supported[ARB_VERTEX_ARRAY_BGRA])
                     {
                         const DWORD *src = (const DWORD *)ptr;
                         DWORD c = *src & 0xff00ff00;
@@ -4479,87 +4438,11 @@ static void loadVertexData(const struct wined3d_context *context, IWineD3DStateB
     loadTexCoords(context, stateblock, si, &curVBO);
 }
 
-static inline void drawPrimitiveTraceDataLocations(const struct wined3d_stream_info *dataLocations)
-{
-    /* Dump out what parts we have supplied */
-    TRACE("Strided Data:\n");
-    TRACE_STRIDED((dataLocations), WINED3D_FFP_POSITION);
-    TRACE_STRIDED((dataLocations), WINED3D_FFP_BLENDWEIGHT);
-    TRACE_STRIDED((dataLocations), WINED3D_FFP_BLENDINDICES);
-    TRACE_STRIDED((dataLocations), WINED3D_FFP_NORMAL);
-    TRACE_STRIDED((dataLocations), WINED3D_FFP_PSIZE);
-    TRACE_STRIDED((dataLocations), WINED3D_FFP_DIFFUSE);
-    TRACE_STRIDED((dataLocations), WINED3D_FFP_SPECULAR);
-    TRACE_STRIDED((dataLocations), WINED3D_FFP_TEXCOORD0);
-    TRACE_STRIDED((dataLocations), WINED3D_FFP_TEXCOORD1);
-    TRACE_STRIDED((dataLocations), WINED3D_FFP_TEXCOORD2);
-    TRACE_STRIDED((dataLocations), WINED3D_FFP_TEXCOORD3);
-    TRACE_STRIDED((dataLocations), WINED3D_FFP_TEXCOORD4);
-    TRACE_STRIDED((dataLocations), WINED3D_FFP_TEXCOORD5);
-    TRACE_STRIDED((dataLocations), WINED3D_FFP_TEXCOORD6);
-    TRACE_STRIDED((dataLocations), WINED3D_FFP_TEXCOORD7);
-}
-
 static void streamsrc(DWORD state, IWineD3DStateBlockImpl *stateblock, struct wined3d_context *context)
 {
-    const struct wined3d_gl_info *gl_info = context->gl_info;
     IWineD3DDeviceImpl *device = stateblock->device;
-    BOOL fixup = FALSE;
-    struct wined3d_stream_info *dataLocations = &device->strided_streams;
-    BOOL useVertexShaderFunction;
-    BOOL load_numbered = FALSE;
-    BOOL load_named = FALSE;
-
-    useVertexShaderFunction = (device->vs_selected_mode != SHADER_NONE && stateblock->vertexShader) ? TRUE : FALSE;
-
-    if(device->up_strided) {
-        /* Note: this is a ddraw fixed-function code path */
-        TRACE("================ Strided Input ===================\n");
-        device_stream_info_from_strided(gl_info, device->up_strided, dataLocations);
-
-        if(TRACE_ON(d3d)) {
-            drawPrimitiveTraceDataLocations(dataLocations);
-        }
-    } else {
-        /* Note: This is a fixed function or shader codepath.
-         * This means it must handle both types of strided data.
-         * Shaders must go through here to zero the strided data, even if they
-         * don't set any declaration at all
-         */
-        TRACE("================ Vertex Declaration  ===================\n");
-        device_stream_info_from_declaration(device, useVertexShaderFunction, dataLocations, &fixup);
-    }
-
-    if (dataLocations->position_transformed) useVertexShaderFunction = FALSE;
-
-    if(useVertexShaderFunction) {
-        if(((IWineD3DVertexDeclarationImpl *) stateblock->vertexDecl)->half_float_conv_needed && !fixup) {
-            TRACE("Using drawStridedSlow with vertex shaders for FLOAT16 conversion\n");
-            device->useDrawStridedSlow = TRUE;
-        } else {
-            load_numbered = TRUE;
-            device->useDrawStridedSlow = FALSE;
-        }
-    }
-    else
-    {
-        WORD slow_mask = (1 << WINED3D_FFP_PSIZE);
-        slow_mask |= -!gl_info->supported[EXT_VERTEX_ARRAY_BGRA]
-                & ((1 << WINED3D_FFP_DIFFUSE) | (1 << WINED3D_FFP_SPECULAR));
-
-        if (fixup || (!dataLocations->position_transformed
-                && !(dataLocations->use_map & slow_mask)))
-        {
-            /* Load the vertex data using named arrays */
-            load_named = TRUE;
-            device->useDrawStridedSlow = FALSE;
-        }
-        else
-        {
-            TRACE("Not loading vertex data\n");
-            device->useDrawStridedSlow = TRUE;
-        }
-    }
+    BOOL load_numbered = use_vs(stateblock) && !device->useDrawStridedSlow;
+    BOOL load_named = !use_vs(stateblock) && !device->useDrawStridedSlow;
 
     if (context->numberedArraysLoaded && !load_numbered)
     {
@@ -4576,13 +4459,13 @@ static void streamsrc(DWORD state, IWineD3DStateBlockImpl *stateblock, struct wi
     if (load_numbered)
     {
         TRACE("Loading numbered arrays\n");
-        loadNumberedArrays(stateblock, dataLocations, context);
+        loadNumberedArrays(stateblock, &device->strided_streams, context);
         context->numberedArraysLoaded = TRUE;
     }
     else if (load_named)
     {
         TRACE("Loading vertex data\n");
-        loadVertexData(context, stateblock, dataLocations);
+        loadVertexData(context, stateblock, &device->strided_streams);
         context->namedArraysLoaded = TRUE;
     }
 }
@@ -5634,8 +5517,7 @@ static const struct StateEntryTemplate ffp_fragmentstate_template[] = {
 /* Context activation is done by the caller. */
 static void ffp_enable(IWineD3DDevice *iface, BOOL enable) { }
 
-static void ffp_fragment_get_caps(WINED3DDEVTYPE devtype,
-        const struct wined3d_gl_info *gl_info, struct fragment_caps *pCaps)
+static void ffp_fragment_get_caps(const struct wined3d_gl_info *gl_info, struct fragment_caps *pCaps)
 {
     pCaps->TextureOpCaps =  WINED3DTEXOPCAPS_ADD         |
                             WINED3DTEXOPCAPS_ADDSIGNED   |
@@ -5670,7 +5552,7 @@ static void ffp_fragment_get_caps(WINED3DDEVTYPE devtype,
     if (gl_info->supported[ARB_TEXTURE_ENV_DOT3])
         pCaps->TextureOpCaps |= WINED3DTEXOPCAPS_DOTPRODUCT3;
 
-    pCaps->MaxTextureBlendStages = gl_info->limits.texture_stages;
+    pCaps->MaxTextureBlendStages = gl_info->limits.textures;
     pCaps->MaxSimultaneousTextures = gl_info->limits.textures;
 }
 
@@ -5723,6 +5605,43 @@ static void multistate_apply_3(DWORD state, IWineD3DStateBlockImpl *stateblock, 
     stateblock->device->multistate_funcs[state][0](state, stateblock, context);
     stateblock->device->multistate_funcs[state][1](state, stateblock, context);
     stateblock->device->multistate_funcs[state][2](state, stateblock, context);
+}
+
+static void prune_invalid_states(struct StateEntry *state_table, const struct wined3d_gl_info *gl_info)
+{
+    unsigned int start, last, i;
+
+    start = STATE_TEXTURESTAGE(gl_info->limits.texture_stages, 0);
+    last = STATE_TEXTURESTAGE(MAX_TEXTURES - 1, WINED3D_HIGHEST_TEXTURE_STATE);
+    for (i = start; i <= last; ++i)
+    {
+        state_table[i].representative = 0;
+        state_table[i].apply = state_undefined;
+    }
+
+    start = STATE_TRANSFORM(WINED3DTS_TEXTURE0 + gl_info->limits.texture_stages);
+    last = STATE_TRANSFORM(WINED3DTS_TEXTURE0 + MAX_TEXTURES - 1);
+    for (i = start; i <= last; ++i)
+    {
+        state_table[i].representative = 0;
+        state_table[i].apply = state_undefined;
+    }
+}
+
+static void validate_state_table(struct StateEntry *state_table)
+{
+    unsigned int i;
+
+    for (i = 0; i < STATE_HIGHEST + 1; ++i)
+    {
+        DWORD rep = state_table[i].representative;
+        if (rep && !state_table[rep].representative)
+        {
+            ERR("State %s (%#x) has invalid representative %s (%#x).\n",
+                    debug_d3dstate(i), i, debug_d3dstate(rep), rep);
+            state_table[i].representative = 0;
+        }
+    }
 }
 
 HRESULT compile_state_table(struct StateEntry *StateTable, APPLYSTATEFUNC **dev_multistate_funcs,
@@ -5823,6 +5742,9 @@ HRESULT compile_state_table(struct StateEntry *StateTable, APPLYSTATEFUNC **dev_
             StateTable[cur[i].state].representative = cur[i].content.representative;
         }
     }
+
+    prune_invalid_states(StateTable, gl_info);
+    validate_state_table(StateTable);
 
     return WINED3D_OK;
 

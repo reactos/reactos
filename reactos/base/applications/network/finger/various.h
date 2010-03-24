@@ -1,9 +1,7 @@
 // Various things you need when porting BSD and GNU utilities to
 // Win32.
 
-#ifndef VARIOUS_H
-#define VARIOUS_H
-
+#pragma once
 
 typedef float f4byte_t;
 typedef double f8byte_t;
@@ -32,5 +30,3 @@ typedef long uid_t;  // SunOS 5.5
 #define rindex(s, c)  strrchr(s, c)
 
 void netfinger(char *);
-
-#endif

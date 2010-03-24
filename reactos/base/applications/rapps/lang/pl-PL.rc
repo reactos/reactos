@@ -16,7 +16,7 @@ BEGIN
 		MENUITEM "&Odinstaluj",ID_UNINSTALL
 		MENUITEM "&Modyfikuj",   ID_MODIFY
 		MENUITEM SEPARATOR
-		MENUITEM "&Remove from Registry", ID_REGREMOVE
+		MENUITEM "&UsuÒ z rejestru", ID_REGREMOVE
 		MENUITEM SEPARATOR
 		MENUITEM "O&dúwieø",  ID_REFRESH
 	END
@@ -44,7 +44,7 @@ BEGIN
 		MENUITEM "&odinstaluj", ID_UNINSTALL
 		MENUITEM "&Modyfikuj",    ID_MODIFY
 		MENUITEM SEPARATOR
-		MENUITEM "&Remove from Registry", ID_REGREMOVE
+		MENUITEM "&UsuÒ z rejestru", ID_REGREMOVE
 		MENUITEM SEPARATOR
 		MENUITEM "&Odúwieø",   ID_REFRESH
 	END
@@ -52,37 +52,37 @@ END
 
 IDD_SETTINGS_DIALOG DIALOGEX DISCARDABLE  0, 0, 250, 144
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Settings"
+CAPTION "Ustawienia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	GROUPBOX "General", -1, 4, 2, 240, 61
-	AUTOCHECKBOX "&Save window position", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-	AUTOCHECKBOX "&Update the list of accessible programs at start", IDC_UPDATE_AVLIST, 15, 29, 219, 12
-	AUTOCHECKBOX "&Log of installation and removal of programs", IDC_LOG_ENABLED, 15, 46, 219, 12
+	GROUPBOX "OgÛlne", -1, 4, 2, 240, 61
+	AUTOCHECKBOX "&Zapisz pozycjÍ okna", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
+	AUTOCHECKBOX "&Aktualizuj listÍ dostÍpnych programÛw przy kaødym uruchomieniu", IDC_UPDATE_AVLIST, 15, 29, 219, 12
+	AUTOCHECKBOX "Zap&isuj dziennik instalacji i usuwania programÛw", IDC_LOG_ENABLED, 15, 46, 219, 12
 
-	GROUPBOX "Downloading", -1, 4, 65, 240, 51
-	LTEXT "Folder for downloadings:", -1, 16, 75, 100, 9
+	GROUPBOX "Pobieranie", -1, 4, 65, 240, 51
+	LTEXT "Katalog dla pobranych plikÛw:", -1, 16, 75, 100, 9
 	EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP
-	PUSHBUTTON "&Choose", IDC_CHOOSE, 187, 85, 50, 14
-	AUTOCHECKBOX "&Delete installers of programs after installation", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+	PUSHBUTTON "&Wybierz", IDC_CHOOSE, 187, 85, 50, 14
+	AUTOCHECKBOX "&UsuÒ instalatory programÛw po ich zainstalowaniu", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
 
-	PUSHBUTTON "Default", IDC_DEFAULT_SETTINGS, 8, 124, 60, 14
+	PUSHBUTTON "Domyúlne", IDC_DEFAULT_SETTINGS, 8, 124, 60, 14
 	PUSHBUTTON "OK", IDOK, 116, 124, 60, 14
-	PUSHBUTTON "Cancel", IDCANCEL, 181, 124, 60, 14
+	PUSHBUTTON "Anuluj", IDCANCEL, 181, 124, 60, 14
 END
 
 IDD_INSTALL_DIALOG DIALOGEX DISCARDABLE  0, 0, 216, 97
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Program installation"
+CAPTION "Instalacja programu"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
 
-	AUTORADIOBUTTON "&Install from a disk (CD or DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
-	AUTORADIOBUTTON "&Download and install", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
+	AUTORADIOBUTTON "&Zainstaluj z dysku (CD or DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+	AUTORADIOBUTTON "&Pobierz i zainstaluj", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
 
 	PUSHBUTTON "OK", IDOK, 86, 78, 60, 14
-	PUSHBUTTON "Cancel", IDCANCEL, 150, 78, 60, 14
+	PUSHBUTTON "Anuluj", IDCANCEL, 150, 78, 60, 14
 END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX LOADONCALL MOVEABLE DISCARDABLE  0, 0, 220, 76
@@ -101,7 +101,7 @@ CAPTION "O programie"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "ReactOS Applications Manager\nCopyright (C) 2009\nby Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
-	PUSHBUTTON "Close", IDOK, 133, 46, 50, 14
+	PUSHBUTTON "Zamknij", IDOK, 133, 46, 50, 14
 	ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
 END
 
@@ -139,7 +139,7 @@ BEGIN
 	IDS_INFO_INSTLOCATION "\nScieøka instalacji: "
 	IDS_INFO_INSTALLSRC "\nèrÛd≥o instalacji: "
 	IDS_INFO_UNINSTALLSTR "\nKomenda deinstalacji: "
-	IDS_INFO_MODIFYPATH "\nModify Path: "
+	IDS_INFO_MODIFYPATH "\nModyfikacja úcieøki instalacji: "
 	IDS_INFO_INSTALLDATE "\nData instalacji: "
 END
 
@@ -186,10 +186,10 @@ BEGIN
 	IDS_AVAILABLEFORINST "DostÍpne"
 	IDS_UPDATES "Uaktualnienia"
 	IDS_APPLICATIONS "Aplikacje"
-	IDS_CHOOSE_FOLDER_TEXT "Choose a folder which will be used for downloading of programs:"
-	IDS_CHOOSE_FOLDER_ERROR "You have specified a nonexistent folder!"
-	IDS_USER_NOT_ADMIN "You should be administrator for start ""ReactOS Applications Manager""!"
-	IDS_APP_REG_REMOVE "Are you sure you want to delete the data on the installed program from the registry?"
-	IDS_INFORMATION "Information"
-	IDS_UNABLE_TO_REMOVE "Unable to remove data on the program from the registry!"
+	IDS_CHOOSE_FOLDER_TEXT "Wybierz katalog w ktÛrym bÍda zapisywane pobrane programy:"
+	IDS_CHOOSE_FOLDER_ERROR "Wybra≥eú nieistniejπcy katalog!"
+	IDS_USER_NOT_ADMIN "Musisz mieÊ uprawnienia administratora aby uruchomiÊ ""ReactOS Applications Manager""!"
+	IDS_APP_REG_REMOVE "Czy na pewno chcesz usunπÊ wpis tego programu z rejestru?"
+	IDS_INFORMATION "Informacja"
+	IDS_UNABLE_TO_REMOVE "Nie moøna by≥o usunπÊ wpisu z rejestru!"
 END

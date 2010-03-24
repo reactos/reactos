@@ -1479,7 +1479,7 @@ RtlUpcaseUnicodeToOemN(
     PCHAR OemString,
     ULONG OemSize,
     PULONG ResultSize,
-    PWCHAR UnicodeString,
+    PCWCH UnicodeString,
     ULONG UnicodeSize
 );
 
@@ -1509,7 +1509,7 @@ RtlUnicodeToOemN(
     PCHAR OemString,
     ULONG OemSize,
     PULONG ResultSize,
-    PWCHAR UnicodeString,
+    PCWCH UnicodeString,
     ULONG UnicodeSize
 );
 
@@ -1534,7 +1534,7 @@ RtlUpcaseUnicodeToMultiByteN(
     PCHAR MbString,
     ULONG MbSize,
     PULONG ResultSize,
-    PWCHAR UnicodeString,
+    PCWCH UnicodeString,
     ULONG UnicodeSize
 );
 
@@ -1543,7 +1543,7 @@ NTSTATUS
 NTAPI
 RtlUnicodeToMultiByteSize(
     PULONG MbSize,
-    PWCHAR UnicodeString,
+    PCWCH UnicodeString,
     ULONG UnicodeSize
 );
 
@@ -1571,7 +1571,7 @@ RtlOemToUnicodeN(
     PWSTR UnicodeString,
     ULONG MaxBytesInUnicodeString,
     PULONG BytesInUnicodeString,
-    IN PCHAR OemString,
+    IN PCCH OemString,
     ULONG BytesInOemString
 );
 
@@ -2653,6 +2653,7 @@ DbgPrintEx(
     IN ...
 );
 
+NTSYSAPI
 ULONG
 NTAPI
 DbgPrompt(

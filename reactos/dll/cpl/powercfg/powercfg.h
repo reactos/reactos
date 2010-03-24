@@ -1,5 +1,4 @@
-#ifndef POWERCFG_H
-#define POWERCFG_H
+#pragma once
 
 #include "powrprof.h"
 
@@ -22,7 +21,5 @@ INT_PTR CALLBACK PowerSchemesDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
 INT_PTR CALLBACK AlarmsDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK AdvancedDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK HibernateDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-#endif /* __CPL_SAMPLE_H */
 
 /* EOF */

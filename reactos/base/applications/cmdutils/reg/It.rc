@@ -1,0 +1,40 @@
+/*
+ * REG.EXE - Wine-compatible reg program.
+ * Italian language support
+ *
+ * Copyright 2010 Luca Bennati
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "reg.h"
+
+/*UTF-8*/
+#pragma code_page(65001)
+
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    STRING_USAGE, "La sintassi di questo comando è:\n\nREG [ ADD | DELETE | QUERY ]\nREG comando /?\n"
+    STRING_ADD_USAGE, "REG ADD nome_della_chiave [/v nome_del_valore | /ve] [/t tipo] [/s separatore] [/d dati] [/f]\n"
+    STRING_DELETE_USAGE, "REG DELETE nome_della_chiave [/v nome_del_valore | /ve | /va] [/f]\n"
+    STRING_QUERY_USAGE, "REG QUERY nome_della_chiave [/v nome_del_valore | /ve] [/s]\n"
+    STRING_SUCCESS, "Operazione completata con successo\n"
+    STRING_INVALID_KEY, "Errore: nome della chiave non valido\n"
+    STRING_INVALID_CMDLINE, "Errore: parametri della linea di comando non validi\n"
+    STRING_NO_REMOTE, "Errore: Impossibile aggiungere chiavi alla macchina remota\n"
+    STRING_CANNOT_FIND, "Errore: Il sistema non è riuscito a trovare la chiave di registro o il valore specificati\n"
+}

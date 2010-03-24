@@ -1,5 +1,4 @@
-#ifndef LANG_KY_KG_H__
-#define LANG_KY_KG_H__
+#pragma once
 
 MUI_LAYOUTS kyKGLayouts[] =
 {
@@ -7,5 +6,3 @@ MUI_LAYOUTS kyKGLayouts[] =
     { L"0409", L"00000409" },
     { NULL, NULL }
 };
-
-#endif

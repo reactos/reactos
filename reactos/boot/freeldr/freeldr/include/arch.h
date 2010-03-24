@@ -17,9 +17,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-
-#ifndef __ARCH_H
-#define __ARCH_H
+#pragma once
 
 #ifdef _M_AMD64
 #include <arch/amd64/amd64.h>
@@ -176,6 +174,3 @@ VOID	SoftReboot(VOID);					// Implemented in boot.S
 VOID	DetectHardware(VOID);		// Implemented in hardware.c
 
 #endif /* ! ASM */
-
-
-#endif // #defined __ARCH_H

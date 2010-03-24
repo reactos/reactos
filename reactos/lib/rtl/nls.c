@@ -345,7 +345,7 @@ NTSTATUS NTAPI
 RtlOemToUnicodeN (PWCHAR UnicodeString,
                   ULONG UnicodeSize,
                   PULONG ResultSize,
-                  PCHAR OemString,
+                  PCCH OemString,
                   ULONG OemSize)
 {
    ULONG Size = 0;
@@ -376,7 +376,7 @@ RtlOemToUnicodeN (PWCHAR UnicodeString,
 
       UCHAR Char;
       USHORT OemLeadByteInfo;
-      PCHAR OemEnd = OemString + OemSize;
+      PCCH OemEnd = OemString + OemSize;
 
       for (i = 0; i < UnicodeSize / sizeof(WCHAR) && OemString < OemEnd; i++)
       {
@@ -569,7 +569,7 @@ RtlUnicodeToMultiByteN (PCHAR MbString,
 NTSTATUS
 NTAPI
 RtlUnicodeToMultiByteSize(PULONG MbSize,
-                          PWCHAR UnicodeString,
+                          PCWCH UnicodeString,
                           ULONG UnicodeSize)
 {
     ULONG UnicodeLength = UnicodeSize / sizeof(WCHAR);
@@ -613,7 +613,7 @@ NTSTATUS NTAPI
 RtlUnicodeToOemN (PCHAR OemString,
                   ULONG OemSize,
                   PULONG ResultSize,
-                  PWCHAR UnicodeString,
+                  PCWCH UnicodeString,
                   ULONG UnicodeSize)
 {
    ULONG Size = 0;
@@ -762,7 +762,7 @@ NTSTATUS NTAPI
 RtlUpcaseUnicodeToMultiByteN (PCHAR MbString,
                               ULONG MbSize,
                               PULONG ResultSize,
-                              PWCHAR UnicodeString,
+                              PCWCH UnicodeString,
                               ULONG UnicodeSize)
 {
    WCHAR UpcaseChar;
@@ -806,7 +806,7 @@ NTSTATUS NTAPI
 RtlUpcaseUnicodeToOemN (PCHAR OemString,
                         ULONG OemSize,
                         PULONG ResultSize,
-                        PWCHAR UnicodeString,
+                        PCWCH UnicodeString,
                         ULONG UnicodeSize)
 {
    WCHAR UpcaseChar;

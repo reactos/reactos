@@ -35,11 +35,12 @@
 #define DPRINT_HWDETECT     0x00000400  // OR this with DebugPrintMask to enable hardware detection messages
 #define DPRINT_WINDOWS      0x00000800  // OR this with DebugPrintMask to enable messages from Windows loader
 #define DPRINT_PELOADER     0x00001000  // OR this with DebugPrintMask to enable messages from PE images loader
+#define DPRINT_SCSIPORT     0x00002000  // OR this with DebugPrintMask to enable messages from SCSI miniport
 
 extern char* g_file;
 extern int g_line;
 
-#if DBG
+#if DBG && !defined(_M_ARM)
 
     VOID	DbgPrintMask(ULONG Mask, char *format, ...);
 	VOID	DebugInit(VOID);
@@ -80,7 +81,7 @@ void	MEMORY_WRITE_BREAKPOINT4(unsigned long addr);
 
 #else
 
-	#define DebugInit()
+	#define DebugInit(x)
 	#define DPRINTM(_x_, ...)
 	#define BugCheck(_x_)
 	#define DbgDumpBuffer(_x_, _y_, _z_)

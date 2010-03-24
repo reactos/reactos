@@ -27,4 +27,3 @@ STRINGTABLE
 {
     IDS_FAILED, "Execuția Wordpad a eșuat"
 }
-#pragma code_page(default)

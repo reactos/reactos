@@ -37,6 +37,7 @@ double	[0-9]+\.[0-9]+([eE][+-]?[0-9]+)*
 %x WSTRQUOTE
 %x ATTR
 %x PP_LINE
+%x SQUOTE
 
 %{
 
@@ -62,8 +63,6 @@ double	[0-9]+\.[0-9]+([eE][+-]?[0-9]+)*
 #include "wine/wpp.h"
 
 #include "parser.tab.h"
-
-extern char *temp_name;
 
 static void addcchar(char c);
 static char *get_buffered_cstring(void);
@@ -157,10 +156,17 @@ UUID *parse_uuid(const char *u)
 				parser_lval.str = get_buffered_cstring();
 				return aWSTRING;
 			}
-<QUOTE,WSTRQUOTE>\\\\	|
+<INITIAL,ATTR>\'	yy_push_state(SQUOTE); cbufidx = 0;
+<SQUOTE>\'		{
+				yy_pop_state();
+				parser_lval.str = get_buffered_cstring();
+				return aSQSTRING;
+			}
+<QUOTE,WSTRQUOTE,SQUOTE>\\\\	|
 <QUOTE,WSTRQUOTE>\\\"	addcchar(yytext[1]);
-<QUOTE,WSTRQUOTE>\\.	addcchar('\\'); addcchar(yytext[1]);
-<QUOTE,WSTRQUOTE>.	addcchar(yytext[0]);
+<SQUOTE>\\\'	addcchar(yytext[1]);
+<QUOTE,WSTRQUOTE,SQUOTE>\\.	addcchar('\\'); addcchar(yytext[1]);
+<QUOTE,WSTRQUOTE,SQUOTE>.	addcchar(yytext[0]);
 <INITIAL,ATTR>\[	yy_push_state(ATTR); return '[';
 <ATTR>\]		yy_pop_state(); return ']';
 <ATTR>{cident}		return attr_token(yytext);

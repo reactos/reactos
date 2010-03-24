@@ -7,6 +7,7 @@
 	<define name="_NTOSKRNL_" />
 	<define name="_NTSYSTEM_" />
 	<define name="_IN_KERNEL_" />
+	<define name="NTDDI_VERSION">0x05020400</define>
 	<if property="_WINKD_" value="1">
 		<define name="_WINKD_" />
 	</if>
@@ -31,7 +32,7 @@
 	<library>wdmguid</library>
 	<dependency>bugcodes</dependency>
 	<directory name="include">
-		<pch>precomp.h</pch>
+		<pch>ntoskrnl.h</pch>
 	</directory>
 	<directory name="ke">
 		<if property="ARCH" value="i386">
@@ -409,7 +410,7 @@
 		</if>
 		<if property="ARCH" value="arm">
 			<directory name="arm">
-				<file>stubs.c</file>
+				<file>page.c</file>
 			</directory>
 		</if>
 		<if property="ARCH" value="powerpc">
@@ -442,9 +443,11 @@
 			<file>hypermap.c</file>
 			<file>iosup.c</file>
 			<file>mdlsup.c</file>
+			<file>mminit.c</file>
 			<file>mmsup.c</file>
 			<file>ncache.c</file>
 			<file>pagfault.c</file>
+			<file>pfnlist.c</file>
 			<file>pool.c</file>
 			<file>procsup.c</file>
 			<file>syspte.c</file>
@@ -488,8 +491,10 @@
 		<file>obwait.c</file>
 	</directory>
 	<directory name="po">
+	    <file>events.c</file>
 		<file>power.c</file>
-		<file>events.c</file>
+		<file>poshtdwn.c</file>
+		<file>povolume.c</file>
 	</directory>
 	<directory name="ps">
 		<if property="ARCH" value="i386">

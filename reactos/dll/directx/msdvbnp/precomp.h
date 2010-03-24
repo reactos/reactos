@@ -1,0 +1,82 @@
+#ifndef PRECOMP_H__
+#define PRECOMP_H__
+
+#define MSDVBNP_TRACE
+#define BUILDING_KS
+#define _KSDDK_
+#include <dshow.h>
+//#include <streams.h>
+#include <ks.h>
+#define __STREAMS__
+#include <ksproxy.h>
+#include <stdio.h>
+#include <wchar.h>
+#include <tchar.h>
+#include <uuids.h>
+#include <bdatypes.h>
+#include <bdaiface.h>
+#include <bdamedia.h>
+#include <tuner.h>
+#include <assert.h>
+
+typedef HRESULT (CALLBACK *LPFNCREATEINSTANCE)(IUnknown* pUnkOuter, REFIID riid, LPVOID* ppvObject);
+
+typedef struct
+{
+    const GUID* riid;
+    LPFNCREATEINSTANCE lpfnCI;
+} INTERFACE_TABLE;
+
+/* classfactory.cpp */
+IClassFactory *
+CClassFactory_fnConstructor(
+    LPFNCREATEINSTANCE lpfnCI,
+    PLONG pcRefDll,
+    IID * riidInst);
+
+/* networkprovider.cpp */
+HRESULT
+WINAPI
+CNetworkProvider_fnConstructor(
+    IUnknown *pUnknown,
+    REFIID riid,
+    LPVOID * ppv);
+
+/* scanningtunner.cpp */
+HRESULT
+WINAPI
+CScanningTunner_fnConstructor(
+    IUnknown *pUnknown,
+    REFIID riid,
+    LPVOID * ppv);
+
+/* enumpins.cpp */
+HRESULT
+WINAPI
+CEnumPins_fnConstructor(
+    IUnknown *pUnknown,
+    ULONG NumPins,
+    IPin ** pins,
+    REFIID riid,
+    LPVOID * ppv);
+
+/* pin.cpp */
+HRESULT
+WINAPI
+CPin_fnConstructor(
+    IUnknown *pUnknown,
+    IBaseFilter * ParentFilter,
+    REFIID riid,
+    LPVOID * ppv);
+
+/* enum_mediatypes.cpp */
+HRESULT
+WINAPI
+CEnumMediaTypes_fnConstructor(
+    IUnknown *pUnknown,
+    ULONG MediaTypeCount,
+    AM_MEDIA_TYPE * MediaTypes,
+    REFIID riid,
+    LPVOID * ppv);
+
+#endif

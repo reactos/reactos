@@ -64,7 +64,7 @@ BEGIN
     END
     POPUP "&Hilfe"
     BEGIN
-        MENUITEM "Explorer &FAQ...",            ID_EXPLORER_FAQ
+        MENUITEM "Explorer-&FAQ...",            ID_EXPLORER_FAQ
         MENUITEM "&Über ReactOS Explorer...",   ID_ABOUT_EXPLORER
         MENUITEM "Über React&OS...",            ID_ABOUT_WINDOWS
     END
@@ -76,7 +76,7 @@ BEGIN
     BEGIN
         MENUITEM "&Ausführen...",               ID_EXECUTE
         MENUITEM SEPARATOR
-        MENUITEM "&Schliessen",                 ID_FILE_EXIT
+        MENUITEM "&Schließen",                 ID_FILE_EXIT
     END
     POPUP "&Ansicht"
     BEGIN
@@ -94,9 +94,9 @@ BEGIN
     END
     POPUP "&Hilfe"
     BEGIN
-        MENUITEM "Explorer &FAQ...",            ID_EXPLORER_FAQ
+        MENUITEM "Explorer-&FAQ...",            ID_EXPLORER_FAQ
         MENUITEM "&Über Explorer...",          ID_ABOUT_EXPLORER
-        MENUITEM "Über &OS...",                ID_ABOUT_WINDOWS
+        MENUITEM "Über React&OS...",                ID_ABOUT_WINDOWS
     END
 END
 
@@ -105,7 +105,7 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM "&Einstellungen...",           ID_DESKTOPBAR_SETTINGS
-        MENUITEM "&Task Manager...",            ID_TASKMGR
+        MENUITEM "&Taskmanager...",            ID_TASKMGR
         MENUITEM SEPARATOR
         MENUITEM "&Über Explorer...",           ID_ABOUT_EXPLORER
     END
@@ -129,7 +129,7 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM "Öffne &Lautstärkeregler",     ID_TRAY_VOLUME
-        MENUITEM "Editieren der Audio-&Einstellungen", ID_VOLUME_PROPERTIES
+        MENUITEM "Ändern der Audio-&Einstellungen", ID_VOLUME_PROPERTIES
     END
 END
 
@@ -177,27 +177,27 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Bitte wählen Sie den gewünschten Platzierungs-Algorithmus für die Desktop-Symbole aus:",
                     IDC_STATIC,7,7,197,23
-    CONTROL         "left/top dwn",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW |
+    CONTROL         "li./ob. abw.",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,7,35,46,44
-    CONTROL         "left/top right",IDC_ICON_ALIGN_1,"Button",BS_OWNERDRAW |
+    CONTROL         "li./ob. re.",IDC_ICON_ALIGN_1,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,57,35,46,44
-    CONTROL         "right/top left",IDC_ICON_ALIGN_2,"Button",BS_OWNERDRAW |
+    CONTROL         "re./ob. li.",IDC_ICON_ALIGN_2,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,110,35,46,44
-    CONTROL         "rig./top dwn",IDC_ICON_ALIGN_3,"Button",BS_OWNERDRAW |
+    CONTROL         "re./ob. abw.",IDC_ICON_ALIGN_3,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,159,35,46,44
-    CONTROL         "left/bot. up",IDC_ICON_ALIGN_4,"Button",BS_OWNERDRAW |
+    CONTROL         "li./unt. aufw.",IDC_ICON_ALIGN_4,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,7,83,46,44
-    CONTROL         "left/bot. right",IDC_ICON_ALIGN_5,"Button",BS_OWNERDRAW |
+    CONTROL         "li./unt. re.",IDC_ICON_ALIGN_5,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,57,83,46,44
-    CONTROL         "right/bot. left",IDC_ICON_ALIGN_6,"Button",BS_OWNERDRAW |
+    CONTROL         "re./unt. li.",IDC_ICON_ALIGN_6,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,110,83,46,44
-    CONTROL         "rig./bot. dwn",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW |
+    CONTROL         "re./unt. aufw.",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,159,83,46,44
-    CONTROL         "border down",IDC_ICON_ALIGN_8,"Button",BS_OWNERDRAW |
+    CONTROL         "Rahmen abw.",IDC_ICON_ALIGN_8,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,7,131,46,44
-    CONTROL         "border H/V",IDC_ICON_ALIGN_9,"Button",BS_OWNERDRAW |
+    CONTROL         "Rahmen H/V",IDC_ICON_ALIGN_9,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,57,131,46,44
-    CONTROL         "round about",IDC_ICON_ALIGN_10,"Button",BS_OWNERDRAW |
+    CONTROL         "im Kreis",IDC_ICON_ALIGN_10,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,110,131,46,44
     CONTROL         "",IDC_ICON_ALIGN_11,"Button",BS_OWNERDRAW | BS_BOTTOM |
                     WS_TABSTOP,159,131,46,44
@@ -242,7 +242,7 @@ BEGIN
     CONTROL         "Öffne Unterverzeichnisses in &neuen Fenstern",
                     IDC_SEPARATE_SUBFOLDERS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,90,157,10
-    LTEXT           "Diese Auswahl wird künftig für alle Explorer-Fenster verwendet werden.",
+    LTEXT           "Diese Auswahl wird künftig für alle Explorerfenster verwendet werden.",
                     IDC_STATIC,7,111,174,22
     DEFPUSHBUTTON   "&OK",IDOK,29,136,50,14,WS_GROUP
     PUSHBUTTON      "A&bbrechen",IDCANCEL,106,136,50,14
@@ -344,7 +344,7 @@ BEGIN
     IDS_FAVORITES           "Favoriten"
     IDS_PROGRAMS            "Programme"
     IDS_SETTINGS            "Einstellungen"
-    IDS_EXPLORE             "Explore"
+    IDS_EXPLORE             "Explorer"
     IDS_EMPTY               "(Leer)"
     IDS_RECENT              "Aktuelle Dokumente"
     IDS_ADMIN               "Verwaltung"
@@ -383,7 +383,7 @@ BEGIN
     IDS_SEARCH              "Suche"
     IDS_ABOUT_EXPLORER      "&Über Explorer..."
     IDS_LAUNCH_MANY_PROGRAMS
-                            "Sie haben mehrere Programme ausgewählt.\nSind Sie sicher, daß Sie diese alle starten wollen?"
+                            "Sie haben mehrere Programme ausgewählt.\nSind Sie sich sicher, dass Sie diese alle starten wollen?"
     IDS_DESKTOPBAR_SETTINGS "Desktop-Einstellungen"
     IDS_DESKTOP             "Desktop"
     IDS_TASKBAR             "Taskbar"

@@ -22,7 +22,7 @@ BEGIN
     EDITTEXT IDC_SHORTTIMESAMPLE_EDIT, 89, 131, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 89, 146, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     GROUPBOX "Geografische Lage", -1, 5, 172, 234, 55
-    LTEXT "Wählen Sie Ihren Standort, sodass Dienste Sie mit lokalen Informationen, wie Nachrichten und Wettervorhersagen, versorgen können.", -1, 14, 184, 210, 24
+    LTEXT "Wählen Sie Ihren Standort, so dass Dienste Sie mit lokalen Informationen, wie Nachrichten und Wettervorhersagen, versorgen können.", -1, 14, 184, 210, 24
     COMBOBOX IDC_LOCATION_COMBO, 14, 210, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
 END
 
@@ -36,7 +36,7 @@ BEGIN
     PUSHBUTTON "&Details...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
     GROUPBOX "Zusätzliche Sprachunterstützung", -1, 5, 62, 234, 82
     LTEXT "Die meisten Sprachen sind standardmäßig installiert. Um weitere Sprachen zu installieren, aktivieren Sie die unteren Kontollkästchen.", -1, 12, 72, 220, 18
-    CHECKBOX "Dateien für Sprachen mit &komplexer Schrift und Rechts-nach-Links Schreibstil installieren.", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE
+    CHECKBOX "Dateien für Sprachen mit &komplexer Schrift und Rechts-nach-Links-Schreibstil installieren.", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE
     CHECKBOX "Dateien für &ostasiatische Sprachen installieren.", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE
 END
 
@@ -47,12 +47,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Sprache für Unicode-Inkompatible Programme", -1, 5, 5, 234, 90
     COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
-    LTEXT "Diese Einstellung ermöglicht es Unicode-Inkompatiblen Programmen, Menüs und Dialoge in der örtlichen Sprache darzustellen. Dies beeinflusst Unicode-Kompatible Programme nicht, wird aber für alle Nutzer des Computers angewendet.", -1, 14, 18, 223, 33
-    LTEXT "Wählen Sie eine Sprache aus, die der Sprachversion des Programmes entspricht, dass Sie nutzen wollen:", -1, 14, 55, 223, 18
+    LTEXT "Diese Einstellung ermöglicht es, Unicode-Inkompatiblen Programmen, Menüs und Dialoge in der örtlichen Sprache darzustellen. Dies beeinflusst Unicode-Kompatible Programme nicht, wird aber für alle Nutzer des Computers angewendet.", -1, 14, 18, 223, 33
+    LTEXT "Wählen Sie eine Sprache aus, die der Sprachversion des Programmes entspricht, das Sie nutzen wollen:", -1, 14, 55, 223, 18
     GROUPBOX "Codepage Konvertierungstabellen", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
     GROUPBOX "Standardeinstellungen für Benutzerkonten", -1, 5, 193, 234, 30
-    CHECKBOX "Einstellungen &auf das aktive und Standardkonto anwenden.", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22, BS_MULTILINE
+    CHECKBOX "Einstellungen &auf das aktive und das Standardkonto anwenden.", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22, BS_MULTILINE
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234
@@ -143,7 +143,7 @@ CAPTION "Datum"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Kalender", -1, 7, 7, 230, 74
-    LTEXT "Eine Zweistellige Jahreszahl in folgendem Zeitraum interpretieren:", -1, 13, 18, 215, 8
+    LTEXT "Eine zweistellige Jahreszahl in folgendem Zeitraum interpretieren:", -1, 13, 18, 215, 8
     EDITTEXT IDC_FIRSTYEAR_EDIT, 13, 30, 36, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_DISABLED
     LTEXT "und", -1, 55, 32, 17, 8
     EDITTEXT IDC_SECONDYEAR_EDIT, 77, 30, 36, 12, ES_LEFT | ES_NUMBER | WS_GROUP
@@ -178,7 +178,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Sortierung", -1, 7, 7, 230, 74
     LTEXT "Sortiermethoden definieren die Sortierreihenfolge von Zeichen, Wörtern, Dateien und Ordnern.", -1, 14, 17, 220, 25
-    LTEXT "Wählen Sie eine Sortiermethode für Ihre Sprache:", -1, 14, 37, 220, 22
+    LTEXT "Wählen Sie eine Sortiermethode für Ihre Sprache aus:", -1, 14, 37, 220, 22
     COMBOBOX IDC_SORTLIST_COMBO, 14, 56, 217, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 

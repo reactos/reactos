@@ -110,6 +110,7 @@ HalpInitializeClock(VOID)
 }
 
 #ifdef _M_IX86
+#ifndef _MINIHAL_
 VOID
 FASTCALL
 HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)
@@ -161,9 +162,8 @@ HalpProfileInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     /* Spurious, just end the interrupt */
     KiEoiHelper(TrapFrame);
 }
+#endif
 
-KiTrap(HalpClockInterrupt,   KI_PUSH_FAKE_ERROR_CODE);
-KiTrap(HalpProfileInterrupt, KI_PUSH_FAKE_ERROR_CODE);
 #endif
 
 /* PUBLIC FUNCTIONS ***********************************************************/

@@ -1,5 +1,4 @@
-#ifndef _INTRIN_INTERNAL_
-#define _INTRIN_INTERNAL_
+#pragma once
 
 #if defined(__GNUC__)
 
@@ -261,8 +260,6 @@ Ke386SetGs(IN USHORT Value)
 
 #else
 #error Unknown compiler for inline assembler
-#endif
-
 #endif
 
 /* EOF */

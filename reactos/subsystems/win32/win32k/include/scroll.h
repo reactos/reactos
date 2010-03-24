@@ -1,5 +1,4 @@
-#ifndef _WIN32K_SCROLL_H
-#define _WIN32K_SCROLL_H
+#pragma once
 
 typedef struct tagSBCALC
 {
@@ -62,5 +61,3 @@ typedef struct _SBINFOEX
 
 BOOL FASTCALL co_IntCreateScrollBars(PWINDOW_OBJECT Window);
 BOOL FASTCALL IntDestroyScrollBars(PWINDOW_OBJECT Window);
-
-#endif /* _WIN32K_SCROLL_H */

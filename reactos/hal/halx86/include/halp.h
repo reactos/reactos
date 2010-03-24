@@ -2,8 +2,7 @@
  *
  */
 
-#ifndef __INTERNAL_HAL_HAL_H
-#define __INTERNAL_HAL_HAL_H
+#pragma once
 
 typedef struct _HAL_BIOS_FRAME
 {
@@ -73,44 +72,6 @@ DECLSPEC_NORETURN
 // Video Modes for INT10h AH=00 (in AL)
 //
 #define GRAPHICS_MODE_12 0x12           /* 80x30	 8x16  640x480	 16/256K */
-
-//
-// Generates a 16-bit (real-mode or Virtual 8086) BIOS interrupt with a given AX */
-//
-VOID
-FORCEINLINE
-HalpCallBiosInterrupt(IN ULONG Interrupt,
-                      IN ULONG Ax)
-{
-    __asm__ __volatile__
-    (
-        ".byte 0x66\n"
-        "movl $%c[v], %%eax\n"
-        "int $%c[i]\n"
-        :
-        : [v] "i"(Ax),
-          [i] "i"(Interrupt)
-    );
-}
-
-//
-// Constructs a stack of the given size and alignment in the real-mode .text region */
-//
-VOID
-FORCEINLINE
-HalpRealModeStack(IN ULONG Alignment,
-                  IN ULONG Size)
-{
-    __asm__ __volatile__
-    (
-        ".align %c[v]\n"
-        ".space %c[i]\n"
-        ".globl _HalpRealModeEnd\n_HalpRealModeEnd:\n"
-        :
-        : [v] "i"(Alignment),
-          [i] "i"(Size)
-    );
-}
 
 //
 // Commonly stated as being 1.19318MHz
@@ -675,6 +636,18 @@ HalpBiosDisplayReset(
     VOID
 );
 
+VOID
+FASTCALL
+HalpExitToV86(
+    PKTRAP_FRAME TrapFrame
+);
+
+VOID
+DECLSPEC_NORETURN
+HalpRealModeStart(
+    VOID
+);
+
 //
 // Processor Halt Routine
 //
@@ -732,5 +705,3 @@ extern KSPIN_LOCK HalpSystemHardwareLock;
 extern PADDRESS_USAGE HalpAddressUsageList;
 
 extern LARGE_INTEGER HalpPerfCounter;
-
-#endif /* __INTERNAL_HAL_HAL_H */

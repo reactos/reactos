@@ -4,8 +4,8 @@
  * FILE:        include/ip.h
  * PURPOSE:     Internet Protocol related definitions
  */
-#ifndef __IP_H
-#define __IP_H
+
+#pragma once
 
 typedef VOID (*OBJECT_FREE_ROUTINE)(PVOID Object);
 
@@ -245,9 +245,5 @@ VOID IPRegisterProtocol(
 NTSTATUS IPStartup(PUNICODE_STRING RegistryPath);
 
 NTSTATUS IPShutdown(VOID);
-
-
-
-#endif /* __IP_H */
 
 /* EOF */

@@ -183,17 +183,21 @@ LPTSTR GetConnectionType(LPTSTR lpClass)
             ConType = (LPTSTR)HeapAlloc(ProcessHeap,
                                         0,
                                         dwDataSize);
-            if (ConType == NULL)
-                return NULL;
-
-            if(RegQueryValueEx(hKey,
-                               _T("Name"),
-                               NULL,
-                               &dwType,
-                               (PBYTE)ConType,
-                               &dwDataSize) != ERROR_SUCCESS)
+            if (ConType)
             {
-                ConType = NULL;
+                if(RegQueryValueEx(hKey,
+                                   _T("Name"),
+                                   NULL,
+                                   &dwType,
+                                   (PBYTE)ConType,
+                                   &dwDataSize) != ERROR_SUCCESS)
+                {
+                    HeapFree(ProcessHeap,
+                             0,
+                             ConType);
+
+                    ConType = NULL;
+                }
             }
         }
     }
@@ -456,7 +460,9 @@ VOID ShowInfo(BOOL bAll)
 
         if (bAll)
         {
-            _tprintf(_T("\tDescription . . . . . . . . . . . : %s\n"), GetConnectionDescription(pAdapter->AdapterName));
+            LPTSTR lpDesc = GetConnectionDescription(pAdapter->AdapterName);
+            _tprintf(_T("\tDescription . . . . . . . . . . . : %s\n"), lpDesc);
+            HeapFree(ProcessHeap, 0, lpDesc);
             _tprintf(_T("\tPhysical Address. . . . . . . . . : %s\n"), PrintMacAddr(pAdapter->Address));
             if (pAdapter->DhcpEnabled)
                 _tprintf(_T("\tDHCP Enabled. . . . . . . . . . . : Yes\n"));

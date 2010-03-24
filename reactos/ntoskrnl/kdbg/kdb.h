@@ -1,5 +1,4 @@
-#ifndef NTOSKRNL_KDB_H
-#define NTOSKRNL_KDB_H
+#pragma once
 
 /* DEFINES *******************************************************************/
 
@@ -272,5 +271,3 @@ VOID
 KbdDisableMouse();
 VOID
 KbdEnableMouse();
-
-#endif /* NTOSKRNL_KDB_H */

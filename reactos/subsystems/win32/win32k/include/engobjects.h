@@ -25,8 +25,8 @@
  * REVISION HISTORY:
  *                 21/8/1999: Created
  */
-#ifndef __ENG_OBJECTS_H
-#define __ENG_OBJECTS_H
+
+#pragma once
 
 #include <ft2build.h>
 #include <freetype/freetype.h>
@@ -133,6 +133,3 @@ typedef struct _XFORMGDI {
    we can simply typecast the pointer */
 #define ObjToGDI(ClipObj, Type) (Type##GDI *)(ClipObj)
 #define GDIToObj(ClipGDI, Type) (Type##OBJ *)(ClipGDI)
-
-
-#endif //__ENG_OBJECTS_H

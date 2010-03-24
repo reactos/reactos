@@ -279,6 +279,7 @@ SeDefaultObjectMethod(IN PVOID Object,
     return STATUS_SUCCESS;
 }
 
+ULONG SidInTokenCalls = 0;
 
 static BOOLEAN
 SepSidInToken(PACCESS_TOKEN _Token,
@@ -289,6 +290,9 @@ SepSidInToken(PACCESS_TOKEN _Token,
 
     PAGED_CODE();
 
+    SidInTokenCalls++;
+    if (!(SidInTokenCalls % 10000)) DPRINT1("SidInToken Calls: %d\n", SidInTokenCalls);
+    
     if (Token->UserAndGroupCount == 0)
     {
         return FALSE;
@@ -298,7 +302,7 @@ SepSidInToken(PACCESS_TOKEN _Token,
     {
         if (RtlEqualSid(Sid, Token->UserAndGroups[i].Sid))
         {
-            if (Token->UserAndGroups[i].Attributes & SE_GROUP_ENABLED)
+            if ((i == 0)|| (Token->UserAndGroups[i].Attributes & SE_GROUP_ENABLED))
             {
                 return TRUE;
             }
@@ -470,7 +474,16 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
             SeUnlockSubjectContext(SubjectSecurityContext);
         }
 
-        *GrantedAccess = DesiredAccess;
+        if (DesiredAccess & MAXIMUM_ALLOWED)
+        {
+            *GrantedAccess = GenericMapping->GenericAll;
+            *GrantedAccess |= (DesiredAccess & ~MAXIMUM_ALLOWED);
+        }
+        else
+        {
+            *GrantedAccess = DesiredAccess | PreviouslyGrantedAccess;
+        }
+        
         *AccessStatus = STATUS_SUCCESS;
         return TRUE;
     }
@@ -691,6 +704,27 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         return STATUS_SUCCESS;
     }
 
+    /* Protect probe in SEH */
+    _SEH2_TRY
+    {
+        /* Probe all pointers */
+        ProbeForRead(GenericMapping, sizeof(GENERIC_MAPPING), sizeof(ULONG));
+        ProbeForRead(PrivilegeSetLength, sizeof(ULONG), sizeof(ULONG));
+        ProbeForWrite(PrivilegeSet, *PrivilegeSetLength, sizeof(ULONG));
+        ProbeForWrite(GrantedAccess, sizeof(ACCESS_MASK), sizeof(ULONG));
+        ProbeForWrite(AccessStatus, sizeof(NTSTATUS), sizeof(ULONG));
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Return the exception code */
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
+
+    /* Check for unmapped access rights */
+    if (DesiredAccess & (GENERIC_READ | GENERIC_WRITE | GENERIC_EXECUTE | GENERIC_ALL))
+        return STATUS_GENERIC_NOT_MAPPED;
+
     /* Reference the token */
     Status = ObReferenceObjectByHandle(TokenHandle,
                                        TOKEN_QUERY,
@@ -709,7 +743,15 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     {
         DPRINT1("No impersonation token\n");
         ObDereferenceObject(Token);
-        return STATUS_ACCESS_DENIED;
+        return STATUS_NO_IMPERSONATION_TOKEN;
+    }
+
+    /* Check the impersonation level */
+    if (Token->ImpersonationLevel < SecurityIdentification)
+    {
+        DPRINT1("Impersonation level < SecurityIdentification\n");
+        ObDereferenceObject(Token);
+        return STATUS_BAD_IMPERSONATION_LEVEL;
     }
 
     /* Set up the subject context, and lock it */

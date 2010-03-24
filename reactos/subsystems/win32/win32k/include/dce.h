@@ -1,5 +1,4 @@
-#ifndef _WIN32K_DCE_H
-#define _WIN32K_DCE_H
+#pragma once
 
 /* Ported from WINE by Jason Filby */
 
@@ -48,6 +47,7 @@ typedef struct tagDCE
 #define DCX_DCPOWNED		0x00008000
 #define DCX_NOCLIPCHILDREN	0x00080000
 #define DCX_NORECOMPUTE		0x00100000
+#define DCX_INDESTROY           0x00400000
 
 BOOL FASTCALL DCE_Cleanup(PDCE pDce);
 PDCE FASTCALL DceAllocDCE(PWINDOW_OBJECT Window, DCE_TYPE Type);
@@ -63,5 +63,3 @@ void FASTCALL DceFreeClassDCE(HDC);
 HWND FASTCALL UserGethWnd(HDC,PWNDOBJ*);
 void FASTCALL DceFreeWindowDCE(PWINDOW_OBJECT);
 void FASTCALL DceFreeThreadDCE(PTHREADINFO);
-
-#endif /* _WIN32K_DCE_H */

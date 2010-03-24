@@ -1,5 +1,4 @@
-#ifndef _WIN32K_CLASS_H
-#define _WIN32K_CLASS_H
+#pragma once
 
 #include <include/win32.h>
 #include <include/desktop.h>
@@ -105,7 +104,5 @@ IntCheckProcessDesktopClasses(IN PDESKTOP Desktop,
 BOOL FASTCALL LookupFnIdToiCls(int, int * );
 WNDPROC FASTCALL IntGetClassWndProc(PCLS, BOOL);
 ULONG_PTR FASTCALL UserGetCPD(PVOID,GETCPD,ULONG_PTR);
-
-#endif /* _WIN32K_CLASS_H */
 
 /* EOF */

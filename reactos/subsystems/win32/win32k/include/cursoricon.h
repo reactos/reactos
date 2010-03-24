@@ -1,5 +1,4 @@
-#ifndef _WIN32K_CURSORICON_H
-#define _WIN32K_CURSORICON_H
+#pragma once
 
 #define MAXCURICONHANDLES 4096
 
@@ -106,8 +105,4 @@ GreMovePointer(
     LONG x,
     LONG y);
 
-#endif /* _WIN32K_CURSORICON_H */
-
 /* EOF */
-
-

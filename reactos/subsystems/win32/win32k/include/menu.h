@@ -1,5 +1,4 @@
-#ifndef _WIN32K_MENU_H
-#define _WIN32K_MENU_H
+#pragma once
 
 #define IS_ATOM(x) \
   (((ULONG_PTR)(x) > 0x0) && ((ULONG_PTR)(x) < 0x10000))
@@ -24,7 +23,7 @@ typedef struct _MENU_ITEM
   UNICODE_STRING Text;
   HBITMAP hbmpItem;
   RECTL Rect;
-  UINT XTab;
+  UINT dxTab;
 } MENU_ITEM, *PMENU_ITEM;
 
 typedef struct _MENU_OBJECT
@@ -110,5 +109,3 @@ InitMenuImpl(VOID);
 
 NTSTATUS FASTCALL
 CleanupMenuImpl(VOID);
-
-#endif /* _WIN32K_MENU_H */

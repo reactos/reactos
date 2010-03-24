@@ -1,5 +1,4 @@
-#ifndef __NTOSKRNL_INCLUDE_INTERNAL_I386_KE_H
-#define __NTOSKRNL_INCLUDE_INTERNAL_I386_KE_H
+#pragma once
 
 #ifndef __ASM__
 
@@ -398,9 +397,9 @@ Ki386HandleOpcodeV86(
     IN PKTRAP_FRAME TrapFrame
 );
 
+DECLSPEC_NORETURN
 VOID
 FASTCALL
-DECLSPEC_NORETURN
 KiEoiHelper(
     IN PKTRAP_FRAME TrapFrame
 );
@@ -417,9 +416,9 @@ KiExitV86Mode(
     IN PKTRAP_FRAME TrapFrame
 );
 
+DECLSPEC_NORETURN
 VOID
 NTAPI
-DECLSPEC_NORETURN
 KiDispatchExceptionFromTrapFrame(
     IN NTSTATUS Code,
     IN ULONG_PTR Address,
@@ -439,7 +438,6 @@ extern ULONG KeI386EFlagsOrMaskV86;
 extern BOOLEAN KeI386VirtualIntExtensions;
 extern KIDTENTRY KiIdt[MAXIMUM_IDTVECTOR];
 extern KDESCRIPTOR KiIdtDescriptor;
-extern ULONG Ke386GlobalPagesEnabled;
 extern BOOLEAN KiI386PentiumLockErrataPresent;
 extern ULONG KeI386NpxPresent;
 extern ULONG KeI386XMMIPresent;
@@ -622,6 +620,7 @@ KiSystemCallTrampoline(IN PVOID Handler,
      * later to function like this as well.
      *
      */
+#ifdef __GNUC__
     __asm__ __volatile__
     (
         "subl %1, %%esp\n"
@@ -637,7 +636,23 @@ KiSystemCallTrampoline(IN PVOID Handler,
           "r"(Handler)
         : "%esp", "%esi", "%edi"
     );
-    
+#elif defined(_MSC_VER)
+    __asm
+    {
+        mov ecx, StackBytes
+        mov edx, Arguments
+        sub esp, ecx
+        mov edi, esp
+        mov esi, edx
+        shr ecx, 2
+        rep movsd
+        call Handler
+        mov Result, eax
+    }
+#else
+#error Unknown Compiler
+#endif
+
     return Result;
 }
 
@@ -704,6 +719,7 @@ KiConvertToGuiThread(VOID)
      * on its merry way.
      *
      */
+#ifdef __GNUC__
     __asm__ __volatile__
     (
         "movl %%ebp, %1\n"
@@ -714,9 +730,22 @@ KiConvertToGuiThread(VOID)
         "movl %%eax, %0\n"
         : "=r"(Result), "=r"(StackFrame)
         :
-        : "%esp", "%ecx", "%edx"
+        : "%esp", "%ecx", "%edx", "memory"
     );
-        
+#elif defined(_MSC_VER)
+    NTSTATUS NTAPI PsConvertToGuiThread(VOID);
+    __asm
+    {
+        mov StackFrame, ebp
+        sub StackFrame, esp
+        call PsConvertToGuiThread
+        add StackFrame, esp
+        mov ebp, StackFrame
+        mov Result, eax
+    }
+#else
+#error Unknown Compiler
+#endif
     return Result;
 }
 
@@ -728,7 +757,8 @@ FORCEINLINE
 KiSwitchToBootStack(IN ULONG_PTR InitialStack)
 {
     /* We have to switch to a new stack before continuing kernel initialization */
-    __asm__ __volatile__
+#ifdef __GNUC__
+    __asm__
     (
         "movl %0, %%esp\n"
         "subl %1, %%esp\n"
@@ -740,6 +770,19 @@ KiSwitchToBootStack(IN ULONG_PTR InitialStack)
           "i"(CR0_EM | CR0_TS | CR0_MP)
         : "%esp"
     );
+#elif defined(_MSC_VER)
+    VOID NTAPI KiSystemStartupBootStack(VOID);
+    __asm
+    {
+        mov ecx, InitialStack
+        mov esp, ecx
+        sub esp, (NPX_FRAME_LENGTH + KTRAP_FRAME_ALIGN + KTRAP_FRAME_LENGTH)
+        push (CR0_EM | CR0_TS | CR0_MP)
+        jmp KiSystemStartupBootStack
+    }
+#else
+#error Unknown Compiler
+#endif
 }
 
 //
@@ -776,4 +819,3 @@ Ki386PerfEnd(VOID)
 }
 
 #endif
-#endif /* __NTOSKRNL_INCLUDE_INTERNAL_I386_KE_H */

@@ -188,7 +188,8 @@ IntInt10CallBios(
 
     /* Detach and return status */
     IntDetachFromCSRSS(&CallingProcess, &ApcState);
-    return Status;
+    if (NT_SUCCESS(Status)) return NO_ERROR;
+    return ERROR_INVALID_PARAMETER;
 }
 #endif
 
@@ -243,8 +244,8 @@ VideoPortInt10(
 
     /* Detach from CSRSS */
     IntDetachFromCSRSS(&CallingProcess, &ApcState);
-
-    return Status;
+    if (NT_SUCCESS(Status)) return NO_ERROR;
+    return ERROR_INVALID_PARAMETER;
 #else
     /* Not implemented for anything else than X86*/
     DPRINT1("Int10 not available on non-x86!\n");

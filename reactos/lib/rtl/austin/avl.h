@@ -6,8 +6,7 @@
  * PROGRAMMER:      arty
  */
 
-#ifndef _REACTOS_RTL_LIB_AUSTIN_AVL_H
-#define _REACTOS_RTL_LIB_AUSTIN_AVL_H
+#pragma once
 
 #define avl_data(x) ((void*)(&(x)[1]))
 
@@ -25,6 +24,3 @@ int  avl_search
  PVOID _key,
  PRTL_BALANCED_LINKS node,
  PRTL_BALANCED_LINKS *where);
-
-
-#endif/*_REACTOS_RTL_LIB_AUSTIN_AVL_H*/

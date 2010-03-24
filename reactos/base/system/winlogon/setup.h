@@ -24,12 +24,9 @@
  * PROGRAMMER:      Eric Kohl
  */
 
-#ifndef __SETUP_H__
-#define __SETUP_H__
+#pragma once
 
 DWORD GetSetupType (VOID);
 BOOL RunSetup (VOID);
-
-#endif /* __SETUP_H__ */
 
 /* EOF */

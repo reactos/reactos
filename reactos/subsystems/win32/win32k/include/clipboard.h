@@ -1,5 +1,4 @@
-#ifndef _WIN32K_CLIPBOARD_H
-#define _WIN32K_CLIPBOARD_H
+#pragma once
 
 #include "window.h"
 #include <include/win32.h>
@@ -50,5 +49,3 @@ UINT APIENTRY IntEnumClipboardFormats(UINT format);
 UINT FASTCALL
 IntEnumClipboardFormats(UINT format);
 */
-
-#endif /* _WIN32K_CLIPBOARD_H */

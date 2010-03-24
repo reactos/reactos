@@ -1,5 +1,4 @@
-#ifndef _WIN32K_NTUSER_H
-#define _WIN32K_NTUSER_H
+#pragma once
 
 #define DECLARE_RETURN(type) type _ret_
 #define RETURN(value) { _ret_ = value; goto _cleanup_; }
@@ -19,8 +18,5 @@ VOID FASTCALL UserEnterExclusive(VOID);
 VOID FASTCALL UserLeave(VOID);
 BOOL FASTCALL UserIsEntered(VOID);
 BOOL FASTCALL UserIsEnteredExclusive(VOID);
-
-
-#endif /* _WIN32K_NTUSER_H */
 
 /* EOF */

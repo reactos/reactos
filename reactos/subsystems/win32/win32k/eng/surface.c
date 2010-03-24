@@ -445,25 +445,269 @@ IntCreateBitmap(IN SIZEL Size,
     return hbmp;
 }
 
+/* Name gleaned from C++ symbol information for SURFMEM::bInitDIB */
+typedef struct _DEVBITMAPINFO
+{
+    ULONG Format;
+    ULONG Width;
+    ULONG Height;
+    ULONG Flags;
+    ULONG Size;
+} DEVBITMAPINFO, *PDEVBITMAPINFO;
+
+SURFOBJ*
+FASTCALL
+SURFMEM_bCreateDib(IN PDEVBITMAPINFO BitmapInfo,
+                   IN PVOID Bits)
+{
+    BOOLEAN Compressed = FALSE;
+    ULONG ScanLine = 0; // Compiler is dumb
+    ULONG Size;
+    SURFOBJ *pso;
+    PSURFACE psurf;
+    SIZEL LocalSize;
+    BOOLEAN AllocatedLocally = FALSE;
+
+    /*
+     * First, check the format so we can get the aligned scanline width.
+     * RLE and the newer fancy-smanshy JPG/PNG support do NOT have scanlines
+     * since they are compressed surfaces!
+     */
+    switch (BitmapInfo->Format)
+    {
+        case BMF_1BPP:
+            ScanLine = ((BitmapInfo->Width + 31) & ~31) >> 3;
+            break;
+
+        case BMF_4BPP:
+            ScanLine = ((BitmapInfo->Width + 7) & ~7) >> 1;
+            break;
+
+        case BMF_8BPP:
+            ScanLine = (BitmapInfo->Width + 3) & ~3;
+            break;
+
+        case BMF_16BPP:
+            ScanLine = ((BitmapInfo->Width + 1) & ~1) << 1;
+            break;
+
+        case BMF_24BPP:
+            ScanLine = ((BitmapInfo->Width * 3) + 3) & ~3;
+            break;
+
+        case BMF_32BPP:
+            ScanLine = BitmapInfo->Width << 2;
+            break;
+
+        case BMF_8RLE:
+        case BMF_4RLE:
+        case BMF_JPEG:
+        case BMF_PNG:
+            Compressed = TRUE;
+            break;
+
+        default:
+            DPRINT1("Invalid bitmap format\n");
+            return NULL;
+    }
+
+    /* Does the device manage its own surface? */
+    if (!Bits)
+    {
+        /* We need to allocate bits for the caller, figure out the size */
+        if (Compressed)
+        {
+            /* Note: we should not be seeing this scenario from ENGDDI */
+            ASSERT(FALSE);
+            Size = BitmapInfo->Size;
+        }
+        else
+        {
+            /* The height times the bytes for each scanline */
+            Size = BitmapInfo->Height * ScanLine;
+        }
+        
+        if (Size)
+        {
+            /* Check for allocation flag */
+            if (BitmapInfo->Flags & BMF_USERMEM)
+            {
+                /* Get the bits from user-mode memory */
+                Bits = EngAllocUserMem(Size, 'mbuG');
+            }
+            else
+            {
+                /* Get kernel bits (zeroed out if requested) */
+                Bits = EngAllocMem((BitmapInfo->Flags & BMF_NOZEROINIT) ? 0 : FL_ZERO_MEMORY,
+                                   Size,
+                                   TAG_DIB);
+            }
+            AllocatedLocally = TRUE;
+            /* Bail out if that failed */
+            if (!Bits) return NULL;
+        }
+    }
+    else
+    {
+        /* Should not have asked for user memory */
+        ASSERT((BitmapInfo->Flags & BMF_USERMEM) == 0);
+    }
+
+    /* Allocate the actual surface object structure */
+    psurf = SURFACE_AllocSurfaceWithHandle();
+    if (!psurf)
+    {
+        if(Bits && AllocatedLocally)
+        {
+            if(BitmapInfo->Flags & BMF_USERMEM)
+                EngFreeUserMem(Bits);
+            else
+                EngFreeMem(Bits);
+        }
+        return NULL;
+    }
+
+    /* Lock down the surface */
+    if (!SURFACE_InitBitsLock(psurf))
+    {
+        /* Bail out if that failed */
+        SURFACE_UnlockSurface(psurf);
+        SURFACE_FreeSurfaceByHandle(psurf->BaseObject.hHmgr);
+        return NULL;
+    }
+
+    /* We should now have our surface object */
+    pso = &psurf->SurfObj;
+
+    /* Save format and flags */
+    pso->iBitmapFormat = BitmapInfo->Format;
+    pso->fjBitmap = BitmapInfo->Flags & (BMF_TOPDOWN | BMF_UMPDMEM | BMF_USERMEM);
+
+    /* Save size and type */
+    LocalSize.cy = BitmapInfo->Height;
+    LocalSize.cx = BitmapInfo->Width;
+    pso->sizlBitmap = LocalSize;
+    pso->iType = STYPE_BITMAP;
+    
+    /* Device-managed surface, no flags or dimension */
+    pso->dhsurf = 0;
+    pso->dhpdev = NULL;
+    pso->hdev = NULL;
+    psurf->flFlags = 0;
+    psurf->dimension.cx = 0;
+    psurf->dimension.cy = 0;
+    psurf->hSecure = NULL;
+    psurf->hDIBSection = NULL;
+    psurf->flHooks = 0;
+    
+    /* Set bits */
+    pso->pvBits = Bits;
+    
+    /* Check for bitmap type */
+    if (!Compressed)
+    {
+        /* Number of bits is based on the height times the scanline */
+        pso->cjBits = BitmapInfo->Height * ScanLine;
+        if (BitmapInfo->Flags & BMF_TOPDOWN)
+        {
+            /* For topdown, the base address starts with the bits */
+            pso->pvScan0 = pso->pvBits;
+            pso->lDelta = ScanLine;
+        }
+        else
+        {
+            /* Otherwise we start with the end and go up */
+            pso->pvScan0 = (PVOID)((ULONG_PTR)pso->pvBits + pso->cjBits - ScanLine);
+            pso->lDelta = -ScanLine;
+        }
+    }
+    else
+    {
+        /* Compressed surfaces don't have scanlines! */
+        pso->lDelta = 0;
+        pso->cjBits = BitmapInfo->Size;
+        
+        /* Check for JPG or PNG */
+        if ((BitmapInfo->Format != BMF_JPEG) && (BitmapInfo->Format != BMF_PNG))
+        {
+            /* Wherever the bit data is */
+            pso->pvScan0 = pso->pvBits;
+        }
+        else
+        {
+            /* Fancy formats don't use a base address */
+            pso->pvScan0 = NULL;
+            ASSERT(FALSE); // ENGDDI shouldn't be creating PNGs for drivers ;-)
+        }
+    }
+    
+    /* Finally set the handle and uniq */
+    pso->hsurf = (HSURF)psurf->BaseObject.hHmgr;
+    pso->iUniq = 0;
+    
+    /* Unlock and return the surface */
+    SURFACE_UnlockSurface(psurf);
+    return pso;
+}
+
 /*
  * @implemented
  */
-HBITMAP APIENTRY
+HBITMAP
+APIENTRY
 EngCreateBitmap(IN SIZEL Size,
                 IN LONG Width,
                 IN ULONG Format,
                 IN ULONG Flags,
                 IN PVOID Bits)
 {
-    HBITMAP hNewBitmap;
+    SURFOBJ* Surface;
+    DEVBITMAPINFO BitmapInfo;
+    
+    /* Capture the parameters */
+    BitmapInfo.Format = Format;
+    BitmapInfo.Width = Size.cx;
+    BitmapInfo.Height = Size.cy;
+    BitmapInfo.Flags = Flags;
 
-    hNewBitmap = IntCreateBitmap(Size, Width, Format, Flags, Bits);
-    if ( !hNewBitmap )
-        return 0;
+    /*
+     * If the display driver supports framebuffer access, use the scanline width
+     * to determine the actual width of the bitmap, and convert it to pels instead
+     * of bytes.
+     */
+    if ((Bits) && (Width))
+    {
+        switch (BitmapInfo.Format)
+        {
+            /* Do the conversion for each bit depth we support */
+            case BMF_1BPP:
+                BitmapInfo.Width = Width * 8;
+                break;
+            case BMF_4BPP:
+                BitmapInfo.Width = Width * 2;
+                break;
+            case BMF_8BPP:
+                BitmapInfo.Width = Width;
+                break;
+            case BMF_16BPP:
+                BitmapInfo.Width = Width / 2;
+                break;
+            case BMF_24BPP:
+                BitmapInfo.Width = Width / 3;
+                break;
+            case BMF_32BPP:
+                BitmapInfo.Width = Width / 4;
+                break;
+        }
+    }
+    
+    /* Now create the surface */
+    Surface = SURFMEM_bCreateDib(&BitmapInfo, Bits);
+    if (!Surface) return 0;
 
-    GDIOBJ_SetOwnership(hNewBitmap, NULL);
-
-    return hNewBitmap;
+    /* Set public ownership and reutrn the handle */
+    GDIOBJ_SetOwnership(Surface->hsurf, NULL);
+    return Surface->hsurf;
 }
 
 /*

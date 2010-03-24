@@ -7,6 +7,9 @@
 	<directory name="vga">
 		<xi:include href="vga/vgamp.rbuild" />
 	</directory>
+	<directory name="vga_new">
+		<xi:include href="vga_new/vga.rbuild" />
+	</directory>
 	<directory name="vmx_svga">
 		<xi:include href="vmx_svga/vmx_svga.rbuild" />
 	</directory>

@@ -5,8 +5,7 @@
  * - Statistics
  */
 
-#ifndef __L2L_STAT_H__
-#define __L2L_STAT_H__
+#pragma once
 
 #include <stdio.h>
 
@@ -26,7 +25,5 @@ typedef struct summ_struct
 
 void stat_print(FILE *outFile, PSUMM psumm);
 void stat_clear(PSUMM psumm);
-
-#endif /* __L2L_STAT_H__ */
 
 /* EOF */

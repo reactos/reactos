@@ -12,6 +12,8 @@
 #include <string.h>
 #include <ctype.h>
 
+//#define DBG 1
+
 #if DBG
 #define trace printf
 #else
@@ -70,24 +72,40 @@ LoadFile(const char* pszFileName, size_t* pFileSize)
 {
 	FILE* file;
 	void* pFileData = NULL;
+	int iFileSize;
+
+    trace("Loading file...");
 
 	file = fopen(pszFileName, "rb");
-	if (file != NULL)
+	if (!file)
 	{
-		fseek(file, 0L, SEEK_END);
-		*pFileSize = ftell(file);
-		fseek(file, 0L, SEEK_SET);
-		pFileData = malloc(*pFileSize);
-		if (pFileData != NULL)
-		{
-			if (*pFileSize != fread(pFileData, 1, *pFileSize, file))
-			{
-				free(pFileData);
-				pFileData = NULL;
-			}
-		}
-		fclose(file);
+	    trace("Could not open file\n");
+	    return NULL;
 	}
+
+    fseek(file, 0L, SEEK_END);
+    iFileSize = ftell(file);
+    fseek(file, 0L, SEEK_SET);
+    *pFileSize = iFileSize;
+    trace("ok. Size is %d\n", iFileSize);
+
+    pFileData = malloc(iFileSize + 1);
+
+    if (pFileData != NULL)
+    {
+        if (iFileSize != fread(pFileData, 1, iFileSize, file))
+        {
+            free(pFileData);
+            pFileData = NULL;
+        }
+    }
+    else
+    {
+        trace("Could not allocate memory for file\n");
+    }
+
+    fclose(file);
+
 	return pFileData;
 }
 
@@ -452,6 +470,9 @@ ParseInputFile(const char *pszInFile, FILE *fileOut)
 
             /* Restore the global file name */
             gpszCurFile = pszInFile;
+            
+            /* Restore the zeroed character */
+            *p2 = ')';
 
             if (ret == -1)
             {
@@ -481,6 +502,8 @@ ParseInputFile(const char *pszInFile, FILE *fileOut)
     /* Free the file data */
     free(pInputData);
 
+    trace("Done with file.\n\n");
+
     return 0;
 }
 
@@ -494,7 +517,7 @@ main(int argc, char* argv[])
 
     if (argc != 3)
     {
-        error("Usage: hc <inputfile> <outputfile>\n");
+        error("Usage: hpp <inputfile> <outputfile>\n");
         exit(1);
     }
 

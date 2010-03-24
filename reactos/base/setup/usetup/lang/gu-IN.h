@@ -1,5 +1,4 @@
-#ifndef LANG_GU_IN_H__
-#define LANG_GU_IN_H__
+#pragma once
 
 MUI_LAYOUTS guINLayouts[] =
 {
@@ -8,5 +7,3 @@ MUI_LAYOUTS guINLayouts[] =
     { L"0439", L"00000439" },
     { NULL, NULL }
 };
-
-#endif

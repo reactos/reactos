@@ -8,6 +8,7 @@
 	<file>main.c</file>
 	<file>mediadet.c</file>
 	<file>regsvr.c</file>
+	<file>samplegrabber.c</file>
 	<library>wine</library>
 	<library>strmiids</library>
 	<library>uuid</library>

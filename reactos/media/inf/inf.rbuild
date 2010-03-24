@@ -3,6 +3,7 @@
 <group>
 	<installfile installbase="inf">acpi.inf</installfile>
 	<installfile installbase="inf">audio.inf</installfile>
+	<installfile installbase="inf">battery.inf</installfile>
 	<installfile installbase="inf">cdrom.inf</installfile>
 	<installfile installbase="inf">cpu.inf</installfile>
 	<installfile installbase="inf">display.inf</installfile>

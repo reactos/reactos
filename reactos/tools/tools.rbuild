@@ -7,6 +7,9 @@
 <directory name="cdmake">
 	<xi:include href="cdmake/cdmake.rbuild" />
 </directory>
+<directory name="hpp">
+	<xi:include href="hpp/hpp.rbuild" />
+</directory>
 <directory name="kbdtool">
 	<xi:include href="kbdtool/kbdtool.rbuild" />
 </directory>

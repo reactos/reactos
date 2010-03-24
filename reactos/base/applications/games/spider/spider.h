@@ -1,5 +1,4 @@
-#ifndef SOLITAIRE_INCLUDED
-#define SOLITAIRE_INCLUDED
+#pragma once
 
 #define DIFFICULTY_ONE_COLOR     1
 #define DIFFICULTY_TWO_COLORS    2
@@ -38,5 +37,3 @@ void CARDLIBPROC DeckClickProc(CardRegion &stackobj, int iNumClicked);
 void CARDLIBPROC PileDblClickProc(CardRegion &stackobj, int iNumClicked);
 
 void CARDLIBPROC PileRemoveProc(CardRegion &stackobj, int iRemoved);
-
-#endif

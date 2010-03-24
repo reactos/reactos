@@ -20,9 +20,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __ABOUT_H
-#define __ABOUT_H
+#pragma once
 
 void	OnAbout(void);
-
-#endif /* __ABOUT_H */

@@ -12,6 +12,15 @@
 #ifndef __DMEMMGR_INCLUDED__
 #define __DMEMMGR_INCLUDED__
 
+/* Helper macro to enable gcc's extension.  */
+#ifndef __GNU_EXTENSION
+#ifdef __GNUC__
+#define __GNU_EXTENSION __extension__
+#else
+#define __GNU_EXTENSION
+#endif
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -70,7 +79,7 @@ typedef struct _VMEMR
 
 typedef struct _SURFACEALIGNMENT
 {
-  union
+  __GNU_EXTENSION union
   {
     struct
     {

@@ -17,6 +17,11 @@
 #define NDEBUG
 #include <debug.h>
 
+/*
+ * Uncomment the line below to start services
+ *  using the SERVICE_START_PENDING state
+ */
+// #define USE_SERVICE_START_PENDING
 
 /* GLOBALS *******************************************************************/
 
@@ -116,37 +121,6 @@ ScmGetServiceEntryByResumeCount(DWORD dwResumeCount)
 }
 
 
-PSERVICE
-ScmGetServiceEntryByClientHandle(HANDLE Handle)
-{
-    PLIST_ENTRY ServiceEntry;
-    PSERVICE CurrentService;
-
-    DPRINT("ScmGetServiceEntryByClientHandle() called\n");
-    DPRINT("looking for %p\n", Handle);
-
-    ServiceEntry = ServiceListHead.Flink;
-    while (ServiceEntry != &ServiceListHead)
-    {
-        CurrentService = CONTAINING_RECORD(ServiceEntry,
-                                           SERVICE,
-                                           ServiceListEntry);
-
-        if (CurrentService->hClient == Handle)
-        {
-            DPRINT("Found service: '%S'\n", CurrentService->lpDisplayName);
-            return CurrentService;
-        }
-
-        ServiceEntry = ServiceEntry->Flink;
-    }
-
-    DPRINT("Couldn't find a matching service\n");
-
-    return NULL;
-}
-
-
 DWORD
 ScmCreateNewServiceRecord(LPCWSTR lpServiceName,
                           PSERVICE *lpServiceRecord)
@@ -191,7 +165,7 @@ ScmCreateNewServiceRecord(LPCWSTR lpServiceName,
 VOID
 ScmDeleteServiceRecord(PSERVICE lpService)
 {
-    DPRINT1("Deleting Service %S\n", lpService->lpServiceName);
+    DPRINT("Deleting Service %S\n", lpService->lpServiceName);
 
     /* Delete the display name */
     if (lpService->lpDisplayName != NULL &&
@@ -215,12 +189,12 @@ ScmDeleteServiceRecord(PSERVICE lpService)
     /* Remove the Service from the List */
     RemoveEntryList(&lpService->ServiceListEntry);
 
-    DPRINT1("Deleted Service %S\n", lpService->lpServiceName);
+    DPRINT("Deleted Service %S\n", lpService->lpServiceName);
 
     /* Delete the service record */
     HeapFree(GetProcessHeap(), 0, lpService);
 
-    DPRINT1("Done\n");
+    DPRINT("Done\n");
 }
 
 
@@ -705,12 +679,15 @@ ScmGetBootAndSystemDriverState(VOID)
 
 DWORD
 ScmControlService(PSERVICE Service,
-                  DWORD dwControl,
-                  LPSERVICE_STATUS lpServiceStatus)
+                  DWORD dwControl)
 {
     PSCM_CONTROL_PACKET ControlPacket;
-    DWORD Count;
+    SCM_REPLY_PACKET ReplyPacket;
+
+    DWORD dwWriteCount = 0;
+    DWORD dwReadCount = 0;
     DWORD TotalLength;
+    DWORD dwError = ERROR_SUCCESS;
 
     DPRINT("ScmControlService() called\n");
 
@@ -723,31 +700,37 @@ ScmControlService(PSERVICE Service,
         return ERROR_NOT_ENOUGH_MEMORY;
 
     ControlPacket->dwControl = dwControl;
-    ControlPacket->hClient = Service->hClient;
     ControlPacket->dwSize = TotalLength;
+    ControlPacket->hServiceStatus = (SERVICE_STATUS_HANDLE)Service;
     wcscpy(&ControlPacket->szArguments[0], Service->lpServiceName);
 
     /* Send the control packet */
     WriteFile(Service->ControlPipeHandle,
               ControlPacket,
               sizeof(SCM_CONTROL_PACKET) + (TotalLength * sizeof(WCHAR)),
-              &Count,
+              &dwWriteCount,
               NULL);
 
-    /* FIXME: Read the reply */
+    /* Read the reply */
+    ReadFile(Service->ControlPipeHandle,
+             &ReplyPacket,
+             sizeof(SCM_REPLY_PACKET),
+             &dwReadCount,
+             NULL);
 
     /* Release the contol packet */
     HeapFree(GetProcessHeap(),
              0,
              ControlPacket);
 
-    RtlCopyMemory(lpServiceStatus,
-                  &Service->Status,
-                  sizeof(SERVICE_STATUS));
+    if (dwReadCount == sizeof(SCM_REPLY_PACKET))
+    {
+        dwError = ReplyPacket.dwError;
+    }
 
-    DPRINT("ScmControlService) done\n");
+    DPRINT("ScmControlService() done\n");
 
-    return ERROR_SUCCESS;
+    return dwError;
 }
 
 
@@ -757,11 +740,15 @@ ScmSendStartCommand(PSERVICE Service,
                     LPWSTR *argv)
 {
     PSCM_CONTROL_PACKET ControlPacket;
+    SCM_REPLY_PACKET ReplyPacket;
     DWORD TotalLength;
     DWORD ArgsLength = 0;
     DWORD Length;
     PWSTR Ptr;
-    DWORD Count;
+    DWORD dwWriteCount = 0;
+    DWORD dwReadCount = 0;
+    DWORD dwError = ERROR_SUCCESS;
+    DWORD i;
 
     DPRINT("ScmSendStartCommand() called\n");
 
@@ -769,10 +756,10 @@ ScmSendStartCommand(PSERVICE Service,
     TotalLength = wcslen(Service->lpServiceName) + 1;
     if (argc > 0)
     {
-        for (Count = 0; Count < argc; Count++)
+        for (i = 0; i < argc; i++)
         {
-            DPRINT("Arg: %S\n", argv[Count]);
-            Length = wcslen(argv[Count]) + 1;
+            DPRINT("Arg: %S\n", argv[i]);
+            Length = wcslen(argv[i]) + 1;
             TotalLength += Length;
             ArgsLength += Length;
         }
@@ -788,7 +775,7 @@ ScmSendStartCommand(PSERVICE Service,
         return ERROR_NOT_ENOUGH_MEMORY;
 
     ControlPacket->dwControl = SERVICE_CONTROL_START;
-    ControlPacket->hClient = Service->hClient;
+    ControlPacket->hServiceStatus = (SERVICE_STATUS_HANDLE)Service;
     ControlPacket->dwSize = TotalLength;
     Ptr = &ControlPacket->szArguments[0];
     wcscpy(Ptr, Service->lpServiceName);
@@ -812,19 +799,29 @@ ScmSendStartCommand(PSERVICE Service,
     WriteFile(Service->ControlPipeHandle,
               ControlPacket,
               sizeof(SCM_CONTROL_PACKET) + (TotalLength - 1) * sizeof(WCHAR),
-              &Count,
+              &dwWriteCount,
               NULL);
 
-    /* FIXME: Read the reply */
+    /* Read the reply */
+    ReadFile(Service->ControlPipeHandle,
+             &ReplyPacket,
+             sizeof(SCM_REPLY_PACKET),
+             &dwReadCount,
+             NULL);
 
     /* Release the contol packet */
     HeapFree(GetProcessHeap(),
              0,
              ControlPacket);
 
+    if (dwReadCount == sizeof(SCM_REPLY_PACKET))
+    {
+        dwError = ReplyPacket.dwError;
+    }
+
     DPRINT("ScmSendStartCommand() done\n");
 
-    return ERROR_SUCCESS;
+    return dwError;
 }
 
 
@@ -845,6 +842,7 @@ ScmStartUserModeService(PSERVICE Service,
     WCHAR NtControlPipeName[MAX_PATH + 1];
     HKEY hServiceCurrentKey = INVALID_HANDLE_VALUE;
     DWORD KeyDisposition;
+    DWORD dwProcessId;
 
     RtlInitUnicodeString(&ImagePath, NULL);
 
@@ -986,7 +984,7 @@ ScmStartUserModeService(PSERVICE Service,
 
         /* Read SERVICE_STATUS_HANDLE from pipe */
         if (!ReadFile(Service->ControlPipeHandle,
-                      (LPVOID)&Service->hClient,
+                      (LPVOID)&dwProcessId,
                       sizeof(DWORD),
                       &dwRead,
                       NULL))
@@ -997,7 +995,7 @@ ScmStartUserModeService(PSERVICE Service,
         }
         else
         {
-            DPRINT("Received service status %lu\n", Service->hClient);
+            DPRINT("Received service process ID %lu\n", dwProcessId);
 
             /* Send start command */
             dwError = ScmSendStartCommand(Service, argc, argv);
@@ -1038,12 +1036,23 @@ ScmStartService(PSERVICE Service, DWORD argc, LPWSTR *argv)
         /* Load driver */
         dwError = ScmLoadDriver(Service);
         if (dwError == ERROR_SUCCESS)
+        {
             Service->Status.dwControlsAccepted = SERVICE_ACCEPT_STOP;
+            Service->Status.dwCurrentState = SERVICE_RUNNING;
+        }
     }
     else
     {
         /* Start user-mode service */
         dwError = ScmStartUserModeService(Service, argc, argv);
+        if (dwError == ERROR_SUCCESS)
+        {
+#ifdef USE_SERVICE_START_PENDING
+            Service->Status.dwCurrentState = SERVICE_START_PENDING;
+#else
+            Service->Status.dwCurrentState = SERVICE_RUNNING;
+#endif
+        }
     }
 
     DPRINT("ScmStartService() done (Error %lu)\n", dwError);
@@ -1054,7 +1063,6 @@ ScmStartService(PSERVICE Service, DWORD argc, LPWSTR *argv)
         {
             Group->ServicesRunning = TRUE;
         }
-        Service->Status.dwCurrentState = SERVICE_RUNNING;
     }
 #if 0
     else
@@ -1207,7 +1215,6 @@ ScmAutoShutdownServices(VOID)
 {
     PLIST_ENTRY ServiceEntry;
     PSERVICE CurrentService;
-    SERVICE_STATUS ServiceStatus;
 
     DPRINT("ScmAutoShutdownServices() called\n");
 
@@ -1220,13 +1227,34 @@ ScmAutoShutdownServices(VOID)
             CurrentService->Status.dwCurrentState == SERVICE_START_PENDING)
         {
             /* shutdown service */
-            ScmControlService(CurrentService, SERVICE_CONTROL_STOP, &ServiceStatus);
+            ScmControlService(CurrentService, SERVICE_CONTROL_STOP);
         }
 
         ServiceEntry = ServiceEntry->Flink;
     }
 
     DPRINT("ScmGetBootAndSystemDriverState() done\n");
+}
+
+
+BOOL
+ScmLockDatabaseExclusive(VOID)
+{
+    return RtlAcquireResourceExclusive(&DatabaseLock, TRUE);
+}
+
+
+BOOL
+ScmLockDatabaseShared(VOID)
+{
+    return RtlAcquireResourceShared(&DatabaseLock, TRUE);
+}
+
+
+VOID
+ScmUnlockDatabase(VOID)
+{
+    RtlReleaseResource(&DatabaseLock);
 }
 
 /* EOF */

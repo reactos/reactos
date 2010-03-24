@@ -302,7 +302,7 @@ err_out:
  * Arguments, return values: See DDRAW_Create
  *
  ***********************************************************************/
-HRESULT WINAPI
+HRESULT WINAPI DECLSPEC_HOTPATCH
 DirectDrawCreate(GUID *GUID,
                  LPDIRECTDRAW *DD,
                  IUnknown *UnkOuter)
@@ -325,7 +325,7 @@ DirectDrawCreate(GUID *GUID,
  * Arguments, return values: See DDRAW_Create
  *
  ***********************************************************************/
-HRESULT WINAPI
+HRESULT WINAPI DECLSPEC_HOTPATCH
 DirectDrawCreateEx(GUID *GUID,
                    LPVOID *DD,
                    REFIID iid,
@@ -742,14 +742,7 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
  */
 HRESULT WINAPI DllCanUnloadNow(void)
 {
-    HRESULT hr;
-    FIXME("(void): stub\n");
-
-    EnterCriticalSection(&ddraw_cs);
-    hr = S_FALSE;
-    LeaveCriticalSection(&ddraw_cs);
-
-    return hr;
+    return S_FALSE;
 }
 
 /*******************************************************************************

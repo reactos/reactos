@@ -1,5 +1,4 @@
-#ifndef LANG_ES_UY_H__
-#define LANG_ES_UY_H__
+#pragma once
 
 MUI_LAYOUTS esUYLayouts[] =
 {
@@ -7,5 +6,3 @@ MUI_LAYOUTS esUYLayouts[] =
     { L"0409", L"00000409" },
     { NULL, NULL }
 };
-
-#endif

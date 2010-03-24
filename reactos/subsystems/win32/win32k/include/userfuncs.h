@@ -1,9 +1,4 @@
-#ifndef _WIN32K_USERFUNCS_H
-#define _WIN32K_USERFUNCS_H
-
-
-
-
+#pragma once
 
 PMENU_OBJECT FASTCALL UserGetMenuObject(HMENU hMenu);
 
@@ -158,8 +153,5 @@ BOOL FASTCALL UserDestroyMenu(HMENU hMenu);
 
 DWORD FASTCALL
 co_UserShowScrollBar(PWINDOW_OBJECT Window, int wBar, DWORD bShow);
-
-
-#endif /* _WIN32K_USERFUNCS_H */
 
 /* EOF */

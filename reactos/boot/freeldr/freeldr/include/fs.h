@@ -17,8 +17,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __FS_H
-#define __FS_H
+#pragma once
 
 typedef struct tagDEVVTBL
 {
@@ -60,5 +59,3 @@ ULONG		FsGetNumPathParts(PCSTR Path);
 VOID	FsGetFirstNameFromPath(PCHAR Buffer, PCSTR Path);
 
 #define MAX_FDS 60
-
-#endif // #defined __FS_H

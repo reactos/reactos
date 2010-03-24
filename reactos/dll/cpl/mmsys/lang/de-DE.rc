@@ -12,10 +12,10 @@ BEGIN
     CONTROL "",IDC_VOLUME_TRACKBAR, "msctls_trackbar32", TBS_AUTOTICKS | TBS_ENABLESELRANGE | TBS_BOTTOM | TBS_HORZ | WS_TABSTOP, 65, 45, 140, 14
     LTEXT "Niedrig",-1,62,66,30,17
     LTEXT "Hoch",-1,195,66,30,17
-    CHECKBOX "Stu&mmschalten", IDC_MUTE_CHECKBOX, 50, 78, 140, 10
+    CHECKBOX "Stu&mm schalten", IDC_MUTE_CHECKBOX, 50, 78, 140, 10
     CHECKBOX "Lautstärkeregelungs-&Icon in der Taskleiste zeigen", IDC_ICON_IN_TASKBAR, 50, 92, 170, 10
     PUSHBUTTON "Er&weitert", IDC_ADVANCED_BTN, 150,105,75,15
-    GROUPBOX "Lautsprechereintellungen", IDC_SPEAKER_SET_BTN, 7,140,230,80
+    GROUPBOX "Lautsprechereinstellungen", IDC_SPEAKER_SET_BTN, 7,140,230,80
     CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 160, 70, 70
     LTEXT "Verwenden Sie die unteren Einstellungen um die Lautstäre einzelner Geräte und andere Einstellungen zu verändern.",-1,70,155,150,36
     PUSHBUTTON "&Lautstärke...", IDC_SPEAKER_VOL_BTN, 70,195,75,15
@@ -24,18 +24,18 @@ END
 
 IDD_SOUNDS DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Sounds"
+CAPTION "Klänge"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Ein Soundschema ist eine Kollektion von Sounds, die bestimmten Programmereignissen in ReactOS zugordnet sind. Sie können ein existierendes Schema anwählen oder ein modifiziertes speichern.",-1,8,7,230,40
-    LTEXT "Sounds&chema:",-1,8,42,150,17
+    LTEXT "Ein Klangschema ist eine Sammlung von Klängen, die bestimmten Programmereignissen in ReactOS zugordnet sind. Sie können ein existierendes Schema auswählen oder ein modifiziertes speichern.",-1,8,7,230,40
+    LTEXT "Klang&schema:",-1,8,42,150,17
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "Sp&eichern unter...", IDC_SAVEAS_BTN, 120,70,65,15
     PUSHBUTTON "&Löschen", IDC_DELETE_BTN, 188,70,50,15
-    LTEXT "Um Sounds zu ändern, klicken Sie auf ein Programmereignis in der folgenden Liste und wählen Sie einen Sound. Sie können Änderungen als neue Soundschemata speichern.",-1,8,90,230,40
-    LTEXT "&Pogrammereignisse:",-1,8,118,150,17
+    LTEXT "Um Klänge zu ändern, klicken Sie auf ein Programmereignis in der folgenden Liste und wählen Sie einen Klang aus. Sie können Änderungen als neue Klangschemata speichern.",-1,8,90,230,40
+    LTEXT "&Programmereignisse:",-1,8,118,150,17
     CONTROL "", IDC_SCHEME_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 8, 130, 230, 60, WS_EX_CLIENTEDGE
-    LTEXT "&Sounds:", IDC_TEXT_SOUND,8,194,80,17, WS_DISABLED
+    LTEXT "&Klänge:", IDC_TEXT_SOUND,8,194,80,17, WS_DISABLED
     COMBOBOX IDC_SOUND_LIST, 8, 205, 155, 146, CBS_DROPDOWNLIST | CBS_DISABLENOSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
     PUSHBUTTON "", IDC_PLAY_SOUND, 168,205,15,15, WS_DISABLED | BS_ICON
     PUSHBUTTON "&Durchsuchen...", IDC_BROWSE_SOUND, 188,205,81,15, WS_DISABLED
@@ -52,7 +52,7 @@ BEGIN
     COMBOBOX IDC_DEVICE_PLAY_LIST, 50, 30, 180, 46, CBS_DROPDOWNLIST
     PUSHBUTTON "&Lautstärke...", IDC_VOLUME1_BTN, 85,47,70,15
     PUSHBUTTON "&Erweitert...", IDC_ADV2_BTN, 160,47,70,15
-    GROUPBOX "Soundaufnahme", -1, 7,75,230,60
+    GROUPBOX "Tonaufnahme", -1, 7,75,230,60
     ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15,88,32,32
     LTEXT "S&tandardgerät:",-1,50,88,80,17
     COMBOBOX IDC_DEVICE_REC_LIST, 50, 98, 180, 46, CBS_DROPDOWNLIST
@@ -101,7 +101,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBL
 CAPTION "Schema speichern unter"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Dieses Soundschema speichern unter:", -1, 7, 7, 212, 9
+    LTEXT "&Dieses Klangschema speichern unter:", -1, 7, 7, 212, 9
     EDITTEXT 8960, 7, 17, 211, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "OK", IDOK, 93, 36, 60, 14
     PUSHBUTTON "Abbrechen", IDCANCEL, 157, 36, 60, 14
@@ -136,8 +136,8 @@ BEGIN
     LTEXT "Voll", 8498, 214, 56, 21, 9
     LTEXT "Gut", 8499, 128, 123, 21, 10
     LTEXT "Beste", 8500, 214, 123, 23, 9
-    LTEXT "Diese Zeichenfolge beschreibt die Hardwareeinstellung für das Capture Gerät", 5399, 13, 145, 227, 21
-    LTEXT "Diese Zeichenfolge beschreibt die Hardwareeinstellung für das Render Gerät", 5398, 13, 78, 227, 22
+    LTEXT "Diese Zeichenfolge beschreibt die Hardwareeinstellung für das Capture-Gerät", 5399, 13, 145, 227, 21
+    LTEXT "Diese Zeichenfolge beschreibt die Hardwareeinstellung für das Render-Gerät", 5398, 13, 78, 227, 22
 END
 
 IDD_PERFORMANCE2 DIALOG 0, 0, 257, 218
@@ -157,8 +157,8 @@ BEGIN
     LTEXT "Voll", 8498, 217, 46, 19, 9
     LTEXT "Gut", 8499, 125, 103, 24, 10
     LTEXT "Beste", 8500, 217, 103, 19, 9
-    LTEXT "Diese Zeichenfolge beschreibt die Hardwareeinstellung für das Capture Gerät", 5399, 13, 125, 222, 21
-    LTEXT "Diese Zeichenfolge beschreibt die Hardwareeinstellung für das Render Gerät", 5398, 13, 68, 218, 24
+    LTEXT "Diese Zeichenfolge beschreibt die Hardwareeinstellung für das Capture-Gerät", 5399, 13, 125, 222, 21
+    LTEXT "Diese Zeichenfolge beschreibt die Hardwareeinstellung für das Render-Gerät", 5398, 13, 68, 218, 24
 END
 
 IDD_SETUP1 DIALOG 0, 0, 227, 206
@@ -168,11 +168,11 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "ReactOS Audio", 10243, 7, 5, 213, 192
     ICON 4393, 10241, 26, 26, 20, 20
-    LTEXT "Dieser Computer kann keine Audiodaten abspielen, da der ReactOS Audio-Dienst nicht aktiviert ist.", 10245, 60, 25, 150, 40
+    LTEXT "Dieser Computer kann keine Audiodaten abspielen, da der ReactOS-Audiodienst nicht aktiviert ist.", 10245, 60, 25, 150, 40
     AUTOCHECKBOX "&ReactOS Audio aktivieren", 10253, 60, 68, 150, 9
     LTEXT "Informationen", 10246, 58, 87, 150, 11
     LTEXT "1. Sie müssen Administrator sein, um diesen Dienst aktivieren zu können. Wenn Sie nicht als Administrator angemeldet sind, werden Sie nach dem Administaratornamen und Passwort gefragt.", 10247, 60, 100, 150, 40
-    LTEXT "2. Nach Aktivierung des ReactOS Audio Dienstes müssen Sie den Computer neustarten.", 10248, 60, 140, 150, 40
+    LTEXT "2. Nach Aktivierung des ReactOS-Audiodienstes müssen Sie den Computer neu starten.", 10248, 60, 140, 150, 40
 END
 
 IDD_MULTICHANNEL DIALOG 0, 0, 227, 218
@@ -224,17 +224,17 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "ReactOS Audio", 10259, 7, 5, 213, 192
     ICON 4394, 10257, 25, 25, 20, 20
-    LTEXT "Der ReactOS Audio Dienst ist nun aktiviert. Dennoch kann es sein, dass die Audiowiedergabe nicht richtig funktioniert, bis Sie ReactOS neugestartet haben. Wenn Sie jetzt neustarten wollen, speichern Sie Ihre Arbeit und beenden Sie alle Programme.", 10261, 60, 25, 150, 50
-    LTEXT "Um ReactOS neuzustarten, klicken Sie OK.", 10262, 60, 75, 150, 20
-    LTEXT "Wenn Sie abbrechen, müssen Sie später neustarten, um sichergehen zu können, dass die Audiowiedergabe richtig funktioniert.", 10263, 60, 100, 150, 40
+    LTEXT "Der ReactOS-Audiodienst ist nun aktiviert. Dennoch kann es sein, dass die Audiowiedergabe nicht richtig funktioniert, bis Sie ReactOS neu gestartet haben. Wenn Sie jetzt neu starten wollen, speichern Sie Ihre Arbeit und beenden Sie alle Programme.", 10261, 60, 25, 150, 50
+    LTEXT "Um ReactOS neu zu starten, klicken Sie auf OK.", 10262, 60, 75, 150, 20
+    LTEXT "Wenn Sie abbrechen, müssen Sie später neu starten, um sichergehen zu können, dass die Audiowiedergabe richtig funktioniert.", 10263, 60, 100, 150, 40
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "Sounds und Audio Geräte"
-    IDS_CPLDESCRIPTION "Ändert das Sound-Schema Ihres Computers, oder konfiguriert die Einstellungen für Ihre Lautsprecher und Aufnahmegeräte."
+    IDS_CPLNAME "Klänge und Audiogeräte"
+    IDS_CPLDESCRIPTION "Ändert das Klangschema Ihres Computers oder konfiguriert die Einstellungen für Ihre Lautsprecher und Aufnahmegeräte."
     IDS_NO_SOUND "(Kein)"
-	IDS_NO_DEVICES "No Devices"
+	IDS_NO_DEVICES "Keine Geräte"
 
     5825 "Programmfehler"
     5826 "Programm schließen"

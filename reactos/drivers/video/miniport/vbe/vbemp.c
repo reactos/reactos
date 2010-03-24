@@ -71,6 +71,9 @@ VBEFindAdapter(
    IN OUT PVIDEO_PORT_CONFIG_INFO ConfigInfo,
    OUT PUCHAR Again)
 {
+   if (VideoPortIsNoVesa())
+       return ERROR_DEV_NOT_EXIST;
+
    return NO_ERROR;
 }
 

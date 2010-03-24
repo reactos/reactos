@@ -24,9 +24,7 @@
  * PROGRAMMER:      Eric Kohl
  */
 
-#ifndef __PROGRESS_H__
-#define __PROGRESS_H__
-
+#pragma once
 
 typedef struct _PROGRESS
 {
@@ -74,7 +72,5 @@ ProgressNextStep(PPROGRESSBAR Bar);
 VOID
 ProgressSetStep (PPROGRESSBAR Bar,
 		 ULONG Step);
-
-#endif /* __PROGRESS_H__ */
 
 /* EOF */

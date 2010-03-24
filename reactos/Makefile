@@ -169,11 +169,7 @@ else
 endif
 
 ifeq ($(ROS_AUTOMAKE),)
-  ifeq ($(ARCH),i386)
-    ROS_AUTOMAKE=makefile.auto
-  else
-    ROS_AUTOMAKE=makefile-$(ARCH).auto
-  endif
+  ROS_AUTOMAKE=makefile-$(ARCH).auto
 endif
 
 all: $(ROS_AUTOMAKE)

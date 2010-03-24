@@ -18,8 +18,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __AMD64_AMD64_H_
-#define __AMD64_AMD64_H_
+#pragma once
 
 // This is needed because headers define wrong one for ReactOS
 #undef KIP0PCRADDRESS
@@ -62,7 +61,5 @@ typedef struct _PAGE_DIRECTORY_AMD64
 VOID FrLdrSetupGdtIdt();
 
 #endif
-
-#endif /* __AMD64_AMD64_H_ */
 
 /* EOF */
