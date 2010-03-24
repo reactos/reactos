@@ -6,6 +6,8 @@
 #include <acpi_bus.h>
 #include <acpi_drivers.h>
 
+#include <acpiioct.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -29,7 +31,9 @@ Bus_AddDevice(
     PDEVICE_OBJECT      deviceObject = NULL;
     PFDO_DEVICE_DATA    deviceData = NULL;
     PWCHAR              deviceName = NULL;
+#ifndef NDEBUG
     ULONG               nameLength;
+#endif
 
     PAGED_CODE ();
 
@@ -168,32 +172,45 @@ ACPIDispatchDeviceControl(
    IN PDEVICE_OBJECT DeviceObject,
    IN PIRP Irp)
 {
-    PIO_STACK_LOCATION IrpSp;
-    NTSTATUS Status;
+    PIO_STACK_LOCATION      irpStack;
+    NTSTATUS                status = STATUS_NOT_SUPPORTED;
+    PCOMMON_DEVICE_DATA     commonData;
 
-    DPRINT("Called. IRP is at (0x%X)\n", Irp);
+    PAGED_CODE ();
+
+    irpStack = IoGetCurrentIrpStackLocation (Irp);
+    ASSERT (IRP_MJ_DEVICE_CONTROL == irpStack->MajorFunction);
+
+    commonData = (PCOMMON_DEVICE_DATA) DeviceObject->DeviceExtension;
 
     Irp->IoStatus.Information = 0;
 
-    IrpSp  = IoGetCurrentIrpStackLocation(Irp);
-    switch (IrpSp->Parameters.DeviceIoControl.IoControlCode) {
-        default:
-            DPRINT("Unknown IOCTL 0x%X\n", IrpSp->Parameters.DeviceIoControl.IoControlCode);
-            Status = STATUS_NOT_IMPLEMENTED;
-            break;
-  }
+    if (!commonData->IsFDO)
+    {
+       switch (irpStack->Parameters.DeviceIoControl.IoControlCode)
+       {
+           case IOCTL_ACPI_EVAL_METHOD:
+              status = Bus_PDO_EvalMethod((PPDO_DEVICE_DATA)commonData,
+                                          Irp);
+              break;
 
-    if (Status != STATUS_PENDING) {
-        Irp->IoStatus.Status = Status;
+           /* TODO: Implement other IOCTLs */
 
-        DPRINT("Completing IRP at 0x%X\n", Irp);
+           default:
+              DPRINT1("Unsupported IOCTL: %x\n", irpStack->Parameters.DeviceIoControl.IoControlCode);
+              break;
+       }
+    }
+    else
+       DPRINT1("IOCTL sent to the ACPI FDO! Kill the caller!\n");
 
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-  }
+    if (status != STATUS_PENDING)
+    {
+       Irp->IoStatus.Status = status;
+       IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
 
-    DPRINT("Leaving. Status 0x%X\n", Status);
-
-    return Status;
+    return status;
 }
 
 NTSTATUS

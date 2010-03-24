@@ -92,6 +92,11 @@ ACPIEnumerateDevices(
 
 NTSTATUS
 NTAPI
+Bus_PDO_EvalMethod(PPDO_DEVICE_DATA DeviceData,
+                   PIRP Irp);
+
+NTSTATUS
+NTAPI
 Bus_CreateClose (
     PDEVICE_OBJECT  DeviceObject,
     PIRP            Irp
