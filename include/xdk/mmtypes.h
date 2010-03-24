@@ -142,7 +142,7 @@ typedef enum _MM_SYSTEM_SIZE {
   MmLargeSystem
 } MM_SYSTEMSIZE;
 
-extern PBOOLEAN Mm64BitPhysicalAddress;
+extern NTKERNELAPI BOOLEAN Mm64BitPhysicalAddress;
 extern PVOID MmBadPointer;
 
 $endif /* _WDMDDK_ */

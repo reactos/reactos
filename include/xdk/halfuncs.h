@@ -1,7 +1,8 @@
 /* Hardware Abstraction Layer Functions */
 
-#if defined(USE_DMA_MACROS) && !defined(_NTHAL_) && (defined(_NTDDK_) || defined(_NTDRIVER_)) || defined(_WDM_INCLUDED_)
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
 
+#if defined(USE_DMA_MACROS) && !defined(_NTHAL_) && (defined(_NTDDK_) || defined(_NTDRIVER_)) || defined(_WDM_INCLUDED_)
 $if (_WDMDDK_)
 
 FORCEINLINE
@@ -69,12 +70,12 @@ HalGetDmaAlignment(
 }
 
 $endif
-
 $if (_NTDDK_)
 
-#else
+/* Nothing here */
 
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
+#else /* USE_DMA_MACROS ... */
+
 //DECLSPEC_DEPRECATED_DDK
 NTHALAPI
 VOID
@@ -140,18 +141,11 @@ HalAllocateAdapterChannel(
   IN ULONG  NumberOfMapRegisters,
   IN PDRIVER_CONTROL  ExecutionRoutine);
 
-#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
-
-$endif
-
-#endif
-
+$endif /* _NTDDK_ */
+#endif /* USE_DMA_MACROS ... */
 $if (_NTDDK_)
 
 #if !defined(NO_LEGACY_DRIVERS)
-
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
-
 NTHALAPI
 NTSTATUS
 NTAPI
@@ -201,12 +195,7 @@ BOOLEAN
 NTAPI
 HalMakeBeep(
   IN ULONG Frequency);
-
-#endif
-
 #endif /* !defined(NO_LEGACY_DRIVERS) */
-
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
 
 NTHALAPI
 PADAPTER_OBJECT
@@ -284,7 +273,9 @@ HalPutScatterGatherList(
   IN PSCATTER_GATHER_LIST ScatterGather,
   IN BOOLEAN WriteToDevice);
 
+$endif /* _NTDDK_ */
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+$if (_NTDDK_)
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 NTKERNELAPI
@@ -295,7 +286,7 @@ HalExamineMBR(
   IN ULONG SectorSize,
   IN ULONG MBRTypeIdentifier,
   OUT PVOID *Buffer);
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
 
@@ -312,7 +303,7 @@ NTAPI
 HalFreeHardwareCounters(
   IN HANDLE CounterSetHandle);
 
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
 #if defined(_IA64_)
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
@@ -351,5 +342,5 @@ HalBugCheckSystem(
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
+$endif /* _NTDDK_ */
 
-$endif
