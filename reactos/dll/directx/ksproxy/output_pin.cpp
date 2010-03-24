@@ -26,6 +26,8 @@ class COutputPin : public IPin,
 
 {
 public:
+    typedef std::vector<IUnknown *>ProxyPluginVector;
+
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
     STDMETHODIMP_(ULONG) AddRef()
@@ -162,6 +164,8 @@ public:
     HRESULT STDMETHODCALLTYPE CreatePinHandle(PKSPIN_MEDIUM Medium, PKSPIN_INTERFACE Interface, const AM_MEDIA_TYPE *pmt);
     HRESULT WINAPI IoProcessRoutine();
     HRESULT WINAPI InitializeIOThread();
+    HRESULT STDMETHODCALLTYPE GetSupportedSets(LPGUID * pOutGuid, PULONG NumGuids);
+    HRESULT STDMETHODCALLTYPE LoadProxyPlugins(LPGUID pGuids, ULONG NumGuids);
 
     friend DWORD WINAPI COutputPin_IoThreadStartup(LPVOID lpParameter);
     friend HRESULT STDMETHODCALLTYPE COutputPin_SetState(IPin * Pin, KSSTATE State);
@@ -199,6 +203,8 @@ protected:
 
     KSSTATE m_State;
     CRITICAL_SECTION m_Lock;
+
+    ProxyPluginVector m_Plugins;
 };
 
 COutputPin::~COutputPin()
@@ -229,7 +235,8 @@ COutputPin::COutputPin(
                                          m_hStopEvent(0),
                                          m_StopInProgress(0),
                                          m_IoThreadStarted(0),
-                                         m_State(KSSTATE_STOP)
+                                         m_State(KSSTATE_STOP),
+                                         m_Plugins()
 {
     HRESULT hr;
     IKsObject * KsObjectParent;
@@ -2165,6 +2172,33 @@ COutputPin::CreatePinHandle(
             DebugBreak();
         }
 
+        LPGUID pGuid;
+        ULONG NumGuids = 0;
+
+        // get all supported sets
+        hr = GetSupportedSets(&pGuid, &NumGuids);
+        if (FAILED(hr))
+        {
+#ifdef KSPROXY_TRACE
+            OutputDebugStringW(L"CInputPin::CreatePinHandle GetSupportedSets failed\n");
+#endif
+            return hr;
+        }
+
+        // load all proxy plugins
+        hr = LoadProxyPlugins(pGuid, NumGuids);
+        if (FAILED(hr))
+        {
+#ifdef KSPROXY_TRACE
+            OutputDebugStringW(L"CInputPin::CreatePinHandle LoadProxyPlugins failed\n");
+#endif
+            return hr;
+        }
+
+        // free sets
+        CoTaskMemFree(pGuid);
+
+
         //TODO
         // connect pin pipes
 
@@ -2174,6 +2208,138 @@ COutputPin::CreatePinHandle(
 
     return hr;
 }
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::GetSupportedSets(
+    LPGUID * pOutGuid,
+    PULONG NumGuids)
+{
+    KSPROPERTY Property;
+    LPGUID pGuid;
+    ULONG NumProperty = 0;
+    ULONG NumMethods = 0;
+    ULONG NumEvents = 0;
+    ULONG Length;
+    ULONG BytesReturned;
+    HRESULT hr;
+
+    Property.Set = GUID_NULL;
+    Property.Id = 0;
+    Property.Flags = KSPROPERTY_TYPE_SETSUPPORT;
+
+    KsSynchronousDeviceControl(m_hPin, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), NULL, 0, &NumProperty);
+    KsSynchronousDeviceControl(m_hPin, IOCTL_KS_METHOD, (PVOID)&Property, sizeof(KSPROPERTY), NULL, 0, &NumMethods);
+    KsSynchronousDeviceControl(m_hPin, IOCTL_KS_ENABLE_EVENT, (PVOID)&Property, sizeof(KSPROPERTY), NULL, 0, &NumEvents);
+
+    Length = NumProperty + NumMethods + NumEvents;
+
+    // allocate guid buffer
+    pGuid = (LPGUID)CoTaskMemAlloc(Length);
+    if (!pGuid)
+    {
+        // failed
+        return E_OUTOFMEMORY;
+    }
+
+    NumProperty /= sizeof(GUID);
+    NumMethods /= sizeof(GUID);
+    NumEvents /= sizeof(GUID);
+
+    // get all properties
+    hr = KsSynchronousDeviceControl(m_hPin, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)pGuid, Length, &BytesReturned);
+    if (FAILED(hr))
+    {
+        CoTaskMemFree(pGuid);
+        return E_FAIL;
+    }
+    Length -= BytesReturned;
+
+    // get all methods
+    if (Length)
+    {
+        hr = KsSynchronousDeviceControl(m_hPin, IOCTL_KS_METHOD, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)&pGuid[NumProperty], Length, &BytesReturned);
+        if (FAILED(hr))
+        {
+            CoTaskMemFree(pGuid);
+            return E_FAIL;
+        }
+        Length -= BytesReturned;
+    }
+
+    // get all events
+    if (Length)
+    {
+        hr = KsSynchronousDeviceControl(m_hPin, IOCTL_KS_ENABLE_EVENT, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)&pGuid[NumProperty+NumMethods], Length, &BytesReturned);
+        if (FAILED(hr))
+        {
+            CoTaskMemFree(pGuid);
+            return E_FAIL;
+        }
+        Length -= BytesReturned;
+    }
+
+#ifdef KSPROXY_TRACE
+    WCHAR Buffer[200];
+    swprintf(Buffer, L"NumProperty %lu NumMethods %lu NumEvents %lu\n", NumProperty, NumMethods, NumEvents);
+    OutputDebugStringW(Buffer);
+#endif
+
+    *pOutGuid = pGuid;
+    *NumGuids = NumProperty+NumEvents+NumMethods;
+    return S_OK;
+}
+
+HRESULT
+STDMETHODCALLTYPE
+COutputPin::LoadProxyPlugins(
+    LPGUID pGuids,
+    ULONG NumGuids)
+{
+    ULONG Index;
+    LPOLESTR pStr;
+    HKEY hKey, hSubKey;
+    HRESULT hr;
+    IUnknown * pUnknown;
+
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\MediaInterfaces", 0, KEY_READ, &hKey) != ERROR_SUCCESS)
+    {
+        OutputDebugStringW(L"CKsProxy::LoadProxyPlugins failed to open MediaInterfaces key\n");
+        return E_FAIL;
+    }
+
+    // enumerate all sets
+    for(Index = 0; Index < NumGuids; Index++)
+    {
+        // convert to string
+        hr = StringFromCLSID(pGuids[Index], &pStr);
+        if (FAILED(hr))
+            return E_FAIL;
+
+        // now try open class key
+        if (RegOpenKeyExW(hKey, pStr, 0, KEY_READ, &hSubKey) != ERROR_SUCCESS)
+        {
+            // no plugin for that set exists
+            CoTaskMemFree(pStr);
+            continue;
+        }
+
+        // try load plugin
+        hr = CoCreateInstance(pGuids[Index], (IBaseFilter*)this, CLSCTX_INPROC_SERVER, IID_IUnknown, (void**)&pUnknown);
+        if (SUCCEEDED(hr))
+        {
+            // store plugin
+            m_Plugins.push_back(pUnknown);
+        }
+        // close key
+        RegCloseKey(hSubKey);
+    }
+
+    // close media interfaces key
+    RegCloseKey(hKey);
+    return S_OK;
+}
+
 
 HRESULT
 WINAPI

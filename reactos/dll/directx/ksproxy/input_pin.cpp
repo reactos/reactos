@@ -62,6 +62,8 @@ class CInputPin : public IPin,
                   public ISpecifyPropertyPages
 {
 public:
+    typedef std::vector<IUnknown *>ProxyPluginVector;
+
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
     STDMETHODIMP_(ULONG) AddRef()
@@ -170,6 +172,8 @@ public:
     HRESULT STDMETHODCALLTYPE CheckFormat(const AM_MEDIA_TYPE *pmt);
     HRESULT STDMETHODCALLTYPE CreatePin(const AM_MEDIA_TYPE *pmt);
     HRESULT STDMETHODCALLTYPE CreatePinHandle(PKSPIN_MEDIUM Medium, PKSPIN_INTERFACE Interface, const AM_MEDIA_TYPE *pmt);
+    HRESULT STDMETHODCALLTYPE GetSupportedSets(LPGUID * pOutGuid, PULONG NumGuids);
+    HRESULT STDMETHODCALLTYPE LoadProxyPlugins(LPGUID pGuids, ULONG NumGuids);
     CInputPin(IBaseFilter * ParentFilter, LPCWSTR PinName, ULONG PinId, KSPIN_COMMUNICATION Communication);
     virtual ~CInputPin(){};
 
@@ -195,6 +199,7 @@ protected:
     LPWSTR m_FilterName;
     FRAMING_PROP m_FramingProp[4];
     PKSALLOCATOR_FRAMING_EX m_FramingEx[4];
+    ProxyPluginVector m_Plugins;
 };
 
 CInputPin::CInputPin(
@@ -215,7 +220,8 @@ CInputPin::CInputPin(
                                          m_KsAllocatorEx(0),
                                          m_PipeAllocatorFlag(0),
                                          m_bPinBusCacheInitialized(0),
-                                         m_FilterName(0)
+                                         m_FilterName(0),
+                                         m_Plugins()
 {
     ZeroMemory(m_FramingProp, sizeof(m_FramingProp));
     ZeroMemory(m_FramingEx, sizeof(m_FramingEx));
@@ -1614,6 +1620,33 @@ CInputPin::CreatePinHandle(
             CopyMemory(m_MediaFormat.pbFormat, pmt->pbFormat, pmt->cbFormat);
         }
 
+        LPGUID pGuid;
+        ULONG NumGuids = 0;
+
+        // get all supported sets
+        hr = GetSupportedSets(&pGuid, &NumGuids);
+        if (FAILED(hr))
+        {
+#ifdef KSPROXY_TRACE
+            OutputDebugStringW(L"CInputPin::CreatePinHandle GetSupportedSets failed\n");
+#endif
+            return hr;
+        }
+
+        // load all proxy plugins
+        hr = LoadProxyPlugins(pGuid, NumGuids);
+        if (FAILED(hr))
+        {
+#ifdef KSPROXY_TRACE
+            OutputDebugStringW(L"CInputPin::CreatePinHandle LoadProxyPlugins failed\n");
+#endif
+            return hr;
+        }
+
+        // free sets
+        CoTaskMemFree(pGuid);
+
+
         //TODO
         // connect pin pipes
 
@@ -1623,6 +1656,137 @@ CInputPin::CreatePinHandle(
      CoTaskMemFree(PinConnect);
 
     return hr;
+}
+
+HRESULT
+STDMETHODCALLTYPE
+CInputPin::GetSupportedSets(
+    LPGUID * pOutGuid,
+    PULONG NumGuids)
+{
+    KSPROPERTY Property;
+    LPGUID pGuid;
+    ULONG NumProperty = 0;
+    ULONG NumMethods = 0;
+    ULONG NumEvents = 0;
+    ULONG Length;
+    ULONG BytesReturned;
+    HRESULT hr;
+
+    Property.Set = GUID_NULL;
+    Property.Id = 0;
+    Property.Flags = KSPROPERTY_TYPE_SETSUPPORT;
+
+    KsSynchronousDeviceControl(m_hPin, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), NULL, 0, &NumProperty);
+    KsSynchronousDeviceControl(m_hPin, IOCTL_KS_METHOD, (PVOID)&Property, sizeof(KSPROPERTY), NULL, 0, &NumMethods);
+    KsSynchronousDeviceControl(m_hPin, IOCTL_KS_ENABLE_EVENT, (PVOID)&Property, sizeof(KSPROPERTY), NULL, 0, &NumEvents);
+
+    Length = NumProperty + NumMethods + NumEvents;
+
+    // allocate guid buffer
+    pGuid = (LPGUID)CoTaskMemAlloc(Length);
+    if (!pGuid)
+    {
+        // failed
+        return E_OUTOFMEMORY;
+    }
+
+    NumProperty /= sizeof(GUID);
+    NumMethods /= sizeof(GUID);
+    NumEvents /= sizeof(GUID);
+
+    // get all properties
+    hr = KsSynchronousDeviceControl(m_hPin, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)pGuid, Length, &BytesReturned);
+    if (FAILED(hr))
+    {
+        CoTaskMemFree(pGuid);
+        return E_FAIL;
+    }
+    Length -= BytesReturned;
+
+    // get all methods
+    if (Length)
+    {
+        hr = KsSynchronousDeviceControl(m_hPin, IOCTL_KS_METHOD, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)&pGuid[NumProperty], Length, &BytesReturned);
+        if (FAILED(hr))
+        {
+            CoTaskMemFree(pGuid);
+            return E_FAIL;
+        }
+        Length -= BytesReturned;
+    }
+
+    // get all events
+    if (Length)
+    {
+        hr = KsSynchronousDeviceControl(m_hPin, IOCTL_KS_ENABLE_EVENT, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)&pGuid[NumProperty+NumMethods], Length, &BytesReturned);
+        if (FAILED(hr))
+        {
+            CoTaskMemFree(pGuid);
+            return E_FAIL;
+        }
+        Length -= BytesReturned;
+    }
+
+#ifdef KSPROXY_TRACE
+    WCHAR Buffer[200];
+    swprintf(Buffer, L"NumProperty %lu NumMethods %lu NumEvents %lu\n", NumProperty, NumMethods, NumEvents);
+    OutputDebugStringW(Buffer);
+#endif
+
+    *pOutGuid = pGuid;
+    *NumGuids = NumProperty+NumEvents+NumMethods;
+    return S_OK;
+}
+
+HRESULT
+STDMETHODCALLTYPE
+CInputPin::LoadProxyPlugins(
+    LPGUID pGuids,
+    ULONG NumGuids)
+{
+    ULONG Index;
+    LPOLESTR pStr;
+    HKEY hKey, hSubKey;
+    HRESULT hr;
+    IUnknown * pUnknown;
+
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\MediaInterfaces", 0, KEY_READ, &hKey) != ERROR_SUCCESS)
+    {
+        OutputDebugStringW(L"CInputPin::LoadProxyPlugins failed to open MediaInterfaces key\n");
+        return E_FAIL;
+    }
+
+    // enumerate all sets
+    for(Index = 0; Index < NumGuids; Index++)
+    {
+        // convert to string
+        hr = StringFromCLSID(pGuids[Index], &pStr);
+        if (FAILED(hr))
+            return E_FAIL;
+
+        // now try open class key
+        if (RegOpenKeyExW(hKey, pStr, 0, KEY_READ, &hSubKey) != ERROR_SUCCESS)
+        {
+            // no plugin for that set exists
+            CoTaskMemFree(pStr);
+            continue;
+        }
+
+        // try load plugin
+        hr = CoCreateInstance(pGuids[Index], (IBaseFilter*)this, CLSCTX_INPROC_SERVER, IID_IUnknown, (void**)&pUnknown);
+        if (SUCCEEDED(hr))
+        {
+            // store plugin
+            m_Plugins.push_back(pUnknown);
+        }
+        // close key
+        RegCloseKey(hSubKey);
+    }
+
+    // close media interfaces key
+    RegCloseKey(hKey);
+    return S_OK;
 }
 
 HRESULT
