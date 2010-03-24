@@ -150,7 +150,7 @@ CmBattSendDownStreamIrp(IN PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS
 NTAPI
-CmBattGetPsrData(INP DEVICE_OBJECT DeviceObject,
+CmBattGetPsrData(IN PDEVICE_OBJECT DeviceObject,
                  OUT PULONG PsrData)
 {
     NTSTATUS Status;
