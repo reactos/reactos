@@ -14,11 +14,22 @@ $if (_WDMDDK_)
 #define PROFILE_LEVEL           15
 #define HIGH_LEVEL              15
 
+#define KI_USER_SHARED_DATA     0xFFFFF78000000000ULL
+#define SharedUserData          ((PKUSER_SHARED_DATA const)KI_USER_SHARED_DATA)
+#define SharedInterruptTime     (KI_USER_SHARED_DATA + 0x8)
+#define SharedSystemTime        (KI_USER_SHARED_DATA + 0x14)
+#define SharedTickCount         (KI_USER_SHARED_DATA + 0x320)
+
 #define PAGE_SIZE               0x1000
 #define PAGE_SHIFT              12L
 
-#define KI_USER_SHARED_DATA     0xFFFFF78000000000UI64
-#define SharedUserData          ((PKUSER_SHARED_DATA const)KI_USER_SHARED_DATA)
+#define EFLAG_SIGN              0x8000
+#define EFLAG_ZERO              0x4000
+#define EFLAG_SELECT            (EFLAG_SIGN | EFLAG_ZERO)
+
+#define RESULT_NEGATIVE         ((EFLAG_SIGN & ~EFLAG_ZERO) & EFLAG_SELECT)
+#define RESULT_ZERO             ((~EFLAG_SIGN & EFLAG_ZERO) & EFLAG_SELECT)
+#define RESULT_POSITIVE         ((~EFLAG_SIGN & ~EFLAG_ZERO) & EFLAG_SELECT)
 
 
 typedef struct _KFLOATING_SAVE {
@@ -51,7 +62,7 @@ FORCEINLINE
 VOID
 KeLowerIrql(IN KIRQL NewIrql)
 {
-  ASSERT(KeGetCurrentIrql() >= NewIrql);
+  //ASSERT(KeGetCurrentIrql() >= NewIrql);
   __writecr8(NewIrql);
 }
 
@@ -62,7 +73,7 @@ KfRaiseIrql(IN KIRQL NewIrql)
   KIRQL OldIrql;
 
   OldIrql = __readcr8();
-  ASSERT(OldIrql <= NewIrql);
+  //ASSERT(OldIrql <= NewIrql);
   __writecr8(NewIrql);
   return OldIrql;
 }

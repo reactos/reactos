@@ -3214,7 +3214,6 @@ KeGetCurrentProcessorNumber(VOID)
 #define MM_USER_PROBE_ADDRESS             MmUserProbeAddress
 #define MM_LOWEST_USER_ADDRESS   (PVOID)0x10000
 #define MM_LOWEST_SYSTEM_ADDRESS (PVOID)0xFFFF080000000000ULL
-#define KI_USER_SHARED_DATA       0xFFFFF78000000000ULL
 
 
 #elif defined(_M_IA64)
@@ -3702,6 +3701,7 @@ IoAllocateAdapterChannel(
   IN PVOID Context);
 #endif
 
+#if !defined(DMA_MACROS_DEFINED)
 //DECLSPEC_DEPRECATED_DDK
 NTHALAPI
 PHYSICAL_ADDRESS
@@ -3713,6 +3713,7 @@ IoMapTransfer(
   IN PVOID CurrentVa,
   IN OUT PULONG Length,
   IN BOOLEAN WriteToDevice);
+#endif
 
 NTKERNELAPI
 VOID

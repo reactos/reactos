@@ -249,6 +249,10 @@ InterlockedBitTestAndReset(
 #define InterlockedBitTestAndReset _interlockedbittestandreset
 
 #ifdef _M_AMD64
+#define BitTest64 _bittest64
+#define BitTestAndComplement64 _bittestandcomplement64
+#define BitTestAndSet64 _bittestandset64
+#define BitTestAndReset64 _bittestandreset64
 #define InterlockedBitTestAndSet64 _interlockedbittestandset64
 #define InterlockedBitTestAndReset64 _interlockedbittestandreset64
 #endif
@@ -453,7 +457,7 @@ typedef struct _TIME_FIELDS {
 #if defined(_WIN64)
 
 typedef struct DECLSPEC_ALIGN(16) _SLIST_ENTRY {
-  PSLIST_ENTRY Next;
+  struct _SLIST_ENTRY *Next;
 } SLIST_ENTRY, *PSLIST_ENTRY;
 
 typedef struct _SLIST_ENTRY32 {
@@ -7835,11 +7839,22 @@ _KeQueryTickCount(
 #define PROFILE_LEVEL           15
 #define HIGH_LEVEL              15
 
+#define KI_USER_SHARED_DATA     0xFFFFF78000000000ULL
+#define SharedUserData          ((PKUSER_SHARED_DATA const)KI_USER_SHARED_DATA)
+#define SharedInterruptTime     (KI_USER_SHARED_DATA + 0x8)
+#define SharedSystemTime        (KI_USER_SHARED_DATA + 0x14)
+#define SharedTickCount         (KI_USER_SHARED_DATA + 0x320)
+
 #define PAGE_SIZE               0x1000
 #define PAGE_SHIFT              12L
 
-#define KI_USER_SHARED_DATA     0xFFFFF78000000000UI64
-#define SharedUserData          ((PKUSER_SHARED_DATA const)KI_USER_SHARED_DATA)
+#define EFLAG_SIGN              0x8000
+#define EFLAG_ZERO              0x4000
+#define EFLAG_SELECT            (EFLAG_SIGN | EFLAG_ZERO)
+
+#define RESULT_NEGATIVE         ((EFLAG_SIGN & ~EFLAG_ZERO) & EFLAG_SELECT)
+#define RESULT_ZERO             ((~EFLAG_SIGN & EFLAG_ZERO) & EFLAG_SELECT)
+#define RESULT_POSITIVE         ((~EFLAG_SIGN & ~EFLAG_ZERO) & EFLAG_SELECT)
 
 
 typedef struct _KFLOATING_SAVE {
@@ -7872,7 +7887,7 @@ FORCEINLINE
 VOID
 KeLowerIrql(IN KIRQL NewIrql)
 {
-  ASSERT(KeGetCurrentIrql() >= NewIrql);
+  //ASSERT(KeGetCurrentIrql() >= NewIrql);
   __writecr8(NewIrql);
 }
 
@@ -7883,7 +7898,7 @@ KfRaiseIrql(IN KIRQL NewIrql)
   KIRQL OldIrql;
 
   OldIrql = __readcr8();
-  ASSERT(OldIrql <= NewIrql);
+  //ASSERT(OldIrql <= NewIrql);
   __writecr8(NewIrql);
   return OldIrql;
 }

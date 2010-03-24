@@ -587,6 +587,7 @@ IoAllocateAdapterChannel(
   IN PVOID Context);
 #endif
 
+#if !defined(DMA_MACROS_DEFINED)
 //DECLSPEC_DEPRECATED_DDK
 NTHALAPI
 PHYSICAL_ADDRESS
@@ -598,6 +599,7 @@ IoMapTransfer(
   IN PVOID CurrentVa,
   IN OUT PULONG Length,
   IN BOOLEAN WriteToDevice);
+#endif
 
 NTKERNELAPI
 VOID
