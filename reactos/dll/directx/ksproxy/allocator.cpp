@@ -340,7 +340,9 @@ CKsAllocator::GetBuffer(
     DWORD dwFlags)
 {
     IMediaSample * Sample = NULL;
-    OutputDebugStringW(L"CKsAllocator::GetBuffer\n");
+
+    if (!m_Commited)
+        return VFW_E_NOT_COMMITTED;
 
     do
     {

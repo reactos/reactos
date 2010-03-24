@@ -172,7 +172,6 @@ protected:
     LPCWSTR m_PinName;
     HANDLE m_hPin;
     ULONG m_PinId;
-    IKsObject * m_KsObjectParent;
     IPin * m_Pin;
     IKsAllocatorEx * m_KsAllocatorEx;
     ULONG m_PipeAllocatorFlag;
@@ -189,8 +188,6 @@ protected:
     KSPIN_INTERFACE m_Interface;
     KSPIN_MEDIUM m_Medium;
     AM_MEDIA_TYPE m_MediaFormat;
-
-    IMediaSeeking * m_FilterMediaSeeking;
     ALLOCATOR_PROPERTIES m_Properties;
     IKsInterfaceHandler * m_InterfaceHandler;
 
@@ -201,12 +198,11 @@ protected:
     BOOL m_IoThreadStarted;
 
     KSSTATE m_State;
+    CRITICAL_SECTION m_Lock;
 };
 
 COutputPin::~COutputPin()
 {
-    if (m_KsObjectParent)
-        m_KsObjectParent->Release();
 }
 
 COutputPin::COutputPin(
@@ -218,7 +214,6 @@ COutputPin::COutputPin(
                                          m_PinName(PinName),
                                          m_hPin(INVALID_HANDLE_VALUE),
                                          m_PinId(PinId),
-                                         m_KsObjectParent(0),
                                          m_Pin(0),
                                          m_KsAllocatorEx(0),
                                          m_PipeAllocatorFlag(0),
@@ -228,7 +223,6 @@ COutputPin::COutputPin(
                                          m_MemInputPin(0),
                                          m_IoCount(0),
                                          m_Communication(Communication),
-                                         m_FilterMediaSeeking(0),
                                          m_InterfaceHandler(0),
                                          m_hStartEvent(0),
                                          m_hBufferAvailable(0),
@@ -238,18 +232,20 @@ COutputPin::COutputPin(
                                          m_State(KSSTATE_STOP)
 {
     HRESULT hr;
+    IKsObject * KsObjectParent;
 
-    hr = m_ParentFilter->QueryInterface(IID_IKsObject, (LPVOID*)&m_KsObjectParent);
-    assert(hr == S_OK);
-
-    hr = m_ParentFilter->QueryInterface(IID_IMediaSeeking, (LPVOID*)&m_FilterMediaSeeking);
+    hr = m_ParentFilter->QueryInterface(IID_IKsObject, (LPVOID*)&KsObjectParent);
     assert(hr == S_OK);
 
     ZeroMemory(m_FramingProp, sizeof(m_FramingProp));
     ZeroMemory(m_FramingEx, sizeof(m_FramingEx));
 
-    hr = KsGetMediaType(0, &m_MediaFormat, m_KsObjectParent->KsGetObjectHandle(), m_PinId);
+    hr = KsGetMediaType(0, &m_MediaFormat, KsObjectParent->KsGetObjectHandle(), m_PinId);
     assert(hr == S_OK);
+
+    InitializeCriticalSection(&m_Lock);
+
+    KsObjectParent->Release();
 };
 
 HRESULT
@@ -489,7 +485,17 @@ STDMETHODCALLTYPE
 COutputPin::GetCapabilities(
     DWORD *pCapabilities)
 {
-    return m_FilterMediaSeeking->GetCapabilities(pCapabilities);
+    IMediaSeeking * FilterMediaSeeking;
+    HRESULT hr;
+
+    hr = m_ParentFilter->QueryInterface(IID_IMediaSeeking, (LPVOID*)&FilterMediaSeeking);
+    if (FAILED(hr))
+        return hr;
+
+    hr = FilterMediaSeeking->GetCapabilities(pCapabilities);
+
+    FilterMediaSeeking->Release();
+    return hr;
 }
 
 HRESULT
@@ -497,7 +503,17 @@ STDMETHODCALLTYPE
 COutputPin::CheckCapabilities(
     DWORD *pCapabilities)
 {
-    return m_FilterMediaSeeking->CheckCapabilities(pCapabilities);
+    IMediaSeeking * FilterMediaSeeking;
+    HRESULT hr;
+
+    hr = m_ParentFilter->QueryInterface(IID_IMediaSeeking, (LPVOID*)&FilterMediaSeeking);
+    if (FAILED(hr))
+        return hr;
+
+    hr = FilterMediaSeeking->CheckCapabilities(pCapabilities);
+
+    FilterMediaSeeking->Release();
+    return hr;
 }
 
 HRESULT
@@ -505,7 +521,17 @@ STDMETHODCALLTYPE
 COutputPin::IsFormatSupported(
     const GUID *pFormat)
 {
-    return m_FilterMediaSeeking->IsFormatSupported(pFormat);
+    IMediaSeeking * FilterMediaSeeking;
+    HRESULT hr;
+
+    hr = m_ParentFilter->QueryInterface(IID_IMediaSeeking, (LPVOID*)&FilterMediaSeeking);
+    if (FAILED(hr))
+        return hr;
+
+    hr = FilterMediaSeeking->IsFormatSupported(pFormat);
+
+    FilterMediaSeeking->Release();
+    return hr;
 }
 
 HRESULT
@@ -513,7 +539,17 @@ STDMETHODCALLTYPE
 COutputPin::QueryPreferredFormat(
     GUID *pFormat)
 {
-    return m_FilterMediaSeeking->QueryPreferredFormat(pFormat);
+    IMediaSeeking * FilterMediaSeeking;
+    HRESULT hr;
+
+    hr = m_ParentFilter->QueryInterface(IID_IMediaSeeking, (LPVOID*)&FilterMediaSeeking);
+    if (FAILED(hr))
+        return hr;
+
+    hr = FilterMediaSeeking->QueryPreferredFormat(pFormat);
+
+    FilterMediaSeeking->Release();
+    return hr;
 }
 
 HRESULT
@@ -521,7 +557,17 @@ STDMETHODCALLTYPE
 COutputPin::GetTimeFormat(
     GUID *pFormat)
 {
-    return m_FilterMediaSeeking->GetTimeFormat(pFormat);
+    IMediaSeeking * FilterMediaSeeking;
+    HRESULT hr;
+
+    hr = m_ParentFilter->QueryInterface(IID_IMediaSeeking, (LPVOID*)&FilterMediaSeeking);
+    if (FAILED(hr))
+        return hr;
+
+    hr = FilterMediaSeeking->GetTimeFormat(pFormat);
+
+    FilterMediaSeeking->Release();
+    return hr;
 }
 
 HRESULT
@@ -529,7 +575,17 @@ STDMETHODCALLTYPE
 COutputPin::IsUsingTimeFormat(
     const GUID *pFormat)
 {
-    return m_FilterMediaSeeking->IsUsingTimeFormat(pFormat);
+    IMediaSeeking * FilterMediaSeeking;
+    HRESULT hr;
+
+    hr = m_ParentFilter->QueryInterface(IID_IMediaSeeking, (LPVOID*)&FilterMediaSeeking);
+    if (FAILED(hr))
+        return hr;
+
+    hr = FilterMediaSeeking->IsUsingTimeFormat(pFormat);
+
+    FilterMediaSeeking->Release();
+    return hr;
 }
 
 HRESULT
@@ -537,7 +593,17 @@ STDMETHODCALLTYPE
 COutputPin::SetTimeFormat(
     const GUID *pFormat)
 {
-    return m_FilterMediaSeeking->SetTimeFormat(pFormat);
+    IMediaSeeking * FilterMediaSeeking;
+    HRESULT hr;
+
+    hr = m_ParentFilter->QueryInterface(IID_IMediaSeeking, (LPVOID*)&FilterMediaSeeking);
+    if (FAILED(hr))
+        return hr;
+
+    hr = FilterMediaSeeking->SetTimeFormat(pFormat);
+
+    FilterMediaSeeking->Release();
+    return hr;
 }
 
 HRESULT
@@ -545,7 +611,17 @@ STDMETHODCALLTYPE
 COutputPin::GetDuration(
     LONGLONG *pDuration)
 {
-    return m_FilterMediaSeeking->GetDuration(pDuration);
+    IMediaSeeking * FilterMediaSeeking;
+    HRESULT hr;
+
+    hr = m_ParentFilter->QueryInterface(IID_IMediaSeeking, (LPVOID*)&FilterMediaSeeking);
+    if (FAILED(hr))
+        return hr;
+
+    hr = FilterMediaSeeking->GetDuration(pDuration);
+
+    FilterMediaSeeking->Release();
+    return hr;
 }
 
 HRESULT
@@ -553,7 +629,17 @@ STDMETHODCALLTYPE
 COutputPin::GetStopPosition(
     LONGLONG *pStop)
 {
-    return m_FilterMediaSeeking->GetStopPosition(pStop);
+    IMediaSeeking * FilterMediaSeeking;
+    HRESULT hr;
+
+    hr = m_ParentFilter->QueryInterface(IID_IMediaSeeking, (LPVOID*)&FilterMediaSeeking);
+    if (FAILED(hr))
+        return hr;
+
+    hr = FilterMediaSeeking->GetStopPosition(pStop);
+
+    FilterMediaSeeking->Release();
+    return hr;
 }
 
 
@@ -562,7 +648,17 @@ STDMETHODCALLTYPE
 COutputPin::GetCurrentPosition(
     LONGLONG *pCurrent)
 {
-    return m_FilterMediaSeeking->GetCurrentPosition(pCurrent);
+    IMediaSeeking * FilterMediaSeeking;
+    HRESULT hr;
+
+    hr = m_ParentFilter->QueryInterface(IID_IMediaSeeking, (LPVOID*)&FilterMediaSeeking);
+    if (FAILED(hr))
+        return hr;
+
+    hr = FilterMediaSeeking->GetCurrentPosition(pCurrent);
+
+    FilterMediaSeeking->Release();
+    return hr;
 }
 
 HRESULT
@@ -573,7 +669,17 @@ COutputPin::ConvertTimeFormat(
     LONGLONG Source,
     const GUID *pSourceFormat)
 {
-    return m_FilterMediaSeeking->ConvertTimeFormat(pTarget, pTargetFormat, Source, pSourceFormat);
+    IMediaSeeking * FilterMediaSeeking;
+    HRESULT hr;
+
+    hr = m_ParentFilter->QueryInterface(IID_IMediaSeeking, (LPVOID*)&FilterMediaSeeking);
+    if (FAILED(hr))
+        return hr;
+
+    hr = FilterMediaSeeking->ConvertTimeFormat(pTarget, pTargetFormat, Source, pSourceFormat);
+
+    FilterMediaSeeking->Release();
+    return hr;
 }
 
 HRESULT
@@ -584,7 +690,17 @@ COutputPin::SetPositions(
     LONGLONG *pStop,
     DWORD dwStopFlags)
 {
-    return m_FilterMediaSeeking->SetPositions(pCurrent, dwCurrentFlags, pStop, dwStopFlags);
+    IMediaSeeking * FilterMediaSeeking;
+    HRESULT hr;
+
+    hr = m_ParentFilter->QueryInterface(IID_IMediaSeeking, (LPVOID*)&FilterMediaSeeking);
+    if (FAILED(hr))
+        return hr;
+
+    hr = FilterMediaSeeking->SetPositions(pCurrent, dwCurrentFlags, pStop, dwStopFlags);
+
+    FilterMediaSeeking->Release();
+    return hr;
 }
 
 HRESULT
@@ -593,7 +709,17 @@ COutputPin::GetPositions(
     LONGLONG *pCurrent,
     LONGLONG *pStop)
 {
-    return m_FilterMediaSeeking->GetPositions(pCurrent, pStop);
+    IMediaSeeking * FilterMediaSeeking;
+    HRESULT hr;
+
+    hr = m_ParentFilter->QueryInterface(IID_IMediaSeeking, (LPVOID*)&FilterMediaSeeking);
+    if (FAILED(hr))
+        return hr;
+
+    hr = FilterMediaSeeking->GetPositions(pCurrent, pStop);
+
+    FilterMediaSeeking->Release();
+    return hr;
 }
 
 HRESULT
@@ -602,7 +728,17 @@ COutputPin::GetAvailable(
     LONGLONG *pEarliest,
     LONGLONG *pLatest)
 {
-    return m_FilterMediaSeeking->GetAvailable(pEarliest, pLatest);
+    IMediaSeeking * FilterMediaSeeking;
+    HRESULT hr;
+
+    hr = m_ParentFilter->QueryInterface(IID_IMediaSeeking, (LPVOID*)&FilterMediaSeeking);
+    if (FAILED(hr))
+        return hr;
+
+    hr = FilterMediaSeeking->GetAvailable(pEarliest, pLatest);
+
+    FilterMediaSeeking->Release();
+    return hr;
 }
 
 HRESULT
@@ -610,7 +746,17 @@ STDMETHODCALLTYPE
 COutputPin::SetRate(
     double dRate)
 {
-    return m_FilterMediaSeeking->SetRate(dRate);
+    IMediaSeeking * FilterMediaSeeking;
+    HRESULT hr;
+
+    hr = m_ParentFilter->QueryInterface(IID_IMediaSeeking, (LPVOID*)&FilterMediaSeeking);
+    if (FAILED(hr))
+        return hr;
+
+    hr = FilterMediaSeeking->SetRate(dRate);
+
+    FilterMediaSeeking->Release();
+    return hr;
 }
 
 HRESULT
@@ -618,7 +764,17 @@ STDMETHODCALLTYPE
 COutputPin::GetRate(
     double *pdRate)
 {
-    return m_FilterMediaSeeking->GetRate(pdRate);
+    IMediaSeeking * FilterMediaSeeking;
+    HRESULT hr;
+
+    hr = m_ParentFilter->QueryInterface(IID_IMediaSeeking, (LPVOID*)&FilterMediaSeeking);
+    if (FAILED(hr))
+        return hr;
+
+    hr = FilterMediaSeeking->GetRate(pdRate);
+
+    FilterMediaSeeking->Release();
+    return hr;
 }
 
 HRESULT
@@ -626,7 +782,17 @@ STDMETHODCALLTYPE
 COutputPin::GetPreroll(
     LONGLONG *pllPreroll)
 {
-    return m_FilterMediaSeeking->GetPreroll(pllPreroll);
+    IMediaSeeking * FilterMediaSeeking;
+    HRESULT hr;
+
+    hr = m_ParentFilter->QueryInterface(IID_IMediaSeeking, (LPVOID*)&FilterMediaSeeking);
+    if (FAILED(hr))
+        return hr;
+
+    hr = FilterMediaSeeking->GetPreroll(pllPreroll);
+
+    FilterMediaSeeking->Release();
+    return hr;
 }
 
 //-------------------------------------------------------------------
@@ -683,8 +849,24 @@ STDMETHODCALLTYPE
 COutputPin::KsQueryMediums(
     PKSMULTIPLE_ITEM* MediumList)
 {
-    HANDLE hFilter = m_KsObjectParent->KsGetObjectHandle();
-    return KsGetMultiplePinFactoryItems(hFilter, m_PinId, KSPROPERTY_PIN_MEDIUMS, (PVOID*)MediumList);
+    HRESULT hr;
+    HANDLE hFilter;
+    IKsObject * KsObjectParent;
+
+    hr = m_ParentFilter->QueryInterface(IID_IKsObject, (LPVOID*)&KsObjectParent);
+    if (FAILED(hr))
+        return E_NOINTERFACE;
+
+    hFilter = KsObjectParent->KsGetObjectHandle();
+
+    if (hFilter)
+        hr = KsGetMultiplePinFactoryItems(hFilter, m_PinId, KSPROPERTY_PIN_MEDIUMS, (PVOID*)MediumList);
+    else
+        hr = E_HANDLE;
+
+    KsObjectParent->Release();
+
+    return hr;
 }
 
 HRESULT
@@ -692,9 +874,24 @@ STDMETHODCALLTYPE
 COutputPin::KsQueryInterfaces(
     PKSMULTIPLE_ITEM* InterfaceList)
 {
-    HANDLE hFilter = m_KsObjectParent->KsGetObjectHandle();
+    HRESULT hr;
+    HANDLE hFilter;
+    IKsObject * KsObjectParent;
 
-    return KsGetMultiplePinFactoryItems(hFilter, m_PinId, KSPROPERTY_PIN_INTERFACES, (PVOID*)InterfaceList);
+    hr = m_ParentFilter->QueryInterface(IID_IKsObject, (LPVOID*)&KsObjectParent);
+    if (FAILED(hr))
+        return hr;
+
+    hFilter = KsObjectParent->KsGetObjectHandle();
+
+    if (hFilter)
+        hr = KsGetMultiplePinFactoryItems(hFilter, m_PinId, KSPROPERTY_PIN_INTERFACES, (PVOID*)InterfaceList);
+    else
+        hr = E_HANDLE;
+
+    KsObjectParent->Release();
+
+    return hr;
 }
 
 HRESULT
@@ -1412,6 +1609,9 @@ COutputPin::Disconnect( void)
     m_MemInputPin->Release();
     m_MemAllocator->Release();
 
+    CloseHandle(m_hPin);
+    m_hPin = INVALID_HANDLE_VALUE;
+
     OutputDebugStringW(L"COutputPin::Disconnect\n");
     return S_OK;
 }
@@ -1491,15 +1691,17 @@ COutputPin::EnumMediaTypes(IEnumMediaTypes **ppEnum)
     ULONG MediaTypeCount = 0, Index;
     AM_MEDIA_TYPE * MediaTypes;
     HANDLE hFilter;
+    IKsObject * KsObjectParent;
 
-    if (!m_KsObjectParent)
-    {
-        // no interface
-        return E_NOINTERFACE;
-    }
+    hr = m_ParentFilter->QueryInterface(IID_IKsObject, (LPVOID*)&KsObjectParent);
+    if (FAILED(hr))
+        return hr;
 
     // get parent filter handle
-    hFilter = m_KsObjectParent->KsGetObjectHandle();
+    hFilter = KsObjectParent->KsGetObjectHandle();
+
+    // release IKsObject
+    KsObjectParent->Release();
 
     // query media type count
     hr = KsGetMediaTypeCount(hFilter, m_PinId, &MediaTypeCount);
@@ -1582,12 +1784,26 @@ COutputPin::CheckFormat(
     PKSMULTIPLE_ITEM MultipleItem;
     PKSDATAFORMAT DataFormat;
     HRESULT hr;
+    IKsObject * KsObjectParent;
+    HANDLE hFilter;
 
     if (!pmt)
         return E_POINTER;
 
-    HANDLE hFilter = m_KsObjectParent->KsGetObjectHandle();
-    assert(hFilter != NULL);
+    // get IKsObject interface
+    hr = m_ParentFilter->QueryInterface(IID_IKsObject, (LPVOID*)&KsObjectParent);
+    if (FAILED(hr))
+        return hr;
+
+    // get parent filter handle
+    hFilter = KsObjectParent->KsGetObjectHandle();
+
+    // release IKsObject
+    KsObjectParent->Release();
+
+    if (!hFilter)
+        return E_HANDLE;
+
 
     hr = KsGetMultiplePinFactoryItems(hFilter, m_PinId, KSPROPERTY_PIN_DATARANGES, (PVOID*)&MultipleItem);
     if (FAILED(hr))
@@ -1724,6 +1940,9 @@ COutputPin::CreatePinHandle(
     PKSDATAFORMAT DataFormat;
     ULONG Length;
     HRESULT hr;
+    HANDLE hFilter;
+    IKsObject * KsObjectParent;
+
     //KSALLOCATOR_FRAMING Framing;
     //KSPROPERTY Property;
     //ULONG BytesReturned;
@@ -1774,8 +1993,19 @@ COutputPin::CreatePinHandle(
         CopyMemory((DataFormat + 1), pmt->pbFormat, pmt->cbFormat);
     }
 
-    HANDLE hFilter = m_KsObjectParent->KsGetObjectHandle();
-    assert(hFilter != NULL);
+    // get IKsObject interface
+    hr = m_ParentFilter->QueryInterface(IID_IKsObject, (LPVOID*)&KsObjectParent);
+    if (FAILED(hr))
+        return hr;
+
+    // get parent filter handle
+    hFilter = KsObjectParent->KsGetObjectHandle();
+
+    // release IKsObject
+    KsObjectParent->Release();
+
+    if (!hFilter)
+        return E_HANDLE;
 
     // create pin
     hr = KsCreatePin(hFilter, PinConnect, GENERIC_READ, &m_hPin);
@@ -1852,15 +2082,13 @@ COutputPin::IoProcessRoutine()
     HRESULT hr;
     PKSSTREAM_SEGMENT StreamSegment;
     HANDLE hEvent;
-    WCHAR Buffer[100];
+    WCHAR Buffer[200];
     IMediaSample * Samples[1];
 
     // first wait for the start event to signal
     WaitForSingleObject(m_hStartEvent, INFINITE);
 
     assert(m_InterfaceHandler);
-    REFERENCE_TIME Start = 0;
-    REFERENCE_TIME Stop = 1;
     do
     {
         if (m_StopInProgress)
@@ -1869,16 +2097,15 @@ COutputPin::IoProcessRoutine()
             break;
         }
 
+        assert(m_State == KSSTATE_RUN);
+        assert(m_MemAllocator);
+
         // get buffer
         hr = m_MemAllocator->GetBuffer(&Sample, NULL, NULL, AM_GBF_NOWAIT);
 
         if (FAILED(hr))
         {
-            OutputDebugStringW(L"OutOfSamples\n");
-            m_Pin->BeginFlush();
             WaitForSingleObject(m_hBufferAvailable, INFINITE);
-            m_Pin->EndFlush();
-            OutputDebugStringW(L"After Wait OutOfSamples\n");
             // now retry again
             continue;
         }
@@ -1897,9 +2124,7 @@ COutputPin::IoProcessRoutine()
         {
             swprintf(Buffer, L"COutputPin::IoProcessRoutine KsProcessMediaSamples FAILED PinName %s hr %lx\n", m_PinName, hr);
             OutputDebugStringW(Buffer);
-            SetEvent(m_hStopEvent);
-            m_IoThreadStarted = false;
-            ExitThread(0);
+            break;
         }
 
         // get completion event
@@ -1916,10 +2141,7 @@ COutputPin::IoProcessRoutine()
 
         if (SUCCEEDED(hr))
         {
-            LONG Length = Sample->GetActualDataLength();
-            Stop += Length;
-           // Sample->SetMediaTime(&Start, &Stop);
-            Start = Stop;
+            assert(m_MemInputPin);
 
             // now deliver the sample
             hr = m_MemInputPin->Receive(Sample);
@@ -1963,24 +2185,18 @@ COutputPin::InitializeIOThread()
 
     if (!m_hStartEvent)
         m_hStartEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
-    else
-        ResetEvent(m_hStartEvent);
 
     if (!m_hStartEvent)
         return E_OUTOFMEMORY;
 
     if (!m_hStopEvent)
         m_hStopEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
-    else
-        ResetEvent(m_hStopEvent);
 
     if (!m_hStopEvent)
         return E_OUTOFMEMORY;
 
     if (!m_hBufferAvailable)
         m_hBufferAvailable = CreateEventW(NULL, FALSE, FALSE, NULL);
-    else
-        ResetEvent(m_hBufferAvailable);
 
     if (!m_hBufferAvailable)
         return E_OUTOFMEMORY;
@@ -2008,120 +2224,172 @@ COutputPin_SetState(
     HRESULT hr = S_OK;
     KSPROPERTY Property;
     KSSTATE CurState;
-    WCHAR Buffer[100];
+    WCHAR Buffer[200];
     ULONG BytesReturned;
 
     COutputPin * pPin = (COutputPin*)Pin;
-
 
     Property.Set = KSPROPSETID_Connection;
     Property.Id = KSPROPERTY_CONNECTION_STATE;
     Property.Flags = KSPROPERTY_TYPE_SET;
 
+    EnterCriticalSection(&pPin->m_Lock);
 
-    if (pPin->m_State < State)
+    if (pPin->m_State <= State)
     {
         if (pPin->m_State == KSSTATE_STOP)
         {
+            hr = pPin->InitializeIOThread();
+            if (FAILED(hr))
+            {
+                // failed to initialize I/O thread
+                OutputDebugStringW(L"Failed to initialize I/O Thread\n");
+                LeaveCriticalSection(&pPin->m_Lock);
+                return hr;
+            }
             CurState = KSSTATE_ACQUIRE;
             hr = pPin->KsProperty(&Property, sizeof(KSPROPERTY), &CurState, sizeof(KSSTATE), &BytesReturned);
 
-            swprintf(Buffer, L"COutputPin_SetState Setting State KSSTATE_ACQUIRE PinName %s hr %lx\n", pPin->m_PinName, hr);
+            swprintf(Buffer, L"COutputPin_SetState Setting State CurState: KSSTATE_STOP KSSTATE_ACQUIRE PinName %s hr %lx\n", pPin->m_PinName, hr);
             OutputDebugStringW(Buffer);
             if (FAILED(hr))
+            {
+                LeaveCriticalSection(&pPin->m_Lock);
                 return hr;
+            }
 
             pPin->m_State = CurState;
 
             if (pPin->m_State == State)
+            {
+                LeaveCriticalSection(&pPin->m_Lock);
                 return hr;
+            }
         }
         if (pPin->m_State == KSSTATE_ACQUIRE)
         {
             CurState = KSSTATE_PAUSE;
             hr = pPin->KsProperty(&Property, sizeof(KSPROPERTY), &CurState, sizeof(KSSTATE), &BytesReturned);
 
-            swprintf(Buffer, L"COutputPin_SetState Setting State KSSTATE_PAUSE PinName %s hr %lx\n", pPin->m_PinName, hr);
+            swprintf(Buffer, L"COutputPin_SetState Setting State CurState KSSTATE_ACQUIRE KSSTATE_PAUSE PinName %s hr %lx\n", pPin->m_PinName, hr);
             OutputDebugStringW(Buffer);
             if (FAILED(hr))
+            {
+                LeaveCriticalSection(&pPin->m_Lock);
                 return hr;
+            }
 
             pPin->m_State = CurState;
 
             if (pPin->m_State == State)
+            {
+                LeaveCriticalSection(&pPin->m_Lock);
                 return hr;
+            }
+        }
+        if (State == KSSTATE_RUN && pPin->m_State == KSSTATE_PAUSE)
+        {
+            CurState = KSSTATE_RUN;
+            hr = pPin->KsProperty(&Property, sizeof(KSPROPERTY), &CurState, sizeof(KSSTATE), &BytesReturned);
+
+            swprintf(Buffer, L"COutputPin_SetState Setting State CurState: KSSTATE_PAUSE KSSTATE_RUN PinName %s hr %lx\n", pPin->m_PinName, hr);
+            OutputDebugStringW(Buffer);
+
+            if (SUCCEEDED(hr))
+            {
+                pPin->m_State = CurState;
+                // signal start event
+                SetEvent(pPin->m_hStartEvent);
+            }
         }
 
-        CurState = KSSTATE_RUN;
-        hr = pPin->KsProperty(&Property, sizeof(KSPROPERTY), &CurState, sizeof(KSSTATE), &BytesReturned);
-
-        swprintf(Buffer, L"COutputPin_SetState Setting State KSSTATE_RUN PinName %s hr %lx\n", pPin->m_PinName, hr);
-        OutputDebugStringW(Buffer);
-        if (FAILED(hr))
-            return hr;
-
-        // signal start event
-        SetEvent(pPin->m_hStartEvent);
-
-
-        pPin->m_State = CurState;
+        LeaveCriticalSection(&pPin->m_Lock);
         return hr;
     }
     else
     {
         if (pPin->m_State == KSSTATE_RUN)
         {
+            // setting pending stop flag
+            pPin->m_StopInProgress = true;
+
+            // release any waiting threads
+            SetEvent(pPin->m_hBufferAvailable);
+
+            // wait until i/o thread is done
+            WaitForSingleObject(pPin->m_hStopEvent, INFINITE);
+
             CurState = KSSTATE_PAUSE;
             hr = pPin->KsProperty(&Property, sizeof(KSPROPERTY), &CurState, sizeof(KSSTATE), &BytesReturned);
 
-            swprintf(Buffer, L"COutputPin_SetState Setting State KSSTATE_PAUSE PinName %u hr %lx\n", pPin->m_PinName, hr);
+            swprintf(Buffer, L"COutputPin_SetState Setting State CurState: KSSTATE_RUN KSSTATE_PAUSE PinName %s hr %lx\n", pPin->m_PinName, hr);
             OutputDebugStringW(Buffer);
+
             if (FAILED(hr))
+            {
+                LeaveCriticalSection(&pPin->m_Lock);
                 return hr;
+            }
 
             pPin->m_State = CurState;
 
-            if (pPin->m_State == State)
+            if (FAILED(hr))
+            {
+                LeaveCriticalSection(&pPin->m_Lock);
                 return hr;
+            }
         }
         if (pPin->m_State == KSSTATE_PAUSE)
         {
             CurState = KSSTATE_ACQUIRE;
             hr = pPin->KsProperty(&Property, sizeof(KSPROPERTY), &CurState, sizeof(KSSTATE), &BytesReturned);
 
-            swprintf(Buffer, L"COutputPin_SetState Setting State KSSTATE_ACQUIRE PinName %u hr %lx\n", pPin->m_PinName, hr);
+            swprintf(Buffer, L"COutputPin_SetState Setting State CurState: KSSTATE_PAUSE KSSTATE_ACQUIRE PinName %s hr %lx\n", pPin->m_PinName, hr);
             OutputDebugStringW(Buffer);
+
             if (FAILED(hr))
+            {
+                LeaveCriticalSection(&pPin->m_Lock);
                 return hr;
+            }
 
             pPin->m_State = CurState;
 
             if (pPin->m_State == State)
+            {
+                LeaveCriticalSection(&pPin->m_Lock);
                 return hr;
+            }
         }
 
-        // setting pending stop flag
-        pPin->m_StopInProgress = true;
+        CloseHandle(pPin->m_hStopEvent);
+        CloseHandle(pPin->m_hStartEvent);
+        CloseHandle(pPin->m_hBufferAvailable);
+
+        /* close event handles */
+        pPin->m_hStopEvent = NULL;
+        pPin->m_hStartEvent = NULL;
+        pPin->m_hBufferAvailable = NULL;
 
         CurState = KSSTATE_STOP;
         hr = pPin->KsProperty(&Property, sizeof(KSPROPERTY), &CurState, sizeof(KSSTATE), &BytesReturned);
 
-        swprintf(Buffer, L"COutputPin_SetState Setting State KSSTATE_STOP PinName %s hr %lx\n", pPin->m_PinName, hr);
+        swprintf(Buffer, L"COutputPin_SetState Setting State CurState: KSSTATE_ACQUIRE KSSTATE_STOP PinName %s hr %lx\n", pPin->m_PinName, hr);
         OutputDebugStringW(Buffer);
-        if (FAILED(hr))
-            return hr;
 
-        // release any waiting threads
-        SetEvent(pPin->m_hBufferAvailable);
+        if (SUCCEEDED(hr))
+        {
+            // store state
+            pPin->m_State = CurState;
+        }
 
-        // wait until i/o thread is done
-        WaitForSingleObject(pPin->m_hStopEvent, INFINITE);
+        // unset pending stop flag
+        pPin->m_StopInProgress = false;
 
-        pPin->m_State = CurState;
+        LeaveCriticalSection(&pPin->m_Lock);
         return hr;
     }
 }
-
 
 HRESULT
 WINAPI

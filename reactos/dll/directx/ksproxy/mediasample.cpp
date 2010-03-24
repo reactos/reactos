@@ -116,8 +116,6 @@ CMediaSample::QueryInterface(
     }
     if (IsEqualGUID(refiid, IID_IMediaSample2))
     {
-
-        OutputDebugStringW(L"CMediaSample::QueryInterface requested IMediaSample2 interface\n");
 #if 0
         *Output = (IMediaSample2*)(this);
         reinterpret_cast<IMediaSample2*>(*Output)->AddRef();
@@ -267,8 +265,6 @@ HRESULT
 STDMETHODCALLTYPE
 CMediaSample::GetMediaType(AM_MEDIA_TYPE **ppMediaType)
 {
-    OutputDebugStringW(L"CMediaSample::GetMediaType\n");
-
     if (!m_MediaType)
     {
         *ppMediaType = NULL;

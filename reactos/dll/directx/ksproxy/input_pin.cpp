@@ -170,14 +170,13 @@ public:
     HRESULT STDMETHODCALLTYPE CheckFormat(const AM_MEDIA_TYPE *pmt);
     HRESULT STDMETHODCALLTYPE CreatePin(const AM_MEDIA_TYPE *pmt);
     HRESULT STDMETHODCALLTYPE CreatePinHandle(PKSPIN_MEDIUM Medium, PKSPIN_INTERFACE Interface, const AM_MEDIA_TYPE *pmt);
-    CInputPin(IBaseFilter * ParentFilter, LPCWSTR PinName, HANDLE hFilter, ULONG PinId, KSPIN_COMMUNICATION Communication);
+    CInputPin(IBaseFilter * ParentFilter, LPCWSTR PinName, ULONG PinId, KSPIN_COMMUNICATION Communication);
     virtual ~CInputPin(){};
 
 protected:
     LONG m_Ref;
     IBaseFilter * m_ParentFilter;
     LPCWSTR m_PinName;
-    HANDLE m_hFilter;
     HANDLE m_hPin;
     ULONG m_PinId;
     IMemAllocator * m_MemAllocator;
@@ -199,14 +198,12 @@ protected:
 };
 
 CInputPin::CInputPin(
-    IBaseFilter * ParentFilter, 
+    IBaseFilter * ParentFilter,
     LPCWSTR PinName,
-    HANDLE hFilter,
     ULONG PinId,
     KSPIN_COMMUNICATION Communication) : m_Ref(0),
                                          m_ParentFilter(ParentFilter),
                                          m_PinName(PinName),
-                                         m_hFilter(hFilter),
                                          m_hPin(INVALID_HANDLE_VALUE),
                                          m_PinId(PinId),
                                          m_MemAllocator(0),
@@ -223,8 +220,21 @@ CInputPin::CInputPin(
     ZeroMemory(m_FramingProp, sizeof(m_FramingProp));
     ZeroMemory(m_FramingEx, sizeof(m_FramingEx));
 
+    HRESULT hr;
+    IKsObject * KsObjectParent;
+    HANDLE hFilter;
+
+    hr = m_ParentFilter->QueryInterface(IID_IKsObject, (LPVOID*)&KsObjectParent);
+    assert(hr == S_OK);
+
+    hFilter = KsObjectParent->KsGetObjectHandle();
+    assert(hFilter);
+
+    KsObjectParent->Release();
+
+
     ZeroMemory(&m_MediaFormat, sizeof(AM_MEDIA_TYPE));
-    HRESULT hr = KsGetMediaType(0, &m_MediaFormat, m_hFilter, m_PinId);
+    hr = KsGetMediaType(0, &m_MediaFormat, hFilter, m_PinId);
     assert(hr == S_OK);
 }
 
@@ -688,7 +698,22 @@ STDMETHODCALLTYPE
 CInputPin::KsQueryMediums(
     PKSMULTIPLE_ITEM* MediumList)
 {
-    return KsGetMultiplePinFactoryItems(m_hFilter, m_PinId, KSPROPERTY_PIN_MEDIUMS, (PVOID*)MediumList);
+    HRESULT hr;
+    IKsObject * KsObjectParent;
+    HANDLE hFilter;
+
+    hr = m_ParentFilter->QueryInterface(IID_IKsObject, (LPVOID*)&KsObjectParent);
+    if (FAILED(hr))
+        return hr;
+
+    hFilter = KsObjectParent->KsGetObjectHandle();
+
+    KsObjectParent->Release();
+
+    if (!hFilter)
+        return E_HANDLE;
+
+    return KsGetMultiplePinFactoryItems(hFilter, m_PinId, KSPROPERTY_PIN_MEDIUMS, (PVOID*)MediumList);
 }
 
 HRESULT
@@ -696,7 +721,22 @@ STDMETHODCALLTYPE
 CInputPin::KsQueryInterfaces(
     PKSMULTIPLE_ITEM* InterfaceList)
 {
-    return KsGetMultiplePinFactoryItems(m_hFilter, m_PinId, KSPROPERTY_PIN_INTERFACES, (PVOID*)InterfaceList);
+    HRESULT hr;
+    IKsObject * KsObjectParent;
+    HANDLE hFilter;
+
+    hr = m_ParentFilter->QueryInterface(IID_IKsObject, (LPVOID*)&KsObjectParent);
+    if (FAILED(hr))
+        return hr;
+
+    hFilter = KsObjectParent->KsGetObjectHandle();
+
+    KsObjectParent->Release();
+
+    if (!hFilter)
+        return E_HANDLE;
+
+    return KsGetMultiplePinFactoryItems(hFilter, m_PinId, KSPROPERTY_PIN_INTERFACES, (PVOID*)InterfaceList);
 }
 
 HRESULT
@@ -1159,9 +1199,23 @@ CInputPin::EnumMediaTypes(IEnumMediaTypes **ppEnum)
     HRESULT hr;
     ULONG MediaTypeCount = 0, Index;
     AM_MEDIA_TYPE * MediaTypes;
+    IKsObject * KsObjectParent;
+    HANDLE hFilter;
+
+    hr = m_ParentFilter->QueryInterface(IID_IKsObject, (LPVOID*)&KsObjectParent);
+    if (FAILED(hr))
+        return hr;
+
+    hFilter = KsObjectParent->KsGetObjectHandle();
+
+    KsObjectParent->Release();
+
+    if (!hFilter)
+        return E_HANDLE;
+
 
     // query media type count
-    hr = KsGetMediaTypeCount(m_hFilter, m_PinId, &MediaTypeCount);
+    hr = KsGetMediaTypeCount(hFilter, m_PinId, &MediaTypeCount);
     if (FAILED(hr) || !MediaTypeCount)
         return hr;
 
@@ -1179,7 +1233,7 @@ CInputPin::EnumMediaTypes(IEnumMediaTypes **ppEnum)
     for(Index = 0; Index < MediaTypeCount; Index++)
     {
         // get media type
-        hr = KsGetMediaType(Index, &MediaTypes[Index], m_hFilter, m_PinId);
+        hr = KsGetMediaType(Index, &MediaTypes[Index], hFilter, m_PinId);
         if (FAILED(hr))
         {
             // failed
@@ -1237,11 +1291,25 @@ CInputPin::CheckFormat(
     PKSMULTIPLE_ITEM MultipleItem;
     PKSDATAFORMAT DataFormat;
     HRESULT hr;
+    IKsObject * KsObjectParent;
+    HANDLE hFilter;
 
     if (!pmt)
         return E_POINTER;
 
-    hr = KsGetMultiplePinFactoryItems(m_hFilter, m_PinId, KSPROPERTY_PIN_DATARANGES, (PVOID*)&MultipleItem);
+    hr = m_ParentFilter->QueryInterface(IID_IKsObject, (LPVOID*)&KsObjectParent);
+    if (FAILED(hr))
+        return hr;
+
+    hFilter = KsObjectParent->KsGetObjectHandle();
+
+    KsObjectParent->Release();
+
+    if (!hFilter)
+        return E_HANDLE;
+
+
+    hr = KsGetMultiplePinFactoryItems(hFilter, m_PinId, KSPROPERTY_PIN_DATARANGES, (PVOID*)&MultipleItem);
     if (FAILED(hr))
         return S_FALSE;
 
@@ -1379,6 +1447,23 @@ CInputPin::CreatePinHandle(
     PKSDATAFORMAT DataFormat;
     ULONG Length;
     HRESULT hr;
+    IKsObject * KsObjectParent;
+    HANDLE hFilter;
+
+    if (!pmt)
+        return E_POINTER;
+
+    hr = m_ParentFilter->QueryInterface(IID_IKsObject, (LPVOID*)&KsObjectParent);
+    if (FAILED(hr))
+        return hr;
+
+    hFilter = KsObjectParent->KsGetObjectHandle();
+
+    KsObjectParent->Release();
+
+    if (!hFilter)
+        return E_HANDLE;
+
 
     if (m_hPin != INVALID_HANDLE_VALUE)
     {
@@ -1427,7 +1512,7 @@ CInputPin::CreatePinHandle(
     }
 
     // create pin
-    hr = KsCreatePin(m_hFilter, PinConnect, GENERIC_WRITE, &m_hPin);
+    hr = KsCreatePin(hFilter, PinConnect, GENERIC_WRITE, &m_hPin);
 
     if (SUCCEEDED(hr))
     {
@@ -1482,7 +1567,7 @@ CInputPin_Constructor(
     REFIID riid,
     LPVOID * ppv)
 {
-    CInputPin * handler = new CInputPin(ParentFilter, PinName, hFilter, PinId, Communication);
+    CInputPin * handler = new CInputPin(ParentFilter, PinName, PinId, Communication);
 
     if (!handler)
         return E_OUTOFMEMORY;

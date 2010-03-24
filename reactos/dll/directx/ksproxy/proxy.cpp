@@ -63,7 +63,7 @@ public:
         InterlockedDecrement(&m_Ref);
         if (!m_Ref)
         {
-            delete this;
+            //delete this;
             return 0;
         }
         return m_Ref;
@@ -171,7 +171,7 @@ public:
     HRESULT STDMETHODCALLTYPE GetPages(CAUUID *pPages);
 
 
-    CKsProxy() : m_Ref(0), m_pGraph(0), m_ReferenceClock((IReferenceClock*)this), m_FilterState(State_Stopped), m_hDevice(0), m_Plugins(), m_Pins(), m_DevicePath(0), m_hClock(0) {};
+    CKsProxy();
     ~CKsProxy()
     {
         if (m_hDevice)
@@ -203,7 +203,22 @@ protected:
     LPWSTR m_DevicePath;
     CLSID m_DeviceInterfaceGUID;
     HANDLE m_hClock;
+    CRITICAL_SECTION m_Lock;
 };
+
+CKsProxy::CKsProxy() : m_Ref(0),
+                       m_pGraph(0),
+                       m_ReferenceClock((IReferenceClock*)this),
+                       m_FilterState(State_Stopped),
+                       m_hDevice(0),
+                       m_Plugins(),
+                       m_Pins(),
+                       m_DevicePath(0),
+                       m_hClock(0)
+{
+    InitializeCriticalSection(&m_Lock);
+}
+
 
 HRESULT
 STDMETHODCALLTYPE
@@ -2516,8 +2531,19 @@ HRESULT
 STDMETHODCALLTYPE
 CKsProxy::Stop()
 {
-    OutputDebugStringW(L"CKsProxy::Stop : NotImplemented\n");
-    return E_NOTIMPL;
+    HRESULT hr;
+
+    OutputDebugStringW(L"CKsProxy::Stop\n");
+
+    EnterCriticalSection(&m_Lock);
+
+    hr = SetPinState(KSSTATE_STOP);
+    if (SUCCEEDED(hr))
+        m_FilterState = State_Stopped;
+
+    LeaveCriticalSection(&m_Lock);
+
+    return hr;
 }
 
 HRESULT
@@ -2528,15 +2554,24 @@ CKsProxy::Pause()
 
     OutputDebugStringW(L"CKsProxy::Pause\n");
 
-    if (m_FilterState == State_Stopped)
-    {
-        hr = SetPinState(KSSTATE_PAUSE);
-        if (FAILED(hr))
-            return hr;
+    EnterCriticalSection(&m_Lock);
 
+    if (m_FilterState == State_Running)
+    {
+        hr = SetPinState(KSSTATE_STOP);
+    }
+    if (SUCCEEDED(hr))
+    {
+        if (m_FilterState == State_Stopped)
+        {
+            hr = SetPinState(KSSTATE_PAUSE);
+        }
     }
 
-    m_FilterState = State_Paused;
+    if (SUCCEEDED(hr))
+        m_FilterState = State_Paused;
+
+    LeaveCriticalSection(&m_Lock);
     return hr;
 
 }
@@ -2550,21 +2585,28 @@ CKsProxy::Run(
 
     OutputDebugStringW(L"CKsProxy::Run\n");
 
+    EnterCriticalSection(&m_Lock);
+
     if (m_FilterState == State_Stopped)
     {
+        LeaveCriticalSection(&m_Lock);
         // setting filter state to pause
         hr = Pause();
         if (FAILED(hr))
             return hr;
 
+        EnterCriticalSection(&m_Lock);
         assert(m_FilterState == State_Paused);
     }
 
     hr = SetPinState(KSSTATE_RUN);
-    if (FAILED(hr))
-        return hr;
 
-    m_FilterState = State_Running;
+    if (SUCCEEDED(hr))
+    {
+        m_FilterState = State_Running;
+    }
+
+    LeaveCriticalSection(&m_Lock);
     return hr;
 }
 
@@ -2647,6 +2689,9 @@ CKsProxy::GetState(
     DWORD dwMilliSecsTimeout,
     FILTER_STATE *State)
 {
+    if (!State)
+        return E_POINTER;
+
     *State = m_FilterState;
     return S_OK;
 }
@@ -2851,7 +2896,11 @@ CKsProxy::JoinFilterGraph(
     IFilterGraph *pGraph,
     LPCWSTR pName)
 {
-    OutputDebugStringW(L"CKsProxy::JoinFilterGraph\n");
+#ifdef KSPROXY_TRACE
+    WCHAR Buffer[100];
+    swprintf(Buffer, L"CKsProxy::JoinFilterGraph pName %s pGraph %p m_Ref %u\n", pName, pGraph, m_Ref);
+    OutputDebugStringW(Buffer);
+#endif
 
     if (pGraph)
     {
