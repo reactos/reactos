@@ -3135,6 +3135,9 @@ typedef struct DECLSPEC_ALIGN(16) _CONTEXT {
   ULONG64 LastExceptionFromRip;
 } CONTEXT;
 
+#define PCR_MINOR_VERSION 1
+#define PCR_MAJOR_VERSION 1
+
 typedef struct _KPCR
 {
     _ANONYMOUS_UNION union
@@ -3208,6 +3211,10 @@ KeGetCurrentProcessorNumber(VOID)
 #define PPE_TOP     0xFFFFF6FB7DBFFFFFULL
 #define PDE_TOP     0xFFFFF6FB7FFFFFFFULL
 #define PTE_TOP     0xFFFFF6FFFFFFFFFFULL
+
+extern NTKERNELAPI PVOID MmHighestUserAddress;
+extern NTKERNELAPI PVOID MmSystemRangeStart;
+extern NTKERNELAPI ULONG64 MmUserProbeAddress;
 
 #define MM_HIGHEST_USER_ADDRESS           MmHighestUserAddress
 #define MM_SYSTEM_RANGE_START             MmSystemRangeStart
@@ -3376,13 +3383,14 @@ ExRaiseDatatypeMisalignment(VOID);
 
 /* Hardware Abstraction Layer Functions */
 
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
 #if defined(USE_DMA_MACROS) && !defined(_NTHAL_) && (defined(_NTDDK_) || defined(_NTDRIVER_)) || defined(_WDM_INCLUDED_)
 
+/* Nothing here */
 
+#else /* USE_DMA_MACROS ... */
 
-#else
-
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
 //DECLSPEC_DEPRECATED_DDK
 NTHALAPI
 VOID
@@ -3448,16 +3456,9 @@ HalAllocateAdapterChannel(
   IN ULONG  NumberOfMapRegisters,
   IN PDRIVER_CONTROL  ExecutionRoutine);
 
-#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
-
-
-#endif
-
+#endif /* USE_DMA_MACROS ... */
 
 #if !defined(NO_LEGACY_DRIVERS)
-
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
-
 NTHALAPI
 NTSTATUS
 NTAPI
@@ -3507,12 +3508,7 @@ BOOLEAN
 NTAPI
 HalMakeBeep(
   IN ULONG Frequency);
-
-#endif
-
 #endif /* !defined(NO_LEGACY_DRIVERS) */
-
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
 
 NTHALAPI
 PADAPTER_OBJECT
@@ -3601,7 +3597,7 @@ HalExamineMBR(
   IN ULONG SectorSize,
   IN ULONG MBRTypeIdentifier,
   OUT PVOID *Buffer);
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
 
@@ -3618,7 +3614,7 @@ NTAPI
 HalFreeHardwareCounters(
   IN HANDLE CounterSetHandle);
 
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
 #if defined(_IA64_)
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
@@ -4137,7 +4133,6 @@ KeInvalidateRangeAllCaches(
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
-
 NTKERNELAPI
 VOID
 NTAPI
@@ -4178,7 +4173,6 @@ KeBugCheck(
   IN ULONG BugCheckCode);
 
 
-
 #if defined(SINGLE_GROUP_LEGACY_API)
 
 
@@ -4210,15 +4204,17 @@ KeAreApcsDisabled(VOID);
 
 
 #if (NTDDI_VERSION >= NTDDI_WS03)
+
+
 NTKERNELAPI
 BOOLEAN
 NTAPI
 KeInvalidateAllCaches(VOID);
 
-
 #endif /* (NTDDI_VERSION >= NTDDI_WS03) */
 
 #if (NTDDI_VERSION >= NTDDI_WS03SP1)
+
 NTKERNELAPI
 NTSTATUS
 NTAPI
@@ -4242,6 +4238,7 @@ KeLeaveGuardedRegion(VOID);
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 
+
 #if defined(SINGLE_GROUP_LEGACY_API)
 NTKERNELAPI
 ULONG
@@ -4254,7 +4251,7 @@ ULONG
 NTAPI
 KeQueryMaximumProcessorCount(VOID);
 
-#endif
+#endif /* SINGLE_GROUP_LEGACY_API */
 
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
