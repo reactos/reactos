@@ -9,7 +9,9 @@
 
 #include "precomp.h"
 
+#ifndef _MSC_VER
 const GUID IID_IKsPropertySet = {0x31efac30, 0x515c, 0x11d0, {0xa9,0xaa, 0x00,0xaa,0x00,0x61,0xbe,0x93}};
+#endif
 
 class CControlNode : public IUnknown
 {
@@ -88,7 +90,6 @@ CControlNode::QueryInterface(
 HRESULT
 WINAPI
 CControlNode_fnConstructor(
-    HANDLE hFile,
     IBaseFilter * pFilter,
     ULONG NodeType,
     ULONG PinId,
@@ -99,6 +100,7 @@ CControlNode_fnConstructor(
     HRESULT hr;
     IPin * pPin = NULL;
     IKsObject * pObject = NULL;
+    HANDLE hFile = INVALID_HANDLE_VALUE;
 
     // store pin id
     swprintf(Buffer, L"%u", PinId);

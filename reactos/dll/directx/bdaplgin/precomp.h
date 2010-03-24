@@ -9,6 +9,7 @@
 #include <ks.h>
 #define __STREAMS__
 #include <ksproxy.h>
+#include <ksmedia.h>
 #include <stdio.h>
 #include <wchar.h>
 #include <tchar.h>
@@ -55,7 +56,6 @@ CBDAPinControl_fnConstructor(
 HRESULT
 WINAPI
 CControlNode_fnConstructor(
-    HANDLE hFile,
     IBaseFilter * pFilter,
     ULONG NodeType,
     ULONG PinId,
@@ -100,5 +100,7 @@ CBDADigitalDemodulator_fnConstructor(
     ULONG NodeId,
     REFIID riid,
     LPVOID * ppv);
+
+extern const GUID IID_IKsObject;
 
 #endif
