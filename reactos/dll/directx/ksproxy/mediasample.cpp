@@ -348,7 +348,9 @@ CMediaSample_Constructor(
     REFIID riid,
     LPVOID * ppv)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CMediaSample_Constructor\n");
+#endif
 
     CMediaSample * handler = new CMediaSample(Allocator, pBuffer, BufferSize);
 

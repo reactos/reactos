@@ -3,6 +3,7 @@
 #define _FORCENAMELESSUNION
 #define BUILDING_KS
 #define _KSDDK_
+//#define KSPROXY_TRACE
 #include <dshow.h>
 //#include <streams.h>
 #include <ks.h>

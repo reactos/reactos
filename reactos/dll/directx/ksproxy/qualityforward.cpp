@@ -88,7 +88,9 @@ STDMETHODCALLTYPE
 CKsQualityForwarder::KsFlushClient(
     IN IKsPin  *Pin)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugString("UNIMPLEMENTED\n");
+#endif
 }
 
 HRESULT
@@ -101,14 +103,18 @@ CKsQualityForwarder_Constructor(
     HRESULT hr;
     HANDLE handle;
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsQualityForwarder_Constructor\n");
+#endif
 
     // open default clock
     hr = KsOpenDefaultDevice(KSCATEGORY_QUALITY, GENERIC_READ | GENERIC_WRITE, &handle);
 
     if (hr != NOERROR)
     {
+#ifdef KSPROXY_TRACE
          OutputDebugString("CKsClockForwarder_Constructor failed to open device\n");
+#endif
          return hr;
     }
 

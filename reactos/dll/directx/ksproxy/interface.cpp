@@ -285,10 +285,11 @@ CKsInterfaceHandler::KsProcessMediaSamples(
              if (SampleList[Index]->IsSyncPoint() == S_OK)
                  Properties.dwSampleFlags |= AM_SAMPLE_SPLICEPOINT;
          }
-
+#ifdef KSPROXY_TRACE
          WCHAR Buffer[200];
          swprintf(Buffer, L"CKsInterfaceHandler::KsProcessMediaSamples PinName %s BufferLength %lu Property Buffer %p ExtendedSize %u lActual %u dwSampleFlags %lx\n", m_PinName, Properties.cbBuffer, Properties.pbBuffer, ExtendedSize, Properties.lActual, Properties.dwSampleFlags);
-         //OutputDebugStringW(Buffer);
+         OutputDebugStringW(Buffer);
+#endif
 
          CurStreamHeader->Size = sizeof(KSSTREAM_HEADER) + ExtendedSize;
          CurStreamHeader->PresentationTime.Denominator = 1;
@@ -479,7 +480,9 @@ CKsInterfaceHandler_Constructor(
     REFIID riid,
     LPVOID * ppv)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsInterfaceHandler_Constructor\n");
+#endif
 
     CKsInterfaceHandler * handler = new CKsInterfaceHandler();
 

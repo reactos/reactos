@@ -124,7 +124,9 @@ CKsNode_Constructor(
     HANDLE handle;
     KSNODE_CREATE NodeCreate;
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsNode_Constructor\n");
+#endif
 
     //setup request
     NodeCreate.CreateFlags = 0;

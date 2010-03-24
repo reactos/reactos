@@ -103,7 +103,9 @@ CKsDataTypeHandler::KsIsMediaTypeInRanges(
     ULONG Index;
     HRESULT hr = S_FALSE;
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsDataTypeHandler::KsIsMediaTypeInRanges\n");
+#endif
 
     DataList = (PKSMULTIPLE_ITEM)DataRanges;
     DataRange = (PKSDATARANGE)(DataList + 1);
@@ -187,7 +189,9 @@ STDMETHODCALLTYPE
 CKsDataTypeHandler::KsSetMediaType(
     IN const AM_MEDIA_TYPE* AmMediaType)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugString("CKsDataTypeHandler::KsSetMediaType\n");
+#endif
 
     if (m_Type)
     {
@@ -228,7 +232,10 @@ CKsDataTypeHandler_Constructor (
     REFIID riid,
     LPVOID * ppv)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsDataTypeHandler_Constructor\n");
+#endif
+
     CKsDataTypeHandler * handler = new CKsDataTypeHandler();
 
     if (!handler)

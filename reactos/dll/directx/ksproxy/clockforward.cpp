@@ -120,10 +120,11 @@ HRESULT
 STDMETHODCALLTYPE
 CKsClockForwarder::Stop()
 {
+#ifdef KSPROXY_TRACE
     WCHAR Buffer[200];
-
     swprintf(Buffer, L"CKsClockForwarder::Stop m_ThreadStarted %u m_PendingStop %u m_hThread %p m_hEvent %p m_Handle %p\n", m_ThreadStarted, m_PendingStop, m_hThread, m_hEvent, m_Handle);
     OutputDebugStringW(Buffer);
+#endif
 
     m_Time = 0;
     if (m_ThreadStarted)
@@ -164,7 +165,9 @@ HRESULT
 STDMETHODCALLTYPE
 CKsClockForwarder::Pause()
 {
+#ifdef KSPROXY_TRACE
     OutputDebugString("CKsClockForwarder::Pause\n");
+#endif
 
     if (!m_hEvent)
     {
@@ -204,7 +207,9 @@ STDMETHODCALLTYPE
 CKsClockForwarder::Run(
     REFERENCE_TIME tStart)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugString("CKsClockForwarder::Run\n");
+#endif
 
     m_Time = tStart;
 
@@ -231,7 +236,9 @@ STDMETHODCALLTYPE
 CKsClockForwarder::SetSyncSource(
     IReferenceClock *pClock)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugString("CKsClockForwarder::SetSyncSource\n");
+#endif
 
     if (pClock)
         pClock->AddRef();
@@ -248,7 +255,10 @@ HRESULT
 STDMETHODCALLTYPE
 CKsClockForwarder::NotifyGraphChange()
 {
+#ifdef KSPROXY_TRACE
     OutputDebugString("CKsClockForwarder::NotifyGraphChange\n");
+#endif
+
     return NOERROR;
 }
 
@@ -279,9 +289,11 @@ CKsClockForwarder::SetClockState(KSSTATE State)
     if (SUCCEEDED(hr))
         m_State = State;
 
+#ifdef KSPROXY_TRACE
     WCHAR Buffer[100];
     swprintf(Buffer, L"CKsClockForwarder::SetClockState m_State %u State %u hr %lx\n", m_State, State, hr);
     OutputDebugStringW(Buffer);
+#endif
 
     return hr;
 }
@@ -331,14 +343,18 @@ CKsClockForwarder_Constructor(
     HRESULT hr;
     HANDLE handle;
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsClockForwarder_Constructor\n");
+#endif
 
     // open default clock
     hr = KsOpenDefaultDevice(KSCATEGORY_CLOCK, GENERIC_READ | GENERIC_WRITE, &handle);
 
     if (hr != NOERROR)
     {
+#ifdef KSPROXY_TRACE
          OutputDebugString("CKsClockForwarder_Constructor failed to open device\n");
+#endif
          return hr;
     }
 
