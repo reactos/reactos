@@ -23,6 +23,10 @@ $if (_NTDDK_)
 #define PDE_TOP     0xFFFFF6FB7FFFFFFFULL
 #define PTE_TOP     0xFFFFF6FFFFFFFFFFULL
 
+extern NTKERNELAPI PVOID MmHighestUserAddress;
+extern NTKERNELAPI PVOID MmSystemRangeStart;
+extern NTKERNELAPI ULONG64 MmUserProbeAddress;
+
 #define MM_HIGHEST_USER_ADDRESS           MmHighestUserAddress
 #define MM_SYSTEM_RANGE_START             MmSystemRangeStart
 #define MM_USER_PROBE_ADDRESS             MmUserProbeAddress

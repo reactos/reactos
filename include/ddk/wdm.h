@@ -7923,15 +7923,20 @@ KeRaiseIrqlToSynchLevel(VOID)
   return KfRaiseIrql(12); // SYNCH_LEVEL = IPI_LEVEL - 2
 }
 
-#define KeAcquireSpinLock(SpinLock, OldIrql) \
-    *(OldIrql) = KeAcquireSpinLockRaiseToDpc(SpinLock)
-
 FORCEINLINE
 PKTHREAD
 KeGetCurrentThread(VOID)
 {
   return (struct _KTHREAD *)__readgsqword(0x188);
 }
+
+/* VOID
+ * KeFlushIoBuffers(
+ *   IN PMDL Mdl,
+ *   IN BOOLEAN ReadOperation,
+ *   IN BOOLEAN DmaOperation)
+ */
+#define KeFlushIoBuffers(_Mdl, _ReadOperation, _DmaOperation)
 
 /* x86 and x64 performs a 0x2C interrupt */
 #define DbgRaiseAssertionFailure __int2c
@@ -9677,7 +9682,6 @@ KeClearEvent(
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
 
-
 #if defined(_NTDDK_) || defined(_NTIFS_)
 NTKERNELAPI
 VOID
@@ -9726,7 +9730,6 @@ KeQueryActiveProcessors(VOID);
 #endif /* defined(SINGLE_GROUP_LEGACY_API) */
 
 #if !defined(_M_AMD64)
-
 NTKERNELAPI
 ULONGLONG
 NTAPI
@@ -9737,8 +9740,37 @@ VOID
 NTAPI
 KeQuerySystemTime(
   OUT PLARGE_INTEGER CurrentTime);
-
 #endif /* !_M_AMD64 */
+
+#if !defined(_X86_)
+NTKERNELAPI
+KIRQL
+NTAPI
+KeAcquireSpinLockRaiseToDpc(
+  IN OUT PKSPIN_LOCK SpinLock);
+
+#define KeAcquireSpinLock(SpinLock, OldIrql) \
+    *(OldIrql) = KeAcquireSpinLockRaiseToDpc(SpinLock)
+
+NTKERNELAPI
+VOID
+NTAPI
+KeAcquireSpinLockAtDpcLevel(
+  IN OUT PKSPIN_LOCK SpinLock);
+
+NTKERNELAPI
+VOID
+NTAPI
+KeReleaseSpinLock(
+  IN OUT PKSPIN_LOCK SpinLock,
+  IN KIRQL NewIrql);
+
+NTKERNELAPI
+VOID
+NTAPI
+KeReleaseSpinLockFromDpcLevel(
+  IN OUT PKSPIN_LOCK SpinLock);
+#endif /* !_X86_ */
 
 #if defined(_X86_) && (defined(_WDM_INCLUDED_) || defined(WIN9X_COMPAT_SPINLOCK))
 NTKERNELAPI
@@ -10183,9 +10215,11 @@ FASTCALL
 KeTestSpinLock(
   IN PKSPIN_LOCK SpinLock);
 
+
 #endif /* (NTDDI_VERSION >= NTDDI_WS03) */
 
 #if (NTDDI_VERSION >= NTDDI_WS03SP1)
+
 
 NTKERNELAPI
 BOOLEAN
@@ -10247,6 +10281,7 @@ KeTryToAcquireGuardedMutex(
 #endif /* (NTDDI_VERSION >= NTDDI_WS03SP1) */
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
+
 NTKERNELAPI
 VOID
 FASTCALL
@@ -10290,7 +10325,7 @@ NTKERNELAPI
 ULONG
 NTAPI
 KeQueryMaximumProcessorCount(VOID);
-#endif
+#endif /* SINGLE_GROUP_LEGACY_API */
 
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 

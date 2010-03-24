@@ -3209,6 +3209,10 @@ KeGetCurrentProcessorNumber(VOID)
 #define PDE_TOP     0xFFFFF6FB7FFFFFFFULL
 #define PTE_TOP     0xFFFFF6FFFFFFFFFFULL
 
+extern NTKERNELAPI PVOID MmHighestUserAddress;
+extern NTKERNELAPI PVOID MmSystemRangeStart;
+extern NTKERNELAPI ULONG64 MmUserProbeAddress;
+
 #define MM_HIGHEST_USER_ADDRESS           MmHighestUserAddress
 #define MM_SYSTEM_RANGE_START             MmSystemRangeStart
 #define MM_USER_PROBE_ADDRESS             MmUserProbeAddress
@@ -4137,7 +4141,6 @@ KeInvalidateRangeAllCaches(
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
-
 NTKERNELAPI
 VOID
 NTAPI
@@ -4178,7 +4181,6 @@ KeBugCheck(
   IN ULONG BugCheckCode);
 
 
-
 #if defined(SINGLE_GROUP_LEGACY_API)
 
 
@@ -4210,15 +4212,17 @@ KeAreApcsDisabled(VOID);
 
 
 #if (NTDDI_VERSION >= NTDDI_WS03)
+
+
 NTKERNELAPI
 BOOLEAN
 NTAPI
 KeInvalidateAllCaches(VOID);
 
-
 #endif /* (NTDDI_VERSION >= NTDDI_WS03) */
 
 #if (NTDDI_VERSION >= NTDDI_WS03SP1)
+
 NTKERNELAPI
 NTSTATUS
 NTAPI
@@ -4242,6 +4246,7 @@ KeLeaveGuardedRegion(VOID);
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 
+
 #if defined(SINGLE_GROUP_LEGACY_API)
 NTKERNELAPI
 ULONG
@@ -4254,7 +4259,7 @@ ULONG
 NTAPI
 KeQueryMaximumProcessorCount(VOID);
 
-#endif
+#endif /* SINGLE_GROUP_LEGACY_API */
 
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 

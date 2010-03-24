@@ -216,6 +216,8 @@ FASTCALL
 ExInterlockedFlushSList(
   IN OUT PSLIST_HEADER ListHead);
 
+#endif /* !defined(_WIN64) */
+
 #if defined(_WIN2K_COMPAT_SLIST_USAGE) && defined(_X86_)
 
 NTKERNELAPI
@@ -246,12 +248,14 @@ ExFreeToPagedLookasideList(
   IN OUT PPAGED_LOOKASIDE_LIST Lookaside,
   IN PVOID Entry);
 
-#else
+#else /* !_WIN2K_COMPAT_SLIST_USAGE */
 
+#if !defined(_WIN64)
 #define ExInterlockedPopEntrySList(_ListHead, _Lock) \
     InterlockedPopEntrySList(_ListHead)
 #define ExInterlockedPushEntrySList(_ListHead, _ListEntry, _Lock) \
     InterlockedPushEntrySList(_ListHead, _ListEntry)
+#endif
 
 static __inline
 PVOID
@@ -288,7 +292,6 @@ ExFreeToPagedLookasideList(
 
 #endif /* _WIN2K_COMPAT_SLIST_USAGE */
 
-#endif /* !defined(_WIN64) */
 
 /* ERESOURCE_THREAD
  * ExGetCurrentResourceThread(

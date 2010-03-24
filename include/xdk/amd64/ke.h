@@ -93,9 +93,6 @@ KeRaiseIrqlToSynchLevel(VOID)
   return KfRaiseIrql(12); // SYNCH_LEVEL = IPI_LEVEL - 2
 }
 
-#define KeAcquireSpinLock(SpinLock, OldIrql) \
-    *(OldIrql) = KeAcquireSpinLockRaiseToDpc(SpinLock)
-
 FORCEINLINE
 PKTHREAD
 KeGetCurrentThread(VOID)
@@ -224,6 +221,9 @@ typedef struct DECLSPEC_ALIGN(16) _CONTEXT {
   ULONG64 LastExceptionToRip;
   ULONG64 LastExceptionFromRip;
 } CONTEXT;
+
+#define PCR_MINOR_VERSION 1
+#define PCR_MAJOR_VERSION 1
 
 typedef struct _KPCR
 {
