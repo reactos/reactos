@@ -790,7 +790,7 @@ MmUnloadSystemImage(IN PVOID ImageHandle)
     }
 
     /* Free the driver */
-    MmFreeSection(LdrEntry->DllBase);
+    //MmFreeSection(LdrEntry->DllBase);
 
     /* Check if we're linked in */
     if (LdrEntry->InLoadOrderLinks.Flink)

@@ -158,13 +158,12 @@ MmInitGlobalKernelPageDirectory(VOID)
 #define MI_MAKE_WRITE_PAGE(x)      ((x)->u.Hard.Writable = 1)
 #endif
 
-#if 0  // FIXME
+// FIXME!!!
 #define PAGE_TO_SECTION_PAGE_DIRECTORY_OFFSET(x) \
     ((x) / (4*1024*1024))
 
 #define PAGE_TO_SECTION_PAGE_TABLE_OFFSET(x) \
     ((((x)) % (4*1024*1024)) / (4*1024))
-#endif
 
 #define NR_SECTION_PAGE_TABLES              1024
 #define NR_SECTION_PAGE_ENTRIES             1024

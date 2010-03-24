@@ -897,7 +897,6 @@ KeCapturePersistentThreadState(IN PVOID CurrentThread,
     UNIMPLEMENTED;
 }
 
-#ifndef _M_AMD64
 /*
  * @implemented
  */
@@ -909,7 +908,6 @@ KeGetCurrentThread(VOID)
     /* Return the current thread on this PCR */
     return _KeGetCurrentThread();
 }
-#endif
 
 /*
  * @implemented

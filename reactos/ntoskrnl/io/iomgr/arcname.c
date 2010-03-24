@@ -377,7 +377,9 @@ IopAssignArcNamesToCdrom(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     }
     goto checkbootcd;
 
+#ifndef _M_AMD64
 freeldrhack:
+#endif
     /*
      * FIXME: In normal conditions, NTLDR/FreeLdr sends the *proper* CDROM
      * ARC Path name, and what happens here is a comparision of both checksums

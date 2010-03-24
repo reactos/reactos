@@ -147,13 +147,6 @@ KeFlushProcessTb(VOID)
 }
 
 FORCEINLINE
-PRKTHREAD
-KeGetCurrentThread(VOID)
-{
-    return (PRKTHREAD)__readgsqword(FIELD_OFFSET(KIPCR, Prcb.CurrentThread));
-}
-
-FORCEINLINE
 VOID
 KiRundownThread(IN PKTHREAD Thread)
 {

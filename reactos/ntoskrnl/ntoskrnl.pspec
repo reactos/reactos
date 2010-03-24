@@ -347,6 +347,8 @@
 @ FASTCALL InterlockedIncrement(ptr)
 @ FASTCALL InterlockedPopEntrySList(ptr)
 @ FASTCALL InterlockedPushEntrySList(ptr ptr)
+#else
+@ stdcall InitializeSListHead(ptr) RtlInitializeSListHead
 #endif
 @ stdcall IoAcquireCancelSpinLock(ptr)
 @ stdcall IoAcquireRemoveLockEx(ptr ptr str long long)

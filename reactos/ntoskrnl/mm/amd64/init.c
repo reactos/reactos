@@ -26,21 +26,16 @@ HalInitializeBios(ULONG Unknown, PLOADER_PARAMETER_BLOCK LoaderBlock);
 
 /* GLOBALS *****************************************************************/
 
+/* Template PTE and PDE for a kernel page */
+MMPTE ValidKernelPde = {.u.Hard.Valid = 1, .u.Hard.Write = 1, .u.Hard.Dirty = 1, .u.Hard.Accessed = 1};
+MMPTE ValidKernelPte = {.u.Hard.Valid = 1, .u.Hard.Write = 1, .u.Hard.Dirty = 1, .u.Hard.Accessed = 1};
+
 /* Sizes */
-//SIZE_T MmBootImageSize;
-//SIZE_T MmMinimumNonPagedPoolSize = 256 * 1024;
-//SIZE_T MmSizeOfNonPagedPoolInBytes;
-//SIZE_T MmMaximumNonPagedPoolInBytes;
-//ULONG MmMaximumNonPagedPoolPercent;
-//ULONG MmMinAdditionNonPagedPoolPerMb = 32 * 1024;
-//ULONG MmMaxAdditionNonPagedPoolPerMb = 400 * 1024;
-//SIZE_T MmDefaultMaximumNonPagedPool = 1024 * 1024; 
-//SIZE_T MmSessionSize = MI_SESSION_SIZE;
+///SIZE_T MmSessionSize = MI_SESSION_SIZE;
 SIZE_T MmSessionViewSize = MI_SESSION_VIEW_SIZE;
 SIZE_T MmSessionPoolSize = MI_SESSION_POOL_SIZE;
 SIZE_T MmSessionImageSize = MI_SESSION_IMAGE_SIZE;
 SIZE_T MmSystemViewSize = MI_SYSTEM_VIEW_SIZE;
-//SIZE_T MmSizeOfPagedPoolInBytes = MI_MIN_INIT_PAGED_POOLSIZE;
 SIZE_T MiNonPagedSystemSize;
 
 /* Address ranges */
@@ -66,15 +61,8 @@ PVOID MmNonPagedPoolExpansionStart;
 ///PVOID MmNonPagedPoolEnd = MI_NONPAGED_POOL_END; // 0xFFFFFAE000000000
 PVOID MmHyperSpaceEnd = (PVOID)HYPER_SPACE_END;
 
-//PPHYSICAL_MEMORY_DESCRIPTOR MmPhysicalMemoryBlock;
-//ULONG MmNumberOfPhysicalPages, MmHighestPhysicalPage, MmLowestPhysicalPage = -1; // FIXME: ULONG64
-
-//ULONG MmNumberOfSystemPtes;
-//PMMPTE MmSystemPagePtes;
 MMSUPPORT MmSystemCacheWs;
 
-//RTL_BITMAP MiPfnBitMap;
-//ULONG64 MxPfnAllocation;
 ULONG64 MxPfnSizeInBytes;
 
 PMEMORY_ALLOCATION_DESCRIPTOR MxFreeDescriptor;
@@ -87,7 +75,6 @@ PFN_NUMBER MxFreePageBase;
 ULONG64 MxFreePageCount = 0;
 
 extern PFN_NUMBER MmSystemPageDirectory;
-//PFN_NUMBER MmSizeOfPagedPoolInPages = MI_MIN_INIT_PAGED_POOLSIZE / PAGE_SIZE;
 
 BOOLEAN MiPfnsInitialized = FALSE;
 
@@ -878,3 +865,18 @@ MmArmInitSystem_x(IN ULONG Phase,
     return STATUS_SUCCESS;
 }
 
+VOID
+FASTCALL
+MiSyncARM3WithROS(IN PVOID AddressStart,
+                  IN PVOID AddressEnd)
+{
+    
+}
+
+NTSTATUS
+NTAPI
+MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
