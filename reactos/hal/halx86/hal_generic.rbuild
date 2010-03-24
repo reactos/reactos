@@ -74,22 +74,38 @@
 				<file>sysbus.c</file>
 			</directory>
 			<file>beep.c</file>
-			<file>bios.c</file>
 			<file>cmos.c</file>
 			<file>dma.c</file>
 			<file>display.c</file>
 			<file>drive.c</file>
-			<file>misc.c</file>
-			<file>pic.c</file>
-			<file>portio.c</file>
-			<file>processor.c</file>
 			<file>profil.c</file>
 			<file>reboot.c</file>
 			<file>spinlock.c</file>
 			<file>sysinfo.c</file>
-			<file>systimer.S</file>
 			<file>timer.c</file>
 			<file>usage.c</file>
+			<if property="ARCH" value="i386">
+				<file>bios.c</file>
+				<file>misc.c</file>
+				<file>pic.c</file>
+				<file>trap.S</file>
+				<file>usage.c</file>
+				<directory name="i386">
+					<file>portio.c</file>
+					<file>systimer.S</file>
+					<file>v86.s</file>
+				</directory>
+			</if>
+			<if property="ARCH" value="amd64">
+				<directory name="amd64">
+					<file>halinit.c</file>
+					<file>irq.S</file>
+					<file>misc.c</file>
+					<file>apic.c</file>
+					<file>systimer.S</file>
+					<file>usage.c</file>
+				</directory>
+			</if>
 		</directory>
 		<directory name="up">
 			<file>halinit_up.c</file>
