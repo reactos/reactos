@@ -93,6 +93,9 @@ KeRaiseIrqlToSynchLevel(VOID)
   return KfRaiseIrql(12); // SYNCH_LEVEL = IPI_LEVEL - 2
 }
 
+#define KeAcquireSpinLock(SpinLock, OldIrql) \
+    *(OldIrql) = KeAcquireSpinLockRaiseToDpc(SpinLock)
+
 FORCEINLINE
 PKTHREAD
 KeGetCurrentThread(VOID)

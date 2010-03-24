@@ -11,11 +11,6 @@ KeInvalidateRangeAllCaches(
 $endif
 
 $if (_WDMDDK_)
-NTHALAPI
-KIRQL
-NTAPI
-KeGetCurrentIrql(VOID);
-
 NTKERNELAPI
 VOID
 NTAPI

@@ -60,6 +60,11 @@ KeMemoryBarrier(VOID)
 }
 
 NTHALAPI
+KIRQL
+NTAPI
+KeGetCurrentIrql(VOID);
+
+NTHALAPI
 VOID
 FASTCALL
 KfLowerIrql(

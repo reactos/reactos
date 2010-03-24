@@ -7725,6 +7725,11 @@ KeMemoryBarrier(VOID)
 }
 
 NTHALAPI
+KIRQL
+NTAPI
+KeGetCurrentIrql(VOID);
+
+NTHALAPI
 VOID
 FASTCALL
 KfLowerIrql(
@@ -7917,6 +7922,9 @@ KeRaiseIrqlToSynchLevel(VOID)
 {
   return KfRaiseIrql(12); // SYNCH_LEVEL = IPI_LEVEL - 2
 }
+
+#define KeAcquireSpinLock(SpinLock, OldIrql) \
+    *(OldIrql) = KeAcquireSpinLockRaiseToDpc(SpinLock)
 
 FORCEINLINE
 PKTHREAD
@@ -9651,11 +9659,6 @@ RTLVERLIB_DDI(RtlIsServicePackVersionInstalled)(
 /******************************************************************************
  *                              Kernel Functions                              *
  ******************************************************************************/
-
-NTHALAPI
-KIRQL
-NTAPI
-KeGetCurrentIrql(VOID);
 
 NTKERNELAPI
 VOID
