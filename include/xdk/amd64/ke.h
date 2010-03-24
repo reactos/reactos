@@ -103,6 +103,14 @@ KeGetCurrentThread(VOID)
   return (struct _KTHREAD *)__readgsqword(0x188);
 }
 
+/* VOID
+ * KeFlushIoBuffers(
+ *   IN PMDL Mdl,
+ *   IN BOOLEAN ReadOperation,
+ *   IN BOOLEAN DmaOperation)
+ */
+#define KeFlushIoBuffers(_Mdl, _ReadOperation, _DmaOperation)
+
 /* x86 and x64 performs a 0x2C interrupt */
 #define DbgRaiseAssertionFailure __int2c
 
