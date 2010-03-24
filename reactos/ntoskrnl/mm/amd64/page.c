@@ -15,7 +15,7 @@
 
 #undef InterlockedExchangePte
 #define InterlockedExchangePte(pte1, pte2) \
-    InterlockedExchange64(&pte1->u.Long, pte2.u.Long)
+    InterlockedExchange64((LONG64*)&pte1->u.Long, pte2.u.Long)
 
 #define PAGE_EXECUTE_ANY (PAGE_EXECUTE|PAGE_EXECUTE_READ|PAGE_EXECUTE_READWRITE|PAGE_EXECUTE_WRITECOPY)
 #define PAGE_WRITE_ANY (PAGE_EXECUTE_READWRITE|PAGE_READWRITE|PAGE_EXECUTE_WRITECOPY|PAGE_WRITECOPY)
@@ -251,7 +251,6 @@ NTAPI
 MmGetPageProtect(PEPROCESS Process, PVOID Address)
 {
     MMPTE Pte;
-    ULONG Protect;
 
     Pte.u.Long = MiGetPteValueForProcess(Process, Address);
 
@@ -362,7 +361,7 @@ MmDeleteVirtualMapping(
     if (Pte)
     {
         /* Atomically set the entry to zero and get the old value. */
-        OldPte.u.Long = InterlockedExchange64(&Pte->u.Long, 0);
+        OldPte.u.Long = InterlockedExchange64((LONG64*)&Pte->u.Long, 0);
 
         if (OldPte.u.Hard.Valid)
         {

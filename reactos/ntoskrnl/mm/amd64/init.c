@@ -27,21 +27,21 @@ HalInitializeBios(ULONG Unknown, PLOADER_PARAMETER_BLOCK LoaderBlock);
 /* GLOBALS *****************************************************************/
 
 /* Sizes */
-ULONG64 MmBootImageSize;
-ULONG64 MmMinimumNonPagedPoolSize = 256 * 1024;
-ULONG64 MmSizeOfNonPagedPoolInBytes;
-ULONG64 MmMaximumNonPagedPoolInBytes;
-ULONG64 MmMaximumNonPagedPoolPercent;
-ULONG64 MmMinAdditionNonPagedPoolPerMb = 32 * 1024;
-ULONG64 MmMaxAdditionNonPagedPoolPerMb = 400 * 1024;
-ULONG64 MmDefaultMaximumNonPagedPool = 1024 * 1024; 
-ULONG64 MmSessionSize = MI_SESSION_SIZE;
-ULONG64 MmSessionViewSize = MI_SESSION_VIEW_SIZE;
-ULONG64 MmSessionPoolSize = MI_SESSION_POOL_SIZE;
-ULONG64 MmSessionImageSize = MI_SESSION_IMAGE_SIZE;
-ULONG64 MmSystemViewSize = MI_SYSTEM_VIEW_SIZE;
-ULONG64 MmSizeOfPagedPoolInBytes = MI_MIN_INIT_PAGED_POOLSIZE;
-ULONG64 MiNonPagedSystemSize;
+//SIZE_T MmBootImageSize;
+//SIZE_T MmMinimumNonPagedPoolSize = 256 * 1024;
+//SIZE_T MmSizeOfNonPagedPoolInBytes;
+//SIZE_T MmMaximumNonPagedPoolInBytes;
+//ULONG MmMaximumNonPagedPoolPercent;
+//ULONG MmMinAdditionNonPagedPoolPerMb = 32 * 1024;
+//ULONG MmMaxAdditionNonPagedPoolPerMb = 400 * 1024;
+//SIZE_T MmDefaultMaximumNonPagedPool = 1024 * 1024; 
+//SIZE_T MmSessionSize = MI_SESSION_SIZE;
+SIZE_T MmSessionViewSize = MI_SESSION_VIEW_SIZE;
+SIZE_T MmSessionPoolSize = MI_SESSION_POOL_SIZE;
+SIZE_T MmSessionImageSize = MI_SESSION_IMAGE_SIZE;
+SIZE_T MmSystemViewSize = MI_SYSTEM_VIEW_SIZE;
+//SIZE_T MmSizeOfPagedPoolInBytes = MI_MIN_INIT_PAGED_POOLSIZE;
+SIZE_T MiNonPagedSystemSize;
 
 /* Address ranges */
 ULONG64 MmUserProbeAddress = 0x7FFFFFF0000ULL;
@@ -57,24 +57,24 @@ PVOID MiSessionImageEnd;                        // FFFFF98000000000 = MiSessionS
 PVOID MiSessionSpaceEnd = MI_SESSION_SPACE_END; // FFFFF98000000000
 PVOID MmSystemCacheStart;                       // FFFFF98000000000
 PVOID MmSystemCacheEnd;                         // FFFFFA8000000000
-PVOID MmPagedPoolStart = MI_PAGED_POOL_START;   // FFFFFA8000000000
+/// PVOID MmPagedPoolStart = MI_PAGED_POOL_START;   // FFFFFA8000000000
 PVOID MmPagedPoolEnd;                           // FFFFFAA000000000
 PVOID MiSystemViewStart;
 PVOID MmNonPagedSystemStart;                    // FFFFFAA000000000
 PVOID MmNonPagedPoolStart;
 PVOID MmNonPagedPoolExpansionStart;
-PVOID MmNonPagedPoolEnd = MI_NONPAGED_POOL_END; // 0xFFFFFAE000000000
+///PVOID MmNonPagedPoolEnd = MI_NONPAGED_POOL_END; // 0xFFFFFAE000000000
 PVOID MmHyperSpaceEnd = (PVOID)HYPER_SPACE_END;
 
-PPHYSICAL_MEMORY_DESCRIPTOR MmPhysicalMemoryBlock;
-ULONG MmNumberOfPhysicalPages, MmHighestPhysicalPage, MmLowestPhysicalPage = -1; // FIXME: ULONG64
+//PPHYSICAL_MEMORY_DESCRIPTOR MmPhysicalMemoryBlock;
+//ULONG MmNumberOfPhysicalPages, MmHighestPhysicalPage, MmLowestPhysicalPage = -1; // FIXME: ULONG64
 
-ULONG MmNumberOfSystemPtes;
-PMMPTE MmSystemPagePtes;
+//ULONG MmNumberOfSystemPtes;
+//PMMPTE MmSystemPagePtes;
 MMSUPPORT MmSystemCacheWs;
 
-RTL_BITMAP MiPfnBitMap;
-ULONG64 MxPfnAllocation;
+//RTL_BITMAP MiPfnBitMap;
+//ULONG64 MxPfnAllocation;
 ULONG64 MxPfnSizeInBytes;
 
 PMEMORY_ALLOCATION_DESCRIPTOR MxFreeDescriptor;
@@ -86,8 +86,8 @@ BOOLEAN MiIncludeType[LoaderMaximum];
 PFN_NUMBER MxFreePageBase;
 ULONG64 MxFreePageCount = 0;
 
-PFN_NUMBER MmSystemPageDirectory;
-PFN_NUMBER MmSizeOfPagedPoolInPages = MI_MIN_INIT_PAGED_POOLSIZE / PAGE_SIZE;
+extern PFN_NUMBER MmSystemPageDirectory;
+//PFN_NUMBER MmSizeOfPagedPoolInPages = MI_MIN_INIT_PAGED_POOLSIZE / PAGE_SIZE;
 
 BOOLEAN MiPfnsInitialized = FALSE;
 
@@ -187,7 +187,7 @@ MiEarlyAllocPage()
 
     if (MiPfnsInitialized)
     {
-        return MmAllocPage(MC_SYSTEM, 0);
+        return MmAllocPage(MC_SYSTEM);
     }
 
     /* Make sure we have enough pages */
@@ -308,7 +308,7 @@ MiPreparePfnDatabse(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     MxPfnAllocation = MxPfnSizeInBytes >> PAGE_SHIFT;
 
     /* Simply start at hardcoded address */
-    MmPfnDatabase = MI_PFN_DATABASE;
+    MmPfnDatabase[1] = MI_PFN_DATABASE;
 
     /* Loop the memory descriptors */
     for (ListEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
@@ -552,7 +552,7 @@ MiBuildNonPagedPool(VOID)
     }
 
     /* Initialize the ARM3 nonpaged pool */
-    MiInitializeArmPool();
+    MiInitializeNonPagedPool();
 
     /* Initialize the nonpaged pool */
     InitializePool(NonPagedPool, 0);
@@ -693,7 +693,7 @@ MiBuildPhysicalMemoryBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 VOID
 NTAPI
-MiBuildPagedPool(VOID)
+MiBuildPagedPool_x(VOID)
 {
     PMMPTE Pte;
     MMPTE TmplPte;
@@ -737,7 +737,7 @@ MiBuildPagedPool(VOID)
     if (!Pte->u.Flush.Valid)
     {
         /* Map it! */
-        TmplPte.u.Flush.PageFrameNumber = MmAllocPage(MC_SYSTEM, 0);
+        TmplPte.u.Flush.PageFrameNumber = MmAllocPage(MC_SYSTEM);
         *Pte = TmplPte;
     }
 
@@ -817,7 +817,7 @@ MiBuildPagedPool(VOID)
 
 NTSTATUS
 NTAPI
-MmArmInitSystem(IN ULONG Phase,
+MmArmInitSystem_x(IN ULONG Phase,
                 IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     if (Phase == 0)
@@ -829,7 +829,7 @@ MmArmInitSystem(IN ULONG Phase,
         MiEvaluateMemoryDescriptors(LoaderBlock);
 
         /* Start PFN database at hardcoded address */
-        MmPfnDatabase = MI_PFN_DATABASE;
+        MmPfnDatabase[1] = MI_PFN_DATABASE;
 
         /* Prepare PFN database mappings */
         MiPreparePfnDatabse(LoaderBlock);
