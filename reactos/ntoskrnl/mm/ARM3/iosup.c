@@ -46,7 +46,7 @@ MI_PFN_CACHE_ATTRIBUTE MiPlatformCacheAttributes[2][MmMaximumCacheType] =
 PVOID
 NTAPI
 MmMapIoSpace(IN PHYSICAL_ADDRESS PhysicalAddress,
-             IN ULONG NumberOfBytes,
+             IN SIZE_T NumberOfBytes,
              IN MEMORY_CACHING_TYPE CacheType)
 {
     

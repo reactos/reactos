@@ -159,8 +159,8 @@ typedef struct _R_POOL
 R_POOL, *PR_POOL;
 
 PVOID MmPagedPoolBase;
-ULONG MmPagedPoolSize;
-ULONG MmTotalPagedPoolQuota = 0; // TODO FIXME commented out until we use it
+SIZE_T MmPagedPoolSize;
+SIZE_T MmTotalPagedPoolQuota = 0; // TODO FIXME commented out until we use it
 static PR_POOL MmPagedPool = NULL;
 
 /* FUNCTIONS*******************************************************************/

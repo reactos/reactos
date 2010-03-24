@@ -6,22 +6,22 @@
 
 struct _EPROCESS;
 
-extern ULONG MiFreeSwapPages;
-extern ULONG MiUsedSwapPages;
-extern ULONG MmPagedPoolSize;
-extern ULONG MmTotalPagedPoolQuota;
-extern ULONG MmTotalNonPagedPoolQuota;
+extern PFN_NUMBER MiFreeSwapPages;
+extern PFN_NUMBER MiUsedSwapPages;
+extern SIZE_T MmPagedPoolSize;
+extern SIZE_T MmTotalPagedPoolQuota;
+extern SIZE_T MmTotalNonPagedPoolQuota;
 extern PHYSICAL_ADDRESS MmSharedDataPagePhysicalAddress;
-extern ULONG MmNumberOfPhysicalPages;
+extern PFN_NUMBER MmNumberOfPhysicalPages;
 extern UCHAR MmDisablePagingExecutive;
-extern ULONG MmLowestPhysicalPage;
-extern ULONG MmHighestPhysicalPage;
-extern ULONG MmAvailablePages;
-extern ULONG MmResidentAvailablePages;
-extern ULONG MmNumberOfSystemPtes;
+extern PFN_NUMBER MmLowestPhysicalPage;
+extern PFN_NUMBER MmHighestPhysicalPage;
+extern PFN_NUMBER MmAvailablePages;
+extern PFN_NUMBER MmResidentAvailablePages;
+extern ULONG_PTR MmNumberOfSystemPtes;
 
 extern PVOID MmPagedPoolBase;
-extern ULONG MmPagedPoolSize;
+extern SIZE_T MmPagedPoolSize;
 
 extern PMEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptor;
 extern MEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptorOrg;

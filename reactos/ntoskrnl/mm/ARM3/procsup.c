@@ -503,7 +503,7 @@ MmCreatePeb(IN PEPROCESS Process,
             ImageConfigData = RtlImageDirectoryEntryToData(Peb->ImageBaseAddress,
                                                            TRUE,
                                                            IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG,
-                                                           &ViewSize);
+                                                           (PULONG)&ViewSize);
             if (ImageConfigData)
             {
                 //

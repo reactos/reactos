@@ -1553,7 +1553,7 @@ IoFreeIrp(IN PIRP Irp)
         if (Irp)
         {
            InterlockedPushEntrySList(&List->L.ListHead,
-                                     (PSINGLE_LIST_ENTRY)Irp);
+                                     (PSLIST_ENTRY)Irp);
         }
     }
 }

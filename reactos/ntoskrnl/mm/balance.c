@@ -228,7 +228,7 @@ MiIsBalancerThread(VOID)
           PsGetCurrentThread() == MiBalancerThreadId.UniqueThread;
 }
 
-VOID NTAPI MiSetConsumer(IN PFN_TYPE Pfn, IN ULONG Consumer);
+VOID NTAPI MiSetConsumer(IN PFN_NUMBER Pfn, IN ULONG Consumer);
 
 NTSTATUS
 NTAPI

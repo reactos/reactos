@@ -1411,7 +1411,7 @@ KeRegisterNmiCallback(IN PNMI_CALLBACK CallbackRoutine,
     //
     KiAcquireNmiListLock(&OldIrql);
     NmiData->Next = KiNmiCallbackListHead;
-    Next = InterlockedCompareExchangePointer(&KiNmiCallbackListHead,
+    Next = InterlockedCompareExchangePointer((PVOID*)&KiNmiCallbackListHead,
                                              NmiData,
                                              NmiData->Next);
     ASSERT(Next == NmiData->Next);

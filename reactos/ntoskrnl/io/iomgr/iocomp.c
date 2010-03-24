@@ -92,7 +92,7 @@ IopFreeMiniPacket(PIOP_MINI_COMPLETION_PACKET Packet)
     }
 
     /* The free was within dhe Depth */
-    InterlockedPushEntrySList(&List->L.ListHead, (PSINGLE_LIST_ENTRY)Packet);
+    InterlockedPushEntrySList(&List->L.ListHead, (PSLIST_ENTRY)Packet);
 }
 
 VOID
