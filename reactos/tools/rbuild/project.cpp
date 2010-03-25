@@ -547,3 +547,95 @@ Project::GetLinkerSet () const
 	default: assert ( false );
 	}
 }
+
+void
+Project::GenerateInstallerFileList()
+{
+    std::map<std::string, Module*> Result;
+    std::map<std::string, Module*>::iterator i; 
+    std::string buffer = "";
+
+    printf ( "Generating reactos.dff..." );
+    std::string path = Environment::GetIntermediatePath();
+    path += sSep + "reactos.dff";
+    FILE* f = fopen(path.c_str(), "wb");
+
+    buffer = "; Main ReactOS package\r\n"
+             ".Set DiskLabelTemplate=\"ReactOS\"                ; Label of disk\r\n"
+             ".Set CabinetNameTemplate=\"reactos.cab\"          ; reactos.cab\r\n"
+             ".Set InfFileName=\"reactos.inf\"                  ; reactos.inf\r\n"
+             ".InfBegin\r\n"
+             "[Version]\r\n"
+             "Signature = \"$ReactOS$\"\r\n"
+             "[Directories]\r\n"
+             "1 = system32\r\n"
+             "2 = system32\\drivers\r\n"
+             "3 = Fonts\r\n"
+             "4 =\r\n"
+             "5 = system32\\drivers\\etc\r\n"
+             "6 = inf\r\n"
+             "7 = bin\r\n"
+             "8 = media\r\n"
+             ".InfEnd\r\n"
+             "; Contents of disk\r\n"
+             ".InfBegin\r\n"
+             "[SourceFiles]\r\n"
+             ".InfEnd\r\n";
+    fprintf(f,buffer.c_str());
+    for(i = modules.begin(); i != modules.end(); ++i)
+    {
+        buffer = "";
+        if(i->second->install)
+        {
+            buffer = i->second->output->relative_path + sSep;
+            buffer += i->second->output->name;
+            if(i->second->installbase == "system32")
+                buffer += "\t1";
+            if(i->second->installbase == "system32/drivers")
+                buffer += "\t2";
+            else if(i->second->installbase == "fonts")
+                buffer += "\t3";
+            else if(i->second->installbase == "")
+                buffer += "\t4";
+            else if(i->second->installbase == "system32/drivers/etc")
+                buffer += "\t5";
+            else if(i->second->installbase == "inf")
+                buffer += "\t6";
+            else if(i->second->installbase == "bin")
+                buffer += "\t7";
+            else if(i->second->installbase == "media")
+                buffer += "\t8";
+
+            fprintf(f, "%s\r\n",buffer.c_str());
+        }
+    }
+
+    for(size_t j = 0; j< installfiles.size(); j++)
+    {
+        buffer = "";
+        buffer = installfiles[j]->source->relative_path + sSep;
+        buffer += installfiles[j]->target->name;
+        if(installfiles[j]->installbase == "system32")
+            buffer += "\t1";
+        if(installfiles[j]->installbase == "system32/drivers")
+            buffer += "\t2";
+        else if(installfiles[j]->installbase == "fonts")
+            buffer += "\t3";
+        else if(installfiles[j]->installbase == "")
+            buffer += "\t4";
+        else if(installfiles[j]->installbase == "system32/drivers/etc")
+            buffer += "\t5";
+        else if(installfiles[j]->installbase == "inf")
+            buffer += "\t6";
+        else if(installfiles[j]->installbase == "bin")
+            buffer += "\t7";
+        else if(installfiles[j]->installbase == "media")
+            buffer += "\t8";
+
+
+        fprintf(f,"%s\r\n",buffer.c_str());
+    }
+
+	printf ( "done\n" );
+
+}

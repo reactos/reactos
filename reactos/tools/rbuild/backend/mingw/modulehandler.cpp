@@ -2740,8 +2740,8 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 	const FileLocation *isoboot = bootModule->output;
 
 	// prepare reactos.dff and reactos.inf
-	FileLocation reactosDff ( SourceDirectory,
-	                          "boot" + sSep + "bootdata" + sSep + "packages",
+	FileLocation reactosDff ( IntermediateDirectory,
+	                          "",
 	                          "reactos.dff" );
 	FileLocation reactosInf ( bootcdReactos.directory,
 	                          bootcdReactos.relative_path,

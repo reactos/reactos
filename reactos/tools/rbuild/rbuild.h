@@ -284,6 +284,7 @@ public:
 	const Property* LookupProperty ( const std::string& name ) const;
 	std::string GetCompilerSet () const;
 	std::string GetLinkerSet () const;
+	void GenerateInstallerFileList();
 private:
 	std::string ResolveNextProperty ( const std::string& s ) const;
 	void ReadXml ();
@@ -408,6 +409,7 @@ public:
 	bool isCRT;
 	std::string CRT;
 	bool dynamicCRT;
+	std::string installbase;
 	FileLocation *output; // "path/foo.exe"
 	FileLocation *dependency; // "path/foo.exe" or "path/libfoo.a"
 	FileLocation *install;
@@ -913,6 +915,7 @@ class InstallFile : public XmlNode
 public:
 	FileLocation *source;
 	FileLocation *target;
+	std::string installbase;
 
 	InstallFile ( const Project& project,
 	              const XMLElement& bootstrapNode,

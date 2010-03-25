@@ -396,6 +396,12 @@ Module::Module ( const Project& project,
 	if ( att != NULL )
 	{
 		const XMLAttribute* installbase = moduleNode.GetAttribute ( "installbase", false );
+
+        if(installbase)
+            this->installbase = installbase->value;
+        else
+            this->installbase = "";
+
 		install = new FileLocation ( InstallDirectory,
 		                             installbase ? installbase->value : "",
 		                             att->value,

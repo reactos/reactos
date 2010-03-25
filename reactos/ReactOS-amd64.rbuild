@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
-<project name="ReactOS" makefile="makefile-amd64.auto" xmlns:xi="http://www.w3.org/2001/XInclude">
+<project name="ReactOS" makefile="makefile-amd64.auto" xmlns:xi="http://www.w3.org/2001/XInclude" allowwarnings="true">
 	<xi:include href="config-amd64.rbuild">
 		<xi:fallback>
 			<xi:include href="config-amd64.template.rbuild" />
@@ -28,12 +28,14 @@
 			<compilerflag>-ftracer</compilerflag>
 			<compilerflag>-momit-leaf-frame-pointer</compilerflag>
 		</if>
+		<compilerflag>-fms-extensions</compilerflag>
 		<compilerflag>-mpreferred-stack-boundary=4</compilerflag>
 		<compilerflag compiler="midl">-m64 --win64</compilerflag>
 		<!-- compilerflag compiler="cc,cxx">-gstabs+</compilerflag -->
 		<!-- compilerflag compiler="as">-gstabs+</compilerflag -->
 		<compilerflag>-U_X86_</compilerflag>
 		<compilerflag>-Wno-format</compilerflag>
+		<compilerflag>-fno-leading-underscore</compilerflag>
 	</group>
 
 	<group linkerset="ld">
@@ -42,6 +44,8 @@
 		<linkerflag>-section-alignment=0x1000</linkerflag>
 		<linkerflag>--unique=.eh_frame</linkerflag>
 		<linkerflag>-static</linkerflag>
+		<linkerflag>-fno-leading-underscore</linkerflag>
+		<linkerflag>--exclude-all-symbols</linkerflag>
 	</group>
 
 	<if property="USERMODE" value="1">

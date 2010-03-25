@@ -365,9 +365,16 @@ MingwBackend::ProcessNormal ()
 	GenerateTestSupportCode ();
 	GenerateCompilationUnitSupportCode ();
 	GenerateSysSetup ();
+	GenerateInstallerFileList();
 	GenerateProxyMakefiles ();
 	CheckAutomaticDependencies ();
 	CloseMakefile ();
+}
+
+void
+MingwBackend::GenerateInstallerFileList()
+{
+	this->ProjectNode.GenerateInstallerFileList();
 }
 
 void
