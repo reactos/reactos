@@ -330,7 +330,7 @@ IntVideoPortFindAdapter(
 {
    WCHAR DeviceVideoBuffer[20];
    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
-   ULONG Size;
+   SIZE_T Size;
    NTSTATUS Status;
    VIDEO_PORT_CONFIG_INFO ConfigInfo;
    SYSTEM_BASIC_INFORMATION SystemBasicInfo;

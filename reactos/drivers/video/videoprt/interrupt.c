@@ -110,6 +110,7 @@ VP_STATUS
 NTAPI
 VideoPortEnableInterrupt(IN PVOID HwDeviceExtension)
 {
+#ifndef _M_AMD64
     PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
     BOOLEAN InterruptValid;
 
@@ -133,6 +134,11 @@ VideoPortEnableInterrupt(IN PVOID HwDeviceExtension)
 
     /* Return to caller */
     return NO_ERROR;
+#else
+    /* FIXME: Function still present? If so what to use instead of HalEnableSystemInterrupt? */
+    UNIMPLEMENTED;
+    return ERROR_INVALID_ACCESS;
+#endif
 }
 
 /*
@@ -142,6 +148,7 @@ VP_STATUS
 NTAPI
 VideoPortDisableInterrupt(IN PVOID HwDeviceExtension)
 {
+#ifndef _M_AMD64
     PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
 
     /* Get the device extension */
@@ -158,4 +165,9 @@ VideoPortDisableInterrupt(IN PVOID HwDeviceExtension)
     HalDisableSystemInterrupt(DeviceExtension->InterruptVector,
                               0);
     return NO_ERROR;
+#else
+    /* FIXME: Function still present? If so what to use instead of HalDisableSystemInterrupt? */
+    UNIMPLEMENTED;
+    return ERROR_INVALID_ACCESS;
+#endif
 }

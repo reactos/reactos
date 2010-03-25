@@ -24,6 +24,7 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+#if defined(_M_IX86)
 VP_STATUS NTAPI
 IntInt10AllocateBuffer(
    IN PVOID Context,
@@ -190,6 +191,7 @@ IntInt10CallBios(
     if (NT_SUCCESS(Status)) return NO_ERROR;
     return ERROR_INVALID_PARAMETER;
 }
+#endif
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
@@ -202,6 +204,7 @@ VideoPortInt10(
     IN PVOID HwDeviceExtension,
     IN PVIDEO_X86_BIOS_ARGUMENTS BiosArguments)
 {
+#if defined(_M_IX86)
     CONTEXT BiosContext;
     NTSTATUS Status;
     PKPROCESS CallingProcess = (PKPROCESS)PsGetCurrentProcess();
@@ -243,4 +246,9 @@ VideoPortInt10(
     IntDetachFromCSRSS(&CallingProcess, &ApcState);
     if (NT_SUCCESS(Status)) return NO_ERROR;
     return ERROR_INVALID_PARAMETER;
+#else
+    /* Not implemented for anything else than X86*/
+    DPRINT1("Int10 not available on non-x86!\n");
+    return ERROR_INVALID_FUNCTION;
+#endif
 }
