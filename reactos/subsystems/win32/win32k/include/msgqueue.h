@@ -187,7 +187,7 @@ co_IntSendMessageTimeout(HWND hWnd,
 LRESULT FASTCALL
 IntDispatchMessage(MSG* Msg);
 BOOL FASTCALL
-IntTranslateKbdMessage(LPMSG lpMsg, HKL dwhkl);
+IntTranslateKbdMessage(LPMSG lpMsg, UINT flags);
 
 VOID FASTCALL
 co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
