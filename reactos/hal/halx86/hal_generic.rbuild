@@ -70,19 +70,23 @@
 			<file>display.c</file>
 			<file>drive.c</file>
 			<file>misc.c</file>
-			<file>pic.c</file>
-			<file>portio.c</file>
-			<file>processor.c</file>
 			<file>profil.c</file>
 			<file>reboot.c</file>
 			<file>spinlock.c</file>
 			<file>sysinfo.c</file>
-			<file>systimer.S</file>
 			<file>timer.c</file>
 			<file>usage.c</file>
+			<if property="ARCH" value="i386">
+				<directory name="i386">
+					<file>portio.c</file>
+					<file>systimer.S</file>
+				</directory>
+			</if>
 		</directory>
 		<directory name="up">
 			<file>halinit_up.c</file>
+			<file>pic.c</file>
+			<file>processor.c</file>
 		</directory>
 	</module>
 </group>
