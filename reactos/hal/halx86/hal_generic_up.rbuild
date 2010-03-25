@@ -9,7 +9,7 @@
 		<directory name="generic">
 			<file>spinlock.c</file>
 		</directory>
-		<directory name="generic">
+		<directory name="up">
 			<file>pic.c</file>
 			<file>processor.c</file>
 		</directory>
