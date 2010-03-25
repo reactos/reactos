@@ -11,4 +11,5 @@
 	<file>cmbpnp.c</file>
 	<file>cmbwmi.c</file>
 	<file>cmbatt.rc</file>
+	<pch>cmbatt.h</pch>
 </module>
