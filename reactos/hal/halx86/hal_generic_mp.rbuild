@@ -7,6 +7,9 @@
 		<define name="_NTHALDLL_" />
 		<define name="_NTHAL_" />
 		<define name="CONFIG_SMP" />
+		<directory name="generic">
+			<file>spinlock.c</file>
+		</directory>
 		<directory name="mp">
 			<file>apic.c</file>
 			<file>halinit_mp.c</file>
@@ -14,7 +17,6 @@
 			<file>ipi_mp.c</file>
 			<file>mpconfig.c</file>
 			<file>processor_mp.c</file>
-			<file>spinlock.c</file>
 			<file>halmp.rc</file>
 		</directory>
 	</module>
