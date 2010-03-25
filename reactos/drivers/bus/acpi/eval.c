@@ -23,11 +23,13 @@ Bus_PDO_EvalMethod(PPDO_DEVICE_DATA DeviceData,
 {
   ULONG Signature;
   NTSTATUS Status;
-  ACPI_OBJECT_LIST *ParamList;
+  ACPI_OBJECT_LIST ParamList;
   PACPI_EVAL_INPUT_BUFFER EvalInputBuff = Irp->AssociatedIrp.SystemBuffer;
   ACPI_BUFFER RetBuff = {ACPI_ALLOCATE_BUFFER, NULL};
   PACPI_EVAL_OUTPUT_BUFFER OutputBuf;
   PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
+  ACPI_EVAL_INPUT_BUFFER_SIMPLE_INTEGER *SimpleInt;
+  ACPI_EVAL_INPUT_BUFFER_SIMPLE_STRING *SimpleStr;
 
   if (IrpSp->Parameters.DeviceIoControl.InputBufferLength < sizeof(ULONG))
       return STATUS_INVALID_PARAMETER;
@@ -40,10 +42,38 @@ Bus_PDO_EvalMethod(PPDO_DEVICE_DATA DeviceData,
         if (IrpSp->Parameters.DeviceIoControl.InputBufferLength < sizeof(ACPI_EVAL_INPUT_BUFFER))
             return STATUS_INVALID_PARAMETER;
 
-        ParamList = NULL;
+        ParamList.Count = 0;
         break;
 
-     /* FIXME: Support input parameters */
+     case ACPI_EVAL_INPUT_BUFFER_SIMPLE_INTEGER_SIGNATURE:
+        SimpleInt = Irp->AssociatedIrp.SystemBuffer;
+
+        if (IrpSp->Parameters.DeviceIoControl.InputBufferLength < sizeof(ACPI_EVAL_INPUT_BUFFER_SIMPLE_INTEGER))
+            return STATUS_INVALID_PARAMETER;
+
+        ParamList.Count = 1;
+
+        ParamList.Pointer = ExAllocatePool(NonPagedPool, sizeof(ACPI_OBJECT));
+        if (!ParamList.Pointer) return STATUS_INSUFFICIENT_RESOURCES;
+
+        ParamList.Pointer[0].Type = ACPI_TYPE_INTEGER;
+        ParamList.Pointer[0].Integer.Value = SimpleInt->IntegerArgument;
+        break;
+
+     case ACPI_EVAL_INPUT_BUFFER_SIMPLE_STRING_SIGNATURE:
+        SimpleStr = Irp->AssociatedIrp.SystemBuffer;
+
+        if (IrpSp->Parameters.DeviceIoControl.InputBufferLength < sizeof(ACPI_EVAL_INPUT_BUFFER_SIMPLE_STRING))
+            return STATUS_INVALID_PARAMETER;
+
+        ParamList.Count = 1;
+
+        ParamList.Pointer = ExAllocatePool(NonPagedPool, sizeof(ACPI_OBJECT));
+        if (!ParamList.Pointer) return STATUS_INSUFFICIENT_RESOURCES;
+
+        ParamList.Pointer[0].String.Pointer = (CHAR*)SimpleStr->String;
+        ParamList.Pointer[0].String.Length = SimpleStr->StringLength;
+        break;
 
      default:
         DPRINT1("Unsupported input buffer signature: %d\n", Signature);
@@ -52,8 +82,12 @@ Bus_PDO_EvalMethod(PPDO_DEVICE_DATA DeviceData,
 
   Status = AcpiEvaluateObject(DeviceData->AcpiHandle,
                               (CHAR*)EvalInputBuff->MethodName,
-                              ParamList,
+                              &ParamList,
                               &RetBuff);
+
+  if (ParamList.Count != 0)
+      ExFreePool(ParamList.Pointer);
+
   if (ACPI_SUCCESS(Status))
   {
       ACPI_OBJECT *Obj = RetBuff.Pointer;
