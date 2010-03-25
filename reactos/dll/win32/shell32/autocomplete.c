@@ -214,7 +214,7 @@ static HRESULT WINAPI IAutoComplete_fnInit(
     static const WCHAR lbName[] = {'L','i','s','t','B','o','x',0};
 
     TRACE("(%p)->(0x%08lx, %p, %s, %s)\n",
-	  This, (long)hwndEdit, punkACL, debugstr_w(pwzsRegKeyPath), debugstr_w(pwszQuickComplete));
+	  This, hwndEdit, punkACL, debugstr_w(pwzsRegKeyPath), debugstr_w(pwszQuickComplete));
 
     if (This->options & ACO_AUTOSUGGEST) TRACE(" ACO_AUTOSUGGEST\n");
     if (This->options & ACO_AUTOAPPEND) TRACE(" ACO_AUTOAPPEND\n");

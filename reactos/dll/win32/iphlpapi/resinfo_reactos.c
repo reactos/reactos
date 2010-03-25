@@ -58,7 +58,7 @@ NTAPI
 RtlAllocateHeap (
 	HANDLE	Heap,
 	ULONG	Flags,
-	ULONG	Size
+	SIZE_T	Size
 	);
 
 NTSYSAPI
