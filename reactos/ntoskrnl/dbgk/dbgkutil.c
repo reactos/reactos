@@ -243,10 +243,10 @@ DbgkCreateThread(IN PETHREAD Thread,
             wcsncpy(Teb->StaticUnicodeBuffer,
                     L"ntdll.dll",
                     sizeof(Teb->StaticUnicodeBuffer) / sizeof(WCHAR));
-            Teb->Tib.ArbitraryUserPointer = Teb->StaticUnicodeBuffer;
+            Teb->NtTib.ArbitraryUserPointer = Teb->StaticUnicodeBuffer;
 
             /* Return it in the debug event as well */
-            LoadDll->NamePointer = &Teb->Tib.ArbitraryUserPointer;
+            LoadDll->NamePointer = &Teb->NtTib.ArbitraryUserPointer;
         }
 
         /* Get a handle */

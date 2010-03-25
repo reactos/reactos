@@ -25,6 +25,7 @@ Author:
 #include <umtypes.h>
 #include <ntnls.h>
 #include <rtltypes.h>
+#include <pstypes.h>
 #include <extypes.h>
 #include "in6addr.h"
 #include "inaddr.h"
