@@ -8,6 +8,9 @@
 #include <acpi_bus.h>
 #include <acpi_drivers.h>
 
+#include <initguid.h>
+#include <poclass.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -33,8 +36,12 @@ Bus_PDO_PnP (
 {
     NTSTATUS                status;
     POWER_STATE             state;
+    struct acpi_device      *device = NULL;
 
     PAGED_CODE ();
+
+    if (DeviceData->AcpiHandle)
+        acpi_bus_get_device(DeviceData->AcpiHandle, &device);
 
     //
     // NB: Because we are a bus enumerator, we have no one to whom we could
@@ -45,7 +52,6 @@ Bus_PDO_PnP (
     switch (IrpStack->MinorFunction) {
 
     case IRP_MN_START_DEVICE:
-
         //
         // Here we do what ever initialization and ``turning on'' that is
         // required to allow others to access this device.
@@ -59,6 +65,43 @@ Bus_PDO_PnP (
             break;
         }
 
+        DeviceData->InterfaceName.Length = 0;
+
+        if (!device)
+        {
+            IoRegisterDeviceInterface(DeviceData->Common.Self,
+                                      &GUID_DEVICE_SYS_BUTTON,
+                                      NULL,
+                                      &DeviceData->InterfaceName);
+        }
+        else if (device->flags.hardware_id &&
+                 strstr(device->pnp.hardware_id, ACPI_THERMAL_HID))
+        {
+            IoRegisterDeviceInterface(DeviceData->Common.Self,
+                                      &GUID_DEVICE_THERMAL_ZONE,
+                                      NULL,
+                                      &DeviceData->InterfaceName);
+        }
+        else if (device->flags.hardware_id &&
+                 strstr(device->pnp.hardware_id, ACPI_BUTTON_HID_LID))
+        {
+            IoRegisterDeviceInterface(DeviceData->Common.Self,
+                                      &GUID_DEVICE_LID,
+                                      NULL,
+                                      &DeviceData->InterfaceName);
+        }
+        else if (device->flags.hardware_id &&
+                 strstr(device->pnp.hardware_id, ACPI_PROCESSOR_HID))
+        {
+            IoRegisterDeviceInterface(DeviceData->Common.Self,
+                                      &GUID_DEVICE_PROCESSOR,
+                                      NULL,
+                                      &DeviceData->InterfaceName);
+        }
+
+        if (DeviceData->InterfaceName.Length != 0)
+            IoSetDeviceInterfaceState(&DeviceData->InterfaceName, TRUE);
+
         state.DeviceState = PowerDeviceD0;
         PoSetPowerState(DeviceData->Common.Self, DevicePowerState, state);
         DeviceData->Common.DevicePowerState = PowerDeviceD0;
@@ -67,6 +110,9 @@ Bus_PDO_PnP (
         break;
 
     case IRP_MN_STOP_DEVICE:
+
+        if (DeviceData->InterfaceName.Length != 0)
+            IoSetDeviceInterfaceState(&DeviceData->InterfaceName, FALSE);
 
         //
         // Here we shut down the device and give up and unmap any resources
@@ -331,20 +377,17 @@ Bus_PDO_QueryDeviceCaps(
        deviceCapabilities->UniqueID = device->flags.unique_id;
        deviceCapabilities->NoDisplayInUI = !device->status.show_in_ui;
        deviceCapabilities->Address = device->pnp.bus_address;
-       deviceCapabilities->RawDeviceOK = FALSE;
     }
-    else
-    {
-       deviceCapabilities->EjectSupported = FALSE;
-       deviceCapabilities->HardwareDisabled = FALSE;
-       deviceCapabilities->Removable = FALSE;
-       deviceCapabilities->SurpriseRemovalOK = FALSE;
-       deviceCapabilities->UniqueID = FALSE;
-       deviceCapabilities->NoDisplayInUI = FALSE;
-       deviceCapabilities->Address = 0;
 
-       /* The ACPI driver will run fixed buttons */
-       deviceCapabilities->RawDeviceOK = TRUE;
+    if (!device ||
+        (device->flags.hardware_id &&
+         (strstr(device->pnp.hardware_id, ACPI_BUTTON_HID_LID) ||
+          strstr(device->pnp.hardware_id, ACPI_THERMAL_HID) ||
+          strstr(device->pnp.hardware_id, ACPI_PROCESSOR_HID))))
+    {
+        /* Allow ACPI to control the device if it is a lid button,
+         * a thermal zone, a processor, or a fixed feature button */
+        deviceCapabilities->RawDeviceOK = TRUE;
     }
 
     deviceCapabilities->SilentInstall = FALSE;

@@ -7,6 +7,7 @@
 #include <acpi_drivers.h>
 
 #include <acpiioct.h>
+#include <poclass.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -16,8 +17,6 @@
 #pragma alloc_text (PAGE, Bus_AddDevice)
 
 #endif
-
-
 
 NTSTATUS
 NTAPI
@@ -189,6 +188,7 @@ ACPIDispatchDeviceControl(
     PIO_STACK_LOCATION      irpStack;
     NTSTATUS                status = STATUS_NOT_SUPPORTED;
     PCOMMON_DEVICE_DATA     commonData;
+    ULONG Caps = 0;
 
     PAGED_CODE ();
 
@@ -206,6 +206,44 @@ ACPIDispatchDeviceControl(
            case IOCTL_ACPI_EVAL_METHOD:
               status = Bus_PDO_EvalMethod((PPDO_DEVICE_DATA)commonData,
                                           Irp);
+              break;
+
+           case IOCTL_GET_SYS_BUTTON_CAPS:
+              if (irpStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(ULONG))
+              {
+                  status = STATUS_BUFFER_TOO_SMALL;
+                  break;
+              }
+
+              if (wcsstr(((PPDO_DEVICE_DATA)commonData)->HardwareIDs, L"PNP0C0C") ||
+                  wcsstr(((PPDO_DEVICE_DATA)commonData)->HardwareIDs, L"ACPI_FPB"))
+              {
+                  DPRINT1("Power button reported to power manager\n");
+                  Caps |= SYS_BUTTON_POWER;
+              }
+              else if (wcsstr(((PPDO_DEVICE_DATA)commonData)->HardwareIDs, L"PNP0C0E") ||
+                       wcsstr(((PPDO_DEVICE_DATA)commonData)->HardwareIDs, L"ACPI_FSB"))
+              {
+                  DPRINT1("Sleep button reported to power manager\n");
+                  Caps |= SYS_BUTTON_SLEEP;
+              }
+              else if (wcsstr(((PPDO_DEVICE_DATA)commonData)->HardwareIDs, L"PNP0C0D"))
+              {
+                  DPRINT1("Lid button reported to power manager\n");
+                  Caps |= SYS_BUTTON_LID;
+              }
+              else
+              {
+                  DPRINT1("IOCTL_GET_SYS_BUTTON_CAPS sent to a non-button device\n");
+                  status = STATUS_INVALID_PARAMETER;
+              }
+
+              if (Caps != 0)
+              {
+                  RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, &Caps, sizeof(Caps));
+                  Irp->IoStatus.Information = sizeof(Caps);
+                  status = STATUS_SUCCESS;
+              }
               break;
 
            /* TODO: Implement other IOCTLs */

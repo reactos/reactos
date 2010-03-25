@@ -39,6 +39,7 @@ typedef struct _PDO_DEVICE_DATA
     // Link point to hold all the PDOs for a single bus together
     LIST_ENTRY  Link;
     ULONG       InterfaceRefCount;
+    UNICODE_STRING InterfaceName;
 
 } PDO_DEVICE_DATA, *PPDO_DEVICE_DATA;
 
@@ -63,10 +64,6 @@ typedef struct _FDO_DEVICE_DATA
 
     // A synchronization for access to the device extension.
     FAST_MUTEX      Mutex;
-
-    // The name returned from IoRegisterDeviceInterface,
-    // which is used as a handle for IoSetDeviceInterfaceState.
-    UNICODE_STRING      InterfaceName;
 
 } FDO_DEVICE_DATA, *PFDO_DEVICE_DATA;
 
