@@ -22,6 +22,8 @@
 
 #pragma once
 
+#define _CFGMGR32_H_
+
 #include <cfg.h>
 
 #ifndef GUID_DEFINED

@@ -22,6 +22,8 @@
 
 #pragma once
 
+#define _CFG_INCLUDED_
+
 #ifdef __cplusplus
 extern "C" {
 #endif
