@@ -20,14 +20,7 @@
  *
  */
 
-#ifndef __TVOUT_H
-#define __TVOUT_H
-
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 
 #ifndef GUID_DEFINED
 #include <guiddef.h>
@@ -84,30 +77,27 @@
 #define VP_CP_CMD_CHANGE                  0x00000004
 
 typedef struct _VIDEOPARAMETERS {
-  GUID  Guid;
-  ULONG  dwOffset;
-  ULONG  dwCommand;
-  ULONG  dwFlags;
-  ULONG  dwMode;
-  ULONG  dwTVStandard;
-  ULONG  dwAvailableModes;
-  ULONG  dwAvailableTVStandard;
-  ULONG  dwFlickerFilter;
-  ULONG  dwOverScanX;
-  ULONG  dwOverScanY;
-  ULONG  dwMaxUnscaledX;
-  ULONG  dwMaxUnscaledY;
-  ULONG  dwPositionX;
-  ULONG  dwPositionY;
-  ULONG  dwBrightness;
-  ULONG  dwContrast;
-  ULONG  dwCPType;
-  ULONG  dwCPCommand;
-  ULONG  dwCPStandard;
-  ULONG  dwCPKey;
-  ULONG  bCP_APSTriggerBits;
-  UCHAR  bOEMCopyProtection[256];
-} VIDEOPARAMETERS, *PVIDEOPARAMETERS, FAR *LPVIDEOPARAMETERS;
-
-
-#endif /* __TVOUT_H */
+  GUID Guid;
+  ULONG dwOffset;
+  ULONG dwCommand;
+  ULONG dwFlags;
+  ULONG dwMode;
+  ULONG dwTVStandard;
+  ULONG dwAvailableModes;
+  ULONG dwAvailableTVStandard;
+  ULONG dwFlickerFilter;
+  ULONG dwOverScanX;
+  ULONG dwOverScanY;
+  ULONG dwMaxUnscaledX;
+  ULONG dwMaxUnscaledY;
+  ULONG dwPositionX;
+  ULONG dwPositionY;
+  ULONG dwBrightness;
+  ULONG dwContrast;
+  ULONG dwCPType;
+  ULONG dwCPCommand;
+  ULONG dwCPStandard;
+  ULONG dwCPKey;
+  ULONG bCP_APSTriggerBits;
+  UCHAR bOEMCopyProtection[256];
+} VIDEOPARAMETERS, *PVIDEOPARAMETERS, *LPVIDEOPARAMETERS;
