@@ -520,7 +520,7 @@ static NTSTATUS NTAPI ConfigCallback(PVOID Context,
           if(AddressSpace == 0)
               gControllerInfo[gNumberOfControllers].BaseAddress = MmMapIoSpace(TranslatedAddress, FDC_PORT_BYTES, MmNonCached);
           else
-              gControllerInfo[gNumberOfControllers].BaseAddress = (PUCHAR)TranslatedAddress.u.LowPart;
+              gControllerInfo[gNumberOfControllers].BaseAddress = (PUCHAR)(ULONG_PTR)TranslatedAddress.QuadPart;
         }
 
       else if(PartialDescriptor->Type == CmResourceTypeDma)

@@ -59,6 +59,13 @@ NTAPI
 ExGetCurrentProcessorCpuUsage(
     PULONG CpuUsage);
 
+/* portability fixes */
+#ifdef _M_AMD64
+#define KfReleaseSpinLock KeReleaseSpinLock
+#define KefAcquireSpinLockAtDpcLevel KeAcquireSpinLockAtDpcLevel
+#define KefReleaseSpinLockFromDpcLevel KeReleaseSpinLockFromDpcLevel
+#endif
+
 #endif /* __NDISSYS_H */
 
 /* EOF */

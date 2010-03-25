@@ -2744,7 +2744,7 @@ Return Value:
 
 {
     PHW_DEVICE_EXTENSION  deviceExtension = HwDeviceExtension;
-    ULONG                 nativeModeAdapterTableIndex = (ULONG)Context;
+    ULONG                 nativeModeAdapterTableIndex = (ULONG_PTR)Context;
     ULONG                 channel;
     PUCHAR                ioSpace;
     BOOLEAN               atapiOnly,
@@ -6260,7 +6260,7 @@ Return Value:
         newStatus = ScsiPortInitialize(DriverObject,
                                        Argument2,
                                        &hwInitializationData,
-                                       (PVOID) i);
+                                       (PVOID)(ULONG_PTR)i);
         if (newStatus < statusToReturn)
             statusToReturn = newStatus;
     }
