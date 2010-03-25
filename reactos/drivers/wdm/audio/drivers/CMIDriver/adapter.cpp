@@ -535,7 +535,7 @@ DriverEntry(
 #pragma code_seg()
 int __cdecl _purecall (void)
 {
-	return 0;
+    return 0;
 }
 
 #else
