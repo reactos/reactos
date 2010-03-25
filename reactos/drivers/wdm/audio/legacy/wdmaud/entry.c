@@ -228,25 +228,25 @@ WdmAudCleanup(
     KeReleaseSpinLock(&DeviceExtension->Lock, OldIrql);
 
     /* check if all audio pins have been closed */
-        for (Index = 0; Index < pClient->NumPins; Index++)
-        {
-           DPRINT("Index %u Pin %p Type %x\n", Index, pClient->hPins[Index].Handle, pClient->hPins[Index].Type);
-           if (pClient->hPins[Index].Handle && pClient->hPins[Index].Type != MIXER_DEVICE_TYPE)
-           {
+    for (Index = 0; Index < pClient->NumPins; Index++)
+    {
+       DPRINT("Index %u Pin %p Type %x\n", Index, pClient->hPins[Index].Handle, pClient->hPins[Index].Type);
+       if (pClient->hPins[Index].Handle && pClient->hPins[Index].Type != MIXER_DEVICE_TYPE)
+       {
            /* found an still open audio pin */
-               ZwClose(pClient->hPins[Index].Handle);
-           }
-        }
+           ZwClose(pClient->hPins[Index].Handle);
+       }
+    }
 
     /* free pin array */
-        if (pClient->hPins)
-            ExFreePool(pClient->hPins);
+    if (pClient->hPins)
+        ExFreePool(pClient->hPins);
 
     /* free client context struct */
-        ExFreePool(pClient);
+    ExFreePool(pClient);
 
     /* clear old client pointer */
-        IoStack->FileObject->FsContext = NULL;
+    IoStack->FileObject->FsContext = NULL;
 
     /* complete request */
     Irp->IoStatus.Status = STATUS_SUCCESS;

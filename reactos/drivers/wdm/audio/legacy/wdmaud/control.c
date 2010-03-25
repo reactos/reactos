@@ -151,7 +151,7 @@ WdmAudIoctlClose(
             {
                 ObDereferenceObject(ClientInfo->hPins[Index].NotifyEvent);
                 ClientInfo->hPins[Index].NotifyEvent = NULL;
-    }
+            }
         }
     }
 
