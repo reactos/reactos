@@ -7,6 +7,9 @@
 <directory name="cmbatt">
 	<xi:include href="cmbatt/cmbatt.rbuild" />
 </directory>
+<directory name="compbatt">
+	<xi:include href="compbatt/compbatt.rbuild" />
+</directory>
 </group>
 
 <module name="acpi" type="kernelmodedriver" installbase="system32/drivers" installname="acpi.sys" allowwarnings="true">
@@ -26,6 +29,8 @@
 	</directory>
 	<file>osl.c</file>
 	<file>acpienum.c</file>
+	<file>eval.c</file>
+	<file>interface.c</file>
 	<file>pnp.c</file>
 	<file>power.c</file>
 	<file>buspdo.c</file>

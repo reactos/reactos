@@ -298,17 +298,28 @@ static void ME_PlayUndoItem(ME_TextEditor *editor, ME_DisplayItem *pItem)
   }
   case diUndoSetCharFormat:
   {
-    ME_SetCharFormat(editor, pUItem->nStart, pUItem->nLen, &pItem->member.ustyle->fmt);
+    ME_Cursor start, end;
+    ME_CursorFromCharOfs(editor, pUItem->nStart, &start);
+    end = start;
+    ME_MoveCursorChars(editor, &end, pUItem->nLen);
+    ME_SetCharFormat(editor, &start, &end, &pItem->member.ustyle->fmt);
     break;
   }
   case diUndoInsertRun:
   {
-    ME_InsertRun(editor, pItem->member.run.nCharOfs, pItem);
+    ME_Cursor tmp;
+    ME_CursorFromCharOfs(editor, pItem->member.run.nCharOfs, &tmp);
+    ME_InsertRunAtCursor(editor, &tmp, pItem->member.run.style,
+                         pItem->member.run.strText->szData,
+                         pItem->member.run.strText->nLen,
+                         pItem->member.run.nFlags);
     break;
   }
   case diUndoDeleteRun:
   {
-    ME_InternalDeleteText(editor, pUItem->nStart, pUItem->nLen, TRUE);
+    ME_Cursor tmp;
+    ME_CursorFromCharOfs(editor, pUItem->nStart, &tmp);
+    ME_InternalDeleteText(editor, &tmp, pUItem->nLen, TRUE);
     break;
   }
   case diUndoJoinParagraphs:

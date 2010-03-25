@@ -23,7 +23,8 @@ Author:
 // Dependencies
 //
 #include <umtypes.h>
-#include <pstypes.h>
+#include <mmtypes.h>
+#include <ldrtypes.h>
 
 //
 // Maximum Atom Length
@@ -760,6 +761,7 @@ typedef struct _RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED
 } RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED,
   *PRTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED;
 
+#if (NTDDI_VERSION >= NTDDI_WS03)
 typedef struct _ACTIVATION_CONTEXT_STACK
 {
     PRTL_ACTIVATION_CONTEXT_STACK_FRAME ActiveFrame;
@@ -769,6 +771,15 @@ typedef struct _ACTIVATION_CONTEXT_STACK
     ULONG StackId;
 } ACTIVATION_CONTEXT_STACK,
   *PACTIVATION_CONTEXT_STACK;
+#else
+typedef struct _ACTIVATION_CONTEXT_STACK
+{
+    ULONG Flags;
+    ULONG NextCookieSequenceNumber;
+    PVOID ActiveFrame;
+    LIST_ENTRY FrameListCache;
+} ACTIVATION_CONTEXT_STACK, *PACTIVATION_CONTEXT_STACK;
+#endif
 
 #endif
 

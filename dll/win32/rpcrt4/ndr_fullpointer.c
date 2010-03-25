@@ -161,6 +161,9 @@ int WINAPI NdrFullPointerQueryRefId(PFULL_PTR_XLAT_TABLES pXlatTables,
 {
     TRACE("(%p, 0x%x, %d, %p)\n", pXlatTables, RefId, QueryType, ppPointer);
 
+    if (!RefId)
+        return 1;
+
     expand_pointer_table_if_necessary(pXlatTables, RefId);
 
     pXlatTables->NextRefId = max(RefId + 1, pXlatTables->NextRefId);

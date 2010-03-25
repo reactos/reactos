@@ -1339,14 +1339,18 @@ typedef struct _CRYPT_URL_INFO {
     DWORD *rgcGroupEntry;
 } CRYPT_URL_INFO, *PCRYPT_URL_INFO;
 
-#define URL_OID_CERTIFICATE_ISSUER         ((LPCSTR)1)
-#define URL_OID_CERTIFICATE_CRL_DIST_POINT ((LPCSTR)2)
-#define URL_OID_CTL_ISSUER                 ((LPCSTR)3)
-#define URL_OID_CTL_NEXT_UPDATE            ((LPCSTR)4)
-#define URL_OID_CRL_ISSUER                 ((LPCSTR)5)
-#define URL_OID_CERTIFICATE_FRESHEST_CRL   ((LPCSTR)6)
-#define URL_OID_CRL_FRESHEST_CRL           ((LPCSTR)7)
-#define URL_OID_CROSS_CERT_DIST_POINT      ((LPCSTR)8)
+#define URL_OID_CERTIFICATE_ISSUER                  ((LPCSTR)1)
+#define URL_OID_CERTIFICATE_CRL_DIST_POINT          ((LPCSTR)2)
+#define URL_OID_CTL_ISSUER                          ((LPCSTR)3)
+#define URL_OID_CTL_NEXT_UPDATE                     ((LPCSTR)4)
+#define URL_OID_CRL_ISSUER                          ((LPCSTR)5)
+#define URL_OID_CERTIFICATE_FRESHEST_CRL            ((LPCSTR)6)
+#define URL_OID_CRL_FRESHEST_CRL                    ((LPCSTR)7)
+#define URL_OID_CROSS_CERT_DIST_POINT               ((LPCSTR)8)
+#define URL_OID_CERTIFICATE_OCSP                    ((LPCSTR)9)
+#define URL_OID_CERTIFICATE_OCSP_AND_CRL_DIST_POINT ((LPCSTR)10)
+#define URL_OID_CERTIFICATE_CRL_DIST_POINT_AND_OCSP ((LPCSTR)11)
+#define URL_OID_CROSS_CERT_SUBJECT_INFO_ACCESS      ((LPCSTR)12)
 
 #define URL_OID_GET_OBJECT_URL_FUNC "UrlDllGetObjectUrl"
 
@@ -2778,6 +2782,9 @@ typedef struct _CTL_FIND_SUBJECT_PARA
 #define szOID_RSA_MD5RSA                    "1.2.840.113549.1.1.4"
 #define szOID_RSA_SHA1RSA                   "1.2.840.113549.1.1.5"
 #define szOID_RSA_SET0AEP_RSA               "1.2.840.113549.1.1.6"
+#define szOID_RSA_SHA256RSA                 "1.2.840.113549.1.1.11"
+#define szOID_RSA_SHA384RSA                 "1.2.840.113549.1.1.12"
+#define szOID_RSA_SHA512RSA                 "1.2.840.113549.1.1.13"
 #define szOID_RSA_DH                        "1.2.840.113549.1.3.1"
 #define szOID_RSA_data                      "1.2.840.113549.1.7.1"
 #define szOID_RSA_signedData                "1.2.840.113549.1.7.2"

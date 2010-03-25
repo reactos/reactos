@@ -24,6 +24,7 @@ import "msxml.idl";
 
 cpp_quote("#ifdef WINE_NO_UNICODE_MACROS")
 cpp_quote("#undef GetUserName")
+cpp_quote("#undef SetPort")
 cpp_quote("#endif")
 
 interface IInternetProtocolSink;
@@ -1715,6 +1716,105 @@ interface IUriContainer : IUnknown
 {
     HRESULT GetIUri([out] IUri **ppIUri);
 }
+
+/*****************************************************************************
+ * IUriBuilder interface
+ */
+[
+    local,
+    object,
+    uuid(4221b2e1-8955-46c0-bd5b-de9897565de7),
+    pointer_default(unique)
+]
+interface IUriBuilder: IUnknown
+{
+    HRESULT CreateUriSimple(
+        [in]  DWORD       dwAllowEncodingPropertyMask,
+        [in]  DWORD_PTR   dwReserved,
+        [out] IUri      **ppIUri);
+
+    HRESULT CreateUri(
+        [in]  DWORD       dwCreateFlags,
+        [in]  DWORD       dwAllowEncodingPropertyMask,
+        [in]  DWORD_PTR   dwReserved,
+        [out] IUri      **ppIUri);
+
+    HRESULT CreateUriWithFlags(
+        [in]  DWORD       dwCreateFlags,
+        [in]  DWORD       dwUriBuilderFlags,
+        [in]  DWORD       dwAllowEncodingPropertyMask,
+        [in]  DWORD_PTR   dwReserved,
+        [out] IUri      **ppIUri);
+
+    HRESULT GetIUri(
+        [out] IUri **ppIUri);
+
+    HRESULT SetIUri(
+        [in, unique] IUri *pIUri);
+
+    HRESULT GetFragment(
+        [out] DWORD   *pcchFragment,
+        [out] LPCWSTR *ppwzFragment);
+
+    HRESULT GetHost(
+        [out] DWORD   *pcchHost,
+        [out] LPCWSTR *ppwzHost);
+
+    HRESULT GetPassword(
+        [out] DWORD   *pcchPassword,
+        [out] LPCWSTR *ppwzPassword);
+
+    HRESULT GetPath(
+        [out] DWORD   *pcchPath,
+        [out] LPCWSTR *ppwzPath);
+
+    HRESULT GetPort(
+        [out] BOOL  *pfHasPort,
+        [out] DWORD *pdwPort);
+
+    HRESULT GetQuery(
+        [out] DWORD   *pcchQuery,
+        [out] LPCWSTR *ppwzQuery);
+
+    HRESULT GetSchemeName(
+        [out] DWORD   *pcchSchemeName,
+        [out] LPCWSTR *ppwzSchemeName);
+
+    HRESULT GetUserName(
+        [out] DWORD   *pcchUserName,
+        [out] LPCWSTR *ppwzUserName);
+
+    HRESULT SetFragment(
+        [in] LPCWSTR pwzNewValue);
+
+    HRESULT SetHost(
+        [in] LPCWSTR pwzNewValue);
+
+    HRESULT SetPassword(
+        [in] LPCWSTR pwzNewValue);
+
+    HRESULT SetPath(
+        [in] LPCWSTR pwzNewValue);
+
+    HRESULT SetPort(
+        [in] BOOL  fHasPort,
+        [in] DWORD dwNewValue);
+
+    HRESULT SetQuery(
+        [in] LPCWSTR pwzNewValue);
+
+    HRESULT SetSchemeName(
+        [in] LPCWSTR pwzNewValue);
+
+    HRESULT SetUserName(
+        [in] LPCWSTR pwzNewValue);
+
+    HRESULT RemoveProperties(
+        [in] DWORD dwPropertyMask);
+
+    HRESULT HasBeenModified(
+        [out] BOOL *pfModified);
+};
 
 /*****************************************************************************
  * IInternetProtocolEx interface

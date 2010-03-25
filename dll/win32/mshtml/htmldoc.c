@@ -554,9 +554,12 @@ static HRESULT WINAPI HTMLDocument_get_vlinkColor(IHTMLDocument2 *iface, VARIANT
 static HRESULT WINAPI HTMLDocument_get_referrer(IHTMLDocument2 *iface, BSTR *p)
 {
     HTMLDocument *This = HTMLDOC_THIS(iface);
+
     FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
-}
+
+    *p = NULL;
+    return S_OK;
+ }
 
 static HRESULT WINAPI HTMLDocument_get_location(IHTMLDocument2 *iface, IHTMLLocation **p)
 {
@@ -1474,7 +1477,7 @@ static void HTMLDocument_on_advise(IUnknown *iface, cp_static_data_t *cp)
     HTMLDocument *This = HTMLDOC_THIS(iface);
 
     if(This->window)
-        update_cp_events(This->window, cp);
+        update_cp_events(This->window, &This->doc_node->node.event_target, cp, This->doc_node->node.nsnode);
 }
 
 #undef HTMLDOC_THIS
@@ -1595,6 +1598,11 @@ static HRESULT WINAPI DocDispatchEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID
         VARIANT *pvarRes, EXCEPINFO *pei, IServiceProvider *pspCaller)
 {
     HTMLDocument *This = DISPEX_THIS(iface);
+
+    if(This->window && id == DISPID_IHTMLDOCUMENT2_LOCATION && (wFlags & DISPATCH_PROPERTYPUT))
+        return IDispatchEx_InvokeEx(DISPATCHEX(This->window), DISPID_IHTMLWINDOW2_LOCATION, lcid, wFlags,
+                pdp, pvarRes, pei, pspCaller);
+
 
     return IDispatchEx_InvokeEx(This->dispex, id, lcid, wFlags, pdp, pvarRes, pei, pspCaller);
 }

@@ -1574,7 +1574,7 @@ FillRect(HDC hDC, CONST RECT *lprc, HBRUSH hbr)
 
     if (hbr <= (HBRUSH)(COLOR_MENUBAR + 1))
     {
-        hbr = GetSysColorBrush((int)hbr - 1);
+        hbr = GetSysColorBrush(PtrToUlong(hbr) - 1);
     }
     if ((prevhbr = SelectObject(hDC, hbr)) == NULL)
     {

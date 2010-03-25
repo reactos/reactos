@@ -132,7 +132,10 @@ STDMETHODCALLTYPE
 CEnumPins::Clone(
     IEnumPins **ppEnum)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CEnumPins::Clone : NotImplemented\n");
+#endif
+
     return E_NOTIMPL;
 }
 

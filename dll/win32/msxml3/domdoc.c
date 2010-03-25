@@ -1650,19 +1650,20 @@ static HRESULT WINAPI domdoc_abort(
 
 static BOOL bstr_to_utf8( BSTR bstr, char **pstr, int *plen )
 {
-    UINT len, blen = SysStringLen( bstr );
+    UINT len;
     LPSTR str;
 
-    len = WideCharToMultiByte( CP_UTF8, 0, bstr, blen, NULL, 0, NULL, NULL );
+    len = WideCharToMultiByte( CP_UTF8, 0, bstr, -1, NULL, 0, NULL, NULL );
     str = heap_alloc( len );
     if ( !str )
         return FALSE;
-    WideCharToMultiByte( CP_UTF8, 0, bstr, blen, str, len, NULL, NULL );
+    WideCharToMultiByte( CP_UTF8, 0, bstr, -1, str, len, NULL, NULL );
     *plen = len;
     *pstr = str;
     return TRUE;
 }
 
+/* don't rely on data to be in BSTR format, treat it as WCHAR string */
 static HRESULT WINAPI domdoc_loadXML(
     IXMLDOMDocument2 *iface,
     BSTR bstrXML,

@@ -4722,6 +4722,7 @@ static HRESULT WINAPI ITypeLibComp_fnBind(
 {
     ITypeLibImpl *This = impl_from_ITypeComp(iface);
     ITypeInfoImpl *pTypeInfo;
+    int typemismatch=0;
 
     TRACE("(%s, 0x%x, 0x%x, %p, %p, %p)\n", debugstr_w(szName), lHash, wFlags, ppTInfo, pDescKind, pBindPtr);
 
@@ -4761,6 +4762,8 @@ static HRESULT WINAPI ITypeLibComp_fnBind(
                 TRACE("found in module or in enum: %s\n", debugstr_w(szName));
                 return S_OK;
             }
+            else if (hr == TYPE_E_TYPEMISMATCH)
+                typemismatch = 1;
         }
 
         if ((pTypeInfo->TypeAttr.typekind == TKIND_COCLASS) &&
@@ -4833,11 +4836,21 @@ static HRESULT WINAPI ITypeLibComp_fnBind(
                 ITypeInfo_AddRef(*ppTInfo);
                 return S_OK;
             }
+            else if (hr == TYPE_E_TYPEMISMATCH)
+                typemismatch = 1;
         }
     }
 
-    TRACE("name not found %s\n", debugstr_w(szName));
-    return S_OK;
+    if (typemismatch)
+    {
+        TRACE("type mismatch %s\n", debugstr_w(szName));
+        return TYPE_E_TYPEMISMATCH;
+    }
+    else
+    {
+        TRACE("name not found %s\n", debugstr_w(szName));
+        return S_OK;
+    }
 }
 
 static HRESULT WINAPI ITypeLibComp_fnBindType(
@@ -5568,6 +5581,11 @@ static HRESULT WINAPI ITypeInfo_fnGetImplTypeFlags( ITypeInfo2 *iface,
         return S_OK;
     }
     *pImplTypeFlags=0;
+
+    if(This->TypeAttr.typekind==TKIND_DISPATCH && !index)
+        return S_OK;
+
+    WARN("ImplType %d not found\n", index);
     return TYPE_E_ELEMENTNOTFOUND;
 }
 
@@ -6052,9 +6070,6 @@ static HRESULT WINAPI ITypeInfo_fnInvoke(
                     hres = DISP_E_PARAMNOTFOUND;
                     goto func_fail;
                 }
-                /* ignore the DISPID_PROPERTYPUT named argument from now on */
-                cNamedArgs--;
-                rgdispidNamedArgs++;
             }
 
             if (func_desc->cParamsOpt < 0 && cNamedArgs)
@@ -6092,7 +6107,7 @@ static HRESULT WINAPI ITypeInfo_fnInvoke(
                     USHORT j;
                     src_arg = NULL;
                     for (j = 0; j < cNamedArgs; j++)
-                        if (rgdispidNamedArgs[j] == i)
+                        if (rgdispidNamedArgs[j] == i || (i == func_desc->cParams-1 && rgdispidNamedArgs[j] == DISPID_PROPERTYPUT))
                         {
                             src_arg = &pDispParams->rgvarg[j];
                             break;
@@ -6859,7 +6874,8 @@ static HRESULT WINAPI ITypeInfo_fnGetMops( ITypeInfo2 *iface, MEMBERID memid,
 				BSTR  *pBstrMops)
 {
     ITypeInfoImpl *This = (ITypeInfoImpl *)iface;
-    FIXME("(%p) stub!\n", This);
+    FIXME("(%p %d) stub!\n", This, memid);
+    *pBstrMops = NULL;
     return S_OK;
 }
 

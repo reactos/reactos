@@ -20,7 +20,7 @@
 	<group compilerset="msc">
 		<compilerflag compiler="cxx">/GR-</compilerflag>
 	</group>
-
+	<file>allocator.cpp</file>
 	<file>basicaudio.cpp</file>
 	<file>classfactory.cpp</file>
 	<file>clockforward.cpp</file>
@@ -33,6 +33,7 @@
 	<file>interface.cpp</file>
 	<file>ksproxy.cpp</file>
 	<file>ksproxy.rc</file>
+	<file>mediasample.cpp</file>
 	<file>node.cpp</file>
 	<file>output_pin.cpp</file>
 	<file>proxy.cpp</file>

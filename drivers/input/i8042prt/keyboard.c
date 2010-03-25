@@ -200,7 +200,7 @@ i8042PowerWorkItem(
 	/* Register GUID_DEVICE_SYS_BUTTON interface and report capability */
 	if (DeviceExtension->NewCaps != DeviceExtension->ReportedCaps)
 	{
-		WaitingIrp = InterlockedExchangePointer(&DeviceExtension->PowerIrp, NULL);
+		WaitingIrp = InterlockedExchangePointer((PVOID)&DeviceExtension->PowerIrp, NULL);
 		if (WaitingIrp)
 		{
 			/* Cancel the current power irp, as capability changed */
@@ -255,7 +255,7 @@ i8042PowerWorkItem(
 	}
 
 	/* Directly complete the IOCTL_GET_SYS_BUTTON_EVENT Irp (if any) */
-	WaitingIrp = InterlockedExchangePointer(&DeviceExtension->PowerIrp, NULL);
+	WaitingIrp = InterlockedExchangePointer((PVOID)&DeviceExtension->PowerIrp, NULL);
 	if (WaitingIrp)
 	{
 		PULONG pEvent = (PULONG)WaitingIrp->AssociatedIrp.SystemBuffer;
@@ -413,7 +413,7 @@ i8042KbdDeviceControl(
 			else
 			{
 				WaitingIrp = InterlockedCompareExchangePointer(
-					&DeviceExtension->PowerIrp,
+					(PVOID)&DeviceExtension->PowerIrp,
 					Irp,
 					NULL);
 				/* Check if an Irp is already pending */
@@ -431,7 +431,7 @@ i8042KbdDeviceControl(
 					PowerKey = InterlockedExchange((PLONG)&DeviceExtension->LastPowerKey, 0);
 					if (PowerKey != 0)
 					{
-						(VOID)InterlockedCompareExchangePointer(&DeviceExtension->PowerIrp, NULL, Irp);
+						(VOID)InterlockedCompareExchangePointer((PVOID)&DeviceExtension->PowerIrp, NULL, Irp);
 						*(PULONG)Irp->AssociatedIrp.SystemBuffer = PowerKey;
 						Status = STATUS_SUCCESS;
 						Irp->IoStatus.Status = Status;

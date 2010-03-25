@@ -340,8 +340,8 @@ RtlWalkFrameChain(OUT PVOID *Callers,
             }
 
             /* Get the stack limits */
-            StackBegin = (ULONG_PTR)Teb->Tib.StackLimit;
-            StackEnd = (ULONG_PTR)Teb->Tib.StackBase;
+            StackBegin = (ULONG_PTR)Teb->NtTib.StackLimit;
+            StackEnd = (ULONG_PTR)Teb->NtTib.StackBase;
 #ifdef _M_IX86
             Stack = TrapFrame->Ebp;
 #elif defined(_M_PPC)

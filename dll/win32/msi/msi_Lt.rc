@@ -37,4 +37,3 @@ STRINGTABLE DISCARDABLE
 	14 "komponentas iš:"
 	15 "parinkite aplanką, kuris turi %s"
 }
-#pragma code_page(default)

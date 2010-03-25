@@ -543,11 +543,6 @@ typedef struct BusNumber_Resource_s {
   BUSNUMBER_RANGE BusNumber_Data[ANYSIZE_ARRAY];
 } BUSNUMBER_RESOURCE, *PBUSNUMBER_RESOURCE;
 
-typedef struct IRQ_Resource_s {
-  IRQ_DES  IRQ_Header;
-  IRQ_RANGE  IRQ_Data[ANYSIZE_ARRAY];
-} IRQ_RESOURCE, *PIRQ_RESOURCE;
-
 #define CM_HWPI_NOT_DOCKABLE           0x00000000
 #define CM_HWPI_UNDOCKED               0x00000001
 #define CM_HWPI_DOCKED                 0x00000002

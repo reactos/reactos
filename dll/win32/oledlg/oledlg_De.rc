@@ -97,4 +97,3 @@ STRINGTABLE DISCARDABLE
     IDS_PS_UNKNOWN_SRC                    "Unbekannte Quelle"
     IDS_PS_UNKNOWN_APP                    "dem Erzeugerprogramm"
 }
-#pragma code_page(default)

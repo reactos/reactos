@@ -80,7 +80,7 @@ BmfdQueryGlyphAndBitmap(
     ULONG cjSize)
 {
     PBMFD_FACE pface = pfont->pface;
-    PGLYPHENTRY pge = (PGLYPHENTRY)hg;
+    PGLYPHENTRY pge = (PGLYPHENTRY)(pface->pCharTable + hg);
     ULONG xSrc, ySrc, cxSrc, cySrc;
     ULONG xDst, yDst, cxDst, cyDst;
     ULONG xScale, yScale;

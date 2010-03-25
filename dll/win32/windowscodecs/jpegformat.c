@@ -570,7 +570,7 @@ HRESULT JpegDecoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
 
 HRESULT JpegDecoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
 {
-    ERR("Trying to load JPEG picture, but JPEG supported not compiled in.\n");
+    ERR("Trying to load JPEG picture, but JPEG support is not compiled in.\n");
     return E_FAIL;
 }
 

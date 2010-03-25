@@ -26,7 +26,7 @@ typedef struct
 {
     KSSTREAM_HEADER Header;
     SOUND_DEVICE_TYPE DeviceType;
-    ULONG DeviceIndex;
+    ULONG_PTR DeviceIndex;
 
     HANDLE hDevice;
     ULONG DeviceCount;

@@ -51,6 +51,7 @@
 #include "oleauto.h"
 
 #include "dbghelp_private.h"
+#include "image_private.h"
 
 #include "wine/debug.h"
 
@@ -139,6 +140,7 @@ struct attribute
     union
     {
         unsigned long                   uvalue;
+        ULONGLONG                       lluvalue;
         long                            svalue;
         const char*                     string;
         struct dwarf2_block             block;
@@ -157,6 +159,7 @@ typedef struct dwarf2_section_s
 {
     const unsigned char*        address;
     unsigned                    size;
+    DWORD_PTR                   rva;
 } dwarf2_section_t;
 
 enum dwarf2_sections {section_debug, section_string, section_abbrev, section_line, section_max};
@@ -512,9 +515,8 @@ static void dwarf2_fill_attr(const dwarf2_parse_context_t* ctx,
         break;
 
     case DW_FORM_data8:
-        attr->u.block.size = 8;
-        attr->u.block.ptr  = data;
-        data += 8;
+        attr->u.lluvalue = dwarf2_get_u8(data);
+        TRACE("data8<%s>\n", wine_dbgstr_longlong(attr->u.uvalue));
         break;
 
     case DW_FORM_ref1:
@@ -1480,6 +1482,11 @@ static void dwarf2_parse_variable(dwarf2_subprogram_t* subpgm,
             v.n1.n2.n3.lVal = value.u.uvalue;
             break;
 
+        case DW_FORM_data8:
+            v.n1.n2.vt = VT_UI8;
+            v.n1.n2.n3.llVal = value.u.lluvalue;
+            break;
+
         case DW_FORM_sdata:
             v.n1.n2.vt = VT_I4;
             v.n1.n2.n3.lVal = value.u.svalue;
@@ -1510,12 +1517,6 @@ static void dwarf2_parse_variable(dwarf2_subprogram_t* subpgm,
                 memcpy(v.n1.n2.n3.byref, value.u.block.ptr, value.u.block.size);
             }
             break;
-
-        case DW_FORM_data8:
-	    v.n1.n2.vt = VT_I1 | VT_BYREF;
-	    v.n1.n2.n3.byref = pool_alloc(&subpgm->ctx->module->pool, value.u.block.size);
-	    memcpy(v.n1.n2.n3.byref, value.u.block.ptr, value.u.block.size);
-	    break;
 
         default:
             FIXME("Unsupported form for const value %s (%lx)\n",
@@ -1952,7 +1953,7 @@ static BOOL dwarf2_parse_line_numbers(const dwarf2_section_t* sections,
     const char**                p;
 
     /* section with line numbers stripped */
-    if (sections[section_line].address == ELF_NO_MAP)
+    if (sections[section_line].address == IMAGE_NO_MAP)
         return FALSE;
 
     traverse.data = sections[section_line].address + offset;
@@ -2211,7 +2212,7 @@ static BOOL dwarf2_parse_compilation_unit(const dwarf2_section_t* sections,
     return ret;
 }
 
-static BOOL dwarf2_lookup_loclist(const struct module* module, const BYTE* start,
+static BOOL dwarf2_lookup_loclist(const struct module_format* modfmt, const BYTE* start,
                                   unsigned long ip,
                                   dwarf2_traverse_context_t*  lctx)
 {
@@ -2219,7 +2220,7 @@ static BOOL dwarf2_lookup_loclist(const struct module* module, const BYTE* start
     const BYTE*                 ptr = start;
     DWORD                       len;
 
-    while (ptr < module->dwarf2_info->debug_loc.address + module->dwarf2_info->debug_loc.size)
+    while (ptr < modfmt->u.dwarf2_info->debug_loc.address + modfmt->u.dwarf2_info->debug_loc.size)
     {
         beg = dwarf2_get_u4(ptr); ptr += 4;
         end = dwarf2_get_u4(ptr); ptr += 4;
@@ -2240,7 +2241,7 @@ static BOOL dwarf2_lookup_loclist(const struct module* module, const BYTE* start
 }
 
 static enum location_error loc_compute_frame(struct process* pcs,
-                                             const struct module* module,
+                                             const struct module_format* modfmt,
                                              const struct symt_function* func,
                                              DWORD ip, struct location* frame)
 {
@@ -2266,8 +2267,8 @@ static enum location_error loc_compute_frame(struct process* pcs,
                 break;
             case loc_dwarf2_location_list:
                 WARN("Searching loclist for %s\n", func->hash_elt.name);
-                if (!dwarf2_lookup_loclist(module, 
-                                           module->dwarf2_info->debug_loc.address + pframe->offset,
+                if (!dwarf2_lookup_loclist(modfmt,
+                                           modfmt->u.dwarf2_info->debug_loc.address + pframe->offset,
                                            ip, &lctx))
                     return loc_err_out_of_scope;
                 if ((err = compute_location(&lctx, frame, pcs->handle, NULL)) < 0) return err;
@@ -2289,7 +2290,7 @@ static enum location_error loc_compute_frame(struct process* pcs,
 }
 
 static void dwarf2_location_compute(struct process* pcs,
-                                    const struct module* module,
+                                    const struct module_format* modfmt,
                                     const struct symt_function* func,
                                     struct location* loc)
 {
@@ -2308,14 +2309,14 @@ static void dwarf2_location_compute(struct process* pcs,
         /* instruction pointer relative to compiland's start */
         ip = pcs->ctx_frame.InstructionOffset - ((struct symt_compiland*)func->container)->address;
 
-        if ((err = loc_compute_frame(pcs, module, func, ip, &frame)) == 0)
+        if ((err = loc_compute_frame(pcs, modfmt, func, ip, &frame)) == 0)
         {
             switch (loc->kind)
             {
             case loc_dwarf2_location_list:
                 /* Then, if the variable has a location list, find it !! */
-                if (dwarf2_lookup_loclist(module, 
-                                          module->dwarf2_info->debug_loc.address + loc->offset,
+                if (dwarf2_lookup_loclist(modfmt,
+                                          modfmt->u.dwarf2_info->debug_loc.address + loc->offset,
                                           ip, &lctx))
                     goto do_compute;
                 err = loc_err_out_of_scope;
@@ -2350,56 +2351,115 @@ static void dwarf2_location_compute(struct process* pcs,
     }
 }
 
+static void dwarf2_module_remove(struct process* pcs, struct module_format* modfmt)
+{
+    HeapFree(GetProcessHeap(), 0, modfmt->u.dwarf2_info);
+    HeapFree(GetProcessHeap(), 0, modfmt);
+}
+
+static inline BOOL dwarf2_init_section(dwarf2_section_t* section, struct image_file_map* fmap,
+                                       const char* sectname, struct image_section_map* ism)
+{
+    struct image_section_map    local_ism;
+
+    if (!ism) ism = &local_ism;
+    if (!image_find_section(fmap, sectname, ism))
+    {
+        section->address = NULL;
+        section->size    = 0;
+        section->rva     = 0;
+        return FALSE;
+    }
+
+    section->address = (const BYTE*)image_map_section(ism);
+    section->size    = image_get_map_size(ism);
+    section->rva     = image_get_map_rva(ism);
+    return TRUE;
+}
+
 BOOL dwarf2_parse(struct module* module, unsigned long load_offset,
                   const struct elf_thunk_area* thunks,
-		  const unsigned char* debug, unsigned int debug_size,
-		  const unsigned char* abbrev, unsigned int abbrev_size,
-		  const unsigned char* str, unsigned int str_size,
-		  const unsigned char* line, unsigned int line_size,
-		  const unsigned char* loclist, unsigned int loclist_size)
+                  struct image_file_map* fmap)
 {
     dwarf2_section_t    section[section_max];
-    unsigned char*      ptr;
     dwarf2_traverse_context_t   mod_ctx;
+    struct image_section_map    debug_sect, debug_str_sect, debug_abbrev_sect,
+                                debug_line_sect, debug_loclist_sect;
+    BOOL                ret = TRUE;
+    struct module_format* dwarf2_modfmt;
 
-    mod_ctx.start_data = mod_ctx.data = debug;
-    mod_ctx.end_data = debug + debug_size;
+    if (!dwarf2_init_section(&section[section_debug],  fmap, ".debug_info", &debug_sect))
+    {
+        /* no Dwarf debug info here, so there's no error */
+        return TRUE;
+    }
+    dwarf2_init_section(&section[section_abbrev], fmap, ".debug_abbrev", &debug_abbrev_sect);
+    dwarf2_init_section(&section[section_string], fmap, ".debug_str",    &debug_str_sect);
+    dwarf2_init_section(&section[section_line],   fmap, ".debug_line",   &debug_line_sect);
 
-    module->loc_compute = dwarf2_location_compute;
+    if (section[section_debug].address == IMAGE_NO_MAP ||
+        section[section_abbrev].address == IMAGE_NO_MAP ||
+        section[section_string].address == IMAGE_NO_MAP)
+    {
+        ret = FALSE;
+        goto leave;
+    }
 
-    section[section_debug].address = debug;
-    section[section_debug].size = debug_size;
-    section[section_abbrev].address = abbrev;
-    section[section_abbrev].size = abbrev_size;
-    section[section_string].address = str;
-    section[section_string].size = str_size;
-    section[section_line].address = line;
-    section[section_line].size = line_size;
+    if (fmap->modtype == DMT_ELF)
+    {
+        /* debug info might have a different base address than .so file
+         * when elf file is prelinked after splitting off debug info
+         * adjust symbol base addresses accordingly
+         */
+        load_offset += fmap->u.elf.elf_start - debug_sect.fmap->u.elf.elf_start;
+    }
 
-    if (loclist_size)
+    TRACE("Loading Dwarf2 information for %s\n", debugstr_w(module->module.ModuleName));
+
+    mod_ctx.start_data = mod_ctx.data = section[section_debug].address;
+    mod_ctx.end_data = mod_ctx.data + section[section_debug].size;
+
+
+    dwarf2_modfmt = HeapAlloc(GetProcessHeap(), 0, sizeof(*dwarf2_modfmt));
+    if (!dwarf2_modfmt) return FALSE;
+    dwarf2_modfmt->module = module;
+    dwarf2_modfmt->remove = dwarf2_module_remove;
+    dwarf2_modfmt->loc_compute = dwarf2_location_compute;
+    dwarf2_modfmt->u.dwarf2_info = NULL;
+    dwarf2_modfmt->module->format_info[DFI_DWARF] = dwarf2_modfmt;
+
+    image_find_section(fmap, ".debug_loc", &debug_loclist_sect);
+    if (image_get_map_size(&debug_loclist_sect))
     {
         /* initialize the dwarf2 specific info block for this module.
-         * As we'll need later on the .debug_loc section content, we copy it in
-         * the module structure for later reuse
+         * As we'll need later the .debug_loc section content, we won't unmap this
+         * section upon existing this function
          */
-        module->dwarf2_info = HeapAlloc(GetProcessHeap(), 0, sizeof(*module->dwarf2_info) + loclist_size);
-        if (!module->dwarf2_info) return FALSE;
-        ptr = (unsigned char*)(module->dwarf2_info + 1);
-        memcpy(ptr, loclist, loclist_size);
-        module->dwarf2_info->debug_loc.address = ptr;
-        module->dwarf2_info->debug_loc.size    = loclist_size;
+        dwarf2_modfmt->u.dwarf2_info = HeapAlloc(GetProcessHeap(), 0,
+                                                 sizeof(*dwarf2_modfmt->u.dwarf2_info));
+        if (!dwarf2_modfmt->u.dwarf2_info) goto leave;
+        dwarf2_modfmt->u.dwarf2_info->debug_loc.address = (const BYTE*)image_map_section(&debug_loclist_sect);
+        dwarf2_modfmt->u.dwarf2_info->debug_loc.size    = image_get_map_size(&debug_loclist_sect);
     }
+    else image_unmap_section(&debug_loclist_sect);
 
     while (mod_ctx.data < mod_ctx.end_data)
     {
-        dwarf2_parse_compilation_unit(section, module, thunks, &mod_ctx, load_offset);
+        dwarf2_parse_compilation_unit(section, dwarf2_modfmt->module, thunks, &mod_ctx, load_offset);
     }
-    module->module.SymType = SymDia;
-    module->module.CVSig = 'D' | ('W' << 8) | ('A' << 16) | ('R' << 24);
+    dwarf2_modfmt->module->module.SymType = SymDia;
+    dwarf2_modfmt->module->module.CVSig = 'D' | ('W' << 8) | ('A' << 16) | ('R' << 24);
     /* FIXME: we could have a finer grain here */
-    module->module.GlobalSymbols = TRUE;
-    module->module.TypeInfo = TRUE;
-    module->module.SourceIndexed = TRUE;
-    module->module.Publics = TRUE;
-    return TRUE;
+    dwarf2_modfmt->module->module.GlobalSymbols = TRUE;
+    dwarf2_modfmt->module->module.TypeInfo = TRUE;
+    dwarf2_modfmt->module->module.SourceIndexed = TRUE;
+    dwarf2_modfmt->module->module.Publics = TRUE;
+
+leave:
+    image_unmap_section(&debug_sect);
+    image_unmap_section(&debug_abbrev_sect);
+    image_unmap_section(&debug_str_sect);
+    image_unmap_section(&debug_line_sect);
+
+    return ret;
 }

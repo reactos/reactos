@@ -1306,6 +1306,78 @@ static void CRYPT_CheckChainNameConstraints(PCERT_SIMPLE_CHAIN chain)
     }
 }
 
+/* Gets cert's policies info, if any.  Free with LocalFree. */
+static CERT_POLICIES_INFO *CRYPT_GetPolicies(PCCERT_CONTEXT cert)
+{
+    PCERT_EXTENSION ext;
+    CERT_POLICIES_INFO *policies = NULL;
+
+    ext = CertFindExtension(szOID_KEY_USAGE, cert->pCertInfo->cExtension,
+     cert->pCertInfo->rgExtension);
+    if (ext)
+    {
+        DWORD size;
+
+        CryptDecodeObjectEx(X509_ASN_ENCODING, X509_CERT_POLICIES,
+         ext->Value.pbData, ext->Value.cbData, CRYPT_DECODE_ALLOC_FLAG, NULL,
+         &policies, &size);
+    }
+    return policies;
+}
+
+static void CRYPT_CheckPolicies(CERT_POLICIES_INFO *policies, CERT_INFO *cert,
+ DWORD *errorStatus)
+{
+    DWORD i;
+
+    for (i = 0; i < policies->cPolicyInfo; i++)
+    {
+        /* For now, the only accepted policy identifier is the anyPolicy
+         * identifier.
+         * FIXME: the policy identifiers should be compared against the
+         * cert's certificate policies extension, subject to the policy
+         * mappings extension, and the policy constraints extension.
+         * See RFC 5280, sections 4.2.1.4, 4.2.1.5, and 4.2.1.11.
+         */
+        if (strcmp(policies->rgPolicyInfo[i].pszPolicyIdentifier,
+         szOID_ANY_CERT_POLICY))
+        {
+            FIXME("unsupported policy %s\n",
+             policies->rgPolicyInfo[i].pszPolicyIdentifier);
+            *errorStatus |= CERT_TRUST_INVALID_POLICY_CONSTRAINTS;
+        }
+    }
+}
+
+static void CRYPT_CheckChainPolicies(PCERT_SIMPLE_CHAIN chain)
+{
+    int i, j;
+
+    for (i = chain->cElement - 1; i > 0; i--)
+    {
+        CERT_POLICIES_INFO *policies;
+
+        if ((policies = CRYPT_GetPolicies(chain->rgpElement[i]->pCertContext)))
+        {
+            for (j = i - 1; j >= 0; j--)
+            {
+                DWORD errorStatus = 0;
+
+                CRYPT_CheckPolicies(policies,
+                 chain->rgpElement[j]->pCertContext->pCertInfo, &errorStatus);
+                if (errorStatus)
+                {
+                    chain->rgpElement[i]->TrustStatus.dwErrorStatus |=
+                     errorStatus;
+                    CRYPT_CombineTrustStatus(&chain->TrustStatus,
+                     &chain->rgpElement[i]->TrustStatus);
+                }
+            }
+            LocalFree(policies);
+        }
+    }
+}
+
 static LPWSTR name_value_to_str(const CERT_NAME_BLOB *name)
 {
     DWORD len = cert_name_to_str_with_indent(X509_ASN_ENCODING, 0, name,
@@ -1739,6 +1811,8 @@ static BOOL CRYPT_CriticalExtensionsSupported(PCCERT_CONTEXT cert)
                 ret = TRUE;
             else if (!strcmp(oid, szOID_SUBJECT_ALT_NAME2))
                 ret = TRUE;
+            else if (!strcmp(oid, szOID_CERT_POLICIES))
+                ret = TRUE;
             else if (!strcmp(oid, szOID_ENHANCED_KEY_USAGE))
                 ret = TRUE;
             else
@@ -1883,6 +1957,7 @@ static void CRYPT_CheckSimpleChain(PCertificateChainEngine engine,
          &chain->rgpElement[i]->TrustStatus);
     }
     CRYPT_CheckChainNameConstraints(chain);
+    CRYPT_CheckChainPolicies(chain);
     if (CRYPT_IsCertificateSelfSigned(rootElement->pCertContext))
     {
         rootElement->TrustStatus.dwInfoStatus |=

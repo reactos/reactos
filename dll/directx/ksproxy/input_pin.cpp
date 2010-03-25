@@ -62,6 +62,8 @@ class CInputPin : public IPin,
                   public ISpecifyPropertyPages
 {
 public:
+    typedef std::vector<IUnknown *>ProxyPluginVector;
+
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
     STDMETHODIMP_(ULONG) AddRef()
@@ -170,14 +172,15 @@ public:
     HRESULT STDMETHODCALLTYPE CheckFormat(const AM_MEDIA_TYPE *pmt);
     HRESULT STDMETHODCALLTYPE CreatePin(const AM_MEDIA_TYPE *pmt);
     HRESULT STDMETHODCALLTYPE CreatePinHandle(PKSPIN_MEDIUM Medium, PKSPIN_INTERFACE Interface, const AM_MEDIA_TYPE *pmt);
-    CInputPin(IBaseFilter * ParentFilter, LPCWSTR PinName, HANDLE hFilter, ULONG PinId, KSPIN_COMMUNICATION Communication);
+    HRESULT STDMETHODCALLTYPE GetSupportedSets(LPGUID * pOutGuid, PULONG NumGuids);
+    HRESULT STDMETHODCALLTYPE LoadProxyPlugins(LPGUID pGuids, ULONG NumGuids);
+    CInputPin(IBaseFilter * ParentFilter, LPCWSTR PinName, ULONG PinId, KSPIN_COMMUNICATION Communication);
     virtual ~CInputPin(){};
 
 protected:
     LONG m_Ref;
     IBaseFilter * m_ParentFilter;
     LPCWSTR m_PinName;
-    HANDLE m_hFilter;
     HANDLE m_hPin;
     ULONG m_PinId;
     IMemAllocator * m_MemAllocator;
@@ -185,6 +188,7 @@ protected:
     KSPIN_COMMUNICATION m_Communication;
     KSPIN_INTERFACE m_Interface;
     KSPIN_MEDIUM m_Medium;
+    AM_MEDIA_TYPE m_MediaFormat;
     IPin * m_Pin;
     BOOL m_ReadOnly;
     IKsInterfaceHandler * m_InterfaceHandler;
@@ -195,17 +199,16 @@ protected:
     LPWSTR m_FilterName;
     FRAMING_PROP m_FramingProp[4];
     PKSALLOCATOR_FRAMING_EX m_FramingEx[4];
+    ProxyPluginVector m_Plugins;
 };
 
 CInputPin::CInputPin(
-    IBaseFilter * ParentFilter, 
+    IBaseFilter * ParentFilter,
     LPCWSTR PinName,
-    HANDLE hFilter,
     ULONG PinId,
     KSPIN_COMMUNICATION Communication) : m_Ref(0),
                                          m_ParentFilter(ParentFilter),
                                          m_PinName(PinName),
-                                         m_hFilter(hFilter),
                                          m_hPin(INVALID_HANDLE_VALUE),
                                          m_PinId(PinId),
                                          m_MemAllocator(0),
@@ -217,10 +220,28 @@ CInputPin::CInputPin(
                                          m_KsAllocatorEx(0),
                                          m_PipeAllocatorFlag(0),
                                          m_bPinBusCacheInitialized(0),
-                                         m_FilterName(0)
+                                         m_FilterName(0),
+                                         m_Plugins()
 {
     ZeroMemory(m_FramingProp, sizeof(m_FramingProp));
     ZeroMemory(m_FramingEx, sizeof(m_FramingEx));
+
+    HRESULT hr;
+    IKsObject * KsObjectParent;
+    HANDLE hFilter;
+
+    hr = m_ParentFilter->QueryInterface(IID_IKsObject, (LPVOID*)&KsObjectParent);
+    assert(hr == S_OK);
+
+    hFilter = KsObjectParent->KsGetObjectHandle();
+    assert(hFilter);
+
+    KsObjectParent->Release();
+
+
+    ZeroMemory(&m_MediaFormat, sizeof(AM_MEDIA_TYPE));
+    hr = KsGetMediaType(0, &m_MediaFormat, hFilter, m_PinId);
+    assert(hr == S_OK);
 }
 
 HRESULT
@@ -229,6 +250,8 @@ CInputPin::QueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
+    WCHAR Buffer[100];
+
     *Output = NULL;
 
     if (IsEqualGUID(refiid, IID_IUnknown) ||
@@ -240,6 +263,13 @@ CInputPin::QueryInterface(
     }
     else if (IsEqualGUID(refiid, IID_IMemInputPin))
     {
+        if (m_hPin == INVALID_HANDLE_VALUE)
+        {
+            HRESULT hr = CreatePin(&m_MediaFormat);
+            if (FAILED(hr))
+                return hr;
+        }
+
         *Output = (IMemInputPin*)(this);
         reinterpret_cast<IMemInputPin*>(*Output)->AddRef();
         return NOERROR;
@@ -252,6 +282,13 @@ CInputPin::QueryInterface(
     }
     else if (IsEqualGUID(refiid, IID_IKsPropertySet))
     {
+        if (m_hPin == INVALID_HANDLE_VALUE)
+        {
+            HRESULT hr = CreatePin(&m_MediaFormat);
+            if (FAILED(hr))
+                return hr;
+        }
+
         *Output = (IKsPropertySet*)(this);
         reinterpret_cast<IKsPropertySet*>(*Output)->AddRef();
         return NOERROR;
@@ -308,7 +345,6 @@ CInputPin::QueryInterface(
         return NOERROR;
     }
 
-    WCHAR Buffer[MAX_PATH];
     LPOLESTR lpstr;
     StringFromCLSID(refiid, &lpstr);
     swprintf(Buffer, L"CInputPin::QueryInterface: NoInterface for %s\n", lpstr);
@@ -326,7 +362,10 @@ CInputPin::Notify(
     IBaseFilter *pSelf,
     Quality q)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CInputPin::Notify NotImplemented\n");
+#endif
+
     return E_NOTIMPL;
 }
 
@@ -335,7 +374,10 @@ STDMETHODCALLTYPE
 CInputPin::SetSink(
     IQualityControl *piqc)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CInputPin::SetSink NotImplemented\n");
+#endif
+
     return E_NOTIMPL;
 }
 
@@ -348,7 +390,10 @@ STDMETHODCALLTYPE
 CInputPin::KsAddAggregate(
     IN REFGUID AggregateClass)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CInputPin::KsAddAggregate NotImplemented\n");
+#endif
+
     return E_NOTIMPL;
 }
 
@@ -357,7 +402,10 @@ STDMETHODCALLTYPE
 CInputPin::KsRemoveAggregate(
     REFGUID AggregateClass)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CInputPin::KsRemoveAggregate NotImplemented\n");
+#endif
+
     return E_NOTIMPL;
 }
 
@@ -381,7 +429,10 @@ CInputPin::Backout(
     IPin *ppinOut, 
     IGraphBuilder *pGraph)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CInputPin::Backout\n");
+#endif
+
     return S_OK;
 }
 
@@ -394,7 +445,10 @@ STDMETHODCALLTYPE
 CInputPin::KsPinFactory(
     ULONG* PinFactory)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CInputPin::KsPinFactory\n");
+#endif
+
     *PinFactory = m_PinId;
     return S_OK;
 }
@@ -570,7 +624,10 @@ HRESULT
 STDMETHODCALLTYPE
 CInputPin::GetAllocator(IMemAllocator **ppAllocator)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CInputPin::GetAllocator\n");
+#endif
+
     return VFW_E_NO_ALLOCATOR;
 }
 
@@ -578,6 +635,17 @@ HRESULT
 STDMETHODCALLTYPE
 CInputPin::NotifyAllocator(IMemAllocator *pAllocator, BOOL bReadOnly)
 {
+    HRESULT hr;
+    ALLOCATOR_PROPERTIES Properties;
+
+    hr = pAllocator->GetProperties(&Properties);
+
+#ifdef KSPROXY_TRACE
+    WCHAR Buffer[100];
+    swprintf(Buffer, L"CInputPin::NotifyAllocator hr %lx bReadOnly, %u cbAlign %u cbBuffer %u cbPrefix %u cBuffers %u\n", hr, bReadOnly, Properties.cbAlign, Properties.cbBuffer, Properties.cbPrefix, Properties.cBuffers);
+    OutputDebugStringW(Buffer);
+#endif
+
     if (pAllocator)
     {
         pAllocator->AddRef();
@@ -613,17 +681,28 @@ CInputPin::GetAllocatorRequirements(ALLOCATOR_PROPERTIES *pProps)
         pProps->cbBuffer = Framing.FrameSize;
         pProps->cbAlign = Framing.FileAlignment;
         pProps->cbPrefix = 0;
-        return hr;
     }
     else
-        return E_NOTIMPL;
+        hr = E_NOTIMPL;
+
+#ifdef KSPROXY_TRACE
+    WCHAR Buffer[100];
+    swprintf(Buffer, L"CInputPin::GetAllocatorRequirements hr %lx m_hPin %p cBuffers %u cbBuffer %u cbAlign %u cbPrefix %u\n", hr, m_hPin, pProps->cBuffers, pProps->cbBuffer, pProps->cbAlign, pProps->cbPrefix);
+    OutputDebugStringW(Buffer);
+#endif
+
+    return hr;
 }
 
 HRESULT
 STDMETHODCALLTYPE
 CInputPin::Receive(IMediaSample *pSample)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CInputPin::Receive NotImplemented\n");
+    DebugBreak();
+#endif
+
     return E_NOTIMPL;
 }
 
@@ -631,7 +710,11 @@ HRESULT
 STDMETHODCALLTYPE
 CInputPin::ReceiveMultiple(IMediaSample **pSamples, long nSamples, long *nSamplesProcessed)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CInputPin::ReceiveMultiple NotImplemented\n");
+    DebugBreak();
+#endif
+
     return E_NOTIMPL;
 }
 
@@ -639,7 +722,11 @@ HRESULT
 STDMETHODCALLTYPE
 CInputPin::ReceiveCanBlock( void)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CInputPin::ReceiveCanBlock NotImplemented\n");
+    DebugBreak();
+#endif
+
     return S_FALSE;
 }
 
@@ -652,7 +739,22 @@ STDMETHODCALLTYPE
 CInputPin::KsQueryMediums(
     PKSMULTIPLE_ITEM* MediumList)
 {
-    return KsGetMultiplePinFactoryItems(m_hFilter, m_PinId, KSPROPERTY_PIN_MEDIUMS, (PVOID*)MediumList);
+    HRESULT hr;
+    IKsObject * KsObjectParent;
+    HANDLE hFilter;
+
+    hr = m_ParentFilter->QueryInterface(IID_IKsObject, (LPVOID*)&KsObjectParent);
+    if (FAILED(hr))
+        return hr;
+
+    hFilter = KsObjectParent->KsGetObjectHandle();
+
+    KsObjectParent->Release();
+
+    if (!hFilter)
+        return E_HANDLE;
+
+    return KsGetMultiplePinFactoryItems(hFilter, m_PinId, KSPROPERTY_PIN_MEDIUMS, (PVOID*)MediumList);
 }
 
 HRESULT
@@ -660,7 +762,22 @@ STDMETHODCALLTYPE
 CInputPin::KsQueryInterfaces(
     PKSMULTIPLE_ITEM* InterfaceList)
 {
-    return KsGetMultiplePinFactoryItems(m_hFilter, m_PinId, KSPROPERTY_PIN_INTERFACES, (PVOID*)InterfaceList);
+    HRESULT hr;
+    IKsObject * KsObjectParent;
+    HANDLE hFilter;
+
+    hr = m_ParentFilter->QueryInterface(IID_IKsObject, (LPVOID*)&KsObjectParent);
+    if (FAILED(hr))
+        return hr;
+
+    hFilter = KsObjectParent->KsGetObjectHandle();
+
+    KsObjectParent->Release();
+
+    if (!hFilter)
+        return E_HANDLE;
+
+    return KsGetMultiplePinFactoryItems(hFilter, m_PinId, KSPROPERTY_PIN_INTERFACES, (PVOID*)InterfaceList);
 }
 
 HRESULT
@@ -669,8 +786,7 @@ CInputPin::KsCreateSinkPinHandle(
     KSPIN_INTERFACE& Interface,
     KSPIN_MEDIUM& Medium)
 {
-    OutputDebugStringW(L"CInputPin::KsCreateSinkPinHandle NotImplemented\n");
-    return E_NOTIMPL;
+    return CreatePin(&m_MediaFormat);
 }
 
 HRESULT
@@ -707,8 +823,25 @@ HRESULT
 STDMETHODCALLTYPE
 CInputPin::KsPropagateAcquire()
 {
-    OutputDebugStringW(L"CInputPin::KsPropagateAcquire NotImplemented\n");
-    return E_NOTIMPL;
+    KSPROPERTY Property;
+    KSSTATE State;
+    ULONG BytesReturned;
+    HRESULT hr;
+
+    assert(m_hPin != INVALID_HANDLE_VALUE);
+
+    Property.Set = KSPROPSETID_Connection;
+    Property.Id = KSPROPERTY_CONNECTION_STATE;
+    Property.Flags = KSPROPERTY_TYPE_SET;
+
+    State = KSSTATE_ACQUIRE;
+
+    hr = KsProperty(&Property, sizeof(KSPROPERTY), (LPVOID)&State, sizeof(KSSTATE), &BytesReturned);
+
+    //TODO
+    //propagate to connected pin on the pipe
+
+    return hr;
 }
 
 HRESULT
@@ -744,6 +877,7 @@ HRESULT
 STDMETHODCALLTYPE
 CInputPin::KsReceiveAllocator(IMemAllocator *MemAllocator)
 {
+
     if (MemAllocator)
     {
         MemAllocator->AddRef();
@@ -785,7 +919,11 @@ CInputPin::KsQualityNotify(
     ULONG Proportion,
     REFERENCE_TIME TimeDelta)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CInputPin::KsQualityNotify NotImplemented\n");
+#endif
+
+    DebugBreak();
     return E_NOTIMPL;
 }
 
@@ -799,7 +937,9 @@ CInputPin::KsNotifyError(
     IMediaSample* Sample,
     HRESULT hr)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CInputPin::KsNotifyError NotImplemented\n");
+#endif
 }
 
 
@@ -815,7 +955,7 @@ CInputPin::KsProperty(
     ULONG DataLength,
     ULONG* BytesReturned)
 {
-    assert(m_hPin != 0);
+    assert(m_hPin != INVALID_HANDLE_VALUE);
     return KsSynchronousDeviceControl(m_hPin, IOCTL_KS_PROPERTY, (PVOID)Property, PropertyLength, (PVOID)PropertyData, DataLength, BytesReturned);
 }
 
@@ -828,7 +968,7 @@ CInputPin::KsMethod(
     ULONG DataLength,
     ULONG* BytesReturned)
 {
-    assert(m_hPin != 0);
+    assert(m_hPin != INVALID_HANDLE_VALUE);
     return KsSynchronousDeviceControl(m_hPin, IOCTL_KS_METHOD, (PVOID)Method, MethodLength, (PVOID)MethodData, DataLength, BytesReturned);
 }
 
@@ -841,7 +981,7 @@ CInputPin::KsEvent(
     ULONG DataLength,
     ULONG* BytesReturned)
 {
-    assert(m_hPin != 0);
+    assert(m_hPin != INVALID_HANDLE_VALUE);
 
     if (EventLength)
         return KsSynchronousDeviceControl(m_hPin, IOCTL_KS_ENABLE_EVENT, (PVOID)Event, EventLength, (PVOID)EventData, DataLength, BytesReturned);
@@ -972,7 +1112,10 @@ HRESULT
 STDMETHODCALLTYPE
 CInputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CInputPin::Connect NotImplemented\n");
+    DebugBreak();
+#endif
     return NOERROR;
 }
 
@@ -1023,7 +1166,10 @@ CInputPin::Disconnect( void)
     m_Pin->Release();
     m_Pin = NULL;
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CInputPin::Disconnect\n");
+#endif
+
     return S_OK;
 }
 HRESULT
@@ -1051,7 +1197,11 @@ CInputPin::ConnectionMediaType(AM_MEDIA_TYPE *pmt)
     if (!m_Pin)
         return VFW_E_NOT_CONNECTED;
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CInputPin::ConnectionMediaType NotImplemented\n");
+    DebugBreak();
+#endif
+
     return E_NOTIMPL;
 }
 HRESULT
@@ -1103,9 +1253,23 @@ CInputPin::EnumMediaTypes(IEnumMediaTypes **ppEnum)
     HRESULT hr;
     ULONG MediaTypeCount = 0, Index;
     AM_MEDIA_TYPE * MediaTypes;
+    IKsObject * KsObjectParent;
+    HANDLE hFilter;
+
+    hr = m_ParentFilter->QueryInterface(IID_IKsObject, (LPVOID*)&KsObjectParent);
+    if (FAILED(hr))
+        return hr;
+
+    hFilter = KsObjectParent->KsGetObjectHandle();
+
+    KsObjectParent->Release();
+
+    if (!hFilter)
+        return E_HANDLE;
+
 
     // query media type count
-    hr = KsGetMediaTypeCount(m_hFilter, m_PinId, &MediaTypeCount);
+    hr = KsGetMediaTypeCount(hFilter, m_PinId, &MediaTypeCount);
     if (FAILED(hr) || !MediaTypeCount)
         return hr;
 
@@ -1123,7 +1287,7 @@ CInputPin::EnumMediaTypes(IEnumMediaTypes **ppEnum)
     for(Index = 0; Index < MediaTypeCount; Index++)
     {
         // get media type
-        hr = KsGetMediaType(Index, &MediaTypes[Index], m_hFilter, m_PinId);
+        hr = KsGetMediaType(Index, &MediaTypes[Index], hFilter, m_PinId);
         if (FAILED(hr))
         {
             // failed
@@ -1139,35 +1303,45 @@ HRESULT
 STDMETHODCALLTYPE
 CInputPin::QueryInternalConnections(IPin **apPin, ULONG *nPin)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CInputPin::QueryInternalConnections NotImplemented\n");
+#endif
     return E_NOTIMPL;
 }
 HRESULT
 STDMETHODCALLTYPE
 CInputPin::EndOfStream( void)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CInputPin::EndOfStream NotImplemented\n");
+#endif
     return E_NOTIMPL;
 }
 HRESULT
 STDMETHODCALLTYPE
 CInputPin::BeginFlush( void)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CInputPin::BeginFlush NotImplemented\n");
+#endif
     return E_NOTIMPL;
 }
 HRESULT
 STDMETHODCALLTYPE
 CInputPin::EndFlush( void)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CInputPin::EndFlush NotImplemented\n");
+#endif
     return E_NOTIMPL;
 }
 HRESULT
 STDMETHODCALLTYPE
 CInputPin::NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CInputPin::NewSegment NotImplemented\n");
+#endif
     return E_NOTIMPL;
 }
 
@@ -1178,60 +1352,49 @@ STDMETHODCALLTYPE
 CInputPin::CheckFormat(
     const AM_MEDIA_TYPE *pmt)
 {
-    KSP_PIN Property;
     PKSMULTIPLE_ITEM MultipleItem;
     PKSDATAFORMAT DataFormat;
-    ULONG BytesReturned;
     HRESULT hr;
-
-    // prepare request
-    Property.Property.Set = KSPROPSETID_Pin;
-    Property.Property.Id = KSPROPERTY_PIN_DATARANGES;
-    Property.Property.Flags = KSPROPERTY_TYPE_GET;
-    Property.PinId = m_PinId;
-    Property.Reserved = 0;
+    IKsObject * KsObjectParent;
+    HANDLE hFilter;
 
     if (!pmt)
         return E_POINTER;
 
-    // query for size of dataranges
-    hr = KsSynchronousDeviceControl(m_hFilter, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSP_PIN), NULL, 0, &BytesReturned);
+    hr = m_ParentFilter->QueryInterface(IID_IKsObject, (LPVOID*)&KsObjectParent);
+    if (FAILED(hr))
+        return hr;
 
-    if (hr == MAKE_HRESULT(SEVERITY_ERROR, FACILITY_WIN32, ERROR_MORE_DATA))
+    hFilter = KsObjectParent->KsGetObjectHandle();
+
+    KsObjectParent->Release();
+
+    if (!hFilter)
+        return E_HANDLE;
+
+
+    hr = KsGetMultiplePinFactoryItems(hFilter, m_PinId, KSPROPERTY_PIN_DATARANGES, (PVOID*)&MultipleItem);
+    if (FAILED(hr))
+        return S_FALSE;
+
+    DataFormat = (PKSDATAFORMAT)(MultipleItem + 1);
+    for(ULONG Index = 0; Index < MultipleItem->Count; Index++)
     {
-        // allocate dataranges buffer
-        MultipleItem = (PKSMULTIPLE_ITEM)CoTaskMemAlloc(BytesReturned);
-
-        if (!MultipleItem)
-            return E_OUTOFMEMORY;
-
-        // query dataranges
-        hr = KsSynchronousDeviceControl(m_hFilter, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSP_PIN), (PVOID)MultipleItem, BytesReturned, &BytesReturned);
-
-        if (FAILED(hr))
+        if (IsEqualGUID(pmt->majortype, DataFormat->MajorFormat) &&
+            IsEqualGUID(pmt->subtype, DataFormat->SubFormat) &&
+            IsEqualGUID(pmt->formattype, DataFormat->Specifier))
         {
-            // failed to query data ranges
+            // format is supported
             CoTaskMemFree(MultipleItem);
-            return hr;
+#ifdef KSPROXY_TRACE
+            OutputDebugStringW(L"CInputPin::CheckFormat format OK\n");
+#endif
+            return S_OK;
         }
-
-        DataFormat = (PKSDATAFORMAT)(MultipleItem + 1);
-        for(ULONG Index = 0; Index < MultipleItem->Count; Index++)
-        {
-            if (IsEqualGUID(pmt->majortype, DataFormat->MajorFormat) &&
-                IsEqualGUID(pmt->subtype, DataFormat->SubFormat) &&
-                IsEqualGUID(pmt->formattype, DataFormat->Specifier))
-            {
-                // format is supported
-                CoTaskMemFree(MultipleItem);
-                OutputDebugStringW(L"CInputPin::CheckFormat format OK\n");
-                return S_OK;
-            }
-            DataFormat = (PKSDATAFORMAT)((ULONG_PTR)DataFormat + DataFormat->FormatSize);
-        }
-        //format is not supported
-        CoTaskMemFree(MultipleItem);
+        DataFormat = (PKSDATAFORMAT)((ULONG_PTR)DataFormat + DataFormat->FormatSize);
     }
+    //format is not supported
+    CoTaskMemFree(MultipleItem);
     return S_FALSE;
 }
 
@@ -1285,32 +1448,39 @@ CInputPin::CreatePin(
 
     if (m_Communication != KSPIN_COMMUNICATION_BRIDGE && m_Communication != KSPIN_COMMUNICATION_NONE)
     {
-        // now load the IKsInterfaceHandler plugin
-        hr = CoCreateInstance(Interface->Set, NULL, CLSCTX_INPROC_SERVER, IID_IKsInterfaceHandler, (void**)&InterfaceHandler);
-        if (FAILED(hr))
+        if (!m_InterfaceHandler)
         {
-            // failed to load interface handler plugin
-            OutputDebugStringW(L"CInputPin::CreatePin failed to load InterfaceHandlerPlugin\n");
-            CoTaskMemFree(MediumList);
-            CoTaskMemFree(InterfaceList);
+            // now load the IKsInterfaceHandler plugin
+            hr = CoCreateInstance(Interface->Set, NULL, CLSCTX_INPROC_SERVER, IID_IKsInterfaceHandler, (void**)&InterfaceHandler);
+            if (FAILED(hr))
+            {
+                // failed to load interface handler plugin
+#ifdef KSPROXY_TRACE
+                OutputDebugStringW(L"CInputPin::CreatePin failed to load InterfaceHandlerPlugin\n");
+#endif
+                CoTaskMemFree(MediumList);
+                CoTaskMemFree(InterfaceList);
 
-            return hr;
+                return hr;
+            }
+
+            // now set the pin
+            hr = InterfaceHandler->KsSetPin((IKsPin*)this);
+            if (FAILED(hr))
+            {
+                // failed to load interface handler plugin
+#ifdef KSPROXY_TRACE
+                OutputDebugStringW(L"CInputPin::CreatePin failed to initialize InterfaceHandlerPlugin\n");
+#endif
+                InterfaceHandler->Release();
+                CoTaskMemFree(MediumList);
+                CoTaskMemFree(InterfaceList);
+                return hr;
+            }
+
+            // store interface handler
+            m_InterfaceHandler = InterfaceHandler;
         }
-
-        // now set the pin
-        hr = InterfaceHandler->KsSetPin((IKsPin*)this);
-        if (FAILED(hr))
-        {
-            // failed to load interface handler plugin
-            OutputDebugStringW(L"CInputPin::CreatePin failed to initialize InterfaceHandlerPlugin\n");
-            InterfaceHandler->Release();
-            CoTaskMemFree(MediumList);
-            CoTaskMemFree(InterfaceList);
-            return hr;
-        }
-
-        // store interface handler
-        m_InterfaceHandler = InterfaceHandler;
 
         // now create pin
         hr = CreatePinHandle(Medium, Interface, pmt);
@@ -1319,6 +1489,16 @@ CInputPin::CreatePin(
             m_InterfaceHandler->Release();
             m_InterfaceHandler = InterfaceHandler;
         }
+    }
+    else
+    {
+#ifdef KSPROXY_TRACE
+        WCHAR Buffer[100];
+        swprintf(Buffer, L"CInputPin::CreatePin unexpected communication %u %s\n", m_Communication, m_PinName);
+        OutputDebugStringW(Buffer);
+        DebugBreak();
+#endif
+        hr = E_FAIL;
     }
 
     // free medium / interface / dataformat
@@ -1339,6 +1519,32 @@ CInputPin::CreatePinHandle(
     PKSDATAFORMAT DataFormat;
     ULONG Length;
     HRESULT hr;
+    IKsObject * KsObjectParent;
+    HANDLE hFilter;
+
+    if (!pmt)
+        return E_POINTER;
+
+    hr = m_ParentFilter->QueryInterface(IID_IKsObject, (LPVOID*)&KsObjectParent);
+    if (FAILED(hr))
+        return hr;
+
+    hFilter = KsObjectParent->KsGetObjectHandle();
+
+    KsObjectParent->Release();
+
+    if (!hFilter)
+        return E_HANDLE;
+
+
+    if (m_hPin != INVALID_HANDLE_VALUE)
+    {
+        // pin already exists
+        //CloseHandle(m_hPin);
+        //m_hPin = INVALID_HANDLE_VALUE;
+        return S_OK;
+    }
+
 
     // calc format size
     Length = sizeof(KSPIN_CONNECT) + sizeof(KSDATAFORMAT) + pmt->cbFormat;
@@ -1378,12 +1584,209 @@ CInputPin::CreatePinHandle(
     }
 
     // create pin
-    hr = KsCreatePin(m_hFilter, PinConnect, GENERIC_WRITE, &m_hPin);
+    hr = KsCreatePin(hFilter, PinConnect, GENERIC_WRITE, &m_hPin);
+
+    if (SUCCEEDED(hr))
+    {
+        // store current interface / medium
+        CopyMemory(&m_Medium, Medium, sizeof(KSPIN_MEDIUM));
+        CopyMemory(&m_Interface, Interface, sizeof(KSPIN_INTERFACE));
+        CopyMemory(&m_MediaFormat, pmt, sizeof(AM_MEDIA_TYPE));
+
+#ifdef KSPROXY_TRACE
+        LPOLESTR pMajor, pSub, pFormat;
+        StringFromIID(m_MediaFormat.majortype, &pMajor);
+        StringFromIID(m_MediaFormat.subtype , &pSub);
+        StringFromIID(m_MediaFormat.formattype, &pFormat);
+
+        WCHAR Buffer[200];
+        swprintf(Buffer, L"CInputPin::CreatePinHandle Major %s SubType %s Format %s pbFormat %p cbFormat %u\n", pMajor, pSub, pFormat, pmt->pbFormat, pmt->cbFormat);
+        CoTaskMemFree(pMajor);
+        CoTaskMemFree(pSub);
+        CoTaskMemFree(pFormat);
+        OutputDebugStringW(Buffer);
+#endif
+
+        if (pmt->cbFormat)
+        {
+            m_MediaFormat.pbFormat = (BYTE*)CoTaskMemAlloc(pmt->cbFormat);
+            if (!m_MediaFormat.pbFormat)
+            {
+                CoTaskMemFree(PinConnect);
+                m_MediaFormat.pbFormat = NULL;
+                m_MediaFormat.cbFormat = 0;
+                return E_OUTOFMEMORY;
+            }
+            CopyMemory(m_MediaFormat.pbFormat, pmt->pbFormat, pmt->cbFormat);
+        }
+
+        LPGUID pGuid;
+        ULONG NumGuids = 0;
+
+        // get all supported sets
+        hr = GetSupportedSets(&pGuid, &NumGuids);
+        if (FAILED(hr))
+        {
+#ifdef KSPROXY_TRACE
+            OutputDebugStringW(L"CInputPin::CreatePinHandle GetSupportedSets failed\n");
+#endif
+            return hr;
+        }
+
+        // load all proxy plugins
+        hr = LoadProxyPlugins(pGuid, NumGuids);
+        if (FAILED(hr))
+        {
+#ifdef KSPROXY_TRACE
+            OutputDebugStringW(L"CInputPin::CreatePinHandle LoadProxyPlugins failed\n");
+#endif
+            return hr;
+        }
+
+        // free sets
+        CoTaskMemFree(pGuid);
+
+
+        //TODO
+        // connect pin pipes
+
+    }
 
     // free pin connect
      CoTaskMemFree(PinConnect);
 
     return hr;
+}
+
+HRESULT
+STDMETHODCALLTYPE
+CInputPin::GetSupportedSets(
+    LPGUID * pOutGuid,
+    PULONG NumGuids)
+{
+    KSPROPERTY Property;
+    LPGUID pGuid;
+    ULONG NumProperty = 0;
+    ULONG NumMethods = 0;
+    ULONG NumEvents = 0;
+    ULONG Length;
+    ULONG BytesReturned;
+    HRESULT hr;
+
+    Property.Set = GUID_NULL;
+    Property.Id = 0;
+    Property.Flags = KSPROPERTY_TYPE_SETSUPPORT;
+
+    KsSynchronousDeviceControl(m_hPin, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), NULL, 0, &NumProperty);
+    KsSynchronousDeviceControl(m_hPin, IOCTL_KS_METHOD, (PVOID)&Property, sizeof(KSPROPERTY), NULL, 0, &NumMethods);
+    KsSynchronousDeviceControl(m_hPin, IOCTL_KS_ENABLE_EVENT, (PVOID)&Property, sizeof(KSPROPERTY), NULL, 0, &NumEvents);
+
+    Length = NumProperty + NumMethods + NumEvents;
+
+    // allocate guid buffer
+    pGuid = (LPGUID)CoTaskMemAlloc(Length);
+    if (!pGuid)
+    {
+        // failed
+        return E_OUTOFMEMORY;
+    }
+
+    NumProperty /= sizeof(GUID);
+    NumMethods /= sizeof(GUID);
+    NumEvents /= sizeof(GUID);
+
+    // get all properties
+    hr = KsSynchronousDeviceControl(m_hPin, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)pGuid, Length, &BytesReturned);
+    if (FAILED(hr))
+    {
+        CoTaskMemFree(pGuid);
+        return E_FAIL;
+    }
+    Length -= BytesReturned;
+
+    // get all methods
+    if (Length)
+    {
+        hr = KsSynchronousDeviceControl(m_hPin, IOCTL_KS_METHOD, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)&pGuid[NumProperty], Length, &BytesReturned);
+        if (FAILED(hr))
+        {
+            CoTaskMemFree(pGuid);
+            return E_FAIL;
+        }
+        Length -= BytesReturned;
+    }
+
+    // get all events
+    if (Length)
+    {
+        hr = KsSynchronousDeviceControl(m_hPin, IOCTL_KS_ENABLE_EVENT, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)&pGuid[NumProperty+NumMethods], Length, &BytesReturned);
+        if (FAILED(hr))
+        {
+            CoTaskMemFree(pGuid);
+            return E_FAIL;
+        }
+        Length -= BytesReturned;
+    }
+
+#ifdef KSPROXY_TRACE
+    WCHAR Buffer[200];
+    swprintf(Buffer, L"NumProperty %lu NumMethods %lu NumEvents %lu\n", NumProperty, NumMethods, NumEvents);
+    OutputDebugStringW(Buffer);
+#endif
+
+    *pOutGuid = pGuid;
+    *NumGuids = NumProperty+NumEvents+NumMethods;
+    return S_OK;
+}
+
+HRESULT
+STDMETHODCALLTYPE
+CInputPin::LoadProxyPlugins(
+    LPGUID pGuids,
+    ULONG NumGuids)
+{
+    ULONG Index;
+    LPOLESTR pStr;
+    HKEY hKey, hSubKey;
+    HRESULT hr;
+    IUnknown * pUnknown;
+
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\MediaInterfaces", 0, KEY_READ, &hKey) != ERROR_SUCCESS)
+    {
+        OutputDebugStringW(L"CInputPin::LoadProxyPlugins failed to open MediaInterfaces key\n");
+        return E_FAIL;
+    }
+
+    // enumerate all sets
+    for(Index = 0; Index < NumGuids; Index++)
+    {
+        // convert to string
+        hr = StringFromCLSID(pGuids[Index], &pStr);
+        if (FAILED(hr))
+            return E_FAIL;
+
+        // now try open class key
+        if (RegOpenKeyExW(hKey, pStr, 0, KEY_READ, &hSubKey) != ERROR_SUCCESS)
+        {
+            // no plugin for that set exists
+            CoTaskMemFree(pStr);
+            continue;
+        }
+
+        // try load plugin
+        hr = CoCreateInstance(pGuids[Index], (IBaseFilter*)this, CLSCTX_INPROC_SERVER, IID_IUnknown, (void**)&pUnknown);
+        if (SUCCEEDED(hr))
+        {
+            // store plugin
+            m_Plugins.push_back(pUnknown);
+        }
+        // close key
+        RegCloseKey(hSubKey);
+    }
+
+    // close media interfaces key
+    RegCloseKey(hKey);
+    return S_OK;
 }
 
 HRESULT
@@ -1397,7 +1800,7 @@ CInputPin_Constructor(
     REFIID riid,
     LPVOID * ppv)
 {
-    CInputPin * handler = new CInputPin(ParentFilter, PinName, hFilter, PinId, Communication);
+    CInputPin * handler = new CInputPin(ParentFilter, PinName, PinId, Communication);
 
     if (!handler)
         return E_OUTOFMEMORY;

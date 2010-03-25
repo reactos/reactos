@@ -2057,7 +2057,7 @@ static ULONG WINAPI mrd_Release( IWineMsiRemoteDatabase *iface )
 }
 
 static HRESULT WINAPI mrd_IsTablePersistent( IWineMsiRemoteDatabase *iface,
-                                             BSTR table, MSICONDITION *persistent )
+                                             LPCWSTR table, MSICONDITION *persistent )
 {
     msi_remote_database_impl *This = mrd_from_IWineMsiRemoteDatabase( iface );
     *persistent = MsiDatabaseIsTablePersistentW(This->database, table);
@@ -2065,7 +2065,7 @@ static HRESULT WINAPI mrd_IsTablePersistent( IWineMsiRemoteDatabase *iface,
 }
 
 static HRESULT WINAPI mrd_GetPrimaryKeys( IWineMsiRemoteDatabase *iface,
-                                          BSTR table, MSIHANDLE *keys )
+                                          LPCWSTR table, MSIHANDLE *keys )
 {
     msi_remote_database_impl *This = mrd_from_IWineMsiRemoteDatabase( iface );
     UINT r = MsiDatabaseGetPrimaryKeysW(This->database, table, keys);
@@ -2081,7 +2081,7 @@ static HRESULT WINAPI mrd_GetSummaryInformation( IWineMsiRemoteDatabase *iface,
 }
 
 static HRESULT WINAPI mrd_OpenView( IWineMsiRemoteDatabase *iface,
-                                    BSTR query, MSIHANDLE *view )
+                                    LPCWSTR query, MSIHANDLE *view )
 {
     msi_remote_database_impl *This = mrd_from_IWineMsiRemoteDatabase( iface );
     UINT r = MsiDatabaseOpenViewW(This->database, query, view);

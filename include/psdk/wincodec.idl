@@ -72,6 +72,14 @@ typedef enum WICBitmapEncoderCacheOption {
     WICBITMAPENCODERCACHEOPTION_FORCE_DWORD = CODEC_FORCE_DWORD
 } WICBitmapEncoderCacheOption;
 
+typedef enum WICBitmapInterpolationMode {
+    WICBitmapInterpolationModeNearestNeighbor = 0x00000000,
+    WICBitmapInterpolationModeLinear = 0x00000001,
+    WICBitmapInterpolationModeCubic = 0x00000002,
+    WICBitmapInterpolationModeFaint = 0x00000003,
+    WICBITMAPINTERPOLATIONMODE_FORCE_DWORD = CODEC_FORCE_DWORD
+} WICBitmapInterpolationMode;
+
 typedef enum WICBitmapPaletteType {
     WICBitmapPaletteTypeCustom = 0x00000000,
     WICBitmapPaletteTypeMedianCut = 0x00000001,
@@ -169,9 +177,7 @@ cpp_quote("#define WINCODEC_ERR_UNSUPPORTEDPIXELFORMAT 0x88982f80")
 cpp_quote("#define WINCODEC_ERR_UNSUPPORTEDOPERATION 0x88982f81")
 cpp_quote("#define WINCODEC_ERR_INSUFFICIENTBUFFER 0x88982f8c")
 
-interface IWICBitmap;
 interface IWICPalette;
-interface IWICBitmapScaler;
 interface IWICBitmapClipper;
 interface IWICBitmapFlipRotator;
 interface IWICColorContext;
@@ -205,6 +211,46 @@ interface IWICBitmapSource : IUnknown
         [in] UINT cbStride,
         [in] UINT cbBufferSize,
         [out, size_is(cbBufferSize)] BYTE *pbBuffer);
+}
+
+[
+    object,
+    uuid(00000123-a8f2-4877-ba0a-fd2b6645fb94)
+]
+interface IWICBitmapLock : IUnknown
+{
+    HRESULT GetSize(
+        [out] UINT *pWidth,
+        [out] UINT *pHeight);
+
+    HRESULT GetStride(
+        [out] UINT *pcbStride);
+
+    HRESULT GetDataPointer(
+        [out] UINT *pcbBufferSize,
+        [out, size_is(,*pcbBufferSize)] BYTE **ppbData);
+
+    HRESULT GetPixelFormat(
+        [out] WICPixelFormatGUID *pPixelFormat);
+}
+
+[
+    object,
+    uuid(00000121-a8f2-4877-ba0a-fd2b6645fb94)
+]
+interface IWICBitmap : IWICBitmapSource
+{
+    HRESULT Lock(
+        [in] const WICRect *prcLock,
+        [in] DWORD flags,
+        [out] IWICBitmapLock **ppILock);
+
+    HRESULT SetPalette(
+        [in] IWICPalette *pIPalette);
+
+    HRESULT SetResolution(
+        [in] double dpiX,
+        [in] double dpiY);
 }
 
 [
@@ -584,6 +630,19 @@ interface IWICStream : IStream
         [in] IStream *pIStream,
         [in] ULARGE_INTEGER ulOffset,
         [in] ULARGE_INTEGER ulMaxSize);
+}
+
+[
+    object,
+    uuid(00000302-a8f2-4877-ba0a-fd2b6645fb94)
+]
+interface IWICBitmapScaler : IWICBitmapSource
+{
+    HRESULT Initialize(
+        [in] IWICBitmapSource *pISource,
+        [in] UINT uiWidth,
+        [in] UINT uiHeight,
+        [in] WICBitmapInterpolationMode mode);
 }
 
 cpp_quote("DEFINE_GUID(CLSID_WICImagingFactory, 0xcacaf262,0x9370,0x4615,0xa1,0x3b,0x9f,0x55,0x39,0xda,0x4c,0x0a);")

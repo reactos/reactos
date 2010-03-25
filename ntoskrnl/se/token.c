@@ -1347,6 +1347,14 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
                 PSECURITY_IMPERSONATION_LEVEL sil = (PSECURITY_IMPERSONATION_LEVEL)TokenInformation;
                 
                 DPRINT("NtQueryInformationToken(TokenImpersonationLevel)\n");
+
+                /* Fail if the token is not an impersonation token */
+                if (Token->TokenType != TokenImpersonation)
+                {
+                    Status = STATUS_INVALID_INFO_CLASS;
+                    break;
+                }
+
                 RequiredLength = sizeof(SECURITY_IMPERSONATION_LEVEL);
                 
                 _SEH2_TRY
@@ -2187,7 +2195,7 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
 {
     PETHREAD Thread, NewThread;
     HANDLE hToken;
-    PTOKEN Token, NewToken, PrimaryToken;
+    PTOKEN Token, NewToken = NULL, PrimaryToken;
     BOOLEAN CopyOnOpen, EffectiveOnly;
     SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
     SE_IMPERSONATION_STATE ImpersonationState;
@@ -2313,9 +2321,9 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
     }
     
     if (NewToken) ObDereferenceObject(NewToken);
-    
+
     if (CopyOnOpen && NewThread) ObDereferenceObject(NewThread);
-        
+
     if(NT_SUCCESS(Status))
     {
         _SEH2_TRY

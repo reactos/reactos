@@ -26,7 +26,13 @@ typedef struct {
     LONG ref;
 } Uri;
 
-#define URI(x)  ((IUri*)  &(x)->lpIUriVtbl)
+typedef struct {
+    const IUriBuilderVtbl  *lpIUriBuilderVtbl;
+    LONG ref;
+} UriBuilder;
+
+#define URI(x)         ((IUri*)  &(x)->lpIUriVtbl)
+#define URIBUILDER(x)  ((IUriBuilder*)  &(x)->lpIUriBuilderVtbl)
 
 #define URI_THIS(iface) DEFINE_THIS(Uri, IUri, iface)
 
@@ -298,5 +304,275 @@ HRESULT WINAPI CreateUri(LPCWSTR pwzURI, DWORD dwFlags, DWORD_PTR dwReserved, IU
     ret->ref = 1;
 
     *ppURI = URI(ret);
+    return S_OK;
+}
+
+#define URIBUILDER_THIS(iface) DEFINE_THIS(UriBuilder, IUriBuilder, iface)
+
+static HRESULT WINAPI UriBuilder_QueryInterface(IUriBuilder *iface, REFIID riid, void **ppv)
+{
+    UriBuilder *This = URIBUILDER_THIS(iface);
+
+    if(IsEqualGUID(&IID_IUnknown, riid)) {
+        TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
+        *ppv = URIBUILDER(This);
+    }else if(IsEqualGUID(&IID_IUriBuilder, riid)) {
+        TRACE("(%p)->(IID_IUri %p)\n", This, ppv);
+        *ppv = URIBUILDER(This);
+    }else {
+        TRACE("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppv);
+        *ppv = NULL;
+        return E_NOINTERFACE;
+    }
+
+    IUnknown_AddRef((IUnknown*)*ppv);
+    return S_OK;
+}
+
+static ULONG WINAPI UriBuilder_AddRef(IUriBuilder *iface)
+{
+    UriBuilder *This = URIBUILDER_THIS(iface);
+    LONG ref = InterlockedIncrement(&This->ref);
+
+    TRACE("(%p) ref=%d\n", This, ref);
+
+    return ref;
+}
+
+static ULONG WINAPI UriBuilder_Release(IUriBuilder *iface)
+{
+    UriBuilder *This = URIBUILDER_THIS(iface);
+    LONG ref = InterlockedDecrement(&This->ref);
+
+    TRACE("(%p) ref=%d\n", This, ref);
+
+    if(!ref)
+        heap_free(This);
+
+    return ref;
+}
+
+static HRESULT WINAPI UriBuilder_CreateUriSimple(IUriBuilder *iface,
+                                                 DWORD        dwAllowEncodingPropertyMask,
+                                                 DWORD_PTR    dwReserved,
+                                                 IUri       **ppIUri)
+{
+    UriBuilder *This = URIBUILDER_THIS(iface);
+    FIXME("(%p)->(%d %d %p)\n", This, dwAllowEncodingPropertyMask, (DWORD)dwReserved, ppIUri);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI UriBuilder_CreateUri(IUriBuilder *iface,
+                                           DWORD        dwCreateFlags,
+                                           DWORD        dwAllowEncodingPropertyMask,
+                                           DWORD_PTR    dwReserved,
+                                           IUri       **ppIUri)
+{
+    UriBuilder *This = URIBUILDER_THIS(iface);
+    FIXME("(%p)->(0x%08x %d %d %p)\n", This, dwCreateFlags, dwAllowEncodingPropertyMask, (DWORD)dwReserved, ppIUri);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI UriBuilder_CreateUriWithFlags(IUriBuilder *iface,
+                                         DWORD        dwCreateFlags,
+                                         DWORD        dwUriBuilderFlags,
+                                         DWORD        dwAllowEncodingPropertyMask,
+                                         DWORD_PTR    dwReserved,
+                                         IUri       **ppIUri)
+{
+    UriBuilder *This = URIBUILDER_THIS(iface);
+    FIXME("(%p)->(0x%08x 0x%08x %d %d %p)\n", This, dwCreateFlags, dwUriBuilderFlags,
+        dwAllowEncodingPropertyMask, (DWORD)dwReserved, ppIUri);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI  UriBuilder_GetIUri(IUriBuilder *iface, IUri **ppIUri)
+{
+    UriBuilder *This = URIBUILDER_THIS(iface);
+    FIXME("(%p)->(%p)\n", This, ppIUri);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI UriBuilder_SetIUri(IUriBuilder *iface, IUri *pIUri)
+{
+    UriBuilder *This = URIBUILDER_THIS(iface);
+    FIXME("(%p)->(%p)\n", This, pIUri);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI UriBuilder_GetFragment(IUriBuilder *iface, DWORD *pcchFragment, LPCWSTR *ppwzFragment)
+{
+    UriBuilder *This = URIBUILDER_THIS(iface);
+    FIXME("(%p)->(%p %p)\n", This, pcchFragment, ppwzFragment);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI UriBuilder_GetHost(IUriBuilder *iface, DWORD *pcchHost, LPCWSTR *ppwzHost)
+{
+    UriBuilder *This = URIBUILDER_THIS(iface);
+    FIXME("(%p)->(%p %p)\n", This, pcchHost, ppwzHost);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI UriBuilder_GetPassword(IUriBuilder *iface, DWORD *pcchPassword, LPCWSTR *ppwzPassword)
+{
+    UriBuilder *This = URIBUILDER_THIS(iface);
+    FIXME("(%p)->(%p %p)\n", This, pcchPassword, ppwzPassword);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI UriBuilder_GetPath(IUriBuilder *iface, DWORD *pcchPath, LPCWSTR *ppwzPath)
+{
+    UriBuilder *This = URIBUILDER_THIS(iface);
+    FIXME("(%p)->(%p %p)\n", This, pcchPath, ppwzPath);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI UriBuilder_GetPort(IUriBuilder *iface, BOOL *pfHasPort, DWORD *pdwPort)
+{
+    UriBuilder *This = URIBUILDER_THIS(iface);
+    FIXME("(%p)->(%p %p)\n", This, pfHasPort, pdwPort);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI UriBuilder_GetQuery(IUriBuilder *iface, DWORD *pcchQuery, LPCWSTR *ppwzQuery)
+{
+    UriBuilder *This = URIBUILDER_THIS(iface);
+    FIXME("(%p)->(%p %p)\n", This, pcchQuery, ppwzQuery);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI UriBuilder_GetSchemeName(IUriBuilder *iface, DWORD *pcchSchemeName, LPCWSTR *ppwzSchemeName)
+{
+    UriBuilder *This = URIBUILDER_THIS(iface);
+    FIXME("(%p)->(%p %p)\n", This, pcchSchemeName, ppwzSchemeName);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI UriBuilder_GetUserName(IUriBuilder *iface, DWORD *pcchUserName, LPCWSTR *ppwzUserName)
+{
+    UriBuilder *This = URIBUILDER_THIS(iface);
+    FIXME("(%p)->(%p %p)\n", This, pcchUserName, ppwzUserName);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI UriBuilder_SetFragment(IUriBuilder *iface, LPCWSTR pwzNewValue)
+{
+    UriBuilder *This = URIBUILDER_THIS(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_w(pwzNewValue));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI UriBuilder_SetHost(IUriBuilder *iface, LPCWSTR pwzNewValue)
+{
+    UriBuilder *This = URIBUILDER_THIS(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_w(pwzNewValue));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI UriBuilder_SetPassword(IUriBuilder *iface, LPCWSTR pwzNewValue)
+{
+    UriBuilder *This = URIBUILDER_THIS(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_w(pwzNewValue));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI UriBuilder_SetPath(IUriBuilder *iface, LPCWSTR pwzNewValue)
+{
+    UriBuilder *This = URIBUILDER_THIS(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_w(pwzNewValue));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI UriBuilder_SetPort(IUriBuilder *iface, BOOL fHasPort, DWORD dwNewValue)
+{
+    UriBuilder *This = URIBUILDER_THIS(iface);
+    FIXME("(%p)->(%d %d)\n", This, fHasPort, dwNewValue);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI UriBuilder_SetQuery(IUriBuilder *iface, LPCWSTR pwzNewValue)
+{
+    UriBuilder *This = URIBUILDER_THIS(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_w(pwzNewValue));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI UriBuilder_SetSchemeName(IUriBuilder *iface, LPCWSTR pwzNewValue)
+{
+    UriBuilder *This = URIBUILDER_THIS(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_w(pwzNewValue));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI UriBuilder_SetUserName(IUriBuilder *iface, LPCWSTR pwzNewValue)
+{
+    UriBuilder *This = URIBUILDER_THIS(iface);
+    FIXME("(%p)->(%s)\n", This, debugstr_w(pwzNewValue));
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI UriBuilder_RemoveProperties(IUriBuilder *iface, DWORD dwPropertyMask)
+{
+    UriBuilder *This = URIBUILDER_THIS(iface);
+    FIXME("(%p)->(0x%08x)\n", This, dwPropertyMask);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI UriBuilder_HasBeenModified(IUriBuilder *iface, BOOL *pfModified)
+{
+    UriBuilder *This = URIBUILDER_THIS(iface);
+    FIXME("(%p)->(%p)\n", This, pfModified);
+    return E_NOTIMPL;
+}
+
+#undef URIBUILDER_THIS
+
+static const IUriBuilderVtbl UriBuilderVtbl = {
+    UriBuilder_QueryInterface,
+    UriBuilder_AddRef,
+    UriBuilder_Release,
+    UriBuilder_CreateUriSimple,
+    UriBuilder_CreateUri,
+    UriBuilder_CreateUriWithFlags,
+    UriBuilder_GetIUri,
+    UriBuilder_SetIUri,
+    UriBuilder_GetFragment,
+    UriBuilder_GetHost,
+    UriBuilder_GetPassword,
+    UriBuilder_GetPath,
+    UriBuilder_GetPort,
+    UriBuilder_GetQuery,
+    UriBuilder_GetSchemeName,
+    UriBuilder_GetUserName,
+    UriBuilder_SetFragment,
+    UriBuilder_SetHost,
+    UriBuilder_SetPassword,
+    UriBuilder_SetPath,
+    UriBuilder_SetPort,
+    UriBuilder_SetQuery,
+    UriBuilder_SetSchemeName,
+    UriBuilder_SetUserName,
+    UriBuilder_RemoveProperties,
+    UriBuilder_HasBeenModified,
+};
+
+/***********************************************************************
+ *           CreateIUriBuilder (urlmon.@)
+ */
+HRESULT WINAPI CreateIUriBuilder(IUri *pIUri, DWORD dwFlags, DWORD_PTR dwReserved, IUriBuilder **ppIUriBuilder)
+{
+    UriBuilder *ret;
+
+    TRACE("(%p %x %x %p)\n", pIUri, dwFlags, (DWORD)dwReserved, ppIUriBuilder);
+
+    ret = heap_alloc(sizeof(UriBuilder));
+    if(!ret)
+        return E_OUTOFMEMORY;
+
+    ret->lpIUriBuilderVtbl = &UriBuilderVtbl;
+    ret->ref = 1;
+
+    *ppIUriBuilder = URIBUILDER(ret);
     return S_OK;
 }

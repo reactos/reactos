@@ -3135,6 +3135,9 @@ typedef struct DECLSPEC_ALIGN(16) _CONTEXT {
   ULONG64 LastExceptionFromRip;
 } CONTEXT;
 
+#define PCR_MINOR_VERSION 1
+#define PCR_MAJOR_VERSION 1
+
 typedef struct _KPCR
 {
     _ANONYMOUS_UNION union
@@ -3380,13 +3383,14 @@ ExRaiseDatatypeMisalignment(VOID);
 
 /* Hardware Abstraction Layer Functions */
 
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
 #if defined(USE_DMA_MACROS) && !defined(_NTHAL_) && (defined(_NTDDK_) || defined(_NTDRIVER_)) || defined(_WDM_INCLUDED_)
 
+/* Nothing here */
 
+#else /* USE_DMA_MACROS ... */
 
-#else
-
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
 //DECLSPEC_DEPRECATED_DDK
 NTHALAPI
 VOID
@@ -3452,16 +3456,9 @@ HalAllocateAdapterChannel(
   IN ULONG  NumberOfMapRegisters,
   IN PDRIVER_CONTROL  ExecutionRoutine);
 
-#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
-
-
-#endif
-
+#endif /* USE_DMA_MACROS ... */
 
 #if !defined(NO_LEGACY_DRIVERS)
-
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
-
 NTHALAPI
 NTSTATUS
 NTAPI
@@ -3511,12 +3508,7 @@ BOOLEAN
 NTAPI
 HalMakeBeep(
   IN ULONG Frequency);
-
-#endif
-
 #endif /* !defined(NO_LEGACY_DRIVERS) */
-
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
 
 NTHALAPI
 PADAPTER_OBJECT
@@ -3605,7 +3597,7 @@ HalExamineMBR(
   IN ULONG SectorSize,
   IN ULONG MBRTypeIdentifier,
   OUT PVOID *Buffer);
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
 
@@ -3622,7 +3614,7 @@ NTAPI
 HalFreeHardwareCounters(
   IN HANDLE CounterSetHandle);
 
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
 #if defined(_IA64_)
 #if (NTDDI_VERSION >= NTDDI_WIN2K)

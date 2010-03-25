@@ -38,10 +38,10 @@ cpp_quote("#endif")
 ]
 interface IWineMsiRemoteDatabase : IUnknown
 {
-    HRESULT IsTablePersistent( [in] BSTR table, [out] MSICONDITION *persistent );
-    HRESULT GetPrimaryKeys( [in] BSTR table, [out] MSIHANDLE *keys );
+    HRESULT IsTablePersistent( [in] LPCWSTR table, [out] MSICONDITION *persistent );
+    HRESULT GetPrimaryKeys( [in] LPCWSTR table, [out] MSIHANDLE *keys );
     HRESULT GetSummaryInformation( [in] UINT updatecount, [out] MSIHANDLE *suminfo );
-    HRESULT OpenView( [in] BSTR query, [out] MSIHANDLE *view );
+    HRESULT OpenView( [in] LPCWSTR query, [out] MSIHANDLE *view );
     HRESULT SetMsiHandle( [in] MSIHANDLE handle );
 }
 

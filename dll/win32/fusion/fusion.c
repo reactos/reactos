@@ -52,6 +52,15 @@ HRESULT WINAPI CreateInstallReferenceEnum(IInstallReferenceEnum **ppRefEnum,
     return E_NOTIMPL;
 }
 
+/******************************************************************
+ *  CreateApplicationContext   (FUSION.@)
+ */
+HRESULT WINAPI CreateApplicationContext(IAssemblyName *name, void *ctx)
+{
+    FIXME("%p, %p\n", name, ctx);
+    return E_NOTIMPL;
+}
+
 static HRESULT (WINAPI *pGetCORVersion)(LPWSTR pbuffer, DWORD cchBuffer,
                                         DWORD *dwLength);
 

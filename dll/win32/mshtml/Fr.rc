@@ -72,4 +72,3 @@ FONT 8, "MS Shell Dlg"
     PUSHBUTTON "OK", IDOK, 40, 65, 45, 15, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "Annuler", IDCANCEL, 115, 65, 45, 15, WS_GROUP | WS_TABSTOP
 }
-#pragma code_page(default)

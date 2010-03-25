@@ -511,7 +511,7 @@ cleanup:
 }
 
 
-static BOOL CALLBACK
+static INT_PTR CALLBACK
 StatusMessageWindowProc(
     IN HWND hwndDlg,
     IN UINT uMsg,

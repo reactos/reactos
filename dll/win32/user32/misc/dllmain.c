@@ -217,23 +217,25 @@ BOOL
 Init(VOID)
 {
    USERCONNECT UserCon;
+   PVOID *KernelCallbackTable;
 
    /* Set up the kernel callbacks. */
-   NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_WINDOWPROC] =
+   KernelCallbackTable = NtCurrentPeb()->KernelCallbackTable;
+   KernelCallbackTable[USER32_CALLBACK_WINDOWPROC] =
       (PVOID)User32CallWindowProcFromKernel;
-   NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_SENDASYNCPROC] =
+   KernelCallbackTable[USER32_CALLBACK_SENDASYNCPROC] =
       (PVOID)User32CallSendAsyncProcForKernel;
-   NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_LOADSYSMENUTEMPLATE] =
+   KernelCallbackTable[USER32_CALLBACK_LOADSYSMENUTEMPLATE] =
       (PVOID)User32LoadSysMenuTemplateForKernel;
-   NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_LOADDEFAULTCURSORS] =
+   KernelCallbackTable[USER32_CALLBACK_LOADDEFAULTCURSORS] =
       (PVOID)User32SetupDefaultCursors;
-   NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_HOOKPROC] =
+   KernelCallbackTable[USER32_CALLBACK_HOOKPROC] =
       (PVOID)User32CallHookProcFromKernel;
-   NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_EVENTPROC] =
+   KernelCallbackTable[USER32_CALLBACK_EVENTPROC] =
       (PVOID)User32CallEventProcFromKernel;
-   NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_LOADMENU] =
+   KernelCallbackTable[USER32_CALLBACK_LOADMENU] =
       (PVOID)User32CallLoadMenuFromKernel;
-   NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_CLIENTTHREADSTARTUP] =
+   KernelCallbackTable[USER32_CALLBACK_CLIENTTHREADSTARTUP] =
       (PVOID)User32CallClientThreadSetupFromKernel;
 
    NtUserProcessConnect( NtCurrentProcess(),

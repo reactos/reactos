@@ -414,8 +414,20 @@ static INIT_FUNCTION NTSTATUS
 IopLoadDriver(PSERVICE Service)
 {
    NTSTATUS Status = STATUS_UNSUCCESSFUL;
+   PUNICODE_STRING ImagePath = &Service->ImagePath;
+   PWCHAR ImageName;
+   UNICODE_STRING ImageNameU;
 
-   IopDisplayLoadingMessage(&Service->ServiceName);
+   ImageName = wcsrchr(ImagePath->Buffer, L'\\');
+   if (!ImageName)
+       ImageName = ImagePath->Buffer;
+   else
+       ImageName++;
+
+   RtlInitUnicodeString(&ImageNameU, ImageName);
+
+   IopDisplayLoadingMessage(&ImageNameU);
+
    Status = ZwLoadDriver(&Service->RegistryPath);
    IopBootLog(&Service->ImagePath, NT_SUCCESS(Status) ? TRUE : FALSE);
    if (!NT_SUCCESS(Status))

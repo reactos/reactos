@@ -37,4 +37,3 @@ STRINGTABLE DISCARDABLE
 	14 "funzionalità da:"
 	15 "selezionare la cartella che contiene %s"
 }
-#pragma code_page(default)

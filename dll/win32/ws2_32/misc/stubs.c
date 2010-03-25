@@ -30,7 +30,7 @@ getpeername(IN     SOCKET s,
         return SOCKET_ERROR;
     }
 
-    if (!ReferenceProviderByHandle((HANDLE)s, &Provider))
+    if (!ReferenceProviderByHandle((HANDLE)(ULONG_PTR)(s), &Provider))
     {
         WSASetLastError(WSAENOTSOCK);
         return SOCKET_ERROR;

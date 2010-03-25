@@ -313,6 +313,36 @@ enum module_type
 };
 
 struct process;
+struct module;
+
+/* a module can be made of several debug information formats, so we have to
+ * support them all
+ */
+enum format_info
+{
+    DFI_ELF,
+    DFI_PE,
+    DFI_MACHO,
+    DFI_DWARF,
+    DFI_LAST
+};
+
+struct module_format
+{
+    struct module*              module;
+    void                        (*remove)(struct process* pcs, struct module_format* modfmt);
+    void                        (*loc_compute)(struct process* pcs,
+                                               const struct module_format* modfmt,
+                                               const struct symt_function* func,
+                                               struct location* loc);
+    union
+    {
+        struct elf_module_info*         elf_info;
+        struct dwarf2_module_info_s*    dwarf2_info;
+        struct pe_module_info*          pe_info;
+        struct macho_module_info*	macho_info;
+    } u;
+};
 
 struct module
 {
@@ -324,10 +354,7 @@ struct module
     unsigned short              is_virtual : 1;
 
     /* specific information for debug types */
-    struct elf_module_info*	elf_info;
-    struct dwarf2_module_info_s*dwarf2_info;
-
-    struct macho_module_info*	macho_info;
+    struct module_format*       format_info[DFI_LAST];
 
     /* memory allocation pool */
     struct pool                 pool;
@@ -340,10 +367,6 @@ struct module
     unsigned                    sorttab_size;
     struct symt_ht**            addr_sorttab;
     struct hash_table           ht_symbols;
-    void                        (*loc_compute)(struct process* pcs,
-                                               const struct module* module,
-                                               const struct symt_function* func,
-                                               struct location* loc);
 
     /* types */
     struct hash_table           ht_types;
@@ -471,11 +494,10 @@ extern DWORD calc_crc32(int fd);
 typedef BOOL (*enum_modules_cb)(const WCHAR*, unsigned long addr, void* user);
 
 /* elf_module.c */
-#define ELF_NO_MAP      ((const void*)-1)
 extern BOOL         elf_enum_modules(HANDLE hProc, enum_modules_cb, void*);
 extern BOOL         elf_fetch_file_info(const WCHAR* name, DWORD* base, DWORD* size, DWORD* checksum);
-struct elf_file_map;
-extern BOOL         elf_load_debug_info(struct module* module, struct elf_file_map* fmap);
+struct image_file_map;
+extern BOOL         elf_load_debug_info(struct module* module, struct image_file_map* fmap);
 extern struct module*
                     elf_load_module(struct process* pcs, const WCHAR* name, unsigned long);
 extern BOOL         elf_read_wine_loader_dbg_info(struct process* pcs);
@@ -565,11 +587,7 @@ extern BOOL         stabs_parse(struct module* module, unsigned long load_offset
 /* dwarf.c */
 extern BOOL         dwarf2_parse(struct module* module, unsigned long load_offset,
                                  const struct elf_thunk_area* thunks,
-				 const unsigned char* debug, unsigned int debug_size, 
-				 const unsigned char* abbrev, unsigned int abbrev_size, 
-				 const unsigned char* str, unsigned int str_size,
-                                 const unsigned char* line, unsigned int line_size,
-                                 const unsigned char* loclist, unsigned int loclist_size);
+                                 struct image_file_map* fmap);
 
 /* stack.c */
 extern BOOL         sw_read_mem(struct cpu_stack_walk* csw, DWORD64 addr, void* ptr, DWORD sz);

@@ -291,7 +291,9 @@ static HRESULT WINAPI IHlink_fnSetStringReference(IHlink* iface,
     if (grfHLSETF & HLINKSETF_LOCATION)
     {
         heap_free(This->Location);
-        This->Location = hlink_strdupW( pwzLocation );
+        This->Location = NULL;
+        if (pwzLocation && *pwzLocation)
+            This->Location = hlink_strdupW( pwzLocation );
     }
 
     return S_OK;

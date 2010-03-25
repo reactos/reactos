@@ -98,4 +98,3 @@ STRINGTABLE DISCARDABLE
     IDS_PS_UNKNOWN_SRC                    "Nežinomas šaltinis"
     IDS_PS_UNKNOWN_APP                    "programa, kuri jį sukūrė"
 }
-#pragma code_page(default)

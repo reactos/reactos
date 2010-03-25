@@ -624,7 +624,6 @@ SURFMEM_bCreateDib(IN PDEVBITMAPINFO BitmapInfo,
     else
     {
         /* Compressed surfaces don't have scanlines! */
-        ASSERT(FALSE); // Should not get here on ENGDDI
         pso->lDelta = 0;
         pso->cjBits = BitmapInfo->Size;
         

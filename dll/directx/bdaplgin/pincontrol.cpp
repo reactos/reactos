@@ -9,9 +9,12 @@
 
 #include "precomp.h"
 
-const GUID IID_IBDA_PinControl       = {0x0DED49D5, 0xA8B7, 0x4d5d, {0x97, 0xA1, 0x12, 0xB0, 0xC1, 0x95, 0x87, 0x4D}};
+#ifndef _MSC_VER
 const GUID KSPROPSETID_BdaPinControl = {0x0ded49d5, 0xa8b7, 0x4d5d, {0x97, 0xa1, 0x12, 0xb0, 0xc1, 0x95, 0x87, 0x4d}};
+const GUID IID_IBDA_PinControl       = {0x0DED49D5, 0xA8B7, 0x4d5d, {0x97, 0xA1, 0x12, 0xB0, 0xC1, 0x95, 0x87, 0x4D}};
 const GUID IID_IPin = {0x56a86891, 0x0ad4, 0x11ce, {0xb0, 0x3a, 0x00, 0x20, 0xaf, 0x0b, 0xa7, 0x70}};
+#endif
+
 
 class CBDAPinControl : public IBDA_PinControl
 {
@@ -39,7 +42,7 @@ public:
     HRESULT STDMETHODCALLTYPE RegistrationContext(ULONG *pulRegistrationCtx);
 
 
-    CBDAPinControl(HANDLE hFile, IBDA_NetworkProvider * pProvider, IPin * pConnectedPin) : m_Ref(0), m_Handle(hFile), m_pProvider(pProvider), m_pConnectedPin(pConnectedPin){};
+    CBDAPinControl(HANDLE hFile, IBDA_NetworkProvider * pProvider, IPin * pConnectedPin, ULONG RegistrationCtx) : m_Ref(0), m_Handle(hFile), m_pProvider(pProvider), m_pConnectedPin(pConnectedPin), m_RegistrationCtx(RegistrationCtx){};
     virtual ~CBDAPinControl()
     {
         //m_pConnectedPin->Release();
@@ -51,6 +54,7 @@ protected:
     HANDLE m_Handle;
     IBDA_NetworkProvider * m_pProvider;
     IPin * m_pConnectedPin;
+    ULONG m_RegistrationCtx;
 };
 
 HRESULT
@@ -72,15 +76,6 @@ CBDAPinControl::QueryInterface(
         reinterpret_cast<IBDA_PinControl*>(*Output)->AddRef();
         return NOERROR;
     }
-
-#ifdef BDAPLGIN_TRACE
-    WCHAR Buffer[MAX_PATH];
-    LPOLESTR lpstr;
-    StringFromCLSID(refiid, &lpstr);
-    swprintf(Buffer, L"CBDAPinControl::QueryInterface: NoInterface for %s", lpstr);
-    OutputDebugStringW(Buffer);
-    CoTaskMemFree(lpstr);
-#endif
 
     return E_NOINTERFACE;
 }
@@ -142,10 +137,98 @@ STDMETHODCALLTYPE
 CBDAPinControl::RegistrationContext(ULONG *pulRegistrationCtx)
 {
 #ifdef BDAPLGIN_TRACE
-    OutputDebugStringW(L"CBDAPinControl::RegistrationContext: NotImplemented\n");
+    OutputDebugStringW(L"CBDAPinControl::RegistrationContext\n");
 #endif
 
-    return E_NOTIMPL;
+    if (!pulRegistrationCtx)
+    {
+        // invalid argument
+        return E_POINTER;
+    }
+
+    if (m_RegistrationCtx)
+    {
+        // is registered
+        *pulRegistrationCtx = m_RegistrationCtx;
+        return NOERROR;
+    }
+
+    //pin not registered
+    return E_FAIL;
+}
+
+//-------------------------------------------------------------------
+HRESULT
+GetNetworkProviderFromGraph(
+    IFilterGraph * pGraph,
+    IBDA_NetworkProvider ** pOutNetworkProvider)
+{
+    IEnumFilters *pEnumFilters = NULL;
+    IBaseFilter * ppFilter[1];
+    IBDA_NetworkProvider * pNetworkProvider = NULL;
+    HRESULT hr;
+
+    // get IEnumFilters interface
+    hr = pGraph->EnumFilters(&pEnumFilters);
+
+    if (FAILED(hr))
+    {
+        //clean up
+        *pOutNetworkProvider = NULL;
+        return hr;
+    }
+
+    while(pEnumFilters->Next(1, ppFilter, NULL) == S_OK)
+    {
+        // check if that filter supports the IBDA_NetworkProvider interface
+        hr = ppFilter[0]->QueryInterface(IID_IBDA_NetworkProvider, (void**)&pNetworkProvider);
+
+        // release IBaseFilter
+        ppFilter[0]->Release();
+
+        if (SUCCEEDED(hr))
+            break;
+    }
+
+    // release IEnumFilters interface
+    pEnumFilters->Release();
+
+    //store result
+    *pOutNetworkProvider = pNetworkProvider;
+
+    if (pNetworkProvider)
+        return S_OK;
+    else
+        return E_FAIL;
+}
+
+HRESULT
+CBDAPinControl_RealConstructor(
+    HANDLE hPin,
+    IBDA_NetworkProvider *pNetworkProvider,
+    IPin * pConnectedPin,
+    ULONG RegistrationCtx,
+    IUnknown * pUnkOuter,
+    REFIID riid,
+    LPVOID * ppv)
+{
+    CBDAPinControl * handler = new CBDAPinControl(hPin, pNetworkProvider, pConnectedPin, RegistrationCtx);
+
+#ifdef BDAPLGIN_TRACE
+    OutputDebugStringW(L"CBDAPinControl_fnConstructor\n");
+#endif
+
+    if (!handler)
+        return E_OUTOFMEMORY;
+
+    if (FAILED(handler->QueryInterface(riid, ppv)))
+    {
+        /* not supported */
+        delete handler;
+        return E_NOINTERFACE;
+    }
+
+    return NOERROR;
 }
 
 HRESULT
@@ -158,26 +241,13 @@ CBDAPinControl_fnConstructor(
     IPin * pConnectedPin = NULL;
     IBDA_NetworkProvider * pNetworkProvider = NULL;
     HANDLE hFile = INVALID_HANDLE_VALUE;
-
-#if 0
-    if (!IsEqualGUID(riid, IID_IUnknown))
-    {
-#ifdef BDAPLGIN_TRACE
-    OutputDebugStringW(L"CBDAPinControl_fnConstructor: Expected IUnknown\n");
-#endif
-        return REGDB_E_CLASSNOTREG;
-    }
-
-
     HRESULT hr;
     IKsObject * pObject = NULL;
     IPin * pPin = NULL;
-    IEnumFilters *pEnumFilters = NULL;
-
-    IBaseFilter * ppFilter[1];
+    IUnknown * pUnknown = NULL;
     PIN_INFO PinInfo;
     FILTER_INFO FilterInfo;
-
+    ULONG RegistrationCtx = 0;
 
     if (!pUnkOuter)
         return E_POINTER;
@@ -209,8 +279,15 @@ CBDAPinControl_fnConstructor(
        return hr;
     }
 
+    if (!PinInfo.pFilter)
+    {
+        //clean up
+       pObject->Release();
+       pPin->Release();
+       return hr;
+    }
+
     // sanity checks
-    assert(PinInfo.dir == PINDIR_OUTPUT);
     assert(PinInfo.pFilter != NULL);
 
     // query filter info
@@ -219,56 +296,72 @@ CBDAPinControl_fnConstructor(
     // sanity check
     assert(FilterInfo.pGraph != NULL);
 
-    // get IEnumFilters interface
-    hr = FilterInfo.pGraph->EnumFilters(&pEnumFilters);
+    // get network provider interface
+    hr = GetNetworkProviderFromGraph(FilterInfo.pGraph, &pNetworkProvider);
 
-    if (FAILED(hr))
+    if (SUCCEEDED(hr))
     {
-        //clean up
-       FilterInfo.pGraph->Release();
-       PinInfo.pFilter->Release();
-       pObject->Release();
-       pPin->Release();
-       return hr;
+        if (PinInfo.dir == PINDIR_OUTPUT)
+        {
+            // get connected pin handle
+            hr = pPin->ConnectedTo(&pConnectedPin);
+            if (SUCCEEDED(hr))
+            {
+                // get file handle
+                hFile = pObject->KsGetObjectHandle();
+                if (hFile)
+                {
+                    hr = CBDAPinControl_RealConstructor(hFile, pNetworkProvider, pConnectedPin, 0, pUnkOuter, riid, ppv);
+                    if (SUCCEEDED(hr))
+                    {
+                        // set to null to prevent releasing
+                        pNetworkProvider = NULL;
+                        pConnectedPin = NULL;
+                    }
+                }
+                else
+                {
+                    // expected file handle
+                    hr = E_UNEXPECTED;
+                }
+            }
+        }
+        else
+        {
+            // get IUnknown from base filter
+            hr = PinInfo.pFilter->QueryInterface(IID_IUnknown, (void**)&pUnknown);
+            if (SUCCEEDED(hr))
+            {
+                // register device filter
+                hr = pNetworkProvider->RegisterDeviceFilter(pUnknown, &RegistrationCtx);
+                if (SUCCEEDED(hr))
+                {
+                    // get file handle
+                    hFile = pObject->KsGetObjectHandle();
+                    if (hFile)
+                    {
+                        hr = CBDAPinControl_RealConstructor(hFile, pNetworkProvider, NULL, RegistrationCtx, pUnkOuter, riid, ppv);
+                        if (SUCCEEDED(hr))
+                        {
+                            // set to null to prevent releasing
+                            pNetworkProvider = NULL;
+                        }
+                    }
+                    else
+                    {
+                        // expected file handle
+                        hr = E_UNEXPECTED;
+                    }
+                }
+            }
+        }
     }
-
-    while(pEnumFilters->Next(1, ppFilter, NULL) == S_OK)
-    {
-        // check if that filter supports the IBDA_NetworkProvider interface
-        hr = ppFilter[0]->QueryInterface(IID_IBDA_NetworkProvider, (void**)&pNetworkProvider);
-
-        // release IBaseFilter
-        ppFilter[0]->Release();
-
-        if (SUCCEEDED(hr))
-            break;
-    }
-
-    // release IEnumFilters interface
-    pEnumFilters->Release();
 
     // release IFilterGraph interface
     FilterInfo.pGraph->Release();
 
     // release IBaseFilter interface
     PinInfo.pFilter->Release();
-
-    if (pNetworkProvider)
-    {
-        // get connected pin handle
-        hr = pPin->ConnectedTo(&pConnectedPin);
-
-        // get file handle
-        hFile = pObject->KsGetObjectHandle();
-
-        if (FAILED(hr) || hFile == INVALID_HANDLE_VALUE)
-        {
-            // pin not connected
-            pNetworkProvider->Release();
-            // set zero
-            pNetworkProvider = NULL;
-        }
-    }
 
     // release IPin 
     pPin->Release();
@@ -277,30 +370,23 @@ CBDAPinControl_fnConstructor(
     pObject->Release();
 
 
-    if (pNetworkProvider == NULL)
+    if (pNetworkProvider)
     {
-        // no network provider interface in graph
-        return E_NOINTERFACE;
-    }
-#endif
-
-    CBDAPinControl * handler = new CBDAPinControl(hFile, pNetworkProvider, pConnectedPin);
-
-#ifdef BDAPLGIN_TRACE
-    OutputDebugStringW(L"CBDAPinControl_fnConstructor");
-#endif
-
-    DebugBreak();
-
-    if (!handler)
-        return E_OUTOFMEMORY;
-
-    if (FAILED(handler->QueryInterface(riid, ppv)))
-    {
-        /* not supported */
-        delete handler;
-        return E_NOINTERFACE;
+        // release network provider
+        pNetworkProvider->Release();
     }
 
-    return NOERROR;
+    if (pConnectedPin)
+    {
+        // release connected pin
+        pConnectedPin->Release();
+    }
+
+    if (pUnknown)
+    {
+        // release filter
+        pUnknown->Release();
+    }
+
+    return hr;
 }

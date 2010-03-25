@@ -1095,7 +1095,7 @@ typedef	void (*RTFFuncPtr) (RTF_Info *);		/* generic function pointer */
 
 /* RTF parser stack element */
 struct tagRTFState {
-        CHARFORMAT2W fmt;
+        ME_Style *style;
         int codePage;
         int unicodeLength;
 };

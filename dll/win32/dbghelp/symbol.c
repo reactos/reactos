@@ -693,8 +693,20 @@ static void symt_fill_sym_info(struct module_pair* pair,
                     struct location loc = data->u.var;
 
                     if (loc.kind >= loc_user)
-                        pair->effective->loc_compute(pair->pcs, pair->effective, func, &loc);
+                    {
+                        unsigned                i;
+                        struct module_format*   modfmt;
 
+                        for (i = 0; i < DFI_LAST; i++)
+                        {
+                            modfmt = pair->effective->format_info[i];
+                            if (modfmt && modfmt->loc_compute)
+                            {
+                                modfmt->loc_compute(pair->pcs, modfmt, func, &loc);
+                                break;
+                            }
+                        }
+                    }
                     switch (loc.kind)
                     {
                     case loc_error:

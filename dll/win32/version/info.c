@@ -29,14 +29,16 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winver.h"
-#include "winternl.h"
 #include "winuser.h"
-#include "wine/winuser16.h"
+#include "winternl.h"
+#include "lzexpand.h"
 #include "wine/unicode.h"
 #include "winerror.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ver);
+
+extern DWORD find_version_resource( HFILE lzfd, DWORD *reslen, DWORD *offset );
 
 /******************************************************************************
  *
@@ -230,225 +232,16 @@ typedef struct
 #define VersionInfo32_Next( ver ) \
     (VS_VERSION_INFO_STRUCT32 *)( (LPBYTE)ver + (((ver)->wLength + 3) & ~3) )
 
-/***********************************************************************
- *           VERSION_GetFileVersionInfo_PE             [internal]
- *
- *    NOTE: returns size of the PE VERSION resource or 0xFFFFFFFF
- *    in the case the file is a PE module, but VERSION_INFO not found.
- */
-static DWORD VERSION_GetFileVersionInfo_PE( LPCWSTR filename, DWORD datasize, LPVOID data )
-{
-    const VS_FIXEDFILEINFO *vffi;
-    DWORD len;
-    BYTE *buf;
-    HMODULE hModule;
-    HRSRC hRsrc;
-    HGLOBAL hMem;
-
-    TRACE("%s\n", debugstr_w(filename));
-
-    if (!GetModuleHandleExW(0, filename, &hModule))
-	hModule = LoadLibraryExW(filename, 0, LOAD_LIBRARY_AS_DATAFILE);
-
-    if(!hModule)
-    {
-	WARN("Could not load %s\n", debugstr_w(filename));
-
-	return 0;
-    }
-    hRsrc = FindResourceW(hModule,
-			  MAKEINTRESOURCEW(VS_VERSION_INFO),
-			  MAKEINTRESOURCEW(VS_FILE_INFO));
-    if(!hRsrc)
-    {
-	WARN("Could not find VS_VERSION_INFO in %s\n", debugstr_w(filename));
-	FreeLibrary(hModule);
-	return 0xFFFFFFFF;
-    }
-    len = SizeofResource(hModule, hRsrc);
-    hMem = LoadResource(hModule, hRsrc);
-    if(!hMem)
-    {
-	WARN("Could not load VS_VERSION_INFO from %s\n", debugstr_w(filename));
-	FreeLibrary(hModule);
-	return 0xFFFFFFFF;
-    }
-    buf = LockResource(hMem);
-
-    vffi = (VS_FIXEDFILEINFO *)VersionInfo32_Value( (VS_VERSION_INFO_STRUCT32 *)buf );
-
-    if ( vffi->dwSignature != VS_FFI_SIGNATURE )
-    {
-        WARN("vffi->dwSignature is 0x%08x, but not 0x%08lx!\n",
-                   vffi->dwSignature, VS_FFI_SIGNATURE );
-	len = 0xFFFFFFFF;
-	goto END;
-    }
-
-    if ( TRACE_ON(ver) )
-        print_vffi_debug( vffi );
-
-    if(data)
-    {
-	if(datasize < len)
-	    len = datasize; /* truncate data */
-	if(len)
-	    memcpy(data, buf, len);
-	else
-	    len = 0xFFFFFFFF;
-    }
-END:
-    FreeResource(hMem);
-    FreeLibrary(hModule);
-
-    return len;
-}
-
-#ifndef __REACTOS__
-/***********************************************************************
- *           VERSION_GetFileVersionInfo_16             [internal]
- *
- *    NOTE: returns size of the 16-bit VERSION resource or 0xFFFFFFFF
- *    in the case the file exists, but VERSION_INFO not found.
- */
-static DWORD VERSION_GetFileVersionInfo_16( LPCSTR filename, DWORD datasize, LPVOID data )
-{
-    const VS_FIXEDFILEINFO *vffi;
-    DWORD len, offset;
-    BYTE *buf;
-    HMODULE16 hModule;
-    HRSRC16 hRsrc;
-    HGLOBAL16 hMem;
-    char dllname[20], owner[20], *p;
-    const char *basename;
-    BOOL is_builtin = FALSE;
-
-    TRACE("%s\n", debugstr_a(filename));
-
-    /* strip path information */
-
-    basename = filename;
-    if (basename[0] && basename[1] == ':') basename += 2;  /* strip drive specification */
-    if ((p = strrchr( basename, '\\' ))) basename = p + 1;
-    if ((p = strrchr( basename, '/' ))) basename = p + 1;
-
-    if (strlen(basename) < sizeof(dllname)-4)
-    {
-        int file_exists;
-
-        strcpy( dllname, basename );
-        p = strrchr( dllname, '.' );
-        if (!p) strcat( dllname, ".dll" );
-        for (p = dllname; *p; p++) if (*p >= 'A' && *p <= 'Z') *p += 32;
-
-        if (wine_dll_get_owner( dllname, owner, sizeof(owner), &file_exists ) == 0)
-            is_builtin = TRUE;
-    }
-
-    /* first try without loading a 16-bit module */
-    if (is_builtin)
-        len = 0;
-    else
-        len = GetFileResourceSize16( filename,
-                                     MAKEINTRESOURCEA(VS_FILE_INFO),
-                                     MAKEINTRESOURCEA(VS_VERSION_INFO),
-                                     &offset );
-    if (len)
-    {
-        if (!data) return len;
-
-        len = GetFileResource16( filename,
-                                 MAKEINTRESOURCEA(VS_FILE_INFO),
-                                 MAKEINTRESOURCEA(VS_VERSION_INFO),
-                                 offset, datasize, data );
-        if (len)
-        {
-            vffi = (VS_FIXEDFILEINFO *)VersionInfo16_Value( (VS_VERSION_INFO_STRUCT16 *)data );
-
-            if ( vffi->dwSignature == VS_FFI_SIGNATURE )
-            {
-                if ( ((VS_VERSION_INFO_STRUCT16 *)data)->wLength < len )
-                    len = ((VS_VERSION_INFO_STRUCT16 *)data)->wLength;
-
-                if ( TRACE_ON(ver) )
-                    print_vffi_debug( vffi );
-
-                return len;
-            }
-        }
-    }
-
-    /* this might be a builtin 16-bit module */
-    hModule = LoadLibrary16(filename);
-    if(hModule < 32)
-    {
-	WARN("Could not load %s\n", debugstr_a(filename));
-	if (hModule == ERROR_BAD_FORMAT)
-		return 0xFFFFFFFF;
-	else
-		return 0x0;
-    }
-    hRsrc = FindResource16(hModule,
-			  MAKEINTRESOURCEA(VS_VERSION_INFO),
-			  MAKEINTRESOURCEA(VS_FILE_INFO));
-    if(!hRsrc)
-    {
-	WARN("Could not find VS_VERSION_INFO in %s\n", debugstr_a(filename));
-	FreeLibrary16(hModule);
-	return 0xFFFFFFFF;
-    }
-    len = SizeofResource16(hModule, hRsrc);
-    hMem = LoadResource16(hModule, hRsrc);
-    if(!hMem)
-    {
-	WARN("Could not load VS_VERSION_INFO from %s\n", debugstr_a(filename));
-	FreeLibrary16(hModule);
-	return 0xFFFFFFFF;
-    }
-    buf = LockResource16(hMem);
-
-    if(!VersionInfoIs16(buf))
-    {
-        len = 0xFFFFFFFF;
-	goto END;
-    }
-
-    vffi = (VS_FIXEDFILEINFO *)VersionInfo16_Value( (VS_VERSION_INFO_STRUCT16 *)buf );
-
-    if ( vffi->dwSignature != VS_FFI_SIGNATURE )
-    {
-        WARN("vffi->dwSignature is 0x%08x, but not 0x%08lx!\n",
-                   vffi->dwSignature, VS_FFI_SIGNATURE );
-	len = 0xFFFFFFFF;
-	goto END;
-    }
-
-    if ( TRACE_ON(ver) )
-        print_vffi_debug( vffi );
-
-    if(data)
-    {
-	if(datasize < len)
-	    len = datasize; /* truncate data */
-	if(len)
-	    memcpy(data, buf, len);
-	else
-	    len = 0xFFFFFFFF;
-    }
-END:
-    FreeResource16(hMem);
-    FreeLibrary16(hModule);
-
-    return len;
-}
-#endif /* ! __REACTOS__ */
 
 /***********************************************************************
  *           GetFileVersionInfoSizeW         [VERSION.@]
  */
 DWORD WINAPI GetFileVersionInfoSizeW( LPCWSTR filename, LPDWORD handle )
 {
-    DWORD len;
+    DWORD len, offset, magic = 1;
+    HFILE lzfd;
+    HMODULE hModule;
+    OFSTRUCT ofs;
 
     TRACE("(%s,%p)\n", debugstr_w(filename), handle );
 
@@ -465,40 +258,27 @@ DWORD WINAPI GetFileVersionInfoSizeW( LPCWSTR filename, LPDWORD handle )
         return 0;
     }
 
-    len = VERSION_GetFileVersionInfo_PE(filename, 0, NULL);
-    /* 0xFFFFFFFF means: file is a PE module, but VERSION_INFO not found */
-    if(len == 0xFFFFFFFF)
+    if ((lzfd = LZOpenFileW( (LPWSTR)filename, &ofs, OF_READ )) != HFILE_ERROR)
     {
-        SetLastError(ERROR_RESOURCE_DATA_NOT_FOUND);
-        return 0;
+        magic = find_version_resource( lzfd, &len, &offset );
+        LZClose( lzfd );
     }
 
-    if (!len)
+    if ((magic == 1) && (hModule = LoadLibraryExW( filename, 0, LOAD_LIBRARY_AS_DATAFILE )))
     {
-#ifdef __REACTOS__
-        SetLastError(ERROR_FILE_NOT_FOUND);
-        return 0;
-#else /* __REACTOS__ */
-        LPSTR filenameA;
-
-        len = WideCharToMultiByte( CP_ACP, 0, filename, -1, NULL, 0, NULL, NULL );
-        filenameA = HeapAlloc( GetProcessHeap(), 0, len );
-        WideCharToMultiByte( CP_ACP, 0, filename, -1, filenameA, len, NULL, NULL );
-
-        len = VERSION_GetFileVersionInfo_16(filenameA, 0, NULL);
-        HeapFree( GetProcessHeap(), 0, filenameA );
-        /* 0xFFFFFFFF means: file exists, but VERSION_INFO not found */
-        if (!len)
+        HRSRC hRsrc = FindResourceW( hModule, MAKEINTRESOURCEW(VS_VERSION_INFO),
+                                     MAKEINTRESOURCEW(VS_FILE_INFO) );
+        if (hRsrc)
         {
-            SetLastError(ERROR_FILE_NOT_FOUND);
-            return 0;
+            magic = IMAGE_NT_SIGNATURE;
+            len = SizeofResource( hModule, hRsrc );
         }
-        if (len == 0xFFFFFFFF)
-        {
-            SetLastError(ERROR_RESOURCE_DATA_NOT_FOUND);
-            return 0;
-        }
+        FreeLibrary( hModule );
+    }
 
+    switch (magic)
+    {
+    case IMAGE_OS2_SIGNATURE:
         /* We have a 16bit resource.
          *
          * XP/W2K/W2K3 uses a buffer which is more than the actual needed space:
@@ -509,21 +289,22 @@ DWORD WINAPI GetFileVersionInfoSizeW( LPCWSTR filename, LPDWORD handle )
          * info->wLength should be the same as len. Currently it isn't but that
          * doesn't seem to be a problem (len is bigger than info->wLength).
          */
-         len = (len - sizeof(VS_FIXEDFILEINFO)) * 4;
-#endif /* ! __REACTOS__ */
-    }
-    else
-    {
+        SetLastError(0);
+        return (len - sizeof(VS_FIXEDFILEINFO)) * 4;
+
+    case IMAGE_NT_SIGNATURE:
         /* We have a 32bit resource.
          *
          * XP/W2K/W2K3 uses a buffer which is 2 times the actual needed space + 4 bytes "FE2X"
          * This extra buffer is used for Unicode to ANSI conversions in A-Calls
          */
-         len = (len * 2) + 4;
-    }
+        SetLastError(0);
+        return (len * 2) + 4;
 
-    SetLastError(0);
-    return len;
+    default:
+        SetLastError( lzfd == HFILE_ERROR ? ofs.nErrCode : ERROR_RESOURCE_DATA_NOT_FOUND );
+        return 0;
+    }
 }
 
 /***********************************************************************
@@ -554,7 +335,11 @@ DWORD WINAPI GetFileVersionInfoSizeA( LPCSTR filename, LPDWORD handle )
 BOOL WINAPI GetFileVersionInfoW( LPCWSTR filename, DWORD handle,
                                     DWORD datasize, LPVOID data )
 {
-    DWORD len;
+    static const char signature[4] = "FE2X";
+    DWORD len, offset, magic = 1;
+    HFILE lzfd;
+    OFSTRUCT ofs;
+    HMODULE hModule;
     VS_VERSION_INFO_STRUCT32* vvis = data;
 
     TRACE("(%s,%d,size=%d,data=%p)\n",
@@ -565,59 +350,58 @@ BOOL WINAPI GetFileVersionInfoW( LPCWSTR filename, DWORD handle,
         SetLastError(ERROR_INVALID_DATA);
         return FALSE;
     }
-    len = VERSION_GetFileVersionInfo_PE(filename, datasize, data);
-    /* 0xFFFFFFFF means: file is a PE module, but VERSION_INFO not found */
-    if (len == 0xFFFFFFFF)
+
+    if ((lzfd = LZOpenFileW( (LPWSTR)filename, &ofs, OF_READ )) != HFILE_ERROR)
     {
-        SetLastError(ERROR_RESOURCE_DATA_NOT_FOUND);
-        return FALSE;
-    }
-
-    if (!len)
-    {
-#ifdef __REACTOS__
-        SetLastError(ERROR_RESOURCE_DATA_NOT_FOUND);
-        return FALSE;
-#else /* __REACTOS__ */
-        LPSTR filenameA;
-
-        len = WideCharToMultiByte( CP_ACP, 0, filename, -1, NULL, 0, NULL, NULL );
-        filenameA = HeapAlloc( GetProcessHeap(), 0, len );
-        WideCharToMultiByte( CP_ACP, 0, filename, -1, filenameA, len, NULL, NULL );
-
-        len = VERSION_GetFileVersionInfo_16(filenameA, datasize, data);
-        HeapFree( GetProcessHeap(), 0, filenameA );
-        /* 0xFFFFFFFF means: file exists, but VERSION_INFO not found */
-        if (!len || len == 0xFFFFFFFF)
+        if ((magic = find_version_resource( lzfd, &len, &offset )) > 1)
         {
-            SetLastError(ERROR_RESOURCE_DATA_NOT_FOUND);
-            return FALSE;
+            LZSeek( lzfd, offset, 0 /* SEEK_SET */ );
+            len = LZRead( lzfd, data, min( len, datasize ) );
         }
-        /* We have a 16bit resource. */
-#endif /* ! __REACTOS__ */
+        LZClose( lzfd );
     }
-    else 
+
+    if ((magic == 1) && (hModule = LoadLibraryExW( filename, 0, LOAD_LIBRARY_AS_DATAFILE )))
     {
-        static const char signature[] = "FE2X";
-        DWORD bufsize = vvis->wLength + strlen(signature);
-        DWORD convbuf;
- 
+        HRSRC hRsrc = FindResourceW( hModule, MAKEINTRESOURCEW(VS_VERSION_INFO),
+                                     MAKEINTRESOURCEW(VS_FILE_INFO) );
+        if (hRsrc)
+        {
+            HGLOBAL hMem = LoadResource( hModule, hRsrc );
+            magic = IMAGE_NT_SIGNATURE;
+            len = min( SizeofResource(hModule, hRsrc), datasize );
+            memcpy( data, LockResource( hMem ), len );
+            FreeResource( hMem );
+        }
+        FreeLibrary( hModule );
+    }
+
+    switch (magic)
+    {
+    case IMAGE_OS2_SIGNATURE:
+        /* We have a 16bit resource. */
+        if (TRACE_ON(ver))
+            print_vffi_debug( (VS_FIXEDFILEINFO *)VersionInfo16_Value( (VS_VERSION_INFO_STRUCT16 *)data ));
+        SetLastError(0);
+        return TRUE;
+
+    case IMAGE_NT_SIGNATURE:
         /* We have a 32bit resource.
          *
          * XP/W2K/W2K3 uses a buffer which is 2 times the actual needed space + 4 bytes "FE2X"
          * This extra buffer is used for Unicode to ANSI conversions in A-Calls
          */
+        len = vvis->wLength + sizeof(signature);
+        if (datasize >= len) memcpy( (char*)data + vvis->wLength, signature, sizeof(signature) );
+        if (TRACE_ON(ver))
+            print_vffi_debug( (VS_FIXEDFILEINFO *)VersionInfo32_Value( vvis ));
+        SetLastError(0);
+        return TRUE;
 
-        /* information is truncated to datasize bytes */
-        if (datasize >= bufsize)
-        {
-            convbuf = datasize - vvis->wLength;
-            memcpy( ((char*)(data))+vvis->wLength, signature, convbuf > 4 ? 4 : convbuf );
-        }
+    default:
+        SetLastError( lzfd == HFILE_ERROR ? ofs.nErrCode : ERROR_RESOURCE_DATA_NOT_FOUND );
+        return FALSE;
     }
-
-    SetLastError(0);
-    return TRUE;
 }
 
 /***********************************************************************
