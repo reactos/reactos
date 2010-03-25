@@ -179,7 +179,7 @@ VOID NTAPI DispCancelRequest(
     }
 
     if (DequeuedIrp)
-    IRPFinish(Irp, STATUS_CANCELLED);
+       IRPFinish(Irp, STATUS_CANCELLED);
 
     TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
@@ -222,8 +222,8 @@ VOID NTAPI DispCancelListenRequest(
     if (TCPAbortListenForSocket(Connection->AddressFile->Listener,
                                 Connection))
     {
-    Irp->IoStatus.Information = 0;
-    IRPFinish(Irp, STATUS_CANCELLED);
+        Irp->IoStatus.Information = 0;
+        IRPFinish(Irp, STATUS_CANCELLED);
     }
 
     TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
@@ -763,7 +763,7 @@ NTSTATUS DispTdiQueryInformation(
          MaxDatagramInfo->MaxDatagramSize = 0xFFFF;
 
          return STATUS_SUCCESS;
-      }
+     }
   }
 
   return STATUS_NOT_IMPLEMENTED;
@@ -1052,7 +1052,7 @@ NTSTATUS DispTdiSendDatagram(
         else {
             Status = STATUS_UNSUCCESSFUL;
             ASSERT(FALSE);
-    }
+        }
     }
 
 done:
