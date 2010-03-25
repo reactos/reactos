@@ -57,6 +57,11 @@ struct acpi_button {
 	UINT8			type;
 	unsigned long		pushed;
 };
+
+struct acpi_device *power_button;
+struct acpi_device *sleep_button;
+struct acpi_device *lid_button;
+
 /* --------------------------------------------------------------------------
                                 Driver Interface
    -------------------------------------------------------------------------- */
@@ -112,10 +117,6 @@ acpi_button_add (
 	int			result = 0;
 	ACPI_STATUS		status = AE_OK;
 	struct acpi_button	*button = NULL;
-
-	static struct acpi_device *power_button;
-	static struct acpi_device *sleep_button;
-	static struct acpi_device *lid_button;
 
 	ACPI_FUNCTION_TRACE("acpi_button_add");
 

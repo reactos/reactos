@@ -18,6 +18,9 @@
 
 #endif
 
+extern struct acpi_device *sleep_button;
+extern struct acpi_device *power_button;
+
 NTSTATUS
 NTAPI
 Bus_AddDevice(
@@ -215,22 +218,37 @@ ACPIDispatchDeviceControl(
                   break;
               }
 
-              if (wcsstr(((PPDO_DEVICE_DATA)commonData)->HardwareIDs, L"PNP0C0C") ||
-                  wcsstr(((PPDO_DEVICE_DATA)commonData)->HardwareIDs, L"ACPI_FPB"))
-              {
-                  DPRINT1("Power button reported to power manager\n");
-                  Caps |= SYS_BUTTON_POWER;
-              }
-              else if (wcsstr(((PPDO_DEVICE_DATA)commonData)->HardwareIDs, L"PNP0C0E") ||
-                       wcsstr(((PPDO_DEVICE_DATA)commonData)->HardwareIDs, L"ACPI_FSB"))
-              {
-                  DPRINT1("Sleep button reported to power manager\n");
-                  Caps |= SYS_BUTTON_SLEEP;
-              }
-              else if (wcsstr(((PPDO_DEVICE_DATA)commonData)->HardwareIDs, L"PNP0C0D"))
+              if (wcsstr(((PPDO_DEVICE_DATA)commonData)->HardwareIDs, L"PNP0C0D"))
               {
                   DPRINT1("Lid button reported to power manager\n");
                   Caps |= SYS_BUTTON_LID;
+              }
+              else if (((PPDO_DEVICE_DATA)commonData)->AcpiHandle == NULL)
+              {
+                  /* We have to return both at the same time because since we
+                   * have a NULL handle we are the fixed feature DO and we will
+                   * only be called once (not once per device)
+                   */
+                  if (power_button)
+                  {
+                      DPRINT1("Fixed power button reported to power manager\n");
+                      Caps |= SYS_BUTTON_POWER;
+                  }
+                  if (sleep_button)
+                  {
+                      DPRINT1("Fixed sleep button reported to power manager\n");
+                      Caps |= SYS_BUTTON_SLEEP;
+                  }
+              }
+              if (wcsstr(((PPDO_DEVICE_DATA)commonData)->HardwareIDs, L"PNP0C0C"))
+              {
+                  DPRINT1("Control method power button reported to power manager\n");
+                  Caps |= SYS_BUTTON_POWER;
+              }
+              else if (wcsstr(((PPDO_DEVICE_DATA)commonData)->HardwareIDs, L"PNP0C0E"))
+              {
+                  DPRINT1("Control method sleep reported to power manager\n");
+                  Caps |= SYS_BUTTON_SLEEP;
               }
               else
               {

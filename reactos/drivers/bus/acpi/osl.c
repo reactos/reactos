@@ -576,7 +576,12 @@ AcpiOsWaitSemaphore(
     DPRINT("Waiting for semaphore %p\n", Handle);
     ASSERT(Mutex);
 
-    ExAcquireFastMutex(Mutex);
+    /* HACK: We enter here at a high IRQL sometimes
+     * because we get called from DPCs and ISRs and
+     * we can't use a fast mutex at that IRQL */
+    if (KeGetCurrentIrql() <= APC_LEVEL)
+        ExAcquireFastMutex(Mutex);
+
     return AE_OK;
 }
 
@@ -590,7 +595,12 @@ AcpiOsSignalSemaphore (
     DPRINT("AcpiOsSignalSemaphore %p\n",Handle);
     ASSERT(Mutex);
 
-    ExReleaseFastMutex(Mutex);
+    /* HACK: We enter here at a high IRQL sometimes
+     * because we get called from DPCs and ISRs and
+     * we can't use a fast mutex at that IRQL */
+    if (KeGetCurrentIrql() <= APC_LEVEL)
+        ExReleaseFastMutex(Mutex);
+
     return AE_OK;
 }
 
