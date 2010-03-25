@@ -24,7 +24,7 @@ BOOL
 FASTCALL
 VerifyObjectOwner(PDD_ENTRY pEntry)
 {
-    DWORD Pid = (DWORD) PsGetCurrentProcessId() & 0xFFFFFFFC;
+    DWORD Pid = (DWORD)(DWORD_PTR)PsGetCurrentProcessId() & 0xFFFFFFFC;
     DWORD check = pEntry->ObjectOwner.ulObj & 0xFFFFFFFE;
     return ( (check == Pid) || (!check));
 }
@@ -145,7 +145,7 @@ FASTCALL
 DdHmgLock(HANDLE DdHandle, UCHAR ObjectType, BOOLEAN LockOwned)
 {
 
-    DWORD Index = (DWORD)DdHandle & 0x1FFFFF;
+    DWORD Index = (DWORD)(DWORD_PTR)DdHandle & 0x1FFFFF;
     PDD_ENTRY pEntry = NULL;
     PVOID Object = NULL;
 
