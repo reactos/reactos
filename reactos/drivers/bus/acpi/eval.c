@@ -93,6 +93,10 @@ Bus_PDO_EvalMethod(PPDO_DEVICE_DATA DeviceData,
       ACPI_OBJECT *Obj = RetBuff.Pointer;
       ULONG ExtraParamLength;
 
+      /* If we didn't get anything back then we're done */
+      if (!RetBuff.Pointer || RetBuff.Length == 0)
+          return STATUS_SUCCESS;
+
       switch (Obj->Type)
       {
           case ACPI_TYPE_INTEGER:
