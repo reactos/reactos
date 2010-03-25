@@ -168,6 +168,20 @@ End:
 
 NTSTATUS
 NTAPI
+ACPIDispatchCreateClose(
+   IN PDEVICE_OBJECT DeviceObject,
+   IN PIRP Irp)
+{
+   Irp->IoStatus.Status = STATUS_SUCCESS;
+   Irp->IoStatus.Information = 0;
+
+   IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+   return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
 ACPIDispatchDeviceControl(
    IN PDEVICE_OBJECT DeviceObject,
    IN PIRP Irp)
@@ -228,6 +242,8 @@ DriverEntry (
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = ACPIDispatchDeviceControl;
     DriverObject->MajorFunction [IRP_MJ_PNP] = Bus_PnP;
     DriverObject->MajorFunction [IRP_MJ_POWER] = Bus_Power;
+    DriverObject->MajorFunction [IRP_MJ_CREATE] = ACPIDispatchCreateClose;
+    DriverObject->MajorFunction [IRP_MJ_CLOSE] = ACPIDispatchCreateClose;
 
     DriverObject->DriverExtension->AddDevice = Bus_AddDevice;
 
