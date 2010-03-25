@@ -6,7 +6,7 @@
 	<include base="bootvid">.</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>
-	<if property="ARCH" value="i386">
+	<if property="PLATFORM" value="PC">
 		<directory name="i386">
 			<file>bootvid.c</file>
 			<file>bootdata.c</file>
