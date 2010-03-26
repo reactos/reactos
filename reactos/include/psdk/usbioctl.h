@@ -665,6 +665,8 @@ typedef struct _USB_DEVICE_PERFORMANCE_INFO {
 
 #include <poppack.h>
 
+#endif /* USB_KERNEL_IOCTL */
+
 #ifdef __cplusplus
 }
 #endif

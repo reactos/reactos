@@ -1,9 +1,9 @@
 /* DDK/NDK/SDK Headers */
-#include <ddk/ntddk.h>
-#include <ddk/ntddmou.h>
-#include <ddk/ntifs.h>
-#include <ddk/tvout.h>
-#include <ndk/ntndk.h>
+#include <ntddk.h>
+#include <ntddmou.h>
+#include <ntifs.h>
+#include <tvout.h>
+#include <ntndk.h>
 
 /* Win32 Headers */
 #define WINBASEAPI

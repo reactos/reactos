@@ -385,7 +385,7 @@ SpiCreatePortConfig(
 }
 
 VOID
-DDKCDECLAPI
+__cdecl
 ScsiDebugPrint(
     IN ULONG DebugPrintLevel,
     IN PCCHAR DebugMessage,
@@ -421,7 +421,7 @@ ScsiDebugPrint(
 }
 
 VOID
-DDKAPI
+NTAPI
 ScsiPortCompleteRequest(
     IN PVOID HwDeviceExtension,
     IN UCHAR PathId,
@@ -435,7 +435,7 @@ ScsiPortCompleteRequest(
 
 #undef ScsiPortConvertPhysicalAddressToUlong
 ULONG
-DDKAPI
+NTAPI
 ScsiPortConvertPhysicalAddressToUlong(
     IN SCSI_PHYSICAL_ADDRESS Address)
 {
@@ -443,7 +443,7 @@ ScsiPortConvertPhysicalAddressToUlong(
 }
 
 SCSI_PHYSICAL_ADDRESS
-DDKAPI
+NTAPI
 ScsiPortConvertUlongToPhysicalAddress(
     IN ULONG UlongAddress)
 {
@@ -451,7 +451,7 @@ ScsiPortConvertUlongToPhysicalAddress(
 }
 
 VOID
-DDKAPI
+NTAPI
 ScsiPortFlushDma(
     IN PVOID DeviceExtension)
 {
@@ -460,7 +460,7 @@ ScsiPortFlushDma(
 }
 
 VOID
-DDKAPI
+NTAPI
 ScsiPortFreeDeviceBase(
     IN PVOID HwDeviceExtension,
     IN PVOID MappedAddress)
@@ -469,7 +469,7 @@ ScsiPortFreeDeviceBase(
 }
 
 ULONG
-DDKAPI
+NTAPI
 ScsiPortGetBusData(
     IN PVOID DeviceExtension,
     IN ULONG BusDataType,
@@ -482,7 +482,7 @@ ScsiPortGetBusData(
 }
 
 PVOID
-DDKAPI
+NTAPI
 ScsiPortGetDeviceBase(
     IN PVOID HwDeviceExtension,
     IN INTERFACE_TYPE BusType,
@@ -514,7 +514,7 @@ ScsiPortGetDeviceBase(
 }
 
 PVOID
-DDKAPI
+NTAPI
 ScsiPortGetLogicalUnit(
     IN PVOID HwDeviceExtension,
     IN UCHAR PathId,
@@ -527,7 +527,7 @@ ScsiPortGetLogicalUnit(
 }
 
 SCSI_PHYSICAL_ADDRESS
-DDKAPI
+NTAPI
 ScsiPortGetPhysicalAddress(
     IN PVOID HwDeviceExtension,
     IN PSCSI_REQUEST_BLOCK Srb OPTIONAL,
@@ -564,7 +564,7 @@ ScsiPortGetPhysicalAddress(
 }
 
 PSCSI_REQUEST_BLOCK
-DDKAPI
+NTAPI
 ScsiPortGetSrb(
     IN PVOID DeviceExtension,
     IN UCHAR PathId,
@@ -641,7 +641,7 @@ SpiAllocateCommonBuffer(
 }
 
 PVOID
-DDKAPI
+NTAPI
 ScsiPortGetUncachedExtension(
     IN PVOID HwDeviceExtension,
     IN PPORT_CONFIGURATION_INFORMATION ConfigInfo,
@@ -726,7 +726,7 @@ ScsiPortGetUncachedExtension(
 }
 
 PVOID
-DDKAPI
+NTAPI
 ScsiPortGetVirtualAddress(
     IN PVOID HwDeviceExtension,
     IN SCSI_PHYSICAL_ADDRESS PhysicalAddress)
@@ -1031,7 +1031,7 @@ SpiGetPciConfigData(
 }
 
 ULONG
-DDKAPI
+NTAPI
 ScsiPortInitialize(
     IN PVOID Argument1,
     IN PVOID Argument2,
@@ -1186,7 +1186,7 @@ ScsiPortInitialize(
 }
 
 VOID
-DDKAPI
+NTAPI
 ScsiPortIoMapTransfer(
     IN PVOID HwDeviceExtension,
     IN PSCSI_REQUEST_BLOCK Srb,
@@ -1198,7 +1198,7 @@ ScsiPortIoMapTransfer(
 }
 
 VOID
-DDKAPI
+NTAPI
 ScsiPortLogError(
     IN PVOID HwDeviceExtension,
     IN PSCSI_REQUEST_BLOCK Srb OPTIONAL,
@@ -1213,7 +1213,7 @@ ScsiPortLogError(
 }
 
 VOID
-DDKAPI
+NTAPI
 ScsiPortMoveMemory(
     IN PVOID WriteBuffer,
     IN PVOID ReadBuffer,
@@ -1223,7 +1223,7 @@ ScsiPortMoveMemory(
 }
 
 VOID
-DDKCDECLAPI
+__cdecl
 ScsiPortNotification(
     IN SCSI_NOTIFICATION_TYPE NotificationType,
     IN PVOID HwDeviceExtension,
@@ -1259,7 +1259,7 @@ ScsiPortNotification(
 }
 
 VOID
-DDKAPI
+NTAPI
 ScsiPortReadPortBufferUchar(
     IN PUCHAR Port,
     OUT PUCHAR Buffer,
@@ -1269,7 +1269,7 @@ ScsiPortReadPortBufferUchar(
 }
 
 VOID
-DDKAPI
+NTAPI
 ScsiPortReadPortBufferUlong(
     IN PULONG Port,
     OUT PULONG Buffer,
@@ -1279,7 +1279,7 @@ ScsiPortReadPortBufferUlong(
 }
 
 VOID
-DDKAPI
+NTAPI
 ScsiPortReadPortBufferUshort(
     IN PUSHORT Port,
     OUT PUSHORT Buffer,
@@ -1289,7 +1289,7 @@ ScsiPortReadPortBufferUshort(
 }
 
 UCHAR
-DDKAPI
+NTAPI
 ScsiPortReadPortUchar(
     IN PUCHAR Port)
 {
@@ -1300,7 +1300,7 @@ ScsiPortReadPortUchar(
 }
 
 ULONG
-DDKAPI
+NTAPI
 ScsiPortReadPortUlong(
     IN PULONG Port)
 {
@@ -1308,7 +1308,7 @@ ScsiPortReadPortUlong(
 }
 
 USHORT
-DDKAPI
+NTAPI
 ScsiPortReadPortUshort(
     IN PUSHORT Port)
 {
@@ -1316,7 +1316,7 @@ ScsiPortReadPortUshort(
 }
 
 VOID
-DDKAPI
+NTAPI
 ScsiPortReadRegisterBufferUchar(
     IN PUCHAR Register,
     IN PUCHAR Buffer,
@@ -1327,7 +1327,7 @@ ScsiPortReadRegisterBufferUchar(
 }
 
 VOID
-DDKAPI
+NTAPI
 ScsiPortReadRegisterBufferUlong(
     IN PULONG Register,
     IN PULONG Buffer,
@@ -1338,7 +1338,7 @@ ScsiPortReadRegisterBufferUlong(
 }
 
 VOID
-DDKAPI
+NTAPI
 ScsiPortReadRegisterBufferUshort(
     IN PUSHORT Register,
     IN PUSHORT Buffer,
@@ -1349,7 +1349,7 @@ ScsiPortReadRegisterBufferUshort(
 }
 
 UCHAR
-DDKAPI
+NTAPI
 ScsiPortReadRegisterUchar(
     IN PUCHAR Register)
 {
@@ -1357,7 +1357,7 @@ ScsiPortReadRegisterUchar(
 }
 
 ULONG
-DDKAPI
+NTAPI
 ScsiPortReadRegisterUlong(
     IN PULONG Register)
 {
@@ -1365,7 +1365,7 @@ ScsiPortReadRegisterUlong(
 }
 
 USHORT
-DDKAPI
+NTAPI
 ScsiPortReadRegisterUshort(
     IN PUSHORT Register)
 {
@@ -1373,7 +1373,7 @@ ScsiPortReadRegisterUshort(
 }
 
 ULONG
-DDKAPI
+NTAPI
 ScsiPortSetBusDataByOffset(
     IN PVOID DeviceExtension,
     IN ULONG BusDataType,
@@ -1389,7 +1389,7 @@ ScsiPortSetBusDataByOffset(
 }
 
 VOID
-DDKAPI
+NTAPI
 ScsiPortStallExecution(
     IN ULONG Delay)
 {
@@ -1397,7 +1397,7 @@ ScsiPortStallExecution(
 }
 
 BOOLEAN
-DDKAPI
+NTAPI
 ScsiPortValidateRange(
     IN PVOID HwDeviceExtension,
     IN INTERFACE_TYPE BusType,
@@ -1417,7 +1417,7 @@ ScsiPortValidateRange(
 
 
 VOID
-DDKAPI
+NTAPI
 ScsiPortWritePortBufferUchar(
     IN PUCHAR Port,
     IN PUCHAR Buffer,
@@ -1427,7 +1427,7 @@ ScsiPortWritePortBufferUchar(
 }
 
 VOID
-DDKAPI
+NTAPI
 ScsiPortWritePortBufferUlong(
     IN PULONG Port,
     IN PULONG Buffer,
@@ -1437,7 +1437,7 @@ ScsiPortWritePortBufferUlong(
 }
 
 VOID
-DDKAPI
+NTAPI
 ScsiPortWritePortBufferUshort(
     IN PUSHORT Port,
     IN PUSHORT Buffer,
@@ -1447,7 +1447,7 @@ ScsiPortWritePortBufferUshort(
 }
 
 VOID
-DDKAPI
+NTAPI
 ScsiPortWritePortUchar(
     IN PUCHAR Port,
     IN UCHAR Value)
@@ -1456,7 +1456,7 @@ ScsiPortWritePortUchar(
 }
 
 VOID
-DDKAPI
+NTAPI
 ScsiPortWritePortUlong(
     IN PULONG Port,
     IN ULONG Value)
@@ -1465,7 +1465,7 @@ ScsiPortWritePortUlong(
 }
 
 VOID
-DDKAPI
+NTAPI
 ScsiPortWritePortUshort(
     IN PUSHORT Port,
     IN USHORT Value)
@@ -1474,7 +1474,7 @@ ScsiPortWritePortUshort(
 }
 
 VOID
-DDKAPI
+NTAPI
 ScsiPortWriteRegisterBufferUchar(
     IN PUCHAR Register,
     IN PUCHAR Buffer,
@@ -1485,7 +1485,7 @@ ScsiPortWriteRegisterBufferUchar(
 }
 
 VOID
-DDKAPI
+NTAPI
 ScsiPortWriteRegisterBufferUlong(
     IN PULONG Register,
     IN PULONG Buffer,
@@ -1496,7 +1496,7 @@ ScsiPortWriteRegisterBufferUlong(
 }
 
 VOID
-DDKAPI
+NTAPI
 ScsiPortWriteRegisterBufferUshort(
     IN PUSHORT Register,
     IN PUSHORT Buffer,
@@ -1507,7 +1507,7 @@ ScsiPortWriteRegisterBufferUshort(
 }
 
 VOID
-DDKAPI
+NTAPI
 ScsiPortWriteRegisterUchar(
     IN PUCHAR Register,
     IN ULONG Value)
@@ -1516,7 +1516,7 @@ ScsiPortWriteRegisterUchar(
 }
 
 VOID
-DDKAPI
+NTAPI
 ScsiPortWriteRegisterUlong(
     IN PULONG Register,
     IN ULONG Value)
@@ -1525,7 +1525,7 @@ ScsiPortWriteRegisterUlong(
 }
 
 VOID
-DDKAPI
+NTAPI
 ScsiPortWriteRegisterUshort(
     IN PUSHORT Register,
     IN USHORT Value)

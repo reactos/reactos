@@ -100,17 +100,17 @@ typedef struct _SMB_REGISTER_ALARM {
 #define SMB_CLASS_MINOR_VERSION           0x0000
 
 typedef NTSTATUS
-(DDKAPI *SMB_RESET_DEVICE)(
+(NTAPI *SMB_RESET_DEVICE)(
   IN struct _SMB_CLASS  *SmbClass,
   IN PVOID  SmbMiniport);
 
 typedef VOID
-(DDKAPI *SMB_START_IO)(
+(NTAPI *SMB_START_IO)(
   IN struct _SMB_CLASS  *SmbClass,
   IN PVOID  SmbMiniport);
 
 typedef NTSTATUS
-(DDKAPI *SMB_STOP_DEVICE)(
+(NTAPI *SMB_STOP_DEVICE)(
   IN struct _SMB_CLASS  *SmbClass,
   IN PVOID  SmbMiniport);
 
@@ -130,7 +130,7 @@ typedef struct _SMB_CLASS {
 
 SMBCLASSAPI
 VOID
-DDKAPI
+NTAPI
 SmbClassAlarm(
   IN PSMB_CLASS  SmbClass,
   IN UCHAR  Address,
@@ -138,19 +138,19 @@ SmbClassAlarm(
 
 SMBCLASSAPI
 VOID
-DDKAPI
+NTAPI
 SmbClassCompleteRequest(
   IN PSMB_CLASS  SmbClass);
 
 typedef NTSTATUS
-(DDKAPI *PSMB_INITIALIZE_MINIPORT)(
+(NTAPI *PSMB_INITIALIZE_MINIPORT)(
   IN PSMB_CLASS  SmbClass,
   IN PVOID  MiniportExtension,
   IN PVOID  MiniportContext);
 
 SMBCLASSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 SmbClassCreateFdo(
   IN PDRIVER_OBJECT  DriverObject,
   IN PDEVICE_OBJECT  PDO,
@@ -161,7 +161,7 @@ SmbClassCreateFdo(
 
 SMBCLASSAPI
 NTSTATUS
-DDKAPI
+NTAPI
 SmbClassInitializeDevice(
   IN ULONG  MajorVersion,
   IN ULONG  MinorVersion,
@@ -169,13 +169,13 @@ SmbClassInitializeDevice(
 
 SMBCLASSAPI
 VOID
-DDKAPI
+NTAPI
 SmbClassLockDevice(
   IN PSMB_CLASS  SmbClass);
 
 SMBCLASSAPI
 VOID
-DDKAPI
+NTAPI
 SmbClassUnlockDevice(
   IN PSMB_CLASS  SmbClass);
 
