@@ -7,15 +7,6 @@
 #include <windows.h>
 #include <string.h>
 
-#if defined (_WIN64) && defined (__ia64__)
-#error FIXME: Unsupported __ImageBase implementation.
-#else
-/* Hack, for bug in ld.  Will be removed soon.  */
-#define __ImageBase _image_base__
-/* This symbol is defined by the linker.  */
-extern IMAGE_DOS_HEADER __ImageBase;
-#endif
-
 BOOL _ValidateImageBase (PBYTE);
 
 BOOL

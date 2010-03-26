@@ -28,6 +28,7 @@
 			<compilerflag>-ftracer</compilerflag>
 			<compilerflag>-momit-leaf-frame-pointer</compilerflag>
 		</if>
+		<compilerflag>-fms-extensions</compilerflag>
 		<compilerflag>-mpreferred-stack-boundary=4</compilerflag>
 		<compilerflag compiler="midl">-m64 --win64</compilerflag>
 		<!-- compilerflag compiler="cc,cxx">-gstabs+</compilerflag -->
@@ -44,6 +45,7 @@
 		<linkerflag>--unique=.eh_frame</linkerflag>
 		<linkerflag>-static</linkerflag>
 		<linkerflag>-fno-leading-underscore</linkerflag>
+		<linkerflag>-shared</linkerflag>
 		<linkerflag>--exclude-all-symbols</linkerflag>
 	</group>
 

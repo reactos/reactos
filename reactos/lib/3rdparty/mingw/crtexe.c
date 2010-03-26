@@ -32,11 +32,6 @@ extern char *** __MINGW_IMP_SYMBOL(__initenv);
 #define __initenv (* __MINGW_IMP_SYMBOL(__initenv))
 #endif
 
-/* Hack, for bug in ld.  Will be removed soon.  */
-#define __ImageBase _image_base__
-/* This symbol is defined by ld.  */
-extern IMAGE_DOS_HEADER __ImageBase;
-
 extern void _fpreset (void);
 #define SPACECHAR _T(' ')
 #define DQUOTECHAR _T('\"')
