@@ -19,7 +19,7 @@ double _scalb( double __x, long e )
 	union
 	{
 		double*   __x;
-                double_t*   x;
+                double_s*   x;
 	} x;
 
 	x.__x = &__x;

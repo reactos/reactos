@@ -50,7 +50,7 @@ fpclass_t _fpclass(double __d)
 	union
 	{
 		double*	  __d;
-		double_t*   d;
+		double_s*   d;
 	} d;
 	d.__d = &__d;
 

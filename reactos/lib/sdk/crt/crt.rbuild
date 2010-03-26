@@ -25,6 +25,7 @@
 	<define name="_MSVCRT_LIB_" />
 	<define name="_MSVCRT_" />
 	<define name="_MT" />
+	<define name="_CRTBLD" />
 	<directory name="conio">
 		<file>cgets.c</file>
 		<file>cprintf.c</file>

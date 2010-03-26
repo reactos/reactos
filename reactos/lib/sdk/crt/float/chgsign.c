@@ -20,7 +20,7 @@ double _chgsign( double __x )
 	union
 	{
 	    double* __x;
-	    double_t *x;
+	    double_s *x;
 	} u;
 	u.__x = &__x;
 
