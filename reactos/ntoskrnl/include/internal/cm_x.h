@@ -254,3 +254,25 @@ CmpConvertKcbSharedToExclusive(IN PCM_KEY_CONTROL_BLOCK k)
     ExReleasePushLock(&GET_HASH_ENTRY(CmpNameCacheTable,            \
                                       (k)).Lock);                   \
 }
+
+//
+// Asserts that either the registry or the KCB is locked
+//
+#define CMP_ASSERT_HASH_ENTRY_LOCK(k)                               \
+{                                                                   \
+    ASSERT(((GET_HASH_ENTRY(CmpCacheTable, k).Owner ==              \
+            KeGetCurrentThread())) ||                               \
+           (CmpTestRegistryLockExclusive() == TRUE));               \
+}
+
+//
+// Gets the page attached to the KCB
+//
+#define CmpGetAllocPageFromKcb(k)                                   \
+    (PCM_ALLOC_PAGE)(((ULONG_PTR)(k)) & ~(PAGE_SIZE - 1))
+
+//
+// Gets the page attached to the delayed allocation
+//
+#define CmpGetAllocPageFromDelayAlloc(a)                            \
+    (PCM_ALLOC_PAGE)(((ULONG_PTR)(a)) & ~(PAGE_SIZE - 1))
