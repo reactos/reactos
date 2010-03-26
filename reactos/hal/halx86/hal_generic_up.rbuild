@@ -13,11 +13,5 @@
 			<file>pic.c</file>
 			<file>processor.c</file>
 		</directory>
-		<directory name="up">
-			<file>processor.c</file>
-			<if property="ARCH" value="i386">
-				<file>irq.S</file>
-			</if>
-		</directory>
 	</module>
 </group>

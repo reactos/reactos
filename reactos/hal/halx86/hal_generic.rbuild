@@ -28,23 +28,16 @@
 			<file>timer.c</file>
 			<file>usage.c</file>
 			<if property="ARCH" value="i386">
-				<directory name="i386">
-					<file>portio.c</file>
-					<file>systimer.S</file>
-			<if property="ARCH" value="i386">
 				<file>bios.c</file>
-				<file>halinit.c</file>
-				<file>misc.c</file>
-				<file>pic.c</file>
-					<file>trap.S</file>
 				<directory name="i386">
 					<file>portio.c</file>
 					<file>systimer.S</file>
-					<file>v86.s</file>
+					<file>trap.S</file>
 				</directory>
 			</if>
 			<if property="ARCH" value="amd64">
 				<directory name="amd64">
+					<file>x86bios.c</file>
 					<file>halinit.c</file>
 					<file>irq.S</file>
 					<file>misc.c</file>
@@ -81,6 +74,7 @@
 				<file>sysbus.c</file>
 			</directory>
 			<file>beep.c</file>
+			<file>bios.c</file>
 			<file>cmos.c</file>
 			<file>dma.c</file>
 			<file>display.c</file>
@@ -106,7 +100,7 @@
 					<file>apic.c</file>
 					<file>systimer.S</file>
 					<file>usage.c</file>
-				</directory>
+		</directory>
 			</if>
 		</directory>
 		<directory name="up">
