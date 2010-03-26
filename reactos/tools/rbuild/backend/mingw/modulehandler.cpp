@@ -1423,13 +1423,13 @@ void
 MingwModuleHandler::GenerateLinkerCommand () const
 {
 	string definitionFilename;
-
+	
 	const FileLocation *DefinitionFilename = GetDefinitionFilename ();
 
 	if ( DefinitionFilename ) {
 		definitionFilename = backend->GetFullName (*DefinitionFilename);
 		delete DefinitionFilename;
-}
+	}
 
 	string linkerScriptArgument;
 	if ( module.linkerScript != NULL ) {
@@ -1446,7 +1446,7 @@ MingwModuleHandler::GenerateLinkerCommand () const
 	if ( ModuleHandlerInformations[module.type].DefaultHost == HostFalse ) {
 		if ( module.cplusplus ) {
 			switch ( module.type )
-	{
+			{
 			case Win32DLL:
 			case Win32OCX:
 			case Win32CUI:
@@ -1458,7 +1458,7 @@ MingwModuleHandler::GenerateLinkerCommand () const
 			default:
 				extraLibraries = "$$(PROJECT_CCLIBS)";
 				break;
-	}
+			}
 		} else
 			extraLibraries = "$$(PROJECT_CCLIBS)";
 	}
@@ -1466,7 +1466,7 @@ MingwModuleHandler::GenerateLinkerCommand () const
 	delete PassThruCacheDirectory ( new FileLocation ( module.output->directory, module.output->relative_path, "" ) );
 	delete PassThruCacheDirectory ( new FileLocation ( IntermediateDirectory, module.output->relative_path, "" ) );
 
-		fprintf ( fMakefile,
+	fprintf ( fMakefile,
 			  "$(eval $(call RBUILD_LINK_RULE,%s,%s,%s,%s,%s,%s,%s))\n",
 			  module.name.c_str(),
 			  definitionFilename.c_str(),
