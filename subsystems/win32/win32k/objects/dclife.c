@@ -117,6 +117,8 @@ DC_vInitDc(
     DCTYPE dctype,
     PPDEVOBJ ppdev)
 {
+    /* Lock ppdev */
+    EngAcquireSemaphoreShared(ppdev->hsemDevLock);
 
     /* Setup some basic fields */
     pdc->dctype = dctype;
@@ -477,6 +479,7 @@ GreOpenDCW(
     }
     hdc = pdc->BaseObject.hHmgr;
 
+    /* Lock ppdev and initialize the new DC */
     DC_vInitDc(pdc, iType, ppdev);
     /* FIXME: HACK! */
     DC_InitHack(pdc);
@@ -638,7 +641,7 @@ NtGdiCreateCompatibleDC(HDC hdc)
     }
     hdcNew = pdcNew->BaseObject.hHmgr;
 
-    /* Initialize the new DC */
+    /* Lock ppdev and initialize the new DC */
     DC_vInitDc(pdcNew, DCTYPE_MEMORY, ppdev);
     /* FIXME: HACK! */
     DC_InitHack(pdcNew);

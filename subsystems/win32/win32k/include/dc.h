@@ -167,8 +167,8 @@ FORCEINLINE
 DC_LockDc(HDC hdc)
 {
     PDC pdc;
-    pdc = GDIOBJ_LockObj(hdc, GDI_OBJECT_TYPE_DC);
-//    EngAcquireSemaphoreShared(pdc->ppdev->hsemDevLock);
+    pdc = GDIOBJ_LockObj(hdc, GDILoObjType_LO_DC_TYPE);
+    if(pdc) EngAcquireSemaphoreShared(pdc->ppdev->hsemDevLock);
     return pdc;
 }
 
@@ -176,7 +176,7 @@ void
 FORCEINLINE
 DC_UnlockDc(PDC pdc)
 {
-//    EngReleaseSemaphore(pdc->ppdev->hsemDevLock);
+    EngReleaseSemaphore(pdc->ppdev->hsemDevLock);
     GDIOBJ_UnlockObjByPtr(&pdc->BaseObject);
 }
 
