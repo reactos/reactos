@@ -305,7 +305,7 @@ typedef long *LPLONG;
 typedef int *LPLONG;
 #endif
 typedef DWORD *PDWORD,*LPDWORD;
-typedef CONST void *PCVOID,*LPCVOID;
+typedef CONST void *LPCVOID;
 
 typedef unsigned int UINT,*PUINT,*LPUINT;
 

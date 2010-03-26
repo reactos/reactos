@@ -9,9 +9,9 @@
 	</if>
 
 	<if property="ARCH" value="amd64">
-	    <directory name="halx86">
-		    <xi:include href="halx86/directory.rbuild" />
-	    </directory>
+		<directory name="halx86">
+			<xi:include href="halx86/directory.rbuild" />
+		</directory>
 	</if>
 
 	<if property="ARCH" value="powerpc">

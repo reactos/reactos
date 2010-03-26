@@ -6,6 +6,9 @@
 #include <acpi_bus.h>
 #include <acpi_drivers.h>
 
+#include <acpiioct.h>
+#include <poclass.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -15,7 +18,8 @@
 
 #endif
 
-
+extern struct acpi_device *sleep_button;
+extern struct acpi_device *power_button;
 
 NTSTATUS
 NTAPI
@@ -29,7 +33,9 @@ Bus_AddDevice(
     PDEVICE_OBJECT      deviceObject = NULL;
     PFDO_DEVICE_DATA    deviceData = NULL;
     PWCHAR              deviceName = NULL;
+#ifndef NDEBUG
     ULONG               nameLength;
+#endif
 
     PAGED_CODE ();
 
@@ -164,36 +170,159 @@ End:
 
 NTSTATUS
 NTAPI
+ACPIDispatchCreateClose(
+   IN PDEVICE_OBJECT DeviceObject,
+   IN PIRP Irp)
+{
+   Irp->IoStatus.Status = STATUS_SUCCESS;
+   Irp->IoStatus.Information = 0;
+
+   IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+   return STATUS_SUCCESS;
+}
+
+VOID
+NTAPI
+ButtonWaitThread(PVOID Context)
+{
+    PIRP Irp = Context;
+    int result;
+    struct acpi_bus_event event;
+    ULONG ButtonEvent;
+
+    while (ACPI_SUCCESS(result = acpi_bus_receive_event(&event)) &&
+           event.type != ACPI_BUTTON_NOTIFY_STATUS);
+
+    if (!ACPI_SUCCESS(result))
+    {
+       Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+    }
+    else
+    {
+       if (strstr(event.bus_id, "PWRF"))
+           ButtonEvent = SYS_BUTTON_POWER;
+       else if (strstr(event.bus_id, "SLPF"))
+           ButtonEvent = SYS_BUTTON_SLEEP;
+       else
+           ButtonEvent = 0;
+
+       RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, &ButtonEvent, sizeof(ButtonEvent));
+       Irp->IoStatus.Status = STATUS_SUCCESS;
+       Irp->IoStatus.Information = sizeof(ULONG);
+    }
+
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+}
+    
+
+NTSTATUS
+NTAPI
 ACPIDispatchDeviceControl(
    IN PDEVICE_OBJECT DeviceObject,
    IN PIRP Irp)
 {
-    PIO_STACK_LOCATION IrpSp;
-    NTSTATUS Status;
+    PIO_STACK_LOCATION      irpStack;
+    NTSTATUS                status = STATUS_NOT_SUPPORTED;
+    PCOMMON_DEVICE_DATA     commonData;
+    ULONG Caps = 0;
+    HANDLE ThreadHandle;
 
-    DPRINT("Called. IRP is at (0x%X)\n", Irp);
+    PAGED_CODE ();
+
+    irpStack = IoGetCurrentIrpStackLocation (Irp);
+    ASSERT (IRP_MJ_DEVICE_CONTROL == irpStack->MajorFunction);
+
+    commonData = (PCOMMON_DEVICE_DATA) DeviceObject->DeviceExtension;
 
     Irp->IoStatus.Information = 0;
 
-    IrpSp  = IoGetCurrentIrpStackLocation(Irp);
-    switch (IrpSp->Parameters.DeviceIoControl.IoControlCode) {
-        default:
-            DPRINT("Unknown IOCTL 0x%X\n", IrpSp->Parameters.DeviceIoControl.IoControlCode);
-            Status = STATUS_NOT_IMPLEMENTED;
-            break;
-  }
+    if (!commonData->IsFDO)
+    {
+       switch (irpStack->Parameters.DeviceIoControl.IoControlCode)
+       {
+           case IOCTL_ACPI_EVAL_METHOD:
+              status = Bus_PDO_EvalMethod((PPDO_DEVICE_DATA)commonData,
+                                          Irp);
+              break;
 
-    if (Status != STATUS_PENDING) {
-        Irp->IoStatus.Status = Status;
+           case IOCTL_GET_SYS_BUTTON_CAPS:
+              if (irpStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(ULONG))
+              {
+                  status = STATUS_BUFFER_TOO_SMALL;
+                  break;
+              }
 
-        DPRINT("Completing IRP at 0x%X\n", Irp);
+              if (wcsstr(((PPDO_DEVICE_DATA)commonData)->HardwareIDs, L"PNP0C0D"))
+              {
+                  DPRINT1("Lid button reported to power manager\n");
+                  Caps |= SYS_BUTTON_LID;
+              }
+              else if (((PPDO_DEVICE_DATA)commonData)->AcpiHandle == NULL)
+              {
+                  /* We have to return both at the same time because since we
+                   * have a NULL handle we are the fixed feature DO and we will
+                   * only be called once (not once per device)
+                   */
+                  if (power_button)
+                  {
+                      DPRINT1("Fixed power button reported to power manager\n");
+                      Caps |= SYS_BUTTON_POWER;
+                  }
+                  if (sleep_button)
+                  {
+                      DPRINT1("Fixed sleep button reported to power manager\n");
+                      Caps |= SYS_BUTTON_SLEEP;
+                  }
+              }
+              if (wcsstr(((PPDO_DEVICE_DATA)commonData)->HardwareIDs, L"PNP0C0C"))
+              {
+                  DPRINT1("Control method power button reported to power manager\n");
+                  Caps |= SYS_BUTTON_POWER;
+              }
+              else if (wcsstr(((PPDO_DEVICE_DATA)commonData)->HardwareIDs, L"PNP0C0E"))
+              {
+                  DPRINT1("Control method sleep reported to power manager\n");
+                  Caps |= SYS_BUTTON_SLEEP;
+              }
+              else
+              {
+                  DPRINT1("IOCTL_GET_SYS_BUTTON_CAPS sent to a non-button device\n");
+                  status = STATUS_INVALID_PARAMETER;
+              }
 
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-  }
+              if (Caps != 0)
+              {
+                  RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, &Caps, sizeof(Caps));
+                  Irp->IoStatus.Information = sizeof(Caps);
+                  status = STATUS_SUCCESS;
+              }
+              break;
 
-    DPRINT("Leaving. Status 0x%X\n", Status);
+           case IOCTL_GET_SYS_BUTTON_EVENT:
+              PsCreateSystemThread(&ThreadHandle, THREAD_ALL_ACCESS, 0, 0, 0, ButtonWaitThread, Irp);
+              ZwClose(ThreadHandle);
 
-    return Status;
+              status = STATUS_PENDING;
+              break;
+
+           default:
+              DPRINT1("Unsupported IOCTL: %x\n", irpStack->Parameters.DeviceIoControl.IoControlCode);
+              break;
+       }
+    }
+    else
+       DPRINT1("IOCTL sent to the ACPI FDO! Kill the caller!\n");
+
+    if (status != STATUS_PENDING)
+    {
+       Irp->IoStatus.Status = status;
+       IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
+    else
+       IoMarkIrpPending(Irp);
+
+    return status;
 }
 
 NTSTATUS
@@ -211,6 +340,8 @@ DriverEntry (
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = ACPIDispatchDeviceControl;
     DriverObject->MajorFunction [IRP_MJ_PNP] = Bus_PnP;
     DriverObject->MajorFunction [IRP_MJ_POWER] = Bus_Power;
+    DriverObject->MajorFunction [IRP_MJ_CREATE] = ACPIDispatchCreateClose;
+    DriverObject->MajorFunction [IRP_MJ_CLOSE] = ACPIDispatchCreateClose;
 
     DriverObject->DriverExtension->AddDevice = Bus_AddDevice;
 

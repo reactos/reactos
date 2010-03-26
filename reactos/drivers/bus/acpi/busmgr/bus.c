@@ -58,6 +58,7 @@ KSPIN_LOCK	acpi_bus_event_lock;
 LIST_HEAD(acpi_bus_event_list);
 //DECLARE_WAIT_QUEUE_HEAD(acpi_bus_event_queue);
 KEVENT AcpiEventQueue;
+KDPC event_dpc;
 
 
 static int
@@ -455,6 +456,21 @@ acpi_bus_get_perf_flags (
                                 Event Management
    -------------------------------------------------------------------------- */
 
+void
+acpi_bus_generate_event_dpc(PKDPC Dpc,
+                            PVOID DeferredContext,
+                            PVOID SystemArgument1,
+                            PVOID SystemArgument2)
+{
+	struct acpi_bus_event *event = SystemArgument1;
+	KIRQL OldIrql;
+
+	KeAcquireSpinLock(&acpi_bus_event_lock, &OldIrql);
+	list_add_tail(&event->node, &acpi_bus_event_list);
+	KeReleaseSpinLock(&acpi_bus_event_lock, OldIrql);
+
+	KeSetEvent(&AcpiEventQueue, IO_NO_INCREMENT, FALSE);
+}
 
 int
 acpi_bus_generate_event (
@@ -463,10 +479,8 @@ acpi_bus_generate_event (
 	int			data)
 {
 	struct acpi_bus_event	*event = NULL;
-	//unsigned long		flags = 0;
-	KIRQL OldIrql;
 
-	DPRINT1("acpi_bus_generate_event");
+	DPRINT("acpi_bus_generate_event");
 
 	if (!device)
 		return_VALUE(AE_BAD_PARAMETER);
@@ -484,14 +498,8 @@ acpi_bus_generate_event (
 	event->type = type;
 	event->data = data;
 
-	//spin_lock_irqsave(&acpi_bus_event_lock, flags);
-	KeAcquireSpinLock(&acpi_bus_event_lock, &OldIrql);
-	list_add_tail(&event->node, &acpi_bus_event_list);
-	KeReleaseSpinLock(&acpi_bus_event_lock, OldIrql);
-	//spin_unlock_irqrestore(&acpi_bus_event_lock, flags);
-
-	KeSetEvent(&AcpiEventQueue, IO_NO_INCREMENT, FALSE);
-	//wake_up_interruptible(&acpi_bus_event_queue);
+	if (!KeInsertQueueDpc(&event_dpc, event, NULL))
+	    ExFreePool(event);
 
 	return_VALUE(0);
 }
@@ -506,7 +514,7 @@ acpi_bus_receive_event (
 
 	//DECLARE_WAITQUEUE(wait, current);
 
-	DPRINT1("acpi_bus_receive_event");
+	DPRINT("acpi_bus_receive_event");
 
 	if (!event)
 		return AE_BAD_PARAMETER;
@@ -1153,9 +1161,11 @@ acpi_bus_add (
 	case ACPI_BUS_TYPE_SYSTEM:
 		sprintf(device->pnp.bus_id, "%s", "ACPI");
 		break;
+	case ACPI_BUS_TYPE_POWER_BUTTONF:
 	case ACPI_BUS_TYPE_POWER_BUTTON:
 		sprintf(device->pnp.bus_id, "%s", "PWRF");
 		break;
+	case ACPI_BUS_TYPE_SLEEP_BUTTONF:
 	case ACPI_BUS_TYPE_SLEEP_BUTTON:
 		sprintf(device->pnp.bus_id, "%s", "SLPF");
 		break;
@@ -1262,9 +1272,15 @@ acpi_bus_add (
 		hid = ACPI_THERMAL_HID;
 		break;
 	case ACPI_BUS_TYPE_POWER_BUTTON:
+		hid = ACPI_BUTTON_HID_POWER;
+		break;
+	case ACPI_BUS_TYPE_POWER_BUTTONF:
 		hid = ACPI_BUTTON_HID_POWERF;
 		break;
 	case ACPI_BUS_TYPE_SLEEP_BUTTON:
+		hid = ACPI_BUTTON_HID_SLEEP;
+		break;
+	case ACPI_BUS_TYPE_SLEEP_BUTTONF:
 		hid = ACPI_BUTTON_HID_SLEEPF;
 		break;
 	}
@@ -1326,7 +1342,9 @@ acpi_bus_add (
 	 */
 	switch (type) {
 	case ACPI_BUS_TYPE_POWER_BUTTON:
+	case ACPI_BUS_TYPE_POWER_BUTTONF:
 	case ACPI_BUS_TYPE_SLEEP_BUTTON:
+	case ACPI_BUS_TYPE_SLEEP_BUTTONF:
 		break;
 	default:
 		status = AcpiAttachData(device->handle,
@@ -1530,16 +1548,40 @@ acpi_bus_scan_fixed (
 	if (!root)
 		return_VALUE(AE_NOT_FOUND);
 
-	/*
-	 * Enumerate all fixed-feature devices.
+	/* If ACPI_FADT_POWER_BUTTON is set, then a control
+	 * method power button is present. Otherwise, a fixed
+	 * power button is present.
 	 */
 	if (AcpiGbl_FADT.Flags & ACPI_FADT_POWER_BUTTON)
 		result = acpi_bus_add(&device, acpi_root, 
 			NULL, ACPI_BUS_TYPE_POWER_BUTTON);
+	else
+	{
+		/* Enable the fixed power button so we get notified if it is pressed */
+		AcpiWriteBitRegister(ACPI_BITREG_POWER_BUTTON_ENABLE, 1);
 
+		result = acpi_bus_add(&device, acpi_root,
+			NULL, ACPI_BUS_TYPE_POWER_BUTTONF);
+	}
+
+	/* This one is a bit more complicated and we do it wrong
+	 * right now. If ACPI_FADT_SLEEP_BUTTON is set but no
+	 * device object is present then no sleep button is present, but
+	 * if the flags is clear and there is no device object then it is
+	 * a fixed sleep button. If the flag is set and there is a device object
+	 * the we have a control method button just like above.
+	 */
 	if (AcpiGbl_FADT.Flags & ACPI_FADT_SLEEP_BUTTON)
 		result = acpi_bus_add(&device, acpi_root, 
 			NULL, ACPI_BUS_TYPE_SLEEP_BUTTON);
+	else
+	{
+		/* Enable the fixed sleep button so we get notified if it is pressed */
+		AcpiWriteBitRegister(ACPI_BITREG_SLEEP_BUTTON_ENABLE, 1);
+
+		result = acpi_bus_add(&device, acpi_root,
+			NULL, ACPI_BUS_TYPE_SLEEP_BUTTONF);
+	}
 
 	return_VALUE(result);
 }
@@ -1549,120 +1591,6 @@ acpi_bus_scan_fixed (
                              Initialization/Cleanup
    -------------------------------------------------------------------------- */
 
-static int
-acpi_bus_init_irq (void)
-{
-	ACPI_STATUS		status = AE_OK;
-	ACPI_OBJECT	arg = {ACPI_TYPE_INTEGER};
-	ACPI_OBJECT_LIST	arg_list = {1, &arg};
-	//char			*message = NULL;
-
-	DPRINT("acpi_bus_init_irq");
-
-	/* 
-	 * Let the system know what interrupt model we are using by
-	 * evaluating the \_PIC object, if exists.
-	 */
-
-	//switch (acpi_irq_model) {
-	//case ACPI_IRQ_MODEL_PIC:
-	//	message = "PIC";
-	//	break;
-	//case ACPI_IRQ_MODEL_IOAPIC:
-	//	message = "IOAPIC";
-	//	break;
-	//case ACPI_IRQ_MODEL_IOSAPIC:
-	//	message = "IOSAPIC";
-	//	break;
-	//default:
-	//	DPRINT1("Unknown interrupt routing model\n");
-	//	return_VALUE(AE_NOT_FOUND);
-	//}
-
-	//DPRINT("Using %s for interrupt routing\n", message);
-
-	//arg.Integer.Value = acpi_irq_model;
-
-	//status = AcpiEvaluateObject(NULL, "\\_PIC", &arg_list, NULL);
-	//if (ACPI_FAILURE(status) && (status != AE_NOT_FOUND)) {
-	//	ACPI_DEBUG_PRINT((ACPI_DB_ERROR, "Error evaluating _PIC\n"));
-	//	return_VALUE(AE_NOT_FOUND);
-	//}
-
-	return_VALUE(0);
-}
-
-
-//void
-//acpi_early_init (void)
-//{
-//	ACPI_STATUS		status = AE_OK;
-//
-//	DPRINT("acpi_early_init");
-//
-//	if (acpi_disabled)
-//		return_VOID;
-//
-	/* enable workarounds, unless strict ACPI spec. compliance */
-//	if (!acpi_strict)
-//		acpi_gbl_enable_interpreter_slack = TRUE;
-//
-//	status = acpi_reallocate_root_table();
-//	if (ACPI_FAILURE(status)) {
-//		printk(KERN_ERR PREFIX
-//		       "Unable to reallocate ACPI tables\n");
-//		goto error0;
-//	}
-//
-//	status = acpi_initialize_subsystem();
-//	if (ACPI_FAILURE(status)) {
-//		printk(KERN_ERR PREFIX
-//		       "Unable to initialize the ACPI Interpreter\n");
-//		goto error0;
-//	}
-//
-//	status = acpi_load_tables();
-//	if (ACPI_FAILURE(status)) {
-//		printk(KERN_ERR PREFIX
-//		       "Unable to load the System Description Tables\n");
-//		goto error0;
-//	}
-//
-//#ifdef CONFIG_X86
-//	if (!acpi_ioapic) {
-//		/* compatible (0) means level (3) */
-//		if (!(acpi_sci_flags & ACPI_MADT_TRIGGER_MASK)) {
-//			acpi_sci_flags &= ~ACPI_MADT_TRIGGER_MASK;
-//			acpi_sci_flags |= ACPI_MADT_TRIGGER_LEVEL;
-//		}
-//		/* Set PIC-mode SCI trigger type */
-//		acpi_pic_sci_set_trigger(acpi_gbl_FADT.sci_interrupt,
-//					 (acpi_sci_flags & ACPI_MADT_TRIGGER_MASK) >> 2);
-//	} else {
-//		/*
-//		 * now that acpi_gbl_FADT is initialized,
-//		 * update it with result from INT_SRC_OVR parsing
-//		 */
-//		acpi_gbl_FADT.sci_interrupt = acpi_sci_override_gsi;
-//	}
-//#endif
-//
-//	status =
-//	    acpi_enable_subsystem(~
-//				  (ACPI_NO_HARDWARE_INIT |
-//				   ACPI_NO_ACPI_ENABLE));
-//	if (ACPI_FAILURE(status)) {
-//		printk(KERN_ERR PREFIX "Unable to enable ACPI\n");
-//		goto error0;
-//	}
-//
-//	return;
-//
-//      error0:
-//	disable_acpi();
-//	return;
-//}
-
 int
 acpi_bus_init (void)
 {
@@ -1670,6 +1598,8 @@ acpi_bus_init (void)
 	ACPI_STATUS		status = AE_OK;
 
 	DPRINT("acpi_bus_init");
+
+        KeInitializeDpc(&event_dpc, acpi_bus_generate_event_dpc, NULL);
 
 	status = AcpiEnableSubsystem(ACPI_FULL_INITIALIZATION);
 	if (ACPI_FAILURE(status)) {
@@ -1702,13 +1632,6 @@ acpi_bus_init (void)
 	//acpi_sleep_init();
 
 	/*
-	 * Get the system interrupt model and evaluate \_PIC.
-	 */
-	result = acpi_bus_init_irq();
-	if (result)
-		goto error1;
-
-	/*
 	 * Register the for all standard device notifications.
 	 */
 	status = AcpiInstallNotifyHandler(ACPI_ROOT_OBJECT, ACPI_SYSTEM_NOTIFY, &acpi_bus_notify, NULL);
@@ -1726,6 +1649,7 @@ acpi_bus_init (void)
 	if (result)
 		goto error2;
 
+
 	/*
 	 * Enumerate devices in the ACPI namespace.
 	 */
@@ -1736,7 +1660,6 @@ acpi_bus_init (void)
 	if (result)
 		DPRINT1("acpi_bus_scan failed\n");
 
-	//acpi_motherboard_init();
 	return_VALUE(0);
 
 	/* Mimic structured exception handling */

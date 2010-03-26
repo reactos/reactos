@@ -1015,7 +1015,7 @@ UniataEnumBusMasterController(
     PVOID Argument2
     );
 
-extern ULONG DDKAPI
+extern ULONG NTAPI
 UniataFindCompatBusMasterController1(
     IN PVOID HwDeviceExtension,
     IN PVOID Context,
@@ -1025,7 +1025,7 @@ UniataFindCompatBusMasterController1(
     OUT PBOOLEAN Again
     );
 
-extern ULONG DDKAPI
+extern ULONG NTAPI
 UniataFindCompatBusMasterController2(
     IN PVOID HwDeviceExtension,
     IN PVOID Context,
@@ -1044,7 +1044,7 @@ UniataAllocateLunExt(
     ULONG NewNumberChannels
     );
 
-extern ULONG DDKAPI
+extern ULONG NTAPI
 UniataFindBusMasterController(
     IN PVOID HwDeviceExtension,
     IN PVOID Context,
@@ -1054,7 +1054,7 @@ UniataFindBusMasterController(
     OUT PBOOLEAN Again
     );
 
-extern ULONG DDKAPI
+extern ULONG NTAPI
 UniataFindFakeBusMasterController(
     IN PVOID HwDeviceExtension,
     IN PVOID Context,

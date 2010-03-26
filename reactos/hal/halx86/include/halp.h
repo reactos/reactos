@@ -685,6 +685,15 @@ VOID
 NTAPI
 HalpSetInterruptGate(ULONG Index, PVOID Address);
 
+
+VOID
+FASTCALL
+KeUpdateSystemTime(
+    IN PKTRAP_FRAME TrapFrame,
+    IN ULONG Increment,
+    IN KIRQL OldIrql
+);
+
 #ifdef _M_AMD64
 #define KfLowerIrql KeLowerIrql
 #ifndef CONFIG_SMP

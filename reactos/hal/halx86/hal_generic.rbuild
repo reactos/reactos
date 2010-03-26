@@ -17,20 +17,26 @@
 			</directory>
 			<file>beep.c</file>
 			<file>cmos.c</file>
+			<file>display.c</file>
 			<file>dma.c</file>
 			<file>drive.c</file>
-			<file>display.c</file>
+			<file>halinit.c</file>
+			<file>misc.c</file>
 			<file>profil.c</file>
 			<file>reboot.c</file>
 			<file>sysinfo.c</file>
 			<file>timer.c</file>
+			<file>usage.c</file>
+			<if property="ARCH" value="i386">
+				<directory name="i386">
+					<file>portio.c</file>
+					<file>systimer.S</file>
 			<if property="ARCH" value="i386">
 				<file>bios.c</file>
 				<file>halinit.c</file>
 				<file>misc.c</file>
 				<file>pic.c</file>
-				<file>trap.S</file>
-				<file>usage.c</file>
+					<file>trap.S</file>
 				<directory name="i386">
 					<file>portio.c</file>
 					<file>systimer.S</file>
@@ -57,6 +63,7 @@
 			<pch>hal.h</pch>
 		</directory>
 	</module>
+
 	<module name="mini_hal" type="objectlibrary">
 		<include>include</include>
 		<include base="ntoskrnl">include</include>
@@ -78,6 +85,7 @@
 			<file>dma.c</file>
 			<file>display.c</file>
 			<file>drive.c</file>
+			<file>misc.c</file>
 			<file>profil.c</file>
 			<file>reboot.c</file>
 			<file>spinlock.c</file>
@@ -85,15 +93,9 @@
 			<file>timer.c</file>
 			<file>usage.c</file>
 			<if property="ARCH" value="i386">
-				<file>bios.c</file>
-				<file>misc.c</file>
-				<file>pic.c</file>
-				<file>trap.S</file>
-				<file>usage.c</file>
 				<directory name="i386">
 					<file>portio.c</file>
 					<file>systimer.S</file>
-					<file>v86.s</file>
 				</directory>
 			</if>
 			<if property="ARCH" value="amd64">
@@ -109,6 +111,8 @@
 		</directory>
 		<directory name="up">
 			<file>halinit_up.c</file>
+			<file>pic.c</file>
+			<file>processor.c</file>
 		</directory>
 	</module>
 </group>

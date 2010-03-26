@@ -7,5 +7,5 @@
 	</group>
 	<redefine name="WINVER">0x600</redefine>
 	<file>idndl.cpp</file>
-	<importlibrary definition="idndl-$(ARCH).def" />
+	<importlibrary definition="idndl.spec" />
 </module>

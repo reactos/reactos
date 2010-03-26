@@ -66,14 +66,34 @@ ULONG
 FASTCALL
 GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
 {
+  BOOL Hit = FALSE;
+  ULONG Cmd = 0, Size = 0;
   PDC_ATTR pdcattr = NULL;
 
   if (dc)
   {
-    pdcattr = dc->pdcattr;
+     pdcattr = dc->pdcattr;
   }
+
+  _SEH2_TRY
+  {
+     Cmd = pHdr->Cmd;
+     Size = pHdr->Size; // Return the full size of the structure.
+  }
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+  {
+     Hit = TRUE;
+  }
+  _SEH2_END;
+
+  if (Hit)
+  {
+     DPRINT1("WARNING! GdiBatch Fault!\n");
+     return 0;
+  }
+
   // FYI! The thread is approaching the end of sunset.
-  switch(pHdr->Cmd)
+  switch(Cmd)
   {
      case GdiBCPatBlt: // Highest pri first!
         break;
@@ -113,7 +133,7 @@ GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
         break;
   }
 
-  return pHdr->Size; // Return the full size of the structure.
+  return Size; 
 }
 
 /*
@@ -139,7 +159,6 @@ NTSTATUS
 APIENTRY
 NtGdiFlushUserBatch(VOID)
 {
-  BOOL Hit;
   PTEB pTeb = NtCurrentTeb();
   ULONG GdiBatchCount = pTeb->GdiBatchCount;
 
@@ -161,28 +180,13 @@ NtGdiFlushUserBatch(VOID)
       }
 
        // No need to init anything, just go!
-       for (Hit = FALSE; GdiBatchCount > 0; GdiBatchCount--)
-       {   /*
-              Looks like a hack,
-              feels like a hack,
-              you're right it's a hack,
-              due to the lack,
-              of kernel thread locking when it is in sunset!
-            */
-           _SEH2_TRY
-           {
-              ((PGDIBATCHHDR)pHdr)->Cmd = ((PGDIBATCHHDR)pHdr)->Cmd;
-           }
-           _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-           {
-              Hit = TRUE;
-           }
-           _SEH2_END;
-
-           if (Hit) break;
-
+       for (; GdiBatchCount > 0; GdiBatchCount--)
+       {
+           ULONG Size;
            // Process Gdi Batch!
-           pHdr += GdiFlushUserBatch(pDC, (PGDIBATCHHDR) pHdr);
+           Size = GdiFlushUserBatch(pDC, (PGDIBATCHHDR) pHdr);
+           if (!Size) break;
+           pHdr += Size;
        }
 
        if (pDC)

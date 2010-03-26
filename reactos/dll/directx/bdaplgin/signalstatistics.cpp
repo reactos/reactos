@@ -9,8 +9,10 @@
 
 #include "precomp.h"
 
+#ifndef _MSC_VER
 const GUID IID_IBDA_SignalStatistics = {0x1347d106, 0xcf3a, 0x428a, {0xa5, 0xcb, 0xac, 0x0d, 0x9a, 0x2a, 0x43, 0x38}};
 const GUID KSPROPSETID_BdaSignalStats = {0x1347d106, 0xcf3a, 0x428a, {0xa5, 0xcb, 0xac, 0xd, 0x9a, 0x2a, 0x43, 0x38}};
+#endif
 
 class CBDASignalStatistics : public IBDA_SignalStatistics
 {
@@ -45,12 +47,12 @@ public:
     HRESULT STDMETHODCALLTYPE put_SampleTime(LONG lmsSampleTime);
     HRESULT STDMETHODCALLTYPE get_SampleTime(LONG *plmsSampleTime);
 
-    CBDASignalStatistics(HANDLE hFile, ULONG NodeId) : m_Ref(0), m_hFile(hFile), m_NodeId(NodeId){};
+    CBDASignalStatistics(IKsPropertySet * pProperty, ULONG NodeId) : m_Ref(0), m_pProperty(pProperty), m_NodeId(NodeId){};
     ~CBDASignalStatistics(){};
 
 protected:
     LONG m_Ref;
-    HANDLE m_hFile;
+    IKsPropertySet * m_pProperty;
     ULONG m_NodeId;
 };
 
@@ -75,7 +77,6 @@ CBDASignalStatistics::QueryInterface(
         reinterpret_cast<IBDA_SignalStatistics*>(*Output)->AddRef();
         return NOERROR;
     }
-
     return E_NOINTERFACE;
 }
 
@@ -95,13 +96,13 @@ CBDASignalStatistics::get_SignalStrength(LONG *plDbStrength)
     ULONG BytesReturned;
 
     // setup request
-    Node.Property.Set = KSPROPSETID_BdaSignalStats;
-    Node.Property.Id = KSPROPERTY_BDA_SIGNAL_STRENGTH;
-    Node.Property.Flags = KSPROPERTY_TYPE_GET | KSPROPERTY_TYPE_TOPOLOGY;
     Node.NodeId = (ULONG)-1;
+    Node.Reserved = 0;
 
-    // perform request
-    hr = KsSynchronousDeviceControl(m_hFile, IOCTL_KS_PROPERTY, (PVOID)&Node, sizeof(KSP_NODE), plDbStrength, sizeof(LONG), &BytesReturned);
+    assert(m_pProperty);
+
+    hr = m_pProperty->Get(KSPROPSETID_BdaSignalStats, KSPROPERTY_BDA_SIGNAL_STRENGTH, &Node.NodeId, sizeof(KSP_NODE)-sizeof(KSPROPERTY), plDbStrength, sizeof(LONG), &BytesReturned);
+
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
@@ -128,13 +129,11 @@ CBDASignalStatistics::get_SignalQuality(LONG *plPercentQuality)
     ULONG BytesReturned;
 
     // setup request
-    Node.Property.Set = KSPROPSETID_BdaSignalStats;
-    Node.Property.Id = KSPROPERTY_BDA_SIGNAL_QUALITY;
-    Node.Property.Flags = KSPROPERTY_TYPE_GET | KSPROPERTY_TYPE_TOPOLOGY;
     Node.NodeId = (ULONG)-1;
+    Node.Reserved = 0;
 
     // perform request
-    hr = KsSynchronousDeviceControl(m_hFile, IOCTL_KS_PROPERTY, (PVOID)&Node, sizeof(KSP_NODE), plPercentQuality, sizeof(LONG), &BytesReturned);
+    hr = m_pProperty->Get(KSPROPSETID_BdaSignalStats, KSPROPERTY_BDA_SIGNAL_QUALITY, &Node.NodeId, sizeof(KSP_NODE)-sizeof(KSPROPERTY), plPercentQuality, sizeof(LONG), &BytesReturned);
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
@@ -162,13 +161,12 @@ CBDASignalStatistics::get_SignalPresent(BOOLEAN *pfPresent)
     ULONG BytesReturned;
 
     // setup request
-    Node.Property.Set = KSPROPSETID_BdaSignalStats;
-    Node.Property.Id = KSPROPERTY_BDA_SIGNAL_PRESENT;
-    Node.Property.Flags = KSPROPERTY_TYPE_GET | KSPROPERTY_TYPE_TOPOLOGY;
     Node.NodeId = (ULONG)-1;
+    Node.Reserved = 0;
 
     // perform request
-    hr = KsSynchronousDeviceControl(m_hFile, IOCTL_KS_PROPERTY, (PVOID)&Node, sizeof(KSP_NODE), &Present, sizeof(ULONG), &BytesReturned);
+    hr = m_pProperty->Get(KSPROPSETID_BdaSignalStats, KSPROPERTY_BDA_SIGNAL_PRESENT, &Node.NodeId, sizeof(KSP_NODE)-sizeof(KSPROPERTY), &Present, sizeof(ULONG), &BytesReturned);
+
     // store result
     *pfPresent = Present;
 
@@ -198,13 +196,12 @@ CBDASignalStatistics::get_SignalLocked(BOOLEAN *pfLocked)
     ULONG BytesReturned;
 
     // setup request
-    Node.Property.Set = KSPROPSETID_BdaSignalStats;
-    Node.Property.Id = KSPROPERTY_BDA_SIGNAL_LOCKED;
-    Node.Property.Flags = KSPROPERTY_TYPE_GET | KSPROPERTY_TYPE_TOPOLOGY;
     Node.NodeId = (ULONG)-1;
+    Node.Reserved = 0;
 
     // perform request
-    hr = KsSynchronousDeviceControl(m_hFile, IOCTL_KS_PROPERTY, (PVOID)&Node, sizeof(KSP_NODE), &Locked, sizeof(ULONG), &BytesReturned);
+    hr = m_pProperty->Get(KSPROPSETID_BdaSignalStats, KSPROPERTY_BDA_SIGNAL_LOCKED, &Node.NodeId, sizeof(KSP_NODE)-sizeof(KSPROPERTY), &Locked, sizeof(ULONG), &BytesReturned);
+
     *pfLocked = Locked;
 
 #ifdef BDAPLGIN_TRACE
@@ -222,20 +219,17 @@ CBDASignalStatistics::put_SampleTime(LONG lmsSampleTime)
 {
     KSP_NODE Node;
     HRESULT hr;
-    ULONG BytesReturned;
 
     // setup request
-    Node.Property.Set = KSPROPSETID_BdaSignalStats;
-    Node.Property.Id = KSPROPERTY_BDA_SAMPLE_TIME;
-    Node.Property.Flags = KSPROPERTY_TYPE_SET | KSPROPERTY_TYPE_TOPOLOGY;
     Node.NodeId = (ULONG)-1;
+    Node.Reserved = 0;
 
     // perform request
-    hr = KsSynchronousDeviceControl(m_hFile, IOCTL_KS_PROPERTY, (PVOID)&Node, sizeof(KSP_NODE), &lmsSampleTime, sizeof(LONG), &BytesReturned);
+    hr = m_pProperty->Set(KSPROPSETID_BdaSignalStats, KSPROPERTY_BDA_SAMPLE_TIME, &Node.NodeId, sizeof(KSP_NODE)-sizeof(KSPROPERTY), &lmsSampleTime, sizeof(LONG));
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDASignalStatistics::put_SampleTime: m_NodeId %lu hr %lx, BytesReturned %lu\n", m_NodeId, hr, BytesReturned);
+    swprintf(Buffer, L"CBDASignalStatistics::put_SampleTime: m_NodeId %lu hr %lx\n", m_NodeId, hr);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -251,13 +245,11 @@ CBDASignalStatistics::get_SampleTime(LONG *plmsSampleTime)
     ULONG BytesReturned;
 
     // setup request
-    Node.Property.Set = KSPROPSETID_BdaSignalStats;
-    Node.Property.Id = KSPROPERTY_BDA_SAMPLE_TIME;
-    Node.Property.Flags = KSPROPERTY_TYPE_GET | KSPROPERTY_TYPE_TOPOLOGY;
     Node.NodeId = (ULONG)-1;
+    Node.Reserved = 0;
 
     // perform request
-    hr = KsSynchronousDeviceControl(m_hFile, IOCTL_KS_PROPERTY, (PVOID)&Node, sizeof(KSP_NODE), plmsSampleTime, sizeof(LONG), &BytesReturned);
+    hr = m_pProperty->Get(KSPROPSETID_BdaSignalStats, KSPROPERTY_BDA_SAMPLE_TIME, &Node.NodeId, sizeof(KSP_NODE)-sizeof(KSPROPERTY), plmsSampleTime, sizeof(LONG), &BytesReturned);
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
@@ -271,13 +263,13 @@ CBDASignalStatistics::get_SampleTime(LONG *plmsSampleTime)
 HRESULT
 WINAPI
 CBDASignalStatistics_fnConstructor(
-    HANDLE hFile,
+    IKsPropertySet * pProperty,
     ULONG NodeId,
     REFIID riid,
     LPVOID * ppv)
 {
     // construct device control
-    CBDASignalStatistics * handler = new CBDASignalStatistics(hFile, NodeId);
+    CBDASignalStatistics * handler = new CBDASignalStatistics(pProperty, NodeId);
 
 #ifdef BDAPLGIN_TRACE
     OutputDebugStringW(L"CBDASignalStatistics_fnConstructor\n");

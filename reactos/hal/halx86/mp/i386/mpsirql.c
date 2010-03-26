@@ -143,6 +143,7 @@ KfLowerIrql (KIRQL	NewIrql)
   HalpLowerIrql (NewIrql, FALSE);
 }
 
+
 /**********************************************************************
  * NAME							EXPORTED
  *	KfRaiseIrql
@@ -190,7 +191,6 @@ KfRaiseIrql (KIRQL	NewIrql)
 
   return OldIrql;
 }
-
 
 /**********************************************************************
  * NAME							EXPORTED

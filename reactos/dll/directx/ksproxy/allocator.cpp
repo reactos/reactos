@@ -140,7 +140,10 @@ CKsAllocator::SetProperties(
     SYSTEM_INFO SystemInfo;
 
     EnterCriticalSection(&m_CriticalSection);
+
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsAllocator::SetProperties\n");
+#endif
 
     if (!pRequest || !pActual)
         return E_POINTER;
@@ -216,7 +219,9 @@ CKsAllocator::Commit()
     //TODO integer overflow checks
     EnterCriticalSection(&m_CriticalSection);
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsAllocator::Commit\n");
+#endif
 
     if (m_Mode == KsAllocatorMode_Kernel)
     {
@@ -301,7 +306,9 @@ CKsAllocator::Decommit()
 {
     EnterCriticalSection(&m_CriticalSection);
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsAllocator::Decommit\n");
+#endif
 
     if (m_Mode == KsAllocatorMode_Kernel)
     {
@@ -340,7 +347,9 @@ CKsAllocator::GetBuffer(
     DWORD dwFlags)
 {
     IMediaSample * Sample = NULL;
-    OutputDebugStringW(L"CKsAllocator::GetBuffer\n");
+
+    if (!m_Commited)
+        return VFW_E_NOT_COMMITTED;
 
     do
     {
@@ -390,7 +399,9 @@ CKsAllocator::ReleaseBuffer(
 {
     EnterCriticalSection(&m_CriticalSection);
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsAllocator::ReleaseBuffer\n");
+#endif
 
     // media sample always 1 ref count in free list
     pBuffer->AddRef();
@@ -427,7 +438,10 @@ CKsAllocator::SetNotify(
     IMemAllocatorNotifyCallbackTemp *pNotify)
 {
     EnterCriticalSection(&m_CriticalSection);
+
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsAllocator::SetNotify\n");
+#endif
 
     if (pNotify)
         pNotify->AddRef();
@@ -519,7 +533,9 @@ CKsAllocator::KsCreateAllocatorAndGetHandle(
     KSALLOCATOR_FRAMING AllocatorFraming;
     HANDLE hPin;
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsAllocator::KsCreateAllocatorAndGetHandle\n");
+#endif
 
     if (m_hAllocator)
     {
@@ -588,7 +604,9 @@ CKsAllocator_Constructor(
     REFIID riid,
     LPVOID * ppv)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsAllocator_Constructor\n");
+#endif
 
     CKsAllocator * handler = new CKsAllocator();
 

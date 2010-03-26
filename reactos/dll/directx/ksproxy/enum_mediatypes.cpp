@@ -64,13 +64,6 @@ CEnumMediaTypes::QueryInterface(
         return NOERROR;
     }
 
-    WCHAR Buffer[MAX_PATH];
-    LPOLESTR lpstr;
-    StringFromCLSID(refiid, &lpstr);
-    swprintf(Buffer, L"CEnumMediaTypes::QueryInterface: NoInterface for %s\n", lpstr);
-    OutputDebugStringW(Buffer);
-    CoTaskMemFree(lpstr);
-
     return E_NOINTERFACE;
 }
 
@@ -171,7 +164,9 @@ STDMETHODCALLTYPE
 CEnumMediaTypes::Clone(
     IEnumMediaTypes **ppEnum)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CEnumMediaTypes::Clone : NotImplemented\n");
+#endif
     return E_NOTIMPL;
 }
 
@@ -189,7 +184,7 @@ CEnumMediaTypes_fnConstructor(
     WCHAR Buffer[MAX_PATH];
     LPOLESTR lpstr;
     StringFromCLSID(riid, &lpstr);
-    swprintf(Buffer, L"CEnumMediaTypes_fnConstructor riid %s pUnknown %p\n", lpstr, pUnknown);
+    swprintf(Buffer, L"CEnumMediaTypes_fnConstructor riid %s\n", lpstr);
     OutputDebugStringW(Buffer);
 #endif
 

@@ -8,15 +8,17 @@
 /* INCLUDES ******************************************************************/
 
 #include <asm.h>
-#include <internal/i386/asmmacro.S>
 .intel_syntax noprefix
 
 /* GLOBALS *******************************************************************/
 
+.globl _HalpPerfCounter
 _HalpLastPerfCounterLow:    .long 0
 _HalpLastPerfCounterHigh:   .long 0
+_HalpPerfCounter:
 _HalpPerfCounterLow:        .long 0
 _HalpPerfCounterHigh:       .long 0
+_HalpSystemHardwareFlags:   .long 0
 
 _UnhandledMsg:
     .asciz "\n\x7\x7!!! Unhandled or Unexpected Code at line: %lx!!!\n"
@@ -327,6 +329,7 @@ AndItsNotYou:
     ret
 .endfunc
 
+#ifndef _MINIHAL_
 .globl _KeStallExecutionProcessor@4
 .func KeStallExecutionProcessor@4
 _KeStallExecutionProcessor@4:
@@ -357,6 +360,7 @@ Done:
     /* Return */
     ret 4
 .endfunc
+#endif
 
 .global _KeQueryPerformanceCounter@4
 .func KeQueryPerformanceCounter@4
@@ -516,73 +520,4 @@ InvalidCount:
     mov _HalpLastPerfCounterLow, eax
     mov _HalpLastPerfCounterHigh, eax
     jmp LoopPreInt
-.endfunc
-
-.globl _HalpClockInterrupt@0
-.func HalpClockInterrupt@0
-TRAP_FIXUPS hci_a, hci_t, DoFixupV86, DoFixupAbios
-_HalpClockInterrupt@0:
-
-    /* Enter trap */
-    INT_PROLOG hci_a, hci_t, DoPushFakeErrorCode
-
-    /* Push vector and make stack for IRQL */
-    push 0x30
-    sub esp, 4
-
-    /* Begin the interrupt */
-    push esp
-    push 0x30
-    push CLOCK2_LEVEL
-    call _HalBeginSystemInterrupt@12
-
-    /* Check if it's spurious */
-    or al, al
-    jz Spurious
-
-    /* Update the performance counter */
-    xor ebx, ebx
-    mov eax, _HalpCurrentRollOver
-    add _HalpPerfCounterLow, eax
-    adc _HalpPerfCounterHigh, ebx
-
-    /* Get the time increment and check if someone changed the clock rate */
-    mov eax, _HalpCurrentTimeIncrement
-    cmp _HalpClockSetMSRate, ebx
-    jz _KeUpdateSystemTime@0
-
-    /* FIXME: Someone did! */
-    int 3
-
-Spurious:
-
-    /* Exit the interrupt */
-    add esp, 8
-    jmp _Kei386EoiHelper@0
-.endfunc
-
-.globl _HalpProfileInterrupt@0
-.func HalpProfileInterrupt@0
-TRAP_FIXUPS hpi_a, hpi_t, DoFixupV86, DoFixupAbios
-_HalpProfileInterrupt@0:
-
-    /* Enter trap */
-    INT_PROLOG hpi_a, hpi_t, DoPushFakeErrorCode
-
-    /* Push vector and make stack for IRQL */
-    push 0x38
-    sub esp, 4
-
-    /* Begin the interrupt */
-    push esp
-    push 0x38
-    push PROFILE_LEVEL
-    call _HalBeginSystemInterrupt@12
-
-    /* Check if it's spurious */
-    or al, al
-    jz Spurious
-
-    /* FIXME: We should not be getting profile interrupts yet! */
-    int 3
 .endfunc

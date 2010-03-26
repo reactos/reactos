@@ -4,13 +4,11 @@
  * FILE:            hal/halx86/up/spinlock.c
  * PURPOSE:         Spinlock and Queued Spinlock Support
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
- *                  Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
 
-/* Enable this (and the define in irq.S) to make UP HAL work for MP Kernel */
-/* #define CONFIG_SMP */
+/* This file is compiled twice. Once for UP and once for MP */
 
 #include <hal.h>
 #define NDEBUG
@@ -33,18 +31,6 @@ KSPIN_LOCK HalpSystemHardwareLock;
 /*
  * @implemented
  */
-VOID
-NTAPI
-KeAcquireSpinLock(PKSPIN_LOCK SpinLock,
-                  PKIRQL OldIrql)
-{
-    /* Call the fastcall function */
-    *OldIrql = KfAcquireSpinLock(SpinLock);
-}
-
-/*
- * @implemented
- */
 KIRQL
 FASTCALL
 KeAcquireSpinLockRaiseToSynch(PKSPIN_LOCK SpinLock)
@@ -57,18 +43,6 @@ KeAcquireSpinLockRaiseToSynch(PKSPIN_LOCK SpinLock)
     /* Acquire the lock and return */
     KxAcquireSpinLock(SpinLock);
     return OldIrql;
-}
-
-/*
- * @implemented
- */
-VOID
-NTAPI
-KeReleaseSpinLock(PKSPIN_LOCK SpinLock,
-                  KIRQL NewIrql)
-{
-    /* Call the fastcall function */
-    KfReleaseSpinLock(SpinLock, NewIrql);
 }
 
 /*
@@ -236,31 +210,6 @@ KeTryToAcquireQueuedSpinLock(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber,
 
     /* Always return true on UP Machines */
     return TRUE;
-}
-
-#undef KeRaiseIrql
-/*
- * @implemented
- */
-VOID
-NTAPI
-KeRaiseIrql(KIRQL NewIrql,
-            PKIRQL OldIrql)
-{
-    /* Call the fastcall function */
-    *OldIrql = KfRaiseIrql(NewIrql);
-}
-
-#undef KeLowerIrql
-/*
- * @implemented
- */
-VOID
-NTAPI
-KeLowerIrql(KIRQL NewIrql)
-{
-    /* Call the fastcall function */
-    KfLowerIrql(NewIrql);
 }
 
 #endif

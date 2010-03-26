@@ -102,7 +102,9 @@ HRESULT
 STDMETHODCALLTYPE
 CVPConfig::Stop()
 {
-    OutputDebugString("UNIMPLEMENTED\n");
+#ifdef KSPROXY_TRACE
+    OutputDebugStringW(L"UNIMPLEMENTED\n");
+#endif
     return E_NOTIMPL;
 }
 
@@ -110,7 +112,9 @@ HRESULT
 STDMETHODCALLTYPE
 CVPConfig::Pause()
 {
-    OutputDebugString("UNIMPLEMENTED\n");
+#ifdef KSPROXY_TRACE
+    OutputDebugStringW(L"UNIMPLEMENTED\n");
+#endif
     return E_NOTIMPL;
 }
 
@@ -119,7 +123,9 @@ STDMETHODCALLTYPE
 CVPConfig::Run(
     REFERENCE_TIME tStart)
 {
-    OutputDebugString("UNIMPLEMENTED\n");
+#ifdef KSPROXY_TRACE
+    OutputDebugStringW(L"UNIMPLEMENTED\n");
+#endif
     return E_NOTIMPL;
 }
 
@@ -128,7 +134,9 @@ STDMETHODCALLTYPE
 CVPConfig::SetSyncSource(
     IReferenceClock *pClock)
 {
-    OutputDebugString("UNIMPLEMENTED\n");
+#ifdef KSPROXY_TRACE
+    OutputDebugStringW(L"UNIMPLEMENTED\n");
+#endif
     return E_NOTIMPL;
 }
 
@@ -136,7 +144,9 @@ HRESULT
 STDMETHODCALLTYPE
 CVPConfig::NotifyGraphChange()
 {
-    OutputDebugString("UNIMPLEMENTED\n");
+#ifdef KSPROXY_TRACE
+    OutputDebugStringW(L"UNIMPLEMENTED\n");
+#endif
     return E_NOTIMPL;
 }
 
@@ -149,7 +159,9 @@ CVPConfig::GetConnectInfo(
     LPDWORD pdwNumConnectInfo, 
     IN OUT LPDDVIDEOPORTCONNECT pddVPConnectInfo)
 {
-    OutputDebugString("UNIMPLEMENTED\n");
+#ifdef KSPROXY_TRACE
+    OutputDebugStringW(L"UNIMPLEMENTED\n");
+#endif
     return E_NOTIMPL;
 }
 
@@ -158,7 +170,9 @@ STDMETHODCALLTYPE
 CVPConfig::SetConnectInfo(
     DWORD dwChosenEntry)
 {
-    OutputDebugString("UNIMPLEMENTED\n");
+#ifdef KSPROXY_TRACE
+    OutputDebugStringW(L"UNIMPLEMENTED\n");
+#endif
     return E_NOTIMPL;
 }
 
@@ -167,7 +181,9 @@ STDMETHODCALLTYPE
 CVPConfig::GetVPDataInfo(
     LPAMVPDATAINFO pamvpDataInfo)
 {
-    OutputDebugString("UNIMPLEMENTED\n");
+#ifdef KSPROXY_TRACE
+    OutputDebugStringW(L"UNIMPLEMENTED\n");
+#endif
     return E_NOTIMPL;
 }
 
@@ -177,7 +193,9 @@ CVPConfig::GetMaxPixelRate(
     LPAMVPSIZE pamvpSize,
     OUT LPDWORD pdwMaxPixelsPerSecond)
 {
-    OutputDebugString("UNIMPLEMENTED\n");
+#ifdef KSPROXY_TRACE
+    OutputDebugStringW(L"UNIMPLEMENTED\n");
+#endif
     return E_NOTIMPL;
 }
 
@@ -187,7 +205,9 @@ CVPConfig::InformVPInputFormats(
     DWORD dwNumFormats,
     IN LPDDPIXELFORMAT pDDPixelFormats)
 {
-    OutputDebugString("UNIMPLEMENTED\n");
+#ifdef KSPROXY_TRACE
+    OutputDebugStringW(L"UNIMPLEMENTED\n");
+#endif
     return E_NOTIMPL;
 }
 
@@ -197,7 +217,9 @@ CVPConfig::GetVideoFormats(
     LPDWORD pdwNumFormats, 
     IN OUT LPDDPIXELFORMAT pddPixelFormats)
 {
-    OutputDebugString("UNIMPLEMENTED\n");
+#ifdef KSPROXY_TRACE
+    OutputDebugStringW(L"UNIMPLEMENTED\n");
+#endif
     return E_NOTIMPL;
 }
 
@@ -206,7 +228,9 @@ STDMETHODCALLTYPE
 CVPConfig::SetVideoFormat(
     DWORD dwChosenEntry)
 {
-    OutputDebugString("UNIMPLEMENTED\n");
+#ifdef KSPROXY_TRACE
+    OutputDebugStringW(L"UNIMPLEMENTED\n");
+#endif
     return E_NOTIMPL;
 }
 
@@ -214,7 +238,9 @@ HRESULT
 STDMETHODCALLTYPE
 CVPConfig::SetInvertPolarity()
 {
-    OutputDebugString("UNIMPLEMENTED\n");
+#ifdef KSPROXY_TRACE
+    OutputDebugStringW(L"UNIMPLEMENTED\n");
+#endif
     return E_NOTIMPL;
 }
 
@@ -223,7 +249,9 @@ STDMETHODCALLTYPE
 CVPConfig::GetOverlaySurface(
     LPDIRECTDRAWSURFACE* ppddOverlaySurface)
 {
-    OutputDebugString("UNIMPLEMENTED\n");
+#ifdef KSPROXY_TRACE
+    OutputDebugStringW(L"UNIMPLEMENTED\n");
+#endif
     return E_NOTIMPL;
 }
 
@@ -232,7 +260,9 @@ STDMETHODCALLTYPE
 CVPConfig::SetDirectDrawKernelHandle(
     ULONG_PTR dwDDKernelHandle)
 {
-    OutputDebugString("UNIMPLEMENTED\n");
+#ifdef KSPROXY_TRACE
+    OutputDebugStringW(L"UNIMPLEMENTED\n");
+#endif
     return E_NOTIMPL;
 }
 
@@ -241,7 +271,9 @@ STDMETHODCALLTYPE
 CVPConfig::SetVideoPortID(
     IN DWORD dwVideoPortID)
 {
-    OutputDebugString("UNIMPLEMENTED\n");
+#ifdef KSPROXY_TRACE
+    OutputDebugStringW(L"UNIMPLEMENTED\n");
+#endif
     return E_NOTIMPL;
 }
 
@@ -252,7 +284,9 @@ CVPConfig::SetDDSurfaceKernelHandles(
     DWORD cHandles,
     IN ULONG_PTR *rgDDKernelHandles)
 {
-    OutputDebugString("UNIMPLEMENTED\n");
+#ifdef KSPROXY_TRACE
+    OutputDebugStringW(L"UNIMPLEMENTED\n");
+#endif
     return E_NOTIMPL;
 }
 
@@ -264,7 +298,9 @@ CVPConfig::SetSurfaceParameters(
     IN DWORD dwXOrigin,
     IN DWORD dwYOrigin)
 {
-    OutputDebugString("UNIMPLEMENTED\n");
+#ifdef KSPROXY_TRACE
+    OutputDebugStringW(L"UNIMPLEMENTED\n");
+#endif
     return E_NOTIMPL;
 }
 
@@ -277,7 +313,9 @@ STDMETHODCALLTYPE
 CVPConfig::IsVPDecimationAllowed(
     LPBOOL pbIsDecimationAllowed)
 {
-    OutputDebugString("UNIMPLEMENTED\n");
+#ifdef KSPROXY_TRACE
+    OutputDebugStringW(L"UNIMPLEMENTED\n");
+#endif
     return E_NOTIMPL;
 }
 
@@ -286,11 +324,11 @@ STDMETHODCALLTYPE
 CVPConfig::SetScalingFactors(
     LPAMVPSIZE pamvpSize)
 {
-    OutputDebugString("UNIMPLEMENTED\n");
+#ifdef KSPROXY_TRACE
+    OutputDebugStringW(L"UNIMPLEMENTED\n");
+#endif
     return E_NOTIMPL;
 }
-
-
 
 
 HRESULT
@@ -300,7 +338,9 @@ CVPConfig_Constructor(
     REFIID riid,
     LPVOID * ppv)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CVPConfig_Constructor\n");
+#endif
 
     CVPConfig * handler = new CVPConfig();
 

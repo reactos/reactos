@@ -26,7 +26,6 @@
 
 #define DDKFASTAPI __fastcall
 #define FASTCALL __fastcall
-#define DDKCDECLAPI __cdecl
 
 ULONG DbgPrint(PCCH Format,...);
 

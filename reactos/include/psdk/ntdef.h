@@ -173,11 +173,6 @@ typedef unsigned long POINTER_64; // FIXME! HACK!!!
 
 #define NTAPI __stdcall
 
-//
-// Used by the DDK exclusively , don't put in drivers
-//
-#define DDKAPI __stdcall // Use NTAPI instead
-#define DDKCDECLAPI __cdecl // Just use __cdecl
 
 /* Import and Export Specifiers */
 

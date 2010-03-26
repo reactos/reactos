@@ -47,7 +47,7 @@ ConvertFiberToThread(VOID)
     pTeb->HasFiberData = FALSE;
 
     /* free the fiber */
-    if (pTeb->NtTib.FiberData != NULL)
+    if(pTeb->NtTib.FiberData != NULL)
     {
         RtlFreeHeap(GetProcessHeap(), 0, pTeb->NtTib.FiberData);
     }

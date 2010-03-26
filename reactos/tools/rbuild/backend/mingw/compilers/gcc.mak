@@ -9,18 +9,6 @@ CPPFLAG_UNICODE:=-DUNICODE -D_UNICODE
 
 # FIXME: disabled until RosBE stops sucking
 # BUILTIN_CPPFLAGS+= -nostdinc
-ifeq ($(ROS_ARCH),i386)
-BUILTIN_CFLAGS+= -fno-optimize-sibling-calls -fno-set-stack-executable
-else
-BUILTIN_CFLAGS+= -fno-optimize-sibling-calls
-endif
-BUILTIN_CXXFLAGS+= -fno-optimize-sibling-calls
-
-# Add -fno-set-stack-executable required for x86/MinGW
-ifneq (,$(filter $(ARCH), i386))
-	BUILTIN_CFLAGS+= -fno-set-stack-executable
-	BUILTIN_CXXFLAGS+= -fno-set-stack-executable
-endif
 
 #(module, source, dependencies, cflags, output)
 define RBUILD_DEPENDS

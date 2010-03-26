@@ -9,8 +9,10 @@
 
 #include "precomp.h"
 
+#ifndef _MSC_VER
 const GUID IID_IBDA_LNBInfo = {0x992cf102, 0x49f9, 0x4719, {0xa6, 0x64,  0xc4, 0xf2, 0x3e, 0x24, 0x08, 0xf4}};
 const GUID KSPROPSETID_BdaLNBInfo = {0x992cf102, 0x49f9, 0x4719, {0xa6, 0x64, 0xc4, 0xf2, 0x3e, 0x24, 0x8, 0xf4}};
+#endif
 
 class CBDALNBInfo : public IBDA_LNBInfo
 {
@@ -41,12 +43,12 @@ public:
     HRESULT STDMETHODCALLTYPE put_HighLowSwitchFrequency(ULONG ulSwitchFrequency);
     HRESULT STDMETHODCALLTYPE get_HighLowSwitchFrequency(ULONG *pulSwitchFrequency);
 
-    CBDALNBInfo(HANDLE hFile, ULONG NodeId) : m_Ref(0), m_hFile(hFile), m_NodeId(NodeId){};
+    CBDALNBInfo(IKsPropertySet *pProperty, ULONG NodeId) : m_Ref(0), m_pProperty(pProperty), m_NodeId(NodeId){};
     ~CBDALNBInfo(){};
 
 protected:
     LONG m_Ref;
-    HANDLE m_hFile;
+    IKsPropertySet * m_pProperty;
     ULONG m_NodeId;
 };
 
@@ -90,20 +92,17 @@ CBDALNBInfo::put_LocalOscilatorFrequencyLowBand(ULONG ulLOFLow)
 {
     KSP_NODE Node;
     HRESULT hr;
-    ULONG BytesReturned;
 
     // setup request
-    Node.Property.Set = KSPROPSETID_BdaLNBInfo;
-    Node.Property.Id = KSPROPERTY_BDA_LNB_LOF_LOW_BAND;
-    Node.Property.Flags = KSPROPERTY_TYPE_SET | KSPROPERTY_TYPE_TOPOLOGY;
     Node.NodeId = m_NodeId;
+    Node.Reserved = 0;
 
     // perform request
-    hr = KsSynchronousDeviceControl(m_hFile, IOCTL_KS_PROPERTY, (PVOID)&Node, sizeof(KSP_NODE), &ulLOFLow, sizeof(ULONG), &BytesReturned);
+    hr = m_pProperty->Set(KSPROPSETID_BdaLNBInfo, KSPROPERTY_BDA_LNB_LOF_LOW_BAND, &Node.NodeId, sizeof(KSP_NODE)-sizeof(KSPROPERTY), &ulLOFLow, sizeof(LONG));
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDALNBInfo::put_LocalOscilatorFrequencyLowBand: m_NodeId %lu hr %lx, BytesReturned %lu\n", m_NodeId, hr, BytesReturned);
+    swprintf(Buffer, L"CBDALNBInfo::put_LocalOscilatorFrequencyLowBand: m_NodeId %lu hr %lx\n", m_NodeId, hr);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -123,20 +122,17 @@ CBDALNBInfo::put_LocalOscilatorFrequencyHighBand(ULONG ulLOFHigh)
 {
     KSP_NODE Node;
     HRESULT hr;
-    ULONG BytesReturned;
 
     // setup request
-    Node.Property.Set = KSPROPSETID_BdaLNBInfo;
-    Node.Property.Id = KSPROPERTY_BDA_LNB_LOF_HIGH_BAND;
-    Node.Property.Flags = KSPROPERTY_TYPE_SET | KSPROPERTY_TYPE_TOPOLOGY;
     Node.NodeId = m_NodeId;
+    Node.Reserved = 0;
 
     // perform request
-    hr = KsSynchronousDeviceControl(m_hFile, IOCTL_KS_PROPERTY, (PVOID)&Node, sizeof(KSP_NODE), &ulLOFHigh, sizeof(ULONG), &BytesReturned);
+    hr = m_pProperty->Set(KSPROPSETID_BdaLNBInfo, KSPROPERTY_BDA_LNB_LOF_HIGH_BAND, &Node.NodeId, sizeof(KSP_NODE)-sizeof(KSPROPERTY), &ulLOFHigh, sizeof(ULONG));
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDALNBInfo::put_LocalOscilatorFrequencyHighBand: m_NodeId %lu hr %lx, BytesReturned %lu\n", m_NodeId, hr, BytesReturned);
+    swprintf(Buffer, L"CBDALNBInfo::put_LocalOscilatorFrequencyHighBand: m_NodeId %lu hr %lx\n", m_NodeId, hr);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -156,20 +152,17 @@ CBDALNBInfo::put_HighLowSwitchFrequency(ULONG ulSwitchFrequency)
 {
     KSP_NODE Node;
     HRESULT hr;
-    ULONG BytesReturned;
 
     // setup request
-    Node.Property.Set = KSPROPSETID_BdaLNBInfo;
-    Node.Property.Id = KSPROPERTY_BDA_LNB_SWITCH_FREQUENCY;
-    Node.Property.Flags = KSPROPERTY_TYPE_SET | KSPROPERTY_TYPE_TOPOLOGY;
     Node.NodeId = m_NodeId;
+    Node.Reserved = 0;
 
     // perform request
-    hr = KsSynchronousDeviceControl(m_hFile, IOCTL_KS_PROPERTY, (PVOID)&Node, sizeof(KSP_NODE), &ulSwitchFrequency, sizeof(ULONG), &BytesReturned);
+    hr = m_pProperty->Set(KSPROPSETID_BdaLNBInfo, KSPROPERTY_BDA_LNB_SWITCH_FREQUENCY, &Node.NodeId, sizeof(KSP_NODE)-sizeof(KSPROPERTY), &ulSwitchFrequency, sizeof(ULONG));
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDALNBInfo::put_HighLowSwitchFrequency: m_NodeId %lu hr %lx, BytesReturned %lu\n", m_NodeId, hr, BytesReturned);
+    swprintf(Buffer, L"CBDALNBInfo::put_HighLowSwitchFrequency: m_NodeId %lu hr %lx\n", m_NodeId, hr);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -186,13 +179,13 @@ CBDALNBInfo::get_HighLowSwitchFrequency(ULONG *pulSwitchFrequency)
 HRESULT
 WINAPI
 CBDALNBInfo_fnConstructor(
-    HANDLE hFile,
+    IKsPropertySet *pProperty,
     ULONG NodeId,
     REFIID riid,
     LPVOID * ppv)
 {
     // construct device control
-    CBDALNBInfo * handler = new CBDALNBInfo(hFile, NodeId);
+    CBDALNBInfo * handler = new CBDALNBInfo(pProperty, NodeId);
 
 #ifdef BDAPLGIN_TRACE
     OutputDebugStringW(L"CBDALNBInfo_fnConstructor\n");

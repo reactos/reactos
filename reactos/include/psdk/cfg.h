@@ -20,7 +20,8 @@
  *
  */
 
-#ifndef _CFG_INCLUDED_
+#pragma once
+
 #define _CFG_INCLUDED_
 
 #ifdef __cplusplus
@@ -77,7 +78,26 @@ extern "C" {
 #define CM_PROB_DRIVER_BLOCKED              0x00000030
 #define CM_PROB_REGISTRY_TOO_LARGE          0x00000031
 #define CM_PROB_SETPROPERTIES_FAILED        0x00000032
-#define NUM_CM_PROB                         0x00000033
+#define CM_PROB_WAITING_ON_DEPENDENCY       0x00000033
+#define CM_PROB_UNSIGNED_DRIVER             0x00000034
+
+#define NUM_CM_PROB_V1                      0x00000025
+#define NUM_CM_PROB_V2                      0x00000032
+#define NUM_CM_PROB_V3                      0x00000033
+#define NUM_CM_PROB_V4                      0x00000034
+#define NUM_CM_PROB_V5                      0x00000035
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+#define NUM_CM_PROB NUM_CM_PROB_V5
+#elif (NTDDI_VERSION >= NTDDI_WS08)
+#define NUM_CM_PROB NUM_CM_PROB_V4
+#elif (NTDDI_VERSION >= NTDDI_WS03)
+#define NUM_CM_PROB NUM_CM_PROB_V3
+#elif (NTDDI_VERSION >= NTDDI_WINXP)
+#define NUM_CM_PROB NUM_CM_PROB_V2
+#elif (NTDDI_VERSION >= WIN2K)
+#define NUM_CM_PROB NUM_CM_PROB_V1
+#endif
 
 #define LCPRI_FORCECONFIG                 0x00000000
 #define LCPRI_BOOTCONFIG                  0x00000001
@@ -95,24 +115,24 @@ extern "C" {
 #define LCPRI_DISABLED                    0x0000FFFF
 #define MAX_LCPRI                         0x0000FFFF
 
-#define DN_ROOT_ENUMERATED  0x00000001	/* Was enumerated by ROOT */
-#define DN_DRIVER_LOADED    0x00000002	/* Has Register_Device_Driver */
-#define DN_ENUM_LOADED      0x00000004	/* Has Register_Enumerator */
-#define DN_STARTED          0x00000008	/* Is currently configured */
-#define DN_MANUAL           0x00000010	/* Manually installed */
-#define DN_NEED_TO_ENUM     0x00000020	/* May need reenumeration */
-#define DN_NOT_FIRST_TIME   0x00000040	/* Has received a config (Win9x only) */
-#define DN_HARDWARE_ENUM    0x00000080	/* Enum generates hardware ID */
-#define DN_LIAR             0x00000100	/* Lied about can reconfig once (Win9x only) */
-#define DN_HAS_MARK         0x00000200	/* Not CM_Create_DevNode lately (Win9x only) */
-#define DN_HAS_PROBLEM      0x00000400	/* Need device installer */
-#define DN_FILTERED         0x00000800	/* Is filtered */
-#define DN_MOVED            0x00001000	/* Has been moved (Win9x only) */
-#define DN_DISABLEABLE      0x00002000	/* Can be rebalanced */
-#define DN_REMOVABLE        0x00004000	/* Can be removed */
-#define DN_PRIVATE_PROBLEM  0x00008000	/* Has a private problem */
-#define DN_MF_PARENT        0x00010000	/* Multi function parent */
-#define DN_MF_CHILD         0x00020000	/* Multi function child */
+#define DN_ROOT_ENUMERATED  0x00000001 /* Was enumerated by ROOT */
+#define DN_DRIVER_LOADED    0x00000002 /* Has Register_Device_Driver */
+#define DN_ENUM_LOADED      0x00000004 /* Has Register_Enumerator */
+#define DN_STARTED          0x00000008 /* Is currently configured */
+#define DN_MANUAL           0x00000010 /* Manually installed */
+#define DN_NEED_TO_ENUM     0x00000020 /* May need reenumeration */
+#define DN_NOT_FIRST_TIME   0x00000040 /* Has received a config (Win9x only) */
+#define DN_HARDWARE_ENUM    0x00000080 /* Enum generates hardware ID */
+#define DN_LIAR             0x00000100 /* Lied about can reconfig once (Win9x only) */
+#define DN_HAS_MARK         0x00000200 /* Not CM_Create_DevNode lately (Win9x only) */
+#define DN_HAS_PROBLEM      0x00000400 /* Need device installer */
+#define DN_FILTERED         0x00000800 /* Is filtered */
+#define DN_MOVED            0x00001000 /* Has been moved (Win9x only) */
+#define DN_DISABLEABLE      0x00002000 /* Can be rebalanced */
+#define DN_REMOVABLE        0x00004000 /* Can be removed */
+#define DN_PRIVATE_PROBLEM  0x00008000 /* Has a private problem */
+#define DN_MF_PARENT        0x00010000 /* Multi function parent */
+#define DN_MF_CHILD         0x00020000 /* Multi function child */
 #define DN_WILL_BE_REMOVED  0x00040000
 #define DN_NOT_FIRST_TIMEE  0x00080000
 #define DN_STOP_FREE_RES    0x00100000
@@ -128,11 +148,33 @@ extern "C" {
 #define DN_NO_SHOW_IN_DM    0x40000000
 #define DN_BOOT_LOG_PROB    0x80000000
 
-#define DN_NEED_RESTART          DN_LIAR
-#define DN_DRIVER_BLOCKED        DN_NOT_FIRST_TIME
-#define DN_LEGACY_DRIVER         DN_MOVED
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+
+#define DN_NEED_RESTART DN_LIAR
+#define DN_DRIVER_BLOCKED DN_NOT_FIRST_TIME
+#define DN_LEGACY_DRIVER DN_MOVED
 #define DN_CHILD_WITH_INVALID_ID DN_HAS_MARK
 
+#elif (NTDDI_VERSION >= NTDDI_WIN2K)
+
+#define DN_NEED_RESTART 0x00000100
+
+#endif
+
+#define DN_CHANGEABLE_FLAGS (DN_NOT_FIRST_TIME + \
+                             DN_HARDWARE_ENUM + \
+                             DN_HAS_MARK + \
+                             DN_DISABLEABLE + \
+                             DN_REMOVABLE + \
+                             DN_MF_CHILD + \
+                             DN_MF_PARENT + \
+                             DN_NOT_FIRST_TIMEE + \
+                             DN_STOP_FREE_RES + \
+                             DN_REBAL_CANDIDATE + \
+                             DN_NT_ENUMERATOR + \
+                             DN_NT_DRIVER + \
+                             DN_SILENT_INSTALL + \
+                             DN_NO_SHOW_IN_DM)
 
 typedef enum _PNP_VETO_TYPE {
   PNP_VetoTypeUnknown,
@@ -149,14 +191,7 @@ typedef enum _PNP_VETO_TYPE {
   PNP_VetoLegacyDriver
 } PNP_VETO_TYPE, *PPNP_VETO_TYPE;
 
-#define CM_GLOBAL_STATE_CAN_DO_UI           0x00000001
-#define CM_GLOBAL_STATE_ON_BIG_STACK        0x00000002
-#define CM_GLOBAL_STATE_SERVICES_AVAILABLE  0x00000004
-#define CM_GLOBAL_STATE_SHUTTING_DOWN       0x00000008
-#define CM_GLOBAL_STATE_DETECTION_PENDING   0x00000010
-
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _CFG_INCLUDED_ */

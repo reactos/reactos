@@ -138,7 +138,7 @@ PoInitSystem(IN ULONG BootPhase)
     {
         /* Registry power button notification */
         IoRegisterPlugPlayNotification(EventCategoryDeviceInterfaceChange,
-                                       0, /* The registry has not been initialized yet */
+                                       PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES,
                                        (PVOID)&GUID_DEVICE_SYS_BUTTON,
                                        IopRootDeviceNode->
                                        PhysicalDeviceObject->DriverObject,
