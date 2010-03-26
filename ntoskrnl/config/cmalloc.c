@@ -70,14 +70,13 @@ CmpFreeKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb)
     KeAcquireGuardedMutex(&CmpAllocBucketLock);
     
     /* Sanity check on lock ownership */
-    //ASSERT((CmpIsKcbLockedExclusive(Kcb) == TRUE) ||
-    //       (CmpTestRegistryLockExclusive() == TRUE));
+    CMP_ASSERT_HASH_ENTRY_LOCK(Kcb->ConvKey);
     
     /* Add us to the free list */
     InsertTailList(&CmpFreeKCBListHead, &Kcb->FreeListEntry);
     
     /* Get the allocation page */
-    AllocPage = (PCM_ALLOC_PAGE)((ULONG_PTR)Kcb & 0xFFFFF000);
+    AllocPage = CmpGetAllocPageFromKcb(Kcb);
     
     /* Sanity check */
     ASSERT(AllocPage->FreeCount != CM_KCBS_PER_PAGE);
@@ -134,7 +133,7 @@ SearchKcbList:
                                            FreeListEntry);
             
             /* Get the allocation page */
-            AllocPage = (PCM_ALLOC_PAGE)((ULONG_PTR)CurrentKcb & 0xFFFFF000);
+            AllocPage = CmpGetAllocPageFromKcb(CurrentKcb);
             
             /* Decrease the free count */
             ASSERT(AllocPage->FreeCount != 0);
@@ -168,7 +167,7 @@ SearchKcbList:
                 /* Set it up */
                 CurrentKcb->PrivateAlloc = TRUE;
                 CurrentKcb->DelayCloseEntry = NULL;
-                InsertHeadList(&CmpFreeKCBListHead,
+                InsertTailList(&CmpFreeKCBListHead,
                                &CurrentKcb->FreeListEntry);
             }
             
@@ -178,9 +177,7 @@ SearchKcbList:
     }
 
     /* Allocate a KCB only */
-    CurrentKcb = CmpAllocate(sizeof(CM_KEY_CONTROL_BLOCK),
-                             TRUE,
-                             TAG_CM);
+    CurrentKcb = CmpAllocate(sizeof(CM_KEY_CONTROL_BLOCK), TRUE, TAG_CM);
     if (CurrentKcb)
     {
         /* Set it up */
@@ -219,7 +216,7 @@ SearchList:
         Entry->ListEntry.Flink = Entry->ListEntry.Blink = NULL;
         
         /* Grab the alloc page */
-        AllocPage = (PCM_ALLOC_PAGE)((ULONG_PTR)Entry & 0xFFFFF000);
+        AllocPage = CmpGetAllocPageFromDelayAlloc(Entry);
         
         /* Decrease free entries */
         ASSERT(AllocPage->FreeCount != 0);
@@ -278,7 +275,7 @@ CmpFreeDelayItem(PVOID Entry)
     InsertTailList(&CmpFreeDelayItemsListHead, &AllocEntry->ListEntry);
     
     /* Get the alloc page */
-    AllocPage = (PCM_ALLOC_PAGE)((ULONG_PTR)Entry & 0xFFFFF000);
+    AllocPage = CmpGetAllocPageFromDelayAlloc(Entry);
     ASSERT(AllocPage->FreeCount != CM_DELAYS_PER_PAGE);
     
     /* Increase the number of free items */

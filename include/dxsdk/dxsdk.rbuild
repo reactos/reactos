@@ -3,6 +3,7 @@
 <module name="dxsdk" type="idlheader">
 	<file>amstream.idl</file>
 	<file>austream.idl</file>
+	<file>bdatif.idl</file>
 	<file>ddstream.idl</file>
 	<file>dmodshow.idl</file>
 	<file>mixerocx.idl</file>

@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+<installfile installbase="system32/drivers/etc">quotes</installfile>
 <module name="tcpsvcs" type="win32cui" installbase="system32" installname="tcpsvcs.exe" unicode="yes">
 	<include base="arp">.</include>
 	<library>ws2_32</library>

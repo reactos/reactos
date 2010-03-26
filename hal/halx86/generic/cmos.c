@@ -15,44 +15,9 @@
 
 /* GLOBALS *******************************************************************/
 
-KSPIN_LOCK HalpSystemHardwareLock;
 UCHAR HalpCmosCenturyOffset;
-ULONG HalpSystemHardwareFlags;
 
-/* PRIVATE FUNCTIONS **********************************************************/
-
-VOID
-NTAPI
-HalpAcquireSystemHardwareSpinLock(VOID)
-{
-    ULONG Flags;
-
-    /* Get flags and disable interrupts */
-    Flags = __readeflags();
-    _disable();
-
-    /* Acquire the lock */
-    KxAcquireSpinLock(&HalpSystemHardwareLock);
-
-    /* We have the lock, save the flags now */
-    HalpSystemHardwareFlags = Flags;
-}
-
-VOID
-NTAPI
-HalpReleaseCmosSpinLock(VOID)
-{
-    ULONG Flags;
-
-    /* Get the flags */
-    Flags = HalpSystemHardwareFlags;
-
-    /* Release the lock */
-    KxReleaseSpinLock(&HalpSystemHardwareLock);
-
-    /* Restore the flags */
-    __writeeflags(Flags);
-}
+/* PRIVATE FUNCTIONS *********************************************************/
 
 FORCEINLINE
 UCHAR
