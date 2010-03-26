@@ -58,6 +58,7 @@ KSPIN_LOCK	acpi_bus_event_lock;
 LIST_HEAD(acpi_bus_event_list);
 //DECLARE_WAIT_QUEUE_HEAD(acpi_bus_event_queue);
 KEVENT AcpiEventQueue;
+KDPC event_dpc;
 
 
 static int
@@ -455,6 +456,21 @@ acpi_bus_get_perf_flags (
                                 Event Management
    -------------------------------------------------------------------------- */
 
+void
+acpi_bus_generate_event_dpc(PKDPC Dpc,
+                            PVOID DeferredContext,
+                            PVOID SystemArgument1,
+                            PVOID SystemArgument2)
+{
+	struct acpi_bus_event *event = SystemArgument1;
+	KIRQL OldIrql;
+
+	KeAcquireSpinLock(&acpi_bus_event_lock, &OldIrql);
+	list_add_tail(&event->node, &acpi_bus_event_list);
+	KeReleaseSpinLock(&acpi_bus_event_lock, OldIrql);
+
+	KeSetEvent(&AcpiEventQueue, IO_NO_INCREMENT, FALSE);
+}
 
 int
 acpi_bus_generate_event (
@@ -463,10 +479,8 @@ acpi_bus_generate_event (
 	int			data)
 {
 	struct acpi_bus_event	*event = NULL;
-	//unsigned long		flags = 0;
-	KIRQL OldIrql;
 
-	DPRINT1("acpi_bus_generate_event");
+	DPRINT("acpi_bus_generate_event");
 
 	if (!device)
 		return_VALUE(AE_BAD_PARAMETER);
@@ -484,14 +498,8 @@ acpi_bus_generate_event (
 	event->type = type;
 	event->data = data;
 
-	//spin_lock_irqsave(&acpi_bus_event_lock, flags);
-	KeAcquireSpinLock(&acpi_bus_event_lock, &OldIrql);
-	list_add_tail(&event->node, &acpi_bus_event_list);
-	KeReleaseSpinLock(&acpi_bus_event_lock, OldIrql);
-	//spin_unlock_irqrestore(&acpi_bus_event_lock, flags);
-
-	KeSetEvent(&AcpiEventQueue, IO_NO_INCREMENT, FALSE);
-	//wake_up_interruptible(&acpi_bus_event_queue);
+	if (!KeInsertQueueDpc(&event_dpc, event, NULL))
+	    ExFreePool(event);
 
 	return_VALUE(0);
 }
@@ -506,7 +514,7 @@ acpi_bus_receive_event (
 
 	//DECLARE_WAITQUEUE(wait, current);
 
-	DPRINT1("acpi_bus_receive_event");
+	DPRINT("acpi_bus_receive_event");
 
 	if (!event)
 		return AE_BAD_PARAMETER;
@@ -1153,9 +1161,11 @@ acpi_bus_add (
 	case ACPI_BUS_TYPE_SYSTEM:
 		sprintf(device->pnp.bus_id, "%s", "ACPI");
 		break;
+	case ACPI_BUS_TYPE_POWER_BUTTONF:
 	case ACPI_BUS_TYPE_POWER_BUTTON:
 		sprintf(device->pnp.bus_id, "%s", "PWRF");
 		break;
+	case ACPI_BUS_TYPE_SLEEP_BUTTONF:
 	case ACPI_BUS_TYPE_SLEEP_BUTTON:
 		sprintf(device->pnp.bus_id, "%s", "SLPF");
 		break;
@@ -1588,6 +1598,8 @@ acpi_bus_init (void)
 	ACPI_STATUS		status = AE_OK;
 
 	DPRINT("acpi_bus_init");
+
+        KeInitializeDpc(&event_dpc, acpi_bus_generate_event_dpc, NULL);
 
 	status = AcpiEnableSubsystem(ACPI_FULL_INITIALIZATION);
 	if (ACPI_FAILURE(status)) {

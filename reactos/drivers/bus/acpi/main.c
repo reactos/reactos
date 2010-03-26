@@ -182,6 +182,40 @@ ACPIDispatchCreateClose(
    return STATUS_SUCCESS;
 }
 
+VOID
+NTAPI
+ButtonWaitThread(PVOID Context)
+{
+    PIRP Irp = Context;
+    int result;
+    struct acpi_bus_event event;
+    ULONG ButtonEvent;
+
+    while (ACPI_SUCCESS(result = acpi_bus_receive_event(&event)) &&
+           event.type != ACPI_BUTTON_NOTIFY_STATUS);
+
+    if (!ACPI_SUCCESS(result))
+    {
+       Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+    }
+    else
+    {
+       if (strstr(event.bus_id, "PWRF"))
+           ButtonEvent = SYS_BUTTON_POWER;
+       else if (strstr(event.bus_id, "SLPF"))
+           ButtonEvent = SYS_BUTTON_SLEEP;
+       else
+           ButtonEvent = 0;
+
+       RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, &ButtonEvent, sizeof(ButtonEvent));
+       Irp->IoStatus.Status = STATUS_SUCCESS;
+       Irp->IoStatus.Information = sizeof(ULONG);
+    }
+
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+}
+    
+
 NTSTATUS
 NTAPI
 ACPIDispatchDeviceControl(
@@ -192,6 +226,7 @@ ACPIDispatchDeviceControl(
     NTSTATUS                status = STATUS_NOT_SUPPORTED;
     PCOMMON_DEVICE_DATA     commonData;
     ULONG Caps = 0;
+    HANDLE ThreadHandle;
 
     PAGED_CODE ();
 
@@ -264,7 +299,12 @@ ACPIDispatchDeviceControl(
               }
               break;
 
-           /* TODO: Implement other IOCTLs */
+           case IOCTL_GET_SYS_BUTTON_EVENT:
+              PsCreateSystemThread(&ThreadHandle, THREAD_ALL_ACCESS, 0, 0, 0, ButtonWaitThread, Irp);
+              ZwClose(ThreadHandle);
+
+              status = STATUS_PENDING;
+              break;
 
            default:
               DPRINT1("Unsupported IOCTL: %x\n", irpStack->Parameters.DeviceIoControl.IoControlCode);
@@ -279,6 +319,8 @@ ACPIDispatchDeviceControl(
        Irp->IoStatus.Status = status;
        IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
+    else
+       IoMarkIrpPending(Irp);
 
     return status;
 }
