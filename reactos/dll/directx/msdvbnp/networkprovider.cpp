@@ -8,11 +8,15 @@
  */
 #include "precomp.h"
 
+#define DEVICE_FILTER_MASK (0x80000000)
+
 class CNetworkProvider : public IBaseFilter,
                          public IAMovieSetup,
                          public IBDA_NetworkProvider
 {
 public:
+    typedef std::vector<IUnknown*>DeviceFilterStack;
+
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
     STDMETHODIMP_(ULONG) AddRef()
@@ -58,7 +62,7 @@ public:
     HRESULT STDMETHODCALLTYPE RegisterDeviceFilter(IUnknown *pUnkFilterControl, ULONG *ppvRegisitrationContext);
     HRESULT STDMETHODCALLTYPE UnRegisterDeviceFilter(ULONG pvRegistrationContext);
 
-    CNetworkProvider() : m_Ref(0), m_pGraph(0), m_ReferenceClock(0), m_FilterState(State_Stopped) {m_Pins[0] = 0;};
+    CNetworkProvider(LPCGUID ClassID);
     virtual ~CNetworkProvider(){};
 
 protected:
@@ -67,6 +71,9 @@ protected:
     IReferenceClock * m_ReferenceClock;
     FILTER_STATE m_FilterState;
     IPin * m_Pins[1];
+    GUID m_ClassID;
+    DeviceFilterStack m_DeviceFilters;
+    IScanningTuner * m_Tuner;
 };
 
 HRESULT
@@ -75,6 +82,9 @@ CNetworkProvider::QueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
+    ULONG Index;
+    HRESULT hr;
+
     *Output = NULL;
 
     if (IsEqualGUID(refiid, IID_IUnknown))
@@ -94,7 +104,47 @@ CNetworkProvider::QueryInterface(
         IsEqualGUID(refiid, IID_IScanningTuner))
     {
         // construct scanning tuner
-        return CScanningTunner_fnConstructor(NULL, refiid, Output);
+        if (!m_Tuner)
+        {
+            HRESULT hr = CScanningTunner_fnConstructor(m_DeviceFilters, refiid, (void**)&m_Tuner);
+            if (FAILED(hr))
+                return hr;
+        }
+        m_Tuner->AddRef();
+        *Output = (IUnknown*)m_Tuner;
+
+        return NOERROR;
+    }
+
+    if (IsEqualGUID(refiid, IID_IBDA_NetworkProvider))
+    {
+        *Output = (IBDA_NetworkProvider*)(this);
+        reinterpret_cast<IBDA_NetworkProvider*>(*Output)->AddRef();
+        return NOERROR;
+    }
+
+    for(Index = 0; Index < m_DeviceFilters.size(); Index++)
+    {
+        // get device filter
+        IUnknown *pFilter = m_DeviceFilters[Index];
+
+        if (!pFilter)
+            continue;
+
+        // query for requested interface
+        hr =  pFilter->QueryInterface(refiid, Output);
+        if (SUCCEEDED(hr))
+        {
+#ifdef MSDVBNP_TRACE
+            WCHAR Buffer[MAX_PATH];
+            LPOLESTR lpstr;
+            StringFromCLSID(refiid, &lpstr);
+            swprintf(Buffer, L"CNetworkProvider::QueryInterface: DeviceFilter %lu supports %s !!!\n", Index, lpstr);
+            OutputDebugStringW(Buffer);
+            CoTaskMemFree(lpstr);
+#endif
+            return hr;
+        }
     }
 
     WCHAR Buffer[MAX_PATH];
@@ -103,10 +153,22 @@ CNetworkProvider::QueryInterface(
     swprintf(Buffer, L"CNetworkProvider::QueryInterface: NoInterface for %s !!!\n", lpstr);
     OutputDebugStringW(Buffer);
     CoTaskMemFree(lpstr);
-
+    DebugBreak();
 
     return E_NOINTERFACE;
 }
+
+CNetworkProvider::CNetworkProvider(LPCGUID ClassID) : m_Ref(0),
+                                                      m_pGraph(0), 
+                                                      m_ReferenceClock(0),
+                                                      m_FilterState(State_Stopped),
+                                                      m_DeviceFilters(),
+                                                      m_Tuner(0)
+{
+    m_Pins[0] = 0;
+
+    CopyMemory(&m_ClassID, ClassID, sizeof(GUID));
+};
 
 //-------------------------------------------------------------------
 // IBaseFilter interface
@@ -117,24 +179,29 @@ STDMETHODCALLTYPE
 CNetworkProvider::GetClassID(
     CLSID *pClassID)
 {
-    OutputDebugStringW(L"CNetworkProvider::GetClassID : NotImplemented\n");
-    return E_NOTIMPL;
+    OutputDebugStringW(L"CNetworkProvider::GetClassID\n");
+    CopyMemory(&pClassID, &m_ClassID, sizeof(GUID));
+
+    return S_OK;
 }
 
 HRESULT
 STDMETHODCALLTYPE
 CNetworkProvider::Stop()
 {
-    OutputDebugStringW(L"CNetworkProvider::Stop : NotImplemented\n");
-    return E_NOTIMPL;
+    OutputDebugStringW(L"CNetworkProvider::Stop\n");
+    m_FilterState = State_Stopped;
+    return S_OK;
 }
 
 HRESULT
 STDMETHODCALLTYPE
 CNetworkProvider::Pause()
 {
-    OutputDebugStringW(L"CNetworkProvider::Pause : NotImplemented\n");
-    return E_NOTIMPL;
+    OutputDebugStringW(L"CNetworkProvider::Pause\n");
+
+    m_FilterState = State_Paused;
+    return S_OK;
 }
 
 HRESULT
@@ -142,8 +209,10 @@ STDMETHODCALLTYPE
 CNetworkProvider::Run(
     REFERENCE_TIME tStart)
 {
-    OutputDebugStringW(L"CNetworkProvider::Run : NotImplemented\n");
-    return E_NOTIMPL;
+    OutputDebugStringW(L"CNetworkProvider::Run\n");
+
+    m_FilterState = State_Running;
+    return S_OK;
 }
 
 HRESULT
@@ -166,7 +235,6 @@ CNetworkProvider::SetSyncSource(
         pClock->AddRef();
 
     }
-
     if (m_ReferenceClock)
     {
         m_ReferenceClock->Release();
@@ -227,6 +295,9 @@ CNetworkProvider::QueryFilterInfo(
     pInfo->achName[0] = L'\0';
     pInfo->pGraph = m_pGraph;
 
+    if (m_pGraph)
+        m_pGraph->AddRef();
+
     return S_OK;
 }
 
@@ -257,7 +328,6 @@ STDMETHODCALLTYPE
 CNetworkProvider::QueryVendorInfo(
     LPWSTR *pVendorInfo)
 {
-    OutputDebugStringW(L"CNetworkProvider::QueryVendorInfo : NotImplemented\n");
     return E_NOTIMPL;
 }
 
@@ -336,16 +406,95 @@ CNetworkProvider::RegisterDeviceFilter(
     IUnknown *pUnkFilterControl,
     ULONG *ppvRegisitrationContext)
 {
-    OutputDebugStringW(L"CNetworkProvider::RegisterDeviceFilter : NotImplemented\n");
-    return E_NOTIMPL;
+    HRESULT hr;
+    IBDA_DeviceControl * pDeviceControl = NULL;
+    IBDA_Topology *pTopology = NULL;
+
+    OutputDebugStringW(L"CNetworkProvider::RegisterDeviceFilter\n");
+
+    if (!pUnkFilterControl || !ppvRegisitrationContext)
+    {
+        //invalid argument
+        return E_POINTER;
+    }
+
+    // the filter must support IBDA_DeviceControl and IBDA_Topology
+    hr = pUnkFilterControl->QueryInterface(IID_IBDA_DeviceControl, (void**)&pDeviceControl);
+    if (FAILED(hr))
+    {
+        OutputDebugStringW(L"CNetworkProvider::RegisterDeviceFilter Filter does not support IBDA_DeviceControl\n");
+        return hr;
+    }
+
+    hr = pUnkFilterControl->QueryInterface(IID_IBDA_Topology, (void**)&pTopology);
+    if (FAILED(hr))
+    {
+        pDeviceControl->Release();
+        OutputDebugStringW(L"CNetworkProvider::RegisterDeviceFilter Filter does not support IID_IBDA_Topology\n");
+        return hr;
+    }
+
+    //TODO
+    // analyize device filter
+
+    // increment reference
+    pUnkFilterControl->AddRef();
+
+    // release IBDA_DeviceControl interface
+    pDeviceControl->Release();
+
+    // release IBDA_Topology interface
+    pTopology->Release();
+
+    // store registration ctx
+    *ppvRegisitrationContext = (m_DeviceFilters.size() | DEVICE_FILTER_MASK);
+
+    // store filter
+    m_DeviceFilters.push_back(pUnkFilterControl);
+
+    OutputDebugStringW(L"CNetworkProvider::RegisterDeviceFilter complete\n");
+
+    return S_OK;
 }
 
 HRESULT
 STDMETHODCALLTYPE
 CNetworkProvider::UnRegisterDeviceFilter(ULONG pvRegistrationContext)
 {
-    OutputDebugStringW(L"CNetworkProvider::UnRegisterDeviceFilter : NotImplemented\n");
-    return E_NOTIMPL;
+    ULONG Index;
+    IUnknown * pUnknown;
+
+    OutputDebugStringW(L"CNetworkProvider::UnRegisterDeviceFilter\n");
+
+    if (!(pvRegistrationContext & DEVICE_FILTER_MASK))
+    {
+        // invalid argument
+        return E_INVALIDARG;
+    }
+
+    // get real index
+    Index = pvRegistrationContext & ~DEVICE_FILTER_MASK;
+
+    if (Index >= m_DeviceFilters.size())
+    {
+        // invalid argument
+        return E_INVALIDARG;
+    }
+
+    pUnknown = m_DeviceFilters[Index];
+    if (!pUnknown)
+    {
+        // filter was already de-registered
+        return E_INVALIDARG;
+    }
+
+    // remove from vector
+    m_DeviceFilters[Index] = NULL;
+
+    // release extra reference
+    pUnknown->Release();
+
+    return NOERROR;
 }
 
 HRESULT
@@ -355,7 +504,7 @@ CNetworkProvider_fnConstructor(
     REFIID riid,
     LPVOID * ppv)
 {
-    CNetworkProvider * handler = new CNetworkProvider();
+    CNetworkProvider * handler = new CNetworkProvider(&CLSID_DVBTNetworkProvider);
 
 #ifdef MSDVBNP_TRACE
     WCHAR Buffer[MAX_PATH];

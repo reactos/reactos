@@ -1985,8 +1985,12 @@ COutputPin::CreatePin(
         hr = CreatePinHandle(Medium, Interface, pmt);
         if (FAILED(hr))
         {
-            m_InterfaceHandler->Release();
-            m_InterfaceHandler = InterfaceHandler;
+#ifdef KSPROXY_TRACE
+            WCHAR Buffer[100];
+            swprintf(Buffer, L"COutputPin::CreatePinHandle failed with %lx\n", hr);
+            OutputDebugStringW(Buffer);
+#endif
+            return hr;
         }
 
         if (!m_InterfaceHandler)
@@ -2181,6 +2185,7 @@ COutputPin::CreatePinHandle(
         {
 #ifdef KSPROXY_TRACE
             OutputDebugStringW(L"CInputPin::CreatePinHandle GetSupportedSets failed\n");
+            DebugBreak();
 #endif
             return hr;
         }
@@ -2191,6 +2196,7 @@ COutputPin::CreatePinHandle(
         {
 #ifdef KSPROXY_TRACE
             OutputDebugStringW(L"CInputPin::CreatePinHandle LoadProxyPlugins failed\n");
+            DebugBreak();
 #endif
             return hr;
         }
@@ -2234,6 +2240,8 @@ COutputPin::GetSupportedSets(
 
     Length = NumProperty + NumMethods + NumEvents;
 
+    assert(Length);
+
     // allocate guid buffer
     pGuid = (LPGUID)CoTaskMemAlloc(Length);
     if (!pGuid)
@@ -2256,7 +2264,7 @@ COutputPin::GetSupportedSets(
     Length -= BytesReturned;
 
     // get all methods
-    if (Length)
+    if (Length && NumMethods)
     {
         hr = KsSynchronousDeviceControl(m_hPin, IOCTL_KS_METHOD, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)&pGuid[NumProperty], Length, &BytesReturned);
         if (FAILED(hr))
@@ -2268,7 +2276,7 @@ COutputPin::GetSupportedSets(
     }
 
     // get all events
-    if (Length)
+    if (Length && NumEvents)
     {
         hr = KsSynchronousDeviceControl(m_hPin, IOCTL_KS_ENABLE_EVENT, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)&pGuid[NumProperty+NumMethods], Length, &BytesReturned);
         if (FAILED(hr))
@@ -2330,6 +2338,7 @@ COutputPin::LoadProxyPlugins(
         {
             // store plugin
             m_Plugins.push_back(pUnknown);
+DebugBreak();
         }
         // close key
         RegCloseKey(hSubKey);

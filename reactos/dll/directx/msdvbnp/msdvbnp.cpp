@@ -9,8 +9,6 @@
 
 #include "precomp.h"
 
-const GUID CLSID_DVBTNetworkProvider = {0x216c62df, 0x6d7f, 0x4e9a, {0x85, 0x71, 0x5, 0xf1, 0x4e, 0xdb, 0x76, 0x6a}};
-
 static INTERFACE_TABLE InterfaceTable[] =
 {
     {&CLSID_DVBTNetworkProvider, CNetworkProvider_fnConstructor},

@@ -1629,6 +1629,7 @@ CInputPin::CreatePinHandle(
         {
 #ifdef KSPROXY_TRACE
             OutputDebugStringW(L"CInputPin::CreatePinHandle GetSupportedSets failed\n");
+            DebugBreak();
 #endif
             return hr;
         }
@@ -1639,6 +1640,7 @@ CInputPin::CreatePinHandle(
         {
 #ifdef KSPROXY_TRACE
             OutputDebugStringW(L"CInputPin::CreatePinHandle LoadProxyPlugins failed\n");
+            DebugBreak();
 #endif
             return hr;
         }
@@ -1683,6 +1685,8 @@ CInputPin::GetSupportedSets(
 
     Length = NumProperty + NumMethods + NumEvents;
 
+    assert(Length);
+
     // allocate guid buffer
     pGuid = (LPGUID)CoTaskMemAlloc(Length);
     if (!pGuid)
@@ -1695,6 +1699,12 @@ CInputPin::GetSupportedSets(
     NumMethods /= sizeof(GUID);
     NumEvents /= sizeof(GUID);
 
+#ifdef KSPROXY_TRACE
+    WCHAR Buffer[200];
+    swprintf(Buffer, L"CInputPin::GetSupportedSets NumProperty %lu NumMethods %lu NumEvents %lu\n", NumProperty, NumMethods, NumEvents);
+    OutputDebugStringW(Buffer);
+#endif
+
     // get all properties
     hr = KsSynchronousDeviceControl(m_hPin, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)pGuid, Length, &BytesReturned);
     if (FAILED(hr))
@@ -1705,7 +1715,7 @@ CInputPin::GetSupportedSets(
     Length -= BytesReturned;
 
     // get all methods
-    if (Length)
+    if (Length && NumMethods)
     {
         hr = KsSynchronousDeviceControl(m_hPin, IOCTL_KS_METHOD, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)&pGuid[NumProperty], Length, &BytesReturned);
         if (FAILED(hr))
@@ -1717,7 +1727,7 @@ CInputPin::GetSupportedSets(
     }
 
     // get all events
-    if (Length)
+    if (Length && NumEvents)
     {
         hr = KsSynchronousDeviceControl(m_hPin, IOCTL_KS_ENABLE_EVENT, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)&pGuid[NumProperty+NumMethods], Length, &BytesReturned);
         if (FAILED(hr))
@@ -1727,12 +1737,6 @@ CInputPin::GetSupportedSets(
         }
         Length -= BytesReturned;
     }
-
-#ifdef KSPROXY_TRACE
-    WCHAR Buffer[200];
-    swprintf(Buffer, L"NumProperty %lu NumMethods %lu NumEvents %lu\n", NumProperty, NumMethods, NumEvents);
-    OutputDebugStringW(Buffer);
-#endif
 
     *pOutGuid = pGuid;
     *NumGuids = NumProperty+NumEvents+NumMethods;
@@ -1779,6 +1783,7 @@ CInputPin::LoadProxyPlugins(
         {
             // store plugin
             m_Plugins.push_back(pUnknown);
+DebugBreak();
         }
         // close key
         RegCloseKey(hSubKey);
