@@ -48,12 +48,12 @@ public:
     HRESULT STDMETHODCALLTYPE put_FrequencyMultiplier(ULONG ulMultiplier);
     HRESULT STDMETHODCALLTYPE get_FrequencyMultiplier(ULONG *pulMultiplier);
 
-    CBDAFrequencyFilter(HANDLE hFile, ULONG NodeId) : m_Ref(0), m_hFile(hFile), m_NodeId(NodeId){};
+    CBDAFrequencyFilter(IKsPropertySet * pProperty, ULONG NodeId) : m_Ref(0), m_pProperty(pProperty), m_NodeId(NodeId){};
     virtual ~CBDAFrequencyFilter(){};
 
 protected:
     LONG m_Ref;
-    HANDLE m_hFile;
+    IKsPropertySet * m_pProperty;
     ULONG m_NodeId;
 };
 
@@ -86,6 +86,7 @@ CBDAFrequencyFilter::QueryInterface(
     swprintf(Buffer, L"CControlNode::QueryInterface: NoInterface for %s", lpstr);
     OutputDebugStringW(Buffer);
     CoTaskMemFree(lpstr);
+DebugBreak();
 #endif
 
     return E_NOINTERFACE;
@@ -112,20 +113,16 @@ CBDAFrequencyFilter::put_Frequency(ULONG ulFrequency)
     KSP_NODE Node;
     HRESULT hr;
 
-    ULONG BytesReturned;
-
     // setup request
-    Node.Property.Set = KSPROPSETID_BdaFrequencyFilter;
-    Node.Property.Id = KSPROPERTY_BDA_RF_TUNER_FREQUENCY;
-    Node.Property.Flags = KSPROPERTY_TYPE_SET | KSPROPERTY_TYPE_TOPOLOGY;
     Node.NodeId = m_NodeId;
+    Node.Reserved = 0;
 
     // perform request
-    hr = KsSynchronousDeviceControl(m_hFile, IOCTL_KS_PROPERTY, (PVOID)&Node, sizeof(KSP_NODE), &ulFrequency, sizeof(ULONG), &BytesReturned);
+    hr = m_pProperty->Set(KSPROPSETID_BdaFrequencyFilter, KSPROPERTY_BDA_RF_TUNER_FREQUENCY, &Node.NodeId, sizeof(KSP_NODE)-sizeof(KSPROPERTY), &ulFrequency, sizeof(ULONG));
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDAFrequencyFilter::put_Frequency: m_NodeId %lu hr %lx, BytesReturned %lu\n", m_NodeId, hr, BytesReturned);
+    swprintf(Buffer, L"CBDAFrequencyFilter::put_Frequency: m_NodeId %lu hr %lx\n", m_NodeId, hr);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -145,20 +142,17 @@ CBDAFrequencyFilter::put_Polarity(Polarisation Polarity)
 {
     KSP_NODE Node;
     HRESULT hr;
-    ULONG BytesReturned;
 
     // setup request
-    Node.Property.Set = KSPROPSETID_BdaFrequencyFilter;
-    Node.Property.Id = KSPROPERTY_BDA_RF_TUNER_POLARITY;
-    Node.Property.Flags = KSPROPERTY_TYPE_SET | KSPROPERTY_TYPE_TOPOLOGY;
     Node.NodeId = m_NodeId;
+    Node.Reserved = 0;
 
     // perform request
-    hr = KsSynchronousDeviceControl(m_hFile, IOCTL_KS_PROPERTY, (PVOID)&Node, sizeof(KSP_NODE), &Polarity, sizeof(Polarisation), &BytesReturned);
+    hr = m_pProperty->Set(KSPROPSETID_BdaFrequencyFilter, KSPROPERTY_BDA_RF_TUNER_POLARITY, &Node.NodeId, sizeof(KSP_NODE)-sizeof(KSPROPERTY), &Polarity, sizeof(Polarisation));
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDAFrequencyFilter::put_Polarity: m_NodeId %lu hr %lx, BytesReturned %lu\n", m_NodeId, hr, BytesReturned);
+    swprintf(Buffer, L"CBDAFrequencyFilter::put_Polarity: m_NodeId %lu hr %lx\n", m_NodeId, hr);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -178,20 +172,17 @@ CBDAFrequencyFilter::put_Range(ULONG ulRange)
 {
     KSP_NODE Node;
     HRESULT hr;
-    ULONG BytesReturned;
 
     // setup request
-    Node.Property.Set = KSPROPSETID_BdaFrequencyFilter;
-    Node.Property.Id = KSPROPERTY_BDA_RF_TUNER_RANGE;
-    Node.Property.Flags = KSPROPERTY_TYPE_SET | KSPROPERTY_TYPE_TOPOLOGY;
     Node.NodeId = m_NodeId;
+    Node.Reserved = 0;
 
     // perform request
-    hr = KsSynchronousDeviceControl(m_hFile, IOCTL_KS_PROPERTY, (PVOID)&Node, sizeof(KSP_NODE), &ulRange, sizeof(ULONG), &BytesReturned);
+    hr = m_pProperty->Set(KSPROPSETID_BdaFrequencyFilter, KSPROPERTY_BDA_RF_TUNER_RANGE, &Node.NodeId, sizeof(KSP_NODE)-sizeof(KSPROPERTY), &ulRange, sizeof(ULONG));
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDAFrequencyFilter::put_Polarity: m_NodeId %lu hr %lx, BytesReturned %lu\n", m_NodeId, hr, BytesReturned);
+    swprintf(Buffer, L"CBDAFrequencyFilter::put_Polarity: m_NodeId %lu hr %lx\n", m_NodeId, hr);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -211,20 +202,17 @@ CBDAFrequencyFilter::put_Bandwidth(ULONG ulBandwidth)
 {
     KSP_NODE Node;
     HRESULT hr;
-    ULONG BytesReturned;
 
     // setup request
-    Node.Property.Set = KSPROPSETID_BdaFrequencyFilter;
-    Node.Property.Id = KSPROPERTY_BDA_RF_TUNER_BANDWIDTH;
-    Node.Property.Flags = KSPROPERTY_TYPE_SET | KSPROPERTY_TYPE_TOPOLOGY;
     Node.NodeId = m_NodeId;
+    Node.Reserved = 0;
 
     // perform request
-    hr = KsSynchronousDeviceControl(m_hFile, IOCTL_KS_PROPERTY, (PVOID)&Node, sizeof(KSP_NODE), &ulBandwidth, sizeof(ULONG), &BytesReturned);
+    hr = m_pProperty->Set(KSPROPSETID_BdaFrequencyFilter, KSPROPERTY_BDA_RF_TUNER_BANDWIDTH, &Node.NodeId, sizeof(KSP_NODE)-sizeof(KSPROPERTY), &ulBandwidth, sizeof(ULONG));
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDAFrequencyFilter::put_Bandwidth: m_NodeId %lu hr %lx, BytesReturned %lu\n", m_NodeId, hr, BytesReturned);
+    swprintf(Buffer, L"CBDAFrequencyFilter::put_Bandwidth: m_NodeId %lu hr %lx\n", m_NodeId, hr);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -243,20 +231,17 @@ CBDAFrequencyFilter::put_FrequencyMultiplier(ULONG ulMultiplier)
 {
     KSP_NODE Node;
     HRESULT hr;
-    ULONG BytesReturned;
 
     // setup request
-    Node.Property.Set = KSPROPSETID_BdaFrequencyFilter;
-    Node.Property.Id = KSPROPERTY_BDA_RF_TUNER_FREQUENCY_MULTIPLIER;
-    Node.Property.Flags = KSPROPERTY_TYPE_SET | KSPROPERTY_TYPE_TOPOLOGY;
     Node.NodeId = m_NodeId;
+    Node.Reserved = 0;
 
     // perform request
-    hr = KsSynchronousDeviceControl(m_hFile, IOCTL_KS_PROPERTY, (PVOID)&Node, sizeof(KSP_NODE), &ulMultiplier, sizeof(ULONG), &BytesReturned);
+    hr = m_pProperty->Set(KSPROPSETID_BdaFrequencyFilter, KSPROPERTY_BDA_RF_TUNER_FREQUENCY_MULTIPLIER, &Node.NodeId, sizeof(KSP_NODE)-sizeof(KSPROPERTY), &ulMultiplier, sizeof(ULONG));
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDAFrequencyFilter::put_FrequencyMultiplier: m_NodeId %lu hr %lx, BytesReturned %lu\n", m_NodeId, hr, BytesReturned);
+    swprintf(Buffer, L"CBDAFrequencyFilter::put_FrequencyMultiplier: m_NodeId %lu hr %lx\n", m_NodeId, hr);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -273,13 +258,13 @@ CBDAFrequencyFilter::get_FrequencyMultiplier(ULONG *pulMultiplier)
 HRESULT
 WINAPI
 CBDAFrequencyFilter_fnConstructor(
-    HANDLE hFile,
+    IKsPropertySet* pProperty,
     ULONG NodeId,
     REFIID riid,
     LPVOID * ppv)
 {
     // construct device control
-    CBDAFrequencyFilter * handler = new CBDAFrequencyFilter(hFile, NodeId);
+    CBDAFrequencyFilter * handler = new CBDAFrequencyFilter(pProperty, NodeId);
 
 #ifdef BDAPLGIN_TRACE
     OutputDebugStringW(L"CBDAFrequencyFilter_fnConstructor\n");

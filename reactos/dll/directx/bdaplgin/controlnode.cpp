@@ -34,12 +34,12 @@ public:
         return m_Ref;
     }
 
-    CControlNode(HANDLE hFile, ULONG NodeType, ULONG PinId) : m_Ref(0), m_hFile(hFile), m_NodeType(NodeType), m_PinId(PinId){};
+    CControlNode(IKsPropertySet * pProperty, ULONG NodeType, ULONG PinId) : m_Ref(0), m_pKsProperty(pProperty), m_NodeType(NodeType), m_PinId(PinId){};
     virtual ~CControlNode(){};
 
 protected:
     LONG m_Ref;
-    HANDLE m_hFile;
+    IKsPropertySet * m_pKsProperty;
     ULONG m_NodeType;
     ULONG m_PinId;
 };
@@ -60,19 +60,19 @@ CControlNode::QueryInterface(
     }
     else if(IsEqualGUID(refiid, IID_IBDA_FrequencyFilter))
     {
-        return CBDAFrequencyFilter_fnConstructor(m_hFile, m_NodeType, refiid, Output);
+        return CBDAFrequencyFilter_fnConstructor(m_pKsProperty, m_NodeType, refiid, Output);
     }
     else if(IsEqualGUID(refiid, IID_IBDA_SignalStatistics))
     {
-        return CBDASignalStatistics_fnConstructor(m_hFile, m_NodeType, refiid, Output);
+        return CBDASignalStatistics_fnConstructor(m_pKsProperty, m_NodeType, refiid, Output);
     }
     else if(IsEqualGUID(refiid, IID_IBDA_LNBInfo))
     {
-        return CBDALNBInfo_fnConstructor(m_hFile, m_NodeType, refiid, Output);
+        return CBDALNBInfo_fnConstructor(m_pKsProperty, m_NodeType, refiid, Output);
     }
     else if(IsEqualGUID(refiid, IID_IBDA_DigitalDemodulator))
     {
-        return CBDADigitalDemodulator_fnConstructor(m_hFile, m_NodeType, refiid, Output);
+        return CBDADigitalDemodulator_fnConstructor(m_pKsProperty, m_NodeType, refiid, Output);
     }
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[MAX_PATH];
@@ -99,8 +99,7 @@ CControlNode_fnConstructor(
     WCHAR Buffer[100];
     HRESULT hr;
     IPin * pPin = NULL;
-    IKsObject * pObject = NULL;
-    HANDLE hFile = INVALID_HANDLE_VALUE;
+    IKsPropertySet * pProperty;
 
     // store pin id
     swprintf(Buffer, L"%u", PinId);
@@ -117,26 +116,21 @@ CControlNode_fnConstructor(
         return hr;
     }
 
-    // query IKsObject interface
-    hr = pPin->QueryInterface(IID_IKsObject, (void**)&pObject);
+    // query for IKsPropertySet interface
+    hr = pPin->QueryInterface(IID_IKsPropertySet, (void**)&pProperty);
+    if (FAILED(hr))
+        return hr;
 
 #ifdef BDAPLGIN_TRACE
     swprintf(Buffer, L"CControlNode_fnConstructor get IID_IKsObject status %lx\n", hr);
     OutputDebugStringW(Buffer);
 #endif
 
-    if (SUCCEEDED(hr))
-    {
-        // get pin handle
-        hFile = pObject->KsGetObjectHandle();
-        // release IKsObject interface
-        pObject->Release();
-    }
     // release IPin interface
     pPin->Release();
 
     // construct device control
-    CControlNode * handler = new CControlNode(hFile, NodeType, PinId);
+    CControlNode * handler = new CControlNode(pProperty, NodeType, PinId);
 
 #ifdef BDAPLGIN_TRACE
     OutputDebugStringW(L"CControlNode_fnConstructor\n");

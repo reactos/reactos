@@ -50,12 +50,12 @@ public:
     HRESULT STDMETHODCALLTYPE put_SpectralInversion(SpectralInversion *pSpectralInversion);
     HRESULT STDMETHODCALLTYPE get_SpectralInversion(SpectralInversion *pSpectralInversion);
 
-    CBDADigitalDemodulator(HANDLE hFile, ULONG NodeId) : m_Ref(0), m_hFile(hFile), m_NodeId(NodeId){};
+    CBDADigitalDemodulator(IKsPropertySet * pProperty, ULONG NodeId) : m_Ref(0), m_pProperty(pProperty), m_NodeId(NodeId){};
     ~CBDADigitalDemodulator(){};
 
 protected:
     LONG m_Ref;
-    HANDLE m_hFile;
+    IKsPropertySet * m_pProperty;
     ULONG m_NodeId;
 };
 
@@ -88,6 +88,7 @@ CBDADigitalDemodulator::QueryInterface(
     swprintf(Buffer, L"CBDADigitalDemodulator::QueryInterface: NoInterface for %s", lpstr);
     OutputDebugStringW(Buffer);
     CoTaskMemFree(lpstr);
+DebugBreak();
 #endif
 
     return E_NOINTERFACE;
@@ -100,20 +101,17 @@ CBDADigitalDemodulator::put_ModulationType(ModulationType *pModulationType)
     KSP_NODE Node;
     HRESULT hr;
 
-    ULONG BytesReturned;
-
     // setup request
-    Node.Property.Set = KSPROPSETID_BdaDigitalDemodulator;
-    Node.Property.Id = KSPROPERTY_BDA_MODULATION_TYPE;
-    Node.Property.Flags = KSPROPERTY_TYPE_TOPOLOGY | KSPROPERTY_TYPE_SET;
     Node.NodeId = m_NodeId;
+    Node.Reserved = 0;
 
     // perform request
-    hr = KsSynchronousDeviceControl(m_hFile, IOCTL_KS_PROPERTY, (PVOID)&Node, sizeof(KSP_NODE), pModulationType, sizeof(ModulationType), &BytesReturned);
+    hr = m_pProperty->Set(KSPROPSETID_BdaDigitalDemodulator, KSPROPERTY_BDA_MODULATION_TYPE, &Node.NodeId, sizeof(KSP_NODE)-sizeof(KSPROPERTY), pModulationType, sizeof(ModulationType));
+
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDADigitalDemodulator::put_ModulationType: hr %lx, BytesReturned %lu\n", hr, BytesReturned);
+    swprintf(Buffer, L"CBDADigitalDemodulator::put_ModulationType: hr %lx\n", hr);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -133,20 +131,18 @@ CBDADigitalDemodulator::put_InnerFECMethod(FECMethod *pFECMethod)
 {
     KSP_NODE Node;
     HRESULT hr;
-    ULONG BytesReturned;
 
     // setup request
-    Node.Property.Set = KSPROPSETID_BdaDigitalDemodulator;
-    Node.Property.Id = KSPROPERTY_BDA_INNER_FEC_TYPE;
-    Node.Property.Flags = KSPROPERTY_TYPE_TOPOLOGY | KSPROPERTY_TYPE_SET;
     Node.NodeId = m_NodeId;
+    Node.Reserved = 0;
 
     // perform request
-    hr = KsSynchronousDeviceControl(m_hFile, IOCTL_KS_PROPERTY, (PVOID)&Node, sizeof(KSP_NODE), pFECMethod, sizeof(FECMethod), &BytesReturned);
+    hr = m_pProperty->Set(KSPROPSETID_BdaDigitalDemodulator, KSPROPERTY_BDA_INNER_FEC_TYPE, &Node.NodeId, sizeof(KSP_NODE)-sizeof(KSPROPERTY), pFECMethod, sizeof(FECMethod));
+
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDADigitalDemodulator::put_InnerFECMethod: hr %lx, BytesReturned %lu\n", hr, BytesReturned);
+    swprintf(Buffer, L"CBDADigitalDemodulator::put_InnerFECMethod: hr %lx\n", hr);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -167,20 +163,16 @@ CBDADigitalDemodulator::put_InnerFECRate(BinaryConvolutionCodeRate *pFECRate)
     KSP_NODE Node;
     HRESULT hr;
 
-    ULONG BytesReturned;
-
     // setup request
-    Node.Property.Set = KSPROPSETID_BdaDigitalDemodulator;
-    Node.Property.Id = KSPROPERTY_BDA_INNER_FEC_RATE;
-    Node.Property.Flags = KSPROPERTY_TYPE_TOPOLOGY | KSPROPERTY_TYPE_SET;
     Node.NodeId = m_NodeId;
+    Node.Reserved = 0;
 
     // perform request
-    hr = KsSynchronousDeviceControl(m_hFile, IOCTL_KS_PROPERTY, (PVOID)&Node, sizeof(KSP_NODE), pFECRate, sizeof(BinaryConvolutionCodeRate), &BytesReturned);
+    hr = m_pProperty->Set(KSPROPSETID_BdaDigitalDemodulator, KSPROPERTY_BDA_INNER_FEC_RATE, &Node.NodeId, sizeof(KSP_NODE)-sizeof(KSPROPERTY), pFECRate, sizeof(BinaryConvolutionCodeRate));
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDADigitalDemodulator::put_InnerFECRate: hr %lx, BytesReturned %lu\n", hr, BytesReturned);
+    swprintf(Buffer, L"CBDADigitalDemodulator::put_InnerFECRate: hr %lx\n", hr);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -200,20 +192,17 @@ CBDADigitalDemodulator::put_OuterFECMethod(FECMethod *pFECMethod)
 {
     KSP_NODE Node;
     HRESULT hr;
-    ULONG BytesReturned;
 
     // setup request
-    Node.Property.Set = KSPROPSETID_BdaDigitalDemodulator;
-    Node.Property.Id = KSPROPERTY_BDA_OUTER_FEC_TYPE;
-    Node.Property.Flags = KSPROPERTY_TYPE_TOPOLOGY | KSPROPERTY_TYPE_SET;
     Node.NodeId = m_NodeId;
+    Node.Reserved = 0;
 
     // perform request
-    hr = KsSynchronousDeviceControl(m_hFile, IOCTL_KS_PROPERTY, (PVOID)&Node, sizeof(KSP_NODE), pFECMethod, sizeof(FECMethod), &BytesReturned);
+    hr = m_pProperty->Set(KSPROPSETID_BdaDigitalDemodulator, KSPROPERTY_BDA_OUTER_FEC_TYPE, &Node.NodeId, sizeof(KSP_NODE)-sizeof(KSPROPERTY), pFECMethod, sizeof(FECMethod));
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDADigitalDemodulator::put_OuterFECMethod: hr %lx, BytesReturned %lu\n", hr, BytesReturned);
+    swprintf(Buffer, L"CBDADigitalDemodulator::put_OuterFECMethod: hr %lx\n", hr);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -234,20 +223,16 @@ CBDADigitalDemodulator::put_OuterFECRate(BinaryConvolutionCodeRate *pFECRate)
     KSP_NODE Node;
     HRESULT hr;
 
-    ULONG BytesReturned;
-
     // setup request
-    Node.Property.Set = KSPROPSETID_BdaDigitalDemodulator;
-    Node.Property.Id = KSPROPERTY_BDA_OUTER_FEC_RATE;
-    Node.Property.Flags = KSPROPERTY_TYPE_TOPOLOGY | KSPROPERTY_TYPE_SET;
     Node.NodeId = m_NodeId;
+    Node.Reserved = 0;
 
     // perform request
-    hr = KsSynchronousDeviceControl(m_hFile, IOCTL_KS_PROPERTY, (PVOID)&Node, sizeof(KSP_NODE), pFECRate, sizeof(BinaryConvolutionCodeRate), &BytesReturned);
+    hr = m_pProperty->Set(KSPROPSETID_BdaDigitalDemodulator, KSPROPERTY_BDA_OUTER_FEC_RATE, &Node.NodeId, sizeof(KSP_NODE)-sizeof(KSPROPERTY), pFECRate, sizeof(BinaryConvolutionCodeRate));
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDADigitalDemodulator::put_OuterFECRate: hr %lx, BytesReturned %lu\n", hr, BytesReturned);
+    swprintf(Buffer, L"CBDADigitalDemodulator::put_OuterFECRate: hr %lx\n", hr);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -267,20 +252,17 @@ CBDADigitalDemodulator::put_SymbolRate(ULONG *pSymbolRate)
 {
     KSP_NODE Node;
     HRESULT hr;
-    ULONG BytesReturned;
 
     // setup request
-    Node.Property.Set = KSPROPSETID_BdaDigitalDemodulator;
-    Node.Property.Id = KSPROPERTY_BDA_SYMBOL_RATE;
-    Node.Property.Flags = KSPROPERTY_TYPE_TOPOLOGY | KSPROPERTY_TYPE_SET;
     Node.NodeId = m_NodeId;
+    Node.Reserved = 0;
 
     // perform request
-    hr = KsSynchronousDeviceControl(m_hFile, IOCTL_KS_PROPERTY, (PVOID)&Node, sizeof(KSP_NODE), pSymbolRate, sizeof(ULONG), &BytesReturned);
+    hr = m_pProperty->Set(KSPROPSETID_BdaDigitalDemodulator, KSPROPERTY_BDA_SYMBOL_RATE, &Node.NodeId, sizeof(KSP_NODE)-sizeof(KSPROPERTY), pSymbolRate, sizeof(ULONG));
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDADigitalDemodulator::put_SymbolRate: hr %lx, BytesReturned %lu\n", hr, BytesReturned);
+    swprintf(Buffer, L"CBDADigitalDemodulator::put_SymbolRate: hr %lx\n", hr);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -300,20 +282,17 @@ CBDADigitalDemodulator::put_SpectralInversion(SpectralInversion *pSpectralInvers
 {
     KSP_NODE Node;
     HRESULT hr;
-    ULONG BytesReturned;
 
     // setup request
-    Node.Property.Set = KSPROPSETID_BdaDigitalDemodulator;
-    Node.Property.Id = KSPROPERTY_BDA_SPECTRAL_INVERSION;
-    Node.Property.Flags = KSPROPERTY_TYPE_TOPOLOGY | KSPROPERTY_TYPE_SET;
     Node.NodeId = m_NodeId;
+    Node.Reserved = 0;
 
     // perform request
-    hr = KsSynchronousDeviceControl(m_hFile, IOCTL_KS_PROPERTY, (PVOID)&Node, sizeof(KSP_NODE), pSpectralInversion, sizeof(SpectralInversion), &BytesReturned);
+    hr = m_pProperty->Set(KSPROPSETID_BdaDigitalDemodulator, KSPROPERTY_BDA_SPECTRAL_INVERSION, &Node.NodeId, sizeof(KSP_NODE)-sizeof(KSPROPERTY), pSpectralInversion, sizeof(SpectralInversion));
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDADigitalDemodulator::put_SpectralInversion: hr %lx, BytesReturned %lu\n", hr, BytesReturned);
+    swprintf(Buffer, L"CBDADigitalDemodulator::put_SpectralInversion: hr %lx\n", hr);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -331,13 +310,13 @@ CBDADigitalDemodulator::get_SpectralInversion(SpectralInversion *pSpectralInvers
 HRESULT
 WINAPI
 CBDADigitalDemodulator_fnConstructor(
-    HANDLE hFile,
+    IKsPropertySet * pProperty,
     ULONG NodeId,
     REFIID riid,
     LPVOID * ppv)
 {
     // construct device control
-    CBDADigitalDemodulator * handler = new CBDADigitalDemodulator(hFile, NodeId);
+    CBDADigitalDemodulator * handler = new CBDADigitalDemodulator(pProperty, NodeId);
 
 #ifdef BDAPLGIN_TRACE
     OutputDebugStringW(L"CBDADigitalDemodulator_fnConstructor\n");

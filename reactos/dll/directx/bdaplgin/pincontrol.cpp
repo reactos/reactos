@@ -76,7 +76,7 @@ CBDAPinControl::QueryInterface(
         reinterpret_cast<IBDA_PinControl*>(*Output)->AddRef();
         return NOERROR;
     }
-
+DebugBreak();
     return E_NOINTERFACE;
 }
 //-------------------------------------------------------------------
@@ -252,6 +252,9 @@ CBDAPinControl_fnConstructor(
     if (!pUnkOuter)
         return E_POINTER;
 
+    OutputDebugStringW(L"CBDAPinControl_fnConstructor\n");
+    //DebugBreak();
+
     // query for IKsObject interface
     hr = pUnkOuter->QueryInterface(IID_IKsObject, (void**)&pObject);
 
@@ -352,6 +355,13 @@ CBDAPinControl_fnConstructor(
                         // expected file handle
                         hr = E_UNEXPECTED;
                     }
+                }
+                else
+                {
+                    WCHAR Buffer[100];
+                    swprintf(Buffer, L"CBDAPinControl_fnConstructor failed to register filter with %lx\n", hr);
+                    OutputDebugStringW(Buffer);
+                    DebugBreak();
                 }
             }
         }
