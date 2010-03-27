@@ -1,3 +1,4 @@
+$if (_WDMDDK_)
 /******************************************************************************
  *                            Power Management Support Types                  *
  ******************************************************************************/
@@ -408,5 +409,14 @@ NTSTATUS
   IN ULONG ValueLength,
   IN OUT PVOID Context OPTIONAL);
 typedef POWER_SETTING_CALLBACK *PPOWER_SETTING_CALLBACK;
+$endif (_WDMDDK_)
+$if (_NTIFS_)
 
+#define PO_CB_SYSTEM_POWER_POLICY       0
+#define PO_CB_AC_STATUS                 1
+#define PO_CB_BUTTON_COLLISION          2
+#define PO_CB_SYSTEM_STATE_LOCK         3
+#define PO_CB_LID_SWITCH_STATE          4
+#define PO_CB_PROCESSOR_POWER_POLICY    5
+$endif (_NTIFS_)
 

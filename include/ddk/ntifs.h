@@ -3,10 +3,11 @@
  *
  * Windows NT Filesystem Driver Developer Kit
  *
- * This file is part of the w32api package.
+ * This file is part of the ReactOS DDK package.
  *
  * Contributors:
- *   Created by Bo Brantén <bosse@acc.umu.se>
+ *   Amine Khaldi
+ *   Timo Kreuzer (timo.kreuzer@reactos.org)
  *
  * THIS SOFTWARE IS NOT COPYRIGHTED
  *
@@ -36,7 +37,8 @@ extern "C" {
 #include <ntnls.h>
 #include <ntstatus.h>
 #include <bugcodes.h>
-/* FIXME : #include <ntiologc.h> */
+#include <ntiologc.h>
+
 
 #ifndef FlagOn
 #define FlagOn(_F,_SF)        ((_F) & (_SF))
@@ -58,6 +60,9 @@ typedef UNICODE_STRING LSA_UNICODE_STRING, *PLSA_UNICODE_STRING;
 typedef STRING LSA_STRING, *PLSA_STRING;
 typedef OBJECT_ATTRIBUTES LSA_OBJECT_ATTRIBUTES, *PLSA_OBJECT_ATTRIBUTES;
 
+/******************************************************************************
+ *                            Security Manager Types                          *
+ ******************************************************************************/
 #ifndef SID_IDENTIFIER_AUTHORITY_DEFINED
 #define SID_IDENTIFIER_AUTHORITY_DEFINED
 typedef struct _SID_IDENTIFIER_AUTHORITY {
@@ -709,6 +714,1179 @@ typedef enum _MANDATORY_LEVEL {
   MandatoryLevelCount
 } MANDATORY_LEVEL, *PMANDATORY_LEVEL;
 
+#define TOKEN_HAS_TRAVERSE_PRIVILEGE    0x0001
+#define TOKEN_HAS_BACKUP_PRIVILEGE      0x0002
+#define TOKEN_HAS_RESTORE_PRIVILEGE     0x0004
+#define TOKEN_WRITE_RESTRICTED          0x0008
+#define TOKEN_IS_RESTRICTED             0x0010
+#define TOKEN_SESSION_NOT_REFERENCED    0x0020
+#define TOKEN_SANDBOX_INERT             0x0040
+#define TOKEN_HAS_IMPERSONATE_PRIVILEGE 0x0080
+#define SE_BACKUP_PRIVILEGES_CHECKED    0x0100
+#define TOKEN_VIRTUALIZE_ALLOWED        0x0200
+#define TOKEN_VIRTUALIZE_ENABLED        0x0400
+#define TOKEN_IS_FILTERED               0x0800
+#define TOKEN_UIACCESS                  0x1000
+#define TOKEN_NOT_LOW                   0x2000
+
+typedef struct _SE_EXPORTS {
+  LUID SeCreateTokenPrivilege;
+  LUID SeAssignPrimaryTokenPrivilege;
+  LUID SeLockMemoryPrivilege;
+  LUID SeIncreaseQuotaPrivilege;
+  LUID SeUnsolicitedInputPrivilege;
+  LUID SeTcbPrivilege;
+  LUID SeSecurityPrivilege;
+  LUID SeTakeOwnershipPrivilege;
+  LUID SeLoadDriverPrivilege;
+  LUID SeCreatePagefilePrivilege;
+  LUID SeIncreaseBasePriorityPrivilege;
+  LUID SeSystemProfilePrivilege;
+  LUID SeSystemtimePrivilege;
+  LUID SeProfileSingleProcessPrivilege;
+  LUID SeCreatePermanentPrivilege;
+  LUID SeBackupPrivilege;
+  LUID SeRestorePrivilege;
+  LUID SeShutdownPrivilege;
+  LUID SeDebugPrivilege;
+  LUID SeAuditPrivilege;
+  LUID SeSystemEnvironmentPrivilege;
+  LUID SeChangeNotifyPrivilege;
+  LUID SeRemoteShutdownPrivilege;
+  PSID SeNullSid;
+  PSID SeWorldSid;
+  PSID SeLocalSid;
+  PSID SeCreatorOwnerSid;
+  PSID SeCreatorGroupSid;
+  PSID SeNtAuthoritySid;
+  PSID SeDialupSid;
+  PSID SeNetworkSid;
+  PSID SeBatchSid;
+  PSID SeInteractiveSid;
+  PSID SeLocalSystemSid;
+  PSID SeAliasAdminsSid;
+  PSID SeAliasUsersSid;
+  PSID SeAliasGuestsSid;
+  PSID SeAliasPowerUsersSid;
+  PSID SeAliasAccountOpsSid;
+  PSID SeAliasSystemOpsSid;
+  PSID SeAliasPrintOpsSid;
+  PSID SeAliasBackupOpsSid;
+  PSID SeAuthenticatedUsersSid;
+  PSID SeRestrictedSid;
+  PSID SeAnonymousLogonSid;
+  LUID SeUndockPrivilege;
+  LUID SeSyncAgentPrivilege;
+  LUID SeEnableDelegationPrivilege;
+  PSID SeLocalServiceSid;
+  PSID SeNetworkServiceSid;
+  LUID SeManageVolumePrivilege;
+  LUID SeImpersonatePrivilege;
+  LUID SeCreateGlobalPrivilege;
+  LUID SeTrustedCredManAccessPrivilege;
+  LUID SeRelabelPrivilege;
+  LUID SeIncreaseWorkingSetPrivilege;
+  LUID SeTimeZonePrivilege;
+  LUID SeCreateSymbolicLinkPrivilege;
+  PSID SeIUserSid;
+  PSID SeUntrustedMandatorySid;
+  PSID SeLowMandatorySid;
+  PSID SeMediumMandatorySid;
+  PSID SeHighMandatorySid;
+  PSID SeSystemMandatorySid;
+  PSID SeOwnerRightsSid;
+} SE_EXPORTS, *PSE_EXPORTS;
+
+typedef NTSTATUS
+(NTAPI *PSE_LOGON_SESSION_TERMINATED_ROUTINE)(
+  IN PLUID LogonId);
+/******************************************************************************
+ *                           Runtime Library Types                            *
+ ******************************************************************************/
+
+
+#define RTL_SYSTEM_VOLUME_INFORMATION_FOLDER    L"System Volume Information"
+
+typedef PVOID
+(NTAPI *PRTL_ALLOCATE_STRING_ROUTINE)(
+  IN SIZE_T NumberOfBytes);
+
+#if _WIN32_WINNT >= 0x0600
+typedef PVOID
+(NTAPI *PRTL_REALLOCATE_STRING_ROUTINE)(
+  IN SIZE_T NumberOfBytes,
+  IN PVOID Buffer);
+#endif
+
+typedef VOID
+(NTAPI *PRTL_FREE_STRING_ROUTINE)(
+  IN PVOID Buffer);
+
+extern const PRTL_ALLOCATE_STRING_ROUTINE RtlAllocateStringRoutine;
+extern const PRTL_FREE_STRING_ROUTINE RtlFreeStringRoutine;
+
+#if _WIN32_WINNT >= 0x0600
+extern const PRTL_REALLOCATE_STRING_ROUTINE RtlReallocateStringRoutine;
+#endif
+
+typedef NTSTATUS
+(NTAPI * PRTL_HEAP_COMMIT_ROUTINE) (
+  IN PVOID Base,
+  IN OUT PVOID *CommitAddress,
+  IN OUT PSIZE_T CommitSize);
+
+typedef struct _RTL_HEAP_PARAMETERS {
+  ULONG Length;
+  SIZE_T SegmentReserve;
+  SIZE_T SegmentCommit;
+  SIZE_T DeCommitFreeBlockThreshold;
+  SIZE_T DeCommitTotalFreeThreshold;
+  SIZE_T MaximumAllocationSize;
+  SIZE_T VirtualMemoryThreshold;
+  SIZE_T InitialCommit;
+  SIZE_T InitialReserve;
+  PRTL_HEAP_COMMIT_ROUTINE CommitRoutine;
+  SIZE_T Reserved[2];
+} RTL_HEAP_PARAMETERS, *PRTL_HEAP_PARAMETERS;
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+typedef struct _GENERATE_NAME_CONTEXT {
+  USHORT Checksum;
+  BOOLEAN CheckSumInserted;
+  UCHAR NameLength;
+  WCHAR NameBuffer[8];
+  ULONG ExtensionLength;
+  WCHAR ExtensionBuffer[4];
+  ULONG LastIndexValue;
+} GENERATE_NAME_CONTEXT, *PGENERATE_NAME_CONTEXT;
+
+typedef struct _PREFIX_TABLE_ENTRY {
+  CSHORT NodeTypeCode;
+  CSHORT NameLength;
+  struct _PREFIX_TABLE_ENTRY *NextPrefixTree;
+  RTL_SPLAY_LINKS Links;
+  PSTRING Prefix;
+} PREFIX_TABLE_ENTRY, *PPREFIX_TABLE_ENTRY;
+
+typedef struct _PREFIX_TABLE {
+  CSHORT NodeTypeCode;
+  CSHORT NameLength;
+  PPREFIX_TABLE_ENTRY NextPrefixTree;
+} PREFIX_TABLE, *PPREFIX_TABLE;
+
+typedef struct _UNICODE_PREFIX_TABLE_ENTRY {
+  CSHORT NodeTypeCode;
+  CSHORT NameLength;
+  struct _UNICODE_PREFIX_TABLE_ENTRY *NextPrefixTree;
+  struct _UNICODE_PREFIX_TABLE_ENTRY *CaseMatch;
+  RTL_SPLAY_LINKS Links;
+  PUNICODE_STRING Prefix;
+} UNICODE_PREFIX_TABLE_ENTRY, *PUNICODE_PREFIX_TABLE_ENTRY;
+
+typedef struct _UNICODE_PREFIX_TABLE {
+  CSHORT NodeTypeCode;
+  CSHORT NameLength;
+  PUNICODE_PREFIX_TABLE_ENTRY NextPrefixTree;
+  PUNICODE_PREFIX_TABLE_ENTRY LastNextEntry;
+} UNICODE_PREFIX_TABLE, *PUNICODE_PREFIX_TABLE;
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+typedef struct _COMPRESSED_DATA_INFO {
+  USHORT CompressionFormatAndEngine;
+  UCHAR CompressionUnitShift;
+  UCHAR ChunkShift;
+  UCHAR ClusterShift;
+  UCHAR Reserved;
+  USHORT NumberOfChunks;
+  ULONG CompressedChunkSizes[ANYSIZE_ARRAY];
+} COMPRESSED_DATA_INFO, *PCOMPRESSED_DATA_INFO;
+#endif
+/******************************************************************************
+ *                         Runtime Library Functions                          *
+ ******************************************************************************/
+
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlAllocateHeap(
+  IN HANDLE HeapHandle,
+  IN ULONG Flags OPTIONAL,
+  IN SIZE_T Size);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlFreeHeap(
+  IN PVOID HeapHandle,
+  IN ULONG Flags OPTIONAL,
+  IN PVOID BaseAddress);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlCaptureContext(
+  OUT PCONTEXT ContextRecord);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlRandom(
+  IN OUT PULONG Seed);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlCreateUnicodeString(
+  OUT PUNICODE_STRING DestinationString,
+  IN PCWSTR SourceString);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlAppendStringToString(
+  IN OUT PSTRING Destination,
+  IN const STRING *Source);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlOemStringToUnicodeString(
+  IN OUT PUNICODE_STRING DestinationString,
+  IN PCOEM_STRING SourceString,
+  IN BOOLEAN AllocateDestinationString);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlUnicodeStringToOemString(
+  IN OUT POEM_STRING DestinationString,
+  IN PCUNICODE_STRING SourceString,
+  IN BOOLEAN AllocateDestinationString);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlUpcaseUnicodeStringToOemString(
+  IN OUT POEM_STRING DestinationString,
+  IN PCUNICODE_STRING SourceString,
+  IN BOOLEAN AllocateDestinationString);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlOemStringToCountedUnicodeString(
+  IN OUT PUNICODE_STRING DestinationString,
+  IN PCOEM_STRING SourceString,
+  IN BOOLEAN AllocateDestinationString);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlUnicodeStringToCountedOemString(
+  IN OUT POEM_STRING DestinationString,
+  IN PCUNICODE_STRING SourceString,
+  IN BOOLEAN AllocateDestinationString);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlUpcaseUnicodeStringToCountedOemString(
+  IN OUT POEM_STRING DestinationString,
+  IN PCUNICODE_STRING SourceString,
+  IN BOOLEAN AllocateDestinationString);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlDowncaseUnicodeString(
+  IN OUT PUNICODE_STRING UniDest,
+  IN PCUNICODE_STRING UniSource,
+  IN BOOLEAN AllocateDestinationString);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlFreeOemString (
+  IN OUT POEM_STRING OemString);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlxUnicodeStringToOemSize(
+  IN PCUNICODE_STRING UnicodeString);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlxOemStringToUnicodeSize(
+  IN PCOEM_STRING OemString);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlMultiByteToUnicodeN(
+  OUT PWCH UnicodeString,
+  IN ULONG MaxBytesInUnicodeString,
+  OUT PULONG BytesInUnicodeString OPTIONAL,
+  IN const CHAR *MultiByteString,
+  IN ULONG BytesInMultiByteString);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlMultiByteToUnicodeSize(
+  OUT PULONG BytesInUnicodeString,
+  IN const CHAR *MultiByteString,
+  IN ULONG BytesInMultiByteString);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlUnicodeToMultiByteSize(
+  OUT PULONG BytesInMultiByteString,
+  IN PCWCH UnicodeString,
+  IN ULONG BytesInUnicodeString);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlUnicodeToMultiByteN(
+  OUT PCHAR MultiByteString,
+  IN ULONG MaxBytesInMultiByteString,
+  OUT PULONG BytesInMultiByteString OPTIONAL,
+  IN PWCH UnicodeString,
+  IN ULONG BytesInUnicodeString);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlUpcaseUnicodeToMultiByteN(
+  OUT PCHAR MultiByteString,
+  IN ULONG MaxBytesInMultiByteString,
+  OUT PULONG BytesInMultiByteString OPTIONAL,
+  IN PCWCH UnicodeString,
+  IN ULONG BytesInUnicodeString);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlOemToUnicodeN(
+  OUT PWSTR UnicodeString,
+  IN ULONG MaxBytesInUnicodeString,
+  OUT PULONG BytesInUnicodeString OPTIONAL,
+  IN PCCH OemString,
+  IN ULONG BytesInOemString);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlUnicodeToOemN(
+  OUT PCHAR OemString,
+  IN ULONG MaxBytesInOemString,
+  OUT PULONG BytesInOemString OPTIONAL,
+  IN PCWCH UnicodeString,
+  IN ULONG BytesInUnicodeString);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlUpcaseUnicodeToOemN(
+  OUT PCHAR OemString,
+  IN ULONG MaxBytesInOemString,
+  OUT PULONG BytesInOemString OPTIONAL,
+  IN PCWCH UnicodeString,
+  IN ULONG BytesInUnicodeString);
+
+#if (NTDDI_VERSION >= NTDDI_VISTASP1)
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlGenerate8dot3Name(
+  IN PCUNICODE_STRING Name,
+  IN BOOLEAN AllowExtendedCharacters,
+  IN OUT PGENERATE_NAME_CONTEXT Context,
+  IN OUT PUNICODE_STRING Name8dot3);
+#else
+NTSYSAPI
+VOID
+NTAPI
+RtlGenerate8dot3Name(
+  IN PCUNICODE_STRING Name,
+  IN BOOLEAN AllowExtendedCharacters,
+  IN OUT PGENERATE_NAME_CONTEXT Context,
+  IN OUT PUNICODE_STRING Name8dot3);
+#endif
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlIsNameLegalDOS8Dot3(
+  IN PCUNICODE_STRING Name,
+  IN OUT POEM_STRING OemName OPTIONAL,
+  IN OUT PBOOLEAN NameContainsSpaces OPTIONAL);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlIsValidOemCharacter(
+  IN OUT PWCHAR Char);
+
+NTSYSAPI
+VOID
+NTAPI
+PfxInitialize(
+  OUT PPREFIX_TABLE PrefixTable);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+PfxInsertPrefix(
+  IN PPREFIX_TABLE PrefixTable,
+  IN PSTRING Prefix,
+  OUT PPREFIX_TABLE_ENTRY PrefixTableEntry);
+
+NTSYSAPI
+VOID
+NTAPI
+PfxRemovePrefix(
+  IN PPREFIX_TABLE PrefixTable,
+  IN PPREFIX_TABLE_ENTRY PrefixTableEntry);
+
+NTSYSAPI
+PPREFIX_TABLE_ENTRY
+NTAPI
+PfxFindPrefix(
+  IN PPREFIX_TABLE PrefixTable,
+  IN PSTRING FullName);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlInitializeUnicodePrefix(
+  OUT PUNICODE_PREFIX_TABLE PrefixTable);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlInsertUnicodePrefix(
+  IN PUNICODE_PREFIX_TABLE PrefixTable,
+  IN PUNICODE_STRING Prefix,
+  OUT PUNICODE_PREFIX_TABLE_ENTRY PrefixTableEntry);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlRemoveUnicodePrefix(
+  IN PUNICODE_PREFIX_TABLE PrefixTable,
+  IN PUNICODE_PREFIX_TABLE_ENTRY PrefixTableEntry);
+
+NTSYSAPI
+PUNICODE_PREFIX_TABLE_ENTRY
+NTAPI
+RtlFindUnicodePrefix(
+  IN PUNICODE_PREFIX_TABLE PrefixTable,
+  IN PUNICODE_STRING FullName,
+  IN ULONG CaseInsensitiveIndex);
+
+NTSYSAPI
+PUNICODE_PREFIX_TABLE_ENTRY
+NTAPI
+RtlNextUnicodePrefix(
+  IN PUNICODE_PREFIX_TABLE PrefixTable,
+  IN BOOLEAN Restart);
+
+NTSYSAPI
+SIZE_T
+NTAPI
+RtlCompareMemoryUlong(
+  IN PVOID Source,
+  IN SIZE_T Length,
+  IN ULONG Pattern);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlTimeToSecondsSince1980(
+  IN PLARGE_INTEGER Time,
+  OUT PULONG ElapsedSeconds);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlSecondsSince1980ToTime(
+  IN ULONG ElapsedSeconds,
+  OUT PLARGE_INTEGER Time);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlTimeToSecondsSince1970(
+  IN PLARGE_INTEGER Time,
+  OUT PULONG ElapsedSeconds);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlSecondsSince1970ToTime(
+  IN ULONG ElapsedSeconds,
+  OUT PLARGE_INTEGER Time);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlValidSid(
+  IN PSID Sid);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlEqualSid(
+  IN PSID Sid1,
+  IN PSID Sid2);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlEqualPrefixSid(
+  IN PSID Sid1,
+  IN PSID Sid2);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlLengthRequiredSid(
+  IN ULONG SubAuthorityCount);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlFreeSid(
+  IN PSID Sid);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlAllocateAndInitializeSid(
+  IN PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
+  IN UCHAR SubAuthorityCount,
+  IN ULONG SubAuthority0,
+  IN ULONG SubAuthority1,
+  IN ULONG SubAuthority2,
+  IN ULONG SubAuthority3,
+  IN ULONG SubAuthority4,
+  IN ULONG SubAuthority5,
+  IN ULONG SubAuthority6,
+  IN ULONG SubAuthority7,
+  OUT PSID *Sid);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlInitializeSid(
+  OUT PSID Sid,
+  IN PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
+  IN UCHAR SubAuthorityCount);
+
+NTSYSAPI
+PULONG
+NTAPI
+RtlSubAuthoritySid(
+  IN PSID Sid,
+  IN ULONG SubAuthority);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlLengthSid(
+  IN PSID Sid);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlCopySid(
+  IN ULONG Length,
+  IN PSID Destination,
+  IN PSID Source);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlConvertSidToUnicodeString(
+  IN OUT PUNICODE_STRING UnicodeString,
+  IN PSID Sid,
+  IN BOOLEAN AllocateDestinationString);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlCopyLuid(
+  OUT PLUID DestinationLuid,
+  IN PLUID SourceLuid);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlCreateAcl(
+  OUT PACL Acl,
+  IN ULONG AclLength,
+  IN ULONG AclRevision);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlAddAce(
+  IN OUT PACL Acl,
+  IN ULONG AceRevision,
+  IN ULONG StartingAceIndex,
+  IN PVOID AceList,
+  IN ULONG AceListLength);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlDeleteAce(
+  IN OUT PACL Acl,
+  IN ULONG AceIndex);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlGetAce(
+  IN PACL Acl,
+  IN ULONG AceIndex,
+  OUT PVOID *Ace);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlAddAccessAllowedAce(
+  IN OUT PACL Acl,
+  IN ULONG AceRevision,
+  IN ACCESS_MASK AccessMask,
+  IN PSID Sid);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlAddAccessAllowedAceEx(
+  IN OUT PACL Acl,
+  IN ULONG AceRevision,
+  IN ULONG AceFlags,
+  IN ACCESS_MASK AccessMask,
+  IN PSID Sid);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlCreateSecurityDescriptorRelative(
+  OUT PISECURITY_DESCRIPTOR_RELATIVE SecurityDescriptor,
+  IN ULONG Revision);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlGetDaclSecurityDescriptor(
+  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+  OUT PBOOLEAN DaclPresent,
+  OUT PACL *Dacl,
+  OUT PBOOLEAN DaclDefaulted);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlSetOwnerSecurityDescriptor(
+  IN OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
+  IN PSID Owner OPTIONAL,
+  IN BOOLEAN OwnerDefaulted);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlGetOwnerSecurityDescriptor(
+  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+  OUT PSID *Owner,
+  OUT PBOOLEAN OwnerDefaulted);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlNtStatusToDosError(
+  IN NTSTATUS Status);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlCustomCPToUnicodeN(
+  IN PCPTABLEINFO CustomCP,
+  OUT PWCH UnicodeString,
+  IN ULONG MaxBytesInUnicodeString,
+  OUT PULONG BytesInUnicodeString OPTIONAL,
+  IN PCH CustomCPString,
+  IN ULONG BytesInCustomCPString);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlUnicodeToCustomCPN(
+  IN PCPTABLEINFO CustomCP,
+  OUT PCH CustomCPString,
+  IN ULONG MaxBytesInCustomCPString,
+  OUT PULONG BytesInCustomCPString OPTIONAL,
+  IN PWCH UnicodeString,
+  IN ULONG BytesInUnicodeString);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlUpcaseUnicodeToCustomCPN(
+  IN PCPTABLEINFO CustomCP,
+  OUT PCH CustomCPString,
+  IN ULONG MaxBytesInCustomCPString,
+  OUT PULONG BytesInCustomCPString OPTIONAL,
+  IN PWCH UnicodeString,
+  IN ULONG BytesInUnicodeString);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlInitCodePageTable(
+  IN PUSHORT TableBase,
+  IN OUT PCPTABLEINFO CodePageTable);
+
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+
+
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlCreateHeap(
+  IN ULONG Flags,
+  IN PVOID HeapBase OPTIONAL,
+  IN SIZE_T ReserveSize OPTIONAL,
+  IN SIZE_T CommitSize OPTIONAL,
+  IN PVOID Lock OPTIONAL,
+  IN PRTL_HEAP_PARAMETERS Parameters OPTIONAL);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlDestroyHeap(
+  IN PVOID HeapHandle);
+
+NTSYSAPI
+USHORT
+NTAPI
+RtlCaptureStackBackTrace(
+  IN ULONG FramesToSkip,
+  IN ULONG FramesToCapture,
+  OUT PVOID *BackTrace,
+  OUT PULONG BackTraceHash OPTIONAL);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlRandomEx(
+  IN OUT PULONG Seed);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlInitUnicodeStringEx(
+  OUT PUNICODE_STRING DestinationString,
+  IN PCWSTR SourceString OPTIONAL);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlValidateUnicodeString(
+  IN ULONG Flags,
+  IN PCUNICODE_STRING String);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlDuplicateUnicodeString(
+  IN ULONG Flags,
+  IN PCUNICODE_STRING SourceString,
+  OUT PUNICODE_STRING DestinationString);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlGetCompressionWorkSpaceSize(
+  IN USHORT CompressionFormatAndEngine,
+  OUT PULONG CompressBufferWorkSpaceSize,
+  OUT PULONG CompressFragmentWorkSpaceSize);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlCompressBuffer(
+  IN USHORT CompressionFormatAndEngine,
+  IN PUCHAR UncompressedBuffer,
+  IN ULONG UncompressedBufferSize,
+  OUT PUCHAR CompressedBuffer,
+  IN ULONG CompressedBufferSize,
+  IN ULONG UncompressedChunkSize,
+  OUT PULONG FinalCompressedSize,
+  IN PVOID WorkSpace);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlDecompressBuffer(
+  IN USHORT CompressionFormat,
+  OUT PUCHAR UncompressedBuffer,
+  IN ULONG UncompressedBufferSize,
+  IN PUCHAR CompressedBuffer,
+  IN ULONG CompressedBufferSize,
+  OUT PULONG FinalUncompressedSize);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlDecompressFragment(
+  IN USHORT CompressionFormat,
+  OUT PUCHAR UncompressedFragment,
+  IN ULONG UncompressedFragmentSize,
+  IN PUCHAR CompressedBuffer,
+  IN ULONG CompressedBufferSize,
+  IN ULONG FragmentOffset,
+  OUT PULONG FinalUncompressedSize,
+  IN PVOID WorkSpace);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlDescribeChunk(
+  IN USHORT CompressionFormat,
+  IN OUT PUCHAR *CompressedBuffer,
+  IN PUCHAR EndOfCompressedBufferPlus1,
+  OUT PUCHAR *ChunkBuffer,
+  OUT PULONG ChunkSize);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlReserveChunk(
+  IN USHORT CompressionFormat,
+  IN OUT PUCHAR *CompressedBuffer,
+  IN PUCHAR EndOfCompressedBufferPlus1,
+  OUT PUCHAR *ChunkBuffer,
+  IN ULONG ChunkSize);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlDecompressChunks(
+  OUT PUCHAR UncompressedBuffer,
+  IN ULONG UncompressedBufferSize,
+  IN PUCHAR CompressedBuffer,
+  IN ULONG CompressedBufferSize,
+  IN PUCHAR CompressedTail,
+  IN ULONG CompressedTailSize,
+  IN PCOMPRESSED_DATA_INFO CompressedDataInfo);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlCompressChunks(
+  IN PUCHAR UncompressedBuffer,
+  IN ULONG UncompressedBufferSize,
+  OUT PUCHAR CompressedBuffer,
+  IN ULONG CompressedBufferSize,
+  IN OUT PCOMPRESSED_DATA_INFO CompressedDataInfo,
+  IN ULONG CompressedDataInfoLength,
+  IN PVOID WorkSpace);
+
+NTSYSAPI
+PSID_IDENTIFIER_AUTHORITY
+NTAPI
+RtlIdentifierAuthoritySid(
+  IN PSID Sid);
+
+NTSYSAPI
+PUCHAR
+NTAPI
+RtlSubAuthorityCountSid(
+  IN PSID Sid);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlNtStatusToDosErrorNoTeb(
+  IN NTSTATUS Status);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlCreateSystemVolumeInformationFolder(
+  IN PCUNICODE_STRING VolumeRootPath);
+
+#if defined(_M_AMD64)
+
+FORCEINLINE
+VOID
+RtlFillMemoryUlong (
+  OUT PVOID Destination,
+  IN SIZE_T Length,
+  IN ULONG Pattern)
+{
+  PULONG Address = (PULONG)Destination;
+  if ((Length /= 4) != 0) {
+    if (((ULONG64)Address & 4) != 0) {
+      *Address = Pattern;
+      if ((Length -= 1) == 0) {
+        return;
+      }
+    Address += 1;
+    }
+    __stosq((PULONG64)(Address), Pattern | ((ULONG64)Pattern << 32), Length / 2);
+    if ((Length & 1) != 0) Address[Length - 1] = Pattern;
+  }
+  return;
+}
+
+#define RtlFillMemoryUlonglong(Destination, Length, Pattern)                \
+    __stosq((PULONG64)(Destination), Pattern, (Length) / 8)
+
+#else
+
+NTSYSAPI
+VOID
+NTAPI
+RtlFillMemoryUlong(
+  OUT PVOID Destination,
+  IN SIZE_T Length,
+  IN ULONG Pattern);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlFillMemoryUlonglong(
+  OUT PVOID Destination,
+  IN SIZE_T Length,
+  IN ULONGLONG Pattern);
+
+#endif /* defined(_M_AMD64) */
+
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
+
+#if (NTDDI_VERSION >= NTDDI_WS03)
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlInitAnsiStringEx(
+  OUT PANSI_STRING DestinationString,
+  IN PCSZ SourceString OPTIONAL);
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WS03SP1)
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlGetSaclSecurityDescriptor(
+  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+  OUT PBOOLEAN SaclPresent,
+  OUT PACL *Sacl,
+  OUT PBOOLEAN SaclDefaulted);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlSetGroupSecurityDescriptor(
+  IN OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
+  IN PSID Group OPTIONAL,
+  IN BOOLEAN GroupDefaulted OPTIONAL);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlGetGroupSecurityDescriptor(
+  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+  OUT PSID *Group,
+  OUT PBOOLEAN GroupDefaulted);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlAbsoluteToSelfRelativeSD(
+  IN PSECURITY_DESCRIPTOR AbsoluteSecurityDescriptor,
+  OUT PSECURITY_DESCRIPTOR SelfRelativeSecurityDescriptor OPTIONAL,
+  IN OUT PULONG BufferLength);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlSelfRelativeToAbsoluteSD(
+  IN PSECURITY_DESCRIPTOR SelfRelativeSecurityDescriptor,
+  OUT PSECURITY_DESCRIPTOR AbsoluteSecurityDescriptor OPTIONAL,
+  IN OUT PULONG AbsoluteSecurityDescriptorSize,
+  OUT PACL Dacl OPTIONAL,
+  IN OUT PULONG DaclSize,
+  OUT PACL Sacl OPTIONAL,
+  IN OUT PULONG SaclSize,
+  OUT PSID Owner OPTIONAL,
+  IN OUT PULONG OwnerSize,
+  OUT PSID PrimaryGroup OPTIONAL,
+  IN OUT PULONG PrimaryGroupSize);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WS03SP1) */
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlNormalizeString(
+  IN ULONG NormForm,
+  IN PCWSTR SourceString,
+  IN LONG SourceStringLength,
+  OUT PWSTR DestinationString,
+  IN OUT PLONG DestinationStringLength);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlIsNormalizedString(
+  IN ULONG NormForm,
+  IN PCWSTR SourceString,
+  IN LONG SourceStringLength,
+  OUT PBOOLEAN Normalized);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlIdnToAscii(
+  IN ULONG Flags,
+  IN PCWSTR SourceString,
+  IN LONG SourceStringLength,
+  OUT PWSTR DestinationString,
+  IN OUT PLONG DestinationStringLength);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlIdnToUnicode(
+  IN ULONG Flags,
+  IN PCWSTR SourceString,
+  IN LONG SourceStringLength,
+  OUT PWSTR DestinationString,
+  IN OUT PLONG DestinationStringLength);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlIdnToNameprepUnicode(
+  IN ULONG Flags,
+  IN PCWSTR SourceString,
+  IN LONG SourceStringLength,
+  OUT PWSTR DestinationString,
+  IN OUT PLONG DestinationStringLength);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlCreateServiceSid(
+  IN PUNICODE_STRING ServiceName,
+  OUT PSID ServiceSid,
+  IN OUT PULONG ServiceSidLength);
+
+NTSYSAPI
+LONG
+NTAPI
+RtlCompareAltitudes(
+  IN PCUNICODE_STRING Altitude1,
+  IN PCUNICODE_STRING Altitude2);
+
+
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlUnicodeToUTF8N(
+  OUT PCHAR UTF8StringDestination,
+  IN ULONG UTF8StringMaxByteCount,
+  OUT PULONG UTF8StringActualByteCount,
+  IN PCWCH UnicodeStringSource,
+  IN ULONG UnicodeStringByteCount);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlUTF8ToUnicodeN(
+  OUT PWSTR UnicodeStringDestination,
+  IN ULONG UnicodeStringMaxByteCount,
+  OUT PULONG UnicodeStringActualByteCount,
+  IN PCCH UTF8StringSource,
+  IN ULONG UTF8StringByteCount);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlReplaceSidInSd(
+  IN OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
+  IN PSID OldSid,
+  IN PSID NewSid,
+  OUT ULONG *NumChanges);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlCreateVirtualAccountSid(
+  IN PCUNICODE_STRING Name,
+  IN ULONG BaseSubAuthority,
+  OUT PSID Sid,
+  IN OUT PULONG SidLength);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
+
+
+#if defined(_AMD64_) || defined(_IA64_)
+
+
+
+#endif /* defined(_AMD64_) || defined(_IA64_) */
+
+
+
+#define RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE 1
+#define RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING 2
+
+#define RtlUnicodeStringToOemSize(STRING) (NLS_MB_OEM_CODE_PAGE_TAG ?                                \
+                                           RtlxUnicodeStringToOemSize(STRING) :                      \
+                                           ((STRING)->Length + sizeof(UNICODE_NULL)) / sizeof(WCHAR) \
+)
+
+#define RtlOemStringToUnicodeSize(STRING) (                 \
+    NLS_MB_OEM_CODE_PAGE_TAG ?                              \
+    RtlxOemStringToUnicodeSize(STRING) :                    \
+    ((STRING)->Length + sizeof(ANSI_NULL)) * sizeof(WCHAR)  \
+)
+
+#define RtlOemStringToCountedUnicodeSize(STRING) (                    \
+    (ULONG)(RtlOemStringToUnicodeSize(STRING) - sizeof(UNICODE_NULL)) \
+)
+
+#define RtlOffsetToPointer(B,O) ((PCHAR)(((PCHAR)(B)) + ((ULONG_PTR)(O))))
+#define RtlPointerToOffset(B,P) ((ULONG)(((PCHAR)(P)) - ((PCHAR)(B))))
+
 typedef enum _OBJECT_INFORMATION_CLASS {
   ObjectBasicInformation = 0,
   ObjectNameInformation = 1, /* FIXME, not in WDK */
@@ -1245,1125 +2423,6 @@ NtCreateSection(
 
 #endif
 
-typedef NTSTATUS
-(NTAPI * PRTL_HEAP_COMMIT_ROUTINE) (
-  IN PVOID Base,
-  IN OUT PVOID *CommitAddress,
-  IN OUT PSIZE_T CommitSize);
-
-typedef struct _RTL_HEAP_PARAMETERS {
-  ULONG Length;
-  SIZE_T SegmentReserve;
-  SIZE_T SegmentCommit;
-  SIZE_T DeCommitFreeBlockThreshold;
-  SIZE_T DeCommitTotalFreeThreshold;
-  SIZE_T MaximumAllocationSize;
-  SIZE_T VirtualMemoryThreshold;
-  SIZE_T InitialCommit;
-  SIZE_T InitialReserve;
-  PRTL_HEAP_COMMIT_ROUTINE CommitRoutine;
-  SIZE_T Reserved[2];
-} RTL_HEAP_PARAMETERS, *PRTL_HEAP_PARAMETERS;
-
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
-
-NTSYSAPI
-PVOID
-NTAPI
-RtlAllocateHeap(
-  IN HANDLE HeapHandle,
-  IN ULONG Flags OPTIONAL,
-  IN SIZE_T Size);
-
-NTSYSAPI
-BOOLEAN
-NTAPI
-RtlFreeHeap(
-  IN PVOID HeapHandle,
-  IN ULONG Flags OPTIONAL,
-  IN PVOID BaseAddress);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlCaptureContext(
-  OUT PCONTEXT ContextRecord);
-
-NTSYSAPI
-ULONG
-NTAPI
-RtlRandom(
-  IN OUT PULONG Seed);
-
-NTSYSAPI
-BOOLEAN
-NTAPI
-RtlCreateUnicodeString(
-  OUT PUNICODE_STRING DestinationString,
-  IN PCWSTR SourceString);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlAppendStringToString(
-  IN OUT PSTRING Destination,
-  IN const STRING *Source);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlOemStringToUnicodeString(
-  IN OUT PUNICODE_STRING DestinationString,
-  IN PCOEM_STRING SourceString,
-  IN BOOLEAN AllocateDestinationString);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlUnicodeStringToOemString(
-  IN OUT POEM_STRING DestinationString,
-  IN PCUNICODE_STRING SourceString,
-  IN BOOLEAN AllocateDestinationString);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlUpcaseUnicodeStringToOemString(
-  IN OUT POEM_STRING DestinationString,
-  IN PCUNICODE_STRING SourceString,
-  IN BOOLEAN AllocateDestinationString);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlOemStringToCountedUnicodeString(
-  IN OUT PUNICODE_STRING DestinationString,
-  IN PCOEM_STRING SourceString,
-  IN BOOLEAN AllocateDestinationString);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlUnicodeStringToCountedOemString(
-  IN OUT POEM_STRING DestinationString,
-  IN PCUNICODE_STRING SourceString,
-  IN BOOLEAN AllocateDestinationString);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlUpcaseUnicodeStringToCountedOemString(
-  IN OUT POEM_STRING DestinationString,
-  IN PCUNICODE_STRING SourceString,
-  IN BOOLEAN AllocateDestinationString);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlDowncaseUnicodeString(
-  IN OUT PUNICODE_STRING UniDest,
-  IN PCUNICODE_STRING UniSource,
-  IN BOOLEAN AllocateDestinationString);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlFreeOemString (
-  IN OUT POEM_STRING OemString);
-
-NTSYSAPI
-ULONG
-NTAPI
-RtlxUnicodeStringToOemSize(
-  IN PCUNICODE_STRING UnicodeString);
-
-NTSYSAPI
-ULONG
-NTAPI
-RtlxOemStringToUnicodeSize(
-  IN PCOEM_STRING OemString);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlMultiByteToUnicodeN(
-  OUT PWCH UnicodeString,
-  IN ULONG MaxBytesInUnicodeString,
-  OUT PULONG BytesInUnicodeString OPTIONAL,
-  IN const CHAR *MultiByteString,
-  IN ULONG BytesInMultiByteString);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlMultiByteToUnicodeSize(
-  OUT PULONG BytesInUnicodeString,
-  IN const CHAR *MultiByteString,
-  IN ULONG BytesInMultiByteString);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlUnicodeToMultiByteSize(
-  OUT PULONG BytesInMultiByteString,
-  IN PCWCH UnicodeString,
-  IN ULONG BytesInUnicodeString);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlUnicodeToMultiByteN(
-  OUT PCHAR MultiByteString,
-  IN ULONG MaxBytesInMultiByteString,
-  OUT PULONG BytesInMultiByteString OPTIONAL,
-  IN PWCH UnicodeString,
-  IN ULONG BytesInUnicodeString);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlUpcaseUnicodeToMultiByteN(
-  OUT PCHAR MultiByteString,
-  IN ULONG MaxBytesInMultiByteString,
-  OUT PULONG BytesInMultiByteString OPTIONAL,
-  IN PCWCH UnicodeString,
-  IN ULONG BytesInUnicodeString);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlOemToUnicodeN(
-  OUT PWSTR UnicodeString,
-  IN ULONG MaxBytesInUnicodeString,
-  OUT PULONG BytesInUnicodeString OPTIONAL,
-  IN PCCH OemString,
-  IN ULONG BytesInOemString);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlUnicodeToOemN(
-  OUT PCHAR OemString,
-  IN ULONG MaxBytesInOemString,
-  OUT PULONG BytesInOemString OPTIONAL,
-  IN PCWCH UnicodeString,
-  IN ULONG BytesInUnicodeString);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlUpcaseUnicodeToOemN(
-  OUT PCHAR OemString,
-  IN ULONG MaxBytesInOemString,
-  OUT PULONG BytesInOemString OPTIONAL,
-  IN PCWCH UnicodeString,
-  IN ULONG BytesInUnicodeString);
-
-typedef struct _GENERATE_NAME_CONTEXT {
-  USHORT Checksum;
-  BOOLEAN CheckSumInserted;
-  UCHAR NameLength;
-  WCHAR NameBuffer[8];
-  ULONG ExtensionLength;
-  WCHAR ExtensionBuffer[4];
-  ULONG LastIndexValue;
-} GENERATE_NAME_CONTEXT, *PGENERATE_NAME_CONTEXT;
-
-#if (NTDDI_VERSION >= NTDDI_VISTASP1)
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlGenerate8dot3Name(
-  IN PCUNICODE_STRING Name,
-  IN BOOLEAN AllowExtendedCharacters,
-  IN OUT PGENERATE_NAME_CONTEXT Context,
-  IN OUT PUNICODE_STRING Name8dot3);
-#else
-NTSYSAPI
-VOID
-NTAPI
-RtlGenerate8dot3Name(
-  IN PCUNICODE_STRING Name,
-  IN BOOLEAN AllowExtendedCharacters,
-  IN OUT PGENERATE_NAME_CONTEXT Context,
-  IN OUT PUNICODE_STRING Name8dot3);
-#endif
-
-NTSYSAPI
-BOOLEAN
-NTAPI
-RtlIsNameLegalDOS8Dot3(
-  IN PCUNICODE_STRING Name,
-  IN OUT POEM_STRING OemName OPTIONAL,
-  IN OUT PBOOLEAN NameContainsSpaces OPTIONAL);
-
-NTSYSAPI
-BOOLEAN
-NTAPI
-RtlIsValidOemCharacter(
-  IN OUT PWCHAR Char);
-
-typedef struct _PREFIX_TABLE_ENTRY {
-  CSHORT NodeTypeCode;
-  CSHORT NameLength;
-  struct _PREFIX_TABLE_ENTRY *NextPrefixTree;
-  RTL_SPLAY_LINKS Links;
-  PSTRING Prefix;
-} PREFIX_TABLE_ENTRY, *PPREFIX_TABLE_ENTRY;
-
-typedef struct _PREFIX_TABLE {
-  CSHORT NodeTypeCode;
-  CSHORT NameLength;
-  PPREFIX_TABLE_ENTRY NextPrefixTree;
-} PREFIX_TABLE, *PPREFIX_TABLE;
-
-NTSYSAPI
-VOID
-NTAPI
-PfxInitialize(
-  OUT PPREFIX_TABLE PrefixTable);
-
-NTSYSAPI
-BOOLEAN
-NTAPI
-PfxInsertPrefix(
-  IN PPREFIX_TABLE PrefixTable,
-  IN PSTRING Prefix,
-  OUT PPREFIX_TABLE_ENTRY PrefixTableEntry);
-
-NTSYSAPI
-VOID
-NTAPI
-PfxRemovePrefix(
-  IN PPREFIX_TABLE PrefixTable,
-  IN PPREFIX_TABLE_ENTRY PrefixTableEntry);
-
-NTSYSAPI
-PPREFIX_TABLE_ENTRY
-NTAPI
-PfxFindPrefix(
-  IN PPREFIX_TABLE PrefixTable,
-  IN PSTRING FullName);
-
-typedef struct _UNICODE_PREFIX_TABLE_ENTRY {
-  CSHORT NodeTypeCode;
-  CSHORT NameLength;
-  struct _UNICODE_PREFIX_TABLE_ENTRY *NextPrefixTree;
-  struct _UNICODE_PREFIX_TABLE_ENTRY *CaseMatch;
-  RTL_SPLAY_LINKS Links;
-  PUNICODE_STRING Prefix;
-} UNICODE_PREFIX_TABLE_ENTRY, *PUNICODE_PREFIX_TABLE_ENTRY;
-
-typedef struct _UNICODE_PREFIX_TABLE {
-  CSHORT NodeTypeCode;
-  CSHORT NameLength;
-  PUNICODE_PREFIX_TABLE_ENTRY NextPrefixTree;
-  PUNICODE_PREFIX_TABLE_ENTRY LastNextEntry;
-} UNICODE_PREFIX_TABLE, *PUNICODE_PREFIX_TABLE;
-
-NTSYSAPI
-VOID
-NTAPI
-RtlInitializeUnicodePrefix(
-  OUT PUNICODE_PREFIX_TABLE PrefixTable);
-
-NTSYSAPI
-BOOLEAN
-NTAPI
-RtlInsertUnicodePrefix(
-  IN PUNICODE_PREFIX_TABLE PrefixTable,
-  IN PUNICODE_STRING Prefix,
-  OUT PUNICODE_PREFIX_TABLE_ENTRY PrefixTableEntry);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlRemoveUnicodePrefix(
-  IN PUNICODE_PREFIX_TABLE PrefixTable,
-  IN PUNICODE_PREFIX_TABLE_ENTRY PrefixTableEntry);
-
-NTSYSAPI
-PUNICODE_PREFIX_TABLE_ENTRY
-NTAPI
-RtlFindUnicodePrefix(
-  IN PUNICODE_PREFIX_TABLE PrefixTable,
-  IN PUNICODE_STRING FullName,
-  IN ULONG CaseInsensitiveIndex);
-
-NTSYSAPI
-PUNICODE_PREFIX_TABLE_ENTRY
-NTAPI
-RtlNextUnicodePrefix(
-  IN PUNICODE_PREFIX_TABLE PrefixTable,
-  IN BOOLEAN Restart);
-
-NTSYSAPI
-SIZE_T
-NTAPI
-RtlCompareMemoryUlong(
-  IN PVOID Source,
-  IN SIZE_T Length,
-  IN ULONG Pattern);
-
-NTSYSAPI
-BOOLEAN
-NTAPI
-RtlTimeToSecondsSince1980(
-  IN PLARGE_INTEGER Time,
-  OUT PULONG ElapsedSeconds);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlSecondsSince1980ToTime(
-  IN ULONG ElapsedSeconds,
-  OUT PLARGE_INTEGER Time);
-
-NTSYSAPI
-BOOLEAN
-NTAPI
-RtlTimeToSecondsSince1970(
-  IN PLARGE_INTEGER Time,
-  OUT PULONG ElapsedSeconds);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlSecondsSince1970ToTime(
-  IN ULONG ElapsedSeconds,
-  OUT PLARGE_INTEGER Time);
-
-NTSYSAPI
-BOOLEAN
-NTAPI
-RtlValidSid(
-  IN PSID Sid);
-
-NTSYSAPI
-BOOLEAN
-NTAPI
-RtlEqualSid(
-  IN PSID Sid1,
-  IN PSID Sid2);
-
-NTSYSAPI
-BOOLEAN
-NTAPI
-RtlEqualPrefixSid(
-  IN PSID Sid1,
-  IN PSID Sid2);
-
-NTSYSAPI
-ULONG
-NTAPI
-RtlLengthRequiredSid(
-  IN ULONG SubAuthorityCount);
-
-NTSYSAPI
-PVOID
-NTAPI
-RtlFreeSid(
-  IN PSID Sid);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlAllocateAndInitializeSid(
-  IN PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
-  IN UCHAR SubAuthorityCount,
-  IN ULONG SubAuthority0,
-  IN ULONG SubAuthority1,
-  IN ULONG SubAuthority2,
-  IN ULONG SubAuthority3,
-  IN ULONG SubAuthority4,
-  IN ULONG SubAuthority5,
-  IN ULONG SubAuthority6,
-  IN ULONG SubAuthority7,
-  OUT PSID *Sid);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlInitializeSid(
-  OUT PSID Sid,
-  IN PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
-  IN UCHAR SubAuthorityCount);
-
-NTSYSAPI
-PULONG
-NTAPI
-RtlSubAuthoritySid(
-  IN PSID Sid,
-  IN ULONG SubAuthority);
-
-NTSYSAPI
-ULONG
-NTAPI
-RtlLengthSid(
-  IN PSID Sid);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlCopySid(
-  IN ULONG Length,
-  IN PSID Destination,
-  IN PSID Source);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlConvertSidToUnicodeString(
-  IN OUT PUNICODE_STRING UnicodeString,
-  IN PSID Sid,
-  IN BOOLEAN AllocateDestinationString);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlCopyLuid(
-  OUT PLUID DestinationLuid,
-  IN PLUID SourceLuid);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlCreateAcl(
-  OUT PACL Acl,
-  IN ULONG AclLength,
-  IN ULONG AclRevision);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlAddAce(
-  IN OUT PACL Acl,
-  IN ULONG AceRevision,
-  IN ULONG StartingAceIndex,
-  IN PVOID AceList,
-  IN ULONG AceListLength);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlDeleteAce(
-  IN OUT PACL Acl,
-  IN ULONG AceIndex);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlGetAce(
-  IN PACL Acl,
-  IN ULONG AceIndex,
-  OUT PVOID *Ace);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlAddAccessAllowedAce(
-  IN OUT PACL Acl,
-  IN ULONG AceRevision,
-  IN ACCESS_MASK AccessMask,
-  IN PSID Sid);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlAddAccessAllowedAceEx(
-  IN OUT PACL Acl,
-  IN ULONG AceRevision,
-  IN ULONG AceFlags,
-  IN ACCESS_MASK AccessMask,
-  IN PSID Sid);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlCreateSecurityDescriptorRelative(
-  OUT PISECURITY_DESCRIPTOR_RELATIVE SecurityDescriptor,
-  IN ULONG Revision);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlGetDaclSecurityDescriptor(
-  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-  OUT PBOOLEAN DaclPresent,
-  OUT PACL *Dacl,
-  OUT PBOOLEAN DaclDefaulted);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlSetOwnerSecurityDescriptor(
-  IN OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
-  IN PSID Owner OPTIONAL,
-  IN BOOLEAN OwnerDefaulted);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlGetOwnerSecurityDescriptor(
-  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-  OUT PSID *Owner,
-  OUT PBOOLEAN OwnerDefaulted);
-
-NTSYSAPI
-ULONG
-NTAPI
-RtlNtStatusToDosError(
-  IN NTSTATUS Status);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlCustomCPToUnicodeN(
-  IN PCPTABLEINFO CustomCP,
-  OUT PWCH UnicodeString,
-  IN ULONG MaxBytesInUnicodeString,
-  OUT PULONG BytesInUnicodeString OPTIONAL,
-  IN PCH CustomCPString,
-  IN ULONG BytesInCustomCPString);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlUnicodeToCustomCPN(
-  IN PCPTABLEINFO CustomCP,
-  OUT PCH CustomCPString,
-  IN ULONG MaxBytesInCustomCPString,
-  OUT PULONG BytesInCustomCPString OPTIONAL,
-  IN PWCH UnicodeString,
-  IN ULONG BytesInUnicodeString);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlUpcaseUnicodeToCustomCPN(
-  IN PCPTABLEINFO CustomCP,
-  OUT PCH CustomCPString,
-  IN ULONG MaxBytesInCustomCPString,
-  OUT PULONG BytesInCustomCPString OPTIONAL,
-  IN PWCH UnicodeString,
-  IN ULONG BytesInUnicodeString);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlInitCodePageTable(
-  IN PUSHORT TableBase,
-  IN OUT PCPTABLEINFO CodePageTable);
-
-#endif
-
-#if (NTDDI_VERSION >= NTDDI_WINXP)
-
-NTSYSAPI
-PVOID
-NTAPI
-RtlCreateHeap(
-  IN ULONG Flags,
-  IN PVOID HeapBase OPTIONAL,
-  IN SIZE_T ReserveSize OPTIONAL,
-  IN SIZE_T CommitSize OPTIONAL,
-  IN PVOID Lock OPTIONAL,
-  IN PRTL_HEAP_PARAMETERS Parameters OPTIONAL);
-
-NTSYSAPI
-PVOID
-NTAPI
-RtlDestroyHeap(
-  IN PVOID HeapHandle);
-
-NTSYSAPI
-USHORT
-NTAPI
-RtlCaptureStackBackTrace(
-  IN ULONG FramesToSkip,
-  IN ULONG FramesToCapture,
-  OUT PVOID *BackTrace,
-  OUT PULONG BackTraceHash OPTIONAL);
-
-NTSYSAPI
-ULONG
-NTAPI
-RtlRandomEx(
-  IN OUT PULONG Seed);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlInitUnicodeStringEx(
-  OUT PUNICODE_STRING DestinationString,
-  IN PCWSTR SourceString OPTIONAL);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlValidateUnicodeString(
-  IN ULONG Flags,
-  IN PCUNICODE_STRING String);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlDuplicateUnicodeString(
-  IN ULONG Flags,
-  IN PCUNICODE_STRING SourceString,
-  OUT PUNICODE_STRING DestinationString);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlGetCompressionWorkSpaceSize(
-  IN USHORT CompressionFormatAndEngine,
-  OUT PULONG CompressBufferWorkSpaceSize,
-  OUT PULONG CompressFragmentWorkSpaceSize);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlCompressBuffer(
-  IN USHORT CompressionFormatAndEngine,
-  IN PUCHAR UncompressedBuffer,
-  IN ULONG UncompressedBufferSize,
-  OUT PUCHAR CompressedBuffer,
-  IN ULONG CompressedBufferSize,
-  IN ULONG UncompressedChunkSize,
-  OUT PULONG FinalCompressedSize,
-  IN PVOID WorkSpace);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlDecompressBuffer(
-  IN USHORT CompressionFormat,
-  OUT PUCHAR UncompressedBuffer,
-  IN ULONG UncompressedBufferSize,
-  IN PUCHAR CompressedBuffer,
-  IN ULONG CompressedBufferSize,
-  OUT PULONG FinalUncompressedSize);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlDecompressFragment(
-  IN USHORT CompressionFormat,
-  OUT PUCHAR UncompressedFragment,
-  IN ULONG UncompressedFragmentSize,
-  IN PUCHAR CompressedBuffer,
-  IN ULONG CompressedBufferSize,
-  IN ULONG FragmentOffset,
-  OUT PULONG FinalUncompressedSize,
-  IN PVOID WorkSpace);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlDescribeChunk(
-  IN USHORT CompressionFormat,
-  IN OUT PUCHAR *CompressedBuffer,
-  IN PUCHAR EndOfCompressedBufferPlus1,
-  OUT PUCHAR *ChunkBuffer,
-  OUT PULONG ChunkSize);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlReserveChunk(
-  IN USHORT CompressionFormat,
-  IN OUT PUCHAR *CompressedBuffer,
-  IN PUCHAR EndOfCompressedBufferPlus1,
-  OUT PUCHAR *ChunkBuffer,
-  IN ULONG ChunkSize);
-
-typedef struct _COMPRESSED_DATA_INFO {
-  USHORT CompressionFormatAndEngine;
-  UCHAR CompressionUnitShift;
-  UCHAR ChunkShift;
-  UCHAR ClusterShift;
-  UCHAR Reserved;
-  USHORT NumberOfChunks;
-  ULONG CompressedChunkSizes[ANYSIZE_ARRAY];
-} COMPRESSED_DATA_INFO, *PCOMPRESSED_DATA_INFO;
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlDecompressChunks(
-  OUT PUCHAR UncompressedBuffer,
-  IN ULONG UncompressedBufferSize,
-  IN PUCHAR CompressedBuffer,
-  IN ULONG CompressedBufferSize,
-  IN PUCHAR CompressedTail,
-  IN ULONG CompressedTailSize,
-  IN PCOMPRESSED_DATA_INFO CompressedDataInfo);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlCompressChunks(
-  IN PUCHAR UncompressedBuffer,
-  IN ULONG UncompressedBufferSize,
-  OUT PUCHAR CompressedBuffer,
-  IN ULONG CompressedBufferSize,
-  IN OUT PCOMPRESSED_DATA_INFO CompressedDataInfo,
-  IN ULONG CompressedDataInfoLength,
-  IN PVOID WorkSpace);
-
-NTSYSAPI
-PSID_IDENTIFIER_AUTHORITY
-NTAPI
-RtlIdentifierAuthoritySid(
-  IN PSID Sid);
-
-NTSYSAPI
-PUCHAR
-NTAPI
-RtlSubAuthorityCountSid(
-  IN PSID Sid);
-
-NTSYSAPI
-ULONG
-NTAPI
-RtlNtStatusToDosErrorNoTeb(
-  IN NTSTATUS Status);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlCreateSystemVolumeInformationFolder(
-  IN PCUNICODE_STRING VolumeRootPath);
-
-#endif
-
-#if defined(_M_AMD64)
-
-FORCEINLINE
-VOID
-RtlFillMemoryUlong (
-  OUT PVOID Destination,
-  IN SIZE_T Length,
-  IN ULONG Pattern)
-{
-  PULONG Address = (PULONG)Destination;
-  if ((Length /= 4) != 0) {
-    if (((ULONG64)Address & 4) != 0) {
-      *Address = Pattern;
-      if ((Length -= 1) == 0) {
-        return;
-      }
-    Address += 1;
-    }
-    __stosq((PULONG64)(Address), Pattern | ((ULONG64)Pattern << 32), Length / 2);
-    if ((Length & 1) != 0) Address[Length - 1] = Pattern;
-  }
-  return;
-}
-
-#define RtlFillMemoryUlonglong(Destination, Length, Pattern)                \
-    __stosq((PULONG64)(Destination), Pattern, (Length) / 8)
-
-#else
-
-#if (NTDDI_VERSION >= NTDDI_WINXP)
-
-NTSYSAPI
-VOID
-NTAPI
-RtlFillMemoryUlong(
-  OUT PVOID Destination,
-  IN SIZE_T Length,
-  IN ULONG Pattern);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlFillMemoryUlonglong(
-  OUT PVOID Destination,
-  IN SIZE_T Length,
-  IN ULONGLONG Pattern);
-
-#endif
-
-#endif // defined(_M_AMD64)
-
-#if (NTDDI_VERSION >= NTDDI_WS03)
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlInitAnsiStringEx(
-  OUT PANSI_STRING DestinationString,
-  IN PCSZ SourceString OPTIONAL);
-
-#endif
-
-#if (NTDDI_VERSION >= NTDDI_WS03SP1)
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlGetSaclSecurityDescriptor(
-  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-  OUT PBOOLEAN SaclPresent,
-  OUT PACL *Sacl,
-  OUT PBOOLEAN SaclDefaulted);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlSetGroupSecurityDescriptor(
-  IN OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
-  IN PSID Group OPTIONAL,
-  IN BOOLEAN GroupDefaulted OPTIONAL);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlGetGroupSecurityDescriptor(
-  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-  OUT PSID *Group,
-  OUT PBOOLEAN GroupDefaulted);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlAbsoluteToSelfRelativeSD(
-  IN PSECURITY_DESCRIPTOR AbsoluteSecurityDescriptor,
-  OUT PSECURITY_DESCRIPTOR SelfRelativeSecurityDescriptor OPTIONAL,
-  IN OUT PULONG BufferLength);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlSelfRelativeToAbsoluteSD(
-  IN PSECURITY_DESCRIPTOR SelfRelativeSecurityDescriptor,
-  OUT PSECURITY_DESCRIPTOR AbsoluteSecurityDescriptor OPTIONAL,
-  IN OUT PULONG AbsoluteSecurityDescriptorSize,
-  OUT PACL Dacl OPTIONAL,
-  IN OUT PULONG DaclSize,
-  OUT PACL Sacl OPTIONAL,
-  IN OUT PULONG SaclSize,
-  OUT PSID Owner OPTIONAL,
-  IN OUT PULONG OwnerSize,
-  OUT PSID PrimaryGroup OPTIONAL,
-  IN OUT PULONG PrimaryGroupSize);
-
-#endif
-
-#if (NTDDI_VERSION >= NTDDI_VISTA)
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlNormalizeString(
-  IN ULONG NormForm,
-  IN PCWSTR SourceString,
-  IN LONG SourceStringLength,
-  OUT PWSTR DestinationString,
-  IN OUT PLONG DestinationStringLength);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlIsNormalizedString(
-  IN ULONG NormForm,
-  IN PCWSTR SourceString,
-  IN LONG SourceStringLength,
-  OUT PBOOLEAN Normalized);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlIdnToAscii(
-  IN ULONG Flags,
-  IN PCWSTR SourceString,
-  IN LONG SourceStringLength,
-  OUT PWSTR DestinationString,
-  IN OUT PLONG DestinationStringLength);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlIdnToUnicode(
-  IN ULONG Flags,
-  IN PCWSTR SourceString,
-  IN LONG SourceStringLength,
-  OUT PWSTR DestinationString,
-  IN OUT PLONG DestinationStringLength);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlIdnToNameprepUnicode(
-  IN ULONG Flags,
-  IN PCWSTR SourceString,
-  IN LONG SourceStringLength,
-  OUT PWSTR DestinationString,
-  IN OUT PLONG DestinationStringLength);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlCreateServiceSid(
-  IN PUNICODE_STRING ServiceName,
-  OUT PSID ServiceSid,
-  IN OUT PULONG ServiceSidLength);
-
-NTSYSAPI
-LONG
-NTAPI
-RtlCompareAltitudes(
-  IN PCUNICODE_STRING Altitude1,
-  IN PCUNICODE_STRING Altitude2);
-
-#endif
-
-#if (NTDDI_VERSION >= NTDDI_WIN7)
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlUnicodeToUTF8N(
-  OUT PCHAR UTF8StringDestination,
-  IN ULONG UTF8StringMaxByteCount,
-  OUT PULONG UTF8StringActualByteCount,
-  IN PCWCH UnicodeStringSource,
-  IN ULONG UnicodeStringByteCount);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlUTF8ToUnicodeN(
-  OUT PWSTR UnicodeStringDestination,
-  IN ULONG UnicodeStringMaxByteCount,
-  OUT PULONG UnicodeStringActualByteCount,
-  IN PCCH UTF8StringSource,
-  IN ULONG UTF8StringByteCount);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlReplaceSidInSd(
-  IN OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
-  IN PSID OldSid,
-  IN PSID NewSid,
-  OUT ULONG *NumChanges);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlCreateVirtualAccountSid(
-  IN PCUNICODE_STRING Name,
-  IN ULONG BaseSubAuthority,
-  OUT PSID Sid,
-  IN OUT PULONG SidLength);
-
-#endif
-
-#define HEAP_NO_SERIALIZE               0x00000001
-#define HEAP_GROWABLE                   0x00000002
-#define HEAP_GENERATE_EXCEPTIONS        0x00000004
-#define HEAP_ZERO_MEMORY                0x00000008
-#define HEAP_REALLOC_IN_PLACE_ONLY      0x00000010
-#define HEAP_TAIL_CHECKING_ENABLED      0x00000020
-#define HEAP_FREE_CHECKING_ENABLED      0x00000040
-#define HEAP_DISABLE_COALESCE_ON_FREE   0x00000080
-
-#define HEAP_CREATE_ALIGN_16            0x00010000
-#define HEAP_CREATE_ENABLE_TRACING      0x00020000
-#define HEAP_CREATE_ENABLE_EXECUTE      0x00040000
-
-#define HEAP_SETTABLE_USER_VALUE        0x00000100
-#define HEAP_SETTABLE_USER_FLAG1        0x00000200
-#define HEAP_SETTABLE_USER_FLAG2        0x00000400
-#define HEAP_SETTABLE_USER_FLAG3        0x00000800
-#define HEAP_SETTABLE_USER_FLAGS        0x00000E00
-
-#define HEAP_CLASS_0                    0x00000000
-#define HEAP_CLASS_1                    0x00001000
-#define HEAP_CLASS_2                    0x00002000
-#define HEAP_CLASS_3                    0x00003000
-#define HEAP_CLASS_4                    0x00004000
-#define HEAP_CLASS_5                    0x00005000
-#define HEAP_CLASS_6                    0x00006000
-#define HEAP_CLASS_7                    0x00007000
-#define HEAP_CLASS_8                    0x00008000
-#define HEAP_CLASS_MASK                 0x0000F000
-
-#define HEAP_MAXIMUM_TAG                0x0FFF
-#define HEAP_GLOBAL_TAG                 0x0800
-#define HEAP_PSEUDO_TAG_FLAG            0x8000
-#define HEAP_TAG_SHIFT                  18
-#define HEAP_TAG_MASK                  (HEAP_MAXIMUM_TAG << HEAP_TAG_SHIFT)
-
-#define HEAP_CREATE_VALID_MASK         (HEAP_NO_SERIALIZE |             \
-                                        HEAP_GROWABLE |                 \
-                                        HEAP_GENERATE_EXCEPTIONS |      \
-                                        HEAP_ZERO_MEMORY |              \
-                                        HEAP_REALLOC_IN_PLACE_ONLY |    \
-                                        HEAP_TAIL_CHECKING_ENABLED |    \
-                                        HEAP_FREE_CHECKING_ENABLED |    \
-                                        HEAP_DISABLE_COALESCE_ON_FREE | \
-                                        HEAP_CLASS_MASK |               \
-                                        HEAP_CREATE_ALIGN_16 |          \
-                                        HEAP_CREATE_ENABLE_TRACING |    \
-                                        HEAP_CREATE_ENABLE_EXECUTE)
-
-FORCEINLINE
-ULONG
-HEAP_MAKE_TAG_FLAGS(
-  IN ULONG TagBase,
-  IN ULONG Tag)
-{
-  //__assume_bound(TagBase); // FIXME
-  return ((ULONG)((TagBase) + ((Tag) << HEAP_TAG_SHIFT)));
-}
-
-#define RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE 1
-#define RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING 2
-
-#define RtlUnicodeStringToOemSize(STRING) (NLS_MB_OEM_CODE_PAGE_TAG ?                                \
-                                           RtlxUnicodeStringToOemSize(STRING) :                      \
-                                           ((STRING)->Length + sizeof(UNICODE_NULL)) / sizeof(WCHAR) \
-)
-
-#define RtlOemStringToUnicodeSize(STRING) (                 \
-    NLS_MB_OEM_CODE_PAGE_TAG ?                              \
-    RtlxOemStringToUnicodeSize(STRING) :                    \
-    ((STRING)->Length + sizeof(ANSI_NULL)) * sizeof(WCHAR)  \
-)
-
-#define RtlOemStringToCountedUnicodeSize(STRING) (                    \
-    (ULONG)(RtlOemStringToUnicodeSize(STRING) - sizeof(UNICODE_NULL)) \
-)
-
-typedef PVOID
-(NTAPI *PRTL_ALLOCATE_STRING_ROUTINE)(
-  IN SIZE_T NumberOfBytes);
-
-#if _WIN32_WINNT >= 0x0600
-
-typedef PVOID
-(NTAPI *PRTL_REALLOCATE_STRING_ROUTINE)(
-  IN SIZE_T NumberOfBytes,
-  IN PVOID Buffer);
-
-#endif
-
-typedef VOID
-(NTAPI *PRTL_FREE_STRING_ROUTINE)(
-  IN PVOID Buffer);
-
-extern const PRTL_ALLOCATE_STRING_ROUTINE RtlAllocateStringRoutine;
-extern const PRTL_FREE_STRING_ROUTINE RtlFreeStringRoutine;
-
-#if _WIN32_WINNT >= 0x0600
-extern const PRTL_REALLOCATE_STRING_ROUTINE RtlReallocateStringRoutine;
-#endif
-
 #define COMPRESSION_FORMAT_NONE         (0x0000)
 #define COMPRESSION_FORMAT_DEFAULT      (0x0001)
 #define COMPRESSION_FORMAT_LZNT1        (0x0002)
@@ -2371,19 +2430,14 @@ extern const PRTL_REALLOCATE_STRING_ROUTINE RtlReallocateStringRoutine;
 #define COMPRESSION_ENGINE_MAXIMUM      (0x0100)
 #define COMPRESSION_ENGINE_HIBER        (0x0200)
 
-#define RtlOffsetToPointer(B,O)  ((PCHAR)( ((PCHAR)(B)) + ((ULONG_PTR)(O))  ))
-#define RtlPointerToOffset(B,P)  ((ULONG)( ((PCHAR)(P)) - ((PCHAR)(B))  ))
-
 #define MAX_UNICODE_STACK_BUFFER_LENGTH 256
-
-#define RTL_SYSTEM_VOLUME_INFORMATION_FOLDER    L"System Volume Information"
 
 #define METHOD_FROM_CTL_CODE(ctrlCode)          ((ULONG)(ctrlCode & 3))
 
 #define METHOD_DIRECT_TO_HARDWARE       METHOD_IN_DIRECT
 #define METHOD_DIRECT_FROM_HARDWARE     METHOD_OUT_DIRECT
 
-typedef ULONG  LSA_OPERATIONAL_MODE, *PLSA_OPERATIONAL_MODE;
+typedef ULONG LSA_OPERATIONAL_MODE, *PLSA_OPERATIONAL_MODE;
 
 typedef enum _SECURITY_LOGON_TYPE {
   UndefinedLogonType = 0,
@@ -2783,6 +2837,8 @@ typedef struct _MSV1_0_GETUSERINFO_RESPONSE {
   UNICODE_STRING LogonServer;
   SECURITY_LOGON_TYPE LogonType;
 } MSV1_0_GETUSERINFO_RESPONSE, *PMSV1_0_GETUSERINFO_RESPONSE;
+
+
 
 #define FILE_OPLOCK_BROKEN_TO_LEVEL_2   0x00000007
 #define FILE_OPLOCK_BROKEN_TO_NONE      0x00000008
@@ -4518,6 +4574,157 @@ typedef struct _REMOTE_LINK_TRACKING_INFORMATION {
   UCHAR TargetLinkTrackingInformationBuffer[1];
 } REMOTE_LINK_TRACKING_INFORMATION, *PREMOTE_LINK_TRACKING_INFORMATION;
 
+#define IO_OPEN_PAGING_FILE             0x0002
+#define IO_OPEN_TARGET_DIRECTORY        0x0004
+#define IO_STOP_ON_SYMLINK              0x0008
+#define IO_MM_PAGING_FILE               0x0010
+
+typedef VOID
+(NTAPI *PDRIVER_FS_NOTIFICATION) (
+  IN PDEVICE_OBJECT DeviceObject,
+  IN BOOLEAN FsActive);
+
+typedef enum _FS_FILTER_SECTION_SYNC_TYPE {
+  SyncTypeOther = 0,
+  SyncTypeCreateSection
+} FS_FILTER_SECTION_SYNC_TYPE, *PFS_FILTER_SECTION_SYNC_TYPE;
+
+typedef enum _FS_FILTER_STREAM_FO_NOTIFICATION_TYPE {
+  NotifyTypeCreate = 0,
+  NotifyTypeRetired
+} FS_FILTER_STREAM_FO_NOTIFICATION_TYPE, *PFS_FILTER_STREAM_FO_NOTIFICATION_TYPE;
+
+typedef union _FS_FILTER_PARAMETERS {
+  struct {
+    PLARGE_INTEGER EndingOffset;
+    PERESOURCE *ResourceToRelease;
+  } AcquireForModifiedPageWriter;
+  struct {
+    PERESOURCE ResourceToRelease;
+  } ReleaseForModifiedPageWriter;
+  struct {
+    FS_FILTER_SECTION_SYNC_TYPE SyncType;
+    ULONG PageProtection;
+  } AcquireForSectionSynchronization;
+  struct {
+    FS_FILTER_STREAM_FO_NOTIFICATION_TYPE NotificationType;
+    BOOLEAN POINTER_ALIGNMENT SafeToRecurse;
+  } NotifyStreamFileObject;
+  struct {
+    PVOID Argument1;
+    PVOID Argument2;
+    PVOID Argument3;
+    PVOID Argument4;
+    PVOID Argument5;
+  } Others;
+} FS_FILTER_PARAMETERS, *PFS_FILTER_PARAMETERS;
+
+#define FS_FILTER_ACQUIRE_FOR_SECTION_SYNCHRONIZATION      (UCHAR)-1
+#define FS_FILTER_RELEASE_FOR_SECTION_SYNCHRONIZATION      (UCHAR)-2
+#define FS_FILTER_ACQUIRE_FOR_MOD_WRITE                    (UCHAR)-3
+#define FS_FILTER_RELEASE_FOR_MOD_WRITE                    (UCHAR)-4
+#define FS_FILTER_ACQUIRE_FOR_CC_FLUSH                     (UCHAR)-5
+#define FS_FILTER_RELEASE_FOR_CC_FLUSH                     (UCHAR)-6
+
+typedef struct _FS_FILTER_CALLBACK_DATA {
+  ULONG SizeOfFsFilterCallbackData;
+  UCHAR Operation;
+  UCHAR Reserved;
+  struct _DEVICE_OBJECT *DeviceObject;
+  struct _FILE_OBJECT *FileObject;
+  FS_FILTER_PARAMETERS Parameters;
+} FS_FILTER_CALLBACK_DATA, *PFS_FILTER_CALLBACK_DATA;
+
+typedef NTSTATUS
+(NTAPI *PFS_FILTER_CALLBACK) (
+  IN PFS_FILTER_CALLBACK_DATA Data,
+  OUT PVOID *CompletionContext);
+
+typedef VOID
+(NTAPI *PFS_FILTER_COMPLETION_CALLBACK) (
+  IN PFS_FILTER_CALLBACK_DATA Data,
+  IN NTSTATUS OperationStatus,
+  IN PVOID CompletionContext);
+
+typedef struct _FS_FILTER_CALLBACKS {
+  ULONG SizeOfFsFilterCallbacks;
+  ULONG Reserved;
+  PFS_FILTER_CALLBACK PreAcquireForSectionSynchronization;
+  PFS_FILTER_COMPLETION_CALLBACK PostAcquireForSectionSynchronization;
+  PFS_FILTER_CALLBACK PreReleaseForSectionSynchronization;
+  PFS_FILTER_COMPLETION_CALLBACK PostReleaseForSectionSynchronization;
+  PFS_FILTER_CALLBACK PreAcquireForCcFlush;
+  PFS_FILTER_COMPLETION_CALLBACK PostAcquireForCcFlush;
+  PFS_FILTER_CALLBACK PreReleaseForCcFlush;
+  PFS_FILTER_COMPLETION_CALLBACK PostReleaseForCcFlush;
+  PFS_FILTER_CALLBACK PreAcquireForModifiedPageWriter;
+  PFS_FILTER_COMPLETION_CALLBACK PostAcquireForModifiedPageWriter;
+  PFS_FILTER_CALLBACK PreReleaseForModifiedPageWriter;
+  PFS_FILTER_COMPLETION_CALLBACK PostReleaseForModifiedPageWriter;
+} FS_FILTER_CALLBACKS, *PFS_FILTER_CALLBACKS;
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlRegisterFileSystemFilterCallbacks(
+  IN struct _DRIVER_OBJECT *FilterDriverObject,
+  IN PFS_FILTER_CALLBACKS Callbacks);
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlNotifyStreamFileObject(
+  IN struct _FILE_OBJECT * StreamFileObject,
+  IN struct _DEVICE_OBJECT *DeviceObjectHint OPTIONAL,
+  IN FS_FILTER_STREAM_FO_NOTIFICATION_TYPE NotificationType,
+  IN BOOLEAN SafeToRecurse);
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+
+#define DO_VERIFY_VOLUME                    0x00000002
+#define DO_BUFFERED_IO                      0x00000004
+#define DO_EXCLUSIVE                        0x00000008
+#define DO_DIRECT_IO                        0x00000010
+#define DO_MAP_IO_BUFFER                    0x00000020
+#define DO_DEVICE_HAS_NAME                  0x00000040
+#define DO_DEVICE_INITIALIZING              0x00000080
+#define DO_SYSTEM_BOOT_PARTITION            0x00000100
+#define DO_LONG_TERM_REQUESTS               0x00000200
+#define DO_NEVER_LAST_DEVICE                0x00000400
+#define DO_SHUTDOWN_REGISTERED              0x00000800
+#define DO_BUS_ENUMERATED_DEVICE            0x00001000
+#define DO_POWER_PAGABLE                    0x00002000
+#define DO_POWER_INRUSH                     0x00004000
+#define DO_LOW_PRIORITY_FILESYSTEM          0x00010000
+#define DO_SUPPORTS_TRANSACTIONS            0x00040000
+#define DO_FORCE_NEITHER_IO                 0x00080000
+#define DO_VOLUME_DEVICE_OBJECT             0x00100000
+#define DO_SYSTEM_SYSTEM_PARTITION          0x00200000
+#define DO_SYSTEM_CRITICAL_PARTITION        0x00400000
+#define DO_DISALLOW_EXECUTE                 0x00800000
+
+extern KSPIN_LOCK                   IoStatisticsLock;
+extern ULONG                        IoReadOperationCount;
+extern ULONG                        IoWriteOperationCount;
+extern ULONG                        IoOtherOperationCount;
+extern LARGE_INTEGER                IoReadTransferCount;
+extern LARGE_INTEGER                IoWriteTransferCount;
+extern LARGE_INTEGER                IoOtherTransferCount;
+
+#define IO_FILE_OBJECT_NON_PAGED_POOL_CHARGE    64
+#define IO_FILE_OBJECT_PAGED_POOL_CHARGE        1024
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+typedef struct _IO_PRIORITY_INFO {
+  ULONG Size;
+  ULONG ThreadPriority;
+  ULONG PagePriority;
+  IO_PRIORITY_HINT IoPriority;
+} IO_PRIORITY_INFO, *PIO_PRIORITY_INFO;
+#endif
+
 typedef struct _PUBLIC_OBJECT_BASIC_INFORMATION {
   ULONG Attributes;
   ACCESS_MASK GrantedAccess;
@@ -4563,7 +4770,25 @@ typedef struct _KQUEUE {
   LIST_ENTRY ThreadListHead;
 } KQUEUE, *PKQUEUE, *RESTRICTED_POINTER PRKQUEUE;
 
+/******************************************************************************
+ *                              Kernel Functions                              *
+ ******************************************************************************/
+
+NTSTATUS
+NTAPI
+KeGetProcessorNumberFromIndex(
+  IN ULONG ProcIndex,
+  OUT PPROCESSOR_NUMBER ProcNumber);
+
+ULONG
+NTAPI
+KeGetProcessorIndexFromNumber(
+  IN PPROCESSOR_NUMBER ProcNumber);
+
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+
+
 
 NTKERNELAPI
 VOID
@@ -4683,6 +4908,7 @@ KeAcquireSpinLockRaiseToSynch(
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 
+
 _DECL_HAL_KE_IMPORT
 KIRQL
 FASTCALL
@@ -4705,6 +4931,10 @@ KeTryToAcquireQueuedSpinLock(
 
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
+
+
+
+
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 
 NTKERNELAPI
@@ -4725,18 +4955,18 @@ KeRemoveQueueEx (
 
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
-#define INVALID_PROCESSOR_INDEX     0xffffffff
 
-NTSTATUS
-NTAPI
-KeGetProcessorNumberFromIndex(
-  IN ULONG ProcIndex,
-  OUT PPROCESSOR_NUMBER ProcNumber);
 
-ULONG
-NTAPI
-KeGetProcessorIndexFromNumber(
-  IN PPROCESSOR_NUMBER ProcNumber);
+/******************************************************************************
+ *                          Executive Functions                               *
+ ******************************************************************************/
+
+
+#define ExDisableResourceBoost ExDisableResourceBoostLite
+
+VOID
+ExInitializePushLock (
+  OUT PEX_PUSH_LOCK PushLock);
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
@@ -4756,19 +4986,10 @@ VOID
 NTAPI
 ExDisableResourceBoostLite(
   IN PERESOURCE Resource);
-
-#endif
-
-#define ExDisableResourceBoost ExDisableResourceBoostLite
-
-#define EX_PUSH_LOCK ULONG_PTR
-#define PEX_PUSH_LOCK PULONG_PTR
-
-VOID
-ExInitializePushLock (
-  OUT PEX_PUSH_LOCK PushLock);
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
+
 PSLIST_ENTRY
 FASTCALL
 InterlockedPushListSList(
@@ -4776,133 +4997,14 @@ InterlockedPushListSList(
   IN OUT PSLIST_ENTRY List,
   IN OUT PSLIST_ENTRY ListEnd,
   IN ULONG Count);
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
-#endif
-
-/* #if !defined(_X86AMD64_)  FIXME : WHAT ?! */
-#if defined(_WIN64)
-
-C_ASSERT(sizeof(ERESOURCE) == 0x68);
-C_ASSERT(FIELD_OFFSET(ERESOURCE,ActiveCount) == 0x18);
-C_ASSERT(FIELD_OFFSET(ERESOURCE,Flag) == 0x1a);
-
-#else
-
-C_ASSERT(sizeof(ERESOURCE) == 0x38);
-C_ASSERT(FIELD_OFFSET(ERESOURCE,ActiveCount) == 0x0c);
-C_ASSERT(FIELD_OFFSET(ERESOURCE,Flag) == 0x0e);
-
-#endif
-/* #endif */
-
-#define TOKEN_HAS_TRAVERSE_PRIVILEGE    0x0001
-#define TOKEN_HAS_BACKUP_PRIVILEGE      0x0002
-#define TOKEN_HAS_RESTORE_PRIVILEGE     0x0004
-#define TOKEN_WRITE_RESTRICTED          0x0008
-#define TOKEN_IS_RESTRICTED             0x0010
-#define TOKEN_SESSION_NOT_REFERENCED    0x0020
-#define TOKEN_SANDBOX_INERT             0x0040
-#define TOKEN_HAS_IMPERSONATE_PRIVILEGE 0x0080
-#define SE_BACKUP_PRIVILEGES_CHECKED    0x0100
-#define TOKEN_VIRTUALIZE_ALLOWED        0x0200
-#define TOKEN_VIRTUALIZE_ENABLED        0x0400
-#define TOKEN_IS_FILTERED               0x0800
-#define TOKEN_UIACCESS                  0x1000
-#define TOKEN_NOT_LOW                   0x2000
-
-typedef struct _SE_EXPORTS {
-  LUID SeCreateTokenPrivilege;
-  LUID SeAssignPrimaryTokenPrivilege;
-  LUID SeLockMemoryPrivilege;
-  LUID SeIncreaseQuotaPrivilege;
-  LUID SeUnsolicitedInputPrivilege;
-  LUID SeTcbPrivilege;
-  LUID SeSecurityPrivilege;
-  LUID SeTakeOwnershipPrivilege;
-  LUID SeLoadDriverPrivilege;
-  LUID SeCreatePagefilePrivilege;
-  LUID SeIncreaseBasePriorityPrivilege;
-  LUID SeSystemProfilePrivilege;
-  LUID SeSystemtimePrivilege;
-  LUID SeProfileSingleProcessPrivilege;
-  LUID SeCreatePermanentPrivilege;
-  LUID SeBackupPrivilege;
-  LUID SeRestorePrivilege;
-  LUID SeShutdownPrivilege;
-  LUID SeDebugPrivilege;
-  LUID SeAuditPrivilege;
-  LUID SeSystemEnvironmentPrivilege;
-  LUID SeChangeNotifyPrivilege;
-  LUID SeRemoteShutdownPrivilege;
-  PSID SeNullSid;
-  PSID SeWorldSid;
-  PSID SeLocalSid;
-  PSID SeCreatorOwnerSid;
-  PSID SeCreatorGroupSid;
-  PSID SeNtAuthoritySid;
-  PSID SeDialupSid;
-  PSID SeNetworkSid;
-  PSID SeBatchSid;
-  PSID SeInteractiveSid;
-  PSID SeLocalSystemSid;
-  PSID SeAliasAdminsSid;
-  PSID SeAliasUsersSid;
-  PSID SeAliasGuestsSid;
-  PSID SeAliasPowerUsersSid;
-  PSID SeAliasAccountOpsSid;
-  PSID SeAliasSystemOpsSid;
-  PSID SeAliasPrintOpsSid;
-  PSID SeAliasBackupOpsSid;
-  PSID SeAuthenticatedUsersSid;
-  PSID SeRestrictedSid;
-  PSID SeAnonymousLogonSid;
-  LUID SeUndockPrivilege;
-  LUID SeSyncAgentPrivilege;
-  LUID SeEnableDelegationPrivilege;
-  PSID SeLocalServiceSid;
-  PSID SeNetworkServiceSid;
-  LUID SeManageVolumePrivilege;
-  LUID SeImpersonatePrivilege;
-  LUID SeCreateGlobalPrivilege;
-  LUID SeTrustedCredManAccessPrivilege;
-  LUID SeRelabelPrivilege;
-  LUID SeIncreaseWorkingSetPrivilege;
-  LUID SeTimeZonePrivilege;
-  LUID SeCreateSymbolicLinkPrivilege;
-  PSID SeIUserSid;
-  PSID SeUntrustedMandatorySid;
-  PSID SeLowMandatorySid;
-  PSID SeMediumMandatorySid;
-  PSID SeHighMandatorySid;
-  PSID SeSystemMandatorySid;
-  PSID SeOwnerRightsSid;
-} SE_EXPORTS, *PSE_EXPORTS;
-
-typedef NTSTATUS
-(NTAPI *PSE_LOGON_SESSION_TERMINATED_ROUTINE)(
-  IN PLUID LogonId);
-
-#define SeLengthSid( Sid ) \
-    (8 + (4 * ((SID *)Sid)->SubAuthorityCount))
-
-#define SeDeleteClientSecurity(C)  {                                           \
-            if (SeTokenType((C)->ClientToken) == TokenPrimary) {               \
-                PsDereferencePrimaryToken( (C)->ClientToken );                 \
-            } else {                                                           \
-                PsDereferenceImpersonationToken( (C)->ClientToken );           \
-            }                                                                  \
-}
-
-#define SeStopImpersonatingClient() PsRevertToSelf()
-
-#define SeQuerySubjectContextToken( SubjectContext )                \
-    ( ARGUMENT_PRESENT(                                             \
-        ((PSECURITY_SUBJECT_CONTEXT) SubjectContext)->ClientToken   \
-        ) ?                                                         \
-    ((PSECURITY_SUBJECT_CONTEXT) SubjectContext)->ClientToken :     \
-    ((PSECURITY_SUBJECT_CONTEXT) SubjectContext)->PrimaryToken )
+/******************************************************************************
+ *                            Security Manager Functions                      *
+ ******************************************************************************/
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
+
 
 NTKERNELAPI
 VOID
@@ -5104,7 +5206,6 @@ SeQueryInformationToken(
   OUT PVOID *TokenInformation);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
-
 #if (NTDDI_VERSION >= NTDDI_WIN2KSP3)
 NTKERNELAPI
 BOOLEAN
@@ -5156,6 +5257,7 @@ SeAuditingHardLinkEventsWithContext(
   IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext OPTIONAL);
 
 #endif
+
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 
@@ -5238,7 +5340,6 @@ SeAuditTransactionStateChange(
   IN GUID *TransactionId,
   IN GUID *ResourceManagerId,
   IN ULONG NewTransactionState);
-
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 #if (NTDDI_VERSION >= NTDDI_VISTA || (NTDDI_VERSION >= NTDDI_WINXPSP2 && NTDDI_VERSION < NTDDI_WS03))
@@ -5278,7 +5379,7 @@ SeMaximumAuditMaskFromGlobalSacl(
   IN PACCESS_TOKEN Token,
   IN OUT PACCESS_MASK AuditMask);
 
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
 NTSTATUS
 NTAPI
@@ -5315,9 +5416,47 @@ SeLocateProcessImageName(
   IN OUT PEPROCESS Process,
   OUT PUNICODE_STRING *pImageFileName);
 
+#define SeLengthSid( Sid ) \
+    (8 + (4 * ((SID *)Sid)->SubAuthorityCount))
+
+#define SeDeleteClientSecurity(C)  {                                           \
+            if (SeTokenType((C)->ClientToken) == TokenPrimary) {               \
+                PsDereferencePrimaryToken( (C)->ClientToken );                 \
+            } else {                                                           \
+                PsDereferenceImpersonationToken( (C)->ClientToken );           \
+            }                                                                  \
+}
+
+#define SeStopImpersonatingClient() PsRevertToSelf()
+
+#define SeQuerySubjectContextToken( SubjectContext )                \
+    ( ARGUMENT_PRESENT(                                             \
+        ((PSECURITY_SUBJECT_CONTEXT) SubjectContext)->ClientToken   \
+        ) ?                                                         \
+    ((PSECURITY_SUBJECT_CONTEXT) SubjectContext)->ClientToken :     \
+    ((PSECURITY_SUBJECT_CONTEXT) SubjectContext)->PrimaryToken )
+
 extern NTKERNELAPI PSE_EXPORTS SeExports;
+/******************************************************************************
+ *                          Process Manager Functions                         *
+ ******************************************************************************/
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PsLookupProcessByProcessId(
+  IN HANDLE ProcessId,
+  OUT PEPROCESS *Process);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PsLookupThreadByThreadId(
+  IN HANDLE UniqueThreadId,
+  OUT PETHREAD *Thread);
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
+
 
 NTKERNELAPI
 PACCESS_TOKEN
@@ -5331,8 +5470,7 @@ PsReferenceImpersonationToken(
 NTKERNELAPI
 LARGE_INTEGER
 NTAPI
-PsGetProcessExitTime(
-  VOID);
+PsGetProcessExitTime(VOID);
 
 NTKERNELAPI
 BOOLEAN
@@ -5367,8 +5505,7 @@ PsRestoreImpersonation(
 NTKERNELAPI
 VOID
 NTAPI
-PsRevertToSelf(
-  VOID);
+PsRevertToSelf(VOID);
 
 NTKERNELAPI
 VOID
@@ -5398,10 +5535,9 @@ HANDLE
 NTAPI
 PsReferencePrimaryToken(
   IN OUT PEPROCESS Process);
-
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
-
 #if (NTDDI_VERSION >= NTDDI_WINXP)
+
 
 NTKERNELAPI
 VOID
@@ -5428,164 +5564,19 @@ BOOLEAN
 NTAPI
 PsIsSystemThread(
   IN PETHREAD Thread);
-
-#endif
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-PsLookupProcessByProcessId(
-  IN HANDLE ProcessId,
-  OUT PEPROCESS *Process);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-PsLookupThreadByThreadId(
-  IN HANDLE UniqueThreadId,
-  OUT PETHREAD *Thread);
-
-#define IO_OPEN_PAGING_FILE             0x0002
-#define IO_OPEN_TARGET_DIRECTORY        0x0004
-#define IO_STOP_ON_SYMLINK              0x0008
-#define IO_MM_PAGING_FILE               0x0010
-
-typedef VOID
-(NTAPI *PDRIVER_FS_NOTIFICATION) (
-  IN PDEVICE_OBJECT DeviceObject,
-  IN BOOLEAN FsActive);
-
-typedef enum _FS_FILTER_SECTION_SYNC_TYPE {
-  SyncTypeOther = 0,
-  SyncTypeCreateSection
-} FS_FILTER_SECTION_SYNC_TYPE, *PFS_FILTER_SECTION_SYNC_TYPE;
-
-typedef enum _FS_FILTER_STREAM_FO_NOTIFICATION_TYPE {
-  NotifyTypeCreate = 0,
-  NotifyTypeRetired
-} FS_FILTER_STREAM_FO_NOTIFICATION_TYPE, *PFS_FILTER_STREAM_FO_NOTIFICATION_TYPE;
-
-typedef union _FS_FILTER_PARAMETERS {
-  struct {
-    PLARGE_INTEGER EndingOffset;
-    PERESOURCE *ResourceToRelease;
-  } AcquireForModifiedPageWriter;
-  struct {
-    PERESOURCE ResourceToRelease;
-  } ReleaseForModifiedPageWriter;
-  struct {
-    FS_FILTER_SECTION_SYNC_TYPE SyncType;
-    ULONG PageProtection;
-  } AcquireForSectionSynchronization;
-  struct {
-    FS_FILTER_STREAM_FO_NOTIFICATION_TYPE NotificationType;
-    BOOLEAN POINTER_ALIGNMENT SafeToRecurse;
-  } NotifyStreamFileObject;
-  struct {
-    PVOID Argument1;
-    PVOID Argument2;
-    PVOID Argument3;
-    PVOID Argument4;
-    PVOID Argument5;
-  } Others;
-} FS_FILTER_PARAMETERS, *PFS_FILTER_PARAMETERS;
-
-#define FS_FILTER_ACQUIRE_FOR_SECTION_SYNCHRONIZATION      (UCHAR)-1
-#define FS_FILTER_RELEASE_FOR_SECTION_SYNCHRONIZATION      (UCHAR)-2
-#define FS_FILTER_ACQUIRE_FOR_MOD_WRITE                    (UCHAR)-3
-#define FS_FILTER_RELEASE_FOR_MOD_WRITE                    (UCHAR)-4
-#define FS_FILTER_ACQUIRE_FOR_CC_FLUSH                     (UCHAR)-5
-#define FS_FILTER_RELEASE_FOR_CC_FLUSH                     (UCHAR)-6
-
-typedef struct _FS_FILTER_CALLBACK_DATA {
-  ULONG SizeOfFsFilterCallbackData;
-  UCHAR Operation;
-  UCHAR Reserved;
-  struct _DEVICE_OBJECT *DeviceObject;
-  struct _FILE_OBJECT *FileObject;
-  FS_FILTER_PARAMETERS Parameters;
-} FS_FILTER_CALLBACK_DATA, *PFS_FILTER_CALLBACK_DATA;
-
-typedef NTSTATUS
-(NTAPI *PFS_FILTER_CALLBACK) (
-  IN PFS_FILTER_CALLBACK_DATA Data,
-  OUT PVOID *CompletionContext);
-
-typedef VOID
-(NTAPI *PFS_FILTER_COMPLETION_CALLBACK) (
-  IN PFS_FILTER_CALLBACK_DATA Data,
-  IN NTSTATUS OperationStatus,
-  IN PVOID CompletionContext);
-
-typedef struct _FS_FILTER_CALLBACKS {
-  ULONG SizeOfFsFilterCallbacks;
-  ULONG Reserved;
-  PFS_FILTER_CALLBACK PreAcquireForSectionSynchronization;
-  PFS_FILTER_COMPLETION_CALLBACK PostAcquireForSectionSynchronization;
-  PFS_FILTER_CALLBACK PreReleaseForSectionSynchronization;
-  PFS_FILTER_COMPLETION_CALLBACK PostReleaseForSectionSynchronization;
-  PFS_FILTER_CALLBACK PreAcquireForCcFlush;
-  PFS_FILTER_COMPLETION_CALLBACK PostAcquireForCcFlush;
-  PFS_FILTER_CALLBACK PreReleaseForCcFlush;
-  PFS_FILTER_COMPLETION_CALLBACK PostReleaseForCcFlush;
-  PFS_FILTER_CALLBACK PreAcquireForModifiedPageWriter;
-  PFS_FILTER_COMPLETION_CALLBACK PostAcquireForModifiedPageWriter;
-  PFS_FILTER_CALLBACK PreReleaseForModifiedPageWriter;
-  PFS_FILTER_COMPLETION_CALLBACK PostReleaseForModifiedPageWriter;
-} FS_FILTER_CALLBACKS, *PFS_FILTER_CALLBACKS;
-
-#if (NTDDI_VERSION >= NTDDI_WINXP)
-NTKERNELAPI
-NTSTATUS
-NTAPI
-FsRtlRegisterFileSystemFilterCallbacks(
-  IN struct _DRIVER_OBJECT *FilterDriverObject,
-  IN PFS_FILTER_CALLBACKS Callbacks);
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
-#if (NTDDI_VERSION >= NTDDI_VISTA)
-NTKERNELAPI
-NTSTATUS
-NTAPI
-FsRtlNotifyStreamFileObject(
-  IN struct _FILE_OBJECT * StreamFileObject,
-  IN struct _DEVICE_OBJECT *DeviceObjectHint OPTIONAL,
-  IN FS_FILTER_STREAM_FO_NOTIFICATION_TYPE NotificationType,
-  IN BOOLEAN SafeToRecurse);
-#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+/******************************************************************************
+ *                         I/O Manager Functions                              *
+ ******************************************************************************/
 
-#define DO_VERIFY_VOLUME                    0x00000002
-#define DO_BUFFERED_IO                      0x00000004
-#define DO_EXCLUSIVE                        0x00000008
-#define DO_DIRECT_IO                        0x00000010
-#define DO_MAP_IO_BUFFER                    0x00000020
-#define DO_DEVICE_HAS_NAME                  0x00000040
-#define DO_DEVICE_INITIALIZING              0x00000080
-#define DO_SYSTEM_BOOT_PARTITION            0x00000100
-#define DO_LONG_TERM_REQUESTS               0x00000200
-#define DO_NEVER_LAST_DEVICE                0x00000400
-#define DO_SHUTDOWN_REGISTERED              0x00000800
-#define DO_BUS_ENUMERATED_DEVICE            0x00001000
-#define DO_POWER_PAGABLE                    0x00002000
-#define DO_POWER_INRUSH                     0x00004000
-#define DO_LOW_PRIORITY_FILESYSTEM          0x00010000
-#define DO_SUPPORTS_TRANSACTIONS            0x00040000
-#define DO_FORCE_NEITHER_IO                 0x00080000
-#define DO_VOLUME_DEVICE_OBJECT             0x00100000
-#define DO_SYSTEM_SYSTEM_PARTITION          0x00200000
-#define DO_SYSTEM_CRITICAL_PARTITION        0x00400000
-#define DO_DISALLOW_EXECUTE                 0x00800000
-
-extern KSPIN_LOCK                   IoStatisticsLock;
-extern ULONG                        IoReadOperationCount;
-extern ULONG                        IoWriteOperationCount;
-extern ULONG                        IoOtherOperationCount;
-extern LARGE_INTEGER                IoReadTransferCount;
-extern LARGE_INTEGER                IoWriteTransferCount;
-extern LARGE_INTEGER                IoOtherTransferCount;
-
-#define IO_FILE_OBJECT_NON_PAGED_POOL_CHARGE    64
-#define IO_FILE_OBJECT_PAGED_POOL_CHARGE        1024
+#define IoIsFileOpenedExclusively(FileObject) ( \
+    (BOOLEAN) !(                                \
+    (FileObject)->SharedRead ||                 \
+    (FileObject)->SharedWrite ||                \
+    (FileObject)->SharedDelete                  \
+    )                                           \
+)
 
 #if (NTDDI_VERSION == NTDDI_WIN2K)
 NTKERNELAPI
@@ -5595,8 +5586,8 @@ IoRegisterFsRegistrationChangeEx(
   IN PDRIVER_OBJECT DriverObject,
   IN PDRIVER_FS_NOTIFICATION DriverNotificationRoutine);
 #endif
-
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
+
 
 NTKERNELAPI
 VOID
@@ -5697,8 +5688,7 @@ IoGetBaseFileSystemDeviceObject(
 NTKERNELAPI
 PCONFIGURATION_INFORMATION
 NTAPI
-IoGetConfigurationInformation(
-  VOID);
+IoGetConfigurationInformation(VOID);
 
 NTKERNELAPI
 ULONG
@@ -5715,8 +5705,7 @@ IoGetRequestorProcess(
 NTKERNELAPI
 PIRP
 NTAPI
-IoGetTopLevelIrp(
-  VOID);
+IoGetTopLevelIrp(VOID);
 
 NTKERNELAPI
 BOOLEAN
@@ -5849,7 +5838,9 @@ IoGetRequestorSessionId(
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
+
 #if (NTDDI_VERSION >= NTDDI_WINXP)
+
 
 NTKERNELAPI
 PFILE_OBJECT
@@ -5894,9 +5885,11 @@ IoGetDiskDeviceObject(
   IN PDEVICE_OBJECT FileSystemDeviceObject,
   OUT PDEVICE_OBJECT *DiskDeviceObject);
 
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
 #if (NTDDI_VERSION >= NTDDI_WS03SP1)
+
+
 NTKERNELAPI
 NTSTATUS
 NTAPI
@@ -5904,9 +5897,10 @@ IoEnumerateRegisteredFiltersList(
   OUT PDRIVER_OBJECT *DriverObjectList,
   IN ULONG DriverObjectListSize,
   OUT PULONG ActualNumberDriverObjects);
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_WS03SP1) */
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
+
 VOID
 FORCEINLINE
 NTAPI
@@ -5918,9 +5912,10 @@ IoInitializePriorityInfo(
   PriorityInfo->IoPriority = IoPriorityNormal;
   PriorityInfo->PagePriority = 0;
 }
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
+
 
 NTKERNELAPI
 NTSTATUS
@@ -5937,25 +5932,8 @@ IoReplaceFileObjectName(
   IN PFILE_OBJECT FileObject,
   IN PWSTR NewFileName,
   IN USHORT FileNameLength);
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
-#endif
-
-#define IoIsFileOpenedExclusively(FileObject) ( \
-    (BOOLEAN) !(                                \
-    (FileObject)->SharedRead ||                 \
-    (FileObject)->SharedWrite ||                \
-    (FileObject)->SharedDelete                  \
-    )                                           \
-)
-
-#if (NTDDI_VERSION >= NTDDI_VISTA)
-typedef struct _IO_PRIORITY_INFO {
-  ULONG Size;
-  ULONG ThreadPriority;
-  ULONG PagePriority;
-  IO_PRIORITY_HINT IoPriority;
-} IO_PRIORITY_INFO, *PIO_PRIORITY_INFO;
-#endif
 
 #define PO_CB_SYSTEM_POWER_POLICY       0
 #define PO_CB_AC_STATUS                 1
@@ -5964,6 +5942,7 @@ typedef struct _IO_PRIORITY_INFO {
 #define PO_CB_LID_SWITCH_STATE          4
 #define PO_CB_PROCESSOR_POWER_POLICY    5
 
+
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 NTKERNELAPI
 NTSTATUS
@@ -5971,26 +5950,97 @@ NTAPI
 PoQueueShutdownWorkItem(
   IN OUT PWORK_QUEUE_ITEM WorkItem);
 #endif
-
-#if defined(_IA64_)
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
-//DECLSPEC_DEPRECATED_DDK
-NTHALAPI
-ULONG
-NTAPI
-HalGetDmaAlignmentRequirement(
-  VOID);
-#endif
-#endif
-
-#if defined(_M_IX86) || defined(_M_AMD64)
-#define HalGetDmaAlignmentRequirement() 1L
-#endif
-
+/******************************************************************************
+ *                         Memory manager Types                               *
+ ******************************************************************************/
 typedef enum _MMFLUSH_TYPE {
   MmFlushForDelete,
   MmFlushForWrite
 } MMFLUSH_TYPE;
+
+typedef struct _READ_LIST {
+  PFILE_OBJECT FileObject;
+  ULONG NumberOfEntries;
+  LOGICAL IsImage;
+  FILE_SEGMENT_ELEMENT List[ANYSIZE_ARRAY];
+} READ_LIST, *PREAD_LIST;
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+
+typedef union _MM_PREFETCH_FLAGS {
+  struct {
+    ULONG Priority : SYSTEM_PAGE_PRIORITY_BITS;
+    ULONG RepurposePriority : SYSTEM_PAGE_PRIORITY_BITS;
+  } Flags;
+  ULONG AllFlags;
+} MM_PREFETCH_FLAGS, *PMM_PREFETCH_FLAGS;
+
+#define MM_PREFETCH_FLAGS_MASK ((1 << (2*SYSTEM_PAGE_PRIORITY_BITS)) - 1)
+
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
+
+#define HEAP_NO_SERIALIZE               0x00000001
+#define HEAP_GROWABLE                   0x00000002
+#define HEAP_GENERATE_EXCEPTIONS        0x00000004
+#define HEAP_ZERO_MEMORY                0x00000008
+#define HEAP_REALLOC_IN_PLACE_ONLY      0x00000010
+#define HEAP_TAIL_CHECKING_ENABLED      0x00000020
+#define HEAP_FREE_CHECKING_ENABLED      0x00000040
+#define HEAP_DISABLE_COALESCE_ON_FREE   0x00000080
+
+#define HEAP_CREATE_ALIGN_16            0x00010000
+#define HEAP_CREATE_ENABLE_TRACING      0x00020000
+#define HEAP_CREATE_ENABLE_EXECUTE      0x00040000
+
+#define HEAP_SETTABLE_USER_VALUE        0x00000100
+#define HEAP_SETTABLE_USER_FLAG1        0x00000200
+#define HEAP_SETTABLE_USER_FLAG2        0x00000400
+#define HEAP_SETTABLE_USER_FLAG3        0x00000800
+#define HEAP_SETTABLE_USER_FLAGS        0x00000E00
+
+#define HEAP_CLASS_0                    0x00000000
+#define HEAP_CLASS_1                    0x00001000
+#define HEAP_CLASS_2                    0x00002000
+#define HEAP_CLASS_3                    0x00003000
+#define HEAP_CLASS_4                    0x00004000
+#define HEAP_CLASS_5                    0x00005000
+#define HEAP_CLASS_6                    0x00006000
+#define HEAP_CLASS_7                    0x00007000
+#define HEAP_CLASS_8                    0x00008000
+#define HEAP_CLASS_MASK                 0x0000F000
+
+#define HEAP_MAXIMUM_TAG                0x0FFF
+#define HEAP_GLOBAL_TAG                 0x0800
+#define HEAP_PSEUDO_TAG_FLAG            0x8000
+#define HEAP_TAG_SHIFT                  18
+#define HEAP_TAG_MASK                  (HEAP_MAXIMUM_TAG << HEAP_TAG_SHIFT)
+
+#define HEAP_CREATE_VALID_MASK         (HEAP_NO_SERIALIZE |             \
+                                        HEAP_GROWABLE |                 \
+                                        HEAP_GENERATE_EXCEPTIONS |      \
+                                        HEAP_ZERO_MEMORY |              \
+                                        HEAP_REALLOC_IN_PLACE_ONLY |    \
+                                        HEAP_TAIL_CHECKING_ENABLED |    \
+                                        HEAP_FREE_CHECKING_ENABLED |    \
+                                        HEAP_DISABLE_COALESCE_ON_FREE | \
+                                        HEAP_CLASS_MASK |               \
+                                        HEAP_CREATE_ALIGN_16 |          \
+                                        HEAP_CREATE_ENABLE_TRACING |    \
+                                        HEAP_CREATE_ENABLE_EXECUTE)
+
+/******************************************************************************
+ *                       Memory manager Functions                             *
+ ******************************************************************************/
+
+FORCEINLINE
+ULONG
+HEAP_MAKE_TAG_FLAGS(
+  IN ULONG TagBase,
+  IN ULONG Tag)
+{
+  //__assume_bound(TagBase); // FIXME
+  return ((ULONG)((TagBase) + ((Tag) << HEAP_TAG_SHIFT)));
+}
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
@@ -6028,25 +6078,10 @@ MmSetAddressRangeModified(
   IN PVOID Address,
   IN SIZE_T Length);
 
-#endif
-
-typedef struct _READ_LIST {
-  PFILE_OBJECT FileObject;
-  ULONG NumberOfEntries;
-  LOGICAL IsImage;
-  FILE_SEGMENT_ELEMENT List[ANYSIZE_ARRAY];
-} READ_LIST, *PREAD_LIST;
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
-typedef union _MM_PREFETCH_FLAGS {
-  struct {
-    ULONG Priority : SYSTEM_PAGE_PRIORITY_BITS;
-    ULONG RepurposePriority : SYSTEM_PAGE_PRIORITY_BITS;
-  } Flags;
-  ULONG AllFlags;
-} MM_PREFETCH_FLAGS, *PMM_PREFETCH_FLAGS;
 
-#define MM_PREFETCH_FLAGS_MASK ((1 << (2*SYSTEM_PAGE_PRIORITY_BITS)) - 1)
 
 NTKERNELAPI
 NTSTATUS
@@ -6054,15 +6089,19 @@ NTAPI
 MmPrefetchPages(
   IN ULONG NumberOfLists,
   IN PREAD_LIST *ReadLists);
-#endif
+
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
+
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
+
 NTKERNELAPI
 ULONG
 NTAPI
 MmDoesFileHaveUserWritableReferences(
   IN PSECTION_OBJECT_POINTERS SectionPointer);
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
@@ -6110,10 +6149,10 @@ NTAPI
 ObQueryObjectAuditingByHandle(
   IN HANDLE Handle,
   OUT PBOOLEAN GenerateOnClose);
-
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
+
 NTKERNELAPI
 BOOLEAN
 NTAPI
@@ -6121,7 +6160,9 @@ ObIsKernelHandle(
   IN HANDLE Handle);
 #endif
 
+
 #if (NTDDI_VERSION >= NTDDI_WIN7)
+
 NTKERNELAPI
 NTSTATUS
 NTAPI
@@ -6134,19 +6175,9 @@ ObOpenObjectByPointerWithTag(
   IN KPROCESSOR_MODE AccessMode,
   IN ULONG Tag,
   OUT PHANDLE Handle);
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
-typedef ULONG LBN;
-typedef LBN *PLBN;
-
-typedef ULONG VBN;
-typedef VBN *PVBN;
-
-typedef enum _FAST_IO_POSSIBLE {
-  FastIoIsNotPossible = 0,
-  FastIoIsPossible,
-  FastIoIsQuestionable
-} FAST_IO_POSSIBLE;
+/* FSRTL Types */
 
 typedef struct _FSRTL_COMMON_FCB_HEADER {
   CSHORT NodeTypeCode;
@@ -6202,11 +6233,6 @@ typedef struct _FSRTL_ADVANCED_FCB_HEADER {
 #define FSRTL_NETWORK2_TOP_LEVEL_IRP    ((LONG_PTR)0x06)
 #define FSRTL_MAX_TOP_LEVEL_IRP_FLAG    ((LONG_PTR)0xFFFF)
 
-typedef struct _EOF_WAIT_BLOCK {
-  LIST_ENTRY EofWaitLinks;
-  KEVENT Event;
-} EOF_WAIT_BLOCK, *PEOF_WAIT_BLOCK;
-
 typedef struct _FSRTL_AUXILIARY_BUFFER {
   PVOID Buffer;
   ULONG Length;
@@ -6215,44 +6241,6 @@ typedef struct _FSRTL_AUXILIARY_BUFFER {
 } FSRTL_AUXILIARY_BUFFER, *PFSRTL_AUXILIARY_BUFFER;
 
 #define FSRTL_AUXILIARY_FLAG_DEALLOCATE 0x00000001
-
-typedef struct _FILE_LOCK_INFO {
-  LARGE_INTEGER StartingByte;
-  LARGE_INTEGER Length;
-  BOOLEAN ExclusiveLock;
-  ULONG Key;
-  PFILE_OBJECT FileObject;
-  PVOID ProcessId;
-  LARGE_INTEGER EndingByte;
-} FILE_LOCK_INFO, *PFILE_LOCK_INFO;
-
-typedef NTSTATUS
-(NTAPI *PCOMPLETE_LOCK_IRP_ROUTINE) (
-  IN PVOID Context,
-  IN PIRP Irp);
-
-typedef VOID
-(NTAPI *PUNLOCK_ROUTINE) (
-  IN PVOID Context,
-  IN PFILE_LOCK_INFO FileLockInfo);
-
-typedef struct _FILE_LOCK {
-  PCOMPLETE_LOCK_IRP_ROUTINE CompleteLockIrpRoutine;
-  PUNLOCK_ROUTINE UnlockRoutine;
-  BOOLEAN FastIoIsQuestionable;
-  BOOLEAN SpareC[3];
-  PVOID LockInformation;
-  FILE_LOCK_INFO LastReturnedLockInfo;
-  PVOID LastReturnedLock;
-  LONG volatile LockRequestsInProgress;
-} FILE_LOCK, *PFILE_LOCK;
-
-typedef struct _TUNNEL {
-  FAST_MUTEX Mutex;
-  PRTL_SPLAY_LINKS Cache;
-  LIST_ENTRY TimerQueue;
-  USHORT NumEntries;
-} TUNNEL, *PTUNNEL;
 
 typedef enum _FSRTL_COMPARISON_RESULT {
   LessThan = -1,
@@ -6266,59 +6254,6 @@ typedef enum _FSRTL_COMPARISON_RESULT {
 #define FSRTL_WILD_CHARACTER            0x08
 #define FSRTL_OLE_LEGAL                 0x10
 #define FSRTL_NTFS_STREAM_LEGAL         (FSRTL_NTFS_LEGAL | FSRTL_OLE_LEGAL)
-
-typedef struct _BASE_MCB {
-  ULONG MaximumPairCount;
-  ULONG PairCount;
-  USHORT PoolType;
-  USHORT Flags;
-  PVOID Mapping;
-} BASE_MCB, *PBASE_MCB;
-
-typedef struct _LARGE_MCB {
-  PKGUARDED_MUTEX GuardedMutex;
-  BASE_MCB BaseMcb;
-} LARGE_MCB, *PLARGE_MCB;
-
-#define MCB_FLAG_RAISE_ON_ALLOCATION_FAILURE 1
-
-typedef struct _MCB {
-  LARGE_MCB DummyFieldThatSizesThisStructureCorrectly;
-} MCB, *PMCB;
-
-typedef PVOID OPLOCK, *POPLOCK;
-
-typedef VOID
-(NTAPI *POPLOCK_WAIT_COMPLETE_ROUTINE) (
-  IN PVOID Context,
-  IN PIRP Irp);
-
-typedef VOID
-(NTAPI *POPLOCK_FS_PREPOST_IRP) (
-  IN PVOID Context,
-  IN PIRP Irp);
-
-#if (NTDDI_VERSION >= NTDDI_VISTASP1)
-#define OPLOCK_FLAG_COMPLETE_IF_OPLOCKED    0x00000001
-#endif
-
-#if (NTDDI_VERSION >= NTDDI_WIN7)
-#define OPLOCK_FLAG_OPLOCK_KEY_CHECK_ONLY   0x00000002
-#define OPLOCK_FLAG_BACK_OUT_ATOMIC_OPLOCK  0x00000004
-#define OPLOCK_FLAG_IGNORE_OPLOCK_KEYS      0x00000008
-#define OPLOCK_FSCTRL_FLAG_ALL_KEYS_MATCH   0x00000001
-#endif
-
-#if (NTDDI_VERSION >= NTDDI_WIN7)
-
-typedef struct _OPLOCK_KEY_ECP_CONTEXT {
-  GUID OplockKey;
-  ULONG Reserved;
-} OPLOCK_KEY_ECP_CONTEXT, *POPLOCK_KEY_ECP_CONTEXT;
-
-DEFINE_GUID( GUID_ECP_OPLOCK_KEY, 0x48850596, 0x3050, 0x4be7, 0x98, 0x63, 0xfe, 0xc3, 0x50, 0xce, 0x8d, 0x7f );
-
-#endif
 
 #define FSRTL_VOLUME_DISMOUNT           1
 #define FSRTL_VOLUME_DISMOUNT_FAILED    2
@@ -6334,19 +6269,6 @@ DEFINE_GUID( GUID_ECP_OPLOCK_KEY, 0x48850596, 0x3050, 0x4be7, 0x98, 0x63, 0xfe, 
 #define FSRTL_VOLUME_PREPARING_EJECT    12
 #define FSRTL_VOLUME_CHANGE_SIZE        13
 #define FSRTL_VOLUME_BACKGROUND_FORMAT  14
-
-typedef PVOID PNOTIFY_SYNC;
-
-typedef BOOLEAN
-(NTAPI *PCHECK_FOR_TRAVERSE_ACCESS) (
-  IN PVOID NotifyContext,
-  IN PVOID TargetContext OPTIONAL,
-  IN PSECURITY_SUBJECT_CONTEXT SubjectContext);
-
-typedef BOOLEAN
-(NTAPI *PFILTER_REPORT_CHANGE) (
-  IN PVOID NotifyContext,
-  IN PVOID FilterContext);
 
 typedef VOID
 (NTAPI *PFSRTL_STACK_OVERFLOW_ROUTINE) (
@@ -6423,11 +6345,12 @@ typedef struct _FSRTL_PER_FILEOBJECT_CONTEXT {
   PVOID InstanceId;
 } FSRTL_PER_FILEOBJECT_CONTEXT, *PFSRTL_PER_FILEOBJECT_CONTEXT;
 
-#define FsRtlEnterFileSystem    KeEnterCriticalRegion
-#define FsRtlExitFileSystem     KeLeaveCriticalRegion
-
 #define FSRTL_CC_FLUSH_ERROR_FLAG_NO_HARD_ERROR  0x1
 #define FSRTL_CC_FLUSH_ERROR_FLAG_NO_LOG_ENTRY   0x2
+/* FSRTL Functions */
+
+#define FsRtlEnterFileSystem    KeEnterCriticalRegion
+#define FsRtlExitFileSystem     KeLeaveCriticalRegion
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
@@ -7792,14 +7715,6 @@ FsRtlRemovePerFileObjectContext(
     (InterlockedDecrement((LONG volatile *)&((FL)->LockRequestsInProgress)));\
 }
 
-extern NTKERNELAPI PUSHORT NlsOemLeadByteInfo;
-#define NLS_OEM_LEAD_BYTE_INFO            NlsOemLeadByteInfo
-
-#ifdef NLS_MB_CODE_PAGE_TAG
-#undef NLS_MB_CODE_PAGE_TAG
-#endif
-#define NLS_MB_CODE_PAGE_TAG              NlsMbOemCodePageTag
-
 /* GCC compatible definition, MS one is retarded */
 extern NTKERNELAPI const UCHAR * const FsRtlLegalAnsiCharacterArray;
 #define LEGAL_ANSI_CHARACTER_ARRAY        FsRtlLegalAnsiCharacterArray
@@ -7929,118 +7844,7 @@ FsRtlSetupAdvancedHeader(
     (IRP)->IoStatus.Status = (STATUS);             \
     IoCompleteRequest( (IRP), IO_DISK_INCREMENT ); \
 }
-
-#if (NTDDI_VERSION >= NTDDI_WIN7)
-typedef struct _ECP_HEADER ECP_HEADER, *PECP_HEADER;
-#endif
-
-#if (NTDDI_VERSION >= NTDDI_VISTA)
-
-typedef enum _NETWORK_OPEN_LOCATION_QUALIFIER {
-  NetworkOpenLocationAny,
-  NetworkOpenLocationRemote,
-  NetworkOpenLocationLoopback
-} NETWORK_OPEN_LOCATION_QUALIFIER;
-
-typedef enum _NETWORK_OPEN_INTEGRITY_QUALIFIER {
-  NetworkOpenIntegrityAny,
-  NetworkOpenIntegrityNone,
-  NetworkOpenIntegritySigned,
-  NetworkOpenIntegrityEncrypted,
-  NetworkOpenIntegrityMaximum
-} NETWORK_OPEN_INTEGRITY_QUALIFIER;
-
-#if (NTDDI_VERSION >= NTDDI_WIN7)
-
-#define NETWORK_OPEN_ECP_IN_FLAG_DISABLE_HANDLE_COLLAPSING 0x1
-#define NETWORK_OPEN_ECP_IN_FLAG_DISABLE_HANDLE_DURABILITY 0x2
-#define NETWORK_OPEN_ECP_IN_FLAG_FORCE_BUFFERED_SYNCHRONOUS_IO_HACK 0x80000000
-
-typedef struct _NETWORK_OPEN_ECP_CONTEXT {
-  USHORT Size;
-  USHORT Reserved;
-  struct {
-    struct {
-      NETWORK_OPEN_LOCATION_QUALIFIER Location;
-      NETWORK_OPEN_INTEGRITY_QUALIFIER Integrity;
-      ULONG Flags;
-    } in;
-    struct {
-      NETWORK_OPEN_LOCATION_QUALIFIER Location;
-      NETWORK_OPEN_INTEGRITY_QUALIFIER Integrity;
-      ULONG Flags;
-    } out;
-  } DUMMYSTRUCTNAME;
-} NETWORK_OPEN_ECP_CONTEXT, *PNETWORK_OPEN_ECP_CONTEXT;
-
-typedef struct _NETWORK_OPEN_ECP_CONTEXT_V0 {
-  USHORT Size;
-  USHORT Reserved;
-  struct {
-    struct {
-    NETWORK_OPEN_LOCATION_QUALIFIER Location;
-    NETWORK_OPEN_INTEGRITY_QUALIFIER Integrity;
-    } in;
-    struct {
-      NETWORK_OPEN_LOCATION_QUALIFIER Location;
-      NETWORK_OPEN_INTEGRITY_QUALIFIER Integrity;
-    } out;
-  } DUMMYSTRUCTNAME;
-} NETWORK_OPEN_ECP_CONTEXT_V0, *PNETWORK_OPEN_ECP_CONTEXT_V0;
-
-#elif (NTDDI_VERSION >= NTDDI_VISTA)
-typedef struct _NETWORK_OPEN_ECP_CONTEXT {
-  USHORT Size;
-  USHORT Reserved;
-  struct {
-    struct {
-      NETWORK_OPEN_LOCATION_QUALIFIER Location;
-      NETWORK_OPEN_INTEGRITY_QUALIFIER Integrity;
-    } in;
-    struct {
-      NETWORK_OPEN_LOCATION_QUALIFIER Location;
-      NETWORK_OPEN_INTEGRITY_QUALIFIER Integrity;
-    } out;
-  } DUMMYSTRUCTNAME;
-} NETWORK_OPEN_ECP_CONTEXT, *PNETWORK_OPEN_ECP_CONTEXT;
-#endif
-
-DEFINE_GUID(GUID_ECP_NETWORK_OPEN_CONTEXT, 0xc584edbf, 0x00df, 0x4d28, 0xb8, 0x84, 0x35, 0xba, 0xca, 0x89, 0x11, 0xe8 );
-
-#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
-
-
-#if (NTDDI_VERSION >= NTDDI_VISTA)
-
-typedef struct _PREFETCH_OPEN_ECP_CONTEXT {
-  PVOID Context;
-} PREFETCH_OPEN_ECP_CONTEXT, *PPREFETCH_OPEN_ECP_CONTEXT;
-
-DEFINE_GUID(GUID_ECP_PREFETCH_OPEN, 0xe1777b21, 0x847e, 0x4837, 0xaa, 0x45, 0x64, 0x16, 0x1d, 0x28, 0x6, 0x55 );
-
-#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
-
-#if (NTDDI_VERSION >= NTDDI_WIN7)
-
-DEFINE_GUID (GUID_ECP_NFS_OPEN, 0xf326d30c, 0xe5f8, 0x4fe7, 0xab, 0x74, 0xf5, 0xa3, 0x19, 0x6d, 0x92, 0xdb);
-DEFINE_GUID(GUID_ECP_SRV_OPEN, 0xbebfaebc, 0xaabf, 0x489d, 0x9d, 0x2c, 0xe9, 0xe3, 0x61, 0x10, 0x28, 0x53 );
-
-typedef struct sockaddr_storage *PSOCKADDR_STORAGE_NFS;
-
-typedef struct _NFS_OPEN_ECP_CONTEXT {
-  PUNICODE_STRING ExportAlias;
-  PSOCKADDR_STORAGE_NFS ClientSocketAddress;
-} NFS_OPEN_ECP_CONTEXT, *PNFS_OPEN_ECP_CONTEXT, **PPNFS_OPEN_ECP_CONTEXT;
-
-typedef struct _SRV_OPEN_ECP_CONTEXT {
-  PUNICODE_STRING ShareName;
-  PSOCKADDR_STORAGE_NFS SocketAddress;
-  BOOLEAN OplockBlockState;
-  BOOLEAN OplockAppState;
-  BOOLEAN OplockFinalState;
-} SRV_OPEN_ECP_CONTEXT, *PSRV_OPEN_ECP_CONTEXT;
-
-#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
+/* Common Cache Types */
 
 #define VACB_MAPPING_GRANULARITY        (0x40000)
 #define VACB_OFFSET_SHIFT               (18)
@@ -8107,6 +7911,13 @@ typedef VOID
 (NTAPI *PCC_POST_DEFERRED_WRITE) (
   IN PVOID Context1,
   IN PVOID Context2);
+
+#define UNINITIALIZE_CACHE_MAPS          (1)
+#define DO_NOT_RETRY_PURGE               (2)
+#define DO_NOT_PURGE_DIRTY_PAGES         (0x4)
+
+#define CC_FLUSH_AND_PURGE_NO_PURGE     (0x1)
+/* Common Cache Functions */
 
 #define CcIsFileCached(FO) (                                                         \
     ((FO)->SectionObjectPointer != NULL) &&                                          \
@@ -8497,12 +8308,6 @@ CcCoherencyFlushAndPurgeCache(
     ((PLARGE_INTEGER)((FO)->SectionObjectPointer->SharedCacheMap) + 1) \
 )
 
-#define UNINITIALIZE_CACHE_MAPS          (1)
-#define DO_NOT_RETRY_PURGE               (2)
-#define DO_NOT_PURGE_DIRTY_PAGES         (0x4)
-
-#define CC_FLUSH_AND_PURGE_NO_PURGE     (0x1)
-
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 NTKERNELAPI
 BOOLEAN
@@ -8540,42 +8345,45 @@ CcCopyWriteWontFlush(
         CcScheduleReadAhead((FO), (FOFF), (LEN));   \
     }                                               \
 )
+/******************************************************************************
+ *                            ZwXxx Functions                                 *
+ ******************************************************************************/
 
-#define PIN_WAIT                        (1)
-#define PIN_EXCLUSIVE                   (2)
-#define PIN_NO_READ                     (4)
-#define PIN_IF_BCB                      (8)
-#define PIN_CALLER_TRACKS_DIRTY_DATA    (32)
-#define PIN_HIGH_PRIORITY               (64)
 
-#define MAP_WAIT                          1
-#define MAP_NO_READ                       (16)
-#define MAP_HIGH_PRIORITY                 (64)
 
-#define IOCTL_REDIR_QUERY_PATH          CTL_CODE(FILE_DEVICE_NETWORK_FILE_SYSTEM, 99, METHOD_NEITHER, FILE_ANY_ACCESS)
-#define IOCTL_REDIR_QUERY_PATH_EX       CTL_CODE(FILE_DEVICE_NETWORK_FILE_SYSTEM, 100, METHOD_NEITHER, FILE_ANY_ACCESS)
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwQueryEaFile(
+  IN HANDLE FileHandle,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  OUT PVOID Buffer,
+  IN ULONG Length,
+  IN BOOLEAN ReturnSingleEntry,
+  IN PVOID EaList OPTIONAL,
+  IN ULONG EaListLength,
+  IN PULONG EaIndex OPTIONAL,
+  IN BOOLEAN RestartScan);
 
-typedef struct _QUERY_PATH_REQUEST {
-  ULONG PathNameLength;
-  PIO_SECURITY_CONTEXT SecurityContext;
-  WCHAR FilePathName[1];
-} QUERY_PATH_REQUEST, *PQUERY_PATH_REQUEST;
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwSetEaFile(
+  IN HANDLE FileHandle,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  OUT PVOID Buffer,
+  IN ULONG Length);
 
-typedef struct _QUERY_PATH_REQUEST_EX {
-  PIO_SECURITY_CONTEXT pSecurityContext;
-  ULONG EaLength;
-  PVOID pEaBuffer;
-  UNICODE_STRING PathName;
-  UNICODE_STRING DomainServiceName;
-  ULONG_PTR Reserved[ 3 ];
-} QUERY_PATH_REQUEST_EX, *PQUERY_PATH_REQUEST_EX;
-
-typedef struct _QUERY_PATH_RESPONSE {
-  ULONG LengthAccepted;
-} QUERY_PATH_RESPONSE, *PQUERY_PATH_RESPONSE;
-
-#define VOLSNAPCONTROLTYPE                              0x00000053
-#define IOCTL_VOLSNAP_FLUSH_AND_HOLD_WRITES             CTL_CODE(VOLSNAPCONTROLTYPE, 0, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwDuplicateToken(
+  IN HANDLE ExistingTokenHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes,
+  IN BOOLEAN EffectiveOnly,
+  IN TOKEN_TYPE TokenType,
+  OUT PHANDLE NewTokenHandle);
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
@@ -8752,7 +8560,6 @@ ZwQuerySecurityObject(
   OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
   IN ULONG Length,
   OUT PULONG ResultLength);
-
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
@@ -8776,7 +8583,7 @@ ZwOpenThreadTokenEx(
   IN ULONG HandleAttributes,
   OUT PHANDLE TokenHandle);
 
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 
@@ -8834,10 +8641,9 @@ NTAPI
 ZwFlushBuffersFile(
   IN HANDLE FileHandle,
   OUT PIO_STATUS_BLOCK IoStatusBlock);
-
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
-
 #if (NTDDI_VERSION >= NTDDI_WIN7)
+
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -8846,42 +8652,323 @@ ZwSetInformationToken(
   IN TOKEN_INFORMATION_CLASS TokenInformationClass,
   IN PVOID TokenInformation,
   IN ULONG TokenInformationLength);
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
+
+
+#define INVALID_PROCESSOR_INDEX     0xffffffff
+
+#define EX_PUSH_LOCK ULONG_PTR
+#define PEX_PUSH_LOCK PULONG_PTR
+
+/* #if !defined(_X86AMD64_)  FIXME : WHAT ?! */
+#if defined(_WIN64)
+
+C_ASSERT(sizeof(ERESOURCE) == 0x68);
+C_ASSERT(FIELD_OFFSET(ERESOURCE,ActiveCount) == 0x18);
+C_ASSERT(FIELD_OFFSET(ERESOURCE,Flag) == 0x1a);
+
+#else
+
+C_ASSERT(sizeof(ERESOURCE) == 0x38);
+C_ASSERT(FIELD_OFFSET(ERESOURCE,ActiveCount) == 0x0c);
+C_ASSERT(FIELD_OFFSET(ERESOURCE,Flag) == 0x0e);
+
+#endif
+/* #endif */
+
+#if defined(_IA64_)
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+//DECLSPEC_DEPRECATED_DDK
+NTHALAPI
+ULONG
+NTAPI
+HalGetDmaAlignmentRequirement(
+  VOID);
+#endif
 #endif
 
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwQueryEaFile(
-  IN HANDLE FileHandle,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  OUT PVOID Buffer,
-  IN ULONG Length,
-  IN BOOLEAN ReturnSingleEntry,
-  IN PVOID EaList OPTIONAL,
-  IN ULONG EaListLength,
-  IN PULONG EaIndex OPTIONAL,
-  IN BOOLEAN RestartScan);
+#if defined(_M_IX86) || defined(_M_AMD64)
+#define HalGetDmaAlignmentRequirement() 1L
+#endif
 
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwSetEaFile(
-  IN HANDLE FileHandle,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  OUT PVOID Buffer,
-  IN ULONG Length);
+typedef ULONG LBN;
+typedef LBN *PLBN;
 
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwDuplicateToken(
-  IN HANDLE ExistingTokenHandle,
-  IN ACCESS_MASK DesiredAccess,
-  IN POBJECT_ATTRIBUTES ObjectAttributes,
-  IN BOOLEAN EffectiveOnly,
-  IN TOKEN_TYPE TokenType,
-  OUT PHANDLE NewTokenHandle);
+typedef ULONG VBN;
+typedef VBN *PVBN;
 
+typedef enum _FAST_IO_POSSIBLE {
+  FastIoIsNotPossible = 0,
+  FastIoIsPossible,
+  FastIoIsQuestionable
+} FAST_IO_POSSIBLE;
+
+typedef struct _EOF_WAIT_BLOCK {
+  LIST_ENTRY EofWaitLinks;
+  KEVENT Event;
+} EOF_WAIT_BLOCK, *PEOF_WAIT_BLOCK;
+
+typedef struct _FILE_LOCK_INFO {
+  LARGE_INTEGER StartingByte;
+  LARGE_INTEGER Length;
+  BOOLEAN ExclusiveLock;
+  ULONG Key;
+  PFILE_OBJECT FileObject;
+  PVOID ProcessId;
+  LARGE_INTEGER EndingByte;
+} FILE_LOCK_INFO, *PFILE_LOCK_INFO;
+
+typedef NTSTATUS
+(NTAPI *PCOMPLETE_LOCK_IRP_ROUTINE) (
+  IN PVOID Context,
+  IN PIRP Irp);
+
+typedef VOID
+(NTAPI *PUNLOCK_ROUTINE) (
+  IN PVOID Context,
+  IN PFILE_LOCK_INFO FileLockInfo);
+
+typedef struct _FILE_LOCK {
+  PCOMPLETE_LOCK_IRP_ROUTINE CompleteLockIrpRoutine;
+  PUNLOCK_ROUTINE UnlockRoutine;
+  BOOLEAN FastIoIsQuestionable;
+  BOOLEAN SpareC[3];
+  PVOID LockInformation;
+  FILE_LOCK_INFO LastReturnedLockInfo;
+  PVOID LastReturnedLock;
+  LONG volatile LockRequestsInProgress;
+} FILE_LOCK, *PFILE_LOCK;
+
+typedef struct _TUNNEL {
+  FAST_MUTEX Mutex;
+  PRTL_SPLAY_LINKS Cache;
+  LIST_ENTRY TimerQueue;
+  USHORT NumEntries;
+} TUNNEL, *PTUNNEL;
+
+typedef struct _BASE_MCB {
+  ULONG MaximumPairCount;
+  ULONG PairCount;
+  USHORT PoolType;
+  USHORT Flags;
+  PVOID Mapping;
+} BASE_MCB, *PBASE_MCB;
+
+typedef struct _LARGE_MCB {
+  PKGUARDED_MUTEX GuardedMutex;
+  BASE_MCB BaseMcb;
+} LARGE_MCB, *PLARGE_MCB;
+
+#define MCB_FLAG_RAISE_ON_ALLOCATION_FAILURE 1
+
+typedef struct _MCB {
+  LARGE_MCB DummyFieldThatSizesThisStructureCorrectly;
+} MCB, *PMCB;
+
+typedef PVOID OPLOCK, *POPLOCK;
+
+typedef VOID
+(NTAPI *POPLOCK_WAIT_COMPLETE_ROUTINE) (
+  IN PVOID Context,
+  IN PIRP Irp);
+
+typedef VOID
+(NTAPI *POPLOCK_FS_PREPOST_IRP) (
+  IN PVOID Context,
+  IN PIRP Irp);
+
+#if (NTDDI_VERSION >= NTDDI_VISTASP1)
+#define OPLOCK_FLAG_COMPLETE_IF_OPLOCKED    0x00000001
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+#define OPLOCK_FLAG_OPLOCK_KEY_CHECK_ONLY   0x00000002
+#define OPLOCK_FLAG_BACK_OUT_ATOMIC_OPLOCK  0x00000004
+#define OPLOCK_FLAG_IGNORE_OPLOCK_KEYS      0x00000008
+#define OPLOCK_FSCTRL_FLAG_ALL_KEYS_MATCH   0x00000001
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+
+typedef struct _OPLOCK_KEY_ECP_CONTEXT {
+  GUID OplockKey;
+  ULONG Reserved;
+} OPLOCK_KEY_ECP_CONTEXT, *POPLOCK_KEY_ECP_CONTEXT;
+
+DEFINE_GUID( GUID_ECP_OPLOCK_KEY, 0x48850596, 0x3050, 0x4be7, 0x98, 0x63, 0xfe, 0xc3, 0x50, 0xce, 0x8d, 0x7f );
+
+#endif
+
+typedef PVOID PNOTIFY_SYNC;
+
+typedef BOOLEAN
+(NTAPI *PCHECK_FOR_TRAVERSE_ACCESS) (
+  IN PVOID NotifyContext,
+  IN PVOID TargetContext OPTIONAL,
+  IN PSECURITY_SUBJECT_CONTEXT SubjectContext);
+
+typedef BOOLEAN
+(NTAPI *PFILTER_REPORT_CHANGE) (
+  IN PVOID NotifyContext,
+  IN PVOID FilterContext);
+
+extern NTKERNELAPI PUSHORT NlsOemLeadByteInfo;
+#define NLS_OEM_LEAD_BYTE_INFO            NlsOemLeadByteInfo
+
+#ifdef NLS_MB_CODE_PAGE_TAG
+#undef NLS_MB_CODE_PAGE_TAG
+#endif
+#define NLS_MB_CODE_PAGE_TAG              NlsMbOemCodePageTag
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+typedef struct _ECP_HEADER ECP_HEADER, *PECP_HEADER;
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+typedef enum _NETWORK_OPEN_LOCATION_QUALIFIER {
+  NetworkOpenLocationAny,
+  NetworkOpenLocationRemote,
+  NetworkOpenLocationLoopback
+} NETWORK_OPEN_LOCATION_QUALIFIER;
+
+typedef enum _NETWORK_OPEN_INTEGRITY_QUALIFIER {
+  NetworkOpenIntegrityAny,
+  NetworkOpenIntegrityNone,
+  NetworkOpenIntegritySigned,
+  NetworkOpenIntegrityEncrypted,
+  NetworkOpenIntegrityMaximum
+} NETWORK_OPEN_INTEGRITY_QUALIFIER;
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+
+#define NETWORK_OPEN_ECP_IN_FLAG_DISABLE_HANDLE_COLLAPSING 0x1
+#define NETWORK_OPEN_ECP_IN_FLAG_DISABLE_HANDLE_DURABILITY 0x2
+#define NETWORK_OPEN_ECP_IN_FLAG_FORCE_BUFFERED_SYNCHRONOUS_IO_HACK 0x80000000
+
+typedef struct _NETWORK_OPEN_ECP_CONTEXT {
+  USHORT Size;
+  USHORT Reserved;
+  struct {
+    struct {
+      NETWORK_OPEN_LOCATION_QUALIFIER Location;
+      NETWORK_OPEN_INTEGRITY_QUALIFIER Integrity;
+      ULONG Flags;
+    } in;
+    struct {
+      NETWORK_OPEN_LOCATION_QUALIFIER Location;
+      NETWORK_OPEN_INTEGRITY_QUALIFIER Integrity;
+      ULONG Flags;
+    } out;
+  } DUMMYSTRUCTNAME;
+} NETWORK_OPEN_ECP_CONTEXT, *PNETWORK_OPEN_ECP_CONTEXT;
+
+typedef struct _NETWORK_OPEN_ECP_CONTEXT_V0 {
+  USHORT Size;
+  USHORT Reserved;
+  struct {
+    struct {
+    NETWORK_OPEN_LOCATION_QUALIFIER Location;
+    NETWORK_OPEN_INTEGRITY_QUALIFIER Integrity;
+    } in;
+    struct {
+      NETWORK_OPEN_LOCATION_QUALIFIER Location;
+      NETWORK_OPEN_INTEGRITY_QUALIFIER Integrity;
+    } out;
+  } DUMMYSTRUCTNAME;
+} NETWORK_OPEN_ECP_CONTEXT_V0, *PNETWORK_OPEN_ECP_CONTEXT_V0;
+
+#elif (NTDDI_VERSION >= NTDDI_VISTA)
+typedef struct _NETWORK_OPEN_ECP_CONTEXT {
+  USHORT Size;
+  USHORT Reserved;
+  struct {
+    struct {
+      NETWORK_OPEN_LOCATION_QUALIFIER Location;
+      NETWORK_OPEN_INTEGRITY_QUALIFIER Integrity;
+    } in;
+    struct {
+      NETWORK_OPEN_LOCATION_QUALIFIER Location;
+      NETWORK_OPEN_INTEGRITY_QUALIFIER Integrity;
+    } out;
+  } DUMMYSTRUCTNAME;
+} NETWORK_OPEN_ECP_CONTEXT, *PNETWORK_OPEN_ECP_CONTEXT;
+#endif
+
+DEFINE_GUID(GUID_ECP_NETWORK_OPEN_CONTEXT, 0xc584edbf, 0x00df, 0x4d28, 0xb8, 0x84, 0x35, 0xba, 0xca, 0x89, 0x11, 0xe8 );
+
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+typedef struct _PREFETCH_OPEN_ECP_CONTEXT {
+  PVOID Context;
+} PREFETCH_OPEN_ECP_CONTEXT, *PPREFETCH_OPEN_ECP_CONTEXT;
+
+DEFINE_GUID(GUID_ECP_PREFETCH_OPEN, 0xe1777b21, 0x847e, 0x4837, 0xaa, 0x45, 0x64, 0x16, 0x1d, 0x28, 0x6, 0x55 );
+
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+
+DEFINE_GUID (GUID_ECP_NFS_OPEN, 0xf326d30c, 0xe5f8, 0x4fe7, 0xab, 0x74, 0xf5, 0xa3, 0x19, 0x6d, 0x92, 0xdb);
+DEFINE_GUID(GUID_ECP_SRV_OPEN, 0xbebfaebc, 0xaabf, 0x489d, 0x9d, 0x2c, 0xe9, 0xe3, 0x61, 0x10, 0x28, 0x53 );
+
+typedef struct sockaddr_storage *PSOCKADDR_STORAGE_NFS;
+
+typedef struct _NFS_OPEN_ECP_CONTEXT {
+  PUNICODE_STRING ExportAlias;
+  PSOCKADDR_STORAGE_NFS ClientSocketAddress;
+} NFS_OPEN_ECP_CONTEXT, *PNFS_OPEN_ECP_CONTEXT, **PPNFS_OPEN_ECP_CONTEXT;
+
+typedef struct _SRV_OPEN_ECP_CONTEXT {
+  PUNICODE_STRING ShareName;
+  PSOCKADDR_STORAGE_NFS SocketAddress;
+  BOOLEAN OplockBlockState;
+  BOOLEAN OplockAppState;
+  BOOLEAN OplockFinalState;
+} SRV_OPEN_ECP_CONTEXT, *PSRV_OPEN_ECP_CONTEXT;
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
+
+#define PIN_WAIT                        (1)
+#define PIN_EXCLUSIVE                   (2)
+#define PIN_NO_READ                     (4)
+#define PIN_IF_BCB                      (8)
+#define PIN_CALLER_TRACKS_DIRTY_DATA    (32)
+#define PIN_HIGH_PRIORITY               (64)
+
+#define MAP_WAIT                          1
+#define MAP_NO_READ                       (16)
+#define MAP_HIGH_PRIORITY                 (64)
+
+#define IOCTL_REDIR_QUERY_PATH          CTL_CODE(FILE_DEVICE_NETWORK_FILE_SYSTEM, 99, METHOD_NEITHER, FILE_ANY_ACCESS)
+#define IOCTL_REDIR_QUERY_PATH_EX       CTL_CODE(FILE_DEVICE_NETWORK_FILE_SYSTEM, 100, METHOD_NEITHER, FILE_ANY_ACCESS)
+
+typedef struct _QUERY_PATH_REQUEST {
+  ULONG PathNameLength;
+  PIO_SECURITY_CONTEXT SecurityContext;
+  WCHAR FilePathName[1];
+} QUERY_PATH_REQUEST, *PQUERY_PATH_REQUEST;
+
+typedef struct _QUERY_PATH_REQUEST_EX {
+  PIO_SECURITY_CONTEXT pSecurityContext;
+  ULONG EaLength;
+  PVOID pEaBuffer;
+  UNICODE_STRING PathName;
+  UNICODE_STRING DomainServiceName;
+  ULONG_PTR Reserved[ 3 ];
+} QUERY_PATH_REQUEST_EX, *PQUERY_PATH_REQUEST_EX;
+
+typedef struct _QUERY_PATH_RESPONSE {
+  ULONG LengthAccepted;
+} QUERY_PATH_RESPONSE, *PQUERY_PATH_RESPONSE;
+
+#define VOLSNAPCONTROLTYPE                              0x00000053
+#define IOCTL_VOLSNAP_FLUSH_AND_HOLD_WRITES             CTL_CODE(VOLSNAPCONTROLTYPE, 0, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
+
+/* FIXME : These definitions below don't belong here (or anywhere in ddk really) */
 #pragma pack(push,4)
 
 #ifndef VER_PRODUCTBUILD

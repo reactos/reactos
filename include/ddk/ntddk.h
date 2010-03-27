@@ -40,11 +40,8 @@
 #include <ntdef.h>
 #include <ntstatus.h>
 #include <mce.h>
-
-/* FIXME
 #include <bugcodes.h>
 #include <ntiologc.h>
-*/
 
 #include <stdarg.h> // FIXME
 #include <basetyps.h> // FIXME
@@ -2509,7 +2506,6 @@ extern NTKERNELAPI PEPROCESS PsInitialSystemProcess;
  ******************************************************************************/
 
 
-
 #ifndef _RTL_RUN_ONCE_DEF
 #define _RTL_RUN_ONCE_DEF
 
@@ -2874,8 +2870,6 @@ typedef enum _WELL_KNOWN_SID_TYPE {
   WinConsoleLogonSid = 81,
   WinThisOrganizationCertificateSid = 82,
 } WELL_KNOWN_SID_TYPE;
-
-
 
 #if defined(_M_IX86)
 
@@ -3330,6 +3324,7 @@ Exfi386InterlockedExchangeUlong(
   IN ULONG  Value);
 #endif
 
+
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 NTKERNELAPI
 NTSTATUS
@@ -3376,6 +3371,7 @@ NTAPI
 ExRaiseDatatypeMisalignment(VOID);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
 
 /* Hardware Abstraction Layer Functions */
 
@@ -3878,6 +3874,7 @@ NTAPI
 IoSetThreadHardErrorMode(
   IN BOOLEAN EnableHardErrors);
 
+
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 #if (NTDDI_VERSION >= NTDDI_WIN2KSP3)
@@ -4023,8 +4020,8 @@ IoGetPagingIoPriority(
   IN PIRP Irp);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WS03) */
-
 #if (NTDDI_VERSION >= NTDDI_WS03SP1)
+
 BOOLEAN
 NTAPI
 IoTranslateBusAddress(
@@ -4033,7 +4030,7 @@ IoTranslateBusAddress(
   IN PHYSICAL_ADDRESS BusAddress,
   IN OUT PULONG AddressSpace,
   OUT PPHYSICAL_ADDRESS TranslatedAddress);
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_WS03SP1) */
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 NTKERNELAPI
@@ -4094,6 +4091,7 @@ IoIsFileObjectIgnoringSharing(
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
+
 NTSTATUS
 NTAPI
 IoSetFileObjectIgnoreSharing(
@@ -4115,13 +4113,13 @@ DbgPrompt(
 /******************************************************************************
  *                              Kernel Functions                              *
  ******************************************************************************/
+
 NTKERNELAPI
 VOID
 FASTCALL
 KeInvalidateRangeAllCaches(
   IN PVOID BaseAddress,
   IN ULONG Length);
-
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
@@ -4163,8 +4161,6 @@ VOID
 NTAPI
 KeBugCheck(
   IN ULONG BugCheckCode);
-
-
 #if defined(SINGLE_GROUP_LEGACY_API)
 
 
@@ -4179,21 +4175,19 @@ NTKERNELAPI
 KAFFINITY
 NTAPI
 KeQueryActiveProcessors(VOID);
-
 #endif /* defined(SINGLE_GROUP_LEGACY_API) */
 
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
+
 NTKERNELAPI
 BOOLEAN
 NTAPI
 KeAreApcsDisabled(VOID);
 
-
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
-
 
 #if (NTDDI_VERSION >= NTDDI_WS03)
 
@@ -4202,9 +4196,7 @@ NTKERNELAPI
 BOOLEAN
 NTAPI
 KeInvalidateAllCaches(VOID);
-
 #endif /* (NTDDI_VERSION >= NTDDI_WS03) */
-
 #if (NTDDI_VERSION >= NTDDI_WS03SP1)
 
 NTKERNELAPI
@@ -4224,14 +4216,11 @@ NTKERNELAPI
 VOID
 NTAPI
 KeLeaveGuardedRegion(VOID);
-
-
 #endif /* (NTDDI_VERSION >= NTDDI_WS03SP1) */
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
-
-
 #if defined(SINGLE_GROUP_LEGACY_API)
+
 NTKERNELAPI
 ULONG
 NTAPI
@@ -4242,11 +4231,9 @@ NTKERNELAPI
 ULONG
 NTAPI
 KeQueryMaximumProcessorCount(VOID);
-
 #endif /* SINGLE_GROUP_LEGACY_API */
 
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
-
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
 
@@ -4331,16 +4318,14 @@ KeQueryHardwareCounterConfiguration(
   OUT PHARDWARE_COUNTER CounterArray,
   IN ULONG MaximumCount,
   OUT PULONG Count);
-
-
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
-
 
 /******************************************************************************
  *                       Memory manager Functions                             *
  ******************************************************************************/
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
+
 NTKERNELAPI
 PPHYSICAL_MEMORY_RANGE
 NTAPI
@@ -4515,78 +4500,17 @@ MmFreeContiguousMemorySpecifyCache(
   IN SIZE_T NumberOfBytes,
   IN MEMORY_CACHING_TYPE CacheType);
 
-
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
-#if (NTDDI_VERSION >= NTDDI_WINXP)
 
-NTKERNELAPI
-NTSTATUS
-NTAPI
-MmAdvanceMdl(
-  IN OUT PMDL Mdl,
-  IN ULONG NumberOfBytes);
-
-NTKERNELAPI
-PVOID
-NTAPI
-MmAllocateMappingAddress(
-  IN SIZE_T NumberOfBytes,
-  IN ULONG PoolTag);
-
-NTKERNELAPI
-VOID
-NTAPI
-MmFreeMappingAddress(
-  IN PVOID BaseAddress,
-  IN ULONG PoolTag);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-MmIsVerifierEnabled(
-  OUT PULONG VerifierFlags);
-
-NTKERNELAPI
-PVOID
-NTAPI
-MmMapLockedPagesWithReservedMapping(
-  IN PVOID MappingAddress,
-  IN ULONG PoolTag,
-  IN PMDL MemoryDescriptorList,
-  IN MEMORY_CACHING_TYPE CacheType);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-MmProtectMdlSystemAddress(
-  IN PMDL MemoryDescriptorList,
-  IN ULONG NewProtect);
-
-NTKERNELAPI
-VOID
-NTAPI
-MmUnmapReservedMapping(
-  IN PVOID BaseAddress,
-  IN ULONG PoolTag,
-  IN PMDL MemoryDescriptorList);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-MmAddVerifierThunks(
-  IN PVOID ThunkBuffer,
-  IN ULONG ThunkBufferSize);
-
-#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
 #if (NTDDI_VERSION >= NTDDI_WS03)
+
 NTKERNELAPI
 NTSTATUS
 NTAPI
 MmCreateMirror(VOID);
-#endif
-
+#endif /* (NTDDI_VERSION >= NTDDI_WS03) */
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 NTSTATUS
@@ -4598,8 +4522,7 @@ MmRotatePhysicalView(
   IN MM_ROTATE_DIRECTION Direction,
   IN PMM_ROTATE_COPY_CALLBACK_FUNCTION CopyFunction,
   IN PVOID Context OPTIONAL);
-
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 /******************************************************************************
  *                          Process Manager Functions                         *
@@ -4664,9 +4587,7 @@ PsGetVersion(
   OUT PULONG MinorVersion OPTIONAL,
   OUT PULONG BuildNumber OPTIONAL,
   OUT PUNICODE_STRING CSDVersion OPTIONAL);
-
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
-
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 
 NTKERNELAPI
@@ -4698,7 +4619,6 @@ LONGLONG
 NTAPI
 PsGetProcessCreateTimeQuadPart(
   IN PEPROCESS Process);
-
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
 #if (NTDDI_VERSION >= NTDDI_WS03)
@@ -4736,8 +4656,8 @@ PsSetCreateProcessNotifyRoutineEx(
  *                         Runtime Library Functions                          *
  ******************************************************************************/
 
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
 
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
 
 
 #ifndef RTL_USE_AVL_TABLES
@@ -4972,11 +4892,11 @@ RtlWalkFrameChain(
   IN ULONG Flags);
 
 
-
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
+
 
 
 NTSYSAPI
@@ -5086,8 +5006,8 @@ RtlIsGenericTableEmptyAvl(
   IN PRTL_AVL_TABLE Table);
 
 
-
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
+
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 
@@ -5132,7 +5052,6 @@ RtlGetProductInfo(
   IN ULONG SpMajorVersion,
   IN ULONG SpMinorVersion,
   OUT PULONG ReturnedProductType);
-
 
 
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
@@ -5239,7 +5158,6 @@ BOOLEAN
 NTAPI
 RtlContractHashTable(
   IN PRTL_DYNAMIC_HASH_TABLE HashTable);
-
 
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
@@ -5480,6 +5398,7 @@ RtlActiveEnumeratorsHashTable(
  ******************************************************************************/
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
+
 NTKERNELAPI
 BOOLEAN
 NTAPI
@@ -5487,13 +5406,12 @@ SeSinglePrivilegeCheck(
   IN LUID PrivilegeValue,
   IN KPROCESSOR_MODE PreviousMode);
 
-
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
 
 /******************************************************************************
  *                            ZwXxx Functions                                 *
  ******************************************************************************/
-
 
 
 NTSYSAPI
@@ -5518,9 +5436,7 @@ ZwOpenProcess(
   IN POBJECT_ATTRIBUTES ObjectAttributes,
   IN PCLIENT_ID ClientId OPTIONAL);
 
-
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
-
 
 NTSTATUS
 NTAPI
@@ -5604,8 +5520,6 @@ ZwDeviceIoControlFile(
   OUT PVOID OutputBuffer OPTIONAL,
   IN ULONG OutputBufferLength);
 
-
-
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 
@@ -5618,8 +5532,6 @@ ZwSetTimerEx(
   IN TIMER_SET_INFORMATION_CLASS TimerSetInformationClass,
   IN OUT PVOID TimerSetInformation,
   IN ULONG TimerSetInformationLength);
-
-
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
 

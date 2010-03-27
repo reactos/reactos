@@ -551,7 +551,6 @@ typedef BOOLEAN
 (*PFN_RTL_IS_SERVICE_PACK_VERSION_INSTALLED)(
   IN ULONG Version);
 
-
 /******************************************************************************
  *                              Kernel Types                                  *
  ******************************************************************************/
@@ -2271,7 +2270,6 @@ typedef struct _SE_ADT_PARAMETER_ARRAY {
 
 #endif /* !_NTLSA_AUDIT_ */
 #endif /* !_NTLSA_IFS_ */
-
 /******************************************************************************
  *                            Power Management Support Types                  *
  ******************************************************************************/
@@ -2682,7 +2680,6 @@ NTSTATUS
   IN ULONG ValueLength,
   IN OUT PVOID Context OPTIONAL);
 typedef POWER_SETTING_CALLBACK *PPOWER_SETTING_CALLBACK;
-
 
 /******************************************************************************
  *                            Configuration Manager Types                     *
@@ -8399,8 +8396,6 @@ RtlStringFromGUID(
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
-
-
 NTSYSAPI
 BOOLEAN
 NTAPI
@@ -8879,7 +8874,6 @@ RtlSetDaclSecurityDescriptor(
 #define RtlStoreUlongPtr(Address,Value) RtlStoreUlong(Address,Value)
 #endif /* _WIN64 */
 
-
 NTSYSAPI
 BOOLEAN
 NTAPI
@@ -8988,7 +8982,6 @@ RtlPrefetchMemoryNonTemporal(
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 
 
-
 NTSYSAPI
 VOID
 NTAPI
@@ -9026,11 +9019,11 @@ RtlHashUnicodeString(
   OUT PULONG HashValue);
 
 
+
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
+
 #if (NTDDI_VERSION >= NTDDI_VISTA)
-
-
 
 NTSYSAPI
 ULONG
@@ -9085,8 +9078,6 @@ RtlCmEncodeMemIoResource(
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
-
-
 
 NTSYSAPI
 NTSTATUS
@@ -9663,7 +9654,6 @@ RTLVERLIB_DDI(RtlIsServicePackVersionInstalled)(
 /******************************************************************************
  *                              Kernel Functions                              *
  ******************************************************************************/
-
 NTKERNELAPI
 VOID
 NTAPI
@@ -9679,7 +9669,6 @@ KeClearEvent(
   IN OUT PRKEVENT Event);
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
-
 
 #if defined(_NTDDK_) || defined(_NTIFS_)
 NTKERNELAPI
@@ -9698,7 +9687,6 @@ ProbeForWrite(
   IN PVOID Address,
   IN SIZE_T Length,
   IN ULONG Alignment);
-
 
 #if defined(SINGLE_GROUP_LEGACY_API)
 
@@ -9724,8 +9712,6 @@ NTKERNELAPI
 KAFFINITY
 NTAPI
 KeQueryActiveProcessors(VOID);
-
-
 #endif /* defined(SINGLE_GROUP_LEGACY_API) */
 
 #if !defined(_M_AMD64)
@@ -10164,7 +10150,6 @@ VOID
 NTAPI
 KeFlushQueuedDpcs(VOID);
 #endif /* (NTDDI_VERSION >= NTDDI_WINXPSP2) */
-
 #if (NTDDI_VERSION >= NTDDI_WS03)
 
 NTKERNELAPI
@@ -10214,11 +10199,8 @@ FASTCALL
 KeTestSpinLock(
   IN PKSPIN_LOCK SpinLock);
 
-
 #endif /* (NTDDI_VERSION >= NTDDI_WS03) */
-
 #if (NTDDI_VERSION >= NTDDI_WS03SP1)
-
 
 NTKERNELAPI
 BOOLEAN
@@ -10276,11 +10258,9 @@ BOOLEAN
 FASTCALL
 KeTryToAcquireGuardedMutex(
   IN OUT PKGUARDED_MUTEX GuardedMutex);
-
 #endif /* (NTDDI_VERSION >= NTDDI_WS03SP1) */
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
-
 NTKERNELAPI
 VOID
 FASTCALL
@@ -10299,7 +10279,6 @@ NTSTATUS
 NTAPI
 KeQueryDpcWatchdogInformation(
   OUT PKDPC_WATCHDOG_INFORMATION WatchdogInformation);
-
 #if defined(SINGLE_GROUP_LEGACY_API)
 
 NTKERNELAPI
@@ -10341,9 +10320,7 @@ KeDeregisterProcessorChangeCallback(
   IN PVOID CallbackHandle);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WS08) */
-
 #if (NTDDI_VERSION >= NTDDI_WIN7)
-
 
 ULONG64
 NTAPI
@@ -10482,9 +10459,7 @@ ULONG
 NTAPI
 KeGetProcessorIndexFromNumber(
   IN PPROCESSOR_NUMBER ProcNumber);
-
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
-
 #if !defined(_IA64_)
 NTHALAPI
 VOID
@@ -10699,7 +10674,6 @@ KeFlushWriteBuffer(VOID);
 }
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
-
 NTKERNELAPI
 PVOID
 NTAPI
@@ -10946,7 +10920,6 @@ MmAddVerifierThunks(
   IN ULONG ThunkBufferSize);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
-
 #if (NTDDI_VERSION >= NTDDI_WS03)
 NTKERNELAPI
 LOGICAL
@@ -10954,8 +10927,8 @@ NTAPI
 MmIsIoSpaceActive(
   IN PHYSICAL_ADDRESS StartAddress,
   IN SIZE_T NumberOfBytes);
-#endif
 
+#endif /* (NTDDI_VERSION >= NTDDI_WS03) */
 #if (NTDDI_VERSION >= NTDDI_WS03SP1)
 NTKERNELAPI
 PMDL
@@ -10970,20 +10943,18 @@ MmAllocatePagesForMdlEx(
 #endif
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
-
 NTKERNELAPI
 LOGICAL
 NTAPI
 MmIsDriverVerifyingByAddress(
   IN PVOID AddressWithinSection);
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 /******************************************************************************
  *                            Security Manager Functions                      *
  ******************************************************************************/
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
-
 NTKERNELAPI
 BOOLEAN
 NTAPI
@@ -11068,6 +11039,7 @@ NTAPI
 SeLockSubjectContext(
   IN PSECURITY_SUBJECT_CONTEXT SubjectContext);
 
+
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 #if (NTDDI_VERSION >= NTDDI_WS03SP1)
@@ -11091,7 +11063,6 @@ SeReportSecurityEvent(
 #endif /* (NTDDI_VERSION >= NTDDI_WS03SP1) */
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
-
 NTKERNELAPI
 ULONG
 NTAPI
@@ -11108,7 +11079,6 @@ SeGetWorldRights(
   IN PGENERIC_MAPPING GenericMapping,
   OUT PACCESS_MASK GrantedAccess);
 #endif /* SE_NTFS_WORLD_CACHE */
-
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 /******************************************************************************
  *                         Configuration Manager Functions                    *
@@ -12374,7 +12344,9 @@ NTAPI
 IoSetTopLevelIrp(
   IN PIRP Irp OPTIONAL);
 
+
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 
@@ -12570,6 +12542,7 @@ IoCsqInsertIrpEx(
   IN PVOID InsertContext OPTIONAL);
 #endif /* (NTDDI_VERSION >= NTDDI_WS03) */
 
+
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 NTKERNELAPI
 NTSTATUS
@@ -12719,6 +12692,7 @@ IoReplacePartitionUnit(
 #endif
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
+
 NTKERNELAPI
 NTSTATUS
 NTAPI
@@ -13401,6 +13375,7 @@ ExInitializeFastMutex(
   return;
 }
 
+
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 NTKERNELAPI
 VOID
@@ -13823,7 +13798,6 @@ VOID
 FASTCALL
 ExWaitForRundownProtectionRelease(
   IN OUT PEX_RUNDOWN_REF RunRef);
-
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
 #if (NTDDI_VERSION >= NTDDI_WINXPSP2)
@@ -14066,7 +14040,6 @@ ExFreeToNPagedLookasideList(
  ******************************************************************************/
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
-
 NTKERNELAPI
 LONG_PTR
 FASTCALL
@@ -14115,7 +14088,6 @@ NTAPI
 ObReleaseObjectSecurity(
   IN PSECURITY_DESCRIPTOR SecurityDescriptor,
   IN BOOLEAN MemoryAllocated);
-
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
@@ -14148,7 +14120,6 @@ ObGetFilterVersion(VOID);
 #endif /* (NTDDI_VERSION >= NTDDI_VISTASP1) */
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
-
 NTKERNELAPI
 NTSTATUS
 NTAPI
@@ -14196,9 +14167,7 @@ ObDereferenceObjectDeferDeleteWithTag(
 #define ObReferenceObject ObfReferenceObject
 #define ObDereferenceObjectWithTag ObfDereferenceObjectWithTag
 #define ObReferenceObjectWithTag ObfReferenceObjectWithTag
-
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
-
 
 /******************************************************************************
  *                          Process Manager Functions                         *
@@ -14249,8 +14218,8 @@ NTAPI
 PsTerminateSystemThread(
   IN NTSTATUS ExitStatus);
 
-
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
 
 /******************************************************************************
  *                          WMI Library Support Functions                     *
@@ -15321,10 +15290,7 @@ NtPropagationFailed(
 #define ZwCurrentThread() NtCurrentThread()
 
 
-
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
-
-
 
 NTSYSAPI
 NTSTATUS
@@ -15590,7 +15556,6 @@ NTAPI
 ZwQueryFullAttributesFile(
   IN POBJECT_ATTRIBUTES ObjectAttributes,
   OUT PFILE_NETWORK_OPEN_INFORMATION FileInformation);
-
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
@@ -15927,14 +15892,8 @@ NTAPI
 ZwSinglePhaseReject(
   IN HANDLE EnlistmentHandle,
   IN PLARGE_INTEGER TmVirtualClock OPTIONAL);
-
-
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
-
-
 #if (NTDDI_VERSION >= NTDDI_WIN7)
-
-
 
 NTSYSAPI
 NTSTATUS
@@ -15998,7 +15957,6 @@ ZwSetInformationKey(
   IN KEY_SET_INFORMATION_CLASS KeySetInformationClass,
   IN PVOID KeySetInformation,
   IN ULONG KeySetInformationLength);
-
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 

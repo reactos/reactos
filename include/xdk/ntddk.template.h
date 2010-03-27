@@ -40,11 +40,8 @@
 #include <ntdef.h>
 #include <ntstatus.h>
 #include <mce.h>
-
-/* FIXME
 #include <bugcodes.h>
 #include <ntiologc.h>
-*/
 
 #include <stdarg.h> // FIXME
 #include <basetyps.h> // FIXME

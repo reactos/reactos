@@ -2,100 +2,6 @@
  *                          Executive Functions                               *
  ******************************************************************************/
 
-$if (_NTDDK_)
-static __inline PVOID
-ExAllocateFromZone(
-  IN PZONE_HEADER Zone)
-{
-  if (Zone->FreeList.Next)
-    Zone->FreeList.Next = Zone->FreeList.Next->Next;
-  return (PVOID) Zone->FreeList.Next;
-}
-
-static __inline PVOID
-ExFreeToZone(
-  IN PZONE_HEADER Zone,
-  IN PVOID Block)
-{
-  ((PSINGLE_LIST_ENTRY) Block)->Next = Zone->FreeList.Next;
-  Zone->FreeList.Next = ((PSINGLE_LIST_ENTRY) Block);
-  return ((PSINGLE_LIST_ENTRY) Block)->Next;
-}
-
-/*
- * PVOID
- * ExInterlockedAllocateFromZone(
- *   IN PZONE_HEADER  Zone,
- *   IN PKSPIN_LOCK  Lock)
- */
-#define ExInterlockedAllocateFromZone(Zone, Lock) \
-    ((PVOID) ExInterlockedPopEntryList(&Zone->FreeList, Lock))
-
-/* PVOID
- * ExInterlockedFreeToZone(
- *  IN PZONE_HEADER  Zone,
- *  IN PVOID  Block,
- *  IN PKSPIN_LOCK  Lock);
- */
-#define ExInterlockedFreeToZone(Zone, Block, Lock) \
-    ExInterlockedPushEntryList(&(Zone)->FreeList, (PSINGLE_LIST_ENTRY)(Block), Lock)
-
-/*
- * BOOLEAN
- * ExIsFullZone(
- *  IN PZONE_HEADER  Zone)
- */
-#define ExIsFullZone(Zone) \
-  ((Zone)->FreeList.Next == (PSINGLE_LIST_ENTRY) NULL)
-
-/* BOOLEAN
- * ExIsObjectInFirstZoneSegment(
- *     IN PZONE_HEADER Zone,
- *     IN PVOID Object);
- */
-#define ExIsObjectInFirstZoneSegment(Zone,Object) \
-    ((BOOLEAN)( ((PUCHAR)(Object) >= (PUCHAR)(Zone)->SegmentList.Next) && \
-                ((PUCHAR)(Object) <  (PUCHAR)(Zone)->SegmentList.Next + \
-                         (Zone)->TotalSegmentSize)) )
-
-#define ExAcquireResourceExclusive ExAcquireResourceExclusiveLite
-#define ExAcquireResourceShared ExAcquireResourceSharedLite
-#define ExConvertExclusiveToShared ExConvertExclusiveToSharedLite
-#define ExDeleteResource ExDeleteResourceLite
-#define ExInitializeResource ExInitializeResourceLite
-#define ExIsResourceAcquiredExclusive ExIsResourceAcquiredExclusiveLite
-#define ExIsResourceAcquiredShared ExIsResourceAcquiredSharedLite
-#define ExIsResourceAcquired ExIsResourceAcquiredSharedLite
-#define ExReleaseResourceForThread ExReleaseResourceForThreadLite
-
-typedef enum _INTERLOCKED_RESULT {
-  ResultNegative = RESULT_NEGATIVE,
-  ResultZero = RESULT_ZERO,
-  ResultPositive = RESULT_POSITIVE
-} INTERLOCKED_RESULT;
-
-#ifdef _X86_
-NTKERNELAPI
-INTERLOCKED_RESULT
-FASTCALL
-Exfi386InterlockedIncrementLong(
-  IN OUT LONG volatile *Addend);
-
-NTKERNELAPI
-INTERLOCKED_RESULT
-FASTCALL
-Exfi386InterlockedDecrementLong(
-  IN PLONG  Addend);
-
-NTKERNELAPI
-ULONG
-FASTCALL
-Exfi386InterlockedExchangeUlong(
-  IN PULONG  Target,
-  IN ULONG  Value);
-#endif
-
-$endif  (_NTDDK_)
 $if (_WDMDDK_)
 #define ExInterlockedIncrementLong(Addend,Lock) Exfi386InterlockedIncrementLong(Addend)
 #define ExInterlockedDecrementLong(Addend,Lock) Exfi386InterlockedDecrementLong(Addend)
@@ -327,53 +233,110 @@ ExInitializeFastMutex(
 }
 
 $endif (_WDMDDK_)
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
 $if (_NTDDK_)
+static __inline PVOID
+ExAllocateFromZone(
+  IN PZONE_HEADER Zone)
+{
+  if (Zone->FreeList.Next)
+    Zone->FreeList.Next = Zone->FreeList.Next->Next;
+  return (PVOID) Zone->FreeList.Next;
+}
+
+static __inline PVOID
+ExFreeToZone(
+  IN PZONE_HEADER Zone,
+  IN PVOID Block)
+{
+  ((PSINGLE_LIST_ENTRY) Block)->Next = Zone->FreeList.Next;
+  Zone->FreeList.Next = ((PSINGLE_LIST_ENTRY) Block);
+  return ((PSINGLE_LIST_ENTRY) Block)->Next;
+}
+
+/*
+ * PVOID
+ * ExInterlockedAllocateFromZone(
+ *   IN PZONE_HEADER  Zone,
+ *   IN PKSPIN_LOCK  Lock)
+ */
+#define ExInterlockedAllocateFromZone(Zone, Lock) \
+    ((PVOID) ExInterlockedPopEntryList(&Zone->FreeList, Lock))
+
+/* PVOID
+ * ExInterlockedFreeToZone(
+ *  IN PZONE_HEADER  Zone,
+ *  IN PVOID  Block,
+ *  IN PKSPIN_LOCK  Lock);
+ */
+#define ExInterlockedFreeToZone(Zone, Block, Lock) \
+    ExInterlockedPushEntryList(&(Zone)->FreeList, (PSINGLE_LIST_ENTRY)(Block), Lock)
+
+/*
+ * BOOLEAN
+ * ExIsFullZone(
+ *  IN PZONE_HEADER  Zone)
+ */
+#define ExIsFullZone(Zone) \
+  ((Zone)->FreeList.Next == (PSINGLE_LIST_ENTRY) NULL)
+
+/* BOOLEAN
+ * ExIsObjectInFirstZoneSegment(
+ *     IN PZONE_HEADER Zone,
+ *     IN PVOID Object);
+ */
+#define ExIsObjectInFirstZoneSegment(Zone,Object) \
+    ((BOOLEAN)( ((PUCHAR)(Object) >= (PUCHAR)(Zone)->SegmentList.Next) && \
+                ((PUCHAR)(Object) <  (PUCHAR)(Zone)->SegmentList.Next + \
+                         (Zone)->TotalSegmentSize)) )
+
+#define ExAcquireResourceExclusive ExAcquireResourceExclusiveLite
+#define ExAcquireResourceShared ExAcquireResourceSharedLite
+#define ExConvertExclusiveToShared ExConvertExclusiveToSharedLite
+#define ExDeleteResource ExDeleteResourceLite
+#define ExInitializeResource ExInitializeResourceLite
+#define ExIsResourceAcquiredExclusive ExIsResourceAcquiredExclusiveLite
+#define ExIsResourceAcquiredShared ExIsResourceAcquiredSharedLite
+#define ExIsResourceAcquired ExIsResourceAcquiredSharedLite
+#define ExReleaseResourceForThread ExReleaseResourceForThreadLite
+
+typedef enum _INTERLOCKED_RESULT {
+  ResultNegative = RESULT_NEGATIVE,
+  ResultZero = RESULT_ZERO,
+  ResultPositive = RESULT_POSITIVE
+} INTERLOCKED_RESULT;
+
+#ifdef _X86_
 NTKERNELAPI
-NTSTATUS
-NTAPI
-ExExtendZone(
-  IN OUT PZONE_HEADER Zone,
-  IN OUT PVOID Segment,
-  IN ULONG SegmentSize);
+INTERLOCKED_RESULT
+FASTCALL
+Exfi386InterlockedIncrementLong(
+  IN OUT LONG volatile *Addend);
 
 NTKERNELAPI
-NTSTATUS
-NTAPI
-ExInitializeZone(
-  OUT PZONE_HEADER Zone,
-  IN ULONG BlockSize,
-  IN OUT PVOID InitialSegment,
-  IN ULONG InitialSegmentSize);
+INTERLOCKED_RESULT
+FASTCALL
+Exfi386InterlockedDecrementLong(
+  IN PLONG  Addend);
 
 NTKERNELAPI
-NTSTATUS
-NTAPI
-ExInterlockedExtendZone(
-  IN OUT PZONE_HEADER Zone,
-  IN OUT PVOID Segment,
-  IN ULONG SegmentSize,
-  IN OUT PKSPIN_LOCK Lock);
+ULONG
+FASTCALL
+Exfi386InterlockedExchangeUlong(
+  IN PULONG  Target,
+  IN ULONG  Value);
+#endif
 
-NTKERNELAPI
-NTSTATUS
-NTAPI
-ExUuidCreate(
-  OUT UUID *Uuid);
+$endif (_NTDDK_)
+$if (_NTIFS_)
 
-NTKERNELAPI
-DECLSPEC_NORETURN
+#define ExDisableResourceBoost ExDisableResourceBoostLite
+
 VOID
-NTAPI
-ExRaiseAccessViolation(VOID);
+ExInitializePushLock (
+  OUT PEX_PUSH_LOCK PushLock);
+$endif (_NTIFS_)
 
-NTKERNELAPI
-DECLSPEC_NORETURN
-VOID
-NTAPI
-ExRaiseDatatypeMisalignment(VOID);
-
-$endif  (_NTDDK_)
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
 $if (_WDMDDK_)
 NTKERNELAPI
 VOID
@@ -751,11 +714,78 @@ NTAPI
 ExUnregisterCallback(
   IN OUT PVOID CbRegistration);
 
-$endif  (_WDMDDK_)
+$endif (_WDMDDK_)
+$if (_NTDDK_)
+NTKERNELAPI
+NTSTATUS
+NTAPI
+ExExtendZone(
+  IN OUT PZONE_HEADER Zone,
+  IN OUT PVOID Segment,
+  IN ULONG SegmentSize);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+ExInitializeZone(
+  OUT PZONE_HEADER Zone,
+  IN ULONG BlockSize,
+  IN OUT PVOID InitialSegment,
+  IN ULONG InitialSegmentSize);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+ExInterlockedExtendZone(
+  IN OUT PZONE_HEADER Zone,
+  IN OUT PVOID Segment,
+  IN ULONG SegmentSize,
+  IN OUT PKSPIN_LOCK Lock);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+ExUuidCreate(
+  OUT UUID *Uuid);
+
+NTKERNELAPI
+DECLSPEC_NORETURN
+VOID
+NTAPI
+ExRaiseAccessViolation(VOID);
+
+NTKERNELAPI
+DECLSPEC_NORETURN
+VOID
+NTAPI
+ExRaiseDatatypeMisalignment(VOID);
+
+$endif (_NTDDK_)
+$if (_NTIFS_)
+
+NTKERNELAPI
+SIZE_T
+NTAPI
+ExQueryPoolBlockSize(
+  IN PVOID PoolBlock,
+  OUT PBOOLEAN QuotaCharged);
+
+VOID
+ExAdjustLookasideDepth(
+  VOID);
+
+NTKERNELAPI
+VOID
+NTAPI
+ExDisableResourceBoostLite(
+  IN PERESOURCE Resource);
+$endif (_NTIFS_)
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
-$if (_WDMDDK_)
+$if (_WDMDDK_ || _NTIFS_)
 #if (NTDDI_VERSION >= NTDDI_WINXP)
+$endif
+$if (_WDMDDK_)
 
 NTKERNELAPI
 BOOLEAN
@@ -798,9 +828,22 @@ VOID
 FASTCALL
 ExWaitForRundownProtectionRelease(
   IN OUT PEX_RUNDOWN_REF RunRef);
+$endif (_WDMDDK_)
+$if (_NTIFS_)
 
+PSLIST_ENTRY
+FASTCALL
+InterlockedPushListSList(
+  IN OUT PSLIST_HEADER ListHead,
+  IN OUT PSLIST_ENTRY List,
+  IN OUT PSLIST_ENTRY ListEnd,
+  IN ULONG Count);
+$endif (_NTIFS_)
+$if (_WDMDDK_ || _NTIFS_)
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
+$endif
 
+$if (_WDMDDK_)
 #if (NTDDI_VERSION >= NTDDI_WINXPSP2)
 
 NTKERNELAPI
