@@ -630,6 +630,37 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     }
 }
 
+static PSID
+SepGetSDOwner(IN PSECURITY_DESCRIPTOR _SecurityDescriptor)
+{
+    PISECURITY_DESCRIPTOR SecurityDescriptor = _SecurityDescriptor;
+    PSID Owner;
+
+    if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
+        Owner = (PSID)((ULONG_PTR)SecurityDescriptor->Owner +
+                       (ULONG_PTR)SecurityDescriptor);
+    else
+        Owner = (PSID)SecurityDescriptor->Owner;
+
+    return Owner;
+}
+
+static PSID
+SepGetSDGroup(IN PSECURITY_DESCRIPTOR _SecurityDescriptor)
+{
+    PISECURITY_DESCRIPTOR SecurityDescriptor = _SecurityDescriptor;
+    PSID Group;
+
+    if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
+        Group = (PSID)((ULONG_PTR)SecurityDescriptor->Group +
+                       (ULONG_PTR)SecurityDescriptor);
+    else
+        Group = (PSID)SecurityDescriptor->Group;
+
+    return Group;
+}
+
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
@@ -734,14 +765,14 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                                        NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to reference token (Status %lx)\n", Status);
+        DPRINT("Failed to reference token (Status %lx)\n", Status);
         return Status;
     }
 
     /* Check token type */
     if (Token->TokenType != TokenImpersonation)
     {
-        DPRINT1("No impersonation token\n");
+        DPRINT("No impersonation token\n");
         ObDereferenceObject(Token);
         return STATUS_NO_IMPERSONATION_TOKEN;
     }
@@ -749,9 +780,18 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     /* Check the impersonation level */
     if (Token->ImpersonationLevel < SecurityIdentification)
     {
-        DPRINT1("Impersonation level < SecurityIdentification\n");
+        DPRINT("Impersonation level < SecurityIdentification\n");
         ObDereferenceObject(Token);
         return STATUS_BAD_IMPERSONATION_LEVEL;
+    }
+
+    /* Check security descriptor for valid owner and group */
+    if (SepGetSDOwner(SecurityDescriptor)== NULL ||
+        SepGetSDGroup(SecurityDescriptor) == NULL)
+    {
+        DPRINT("Security Descriptor does not have a valid group or owner\n");
+        ObDereferenceObject(Token);
+        return STATUS_INVALID_SECURITY_DESCR;
     }
 
     /* Set up the subject context, and lock it */
@@ -774,8 +814,10 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                    AccessStatus,
                    SecurityIdentification);
 
-    /* Unlock subject context and dereference the token */
+    /* Unlock subject context */
     SeUnlockSubjectContext(&SubjectSecurityContext);
+
+    /* Dereference the token */
     ObDereferenceObject(Token);
 
     /* Check succeeded */
