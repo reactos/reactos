@@ -94,7 +94,7 @@ BOOLEAN WinVer_WDM_Model = FALSE;
 UCHAR g_foo = 0;
 
 BOOLEAN
-NTAPI
+DDKAPI
 AtapiResetController__(
     IN PVOID HwDeviceExtension,
     IN ULONG PathId,
@@ -115,7 +115,7 @@ AtapiHwInitialize__(
 #ifndef UNIATA_CORE
 
 VOID
-NTAPI
+DDKAPI
 AtapiCallBack_X(
     IN PVOID HwDeviceExtension
     );
@@ -129,13 +129,13 @@ AtapiCallBack_X(
 #endif
 
 RETTYPE_XXableInterrupts
-NTAPI
+DDKAPI
 AtapiInterruptDpc(
     IN PVOID HwDeviceExtension
     );
 
 RETTYPE_XXableInterrupts
-NTAPI
+DDKAPI
 AtapiEnableInterrupts__(
     IN PVOID HwDeviceExtension
     );
@@ -150,7 +150,7 @@ AtapiQueueTimerDpc(
     );
 
 SCSI_ADAPTER_CONTROL_STATUS
-NTAPI
+DDKAPI
 AtapiAdapterControl(
     IN PVOID HwDeviceExtension,
     IN SCSI_ADAPTER_CONTROL_TYPE ControlType,
@@ -1005,7 +1005,7 @@ AtaUmode(PIDENTIFY_DATA2 ident)
 #ifndef UNIATA_CORE
 
 VOID
-NTAPI
+DDKAPI
 AtapiTimerDpc(
     IN PVOID HwDeviceExtension
     )
@@ -1856,7 +1856,7 @@ Return Value:
 
 --*/
 BOOLEAN
-NTAPI
+DDKAPI
 AtapiResetController(
     IN PVOID HwDeviceExtension,
     IN ULONG PathId
@@ -2598,7 +2598,7 @@ Return Value:
 
 --*/
 BOOLEAN
-NTAPI
+DDKAPI
 AtapiHwInitialize(
     IN PVOID HwDeviceExtension
     )
@@ -3210,7 +3210,7 @@ Return Value:
 
 --*/
 BOOLEAN
-NTAPI
+DDKAPI
 AtapiInterrupt(
     IN PVOID HwDeviceExtension
     )
@@ -3400,7 +3400,7 @@ AtapiInterrupt2(
 } // end AtapiInterrupt2()
 
 RETTYPE_XXableInterrupts
-NTAPI
+DDKAPI
 AtapiInterruptDpc(
     IN PVOID HwDeviceExtension
     )
@@ -3437,7 +3437,7 @@ AtapiInterruptDpc(
 
 
 RETTYPE_XXableInterrupts
-NTAPI
+DDKAPI
 AtapiEnableInterrupts__(
     IN PVOID HwDeviceExtension
     )
@@ -7251,7 +7251,7 @@ Return Value:
 
 --*/
 BOOLEAN
-NTAPI
+DDKAPI
 AtapiStartIo(
     IN PVOID HwDeviceExtension,
     IN PSCSI_REQUEST_BLOCK Srb
@@ -8343,7 +8343,7 @@ Return Value:
 --*/
 extern "C"
 ULONG
-NTAPI
+DDKAPI
 DriverEntry(
     IN PVOID DriverObject,
     IN PVOID Argument2
@@ -9059,7 +9059,7 @@ AtapiRegCheckParameterValue(
 
 
 SCSI_ADAPTER_CONTROL_STATUS
-NTAPI
+DDKAPI
 AtapiAdapterControl(
     IN PVOID HwDeviceExtension,
     IN SCSI_ADAPTER_CONTROL_TYPE ControlType,
@@ -9152,7 +9152,7 @@ AtapiAdapterControl(
 extern "C"
 NTHALAPI
 VOID
-NTAPI
+DDKAPI
 HalDisplayString (
     PUCHAR String
     );

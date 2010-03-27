@@ -16,13 +16,6 @@ const unsigned long PNP_MAX_BUFFER_SIZE = 16000000;
 
 cpp_quote("#ifndef _CFGMGR32_H_")
 typedef unsigned long RESOURCEID;
-
-typedef struct _HWPROFILEINFO {
-    DWORD HWPI_ulHWProfile;
-    WCHAR HWPI_szFriendlyName[80];
-    DWORD HWPI_dwFlags;
-} HWPROFILEINFO;
-
 cpp_quote("#endif")
 typedef unsigned long DEVPROPTYPE;
 typedef [range(0, PNP_MAX_PROP_SIZE)] unsigned long PNP_PROP_SIZE;
@@ -248,6 +241,12 @@ typedef struct _DEVPROPKEY {
     GUID fmtid;
     DWORD pid;
 } DEVPROPKEY;
+
+typedef struct _HWPROFILEINFO {
+    DWORD HWPI_ulHWProfile;
+    WCHAR HWPI_szFriendlyName[80];
+    DWORD HWPI_dwFlags;
+} HWPROFILEINFO;
 
 [
   uuid (809F4e40-A03D-11CE-8F69-08003E30051B),

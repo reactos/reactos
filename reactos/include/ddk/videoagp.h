@@ -41,59 +41,59 @@ typedef enum _VIDEO_PORT_CACHE_TYPE {
 } VIDEO_PORT_CACHE_TYPE;
 
 typedef BOOLEAN
-(NTAPI *PAGP_COMMIT_PHYSICAL)(
+(DDKAPI *PAGP_COMMIT_PHYSICAL)(
   IN PVOID  HwDeviceExtension,
   IN PVOID  PhysicalReserveContext,
   IN ULONG  Pages,
   IN ULONG  Offset);
 
 typedef PVOID
-(NTAPI *PAGP_COMMIT_VIRTUAL)(
+(DDKAPI *PAGP_COMMIT_VIRTUAL)(
   IN PVOID  HwDeviceExtension,
   IN PVOID  VirtualReserveContext,
   IN ULONG  Pages,
   IN ULONG  Offset);
 
 typedef VOID
-(NTAPI *PAGP_FREE_PHYSICAL)(
+(DDKAPI *PAGP_FREE_PHYSICAL)(
   IN PVOID  HwDeviceExtension,
   IN PVOID  PhysicalReserveContext,
   IN ULONG  Pages,
   IN ULONG  Offset);
 
 typedef VOID
-(NTAPI *PAGP_FREE_VIRTUAL)(
+(DDKAPI *PAGP_FREE_VIRTUAL)(
   IN PVOID  HwDeviceExtension,
   IN PVOID  VirtualReserveContext,
   IN ULONG  Pages,
   IN ULONG  Offset);
 
 typedef VOID
-(NTAPI *PAGP_RELEASE_PHYSICAL)(
+(DDKAPI *PAGP_RELEASE_PHYSICAL)(
   IN PVOID  HwDeviceExtension,
   IN PVOID  PhysicalReserveContext);
 
 typedef VOID
-(NTAPI *PAGP_RELEASE_VIRTUAL)(
+(DDKAPI *PAGP_RELEASE_VIRTUAL)(
   IN PVOID  HwDeviceExtension,
   IN PVOID  VirtualReserveContext);
 
 typedef PHYSICAL_ADDRESS
-(NTAPI *PAGP_RESERVE_PHYSICAL)(
+(DDKAPI *PAGP_RESERVE_PHYSICAL)(
   IN PVOID  HwDeviceExtension,
   IN ULONG  Pages,
   IN VIDEO_PORT_CACHE_TYPE  Caching,
   OUT PVOID  *PhysicalReserveContext);
 
 typedef PVOID
-(NTAPI *PAGP_RESERVE_VIRTUAL)(
+(DDKAPI *PAGP_RESERVE_VIRTUAL)(
   IN PVOID  HwDeviceExtension,
   IN HANDLE  ProcessHandle,
   IN PVOID  PhysicalReserveContext,
   OUT PVOID  *VirtualReserveContext);
 
 typedef BOOLEAN
-(NTAPI *PAGP_SET_RATE)(
+(DDKAPI *PAGP_SET_RATE)(
   IN PVOID  HwDeviceExtension,
   IN ULONG  AgpRate);
 
@@ -111,7 +111,7 @@ typedef struct _VIDEO_PORT_AGP_SERVICES {
 
 VPAPI
 BOOLEAN
-NTAPI
+DDKAPI
 VideoPortGetAgpServices(
   IN PVOID  HwDeviceExtension,
   IN PVIDEO_PORT_AGP_SERVICES  AgpServices);

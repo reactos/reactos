@@ -10,6 +10,7 @@ typedef VOID
 typedef VOID
 (WINAPI *PINTERFACE_DEREFERENCE)(
   PVOID  Context);
+#define DDKAPI __stdcall // FIXME
 #include <ntndk.h>
 #include <hidusage.h>
 #include <hidclass.h>

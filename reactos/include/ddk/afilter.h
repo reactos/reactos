@@ -104,33 +104,33 @@ typedef struct _ARC_FILTER
 } ARC_FILTER,*PARC_FILTER;
 
 BOOLEAN
-NTAPI
+DDKAPI
 ArcCreateFilter(
   IN struct _NDIS_MINIPORT_BLOCK  *Miniport,
   IN UCHAR  AdapterAddress,
   OUT PARC_FILTER  *Filter);
 
 VOID
-NTAPI
+DDKAPI
 ArcDeleteFilter(
   IN PARC_FILTER Filter);
 
 BOOLEAN
-NTAPI
+DDKAPI
 ArcNoteFilterOpenAdapter(
   IN PARC_FILTER  Filter,
   IN NDIS_HANDLE  NdisBindingHandle,
   OUT PNDIS_HANDLE  NdisFilterHandle);
 
 NDIS_STATUS
-NTAPI
+DDKAPI
 ArcDeleteFilterOpenAdapter(
   IN PARC_FILTER  Filter,
   IN NDIS_HANDLE  NdisFilterHandle,
   IN PNDIS_REQUEST  NdisRequest);
 
 NDIS_STATUS
-NTAPI
+DDKAPI
 ArcFilterAdjust(
   IN PARC_FILTER  Filter,
   IN NDIS_HANDLE  NdisFilterHandle,
@@ -139,12 +139,12 @@ ArcFilterAdjust(
   IN BOOLEAN  Set);
 
 VOID
-NTAPI
+DDKAPI
 ArcFilterDprIndicateReceiveComplete(
   IN PARC_FILTER  Filter);
 
 VOID
-NTAPI
+DDKAPI
 ArcFilterDprIndicateReceive(
   IN PARC_FILTER  Filter,
   IN PUCHAR  pRawHeader,
@@ -152,7 +152,7 @@ ArcFilterDprIndicateReceive(
   IN UINT  Length);
 
 NDIS_STATUS
-NTAPI
+DDKAPI
 ArcFilterTransferData(
   IN PARC_FILTER  Filter,
   IN NDIS_HANDLE  MacReceiveContext,
@@ -162,18 +162,18 @@ ArcFilterTransferData(
   OUT PUINT  BytesTransfered);
 
 VOID
-NTAPI
+DDKAPI
 ArcFreeNdisPacket(
   IN PARC_PACKET  Packet);
 
 VOID
-NTAPI
+DDKAPI
 ArcFilterDoIndication(
   IN PARC_FILTER  Filter,
   IN PARC_PACKET  Packet);
 
 VOID
-NTAPI
+DDKAPI
 ArcDestroyPacket(
   IN PARC_FILTER  Filter,
   IN PARC_PACKET  Packet);

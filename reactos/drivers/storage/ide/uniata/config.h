@@ -86,7 +86,9 @@
 /*  Compiler dependencies                          */
 /***************************************************/
 
+#define DDKAPI          __stdcall
 #define DDKFASTAPI      __fastcall
+#define DDKCDECLAPI     __cdecl
 
 /* Are we under GNU C (mingw) ??? */
 #ifdef __GNUC__

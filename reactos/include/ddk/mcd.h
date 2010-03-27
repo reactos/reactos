@@ -51,7 +51,7 @@ extern "C" {
 
 CHANGERAPI
 PVOID
-NTAPI
+DDKAPI
 ChangerClassAllocatePool(
   IN POOL_TYPE  PoolType,
   IN ULONG  NumberOfBytes);
@@ -64,13 +64,13 @@ ChangerClassDebugPrint(
 
 CHANGERAPI
 PVOID
-NTAPI
+DDKAPI
 ChangerClassFreePool(
   IN PVOID  PoolToFree);
 
 CHANGERAPI
 NTSTATUS
-NTAPI
+DDKAPI
 ChangerClassSendSrbSynchronous(
   IN PDEVICE_OBJECT  DeviceObject,
   IN PSCSI_REQUEST_BLOCK  Srb,
@@ -79,27 +79,27 @@ ChangerClassSendSrbSynchronous(
   IN BOOLEAN  WriteToDevice);
 
 
-typedef NTSTATUS NTAPI
+typedef NTSTATUS DDKAPI
 (*CHANGER_INITIALIZE)(
   IN PDEVICE_OBJECT  DeviceObject);
 
-typedef ULONG NTAPI
+typedef ULONG DDKAPI
 (*CHANGER_EXTENSION_SIZE)(
   VOID);
 
-typedef VOID NTAPI
+typedef VOID DDKAPI
 (*CHANGER_ERROR_ROUTINE)(
   PDEVICE_OBJECT  DeviceObject,
   PSCSI_REQUEST_BLOCK  Srb,
   NTSTATUS  *Status,
   BOOLEAN  *Retry);
 
-typedef NTSTATUS NTAPI
+typedef NTSTATUS DDKAPI
 (*CHANGER_COMMAND_ROUTINE)(
   IN PDEVICE_OBJECT  DeviceObject,
   IN PIRP  Irp);
 
-typedef NTSTATUS NTAPI
+typedef NTSTATUS DDKAPI
 (*CHANGER_PERFORM_DIAGNOSTICS)(
   IN PDEVICE_OBJECT  DeviceObject,
   OUT PWMI_CHANGER_PROBLEM_DEVICE_ERROR  ChangerDeviceError);
@@ -125,7 +125,7 @@ typedef struct _MCD_INIT_DATA {
 
 CHANGERAPI
 NTSTATUS
-NTAPI
+DDKAPI
 ChangerClassInitialize(
   IN PDRIVER_OBJECT  DriverObject,
   IN PUNICODE_STRING  RegistryPath,

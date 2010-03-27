@@ -10,7 +10,6 @@
 	<define name="wcsnicmp">_wcsnicmp</define>
 
 	<define name="_SETUPAPI_" />
-	<define name="_CFGMGR32_" />
 	<library>pnp_client</library>
 	<library>uuid</library>
 	<library>wine</library>

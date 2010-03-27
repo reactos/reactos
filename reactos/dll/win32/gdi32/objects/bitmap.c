@@ -292,7 +292,7 @@ CreateBitmap(INT  Width,
              INT  Height,
              UINT  Planes,
              UINT  BitsPixel,
-             CONST VOID* pUnsafeBits)
+             PCVOID pUnsafeBits)
 {
     /* FIXME some part should be done in user mode */
     if (Width && Height)

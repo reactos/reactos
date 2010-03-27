@@ -42,12 +42,12 @@ extern "C" {
 
 UPSAPI
 VOID
-NTAPI
+DDKAPI
 UPSCancelWait(VOID);
 
 UPSAPI
 DWORD
-NTAPI
+DDKAPI
 UPSGetState(VOID);
 
 #define UPS_INITUNKNOWNERROR              0
@@ -60,23 +60,23 @@ UPSGetState(VOID);
 
 UPSAPI
 DWORD
-NTAPI
+DDKAPI
 UPSInit(VOID);
 
 UPSAPI
 VOID
-NTAPI
+DDKAPI
 UPSStop(VOID);
 
 UPSAPI
 VOID
-NTAPI
+DDKAPI
 UPSTurnOff(
   IN DWORD  aTurnOffDelay);
 
 UPSAPI
 VOID
-NTAPI
+DDKAPI
 UPSWaitForStateChange(
   IN DWORD  aCurrentState,
   IN DWORD  anInterval);

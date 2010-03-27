@@ -1,10 +1,10 @@
 
 /* DDK/NDK/SDK Headers */
-#include <ntddk.h>
-#include <ntddmou.h>
-#include <ntifs.h>
-#include <tvout.h>
-#include <ntndk.h>
+#include <ddk/ntddk.h>
+#include <ddk/ntddmou.h>
+#include <ddk/ntifs.h>
+#include <ddk/tvout.h>
+#include <ndk/ntndk.h>
 
 #include <stdarg.h>
 #include <windef.h>
@@ -16,7 +16,7 @@
 #include <dde.h>
 
 
-#include <ddkmapi.h>
+#include <ddk/ddkmapi.h>
 
 /* Prototypes */
 VOID DxGetVersionNumber(PVOID lpvInBuffer, LPDDGETVERSIONNUMBER lpvOutBuffer);

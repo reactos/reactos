@@ -14,8 +14,12 @@
 #define NDEBUG
 #include <debug.h>
 
+#ifdef _MSC_VER
+  #define DDKAPI
+#endif
+
 SCSI_PHYSICAL_ADDRESS
-NTAPI
+DDKAPI
 ScsiPortConvertUlongToPhysicalAddress(
     IN ULONG  UlongAddress)
 {
@@ -23,7 +27,7 @@ ScsiPortConvertUlongToPhysicalAddress(
 }
 
 VOID
-NTAPI
+DDKAPI
 ScsiPortReadPortBufferUchar(
     IN PUCHAR Port,
     IN PUCHAR Buffer,
@@ -33,7 +37,7 @@ ScsiPortReadPortBufferUchar(
 }
 
 VOID
-NTAPI
+DDKAPI
 ScsiPortReadPortBufferUshort(
     IN PUSHORT Port,
     IN PUSHORT Buffer,
@@ -43,7 +47,7 @@ ScsiPortReadPortBufferUshort(
 }
 
 VOID
-NTAPI
+DDKAPI
 ScsiPortReadPortBufferUlong(
     IN PULONG Port,
     IN PULONG Buffer,
@@ -53,7 +57,7 @@ ScsiPortReadPortBufferUlong(
 }
 
 UCHAR
-NTAPI
+DDKAPI
 ScsiPortReadPortUchar(
     IN PUCHAR Port)
 {
@@ -61,7 +65,7 @@ ScsiPortReadPortUchar(
 }
 
 USHORT
-NTAPI
+DDKAPI
 ScsiPortReadPortUshort(
     IN PUSHORT Port)
 {
@@ -69,7 +73,7 @@ ScsiPortReadPortUshort(
 }
 
 ULONG
-NTAPI
+DDKAPI
 ScsiPortReadPortUlong(
     IN PULONG Port)
 {
@@ -77,7 +81,7 @@ ScsiPortReadPortUlong(
 }
 
 VOID
-NTAPI
+DDKAPI
 ScsiPortReadRegisterBufferUchar(
     IN PUCHAR Register,
     IN PUCHAR Buffer,
@@ -87,7 +91,7 @@ ScsiPortReadRegisterBufferUchar(
 }
 
 VOID
-NTAPI
+DDKAPI
 ScsiPortReadRegisterBufferUshort(
     IN PUSHORT Register,
     IN PUSHORT Buffer,
@@ -97,7 +101,7 @@ ScsiPortReadRegisterBufferUshort(
 }
 
 VOID
-NTAPI
+DDKAPI
 ScsiPortReadRegisterBufferUlong(
     IN PULONG Register,
     IN PULONG Buffer,
@@ -107,7 +111,7 @@ ScsiPortReadRegisterBufferUlong(
 }
 
 UCHAR
-NTAPI
+DDKAPI
 ScsiPortReadRegisterUchar(
     IN PUCHAR Register)
 {
@@ -115,7 +119,7 @@ ScsiPortReadRegisterUchar(
 }
 
 USHORT
-NTAPI
+DDKAPI
 ScsiPortReadRegisterUshort(
     IN PUSHORT Register)
 {
@@ -123,7 +127,7 @@ ScsiPortReadRegisterUshort(
 }
 
 ULONG
-NTAPI
+DDKAPI
 ScsiPortReadRegisterUlong(
     IN PULONG Register)
 {
@@ -131,7 +135,7 @@ ScsiPortReadRegisterUlong(
 }
 
 VOID
-NTAPI
+DDKAPI
 ScsiPortWritePortBufferUchar(
     IN PUCHAR Port,
     IN PUCHAR Buffer,
@@ -141,7 +145,7 @@ ScsiPortWritePortBufferUchar(
 }
 
 VOID
-NTAPI
+DDKAPI
 ScsiPortWritePortBufferUshort(
     IN PUSHORT Port,
     IN PUSHORT Buffer,
@@ -151,7 +155,7 @@ ScsiPortWritePortBufferUshort(
 }
 
 VOID
-NTAPI
+DDKAPI
 ScsiPortWritePortBufferUlong(
     IN PULONG Port,
     IN PULONG Buffer,
@@ -161,7 +165,7 @@ ScsiPortWritePortBufferUlong(
 }
 
 VOID
-NTAPI
+DDKAPI
 ScsiPortWritePortUchar(
     IN PUCHAR Port,
     IN UCHAR Value)
@@ -170,7 +174,7 @@ ScsiPortWritePortUchar(
 }
 
 VOID
-NTAPI
+DDKAPI
 ScsiPortWritePortUshort(
     IN PUSHORT Port,
     IN USHORT Value)
@@ -179,7 +183,7 @@ ScsiPortWritePortUshort(
 }
 
 VOID
-NTAPI
+DDKAPI
 ScsiPortWritePortUlong(
     IN PULONG Port,
     IN ULONG Value)
@@ -188,7 +192,7 @@ ScsiPortWritePortUlong(
 }
 
 VOID
-NTAPI
+DDKAPI
 ScsiPortWriteRegisterBufferUchar(
     IN PUCHAR Register,
     IN PUCHAR Buffer,
@@ -198,7 +202,7 @@ ScsiPortWriteRegisterBufferUchar(
 }
 
 VOID
-NTAPI
+DDKAPI
 ScsiPortWriteRegisterBufferUshort(
     IN PUSHORT Register,
     IN PUSHORT Buffer,
@@ -208,7 +212,7 @@ ScsiPortWriteRegisterBufferUshort(
 }
 
 VOID
-NTAPI
+DDKAPI
 ScsiPortWriteRegisterBufferUlong(
     IN PULONG Register,
     IN PULONG Buffer,
@@ -218,7 +222,7 @@ ScsiPortWriteRegisterBufferUlong(
 }
 
 VOID
-NTAPI
+DDKAPI
 ScsiPortWriteRegisterUchar(
     IN PUCHAR  Register,
     IN ULONG  Value)
@@ -227,7 +231,7 @@ ScsiPortWriteRegisterUchar(
 }
 
 VOID
-NTAPI
+DDKAPI
 ScsiPortWriteRegisterUshort(
     IN PUSHORT Register,
     IN USHORT Value)
@@ -236,7 +240,7 @@ ScsiPortWriteRegisterUshort(
 }
 
 VOID
-NTAPI
+DDKAPI
 ScsiPortWriteRegisterUlong(
     IN PULONG Register,
     IN ULONG Value)

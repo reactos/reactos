@@ -30,14 +30,6 @@ typedef NTSTATUS
   OUT PUNICODE_STRING *RegistryPath OPTIONAL,
   IN OUT PUNICODE_STRING MofResourceName,
   OUT PDEVICE_OBJECT *Pdo OPTIONAL);
-  
-typedef NTSTATUS
-(NTAPI *PWMI_FUNCTION_CONTROL) (
-  IN OUT PDEVICE_OBJECT DeviceObject,
-  IN OUT PIRP Irp,
-  IN ULONG GuidIndex,
-  IN WMIENABLEDISABLECONTROL Function,
-  IN BOOLEAN Enable);
 
 typedef NTSTATUS
 (NTAPI *PWMI_QUERY_DATABLOCK) (
@@ -49,17 +41,6 @@ typedef NTSTATUS
   OUT PULONG InstanceLengthArray OPTIONAL,
   IN ULONG BufferAvail,
   OUT PUCHAR Buffer OPTIONAL);
-
-typedef NTSTATUS
-(NTAPI *PWMI_EXECUTE_METHOD) (
-  IN OUT PDEVICE_OBJECT DeviceObject,
-  IN OUT PIRP Irp,
-  IN ULONG GuidIndex,
-  IN ULONG InstanceIndex,
-  IN ULONG MethodId,
-  IN ULONG InBufferSize,
-  IN ULONG OutBufferSize,
-  IN OUT PUCHAR Buffer);
 
 typedef NTSTATUS
 (NTAPI *PWMI_SET_DATABLOCK) (
@@ -79,6 +60,25 @@ typedef NTSTATUS
   IN ULONG DataItemId,
   IN ULONG BufferSize,
   IN PUCHAR Buffer);
+
+typedef NTSTATUS
+(NTAPI *PWMI_EXECUTE_METHOD) (
+  IN OUT PDEVICE_OBJECT DeviceObject,
+  IN OUT PIRP Irp,
+  IN ULONG GuidIndex,
+  IN ULONG InstanceIndex,
+  IN ULONG MethodId,
+  IN ULONG InBufferSize,
+  IN ULONG OutBufferSize,
+  IN OUT PUCHAR Buffer);
+
+typedef NTSTATUS
+(NTAPI *PWMI_FUNCTION_CONTROL) (
+  IN OUT PDEVICE_OBJECT DeviceObject,
+  IN OUT PIRP Irp,
+  IN ULONG GuidIndex,
+  IN WMIENABLEDISABLECONTROL Function,
+  IN BOOLEAN Enable);
 
 typedef struct _WMILIB_CONTEXT {
   ULONG GuidCount;

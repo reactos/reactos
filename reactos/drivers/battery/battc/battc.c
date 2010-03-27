@@ -23,7 +23,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 
 BCLASSAPI
 NTSTATUS
-NTAPI
+DDKAPI
 BatteryClassUnload(PVOID ClassData)
 {
   PBATTERY_CLASS_DATA BattClass = ClassData;
@@ -44,7 +44,7 @@ BatteryClassUnload(PVOID ClassData)
 
 BCLASSAPI
 NTSTATUS
-NTAPI
+DDKAPI
 BatteryClassSystemControl(PVOID ClassData,
                           PVOID WmiLibContext,
                           PDEVICE_OBJECT DeviceObject,
@@ -58,7 +58,7 @@ BatteryClassSystemControl(PVOID ClassData,
 
 BCLASSAPI
 NTSTATUS
-NTAPI
+DDKAPI
 BatteryClassQueryWmiDataBlock(PVOID ClassData,
                               PDEVICE_OBJECT DeviceObject,
                               PIRP Irp,
@@ -74,7 +74,7 @@ BatteryClassQueryWmiDataBlock(PVOID ClassData,
 
 BCLASSAPI
 NTSTATUS
-NTAPI
+DDKAPI
 BatteryClassStatusNotify(PVOID ClassData)
 {
   PBATTERY_CLASS_DATA BattClass = ClassData;
@@ -129,7 +129,7 @@ BatteryClassStatusNotify(PVOID ClassData)
 
 BCLASSAPI
 NTSTATUS
-NTAPI
+DDKAPI
 BatteryClassInitializeDevice(PBATTERY_MINIPORT_INFO MiniportInfo,
                              PVOID *ClassData)
 {
@@ -172,7 +172,7 @@ BatteryClassInitializeDevice(PBATTERY_MINIPORT_INFO MiniportInfo,
 
 BCLASSAPI
 NTSTATUS
-NTAPI
+DDKAPI
 BatteryClassIoctl(PVOID ClassData,
                   PIRP Irp)
 {

@@ -36,7 +36,7 @@ extern "C" {
 #define AGP_CAPABILITIES_MAP_PHYSICAL     0x00000001L
 
 typedef NTSTATUS
-(NTAPI *PAGP_BUS_COMMIT_MEMORY)(
+(DDKAPI *PAGP_BUS_COMMIT_MEMORY)(
   IN     PVOID  AgpContext,
   IN     PVOID  MapHandle,
   IN     ULONG  NumberOfPages,
@@ -45,19 +45,19 @@ typedef NTSTATUS
   OUT    PHYSICAL_ADDRESS  *MemoryBase);
 
 typedef NTSTATUS
-(NTAPI *PAGP_BUS_FREE_MEMORY)(
+(DDKAPI *PAGP_BUS_FREE_MEMORY)(
   IN  PVOID  AgpContext,
   IN  PVOID  MapHandle,
   IN  ULONG  NumberOfPages,
   IN  ULONG  OffsetInPages);
 
 typedef NTSTATUS
-(NTAPI *PAGP_BUS_RELEASE_MEMORY)(
+(DDKAPI *PAGP_BUS_RELEASE_MEMORY)(
   IN  PVOID  AgpContext,
   IN  PVOID  MapHandle);
 
 typedef NTSTATUS
-(NTAPI *PAGP_BUS_RESERVE_MEMORY)(
+(DDKAPI *PAGP_BUS_RESERVE_MEMORY)(
   IN  PVOID  AgpContext,
   IN  ULONG  NumberOfPages,
   IN  MEMORY_CACHING_TYPE  MemoryType,
@@ -65,12 +65,12 @@ typedef NTSTATUS
   OUT PHYSICAL_ADDRESS  *PhysicalAddress  OPTIONAL);
 
 typedef NTSTATUS
-(NTAPI *PAGP_BUS_SET_RATE)(
+(DDKAPI *PAGP_BUS_SET_RATE)(
   IN  PVOID  AgpContext,
   IN  ULONG  AgpRate);
 
 typedef NTSTATUS
-(NTAPI *PAGP_GET_MAPPED_PAGES)(
+(DDKAPI *PAGP_GET_MAPPED_PAGES)(
   IN  PVOID  AgpContext,
   IN  PVOID  MapHandle,
   IN  ULONG  NumberOfPages,

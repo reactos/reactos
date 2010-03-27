@@ -69,7 +69,7 @@ typedef struct _HIDP_KEYBOARD_MODIFIER_STATE {
   } DUMMYUNIONNAME;
 } HIDP_KEYBOARD_MODIFIER_STATE, *PHIDP_KEYBOARD_MODIFIER_STATE;
 
-typedef BOOLEAN (NTAPI *PHIDP_INSERT_SCANCODES)(
+typedef BOOLEAN (DDKAPI *PHIDP_INSERT_SCANCODES)(
   IN PVOID  Context,
   IN PCHAR  NewScanCodes,
   IN ULONG  Length);
@@ -94,7 +94,7 @@ typedef struct _HIDD_CONFIGURATION {
 
 HIDAPI
 NTSTATUS
-NTAPI
+DDKAPI
 HidP_TranslateUsageAndPagesToI8042ScanCodes(
   IN PUSAGE_AND_PAGE  ChangedUsageList,
   IN ULONG  UsageListLength,
@@ -105,7 +105,7 @@ HidP_TranslateUsageAndPagesToI8042ScanCodes(
 
 HIDAPI
 NTSTATUS
-NTAPI
+DDKAPI
 HidP_TranslateUsagesToI8042ScanCodes(
   IN PUSAGE  ChangedUsageList,
   IN ULONG  UsageListLength,
@@ -313,14 +313,14 @@ typedef enum _HIDP_REPORT_TYPE {
 
 HIDAPI
 NTSTATUS
-NTAPI
+DDKAPI
 HidP_GetCaps(
   IN PHIDP_PREPARSED_DATA  PreparsedData,
   OUT PHIDP_CAPS  Capabilities);
 
 HIDAPI
 NTSTATUS
-NTAPI
+DDKAPI
 HidP_GetData(
   IN HIDP_REPORT_TYPE  ReportType,
   OUT PHIDP_DATA  DataList,
@@ -331,7 +331,7 @@ HidP_GetData(
 
 HIDAPI
 NTSTATUS
-NTAPI
+DDKAPI
 HidP_GetExtendedAttributes(
   IN HIDP_REPORT_TYPE  ReportType,
   IN USHORT  DataIndex,
@@ -341,7 +341,7 @@ HidP_GetExtendedAttributes(
 
 HIDAPI
 NTSTATUS
-NTAPI
+DDKAPI
 HidP_GetLinkCollectionNodes(
   OUT PHIDP_LINK_COLLECTION_NODE  LinkCollectionNodes,
   IN OUT PULONG  LinkCollectionNodesLength,
@@ -349,7 +349,7 @@ HidP_GetLinkCollectionNodes(
 
 HIDAPI
 NTSTATUS
-NTAPI
+DDKAPI
 HidP_GetScaledUsageValue(
   IN HIDP_REPORT_TYPE  ReportType,
   IN USAGE  UsagePage,
@@ -362,7 +362,7 @@ HidP_GetScaledUsageValue(
 
 HIDAPI
 NTSTATUS
-NTAPI
+DDKAPI
 HidP_GetSpecificButtonCaps(
   IN HIDP_REPORT_TYPE  ReportType,
   IN USAGE  UsagePage,
@@ -374,7 +374,7 @@ HidP_GetSpecificButtonCaps(
 
 HIDAPI
 NTSTATUS
-NTAPI
+DDKAPI
 HidP_GetSpecificValueCaps(
   IN HIDP_REPORT_TYPE  ReportType,
   IN USAGE  UsagePage,
@@ -386,7 +386,7 @@ HidP_GetSpecificValueCaps(
 
 HIDAPI
 NTSTATUS
-NTAPI
+DDKAPI
 HidP_GetUsages(
   IN HIDP_REPORT_TYPE  ReportType,
   IN USAGE  UsagePage,
@@ -399,7 +399,7 @@ HidP_GetUsages(
 
 HIDAPI
 NTSTATUS
-NTAPI
+DDKAPI
 HidP_GetUsagesEx(
   IN HIDP_REPORT_TYPE  ReportType,
   IN USHORT  LinkCollection,
@@ -411,7 +411,7 @@ HidP_GetUsagesEx(
 
 HIDAPI
 NTSTATUS
-NTAPI
+DDKAPI
 HidP_GetUsageValue(
   IN HIDP_REPORT_TYPE  ReportType,
   IN USAGE  UsagePage,
@@ -424,7 +424,7 @@ HidP_GetUsageValue(
 
 HIDAPI
 NTSTATUS
-NTAPI
+DDKAPI
 HidP_GetUsageValueArray(
   IN HIDP_REPORT_TYPE  ReportType,
   IN USAGE  UsagePage,
@@ -453,7 +453,7 @@ HidP_GetUsageValueArray(
 
 HIDAPI
 NTSTATUS
-NTAPI
+DDKAPI
 HidP_InitializeReportForID(
   IN HIDP_REPORT_TYPE  ReportType,
   IN UCHAR  ReportID,
@@ -475,14 +475,14 @@ HidP_InitializeReportForID(
 
 HIDAPI
 ULONG
-NTAPI
+DDKAPI
 HidP_MaxDataListLength(
   IN HIDP_REPORT_TYPE  ReportType,
   IN PHIDP_PREPARSED_DATA  PreparsedData);
 
 HIDAPI
 ULONG
-NTAPI
+DDKAPI
 HidP_MaxUsageListLength(
   IN HIDP_REPORT_TYPE  ReportType,
   IN USAGE  UsagePage  OPTIONAL,
@@ -509,7 +509,7 @@ HidP_MaxUsageListLength(
 
 HIDAPI
 NTSTATUS
-NTAPI
+DDKAPI
 HidP_SetData(
   IN HIDP_REPORT_TYPE  ReportType,
   IN PHIDP_DATA  DataList,
@@ -520,7 +520,7 @@ HidP_SetData(
 
 HIDAPI
 NTSTATUS
-NTAPI
+DDKAPI
 HidP_SetScaledUsageValue(
   IN HIDP_REPORT_TYPE  ReportType,
   IN USAGE  UsagePage,
@@ -533,7 +533,7 @@ HidP_SetScaledUsageValue(
 
 HIDAPI
 NTSTATUS
-NTAPI
+DDKAPI
 HidP_SetUsages(
   IN HIDP_REPORT_TYPE  ReportType,
   IN USAGE  UsagePage,
@@ -546,7 +546,7 @@ HidP_SetUsages(
 
 HIDAPI
 NTSTATUS
-NTAPI
+DDKAPI
 HidP_SetUsageValue(
   IN HIDP_REPORT_TYPE  ReportType,
   IN USAGE  UsagePage,
@@ -559,7 +559,7 @@ HidP_SetUsageValue(
 
 HIDAPI
 NTSTATUS
-NTAPI
+DDKAPI
 HidP_SetUsageValueArray(
   IN HIDP_REPORT_TYPE  ReportType,
   IN USAGE  UsagePage,
@@ -592,7 +592,7 @@ HidP_SetUsageValueArray(
 
 HIDAPI
 NTSTATUS
-NTAPI
+DDKAPI
 HidP_UnsetUsages(
   IN HIDP_REPORT_TYPE  ReportType,
   IN USAGE  UsagePage,
@@ -605,7 +605,7 @@ HidP_UnsetUsages(
 
 HIDAPI
 NTSTATUS
-NTAPI
+DDKAPI
 HidP_UsageAndPageListDifference(
   IN PUSAGE_AND_PAGE  PreviousUsageList,
   IN PUSAGE_AND_PAGE  CurrentUsageList,
@@ -615,7 +615,7 @@ HidP_UsageAndPageListDifference(
 
 HIDAPI
 NTSTATUS
-NTAPI
+DDKAPI
 HidP_UsageListDifference(
   IN PUSAGE  PreviousUsageList,
   IN PUSAGE  CurrentUsageList,

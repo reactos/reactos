@@ -77,7 +77,7 @@ extern "C" {
 
 SCSIPORT_API
 VOID
-__cdecl
+DDKCDECLAPI
 ScsiDebugPrint(
     ULONG DebugPrintLevel,
     PCCHAR DebugMessage,
@@ -1066,7 +1066,7 @@ IdeMediaStatus(
     IN UCHAR Channel
     );
 
-ULONG NTAPI
+ULONG DDKAPI
 AtapiFindController(
     IN PVOID HwDeviceExtension,
     IN PVOID Context,
