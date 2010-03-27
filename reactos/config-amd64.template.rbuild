@@ -65,7 +65,7 @@
 	enable this (except they/you purchased a license from the patent owner).
 	This settings is disabled (0) by default.
 -->
-<property name="NSWPAT" value="0" />
+<property name="NSWPAT" value="1" />
 
 <!--
 	Whether to compile with the KD protocol. This will disable support for KDBG

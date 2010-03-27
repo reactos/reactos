@@ -36,11 +36,6 @@ InstallFile::InstallFile ( const Project& project,
 	const XMLAttribute* base = node.GetAttribute ( "installbase", false );
 	const XMLAttribute* newname = node.GetAttribute ( "newname", false );
 
-	if(base)
-        installbase = base->value;
-    else
-        installbase = "";
-
 	DirectoryLocation source_directory = SourceDirectory;
 	const XMLAttribute* att = node.GetAttribute ( "root", false );
 	if ( att != NULL)
