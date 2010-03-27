@@ -66,5 +66,5 @@ CmGetBoundTransaction(
 
 #endif // NTDDI_VERSION >= NTDDI_VISTA
 
-$endif
+$endif (_WDMDDK_)
 

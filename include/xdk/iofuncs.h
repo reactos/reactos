@@ -1,6 +1,7 @@
 /******************************************************************************
  *                         I/O Manager Functions                              *
  ******************************************************************************/
+
 $if (_NTDDK_)
 /*
  * VOID IoAssignArcName(
@@ -26,9 +27,8 @@ IoInitializeDriverCreateContext(
   RtlZeroMemory(DriverContext, sizeof(IO_DRIVER_CREATE_CONTEXT));
   DriverContext->Size = sizeof(IO_DRIVER_CREATE_CONTEXT);
 }
-$endif
 
-
+$endif (_NTDDK_)
 $if (_WDMDDK_)
 /*
  * NTSTATUS
@@ -571,9 +571,10 @@ IoMapTransfer(
                      WriteToDevice);
 }
 #endif
-$endif
 
+$endif (_WDMDDK_)
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
+
 $if (_NTDDK_)
 #if !(defined(USE_DMA_MACROS) && (defined(_NTDDK_) || defined(_NTDRIVER_)) || defined(_WDM_INCLUDED_))
 NTKERNELAPI
@@ -772,8 +773,8 @@ BOOLEAN
 NTAPI
 IoSetThreadHardErrorMode(
   IN BOOLEAN EnableHardErrors);
-$endif
 
+$endif (_NTDDK_)
 $if (_WDMDDK_)
 NTKERNELAPI
 VOID
@@ -1423,7 +1424,7 @@ NTAPI
 IoSetTopLevelIrp(
   IN PIRP Irp OPTIONAL);
 
-$endif
+$endif (_WDMDDK_)
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 $if (_NTDDK_)
@@ -1443,9 +1444,10 @@ IoSetFileOrigin(
   IN BOOLEAN Remote);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2KSP3) */
-$endif
 
+$endif (_NTDDK_)
 #if (NTDDI_VERSION >= NTDDI_WINXP)
+
 $if (_NTDDK_)
 NTKERNELAPI
 NTSTATUS
@@ -1559,8 +1561,8 @@ IoAttachDeviceToDeviceStackSafe(
   IN PDEVICE_OBJECT SourceDevice,
   IN PDEVICE_OBJECT TargetDevice,
   OUT PDEVICE_OBJECT *AttachedToDeviceObject);
-$endif
 
+$endif (_NTDDK_)
 $if (_WDMDDK_)
 NTKERNELAPI
 NTSTATUS
@@ -1719,7 +1721,8 @@ IoWMISetSingleItem(
   IN ULONG Version,
   IN ULONG ValueBufferSize,
   IN PVOID ValueBuffer);
-$endif
+$endif (_WDMDDK_)
+
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
 $if (_WDMDDK_)
@@ -1731,8 +1734,8 @@ IoValidateDeviceIoControlAccess(
   IN PIRP Irp,
   IN ULONG RequiredAccess);
 #endif
-$endif
 
+$endif (_WDMDDK_)
 #if (NTDDI_VERSION >= NTDDI_WS03)
 $if (_NTDDK_)
 NTKERNELAPI
@@ -1740,8 +1743,8 @@ IO_PAGING_PRIORITY
 FASTCALL
 IoGetPagingIoPriority(
   IN PIRP Irp);
-$endif
 
+$endif (_NTDDK_)
 $if (_WDMDDK_)
 NTKERNELAPI
 NTSTATUS
@@ -1763,7 +1766,7 @@ IoCsqInsertIrpEx(
   IN PIRP Irp,
   IN PIO_CSQ_IRP_CONTEXT Context OPTIONAL,
   IN PVOID InsertContext OPTIONAL);
-$endif
+$endif (_WDMDDK_)
 #endif /* (NTDDI_VERSION >= NTDDI_WS03) */
 
 $if (_NTDDK_)
@@ -1777,8 +1780,8 @@ IoTranslateBusAddress(
   IN OUT PULONG AddressSpace,
   OUT PPHYSICAL_ADDRESS TranslatedAddress);
 #endif
-$endif
 
+$endif (_NTDDK_)
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 $if (_NTDDK_)
 NTKERNELAPI
@@ -1835,8 +1838,8 @@ BOOLEAN
 NTAPI
 IoIsFileObjectIgnoringSharing(
   IN PFILE_OBJECT FileObject);
-$endif
 
+$endif (_NTDDK_)
 $if (_WDMDDK_)
 NTKERNELAPI
 NTSTATUS
@@ -1970,8 +1973,8 @@ IoGetDevicePropertyData(
   PVOID Data,
   PULONG RequiredSize,
   PDEVPROPTYPE Type);
-$endif
 
+$endif (_WDMDDK_)
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 $if (_WDMDDK_)
@@ -1986,16 +1989,16 @@ IoReplacePartitionUnit(
   IN PDEVICE_OBJECT SparePdo,
   IN ULONG Flags);
 #endif
-$endif
 
+$endif (_WDMDDK_)
 #if (NTDDI_VERSION >= NTDDI_WIN7)
 $if (_NTDDK_)
 NTSTATUS
 NTAPI
 IoSetFileObjectIgnoreSharing(
   IN PFILE_OBJECT FileObject);
-$endif
 
+$endif (_NTDDK_)
 $if (_WDMDDK_)
 NTKERNELAPI
 NTSTATUS
@@ -2038,8 +2041,8 @@ NTAPI
 IoGetDeviceNumaNode(
   IN PDEVICE_OBJECT Pdo,
   OUT PUSHORT NodeNumber);
-$endif
 
+$endif (_WDMDDK_)
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
 $if (_WDMDDK_)
@@ -2280,5 +2283,5 @@ IoInitializeThreadedDpcRequest(
                           DeviceObject );
 }
 #endif
-$endif
 
+$endif (_WDMDDK_)

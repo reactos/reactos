@@ -1967,7 +1967,6 @@ extern ULONG NtGlobalFlag;
 #define IF_NTOS_DEBUG(FlagName) if(FALSE)
 #endif
 
-
 /******************************************************************************
  *                            Security Manager Types                          *
  ******************************************************************************/
@@ -11183,7 +11182,6 @@ CmGetBoundTransaction(
  *                         I/O Manager Functions                              *
  ******************************************************************************/
 
-
 /*
  * NTSTATUS
  * IoAcquireRemoveLock(
@@ -12378,7 +12376,6 @@ IoSetTopLevelIrp(
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
-
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 
 NTKERNELAPI
@@ -12538,6 +12535,7 @@ IoWMISetSingleItem(
   IN ULONG Version,
   IN ULONG ValueBufferSize,
   IN PVOID ValueBuffer);
+
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
 #if (NTDDI_VERSION >= NTDDI_WINXPSP1)
@@ -12550,7 +12548,6 @@ IoValidateDeviceIoControlAccess(
 #endif
 
 #if (NTDDI_VERSION >= NTDDI_WS03)
-
 NTKERNELAPI
 NTSTATUS
 NTAPI
@@ -12573,9 +12570,7 @@ IoCsqInsertIrpEx(
   IN PVOID InsertContext OPTIONAL);
 #endif /* (NTDDI_VERSION >= NTDDI_WS03) */
 
-
 #if (NTDDI_VERSION >= NTDDI_VISTA)
-
 NTKERNELAPI
 NTSTATUS
 NTAPI
@@ -12724,7 +12719,6 @@ IoReplacePartitionUnit(
 #endif
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
-
 NTKERNELAPI
 NTSTATUS
 NTAPI
@@ -13408,7 +13402,6 @@ ExInitializeFastMutex(
 }
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
-
 NTKERNELAPI
 VOID
 FASTCALL
@@ -14068,7 +14061,6 @@ ExFreeToNPagedLookasideList(
    }
 }
 
-
 /******************************************************************************
  *                          Object Manager Functions                          *
  ******************************************************************************/
@@ -14664,6 +14656,7 @@ HalGetDmaAlignment(
 }
 
 #endif /* USE_DMA_MACROS ... */
+
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 #ifndef _NTTMAPI_

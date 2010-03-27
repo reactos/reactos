@@ -1,8 +1,8 @@
 /******************************************************************************
  *                            Executive Types                                 *
  ******************************************************************************/
-$if (_WDMDDK_)
 
+$if (_WDMDDK_)
 #define EX_RUNDOWN_ACTIVE                 0x1
 #define EX_RUNDOWN_COUNT_SHIFT            0x1
 #define EX_RUNDOWN_COUNT_INC              (1 << EX_RUNDOWN_COUNT_SHIFT)
@@ -268,9 +268,8 @@ extern ULONG NtGlobalFlag;
 #define IF_NTOS_DEBUG(FlagName) if(FALSE)
 #endif
 
-$endif /* _WDMDDK_ */
+$endif (_WDMDDK_)
 $if (_NTDDK_)
-
 typedef struct _ZONE_SEGMENT_HEADER {
   SINGLE_LIST_ENTRY SegmentList;
   PVOID Reserved;
@@ -285,5 +284,4 @@ typedef struct _ZONE_HEADER {
 
 #define PROTECTED_POOL                    0x80000000
 
-$endif /* _NTDDK_ */
-
+$endif (_NTDDK_)

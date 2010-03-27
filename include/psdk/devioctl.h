@@ -26,7 +26,6 @@
 #define _DEVIOCTL_
 
 
-
 #define FILE_DEVICE_BEEP                  0x00000001
 #define FILE_DEVICE_CD_ROM                0x00000002
 #define FILE_DEVICE_CD_ROM_FILE_SYSTEM    0x00000003
@@ -98,14 +97,12 @@
 /* DEVICE_OBJECT.DeviceType */
 #define DEVICE_TYPE ULONG
 
-
 #define CTL_CODE(DeviceType, Function, Method, Access) \
   (((DeviceType) << 16) | ((Access) << 14) | ((Function) << 2) | (Method))
 
 #define DEVICE_TYPE_FROM_CTL_CODE(ctl) (((ULONG) (ctl & 0xffff0000)) >> 16)
 
 #define METHOD_FROM_CTL_CODE(ctrlCode)          ((ULONG)(ctrlCode & 3))
-
 
 #define METHOD_BUFFERED                   0
 #define METHOD_IN_DIRECT                  1
@@ -115,12 +112,10 @@
 #define METHOD_DIRECT_TO_HARDWARE       METHOD_IN_DIRECT
 #define METHOD_DIRECT_FROM_HARDWARE     METHOD_OUT_DIRECT
 
-
 #define FILE_ANY_ACCESS                   0x00000000
 #define FILE_SPECIAL_ACCESS               FILE_ANY_ACCESS
 #define FILE_READ_ACCESS                  0x00000001
 #define FILE_WRITE_ACCESS                 0x00000002
-
 
 
 #endif /*_DEVIOCTL_ */

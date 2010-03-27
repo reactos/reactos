@@ -1,6 +1,7 @@
 /******************************************************************************
  *                          Executive Functions                               *
  ******************************************************************************/
+
 $if (_NTDDK_)
 static __inline PVOID
 ExAllocateFromZone(
@@ -94,8 +95,7 @@ Exfi386InterlockedExchangeUlong(
   IN ULONG  Value);
 #endif
 
-$endif
-
+$endif  (_NTDDK_)
 $if (_WDMDDK_)
 #define ExInterlockedIncrementLong(Addend,Lock) Exfi386InterlockedIncrementLong(Addend)
 #define ExInterlockedDecrementLong(Addend,Lock) Exfi386InterlockedDecrementLong(Addend)
@@ -325,8 +325,8 @@ ExInitializeFastMutex(
   KeInitializeEvent(&FastMutex->Event, SynchronizationEvent, FALSE);
   return;
 }
-$endif
 
+$endif (_WDMDDK_)
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 $if (_NTDDK_)
 NTKERNELAPI
@@ -372,8 +372,8 @@ DECLSPEC_NORETURN
 VOID
 NTAPI
 ExRaiseDatatypeMisalignment(VOID);
-$endif
 
+$endif  (_NTDDK_)
 $if (_WDMDDK_)
 NTKERNELAPI
 VOID
@@ -750,8 +750,8 @@ VOID
 NTAPI
 ExUnregisterCallback(
   IN OUT PVOID CbRegistration);
-$endif
 
+$endif  (_WDMDDK_)
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 $if (_WDMDDK_)
@@ -1036,5 +1036,4 @@ ExFreeToNPagedLookasideList(
    }
 }
 
-$endif
-
+$endif  (_WDMDDK_)

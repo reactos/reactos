@@ -111,7 +111,6 @@ typedef struct _ZONE_HEADER {
 
 #define PROTECTED_POOL                    0x80000000
 
-
 /******************************************************************************
  *                         I/O Manager Types                                  *
  ******************************************************************************/
@@ -3238,6 +3237,7 @@ extern NTKERNELAPI ULONG64 MmUserProbeAddress;
 /******************************************************************************
  *                          Executive Functions                               *
  ******************************************************************************/
+
 static __inline PVOID
 ExAllocateFromZone(
   IN PZONE_HEADER Zone)
@@ -3330,8 +3330,6 @@ Exfi386InterlockedExchangeUlong(
   IN ULONG  Value);
 #endif
 
-
-
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 NTKERNELAPI
 NTSTATUS
@@ -3377,9 +3375,7 @@ VOID
 NTAPI
 ExRaiseDatatypeMisalignment(VOID);
 
-
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
-
 
 /* Hardware Abstraction Layer Functions */
 
@@ -3653,10 +3649,10 @@ HalBugCheckSystem(
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
-
 /******************************************************************************
  *                         I/O Manager Functions                              *
  ******************************************************************************/
+
 /*
  * VOID IoAssignArcName(
  *   IN PUNICODE_STRING  ArcName,
@@ -3682,9 +3678,8 @@ IoInitializeDriverCreateContext(
   DriverContext->Size = sizeof(IO_DRIVER_CREATE_CONTEXT);
 }
 
-
-
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
+
 #if !(defined(USE_DMA_MACROS) && (defined(_NTDDK_) || defined(_NTDRIVER_)) || defined(_WDM_INCLUDED_))
 NTKERNELAPI
 NTSTATUS
@@ -3903,6 +3898,7 @@ IoSetFileOrigin(
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2KSP3) */
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
+
 NTKERNELAPI
 NTSTATUS
 FASTCALL
@@ -4016,8 +4012,8 @@ IoAttachDeviceToDeviceStackSafe(
   IN PDEVICE_OBJECT TargetDevice,
   OUT PDEVICE_OBJECT *AttachedToDeviceObject);
 
-#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
 #if (NTDDI_VERSION >= NTDDI_WS03)
 NTKERNELAPI
@@ -4095,9 +4091,7 @@ NTAPI
 IoIsFileObjectIgnoringSharing(
   IN PFILE_OBJECT FileObject);
 
-
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
-
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
 NTSTATUS
@@ -4105,9 +4099,7 @@ NTAPI
 IoSetFileObjectIgnoreSharing(
   IN PFILE_OBJECT FileObject);
 
-
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
-
 
 /******************************************************************************
  *                          Kernel Debugger Functions                         *
