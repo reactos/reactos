@@ -54,8 +54,8 @@ $if (_WDMDDK_)
 #define IO_RESOURCE_PREFERRED             0x01
 #define IO_RESOURCE_DEFAULT               0x02
 #define IO_RESOURCE_ALTERNATIVE           0x08
-$endif
 
+$endif (_WDMDDK_)
 $if (_WDMDDK_ || _DEVIOCTL_)
 #define FILE_DEVICE_BEEP                  0x00000001
 #define FILE_DEVICE_CD_ROM                0x00000002
@@ -124,9 +124,9 @@ $if (_WDMDDK_ || _DEVIOCTL_)
 #define FILE_DEVICE_MT_TRANSPORT          0x00000043
 #define FILE_DEVICE_BIOMETRIC             0x00000044
 #define FILE_DEVICE_PMI                   0x00000045
-$endif
-$if (_WDMDDK_)
 
+$endif (_WDMDDK_ || _DEVIOCTL_)
+$if (_WDMDDK_)
 #if defined(NT_PROCESSOR_GROUPS)
 
 typedef USHORT IRQ_DEVICE_POLICY, *PIRQ_DEVICE_POLICY;
@@ -213,11 +213,9 @@ typedef struct _WAIT_CONTEXT_BLOCK {
   PKDPC BufferChainingDpc;
 } WAIT_CONTEXT_BLOCK, *PWAIT_CONTEXT_BLOCK;
 
-$endif
-$if (_WDMDDK_ || _NTDDK_)
-/* DEVICE_OBJECT.Flags */
-$endif
+$endif (_WDMDDK_)
 $if (_NTDDK_)
+/* DEVICE_OBJECT.Flags */
 #define DO_DEVICE_HAS_NAME                0x00000040
 #define DO_SYSTEM_BOOT_PARTITION          0x00000100
 #define DO_LONG_TERM_REQUESTS             0x00000200
@@ -229,8 +227,10 @@ $if (_NTDDK_)
 #define DO_SYSTEM_SYSTEM_PARTITION        0x00200000
 #define DO_SYSTEM_CRITICAL_PARTITION      0x00400000
 #define DO_DISALLOW_EXECUTE               0x00800000
+
 $endif
 $if (_WDMDDK_)
+/* DEVICE_OBJECT.Flags */
 #define DO_VERIFY_VOLUME                  0x00000002
 #define DO_BUFFERED_IO                    0x00000004
 #define DO_EXCLUSIVE                      0x00000008
@@ -267,14 +267,14 @@ $if (_WDMDDK_)
 #define FILE_128_BYTE_ALIGNMENT         0x0000007f
 #define FILE_256_BYTE_ALIGNMENT         0x000000ff
 #define FILE_512_BYTE_ALIGNMENT         0x000001ff
+
 $endif
 $if (_WDMDDK_ || _DEVIOCTL_)
-
 /* DEVICE_OBJECT.DeviceType */
 #define DEVICE_TYPE ULONG
+
 $endif
 $if (_WDMDDK_)
-
 typedef struct _DEVICE_OBJECT {
   CSHORT Type;
   USHORT Size;
@@ -1779,8 +1779,8 @@ typedef struct _IO_COMPLETION_CONTEXT {
 #define SL_WATCH_TREE                     0x01
 
 #define SL_ALLOW_RAW_MOUNT                0x01
-$endif
 
+$endif (_WDMDDK_)
 $if (_WDMDDK_ || _DEVIOCTL_)
 #define CTL_CODE(DeviceType, Function, Method, Access) \
   (((DeviceType) << 16) | ((Access) << 14) | ((Function) << 2) | (Method))
@@ -1788,8 +1788,8 @@ $if (_WDMDDK_ || _DEVIOCTL_)
 #define DEVICE_TYPE_FROM_CTL_CODE(ctl) (((ULONG) (ctl & 0xffff0000)) >> 16)
 
 #define METHOD_FROM_CTL_CODE(ctrlCode)          ((ULONG)(ctrlCode & 3))
-$endif
 
+$endif (_WDMDDK_ || _DEVIOCTL_)
 $if (_WDMDDK_)
 #define IRP_NOCACHE                     0x00000001
 #define IRP_PAGING_IO                   0x00000002
@@ -2841,8 +2841,8 @@ typedef struct _IO_STACK_LOCATION {
 #define SL_INVOKE_ON_CANCEL               0x20
 #define SL_INVOKE_ON_SUCCESS              0x40
 #define SL_INVOKE_ON_ERROR                0x80
-$endif
 
+$endif (_WDMDDK_)
 $if (_WDMDDK_ || _DEVIOCTL_)
 #define METHOD_BUFFERED                   0
 #define METHOD_IN_DIRECT                  1
@@ -2851,8 +2851,8 @@ $if (_WDMDDK_ || _DEVIOCTL_)
 
 #define METHOD_DIRECT_TO_HARDWARE       METHOD_IN_DIRECT
 #define METHOD_DIRECT_FROM_HARDWARE     METHOD_OUT_DIRECT
-$endif
 
+$endif (_WDMDDK_ || _DEVIOCTL_)
 $if (_WDMDDK_)
 #define FILE_SUPERSEDED                   0x00000000
 #define FILE_OPENED                       0x00000001
@@ -2941,15 +2941,15 @@ $if (_WDMDDK_)
 #define FILE_OPEN_REPARSE_POINT           0x00200000
 #define FILE_OPEN_NO_RECALL               0x00400000
 #define FILE_OPEN_FOR_FREE_SPACE_QUERY    0x00800000
-$endif
 
+$endif (_WDMDDK_)
 $if (_WDMDDK_ || _DEVIOCTL_)
 #define FILE_ANY_ACCESS                   0x00000000
 #define FILE_SPECIAL_ACCESS               FILE_ANY_ACCESS
 #define FILE_READ_ACCESS                  0x00000001
 #define FILE_WRITE_ACCESS                 0x00000002
-$endif
 
+$endif (_WDMDDK_ || _DEVIOCTL_)
 $if (_WDMDDK_)
 #define FILE_ALL_ACCESS \
   (STANDARD_RIGHTS_REQUIRED | \
@@ -3771,7 +3771,8 @@ typedef struct _PCI_MSIX_TABLE_CONFIG_INTERFACE {
 
 #define PCI_MSIX_TABLE_CONFIG_MINIMUM_SIZE \
         RTL_SIZEOF_THROUGH_FIELD(PCI_MSIX_TABLE_CONFIG_INTERFACE, UnmaskTableEntry)
-$endif
+
+$endif (_WDMDDK_)
 $if (_NTDDK_)
 #ifndef _ARC_DDK_
 #define _ARC_DDK_
@@ -4888,5 +4889,5 @@ typedef enum _BUS_DATA_TYPE {
   SgiInternalConfiguration,
   MaximumBusDataType
 } BUS_DATA_TYPE, *PBUS_DATA_TYPE;
-$endif
 
+$endif (_NTDDK_)
