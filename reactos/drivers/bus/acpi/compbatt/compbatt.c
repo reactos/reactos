@@ -21,8 +21,17 @@ NTAPI
 CompBattOpenClose(IN PDEVICE_OBJECT DeviceObject,
                   IN PIRP Irp)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PAGED_CODE();
+    if (CompBattDebug & 0x100) DbgPrint("CompBatt: ENTERING OpenClose\n");
+    
+    /* Complete the IRP with success */
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    Irp->IoStatus.Information = 0;
+    IofCompleteRequest(Irp, IO_NO_INCREMENT);
+    
+    /* Return success */
+    if (CompBattDebug & 0x100) DbgPrint("CompBatt: Exiting OpenClose\n");
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -30,8 +39,28 @@ NTAPI
 CompBattSystemControl(IN PDEVICE_OBJECT DeviceObject,
                       IN PIRP Irp)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PCOMPBATT_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+    NTSTATUS Status;
+    PAGED_CODE();
+    if (CompBattDebug & 1) DbgPrint("CompBatt: ENTERING System Control\n");
+    
+    /* Are we attached yet? */
+    if (DeviceExtension->AttachedDevice)
+    {
+        /* Send it up the stack */
+        IoSkipCurrentIrpStackLocation(Irp);
+        Status = IoCallDriver(DeviceExtension->AttachedDevice, Irp);
+    }
+    else
+    {
+        /* We don't support WMI */
+        Status = STATUS_NOT_SUPPORTED;
+        Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
+        IofCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
+    
+    /* Return status */
+    return Status;
 }
 
 NTSTATUS
@@ -65,8 +94,23 @@ NTAPI
 CompBattIoctl(IN PDEVICE_OBJECT DeviceObject,
               IN PIRP Irp)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PCOMPBATT_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+    NTSTATUS Status;
+    if (CompBattDebug & 1) DbgPrint("CompBatt: ENTERING Ioctl\n");
+
+    /* Let the class driver handle it */
+    Status = BatteryClassIoctl(DeviceExtension->ClassData, Irp);
+    if (Status == STATUS_NOT_SUPPORTED)
+    {
+        /* It failed, try the next driver up the stack */
+        Irp->IoStatus.Status = Status;
+        IoSkipCurrentIrpStackLocation(Irp);
+        Status = IoCallDriver(DeviceExtension->AttachedDevice, Irp);
+    }
+
+    /* Return status */
+    if (CompBattDebug & 1) DbgPrint("CompBatt: EXITING Ioctl\n");
+    return Status;
 }
 
 NTSTATUS
@@ -161,8 +205,18 @@ NTAPI
 DriverEntry(IN PDRIVER_OBJECT DriverObject,
             IN PUNICODE_STRING RegistryPath)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    /* Register add device routine */
+    DriverObject->DriverExtension->AddDevice = CompBattAddDevice;
+    
+    /* Register other handlers */
+    DriverObject->MajorFunction[0] = CompBattOpenClose;
+    DriverObject->MajorFunction[2] = CompBattOpenClose;
+    DriverObject->MajorFunction[14] = CompBattIoctl;
+    DriverObject->MajorFunction[22] = CompBattPowerDispatch;
+    DriverObject->MajorFunction[23] = CompBattSystemControl;
+    DriverObject->MajorFunction[27] = CompBattPnpDispatch;
+    
+    return STATUS_SUCCESS;
 }
 
 /* EOF */

@@ -52,6 +52,68 @@ typedef struct _COMPBATT_DEVICE_EXTENSION
     PVOID NotificationEntry;
 } COMPBATT_DEVICE_EXTENSION, *PCOMPBATT_DEVICE_EXTENSION;
 
-extern ULONG CmBattDebug;
+NTSTATUS
+NTAPI
+CompBattAddDevice(
+    IN PDRIVER_OBJECT DriverObject,
+    IN PDEVICE_OBJECT PdoDeviceObject
+);
+
+NTSTATUS
+NTAPI
+CompBattPowerDispatch(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp
+);
+
+NTSTATUS
+NTAPI
+CompBattPnpDispatch(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp
+);
+
+NTSTATUS
+NTAPI
+CompBattQueryInformation(
+    IN PCOMPBATT_DEVICE_EXTENSION FdoExtension,
+    IN ULONG Tag,
+    IN BATTERY_QUERY_INFORMATION_LEVEL InfoLevel,
+    IN OPTIONAL LONG AtRate,
+    IN PVOID Buffer,
+    IN ULONG BufferLength,
+    OUT PULONG ReturnedLength
+);
+                       
+NTSTATUS
+NTAPI
+CompBattQueryStatus(
+    IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension,
+    IN ULONG Tag,
+    IN PBATTERY_STATUS BatteryStatus
+);
+
+NTSTATUS
+NTAPI
+CompBattSetStatusNotify(
+    IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension,
+    IN ULONG BatteryTag,
+    IN PBATTERY_NOTIFY BatteryNotify
+);
+
+NTSTATUS
+NTAPI
+CompBattDisableStatusNotify(
+    IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+CompBattQueryTag(
+    IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension,
+    OUT PULONG Tag
+);
+
+extern ULONG CompBattDebug;
 
 /* EOF */
