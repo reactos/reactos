@@ -145,7 +145,6 @@ DC_vRestoreDC(
             /* WTF? Internal error! */
             DPRINT1("Could not lock the saved DC (%p) for dc %p!\n",
                     hdcSave, pdc->BaseObject.hHmgr);
-            DC_UnlockDc(pdc);
             return;// FALSE;
         }
 

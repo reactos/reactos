@@ -384,6 +384,7 @@ DC_SetOwnership(HDC hDC, PEPROCESS Owner)
     INT Index;
     PGDI_TABLE_ENTRY Entry;
     PDC pDC;
+    BOOL ret;
 
     /* FIXME: This function has broken error handling */
 
@@ -405,40 +406,43 @@ DC_SetOwnership(HDC hDC, PEPROCESS Owner)
           These regions do not use attribute sections and when allocated, use
           gdiobj level functions.
     */
-        if (pDC->rosdc.hClipRgn)
-        {   // FIXME! HAX!!!
-            Index = GDI_HANDLE_GET_INDEX(pDC->rosdc.hClipRgn);
-            Entry = &GdiHandleTable->Entries[Index];
-            if (Entry->UserData) FreeObjectAttr(Entry->UserData);
-            Entry->UserData = NULL;
-            //
-            if (!GDIOBJ_SetOwnership(pDC->rosdc.hClipRgn, Owner)) return FALSE;
-        }
-        if (pDC->prgnVis)
-        {   // FIXME! HAX!!!
-            Index = GDI_HANDLE_GET_INDEX(((PROSRGNDATA)pDC->prgnVis)->BaseObject.hHmgr);
-            Entry = &GdiHandleTable->Entries[Index];
-            if (Entry->UserData) FreeObjectAttr(Entry->UserData);
-            Entry->UserData = NULL;
-            //
-            if (!GDIOBJ_SetOwnership(((PROSRGNDATA)pDC->prgnVis)->BaseObject.hHmgr, Owner)) return FALSE;
-        }
-        if (pDC->rosdc.hGCClipRgn)
-        {   // FIXME! HAX!!!
-            Index = GDI_HANDLE_GET_INDEX(pDC->rosdc.hGCClipRgn);
-            Entry = &GdiHandleTable->Entries[Index];
-            if (Entry->UserData) FreeObjectAttr(Entry->UserData);
-            Entry->UserData = NULL;
-            //
-            if (!GDIOBJ_SetOwnership(pDC->rosdc.hGCClipRgn, Owner)) return FALSE;
-        }
-        if (pDC->dclevel.hPath)
-        {
-            if (!GDIOBJ_SetOwnership(pDC->dclevel.hPath, Owner)) return FALSE;
-        }
-        DC_UnlockDc(pDC);
+    if (pDC->rosdc.hClipRgn)
+    {   // FIXME! HAX!!!
+        Index = GDI_HANDLE_GET_INDEX(pDC->rosdc.hClipRgn);
+        Entry = &GdiHandleTable->Entries[Index];
+        if (Entry->UserData) FreeObjectAttr(Entry->UserData);
+        Entry->UserData = NULL;
+        //
+        if (!GDIOBJ_SetOwnership(pDC->rosdc.hClipRgn, Owner)) goto leave;
+    }
+    if (pDC->prgnVis)
+    {   // FIXME! HAX!!!
+        Index = GDI_HANDLE_GET_INDEX(((PROSRGNDATA)pDC->prgnVis)->BaseObject.hHmgr);
+        Entry = &GdiHandleTable->Entries[Index];
+        if (Entry->UserData) FreeObjectAttr(Entry->UserData);
+        Entry->UserData = NULL;
+        //
+        if (!GDIOBJ_SetOwnership(((PROSRGNDATA)pDC->prgnVis)->BaseObject.hHmgr, Owner)) goto leave;
+    }
+    if (pDC->rosdc.hGCClipRgn)
+    {   // FIXME! HAX!!!
+        Index = GDI_HANDLE_GET_INDEX(pDC->rosdc.hGCClipRgn);
+        Entry = &GdiHandleTable->Entries[Index];
+        if (Entry->UserData) FreeObjectAttr(Entry->UserData);
+        Entry->UserData = NULL;
+        //
+        if (!GDIOBJ_SetOwnership(pDC->rosdc.hGCClipRgn, Owner)) goto leave;
+    }
+    if (pDC->dclevel.hPath)
+    {
+        if (!GDIOBJ_SetOwnership(pDC->dclevel.hPath, Owner)) goto leave;
+    }
+    ret = TRUE;
 
-    return TRUE;
+leave:
+    DC_UnlockDc(pDC);
+
+    return ret;
 }
 
 HDC
