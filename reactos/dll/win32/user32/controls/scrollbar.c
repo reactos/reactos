@@ -1196,64 +1196,44 @@ VOID FASTCALL
 ScrollTrackScrollBar(HWND Wnd, INT SBType, POINT Pt)
 {
   MSG Msg;
-  RECT WindowRect;
-  UINT XOffset, YOffset;
-  POINT TopLeft;
+  UINT XOffset = 0, YOffset = 0;
 
-  if (SB_CTL != SBType)
-    {
-      GetWindowRect(Wnd, &WindowRect);
-
-      Pt.x -= WindowRect.left;
-      Pt.y -= WindowRect.top;
-
-      TopLeft.x = WindowRect.left;
-      TopLeft.y = WindowRect.top;
-      ScreenToClient(Wnd, &TopLeft);
-      XOffset = - TopLeft.x;
-      YOffset = - TopLeft.y;
-    }
-  else
-    {
-      XOffset = 0;
-      YOffset = 0;
-    }
+  if (SBType != SB_CTL)
+  {
+      PWND pwnd = ValidateHwnd(Wnd);
+      if (!pwnd) return;
+      XOffset = pwnd->rcClient.left - pwnd->rcWindow.left;
+      YOffset = pwnd->rcClient.top - pwnd->rcWindow.top;
+      ScreenToClient(Wnd, &Pt);
+      Pt.x += XOffset;
+      Pt.y += YOffset;
+  }
 
   IntScrollHandleScrollEvent(Wnd, SBType, WM_LBUTTONDOWN, Pt);
 
   do
-    {
-      if (! GetMessageW(&Msg, 0, 0, 0))
-        {
-          break;
-        }
-      if (CallMsgFilterW(&Msg, MSGF_SCROLLBAR))
-        {
-          continue;
-        }
-
-      switch(Msg.message)
-        {
-          case WM_SYSTIMER:
-          case WM_LBUTTONUP:
-          case WM_MOUSEMOVE:
-            Pt.x = LOWORD(Msg.lParam) + XOffset;
-            Pt.y = HIWORD(Msg.lParam) + YOffset;
-            IntScrollHandleScrollEvent(Wnd, SBType, Msg.message, Pt);
-            break;
-          default:
-            TranslateMessage(&Msg);
-            DispatchMessageW(&Msg);
-            break;
-        }
-
-      if (! IsWindow(Wnd))
-        {
+  {
+      if (!GetMessageW(&Msg, 0, 0, 0)) break;
+      if (CallMsgFilterW(&Msg, MSGF_SCROLLBAR)) continue;
+      if ( Msg.message == WM_LBUTTONUP ||
+           Msg.message == WM_MOUSEMOVE ||
+          (Msg.message == WM_SYSTIMER && Msg.wParam == SCROLL_TIMER))
+      {
+          Pt.x = LOWORD(Msg.lParam) + XOffset;
+          Pt.y = HIWORD(Msg.lParam) + YOffset;
+          IntScrollHandleScrollEvent(Wnd, SBType, Msg.message, Pt);
+      }
+      else
+      {
+          TranslateMessage(&Msg);
+          DispatchMessageW(&Msg);
+      }
+      if (!IsWindow(Wnd))
+      {
           ReleaseCapture();
           break;
-        }
-    }
-  while (WM_LBUTTONUP != Msg.message);
+      }
+   } while (Msg.message != WM_LBUTTONUP && GetCapture() == Wnd);
 }
 
 
