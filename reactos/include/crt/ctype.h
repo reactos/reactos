@@ -38,7 +38,7 @@ extern "C" {
 #ifndef _CRT_WCTYPEDATA_DEFINED
 #define _CRT_WCTYPEDATA_DEFINED
 # ifndef _CTYPE_DISABLE_MACROS
-  _CRTDATA(extern unsigned short *_wctype);
+  _CRTDATA(extern const unsigned short _wctype[]);
   _CRTIMP const wctype_t * __cdecl __pwctype_func(void);
 #  ifndef _M_CEE_PURE
   _CRTDATA(extern const wctype_t *_pwctype);
