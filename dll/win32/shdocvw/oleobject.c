@@ -960,17 +960,6 @@ void WebBrowser_OleObject_Init(WebBrowser *This)
     This->lpOleInPlaceActiveObjectVtbl = &OleInPlaceActiveObjectVtbl;
     This->lpOleCommandTargetVtbl     = &OleCommandTargetVtbl;
 
-    This->client = NULL;
-    This->inplace = NULL;
-    This->container = NULL;
-    This->frame_hwnd = NULL;
-    This->uiwindow = NULL;
-    This->shell_embedding_hwnd = NULL;
-
-    memset(&This->pos_rect, 0, sizeof(RECT));
-    memset(&This->clip_rect, 0, sizeof(RECT));
-    memset(&This->frameinfo, 0, sizeof(OLEINPLACEFRAMEINFO));
-
     /* Default size is 50x20 pixels, in himetric units */
     This->extent.cx = MulDiv( 50, 2540, dpi_x );
     This->extent.cy = MulDiv( 20, 2540, dpi_y );

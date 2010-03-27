@@ -1,7 +1,7 @@
 #ifndef PRECOMP_H__
 #define PRECOMP_H__
 
-//#define BDAPLGIN_TRACE
+#define BDAPLGIN_TRACE
 #define BUILDING_KS
 #define _KSDDK_
 #include <dshow.h>
@@ -9,6 +9,7 @@
 #include <ks.h>
 #define __STREAMS__
 #include <ksproxy.h>
+#include <ksmedia.h>
 #include <stdio.h>
 #include <wchar.h>
 #include <tchar.h>
@@ -55,7 +56,6 @@ CBDAPinControl_fnConstructor(
 HRESULT
 WINAPI
 CControlNode_fnConstructor(
-    HANDLE hFile,
     IBaseFilter * pFilter,
     ULONG NodeType,
     ULONG PinId,
@@ -67,7 +67,7 @@ CControlNode_fnConstructor(
 HRESULT
 WINAPI
 CBDAFrequencyFilter_fnConstructor(
-    HANDLE hFile,
+    IKsPropertySet * pProperty,
     ULONG NodeId,
     REFIID riid,
     LPVOID * ppv);
@@ -77,7 +77,7 @@ CBDAFrequencyFilter_fnConstructor(
 HRESULT
 WINAPI
 CBDASignalStatistics_fnConstructor(
-    HANDLE hFile,
+    IKsPropertySet * pProperty,
     ULONG NodeId,
     REFIID riid,
     LPVOID * ppv);
@@ -87,7 +87,7 @@ CBDASignalStatistics_fnConstructor(
 HRESULT
 WINAPI
 CBDALNBInfo_fnConstructor(
-    HANDLE hFile,
+    IKsPropertySet * pProperty,
     ULONG NodeId,
     REFIID riid,
     LPVOID * ppv);
@@ -96,9 +96,11 @@ CBDALNBInfo_fnConstructor(
 HRESULT
 WINAPI
 CBDADigitalDemodulator_fnConstructor(
-    HANDLE hFile,
+    IKsPropertySet * pProperty,
     ULONG NodeId,
     REFIID riid,
     LPVOID * ppv);
+
+extern const GUID IID_IKsObject;
 
 #endif

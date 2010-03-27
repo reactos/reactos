@@ -28,6 +28,8 @@
 		<compilerflag>-mpreferred-stack-boundary=2</compilerflag>
 		<compilerflag compiler="midl">-m32 --win32</compilerflag>
 		<compilerflag compiler="cc,cxx">-gstabs+</compilerflag>
+		<compilerflag compiler="cc,cxx">-fno-set-stack-executable</compilerflag>
+		<compilerflag compiler="cc,cxx">-fno-optimize-sibling-calls</compilerflag>
 		<compilerflag compiler="as">-gstabs+</compilerflag>
 	</group>
 

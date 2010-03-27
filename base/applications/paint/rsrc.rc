@@ -42,4 +42,9 @@
 // THIS WILL MAKE THE PROGRAM USE THE COMMON CONTROLS
 // LIBRARY VERSION 6.0 (IF IT IS AVAILABLE)
 //
+#ifdef _AMD64_
+1 24 "paint.exe.amd64.manifest"
+#elif _X86_
 1 24 "paint.exe.manifest"
+#endif
+

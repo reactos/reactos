@@ -2108,6 +2108,8 @@ GpStatus WINGDIPAPI GdipGetMetafileHeaderFromMetafile(GpMetafile * metafile,
     if(!(calls++))
         FIXME("not implemented\n");
 
+    memset(header, 0, sizeof(MetafileHeader));
+
     return Ok;
 }
 
@@ -2194,6 +2196,7 @@ struct image_format_dimension image_format_dimensions[] =
     {NULL}
 };
 
+/* FIXME: Need to handle multi-framed images */
 GpStatus WINGDIPAPI GdipImageGetFrameCount(GpImage *image,
     GDIPCONST GUID* dimensionID, UINT* count)
 {
@@ -2201,13 +2204,15 @@ GpStatus WINGDIPAPI GdipImageGetFrameCount(GpImage *image,
 
     TRACE("(%p,%s,%p)\n", image, debugstr_guid(dimensionID), count);
 
-    if(!image || !dimensionID || !count)
+    if(!image || !count)
         return InvalidParameter;
 
     if(!(calls++))
-        FIXME("not implemented\n");
+        FIXME("returning frame count of 1\n");
 
-    return NotImplemented;
+    *count = 1;
+
+    return Ok;
 }
 
 GpStatus WINGDIPAPI GdipImageGetFrameDimensionsCount(GpImage *image,

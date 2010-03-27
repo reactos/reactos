@@ -370,6 +370,30 @@ void WINAPI NdrOleFree(void *NodeToFree)
 }
 
 /***********************************************************************
+ * Helper function to create a proxy.
+ * Probably similar to NdrpCreateProxy.
+ */
+HRESULT create_proxy(REFIID iid, IUnknown *pUnkOuter, IRpcProxyBuffer **pproxy, void **ppv)
+{
+    CLSID clsid;
+    IPSFactoryBuffer *psfac;
+    HRESULT r;
+
+    if(!LoadCOM()) return E_FAIL;
+
+    r = COM_GetPSClsid( iid, &clsid );
+    if(FAILED(r)) return r;
+
+    r = COM_GetClassObject( &clsid, CLSCTX_INPROC_SERVER, NULL, &IID_IPSFactoryBuffer, (void**)&psfac );
+    if(FAILED(r)) return r;
+
+    r = IPSFactoryBuffer_CreateProxy(psfac, pUnkOuter, iid, pproxy, ppv);
+
+    IPSFactoryBuffer_Release(psfac);
+    return r;
+}
+
+/***********************************************************************
  * Helper function to create a stub.
  * This probably looks very much like NdrpCreateStub.
  */

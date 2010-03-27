@@ -979,16 +979,27 @@
 #define YYTEXT_POINTER 1
 
 /* Define to a macro to output a .cfi assembly pseudo-op */
-#define __ASM_CFI(x)
+#define __ASM_CFI(str) str
+
+/* Define to a macro to define an assembly function */
+#define __ASM_DEFINE_FUNC(name,suffix,code) asm(".text\n\t.align 4\n\t.globl _" #name suffix "\n\t.def _" #name suffix "; .scl 2; .type 32; .endef\n_" #name suffix ":\n\t.cfi_startproc\n\t" code "\n\t.cfi_endproc");
 
 /* Define to a macro to generate an assembly function directive */
 #define __ASM_FUNC(name) ".def " __ASM_NAME(name) "; .scl 2; .type 32; .endef"
+
+/* Define to a macro to generate an assembly function with C calling
+   convention */
+#define __ASM_GLOBAL_FUNC(name,code) __ASM_DEFINE_FUNC(name,"",code)
 
 /* Define to a macro to generate an assembly name from a C symbol */
 #define __ASM_NAME(name) "_" name
 
 /* Define to a macro to generate an stdcall suffix */
 #define __ASM_STDCALL(args) "@" #args
+
+/* Define to a macro to generate an assembly function with stdcall calling
+   convention */
+#define __ASM_STDCALL_FUNC(name,args,code) __ASM_DEFINE_FUNC(name,__ASM_STDCALL(args),code)
 
 /* Define to empty if `const' does not conform to ANSI C. */
 /* #undef const */

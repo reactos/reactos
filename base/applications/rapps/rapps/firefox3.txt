@@ -2,10 +2,10 @@
 
 [Section]
 Name = Mozilla Firefox 3.0
-Version = 3.0.17
+Version = 3.0.18
 Licence = MPL/GPL/LGPL
 Description = The most popular and one of the best free Web Browsers out there.
-Size = 7.1M
+Size = 7.2M
 Category = 5
 URLSite = http://www.mozilla.com/en-US/
 URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/latest-3.0/win32/en-US/Firefox%20Setup%203.0.18.exe
@@ -13,7 +13,7 @@ CDPath = none
 
 [Section.0407]
 Description = Der populärste und einer der besten freien Webbrowser.
-Size = 6.9M
+Size = 7.0M
 URLSite = http://www.mozilla-europe.org/de/
 URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/latest-3.0/win32/de/Firefox%20Setup%203.0.18.exe
 

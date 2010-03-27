@@ -244,7 +244,7 @@ static BOOL IsConsoleProcess(HANDLE Process)
 		return TRUE;
 	}
 
-	return IMAGE_SUBSYSTEM_WINDOWS_CUI == ProcessPeb.ImageSubSystem;
+	return IMAGE_SUBSYSTEM_WINDOWS_CUI == ProcessPeb.ImageSubsystem;
 }
 
 

@@ -305,7 +305,7 @@ class audio_wavein
             if ( aud_info.bits() == 16 )
                 svalue = ( unsigned int )  abs( *(( short * ) (main_buffer + aud_info.bytes_in_samples( nsamp ))));
             else if ( aud_info.bits() == 8 )
-               svalue = (unsigned int)(( unsigned char * ) *(main_buffer + aud_info.bytes_in_samples( nsamp )));
+               svalue = (unsigned int)(( ptrdiff_t ) *(main_buffer + aud_info.bytes_in_samples( nsamp )));
 
             else 
                 svalue = 0;

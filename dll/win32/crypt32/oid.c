@@ -1067,6 +1067,9 @@ static const WCHAR rc2[] = { 'r','c','2',0 };
 static const WCHAR rc4[] = { 'r','c','4',0 };
 static const WCHAR sha[] = { 's','h','a',0 };
 static const WCHAR sha1[] = { 's','h','a','1',0 };
+static const WCHAR sha256[] = { 's','h','a','2','5','6',0 };
+static const WCHAR sha384[] = { 's','h','a','3','8','4',0 };
+static const WCHAR sha512[] = { 's','h','a','5','1','2',0 };
 static const WCHAR RSA[] = { 'R','S','A',0 };
 static const WCHAR RSA_KEYX[] = { 'R','S','A','_','K','E','Y','X',0 };
 static const WCHAR RSA_SIGN[] = { 'R','S','A','_','S','I','G','N',0 };
@@ -1086,6 +1089,9 @@ static const WCHAR shaDSA[] = { 's','h','a','D','S','A',0 };
 static const WCHAR sha1DSA[] = { 's','h','a','1','D','S','A',0 };
 static const WCHAR shaRSA[] = { 's','h','a','R','S','A',0 };
 static const WCHAR sha1RSA[] = { 's','h','a','1','R','S','A',0 };
+static const WCHAR sha256RSA[] = { 's','h','a','2','5','6','R','S','A',0 };
+static const WCHAR sha384RSA[] = { 's','h','a','3','8','4','R','S','A',0 };
+static const WCHAR sha512RSA[] = { 's','h','a','5','1','2','R','S','A',0 };
 static const WCHAR mosaicUpdatedSig[] =
  { 'm','o','s','a','i','c','U','p','d','a','t','e','d','S','i','g',0 };
 static const WCHAR CN[] = { 'C','N',0 };
@@ -1189,6 +1195,9 @@ static const struct OIDInfoConstructor {
  { 3, szOID_PKIX_NO_SIGNATURE,         CALG_NO_SIGN,  NO_SIGN, NULL },
 
  { 4, szOID_RSA_SHA1RSA,               CALG_SHA1,     sha1RSA, &rsaSignBlob },
+ { 4, szOID_RSA_SHA256RSA,             CALG_SHA_256,  sha256RSA, &rsaSignBlob },
+ { 4, szOID_RSA_SHA384RSA,             CALG_SHA_384,  sha384RSA, &rsaSignBlob },
+ { 4, szOID_RSA_SHA512RSA,             CALG_SHA_512,  sha512RSA, &rsaSignBlob },
  { 4, szOID_RSA_MD5RSA,                CALG_MD5,      md5RSA, &rsaSignBlob },
  { 4, szOID_X957_SHA1DSA,              CALG_SHA1,     sha1DSA, &dssSignBlob },
  { 4, szOID_OIWSEC_sha1RSASign,        CALG_SHA1,     sha1RSA, &rsaSignBlob },

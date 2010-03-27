@@ -97,7 +97,9 @@ HRESULT
 STDMETHODCALLTYPE
 CKsBasicAudio::Stop()
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"UNIMPLEMENTED\n");
+#endif
     return E_NOTIMPL;
 }
 
@@ -105,7 +107,10 @@ HRESULT
 STDMETHODCALLTYPE
 CKsBasicAudio::Pause()
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"UNIMPLEMENTED\n");
+#endif
+
     return E_NOTIMPL;
 }
 
@@ -114,7 +119,10 @@ STDMETHODCALLTYPE
 CKsBasicAudio::Run(
     REFERENCE_TIME tStart)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"UNIMPLEMENTED\n");
+#endif
+
     return E_NOTIMPL;
 }
 
@@ -123,7 +131,9 @@ STDMETHODCALLTYPE
 CKsBasicAudio::SetSyncSource(
     IReferenceClock *pClock)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"UNIMPLEMENTED\n");
+#endif
     return E_NOTIMPL;
 }
 
@@ -131,7 +141,10 @@ HRESULT
 STDMETHODCALLTYPE
 CKsBasicAudio::NotifyGraphChange()
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"UNIMPLEMENTED\n");
+#endif
+
     return E_NOTIMPL;
 }
 
@@ -144,7 +157,10 @@ STDMETHODCALLTYPE
 CKsBasicAudio::GetTypeInfoCount(
     UINT *pctinfo)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"UNIMPLEMENTED\n");
+#endif
+
     return E_NOTIMPL;
 }
 
@@ -155,7 +171,9 @@ CKsBasicAudio::GetTypeInfo(
     LCID lcid,
     ITypeInfo **ppTInfo)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"UNIMPLEMENTED\n");
+#endif
     return E_NOTIMPL;
 }
 
@@ -168,7 +186,10 @@ CKsBasicAudio::GetIDsOfNames(
     LCID lcid,
     DISPID *rgDispId)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"UNIMPLEMENTED\n");
+#endif
+
     return E_NOTIMPL;
 }
 
@@ -184,7 +205,10 @@ CKsBasicAudio::Invoke(
     EXCEPINFO *pExcepInfo,
     UINT *puArgErr)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"UNIMPLEMENTED\n");
+#endif
+
     return E_NOTIMPL;
 }
 
@@ -197,7 +221,10 @@ STDMETHODCALLTYPE
 CKsBasicAudio::put_Volume(
     long lVolume)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"UNIMPLEMENTED\n");
+#endif
+
     return E_NOTIMPL;
 }
 
@@ -207,7 +234,10 @@ STDMETHODCALLTYPE
 CKsBasicAudio::get_Volume(
     long *plVolume)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"UNIMPLEMENTED\n");
+#endif
+
     return E_NOTIMPL;
 }
 
@@ -217,7 +247,10 @@ STDMETHODCALLTYPE
 CKsBasicAudio::put_Balance(
     long lBalance)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"UNIMPLEMENTED\n");
+#endif
+
     return E_NOTIMPL;
 }
 
@@ -227,7 +260,10 @@ STDMETHODCALLTYPE
 CKsBasicAudio::get_Balance(
     long *plBalance)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"UNIMPLEMENTED\n");
+#endif
+
     return E_NOTIMPL;
 }
 
@@ -238,7 +274,9 @@ CKsBasicAudio_Constructor(
     REFIID riid,
     LPVOID * ppv)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsBasicAudio_Constructor\n");
+#endif
 
     CKsBasicAudio * handler = new CKsBasicAudio();
 

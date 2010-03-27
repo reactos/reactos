@@ -33,6 +33,7 @@
 	<file>interface.cpp</file>
 	<file>ksproxy.cpp</file>
 	<file>ksproxy.rc</file>
+	<file>mediasample.cpp</file>
 	<file>node.cpp</file>
 	<file>output_pin.cpp</file>
 	<file>proxy.cpp</file>

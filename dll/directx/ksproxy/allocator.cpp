@@ -15,6 +15,9 @@ class CKsAllocator : public IKsAllocatorEx,
                      public IMemAllocatorCallbackTemp
 {
 public:
+    typedef std::stack<IMediaSample *>MediaSampleStack;
+    typedef std::list<IMediaSample *>MediaSampleList;
+
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
     STDMETHODIMP_(ULONG) AddRef()
@@ -58,9 +61,9 @@ public:
     HRESULT STDMETHODCALLTYPE GetFreeCount(LONG *plBuffersFree);
 
 
-    CKsAllocator() : m_Ref(0), m_hAllocator(0), m_Mode(KsAllocatorMode_User), m_Notify(0), m_Allocated(0), m_FreeCount(0), m_cbBuffer(0), m_cBuffers(0), m_cbAlign(0), m_cbPrefix(0){}
+    CKsAllocator();
     virtual ~CKsAllocator(){}
-
+    VOID STDMETHODCALLTYPE FreeMediaSamples();
 protected:
     LONG m_Ref;
     HANDLE m_hAllocator;
@@ -68,11 +71,16 @@ protected:
     ALLOCATOR_PROPERTIES_EX m_Properties;
     IMemAllocatorNotifyCallbackTemp *m_Notify;
     ULONG m_Allocated;
-    ULONG m_FreeCount;
-    ULONG m_cbBuffer;
-    ULONG m_cBuffers;
-    ULONG m_cbAlign;
-    ULONG m_cbPrefix;
+    LONG m_cbBuffer;
+    LONG m_cBuffers;
+    LONG m_cbAlign;
+    LONG m_cbPrefix;
+    BOOL m_Commited;
+    CRITICAL_SECTION m_CriticalSection;
+    MediaSampleStack m_FreeList;
+    MediaSampleList m_UsedList;
+    LPVOID m_Buffer;
+    BOOL m_FreeSamples;
 };
 
 
@@ -93,12 +101,31 @@ CKsAllocator::QueryInterface(
     if (IsEqualGUID(refiid, IID_IMemAllocator) ||
         IsEqualGUID(refiid, IID_IMemAllocatorCallbackTemp))
     {
-        *Output = (IDistributorNotify*)(this);
-        reinterpret_cast<IDistributorNotify*>(*Output)->AddRef();
+        *Output = (IMemAllocatorCallbackTemp*)(this);
+        reinterpret_cast<IMemAllocatorCallbackTemp*>(*Output)->AddRef();
         return NOERROR;
     }
 
     return E_NOINTERFACE;
+}
+
+CKsAllocator::CKsAllocator() : m_Ref(0), 
+                               m_hAllocator(0), 
+                               m_Mode(KsAllocatorMode_User),
+                               m_Notify(0),
+                               m_Allocated(0),
+                               m_cbBuffer(0),
+                               m_cBuffers(0),
+                               m_cbAlign(0),
+                               m_cbPrefix(0),
+                               m_Commited(FALSE),
+                               m_FreeList(),
+                               m_UsedList(),
+                               m_Buffer(0),
+                               m_FreeSamples(FALSE)
+{
+   InitializeCriticalSection(&m_CriticalSection);
+
 }
 
 //-------------------------------------------------------------------
@@ -112,7 +139,11 @@ CKsAllocator::SetProperties(
 {
     SYSTEM_INFO SystemInfo;
 
-    OutputDebugStringW(L"CKsAllocator::SetProperties Stub\n");
+    EnterCriticalSection(&m_CriticalSection);
+
+#ifdef KSPROXY_TRACE
+    OutputDebugStringW(L"CKsAllocator::SetProperties\n");
+#endif
 
     if (!pRequest || !pActual)
         return E_POINTER;
@@ -126,18 +157,28 @@ CKsAllocator::SetProperties(
     if (!pRequest->cbAlign || (pRequest->cbAlign - 1) & SystemInfo.dwAllocationGranularity)
     {
         // bad alignment
+        LeaveCriticalSection(&m_CriticalSection);
         return VFW_E_BADALIGN;
     }
 
     if (m_Mode == KsAllocatorMode_Kernel)
     {
-        // u cannt change a kernel allocator
+        // u can't change a kernel allocator
+        LeaveCriticalSection(&m_CriticalSection);
         return VFW_E_ALREADY_COMMITTED;
     }
 
-    if (m_Allocated != m_FreeCount)
+    if (m_Commited)
+    {
+        // need to decommit first
+        LeaveCriticalSection(&m_CriticalSection);
+        return VFW_E_ALREADY_COMMITTED;
+    }
+
+    if (m_Allocated != m_FreeList.size())
     {
         // outstanding buffers
+        LeaveCriticalSection(&m_CriticalSection);
         return VFW_E_BUFFERS_OUTSTANDING;
     }
 
@@ -146,6 +187,7 @@ CKsAllocator::SetProperties(
     pActual->cbPrefix = m_cbPrefix = pRequest->cbPrefix;
     pActual->cBuffers = m_cBuffers = pRequest->cBuffers;
 
+    LeaveCriticalSection(&m_CriticalSection);
     return NOERROR;
 }
 
@@ -169,28 +211,130 @@ HRESULT
 STDMETHODCALLTYPE
 CKsAllocator::Commit()
 {
+    LONG Index;
+    PUCHAR CurrentBuffer;
+    IMediaSample * Sample;
+    HRESULT hr;
+
+    //TODO integer overflow checks
+    EnterCriticalSection(&m_CriticalSection);
+
+#ifdef KSPROXY_TRACE
+    OutputDebugStringW(L"CKsAllocator::Commit\n");
+#endif
+
     if (m_Mode == KsAllocatorMode_Kernel)
     {
         /* no-op for kernel allocator */
+       LeaveCriticalSection(&m_CriticalSection);
        return NOERROR;
     }
 
-    OutputDebugStringW(L"CKsAllocator::Commit NotImplemented\n");
-    return E_NOTIMPL;
+    if (m_Commited)
+    {
+        // already commited
+        LeaveCriticalSection(&m_CriticalSection);
+        return NOERROR;
+    }
+
+    if (m_cbBuffer < 0 || m_cBuffers < 0 || m_cbPrefix < 0)
+    {
+        // invalid parameter
+        LeaveCriticalSection(&m_CriticalSection);
+        return E_OUTOFMEMORY;
+    }
+
+    LONG Size = m_cbBuffer + m_cbPrefix;
+
+    if (m_cbAlign > 1)
+    {
+        //check alignment
+        LONG Mod = Size % m_cbAlign;
+        if (Mod)
+        {
+            // calculate aligned size
+            Size += m_cbAlign - Mod;
+        }
+    }
+
+    LONG TotalSize = Size * m_cBuffers;
+
+    assert(TotalSize);
+    assert(m_cBuffers);
+    assert(Size);
+
+    // now allocate buffer
+    m_Buffer = VirtualAlloc(NULL, TotalSize, MEM_COMMIT, PAGE_READWRITE);
+    if (!m_Buffer)
+    {
+        LeaveCriticalSection(&m_CriticalSection);
+        return E_OUTOFMEMORY;
+    }
+
+    ZeroMemory(m_Buffer, TotalSize);
+
+    CurrentBuffer = (PUCHAR)m_Buffer;
+
+    for (Index = 0; Index < m_cBuffers; Index++)
+    {
+        // construct media sample
+        hr = CMediaSample_Constructor((IMemAllocator*)this, CurrentBuffer + m_cbPrefix, m_cbBuffer, IID_IMediaSample, (void**)&Sample);
+        if (FAILED(hr))
+        {
+            LeaveCriticalSection(&m_CriticalSection);
+            return E_OUTOFMEMORY;
+        }
+
+        // add to free list
+        m_FreeList.push(Sample);
+        m_Allocated++;
+
+        //next sample buffer
+        CurrentBuffer += Size;
+    }
+
+    // we are now commited
+    m_Commited = true;
+
+    LeaveCriticalSection(&m_CriticalSection);
+    return S_OK;
 }
 
 HRESULT
 STDMETHODCALLTYPE
 CKsAllocator::Decommit()
 {
+    EnterCriticalSection(&m_CriticalSection);
+
+#ifdef KSPROXY_TRACE
+    OutputDebugStringW(L"CKsAllocator::Decommit\n");
+#endif
+
     if (m_Mode == KsAllocatorMode_Kernel)
     {
         /* no-op for kernel allocator */
-       return NOERROR;
+        LeaveCriticalSection(&m_CriticalSection);
+        return NOERROR;
     }
 
-    OutputDebugStringW(L"CKsAllocator::Decommit NotImplemented\n");
-    return E_NOTIMPL;
+    m_Commited = false;
+
+    if (m_Allocated != m_FreeList.size())
+    {
+        // outstanding buffers
+        m_FreeSamples = true;
+        LeaveCriticalSection(&m_CriticalSection);
+        return NOERROR;
+    }
+    else
+    {
+        // no outstanding buffers
+        // free to free them
+        FreeMediaSamples();
+    }
+
+    LeaveCriticalSection(&m_CriticalSection);
+    return NOERROR;
 }
 
 
@@ -202,8 +346,50 @@ CKsAllocator::GetBuffer(
     REFERENCE_TIME *pEndTime,
     DWORD dwFlags)
 {
-    OutputDebugStringW(L"CKsAllocator::GetBuffer NotImplemented\n");
-    return E_NOTIMPL;
+    IMediaSample * Sample = NULL;
+
+    if (!m_Commited)
+        return VFW_E_NOT_COMMITTED;
+
+    do
+    {
+        EnterCriticalSection(&m_CriticalSection);
+
+        if (!m_FreeList.empty())
+        {
+            Sample = m_FreeList.top();
+            m_FreeList.pop();
+        }
+
+        LeaveCriticalSection(&m_CriticalSection);
+
+        if (dwFlags & AM_GBF_NOWAIT)
+        {
+            // never wait untill a buffer becomes available
+            break;
+        }
+    }
+    while(Sample == NULL);
+
+    if (!Sample)
+    {
+        // no sample acquired
+        //HACKKKKKKK
+        Sample = m_UsedList.back();
+        m_UsedList.pop_back();
+
+        if (!Sample)
+            return VFW_E_TIMEOUT;
+    }
+
+    // store result
+    *ppBuffer = Sample;
+
+   // store sample in used list
+   m_UsedList.push_front(Sample);
+
+    // done
+    return NOERROR;
 }
 
 HRESULT
@@ -211,8 +397,36 @@ STDMETHODCALLTYPE
 CKsAllocator::ReleaseBuffer(
     IMediaSample *pBuffer)
 {
-    OutputDebugStringW(L"CKsAllocator::ReleaseBuffer NotImplemented\n");
-    return E_NOTIMPL;
+    EnterCriticalSection(&m_CriticalSection);
+
+#ifdef KSPROXY_TRACE
+    OutputDebugStringW(L"CKsAllocator::ReleaseBuffer\n");
+#endif
+
+    // media sample always 1 ref count in free list
+    pBuffer->AddRef();
+
+    // add the sample to the free list
+    m_FreeList.push(pBuffer);
+
+
+    if (m_FreeSamples)
+    {
+        // pending de-commit
+        if (m_FreeList.size () == m_Allocated)
+        {
+            FreeMediaSamples();
+        }
+    }
+
+    if (m_Notify)
+    {
+        //notify caller of an available buffer
+        m_Notify->NotifyRelease();
+    }
+
+    LeaveCriticalSection(&m_CriticalSection);
+    return S_OK;
 }
 
 //-------------------------------------------------------------------
@@ -223,7 +437,11 @@ STDMETHODCALLTYPE
 CKsAllocator::SetNotify(
     IMemAllocatorNotifyCallbackTemp *pNotify)
 {
+    EnterCriticalSection(&m_CriticalSection);
+
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsAllocator::SetNotify\n");
+#endif
 
     if (pNotify)
         pNotify->AddRef();
@@ -232,6 +450,8 @@ CKsAllocator::SetNotify(
         m_Notify->Release();
 
     m_Notify = pNotify;
+
+    LeaveCriticalSection(&m_CriticalSection);
     return NOERROR;
 }
 
@@ -240,8 +460,8 @@ STDMETHODCALLTYPE
 CKsAllocator::GetFreeCount(
     LONG *plBuffersFree)
 {
-    OutputDebugStringW(L"CKsAllocator::GetFreeCount NotImplemented\n");
-    return E_NOTIMPL;
+    *plBuffersFree = m_Allocated - m_FreeList.size();
+    return S_OK;
 }
 
 //-------------------------------------------------------------------
@@ -313,7 +533,9 @@ CKsAllocator::KsCreateAllocatorAndGetHandle(
     KSALLOCATOR_FRAMING AllocatorFraming;
     HANDLE hPin;
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsAllocator::KsCreateAllocatorAndGetHandle\n");
+#endif
 
     if (m_hAllocator)
     {
@@ -349,6 +571,32 @@ CKsAllocator::KsCreateAllocatorAndGetHandle(
     return m_hAllocator;
 }
 
+//-------------------------------------------------------------------
+VOID
+STDMETHODCALLTYPE
+CKsAllocator::FreeMediaSamples()
+{
+    ULONG Index;
+
+    for(Index = 0; Index < m_FreeList.size(); Index++)
+    {
+        IMediaSample * Sample = m_FreeList.top();
+        m_FreeList.pop();
+        delete Sample;
+    }
+
+    m_FreeSamples = false;
+    m_Allocated = 0;
+
+    if (m_Buffer)
+    {
+        // release buffer
+        VirtualFree(m_Buffer, 0, MEM_RELEASE);
+
+        m_Buffer = NULL;
+    }
+}
+
 HRESULT
 WINAPI
 CKsAllocator_Constructor(
@@ -356,7 +604,9 @@ CKsAllocator_Constructor(
     REFIID riid,
     LPVOID * ppv)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsAllocator_Constructor\n");
+#endif
 
     CKsAllocator * handler = new CKsAllocator();
 

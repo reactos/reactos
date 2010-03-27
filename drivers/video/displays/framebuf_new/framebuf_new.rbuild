@@ -10,10 +10,12 @@
 	<file>pointer.c</file>
 	<file>screen.c</file>
 	<file>framebuf_new.rc</file>
-	<group compilerset="gcc">
-        <compilerflag>-mrtd</compilerflag>
-        <compilerflag>-fno-builtin</compilerflag>
-		<compilerflag>-Wno-unused-variable</compilerflag>
-	</group>
+	<if property="ARCH" value="i386">
+		<group compilerset="gcc">
+	        	<compilerflag>-mrtd</compilerflag>
+        		<compilerflag>-fno-builtin</compilerflag>
+			<compilerflag>-Wno-unused-variable</compilerflag>
+		</group>
+	</if>
 	<pch>driver.h</pch>
 </module>

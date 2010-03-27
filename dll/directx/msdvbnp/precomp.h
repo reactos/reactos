@@ -9,15 +9,18 @@
 #include <ks.h>
 #define __STREAMS__
 #include <ksproxy.h>
+#include <ksmedia.h>
 #include <stdio.h>
 #include <wchar.h>
 #include <tchar.h>
 #include <uuids.h>
 #include <bdatypes.h>
 #include <bdaiface.h>
+#include <bdatif.h>
 #include <bdamedia.h>
 #include <tuner.h>
 #include <assert.h>
+#include <vector>
 
 typedef HRESULT (CALLBACK *LPFNCREATEINSTANCE)(IUnknown* pUnkOuter, REFIID riid, LPVOID* ppvObject);
 
@@ -46,7 +49,7 @@ CNetworkProvider_fnConstructor(
 HRESULT
 WINAPI
 CScanningTunner_fnConstructor(
-    IUnknown *pUnknown,
+    std::vector<IUnknown*> & m_DeviceFilter,
     REFIID riid,
     LPVOID * ppv);
 
@@ -78,5 +81,9 @@ CEnumMediaTypes_fnConstructor(
     AM_MEDIA_TYPE * MediaTypes,
     REFIID riid,
     LPVOID * ppv);
+
+#ifndef _MSC_VER
+extern const GUID CLSID_DVBTNetworkProvider;
+#endif
 
 #endif

@@ -244,7 +244,7 @@ CallClient(
     DWORD_PTR parameter1,
     DWORD_PTR parameter2)
 {
-    DPRINT("Calling client - callback 0x%x mmhandle 0x%x\n", (int) device_info->callback, device_info->mme_handle);
+    DPRINT("Calling client - callback 0x%x mmhandle 0x%x\n", device_info->callback, device_info->mme_handle);
     return DriverCallback(device_info->callback,
                           HIWORD(device_info->flags),
                           device_info->mme_handle,

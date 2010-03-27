@@ -106,7 +106,7 @@ NdisImmediateReadPortUchar(
     OUT PUCHAR      Data)
 {
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
-  *Data = READ_PORT_UCHAR((PUCHAR)Port); // FIXME: What to do with WrapperConfigurationContext?
+  *Data = READ_PORT_UCHAR(UlongToPtr(Port)); // FIXME: What to do with WrapperConfigurationContext?
 }
 
 
@@ -121,7 +121,7 @@ NdisImmediateReadPortUlong(
     OUT PULONG      Data)
 {
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
-  *Data = READ_PORT_ULONG((PULONG)Port); // FIXME: What to do with WrapperConfigurationContext?
+  *Data = READ_PORT_ULONG(UlongToPtr(Port)); // FIXME: What to do with WrapperConfigurationContext?
 }
 
 
@@ -136,7 +136,7 @@ NdisImmediateReadPortUshort(
     OUT PUSHORT     Data)
 {
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
-  *Data = READ_PORT_USHORT((PUSHORT)Port); // FIXME: What to do with WrapperConfigurationContext?
+  *Data = READ_PORT_USHORT(UlongToPtr(Port)); // FIXME: What to do with WrapperConfigurationContext?
 }
 
 
@@ -151,7 +151,7 @@ NdisImmediateWritePortUchar(
     IN  UCHAR       Data)
 {
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
-  WRITE_PORT_UCHAR((PUCHAR)Port, Data); // FIXME: What to do with WrapperConfigurationContext?
+  WRITE_PORT_UCHAR(UlongToPtr(Port), Data); // FIXME: What to do with WrapperConfigurationContext?
 }
 
 
@@ -166,7 +166,7 @@ NdisImmediateWritePortUlong(
     IN  ULONG       Data)
 {
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
-  WRITE_PORT_ULONG((PULONG)Port, Data); // FIXME: What to do with WrapperConfigurationContext?
+  WRITE_PORT_ULONG(UlongToPtr(Port), Data); // FIXME: What to do with WrapperConfigurationContext?
 }
 
 
@@ -181,7 +181,7 @@ NdisImmediateWritePortUshort(
     IN  USHORT      Data)
 {
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
-  WRITE_PORT_USHORT((PUSHORT)Port, Data); // FIXME: What to do with WrapperConfigurationContext?
+  WRITE_PORT_USHORT(UlongToPtr(Port), Data); // FIXME: What to do with WrapperConfigurationContext?
 }
 
 
@@ -880,7 +880,7 @@ NdisMRegisterIoPortRange(
   if(AddressSpace)
     {
       ASSERT(TranslatedAddress.u.HighPart == 0);
-      *PortOffset = (PVOID) TranslatedAddress.u.LowPart;
+      *PortOffset = (PVOID)(ULONG_PTR)TranslatedAddress.QuadPart;
       NDIS_DbgPrint(MAX_TRACE, ("Returning 0x%x\n", *PortOffset));
       return NDIS_STATUS_SUCCESS;
     }

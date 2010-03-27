@@ -1915,6 +1915,12 @@ NTSTATUS
 
 typedef POWER_SETTING_CALLBACK *PPOWER_SETTING_CALLBACK;
 
+#define PO_CB_SYSTEM_POWER_POLICY       0
+#define PO_CB_AC_STATUS                 1
+#define PO_CB_BUTTON_COLLISION          2
+#define PO_CB_SYSTEM_STATE_LOCK         3
+#define PO_CB_LID_SWITCH_STATE          4
+#define PO_CB_PROCESSOR_POWER_POLICY    5
 
 /******************************************************************************
  *                            Configuration Manager Types                     *
@@ -3152,6 +3158,12 @@ typedef VOID
 (DDKAPI *WMI_NOTIFICATION_CALLBACK)(
   PVOID  Wnode,
   PVOID  Context);
+  
+#define WMIREG_ACTION_REGISTER      1
+#define WMIREG_ACTION_DEREGISTER    2
+#define WMIREG_ACTION_REREGISTER    3
+#define WMIREG_ACTION_UPDATE_GUIDS  4
+#define WMIREG_ACTION_BLOCK_IRPS    5
 
 #define EVENT_INCREMENT                   1
 #define IO_NO_INCREMENT                   0
@@ -3478,6 +3490,91 @@ typedef struct
     PREGISTER_FOR_DEVICE_NOTIFICATIONS2 RegisterForDeviceNotifications;
     PUNREGISTER_FOR_DEVICE_NOTIFICATIONS2 UnregisterForDeviceNotifications;
 } ACPI_INTERFACE_STANDARD2, *PACPI_INTERFACE_STANDARD2;
+
+typedef
+BOOLEAN
+(*PGPE_SERVICE_ROUTINE)(
+    PDEVICE_OBJECT ObjectContext,
+    PVOID ServiceContext
+);
+
+typedef
+NTSTATUS
+(*PGPE_CONNECT_VECTOR)(
+    PDEVICE_OBJECT Context,
+    ULONG GpeNumber,
+    KINTERRUPT_MODE Mode,
+    BOOLEAN Shareable,
+    PGPE_SERVICE_ROUTINE ServiceRoutine,
+    PVOID ServiceContext,
+    PVOID *ObjectContext
+);
+
+typedef
+NTSTATUS
+(*PGPE_DISCONNECT_VECTOR)(
+    PDEVICE_OBJECT Context,
+    PVOID ObjectContext
+);
+
+typedef
+NTSTATUS
+(*PGPE_ENABLE_EVENT)(
+    PDEVICE_OBJECT Context,
+    PVOID ObjectContext
+);
+
+typedef
+NTSTATUS
+(*PGPE_DISABLE_EVENT)(
+    PDEVICE_OBJECT Context,
+    PVOID ObjectContext
+);
+
+typedef
+NTSTATUS
+(*PGPE_CLEAR_STATUS)(
+    PDEVICE_OBJECT Context,
+    PVOID ObjectContext
+);
+
+typedef
+VOID
+(*PDEVICE_NOTIFY_CALLBACK)(
+    PVOID NotificationContext,
+    ULONG NotifyCode
+);
+
+typedef
+NTSTATUS
+(*PREGISTER_FOR_DEVICE_NOTIFICATIONS)(
+    PDEVICE_OBJECT Context,
+    PDEVICE_NOTIFY_CALLBACK NotificationHandler,
+    PVOID NotificationContext
+);
+
+typedef
+VOID
+(*PUNREGISTER_FOR_DEVICE_NOTIFICATIONS)(
+    PDEVICE_OBJECT Context,
+    PDEVICE_NOTIFY_CALLBACK NotificationHandler
+);
+
+typedef struct
+{
+    USHORT Size;
+    USHORT Version;
+    PVOID Context;
+    PINTERFACE_REFERENCE InterfaceReference;
+    PINTERFACE_DEREFERENCE InterfaceDereference;
+    PGPE_CONNECT_VECTOR GpeConnectVector;
+    PGPE_DISCONNECT_VECTOR GpeDisconnectVector;
+    PGPE_ENABLE_EVENT GpeEnableEvent;
+    PGPE_DISABLE_EVENT GpeDisableEvent;
+    PGPE_CLEAR_STATUS GpeClearStatus;
+    PREGISTER_FOR_DEVICE_NOTIFICATIONS RegisterForDeviceNotifications;
+    PUNREGISTER_FOR_DEVICE_NOTIFICATIONS UnregisterForDeviceNotifications;
+} ACPI_INTERFACE_STANDARD, *PACPI_INTERFACE_STANDARD;
 
 typedef struct _DEVICE_CAPABILITIES {
   USHORT  Size;

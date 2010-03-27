@@ -51,26 +51,9 @@ BatteryClassSystemControl(PVOID ClassData,
                           PIRP Irp,
                           PVOID Disposition)
 {
-  NTSTATUS Status;
-
   UNIMPLEMENTED
 
-  /* FIXME: Uncomment when WmiCompleteRequest is implemented */
-#if 0
-  Status = STATUS_WMI_GUID_NOT_FOUND;
-  WmiCompleteRequest(DeviceObject,
-                     Irp,
-                     Status,
-                     0,
-                     IO_NO_INCREMENT);
-#else
-  Irp->IoStatus.Status = Status = STATUS_WMI_GUID_NOT_FOUND;
-  Irp->IoStatus.Information = 0;
-
-  IoCompleteRequest(Irp, IO_NO_INCREMENT);
-#endif
-
-  return Status;
+  return STATUS_WMI_GUID_NOT_FOUND;
 }
 
 BCLASSAPI

@@ -83,7 +83,7 @@ VOID NTAPI
 RtlAcquirePebLock(VOID)
 {
    PPEB Peb = NtCurrentPeb ();
-   Peb->FastPebLockRoutine (Peb->FastPebLock);
+   RtlEnterCriticalSection(Peb->FastPebLock);
 }
 
 /*
@@ -93,7 +93,7 @@ VOID NTAPI
 RtlReleasePebLock(VOID)
 {
    PPEB Peb = NtCurrentPeb ();
-   Peb->FastPebUnlockRoutine (Peb->FastPebLock);
+   RtlLeaveCriticalSection(Peb->FastPebLock);
 }
 
 /*
@@ -201,10 +201,23 @@ RtlpCaptureStackLimits(IN ULONG_PTR Ebp,
                        IN ULONG_PTR *StackEnd)
 {
     /* FIXME: Verify */
-    *StackBegin = (ULONG_PTR)NtCurrentTeb()->Tib.StackLimit;
-    *StackEnd = (ULONG_PTR)NtCurrentTeb()->Tib.StackBase;
+    *StackBegin = (ULONG_PTR)NtCurrentTeb()->NtTib.StackLimit;
+    *StackEnd = (ULONG_PTR)NtCurrentTeb()->NtTib.StackBase;
     return TRUE;
 }
+
+#ifdef _AMD64_
+VOID
+NTAPI
+RtlpGetStackLimits(
+    OUT PULONG_PTR LowLimit,
+    OUT PULONG_PTR HighLimit)
+{
+    *LowLimit = (ULONG_PTR)NtCurrentTeb()->NtTib.StackLimit;
+    *HighLimit = (ULONG_PTR)NtCurrentTeb()->NtTib.StackBase;
+    return;
+}
+#endif
 
 BOOLEAN
 NTAPI

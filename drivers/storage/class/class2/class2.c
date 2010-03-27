@@ -1314,7 +1314,7 @@ Return Value:
     // of original IRP.
     //
 
-    nextIrpStack->Parameters.Others.Argument1 = (PVOID) irpCount;
+    nextIrpStack->Parameters.Others.Argument1 = (PVOID)(ULONG_PTR) irpCount;
 
     for (i = 0; i < irpCount; i++) {
 
@@ -1502,7 +1502,7 @@ Return Value:
             srb,
             irpStack->MajorFunction,
             irpStack->MajorFunction == IRP_MJ_DEVICE_CONTROL ? irpStack->Parameters.DeviceIoControl.IoControlCode : 0,
-            MAXIMUM_RETRIES - ((ULONG)irpStack->Parameters.Others.Argument4),
+            MAXIMUM_RETRIES - ((ULONG_PTR)irpStack->Parameters.Others.Argument4),
             &status);
 
         //
@@ -1517,7 +1517,7 @@ Return Value:
             retry = TRUE;
         }
 
-        if (retry && (irpStack->Parameters.Others.Argument4 = (PVOID)((ULONG)irpStack->Parameters.Others.Argument4-1))) {
+        if (retry && (irpStack->Parameters.Others.Argument4 = (PVOID)((ULONG_PTR)irpStack->Parameters.Others.Argument4-1))) {
 
             //
             // Retry request.
@@ -1654,7 +1654,7 @@ Return Value:
             srb,
             irpStack->MajorFunction,
             irpStack->MajorFunction == IRP_MJ_DEVICE_CONTROL ? irpStack->Parameters.DeviceIoControl.IoControlCode : 0,
-            MAXIMUM_RETRIES - ((ULONG)irpStack->Parameters.Others.Argument4),
+            MAXIMUM_RETRIES - ((ULONG_PTR)irpStack->Parameters.Others.Argument4),
             &status);
 
         //
@@ -1669,7 +1669,7 @@ Return Value:
             retry = TRUE;
         }
 
-        if (retry && (irpStack->Parameters.Others.Argument4 = (PVOID)((ULONG)irpStack->Parameters.Others.Argument4-1))) {
+        if (retry && (irpStack->Parameters.Others.Argument4 = (PVOID)((ULONG_PTR)irpStack->Parameters.Others.Argument4-1))) {
 
             //
             // Retry request. If the class driver has supplied a StartIo,

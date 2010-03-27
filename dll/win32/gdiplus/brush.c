@@ -865,7 +865,10 @@ GpStatus WINGDIPAPI GdipCreateTextureIA(GpImage *image,
 
     (*texture)->brush.gdibrush = CreateBrushIndirect(&(*texture)->brush.lb);
     (*texture)->brush.bt = BrushTypeTextureFill;
-    (*texture)->wrap = imageattr->wrap;
+    if (imageattr)
+        (*texture)->wrap = imageattr->wrap;
+    else
+        (*texture)->wrap = WrapModeTile;
     (*texture)->image = new_image;
 
 exit:

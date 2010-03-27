@@ -229,7 +229,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         PTDI_CONNECTION_INFORMATION TargetAddress;
 
         /* Check that the socket is bound */
-        if( FCB->State != SOCKET_STATE_BOUND )
+        if( FCB->State != SOCKET_STATE_BOUND || !FCB->RemoteAddress )
             return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER, Irp,
                                            0 );
 

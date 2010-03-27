@@ -27,6 +27,7 @@
 #include "winreg.h"
 #include "shlwapi.h"
 #include "wininet.h"
+#include "mshtml.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
@@ -378,8 +379,7 @@ static BindStatusCallback *create_callback(DocHost *doc_host, LPCWSTR url, PBYTE
     return ret;
 }
 
-static void on_before_navigate2(DocHost *This, LPCWSTR url, const BYTE *post_data,
-                                ULONG post_data_len, LPWSTR headers, VARIANT_BOOL *cancel)
+static void on_before_navigate2(DocHost *This, LPCWSTR url, SAFEARRAY *post_data, LPWSTR headers, VARIANT_BOOL *cancel)
 {
     VARIANT var_url, var_flags, var_frame_name, var_post_data, var_post_data2, var_headers;
     DISPPARAMS dispparams;
@@ -404,18 +404,12 @@ static void on_before_navigate2(DocHost *This, LPCWSTR url, const BYTE *post_dat
     V_VARIANTREF(params+2) = &var_post_data2;
     V_VT(&var_post_data2) = (VT_BYREF|VT_VARIANT);
     V_VARIANTREF(&var_post_data2) = &var_post_data;
-    VariantInit(&var_post_data);
 
-    if(post_data_len) {
-        SAFEARRAYBOUND bound = {post_data_len, 0};
-        void *data;
-
+    if(post_data) {
         V_VT(&var_post_data) = VT_UI1|VT_ARRAY;
-        V_ARRAY(&var_post_data) = SafeArrayCreate(VT_UI1, 1, &bound);
-
-        SafeArrayAccessData(V_ARRAY(&var_post_data), &data);
-        memcpy(data, post_data, post_data_len);
-        SafeArrayUnaccessData(V_ARRAY(&var_post_data));
+        V_ARRAY(&var_post_data) = post_data;
+    }else {
+        V_VT(&var_post_data) = VT_EMPTY;
     }
 
     V_VT(params+3) = (VT_BYREF|VT_VARIANT);
@@ -439,8 +433,6 @@ static void on_before_navigate2(DocHost *This, LPCWSTR url, const BYTE *post_dat
     call_sink(This->cps.wbe2, DISPID_BEFORENAVIGATE2, &dispparams);
 
     SysFreeString(V_BSTR(&var_url));
-    if(post_data_len)
-        SafeArrayDestroy(V_ARRAY(&var_post_data));
 }
 
 /* FIXME: urlmon should handle it */
@@ -543,15 +535,153 @@ static HRESULT bind_to_object(DocHost *This, IMoniker *mon, LPCWSTR url, IBindCt
     return S_OK;
 }
 
-static HRESULT navigate_bsc(DocHost *This, BindStatusCallback *bsc, IMoniker *mon)
+static void html_window_navigate(DocHost *This, IHTMLPrivateWindow *window, BSTR url, BSTR headers, SAFEARRAY *post_data)
 {
-    IBindCtx *bindctx;
-    VARIANT_BOOL cancel = VARIANT_FALSE;
+    VARIANT headers_var, post_data_var;
+    WCHAR *new_url;
+    BSTR empty_str;
+    DWORD size;
     HRESULT hres;
 
-    This->ready_state = READYSTATE_LOADING;
+    size = (strlenW(url)+1)*sizeof(WCHAR);
+    new_url = CoTaskMemAlloc(size);
+    if(!new_url)
+        return;
+    memcpy(new_url, url, size);
+    CoTaskMemFree(This->url);
+    This->url = new_url;
 
-    on_before_navigate2(This, bsc->url, bsc->post_data, bsc->post_data_len, bsc->headers, &cancel);
+    empty_str = SysAllocStringLen(NULL, 0);
+
+    if(headers) {
+        V_VT(&headers_var) = VT_BSTR;
+        V_BSTR(&headers_var) = headers;
+    }else {
+        V_VT(&headers_var) = VT_EMPTY;
+    }
+
+    if(post_data) {
+        V_VT(&post_data_var) = VT_UI1|VT_ARRAY;
+        V_ARRAY(&post_data_var) = post_data;
+    }else {
+        V_VT(&post_data_var) = VT_EMPTY;
+    }
+
+    set_doc_state(This, READYSTATE_LOADING);
+    hres = IHTMLPrivateWindow_SuperNavigate(window, url, empty_str, NULL, NULL, &post_data_var, &headers_var, 0);
+    SysFreeString(empty_str);
+    if(FAILED(hres))
+        WARN("SuprtNavigate failed: %08x\n", hres);
+}
+
+typedef struct {
+    task_header_t header;
+    BSTR url;
+    BSTR headers;
+    SAFEARRAY *post_data;
+    BOOL async_notif;
+} task_doc_navigate_t;
+
+static HRESULT free_doc_navigate_task(task_doc_navigate_t *task, BOOL free_task)
+{
+    SysFreeString(task->url);
+    SysFreeString(task->headers);
+    if(task->post_data)
+        SafeArrayDestroy(task->post_data);
+    if(free_task)
+        heap_free(task);
+    return E_OUTOFMEMORY;
+}
+
+static void doc_navigate_proc(DocHost *This, task_header_t *t)
+{
+    task_doc_navigate_t *task = (task_doc_navigate_t*)t;
+    IHTMLPrivateWindow *priv_window;
+    HRESULT hres;
+
+    if(!This->doc_navigate)
+        return;
+
+    if(task->async_notif) {
+        VARIANT_BOOL cancel = VARIANT_FALSE;
+        on_before_navigate2(This, task->url, task->post_data, task->headers, &cancel);
+        if(cancel) {
+            TRACE("Navigation calnceled\n");
+            free_doc_navigate_task(task, FALSE);
+            return;
+        }
+    }
+
+    hres = IUnknown_QueryInterface(This->doc_navigate, &IID_IHTMLPrivateWindow, (void**)&priv_window);
+    if(SUCCEEDED(hres)) {
+        html_window_navigate(This, priv_window, task->url, task->headers, task->post_data);
+        IHTMLPrivateWindow_Release(priv_window);
+    }else {
+        WARN("Could not get IHTMLPrivateWindow iface: %08x\n", hres);
+    }
+
+    free_doc_navigate_task(task, FALSE);
+}
+
+static HRESULT async_doc_navigate(DocHost *This, LPCWSTR url, LPCWSTR headers, PBYTE post_data, ULONG post_data_size,
+        BOOL async_notif)
+{
+    task_doc_navigate_t *task;
+
+    task = heap_alloc_zero(sizeof(*task));
+    if(!task)
+        return E_OUTOFMEMORY;
+
+    task->url = SysAllocString(url);
+    if(!task->url)
+        return free_doc_navigate_task(task, TRUE);
+
+    if(headers) {
+        task->headers = SysAllocString(headers);
+        if(!task->headers)
+            return free_doc_navigate_task(task, TRUE);
+    }
+
+    if(task->post_data) {
+        task->post_data = SafeArrayCreateVector(VT_UI1, 0, post_data_size);
+        if(!task->post_data)
+            return free_doc_navigate_task(task, TRUE);
+        memcpy(task->post_data->pvData, post_data, post_data_size);
+    }
+
+    if(!async_notif) {
+        VARIANT_BOOL cancel = VARIANT_FALSE;
+
+        on_before_navigate2(This, task->url, task->post_data, task->headers, &cancel);
+        if(cancel) {
+            TRACE("Navigation calnceled\n");
+            free_doc_navigate_task(task, TRUE);
+            return S_OK;
+        }
+    }
+
+    task->async_notif = async_notif;
+    push_dochost_task(This, &task->header, doc_navigate_proc, FALSE);
+    return S_OK;
+}
+
+static HRESULT navigate_bsc(DocHost *This, BindStatusCallback *bsc, IMoniker *mon)
+{
+    VARIANT_BOOL cancel = VARIANT_FALSE;
+    SAFEARRAY *post_data = NULL;
+    IBindCtx *bindctx;
+    HRESULT hres;
+
+    set_doc_state(This, READYSTATE_LOADING);
+
+    if(bsc->post_data) {
+        post_data = SafeArrayCreateVector(VT_UI1, 0, bsc->post_data_len);
+        memcpy(post_data->pvData, post_data, bsc->post_data_len);
+    }
+
+    on_before_navigate2(This, bsc->url, post_data, bsc->headers, &cancel);
+    if(post_data)
+        SafeArrayDestroy(post_data);
     if(cancel) {
         FIXME("Navigation canceled\n");
         return S_OK;
@@ -596,10 +726,10 @@ static void navigate_bsc_proc(DocHost *This, task_header_t *t)
 HRESULT navigate_url(DocHost *This, LPCWSTR url, const VARIANT *Flags,
                      const VARIANT *TargetFrameName, VARIANT *PostData, VARIANT *Headers)
 {
-    task_navigate_bsc_t *task;
     PBYTE post_data = NULL;
     ULONG post_data_len = 0;
     LPWSTR headers = NULL;
+    HRESULT hres = S_OK;
 
     TRACE("navigating to %s\n", debugstr_w(url));
 
@@ -626,15 +756,23 @@ HRESULT navigate_url(DocHost *This, LPCWSTR url, const VARIANT *Flags,
         TRACE("Headers: %s\n", debugstr_w(headers));
     }
 
-    task = heap_alloc(sizeof(*task));
-    task->bsc = create_callback(This, url, post_data, post_data_len, headers);
+    set_doc_state(This, READYSTATE_LOADING);
+    This->ready_state = READYSTATE_LOADING;
+
+    if(This->doc_navigate) {
+        hres = async_doc_navigate(This, url, headers, post_data, post_data_len, TRUE);
+    }else {
+        task_navigate_bsc_t *task;
+
+        task = heap_alloc(sizeof(*task));
+        task->bsc = create_callback(This, url, post_data, post_data_len, headers);
+        push_dochost_task(This, &task->header, navigate_bsc_proc, This->url == NULL);
+    }
 
     if(post_data)
         SafeArrayUnaccessData(V_ARRAY(PostData));
 
-    push_dochost_task(This, &task->header, navigate_bsc_proc, This->url == NULL);
-
-    return S_OK;
+    return hres;
 }
 
 static HRESULT navigate_hlink(DocHost *This, IMoniker *mon, IBindCtx *bindctx,
@@ -648,6 +786,10 @@ static HRESULT navigate_hlink(DocHost *This, IMoniker *mon, IBindCtx *bindctx,
     BINDINFO bindinfo;
     DWORD bindf = 0;
     HRESULT hres;
+
+    hres = IMoniker_GetDisplayName(mon, 0, NULL, &url);
+    if(FAILED(hres))
+        FIXME("GetDisplayName failed: %08x\n", hres);
 
     hres = IBindStatusCallback_QueryInterface(callback, &IID_IHttpNegotiate,
                                               (void**)&http_negotiate);
@@ -670,16 +812,15 @@ static HRESULT navigate_hlink(DocHost *This, IMoniker *mon, IBindCtx *bindctx,
             post_data = bindinfo.stgmedData.u.hGlobal;
     }
 
-    hres = IMoniker_GetDisplayName(mon, 0, NULL, &url);
-    if(FAILED(hres))
-        FIXME("GetDisplayName failed: %08x\n", hres);
+    if(This->doc_navigate) {
+        hres = async_doc_navigate(This, url, headers, post_data, post_data_len, FALSE);
+    }else {
+        bsc = create_callback(This, url, post_data, post_data_len, headers);
+        hres = navigate_bsc(This, bsc, mon);
+        IBindStatusCallback_Release(BINDSC(bsc));
+    }
 
-    bsc = create_callback(This, url, post_data, post_data_len, headers);
     CoTaskMemFree(url);
-
-    hres = navigate_bsc(This, bsc, mon);
-
-    IBindStatusCallback_Release(BINDSC(bsc));
     CoTaskMemFree(headers);
     ReleaseBindInfo(&bindinfo);
 

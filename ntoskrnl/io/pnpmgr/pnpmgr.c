@@ -1847,6 +1847,7 @@ IopActionConfigureChildServices(PDEVICE_NODE DeviceNode,
    PUNICODE_STRING Service;
    UNICODE_STRING ClassGUID;
    NTSTATUS Status;
+   DEVICE_CAPABILITIES DeviceCaps;
 
    DPRINT("IopActionConfigureChildServices(%p, %p)\n", DeviceNode, Context);
 
@@ -1920,15 +1921,32 @@ IopActionConfigureChildServices(PDEVICE_NODE DeviceNode,
 
       if (Service->Buffer == NULL)
       {
-         IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
+         if (NT_SUCCESS(IopQueryDeviceCapabilities(DeviceNode, &DeviceCaps)) &&
+             DeviceCaps.RawDeviceOK)
+         {
+            DPRINT1("%wZ is using parent bus driver (%wZ)\n", &DeviceNode->InstancePath, &ParentDeviceNode->ServiceName);
 
-         if (ClassGUID.Length != 0)
+            DeviceNode->ServiceName.Length = 0;
+            DeviceNode->ServiceName.MaximumLength = ParentDeviceNode->ServiceName.MaximumLength;
+            DeviceNode->ServiceName.Buffer = ExAllocatePool(PagedPool, DeviceNode->ServiceName.MaximumLength);
+            if (!DeviceNode->ServiceName.Buffer)
+                return STATUS_SUCCESS;
+
+            RtlCopyUnicodeString(&DeviceNode->ServiceName, &ParentDeviceNode->ServiceName);
+
+            IopDeviceNodeSetFlag(DeviceNode, DNF_LEGACY_DRIVER);
+         }
+         else if (ClassGUID.Length != 0)
          {
             /* Device has a ClassGUID value, but no Service value.
              * Suppose it is using the NULL driver, so state the
              * device is started */
             DPRINT1("%wZ is using NULL driver\n", &DeviceNode->InstancePath);
             IopDeviceNodeSetFlag(DeviceNode, DNF_STARTED);
+         }
+         else
+         {
+            IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
          }
          return STATUS_SUCCESS;
       }

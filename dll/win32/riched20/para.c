@@ -335,6 +335,8 @@ ME_DisplayItem *ME_JoinParagraphs(ME_TextEditor *editor, ME_DisplayItem *tp,
   int i, shift;
   ME_UndoItem *undo = NULL;
   int end_len;
+  CHARFORMAT2W fmt;
+  ME_Cursor startCur, endCur;
 
   assert(tp->type == diParagraph);
   assert(tp->member.para.next_para);
@@ -351,12 +353,15 @@ ME_DisplayItem *ME_JoinParagraphs(ME_TextEditor *editor, ME_DisplayItem *tp,
 
   end_len = pRun->member.run.strText->nLen;
 
-  {
-    /* null char format operation to store the original char format for the ENDPARA run */
-    CHARFORMAT2W fmt;
-    ME_InitCharFormat2W(&fmt);
-    ME_SetCharFormat(editor, pNext->member.para.nCharOfs - end_len, end_len, &fmt);
-  }
+  /* null char format operation to store the original char format for the ENDPARA run */
+  ME_InitCharFormat2W(&fmt);
+  endCur.pPara = pNext;
+  endCur.pRun = ME_FindItemFwd(pNext, diRun);
+  endCur.nOffset = 0;
+  startCur = endCur;
+  ME_PrevRun(&startCur.pPara, &startCur.pRun);
+  ME_SetCharFormat(editor, &startCur, &endCur, &fmt);
+
   undo = ME_AddUndoItem(editor, diUndoSplitParagraph, pNext);
   if (undo)
   {

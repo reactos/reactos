@@ -14,10 +14,13 @@
 		<library>ntoskrnl</library>
 		<library>libcntpr</library>
 		<directory name="mp">
-			<file>mps.S</file>
-			<file>mpsboot.asm</file>
-			<file>mpsirql.c</file>
-
+			<if property="ARCH" value="i386">
+				<directory name="i386">
+					<file>mps.S</file>
+					<file>mpsboot.asm</file>
+					<file>mpsirql.c</file>
+				</directory>
+			</if>
 		</directory>
 	</module>
 </group>

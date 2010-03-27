@@ -402,6 +402,12 @@ DllMain(HANDLE hDll,
     return TRUE;
 }
 
+#undef InterlockedIncrement
+#undef InterlockedDecrement
+#undef InterlockedExchange
+#undef InterlockedExchangeAdd
+#undef InterlockedCompareExchange
+
 LONG
 WINAPI
 InterlockedIncrement(IN OUT LONG volatile *lpAddend)

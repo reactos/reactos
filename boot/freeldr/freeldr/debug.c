@@ -351,7 +351,7 @@ KeBugCheckEx(
     IN ULONG_PTR  BugCheckParameter3,
     IN ULONG_PTR  BugCheckParameter4)
 {
-    char Buffer[64];
+    char Buffer[70];
     sprintf(Buffer, "*** STOP: 0x%08lX (0x%08lX, 0x%08lX, 0x%08lX, 0x%08lX)",
         BugCheckCode, BugCheckParameter1, BugCheckParameter2,
         BugCheckParameter3, BugCheckParameter4);

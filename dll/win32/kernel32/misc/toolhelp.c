@@ -400,11 +400,11 @@ TH32CreateSnapshotSectionInitialize(DWORD dwFlags,
 
       ProcessListEntry->dwSize = sizeof(PROCESSENTRY32W);
       ProcessListEntry->cntUsage = 0; /* no longer used */
-      ProcessListEntry->th32ProcessID = (ULONG)ProcessInfo->UniqueProcessId;
+      ProcessListEntry->th32ProcessID = (ULONG_PTR)ProcessInfo->UniqueProcessId;
       ProcessListEntry->th32DefaultHeapID = 0; /* no longer used */
       ProcessListEntry->th32ModuleID = 0; /* no longer used */
       ProcessListEntry->cntThreads = ProcessInfo->NumberOfThreads;
-      ProcessListEntry->th32ParentProcessID = (ULONG)ProcessInfo->InheritedFromUniqueProcessId;
+      ProcessListEntry->th32ParentProcessID = (ULONG_PTR)ProcessInfo->InheritedFromUniqueProcessId;
       ProcessListEntry->pcPriClassBase = ProcessInfo->BasePriority;
       ProcessListEntry->dwFlags = 0; /* no longer used */
       if(ProcessInfo->ImageName.Buffer != NULL)
@@ -447,8 +447,8 @@ TH32CreateSnapshotSectionInitialize(DWORD dwFlags,
       {
         ThreadListEntry->dwSize = sizeof(THREADENTRY32);
         ThreadListEntry->cntUsage = 0; /* no longer used */
-        ThreadListEntry->th32ThreadID = (ULONG)ThreadInfo->ClientId.UniqueThread;
-        ThreadListEntry->th32OwnerProcessID = (ULONG)ThreadInfo->ClientId.UniqueProcess;
+        ThreadListEntry->th32ThreadID = (ULONG_PTR)ThreadInfo->ClientId.UniqueThread;
+        ThreadListEntry->th32OwnerProcessID = (ULONG_PTR)ThreadInfo->ClientId.UniqueProcess;
         ThreadListEntry->tpBasePri = ThreadInfo->BasePriority;
         ThreadListEntry->tpDeltaPri = 0; /* no longer used */
         ThreadListEntry->dwFlags = 0; /* no longer used */

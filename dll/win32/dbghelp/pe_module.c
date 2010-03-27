@@ -30,10 +30,238 @@
 #include <assert.h>
 
 #include "dbghelp_private.h"
+#include "image_private.h"
 #include "winternl.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
+
+struct pe_module_info
+{
+    struct image_file_map       fmap;
+};
+
+static void* pe_map_full(struct image_file_map* fmap, IMAGE_NT_HEADERS** nth)
+{
+    if (!fmap->u.pe.full_map)
+    {
+        fmap->u.pe.full_map = MapViewOfFile(fmap->u.pe.hMap, FILE_MAP_READ, 0, 0, 0);
+    }
+    if (fmap->u.pe.full_map)
+    {
+        if (nth) *nth = RtlImageNtHeader(fmap->u.pe.full_map);
+        fmap->u.pe.full_count++;
+        return fmap->u.pe.full_map;
+    }
+    return IMAGE_NO_MAP;
+}
+
+static void pe_unmap_full(struct image_file_map* fmap)
+{
+    if (fmap->u.pe.full_count && !--fmap->u.pe.full_count)
+    {
+        UnmapViewOfFile(fmap->u.pe.full_map);
+        fmap->u.pe.full_map = NULL;
+    }
+}
+
+/******************************************************************
+ *		pe_map_section
+ *
+ * Maps a single section into memory from an PE file
+ */
+const char* pe_map_section(struct image_section_map* ism)
+{
+    void*       mapping;
+    struct pe_file_map* fmap = &ism->fmap->u.pe;
+
+    if (ism->sidx >= 0 && ism->sidx < fmap->ntheader.FileHeader.NumberOfSections &&
+        fmap->sect[ism->sidx].mapped == IMAGE_NO_MAP)
+    {
+        IMAGE_NT_HEADERS*       nth;
+        /* FIXME: that's rather drastic, but that will do for now
+         * that's ok if the full file map exists, but we could be less agressive otherwise and
+         * only map the relevant section
+         */
+        if ((mapping = pe_map_full(ism->fmap, &nth)))
+        {
+            fmap->sect[ism->sidx].mapped = RtlImageRvaToVa(nth, mapping,
+                                                           fmap->sect[ism->sidx].shdr.VirtualAddress,
+                                                           NULL);
+            return fmap->sect[ism->sidx].mapped;
+        }
+    }
+    return IMAGE_NO_MAP;
+}
+
+/******************************************************************
+ *		pe_find_section
+ *
+ * Finds a section by name (and type) into memory from an PE file
+ * or its alternate if any
+ */
+BOOL pe_find_section(struct image_file_map* fmap, const char* name,
+                     struct image_section_map* ism)
+{
+    const char*                 sectname;
+    unsigned                    i;
+    char                        tmp[IMAGE_SIZEOF_SHORT_NAME + 1];
+
+    for (i = 0; i < fmap->u.pe.ntheader.FileHeader.NumberOfSections; i++)
+    {
+        sectname = (const char*)fmap->u.pe.sect[i].shdr.Name;
+        /* long section names start with a '/' (at least on MinGW32) */
+        if (sectname[0] == '/' && fmap->u.pe.strtable)
+            sectname = fmap->u.pe.strtable + atoi(sectname + 1);
+        else
+        {
+            /* the section name may not be null terminated */
+            sectname = memcpy(tmp, sectname, IMAGE_SIZEOF_SHORT_NAME);
+            tmp[IMAGE_SIZEOF_SHORT_NAME] = '\0';
+        }
+        if (!strcasecmp(sectname, name))
+        {
+            ism->fmap = fmap;
+            ism->sidx = i;
+            return TRUE;
+        }
+    }
+    ism->fmap = NULL;
+    ism->sidx = -1;
+
+    return FALSE;
+}
+
+/******************************************************************
+ *		pe_unmap_section
+ *
+ * Unmaps a single section from memory
+ */
+void pe_unmap_section(struct image_section_map* ism)
+{
+    if (ism->sidx >= 0 && ism->sidx < ism->fmap->u.pe.ntheader.FileHeader.NumberOfSections &&
+        ism->fmap->u.pe.sect[ism->sidx].mapped != IMAGE_NO_MAP)
+    {
+        pe_unmap_full(ism->fmap);
+        ism->fmap->u.pe.sect[ism->sidx].mapped = IMAGE_NO_MAP;
+    }
+}
+
+/******************************************************************
+ *		pe_get_map_rva
+ *
+ * Get the RVA of an PE section
+ */
+DWORD_PTR pe_get_map_rva(const struct image_section_map* ism)
+{
+    if (ism->sidx < 0 || ism->sidx >= ism->fmap->u.pe.ntheader.FileHeader.NumberOfSections)
+        return 0;
+    return ism->fmap->u.pe.sect[ism->sidx].shdr.VirtualAddress;
+}
+
+/******************************************************************
+ *		pe_get_map_size
+ *
+ * Get the size of an PE section
+ */
+unsigned pe_get_map_size(const struct image_section_map* ism)
+{
+    if (ism->sidx < 0 || ism->sidx >= ism->fmap->u.pe.ntheader.FileHeader.NumberOfSections)
+        return 0;
+    return ism->fmap->u.pe.sect[ism->sidx].shdr.SizeOfRawData;
+}
+
+/******************************************************************
+ *		pe_map_file
+ *
+ * Maps an PE file into memory (and checks it's a real PE file)
+ */
+static BOOL pe_map_file(HANDLE file, struct image_file_map* fmap, enum module_type mt)
+{
+    void*       mapping;
+
+    fmap->modtype = mt;
+    fmap->u.pe.hMap = CreateFileMappingW(file, NULL, PAGE_READONLY, 0, 0, NULL);
+    if (fmap->u.pe.hMap == 0) return FALSE;
+    fmap->u.pe.full_count = 0;
+    fmap->u.pe.full_map = NULL;
+    if (!(mapping = pe_map_full(fmap, NULL))) goto error;
+
+    switch (mt)
+    {
+    case DMT_PE:
+        {
+            IMAGE_NT_HEADERS*       nthdr;
+            IMAGE_SECTION_HEADER*   section;
+            unsigned                i;
+
+            if (!(nthdr = RtlImageNtHeader(mapping))) goto error;
+            memcpy(&fmap->u.pe.ntheader, nthdr, sizeof(fmap->u.pe.ntheader));
+            section = (IMAGE_SECTION_HEADER*)
+                ((char*)&nthdr->OptionalHeader + nthdr->FileHeader.SizeOfOptionalHeader);
+            fmap->u.pe.sect = HeapAlloc(GetProcessHeap(), 0,
+                                        nthdr->FileHeader.NumberOfSections * sizeof(fmap->u.pe.sect[0]));
+            if (!fmap->u.pe.sect) goto error;
+            for (i = 0; i < nthdr->FileHeader.NumberOfSections; i++)
+            {
+                memcpy(&fmap->u.pe.sect[i].shdr, section + i, sizeof(IMAGE_SECTION_HEADER));
+                fmap->u.pe.sect[i].mapped = IMAGE_NO_MAP;
+            }
+            if (nthdr->FileHeader.PointerToSymbolTable && nthdr->FileHeader.NumberOfSymbols)
+            {
+                /* FIXME ugly: should rather map the relevant content instead of copying it */
+                const char* src = (const char*)mapping +
+                    nthdr->FileHeader.PointerToSymbolTable +
+                    nthdr->FileHeader.NumberOfSymbols * sizeof(IMAGE_SYMBOL);
+                char* dst;
+                DWORD sz = *(DWORD*)src;
+
+                if ((dst = HeapAlloc(GetProcessHeap(), 0, sz)))
+                    memcpy(dst, src, sz);
+                fmap->u.pe.strtable = dst;
+            }
+            else fmap->u.pe.strtable = NULL;
+        }
+        break;
+    default: assert(0); goto error;
+    }
+    pe_unmap_full(fmap);
+
+    return TRUE;
+error:
+    pe_unmap_full(fmap);
+    CloseHandle(fmap->u.pe.hMap);
+    return FALSE;
+}
+
+/******************************************************************
+ *		pe_unmap_file
+ *
+ * Unmaps an PE file from memory (previously mapped with pe_map_file)
+ */
+static void pe_unmap_file(struct image_file_map* fmap)
+{
+    if (fmap->u.pe.hMap != 0)
+    {
+        struct image_section_map  ism;
+        ism.fmap = fmap;
+        for (ism.sidx = 0; ism.sidx < fmap->u.pe.ntheader.FileHeader.NumberOfSections; ism.sidx++)
+        {
+            pe_unmap_section(&ism);
+        }
+        while (fmap->u.pe.full_count) pe_unmap_full(fmap);
+        HeapFree(GetProcessHeap(), 0, fmap->u.pe.sect);
+        HeapFree(GetProcessHeap(), 0, (void*)fmap->u.pe.strtable); /* FIXME ugly (see pe_map_file) */
+        CloseHandle(fmap->u.pe.hMap);
+        fmap->u.pe.hMap = NULL;
+    }
+}
+
+static void pe_module_remove(struct process* pcs, struct module_format* modfmt)
+{
+    pe_unmap_file(&modfmt->u.pe_info->fmap);
+    HeapFree(GetProcessHeap(), 0, modfmt);
+}
 
 /******************************************************************
  *		pe_locate_with_coff_symbol_table
@@ -43,37 +271,35 @@ WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
  * Mingw32 requires this for stabs debug information as address for global variables isn't filled in
  * (this is similar to what is done in elf_module.c when using the .symtab ELF section)
  */
-static BOOL pe_locate_with_coff_symbol_table(struct module* module, IMAGE_NT_HEADERS* nth, void* mapping)
+static BOOL pe_locate_with_coff_symbol_table(struct module* module)
 {
+    struct image_file_map* fmap = &module->format_info[DFI_PE]->u.pe_info->fmap;
     const IMAGE_SYMBOL* isym;
     int                 i, numsym, naux;
-    const char*         strtable;
     char                tmp[9];
     const char*         name;
     struct hash_table_iter      hti;
     void*               ptr;
     struct symt_data*   sym;
-    const IMAGE_SECTION_HEADER* sect;
+    const char*         mapping;
 
-    numsym = nth->FileHeader.NumberOfSymbols;
-    if (!nth->FileHeader.PointerToSymbolTable || !numsym)
+    numsym = fmap->u.pe.ntheader.FileHeader.NumberOfSymbols;
+    if (!fmap->u.pe.ntheader.FileHeader.PointerToSymbolTable || !numsym)
         return TRUE;
-    isym = (const IMAGE_SYMBOL*)((char*)mapping + nth->FileHeader.PointerToSymbolTable);
-    /* FIXME: no way to get strtable size */
-    strtable = (const char*)&isym[numsym];
-    sect = IMAGE_FIRST_SECTION(nth);
+    if (!(mapping = pe_map_full(fmap, NULL))) return FALSE;
+    isym = (const IMAGE_SYMBOL*)(mapping + fmap->u.pe.ntheader.FileHeader.PointerToSymbolTable);
 
     for (i = 0; i < numsym; i+= naux, isym += naux)
     {
         if (isym->StorageClass == IMAGE_SYM_CLASS_EXTERNAL &&
-            isym->SectionNumber > 0 && isym->SectionNumber <= nth->FileHeader.NumberOfSections)
+            isym->SectionNumber > 0 && isym->SectionNumber <= fmap->u.pe.ntheader.FileHeader.NumberOfSections)
         {
             if (isym->N.Name.Short)
             {
                 name = memcpy(tmp, isym->N.ShortName, 8);
                 tmp[8] = '\0';
             }
-            else name = strtable + isym->N.Name.Long;
+            else name = fmap->u.pe.strtable + isym->N.Name.Long;
             if (name[0] == '_') name++;
             hash_table_iter_init(&module->ht_symbols, &hti, name);
             while ((ptr = hash_table_iter_up(&hti)))
@@ -86,15 +312,17 @@ static BOOL pe_locate_with_coff_symbol_table(struct module* module, IMAGE_NT_HEA
                     TRACE("Changing absolute address for %d.%s: %lx -> %s\n",
                           isym->SectionNumber, name, sym->u.var.offset,
                           wine_dbgstr_longlong(module->module.BaseOfImage +
-                                               sect[isym->SectionNumber - 1].VirtualAddress + isym->Value));
+                                               fmap->u.pe.sect[isym->SectionNumber - 1].shdr.VirtualAddress +
+                                               isym->Value));
                     sym->u.var.offset = module->module.BaseOfImage +
-                        sect[isym->SectionNumber - 1].VirtualAddress + isym->Value;
+                        fmap->u.pe.sect[isym->SectionNumber - 1].shdr.VirtualAddress + isym->Value;
                     break;
                 }
             }
         }
         naux = isym->NumberOfAuxSymbols + 1;
     }
+    pe_unmap_full(fmap);
     return TRUE;
 }
 
@@ -103,8 +331,9 @@ static BOOL pe_locate_with_coff_symbol_table(struct module* module, IMAGE_NT_HEA
  *
  * Load public symbols out of the COFF symbol table (if any).
  */
-static BOOL pe_load_coff_symbol_table(struct module* module, IMAGE_NT_HEADERS* nth, void* mapping)
+static BOOL pe_load_coff_symbol_table(struct module* module)
 {
+    struct image_file_map* fmap = &module->format_info[DFI_PE]->u.pe_info->fmap;
     const IMAGE_SYMBOL* isym;
     int                 i, numsym, naux;
     const char*         strtable;
@@ -113,14 +342,16 @@ static BOOL pe_load_coff_symbol_table(struct module* module, IMAGE_NT_HEADERS* n
     const char*         lastfilename = NULL;
     struct symt_compiland*   compiland = NULL;
     const IMAGE_SECTION_HEADER* sect;
+    const char*         mapping;
 
-    numsym = nth->FileHeader.NumberOfSymbols;
-    if (!nth->FileHeader.PointerToSymbolTable || !numsym)
+    numsym = fmap->u.pe.ntheader.FileHeader.NumberOfSymbols;
+    if (!fmap->u.pe.ntheader.FileHeader.PointerToSymbolTable || !numsym)
         return TRUE;
-    isym = (const IMAGE_SYMBOL*)((char*)mapping + nth->FileHeader.PointerToSymbolTable);
+    if (!(mapping = pe_map_full(fmap, NULL))) return FALSE;
+    isym = (const IMAGE_SYMBOL*)((char*)mapping + fmap->u.pe.ntheader.FileHeader.PointerToSymbolTable);
     /* FIXME: no way to get strtable size */
     strtable = (const char*)&isym[numsym];
-    sect = IMAGE_FIRST_SECTION(nth);
+    sect = IMAGE_FIRST_SECTION(&fmap->u.pe.ntheader);
 
     for (i = 0; i < numsym; i+= naux, isym += naux)
     {
@@ -130,7 +361,7 @@ static BOOL pe_load_coff_symbol_table(struct module* module, IMAGE_NT_HEADERS* n
             compiland = NULL;
         }
         if (isym->StorageClass == IMAGE_SYM_CLASS_EXTERNAL &&
-            isym->SectionNumber > 0 && isym->SectionNumber <= nth->FileHeader.NumberOfSections)
+            isym->SectionNumber > 0 && isym->SectionNumber <= fmap->u.pe.ntheader.FileHeader.NumberOfSections)
         {
             if (isym->N.Name.Short)
             {
@@ -143,9 +374,12 @@ static BOOL pe_load_coff_symbol_table(struct module* module, IMAGE_NT_HEADERS* n
             if (!compiland && lastfilename)
                 compiland = symt_new_compiland(module, 0,
                                                source_new(module, NULL, lastfilename));
-            symt_new_public(module, compiland, name,
-                            module->module.BaseOfImage + sect[isym->SectionNumber - 1].VirtualAddress + isym->Value,
-                            1);
+
+            if (!(dbghelp_options & SYMOPT_NO_PUBLICS))
+                symt_new_public(module, compiland, name,
+                                module->module.BaseOfImage + sect[isym->SectionNumber - 1].VirtualAddress +
+                                     isym->Value,
+                                1);
         }
         naux = isym->NumberOfAuxSymbols + 1;
     }
@@ -155,6 +389,7 @@ static BOOL pe_load_coff_symbol_table(struct module* module, IMAGE_NT_HEADERS* n
     module->module.TypeInfo = FALSE;
     module->module.SourceIndexed = FALSE;
     module->module.Publics = TRUE;
+    pe_unmap_full(fmap);
 
     return TRUE;
 }
@@ -176,30 +411,30 @@ static inline DWORD pe_get_sect_size(IMAGE_SECTION_HEADER* sect)
  * look for stabs information in PE header (it's how the mingw compiler provides 
  * its debugging information)
  */
-static BOOL pe_load_stabs(const struct process* pcs, struct module* module, 
-                          void* mapping, IMAGE_NT_HEADERS* nth)
+static BOOL pe_load_stabs(const struct process* pcs, struct module* module)
 {
-    IMAGE_SECTION_HEADER*       section;
-    IMAGE_SECTION_HEADER*       sect_stabs = NULL;
-    IMAGE_SECTION_HEADER*       sect_stabstr = NULL;
-    int                         i;
+    struct image_file_map*      fmap = &module->format_info[DFI_PE]->u.pe_info->fmap;
+    struct image_section_map    sect_stabs, sect_stabstr;
     BOOL                        ret = FALSE;
 
-    section = (IMAGE_SECTION_HEADER*)
-        ((char*)&nth->OptionalHeader + nth->FileHeader.SizeOfOptionalHeader);
-    for (i = 0; i < nth->FileHeader.NumberOfSections; i++, section++)
+    if (pe_find_section(fmap, ".stab", &sect_stabs) && pe_find_section(fmap, ".stabstr", &sect_stabstr))
     {
-        if (!strcasecmp((const char*)section->Name, ".stab"))              sect_stabs = section;
-        else if (!strncasecmp((const char*)section->Name, ".stabstr", 8))  sect_stabstr = section;
-    }
-    if (sect_stabs && sect_stabstr)
-    {
-        ret = stabs_parse(module,
-                          module->module.BaseOfImage - nth->OptionalHeader.ImageBase,
-                          pe_get_sect(nth, mapping, sect_stabs),   pe_get_sect_size(sect_stabs),
-                          pe_get_sect(nth, mapping, sect_stabstr), pe_get_sect_size(sect_stabstr),
-                          NULL, NULL);
-        if (ret) pe_locate_with_coff_symbol_table(module, nth, mapping);
+        const char* stab;
+        const char* stabstr;
+
+        stab = image_map_section(&sect_stabs);
+        stabstr = image_map_section(&sect_stabstr);
+        if (stab != IMAGE_NO_MAP && stabstr != IMAGE_NO_MAP)
+        {
+            ret = stabs_parse(module,
+                              module->module.BaseOfImage - fmap->u.pe.ntheader.OptionalHeader.ImageBase,
+                              stab, image_get_map_size(&sect_stabs),
+                              stabstr, image_get_map_size(&sect_stabstr),
+                              NULL, NULL);
+        }
+        image_unmap_section(&sect_stabs);
+        image_unmap_section(&sect_stabstr);
+        if (ret) pe_locate_with_coff_symbol_table(module);
     }
     TRACE("%s the STABS debug info\n", ret ? "successfully loaded" : "failed to load");
 
@@ -212,51 +447,15 @@ static BOOL pe_load_stabs(const struct process* pcs, struct module* module,
  * look for dwarf information in PE header (it's also a way for the mingw compiler
  * to provide its debugging information)
  */
-static BOOL pe_load_dwarf(const struct process* pcs, struct module* module,
-                          void* mapping, IMAGE_NT_HEADERS* nth)
+static BOOL pe_load_dwarf(struct module* module)
 {
-    IMAGE_SECTION_HEADER*       section;
-    IMAGE_SECTION_HEADER*       sect_debuginfo = NULL;
-    IMAGE_SECTION_HEADER*       sect_debugstr = NULL;
-    IMAGE_SECTION_HEADER*       sect_debugabbrev = NULL;
-    IMAGE_SECTION_HEADER*       sect_debugline = NULL;
-    IMAGE_SECTION_HEADER*       sect_debugloc = NULL;
-    int                         i;
-    const char*                 strtable;
-    const char*                 sectname;
+    struct image_file_map*      fmap = &module->format_info[DFI_PE]->u.pe_info->fmap;
     BOOL                        ret = FALSE;
 
-    if (nth->FileHeader.PointerToSymbolTable && nth->FileHeader.NumberOfSymbols)
-        /* FIXME: no way to get strtable size */
-        strtable = (const char*)mapping + nth->FileHeader.PointerToSymbolTable +
-             nth->FileHeader.NumberOfSymbols * sizeof(IMAGE_SYMBOL);
-    else strtable = NULL;
-
-    section = (IMAGE_SECTION_HEADER*)
-        ((char*)&nth->OptionalHeader + nth->FileHeader.SizeOfOptionalHeader);
-    for (i = 0; i < nth->FileHeader.NumberOfSections; i++, section++)
-    {
-        sectname = (const char*)section->Name;
-        /* long section names start with a '/' (at least on MinGW32) */
-        if (*sectname == '/' && strtable)
-            sectname = strtable + atoi(sectname + 1);
-        if (!strcasecmp(sectname, ".debug_info"))        sect_debuginfo = section;
-        else if (!strcasecmp(sectname, ".debug_str"))    sect_debugstr = section;
-        else if (!strcasecmp(sectname, ".debug_abbrev")) sect_debugabbrev = section;
-        else if (!strcasecmp(sectname, ".debug_line"))   sect_debugline = section;
-        else if (!strcasecmp(sectname, ".debug_loc"))    sect_debugloc = section;
-    }
-    if (sect_debuginfo)
-    {
-        ret = dwarf2_parse(module,
-                           module->module.BaseOfImage - nth->OptionalHeader.ImageBase,
-                           NULL, /* FIXME: some thunks to deal with ? */
-                           pe_get_sect(nth, mapping, sect_debuginfo),   pe_get_sect_size(sect_debuginfo),
-                           pe_get_sect(nth, mapping, sect_debugabbrev), pe_get_sect_size(sect_debugabbrev),
-                           pe_get_sect(nth, mapping, sect_debugstr),    pe_get_sect_size(sect_debugstr),
-                           pe_get_sect(nth, mapping, sect_debugline),   pe_get_sect_size(sect_debugline),
-                           pe_get_sect(nth, mapping, sect_debugloc),    pe_get_sect_size(sect_debugloc));
-    }
+    ret = dwarf2_parse(module,
+                       module->module.BaseOfImage - fmap->u.pe.ntheader.OptionalHeader.ImageBase,
+                       NULL, /* FIXME: some thunks to deal with ? */
+                       fmap);
     TRACE("%s the DWARF debug info\n", ret ? "successfully loaded" : "failed to load");
 
     return ret;
@@ -314,19 +513,21 @@ static BOOL pe_load_dbg_file(const struct process* pcs, struct module* module,
  *
  * Process MSC debug information in PE file.
  */
-static BOOL pe_load_msc_debug_info(const struct process* pcs, 
-                                   struct module* module,
-                                   void* mapping, const IMAGE_NT_HEADERS* nth)
+static BOOL pe_load_msc_debug_info(const struct process* pcs, struct module* module)
 {
+    struct image_file_map*      fmap = &module->format_info[DFI_PE]->u.pe_info->fmap;
     BOOL                        ret = FALSE;
     const IMAGE_DATA_DIRECTORY* dir;
     const IMAGE_DEBUG_DIRECTORY*dbg = NULL;
     int                         nDbg;
+    void*                       mapping;
+    IMAGE_NT_HEADERS*           nth;
 
+    if (!(mapping = pe_map_full(fmap, &nth))) return FALSE;
     /* Read in debug directory */
     dir = nth->OptionalHeader.DataDirectory + IMAGE_DIRECTORY_ENTRY_DEBUG;
     nDbg = dir->Size / sizeof(IMAGE_DEBUG_DIRECTORY);
-    if (!nDbg) return FALSE;
+    if (!nDbg) goto done;
 
     dbg = RtlImageRvaToVa(nth, mapping, dir->VirtualAddress, NULL);
 
@@ -353,26 +554,29 @@ static BOOL pe_load_msc_debug_info(const struct process* pcs,
         const IMAGE_SECTION_HEADER *sectp = (const IMAGE_SECTION_HEADER*)((const char*)&nth->OptionalHeader + nth->FileHeader.SizeOfOptionalHeader);
         /* Debug info is embedded into PE module */
         ret = pe_load_debug_directory(pcs, module, mapping, sectp,
-            nth->FileHeader.NumberOfSections, dbg, nDbg);
+                                      nth->FileHeader.NumberOfSections, dbg, nDbg);
     }
-
+done:
+    pe_unmap_full(fmap);
     return ret;
 }
 
 /***********************************************************************
  *			pe_load_export_debug_info
  */
-static BOOL pe_load_export_debug_info(const struct process* pcs, 
-                                      struct module* module, 
-                                      void* mapping, const IMAGE_NT_HEADERS* nth)
+static BOOL pe_load_export_debug_info(const struct process* pcs, struct module* module)
 {
+    struct image_file_map*              fmap = &module->format_info[DFI_PE]->u.pe_info->fmap;
     unsigned int 		        i;
     const IMAGE_EXPORT_DIRECTORY* 	exports;
     DWORD			        base = module->module.BaseOfImage;
     DWORD                               size;
+    IMAGE_NT_HEADERS*                   nth;
+    void*                               mapping;
 
     if (dbghelp_options & SYMOPT_NO_PUBLICS) return TRUE;
 
+    if (!(mapping = pe_map_full(fmap, &nth))) return FALSE;
 #if 0
     /* Add start of DLL (better use the (yet unimplemented) Exe SymTag for this) */
     /* FIXME: module.ModuleName isn't correctly set yet if it's passed in SymLoadModule */
@@ -435,6 +639,8 @@ static BOOL pe_load_export_debug_info(const struct process* pcs,
     /* no real debug info, only entry points */
     if (module->module.SymType == SymDeferred)
         module->module.SymType = SymExport;
+    pe_unmap_full(fmap);
+
     return TRUE;
 }
 
@@ -445,39 +651,21 @@ static BOOL pe_load_export_debug_info(const struct process* pcs,
 BOOL pe_load_debug_info(const struct process* pcs, struct module* module)
 {
     BOOL                ret = FALSE;
-    HANDLE              hFile;
-    HANDLE              hMap;
-    void*               mapping;
-    IMAGE_NT_HEADERS*   nth;
 
-    hFile = CreateFileW(module->module.LoadedImageName, GENERIC_READ, FILE_SHARE_READ,
-                        NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (hFile == INVALID_HANDLE_VALUE) return ret;
-    if ((hMap = CreateFileMappingW(hFile, NULL, PAGE_READONLY, 0, 0, NULL)) != 0)
+    if (!(dbghelp_options & SYMOPT_PUBLICS_ONLY))
     {
-        if ((mapping = MapViewOfFile(hMap, FILE_MAP_READ, 0, 0, 0)) != NULL)
-        {
-            nth = RtlImageNtHeader(mapping);
-
-            if (!(dbghelp_options & SYMOPT_PUBLICS_ONLY))
-            {
-                ret = pe_load_stabs(pcs, module, mapping, nth) ||
-                    pe_load_dwarf(pcs, module, mapping, nth) ||
-                    pe_load_msc_debug_info(pcs, module, mapping, nth) ||
-                    pe_load_coff_symbol_table(module, nth, mapping);
-                /* if we still have no debug info (we could only get SymExport at this
-                 * point), then do the SymExport except if we have an ELF container, 
-                 * in which case we'll rely on the export's on the ELF side
-                 */
-            }
-/* FIXME shouldn't we check that? if (!module_get_debug(pcs, module))l */
-            if (pe_load_export_debug_info(pcs, module, mapping, nth) && !ret)
-                ret = TRUE;
-            UnmapViewOfFile(mapping);
-        }
-        CloseHandle(hMap);
+        ret = pe_load_stabs(pcs, module);
+        ret = pe_load_dwarf(module) || ret;
+        ret = pe_load_msc_debug_info(pcs, module) || ret;
+        ret = ret || pe_load_coff_symbol_table(module); /* FIXME */
+        /* if we still have no debug info (we could only get SymExport at this
+         * point), then do the SymExport except if we have an ELF container,
+         * in which case we'll rely on the export's on the ELF side
+         */
     }
-    CloseHandle(hFile);
+    /* FIXME shouldn't we check that? if (!module_get_debug(pcs, module)) */
+    if (pe_load_export_debug_info(pcs, module) && !ret)
+        ret = TRUE;
 
     return ret;
 }
@@ -489,15 +677,14 @@ BOOL pe_load_debug_info(const struct process* pcs, struct module* module)
 struct module* pe_load_native_module(struct process* pcs, const WCHAR* name,
                                      HANDLE hFile, DWORD base, DWORD size)
 {
-    struct module*      module = NULL;
-    BOOL                opened = FALSE;
-    HANDLE              hMap;
-    WCHAR               loaded_name[MAX_PATH];
+    struct module*              module = NULL;
+    BOOL                        opened = FALSE;
+    struct module_format*       modfmt;
+    WCHAR                       loaded_name[MAX_PATH];
 
     loaded_name[0] = '\0';
     if (!hFile)
     {
-
         assert(name);
 
         if ((hFile = FindExecutableImageExW(name, pcs->search_path, loaded_name, NULL, NULL)) == NULL)
@@ -507,37 +694,37 @@ struct module* pe_load_native_module(struct process* pcs, const WCHAR* name,
     else if (name) strcpyW(loaded_name, name);
     else if (dbghelp_options & SYMOPT_DEFERRED_LOADS)
         FIXME("Trouble ahead (no module name passed in deferred mode)\n");
-
-    if ((hMap = CreateFileMappingW(hFile, NULL, PAGE_READONLY, 0, 0, NULL)) != NULL)
+    if (!(modfmt = HeapAlloc(GetProcessHeap(), 0, sizeof(struct module_format) + sizeof(struct pe_module_info))))
+        return NULL;
+    modfmt->u.pe_info = (struct pe_module_info*)(modfmt + 1);
+    if (pe_map_file(hFile, &modfmt->u.pe_info->fmap, DMT_PE))
     {
-        void*   mapping;
+        if (!base) base = modfmt->u.pe_info->fmap.u.pe.ntheader.OptionalHeader.ImageBase;
+        if (!size) size = modfmt->u.pe_info->fmap.u.pe.ntheader.OptionalHeader.SizeOfImage;
 
-        if ((mapping = MapViewOfFile(hMap, FILE_MAP_READ, 0, 0, 0)) != NULL)
+        module = module_new(pcs, loaded_name, DMT_PE, FALSE, base, size,
+                            modfmt->u.pe_info->fmap.u.pe.ntheader.FileHeader.TimeDateStamp,
+                            modfmt->u.pe_info->fmap.u.pe.ntheader.OptionalHeader.CheckSum);
+        if (module)
         {
-            IMAGE_NT_HEADERS*   nth = RtlImageNtHeader(mapping);
+            modfmt->module = module;
+            modfmt->remove = pe_module_remove;
+            modfmt->loc_compute = NULL;
 
-            if (nth)
-            {
-                if (!base) base = nth->OptionalHeader.ImageBase;
-                if (!size) size = nth->OptionalHeader.SizeOfImage;
-
-                module = module_new(pcs, loaded_name, DMT_PE, FALSE, base, size,
-                                    nth->FileHeader.TimeDateStamp,
-                                    nth->OptionalHeader.CheckSum);
-                if (module)
-                {
-                    if (dbghelp_options & SYMOPT_DEFERRED_LOADS)
-                        module->module.SymType = SymDeferred;
-                    else
-                        pe_load_debug_info(pcs, module);
-                }
-                else
-                    ERR("could not load the module '%s'\n", debugstr_w(loaded_name));
-            }
-            UnmapViewOfFile(mapping);
+            module->format_info[DFI_PE] = modfmt;
+            if (dbghelp_options & SYMOPT_DEFERRED_LOADS)
+                module->module.SymType = SymDeferred;
+            else
+                pe_load_debug_info(pcs, module);
         }
-        CloseHandle(hMap);
+        else
+        {
+            ERR("could not load the module '%s'\n", debugstr_w(loaded_name));
+            pe_unmap_file(&modfmt->u.pe_info->fmap);
+        }
     }
+    if (!module) HeapFree(GetProcessHeap(), 0, modfmt);
+
     if (opened) CloseHandle(hFile);
 
     return module;

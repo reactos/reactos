@@ -7,9 +7,11 @@
 		<define name="_NTHALDLL_" />
 		<define name="_NTHAL_" />
 		<directory name="generic">
+			<file>spinlock.c</file>
+		</directory>
+		<directory name="up">
 			<file>pic.c</file>
 			<file>processor.c</file>
-			<file>spinlock.c</file>
 		</directory>
 	</module>
 </group>

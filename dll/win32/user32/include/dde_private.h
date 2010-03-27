@@ -208,7 +208,7 @@ extern	WDML_CONV*	WDML_GetConvFromWnd(HWND hWnd);
 extern	WDML_CONV*	WDML_FindConv(WDML_INSTANCE* pInstance, WDML_SIDE side,
 				      HSZ hszService, HSZ hszTopic);
 extern  BOOL		WDML_PostAck(WDML_CONV* pConv, WDML_SIDE side, WORD appRetCode,
-				     BOOL fBusy, BOOL fAck, UINT pmt, LPARAM lParam, UINT oldMsg);
+				     BOOL fBusy, BOOL fAck, UINT_PTR pmt, LPARAM lParam, UINT oldMsg);
 extern	void		WDML_AddLink(WDML_INSTANCE* pInstance, HCONV hConv, WDML_SIDE side,
 				     UINT wType, HSZ hszItem, UINT wFmt);
 extern	WDML_LINK*	WDML_FindLink(WDML_INSTANCE* pInstance, HCONV hConv, WDML_SIDE side,

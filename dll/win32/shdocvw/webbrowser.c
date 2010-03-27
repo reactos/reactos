@@ -1115,23 +1115,20 @@ static HRESULT WebBrowser_Create(INT version, IUnknown *pOuter, REFIID riid, voi
 
     TRACE("(%p %s %p) version=%d\n", pOuter, debugstr_guid(riid), ppv, version);
 
-    ret = heap_alloc(sizeof(WebBrowser));
+    ret = heap_alloc_zero(sizeof(WebBrowser));
 
     ret->lpWebBrowser2Vtbl = &WebBrowser2Vtbl;
     ret->lpServiceProviderVtbl = &ServiceProviderVtbl;
-    ret->ref = 0;
+    ret->ref = 1;
     ret->version = version;
 
     DocHost_Init(&ret->doc_host, (IDispatch*)WEBBROWSER2(ret));
 
-    ret->register_browser = VARIANT_FALSE;
     ret->visible = VARIANT_TRUE;
     ret->menu_bar = VARIANT_TRUE;
     ret->address_bar = VARIANT_TRUE;
     ret->status_bar = VARIANT_TRUE;
     ret->tool_bar = VARIANT_TRUE;
-    ret->full_screen = VARIANT_FALSE;
-    ret->theater_mode = VARIANT_FALSE;
 
     WebBrowser_OleObject_Init(ret);
     WebBrowser_ViewObject_Init(ret);
@@ -1139,14 +1136,11 @@ static HRESULT WebBrowser_Create(INT version, IUnknown *pOuter, REFIID riid, voi
     WebBrowser_ClassInfo_Init(ret);
     WebBrowser_HlinkFrame_Init(ret);
 
-    hres = IWebBrowser_QueryInterface(WEBBROWSER(ret), riid, ppv);
-    if(SUCCEEDED(hres)) {
-        SHDOCVW_LockModule();
-    }else {
-        heap_free(ret);
-        return hres;
-    }
+    SHDOCVW_LockModule();
 
+    hres = IWebBrowser_QueryInterface(WEBBROWSER(ret), riid, ppv);
+
+    IWebBrowser2_Release(WEBBROWSER(ret));
     return hres;
 }
 

@@ -1345,9 +1345,12 @@ static WCHAR *HTTP_BuildProxyRequestUrl(http_request_t *req)
 static BOOL HTTP_DealWithProxy(appinfo_t *hIC, http_session_t *lpwhs, http_request_t *lpwhr)
 {
     WCHAR buf[MAXHOSTNAME];
+    WCHAR protoProxy[MAXHOSTNAME + 15];
+    DWORD protoProxyLen = sizeof(protoProxy) / sizeof(protoProxy[0]);
     WCHAR proxy[MAXHOSTNAME + 15]; /* 15 == "http://" + sizeof(port#) + ":/\0" */
     static WCHAR szNul[] = { 0 };
     URL_COMPONENTSW UrlComponents;
+    static const WCHAR protoHttp[] = { 'h','t','t','p',0 };
     static const WCHAR szHttp[] = { 'h','t','t','p',':','/','/',0 };
     static const WCHAR szFormat[] = { 'h','t','t','p',':','/','/','%','s',0 };
 
@@ -1356,11 +1359,13 @@ static BOOL HTTP_DealWithProxy(appinfo_t *hIC, http_session_t *lpwhs, http_reque
     UrlComponents.lpszHostName = buf;
     UrlComponents.dwHostNameLength = MAXHOSTNAME;
 
+    if (!INTERNET_FindProxyForProtocol(hIC->lpszProxy, protoHttp, protoProxy, &protoProxyLen))
+        return FALSE;
     if( CSTR_EQUAL != CompareStringW(LOCALE_SYSTEM_DEFAULT, NORM_IGNORECASE,
-                                 hIC->lpszProxy,strlenW(szHttp),szHttp,strlenW(szHttp)) )
-        sprintfW(proxy, szFormat, hIC->lpszProxy);
+                                 protoProxy,strlenW(szHttp),szHttp,strlenW(szHttp)) )
+        sprintfW(proxy, szFormat, protoProxy);
     else
-	strcpyW(proxy, hIC->lpszProxy);
+	strcpyW(proxy, protoProxy);
     if( !InternetCrackUrlW(proxy, 0, 0, &UrlComponents) )
         return FALSE;
     if( UrlComponents.dwHostNameLength == 0 )
@@ -4253,8 +4258,6 @@ DWORD HTTP_Connect(appinfo_t *hIC, LPCWSTR lpszServerName,
     }
 
     if(hIC->lpszProxy && hIC->dwAccessType == INTERNET_OPEN_TYPE_PROXY) {
-        if(strchrW(hIC->lpszProxy, ' '))
-            FIXME("Several proxies not implemented.\n");
         if(hIC->lpszProxyBypass)
             FIXME("Proxy bypass is ignored.\n");
     }

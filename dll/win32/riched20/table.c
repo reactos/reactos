@@ -70,6 +70,7 @@ static ME_DisplayItem* ME_InsertEndParaFromCursor(ME_TextEditor *editor,
   }
 
   tp = ME_SplitParagraph(editor, cursor->pRun, pStyle, eol_str, paraFlags);
+  ME_ReleaseStyle(pStyle);
   cursor->pPara = tp;
   cursor->pRun = ME_FindItemFwd(tp, diRun);
   return tp;
@@ -95,6 +96,7 @@ ME_DisplayItem* ME_InsertTableRowStartAtParagraph(ME_TextEditor *editor,
   editor->pCursors[0].nOffset = 0;
   editor->pCursors[1] = editor->pCursors[0];
   startRowPara = ME_InsertTableRowStartFromCursor(editor);
+  savedCursor.pPara = ME_GetParagraph(savedCursor.pRun);
   editor->pCursors[0] = savedCursor;
   editor->pCursors[1] = editor->pCursors[0];
 
@@ -121,8 +123,8 @@ ME_DisplayItem* ME_InsertTableRowStartAtParagraph(ME_TextEditor *editor,
 ME_DisplayItem* ME_InsertTableCellFromCursor(ME_TextEditor *editor)
 {
   ME_DisplayItem *para;
-  WCHAR cr = '\r';
-  ME_String *eol_str = ME_MakeStringN(&cr, 1);
+  WCHAR tab = '\t';
+  ME_String *eol_str = ME_MakeStringN(&tab, 1);
   para = ME_InsertEndParaFromCursor(editor, 0, eol_str, MEPF_CELL);
   return para;
 }
@@ -273,13 +275,14 @@ BOOL ME_IsInTable(ME_DisplayItem *pItem)
 }
 
 /* Table rows should either be deleted completely or not at all. */
-void ME_ProtectPartialTableDeletion(ME_TextEditor *editor, int nOfs,int *nChars)
+void ME_ProtectPartialTableDeletion(ME_TextEditor *editor, ME_Cursor *c, int *nChars)
 {
-  ME_Cursor c, c2;
-  ME_DisplayItem *this_para, *end_para;
-  ME_CursorFromCharOfs(editor, nOfs, &c);
-  this_para = c.pPara;
-  ME_CursorFromCharOfs(editor, nOfs + *nChars, &c2);
+  int nOfs = ME_GetCursorOfs(c);
+  ME_Cursor c2 = *c;
+  ME_DisplayItem *this_para = c->pPara;
+  ME_DisplayItem *end_para;
+
+  ME_MoveCursorChars(editor, &c2, *nChars);
   end_para = c2.pPara;
   if (c2.pRun->member.run.nFlags & MERF_ENDPARA) {
     /* End offset might be in the middle of the end paragraph run.
@@ -355,27 +358,32 @@ void ME_ProtectPartialTableDeletion(ME_TextEditor *editor, int nOfs,int *nChars)
         this_para->member.para.pFmt->dwMask & PFM_TABLE &&
         this_para->member.para.pFmt->wEffects & PFE_TABLE)
     {
-      pRun = c.pRun;
+      pRun = c->pRun;
       /* Find the next tab or end paragraph to use as a delete boundary */
       while (!(pRun->member.run.nFlags & (MERF_TAB|MERF_ENDPARA)))
         pRun = ME_FindItemFwd(pRun, diRun);
       nCharsToBoundary = pRun->member.run.nCharOfs
-                         - c.pRun->member.run.nCharOfs
-                         - c.nOffset;
+                         - c->pRun->member.run.nCharOfs
+                         - c->nOffset;
       *nChars = min(*nChars, nCharsToBoundary);
     } else if (end_para->member.para.pFmt->dwMask & PFM_TABLE &&
                end_para->member.para.pFmt->wEffects & PFE_TABLE)
     {
       /* The deletion starts from before the row, so don't join it with
        * previous non-empty paragraphs. */
+      ME_DisplayItem *curPara;
       pRun = NULL;
-      if (nOfs > this_para->member.para.nCharOfs)
+      if (nOfs > this_para->member.para.nCharOfs) {
         pRun = ME_FindItemBack(end_para, diRun);
-      if (!pRun)
+        curPara = end_para->member.para.prev_para;
+      }
+      if (!pRun) {
         pRun = ME_FindItemFwd(end_para, diRun);
+        curPara = end_para;
+      }
       if (pRun)
       {
-        nCharsToBoundary = ME_GetParagraph(pRun)->member.para.nCharOfs
+        nCharsToBoundary = curPara->member.para.nCharOfs
                            + pRun->member.run.nCharOfs
                            - nOfs;
         if (nCharsToBoundary >= 0)
@@ -549,8 +557,8 @@ void ME_TabPressedInTable(ME_TextEditor *editor, BOOL bSelectedRow)
   ME_InvalidateSelection(editor);
   {
     int from, to;
-    from = ME_GetCursorOfs(editor, 0);
-    to = ME_GetCursorOfs(editor, 1);
+    from = ME_GetCursorOfs(&editor->pCursors[0]);
+    to = ME_GetCursorOfs(&editor->pCursors[1]);
     if (from <= to)
     {
       fromCursor = editor->pCursors[0];

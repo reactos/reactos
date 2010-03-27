@@ -8,29 +8,25 @@
 
 /* INCLUDES ******************************************************************/
 
-/* Enable this (and the define in irq.S) to make UP HAL work for MP Kernel */
-/* #define CONFIG_SMP */
+/* This file is compiled twice. Once for UP and once for MP */
 
 #include <hal.h>
 #define NDEBUG
 #include <debug.h>
 
+#include <internal/spinlock.h>
+
 #undef KeAcquireSpinLock
 #undef KeReleaseSpinLock
 
+/* GLOBALS *******************************************************************/
+
+ULONG HalpSystemHardwareFlags;
+KSPIN_LOCK HalpSystemHardwareLock;
+
 /* FUNCTIONS *****************************************************************/
 
-/*
- * @implemented
- */
-VOID
-NTAPI
-KeAcquireSpinLock(PKSPIN_LOCK SpinLock,
-                  PKIRQL OldIrql)
-{
-    /* Call the fastcall function */
-    *OldIrql = KfAcquireSpinLock(SpinLock);
-}
+#ifdef _M_IX86
 
 /*
  * @implemented
@@ -47,18 +43,6 @@ KeAcquireSpinLockRaiseToSynch(PKSPIN_LOCK SpinLock)
     /* Acquire the lock and return */
     KxAcquireSpinLock(SpinLock);
     return OldIrql;
-}
-
-/*
- * @implemented
- */
-VOID
-NTAPI
-KeReleaseSpinLock(PKSPIN_LOCK SpinLock,
-                  KIRQL NewIrql)
-{
-    /* Call the fastcall function */
-    KfReleaseSpinLock(SpinLock, NewIrql);
 }
 
 /*
@@ -228,27 +212,38 @@ KeTryToAcquireQueuedSpinLock(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber,
     return TRUE;
 }
 
-#undef KeRaiseIrql
-/*
- * @implemented
- */
+#endif
+
 VOID
 NTAPI
-KeRaiseIrql(KIRQL NewIrql,
-            PKIRQL OldIrql)
+HalpAcquireSystemHardwareSpinLock(VOID)
 {
-    /* Call the fastcall function */
-    *OldIrql = KfRaiseIrql(NewIrql);
+    ULONG Flags;
+
+    /* Get flags and disable interrupts */
+    Flags = __readeflags();
+    _disable();
+
+    /* Acquire the lock */
+    KxAcquireSpinLock(&HalpSystemHardwareLock);
+
+    /* We have the lock, save the flags now */
+    HalpSystemHardwareFlags = Flags;
 }
 
-#undef KeLowerIrql
-/*
- * @implemented
- */
 VOID
 NTAPI
-KeLowerIrql(KIRQL NewIrql)
+HalpReleaseCmosSpinLock(VOID)
 {
-    /* Call the fastcall function */
-    KfLowerIrql(NewIrql);
+    ULONG Flags;
+
+    /* Get the flags */
+    Flags = HalpSystemHardwareFlags;
+
+    /* Release the lock */
+    KxReleaseSpinLock(&HalpSystemHardwareLock);
+
+    /* Restore the flags */
+    __writeeflags(Flags);
 }
+

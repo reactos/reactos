@@ -47,9 +47,9 @@ ConvertFiberToThread(VOID)
     pTeb->HasFiberData = FALSE;
 
     /* free the fiber */
-    if (pTeb->Tib.FiberData != NULL)
+    if(pTeb->NtTib.FiberData != NULL)
     {
-        RtlFreeHeap(GetProcessHeap(), 0, pTeb->Tib.FiberData);
+        RtlFreeHeap(GetProcessHeap(), 0, pTeb->NtTib.FiberData);
     }
 
     /* success */
@@ -69,7 +69,7 @@ ConvertThreadToFiberEx(LPVOID lpParameter,
     DPRINT1("Converting Thread to Fiber\n");
 
     /* the current thread is already a fiber */
-    if(pTeb->HasFiberData && pTeb->Tib.FiberData) return pTeb->Tib.FiberData;
+    if(pTeb->HasFiberData && pTeb->NtTib.FiberData) return pTeb->NtTib.FiberData;
 
     /* allocate the fiber */
     pfCurFiber = (PFIBER)RtlAllocateHeap(GetProcessHeap(), 
@@ -85,9 +85,9 @@ ConvertThreadToFiberEx(LPVOID lpParameter,
 
     /* copy some contextual data from the thread to the fiber */
     pfCurFiber->Parameter = lpParameter;
-    pfCurFiber->ExceptionList = pTeb->Tib.ExceptionList;
-    pfCurFiber->StackBase = pTeb->Tib.StackBase;
-    pfCurFiber->StackLimit = pTeb->Tib.StackLimit;
+    pfCurFiber->ExceptionList = pTeb->NtTib.ExceptionList;
+    pfCurFiber->StackBase = pTeb->NtTib.StackBase;
+    pfCurFiber->StackLimit = pTeb->NtTib.StackLimit;
     pfCurFiber->DeallocationStack = pTeb->DeallocationStack;
     pfCurFiber->FlsData = pTeb->FlsData;
     pfCurFiber->GuaranteedStackBytes = pTeb->GuaranteedStackBytes;
@@ -101,7 +101,7 @@ ConvertThreadToFiberEx(LPVOID lpParameter,
     }
 
     /* associate the fiber to the current thread */
-    pTeb->Tib.FiberData = pfCurFiber;
+    pTeb->NtTib.FiberData = pfCurFiber;
     pTeb->HasFiberData = TRUE;
 
     /* success */
@@ -227,7 +227,7 @@ DeleteFiber(LPVOID lpFiber)
     RtlFreeHeap(GetProcessHeap(), 0, lpFiber);
 
     /* the fiber is deleting itself: let the system deallocate the stack */
-    if(NtCurrentTeb()->Tib.FiberData == lpFiber) ExitThread(1);
+    if(NtCurrentTeb()->NtTib.FiberData == lpFiber) ExitThread(1);
 
     /* deallocate the stack */
     NtFreeVirtualMemory(NtCurrentProcess(),

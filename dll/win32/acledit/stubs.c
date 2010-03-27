@@ -1,5 +1,4 @@
-/* $Id: stubs.c 35011 2008-08-01 16:29:40Z sginsberg $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Access Control List Editor
  * FILE:            lib/acledit/stubs.c

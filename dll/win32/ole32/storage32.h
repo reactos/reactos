@@ -79,6 +79,11 @@ static const ULONG DIRENTRY_NULL             = 0xFFFFFFFF;
 
 #define RAW_DIRENTRY_SIZE 0x00000080
 
+#define HEADER_SIZE 512
+
+#define MIN_BIG_BLOCK_SIZE 0x200
+#define MAX_BIG_BLOCK_SIZE 0x1000
+
 /*
  * Type of child entry link
  */
@@ -91,15 +96,8 @@ static const ULONG DIRENTRY_NULL             = 0xFFFFFFFF;
  */
 #define STGTY_ROOT 0x05
 
-/*
- * These defines assume a hardcoded blocksize. The code will assert
- * if the blocksize is different. Some changes will have to be done if it
- * becomes the case.
- */
-#define BIG_BLOCK_SIZE           0x200
 #define COUNT_BBDEPOTINHEADER    109
 #define LIMIT_TO_USE_SMALL_BLOCK 0x1000
-#define NUM_BLOCKS_PER_DEPOT_BLOCK 128
 
 #define STGM_ACCESS_MODE(stgm)   ((stgm)&0x0000f)
 #define STGM_SHARE_MODE(stgm)    ((stgm)&0x000f0)
@@ -163,10 +161,9 @@ typedef struct BigBlockFile BigBlockFile,*LPBIGBLOCKFILE;
 BigBlockFile*  BIGBLOCKFILE_Construct(HANDLE hFile,
                                       ILockBytes* pLkByt,
                                       DWORD openFlags,
-                                      ULONG blocksize,
                                       BOOL fileBased);
 void           BIGBLOCKFILE_Destructor(LPBIGBLOCKFILE This);
-HRESULT        BIGBLOCKFILE_EnsureExists(LPBIGBLOCKFILE This, ULONG index);
+HRESULT        BIGBLOCKFILE_Expand(LPBIGBLOCKFILE This, ULARGE_INTEGER newSize);
 HRESULT        BIGBLOCKFILE_SetSize(LPBIGBLOCKFILE This, ULARGE_INTEGER newSize);
 HRESULT        BIGBLOCKFILE_ReadAt(LPBIGBLOCKFILE This, ULARGE_INTEGER offset,
            void* buffer, ULONG size, ULONG* bytesRead);
@@ -359,7 +356,7 @@ struct StorageImpl
   ULONG extBigBlockDepotCount;
   ULONG bigBlockDepotStart[COUNT_BBDEPOTINHEADER];
 
-  ULONG blockDepotCached[NUM_BLOCKS_PER_DEPOT_BLOCK];
+  ULONG blockDepotCached[MAX_BIG_BLOCK_SIZE / 4];
   ULONG indexBlockDepotCached;
   ULONG prevFreeBlock;
 

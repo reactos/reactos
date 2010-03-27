@@ -4,10 +4,12 @@
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<library>battc</library>
+	<library>wmilib</library>
 	<include base="cmbatt">.</include>
 	<file>cmbatt.c</file>
 	<file>cmexec.c</file>
 	<file>cmbpnp.c</file>
 	<file>cmbwmi.c</file>
 	<file>cmbatt.rc</file>
+	<pch>cmbatt.h</pch>
 </module>

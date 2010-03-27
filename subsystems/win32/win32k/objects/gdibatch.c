@@ -67,14 +67,34 @@ ULONG
 FASTCALL
 GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
 {
+  BOOL Hit = FALSE;
+  ULONG Cmd = 0, Size = 0;
   PDC_ATTR pdcattr = NULL;
 
   if (dc)
   {
-    pdcattr = dc->pdcattr;
+     pdcattr = dc->pdcattr;
   }
-  // The thread is approaching the end of sunset.
-  switch(pHdr->Cmd)
+
+  _SEH2_TRY
+  {
+     Cmd = pHdr->Cmd;
+     Size = pHdr->Size; // Return the full size of the structure.
+  }
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+  {
+     Hit = TRUE;
+  }
+  _SEH2_END;
+
+  if (Hit)
+  {
+     DPRINT1("WARNING! GdiBatch Fault!\n");
+     return 0;
+  }
+
+  // FYI! The thread is approaching the end of sunset.
+  switch(Cmd)
   {
      case GdiBCPatBlt: // Highest pri first!
         break;
@@ -114,7 +134,7 @@ GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
         break;
   }
 
-  return pHdr->Size; // Return the full size of the structure.
+  return Size; 
 }
 
 /*
@@ -163,8 +183,11 @@ NtGdiFlushUserBatch(VOID)
        // No need to init anything, just go!
        for (; GdiBatchCount > 0; GdiBatchCount--)
        {
+           ULONG Size;
            // Process Gdi Batch!
-           pHdr += GdiFlushUserBatch(pDC, (PGDIBATCHHDR) pHdr);
+           Size = GdiFlushUserBatch(pDC, (PGDIBATCHHDR) pHdr);
+           if (!Size) break;
+           pHdr += Size;
        }
 
        if (pDC)

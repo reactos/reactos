@@ -355,7 +355,7 @@ BOOLEAN
 NTAPI
 VidInitialize(IN BOOLEAN SetMode)
 {
-    ULONG Context = 0;
+    ULONG_PTR Context = 0;
     PHYSICAL_ADDRESS TranslatedAddress;
     PHYSICAL_ADDRESS NullAddress = {{0, 0}}, VgaAddress;
     ULONG AddressSpace = 1;

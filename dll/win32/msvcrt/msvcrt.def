@@ -316,7 +316,7 @@ EXPORTS
 ;  _getwche @310
   _getws @311
   _global_unwind2 @312
-;  _gmtime64 @313
+  _gmtime64 @313
   _heapadd @314
   _heapchk @315
   _heapmin @316
@@ -373,7 +373,7 @@ EXPORTS
   _lfind @366
   _loaddll @367
   _local_unwind2 @368
-;  _localtime64 @369
+  _localtime64 @369
   _lock @370
   _locking @371
   _logb @372
@@ -539,7 +539,7 @@ EXPORTS
   _tell @532
   _telli64 @533
   _tempnam @534
-;  _time64 @535
+  _time64 @535
   _timezone @536 DATA
   _tolower @537
   _toupper @538

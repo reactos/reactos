@@ -241,6 +241,9 @@ static const PROV_ENUMALGS_EX aProvEnumAlgsEx[5][RSAENH_MAX_ENUMALGS+1] =
   {CALG_AES_192,  192,192,  192,0,                    8,"AES-192", 39,"Advanced Encryption Standard (AES-192)"},
   {CALG_AES_256,  256,256,  256,0,                    8,"AES-256", 39,"Advanced Encryption Standard (AES-256)"},
   {CALG_SHA,      160,160,  160,CRYPT_FLAG_SIGNING,   6,"SHA-1",   30,"Secure Hash Algorithm (SHA-1)"},
+  {CALG_SHA_256,  256,256,  256,CRYPT_FLAG_SIGNING,   6,"SHA-256", 30,"Secure Hash Algorithm (SHA-256)"},
+  {CALG_SHA_384,  384,384,  384,CRYPT_FLAG_SIGNING,   6,"SHA-384", 30,"Secure Hash Algorithm (SHA-284)"},
+  {CALG_SHA_512,  512,512,  512,CRYPT_FLAG_SIGNING,   6,"SHA-512", 30,"Secure Hash Algorithm (SHA-512)"},
   {CALG_MD2,      128,128,  128,CRYPT_FLAG_SIGNING,   4,"MD2",     23,"Message Digest 2 (MD2)"},
   {CALG_MD4,      128,128,  128,CRYPT_FLAG_SIGNING,   4,"MD4",     23,"Message Digest 4 (MD4)"},
   {CALG_MD5,      128,128,  128,CRYPT_FLAG_SIGNING,   4,"MD5",     23,"Message Digest 5 (MD5)"},
@@ -1422,8 +1425,8 @@ static BOOL build_hash_signature(BYTE *pbSignature, DWORD dwLen, ALG_ID aiAlgid,
     static const struct tagOIDDescriptor {
         ALG_ID aiAlgid;
         DWORD dwLen;
-        CONST BYTE abOID[18];
-    } aOIDDescriptor[5] = {
+        CONST BYTE abOID[19];
+    } aOIDDescriptor[8] = {
         { CALG_MD2, 18, { 0x30, 0x20, 0x30, 0x0c, 0x06, 0x08, 0x2a, 0x86, 0x48,
                           0x86, 0xf7, 0x0d, 0x02, 0x02, 0x05, 0x00, 0x04, 0x10 } },
         { CALG_MD4, 18, { 0x30, 0x20, 0x30, 0x0c, 0x06, 0x08, 0x2a, 0x86, 0x48, 
@@ -1432,6 +1435,15 @@ static BOOL build_hash_signature(BYTE *pbSignature, DWORD dwLen, ALG_ID aiAlgid,
                           0x86, 0xf7, 0x0d, 0x02, 0x05, 0x05, 0x00, 0x04, 0x10 } },
         { CALG_SHA, 15, { 0x30, 0x21, 0x30, 0x09, 0x06, 0x05, 0x2b, 0x0e, 0x03, 
                           0x02, 0x1a, 0x05, 0x00, 0x04, 0x14 } },
+        { CALG_SHA_256, 19, { 0x30, 0x31, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86,
+                              0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01,
+                              0x05, 0x00, 0x04, 0x20 } },
+        { CALG_SHA_384, 19, { 0x30, 0x41, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86,
+                              0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01,
+                              0x05, 0x00, 0x04, 0x30 } },
+        { CALG_SHA_384, 19, { 0x30, 0x51, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86,
+                              0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01,
+                              0x05, 0x00, 0x04, 0x40 } },
         { 0,        0,  { 0 } }
     };
     DWORD dwIdxOID, i, j;

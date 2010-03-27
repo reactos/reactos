@@ -319,8 +319,8 @@ VgaScroll(ULONG Scroll)
             do
             {
                 /* Write value in the new position so that we can do the scroll */
-                WRITE_REGISTER_UCHAR((PUCHAR)j,
-                                     READ_REGISTER_UCHAR((PUCHAR)j + i));
+                WRITE_REGISTER_UCHAR(UlongToPtr(j),
+                                     READ_REGISTER_UCHAR(UlongToPtr(j + i)));
 
                 /* Move to the next memory location to write to */
                 j++;
@@ -1197,7 +1197,7 @@ VidSolidColorFill(IN ULONG Left,
     __outpw(0x3CE, 7);
 
     /* Calculate pixel position for the read */
-    Offset = VgaBase + (Top * 80) + (PUCHAR)LeftOffset;
+    Offset = VgaBase + (Top * 80) + (PUCHAR)(ULONG_PTR)LeftOffset;
 
     /* Select the bitmask register and write the mask */
     __outpw(0x3CE, (USHORT)lMask);
@@ -1221,7 +1221,7 @@ VidSolidColorFill(IN ULONG Left,
     if (Distance)
     {
         /* Calculate new pixel position */
-        Offset = VgaBase + (Top * 80) + (PUCHAR)RightOffset;
+        Offset = VgaBase + (Top * 80) + (PUCHAR)(ULONG_PTR)RightOffset;
         Distance--;
 
         /* Select the bitmask register and write the mask */
@@ -1247,7 +1247,7 @@ VidSolidColorFill(IN ULONG Left,
         if (Distance)
         {
             /* Calculate new pixel position */
-            Offset = VgaBase + (Top * 80) + (PUCHAR)(LeftOffset + 1);
+            Offset = VgaBase + (Top * 80) + (PUCHAR)(ULONG_PTR)(LeftOffset + 1);
 
             /* Set the bitmask to 0xFF for all 4 planes */
             __outpw(0x3CE, 0xFF08);

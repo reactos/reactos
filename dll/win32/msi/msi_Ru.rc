@@ -37,4 +37,3 @@ STRINGTABLE DISCARDABLE
 	14 "возможность из:"
 	15 "выберите каталог, содержащий %s"
 }
-#pragma code_page(default)

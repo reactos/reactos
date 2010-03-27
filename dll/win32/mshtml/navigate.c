@@ -972,8 +972,11 @@ static HRESULT read_stream_data(nsChannelBSC *This, IStream *stream)
 
             on_start_nsrequest(This);
 
-            if(This->window)
+            if(This->window) {
                 update_window_doc(This->window);
+                if(This->window->readystate != READYSTATE_LOADING)
+                    set_ready_state(This->window, READYSTATE_LOADING);
+            }
         }
 
         This->bsc.readed += This->nsstream->buf_size;

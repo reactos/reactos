@@ -63,7 +63,7 @@ public:
         InterlockedDecrement(&m_Ref);
         if (!m_Ref)
         {
-            delete this;
+            //delete this;
             return 0;
         }
         return m_Ref;
@@ -171,7 +171,7 @@ public:
     HRESULT STDMETHODCALLTYPE GetPages(CAUUID *pPages);
 
 
-    CKsProxy() : m_Ref(0), m_pGraph(0), m_ReferenceClock((IReferenceClock*)this), m_FilterState(State_Stopped), m_hDevice(0), m_Plugins(), m_Pins(), m_DevicePath(0), m_hClock(0) {};
+    CKsProxy();
     ~CKsProxy()
     {
         if (m_hDevice)
@@ -203,7 +203,22 @@ protected:
     LPWSTR m_DevicePath;
     CLSID m_DeviceInterfaceGUID;
     HANDLE m_hClock;
+    CRITICAL_SECTION m_Lock;
 };
+
+CKsProxy::CKsProxy() : m_Ref(0),
+                       m_pGraph(0),
+                       m_ReferenceClock((IReferenceClock*)this),
+                       m_FilterState(State_Stopped),
+                       m_hDevice(0),
+                       m_Plugins(),
+                       m_Pins(),
+                       m_DevicePath(0),
+                       m_hClock(0)
+{
+    InitializeCriticalSection(&m_Lock);
+}
+
 
 HRESULT
 STDMETHODCALLTYPE
@@ -332,24 +347,26 @@ CKsProxy::QueryInterface(
             HRESULT hr = m_Plugins[Index]->QueryInterface(refiid, Output);
             if (SUCCEEDED(hr))
             {
+#ifdef KSPROXY_TRACE
                 WCHAR Buffer[100];
                 LPOLESTR lpstr;
                 StringFromCLSID(refiid, &lpstr);
                 swprintf(Buffer, L"CKsProxy::QueryInterface plugin %lu supports interface %s\n", Index, lpstr);
                 OutputDebugStringW(Buffer);
                 CoTaskMemFree(lpstr);
+#endif
                 return hr;
             }
         }
     }
-
+#ifdef KSPROXY_TRACE
     WCHAR Buffer[MAX_PATH];
     LPOLESTR lpstr;
     StringFromCLSID(refiid, &lpstr);
     swprintf(Buffer, L"CKsProxy::QueryInterface: NoInterface for %s !!!\n", lpstr);
     OutputDebugStringW(Buffer);
     CoTaskMemFree(lpstr);
-
+#endif
 
     return E_NOINTERFACE;
 }
@@ -362,7 +379,9 @@ HRESULT
 STDMETHODCALLTYPE
 CKsProxy::GetPages(CAUUID *pPages)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::GetPages NotImplemented\n");
+#endif
 
     if (!pPages)
         return E_POINTER;
@@ -478,7 +497,10 @@ STDMETHODCALLTYPE
 CKsProxy::KsGetTime(
     LONGLONG* Time)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::KsGetTime\n");
+#endif
+
     return PerformClockProperty(KSPROPERTY_CLOCK_TIME, KSPROPERTY_TYPE_GET, (PVOID)Time, sizeof(LONGLONG));
 }
 
@@ -487,7 +509,10 @@ STDMETHODCALLTYPE
 CKsProxy::KsSetTime(
     LONGLONG Time)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::KsSetTime\n");
+#endif
+
     return PerformClockProperty(KSPROPERTY_CLOCK_TIME, KSPROPERTY_TYPE_SET, (PVOID)&Time, sizeof(LONGLONG));
 }
 
@@ -496,7 +521,10 @@ STDMETHODCALLTYPE
 CKsProxy::KsGetPhysicalTime(
     LONGLONG* Time)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::KsGetPhysicalTime\n");
+#endif
+
     return PerformClockProperty(KSPROPERTY_CLOCK_PHYSICALTIME, KSPROPERTY_TYPE_GET, (PVOID)Time, sizeof(LONGLONG));
 }
 
@@ -505,7 +533,10 @@ STDMETHODCALLTYPE
 CKsProxy::KsSetPhysicalTime(
     LONGLONG Time)
 {
-    OutputDebugStringW(L"CKsProxy::KsSetPhysicalTime NotImplemented\n");
+#ifdef KSPROXY_TRACE
+    OutputDebugStringW(L"CKsProxy::KsSetPhysicalTime\n");
+#endif
+
     return PerformClockProperty(KSPROPERTY_CLOCK_PHYSICALTIME, KSPROPERTY_TYPE_SET, (PVOID)&Time, sizeof(LONGLONG));
 }
 
@@ -514,7 +545,10 @@ STDMETHODCALLTYPE
 CKsProxy::KsGetCorrelatedTime(
     KSCORRELATED_TIME* CorrelatedTime)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::KsGetCorrelatedTime\n");
+#endif
+
     return PerformClockProperty(KSPROPERTY_CLOCK_CORRELATEDTIME, KSPROPERTY_TYPE_GET, (PVOID)CorrelatedTime, sizeof(KSCORRELATED_TIME));
 }
 
@@ -523,7 +557,9 @@ STDMETHODCALLTYPE
 CKsProxy::KsSetCorrelatedTime(
     KSCORRELATED_TIME* CorrelatedTime)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::KsSetCorrelatedTime\n");
+#endif
     return PerformClockProperty(KSPROPERTY_CLOCK_CORRELATEDTIME, KSPROPERTY_TYPE_SET, (PVOID)CorrelatedTime, sizeof(KSCORRELATED_TIME));
 }
 
@@ -532,7 +568,9 @@ STDMETHODCALLTYPE
 CKsProxy::KsGetCorrelatedPhysicalTime(
     KSCORRELATED_TIME* CorrelatedTime)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::KsGetCorrelatedPhysicalTime\n");
+#endif
     return PerformClockProperty(KSPROPERTY_CLOCK_CORRELATEDPHYSICALTIME, KSPROPERTY_TYPE_GET, (PVOID)CorrelatedTime, sizeof(KSCORRELATED_TIME));
 }
 
@@ -541,7 +579,10 @@ STDMETHODCALLTYPE
 CKsProxy::KsSetCorrelatedPhysicalTime(
     KSCORRELATED_TIME* CorrelatedTime)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::KsSetCorrelatedPhysicalTime\n");
+#endif
+
     return PerformClockProperty(KSPROPERTY_CLOCK_CORRELATEDPHYSICALTIME, KSPROPERTY_TYPE_SET, (PVOID)CorrelatedTime, sizeof(KSCORRELATED_TIME));
 }
 
@@ -550,7 +591,9 @@ STDMETHODCALLTYPE
 CKsProxy::KsGetResolution(
     KSRESOLUTION* Resolution)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::KsGetResolution\n");
+#endif
     return PerformClockProperty(KSPROPERTY_CLOCK_RESOLUTION, KSPROPERTY_TYPE_GET, (PVOID)Resolution, sizeof(KSRESOLUTION));
 }
 
@@ -559,7 +602,9 @@ STDMETHODCALLTYPE
 CKsProxy::KsGetState(
     KSSTATE* State)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::KsGetState\n");
+#endif
     return PerformClockProperty(KSPROPERTY_CLOCK_STATE, KSPROPERTY_TYPE_GET, (PVOID)State, sizeof(KSSTATE));
 }
 
@@ -575,7 +620,9 @@ CKsProxy::GetTime(
     KSPROPERTY Property;
     ULONG BytesReturned;
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::GetTime\n");
+#endif
 
     if (!pTime)
         return E_POINTER;
@@ -620,7 +667,9 @@ CKsProxy::AdviseTime(
     ULONG BytesReturned;
     PKSEVENT_TIME_MARK Event;
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::AdviseTime\n");
+#endif
 
     //
     //FIXME locks
@@ -686,7 +735,9 @@ CKsProxy::AdvisePeriodic(
     ULONG BytesReturned;
     PKSEVENT_TIME_INTERVAL Event;
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::AdvisePeriodic\n");
+#endif
 
     //
     //FIXME locks
@@ -748,7 +799,9 @@ CKsProxy::Unadvise(
     HRESULT hr;
     ULONG BytesReturned;
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::Unadvise\n");
+#endif
 
     if (m_hClock)
     {
@@ -786,7 +839,10 @@ CKsProxy::GetCapabilities(
     Property.Id = KSPROPERTY_MEDIASEEKING_CAPABILITIES;
     Property.Flags = KSPROPERTY_TYPE_GET;
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::GetCapabilities\n");
+#endif
+
 
     if (!pCapabilities)
         return E_POINTER;
@@ -836,7 +892,9 @@ CKsProxy::CheckCapabilities(
     DWORD Capabilities;
     HRESULT hr;
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::CheckCapabilities\n");
+#endif
 
     if (!pCapabilities)
         return E_POINTER;
@@ -914,11 +972,13 @@ CKsProxy::IsFormatSupported(
     ULONG Index;
     HRESULT hr = S_FALSE;
 
+#ifdef KSPROXY_TRACE
     WCHAR Buffer[100];
     LPOLESTR pstr;
     StringFromCLSID(*pFormat, &pstr);
     swprintf(Buffer, L"CKsProxy::IsFormatSupported %s\n",pstr);
     OutputDebugStringW(Buffer);
+#endif
 
     if (!pFormat)
         return E_POINTER;
@@ -927,8 +987,10 @@ CKsProxy::IsFormatSupported(
     hr = GetMediaSeekingFormats(&FormatList);
     if (SUCCEEDED(hr))
     {
+#ifdef KSPROXY_TRACE
         swprintf(Buffer, L"CKsProxy::IsFormatSupported NumFormat %lu\n",FormatList->Count);
         OutputDebugStringW(Buffer);
+#endif
 
         //iterate through format list
         pGuid = (LPGUID)(FormatList + 1);
@@ -961,7 +1023,9 @@ CKsProxy::IsFormatSupported(
         {
             // plugin does not support interface
             hr = S_FALSE;
+#ifdef KSPROXY_TRACE
             OutputDebugStringW(L"CKsProxy::IsFormatSupported plugin does not support IMediaSeeking interface\n");
+#endif
             break;
         }
 
@@ -986,7 +1050,9 @@ CKsProxy::QueryPreferredFormat(
     HRESULT hr;
     ULONG Index;
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::QueryPreferredFormat\n");
+#endif
 
     if (!pFormat)
         return E_POINTER;
@@ -1046,7 +1112,9 @@ CKsProxy::GetTimeFormat(
     Property.Id = KSPROPERTY_MEDIASEEKING_TIMEFORMAT;
     Property.Flags = KSPROPERTY_TYPE_GET;
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::GetTimeFormat\n");
+#endif
 
     hr = KsSynchronousDeviceControl(m_hDevice, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)pFormat, sizeof(GUID), &BytesReturned);
     if (hr == MAKE_HRESULT(SEVERITY_ERROR, FACILITY_WIN32, ERROR_NOT_FOUND) || hr == MAKE_HRESULT(SEVERITY_ERROR, FACILITY_WIN32, ERROR_SET_NOT_FOUND))
@@ -1086,7 +1154,9 @@ CKsProxy::IsUsingTimeFormat(
 {
     GUID Format;
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::IsUsingTimeFormat\n");
+#endif
 
     if (FAILED(QueryPreferredFormat(&Format)))
         return S_FALSE;
@@ -1110,7 +1180,9 @@ CKsProxy::SetTimeFormat(
     Property.Id = KSPROPERTY_MEDIASEEKING_TIMEFORMAT;
     Property.Flags = KSPROPERTY_TYPE_SET;
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::SetTimeFormat\n");
+#endif
 
     hr = KsSynchronousDeviceControl(m_hDevice, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)pFormat, sizeof(GUID), &BytesReturned);
     if (hr == MAKE_HRESULT(SEVERITY_ERROR, FACILITY_WIN32, ERROR_NOT_FOUND) || hr == MAKE_HRESULT(SEVERITY_ERROR, FACILITY_WIN32, ERROR_SET_NOT_FOUND))
@@ -1158,7 +1230,9 @@ CKsProxy::GetDuration(
     Property.Id = KSPROPERTY_MEDIASEEKING_DURATION;
     Property.Flags = KSPROPERTY_TYPE_GET;
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::GetDuration\n");
+#endif
 
     hr = KsSynchronousDeviceControl(m_hDevice, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)pDuration, sizeof(LONGLONG), &BytesReturned);
     if (hr == MAKE_HRESULT(SEVERITY_ERROR, FACILITY_WIN32, ERROR_NOT_FOUND) || hr == MAKE_HRESULT(SEVERITY_ERROR, FACILITY_WIN32, ERROR_SET_NOT_FOUND))
@@ -1204,7 +1278,9 @@ CKsProxy::GetStopPosition(
     Property.Id = KSPROPERTY_MEDIASEEKING_STOPPOSITION;
     Property.Flags = KSPROPERTY_TYPE_GET;
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::GetStopPosition\n");
+#endif
 
     hr = KsSynchronousDeviceControl(m_hDevice, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)pStop, sizeof(LONGLONG), &BytesReturned);
     if (hr == MAKE_HRESULT(SEVERITY_ERROR, FACILITY_WIN32, ERROR_NOT_FOUND) || hr == MAKE_HRESULT(SEVERITY_ERROR, FACILITY_WIN32, ERROR_SET_NOT_FOUND))
@@ -1250,7 +1326,9 @@ CKsProxy::GetCurrentPosition(
     Property.Id = KSPROPERTY_MEDIASEEKING_POSITION;
     Property.Flags = KSPROPERTY_TYPE_GET;
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::GetCurrentPosition\n");
+#endif
 
     hr = KsSynchronousDeviceControl(m_hDevice, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)pCurrent, sizeof(LONGLONG), &BytesReturned);
     if (hr == MAKE_HRESULT(SEVERITY_ERROR, FACILITY_WIN32, ERROR_NOT_FOUND) || hr == MAKE_HRESULT(SEVERITY_ERROR, FACILITY_WIN32, ERROR_SET_NOT_FOUND))
@@ -1300,7 +1378,9 @@ CKsProxy::ConvertTimeFormat(
     Property.Property.Id = KSPROPERTY_MEDIASEEKING_CONVERTTIMEFORMAT;
     Property.Property.Flags = KSPROPERTY_TYPE_GET;
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::ConvertTimeFormat\n");
+#endif
 
     if (!pTargetFormat)
     {
@@ -1383,7 +1463,9 @@ CKsProxy::SetPositions(
     Positions.Stop = *pStop;
     Positions.StopFlags = (KS_SEEKING_FLAGS)dwStopFlags;
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::SetPositions\n");
+#endif
 
     hr = KsSynchronousDeviceControl(m_hDevice, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)&Positions, sizeof(KSPROPERTY_POSITIONS), &BytesReturned);
     if (SUCCEEDED(hr))
@@ -1444,7 +1526,9 @@ CKsProxy::GetPositions(
 {
     HRESULT hr;
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::GetPositions\n");
+#endif
 
     hr = GetCurrentPosition(pCurrent);
     if (SUCCEEDED(hr))
@@ -1468,7 +1552,9 @@ CKsProxy::GetAvailable(
     Property.Id = KSPROPERTY_MEDIASEEKING_AVAILABLE;
     Property.Flags = KSPROPERTY_TYPE_GET;
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::GetAvailable\n");
+#endif
 
     hr = KsSynchronousDeviceControl(m_hDevice, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)&Media, sizeof(KSPROPERTY_MEDIAAVAILABLE), &BytesReturned);
     if (hr == MAKE_HRESULT(SEVERITY_ERROR, FACILITY_WIN32, ERROR_NOT_FOUND) || hr == MAKE_HRESULT(SEVERITY_ERROR, FACILITY_WIN32, ERROR_SET_NOT_FOUND))
@@ -1512,7 +1598,9 @@ STDMETHODCALLTYPE
 CKsProxy::SetRate(
     double dRate)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::SetRate\n");
+#endif
     return E_NOTIMPL;
 }
 
@@ -1521,7 +1609,9 @@ STDMETHODCALLTYPE
 CKsProxy::GetRate(
     double *pdRate)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::GetRate\n");
+#endif
     return E_NOTIMPL;
 }
 
@@ -1538,7 +1628,9 @@ CKsProxy::GetPreroll(
     Property.Id = KSPROPERTY_MEDIASEEKING_PREROLL;
     Property.Flags = KSPROPERTY_TYPE_GET;
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::GetPreroll\n");
+#endif
 
     hr = KsSynchronousDeviceControl(m_hDevice, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)pllPreroll, sizeof(LONGLONG), &BytesReturned);
     if (hr == MAKE_HRESULT(SEVERITY_ERROR, FACILITY_WIN32, ERROR_NOT_FOUND) || hr == MAKE_HRESULT(SEVERITY_ERROR, FACILITY_WIN32, ERROR_SET_NOT_FOUND))
@@ -1584,7 +1676,7 @@ CKsProxy::GetMiscFlags()
     HRESULT hr;
     PIN_DIRECTION PinDirection;
     KSPIN_COMMUNICATION Communication;
-    WCHAR Buffer[100];
+
 
     for(Index = 0; Index < m_Pins.size(); Index++)
     {
@@ -1599,7 +1691,7 @@ CKsProxy::GetMiscFlags()
                 if (SUCCEEDED(GetPinCommunication(Index, //FIXME verify PinId
                                         &Communication)))
                 {
-                    if (Communication == KSPIN_COMMUNICATION_NONE || Communication == KSPIN_COMMUNICATION_BRIDGE)
+                    if (Communication != KSPIN_COMMUNICATION_NONE && Communication != KSPIN_COMMUNICATION_BRIDGE)
                     {
                         Flags |= AM_FILTER_MISC_FLAGS_IS_SOURCE;
                     }
@@ -1608,8 +1700,12 @@ CKsProxy::GetMiscFlags()
         }
     }
 
+#ifdef KSPROXY_TRACE
+    WCHAR Buffer[100];
     swprintf(Buffer, L"CKsProxy::GetMiscFlags stub Flags %x\n", Flags);
     OutputDebugStringW(Buffer);
+#endif
+
     return Flags;
 }
 
@@ -1625,8 +1721,11 @@ CKsProxy::KsProperty(
     ULONG DataLength,
     ULONG* BytesReturned)
 {
-    assert(m_hDevice != 0);
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::KsProperty\n");
+#endif
+
+    assert(m_hDevice != 0);
     return KsSynchronousDeviceControl(m_hDevice, IOCTL_KS_PROPERTY, (PVOID)Property, PropertyLength, (PVOID)PropertyData, DataLength, BytesReturned);
 }
 
@@ -1639,8 +1738,11 @@ CKsProxy::KsMethod(
     ULONG DataLength,
     ULONG* BytesReturned)
 {
-    assert(m_hDevice != 0);
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::KsMethod\n");
+#endif
+
+    assert(m_hDevice != 0);
     return KsSynchronousDeviceControl(m_hDevice, IOCTL_KS_METHOD, (PVOID)Method, MethodLength, (PVOID)MethodData, DataLength, BytesReturned);
 }
 
@@ -1653,8 +1755,11 @@ CKsProxy::KsEvent(
     ULONG DataLength,
     ULONG* BytesReturned)
 {
-    assert(m_hDevice != 0);
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::KsEvent\n");
+#endif
+
+    assert(m_hDevice != 0);
     if (EventLength)
         return KsSynchronousDeviceControl(m_hDevice, IOCTL_KS_ENABLE_EVENT, (PVOID)Event, EventLength, (PVOID)EventData, DataLength, BytesReturned);
     else
@@ -1677,7 +1782,9 @@ CKsProxy::Set(
 {
     ULONG BytesReturned;
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::Set\n");
+#endif
 
     if (cbInstanceData)
     {
@@ -1721,7 +1828,9 @@ CKsProxy::Get(
 {
     ULONG BytesReturned;
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::Get\n");
+#endif
 
     if (cbInstanceData)
     {
@@ -1762,7 +1871,9 @@ CKsProxy::QuerySupported(
     KSPROPERTY Property;
     ULONG BytesReturned;
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::QuerySupported\n");
+#endif
 
     Property.Set = guidPropSet;
     Property.Id = dwPropID;
@@ -1787,7 +1898,9 @@ CKsProxy::CreateNodeInstance(
 {
     HRESULT hr;
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::CreateNodeInstance\n");
+#endif
 
     *Interface = NULL;
 
@@ -1812,7 +1925,9 @@ STDMETHODCALLTYPE
 CKsProxy::KsAddAggregate(
     IN REFGUID AggregateClass)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::KsAddAggregate NotImplemented\n");
+#endif
     return E_NOTIMPL;
 }
 
@@ -1821,7 +1936,10 @@ STDMETHODCALLTYPE
 CKsProxy::KsRemoveAggregate(
     REFGUID AggregateClass)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::KsRemoveAggregate NotImplemented\n");
+#endif
+
     return E_NOTIMPL;
 }
 
@@ -1834,8 +1952,10 @@ HRESULT
 STDMETHODCALLTYPE
 CKsProxy::IsDirty()
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::IsDirty Notimplemented\n");
     DebugBreak();
+#endif
     return E_NOTIMPL;
 }
 
@@ -1853,7 +1973,9 @@ CKsProxy::Load(
     ULONG PinId;
     LPOLESTR pMajor, pSub, pFormat;
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::Load\n");
+#endif
 
 #if 0
     ULONG Version = ReadInt(pStm, hr);
@@ -1923,7 +2045,10 @@ CKsProxy::Save(
     IStream *pStm,
     BOOL fClearDirty)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::Save Notimplemented\n");
+#endif
+
     return E_NOTIMPL;
 }
 
@@ -1932,8 +2057,11 @@ STDMETHODCALLTYPE
 CKsProxy::GetSizeMax(
     ULARGE_INTEGER *pcbSize)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::GetSizeMax Notimplemented\n");
     DebugBreak();
+#endif
+
     return E_NOTIMPL;
 }
 
@@ -1945,8 +2073,9 @@ HRESULT
 STDMETHODCALLTYPE
 CKsProxy::DeviceInfo(CLSID *pclsidInterfaceClass, LPWSTR *pwszSymbolicLink)
 {
-
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::DeviceInfo\n");
+#endif
 
     if (!m_DevicePath)
     {
@@ -1971,7 +2100,9 @@ HRESULT
 STDMETHODCALLTYPE
 CKsProxy::Reassociate(void)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::Reassociate\n");
+#endif
 
     if (!m_DevicePath || m_hDevice)
     {
@@ -1994,7 +2125,9 @@ HRESULT
 STDMETHODCALLTYPE
 CKsProxy::Disassociate(void)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::Disassociate\n");
+#endif
 
     if (!m_hDevice)
         return E_HANDLE;
@@ -2012,7 +2145,10 @@ HANDLE
 STDMETHODCALLTYPE
 CKsProxy::KsGetClockHandle()
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::KsGetClockHandle\n");
+#endif
+
     return m_hClock;
 }
 
@@ -2025,7 +2161,10 @@ HANDLE
 STDMETHODCALLTYPE
 CKsProxy::KsGetObjectHandle()
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::KsGetObjectHandle\n");
+#endif
+
     return m_hDevice;
 }
 
@@ -2036,7 +2175,10 @@ HRESULT
 STDMETHODCALLTYPE
 CKsProxy::InitNew( void)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::InitNew\n");
+#endif
+
     return S_OK;
 }
 
@@ -2323,7 +2465,6 @@ CKsProxy::CreatePins()
     KSPIN_DATAFLOW DataFlow;
     KSPIN_COMMUNICATION Communication;
     HRESULT hr;
-    WCHAR Buffer[100];
     LPWSTR PinName;
     IPin * pPin;
     ULONG InputPin = 0;
@@ -2390,8 +2531,12 @@ CKsProxy::CreatePins()
         // store pins
         m_Pins.push_back(pPin);
 
+#ifdef KSPROXY_TRACE
+        WCHAR Buffer[100];
         swprintf(Buffer, L"Index %lu DataFlow %lu Name %s\n", Index, DataFlow, PinName);
         OutputDebugStringW(Buffer);
+#endif
+
     }
 
     return S_OK;
@@ -2402,14 +2547,16 @@ STDMETHODCALLTYPE
 CKsProxy::Load(IPropertyBag *pPropBag, IErrorLog *pErrorLog)
 {
     HRESULT hr;
-    WCHAR Buffer[100];
     VARIANT varName;
     LPGUID pGuid;
     ULONG NumGuids = 0;
     HDEVINFO hList;
     SP_DEVICE_INTERFACE_DATA DeviceInterfaceData;
 
+#ifdef KSPROXY_TRACE
+    WCHAR Buffer[100];
     OutputDebugStringW(L"CKsProxy::Load\n");
+#endif
 
     // read device path
     varName.vt = VT_BSTR;
@@ -2417,14 +2564,18 @@ CKsProxy::Load(IPropertyBag *pPropBag, IErrorLog *pErrorLog)
 
     if (FAILED(hr))
     {
+#ifdef KSPROXY_TRACE
         swprintf(Buffer, L"CKsProxy::Load Read %lx\n", hr);
         OutputDebugStringW(Buffer);
+#endif
         return MAKE_HRESULT(SEVERITY_ERROR, FACILITY_WIN32, GetLastError());
     }
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"DevicePath: ");
     OutputDebugStringW(varName.bstrVal);
     OutputDebugStringW(L"\n");
+#endif
 
     // create device list
     hList = SetupDiCreateDeviceInfoListExW(NULL, NULL, NULL, NULL);
@@ -2453,9 +2604,10 @@ CKsProxy::Load(IPropertyBag *pPropBag, IErrorLog *pErrorLog)
     if (m_hDevice == INVALID_HANDLE_VALUE)
     {
         // failed to open device
+#ifdef KSPROXY_TRACE
         swprintf(Buffer, L"CKsProxy:: failed to open device with %lx\n", GetLastError());
         OutputDebugStringW(Buffer);
-
+#endif
         return MAKE_HRESULT(SEVERITY_ERROR, FACILITY_WIN32, GetLastError());
     }
 
@@ -2493,7 +2645,9 @@ HRESULT
 STDMETHODCALLTYPE
 CKsProxy::Save(IPropertyBag *pPropBag, BOOL fClearDirty, BOOL fSaveAllProperties)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::Save\n");
+#endif
     return E_NOTIMPL;
 }
 
@@ -2506,7 +2660,9 @@ STDMETHODCALLTYPE
 CKsProxy::GetClassID(
     CLSID *pClassID)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::GetClassID\n");
+#endif
     CopyMemory(pClassID, &CLSID_Proxy, sizeof(GUID));
 
     return S_OK;
@@ -2516,8 +2672,21 @@ HRESULT
 STDMETHODCALLTYPE
 CKsProxy::Stop()
 {
-    OutputDebugStringW(L"CKsProxy::Stop : NotImplemented\n");
-    return E_NOTIMPL;
+    HRESULT hr;
+
+#ifdef KSPROXY_TRACE
+    OutputDebugStringW(L"CKsProxy::Stop\n");
+#endif
+
+    EnterCriticalSection(&m_Lock);
+
+    hr = SetPinState(KSSTATE_STOP);
+    if (SUCCEEDED(hr))
+        m_FilterState = State_Stopped;
+
+    LeaveCriticalSection(&m_Lock);
+
+    return hr;
 }
 
 HRESULT
@@ -2526,17 +2695,28 @@ CKsProxy::Pause()
 {
     HRESULT hr = S_OK;
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::Pause\n");
+#endif
 
-    if (m_FilterState == State_Stopped)
+    EnterCriticalSection(&m_Lock);
+
+    if (m_FilterState == State_Running)
     {
-        hr = SetPinState(KSSTATE_PAUSE);
-        if (FAILED(hr))
-            return hr;
-
+        hr = SetPinState(KSSTATE_STOP);
+    }
+    if (SUCCEEDED(hr))
+    {
+        if (m_FilterState == State_Stopped)
+        {
+            hr = SetPinState(KSSTATE_PAUSE);
+        }
     }
 
-    m_FilterState = State_Paused;
+    if (SUCCEEDED(hr))
+        m_FilterState = State_Paused;
+
+    LeaveCriticalSection(&m_Lock);
     return hr;
 
 }
@@ -2548,23 +2728,32 @@ CKsProxy::Run(
 {
     HRESULT hr;
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::Run\n");
+#endif
+
+    EnterCriticalSection(&m_Lock);
 
     if (m_FilterState == State_Stopped)
     {
+        LeaveCriticalSection(&m_Lock);
         // setting filter state to pause
         hr = Pause();
         if (FAILED(hr))
             return hr;
 
+        EnterCriticalSection(&m_Lock);
         assert(m_FilterState == State_Paused);
     }
 
     hr = SetPinState(KSSTATE_RUN);
-    if (FAILED(hr))
-        return hr;
 
-    m_FilterState = State_Running;
+    if (SUCCEEDED(hr))
+    {
+        m_FilterState = State_Running;
+    }
+
+    LeaveCriticalSection(&m_Lock);
     return hr;
 }
 
@@ -2578,6 +2767,7 @@ CKsProxy::SetPinState(
     IKsObject *pObject;
     ULONG BytesReturned;
     KSPROPERTY Property;
+    PIN_INFO PinInfo;
 
     Property.Set = KSPROPSETID_Connection;
     Property.Id = KSPROPERTY_CONNECTION_STATE;
@@ -2602,6 +2792,22 @@ CKsProxy::SetPinState(
         // release connected pin
         TempPin->Release();
 
+        // query for the pin info
+        hr = Pin->QueryPinInfo(&PinInfo);
+
+        if (SUCCEEDED(hr))
+        {
+            if (PinInfo.pFilter)
+                PinInfo.pFilter->Release();
+
+            if (PinInfo.dir == PINDIR_OUTPUT)
+            {
+                hr = COutputPin_SetState(Pin, State);
+                if (SUCCEEDED(hr))
+                    continue;
+            }
+        }
+
         //query IKsObject interface
         hr = Pin->QueryInterface(IID_IKsObject, (void**)&pObject);
 
@@ -2614,9 +2820,11 @@ CKsProxy::SetPinState(
         // now set state
         hr = KsSynchronousDeviceControl(hPin, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)&State, sizeof(KSSTATE), &BytesReturned);
 
+#ifdef KSPROXY_TRACE
         WCHAR Buffer[100];
         swprintf(Buffer, L"CKsProxy::SetPinState Index %u State %u hr %lx\n", Index, State, hr);
         OutputDebugStringW(Buffer);
+#endif
 
         if (FAILED(hr))
             return hr;
@@ -2630,6 +2838,9 @@ CKsProxy::GetState(
     DWORD dwMilliSecsTimeout,
     FILTER_STATE *State)
 {
+    if (!State)
+        return E_POINTER;
+
     *State = m_FilterState;
     return S_OK;
 }
@@ -2649,8 +2860,9 @@ CKsProxy::SetSyncSource(
     ULONG BytesReturned;
     PIN_DIRECTION PinDir;
 
-// Plug In Distributor: IKsClock 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::SetSyncSource\n");
+#endif
 
     // FIXME
     // need locks
@@ -2744,7 +2956,9 @@ CKsProxy::SetSyncSource(
     }
 
     m_ReferenceClock = pClock;
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::SetSyncSource done\n");
+#endif
     return S_OK;
 }
 
@@ -2753,7 +2967,9 @@ STDMETHODCALLTYPE
 CKsProxy::GetSyncSource(
     IReferenceClock **pClock)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::GetSyncSource\n");
+#endif
 
     if (!pClock)
         return E_POINTER;
@@ -2770,7 +2986,10 @@ STDMETHODCALLTYPE
 CKsProxy::EnumPins(
     IEnumPins **ppEnum)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::EnumPins\n");
+#endif
+
     return CEnumPins_fnConstructor(m_Pins, IID_IEnumPins, (void**)ppEnum);
 }
 
@@ -2781,7 +3000,9 @@ CKsProxy::FindPin(
 {
     ULONG PinId;
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::FindPin\n");
+#endif
 
     if (!ppPin)
         return E_POINTER;
@@ -2817,7 +3038,9 @@ CKsProxy::QueryFilterInfo(
     if (!pInfo)
         return E_POINTER;
 
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::QueryFilterInfo\n");
+#endif
 
     pInfo->achName[0] = L'\0';
     pInfo->pGraph = m_pGraph;
@@ -2834,7 +3057,11 @@ CKsProxy::JoinFilterGraph(
     IFilterGraph *pGraph,
     LPCWSTR pName)
 {
-    OutputDebugStringW(L"CKsProxy::JoinFilterGraph\n");
+#ifdef KSPROXY_TRACE
+    WCHAR Buffer[100];
+    swprintf(Buffer, L"CKsProxy::JoinFilterGraph pName %s pGraph %p m_Ref %u\n", pName, pGraph, m_Ref);
+    OutputDebugStringW(Buffer);
+#endif
 
     if (pGraph)
     {
@@ -2856,7 +3083,9 @@ STDMETHODCALLTYPE
 CKsProxy::QueryVendorInfo(
     LPWSTR *pVendorInfo)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::QueryVendorInfo\n");
+#endif
     return StringFromCLSID(CLSID_Proxy, pVendorInfo);
 }
 
@@ -2868,7 +3097,10 @@ HRESULT
 STDMETHODCALLTYPE
 CKsProxy::Register()
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::Register : NotImplemented\n");
+#endif
+
     return E_NOTIMPL;
 }
 
@@ -2876,7 +3108,9 @@ HRESULT
 STDMETHODCALLTYPE
 CKsProxy::Unregister()
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::Unregister : NotImplemented\n");
+#endif
     return E_NOTIMPL;
 }
 
@@ -2887,11 +3121,13 @@ CKsProxy_Constructor(
     REFIID riid,
     LPVOID * ppv)
 {
+#ifdef KSPROXY_TRACE
     WCHAR Buffer[100];
     LPOLESTR pstr;
     StringFromCLSID(riid, &pstr);
     swprintf(Buffer, L"CKsProxy_Constructor pUnkOuter %p riid %s\n", pUnkOuter, pstr);
     OutputDebugStringW(Buffer);
+#endif
 
     CKsProxy * handler = new CKsProxy();
 

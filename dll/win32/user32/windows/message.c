@@ -2448,7 +2448,7 @@ TranslateMessageEx(CONST MSG *lpMsg, DWORD unk)
         case WM_KEYUP:
         case WM_SYSKEYDOWN:
         case WM_SYSKEYUP:
-            return(NtUserTranslateMessage((LPMSG)lpMsg, (HKL)unk));
+            return(NtUserTranslateMessage((LPMSG)lpMsg, unk));
 
         default:
             if ( lpMsg->message & ~WM_MAXIMUM )

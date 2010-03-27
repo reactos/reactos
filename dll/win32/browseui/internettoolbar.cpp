@@ -416,8 +416,8 @@ HRESULT STDMETHODCALLTYPE CMenuCallback::CallbackSM(LPSMDATA psmd, UINT uMsg, WP
 			if ((infoPtr->dwMask & SMIM_FLAGS) != 0)
 				if (psmd->uId == FCIDM_MENU_FAVORITES)
 					infoPtr->dwFlags |= SMIF_DROPCASCADE;
-				else
-					infoPtr->dwFlags |= SMIF_TRACKPOPUP;
+				else{
+				 	infoPtr->dwFlags |= SMIF_TRACKPOPUP;}
 			if ((infoPtr->dwMask & SMIM_ICON) != 0)
 				infoPtr->iIcon = -1;
 			}

@@ -655,9 +655,10 @@ static int macho_parse_symtab(struct macho_file_map* fmap,
             sc->stroff, sc->strsize, (const void**)&stab, (const void**)&stabstr))
         return 0;
 
-    if (!stabs_parse(mdi->module, mdi->module->macho_info->load_addr - fmap->segs_start,
-                       stab, sc->nsyms * sizeof(struct nlist),
-                       stabstr, sc->strsize, macho_stabs_def_cb, mdi))
+    if (!stabs_parse(mdi->module,
+                     mdi->module->format_info[DFI_MACHO]->u.macho_info->load_addr - fmap->segs_start,
+                     stab, sc->nsyms * sizeof(struct nlist),
+                     stabstr, sc->strsize, macho_stabs_def_cb, mdi))
         ret = -1;
 
     macho_unmap_ranges(fmap, sc->symoff, sc->nsyms * sizeof(struct nlist),
@@ -703,7 +704,7 @@ static void macho_finish_stabs(struct module* module, struct hash_table* ht_symt
             {
             case SymTagFunction:
                 func = (struct symt_function*)sym;
-                if (func->address == module->macho_info->load_addr)
+                if (func->address == module->format_info[DFI_MACHO]->u.macho_info->load_addr)
                 {
                     TRACE("Adjusting function %p/%s!%s from 0x%08lx to 0x%08lx\n", func,
                           debugstr_w(module->module.ModuleName), sym->hash_elt.name,
@@ -720,7 +721,7 @@ static void macho_finish_stabs(struct module* module, struct hash_table* ht_symt
                 {
                 case DataIsGlobal:
                 case DataIsFileStatic:
-                    if (data->u.var.offset == module->macho_info->load_addr)
+                    if (data->u.var.offset == module->format_info[DFI_MACHO]->u.macho_info->load_addr)
                     {
                         TRACE("Adjusting data symbol %p/%s!%s from 0x%08lx to 0x%08lx\n",
                               data, debugstr_w(module->module.ModuleName), sym->hash_elt.name,
@@ -879,7 +880,7 @@ BOOL macho_load_debug_info(struct module* module, struct macho_file_map* fmap)
 
     TRACE("(%p, %p/%d)\n", module, fmap, fmap ? fmap->fd : -1);
 
-    if (module->type != DMT_MACHO || !module->macho_info)
+    if (module->type != DMT_MACHO || !module->format_info[DFI_MACHO]->u.macho_info)
     {
         ERR("Bad Mach-O module '%s'\n", debugstr_w(module->module.LoadedImageName));
         return FALSE;
@@ -963,26 +964,34 @@ static BOOL macho_load_file(struct process* pcs, const WCHAR* filename,
 
     if (macho_info->flags & MACHO_INFO_MODULE)
     {
-        struct macho_module_info *macho_module_info =
-            HeapAlloc(GetProcessHeap(), 0, sizeof(struct macho_module_info));
-        if (!macho_module_info) goto leave;
+        struct macho_module_info *macho_module_info;
+        struct module_format*   modfmt =
+            HeapAlloc(GetProcessHeap(), 0, sizeof(struct module_format) + sizeof(struct macho_module_info));
+        if (!modfmt) goto leave;
         macho_info->module = module_new(pcs, filename, DMT_MACHO, FALSE, load_addr,
                                         fmap.segs_size, 0, calc_crc32(fmap.fd));
         if (!macho_info->module)
         {
-            HeapFree(GetProcessHeap(), 0, macho_module_info);
+            HeapFree(GetProcessHeap(), 0, modfmt);
             goto leave;
         }
-        macho_info->module->macho_info = macho_module_info;
-        macho_info->module->macho_info->load_addr = load_addr;
+        macho_module_info = (void*)(modfmt + 1);
+        macho_info->module->format_info[DFI_MACHO] = modfmt;
+
+        modfmt->module       = macho_info->module;
+        modfmt->remove       = NULL;
+        modfmt->loc_compute  = NULL;
+        modfmt->u.macho_info = macho_module_info;
+
+        macho_module_info->load_addr = load_addr;
 
         if (dbghelp_options & SYMOPT_DEFERRED_LOADS)
             macho_info->module->module.SymType = SymDeferred;
         else if (!macho_load_debug_info(macho_info->module, &fmap))
             ret = FALSE;
 
-        macho_info->module->macho_info->in_use = 1;
-        macho_info->module->macho_info->is_loader = 0;
+        macho_info->module->format_info[DFI_MACHO]->u.macho_info->in_use = 1;
+        macho_info->module->format_info[DFI_MACHO]->u.macho_info->is_loader = 0;
         TRACE("module = %p\n", macho_info->module);
     }
 
@@ -1109,7 +1118,7 @@ static BOOL macho_search_and_load_file(struct process* pcs, const WCHAR* filenam
     if ((module = module_is_already_loaded(pcs, filename)))
     {
         macho_info->module = module;
-        module->macho_info->in_use = 1;
+        module->format_info[DFI_MACHO]->u.macho_info->in_use = 1;
         return module->module.SymType;
     }
 
@@ -1231,7 +1240,7 @@ BOOL    macho_synchronize_module_list(struct process* pcs)
     for (module = pcs->lmodules; module; module = module->next)
     {
         if (module->type == DMT_MACHO && !module->is_virtual)
-            module->macho_info->in_use = 0;
+            module->format_info[DFI_MACHO]->u.macho_info->in_use = 0;
     }
 
     ms.pcs = pcs;
@@ -1243,7 +1252,8 @@ BOOL    macho_synchronize_module_list(struct process* pcs)
     while (module)
     {
         if (module->type == DMT_MACHO && !module->is_virtual &&
-            !module->macho_info->in_use && !module->macho_info->is_loader)
+            !module->format_info[DFI_MACHO]->u.macho_info->in_use &&
+            !module->format_info[DFI_MACHO]->u.macho_info->is_loader)
         {
             module_remove(pcs, module);
             /* restart all over */
@@ -1297,7 +1307,7 @@ BOOL macho_read_wine_loader_dbg_info(struct process* pcs)
     TRACE("(%p/%p)\n", pcs, pcs->handle);
     macho_info.flags = MACHO_INFO_DEBUG_HEADER | MACHO_INFO_MODULE;
     if (!macho_search_loader(pcs, &macho_info)) return FALSE;
-    macho_info.module->macho_info->is_loader = 1;
+    macho_info.module->format_info[DFI_MACHO]->u.macho_info->is_loader = 1;
     module_set_module(macho_info.module, S_WineLoaderW);
     return (pcs->dbg_hdr_addr = macho_info.dbg_hdr_addr) != 0;
 }

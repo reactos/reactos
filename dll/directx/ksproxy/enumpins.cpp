@@ -64,6 +64,14 @@ CEnumPins::QueryInterface(
         return NOERROR;
     }
 
+    WCHAR Buffer[100];
+    LPOLESTR lpstr;
+    StringFromCLSID(refiid, &lpstr);
+    swprintf(Buffer, L"CEnumPins::QueryInterface: NoInterface for %s\n", lpstr);
+    OutputDebugStringW(Buffer);
+    CoTaskMemFree(lpstr);
+
+DebugBreak();
     return E_NOINTERFACE;
 }
 
@@ -132,7 +140,10 @@ STDMETHODCALLTYPE
 CEnumPins::Clone(
     IEnumPins **ppEnum)
 {
+#ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CEnumPins::Clone : NotImplemented\n");
+#endif
+
     return E_NOTIMPL;
 }
 

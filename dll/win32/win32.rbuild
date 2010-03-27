@@ -31,6 +31,9 @@
 <directory name="avifil32">
 	<xi:include href="avifil32/avifil32.rbuild" />
 </directory>
+<directory name="batt">
+	<xi:include href="batt/batt.rbuild" />
+</directory>
 <directory name="bcrypt">
 	<xi:include href="bcrypt/bcrypt.rbuild" />
 </directory>
