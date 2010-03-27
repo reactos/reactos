@@ -158,9 +158,9 @@ EXPORTS
   __p__winminor @153
   __p__winver @154
   __p__wpgmptr @155
-;  __pctype_func @156
+  __pctype_func @156
   __pioinfo @157 DATA
-;  __pwctype_func @158
+  __pwctype_func @158
   __pxcptinfoptrs @159
   __set_app_type @160
   __setlc_active @161 DATA
@@ -583,7 +583,7 @@ EXPORTS
   _wcsupr @576
   _wctime @577
 ;  _wctime64 @578
-;  _wctype @579
+  _wctype @579
   _wenviron @580 DATA
   _wexecl @581
   _wexecle @582
