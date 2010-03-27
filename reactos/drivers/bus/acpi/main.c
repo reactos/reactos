@@ -275,7 +275,7 @@ ACPIDispatchDeviceControl(
                       Caps |= SYS_BUTTON_SLEEP;
                   }
               }
-              if (wcsstr(((PPDO_DEVICE_DATA)commonData)->HardwareIDs, L"PNP0C0C"))
+              else if (wcsstr(((PPDO_DEVICE_DATA)commonData)->HardwareIDs, L"PNP0C0C"))
               {
                   DPRINT1("Control method power button reported to power manager\n");
                   Caps |= SYS_BUTTON_POWER;
