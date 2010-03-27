@@ -9,7 +9,6 @@
 /* INCLUDES *******************************************************************/
 
 #include "cmbatt.h"
-#include "ntstatus.h"
 
 /* FUNCTIONS ******************************************************************/
 
@@ -112,8 +111,8 @@ CmBattSendDownStreamIrp(IN PDEVICE_OBJECT DeviceObject,
         if (CmBattDebug & 0x4C)
             DbgPrint("CmBattSendDownStreamIrp: Failed to allocate Irp\n");
         return STATUS_INSUFFICIENT_RESOURCES;
-}
-
+    }
+ 
     /* Call ACPI */
     if (CmBattDebug & 0x40)
         DbgPrint("CmBattSendDownStreamIrp: Irp %x [Tid] %x\n",
@@ -183,13 +182,13 @@ CmBattGetPsrData(IN PDEVICE_OBJECT DeviceObject,
         Status = GetDwordElement(OutputBuffer.Argument, PsrData);
         if (CmBattDebug & 0x440)
             DbgPrint("CmBattGetPsrData: _PSR method returned %x \n", *PsrData);
-}
+    }
     else if (CmBattDebug & 0x44C)
     {
         /* Failure */
         DbgPrint("CmBattGetPsrData: Failed _PSR method - Status (0x%x)\n", Status);
     }
-
+    
     /* Return status */
     return Status;
 }
@@ -228,14 +227,14 @@ CmBattGetStaData(IN PDEVICE_OBJECT DeviceObject,
         Status = GetDwordElement(OutputBuffer.Argument, StaData);
         if (CmBattDebug & 0x440)
             DbgPrint("CmBattGetStaData: _STA method returned %x \n", *StaData);
-}   
+    }
     else if (CmBattDebug & 0x44C)
     {
         /* Failure */
         DbgPrint("CmBattGetStaData: Failed _STA method - Status (0x%x)\n", Status);
         Status = STATUS_NO_SUCH_DEVICE;
     }
-
+    
     /* Return status */
     return Status;
 }
@@ -274,14 +273,14 @@ CmBattGetUniqueId(IN PDEVICE_OBJECT DeviceObject,
         Status = GetDwordElement(OutputBuffer.Argument, UniqueId);
         if (CmBattDebug & 0x440)
             DbgPrint("CmBattGetUniqueId: _UID method returned %x \n", *UniqueId);
-}
+    }
     else if (CmBattDebug & 0x44C)
     {
         /* Failure */
         DbgPrint("CmBattGetUniqueId: Failed _UID method - Status (0x%x)\n", Status);
         Status = STATUS_NO_SUCH_DEVICE;
     }
-
+    
     /* Return status */
     return Status;
 }
@@ -332,65 +331,8 @@ NTAPI
 CmBattGetBstData(PCMBATT_DEVICE_EXTENSION DeviceExtension,
                  PACPI_BST_DATA BstData)
 {
-    PIRP Irp;
-    NTSTATUS Status;
-    KEVENT Event;
-    IO_STATUS_BLOCK IoStatusBlock;
-    PAGED_CODE();
-
-    /* Initialize our wait event */
-    KeInitializeEvent(&Event, SynchronizationEvent, 0);
-    
-    /* Allocate the IRP */
-    Irp = IoBuildDeviceIoControlRequest(IoControlCode,
-                                        DeviceObject,
-                                        InputBuffer,
-                                        InputBufferLength,
-                                        OutputBuffer,
-                                        OutputBufferLength,
-                                        0,
-                                        &Event,
-                                        &IoStatusBlock);
-    if (!Irp)
-    {
-        /* No IRP, fail */
-        if (CmBattDebug & 0x4C)
-            DbgPrint("CmBattSendDownStreamIrp: Failed to allocate Irp\n");
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    /* Call ACPI */
-   if (CmBattDebug & 0x40)
-       DbgPrint("CmBattSendDownStreamIrp: Irp %x [Tid] %x\n", Irp, KeGetCurrentThread());
-    Status = IoCallDriver(DeviceObject, Irp);
-    if (Status == STATUS_PENDING)
-    {
-        /* Wait for completion */
-        KeWaitForSingleObject(&Event,
-                              Executive,
-                              KernelMode,
-                              FALSE,
-                              NULL);
-        Status = Irp->IoStatus.Status;
-    }
-    
-    /* Check if caller wanted output */
-    if (OutputBuffer)
-    {
-        /* Make sure it's valid ACPI output buffer */
-        if ((OutputBuffer->Signature != ACPI_EVAL_OUTPUT_BUFFER_SIGNATURE) ||
-            !(OutputBuffer->Count))
-        {
-            /* It isn't, so set failure code */
-            Status = STATUS_ACPI_INVALID_DATA;
-        }
-    }
-    
-    /* Return status */
-    if (CmBattDebug & 0x40)
-      DbgPrint("CmBattSendDownStreamIrp: Irp %x completed %x! [Tid] %x\n",
-               Irp, Status, KeGetCurrentThread());
-    return Status;
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
-     
+
 /* EOF */
