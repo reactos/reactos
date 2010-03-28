@@ -9,6 +9,7 @@
 	<define name="close">_close</define>
 	<define name="read">_read</define>
 	<define name="write">_write</define>
+	<define name="NO_OLDNAMES">1</define>
 
 	<library>ntdll</library>
 	<library>ws2_32</library>
