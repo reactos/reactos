@@ -173,6 +173,8 @@ DC_vRestoreDC(
         /* Prevent save dc from being restored */
         pdcSave->dclevel.lSaveDepth = 1;
 
+        /* Unlock it */
+        DC_UnlockDc(pdcSave);
         /* Delete the saved dc */
         GreDeleteObject(hdcSave);
     }
