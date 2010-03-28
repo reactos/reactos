@@ -176,7 +176,7 @@ InitDisplayDriver(
                                         QueryTable,
                                         NULL,
                                         NULL);
-        
+
         if (!dwVgaCompatible)
         {
             /* This driver is not a vga driver */
@@ -243,7 +243,7 @@ DisplayDriverQueryRoutine(
     UNREFERENCED_PARAMETER(Context);
     UNREFERENCED_PARAMETER(EntryContext);
 
-    DPRINT1("DisplayDriverQueryRoutine(%S, %S);\n", 
+    DPRINT1("DisplayDriverQueryRoutine(%S, %S);\n",
             ValueName, pwszRegKey);
 
     /* Check if we have a correct entry */
@@ -408,7 +408,7 @@ NtUserEnumDisplayDevices(
     PUNICODE_STRING pustrDevice,
     DWORD iDevNum,
     PDISPLAY_DEVICEW pDisplayDevice,
-    DWORD dwFlags) 		
+    DWORD dwFlags)
 {
     UNICODE_STRING ustrDevice;
     WCHAR awcDevice[CCHDEVICENAME];
@@ -511,7 +511,8 @@ UserEnumCurrentDisplaySettings(
     }
 
     *ppdm = ppdev->pdmwDev;
-    
+    PDEVOBJ_vRelease(ppdev);
+
     return STATUS_SUCCESS;
 }
 
@@ -772,7 +773,7 @@ UserChangeDisplaySettings(
         {
             DPRINT1("Could not open registry key\n");
             lResult = DISP_CHANGE_NOTUPDATED;
-        }       
+        }
     }
 
     /* Check if DEVMODE matches the current mode */
@@ -788,16 +789,16 @@ UserChangeDisplaySettings(
         if (!PDEVOBJ_bSwitchMode(ppdev, pdm))
         {
             DPRINT1("failed to set mode\n");
-            lResult = (lResult == DISP_CHANGE_NOTUPDATED) ? 
+            lResult = (lResult == DISP_CHANGE_NOTUPDATED) ?
                 DISP_CHANGE_FAILED : DISP_CHANGE_RESTART;
         }
-        
+
         /* Send message */
-        
+
     }
 
 leave:
-//    PDEVOBJ_vReleasePdev(ppdev);
+    PDEVOBJ_vRelease(ppdev);
 
     return lResult;
 }
