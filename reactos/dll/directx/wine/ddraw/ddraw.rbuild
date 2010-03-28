@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
-<module name="ddraw" type="win32dll" installbase="system32" installname="ddraw.dll" allowwarnings ="true">
+<module name="ddraw" type="win32dll" installbase="system32" installname="ddraw.dll" allowwarnings ="true" crt="msvcrt">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="ddraw.spec" />
 	<include base="ddraw">.</include>

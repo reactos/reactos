@@ -1,4 +1,4 @@
-<module name="mciwave" type="win32dll" baseaddress="${BASEADDRESS_MCIWAVE}" installbase="system32" installname="mciwave.dll" allowwarnings="true" entrypoint="0">
+<module name="mciwave" type="win32dll" baseaddress="${BASEADDRESS_MCIWAVE}" installbase="system32" installname="mciwave.dll" allowwarnings="true" entrypoint="0" crt="msvcrt">
 	<importlibrary definition="mciwave.spec" />
 	<include base="mciwave">.</include>
 	<include base="ReactOS">include/reactos/wine</include>

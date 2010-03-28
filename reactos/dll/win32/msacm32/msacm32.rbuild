@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="msacm32" type="win32dll" baseaddress="${BASEADDRESS_MSACM32}" installbase="system32" installname="msacm32.dll" unicode="yes">
+<module name="msacm32" type="win32dll" baseaddress="${BASEADDRESS_MSACM32}" installbase="system32" installname="msacm32.dll" unicode="yes" crt="msvcrt">
 	<importlibrary definition="msacm32.spec" />
 	<include base="msacm32">.</include>
 	<include base="ReactOS">include/reactos/wine</include>

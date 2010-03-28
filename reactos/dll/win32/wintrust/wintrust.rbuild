@@ -1,4 +1,4 @@
-<module name="wintrust" type="win32dll" baseaddress="${BASEADDRESS_WINTRUST}" installbase="system32" installname="wintrust.dll" allowwarnings="true">
+<module name="wintrust" type="win32dll" baseaddress="${BASEADDRESS_WINTRUST}" installbase="system32" installname="wintrust.dll" allowwarnings="true" crt="MSVCRT">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="wintrust.spec" />
 	<include base="wintrust">.</include>

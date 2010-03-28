@@ -1,4 +1,4 @@
-<module name="msg711.acm" type="win32dll" baseaddress="${BASEADDRESS_MSG711ACM}" installbase="system32" installname="msg711.acm" allowwarnings="true" entrypoint="0">
+<module name="msg711.acm" type="win32dll" baseaddress="${BASEADDRESS_MSG711ACM}" installbase="system32" installname="msg711.acm" allowwarnings="true" entrypoint="0" crt="msvcrt">
 	<importlibrary definition="msg711.acm.spec" />
 	<include base="msg711.acm">.</include>
 	<include base="ReactOS">include/reactos/wine</include>

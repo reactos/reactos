@@ -28,8 +28,7 @@ extern "C" {
 #endif
 
 #ifndef assert
-//#define assert(_Expression) (void)((!!(_Expression)) || (_assert(#_Expression,__FILE__,__LINE__),0))
-#define assert(_Expression) (void)((!!(_Expression)))// || (_wassert(_CRT_WIDE(#_Expression),_CRT_WIDE(__FILE__),__LINE__),0))
+#define assert(_Expression) (void)((!!(_Expression)) || (_assert(#_Expression,__FILE__,__LINE__),0))
 #endif
 
 #ifndef wassert
