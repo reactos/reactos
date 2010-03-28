@@ -22,6 +22,11 @@ ULONG_PTR KernelBase;
 
 /***************************************************************************/
 
+VOID NTAPI HalpInitializePICs(IN BOOLEAN EnableInterrupts)
+{
+    UNIMPLEMENTED;
+}
+
 VOID
 HalpInitPhase0(PLOADER_PARAMETER_BLOCK LoaderBlock)
 
