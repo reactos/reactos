@@ -374,6 +374,8 @@ ASSERT(pdc->rosdc.hGCClipRgn);
 
     PATH_Delete(pdc->dclevel.hPath);
 
+    PDEVOBJ_vRelease(pdc->ppdev) ;
+
     return TRUE;
 }
 
@@ -652,8 +654,6 @@ NtGdiCreateCompatibleDC(HDC hdc)
 
     /* Allocate a dc attribute */
     DC_AllocDcAttr(pdcNew);
-
-    PDEVOBJ_vRelease(ppdev);
 
     // HACK!
     DC_vSelectSurface(pdcNew, psurfDefaultBitmap);
