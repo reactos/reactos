@@ -2771,12 +2771,12 @@ IopUpdateRootKey(VOID)
    if (IopIsAcpiComputer())
    {
       InitializeObjectAttributes(&ObjectAttributes, &HalAcpiDevice, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, hRoot, NULL);
-      Status = ZwCreateKey(&hHalAcpiDevice, KEY_CREATE_SUB_KEY, &ObjectAttributes, 0, NULL, REG_OPTION_VOLATILE, NULL);
+      Status = ZwCreateKey(&hHalAcpiDevice, KEY_CREATE_SUB_KEY, &ObjectAttributes, 0, NULL, 0, NULL);
       ZwClose(hRoot);
       if (!NT_SUCCESS(Status))
          return Status;
       InitializeObjectAttributes(&ObjectAttributes, &HalAcpiId, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, hHalAcpiDevice, NULL);
-      Status = ZwCreateKey(&hHalAcpiId, KEY_CREATE_SUB_KEY, &ObjectAttributes, 0, NULL, REG_OPTION_VOLATILE, NULL);
+      Status = ZwCreateKey(&hHalAcpiId, KEY_CREATE_SUB_KEY, &ObjectAttributes, 0, NULL, 0, NULL);
       ZwClose(hHalAcpiDevice);
       if (!NT_SUCCESS(Status))
          return Status;
