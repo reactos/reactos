@@ -151,6 +151,7 @@ dll\cpl\timedate\timedate.cpl                       1
 ;dll\cpl\usrmgr\usrmgr.cpl                          1
 
 dll\directx\amstream\amstream.dll                   1
+dll\directx\bdaplgin\bdaplgin.ax                    1
 dll\directx\dinput\dinput.dll                       1
 dll\directx\dinput8\dinput8.dll                     1
 dll\directx\dmusic\dmusic.dll                       1
@@ -164,6 +165,8 @@ dll\directx\devenum\devenum.dll                     1
 dll\directx\ksproxy\ksproxy.ax                      1
 dll\directx\ksuser\ksuser.dll                       1
 dll\directx\msdmo\msdmo.dll                         1
+dll\directx\msdvbnp\msdvbnp.ax                      1
+dll\directx\msvidctl\msvidctl.dll                   1
 dll\directx\quartz\quartz.dll                       1
 dll\directx\qedit\qedit.dll                         1
 dll\directx\wine\d3d8\d3d8.dll                      1

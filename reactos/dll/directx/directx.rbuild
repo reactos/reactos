@@ -43,6 +43,12 @@
 	<directory name="msdmo">
 		<xi:include href="msdmo/msdmo.rbuild" />
 	</directory>
+	<directory name="msdvbnp">
+		<xi:include href="msdvbnp/msdvbnp.rbuild" />
+	</directory>
+	<directory name="msvidctl">
+		<xi:include href="msvidctl/msvidctl.rbuild" />
+	</directory>
 	<directory name="qedit">
 		<xi:include href="qedit/qedit.rbuild" />
 	</directory>

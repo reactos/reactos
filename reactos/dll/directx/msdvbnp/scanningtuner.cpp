@@ -287,7 +287,7 @@ CScanningTunner::performDVBTTune(
     IDVBTuneRequest * pDVBTRequest,
     IDVBTLocator *pDVBTLocator)
 {
-    HRESULT hr;
+    HRESULT hr = S_OK;
     ULONG Index;
     IBDA_Topology *pTopo;
     IUnknown *pNode;

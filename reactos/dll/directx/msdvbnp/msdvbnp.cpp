@@ -48,7 +48,27 @@ HRESULT
 WINAPI
 DllUnregisterServer(void)
 {
-    return S_OK;
+    ULONG Index = 0;
+    LPOLESTR pStr;
+    HRESULT hr = S_OK;
+    HKEY hClass;
+
+    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, L"CLSID", 0, KEY_SET_VALUE, &hClass) != ERROR_SUCCESS)
+        return E_FAIL;
+
+    do
+    {
+        hr = StringFromCLSID(*InterfaceTable[Index].riid, &pStr);
+        if (FAILED(hr))
+            break;
+
+        RegDeleteKeyW(hClass, pStr);
+        CoTaskMemFree(pStr);
+        Index++;
+    }while(InterfaceTable[Index].lpfnCI != 0);
+
+    RegCloseKey(hClass);
+    return hr;
 }
 
 extern "C"
@@ -57,7 +77,39 @@ HRESULT
 WINAPI
 DllRegisterServer(void)
 {
-    return S_OK;
+    ULONG Index = 0;
+    LPOLESTR pStr;
+    HRESULT hr = S_OK;
+    HKEY hClass, hKey, hSubKey;
+    static LPCWSTR ModuleName = L"msdvbnp.ax";
+    static LPCWSTR ThreadingModel = L"Both";
+
+    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, L"CLSID", 0, KEY_WRITE, &hClass) != ERROR_SUCCESS)
+        return E_FAIL;
+
+    do
+    {
+        hr = StringFromCLSID(*InterfaceTable[Index].riid, &pStr);
+        if (FAILED(hr))
+            break;
+
+        if (RegCreateKeyExW(hClass, pStr, 0, 0, 0, KEY_WRITE, NULL, &hKey, 0) == ERROR_SUCCESS)
+        {
+            if (RegCreateKeyExW(hKey, L"InprocServer32", 0, 0, 0, KEY_WRITE, NULL, &hSubKey, 0) == ERROR_SUCCESS)
+            {
+                RegSetValueExW(hSubKey, 0, 0, REG_SZ, (const BYTE*)ModuleName, (wcslen(ModuleName) + 1) * sizeof(WCHAR));
+                RegSetValueExW(hSubKey, L"ThreadingModel", 0, REG_SZ, (const BYTE*)ThreadingModel, (wcslen(ThreadingModel) + 1) * sizeof(WCHAR));
+                RegCloseKey(hSubKey);
+            }
+            RegCloseKey(hKey);
+        }
+
+        CoTaskMemFree(pStr);
+        Index++;
+    }while(InterfaceTable[Index].lpfnCI != 0);
+
+    RegCloseKey(hClass);
+    return hr;
 }
 
 KSDDKAPI
