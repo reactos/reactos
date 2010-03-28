@@ -14,4 +14,8 @@ void _fpreset (void)
   (* __MINGW_IMP_SYMBOL(_fpreset))();
 }
 
+#ifdef __GNUC__
 void __attribute__ ((alias ("_fpreset"))) fpreset(void);
+#else
+void fpreset(void) { _fpreset(); }
+#endif
