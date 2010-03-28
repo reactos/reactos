@@ -37,8 +37,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 /* GLOBALS *******************************************************************/
 
-#define DSS_DEFAULT 0x0040  /* Make it bold */
-
 static const WORD wPattern_AA55[8] = { 0xaaaa, 0x5555, 0xaaaa, 0x5555,
                                        0xaaaa, 0x5555, 0xaaaa, 0x5555 };
 
