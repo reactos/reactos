@@ -61,6 +61,7 @@ rmdir==_rmdir
 rmtmp==_rmtmp
 searchenv==_searchenv
 setmode==_setmode
+snprintf=_snprintf
 sopen==_sopen
 spawnl==_spawnl
 spawnle==_spawnle
