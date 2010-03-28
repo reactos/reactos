@@ -1,8 +1,8 @@
 Index: internal.h
 ===================================================================
---- internal.h	(Revision 43956)
+--- internal.h	(Revision 46537)
 +++ internal.h	(Arbeitskopie)
-@@ -32,6 +32,12 @@
+@@ -35,6 +35,12 @@
  #define __IOINFO_TM_UTF8 1
  #define __IOINFO_TM_UTF16LE 2
  
@@ -15,7 +15,7 @@ Index: internal.h
    typedef struct {
      intptr_t osfhnd;
      char osfile;
-@@ -43,6 +49,10 @@
+@@ -46,6 +52,10 @@
      char pipech2[2];
    } ioinfo;
  
@@ -28,7 +28,7 @@ Index: internal.h
  #define _pioinfo(i) (__pioinfo[(i) >> 5] + ((i) & (IOINFO_ARRAY_ELTS - 1)))
 Index: oscalls.h
 ===================================================================
---- oscalls.h	(Revision 43956)
+--- oscalls.h	(Revision 46537)
 +++ oscalls.h	(Arbeitskopie)
 @@ -30,6 +30,11 @@
  #endif
@@ -55,7 +55,7 @@ Index: oscalls.h
  #endif
 Index: sect_attribs.h
 ===================================================================
---- sect_attribs.h	(Revision 43956)
+--- sect_attribs.h	(Revision 46537)
 +++ sect_attribs.h	(Arbeitskopie)
 @@ -10,7 +10,7 @@
  #define _ATTRIBUTES shared
