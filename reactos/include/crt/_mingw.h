@@ -184,7 +184,7 @@ allow GCC to optimize away some EH unwind code, at least in DW2 case.  */
 #define USE_MINGW_SETJMP_TWO_ARGS
 #endif
 
-/* Diable deprecation for now! */
+/* Disable deprecation for now! */
 #define _CRT_SECURE_NO_DEPRECATE
 #define _CRT_SECURE_NO_DEPRECATE_CORE
 #ifdef __WINESRC__
@@ -197,33 +197,7 @@ allow GCC to optimize away some EH unwind code, at least in DW2 case.  */
 #define _CRT_UNUSED(x) (void)x
 #endif
 
-#if defined(__x86__)
-#define __MINGW_USE_UNDERSCORE_PREFIX 1
-#else
-#define __MINGW_USE_UNDERSCORE_PREFIX 0
-#endif
-
-#if __MINGW_USE_UNDERSCORE_PREFIX == 0
-#define __MINGW_IMP_SYMBOL(sym)	__imp_##sym
-#define __MINGW_USYMBOL(sym) sym
-#else
-#define __MINGW_IMP_SYMBOL(sym)	_imp__##sym
-#define __MINGW_USYMBOL(sym) _##sym
-#endif
-
-#if defined(__x86__)
-/* Hack, for bug in ld.  Will be removed soon.  */
-#define __ImageBase _image_base__
-/* This symbol is defined by the linker.  */
-extern char __ImageBase;
-#elif defined(__x86_64__)
-/* Hack, for bug in ld.  Will be removed soon.  */
-#define __ImageBase __image_base__
-/* This symbol is defined by the linker.  */
-extern char __ImageBase;
-#else
-#error FIXME: Unsupported __ImageBase implementation.
-#endif
+#include "_mingw_mac.h"
 
 #endif /* !_INC_MINGW */
 
