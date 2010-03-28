@@ -6,10 +6,13 @@
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
-#ifdef _MSC_VER
+#ifdef _USE_ML
 
 /* Allow ".name" identifiers */
 OPTION DOTNAME
+
+.586
+.MODEL FLAT
 
 /* Hex numbers need to be in 01ABh format */
 #define HEX(x) 0##x##h
@@ -48,7 +51,11 @@ ENDM
 ENDM
 
 .code64 MACRO
-  .code
+    .code
+ENDM
+
+.code32 MACRO
+    .code
 ENDM
 
 UNIMPLEMENTED MACRO name
@@ -107,6 +114,13 @@ ENDM
 
 /* MASM needs an END tag */
 #define END
+
+.macro .MODEL model
+.endm
+
+.macro .code
+    .text
+.endm
 
 /* Macros for x64 stack unwind OPs */
 
@@ -171,5 +185,6 @@ code = 1
 #define if .if
 #define endif .endif
 #define else .else
+#define elseif .elseif
 
 #endif
