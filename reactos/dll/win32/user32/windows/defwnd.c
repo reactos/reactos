@@ -851,6 +851,10 @@ DefWndHandleWindowPosChanging(HWND hWnd, WINDOWPOS* Pos)
     return 0;
 }
 
+/* Undocumented flags. */
+#define SWP_NOCLIENTMOVE          0x0800
+#define SWP_NOCLIENTSIZE          0x1000
+
 LRESULT
 DefWndHandleWindowPosChanged(HWND hWnd, WINDOWPOS* Pos)
 {

@@ -18,7 +18,7 @@
  * @implemented
  */
 HWINSTA WINAPI
-CreateWindowStationA(LPCSTR lpwinsta,
+CreateWindowStationA(LPSTR lpwinsta,
 		     DWORD dwReserved,
 		     ACCESS_MASK dwDesiredAccess,
 		     LPSECURITY_ATTRIBUTES lpsa)
@@ -52,7 +52,7 @@ CreateWindowStationA(LPCSTR lpwinsta,
  * @implemented
  */
 HWINSTA WINAPI
-CreateWindowStationW(LPCWSTR lpwinsta,
+CreateWindowStationW(LPWSTR lpwinsta,
 		     DWORD dwReserved,
 		     ACCESS_MASK dwDesiredAccess,
 		     LPSECURITY_ATTRIBUTES lpsa)
@@ -266,7 +266,7 @@ EnumWindowStationsW(WINSTAENUMPROCW EnumFunc,
  * @implemented
  */
 HWINSTA WINAPI
-OpenWindowStationA(LPCSTR lpszWinSta,
+OpenWindowStationA(LPSTR lpszWinSta,
 		   BOOL fInherit,
 		   ACCESS_MASK dwDesiredAccess)
 {
@@ -298,7 +298,7 @@ OpenWindowStationA(LPCSTR lpszWinSta,
  * @implemented
  */
 HWINSTA WINAPI
-OpenWindowStationW(LPCWSTR lpszWinSta,
+OpenWindowStationW(LPWSTR lpszWinSta,
 		   BOOL fInherit,
 		   ACCESS_MASK dwDesiredAccess)
 {

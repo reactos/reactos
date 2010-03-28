@@ -69,7 +69,6 @@ extern "C" {
 #define DI_MASK	1
 #define DI_NORMAL	3
 #define DI_APPBANDING 1
-#define DI_NOMIRROR	16
 #define EMR_HEADER	1
 #define EMR_POLYBEZIER 2
 #define EMR_POLYGON	3
@@ -185,19 +184,12 @@ extern "C" {
 #define EMR_SETICMPROFILEW 113
 #define EMR_ALPHABLEND 114
 #define EMR_ALPHADIBBLEND 115
-#define EMR_SETLAYOUT 115
 #define EMR_TRANSPARENTBLT 116
 #define EMR_TRANSPARENTDIB 117
-#define EMR_RESERVED_117 117
 #define EMR_GRADIENTFILL 118
 #define EMR_SETLINKEDUFIS 119
 #define EMR_SETTEXTJUSTIFICATION 120
 #define EMR_COLORMATCHTOTARGETW 121
-#define EMR_CREATECOLORSPACEW 122
-
-#define EMR_MIN 1
-#define EMR_MAX 122
-
 #endif
 #define ENHMETA_SIGNATURE 1179469088
 #define EPS_SIGNATURE 0x46535045
@@ -273,16 +265,6 @@ extern "C" {
 #define META_CREATEFONTINDIRECT	0x2FB
 #define META_CREATEBRUSHINDIRECT	0x2FC
 #define META_CREATEREGION	0x6FF
-#define META_DRAWTEXT	0x062F
-#define META_RESETDC	0x014C
-#define META_STARTDOC	0x014D
-#define META_STARTPAGE	0x004F
-#define META_ENDPAGE	0x0050
-#define META_ABORTDOC	0x0052
-#define META_ENDDOC	0x005E
-#define META_CREATEBRUSH	0x00F8
-#define META_CREATEBITMAPINDIRECT	0x02FD
-#define META_CREATEBITMAP	0x06FE
 #define PT_MOVETO	6
 #define PT_LINETO	2
 #define PT_BEZIERTO	4
@@ -397,17 +379,6 @@ extern "C" {
 #define JOHAB_CHARSET	130
 #define VIETNAMESE_CHARSET	163
 #define MAC_CHARSET 77
-/* I don't know if the values of *_CHARSET macros are defined in Windows
- * or if we can choose them as we want. -- srtxg
- */
-#define VISCII_CHARSET        (BYTE)240 /* viscii1.1-1 */
-#define TCVN_CHARSET          (BYTE)241 /* tcvn-0 */
-#define KOI8_CHARSET          (BYTE)242 /* koi8-{r,u,ru} */
-#define ISO3_CHARSET          (BYTE)243 /* iso8859-3 */
-#define ISO4_CHARSET          (BYTE)244 /* iso8859-4 */
-#define ISO10_CHARSET         (BYTE)245 /* iso8859-10 */
-#define CELTIC_CHARSET        (BYTE)246 /* iso8859-14 */
-
 #define OUT_DEFAULT_PRECIS	0
 #define OUT_STRING_PRECIS	1
 #define OUT_CHARACTER_PRECIS	2
@@ -429,8 +400,6 @@ extern "C" {
 #define PROOF_QUALITY	2
 #define NONANTIALIASED_QUALITY 3
 #define ANTIALIASED_QUALITY 4
-#define CLEARTYPE_QUALITY 5
-#define CLEARTYPE_NATURAL_QUALITY 6
 #define DEFAULT_PITCH	0
 #define FIXED_PITCH	1
 #define VARIABLE_PITCH	2
@@ -593,7 +562,6 @@ extern "C" {
 #define PS_TYPE_MASK	983040
 #define ALTERNATE	1
 #define WINDING	2
-#define POLYFILL_LAST	2
 #define DC_BINNAMES	12
 #define DC_BINS	6
 #define DC_COPIES	18
@@ -633,7 +601,6 @@ extern "C" {
 #define DCBA_FACEDOWNRIGHT	259
 #define FLOODFILLBORDER 0
 #define FLOODFILLSURFACE 1
-#define ETO_GRAYED            0x00001
 #define ETO_OPAQUE            0x00002
 #define ETO_CLIPPED           0x00004
 #if (WINVER >= 0x0400)
@@ -844,16 +811,8 @@ extern "C" {
 #define GGO_GRAY8_BITMAP 6
 #define GGO_GLYPH_INDEX 128
 #define GGO_UNHINTED 256
-#ifdef __WINESRC__
-#define WINE_GGO_GRAY16_BITMAP 0x10
-#define WINE_GGO_HRGB_BITMAP   0x11
-#define WINE_GGO_HBGR_BITMAP   0x12
-#define WINE_GGO_VRGB_BITMAP   0x13
-#define WINE_GGO_VBGR_BITMAP   0x14
-#endif
 #define GM_COMPATIBLE 1
 #define GM_ADVANCED 2
-#define GM_LAST     2
 #define MM_ANISOTROPIC 8
 #define MM_HIENGLISH 5
 #define MM_HIMETRIC 3
@@ -877,12 +836,6 @@ extern "C" {
 #define PT_CLOSEFIGURE 1
 #define TT_AVAILABLE 1
 #define TT_ENABLED 2
-
-#ifdef __WINESRC__
-#define WINE_TT_SUBPIXEL_RENDERING_ENABLED 0x4000
-#define WINE_TT_HINTER_ENABLED 0x8000
-#endif
-
 #define BLACK_BRUSH 4
 #define DKGRAY_BRUSH 3
 #define GRAY_BRUSH 2
@@ -938,7 +891,6 @@ extern "C" {
 #define MWT_MAX MWT_RIGHTMULTIPLY
 #define OPAQUE 2
 #define TRANSPARENT 1
-#define BKMODE_LAST  2
 #define BLACKONWHITE 1
 #define WHITEONBLACK 2
 #define COLORONCOLOR 3
@@ -1065,7 +1017,6 @@ extern "C" {
 #define BS_DIBPATTERNPT	6
 #define BS_PATTERN8X8	7
 #define BS_DIBPATTERN8X8	8
-#define BS_MONOPATTERN	9
 #define LCS_CALIBRATED_RGB	0
 #define LCS_DEVICE_RGB	1
 #define LCS_DEVICE_CMYK	2
@@ -2211,26 +2162,6 @@ typedef struct tagEMRSTRETCHBLT {
 	LONG cxSrc;
 	LONG cySrc;
 } EMRSTRETCHBLT,*PEMRSTRETCHBLT;
-typedef struct tagEMRALPHABLEND {
-	EMR      emr;
-	RECTL    rclBounds;
-	LONG     xDest;
-	LONG     yDest;
-	LONG     cxDest;
-	LONG     cyDest;
-	DWORD    dwRop;
-	LONG     xSrc;
-	LONG     ySrc;
-	XFORM    xformSrc;
-	COLORREF crBkColorSrc;
-	DWORD    iUsageSrc;
-	DWORD    offBmiSrc;
-	DWORD    cbBmiSrc;
-	DWORD    offBitsSrc;
-	DWORD    cbBitsSrc;
-	LONG     cxSrc;
-	LONG     cySrc;
-} EMRALPHABLEND, *PEMRALPHABLEND;
 typedef struct tagEMRSTRETCHDIBITS {
 	EMR emr;
 	RECTL rclBounds;
@@ -2984,17 +2915,12 @@ int WINAPI FillRgn(HDC,HRGN,HBRUSH);
 BOOL WINAPI FixBrushOrgEx(HDC,int,int,LPPOINT);
 BOOL WINAPI FlattenPath(HDC);
 BOOL WINAPI FloodFill(HDC,int,int,COLORREF);
-BOOL WINAPI FrameRgn(HDC,HRGN,HBRUSH,INT,INT);
 BOOL WINAPI GdiAlphaBlend(HDC,int,int,int,int,HDC,int,int,int,int,BLENDFUNCTION);
 BOOL WINAPI GdiComment(HDC,UINT,const BYTE*);
-DEVMODEW * WINAPI GdiConvertToDevmodeW(const DEVMODEA *);
+DEVMODEW* WINAPI GdiConvertToDevmodeW(const DEVMODEA *);
 BOOL WINAPI GdiFlush(void);
-LONG WINAPI GdiGetCharDimensions(HDC, LPTEXTMETRICW, LONG *);
-DWORD WINAPI GdiGetCodePage(HDC);
 DWORD WINAPI GdiGetBatchLimit(void);
 DWORD WINAPI GdiSetBatchLimit(DWORD);
-BOOL WINAPI GdiGradientFill(HDC,PTRIVERTEX,ULONG,PVOID,ULONG,ULONG);
-BOOL WINAPI GdiIsMetaFileDC(HDC);
 #define GetCValue(cmyk) ((BYTE)(cmyk))
 #define GetMValue(cmyk) ((BYTE)((cmyk)>> 8))
 #define GetYValue(cmyk) ((BYTE)((cmyk)>>16))
@@ -3091,8 +3017,8 @@ UINT WINAPI GetSystemPaletteEntries(HDC,UINT,UINT,LPPALETTEENTRY);
 UINT WINAPI GetSystemPaletteUse(HDC);
 UINT WINAPI GetTextAlign(HDC);
 int WINAPI GetTextCharacterExtra(HDC);
-UINT WINAPI GetTextCharset(HDC);
-UINT WINAPI GetTextCharsetInfo(HDC,LPFONTSIGNATURE,DWORD);
+int WINAPI GetTextCharset(HDC);
+int WINAPI GetTextCharsetInfo(HDC,LPFONTSIGNATURE,DWORD);
 COLORREF WINAPI GetTextColor(HDC);
 BOOL WINAPI GetTextExtentExPointA(HDC,LPCSTR,int,int,LPINT,LPINT,LPSIZE);
 BOOL WINAPI GetTextExtentExPointW( HDC,LPCWSTR,int,int,LPINT,LPINT,LPSIZE );
@@ -3133,11 +3059,11 @@ BOOL WINAPI PlayMetaFileRecord(HDC,LPHANDLETABLE,LPMETARECORD,UINT);
 BOOL WINAPI PlgBlt(HDC,const POINT*,HDC,int,int,int,int,HBITMAP,int,int);
 BOOL WINAPI PolyBezier(HDC,const POINT*,DWORD);
 BOOL WINAPI PolyBezierTo(HDC,const POINT*,DWORD);
-BOOL WINAPI PolyDraw(HDC,const POINT*,const BYTE*,DWORD);
+BOOL WINAPI PolyDraw(HDC,const POINT*,const BYTE*,int);
 BOOL WINAPI Polygon(HDC,const POINT*,int);
 BOOL WINAPI Polyline(HDC,const POINT*,int);
 BOOL WINAPI PolylineTo(HDC,const POINT*,DWORD);
-BOOL WINAPI PolyPolygon(HDC,const POINT*,const INT*,DWORD);
+BOOL WINAPI PolyPolygon(HDC,const POINT*,const INT*,int);
 BOOL WINAPI PolyPolyline(HDC,const POINT*,const DWORD*,DWORD);
 BOOL WINAPI PolyTextOutA(HDC,const POLYTEXTA*,int);
 BOOL WINAPI PolyTextOutW(HDC,const POLYTEXTW*,int);
@@ -3168,7 +3094,7 @@ HGDIOBJ WINAPI SelectObject(HDC,HGDIOBJ);
 HPALETTE WINAPI SelectPalette(HDC,HPALETTE,BOOL);
 int WINAPI SetAbortProc(HDC,ABORTPROC);
 int WINAPI SetArcDirection(HDC,int);
-LONG WINAPI SetBitmapBits(HBITMAP,LONG,PCVOID);
+LONG WINAPI SetBitmapBits(HBITMAP,DWORD,PCVOID);
 BOOL WINAPI SetBitmapDimensionEx(HBITMAP,int,int,LPSIZE);
 COLORREF WINAPI SetBkColor(HDC,COLORREF);
 int WINAPI SetBkMode(HDC,int);
@@ -3204,7 +3130,6 @@ BOOL WINAPI SetPixelFormat(HDC,int,const PIXELFORMATDESCRIPTOR*);
 BOOL WINAPI SetPixelV(HDC,int,int,COLORREF);
 int WINAPI SetPolyFillMode(HDC,int);
 BOOL WINAPI SetRectRgn(HRGN,int,int,int,int);
-INT WINAPI SetRelAbs(HDC,INT);
 int WINAPI SetROP2(HDC,int);
 int WINAPI SetStretchBltMode(HDC,int);
 UINT WINAPI SetSystemPaletteUse(HDC,UINT);
@@ -3423,22 +3348,6 @@ typedef DISPLAY_DEVICEA DISPLAY_DEVICE, *PDISPLAY_DEVICE, *LPDISPLAY_DEVICE;
 #define wglUseFontOutlines wglUseFontOutlinesA
 #endif
 #endif
-
-#ifdef __WINESRC__
-/* the DC hook support is only exported on Win16, the 32-bit version is a Wine extension */
-
-#define DCHC_INVALIDVISRGN      0x0001
-#define DCHC_DELETEDC           0x0002
-#define DCHF_INVALIDATEVISRGN   0x0001
-#define DCHF_VALIDATEVISRGN     0x0002
-
-typedef BOOL (CALLBACK *DCHOOKPROC)(HDC,WORD,DWORD_PTR,LPARAM);
-
-WINGDIAPI DWORD_PTR WINAPI GetDCHook(HDC,DCHOOKPROC*);
-WINGDIAPI BOOL      WINAPI SetDCHook(HDC,DCHOOKPROC,DWORD_PTR);
-WINGDIAPI WORD      WINAPI SetHookFlags(HDC,WORD);
-WINGDIAPI INT       WINAPI SelectVisRgn(HDC,HRGN);
-#endif /* __WINESRC__ */
 
 #ifdef _MSC_VER
 #pragma warning(pop)
