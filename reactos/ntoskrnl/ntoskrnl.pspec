@@ -728,7 +728,8 @@
 @ stdcall KeWaitForSingleObject(ptr long long long ptr)
 @ FASTCALL KefAcquireSpinLockAtDpcLevel(ptr)
 @ FASTCALL KefReleaseSpinLockFromDpcLevel(ptr)
-@ stdcall -arch=i386 Kei386EoiHelper(ptr) /* FIXME: Evaluate decision */
+@ stdcall -arch=i386 Kei386EoiHelper()
+@ fastcall -arch=i386 KiEoiHelper(ptr) /* FIXME: Evaluate decision */
 @ FASTCALL KiAcquireSpinLock(ptr)
 @ extern KiBugCheckData
 @ stdcall KiCheckForKernelApcDelivery()
