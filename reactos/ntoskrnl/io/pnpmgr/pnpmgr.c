@@ -2180,10 +2180,10 @@ IopEnumerateDetectedDevices(
    const UNICODE_STRING IdentifierMouse = RTL_CONSTANT_STRING(L"PointerController");
    UNICODE_STRING HardwareIdMouse = RTL_CONSTANT_STRING(L"*PNP0F13\0");
    static ULONG DeviceIndexMouse = 0;
-   const UNICODE_STRING IdentifierParallel = RTL_CONSTANT_STRING(L"PARALLEL");
+   const UNICODE_STRING IdentifierParallel = RTL_CONSTANT_STRING(L"ParallelController");
    UNICODE_STRING HardwareIdParallel = RTL_CONSTANT_STRING(L"*PNP0400\0");
    static ULONG DeviceIndexParallel = 0;
-   const UNICODE_STRING IdentifierFloppy = RTL_CONSTANT_STRING(L"FLOPPY");
+   const UNICODE_STRING IdentifierFloppy = RTL_CONSTANT_STRING(L"FloppyDiskPeripheral");
    UNICODE_STRING HardwareIdFloppy = RTL_CONSTANT_STRING(L"*PNP0700\0");
    static ULONG DeviceIndexFloppy = 0;
    const UNICODE_STRING IdentifierIsa = RTL_CONSTANT_STRING(L"ISA");
@@ -2433,6 +2433,18 @@ IopEnumerateDetectedDevices(
          DeviceIndex = DeviceIndexMouse++;
          IsDeviceDesc = FALSE;
       }
+      else if (RelativePath && RtlCompareUnicodeString(RelativePath, &IdentifierParallel, FALSE) == 0)
+      {
+         pHardwareId = &HardwareIdParallel;
+         DeviceIndex = DeviceIndexParallel++;
+         IsDeviceDesc = FALSE;
+      }
+      else if (RelativePath && RtlCompareUnicodeString(RelativePath, &IdentifierFloppy, FALSE) == 0)
+      {
+         pHardwareId = &HardwareIdFloppy;
+         DeviceIndex = DeviceIndexFloppy++;
+         IsDeviceDesc = FALSE;
+      }
       else if (NT_SUCCESS(Status))
       {
          /* Try to also match the device identifier */
@@ -2456,35 +2468,10 @@ IopEnumerateDetectedDevices(
             IsDeviceDesc = FALSE;
          }
 #endif
-         else /* Now let's detect devices with a device number at the end */
+         else
          {
-            /* First, we remove the number */
-            ValueName.Length -= sizeof(WCHAR);
-
-            /* Let's see if it is a floppy device */
-            if (RtlCompareUnicodeString(&ValueName, &IdentifierFloppy, FALSE) == 0)
-            {
-                pHardwareId = &HardwareIdFloppy;
-                DeviceIndex = DeviceIndexFloppy++;
-                IsDeviceDesc = FALSE;
-            }
-            /* Nope, is it a parallel port? */
-            else if (RtlCompareUnicodeString(&ValueName, &IdentifierParallel, FALSE) == 0)
-            {
-                pHardwareId = &HardwareIdParallel;
-                DeviceIndex = DeviceIndexParallel++;
-                IsDeviceDesc = FALSE;
-            }
-            /* Nope, out of ideas so let's skip this one */
-            else
-            {
-                ValueName.Length += sizeof(WCHAR);
-                DPRINT("Unknown device '%wZ'\n", &ValueName);
-                goto nextdevice;
-            }
-
-            /* Add the number back */
-            ValueName.Length += sizeof(WCHAR);
+            DPRINT("Unknown device '%wZ'\n", &ValueName);
+            goto nextdevice;
          }
       }
       else
