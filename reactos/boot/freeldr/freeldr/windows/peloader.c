@@ -573,7 +573,7 @@ WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 			High = ExportDirectory->NumberOfNames - 1;
 
 			DPRINTM(DPRINT_PELOADER, "WinLdrpBindImportName() looking up import '%s' in #0..#%d\n",
-			        VaToPa(&((PIMAGE_IMPORT_BY_NAME)VaToPa(ThunkData->u1.AddressOfData))->Name[0]), High);
+			        VaToPa(&((PIMAGE_IMPORT_BY_NAME)VaToPa((PVOID)ThunkData->u1.AddressOfData))->Name[0]), High);
 
 			/* Perform a binary-search loop */
 			while (High >= Low)
@@ -586,7 +586,7 @@ WinLdrpBindImportName(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 					(PCHAR)VaToPa(RVA(DllBase, NameTable[Middle])));
 
 				DPRINTM(DPRINT_PELOADER, "Binary search: comparing Import '%s', Export #%ld:'%s' -> %d\n",
-					VaToPa(&((PIMAGE_IMPORT_BY_NAME)VaToPa(ThunkData->u1.AddressOfData))->Name[0]),
+					VaToPa(&((PIMAGE_IMPORT_BY_NAME)VaToPa((PVOID)ThunkData->u1.AddressOfData))->Name[0]),
 					Middle, (PCHAR)VaToPa(RVA(DllBase, NameTable[Middle])), Result);
 
 				/*DPRINTM(DPRINT_PELOADER, "TE->u1.AOD %p, fulladdr %p\n",
