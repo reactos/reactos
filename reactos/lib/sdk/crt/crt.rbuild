@@ -26,6 +26,7 @@
 	<define name="_MSVCRT_" />
 	<define name="_MT" />
 	<define name="_CRTBLD" />
+	<define name="__CRT__NO_INLINE" />
 	<directory name="conio">
 		<file>cgets.c</file>
 		<file>cprintf.c</file>
@@ -140,9 +141,11 @@
 				<file>aullrem_asm.s</file>
 				<file>aullshr_asm.s</file>
 				<file>ceil_asm.s</file>
+				<file>ceilf.S</file>
 				<file>cos_asm.s</file>
 				<file>fabs_asm.s</file>
 				<file>floor_asm.s</file>
+				<file>floorf.S</file>
 				<file>ftol_asm.s</file>
 				<file>log_asm.s</file>
 				<file>log10_asm.s</file>
@@ -153,9 +156,13 @@
 
 				<file>atan2.c</file>
 				<file>ci.c</file>
+				<file>cosf.c</file>
 				<file>exp.c</file>
 				<file>fmod.c</file>
+				<file>fmodf.c</file>
 				<file>ldexp.c</file>
+				<file>sinf.c</file>
+				<file>sqrtf.c</file>
 			</directory>
 			<!-- FIXME: we don't actually implement these... they recursively call themselves through an alias -->
 			<!--<file>j0_y0.c</file>

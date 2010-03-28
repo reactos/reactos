@@ -8,6 +8,7 @@
 	<define name="_NTDLLBUILD_" />
 	<define name="_LIBCNT_" />
 	<define name="_CRTBLD" />
+	<define name="__CRT__NO_INLINE" />
 	<if property="ARCH" value="i386">
 		<define name="__MINGW_IMPORT">"extern __attribute__ ((dllexport))"</define>
 	</if>
