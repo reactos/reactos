@@ -4,22 +4,13 @@
  * No warranty is given; refer to the file DISCLAIMER.PD within this package.
  */
 
-#ifdef CRTDLL
-#undef CRTDLL
-#endif
+#include <ctype.h>
+#undef iscsymf
 
-#include <internal.h>
+int iscsymf (int);
 
-extern int _dowildcard;
-
-#ifdef WPRFLAG
-int __CRTDECL
-__wsetargv (void)
-#else
-int __CRTDECL
-__setargv (void)
-#endif
+int
+iscsymf (int c)
 {
-  _dowildcard = 1;
-  return 0;
+	return __iscsymf(c);
 }

@@ -4,22 +4,13 @@
  * No warranty is given; refer to the file DISCLAIMER.PD within this package.
  */
 
-#ifdef CRTDLL
-#undef CRTDLL
-#endif
+#define __CRT__NO_INLINE
+#include <string.h>
 
-#include <internal.h>
-
-extern int _dowildcard;
-
-#ifdef WPRFLAG
-int __CRTDECL
-__wsetargv (void)
-#else
-int __CRTDECL
-__setargv (void)
-#endif
+#undef strcasecmp
+int strcasecmp (const char *, const char *);
+int
+strcasecmp (const char *sz1, const char *sz2)
 {
-  _dowildcard = 1;
-  return 0;
+  return _stricmp (sz1,sz2);
 }

@@ -1,7 +1,7 @@
 /**
  * This file has no copyright assigned and is placed in the Public Domain.
  * This file is part of the w64 mingw-runtime package.
- * No warranty is given; refer to the file DISCLAIMER within this package.
+ * No warranty is given; refer to the file DISCLAIMER.PD within this package.
  */
 
 #undef CRTDLL
@@ -20,7 +20,6 @@
 #include <tchar.h>
 #include <sect_attribs.h>
 #include <locale.h>
-#include <intrin.h>
 
 #ifndef __winitenv
 extern wchar_t *** __MINGW_IMP_SYMBOL(__winitenv);
@@ -31,6 +30,11 @@ extern wchar_t *** __MINGW_IMP_SYMBOL(__winitenv);
 extern char *** __MINGW_IMP_SYMBOL(__initenv);
 #define __initenv (* __MINGW_IMP_SYMBOL(__initenv))
 #endif
+
+/* Hack, for bug in ld.  Will be removed soon.  */
+#define __ImageBase __MINGW_LSYMBOL(_image_base__)
+/* This symbol is defined by ld.  */
+extern IMAGE_DOS_HEADER __ImageBase;
 
 extern void _fpreset (void);
 #define SPACECHAR _T(' ')
@@ -47,11 +51,7 @@ extern int * __MINGW_IMP_SYMBOL(_commode);
 #define _commode (* __MINGW_IMP_SYMBOL(_commode))
 extern int _dowildcard;
 
-#if defined(__GNUC__)
 int _MINGW_INSTALL_DEBUG_MATHERR __attribute__((weak)) = 0;
-#else
-int _MINGW_INSTALL_DEBUG_MATHERR = 0;
-#endif
 extern int __defaultmatherr;
 extern _CRTIMP void __cdecl _initterm(_PVFV *, _PVFV *);
 
@@ -62,6 +62,7 @@ extern _CRTALLOC(".CRT$XIZ") _PIFV __xi_z[];
 extern _CRTALLOC(".CRT$XCA") _PVFV __xc_a[];
 extern _CRTALLOC(".CRT$XCZ") _PVFV __xc_z[];
 
+/* TLS initialization hook.  */
 extern const PIMAGE_TLS_CALLBACK __dyn_tls_init_callback;
 
 extern _PVFV *__onexitbegin;
@@ -179,7 +180,7 @@ __tmainCRTStartup (void)
 {
   _TCHAR *lpszCommandLine = NULL;
   STARTUPINFO StartupInfo;
-  BOOL inDoubleQuote = FALSE;
+  WINBOOL inDoubleQuote = FALSE;
   memset (&StartupInfo, 0, sizeof (STARTUPINFO));
   
   if (mingw_app_type)

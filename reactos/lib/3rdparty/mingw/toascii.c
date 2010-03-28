@@ -4,22 +4,14 @@
  * No warranty is given; refer to the file DISCLAIMER.PD within this package.
  */
 
-#ifdef CRTDLL
-#undef CRTDLL
-#endif
+#include <ctype.h>
 
-#include <internal.h>
+#undef toascii
 
-extern int _dowildcard;
+int toascii (int);
 
-#ifdef WPRFLAG
-int __CRTDECL
-__wsetargv (void)
-#else
-int __CRTDECL
-__setargv (void)
-#endif
+int
+toascii (int c)
 {
-  _dowildcard = 1;
-  return 0;
+	return __toascii(c);
 }

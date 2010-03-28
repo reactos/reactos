@@ -3,6 +3,10 @@
 <group>
 <module name="mingw_common" type="staticlibrary" isstartuplib="true" crt="dll">
 	<define name="_CRTBLD" />
+
+	<!-- This is to prevent from using data imports directly -->
+	<define name="_M_CEE_PURE" />
+
 	<importlibrary definition="moldname-msvcrt.def" dllname="msvcrt.dll" />
 	<include base="ReactOS">include/reactos/mingw-w64</include>
 	<if property="USERMODE" value="1">
@@ -18,19 +22,18 @@
 	<file>CRT_glob.c</file>
 	<file>crt_handler.c</file>
 	<file>dllentry.c</file>
-	<file>dummy_mingwthrd.c</file>
 	<file>gccmain.c</file>
-	<file>getopt.c</file>
 	<file>gs_support.c</file>
 	<file>merr.c</file>
 	<!-- file>mingw_custom.c</file -->
 	<file>mingw_helpers.c</file>
-	<file>mingwthrd_nomt.c</file>
 	<file>natstart.c</file>
 	<file>pesect.c</file>
 	<file>pseudo-reloc.c</file>
 	<file>pseudo-reloc-list.c</file>
+	<file>tlsmcrt.c</file>
 	<file>tlssup.c</file>
+	<file>tlsthrd.c</file>
 	<file>txtmode.c</file>
 	<file>wildcard.c</file>
 	<file>xncommod.c</file>

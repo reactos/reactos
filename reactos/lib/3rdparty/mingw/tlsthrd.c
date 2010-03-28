@@ -1,9 +1,11 @@
-/*
- * mthr_stub.c
+/**
+ * This file has no copyright assigned and is placed in the Public Domain.
+ * This file is part of the w64 mingw-runtime package.
+ * No warranty is given; refer to the file DISCLAIMER.PD within this package.
  *
- * Implement Mingw-w64 thread-support.
+ * Written by Kai Tietz  <kai.tietz@onevision.com>
  *
- * This file is used by if gcc is built with --enable-threads=win32. 
+ * This file is used by if gcc is built with --enable-threads=win32.
  *
  * Based on version created by Mumit Khan  <khan@nanotech.wisc.edu>
  *
@@ -15,7 +17,7 @@
 #include <windows.h>
 #include <stdlib.h>
 
-BOOL __mingw_TLScallback (HANDLE hDllHandle, DWORD reason, LPVOID reserved);
+WINBOOL __mingw_TLScallback (HANDLE hDllHandle, DWORD reason, LPVOID reserved);
 int ___w64_mingwthr_remove_key_dtor (DWORD key);
 int ___w64_mingwthr_add_key_dtor (DWORD key, void (*dtor)(void *));
 
@@ -42,12 +44,10 @@ ___w64_mingwthr_add_key_dtor (DWORD key, void (*dtor)(void *))
 
   if (__mingwthr_cs_init == 0)
     return 0;
-  new_key = (__mingwthr_key_t *)malloc(sizeof (__mingwthr_key_t));
-
+  new_key = (__mingwthr_key_t *) calloc (1, sizeof (__mingwthr_key_t));
   if (new_key == NULL)
     return -1;
 
-  memset(new_key, 0,sizeof (__mingwthr_key_t));
   new_key->key = key;
   new_key->dtor = dtor;
 
@@ -116,8 +116,8 @@ __mingwthr_run_key_dtors (void)
 
   LeaveCriticalSection (&__mingwthr_cs);
 }
-  
-BOOL
+
+WINBOOL
 __mingw_TLScallback (HANDLE hDllHandle __attribute__ ((__unused__)),
 		     DWORD reason,
 		     LPVOID reserved __attribute__ ((__unused__)))

@@ -1,15 +1,24 @@
 /**
  * This file has no copyright assigned and is placed in the Public Domain.
  * This file is part of the w64 mingw-runtime package.
- * No warranty is given; refer to the file DISCLAIMER within this package.
+ * No warranty is given; refer to the file DISCLAIMER.PD within this package.
  */
 
 #include <windows.h>
 #include <string.h>
 
-BOOL _ValidateImageBase (PBYTE);
+#if defined (_WIN64) && defined (__ia64__)
+#error FIXME: Unsupported __ImageBase implementation.
+#else
+/* Hack, for bug in ld.  Will be removed soon.  */
+#define __ImageBase __MINGW_LSYMBOL(_image_base__)
+/* This symbol is defined by the linker.  */
+extern IMAGE_DOS_HEADER __ImageBase;
+#endif
 
-BOOL
+WINBOOL _ValidateImageBase (PBYTE);
+
+WINBOOL
 _ValidateImageBase (PBYTE pImageBase)
 {
   PIMAGE_DOS_HEADER pDOSHeader;
@@ -122,9 +131,9 @@ _GetPEImageBase (void)
   return pImageBase;
 }
 
-BOOL _IsNonwritableInCurrentImage (PBYTE);
+WINBOOL _IsNonwritableInCurrentImage (PBYTE);
 
-BOOL
+WINBOOL
 _IsNonwritableInCurrentImage (PBYTE pTarget)
 {
   PBYTE pImageBase;

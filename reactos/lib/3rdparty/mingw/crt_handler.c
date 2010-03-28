@@ -1,7 +1,7 @@
 /**
  * This file has no copyright assigned and is placed in the Public Domain.
  * This file is part of the w64 mingw-runtime package.
- * No warranty is given; refer to the file DISCLAIMER within this package.
+ * No warranty is given; refer to the file DISCLAIMER.PD within this package.
  */
 
 #include <windows.h>
@@ -12,6 +12,14 @@
 #include <memory.h>
 #include <signal.h>
 #include <stdio.h>
+
+#if defined (_WIN64) && defined (__ia64__)
+#error FIXME: Unsupported __ImageBase implementation.
+#else
+#define __ImageBase __MINGW_LSYMBOL(_image_base__)
+/* This symbol is defined by the linker.  */
+extern IMAGE_DOS_HEADER __ImageBase;
+#endif
 
 #pragma pack(push,1)
 typedef struct _UNWIND_INFO {
@@ -107,6 +115,8 @@ __mingw_SEH_error_handler (struct _EXCEPTION_RECORD* ExceptionRecord,
 	  (*old_handler) (SIGSEGV);
 	  action = EXCEPTION_CONTINUE_EXECUTION;
 	}
+      else
+        action = EXCEPTION_EXECUTE_HANDLER;
       break;
     case EXCEPTION_ILLEGAL_INSTRUCTION:
     case EXCEPTION_PRIV_INSTRUCTION:
@@ -125,6 +135,8 @@ __mingw_SEH_error_handler (struct _EXCEPTION_RECORD* ExceptionRecord,
 	  (*old_handler) (SIGILL);
 	  action = EXCEPTION_CONTINUE_EXECUTION;
 	}
+      else
+        action = EXCEPTION_EXECUTE_HANDLER;
       break;
     case EXCEPTION_FLT_INVALID_OPERATION:
     case EXCEPTION_FLT_DIVIDE_BY_ZERO:

@@ -1,7 +1,7 @@
 /**
  * This file has no copyright assigned and is placed in the Public Domain.
  * This file is part of the w64 mingw-runtime package.
- * No warranty is given; refer to the file DISCLAIMER within this package.
+ * No warranty is given; refer to the file DISCLAIMER.PD within this package.
  */
 
 #ifndef _INC_INTERNAL
@@ -18,9 +18,12 @@ extern "C" {
 
 #pragma pack(push,_CRT_PACKING)
 
+#ifndef __INTERNAL_FUNC_DEFINED
+#define __INTERNAL_FUNC_DEFINED
   typedef void (__cdecl *_PVFV)(void);
   typedef int (__cdecl *_PIFV)(void);
   typedef void (__cdecl *_PVFI)(int);
+#endif
 
 #if defined (SPECIAL_CRTEXE) && (defined (_DLL) || defined (__GNUC__))
   extern int _commode;
@@ -32,12 +35,6 @@ extern "C" {
 #define __IOINFO_TM_UTF8 1
 #define __IOINFO_TM_UTF16LE 2
 
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable:4214)
-#pragma warning(disable:4820)
-#endif
-
   typedef struct {
     intptr_t osfhnd;
     char osfile;
@@ -48,10 +45,6 @@ extern "C" {
     char unicode : 1;
     char pipech2[2];
   } ioinfo;
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
 #define IOINFO_ARRAY_ELTS (1 << 5)
 
