@@ -39,6 +39,7 @@ InitMetrics(VOID)
     {
         Width = ppdev->gdiinfo.ulHorzRes;
         Height = ppdev->gdiinfo.ulVertRes;
+        PDEVOBJ_vRelease(ppdev);
     }
 
     piSysMet = gpsi->aiSysMet;
