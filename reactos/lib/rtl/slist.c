@@ -30,11 +30,12 @@ RtlInitializeSListHead(
     {
         RtlRaiseStatus(STATUS_DATATYPE_MISALIGNMENT);
     }
+
+    SListHead->Region = 0;
 #endif
 
     /* Zero it */
     SListHead->Alignment = 0;
-    SListHead->Region = 0;
 
 #if defined(_IA64_)
     FeatureBits = __getReg(CV_IA64_CPUID4);
