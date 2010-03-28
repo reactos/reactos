@@ -352,6 +352,7 @@ NtGdiSelectClipPath(
     if (pPath->state != PATH_Closed)
     {
         SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
+        DC_UnlockDc(pdc);
         return FALSE;
     }
 
