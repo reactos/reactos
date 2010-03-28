@@ -57,7 +57,7 @@
 		</directory>
 	</module>
 
-	<module name="mini_hal" type="objectlibrary">
+	<module name="mini_hal" type="objectlibrary" crt="static">
 		<include>include</include>
 		<include base="ntoskrnl">include</include>
 		<define name="_NTHALDLL_" />
@@ -100,7 +100,7 @@
 					<file>apic.c</file>
 					<file>systimer.S</file>
 					<file>usage.c</file>
-		</directory>
+				</directory>
 			</if>
 		</directory>
 		<directory name="up">

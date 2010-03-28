@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="freeldr_base" type="objectlibrary">
+<module name="freeldr_base" type="objectlibrary" crt="static">
 	<include base="freeldr_base">include</include>
 	<include base="freeldr_base">cache</include>
 	<include base="cmlib">.</include>
