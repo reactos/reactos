@@ -102,7 +102,7 @@ IsBatteryAlreadyOnList(IN PCUNICODE_STRING BatteryName,
 
 NTSTATUS
 NTAPI
-CompBattAddNewBattery(IN PCUNICODE_STRING BatteryName,
+CompBattAddNewBattery(IN PUNICODE_STRING BatteryName,
                       IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
 {
     NTSTATUS Status = STATUS_SUCCESS;

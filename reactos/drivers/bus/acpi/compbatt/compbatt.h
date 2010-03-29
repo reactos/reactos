@@ -132,7 +132,7 @@ CompBattMonitorIrpCompleteWorker(
 NTSTATUS
 NTAPI
 CompBattGetDeviceObjectPointer(
-    IN PCUNICODE_STRING DeviceName,
+    IN PUNICODE_STRING DeviceName,
     IN ACCESS_MASK DesiredAccess,
     OUT PFILE_OBJECT *FileObject,
     OUT PDEVICE_OBJECT *DeviceObject
