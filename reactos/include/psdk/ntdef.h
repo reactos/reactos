@@ -1,5 +1,5 @@
-#ifndef _NTDEF_H
-#define _NTDEF_H
+#ifndef _NTDEF_
+#define _NTDEF_
 
 /* Dependencies */
 #include <ctype.h>
@@ -74,20 +74,6 @@ typedef unsigned long POINTER_64; // FIXME! HACK!!!
 #endif
 #endif /* NULL */
 
-typedef enum _EVENT_TYPE {
-  NotificationEvent,
-  SynchronizationEvent
-} EVENT_TYPE;
-
-typedef enum _TIMER_TYPE {
-    NotificationTimer,
-    SynchronizationTimer
-} TIMER_TYPE;
-
-typedef enum _WAIT_TYPE {
-  WaitAll,
-  WaitAny
-} WAIT_TYPE;
 
 //
 // FIXME
@@ -187,11 +173,6 @@ typedef enum _WAIT_TYPE {
 
 #define NTAPI __stdcall
 
-//
-// Used by the DDK exclusively , don't put in drivers
-//
-#define DDKAPI __stdcall // Use NTAPI instead
-#define DDKCDECLAPI __cdecl // Just use __cdecl
 
 /* Import and Export Specifiers */
 
@@ -306,19 +287,6 @@ typedef int INT;
 #endif
 typedef double DOUBLE;
 
-//
-// Used to store a non-float 8 byte aligned structure
-//
-typedef struct _QUAD
-{
-    _ANONYMOUS_UNION union
-    {
-        __GNU_EXTENSION __int64 UseThisFieldToCopy;
-        double DoNotUseThisField;
-    };
-} QUAD, *PQUAD, UQUAD, *PUQUAD;
-
-
 /* Unsigned Types */
 typedef unsigned char UCHAR, *PUCHAR;
 typedef unsigned short USHORT, *PUSHORT;
@@ -389,6 +357,15 @@ typedef ULONG LCID;
 typedef PULONG PLCID;
 typedef USHORT LANGID;
 
+/* Used to store a non-float 8 byte aligned structure */
+typedef struct _QUAD
+{
+    _ANONYMOUS_UNION union
+    {
+        __GNU_EXTENSION __int64 UseThisFieldToCopy;
+        double DoNotUseThisField;
+    } DUMMYUNIONNAME;
+} QUAD, *PQUAD, UQUAD, *PUQUAD;
 
 /* Large Integer Unions */
 #if defined(MIDL_PASS)
@@ -544,7 +521,20 @@ typedef enum _NT_PRODUCT_TYPE {
 	NtProductServer
 } NT_PRODUCT_TYPE, *PNT_PRODUCT_TYPE;
 
+typedef enum _EVENT_TYPE {
+  NotificationEvent,
+  SynchronizationEvent
+} EVENT_TYPE;
 
+typedef enum _TIMER_TYPE {
+    NotificationTimer,
+    SynchronizationTimer
+} TIMER_TYPE;
+
+typedef enum _WAIT_TYPE {
+  WaitAll,
+  WaitAny
+} WAIT_TYPE;
 
 /* Doubly Linked Lists */
 typedef struct _LIST_ENTRY {
@@ -582,6 +572,11 @@ typedef EXCEPTION_DISPOSITION
   IN OUT struct _CONTEXT *ContextRecord,
   IN OUT PVOID DispatcherContext);
 
+typedef struct _GROUP_AFFINITY {
+  KAFFINITY Mask;
+  USHORT Group;
+  USHORT Reserved[3];
+} GROUP_AFFINITY, *PGROUP_AFFINITY;
 
 /* Helper Macros */
 #define RTL_CONSTANT_STRING(s) { sizeof(s)-sizeof((s)[0]), sizeof(s), s }
