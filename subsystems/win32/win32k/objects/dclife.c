@@ -386,7 +386,7 @@ DC_SetOwnership(HDC hDC, PEPROCESS Owner)
     INT Index;
     PGDI_TABLE_ENTRY Entry;
     PDC pDC;
-    BOOL ret;
+    BOOL ret = FALSE;
 
     /* FIXME: This function has broken error handling */
 
