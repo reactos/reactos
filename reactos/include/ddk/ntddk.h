@@ -2394,6 +2394,14 @@ IoWritePartitionTableEx(
   IN PDEVICE_OBJECT DeviceObject,
   IN struct _DRIVE_LAYOUT_INFORMATION_EX *DriveLayout);
 
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoAttachDeviceToDeviceStackSafe(
+  IN PDEVICE_OBJECT SourceDevice,
+  IN PDEVICE_OBJECT TargetDevice,
+  OUT PDEVICE_OBJECT *AttachedToDeviceObject);
+
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
 /** Kernel debugger routines **/

@@ -8936,15 +8936,6 @@ FsRtlUninitializeOplock (
 NTKERNELAPI
 NTSTATUS
 NTAPI
-IoAttachDeviceToDeviceStackSafe(
-    IN PDEVICE_OBJECT   SourceDevice,
-    IN PDEVICE_OBJECT   TargetDevice,
-    OUT PDEVICE_OBJECT  *AttachedToDeviceObject
-);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
 ObCreateObject (
     IN KPROCESSOR_MODE      ObjectAttributesAccessMode OPTIONAL,
     IN POBJECT_TYPE         ObjectType,
