@@ -59,6 +59,9 @@ RemoveBatteryFromList(IN PCUNICODE_STRING BatteryName,
             ExReleaseFastMutex(&DeviceExtension->Lock);
             return BatteryData;
         }
+        
+        /* Next */
+        NextEntry = NextEntry->Flink;
     }
     
     /* Done */
@@ -92,6 +95,9 @@ IsBatteryAlreadyOnList(IN PCUNICODE_STRING BatteryName,
             Found = TRUE;
             break;
         }
+
+        /* Next */
+        NextEntry = NextEntry->Flink;
     }
     
     /* Release the lock and return search status */

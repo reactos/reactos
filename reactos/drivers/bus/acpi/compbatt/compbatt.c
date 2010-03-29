@@ -81,12 +81,41 @@ CompBattMonitorIrpCompleteWorker(IN PCOMPBATT_BATTERY_DATA BatteryData)
     return STATUS_NOT_IMPLEMENTED;
 }
 
-NTSTATUS
+VOID
 NTAPI
 CompBattRecalculateTag(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PCOMPBATT_BATTERY_DATA BatteryData;
+    ULONG Tag;
+    PLIST_ENTRY ListHead, NextEntry;
+    if (CompBattDebug & 0x100) DbgPrint("CompBatt: ENTERING CompBattRecalculateTag\n");
+
+    /* Loop the battery list */
+    ExAcquireFastMutex(&DeviceExtension->Lock);
+    ListHead = &DeviceExtension->BatteryList;
+    NextEntry = ListHead->Flink;
+    while (NextEntry != ListHead)
+    {
+        /* Get the battery information and check if it has a tag */
+        BatteryData = CONTAINING_RECORD(NextEntry, COMPBATT_BATTERY_DATA, BatteryLink);
+        if (BatteryData->Flags & COMPBATT_TAG_ASSIGNED)
+        {
+            /* Generate the next tag and exit */
+            Tag = DeviceExtension->NextTag;
+            DeviceExtension->Flags |= COMPBATT_TAG_ASSIGNED;
+            DeviceExtension->Tag = Tag;
+            DeviceExtension->NextTag = Tag + 1;
+            break;
+       }
+       
+       /* No tag for this device extension, clear it */
+       DeviceExtension->Tag = 0;
+       NextEntry = NextEntry->Flink;
+    }
+    
+    /* We're done */ 
+    ExReleaseFastMutex(&DeviceExtension->Lock);
+    if (CompBattDebug & 0x100) DbgPrint("CompBatt: EXITING CompBattRecalculateTag\n");
 }
 
 NTSTATUS
@@ -118,16 +147,61 @@ NTAPI
 CompBattQueryTag(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension,
                  OUT PULONG Tag)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    PAGED_CODE();
+    if (CompBattDebug & 0x100) DbgPrint("CompBatt: ENTERING QueryTag\n");
+
+    /* Was a tag assigned? */
+    if (!(DeviceExtension->Flags & COMPBATT_TAG_ASSIGNED))
+    {
+        /* Assign one */
+        CompBattRecalculateTag(DeviceExtension);
+    }
+      
+    /* Do we have a tag now? */
+    if ((DeviceExtension->Flags & COMPBATT_TAG_ASSIGNED) && (DeviceExtension->Tag))
+    {
+        /* Return the tag */
+        *Tag = DeviceExtension->Tag;
+        Status = STATUS_SUCCESS;
+    }
+    else
+    {
+        /* No tag */
+        *Tag = 0;
+        Status = STATUS_NO_SUCH_DEVICE;
+    }
+    
+    /* Return status */
+    if (CompBattDebug & 0x100) DbgPrint("CompBatt: EXITING QueryTag\n");
+    return Status;
 }
 
 NTSTATUS
 NTAPI
 CompBattDisableStatusNotify(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PCOMPBATT_BATTERY_DATA BatteryData;
+    PLIST_ENTRY ListHead, NextEntry;
+    if (CompBattDebug & 0x100) DbgPrint("CompBatt: ENTERING DisableStatusNotify\n");
+
+    /* Loop the battery list */
+    ExAcquireFastMutex(&DeviceExtension->Lock);
+    ListHead = &DeviceExtension->BatteryList;
+    NextEntry = ListHead->Flink;
+    while (NextEntry != ListHead)
+    {
+        /* Get the battery information and clear capacity data */
+        BatteryData = CONTAINING_RECORD(NextEntry, COMPBATT_BATTERY_DATA, BatteryLink);
+        BatteryData->WaitStatus.LowCapacity = 0;
+        BatteryData->WaitStatus.HighCapacity = 0x7FFFFFFF;
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Done */
+    ExReleaseFastMutex(&DeviceExtension->Lock);
+    if (CompBattDebug & 0x100) DbgPrint("CompBatt: EXITING DisableStatusNotify\n");
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -161,11 +235,158 @@ CompBattQueryStatus(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension,
 
 NTSTATUS
 NTAPI
-CompBattGetBatteryInformation(OUT PBATTERY_INFORMATION BatteryInformation,
+CompBattGetBatteryInformation(OUT PBATTERY_INFORMATION BatteryInfo,
                               IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status = STATUS_SUCCESS;
+    BATTERY_QUERY_INFORMATION InputBuffer;
+    PCOMPBATT_BATTERY_DATA BatteryData;
+    PLIST_ENTRY ListHead, NextEntry;
+    if (CompBattDebug & 1) DbgPrint("CompBatt: ENTERING GetBatteryInformation\n");
+    
+    /* Set defaults */
+    BatteryInfo->DefaultAlert1 = 0;
+    BatteryInfo->DefaultAlert2 = 0;
+    BatteryInfo->CriticalBias = 0;
+    
+    /* Loop the battery list */
+    ExAcquireFastMutex(&DeviceExtension->Lock);
+    ListHead = &DeviceExtension->BatteryList;
+    NextEntry = ListHead->Flink;
+    while (NextEntry != ListHead)
+    {
+        /* Try to acquire the remove lock */
+        BatteryData = CONTAINING_RECORD(NextEntry, COMPBATT_BATTERY_DATA, BatteryLink);
+        if (NT_SUCCESS(IoAcquireRemoveLock(&BatteryData->RemoveLock, 0)))
+        {
+            /* Now release the device lock since the battery can't go away */
+            ExReleaseFastMutex(&DeviceExtension->Lock);
+            
+            /* Build the query */
+            InputBuffer.BatteryTag = BatteryData->Tag;
+            InputBuffer.InformationLevel = BatteryInformation;
+            InputBuffer.AtRate = 0;
+            
+            /* Make sure the battery has a tag */
+            if (BatteryData->Tag)
+            {
+                /* Do we already have the data? */
+                if (!(BatteryData->Flags & COMPBATT_BATTERY_INFORMATION_PRESENT))
+                {
+                    /* Send the IOCTL to query the information */
+                    RtlZeroMemory(&BatteryData->BatteryInformation,
+                                  sizeof(BatteryData->BatteryInformation));
+                    Status = BatteryIoctl(IOCTL_BATTERY_QUERY_INFORMATION,
+                                          BatteryData->DeviceObject,
+                                          &InputBuffer,
+                                          sizeof(InputBuffer),
+                                          &BatteryData->BatteryInformation,
+                                          sizeof(BatteryData->BatteryInformation),
+                                          0);
+                    if (!NT_SUCCESS(Status))
+                    {
+                        /* Fail if the query had a problem */
+                        if (Status == STATUS_DEVICE_REMOVED) Status = STATUS_NO_SUCH_DEVICE;
+                        ExAcquireFastMutex(&DeviceExtension->Lock);
+                        IoReleaseRemoveLock(&BatteryData->RemoveLock, 0);
+                        break;
+                    }
+                    
+                    /* Next time we can use the static copy */
+                    BatteryData->Flags |= COMPBATT_BATTERY_INFORMATION_PRESENT;
+                    if (CompBattDebug & 2)
+                        DbgPrint("CompBattGetBatteryInformation: Read individual BATTERY_INFORMATION\n"
+                                 "--------  Capabilities = %x\n--------  Technology = %x\n"
+                                 "--------  Chemistry[4] = %x\n--------  DesignedCapacity = %x\n"
+                                 "--------  FullChargedCapacity = %x\n--------  DefaultAlert1 = %x\n"
+                                 "--------  DefaultAlert2 = %x\n--------  CriticalBias = %x\n"
+                                 "--------  CycleCount = %x\n",
+                                 BatteryData->BatteryInformation.Capabilities,
+                                 BatteryData->BatteryInformation.Technology,
+                                 BatteryData->BatteryInformation.Chemistry,
+                                 BatteryData->BatteryInformation.DesignedCapacity,
+                                 BatteryData->BatteryInformation.FullChargedCapacity,
+                                 BatteryData->BatteryInformation.DefaultAlert1,
+                                 BatteryData->BatteryInformation.DefaultAlert2,
+                                 BatteryData->BatteryInformation.CriticalBias,
+                                 BatteryData->BatteryInformation.CycleCount);
+                }
+
+                /* Combine capabilities */
+                BatteryInfo->Capabilities |= BatteryData->BatteryInformation.Capabilities;
+                
+                /* Add-on capacity */
+                if (BatteryData->BatteryInformation.DesignedCapacity != BATTERY_UNKNOWN_CAPACITY)
+                {
+                    BatteryInfo->DesignedCapacity += BatteryData->BatteryInformation.DesignedCapacity;
+                }
+
+                /* Add on fully charged capacity */
+                if (BatteryData->BatteryInformation.FullChargedCapacity != BATTERY_UNKNOWN_CAPACITY)
+                {
+                    BatteryInfo->FullChargedCapacity += BatteryData->BatteryInformation.FullChargedCapacity;
+                }
+                
+                /* Choose the highest alert */
+                BatteryInfo->DefaultAlert1 = max(BatteryInfo->DefaultAlert1,
+                                                 BatteryData->BatteryInformation.DefaultAlert1);
+
+                /* Choose the highest alert */
+                BatteryInfo->DefaultAlert2 = max(BatteryInfo->DefaultAlert2,
+                                                 BatteryData->BatteryInformation.DefaultAlert2);
+                
+                /* Choose the highest critical bias */
+                BatteryInfo->CriticalBias = max(BatteryInfo->CriticalBias,
+                                                BatteryData->BatteryInformation.CriticalBias);
+            }
+            
+            /* Re-acquire the device extension lock and release the remove lock */
+            ExAcquireFastMutex(&DeviceExtension->Lock);
+            IoReleaseRemoveLock(&BatteryData->RemoveLock, 0);
+        }
+        
+        /* Next entry */
+        NextEntry = NextEntry->Flink;
+    }
+    
+    /* We are done with the list, check if the information was queried okay */ 
+    ExReleaseFastMutex(&DeviceExtension->Lock);
+    if (NT_SUCCESS(Status))
+    {
+        /* If there's no fully charged capacity, use the design capacity */
+        if (!BatteryInfo->FullChargedCapacity)
+        {
+            BatteryInfo->FullChargedCapacity = BatteryInfo->DesignedCapacity;
+        }
+        
+        /* Print out final combined data */
+        if (CompBattDebug & 2)
+            DbgPrint("CompBattGetBatteryInformation: Returning BATTERY_INFORMATION\n"
+                     "--------  Capabilities = %x\n--------  Technology = %x\n"
+                     "--------  Chemistry[4] = %x\n--------  DesignedCapacity = %x\n"
+                     "--------  FullChargedCapacity = %x\n--------  DefaultAlert1 = %x\n"
+                     "--------  DefaultAlert2 = %x\n--------  CriticalBias = %x\n"
+                     "--------  CycleCount = %x\n",
+                     BatteryInfo->Capabilities,
+                     BatteryInfo->Technology,
+                     BatteryInfo->Chemistry,
+                     BatteryInfo->DesignedCapacity,
+                     BatteryInfo->FullChargedCapacity,
+                     BatteryInfo->DefaultAlert1,
+                     BatteryInfo->DefaultAlert2,
+                     BatteryInfo->CriticalBias,
+                     BatteryInfo->CycleCount);
+                     
+        /* Copy the data into the device extension */
+        RtlCopyMemory(&DeviceExtension->BatteryInformation,
+                      BatteryInfo,
+                      sizeof(DeviceExtension->BatteryInformation));
+        DeviceExtension->Flags |= COMPBATT_BATTERY_INFORMATION_PRESENT;
+    }
+    
+    /* We are done */
+    if (CompBattDebug & 1) DbgPrint("CompBatt: EXITING GetBatteryInformation\n");
+    return Status;
 }
 
 NTSTATUS
@@ -209,13 +430,12 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     DriverObject->DriverExtension->AddDevice = CompBattAddDevice;
     
     /* Register other handlers */
-    DriverObject->MajorFunction[0] = CompBattOpenClose;
-    DriverObject->MajorFunction[2] = CompBattOpenClose;
-    DriverObject->MajorFunction[14] = CompBattIoctl;
-    DriverObject->MajorFunction[22] = CompBattPowerDispatch;
-    DriverObject->MajorFunction[23] = CompBattSystemControl;
-    DriverObject->MajorFunction[27] = CompBattPnpDispatch;
-    
+    DriverObject->MajorFunction[IRP_MJ_CREATE] = CompBattOpenClose;
+    DriverObject->MajorFunction[IRP_MJ_CLOSE] = CompBattOpenClose;
+    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = CompBattIoctl;
+    DriverObject->MajorFunction[IRP_MJ_POWER] = CompBattPowerDispatch;
+    DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = CompBattSystemControl;
+    DriverObject->MajorFunction[IRP_MJ_PNP] = CompBattPnpDispatch;
     return STATUS_SUCCESS;
 }
 

@@ -12,6 +12,9 @@
 #include <debug.h>
 #include <wdmguid.h>
 
+#define COMPBATT_BATTERY_INFORMATION_PRESENT    0x04
+#define COMPBATT_TAG_ASSIGNED                   0x80
+
 typedef struct _COMPBATT_BATTERY_DATA
 {
     LIST_ENTRY BatteryLink;
@@ -136,6 +139,18 @@ CompBattGetDeviceObjectPointer(
     IN ACCESS_MASK DesiredAccess,
     OUT PFILE_OBJECT *FileObject,
     OUT PDEVICE_OBJECT *DeviceObject
+);
+
+NTSTATUS
+NTAPI
+BatteryIoctl(
+    IN ULONG IoControlCode, 
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PVOID InputBuffer,
+    IN ULONG InputBufferLength,
+    IN PVOID OutputBuffer,
+    IN ULONG OutputBufferLength,
+    IN BOOLEAN InternalDeviceIoControl
 );
                                
 extern ULONG CompBattDebug;
