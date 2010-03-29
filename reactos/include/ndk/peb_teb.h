@@ -1,3 +1,4 @@
+
 #define PASTE2(x,y)       x##y
 #define PASTE(x,y)         PASTE2(x,y)
 
@@ -16,10 +17,6 @@
   #define GDI_HANDLE_BUFFER_SIZE 60
 #else
   #define GDI_HANDLE_BUFFER_SIZE 34
-#endif
-
-#if defined(_NTDDK_INCLUDED_) || defined(_NTIFS_)
-#define PPEB PPEB_RENAMED
 #endif
 
 typedef struct STRUCT(_PEB)
@@ -155,7 +152,6 @@ typedef struct STRUCT(_PEB)
 #endif
 } STRUCT(PEB), *STRUCT(PPEB);
 
-#undef PPEB
 
 #if defined(_WIN64) && !defined(EXPLICIT_32BIT)
 C_ASSERT(FIELD_OFFSET(STRUCT(PEB), Mutant) == 0x08);

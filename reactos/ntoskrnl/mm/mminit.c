@@ -48,7 +48,7 @@ MemType[] =
     "LoaderXIPRom      "
 };
 
-BOOLEAN Mm64BitPhysicalAddress = FALSE;
+PBOOLEAN Mm64BitPhysicalAddress = FALSE;
 ULONG MmReadClusterSize;
 //
 // 0 | 1 is on/off paging, 2 is undocumented

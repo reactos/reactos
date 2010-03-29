@@ -229,11 +229,9 @@ typedef struct _IO_CSQ_IRP_CONTEXT {
 	}
  *
  */
-#ifndef IO_TYPE_CSQ_EX
 typedef NTSTATUS (NTAPI *PIO_CSQ_INSERT_IRP_EX) (struct _IO_CSQ *Csq,
                                                  PIRP Irp,
                                                  PVOID InsertContext);
-#endif
 
 /*
  * CANCEL-SAFE QUEUE DDIs

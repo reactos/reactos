@@ -17,6 +17,15 @@
 #define PST_RS232 1
 #define COMMPROP_INITIALIZED 0xE73CF52E
 
+#ifndef _NTIFS_
+/* Why is it only defined in ntifs.h file? */
+NTSTATUS NTAPI
+IoAttachDeviceToDeviceStackSafe(
+  IN PDEVICE_OBJECT SourceDevice,
+  IN PDEVICE_OBJECT TargetDevice,
+  OUT PDEVICE_OBJECT *AttachedToDeviceObject);
+#endif
+
 typedef enum
 {
   dsStopped,
