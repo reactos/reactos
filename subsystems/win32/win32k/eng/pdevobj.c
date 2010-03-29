@@ -34,9 +34,9 @@ PDEVOBJ_AllocPDEV()
     ppdev = ExAllocatePoolWithTag(PagedPool, sizeof(PDEVOBJ), GDITAG_PDEV);
     if (!ppdev)
         return NULL;
-    
+
     RtlZeroMemory(ppdev, sizeof(PDEVOBJ));
-    
+
     ppdev->cPdevRefs = 1;
 
     return ppdev;
@@ -51,13 +51,44 @@ PDEVOBJ_vRelease(PPDEVOBJ ppdev)
 
     /* Decrease reference count */
     --ppdev->cPdevRefs;
-    
+
     /* Check if references are left */
     if (ppdev->cPdevRefs == 0)
     {
-        // FIXME: should delete the PDEV now
-        UNIMPLEMENTED;
-        ASSERT(FALSE);
+        /* Release surface */
+        if(ppdev->pSurface)
+        {
+            SURFACE_ShareUnlockSurface(ppdev->pSurface);
+            ppdev->pfn.DisableSurface(ppdev->dhpdev);
+        }
+
+        /* Disable PDEV */
+        ppdev->pfn.DisablePDEV(ppdev->dhpdev);
+
+        /* Remove it from list */
+        if( ppdev == gppdevList )
+            gppdevList = ppdev->ppdevNext ;
+        else
+        {
+            PPDEVOBJ ppdevCurrent = gppdevList;
+            BOOL found = FALSE ;
+            while (!found && ppdevCurrent->ppdevNext)
+            {
+                if (ppdevCurrent->ppdevNext == ppdev)
+                    found = TRUE;
+                else
+                    ppdevCurrent = ppdevCurrent->ppdevNext ;
+            }
+            if(found)
+                ppdevCurrent->ppdevNext = ppdev->ppdevNext;
+        }
+
+        /* Is this the primary one ? */
+        if (ppdev == gppdevPrimary)
+            gppdevPrimary = NULL;
+
+        /* Free it */
+        ExFreePoolWithTag(ppdev, GDITAG_PDEV );
     }
 
     /* Unlock loader */
@@ -179,7 +210,7 @@ EngpCreatePDEV(
     pGraphicsDevice = EngpFindGraphicsDevice(pustrDeviceName, 0, 0);
     if (!pGraphicsDevice)
     {
-        DPRINT1("No GRAPHICS_DEVICE found for %ls!\n", 
+        DPRINT1("No GRAPHICS_DEVICE found for %ls!\n",
                 pustrDeviceName ? pustrDeviceName->Buffer : 0);
         return NULL;
     }
@@ -267,7 +298,7 @@ PDEVOBJ_vSwitchPdev(
     ppdev->pfn = ppdev2->pfn;
     ppdev2->pfn = pdevTmp.pfn;
 
-    /* Exchange LDEVs */ 
+    /* Exchange LDEVs */
     ppdev->pldev = ppdev2->pldev;
     ppdev2->pldev = pdevTmp.pldev;
 
@@ -291,8 +322,8 @@ PDEVOBJ_vSwitchPdev(
     ppdev2->gdiinfo = pdevTmp.gdiinfo;
 
     /* Notify each driver instance of its new HDEV association */
-    ppdev->pfn.CompletePDEV(ppdev->dhpdev, (HDEV)ppdev); 
-    ppdev2->pfn.CompletePDEV(ppdev2->dhpdev, (HDEV)ppdev2); 
+    ppdev->pfn.CompletePDEV(ppdev->dhpdev, (HDEV)ppdev);
+    ppdev2->pfn.CompletePDEV(ppdev2->dhpdev, (HDEV)ppdev2);
 }
 
 void
@@ -338,11 +369,10 @@ PDEVOBJ_bSwitchMode(
     PSURFACE pSurface;
     BOOL retval = FALSE;
 
-    // FIXME: dynamic mode switching is broken, need to fix PDEV locking first!
-    return FALSE;
-
     /* Lock the PDEV */
     EngAcquireSemaphore(ppdev->hsemDevLock);
+    /* And everything else */
+    EngAcquireSemaphore(ghsemPDEV);
 
     DPRINT1("PDEVOBJ_bSwitchMode, ppdev = %p, pSurface = %p\n", ppdev, ppdev->pSurface);
 
@@ -385,19 +415,14 @@ PDEVOBJ_bSwitchMode(
 
     /* 8. Disable DirectDraw */
 
-    /* 9. Disable old surface */
-    SURFACE_ShareUnlockSurface(ppdevTmp->pSurface);
-    ppdevTmp->pfn.DisableSurface(ppdevTmp->dhpdev);
-
-    /* 10. Disable old PDEV */
-    ppdevTmp->pfn.DisablePDEV(ppdevTmp->dhpdev);
-//    PDEVOBJ_vReleasePdev(ppdevTmp);
+    PDEVOBJ_vRelease(ppdevTmp);
 
     /* Success! */
     retval = TRUE;
 leave:
     /* Unlock PDEV */
     EngReleaseSemaphore(ppdev->hsemDevLock);
+    EngReleaseSemaphore(ghsemPDEV);
 
     DPRINT1("leave, ppdev = %p, pSurface = %p\n", ppdev, ppdev->pSurface);
     ASSERT(ppdev->pSurface->BitsLock);
@@ -524,8 +549,8 @@ PDEVOBJ_vGetDeviceCaps(
     pDevCaps->ulLogPixelsX = pGdiInfo->ulLogPixelsX;
     pDevCaps->ulLogPixelsY = pGdiInfo->ulLogPixelsY;
     pDevCaps->ulSizePalette = pGdiInfo->ulNumPalReg;
-    pDevCaps->ulColorRes = pGdiInfo->ulDACRed + 
-                           pGdiInfo->ulDACGreen + 
+    pDevCaps->ulColorRes = pGdiInfo->ulDACRed +
+                           pGdiInfo->ulDACGreen +
                            pGdiInfo->ulDACBlue;
     pDevCaps->ulPhysicalWidth = pGdiInfo->szlPhysSize.cx;
     pDevCaps->ulPhysicalHeight = pGdiInfo->szlPhysSize.cy;
