@@ -1,15 +1,13 @@
-#ifndef _NTDEF_H
-#define _NTDEF_H
+#ifndef _NTDEF_
+#define _NTDEF_
 
-//
-// Dependencies
-//
+/* Dependencies */
 #include <ctype.h>
 #include <basetsd.h>
 #include <excpt.h>
 #include <sdkddkver.h>
 
-// FIXME: Should we include these here?
+// FIXME: Shouldn't be included!
 #include <stdarg.h>
 #include <string.h>
 
@@ -24,11 +22,8 @@
 
 typedef unsigned long POINTER_64; // FIXME! HACK!!!
 
+/* Pseudo Modifiers for Input Parameters */
 
-
-//
-// Pseudo Modifiers for Input Parameters
-//
 #ifndef IN
 #define IN
 #endif
@@ -54,29 +49,21 @@ typedef unsigned long POINTER_64; // FIXME! HACK!!!
 #endif
 
 
-//
-// Defines the "size" of an any-size array
-//
+/* Defines the "size" of an any-size array */
 #ifndef ANYSIZE_ARRAY
 #define ANYSIZE_ARRAY 1
 #endif
 
-//
-// Constant modifier
-//
+/* Constant modifier */
 #ifndef CONST
 #define CONST const
 #endif
 
-//
-// TRUE/FALSE
-//
+/* TRUE/FALSE */
 #define FALSE   0
 #define TRUE    1
 
-//
-// NULL/NULL64
-//
+/* NULL/NULL64 */
 #ifndef NULL
 #ifdef __cplusplus
 #define NULL    0
@@ -85,22 +72,8 @@ typedef unsigned long POINTER_64; // FIXME! HACK!!!
 #define NULL    ((void *)0)
 #define NULL64  ((void * POINTER_64)0)
 #endif
-#endif // NULL
+#endif /* NULL */
 
-typedef enum _EVENT_TYPE {
-  NotificationEvent,
-  SynchronizationEvent
-} EVENT_TYPE;
-
-typedef enum _TIMER_TYPE {
-    NotificationTimer,
-    SynchronizationTimer
-} TIMER_TYPE;
-
-typedef enum _WAIT_TYPE {
-  WaitAll,
-  WaitAny
-} WAIT_TYPE;
 
 //
 // FIXME
@@ -171,35 +144,27 @@ typedef enum _WAIT_TYPE {
 #define ARGUMENT_PRESENT(ArgumentPointer) \
   ((CHAR*)((ULONG_PTR)(ArgumentPointer)) != (CHAR*)NULL)
 
-//
-// Returns the base address of a structure from a structure member
-//
+/* Returns the base address of a structure from a structure member */
 #ifndef CONTAINING_RECORD
 #define CONTAINING_RECORD(address, type, field) \
   ((type *)(((ULONG_PTR)address) - (ULONG_PTR)(&(((type *)0)->field))))
 #endif
 
-//
-// Returns the byte offset of the specified structure's member
-//
+/* Returns the byte offset of the specified structure's member */
 #ifndef __GNUC__
 #define FIELD_OFFSET(Type, Field) ((LONG)(LONG_PTR)&(((Type*) 0)->Field))
 #else
 #define FIELD_OFFSET(Type, Field) __builtin_offsetof(Type, Field)
 #endif
 
-//
-// Returns the type's alignment
-//
+/* Returns the type's alignment */
 #if defined(_MSC_VER) && (_MSC_VER >= 1300)
 #define TYPE_ALIGNMENT(t) __alignof(t)
 #else
 #define TYPE_ALIGNMENT(t) FIELD_OFFSET( struct { char x; t test; }, test )
 #endif
 
-//
-// Calling Conventions
-//
+/* Calling Conventions */
 #if defined(_M_IX86)
 #define FASTCALL __fastcall
 #else
@@ -208,20 +173,12 @@ typedef enum _WAIT_TYPE {
 
 #define NTAPI __stdcall
 
-//
-// Used by the DDK exclusively , don't put in drivers
-//
-#define DDKAPI __stdcall // Use NTAPI instead
-#define DDKCDECLAPI __cdecl // Just use __cdecl
 
-//
-// Import and Export Specifiers
-//
+/* Import and Export Specifiers */
 
-// Done the same way as in windef.h for now
+/* Done the same way as in windef.h for now */
 #define DECLSPEC_IMPORT __declspec(dllimport)
 #define DECLSPEC_NORETURN __declspec(noreturn)
-
 
 #ifndef DECLSPEC_ADDRSAFE
 #if (_MSC_VER >= 1200) && (defined(_M_ALPHA) || defined(_M_AXP64))
@@ -243,9 +200,7 @@ typedef enum _WAIT_TYPE {
 #endif
 #endif
 
-//
-// Inlines
-//
+/* Inlines */
 #ifndef FORCEINLINE
 #if (_MSC_VER >= 1200)
 #define FORCEINLINE __forceinline
@@ -272,9 +227,7 @@ typedef enum _WAIT_TYPE {
 #define NTAPI_INLINE
 #endif
 
-//
-// Use to specify structure alignment
-//
+/* Use to specify structure alignment */
 #ifndef DECLSPEC_ALIGN
 #if defined(_MSC_VER) && (_MSC_VER >= 1300) && !defined(MIDL_PASS)
 #define DECLSPEC_ALIGN(x) __declspec(align(x))
@@ -285,21 +238,13 @@ typedef enum _WAIT_TYPE {
 #endif
 #endif
 
-
-
-//
-// Use to silence unused variable warnings when it is intentional
-//
+/* Use to silence unused variable warnings when it is intentional */
 #define UNREFERENCED_PARAMETER(P) {(P)=(P);}
 #define UNREFERENCED_LOCAL_VARIABLE(L) {(L)=(L);}
 #define DBG_UNREFERENCED_PARAMETER(P)
 #define DBG_UNREFERENCED_LOCAL_VARIABLE(L)
 
-
-
-//
-// min/max helper macros
-//
+/* min/max helper macros */
 #ifndef NOMINMAX
 
 #ifndef min
@@ -310,25 +255,17 @@ typedef enum _WAIT_TYPE {
 #define max(a,b) (((a) > (b)) ? (a) : (b))
 #endif
 
-#endif // NOMINMAX
+#endif /* NOMINMAX */
 
-
-
-//
-// Tell windef.h that we have defined some basic types
-//
+/* Tell windef.h that we have defined some basic types */
 #define BASETYPES
 
-//
-// Void Pointers
-//
+/* Void Pointers */
 typedef void *PVOID;
 //typedef void * POINTER_64 PVOID64;
 typedef PVOID PVOID64; // FIXME!
 
-//
-// Handle Type
-//
+/* Handle Type */
 #ifdef STRICT
 typedef void *HANDLE;
 #define DECLARE_HANDLE(n) typedef struct n##__{int i;}*n
@@ -338,9 +275,7 @@ typedef PVOID HANDLE;
 #endif
 typedef HANDLE *PHANDLE;
 
-//
-// Upper-Case Versions of Some Standard C Types
-//
+/* Upper-Case Versions of Some Standard C Types */
 #ifndef VOID
 #define VOID void
 typedef char CHAR;
@@ -352,47 +287,25 @@ typedef int INT;
 #endif
 typedef double DOUBLE;
 
-//
-// Used to store a non-float 8 byte aligned structure
-//
-typedef struct _QUAD
-{
-    _ANONYMOUS_UNION union
-    {
-        __GNU_EXTENSION __int64 UseThisFieldToCopy;
-        double DoNotUseThisField;
-    };
-} QUAD, *PQUAD, UQUAD, *PUQUAD;
-
-
-//
-// Unsigned Types
-//
+/* Unsigned Types */
 typedef unsigned char UCHAR, *PUCHAR;
 typedef unsigned short USHORT, *PUSHORT;
 typedef unsigned long ULONG, *PULONG;
 typedef CONST UCHAR *PCUCHAR;
 typedef CONST USHORT *PCUSHORT;
 typedef CONST ULONG *PCULONG;
-
 typedef UCHAR FCHAR;
 typedef USHORT FSHORT;
 typedef ULONG FLONG;
-typedef UCHAR BOOLEAN;
-typedef BOOLEAN *PBOOLEAN;
-
+typedef UCHAR BOOLEAN, *PBOOLEAN;
 typedef ULONG LOGICAL;
 typedef ULONG *PLOGICAL;
 
-//
-// Signed Types
-//
+/* Signed Types */
 typedef SHORT *PSHORT;
 typedef LONG *PLONG;
-
 typedef LONG NTSTATUS;
 typedef NTSTATUS *PNTSTATUS;
-
 typedef signed char SCHAR;
 typedef SCHAR *PSCHAR;
 
@@ -401,22 +314,15 @@ typedef SCHAR *PSCHAR;
 typedef LONG HRESULT;
 #endif
 
-//
-// 64-bit types
-//
+/* 64-bit types */
 __GNU_EXTENSION typedef __int64 LONGLONG, *PLONGLONG;
 __GNU_EXTENSION typedef unsigned __int64 ULONGLONG, *PULONGLONG;
 typedef ULONGLONG DWORDLONG, *PDWORDLONG;
 
-//
-// Update Sequence Number
-//
+/* Update Sequence Number */
 typedef LONGLONG USN;
 
-
-//
-// ANSI (Multi-byte Character) types
-//
+/* ANSI (Multi-byte Character) types */
 typedef CHAR *PCHAR, *LPCH, *PCH;
 typedef CONST CHAR *LPCCH, *PCCH;
 typedef CHAR *NPSTR, *LPSTR, *PSTR;
@@ -425,15 +331,11 @@ typedef CONST PSTR *PCZPSTR;
 typedef CONST CHAR *LPCSTR, *PCSTR;
 typedef PCSTR *PZPCSTR;
 
-//
-// Pointer to an Asciiz string
-//
+/* Pointer to an Asciiz string */
 typedef CHAR *PSZ;
 typedef CONST char *PCSZ;
 
-//
-// UNICODE (Wide Character) types
-//
+/* UNICODE (Wide Character) types */
 typedef wchar_t WCHAR;
 typedef WCHAR *PWCHAR, *LPWCH, *PWCH;
 typedef CONST WCHAR *LPCWCH, *PCWCH;
@@ -445,25 +347,27 @@ typedef CONST WCHAR *LPCWSTR, *PCWSTR;
 typedef PCWSTR *PZPCWSTR;
 typedef CONST WCHAR UNALIGNED *LPCUWSTR, *PCUWSTR;
 
-//
-// Cardinal Data Types
-//
+/* Cardinal Data Types */
 typedef char CCHAR, *PCCHAR;
 typedef short CSHORT, *PCSHORT;
 typedef ULONG CLONG, *PCLONG;
 
-//
-// NLS basics (Locale and Language Ids)
-//
+/* NLS basics (Locale and Language Ids) */
 typedef ULONG LCID;
 typedef PULONG PLCID;
 typedef USHORT LANGID;
 
+/* Used to store a non-float 8 byte aligned structure */
+typedef struct _QUAD
+{
+    _ANONYMOUS_UNION union
+    {
+        __GNU_EXTENSION __int64 UseThisFieldToCopy;
+        double DoNotUseThisField;
+    } DUMMYUNIONNAME;
+} QUAD, *PQUAD, UQUAD, *PUQUAD;
 
-
-//
-// Large Integer Unions
-//
+/* Large Integer Unions */
 #if defined(MIDL_PASS)
 typedef struct _LARGE_INTEGER {
 #else
@@ -478,7 +382,7 @@ typedef union _LARGE_INTEGER {
         ULONG LowPart;
         LONG HighPart;
     } u;
-#endif //MIDL_PASS
+#endif /* MIDL_PASS */
     LONGLONG QuadPart;
 } LARGE_INTEGER, *PLARGE_INTEGER;
 
@@ -496,40 +400,26 @@ typedef union _ULARGE_INTEGER {
         ULONG LowPart;
         ULONG HighPart;
     } u;
-#endif //MIDL_PASS
+#endif /* MIDL_PASS */
     ULONGLONG QuadPart;
 } ULARGE_INTEGER, *PULARGE_INTEGER;
 
-//
-// Physical Addresses are always treated as 64-bit wide
-//
+/* Physical Addresses are always treated as 64-bit wide */
 typedef LARGE_INTEGER PHYSICAL_ADDRESS, *PPHYSICAL_ADDRESS;
 
-
-
-//
-// Locally Unique Identifier
-//
+/* Locally Unique Identifier */
 typedef struct _LUID {
     ULONG LowPart;
     LONG HighPart;
 } LUID, *PLUID;
 
-
-
-//
-// Native API Return Value Macros
-//
+/* Native API Return Value Macros */
 #define NT_SUCCESS(Status)              (((NTSTATUS)(Status)) >= 0)
 #define NT_INFORMATION(Status)          ((((ULONG)(Status)) >> 30) == 1)
 #define NT_WARNING(Status)              ((((ULONG)(Status)) >> 30) == 2)
 #define NT_ERROR(Status)                ((((ULONG)(Status)) >> 30) == 3)
 
-
-
-//
-// String Types
-//
+/* String Types */
 typedef struct _UNICODE_STRING {
   USHORT Length;
   USHORT MaximumLength;
@@ -575,9 +465,7 @@ typedef struct _STRING64 {
   UNICODE_STRING64, *PUNICODE_STRING64, 
   ANSI_STRING64, *PANSI_STRING64;
 
-//
-// LangID and NLS
-//
+/* LangID and NLS */
 #define MAKELANGID(p, s)       ((((USHORT)(s)) << 10) | (USHORT)(p))
 #define PRIMARYLANGID(lgid)    ((USHORT)(lgid) & 0x3ff)
 #define SUBLANGID(lgid)        ((USHORT)(lgid) >> 10)
@@ -594,10 +482,7 @@ typedef struct _STRING64 {
 #define SORTVERSIONFROMLCID(lcid)  ((USHORT)((((ULONG)(lcid)) >> 20) & 0xf))
 
 
-
-//
-// Object Attributes
-//
+/* Object Attributes */
 typedef struct _OBJECT_ATTRIBUTES {
   ULONG Length;
   HANDLE RootDirectory;
@@ -608,9 +493,7 @@ typedef struct _OBJECT_ATTRIBUTES {
 } OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
 typedef CONST OBJECT_ATTRIBUTES *PCOBJECT_ATTRIBUTES;
 
-//
-// Values for the Attributes member
-//
+/* Values for the Attributes member */
 #define OBJ_INHERIT             0x00000002
 #define OBJ_PERMANENT           0x00000010
 #define OBJ_EXCLUSIVE           0x00000020
@@ -621,9 +504,7 @@ typedef CONST OBJECT_ATTRIBUTES *PCOBJECT_ATTRIBUTES;
 #define OBJ_FORCE_ACCESS_CHECK  0x00000400
 #define OBJ_VALID_ATTRIBUTES    0x000007F2
 
-//
-// Helper Macro
-//
+/* Helper Macro */
 #define InitializeObjectAttributes(p,n,a,r,s) { \
   (p)->Length = sizeof(OBJECT_ATTRIBUTES); \
   (p)->RootDirectory = (r); \
@@ -633,22 +514,29 @@ typedef CONST OBJECT_ATTRIBUTES *PCOBJECT_ATTRIBUTES;
   (p)->SecurityQualityOfService = NULL; \
 }
 
-
-
-//
-// Product Types
-//
+/* Product Types */
 typedef enum _NT_PRODUCT_TYPE {
 	NtProductWinNt = 1,
 	NtProductLanManNt,
 	NtProductServer
 } NT_PRODUCT_TYPE, *PNT_PRODUCT_TYPE;
 
+typedef enum _EVENT_TYPE {
+  NotificationEvent,
+  SynchronizationEvent
+} EVENT_TYPE;
 
+typedef enum _TIMER_TYPE {
+    NotificationTimer,
+    SynchronizationTimer
+} TIMER_TYPE;
 
-//
-// Doubly Linked Lists
-//
+typedef enum _WAIT_TYPE {
+  WaitAll,
+  WaitAny
+} WAIT_TYPE;
+
+/* Doubly Linked Lists */
 typedef struct _LIST_ENTRY {
    struct _LIST_ENTRY *Flink;
    struct _LIST_ENTRY *Blink;
@@ -666,13 +554,10 @@ typedef struct LIST_ENTRY64
     ULONGLONG Blink;
 } LIST_ENTRY64, *PLIST_ENTRY64;
 
-//
-// Singly Linked Lists
-//
+/* Singly Linked Lists */
 typedef struct _SINGLE_LIST_ENTRY {
     struct _SINGLE_LIST_ENTRY *Next;
 } SINGLE_LIST_ENTRY, *PSINGLE_LIST_ENTRY;
-
 
 typedef struct _PROCESSOR_NUMBER {
   USHORT Group;
@@ -681,16 +566,19 @@ typedef struct _PROCESSOR_NUMBER {
 } PROCESSOR_NUMBER, *PPROCESSOR_NUMBER;
 
 typedef EXCEPTION_DISPOSITION
-(DDKAPI *PEXCEPTION_ROUTINE)(
+(NTAPI *PEXCEPTION_ROUTINE)(
   IN struct _EXCEPTION_RECORD *ExceptionRecord,
   IN PVOID EstablisherFrame,
   IN OUT struct _CONTEXT *ContextRecord,
   IN OUT PVOID DispatcherContext);
 
+typedef struct _GROUP_AFFINITY {
+  KAFFINITY Mask;
+  USHORT Group;
+  USHORT Reserved[3];
+} GROUP_AFFINITY, *PGROUP_AFFINITY;
 
-//
-// Helper Macros
-//
+/* Helper Macros */
 #define RTL_CONSTANT_STRING(s) { sizeof(s)-sizeof((s)[0]), sizeof(s), s }
 
 #define RTL_FIELD_SIZE(type, field) (sizeof(((type *)0)->field))
@@ -704,11 +592,7 @@ typedef EXCEPTION_DISPOSITION
 #endif
 #define ARRAYSIZE(A)    RTL_NUMBER_OF_V2(A)
 
-
-
-//
-// Type Limits
-//
+/* Type Limits */
 #define MINCHAR   0x80
 #define MAXCHAR   0x7f
 #define MINSHORT  0x8000
@@ -720,29 +604,17 @@ typedef EXCEPTION_DISPOSITION
 #define MAXULONG  0xffffffff
 #define MAXLONGLONG (0x7fffffffffffffffLL)
 
-
-
-//
-// Multiplication and Shift Operations
-//
+/* Multiplication and Shift Operations */
 #define Int32x32To64(a,b) ((LONGLONG)(a)*(LONGLONG)(b))
 #define UInt32x32To64(a,b) ((DWORDLONG)(a)*(DWORDLONG)(b))
 #define Int64ShllMod32(a,b) ((DWORDLONG)(a)<<(b))
 #define Int64ShraMod32(a,b) ((LONGLONG)(a)>>(b))
 #define Int64ShrlMod32(a,b) ((DWORDLONG)(a)>>(b))
 
-
-
-//
-// C_ASSERT Definition
-//
+/* C_ASSERT Definition */
 #define C_ASSERT(expr) extern char (*c_assert(void)) [(expr) ? 1 : -1]
 
-
-
-//
-//  Primary language IDs.
-//
+/*  Primary language IDs. */
 #define LANG_NEUTRAL                     0x00
 #define LANG_INVARIANT                   0x7f
 
@@ -873,6 +745,4 @@ typedef EXCEPTION_DISPOSITION
 #define LANG_YORUBA                      0x6a
 #define LANG_ZULU                        0x35
 
-
-
-#endif /* _NTDEF_H */
+#endif /* _NTDEF_ */
