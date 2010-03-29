@@ -394,8 +394,85 @@ NTAPI
 CompBattGetBatteryGranularity(OUT PBATTERY_REPORTING_SCALE ReportingScale,
                               IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status = STATUS_SUCCESS;
+    BATTERY_QUERY_INFORMATION InputBuffer;
+    PCOMPBATT_BATTERY_DATA BatteryData;
+    BATTERY_REPORTING_SCALE BatteryScale[4];
+    PLIST_ENTRY ListHead, NextEntry;
+    ULONG i;
+    if (CompBattDebug & 1) DbgPrint("CompBatt: ENTERING GetBatteryGranularity\n");
+    
+    /* Set defaults */
+    ReportingScale[0].Granularity = -1;
+    ReportingScale[1].Granularity = -1;
+    ReportingScale[2].Granularity = -1;
+    ReportingScale[3].Granularity = -1;
+    
+    /* Loop the battery list */
+    ExAcquireFastMutex(&DeviceExtension->Lock);
+    ListHead = &DeviceExtension->BatteryList;
+    NextEntry = ListHead->Flink;
+    while (NextEntry != ListHead)
+    {
+        /* Try to acquire the remove lock */
+        BatteryData = CONTAINING_RECORD(NextEntry, COMPBATT_BATTERY_DATA, BatteryLink);
+        if (NT_SUCCESS(IoAcquireRemoveLock(&BatteryData->RemoveLock, 0)))
+        {
+            /* Now release the device lock since the battery can't go away */
+            ExReleaseFastMutex(&DeviceExtension->Lock);
+            
+            /* Build the query */
+            InputBuffer.BatteryTag = BatteryData->Tag;
+            InputBuffer.InformationLevel = BatteryGranularityInformation;
+            
+            /* Make sure the battery has a tag */
+            if (BatteryData->Tag)
+            {
+                /* Send the IOCTL to query the information */
+                RtlZeroMemory(&BatteryData->BatteryInformation,
+                              sizeof(BatteryData->BatteryInformation));
+                Status = BatteryIoctl(IOCTL_BATTERY_QUERY_INFORMATION,
+                                      BatteryData->DeviceObject,
+                                      &InputBuffer,
+                                      sizeof(InputBuffer),
+                                      &BatteryScale,
+                                      sizeof(BatteryScale),
+                                      0);
+                if (!NT_SUCCESS(Status))
+                {
+                    /* Fail if the query had a problem */
+                    ExAcquireFastMutex(&DeviceExtension->Lock);
+                    IoReleaseRemoveLock(&BatteryData->RemoveLock, 0);
+                    break;
+                }
+                
+                /* Loop all 4 scales */
+                for (i = 0; i < 4; i++)
+                {
+                    /* Check for valid granularity */
+                    if (BatteryScale[i].Granularity)
+                    {
+                        /* If it's smaller, use it instead */
+                        ReportingScale[i].Granularity = min(BatteryScale[i].Granularity,
+                                                            ReportingScale[i].Granularity);
+                    }
+                    
+                }
+            }
+            
+            /* Re-acquire the device extension lock and release the remove lock */
+            ExAcquireFastMutex(&DeviceExtension->Lock);
+            IoReleaseRemoveLock(&BatteryData->RemoveLock, 0);
+        }
+
+        /* Next entry */
+        NextEntry = NextEntry->Flink;
+    }
+    
+    /* All done */
+    ExReleaseFastMutex(&DeviceExtension->Lock);
+    if (CompBattDebug & 1) DbgPrint("CompBatt: EXITING GetBatteryGranularity\n");
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -409,7 +486,7 @@ CompBattGetEstimatedTime(OUT PULONG Time,
     
 NTSTATUS
 NTAPI
-CompBattQueryInformation(IN PCOMPBATT_DEVICE_EXTENSION FdoExtension,
+CompBattQueryInformation(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension,
                          IN ULONG Tag,
                          IN BATTERY_QUERY_INFORMATION_LEVEL InfoLevel,
                          IN OPTIONAL LONG AtRate,
@@ -417,8 +494,109 @@ CompBattQueryInformation(IN PCOMPBATT_DEVICE_EXTENSION FdoExtension,
                          IN ULONG BufferLength,
                          OUT PULONG ReturnedLength)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    BATTERY_INFORMATION BatteryInfo;
+    BATTERY_REPORTING_SCALE BatteryGranularity[4];
+    PWCHAR BatteryName = L"Composite Battery";
+    BATTERY_MANUFACTURE_DATE Date;
+    ULONG Dummy, Time;
+    PVOID QueryData = NULL;
+    ULONG QueryLength = 0;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PAGED_CODE();
+    if (CompBattDebug & 1)  DbgPrint("CompBatt: ENTERING QueryInformation\n");
+
+    /* Check for valid/correct tag */
+    if ((Tag != DeviceExtension->Tag) ||
+        (!(DeviceExtension->Flags & COMPBATT_TAG_ASSIGNED)))
+    {
+        /* Not right, so fail */
+        return STATUS_NO_SUCH_DEVICE;
+    }
+      
+    /* Check what caller wants */
+    switch (InfoLevel)
+    {
+        case BatteryInformation:
+        
+            /* Query combined battery information */
+            RtlZeroMemory(&BatteryInfo, sizeof(BatteryInfo));
+            Status = CompBattGetBatteryInformation(&BatteryInfo, DeviceExtension);
+            if (NT_SUCCESS(Status))
+            {
+                /* Return the data if successful */
+                QueryData = &BatteryInfo;
+                QueryLength = sizeof(BatteryInfo);
+            }
+            break;
+        
+        case BatteryGranularityInformation:
+
+            /* Query combined granularity information */
+            RtlZeroMemory(&BatteryGranularity, sizeof(BatteryGranularity));
+            Status = CompBattGetBatteryGranularity(BatteryGranularity, DeviceExtension);
+            if (NT_SUCCESS(Status))
+            {
+                /* Return the data if successful */
+                QueryLength = sizeof(BatteryGranularity);
+                QueryData = &BatteryGranularity;
+            }
+            break;
+            
+        case BatteryEstimatedTime:
+        
+            /* Query combined time estimate information */
+            RtlZeroMemory(&Time, sizeof(Time));
+            Status = CompBattGetEstimatedTime(&Time, DeviceExtension);
+            if (NT_SUCCESS(Status))
+            {
+                /* Return the data if successful */
+                QueryLength = sizeof(Time);
+                QueryData = &Time; 
+            }
+            break;
+            
+        case BatteryManufactureName:
+        case BatteryDeviceName:
+        
+            /* Return the static buffer */
+            QueryData = BatteryName;
+            QueryLength = sizeof(L"Composite Battery");
+            break;
+    
+        case BatteryManufactureDate:
+        
+            /* Static data */
+            Date.Day = 26;
+            Date.Month = 06;
+            Date.Year = 1997;
+            break;
+
+        case BatteryTemperature:
+        case BatteryUniqueID:
+
+            /* Return zero */
+            Dummy = 0;
+            QueryData = &Dummy;
+            QueryLength = sizeof(Dummy);
+            break;
+            
+        default:
+        
+            /* Everything else is unknown */
+            Status = STATUS_INVALID_PARAMETER;
+            break;
+    }
+
+    /* Return the required length and check if the caller supplied enough */
+    *ReturnedLength = QueryLength;
+    if (BufferLength < QueryLength) Status = STATUS_BUFFER_TOO_SMALL;
+
+    /* Copy the data if there's enough space and it exists */
+    if ((NT_SUCCESS(Status)) && (QueryData)) RtlCopyMemory(Buffer, QueryData, QueryLength);
+      
+    /* Return function result */
+    if (CompBattDebug & 1) DbgPrint("CompBatt: EXITING QueryInformation\n");
+    return Status;
 }
 
 NTSTATUS
