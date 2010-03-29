@@ -27,7 +27,7 @@ CompBattOpenClose(IN PDEVICE_OBJECT DeviceObject,
     /* Complete the IRP with success */
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;
-    IofCompleteRequest(Irp, IO_NO_INCREMENT);
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
     
     /* Return success */
     if (CompBattDebug & 0x100) DbgPrint("CompBatt: Exiting OpenClose\n");
@@ -56,7 +56,7 @@ CompBattSystemControl(IN PDEVICE_OBJECT DeviceObject,
         /* We don't support WMI */
         Status = STATUS_NOT_SUPPORTED;
         Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
-        IofCompleteRequest(Irp, IO_NO_INCREMENT);
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
     
     /* Return status */
@@ -75,7 +75,7 @@ CompBattMonitorIrpComplete(IN PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS
 NTAPI
-CompBattMonitorIrpCompleteWorker(IN PCOMPBATT_BATTERY_ENTRY BatteryData)
+CompBattMonitorIrpCompleteWorker(IN PCOMPBATT_BATTERY_DATA BatteryData)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;

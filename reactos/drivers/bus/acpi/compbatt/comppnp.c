@@ -28,13 +28,43 @@ CompBattPowerDispatch(IN PDEVICE_OBJECT DeviceObject,
     return PoCallDriver(DeviceExtension->AttachedDevice, Irp);
 }
 
-PCOMPBATT_BATTERY_ENTRY
+PCOMPBATT_BATTERY_DATA
 NTAPI
 RemoveBatteryFromList(IN PCUNICODE_STRING BatteryName,
                       IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    return NULL;
+    PLIST_ENTRY ListHead, NextEntry;
+    PCOMPBATT_BATTERY_DATA BatteryData;
+    if (CompBattDebug & 1)
+        DbgPrint("CompBatt: ENTERING RemoveBatteryFromList\n");
+
+    /* Loop the battery list */
+    ExAcquireFastMutex(&DeviceExtension->Lock);
+    ListHead = &DeviceExtension->BatteryList;
+    NextEntry = ListHead->Flink;
+    while (NextEntry != ListHead)
+    {
+        /* Get the battery information and compare the name */
+        BatteryData = CONTAINING_RECORD(NextEntry, COMPBATT_BATTERY_DATA, BatteryLink);
+        if (!RtlCompareUnicodeString(BatteryName, &BatteryData->BatteryName, TRUE))
+        {
+            /* Flush pending deletes and any lock waiters */
+            IoAcquireRemoveLock(&BatteryData->RemoveLock, 0);
+            ExReleaseFastMutex(&DeviceExtension->Lock);
+            IoReleaseRemoveLockAndWait(&BatteryData->RemoveLock, 0);
+          
+            /* Remove the entry from the list */
+            ExAcquireFastMutex(&DeviceExtension->Lock);
+            RemoveEntryList(&BatteryData->BatteryLink);
+            ExReleaseFastMutex(&DeviceExtension->Lock);
+            return BatteryData;
+        }
+    }
+    
+    /* Done */
+    ExReleaseFastMutex(&DeviceExtension->Lock);
+    if (CompBattDebug & 1) DbgPrint("CompBatt: EXITING RemoveBatteryFromList\n");
+    return STATUS_SUCCESS;
 }
 
 BOOLEAN
@@ -42,8 +72,32 @@ NTAPI
 IsBatteryAlreadyOnList(IN PCUNICODE_STRING BatteryName,
                        IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    PLIST_ENTRY ListHead, NextEntry;
+    PCOMPBATT_BATTERY_DATA BatteryData;
+    BOOLEAN Found = FALSE;
+    if (CompBattDebug & 1)
+        DbgPrint("CompBatt: ENTERING IsBatteryAlreadyOnList\n");
+    
+    /* Loop the battery list */
+    ExAcquireFastMutex(&DeviceExtension->Lock);
+    ListHead = &DeviceExtension->BatteryList;
+    NextEntry = ListHead->Flink;
+    while (NextEntry != ListHead)
+    {
+        /* Get the battery information and compare the name */
+        BatteryData = CONTAINING_RECORD(NextEntry, COMPBATT_BATTERY_DATA, BatteryLink);
+        if (!RtlCompareUnicodeString(BatteryName, &BatteryData->BatteryName, TRUE))
+        {
+            /* Got it */
+            Found = TRUE;
+            break;
+        }
+    }
+    
+    /* Release the lock and return search status */
+    ExReleaseFastMutex(&DeviceExtension->Lock);
+    if (CompBattDebug & 1) DbgPrint("CompBatt: EXITING IsBatteryAlreadyOnList\n");
+    return Found;
 }
 
 NTSTATUS
@@ -51,8 +105,107 @@ NTAPI
 CompBattAddNewBattery(IN PCUNICODE_STRING BatteryName,
                       IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PCOMPBATT_BATTERY_DATA BatteryData;
+    PIRP Irp;
+    PIO_STACK_LOCATION IoStackLocation;
+    PFILE_OBJECT FileObject;
+    PAGED_CODE();
+    if (CompBattDebug & 1)
+        DbgPrint("CompBatt: ENTERING AddNewBattery \"%w\" \n", BatteryName->Buffer);
+    
+    /* Is this a new battery? */
+    if (!IsBatteryAlreadyOnList(BatteryName, DeviceExtension))
+    {
+        /* Allocate battery data */
+        BatteryData = ExAllocatePoolWithTag(NonPagedPool,
+                                            sizeof(COMPBATT_BATTERY_DATA) +
+                                            BatteryName->Length,
+                                            'CtaB');
+        if (BatteryData)
+        {
+            /* Initialize the data and write the battery name */
+            RtlZeroMemory(BatteryData, sizeof(COMPBATT_BATTERY_DATA));
+            BatteryData->Tag = 0;
+            BatteryData->BatteryName.MaximumLength = BatteryName->Length;
+            BatteryData->BatteryName.Buffer = (PWCHAR)(BatteryData + 1);
+            RtlCopyUnicodeString(&BatteryData->BatteryName, BatteryName);
+            
+            /* Get the device object */
+            Status = CompBattGetDeviceObjectPointer(BatteryName,
+                                                    FILE_ALL_ACCESS,
+                                                    &FileObject,
+                                                    &BatteryData->DeviceObject);
+            if (NT_SUCCESS(Status))
+            {
+                /* Reference the DO and drop the FO */
+                ObfReferenceObject(BatteryData->DeviceObject);
+                ObfDereferenceObject(FileObject);
+                
+                /* Allocate the battery IRP */            
+                Irp = IoAllocateIrp(BatteryData->DeviceObject->StackSize + 1, 0);
+                if (Irp)
+                {
+                    /* Save it */
+                    BatteryData->Irp = Irp;
+                    
+                    /* Setup the stack location */
+                    IoStackLocation = IoGetNextIrpStackLocation(Irp);
+                    IoStackLocation->Parameters.Others.Argument1 = DeviceExtension;
+                    IoStackLocation->Parameters.Others.Argument2 = BatteryData;
+
+                    /* Set IRP data */
+                    IoSetNextIrpStackLocation(Irp);
+                    Irp->IoStatus.Status = STATUS_DEVICE_NOT_CONNECTED;
+                    BatteryData->WaitFlag = 0;
+
+                    /* Insert this battery in the list */
+                    ExAcquireFastMutex(&DeviceExtension->Lock);
+                    InsertTailList(&DeviceExtension->BatteryList,
+                                   &BatteryData->BatteryLink);
+                    ExReleaseFastMutex(&DeviceExtension->Lock);
+
+                    /* Initialize the work item and delete lock */
+                    IoInitializeRemoveLock(&BatteryData->RemoveLock, 0, 0, 0);
+                    ExInitializeWorkItem(&BatteryData->WorkItem,
+                                         (PVOID)CompBattMonitorIrpCompleteWorker,
+                                         BatteryData);
+                    
+                    /* Setup the IRP work entry */
+                    CompBattMonitorIrpComplete(BatteryData->DeviceObject, Irp, 0);
+                    Status = STATUS_SUCCESS;
+                }
+                else
+                {
+                    /* Fail, no memory */
+                    if (CompBattDebug & 8)
+                        DbgPrint("CompBatt: Couldn't allocate new battery Irp\n");
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                    ObfDereferenceObject(BatteryData->DeviceObject);
+                }
+            }
+            else if (CompBattDebug & 8)
+            {
+                /* Fail */
+                DbgPrint("CompBattAddNewBattery: Failed to get device Object. status = %lx\n", 
+                         Status);
+            }
+            
+            /* Free the battery data */
+            ExFreePool(BatteryData);
+        }
+        else
+        {
+            /* Fail, no memory */
+            if (CompBattDebug & 8)
+                DbgPrint("CompBatt: Couldn't allocate new battery node\n");
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+        }
+    }
+
+    /* We're done */
+    if (CompBattDebug & 1) DbgPrint("CompBatt: EXITING AddNewBattery\n");
+    return Status;
 }
 
 NTSTATUS
@@ -60,16 +213,65 @@ NTAPI
 CompBattRemoveBattery(IN PCUNICODE_STRING BatteryName,
                       IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PCOMPBATT_BATTERY_DATA BatteryData;
+    if (CompBattDebug & 1) DbgPrint("CompBatt: RemoveBattery\n");
+
+    /* Remove the entry */
+    BatteryData = RemoveBatteryFromList(BatteryName, DeviceExtension);
+    if (BatteryData)
+    {
+        /* Dereference and free it */
+        ObfDereferenceObject(BatteryData->DeviceObject);
+        ExFreePool(BatteryData);
+        
+        /* Notify class driver */
+        DeviceExtension->Flags = 0;
+        BatteryClassStatusNotify(DeviceExtension->ClassData);
+    }
+
+    /* It's done */
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
 NTAPI
 CompBattGetBatteries(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PWCHAR p;
+    NTSTATUS Status;
+    PWCHAR LinkList;
+    UNICODE_STRING LinkString;
+    if (CompBattDebug & 1) DbgPrint("CompBatt: ENTERING GetBatteries\n");
+    
+    /* Get all battery links */
+    Status = IoGetDeviceInterfaces(&GUID_DEVICE_BATTERY, NULL, 0, &LinkList);
+    p = LinkList;
+    if (NT_SUCCESS(Status))
+    {
+        /* Loop all strings inside */
+        while (TRUE)
+        {
+            /* Create the string */
+            RtlInitUnicodeString(&LinkString, p);
+            if (!LinkString.Length) break;
+            
+            /* Add this battery and move on */
+            Status = CompBattAddNewBattery(&LinkString, DeviceExtension);
+            p += (LinkString.Length / sizeof(WCHAR)) + sizeof(UNICODE_NULL);
+        }
+      
+        /* Parsing complete, clean up buffer */
+        ExFreePool(LinkList);
+    }
+    else if (CompBattDebug & 8)
+    {
+        /* Fail */
+        DbgPrint("CompBatt: Couldn't get list of batteries\n");
+    }
+    
+    /* Done */
+    if (CompBattDebug & 1) DbgPrint("CompBatt: EXITING GetBatteries\n");
+    return Status;
 }
 
 NTSTATUS
@@ -77,8 +279,32 @@ NTAPI
 CompBattPnpEventHandler(IN PDEVICE_INTERFACE_CHANGE_NOTIFICATION Notification,
                         IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    if (CompBattDebug & 1) DbgPrint("CompBatt: ENTERING PnpEventHandler\n");
+    if (CompBattDebug & 2) DbgPrint("CompBatt: Received device interface change notification\n");
+
+    /* Check what happened */
+    if (IsEqualGUIDAligned(&Notification->Event, &GUID_DEVICE_INTERFACE_ARRIVAL))
+    {
+        /* Add the new battery */
+        if (CompBattDebug & 2)
+            DbgPrint("CompBatt: Received notification of battery arrival\n");
+        CompBattAddNewBattery(Notification->SymbolicLinkName, DeviceExtension);
+    }
+    else if (IsEqualGUIDAligned(&Notification->Event, &GUID_DEVICE_INTERFACE_REMOVAL))
+    {
+        /* Don't do anything */
+        if (CompBattDebug & 2)
+            DbgPrint("CompBatt: Received notification of battery removal\n");
+    }
+    else
+    {
+        /* Shouldn't happen */
+        if (CompBattDebug & 2) DbgPrint("CompBatt: Received unhandled PnP event\n");
+    }
+
+    /* Done, return success */
+    if (CompBattDebug & 1) DbgPrint("CompBatt: EXITING PnpEventHandler\n");
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -251,7 +477,7 @@ CompBattPnpDispatch(IN PDEVICE_OBJECT DeviceObject,
     {
         /* Complete the request */
         Status = Irp->IoStatus.Status;
-        IofCompleteRequest(Irp, IO_NO_INCREMENT);
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
 
     /* Release the remove lock and return status */
