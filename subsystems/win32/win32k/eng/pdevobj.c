@@ -52,13 +52,15 @@ PDEVOBJ_vRelease(PPDEVOBJ ppdev)
     /* Decrease reference count */
     --ppdev->cPdevRefs;
 
+    ASSERT(ppdev->cPdevRefs >= 0) ;
+
     /* Check if references are left */
     if (ppdev->cPdevRefs == 0)
     {
         /* Release surface */
         if(ppdev->pSurface)
         {
-            SURFACE_ShareUnlockSurface(ppdev->pSurface);
+            SURFACE_FreeSurface(ppdev->pSurface);
             ppdev->pfn.DisableSurface(ppdev->dhpdev);
         }
 
