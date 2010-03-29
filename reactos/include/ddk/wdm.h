@@ -43,6 +43,10 @@
 #include <guiddef.h>
 #endif /* GUID_DEFINED */
 
+#ifndef _KTMTYPES_
+typedef GUID UOW, *PUOW;
+#endif
+
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 #include <dpfilter.h>
 #endif
