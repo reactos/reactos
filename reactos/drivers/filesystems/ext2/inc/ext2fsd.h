@@ -42,8 +42,11 @@ typedef unsigned char   BYTE;
 /* REACTOS FIXME */
 #undef DeleteFile
 /* This is deprecated and should be changed in the EXT2FS driver. */
+
+/* FIXME : Those two definitions already exist in wdm.h
 #define RtlLargeIntegerLessThan(a, b) (a).QuadPart < (b).QuadPart
 #define RtlLargeIntegerGreaterThan(a, b) (a).QuadPart > (b).QuadPart
+*/
 
 
 // the following include files should be in the inc sub-dir associated with this driver

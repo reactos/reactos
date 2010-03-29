@@ -6603,7 +6603,46 @@ RtlCheckBit(
 #define RtlCheckBit(BMH,BP) (((((PLONG)(BMH)->Buffer)[(BP)/32]) >> ((BP)%32)) & 0x1)
 #endif // defined(_M_AMD64)
 
-#endif // !defined(MIDL_PASS)
+#define RtlLargeIntegerGreaterThan(X,Y) (                              \
+    (((X).HighPart == (Y).HighPart) && ((X).LowPart > (Y).LowPart)) || \
+    ((X).HighPart > (Y).HighPart)                                      \
+)
+
+#define RtlLargeIntegerGreaterThanOrEqualTo(X,Y) (                      \
+    (((X).HighPart == (Y).HighPart) && ((X).LowPart >= (Y).LowPart)) || \
+    ((X).HighPart > (Y).HighPart)                                       \
+)
+
+#define RtlLargeIntegerNotEqualTo(X,Y) (                          \
+    (((X).LowPart ^ (Y).LowPart) | ((X).HighPart ^ (Y).HighPart)) \
+)
+
+#define RtlLargeIntegerLessThan(X,Y) (                                 \
+    (((X).HighPart == (Y).HighPart) && ((X).LowPart < (Y).LowPart)) || \
+    ((X).HighPart < (Y).HighPart)                                      \
+)
+
+#define RtlLargeIntegerLessThanOrEqualTo(X,Y) (                         \
+    (((X).HighPart == (Y).HighPart) && ((X).LowPart <= (Y).LowPart)) || \
+    ((X).HighPart < (Y).HighPart)                                       \
+)
+
+#define RtlLargeIntegerGreaterThanZero(X) (       \
+    (((X).HighPart == 0) && ((X).LowPart > 0)) || \
+    ((X).HighPart > 0 )                           \
+)
+
+#define RtlLargeIntegerGreaterOrEqualToZero(X) ( (X).HighPart >= 0 )
+
+#define RtlLargeIntegerEqualToZero(X) ( !((X).LowPart | (X).HighPart) )
+
+#define RtlLargeIntegerNotEqualToZero(X) ( ((X).LowPart | (X).HighPart) )
+
+#define RtlLargeIntegerLessThanZero(X) ( ((X).HighPart < 0) )
+
+#define RtlLargeIntegerLessOrEqualToZero(X) ( ((X).HighPart < 0) || !((X).LowPart | (X).HighPart) )
+
+#endif /* !defined(MIDL_PASS) */
 
 /* Byte Swap Functions */
 #if (defined(_M_IX86) && (_MSC_FULL_VER > 13009037 || defined(__GNUC__))) || \
