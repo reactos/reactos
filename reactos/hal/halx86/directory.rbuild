@@ -8,6 +8,7 @@
 
 	<if property="ARCH" value="i386">
 		<xi:include href="hal.rbuild" />
+    	<xi:include href="halacpi.rbuild" />
 		<xi:include href="halxbox.rbuild" />
 		<if property="BUILD_MP" value="1">
 			<xi:include href="halmps.rbuild" />
