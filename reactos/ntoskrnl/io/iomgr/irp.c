@@ -966,8 +966,11 @@ IoBuildSynchronousFsdRequest(IN ULONG MajorFunction,
                                         IoStatusBlock );
     if (!Irp) return NULL;
 
-    /* Set the Event which makes it Syncronous */
+    /* Associate the caller's event object with this IRP */
     Irp->UserEvent = Event;
+
+    /* Set the synchronous flag */
+    Irp->Flags |= IRP_SYNCHRONOUS_API;
 
     /* Sync IRPs are queued to requestor thread's irp cancel/cleanup list */
     IoQueueThreadIrp(Irp);
