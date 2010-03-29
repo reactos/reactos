@@ -28,6 +28,7 @@ scsi.inf
 usbport.inf
 audio.inf
 ks.inf
+bda.inf
 
 [RegistrationPhase2]
 RegisterDlls=OleControlDlls
