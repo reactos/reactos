@@ -466,6 +466,10 @@ typedef enum _MODE {
   MaximumMode
 } MODE;
 
+#if (NTDDI_VERSION < NTDDI_WIN7) || defined(_X86_) || !defined(NT_PROCESSOR_GROUPS)
+#define SINGLE_GROUP_LEGACY_API        1
+#endif
+
 /* Processor features */
 #define PF_FLOATING_POINT_PRECISION_ERRATA  0   
 #define PF_FLOATING_POINT_EMULATED          1   
