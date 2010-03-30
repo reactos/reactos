@@ -1,0 +1,27 @@
+
+
+This is a list of todos for win32k. If you found something that needs to be 
+done, but you can't or don't want to handle it right now, you can add an entry
+here, so it won't get forgotton.
+
+Please also note, where to find the problem (file / function), and possible 
+requirements before it can be handled.
+
+
+# Lock the PDEV lock only when we are going to touch the PDEV or the Surface
+  Currently the PDEV is locked (shared HSEM == ERESOURCE) when we lock the DC,
+  this is only a minimal implementation, as we don't need to do that, when we
+  don't even touch anything from the PDEV or the surface. This should be
+  optimized. (see dc.h, DC_LockDc)
+
+# Get rid of all float and double in win32k.
+  We can't use the fpu on x86 in the kernel, as fpu state is not saved in
+  user/kernel transitions. There are 3 possible solutions:
+  1.) Rewrite the function to use integer (preferred)
+  2.) Use FLOATOBJ
+  3.) Use KeSaveFloatingPointState (slow, avoid!)
+
+# Rewrite the handle manager! Once and for all!
+
+
+
