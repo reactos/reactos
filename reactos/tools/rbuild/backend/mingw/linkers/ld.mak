@@ -6,6 +6,12 @@ LDFLAG_CONSOLE:=--subsystem=console
 LDFLAG_WINDOWS:=--subsystem=windows
 LDFLAG_NATIVE:=--subsystem=native
 
+LDFLAG_EXCLUDE_ALL_SYMBOLS=-exclude-all-symbols
+DLLTOOL_FLAGS=--kill-at
+ifeq ($(ARCH),amd64)
+    DLLTOOL_FLAGS= --no-leading-underscore
+endif
+
 #~ #(module, objs, deps, ldflags, output, def, libs, entry, base)
 #(module, objs, deps, ldflags, output, def, libs, entry, base, extralibs)
 define RBUILD_LINK
@@ -13,15 +19,15 @@ define RBUILD_LINK
 ifneq ($(6),)
 ${call RBUILD_intermediate_dir,$(5)}$$(SEP)lib${call RBUILD_name,$(5)}.a: $(6) | ${call RBUILD_intermediate_path,$(5)}
 	$$(ECHO_IMPLIB)
-	$${dlltool} --def $(6) --kill-at --output-lib=$$@
+	$${dlltool} --def $(6) $(DLLTOOL_FLAGS) --output-lib=$$@
 
 ${call RBUILD_intermediate_dir,$(5)}$$(SEP)lib${call RBUILD_name,$(5)}.delayimp.a: $(6) | ${call RBUILD_intermediate_path,$(5)}
 	$$(ECHO_IMPLIB)
-	$${dlltool} --def $(6) --kill-at --output-delaylib=$$@
+	$${dlltool} --def $(6) $(DLLTOOL_FLAGS) --output-delaylib=$$@
 
 ${call RBUILD_intermediate_path_noext,$(5)}.exp: $(6) | ${call RBUILD_intermediate_path,$(5)}
 	$$(ECHO_IMPLIB)
-	$${dlltool} --def $(6) --kill-at --output-exp=$$@
+	$${dlltool} --def $(6) $(DLLTOOL_FLAGS) --output-exp=$$@
 
 $(1)_CLEANFILES+=\
 	${call RBUILD_intermediate_dir,$(5)}$$(SEP)lib$(notdir $(5)).a \

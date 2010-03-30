@@ -1358,7 +1358,7 @@ Module::GetEntryPoint() const
 	if (entrypoint == "0" || entrypoint == "0x0")
 		return "0";
 	
-	if (Environment::GetArch() != "arm")
+	if (Environment::GetArch() != "arm" && Environment::GetArch() != "amd64")
 		result = "_";
 
 	result += entrypoint;
