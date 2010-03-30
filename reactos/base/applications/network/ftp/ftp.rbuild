@@ -6,6 +6,7 @@
 
 	<library>ws2_32</library>
 	<library>iphlpapi</library>
+	<library>oldnames</library>
 	<file>cmds.c</file>
 	<file>cmdtab.c</file>
 	<file>domacro.c</file>

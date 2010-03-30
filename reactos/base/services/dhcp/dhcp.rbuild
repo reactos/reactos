@@ -8,6 +8,7 @@
 	<library>ws2_32</library>
 	<library>iphlpapi</library>
 	<library>advapi32</library>
+	<library>oldnames</library>
 	<file>adapter.c</file>
 	<file>alloc.c</file>
 	<file>api.c</file>

@@ -7,7 +7,6 @@
 	<!-- This is to prevent from using data imports directly -->
 	<define name="_M_CEE_PURE" />
 
-	<importlibrary definition="moldname-msvcrt.def" dllname="msvcrt.dll" />
 	<include base="ReactOS">include/reactos/mingw-w64</include>
 	<if property="USERMODE" value="1">
 		<library>kernel32</library>
@@ -62,5 +61,9 @@
 	<include base="ReactOS">include/reactos/mingw-w64</include>
 	<file>crtdll.c</file>
 	<file>dllargv.c</file>
+</module>
+<module name="oldnames" type="staticlibrary">
+	<define name="_CRTBLD" />
+	<importlibrary definition="moldname-msvcrt.def" dllname="msvcrt.dll" />
 </module>
 </group>
