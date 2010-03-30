@@ -11,7 +11,7 @@ frexp(double __x, int *exptr)
 	union
 	{
 		double*   __x;
-		double_t*   x;
+		double_s*   x;
 	} x;
 
 	x.__x = &__x;

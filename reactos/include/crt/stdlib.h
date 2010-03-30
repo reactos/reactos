@@ -535,7 +535,7 @@ extern "C" {
   _CRTIMP int __cdecl putenv(const char *_EnvString);
   _CRTIMP void __cdecl swab(char *_Buf1,char *_Buf2,int _SizeInBytes);
   _CRTIMP char *__cdecl ultoa(unsigned long _Val,char *_Dstbuf,int _Radix);
-  _CRTIMP onexit_t __cdecl onexit(onexit_t _Func);
+  onexit_t __cdecl onexit(onexit_t _Func);
 #endif
 #endif
 

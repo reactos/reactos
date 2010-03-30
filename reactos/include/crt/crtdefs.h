@@ -25,6 +25,7 @@
 //#define NO_OLDNAMES
 //#endif
 
+
 /** Properties ***************************************************************/
 
 #undef _CRT_PACKING
@@ -50,12 +51,14 @@
 #endif
 
 #ifndef _CRTIMP
- #ifdef _DLL
+ #ifdef CRTDLL /* Defined for ntdll, crtdll, msvcrt, etc */
+  #define _CRTIMP __declspec(dllexport)
+ #elif defined(_DLL)
   #define _CRTIMP __declspec(dllimport)
- #else
-  #define _CRTIMP 
- #endif
-#endif
+ #else /* !CRTDLL && !_DLL */
+  #define _CRTIMP
+ #endif /* CRTDLL || _DLL */
+#endif /* !_CRTIMP */
 
 //#define _CRT_ALTERNATIVE_INLINES
 
@@ -218,6 +221,7 @@
 #define _CRT_OBSOLETE(_NewItem)
 #endif
 
+
 /** Constants ****************************************************************/
 
 #define _ARGMAX 100
@@ -229,7 +233,6 @@
 #define __STDC_SECURE_LIB__ 200411L
 #define __GOT_SECURE_LIB__ __STDC_SECURE_LIB__
 #define _SECURECRT_FILL_BUFFER_PATTERN 0xFD
-
 
 
 /** Type definitions *********************************************************/

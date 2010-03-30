@@ -93,7 +93,7 @@
 		</directory>
 	</module>
 
-	<module name="mini_hal" type="objectlibrary">
+	<module name="mini_hal" type="objectlibrary" crt="static">
 		<include>include</include>
 		<include base="ntoskrnl">include</include>
 		<define name="_NTHALDLL_" />
@@ -128,7 +128,7 @@
 					<file>systimer.S</file>
 				</directory>
 			</if>
-		</directory>
+				</directory>
 		<directory name="up">
 			<file>halinit_up.c</file>
 			<file>pic.c</file>

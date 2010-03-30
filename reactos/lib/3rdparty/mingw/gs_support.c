@@ -1,7 +1,7 @@
 /**
  * This file has no copyright assigned and is placed in the Public Domain.
  * This file is part of the w64 mingw-runtime package.
- * No warranty is given; refer to the file DISCLAIMER within this package.
+ * No warranty is given; refer to the file DISCLAIMER.PD within this package.
  */
 
 #include <windows.h>
@@ -42,6 +42,8 @@ static const EXCEPTION_POINTERS GS_ExceptionPointers = {
 
 DECLSPEC_SELECTANY UINT_PTR __security_cookie = DEFAULT_SECURITY_COOKIE;
 DECLSPEC_SELECTANY UINT_PTR __security_cookie_complement = ~(DEFAULT_SECURITY_COOKIE);
+
+void __cdecl __security_init_cookie (void);
 
 void __cdecl
 __security_init_cookie (void)
@@ -85,6 +87,8 @@ __security_init_cookie (void)
   __security_cookie = cookie;
   __security_cookie_complement = ~cookie;
 }
+
+__declspec(noreturn) void __cdecl __report_gsfailure (ULONGLONG);
 
 __declspec(noreturn) void __cdecl
 __report_gsfailure (ULONGLONG StackCookie)
