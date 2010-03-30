@@ -11,7 +11,7 @@
 /*  -------------------------------------------------------  INCLUDES  */
 
 #ifdef __GNUC__
-#include <wctype.h> /* towlower prototype */
+#include <ctype.h> /* towlower prototype */
 #endif
 
 #define NDEBUG
