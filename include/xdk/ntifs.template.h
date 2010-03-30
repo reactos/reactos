@@ -1064,6 +1064,7 @@ typedef struct _KQUEUE {
 } KQUEUE, *PKQUEUE, *RESTRICTED_POINTER PRKQUEUE;
 
 $include (kefuncs.h)
+$include (extypes.h)
 $include (exfuncs.h)
 $include (sefuncs.h)
 $include (psfuncs.h)
@@ -1078,11 +1079,6 @@ $include (fsrtlfuncs.h)
 $include (cctypes.h)
 $include (ccfuncs.h)
 $include (zwfuncs.h)
-
-#define INVALID_PROCESSOR_INDEX     0xffffffff
-
-#define EX_PUSH_LOCK ULONG_PTR
-#define PEX_PUSH_LOCK PULONG_PTR
 
 /* #if !defined(_X86AMD64_)  FIXME : WHAT ?! */
 #if defined(_WIN64)
@@ -1114,127 +1110,6 @@ HalGetDmaAlignmentRequirement(
 #if defined(_M_IX86) || defined(_M_AMD64)
 #define HalGetDmaAlignmentRequirement() 1L
 #endif
-
-typedef ULONG LBN;
-typedef LBN *PLBN;
-
-typedef ULONG VBN;
-typedef VBN *PVBN;
-
-typedef enum _FAST_IO_POSSIBLE {
-  FastIoIsNotPossible = 0,
-  FastIoIsPossible,
-  FastIoIsQuestionable
-} FAST_IO_POSSIBLE;
-
-typedef struct _EOF_WAIT_BLOCK {
-  LIST_ENTRY EofWaitLinks;
-  KEVENT Event;
-} EOF_WAIT_BLOCK, *PEOF_WAIT_BLOCK;
-
-typedef struct _FILE_LOCK_INFO {
-  LARGE_INTEGER StartingByte;
-  LARGE_INTEGER Length;
-  BOOLEAN ExclusiveLock;
-  ULONG Key;
-  PFILE_OBJECT FileObject;
-  PVOID ProcessId;
-  LARGE_INTEGER EndingByte;
-} FILE_LOCK_INFO, *PFILE_LOCK_INFO;
-
-typedef NTSTATUS
-(NTAPI *PCOMPLETE_LOCK_IRP_ROUTINE) (
-  IN PVOID Context,
-  IN PIRP Irp);
-
-typedef VOID
-(NTAPI *PUNLOCK_ROUTINE) (
-  IN PVOID Context,
-  IN PFILE_LOCK_INFO FileLockInfo);
-
-typedef struct _FILE_LOCK {
-  PCOMPLETE_LOCK_IRP_ROUTINE CompleteLockIrpRoutine;
-  PUNLOCK_ROUTINE UnlockRoutine;
-  BOOLEAN FastIoIsQuestionable;
-  BOOLEAN SpareC[3];
-  PVOID LockInformation;
-  FILE_LOCK_INFO LastReturnedLockInfo;
-  PVOID LastReturnedLock;
-  LONG volatile LockRequestsInProgress;
-} FILE_LOCK, *PFILE_LOCK;
-
-typedef struct _TUNNEL {
-  FAST_MUTEX Mutex;
-  PRTL_SPLAY_LINKS Cache;
-  LIST_ENTRY TimerQueue;
-  USHORT NumEntries;
-} TUNNEL, *PTUNNEL;
-
-typedef struct _BASE_MCB {
-  ULONG MaximumPairCount;
-  ULONG PairCount;
-  USHORT PoolType;
-  USHORT Flags;
-  PVOID Mapping;
-} BASE_MCB, *PBASE_MCB;
-
-typedef struct _LARGE_MCB {
-  PKGUARDED_MUTEX GuardedMutex;
-  BASE_MCB BaseMcb;
-} LARGE_MCB, *PLARGE_MCB;
-
-#define MCB_FLAG_RAISE_ON_ALLOCATION_FAILURE 1
-
-typedef struct _MCB {
-  LARGE_MCB DummyFieldThatSizesThisStructureCorrectly;
-} MCB, *PMCB;
-
-typedef PVOID OPLOCK, *POPLOCK;
-
-typedef VOID
-(NTAPI *POPLOCK_WAIT_COMPLETE_ROUTINE) (
-  IN PVOID Context,
-  IN PIRP Irp);
-
-typedef VOID
-(NTAPI *POPLOCK_FS_PREPOST_IRP) (
-  IN PVOID Context,
-  IN PIRP Irp);
-
-#if (NTDDI_VERSION >= NTDDI_VISTASP1)
-#define OPLOCK_FLAG_COMPLETE_IF_OPLOCKED    0x00000001
-#endif
-
-#if (NTDDI_VERSION >= NTDDI_WIN7)
-#define OPLOCK_FLAG_OPLOCK_KEY_CHECK_ONLY   0x00000002
-#define OPLOCK_FLAG_BACK_OUT_ATOMIC_OPLOCK  0x00000004
-#define OPLOCK_FLAG_IGNORE_OPLOCK_KEYS      0x00000008
-#define OPLOCK_FSCTRL_FLAG_ALL_KEYS_MATCH   0x00000001
-#endif
-
-#if (NTDDI_VERSION >= NTDDI_WIN7)
-
-typedef struct _OPLOCK_KEY_ECP_CONTEXT {
-  GUID OplockKey;
-  ULONG Reserved;
-} OPLOCK_KEY_ECP_CONTEXT, *POPLOCK_KEY_ECP_CONTEXT;
-
-DEFINE_GUID( GUID_ECP_OPLOCK_KEY, 0x48850596, 0x3050, 0x4be7, 0x98, 0x63, 0xfe, 0xc3, 0x50, 0xce, 0x8d, 0x7f );
-
-#endif
-
-typedef PVOID PNOTIFY_SYNC;
-
-typedef BOOLEAN
-(NTAPI *PCHECK_FOR_TRAVERSE_ACCESS) (
-  IN PVOID NotifyContext,
-  IN PVOID TargetContext OPTIONAL,
-  IN PSECURITY_SUBJECT_CONTEXT SubjectContext);
-
-typedef BOOLEAN
-(NTAPI *PFILTER_REPORT_CHANGE) (
-  IN PVOID NotifyContext,
-  IN PVOID FilterContext);
 
 extern NTKERNELAPI PUSHORT NlsOemLeadByteInfo;
 #define NLS_OEM_LEAD_BYTE_INFO            NlsOemLeadByteInfo

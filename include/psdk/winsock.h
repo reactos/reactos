@@ -652,7 +652,7 @@ recvfrom(
   IN int len,
   IN int flags,
   OUT struct sockaddr FAR *from OPTIONAL,
-  IN OUY int FAR * fromlen OPTIONAL);
+  IN OUT int FAR * fromlen OPTIONAL);
 
 int
 PASCAL FAR

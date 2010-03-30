@@ -1,7 +1,8 @@
+$if (_WDMDDK_ || _NTDDK_)
 /******************************************************************************
  *                            Executive Types                                 *
  ******************************************************************************/
-
+$endif
 $if (_WDMDDK_)
 #define EX_RUNDOWN_ACTIVE                 0x1
 #define EX_RUNDOWN_COUNT_SHIFT            0x1
@@ -285,3 +286,9 @@ typedef struct _ZONE_HEADER {
 #define PROTECTED_POOL                    0x80000000
 
 $endif (_NTDDK_)
+$if (_NTIFS_)
+#define INVALID_PROCESSOR_INDEX     0xffffffff
+
+#define EX_PUSH_LOCK ULONG_PTR
+#define PEX_PUSH_LOCK PULONG_PTR
+$endif (_NTIFS_)

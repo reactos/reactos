@@ -1,6 +1,6 @@
 #pragma once
 
-#if !(defined _WINSOCK2API_ || defined _WINSOCK_H)
+#if !(defined _WINSOCK2API_ || defined _WINSOCKAPI_)
 #define _WINSOCK2API_
 #define _WINSOCKAPI_ /* to prevent later inclusion of winsock.h */
 
@@ -179,9 +179,6 @@ struct linger {
   u_short l_linger;
 };
 
-#define _IO(x,y) (IOC_VOID|((x)<<8)|(y))
-#define _IOR(x,y,t) (IOC_OUT|(((LONG)sizeof(t)&IOCPARM_MASK)<<16)|((x)<<8)|(y))
-#define _IOW(x,y,t) (IOC_IN|(((LONG)sizeof(t)&IOCPARM_MASK)<<16)|((x)<<8)|(y))
 #define FIONBIO _IOW('f', 126, u_long)
 
 struct netent {
@@ -192,14 +189,15 @@ struct netent {
 };
 
 struct servent {
-  char *s_name;
-  char **s_aliases;
+  char FAR *s_name;
+  char FAR **s_aliases;
 #ifdef _WIN64
-  char *s_proto;
+  char FAR *s_proto;
   short s_port;
 #else
   short s_port;
-  char *s_proto;
+  char FAR *s_proto;
+#endif
 };
 
 struct protoent {
@@ -208,9 +206,8 @@ struct protoent {
   short p_proto;
 };
 
-#define SO_CONDITIONAL_ACCEPT 0x3002
-
 #define SOMAXCONN 0x7fffffff
+
 #define MSG_OOB 1
 #define MSG_PEEK 2
 #define MSG_DONTROUTE 4
@@ -225,13 +222,7 @@ struct protoent {
 #define NO_DATA WSANO_DATA
 #define NO_ADDRESS WSANO_ADDRESS
 
-#endif /* ! (__INSIDE_CYGWIN__ || __INSIDE_MSYS__) */
-
-#define IOCPARM_MASK 0x7f
-#define IOC_VOID 0x20000000
-#define IOC_OUT 0x40000000
-#define IOC_IN 0x80000000
-#define IOC_INOUT (IOC_IN|IOC_OUT)
+#endif /* !(defined (__INSIDE_CYGWIN__) || defined (__INSIDE_MSYS__)) */
 
 #define FIONREAD _IOR('f', 127, u_long)
 #define FIOASYNC _IOW('f', 125, u_long)
@@ -241,31 +232,6 @@ struct protoent {
 #define SIOCGLOWAT _IOR('s',  3, u_long)
 #define SIOCATMARK _IOR('s',  7, u_long)
 
-#define IPPORT_ECHO 7
-#define IPPORT_DISCARD 9
-#define IPPORT_SYSTAT 11
-#define IPPORT_DAYTIME 13
-#define IPPORT_NETSTAT 15
-#define IPPORT_FTP 21
-#define IPPORT_TELNET 23
-#define IPPORT_SMTP 25
-#define IPPORT_TIMESERVER 37
-#define IPPORT_NAMESERVER 42
-#define IPPORT_WHOIS 43
-#define IPPORT_MTP 57
-#define IPPORT_TFTP 69
-#define IPPORT_RJE 77
-#define IPPORT_FINGER 79
-#define IPPORT_TTYLINK 87
-#define IPPORT_SUPDUP 95
-#define IPPORT_EXECSERVER 512
-#define IPPORT_LOGINSERVER 513
-#define IPPORT_CMDSERVER 514
-#define IPPORT_EFSSERVER 520
-#define IPPORT_BIFFUDP 512
-#define IPPORT_WHOSERVER 513
-#define IPPORT_ROUTESERVER 520
-#define IPPORT_RESERVED 1024
 #define IMPLINK_IP 155
 #define IMPLINK_LOWEXPER 156
 #define IMPLINK_HIGHEXPER 158
@@ -281,36 +247,6 @@ struct protoent {
 
 #define FROM_PROTOCOL_INFO (-1)
 
-#define SOCK_STREAM 1
-#define SOCK_DGRAM 2
-#define SOCK_RAW 3
-#define SOCK_RDM 4
-#define SOCK_SEQPACKET 5
-
-#define SO_DEBUG 1
-#define SO_ACCEPTCONN 2
-#define SO_REUSEADDR 4
-#define SO_KEEPALIVE 8
-#define SO_DONTROUTE 16
-#define SO_BROADCAST 32
-#define SO_USELOOPBACK 64
-#define SO_LINGER 128
-#define SO_OOBINLINE 256
-#define SO_DONTLINGER (int)(~SO_LINGER)
-#define SO_EXCLUSIVEADDRUSE ((int)(~SO_REUSEADDR))
-
-#define SO_SNDBUF 0x1001
-#define SO_RCVBUF 0x1002
-#define SO_SNDLOWAT 0x1003
-#define SO_RCVLOWAT 0x1004
-#define SO_SNDTIMEO 0x1005
-#define SO_RCVTIMEO 0x1006
-#define SO_ERROR 0x1007
-#define SO_TYPE 0x1008
-
-#define SO_GROUP_ID 0x2001
-#define SO_GROUP_PRIORITY 0x2002
-#define SO_MAX_MSG_SIZE 0x2003
 #define SO_PROTOCOL_INFOA 0x2004
 #define SO_PROTOCOL_INFOW 0x2005
 #ifdef UNICODE
@@ -349,8 +285,6 @@ struct protoent {
 #define PF_BTH AF_BTH
 #endif
 #define PF_MAX AF_MAX
-
-#define SOL_SOCKET 0xffff
 
 #define MSG_PARTIAL 0x8000
 #define MSG_INTERRUPT 0x10
@@ -541,38 +475,6 @@ struct protoent {
 
 #define SERVICE_MULTIPLE                    0x00000001
 
-#define NS_ALL         0
-#define NS_SAP         1
-#define NS_NDS         2
-#define NS_PEER_BROWSE 3
-#define NS_SLP         5
-#define NS_DHCP        6
-#define NS_TCPIP_LOCAL 10
-#define NS_TCPIP_HOSTS 11
-#define NS_DNS         12
-#define NS_NETBT       13
-#define NS_WINS        14
-#if(_WIN32_WINNT >= 0x0501)
-#define NS_NLA         15
-#endif
-#if(_WIN32_WINNT >= 0x0600)
-#define NS_BTH         16
-#endif
-#define NS_NBP         20
-#define NS_MS          30
-#define NS_STDA        31
-#define NS_NTDS        32
-#if(_WIN32_WINNT >= 0x0600)
-#define NS_EMAIL       37
-#define NS_PNRPNAME    38
-#define NS_PNRPCLOUD   39
-#endif
-#define NS_X500        40
-#define NS_NIS         41
-#define NS_NISPLUS     42
-#define NS_WRQ         50
-#define NS_NETDES      60
-
 #define RES_UNUSED_1    0x00000001
 #define RES_FLUSH_CACHE 0x00000002
 #ifndef RES_SERVICE
@@ -635,11 +537,6 @@ struct protoent {
 #define RESULT_IS_DELETED    0x0040
 #endif
 
-
-
-
-
-
 #ifndef s_addr
 
 #define s_addr S_un.S_addr
@@ -665,7 +562,7 @@ typedef struct WSAData {
 #ifdef _WIN64
   unsigned short iMaxSockets;
   unsigned short iMaxUdpDg;
-  char *lpVendorInfo;
+  char FAR *lpVendorInfo;
   char szDescription[WSADESCRIPTION_LEN+1];
   char szSystemStatus[WSASYS_STATUS_LEN+1];
 #else
@@ -673,7 +570,8 @@ typedef struct WSAData {
   char szSystemStatus[WSASYS_STATUS_LEN+1];
   unsigned short iMaxSockets;
   unsigned short iMaxUdpDg;
-  char *lpVendorInfo;
+  char FAR *lpVendorInfo;
+#endif
 } WSADATA, FAR *LPWSADATA;
 
 struct sockproto {
@@ -1204,7 +1102,7 @@ typedef int
   IN int len,
   IN int flags,
   OUT struct sockaddr FAR *from OPTIONAL,
-  IN OUY int FAR * fromlen OPTIONAL);
+  IN OUT int FAR * fromlen OPTIONAL);
 
 typedef int
 (WSAAPI *LPFN_SELECT)(
@@ -1820,7 +1718,6 @@ typedef INT
 
 #if INCL_WINSOCK_API_PROTOTYPES
 
-
 WINSOCK_API_LINKAGE
 SOCKET
 WSAAPI
@@ -1946,7 +1843,7 @@ recvfrom(
   IN int len,
   IN int flags,
   OUT struct sockaddr FAR *from OPTIONAL,
-  IN OUY int FAR *fromlen OPTIONAL);
+  IN OUT int FAR *fromlen OPTIONAL);
 
 WINSOCK_API_LINKAGE
 int
@@ -2828,3 +2725,5 @@ typedef struct timeval FAR *LPTIMEVAL;
 #include <wsipv6ok.h>
 #endif
 #endif */
+
+#endif /* !(defined _WINSOCK2API_ || defined _WINSOCK_H) */

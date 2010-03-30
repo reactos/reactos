@@ -9,7 +9,7 @@
 #pragma once
 
 #include <ntddk.h>
-#include <wmlib.h>
+#include <wmilib.h>
 #include <initguid.h>
 #include <batclass.h>
 
