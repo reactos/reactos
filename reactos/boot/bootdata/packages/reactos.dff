@@ -505,6 +505,7 @@ drivers\input\mouclass\mouclass.sys                 2
 drivers\input\sermouse\sermouse.sys                 2
 
 drivers\ksfilter\ks\ks.sys                          2
+drivers\multimedia\bdasup\bdasup.sys                2
 
 drivers\network\afd\afd.sys                         2
 drivers\network\ndis\ndis.sys                       2
