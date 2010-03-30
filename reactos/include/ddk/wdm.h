@@ -5191,6 +5191,13 @@ typedef VOID
   IN struct _IO_CSQ  *Csq,
   IN PIRP  Irp);
 
+typedef NTSTATUS
+(NTAPI IO_CSQ_INSERT_IRP_EX)(
+  IN struct _IO_CSQ *Csq,
+  IN PIRP Irp,
+  IN PVOID InsertContext);
+typedef IO_CSQ_INSERT_IRP_EX *PIO_CSQ_INSERT_IRP_EX;
+
 typedef VOID
 (NTAPI *PIO_CSQ_REMOVE_IRP)(
   IN struct _IO_CSQ  *Csq,
