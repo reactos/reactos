@@ -130,43 +130,6 @@ typedef USHORT ADDRESS_FAMILY;
 
 #define TCP_NODELAY           0x0001
 
-typedef struct sockaddr {
-#if (_WIN32_WINNT < 0x0600)
-  u_short sa_family;
-#else
-  ADDRESS_FAMILY sa_family;
-#endif
-  CHAR sa_data[14];
-} SOCKADDR, *PSOCKADDR, FAR *LPSOCKADDR;
-
-#ifndef __CSADDR_DEFINED__
-#define __CSADDR_DEFINED__
-
-typedef struct _SOCKET_ADDRESS {
-  LPSOCKADDR lpSockaddr;
-  INT iSockaddrLength;
-} SOCKET_ADDRESS, *PSOCKET_ADDRESS, *LPSOCKET_ADDRESS;
-
-typedef struct _SOCKET_ADDRESS_LIST {
-  INT iAddressCount;
-  SOCKET_ADDRESS Address[1];
-} SOCKET_ADDRESS_LIST, *PSOCKET_ADDRESS_LIST, FAR *LPSOCKET_ADDRESS_LIST;
-
-#if (_WIN32_WINNT >= 0x0600)
-#define SIZEOF_SOCKET_ADDRESS_LIST(AddressCount) \
-    (FIELD_OFFSET(SOCKET_ADDRESS_LIST, Address) + \
-     AddressCount * sizeof(SOCKET_ADDRESS))
-#endif
-
-typedef struct _CSADDR_INFO {
-  SOCKET_ADDRESS LocalAddr;
-  SOCKET_ADDRESS RemoteAddr;
-  INT iSocketType;
-  INT iProtocol;
-} CSADDR_INFO, *PCSADDR_INFO, FAR *LPCSADDR_INFO ;
-
-#endif /* __CSADDR_DEFINED__ */
-
 #define _SS_MAXSIZE           128
 #define _SS_ALIGNSIZE         (sizeof(__int64))
 
@@ -179,32 +142,6 @@ typedef struct _CSADDR_INFO {
 
 #define _SS_PAD1SIZE (_SS_ALIGNSIZE - sizeof (short))
 #define _SS_PAD2SIZE (_SS_MAXSIZE - (sizeof (short) + _SS_PAD1SIZE + _SS_ALIGNSIZE))
-
-#endif /* (_WIN32_WINNT >= 0x0600) */
-
-typedef struct sockaddr_storage {
-  ADDRESS_FAMILY ss_family;
-  CHAR __ss_pad1[_SS_PAD1SIZE];
-  __int64 __ss_align;
-  CHAR __ss_pad2[_SS_PAD2SIZE];
-} SOCKADDR_STORAGE_LH, *PSOCKADDR_STORAGE_LH, FAR *LPSOCKADDR_STORAGE_LH;
-
-typedef struct sockaddr_storage_xp {
-  short ss_family;
-  CHAR __ss_pad1[_SS_PAD1SIZE];
-  __int64 __ss_align;
-  CHAR __ss_pad2[_SS_PAD2SIZE];
-} SOCKADDR_STORAGE_XP, *PSOCKADDR_STORAGE_XP, FAR *LPSOCKADDR_STORAGE_XP;
-
-#if (_WIN32_WINNT >= 0x0600)
-
-typedef SOCKADDR_STORAGE_LH SOCKADDR_STORAGE;
-typedef SOCKADDR_STORAGE *PSOCKADDR_STORAGE, FAR *LPSOCKADDR_STORAGE;
-
-#elif (_WIN32_WINNT >= 0x0501)
-
-typedef SOCKADDR_STORAGE_XP SOCKADDR_STORAGE;
-typedef SOCKADDR_STORAGE *PSOCKADDR_STORAGE, FAR *LPSOCKADDR_STORAGE;
 
 #endif /* (_WIN32_WINNT >= 0x0600) */
 
@@ -251,59 +188,6 @@ typedef SOCKADDR_STORAGE *PSOCKADDR_STORAGE, FAR *LPSOCKADDR_STORAGE;
 #endif
 
 #define IPPROTO_IP                          0
-
-typedef enum {
-#if (_WIN32_WINNT >= 0x0501)
-  IPPROTO_HOPOPTS = 0,
-#endif
-  IPPROTO_ICMP = 1,
-  IPPROTO_IGMP = 2,
-  IPPROTO_GGP = 3,
-#if (_WIN32_WINNT >= 0x0501)
-  IPPROTO_IPV4 = 4,
-#endif
-#if (_WIN32_WINNT >= 0x0600)
-  IPPROTO_ST = 5,
-#endif
-  IPPROTO_TCP = 6,
-#if (_WIN32_WINNT >= 0x0600)
-  IPPROTO_CBT = 7,
-  IPPROTO_EGP = 8,
-  IPPROTO_IGP = 9,
-#endif
-  IPPROTO_PUP = 12,
-  IPPROTO_UDP = 17,
-  IPPROTO_IDP = 22,
-#if (_WIN32_WINNT >= 0x0600)
-  IPPROTO_RDP = 27,
-#endif
-#if (_WIN32_WINNT >= 0x0501)
-  IPPROTO_IPV6 = 41,
-  IPPROTO_ROUTING = 43,
-  IPPROTO_FRAGMENT = 44,
-  IPPROTO_ESP = 50,
-  IPPROTO_AH = 51,
-  IPPROTO_ICMPV6 = 58,
-  IPPROTO_NONE = 59,
-  IPPROTO_DSTOPTS = 60,
-#endif /* (_WIN32_WINNT >= 0x0501) */
-  IPPROTO_ND = 77,
-#if(_WIN32_WINNT >= 0x0501)
-  IPPROTO_ICLFXBM = 78,
-#endif
-#if (_WIN32_WINNT >= 0x0600)
-  IPPROTO_PIM = 103,
-  IPPROTO_PGM = 113,
-  IPPROTO_L2TP = 115,
-  IPPROTO_SCTP = 132,
-#endif /* (_WIN32_WINNT >= 0x0600) */
-  IPPROTO_RAW = 255,
-  IPPROTO_MAX = 256,
-  IPPROTO_RESERVED_RAW = 257,
-  IPPROTO_RESERVED_IPSEC = 258,
-  IPPROTO_RESERVED_IPSECOFFLOAD = 259,
-  IPPROTO_RESERVED_MAX = 260
-} IPPROTO, *PIPROTO;
 
 #define IPPORT_TCPMUX           1
 #define IPPORT_ECHO             7
@@ -389,6 +273,206 @@ typedef enum {
 #define INADDR_BROADCAST        (ULONG)0xffffffff
 #define INADDR_NONE             0xffffffff
 
+#define SCOPEID_UNSPECIFIED_INIT    {0}
+
+#define IOCPARM_MASK    0x7f
+#define IOC_VOID        0x20000000
+#define IOC_OUT         0x40000000
+#define IOC_IN          0x80000000
+#define IOC_INOUT       (IOC_IN|IOC_OUT)
+
+#define _IO(x,y)        (IOC_VOID|((x)<<8)|(y))
+#define _IOR(x,y,t)     (IOC_OUT|(((long)sizeof(t)&IOCPARM_MASK)<<16)|((x)<<8)|(y))
+#define _IOW(x,y,t)     (IOC_IN|(((long)sizeof(t)&IOCPARM_MASK)<<16)|((x)<<8)|(y))
+
+#define MSG_TRUNC       0x0100
+#define MSG_CTRUNC      0x0200
+#define MSG_BCAST       0x0400
+#define MSG_MCAST       0x0800
+
+#define AI_PASSIVE                  0x00000001
+#define AI_CANONNAME                0x00000002
+#define AI_NUMERICHOST              0x00000004
+#define AI_NUMERICSERV              0x00000008
+
+#define AI_ALL                      0x00000100
+#define AI_ADDRCONFIG               0x00000400
+#define AI_V4MAPPED                 0x00000800
+
+#define AI_NON_AUTHORITATIVE        0x00004000
+#define AI_SECURE                   0x00008000
+#define AI_RETURN_PREFERRED_NAMES   0x00010000
+
+#define AI_FQDN                     0x00020000
+#define AI_FILESERVER               0x00040000
+
+#define NS_ALL                      0
+
+#define NS_SAP                      1
+#define NS_NDS                      2
+#define NS_PEER_BROWSE              3
+#define NS_SLP                      5
+#define NS_DHCP                     6
+
+#define NS_TCPIP_LOCAL              10
+#define NS_TCPIP_HOSTS              11
+#define NS_DNS                      12
+#define NS_NETBT                    13
+#define NS_WINS                     14
+
+#if(_WIN32_WINNT >= 0x0501)
+#define NS_NLA                      15
+#endif
+
+#if(_WIN32_WINNT >= 0x0600)
+#define NS_BTH                      16
+#endif
+
+#define NS_NBP                      20
+
+#define NS_MS                       30
+#define NS_STDA                     31
+#define NS_NTDS                     32
+
+#if(_WIN32_WINNT >= 0x0600)
+#define NS_EMAIL                    37
+#define NS_PNRPNAME                 38
+#define NS_PNRPCLOUD                39
+#endif
+
+#define NS_X500                     40
+#define NS_NIS                      41
+#define NS_NISPLUS                  42
+
+#define NS_WRQ                      50
+
+#define NS_NETDES                   60
+
+#define NI_NOFQDN       0x01
+#define NI_NUMERICHOST  0x02
+#define NI_NAMEREQD     0x04
+#define NI_NUMERICSERV  0x08
+#define NI_DGRAM        0x10
+
+#define NI_MAXHOST      1025
+#define NI_MAXSERV      32
+
+typedef struct sockaddr {
+#if (_WIN32_WINNT < 0x0600)
+  u_short sa_family;
+#else
+  ADDRESS_FAMILY sa_family;
+#endif
+  CHAR sa_data[14];
+} SOCKADDR, *PSOCKADDR, FAR *LPSOCKADDR;
+
+#ifndef __CSADDR_DEFINED__
+#define __CSADDR_DEFINED__
+
+typedef struct _SOCKET_ADDRESS {
+  LPSOCKADDR lpSockaddr;
+  INT iSockaddrLength;
+} SOCKET_ADDRESS, *PSOCKET_ADDRESS, *LPSOCKET_ADDRESS;
+
+typedef struct _SOCKET_ADDRESS_LIST {
+  INT iAddressCount;
+  SOCKET_ADDRESS Address[1];
+} SOCKET_ADDRESS_LIST, *PSOCKET_ADDRESS_LIST, FAR *LPSOCKET_ADDRESS_LIST;
+
+#if (_WIN32_WINNT >= 0x0600)
+#define SIZEOF_SOCKET_ADDRESS_LIST(AddressCount) \
+    (FIELD_OFFSET(SOCKET_ADDRESS_LIST, Address) + \
+     AddressCount * sizeof(SOCKET_ADDRESS))
+#endif
+
+typedef struct _CSADDR_INFO {
+  SOCKET_ADDRESS LocalAddr;
+  SOCKET_ADDRESS RemoteAddr;
+  INT iSocketType;
+  INT iProtocol;
+} CSADDR_INFO, *PCSADDR_INFO, FAR *LPCSADDR_INFO ;
+
+#endif /* __CSADDR_DEFINED__ */
+
+typedef struct sockaddr_storage {
+  ADDRESS_FAMILY ss_family;
+  CHAR __ss_pad1[_SS_PAD1SIZE];
+  __int64 __ss_align;
+  CHAR __ss_pad2[_SS_PAD2SIZE];
+} SOCKADDR_STORAGE_LH, *PSOCKADDR_STORAGE_LH, FAR *LPSOCKADDR_STORAGE_LH;
+
+typedef struct sockaddr_storage_xp {
+  short ss_family;
+  CHAR __ss_pad1[_SS_PAD1SIZE];
+  __int64 __ss_align;
+  CHAR __ss_pad2[_SS_PAD2SIZE];
+} SOCKADDR_STORAGE_XP, *PSOCKADDR_STORAGE_XP, FAR *LPSOCKADDR_STORAGE_XP;
+
+#if (_WIN32_WINNT >= 0x0600)
+
+typedef SOCKADDR_STORAGE_LH SOCKADDR_STORAGE;
+typedef SOCKADDR_STORAGE *PSOCKADDR_STORAGE, FAR *LPSOCKADDR_STORAGE;
+
+#elif (_WIN32_WINNT >= 0x0501)
+
+typedef SOCKADDR_STORAGE_XP SOCKADDR_STORAGE;
+typedef SOCKADDR_STORAGE *PSOCKADDR_STORAGE, FAR *LPSOCKADDR_STORAGE;
+
+#endif /* (_WIN32_WINNT >= 0x0600) */
+
+typedef enum {
+#if (_WIN32_WINNT >= 0x0501)
+  IPPROTO_HOPOPTS = 0,
+#endif
+  IPPROTO_ICMP = 1,
+  IPPROTO_IGMP = 2,
+  IPPROTO_GGP = 3,
+#if (_WIN32_WINNT >= 0x0501)
+  IPPROTO_IPV4 = 4,
+#endif
+#if (_WIN32_WINNT >= 0x0600)
+  IPPROTO_ST = 5,
+#endif
+  IPPROTO_TCP = 6,
+#if (_WIN32_WINNT >= 0x0600)
+  IPPROTO_CBT = 7,
+  IPPROTO_EGP = 8,
+  IPPROTO_IGP = 9,
+#endif
+  IPPROTO_PUP = 12,
+  IPPROTO_UDP = 17,
+  IPPROTO_IDP = 22,
+#if (_WIN32_WINNT >= 0x0600)
+  IPPROTO_RDP = 27,
+#endif
+#if (_WIN32_WINNT >= 0x0501)
+  IPPROTO_IPV6 = 41,
+  IPPROTO_ROUTING = 43,
+  IPPROTO_FRAGMENT = 44,
+  IPPROTO_ESP = 50,
+  IPPROTO_AH = 51,
+  IPPROTO_ICMPV6 = 58,
+  IPPROTO_NONE = 59,
+  IPPROTO_DSTOPTS = 60,
+#endif /* (_WIN32_WINNT >= 0x0501) */
+  IPPROTO_ND = 77,
+#if(_WIN32_WINNT >= 0x0501)
+  IPPROTO_ICLFXBM = 78,
+#endif
+#if (_WIN32_WINNT >= 0x0600)
+  IPPROTO_PIM = 103,
+  IPPROTO_PGM = 113,
+  IPPROTO_L2TP = 115,
+  IPPROTO_SCTP = 132,
+#endif /* (_WIN32_WINNT >= 0x0600) */
+  IPPROTO_RAW = 255,
+  IPPROTO_MAX = 256,
+  IPPROTO_RESERVED_RAW = 257,
+  IPPROTO_RESERVED_IPSEC = 258,
+  IPPROTO_RESERVED_IPSECOFFLOAD = 259,
+  IPPROTO_RESERVED_MAX = 260
+} IPPROTO, *PIPROTO;
+
 typedef enum {
   ScopeLevelInterface = 1,
   ScopeLevelLink = 2,
@@ -410,8 +494,6 @@ typedef struct {
   };
 } SCOPE_ID, *PSCOPE_ID;
 
-#define SCOPEID_UNSPECIFIED_INIT    {0}
-
 typedef struct sockaddr_in {
 #if(_WIN32_WINNT < 0x0600)
   short sin_family;
@@ -430,16 +512,6 @@ typedef struct sockaddr_dl {
   UCHAR sdl_zero[4];
 } SOCKADDR_DL, *PSOCKADDR_DL;
 #endif
-
-#define IOCPARM_MASK    0x7f
-#define IOC_VOID        0x20000000
-#define IOC_OUT         0x40000000
-#define IOC_IN          0x80000000
-#define IOC_INOUT       (IOC_IN|IOC_OUT)
-
-#define _IO(x,y)        (IOC_VOID|((x)<<8)|(y))
-#define _IOR(x,y,t)     (IOC_OUT|(((long)sizeof(t)&IOCPARM_MASK)<<16)|((x)<<8)|(y))
-#define _IOW(x,y,t)     (IOC_IN|(((long)sizeof(t)&IOCPARM_MASK)<<16)|((x)<<8)|(y))
 
 typedef struct _WSABUF {
   ULONG len;
@@ -587,27 +659,6 @@ typedef WSACMSGHDR CMSGHDR, *PCMSGHDR;
 #define CMSG_LEN WSA_CMSG_LEN
 #endif
 
-#define MSG_TRUNC       0x0100
-#define MSG_CTRUNC      0x0200
-#define MSG_BCAST       0x0400
-#define MSG_MCAST       0x0800
-
-#define AI_PASSIVE                  0x00000001
-#define AI_CANONNAME                0x00000002
-#define AI_NUMERICHOST              0x00000004
-#define AI_NUMERICSERV              0x00000008
-
-#define AI_ALL                      0x00000100
-#define AI_ADDRCONFIG               0x00000400
-#define AI_V4MAPPED                 0x00000800
-
-#define AI_NON_AUTHORITATIVE        0x00004000
-#define AI_SECURE                   0x00008000
-#define AI_RETURN_PREFERRED_NAMES   0x00010000
-
-#define AI_FQDN                     0x00020000
-#define AI_FILESERVER               0x00040000
-
 typedef struct addrinfo {
   int ai_flags;
   int ai_family;
@@ -661,57 +712,6 @@ typedef struct addrinfoexW {
 } ADDRINFOEXW, *PADDRINFOEXW, *LPADDRINFOEXW;
 
 #endif /* (_WIN32_WINNT >= 0x0600) */
-
-#define NS_ALL                      0
-
-#define NS_SAP                      1
-#define NS_NDS                      2
-#define NS_PEER_BROWSE              3
-#define NS_SLP                      5
-#define NS_DHCP                     6
-
-#define NS_TCPIP_LOCAL              10
-#define NS_TCPIP_HOSTS              11
-#define NS_DNS                      12
-#define NS_NETBT                    13
-#define NS_WINS                     14
-
-#if(_WIN32_WINNT >= 0x0501)
-#define NS_NLA                      15
-#endif
-
-#if(_WIN32_WINNT >= 0x0600)
-#define NS_BTH                      16
-#endif
-
-#define NS_NBP                      20
-
-#define NS_MS                       30
-#define NS_STDA                     31
-#define NS_NTDS                     32
-
-#if(_WIN32_WINNT >= 0x0600)
-#define NS_EMAIL                    37
-#define NS_PNRPNAME                 38
-#define NS_PNRPCLOUD                39
-#endif
-
-#define NS_X500                     40
-#define NS_NIS                      41
-#define NS_NISPLUS                  42
-
-#define NS_WRQ                      50
-
-#define NS_NETDES                   60
-
-#define NI_NOFQDN       0x01
-#define NI_NUMERICHOST  0x02
-#define NI_NAMEREQD     0x04
-#define NI_NUMERICSERV  0x08
-#define NI_DGRAM        0x10
-
-#define NI_MAXHOST      1025
-#define NI_MAXSERV      32
 
 #ifdef __cplusplus
 }

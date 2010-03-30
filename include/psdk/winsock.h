@@ -314,38 +314,9 @@ int PASCAL gethostname(char*,int);
 #define INADDR_BROADCAST (u_long)0xffffffff
 #define INADDR_NONE 0xffffffff
 
-struct sockaddr_in {
-  short sin_family;
-  u_short sin_port;
-  struct in_addr sin_addr;
-  char sin_zero[8];
-};
-
 #define WSADESCRIPTION_LEN   256
 #define WSASYS_STATUS_LEN    128
 
-typedef struct WSAData {
-  WORD wVersion;
-  WORD wHighVersion;
-#ifdef _WIN64
-  unsigned short iMaxSockets;
-  unsigned short iMaxUdpDg;
-  char *lpVendorInfo;
-  char szDescription[WSADESCRIPTION_LEN+1];
-  char szSystemStatus[WSASYS_STATUS_LEN+1];
-#else
-  char szDescription[WSADESCRIPTION_LEN+1];
-  char szSystemStatus[WSASYS_STATUS_LEN+1];
-  unsigned short iMaxSockets;
-  unsigned short iMaxUdpDg;
-  char *lpVendorInfo;
-} WSADATA, FAR *LPWSADATA;
-
-/*
- * Note that the next 5 IP defines are specific to WinSock 1.1 (wsock32.dll).
- * They will cause errors or unexpected results if used with the
- * (gs)etsockopts exported from the WinSock 2 lib, ws2_32.dll. Refer ws2tcpip.h.
- */
 #define IP_MULTICAST_IF 2
 #define IP_MULTICAST_TTL 3
 #define IP_MULTICAST_LOOP 4
@@ -358,11 +329,6 @@ typedef struct WSAData {
 #define IP_DEFAULT_MULTICAST_TTL   1
 #define IP_DEFAULT_MULTICAST_LOOP  1
 #define IP_MAX_MEMBERSHIPS  20
-
-struct ip_mreq {
-  struct in_addr imr_multiaddr;
-  struct in_addr imr_interface;
-};
 
 #define INVALID_SOCKET (SOCKET)(~0)
 #define SOCKET_ERROR (-1)
@@ -402,11 +368,6 @@ struct ip_mreq {
 #define AF_BAN 21
 #define AF_ATM 22
 #define AF_INET6 23
-
-struct sockproto {
-  u_short sp_family;
-  u_short sp_protocol;
-};
 
 #define PF_UNSPEC AF_UNSPEC
 #define PF_UNIX AF_UNIX
@@ -509,6 +470,79 @@ struct sockproto {
 #endif /* !WSABASEERR */
 
 #define WSANO_ADDRESS WSANO_DATA
+
+#define TF_DISCONNECT       0x01
+#define TF_REUSE_SOCKET     0x02
+#define TF_WRITE_BEHIND     0x04
+
+#define WSAMAKEASYNCREPLY(b,e) MAKELONG(b,e)
+#define WSAMAKESELECTREPLY(e,error) MAKELONG(e,error)
+#define WSAGETASYNCBUFLEN(l) LOWORD(l)
+#define WSAGETASYNCERROR(l) HIWORD(l)
+#define WSAGETSELECTEVENT(l) LOWORD(l)
+#define WSAGETSELECTERROR(l) HIWORD(l)
+
+typedef struct sockaddr SOCKADDR;
+typedef struct sockaddr *PSOCKADDR;
+typedef struct sockaddr *LPSOCKADDR;
+typedef struct sockaddr_in SOCKADDR_IN;
+typedef struct sockaddr_in *PSOCKADDR_IN;
+typedef struct sockaddr_in *LPSOCKADDR_IN;
+typedef struct linger LINGER;
+typedef struct linger *PLINGER;
+typedef struct linger *LPLINGER;
+typedef struct in_addr IN_ADDR;
+typedef struct in_addr *PIN_ADDR;
+typedef struct in_addr *LPIN_ADDR;
+typedef struct fd_set FD_SET;
+typedef struct fd_set *PFD_SET;
+typedef struct fd_set *LPFD_SET;
+typedef struct hostent HOSTENT;
+typedef struct hostent *PHOSTENT;
+typedef struct hostent *LPHOSTENT;
+typedef struct servent SERVENT;
+typedef struct servent *PSERVENT;
+typedef struct servent *LPSERVENT;
+typedef struct protoent PROTOENT;
+typedef struct protoent *PPROTOENT;
+typedef struct protoent *LPPROTOENT;
+typedef struct timeval TIMEVAL;
+typedef struct timeval *PTIMEVAL;
+typedef struct timeval *LPTIMEVAL;
+
+struct sockaddr_in {
+  short sin_family;
+  u_short sin_port;
+  struct in_addr sin_addr;
+  char sin_zero[8];
+};
+
+typedef struct WSAData {
+  WORD wVersion;
+  WORD wHighVersion;
+#ifdef _WIN64
+  unsigned short iMaxSockets;
+  unsigned short iMaxUdpDg;
+  char *lpVendorInfo;
+  char szDescription[WSADESCRIPTION_LEN+1];
+  char szSystemStatus[WSASYS_STATUS_LEN+1];
+#else
+  char szDescription[WSADESCRIPTION_LEN+1];
+  char szSystemStatus[WSASYS_STATUS_LEN+1];
+  unsigned short iMaxSockets;
+  unsigned short iMaxUdpDg;
+  char *lpVendorInfo;
+} WSADATA, FAR *LPWSADATA;
+
+struct ip_mreq {
+  struct in_addr imr_multiaddr;
+  struct in_addr imr_interface;
+};
+
+struct sockproto {
+  u_short sp_family;
+  u_short sp_protocol;
+};
 
 SOCKET
 PASCAL FAR
@@ -831,10 +865,6 @@ typedef struct _TRANSMIT_FILE_BUFFERS {
   DWORD TailLength;
 } TRANSMIT_FILE_BUFFERS, *PTRANSMIT_FILE_BUFFERS, *LPTRANSMIT_FILE_BUFFERS;
 
-#define TF_DISCONNECT       0x01
-#define TF_REUSE_SOCKET     0x02
-#define TF_WRITE_BEHIND     0x04
-
 BOOL
 PASCAL FAR
 TransmitFile(
@@ -869,41 +899,6 @@ GetAcceptExSockaddrs(
   OUT LPINT LocalSockaddrLength,
   OUT struct sockaddr **RemoteSockaddr,
   OUT LPINT RemoteSockaddrLength);
-
-#define WSAMAKEASYNCREPLY(b,e) MAKELONG(b,e)
-#define WSAMAKESELECTREPLY(e,error) MAKELONG(e,error)
-#define WSAGETASYNCBUFLEN(l) LOWORD(l)
-#define WSAGETASYNCERROR(l) HIWORD(l)
-#define WSAGETSELECTEVENT(l) LOWORD(l)
-#define WSAGETSELECTERROR(l) HIWORD(l)
-
-typedef struct sockaddr SOCKADDR;
-typedef struct sockaddr *PSOCKADDR;
-typedef struct sockaddr *LPSOCKADDR;
-typedef struct sockaddr_in SOCKADDR_IN;
-typedef struct sockaddr_in *PSOCKADDR_IN;
-typedef struct sockaddr_in *LPSOCKADDR_IN;
-typedef struct linger LINGER;
-typedef struct linger *PLINGER;
-typedef struct linger *LPLINGER;
-typedef struct in_addr IN_ADDR;
-typedef struct in_addr *PIN_ADDR;
-typedef struct in_addr *LPIN_ADDR;
-typedef struct fd_set FD_SET;
-typedef struct fd_set *PFD_SET;
-typedef struct fd_set *LPFD_SET;
-typedef struct hostent HOSTENT;
-typedef struct hostent *PHOSTENT;
-typedef struct hostent *LPHOSTENT;
-typedef struct servent SERVENT;
-typedef struct servent *PSERVENT;
-typedef struct servent *LPSERVENT;
-typedef struct protoent PROTOENT;
-typedef struct protoent *PPROTOENT;
-typedef struct protoent *LPPROTOENT;
-typedef struct timeval TIMEVAL;
-typedef struct timeval *PTIMEVAL;
-typedef struct timeval *LPTIMEVAL;
 
 #if(_WIN32_WINNT >= 0x0501)
 

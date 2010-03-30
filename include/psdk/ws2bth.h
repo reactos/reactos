@@ -21,13 +21,6 @@
 #define NS_BTH 16
 #endif
 
-typedef struct _SOCKADDR_BTH {
-  USHORT addressFamily;
-  BTH_ADDR btAddr;
-  GUID serviceClassId;
-  ULONG port;
-} SOCKADDR_BTH, *PSOCKADDR_BTH;
-
 DEFINE_GUID(SVCID_BTH_PROVIDER, 0x6aa63e0, 0x7d60, 0x41ff, 0xaf, 0xb2, 0x3e, 0xe6, 0xd2, 0xd9, 0x39, 0x2d);
 
 #define BTH_ADDR_STRING_SIZE           12
@@ -50,15 +43,6 @@ DEFINE_GUID(SVCID_BTH_PROVIDER, 0x6aa63e0, 0x7d60, 0x41ff, 0xaf, 0xb2, 0x3e, 0xe
 
 #define BTH_SDP_VERSION      1
 
-typedef struct _BTH_SET_SERVICE {
-  PULONG pSdpVersion;
-  HANDLE *pRecordHandle;
-  ULONG fCodService;
-  ULONG Reserved[5];
-  ULONG ulRecordLength;
-  UCHAR pRecord[1];
-} BTH_SET_SERVICE, *PBTH_SET_SERVICE;
-
 #define SDP_DEFAULT_INQUIRY_SECONDS    6
 #define SDP_MAX_INQUIRY_SECONDS        60
 
@@ -67,19 +51,6 @@ typedef struct _BTH_SET_SERVICE {
 #define SDP_SERVICE_SEARCH_REQUEST               1
 #define SDP_SERVICE_ATTRIBUTE_REQUEST            2
 #define SDP_SERVICE_SEARCH_ATTRIBUTE_REQUEST     3
-
-typedef struct _BTH_QUERY_DEVICE {
-  ULONG LAP;
-  UCHAR length;
-} BTH_QUERY_DEVICE, *PBTH_QUERY_DEVICE;
-
-typedef struct _BTH_QUERY_SERVICE {
-  ULONG type;
-  ULONG serviceHandle;
-  SdpQueryUuid uuids[MAX_UUIDS_IN_QUERY];
-  ULONG numRange;
-  SdpAttributeRange pRange[1];
-} BTH_QUERY_SERVICE, *PBTH_QUERY_SERVICE;
 
 #define BTHNS_RESULT_DEVICE_CONNECTED       0x00010000
 #define BTHNS_RESULT_DEVICE_REMEMBERED      0x00020000
@@ -108,19 +79,10 @@ typedef struct _BTH_QUERY_SERVICE {
 #define MSC_BREAK_BIT   BIT(1)
 #define MSC_SET_BREAK_LENGTH(b, l) ((b) = ((b)&0x3) | (((l)&0xf) << 4))
 
-typedef struct _RFCOMM_MSC_DATA {
-  UCHAR Signals;
-  UCHAR Break;
-} RFCOMM_MSC_DATA, *PRFCOMM_MSC_DATA;
-
 #define RLS_ERROR            0x01
 #define RLS_OVERRUN          0x02
 #define RLS_PARITY           0x04
 #define RLS_FRAMING          0x08
-
-typedef struct _RFCOMM_RLS_DATA {
-  UCHAR LineStatus;
-} RFCOMM_RLS_DATA, *PRFCOMM_RLS_DATA;
 
 #define RPN_BAUD_2400       0
 #define RPN_BAUD_4800       1
@@ -173,6 +135,50 @@ typedef struct _RFCOMM_RLS_DATA {
 #define RFCOMM_CMD_RPN              3
 #define RFCOMM_CMD_RPN_REQUEST      4
 #define RFCOMM_CMD_RPN_RESPONSE     5
+
+
+
+
+
+
+
+typedef struct _SOCKADDR_BTH {
+  USHORT addressFamily;
+  BTH_ADDR btAddr;
+  GUID serviceClassId;
+  ULONG port;
+} SOCKADDR_BTH, *PSOCKADDR_BTH;
+
+typedef struct _BTH_SET_SERVICE {
+  PULONG pSdpVersion;
+  HANDLE *pRecordHandle;
+  ULONG fCodService;
+  ULONG Reserved[5];
+  ULONG ulRecordLength;
+  UCHAR pRecord[1];
+} BTH_SET_SERVICE, *PBTH_SET_SERVICE;
+
+typedef struct _BTH_QUERY_DEVICE {
+  ULONG LAP;
+  UCHAR length;
+} BTH_QUERY_DEVICE, *PBTH_QUERY_DEVICE;
+
+typedef struct _BTH_QUERY_SERVICE {
+  ULONG type;
+  ULONG serviceHandle;
+  SdpQueryUuid uuids[MAX_UUIDS_IN_QUERY];
+  ULONG numRange;
+  SdpAttributeRange pRange[1];
+} BTH_QUERY_SERVICE, *PBTH_QUERY_SERVICE;
+
+typedef struct _RFCOMM_MSC_DATA {
+  UCHAR Signals;
+  UCHAR Break;
+} RFCOMM_MSC_DATA, *PRFCOMM_MSC_DATA;
+
+typedef struct _RFCOMM_RLS_DATA {
+  UCHAR LineStatus;
+} RFCOMM_RLS_DATA, *PRFCOMM_RLS_DATA;
 
 typedef struct _RFCOMM_RPN_DATA {
   UCHAR Baud;

@@ -299,7 +299,7 @@ WSARecvEx(
   OUT char FAR *buf,
   IN int len,
   IN OUT int FAR *flags);
-#else //(_WIN32_WINNT < 0x0600)
+#else
 INT
 PASCAL
 FAR
@@ -308,7 +308,7 @@ WSARecvEx(
   OUT CHAR FAR *buf,
   IN INT len,
   IN OUT INT FAR *flags);
-#endif //(_WIN32_WINNT < 0x0600)
+#endif /* (_WIN32_WINNT < 0x0600) */
 
 BOOL
 PASCAL

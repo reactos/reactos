@@ -270,46 +270,10 @@ struct protoent {
 #define IMPLINK_LOWEXPER 156
 #define IMPLINK_HIGHEXPER 158
 
-#ifndef s_addr
-
-#define s_addr S_un.S_addr
-#define s_host S_un.S_un_b.s_b2
-#define s_net S_un.S_un_b.s_b1
-#define s_imp S_un.S_un_w.s_w2
-#define s_impno S_un.S_un_b.s_b4
-#define s_lh S_un.S_un_b.s_b3
-
-typedef struct in_addr {
-  union {
-    struct { u_char s_b1,s_b2,s_b3,s_b4; } S_un_b;
-    struct { u_short s_w1,s_w2; } S_un_w;
-    u_long S_addr;
-  } S_un;
-} IN_ADDR, *PIN_ADDR;
-
-#endif /* s_addr */
-
 #define ADDR_ANY INADDR_ANY
 
 #define WSADESCRIPTION_LEN 256
 #define WSASYS_STATUS_LEN 128
-
-typedef struct WSAData {
-  WORD wVersion;
-  WORD wHighVersion;
-#ifdef _WIN64
-  unsigned short iMaxSockets;
-  unsigned short iMaxUdpDg;
-  char *lpVendorInfo;
-  char szDescription[WSADESCRIPTION_LEN+1];
-  char szSystemStatus[WSASYS_STATUS_LEN+1];
-#else
-  char szDescription[WSADESCRIPTION_LEN+1];
-  char szSystemStatus[WSASYS_STATUS_LEN+1];
-  unsigned short iMaxSockets;
-  unsigned short iMaxUdpDg;
-  char *lpVendorInfo;
-} WSADATA, FAR *LPWSADATA;
 
 #define INVALID_SOCKET (SOCKET)(~0)
 
@@ -355,11 +319,6 @@ typedef struct WSAData {
 #define SO_PROTOCOL_INFO SO_PROTOCOL_INFOA
 #endif
 #define PVD_CONFIG 0x3001
-
-struct sockproto {
-  u_short sp_family;
-  u_short sp_protocol;
-};
 
 #define PF_UNSPEC AF_UNSPEC
 #define PF_UNIX AF_UNIX
@@ -517,64 +476,6 @@ struct sockproto {
 
 #endif /* !WSABASEERR */
 
-#ifdef WIN32
-
-#define WSAAPI FAR PASCAL
-#define WSAEVENT HANDLE
-#define LPWSAEVENT LPHANDLE
-#define WSAOVERLAPPED OVERLAPPED
-typedef struct _OVERLAPPED *LPWSAOVERLAPPED;
-#define WSA_IO_PENDING (ERROR_IO_PENDING)
-#define WSA_IO_INCOMPLETE (ERROR_IO_INCOMPLETE)
-#define WSA_INVALID_HANDLE (ERROR_INVALID_HANDLE)
-#define WSA_INVALID_PARAMETER (ERROR_INVALID_PARAMETER)
-#define WSA_NOT_ENOUGH_MEMORY (ERROR_NOT_ENOUGH_MEMORY)
-#define WSA_OPERATION_ABORTED (ERROR_OPERATION_ABORTED)
-#define WSA_INVALID_EVENT ((WSAEVENT)NULL)
-#define WSA_MAXIMUM_WAIT_EVENTS (MAXIMUM_WAIT_OBJECTS)
-#define WSA_WAIT_FAILED ((DWORD)-1L)
-#define WSA_WAIT_EVENT_0 (WAIT_OBJECT_0)
-#define WSA_WAIT_IO_COMPLETION (WAIT_IO_COMPLETION)
-#define WSA_WAIT_TIMEOUT (WAIT_TIMEOUT)
-#define WSA_INFINITE (INFINITE)
-
-#else /* WIN16 */
-
-#define WSAAPI FAR PASCAL
-typedef DWORD WSAEVENT, FAR * LPWSAEVENT;
-
-typedef struct _WSAOVERLAPPED {
-  DWORD Internal;
-  DWORD InternalHigh;
-  DWORD Offset;
-  DWORD OffsetHigh;
-  WSAEVENT hEvent;
-} WSAOVERLAPPED, FAR * LPWSAOVERLAPPED;
-
-#define WSA_IO_PENDING (WSAEWOULDBLOCK)
-#define WSA_IO_INCOMPLETE (WSAEWOULDBLOCK)
-#define WSA_INVALID_HANDLE (WSAENOTSOCK)
-#define WSA_INVALID_PARAMETER (WSAEINVAL)
-#define WSA_NOT_ENOUGH_MEMORY (WSAENOBUFS)
-#define WSA_OPERATION_ABORTED (WSAEINTR)
-
-#define WSA_INVALID_EVENT ((WSAEVENT)NULL)
-#define WSA_MAXIMUM_WAIT_EVENTS (MAXIMUM_WAIT_OBJECTS)
-#define WSA_WAIT_FAILED ((DWORD)-1L)
-#define WSA_WAIT_EVENT_0 ((DWORD)0)
-#define WSA_WAIT_TIMEOUT ((DWORD)0x102L)
-#define WSA_INFINITE ((DWORD)-1L)
-
-#endif /* WIN32 */
-
-#include <qos.h>
-
-typedef struct _QualityOfService {
-  FLOWSPEC SendingFlowspec;
-  FLOWSPEC ReceivingFlowspec;
-  WSABUF ProviderSpecific;
-} QOS, *LPQOS;
-
 #define CF_ACCEPT 0x0000
 #define CF_REJECT 0x0001
 #define CF_DEFER 0x0002
@@ -582,85 +483,15 @@ typedef struct _QualityOfService {
 #define SD_SEND 0x01
 #define SD_BOTH 0x02
 
-typedef unsigned int GROUP;
-
 #define SG_UNCONSTRAINED_GROUP 0x01
 #define SG_CONSTRAINED_GROUP 0x02
-
-typedef struct _WSANETWORKEVENTS {
-  LONG lNetworkEvents;
-  int iErrorCode[FD_MAX_EVENTS];
-} WSANETWORKEVENTS, *LPWSANETWORKEVENTS;
-
-#ifndef GUID_DEFINED
-#include <guiddef.h>
-#endif
 
 #define MAX_PROTOCOL_CHAIN 7
 
 #define BASE_PROTOCOL      1
 #define LAYERED_PROTOCOL   0
 
-typedef struct _WSAPROTOCOLCHAIN {
-  int ChainLen;
-  DWORD ChainEntries[MAX_PROTOCOL_CHAIN];
-} WSAPROTOCOLCHAIN, *LPWSAPROTOCOLCHAIN;
-
 #define WSAPROTOCOL_LEN 255
-
-typedef struct _WSAPROTOCOL_INFOA {
-  DWORD dwServiceFlags1;
-  DWORD dwServiceFlags2;
-  DWORD dwServiceFlags3;
-  DWORD dwServiceFlags4;
-  DWORD dwProviderFlags;
-  GUID ProviderId;
-  DWORD dwCatalogEntryId;
-  WSAPROTOCOLCHAIN ProtocolChain;
-  int iVersion;
-  int iAddressFamily;
-  int iMaxSockAddr;
-  int iMinSockAddr;
-  int iSocketType;
-  int iProtocol;
-  int iProtocolMaxOffset;
-  int iNetworkByteOrder;
-  int iSecurityScheme;
-  DWORD dwMessageSize;
-  DWORD dwProviderReserved;
-  CHAR szProtocol[WSAPROTOCOL_LEN+1];
-} WSAPROTOCOL_INFOA, *LPWSAPROTOCOL_INFOA;
-
-typedef struct _WSAPROTOCOL_INFOW {
-  DWORD dwServiceFlags1;
-  DWORD dwServiceFlags2;
-  DWORD dwServiceFlags3;
-  DWORD dwServiceFlags4;
-  DWORD dwProviderFlags;
-  GUID ProviderId;
-  DWORD dwCatalogEntryId;
-  WSAPROTOCOLCHAIN ProtocolChain;
-  int iVersion;
-  int iAddressFamily;
-  int iMaxSockAddr;
-  int iMinSockAddr;
-  int iSocketType;
-  int iProtocol;
-  int iProtocolMaxOffset;
-  int iNetworkByteOrder;
-  int iSecurityScheme;
-  DWORD dwMessageSize;
-  DWORD dwProviderReserved;
-  WCHAR szProtocol[WSAPROTOCOL_LEN+1];
-} WSAPROTOCOL_INFOW, * LPWSAPROTOCOL_INFOW;
-
-#ifdef UNICODE
-typedef WSAPROTOCOL_INFOW WSAPROTOCOL_INFO;
-typedef LPWSAPROTOCOL_INFOW LPWSAPROTOCOL_INFO;
-#else
-typedef WSAPROTOCOL_INFOA WSAPROTOCOL_INFO;
-typedef LPWSAPROTOCOL_INFOA LPWSAPROTOCOL_INFO;
-#endif
 
 #define PFL_MULTIPLE_PROTO_ENTRIES          0x00000001
 #define PFL_RECOMMENDED_PROTO_ENTRY         0x00000002
@@ -705,80 +536,8 @@ typedef LPWSAPROTOCOL_INFOA LPWSAPROTOCOL_INFO;
 #define WSA_FLAG_MULTIPOINT_D_LEAF          0x10
 #define WSA_FLAG_ACCESS_SYSTEM_SECURITY     0x40
 
-typedef int
-(CALLBACK *LPCONDITIONPROC)(
-  IN LPWSABUF lpCallerId,
-  IN LPWSABUF lpCallerData,
-  IN OUT LPQOS lpSQOS,
-  IN OUT LPQOS lpGQOS,
-  IN LPWSABUF lpCalleeId,
-  IN LPWSABUF lpCalleeData,
-  OUT GROUP FAR *g,
-  IN DWORD_PTR dwCallbackData);
-
-typedef void
-(CALLBACK *LPWSAOVERLAPPED_COMPLETION_ROUTINE)(
-  IN DWORD dwError,
-  IN DWORD cbTransferred,
-  IN LPWSAOVERLAPPED lpOverlapped,
-  IN DWORD dwFlags);
-
-#if(_WIN32_WINNT >= 0x0501)
-
-#define SIO_NSP_NOTIFY_CHANGE _WSAIOW(IOC_WS2,25)
-
-typedef enum _WSACOMPLETIONTYPE {
-  NSP_NOTIFY_IMMEDIATELY = 0,
-  NSP_NOTIFY_HWND,
-  NSP_NOTIFY_EVENT,
-  NSP_NOTIFY_PORT,
-  NSP_NOTIFY_APC
-} WSACOMPLETIONTYPE, * PWSACOMPLETIONTYPE, *LPWSACOMPLETIONTYPE;
-
-typedef struct _WSACOMPLETION {
-  WSACOMPLETIONTYPE Type;
-  union {
-    struct {
-      HWND hWnd;
-      UINT uMsg;
-      WPARAM context;
-    } WindowMessage;
-    struct {
-      LPWSAOVERLAPPED lpOverlapped;
-    } Event;
-    struct {
-      LPWSAOVERLAPPED lpOverlapped;
-      LPWSAOVERLAPPED_COMPLETION_ROUTINE lpfnCompletionProc;
-    } Apc;
-    struct {
-      LPWSAOVERLAPPED lpOverlapped;
-      HANDLE hPort;
-      ULONG_PTR Key;
-    } Port;
-  } Parameters;
-} WSACOMPLETION, *PWSACOMPLETION, *LPWSACOMPLETION;
-
-#endif /* (_WIN32_WINNT >= 0x0501) */
-
 #define TH_NETDEV                           0x00000001
 #define TH_TAPI                             0x00000002
-
-#ifndef __BLOB_T_DEFINED /* also in wtypes.h and nspapi.h */
-#define __BLOB_T_DEFINED
-/* wine is using a diff define */
-#ifndef _tagBLOB_DEFINED
-#define _tagBLOB_DEFINED
-#define _BLOB_DEFINED
-#define _LPBLOB_DEFINED
-
-typedef struct _BLOB {
-  ULONG cbSize;
-  BYTE *pBlobData;
-} BLOB,*PBLOB,*LPBLOB;
-
-#endif /* _tagBLOB_DEFINED */
-
-#endif /* __BLOB_T_DEFINED */
 
 #define SERVICE_MULTIPLE                    0x00000001
 
@@ -845,6 +604,282 @@ typedef struct _BLOB {
 #define SERVICE_TYPE_VALUE_UDPPORT      SERVICE_TYPE_VALUE_UDPPORTA
 #define SERVICE_TYPE_VALUE_OBJECTID     SERVICE_TYPE_VALUE_OBJECTIDA
 #endif
+
+#define LUP_DEEP                0x0001
+#define LUP_CONTAINERS          0x0002
+#define LUP_NOCONTAINERS        0x0004
+#define LUP_NEAREST             0x0008
+#define LUP_RETURN_NAME         0x0010
+#define LUP_RETURN_TYPE         0x0020
+#define LUP_RETURN_VERSION      0x0040
+#define LUP_RETURN_COMMENT      0x0080
+#define LUP_RETURN_ADDR         0x0100
+#define LUP_RETURN_BLOB         0x0200
+#define LUP_RETURN_ALIASES      0x0400
+#define LUP_RETURN_QUERY_STRING 0x0800
+#define LUP_RETURN_ALL          0x0FF0
+#define LUP_RES_SERVICE         0x8000
+#define LUP_FLUSHCACHE          0x1000
+#define LUP_FLUSHPREVIOUS       0x2000
+#define LUP_NON_AUTHORITATIVE   0x4000
+#define LUP_SECURE              0x8000
+#define LUP_RETURN_PREFERRED_NAMES 0x10000
+#define LUP_ADDRCONFIG          0x00100000
+#define LUP_DUAL_ADDR           0x00200000
+#define LUP_FILESERVER          0x00400000
+
+#define RESULT_IS_ALIAS      0x0001
+#if(_WIN32_WINNT >= 0x0501)
+#define RESULT_IS_ADDED      0x0010
+#define RESULT_IS_CHANGED    0x0020
+#define RESULT_IS_DELETED    0x0040
+#endif
+
+
+
+
+
+
+#ifndef s_addr
+
+#define s_addr S_un.S_addr
+#define s_host S_un.S_un_b.s_b2
+#define s_net S_un.S_un_b.s_b1
+#define s_imp S_un.S_un_w.s_w2
+#define s_impno S_un.S_un_b.s_b4
+#define s_lh S_un.S_un_b.s_b3
+
+typedef struct in_addr {
+  union {
+    struct { u_char s_b1,s_b2,s_b3,s_b4; } S_un_b;
+    struct { u_short s_w1,s_w2; } S_un_w;
+    u_long S_addr;
+  } S_un;
+} IN_ADDR, *PIN_ADDR;
+
+#endif /* s_addr */
+
+typedef struct WSAData {
+  WORD wVersion;
+  WORD wHighVersion;
+#ifdef _WIN64
+  unsigned short iMaxSockets;
+  unsigned short iMaxUdpDg;
+  char *lpVendorInfo;
+  char szDescription[WSADESCRIPTION_LEN+1];
+  char szSystemStatus[WSASYS_STATUS_LEN+1];
+#else
+  char szDescription[WSADESCRIPTION_LEN+1];
+  char szSystemStatus[WSASYS_STATUS_LEN+1];
+  unsigned short iMaxSockets;
+  unsigned short iMaxUdpDg;
+  char *lpVendorInfo;
+} WSADATA, FAR *LPWSADATA;
+
+struct sockproto {
+  u_short sp_family;
+  u_short sp_protocol;
+};
+
+#ifdef WIN32
+
+#define WSAAPI FAR PASCAL
+#define WSAEVENT HANDLE
+#define LPWSAEVENT LPHANDLE
+#define WSAOVERLAPPED OVERLAPPED
+typedef struct _OVERLAPPED *LPWSAOVERLAPPED;
+#define WSA_IO_PENDING (ERROR_IO_PENDING)
+#define WSA_IO_INCOMPLETE (ERROR_IO_INCOMPLETE)
+#define WSA_INVALID_HANDLE (ERROR_INVALID_HANDLE)
+#define WSA_INVALID_PARAMETER (ERROR_INVALID_PARAMETER)
+#define WSA_NOT_ENOUGH_MEMORY (ERROR_NOT_ENOUGH_MEMORY)
+#define WSA_OPERATION_ABORTED (ERROR_OPERATION_ABORTED)
+#define WSA_INVALID_EVENT ((WSAEVENT)NULL)
+#define WSA_MAXIMUM_WAIT_EVENTS (MAXIMUM_WAIT_OBJECTS)
+#define WSA_WAIT_FAILED ((DWORD)-1L)
+#define WSA_WAIT_EVENT_0 (WAIT_OBJECT_0)
+#define WSA_WAIT_IO_COMPLETION (WAIT_IO_COMPLETION)
+#define WSA_WAIT_TIMEOUT (WAIT_TIMEOUT)
+#define WSA_INFINITE (INFINITE)
+
+#else /* WIN16 */
+
+#define WSAAPI FAR PASCAL
+typedef DWORD WSAEVENT, FAR * LPWSAEVENT;
+
+typedef struct _WSAOVERLAPPED {
+  DWORD Internal;
+  DWORD InternalHigh;
+  DWORD Offset;
+  DWORD OffsetHigh;
+  WSAEVENT hEvent;
+} WSAOVERLAPPED, FAR * LPWSAOVERLAPPED;
+
+#define WSA_IO_PENDING (WSAEWOULDBLOCK)
+#define WSA_IO_INCOMPLETE (WSAEWOULDBLOCK)
+#define WSA_INVALID_HANDLE (WSAENOTSOCK)
+#define WSA_INVALID_PARAMETER (WSAEINVAL)
+#define WSA_NOT_ENOUGH_MEMORY (WSAENOBUFS)
+#define WSA_OPERATION_ABORTED (WSAEINTR)
+
+#define WSA_INVALID_EVENT ((WSAEVENT)NULL)
+#define WSA_MAXIMUM_WAIT_EVENTS (MAXIMUM_WAIT_OBJECTS)
+#define WSA_WAIT_FAILED ((DWORD)-1L)
+#define WSA_WAIT_EVENT_0 ((DWORD)0)
+#define WSA_WAIT_TIMEOUT ((DWORD)0x102L)
+#define WSA_INFINITE ((DWORD)-1L)
+
+#endif /* WIN32 */
+
+#include <qos.h>
+
+typedef struct _QualityOfService {
+  FLOWSPEC SendingFlowspec;
+  FLOWSPEC ReceivingFlowspec;
+  WSABUF ProviderSpecific;
+} QOS, *LPQOS;
+
+typedef unsigned int GROUP;
+
+typedef struct _WSANETWORKEVENTS {
+  LONG lNetworkEvents;
+  int iErrorCode[FD_MAX_EVENTS];
+} WSANETWORKEVENTS, *LPWSANETWORKEVENTS;
+
+#ifndef GUID_DEFINED
+#include <guiddef.h>
+#endif
+
+typedef struct _WSAPROTOCOLCHAIN {
+  int ChainLen;
+  DWORD ChainEntries[MAX_PROTOCOL_CHAIN];
+} WSAPROTOCOLCHAIN, *LPWSAPROTOCOLCHAIN;
+
+typedef struct _WSAPROTOCOL_INFOA {
+  DWORD dwServiceFlags1;
+  DWORD dwServiceFlags2;
+  DWORD dwServiceFlags3;
+  DWORD dwServiceFlags4;
+  DWORD dwProviderFlags;
+  GUID ProviderId;
+  DWORD dwCatalogEntryId;
+  WSAPROTOCOLCHAIN ProtocolChain;
+  int iVersion;
+  int iAddressFamily;
+  int iMaxSockAddr;
+  int iMinSockAddr;
+  int iSocketType;
+  int iProtocol;
+  int iProtocolMaxOffset;
+  int iNetworkByteOrder;
+  int iSecurityScheme;
+  DWORD dwMessageSize;
+  DWORD dwProviderReserved;
+  CHAR szProtocol[WSAPROTOCOL_LEN+1];
+} WSAPROTOCOL_INFOA, *LPWSAPROTOCOL_INFOA;
+
+typedef struct _WSAPROTOCOL_INFOW {
+  DWORD dwServiceFlags1;
+  DWORD dwServiceFlags2;
+  DWORD dwServiceFlags3;
+  DWORD dwServiceFlags4;
+  DWORD dwProviderFlags;
+  GUID ProviderId;
+  DWORD dwCatalogEntryId;
+  WSAPROTOCOLCHAIN ProtocolChain;
+  int iVersion;
+  int iAddressFamily;
+  int iMaxSockAddr;
+  int iMinSockAddr;
+  int iSocketType;
+  int iProtocol;
+  int iProtocolMaxOffset;
+  int iNetworkByteOrder;
+  int iSecurityScheme;
+  DWORD dwMessageSize;
+  DWORD dwProviderReserved;
+  WCHAR szProtocol[WSAPROTOCOL_LEN+1];
+} WSAPROTOCOL_INFOW, * LPWSAPROTOCOL_INFOW;
+
+#ifdef UNICODE
+typedef WSAPROTOCOL_INFOW WSAPROTOCOL_INFO;
+typedef LPWSAPROTOCOL_INFOW LPWSAPROTOCOL_INFO;
+#else
+typedef WSAPROTOCOL_INFOA WSAPROTOCOL_INFO;
+typedef LPWSAPROTOCOL_INFOA LPWSAPROTOCOL_INFO;
+#endif
+
+typedef int
+(CALLBACK *LPCONDITIONPROC)(
+  IN LPWSABUF lpCallerId,
+  IN LPWSABUF lpCallerData,
+  IN OUT LPQOS lpSQOS,
+  IN OUT LPQOS lpGQOS,
+  IN LPWSABUF lpCalleeId,
+  IN LPWSABUF lpCalleeData,
+  OUT GROUP FAR *g,
+  IN DWORD_PTR dwCallbackData);
+
+typedef void
+(CALLBACK *LPWSAOVERLAPPED_COMPLETION_ROUTINE)(
+  IN DWORD dwError,
+  IN DWORD cbTransferred,
+  IN LPWSAOVERLAPPED lpOverlapped,
+  IN DWORD dwFlags);
+
+#if(_WIN32_WINNT >= 0x0501)
+
+#define SIO_NSP_NOTIFY_CHANGE _WSAIOW(IOC_WS2,25)
+
+typedef enum _WSACOMPLETIONTYPE {
+  NSP_NOTIFY_IMMEDIATELY = 0,
+  NSP_NOTIFY_HWND,
+  NSP_NOTIFY_EVENT,
+  NSP_NOTIFY_PORT,
+  NSP_NOTIFY_APC
+} WSACOMPLETIONTYPE, * PWSACOMPLETIONTYPE, *LPWSACOMPLETIONTYPE;
+
+typedef struct _WSACOMPLETION {
+  WSACOMPLETIONTYPE Type;
+  union {
+    struct {
+      HWND hWnd;
+      UINT uMsg;
+      WPARAM context;
+    } WindowMessage;
+    struct {
+      LPWSAOVERLAPPED lpOverlapped;
+    } Event;
+    struct {
+      LPWSAOVERLAPPED lpOverlapped;
+      LPWSAOVERLAPPED_COMPLETION_ROUTINE lpfnCompletionProc;
+    } Apc;
+    struct {
+      LPWSAOVERLAPPED lpOverlapped;
+      HANDLE hPort;
+      ULONG_PTR Key;
+    } Port;
+  } Parameters;
+} WSACOMPLETION, *PWSACOMPLETION, *LPWSACOMPLETION;
+
+#endif /* (_WIN32_WINNT >= 0x0501) */
+
+#ifndef __BLOB_T_DEFINED /* also in wtypes.h and nspapi.h */
+#define __BLOB_T_DEFINED
+/* wine is using a diff define */
+#ifndef _tagBLOB_DEFINED
+#define _tagBLOB_DEFINED
+#define _BLOB_DEFINED
+#define _LPBLOB_DEFINED
+
+typedef struct _BLOB {
+  ULONG cbSize;
+  BYTE *pBlobData;
+} BLOB,*PBLOB,*LPBLOB;
+
+#endif /* _tagBLOB_DEFINED */
+
+#endif /* __BLOB_T_DEFINED */
 
 typedef struct _AFPROTOCOLS {
   INT iAddressFamily;
@@ -946,36 +981,6 @@ typedef WSAQUERYSET2A WSAQUERYSET2;
 typedef PWSAQUERYSET2A PWSAQUERYSET2;
 typedef LPWSAQUERYSET2A LPWSAQUERYSET2;
 #endif /* UNICODE */
-
-#define LUP_DEEP                0x0001
-#define LUP_CONTAINERS          0x0002
-#define LUP_NOCONTAINERS        0x0004
-#define LUP_NEAREST             0x0008
-#define LUP_RETURN_NAME         0x0010
-#define LUP_RETURN_TYPE         0x0020
-#define LUP_RETURN_VERSION      0x0040
-#define LUP_RETURN_COMMENT      0x0080
-#define LUP_RETURN_ADDR         0x0100
-#define LUP_RETURN_BLOB         0x0200
-#define LUP_RETURN_ALIASES      0x0400
-#define LUP_RETURN_QUERY_STRING 0x0800
-#define LUP_RETURN_ALL          0x0FF0
-#define LUP_RES_SERVICE         0x8000
-#define LUP_FLUSHCACHE          0x1000
-#define LUP_FLUSHPREVIOUS       0x2000
-#define LUP_NON_AUTHORITATIVE   0x4000
-#define LUP_SECURE              0x8000
-#define LUP_RETURN_PREFERRED_NAMES 0x10000
-#define LUP_ADDRCONFIG          0x00100000
-#define LUP_DUAL_ADDR           0x00200000
-#define LUP_FILESERVER          0x00400000
-
-#define RESULT_IS_ALIAS      0x0001
-#if(_WIN32_WINNT >= 0x0501)
-#define RESULT_IS_ADDED      0x0010
-#define RESULT_IS_CHANGED    0x0020
-#define RESULT_IS_DELETED    0x0040
-#endif
 
 typedef enum _WSAESETSERVICEOP {
   RNRSERVICE_REGISTER=0,
