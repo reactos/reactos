@@ -3662,7 +3662,7 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
         if (!(l = RegOpenKeyExW(HKLM,
                           lpKeyName,
                           0,
-                          0,
+                          samDesired,
                           &hClassesKey)))
         {
         	 if (MachineName != NULL)
