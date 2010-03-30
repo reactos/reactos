@@ -474,13 +474,23 @@ RtlpGetRegistryHandle(IN ULONG RelativeTo,
         /* Check if we need the current user key */
         if (RelativeTo == RTL_REGISTRY_USER)
         {
-            /* Get the path */
+            /* Get the user key path */
             Status = RtlFormatCurrentUserKeyPath(&KeyPath);
-            if (!NT_SUCCESS(Status)) return(Status);
 
-            /* Append it */
-            Status = RtlAppendUnicodeStringToString(&KeyName, &KeyPath);
-            RtlFreeUnicodeString (&KeyPath);
+            /* Check if it worked */
+            if (NT_SUCCESS(Status))
+            {
+                /* Append the user key path */
+                Status = RtlAppendUnicodeStringToString(&KeyName, &KeyPath);
+
+                /* Free the user key path */
+                RtlFreeUnicodeString (&KeyPath);
+            }
+            else
+            {
+                /* It didn't work so fall back to the default user key */
+                Status = RtlAppendUnicodeToString(&KeyName, RtlpRegPaths[RTL_REGISTRY_USER]);
+            }
         }
         else
         {

@@ -343,38 +343,38 @@ typedef struct _ARBITER_CONFLICT_INFO {
 } ARBITER_CONFLICT_INFO, *PARBITER_CONFLICT_INFO;
 
 typedef struct _ARBITER_TEST_ALLOCATION_PARAMETERS {
-  IN OUT PLIST_ENTRY ArbitrationList;
-  IN ULONG AllocateFromCount;
-  IN PCM_PARTIAL_RESOURCE_DESCRIPTOR AllocateFrom;
+      IN OUT PLIST_ENTRY ArbitrationList;
+      IN ULONG AllocateFromCount;
+      IN PCM_PARTIAL_RESOURCE_DESCRIPTOR AllocateFrom;
 } ARBITER_TEST_ALLOCATION_PARAMETERS, *PARBITER_TEST_ALLOCATION_PARAMETERS;
 
 typedef struct _ARBITER_RETEST_ALLOCATION_PARAMETERS {
-  IN OUT PLIST_ENTRY ArbitrationList;
-  IN ULONG AllocateFromCount;
-  IN PCM_PARTIAL_RESOURCE_DESCRIPTOR AllocateFrom;
+      IN OUT PLIST_ENTRY ArbitrationList;
+      IN ULONG AllocateFromCount;
+      IN PCM_PARTIAL_RESOURCE_DESCRIPTOR AllocateFrom;
 } ARBITER_RETEST_ALLOCATION_PARAMETERS, *PARBITER_RETEST_ALLOCATION_PARAMETERS;
 
 typedef struct _ARBITER_BOOT_ALLOCATION_PARAMETERS {
-  IN OUT PLIST_ENTRY ArbitrationList;
+      IN OUT PLIST_ENTRY ArbitrationList;
 } ARBITER_BOOT_ALLOCATION_PARAMETERS, *PARBITER_BOOT_ALLOCATION_PARAMETERS;
 
 typedef struct _ARBITER_QUERY_ALLOCATED_RESOURCES_PARAMETERS {
-  OUT PCM_PARTIAL_RESOURCE_LIST *AllocatedResources;
+      OUT PCM_PARTIAL_RESOURCE_LIST *AllocatedResources;
 } ARBITER_QUERY_ALLOCATED_RESOURCES_PARAMETERS, *PARBITER_QUERY_ALLOCATED_RESOURCES_PARAMETERS;
 
 typedef struct _ARBITER_QUERY_CONFLICT_PARAMETERS {
-  IN PDEVICE_OBJECT PhysicalDeviceObject;
-  IN PIO_RESOURCE_DESCRIPTOR ConflictingResource;
-  OUT PULONG ConflictCount;
-  OUT PARBITER_CONFLICT_INFO *Conflicts;
+      IN PDEVICE_OBJECT PhysicalDeviceObject;
+      IN PIO_RESOURCE_DESCRIPTOR ConflictingResource;
+      OUT PULONG ConflictCount;
+      OUT PARBITER_CONFLICT_INFO *Conflicts;
 } ARBITER_QUERY_CONFLICT_PARAMETERS, *PARBITER_QUERY_CONFLICT_PARAMETERS;
 
 typedef struct _ARBITER_QUERY_ARBITRATE_PARAMETERS {
-  IN PLIST_ENTRY ArbitrationList;
+      IN PLIST_ENTRY ArbitrationList;
 } ARBITER_QUERY_ARBITRATE_PARAMETERS, *PARBITER_QUERY_ARBITRATE_PARAMETERS;
 
 typedef struct _ARBITER_ADD_RESERVED_PARAMETERS {
-  IN PDEVICE_OBJECT ReserveDevice;
+      IN PDEVICE_OBJECT ReserveDevice;
 } ARBITER_ADD_RESERVED_PARAMETERS, *PARBITER_ADD_RESERVED_PARAMETERS;
 
 typedef struct _ARBITER_PARAMETERS {
@@ -1458,7 +1458,7 @@ typedef PVOID
   IN ULONG Signature,
   IN PCSTR OemId OPTIONAL,
   IN PCSTR OemTableId OPTIONAL);
-
+  
 #if defined(_IA64_)
 typedef NTSTATUS
 (*pHalGetErrorCapList)(
@@ -2899,7 +2899,7 @@ typedef enum _WELL_KNOWN_SID_TYPE {
 #define CONTEXT_DEBUG_REGISTERS    (CONTEXT_i386|0x00000010L)
 #define CONTEXT_EXTENDED_REGISTERS (CONTEXT_i386|0x00000020L)
 
-#define CONTEXT_FULL (CONTEXT_CONTROL|CONTEXT_INTEGER|CONTEXT_SEGMENTS)
+#define CONTEXT_FULL  (CONTEXT_CONTROL|CONTEXT_INTEGER|CONTEXT_SEGMENTS)
 #define CONTEXT_ALL (CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_SEGMENTS |  \
                      CONTEXT_FLOATING_POINT | CONTEXT_DEBUG_REGISTERS |      \
                      CONTEXT_EXTENDED_REGISTERS)
@@ -3008,15 +3008,15 @@ extern NTKERNELAPI PVOID MmHighestUserAddress;
 extern NTKERNELAPI PVOID MmSystemRangeStart;
 extern NTKERNELAPI ULONG MmUserProbeAddress;
 
-#define MM_HIGHEST_USER_ADDRESS MmHighestUserAddress
-#define MM_SYSTEM_RANGE_START MmSystemRangeStart
+#define MM_HIGHEST_USER_ADDRESS           MmHighestUserAddress
+#define MM_SYSTEM_RANGE_START             MmSystemRangeStart
 #if defined(_LOCAL_COPY_USER_PROBE_ADDRESS_)
 #define MM_USER_PROBE_ADDRESS _LOCAL_COPY_USER_PROBE_ADDRESS_
 extern ULONG _LOCAL_COPY_USER_PROBE_ADDRESS_;
 #else
-#define MM_USER_PROBE_ADDRESS MmUserProbeAddress
+#define MM_USER_PROBE_ADDRESS             MmUserProbeAddress
 #endif
-#define MM_LOWEST_USER_ADDRESS (PVOID)0x10000
+#define MM_LOWEST_USER_ADDRESS   (PVOID)0x10000
 #define MM_KSEG0_BASE       MM_SYSTEM_RANGE_START
 #define MM_SYSTEM_SPACE_END 0xFFFFFFFF
 #if !defined (_X86PAE_)
@@ -3065,74 +3065,74 @@ extern ULONG _LOCAL_COPY_USER_PROBE_ADDRESS_;
 #define INITIAL_FPCSR                  0x027f
 
 typedef struct DECLSPEC_ALIGN(16) _CONTEXT {
-  ULONG64 P1Home;
-  ULONG64 P2Home;
-  ULONG64 P3Home;
-  ULONG64 P4Home;
-  ULONG64 P5Home;
-  ULONG64 P6Home;
-  ULONG ContextFlags;
-  ULONG MxCsr;
-  USHORT SegCs;
-  USHORT SegDs;
-  USHORT SegEs;
-  USHORT SegFs;
-  USHORT SegGs;
-  USHORT SegSs;
-  ULONG EFlags;
-  ULONG64 Dr0;
-  ULONG64 Dr1;
-  ULONG64 Dr2;
-  ULONG64 Dr3;
-  ULONG64 Dr6;
-  ULONG64 Dr7;
-  ULONG64 Rax;
-  ULONG64 Rcx;
-  ULONG64 Rdx;
-  ULONG64 Rbx;
-  ULONG64 Rsp;
-  ULONG64 Rbp;
-  ULONG64 Rsi;
-  ULONG64 Rdi;
-  ULONG64 R8;
-  ULONG64 R9;
-  ULONG64 R10;
-  ULONG64 R11;
-  ULONG64 R12;
-  ULONG64 R13;
-  ULONG64 R14;
-  ULONG64 R15;
-  ULONG64 Rip;
-  union {
-    XMM_SAVE_AREA32 FltSave;
-    struct {
-      M128A Header[2];
-      M128A Legacy[8];
-      M128A Xmm0;
-      M128A Xmm1;
-      M128A Xmm2;
-      M128A Xmm3;
-      M128A Xmm4;
-      M128A Xmm5;
-      M128A Xmm6;
-      M128A Xmm7;
-      M128A Xmm8;
-      M128A Xmm9;
-      M128A Xmm10;
-      M128A Xmm11;
-      M128A Xmm12;
-      M128A Xmm13;
-      M128A Xmm14;
-      M128A Xmm15;
-    } DUMMYSTRUCTNAME;
-  } DUMMYUNIONNAME;
-  M128A VectorRegister[26];
-  ULONG64 VectorControl;
-  ULONG64 DebugControl;
-  ULONG64 LastBranchToRip;
-  ULONG64 LastBranchFromRip;
-  ULONG64 LastExceptionToRip;
-  ULONG64 LastExceptionFromRip;
+    ULONG64 P1Home;
+    ULONG64 P2Home;
+    ULONG64 P3Home;
+    ULONG64 P4Home;
+    ULONG64 P5Home;
+    ULONG64 P6Home;
+    ULONG ContextFlags;
+    ULONG MxCsr;
+    USHORT SegCs;
+    USHORT SegDs;
+    USHORT SegEs;
+    USHORT SegFs;
+    USHORT SegGs;
+    USHORT SegSs;
+    ULONG EFlags;
+    ULONG64 Dr0;
+    ULONG64 Dr1;
+    ULONG64 Dr2;
+    ULONG64 Dr3;
+    ULONG64 Dr6;
+    ULONG64 Dr7;
+    ULONG64 Rax;
+    ULONG64 Rcx;
+    ULONG64 Rdx;
+    ULONG64 Rbx;
+    ULONG64 Rsp;
+    ULONG64 Rbp;
+    ULONG64 Rsi;
+    ULONG64 Rdi;
+    ULONG64 R8;
+    ULONG64 R9;
+    ULONG64 R10;
+    ULONG64 R11;
+    ULONG64 R12;
+    ULONG64 R13;
+    ULONG64 R14;
+    ULONG64 R15;
+    ULONG64 Rip;
+   union {
+       XMM_SAVE_AREA32 FltSave;
+       struct {
+           M128A Header[2];
+           M128A Legacy[8];
+           M128A Xmm0;
+           M128A Xmm1;
+           M128A Xmm2;
+           M128A Xmm3;
+           M128A Xmm4;
+           M128A Xmm5;
+           M128A Xmm6;
+           M128A Xmm7;
+           M128A Xmm8;
+           M128A Xmm9;
+           M128A Xmm10;
+           M128A Xmm11;
+           M128A Xmm12;
+           M128A Xmm13;
+           M128A Xmm14;
+           M128A Xmm15;
+      } DUMMYSTRUCTNAME;
+    } DUMMYUNIONNAME;
+    M128A VectorRegister[26];
+    ULONG64 VectorControl;
+    ULONG64 DebugControl;
+    ULONG64 LastBranchToRip;
+    ULONG64 LastBranchFromRip;
+    ULONG64 LastExceptionToRip;
+    ULONG64 LastExceptionFromRip;
 } CONTEXT;
 
 #define PCR_MINOR_VERSION 1
@@ -3249,8 +3249,8 @@ ExAllocateFromZone(
 
 static __inline PVOID
 ExFreeToZone(
-  IN PZONE_HEADER Zone,
-  IN PVOID Block)
+  IN PZONE_HEADER  Zone,
+  IN PVOID  Block)
 {
   ((PSINGLE_LIST_ENTRY) Block)->Next = Zone->FreeList.Next;
   Zone->FreeList.Next = ((PSINGLE_LIST_ENTRY) Block);

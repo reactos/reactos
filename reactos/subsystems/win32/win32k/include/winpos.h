@@ -1,9 +1,5 @@
 #pragma once
 
-/* Undocumented flags. */
-#define SWP_NOCLIENTMOVE          0x0800
-#define SWP_NOCLIENTSIZE          0x1000
-
 #define IntPtInWindow(WndObject,x,y) \
   ((x) >= (WndObject)->Wnd->rcWindow.left && \
    (x) < (WndObject)->Wnd->rcWindow.right && \

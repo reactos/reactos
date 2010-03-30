@@ -253,7 +253,7 @@ StartTheTimers(VOID)
 
 UINT_PTR
 FASTCALL
-SetSystemTimer( PWINDOW_OBJECT Window,
+SystemTimerSet( PWINDOW_OBJECT Window,
                 UINT_PTR nIDEvent,
                 UINT uElapse,
                 TIMERPROC lpTimerFunc) 

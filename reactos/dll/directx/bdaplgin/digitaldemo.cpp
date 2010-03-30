@@ -111,7 +111,7 @@ CBDADigitalDemodulator::put_ModulationType(ModulationType *pModulationType)
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDADigitalDemodulator::put_ModulationType: hr %lx\n", hr);
+    swprintf(Buffer, L"CBDADigitalDemodulator::put_ModulationType: pModulationType %lu hr %lx\n", *pModulationType, hr);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -142,7 +142,7 @@ CBDADigitalDemodulator::put_InnerFECMethod(FECMethod *pFECMethod)
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDADigitalDemodulator::put_InnerFECMethod: hr %lx\n", hr);
+    swprintf(Buffer, L"CBDADigitalDemodulator::put_InnerFECMethod: pFECMethod %lu hr %lx\n", *pFECMethod, hr);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -172,7 +172,7 @@ CBDADigitalDemodulator::put_InnerFECRate(BinaryConvolutionCodeRate *pFECRate)
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDADigitalDemodulator::put_InnerFECRate: hr %lx\n", hr);
+    swprintf(Buffer, L"CBDADigitalDemodulator::put_InnerFECRate: pFECRate %lu hr %lx\n", *pFECRate, hr);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -202,7 +202,7 @@ CBDADigitalDemodulator::put_OuterFECMethod(FECMethod *pFECMethod)
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDADigitalDemodulator::put_OuterFECMethod: hr %lx\n", hr);
+    swprintf(Buffer, L"CBDADigitalDemodulator::put_OuterFECMethod: pFECMethod %lu hr %lx\n", *pFECMethod, hr);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -232,7 +232,7 @@ CBDADigitalDemodulator::put_OuterFECRate(BinaryConvolutionCodeRate *pFECRate)
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDADigitalDemodulator::put_OuterFECRate: hr %lx\n", hr);
+    swprintf(Buffer, L"CBDADigitalDemodulator::put_OuterFECRate: pFECRate %lu hr %lx\n", *pFECRate, hr);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -262,7 +262,7 @@ CBDADigitalDemodulator::put_SymbolRate(ULONG *pSymbolRate)
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDADigitalDemodulator::put_SymbolRate: hr %lx\n", hr);
+    swprintf(Buffer, L"CBDADigitalDemodulator::put_SymbolRate: pSymbolRate %lu hr %lx\n", *pSymbolRate, hr);
     OutputDebugStringW(Buffer);
 #endif
 
@@ -292,7 +292,7 @@ CBDADigitalDemodulator::put_SpectralInversion(SpectralInversion *pSpectralInvers
 
 #ifdef BDAPLGIN_TRACE
     WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDADigitalDemodulator::put_SpectralInversion: hr %lx\n", hr);
+    swprintf(Buffer, L"CBDADigitalDemodulator::put_SpectralInversion: pSpectralInversion %lu hr %lx\n", *pSpectralInversion, hr);
     OutputDebugStringW(Buffer);
 #endif
 

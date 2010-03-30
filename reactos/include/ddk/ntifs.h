@@ -6762,14 +6762,14 @@ BOOLEAN
 NTAPI
 FsRtlDoesDbcsContainWildCards(
   IN PANSI_STRING Name);
-
+    
 NTKERNELAPI
 BOOLEAN
 NTAPI
 FsRtlIsDbcsInExpression(
   IN PANSI_STRING Expression,
   IN PANSI_STRING Name);
-
+    
 NTKERNELAPI
 BOOLEAN
 NTAPI
@@ -6778,7 +6778,7 @@ FsRtlIsFatDbcsLegal(
   IN BOOLEAN WildCardsPermissible,
   IN BOOLEAN PathNamePermissible,
   IN BOOLEAN LeadingBackslashPermissible);
-
+    
 NTKERNELAPI
 BOOLEAN
 NTAPI
@@ -7027,7 +7027,7 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 FsRtlNotifyVolumeEvent(
-  IN PFILE_OBJECT FileObject,
+    IN PFILE_OBJECT     FileObject,
   IN ULONG EventCode);
 
 NTKERNELAPI
@@ -7169,7 +7169,7 @@ FsRtlCreateSectionForDataScan(
   OUT PHANDLE SectionHandle,
   OUT PVOID *SectionObject,
   OUT PLARGE_INTEGER SectionFileSize OPTIONAL,
-  IN PFILE_OBJECT FileObject,
+    IN PFILE_OBJECT FileObject,
   IN ACCESS_MASK DesiredAccess,
   IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
   IN PLARGE_INTEGER MaximumSize OPTIONAL,
@@ -7255,7 +7255,7 @@ FsRtlIsPagingFile(
 #if (NTDDI_VERSION >= NTDDI_WS03)
 
 NTKERNELAPI
-VOID
+    VOID
 NTAPI
 FsRtlInitializeBaseMcb(
   IN PBASE_MCB Mcb,
@@ -7346,8 +7346,8 @@ NTKERNELAPI
 BOOLEAN
 NTAPI
 FsRtlSplitBaseMcb(
-  IN PBASE_MCB Mcb,
-  IN LONGLONG Vbn,
+    IN PBASE_MCB  Mcb,
+    IN LONGLONG   Vbn,
   IN LONGLONG Amount);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WS03) */
@@ -7365,8 +7365,8 @@ NTSTATUS
 NTAPI
 FsRtlAddBaseMcbEntryEx(
   IN PBASE_MCB Mcb,
-  IN LONGLONG Vbn,
-  IN LONGLONG Lbn,
+    IN LONGLONG    Vbn,
+    IN LONGLONG    Lbn,
   IN LONGLONG SectorCount);
 
 NTKERNELAPI
@@ -8210,7 +8210,7 @@ NTKERNELAPI
 BOOLEAN
 NTAPI
 CcCanIWrite(
-  IN PFILE_OBJECT FileObject,
+    IN PFILE_OBJECT     FileObject,
   IN ULONG BytesToWrite,
   IN BOOLEAN Wait,
   IN BOOLEAN Retrying);
@@ -8230,8 +8230,8 @@ NTKERNELAPI
 BOOLEAN
 NTAPI
 CcCopyRead(
-  IN PFILE_OBJECT FileObject,
-  IN PLARGE_INTEGER FileOffset,
+    IN PFILE_OBJECT     FileObject,
+    IN PLARGE_INTEGER   FileOffset,
   IN ULONG Length,
   IN BOOLEAN Wait,
   OUT PVOID Buffer,
@@ -8338,7 +8338,7 @@ NTKERNELAPI
 BOOLEAN
 NTAPI
 CcPinMappedData(
-  IN PFILE_OBJECT FileObject,
+    IN PFILE_OBJECT FileObject,
   IN PLARGE_INTEGER FileOffset,
   IN ULONG Length,
   IN ULONG Flags,

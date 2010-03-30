@@ -22,8 +22,11 @@
 	<file>classfactory.cpp</file>
 	<file>enum_mediatypes.cpp</file>
 	<file>enumpins.cpp</file>
+	<file>ethernetfilter.cpp</file>
 	<file>msdvbnp.cpp</file>
 	<file>msdvbnp.rc</file>
+	<file>ipv4.cpp</file>
+	<file>ipv6.cpp</file>
 	<file>networkprovider.cpp</file>
 	<file>pin.cpp</file>
 	<file>scanningtuner.cpp</file>

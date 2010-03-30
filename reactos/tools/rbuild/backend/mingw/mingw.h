@@ -119,7 +119,6 @@ private:
 	bool use_pch;
 	bool DetectMicrosoftCompiler ( std::string& version, std::string& path );
 	bool DetectMicrosoftLinker ( std::string& version, std::string& path );
-	void GenerateInstallerFileList();
 };
 
 

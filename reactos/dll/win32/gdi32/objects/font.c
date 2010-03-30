@@ -1671,7 +1671,7 @@ RemoveFontResourceExW(LPCWSTR lpFileName,
 /*
  * @implemented
  */
-DWORD
+LONG
 WINAPI
 GdiGetCharDimensions(HDC hdc, LPTEXTMETRICW lptm, LONG *height)
 {

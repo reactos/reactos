@@ -24,6 +24,7 @@
 	<property name="BASEADDRESS_PSTOREC"		value="0x513d0000" />
 	<property name="BASEADDRESS_LPK"		value="0x516c0000" />
 	<property name="BASEADDRESS_MSGSM32ACM"		value="0x56db0000" />
+	<property name="BASEADDRESS_MSDVBNP"		value="0x58280000" />
 	<property name="BASEADDRESS_MSG711ACM"		value="0x584f0000" />
 	<property name="BASEADDRESS_IMAADP32ACM"	value="0x585e0000" />
 	<property name="BASEADDRESS_BDAPLGIN"	value="0x58600000" />
@@ -32,6 +33,7 @@
 	<property name="BASEADDRESS_MMSYS"		value="0x588a0000" />
 	<property name="BASEADDRESS_JOY"		value="0x589b0000" />
 	<property name="BASEADDRESS_QMGR"		value="0x59620000" />
+	<property name="BASEADDRESS_MSVIDCTL"		value="0x59660000" />
 	<property name="BASEADDRESS_UXTHEME"		value="0x5ad70000" />
 	<property name="BASEADDRESS_VDMDBG"		value="0x5b0d0000" />
 	<property name="BASEADDRESS_UNTFS"		value="0x5b340000" />

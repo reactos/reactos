@@ -96,7 +96,16 @@ LRESULT CALLBACK RosImageProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 					// build new bitmap
 					GetObject(pImgInfo->hBitmap, sizeof(BITMAP), &bitmap);
 					dc = CreateCompatibleDC(GetDC(NULL));
+					if (dc == NULL)
+					{
+						break;
+					}
 					sdc = CreateCompatibleDC(dc);
+					if (sdc == NULL)
+					{
+						DeleteDC(dc);
+						break;
+					}
 					ncm.cbSize = sizeof(NONCLIENTMETRICS);
 					SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &ncm, 0);
 
