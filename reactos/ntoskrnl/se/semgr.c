@@ -362,8 +362,7 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                IN PGENERIC_MAPPING GenericMapping,
                IN KPROCESSOR_MODE AccessMode,
                OUT PACCESS_MASK GrantedAccess,
-               OUT PNTSTATUS AccessStatus,
-               SECURITY_IMPERSONATION_LEVEL LowestImpersonationLevel)
+               OUT PNTSTATUS AccessStatus)
 {
     LUID_AND_ATTRIBUTES Privilege;
     ACCESS_MASK CurrentAccess, AccessMask;
@@ -376,22 +375,6 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     PSID Sid;
     NTSTATUS Status;
     PAGED_CODE();
-
-    /* Check if we didn't get an SD */
-    if (!SecurityDescriptor)
-    {
-        /* Automatic failure */
-        *AccessStatus = STATUS_ACCESS_DENIED;
-        return FALSE;
-    }
-
-    /* Check for invalid impersonation */
-    if ((SubjectSecurityContext->ClientToken) &&
-        (SubjectSecurityContext->ImpersonationLevel < LowestImpersonationLevel))
-    {
-        *AccessStatus = STATUS_BAD_IMPERSONATION_LEVEL;
-        return FALSE;
-    }
 
     /* Check for no access desired */
     if (!DesiredAccess)
@@ -680,6 +663,22 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         return TRUE;
     }
 
+    /* Check if we didn't get an SD */
+    if (!SecurityDescriptor)
+    {
+        /* Automatic failure */
+        *AccessStatus = STATUS_ACCESS_DENIED;
+        return FALSE;
+    }
+
+    /* Check for invalid impersonation */
+    if ((SubjectSecurityContext->ClientToken) &&
+        (SubjectSecurityContext->ImpersonationLevel < SecurityImpersonation))
+    {
+        *AccessStatus = STATUS_BAD_IMPERSONATION_LEVEL;
+        return FALSE;
+    }
+
     /* Call the internal function */
     return SepAccessCheck(SecurityDescriptor,
                           SubjectSecurityContext,
@@ -690,8 +689,7 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                           GenericMapping,
                           AccessMode,
                           GrantedAccess,
-                          AccessStatus,
-                          SecurityImpersonation);
+                          AccessStatus);
 }
 
 /* SYSTEM CALLS ***************************************************************/
@@ -710,6 +708,7 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
               OUT PACCESS_MASK GrantedAccess,
               OUT PNTSTATUS AccessStatus)
 {
+    PSECURITY_DESCRIPTOR CapturedSecurityDescriptor = NULL;
     SECURITY_SUBJECT_CONTEXT SubjectSecurityContext;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     PTOKEN Token;
@@ -787,11 +786,35 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         return STATUS_BAD_IMPERSONATION_LEVEL;
     }
 
+    /* Capture the security descriptor */
+    Status = SeCaptureSecurityDescriptor(SecurityDescriptor,
+                                         PreviousMode,
+                                         PagedPool,
+                                         FALSE,
+                                         &CapturedSecurityDescriptor);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("Failed to capture the Security Descriptor\n");
+        ObDereferenceObject(Token);
+        return Status;
+    }
+
+    /* Check the captured security descriptor */
+    if (CapturedSecurityDescriptor == NULL)
+    {
+        DPRINT("Security Descriptor is NULL\n");
+        ObDereferenceObject(Token);
+        return STATUS_INVALID_SECURITY_DESCR;
+    }
+
     /* Check security descriptor for valid owner and group */
     if (SepGetSDOwner(SecurityDescriptor)== NULL ||
         SepGetSDGroup(SecurityDescriptor) == NULL)
     {
         DPRINT("Security Descriptor does not have a valid group or owner\n");
+        SeReleaseSecurityDescriptor(CapturedSecurityDescriptor,
+                                    PreviousMode,
+                                    FALSE);
         ObDereferenceObject(Token);
         return STATUS_INVALID_SECURITY_DESCR;
     }
@@ -804,7 +827,7 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     SeLockSubjectContext(&SubjectSecurityContext);
 
     /* Now perform the access check */
-    SepAccessCheck(SecurityDescriptor,
+    SepAccessCheck(CapturedSecurityDescriptor,
                    &SubjectSecurityContext,
                    TRUE,
                    DesiredAccess,
@@ -813,11 +836,15 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                    GenericMapping,
                    PreviousMode,
                    GrantedAccess,
-                   AccessStatus,
-                   SecurityIdentification);
+                   AccessStatus);
 
     /* Unlock subject context */
     SeUnlockSubjectContext(&SubjectSecurityContext);
+
+    /* Release the captured security descriptor */
+    SeReleaseSecurityDescriptor(CapturedSecurityDescriptor,
+                                PreviousMode,
+                                FALSE);
 
     /* Dereference the token */
     ObDereferenceObject(Token);
