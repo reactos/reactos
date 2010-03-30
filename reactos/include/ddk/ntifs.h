@@ -25,30 +25,8 @@
 #define _NTIFS_INCLUDED_
 #define _GNU_NTIFS_
 
-/* Helper macro to enable gcc's extension.  */
-#ifndef __GNU_EXTENSION
-#ifdef __GNUC__
-#define __GNU_EXTENSION __extension__
-#else
-#define __GNU_EXTENSION
-#endif
-#endif
-
 #ifdef __cplusplus
 extern "C" {
-#endif
-
-#if !defined(_NTHALDLL_) && !defined(_BLDR_)
-#define NTHALAPI DECLSPEC_IMPORT
-#else
-#define NTHALAPI
-#endif
-
-/* For ReactOS */
-#if !defined(_NTOSKRNL_) && !defined(_BLDR_)
-#define NTKERNELAPI DECLSPEC_IMPORT
-#else
-#define NTKERNELAPI
 #endif
 
 /* Dependencies */
@@ -74,16 +52,6 @@ extern "C" {
 
 #ifndef ClearFlag
 #define ClearFlag(_F,_SF)     ((_F) &= ~(_SF))
-#endif
-
-#define PsGetCurrentProcess IoGetCurrentProcess
-
-#if (NTDDI_VERSION >= NTDDI_VISTA)
-extern NTSYSAPI volatile CCHAR KeNumberProcessors;
-#elif (NTDDI_VERSION >= NTDDI_WINXP)
-extern NTSYSAPI CCHAR KeNumberProcessors;
-#else
-extern PCCHAR KeNumberProcessors;
 #endif
 
 typedef UNICODE_STRING LSA_UNICODE_STRING, *PLSA_UNICODE_STRING;
@@ -751,8 +719,6 @@ typedef enum _OBJECT_INFORMATION_CLASS {
   MaxObjectInfoClass /* FIXME, not in WDK */
 } OBJECT_INFORMATION_CLASS;
 
-#if (NTDDI_VERSION >= NTDDI_NT4)
-
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
@@ -762,8 +728,6 @@ NtQueryObject(
   OUT PVOID ObjectInformation OPTIONAL,
   IN ULONG ObjectInformationLength,
   OUT PULONG ReturnLength OPTIONAL);
-
-#endif
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
@@ -2414,94 +2378,10 @@ extern const PRTL_REALLOCATE_STRING_ROUTINE RtlReallocateStringRoutine;
 
 #define RTL_SYSTEM_VOLUME_INFORMATION_FOLDER    L"System Volume Information"
 
-#define DEVICE_TYPE ULONG
-
-#define FILE_DEVICE_BEEP                0x00000001
-#define FILE_DEVICE_CD_ROM              0x00000002
-#define FILE_DEVICE_CD_ROM_FILE_SYSTEM  0x00000003
-#define FILE_DEVICE_CONTROLLER          0x00000004
-#define FILE_DEVICE_DATALINK            0x00000005
-#define FILE_DEVICE_DFS                 0x00000006
-#define FILE_DEVICE_DISK                0x00000007
-#define FILE_DEVICE_DISK_FILE_SYSTEM    0x00000008
-#define FILE_DEVICE_FILE_SYSTEM         0x00000009
-#define FILE_DEVICE_INPORT_PORT         0x0000000a
-#define FILE_DEVICE_KEYBOARD            0x0000000b
-#define FILE_DEVICE_MAILSLOT            0x0000000c
-#define FILE_DEVICE_MIDI_IN             0x0000000d
-#define FILE_DEVICE_MIDI_OUT            0x0000000e
-#define FILE_DEVICE_MOUSE               0x0000000f
-#define FILE_DEVICE_MULTI_UNC_PROVIDER  0x00000010
-#define FILE_DEVICE_NAMED_PIPE          0x00000011
-#define FILE_DEVICE_NETWORK             0x00000012
-#define FILE_DEVICE_NETWORK_BROWSER     0x00000013
-#define FILE_DEVICE_NETWORK_FILE_SYSTEM 0x00000014
-#define FILE_DEVICE_NULL                0x00000015
-#define FILE_DEVICE_PARALLEL_PORT       0x00000016
-#define FILE_DEVICE_PHYSICAL_NETCARD    0x00000017
-#define FILE_DEVICE_PRINTER             0x00000018
-#define FILE_DEVICE_SCANNER             0x00000019
-#define FILE_DEVICE_SERIAL_MOUSE_PORT   0x0000001a
-#define FILE_DEVICE_SERIAL_PORT         0x0000001b
-#define FILE_DEVICE_SCREEN              0x0000001c
-#define FILE_DEVICE_SOUND               0x0000001d
-#define FILE_DEVICE_STREAMS             0x0000001e
-#define FILE_DEVICE_TAPE                0x0000001f
-#define FILE_DEVICE_TAPE_FILE_SYSTEM    0x00000020
-#define FILE_DEVICE_TRANSPORT           0x00000021
-#define FILE_DEVICE_UNKNOWN             0x00000022
-#define FILE_DEVICE_VIDEO               0x00000023
-#define FILE_DEVICE_VIRTUAL_DISK        0x00000024
-#define FILE_DEVICE_WAVE_IN             0x00000025
-#define FILE_DEVICE_WAVE_OUT            0x00000026
-#define FILE_DEVICE_8042_PORT           0x00000027
-#define FILE_DEVICE_NETWORK_REDIRECTOR  0x00000028
-#define FILE_DEVICE_BATTERY             0x00000029
-#define FILE_DEVICE_BUS_EXTENDER        0x0000002a
-#define FILE_DEVICE_MODEM               0x0000002b
-#define FILE_DEVICE_VDM                 0x0000002c
-#define FILE_DEVICE_MASS_STORAGE        0x0000002d
-#define FILE_DEVICE_SMB                 0x0000002e
-#define FILE_DEVICE_KS                  0x0000002f
-#define FILE_DEVICE_CHANGER             0x00000030
-#define FILE_DEVICE_SMARTCARD           0x00000031
-#define FILE_DEVICE_ACPI                0x00000032
-#define FILE_DEVICE_DVD                 0x00000033
-#define FILE_DEVICE_FULLSCREEN_VIDEO    0x00000034
-#define FILE_DEVICE_DFS_FILE_SYSTEM     0x00000035
-#define FILE_DEVICE_DFS_VOLUME          0x00000036
-#define FILE_DEVICE_SERENUM             0x00000037
-#define FILE_DEVICE_TERMSRV             0x00000038
-#define FILE_DEVICE_KSEC                0x00000039
-#define FILE_DEVICE_FIPS                0x0000003A
-#define FILE_DEVICE_INFINIBAND          0x0000003B
-#define FILE_DEVICE_VMBUS               0x0000003E
-#define FILE_DEVICE_CRYPT_PROVIDER      0x0000003F
-#define FILE_DEVICE_WPD                 0x00000040
-#define FILE_DEVICE_BLUETOOTH           0x00000041
-#define FILE_DEVICE_MT_COMPOSITE        0x00000042
-#define FILE_DEVICE_MT_TRANSPORT        0x00000043
-#define FILE_DEVICE_BIOMETRIC           0x00000044
-#define FILE_DEVICE_PMI                 0x00000045
-
-#define CTL_CODE(DeviceType, Function, Method, Access) \
-  (((DeviceType) << 16) | ((Access) << 14) | ((Function) << 2) | (Method))
-
-#define DEVICE_TYPE_FROM_CTL_CODE(ctl) (((ULONG) (ctl & 0xffff0000)) >> 16)
-
 #define METHOD_FROM_CTL_CODE(ctrlCode)          ((ULONG)(ctrlCode & 3))
 
-#define METHOD_BUFFERED                 0
-#define METHOD_IN_DIRECT                1
-#define METHOD_OUT_DIRECT               2
-#define METHOD_NEITHER                  3
 #define METHOD_DIRECT_TO_HARDWARE       METHOD_IN_DIRECT
 #define METHOD_DIRECT_FROM_HARDWARE     METHOD_OUT_DIRECT
-
-#define FILE_ANY_ACCESS                   0x00000000
-#define FILE_SPECIAL_ACCESS               FILE_ANY_ACCESS
-#define FILE_READ_ACCESS                  0x00000001
-#define FILE_WRITE_ACCESS                 0x00000002
 
 typedef ULONG  LSA_OPERATIONAL_MODE, *PLSA_OPERATIONAL_MODE;
 
@@ -4673,6 +4553,8 @@ typedef struct _KAPC_STATE {
 
 #define KAPC_STATE_ACTUAL_LENGTH (FIELD_OFFSET(KAPC_STATE, UserApcPending) + sizeof(BOOLEAN))
 
+#define ASSERT_QUEUE(Q) ASSERT(((Q)->Header.Type & KOBJECT_TYPE_MASK) == QueueObject);
+
 typedef struct _KQUEUE {
   DISPATCHER_HEADER Header;
   LIST_ENTRY EntryListHead;
@@ -4807,7 +4689,7 @@ FASTCALL
 KeAcquireQueuedSpinLock(
   IN OUT KSPIN_LOCK_QUEUE_NUMBER Number);
 
-NTHALAPI
+_DECL_HAL_KE_IMPORT
 VOID
 FASTCALL
 KeReleaseQueuedSpinLock(
@@ -5021,24 +4903,6 @@ typedef NTSTATUS
     ((PSECURITY_SUBJECT_CONTEXT) SubjectContext)->PrimaryToken )
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
-
-NTKERNELAPI
-VOID
-NTAPI
-SeCaptureSubjectContext(
-  OUT PSECURITY_SUBJECT_CONTEXT SubjectContext);
-
-NTKERNELAPI
-VOID
-NTAPI
-SeLockSubjectContext(
-  IN PSECURITY_SUBJECT_CONTEXT SubjectContext);
-
-NTKERNELAPI
-VOID
-NTAPI
-SeUnlockSubjectContext(
-  IN PSECURITY_SUBJECT_CONTEXT SubjectContext);
 
 NTKERNELAPI
 VOID
@@ -5453,18 +5317,6 @@ SeLocateProcessImageName(
 
 extern NTKERNELAPI PSE_EXPORTS SeExports;
 
-#if !defined(_PSGETCURRENTTHREAD_)
-#define _PSGETCURRENTTHREAD_
-
-FORCEINLINE
-PETHREAD
-PsGetCurrentThread(
-  VOID)
-{
-  return (PETHREAD)KeGetCurrentThread();
-}
-#endif
-
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
 NTKERNELAPI
@@ -5534,7 +5386,20 @@ PsReturnPoolQuota(
   IN POOL_TYPE PoolType,
   IN ULONG_PTR Amount);
 
-#endif
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PsAssignImpersonationToken(
+  IN PETHREAD Thread,
+  IN HANDLE Token OPTIONAL);
+
+NTKERNELAPI
+HANDLE
+NTAPI
+PsReferencePrimaryToken(
+  IN OUT PEPROCESS Process);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 
@@ -5826,18 +5691,6 @@ IoPageRead(
 NTKERNELAPI
 PDEVICE_OBJECT
 NTAPI
-IoGetAttachedDevice(
-  IN PDEVICE_OBJECT DeviceObject);
-
-NTKERNELAPI
-PDEVICE_OBJECT
-NTAPI
-IoGetAttachedDeviceReference(
-  IN PDEVICE_OBJECT DeviceObject);
-
-NTKERNELAPI
-PDEVICE_OBJECT
-NTAPI
 IoGetBaseFileSystemDeviceObject(
   IN PFILE_OBJECT FileObject);
 
@@ -5952,42 +5805,6 @@ IoSetTopLevelIrp(
   IN PIRP Irp OPTIONAL);
 
 NTKERNELAPI
-VOID
-NTAPI
-IoStartNextPacket(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN BOOLEAN Cancelable);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoStartNextPacketByKey(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN BOOLEAN Cancelable,
-  IN ULONG Key);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoStartPacket(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN PIRP Irp,
-  IN PULONG Key OPTIONAL,
-  IN PDRIVER_CANCEL CancelFunction OPTIONAL);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoStartTimer(
-  IN PDEVICE_OBJECT DeviceObject);
-
-NTKERNELAPI
-VOID
-NTAPI
-IoStopTimer(
-  IN PDEVICE_OBJECT DeviceObject);
-
-NTKERNELAPI
 NTSTATUS
 NTAPI
 IoSynchronousPageWrite(
@@ -6024,12 +5841,6 @@ IoVerifyVolume(
   IN BOOLEAN AllowRawMount);
 
 NTKERNELAPI
-VOID
-NTAPI
-IoWriteErrorLogEntry(
-  IN PVOID ElEntry);
-
-NTKERNELAPI
 NTSTATUS
 NTAPI
 IoGetRequestorSessionId(
@@ -6054,13 +5865,6 @@ NTAPI
 IoQueryFileDosDeviceName(
   IN PFILE_OBJECT FileObject,
   OUT POBJECT_NAME_INFORMATION *ObjectNameInformation);
-
-VOID
-NTAPI
-IoSetStartIoAttributes(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN BOOLEAN DeferredStartIo,
-  IN BOOLEAN NonCancelable);
 
 NTKERNELAPI
 NTSTATUS
@@ -6160,53 +5964,6 @@ typedef struct _IO_PRIORITY_INFO {
 #define PO_CB_LID_SWITCH_STATE          4
 #define PO_CB_PROCESSOR_POWER_POLICY    5
 
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
-
-NTKERNELAPI
-PVOID
-NTAPI
-PoRegisterSystemState(
-  IN OUT PVOID StateHandle OPTIONAL,
-  IN EXECUTION_STATE Flags);
-
-NTKERNELAPI
-VOID
-NTAPI
-PoUnregisterSystemState(
-  IN OUT PVOID StateHandle);
-
-NTKERNELAPI
-POWER_STATE
-NTAPI
-PoSetPowerState(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN POWER_STATE_TYPE Type,
-  IN POWER_STATE State);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-PoCallDriver(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN OUT PIRP Irp);
-
-NTKERNELAPI
-VOID
-NTAPI
-PoStartNextPowerIrp(
-  IN OUT PIRP Irp);
-
-NTKERNELAPI
-PULONG
-NTAPI
-PoRegisterDeviceForIdleDetection(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN ULONG ConservationIdleTime,
-  IN ULONG PerformanceIdleTime,
-  IN DEVICE_POWER_STATE State);
-
-#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
-
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 NTKERNELAPI
 NTSTATUS
@@ -6214,84 +5971,6 @@ NTAPI
 PoQueueShutdownWorkItem(
   IN OUT PWORK_QUEUE_ITEM WorkItem);
 #endif
-
-#if (NTDDI_VERSION >= NTDDI_VISTA)
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-PoRegisterPowerSettingCallback(
-  IN PDEVICE_OBJECT DeviceObject OPTIONAL,
-  IN LPCGUID SettingGuid,
-  IN PPOWER_SETTING_CALLBACK Callback,
-  IN PVOID Context OPTIONAL,
-  OUT PVOID *Handle);
-
-NTKERNELAPI
-NTSTATUS
-PoUnregisterPowerSettingCallback(
-  IN OUT PVOID Handle);
-
-#endif
-
-#if (NTDDI_VERSION >= NTDDI_WIN6SP1)
-NTKERNELAPI
-VOID
-NTAPI
-PoSetDeviceBusyEx(
-  IN OUT PULONG IdlePointer);
-#endif
-
-#if (NTDDI_VERSION >= NTDDI_WIN7)
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-PoCreatePowerRequest(
-  OUT PVOID *PowerRequest,
-  IN PDEVICE_OBJECT DeviceObject,
-  IN PCOUNTED_REASON_CONTEXT Context);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-PoSetPowerRequest(
-  IN OUT PVOID PowerRequest,
-  IN POWER_REQUEST_TYPE Type);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-PoClearPowerRequest(
-  IN OUT PVOID PowerRequest,
-  IN POWER_REQUEST_TYPE Type);
-
-NTKERNELAPI
-VOID
-NTAPI
-PoDeletePowerRequest(
-  IN OUT PVOID PowerRequest);
-
-NTKERNELAPI
-VOID
-NTAPI
-PoStartDeviceBusy(
-  IN OUT PULONG IdlePointer);
-
-NTKERNELAPI
-VOID
-NTAPI
-PoEndDeviceBusy(
-  IN OUT PULONG IdlePointer);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-PoQueryWatchdogTime(
-  IN PDEVICE_OBJECT Pdo,
-  OUT PULONG SecondsRemaining);
-
-#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
 #if defined(_IA64_)
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
@@ -6567,6 +6246,188 @@ typedef struct _FILE_LOCK {
   PVOID LastReturnedLock;
   LONG volatile LockRequestsInProgress;
 } FILE_LOCK, *PFILE_LOCK;
+
+typedef struct _TUNNEL {
+  FAST_MUTEX Mutex;
+  PRTL_SPLAY_LINKS Cache;
+  LIST_ENTRY TimerQueue;
+  USHORT NumEntries;
+} TUNNEL, *PTUNNEL;
+
+typedef enum _FSRTL_COMPARISON_RESULT {
+  LessThan = -1,
+  EqualTo = 0,
+  GreaterThan = 1
+} FSRTL_COMPARISON_RESULT;
+
+#define FSRTL_FAT_LEGAL                 0x01
+#define FSRTL_HPFS_LEGAL                0x02
+#define FSRTL_NTFS_LEGAL                0x04
+#define FSRTL_WILD_CHARACTER            0x08
+#define FSRTL_OLE_LEGAL                 0x10
+#define FSRTL_NTFS_STREAM_LEGAL         (FSRTL_NTFS_LEGAL | FSRTL_OLE_LEGAL)
+
+typedef struct _BASE_MCB {
+  ULONG MaximumPairCount;
+  ULONG PairCount;
+  USHORT PoolType;
+  USHORT Flags;
+  PVOID Mapping;
+} BASE_MCB, *PBASE_MCB;
+
+typedef struct _LARGE_MCB {
+  PKGUARDED_MUTEX GuardedMutex;
+  BASE_MCB BaseMcb;
+} LARGE_MCB, *PLARGE_MCB;
+
+#define MCB_FLAG_RAISE_ON_ALLOCATION_FAILURE 1
+
+typedef struct _MCB {
+  LARGE_MCB DummyFieldThatSizesThisStructureCorrectly;
+} MCB, *PMCB;
+
+typedef PVOID OPLOCK, *POPLOCK;
+
+typedef VOID
+(NTAPI *POPLOCK_WAIT_COMPLETE_ROUTINE) (
+  IN PVOID Context,
+  IN PIRP Irp);
+
+typedef VOID
+(NTAPI *POPLOCK_FS_PREPOST_IRP) (
+  IN PVOID Context,
+  IN PIRP Irp);
+
+#if (NTDDI_VERSION >= NTDDI_VISTASP1)
+#define OPLOCK_FLAG_COMPLETE_IF_OPLOCKED    0x00000001
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+#define OPLOCK_FLAG_OPLOCK_KEY_CHECK_ONLY   0x00000002
+#define OPLOCK_FLAG_BACK_OUT_ATOMIC_OPLOCK  0x00000004
+#define OPLOCK_FLAG_IGNORE_OPLOCK_KEYS      0x00000008
+#define OPLOCK_FSCTRL_FLAG_ALL_KEYS_MATCH   0x00000001
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+
+typedef struct _OPLOCK_KEY_ECP_CONTEXT {
+  GUID OplockKey;
+  ULONG Reserved;
+} OPLOCK_KEY_ECP_CONTEXT, *POPLOCK_KEY_ECP_CONTEXT;
+
+DEFINE_GUID( GUID_ECP_OPLOCK_KEY, 0x48850596, 0x3050, 0x4be7, 0x98, 0x63, 0xfe, 0xc3, 0x50, 0xce, 0x8d, 0x7f );
+
+#endif
+
+#define FSRTL_VOLUME_DISMOUNT           1
+#define FSRTL_VOLUME_DISMOUNT_FAILED    2
+#define FSRTL_VOLUME_LOCK               3
+#define FSRTL_VOLUME_LOCK_FAILED        4
+#define FSRTL_VOLUME_UNLOCK             5
+#define FSRTL_VOLUME_MOUNT              6
+#define FSRTL_VOLUME_NEEDS_CHKDSK       7
+#define FSRTL_VOLUME_WORM_NEAR_FULL     8
+#define FSRTL_VOLUME_WEARING_OUT        9
+#define FSRTL_VOLUME_FORCED_CLOSED      10
+#define FSRTL_VOLUME_INFO_MAKE_COMPAT   11
+#define FSRTL_VOLUME_PREPARING_EJECT    12
+#define FSRTL_VOLUME_CHANGE_SIZE        13
+#define FSRTL_VOLUME_BACKGROUND_FORMAT  14
+
+typedef PVOID PNOTIFY_SYNC;
+
+typedef BOOLEAN
+(NTAPI *PCHECK_FOR_TRAVERSE_ACCESS) (
+  IN PVOID NotifyContext,
+  IN PVOID TargetContext OPTIONAL,
+  IN PSECURITY_SUBJECT_CONTEXT SubjectContext);
+
+typedef BOOLEAN
+(NTAPI *PFILTER_REPORT_CHANGE) (
+  IN PVOID NotifyContext,
+  IN PVOID FilterContext);
+
+typedef VOID
+(NTAPI *PFSRTL_STACK_OVERFLOW_ROUTINE) (
+  IN PVOID Context,
+  IN PKEVENT Event);
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+#define FSRTL_UNC_PROVIDER_FLAGS_MAILSLOTS_SUPPORTED    0x00000001
+#define FSRTL_UNC_PROVIDER_FLAGS_CSC_ENABLED            0x00000002
+#define FSRTL_UNC_PROVIDER_FLAGS_DOMAIN_SVC_AWARE       0x00000004
+
+#define FSRTL_ALLOCATE_ECPLIST_FLAG_CHARGE_QUOTA           0x00000001
+
+#define FSRTL_ALLOCATE_ECP_FLAG_CHARGE_QUOTA               0x00000001
+#define FSRTL_ALLOCATE_ECP_FLAG_NONPAGED_POOL              0x00000002
+
+#define FSRTL_ECP_LOOKASIDE_FLAG_NONPAGED_POOL             0x00000002
+
+#define FSRTL_VIRTDISK_FULLY_ALLOCATED  0x00000001
+#define FSRTL_VIRTDISK_NO_DRIVE_LETTER  0x00000002
+
+typedef struct _FSRTL_MUP_PROVIDER_INFO_LEVEL_1 {
+  ULONG32 ProviderId;
+} FSRTL_MUP_PROVIDER_INFO_LEVEL_1, *PFSRTL_MUP_PROVIDER_INFO_LEVEL_1;
+
+typedef struct _FSRTL_MUP_PROVIDER_INFO_LEVEL_2 {
+  ULONG32 ProviderId;
+  UNICODE_STRING ProviderName;
+} FSRTL_MUP_PROVIDER_INFO_LEVEL_2, *PFSRTL_MUP_PROVIDER_INFO_LEVEL_2;
+
+typedef VOID
+(*PFSRTL_EXTRA_CREATE_PARAMETER_CLEANUP_CALLBACK) (
+  IN OUT PVOID EcpContext,
+  IN LPCGUID EcpType);
+
+typedef struct _ECP_LIST ECP_LIST, *PECP_LIST;
+
+typedef ULONG FSRTL_ALLOCATE_ECPLIST_FLAGS;
+typedef ULONG FSRTL_ALLOCATE_ECP_FLAGS;
+typedef ULONG FSRTL_ECP_LOOKASIDE_FLAGS;
+
+typedef enum _FSRTL_CHANGE_BACKING_TYPE {
+  ChangeDataControlArea,
+  ChangeImageControlArea,
+  ChangeSharedCacheMap
+} FSRTL_CHANGE_BACKING_TYPE, *PFSRTL_CHANGE_BACKING_TYPE;
+
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+
+typedef struct _FSRTL_PER_FILE_CONTEXT {
+  LIST_ENTRY Links;
+  PVOID OwnerId;
+  PVOID InstanceId;
+  PFREE_FUNCTION FreeCallback;
+} FSRTL_PER_FILE_CONTEXT, *PFSRTL_PER_FILE_CONTEXT;
+
+typedef struct _FSRTL_PER_STREAM_CONTEXT {
+  LIST_ENTRY Links;
+  PVOID OwnerId;
+  PVOID InstanceId;
+  PFREE_FUNCTION FreeCallback;
+} FSRTL_PER_STREAM_CONTEXT, *PFSRTL_PER_STREAM_CONTEXT;
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+typedef VOID
+(*PFN_FSRTLTEARDOWNPERSTREAMCONTEXTS) (
+  IN PFSRTL_ADVANCED_FCB_HEADER AdvancedHeader);
+#endif
+
+typedef struct _FSRTL_PER_FILEOBJECT_CONTEXT {
+  LIST_ENTRY Links;
+  PVOID OwnerId;
+  PVOID InstanceId;
+} FSRTL_PER_FILEOBJECT_CONTEXT, *PFSRTL_PER_FILEOBJECT_CONTEXT;
+
+#define FsRtlEnterFileSystem    KeEnterCriticalRegion
+#define FsRtlExitFileSystem     KeLeaveCriticalRegion
+
+#define FSRTL_CC_FLUSH_ERROR_FLAG_NO_HARD_ERROR  0x1
+#define FSRTL_CC_FLUSH_ERROR_FLAG_NO_LOG_ENTRY   0x2
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
@@ -6845,15 +6706,2181 @@ FsRtlPrivateLock(
   IN PVOID Context,
   IN BOOLEAN AlreadySynchronized);
 
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlInitializeTunnelCache(
+  IN PTUNNEL Cache);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlAddToTunnelCache(
+  IN PTUNNEL Cache,
+  IN ULONGLONG DirectoryKey,
+  IN PUNICODE_STRING ShortName,
+  IN PUNICODE_STRING LongName,
+  IN BOOLEAN KeyByShortName,
+  IN ULONG DataLength,
+  IN PVOID Data);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlFindInTunnelCache(
+  IN PTUNNEL Cache,
+  IN ULONGLONG DirectoryKey,
+  IN PUNICODE_STRING Name,
+  OUT PUNICODE_STRING ShortName,
+  OUT PUNICODE_STRING LongName,
+  IN OUT PULONG DataLength,
+  OUT PVOID Data);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlDeleteKeyFromTunnelCache(
+  IN PTUNNEL Cache,
+  IN ULONGLONG DirectoryKey);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlDeleteTunnelCache(
+  IN PTUNNEL Cache);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlDissectDbcs(
+  IN ANSI_STRING Name,
+  OUT PANSI_STRING FirstPart,
+  OUT PANSI_STRING RemainingPart);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlDoesDbcsContainWildCards(
+  IN PANSI_STRING Name);
+    
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlIsDbcsInExpression(
+  IN PANSI_STRING Expression,
+  IN PANSI_STRING Name);
+    
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlIsFatDbcsLegal(
+  IN ANSI_STRING DbcsName,
+  IN BOOLEAN WildCardsPermissible,
+  IN BOOLEAN PathNamePermissible,
+  IN BOOLEAN LeadingBackslashPermissible);
+    
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlIsHpfsDbcsLegal(
+  IN ANSI_STRING DbcsName,
+  IN BOOLEAN WildCardsPermissible,
+  IN BOOLEAN PathNamePermissible,
+  IN BOOLEAN LeadingBackslashPermissible);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlNormalizeNtstatus(
+  IN NTSTATUS Exception,
+  IN NTSTATUS GenericException);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlIsNtstatusExpected(
+  IN NTSTATUS Ntstatus);
+
+NTKERNELAPI
+PERESOURCE
+NTAPI
+FsRtlAllocateResource(
+  VOID);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlInitializeLargeMcb(
+  IN PLARGE_MCB Mcb,
+  IN POOL_TYPE PoolType);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlUninitializeLargeMcb(
+  IN PLARGE_MCB Mcb);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlResetLargeMcb(
+  IN PLARGE_MCB Mcb,
+  IN BOOLEAN SelfSynchronized);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlTruncateLargeMcb(
+  IN PLARGE_MCB Mcb,
+  IN LONGLONG Vbn);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlAddLargeMcbEntry(
+  IN PLARGE_MCB Mcb,
+  IN LONGLONG Vbn,
+  IN LONGLONG Lbn,
+  IN LONGLONG SectorCount);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlRemoveLargeMcbEntry(
+  IN PLARGE_MCB Mcb,
+  IN LONGLONG Vbn,
+  IN LONGLONG SectorCount);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlLookupLargeMcbEntry(
+  IN PLARGE_MCB Mcb,
+  IN LONGLONG Vbn,
+  OUT PLONGLONG Lbn OPTIONAL,
+  OUT PLONGLONG SectorCountFromLbn OPTIONAL,
+  OUT PLONGLONG StartingLbn OPTIONAL,
+  OUT PLONGLONG SectorCountFromStartingLbn OPTIONAL,
+  OUT PULONG Index OPTIONAL);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlLookupLastLargeMcbEntry(
+  IN PLARGE_MCB Mcb,
+  OUT PLONGLONG Vbn,
+  OUT PLONGLONG Lbn);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlLookupLastLargeMcbEntryAndIndex(
+  IN PLARGE_MCB OpaqueMcb,
+  OUT PLONGLONG LargeVbn,
+  OUT PLONGLONG LargeLbn,
+  OUT PULONG Index);
+
+NTKERNELAPI
+ULONG
+NTAPI
+FsRtlNumberOfRunsInLargeMcb(
+  IN PLARGE_MCB Mcb);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlGetNextLargeMcbEntry(
+  IN PLARGE_MCB Mcb,
+  IN ULONG RunIndex,
+  OUT PLONGLONG Vbn,
+  OUT PLONGLONG Lbn,
+  OUT PLONGLONG SectorCount);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlSplitLargeMcb(
+  IN PLARGE_MCB Mcb,
+  IN LONGLONG Vbn,
+  IN LONGLONG Amount);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlInitializeMcb(
+  IN PMCB Mcb,
+  IN POOL_TYPE PoolType);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlUninitializeMcb(
+  IN PMCB Mcb);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlTruncateMcb(
+  IN PMCB Mcb,
+  IN VBN Vbn);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlAddMcbEntry(
+  IN PMCB Mcb,
+  IN VBN Vbn,
+  IN LBN Lbn,
+  IN ULONG SectorCount);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlRemoveMcbEntry(
+  IN PMCB Mcb,
+  IN VBN Vbn,
+  IN ULONG SectorCount);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlLookupMcbEntry(
+  IN PMCB Mcb,
+  IN VBN Vbn,
+  OUT PLBN Lbn,
+  OUT PULONG SectorCount OPTIONAL,
+  OUT PULONG Index);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlLookupLastMcbEntry(
+  IN PMCB Mcb,
+  OUT PVBN Vbn,
+  OUT PLBN Lbn);
+
+NTKERNELAPI
+ULONG
+NTAPI
+FsRtlNumberOfRunsInMcb(
+  IN PMCB Mcb);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlGetNextMcbEntry(
+  IN PMCB Mcb,
+  IN ULONG RunIndex,
+  OUT PVBN Vbn,
+  OUT PLBN Lbn,
+  OUT PULONG SectorCount);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlBalanceReads(
+  IN PDEVICE_OBJECT TargetDevice);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlInitializeOplock(
+  IN OUT POPLOCK Oplock);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlUninitializeOplock(
+  IN OUT POPLOCK Oplock);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlOplockFsctrl(
+  IN POPLOCK Oplock,
+  IN PIRP Irp,
+  IN ULONG OpenCount);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlCheckOplock(
+  IN POPLOCK Oplock,
+  IN PIRP Irp,
+  IN PVOID Context,
+  IN POPLOCK_WAIT_COMPLETE_ROUTINE CompletionRoutine OPTIONAL,
+  IN POPLOCK_FS_PREPOST_IRP PostIrpRoutine OPTIONAL);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlOplockIsFastIoPossible(
+  IN POPLOCK Oplock);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlCurrentBatchOplock(
+  IN POPLOCK Oplock);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlNotifyVolumeEvent(
+    IN PFILE_OBJECT     FileObject,
+  IN ULONG EventCode);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlNotifyInitializeSync(
+  IN PNOTIFY_SYNC *NotifySync);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlNotifyUninitializeSync(
+  IN PNOTIFY_SYNC *NotifySync);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlNotifyFullChangeDirectory(
+  IN PNOTIFY_SYNC NotifySync,
+  IN PLIST_ENTRY NotifyList,
+  IN PVOID FsContext,
+  IN PSTRING FullDirectoryName,
+  IN BOOLEAN WatchTree,
+  IN BOOLEAN IgnoreBuffer,
+  IN ULONG CompletionFilter,
+  IN PIRP NotifyIrp OPTIONAL,
+  IN PCHECK_FOR_TRAVERSE_ACCESS TraverseCallback OPTIONAL,
+  IN PSECURITY_SUBJECT_CONTEXT SubjectContext OPTIONAL);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlNotifyFilterReportChange(
+  IN PNOTIFY_SYNC NotifySync,
+  IN PLIST_ENTRY NotifyList,
+  IN PSTRING FullTargetName,
+  IN USHORT TargetNameOffset,
+  IN PSTRING StreamName OPTIONAL,
+  IN PSTRING NormalizedParentName OPTIONAL,
+  IN ULONG FilterMatch,
+  IN ULONG Action,
+  IN PVOID TargetContext OPTIONAL,
+  IN PVOID FilterContext OPTIONAL);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlNotifyFullReportChange(
+  IN PNOTIFY_SYNC NotifySync,
+  IN PLIST_ENTRY NotifyList,
+  IN PSTRING FullTargetName,
+  IN USHORT TargetNameOffset,
+  IN PSTRING StreamName OPTIONAL,
+  IN PSTRING NormalizedParentName OPTIONAL,
+  IN ULONG FilterMatch,
+  IN ULONG Action,
+  IN PVOID TargetContext OPTIONAL);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlNotifyCleanup(
+  IN PNOTIFY_SYNC NotifySync,
+  IN PLIST_ENTRY NotifyList,
+  IN PVOID FsContext);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlDissectName(
+  IN UNICODE_STRING Name,
+  OUT PUNICODE_STRING FirstPart,
+  OUT PUNICODE_STRING RemainingPart);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlDoesNameContainWildCards(
+  IN PUNICODE_STRING Name);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlAreNamesEqual(
+  IN PCUNICODE_STRING Name1,
+  IN PCUNICODE_STRING Name2,
+  IN BOOLEAN IgnoreCase,
+  IN PCWCH UpcaseTable OPTIONAL);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlIsNameInExpression(
+  IN PUNICODE_STRING Expression,
+  IN PUNICODE_STRING Name,
+  IN BOOLEAN IgnoreCase,
+  IN PWCHAR UpcaseTable OPTIONAL);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlPostPagingFileStackOverflow(
+  IN PVOID Context,
+  IN PKEVENT Event,
+  IN PFSRTL_STACK_OVERFLOW_ROUTINE StackOverflowRoutine);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlPostStackOverflow (
+  IN PVOID Context,
+  IN PKEVENT Event,
+  IN PFSRTL_STACK_OVERFLOW_ROUTINE StackOverflowRoutine);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlRegisterUncProvider(
+  OUT PHANDLE MupHandle,
+  IN PUNICODE_STRING RedirectorDeviceName,
+  IN BOOLEAN MailslotsSupported);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlDeregisterUncProvider(
+  IN HANDLE Handle);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlTeardownPerStreamContexts(
+  IN PFSRTL_ADVANCED_FCB_HEADER AdvancedHeader);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlCreateSectionForDataScan(
+  OUT PHANDLE SectionHandle,
+  OUT PVOID *SectionObject,
+  OUT PLARGE_INTEGER SectionFileSize OPTIONAL,
+    IN PFILE_OBJECT FileObject,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+  IN PLARGE_INTEGER MaximumSize OPTIONAL,
+  IN ULONG SectionPageProtection,
+  IN ULONG AllocationAttributes,
+  IN ULONG Flags);
+
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlNotifyFilterChangeDirectory(
+  IN PNOTIFY_SYNC NotifySync,
+  IN PLIST_ENTRY NotifyList,
+  IN PVOID FsContext,
+  IN PSTRING FullDirectoryName,
+  IN BOOLEAN WatchTree,
+  IN BOOLEAN IgnoreBuffer,
+  IN ULONG CompletionFilter,
+  IN PIRP NotifyIrp OPTIONAL,
+  IN PCHECK_FOR_TRAVERSE_ACCESS TraverseCallback OPTIONAL,
+  IN PSECURITY_SUBJECT_CONTEXT SubjectContext OPTIONAL,
+  IN PFILTER_REPORT_CHANGE FilterCallback OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlInsertPerStreamContext(
+  IN PFSRTL_ADVANCED_FCB_HEADER PerStreamContext,
+  IN PFSRTL_PER_STREAM_CONTEXT Ptr);
+
+NTKERNELAPI
+PFSRTL_PER_STREAM_CONTEXT
+NTAPI
+FsRtlLookupPerStreamContextInternal(
+  IN PFSRTL_ADVANCED_FCB_HEADER StreamContext,
+  IN PVOID OwnerId OPTIONAL,
+  IN PVOID InstanceId OPTIONAL);
+
+NTKERNELAPI
+PFSRTL_PER_STREAM_CONTEXT
+NTAPI
+FsRtlRemovePerStreamContext(
+  IN PFSRTL_ADVANCED_FCB_HEADER StreamContext,
+  IN PVOID OwnerId OPTIONAL,
+  IN PVOID InstanceId OPTIONAL);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlIncrementCcFastReadNotPossible(
+  VOID);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlIncrementCcFastReadWait(
+  VOID);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlIncrementCcFastReadNoWait(
+  VOID);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlIncrementCcFastReadResourceMiss(
+  VOID);
+
+NTKERNELAPI
+LOGICAL
+NTAPI
+FsRtlIsPagingFile(
+  IN PFILE_OBJECT FileObject);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
+
+#if (NTDDI_VERSION >= NTDDI_WS03)
+
+NTKERNELAPI
+    VOID
+NTAPI
+FsRtlInitializeBaseMcb(
+  IN PBASE_MCB Mcb,
+  IN POOL_TYPE PoolType);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlUninitializeBaseMcb(
+  IN PBASE_MCB Mcb);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlResetBaseMcb(
+  IN PBASE_MCB Mcb);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlTruncateBaseMcb(
+  IN PBASE_MCB Mcb,
+  IN LONGLONG Vbn);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlAddBaseMcbEntry(
+  IN PBASE_MCB Mcb,
+  IN LONGLONG Vbn,
+  IN LONGLONG Lbn,
+  IN LONGLONG SectorCount);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlRemoveBaseMcbEntry(
+  IN PBASE_MCB Mcb,
+  IN LONGLONG Vbn,
+  IN LONGLONG SectorCount);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlLookupBaseMcbEntry(
+  IN PBASE_MCB Mcb,
+  IN LONGLONG Vbn,
+  OUT PLONGLONG Lbn OPTIONAL,
+  OUT PLONGLONG SectorCountFromLbn OPTIONAL,
+  OUT PLONGLONG StartingLbn OPTIONAL,
+  OUT PLONGLONG SectorCountFromStartingLbn OPTIONAL,
+  OUT PULONG Index OPTIONAL);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlLookupLastBaseMcbEntry(
+  IN PBASE_MCB Mcb,
+  OUT PLONGLONG Vbn,
+  OUT PLONGLONG Lbn);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlLookupLastBaseMcbEntryAndIndex(
+  IN PBASE_MCB OpaqueMcb,
+  IN OUT PLONGLONG LargeVbn,
+  IN OUT PLONGLONG LargeLbn,
+  IN OUT PULONG Index);
+
+NTKERNELAPI
+ULONG
+NTAPI
+FsRtlNumberOfRunsInBaseMcb(
+  IN PBASE_MCB Mcb);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlGetNextBaseMcbEntry(
+  IN PBASE_MCB Mcb,
+  IN ULONG RunIndex,
+  OUT PLONGLONG Vbn,
+  OUT PLONGLONG Lbn,
+  OUT PLONGLONG SectorCount);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlSplitBaseMcb(
+    IN PBASE_MCB  Mcb,
+    IN LONGLONG   Vbn,
+  IN LONGLONG Amount);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WS03) */
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+BOOLEAN
+NTAPI
+FsRtlInitializeBaseMcbEx(
+  IN PBASE_MCB Mcb,
+  IN POOL_TYPE PoolType,
+  IN USHORT Flags);
+
+NTSTATUS
+NTAPI
+FsRtlAddBaseMcbEntryEx(
+  IN PBASE_MCB Mcb,
+    IN LONGLONG    Vbn,
+    IN LONGLONG    Lbn,
+  IN LONGLONG SectorCount);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlCurrentOplock(
+  IN POPLOCK Oplock);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlOplockBreakToNone(
+  IN OUT POPLOCK Oplock,
+  IN PIO_STACK_LOCATION IrpSp OPTIONAL,
+  IN PIRP Irp,
+  IN PVOID Context OPTIONAL,
+  IN POPLOCK_WAIT_COMPLETE_ROUTINE CompletionRoutine OPTIONAL,
+  IN POPLOCK_FS_PREPOST_IRP PostIrpRoutine OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlNotifyVolumeEventEx(
+  IN PFILE_OBJECT FileObject,
+  IN ULONG EventCode,
+  IN PTARGET_DEVICE_CUSTOM_NOTIFICATION Event);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlNotifyCleanupAll(
+  IN PNOTIFY_SYNC NotifySync,
+  IN PLIST_ENTRY NotifyList);
+
+NTSTATUS
+NTAPI
+FsRtlRegisterUncProviderEx(
+  OUT PHANDLE MupHandle,
+  IN PUNICODE_STRING RedirDevName,
+  IN PDEVICE_OBJECT DeviceObject,
+  IN ULONG Flags);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlCancellableWaitForSingleObject(
+  IN PVOID Object,
+  IN PLARGE_INTEGER Timeout OPTIONAL,
+  IN PIRP Irp OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlCancellableWaitForMultipleObjects(
+  IN ULONG Count,
+  IN PVOID ObjectArray[],
+  IN WAIT_TYPE WaitType,
+  IN PLARGE_INTEGER Timeout OPTIONAL,
+  IN PKWAIT_BLOCK WaitBlockArray OPTIONAL,
+  IN PIRP Irp OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlMupGetProviderInfoFromFileObject(
+  IN PFILE_OBJECT pFileObject,
+  IN ULONG Level,
+  OUT PVOID pBuffer,
+  IN OUT PULONG pBufferSize);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlMupGetProviderIdFromName(
+  IN PUNICODE_STRING pProviderName,
+  OUT PULONG32 pProviderId);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlIncrementCcFastMdlReadWait(
+  VOID);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlValidateReparsePointBuffer(
+  IN ULONG BufferLength,
+  IN PREPARSE_DATA_BUFFER ReparseBuffer);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlRemoveDotsFromPath(
+  IN OUT PWSTR OriginalString,
+  IN USHORT PathLength,
+  OUT USHORT *NewLength);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlAllocateExtraCreateParameterList(
+  IN FSRTL_ALLOCATE_ECPLIST_FLAGS Flags,
+  OUT PECP_LIST *EcpList);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlFreeExtraCreateParameterList(
+  IN PECP_LIST EcpList);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlAllocateExtraCreateParameter(
+  IN LPCGUID EcpType,
+  IN ULONG SizeOfContext,
+  IN FSRTL_ALLOCATE_ECP_FLAGS Flags,
+  IN PFSRTL_EXTRA_CREATE_PARAMETER_CLEANUP_CALLBACK CleanupCallback OPTIONAL,
+  IN ULONG PoolTag,
+  OUT PVOID *EcpContext);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlFreeExtraCreateParameter(
+  IN PVOID EcpContext);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlInitExtraCreateParameterLookasideList(
+  IN OUT PVOID Lookaside,
+  IN FSRTL_ECP_LOOKASIDE_FLAGS Flags,
+  IN SIZE_T Size,
+  IN ULONG Tag);
+
+VOID
+NTAPI
+FsRtlDeleteExtraCreateParameterLookasideList(
+  IN OUT PVOID Lookaside,
+  IN FSRTL_ECP_LOOKASIDE_FLAGS Flags);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlAllocateExtraCreateParameterFromLookasideList(
+  IN LPCGUID EcpType,
+  IN ULONG SizeOfContext,
+  IN FSRTL_ALLOCATE_ECP_FLAGS Flags,
+  IN PFSRTL_EXTRA_CREATE_PARAMETER_CLEANUP_CALLBACK CleanupCallback OPTIONAL,
+  IN OUT PVOID LookasideList,
+  OUT PVOID *EcpContext);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlInsertExtraCreateParameter(
+  IN OUT PECP_LIST EcpList,
+  IN OUT PVOID EcpContext);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlFindExtraCreateParameter(
+  IN PECP_LIST EcpList,
+  IN LPCGUID EcpType,
+  OUT PVOID *EcpContext OPTIONAL,
+  OUT ULONG *EcpContextSize OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlRemoveExtraCreateParameter(
+  IN OUT PECP_LIST EcpList,
+  IN LPCGUID EcpType,
+  OUT PVOID *EcpContext,
+  OUT ULONG *EcpContextSize OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlGetEcpListFromIrp(
+  IN PIRP Irp,
+  OUT PECP_LIST *EcpList OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlSetEcpListIntoIrp(
+  IN OUT PIRP Irp,
+  IN PECP_LIST EcpList);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlGetNextExtraCreateParameter(
+  IN PECP_LIST EcpList,
+  IN PVOID CurrentEcpContext OPTIONAL,
+  OUT LPGUID NextEcpType OPTIONAL,
+  OUT PVOID *NextEcpContext OPTIONAL,
+  OUT ULONG *NextEcpContextSize OPTIONAL);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlAcknowledgeEcp(
+  IN PVOID EcpContext);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlIsEcpAcknowledged(
+  IN PVOID EcpContext);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlIsEcpFromUserMode(
+  IN PVOID EcpContext);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlChangeBackingFileObject(
+  IN PFILE_OBJECT CurrentFileObject OPTIONAL,
+  IN PFILE_OBJECT NewFileObject,
+  IN FSRTL_CHANGE_BACKING_TYPE ChangeBackingType,
+  IN ULONG Flags);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlLogCcFlushError(
+  IN PUNICODE_STRING FileName,
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
+  IN NTSTATUS FlushError,
+  IN ULONG Flags);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlAreVolumeStartupApplicationsComplete(
+  VOID);
+
+NTKERNELAPI
+ULONG
+NTAPI
+FsRtlQueryMaximumVirtualDiskNestingLevel(
+  VOID);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlGetVirtualDiskNestingLevel(
+  IN PDEVICE_OBJECT DeviceObject,
+  OUT PULONG NestingLevel,
+  OUT PULONG NestingFlags OPTIONAL);
+
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+
+#if (NTDDI_VERSION >= NTDDI_VISTASP1)
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlCheckOplockEx(
+  IN POPLOCK Oplock,
+  IN PIRP Irp,
+  IN ULONG Flags,
+  IN PVOID Context OPTIONAL,
+  IN POPLOCK_WAIT_COMPLETE_ROUTINE CompletionRoutine OPTIONAL,
+  IN POPLOCK_FS_PREPOST_IRP PostIrpRoutine OPTIONAL);
+
+#endif
+
 #if (NTDDI_VERSION >= NTDDI_WIN7)
+
 NTKERNELAPI
 BOOLEAN
 NTAPI
 FsRtlAreThereCurrentOrInProgressFileLocks(
   IN PFILE_LOCK FileLock);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlOplockIsSharedRequest(
+  IN PIRP Irp);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlOplockBreakH(
+  IN POPLOCK Oplock,
+  IN PIRP Irp,
+  IN ULONG Flags,
+  IN PVOID Context OPTIONAL,
+  IN POPLOCK_WAIT_COMPLETE_ROUTINE CompletionRoutine OPTIONAL,
+  IN POPLOCK_FS_PREPOST_IRP PostIrpRoutine OPTIONAL);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlCurrentOplockH(
+  IN POPLOCK Oplock);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlOplockBreakToNoneEx(
+  IN OUT POPLOCK Oplock,
+  IN PIRP Irp,
+  IN ULONG Flags,
+  IN PVOID Context OPTIONAL,
+  IN POPLOCK_WAIT_COMPLETE_ROUTINE CompletionRoutine OPTIONAL,
+  IN POPLOCK_FS_PREPOST_IRP PostIrpRoutine OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlOplockFsctrlEx(
+  IN POPLOCK Oplock,
+  IN PIRP Irp,
+  IN ULONG OpenCount,
+  IN ULONG Flags);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlOplockKeysEqual(
+  IN PFILE_OBJECT Fo1 OPTIONAL,
+  IN PFILE_OBJECT Fo2 OPTIONAL);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlInitializeExtraCreateParameterList(
+  IN OUT PECP_LIST EcpList);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlInitializeExtraCreateParameter(
+  IN PECP_HEADER Ecp,
+  IN ULONG EcpFlags,
+  IN PFSRTL_EXTRA_CREATE_PARAMETER_CLEANUP_CALLBACK CleanupCallback OPTIONAL,
+  IN ULONG TotalSize,
+  IN LPCGUID EcpType,
+  IN PVOID ListAllocatedFrom OPTIONAL);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlInsertPerFileContext(
+  IN PVOID* PerFileContextPointer,
+  IN PFSRTL_PER_FILE_CONTEXT Ptr);
+
+NTKERNELAPI
+PFSRTL_PER_FILE_CONTEXT
+NTAPI
+FsRtlLookupPerFileContext(
+  IN PVOID* PerFileContextPointer,
+  IN PVOID OwnerId OPTIONAL,
+  IN PVOID InstanceId OPTIONAL);
+
+NTKERNELAPI
+PFSRTL_PER_FILE_CONTEXT
+NTAPI
+FsRtlRemovePerFileContext(
+  IN PVOID* PerFileContextPointer,
+  IN PVOID OwnerId OPTIONAL,
+  IN PVOID InstanceId OPTIONAL);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlTeardownPerFileContexts(
+  IN PVOID* PerFileContextPointer);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlInsertPerFileObjectContext(
+  IN PFILE_OBJECT FileObject,
+  IN PFSRTL_PER_FILEOBJECT_CONTEXT Ptr);
+
+NTKERNELAPI
+PFSRTL_PER_FILEOBJECT_CONTEXT
+NTAPI
+FsRtlLookupPerFileObjectContext(
+  IN PFILE_OBJECT FileObject,
+  IN PVOID OwnerId OPTIONAL,
+  IN PVOID InstanceId OPTIONAL);
+
+NTKERNELAPI
+PFSRTL_PER_FILEOBJECT_CONTEXT
+NTAPI
+FsRtlRemovePerFileObjectContext(
+  IN PFILE_OBJECT FileObject,
+  IN PVOID OwnerId OPTIONAL,
+  IN PVOID InstanceId OPTIONAL);
+
+#define FsRtlFastLock(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11) (       \
+     FsRtlPrivateLock(A1, A2, A3, A4, A5, A6, A7, A8, A9, NULL, A10, A11)   \
+)
+
+#define FsRtlAreThereCurrentFileLocks(FL) ( \
+    ((FL)->FastIoIsQuestionable)            \
+)
+
+#define FsRtlIncrementLockRequestsInProgress(FL) {                           \
+    ASSERT( (FL)->LockRequestsInProgress >= 0 );                             \
+    (void)                                                                   \
+    (InterlockedIncrement((LONG volatile *)&((FL)->LockRequestsInProgress)));\
+}
+
+#define FsRtlDecrementLockRequestsInProgress(FL) {                           \
+    ASSERT( (FL)->LockRequestsInProgress > 0 );                              \
+    (void)                                                                   \
+    (InterlockedDecrement((LONG volatile *)&((FL)->LockRequestsInProgress)));\
+}
+
+extern NTKERNELAPI PUSHORT NlsOemLeadByteInfo;
+#define NLS_OEM_LEAD_BYTE_INFO            NlsOemLeadByteInfo
+
+#ifdef NLS_MB_CODE_PAGE_TAG
+#undef NLS_MB_CODE_PAGE_TAG
 #endif
+#define NLS_MB_CODE_PAGE_TAG              NlsMbOemCodePageTag
+
+/* GCC compatible definition, MS one is retarded */
+extern NTKERNELAPI const UCHAR * const FsRtlLegalAnsiCharacterArray;
+#define LEGAL_ANSI_CHARACTER_ARRAY        FsRtlLegalAnsiCharacterArray
+
+#define FsRtlIsAnsiCharacterWild(C) (                                       \
+    FlagOn(FsRtlLegalAnsiCharacterArray[(UCHAR)(C)], FSRTL_WILD_CHARACTER ) \
+)
+
+#define FsRtlIsAnsiCharacterLegalFat(C, WILD) (                                \
+    FlagOn(FsRtlLegalAnsiCharacterArray[(UCHAR)(C)], (FSRTL_FAT_LEGAL) |       \
+                                        ((WILD) ? FSRTL_WILD_CHARACTER : 0 ))  \
+)
+
+#define FsRtlIsAnsiCharacterLegalHpfs(C, WILD) (                               \
+    FlagOn(FsRtlLegalAnsiCharacterArray[(UCHAR)(C)], (FSRTL_HPFS_LEGAL) |      \
+                                        ((WILD) ? FSRTL_WILD_CHARACTER : 0 ))  \
+)
+
+#define FsRtlIsAnsiCharacterLegalNtfs(C, WILD) (                               \
+    FlagOn(FsRtlLegalAnsiCharacterArray[(UCHAR)(C)], (FSRTL_NTFS_LEGAL) |      \
+                                        ((WILD) ? FSRTL_WILD_CHARACTER : 0 ))  \
+)
+
+#define FsRtlIsAnsiCharacterLegalNtfsStream(C,WILD_OK) (                    \
+    FsRtlTestAnsiCharacter((C), TRUE, (WILD_OK), FSRTL_NTFS_STREAM_LEGAL)   \
+)
+
+#define FsRtlIsAnsiCharacterLegal(C,FLAGS) (          \
+    FsRtlTestAnsiCharacter((C), TRUE, FALSE, (FLAGS)) \
+)
+
+#define FsRtlTestAnsiCharacter(C, DEFAULT_RET, WILD_OK, FLAGS) (            \
+        ((SCHAR)(C) < 0) ? DEFAULT_RET :                                    \
+                           FlagOn( LEGAL_ANSI_CHARACTER_ARRAY[(C)],         \
+                                   (FLAGS) |                                \
+                                   ((WILD_OK) ? FSRTL_WILD_CHARACTER : 0) ) \
+)
+
+#define FsRtlIsLeadDbcsCharacter(DBCS_CHAR) (                               \
+    (BOOLEAN)((UCHAR)(DBCS_CHAR) < 0x80 ? FALSE :                           \
+              (NLS_MB_CODE_PAGE_TAG &&                                      \
+               (NLS_OEM_LEAD_BYTE_INFO[(UCHAR)(DBCS_CHAR)] != 0)))          \
+)
+
+#define FsRtlIsUnicodeCharacterWild(C) (                                    \
+    (((C) >= 0x40) ?                                                        \
+    FALSE :                                                                 \
+    FlagOn(FsRtlLegalAnsiCharacterArray[(C)], FSRTL_WILD_CHARACTER ))       \
+)
+
+#define FsRtlInitPerFileContext( _fc, _owner, _inst, _cb)   \
+    ((_fc)->OwnerId = (_owner),                               \
+     (_fc)->InstanceId = (_inst),                             \
+     (_fc)->FreeCallback = (_cb))
+
+#define FsRtlGetPerFileContextPointer(_fo) \
+    (FsRtlSupportsPerFileContexts(_fo) ? \
+        FsRtlGetPerStreamContextPointer(_fo)->FileContextSupportPointer : \
+        NULL)
+
+#define FsRtlSupportsPerFileContexts(_fo)                     \
+    ((FsRtlGetPerStreamContextPointer(_fo) != NULL) &&        \
+     (FsRtlGetPerStreamContextPointer(_fo)->Version >= FSRTL_FCB_HEADER_V1) &&  \
+     (FsRtlGetPerStreamContextPointer(_fo)->FileContextSupportPointer != NULL))
+
+#define FsRtlSetupAdvancedHeaderEx( _advhdr, _fmutx, _fctxptr )                     \
+{                                                                                   \
+    FsRtlSetupAdvancedHeader( _advhdr, _fmutx );                                    \
+    if ((_fctxptr) != NULL) {                                                       \
+        (_advhdr)->FileContextSupportPointer = (_fctxptr);                          \
+    }                                                                               \
+}
+
+#define FsRtlGetPerStreamContextPointer(FO) (   \
+    (PFSRTL_ADVANCED_FCB_HEADER)(FO)->FsContext \
+)
+
+#define FsRtlInitPerStreamContext(PSC, O, I, FC) ( \
+    (PSC)->OwnerId = (O),                          \
+    (PSC)->InstanceId = (I),                       \
+    (PSC)->FreeCallback = (FC)                     \
+)
+
+#define FsRtlSupportsPerStreamContexts(FO) (                       \
+    (BOOLEAN)((NULL != FsRtlGetPerStreamContextPointer(FO) &&     \
+              FlagOn(FsRtlGetPerStreamContextPointer(FO)->Flags2, \
+              FSRTL_FLAG2_SUPPORTS_FILTER_CONTEXTS))               \
+)
+
+#define FsRtlLookupPerStreamContext(_sc, _oid, _iid)                          \
+ (((NULL != (_sc)) &&                                                         \
+   FlagOn((_sc)->Flags2,FSRTL_FLAG2_SUPPORTS_FILTER_CONTEXTS) &&              \
+   !IsListEmpty(&(_sc)->FilterContexts)) ?                                    \
+        FsRtlLookupPerStreamContextInternal((_sc), (_oid), (_iid)) :          \
+        NULL)
+
+VOID
+FORCEINLINE
+NTAPI
+FsRtlSetupAdvancedHeader(
+  IN PVOID AdvHdr,
+  IN PFAST_MUTEX FMutex )
+{
+  PFSRTL_ADVANCED_FCB_HEADER localAdvHdr = (PFSRTL_ADVANCED_FCB_HEADER)AdvHdr;
+
+  localAdvHdr->Flags |= FSRTL_FLAG_ADVANCED_HEADER;
+  localAdvHdr->Flags2 |= FSRTL_FLAG2_SUPPORTS_FILTER_CONTEXTS;
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+  localAdvHdr->Version = FSRTL_FCB_HEADER_V1;
+#else
+  localAdvHdr->Version = FSRTL_FCB_HEADER_V0;
+#endif
+  InitializeListHead( &localAdvHdr->FilterContexts );
+  if (FMutex != NULL) {
+    localAdvHdr->FastMutex = FMutex;
+  }
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+  *((PULONG_PTR)(&localAdvHdr->PushLock)) = 0;
+  localAdvHdr->FileContextSupportPointer = NULL;
+#endif
+}
+
+#define FsRtlInitPerFileObjectContext(_fc, _owner, _inst)         \
+           ((_fc)->OwnerId = (_owner), (_fc)->InstanceId = (_inst))
+
+#define FsRtlCompleteRequest(IRP,STATUS) {         \
+    (IRP)->IoStatus.Status = (STATUS);             \
+    IoCompleteRequest( (IRP), IO_DISK_INCREMENT ); \
+}
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+typedef struct _ECP_HEADER ECP_HEADER, *PECP_HEADER;
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+typedef enum _NETWORK_OPEN_LOCATION_QUALIFIER {
+  NetworkOpenLocationAny,
+  NetworkOpenLocationRemote,
+  NetworkOpenLocationLoopback
+} NETWORK_OPEN_LOCATION_QUALIFIER;
+
+typedef enum _NETWORK_OPEN_INTEGRITY_QUALIFIER {
+  NetworkOpenIntegrityAny,
+  NetworkOpenIntegrityNone,
+  NetworkOpenIntegritySigned,
+  NetworkOpenIntegrityEncrypted,
+  NetworkOpenIntegrityMaximum
+} NETWORK_OPEN_INTEGRITY_QUALIFIER;
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+
+#define NETWORK_OPEN_ECP_IN_FLAG_DISABLE_HANDLE_COLLAPSING 0x1
+#define NETWORK_OPEN_ECP_IN_FLAG_DISABLE_HANDLE_DURABILITY 0x2
+#define NETWORK_OPEN_ECP_IN_FLAG_FORCE_BUFFERED_SYNCHRONOUS_IO_HACK 0x80000000
+
+typedef struct _NETWORK_OPEN_ECP_CONTEXT {
+  USHORT Size;
+  USHORT Reserved;
+  struct {
+    struct {
+      NETWORK_OPEN_LOCATION_QUALIFIER Location;
+      NETWORK_OPEN_INTEGRITY_QUALIFIER Integrity;
+      ULONG Flags;
+    } in;
+    struct {
+      NETWORK_OPEN_LOCATION_QUALIFIER Location;
+      NETWORK_OPEN_INTEGRITY_QUALIFIER Integrity;
+      ULONG Flags;
+    } out;
+  } DUMMYSTRUCTNAME;
+} NETWORK_OPEN_ECP_CONTEXT, *PNETWORK_OPEN_ECP_CONTEXT;
+
+typedef struct _NETWORK_OPEN_ECP_CONTEXT_V0 {
+  USHORT Size;
+  USHORT Reserved;
+  struct {
+    struct {
+    NETWORK_OPEN_LOCATION_QUALIFIER Location;
+    NETWORK_OPEN_INTEGRITY_QUALIFIER Integrity;
+    } in;
+    struct {
+      NETWORK_OPEN_LOCATION_QUALIFIER Location;
+      NETWORK_OPEN_INTEGRITY_QUALIFIER Integrity;
+    } out;
+  } DUMMYSTRUCTNAME;
+} NETWORK_OPEN_ECP_CONTEXT_V0, *PNETWORK_OPEN_ECP_CONTEXT_V0;
+
+#elif (NTDDI_VERSION >= NTDDI_VISTA)
+typedef struct _NETWORK_OPEN_ECP_CONTEXT {
+  USHORT Size;
+  USHORT Reserved;
+  struct {
+    struct {
+      NETWORK_OPEN_LOCATION_QUALIFIER Location;
+      NETWORK_OPEN_INTEGRITY_QUALIFIER Integrity;
+    } in;
+    struct {
+      NETWORK_OPEN_LOCATION_QUALIFIER Location;
+      NETWORK_OPEN_INTEGRITY_QUALIFIER Integrity;
+    } out;
+  } DUMMYSTRUCTNAME;
+} NETWORK_OPEN_ECP_CONTEXT, *PNETWORK_OPEN_ECP_CONTEXT;
+#endif
+
+DEFINE_GUID(GUID_ECP_NETWORK_OPEN_CONTEXT, 0xc584edbf, 0x00df, 0x4d28, 0xb8, 0x84, 0x35, 0xba, 0xca, 0x89, 0x11, 0xe8 );
+
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+typedef struct _PREFETCH_OPEN_ECP_CONTEXT {
+  PVOID Context;
+} PREFETCH_OPEN_ECP_CONTEXT, *PPREFETCH_OPEN_ECP_CONTEXT;
+
+DEFINE_GUID(GUID_ECP_PREFETCH_OPEN, 0xe1777b21, 0x847e, 0x4837, 0xaa, 0x45, 0x64, 0x16, 0x1d, 0x28, 0x6, 0x55 );
+
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+
+DEFINE_GUID (GUID_ECP_NFS_OPEN, 0xf326d30c, 0xe5f8, 0x4fe7, 0xab, 0x74, 0xf5, 0xa3, 0x19, 0x6d, 0x92, 0xdb);
+DEFINE_GUID(GUID_ECP_SRV_OPEN, 0xbebfaebc, 0xaabf, 0x489d, 0x9d, 0x2c, 0xe9, 0xe3, 0x61, 0x10, 0x28, 0x53 );
+
+typedef struct sockaddr_storage *PSOCKADDR_STORAGE_NFS;
+
+typedef struct _NFS_OPEN_ECP_CONTEXT {
+  PUNICODE_STRING ExportAlias;
+  PSOCKADDR_STORAGE_NFS ClientSocketAddress;
+} NFS_OPEN_ECP_CONTEXT, *PNFS_OPEN_ECP_CONTEXT, **PPNFS_OPEN_ECP_CONTEXT;
+
+typedef struct _SRV_OPEN_ECP_CONTEXT {
+  PUNICODE_STRING ShareName;
+  PSOCKADDR_STORAGE_NFS SocketAddress;
+  BOOLEAN OplockBlockState;
+  BOOLEAN OplockAppState;
+  BOOLEAN OplockFinalState;
+} SRV_OPEN_ECP_CONTEXT, *PSRV_OPEN_ECP_CONTEXT;
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
+
+#define VACB_MAPPING_GRANULARITY        (0x40000)
+#define VACB_OFFSET_SHIFT               (18)
+
+typedef struct _PUBLIC_BCB {
+  CSHORT NodeTypeCode;
+  CSHORT NodeByteSize;
+  ULONG MappedLength;
+  LARGE_INTEGER MappedFileOffset;
+} PUBLIC_BCB, *PPUBLIC_BCB;
+
+typedef struct _CC_FILE_SIZES {
+  LARGE_INTEGER AllocationSize;
+  LARGE_INTEGER FileSize;
+  LARGE_INTEGER ValidDataLength;
+} CC_FILE_SIZES, *PCC_FILE_SIZES;
+
+typedef BOOLEAN
+(NTAPI *PACQUIRE_FOR_LAZY_WRITE) (
+  IN PVOID Context,
+  IN BOOLEAN Wait);
+
+typedef VOID
+(NTAPI *PRELEASE_FROM_LAZY_WRITE) (
+  IN PVOID Context);
+
+typedef BOOLEAN
+(NTAPI *PACQUIRE_FOR_READ_AHEAD) (
+  IN PVOID Context,
+  IN BOOLEAN Wait);
+
+typedef VOID
+(NTAPI *PRELEASE_FROM_READ_AHEAD) (
+  IN PVOID Context);
+
+typedef struct _CACHE_MANAGER_CALLBACKS {
+  PACQUIRE_FOR_LAZY_WRITE AcquireForLazyWrite;
+  PRELEASE_FROM_LAZY_WRITE ReleaseFromLazyWrite;
+  PACQUIRE_FOR_READ_AHEAD AcquireForReadAhead;
+  PRELEASE_FROM_READ_AHEAD ReleaseFromReadAhead;
+} CACHE_MANAGER_CALLBACKS, *PCACHE_MANAGER_CALLBACKS;
+
+typedef struct _CACHE_UNINITIALIZE_EVENT {
+  struct _CACHE_UNINITIALIZE_EVENT *Next;
+  KEVENT Event;
+} CACHE_UNINITIALIZE_EVENT, *PCACHE_UNINITIALIZE_EVENT;
+
+typedef VOID
+(NTAPI *PDIRTY_PAGE_ROUTINE) (
+  IN PFILE_OBJECT FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN ULONG Length,
+  IN PLARGE_INTEGER OldestLsn,
+  IN PLARGE_INTEGER NewestLsn,
+  IN PVOID Context1,
+  IN PVOID Context2);
+
+typedef VOID
+(NTAPI *PFLUSH_TO_LSN) (
+  IN PVOID LogHandle,
+  IN LARGE_INTEGER Lsn);
+
+typedef VOID
+(NTAPI *PCC_POST_DEFERRED_WRITE) (
+  IN PVOID Context1,
+  IN PVOID Context2);
+
+#define CcIsFileCached(FO) (                                                         \
+    ((FO)->SectionObjectPointer != NULL) &&                                          \
+    (((PSECTION_OBJECT_POINTERS)(FO)->SectionObjectPointer)->SharedCacheMap != NULL) \
+)
+
+extern ULONG CcFastMdlReadWait;
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTKERNELAPI
+VOID
+NTAPI
+CcInitializeCacheMap(
+  IN PFILE_OBJECT FileObject,
+  IN PCC_FILE_SIZES FileSizes,
+  IN BOOLEAN PinAccess,
+  IN PCACHE_MANAGER_CALLBACKS Callbacks,
+  IN PVOID LazyWriteContext);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+CcUninitializeCacheMap(
+  IN PFILE_OBJECT FileObject,
+  IN PLARGE_INTEGER TruncateSize OPTIONAL,
+  IN PCACHE_UNINITIALIZE_EVENT UninitializeCompleteEvent OPTIONAL);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcSetFileSizes(
+  IN PFILE_OBJECT FileObject,
+  IN PCC_FILE_SIZES FileSizes);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcSetDirtyPageThreshold(
+  IN PFILE_OBJECT FileObject,
+  IN ULONG DirtyPageThreshold);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcFlushCache(
+  IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
+  IN PLARGE_INTEGER FileOffset OPTIONAL,
+  IN ULONG Length,
+  OUT PIO_STATUS_BLOCK IoStatus OPTIONAL);
+
+NTKERNELAPI
+LARGE_INTEGER
+NTAPI
+CcGetFlushedValidData(
+  IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
+  IN BOOLEAN BcbListHeld);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+CcZeroData(
+  IN PFILE_OBJECT FileObject,
+  IN PLARGE_INTEGER StartOffset,
+  IN PLARGE_INTEGER EndOffset,
+  IN BOOLEAN Wait);
+
+NTKERNELAPI
+PVOID
+NTAPI
+CcRemapBcb(
+  IN PVOID Bcb);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcRepinBcb(
+  IN PVOID Bcb);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcUnpinRepinnedBcb(
+  IN PVOID Bcb,
+  IN BOOLEAN WriteThrough,
+  OUT PIO_STATUS_BLOCK IoStatus);
+
+NTKERNELAPI
+PFILE_OBJECT
+NTAPI
+CcGetFileObjectFromSectionPtrs(
+  IN PSECTION_OBJECT_POINTERS SectionObjectPointer);
+
+NTKERNELAPI
+PFILE_OBJECT
+NTAPI
+CcGetFileObjectFromBcb(
+  IN PVOID Bcb);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+CcCanIWrite(
+    IN PFILE_OBJECT     FileObject,
+  IN ULONG BytesToWrite,
+  IN BOOLEAN Wait,
+  IN BOOLEAN Retrying);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcDeferWrite(
+  IN PFILE_OBJECT FileObject,
+  IN PCC_POST_DEFERRED_WRITE PostRoutine,
+  IN PVOID Context1,
+  IN PVOID Context2,
+  IN ULONG BytesToWrite,
+  IN BOOLEAN Retrying);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+CcCopyRead(
+    IN PFILE_OBJECT     FileObject,
+    IN PLARGE_INTEGER   FileOffset,
+  IN ULONG Length,
+  IN BOOLEAN Wait,
+  OUT PVOID Buffer,
+  OUT PIO_STATUS_BLOCK IoStatus);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcFastCopyRead(
+  IN PFILE_OBJECT FileObject,
+  IN ULONG FileOffset,
+  IN ULONG Length,
+  IN ULONG PageCount,
+  OUT PVOID Buffer,
+  OUT PIO_STATUS_BLOCK IoStatus);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+CcCopyWrite(
+  IN PFILE_OBJECT FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN ULONG Length,
+  IN BOOLEAN Wait,
+  IN PVOID Buffer);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcFastCopyWrite(
+  IN PFILE_OBJECT FileObject,
+  IN ULONG FileOffset,
+  IN ULONG Length,
+  IN PVOID Buffer);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcMdlRead(
+  IN PFILE_OBJECT FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN ULONG Length,
+  OUT PMDL *MdlChain,
+  OUT PIO_STATUS_BLOCK IoStatus);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcMdlReadComplete(
+  IN PFILE_OBJECT FileObject,
+  IN PMDL MdlChain);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcPrepareMdlWrite(
+  IN PFILE_OBJECT FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN ULONG Length,
+  OUT PMDL *MdlChain,
+  OUT PIO_STATUS_BLOCK IoStatus);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcMdlWriteComplete(
+  IN PFILE_OBJECT FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN PMDL MdlChain);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcScheduleReadAhead(
+  IN PFILE_OBJECT FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN ULONG Length);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+CcWaitForCurrentLazyWriterActivity(
+  VOID);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcSetReadAheadGranularity(
+  IN PFILE_OBJECT FileObject,
+  IN ULONG Granularity);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+CcPinRead(
+  IN PFILE_OBJECT FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN ULONG Length,
+  IN ULONG Flags,
+  OUT PVOID *Bcb,
+  OUT PVOID *Buffer);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+CcPinMappedData(
+    IN PFILE_OBJECT FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN ULONG Length,
+  IN ULONG Flags,
+  IN OUT PVOID *Bcb);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+CcPreparePinWrite(
+  IN PFILE_OBJECT FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN ULONG Length,
+  IN BOOLEAN Zero,
+  IN ULONG Flags,
+  OUT PVOID *Bcb,
+  OUT PVOID *Buffer);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcSetDirtyPinnedData(
+  IN PVOID BcbVoid,
+  IN PLARGE_INTEGER Lsn OPTIONAL);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcUnpinData(
+  IN PVOID Bcb);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcSetBcbOwnerPointer(
+  IN PVOID Bcb,
+  IN PVOID OwnerPointer);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcUnpinDataForThread(
+  IN PVOID Bcb,
+  IN ERESOURCE_THREAD ResourceThreadId);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcSetAdditionalCacheAttributes(
+  IN PFILE_OBJECT FileObject,
+  IN BOOLEAN DisableReadAhead,
+  IN BOOLEAN DisableWriteBehind);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+CcIsThereDirtyData(
+  IN PVPB Vpb);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+
+NTKERNELAPI
+VOID
+NTAPI
+CcMdlWriteAbort(
+  IN PFILE_OBJECT FileObject,
+  IN PMDL MdlChain);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcSetLogHandleForFile(
+  IN PFILE_OBJECT FileObject,
+  IN PVOID LogHandle,
+  IN PFLUSH_TO_LSN FlushToLsnRoutine);
+
+NTKERNELAPI
+LARGE_INTEGER
+NTAPI
+CcGetDirtyPages(
+  IN PVOID LogHandle,
+  IN PDIRTY_PAGE_ROUTINE DirtyPageRoutine,
+  IN PVOID Context1,
+  IN PVOID Context2);
+
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+NTKERNELAPI
+BOOLEAN
+NTAPI
+CcMapData(
+  IN PFILE_OBJECT FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN ULONG Length,
+  IN ULONG Flags,
+  OUT PVOID *Bcb,
+  OUT PVOID *Buffer);
+#elif (NTDDI_VERSION >= NTDDI_WIN2K)
+NTKERNELAPI
+BOOLEAN
+NTAPI
+CcMapData(
+  IN PFILE_OBJECT FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN ULONG Length,
+  IN BOOLEAN Wait,
+  OUT PVOID *Bcb,
+  OUT PVOID *Buffer);
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+CcSetFileSizesEx(
+  IN PFILE_OBJECT FileObject,
+  IN PCC_FILE_SIZES FileSizes);
+
+NTKERNELAPI
+PFILE_OBJECT
+NTAPI
+CcGetFileObjectFromSectionPtrsRef(
+  IN PSECTION_OBJECT_POINTERS SectionObjectPointer);
+
+NTKERNELAPI
+VOID
+NTAPI
+CcSetParallelFlushFile(
+  IN PFILE_OBJECT FileObject,
+  IN BOOLEAN EnableParallelFlush);
+
+NTKERNELAPI
+BOOLEAN
+CcIsThereDirtyDataEx(
+  IN PVPB Vpb,
+  IN PULONG NumberOfDirtyPages OPTIONAL);
+
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+NTKERNELAPI
+VOID
+NTAPI
+CcCoherencyFlushAndPurgeCache(
+  IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
+  IN PLARGE_INTEGER FileOffset OPTIONAL,
+  IN ULONG Length,
+  OUT PIO_STATUS_BLOCK IoStatus,
+  IN ULONG Flags OPTIONAL);
+#endif
+
+#define CcGetFileSizePointer(FO) (                                     \
+    ((PLARGE_INTEGER)((FO)->SectionObjectPointer->SharedCacheMap) + 1) \
+)
+
+#define UNINITIALIZE_CACHE_MAPS          (1)
+#define DO_NOT_RETRY_PURGE               (2)
+#define DO_NOT_PURGE_DIRTY_PAGES         (0x4)
+
+#define CC_FLUSH_AND_PURGE_NO_PURGE     (0x1)
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+NTKERNELAPI
+BOOLEAN
+NTAPI
+CcPurgeCacheSection(
+  IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
+  IN PLARGE_INTEGER FileOffset OPTIONAL,
+  IN ULONG Length,
+  IN ULONG Flags);
+#elif (NTDDI_VERSION >= NTDDI_WIN2K)
+NTKERNELAPI
+BOOLEAN
+NTAPI
+CcPurgeCacheSection(
+  IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
+  IN PLARGE_INTEGER FileOffset OPTIONAL,
+  IN ULONG Length,
+  IN BOOLEAN UninitializeCacheMaps);
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+NTKERNELAPI
+BOOLEAN
+NTAPI
+CcCopyWriteWontFlush(
+  IN PFILE_OBJECT FileObject,
+  IN PLARGE_INTEGER FileOffset,
+  IN ULONG Length);
+#else
+#define CcCopyWriteWontFlush(FO, FOFF, LEN) ((LEN) <= 0x10000)
+#endif
+
+#define CcReadAhead(FO, FOFF, LEN) (                \
+    if ((LEN) >= 256) {                             \
+        CcScheduleReadAhead((FO), (FOFF), (LEN));   \
+    }                                               \
+)
+
+#define PIN_WAIT                        (1)
+#define PIN_EXCLUSIVE                   (2)
+#define PIN_NO_READ                     (4)
+#define PIN_IF_BCB                      (8)
+#define PIN_CALLER_TRACKS_DIRTY_DATA    (32)
+#define PIN_HIGH_PRIORITY               (64)
+
+#define MAP_WAIT                          1
+#define MAP_NO_READ                       (16)
+#define MAP_HIGH_PRIORITY                 (64)
+
+#define IOCTL_REDIR_QUERY_PATH          CTL_CODE(FILE_DEVICE_NETWORK_FILE_SYSTEM, 99, METHOD_NEITHER, FILE_ANY_ACCESS)
+#define IOCTL_REDIR_QUERY_PATH_EX       CTL_CODE(FILE_DEVICE_NETWORK_FILE_SYSTEM, 100, METHOD_NEITHER, FILE_ANY_ACCESS)
+
+typedef struct _QUERY_PATH_REQUEST {
+  ULONG PathNameLength;
+  PIO_SECURITY_CONTEXT SecurityContext;
+  WCHAR FilePathName[1];
+} QUERY_PATH_REQUEST, *PQUERY_PATH_REQUEST;
+
+typedef struct _QUERY_PATH_REQUEST_EX {
+  PIO_SECURITY_CONTEXT pSecurityContext;
+  ULONG EaLength;
+  PVOID pEaBuffer;
+  UNICODE_STRING PathName;
+  UNICODE_STRING DomainServiceName;
+  ULONG_PTR Reserved[ 3 ];
+} QUERY_PATH_REQUEST_EX, *PQUERY_PATH_REQUEST_EX;
+
+typedef struct _QUERY_PATH_RESPONSE {
+  ULONG LengthAccepted;
+} QUERY_PATH_RESPONSE, *PQUERY_PATH_RESPONSE;
+
+#define VOLSNAPCONTROLTYPE                              0x00000053
+#define IOCTL_VOLSNAP_FLUSH_AND_HOLD_WRITES             CTL_CODE(VOLSNAPCONTROLTYPE, 0, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwQueryObject(
+  IN HANDLE Handle OPTIONAL,
+  IN OBJECT_INFORMATION_CLASS ObjectInformationClass,
+  OUT PVOID ObjectInformation OPTIONAL,
+  IN ULONG ObjectInformationLength,
+  OUT PULONG ReturnLength OPTIONAL);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwNotifyChangeKey(
+  IN HANDLE KeyHandle,
+  IN HANDLE EventHandle OPTIONAL,
+  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+  IN PVOID ApcContext OPTIONAL,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  IN ULONG NotifyFilter,
+  IN BOOLEAN WatchSubtree,
+  OUT PVOID Buffer,
+  IN ULONG BufferLength,
+  IN BOOLEAN Asynchronous);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwCreateEvent(
+  OUT PHANDLE EventHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+  IN EVENT_TYPE EventType,
+  IN BOOLEAN InitialState);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwDeleteFile(
+  IN POBJECT_ATTRIBUTES ObjectAttributes);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwQueryDirectoryFile(
+  IN HANDLE FileHandle,
+  IN HANDLE Event OPTIONAL,
+  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+  IN PVOID ApcContext OPTIONAL,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  OUT PVOID FileInformation,
+  IN ULONG Length,
+  IN FILE_INFORMATION_CLASS FileInformationClass,
+  IN BOOLEAN ReturnSingleEntry,
+  IN PUNICODE_STRING FileName OPTIONAL,
+  IN BOOLEAN RestartScan);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwSetVolumeInformationFile(
+  IN HANDLE FileHandle,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  IN PVOID FsInformation,
+  IN ULONG Length,
+  IN FS_INFORMATION_CLASS FsInformationClass);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwFsControlFile(
+  IN HANDLE FileHandle,
+  IN HANDLE Event OPTIONAL,
+  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+  IN PVOID ApcContext OPTIONAL,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  IN ULONG FsControlCode,
+  IN PVOID InputBuffer OPTIONAL,
+  IN ULONG InputBufferLength,
+  OUT PVOID OutputBuffer OPTIONAL,
+  IN ULONG OutputBufferLength);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwDuplicateObject(
+  IN HANDLE SourceProcessHandle,
+  IN HANDLE SourceHandle,
+  IN HANDLE TargetProcessHandle OPTIONAL,
+  OUT PHANDLE TargetHandle OPTIONAL,
+  IN ACCESS_MASK DesiredAccess,
+  IN ULONG HandleAttributes,
+  IN ULONG Options);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwOpenDirectoryObject(
+  OUT PHANDLE DirectoryHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwAllocateVirtualMemory(
+  IN HANDLE ProcessHandle,
+  IN OUT PVOID *BaseAddress,
+  IN ULONG_PTR ZeroBits,
+  IN OUT PSIZE_T RegionSize,
+  IN ULONG AllocationType,
+  IN ULONG Protect);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwFreeVirtualMemory(
+  IN HANDLE ProcessHandle,
+  IN OUT PVOID *BaseAddress,
+  IN OUT PSIZE_T RegionSize,
+  IN ULONG FreeType);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwWaitForSingleObject(
+  IN HANDLE Handle,
+  IN BOOLEAN Alertable,
+  IN PLARGE_INTEGER Timeout OPTIONAL);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwSetEvent(
+  IN HANDLE EventHandle,
+  OUT PLONG PreviousState OPTIONAL);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwFlushVirtualMemory(
+  IN HANDLE ProcessHandle,
+  IN OUT PVOID *BaseAddress,
+  IN OUT PSIZE_T RegionSize,
+  OUT PIO_STATUS_BLOCK IoStatusBlock);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwQueryInformationToken(
+  IN HANDLE TokenHandle,
+  IN TOKEN_INFORMATION_CLASS TokenInformationClass,
+  OUT PVOID TokenInformation,
+  IN ULONG Length,
+  OUT PULONG ResultLength);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwSetSecurityObject(
+  IN HANDLE Handle,
+  IN SECURITY_INFORMATION SecurityInformation,
+  IN PSECURITY_DESCRIPTOR SecurityDescriptor);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwQuerySecurityObject(
+  IN HANDLE FileHandle,
+  IN SECURITY_INFORMATION SecurityInformation,
+  OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
+  IN ULONG Length,
+  OUT PULONG ResultLength);
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwOpenProcessTokenEx(
+  IN HANDLE ProcessHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN ULONG HandleAttributes,
+  OUT PHANDLE TokenHandle);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwOpenThreadTokenEx(
+  IN HANDLE ThreadHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN BOOLEAN OpenAsSelf,
+  IN ULONG HandleAttributes,
+  OUT PHANDLE TokenHandle);
+
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwLockFile(
+  IN HANDLE FileHandle,
+  IN HANDLE Event OPTIONAL,
+  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+  IN PVOID ApcContext OPTIONAL,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  IN PLARGE_INTEGER ByteOffset,
+  IN PLARGE_INTEGER Length,
+  IN ULONG Key,
+  IN BOOLEAN FailImmediately,
+  IN BOOLEAN ExclusiveLock);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwUnlockFile(
+  IN HANDLE FileHandle,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  IN PLARGE_INTEGER ByteOffset,
+  IN PLARGE_INTEGER Length,
+  IN ULONG Key);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwQueryQuotaInformationFile(
+  IN HANDLE FileHandle,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  OUT PVOID Buffer,
+  IN ULONG Length,
+  IN BOOLEAN ReturnSingleEntry,
+  IN PVOID SidList,
+  IN ULONG SidListLength,
+  IN PSID StartSid OPTIONAL,
+  IN BOOLEAN RestartScan);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwSetQuotaInformationFile(
+  IN HANDLE FileHandle,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  IN PVOID Buffer,
+  IN ULONG Length);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwFlushBuffersFile(
+  IN HANDLE FileHandle,
+  OUT PIO_STATUS_BLOCK IoStatusBlock);
+
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwSetInformationToken(
+  IN HANDLE TokenHandle,
+  IN TOKEN_INFORMATION_CLASS TokenInformationClass,
+  IN PVOID TokenInformation,
+  IN ULONG TokenInformationLength);
+#endif
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwQueryEaFile(
+  IN HANDLE FileHandle,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  OUT PVOID Buffer,
+  IN ULONG Length,
+  IN BOOLEAN ReturnSingleEntry,
+  IN PVOID EaList OPTIONAL,
+  IN ULONG EaListLength,
+  IN PULONG EaIndex OPTIONAL,
+  IN BOOLEAN RestartScan);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwSetEaFile(
+  IN HANDLE FileHandle,
+  OUT PIO_STATUS_BLOCK IoStatusBlock,
+  OUT PVOID Buffer,
+  IN ULONG Length);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwDuplicateToken(
+  IN HANDLE ExistingTokenHandle,
+  IN ACCESS_MASK DesiredAccess,
+  IN POBJECT_ATTRIBUTES ObjectAttributes,
+  IN BOOLEAN EffectiveOnly,
+  IN TOKEN_TYPE TokenType,
+  OUT PHANDLE NewTokenHandle);
 
 #pragma pack(push,4)
 
@@ -6863,11 +8890,6 @@ FsRtlAreThereCurrentOrInProgressFileLocks(
 
 #include "csq.h"
 
-#ifdef _NTOSKRNL_
-extern PUCHAR                       FsRtlLegalAnsiCharacterArray;
-#else
-extern DECLSPEC_IMPORT PUCHAR       FsRtlLegalAnsiCharacterArray;
-#endif
 extern PACL                         SePublicDefaultDacl;
 extern PACL                         SeSystemDefaultDacl;
 
@@ -6890,29 +8912,10 @@ extern PACL                         SeSystemDefaultDacl;
 
 #define FILE_VC_QUOTAS_LOG_VIOLATIONS   0x00000004
 
-#define FSRTL_VOLUME_DISMOUNT           1
-#define FSRTL_VOLUME_DISMOUNT_FAILED    2
-#define FSRTL_VOLUME_LOCK               3
-#define FSRTL_VOLUME_LOCK_FAILED        4
-#define FSRTL_VOLUME_UNLOCK             5
-#define FSRTL_VOLUME_MOUNT              6
-
-#define FSRTL_WILD_CHARACTER            0x08
-
-#define FSRTL_FAT_LEGAL                 0x01
-#define FSRTL_HPFS_LEGAL                0x02
-#define FSRTL_NTFS_LEGAL                0x04
-#define FSRTL_WILD_CHARACTER            0x08
-#define FSRTL_OLE_LEGAL                 0x10
-#define FSRTL_NTFS_STREAM_LEGAL         0x14
-
 #ifdef _X86_
 #define HARDWARE_PTE    HARDWARE_PTE_X86
 #define PHARDWARE_PTE   PHARDWARE_PTE_X86
 #endif
-
-#define IO_CHECK_CREATE_PARAMETERS      0x0200
-#define IO_ATTACH_DEVICE                0x0400
 
 #define IO_ATTACH_DEVICE_API            0x80000000
 
@@ -6931,8 +8934,6 @@ extern PACL                         SeSystemDefaultDacl;
 #define MAILSLOT_SIZE_AUTO              0
 
 #define MEM_DOS_LIM                     0x40000000
-
-#define MCB_FLAG_RAISE_ON_ALLOCATION_FAILURE 1
 
 #define OB_TYPE_TYPE                    1
 #define OB_TYPE_DIRECTORY               2
@@ -6958,22 +8959,11 @@ extern PACL                         SeSystemDefaultDacl;
 #define OB_TYPE_IO_COMPLETION           22
 #define OB_TYPE_FILE                    23
 
-#define PIN_WAIT                        (1)
-#define PIN_EXCLUSIVE                   (2)
-#define PIN_NO_READ                     (4)
-#define PIN_IF_BCB                      (8)
-
 #define SEC_BASED	0x00200000
-
-#define SECURITY_WORLD_SID_AUTHORITY    {0,0,0,0,0,1}
-#define SECURITY_WORLD_RID              (0x00000000L)
 
 /* end winnt.h */
 
 #define TOKEN_HAS_ADMIN_GROUP           0x08
-
-#define VACB_MAPPING_GRANULARITY        (0x40000)
-#define VACB_OFFSET_SHIFT               (18)
 
 #if (VER_PRODUCTBUILD >= 1381)
 #define FSCTL_GET_HFS_INFORMATION       CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 31, METHOD_BUFFERED, FILE_ANY_ACCESS)
@@ -7000,18 +8990,6 @@ extern PACL                         SeSystemDefaultDacl;
 #define FSCTL_NETWORK_GET_STATISTICS            CTL_CODE(FILE_DEVICE_NETWORK_FILE_SYSTEM, 116, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define FSCTL_NETWORK_SET_DOMAIN_NAME           CTL_CODE(FILE_DEVICE_NETWORK_FILE_SYSTEM, 120, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define FSCTL_NETWORK_REMOTE_BOOT_INIT_SCRT     CTL_CODE(FILE_DEVICE_NETWORK_FILE_SYSTEM, 250, METHOD_BUFFERED, FILE_ANY_ACCESS)
-
-#define IOCTL_REDIR_QUERY_PATH          CTL_CODE(FILE_DEVICE_NETWORK_FILE_SYSTEM, 99, METHOD_NEITHER, FILE_ANY_ACCESS)
-
-typedef PVOID OPLOCK, *POPLOCK;
-
-//
-// Forwarders
-//
-struct _RTL_AVL_TABLE;
-struct _RTL_GENERIC_TABLE;
-
-typedef PVOID PNOTIFY_SYNC;
 
 typedef enum _FILE_STORAGE_TYPE {
     StorageTypeDefault = 1,
@@ -7048,17 +9026,6 @@ typedef struct _BITMAP_RANGE {
     PULONG          Bitmap;
 } BITMAP_RANGE, *PBITMAP_RANGE;
 
-typedef struct _CACHE_UNINITIALIZE_EVENT {
-    struct _CACHE_UNINITIALIZE_EVENT    *Next;
-    KEVENT                              Event;
-} CACHE_UNINITIALIZE_EVENT, *PCACHE_UNINITIALIZE_EVENT;
-
-typedef struct _CC_FILE_SIZES {
-    LARGE_INTEGER AllocationSize;
-    LARGE_INTEGER FileSize;
-    LARGE_INTEGER ValidDataLength;
-} CC_FILE_SIZES, *PCC_FILE_SIZES;
-
 typedef struct _FILE_COPY_ON_WRITE_INFORMATION {
     BOOLEAN ReplaceIfExists;
     HANDLE  RootDirectory;
@@ -7080,49 +9047,6 @@ typedef struct _FILE_FULL_DIRECTORY_INFORMATION {
     ULONG           EaSize;
     WCHAR           FileName[ANYSIZE_ARRAY];
 } FILE_FULL_DIRECTORY_INFORMATION, *PFILE_FULL_DIRECTORY_INFORMATION;
-
-typedef struct _FILE_FS_FULL_SIZE_INFORMATION {
-    LARGE_INTEGER   TotalAllocationUnits;
-    LARGE_INTEGER   CallerAvailableAllocationUnits;
-    LARGE_INTEGER   ActualAvailableAllocationUnits;
-    ULONG           SectorsPerAllocationUnit;
-    ULONG           BytesPerSector;
-} FILE_FS_FULL_SIZE_INFORMATION, *PFILE_FS_FULL_SIZE_INFORMATION;
-
-typedef struct _FILE_FS_LABEL_INFORMATION {
-    ULONG VolumeLabelLength;
-    WCHAR VolumeLabel[1];
-} FILE_FS_LABEL_INFORMATION, *PFILE_FS_LABEL_INFORMATION;
-
-#if (VER_PRODUCTBUILD >= 2195)
-
-typedef struct _FILE_FS_OBJECT_ID_INFORMATION {
-    UCHAR ObjectId[16];
-    UCHAR ExtendedInfo[48];
-} FILE_FS_OBJECT_ID_INFORMATION, *PFILE_FS_OBJECT_ID_INFORMATION;
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
-
-typedef struct _FILE_FS_SIZE_INFORMATION {
-    LARGE_INTEGER   TotalAllocationUnits;
-    LARGE_INTEGER   AvailableAllocationUnits;
-    ULONG           SectorsPerAllocationUnit;
-    ULONG           BytesPerSector;
-} FILE_FS_SIZE_INFORMATION, *PFILE_FS_SIZE_INFORMATION;
-
-typedef struct _FILE_FS_VOLUME_INFORMATION {
-    LARGE_INTEGER   VolumeCreationTime;
-    ULONG           VolumeSerialNumber;
-    ULONG           VolumeLabelLength;
-    BOOLEAN         SupportsObjects;
-    WCHAR           VolumeLabel[1];
-} FILE_FS_VOLUME_INFORMATION, *PFILE_FS_VOLUME_INFORMATION;
-
-typedef struct _FILE_FS_OBJECTID_INFORMATION
-{
-    UCHAR ObjectId[16];
-    UCHAR ExtendedInfo[48];
-} FILE_FS_OBJECTID_INFORMATION, *PFILE_FS_OBJECTID_INFORMATION;
 
 /* raw internal file lock struct returned from FsRtlGetNextFileLock */
 typedef struct _FILE_SHARED_LOCK_ENTRY {
@@ -7208,51 +9132,6 @@ typedef struct _FILE_OLE_STATE_BITS_INFORMATION {
     ULONG StateBitsMask;
 } FILE_OLE_STATE_BITS_INFORMATION, *PFILE_OLE_STATE_BITS_INFORMATION;
 
-typedef enum _FSRTL_COMPARISON_RESULT
-{
-    LessThan = -1,
-    EqualTo = 0,
-    GreaterThan = 1
-} FSRTL_COMPARISON_RESULT;
-    
-#if (VER_PRODUCTBUILD >= 2600)
-
-typedef struct _FSRTL_PER_STREAM_CONTEXT {
-    LIST_ENTRY     Links;
-    PVOID          OwnerId;
-    PVOID          InstanceId;
-    PFREE_FUNCTION FreeCallback;
-} FSRTL_PER_STREAM_CONTEXT, *PFSRTL_PER_STREAM_CONTEXT;
-
-typedef struct _FSRTL_PER_FILEOBJECT_CONTEXT
-{
-    LIST_ENTRY Links;
-    PVOID OwnerId;
-    PVOID InstanceId;
-} FSRTL_PER_FILEOBJECT_CONTEXT, *PFSRTL_PER_FILEOBJECT_CONTEXT;
-
-#endif /* (VER_PRODUCTBUILD >= 2600) */
-
-typedef struct _BASE_MCB
-{
-    ULONG MaximumPairCount;
-    ULONG PairCount;
-    USHORT PoolType;
-    USHORT Flags;
-    PVOID Mapping;
-} BASE_MCB, *PBASE_MCB;
-
-typedef struct _LARGE_MCB
-{
-    PKGUARDED_MUTEX GuardedMutex;
-    BASE_MCB BaseMcb;
-} LARGE_MCB, *PLARGE_MCB;
-
-typedef struct _MCB
-{
-    LARGE_MCB DummyFieldThatSizesThisStructureCorrectly;
-} MCB, *PMCB;
-
 typedef struct _MAPPING_PAIR {
     ULONGLONG Vcn;
     ULONGLONG Lcn;
@@ -7263,8 +9142,6 @@ typedef struct _GET_RETRIEVAL_DESCRIPTOR {
     ULONGLONG       StartVcn;
     MAPPING_PAIR    Pair[1];
 } GET_RETRIEVAL_DESCRIPTOR, *PGET_RETRIEVAL_DESCRIPTOR;
-
-#define ASSERT_QUEUE(Q) ASSERT(((Q)->Header.Type & KOBJECT_TYPE_MASK) == QueueObject);
 
 typedef struct _MBCB {
     CSHORT          NodeTypeCode;
@@ -7327,189 +9204,6 @@ typedef struct _OBJECT_ALL_TYPES_INFO {
     ULONG               NumberOfObjectTypes;
     OBJECT_TYPE_INFO    ObjectsTypeInfo[1];
 } OBJECT_ALL_TYPES_INFO, *POBJECT_ALL_TYPES_INFO;
-
-typedef enum _RTL_GENERIC_COMPARE_RESULTS
-{
-    GenericLessThan,
-    GenericGreaterThan,
-    GenericEqual
-} RTL_GENERIC_COMPARE_RESULTS;
-
-typedef enum _TABLE_SEARCH_RESULT
-{
-    TableEmptyTree,
-    TableFoundNode,
-    TableInsertAsLeft,
-    TableInsertAsRight
-} TABLE_SEARCH_RESULT;
-
-typedef NTSTATUS
-(NTAPI *PRTL_AVL_MATCH_FUNCTION)(
-    struct _RTL_AVL_TABLE *Table,
-    PVOID UserData,
-    PVOID MatchData
-);
-
-typedef RTL_GENERIC_COMPARE_RESULTS
-(NTAPI *PRTL_AVL_COMPARE_ROUTINE) (
-    struct _RTL_AVL_TABLE *Table,
-    PVOID FirstStruct,
-    PVOID SecondStruct
-);
-
-typedef RTL_GENERIC_COMPARE_RESULTS
-(NTAPI *PRTL_GENERIC_COMPARE_ROUTINE) (
-    struct _RTL_GENERIC_TABLE *Table,
-    PVOID FirstStruct,
-    PVOID SecondStruct
-);
-
-typedef PVOID
-(NTAPI *PRTL_GENERIC_ALLOCATE_ROUTINE) (
-    struct _RTL_GENERIC_TABLE *Table,
-    CLONG ByteSize
-);
-
-typedef VOID
-(NTAPI *PRTL_GENERIC_FREE_ROUTINE) (
-    struct _RTL_GENERIC_TABLE *Table,
-    PVOID Buffer
-);
-
-typedef PVOID
-(NTAPI *PRTL_AVL_ALLOCATE_ROUTINE) (
-    struct _RTL_AVL_TABLE *Table,
-    CLONG ByteSize
-);
-
-typedef VOID
-(NTAPI *PRTL_AVL_FREE_ROUTINE) (
-    struct _RTL_AVL_TABLE *Table,
-    PVOID Buffer
-);
-
-typedef struct _PUBLIC_BCB {
-    CSHORT          NodeTypeCode;
-    CSHORT          NodeByteSize;
-    ULONG           MappedLength;
-    LARGE_INTEGER   MappedFileOffset;
-} PUBLIC_BCB, *PPUBLIC_BCB;
-
-typedef struct _QUERY_PATH_REQUEST {
-    ULONG                   PathNameLength;
-    PIO_SECURITY_CONTEXT    SecurityContext;
-    WCHAR                   FilePathName[1];
-} QUERY_PATH_REQUEST, *PQUERY_PATH_REQUEST;
-
-typedef struct _QUERY_PATH_RESPONSE {
-    ULONG LengthAccepted;
-} QUERY_PATH_RESPONSE, *PQUERY_PATH_RESPONSE;
-
-typedef struct _RTL_BALANCED_LINKS
-{
-    struct _RTL_BALANCED_LINKS *Parent;
-    struct _RTL_BALANCED_LINKS *LeftChild;
-    struct _RTL_BALANCED_LINKS *RightChild;
-    CHAR Balance;
-    UCHAR Reserved[3];
-} RTL_BALANCED_LINKS, *PRTL_BALANCED_LINKS;
-
-typedef struct _RTL_GENERIC_TABLE
-{
-    PRTL_SPLAY_LINKS TableRoot;
-    LIST_ENTRY InsertOrderList;
-    PLIST_ENTRY OrderedPointer;
-    ULONG WhichOrderedElement;
-    ULONG NumberGenericTableElements;
-    PRTL_GENERIC_COMPARE_ROUTINE CompareRoutine;
-    PRTL_GENERIC_ALLOCATE_ROUTINE AllocateRoutine;
-    PRTL_GENERIC_FREE_ROUTINE FreeRoutine;
-    PVOID TableContext;
-} RTL_GENERIC_TABLE, *PRTL_GENERIC_TABLE;
-
-#undef PRTL_GENERIC_COMPARE_ROUTINE
-#undef PRTL_GENERIC_ALLOCATE_ROUTINE
-#undef PRTL_GENERIC_FREE_ROUTINE
-#undef RTL_GENERIC_TABLE
-#undef PRTL_GENERIC_TABLE
-
-#define PRTL_GENERIC_COMPARE_ROUTINE PRTL_AVL_COMPARE_ROUTINE
-#define PRTL_GENERIC_ALLOCATE_ROUTINE PRTL_AVL_ALLOCATE_ROUTINE
-#define PRTL_GENERIC_FREE_ROUTINE PRTL_AVL_FREE_ROUTINE
-#define RTL_GENERIC_TABLE RTL_AVL_TABLE
-#define PRTL_GENERIC_TABLE PRTL_AVL_TABLE
-
-#define RtlInitializeGenericTable               RtlInitializeGenericTableAvl
-#define RtlInsertElementGenericTable            RtlInsertElementGenericTableAvl
-#define RtlInsertElementGenericTableFull        RtlInsertElementGenericTableFullAvl
-#define RtlDeleteElementGenericTable            RtlDeleteElementGenericTableAvl
-#define RtlLookupElementGenericTable            RtlLookupElementGenericTableAvl
-#define RtlLookupElementGenericTableFull        RtlLookupElementGenericTableFullAvl
-#define RtlEnumerateGenericTable                RtlEnumerateGenericTableAvl
-#define RtlEnumerateGenericTableWithoutSplaying RtlEnumerateGenericTableWithoutSplayingAvl
-#define RtlGetElementGenericTable               RtlGetElementGenericTableAvl
-#define RtlNumberGenericTableElements           RtlNumberGenericTableElementsAvl
-#define RtlIsGenericTableEmpty                  RtlIsGenericTableEmptyAvl
-
-typedef struct _RTL_AVL_TABLE
-{
-    RTL_BALANCED_LINKS BalancedRoot;
-    PVOID OrderedPointer;
-    ULONG WhichOrderedElement;
-    ULONG NumberGenericTableElements;
-    ULONG DepthOfTree;
-    PRTL_BALANCED_LINKS RestartKey;
-    ULONG DeleteCount;
-    PRTL_AVL_COMPARE_ROUTINE CompareRoutine;
-    PRTL_AVL_ALLOCATE_ROUTINE AllocateRoutine;
-    PRTL_AVL_FREE_ROUTINE FreeRoutine;
-    PVOID TableContext;
-} RTL_AVL_TABLE, *PRTL_AVL_TABLE;
-
-NTSYSAPI
-VOID
-NTAPI
-RtlInitializeGenericTableAvl(
-    PRTL_AVL_TABLE Table,
-    PRTL_AVL_COMPARE_ROUTINE CompareRoutine,
-    PRTL_AVL_ALLOCATE_ROUTINE AllocateRoutine,
-    PRTL_AVL_FREE_ROUTINE FreeRoutine,
-    PVOID TableContext
-);
-
-NTSYSAPI
-PVOID
-NTAPI
-RtlInsertElementGenericTableAvl (
-    PRTL_AVL_TABLE Table,
-    PVOID Buffer,
-    CLONG BufferSize,
-    PBOOLEAN NewElement OPTIONAL
-    );
-    
-NTSYSAPI
-BOOLEAN
-NTAPI
-RtlDeleteElementGenericTableAvl (
-    PRTL_AVL_TABLE Table,
-    PVOID Buffer
-    );
-    
-NTSYSAPI
-PVOID
-NTAPI
-RtlLookupElementGenericTableAvl (
-    PRTL_AVL_TABLE Table,
-    PVOID Buffer
-    );
-    
-NTSYSAPI
-PVOID
-NTAPI
-RtlEnumerateGenericTableWithoutSplayingAvl (
-    PRTL_AVL_TABLE Table,
-    PVOID *RestartKey
-    );
 
 #if defined(USE_LPC6432)
 #define LPC_CLIENT_ID CLIENT_ID64
@@ -7575,13 +9269,6 @@ typedef struct _REMOTE_PORT_VIEW
     LPC_PVOID ViewBase;
 } REMOTE_PORT_VIEW, *PREMOTE_PORT_VIEW;
 
-typedef struct _TUNNEL {
-    FAST_MUTEX          Mutex;
-    PRTL_SPLAY_LINKS    Cache;
-    LIST_ENTRY          TimerQueue;
-    USHORT              NumEntries;
-} TUNNEL, *PTUNNEL;
-
 typedef struct _VAD_HEADER {
     PVOID       StartVPN;
     PVOID       EndVPN;
@@ -7596,578 +9283,12 @@ typedef struct _VAD_HEADER {
     LIST_ENTRY  Secured;
 } VAD_HEADER, *PVAD_HEADER;
 
-#if (VER_PRODUCTBUILD >= 2600)
-
-typedef BOOLEAN
-(NTAPI *PFILTER_REPORT_CHANGE) (
-    IN PVOID  NotifyContext,
-    IN PVOID  FilterContext
-);
-
-#endif
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-CcCanIWrite (
-    IN PFILE_OBJECT FileObject,
-    IN ULONG        BytesToWrite,
-    IN BOOLEAN      Wait,
-    IN BOOLEAN      Retrying
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-CcCopyRead (
-    IN PFILE_OBJECT         FileObject,
-    IN PLARGE_INTEGER       FileOffset,
-    IN ULONG                Length,
-    IN BOOLEAN              Wait,
-    OUT PVOID               Buffer,
-    OUT PIO_STATUS_BLOCK    IoStatus
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-CcCopyWrite (
-    IN PFILE_OBJECT     FileObject,
-    IN PLARGE_INTEGER   FileOffset,
-    IN ULONG            Length,
-    IN BOOLEAN          Wait,
-    IN PVOID            Buffer
-);
-
-#define CcCopyWriteWontFlush(FO, FOFF, LEN) ((LEN) <= 0x10000)
-
-typedef VOID (NTAPI *PCC_POST_DEFERRED_WRITE) (
-    IN PVOID Context1,
-    IN PVOID Context2
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-CcDeferWrite (
-    IN PFILE_OBJECT             FileObject,
-    IN PCC_POST_DEFERRED_WRITE  PostRoutine,
-    IN PVOID                    Context1,
-    IN PVOID                    Context2,
-    IN ULONG                    BytesToWrite,
-    IN BOOLEAN                  Retrying
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-CcFastCopyRead (
-    IN PFILE_OBJECT         FileObject,
-    IN ULONG                FileOffset,
-    IN ULONG                Length,
-    IN ULONG                PageCount,
-    OUT PVOID               Buffer,
-    OUT PIO_STATUS_BLOCK    IoStatus
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-CcFastCopyWrite (
-    IN PFILE_OBJECT FileObject,
-    IN ULONG        FileOffset,
-    IN ULONG        Length,
-    IN PVOID        Buffer
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-CcFlushCache (
-    IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
-    IN PLARGE_INTEGER           FileOffset OPTIONAL,
-    IN ULONG                    Length,
-    OUT PIO_STATUS_BLOCK        IoStatus OPTIONAL
-);
-
-typedef VOID (NTAPI *PDIRTY_PAGE_ROUTINE) (
-    IN PFILE_OBJECT     FileObject,
-    IN PLARGE_INTEGER   FileOffset,
-    IN ULONG            Length,
-    IN PLARGE_INTEGER   OldestLsn,
-    IN PLARGE_INTEGER   NewestLsn,
-    IN PVOID            Context1,
-    IN PVOID            Context2
-);
-
-NTKERNELAPI
-LARGE_INTEGER
-NTAPI
-CcGetDirtyPages (
-    IN PVOID                LogHandle,
-    IN PDIRTY_PAGE_ROUTINE  DirtyPageRoutine,
-    IN PVOID                Context1,
-    IN PVOID                Context2
-);
-
-NTKERNELAPI
-PFILE_OBJECT
-NTAPI
-CcGetFileObjectFromBcb (
-    IN PVOID Bcb
-);
-
-NTKERNELAPI
-PFILE_OBJECT
-NTAPI
-CcGetFileObjectFromSectionPtrs (
-    IN PSECTION_OBJECT_POINTERS SectionObjectPointer
-);
-
-#define CcGetFileSizePointer(FO) (                                     \
-    ((PLARGE_INTEGER)((FO)->SectionObjectPointer->SharedCacheMap) + 1) \
-)
-
-#if (VER_PRODUCTBUILD >= 2195)
-
-NTKERNELAPI
-LARGE_INTEGER
-NTAPI
-CcGetFlushedValidData (
-    IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
-    IN BOOLEAN                  BcbListHeld
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
-
 NTKERNELAPI
 LARGE_INTEGER
 NTAPI
 CcGetLsnForFileObject (
     IN PFILE_OBJECT     FileObject,
     OUT PLARGE_INTEGER  OldestLsn OPTIONAL
-);
-
-typedef BOOLEAN (NTAPI *PACQUIRE_FOR_LAZY_WRITE) (
-    IN PVOID    Context,
-    IN BOOLEAN  Wait
-);
-
-typedef VOID (NTAPI *PRELEASE_FROM_LAZY_WRITE) (
-    IN PVOID Context
-);
-
-typedef BOOLEAN (NTAPI *PACQUIRE_FOR_READ_AHEAD) (
-    IN PVOID    Context,
-    IN BOOLEAN  Wait
-);
-
-typedef VOID (NTAPI *PRELEASE_FROM_READ_AHEAD) (
-    IN PVOID Context
-);
-
-typedef struct _CACHE_MANAGER_CALLBACKS {
-    PACQUIRE_FOR_LAZY_WRITE     AcquireForLazyWrite;
-    PRELEASE_FROM_LAZY_WRITE    ReleaseFromLazyWrite;
-    PACQUIRE_FOR_READ_AHEAD     AcquireForReadAhead;
-    PRELEASE_FROM_READ_AHEAD    ReleaseFromReadAhead;
-} CACHE_MANAGER_CALLBACKS, *PCACHE_MANAGER_CALLBACKS;
-
-NTKERNELAPI
-VOID
-NTAPI
-CcInitializeCacheMap (
-    IN PFILE_OBJECT             FileObject,
-    IN PCC_FILE_SIZES           FileSizes,
-    IN BOOLEAN                  PinAccess,
-    IN PCACHE_MANAGER_CALLBACKS Callbacks,
-    IN PVOID                    LazyWriteContext
-);
-
-#define CcIsFileCached(FO) (                                                         \
-    ((FO)->SectionObjectPointer != NULL) &&                                          \
-    (((PSECTION_OBJECT_POINTERS)(FO)->SectionObjectPointer)->SharedCacheMap != NULL) \
-)
-
-extern ULONG CcFastMdlReadWait;
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-CcIsThereDirtyData (
-    IN PVPB Vpb
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-CcMapData (
-    IN PFILE_OBJECT     FileObject,
-    IN PLARGE_INTEGER   FileOffset,
-    IN ULONG            Length,
-    IN ULONG            Flags,
-    OUT PVOID           *Bcb,
-    OUT PVOID           *Buffer
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-CcMdlRead (
-    IN PFILE_OBJECT         FileObject,
-    IN PLARGE_INTEGER       FileOffset,
-    IN ULONG                Length,
-    OUT PMDL                *MdlChain,
-    OUT PIO_STATUS_BLOCK    IoStatus
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-CcMdlReadComplete (
-    IN PFILE_OBJECT FileObject,
-    IN PMDL         MdlChain
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-CcMdlWriteComplete (
-    IN PFILE_OBJECT     FileObject,
-    IN PLARGE_INTEGER   FileOffset,
-    IN PMDL             MdlChain
-);
-
-#define MAP_WAIT        1
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-CcPinMappedData (
-    IN PFILE_OBJECT     FileObject,
-    IN PLARGE_INTEGER   FileOffset,
-    IN ULONG            Length,
-    IN ULONG            Flags,
-    IN OUT PVOID        *Bcb
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-CcPinRead (
-    IN PFILE_OBJECT     FileObject,
-    IN PLARGE_INTEGER   FileOffset,
-    IN ULONG            Length,
-    IN ULONG            Flags,
-    OUT PVOID           *Bcb,
-    OUT PVOID           *Buffer
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-CcPrepareMdlWrite (
-    IN PFILE_OBJECT         FileObject,
-    IN PLARGE_INTEGER       FileOffset,
-    IN ULONG                Length,
-    OUT PMDL                *MdlChain,
-    OUT PIO_STATUS_BLOCK    IoStatus
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-CcPreparePinWrite (
-    IN PFILE_OBJECT     FileObject,
-    IN PLARGE_INTEGER   FileOffset,
-    IN ULONG            Length,
-    IN BOOLEAN          Zero,
-    IN ULONG            Flags,
-    OUT PVOID           *Bcb,
-    OUT PVOID           *Buffer
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-CcPurgeCacheSection (
-    IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
-    IN PLARGE_INTEGER           FileOffset OPTIONAL,
-    IN ULONG                    Length,
-    IN BOOLEAN                  UninitializeCacheMaps
-);
-
-#define CcReadAhead(FO, FOFF, LEN) (                \
-    if ((LEN) >= 256) {                             \
-        CcScheduleReadAhead((FO), (FOFF), (LEN));   \
-    }                                               \
-)
-
-#if (VER_PRODUCTBUILD >= 2195)
-
-NTKERNELAPI
-PVOID
-NTAPI
-CcRemapBcb (
-    IN PVOID Bcb
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
-
-NTKERNELAPI
-VOID
-NTAPI
-CcRepinBcb (
-    IN PVOID Bcb
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-CcScheduleReadAhead (
-    IN PFILE_OBJECT     FileObject,
-    IN PLARGE_INTEGER   FileOffset,
-    IN ULONG            Length
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-CcSetAdditionalCacheAttributes (
-    IN PFILE_OBJECT FileObject,
-    IN BOOLEAN      DisableReadAhead,
-    IN BOOLEAN      DisableWriteBehind
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-CcSetBcbOwnerPointer (
-    IN PVOID Bcb,
-    IN PVOID OwnerPointer
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-CcSetDirtyPageThreshold (
-    IN PFILE_OBJECT FileObject,
-    IN ULONG        DirtyPageThreshold
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-CcSetDirtyPinnedData (
-    IN PVOID            BcbVoid,
-    IN PLARGE_INTEGER   Lsn OPTIONAL
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-CcSetFileSizes (
-    IN PFILE_OBJECT     FileObject,
-    IN PCC_FILE_SIZES   FileSizes
-);
-
-typedef VOID (NTAPI *PFLUSH_TO_LSN) (
-    IN PVOID            LogHandle,
-    IN LARGE_INTEGER    Lsn
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-CcSetLogHandleForFile (
-    IN PFILE_OBJECT     FileObject,
-    IN PVOID            LogHandle,
-    IN PFLUSH_TO_LSN    FlushToLsnRoutine
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-CcSetReadAheadGranularity (
-    IN PFILE_OBJECT FileObject,
-    IN ULONG        Granularity     /* default: PAGE_SIZE */
-                                    /* allowed: 2^n * PAGE_SIZE */
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-CcUninitializeCacheMap (
-    IN PFILE_OBJECT                 FileObject,
-    IN PLARGE_INTEGER               TruncateSize OPTIONAL,
-    IN PCACHE_UNINITIALIZE_EVENT    UninitializeCompleteEvent OPTIONAL
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-CcUnpinData (
-    IN PVOID Bcb
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-CcUnpinDataForThread (
-    IN PVOID            Bcb,
-    IN ERESOURCE_THREAD ResourceThreadId
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-CcUnpinRepinnedBcb (
-    IN PVOID                Bcb,
-    IN BOOLEAN              WriteThrough,
-    OUT PIO_STATUS_BLOCK    IoStatus
-);
-
-#if (VER_PRODUCTBUILD >= 2195)
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-CcWaitForCurrentLazyWriterActivity (
-    VOID
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-CcZeroData (
-    IN PFILE_OBJECT     FileObject,
-    IN PLARGE_INTEGER   StartOffset,
-    IN PLARGE_INTEGER   EndOffset,
-    IN BOOLEAN          Wait
-);
-
-#if (VER_PRODUCTBUILD >= 2600)
-
-#ifndef __NTOSKRNL__
-NTKERNELAPI
-VOID
-FASTCALL
-ExInitializeRundownProtection (
-    IN PEX_RUNDOWN_REF  RunRef
-);
-
-NTKERNELAPI
-VOID
-FASTCALL
-ExReInitializeRundownProtection (
-    IN PEX_RUNDOWN_REF  RunRef
-);
-
-NTKERNELAPI
-BOOLEAN
-FASTCALL
-ExAcquireRundownProtection (
-    IN PEX_RUNDOWN_REF  RunRef
-);
-
-NTKERNELAPI
-BOOLEAN
-FASTCALL
-ExAcquireRundownProtectionEx (
-    IN PEX_RUNDOWN_REF  RunRef,
-    IN ULONG            Count
-);
-
-NTKERNELAPI
-VOID
-FASTCALL
-ExReleaseRundownProtection (
-    IN PEX_RUNDOWN_REF  RunRef
-);
-
-NTKERNELAPI
-VOID
-FASTCALL
-ExReleaseRundownProtectionEx (
-    IN PEX_RUNDOWN_REF  RunRef,
-    IN ULONG            Count
-);
-
-NTKERNELAPI
-VOID
-FASTCALL
-ExRundownCompleted (
-    IN PEX_RUNDOWN_REF  RunRef
-);
-
-NTKERNELAPI
-VOID
-FASTCALL
-ExWaitForRundownProtectionRelease (
-    IN PEX_RUNDOWN_REF  RunRef
-);
-
-#endif
-#endif /* (VER_PRODUCTBUILD >= 2600) */
-
-
-#define FsRtlSetupAdvancedHeader( _advhdr, _fmutx )                         \
-{                                                                           \
-    SetFlag( (_advhdr)->Flags, FSRTL_FLAG_ADVANCED_HEADER );                \
-    SetFlag( (_advhdr)->Flags2, FSRTL_FLAG2_SUPPORTS_FILTER_CONTEXTS );     \
-    (_advhdr)->Version = FSRTL_FCB_HEADER_V1;                               \
-    InitializeListHead( &(_advhdr)->FilterContexts );                       \
-    if ((_fmutx) != NULL) {                                                 \
-        (_advhdr)->FastMutex = (_fmutx);                                    \
-    }                                                                       \
-    *((PULONG_PTR)(&(_advhdr)->PushLock)) = 0;                              \
-    /*ExInitializePushLock( &(_advhdr)->PushLock ); API Not avaliable downlevel*/\
-    (_advhdr)->FileContextSupportPointer = NULL;                            \
-}
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlAddBaseMcbEntry (
-    IN PBASE_MCB  Mcb,
-    IN LONGLONG   Vbn,
-    IN LONGLONG   Lbn,
-    IN LONGLONG   SectorCount
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlAddLargeMcbEntry (
-    IN PLARGE_MCB  Mcb,
-    IN LONGLONG    Vbn,
-    IN LONGLONG    Lbn,
-    IN LONGLONG    SectorCount
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlAddMcbEntry (
-    IN PMCB   Mcb,
-    IN VBN    Vbn,
-    IN LBN    Lbn,
-    IN ULONG  SectorCount
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlAddToTunnelCache (
-    IN PTUNNEL          Cache,
-    IN ULONGLONG        DirectoryKey,
-    IN PUNICODE_STRING  ShortName,
-    IN PUNICODE_STRING  LongName,
-    IN BOOLEAN          KeyByShortName,
-    IN ULONG            DataLength,
-    IN PVOID            Data
 );
 
 NTKERNELAPI
@@ -8207,392 +9328,11 @@ FsRtlAllocatePoolWithTag (
 NTKERNELAPI
 BOOLEAN
 NTAPI
-FsRtlAreNamesEqual (
-    IN PCUNICODE_STRING  Name1,
-    IN PCUNICODE_STRING  Name2,
-    IN BOOLEAN           IgnoreCase,
-    IN PCWCH             UpcaseTable OPTIONAL
-);
-
-#define FsRtlAreThereCurrentFileLocks(FL) ( \
-    ((FL)->FastIoIsQuestionable)            \
-)
-
-typedef
-VOID
-(NTAPI*POPLOCK_WAIT_COMPLETE_ROUTINE) (
-    IN PVOID    Context,
-    IN PIRP     Irp
-);
-
-typedef
-VOID
-(NTAPI*POPLOCK_FS_PREPOST_IRP) (
-    IN PVOID    Context,
-    IN PIRP     Irp
-);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-FsRtlCheckOplock (
-    IN POPLOCK                          Oplock,
-    IN PIRP                             Irp,
-    IN PVOID                            Context,
-    IN POPLOCK_WAIT_COMPLETE_ROUTINE    CompletionRoutine OPTIONAL,
-    IN POPLOCK_FS_PREPOST_IRP           PostIrpRoutine OPTIONAL
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlCurrentBatchOplock (
-    IN POPLOCK Oplock
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlDeleteKeyFromTunnelCache (
-    IN PTUNNEL      Cache,
-    IN ULONGLONG    DirectoryKey
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlDeleteTunnelCache (
-    IN PTUNNEL Cache
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlDeregisterUncProvider (
-    IN HANDLE Handle
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlDissectDbcs (
-    IN ANSI_STRING    Name,
-    OUT PANSI_STRING  FirstPart,
-    OUT PANSI_STRING  RemainingPart
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlDissectName (
-    IN UNICODE_STRING    Name,
-    OUT PUNICODE_STRING  FirstPart,
-    OUT PUNICODE_STRING  RemainingPart
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlDoesDbcsContainWildCards (
-    IN PANSI_STRING Name
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlDoesNameContainWildCards (
-    IN PUNICODE_STRING Name
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlIsFatDbcsLegal (
-    IN ANSI_STRING DbcsName,
-    IN BOOLEAN WildCardsPermissible,
-    IN BOOLEAN PathNamePermissible,
-    IN BOOLEAN LeadingBackslashPermissible
-    );
-
-
-#define FsRtlCompleteRequest(IRP,STATUS) {         \
-    (IRP)->IoStatus.Status = (STATUS);             \
-    IoCompleteRequest( (IRP), IO_DISK_INCREMENT ); \
-}
-
-#define FsRtlEnterFileSystem    KeEnterCriticalRegion
-
-#define FsRtlExitFileSystem     KeLeaveCriticalRegion
-
-#define FsRtlFastLock(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11) (       \
-     FsRtlPrivateLock(A1, A2, A3, A4, A5, A6, A7, A8, A9, NULL, A10, A11)   \
-)
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlFindInTunnelCache (
-    IN PTUNNEL          Cache,
-    IN ULONGLONG        DirectoryKey,
-    IN PUNICODE_STRING  Name,
-    OUT PUNICODE_STRING ShortName,
-    OUT PUNICODE_STRING LongName,
-    IN OUT PULONG       DataLength,
-    OUT PVOID           Data
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlGetNextBaseMcbEntry (
-    IN PBASE_MCB   Mcb,
-    IN ULONG       RunIndex,
-    OUT PLONGLONG  Vbn,
-    OUT PLONGLONG  Lbn,
-    OUT PLONGLONG  SectorCount
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlGetNextLargeMcbEntry (
-    IN PLARGE_MCB  Mcb,
-    IN ULONG       RunIndex,
-    OUT PLONGLONG  Vbn,
-    OUT PLONGLONG  Lbn,
-    OUT PLONGLONG  SectorCount
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlGetNextMcbEntry (
-    IN PMCB     Mcb,
-    IN ULONG    RunIndex,
-    OUT PVBN    Vbn,
-    OUT PLBN    Lbn,
-    OUT PULONG  SectorCount
-);
-
-#define FsRtlGetPerStreamContextPointer(FO) (   \
-    (PFSRTL_ADVANCED_FCB_HEADER)(FO)->FsContext \
-)
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlInitializeBaseMcb (
-    IN PBASE_MCB  Mcb,
-    IN POOL_TYPE  PoolType
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlInitializeLargeMcb (
-    IN PLARGE_MCB  Mcb,
-    IN POOL_TYPE   PoolType
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlInitializeMcb (
-    IN PMCB       Mcb,
-    IN POOL_TYPE  PoolType
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlInitializeOplock (
-    IN OUT POPLOCK Oplock
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlInitializeTunnelCache (
-    IN PTUNNEL Cache
-);
-
-#define FsRtlInitPerStreamContext(PSC, O, I, FC) ( \
-    (PSC)->OwnerId = (O),                          \
-    (PSC)->InstanceId = (I),                       \
-    (PSC)->FreeCallback = (FC)                     \
-)
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-FsRtlInsertPerStreamContext (
-    IN PFSRTL_ADVANCED_FCB_HEADER  PerStreamContext,
-    IN PFSRTL_PER_STREAM_CONTEXT   Ptr
-);
-
-#define FsRtlIsAnsiCharacterLegalFat(C, WILD) (                                \
-    FlagOn(FsRtlLegalAnsiCharacterArray[(UCHAR)(C)], (FSRTL_FAT_LEGAL) |       \
-                                        ((WILD) ? FSRTL_WILD_CHARACTER : 0 ))  \
-)
-
-#define FsRtlIsAnsiCharacterLegalHpfs(C, WILD) (                               \
-    FlagOn(FsRtlLegalAnsiCharacterArray[(UCHAR)(C)], (FSRTL_HPFS_LEGAL) |      \
-                                        ((WILD) ? FSRTL_WILD_CHARACTER : 0 ))  \
-)
-
-#define FsRtlIsAnsiCharacterLegalNtfs(C, WILD) (                               \
-    FlagOn(FsRtlLegalAnsiCharacterArray[(UCHAR)(C)], (FSRTL_NTFS_LEGAL) |      \
-                                        ((WILD) ? FSRTL_WILD_CHARACTER : 0 ))  \
-)
-
-#define FsRtlIsAnsiCharacterWild(C) (                                       \
-    FlagOn(FsRtlLegalAnsiCharacterArray[(UCHAR)(C)], FSRTL_WILD_CHARACTER ) \
-)
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
 FsRtlIsFatDbcsLegal (
     IN ANSI_STRING  DbcsName,
     IN BOOLEAN      WildCardsPermissible,
     IN BOOLEAN      PathNamePermissible,
     IN BOOLEAN      LeadingBackslashPermissible
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlIsHpfsDbcsLegal (
-    IN ANSI_STRING  DbcsName,
-    IN BOOLEAN      WildCardsPermissible,
-    IN BOOLEAN      PathNamePermissible,
-    IN BOOLEAN      LeadingBackslashPermissible
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlIsNameInExpression (
-    IN PUNICODE_STRING  Expression,
-    IN PUNICODE_STRING  Name,
-    IN BOOLEAN          IgnoreCase,
-    IN PWCHAR           UpcaseTable OPTIONAL
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlIsNtstatusExpected (
-    IN NTSTATUS Ntstatus
-);
-
-#define NLS_OEM_LEAD_BYTE_INFO NlsOemLeadByteInfo
-
-extern PUSHORT NlsOemLeadByteInfo;
-
-#define FsRtlIsLeadDbcsCharacter(DBCS_CHAR) (                               \
-    (BOOLEAN)((UCHAR)(DBCS_CHAR) < 0x80 ? FALSE :                           \
-              (NLS_MB_CODE_PAGE_TAG &&                                      \
-               (NLS_OEM_LEAD_BYTE_INFO[(UCHAR)(DBCS_CHAR)] != 0)))          \
-)
-
-#define FsRtlIsUnicodeCharacterWild(C) (                                    \
-    (((C) >= 0x40) ?                                                        \
-    FALSE :                                                                 \
-    FlagOn(FsRtlLegalAnsiCharacterArray[(C)], FSRTL_WILD_CHARACTER ))       \
-)
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlLookupBaseMcbEntry (
-    IN PBASE_MCB   Mcb,
-    IN LONGLONG    Vbn,
-    OUT PLONGLONG  Lbn OPTIONAL,
-    OUT PLONGLONG  SectorCountFromLbn OPTIONAL,
-    OUT PLONGLONG  StartingLbn OPTIONAL,
-    OUT PLONGLONG  SectorCountFromStartingLbn OPTIONAL,
-    OUT PULONG     Index OPTIONAL
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlLookupLargeMcbEntry (
-    IN PLARGE_MCB  Mcb,
-    IN LONGLONG    Vbn,
-    OUT PLONGLONG  Lbn OPTIONAL,
-    OUT PLONGLONG  SectorCountFromLbn OPTIONAL,
-    OUT PLONGLONG  StartingLbn OPTIONAL,
-    OUT PLONGLONG  SectorCountFromStartingLbn OPTIONAL,
-    OUT PULONG     Index OPTIONAL
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlLookupLastBaseMcbEntry (
-    IN PBASE_MCB   Mcb,
-    OUT PLONGLONG  Vbn,
-    OUT PLONGLONG  Lbn
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlLookupLastLargeMcbEntry (
-    IN PLARGE_MCB  Mcb,
-    OUT PLONGLONG  Vbn,
-    OUT PLONGLONG  Lbn
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlLookupLastMcbEntry (
-    IN PMCB   Mcb,
-    OUT PVBN  Vbn,
-    OUT PLBN  Lbn
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlLookupLastBaseMcbEntryAndIndex (
-    IN PBASE_MCB      OpaqueMcb,
-    IN OUT PLONGLONG  LargeVbn,
-    IN OUT PLONGLONG  LargeLbn,
-    IN OUT PULONG     Index
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlLookupLastLargeMcbEntryAndIndex (
-    IN PLARGE_MCB  OpaqueMcb,
-    OUT PLONGLONG  LargeVbn,
-    OUT PLONGLONG  LargeLbn,
-    OUT PULONG     Index
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlLookupMcbEntry (
-    IN PMCB     Mcb,
-    IN VBN      Vbn,
-    OUT PLBN    Lbn,
-    OUT PULONG  SectorCount OPTIONAL,
-    OUT PULONG  Index
-);
-
-NTKERNELAPI
-PFSRTL_PER_STREAM_CONTEXT
-NTAPI
-FsRtlLookupPerStreamContextInternal (
-    IN PFSRTL_ADVANCED_FCB_HEADER  StreamContext,
-    IN PVOID                       OwnerId OPTIONAL,
-    IN PVOID                       InstanceId OPTIONAL
 );
 
 NTKERNELAPI
@@ -8613,14 +9353,6 @@ FsRtlMdlWriteComplete (
 );
 
 NTKERNELAPI
-NTSTATUS
-NTAPI
-FsRtlNormalizeNtstatus (
-    IN NTSTATUS Exception,
-    IN NTSTATUS GenericException
-);
-
-NTKERNELAPI
 VOID
 NTAPI
 FsRtlNotifyChangeDirectory (
@@ -8631,306 +9363,6 @@ FsRtlNotifyChangeDirectory (
     IN BOOLEAN      WatchTree,
     IN ULONG        CompletionFilter,
     IN PIRP         NotifyIrp
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlNotifyCleanup (
-    IN PNOTIFY_SYNC NotifySync,
-    IN PLIST_ENTRY  NotifyList,
-    IN PVOID        FsContext
-);
-
-typedef BOOLEAN (NTAPI *PCHECK_FOR_TRAVERSE_ACCESS) (
-    IN PVOID                        NotifyContext,
-    IN PVOID                        TargetContext,
-    IN PSECURITY_SUBJECT_CONTEXT    SubjectContext
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlNotifyFilterChangeDirectory (
-    IN PNOTIFY_SYNC                 NotifySync,
-    IN PLIST_ENTRY                  NotifyList,
-    IN PVOID                        FsContext,
-    IN PSTRING                      FullDirectoryName,
-    IN BOOLEAN                      WatchTree,
-    IN BOOLEAN                      IgnoreBuffer,
-    IN ULONG                        CompletionFilter,
-    IN PIRP                         NotifyIrp,
-    IN PCHECK_FOR_TRAVERSE_ACCESS   TraverseCallback OPTIONAL,
-    IN PSECURITY_SUBJECT_CONTEXT    SubjectContext OPTIONAL,
-    IN PFILTER_REPORT_CHANGE        FilterCallback OPTIONAL);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlNotifyFilterReportChange (
-    IN PNOTIFY_SYNC   NotifySync,
-    IN PLIST_ENTRY    NotifyList,
-    IN PSTRING        FullTargetName,
-    IN USHORT         TargetNameOffset,
-    IN PSTRING        StreamName OPTIONAL,
-    IN PSTRING        NormalizedParentName OPTIONAL,
-    IN ULONG          FilterMatch,
-    IN ULONG          Action,
-    IN PVOID          TargetContext,
-    IN PVOID          FilterContext);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlNotifyFullChangeDirectory (
-    IN PNOTIFY_SYNC                 NotifySync,
-    IN PLIST_ENTRY                  NotifyList,
-    IN PVOID                        FsContext,
-    IN PSTRING                      FullDirectoryName,
-    IN BOOLEAN                      WatchTree,
-    IN BOOLEAN                      IgnoreBuffer,
-    IN ULONG                        CompletionFilter,
-    IN PIRP                         NotifyIrp,
-    IN PCHECK_FOR_TRAVERSE_ACCESS   TraverseCallback OPTIONAL,
-    IN PSECURITY_SUBJECT_CONTEXT    SubjectContext OPTIONAL
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlNotifyFullReportChange (
-    IN PNOTIFY_SYNC NotifySync,
-    IN PLIST_ENTRY  NotifyList,
-    IN PSTRING      FullTargetName,
-    IN USHORT       TargetNameOffset,
-    IN PSTRING      StreamName OPTIONAL,
-    IN PSTRING      NormalizedParentName OPTIONAL,
-    IN ULONG        FilterMatch,
-    IN ULONG        Action,
-    IN PVOID        TargetContext
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlNotifyInitializeSync (
-    IN PNOTIFY_SYNC *NotifySync
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlNotifyUninitializeSync (
-    IN PNOTIFY_SYNC *NotifySync
-);
-
-#if (VER_PRODUCTBUILD >= 2195)
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-FsRtlNotifyVolumeEvent (
-    IN PFILE_OBJECT FileObject,
-    IN ULONG        EventCode
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
-
-NTKERNELAPI
-ULONG
-NTAPI
-FsRtlNumberOfRunsInBaseMcb (
-    IN PBASE_MCB Mcb
-);
-
-NTKERNELAPI
-ULONG
-NTAPI
-FsRtlNumberOfRunsInLargeMcb (
-    IN PLARGE_MCB Mcb
-);
-
-NTKERNELAPI
-ULONG
-NTAPI
-FsRtlNumberOfRunsInMcb (
-    IN PMCB Mcb
-);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-FsRtlOplockFsctrl (
-    IN POPLOCK  Oplock,
-    IN PIRP     Irp,
-    IN ULONG    OpenCount
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlOplockIsFastIoPossible (
-    IN POPLOCK Oplock
-);
-
-typedef VOID
-(NTAPI *PFSRTL_STACK_OVERFLOW_ROUTINE) (
-    IN PVOID    Context,
-    IN PKEVENT  Event
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlPostPagingFileStackOverflow (
-    IN PVOID                          Context,
-    IN PKEVENT                        Event,
-    IN PFSRTL_STACK_OVERFLOW_ROUTINE  StackOverflowRoutine
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlPostStackOverflow (
-    IN PVOID                          Context,
-    IN PKEVENT                        Event,
-    IN PFSRTL_STACK_OVERFLOW_ROUTINE  StackOverflowRoutine
-);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-FsRtlRegisterUncProvider (
-    IN OUT PHANDLE      MupHandle,
-    IN PUNICODE_STRING  RedirectorDeviceName,
-    IN BOOLEAN          MailslotsSupported
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlRemoveBaseMcbEntry (
-    IN PBASE_MCB  Mcb,
-    IN LONGLONG   Vbn,
-    IN LONGLONG   SectorCount
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlRemoveLargeMcbEntry (
-    IN PLARGE_MCB  Mcb,
-    IN LONGLONG    Vbn,
-    IN LONGLONG    SectorCount
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlRemoveMcbEntry (
-    IN PMCB   Mcb,
-    IN VBN    Vbn,
-    IN ULONG  SectorCount
-);
-
-NTKERNELAPI
-PFSRTL_PER_STREAM_CONTEXT
-NTAPI
-FsRtlRemovePerStreamContext (
-    IN PFSRTL_ADVANCED_FCB_HEADER  StreamContext,
-    IN PVOID                       OwnerId OPTIONAL,
-    IN PVOID                       InstanceId OPTIONAL
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlResetBaseMcb (
-    IN PBASE_MCB Mcb
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlResetLargeMcb (
-    IN PLARGE_MCB  Mcb,
-    IN BOOLEAN     SelfSynchronized
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlSplitBaseMcb (
-    IN PBASE_MCB  Mcb,
-    IN LONGLONG   Vbn,
-    IN LONGLONG   Amount
-);
-
-NTKERNELAPI
-BOOLEAN
-NTAPI
-FsRtlSplitLargeMcb (
-    IN PLARGE_MCB  Mcb,
-    IN LONGLONG    Vbn,
-    IN LONGLONG    Amount
-);
-
-#define FsRtlSupportsPerStreamContexts(FO) (                       \
-    (BOOLEAN)((NULL != FsRtlGetPerStreamContextPointer(FO) &&     \
-              FlagOn(FsRtlGetPerStreamContextPointer(FO)->Flags2, \
-              FSRTL_FLAG2_SUPPORTS_FILTER_CONTEXTS))               \
-)
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlTruncateBaseMcb (
-    IN PBASE_MCB  Mcb,
-    IN LONGLONG   Vbn
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlTruncateLargeMcb (
-    IN PLARGE_MCB  Mcb,
-    IN LONGLONG    Vbn
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlTruncateMcb (
-    IN PMCB  Mcb,
-    IN VBN   Vbn
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlUninitializeBaseMcb (
-    IN PBASE_MCB Mcb
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlUninitializeLargeMcb (
-    IN PLARGE_MCB Mcb
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlUninitializeMcb (
-    IN PMCB Mcb
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlUninitializeOplock (
-    IN OUT POPLOCK Oplock
 );
 
 NTKERNELAPI
@@ -8969,23 +9401,6 @@ ObReferenceObjectByName (
     OUT PVOID           *Object
 );
 
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-PsAssignImpersonationToken(
-  IN PETHREAD Thread,
-  IN HANDLE Token OPTIONAL);
-
-NTKERNELAPI
-HANDLE
-NTAPI
-PsReferencePrimaryToken(
-  IN OUT PEPROCESS Process);
-
-#endif
-
 #define PsDereferenceImpersonationToken(T)  \
             {if (ARGUMENT_PRESENT(T)) {     \
                 (ObDereferenceObject((T))); \
@@ -9004,14 +9419,6 @@ PsLookupProcessThreadByCid (
 );
 
 NTSYSAPI
-VOID
-NTAPI
-RtlSecondsSince1970ToTime (
-    IN ULONG            SecondsSince1970,
-    OUT PLARGE_INTEGER  Time
-);
-
-NTSYSAPI
 NTSTATUS
 NTAPI
 RtlSetSaclSecurityDescriptor (
@@ -9020,105 +9427,6 @@ RtlSetSaclSecurityDescriptor (
     IN PACL                     Sacl,
     IN BOOLEAN                  SaclDefaulted
 );
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlUnicodeStringToCountedOemString (
-    IN OUT POEM_STRING  DestinationString,
-    IN PCUNICODE_STRING SourceString,
-    IN BOOLEAN          AllocateDestinationString
-);
-
-/* RTL Splay Tree Functions */
-NTSYSAPI
-PRTL_SPLAY_LINKS
-NTAPI
-RtlSplay(PRTL_SPLAY_LINKS Links);
-
-NTSYSAPI
-PRTL_SPLAY_LINKS
-NTAPI
-RtlDelete(PRTL_SPLAY_LINKS Links);
-
-NTSYSAPI
-VOID
-NTAPI
-RtlDeleteNoSplay(
-    PRTL_SPLAY_LINKS Links,
-    PRTL_SPLAY_LINKS *Root
-);
-
-NTSYSAPI
-PRTL_SPLAY_LINKS
-NTAPI
-RtlSubtreeSuccessor(PRTL_SPLAY_LINKS Links);
-
-NTSYSAPI
-PRTL_SPLAY_LINKS
-NTAPI
-RtlSubtreePredecessor(PRTL_SPLAY_LINKS Links);
-
-NTSYSAPI
-PRTL_SPLAY_LINKS
-NTAPI
-RtlRealSuccessor(PRTL_SPLAY_LINKS Links);
-
-NTSYSAPI
-PRTL_SPLAY_LINKS
-NTAPI
-RtlRealPredecessor(PRTL_SPLAY_LINKS Links);
-
-#define RtlIsLeftChild(Links) \
-    (RtlLeftChild(RtlParent(Links)) == (PRTL_SPLAY_LINKS)(Links))
-
-#define RtlIsRightChild(Links) \
-    (RtlRightChild(RtlParent(Links)) == (PRTL_SPLAY_LINKS)(Links))
-
-#define RtlRightChild(Links) \
-    ((PRTL_SPLAY_LINKS)(Links))->RightChild
-
-#define RtlIsRoot(Links) \
-    (RtlParent(Links) == (PRTL_SPLAY_LINKS)(Links))
-
-#define RtlLeftChild(Links) \
-    ((PRTL_SPLAY_LINKS)(Links))->LeftChild
-
-#define RtlParent(Links) \
-    ((PRTL_SPLAY_LINKS)(Links))->Parent
-
-#define RtlInitializeSplayLinks(Links)                  \
-    {                                                   \
-        PRTL_SPLAY_LINKS _SplayLinks;                   \
-        _SplayLinks = (PRTL_SPLAY_LINKS)(Links);        \
-        _SplayLinks->Parent = _SplayLinks;              \
-        _SplayLinks->LeftChild = NULL;                  \
-        _SplayLinks->RightChild = NULL;                 \
-    }
-
-#define RtlInsertAsLeftChild(ParentLinks,ChildLinks)    \
-    {                                                   \
-        PRTL_SPLAY_LINKS _SplayParent;                  \
-        PRTL_SPLAY_LINKS _SplayChild;                   \
-        _SplayParent = (PRTL_SPLAY_LINKS)(ParentLinks); \
-        _SplayChild = (PRTL_SPLAY_LINKS)(ChildLinks);   \
-        _SplayParent->LeftChild = _SplayChild;          \
-        _SplayChild->Parent = _SplayParent;             \
-    }
-
-#define RtlInsertAsRightChild(ParentLinks,ChildLinks)   \
-    {                                                   \
-        PRTL_SPLAY_LINKS _SplayParent;                  \
-        PRTL_SPLAY_LINKS _SplayChild;                   \
-        _SplayParent = (PRTL_SPLAY_LINKS)(ParentLinks); \
-        _SplayChild = (PRTL_SPLAY_LINKS)(ChildLinks);   \
-        _SplayParent->RightChild = _SplayChild;         \
-        _SplayChild->Parent = _SplayParent;             \
-    }
-
-//
-// RTL time functions
-//
 
 #define SeEnableAccessToExports() SeExports = *(PSE_EXPORTS *)SeExports;
 
@@ -9143,18 +9451,6 @@ NTSTATUS
 NTAPI
 ZwAlertThread (
     IN HANDLE ThreadHandle
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwAllocateVirtualMemory (
-    IN HANDLE       ProcessHandle,
-    IN OUT PVOID    *BaseAddress,
-    IN ULONG_PTR    ZeroBits,
-    IN OUT PSIZE_T  RegionSize,
-    IN ULONG        AllocationType,
-    IN ULONG        Protect
 );
 
 NTSYSAPI
@@ -9205,89 +9501,11 @@ ZwCloseObjectAuditAlarm (
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwCreateSection (
-    OUT PHANDLE             SectionHandle,
-    IN ACCESS_MASK          DesiredAccess,
-    IN POBJECT_ATTRIBUTES   ObjectAttributes OPTIONAL,
-    IN PLARGE_INTEGER       MaximumSize OPTIONAL,
-    IN ULONG                SectionPageProtection,
-    IN ULONG                AllocationAttributes,
-    IN HANDLE               FileHandle OPTIONAL
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
 ZwCreateSymbolicLinkObject (
     OUT PHANDLE             SymbolicLinkHandle,
     IN ACCESS_MASK          DesiredAccess,
     IN POBJECT_ATTRIBUTES   ObjectAttributes,
     IN PUNICODE_STRING      TargetName
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwDeleteFile (
-    IN POBJECT_ATTRIBUTES ObjectAttributes
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwDeleteValueKey (
-    IN HANDLE           Handle,
-    IN PUNICODE_STRING  Name
-);
-
-
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwDeviceIoControlFile (
-  IN HANDLE FileHandle,
-  IN HANDLE Event OPTIONAL,
-  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
-  IN PVOID ApcContext OPTIONAL,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  IN ULONG IoControlCode,
-  IN PVOID InputBuffer OPTIONAL,
-  IN ULONG InputBufferLength,
-  OUT PVOID OutputBuffer OPTIONAL,
-  IN ULONG OutputBufferLength);
-#endif
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwDisplayString (
-    IN PUNICODE_STRING String
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwDuplicateObject (
-    IN HANDLE       SourceProcessHandle,
-    IN HANDLE       SourceHandle,
-    IN HANDLE       TargetProcessHandle OPTIONAL,
-    OUT PHANDLE     TargetHandle OPTIONAL,
-    IN ACCESS_MASK  DesiredAccess,
-    IN ULONG        HandleAttributes,
-    IN ULONG        Options
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwDuplicateToken (
-    IN HANDLE               ExistingTokenHandle,
-    IN ACCESS_MASK          DesiredAccess,
-    IN POBJECT_ATTRIBUTES   ObjectAttributes,
-    IN BOOLEAN              EffectiveOnly,
-    IN TOKEN_TYPE           TokenType,
-    OUT PHANDLE             NewTokenHandle
 );
 
 NTSYSAPI
@@ -9312,46 +9530,6 @@ ZwFlushBuffersFile(
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwFlushVirtualMemory (
-    IN HANDLE               ProcessHandle,
-    IN OUT PVOID            *BaseAddress,
-    IN OUT PULONG           FlushSize,
-    OUT PIO_STATUS_BLOCK    IoStatusBlock
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwFreeVirtualMemory (
-    IN HANDLE       ProcessHandle,
-    IN OUT PVOID    *BaseAddress,
-    IN OUT PSIZE_T  RegionSize,
-    IN ULONG        FreeType
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwFsControlFile (
-    IN HANDLE               FileHandle,
-    IN HANDLE               Event OPTIONAL,
-    IN PIO_APC_ROUTINE      ApcRoutine OPTIONAL,
-    IN PVOID                ApcContext OPTIONAL,
-    OUT PIO_STATUS_BLOCK    IoStatusBlock,
-    IN ULONG                FsControlCode,
-    IN PVOID                InputBuffer OPTIONAL,
-    IN ULONG                InputBufferLength,
-    OUT PVOID               OutputBuffer OPTIONAL,
-    IN ULONG                OutputBufferLength
-);
-
-#if (VER_PRODUCTBUILD >= 2195)
-
-NTSYSAPI
-NTSTATUS
-NTAPI
 ZwInitiatePowerAction (
     IN POWER_ACTION         SystemAction,
     IN SYSTEM_POWER_STATE   MinSystemState,
@@ -9364,52 +9542,9 @@ ZwInitiatePowerAction (
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwLoadDriver (
-    /* "\\Registry\\Machine\\System\\CurrentControlSet\\Services\\<DriverName>" */
-    IN PUNICODE_STRING RegistryPath
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
 ZwLoadKey (
     IN POBJECT_ATTRIBUTES KeyObjectAttributes,
     IN POBJECT_ATTRIBUTES FileObjectAttributes
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwNotifyChangeKey (
-    IN HANDLE               KeyHandle,
-    IN HANDLE               EventHandle OPTIONAL,
-    IN PIO_APC_ROUTINE      ApcRoutine OPTIONAL,
-    IN PVOID                ApcContext OPTIONAL,
-    OUT PIO_STATUS_BLOCK    IoStatusBlock,
-    IN ULONG                NotifyFilter,
-    IN BOOLEAN              WatchSubtree,
-    IN PVOID                Buffer,
-    IN ULONG                BufferLength,
-    IN BOOLEAN              Asynchronous
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwOpenDirectoryObject (
-    OUT PHANDLE             DirectoryHandle,
-    IN ACCESS_MASK          DesiredAccess,
-    IN POBJECT_ATTRIBUTES   ObjectAttributes
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwOpenProcess (
-    OUT PHANDLE             ProcessHandle,
-    IN ACCESS_MASK          DesiredAccess,
-    IN POBJECT_ATTRIBUTES   ObjectAttributes,
-    IN PCLIENT_ID           ClientId OPTIONAL
 );
 
 NTSYSAPI
@@ -9441,21 +9576,6 @@ ZwOpenThreadToken (
     OUT PHANDLE     TokenHandle
 );
 
-#if (VER_PRODUCTBUILD >= 2195)
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwPowerInformation (
-    IN POWER_INFORMATION_LEVEL  PowerInformationLevel,
-    IN PVOID                    InputBuffer OPTIONAL,
-    IN ULONG                    InputBufferLength,
-    OUT PVOID                   OutputBuffer OPTIONAL,
-    IN ULONG                    OutputBufferLength
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
-
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -9470,23 +9590,6 @@ NTAPI
 ZwQueryDefaultLocale (
     IN BOOLEAN  ThreadOrSystem,
     OUT PLCID   Locale
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwQueryDirectoryFile (
-    IN HANDLE                   FileHandle,
-    IN HANDLE                   Event OPTIONAL,
-    IN PIO_APC_ROUTINE          ApcRoutine OPTIONAL,
-    IN PVOID                    ApcContext OPTIONAL,
-    OUT PIO_STATUS_BLOCK        IoStatusBlock,
-    OUT PVOID                   FileInformation,
-    IN ULONG                    Length,
-    IN FILE_INFORMATION_CLASS   FileInformationClass,
-    IN BOOLEAN                  ReturnSingleEntry,
-    IN PUNICODE_STRING          FileName OPTIONAL,
-    IN BOOLEAN                  RestartScan
 );
 
 #if (VER_PRODUCTBUILD >= 2195)
@@ -9504,21 +9607,6 @@ ZwQueryDirectoryObject (
     OUT PULONG      ReturnLength OPTIONAL
 );
 
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwQueryEaFile (
-    IN HANDLE               FileHandle,
-    OUT PIO_STATUS_BLOCK    IoStatusBlock,
-    OUT PVOID               Buffer,
-    IN ULONG                Length,
-    IN BOOLEAN              ReturnSingleEntry,
-    IN PVOID                EaList OPTIONAL,
-    IN ULONG                EaListLength,
-    IN PULONG               EaIndex OPTIONAL,
-    IN BOOLEAN              RestartScan
-);
-
 #endif /* (VER_PRODUCTBUILD >= 2195) */
 
 NTSYSAPI
@@ -9530,39 +9618,6 @@ ZwQueryInformationProcess (
     OUT PVOID           ProcessInformation,
     IN ULONG            ProcessInformationLength,
     OUT PULONG          ReturnLength OPTIONAL
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwQueryInformationToken (
-    IN HANDLE                   TokenHandle,
-    IN TOKEN_INFORMATION_CLASS  TokenInformationClass,
-    OUT PVOID                   TokenInformation,
-    IN ULONG                    Length,
-    OUT PULONG                  ResultLength
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwQuerySecurityObject (
-    IN HANDLE                   FileHandle,
-    IN SECURITY_INFORMATION     SecurityInformation,
-    OUT PSECURITY_DESCRIPTOR    SecurityDescriptor,
-    IN ULONG                    Length,
-    OUT PULONG                  ResultLength
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwQueryVolumeInformationFile (
-    IN HANDLE               FileHandle,
-    OUT PIO_STATUS_BLOCK    IoStatusBlock,
-    OUT PVOID               FsInformation,
-    IN ULONG                Length,
-    IN FS_INFORMATION_CLASS FsInformationClass
 );
 
 NTSYSAPI
@@ -9620,25 +9675,7 @@ ZwSetDefaultUILanguage (
     IN LANGID LanguageId
 );
 
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwSetEaFile (
-    IN HANDLE               FileHandle,
-    OUT PIO_STATUS_BLOCK    IoStatusBlock,
-    OUT PVOID               Buffer,
-    IN ULONG                Length
-);
-
 #endif /* (VER_PRODUCTBUILD >= 2195) */
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwSetEvent (
-    IN HANDLE   EventHandle,
-    OUT PLONG   PreviousState OPTIONAL
-);
 
 NTSYSAPI
 NTSTATUS
@@ -9650,19 +9687,6 @@ ZwSetInformationProcess (
     IN ULONG            ProcessInformationLength
 );
 
-#if (VER_PRODUCTBUILD >= 2195)
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwSetSecurityObject (
-    IN HANDLE               Handle,
-    IN SECURITY_INFORMATION SecurityInformation,
-    IN PSECURITY_DESCRIPTOR SecurityDescriptor
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
-
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -9671,53 +9695,12 @@ ZwSetSystemTime (
     OUT PLARGE_INTEGER  OldTime OPTIONAL
 );
 
-#if (VER_PRODUCTBUILD >= 2195)
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwSetVolumeInformationFile (
-    IN HANDLE               FileHandle,
-    OUT PIO_STATUS_BLOCK    IoStatusBlock,
-    IN PVOID                FsInformation,
-    IN ULONG                Length,
-    IN FS_INFORMATION_CLASS FsInformationClass
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwTerminateProcess (
-    IN HANDLE   ProcessHandle OPTIONAL,
-    IN NTSTATUS ExitStatus
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwUnloadDriver (
-    /* "\\Registry\\Machine\\System\\CurrentControlSet\\Services\\<DriverName>" */
-    IN PUNICODE_STRING RegistryPath
-);
-
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwUnloadKey (
     IN POBJECT_ATTRIBUTES KeyObjectAttributes
 );
-
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwWaitForSingleObject (
-  IN HANDLE Handle,
-  IN BOOLEAN Alertable,
-  IN PLARGE_INTEGER Timeout OPTIONAL);
-#endif
 
 NTSYSAPI
 NTSTATUS
