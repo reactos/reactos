@@ -377,28 +377,6 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     NTSTATUS Status;
     PAGED_CODE();
 
-    /* Check if this is kernel mode */
-    if (AccessMode == KernelMode)
-    {
-        /* Check if kernel wants everything */
-        if (DesiredAccess & MAXIMUM_ALLOWED)
-        {
-            /* Give it */
-            *GrantedAccess = GenericMapping->GenericAll;
-            *GrantedAccess |= (DesiredAccess &~ MAXIMUM_ALLOWED);
-            *GrantedAccess |= PreviouslyGrantedAccess;
-        }
-        else
-        {
-            /* Give the desired and previous access */
-            *GrantedAccess = DesiredAccess | PreviouslyGrantedAccess;
-        }
-
-        /* Success */
-        *AccessStatus = STATUS_SUCCESS;
-        return TRUE;
-    }
-
     /* Check if we didn't get an SD */
     if (!SecurityDescriptor)
     {
@@ -467,7 +445,7 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     }
 
     /* RULE 1: Grant desired access if the object is unprotected */
-    if (Present == TRUE && Dacl == NULL)
+    if (Present == FALSE || Dacl == NULL)
     {
         if (SubjectContextLocked == FALSE)
         {
@@ -678,6 +656,30 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
               OUT PACCESS_MASK GrantedAccess,
               OUT PNTSTATUS AccessStatus)
 {
+    PAGED_CODE();
+
+    /* Check if this is kernel mode */
+    if (AccessMode == KernelMode)
+    {
+        /* Check if kernel wants everything */
+        if (DesiredAccess & MAXIMUM_ALLOWED)
+        {
+            /* Give it */
+            *GrantedAccess = GenericMapping->GenericAll;
+            *GrantedAccess |= (DesiredAccess &~ MAXIMUM_ALLOWED);
+            *GrantedAccess |= PreviouslyGrantedAccess;
+        }
+        else
+        {
+            /* Give the desired and previous access */
+            *GrantedAccess = DesiredAccess | PreviouslyGrantedAccess;
+        }
+
+        /* Success */
+        *AccessStatus = STATUS_SUCCESS;
+        return TRUE;
+    }
+
     /* Call the internal function */
     return SepAccessCheck(SecurityDescriptor,
                           SubjectSecurityContext,
