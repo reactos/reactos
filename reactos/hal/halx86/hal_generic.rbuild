@@ -36,6 +36,7 @@
 				</directory>
 			</if>
 			<if property="ARCH" value="amd64">
+			<include base="x86emu">.</include>
 				<directory name="amd64">
 					<file>x86bios.c</file>
 					<file>halinit.c</file>

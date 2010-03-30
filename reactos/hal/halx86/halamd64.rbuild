@@ -11,15 +11,15 @@
 	<define name="_NTHAL_" />
 	<define name="_X86BIOS_" />
 	<library>hal_generic</library>
-	<library>hal_generic_up</library>
+	<library>hal_generic_mp</library>
 	<library>ntoskrnl</library>
-	<!-- library>x86emu</library -->
+	<library>x86emu</library>
 
 	<directory name="mp">
 		<file>halinit_mp.c</file>
 		<file>halmp.rc</file>
 		<directory name="amd64">
-			<!-- file>mps.S</file -->
+			<file>mps.S</file>
 		</directory>
 	</directory>
 </module>
