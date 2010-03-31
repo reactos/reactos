@@ -92,10 +92,26 @@ CmpIsKeyValueBig(IN PHHIVE Hive,
            (CmpTestRegistryLock() == TRUE))
 
 //
+// Makes sure that the registry is locked or loading
+//
+#define CMP_ASSERT_REGISTRY_LOCK_OR_LOADING(h)                      \
+    ASSERT((CmpSpecialBootCondition == TRUE) ||                     \
+           (((PCMHIVE)h)->HiveIsLoading == TRUE) ||                 \
+           (CmpTestRegistryLock() == TRUE))
+
+//
 // Makes sure that the registry is exclusively locked
 //
 #define CMP_ASSERT_EXCLUSIVE_REGISTRY_LOCK()                        \
     ASSERT((CmpSpecialBootCondition == TRUE) ||                     \
+           (CmpTestRegistryLockExclusive() == TRUE))
+
+//
+// Makes sure that the registry is exclusively locked or loading
+//
+#define CMP_ASSERT_EXCLUSIVE_REGISTRY_LOCK_OR_LOADING(h)            \
+    ASSERT((CmpSpecialBootCondition == TRUE) ||                     \
+           (((PCMHIVE)h)->HiveIsLoading == TRUE) ||                 \
            (CmpTestRegistryLockExclusive() == TRUE))
 
 //
@@ -254,6 +270,47 @@ CmpConvertKcbSharedToExclusive(IN PCM_KEY_CONTROL_BLOCK k)
     ExReleasePushLock(&GET_HASH_ENTRY(CmpNameCacheTable,            \
                                       (k)).Lock);                   \
 }
+
+//
+// Asserts that either the registry or the hash entry is locked
+//
+#define CMP_ASSERT_HASH_ENTRY_LOCK(k)                               \
+{                                                                   \
+    ASSERT(((GET_HASH_ENTRY(CmpCacheTable, k).Owner ==              \
+            KeGetCurrentThread())) ||                               \
+           (CmpTestRegistryLockExclusive() == TRUE));               \
+}
+
+//
+// Asserts that either the registry or the KCB is locked
+//
+#define CMP_ASSERT_KCB_LOCK(k)                                      \
+{                                                                   \
+    ASSERT((CmpIsKcbLockedExclusive(k) == TRUE) ||                  \
+           (CmpTestRegistryLockExclusive() == TRUE));               \
+}
+
+//
+// Gets the page attached to the KCB
+//
+#define CmpGetAllocPageFromKcb(k)                                   \
+    (PCM_ALLOC_PAGE)(((ULONG_PTR)(k)) & ~(PAGE_SIZE - 1))
+
+//
+// Gets the page attached to the delayed allocation
+//
+#define CmpGetAllocPageFromDelayAlloc(a)                            \
+    (PCM_ALLOC_PAGE)(((ULONG_PTR)(a)) & ~(PAGE_SIZE - 1))
+
+//
+// Makes sure that the registry is locked for flushes
+//
+#define CMP_ASSERT_FLUSH_LOCK(h)                                    \
+    ASSERT((CmpSpecialBootCondition == TRUE) ||                     \
+           (((PCMHIVE)h)->HiveIsLoading == TRUE) ||                 \
+           (CmpTestHiveFlusherLockShared((PCMHIVE)h) == TRUE) ||    \
+           (CmpTestHiveFlusherLockExclusive((PCMHIVE)h) == TRUE) || \
+           (CmpTestRegistryLockExclusive() == TRUE));
 
 //
 // Asserts that either the registry or the KCB is locked
