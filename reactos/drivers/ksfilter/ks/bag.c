@@ -127,7 +127,7 @@ KsAddItemToObjectBag(
         BagEntry->Free = ExFreePool;
 
     /* insert item */
-    InsertTailList(&Bag->ObjectList, &Bag->Entry);
+    InsertTailList(&Bag->ObjectList, &BagEntry->Entry);
 
     /* release mutex */
     KeReleaseMutex(Bag->BagMutex, FALSE);

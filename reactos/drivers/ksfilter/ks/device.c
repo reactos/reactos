@@ -74,7 +74,7 @@ IKsDevice_fnInitializeObjectBag(
     if (!Mutex)
     {
         /* use device mutex */
-        Mutex = &This->DeviceMutex;
+        Mutex = &This->BagMutex;
     }
 
     /* initialize object bag */
@@ -220,12 +220,10 @@ IKsDevice_PnpPostStart(
     PPNP_POSTSTART_CONTEXT Ctx = (PPNP_POSTSTART_CONTEXT)Context;
 
     /* call driver pnp post routine */
-    Status = Ctx->DeviceHeader->Descriptor->Dispatch->PostStart(&Ctx->DeviceHeader->KsDevice);
+    Status = Ctx->DeviceHeader->KsDevice.Descriptor->Dispatch->PostStart(&Ctx->DeviceHeader->KsDevice);
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Driver: PostStart Routine returned %x\n", Status);
-
         /* set state to disabled */
         Ctx->DeviceHeader->TargetState  = KSTARGET_STATE_DISABLED;
     }
@@ -240,6 +238,8 @@ IKsDevice_PnpPostStart(
 
     /* free work context */
     FreeItem(Ctx);
+
+    DPRINT("IKsDevice_PnpPostStart: PostStart Routine returned %x\n", Status);
 }
 
 NTSTATUS
@@ -253,6 +253,10 @@ IKsDevice_PnpStartDevice(
     PKSIDEVICE_HEADER DeviceHeader;
     PPNP_POSTSTART_CONTEXT Ctx = NULL;
     NTSTATUS Status;
+    PCM_RESOURCE_LIST TranslatedResourceList;
+    PCM_RESOURCE_LIST UntranslatedResourceList;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor, UnPartialDescriptor;
+    ULONG Index;
 
     /* get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -260,6 +264,8 @@ IKsDevice_PnpStartDevice(
     DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
     /* get device header */
     DeviceHeader = DeviceExtension->DeviceHeader;
+
+    DPRINT("IKsDevice_PnpStartDevice DeviceHeader %p\n", DeviceHeader);
 
     /* first forward irp to lower device object */
     Status = KspForwardIrpSynchronous(DeviceObject, Irp);
@@ -273,20 +279,55 @@ IKsDevice_PnpStartDevice(
         return Status;
     }
 
+    TranslatedResourceList = IoStack->Parameters.StartDevice.AllocatedResourcesTranslated;
+    UntranslatedResourceList = IoStack->Parameters.StartDevice.AllocatedResources;
+
+    DPRINT("ResourceDescriptorCount %lu\n", TranslatedResourceList->List[0].PartialResourceList.Count);
+    for (Index = 0; Index < TranslatedResourceList->List[0].PartialResourceList.Count; Index ++ )
+    {
+        PartialDescriptor = &TranslatedResourceList->List[0].PartialResourceList.PartialDescriptors[Index];
+        UnPartialDescriptor = &UntranslatedResourceList->List[0].PartialResourceList.PartialDescriptors[Index];
+        DPRINT("Descriptor Type %u\n", PartialDescriptor->Type);
+
+        if (PartialDescriptor->Type == CmResourceTypeInterrupt)
+        {
+            DPRINT("CmResourceTypeInterrupt Index %u TRANS   Interrupt Number Affinity %x Level %u Vector %u Flags %x Share %x\n", Index, PartialDescriptor->u.Interrupt.Affinity, PartialDescriptor->u.Interrupt.Level, PartialDescriptor->u.Interrupt.Vector, PartialDescriptor->Flags, PartialDescriptor->ShareDisposition);
+            DPRINT("CmResourceTypeInterrupt Index %u UNTRANS Interrupt Number Affinity %x Level %u Vector %u Flags %x Share %x\\n", Index, UnPartialDescriptor->u.Interrupt.Affinity, UnPartialDescriptor->u.Interrupt.Level, UnPartialDescriptor->u.Interrupt.Vector, UnPartialDescriptor->Flags, UnPartialDescriptor->ShareDisposition);
+
+        }
+        else if (PartialDescriptor->Type == CmResourceTypePort)
+        {
+            DPRINT("CmResourceTypePort Index %u TRANS    Port Length %u Start %u %u Flags %x Share %x\n", Index, PartialDescriptor->u.Port.Length, PartialDescriptor->u.Port.Start.HighPart, PartialDescriptor->u.Port.Start.LowPart, PartialDescriptor->Flags, PartialDescriptor->ShareDisposition);
+            DPRINT("CmResourceTypePort Index %u UNTRANS  Port Length %u Start %u %u Flags %x Share %x\n", Index, UnPartialDescriptor->u.Port.Length, UnPartialDescriptor->u.Port.Start.HighPart, UnPartialDescriptor->u.Port.Start.LowPart, UnPartialDescriptor->Flags, UnPartialDescriptor->ShareDisposition);
+        }
+        else if (PartialDescriptor->Type == CmResourceTypeMemory)
+        {
+            DPRINT("CmResourceTypeMemory Index %u TRANS  Start %x Length %u Flags %x Share %x\n", Index, PartialDescriptor->u.Memory.Start.LowPart, PartialDescriptor->u.Memory.Length, PartialDescriptor->Flags, PartialDescriptor->ShareDisposition);
+            DPRINT("CmResourceTypeMemory Index %u TRANS  Start %x Length %u Flags %x Share %x\n", Index, UnPartialDescriptor->u.Memory.Start.LowPart, UnPartialDescriptor->u.Memory.Length, UnPartialDescriptor->Flags, UnPartialDescriptor->ShareDisposition);
+        }
+    }
+
+    ASSERT(DeviceHeader->KsDevice.Descriptor);
+    ASSERT(DeviceHeader->KsDevice.Descriptor->Dispatch);
+    ASSERT(DeviceHeader->KsDevice.Descriptor->Dispatch->Start);
+
+
     /* do we have a device descriptor */
-    if (DeviceHeader->Descriptor)
+    if (DeviceHeader->KsDevice.Descriptor)
     {
         /* does the device want pnp notifications */
-        if (DeviceHeader->Descriptor->Dispatch)
+        if (DeviceHeader->KsDevice.Descriptor->Dispatch)
         {
             /* does the driver care about IRP_MN_START_DEVICE */
-            if (DeviceHeader->Descriptor->Dispatch->Start)
+            if (DeviceHeader->KsDevice.Descriptor->Dispatch->Start)
             {
                 /* call driver start device routine */
-                Status = DeviceHeader->Descriptor->Dispatch->Start(&DeviceHeader->KsDevice, Irp,
-                                                                   IoStack->Parameters.StartDevice.AllocatedResourcesTranslated,
-                                                                   IoStack->Parameters.StartDevice.AllocatedResources);
+                Status = DeviceHeader->KsDevice.Descriptor->Dispatch->Start(&DeviceHeader->KsDevice, Irp,
+                                                                   TranslatedResourceList,
+                                                                   UntranslatedResourceList);
 
+
+                DPRINT("IKsDevice_PnpStartDevice Start %p, Context %p\n", DeviceHeader->KsDevice.Descriptor->Dispatch->Start, DeviceHeader->KsDevice.Context);
                 ASSERT(Status != STATUS_PENDING);
 
                 if (!NT_SUCCESS(Status))
@@ -303,7 +344,7 @@ IKsDevice_PnpStartDevice(
             }
 
             /* does the driver need post start routine */
-            if (DeviceHeader->Descriptor->Dispatch->PostStart)
+            if (DeviceHeader->KsDevice.Descriptor->Dispatch->PostStart)
             {
                 /* allocate pnp post workitem context */
                 Ctx = (PPNP_POSTSTART_CONTEXT)AllocateItem(NonPagedPool, sizeof(PNP_POSTSTART_CONTEXT));
@@ -351,6 +392,7 @@ IKsDevice_PnpStartDevice(
     }
 
     /* return result */
+    DPRINT1("IKsDevice_PnpStartDevice Status %x PostStartRoutine %p\n", Status, Ctx);
     return Status;
 }
 
@@ -375,10 +417,10 @@ IKsDevice_Pnp(
     DeviceHeader = DeviceExtension->DeviceHeader;
 
     /* do we have a device descriptor */
-    if (DeviceHeader->Descriptor)
+    if (DeviceHeader->KsDevice.Descriptor && DeviceHeader->KsDevice.Descriptor->Dispatch)
     {
         /* does the device want pnp notifications */
-        Dispatch = (PKSDEVICE_DISPATCH)DeviceHeader->Descriptor->Dispatch;
+        Dispatch = (PKSDEVICE_DISPATCH)DeviceHeader->KsDevice.Descriptor->Dispatch;
     }
 
     switch (IoStack->MinorFunction)
@@ -472,7 +514,7 @@ IKsDevice_Pnp(
             /* pass the irp down the driver stack */
             Status = KspForwardIrpSynchronous(DeviceObject, Irp);
 
-            DPRINT("Next Device: Status %x\n", Status);
+            DPRINT1("IRP_MN_QUERY_INTERFACE Next Device: Status %x\n", Status);
 
             Irp->IoStatus.Status = Status;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -480,36 +522,32 @@ IKsDevice_Pnp(
         }
         case IRP_MN_QUERY_DEVICE_RELATIONS:
         {
-            DPRINT("IRP_MN_QUERY_DEVICE_RELATIONS\n");
-
             /* pass the irp down the driver stack */
             Status = KspForwardIrpSynchronous(DeviceObject, Irp);
 
-            DPRINT("Next Device: Status %x\n", Status);
+            DPRINT("IRP_MN_QUERY_DEVICE_RELATIONS Next Device: Status %x\n", Status);
 
-            Irp->IoStatus.Status = Status;
+            //Irp->IoStatus.Status = Status;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
             return Status;
         }
         case IRP_MN_FILTER_RESOURCE_REQUIREMENTS:
         {
-            DPRINT("IRP_MN_FILTER_RESOURCE_REQUIREMENTS\n");
             /* pass the irp down the driver stack */
-            Status = KspForwardIrpSynchronous(DeviceObject, Irp);
+            //Status = KspForwardIrpSynchronous(DeviceObject, Irp);
+            Status = Irp->IoStatus.Status;
+            DPRINT("IRP_MN_FILTER_RESOURCE_REQUIREMENTS Next Device: Status %x\n", Status);
 
-            DPRINT("Next Device: Status %x\n", Status);
-
-            Irp->IoStatus.Status = Status;
+            //Irp->IoStatus.Status = Status;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
             return Status;
         }
        case IRP_MN_QUERY_RESOURCE_REQUIREMENTS:
        {
-            DPRINT("IRP_MN_QUERY_RESOURCE_REQUIREMENTS\n");
             /* pass the irp down the driver stack */
             Status = KspForwardIrpSynchronous(DeviceObject, Irp);
 
-            DPRINT("Next Device: Status %x\n", Status);
+            DPRINT("IRP_MN_QUERY_RESOURCE_REQUIREMENTS Next Device: Status %x\n", Status);
 
             Irp->IoStatus.Status = Status;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -552,7 +590,7 @@ IKsDevice_Create(
     PKSIOBJECT_HEADER ObjectHeader;
     NTSTATUS Status;
 
-    DPRINT("KS / CREATE\n");
+    DPRINT("IKsDevice_Create\n");
     /* get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     /* get device extension */
@@ -630,8 +668,10 @@ KsInitializeDevice(
     PDEVICE_EXTENSION DeviceExtension;
     PKSIDEVICE_HEADER Header;
     ULONG Index;
-    IKsDevice * KsDevice;
+    PKSIOBJECT_BAG Bag;
     NTSTATUS Status = STATUS_SUCCESS;
+
+    DPRINT("KsInitializeDevice Descriptor %p\n", Descriptor);
 
     /* get device extension */
     DeviceExtension = (PDEVICE_EXTENSION)FunctionalDeviceObject->DeviceExtension;
@@ -642,10 +682,13 @@ KsInitializeDevice(
     /* point to allocated header */
     Header = DeviceExtension->DeviceHeader;
 
+    DPRINT("DeviceHeader %p\n", DeviceExtension->DeviceHeader);
+
+
     /* check for success */
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to allocate device header with %x\n", Status);
+        DPRINT1("KsInitializeDevice Failed to allocate device header with %x\n", Status);
         return Status;
     }
 
@@ -653,7 +696,7 @@ KsInitializeDevice(
     Header->lpVtblIKsDevice = &vt_IKsDevice;
     Header->ref = 1;
 
-    /* initialize object bag */
+    /* allocate object bag */
     Header->KsDevice.Bag = AllocateItem(NonPagedPool, sizeof(KSIOBJECT_BAG));
     if (!Header->KsDevice.Bag)
     {
@@ -662,25 +705,41 @@ KsInitializeDevice(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    KsDevice = (IKsDevice*)&DeviceExtension->DeviceHeader->lpVtblIKsDevice;
-    KsDevice->lpVtbl->InitializeObjectBag(KsDevice, Header->KsDevice.Bag, NULL);
+    /* initialize object bag */
+    KeInitializeMutex(&Header->BagMutex, 0);
+    KeInitializeMutex(&Header->DeviceMutex, 0);
 
+    Bag = (PKSIOBJECT_BAG)Header->KsDevice.Bag;
+    Bag->BagMutex = &Header->BagMutex;
+    InitializeListHead(&Header->ObjectBags);
+    InitializeListHead(&Bag->ObjectList);
+    Bag->DeviceHeader = (PVOID)Header;
+
+    /* insert bag into device list */
+    InsertTailList(&Header->ObjectBags, &Bag->Entry);
 
     /* initialize device header */
     Header->KsDevice.FunctionalDeviceObject = FunctionalDeviceObject;
     Header->KsDevice.PhysicalDeviceObject = PhysicalDeviceObject;
     Header->KsDevice.NextDeviceObject = NextDeviceObject;
     Header->KsDevice.Descriptor = Descriptor;
+    Header->KsDevice.SystemPowerState = PowerSystemWorking;
+    Header->KsDevice.DevicePowerState = PowerDeviceD0;
+    Header->KsDevice.Started = FALSE;
+    Header->KsDevice.Context = NULL;
     KsSetDevicePnpAndBaseObject(Header, PhysicalDeviceObject, NextDeviceObject);
 
-    /* FIXME Power state */
+
 
     if (Descriptor)
     {
         /* create a filter factory for each filter descriptor */
+        DPRINT("KsInitializeDevice FilterDescriptorCount %lu\n", Descriptor->FilterDescriptorsCount);
         for(Index = 0; Index < Descriptor->FilterDescriptorsCount; Index++)
         {
             Status = KspCreateFilterFactory(FunctionalDeviceObject, Descriptor->FilterDescriptors[Index], NULL, NULL, 0, NULL, NULL, NULL);
+
+            DPRINT("KsInitializeDevice Index %lu KspCreateFilterFactory Status %lx\n", Index, Status);
             /* check for success */
             if (!NT_SUCCESS(Status))
             {
@@ -697,6 +756,7 @@ KsInitializeDevice(
             Status = Descriptor->Dispatch->Add(&Header->KsDevice);
 
             DPRINT("Driver: AddHandler Status %x\n", Status);
+            Header->KsDevice.Descriptor = Descriptor;
         }
     }
 

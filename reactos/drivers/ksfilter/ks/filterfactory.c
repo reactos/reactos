@@ -338,6 +338,8 @@ KspCreateFilterFactory(
     IKsFilterFactory * Filter;
     NTSTATUS Status;
 
+    DPRINT("KsCreateFilterFactory\n");
+
     /* Lets allocate a filterfactory */
     This = AllocateItem(NonPagedPool, sizeof(IKsFilterFactoryImpl));
     if (!This)
@@ -465,7 +467,8 @@ KsFilterFactoryUpdateCacheData (
     IN const KSFILTER_DESCRIPTOR*  FilterDescriptor OPTIONAL)
 {
     UNIMPLEMENTED
+    DPRINT("KsFilterFactoryUpdateCacheData %p\n", FilterDescriptor);
 
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_SUCCESS;
 }	
 

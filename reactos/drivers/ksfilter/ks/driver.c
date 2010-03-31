@@ -39,6 +39,8 @@ KsGetDevice(
 {
     PKSBASIC_HEADER BasicHeader = (PKSBASIC_HEADER)(ULONG_PTR)Object - sizeof(KSBASIC_HEADER);
 
+    DPRINT("KsGetDevice %p\n", Object);
+
     ASSERT(BasicHeader->Type == KsObjectTypeFilterFactory || BasicHeader->Type == KsObjectTypeFilter || BasicHeader->Type == BasicHeader->Type);
 
     return BasicHeader->KsDevice;
@@ -62,6 +64,8 @@ KsCreateDevice(
     PDEVICE_OBJECT OldHighestDeviceObject;
     if (!ExtensionSize)
         ExtensionSize = sizeof(KSDEVICE_HEADER);
+
+    DPRINT("KsCreateDevice Descriptor %p ExtensionSize %lu\n", Descriptor, ExtensionSize);
 
     Status = IoCreateDevice(DriverObject, ExtensionSize, NULL, FILE_DEVICE_KS, FILE_DEVICE_SECURE_OPEN, FALSE, &FunctionalDeviceObject);
     if (!NT_SUCCESS(Status))
@@ -120,7 +124,8 @@ KsAddDevice(
     const KSDEVICE_DESCRIPTOR *Descriptor = NULL;
 
     /* get stored driver object extension */
-    DriverObjectExtension = IoGetDriverObjectExtension(DriverObject, (PVOID)KsAddDevice);
+
+    DriverObjectExtension = IoGetDriverObjectExtension(DriverObject, (PVOID)KsInitializeDriver);
 
     if (DriverObjectExtension)
     {
@@ -144,16 +149,22 @@ KsInitializeDriver(
 )
 {
     PKS_DRIVER_EXTENSION DriverObjectExtension;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     if (Descriptor)
     {
-        Status = IoAllocateDriverObjectExtension(DriverObject, (PVOID)KsAddDevice, sizeof(KS_DRIVER_EXTENSION), (PVOID*)&DriverObjectExtension);
+        Status = IoAllocateDriverObjectExtension(DriverObject, (PVOID)KsInitializeDriver, sizeof(KS_DRIVER_EXTENSION), (PVOID*)&DriverObjectExtension);
         if (NT_SUCCESS(Status))
         {
             DriverObjectExtension->Descriptor = Descriptor;
         }
     }
+
+    /* sanity check */
+    ASSERT(Status == STATUS_SUCCESS);
+
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     /* Setting our IRP handlers */
     DriverObject->MajorFunction[IRP_MJ_CREATE] = IKsDevice_Create;
@@ -168,7 +179,7 @@ KsInitializeDriver(
     DriverObject->DriverExtension->AddDevice = KsAddDevice;
 
     /* KS handles these */
-    DPRINT1("Setting KS function handlers\n");
+    DPRINT1("KsInitializeDriver Setting KS function handlers\n");
     KsSetMajorFunctionHandler(DriverObject, IRP_MJ_CLOSE);
     KsSetMajorFunctionHandler(DriverObject, IRP_MJ_DEVICE_CONTROL);
 
