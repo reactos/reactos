@@ -58,6 +58,7 @@
 		<directory name="generic">
 		    <directory name="acpi">
 		        <file>halacpi.c</file>
+		        <file>halpnpdd.c</file>
 		    </directory>
 			<directory name="bus">
 				<file>bushndlr.c</file>

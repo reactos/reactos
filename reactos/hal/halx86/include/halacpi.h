@@ -227,4 +227,11 @@ HalpSetupAcpiPhase0(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
+PVOID
+NTAPI
+HalAcpiGetTable(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock,
+    IN ULONG Signature
+);
+
 /* EOF */

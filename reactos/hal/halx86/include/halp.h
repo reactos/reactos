@@ -697,6 +697,16 @@ HalpMapPhysicalMemory64(
     IN ULONG PageCount
 );
 
+NTSTATUS 
+NTAPI
+HalpOpenRegistryKey(
+    IN PHANDLE KeyHandle,
+    IN HANDLE RootKey,
+    IN PUNICODE_STRING KeyName,
+    IN ACCESS_MASK DesiredAccess, 
+    IN BOOLEAN Create
+);
+
 VOID
 FASTCALL
 KeUpdateSystemTime(
