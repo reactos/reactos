@@ -4071,6 +4071,14 @@ KsCreateFilterFactory(
 KSDDKAPI
 NTSTATUS
 NTAPI
+KsFilterFactorySetDeviceClassesState(
+    IN PKSFILTERFACTORY FilterFactory,
+    IN BOOLEAN NewState
+    );
+
+KSDDKAPI
+NTSTATUS
+NTAPI
 KsFilterFactoryUpdateCacheData(
     IN PKSFILTERFACTORY FilterFactory,
     IN const KSFILTER_DESCRIPTOR *FilterDescriptor OPTIONAL
