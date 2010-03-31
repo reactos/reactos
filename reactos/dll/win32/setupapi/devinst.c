@@ -3699,8 +3699,209 @@ BOOL WINAPI SetupDiOpenDeviceInterfaceW(
        DWORD OpenFlags,
        PSP_DEVICE_INTERFACE_DATA DeviceInterfaceData)
 {
-    FIXME("%p %s %08x %p\n",
+    struct DeviceInfoSet * list;
+    PCWSTR pEnd;
+    DWORD dwLength, dwError, dwIndex, dwKeyName, dwSubIndex;
+    CLSID ClassId;
+    WCHAR Buffer[MAX_PATH + 1];
+    WCHAR SymBuffer[MAX_PATH + 1];
+    WCHAR InstancePath[MAX_PATH + 1];
+    HKEY hKey, hDevKey, hSymKey;
+    struct DeviceInfo * deviceInfo;
+    struct DeviceInterface *deviceInterface;
+    BOOL Ret;
+    PLIST_ENTRY ItemList;
+    PLIST_ENTRY InterfaceListEntry;
+
+    TRACE("%p %s %08x %p\n",
         DeviceInfoSet, debugstr_w(DevicePath), OpenFlags, DeviceInterfaceData);
+
+
+    if (DeviceInterfaceData && DeviceInterfaceData->cbSize != sizeof(SP_DEVICE_INTERFACE_DATA))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    list = (struct DeviceInfoSet * )DeviceInfoSet;
+
+    dwLength = wcslen(DevicePath);
+    if (dwLength < 39)
+    {
+        /* path must be at least a guid length + L'\0' */
+        SetLastError(ERROR_BAD_PATHNAME);
+        return FALSE;
+    }
+
+    if (DevicePath[0] != L'\\' ||
+        DevicePath[1] != L'\\' ||
+        (DevicePath[2] != L'?' && DevicePath[2] != L'.') ||
+        DevicePath[3] != L'\\')
+    {
+        /* invalid formatted path */
+        SetLastError(ERROR_BAD_PATHNAME);
+        return FALSE;
+    }
+
+    /* check for reference strings */
+    pEnd = wcschr(&DevicePath[4], L'\\');
+    if (!pEnd)
+    {
+        /* no reference string */
+        pEnd = DevicePath + dwLength;
+    }
+
+    /* copy guid */
+    wcscpy(Buffer, pEnd - 37);
+    Buffer[36] = L'\0';
+
+    dwError = UuidFromStringW(Buffer, &ClassId);
+    if (dwError != NOERROR)
+    {
+        /* invalid formatted path */
+        SetLastError(ERROR_BAD_PATHNAME);
+        return FALSE;
+    }
+
+    hKey = SetupDiOpenClassRegKeyExW(&ClassId, KEY_READ, DIOCR_INTERFACE, list->MachineName, NULL);
+
+    if (hKey == INVALID_HANDLE_VALUE)
+    {
+        /* invalid device class */
+        return FALSE;
+    }
+
+    ItemList = list->ListHead.Flink;
+    while (ItemList != &list->ListHead)
+    {
+        deviceInfo = CONTAINING_RECORD(ItemList, struct DeviceInfo, ListEntry);
+        InterfaceListEntry = deviceInfo->InterfaceListHead.Flink;
+        while (InterfaceListEntry != &deviceInfo->InterfaceListHead)
+        {
+            deviceInterface = CONTAINING_RECORD(InterfaceListEntry, struct DeviceInterface, ListEntry);
+            if (!IsEqualIID(&deviceInterface->InterfaceClassGuid, &ClassId))
+            {
+                InterfaceListEntry = InterfaceListEntry->Flink;
+                continue;
+            }
+
+            if (!wcsicmp(deviceInterface->SymbolicLink, DevicePath))
+            {
+                if (DeviceInterfaceData)
+                {
+                    DeviceInterfaceData->Reserved = (ULONG_PTR)deviceInterface;
+                    DeviceInterfaceData->Flags = deviceInterface->Flags;
+                    CopyMemory(&DeviceInterfaceData->InterfaceClassGuid, &ClassId, sizeof(GUID));
+                }
+
+                return TRUE;
+            }
+
+        }
+    }
+
+
+    dwIndex = 0;
+    do
+    {
+        Buffer[0] = 0;
+        dwKeyName = sizeof(Buffer) / sizeof(WCHAR);
+        dwError = RegEnumKeyExW(hKey, dwIndex, Buffer, &dwKeyName, NULL, NULL, NULL, NULL);
+
+        if (dwError != ERROR_SUCCESS)
+            break;
+
+        if (RegOpenKeyExW(hKey, Buffer, 0, KEY_READ, &hDevKey) != ERROR_SUCCESS)
+            break;
+
+        dwSubIndex = 0;
+        InstancePath[0] = 0;
+        dwKeyName = sizeof(InstancePath);
+
+        dwError = RegQueryValueExW(hDevKey, L"DeviceInstance", NULL, NULL, (LPBYTE)InstancePath, &dwKeyName);
+
+        while(TRUE)
+        {
+            Buffer[0] = 0;
+            dwKeyName = sizeof(Buffer) / sizeof(WCHAR);
+            dwError = RegEnumKeyExW(hDevKey, dwSubIndex, Buffer, &dwKeyName, NULL, NULL, NULL, NULL);
+
+            if (dwError != ERROR_SUCCESS)
+                break;
+
+            dwError = RegOpenKeyExW(hDevKey, Buffer, 0, KEY_READ, &hSymKey);
+            if (dwError != ERROR_SUCCESS)
+                break;
+
+            /* query for symbolic link */
+            dwKeyName = sizeof(SymBuffer);
+            SymBuffer[0] = L'\0';
+            dwError = RegQueryValueExW(hSymKey, L"SymbolicLink", NULL, NULL, (LPBYTE)SymBuffer, &dwKeyName);
+
+            if (dwError != ERROR_SUCCESS)
+            {
+                RegCloseKey(hSymKey);
+                break;
+            }
+
+            if (!wcsicmp(SymBuffer, DevicePath))
+            {
+                Ret = CreateDeviceInfo(list, InstancePath, &ClassId, &deviceInfo);
+                RegCloseKey(hSymKey);
+                RegCloseKey(hDevKey);
+                RegCloseKey(hKey);
+
+                if (Ret)
+                {
+                    deviceInterface = HeapAlloc(GetProcessHeap(), 0, sizeof(struct DeviceInterface) + (wcslen(SymBuffer) + 1) * sizeof(WCHAR));
+                    if (deviceInterface)
+                    {
+
+                        CopyMemory(&deviceInterface->InterfaceClassGuid, &ClassId, sizeof(GUID));
+                        deviceInterface->DeviceInfo = deviceInfo;
+                        deviceInterface->Flags = SPINT_ACTIVE; //FIXME
+
+                        wcscpy(deviceInterface->SymbolicLink, SymBuffer);
+
+                        InsertTailList(&deviceInfo->InterfaceListHead, &deviceInterface->ListEntry);
+                        InsertTailList(&list->ListHead, &deviceInfo->ListEntry);
+
+
+                        if (DeviceInterfaceData)
+                        {
+                            DeviceInterfaceData->Reserved = (ULONG_PTR)deviceInterface;
+                            DeviceInterfaceData->Flags = deviceInterface->Flags;
+                            CopyMemory(&DeviceInterfaceData->InterfaceClassGuid, &ClassId, sizeof(GUID));
+                        }
+                        else
+                        {
+                            Ret = FALSE;
+                            SetLastError(ERROR_INVALID_USER_BUFFER);
+                        }
+                    }
+                }
+                else
+                {
+                    HeapFree(GetProcessHeap(), 0, deviceInfo);
+                    Ret = FALSE;
+                }
+                return Ret;
+        }
+        RegCloseKey(hSymKey);
+        dwSubIndex++;
+    }
+
+    RegCloseKey(hDevKey);
+    dwIndex++;
+    }while(TRUE);
+
+    RegCloseKey(hKey);
     return FALSE;
 }
 
