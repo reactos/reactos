@@ -681,7 +681,21 @@ HalpReleaseCmosSpinLock(
     VOID
 );
 
-
+ULONG
+NTAPI
+HalpAllocPhysicalMemory(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock,
+    IN ULONG MaxAddress,
+    IN ULONG PageCount,
+    IN BOOLEAN Aligned
+);
+                        
+PVOID
+NTAPI
+HalpMapPhysicalMemory64(
+    IN PHYSICAL_ADDRESS PhysicalAddress,
+    IN ULONG PageCount
+);
 
 VOID
 FASTCALL

@@ -28,32 +28,6 @@ HalpCheckPowerButton(VOID)
     return;
 }
 
-#ifndef _MINIHAL_
-PVOID
-NTAPI
-HalpMapPhysicalMemory64(IN PHYSICAL_ADDRESS PhysicalAddress,
-                        IN ULONG NumberPage)
-{
-    //
-    // Use kernel memory manager I/O map facilities
-    //
-    return MmMapIoSpace(PhysicalAddress,
-                        NumberPage << PAGE_SHIFT,
-                        MmNonCached);
-}
-
-VOID
-NTAPI
-HalpUnmapVirtualAddress(IN PVOID VirtualAddress,
-                        IN ULONG NumberPages)
-{
-    //
-    // Use kernel memory manager I/O map facilities
-    //
-    MmUnmapIoSpace(VirtualAddress, NumberPages << PAGE_SHIFT);
-}
-#endif
-
 VOID
 NTAPI
 HalpFlushTLB(VOID)

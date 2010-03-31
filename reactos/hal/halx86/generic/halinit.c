@@ -14,9 +14,224 @@
 
 /* GLOBALS *******************************************************************/
 
+/* Share with Mm headers? */
+#define MM_HAL_VA_START     (PVOID)0xFFC00000
+#define MM_HAL_HEAP_START   (PVOID)((ULONG_PTR)MM_HAL_VA_START + (1024 * 1024))
+
 BOOLEAN HalpPciLockSettings;
+ULONG HalpUsedAllocDescriptors;
+MEMORY_ALLOCATION_DESCRIPTOR HalpAllocationDescriptorArray[64];
+PVOID HalpHeapStart = MM_HAL_HEAP_START;
 
 /* PRIVATE FUNCTIONS *********************************************************/
+
+ULONG
+NTAPI
+HalpAllocPhysicalMemory(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
+                        IN ULONG MaxAddress,
+                        IN ULONG PageCount,
+                        IN BOOLEAN Aligned)
+{
+    ULONG UsedDescriptors, Alignment, PhysicalAddress;
+    PFN_NUMBER MaxPage, BasePage;
+    PLIST_ENTRY NextEntry;
+    PMEMORY_ALLOCATION_DESCRIPTOR MdBlock, NewBlock, FreeBlock;
+    
+    /* Highest page we'll go */
+    MaxPage = MaxAddress >> PAGE_SHIFT;
+    
+    /* We need at least two blocks */
+    if ((HalpUsedAllocDescriptors + 2) > 64) return 0;
+    
+    /* Remember how many we have now */
+    UsedDescriptors = HalpUsedAllocDescriptors;
+        
+    /* Loop the loader block memory descriptors */
+    NextEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
+    while (NextEntry != &LoaderBlock->MemoryDescriptorListHead)
+    {
+        /* Get the block */
+        MdBlock = CONTAINING_RECORD(NextEntry,
+                                    MEMORY_ALLOCATION_DESCRIPTOR,
+                                    ListEntry);
+        
+        /* No alignment by default */
+        Alignment = 0;
+        
+        /* Unless requested, in which case we use a 64KB block alignment */
+        if (Aligned) Alignment = ((MdBlock->BasePage + 0x0F) & ~0x0F) - MdBlock->BasePage;
+        
+        /* Search for free memory */
+        if ((MdBlock->MemoryType == LoaderFree) ||
+            (MdBlock->MemoryType == MemoryFirmwareTemporary))
+        {
+            /* Make sure the page is within bounds, including alignment */
+            BasePage = MdBlock->BasePage;
+            if ((BasePage) &&
+                (MdBlock->PageCount >= PageCount + Alignment) &&
+                (BasePage + PageCount + Alignment < MaxPage))
+            {
+                
+                /* We found an address */
+                PhysicalAddress = (BasePage + Alignment) << PAGE_SHIFT;
+                break;
+            }
+        }
+        
+        /* Keep trying */
+        NextEntry = NextEntry->Flink;
+    }
+    
+    /* If we didn't find anything, get out of here */
+    if (NextEntry == &LoaderBlock->MemoryDescriptorListHead) return 0;
+    
+    /* Okay, now get a descriptor */
+    NewBlock = &HalpAllocationDescriptorArray[HalpUsedAllocDescriptors];
+    NewBlock->PageCount = PageCount;
+    NewBlock->BasePage = MdBlock->BasePage + Alignment;
+    NewBlock->MemoryType = LoaderHALCachedMemory;
+    
+    /* Update count */
+    UsedDescriptors++;
+    HalpUsedAllocDescriptors = UsedDescriptors;
+    
+    /* Check if we had any alignment */
+    if (Alignment)
+    {
+        /* Check if we had leftovers */
+        if ((MdBlock->PageCount - Alignment) != PageCount)
+        {
+            /* Get the next descriptor */
+            FreeBlock = &HalpAllocationDescriptorArray[UsedDescriptors];
+            FreeBlock->PageCount = MdBlock->PageCount - Alignment - PageCount;
+            FreeBlock->BasePage = MdBlock->BasePage + Alignment + PageCount;
+            
+            /* One more */
+            HalpUsedAllocDescriptors++;
+            
+            /* Insert it into the list */
+            InsertHeadList(&MdBlock->ListEntry, &FreeBlock->ListEntry);
+        }
+        
+        /* Use this descriptor */
+        NewBlock->PageCount = Alignment;
+        InsertHeadList(&MdBlock->ListEntry, &NewBlock->ListEntry);
+    }
+    else
+    {
+        /* Consume memory from this block */
+        MdBlock->BasePage += PageCount;
+        MdBlock->PageCount -= PageCount;
+        
+        /* Insert the descriptor */
+        InsertTailList(&MdBlock->ListEntry, &NewBlock->ListEntry);
+
+        /* Remove the entry if the whole block was allocated */
+        if (!MdBlock->PageCount == 0) RemoveEntryList(&MdBlock->ListEntry);
+    }
+
+    /* Return the address */
+    return PhysicalAddress;
+}
+
+PVOID
+NTAPI
+HalpMapPhysicalMemory64(IN PHYSICAL_ADDRESS PhysicalAddress,
+                        IN ULONG PageCount)
+{
+    PHARDWARE_PTE PointerPte;
+    ULONG UsedPages = 0;
+    PVOID VirtualAddress, BaseAddress;
+
+    /* Start at the current HAL heap base */
+    BaseAddress = HalpHeapStart;
+
+    /* Loop until we have all the pages required */
+    while (UsedPages < PageCount)
+    {
+        /* Begin a new loop cycle */
+        UsedPages = 0;
+        VirtualAddress = BaseAddress;
+
+        /* If this overflows past the HAL heap, it means there's no space */
+        if (BaseAddress == NULL) return NULL;
+
+        /* Loop until we have all the pages required in a single run */
+        while (UsedPages < PageCount)
+        {
+            /* Get the PTE for this address and check if it's available */
+            PointerPte = HalAddressToPte(VirtualAddress);
+            if (*(PULONG)PointerPte)
+            {
+                /* PTE has data, skip it and start with a new base address */
+                BaseAddress = (PVOID)((ULONG_PTR)VirtualAddress + PAGE_SIZE);
+                break;
+            }
+         
+            /* PTE is available, keep going on this run */
+            VirtualAddress = (PVOID)((ULONG_PTR)VirtualAddress + PAGE_SIZE);
+            UsedPages++;
+        }
+    }
+
+    /* Take the base address of the page plus the actual offset in the address */
+    VirtualAddress = (PVOID)((ULONG_PTR)BaseAddress +
+                             BYTE_OFFSET(PhysicalAddress.LowPart));
+
+    /* If we are starting at the heap, move the heap */
+    if (BaseAddress == HalpHeapStart)
+    {
+        /* Past this allocation */
+        HalpHeapStart = (PVOID)((ULONG_PTR)BaseAddress + (PageCount * PAGE_SIZE));
+    }
+
+    /* Loop pages that can be mapped */
+    while (UsedPages--)
+    {
+        /* Fill out the PTE */
+        PointerPte = HalAddressToPte(BaseAddress);
+        PointerPte->PageFrameNumber = PhysicalAddress.QuadPart >> PAGE_SHIFT;
+        PointerPte->Valid = 1;
+        PointerPte->Write = 1;
+
+        /* Move to the next address */
+        PhysicalAddress.QuadPart += PAGE_SIZE;
+        BaseAddress = (PVOID)((ULONG_PTR)BaseAddress + PAGE_SIZE);
+    }
+
+    /* Flush the TLB and return the address */
+    HalpFlushTLB();
+    return VirtualAddress;
+}
+
+VOID
+NTAPI
+HalpUnmapVirtualAddress(IN PVOID VirtualAddress,
+                        IN ULONG PageCount)
+{
+    PHARDWARE_PTE PointerPte;
+    ULONG i;
+
+    /* Only accept valid addresses */
+    if (VirtualAddress < MM_HAL_VA_START) return;
+
+    /* Align it down to page size */
+    VirtualAddress = (PVOID)((ULONG_PTR)VirtualAddress & ~(PAGE_SIZE - 1));
+
+    /* Loop PTEs */
+    PointerPte = HalAddressToPte(VirtualAddress);
+    for (i = 0; i < PageCount; i++)
+    {
+        *(PULONG)PointerPte = 0;
+        PointerPte++;
+    }
+
+    /* Flush the TLB */
+    HalpFlushTLB();
+
+    /* Put the heap back */
+    if (HalpHeapStart > VirtualAddress) HalpHeapStart = VirtualAddress;
+}
 
 VOID
 NTAPI
