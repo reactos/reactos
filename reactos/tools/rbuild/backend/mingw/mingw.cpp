@@ -480,18 +480,17 @@ MingwBackend::GenerateGlobalVariables () const
 		fputs ( "BUILTIN_CXXINCLUDES+= $(TARGET_CPPFLAGS)\n", fMakefile );
 
 		fprintf ( fMakefile, "PROJECT_CCLIBS := \"$(shell ${TARGET_CC} -print-libgcc-file-name)\"\n" );
-		
-		// We use our proprietary "ofmt_stub.a" to implement a stub for "_get_output_format" required by "libmingwex.a".
-		// This archive just contains the compiled "ofmt_stub.s" supplied with the MinGW Runtime sources.
-		fprintf ( fMakefile, "PROJECT_CXXLIBS := \"$(shell ${TARGET_CPP} -print-file-name=libstdc++.a)\" \"$(shell ${TARGET_CPP} -print-libgcc-file-name)\" \"$(shell ${TARGET_CPP} -print-file-name=libmingw32.a)\" \"$(shell ${TARGET_CPP} -print-file-name=libmingwex.a)\" \"$(shell ${TARGET_CPP} -print-file-name=ofmt_stub.a)\" \"$(shell ${TARGET_CPP} -print-file-name=libcoldname.a)\"\n" );
+
+		fprintf ( fMakefile, "PROJECT_CXXLIBS := \"$(shell ${TARGET_CPP} -print-file-name=libstdc++.a)\" \"$(shell ${TARGET_CPP} -print-libgcc-file-name)\" \"$(shell ${TARGET_CPP} -print-file-name=libmingw32.a)\" \"$(shell ${TARGET_CPP} -print-file-name=libmingwex.a)\"" );
 		
 		/* hack to get libgcc_eh.a, should check mingw version or something */
 		if (Environment::GetArch() == "amd64")
-		{
-			fprintf ( fMakefile, "PROJECT_LPPFLAGS += $(shell ${TARGET_CPP} -print-file-name=libgcc_eh.a)\n" );
-		}
+			fprintf ( fMakefile, " \"$(shell ${TARGET_CPP} -print-file-name=libgcc_eh.a)\"" );
+		/* hack to get _get_output_format, needed by libmingwex */
+		else if (Environment::GetArch() == "i386")
+			fprintf ( fMakefile, " \"$(shell ${TARGET_CPP} -print-file-name=libcoldname.a)\" ");
+		fprintf ( fMakefile,"\n");
 	}
-
 	MingwModuleHandler::GenerateParameters ( "PROJECT", "+=", ProjectNode.non_if_data );
 	MingwModuleHandler::GenerateParameters ( "PROJECT_HOST", "+=", ProjectNode.host_non_if_data );
 
@@ -975,7 +974,7 @@ MingwBackend::IsSupportedBinutilsVersion ( const string& binutilsVersion )
 {
 	int digit = binutilsVersion.find_last_of(".");
 	if(digit == -1)
-	{
+ 	{
 		printf("Unable to detect binutils version!\n");
 		return false;
 	}
