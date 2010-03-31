@@ -7,6 +7,9 @@
 		<define name="_NTHALDLL_" />
 		<define name="_NTHAL_" />
 		<directory name="generic">
+    		<directory name="legacy">
+    	        <file>halpcat.c</file>
+    	    </directory>
 			<directory name="bus">
 				<file>bushndlr.c</file>
 				<file>isabus.c</file>
@@ -53,6 +56,9 @@
 		<define name="_NTHALDLL_" />
 		<define name="_NTHAL_" />
 		<directory name="generic">
+		    <directory name="acpi">
+		        <file>halacpi.c</file>
+		    </directory>
 			<directory name="bus">
 				<file>bushndlr.c</file>
 				<file>isabus.c</file>

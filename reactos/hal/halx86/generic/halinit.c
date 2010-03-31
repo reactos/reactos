@@ -307,6 +307,9 @@ HalInitSystem(IN ULONG BootPhase,
         }
 
 #ifndef _MINIHAL_
+        /* Initialize ACPI */
+        HalpSetupAcpiPhase0(LoaderBlock);
+
         /* Initialize the PICs */
         HalpInitializePICs(TRUE);
 #endif
