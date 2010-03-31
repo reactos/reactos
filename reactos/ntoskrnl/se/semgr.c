@@ -355,7 +355,6 @@ SeSetSecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
 BOOLEAN NTAPI
 SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext,
-               IN BOOLEAN SubjectContextLocked,
                IN ACCESS_MASK DesiredAccess,
                IN ACCESS_MASK PreviouslyGrantedAccess,
                OUT PPRIVILEGE_SET* Privileges,
@@ -394,9 +393,6 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         return TRUE;
     }
 
-    /* Acquire the lock if needed */
-    if (!SubjectContextLocked) SeLockSubjectContext(SubjectSecurityContext);
-
     /* Map given accesses */
     RtlMapGenericMask(&DesiredAccess, GenericMapping);
     if (PreviouslyGrantedAccess)
@@ -418,11 +414,6 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                                           &Defaulted);
     if (!NT_SUCCESS(Status))
     {
-        if (SubjectContextLocked == FALSE)
-        {
-            SeUnlockSubjectContext(SubjectSecurityContext);
-        }
-
         *AccessStatus = Status;
         return FALSE;
     }
@@ -430,11 +421,6 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     /* RULE 1: Grant desired access if the object is unprotected */
     if (Present == FALSE || Dacl == NULL)
     {
-        if (SubjectContextLocked == FALSE)
-        {
-            SeUnlockSubjectContext(SubjectSecurityContext);
-        }
-
         if (DesiredAccess & MAXIMUM_ALLOWED)
         {
             *GrantedAccess = GenericMapping->GenericAll;
@@ -465,11 +451,6 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         if ((DesiredAccess & ~VALID_INHERIT_FLAGS) == 
             (CurrentAccess & ~VALID_INHERIT_FLAGS))
         {
-            if (SubjectContextLocked == FALSE)
-            {
-                SeUnlockSubjectContext(SubjectSecurityContext);
-            }
-
             *GrantedAccess = CurrentAccess;
             *AccessStatus = STATUS_SUCCESS;
             return TRUE;
@@ -483,11 +464,6 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("RtlGetOwnerSecurityDescriptor() failed (Status %lx)\n", Status);
-        if (SubjectContextLocked == FALSE)
-        {
-            SeUnlockSubjectContext(SubjectSecurityContext);
-        }
-
         *AccessStatus = Status;
         return FALSE;
     }
@@ -498,11 +474,6 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         if ((DesiredAccess & ~VALID_INHERIT_FLAGS) == 
             (CurrentAccess & ~VALID_INHERIT_FLAGS))
         {
-            if (SubjectContextLocked == FALSE)
-            {
-                SeUnlockSubjectContext(SubjectSecurityContext);
-            }
-
             *GrantedAccess = CurrentAccess;
             *AccessStatus = STATUS_SUCCESS;
             return TRUE;
@@ -512,11 +483,6 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     /* Fail if DACL is absent */
     if (Present == FALSE)
     {
-        if (SubjectContextLocked == FALSE)
-        {
-            SeUnlockSubjectContext(SubjectSecurityContext);
-        }
-
         *GrantedAccess = 0;
         *AccessStatus = STATUS_ACCESS_DENIED;
         return FALSE;
@@ -531,11 +497,6 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         {
             if (SepSidInToken(Token, Sid))
             {
-                if (SubjectContextLocked == FALSE)
-                {
-                    SeUnlockSubjectContext(SubjectSecurityContext);
-                }
-
                 *GrantedAccess = 0;
                 *AccessStatus = STATUS_ACCESS_DENIED;
                 return FALSE;
@@ -556,11 +517,6 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
             DPRINT1("Unknown Ace type 0x%lx\n", CurrentAce->Header.AceType);
         }
         CurrentAce = (PACE)((ULONG_PTR)CurrentAce + CurrentAce->Header.AceSize);
-    }
-
-    if (SubjectContextLocked == FALSE)
-    {
-        SeUnlockSubjectContext(SubjectSecurityContext);
     }
 
     DPRINT("CurrentAccess %08lx\n DesiredAccess %08lx\n",
@@ -639,6 +595,8 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
               OUT PACCESS_MASK GrantedAccess,
               OUT PNTSTATUS AccessStatus)
 {
+    BOOLEAN ret;
+
     PAGED_CODE();
 
     /* Check if this is kernel mode */
@@ -679,17 +637,26 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         return FALSE;
     }
 
+    /* Acquire the lock if needed */
+    if (!SubjectContextLocked)
+        SeLockSubjectContext(SubjectSecurityContext);
+
     /* Call the internal function */
-    return SepAccessCheck(SecurityDescriptor,
-                          SubjectSecurityContext,
-                          SubjectContextLocked,
-                          DesiredAccess,
-                          PreviouslyGrantedAccess,
-                          Privileges,
-                          GenericMapping,
-                          AccessMode,
-                          GrantedAccess,
-                          AccessStatus);
+    ret = SepAccessCheck(SecurityDescriptor,
+                         SubjectSecurityContext,
+                         DesiredAccess,
+                         PreviouslyGrantedAccess,
+                         Privileges,
+                         GenericMapping,
+                         AccessMode,
+                         GrantedAccess,
+                         AccessStatus);
+
+    /* Release the lock if needed */
+    if (!SubjectContextLocked)
+        SeUnlockSubjectContext(SubjectSecurityContext);
+
+    return ret;
 }
 
 /* SYSTEM CALLS ***************************************************************/
@@ -808,8 +775,8 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     }
 
     /* Check security descriptor for valid owner and group */
-    if (SepGetSDOwner(SecurityDescriptor)== NULL ||
-        SepGetSDGroup(SecurityDescriptor) == NULL)
+    if (SepGetSDOwner(SecurityDescriptor) == NULL ||  // FIXME: use CapturedSecurityDescriptor
+        SepGetSDGroup(SecurityDescriptor) == NULL)    // FIXME: use CapturedSecurityDescriptor
     {
         DPRINT("Security Descriptor does not have a valid group or owner\n");
         SeReleaseSecurityDescriptor(CapturedSecurityDescriptor,
@@ -827,9 +794,8 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     SeLockSubjectContext(&SubjectSecurityContext);
 
     /* Now perform the access check */
-    SepAccessCheck(CapturedSecurityDescriptor,
+    SepAccessCheck(SecurityDescriptor, // FIXME: use CapturedSecurityDescriptor
                    &SubjectSecurityContext,
-                   TRUE,
                    DesiredAccess,
                    0,
                    &PrivilegeSet, //FIXME
