@@ -8,6 +8,7 @@ typedef struct _DC *PDC;
 #include "bitmaps.h"
 #include "pdevobj.h"
 #include "palette.h"
+#include "region.h"
 
 /* Constants ******************************************************************/
 
@@ -127,9 +128,9 @@ typedef struct _DC
   RECTL       erclWindow;
   RECTL       erclBounds;
   RECTL       erclBoundsApp;
-  PVOID       prgnAPI; /* PROSRGNDATA */
-  PVOID       prgnVis; /* Visible region (must never be 0) */
-  PVOID       prgnRao;
+  PREGION     prgnAPI; /* PROSRGNDATA */
+  PREGION     prgnVis; /* Visible region (must never be 0) */
+  PREGION     prgnRao;
   POINTL      ptlFillOrigin;
   EBRUSHOBJ   eboFill;
   EBRUSHOBJ   eboLine;

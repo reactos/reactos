@@ -365,7 +365,7 @@ DC_Cleanup(PVOID ObjectBody)
     if (pdc->rosdc.hClipRgn)
         GreDeleteObject(pdc->rosdc.hClipRgn);
     if (pdc->prgnVis)
-        REGION_FreeRgnByHandle(((PROSRGNDATA)pdc->prgnVis)->BaseObject.hHmgr);
+        REGION_FreeRgnByHandle(pdc->prgnVis->BaseObject.hHmgr);
 ASSERT(pdc->rosdc.hGCClipRgn);
     if (pdc->rosdc.hGCClipRgn)
         GreDeleteObject(pdc->rosdc.hGCClipRgn);
@@ -419,12 +419,12 @@ DC_SetOwnership(HDC hDC, PEPROCESS Owner)
     }
     if (pDC->prgnVis)
     {   // FIXME! HAX!!!
-        Index = GDI_HANDLE_GET_INDEX(((PROSRGNDATA)pDC->prgnVis)->BaseObject.hHmgr);
+        Index = GDI_HANDLE_GET_INDEX(pDC->prgnVis->BaseObject.hHmgr);
         Entry = &GdiHandleTable->Entries[Index];
         if (Entry->UserData) FreeObjectAttr(Entry->UserData);
         Entry->UserData = NULL;
         //
-        if (!GDIOBJ_SetOwnership(((PROSRGNDATA)pDC->prgnVis)->BaseObject.hHmgr, Owner)) goto leave;
+        if (!GDIOBJ_SetOwnership(pDC->prgnVis->BaseObject.hHmgr, Owner)) goto leave;
     }
     if (pDC->rosdc.hGCClipRgn)
     {   // FIXME! HAX!!!
