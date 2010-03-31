@@ -457,6 +457,14 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         }
     }
 
+    /* Deny access if the DACL is empty */
+    if (Dacl->AceCount == 0)
+    {
+        *GrantedAccess = 0;
+        *AccessStatus = STATUS_ACCESS_DENIED;
+        return FALSE;
+    }
+
     /* RULE 3: Check whether the token is the owner */
     Status = RtlGetOwnerSecurityDescriptor(SecurityDescriptor,
                                            &Sid,
