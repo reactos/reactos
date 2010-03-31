@@ -231,6 +231,7 @@ IKsDevice_PnpPostStart(
     {
         /* set state to enabled */
         Ctx->DeviceHeader->TargetState = KSTARGET_STATE_ENABLED;
+        Status = KspSetFilterFactoriesState(Ctx->DeviceHeader, TRUE);
     }
 
     /* free work item */
@@ -376,6 +377,7 @@ IKsDevice_PnpStartDevice(
             {
                 /* set state to enabled, IRP_MJ_CREATE request may now succeed */
                 DeviceHeader->TargetState = KSTARGET_STATE_ENABLED;
+                Status = KspSetFilterFactoriesState(DeviceHeader, TRUE);
             }
         }
     }

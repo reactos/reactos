@@ -398,8 +398,10 @@ KsFilterFactorySetDeviceClassesState(
     IN PKSFILTERFACTORY  FilterFactory,
     IN BOOLEAN  NewState)
 {
-    IKsFilterFactory * Factory = (IKsFilterFactory*)CONTAINING_RECORD(FilterFactory, IKsFilterFactoryImpl, FilterFactory);
+    IKsFilterFactory * Factory;
+    IKsFilterFactoryImpl * This = (IKsFilterFactoryImpl*)CONTAINING_RECORD(FilterFactory, IKsFilterFactoryImpl, FilterFactory);
 
+    Factory = (IKsFilterFactory*)&This->lpVtbl;
     return Factory->lpVtbl->SetDeviceClassesState(Factory, NewState);
 }
 
