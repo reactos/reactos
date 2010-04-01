@@ -37,11 +37,12 @@ NTAPI
 KsGetDevice(
     IN PVOID Object)
 {
-    PKSBASIC_HEADER BasicHeader = (PKSBASIC_HEADER)(ULONG_PTR)Object - sizeof(KSBASIC_HEADER);
+    PKSBASIC_HEADER BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)Object - sizeof(KSBASIC_HEADER));
 
-    DPRINT("KsGetDevice %p\n", Object);
+    DPRINT("KsGetDevice %p BasicHeader %p Type %x\n", Object, BasicHeader, BasicHeader->Type);
 
     ASSERT(BasicHeader->Type == KsObjectTypeFilterFactory || BasicHeader->Type == KsObjectTypeFilter || BasicHeader->Type == BasicHeader->Type);
+    ASSERT(BasicHeader->KsDevice);
 
     return BasicHeader->KsDevice;
 }

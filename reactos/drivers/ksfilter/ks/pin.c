@@ -339,6 +339,7 @@ KsPinAttemptProcessing(
     IN PKSPIN  Pin,
     IN BOOLEAN  Asynchronous)
 {
+    DPRINT("KsPinAttemptProcessing\n");
     UNIMPLEMENTED
 }
 
@@ -456,6 +457,7 @@ NTAPI
     OUT PIKSREFERENCECLOCK*  Interface)
 {
     UNIMPLEMENTED
+    DPRINT("KsPinGetReferenceClockInterface Pin %p Interface %p\n", Pin, Interface);
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -547,6 +549,8 @@ KsGetPinFromIrp(
     PKSIOBJECT_HEADER ObjectHeader;
     PIO_STACK_LOCATION IoStack = IoGetCurrentIrpStackLocation(Irp);
 
+    DPRINT("KsGetPinFromIrp\n");
+
     /* get object header */
     ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext2;
     /* return object type */
@@ -624,6 +628,7 @@ KsPinGetLeadingEdgeStreamPointer(
     IN KSSTREAM_POINTER_STATE State)
 {
     UNIMPLEMENTED
+    DPRINT("KsPinGetLeadingEdgeStreamPointer Pin %p State %x\n", Pin, State);
     return NULL;
 }
 
@@ -679,6 +684,7 @@ KsStreamPointerUnlock(
     IN BOOLEAN Eject)
 {
     UNIMPLEMENTED
+    DPRINT("KsStreamPointerUnlock\n");
 }
 
 /*
@@ -693,6 +699,8 @@ KsStreamPointerAdvanceOffsetsAndUnlock(
     IN ULONG OutUsed,
     IN BOOLEAN Eject)
 {
+    DPRINT("KsStreamPointerAdvanceOffsets\n");
+
     UNIMPLEMENTED
 }
 
@@ -708,6 +716,8 @@ KsStreamPointerDelete(
     IKsPinImpl * This;
     PKSISTREAM_POINTER Cur, Last;
     PKSISTREAM_POINTER Pointer = (PKSISTREAM_POINTER)StreamPointer;
+
+    DPRINT("KsStreamPointerDelete\n");
 
     This = (IKsPinImpl*)CONTAINING_RECORD(Pointer->StreamPointer.Pin, IKsPinImpl, Pin);
 
@@ -755,6 +765,7 @@ KsStreamPointerClone(
     OUT PKSSTREAM_POINTER* CloneStreamPointer)
 {
     UNIMPLEMENTED
+    DPRINT("KsStreamPointerClone\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -864,7 +875,11 @@ NTAPI
 KsPinGetFirstCloneStreamPointer(
     IN PKSPIN Pin)
 {
-    IKsPinImpl * This = (IKsPinImpl*)CONTAINING_RECORD(Pin, IKsPinImpl, Pin);
+    IKsPinImpl * This;
+
+    DPRINT("KsPinGetFirstCloneStreamPointer %p\n", Pin);
+
+    This = (IKsPinImpl*)CONTAINING_RECORD(Pin, IKsPinImpl, Pin);
     /* return first cloned stream pointer */
     return &This->ClonedStreamPointer->StreamPointer;
 }
@@ -879,6 +894,8 @@ KsStreamPointerGetNextClone(
     IN PKSSTREAM_POINTER StreamPointer)
 {
     PKSISTREAM_POINTER Pointer = (PKSISTREAM_POINTER)StreamPointer;
+
+    DPRINT("KsStreamPointerGetNextClone\n");
 
     /* is there a another cloned stream pointer */
     if (!Pointer->Next)

@@ -21,6 +21,7 @@ typedef struct
 
     PKSIOBJECT_HEADER ObjectHeader;
     KSTOPOLOGY Topology;
+    KSPIN_DESCRIPTOR_EX * PinDescriptorsEx;
     KSPIN_DESCRIPTOR * PinDescriptors;
     ULONG PinDescriptorCount;
     PKSFILTERFACTORY Factory;
@@ -695,7 +696,6 @@ KspPinPropertyHandler(
             UNIMPLEMENTED
             Status = STATUS_UNSUCCESSFUL;
     }
-
     return Status;
 }
 
@@ -736,6 +736,7 @@ IKsFilter_DispatchDeviceIoControl(
     }
 
     /* call property handler supported by ks */
+    KSPROPERTY_ITEM_IRP_STORAGE(Irp) = (KSPROPERTY_ITEM*)This;
     Status = KspPropertyHandler(Irp, 2, FilterPropertySet, NULL, sizeof(KSPROPERTY_ITEM));
 
     if (Status == STATUS_NOT_FOUND)
@@ -785,41 +786,12 @@ IKsFilter_CreateDescriptors(
     ULONG Index = 0;
 
     /* initialize pin descriptors */
-    if (FilterDescriptor->PinDescriptorsCount)
-    {
-        /* allocate pin instance count array */
-        This->PinInstanceCount = AllocateItem(NonPagedPool, sizeof(ULONG) * FilterDescriptor->PinDescriptorsCount);
-        if(!This->PinDescriptors)
-        {
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-
-        /* allocate first pin array */
-        This->FirstPin = AllocateItem(NonPagedPool, sizeof(PKSPIN) * FilterDescriptor->PinDescriptorsCount);
-        if(!This->FirstPin)
-        {
-            FreeItem(This->PinDescriptors);
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-
-
-        /* allocate pin descriptor array */
-        This->PinDescriptors = AllocateItem(NonPagedPool, sizeof(KSPIN_DESCRIPTOR) * FilterDescriptor->PinDescriptorsCount);
-        if(!This->PinDescriptors)
-        {
-            FreeItem(This->PinInstanceCount);
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-
-        /* set pin count */
-        This->PinDescriptorCount = FilterDescriptor->PinDescriptorsCount;
-        /* now copy those pin descriptors over */
-        for(Index = 0; Index < FilterDescriptor->PinDescriptorsCount; Index++)
-        {
-            /* copy one pin per time */
-            RtlMoveMemory(&This->PinDescriptors[Index], &FilterDescriptor->PinDescriptors[Index].PinDescriptor, sizeof(KSPIN_DESCRIPTOR));
-        }
-    }
+    This->PinInstanceCount = NULL;
+    This->FirstPin = NULL;
+    This->PinInstanceCount = NULL;
+    This->PinDescriptors = NULL;
+    This->PinDescriptorsEx = NULL;
+    This->PinDescriptorCount = 0;
 
     /* initialize topology descriptor */
     This->Topology.CategoriesCount = FilterDescriptor->CategoriesCount;
@@ -828,30 +800,45 @@ IKsFilter_CreateDescriptors(
     This->Topology.TopologyConnectionsCount = FilterDescriptor->ConnectionsCount;
     This->Topology.TopologyConnections = FilterDescriptor->Connections;
 
-    if (This->Topology.TopologyNodesCount > 0)
+    if (FilterDescriptor->NodeDescriptorsCount)
     {
-        This->Topology.TopologyNodes = AllocateItem(NonPagedPool, sizeof(GUID) * This->Topology.TopologyNodesCount);
+        /* sanity check */
+        ASSERT(FilterDescriptor->NodeDescriptors);
+
+        /* FIXME handle variable sized node descriptors */
+        ASSERT(FilterDescriptor->NodeDescriptorSize == sizeof(KSNODE_DESCRIPTOR));
+
+        This->Topology.TopologyNodes = AllocateItem(NonPagedPool, sizeof(GUID) * FilterDescriptor->NodeDescriptorsCount);
         /* allocate topology node types array */
         if (!This->Topology.TopologyNodes)
+        {
+            DPRINT("IKsFilter_CreateDescriptors OutOfMemory TopologyNodesCount %lu\n", FilterDescriptor->NodeDescriptorsCount);
             return STATUS_INSUFFICIENT_RESOURCES;
+        }
 
-        This->Topology.TopologyNodesNames = AllocateItem(NonPagedPool, sizeof(GUID) * This->Topology.TopologyNodesCount);
+        This->Topology.TopologyNodesNames = AllocateItem(NonPagedPool, sizeof(GUID) * FilterDescriptor->NodeDescriptorsCount);
         /* allocate topology names array */
         if (!This->Topology.TopologyNodesNames)
         {
             FreeItem((PVOID)This->Topology.TopologyNodes);
+            DPRINT("IKsFilter_CreateDescriptors OutOfMemory TopologyNodesCount %lu\n", FilterDescriptor->NodeDescriptorsCount);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
-        for(Index = 0; Index < This->Topology.TopologyNodesCount; Index++)
+        DPRINT("NodeDescriptorCount %lu\n", FilterDescriptor->NodeDescriptorsCount);
+        for(Index = 0; Index < FilterDescriptor->NodeDescriptorsCount; Index++)
         {
+            DPRINT("Index %lu Type %p Name %p\n", Index, FilterDescriptor->NodeDescriptors[Index].Type, FilterDescriptor->NodeDescriptors[Index].Name);
+
             /* copy topology type */
-            RtlMoveMemory((PVOID)&This->Topology.TopologyNodes[Index], FilterDescriptor->NodeDescriptors[Index].Type, sizeof(GUID));
+            if (FilterDescriptor->NodeDescriptors[Index].Type)
+                RtlMoveMemory((PVOID)&This->Topology.TopologyNodes[Index], FilterDescriptor->NodeDescriptors[Index].Type, sizeof(GUID));
+
             /* copy topology name */
-            RtlMoveMemory((PVOID)&This->Topology.TopologyNodesNames[Index], FilterDescriptor->NodeDescriptors[Index].Name, sizeof(GUID));
+            if (FilterDescriptor->NodeDescriptors[Index].Name)
+                RtlMoveMemory((PVOID)&This->Topology.TopologyNodesNames[Index], FilterDescriptor->NodeDescriptors[Index].Name, sizeof(GUID));
         }
     }
-
     /* done! */
     return STATUS_SUCCESS;
 }
@@ -861,72 +848,24 @@ IKsFilter_CopyFilterDescriptor(
     IKsFilterImpl * This,
     const KSFILTER_DESCRIPTOR* FilterDescriptor)
 {
-    This->Filter.Descriptor = (const KSFILTER_DESCRIPTOR*)AllocateItem(NonPagedPool, sizeof(KSFILTER_DESCRIPTOR));
+    NTSTATUS Status;
+
+    This->Filter.Descriptor = AllocateItem(NonPagedPool, sizeof(KSFILTER_DESCRIPTOR));
     if (!This->Filter.Descriptor)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    /* copy all fields */
+    Status = KsAddItemToObjectBag(This->Filter.Bag, (PVOID)This->Filter.Descriptor, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        FreeItem((PVOID)This->Filter.Descriptor);
+        This->Filter.Descriptor = NULL;
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* copy filter descriptor fields */
     RtlMoveMemory((PVOID)This->Filter.Descriptor, FilterDescriptor, sizeof(KSFILTER_DESCRIPTOR));
 
-
-    /* perform deep copy of pin descriptors */
-    if (FilterDescriptor->PinDescriptorsCount)
-    {
-        KSPIN_DESCRIPTOR_EX * PinDescriptors = (KSPIN_DESCRIPTOR_EX *)AllocateItem(NonPagedPool, FilterDescriptor->PinDescriptorSize * FilterDescriptor->PinDescriptorsCount);
-
-
-        if (!PinDescriptors)
-        {
-            FreeItem((PVOID)This->Filter.Descriptor);
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-        RtlMoveMemory((PVOID)PinDescriptors, FilterDescriptor->PinDescriptors, FilterDescriptor->PinDescriptorSize * FilterDescriptor->PinDescriptorsCount);
-
-        /* brain-dead gcc hack */
-        RtlMoveMemory((PVOID)&This->Filter.Descriptor->PinDescriptors, PinDescriptors, sizeof(PKSPIN_DESCRIPTOR_EX));
-
-    }
-
-    /* perform deep copy of node descriptors */
-    if (FilterDescriptor->NodeDescriptorsCount)
-    {
-        KSNODE_DESCRIPTOR* NodeDescriptor = AllocateItem(NonPagedPool, FilterDescriptor->NodeDescriptorsCount * FilterDescriptor->NodeDescriptorSize);
-        if (!NodeDescriptor)
-        {
-            if (This->Filter.Descriptor->PinDescriptors)
-                FreeItem((PVOID)This->Filter.Descriptor->PinDescriptors);
-            FreeItem((PVOID)This->Filter.Descriptor);
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-        RtlMoveMemory((PVOID)NodeDescriptor, FilterDescriptor->NodeDescriptors, FilterDescriptor->NodeDescriptorsCount * FilterDescriptor->NodeDescriptorSize);
-
-        /* brain-dead gcc hack */
-        RtlMoveMemory((PVOID)&This->Filter.Descriptor->NodeDescriptors, NodeDescriptor, sizeof(PKSNODE_DESCRIPTOR));
-    }
-
-    /* perform deep copy of connections descriptors */
-    if (FilterDescriptor->NodeDescriptorsCount)
-    {
-        KSTOPOLOGY_CONNECTION* Connections = AllocateItem(NonPagedPool, sizeof(KSTOPOLOGY_CONNECTION) * FilterDescriptor->ConnectionsCount);
-        if (!Connections)
-        {
-            if (This->Filter.Descriptor->PinDescriptors)
-                FreeItem((PVOID)This->Filter.Descriptor->PinDescriptors);
-
-            if (This->Filter.Descriptor->NodeDescriptors)
-                FreeItem((PVOID)This->Filter.Descriptor->PinDescriptors);
-
-            FreeItem((PVOID)This->Filter.Descriptor);
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-
-        RtlMoveMemory((PVOID)Connections, FilterDescriptor->Connections, sizeof(KSTOPOLOGY_CONNECTION) * FilterDescriptor->ConnectionsCount);
-
-        /* brain-dead gcc hack */
-        RtlMoveMemory((PVOID)&This->Filter.Descriptor->Connections, Connections, sizeof(PKSTOPOLOGY_CONNECTION));
-    }
-
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 
@@ -1118,21 +1057,12 @@ KspCreateFilter(
     }
 
     /* allocate filter instance */
-    This = AllocateItem(NonPagedPool, sizeof(IKsFilterFactory));
+    This = AllocateItem(NonPagedPool, sizeof(IKsFilterImpl));
     if (!This)
-        return STATUS_INSUFFICIENT_RESOURCES;
-
-    /* copy filter descriptor */
-    Status = IKsFilter_CopyFilterDescriptor(This, Factory->FilterDescriptor);
-    if (!NT_SUCCESS(Status))
     {
-        /* not enough memory */
-        FreeItem(This);
+        DPRINT("KspCreateFilter OutOfMemory\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-
-    /* get current irp stack */
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
 
     /* initialize object bag */
     This->Filter.Bag = AllocateItem(NonPagedPool, sizeof(KSIOBJECT_BAG));
@@ -1140,15 +1070,34 @@ KspCreateFilter(
     {
         /* no memory */
         FreeItem(This);
+        DPRINT("KspCreateFilter OutOfMemory\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
+    KsDevice = (IKsDevice*)&DeviceExtension->DeviceHeader->lpVtblIKsDevice;
+    KsDevice->lpVtbl->InitializeObjectBag(KsDevice, (PKSIOBJECT_BAG)This->Filter.Bag, NULL);
+
+    /* copy filter descriptor */
+    Status = IKsFilter_CopyFilterDescriptor(This, Factory->FilterDescriptor);
+    if (!NT_SUCCESS(Status))
+    {
+        /* not enough memory */
+        FreeItem(This->Filter.Bag);
+        FreeItem(This);
+        DPRINT("KspCreateFilter IKsFilter_CopyFilterDescriptor failed %lx\n", Status);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* get current irp stack */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
 
     /* allocate create items */
     CreateItem = AllocateItem(NonPagedPool, sizeof(KSOBJECT_CREATE_ITEM) * 2);
     if (!CreateItem)
     {
         /* no memory */
+        FreeItem(This->Filter.Bag);
         FreeItem(This);
+        DPRINT("KspCreateFilter OutOfMemory\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -1163,9 +1112,6 @@ KspCreateFilter(
     CreateItem[1].Flags = KSCREATE_ITEM_FREEONSTOP;
     RtlInitUnicodeString(&CreateItem[1].ObjectClass, KSSTRING_TopologyNode);
 
-
-    KsDevice = (IKsDevice*)&DeviceExtension->DeviceHeader->lpVtblIKsDevice;
-    KsDevice->lpVtbl->InitializeObjectBag(KsDevice, (PKSIOBJECT_BAG)This->Filter.Bag, NULL);
 
     /* initialize filter instance */
     This->ref = 1;
@@ -1192,6 +1138,7 @@ KspCreateFilter(
         /* what can go wrong, goes wrong */
         FreeItem(This);
         FreeItem(CreateItem);
+        DPRINT("IKsFilter_CreateDescriptors failed with %lx\n", Status);
         return Status;
     }
 
@@ -1202,6 +1149,8 @@ KspCreateFilter(
         if (Factory->FilterDescriptor->Dispatch->Create)
         {
             /* now let driver initialize the filter instance */
+            DPRINT("Before instantiating filter Filter %p This %p KSBASIC_HEADER %u\n", &This->Filter, This, sizeof(KSBASIC_HEADER));
+            ASSERT(This->Header.KsDevice);
             Status = Factory->FilterDescriptor->Dispatch->Create(&This->Filter, Irp);
 
             if (!NT_SUCCESS(Status) && Status != STATUS_PENDING)
@@ -1236,6 +1185,7 @@ KspCreateFilter(
     IKsFilter_AttachFilterToFilterFactory(This, This->Header.Parent.KsFilterFactory);
 
     /* completed initialization */
+    DPRINT("KspCreateFilter done %lx\n", Status);
     return Status;
 }
 
@@ -1355,77 +1305,57 @@ KsFilterCreatePinFactory (
     OUT PULONG PinID)
 {
     ULONG Count;
-    ULONG *PinInstanceCount;
-    KSPIN_DESCRIPTOR_EX * PinDescriptorsEx;
-    KSPIN_DESCRIPTOR * PinDescriptors;
-    PKSPIN *FirstPin;
+    NTSTATUS Status;
     IKsFilterImpl * This = (IKsFilterImpl*)CONTAINING_RECORD(Filter, IKsFilterImpl, Filter);
 
-    /* calculate existing count */
+    DPRINT("KsFilterCreatePinFactory\n");
+
+    /* calculate new count */
     Count = This->PinDescriptorCount + 1;
 
-    /* allocate pin descriptors array */
-    PinDescriptorsEx = AllocateItem(NonPagedPool, max(This->Filter.Descriptor->PinDescriptorSize, sizeof(KSPIN_DESCRIPTOR_EX)) * Count);
-    if (!PinDescriptorsEx)
-        return STATUS_INSUFFICIENT_RESOURCES;
+    /* sanity check */
+    ASSERT(This->Filter.Descriptor->PinDescriptorSize == sizeof(KSPIN_DESCRIPTOR_EX));
 
-    /* allocate pin instance count array */
-    PinInstanceCount = AllocateItem(NonPagedPool, sizeof(ULONG) * Count);
-    if (!PinInstanceCount)
+    /* allocate pin descriptors ex array */
+    Status = _KsEdit(This->Filter.Bag, (PVOID*)&This->PinDescriptorsEx, Count * sizeof(KSPIN_DESCRIPTOR_EX), This->PinDescriptorCount * sizeof(KSPIN_DESCRIPTOR_EX), 0);
+    if (!NT_SUCCESS(Status))
     {
-        /* not enough memory */
-        FreeItem(PinDescriptorsEx);
-        return STATUS_INSUFFICIENT_RESOURCES;
+        /* failed */
+        DPRINT("KsFilterCreatePinFactory _KsEdit failed with %lx\n", Status);
+        return Status;
     }
 
-    /* allocate pin descriptor array for pin property handling */
-    PinDescriptors = AllocateItem(NonPagedPool, sizeof(KSPIN_DESCRIPTOR) * Count);
-    if (!PinDescriptors)
+    /* allocate pin descriptors array */
+    Status = _KsEdit(This->Filter.Bag, (PVOID*)&This->PinDescriptors, Count * sizeof(KSPIN_DESCRIPTOR), This->PinDescriptorCount * sizeof(KSPIN_DESCRIPTOR), 0);
+    if (!NT_SUCCESS(Status))
     {
-        /* not enough memory */
-        FreeItem(PinDescriptorsEx);
-        FreeItem(PinInstanceCount);
-        return STATUS_INSUFFICIENT_RESOURCES;
+        /* failed */
+        DPRINT("KsFilterCreatePinFactory _KsEdit failed with %lx\n", Status);
+        return Status;
+    }
+
+
+    /* allocate pin instance count array */
+    Status = _KsEdit(This->Filter.Bag,(PVOID*)&This->PinInstanceCount, sizeof(ULONG) * Count, sizeof(ULONG) * This->PinDescriptorCount, 0);
+    if (!NT_SUCCESS(Status))
+    {
+        /* failed */
+        DPRINT("KsFilterCreatePinFactory _KsEdit failed with %lx\n", Status);
+        return Status;
     }
 
     /* allocate first pin array */
-    FirstPin = AllocateItem(NonPagedPool, sizeof(PKSPIN) * Count);
-    if (!FirstPin)
+    Status = _KsEdit(This->Filter.Bag,(PVOID*)&This->FirstPin, sizeof(PKSPIN) * Count, sizeof(PKSPIN) * This->PinDescriptorCount, 0);
+    if (!NT_SUCCESS(Status))
     {
-        /* not enough memory */
-        FreeItem(PinDescriptorsEx);
-        FreeItem(PinInstanceCount);
-        FreeItem(PinDescriptors);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    /* now copy all fields */
-    if (Count > 1)
-    {
-        /* copy old descriptors */
-        RtlMoveMemory(PinDescriptorsEx, This->Filter.Descriptor->PinDescriptors, max(This->Filter.Descriptor->PinDescriptorSize, sizeof(KSPIN_DESCRIPTOR_EX)) * This->PinDescriptorCount);
-        RtlMoveMemory(PinInstanceCount, This->PinInstanceCount, This->PinDescriptorCount * sizeof(ULONG));
-        RtlMoveMemory(PinDescriptors, This->PinDescriptors, sizeof(KSPIN_DESCRIPTOR) * This->PinDescriptorCount);
-        RtlMoveMemory(FirstPin, This->FirstPin, sizeof(PKSPIN) * This->PinDescriptorCount);
-
-        /* now free old descriptors */
-        FreeItem(This->PinInstanceCount);
-        FreeItem((PVOID)This->Filter.Descriptor->PinDescriptors);
-        FreeItem(This->PinDescriptors);
-        FreeItem(This->FirstPin);
+        /* failed */
+        DPRINT("KsFilterCreatePinFactory _KsEdit failed with %lx\n", Status);
+        return Status;
     }
 
     /* add new pin factory */
-    RtlMoveMemory((PVOID)((ULONG_PTR)PinDescriptorsEx + max(This->Filter.Descriptor->PinDescriptorSize, sizeof(KSPIN_DESCRIPTOR_EX)) * This->PinDescriptorCount), InPinDescriptor, sizeof(KSPIN_DESCRIPTOR));
-    RtlMoveMemory((PVOID)(PinDescriptors + This->PinDescriptorCount), &InPinDescriptor->PinDescriptor, sizeof(KSPIN_DESCRIPTOR));
-
-    /* replace old descriptor by using a gcc-compliant hack */
-    RtlMoveMemory((PVOID)&This->Filter.Descriptor->PinDescriptors, PinDescriptorsEx, sizeof(KSPIN_DESCRIPTOR_EX*));
-    RtlMoveMemory((PVOID)&This->Filter.Descriptor->PinDescriptorsCount, &Count, sizeof(ULONG));
-
-    This->PinDescriptors = PinDescriptors;
-    This->PinInstanceCount = PinInstanceCount;
-    This->FirstPin = FirstPin;
+    RtlMoveMemory(&This->PinDescriptorsEx[This->PinDescriptorCount], InPinDescriptor, sizeof(KSPIN_DESCRIPTOR_EX));
+    RtlMoveMemory(&This->PinDescriptors[This->PinDescriptorCount], &InPinDescriptor->PinDescriptor, sizeof(KSPIN_DESCRIPTOR));
 
     /* store new pin id */
     *PinID = This->PinDescriptorCount;
@@ -1433,6 +1363,8 @@ KsFilterCreatePinFactory (
     /* increment pin descriptor count */
     This->PinDescriptorCount++;
 
+
+    DPRINT("KsFilterCreatePinFactory done\n");
     return STATUS_SUCCESS;
 
 }

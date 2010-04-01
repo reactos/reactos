@@ -1621,7 +1621,10 @@ KsAcquireDevice(
     IN PKSDEVICE Device)
 {
     IKsDevice *KsDevice;
-    PKSIDEVICE_HEADER DeviceHeader = (PKSIDEVICE_HEADER)CONTAINING_RECORD(Device, KSIDEVICE_HEADER, KsDevice);
+    PKSIDEVICE_HEADER DeviceHeader;
+
+
+    DeviceHeader = (PKSIDEVICE_HEADER)CONTAINING_RECORD(Device, KSIDEVICE_HEADER, KsDevice);
 
     /* get device interface*/
     KsDevice = (IKsDevice*)&DeviceHeader->lpVtblIKsDevice;

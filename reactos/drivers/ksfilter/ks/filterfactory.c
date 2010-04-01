@@ -41,6 +41,7 @@ IKsFilterFactory_Create(
     IN PIRP Irp)
 {
     PKSOBJECT_CREATE_ITEM CreateItem;
+    IKsFilterFactoryImpl * Factory;
     IKsFilterFactory * iface;
     NTSTATUS Status;
 
@@ -53,7 +54,10 @@ IKsFilterFactory_Create(
     }
 
     /* get filter factory interface */
-    iface = (IKsFilterFactory*)CONTAINING_RECORD(CreateItem->Context, IKsFilterFactoryImpl, FilterFactory);
+    Factory = (IKsFilterFactoryImpl*)CONTAINING_RECORD(CreateItem->Context, IKsFilterFactoryImpl, FilterFactory);
+
+    /* get interface */
+    iface = (IKsFilterFactory*)&Factory->lpVtbl;
 
     /* create a filter instance */
     Status = KspCreateFilter(DeviceObject, Irp, iface);
@@ -253,6 +257,8 @@ IKsFilterFactory_fnInitialize(
         FreeString = TRUE;
     }
 
+    DPRINT("IKsFilterFactory_fnInitialize CategoriesCount %u ReferenceString '%S'\n", Descriptor->CategoriesCount,ReferenceString.Buffer);
+
     /* now register the device interface */
     Status = KspRegisterDeviceInterfaces(DeviceExtension->DeviceHeader->KsDevice.PhysicalDeviceObject,
                                          Descriptor->CategoriesCount,
@@ -365,6 +371,10 @@ KspCreateFilterFactory(
     }
 
     /* return result */
+    DPRINT("KsCreateFilterFactory %x\n", Status);
+    /* sanity check */
+    ASSERT(Status == STATUS_SUCCESS);
+
     return Status;
 }
 
