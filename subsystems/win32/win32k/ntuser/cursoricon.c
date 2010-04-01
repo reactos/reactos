@@ -776,6 +776,39 @@ CLEANUP:
     END_CLEANUP;
 }
 
+BOOL
+APIENTRY
+UserClipCursor(
+    RECTL *prcl)
+{
+    /* FIXME - check if process has WINSTA_WRITEATTRIBUTES */
+    PSYSTEM_CURSORINFO CurInfo;
+    PWINDOW_OBJECT DesktopWindow = NULL;
+
+    CurInfo = IntGetSysCursorInfo();
+
+    DesktopWindow = UserGetDesktopWindow();
+
+    if (prcl != NULL && 
+       (prcl->right > prcl->left) && 
+       (prcl->bottom > prcl->top) &&
+        DesktopWindow != NULL)
+    {
+        CurInfo->CursorClipInfo.IsClipped = TRUE;
+        CurInfo->CursorClipInfo.Left = max(prcl->left, DesktopWindow->Wnd->rcWindow.left);
+        CurInfo->CursorClipInfo.Top = max(prcl->top, DesktopWindow->Wnd->rcWindow.top);
+        CurInfo->CursorClipInfo.Right = min(prcl->right, DesktopWindow->Wnd->rcWindow.right);
+        CurInfo->CursorClipInfo.Bottom = min(prcl->bottom, DesktopWindow->Wnd->rcWindow.bottom);
+
+        UserSetCursorPos(gpsi->ptCursor.x, gpsi->ptCursor.y);
+    }
+    else
+    {
+        CurInfo->CursorClipInfo.IsClipped = FALSE;
+    }
+
+    return TRUE;
+}
 
 /*
  * @implemented
@@ -783,49 +816,38 @@ CLEANUP:
 BOOL
 APIENTRY
 NtUserClipCursor(
-    RECTL *UnsafeRect)
+    RECTL *prcl)
 {
     /* FIXME - check if process has WINSTA_WRITEATTRIBUTES */
-    PSYSTEM_CURSORINFO CurInfo;
-    RECTL Rect;
-    PWINDOW_OBJECT DesktopWindow = NULL;
-    DECLARE_RETURN(BOOL);
+    RECTL rclLocal;
+    BOOL bResult;
 
-    DPRINT("Enter NtUserClipCursor\n");
+    if (prcl)
+    {
+        _SEH2_TRY
+        {
+            /* Probe and copy rect */
+            ProbeForRead(prcl, sizeof(RECTL), 1);
+            rclLocal = *prcl;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            _SEH2_YIELD(return FALSE;)
+        }
+        _SEH2_END
+
+        prcl = &rclLocal;
+    }
+
     UserEnterExclusive();
 
-    if (NULL != UnsafeRect && ! NT_SUCCESS(MmCopyFromCaller(&Rect, UnsafeRect, sizeof(RECT))))
-    {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
-        RETURN(FALSE);
-    }
+    /* Call the internal function */
+    bResult = UserClipCursor(prcl);
 
-    CurInfo = IntGetSysCursorInfo();
-
-    DesktopWindow = UserGetDesktopWindow();
-
-    if ((Rect.right > Rect.left) && (Rect.bottom > Rect.top)
-            && DesktopWindow && UnsafeRect != NULL)
-    {
-
-        CurInfo->CursorClipInfo.IsClipped = TRUE;
-        CurInfo->CursorClipInfo.Left = max(Rect.left, DesktopWindow->Wnd->rcWindow.left);
-        CurInfo->CursorClipInfo.Top = max(Rect.top, DesktopWindow->Wnd->rcWindow.top);
-        CurInfo->CursorClipInfo.Right = min(Rect.right, DesktopWindow->Wnd->rcWindow.right);
-        CurInfo->CursorClipInfo.Bottom = min(Rect.bottom, DesktopWindow->Wnd->rcWindow.bottom);
-
-        UserSetCursorPos(gpsi->ptCursor.x, gpsi->ptCursor.y);
-
-        RETURN(TRUE);
-    }
-
-    CurInfo->CursorClipInfo.IsClipped = FALSE;
-    RETURN(TRUE);
-
-CLEANUP:
-    DPRINT("Leave NtUserClipCursor, ret=%i\n",_ret_);
     UserLeave();
-    END_CLEANUP;
+
+    return bResult;
 }
 
 
