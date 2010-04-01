@@ -746,8 +746,11 @@ IKsFilter_DispatchDeviceIoControl(
         }
     }
 
-    Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    if (Status != STATUS_PENDING)
+    {
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
 
     /* done */
     return Status;
