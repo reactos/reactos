@@ -275,6 +275,14 @@ BdaCreateFilterFactoryEx(
     /* copy filter descriptor template */
     RtlMoveMemory(FilterDescriptor, pFilterDescriptor, sizeof(KSFILTER_DESCRIPTOR));
 
+    /* erase pin / nodes / connections from filter descriptor */
+    FilterDescriptor->PinDescriptorsCount = 0;
+    FilterDescriptor->PinDescriptors = NULL;
+    FilterDescriptor->NodeDescriptorsCount = 0;
+    FilterDescriptor->NodeDescriptors = NULL;
+    FilterDescriptor->ConnectionsCount = 0;
+    FilterDescriptor->Connections = NULL;
+
     /* merge the automation tables */
     Status = KsMergeAutomationTables((PKSAUTOMATION_TABLE*)&FilterDescriptor->AutomationTable, (PKSAUTOMATION_TABLE)pFilterDescriptor->AutomationTable, &FilterAutomationTable, NULL);
 
@@ -301,17 +309,21 @@ BdaCreateFilterFactoryEx(
     /* check for success */
     if (NT_SUCCESS(Status))
     {
-
-        /* add the item to filter object bag */
-        Status = KsAddItemToObjectBag(FilterFactory->Bag, FilterInstance, FreeFilterInstance);
-        if (!NT_SUCCESS(Status))
+        if (FilterDescriptor->AutomationTable != &FilterAutomationTable)
         {
-            /* destroy filter instance */
-            DPRINT1("KsAddItemToObjectBag failed with %lx\n", Status);
-            FreeItem(FilterDescriptor);
-            FreeItem(FilterInstance);
-            KsDeleteFilterFactory(FilterFactory);
-            return Status;
+            /* add the item to filter object bag */
+            KsAddItemToObjectBag(FilterFactory->Bag, (PVOID)FilterDescriptor->AutomationTable, FreeFilterInstance);
+        }
+        else
+        {
+            /* make sure the automation table is not-read only */
+            Status = _KsEdit(FilterFactory->Bag, (PVOID*)&FilterDescriptor->AutomationTable, sizeof(KSAUTOMATION_TABLE), sizeof(KSAUTOMATION_TABLE), 0);
+
+            /* sanity check */
+            ASSERT(Status == STATUS_SUCCESS);
+
+            /* add to object bag */
+            KsAddItemToObjectBag(FilterFactory->Bag, (PVOID)FilterDescriptor->AutomationTable, FreeFilterInstance);
         }
 
         /* initialize filter instance entry */
@@ -338,7 +350,7 @@ BdaCreateFilterFactoryEx(
     {
         /* failed to create filter factory */
         FreeItem(FilterInstance);
-        DPRINT1("KsCreateFilterFactory failed with %lx\n", Status);
+        FreeItem(FilterDescriptor);
     }
 
     /* done */
