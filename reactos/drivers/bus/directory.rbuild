@@ -10,4 +10,7 @@
 <directory name="pci">
 	<xi:include href="pci/pci.rbuild" />
 </directory>
+<directory name="pcix">
+	<xi:include href="pcix/pcix.rbuild" />
+</directory>
 </group>
