@@ -861,4 +861,64 @@ HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     return STATUS_SUCCESS;
 }
 
+VOID
+NTAPI
+HalpInitializePciBus(VOID)
+{
+    /* Setup the PCI stub support */
+    HalpInitializePciStubs();
+    
+    /* Set the NMI crash flag */
+    HalpGetNMICrashFlag();
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+HalReportResourceUsage(VOID)
+{
+    INTERFACE_TYPE InterfaceType;
+    UNICODE_STRING HalString;
+
+    /* FIXME: Initialize DMA 64-bit support */
+
+    /* FIXME: Initialize MCA bus */
+
+    /* Initialize PCI bus. */
+    HalpInitializePciBus();
+
+    /* What kind of bus is this? */
+    switch (HalpBusType)
+    {
+        /* ISA Machine */
+        case MACHINE_TYPE_ISA:
+            InterfaceType = Isa;
+            break;
+
+        /* EISA Machine */
+        case MACHINE_TYPE_EISA:
+            InterfaceType = Eisa;
+            break;
+
+        /* MCA Machine */
+        case MACHINE_TYPE_MCA:
+            InterfaceType = MicroChannel;
+            break;
+
+        /* Unknown */
+        default:
+            InterfaceType = Internal;
+            break;
+    }
+
+    /* Build HAL usage */
+    RtlInitUnicodeString(&HalString, L"ACPI Compatible Eisa/Isa HAL");
+    HalpReportResourceUsage(&HalString, InterfaceType);
+
+    /* Setup PCI debugging and Hibernation */
+    HalpRegisterPciDebuggingDeviceInfo();
+}
+
 /* EOF */

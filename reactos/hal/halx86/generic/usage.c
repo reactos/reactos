@@ -14,6 +14,7 @@
 
 /* GLOBALS ********************************************************************/
 
+BOOLEAN HalpNMIDumpFlag;
 PUCHAR KdComPortInUse;
 PADDRESS_USAGE HalpAddressUsageList;
 IDTUsageFlags HalpIDTUsageFlags[MAXIMUM_IDTVECTOR];
@@ -88,55 +89,56 @@ HalpEnableInterruptHandler(IN UCHAR Flags,
     /* Enable the interrupt */
     HalEnableSystemInterrupt(SystemVector, Irql, Mode);
 }
-#endif
 
-/*
- * @unimplemented
- */
 VOID
 NTAPI
-HalReportResourceUsage(VOID)
+HalpGetNMICrashFlag(VOID)
 {
-    INTERFACE_TYPE InterfaceType;
-    UNICODE_STRING HalString;
+    UNICODE_STRING ValueName;
+    UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\CrashControl");
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    ULONG ResultLength;
+    HANDLE Handle;
+    NTSTATUS Status;
+    KEY_VALUE_PARTIAL_INFORMATION KeyValueInformation; 
 
-    /* FIXME: Initialize DMA 64-bit support */
+    /* Set default */
+    HalpNMIDumpFlag = 0;
 
-    /* FIXME: Initialize MCA bus */
-
-    /* Initialize PCI bus. */
-    HalpInitializePciBus();
+    /* Initialize attributes */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
     
-    /* Initialize the stubs */
-    HalpInitializePciStubs();
-
-    /* What kind of bus is this? */
-    switch (HalpBusType)
+    /* Open crash key */
+    Status = ZwOpenKey(&Handle, KEY_READ, &ObjectAttributes);
+    if (NT_SUCCESS(Status))
     {
-        /* ISA Machine */
-        case MACHINE_TYPE_ISA:
-            InterfaceType = Isa;
-            break;
-
-        /* EISA Machine */
-        case MACHINE_TYPE_EISA:
-            InterfaceType = Eisa;
-            break;
-
-        /* MCA Machine */
-        case MACHINE_TYPE_MCA:
-            InterfaceType = MicroChannel;
-            break;
-
-        /* Unknown */
-        default:
-            InterfaceType = Internal;
-            break;
+        /* Query key value */
+        RtlInitUnicodeString(&ValueName, L"NMICrashDump");
+        Status = ZwQueryValueKey(Handle,
+                                 &ValueName,
+                                 KeyValuePartialInformation,
+                                 &KeyValueInformation,
+                                 sizeof(KeyValueInformation),
+                                 &ResultLength);
+        if (NT_SUCCESS(Status))
+        {
+            /* Check for valid data */
+            if (ResultLength == sizeof(KEY_VALUE_PARTIAL_INFORMATION))
+            {
+                /* Read the flag */
+                HalpNMIDumpFlag = KeyValueInformation.Data[0];
+            }
+        }
+        
+        /* We're done */
+        ZwClose(Handle);
     }
-
-    /* Build HAL usage */
-    RtlInitUnicodeString(&HalString, L"PC Compatible Eisa/Isa HAL");
-    HalpReportResourceUsage(&HalString, InterfaceType);
-
-    /* FIXME: Setup PCI debugging and Hibernation */
 }
+#endif
+
+/* EOF */
+

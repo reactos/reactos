@@ -708,6 +708,19 @@ HalpOpenRegistryKey(
 );
 
 VOID
+NTAPI
+HalpGetNMICrashFlag(
+    VOID
+);
+
+VOID
+NTAPI
+HalpReportResourceUsage(
+    IN PUNICODE_STRING HalName,
+    IN INTERFACE_TYPE InterfaceType
+);
+
+VOID
 FASTCALL
 KeUpdateSystemTime(
     IN PKTRAP_FRAME TrapFrame,
