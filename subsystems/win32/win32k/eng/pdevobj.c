@@ -57,10 +57,11 @@ PDEVOBJ_vRelease(PPDEVOBJ ppdev)
     /* Check if references are left */
     if (ppdev->cPdevRefs == 0)
     {
-        /* Release surface */
+        /* Do we have a surface? */
         if(ppdev->pSurface)
         {
-            SURFACE_FreeSurface(ppdev->pSurface);
+            /* Release the surface and let the driver free it */
+            SURFACE_ShareUnlockSurface(ppdev->pSurface);
             ppdev->pfn.DisableSurface(ppdev->dhpdev);
         }
 
