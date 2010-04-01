@@ -169,7 +169,16 @@ DC_LockDc(HDC hdc)
 {
     PDC pdc;
     pdc = GDIOBJ_LockObj(hdc, GDILoObjType_LO_DC_TYPE);
-    if(pdc) EngAcquireSemaphoreShared(pdc->ppdev->hsemDevLock);
+    
+    /* Direct DC's need PDEV locking */
+    if(pdc && pdc->dctype == DCTYPE_DIRECT)
+    {
+        /* Acquire shared PDEV lock */
+        EngAcquireSemaphoreShared(pdc->ppdev->hsemDevLock);
+        
+        /* Get the current surface */
+        pdc->dclevel.pSurface = pdc->ppdev->pSurface;
+    }
     return pdc;
 }
 
@@ -177,7 +186,12 @@ void
 FORCEINLINE
 DC_UnlockDc(PDC pdc)
 {
-    EngReleaseSemaphore(pdc->ppdev->hsemDevLock);
+    if(pdc->dctype == DCTYPE_DIRECT)
+    {
+        /* Release PDEV lock */
+        EngReleaseSemaphore(pdc->ppdev->hsemDevLock);
+    }
+
     GDIOBJ_UnlockObjByPtr(&pdc->BaseObject);
 }
 

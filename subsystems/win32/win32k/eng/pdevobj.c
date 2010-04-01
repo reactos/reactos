@@ -329,37 +329,6 @@ PDEVOBJ_vSwitchPdev(
     ppdev2->pfn.CompletePDEV(ppdev2->dhpdev, (HDEV)ppdev2);
 }
 
-void
-TestDraw()
-{
-    RECTL rclTrg;
-    PPDEVOBJ ppdev;
-    PDC pdc;
-
-    ppdev = EngpGetPDEV(0);
-
-    pdc = DC_AllocDcWithHandle();
-    DC_vInitDc(pdc, 0, ppdev);
-
-
-    rclTrg.left = rclTrg.top = 0;
-    rclTrg.right = rclTrg.bottom = 400;
-
-    IntEngBitBltEx(&ppdev->pSurface->SurfObj,
-                   NULL,
-                   NULL,
-                   NULL,
-                   NULL,
-                   &rclTrg,
-                   NULL,
-                   NULL,
-                   &pdc->eboFill.BrushObject,
-                   NULL,
-                   ROP3_TO_ROP4(PATCOPY),
-                   FALSE);
-
-    ASSERT(FALSE);
-}
 
 BOOL
 NTAPI
@@ -429,8 +398,6 @@ leave:
 
     DPRINT1("leave, ppdev = %p, pSurface = %p\n", ppdev, ppdev->pSurface);
     ASSERT(ppdev->pSurface->BitsLock);
-
-    TestDraw();
 
     return retval;
 }

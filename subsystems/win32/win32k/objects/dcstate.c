@@ -41,7 +41,6 @@ DC_vCopyState(PDC pdcSrc, PDC pdcDst, BOOL To)
     pdcDst->dclevel.hpal            = pdcSrc->dclevel.hpal;
 
     /* Handle references here correctly */
-    DC_vSelectSurface(pdcDst, pdcSrc->dclevel.pSurface);
     DC_vSelectFillBrush(pdcDst, pdcSrc->dclevel.pbrFill);
     DC_vSelectLineBrush(pdcDst, pdcSrc->dclevel.pbrLine);
     DC_vSelectPalette(pdcDst, pdcSrc->dclevel.ppal);
@@ -160,6 +159,10 @@ DC_vRestoreDC(
             /* Copy the state back */
             DC_vCopyState(pdcSave, pdc, FALSE);
 
+            /* Only memory DC's change their surface */
+            if (pdcSave->dctype == DCTYPE_MEMORY)
+                DC_vSelectSurface(pdc, pdcSave->dclevel.pSurface);
+
             // Restore Path by removing it, if the Save flag is set.
             // BeginPath will takecare of the rest.
             if (pdc->dclevel.hPath && pdc->dclevel.flPath & DCPATH_SAVE)
@@ -273,6 +276,10 @@ NtGdiSaveDC(
 
     /* Copy the current state */
     DC_vCopyState(pdc, pdcSave, TRUE);
+
+    /* Only memory DC's change their surface */
+    if (pdc->dctype == DCTYPE_MEMORY)
+        DC_vSelectSurface(pdcSave, pdc->dclevel.pSurface);
 
     /* Copy path. FIXME: why this way? */
     pdcSave->dclevel.hPath = pdc->dclevel.hPath;

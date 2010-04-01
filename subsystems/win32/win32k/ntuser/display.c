@@ -710,6 +710,8 @@ NtUserEnumDisplaySettings(
     return Status;
 }
 
+BOOL APIENTRY UserClipCursor(RECTL *prcl);
+VOID APIENTRY UserRedrawDesktop();
 
 LONG
 APIENTRY
@@ -725,6 +727,7 @@ UserChangeDisplaySettings(
     HKEY hkey;
     NTSTATUS Status;
     PPDEVOBJ ppdev;
+    PDESKTOP pdesk;
 
     /* If no DEVMODE is given, use registry settings */
     if (!pdm)
@@ -792,6 +795,19 @@ UserChangeDisplaySettings(
             lResult = (lResult == DISP_CHANGE_NOTUPDATED) ?
                 DISP_CHANGE_FAILED : DISP_CHANGE_RESTART;
         }
+
+        /* Update the system metrics */
+        InitMetrics();
+
+        /* Remove all cursor clipping */
+        UserClipCursor(NULL);
+
+        pdesk = IntGetActiveDesktop();
+        IntHideDesktop(pdesk);
+        co_IntShowDesktop(pdesk, ppdev->gdiinfo.ulHorzRes, ppdev->gdiinfo.ulVertRes);
+        //UserRedrawDesktop();
+
+        //IntvGetDeviceCaps(&PrimarySurface, &GdiHandleTable->DevCaps);
 
         /* Send message */
 
@@ -883,9 +899,12 @@ NtUserChangeDisplaySettings(
     }
 
     // FIXME: Copy videoparameters
+    UserEnterExclusive();
 
     /* Call internal function */
     Ret = UserChangeDisplaySettings(pustrDevice, lpDevMode, hwnd, dwflags, NULL);
+
+    UserLeave();
 
     return Ret;
 }
