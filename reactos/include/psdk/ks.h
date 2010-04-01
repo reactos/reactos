@@ -2987,6 +2987,9 @@ struct _KSNODE_DESCRIPTOR
   const KSAUTOMATION_TABLE*  AutomationTable;
   const GUID*  Type;
   const GUID*  Name;
+#if !defined(_WIN64)
+    PVOID Alignment;
+#endif
 };
 
 struct _KSFILTER_DESCRIPTOR
