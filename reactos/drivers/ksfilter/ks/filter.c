@@ -288,43 +288,30 @@ IKsFilter_fnAddProcessPin(
     IKsFilter * iface,
     IN PKSPROCESSPIN ProcessPin)
 {
-    PKSPROCESSPIN *Pins;
+    NTSTATUS Status;
     IKsFilterImpl * This = (IKsFilterImpl*)CONTAINING_RECORD(iface, IKsFilterImpl, lpVtbl);
 
     /* first acquire processing mutex */
     KeWaitForSingleObject(&This->ProcessingMutex, Executive, KernelMode, FALSE, NULL);
 
-    /* allocate new pins array */
-    Pins = AllocateItem(NonPagedPool, sizeof(PKSPROCESSPIN) * (This->ProcessPinIndex.Count + 1));
+    /* edit process pin descriptor */
+    Status = _KsEdit(This->Filter.Bag,
+                     (PVOID*)&This->ProcessPinIndex.Pins, 
+                     (This->ProcessPinIndex.Count + 1) * sizeof(PKSPROCESSPIN),
+                     (This->ProcessPinIndex.Count) * sizeof(PKSPROCESSPIN),
+                     0);
 
-    /* check if allocation succeeded */
-    if (Pins)
+    if (NT_SUCCESS(Status))
     {
-        if (This->ProcessPinIndex.Count)
-        {
-            /* copy old pin index */
-            RtlMoveMemory(Pins, This->ProcessPinIndex.Pins, sizeof(PKSPROCESSPIN) * This->ProcessPinIndex.Count);
-        }
-
         /* add new process pin */
-        Pins[This->ProcessPinIndex.Count] = ProcessPin;
-
-        /* free old process pin */
-        FreeItem(This->ProcessPinIndex.Pins);
-
-        /* store new process pin index */
-        This->ProcessPinIndex.Pins = Pins;
+        This->ProcessPinIndex.Pins[This->ProcessPinIndex.Count] = ProcessPin;
         This->ProcessPinIndex.Count++;
     }
 
     /* release process mutex */
     KeReleaseMutex(&This->ProcessingMutex, FALSE);
 
-    if (Pins)
-        return STATUS_SUCCESS;
-    else
-        return STATUS_INSUFFICIENT_RESOURCES;
-
+    return Status;
 }
 
 NTSTATUS
@@ -530,7 +517,7 @@ KspHandlePropertyInstances(
     KSPIN_CINSTANCES * Instances;
     KSP_PIN * Pin = (KSP_PIN*)Request;
 
-    if (!This->Factory->FilterDescriptor || !This->Factory->FilterDescriptor->PinDescriptorsCount)
+    if (!This->Factory->FilterDescriptor || !This->PinDescriptorCount)
     {
         /* no filter / pin descriptor */
         IoStatus->Status = STATUS_NOT_IMPLEMENTED;
@@ -539,11 +526,11 @@ KspHandlePropertyInstances(
 
     /* ignore custom structs for now */
     ASSERT(This->Factory->FilterDescriptor->PinDescriptorSize == sizeof(KSPIN_DESCRIPTOR_EX)); 
-    ASSERT(This->Factory->FilterDescriptor->PinDescriptorsCount > Pin->PinId);
+    ASSERT(This->PinDescriptorCount > Pin->PinId);
 
     Instances = (KSPIN_CINSTANCES*)Data;
     /* max instance count */
-    Instances->PossibleCount = This->Factory->FilterDescriptor->PinDescriptors[Pin->PinId].InstancesPossible;
+    Instances->PossibleCount = This->PinDescriptorsEx[Pin->PinId].InstancesPossible;
     /* current instance count */
     Instances->CurrentCount = This->PinInstanceCount[Pin->PinId];
 
@@ -562,7 +549,7 @@ KspHandleNecessaryPropertyInstances(
     PULONG Result;
     KSP_PIN * Pin = (KSP_PIN*)Request;
 
-    if (!This->Factory->FilterDescriptor || !This->Factory->FilterDescriptor->PinDescriptorsCount)
+    if (!This->Factory->FilterDescriptor || !This->PinDescriptorCount)
     {
         /* no filter / pin descriptor */
         IoStatus->Status = STATUS_NOT_IMPLEMENTED;
@@ -571,10 +558,10 @@ KspHandleNecessaryPropertyInstances(
 
     /* ignore custom structs for now */
     ASSERT(This->Factory->FilterDescriptor->PinDescriptorSize == sizeof(KSPIN_DESCRIPTOR_EX)); 
-    ASSERT(This->Factory->FilterDescriptor->PinDescriptorsCount > Pin->PinId);
+    ASSERT(This->PinDescriptorCount > Pin->PinId);
 
     Result = (PULONG)Data;
-    *Result = This->Factory->FilterDescriptor->PinDescriptors[Pin->PinId].InstancesNecessary;
+    *Result = This->PinDescriptorsEx[Pin->PinId].InstancesNecessary;
 
     IoStatus->Information = sizeof(ULONG);
     IoStatus->Status = STATUS_SUCCESS;
@@ -600,7 +587,7 @@ KspHandleDataIntersection(
     MultipleItem = (PKSMULTIPLE_ITEM)(Pin + 1);
     DataRange = (PKSDATARANGE)(MultipleItem + 1);
 
-    if (!This->Factory->FilterDescriptor || !This->Factory->FilterDescriptor->PinDescriptorsCount)
+    if (!This->Factory->FilterDescriptor || !This->PinDescriptorCount)
     {
         /* no filter / pin descriptor */
         IoStatus->Status = STATUS_NOT_IMPLEMENTED;
@@ -609,11 +596,11 @@ KspHandleDataIntersection(
 
     /* ignore custom structs for now */
     ASSERT(This->Factory->FilterDescriptor->PinDescriptorSize == sizeof(KSPIN_DESCRIPTOR_EX)); 
-    ASSERT(This->Factory->FilterDescriptor->PinDescriptorsCount > Pin->PinId);
+    ASSERT(This->PinDescriptorCount > Pin->PinId);
 
-    if (This->Factory->FilterDescriptor->PinDescriptors[Pin->PinId].IntersectHandler == NULL ||
-        This->Factory->FilterDescriptor->PinDescriptors[Pin->PinId].PinDescriptor.DataRanges == NULL ||
-        This->Factory->FilterDescriptor->PinDescriptors[Pin->PinId].PinDescriptor.DataRangesCount == 0)
+    if (This->PinDescriptorsEx[Pin->PinId].IntersectHandler == NULL ||
+        This->PinDescriptors[Pin->PinId].DataRanges == NULL ||
+        This->PinDescriptors[Pin->PinId].DataRangesCount == 0)
     {
         /* no driver supported intersect handler / no provided data ranges */
         IoStatus->Status = STATUS_NOT_IMPLEMENTED;
@@ -623,14 +610,14 @@ KspHandleDataIntersection(
     for(Index = 0; Index < MultipleItem->Count; Index++)
     {
         /* Call miniport's properitary handler */
-        Status = This->Factory->FilterDescriptor->PinDescriptors[Pin->PinId].IntersectHandler(NULL, /* context */
-                                                                                              Irp,
-                                                                                              Pin,
-                                                                                              DataRange,
-                                                                                              (PKSDATAFORMAT)This->Factory->FilterDescriptor->PinDescriptors[Pin->PinId].PinDescriptor.DataRanges,
-                                                                                              DataLength,
-                                                                                              Data,
-                                                                                              &Length);
+        Status = This->PinDescriptorsEx[Pin->PinId].IntersectHandler(NULL, /* context */
+                                                                     Irp,
+                                                                     Pin,
+                                                                     DataRange,
+                                                                    (PKSDATAFORMAT)This->Factory->FilterDescriptor->PinDescriptors[Pin->PinId].PinDescriptor.DataRanges,
+                                                                     DataLength,
+                                                                     Data,
+                                                                     &Length);
 
         if (Status == STATUS_SUCCESS)
         {
@@ -696,6 +683,9 @@ KspPinPropertyHandler(
             UNIMPLEMENTED
             Status = STATUS_UNSUCCESSFUL;
     }
+    DPRINT("KspPinPropertyHandler Pins %lu Request->Id %lu Status %lx\n", This->PinDescriptorCount, Request->Id, Status);
+
+
     return Status;
 }
 
@@ -784,9 +774,9 @@ IKsFilter_CreateDescriptors(
     KSFILTER_DESCRIPTOR* FilterDescriptor)
 {
     ULONG Index = 0;
+    NTSTATUS Status;
 
     /* initialize pin descriptors */
-    This->PinInstanceCount = NULL;
     This->FirstPin = NULL;
     This->PinInstanceCount = NULL;
     This->PinDescriptors = NULL;
@@ -799,6 +789,69 @@ IKsFilter_CreateDescriptors(
     This->Topology.TopologyNodesCount = FilterDescriptor->NodeDescriptorsCount;
     This->Topology.TopologyConnectionsCount = FilterDescriptor->ConnectionsCount;
     This->Topology.TopologyConnections = FilterDescriptor->Connections;
+
+    /* are there any templates */
+    if (FilterDescriptor->PinDescriptorsCount)
+    {
+        /* sanity check */
+        ASSERT(FilterDescriptor->PinDescriptors);
+
+        /* FIXME handle variable sized pin descriptors */
+        ASSERT(FilterDescriptor->PinDescriptorSize == sizeof(KSPIN_DESCRIPTOR_EX));
+
+        /* store pin descriptors ex */
+        Status = _KsEdit(This->Filter.Bag, (PVOID*)&This->PinDescriptorsEx, sizeof(KSPIN_DESCRIPTOR_EX) * FilterDescriptor->PinDescriptorsCount,
+                         sizeof(KSPIN_DESCRIPTOR_EX) * FilterDescriptor->PinDescriptorsCount, 0);
+
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("IKsFilter_CreateDescriptors _KsEdit failed %lx\n", Status);
+            return Status;
+        }
+
+        /* store pin descriptors */
+        Status = _KsEdit(This->Filter.Bag, (PVOID*)&This->PinDescriptors, sizeof(KSPIN_DESCRIPTOR) * FilterDescriptor->PinDescriptorsCount,
+                         sizeof(KSPIN_DESCRIPTOR) * FilterDescriptor->PinDescriptorsCount, 0);
+
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("IKsFilter_CreateDescriptors _KsEdit failed %lx\n", Status);
+            return Status;
+        }
+
+        /* store pin instance count ex */
+        Status = _KsEdit(This->Filter.Bag, (PVOID*)&This->PinInstanceCount, sizeof(ULONG) * FilterDescriptor->PinDescriptorsCount,
+                         sizeof(ULONG) * FilterDescriptor->PinDescriptorsCount, 0);
+
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("IKsFilter_CreateDescriptors _KsEdit failed %lx\n", Status);
+            return Status;
+        }
+
+        /* store instantiated pin arrays */
+        Status = _KsEdit(This->Filter.Bag, (PVOID*)&This->FirstPin, sizeof(PKSPIN) * FilterDescriptor->PinDescriptorsCount,
+                         sizeof(PKSPIN) * FilterDescriptor->PinDescriptorsCount, 0);
+
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("IKsFilter_CreateDescriptors _KsEdit failed %lx\n", Status);
+            return Status;
+        }
+
+
+
+        /* add new pin factory */
+        RtlMoveMemory(This->PinDescriptorsEx, FilterDescriptor->PinDescriptors, sizeof(KSPIN_DESCRIPTOR_EX) * FilterDescriptor->PinDescriptorsCount);
+
+        for(Index = 0; Index < FilterDescriptor->PinDescriptorsCount; Index++)
+        {
+            RtlMoveMemory(&This->PinDescriptors[Index], &FilterDescriptor->PinDescriptors[Index].PinDescriptor, sizeof(KSPIN_DESCRIPTOR));
+        }
+
+        /* store new pin descriptor count */
+        This->PinDescriptorCount = FilterDescriptor->PinDescriptorsCount;
+    }
 
     if (FilterDescriptor->NodeDescriptorsCount)
     {
@@ -923,11 +976,16 @@ IKsFilter_DispatchCreatePin(
     PKSPIN_CONNECT Connect;
     NTSTATUS Status;
 
+    DPRINT("IKsFilter_DispatchCreatePin\n");
+
     /* get the create item */
     CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
 
     /* get the filter object */
     This = (IKsFilterImpl*)CreateItem->Context;
+
+    /* sanity check */
+    ASSERT(This->Header.Type == KsObjectTypeFilter);
 
     /* acquire control mutex */
     KeWaitForSingleObject(&This->Header.ControlMutex, Executive, KernelMode, FALSE, NULL);
@@ -935,12 +993,23 @@ IKsFilter_DispatchCreatePin(
     /* now validate the connect request */
     Status = KsValidateConnectRequest(Irp, This->PinDescriptorCount, This->PinDescriptors, &Connect);
 
+    DPRINT("IKsFilter_DispatchCreatePin KsValidateConnectRequest %lx\n", Status);
+
     if (NT_SUCCESS(Status))
     {
-        if (This->PinInstanceCount[Connect->PinId] < This->Filter.Descriptor->PinDescriptors[Connect->PinId].InstancesPossible)
+        /* sanity check */
+        ASSERT(Connect->PinId < This->PinDescriptorCount);
+
+        DPRINT("IKsFilter_DispatchCreatePin KsValidateConnectRequest PinId %lu CurrentInstanceCount %lu MaxPossible %lu\n", Connect->PinId, 
+               This->PinInstanceCount[Connect->PinId],
+               This->PinDescriptorsEx[Connect->PinId].InstancesPossible);
+
+        if (This->PinInstanceCount[Connect->PinId] < This->PinDescriptorsEx[Connect->PinId].InstancesPossible)
         {
             /* create the pin */
-            Status = KspCreatePin(DeviceObject, Irp, This->Header.KsDevice, This->FilterFactory, (IKsFilter*)&This->lpVtbl, Connect, (KSPIN_DESCRIPTOR_EX*)&This->Filter.Descriptor->PinDescriptors[Connect->PinId]);
+            Status = KspCreatePin(DeviceObject, Irp, This->Header.KsDevice, This->FilterFactory, (IKsFilter*)&This->lpVtbl, Connect, &This->PinDescriptorsEx[Connect->PinId]);
+
+            DPRINT("IKsFilter_DispatchCreatePin  KspCreatePin %lx\n", Status);
 
             if (NT_SUCCESS(Status))
             {
@@ -952,6 +1021,7 @@ IKsFilter_DispatchCreatePin(
         {
             /* maximum instance count reached, bye-bye */
             Status = STATUS_UNSUCCESSFUL;
+            DPRINT("IKsFilter_DispatchCreatePin  MaxInstance %lu CurInstance %lu %lx\n", This->PinDescriptorsEx[Connect->PinId].InstancesPossible, This->PinInstanceCount[Connect->PinId]);
         }
     }
 
@@ -964,7 +1034,9 @@ IKsFilter_DispatchCreatePin(
         Irp->IoStatus.Status = Status;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
+
     /* done */
+    DPRINT("IKsFilter_DispatchCreatePin Result %lx\n", Status);
     return Status;
 }
 

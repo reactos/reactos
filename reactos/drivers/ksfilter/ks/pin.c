@@ -1089,6 +1089,8 @@ KspCreatePin(
     ASSERT(Descriptor->Dispatch);
     ASSERT(Descriptor->Dispatch->Create);
 
+    DPRINT("KspCreatePin\n");
+
     /* get current irp stack */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
@@ -1112,6 +1114,7 @@ KspCreatePin(
     {
         /* not enough memory */
         FreeItem(This);
+        DPRINT("KspCreatePin OutOfMemory\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -1184,6 +1187,7 @@ KspCreatePin(
     if (!NT_SUCCESS(Status))
     {
         /* failed to create object header */
+        DPRINT("KspCreatePin KsAllocateObjectHeader failed %lx\n", Status);
         KsFreeObjectBag((KSOBJECT_BAG)This->Pin.Bag);
         FreeItem(This);
         FreeItem(CreateItem);
@@ -1208,6 +1212,8 @@ KspCreatePin(
          */
 
         Status = Filter->lpVtbl->AddProcessPin(Filter, &This->ProcessPin);
+        DPRINT("KspCreatePin AddProcessPin %lx\n", Status);
+
         if (!NT_SUCCESS(Status))
         {
             /* failed to add process pin */
@@ -1226,7 +1232,10 @@ KspCreatePin(
     {
         /*  now inform the driver to create a new pin */
         Status = Descriptor->Dispatch->Create(&This->Pin, Irp);
+        DPRINT("KspCreatePin DispatchCreate %lx\n", Status);
     }
+
+    DPRINT("KspCreatePin Status %lx\n", Status);
 
     if (!NT_SUCCESS(Status) && Status != STATUS_PENDING)
     {
