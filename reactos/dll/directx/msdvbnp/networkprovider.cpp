@@ -201,7 +201,6 @@ CNetworkProvider::QueryInterface(
     swprintf(Buffer, L"CNetworkProvider::QueryInterface: NoInterface for %s !!!\n", lpstr);
     OutputDebugStringW(Buffer);
     CoTaskMemFree(lpstr);
-    DebugBreak();
 
     return E_NOINTERFACE;
 }

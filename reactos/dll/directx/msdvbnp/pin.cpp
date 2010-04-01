@@ -51,7 +51,7 @@ public:
     HRESULT STDMETHODCALLTYPE EndFlush();
     HRESULT STDMETHODCALLTYPE NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate);
 
-    CPin(IBaseFilter * ParentFilter) : m_Ref(0), m_ParentFilter(ParentFilter){};
+    CPin(IBaseFilter * ParentFilter);
     virtual ~CPin(){};
 
     static LPCWSTR PIN_ID;
@@ -59,10 +59,30 @@ public:
 protected:
     LONG m_Ref;
     IBaseFilter * m_ParentFilter;
+    AM_MEDIA_TYPE m_MediaType;
+    IPin * m_Pin;
 };
 
 
 LPCWSTR CPin::PIN_ID = L"Antenna Out";
+
+
+CPin::CPin(
+    IBaseFilter * ParentFilter) : m_Ref(0),
+                                  m_ParentFilter(ParentFilter),
+                                  m_Pin(0)
+{
+    m_MediaType.majortype = KSDATAFORMAT_TYPE_BDA_ANTENNA;
+    m_MediaType.subtype = MEDIASUBTYPE_None;
+    m_MediaType.formattype = FORMAT_None;
+    m_MediaType.bFixedSizeSamples = true;
+    m_MediaType.bTemporalCompression = false;
+    m_MediaType.lSampleSize = sizeof(CHAR);
+    m_MediaType.pUnk = NULL;
+    m_MediaType.cbFormat = 0;
+    m_MediaType.pbFormat = NULL;
+}
+
 
 HRESULT
 STDMETHODCALLTYPE
@@ -100,36 +120,97 @@ HRESULT
 STDMETHODCALLTYPE
 CPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
 {
+    HRESULT hr;
     OutputDebugStringW(L"CPin::Connect called\n");
-    return E_NOTIMPL;
+
+    if (pmt)
+    {
+        hr = pReceivePin->QueryAccept(pmt);
+        if (FAILED(hr))
+        {
+            OutputDebugStringW(L"CPin::Connect QueryAccept failed\n");
+            return hr;
+        }
+    }
+    else
+    {
+        // query accept
+        hr = pReceivePin->QueryAccept(&m_MediaType);
+        if (FAILED(hr))
+        {
+            OutputDebugStringW(L"CPin::Connect QueryAccept pmt default failed\n");
+            return hr;
+        }
+
+         pmt = &m_MediaType;
+    }
+
+    // receive connection;
+    hr = pReceivePin->ReceiveConnection((IPin*)this, pmt);
+    if (SUCCEEDED(hr))
+    {
+        // increment reference count
+        pReceivePin->AddRef();
+        m_Pin = pReceivePin;
+        OutputDebugStringW(L"CPin::Connect success\n");
+    }
+
+    return hr;
 }
 
 HRESULT
 STDMETHODCALLTYPE
 CPin::ReceiveConnection(IPin *pConnector, const AM_MEDIA_TYPE *pmt)
 {
-    OutputDebugStringW(L"CPin::ReceiveConnection called\n");
-    return E_NOTIMPL;
+    return E_UNEXPECTED;
 }
+
 HRESULT
 STDMETHODCALLTYPE
 CPin::Disconnect( void)
 {
-    OutputDebugStringW(L"CPin::Disconnect called\n");
-    return E_NOTIMPL;
+#ifdef MSDVBNP_TRACE
+   OutputDebugStringW(L"CPin::Disconnect\n");
+#endif
+
+    if (!m_Pin)
+    {
+        // pin was not connected
+        return S_FALSE;
+    }
+
+    m_Pin->Release();
+    m_Pin = NULL;
+
+    return S_OK;
 }
 HRESULT
 STDMETHODCALLTYPE
 CPin::ConnectedTo(IPin **pPin)
 {
-    OutputDebugStringW(L"CPin::ConnectedTo called\n");
+#ifdef MSDVBNP_TRACE
+   OutputDebugStringW(L"CPin::ConnectedTo\n");
+#endif
+
+    if (!pPin)
+        return E_POINTER;
+
+    if (m_Pin)
+    {
+        // increment reference count
+        m_Pin->AddRef();
+        *pPin = m_Pin;
+        return S_OK;
+    }
+
+    *pPin = NULL;
     return VFW_E_NOT_CONNECTED;
 }
 HRESULT
 STDMETHODCALLTYPE
 CPin::ConnectionMediaType(AM_MEDIA_TYPE *pmt)
 {
-    OutputDebugStringW(L"CPin::ConnectionMediaType called\n");
+    OutputDebugStringW(L"CPin::ConnectionMediaType NotImplemented\n");
     return E_NOTIMPL;
 }
 HRESULT
@@ -170,7 +251,7 @@ HRESULT
 STDMETHODCALLTYPE
 CPin::QueryAccept(const AM_MEDIA_TYPE *pmt)
 {
-    OutputDebugStringW(L"CPin::QueryAccept called\n");
+    OutputDebugStringW(L"CPin::QueryAccept NotImplemented\n");
     return E_NOTIMPL;
 }
 HRESULT
@@ -200,35 +281,35 @@ HRESULT
 STDMETHODCALLTYPE
 CPin::QueryInternalConnections(IPin **apPin, ULONG *nPin)
 {
-    OutputDebugStringW(L"CPin::QueryInternalConnections called\n");
+    OutputDebugStringW(L"CPin::QueryInternalConnections NotImplemented\n");
     return E_NOTIMPL;
 }
 HRESULT
 STDMETHODCALLTYPE
 CPin::EndOfStream( void)
 {
-    OutputDebugStringW(L"CPin::EndOfStream called\n");
+    OutputDebugStringW(L"CPin::EndOfStream NotImplemented\n");
     return E_NOTIMPL;
 }
 HRESULT
 STDMETHODCALLTYPE
 CPin::BeginFlush( void)
 {
-    OutputDebugStringW(L"CPin::BeginFlush called\n");
+    OutputDebugStringW(L"CPin::BeginFlush NotImplemented\n");
     return E_NOTIMPL;
 }
 HRESULT
 STDMETHODCALLTYPE
 CPin::EndFlush( void)
 {
-    OutputDebugStringW(L"CPin::EndFlush called\n");
+    OutputDebugStringW(L"CPin::EndFlush NotImplemented\n");
     return E_NOTIMPL;
 }
 HRESULT
 STDMETHODCALLTYPE
 CPin::NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate)
 {
-    OutputDebugStringW(L"CPin::NewSegment called\n");
+    OutputDebugStringW(L"CPin::NewSegment NotImplemented\n");
     return E_NOTIMPL;
 }
 
