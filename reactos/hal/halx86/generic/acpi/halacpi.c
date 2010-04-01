@@ -37,6 +37,11 @@ LIST_ENTRY HalpAcpiTableMatchList;
 
 ULONG HalpInvalidAcpiTable;
 
+/* This determines the HAL type */
+BOOLEAN HalDisableFirmwareMapper = TRUE;
+PWCHAR HalHardwareIdString = L"acpipic_up";
+PWCHAR HalName = L"ACPI Compatible Eisa/Isa HAL";
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 PDESCRIPTION_HEADER
@@ -872,6 +877,29 @@ HalpInitializePciBus(VOID)
     HalpGetNMICrashFlag();
 }
 
+VOID
+NTAPI
+HalpBuildAddressMap(VOID)
+{
+    /* ACPI is magic baby */
+}
+
+BOOLEAN
+NTAPI
+HalpGetDebugPortTable(VOID)
+{
+    return ((HalpDebugPortTable) &&
+            (HalpDebugPortTable->BaseAddress.AddressSpaceID == 1));
+}
+
+ULONG
+NTAPI
+HalpIs16BitPortDecodeSupported(VOID)
+{
+    /* All ACPI systems are at least "EISA" so they support this */
+    return CM_RESOURCE_PORT_16_BIT_DECODE;
+}
+
 /*
  * @implemented
  */
@@ -914,7 +942,7 @@ HalReportResourceUsage(VOID)
     }
 
     /* Build HAL usage */
-    RtlInitUnicodeString(&HalString, L"ACPI Compatible Eisa/Isa HAL");
+    RtlInitUnicodeString(&HalString, HalName);
     HalpReportResourceUsage(&HalString, InterfaceType);
 
     /* Setup PCI debugging and Hibernation */

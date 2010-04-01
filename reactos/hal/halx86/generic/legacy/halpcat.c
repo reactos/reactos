@@ -14,6 +14,11 @@
 
 /* GLOBALS ********************************************************************/
 
+/* This determines the HAL type */
+BOOLEAN HalDisableFirmwareMapper = FALSE;
+PWCHAR HalHardwareIdString = L"e_isa_up";
+PWCHAR HalName = L"PC Compatible Eisa/Isa HAL";
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 NTSTATUS
@@ -35,6 +40,33 @@ HalpInitializePciBus(VOID)
     /* FIXME: Should detect broken PCI hardware and apply hacks */
     
     /* FIXME: Should build resource ranges */
+}
+
+VOID
+NTAPI
+HalpBuildAddressMap(VOID)
+{
+    /* FIXME: Inherit ROM blocks from the registry */
+    //HalpInheritROMBlocks();
+    
+    /* FIXME: Add the ROM blocks to our ranges */
+    //HalpAddROMRanges();
+}
+
+BOOLEAN
+NTAPI
+HalpGetDebugPortTable(VOID)
+{
+    /* No ACPI */
+    return FALSE;
+}
+
+ULONG
+NTAPI
+HalpIs16BitPortDecodeSupported(VOID)
+{
+    /* Only EISA systems support this */
+    return (HalpBusType == MACHINE_TYPE_EISA) ? CM_RESOURCE_PORT_16_BIT_DECODE : 0;
 }
 
 /*
@@ -80,7 +112,7 @@ HalReportResourceUsage(VOID)
     }
 
     /* Build HAL usage */
-    RtlInitUnicodeString(&HalString, L"PC Compatible Eisa/Isa HAL");
+    RtlInitUnicodeString(&HalString, HalName);
     HalpReportResourceUsage(&HalString, InterfaceType);
 
     /* Setup PCI debugging and Hibernation */

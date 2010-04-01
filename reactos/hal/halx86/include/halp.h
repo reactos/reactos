@@ -49,6 +49,7 @@ DECLSPEC_NORETURN
 /* Usage flags */
 #define IDT_REGISTERED          0x01
 #define IDT_LATCHED             0x02
+#define IDT_READ_ONLY           0x04
 #define IDT_INTERNAL            0x11
 #define IDT_DEVICE              0x21
 
@@ -713,11 +714,41 @@ HalpGetNMICrashFlag(
     VOID
 );
 
+BOOLEAN
+NTAPI
+HalpGetDebugPortTable(
+    VOID
+);
+
+VOID
+NTAPI
+HalpReportSerialNumber(
+    VOID
+);
+
+NTSTATUS
+NTAPI
+HalpMarkAcpiHal(
+    VOID
+);
+
+VOID
+NTAPI
+HalpBuildAddressMap(
+    VOID
+);
+
 VOID
 NTAPI
 HalpReportResourceUsage(
     IN PUNICODE_STRING HalName,
     IN INTERFACE_TYPE InterfaceType
+);
+
+ULONG
+NTAPI
+HalpIs16BitPortDecodeSupported(
+    VOID
 );
 
 VOID
@@ -748,3 +779,9 @@ extern KSPIN_LOCK HalpSystemHardwareLock;
 extern PADDRESS_USAGE HalpAddressUsageList;
 
 extern LARGE_INTEGER HalpPerfCounter;
+
+extern KAFFINITY HalpActiveProcessors;
+
+extern BOOLEAN HalDisableFirmwareMapper;
+extern PWCHAR HalHardwareIdString;
+extern PWCHAR HalName;
