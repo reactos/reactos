@@ -134,7 +134,7 @@ PnpRootCreateDevice(
     IN PDEVICE_OBJECT *PhysicalDeviceObject)
 {
     PPNPROOT_FDO_DEVICE_EXTENSION DeviceExtension;
-    UNICODE_STRING UnknownServiceName = RTL_CONSTANT_STRING(L"UNKNOWN");
+    UNICODE_STRING UnknownServiceName = RTL_CONSTANT_STRING(L"LEGACY_UNKNOWN");
     PUNICODE_STRING LocalServiceName;
     PPNPROOT_PDO_DEVICE_EXTENSION PdoDeviceExtension;
     WCHAR DevicePath[MAX_PATH + 1];
@@ -154,7 +154,7 @@ PnpRootCreateDevice(
     DPRINT("Creating a PnP root device for service '%wZ'\n", LocalServiceName);
 
     /* Search for a free instance ID */
-    _snwprintf(DevicePath, sizeof(DevicePath) / sizeof(WCHAR), L"%s\\LEGACY_%wZ", REGSTR_KEY_ROOTENUM, LocalServiceName);
+    _snwprintf(DevicePath, sizeof(DevicePath) / sizeof(WCHAR), L"%s\\%wZ", REGSTR_KEY_ROOTENUM, LocalServiceName);
     for (i = 0; i < 9999; i++)
     {
         _snwprintf(InstancePath, sizeof(InstancePath) / sizeof(WCHAR), L"%04lu", i);

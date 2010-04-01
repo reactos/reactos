@@ -46,11 +46,12 @@ typedef struct _INVALIDATE_DEVICE_RELATION_DATA
 
 /* FUNCTIONS *****************************************************************/
 
-static NTSTATUS
+NTSTATUS
 IopAssignDeviceResources(
    IN PDEVICE_NODE DeviceNode,
    OUT ULONG *pRequiredSize);
-static NTSTATUS
+
+NTSTATUS
 IopTranslateDeviceResources(
    IN PDEVICE_NODE DeviceNode,
    IN ULONG RequiredSize);
@@ -361,6 +362,8 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
    PDEVICE_NODE Node;
    NTSTATUS Status;
    KIRQL OldIrql;
+   UNICODE_STRING FullServiceName;
+   UNICODE_STRING LegacyPrefix = RTL_CONSTANT_STRING(L"LEGACY_");
 
    DPRINT("ParentNode 0x%p PhysicalDeviceObject 0x%p ServiceName %wZ\n",
       ParentNode, PhysicalDeviceObject, ServiceName);
@@ -375,7 +378,22 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
 
    if (!PhysicalDeviceObject)
    {
-      Status = PnpRootCreateDevice(ServiceName, &PhysicalDeviceObject);
+      if (ServiceName)
+      {
+         FullServiceName.MaximumLength = LegacyPrefix.Length + ServiceName->Length;
+         FullServiceName.Length = 0;
+         FullServiceName.Buffer = ExAllocatePool(PagedPool, FullServiceName.MaximumLength);
+         if (!FullServiceName.Buffer)
+         {
+            ExFreePool(Node);
+            return STATUS_INSUFFICIENT_RESOURCES;
+         }
+
+         RtlAppendUnicodeStringToString(&FullServiceName, &LegacyPrefix);
+         RtlAppendUnicodeStringToString(&FullServiceName, ServiceName);
+      }
+
+      Status = PnpRootCreateDevice(ServiceName ? &FullServiceName : NULL, &PhysicalDeviceObject);
       if (!NT_SUCCESS(Status))
       {
          DPRINT1("PnpRootCreateDevice() failed with status 0x%08X\n", Status);
@@ -709,7 +727,6 @@ IopCreateDeviceKeyPath(IN PCUNICODE_STRING RegistryPath,
 }
 
 
-static
 NTSTATUS
 IopSetDeviceInstanceData(HANDLE InstanceKey,
                          PDEVICE_NODE DeviceNode)
@@ -799,7 +816,7 @@ IopSetDeviceInstanceData(HANDLE InstanceKey,
 }
 
 
-static NTSTATUS
+NTSTATUS
 IopAssignDeviceResources(
    IN PDEVICE_NODE DeviceNode,
    OUT ULONG *pRequiredSize)
@@ -1014,7 +1031,7 @@ ByeBye:
 }
 
 
-static NTSTATUS
+NTSTATUS
 IopTranslateDeviceResources(
    IN PDEVICE_NODE DeviceNode,
    IN ULONG RequiredSize)
