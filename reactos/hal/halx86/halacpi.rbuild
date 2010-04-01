@@ -8,6 +8,7 @@
 		<include base="ntoskrnl">include</include>
 		<define name="_NTHALDLL_" />
 		<define name="_NTHAL_" />
+		<library>hal_generic</library>
 		<library>hal_generic_acpi</library>
 		<library>hal_generic_up</library>
 		<library>ntoskrnl</library>

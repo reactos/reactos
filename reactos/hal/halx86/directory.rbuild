@@ -5,7 +5,9 @@
 	<xi:include href="hal_generic.rbuild" />
 	<xi:include href="hal_generic_up.rbuild" />
 	<xi:include href="hal_generic_mp.rbuild" />
-
+	<xi:include href="hal_generic_pcat.rbuild" />
+	<xi:include href="hal_generic_acpi.rbuild" />
+		
 	<if property="ARCH" value="i386">
 		<xi:include href="hal.rbuild" />
     	<xi:include href="halacpi.rbuild" />
