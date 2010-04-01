@@ -56,6 +56,10 @@ IopTranslateDeviceResources(
    IN PDEVICE_NODE DeviceNode,
    IN ULONG RequiredSize);
 
+NTSTATUS
+IopUpdateResourceMap(
+   IN PDEVICE_NODE DeviceNode);
+
 PDEVICE_NODE
 FASTCALL
 IopGetDeviceNode(PDEVICE_OBJECT DeviceObject)
@@ -159,7 +163,11 @@ IopStartDevice(
       Status = IopTranslateDeviceResources(DeviceNode, RequiredLength);
       if (NT_SUCCESS(Status))
       {
-         IopDeviceNodeSetFlag(DeviceNode, DNF_RESOURCE_ASSIGNED);
+         Status = IopUpdateResourceMap(DeviceNode);
+         if (!NT_SUCCESS(Status))
+         {
+             DPRINT("IopUpdateResourceMap() failed (Status 0x%08lx)\n", Status);
+         }
       }
       else
       {
@@ -726,6 +734,128 @@ IopCreateDeviceKeyPath(IN PCUNICODE_STRING RegistryPath,
     return STATUS_UNSUCCESSFUL;
 }
 
+NTSTATUS
+IopUpdateResourceMap(IN PDEVICE_NODE DeviceNode)
+{
+  NTSTATUS Status;
+  ULONG Disposition;
+  HANDLE PnpMgrLevel1, PnpMgrLevel2, ResourceMapKey;
+  UNICODE_STRING KeyName;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+
+  RtlInitUnicodeString(&KeyName,
+		       L"\\Registry\\Machine\\HARDWARE\\RESOURCEMAP");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &KeyName,
+			     OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
+			     0,
+			     NULL);
+  Status = ZwCreateKey(&ResourceMapKey,
+		       KEY_ALL_ACCESS,
+		       &ObjectAttributes,
+		       0,
+		       NULL,
+		       REG_OPTION_VOLATILE,
+		       &Disposition);
+  if (!NT_SUCCESS(Status))
+      return Status;
+
+  RtlInitUnicodeString(&KeyName, L"PnP Manager");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &KeyName,
+			     OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
+			     ResourceMapKey,
+			     NULL);
+  Status = ZwCreateKey(&PnpMgrLevel1,
+                       KEY_ALL_ACCESS,
+                       &ObjectAttributes,
+                       0,
+                       NULL,
+                       REG_OPTION_VOLATILE,
+                       &Disposition);
+  ZwClose(ResourceMapKey);
+  if (!NT_SUCCESS(Status))
+      return Status;
+
+  RtlInitUnicodeString(&KeyName, L"PnpManager");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &KeyName,
+			     OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
+			     PnpMgrLevel1,
+			     NULL);
+  Status = ZwCreateKey(&PnpMgrLevel2,
+                       KEY_ALL_ACCESS,
+                       &ObjectAttributes,
+                       0,
+                       NULL,
+                       REG_OPTION_VOLATILE,
+                       &Disposition);
+  ZwClose(PnpMgrLevel1);
+  if (!NT_SUCCESS(Status))
+      return Status;
+
+  if (DeviceNode->ResourceList)
+  {
+      WCHAR NameBuff[256];
+      UNICODE_STRING NameU;
+      UNICODE_STRING Suffix;
+      ULONG OldLength;
+
+      ASSERT(DeviceNode->ResourceListTranslated);
+
+      NameU.Buffer = NameBuff;
+      NameU.Length = 0;
+      NameU.MaximumLength = 256 * sizeof(WCHAR);
+
+      Status = IoGetDeviceProperty(DeviceNode->PhysicalDeviceObject,
+                                   DevicePropertyPhysicalDeviceObjectName,
+                                   NameU.MaximumLength,
+                                   NameU.Buffer,
+                                   &OldLength);
+      ASSERT(Status == STATUS_SUCCESS);
+
+      NameU.Length = (USHORT)OldLength;
+
+      RtlInitUnicodeString(&Suffix, L".Raw");
+      RtlAppendUnicodeStringToString(&NameU, &Suffix);
+
+      Status = ZwSetValueKey(PnpMgrLevel2,
+                             &NameU,
+                             0,
+                             REG_RESOURCE_LIST,
+                             DeviceNode->ResourceList,
+                             CM_RESOURCE_LIST_SIZE(DeviceNode->ResourceList));
+      if (!NT_SUCCESS(Status))
+      {
+          ZwClose(PnpMgrLevel2);
+          return Status;
+      }
+
+      /* "Remove" the suffix by setting the length back to what it used to be */
+      NameU.Length = (USHORT)OldLength;
+
+      RtlInitUnicodeString(&Suffix, L".Translated");
+      RtlAppendUnicodeStringToString(&NameU, &Suffix);
+
+      Status = ZwSetValueKey(PnpMgrLevel2,
+                             &NameU,
+                             0,
+                             REG_RESOURCE_LIST,
+                             DeviceNode->ResourceListTranslated,
+                             CM_RESOURCE_LIST_SIZE(DeviceNode->ResourceListTranslated));
+      ZwClose(PnpMgrLevel2);
+      if (!NT_SUCCESS(Status))
+          return Status;
+  }
+  else
+  {
+      ZwClose(PnpMgrLevel2);
+  }
+
+  IopDeviceNodeSetFlag(DeviceNode, DNF_RESOURCE_ASSIGNED);
+
+  return STATUS_SUCCESS;
+}
 
 NTSTATUS
 IopSetDeviceInstanceData(HANDLE InstanceKey,
@@ -3069,7 +3199,7 @@ PpInitSystem(VOID)
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
@@ -3085,6 +3215,8 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
     PVOID Data = NULL;
     PWSTR Ptr;
     NTSTATUS Status;
+    POBJECT_NAME_INFORMATION ObjectNameInfo = NULL;
+    ULONG RequiredLength, ObjectNameInfoLength;
 
     DPRINT("IoGetDeviceProperty(0x%p %d)\n", DeviceObject, DeviceProperty);
 
@@ -3298,9 +3430,36 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
         break;
 
     case DevicePropertyPhysicalDeviceObjectName:
-        /* InstancePath buffer is NULL terminated, so we can do this */
-        Length = DeviceNode->InstancePath.MaximumLength;
-        Data = DeviceNode->InstancePath.Buffer;
+        Status = ObQueryNameString(DeviceNode->PhysicalDeviceObject,
+                                   NULL,
+                                   0,
+                                   &RequiredLength);
+        if (Status == STATUS_SUCCESS)
+        {
+            Length = 0;
+            Data = L"";
+        }
+        else if (Status == STATUS_INFO_LENGTH_MISMATCH)
+        {
+            ObjectNameInfoLength = RequiredLength;
+            ObjectNameInfo = ExAllocatePool(PagedPool, ObjectNameInfoLength);
+            if (!ObjectNameInfo)
+                return STATUS_INSUFFICIENT_RESOURCES;
+
+            Status = ObQueryNameString(DeviceNode->PhysicalDeviceObject,
+                                       ObjectNameInfo,
+                                       ObjectNameInfoLength,
+                                       &RequiredLength);
+            if (NT_SUCCESS(Status))
+            {
+                Length = ObjectNameInfo->Name.Length;
+                Data = ObjectNameInfo->Name.Buffer;
+            }
+            else
+                return Status;
+        }
+        else
+            return Status;
         break;
 
     default:
@@ -3310,12 +3469,21 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
     /* Prepare returned values */
     *ResultLength = Length;
     if (BufferLength < Length)
+    {
+        if (ObjectNameInfo != NULL)
+            ExFreePool(ObjectNameInfo);
+
         return STATUS_BUFFER_TOO_SMALL;
+    }
     RtlCopyMemory(PropertyBuffer, Data, Length);
 
     /* NULL terminate the string (if required) */
-    if (DeviceProperty == DevicePropertyEnumeratorName)
+    if (DeviceProperty == DevicePropertyEnumeratorName ||
+        DeviceProperty == DevicePropertyPhysicalDeviceObjectName)
         ((LPWSTR)PropertyBuffer)[Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+    if (ObjectNameInfo != NULL)
+        ExFreePool(ObjectNameInfo);
 
     return STATUS_SUCCESS;
 }

@@ -35,6 +35,10 @@ NTSTATUS
 IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
                                 PVOID Context);
 
+NTSTATUS
+IopUpdateResourceMap(
+   IN PDEVICE_NODE DeviceNode);
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 PWCHAR
@@ -268,7 +272,7 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
        {
           Status = IopTranslateDeviceResources(DeviceNode, RequiredLength);
           if (NT_SUCCESS(Status))
-              IopDeviceNodeSetFlag(DeviceNode, DNF_RESOURCE_ASSIGNED);
+              Status = IopUpdateResourceMap(DeviceNode);
        }
        IopDeviceNodeClearFlag(DeviceNode, DNF_ASSIGNING_RESOURCES);
 
