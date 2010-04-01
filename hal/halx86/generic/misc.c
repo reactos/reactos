@@ -18,6 +18,7 @@ BOOLEAN HalpNMIInProgress;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+#ifndef _MINIHAL_
 NTSTATUS 
 NTAPI
 HalpOpenRegistryKey(IN PHANDLE KeyHandle,
@@ -58,6 +59,7 @@ HalpOpenRegistryKey(IN PHANDLE KeyHandle,
     /* We're done */
     return Status;
 }
+#endif
 
 VOID
 NTAPI
