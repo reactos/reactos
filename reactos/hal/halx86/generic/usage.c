@@ -60,6 +60,7 @@ ADDRESS_USAGE HalpDefaultIoSpace =
 
 /* FUNCTIONS ******************************************************************/
 
+#ifndef _MINIHAL_
 VOID
 NTAPI
 HalpGetResourceSortValue(IN PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor,
@@ -481,6 +482,7 @@ HalpReportResourceUsage(IN PUNICODE_STRING HalName,
     /* Get the machine's serial number */
     HalpReportSerialNumber();
 }
+#endif
 
 VOID
 NTAPI
