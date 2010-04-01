@@ -144,13 +144,16 @@
 		<file>cmdelay.c</file>
 		<file>cmindex.c</file>
 		<file>cminit.c</file>
+		<file>cmhvlist.c</file>
 		<file>cmhook.c</file>
 		<file>cmkcbncb.c</file>
 		<file>cmkeydel.c</file>
 		<file>cmlazy.c</file>
 		<file>cmmapvw.c</file>
 		<file>cmname.c</file>
+		<file>cmnotify.c</file>
 		<file>cmparse.c</file>
+		<file>cmquota.c</file>
 		<file>cmse.c</file>
 		<file>cmsecach.c</file>
 		<file>cmsysini.c</file>

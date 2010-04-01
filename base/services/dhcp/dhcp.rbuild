@@ -4,16 +4,11 @@
 	<include base="dhcp">.</include>
 	<include base="dhcp">include</include>
 
-	<!-- FIXME: workarounds until we have a proper oldnames library -->
-	<define name="tzset">_tzset</define>
-	<define name="close">_close</define>
-	<define name="read">_read</define>
-	<define name="write">_write</define>
-
 	<library>ntdll</library>
 	<library>ws2_32</library>
 	<library>iphlpapi</library>
 	<library>advapi32</library>
+	<library>oldnames</library>
 	<file>adapter.c</file>
 	<file>alloc.c</file>
 	<file>api.c</file>

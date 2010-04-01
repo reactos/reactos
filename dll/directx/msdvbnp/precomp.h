@@ -82,6 +82,30 @@ CEnumMediaTypes_fnConstructor(
     REFIID riid,
     LPVOID * ppv);
 
+/* ethernetfilter.cpp */
+HRESULT
+WINAPI
+CEthernetFilter_fnConstructor(
+    IBDA_NetworkProvider * pNetworkProvider,
+    REFIID riid,
+    LPVOID * ppv);
+
+/* ipv6.cpp */
+HRESULT
+WINAPI
+CIPV6Filter_fnConstructor(
+    IBDA_NetworkProvider * pNetworkProvider,
+    REFIID riid,
+    LPVOID * ppv);
+
+/* ipv4.cpp */
+HRESULT
+WINAPI
+CIPV4Filter_fnConstructor(
+    IBDA_NetworkProvider * pNetworkProvider,
+    REFIID riid,
+    LPVOID * ppv);
+
 #ifndef _MSC_VER
 extern const GUID CLSID_DVBTNetworkProvider;
 #endif

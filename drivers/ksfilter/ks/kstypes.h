@@ -103,7 +103,7 @@ typedef struct
     LIST_ENTRY TargetDeviceList;
 
     KMUTEX DeviceMutex;
-    KSDEVICE_DESCRIPTOR* Descriptor;
+    KMUTEX BagMutex;
 
     LIST_ENTRY PowerDispatchList;
     LIST_ENTRY ObjectBags;

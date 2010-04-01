@@ -45,11 +45,6 @@
 
 #include <pseh/pseh2.h>
 
-/* This hack definition is necessary as long as setupapi 
-   depends on Wine "compatibility" headers */
-typedef ULONG RESOURCEID;
-typedef RESOURCEID *PRESOURCEID;
-
 #include <pnp_c.h>
 #include "rpc_private.h"
 #include "resource.h"
@@ -60,6 +55,8 @@ typedef RESOURCEID *PRESOURCEID;
 
 #define SETUP_DEVICE_INFO_SET_MAGIC 0xd00ff057
 #define SETUP_CLASS_IMAGE_LIST_MAGIC 0xd00ff058
+
+#define CMP_MAGIC  0x01234567
 
 struct DeviceInterface /* Element of DeviceInfo.InterfaceListHead */
 {

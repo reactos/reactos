@@ -261,6 +261,12 @@ NtGdiSaveDC(
     InterlockedIncrement(&pdc->ppdev->cPdevRefs);
     DC_vInitDc(pdcSave, DCTYPE_MEMORY, pdc->ppdev);
 
+    /* Handle references here correctly */
+//    pdcSrc->dclevel.pSurface = NULL;
+//    pdcSrc->dclevel.pbrFill = NULL;
+//    pdcSrc->dclevel.pbrLine = NULL;
+//    pdcSrc->dclevel.ppal = NULL;
+
     /* Make it a kernel handle
        (FIXME: windows handles this different, see wiki)*/
     GDIOBJ_SetOwnership(hdcSave, NULL);

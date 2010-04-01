@@ -9,9 +9,12 @@
 #define strcasecmp _stricmp
 #define strncasecmp _strnicmp
 
+#ifndef _TIMEZONE_DEFINED /* also in sys/time.h */
+#define _TIMEZONE_DEFINED
 struct timezone {
-    int tz_minuteswest; /* minutes W of Greenwich */
-    int tz_dsttime;     /* type of dst correction */
+  int tz_minuteswest;
+  int tz_dsttime;
 };
 
-int gettimeofday(struct timeval *tv, struct timezone *tz);
+  extern int __cdecl gettimeofday (struct timeval *p, struct timezone *z);
+#endif

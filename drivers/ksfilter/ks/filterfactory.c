@@ -338,6 +338,8 @@ KspCreateFilterFactory(
     IKsFilterFactory * Filter;
     NTSTATUS Status;
 
+    DPRINT("KsCreateFilterFactory\n");
+
     /* Lets allocate a filterfactory */
     This = AllocateItem(NonPagedPool, sizeof(IKsFilterFactoryImpl));
     if (!This)
@@ -396,8 +398,10 @@ KsFilterFactorySetDeviceClassesState(
     IN PKSFILTERFACTORY  FilterFactory,
     IN BOOLEAN  NewState)
 {
-    IKsFilterFactory * Factory = (IKsFilterFactory*)CONTAINING_RECORD(FilterFactory, IKsFilterFactoryImpl, FilterFactory);
+    IKsFilterFactory * Factory;
+    IKsFilterFactoryImpl * This = (IKsFilterFactoryImpl*)CONTAINING_RECORD(FilterFactory, IKsFilterFactoryImpl, FilterFactory);
 
+    Factory = (IKsFilterFactory*)&This->lpVtbl;
     return Factory->lpVtbl->SetDeviceClassesState(Factory, NewState);
 }
 
@@ -465,7 +469,8 @@ KsFilterFactoryUpdateCacheData (
     IN const KSFILTER_DESCRIPTOR*  FilterDescriptor OPTIONAL)
 {
     UNIMPLEMENTED
+    DPRINT("KsFilterFactoryUpdateCacheData %p\n", FilterDescriptor);
 
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_SUCCESS;
 }	
 

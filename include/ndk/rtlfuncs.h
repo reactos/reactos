@@ -1690,6 +1690,18 @@ RtlDuplicateUnicodeString(
     OUT PUNICODE_STRING DestinationString
 );
 
+//
+// Memory Functions
+//
+NTSYSAPI
+VOID
+NTAPI
+RtlFillMemoryUlong(
+    IN PVOID Destination,
+    IN ULONG Length,
+    IN ULONG Fill
+);
+
 #endif
 
 NTSYSAPI
@@ -1910,18 +1922,6 @@ RtlLookupAtomInAtomTable(
     IN PRTL_ATOM_TABLE AtomTable,
     IN PWSTR AtomName,
     OUT PRTL_ATOM Atom
-);
-
-//
-// Memory Functions
-//
-NTSYSAPI
-VOID
-NTAPI
-RtlFillMemoryUlong(
-    IN PVOID Destination,
-    IN ULONG Length,
-    IN ULONG Fill
 );
 
 //

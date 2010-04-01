@@ -10,8 +10,12 @@
 #include <initguid.h>
 #include <batclass.h>
 #include <debug.h>
+#include <wdmguid.h>
 
-typedef struct _COMPBATT_BATTERY_ENTRY
+#define COMPBATT_BATTERY_INFORMATION_PRESENT    0x04
+#define COMPBATT_TAG_ASSIGNED                   0x80
+
+typedef struct _COMPBATT_BATTERY_DATA
 {
     LIST_ENTRY BatteryLink;
     IO_REMOVE_LOCK RemoveLock;
@@ -31,7 +35,7 @@ typedef struct _COMPBATT_BATTERY_ENTRY
     BATTERY_STATUS BatteryStatus;
     ULONGLONG InterruptTime;
     UNICODE_STRING BatteryName;
-} COMPBATT_BATTERY_ENTRY, *PCOMPBATT_BATTERY_ENTRY;
+} COMPBATT_BATTERY_DATA, *PCOMPBATT_BATTERY_DATA;
 
 typedef struct _COMPBATT_DEVICE_EXTENSION
 {
@@ -114,6 +118,41 @@ CompBattQueryTag(
     OUT PULONG Tag
 );
 
+NTSTATUS
+NTAPI
+CompBattMonitorIrpComplete(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp,
+    IN PKEVENT Event
+);
+
+NTSTATUS
+NTAPI
+CompBattMonitorIrpCompleteWorker(
+    IN PCOMPBATT_BATTERY_DATA BatteryData
+);
+
+NTSTATUS
+NTAPI
+CompBattGetDeviceObjectPointer(
+    IN PUNICODE_STRING DeviceName,
+    IN ACCESS_MASK DesiredAccess,
+    OUT PFILE_OBJECT *FileObject,
+    OUT PDEVICE_OBJECT *DeviceObject
+);
+
+NTSTATUS
+NTAPI
+BatteryIoctl(
+    IN ULONG IoControlCode, 
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PVOID InputBuffer,
+    IN ULONG InputBufferLength,
+    IN PVOID OutputBuffer,
+    IN ULONG OutputBufferLength,
+    IN BOOLEAN InternalDeviceIoControl
+);
+                               
 extern ULONG CompBattDebug;
 
 /* EOF */

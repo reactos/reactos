@@ -8,6 +8,7 @@
 	<define name="_MT" />
 	<define name="_CTYPE_DISABLE_MACROS" />
 	<define name="_NO_INLINING" />
+	<define name="CRTDLL" />
 	<linkerflag linkerset="ld">-enable-stdcall-fixup</linkerflag>
 
 	<!--	__MINGW_IMPORT needs to be defined differently because it's defined

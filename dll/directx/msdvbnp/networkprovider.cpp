@@ -74,6 +74,9 @@ protected:
     GUID m_ClassID;
     DeviceFilterStack m_DeviceFilters;
     IScanningTuner * m_Tuner;
+    IBDA_IPV6Filter * m_IPV6Filter;
+    IBDA_IPV4Filter * m_IPV4Filter;
+    IBDA_EthernetFilter * m_EthernetFilter;
 };
 
 HRESULT
@@ -112,6 +115,51 @@ CNetworkProvider::QueryInterface(
         }
         m_Tuner->AddRef();
         *Output = (IUnknown*)m_Tuner;
+
+        return NOERROR;
+    }
+
+    if (IsEqualGUID(refiid, IID_IBDA_IPV6Filter))
+    {
+        // construct scanning tuner
+        if (!m_IPV6Filter)
+        {
+            HRESULT hr = CIPV6Filter_fnConstructor((IBDA_NetworkProvider*)this, refiid, (void**)&m_IPV6Filter);
+            if (FAILED(hr))
+                return hr;
+        }
+        m_IPV6Filter->AddRef();
+        *Output = (IUnknown*)m_IPV6Filter;
+
+        return NOERROR;
+    }
+
+    if (IsEqualGUID(refiid, IID_IBDA_IPV4Filter))
+    {
+        // construct scanning tuner
+        if (!m_IPV4Filter)
+        {
+            HRESULT hr = CIPV4Filter_fnConstructor((IBDA_NetworkProvider*)this, refiid, (void**)&m_IPV4Filter);
+            if (FAILED(hr))
+                return hr;
+        }
+        m_IPV4Filter->AddRef();
+        *Output = (IUnknown*)m_IPV4Filter;
+
+        return NOERROR;
+    }
+
+    if (IsEqualGUID(refiid, IID_IBDA_EthernetFilter))
+    {
+        // construct scanning tuner
+        if (!m_EthernetFilter)
+        {
+            HRESULT hr = CIPV4Filter_fnConstructor((IBDA_NetworkProvider*)this, refiid, (void**)&m_EthernetFilter);
+            if (FAILED(hr))
+                return hr;
+        }
+        m_EthernetFilter->AddRef();
+        *Output = (IUnknown*)m_EthernetFilter;
 
         return NOERROR;
     }
@@ -163,7 +211,10 @@ CNetworkProvider::CNetworkProvider(LPCGUID ClassID) : m_Ref(0),
                                                       m_ReferenceClock(0),
                                                       m_FilterState(State_Stopped),
                                                       m_DeviceFilters(),
-                                                      m_Tuner(0)
+                                                      m_Tuner(0),
+                                                      m_IPV6Filter(0),
+                                                      m_IPV4Filter(0),
+                                                      m_EthernetFilter(0)
 {
     m_Pins[0] = 0;
 

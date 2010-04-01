@@ -13,7 +13,7 @@
 #define NDEBUG
 #include <debug.h>
 
-#define ENABLE_ACPI
+//#define ENABLE_ACPI
 
 /* GLOBALS *******************************************************************/
 
@@ -150,7 +150,7 @@ IopStartDevice(
       DPRINT("IopInitiatePnpIrp(IRP_MN_FILTER_RESOURCE_REQUIREMENTS) failed\n");
       return Status;
    }
-   DeviceNode->ResourceRequirements = Stack.Parameters.FilterResourceRequirements.IoResourceRequirementList;
+   DeviceNode->ResourceRequirements = (PIO_RESOURCE_REQUIREMENTS_LIST)IoStatusBlock.Information;
 
    Status = IopAssignDeviceResources(DeviceNode, &RequiredLength);
    if (NT_SUCCESS(Status))
@@ -2166,11 +2166,6 @@ IopEnumerateDetectedDevices(
    const UNICODE_STRING IdentifierPci = RTL_CONSTANT_STRING(L"PCI");
    UNICODE_STRING HardwareIdPci = RTL_CONSTANT_STRING(L"*PNP0A03\0");
    static ULONG DeviceIndexPci = 0;
-#ifdef ENABLE_ACPI
-   const UNICODE_STRING IdentifierAcpi = RTL_CONSTANT_STRING(L"ACPI BIOS");
-   UNICODE_STRING HardwareIdAcpi = RTL_CONSTANT_STRING(L"*PNP0C08\0");
-   static ULONG DeviceIndexAcpi = 0;
-#endif
    const UNICODE_STRING IdentifierSerial = RTL_CONSTANT_STRING(L"SerialController");
    UNICODE_STRING HardwareIdSerial = RTL_CONSTANT_STRING(L"*PNP0501\0");
    static ULONG DeviceIndexSerial = 0;
@@ -2180,10 +2175,10 @@ IopEnumerateDetectedDevices(
    const UNICODE_STRING IdentifierMouse = RTL_CONSTANT_STRING(L"PointerController");
    UNICODE_STRING HardwareIdMouse = RTL_CONSTANT_STRING(L"*PNP0F13\0");
    static ULONG DeviceIndexMouse = 0;
-   const UNICODE_STRING IdentifierParallel = RTL_CONSTANT_STRING(L"PARALLEL");
+   const UNICODE_STRING IdentifierParallel = RTL_CONSTANT_STRING(L"ParallelController");
    UNICODE_STRING HardwareIdParallel = RTL_CONSTANT_STRING(L"*PNP0400\0");
    static ULONG DeviceIndexParallel = 0;
-   const UNICODE_STRING IdentifierFloppy = RTL_CONSTANT_STRING(L"FLOPPY");
+   const UNICODE_STRING IdentifierFloppy = RTL_CONSTANT_STRING(L"FloppyDiskPeripheral");
    UNICODE_STRING HardwareIdFloppy = RTL_CONSTANT_STRING(L"*PNP0700\0");
    static ULONG DeviceIndexFloppy = 0;
    const UNICODE_STRING IdentifierIsa = RTL_CONSTANT_STRING(L"ISA");
@@ -2433,6 +2428,18 @@ IopEnumerateDetectedDevices(
          DeviceIndex = DeviceIndexMouse++;
          IsDeviceDesc = FALSE;
       }
+      else if (RelativePath && RtlCompareUnicodeString(RelativePath, &IdentifierParallel, FALSE) == 0)
+      {
+         pHardwareId = &HardwareIdParallel;
+         DeviceIndex = DeviceIndexParallel++;
+         IsDeviceDesc = FALSE;
+      }
+      else if (RelativePath && RtlCompareUnicodeString(RelativePath, &IdentifierFloppy, FALSE) == 0)
+      {
+         pHardwareId = &HardwareIdFloppy;
+         DeviceIndex = DeviceIndexFloppy++;
+         IsDeviceDesc = FALSE;
+      }
       else if (NT_SUCCESS(Status))
       {
          /* Try to also match the device identifier */
@@ -2448,43 +2455,10 @@ IopEnumerateDetectedDevices(
             DeviceIndex = DeviceIndexIsa++;
             IsDeviceDesc = FALSE;
          }
-#ifdef ENABLE_ACPI
-         else if (RtlCompareUnicodeString(&ValueName, &IdentifierAcpi, FALSE) == 0)
+         else
          {
-            pHardwareId = &HardwareIdAcpi;
-            DeviceIndex = DeviceIndexAcpi++;
-            IsDeviceDesc = FALSE;
-         }
-#endif
-         else /* Now let's detect devices with a device number at the end */
-         {
-            /* First, we remove the number */
-            ValueName.Length -= sizeof(WCHAR);
-
-            /* Let's see if it is a floppy device */
-            if (RtlCompareUnicodeString(&ValueName, &IdentifierFloppy, FALSE) == 0)
-            {
-                pHardwareId = &HardwareIdFloppy;
-                DeviceIndex = DeviceIndexFloppy++;
-                IsDeviceDesc = FALSE;
-            }
-            /* Nope, is it a parallel port? */
-            else if (RtlCompareUnicodeString(&ValueName, &IdentifierParallel, FALSE) == 0)
-            {
-                pHardwareId = &HardwareIdParallel;
-                DeviceIndex = DeviceIndexParallel++;
-                IsDeviceDesc = FALSE;
-            }
-            /* Nope, out of ideas so let's skip this one */
-            else
-            {
-                ValueName.Length += sizeof(WCHAR);
-                DPRINT("Unknown device '%wZ'\n", &ValueName);
-                goto nextdevice;
-            }
-
-            /* Add the number back */
-            ValueName.Length += sizeof(WCHAR);
+            DPRINT("Unknown device '%wZ'\n", &ValueName);
+            goto nextdevice;
          }
       }
       else
@@ -2629,7 +2603,7 @@ IopIsAcpiComputer(VOID)
    NTSTATUS Status;
    BOOLEAN ret = FALSE;
 
-   InitializeObjectAttributes(&ObjectAttributes, &MultiKeyPathU, OBJ_KERNEL_HANDLE, NULL, NULL);
+   InitializeObjectAttributes(&ObjectAttributes, &MultiKeyPathU, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
    Status = ZwOpenKey(&hDevicesKey, KEY_ENUMERATE_SUB_KEYS, &ObjectAttributes);
    if (!NT_SUCCESS(Status))
    {
@@ -2784,12 +2758,12 @@ IopUpdateRootKey(VOID)
    if (IopIsAcpiComputer())
    {
       InitializeObjectAttributes(&ObjectAttributes, &HalAcpiDevice, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, hRoot, NULL);
-      Status = ZwCreateKey(&hHalAcpiDevice, KEY_CREATE_SUB_KEY, &ObjectAttributes, 0, NULL, REG_OPTION_VOLATILE, NULL);
+      Status = ZwCreateKey(&hHalAcpiDevice, KEY_CREATE_SUB_KEY, &ObjectAttributes, 0, NULL, 0, NULL);
       ZwClose(hRoot);
       if (!NT_SUCCESS(Status))
          return Status;
       InitializeObjectAttributes(&ObjectAttributes, &HalAcpiId, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, hHalAcpiDevice, NULL);
-      Status = ZwCreateKey(&hHalAcpiId, KEY_CREATE_SUB_KEY, &ObjectAttributes, 0, NULL, REG_OPTION_VOLATILE, NULL);
+      Status = ZwCreateKey(&hHalAcpiId, KEY_CREATE_SUB_KEY, &ObjectAttributes, 0, NULL, 0, NULL);
       ZwClose(hHalAcpiDevice);
       if (!NT_SUCCESS(Status))
          return Status;

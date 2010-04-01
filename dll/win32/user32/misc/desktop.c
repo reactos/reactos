@@ -522,7 +522,7 @@ GetThreadDesktop(
 HDESK
 WINAPI
 OpenDesktopA(
-  LPSTR lpszDesktop,
+  LPCSTR lpszDesktop,
   DWORD dwFlags,
   BOOL fInherit,
   ACCESS_MASK dwDesiredAccess)
@@ -558,7 +558,7 @@ OpenDesktopA(
 HDESK
 WINAPI
 OpenDesktopW(
-  LPWSTR lpszDesktop,
+  LPCWSTR lpszDesktop,
   DWORD dwFlags,
   BOOL fInherit,
   ACCESS_MASK dwDesiredAccess)

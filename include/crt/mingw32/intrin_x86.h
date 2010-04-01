@@ -74,6 +74,10 @@ extern "C" {
 #define _AddressOfReturnAddress() (&(((void **)(__builtin_frame_address(0)))[1]))
 /* TODO: __getcallerseflags but how??? */
 
+/* Maybe the same for x86? */
+#ifdef _x86_64
+#define _alloca(s) __builtin_alloca(s)
+#endif
 
 /*** Atomic operations ***/
 
@@ -565,6 +569,18 @@ __INTRIN_INLINE void __stosd(unsigned long * Dest, const unsigned long Data, siz
 	);
 }
 
+#ifdef _M_AMD64
+__INTRIN_INLINE void __stosq(unsigned __int64 * Dest, const unsigned __int64 Data, size_t Count)
+{
+	__asm__ __volatile__
+	(
+		"rep; stosq" :
+		[Dest] "=D" (Dest), [Count] "=c" (Count) :
+		"[Dest]" (Dest), "a" (Data), "[Count]" (Count)
+	);
+}
+#endif
+
 __INTRIN_INLINE void __movsb(unsigned char * Destination, const unsigned char * Source, size_t Count)
 {
 	__asm__ __volatile__
@@ -594,6 +610,18 @@ __INTRIN_INLINE void __movsd(unsigned long * Destination, const unsigned long * 
 		"[Destination]" (Destination), "[Source]" (Source), "[Count]" (Count)
 	);
 }
+
+#ifdef _M_AMD64
+__INTRIN_INLINE void __movsq(unsigned long * Destination, const unsigned long * Source, size_t Count)
+{
+	__asm__ __volatile__
+	(
+		"rep; movsq" :
+		[Destination] "=D" (Destination), [Source] "=S" (Source), [Count] "=c" (Count) :
+		"[Destination]" (Destination), "[Source]" (Source), "[Count]" (Count)
+	);
+}
+#endif
 
 #if defined(_M_AMD64)
 /*** GS segment addressing ***/
@@ -786,6 +814,20 @@ __INTRIN_INLINE unsigned char _bittest(const long * const a, const long b)
 
 	return retval;
 }
+
+#ifdef _M_AMD64
+__INTRIN_INLINE unsigned char _bittest64(const __int64 * const a, const __int64 b)
+{
+	unsigned char retval;
+
+	if(__builtin_constant_p(b))
+		__asm__("bt %[b], %[a]; setb %b[retval]" : [retval] "=q" (retval) : [a] "mr" (*(a + (b / 64))), [b] "Ir" (b % 64));
+	else
+		__asm__("bt %[b], %[a]; setb %b[retval]" : [retval] "=q" (retval) : [a] "mr" (*a), [b] "r" (b));
+
+	return retval;
+}
+#endif
 
 __INTRIN_INLINE unsigned char _bittestandcomplement(long * const a, const long b)
 {

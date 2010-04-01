@@ -17,6 +17,9 @@ KspSetDeviceInterfacesState(
         SymEntry = (PSYMBOLIC_LINK_ENTRY)CONTAINING_RECORD(Entry, SYMBOLIC_LINK_ENTRY, Entry);
         /* set device interface state */
         Status = IoSetDeviceInterfaceState(&SymEntry->SymbolicLink, Enable);
+
+        DPRINT("KspSetDeviceInterfacesState SymbolicLink %S Status %lx\n", SymEntry->SymbolicLink.Buffer, Status, Enable);
+
         /* check for success */
         if (!NT_SUCCESS(Status))
             return Status;
@@ -95,4 +98,34 @@ KspRegisterDeviceInterfaces(
     return Status;
 }
 
+NTSTATUS
+KspSetFilterFactoriesState(
+    IN PKSIDEVICE_HEADER DeviceHeader,
+    IN BOOLEAN NewState)
+{
+    PCREATE_ITEM_ENTRY CreateEntry;
+    PLIST_ENTRY Entry;
+    NTSTATUS Status = STATUS_SUCCESS;
 
+    /* grab first device interface */
+    Entry = DeviceHeader->ItemList.Flink;
+    while(Entry != &DeviceHeader->ItemList && Status == STATUS_SUCCESS)
+    {
+        /* grab create entry */
+        CreateEntry = CONTAINING_RECORD(Entry, CREATE_ITEM_ENTRY, Entry);
+
+        /* sanity check */
+        ASSERT(CreateEntry->CreateItem);
+
+        if (CreateEntry->CreateItem->Create == IKsFilterFactory_Create)
+        {
+            /* found our own filterfactory */
+            Status = KsFilterFactorySetDeviceClassesState((PKSFILTERFACTORY)CreateEntry->CreateItem->Context, NewState);
+        }
+
+        Entry = Entry->Flink;
+    }
+
+    /* store result */
+    return Status;
+}

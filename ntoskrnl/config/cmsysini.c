@@ -27,6 +27,7 @@ BOOLEAN CmpFlushOnLockRelease;
 BOOLEAN CmpSpecialBootCondition;
 BOOLEAN CmpNoWrite;
 BOOLEAN CmpWasSetupBoot;
+BOOLEAN CmpProfileLoaded;
 ULONG CmpTraceLevel = 0;
 
 extern LONG CmpFlushStarveWriters;
@@ -1620,6 +1621,56 @@ CmpTestRegistryLockExclusive(VOID)
 {
     /* Test the lock */
     return !ExIsResourceAcquiredExclusiveLite(&CmpRegistryLock) ? FALSE : TRUE;
+}
+
+VOID
+NTAPI
+CmpLockHiveFlusherExclusive(IN PCMHIVE Hive)
+{
+    /* Lock the flusher. We should already be in a critical section */
+    CMP_ASSERT_REGISTRY_LOCK_OR_LOADING(Hive);
+    ASSERT((ExIsResourceAcquiredShared(Hive->FlusherLock) == 0) &&
+           (ExIsResourceAcquiredExclusiveLite(Hive->FlusherLock) == 0));
+    ExAcquireResourceExclusiveLite(Hive->FlusherLock, TRUE);
+}
+
+VOID
+NTAPI
+CmpLockHiveFlusherShared(IN PCMHIVE Hive)
+{
+    /* Lock the flusher. We should already be in a critical section */
+    CMP_ASSERT_REGISTRY_LOCK_OR_LOADING(Hive);
+    ASSERT((ExIsResourceAcquiredShared(Hive->FlusherLock) == 0) &&
+           (ExIsResourceAcquiredExclusiveLite(Hive->FlusherLock) == 0));
+    ExAcquireResourceSharedLite(Hive->FlusherLock, TRUE);
+}
+
+VOID
+NTAPI
+CmpUnlockHiveFlusher(IN PCMHIVE Hive)
+{
+    /* Sanity check */
+    CMP_ASSERT_REGISTRY_LOCK_OR_LOADING(Hive);
+    CMP_ASSERT_FLUSH_LOCK(Hive);
+
+    /* Release the lock */
+    ExReleaseResourceLite(Hive->FlusherLock);
+}
+
+BOOLEAN
+NTAPI
+CmpTestHiveFlusherLockShared(IN PCMHIVE Hive)
+{
+    /* Test the lock */
+    return !ExIsResourceAcquiredSharedLite(Hive->FlusherLock) ? FALSE : TRUE;
+}
+
+BOOLEAN
+NTAPI
+CmpTestHiveFlusherLockExclusive(IN PCMHIVE Hive)
+{
+    /* Test the lock */
+    return !ExIsResourceAcquiredExclusiveLite(Hive->FlusherLock) ? FALSE : TRUE;
 }
 
 VOID

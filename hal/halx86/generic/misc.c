@@ -18,6 +18,47 @@ BOOLEAN HalpNMIInProgress;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+NTSTATUS 
+NTAPI
+HalpOpenRegistryKey(IN PHANDLE KeyHandle,
+                    IN HANDLE RootKey,
+                    IN PUNICODE_STRING KeyName,
+                    IN ACCESS_MASK DesiredAccess, 
+                    IN BOOLEAN Create)
+{
+    NTSTATUS Status;
+    ULONG Disposition;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    
+    /* Setup the attributes we received */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               RootKey,
+                               NULL);
+
+    /* What to do? */
+    if ( Create )
+    {
+        /* Create the key */
+        Status = ZwCreateKey(KeyHandle,
+                             DesiredAccess,
+                             &ObjectAttributes,
+                             0,
+                             NULL,
+                             REG_OPTION_VOLATILE,
+                             &Disposition);
+    }
+    else
+    {
+        /* Open the key */
+        Status = ZwOpenKey(KeyHandle, DesiredAccess, &ObjectAttributes);
+    }
+        
+    /* We're done */
+    return Status;
+}
+
 VOID
 NTAPI
 HalpCheckPowerButton(VOID)
@@ -27,32 +68,6 @@ HalpCheckPowerButton(VOID)
     //
     return;
 }
-
-#ifndef _MINIHAL_
-PVOID
-NTAPI
-HalpMapPhysicalMemory64(IN PHYSICAL_ADDRESS PhysicalAddress,
-                        IN ULONG NumberPage)
-{
-    //
-    // Use kernel memory manager I/O map facilities
-    //
-    return MmMapIoSpace(PhysicalAddress,
-                        NumberPage << PAGE_SHIFT,
-                        MmNonCached);
-}
-
-VOID
-NTAPI
-HalpUnmapVirtualAddress(IN PVOID VirtualAddress,
-                        IN ULONG NumberPages)
-{
-    //
-    // Use kernel memory manager I/O map facilities
-    //
-    MmUnmapIoSpace(VirtualAddress, NumberPages << PAGE_SHIFT);
-}
-#endif
 
 VOID
 NTAPI

@@ -1,0 +1,83 @@
+Index: internal.h
+===================================================================
+--- internal.h	(Revision 46537)
++++ internal.h	(Arbeitskopie)
+@@ -35,6 +35,12 @@
+ #define __IOINFO_TM_UTF8 1
+ #define __IOINFO_TM_UTF16LE 2
+ 
++#ifdef _MSC_VER
++#pragma warning(push)
++#pragma warning(disable:4214)
++#pragma warning(disable:4820)
++#endif
++
+   typedef struct {
+     intptr_t osfhnd;
+     char osfile;
+@@ -46,6 +52,10 @@
+     char pipech2[2];
+   } ioinfo;
+ 
++#ifdef _MSC_VER
++#pragma warning(pop)
++#endif
++
+ #define IOINFO_ARRAY_ELTS (1 << 5)
+ 
+ #define _pioinfo(i) (__pioinfo[(i) >> 5] + ((i) & (IOINFO_ARRAY_ELTS - 1)))
+Index: oscalls.h
+===================================================================
+--- oscalls.h	(Revision 46537)
++++ oscalls.h	(Arbeitskopie)
+@@ -30,6 +30,11 @@
+ #endif
+ #endif
+ 
++#ifdef _MSC_VER
++#pragma warning(push)
++#pragma warning(disable:4214)
++#endif
++
+ typedef struct _FTIME
+ {
+   unsigned short twosecs : 5;
+@@ -46,6 +51,10 @@
+   unsigned short year : 7;
+ } FDATE;
+ 
++#ifdef _MSC_VER
++#pragma warning(pop)
++#endif
++
+ typedef FDATE *PFDATE;
+ 
+ #endif
+Index: sect_attribs.h
+===================================================================
+--- sect_attribs.h	(Revision 46537)
++++ sect_attribs.h	(Arbeitskopie)
+@@ -10,7 +10,7 @@
+ #define _ATTRIBUTES shared
+ #endif
+ 
+-#if 0
++#if defined(_MSC_VER)
+ /* Reference list of existing section for msvcrt.  */
+ #pragma section(".CRTMP$XCA",long,_ATTRIBUTES)
+ #pragma section(".CRTMP$XCZ",long,_ATTRIBUTES)
+@@ -55,6 +55,14 @@
+ #pragma section(".rtc$IZZ",long,read)
+ #pragma section(".rtc$TAA",long,read)
+ #pragma section(".rtc$TZZ",long,read)
++#pragma section(".tls",long,read,write)
++#pragma section(".tls$ZZZ",long,read,write)
+ #endif
+ 
++#if defined(_MSC_VER)
++#define _CRTALLOC(x) __declspec(allocate(x))
++#elif defined(__GNUC__)
+ #define _CRTALLOC(x) __attribute__ ((section (x) ))
++#else
++#error
++#endif
