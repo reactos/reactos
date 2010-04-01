@@ -7,7 +7,7 @@
 #include <bdamedia.h>
 #include <bdasup.h>
 
-#define NDEBUG
+#define YDEBUG
 #include <debug.h>
 
 
