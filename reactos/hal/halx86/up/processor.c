@@ -12,7 +12,7 @@
 #define NDEBUG
 #include <debug.h>
 
-LONG HalpActiveProcessors;
+KAFFINITY HalpActiveProcessors;
 KAFFINITY HalpDefaultInterruptAffinity;
 
 /* PRIVATE FUNCTIONS *********************************************************/
@@ -41,7 +41,7 @@ HalInitializeProcessor(IN ULONG ProcessorNumber,
     KeGetPcr()->StallScaleFactor = INITIAL_STALL_COUNT;
 
     /* Update the interrupt affinity and processor mask */
-    InterlockedBitTestAndSet(&HalpActiveProcessors, ProcessorNumber);
+    InterlockedBitTestAndSet((PLONG)&HalpActiveProcessors, ProcessorNumber);
     InterlockedBitTestAndSet((PLONG)&HalpDefaultInterruptAffinity,
                              ProcessorNumber);
 
