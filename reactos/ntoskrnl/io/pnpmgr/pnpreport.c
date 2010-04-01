@@ -36,8 +36,12 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
                                 PVOID Context);
 
 NTSTATUS
-IopUpdateResourceMap(
+IopUpdateResourceMapForPnPDevice(
    IN PDEVICE_NODE DeviceNode);
+
+NTSTATUS
+IopDetectResourceConflict(
+   IN PCM_RESOURCE_LIST ResourceList);
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -272,7 +276,7 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
        {
           Status = IopTranslateDeviceResources(DeviceNode, RequiredLength);
           if (NT_SUCCESS(Status))
-              Status = IopUpdateResourceMap(DeviceNode);
+              Status = IopUpdateResourceMapForPnPDevice(DeviceNode);
        }
        IopDeviceNodeClearFlag(DeviceNode, DNF_ASSIGNING_RESOURCES);
 
@@ -301,7 +305,7 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
 }
 
 /*
- * @unimplemented
+ * @halfplemented
  */
 NTSTATUS
 NTAPI
@@ -313,23 +317,35 @@ IoReportResourceForDetection(IN PDRIVER_OBJECT DriverObject,
                              IN ULONG DeviceListSize OPTIONAL,
                              OUT PBOOLEAN ConflictDetected)
 {
-    static int warned = 0;
-    if (!warned)
-    {
-        DPRINT1("IoReportResourceForDetection partly implemented\n");
-        warned = 1;
-    }
+    PCM_RESOURCE_LIST ResourceList;
+    NTSTATUS Status;
 
     *ConflictDetected = FALSE;
 
-    if (PopSystemPowerDeviceNode && DriverListSize > 0)
+    if (!DriverList && !DeviceList)
+        return STATUS_INVALID_PARAMETER;
+
+    /* Find the real list */
+    if (!DriverList)
+        ResourceList = DeviceList;
+    else
+        ResourceList = DriverList;
+
+    /* Look for a resource conflict */
+    Status = IopDetectResourceConflict(ResourceList);
+    if (Status == STATUS_CONFLICTING_ADDRESSES)
     {
-        /* We hope legacy devices will be enumerated by ACPI */
+        /* Oh noes */
         *ConflictDetected = TRUE;
-        return STATUS_CONFLICTING_ADDRESSES;
+    }
+    else if (NT_SUCCESS(Status))
+    {
+        /* Looks like we're good to go */
+
+        /* TODO: Claim the resources in the ResourceMap */
     }
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 VOID
