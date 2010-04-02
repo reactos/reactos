@@ -166,6 +166,7 @@ struct servent {
 #else
   short s_port;
   char *s_proto;
+#endif
 };
 
 struct protoent {
@@ -491,9 +492,6 @@ typedef struct sockaddr_in *LPSOCKADDR_IN;
 typedef struct linger LINGER;
 typedef struct linger *PLINGER;
 typedef struct linger *LPLINGER;
-typedef struct in_addr IN_ADDR;
-typedef struct in_addr *PIN_ADDR;
-typedef struct in_addr *LPIN_ADDR;
 typedef struct fd_set FD_SET;
 typedef struct fd_set *PFD_SET;
 typedef struct fd_set *LPFD_SET;
@@ -532,6 +530,7 @@ typedef struct WSAData {
   unsigned short iMaxSockets;
   unsigned short iMaxUdpDg;
   char *lpVendorInfo;
+#endif
 } WSADATA, FAR *LPWSADATA;
 
 struct ip_mreq {
