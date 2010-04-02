@@ -606,13 +606,14 @@ MakeInfoDC(PDC pdc, BOOL bSet)
         pdc->dctype = DC_TYPE_INFO;
         pdc->dclevel.pSurface = NULL;
 
-        if (PDEV_sizl(pdc->ppdev, &sizl)->cx == pdc->dclevel.sizl.cx &&
-            PDEV_sizl(pdc->ppdev, &sizl)->cy == pdc->dclevel.sizl.cy)
+        PDEV_sizl(pdc->ppdev, &sizl);
+
+        if ( sizl.cx == pdc->dclevel.sizl.cx &&
+             sizl.cy == pdc->dclevel.sizl.cy )
             return TRUE;
 
-        pdc->dclevel.sizl.cx = PDEV_sizl(pdc->ppdev, &sizl)->cx;
+        pdc->dclevel.sizl.cx = sizl.cx;
         pdc->dclevel.sizl.cy = sizl.cy;
-        IntSetDefaultRegion(pdc);
     }
     else
     {
@@ -632,9 +633,8 @@ MakeInfoDC(PDC pdc, BOOL bSet)
 
         pdc->dclevel.sizl.cx = pSurface->SurfObj.sizlBitmap.cx;
         pdc->dclevel.sizl.cy = pSurface->SurfObj.sizlBitmap.cy;
-        IntSetDefaultRegion(pdc);
     }
-    return TRUE;
+    return IntSetDefaultRegion(pdc);
 }
 
 /*
