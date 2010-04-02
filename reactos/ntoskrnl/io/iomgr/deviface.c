@@ -50,7 +50,169 @@ IoOpenDeviceInterfaceRegistryKey(IN PUNICODE_STRING SymbolicLinkName,
                                  IN ACCESS_MASK DesiredAccess,
                                  OUT PHANDLE DeviceInterfaceKey)
 {
-    return STATUS_NOT_IMPLEMENTED;
+    WCHAR StrBuff[MAX_PATH], PathBuff[MAX_PATH];
+    PWCHAR Guid;
+    UNICODE_STRING EnumU = RTL_CONSTANT_STRING(ENUM_ROOT L"\\");
+    UNICODE_STRING DevParamU = RTL_CONSTANT_STRING(L"\\Device Parameters");
+    UNICODE_STRING PrefixU = RTL_CONSTANT_STRING(L"\\??\\");
+    UNICODE_STRING KeyPath, KeyName;
+    UNICODE_STRING MatchableGuid;
+    HANDLE GuidKey, ChildKey;
+    ULONG Index = 0;
+    PKEY_BASIC_INFORMATION KeyInformation;
+    ULONG KeyInformationLength;
+    PKEY_VALUE_PARTIAL_INFORMATION KeyValueInformation;
+    ULONG KeyValueInformationLength;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    NTSTATUS Status;
+    ULONG RequiredLength;
+
+    MatchableGuid.Length = 0;
+    MatchableGuid.Length += swprintf(StrBuff,
+                                     L"##?#%ls",
+                                     &SymbolicLinkName->Buffer[PrefixU.Length / sizeof(WCHAR)]);
+    StrBuff[++MatchableGuid.Length] = UNICODE_NULL;
+
+    MatchableGuid.Buffer = StrBuff;
+    MatchableGuid.MaximumLength = MAX_PATH * sizeof(WCHAR);
+    MatchableGuid.Length = (MatchableGuid.Length-1) * sizeof(WCHAR);
+
+    Guid = wcsstr(StrBuff, L"{");
+    if (!Guid)
+        return STATUS_OBJECT_NAME_NOT_FOUND;
+
+    KeyPath.Buffer = PathBuff;
+    KeyPath.Length = 0;
+    KeyPath.MaximumLength = MAX_PATH * sizeof(WCHAR);
+
+    RtlAppendUnicodeToString(&KeyPath, BaseKeyString);
+    RtlAppendUnicodeToString(&KeyPath, Guid);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyPath,
+                               OBJ_CASE_INSENSITIVE,
+                               0,
+                               NULL);
+
+    Status = ZwOpenKey(&GuidKey, KEY_CREATE_SUB_KEY, &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    while (TRUE)
+    {
+        Status = ZwEnumerateKey(GuidKey,
+                                Index,
+                                KeyBasicInformation,
+                                NULL,
+                                0,
+                                &RequiredLength);
+        if (Status == STATUS_NO_MORE_ENTRIES)
+            break;
+        else if (Status == STATUS_BUFFER_TOO_SMALL)
+        {
+            KeyInformationLength = RequiredLength;
+            KeyInformation = ExAllocatePool(PagedPool, KeyInformationLength);
+            if (!KeyInformation)
+            {
+                ZwClose(GuidKey);
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            Status = ZwEnumerateKey(GuidKey,
+                                    Index,
+                                    KeyBasicInformation,
+                                    KeyInformation,
+                                    KeyInformationLength,
+                                    &RequiredLength);
+        }
+        else
+        {
+            ZwClose(GuidKey);
+            return STATUS_OBJECT_PATH_NOT_FOUND;
+        }
+        Index++;
+
+        if (!NT_SUCCESS(Status))
+        {
+            ZwClose(GuidKey);
+            return Status;
+        }
+
+        KeyName.Length = KeyName.MaximumLength = KeyInformation->NameLength;
+        KeyName.Buffer = KeyInformation->Name;
+
+        if (!RtlEqualUnicodeString(&KeyName, &MatchableGuid, TRUE))
+            continue;
+
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &KeyName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   GuidKey,
+                                   NULL);
+        Status = ZwOpenKey(&ChildKey, KEY_QUERY_VALUE, &ObjectAttributes);
+        ZwClose(GuidKey);
+        if (!NT_SUCCESS(Status))
+            return Status;
+
+        RtlInitUnicodeString(&KeyName, L"DeviceInstance");
+        Status = ZwQueryValueKey(ChildKey,
+                                 &KeyName,
+                                 KeyValuePartialInformation,
+                                 NULL,
+                                 0,
+                                 &RequiredLength);
+        if (Status == STATUS_BUFFER_TOO_SMALL)
+        {
+            KeyValueInformationLength = RequiredLength;
+            KeyValueInformation = ExAllocatePool(PagedPool, KeyValueInformationLength);
+            if (!KeyValueInformation)
+            {
+                ZwClose(ChildKey);
+                return Status;
+            }
+
+            Status = ZwQueryValueKey(ChildKey,
+                                     &KeyName,
+                                     KeyValuePartialInformation,
+                                     KeyValueInformation,
+                                     KeyValueInformationLength,
+                                     &RequiredLength);
+        }
+        else
+        {
+            ZwClose(ChildKey);
+            return STATUS_OBJECT_PATH_NOT_FOUND;
+        }
+        ZwClose(ChildKey);
+
+        if (!NT_SUCCESS(Status))
+            return Status;
+
+        KeyPath.Length = 0;
+
+        KeyName.Length = KeyName.MaximumLength = KeyValueInformation->DataLength;
+        KeyName.Buffer = (PWCHAR)KeyValueInformation->Data;
+
+        RtlAppendUnicodeStringToString(&KeyPath, &EnumU);
+        RtlAppendUnicodeStringToString(&KeyPath, &KeyName);
+        RtlAppendUnicodeStringToString(&KeyPath, &DevParamU);
+
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &KeyPath,
+                                   OBJ_CASE_INSENSITIVE,
+                                   0,
+                                   NULL);
+        Status = ZwCreateKey(DeviceInterfaceKey,
+                             DesiredAccess,
+                             &ObjectAttributes,
+                             0,
+                             NULL,
+                             REG_OPTION_NON_VOLATILE,
+                             NULL);
+        return Status;
+    }
+
+    return STATUS_OBJECT_PATH_NOT_FOUND;
 }
 
 /*++
