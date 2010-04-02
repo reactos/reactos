@@ -125,6 +125,71 @@ IntIsPrimarySurface(SURFOBJ *SurfObj)
 }
 #endif
 
+BOOL
+FASTCALL
+IntSetDefaultRegion(PDC pdc)
+{
+    PSURFACE pSurface;
+    PROSRGNDATA prgn;
+    RECTL rclWnd, rclClip;
+
+    IntGdiReleaseRaoRgn(pdc);
+
+    rclWnd.left   = 0;
+    rclWnd.top    = 0;
+    rclWnd.right  = pdc->dclevel.sizl.cx;
+    rclWnd.bottom = pdc->dclevel.sizl.cy;
+    rclClip = rclWnd;
+
+//    EngAcquireSemaphoreShared(pdc->ppdev->hsemDevLock);
+    if (pdc->ppdev->flFlags & PDEV_META_DEVICE)
+    {
+        pSurface = pdc->dclevel.pSurface;
+        if (pSurface && pSurface->flFlags & PDEV_SURFACE)
+        {
+            rclClip.left   += pdc->ppdev->ptlOrigion.x;
+            rclClip.top    += pdc->ppdev->ptlOrigion.y;
+            rclClip.right  += pdc->ppdev->ptlOrigion.x;
+            rclClip.bottom += pdc->ppdev->ptlOrigion.y;
+        }
+    }
+//    EngReleaseSemaphore(pdc->ppdev->hsemDevLock);
+
+    prgn = pdc->prgnVis;
+
+    if (prgn && prgn != prgnDefault)
+    {
+        REGION_SetRectRgn( prgn,
+                           rclClip.left,
+                           rclClip.top,
+                           rclClip.right ,
+                           rclClip.bottom );
+    }
+    else
+    {
+        prgn = IntSysCreateRectpRgn( rclClip.left,
+                                     rclClip.top,
+                                     rclClip.right ,
+                                     rclClip.bottom );
+        pdc->prgnVis = prgn;
+    }
+
+    if (prgn)
+    {
+        pdc->ptlDCOrig.x = 0;
+        pdc->ptlDCOrig.y = 0;
+        pdc->erclWindow = rclWnd;
+        pdc->erclClip = rclClip;
+        /* Might be an InitDC or DCE....*/
+        pdc->ptlFillOrigin.x = pdc->dcattr.VisRectRegion.Rect.right;
+        pdc->ptlFillOrigin.y = pdc->dcattr.VisRectRegion.Rect.bottom;
+        return TRUE;
+    }
+
+    pdc->prgnVis = prgnDefault;
+    return FALSE;
+}
+
 
 BOOL APIENTRY
 NtGdiCancelDC(HDC  hDC)
