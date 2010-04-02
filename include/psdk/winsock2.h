@@ -2726,4 +2726,4 @@ typedef struct timeval FAR *LPTIMEVAL;
 #endif
 #endif */
 
-#endif /* !(defined _WINSOCK2API_ || defined _WINSOCK_H) */
+#endif /* !(defined _WINSOCK2API_ || defined _WINSOCKAPI_) */
