@@ -390,6 +390,7 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 {
     LUID_AND_ATTRIBUTES Privilege;
     ACCESS_MASK CurrentAccess, AccessMask;
+    ACCESS_MASK RemainingAccess;
     PACCESS_TOKEN Token;
     ULONG i;
     PACL Dacl;
@@ -424,13 +425,42 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         RtlMapGenericMask(&PreviouslyGrantedAccess, GenericMapping);
 
 
-
     CurrentAccess = PreviouslyGrantedAccess;
-
+    RemainingAccess = DesiredAccess;
 
 
     Token = SubjectSecurityContext->ClientToken ?
     SubjectSecurityContext->ClientToken : SubjectSecurityContext->PrimaryToken;
+
+    /* Check for system security access */
+    if (RemainingAccess & ACCESS_SYSTEM_SECURITY)
+    {
+        Privilege.Luid = SeSecurityPrivilege;
+        Privilege.Attributes = SE_PRIVILEGE_ENABLED;
+
+        /* Fail if we do not the SeSecurityPrivilege */
+        if (!SepPrivilegeCheck(Token,
+                               &Privilege,
+                               1,
+                               PRIVILEGE_SET_ALL_NECESSARY,
+                               AccessMode))
+        {
+            *AccessStatus = STATUS_PRIVILEGE_NOT_HELD;
+            return FALSE;
+        }
+
+        /* Adjust access rights */
+        RemainingAccess &= ~ACCESS_SYSTEM_SECURITY;
+        PreviouslyGrantedAccess |= ACCESS_SYSTEM_SECURITY;
+
+        /* Succeed if there are no more rights to grant */
+        if (RemainingAccess == 0)
+        {
+            *GrantedAccess = PreviouslyGrantedAccess;
+            *AccessStatus = STATUS_SUCCESS;
+            return TRUE;
+        }
+    }
 
     /* Get the DACL */
     Status = RtlGetDaclSecurityDescriptor(SecurityDescriptor,
@@ -474,11 +504,15 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                               PRIVILEGE_SET_ALL_NECESSARY,
                               AccessMode))
         {
+            /* Adjust access rights */
+            RemainingAccess &= ~WRITE_OWNER;
+            PreviouslyGrantedAccess |= WRITE_OWNER;
             CurrentAccess |= WRITE_OWNER;
-            if ((DesiredAccess & ~VALID_INHERIT_FLAGS) == 
-                (CurrentAccess & ~VALID_INHERIT_FLAGS))
+
+            /* Succeed if there are no more rights to grant */
+            if (RemainingAccess == 0)
             {
-                *GrantedAccess = CurrentAccess;
+                *GrantedAccess = PreviouslyGrantedAccess;
                 *AccessStatus = STATUS_SUCCESS;
                 return TRUE;
             }
@@ -488,9 +522,18 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     /* Deny access if the DACL is empty */
     if (Dacl->AceCount == 0)
     {
-        *GrantedAccess = 0;
-        *AccessStatus = STATUS_ACCESS_DENIED;
-        return FALSE;
+        if (RemainingAccess == MAXIMUM_ALLOWED && PreviouslyGrantedAccess != 0)
+        {
+            *GrantedAccess = PreviouslyGrantedAccess;
+            *AccessStatus = STATUS_SUCCESS;
+            return TRUE;
+        }
+        else
+        {
+            *GrantedAccess = 0;
+            *AccessStatus = STATUS_ACCESS_DENIED;
+            return FALSE;
+        }
     }
 
     /* Fail if DACL is absent */
