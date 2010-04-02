@@ -51,31 +51,29 @@ IoOpenDeviceInterfaceRegistryKey(IN PUNICODE_STRING SymbolicLinkName,
                                  OUT PHANDLE DeviceInterfaceKey)
 {
     WCHAR StrBuff[MAX_PATH], PathBuff[MAX_PATH];
-    PWCHAR Guid;
-    UNICODE_STRING EnumU = RTL_CONSTANT_STRING(ENUM_ROOT L"\\");
+    PWCHAR Guid, RefString;
     UNICODE_STRING DevParamU = RTL_CONSTANT_STRING(L"\\Device Parameters");
     UNICODE_STRING PrefixU = RTL_CONSTANT_STRING(L"\\??\\");
     UNICODE_STRING KeyPath, KeyName;
     UNICODE_STRING MatchableGuid;
-    HANDLE GuidKey, ChildKey;
+    UNICODE_STRING GuidString;
+    HANDLE GuidKey, hInterfaceKey;
     ULONG Index = 0;
     PKEY_BASIC_INFORMATION KeyInformation;
     ULONG KeyInformationLength;
-    PKEY_VALUE_PARTIAL_INFORMATION KeyValueInformation;
-    ULONG KeyValueInformationLength;
     OBJECT_ATTRIBUTES ObjectAttributes;
     NTSTATUS Status;
     ULONG RequiredLength;
 
-    MatchableGuid.Length = 0;
-    MatchableGuid.Length += swprintf(StrBuff,
-                                     L"##?#%ls",
-                                     &SymbolicLinkName->Buffer[PrefixU.Length / sizeof(WCHAR)]);
-    StrBuff[++MatchableGuid.Length] = UNICODE_NULL;
+    swprintf(StrBuff, L"##?#%s", &SymbolicLinkName->Buffer[PrefixU.Length / sizeof(WCHAR)]);
 
-    MatchableGuid.Buffer = StrBuff;
-    MatchableGuid.MaximumLength = MAX_PATH * sizeof(WCHAR);
-    MatchableGuid.Length = (MatchableGuid.Length-1) * sizeof(WCHAR);
+    RefString = wcsstr(StrBuff, L"\\");
+    if (RefString)
+    {
+        RefString[0] = 0;
+    }
+
+    RtlInitUnicodeString(&MatchableGuid, StrBuff);
 
     Guid = wcsstr(StrBuff, L"{");
     if (!Guid)
@@ -85,8 +83,11 @@ IoOpenDeviceInterfaceRegistryKey(IN PUNICODE_STRING SymbolicLinkName,
     KeyPath.Length = 0;
     KeyPath.MaximumLength = MAX_PATH * sizeof(WCHAR);
 
+    GuidString.Buffer = Guid;
+    GuidString.Length = GuidString.MaximumLength = 38 * sizeof(WCHAR);
+
     RtlAppendUnicodeToString(&KeyPath, BaseKeyString);
-    RtlAppendUnicodeToString(&KeyPath, Guid);
+    RtlAppendUnicodeStringToString(&KeyPath, &GuidString);
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyPath,
@@ -142,73 +143,62 @@ IoOpenDeviceInterfaceRegistryKey(IN PUNICODE_STRING SymbolicLinkName,
         KeyName.Buffer = KeyInformation->Name;
 
         if (!RtlEqualUnicodeString(&KeyName, &MatchableGuid, TRUE))
-            continue;
-
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   &KeyName,
-                                   OBJ_CASE_INSENSITIVE,
-                                   GuidKey,
-                                   NULL);
-        Status = ZwOpenKey(&ChildKey, KEY_QUERY_VALUE, &ObjectAttributes);
-        ZwClose(GuidKey);
-        if (!NT_SUCCESS(Status))
-            return Status;
-
-        RtlInitUnicodeString(&KeyName, L"DeviceInstance");
-        Status = ZwQueryValueKey(ChildKey,
-                                 &KeyName,
-                                 KeyValuePartialInformation,
-                                 NULL,
-                                 0,
-                                 &RequiredLength);
-        if (Status == STATUS_BUFFER_TOO_SMALL)
         {
-            KeyValueInformationLength = RequiredLength;
-            KeyValueInformation = ExAllocatePool(PagedPool, KeyValueInformationLength);
-            if (!KeyValueInformation)
-            {
-                ZwClose(ChildKey);
-                return Status;
-            }
+            ExFreePool(KeyInformation);
+            continue;
+        }
 
-            Status = ZwQueryValueKey(ChildKey,
-                                     &KeyName,
-                                     KeyValuePartialInformation,
-                                     KeyValueInformation,
-                                     KeyValueInformationLength,
-                                     &RequiredLength);
+        KeyPath.Length = 0;
+        RtlAppendUnicodeStringToString(&KeyPath, &KeyName);
+        RtlAppendUnicodeToString(&KeyPath, L"\\");
+
+        /* check for presence of a reference string */
+        if (RefString)
+        {
+            /* append reference string */
+            RefString[0] = L'#';
+            RtlInitUnicodeString(&KeyName, RefString);
         }
         else
         {
-            ZwClose(ChildKey);
-            return STATUS_OBJECT_PATH_NOT_FOUND;
+            /* no reference string */
+            RtlInitUnicodeString(&KeyName, L"#");
         }
-        ZwClose(ChildKey);
-
-        if (!NT_SUCCESS(Status))
-            return Status;
-
-        KeyPath.Length = 0;
-
-        KeyName.Length = KeyName.MaximumLength = KeyValueInformation->DataLength;
-        KeyName.Buffer = (PWCHAR)KeyValueInformation->Data;
-
-        RtlAppendUnicodeStringToString(&KeyPath, &EnumU);
         RtlAppendUnicodeStringToString(&KeyPath, &KeyName);
-        RtlAppendUnicodeStringToString(&KeyPath, &DevParamU);
 
+        /* initialize reference string attributes */
         InitializeObjectAttributes(&ObjectAttributes,
                                    &KeyPath,
                                    OBJ_CASE_INSENSITIVE,
-                                   0,
+                                   GuidKey,
                                    NULL);
-        Status = ZwCreateKey(DeviceInterfaceKey,
-                             DesiredAccess,
-                             &ObjectAttributes,
-                             0,
-                             NULL,
-                             REG_OPTION_NON_VOLATILE,
-                             NULL);
+
+        /* now open device interface key */
+        Status = ZwOpenKey(&hInterfaceKey, KEY_CREATE_SUB_KEY, &ObjectAttributes);
+
+        if (NT_SUCCESS(Status))
+        {
+            /* check if it provides a DeviceParameters key */
+            InitializeObjectAttributes(&ObjectAttributes, &DevParamU, OBJ_CASE_INSENSITIVE, hInterfaceKey, NULL);
+
+             Status = ZwCreateKey(DeviceInterfaceKey, DesiredAccess, &ObjectAttributes, 0, NULL, REG_OPTION_NON_VOLATILE, NULL);
+
+             if (NT_SUCCESS(Status))
+             {
+                 /* DeviceParameters key present */
+                 ZwClose(hInterfaceKey);
+             }
+             else
+             {
+                 /* fall back to device interface */
+                 *DeviceInterfaceKey = hInterfaceKey;
+                 Status = STATUS_SUCCESS;
+             }
+        }
+
+        /* close class key */
+        ZwClose(GuidKey);
+        ExFreePool(KeyInformation);
         return Status;
     }
 
