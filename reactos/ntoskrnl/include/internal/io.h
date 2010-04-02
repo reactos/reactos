@@ -396,6 +396,33 @@ typedef struct _LOAD_UNLOAD_PARAMS
 } LOAD_UNLOAD_PARAMS, *PLOAD_UNLOAD_PARAMS;
 
 //
+// Boot Driver List Entry
+//
+typedef struct _DRIVER_INFORMATION
+{
+    LIST_ENTRY Link;
+    PDRIVER_OBJECT DriverObject;
+    PBOOT_DRIVER_LIST_ENTRY DataTableEntry;
+    HANDLE ServiceHandle;
+    USHORT TagPosition;
+    ULONG Failed;
+    ULONG Processed;
+    NTSTATUS Status;
+} DRIVER_INFORMATION, *PDRIVER_INFORMATION;
+
+//
+// Boot Driver Node
+//
+typedef struct _BOOT_DRIVER_NODE
+{
+    BOOT_DRIVER_LIST_ENTRY ListEntry;
+    UNICODE_STRING Group;
+    UNICODE_STRING Name;
+    ULONG Tag;
+    ULONG ErrorControl;
+} BOOT_DRIVER_NODE, *PBOOT_DRIVER_NODE;
+ 
+//
 // List of Bus Type GUIDs
 //
 typedef struct _IO_BUS_TYPE_GUID_LIST
@@ -605,6 +632,43 @@ IopGetRegistryValue(IN HANDLE Handle,
                     OUT PKEY_VALUE_FULL_INFORMATION *Information);
 
 
+//
+// PnP Routines
+//
+NTSTATUS
+NTAPI
+PiInitCacheGroupInformation(
+    VOID
+);
+
+USHORT
+NTAPI
+PpInitGetGroupOrderIndex(
+    IN HANDLE ServiceHandle
+);
+
+USHORT
+NTAPI
+PipGetDriverTagPriority(
+    IN HANDLE ServiceHandle
+);
+
+NTSTATUS
+NTAPI
+PnpRegMultiSzToUnicodeStrings(
+    IN PKEY_VALUE_FULL_INFORMATION KeyValueInformation,
+    OUT PUNICODE_STRING *UnicodeStringList,
+    OUT PULONG UnicodeStringCount
+);
+
+BOOLEAN
+NTAPI
+PnpRegSzToString(
+    IN PWCHAR RegSzData,
+    IN ULONG RegSzLength,
+    OUT PUSHORT StringLength OPTIONAL
+);
+                                               
 //
 // Initialization Routines
 //

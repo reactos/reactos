@@ -267,10 +267,12 @@
 		<directory name="pnpmgr">
 			<file>plugplay.c</file>
 			<file>pnpdma.c</file>
+			<file>pnpinit.c</file>
 			<file>pnpmgr.c</file>
 			<file>pnpnotify.c</file>
 			<file>pnpreport.c</file>
 			<file>pnproot.c</file>
+			<file>pnputil.c</file>
 		</directory>
 	</directory>
 	<if property="_WINKD_" value="0">
