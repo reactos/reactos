@@ -744,6 +744,99 @@ typedef enum
     KSPROPERTY_STREAM_PIPE_ID
 } KSPROPERTY_STREAM;
 
+#define DEFINE_KSPROPERTY_ITEM_STREAM_ALLOCATOR(GetHandler, SetHandler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_STREAM_ALLOCATOR,\
+        (GetHandler),\
+        sizeof(KSPROPERTY),\
+        sizeof(HANDLE),\
+        (SetHandler),\
+        NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_STREAM_QUALITY(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_STREAM_QUALITY,\
+        (Handler),\
+        sizeof(KSPROPERTY),\
+        sizeof(KSQUALITY_MANAGER),\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_STREAM_DEGRADATION(GetHandler, SetHandler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_STREAM_DEGRADATION,\
+        (GetHandler),\
+        sizeof(KSPROPERTY),\
+        0,\
+        (SetHandler),\
+        NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_STREAM_MASTERCLOCK(GetHandler, SetHandler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_STREAM_MASTERCLOCK,\
+        (GetHandler),\
+        sizeof(KSPROPERTY),\
+        sizeof(HANDLE),\
+        (SetHandler),\
+        NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_STREAM_TIMEFORMAT(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_STREAM_TIMEFORMAT,\
+        (Handler),\
+        sizeof(KSPROPERTY),\
+        sizeof(GUID),\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_STREAM_PRESENTATIONTIME(GetHandler, SetHandler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_STREAM_PRESENTATIONTIME,\
+        (GetHandler),\
+        sizeof(KSPROPERTY),\
+        sizeof(KSTIME),\
+        (SetHandler),\
+        NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_STREAM_PRESENTATIONEXTENT(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_STREAM_PRESENTATIONEXTENT,\
+        (Handler),\
+        sizeof(KSPROPERTY),\
+        sizeof(LONGLONG),\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_STREAM_FRAMETIME(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_STREAM_FRAMETIME,\
+        (Handler),\
+        sizeof(KSPROPERTY),\
+        sizeof(KSFRAMETIME),\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_STREAM_RATECAPABILITY(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_STREAM_RATECAPABILITY,\
+        (Handler),\
+        sizeof(KSRATE_CAPABILITY),\
+        sizeof(KSRATE),\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_STREAM_RATE(GetHandler, SetHandler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_STREAM_RATE,\
+        (GetHandler),\
+        sizeof(KSPROPERTY),\
+        sizeof(KSRATE),\
+        (SetHandler),\
+        NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_STREAM_PIPE_ID(GetHandler, SetHandler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_STREAM_PIPE_ID,\
+        (GetHandler),\
+        sizeof(KSPROPERTY),\
+        sizeof(HANDLE),\
+        (SetHandler),\
+        NULL, 0, NULL, NULL, 0)
 
 /* ===============================================================
     StreamAllocator
