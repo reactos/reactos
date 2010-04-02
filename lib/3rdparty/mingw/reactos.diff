@@ -1,0 +1,87 @@
+Index: CRT_fp10.c
+===================================================================
+--- CRT_fp10.c	(Revision 43956)
++++ CRT_fp10.c	(Arbeitskopie)
+@@ -7,6 +7,16 @@
+ void _fpreset (void);
+ 
+ void _fpreset (void)
+-  { __asm__ ("fninit" ) ;}
++{ 
++#ifdef __GNUC__
++    __asm__ ("fninit" );
++#else
++    __asm fninit;
++#endif
++}
+ 
++#ifdef __GNUC__
+ void __attribute__ ((alias ("_fpreset"))) fpreset(void);
++#else
++void fpreset(void) { _fpreset(); }
++#endif
+Index: CRT_fp8.c
+===================================================================
+--- CRT_fp8.c	(Revision 43956)
++++ CRT_fp8.c	(Arbeitskopie)
+@@ -14,4 +14,8 @@
+   (* __MINGW_IMP_SYMBOL(_fpreset))();
+ }
+ 
++#ifdef __GNUC__
+ void __attribute__ ((alias ("_fpreset"))) fpreset(void);
++#else
++void fpreset(void) { _fpreset(); }
++#endif
+Index: crtexe.c
+===================================================================
+--- crtexe.c	(Revision 43956)
++++ crtexe.c	(Arbeitskopie)
+@@ -20,6 +20,7 @@
+ #include <tchar.h>
+ #include <sect_attribs.h>
+ #include <locale.h>
++#include <intrin.h>
+ 
+ #ifndef __winitenv
+ extern wchar_t *** __MINGW_IMP_SYMBOL(__winitenv);
+@@ -51,7 +52,11 @@
+ #define _commode (* __MINGW_IMP_SYMBOL(_commode))
+ extern int _dowildcard;
+ 
++#if defined(__GNUC__)
+ int _MINGW_INSTALL_DEBUG_MATHERR __attribute__((weak)) = 0;
++#else
++int _MINGW_INSTALL_DEBUG_MATHERR = 0;
++#endif
+ extern int __defaultmatherr;
+ extern _CRTIMP void __cdecl _initterm(_PVFV *, _PVFV *);
+ 
+Index: gs_support.c
+===================================================================
+--- gs_support.c	(Revision 43956)
++++ gs_support.c	(Arbeitskopie)
+@@ -112,6 +112,7 @@
+   else
+ #endif
+     {
++#ifdef __GNUC__
+ #ifdef _WIN64
+       GS_ContextRecord.Rip = (ULONGLONG) __builtin_return_address (0);
+       GS_ContextRecord.Rsp = (ULONGLONG) __builtin_frame_address (0) + 8;
+@@ -119,6 +120,15 @@
+       GS_ContextRecord.Eip = (DWORD) __builtin_return_address (0);
+       GS_ContextRecord.Esp = (DWORD) __builtin_frame_address (0) + 4;
+ #endif
++#else
++#ifdef _WIN64
++      GS_ContextRecord.Rip = (ULONGLONG) _ReturnAddress();
++      GS_ContextRecord.Rsp = (ULONGLONG) _AddressOfReturnAddress();
++#else
++      GS_ContextRecord.Eip = (DWORD) _ReturnAddress();
++      GS_ContextRecord.Esp = (DWORD) _AddressOfReturnAddress();
++#endif
++#endif
+     }
+ 
+ #ifdef _WIN64

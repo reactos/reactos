@@ -100,9 +100,9 @@ EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVO
 
                     tmp = READ_REGISTER_ULONG((PULONG)((Base + EHCI_PORTSC) + (4 * i)));
 
-                    DPRINT("port tmp %x\n", tmp);
                     GetDeviceDescriptor(FdoDeviceExtension, 0, 0, FALSE);
                     PdoDeviceExtension->ChildDeviceCount++;
+                    PdoDeviceExtension->Ports[i].PortStatus |= USB_PORT_STATUS_HIGH_SPEED | USB_PORT_STATUS_CONNECT | USB_PORT_STATUS_ENABLE;
                     WorkItemData = ExAllocatePool(NonPagedPool, sizeof(WORKITEM_DATA));
                     if (!WorkItemData) ASSERT(FALSE);
                     WorkItemData->IoWorkItem = IoAllocateWorkItem(PdoDeviceExtension->DeviceObject);

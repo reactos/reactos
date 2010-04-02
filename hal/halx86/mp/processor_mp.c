@@ -18,6 +18,8 @@
 #define NDEBUG
 #include <debug.h>
 
+KAFFINITY HalpActiveProcessors;
+ 
 /* PRIVATE FUNCTIONS *********************************************************/
 
 VOID

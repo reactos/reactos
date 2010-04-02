@@ -392,34 +392,18 @@ KsPinPropertyHandler(
                 break;
             }
 
-            /* calculate size */
-            Size = sizeof(KSMULTIPLE_ITEM);
-            Size += max(1, Descriptor[Pin->PinId].InterfacesCount) * sizeof(KSPIN_INTERFACE);
-
-            if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < Size)
+            if (Descriptor[Pin->PinId].Interfaces)
             {
-                Irp->IoStatus.Information = Size;
-                Status = STATUS_MORE_ENTRIES;
-                break;
-            }
-
-            Item = (KSMULTIPLE_ITEM*)Buffer;
-            Item->Size = Size;
-
-            if (Descriptor[Pin->PinId].InterfacesCount)
-            {
-                Item->Count = Descriptor[Pin->PinId].InterfacesCount;
-                RtlMoveMemory((PVOID)(Item + 1), Descriptor[Pin->PinId].Interfaces, Descriptor[Pin->PinId].InterfacesCount * sizeof(KSPIN_INTERFACE));
+                /* use mediums provided by driver */
+                return KsHandleSizedListQuery(Irp, Descriptor[Pin->PinId].InterfacesCount, sizeof(KSPIN_MEDIUM), Descriptor[Pin->PinId].Interfaces);
             }
             else
             {
-                Item->Count = 1;
-                RtlMoveMemory((PVOID)(Item + 1), &StandardPinInterface, sizeof(KSPIN_INTERFACE));
+                /* use standard medium */
+                return KsHandleSizedListQuery(Irp, 1, sizeof(KSPIN_INTERFACE), &StandardPinInterface);
             }
-
-            Status = STATUS_SUCCESS;
-            Irp->IoStatus.Information = Size;
             break;
+
         case KSPROPERTY_PIN_MEDIUMS:
             Pin = (KSP_PIN*)Property;
             if (Pin->PinId >= DescriptorsCount)

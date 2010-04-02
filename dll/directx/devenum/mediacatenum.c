@@ -42,6 +42,7 @@ typedef struct
     IPropertyBagVtbl *lpVtbl;
     LONG ref;
     HKEY hkey;
+    BOOL bInterface;
 } RegPropBagImpl;
 
 
@@ -108,13 +109,31 @@ static HRESULT WINAPI DEVENUM_IPropertyBag_Read(
     RegPropBagImpl *This = (RegPropBagImpl *)iface;
     HRESULT res = S_OK;
     LONG reswin32;
+    WCHAR buffer[MAX_PATH];
+    HKEY hkey;
+    LPCOLESTR pszName;
 
     TRACE("(%p)->(%s, %p, %p)\n", This, debugstr_w(pszPropName), pVar, pErrorLog);
 
     if (!pszPropName || !pVar)
         return E_POINTER;
 
-    reswin32 = RegQueryValueExW(This->hkey, pszPropName, NULL, NULL, NULL, &received);
+    hkey = This->hkey;
+    pszName = pszPropName;
+    if (This->bInterface)
+    {
+        buffer[0] = 0;
+        received = sizeof(buffer)/sizeof(WCHAR);
+        reswin32 = RegEnumKeyEx(This->hkey, 0, buffer, &received, NULL, NULL, NULL, NULL);
+
+        reswin32 = RegOpenKeyExW(This->hkey, buffer, 0, KEY_READ, &hkey);
+
+        if (!wcsicmp(pszPropName, L"DevicePath"))
+            pszName = L"SymbolicLink";
+
+    }
+
+    reswin32 = RegQueryValueExW(hkey, pszName, NULL, NULL, NULL, &received);
     res = HRESULT_FROM_WIN32(reswin32);
 
     if (SUCCEEDED(res))
@@ -122,7 +141,7 @@ static HRESULT WINAPI DEVENUM_IPropertyBag_Read(
         pData = HeapAlloc(GetProcessHeap(), 0, received);
 
         /* work around a GCC bug that occurs here unless we use the reswin32 variable as well */
-        reswin32 = RegQueryValueExW(This->hkey, pszPropName, NULL, &type, pData, &received);
+        reswin32 = RegQueryValueExW(hkey, pszName, NULL, &type, pData, &received);
         res = HRESULT_FROM_WIN32(reswin32);
     }
 
@@ -201,6 +220,9 @@ static HRESULT WINAPI DEVENUM_IPropertyBag_Read(
     if (pData)
         HeapFree(GetProcessHeap(), 0, pData);
 
+    if (This->bInterface)
+        RegCloseKey(hkey);
+
     TRACE("<- %lx\n", res);
     return res;
 }
@@ -270,7 +292,7 @@ static IPropertyBagVtbl IPropertyBag_Vtbl =
     DEVENUM_IPropertyBag_Write
 };
 
-static HRESULT DEVENUM_IPropertyBag_Construct(HANDLE hkey, IPropertyBag **ppBag)
+static HRESULT DEVENUM_IPropertyBag_Construct(HANDLE hkey, IPropertyBag **ppBag, BOOL bInterface)
 {
     RegPropBagImpl * rpb = CoTaskMemAlloc(sizeof(RegPropBagImpl));
     if (!rpb)
@@ -278,6 +300,8 @@ static HRESULT DEVENUM_IPropertyBag_Construct(HANDLE hkey, IPropertyBag **ppBag)
     rpb->lpVtbl = &IPropertyBag_Vtbl;
     rpb->ref = 1;
     rpb->hkey = hkey;
+    rpb->bInterface = bInterface;
+
     *ppBag = (IPropertyBag*)rpb;
     DEVENUM_LockModule();
     return S_OK;
@@ -393,6 +417,7 @@ static HRESULT WINAPI DEVENUM_IMediaCatMoniker_BindToObject(
 {
     IUnknown * pObj = NULL;
     IPropertyBag * pProp = NULL;
+    IPersistPropertyBag * pBag;
     CLSID clsID;
     VARIANT var;
     HRESULT res = E_FAIL;
@@ -430,6 +455,15 @@ static HRESULT WINAPI DEVENUM_IMediaCatMoniker_BindToObject(
 
     if (pObj!=NULL)
     {
+        if (This->bInterface)
+        {
+            res = IUnknown_QueryInterface(pObj, &IID_IPersistPropertyBag, (void**)&pBag);
+            if (SUCCEEDED(res))
+            {
+                res = IPersistPropertyBag_Load(pBag, pProp, NULL); /* FIXME */
+                IPersistPropertyBag_Release(pBag);
+            }
+        }
         /* get the requested interface from the loaded class */
         res= IUnknown_QueryInterface(pObj,riidResult,ppvResult);
     }
@@ -463,7 +497,7 @@ static HRESULT WINAPI DEVENUM_IMediaCatMoniker_BindToStorage(
     {
         HANDLE hkey;
         DuplicateHandle(GetCurrentProcess(), This->hkey, GetCurrentProcess(), &hkey, 0, 0, DUPLICATE_SAME_ACCESS);
-        return DEVENUM_IPropertyBag_Construct(hkey, (IPropertyBag**)ppvObj);
+        return DEVENUM_IPropertyBag_Construct(hkey, (IPropertyBag**)ppvObj, This->bInterface);
     }
 
     return MK_E_NOSTORAGE;
@@ -679,6 +713,7 @@ MediaCatMoniker * DEVENUM_IMediaCatMoniker_Construct()
     pMoniker->lpVtbl = &IMoniker_Vtbl;
     pMoniker->ref = 0;
     pMoniker->hkey = NULL;
+    pMoniker->bInterface = FALSE;
 
     DEVENUM_IMediaCatMoniker_AddRef((LPMONIKER)pMoniker);
 
@@ -764,6 +799,7 @@ static HRESULT WINAPI DEVENUM_IEnumMoniker_Next(LPENUMMONIKER iface, ULONG celt,
         if (!pMoniker)
             return E_OUTOFMEMORY;
 
+        pMoniker->bInterface = This->bInterface;
         if (RegOpenKeyW(This->hkey, buffer, &pMoniker->hkey) != ERROR_SUCCESS)
         {
             DEVENUM_IMediaCatMoniker_Release((LPMONIKER)pMoniker);
@@ -829,7 +865,7 @@ static IEnumMonikerVtbl IEnumMoniker_Vtbl =
     DEVENUM_IEnumMoniker_Clone
 };
 
-HRESULT DEVENUM_IEnumMoniker_Construct(HKEY hkey, IEnumMoniker ** ppEnumMoniker)
+HRESULT DEVENUM_IEnumMoniker_Construct(HKEY hkey, IEnumMoniker ** ppEnumMoniker, BOOL bInterface)
 {
     EnumMonikerImpl * pEnumMoniker = CoTaskMemAlloc(sizeof(EnumMonikerImpl));
     if (!pEnumMoniker)
@@ -839,6 +875,7 @@ HRESULT DEVENUM_IEnumMoniker_Construct(HKEY hkey, IEnumMoniker ** ppEnumMoniker)
     pEnumMoniker->ref = 1;
     pEnumMoniker->index = 0;
     pEnumMoniker->hkey = hkey;
+    pEnumMoniker->bInterface = bInterface;
 
     *ppEnumMoniker = (IEnumMoniker *)pEnumMoniker;
 

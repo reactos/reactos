@@ -184,7 +184,7 @@ allow GCC to optimize away some EH unwind code, at least in DW2 case.  */
 #define USE_MINGW_SETJMP_TWO_ARGS
 #endif
 
-/* Diable deprecation for now! */
+/* Disable deprecation for now! */
 #define _CRT_SECURE_NO_DEPRECATE
 #define _CRT_SECURE_NO_DEPRECATE_CORE
 #ifdef __WINESRC__
@@ -196,6 +196,8 @@ allow GCC to optimize away some EH unwind code, at least in DW2 case.  */
 #ifndef _CRT_UNUSED
 #define _CRT_UNUSED(x) (void)x
 #endif
+
+#include "_mingw_mac.h"
 
 #endif /* !_INC_MINGW */
 

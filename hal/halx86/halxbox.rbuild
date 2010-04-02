@@ -9,6 +9,7 @@
 		<define name="_NTHAL_" />
 		<define name="SARCH_XBOX" />
 		<library>hal_generic</library>
+		<library>hal_generic_pcat</library>
 		<library>hal_generic_up</library>
 		<library>ntoskrnl</library>
 		<library>libcntpr</library>

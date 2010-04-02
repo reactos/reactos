@@ -2987,6 +2987,9 @@ struct _KSNODE_DESCRIPTOR
   const KSAUTOMATION_TABLE*  AutomationTable;
   const GUID*  Type;
   const GUID*  Name;
+#if !defined(_WIN64)
+    PVOID Alignment;
+#endif
 };
 
 struct _KSFILTER_DESCRIPTOR
@@ -4067,6 +4070,14 @@ KsCreateFilterFactory(
     IN  PFNKSFILTERFACTORYPOWER SleepCallback OPTIONAL,
     IN  PFNKSFILTERFACTORYPOWER WakeCallback OPTIONAL,
     OUT PKSFILTERFACTORY *FilterFactory OPTIONAL);
+
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsFilterFactorySetDeviceClassesState(
+    IN PKSFILTERFACTORY FilterFactory,
+    IN BOOLEAN NewState
+    );
 
 KSDDKAPI
 NTSTATUS

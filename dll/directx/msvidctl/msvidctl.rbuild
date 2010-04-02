@@ -3,6 +3,7 @@
 <group>
 <module name="msvidctl" type="win32dll" baseaddress="${BASEADDRESS_MSVIDCTL}" installbase="system32" installname="msvidctl.dll">
 	<importlibrary definition="msvidctl.spec" />
+	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<include base="msvidctl">.</include>
 	<library>ntdll</library>
 	<library>kernel32</library>

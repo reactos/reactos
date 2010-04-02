@@ -472,8 +472,8 @@ CBDADeviceControl::GetControlNode(ULONG ulInputPinId, ULONG ulOutputPinId, ULONG
     hr = KsSynchronousDeviceControl(m_Handle, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSP_BDA_NODE_PIN) + sizeof(ULONG), &PinId, sizeof(ULONG), &BytesReturned);
 
 #ifdef BDAPLGIN_TRACE
-    WCHAR Buffer[100];
-    swprintf(Buffer, L"CBDADeviceControl::GetControlNode: hr %lx, BytesReturned %lu PinId %lu\n", hr, BytesReturned, PinId);
+    WCHAR Buffer[200];
+    swprintf(Buffer, L"CBDADeviceControl::GetControlNode: hr %lx, BytesReturned %lu PinId %lu ulInputPinId %lu ulOutputPinId %lu ulNodeType %lu\n", hr, BytesReturned, PinId, ulInputPinId, ulOutputPinId, ulNodeType);
     OutputDebugStringW(Buffer);
 #endif
 

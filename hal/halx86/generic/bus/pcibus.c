@@ -14,6 +14,8 @@
 
 /* GLOBALS *******************************************************************/
 
+PCI_TYPE1_CFG_CYCLE_BITS HalpPciDebuggingDevice[2] = {{{{0}}}};
+
 BOOLEAN HalpPCIConfigInitialized;
 ULONG HalpMinPciBus, HalpMaxPciBus;
 KSPIN_LOCK HalpPCIConfigLock;
@@ -521,6 +523,34 @@ HalpReleasePciDeviceForDebugging(IN OUT PDEBUG_DEVICE_DESCRIPTOR PciDevice)
     return STATUS_NOT_IMPLEMENTED;
 }
 
+VOID
+NTAPI
+HalpRegisterPciDebuggingDeviceInfo(VOID)
+{
+    BOOLEAN Found = FALSE;
+    ULONG i;
+    PAGED_CODE();
+
+    /* Loop PCI debugging devices */
+    for (i = 0; i < 2; i++)
+    {
+        /* Reserved bit is set if we found one */
+        if (HalpPciDebuggingDevice[i].u.bits.Reserved1)
+        {
+            Found = TRUE;
+            break;
+        }
+    }
+
+    /* Bail out if there aren't any */
+    if (!Found) return;
+    
+    /* FIXME: TODO */
+    DPRINT1("You have implemented the KD routines for searching PCI debugger"
+            "devices, but you have forgotten to implement this routine\n");
+    while (TRUE);
+}
+
 static ULONG NTAPI
 PciSize(ULONG Base, ULONG Mask)
 {
@@ -1026,9 +1056,3 @@ HalpInitializePciStubs(VOID)
     HalpPCIConfigInitialized = TRUE;
 }
 
-VOID
-NTAPI
-HalpInitializePciBus(VOID)
-{
-    /* FIXME: Initialize NMI Crash Flag */
-}

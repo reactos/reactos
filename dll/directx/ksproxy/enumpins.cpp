@@ -64,6 +64,14 @@ CEnumPins::QueryInterface(
         return NOERROR;
     }
 
+    WCHAR Buffer[100];
+    LPOLESTR lpstr;
+    StringFromCLSID(refiid, &lpstr);
+    swprintf(Buffer, L"CEnumPins::QueryInterface: NoInterface for %s\n", lpstr);
+    OutputDebugStringW(Buffer);
+    CoTaskMemFree(lpstr);
+
+DebugBreak();
     return E_NOINTERFACE;
 }
 

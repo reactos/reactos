@@ -622,6 +622,24 @@ CmCheckRegistry(
 );
 
 //
+// Hive List Routines
+//
+NTSTATUS
+NTAPI
+CmpAddToHiveFileList(
+    IN PCMHIVE Hive
+);
+
+//
+// Quota Routines
+//
+VOID
+NTAPI
+CmpSetGlobalQuotaAllowed(
+    VOID
+);
+
+//
 // Notification Routines
 //
 VOID
@@ -631,6 +649,13 @@ CmpReportNotify(
     IN PHHIVE Hive,
     IN HCELL_INDEX Cell,
     IN ULONG Filter
+);
+
+VOID
+NTAPI
+CmpFlushNotify(
+    IN PCM_KEY_BODY KeyBody,
+    IN BOOLEAN LockHeld
 );
 
 VOID
@@ -822,6 +847,36 @@ CmpUnlockRegistry(
     VOID
 );
 
+VOID
+NTAPI
+CmpLockHiveFlusherExclusive(
+    IN PCMHIVE Hive
+);
+
+VOID
+NTAPI
+CmpLockHiveFlusherShared(
+    IN PCMHIVE Hive
+);
+
+BOOLEAN
+NTAPI
+CmpTestHiveFlusherLockExclusive(
+    IN PCMHIVE Hive
+);
+
+BOOLEAN
+NTAPI
+CmpTestHiveFlusherLockShared(
+    IN PCMHIVE Hive
+);
+
+VOID
+NTAPI
+CmpUnlockHiveFlusher(
+    IN PCMHIVE Hive
+);
+
 //
 // Delay Functions
 //
@@ -976,6 +1031,13 @@ NTAPI
 CmpReleaseTwoKcbLockByKey(
     IN ULONG ConvKey1,
     IN ULONG ConvKey2
+);
+
+VOID
+NTAPI
+CmpFlushNotifiesOnKeyBodyList(
+    IN PCM_KEY_CONTROL_BLOCK Kcb,
+    IN BOOLEAN LockHeld
 );
 
 //
@@ -1507,6 +1569,7 @@ extern ULONG CmpDelayedCloseSize, CmpDelayedCloseIndex;
 extern BOOLEAN CmpNoWrite;
 extern BOOLEAN CmpForceForceFlush;
 extern BOOLEAN CmpWasSetupBoot;
+extern BOOLEAN CmpProfileLoaded;
 extern PCMHIVE CmiVolatileHive;
 extern LIST_ENTRY CmiKeyObjectListHead;
 extern BOOLEAN CmpHoldLazyFlush;

@@ -64,7 +64,7 @@
 	<file>explorer.rc</file>
 	<linkerflag>--enable-stdcall-fixup</linkerflag>
 </module>
-<installfile>explorer-cfg-template.xml</installfile>
+<installfile installbase=".">explorer-cfg-template.xml</installfile>
 <directory name="notifyhook">
 	<xi:include href="notifyhook/notifyhook.rbuild" />
 </directory>

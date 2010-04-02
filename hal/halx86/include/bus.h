@@ -158,6 +158,38 @@ typedef struct _PCI_REGISTRY_INFO_INTERNAL
     PCI_CARD_DESCRIPTOR CardList[ANYSIZE_ARRAY];
 } PCI_REGISTRY_INFO_INTERNAL, *PPCI_REGISTRY_INFO_INTERNAL;
 
+typedef struct _PCI_TYPE0_CFG_CYCLE_BITS
+{
+    union
+    {
+        struct
+        {
+            ULONG Reserved1:2;
+            ULONG RegisterNumber:6;
+            ULONG FunctionNumber:3;
+            ULONG Reserved2:21;
+        } bits;
+        ULONG AsULONG;
+    } u;
+} PCI_TYPE0_CFG_CYCLE_BITS, *PPCI_TYPE0_CFG_CYCLE_BITS;
+
+typedef struct _PCI_TYPE1_CFG_CYCLE_BITS
+{
+    union
+    {
+        struct
+        {
+            ULONG Reserved1:2;
+            ULONG RegisterNumber:6;
+            ULONG FunctionNumber:3;
+            ULONG DeviceNumber:5;
+            ULONG BusNumber:8;
+            ULONG Reserved2:8;
+        } bits;
+        ULONG AsULONG;
+    } u;
+} PCI_TYPE1_CFG_CYCLE_BITS, *PPCI_TYPE1_CFG_CYCLE_BITS;
+
 typedef struct _ARRAY
 {
     ULONG ArraySize;
@@ -357,6 +389,12 @@ HalpFindBusAddressTranslation(
     OUT PPHYSICAL_ADDRESS TranslatedAddress,
     IN OUT PULONG_PTR Context,
     IN BOOLEAN NextBus
+);
+
+VOID
+NTAPI
+HalpRegisterPciDebuggingDeviceInfo(
+    VOID
 );
 
 extern ULONG HalpBusType;

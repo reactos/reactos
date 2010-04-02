@@ -28,7 +28,7 @@ int _isnan(double __x)
 	union
 	{
 		double*   __x;
-		double_t*   x;
+		double_s*   x;
 	} x;
     	x.__x = &__x;
 	return ( x.x->exponent == 0x7ff  && ( x.x->mantissah != 0 || x.x->mantissal != 0 ));
@@ -41,7 +41,7 @@ int _isnanl(long double __x)
 	union
 	{
 		long double*   __x;
-		long_double_t*   x;
+		long_double_s*   x;
 	} x;
 	x.__x = &__x;
 
@@ -59,7 +59,7 @@ int _isinf(double __x)
 	union
 	{
 		double*   __x;
-		double_t*   x;
+		double_s*   x;
 	} x;
 
 	x.__x = &__x;
@@ -81,7 +81,7 @@ int _isinfl(long double __x)
 	union
 	{
 		long double*   __x;
-                long_double_t*   x;
+                long_double_s*   x;
 	} x;
 
 	x.__x = &__x;

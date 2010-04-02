@@ -643,6 +643,11 @@ DceFreeDCE(PDCE pdce, BOOLEAN Force)
          Hit = TRUE;
      }
   }
+  else
+  {
+     if (!GreGetObjectOwner(pdce->hDC, GDIObjType_DC_TYPE))
+        DC_SetOwnership( pdce->hDC, PsGetCurrentProcess());
+  }
 
   if (!Hit) IntGdiDeleteDC(pdce->hDC, TRUE);
 

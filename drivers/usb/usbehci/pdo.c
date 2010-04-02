@@ -172,18 +172,24 @@ PdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
         }
         case IOCTL_INTERNAL_USB_GET_DEVICE_HANDLE:
         {
-            DPRINT1("IOCTL_INTERNAL_USB_GET_DEVICE_HANDLE\n");
+            DPRINT1("IOCTL_INTERNAL_USB_GET_DEVICE_HANDLE %x\n", IOCTL_INTERNAL_USB_GET_DEVICE_HANDLE);
+            if (Stack->Parameters.Others.Argument1)
+            {
+                /* Return the root hubs devicehandle */
+                *(PVOID *)Stack->Parameters.Others.Argument1 = (PVOID)PdoDeviceExtension->UsbDevices[0];
+            }
+            else
+                Status = STATUS_INVALID_DEVICE_REQUEST;
             break;
         }
         case IOCTL_INTERNAL_USB_GET_HUB_COUNT:
         {
-            DPRINT1("IOCTL_INTERNAL_USB_GET_HUB_COUNT\n");
-
+            DPRINT1("IOCTL_INTERNAL_USB_GET_HUB_COUNT %x\n", IOCTL_INTERNAL_USB_GET_HUB_COUNT);
             if (Stack->Parameters.Others.Argument1)
             {
                 /* FIXME: Determine the number of hubs between the usb device and root hub */
-                /* For now return 0 */
-                *(PVOID *)Stack->Parameters.Others.Argument1 = 0;
+                /* For now return 1, the root hub */
+                *(PVOID *)Stack->Parameters.Others.Argument1 = (PVOID)1;
             }
             break;
         }
@@ -216,9 +222,8 @@ PdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
             if (Stack->Parameters.Others.Argument2)
                 *(PVOID *)Stack->Parameters.Others.Argument2 = IoGetAttachedDevice(FdoDeviceExtension->DeviceObject);
 
-            Irp->IoStatus.Information = 0;
-            Irp->IoStatus.Status = STATUS_SUCCESS;
-            return STATUS_SUCCESS;
+            Information = 0;
+            Status = STATUS_SUCCESS;
             break;
         }
         case IOCTL_INTERNAL_USB_SUBMIT_IDLE_NOTIFICATION:
@@ -287,7 +292,6 @@ PdoQueryId(PDEVICE_OBJECT DeviceObject, PIRP Irp, ULONG_PTR* Information)
         }
     }
 
-    /* Lifted from hpoussin */
     Status = DuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
                                     &SourceString,
                                     &String);
@@ -350,12 +354,19 @@ PdoDispatchPnp(
             PPDO_DEVICE_EXTENSION PdoDeviceExtension;
             PFDO_DEVICE_EXTENSION FdoDeviceExtension;
             UNICODE_STRING InterfaceSymLinkName;
+            LONG i;
 
             PdoDeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
             FdoDeviceExtension = (PFDO_DEVICE_EXTENSION)PdoDeviceExtension->ControllerFdo->DeviceExtension;
 
             /* Create the root hub */
             RootHubDevice = InternalCreateUsbDevice(1, 0, NULL, TRUE);
+
+            for (i = 0; i < 8; i++)
+            {
+                PdoDeviceExtension->Ports[i].PortStatus = USB_PORT_STATUS_ENABLE;
+                PdoDeviceExtension->Ports[i].PortChange = 0;
+            }
 
             RtlCopyMemory(&RootHubDevice->DeviceDescriptor,
                           ROOTHUB2_DEVICE_DESCRIPTOR,
@@ -409,8 +420,16 @@ PdoDispatchPnp(
                     break;
                 }
                 case BusRelations:
+                    DPRINT1("BusRelations!!!!!\n");
                 case RemovalRelations:
                 case EjectionRelations:
+                {
+                    /* Ignore the request */
+                    Information = Irp->IoStatus.Information;
+                    Status = Irp->IoStatus.Status;
+                    break;
+
+                }
                 default:
                 {
                     DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / Unhandled type 0x%lx\n",
@@ -534,7 +553,8 @@ PdoDispatchPnp(
             else
             {
                 DPRINT1("Not Supported\n");
-                Status = STATUS_NOT_SUPPORTED;
+                Status = Irp->IoStatus.Status;
+                Information = Irp->IoStatus.Information;
             }
             break;
         }

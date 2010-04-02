@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../tools/rbuild/project.dtd">
-<module name="rtl" type="staticlibrary">
+<module name="rtl" type="staticlibrary" crt="static">
 	<define name="_NTOSKRNL_" />
 	<define name="NO_RTL_INLINES" />
 	<define name="_NTSYSTEM_" />

@@ -4,7 +4,4 @@
 <directory name="battc">
 	<xi:include href="battc/battc.rbuild" />
 </directory>
-<directory name="cmbatt">
-	<xi:include href="cmbatt/cmbatt.rbuild" />
-</directory>
 </group>

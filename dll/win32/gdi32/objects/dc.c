@@ -673,7 +673,7 @@ GetRelAbs(
 /*
  * @implemented
  */
-DWORD
+INT
 WINAPI
 SetRelAbs(
 	HDC hdc,

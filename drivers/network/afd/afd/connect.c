@@ -380,7 +380,18 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 #endif
 
    if( FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS )
-       return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER, Irp, 0 );
+   {
+	if( FCB->RemoteAddress ) ExFreePool( FCB->RemoteAddress );
+	FCB->RemoteAddress =
+	    TaCopyTransportAddress( &ConnectReq->RemoteAddress );
+
+	if( !FCB->RemoteAddress )
+	    Status = STATUS_NO_MEMORY;
+	else
+	    Status = STATUS_SUCCESS;
+
+	return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
+   }
 
     switch( FCB->State ) {
     case SOCKET_STATE_CONNECTED:

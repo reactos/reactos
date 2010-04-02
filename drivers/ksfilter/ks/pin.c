@@ -339,6 +339,7 @@ KsPinAttemptProcessing(
     IN PKSPIN  Pin,
     IN BOOLEAN  Asynchronous)
 {
+    DPRINT("KsPinAttemptProcessing\n");
     UNIMPLEMENTED
 }
 
@@ -456,6 +457,7 @@ NTAPI
     OUT PIKSREFERENCECLOCK*  Interface)
 {
     UNIMPLEMENTED
+    DPRINT("KsPinGetReferenceClockInterface Pin %p Interface %p\n", Pin, Interface);
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -547,6 +549,8 @@ KsGetPinFromIrp(
     PKSIOBJECT_HEADER ObjectHeader;
     PIO_STACK_LOCATION IoStack = IoGetCurrentIrpStackLocation(Irp);
 
+    DPRINT("KsGetPinFromIrp\n");
+
     /* get object header */
     ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext2;
     /* return object type */
@@ -624,6 +628,7 @@ KsPinGetLeadingEdgeStreamPointer(
     IN KSSTREAM_POINTER_STATE State)
 {
     UNIMPLEMENTED
+    DPRINT("KsPinGetLeadingEdgeStreamPointer Pin %p State %x\n", Pin, State);
     return NULL;
 }
 
@@ -679,6 +684,7 @@ KsStreamPointerUnlock(
     IN BOOLEAN Eject)
 {
     UNIMPLEMENTED
+    DPRINT("KsStreamPointerUnlock\n");
 }
 
 /*
@@ -693,6 +699,8 @@ KsStreamPointerAdvanceOffsetsAndUnlock(
     IN ULONG OutUsed,
     IN BOOLEAN Eject)
 {
+    DPRINT("KsStreamPointerAdvanceOffsets\n");
+
     UNIMPLEMENTED
 }
 
@@ -708,6 +716,8 @@ KsStreamPointerDelete(
     IKsPinImpl * This;
     PKSISTREAM_POINTER Cur, Last;
     PKSISTREAM_POINTER Pointer = (PKSISTREAM_POINTER)StreamPointer;
+
+    DPRINT("KsStreamPointerDelete\n");
 
     This = (IKsPinImpl*)CONTAINING_RECORD(Pointer->StreamPointer.Pin, IKsPinImpl, Pin);
 
@@ -755,6 +765,7 @@ KsStreamPointerClone(
     OUT PKSSTREAM_POINTER* CloneStreamPointer)
 {
     UNIMPLEMENTED
+    DPRINT("KsStreamPointerClone\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -864,7 +875,11 @@ NTAPI
 KsPinGetFirstCloneStreamPointer(
     IN PKSPIN Pin)
 {
-    IKsPinImpl * This = (IKsPinImpl*)CONTAINING_RECORD(Pin, IKsPinImpl, Pin);
+    IKsPinImpl * This;
+
+    DPRINT("KsPinGetFirstCloneStreamPointer %p\n", Pin);
+
+    This = (IKsPinImpl*)CONTAINING_RECORD(Pin, IKsPinImpl, Pin);
     /* return first cloned stream pointer */
     return &This->ClonedStreamPointer->StreamPointer;
 }
@@ -880,12 +895,77 @@ KsStreamPointerGetNextClone(
 {
     PKSISTREAM_POINTER Pointer = (PKSISTREAM_POINTER)StreamPointer;
 
+    DPRINT("KsStreamPointerGetNextClone\n");
+
     /* is there a another cloned stream pointer */
     if (!Pointer->Next)
         return NULL;
 
     /* return next stream pointer */
     return &Pointer->Next->StreamPointer;
+}
+
+NTSTATUS
+IKsPin_DispatchKsProperty(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp,
+    IKsPinImpl * This)
+{
+    NTSTATUS Status;
+    PKSPROPERTY Property;
+    PIO_STACK_LOCATION IoStack;
+    UNICODE_STRING GuidString;
+    ULONG PropertySetsCount = 0, PropertyItemSize = 0;
+    const KSPROPERTY_SET* PropertySets = NULL;
+
+    /* sanity check */
+    ASSERT(This->Pin.Descriptor);
+
+    /* get current irp stack */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+
+    if (This->Pin.Descriptor->AutomationTable)
+    {
+        /* use available driver property sets */
+        PropertySetsCount = This->Pin.Descriptor->AutomationTable->PropertySetsCount;
+        PropertySets = This->Pin.Descriptor->AutomationTable->PropertySets;
+        PropertyItemSize = This->Pin.Descriptor->AutomationTable->PropertyItemSize;
+    }
+
+
+    /* try driver provided property sets */
+    Status = KspPropertyHandler(Irp,
+                                PropertySetsCount,
+                                PropertySets,
+                                NULL,
+                                PropertyItemSize);
+
+    DPRINT("IKsPin_DispatchKsProperty PropertySetCount %lu Status %lu\n", PropertySetsCount, Status);
+
+    if (Status != STATUS_NOT_FOUND)
+    {
+        /* property was handled by driver */
+        if (Status != STATUS_PENDING)
+        {
+            Irp->IoStatus.Status = Status;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        }
+        return Status;
+    }
+
+    /* property was not handled */
+    Property = (PKSPROPERTY)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
+
+    RtlStringFromGUID(&Property->Set, &GuidString);
+    DPRINT("IKsPin_DispatchKsProperty Unhandled property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
+    RtlFreeUnicodeString(&GuidString);
+
+    Irp->IoStatus.Status = STATUS_NOT_FOUND;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    return STATUS_NOT_FOUND;
+
 }
 
 NTSTATUS
@@ -909,10 +989,17 @@ IKsPin_DispatchDeviceIoControl(
     /* get the object header */
     ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext2;
 
-    /* locate ks pin implemention fro KSPIN offset */
+    /* locate ks pin implemention from KSPIN offset */
     This = (IKsPinImpl*)CONTAINING_RECORD(ObjectHeader->ObjectType, IKsPinImpl, Pin);
 
-    if (IoStack->Parameters.DeviceIoControl.IoControlCode != IOCTL_KS_WRITE_STREAM && IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_READ_STREAM)
+    if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_PROPERTY)
+    {
+        /* handle ks properties */
+        return IKsPin_DispatchKsProperty(DeviceObject, Irp, This);
+    }
+
+
+    if (IoStack->Parameters.DeviceIoControl.IoControlCode != IOCTL_KS_WRITE_STREAM && IoStack->Parameters.DeviceIoControl.IoControlCode != IOCTL_KS_READ_STREAM)
     {
         UNIMPLEMENTED;
         Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
@@ -1067,10 +1154,12 @@ KspCreatePin(
     PDEVICE_EXTENSION DeviceExtension;
     PKSOBJECT_CREATE_ITEM CreateItem;
     NTSTATUS Status;
+    PKSDATAFORMAT DataFormat;
 
     /* sanity checks */
     ASSERT(Descriptor->Dispatch);
-    ASSERT(Descriptor->Dispatch->Create);
+
+    DPRINT("KspCreatePin\n");
 
     /* get current irp stack */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -1095,6 +1184,7 @@ KspCreatePin(
     {
         /* not enough memory */
         FreeItem(This);
+        DPRINT("KspCreatePin OutOfMemory\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -1114,9 +1204,6 @@ KspCreatePin(
     InitializeListHead(&This->IrpList);
     KeInitializeSpinLock(&This->IrpListLock);
 
-    /* initialize ks pin descriptor */
-    This->Pin.Descriptor = Descriptor;
-    This->Pin.Id = Connect->PinId;
 
     /* allocate object bag */
     This->Pin.Bag = AllocateItem(NonPagedPool, sizeof(KSIOBJECT_BAG));
@@ -1131,12 +1218,33 @@ KspCreatePin(
     /* initialize object bag */
     Device->lpVtbl->InitializeObjectBag(Device, This->Pin.Bag, &This->BasicHeader.ControlMutex); /* is using control mutex right? */
 
+    /* get format */
+    DataFormat = (PKSDATAFORMAT)(Connect + 1);
+
+    /* initialize ks pin descriptor */
+    This->Pin.Descriptor = Descriptor;
+    This->Pin.Context = NULL;
+    This->Pin.Id = Connect->PinId;
     This->Pin.Communication = Descriptor->PinDescriptor.Communication;
-    This->Pin.ConnectionIsExternal = FALSE; /* FIXME */
-    //FIXME This->Pin.ConnectionInterface = Descriptor->PinDescriptor.Interfaces;
-    //FIXME This->Pin.ConnectionMedium = Descriptor->PinDescriptor.Mediums;
-    //FIXME This->Pin.ConnectionPriority = KSPRIORITY_NORMAL;
-    This->Pin.ConnectionFormat = (PKSDATAFORMAT) (Connect + 1);
+    This->Pin.ConnectionIsExternal = FALSE; //FIXME
+    RtlMoveMemory(&This->Pin.ConnectionInterface, &Connect->Interface, sizeof(KSPIN_INTERFACE));
+    RtlMoveMemory(&This->Pin.ConnectionMedium, &Connect->Medium, sizeof(KSPIN_MEDIUM));
+    RtlMoveMemory(&This->Pin.ConnectionPriority, &Connect->Priority, sizeof(KSPRIORITY));
+
+    /* allocate format */
+    Status = _KsEdit(This->Pin.Bag, (PVOID*)&This->Pin.ConnectionFormat, DataFormat->FormatSize, DataFormat->FormatSize, 0);
+    if (!NT_SUCCESS(Status))
+    {
+        /* failed to allocate format */
+        KsFreeObjectBag((KSOBJECT_BAG)This->Pin.Bag);
+        FreeItem(This);
+        FreeItem(CreateItem);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* copy format */
+    RtlMoveMemory((PVOID)This->Pin.ConnectionFormat, DataFormat, DataFormat->FormatSize);
+
     This->Pin.AttributeList = NULL; //FIXME
     This->Pin.StreamHeaderSize = sizeof(KSSTREAM_HEADER);
     This->Pin.DataFlow = Descriptor->PinDescriptor.DataFlow;
@@ -1167,6 +1275,7 @@ KspCreatePin(
     if (!NT_SUCCESS(Status))
     {
         /* failed to create object header */
+        DPRINT("KspCreatePin KsAllocateObjectHeader failed %lx\n", Status);
         KsFreeObjectBag((KSOBJECT_BAG)This->Pin.Bag);
         FreeItem(This);
         FreeItem(CreateItem);
@@ -1191,6 +1300,8 @@ KspCreatePin(
          */
 
         Status = Filter->lpVtbl->AddProcessPin(Filter, &This->ProcessPin);
+        DPRINT("KspCreatePin AddProcessPin %lx\n", Status);
+
         if (!NT_SUCCESS(Status))
         {
             /* failed to add process pin */
@@ -1209,7 +1320,10 @@ KspCreatePin(
     {
         /*  now inform the driver to create a new pin */
         Status = Descriptor->Dispatch->Create(&This->Pin, Irp);
+        DPRINT("KspCreatePin DispatchCreate %lx\n", Status);
     }
+
+    DPRINT("KspCreatePin Status %lx\n", Status);
 
     if (!NT_SUCCESS(Status) && Status != STATUS_PENDING)
     {

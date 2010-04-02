@@ -1,29 +1,4 @@
-/*
- * Definitions for print provider, monitor, processor and spooler
- *
- * Copyright 2005 Detlef Riekenberg
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- *
- *
- * "providor" is not a spelling error in this file. It's the real name.
- *
- */
-
-#ifndef _WINSPLP_
-#define _WINSPLP_
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -35,10 +10,284 @@ extern "C" {
 #define PRINTER_NOTIFY_STATUS_POLL      2
 #define PRINTER_NOTIFY_STATUS_INFO      4
 
-
 #define ROUTER_UNKNOWN      0
 #define ROUTER_SUCCESS      1
 #define ROUTER_STOP_ROUTING 2
+
+#if (NTDDI_VERSION >= NTDDI_WS03)
+#ifndef __ATTRIBUTE_INFO_3__
+#define __ATTRIBUTE_INFO_3__
+typedef struct _ATTRIBUTE_INFO_3 {
+  DWORD dwJobNumberOfPagesPerSide;
+  DWORD dwDrvNumberOfPagesPerSide;
+  DWORD dwNupBorderFlags;
+  DWORD dwJobPageOrderFlags;
+  DWORD dwDrvPageOrderFlags;
+  DWORD dwJobNumberOfCopies;
+  DWORD dwDrvNumberOfCopies;
+  DWORD dwColorOptimization;
+  short dmPrintQuality;
+  short dmYResolution;
+} ATTRIBUTE_INFO_3, *PATTRIBUTE_INFO_3;
+#endif
+#endif /* (NTDDI_VERSION >= NTDDI_WS03) */
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+#ifndef __ATTRIBUTE_INFO_4__
+#define __ATTRIBUTE_INFO_4__
+
+typedef struct _ATTRIBUTE_INFO_4 {
+  DWORD dwJobNumberOfPagesPerSide;
+  DWORD dwDrvNumberOfPagesPerSide;
+  DWORD dwNupBorderFlags;
+  DWORD dwJobPageOrderFlags;
+  DWORD dwDrvPageOrderFlags;
+  DWORD dwJobNumberOfCopies;
+  DWORD dwDrvNumberOfCopies;
+  DWORD dwColorOptimization;
+  short dmPrintQuality;
+  short dmYResolution;
+  DWORD dwDuplexFlags;
+  DWORD dwNupDirection;
+  DWORD dwBookletFlags;
+  DWORD dwScalingPercentX;
+  DWORD dwScalingPercentY;
+} ATTRIBUTE_INFO_4, *PATTRIBUTE_INFO_4;
+
+#define REVERSE_PAGES_FOR_REVERSE_DUPLEX (0x00000001)
+#define DONT_SEND_EXTRA_PAGES_FOR_DUPLEX (0x00000001 << 1)
+
+#define RIGHT_THEN_DOWN                  (0x00000001)
+#define DOWN_THEN_RIGHT                  (0x00000001 << 1)
+#define LEFT_THEN_DOWN                   (0x00000001 << 2)
+#define DOWN_THEN_LEFT                   (0x00000001 << 3)
+
+#define BOOKLET_EDGE_LEFT                0x00000000
+#define BOOKLET_EDGE_RIGHT               0x00000001
+
+#endif /* __ATTRIBUTE_INFO_4__ */
+
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+
+typedef struct _PRINTER_NOTIFY_INIT {
+  DWORD Size;
+  DWORD Reserved;
+  DWORD PollTime;
+} PRINTER_NOTIFY_INIT, *LPPRINTER_NOTIFY_INIT, *PPRINTER_NOTIFY_INIT;
+
+typedef struct _SPLCLIENT_INFO_1 {
+  DWORD dwSize;
+  LPWSTR pMachineName;
+  LPWSTR pUserName;
+  DWORD dwBuildNum;
+  DWORD dwMajorVersion;
+  DWORD dwMinorVersion;
+  WORD wProcessorArchitecture;
+} SPLCLIENT_INFO_1, *LPSPLCLIENT_INFO_1, *PSPLCLIENT_INFO_1;
+
+typedef struct _SPLCLIENT_INFO_2_V1{
+  ULONG_PTR hSplPrinter;
+} SPLCLIENT_INFO_2_W2K;
+
+typedef struct _SPLCLIENT_INFO_2_V2{
+#ifdef _WIN64
+  DWORD64 hSplPrinter;
+#else
+  DWORD32 hSplPrinter;
+#endif
+} SPLCLIENT_INFO_2_WINXP;
+
+typedef struct _SPLCLIENT_INFO_2_V3{
+  UINT64 hSplPrinter;
+} SPLCLIENT_INFO_2_LONGHORN;
+
+#if (OSVER(NTDDI_VERSION) == NTDDI_W2K)
+typedef SPLCLIENT_INFO_2_W2K SPLCLIENT_INFO_2, *PSPLCLIENT_INFO_2, *LPSPLCLIENT_INFO_2;
+#elif ((OSVER(NTDDI_VERSION) == NTDDI_WINXP) || (OSVER(NTDDI_VERSION) == NTDDI_WS03))
+typedef SPLCLIENT_INFO_2_WINXP SPLCLIENT_INFO_2, *PSPLCLIENT_INFO_2, *LPSPLCLIENT_INFO_2;
+#else
+typedef SPLCLIENT_INFO_2_LONGHORN SPLCLIENT_INFO_2, *PSPLCLIENT_INFO_2, *LPSPLCLIENT_INFO_2;
+#endif
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+typedef struct _SPLCLIENT_INFO_3 {
+  UINT cbSize;
+  DWORD dwFlags;
+  DWORD dwSize;
+  PWSTR pMachineName;
+  PWSTR pUserName;
+  DWORD dwBuildNum;
+  DWORD dwMajorVersion;
+  DWORD dwMinorVersion;
+  WORD wProcessorArchitecture;
+  UINT64 hSplPrinter;
+} SPLCLIENT_INFO_3, *PSPLCLIENT_INFO_3, *LPSPLCLIENT_INFO_3;
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+
+typedef struct _PRINTPROVIDOR {
+  BOOL (WINAPI *fpOpenPrinter)(PWSTR lpPrinterName, HANDLE *phPrinter,
+                               PPRINTER_DEFAULTSW pDefault);
+  BOOL (WINAPI *fpSetJob)(HANDLE hPrinter, DWORD JobID, DWORD Level,
+                          LPBYTE pJob, DWORD Command);
+  BOOL (WINAPI *fpGetJob)(HANDLE hPrinter, DWORD JobID, DWORD Level,
+                          LPBYTE pJob, DWORD cbBuf, LPDWORD pcbNeeded);
+  BOOL (WINAPI *fpEnumJobs)(HANDLE hPrinter, DWORD FirstJob, DWORD NoJobs,
+                            DWORD Level, LPBYTE pJob, DWORD cbBuf, LPDWORD pcbNeeded,
+                            LPDWORD pcReturned);
+  HANDLE (WINAPI *fpAddPrinter)(LPWSTR pName, DWORD Level, LPBYTE pPrinter);
+ BOOL   (WINAPI *fpDeletePrinter)(HANDLE hPrinter);
+ BOOL   (WINAPI *fpSetPrinter)(HANDLE hPrinter, DWORD Level, LPBYTE pPrinter,
+                 DWORD Command);
+ BOOL   (WINAPI *fpGetPrinter)(HANDLE hPrinter, DWORD Level, LPBYTE pPrinter,
+                 DWORD cbBuf, LPDWORD pcbNeeded);
+ BOOL   (WINAPI *fpEnumPrinters)(DWORD dwType, LPWSTR lpszName, DWORD dwLevel,
+                 LPBYTE lpbPrinters, DWORD cbBuf, LPDWORD lpdwNeeded,
+                 LPDWORD lpdwReturned);
+ BOOL   (WINAPI *fpAddPrinterDriver)(LPWSTR pName, DWORD Level,
+                 LPBYTE pDriverInfo);
+ BOOL   (WINAPI *fpEnumPrinterDrivers)(LPWSTR pName, LPWSTR pEnvironment,
+                 DWORD Level, LPBYTE pDriverInfo, DWORD cbBuf,
+                 LPDWORD pcbNeeded, LPDWORD pcbReturned);
+ BOOL   (WINAPI *fpGetPrinterDriver)(HANDLE hPrinter, LPWSTR pEnvironment,
+                 DWORD Level, LPBYTE pDriverInfo, DWORD cbBuf,
+                 LPDWORD pcbNeeded);
+ BOOL   (WINAPI *fpGetPrinterDriverDirectory)(LPWSTR pName, LPWSTR pEnvironment,
+                 DWORD Level, LPBYTE pDriverDirectory, DWORD cbBuf,
+                 LPDWORD pcbNeeded);
+ BOOL   (WINAPI *fpDeletePrinterDriver)(LPWSTR pName, LPWSTR pEnvironment,
+                 LPWSTR pDriverName);
+ BOOL   (WINAPI *fpAddPrintProcessor)(LPWSTR pName, LPWSTR pEnvironment,
+                 LPWSTR pPathName, LPWSTR pPrintProcessorName);
+ BOOL   (WINAPI *fpEnumPrintProcessors)(LPWSTR pName, LPWSTR pEnvironment,
+                 DWORD Level, LPBYTE pPrintProcessorInfo, DWORD cbBuf,
+                 LPDWORD pcbNeeded, LPDWORD pcbReturned);
+ BOOL   (WINAPI *fpGetPrintProcessorDirectory)(LPWSTR pName, LPWSTR pEnvironment,
+                 DWORD Level, LPBYTE pPrintProcessorInfo, DWORD cbBuf,
+                 LPDWORD pcbNeeded);
+ BOOL   (WINAPI *fpDeletePrintProcessor)(LPWSTR pName, LPWSTR pEnvironment,
+                 LPWSTR pPrintProcessorName);
+ BOOL   (WINAPI *fpEnumPrintProcessorDatatypes)(LPWSTR pName,
+                 LPWSTR pPrintProcessorName, DWORD Level, LPBYTE pDatatypes,
+                 DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcbReturned);
+ DWORD  (WINAPI *fpStartDocPrinter)(HANDLE hPrinter, DWORD Level, LPBYTE pDocInfo);
+ BOOL   (WINAPI *fpStartPagePrinter)(HANDLE hPrinter);
+ BOOL   (WINAPI *fpWritePrinter)(HANDLE hPrinter, LPVOID pBuf, DWORD cbBuf,
+                 LPDWORD pcWritten);
+ BOOL   (WINAPI *fpEndPagePrinter)(HANDLE hPrinter);
+ BOOL   (WINAPI *fpAbortPrinter)(HANDLE hPrinter);
+ BOOL   (WINAPI *fpReadPrinter)(HANDLE hPrinter, LPVOID pBuf, DWORD cbBuf,
+                 LPDWORD pNoBytesRead);
+ BOOL   (WINAPI *fpEndDocPrinter)(HANDLE hPrinter);
+ BOOL   (WINAPI *fpAddJob)(HANDLE hPrinter, DWORD Level, LPBYTE pData,
+                 DWORD cbBuf, LPDWORD pcbNeeded);
+ BOOL   (WINAPI *fpScheduleJob)(HANDLE hPrinter, DWORD JobID);
+ DWORD  (WINAPI *fpGetPrinterData)(HANDLE hPrinter, LPWSTR pValueName,
+                 LPDWORD pType, LPBYTE pData, DWORD nSize, LPDWORD pcbNeeded);
+ DWORD  (WINAPI *fpSetPrinterData)(HANDLE hPrinter, LPWSTR pValueName,
+                 DWORD Type, LPBYTE pData, DWORD cbData);
+ DWORD  (WINAPI *fpWaitForPrinterChange)(HANDLE hPrinter, DWORD Flags);
+ BOOL   (WINAPI *fpClosePrinter)(HANDLE phPrinter);
+ BOOL   (WINAPI *fpAddForm)(HANDLE hPrinter, DWORD Level, LPBYTE pForm);
+ BOOL   (WINAPI *fpDeleteForm)(HANDLE hPrinter, LPWSTR pFormName);
+ BOOL   (WINAPI *fpGetForm)(HANDLE hPrinter, LPWSTR pFormName, DWORD Level,
+                 LPBYTE pForm, DWORD cbBuf, LPDWORD pcbNeeded);
+ BOOL   (WINAPI *fpSetForm)(HANDLE hPrinter, LPWSTR pFormName, DWORD Level,
+                 LPBYTE pForm);
+ BOOL   (WINAPI *fpEnumForms)(HANDLE hPrinter, DWORD Level, LPBYTE pForm,
+                 DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned);
+ BOOL   (WINAPI *fpEnumMonitors)(LPWSTR pName, DWORD Level, LPBYTE pMonitors,
+                 DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned);
+ BOOL   (WINAPI *fpEnumPorts)(LPWSTR pName, DWORD Level, LPBYTE pPorts,
+                 DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned);
+ BOOL   (WINAPI *fpAddPort)(LPWSTR pName, HWND hWnd, LPWSTR pMonitorName);
+ BOOL   (WINAPI *fpConfigurePort)(LPWSTR pName, HWND hWnd, LPWSTR pPortName);
+ BOOL   (WINAPI *fpDeletePort)(LPWSTR pName, HWND hWnd, LPWSTR pPortName);
+ HANDLE (WINAPI *fpCreatePrinterIC)(HANDLE  hPrinter, LPDEVMODEW  pDevMode);
+ BOOL   (WINAPI *fpPlayGdiScriptOnPrinterIC)(HANDLE  hPrinterIC, LPBYTE pIn,
+                 DWORD cIn, LPBYTE pOut, DWORD cOut, DWORD  ul);
+ BOOL   (WINAPI *fpDeletePrinterIC)(HANDLE hPrinterIC);
+ BOOL   (WINAPI *fpAddPrinterConnection)(LPWSTR pName);
+ BOOL   (WINAPI *fpDeletePrinterConnection)(LPWSTR pName);
+ DWORD  (WINAPI *fpPrinterMessageBox)(HANDLE hPrinter, DWORD Error, HWND hWnd,
+                 LPWSTR pText, LPWSTR pCaption, DWORD dwType);
+ BOOL   (WINAPI *fpAddMonitor)(LPWSTR pName, DWORD Level, LPBYTE pMonitors);
+ BOOL   (WINAPI *fpDeleteMonitor)(LPWSTR pName, LPWSTR pEnvironment,
+                 LPWSTR pMonitorName);
+ BOOL   (WINAPI *fpResetPrinter)(HANDLE hPrinter, LPPRINTER_DEFAULTSW pDefault);
+ BOOL   (WINAPI *fpGetPrinterDriverEx)(HANDLE hPrinter, LPWSTR pEnvironment,
+                 DWORD Level, LPBYTE pDriverInfo, DWORD cbBuf, LPDWORD pcbNeeded,
+                 DWORD dwClientMajorVersion, DWORD dwClientMinorVersion,
+                 PDWORD pdwServerMajorVersion, PDWORD pdwServerMinorVersion);
+ HANDLE (WINAPI *fpFindFirstPrinterChangeNotification)(HANDLE hPrinter,
+                 DWORD fdwFlags, DWORD fdwOptions, LPVOID pPrinterNotifyOptions);
+ BOOL   (WINAPI *fpFindClosePrinterChangeNotification)(HANDLE hChange);
+ BOOL   (WINAPI *fpAddPortEx)(HANDLE hMonitor, LPWSTR pName, DWORD Level,
+                 LPBYTE lpBuffer, LPWSTR lpMonitorName);
+ BOOL   (WINAPI *fpShutDown)(LPVOID pvReserved);
+ BOOL   (WINAPI *fpRefreshPrinterChangeNotification)(HANDLE hPrinter,
+                 DWORD Reserved, PVOID pvReserved, PVOID pPrinterNotifyInfo);
+ BOOL   (WINAPI *fpOpenPrinterEx)(LPWSTR pPrinterName, LPHANDLE phPrinter,
+                 LPPRINTER_DEFAULTSW pDefault, LPBYTE pClientInfo, DWORD Level);
+ HANDLE (WINAPI *fpAddPrinterEx)(LPWSTR pName, DWORD Level, LPBYTE pPrinter,
+                 LPBYTE pClientInfo, DWORD ClientInfoLevel);
+ BOOL   (WINAPI *fpSetPort)(LPWSTR pName, LPWSTR pPortName, DWORD dwLevel,
+                 LPBYTE pPortInfo);
+ DWORD  (WINAPI *fpEnumPrinterData)( HANDLE hPrinter, DWORD dwIndex,
+                 LPWSTR pValueName, DWORD cbValueName, LPDWORD pcbValueName,
+                 LPDWORD pType, LPBYTE pData, DWORD cbData, LPDWORD pcbData);
+ DWORD  (WINAPI *fpDeletePrinterData)(HANDLE hPrinter, LPWSTR  pValueName);
+ DWORD  (WINAPI *fpClusterSplOpen)(LPCWSTR pszServer, LPCWSTR pszResource,
+                 PHANDLE phSpooler, LPCWSTR pszName, LPCWSTR pszAddress);
+ DWORD  (WINAPI *fpClusterSplClose)(HANDLE hSpooler);
+ DWORD  (WINAPI *fpClusterSplIsAlive)(HANDLE  hSpooler);
+ DWORD  (WINAPI *fpSetPrinterDataEx)(HANDLE hPrinter, LPCWSTR pKeyName,
+                 LPCWSTR pValueName, DWORD Type, LPBYTE pData, DWORD cbData);
+ DWORD  (WINAPI *fpGetPrinterDataEx)(HANDLE hPrinter, LPCWSTR pKeyName,
+                 LPCWSTR pValueName, LPDWORD pType, LPBYTE pData, DWORD nSize,
+                 LPDWORD pcbNeeded);
+ DWORD  (WINAPI *fpEnumPrinterDataEx)(HANDLE hPrinter, LPCWSTR pKeyName,
+                 LPBYTE pEnumValues, DWORD cbEnumValues, LPDWORD pcbEnumValues,
+                 LPDWORD pnEnumValues);
+ DWORD  (WINAPI *fpEnumPrinterKey)(HANDLE hPrinter, LPCWSTR pKeyName,
+                 LPWSTR pSubkey, DWORD cbSubkey, LPDWORD  pcbSubkey);
+ DWORD  (WINAPI *fpDeletePrinterDataEx)(HANDLE hPrinter, LPCWSTR pKeyName,
+                 LPCWSTR pValueName);
+ DWORD  (WINAPI *fpDeletePrinterKey)(HANDLE hPrinter, LPCWSTR pKeyName);
+ BOOL   (WINAPI *fpSeekPrinter)(HANDLE hPrinter, LARGE_INTEGER liDistanceToMove,
+                 PLARGE_INTEGER pliNewPointer, DWORD dwMoveMethod, BOOL bWrite);
+ BOOL   (WINAPI *fpDeletePrinterDriverEx)(LPWSTR pName, LPWSTR pEnvironment,
+                 LPWSTR pDriverName, DWORD dwDeleteFlag, DWORD dwVersionNum);
+ BOOL   (WINAPI *fpAddPerMachineConnection)(LPCWSTR pServer,
+                 LPCWSTR pPrinterName, LPCWSTR pPrintServer, LPCWSTR pProvider);
+ BOOL   (WINAPI *fpDeletePerMachineConnection)(LPCWSTR pServer,
+                 LPCWSTR pPrinterName);
+ BOOL   (WINAPI *fpEnumPerMachineConnections)(LPCWSTR pServer,
+                 LPBYTE pPrinterEnum, DWORD cbBuf, LPDWORD pcbNeeded,
+                 LPDWORD pcReturned);
+ BOOL   (WINAPI *fpXcvData)(HANDLE hXcv, LPCWSTR pszDataName, PBYTE pInputData,
+                 DWORD cbInputData, PBYTE pOutputData, DWORD cbOutputData,
+                 PDWORD pcbOutputNeeded, PDWORD pdwStatus);
+ BOOL   (WINAPI *fpAddPrinterDriverEx)(LPWSTR pName, DWORD Level,
+                 LPBYTE pDriverInfo, DWORD  dwFileCopyFlags);
+ BOOL   (WINAPI *fpSplReadPrinter)(HANDLE hPrinter, LPBYTE *pBuf, DWORD cbBuf);
+ BOOL   (WINAPI *fpDriverUnloadComplete)(LPWSTR pDriverFile);
+ BOOL   (WINAPI *fpGetSpoolFileInfo)(HANDLE hPrinter, LPWSTR *pSpoolDir,
+                 LPHANDLE phFile, HANDLE hSpoolerProcess, HANDLE hAppProcess);
+ BOOL   (WINAPI *fpCommitSpoolData)(HANDLE hPrinter, DWORD cbCommit);
+ BOOL   (WINAPI *fpCloseSpoolFileHandle)(HANDLE hPrinter);
+ BOOL   (WINAPI *fpFlushPrinter)(HANDLE hPrinter, LPBYTE pBuf, DWORD cbBuf,
+                 LPDWORD pcWritten, DWORD cSleep);
+ DWORD  (WINAPI *fpSendRecvBidiData)(HANDLE hPort, LPCWSTR pAction,
+                 LPBIDI_REQUEST_CONTAINER pReqData,
+                 LPBIDI_RESPONSE_CONTAINER *ppResData);
+ BOOL   (WINAPI *fpAddDriverCatalog)(HANDLE hPrinter, DWORD dwLevel,
+                 VOID *pvDriverInfCatInfo, DWORD dwCatalogCopyFlags);
+} PRINTPROVIDOR, *LPPRINTPROVIDOR;
+
+
+
+
 
 /*
  * WARNING: Many Functions are declared as "BOOL", but return ROUTER_*
@@ -161,12 +410,6 @@ typedef struct _MONITORUI {
  BOOL  (WINAPI *pfnConfigurePortUI)(PCWSTR pName, HWND hWnd, PCWSTR pPortName);
  BOOL  (WINAPI *pfnDeletePortUI)(PCWSTR pszServer, HWND hWnd, PCWSTR pszPortName);
 }MONITORUI, *PMONITORUI;
-
-typedef struct _PRINTER_NOTIFY_INIT {
- DWORD  Size;
- DWORD  Reserved;
- DWORD  PollTime;
-} PRINTER_NOTIFY_INIT, *LPPRINTER_NOTIFY_INIT, *PPRINTER_NOTIFY_INIT;
 
 typedef struct _PRINTPROCESSOROPENDATA {
  PDEVMODEW pDevMode;
@@ -343,16 +586,6 @@ typedef struct _PRINTPROVIDOR {
                  VOID *pvDriverInfCatInfo, DWORD dwCatalogCopyFlags);
 } PRINTPROVIDOR, *LPPRINTPROVIDOR;
 
-typedef struct _SPLCLIENT_INFO_1 {
- DWORD  dwSize;
- LPWSTR pMachineName;
- LPWSTR pUserName;
- DWORD  dwBuildNum;
- DWORD  dwMajorVersion;
- DWORD  dwMinorVersion;
- WORD   wProcessorArchitecture;
-} SPLCLIENT_INFO_1, *LPSPLCLIENT_INFO_1, *PSPLCLIENT_INFO_1;
-
 /* DECLARATIONS */
 
 HANDLE WINAPI CreatePrinterIC(HANDLE hPrinter, LPDEVMODEW pDevMode);
@@ -424,5 +657,3 @@ BOOL   WINAPI SpoolerFindClosePrinterChangeNotification(HANDLE hPrinter);
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
-
-#endif  /* _WINSPLP_ */

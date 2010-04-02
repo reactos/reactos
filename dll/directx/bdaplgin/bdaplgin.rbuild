@@ -3,6 +3,7 @@
 <group>
 <module name="bdaplgin" type="win32dll" baseaddress="${BASEADDRESS_BDAPLGIN}" installbase="system32" installname="bdaplgin.ax">
 	<importlibrary definition="bdaplgin.spec" />
+	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<include base="bdaplgin">.</include>
 	<library>ntdll</library>
 	<library>kernel32</library>

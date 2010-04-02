@@ -94,7 +94,7 @@ _XcptFilter(DWORD ExceptionCode,
     return ret;
 }
 
-int CDECL __CppXcptFilter(NTSTATUS ex, PEXCEPTION_POINTERS ptr)
+int CDECL __CppXcptFilter(unsigned long ex, PEXCEPTION_POINTERS ptr)
 {
      /* only filter c++ exceptions */
      if (ex != CXX_EXCEPTION) return EXCEPTION_CONTINUE_SEARCH;
