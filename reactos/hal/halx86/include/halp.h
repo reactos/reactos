@@ -751,6 +751,12 @@ HalpIs16BitPortDecodeSupported(
     VOID
 );
 
+NTSTATUS
+NTAPI
+HalpQueryAcpiResourceRequirements(
+    OUT PIO_RESOURCE_REQUIREMENTS_LIST *Requirements
+);
+
 VOID
 FASTCALL
 KeUpdateSystemTime(
