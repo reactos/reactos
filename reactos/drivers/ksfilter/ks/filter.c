@@ -26,6 +26,7 @@ typedef struct
     ULONG PinDescriptorCount;
     PKSFILTERFACTORY Factory;
     PFILE_OBJECT FileObject;
+    KMUTEX ControlMutex;
     KMUTEX ProcessingMutex;
 
 
@@ -34,7 +35,7 @@ typedef struct
 
     ULONG *PinInstanceCount;
     PKSPIN * FirstPin;
-    KSPROCESSPIN_INDEXENTRY ProcessPinIndex;
+    PKSPROCESSPIN_INDEXENTRY ProcessPinIndex;
 
 }IKsFilterImpl;
 
@@ -294,18 +295,20 @@ IKsFilter_fnAddProcessPin(
     /* first acquire processing mutex */
     KeWaitForSingleObject(&This->ProcessingMutex, Executive, KernelMode, FALSE, NULL);
 
-    /* edit process pin descriptor */
-    Status = _KsEdit(This->Filter.Bag,
-                     (PVOID*)&This->ProcessPinIndex.Pins, 
-                     (This->ProcessPinIndex.Count + 1) * sizeof(PKSPROCESSPIN),
-                     (This->ProcessPinIndex.Count) * sizeof(PKSPROCESSPIN),
+    /* sanity check */
+    ASSERT(This->PinDescriptorCount > ProcessPin->Pin->Id);
+
+    /* allocate new process pin array */
+    Status = _KsEdit(This->Filter.Bag, (PVOID*)&This->ProcessPinIndex[ProcessPin->Pin->Id].Pins,
+                     (This->PinDescriptorCount + 1) * sizeof(PKSPROCESSPIN),
+                     This->PinDescriptorCount * sizeof(PKSPROCESSPIN),
                      0);
 
     if (NT_SUCCESS(Status))
     {
-        /* add new process pin */
-        This->ProcessPinIndex.Pins[This->ProcessPinIndex.Count] = ProcessPin;
-        This->ProcessPinIndex.Count++;
+        /* store process pin */
+        This->ProcessPinIndex[ProcessPin->Pin->Id].Pins[This->ProcessPinIndex[ProcessPin->Pin->Id].Count] = ProcessPin;
+        This->ProcessPinIndex[ProcessPin->Pin->Id].Count++;
     }
 
     /* release process mutex */
@@ -321,25 +324,39 @@ IKsFilter_fnRemoveProcessPin(
     IN PKSPROCESSPIN ProcessPin)
 {
     ULONG Index;
+    ULONG Count;
+    PKSPROCESSPIN * Pins;
+
     IKsFilterImpl * This = (IKsFilterImpl*)CONTAINING_RECORD(iface, IKsFilterImpl, lpVtbl);
 
     /* first acquire processing mutex */
     KeWaitForSingleObject(&This->ProcessingMutex, Executive, KernelMode, FALSE, NULL);
 
-    /* iterate through process pin index array and search for the process pin to be removed */
-    for(Index = 0; Index < This->ProcessPinIndex.Count; Index++)
+    /* sanity check */
+    ASSERT(ProcessPin->Pin);
+    ASSERT(ProcessPin->Pin->Id);
+
+    Count = This->ProcessPinIndex[ProcessPin->Pin->Id].Count;
+    Pins =  This->ProcessPinIndex[ProcessPin->Pin->Id].Pins;
+
+    /* search for current process pin */
+    for(Index = 0; Index < Count; Index++)
     {
-        if (This->ProcessPinIndex.Pins[Index] == ProcessPin)
+        if (Pins[Index] == ProcessPin)
         {
-            /* found process pin */
-            if (Index + 1 < This->ProcessPinIndex.Count)
-            {
-                /* erase entry */
-                RtlMoveMemory(&This->ProcessPinIndex.Pins[Index], &This->ProcessPinIndex.Pins[Index+1], This->ProcessPinIndex.Count - Index - 1);
-            }
-            /* decrement process pin count */
-            This->ProcessPinIndex.Count--;
+            RtlMoveMemory(&Pins[Index], &Pins[Index + 1], (Count - (Index + 1)) * sizeof(PKSPROCESSPIN));
+            break;
         }
+
+    }
+
+    /* decrement pin count */
+    This->ProcessPinIndex[ProcessPin->Pin->Id].Count--;
+
+    if (!This->ProcessPinIndex[ProcessPin->Pin->Id].Count)
+    {
+        /* clear entry object bag will delete it */
+       This->ProcessPinIndex[ProcessPin->Pin->Id].Pins = NULL;
     }
 
     /* release process mutex */
@@ -394,8 +411,9 @@ NTAPI
 IKsFilter_fnGetProcessDispatch(
     IKsFilter * iface)
 {
-    UNIMPLEMENTED
-    return NULL;
+    IKsFilterImpl * This = (IKsFilterImpl*)CONTAINING_RECORD(iface, IKsFilterImpl, lpVtbl);
+
+    return This->ProcessPinIndex;
 }
 
 static IKsFilterVtbl vt_IKsFilter =
@@ -619,7 +637,7 @@ KspHandleDataIntersection(
                                                                      Data,
                                                                      &Length);
 
-        if (Status == STATUS_SUCCESS)
+        if (Status == STATUS_SUCCESS || Status == STATUS_BUFFER_OVERFLOW)
         {
             IoStatus->Information = Length;
             break;
@@ -784,6 +802,7 @@ IKsFilter_CreateDescriptors(
     This->PinInstanceCount = NULL;
     This->PinDescriptors = NULL;
     This->PinDescriptorsEx = NULL;
+    This->ProcessPinIndex = NULL;
     This->PinDescriptorCount = 0;
 
     /* initialize topology descriptor */
@@ -842,8 +861,6 @@ IKsFilter_CreateDescriptors(
             return Status;
         }
 
-
-
         /* add new pin factory */
         RtlMoveMemory(This->PinDescriptorsEx, FilterDescriptor->PinDescriptors, sizeof(KSPIN_DESCRIPTOR_EX) * FilterDescriptor->PinDescriptorsCount);
 
@@ -852,8 +869,19 @@ IKsFilter_CreateDescriptors(
             RtlMoveMemory(&This->PinDescriptors[Index], &FilterDescriptor->PinDescriptors[Index].PinDescriptor, sizeof(KSPIN_DESCRIPTOR));
         }
 
+        /* allocate process pin index */
+        Status = _KsEdit(This->Filter.Bag, (PVOID*)&This->ProcessPinIndex, sizeof(KSPROCESSPIN_INDEXENTRY) * FilterDescriptor->PinDescriptorsCount,
+                         sizeof(KSPROCESSPIN_INDEXENTRY) * FilterDescriptor->PinDescriptorsCount, 0);
+
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("IKsFilter_CreateDescriptors _KsEdit failed %lx\n", Status);
+            return Status;
+        }
+
         /* store new pin descriptor count */
         This->PinDescriptorCount = FilterDescriptor->PinDescriptorsCount;
+
     }
 
     if (FilterDescriptor->NodeDescriptorsCount)
@@ -991,7 +1019,7 @@ IKsFilter_DispatchCreatePin(
     ASSERT(This->Header.Type == KsObjectTypeFilter);
 
     /* acquire control mutex */
-    KeWaitForSingleObject(&This->Header.ControlMutex, Executive, KernelMode, FALSE, NULL);
+    KeWaitForSingleObject(This->Header.ControlMutex, Executive, KernelMode, FALSE, NULL);
 
     /* now validate the connect request */
     Status = KsValidateConnectRequest(Irp, This->PinDescriptorCount, This->PinDescriptors, &Connect);
@@ -1029,7 +1057,7 @@ IKsFilter_DispatchCreatePin(
     }
 
     /* release control mutex */
-    KeReleaseMutex(&This->Header.ControlMutex, FALSE);
+    KeReleaseMutex(This->Header.ControlMutex, FALSE);
 
     if (Status != STATUS_PENDING)
     {
@@ -1176,6 +1204,8 @@ KspCreateFilter(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
+    DPRINT("KspCreateFilter Flags %lx\n", Factory->FilterDescriptor->Flags);
+
     /* initialize pin create item */
     CreateItem[0].Create = IKsFilter_DispatchCreatePin;
     CreateItem[0].Context = (PVOID)This;
@@ -1202,7 +1232,8 @@ KspCreateFilter(
     This->Header.KsDevice = &DeviceExtension->DeviceHeader->KsDevice;
     This->Header.Parent.KsFilterFactory = iface->lpVtbl->GetStruct(iface);
     This->Header.Type = KsObjectTypeFilter;
-    KeInitializeMutex(&This->Header.ControlMutex, 0);
+    This->Header.ControlMutex = &This->ControlMutex;
+    KeInitializeMutex(This->Header.ControlMutex, 0);
     InitializeListHead(&This->Header.EventList);
     KeInitializeSpinLock(&This->Header.EventListLock);
 
@@ -1224,8 +1255,9 @@ KspCreateFilter(
         if (Factory->FilterDescriptor->Dispatch->Create)
         {
             /* now let driver initialize the filter instance */
-            DPRINT("Before instantiating filter Filter %p This %p KSBASIC_HEADER %u\n", &This->Filter, This, sizeof(KSBASIC_HEADER));
+
             ASSERT(This->Header.KsDevice);
+            ASSERT(This->Header.KsDevice->Started);
             Status = Factory->FilterDescriptor->Dispatch->Create(&This->Filter, Irp);
 
             if (!NT_SUCCESS(Status) && Status != STATUS_PENDING)
@@ -1431,6 +1463,17 @@ KsFilterCreatePinFactory (
     /* add new pin factory */
     RtlMoveMemory(&This->PinDescriptorsEx[This->PinDescriptorCount], InPinDescriptor, sizeof(KSPIN_DESCRIPTOR_EX));
     RtlMoveMemory(&This->PinDescriptors[This->PinDescriptorCount], &InPinDescriptor->PinDescriptor, sizeof(KSPIN_DESCRIPTOR));
+
+
+    /* allocate process pin index */
+    Status = _KsEdit(This->Filter.Bag, (PVOID*)&This->ProcessPinIndex, sizeof(KSPROCESSPIN_INDEXENTRY) * Count,
+                     sizeof(KSPROCESSPIN_INDEXENTRY) * This->PinDescriptorCount, 0);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("KsFilterCreatePinFactory _KsEdit failed %lx\n", Status);
+        return Status;
+    }
 
     /* store new pin id */
     *PinID = This->PinDescriptorCount;

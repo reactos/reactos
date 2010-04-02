@@ -21,6 +21,8 @@ typedef struct
     PFNKSFILTERFACTORYPOWER WakeCallback;
 
     LIST_ENTRY SymbolicLinkList;
+    KMUTEX ControlMutex;
+
 }IKsFilterFactoryImpl;
 
 VOID
@@ -225,16 +227,15 @@ IKsFilterFactory_fnInitialize(
     This->Header.Parent.KsDevice = &DeviceExtension->DeviceHeader->KsDevice;
     This->DeviceHeader = DeviceExtension->DeviceHeader;
 
+    /* initialize filter factory control mutex */
+    This->Header.ControlMutex = &This->ControlMutex;
+    KeInitializeMutex(This->Header.ControlMutex, 0);
+
     /* unused fields */
-    KeInitializeMutex(&This->Header.ControlMutex, 0);
     InitializeListHead(&This->Header.EventList);
     KeInitializeSpinLock(&This->Header.EventListLock);
 
-
     InitializeListHead(&This->SymbolicLinkList);
-
-    /* initialize filter factory control mutex */
-    KeInitializeMutex(&This->Header.ControlMutex, 0);
 
     /* does the device use a reference string */
     if (RefString || !Descriptor->ReferenceGuid)

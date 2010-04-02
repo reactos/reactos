@@ -492,7 +492,7 @@ IKsDevice_Pnp(
         }
         case IRP_MN_QUERY_INTERFACE:
         {
-            Status = STATUS_SUCCESS;
+            Status = STATUS_UNSUCCESSFUL;
             /* check for pnp notification support */
             if (Dispatch)
             {
@@ -508,6 +508,7 @@ IKsDevice_Pnp(
             if (NT_SUCCESS(Status))
             {
                 /* driver supports a private interface */
+                DPRINT1("IRP_MN_QUERY_INTERFACE Device supports interface\n");
                 Irp->IoStatus.Status = Status;
                 IoCompleteRequest(Irp, IO_NO_INCREMENT);
                 return Status;

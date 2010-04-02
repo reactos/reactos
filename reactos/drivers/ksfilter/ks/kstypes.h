@@ -58,7 +58,7 @@ typedef struct
 {
     KSOBJECTTYPE Type;
     PKSDEVICE KsDevice;
-    KMUTEX ControlMutex;
+    PRKMUTEX ControlMutex;
     LIST_ENTRY EventList;
     KSPIN_LOCK EventListLock;
     union

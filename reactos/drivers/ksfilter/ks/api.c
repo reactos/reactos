@@ -1589,7 +1589,7 @@ KsAcquireControl(
     /* sanity check */
     ASSERT(BasicHeader->Type == KsObjectTypeFilter || BasicHeader->Type == KsObjectTypePin);
 
-    KeWaitForSingleObject(&BasicHeader->ControlMutex, Executive, KernelMode, FALSE, NULL);
+    KeWaitForSingleObject(BasicHeader->ControlMutex, Executive, KernelMode, FALSE, NULL);
 
 }
 
@@ -1606,7 +1606,7 @@ KsReleaseControl(
     /* sanity check */
     ASSERT(BasicHeader->Type == KsObjectTypeFilter || BasicHeader->Type == KsObjectTypePin);
 
-    KeReleaseMutex(&BasicHeader->ControlMutex, FALSE);
+    KeReleaseMutex(BasicHeader->ControlMutex, FALSE);
 }
 
 
