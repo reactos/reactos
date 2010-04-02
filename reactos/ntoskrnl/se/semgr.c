@@ -314,6 +314,31 @@ SepSidInToken(PACCESS_TOKEN _Token,
     return FALSE;
 }
 
+static BOOLEAN
+SepTokenIsOwner(PACCESS_TOKEN Token,
+                PSECURITY_DESCRIPTOR SecurityDescriptor)
+{
+    NTSTATUS Status;
+    PSID Sid = NULL;
+    BOOLEAN Defaulted;
+
+    Status = RtlGetOwnerSecurityDescriptor(SecurityDescriptor,
+                                           &Sid,
+                                           &Defaulted);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlGetOwnerSecurityDescriptor() failed (Status %lx)\n", Status);
+        return FALSE;
+    }
+
+    if (Sid == NULL)
+    {
+        DPRINT1("Owner Sid is NULL\n");
+        return FALSE;
+    }
+
+    return SepSidInToken(Token, Sid);
+}
 
 VOID NTAPI
 SeQuerySecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
@@ -438,22 +463,25 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     CurrentAccess = PreviouslyGrantedAccess;
 
     /* RULE 2: Check token for 'take ownership' privilege */
-    Privilege.Luid = SeTakeOwnershipPrivilege;
-    Privilege.Attributes = SE_PRIVILEGE_ENABLED;
-
-    if (SepPrivilegeCheck(Token,
-                          &Privilege,
-                          1,
-                          PRIVILEGE_SET_ALL_NECESSARY,
-                          AccessMode))
+    if (DesiredAccess & WRITE_OWNER)
     {
-        CurrentAccess |= WRITE_OWNER;
-        if ((DesiredAccess & ~VALID_INHERIT_FLAGS) == 
-            (CurrentAccess & ~VALID_INHERIT_FLAGS))
+        Privilege.Luid = SeTakeOwnershipPrivilege;
+        Privilege.Attributes = SE_PRIVILEGE_ENABLED;
+
+        if (SepPrivilegeCheck(Token,
+                              &Privilege,
+                              1,
+                              PRIVILEGE_SET_ALL_NECESSARY,
+                              AccessMode))
         {
-            *GrantedAccess = CurrentAccess;
-            *AccessStatus = STATUS_SUCCESS;
-            return TRUE;
+            CurrentAccess |= WRITE_OWNER;
+            if ((DesiredAccess & ~VALID_INHERIT_FLAGS) == 
+                (CurrentAccess & ~VALID_INHERIT_FLAGS))
+            {
+                *GrantedAccess = CurrentAccess;
+                *AccessStatus = STATUS_SUCCESS;
+                return TRUE;
+            }
         }
     }
 
@@ -463,29 +491,6 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         *GrantedAccess = 0;
         *AccessStatus = STATUS_ACCESS_DENIED;
         return FALSE;
-    }
-
-    /* RULE 3: Check whether the token is the owner */
-    Status = RtlGetOwnerSecurityDescriptor(SecurityDescriptor,
-                                           &Sid,
-                                           &Defaulted);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("RtlGetOwnerSecurityDescriptor() failed (Status %lx)\n", Status);
-        *AccessStatus = Status;
-        return FALSE;
-    }
-
-    if (Sid && SepSidInToken(Token, Sid))
-    {
-        CurrentAccess |= (READ_CONTROL | WRITE_DAC);
-        if ((DesiredAccess & ~VALID_INHERIT_FLAGS) == 
-            (CurrentAccess & ~VALID_INHERIT_FLAGS))
-        {
-            *GrantedAccess = CurrentAccess;
-            *AccessStatus = STATUS_SUCCESS;
-            return TRUE;
-        }
     }
 
     /* Fail if DACL is absent */
@@ -649,16 +654,43 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     if (!SubjectContextLocked)
         SeLockSubjectContext(SubjectSecurityContext);
 
-    /* Call the internal function */
-    ret = SepAccessCheck(SecurityDescriptor,
-                         SubjectSecurityContext,
-                         DesiredAccess,
-                         PreviouslyGrantedAccess,
-                         Privileges,
-                         GenericMapping,
-                         AccessMode,
-                         GrantedAccess,
-                         AccessStatus);
+    /* Check if the token is the owner and grant WRITE_DAC and READ_CONTROL rights */
+    if (DesiredAccess & (WRITE_DAC | READ_CONTROL | MAXIMUM_ALLOWED))
+    {
+         PACCESS_TOKEN Token = SubjectSecurityContext->ClientToken ?
+             SubjectSecurityContext->ClientToken : SubjectSecurityContext->PrimaryToken;
+
+        if (SepTokenIsOwner(Token,
+                            SecurityDescriptor))
+        {
+            if (DesiredAccess & MAXIMUM_ALLOWED)
+                PreviouslyGrantedAccess |= (WRITE_DAC | READ_CONTROL);
+            else
+                PreviouslyGrantedAccess |= (DesiredAccess & (WRITE_DAC | READ_CONTROL));
+
+            DesiredAccess &= ~(WRITE_DAC | READ_CONTROL);
+        }
+    }
+
+    if (DesiredAccess == 0)
+    {
+        *GrantedAccess = PreviouslyGrantedAccess;
+        *AccessStatus = STATUS_SUCCESS;
+        ret = TRUE;
+    }
+    else
+    {
+        /* Call the internal function */
+        ret = SepAccessCheck(SecurityDescriptor,
+                             SubjectSecurityContext,
+                             DesiredAccess,
+                             PreviouslyGrantedAccess,
+                             Privileges,
+                             GenericMapping,
+                             AccessMode,
+                             GrantedAccess,
+                             AccessStatus);
+    }
 
     /* Release the lock if needed */
     if (!SubjectContextLocked)
@@ -686,6 +718,7 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     PSECURITY_DESCRIPTOR CapturedSecurityDescriptor = NULL;
     SECURITY_SUBJECT_CONTEXT SubjectSecurityContext;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    ACCESS_MASK PreviouslyGrantedAccess = 0;
     PTOKEN Token;
     NTSTATUS Status;
     PAGED_CODE();
@@ -801,16 +834,38 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     SubjectSecurityContext.ProcessAuditId = NULL;
     SeLockSubjectContext(&SubjectSecurityContext);
 
-    /* Now perform the access check */
-    SepAccessCheck(SecurityDescriptor, // FIXME: use CapturedSecurityDescriptor
-                   &SubjectSecurityContext,
-                   DesiredAccess,
-                   0,
-                   &PrivilegeSet, //FIXME
-                   GenericMapping,
-                   PreviousMode,
-                   GrantedAccess,
-                   AccessStatus);
+    /* Check if the token is the owner and grant WRITE_DAC and READ_CONTROL rights */
+    if (DesiredAccess & (WRITE_DAC | READ_CONTROL | MAXIMUM_ALLOWED))
+    {
+        if (SepTokenIsOwner(Token, SecurityDescriptor)) // FIXME: use CapturedSecurityDescriptor
+        {
+            if (DesiredAccess & MAXIMUM_ALLOWED)
+                PreviouslyGrantedAccess |= (WRITE_DAC | READ_CONTROL);
+            else
+                PreviouslyGrantedAccess |= (DesiredAccess & (WRITE_DAC | READ_CONTROL));
+
+            DesiredAccess &= ~(WRITE_DAC | READ_CONTROL);
+        }
+    }
+
+    if (DesiredAccess == 0)
+    {
+        *GrantedAccess = PreviouslyGrantedAccess;
+        *AccessStatus = STATUS_SUCCESS;
+    }
+    else
+    {
+        /* Now perform the access check */
+        SepAccessCheck(SecurityDescriptor, // FIXME: use CapturedSecurityDescriptor
+                       &SubjectSecurityContext,
+                       DesiredAccess,
+                       PreviouslyGrantedAccess,
+                       &PrivilegeSet, //FIXME
+                       GenericMapping,
+                       PreviousMode,
+                       GrantedAccess,
+                       AccessStatus);
+    }
 
     /* Unlock subject context */
     SeUnlockSubjectContext(&SubjectSecurityContext);
