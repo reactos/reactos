@@ -76,7 +76,7 @@ hal.dll=,,,,,,,,,,,,2
 
 [Files.pci_mp]
 ntkrnlmp.exe=,,,,,,,,,,ntoskrnl.exe,,2
-halmp.dll=,,,,,,,,,,hal.dll,,2
+halmps.dll=,,,,,,,,,,hal.dll,,2
 
 [Display]
 ;<id> = <user friendly name>,<spare>,<service key name>,<hight>,<width>,<bpp>
