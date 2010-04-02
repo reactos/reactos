@@ -722,7 +722,7 @@ typedef struct _EXTPUSH {
   union {
     WORD DlgTemplateID;
     HANDLE hDlgTemplate;
-  } DUMMYUNIONNAME;
+  } DUMMYUNIONNAME2;
   ULONG_PTR dwReserved[3];
 } EXTPUSH, *PEXTPUSH;
 
