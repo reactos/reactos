@@ -60,6 +60,11 @@ NTSTATUS
 IopUpdateResourceMapForPnPDevice(
    IN PDEVICE_NODE DeviceNode);
 
+NTSTATUS
+NTAPI
+IopCreateDeviceKeyPath(IN PCUNICODE_STRING RegistryPath,
+                       OUT PHANDLE Handle);
+
 PDEVICE_NODE
 FASTCALL
 IopGetDeviceNode(PDEVICE_OBJECT DeviceObject)
@@ -141,6 +146,9 @@ IopStartDevice(
    IO_STACK_LOCATION Stack;
    ULONG RequiredLength;
    NTSTATUS Status;
+   HANDLE InstanceHandle, ControlHandle;
+   UNICODE_STRING KeyName;
+   OBJECT_ATTRIBUTES ObjectAttributes;
 
    IopDeviceNodeSetFlag(DeviceNode, DNF_ASSIGNING_RESOURCES);
    DPRINT("Sending IRP_MN_FILTER_RESOURCE_REQUIREMENTS to device stack\n");
@@ -215,8 +223,31 @@ IopStartDevice(
       }
    }
 
+   Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, &InstanceHandle);
+   if (!NT_SUCCESS(Status))
+       return Status;
+
+   RtlInitUnicodeString(&KeyName, L"Control");
+   InitializeObjectAttributes(&ObjectAttributes,
+                              &KeyName,
+                              OBJ_CASE_INSENSITIVE,
+                              InstanceHandle,
+                              NULL);
+   Status = ZwCreateKey(&ControlHandle, KEY_SET_VALUE, &ObjectAttributes, 0, NULL, REG_OPTION_VOLATILE, NULL);
+   if (!NT_SUCCESS(Status))
+   {
+       ZwClose(InstanceHandle);
+       return Status;
+   }
+
+   RtlInitUnicodeString(&KeyName, L"ActiveService");
+   Status = ZwSetValueKey(ControlHandle, &KeyName, 0, REG_SZ, DeviceNode->ServiceName.Buffer, DeviceNode->ServiceName.Length);
+
    if (NT_SUCCESS(Status))
        IopDeviceNodeSetFlag(DeviceNode, DNF_STARTED);
+
+   ZwClose(ControlHandle);
+   ZwClose(InstanceHandle);
 
    return Status;
 }
@@ -372,6 +403,8 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
    KIRQL OldIrql;
    UNICODE_STRING FullServiceName;
    UNICODE_STRING LegacyPrefix = RTL_CONSTANT_STRING(L"LEGACY_");
+   UNICODE_STRING UnknownDeviceName = RTL_CONSTANT_STRING(L"UNKNOWN");
+   HANDLE TempHandle;
 
    DPRINT("ParentNode 0x%p PhysicalDeviceObject 0x%p ServiceName %wZ\n",
       ParentNode, PhysicalDeviceObject, ServiceName);
@@ -384,30 +417,37 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
 
    RtlZeroMemory(Node, sizeof(DEVICE_NODE));
 
+   if (!ServiceName)
+       ServiceName = &UnknownDeviceName;
+
    if (!PhysicalDeviceObject)
    {
-      if (ServiceName)
+      FullServiceName.MaximumLength = LegacyPrefix.Length + ServiceName->Length;
+      FullServiceName.Length = 0;
+      FullServiceName.Buffer = ExAllocatePool(PagedPool, FullServiceName.MaximumLength);
+      if (!FullServiceName.Buffer)
       {
-         FullServiceName.MaximumLength = LegacyPrefix.Length + ServiceName->Length;
-         FullServiceName.Length = 0;
-         FullServiceName.Buffer = ExAllocatePool(PagedPool, FullServiceName.MaximumLength);
-         if (!FullServiceName.Buffer)
-         {
-            ExFreePool(Node);
-            return STATUS_INSUFFICIENT_RESOURCES;
-         }
-
-         RtlAppendUnicodeStringToString(&FullServiceName, &LegacyPrefix);
-         RtlAppendUnicodeStringToString(&FullServiceName, ServiceName);
+          ExFreePool(Node);
+          return STATUS_INSUFFICIENT_RESOURCES;
       }
 
-      Status = PnpRootCreateDevice(ServiceName ? &FullServiceName : NULL, &PhysicalDeviceObject);
+      RtlAppendUnicodeStringToString(&FullServiceName, &LegacyPrefix);
+      RtlAppendUnicodeStringToString(&FullServiceName, ServiceName);
+
+      Status = PnpRootCreateDevice(&FullServiceName, &PhysicalDeviceObject, &Node->InstancePath);
       if (!NT_SUCCESS(Status))
       {
          DPRINT1("PnpRootCreateDevice() failed with status 0x%08X\n", Status);
          ExFreePool(Node);
          return Status;
       }
+
+      /* Create the device key for legacy drivers */
+      Status = IopCreateDeviceKeyPath(&Node->InstancePath, &TempHandle);
+      if (NT_SUCCESS(Status))
+          ZwClose(TempHandle);
+
+      ExFreePool(FullServiceName.Buffer);
 
       /* This is for drivers passed on the command line to ntoskrnl.exe */
       IopDeviceNodeSetFlag(Node, DNF_STARTED);
@@ -873,6 +913,7 @@ IopSetDeviceInstanceData(HANDLE InstanceKey,
    ULONG ResCount;
    ULONG ListSize, ResultLength;
    NTSTATUS Status;
+   HANDLE ControlHandle;
 
    DPRINT("IopSetDeviceInstanceData() called\n");
 
@@ -946,9 +987,21 @@ IopSetDeviceInstanceData(HANDLE InstanceKey,
                            sizeof(DefaultConfigFlags));
   }
 
+   /* Create the 'Control' key */
+   RtlInitUnicodeString(&KeyName, L"Control");
+   InitializeObjectAttributes(&ObjectAttributes,
+                              &KeyName,
+                              OBJ_CASE_INSENSITIVE,
+                              InstanceKey,
+                              NULL);
+   Status = ZwCreateKey(&ControlHandle, 0, &ObjectAttributes, 0, NULL, REG_OPTION_VOLATILE, NULL);
+
+   if (NT_SUCCESS(Status))
+       ZwClose(ControlHandle);
+
   DPRINT("IopSetDeviceInstanceData() done\n");
 
-  return STATUS_SUCCESS;
+  return Status;
 }
 
 BOOLEAN

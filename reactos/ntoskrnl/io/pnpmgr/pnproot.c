@@ -131,30 +131,25 @@ LocateChildDevice(
 NTSTATUS
 PnpRootCreateDevice(
     IN PUNICODE_STRING ServiceName,
-    IN PDEVICE_OBJECT *PhysicalDeviceObject)
+    OUT PDEVICE_OBJECT *PhysicalDeviceObject,
+    OUT OPTIONAL PUNICODE_STRING FullInstancePath)
 {
     PPNPROOT_FDO_DEVICE_EXTENSION DeviceExtension;
-    UNICODE_STRING UnknownServiceName = RTL_CONSTANT_STRING(L"LEGACY_UNKNOWN");
-    PUNICODE_STRING LocalServiceName;
     PPNPROOT_PDO_DEVICE_EXTENSION PdoDeviceExtension;
     WCHAR DevicePath[MAX_PATH + 1];
     WCHAR InstancePath[5];
     PPNPROOT_DEVICE Device = NULL;
     NTSTATUS Status;
     ULONG i;
+    UNICODE_STRING PathSep = RTL_CONSTANT_STRING(L"\\");
 
     DeviceExtension = PnpRootDeviceObject->DeviceExtension;
     KeAcquireGuardedMutex(&DeviceExtension->DeviceListLock);
 
-    if (ServiceName)
-        LocalServiceName = ServiceName;
-    else
-        LocalServiceName = &UnknownServiceName;
-
-    DPRINT("Creating a PnP root device for service '%wZ'\n", LocalServiceName);
+    DPRINT("Creating a PnP root device for service '%wZ'\n", ServiceName);
 
     /* Search for a free instance ID */
-    _snwprintf(DevicePath, sizeof(DevicePath) / sizeof(WCHAR), L"%s\\%wZ", REGSTR_KEY_ROOTENUM, LocalServiceName);
+    _snwprintf(DevicePath, sizeof(DevicePath) / sizeof(WCHAR), L"%s\\%wZ", REGSTR_KEY_ROOTENUM, ServiceName);
     for (i = 0; i < 9999; i++)
     {
         _snwprintf(InstancePath, sizeof(InstancePath) / sizeof(WCHAR), L"%04lu", i);
@@ -164,7 +159,7 @@ PnpRootCreateDevice(
     }
     if (i == 9999)
     {
-        DPRINT1("Too much legacy devices reported for service '%wZ'\n", &LocalServiceName);
+        DPRINT1("Too much legacy devices reported for service '%wZ'\n", ServiceName);
         Status = STATUS_INSUFFICIENT_RESOURCES;
         goto cleanup;
     }
@@ -187,6 +182,22 @@ PnpRootCreateDevice(
     {
         Status = STATUS_NO_MEMORY;
         goto cleanup;
+    }
+
+    if (FullInstancePath)
+    {
+        FullInstancePath->MaximumLength = Device->DeviceID.Length + PathSep.Length + Device->InstanceID.Length;
+        FullInstancePath->Length = 0;
+        FullInstancePath->Buffer = ExAllocatePool(PagedPool, FullInstancePath->MaximumLength);
+        if (!FullInstancePath->Buffer)
+        {
+            Status = STATUS_NO_MEMORY;
+            goto cleanup;
+        }
+
+        RtlAppendUnicodeStringToString(FullInstancePath, &Device->DeviceID);
+        RtlAppendUnicodeStringToString(FullInstancePath, &PathSep);
+        RtlAppendUnicodeStringToString(FullInstancePath, &Device->InstanceID);
     }
 
     /* Initialize a device object */

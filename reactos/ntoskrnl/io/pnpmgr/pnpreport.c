@@ -161,7 +161,8 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
     {
         /* Create the PDO */
         Status = PnpRootCreateDevice(&ServiceName,
-                                     &Pdo);
+                                     &Pdo,
+                                     NULL);
         if (!NT_SUCCESS(Status))
         {
             DPRINT("PnpRootCreateDevice() failed (Status 0x%08lx)\n", Status);
