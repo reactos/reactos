@@ -391,6 +391,9 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     LUID_AND_ATTRIBUTES Privilege;
     ACCESS_MASK CurrentAccess, AccessMask;
     ACCESS_MASK RemainingAccess;
+    ACCESS_MASK TempAccess;
+    ACCESS_MASK TempGrantedAccess = 0;
+    ACCESS_MASK TempDeniedAccess = 0;
     PACCESS_TOKEN Token;
     ULONG i;
     PACL Dacl;
@@ -544,6 +547,69 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         return FALSE;
     }
 
+    /* Determine the MAXIMUM_ALLOWED access rights */
+    if (DesiredAccess & MAXIMUM_ALLOWED)
+    {
+        CurrentAce = (PACE)(Dacl + 1);
+        for (i = 0; i < Dacl->AceCount; i++)
+        {
+            Sid = (PSID)(CurrentAce + 1);
+            if (CurrentAce->Header.AceType == ACCESS_DENIED_ACE_TYPE)
+            {
+                if (SepSidInToken(Token, Sid))
+                {
+                    /* Map access rights from the ACE */
+                    TempAccess = CurrentAce->AccessMask;
+                    RtlMapGenericMask(&TempAccess, GenericMapping);
+
+                    /* Deny access rights that have not been granted yet */
+                    TempDeniedAccess |= (TempAccess & ~TempGrantedAccess);
+                }
+            }
+            else if (CurrentAce->Header.AceType == ACCESS_ALLOWED_ACE_TYPE)
+            {
+                if (SepSidInToken(Token, Sid))
+                {
+                    /* Map access rights from the ACE */
+                    TempAccess = CurrentAce->AccessMask;
+                    RtlMapGenericMask(&TempAccess, GenericMapping);
+
+                    /* Grant access rights that have not been denied yet */
+                    TempGrantedAccess |= (TempAccess & ~TempDeniedAccess);
+                }
+            }
+            else
+            {
+                DPRINT1("Unsupported ACE type 0x%lx\n", CurrentAce->Header.AceType);
+            }
+
+            /* Get to the next ACE */
+            CurrentAce = (PACE)((ULONG_PTR)CurrentAce + CurrentAce->Header.AceSize);
+        }
+
+        /* Fail if some rights have not been granted */
+        RemainingAccess &= ~(MAXIMUM_ALLOWED | TempGrantedAccess);
+        if (RemainingAccess != 0)
+        {
+            *GrantedAccess = 0;
+            *AccessStatus = STATUS_ACCESS_DENIED;
+            return FALSE;
+        }
+
+        /* Set granted access right and access status */
+        *GrantedAccess = TempGrantedAccess | PreviouslyGrantedAccess;
+        if (*GrantedAccess != 0)
+        {
+            *AccessStatus = STATUS_SUCCESS;
+            return TRUE;
+        }
+        else
+        {
+            *AccessStatus = STATUS_ACCESS_DENIED;
+            return FALSE;
+        }
+    }
+
     /* RULE 4: Grant rights according to the DACL */
     CurrentAce = (PACE)(Dacl + 1);
     for (i = 0; i < Dacl->AceCount; i++)
@@ -570,7 +636,7 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         }
         else
         {
-            DPRINT1("Unknown Ace type 0x%lx\n", CurrentAce->Header.AceType);
+            DPRINT1("Unsupported ACE type 0x%lx\n", CurrentAce->Header.AceType);
         }
         CurrentAce = (PACE)((ULONG_PTR)CurrentAce + CurrentAce->Header.AceSize);
     }
@@ -580,14 +646,8 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 
     *GrantedAccess = CurrentAccess & DesiredAccess;
 
-    if (DesiredAccess & MAXIMUM_ALLOWED)
-    {
-        *GrantedAccess = CurrentAccess;
-        *AccessStatus = STATUS_SUCCESS;
-        return TRUE;
-    }
-    else if ((*GrantedAccess & ~VALID_INHERIT_FLAGS) == 
-             (DesiredAccess & ~VALID_INHERIT_FLAGS))
+    if ((*GrantedAccess & ~VALID_INHERIT_FLAGS) == 
+        (DesiredAccess & ~VALID_INHERIT_FLAGS))
     {
         *AccessStatus = STATUS_SUCCESS;
         return TRUE;
