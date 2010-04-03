@@ -487,10 +487,12 @@ drivers\base\beep\beep.sys                          2
 drivers\base\null\null.sys                          2
 drivers\base\nmidebug\nmidebug.sys                  2
 
-drivers\battery\cmbatt\cmbatt.sys                   2
 drivers\battery\battc\battc.sys                     2
 
 drivers\bus\isapnp\isapnp.sys                       2
+
+drivers\bus\acpi\cmbatt\cmbatt.sys                  2
+drivers\bus\acpi\compbatt\compbatt.sys              2
 
 drivers\directx\dxapi\dxapi.sys                     2
 drivers\directx\dxg\dxg.sys                         2
@@ -505,6 +507,7 @@ drivers\input\mouclass\mouclass.sys                 2
 drivers\input\sermouse\sermouse.sys                 2
 
 drivers\ksfilter\ks\ks.sys                          2
+drivers\multimedia\bdasup\bdasup.sys                2
 
 drivers\network\afd\afd.sys                         2
 drivers\network\ndis\ndis.sys                       2
@@ -523,7 +526,7 @@ drivers\storage\ide\pciidex\pciidex.sys             2
 ;drivers\usb\miniport\usbuhci\usbuhci.sys           2
 ;drivers\usb\usbhub\usbhub.sys                      2
 ;drivers\usb\usbport\usbport.sys                    2
-drivers\usb\nt4compat\usbdriver\usbdriver.sys       2
+;drivers\usb\nt4compat\usbdriver\usbdriver.sys       2
 
 drivers\video\displays\vga\vgaddi.dll               1
 drivers\video\displays\framebuf\framebuf.dll        1

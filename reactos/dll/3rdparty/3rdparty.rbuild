@@ -4,9 +4,9 @@
 	<directory name="mesa32">
 		<xi:include href="mesa32/mesa32.rbuild" />
 	</directory>
-	<!-- directory name="libjpeg">
+	<directory name="libjpeg">
 		<xi:include href="libjpeg/libjpeg.rbuild" />
-	</directory -->
+	</directory>
 	<directory name="libxslt">
 		<xi:include href="libxslt/libxslt.rbuild" />
 	</directory>
