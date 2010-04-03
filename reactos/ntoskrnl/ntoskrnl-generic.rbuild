@@ -244,7 +244,6 @@
 			<file>device.c</file>
 			<file>deviface.c</file>
 			<file>driver.c</file>
-			<file>drvrlist.c</file>
 			<file>error.c</file>
 			<file>file.c</file>
 			<file>iocomp.c</file>

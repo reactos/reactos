@@ -493,9 +493,6 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Setup the group cache */
     if (!NT_SUCCESS(PiInitCacheGroupInformation())) return FALSE;
 
-    /* Create the group driver list */
-    IoCreateDriverList();
-
     /* Load boot start drivers */
     IopInitializeBootDrivers();
 
@@ -532,9 +529,6 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Load system start drivers */
     IopInitializeSystemDrivers();
     PnpSystemInit = TRUE;
-
-    /* Destroy the group driver list */
-    IoDestroyDriverList();
 
     /* Reinitialize drivers that requested it */
     IopReinitializeDrivers();

@@ -200,6 +200,7 @@ IopDisplayLoadingMessage(PUNICODE_STRING ServiceName)
     UNICODE_STRING DotSys = RTL_CONSTANT_STRING(L".SYS");
 
     if (ExpInTextModeSetup) return;
+    if (!KeLoaderBlock) return;
     RtlUpcaseUnicodeString(ServiceName, ServiceName, FALSE);
     snprintf(TextBuffer, sizeof(TextBuffer),
             "%s%sSystem32\\Drivers\\%wZ%s\n",
@@ -1070,6 +1071,38 @@ IopInitializeBootDrivers(VOID)
     InitializeListHead(&KeLoaderBlock->LoadOrderListHead);
 }
 
+VOID
+FASTCALL
+IopInitializeSystemDrivers(VOID)
+{
+    PUNICODE_STRING *DriverList, *SavedList;
+    
+    /* No system drivers on the boot cd */
+    if (KeLoaderBlock->SetupLdrBlock) return;
+    
+    /* Get the driver list */
+    SavedList = DriverList = CmGetSystemDriverList();
+    ASSERT(DriverList);
+    
+    /* Loop it */
+    while (*DriverList)
+    {
+        /* Load the driver */
+        ZwLoadDriver(*DriverList);
+        
+        /* Free the entry */
+        RtlFreeUnicodeString(*DriverList);
+        ExFreePool(*DriverList);
+        
+        /* Next entry */
+        InbvIndicateProgress();
+        DriverList++;
+    }
+
+    /* Free the list */
+    ExFreePool(SavedList);
+}
+
 /*
  * IopUnloadDriver
  *
@@ -1790,6 +1823,8 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
       }
       cur--;
    }
+
+   IopDisplayLoadingMessage(&ServiceName);
 
    /*
     * Get service type.
