@@ -389,7 +389,6 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                OUT PNTSTATUS AccessStatus)
 {
     LUID_AND_ATTRIBUTES Privilege;
-    ACCESS_MASK CurrentAccess, AccessMask;
     ACCESS_MASK RemainingAccess;
     ACCESS_MASK TempAccess;
     ACCESS_MASK TempGrantedAccess = 0;
@@ -427,10 +426,8 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     if (PreviouslyGrantedAccess)
         RtlMapGenericMask(&PreviouslyGrantedAccess, GenericMapping);
 
-
-    CurrentAccess = PreviouslyGrantedAccess;
+    /* Initialize remaining access rights */
     RemainingAccess = DesiredAccess;
-
 
     Token = SubjectSecurityContext->ClientToken ?
     SubjectSecurityContext->ClientToken : SubjectSecurityContext->PrimaryToken;
@@ -488,12 +485,10 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         {
             *GrantedAccess = DesiredAccess | PreviouslyGrantedAccess;
         }
-        
+
         *AccessStatus = STATUS_SUCCESS;
         return TRUE;
     }
-
-    CurrentAccess = PreviouslyGrantedAccess;
 
     /* RULE 2: Check token for 'take ownership' privilege */
     if (DesiredAccess & WRITE_OWNER)
@@ -510,7 +505,6 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
             /* Adjust access rights */
             RemainingAccess &= ~WRITE_OWNER;
             PreviouslyGrantedAccess |= WRITE_OWNER;
-            CurrentAccess |= WRITE_OWNER;
 
             /* Succeed if there are no more rights to grant */
             if (RemainingAccess == 0)
@@ -547,7 +541,7 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         return FALSE;
     }
 
-    /* Determine the MAXIMUM_ALLOWED access rights */
+    /* Determine the MAXIMUM_ALLOWED access rights according to the DACL */
     if (DesiredAccess & MAXIMUM_ALLOWED)
     {
         CurrentAce = (PACE)(Dacl + 1);
@@ -583,7 +577,7 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                 DPRINT1("Unsupported ACE type 0x%lx\n", CurrentAce->Header.AceType);
             }
 
-            /* Get to the next ACE */
+            /* Get the next ACE */
             CurrentAce = (PACE)((ULONG_PTR)CurrentAce + CurrentAce->Header.AceSize);
         }
 
@@ -619,48 +613,61 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         {
             if (SepSidInToken(Token, Sid))
             {
-                *GrantedAccess = 0;
-                *AccessStatus = STATUS_ACCESS_DENIED;
-                return FALSE;
+                /* Map access rights from the ACE */
+                TempAccess = CurrentAce->AccessMask;
+                RtlMapGenericMask(&TempAccess, GenericMapping);
+
+                /* Leave if a remaining right must be denied */
+                if (RemainingAccess & TempAccess)
+                    break;
             }
         }
-
         else if (CurrentAce->Header.AceType == ACCESS_ALLOWED_ACE_TYPE)
         {
             if (SepSidInToken(Token, Sid))
             {
-                AccessMask = CurrentAce->AccessMask;
-                RtlMapGenericMask(&AccessMask, GenericMapping);
-                CurrentAccess |= AccessMask;
+                /* Map access rights from the ACE */
+                TempAccess = CurrentAce->AccessMask;
+                RtlMapGenericMask(&TempAccess, GenericMapping);
+
+                /* Remove granted rights */
+                RemainingAccess &= ~TempAccess;
             }
         }
         else
         {
             DPRINT1("Unsupported ACE type 0x%lx\n", CurrentAce->Header.AceType);
         }
+
+        /* Get the next ACE */
         CurrentAce = (PACE)((ULONG_PTR)CurrentAce + CurrentAce->Header.AceSize);
     }
 
-    DPRINT("CurrentAccess %08lx\n DesiredAccess %08lx\n",
-           CurrentAccess, DesiredAccess);
+    DPRINT("DesiredAccess %08lx\nPreviouslyGrantedAccess %08lx\nRemainingAccess %08lx\n",
+           DesiredAccess, PreviouslyGrantedAccess, RemainingAccess);
 
-    *GrantedAccess = CurrentAccess & DesiredAccess;
+    /* Fail if some rights have not been granted */
+    if (RemainingAccess != 0)
+    {
+        *GrantedAccess = 0;
+        *AccessStatus = STATUS_ACCESS_DENIED;
+        return FALSE;
+    }
 
-    if ((*GrantedAccess & ~VALID_INHERIT_FLAGS) == 
-        (DesiredAccess & ~VALID_INHERIT_FLAGS))
+    /* Set granted access rights */
+    *GrantedAccess = DesiredAccess | PreviouslyGrantedAccess;
+
+    DPRINT("GrantedAccess %08lx\n", *GrantedAccess);
+
+    /* Fail if no rights have been granted */
+    if (*GrantedAccess == 0)
     {
-        *AccessStatus = STATUS_SUCCESS;
-        return TRUE;
+        *AccessStatus = STATUS_ACCESS_DENIED;
+        return FALSE;
     }
-    else
-    {
-        DPRINT1("HACK: Should deny access for caller: granted 0x%lx, desired 0x%lx (generic mapping %p).\n",
-                *GrantedAccess, DesiredAccess, GenericMapping);
-        //*AccessStatus = STATUS_ACCESS_DENIED;
-        //return FALSE;
-        *AccessStatus = STATUS_SUCCESS;
-        return TRUE;
-    }
+
+    *AccessStatus = STATUS_SUCCESS;
+    return TRUE;
 }
 
 static PSID
