@@ -198,6 +198,22 @@ typedef struct _CMHIVE
 
 #endif
 
+typedef struct _HV_HIVE_CELL_PAIR
+{
+    PHHIVE Hive;
+    HCELL_INDEX Cell;
+} HV_HIVE_CELL_PAIR, *PHV_HIVE_CELL_PAIR;
+
+#define STATIC_CELL_PAIR_COUNT 4
+typedef struct _HV_TRACK_CELL_REF
+{
+    USHORT Count;
+    USHORT Max;
+    PHV_HIVE_CELL_PAIR CellArray;
+    HV_HIVE_CELL_PAIR StaticArray[STATIC_CELL_PAIR_COUNT];
+    USHORT StaticCount;
+} HV_TRACK_CELL_REF, *PHV_TRACK_CELL_REF;
+
 extern ULONG CmlibTraceLevel;
 
 /*
@@ -272,6 +288,12 @@ HvIsCellDirty(
     IN HCELL_INDEX Cell
 );
 
+BOOLEAN
+CMAPI
+HvHiveWillShrink(
+    IN PHHIVE RegistryHive
+);
+
 BOOLEAN CMAPI
 HvSyncHive(
    PHHIVE RegistryHive);
@@ -288,6 +310,21 @@ CmCreateRootNode(
 VOID CMAPI
 CmPrepareHive(
    PHHIVE RegistryHive);
+   
+   
+BOOLEAN
+CMAPI
+HvTrackCellRef(
+    PHV_TRACK_CELL_REF CellRef,
+    PHHIVE Hive,
+    HCELL_INDEX Cell
+);
+
+VOID
+CMAPI
+HvReleaseFreeCellRefArray(
+    PHV_TRACK_CELL_REF CellRef
+);
 
 /*
  * Private functions.
