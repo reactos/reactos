@@ -377,6 +377,9 @@ ASSERT(pdc->rosdc.hGCClipRgn);
 
     PATH_Delete(pdc->dclevel.hPath);
 
+    if(pdc->dclevel.pSurface)
+        SURFACE_ShareUnlockSurface(pdc->dclevel.pSurface);
+
     PDEVOBJ_vRelease(pdc->ppdev) ;
 
     return TRUE;
