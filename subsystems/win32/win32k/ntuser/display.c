@@ -78,68 +78,30 @@ RegReadDisplaySettings(HKEY hkey, PDEVMODEW pdm)
 {
     DWORD dwValue;
 
+    /* Zero out the structure */
     RtlZeroMemory(pdm, sizeof(DEVMODEW));
 
-    if (RegReadDWORD(hkey, L"DefaultSettings.BitsPerPel", &dwValue))
-    {
-        pdm->dmBitsPerPel = dwValue;
-        pdm->dmFields |= DM_BITSPERPEL;
+/* Helper macro */
+#define READ(field, str, flag) \
+    if (RegReadDWORD(hkey, L##str, &dwValue)) \
+    { \
+        pdm->field = dwValue; \
+        pdm->dmFields |= flag; \
     }
-    if (RegReadDWORD(hkey, L"DefaultSettings.XResolution", &dwValue))
-    {
-        pdm->dmPelsWidth = dwValue;
-//        pdm->dmFields |= DM_XRESOLUTION;
-    }
-    if (RegReadDWORD(hkey, L"DefaultSettings.YResolution", &dwValue))
-    {
-        pdm->dmPelsHeight = dwValue;
-        pdm->dmFields |= DM_YRESOLUTION;
-    }
-    if (RegReadDWORD(hkey, L"DefaultSettings.Flags", &dwValue))
-    {
-        pdm->dmDisplayFlags = dwValue;
-        pdm->dmFields |= DM_BITSPERPEL;
-    }
-    if (RegReadDWORD(hkey, L"DefaultSettings.VRefresh", &dwValue))
-    {
-        pdm->dmDisplayFrequency = dwValue;
-        pdm->dmFields |= DM_DISPLAYFREQUENCY;
-    }
-    if (RegReadDWORD(hkey, L"DefaultSettings.XPanning", &dwValue))
-    {
-        pdm->dmPanningWidth = dwValue;
-        pdm->dmFields |= DM_PANNINGWIDTH;
-    }
-    if (RegReadDWORD(hkey, L"DefaultSettings.YPanning", &dwValue))
-    {
-        pdm->dmPanningHeight = dwValue;
-        pdm->dmFields |= DM_PANNINGHEIGHT;
-    }
-    if (RegReadDWORD(hkey, L"DefaultSettings.Orientation", &dwValue))
-    {
-        pdm->dmDisplayOrientation = dwValue;
-        pdm->dmFields |= DM_DISPLAYORIENTATION;
-    }
-    if (RegReadDWORD(hkey, L"DefaultSettings.FixedOutput", &dwValue))
-    {
-        pdm->dmDisplayFixedOutput = dwValue;
-        pdm->dmFields |= DM_BITSPERPEL;
-    }
-    if (RegReadDWORD(hkey, L"Attach.RelativeX", &dwValue))
-    {
-        pdm->dmPosition.x = dwValue;
-        pdm->dmFields |= DM_POSITION;
-    }
-    if (RegReadDWORD(hkey, L"Attach.RelativeY", &dwValue))
-    {
-        pdm->dmPosition.y = dwValue;
-        pdm->dmFields |= DM_POSITION;
-    }
-//    RegReadDWORD(hkey, L"Attach.ToDesktop, pdm->dmBitsPerPel", &pdm->);
 
+    /* Read all present settings */
+    READ(dmBitsPerPel, "DefaultSettings.BitsPerPel", DM_BITSPERPEL);
+    READ(dmPelsWidth, "DefaultSettings.XResolution", DM_YRESOLUTION); // DM_XRESOLUTION?
+    READ(dmPelsHeight, "DefaultSettings.YResolution", DM_YRESOLUTION);
+    READ(dmDisplayFlags, "DefaultSettings.Flags", DM_DISPLAYFLAGS);
+    READ(dmDisplayFrequency, "DefaultSettings.VRefresh", DM_DISPLAYFREQUENCY);
+    READ(dmPanningWidth, "DefaultSettings.XPanning", DM_PANNINGWIDTH);
+    READ(dmPanningHeight, "DefaultSettings.YPanning", DM_PANNINGHEIGHT);
+    READ(dmDisplayOrientation, "DefaultSettings.Orientation", DM_DISPLAYORIENTATION);
+    READ(dmDisplayFixedOutput, "DefaultSettings.FixedOutput", DM_DISPLAYFIXEDOUTPUT);
+    READ(dmPosition.x, "Attach.RelativeX", DM_POSITION);
+    READ(dmPosition.y, "Attach.RelativeY", DM_POSITION);
 }
-
-
 
 
 enum
@@ -794,6 +756,8 @@ UserChangeDisplaySettings(
             DPRINT1("failed to set mode\n");
             lResult = (lResult == DISP_CHANGE_NOTUPDATED) ?
                 DISP_CHANGE_FAILED : DISP_CHANGE_RESTART;
+            
+            goto leave;
         }
 
         /* Update the system metrics */
@@ -802,18 +766,26 @@ UserChangeDisplaySettings(
         /* Remove all cursor clipping */
         UserClipCursor(NULL);
 
+        //IntvGetDeviceCaps(&PrimarySurface, &GdiHandleTable->DevCaps);
+
         pdesk = IntGetActiveDesktop();
         IntHideDesktop(pdesk);
         co_IntShowDesktop(pdesk, ppdev->gdiinfo.ulHorzRes, ppdev->gdiinfo.ulVertRes);
-        //UserRedrawDesktop();
 
-        //IntvGetDeviceCaps(&PrimarySurface, &GdiHandleTable->DevCaps);
+        UserRedrawDesktop();
 
-        /* Send message */
-
+        /* Send WM_DISPLAYCHANGE to all toplevel windows */
+        co_IntSendMessageTimeout(HWND_BROADCAST,
+                                 WM_DISPLAYCHANGE,
+                                 (WPARAM)ppdev->gdiinfo.cBitsPixel,
+                                 (LPARAM)(ppdev->gdiinfo.ulHorzRes + (ppdev->gdiinfo.ulHorzRes << 16)),
+                                 SMTO_NORMAL,
+                                 100,
+                                 &ulResult);
     }
 
 leave:
+    /* Release the PDEV */
     PDEVOBJ_vRelease(ppdev);
 
     return lResult;
@@ -831,7 +803,7 @@ NtUserChangeDisplaySettings(
     WCHAR awcDevice[CCHDEVICENAME];
     UNICODE_STRING ustrDevice;
     DEVMODEW dmLocal;
-    LONG Ret;
+    LONG lRet;
 
     /* Check arguments */
     if ((dwflags != CDS_VIDEOPARAMETERS && lParam != NULL) ||
@@ -864,6 +836,7 @@ NtUserChangeDisplaySettings(
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
+            /* Set and return error */
             SetLastNtError(_SEH2_GetExceptionCode());
             _SEH2_YIELD(return DISP_CHANGE_BADPARAM);
         }
@@ -877,35 +850,48 @@ NtUserChangeDisplaySettings(
     {
         _SEH2_TRY
         {
+            /* Probe the size field of the structure */
             ProbeForRead(lpDevMode, sizeof(dmLocal.dmSize), 1);
+            
+            /* Calculate usable size */
             dmLocal.dmSize = min(sizeof(dmLocal), lpDevMode->dmSize);
+            
+            /* Probe and copy the full DEVMODE */
             ProbeForRead(lpDevMode, dmLocal.dmSize, 1);
             RtlCopyMemory(&dmLocal, lpDevMode, dmLocal.dmSize);
             dmLocal.dmSize = sizeof(dmLocal);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
+            /* Set and return error */
             SetLastNtError(_SEH2_GetExceptionCode());
             _SEH2_YIELD(return DISP_CHANGE_BADPARAM);
         }
         _SEH2_END
 
+        /* Check for extra parameters */
         if (dmLocal.dmDriverExtra > 0)
         {
+            /* FIXME: TODO */
             DPRINT1("lpDevMode->dmDriverExtra is IGNORED!\n");
             dmLocal.dmDriverExtra = 0;
         }
+        
+        /* Use the local structure */
         lpDevMode = &dmLocal;
     }
 
     // FIXME: Copy videoparameters
+
+    /* Acquire global USER lock */
     UserEnterExclusive();
 
     /* Call internal function */
-    Ret = UserChangeDisplaySettings(pustrDevice, lpDevMode, hwnd, dwflags, NULL);
+    lRet = UserChangeDisplaySettings(pustrDevice, lpDevMode, hwnd, dwflags, NULL);
 
+    /* Release lock */
     UserLeave();
 
-    return Ret;
+    return lRet;
 }
 
