@@ -169,15 +169,19 @@ DC_LockDc(HDC hdc)
 {
     PDC pdc;
     pdc = GDIOBJ_LockObj(hdc, GDILoObjType_LO_DC_TYPE);
-    
+
     /* Direct DC's need PDEV locking */
     if(pdc && pdc->dctype == DCTYPE_DIRECT)
     {
         /* Acquire shared PDEV lock */
         EngAcquireSemaphoreShared(pdc->ppdev->hsemDevLock);
-        
-        /* Get the current surface */
-        pdc->dclevel.pSurface = pdc->ppdev->pSurface;
+
+        /* Update Surface if needed */
+        if(pdc->dclevel.pSurface != pdc->ppdev->pSurface)
+        {
+            if(pdc->dclevel.pSurface) SURFACE_ShareUnlockSurface(pdc->dclevel.pSurface);
+            pdc->dclevel.pSurface = PDEVOBJ_pSurface(pdc->ppdev);
+        }
     }
     return pdc;
 }
