@@ -94,6 +94,8 @@ KsReleaseDeviceSecurityLock(
 {
     PKSIDEVICE_HEADER Header = (PKSIDEVICE_HEADER)DevHeader;
 
+    DPRINT("KsReleaseDevice\n");
+
     ExReleaseResourceLite(&Header->SecurityLock);
     KeLeaveCriticalRegion();
 }
@@ -1623,7 +1625,7 @@ KsAcquireDevice(
     IKsDevice *KsDevice;
     PKSIDEVICE_HEADER DeviceHeader;
 
-
+    DPRINT("KsAcquireDevice\n");
     DeviceHeader = (PKSIDEVICE_HEADER)CONTAINING_RECORD(Device, KSIDEVICE_HEADER, KsDevice);
 
     /* get device interface*/

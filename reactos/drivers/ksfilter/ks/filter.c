@@ -1572,6 +1572,8 @@ KsGetFilterFromIrp(
     PIO_STACK_LOCATION IoStack;
     PKSIOBJECT_HEADER ObjectHeader;
 
+    DPRINT("KsGetFilterFromIrp\n");
+
     /* get current irp stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 

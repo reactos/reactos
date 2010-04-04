@@ -39,6 +39,8 @@ KsGetDevice(
 {
     PKSBASIC_HEADER BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)Object - sizeof(KSBASIC_HEADER));
 
+    DPRINT("KsGetDevice\n");
+
     ASSERT(BasicHeader->Type == KsObjectTypeFilterFactory || BasicHeader->Type == KsObjectTypeFilter || BasicHeader->Type == KsObjectTypePin);
     ASSERT(BasicHeader->KsDevice);
     ASSERT(BasicHeader->KsDevice->Started);
@@ -151,6 +153,8 @@ KsInitializeDriver(
 {
     PKS_DRIVER_EXTENSION DriverObjectExtension;
     NTSTATUS Status = STATUS_SUCCESS;
+
+    DPRINT("KsInitializeDriver\n");
 
     if (Descriptor)
     {
