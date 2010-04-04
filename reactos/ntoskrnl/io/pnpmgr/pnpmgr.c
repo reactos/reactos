@@ -1574,7 +1574,6 @@ IopCreateResourceListFromRequirements(
             + ResList->Count * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
    }
 
-   DPRINT1("Allocating resource list: %d\n", Size);
    *ResourceList = ExAllocatePool(PagedPool, Size);
    if (!*ResourceList)
        return STATUS_INSUFFICIENT_RESOURCES;
