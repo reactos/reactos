@@ -3316,7 +3316,7 @@ IopEnumerateDetectedDevices(
                        BootResourcesLength);
 
          /* Save boot resources to 'LogConf\BootConfig' */
-         Status = ZwSetValueKey(hLogConf, &BootConfigU, 0, REG_FULL_RESOURCE_DESCRIPTOR, CmResourceList, BootResourcesLength + sizeof(ULONG));
+         Status = ZwSetValueKey(hLogConf, &BootConfigU, 0, REG_RESOURCE_LIST, CmResourceList, BootResourcesLength + sizeof(ULONG));
          if (!NT_SUCCESS(Status))
          {
             DPRINT("ZwSetValueKey() failed with status 0x%08lx\n", Status);
