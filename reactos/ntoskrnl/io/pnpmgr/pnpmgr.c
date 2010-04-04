@@ -2913,7 +2913,6 @@ IopEnumerateDetectedDevices(
    IN ULONG ParentBootResourcesLength)
 {
    UNICODE_STRING IdentifierU = RTL_CONSTANT_STRING(L"Identifier");
-   UNICODE_STRING DeviceDescU = RTL_CONSTANT_STRING(L"DeviceDesc");
    UNICODE_STRING HardwareIDU = RTL_CONSTANT_STRING(L"HardwareID");
    UNICODE_STRING ConfigurationDataU = RTL_CONSTANT_STRING(L"Configuration Data");
    UNICODE_STRING BootConfigU = RTL_CONSTANT_STRING(L"BootConfig");
@@ -2960,7 +2959,6 @@ IopEnumerateDetectedDevices(
    UNICODE_STRING HardwareIdKey;
    PUNICODE_STRING pHardwareId;
    ULONG DeviceIndex = 0;
-   BOOLEAN IsDeviceDesc;
    PUCHAR CmResourceList;
    ULONG ListCount;
 
@@ -3189,31 +3187,26 @@ IopEnumerateDetectedDevices(
       {
          pHardwareId = &HardwareIdSerial;
          DeviceIndex = DeviceIndexSerial++;
-         IsDeviceDesc = TRUE;
       }
       else if (RelativePath && RtlCompareUnicodeString(RelativePath, &IdentifierKeyboard, FALSE) == 0)
       {
          pHardwareId = &HardwareIdKeyboard;
          DeviceIndex = DeviceIndexKeyboard++;
-         IsDeviceDesc = FALSE;
       }
       else if (RelativePath && RtlCompareUnicodeString(RelativePath, &IdentifierMouse, FALSE) == 0)
       {
          pHardwareId = &HardwareIdMouse;
          DeviceIndex = DeviceIndexMouse++;
-         IsDeviceDesc = FALSE;
       }
       else if (RelativePath && RtlCompareUnicodeString(RelativePath, &IdentifierParallel, FALSE) == 0)
       {
          pHardwareId = &HardwareIdParallel;
          DeviceIndex = DeviceIndexParallel++;
-         IsDeviceDesc = FALSE;
       }
       else if (RelativePath && RtlCompareUnicodeString(RelativePath, &IdentifierFloppy, FALSE) == 0)
       {
          pHardwareId = &HardwareIdFloppy;
          DeviceIndex = DeviceIndexFloppy++;
-         IsDeviceDesc = FALSE;
       }
       else if (NT_SUCCESS(Status))
       {
@@ -3222,13 +3215,11 @@ IopEnumerateDetectedDevices(
          {
             pHardwareId = &HardwareIdPci;
             DeviceIndex = DeviceIndexPci++;
-            IsDeviceDesc = FALSE;
          }
          else if (RtlCompareUnicodeString(&ValueName, &IdentifierIsa, FALSE) == 0)
          {
             pHardwareId = &HardwareIdIsa;
             DeviceIndex = DeviceIndexIsa++;
-            IsDeviceDesc = FALSE;
          }
          else
          {
@@ -3280,16 +3271,6 @@ IopEnumerateDetectedDevices(
          goto nextdevice;
       }
       DPRINT("Found %wZ #%lu (%wZ)\n", &ValueName, DeviceIndex, &HardwareIdKey);
-      if (IsDeviceDesc)
-      {
-         Status = ZwSetValueKey(hLevel2Key, &DeviceDescU, 0, REG_SZ, ValueName.Buffer, ValueName.MaximumLength);
-         if (!NT_SUCCESS(Status))
-         {
-            DPRINT("ZwSetValueKey() failed with status 0x%08lx\n", Status);
-            ZwDeleteKey(hLevel2Key);
-            goto nextdevice;
-         }
-      }
       Status = ZwSetValueKey(hLevel2Key, &HardwareIDU, 0, REG_MULTI_SZ, pHardwareId->Buffer, pHardwareId->MaximumLength);
       if (!NT_SUCCESS(Status))
       {
