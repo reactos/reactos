@@ -435,6 +435,12 @@ LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		explorer_show_frame(SW_SHOWNORMAL);
 		break;
 
+      case WM_DISPLAYCHANGE:
+        MoveWindow(_hwnd, 0, 0, LOWORD(lparam), HIWORD(lparam), TRUE);
+        MoveWindow(g_Globals._hwndShellView, 0, 0, LOWORD(lparam), HIWORD(lparam), TRUE);
+        MoveWindow(_desktopBar, 0, HIWORD(lparam) - DESKTOPBARBAR_HEIGHT, LOWORD(lparam), DESKTOPBARBAR_HEIGHT, TRUE);
+        break;
+
 	  case WM_GETISHELLBROWSER:
 		return (LRESULT)static_cast<IShellBrowser*>(this);
 
