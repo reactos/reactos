@@ -751,12 +751,14 @@ UserChangeDisplaySettings(
     /* Shall we apply the settings? */
     if (!(flags & CDS_NORESET))
     {
+        ULONG ulResult;
+
         if (!PDEVOBJ_bSwitchMode(ppdev, pdm))
         {
             DPRINT1("failed to set mode\n");
             lResult = (lResult == DISP_CHANGE_NOTUPDATED) ?
                 DISP_CHANGE_FAILED : DISP_CHANGE_RESTART;
-            
+
             goto leave;
         }
 
@@ -852,10 +854,10 @@ NtUserChangeDisplaySettings(
         {
             /* Probe the size field of the structure */
             ProbeForRead(lpDevMode, sizeof(dmLocal.dmSize), 1);
-            
+
             /* Calculate usable size */
             dmLocal.dmSize = min(sizeof(dmLocal), lpDevMode->dmSize);
-            
+
             /* Probe and copy the full DEVMODE */
             ProbeForRead(lpDevMode, dmLocal.dmSize, 1);
             RtlCopyMemory(&dmLocal, lpDevMode, dmLocal.dmSize);
@@ -876,7 +878,7 @@ NtUserChangeDisplaySettings(
             DPRINT1("lpDevMode->dmDriverExtra is IGNORED!\n");
             dmLocal.dmDriverExtra = 0;
         }
-        
+
         /* Use the local structure */
         lpDevMode = &dmLocal;
     }
