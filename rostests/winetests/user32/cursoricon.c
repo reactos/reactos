@@ -64,6 +64,8 @@ static HANDLE child_process;
 
 #define PROC_INIT (WM_USER+1)
 
+static BOOL (WINAPI *pGetCursorInfo)(CURSORINFO *);
+
 static LRESULT CALLBACK callback_child(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     BOOL ret;
@@ -961,7 +963,7 @@ static HICON create_test_icon(HDC hdc, int width, int height, int bpp,
 {
     ICONINFO iconInfo;
     BITMAPINFO bitmapInfo;
-    UINT32 *buffer = NULL;
+    void *buffer = NULL;
     UINT32 mask = maskvalue ? 0xFFFFFFFF : 0x00000000;
 
     memset(&bitmapInfo, 0, sizeof(bitmapInfo));
@@ -980,7 +982,7 @@ static HICON create_test_icon(HDC hdc, int width, int height, int bpp,
     iconInfo.hbmMask = CreateBitmap( width, height, 1, 1, &mask );
     if(!iconInfo.hbmMask) return NULL;
 
-    iconInfo.hbmColor = CreateDIBSection(hdc, &bitmapInfo, DIB_RGB_COLORS, (void**)&buffer, NULL, 0);
+    iconInfo.hbmColor = CreateDIBSection(hdc, &bitmapInfo, DIB_RGB_COLORS, &buffer, NULL, 0);
     if(!iconInfo.hbmColor || !buffer)
     {
         DeleteObject(iconInfo.hbmMask);
@@ -1072,7 +1074,7 @@ static void test_DrawIcon(void)
     HDC hdcDst = NULL;
     HBITMAP bmpDst = NULL;
     HBITMAP bmpOld = NULL;
-    UINT32 *bits = 0;
+    void *bits = 0;
 
     hdcDst = CreateCompatibleDC(0);
     ok(hdcDst != 0, "CreateCompatibleDC(0) failed to return a valid DC\n");
@@ -1094,7 +1096,7 @@ static void test_DrawIcon(void)
     bitmapInfo.bmiHeader.biCompression = BI_RGB;
     bitmapInfo.bmiHeader.biSizeImage = sizeof(UINT32);
 
-    bmpDst = CreateDIBSection(hdcDst, &bitmapInfo, DIB_RGB_COLORS, (void**)&bits, NULL, 0);
+    bmpDst = CreateDIBSection(hdcDst, &bitmapInfo, DIB_RGB_COLORS, &bits, NULL, 0);
     ok (bmpDst && bits, "CreateDIBSection failed to return a valid bitmap and buffer\n");
     if (!bmpDst || !bits)
         goto cleanup;
@@ -1156,7 +1158,7 @@ static void test_DrawIconEx(void)
     HDC hdcDst = NULL;
     HBITMAP bmpDst = NULL;
     HBITMAP bmpOld = NULL;
-    UINT32 bits = 0;
+    void *bits = 0;
 
     hdcDst = CreateCompatibleDC(0);
     ok(hdcDst != 0, "CreateCompatibleDC(0) failed to return a valid DC\n");
@@ -1177,7 +1179,7 @@ static void test_DrawIconEx(void)
     bitmapInfo.bmiHeader.biPlanes = 1;
     bitmapInfo.bmiHeader.biCompression = BI_RGB;
     bitmapInfo.bmiHeader.biSizeImage = sizeof(UINT32);
-    bmpDst = CreateDIBSection(hdcDst, &bitmapInfo, DIB_RGB_COLORS, (void**)&bits, NULL, 0);
+    bmpDst = CreateDIBSection(hdcDst, &bitmapInfo, DIB_RGB_COLORS, &bits, NULL, 0);
     ok (bmpDst && bits, "CreateDIBSection failed to return a valid bitmap and buffer\n");
     if (!bmpDst || !bits)
         goto cleanup;
@@ -1308,7 +1310,7 @@ static void test_DrawState(void)
     HDC hdcDst = NULL;
     HBITMAP bmpDst = NULL;
     HBITMAP bmpOld = NULL;
-    UINT32 bits = 0;
+    void *bits = 0;
 
     hdcDst = CreateCompatibleDC(0);
     ok(hdcDst != 0, "CreateCompatibleDC(0) failed to return a valid DC\n");
@@ -1329,7 +1331,7 @@ static void test_DrawState(void)
     bitmapInfo.bmiHeader.biPlanes = 1;
     bitmapInfo.bmiHeader.biCompression = BI_RGB;
     bitmapInfo.bmiHeader.biSizeImage = sizeof(UINT32);
-    bmpDst = CreateDIBSection(hdcDst, &bitmapInfo, DIB_RGB_COLORS, (void**)&bits, NULL, 0);
+    bmpDst = CreateDIBSection(hdcDst, &bitmapInfo, DIB_RGB_COLORS, &bits, NULL, 0);
     ok (bmpDst && bits, "CreateDIBSection failed to return a valid bitmap and buffer\n");
     if (!bmpDst || !bits)
         goto cleanup;
@@ -1352,6 +1354,250 @@ cleanup:
     if(hdcDst)
         DeleteDC(hdcDst);
 }
+
+static DWORD parent_id;
+
+static DWORD CALLBACK set_cursor_thread( void *arg )
+{
+    HCURSOR ret;
+
+    PeekMessage( 0, 0, 0, 0, PM_NOREMOVE );  /* create a msg queue */
+    if (parent_id)
+    {
+        BOOL ret = AttachThreadInput( GetCurrentThreadId(), parent_id, TRUE );
+        ok( ret, "AttachThreadInput failed\n" );
+    }
+    if (arg) ret = SetCursor( (HCURSOR)arg );
+    else ret = GetCursor();
+    return (DWORD_PTR)ret;
+}
+
+static void test_SetCursor(void)
+{
+    static const BYTE bmp_bits[4096];
+    ICONINFO cursorInfo;
+    HCURSOR cursor, old_cursor, global_cursor = 0;
+    DWORD error, id, result;
+    UINT display_bpp;
+    HDC hdc;
+    HANDLE thread;
+    CURSORINFO info;
+
+    if (pGetCursorInfo)
+    {
+        memset( &info, 0, sizeof(info) );
+        info.cbSize = sizeof(info);
+        if (!pGetCursorInfo( &info ))
+        {
+            win_skip( "GetCursorInfo not working\n" );
+            pGetCursorInfo = NULL;
+        }
+        else global_cursor = info.hCursor;
+    }
+    cursor = GetCursor();
+    thread = CreateThread( NULL, 0, set_cursor_thread, 0, 0, &id );
+    WaitForSingleObject( thread, 1000 );
+    GetExitCodeThread( thread, &result );
+    ok( result == (DWORD_PTR)cursor, "wrong thread cursor %x/%p\n", result, cursor );
+
+    hdc = GetDC(0);
+    display_bpp = GetDeviceCaps(hdc, BITSPIXEL);
+    ReleaseDC(0, hdc);
+
+    cursorInfo.fIcon = FALSE;
+    cursorInfo.xHotspot = 0;
+    cursorInfo.yHotspot = 0;
+    cursorInfo.hbmMask = CreateBitmap(32, 32, 1, 1, bmp_bits);
+    cursorInfo.hbmColor = CreateBitmap(32, 32, 1, display_bpp, bmp_bits);
+
+    cursor = CreateIconIndirect(&cursorInfo);
+    ok(cursor != NULL, "CreateIconIndirect returned %p\n", cursor);
+    old_cursor = SetCursor( cursor );
+
+    if (pGetCursorInfo)
+    {
+        info.cbSize = sizeof(info);
+        ok( pGetCursorInfo( &info ), "GetCursorInfo failed\n" );
+        /* global cursor doesn't change since we don't have a window */
+        ok( info.hCursor == global_cursor || broken(info.hCursor != cursor), /* win9x */
+            "wrong info cursor %p/%p\n", info.hCursor, global_cursor );
+    }
+    thread = CreateThread( NULL, 0, set_cursor_thread, 0, 0, &id );
+    WaitForSingleObject( thread, 1000 );
+    GetExitCodeThread( thread, &result );
+    ok( result == (DWORD_PTR)old_cursor, "wrong thread cursor %x/%p\n", result, old_cursor );
+
+    SetCursor( 0 );
+    ok( GetCursor() == 0, "wrong cursor %p\n", GetCursor() );
+    thread = CreateThread( NULL, 0, set_cursor_thread, 0, 0, &id );
+    WaitForSingleObject( thread, 1000 );
+    GetExitCodeThread( thread, &result );
+    ok( result == (DWORD_PTR)old_cursor, "wrong thread cursor %x/%p\n", result, old_cursor );
+
+    thread = CreateThread( NULL, 0, set_cursor_thread, cursor, 0, &id );
+    WaitForSingleObject( thread, 1000 );
+    GetExitCodeThread( thread, &result );
+    ok( result == (DWORD_PTR)old_cursor, "wrong thread cursor %x/%p\n", result, old_cursor );
+    ok( GetCursor() == 0, "wrong cursor %p/0\n", GetCursor() );
+
+    parent_id = GetCurrentThreadId();
+    thread = CreateThread( NULL, 0, set_cursor_thread, cursor, 0, &id );
+    WaitForSingleObject( thread, 1000 );
+    GetExitCodeThread( thread, &result );
+    ok( result == (DWORD_PTR)old_cursor, "wrong thread cursor %x/%p\n", result, old_cursor );
+    ok( GetCursor() == cursor, "wrong cursor %p/0\n", cursor );
+
+    if (pGetCursorInfo)
+    {
+        info.cbSize = sizeof(info);
+        ok( pGetCursorInfo( &info ), "GetCursorInfo failed\n" );
+        ok( info.hCursor == global_cursor || broken(info.hCursor != cursor), /* win9x */
+            "wrong info cursor %p/%p\n", info.hCursor, global_cursor );
+    }
+    SetCursor( old_cursor );
+    DestroyCursor( cursor );
+
+    SetLastError( 0xdeadbeef );
+    cursor = SetCursor( (HCURSOR)0xbadbad );
+    error = GetLastError();
+    ok( cursor == 0, "wrong cursor %p/0\n", cursor );
+    ok( error == ERROR_INVALID_CURSOR_HANDLE || broken( error == 0xdeadbeef ),  /* win9x */
+        "wrong error %u\n", error );
+
+    if (pGetCursorInfo)
+    {
+        info.cbSize = sizeof(info);
+        ok( pGetCursorInfo( &info ), "GetCursorInfo failed\n" );
+        ok( info.hCursor == global_cursor || broken(info.hCursor != cursor), /* win9x */
+            "wrong info cursor %p/%p\n", info.hCursor, global_cursor );
+    }
+}
+
+static HANDLE event_start, event_next;
+
+static DWORD CALLBACK show_cursor_thread( void *arg )
+{
+    DWORD count = (DWORD_PTR)arg;
+    int ret;
+
+    PeekMessage( 0, 0, 0, 0, PM_NOREMOVE );  /* create a msg queue */
+    if (parent_id)
+    {
+        BOOL ret = AttachThreadInput( GetCurrentThreadId(), parent_id, TRUE );
+        ok( ret, "AttachThreadInput failed\n" );
+    }
+    if (!count) ret = ShowCursor( FALSE );
+    else while (count--) ret = ShowCursor( TRUE );
+    SetEvent( event_start );
+    WaitForSingleObject( event_next, 2000 );
+    return ret;
+}
+
+static void test_ShowCursor(void)
+{
+    int count;
+    DWORD id, result;
+    HANDLE thread;
+    CURSORINFO info;
+
+    if (pGetCursorInfo)
+    {
+        memset( &info, 0, sizeof(info) );
+        info.cbSize = sizeof(info);
+        ok( pGetCursorInfo( &info ), "GetCursorInfo failed\n" );
+        ok( info.flags & CURSOR_SHOWING, "cursor not shown in info\n" );
+    }
+
+    event_start = CreateEvent( NULL, FALSE, FALSE, NULL );
+    event_next = CreateEvent( NULL, FALSE, FALSE, NULL );
+
+    count = ShowCursor( TRUE );
+    ok( count == 1, "wrong count %d\n", count );
+    count = ShowCursor( TRUE );
+    ok( count == 2, "wrong count %d\n", count );
+    count = ShowCursor( FALSE );
+    ok( count == 1, "wrong count %d\n", count );
+    count = ShowCursor( FALSE );
+    ok( count == 0, "wrong count %d\n", count );
+    count = ShowCursor( FALSE );
+    ok( count == -1, "wrong count %d\n", count );
+    count = ShowCursor( FALSE );
+    ok( count == -2, "wrong count %d\n", count );
+
+    if (pGetCursorInfo)
+    {
+        info.cbSize = sizeof(info);
+        ok( pGetCursorInfo( &info ), "GetCursorInfo failed\n" );
+        /* global show count is not affected since we don't have a window */
+        ok( info.flags & CURSOR_SHOWING, "cursor not shown in info\n" );
+    }
+
+    parent_id = 0;
+    thread = CreateThread( NULL, 0, show_cursor_thread, NULL, 0, &id );
+    WaitForSingleObject( event_start, 1000 );
+    count = ShowCursor( FALSE );
+    ok( count == -3, "wrong count %d\n", count );
+    SetEvent( event_next );
+    WaitForSingleObject( thread, 1000 );
+    GetExitCodeThread( thread, &result );
+    ok( result == -1, "wrong thread count %d\n", result );
+    count = ShowCursor( FALSE );
+    ok( count == -4, "wrong count %d\n", count );
+
+    thread = CreateThread( NULL, 0, show_cursor_thread, (void *)1, 0, &id );
+    WaitForSingleObject( event_start, 1000 );
+    count = ShowCursor( TRUE );
+    ok( count == -3, "wrong count %d\n", count );
+    SetEvent( event_next );
+    WaitForSingleObject( thread, 1000 );
+    GetExitCodeThread( thread, &result );
+    ok( result == 1, "wrong thread count %d\n", result );
+    count = ShowCursor( TRUE );
+    ok( count == -2, "wrong count %d\n", count );
+
+    parent_id = GetCurrentThreadId();
+    thread = CreateThread( NULL, 0, show_cursor_thread, NULL, 0, &id );
+    WaitForSingleObject( event_start, 1000 );
+    count = ShowCursor( TRUE );
+    ok( count == -2, "wrong count %d\n", count );
+    SetEvent( event_next );
+    WaitForSingleObject( thread, 1000 );
+    GetExitCodeThread( thread, &result );
+    ok( result == -3, "wrong thread count %d\n", result );
+    count = ShowCursor( FALSE );
+    ok( count == -2, "wrong count %d\n", count );
+
+    thread = CreateThread( NULL, 0, show_cursor_thread, (void *)3, 0, &id );
+    WaitForSingleObject( event_start, 1000 );
+    count = ShowCursor( TRUE );
+    ok( count == 2, "wrong count %d\n", count );
+    SetEvent( event_next );
+    WaitForSingleObject( thread, 1000 );
+    GetExitCodeThread( thread, &result );
+    ok( result == 1, "wrong thread count %d\n", result );
+    count = ShowCursor( FALSE );
+    ok( count == -2, "wrong count %d\n", count );
+
+    if (pGetCursorInfo)
+    {
+        info.cbSize = sizeof(info);
+        ok( pGetCursorInfo( &info ), "GetCursorInfo failed\n" );
+        ok( info.flags & CURSOR_SHOWING, "cursor not shown in info\n" );
+    }
+
+    count = ShowCursor( TRUE );
+    ok( count == -1, "wrong count %d\n", count );
+    count = ShowCursor( TRUE );
+    ok( count == 0, "wrong count %d\n", count );
+
+    if (pGetCursorInfo)
+    {
+        info.cbSize = sizeof(info);
+        ok( pGetCursorInfo( &info ), "GetCursorInfo failed\n" );
+        ok( info.flags & CURSOR_SHOWING, "cursor not shown in info\n" );
+    }
+}
+
 
 static void test_DestroyCursor(void)
 {
@@ -1435,6 +1681,7 @@ static void test_DestroyCursor(void)
 
 START_TEST(cursoricon)
 {
+    pGetCursorInfo = (void *)GetProcAddress( GetModuleHandleA("user32.dll"), "GetCursorInfo" );
     test_argc = winetest_get_mainargs(&test_argv);
 
     if (test_argc >= 3)
@@ -1463,6 +1710,8 @@ START_TEST(cursoricon)
     test_DrawIcon();
     test_DrawIconEx();
     test_DrawState();
+    test_SetCursor();
+    test_ShowCursor();
     test_DestroyCursor();
     do_parent();
     test_child_process();

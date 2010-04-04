@@ -42,11 +42,24 @@ static LRESULT CALLBACK MyWndProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
     case WM_DESTROY:
         PostQuitMessage(0);
         break;
-
+    case WM_HSCROLL:
+    case WM_VSCROLL:
+        /* stop tracking */
+        ReleaseCapture();
+        return 0;
     default:
         return DefWindowProcA(hWnd, msg, wParam, lParam);
     }
     return 0;
+}
+static void scrollbar_test_track(void)
+{
+    /* test that scrollbar tracking is terminated when
+     * the control looses mouse capture */
+    SendMessage( hScroll, WM_LBUTTONDOWN, 0, MAKELPARAM( 1, 1));
+    /* a normal return from the sendmessage */
+    /* not normal for instance by closing the windws */
+    ok( IsWindow( hScroll), "Scrollbar has gone!\n");
 }
 
 static void scrollbar_test1(void)
@@ -420,6 +433,7 @@ START_TEST ( scroll )
     scrollbar_test2();
     scrollbar_test3();
     scrollbar_test4();
+    scrollbar_test_track();
 
     /* Some test results vary depending of theming being active or not */
     hUxtheme = LoadLibraryA("uxtheme.dll");

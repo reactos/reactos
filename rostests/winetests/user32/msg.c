@@ -12434,17 +12434,17 @@ START_TEST(msg)
     test_quit_message();
     test_SetActiveWindow();
 
-//    if (!pTrackMouseEvent)
+    if (!pTrackMouseEvent)
         win_skip("TrackMouseEvent is not available\n");
-//    else
-//        test_TrackMouseEvent();
+    else
+        test_TrackMouseEvent();
 
     test_SetWindowRgn();
     test_sys_menu();
     test_dialog_messages();
     test_nullCallback();
     test_dbcs_wm_char();
-//    test_menu_messages();
+    test_menu_messages();
     test_paintingloop();
     test_defwinproc();
     test_clipboard_viewers();

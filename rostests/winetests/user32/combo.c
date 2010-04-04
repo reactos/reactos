@@ -461,7 +461,7 @@ static void test_editselection(void)
     ok(LOWORD(len)==1, "Unexpected start position for selection %d\n", LOWORD(len));
     ok(HIWORD(len)==1, "Unexpected end position for selection %d\n", HIWORD(len));
 
-    /* Now what happens when it gets more focus a second time - it doesnt reselect */
+    /* Now what happens when it gets more focus a second time - it doesn't reselect */
     SendMessage(hCombo, WM_SETFOCUS, 0, (LPARAM)hEdit);
     len = SendMessage(hCombo, CB_GETEDITSEL, 0,0);
     ok(LOWORD(len)==1, "Unexpected start position for selection %d\n", LOWORD(len));
