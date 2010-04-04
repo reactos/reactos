@@ -33,7 +33,6 @@ typedef struct _PNPROOT_DEVICE
     UNICODE_STRING DeviceDescription;
     // Resource requirement list
     PIO_RESOURCE_REQUIREMENTS_LIST ResourceRequirementsList;
-    ULONG ResourceRequirementsListSize;
     // Associated resource list
     PCM_RESOURCE_LIST ResourceList;
     ULONG ResourceListSize;
@@ -766,18 +765,7 @@ PdoQueryResources(
 
     DeviceExtension = (PPNPROOT_PDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
-    if (DeviceExtension->DeviceInfo->ResourceList == NULL)
-    {
-        /* Create an empty resource list */
-        ResourceList = ExAllocatePool(PagedPool, sizeof(CM_RESOURCE_LIST));
-        if (!ResourceList)
-            return STATUS_NO_MEMORY;
-
-        ResourceList->Count = 0;
-
-        Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
-    }
-    else
+    if (DeviceExtension->DeviceInfo->ResourceList)
     {
         /* Copy existing resource requirement list */
         ResourceList = ExAllocatePool(
@@ -792,9 +780,14 @@ PdoQueryResources(
             DeviceExtension->DeviceInfo->ResourceListSize);
 
         Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
-    }
 
-    return STATUS_SUCCESS;
+        return STATUS_SUCCESS;
+    }
+    else
+    {
+        /* No resources so just return without changing the status */
+        return Irp->IoStatus.Status;
+    }
 }
 
 static NTSTATUS
@@ -805,23 +798,10 @@ PdoQueryResourceRequirements(
 {
     PPNPROOT_PDO_DEVICE_EXTENSION DeviceExtension;
     PIO_RESOURCE_REQUIREMENTS_LIST ResourceList;
-    ULONG ResourceListSize = FIELD_OFFSET(IO_RESOURCE_REQUIREMENTS_LIST, List);
 
     DeviceExtension = (PPNPROOT_PDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
-    if (DeviceExtension->DeviceInfo->ResourceRequirementsList == NULL)
-    {
-        /* Create an empty resource list */
-        ResourceList = ExAllocatePool(PagedPool, ResourceListSize);
-        if (!ResourceList)
-            return STATUS_NO_MEMORY;
-
-        RtlZeroMemory(ResourceList, ResourceListSize);
-        ResourceList->ListSize = ResourceListSize;
-
-        Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
-    }
-    else
+    if (DeviceExtension->DeviceInfo->ResourceRequirementsList)
     {
         /* Copy existing resource requirement list */
         ResourceList = ExAllocatePool(PagedPool, DeviceExtension->DeviceInfo->ResourceRequirementsList->ListSize);
@@ -832,10 +812,16 @@ PdoQueryResourceRequirements(
             ResourceList,
             DeviceExtension->DeviceInfo->ResourceRequirementsList,
             DeviceExtension->DeviceInfo->ResourceRequirementsList->ListSize);
-            Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
-    }
 
-    return STATUS_SUCCESS;
+        Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
+
+        return STATUS_SUCCESS;
+    }
+    else
+    {
+        /* No resource requirements so just return without changing the status */
+        return Irp->IoStatus.Status;
+    }
 }
 
 static NTSTATUS
