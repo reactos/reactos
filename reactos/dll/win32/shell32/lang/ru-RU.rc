@@ -664,6 +664,8 @@ BEGIN
 	IDS_RESTART_PROMPT          "Вы действительно хотите перезагрузить ReactOS?"
 	IDS_SHUTDOWN_TITLE          "Выключить питание"
 	IDS_SHUTDOWN_PROMPT         "Закончить работу с ReactOS?"
+	IDS_LOGOFF_TITLE            "Log Off"
+	IDS_LOGOFF_PROMPT           "Do you want to log off?"
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Главное меню\\Программы"

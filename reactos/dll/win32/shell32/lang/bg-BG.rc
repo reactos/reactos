@@ -666,6 +666,8 @@ BEGIN
 	IDS_RESTART_PROMPT          "Искате ли да презапуснете системата?"
 	IDS_SHUTDOWN_TITLE          "Изключване"
 	IDS_SHUTDOWN_PROMPT         "Искате ли да изключите компютъра?"
+	IDS_LOGOFF_TITLE            "Log Off"
+	IDS_LOGOFF_PROMPT           "Do you want to log off?"
 
 	// shell folder path default values 
 	IDS_PROGRAMS                "Пусков изборник\\Приложения"

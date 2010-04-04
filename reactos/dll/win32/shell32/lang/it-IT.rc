@@ -666,6 +666,8 @@ BEGIN
 	IDS_RESTART_PROMPT          "Volete riavviare il sistema?"
 	IDS_SHUTDOWN_TITLE          "Termina sessione"
 	IDS_SHUTDOWN_PROMPT         "Volete terminare la sessione di ReactOS?"
+	IDS_LOGOFF_TITLE            "Log Off"
+	IDS_LOGOFF_PROMPT           "Do you want to log off?"
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Menu Avvio\\Programmi"

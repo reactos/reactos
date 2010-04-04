@@ -665,6 +665,8 @@ BEGIN
 	IDS_RESTART_PROMPT          "Haluatko simuloida Windows:n uudelleenkäynnistämistä?"
 	IDS_SHUTDOWN_TITLE          "Sammuta"
 	IDS_SHUTDOWN_PROMPT         "Haluatko lopettaa Wine:n istunnon?"
+	IDS_LOGOFF_TITLE            "Log Off"
+	IDS_LOGOFF_PROMPT           "Do you want to log off?"
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Käynnistä\\Ohjelmat"

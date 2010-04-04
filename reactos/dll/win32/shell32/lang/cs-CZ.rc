@@ -666,6 +666,8 @@ BEGIN
 	IDS_RESTART_PROMPT          "Opravdu chcete restartovat systém?"
 	IDS_SHUTDOWN_TITLE          "Vypnout"
 	IDS_SHUTDOWN_PROMPT         "Opravdu chcete vypnout poèítaè?"
+	IDS_LOGOFF_TITLE            "Log Off"
+	IDS_LOGOFF_PROMPT           "Do you want to log off?"
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Nabídka Start\\Programy"
