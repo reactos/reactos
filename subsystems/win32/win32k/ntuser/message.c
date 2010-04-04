@@ -366,7 +366,7 @@ IntDispatchMessage(PMSG pMsg)
                                         (LPARAM)Time,
                                         sizeof(LPARAM));
         }
-        return 0;        
+        return 0;
      }
      else
      {
@@ -591,7 +591,7 @@ co_IntTranslateMouseMessage(
       *HitTest = HTCLIENT;
    }
 
-   if ( gspv.bMouseClickLock && 
+   if ( gspv.bMouseClickLock &&
         ( (Msg->message == WM_LBUTTONUP) ||
           (Msg->message == WM_LBUTTONDOWN) ) )
    {
@@ -1206,7 +1206,7 @@ UserPostMessage( HWND Wnd,
       return FALSE;
    }
 
-   if (!Wnd) 
+   if (!Wnd)
       return UserPostThreadMessage( PtrToInt(PsGetCurrentThreadId()),
                                     Msg,
                                     wParam,
@@ -1223,6 +1223,7 @@ UserPostMessage( HWND Wnd,
 
       if (List != NULL)
       {
+         UserPostMessage(DesktopWindow->hSelf, Msg, wParam, lParam);
          for (i = 0; List[i]; i++)
             UserPostMessage(List[i], Msg, wParam, lParam);
          ExFreePool(List);
@@ -1448,6 +1449,9 @@ co_IntSendMessageTimeout( HWND hWnd,
       return 0;
    }
 
+   /* Send message to the desktop window too! */
+   co_IntSendMessageTimeoutSingle(DesktopWindow->hSelf, Msg, wParam, lParam, uFlags, uTimeout, uResult);
+
    Children = IntWinListChildren(DesktopWindow);
    if (NULL == Children)
    {
@@ -1653,6 +1657,7 @@ UserSendNotifyMessage( HWND hWnd,
 
       if (List != NULL)
       {
+         UserSendNotifyMessage(DesktopWindow->hSelf, Msg, wParam, lParam);
          for (i = 0; List[i]; i++)
          {
             UserSendNotifyMessage(List[i], Msg, wParam, lParam);
@@ -2263,7 +2268,7 @@ NtUserDispatchMessage(PMSG UnsafeMsgInfo)
   BOOL Hit = FALSE;
   MSG SafeMsg;
 
-  UserEnterExclusive();  
+  UserEnterExclusive();
   _SEH2_TRY
   {
     ProbeForRead(UnsafeMsgInfo, sizeof(MSG), 1);
@@ -2275,7 +2280,7 @@ NtUserDispatchMessage(PMSG UnsafeMsgInfo)
     Hit = TRUE;
   }
   _SEH2_END;
-  
+
   if (!Hit) Res = IntDispatchMessage(&SafeMsg);
 
   UserLeave();
@@ -2496,11 +2501,11 @@ NtUserMessageCall(
             {
                 BadChk = TRUE;
             }
-            _SEH2_END;      
+            _SEH2_END;
          }
          break;
       default:
-         break;   
+         break;
    }
 
    UserLeave();
