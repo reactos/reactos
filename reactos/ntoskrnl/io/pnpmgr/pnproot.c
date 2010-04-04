@@ -694,9 +694,13 @@ PnpRootFdoPnpControl(
             break;
     }
 
-    /* Pass this IRP down to the root device PDO */
-    IoSkipCurrentIrpStackLocation(Irp);
-    return IoCallDriver(DeviceExtension->Ldo, Irp);
+    if (Status != STATUS_PENDING)
+    {
+       Irp->IoStatus.Status = Status;
+       IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
+
+    return Status;
 }
 
 static NTSTATUS
@@ -778,16 +782,16 @@ PdoQueryResources(
         /* Copy existing resource requirement list */
         ResourceList = ExAllocatePool(
             PagedPool,
-            FIELD_OFFSET(CM_RESOURCE_LIST, List) + DeviceExtension->DeviceInfo->ResourceListSize);
+            DeviceExtension->DeviceInfo->ResourceListSize);
         if (!ResourceList)
             return STATUS_NO_MEMORY;
 
-        ResourceList->Count = 1;
         RtlCopyMemory(
-            &ResourceList->List,
+            ResourceList,
             DeviceExtension->DeviceInfo->ResourceList,
             DeviceExtension->DeviceInfo->ResourceListSize);
-            Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
+
+        Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
     }
 
     return STATUS_SUCCESS;
