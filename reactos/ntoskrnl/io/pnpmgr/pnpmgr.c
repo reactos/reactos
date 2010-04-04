@@ -163,7 +163,10 @@ IopStartDevice(
       DPRINT("IopInitiatePnpIrp(IRP_MN_FILTER_RESOURCE_REQUIREMENTS) failed\n");
       return Status;
    }
-   DeviceNode->ResourceRequirements = (PIO_RESOURCE_REQUIREMENTS_LIST)IoStatusBlock.Information;
+   else if (NT_SUCCESS(Status))
+   {
+      DeviceNode->ResourceRequirements = (PIO_RESOURCE_REQUIREMENTS_LIST)IoStatusBlock.Information;
+   }
 
    Status = IopAssignDeviceResources(DeviceNode, &RequiredLength);
    if (NT_SUCCESS(Status))

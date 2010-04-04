@@ -460,22 +460,6 @@ IopCompleteRequest(IN PKAPC Apc,
     }
     else
     {
-        /* Check if we have an associated user IOSB */
-        if (Irp->UserIosb)
-        {
-            /* We do, so let's give them the final status */
-            _SEH2_TRY
-            {
-               /*  Save the IOSB Information */
-               *Irp->UserIosb = Irp->IoStatus;
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-               /* Ignore any error */
-            }
-            _SEH2_END;
-        }
-
         /*
          * Either we didn't return from the request, or we did return but this
          * request was synchronous.
@@ -485,6 +469,9 @@ IopCompleteRequest(IN PKAPC Apc,
             /* So we did return with a synch operation, was it the IRP? */
             if (Irp->Flags & IRP_SYNCHRONOUS_API)
             {
+                /* Yes, this IRP was synchronous, so return the I/O Status */
+                *Irp->UserIosb = Irp->IoStatus;
+
                 /* Now check if the user gave an event */
                 if (Irp->UserEvent)
                 {
