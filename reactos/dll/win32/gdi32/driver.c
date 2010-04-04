@@ -757,6 +757,9 @@ INT WINAPI NamedEscape( HDC hdc, LPCWSTR pDriver, INT nEscape, INT cbInput, LPCS
  */
 ULONG WINAPI DdQueryDisplaySettingsUniqueness(VOID)
 {
-    FIXME("stub\n");
+    static int warn_once;
+
+    if (!warn_once++)
+        FIXME("stub\n");
     return 0;
 }

@@ -1077,7 +1077,7 @@ BOOL WINAPI PlayEnhMetaFileRecord(
 	/* NB POINTS array doesn't start at pPolyPoly->apts it's actually
 	   pPolyPoly->aPolyCounts + pPolyPoly->nPolys */
 
-        POINTS *pts = (POINTS *)(pPolyPoly->aPolyCounts + pPolyPoly->nPolys);
+        const POINTS *pts = (const POINTS *)(pPolyPoly->aPolyCounts + pPolyPoly->nPolys);
         POINT *pt = HeapAlloc( GetProcessHeap(), 0, pPolyPoly->cpts * sizeof(POINT) );
 	DWORD i;
 	for(i = 0; i < pPolyPoly->cpts; i++)
@@ -1085,7 +1085,7 @@ BOOL WINAPI PlayEnhMetaFileRecord(
             pt[i].x = pts[i].x;
             pt[i].y = pts[i].y;
         }
-	PolyPolygon(hdc, pt, (INT*)pPolyPoly->aPolyCounts, pPolyPoly->nPolys);
+	PolyPolygon(hdc, pt, (const INT*)pPolyPoly->aPolyCounts, pPolyPoly->nPolys);
 	HeapFree( GetProcessHeap(), 0, pt );
 	break;
       }
@@ -1095,7 +1095,7 @@ BOOL WINAPI PlayEnhMetaFileRecord(
 	/* NB POINTS array doesn't start at pPolyPoly->apts it's actually
 	   pPolyPoly->aPolyCounts + pPolyPoly->nPolys */
 
-        POINTS *pts = (POINTS *)(pPolyPoly->aPolyCounts + pPolyPoly->nPolys);
+        const POINTS *pts = (const POINTS *)(pPolyPoly->aPolyCounts + pPolyPoly->nPolys);
         POINT *pt = HeapAlloc( GetProcessHeap(), 0, pPolyPoly->cpts * sizeof(POINT) );
 	DWORD i;
 	for(i = 0; i < pPolyPoly->cpts; i++)
@@ -1218,7 +1218,7 @@ BOOL WINAPI PlayEnhMetaFileRecord(
 	HRGN hRgn = 0;
 
         if (mr->nSize >= sizeof(*lpRgn) + sizeof(RGNDATAHEADER))
-            hRgn = ExtCreateRegion( &info->init_transform, 0, (RGNDATA *)lpRgn->RgnData );
+            hRgn = ExtCreateRegion( &info->init_transform, 0, (const RGNDATA *)lpRgn->RgnData );
 
 	ExtSelectClipRgn(hdc, hRgn, (INT)(lpRgn->iMode));
 	/* ExtSelectClipRgn created a copy of the region */
@@ -1281,7 +1281,7 @@ BOOL WINAPI PlayEnhMetaFileRecord(
         const EMRPOLYPOLYLINE *pPolyPolyline = (const EMRPOLYPOLYLINE *)mr;
 	/* NB Points at pPolyPolyline->aPolyCounts + pPolyPolyline->nPolys */
 
-        PolyPolyline(hdc, (LPPOINT)(pPolyPolyline->aPolyCounts +
+        PolyPolyline(hdc, (const POINT*)(pPolyPolyline->aPolyCounts +
 				    pPolyPolyline->nPolys),
 		     pPolyPolyline->aPolyCounts,
 		     pPolyPolyline->nPolys );
@@ -1295,9 +1295,9 @@ BOOL WINAPI PlayEnhMetaFileRecord(
 
 	/* NB Points at pPolyPolygon->aPolyCounts + pPolyPolygon->nPolys */
 
-        PolyPolygon(hdc, (LPPOINT)(pPolyPolygon->aPolyCounts +
+        PolyPolygon(hdc, (const POINT*)(pPolyPolygon->aPolyCounts +
 				   pPolyPolygon->nPolys),
-		    (INT*)pPolyPolygon->aPolyCounts, pPolyPolygon->nPolys );
+		    (const INT*)pPolyPolygon->aPolyCounts, pPolyPolygon->nPolys );
         break;
       }
 
@@ -2113,7 +2113,7 @@ BOOL WINAPI PlayEnhMetaFileRecord(
     case EMR_FILLRGN:
     {
 	const EMRFILLRGN *pFillRgn = (const EMRFILLRGN *)mr;
-	HRGN hRgn = ExtCreateRegion(NULL, pFillRgn->cbRgnData, (RGNDATA *)pFillRgn->RgnData);
+	HRGN hRgn = ExtCreateRegion(NULL, pFillRgn->cbRgnData, (const RGNDATA *)pFillRgn->RgnData);
 	FillRgn(hdc,
 		hRgn,
 		(handletable->objectHandle)[pFillRgn->ihBrush]);
@@ -2124,7 +2124,7 @@ BOOL WINAPI PlayEnhMetaFileRecord(
     case EMR_FRAMERGN:
     {
 	const EMRFRAMERGN *pFrameRgn = (const EMRFRAMERGN *)mr;
-	HRGN hRgn = ExtCreateRegion(NULL, pFrameRgn->cbRgnData, (RGNDATA *)pFrameRgn->RgnData);
+	HRGN hRgn = ExtCreateRegion(NULL, pFrameRgn->cbRgnData, (const RGNDATA *)pFrameRgn->RgnData);
 	FrameRgn(hdc,
 		 hRgn,
 		 (handletable->objectHandle)[pFrameRgn->ihBrush],
@@ -2137,7 +2137,7 @@ BOOL WINAPI PlayEnhMetaFileRecord(
     case EMR_INVERTRGN:
     {
 	const EMRINVERTRGN *pInvertRgn = (const EMRINVERTRGN *)mr;
-	HRGN hRgn = ExtCreateRegion(NULL, pInvertRgn->cbRgnData, (RGNDATA *)pInvertRgn->RgnData);
+	HRGN hRgn = ExtCreateRegion(NULL, pInvertRgn->cbRgnData, (const RGNDATA *)pInvertRgn->RgnData);
 	InvertRgn(hdc, hRgn);
 	DeleteObject(hRgn);
 	break;
@@ -2146,7 +2146,7 @@ BOOL WINAPI PlayEnhMetaFileRecord(
     case EMR_PAINTRGN:
     {
 	const EMRPAINTRGN *pPaintRgn = (const EMRPAINTRGN *)mr;
-	HRGN hRgn = ExtCreateRegion(NULL, pPaintRgn->cbRgnData, (RGNDATA *)pPaintRgn->RgnData);
+	HRGN hRgn = ExtCreateRegion(NULL, pPaintRgn->cbRgnData, (const RGNDATA *)pPaintRgn->RgnData);
 	PaintRgn(hdc, hRgn);
 	DeleteObject(hRgn);
 	break;

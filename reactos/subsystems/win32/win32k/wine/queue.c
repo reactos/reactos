@@ -92,6 +92,8 @@ struct thread_input
     rectangle_t            caret_rect;    /* caret rectangle */
     int                    caret_hide;    /* caret hide count */
     int                    caret_state;   /* caret on/off state */
+    user_handle_t          cursor;        /* current cursor */
+    int                    cursor_count;  /* cursor show count */
     struct list            msg_list;      /* list of hardware messages */
     unsigned char          keystate[256]; /* state of each key */
 };
@@ -109,6 +111,7 @@ struct msg_queue
     int                    paint_count;     /* pending paint messages count */
     int                    quit_message;    /* is there a pending quit message? */
     int                    exit_code;       /* exit code of pending quit message */
+    int                    cursor_count;    /* per-queue cursor show count */
     struct list            msg_list[NB_MSG_KINDS];  /* lists of messages */
     struct list            send_result;     /* stack of sent messages waiting for result */
     struct list            callback_result; /* list of callback messages waiting for result */
@@ -215,11 +218,13 @@ static struct thread_input *create_thread_input( PTHREADINFO thread )
 
     if ((input = alloc_object( &thread_input_ops )))
     {
-        input->focus       = 0;
-        input->capture     = 0;
-        input->active      = 0;
-        input->menu_owner  = 0;
-        input->move_size   = 0;
+        input->focus        = 0;
+        input->capture      = 0;
+        input->active       = 0;
+        input->menu_owner   = 0;
+        input->move_size    = 0;
+        input->cursor       = 0;
+        input->cursor_count = 0;
         list_init( &input->msg_list );
         set_caret_window( input, 0 );
         memset( input->keystate, 0, sizeof(input->keystate) );
@@ -233,23 +238,19 @@ static struct thread_input *create_thread_input( PTHREADINFO thread )
     return input;
 }
 
-/* release the thread input data of a given thread */
-static inline void release_thread_input( PTHREADINFO thread )
-{
-    struct thread_input *input = thread->queue->input;
-
-    if (!input) return;
-    release_object( input );
-    thread->queue->input = NULL;
-}
-
 /* create a message queue object */
 static struct msg_queue *create_msg_queue( PTHREADINFO thread, struct thread_input *input )
 {
+    struct thread_input *new_input = NULL;
     struct msg_queue *queue;
     int i;
 
-    if (!input && !(input = create_thread_input( thread ))) return NULL;
+    if (!input)
+    {
+        if (!(new_input = create_thread_input( thread ))) return NULL;
+        input = new_input;
+    }
+
     if ((queue = alloc_object( &msg_queue_ops )))
     {
         queue->fd              = NULL;
@@ -267,6 +268,7 @@ static struct msg_queue *create_msg_queue( PTHREADINFO thread, struct thread_inp
         queue->changed_mask    = 0;
         queue->paint_count     = 0;
         queue->quit_message    = 0;
+        queue->cursor_count    = 0;
         queue->recv_result     = NULL;
         queue->next_timer_id   = 0x7fff;
         queue->timeout         = NULL;
@@ -281,7 +283,7 @@ static struct msg_queue *create_msg_queue( PTHREADINFO thread, struct thread_inp
 
         thread->queue = queue;
     }
-    release_object( input );
+    if (new_input) release_object( new_input );
     return queue;
 }
 
@@ -292,6 +294,26 @@ void free_msg_queue( PTHREADINFO thread )
     if (!thread->queue) return;
     release_object( thread->queue );
     thread->queue = NULL;
+}
+
+/* change the thread input data of a given thread */
+static int assign_thread_input( PTHREADINFO thread, struct thread_input *new_input )
+{
+    struct msg_queue *queue = thread->queue;
+
+    if (!queue)
+    {
+        thread->queue = create_msg_queue( thread, new_input );
+        return thread->queue != NULL;
+    }
+    if (queue->input)
+    {
+        queue->input->cursor_count -= queue->cursor_count;
+        release_object( queue->input );
+    }
+    queue->input = (struct thread_input *)grab_object( new_input );
+    new_input->cursor_count += queue->cursor_count;
+    return 1;
 }
 
 /* get the hook table for a given thread */
@@ -874,7 +896,11 @@ static void msg_queue_destroy( struct object *obj )
         ExFreePool( timer );
     }
     if (queue->timeout) remove_timeout_user( queue->timeout );
-    if (queue->input) release_object( queue->input );
+    if (queue->input)
+    {
+        queue->input->cursor_count -= queue->cursor_count;
+        release_object( queue->input );
+    }
     if (queue->hooks) release_object( queue->hooks );
     if (queue->fd) release_object( queue->fd );
 }
@@ -949,6 +975,7 @@ int attach_thread_input( PTHREADINFO thread_from, PTHREADINFO thread_to )
 {
     struct desktop *desktop;
     struct thread_input *input;
+    int ret;
 
     if (!thread_to->queue && !(thread_to->queue = create_msg_queue( thread_to, NULL ))) return 0;
     if (!(desktop = get_thread_desktop( thread_from, 0 ))) return 0;
@@ -962,17 +989,10 @@ int attach_thread_input( PTHREADINFO thread_from, PTHREADINFO thread_to )
     }
     release_object( desktop );
 
-    if (thread_from->queue)
-    {
-        release_thread_input( thread_from );
-        thread_from->queue->input = input;
-    }
-    else
-    {
-        if (!(thread_from->queue = create_msg_queue( thread_from, input ))) return 0;
-    }
-    memset( input->keystate, 0, sizeof(input->keystate) );
-    return 1;
+    ret = assign_thread_input( thread_from, input );
+    if (ret) memset( input->keystate, 0, sizeof(input->keystate) );
+    release_object( input );
+    return ret;
 }
 
 /* detach two thread input data structures */
@@ -982,8 +1002,8 @@ void detach_thread_input( PTHREADINFO thread_from )
 
     if ((input = create_thread_input( thread_from )))
     {
-        release_thread_input( thread_from );
-        thread_from->queue->input = input;
+        assign_thread_input( thread_from, input );
+        release_object( input );
     }
 }
 
@@ -1723,7 +1743,7 @@ DECL_HANDLER(send_message)
         msg->data      = NULL;
         msg->data_size = get_req_data_size((void*)req);
 
-        if (msg->data_size && !(msg->data = memdup( get_req_data((void*)req), msg->data_size )))
+        if (msg->data_size && !(msg->data = memdup( get_req_data(), msg->data_size )))
         {
             ExFreePool( msg );
             ObDereferenceObject(thread->peThread);
@@ -1926,7 +1946,7 @@ DECL_HANDLER(reply_message)
     if (!current->queue) set_error( STATUS_ACCESS_DENIED );
     else if (current->queue->recv_result)
         reply_message( current->queue, req->result, 0, req->remove,
-                       get_req_data((void*)req), get_req_data_size((void*)req) );
+                       get_req_data(), get_req_data_size((void*)req) );
 }
 
 
@@ -2217,7 +2237,7 @@ DECL_HANDLER(set_key_state)
     if (input)
     {
         data_size_t size = min( sizeof(input->keystate), get_req_data_size((void*)req) );
-        if (size) memcpy( input->keystate, get_req_data((void*)req), size );
+        if (size) memcpy( input->keystate, get_req_data(), size );
     }
     ObDereferenceObject(thread->peThread);
 }
@@ -2365,4 +2385,33 @@ DECL_HANDLER(set_caret_info)
 DECL_HANDLER(get_last_input_time)
 {
     reply->time = last_input_time;
+}
+
+/* set/get the current cursor */
+DECL_HANDLER(set_cursor)
+{
+    struct msg_queue *queue = get_current_queue();
+    struct thread_input *input;
+
+    if (!queue) return;
+    input = queue->input;
+
+    reply->prev_handle = input->cursor;
+    reply->prev_count  = input->cursor_count;
+
+    if (req->flags & SET_CURSOR_HANDLE)
+    {
+        if (req->handle && !get_user_object( req->handle, USER_CLIENT ))
+        {
+            set_win32_error( ERROR_INVALID_CURSOR_HANDLE );
+            return;
+        }
+        input->cursor = req->handle;
+    }
+
+    if (req->flags & SET_CURSOR_COUNT)
+    {
+        queue->cursor_count += req->show_count;
+        input->cursor_count += req->show_count;
+    }
 }

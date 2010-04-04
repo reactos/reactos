@@ -177,13 +177,11 @@ struct user_thread_info
     DWORD                         GetMessageTimeVal;      /* Value for GetMessageTime */
     DWORD                         GetMessagePosVal;       /* Value for GetMessagePos */
     ULONG_PTR                     GetMessageExtraInfoVal; /* Value for GetMessageExtraInfo */
-    HCURSOR                       cursor;                 /* Current cursor */
-    INT                           cursor_count;           /* Cursor show count */
     UINT                          active_hooks;           /* Bitmap of active hooks */
     HWND                          top_window;             /* Desktop window */
     HWND                          msg_window;             /* HWND_MESSAGE parent window */
 
-    ULONG                         pad[9];                 /* Available for more data */
+    ULONG                         pad[11];                /* Available for more data */
 };
 
 struct hook_extra_info

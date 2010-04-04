@@ -1129,7 +1129,7 @@ void SCROLL_TrackScrollBar( HWND hwnd, INT scrollbar, POINT pt )
             ReleaseCapture();
             break;
         }
-    } while (msg.message != WM_LBUTTONUP);
+    } while (msg.message != WM_LBUTTONUP && GetCapture() == hwnd);
 }
 
 

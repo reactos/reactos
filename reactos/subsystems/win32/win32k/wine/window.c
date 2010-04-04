@@ -2086,7 +2086,7 @@ DECL_HANDLER(set_window_pos)
         return;
     }
 
-    if (get_req_data_size((void*)req) >= sizeof(rectangle_t)) visible_rect = get_req_data((void*)req);
+    if (get_req_data_size((void*)req) >= sizeof(rectangle_t)) visible_rect = get_req_data();
     if (get_req_data_size((void*)req) >= 3 * sizeof(rectangle_t)) valid_rects = visible_rect + 1;
 
     if (!visible_rect) visible_rect = &req->window;
@@ -2136,7 +2136,7 @@ DECL_HANDLER(set_window_text)
         if (len)
         {
             if (!(text = mem_alloc( (len+1) * sizeof(WCHAR) ))) return;
-            memcpy( text, get_req_data((void*)req), len * sizeof(WCHAR) );
+            memcpy( text, get_req_data(), len * sizeof(WCHAR) );
             text[len] = 0;
         }
         if (win->text) ExFreePool( win->text );
@@ -2234,7 +2234,7 @@ DECL_HANDLER(set_window_region)
 
     if (get_req_data_size((void*)req))  /* no data means remove the region completely */
     {
-        if (!(region = create_region_from_req_data( get_req_data((void*)req), get_req_data_size((void*)req) )))
+        if (!(region = create_region_from_req_data( get_req_data(), get_req_data_size((void*)req) )))
             return;
     }
     set_window_region( win, region, req->redraw );
@@ -2354,7 +2354,7 @@ DECL_HANDLER(redraw_window)
     {
         if (get_req_data_size((void*)req))  /* no data means whole rectangle */
         {
-            if (!(region = create_region_from_req_data( get_req_data((void*)req), get_req_data_size((void*)req) )))
+            if (!(region = create_region_from_req_data( get_req_data(), get_req_data_size((void*)req) )))
                 return;
         }
     }

@@ -139,10 +139,10 @@ typedef struct
     {
         struct { unsigned int eip, ebp, esp, eflags, cs, ss; } i386_regs;
         struct { unsigned __int64 rip, rbp, rsp;
-                 unsigned int cs, ss, flags; } x86_64_regs;
+                 unsigned int cs, ss, flags, __pad; } x86_64_regs;
         struct { unsigned __int64 fir;
-                 unsigned int psr; } alpha_regs;
-        struct { unsigned int iar, msr, ctr, lr, dar, dsisr, trap; } powerpc_regs;
+                 unsigned int psr, __pad; } alpha_regs;
+        struct { unsigned int iar, msr, ctr, lr, dar, dsisr, trap, __pad; } powerpc_regs;
         struct { unsigned int psr, pc, npc, y, wim, tbr; } sparc_regs;
     } ctl;
     union
@@ -722,7 +722,7 @@ struct get_process_info_reply
     int          exit_code;
     int          priority;
     cpu_type_t   cpu;
-    char __pad_60[4];
+    int          debugger_present;
 };
 
 
@@ -4655,6 +4655,24 @@ struct free_user_handle_reply
 };
 
 
+
+struct set_cursor_request
+{
+    struct request_header __header;
+    unsigned int   flags;
+    user_handle_t  handle;
+    int            show_count;
+};
+struct set_cursor_reply
+{
+    struct reply_header __header;
+    user_handle_t  prev_handle;
+    int            prev_count;
+};
+#define SET_CURSOR_HANDLE 0x01
+#define SET_CURSOR_COUNT  0x02
+
+
 enum request
 {
     REQ_new_process,
@@ -4898,6 +4916,7 @@ enum request
     REQ_set_window_layered_info,
     REQ_alloc_user_handle,
     REQ_free_user_handle,
+    REQ_set_cursor,
     REQ_NB_REQUESTS
 };
 
@@ -5146,6 +5165,7 @@ union generic_request
     struct set_window_layered_info_request set_window_layered_info_request;
     struct alloc_user_handle_request alloc_user_handle_request;
     struct free_user_handle_request free_user_handle_request;
+    struct set_cursor_request set_cursor_request;
 };
 union generic_reply
 {
@@ -5392,8 +5412,9 @@ union generic_reply
     struct set_window_layered_info_reply set_window_layered_info_reply;
     struct alloc_user_handle_reply alloc_user_handle_reply;
     struct free_user_handle_reply free_user_handle_reply;
+    struct set_cursor_reply set_cursor_reply;
 };
 
-#define SERVER_PROTOCOL_VERSION 395
+#define SERVER_PROTOCOL_VERSION 398
 
 #endif /* __WINE_WINE_SERVER_PROTOCOL_H */

@@ -4330,7 +4330,7 @@ static INT GSUB_is_glyph_covered(LPCVOID table , UINT glyph)
         const GSUB_CoverageFormat2* cf2;
         int i;
         int count;
-        cf2 = (GSUB_CoverageFormat2*)cf1;
+        cf2 = (const GSUB_CoverageFormat2*)cf1;
 
         count = GET_BE_WORD(cf2->RangeCount);
         TRACE("Coverage Format 2, %i ranges\n",count);
@@ -4358,7 +4358,7 @@ static const GSUB_Script* GSUB_get_script_table( const GSUB_Header* header, cons
     const GSUB_ScriptList *script;
     const GSUB_Script *deflt = NULL;
     int i;
-    script = (GSUB_ScriptList*)((LPBYTE)header + GET_BE_WORD(header->ScriptList));
+    script = (const GSUB_ScriptList*)((const BYTE*)header + GET_BE_WORD(header->ScriptList));
 
     TRACE("%i scripts in this font\n",GET_BE_WORD(script->ScriptCount));
     for (i = 0; i < GET_BE_WORD(script->ScriptCount); i++)
@@ -4367,7 +4367,7 @@ static const GSUB_Script* GSUB_get_script_table( const GSUB_Header* header, cons
         int offset;
 
         offset = GET_BE_WORD(script->ScriptRecord[i].Script);
-        scr = (GSUB_Script*)((LPBYTE)script + offset);
+        scr = (const GSUB_Script*)((const BYTE*)script + offset);
 
         if (strncmp(script->ScriptRecord[i].ScriptTag, tag,4)==0)
             return scr;
@@ -4388,7 +4388,7 @@ static const GSUB_LangSys* GSUB_get_lang_table( const GSUB_Script* script, const
     for (i = 0; i < GET_BE_WORD(script->LangSysCount) ; i++)
     {
         offset = GET_BE_WORD(script->LangSysRecord[i].LangSys);
-        Lang = (GSUB_LangSys*)((LPBYTE)script + offset);
+        Lang = (const GSUB_LangSys*)((const BYTE*)script + offset);
 
         if ( strncmp(script->LangSysRecord[i].LangSysTag,tag,4)==0)
             return Lang;
@@ -4396,7 +4396,7 @@ static const GSUB_LangSys* GSUB_get_lang_table( const GSUB_Script* script, const
     offset = GET_BE_WORD(script->DefaultLangSys);
     if (offset)
     {
-        Lang = (GSUB_LangSys*)((LPBYTE)script + offset);
+        Lang = (const GSUB_LangSys*)((const BYTE*)script + offset);
         return Lang;
     }
     return NULL;
@@ -4406,7 +4406,7 @@ static const GSUB_Feature * GSUB_get_feature(const GSUB_Header *header, const GS
 {
     int i;
     const GSUB_FeatureList *feature;
-    feature = (GSUB_FeatureList*)((LPBYTE)header + GET_BE_WORD(header->FeatureList));
+    feature = (const GSUB_FeatureList*)((const BYTE*)header + GET_BE_WORD(header->FeatureList));
 
     TRACE("%i features\n",GET_BE_WORD(lang->FeatureCount));
     for (i = 0; i < GET_BE_WORD(lang->FeatureCount); i++)
@@ -4415,7 +4415,7 @@ static const GSUB_Feature * GSUB_get_feature(const GSUB_Header *header, const GS
         if (strncmp(feature->FeatureRecord[index].FeatureTag,tag,4)==0)
         {
             const GSUB_Feature *feat;
-            feat = (GSUB_Feature*)((LPBYTE)feature + GET_BE_WORD(feature->FeatureRecord[index].Feature));
+            feat = (const GSUB_Feature*)((const BYTE*)feature + GET_BE_WORD(feature->FeatureRecord[index].Feature));
             return feat;
         }
     }
@@ -4427,14 +4427,14 @@ static FT_UInt GSUB_apply_feature(const GSUB_Header * header, const GSUB_Feature
     int i;
     int offset;
     const GSUB_LookupList *lookup;
-    lookup = (GSUB_LookupList*)((LPBYTE)header + GET_BE_WORD(header->LookupList));
+    lookup = (const GSUB_LookupList*)((const BYTE*)header + GET_BE_WORD(header->LookupList));
 
     TRACE("%i lookups\n", GET_BE_WORD(feature->LookupCount));
     for (i = 0; i < GET_BE_WORD(feature->LookupCount); i++)
     {
         const GSUB_LookupTable *look;
         offset = GET_BE_WORD(lookup->Lookup[GET_BE_WORD(feature->LookupListIndex[i])]);
-        look = (GSUB_LookupTable*)((LPBYTE)lookup + offset);
+        look = (const GSUB_LookupTable*)((const BYTE*)lookup + offset);
         TRACE("type %i, flag %x, subtables %i\n",GET_BE_WORD(look->LookupType),GET_BE_WORD(look->LookupFlag),GET_BE_WORD(look->SubTableCount));
         if (GET_BE_WORD(look->LookupType) != 1)
             FIXME("We only handle SubType 1\n");
@@ -4446,12 +4446,12 @@ static FT_UInt GSUB_apply_feature(const GSUB_Header * header, const GSUB_Feature
             {
                 const GSUB_SingleSubstFormat1 *ssf1;
                 offset = GET_BE_WORD(look->SubTable[j]);
-                ssf1 = (GSUB_SingleSubstFormat1*)((LPBYTE)look+offset);
+                ssf1 = (const GSUB_SingleSubstFormat1*)((const BYTE*)look+offset);
                 if (GET_BE_WORD(ssf1->SubstFormat) == 1)
                 {
                     int offset = GET_BE_WORD(ssf1->Coverage);
                     TRACE("  subtype 1, delta %i\n", GET_BE_WORD(ssf1->DeltaGlyphID));
-                    if (GSUB_is_glyph_covered((LPBYTE)ssf1+offset, glyph) != -1)
+                    if (GSUB_is_glyph_covered((const BYTE*)ssf1+offset, glyph) != -1)
                     {
                         TRACE("  Glyph 0x%x ->",glyph);
                         glyph += GET_BE_WORD(ssf1->DeltaGlyphID);
@@ -4464,10 +4464,10 @@ static FT_UInt GSUB_apply_feature(const GSUB_Header * header, const GSUB_Feature
                     INT index;
                     INT offset;
 
-                    ssf2 = (GSUB_SingleSubstFormat2 *)ssf1;
+                    ssf2 = (const GSUB_SingleSubstFormat2 *)ssf1;
                     offset = GET_BE_WORD(ssf1->Coverage);
                     TRACE("  subtype 2,  glyph count %i\n", GET_BE_WORD(ssf2->GlyphCount));
-                    index = GSUB_is_glyph_covered((LPBYTE)ssf2+offset, glyph);
+                    index = GSUB_is_glyph_covered((const BYTE*)ssf2+offset, glyph);
                     TRACE("  Coverage index %i\n",index);
                     if (index != -1)
                     {

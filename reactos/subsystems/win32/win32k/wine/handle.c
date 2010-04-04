@@ -609,7 +609,7 @@ DECL_HANDLER(get_object_info)
 DECL_HANDLER(set_security_object)
 {
     data_size_t sd_size = get_req_data_size((void*)req);
-    const struct security_descriptor *sd = get_req_data((void*)req);
+    const struct security_descriptor *sd = get_req_data();
     struct object *obj;
     unsigned int access = 0;
 

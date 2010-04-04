@@ -1031,12 +1031,12 @@ HRGN WINAPI ExtCreateRegion( const XFORM* lpXform, DWORD dwCount, const RGNDATA*
 
     if (lpXform)
     {
-        RECT *pCurRect, *pEndRect;
+        const RECT *pCurRect, *pEndRect;
 
         hrgn = CreateRectRgn( 0, 0, 0, 0 );
 
-        pEndRect = (RECT *)rgndata->Buffer + rgndata->rdh.nCount;
-        for (pCurRect = (RECT *)rgndata->Buffer; pCurRect < pEndRect; pCurRect++)
+        pEndRect = (const RECT *)rgndata->Buffer + rgndata->rdh.nCount;
+        for (pCurRect = (const RECT *)rgndata->Buffer; pCurRect < pEndRect; pCurRect++)
         {
             static const INT count = 4;
             HRGN poly_hrgn;
@@ -1063,10 +1063,10 @@ HRGN WINAPI ExtCreateRegion( const XFORM* lpXform, DWORD dwCount, const RGNDATA*
 
     if (init_region( &obj->rgn, rgndata->rdh.nCount ))
     {
-	RECT *pCurRect, *pEndRect;
+	const RECT *pCurRect, *pEndRect;
 
-        pEndRect = (RECT *)rgndata->Buffer + rgndata->rdh.nCount;
-        for(pCurRect = (RECT *)rgndata->Buffer; pCurRect < pEndRect; pCurRect++)
+        pEndRect = (const RECT *)rgndata->Buffer + rgndata->rdh.nCount;
+        for(pCurRect = (const RECT *)rgndata->Buffer; pCurRect < pEndRect; pCurRect++)
         {
             if (pCurRect->left < pCurRect->right && pCurRect->top < pCurRect->bottom)
             {
