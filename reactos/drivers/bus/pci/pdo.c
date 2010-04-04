@@ -1290,6 +1290,33 @@ PdoWriteConfig(
   return STATUS_SUCCESS;
 }
 
+static NTSTATUS
+PdoQueryDeviceRelations(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PIRP Irp,
+  PIO_STACK_LOCATION IrpSp)
+{
+  PDEVICE_RELATIONS DeviceRelations;
+
+  /* We only support TargetDeviceRelation for child PDOs */
+  if (IrpSp->Parameters.QueryDeviceRelations.Type != TargetDeviceRelation)
+      return Irp->IoStatus.Status;
+
+  /* We can do this because we only return 1 PDO for TargetDeviceRelation */
+  DeviceRelations = ExAllocatePool(PagedPool, sizeof(*DeviceRelations));
+  if (!DeviceRelations)
+      return STATUS_INSUFFICIENT_RESOURCES;
+
+  DeviceRelations->Count = 1;
+  DeviceRelations->Objects[0] = DeviceObject;
+
+  /* The PnP manager will remove this when it is done with the PDO */
+  ObReferenceObject(DeviceObject);
+
+  Irp->IoStatus.Information = (ULONG_PTR)DeviceRelations;
+
+  return STATUS_SUCCESS;
+}
 
 static NTSTATUS
 PdoSetPower(
@@ -1362,8 +1389,7 @@ PdoPnpControl(
     break;
 
   case IRP_MN_QUERY_DEVICE_RELATIONS:
-    /* FIXME: Possibly handle for RemovalRelations */
-    DPRINT("Unimplemented IRP_MN_QUERY_DEVICE_RELATIONS received\n");
+    Status = PdoQueryDeviceRelations(DeviceObject, Irp, IrpSp);
     break;
 
   case IRP_MN_QUERY_DEVICE_TEXT:
