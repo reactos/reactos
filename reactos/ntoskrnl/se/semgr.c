@@ -485,7 +485,7 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         {
             *GrantedAccess = DesiredAccess | PreviouslyGrantedAccess;
         }
-
+        
         *AccessStatus = STATUS_SUCCESS;
         return TRUE;
     }
@@ -547,34 +547,37 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         CurrentAce = (PACE)(Dacl + 1);
         for (i = 0; i < Dacl->AceCount; i++)
         {
-            Sid = (PSID)(CurrentAce + 1);
-            if (CurrentAce->Header.AceType == ACCESS_DENIED_ACE_TYPE)
+            if (!(CurrentAce->Header.AceFlags & INHERIT_ONLY_ACE))
             {
-                if (SepSidInToken(Token, Sid))
+                Sid = (PSID)(CurrentAce + 1);
+                if (CurrentAce->Header.AceType == ACCESS_DENIED_ACE_TYPE)
                 {
-                    /* Map access rights from the ACE */
-                    TempAccess = CurrentAce->AccessMask;
-                    RtlMapGenericMask(&TempAccess, GenericMapping);
+                    if (SepSidInToken(Token, Sid))
+                    {
+                        /* Map access rights from the ACE */
+                        TempAccess = CurrentAce->AccessMask;
+                        RtlMapGenericMask(&TempAccess, GenericMapping);
 
-                    /* Deny access rights that have not been granted yet */
-                    TempDeniedAccess |= (TempAccess & ~TempGrantedAccess);
+                        /* Deny access rights that have not been granted yet */
+                        TempDeniedAccess |= (TempAccess & ~TempGrantedAccess);
+                    }
                 }
-            }
-            else if (CurrentAce->Header.AceType == ACCESS_ALLOWED_ACE_TYPE)
-            {
-                if (SepSidInToken(Token, Sid))
+                else if (CurrentAce->Header.AceType == ACCESS_ALLOWED_ACE_TYPE)
                 {
-                    /* Map access rights from the ACE */
-                    TempAccess = CurrentAce->AccessMask;
-                    RtlMapGenericMask(&TempAccess, GenericMapping);
+                    if (SepSidInToken(Token, Sid))
+                    {
+                        /* Map access rights from the ACE */
+                        TempAccess = CurrentAce->AccessMask;
+                        RtlMapGenericMask(&TempAccess, GenericMapping);
 
-                    /* Grant access rights that have not been denied yet */
-                    TempGrantedAccess |= (TempAccess & ~TempDeniedAccess);
+                        /* Grant access rights that have not been denied yet */
+                        TempGrantedAccess |= (TempAccess & ~TempDeniedAccess);
+                    }
                 }
-            }
-            else
-            {
-                DPRINT1("Unsupported ACE type 0x%lx\n", CurrentAce->Header.AceType);
+                else
+                {
+                    DPRINT1("Unsupported ACE type 0x%lx\n", CurrentAce->Header.AceType);
+                }
             }
 
             /* Get the next ACE */
@@ -608,35 +611,38 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     CurrentAce = (PACE)(Dacl + 1);
     for (i = 0; i < Dacl->AceCount; i++)
     {
-        Sid = (PSID)(CurrentAce + 1);
-        if (CurrentAce->Header.AceType == ACCESS_DENIED_ACE_TYPE)
+        if (!(CurrentAce->Header.AceFlags & INHERIT_ONLY_ACE))
         {
-            if (SepSidInToken(Token, Sid))
+            Sid = (PSID)(CurrentAce + 1);
+            if (CurrentAce->Header.AceType == ACCESS_DENIED_ACE_TYPE)
             {
-                /* Map access rights from the ACE */
-                TempAccess = CurrentAce->AccessMask;
-                RtlMapGenericMask(&TempAccess, GenericMapping);
+                if (SepSidInToken(Token, Sid))
+                {
+                    /* Map access rights from the ACE */
+                    TempAccess = CurrentAce->AccessMask;
+                    RtlMapGenericMask(&TempAccess, GenericMapping);
 
-                /* Leave if a remaining right must be denied */
-                if (RemainingAccess & TempAccess)
-                    break;
+                    /* Leave if a remaining right must be denied */
+                    if (RemainingAccess & TempAccess)
+                        break;
+                }
             }
-        }
-        else if (CurrentAce->Header.AceType == ACCESS_ALLOWED_ACE_TYPE)
-        {
-            if (SepSidInToken(Token, Sid))
+            else if (CurrentAce->Header.AceType == ACCESS_ALLOWED_ACE_TYPE)
             {
-                /* Map access rights from the ACE */
-                TempAccess = CurrentAce->AccessMask;
-                RtlMapGenericMask(&TempAccess, GenericMapping);
+                if (SepSidInToken(Token, Sid))
+                {
+                    /* Map access rights from the ACE */
+                    TempAccess = CurrentAce->AccessMask;
+                    RtlMapGenericMask(&TempAccess, GenericMapping);
 
-                /* Remove granted rights */
-                RemainingAccess &= ~TempAccess;
+                    /* Remove granted rights */
+                    RemainingAccess &= ~TempAccess;
+                }
             }
-        }
-        else
-        {
-            DPRINT1("Unsupported ACE type 0x%lx\n", CurrentAce->Header.AceType);
+            else
+            {
+                DPRINT1("Unsupported ACE type 0x%lx\n", CurrentAce->Header.AceType);
+            }
         }
 
         /* Get the next ACE */
