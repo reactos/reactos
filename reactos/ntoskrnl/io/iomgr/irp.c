@@ -460,6 +460,22 @@ IopCompleteRequest(IN PKAPC Apc,
     }
     else
     {
+        /* Check if we have an associated user IOSB */
+        if (Irp->UserIosb)
+        {
+            /* We do, so let's give them the final status */
+            _SEH2_TRY
+            {
+               /*  Save the IOSB Information */
+               *Irp->UserIosb = Irp->IoStatus;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+               /* Ignore any error */
+            }
+            _SEH2_END;
+        }
+
         /*
          * Either we didn't return from the request, or we did return but this
          * request was synchronous.
@@ -490,22 +506,6 @@ IopCompleteRequest(IN PKAPC Apc,
                 FileObject->FinalStatus = Irp->IoStatus.Status;
                 KeSetEvent(&FileObject->Event, 0, FALSE);
             }
-        }
-
-        /* Check if we have an associated user IOSB */
-        if (Irp->UserIosb)
-        {
-            /* We do, so let's give them the final status */
-            _SEH2_TRY
-            {
-               /*  Save the IOSB Information */
-               *Irp->UserIosb = Irp->IoStatus;
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-               /* Ignore any error */
-            }
-            _SEH2_END;
         }
 
         /* Now that we got here, we do this for incomplete I/Os as well */
