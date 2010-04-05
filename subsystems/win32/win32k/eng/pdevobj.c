@@ -60,8 +60,7 @@ PDEVOBJ_vRelease(PPDEVOBJ ppdev)
         /* Do we have a surface? */
         if(ppdev->pSurface)
         {
-            /* Release the surface and let the driver free it */
-            SURFACE_ShareUnlockSurface(ppdev->pSurface);
+            /* No one should hold a lock on this surface */
             ppdev->pfn.DisableSurface(ppdev->dhpdev);
         }
 
@@ -147,7 +146,7 @@ PDEVOBJ_pSurface(
 {
     HSURF hsurf;
 
-    DPRINT1("PDEVOBJ_pSurface()\n");
+    DPRINT("PDEVOBJ_pSurface()\n");
 
     /* Check if we already have a surface */
     if (ppdev->pSurface)
@@ -164,7 +163,7 @@ PDEVOBJ_pSurface(
         ppdev->pSurface = SURFACE_ShareLockSurface(hsurf);
     }
 
-    DPRINT1("PDEVOBJ_pSurface() returning %p\n", ppdev->pSurface);
+    DPRINT("PDEVOBJ_pSurface() returning %p\n", ppdev->pSurface);
     return ppdev->pSurface;
 }
 
@@ -292,7 +291,6 @@ PDEVOBJ_vSwitchPdev(
     PPDEVOBJ ppdev2)
 {
     PDEVOBJ pdevTmp;
-    HDEV hdev;
 
     /* Exchange data */
     pdevTmp = *ppdev;
@@ -312,9 +310,10 @@ PDEVOBJ_vSwitchPdev(
     /* Exchange surface */
     ppdev->pSurface = ppdev2->pSurface;
     ppdev2->pSurface = pdevTmp.pSurface;
-    hdev = ppdev->pSurface->SurfObj.hdev;
-    ppdev->pSurface->SurfObj.hdev = ppdev2->pSurface->SurfObj.hdev;
-    ppdev2->pSurface->SurfObj.hdev = hdev;
+    if(ppdev->pSurface)
+        ppdev->pSurface->SurfObj.hdev = (HDEV)ppdev;
+    if(ppdev2->pSurface)
+        ppdev2->pSurface->SurfObj.hdev = (HDEV)ppdev2;
 
     /* Exchange devinfo */
     ppdev->devinfo = ppdev2->devinfo;
@@ -338,7 +337,6 @@ PDEVOBJ_bSwitchMode(
 {
     UNICODE_STRING ustrDevice;
     PPDEVOBJ ppdevTmp;
-    PSURFACE pSurface;
     BOOL retval = FALSE;
 
     /* Lock the PDEV */
@@ -367,25 +365,14 @@ PDEVOBJ_bSwitchMode(
         goto leave;
     }
 
-    /* 3. Create a new surface */
-    pSurface = PDEVOBJ_pSurface(ppdevTmp);
-    if (!pSurface)
-    {
-        DPRINT1("DrvEnableSurface failed\n");
-        goto leave;
-    }
+    /* 3. Get DirectDraw information */
+    /* 4. Enable DirectDraw Not traced */
+    /* 5. Copy old PDEV state to new PDEV instance */
 
-    ASSERT(pSurface->BitsLock);
-
-    /* 4. Get DirectDraw information */
-    /* 5. Enable DirectDraw Not traced */
-    /* 6. Copy old PDEV state to new PDEV instance */
-
-    /* 7. Switch the PDEVs */
+    /* 6. Switch the PDEVs */
     PDEVOBJ_vSwitchPdev(ppdev, ppdevTmp);
-    ASSERT(ppdev->pSurface->BitsLock);
 
-    /* 8. Disable DirectDraw */
+    /* 7. Disable DirectDraw */
 
     PDEVOBJ_vRelease(ppdevTmp);
 
@@ -397,7 +384,6 @@ leave:
     EngReleaseSemaphore(ghsemPDEV);
 
     DPRINT1("leave, ppdev = %p, pSurface = %p\n", ppdev, ppdev->pSurface);
-    ASSERT(ppdev->pSurface->BitsLock);
 
     return retval;
 }
