@@ -7,11 +7,32 @@
  *              Michael Martin
  */
 
-/* usbbusif.h and hubbusif.h need to be imported */
 #include "usbehci.h"
-#include "usbiffn.h"
-#define	NDEBUG
+#include <hubbusif.h>
+#include <usbbusif.h>
+#define NDEBUG
 #include <debug.h>
+
+BOOLEAN
+IsHandleValid(PVOID BusContext,
+              PUSB_DEVICE_HANDLE DeviceHandle)
+{
+    PPDO_DEVICE_EXTENSION PdoDeviceExtension;
+    LONG i;
+
+    PdoDeviceExtension = (PPDO_DEVICE_EXTENSION) BusContext;
+
+    if (!DeviceHandle)
+        return FALSE;
+
+    for (i = 0; i < 128; i++)
+    {
+        if (PdoDeviceExtension->UsbDevices[i] == DeviceHandle)
+            return TRUE;
+    }
+
+    return FALSE;
+}
 
 VOID
 USB_BUSIFFN
@@ -44,8 +65,21 @@ NTSTATUS
 USB_BUSIFFN
 InitializeUsbDevice(PVOID BusContext, PUSB_DEVICE_HANDLE DeviceHandle)
 {
+    PPDO_DEVICE_EXTENSION PdoDeviceExtension;
+    LONG i;
     DPRINT1("InitializeUsbDevice called\n");
-    return STATUS_SUCCESS;
+
+    PdoDeviceExtension = (PPDO_DEVICE_EXTENSION)((PDEVICE_OBJECT)BusContext)->DeviceExtension;
+    /* Find the device handle */
+    for (i = 0; i < PdoDeviceExtension->ChildDeviceCount; i++)
+    {
+        if (DeviceHandle == PdoDeviceExtension->UsbDevices[i])
+        {
+            DPRINT1("Device Handle Found!\n");
+            return STATUS_SUCCESS;
+        }
+    }
+    return STATUS_DEVICE_DATA_ERROR;
 }
 
 NTSTATUS
@@ -93,7 +127,52 @@ QueryDeviceInformation(PVOID BusContext,
                        ULONG DeviceInformationBufferLength,
                        PULONG LengthReturned)
 {
-    DPRINT1("QueryDeviceInformation called\n");
+    PUSB_DEVICE_INFORMATION_0 DeviceInfo = DeviceInformationBuffer;
+    PUSB_DEVICE UsbDevice = (PUSB_DEVICE) DeviceHandle;
+    ULONG SizeNeeded;
+    LONG i;
+
+    DPRINT1("QueryDeviceInformation (%x, %x, %x, %d, %x\n", BusContext, DeviceHandle, DeviceInformationBuffer, DeviceInformationBufferLength, LengthReturned);
+
+    /* Search for a valid usb device in this BusContext */
+    if (!IsHandleValid(BusContext, DeviceHandle))
+    {
+        DPRINT1("Not a valid DeviceHandle\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    SizeNeeded = FIELD_OFFSET(USB_DEVICE_INFORMATION_0, PipeList[UsbDevice->ActiveInterface->InterfaceDescriptor.bNumEndpoints]);
+    *LengthReturned = SizeNeeded;
+
+    DeviceInfo->ActualLength = SizeNeeded;
+
+    if (DeviceInformationBufferLength < SizeNeeded)
+    {
+        DPRINT1("Buffer to small\n");
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
+    if (DeviceInfo->InformationLevel != 0)
+    {
+        DPRINT1("Invalid Param\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    DeviceInfo->PortNumber = UsbDevice->Port;
+    DeviceInfo->HubAddress = 1;
+    DeviceInfo->DeviceAddress = UsbDevice->Address;
+    DeviceInfo->DeviceSpeed = UsbDevice->DeviceSpeed;
+    DeviceInfo->DeviceType = UsbDevice->DeviceType;
+    DeviceInfo->CurrentConfigurationValue = UsbDevice->ActiveConfig->ConfigurationDescriptor.bConfigurationValue;
+    DeviceInfo->NumberOfOpenPipes = UsbDevice->ActiveInterface->InterfaceDescriptor.bNumEndpoints;
+
+    RtlCopyMemory(&DeviceInfo->DeviceDescriptor, &UsbDevice->DeviceDescriptor, sizeof(USB_DEVICE_DESCRIPTOR));
+
+    for (i = 0; i < UsbDevice->ActiveInterface->InterfaceDescriptor.bNumEndpoints; i++)
+    {
+        RtlCopyMemory(&DeviceInfo->PipeList[i].EndpointDescriptor, &UsbDevice->ActiveInterface->EndPoints[i]->EndPointDescriptor, sizeof(USB_ENDPOINT_DESCRIPTOR));
+    }
+
     return STATUS_SUCCESS;
 }
 
@@ -104,7 +183,29 @@ GetControllerInformation(PVOID BusContext,
                          ULONG ControllerInformationBufferLength,
                          PULONG LengthReturned)
 {
+    PUSB_CONTROLLER_INFORMATION_0 ControllerInfo;
+
     DPRINT1("GetControllerInformation called\n");
+    ControllerInfo = ControllerInformationBuffer;
+
+    if (ControllerInformationBufferLength < sizeof(USB_CONTROLLER_INFORMATION_0))
+    {
+        DPRINT1("Buffer to small\n");
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
+    if (ControllerInfo->InformationLevel != 0)
+    {
+        DPRINT1("InformationLevel other than 0 not supported\n");
+        return STATUS_NOT_SUPPORTED;
+    }
+
+    ControllerInfo->ActualLength = sizeof(USB_CONTROLLER_INFORMATION_0);
+    ControllerInfo->SelectiveSuspendEnabled = FALSE;
+    ControllerInfo->IsHighSpeedController = TRUE;
+
+    *LengthReturned = ControllerInfo->ActualLength;
+
     return STATUS_SUCCESS;
 }
 
@@ -113,7 +214,7 @@ USB_BUSIFFN
 ControllerSelectiveSuspend(PVOID BusContext, BOOLEAN Enable)
 {
     DPRINT1("ControllerSelectiveSuspend called\n");
-    return STATUS_SUCCESS;
+    return STATUS_NOT_SUPPORTED;
 }
 
 NTSTATUS
@@ -162,6 +263,12 @@ GetRootHubSymbolicName(PVOID BusContext,
                        PULONG HubSymNameActualLength)
 {
     DPRINT1("GetRootHubSymbolicName called\n");
+
+    if (HubSymNameBufferLength < 20)
+        return STATUS_UNSUCCESSFUL;
+    //RtlStringCbCopy(HubSymNameBuffer, HubSymNameBufferLength, L"ROOT_HUB20");
+    *HubSymNameActualLength = 20;
+
     return STATUS_SUCCESS;
 }
 
@@ -211,12 +318,12 @@ SetDeviceHandleData(PVOID BusContext, PVOID DeviceHandle, PDEVICE_OBJECT UsbDevi
 
 /* USB_BUS_INTERFACE_USBDI_V2 Functions */
 
-NTSTATUS
+VOID
 USB_BUSIFFN
 GetUSBDIVersion(PVOID BusContext, PUSBD_VERSION_INFORMATION VersionInformation, PULONG HcdCapabilites)
 {
     DPRINT1("GetUSBDIVersion called\n");
-    return STATUS_SUCCESS;
+    return;
 }
 
 NTSTATUS

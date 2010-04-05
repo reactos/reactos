@@ -11,8 +11,10 @@
 #define NDEBUG
 
 #include "usbehci.h"
-#include <wdmguid.h>
+#include <hubbusif.h>
+#include <usbbusif.h>
 #include "usbiffn.h"
+#include <wdmguid.h>
 #include <stdio.h>
 #include <debug.h>
 
@@ -51,8 +53,11 @@ const UCHAR ROOTHUB2_CONFIGURATION_DESCRIPTOR [] =
         6: Self-powered,
         5: Remote wakeup,
         4..0: reserved */
-    0x00,       /* MaxPower; */
+    0x00       /* MaxPower; */
+};
 
+const UCHAR ROOTHUB2_INTERFACE_DESCRIPTOR [] = 
+{
     /* one interface */
     0x09,       /* bLength: Interface; */
     0x04,       /* bDescriptorType; Interface */
@@ -62,8 +67,11 @@ const UCHAR ROOTHUB2_CONFIGURATION_DESCRIPTOR [] =
     0x09,       /* bInterfaceClass; HUB_CLASSCODE */
     0x01,       /* bInterfaceSubClass; */
     0x00,       /* bInterfaceProtocol: */
-    0x00,       /* iInterface; */
+    0x00       /* iInterface; */
+};
 
+const UCHAR ROOTHUB2_ENDPOINT_DESCRIPTOR [] =
+{
     /* one endpoint (status change endpoint) */
     0x07,       /* bLength; */
     0x05,       /* bDescriptorType; Endpoint */
@@ -87,7 +95,6 @@ UrbWorkerThread(PVOID Context)
     DPRINT1("Thread terminated\n");
 }
 
-/* FIXME: Do something better */
 PVOID InternalCreateUsbDevice(UCHAR DeviceNumber, ULONG Port, PUSB_DEVICE Parent, BOOLEAN Hub)
 {
     PUSB_DEVICE UsbDevicePointer = NULL;
@@ -97,6 +104,8 @@ PVOID InternalCreateUsbDevice(UCHAR DeviceNumber, ULONG Port, PUSB_DEVICE Parent
         DPRINT1("Out of memory\n");
         return NULL;
     }
+
+    RtlZeroMemory(UsbDevicePointer, sizeof(USB_DEVICE));
 
     if ((Hub) && (!Parent))
     {
@@ -176,21 +185,27 @@ PdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
             if (Stack->Parameters.Others.Argument1)
             {
                 /* Return the root hubs devicehandle */
+                DPRINT1("Returning RootHub Handle %x\n", PdoDeviceExtension->UsbDevices[0]);
                 *(PVOID *)Stack->Parameters.Others.Argument1 = (PVOID)PdoDeviceExtension->UsbDevices[0];
+                Status = STATUS_SUCCESS;
             }
             else
                 Status = STATUS_INVALID_DEVICE_REQUEST;
+
             break;
+
         }
         case IOCTL_INTERNAL_USB_GET_HUB_COUNT:
         {
             DPRINT1("IOCTL_INTERNAL_USB_GET_HUB_COUNT %x\n", IOCTL_INTERNAL_USB_GET_HUB_COUNT);
+            ASSERT(Stack->Parameters.Others.Argument1 != NULL);
             if (Stack->Parameters.Others.Argument1)
             {
                 /* FIXME: Determine the number of hubs between the usb device and root hub */
-                /* For now return 1, the root hub */
-                *(PVOID *)Stack->Parameters.Others.Argument1 = (PVOID)1;
+                DPRINT1("RootHubCount %x\n", *(PULONG)Stack->Parameters.Others.Argument1);
+                *(PULONG)Stack->Parameters.Others.Argument1 = 0;
             }
+            Status = STATUS_SUCCESS;
             break;
         }
         case IOCTL_INTERNAL_USB_GET_HUB_NAME:
@@ -220,7 +235,7 @@ PdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
             if (Stack->Parameters.Others.Argument1)
                 *(PVOID *)Stack->Parameters.Others.Argument1 = FdoDeviceExtension->Pdo;
             if (Stack->Parameters.Others.Argument2)
-                *(PVOID *)Stack->Parameters.Others.Argument2 = IoGetAttachedDevice(FdoDeviceExtension->DeviceObject);
+                *(PVOID *)Stack->Parameters.Others.Argument2 = IoGetAttachedDeviceReference(FdoDeviceExtension->DeviceObject);
 
             Information = 0;
             Status = STATUS_SUCCESS;
@@ -275,6 +290,7 @@ PdoQueryId(PDEVICE_OBJECT DeviceObject, PIRP Irp, ULONG_PTR* Information)
             SourceString.Length = SourceString.MaximumLength = Index * sizeof(WCHAR);
             SourceString.Buffer = Buffer;
             break;
+
         }
         case BusQueryCompatibleIDs:
         {
@@ -375,9 +391,43 @@ PdoDispatchPnp(
             RootHubDevice->DeviceDescriptor.idVendor = FdoDeviceExtension->VendorId;
             RootHubDevice->DeviceDescriptor.idProduct = FdoDeviceExtension->DeviceId;
 
-            RtlCopyMemory(&RootHubDevice->ConfigurationDescriptor,
+            RootHubDevice->Configs = ExAllocatePoolWithTag(NonPagedPool,
+                                                            sizeof(PVOID) * RootHubDevice->DeviceDescriptor.bNumConfigurations,
+                                                            USB_POOL_TAG);
+
+            RootHubDevice->Configs[0] = ExAllocatePoolWithTag(NonPagedPool,
+                                                            sizeof(USB_CONFIGURATION) + sizeof(PVOID) * ROOTHUB2_CONFIGURATION_DESCRIPTOR[5],
+                                                            USB_POOL_TAG);
+
+            RootHubDevice->Configs[0]->Interfaces[0] = ExAllocatePoolWithTag(NonPagedPool,
+                                                            sizeof(USB_INTERFACE) + sizeof(PVOID) * ROOTHUB2_INTERFACE_DESCRIPTOR[3],
+                                                            USB_POOL_TAG);
+
+            RootHubDevice->Configs[0]->Interfaces[0]->EndPoints[0] = ExAllocatePoolWithTag(NonPagedPool,
+                                                            sizeof(USB_ENDPOINT),
+                                                            USB_POOL_TAG);
+
+            DPRINT1("before: ActiveConfig %x\n", RootHubDevice->ActiveConfig);
+            RootHubDevice->ActiveConfig = RootHubDevice->Configs[0];
+            DPRINT1("after: ActiveConfig %x\n", RootHubDevice->ActiveConfig);
+
+            DPRINT1("before: ActiveConfig->Interfaces[0] %x\n", RootHubDevice->ActiveConfig->Interfaces[0]);
+            RootHubDevice->ActiveInterface = RootHubDevice->ActiveConfig->Interfaces[0];
+
+
+            RtlCopyMemory(&RootHubDevice->ActiveConfig->ConfigurationDescriptor,
                           ROOTHUB2_CONFIGURATION_DESCRIPTOR,
                           sizeof(ROOTHUB2_CONFIGURATION_DESCRIPTOR));
+
+            RtlCopyMemory(&RootHubDevice->ActiveConfig->Interfaces[0]->InterfaceDescriptor,
+                         ROOTHUB2_INTERFACE_DESCRIPTOR,
+                         sizeof(ROOTHUB2_INTERFACE_DESCRIPTOR));
+
+            RtlCopyMemory(&RootHubDevice->ActiveConfig->Interfaces[0]->EndPoints[0]->EndPointDescriptor,
+                         ROOTHUB2_ENDPOINT_DESCRIPTOR,
+                         sizeof(ROOTHUB2_ENDPOINT_DESCRIPTOR));
+            RootHubDevice->DeviceSpeed = UsbHighSpeed;
+            RootHubDevice->DeviceType = Usb20Device;
 
             PdoDeviceExtension->UsbDevices[0] = RootHubDevice;
 
@@ -397,13 +447,14 @@ PdoDispatchPnp(
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("Failed to register interface\n");
+                ASSERT(FALSE);
             }
             else
             {
                 Status = IoSetDeviceInterfaceState(&InterfaceSymLinkName, TRUE);
                 DPRINT1("Set interface state %x\n", Status);
+                if (!NT_SUCCESS(Status)) ASSERT(FALSE);
             }
-
 
             Status = STATUS_SUCCESS;
             break;
@@ -593,4 +644,3 @@ PdoDispatchPnp(
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return Status;
 }
-

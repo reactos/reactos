@@ -5,9 +5,11 @@
 #include <stdio.h>
 #define	NDEBUG
 #include <debug.h>
-#include "usbiffn.h"
+#include <hubbusif.h>
 #include <usbioctl.h>
 #include <usb.h>
+
+#define USB_POOL_TAG (ULONG)'UsbR'
 
 #define	DEVICEINTIALIZED		0x01
 #define	DEVICESTARTED			0x02
@@ -196,10 +198,32 @@ typedef struct _EHCI_SETUP_FORMAT
 
 typedef struct _STRING_DESCRIPTOR
 {
-  UCHAR bLength;		/* Size of this descriptor in bytes */
+  UCHAR bLength;            /* Size of this descriptor in bytes */
   UCHAR bDescriptorType;	/* STRING Descriptor Type */
-  UCHAR bString[0];		/* UNICODE encoded string */
+  UCHAR bString[0];         /* UNICODE encoded string */
 } STRING_DESCRIPTOR, *PSTRING_DESCRIPTOR;
+
+typedef struct _USB_ENDPOINT
+{
+    ULONG Flags;
+    LIST_ENTRY  UrbList;
+    struct _USB_INTERFACE *Interface;
+    USB_ENDPOINT_DESCRIPTOR EndPointDescriptor;
+} USB_ENDPOINT, *PUSB_ENDPOINT;
+
+typedef struct _USB_INTERFACE
+{
+    struct _USB_CONFIGURATION *Config;
+    USB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
+    USB_ENDPOINT *EndPoints[];
+} USB_INTERFACE, *PUSB_INTERFACE;
+
+typedef struct _USB_CONFIGURATION
+{
+    struct _USB_DEVICE *Device;
+    USB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor;
+    USB_INTERFACE *Interfaces[];
+} USB_CONFIGURATION, *PUSB_CONFIGURATION;
 
 typedef struct _USB_DEVICE
 {
@@ -207,10 +231,13 @@ typedef struct _USB_DEVICE
     ULONG Port;
     PVOID ParentDevice;
     BOOLEAN IsHub;
+    USB_DEVICE_SPEED DeviceSpeed;
+    USB_DEVICE_TYPE DeviceType;
     USB_DEVICE_DESCRIPTOR DeviceDescriptor;
-    USB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor;
-    USB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
-    USB_ENDPOINT_DESCRIPTOR EndPointDescriptor;
+    USB_CONFIGURATION *ActiveConfig;
+    USB_INTERFACE *ActiveInterface;
+    USB_CONFIGURATION **Configs;
+
 } USB_DEVICE, *PUSB_DEVICE;
 
 /* USBCMD register 32 bits */
@@ -382,7 +409,7 @@ typedef struct _PDO_DEVICE_EXTENSION
     ULONG ChildDeviceCount;
     BOOLEAN HaltUrbHandling;
     PVOID CallbackContext;
-    PRH_INIT_CALLBACK CallbackRoutine;
+    RH_INIT_CALLBACK *CallbackRoutine;
     ULONG NumberOfPorts;
     EHCIPORTS Ports[32];
 } PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;

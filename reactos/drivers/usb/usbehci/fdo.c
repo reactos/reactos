@@ -83,11 +83,11 @@ EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVO
                             DPRINT1("Releasing ownership to companion host controller!\n");
                             /* Release ownership to companion host controller */
                             WRITE_REGISTER_ULONG((PULONG) ((Base + EHCI_PORTSC) + (4 * i)), 0x4000);
+                            continue;
                         }
                     }
 
                     KeStallExecutionProcessor(30);
-                    DPRINT("port tmp %x\n", tmp);
 
                     /* As per USB 2.0 Specs, 9.1.2. Reset the port and clear the status change */
                     tmp |= 0x100 | 0x02;
@@ -545,6 +545,7 @@ StartDevice(PDEVICE_OBJECT DeviceObject, PCM_PARTIAL_RESOURCE_LIST raw, PCM_PART
 
     StartEhci(DeviceObject);
     FdoDeviceExtension->DeviceState = DEVICESTARTED;
+
     return STATUS_SUCCESS;
 }
 
@@ -814,7 +815,6 @@ AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT Pdo)
         IoDetachDevice(FdoDeviceExtension->LowerDevice);
         IoDeleteSymbolicLink(&SymLinkName);
         IoDeleteDevice(Fdo);
-
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -840,11 +840,14 @@ AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT Pdo)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Unable to register device interface!\n");
+        ASSERT(FALSE);
     }
     else
     {
         Status = IoSetDeviceInterfaceState(&InterfaceSymLinkName, TRUE);
         DPRINT1("SetInterfaceState %x\n", Status);
+        if (!NT_SUCCESS(Status))
+            ASSERT(FALSE);
     }
     Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
 
