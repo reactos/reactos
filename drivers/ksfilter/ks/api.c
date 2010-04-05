@@ -94,6 +94,8 @@ KsReleaseDeviceSecurityLock(
 {
     PKSIDEVICE_HEADER Header = (PKSIDEVICE_HEADER)DevHeader;
 
+    DPRINT("KsReleaseDevice\n");
+
     ExReleaseResourceLite(&Header->SecurityLock);
     KeLeaveCriticalRegion();
 }
@@ -1589,7 +1591,7 @@ KsAcquireControl(
     /* sanity check */
     ASSERT(BasicHeader->Type == KsObjectTypeFilter || BasicHeader->Type == KsObjectTypePin);
 
-    KeWaitForSingleObject(&BasicHeader->ControlMutex, Executive, KernelMode, FALSE, NULL);
+    KeWaitForSingleObject(BasicHeader->ControlMutex, Executive, KernelMode, FALSE, NULL);
 
 }
 
@@ -1606,7 +1608,7 @@ KsReleaseControl(
     /* sanity check */
     ASSERT(BasicHeader->Type == KsObjectTypeFilter || BasicHeader->Type == KsObjectTypePin);
 
-    KeReleaseMutex(&BasicHeader->ControlMutex, FALSE);
+    KeReleaseMutex(BasicHeader->ControlMutex, FALSE);
 }
 
 
@@ -1621,7 +1623,10 @@ KsAcquireDevice(
     IN PKSDEVICE Device)
 {
     IKsDevice *KsDevice;
-    PKSIDEVICE_HEADER DeviceHeader = (PKSIDEVICE_HEADER)CONTAINING_RECORD(Device, KSIDEVICE_HEADER, KsDevice);
+    PKSIDEVICE_HEADER DeviceHeader;
+
+    DPRINT("KsAcquireDevice\n");
+    DeviceHeader = (PKSIDEVICE_HEADER)CONTAINING_RECORD(Device, KSIDEVICE_HEADER, KsDevice);
 
     /* get device interface*/
     KsDevice = (IKsDevice*)&DeviceHeader->lpVtblIKsDevice;

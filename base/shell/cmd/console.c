@@ -166,7 +166,7 @@ VOID ConOutChar (TCHAR c)
 VOID ConPuts(LPTSTR szText, DWORD nStdHandle)
 {
 	ConWrite(szText, _tcslen(szText), nStdHandle);
-	ConWrite(_T("\n"), 1, nStdHandle);
+	ConWrite(_T("\r\n"), 2, nStdHandle);
 }
 
 VOID ConOutResPaging(BOOL NewPage, UINT resID)

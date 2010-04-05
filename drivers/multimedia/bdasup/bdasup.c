@@ -261,19 +261,36 @@ BdaCreateFilterFactoryEx(
     PBDA_FILTER_INSTANCE_ENTRY FilterInstance;
     KIRQL OldLevel;
     NTSTATUS Status;
-    KSFILTER_DESCRIPTOR FilterDescriptor;
+    PKSFILTER_DESCRIPTOR FilterDescriptor;
 
     DPRINT("BdaCreateFilterFactoryEx\n");
-    /* backup filter descriptor */
-    RtlMoveMemory(&FilterDescriptor, pFilterDescriptor, sizeof(KSFILTER_DESCRIPTOR));
+
+    FilterDescriptor = AllocateItem(NonPagedPool, sizeof(KSFILTER_DESCRIPTOR));
+    if (!FilterDescriptor)
+    {
+        /* no memory */
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* copy filter descriptor template */
+    RtlMoveMemory(FilterDescriptor, pFilterDescriptor, sizeof(KSFILTER_DESCRIPTOR));
+
+    /* erase pin / nodes / connections from filter descriptor */
+    FilterDescriptor->PinDescriptorsCount = 0;
+    FilterDescriptor->PinDescriptors = NULL;
+    FilterDescriptor->NodeDescriptorsCount = 0;
+    FilterDescriptor->NodeDescriptors = NULL;
+    FilterDescriptor->ConnectionsCount = 0;
+    FilterDescriptor->Connections = NULL;
 
     /* merge the automation tables */
-    Status = KsMergeAutomationTables((PKSAUTOMATION_TABLE*)&FilterDescriptor.AutomationTable, (PKSAUTOMATION_TABLE)pFilterDescriptor->AutomationTable, &FilterAutomationTable, NULL);
+    Status = KsMergeAutomationTables((PKSAUTOMATION_TABLE*)&FilterDescriptor->AutomationTable, (PKSAUTOMATION_TABLE)pFilterDescriptor->AutomationTable, &FilterAutomationTable, NULL);
 
     /* check for success */
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("KsMergeAutomationTables failed with %lx\n", Status);
+        FreeItem(FilterDescriptor);
         return Status;
     }
 
@@ -282,25 +299,31 @@ BdaCreateFilterFactoryEx(
     if (!FilterInstance)
     {
         /* not enough memory */
+        FreeItem(FilterDescriptor);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     /* create the filter factory */
-    Status = KsCreateFilterFactory(pKSDevice->FunctionalDeviceObject, &FilterDescriptor, NULL, NULL, 0, NULL, NULL, &FilterFactory);
+    Status = KsCreateFilterFactory(pKSDevice->FunctionalDeviceObject, FilterDescriptor, NULL, NULL, 0, NULL, NULL, &FilterFactory);
 
     /* check for success */
     if (NT_SUCCESS(Status))
     {
-
-        /* add the item to filter object bag */
-        Status = KsAddItemToObjectBag(FilterFactory->Bag, FilterInstance, FreeFilterInstance);
-        if (!NT_SUCCESS(Status))
+        if (FilterDescriptor->AutomationTable != &FilterAutomationTable)
         {
-            /* destroy filter instance */
-            DPRINT1("KsAddItemToObjectBag failed with %lx\n", Status);
-            FreeItem(FilterInstance);
-            KsDeleteFilterFactory(FilterFactory);
-            return Status;
+            /* add the item to filter object bag */
+            KsAddItemToObjectBag(FilterFactory->Bag, (PVOID)FilterDescriptor->AutomationTable, FreeFilterInstance);
+        }
+        else
+        {
+            /* make sure the automation table is not-read only */
+            Status = _KsEdit(FilterFactory->Bag, (PVOID*)&FilterDescriptor->AutomationTable, sizeof(KSAUTOMATION_TABLE), sizeof(KSAUTOMATION_TABLE), 0);
+
+            /* sanity check */
+            ASSERT(Status == STATUS_SUCCESS);
+
+            /* add to object bag */
+            KsAddItemToObjectBag(FilterFactory->Bag, (PVOID)FilterDescriptor->AutomationTable, FreeFilterInstance);
         }
 
         /* initialize filter instance entry */
@@ -327,7 +350,7 @@ BdaCreateFilterFactoryEx(
     {
         /* failed to create filter factory */
         FreeItem(FilterInstance);
-        DPRINT1("KsCreateFilterFactory failed with %lx\n", Status);
+        FreeItem(FilterDescriptor);
     }
 
     /* done */
@@ -350,7 +373,7 @@ BdaCreatePin(
     PBDA_FILTER_INSTANCE_ENTRY InstanceEntry;
     NTSTATUS Status;
     ULONG PinId;
-    KSPIN_DESCRIPTOR_EX NewPinDescriptor;
+    PKSPIN_DESCRIPTOR_EX NewPinDescriptor;
 
     DPRINT("BdaCreatePin\n");
 
@@ -380,6 +403,7 @@ BdaCreatePin(
     if (!InstanceEntry->FilterTemplate->pFilterDescriptor->PinDescriptorsCount)
     {
         /* no pins supported */
+        DPRINT("BdaCreatePin NoPins supported\n");
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -387,6 +411,7 @@ BdaCreatePin(
     if (InstanceEntry->FilterTemplate->pFilterDescriptor->PinDescriptorsCount <= ulPinType)
     {
         /* pin request is out of bounds */
+        DPRINT("BdaCreatePin ulPinType %lu >= PinDescriptorCount %lu\n", ulPinType, InstanceEntry->FilterTemplate->pFilterDescriptor->PinDescriptorsCount);
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -396,17 +421,26 @@ BdaCreatePin(
     /* get pin descriptor */
     PinDescriptor = (PKSPIN_DESCRIPTOR_EX)&InstanceEntry->FilterTemplate->pFilterDescriptor->PinDescriptors[ulPinType];
 
+    /* allocate pin descriptor */
+    NewPinDescriptor = AllocateItem(NonPagedPool, sizeof(KSPIN_DESCRIPTOR_EX));
+    if (!NewPinDescriptor)
+    {
+        /* no memory */
+        DPRINT("BdaCreatePin OutOfMemory\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
    /* make a copy of the pin descriptor */
-   RtlMoveMemory(&NewPinDescriptor, PinDescriptor, sizeof(KSPIN_DESCRIPTOR_EX));
+   RtlMoveMemory(NewPinDescriptor, PinDescriptor, sizeof(KSPIN_DESCRIPTOR_EX));
 
     /* merge the automation tables */
-    Status = KsMergeAutomationTables((PKSAUTOMATION_TABLE*)&NewPinDescriptor.AutomationTable, (PKSAUTOMATION_TABLE)PinDescriptor->AutomationTable, &PinAutomationTable, pKSFilter->Bag);
+    Status = KsMergeAutomationTables((PKSAUTOMATION_TABLE*)&NewPinDescriptor->AutomationTable, (PKSAUTOMATION_TABLE)PinDescriptor->AutomationTable, &PinAutomationTable, pKSFilter->Bag);
 
     /* check for success */
     if (NT_SUCCESS(Status))
     {
         /* create the pin factory */
-        Status = KsFilterCreatePinFactory(pKSFilter, &NewPinDescriptor, &PinId);
+        Status = KsFilterCreatePinFactory(pKSFilter, NewPinDescriptor, &PinId);
 
         /* check for success */
         if (NT_SUCCESS(Status))
@@ -417,7 +451,7 @@ BdaCreatePin(
     }
 
 
-    DPRINT("BdaCreatePin Result %x\n", Status);
+    DPRINT("BdaCreatePin Result %x PinId %u\n", Status, PinId);
     return Status;
 }
 
@@ -470,7 +504,7 @@ BdaInitFilter(
     ULONG Index, PinId;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    DPRINT("BdaInitFilter\n");
+    DPRINT("BdaInitFilter %p\n", pBdaFilterTemplate);
 
     /* check input parameters */
     if (!pKSFilter)
@@ -487,7 +521,12 @@ BdaInitFilter(
 
     /* sanity check */
     ASSERT(InstanceEntry);
-    ASSERT(InstanceEntry->FilterTemplate == pBdaFilterTemplate);
+
+    if (!pBdaFilterTemplate)
+    {
+        /* use template from BdaCreateFilterFactoryEx */
+        pBdaFilterTemplate = InstanceEntry->FilterTemplate;
+    }
 
     /* now create the pins */
     for(Index = 0; Index < pBdaFilterTemplate->pFilterDescriptor->PinDescriptorsCount; Index++)

@@ -314,6 +314,31 @@ SepSidInToken(PACCESS_TOKEN _Token,
     return FALSE;
 }
 
+static BOOLEAN
+SepTokenIsOwner(PACCESS_TOKEN Token,
+                PSECURITY_DESCRIPTOR SecurityDescriptor)
+{
+    NTSTATUS Status;
+    PSID Sid = NULL;
+    BOOLEAN Defaulted;
+
+    Status = RtlGetOwnerSecurityDescriptor(SecurityDescriptor,
+                                           &Sid,
+                                           &Defaulted);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlGetOwnerSecurityDescriptor() failed (Status %lx)\n", Status);
+        return FALSE;
+    }
+
+    if (Sid == NULL)
+    {
+        DPRINT1("Owner Sid is NULL\n");
+        return FALSE;
+    }
+
+    return SepSidInToken(Token, Sid);
+}
 
 VOID NTAPI
 SeQuerySecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
@@ -364,7 +389,10 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                OUT PNTSTATUS AccessStatus)
 {
     LUID_AND_ATTRIBUTES Privilege;
-    ACCESS_MASK CurrentAccess, AccessMask;
+    ACCESS_MASK RemainingAccess;
+    ACCESS_MASK TempAccess;
+    ACCESS_MASK TempGrantedAccess = 0;
+    ACCESS_MASK TempDeniedAccess = 0;
     PACCESS_TOKEN Token;
     ULONG i;
     PACL Dacl;
@@ -398,14 +426,41 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     if (PreviouslyGrantedAccess)
         RtlMapGenericMask(&PreviouslyGrantedAccess, GenericMapping);
 
-
-
-    CurrentAccess = PreviouslyGrantedAccess;
-
-
+    /* Initialize remaining access rights */
+    RemainingAccess = DesiredAccess;
 
     Token = SubjectSecurityContext->ClientToken ?
     SubjectSecurityContext->ClientToken : SubjectSecurityContext->PrimaryToken;
+
+    /* Check for system security access */
+    if (RemainingAccess & ACCESS_SYSTEM_SECURITY)
+    {
+        Privilege.Luid = SeSecurityPrivilege;
+        Privilege.Attributes = SE_PRIVILEGE_ENABLED;
+
+        /* Fail if we do not the SeSecurityPrivilege */
+        if (!SepPrivilegeCheck(Token,
+                               &Privilege,
+                               1,
+                               PRIVILEGE_SET_ALL_NECESSARY,
+                               AccessMode))
+        {
+            *AccessStatus = STATUS_PRIVILEGE_NOT_HELD;
+            return FALSE;
+        }
+
+        /* Adjust access rights */
+        RemainingAccess &= ~ACCESS_SYSTEM_SECURITY;
+        PreviouslyGrantedAccess |= ACCESS_SYSTEM_SECURITY;
+
+        /* Succeed if there are no more rights to grant */
+        if (RemainingAccess == 0)
+        {
+            *GrantedAccess = PreviouslyGrantedAccess;
+            *AccessStatus = STATUS_SUCCESS;
+            return TRUE;
+        }
+    }
 
     /* Get the DACL */
     Status = RtlGetDaclSecurityDescriptor(SecurityDescriptor,
@@ -435,56 +490,46 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         return TRUE;
     }
 
-    CurrentAccess = PreviouslyGrantedAccess;
-
     /* RULE 2: Check token for 'take ownership' privilege */
-    Privilege.Luid = SeTakeOwnershipPrivilege;
-    Privilege.Attributes = SE_PRIVILEGE_ENABLED;
-
-    if (SepPrivilegeCheck(Token,
-                          &Privilege,
-                          1,
-                          PRIVILEGE_SET_ALL_NECESSARY,
-                          AccessMode))
+    if (DesiredAccess & WRITE_OWNER)
     {
-        CurrentAccess |= WRITE_OWNER;
-        if ((DesiredAccess & ~VALID_INHERIT_FLAGS) == 
-            (CurrentAccess & ~VALID_INHERIT_FLAGS))
+        Privilege.Luid = SeTakeOwnershipPrivilege;
+        Privilege.Attributes = SE_PRIVILEGE_ENABLED;
+
+        if (SepPrivilegeCheck(Token,
+                              &Privilege,
+                              1,
+                              PRIVILEGE_SET_ALL_NECESSARY,
+                              AccessMode))
         {
-            *GrantedAccess = CurrentAccess;
-            *AccessStatus = STATUS_SUCCESS;
-            return TRUE;
+            /* Adjust access rights */
+            RemainingAccess &= ~WRITE_OWNER;
+            PreviouslyGrantedAccess |= WRITE_OWNER;
+
+            /* Succeed if there are no more rights to grant */
+            if (RemainingAccess == 0)
+            {
+                *GrantedAccess = PreviouslyGrantedAccess;
+                *AccessStatus = STATUS_SUCCESS;
+                return TRUE;
+            }
         }
     }
 
     /* Deny access if the DACL is empty */
     if (Dacl->AceCount == 0)
     {
-        *GrantedAccess = 0;
-        *AccessStatus = STATUS_ACCESS_DENIED;
-        return FALSE;
-    }
-
-    /* RULE 3: Check whether the token is the owner */
-    Status = RtlGetOwnerSecurityDescriptor(SecurityDescriptor,
-                                           &Sid,
-                                           &Defaulted);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("RtlGetOwnerSecurityDescriptor() failed (Status %lx)\n", Status);
-        *AccessStatus = Status;
-        return FALSE;
-    }
-
-    if (Sid && SepSidInToken(Token, Sid))
-    {
-        CurrentAccess |= (READ_CONTROL | WRITE_DAC);
-        if ((DesiredAccess & ~VALID_INHERIT_FLAGS) == 
-            (CurrentAccess & ~VALID_INHERIT_FLAGS))
+        if (RemainingAccess == MAXIMUM_ALLOWED && PreviouslyGrantedAccess != 0)
         {
-            *GrantedAccess = CurrentAccess;
+            *GrantedAccess = PreviouslyGrantedAccess;
             *AccessStatus = STATUS_SUCCESS;
             return TRUE;
+        }
+        else
+        {
+            *GrantedAccess = 0;
+            *AccessStatus = STATUS_ACCESS_DENIED;
+            return FALSE;
         }
     }
 
@@ -496,63 +541,139 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         return FALSE;
     }
 
+    /* Determine the MAXIMUM_ALLOWED access rights according to the DACL */
+    if (DesiredAccess & MAXIMUM_ALLOWED)
+    {
+        CurrentAce = (PACE)(Dacl + 1);
+        for (i = 0; i < Dacl->AceCount; i++)
+        {
+            if (!(CurrentAce->Header.AceFlags & INHERIT_ONLY_ACE))
+            {
+                Sid = (PSID)(CurrentAce + 1);
+                if (CurrentAce->Header.AceType == ACCESS_DENIED_ACE_TYPE)
+                {
+                    if (SepSidInToken(Token, Sid))
+                    {
+                        /* Map access rights from the ACE */
+                        TempAccess = CurrentAce->AccessMask;
+                        RtlMapGenericMask(&TempAccess, GenericMapping);
+
+                        /* Deny access rights that have not been granted yet */
+                        TempDeniedAccess |= (TempAccess & ~TempGrantedAccess);
+                    }
+                }
+                else if (CurrentAce->Header.AceType == ACCESS_ALLOWED_ACE_TYPE)
+                {
+                    if (SepSidInToken(Token, Sid))
+                    {
+                        /* Map access rights from the ACE */
+                        TempAccess = CurrentAce->AccessMask;
+                        RtlMapGenericMask(&TempAccess, GenericMapping);
+
+                        /* Grant access rights that have not been denied yet */
+                        TempGrantedAccess |= (TempAccess & ~TempDeniedAccess);
+                    }
+                }
+                else
+                {
+                    DPRINT1("Unsupported ACE type 0x%lx\n", CurrentAce->Header.AceType);
+                }
+            }
+
+            /* Get the next ACE */
+            CurrentAce = (PACE)((ULONG_PTR)CurrentAce + CurrentAce->Header.AceSize);
+        }
+
+        /* Fail if some rights have not been granted */
+        RemainingAccess &= ~(MAXIMUM_ALLOWED | TempGrantedAccess);
+        if (RemainingAccess != 0)
+        {
+            *GrantedAccess = 0;
+            *AccessStatus = STATUS_ACCESS_DENIED;
+            return FALSE;
+        }
+
+        /* Set granted access right and access status */
+        *GrantedAccess = TempGrantedAccess | PreviouslyGrantedAccess;
+        if (*GrantedAccess != 0)
+        {
+            *AccessStatus = STATUS_SUCCESS;
+            return TRUE;
+        }
+        else
+        {
+            *AccessStatus = STATUS_ACCESS_DENIED;
+            return FALSE;
+        }
+    }
+
     /* RULE 4: Grant rights according to the DACL */
     CurrentAce = (PACE)(Dacl + 1);
     for (i = 0; i < Dacl->AceCount; i++)
     {
-        Sid = (PSID)(CurrentAce + 1);
-        if (CurrentAce->Header.AceType == ACCESS_DENIED_ACE_TYPE)
+        if (!(CurrentAce->Header.AceFlags & INHERIT_ONLY_ACE))
         {
-            if (SepSidInToken(Token, Sid))
+            Sid = (PSID)(CurrentAce + 1);
+            if (CurrentAce->Header.AceType == ACCESS_DENIED_ACE_TYPE)
             {
-                *GrantedAccess = 0;
-                *AccessStatus = STATUS_ACCESS_DENIED;
-                return FALSE;
+                if (SepSidInToken(Token, Sid))
+                {
+                    /* Map access rights from the ACE */
+                    TempAccess = CurrentAce->AccessMask;
+                    RtlMapGenericMask(&TempAccess, GenericMapping);
+
+                    /* Leave if a remaining right must be denied */
+                    if (RemainingAccess & TempAccess)
+                        break;
+                }
+            }
+            else if (CurrentAce->Header.AceType == ACCESS_ALLOWED_ACE_TYPE)
+            {
+                if (SepSidInToken(Token, Sid))
+                {
+                    /* Map access rights from the ACE */
+                    TempAccess = CurrentAce->AccessMask;
+                    RtlMapGenericMask(&TempAccess, GenericMapping);
+
+                    /* Remove granted rights */
+                    RemainingAccess &= ~TempAccess;
+                }
+            }
+            else
+            {
+                DPRINT1("Unsupported ACE type 0x%lx\n", CurrentAce->Header.AceType);
             }
         }
 
-        else if (CurrentAce->Header.AceType == ACCESS_ALLOWED_ACE_TYPE)
-        {
-            if (SepSidInToken(Token, Sid))
-            {
-                AccessMask = CurrentAce->AccessMask;
-                RtlMapGenericMask(&AccessMask, GenericMapping);
-                CurrentAccess |= AccessMask;
-            }
-        }
-        else
-        {
-            DPRINT1("Unknown Ace type 0x%lx\n", CurrentAce->Header.AceType);
-        }
+        /* Get the next ACE */
         CurrentAce = (PACE)((ULONG_PTR)CurrentAce + CurrentAce->Header.AceSize);
     }
 
-    DPRINT("CurrentAccess %08lx\n DesiredAccess %08lx\n",
-           CurrentAccess, DesiredAccess);
+    DPRINT("DesiredAccess %08lx\nPreviouslyGrantedAccess %08lx\nRemainingAccess %08lx\n",
+           DesiredAccess, PreviouslyGrantedAccess, RemainingAccess);
 
-    *GrantedAccess = CurrentAccess & DesiredAccess;
+    /* Fail if some rights have not been granted */
+    if (RemainingAccess != 0)
+    {
+        *GrantedAccess = 0;
+        *AccessStatus = STATUS_ACCESS_DENIED;
+        return FALSE;
+    }
 
-    if (DesiredAccess & MAXIMUM_ALLOWED)
+    /* Set granted access rights */
+    *GrantedAccess = DesiredAccess | PreviouslyGrantedAccess;
+
+    DPRINT("GrantedAccess %08lx\n", *GrantedAccess);
+
+    /* Fail if no rights have been granted */
+    if (*GrantedAccess == 0)
     {
-        *GrantedAccess = CurrentAccess;
-        *AccessStatus = STATUS_SUCCESS;
-        return TRUE;
+        *AccessStatus = STATUS_ACCESS_DENIED;
+        return FALSE;
     }
-    else if ((*GrantedAccess & ~VALID_INHERIT_FLAGS) == 
-             (DesiredAccess & ~VALID_INHERIT_FLAGS))
-    {
-        *AccessStatus = STATUS_SUCCESS;
-        return TRUE;
-    }
-    else
-    {
-        DPRINT1("HACK: Should deny access for caller: granted 0x%lx, desired 0x%lx (generic mapping %p).\n",
-                *GrantedAccess, DesiredAccess, GenericMapping);
-        //*AccessStatus = STATUS_ACCESS_DENIED;
-        //return FALSE;
-        *AccessStatus = STATUS_SUCCESS;
-        return TRUE;
-    }
+
+    *AccessStatus = STATUS_SUCCESS;
+    return TRUE;
 }
 
 static PSID
@@ -649,16 +770,43 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     if (!SubjectContextLocked)
         SeLockSubjectContext(SubjectSecurityContext);
 
-    /* Call the internal function */
-    ret = SepAccessCheck(SecurityDescriptor,
-                         SubjectSecurityContext,
-                         DesiredAccess,
-                         PreviouslyGrantedAccess,
-                         Privileges,
-                         GenericMapping,
-                         AccessMode,
-                         GrantedAccess,
-                         AccessStatus);
+    /* Check if the token is the owner and grant WRITE_DAC and READ_CONTROL rights */
+    if (DesiredAccess & (WRITE_DAC | READ_CONTROL | MAXIMUM_ALLOWED))
+    {
+         PACCESS_TOKEN Token = SubjectSecurityContext->ClientToken ?
+             SubjectSecurityContext->ClientToken : SubjectSecurityContext->PrimaryToken;
+
+        if (SepTokenIsOwner(Token,
+                            SecurityDescriptor))
+        {
+            if (DesiredAccess & MAXIMUM_ALLOWED)
+                PreviouslyGrantedAccess |= (WRITE_DAC | READ_CONTROL);
+            else
+                PreviouslyGrantedAccess |= (DesiredAccess & (WRITE_DAC | READ_CONTROL));
+
+            DesiredAccess &= ~(WRITE_DAC | READ_CONTROL);
+        }
+    }
+
+    if (DesiredAccess == 0)
+    {
+        *GrantedAccess = PreviouslyGrantedAccess;
+        *AccessStatus = STATUS_SUCCESS;
+        ret = TRUE;
+    }
+    else
+    {
+        /* Call the internal function */
+        ret = SepAccessCheck(SecurityDescriptor,
+                             SubjectSecurityContext,
+                             DesiredAccess,
+                             PreviouslyGrantedAccess,
+                             Privileges,
+                             GenericMapping,
+                             AccessMode,
+                             GrantedAccess,
+                             AccessStatus);
+    }
 
     /* Release the lock if needed */
     if (!SubjectContextLocked)
@@ -686,6 +834,7 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     PSECURITY_DESCRIPTOR CapturedSecurityDescriptor = NULL;
     SECURITY_SUBJECT_CONTEXT SubjectSecurityContext;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    ACCESS_MASK PreviouslyGrantedAccess = 0;
     PTOKEN Token;
     NTSTATUS Status;
     PAGED_CODE();
@@ -801,16 +950,38 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     SubjectSecurityContext.ProcessAuditId = NULL;
     SeLockSubjectContext(&SubjectSecurityContext);
 
-    /* Now perform the access check */
-    SepAccessCheck(SecurityDescriptor, // FIXME: use CapturedSecurityDescriptor
-                   &SubjectSecurityContext,
-                   DesiredAccess,
-                   0,
-                   &PrivilegeSet, //FIXME
-                   GenericMapping,
-                   PreviousMode,
-                   GrantedAccess,
-                   AccessStatus);
+    /* Check if the token is the owner and grant WRITE_DAC and READ_CONTROL rights */
+    if (DesiredAccess & (WRITE_DAC | READ_CONTROL | MAXIMUM_ALLOWED))
+    {
+        if (SepTokenIsOwner(Token, SecurityDescriptor)) // FIXME: use CapturedSecurityDescriptor
+        {
+            if (DesiredAccess & MAXIMUM_ALLOWED)
+                PreviouslyGrantedAccess |= (WRITE_DAC | READ_CONTROL);
+            else
+                PreviouslyGrantedAccess |= (DesiredAccess & (WRITE_DAC | READ_CONTROL));
+
+            DesiredAccess &= ~(WRITE_DAC | READ_CONTROL);
+        }
+    }
+
+    if (DesiredAccess == 0)
+    {
+        *GrantedAccess = PreviouslyGrantedAccess;
+        *AccessStatus = STATUS_SUCCESS;
+    }
+    else
+    {
+        /* Now perform the access check */
+        SepAccessCheck(SecurityDescriptor, // FIXME: use CapturedSecurityDescriptor
+                       &SubjectSecurityContext,
+                       DesiredAccess,
+                       PreviouslyGrantedAccess,
+                       &PrivilegeSet, //FIXME
+                       GenericMapping,
+                       PreviousMode,
+                       GrantedAccess,
+                       AccessStatus);
+    }
 
     /* Unlock subject context */
     SeUnlockSubjectContext(&SubjectSecurityContext);

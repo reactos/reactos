@@ -98,10 +98,10 @@ IKsClock_DispatchDeviceIoControl(
 {
     UNIMPLEMENTED
 
-    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+    Irp->IoStatus.Status = STATUS_SUCCESS;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS

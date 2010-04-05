@@ -89,6 +89,8 @@ KsAddItemToObjectBag(
     PKSIOBJECT_BAG Bag;
     PKSIOBJECT_BAG_ENTRY BagEntry;
 
+    DPRINT("KsAddItemToObjectBag\n");
+
     /* get real object bag */
     Bag = (PKSIOBJECT_BAG)ObjectBag;
 
@@ -362,6 +364,8 @@ _KsEdit(
     PKSIOBJECT_BAG_ENTRY BagEntry;
     PVOID Item;
     NTSTATUS Status;
+
+    DPRINT("_KsEdit\n");
 
     /* get real object bag */
     Bag = (PKSIOBJECT_BAG)ObjectBag;

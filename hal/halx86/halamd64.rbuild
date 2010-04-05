@@ -10,6 +10,7 @@
 	<define name="_DISABLE_TIDENTS" />
 	<define name="_NTHAL_" />
 	<define name="_X86BIOS_" />
+	<library>hal_generic</library>
 	<library>hal_generic_acpi</library>
 	<library>hal_generic_up</library>
 	<library>ntoskrnl</library>

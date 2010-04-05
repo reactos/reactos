@@ -75,6 +75,25 @@ OR with QUEUE_TRANSFER_DESCRIPTOR Token.SplitTransactionState */
 #define PING_STATE_DO_OUT		0x00
 #define PING_STATE_DO_PING		0x01
 
+#define C_HUB_LOCAL_POWER   0
+#define C_HUB_OVER_CURRENT  1
+#define PORT_CONNECTION     0
+#define PORT_ENABLE         1
+#define PORT_SUSPEND        2
+#define PORT_OVER_CURRENT   3
+#define PORT_RESET          4
+#define PORT_POWER          8
+#define PORT_LOW_SPEED      9
+#define PORT_HIGH_SPEED     9
+#define C_PORT_CONNECTION   16
+#define C_PORT_ENABLE       17
+#define C_PORT_SUSPEND      18
+#define C_PORT_OVER_CURRENT 19
+#define C_PORT_RESET        20
+#define PORT_TEST           21
+#define PORT_INDICATOR      22
+#define USB_PORT_STATUS_CHANGE 0x4000
+
 /* QUEUE ELEMENT TRANSFER DESCRIPTOR TOKEN */
 typedef struct _QETD_TOKEN_BITS
 {
@@ -273,16 +292,16 @@ typedef struct _EHCI_HCC_CONTENT
 } EHCI_HCC_CONTENT, *PEHCI_HCC_CONTENT;
 
 typedef struct _EHCI_CAPS {
-    UCHAR        Length;
-    UCHAR        Reserved;
-    USHORT        HCIVersion;
+    UCHAR Length;
+    UCHAR Reserved;
+    USHORT HCIVersion;
     union
     {
-        EHCI_HCS_CONTENT        HCSParams;
-        ULONG    HCSParamsLong;
+        EHCI_HCS_CONTENT HCSParams;
+        ULONG HCSParamsLong;
     };
-    ULONG        HCCParams;
-    UCHAR        PortRoute [8];
+    ULONG HCCParams;
+    UCHAR PortRoute [8];
 } EHCI_CAPS, *PEHCI_CAPS;
 
 typedef struct _COMMON_DEVICE_EXTENSION
@@ -291,6 +310,14 @@ typedef struct _COMMON_DEVICE_EXTENSION
     PDRIVER_OBJECT DriverObject;
     PDEVICE_OBJECT DeviceObject;
 } COMMON_DEVICE_EXTENSION, *PCOMMON_DEVICE_EXTENSION;
+
+typedef struct _EHCIPORTS
+{
+    ULONG PortNumber;
+    ULONG PortType;
+    USHORT PortStatus;
+    USHORT PortChange;
+} EHCIPORTS, *PEHCIPORTS;
 
 typedef struct _FDO_DEVICE_EXTENSION
 {
@@ -333,8 +360,8 @@ typedef struct _FDO_DEVICE_EXTENSION
 
     PULONG PeriodicFramList;
     PULONG AsyncListQueueHeadPtr;
-    PHYSICAL_ADDRESS    PeriodicFramListPhysAddr;
-    PHYSICAL_ADDRESS    AsyncListQueueHeadPtrPhysAddr;
+    PHYSICAL_ADDRESS PeriodicFramListPhysAddr;
+    PHYSICAL_ADDRESS AsyncListQueueHeadPtrPhysAddr;
 
     BOOLEAN AsyncComplete;
 
@@ -356,6 +383,8 @@ typedef struct _PDO_DEVICE_EXTENSION
     BOOLEAN HaltUrbHandling;
     PVOID CallbackContext;
     PRH_INIT_CALLBACK CallbackRoutine;
+    ULONG NumberOfPorts;
+    EHCIPORTS Ports[32];
 } PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
 
 typedef struct _WORKITEM_DATA

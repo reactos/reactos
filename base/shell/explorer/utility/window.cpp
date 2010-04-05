@@ -268,7 +268,7 @@ LRESULT CALLBACK Window::WindowWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPAR
 		  case WM_CREATE:
 			return pThis->Init((LPCREATESTRUCT)lparam);
 
-		  case WM_NCDESTROY:
+          case WM_NCDESTROY:
 			delete pThis;
 			return 0;
 

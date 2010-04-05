@@ -33,7 +33,6 @@ typedef struct _PNPROOT_DEVICE
     UNICODE_STRING DeviceDescription;
     // Resource requirement list
     PIO_RESOURCE_REQUIREMENTS_LIST ResourceRequirementsList;
-    ULONG ResourceRequirementsListSize;
     // Associated resource list
     PCM_RESOURCE_LIST ResourceList;
     ULONG ResourceListSize;
@@ -131,30 +130,25 @@ LocateChildDevice(
 NTSTATUS
 PnpRootCreateDevice(
     IN PUNICODE_STRING ServiceName,
-    IN PDEVICE_OBJECT *PhysicalDeviceObject)
+    OUT PDEVICE_OBJECT *PhysicalDeviceObject,
+    OUT OPTIONAL PUNICODE_STRING FullInstancePath)
 {
     PPNPROOT_FDO_DEVICE_EXTENSION DeviceExtension;
-    UNICODE_STRING UnknownServiceName = RTL_CONSTANT_STRING(L"UNKNOWN");
-    PUNICODE_STRING LocalServiceName;
     PPNPROOT_PDO_DEVICE_EXTENSION PdoDeviceExtension;
     WCHAR DevicePath[MAX_PATH + 1];
     WCHAR InstancePath[5];
     PPNPROOT_DEVICE Device = NULL;
     NTSTATUS Status;
     ULONG i;
+    UNICODE_STRING PathSep = RTL_CONSTANT_STRING(L"\\");
 
     DeviceExtension = PnpRootDeviceObject->DeviceExtension;
     KeAcquireGuardedMutex(&DeviceExtension->DeviceListLock);
 
-    if (ServiceName)
-        LocalServiceName = ServiceName;
-    else
-        LocalServiceName = &UnknownServiceName;
-
-    DPRINT("Creating a PnP root device for service '%wZ'\n", LocalServiceName);
+    DPRINT("Creating a PnP root device for service '%wZ'\n", ServiceName);
 
     /* Search for a free instance ID */
-    _snwprintf(DevicePath, sizeof(DevicePath) / sizeof(WCHAR), L"%s\\LEGACY_%wZ", REGSTR_KEY_ROOTENUM, LocalServiceName);
+    _snwprintf(DevicePath, sizeof(DevicePath) / sizeof(WCHAR), L"%s\\%wZ", REGSTR_KEY_ROOTENUM, ServiceName);
     for (i = 0; i < 9999; i++)
     {
         _snwprintf(InstancePath, sizeof(InstancePath) / sizeof(WCHAR), L"%04lu", i);
@@ -164,7 +158,7 @@ PnpRootCreateDevice(
     }
     if (i == 9999)
     {
-        DPRINT1("Too much legacy devices reported for service '%wZ'\n", &LocalServiceName);
+        DPRINT1("Too much legacy devices reported for service '%wZ'\n", ServiceName);
         Status = STATUS_INSUFFICIENT_RESOURCES;
         goto cleanup;
     }
@@ -187,6 +181,22 @@ PnpRootCreateDevice(
     {
         Status = STATUS_NO_MEMORY;
         goto cleanup;
+    }
+
+    if (FullInstancePath)
+    {
+        FullInstancePath->MaximumLength = Device->DeviceID.Length + PathSep.Length + Device->InstanceID.Length;
+        FullInstancePath->Length = 0;
+        FullInstancePath->Buffer = ExAllocatePool(PagedPool, FullInstancePath->MaximumLength);
+        if (!FullInstancePath->Buffer)
+        {
+            Status = STATUS_NO_MEMORY;
+            goto cleanup;
+        }
+
+        RtlAppendUnicodeStringToString(FullInstancePath, &Device->DeviceID);
+        RtlAppendUnicodeStringToString(FullInstancePath, &PathSep);
+        RtlAppendUnicodeStringToString(FullInstancePath, &Device->InstanceID);
     }
 
     /* Initialize a device object */
@@ -666,24 +676,27 @@ PnpRootFdoPnpControl(
                 if (NT_SUCCESS(Status))
                     DeviceExtension->State = dsStarted;
             }
-            break;
+
+            Irp->IoStatus.Status = Status;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return Status;
 
          case IRP_MN_STOP_DEVICE:
              DPRINT("IRP_MJ_PNP / IRP_MN_STOP_DEVICE\n");
              /* Root device cannot be stopped */
-             Status = STATUS_NOT_SUPPORTED;
-             break;
+             Irp->IoStatus.Status = Status = STATUS_INVALID_DEVICE_REQUEST;
+             IoCompleteRequest(Irp, IO_NO_INCREMENT);
+             return Status;
 
         default:
             DPRINT("IRP_MJ_PNP / Unknown minor function 0x%lx\n", IrpSp->MinorFunction);
-            Status = STATUS_NOT_IMPLEMENTED;
             break;
     }
 
     if (Status != STATUS_PENDING)
     {
-        Irp->IoStatus.Status = Status;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+       Irp->IoStatus.Status = Status;
+       IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
 
     return Status;
@@ -696,48 +709,25 @@ PdoQueryDeviceRelations(
     IN PIO_STACK_LOCATION IrpSp)
 {
     PDEVICE_RELATIONS Relations;
-    DEVICE_RELATION_TYPE RelationType;
     NTSTATUS Status = Irp->IoStatus.Status;
 
-    RelationType = IrpSp->Parameters.QueryDeviceRelations.Type;
+    if (IrpSp->Parameters.QueryDeviceRelations.Type != TargetDeviceRelation)
+        return Status;
 
-    switch (RelationType)
+    DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / TargetDeviceRelation\n");
+    Relations = (PDEVICE_RELATIONS)ExAllocatePool(PagedPool, sizeof(DEVICE_RELATIONS));
+    if (!Relations)
     {
-        /* FIXME: remove */
-        case BusRelations:
-        {
-            if (IoGetAttachedDevice(DeviceObject) != DeviceObject)
-            {
-                /* We're not alone in the stack */
-                DPRINT1("PnP is misbehaving ; don't know how to handle IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations\n");
-            }
-            break;
-        }
-
-        case TargetDeviceRelation:
-        {
-            DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / TargetDeviceRelation\n");
-            Relations = (PDEVICE_RELATIONS)ExAllocatePool(PagedPool, sizeof(DEVICE_RELATIONS));
-            if (!Relations)
-            {
-                DPRINT("ExAllocatePoolWithTag() failed\n");
-                Status = STATUS_NO_MEMORY;
-            }
-            else
-            {
-                ObReferenceObject(DeviceObject);
-                Relations->Count = 1;
-                Relations->Objects[0] = DeviceObject;
-                Status = STATUS_SUCCESS;
-                Irp->IoStatus.Information = (ULONG_PTR)Relations;
-            }
-            break;
-        }
-
-        default:
-        {
-            DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / unknown relation type 0x%lx\n", RelationType);
-        }
+        DPRINT("ExAllocatePoolWithTag() failed\n");
+        Status = STATUS_NO_MEMORY;
+    }
+    else
+    {
+        ObReferenceObject(DeviceObject);
+        Relations->Count = 1;
+        Relations->Objects[0] = DeviceObject;
+        Status = STATUS_SUCCESS;
+        Irp->IoStatus.Information = (ULONG_PTR)Relations;
     }
 
     return Status;
@@ -775,35 +765,29 @@ PdoQueryResources(
 
     DeviceExtension = (PPNPROOT_PDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
-    if (DeviceExtension->DeviceInfo->ResourceList == NULL)
-    {
-        /* Create an empty resource list */
-        ResourceList = ExAllocatePool(PagedPool, sizeof(CM_RESOURCE_LIST));
-        if (!ResourceList)
-            return STATUS_NO_MEMORY;
-
-        ResourceList->Count = 0;
-
-        Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
-    }
-    else
+    if (DeviceExtension->DeviceInfo->ResourceList)
     {
         /* Copy existing resource requirement list */
         ResourceList = ExAllocatePool(
             PagedPool,
-            FIELD_OFFSET(CM_RESOURCE_LIST, List) + DeviceExtension->DeviceInfo->ResourceListSize);
+            DeviceExtension->DeviceInfo->ResourceListSize);
         if (!ResourceList)
             return STATUS_NO_MEMORY;
 
-        ResourceList->Count = 1;
         RtlCopyMemory(
-            &ResourceList->List,
+            ResourceList,
             DeviceExtension->DeviceInfo->ResourceList,
             DeviceExtension->DeviceInfo->ResourceListSize);
-            Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
-    }
 
-    return STATUS_SUCCESS;
+        Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
+
+        return STATUS_SUCCESS;
+    }
+    else
+    {
+        /* No resources so just return without changing the status */
+        return Irp->IoStatus.Status;
+    }
 }
 
 static NTSTATUS
@@ -814,23 +798,10 @@ PdoQueryResourceRequirements(
 {
     PPNPROOT_PDO_DEVICE_EXTENSION DeviceExtension;
     PIO_RESOURCE_REQUIREMENTS_LIST ResourceList;
-    ULONG ResourceListSize = FIELD_OFFSET(IO_RESOURCE_REQUIREMENTS_LIST, List);
 
     DeviceExtension = (PPNPROOT_PDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
-    if (DeviceExtension->DeviceInfo->ResourceRequirementsList == NULL)
-    {
-        /* Create an empty resource list */
-        ResourceList = ExAllocatePool(PagedPool, ResourceListSize);
-        if (!ResourceList)
-            return STATUS_NO_MEMORY;
-
-        RtlZeroMemory(ResourceList, ResourceListSize);
-        ResourceList->ListSize = ResourceListSize;
-
-        Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
-    }
-    else
+    if (DeviceExtension->DeviceInfo->ResourceRequirementsList)
     {
         /* Copy existing resource requirement list */
         ResourceList = ExAllocatePool(PagedPool, DeviceExtension->DeviceInfo->ResourceRequirementsList->ListSize);
@@ -841,10 +812,16 @@ PdoQueryResourceRequirements(
             ResourceList,
             DeviceExtension->DeviceInfo->ResourceRequirementsList,
             DeviceExtension->DeviceInfo->ResourceRequirementsList->ListSize);
-            Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
-    }
 
-    return STATUS_SUCCESS;
+        Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
+
+        return STATUS_SUCCESS;
+    }
+    else
+    {
+        /* No resource requirements so just return without changing the status */
+        return Irp->IoStatus.Status;
+    }
 }
 
 static NTSTATUS

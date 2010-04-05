@@ -35,3 +35,24 @@ DEFINE_KSPROPERTY_TABLE(PinSet) {\
     DEFINE_KSPROPERTY_ITEM_PIN_CONSTRAINEDDATARANGES(PropGeneral),\
     DEFINE_KSPROPERTY_ITEM_PIN_PROPOSEDATAFORMAT(PropGeneral)\
 }
+
+#define DEFINE_KSPROPERTY_CONNECTIONSET(PinSet,\
+    PropStateHandler, PropDataFormatHandler, PropAllocatorFraming)\
+DEFINE_KSPROPERTY_TABLE(PinSet) {\
+    DEFINE_KSPROPERTY_ITEM_CONNECTION_STATE(PropStateHandler, PropStateHandler),\
+    DEFINE_KSPROPERTY_ITEM_CONNECTION_DATAFORMAT(PropDataFormatHandler, PropDataFormatHandler),\
+    DEFINE_KSPROPERTY_ITEM_CONNECTION_ALLOCATORFRAMING(PropAllocatorFraming)\
+}
+
+
+#define DEFINE_KSPROPERTY_STREAMSET(PinSet,\
+    PropStreamAllocator, PropMasterClock, PropPipeId)\
+DEFINE_KSPROPERTY_TABLE(PinSet) {\
+    DEFINE_KSPROPERTY_ITEM_STREAM_ALLOCATOR(PropStreamAllocator, PropStreamAllocator),\
+    DEFINE_KSPROPERTY_ITEM_STREAM_MASTERCLOCK(PropMasterClock, PropMasterClock),\
+    DEFINE_KSPROPERTY_ITEM_STREAM_PIPE_ID(PropPipeId, PropPipeId)\
+}
+
+
+
+

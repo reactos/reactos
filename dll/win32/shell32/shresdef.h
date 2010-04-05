@@ -90,6 +90,9 @@
 #define IDS_FONTS                   76
 #define IDS_PRINTERS                77
 
+#define IDS_LOGOFF_TITLE            78
+#define IDS_LOGOFF_PROMPT           79
+
 #define IDS_CREATEFOLDER_DENIED     128
 #define IDS_CREATEFOLDER_CAPTION    129
 #define IDS_DELETEITEM_CAPTION      130

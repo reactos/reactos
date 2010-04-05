@@ -122,7 +122,7 @@ DllGetClassObject(
 {
     UINT i;
     HRESULT hres = E_OUTOFMEMORY;
-    IClassFactory * pcf = NULL;	
+    IClassFactory * pcf = NULL;
 
     if (!ppv)
         return E_INVALIDARG;
@@ -138,7 +138,7 @@ DllGetClassObject(
         }
     }
 
-    if (!pcf) 
+    if (!pcf)
     {
         return CLASS_E_CLASSNOTAVAILABLE;
     }

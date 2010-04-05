@@ -71,6 +71,7 @@ typedef struct
     LONG ref;
     DWORD index;
     HKEY hkey;
+    BOOL bInterface;
 } EnumMonikerImpl;
 
 typedef struct
@@ -79,10 +80,11 @@ typedef struct
 
     LONG ref;
     HKEY hkey;
+    BOOL bInterface;
 } MediaCatMoniker;
 
 MediaCatMoniker * DEVENUM_IMediaCatMoniker_Construct(void);
-HRESULT DEVENUM_IEnumMoniker_Construct(HKEY hkey, IEnumMoniker ** ppEnumMoniker);
+HRESULT DEVENUM_IEnumMoniker_Construct(HKEY hkey, IEnumMoniker ** ppEnumMoniker, BOOL bInterface);
 HRESULT WINAPI DEVENUM_ICreateDevEnum_CreateClassEnumerator(
     ICreateDevEnum * iface,
     REFCLSID clsidDeviceClass,

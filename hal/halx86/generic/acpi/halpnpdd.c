@@ -47,56 +47,8 @@ typedef struct _PDO_EXTENSION
 /* GLOBALS ********************************************************************/
 
 PDRIVER_OBJECT HalpDriverObject;
-BOOLEAN HalDisableFirmwareMapper = TRUE;
-PWCHAR HalHardwareIdString = L"acpipic_up";
 
 /* PRIVATE FUNCTIONS **********************************************************/
-
-NTSTATUS
-NTAPI
-HalpMarkAcpiHal(VOID)
-{
-    NTSTATUS Status;
-    UNICODE_STRING KeyString;
-    HANDLE KeyHandle;
-    HANDLE Handle;
-    
-    /* Open the control set key */
-    RtlInitUnicodeString(&KeyString,
-                         L"\\REGISTRY\\MACHINE\\SYSTEM\\CURRENTCONTROLSET");
-    Status = HalpOpenRegistryKey(&Handle, 0, &KeyString, KEY_ALL_ACCESS, FALSE);
-    if (NT_SUCCESS(Status))
-    {
-        /* Open the PNP key */
-        RtlInitUnicodeString(&KeyString, L"Control\\Pnp");
-        Status = HalpOpenRegistryKey(&KeyHandle,
-                                     Handle,
-                                     &KeyString,
-                                     KEY_ALL_ACCESS,
-                                     TRUE);
-        /* Close root key */
-        ZwClose(Handle);
-        
-        /* Check if PNP BIOS key exists */
-        if (NT_SUCCESS(Status))
-        {
-            /* Set the disable value to false -- we need the mapper */
-            RtlInitUnicodeString(&KeyString, L"DisableFirmwareMapper");
-            Status = ZwSetValueKey(KeyHandle,
-                                   &KeyString,
-                                   0,
-                                   REG_DWORD,
-                                   &HalDisableFirmwareMapper,
-                                   sizeof(HalDisableFirmwareMapper));
-            
-            /* Close subkey */
-            ZwClose(KeyHandle);
-        }
-    }
-    
-    /* Return status */
-    return Status;
-}
 
 NTSTATUS
 NTAPI
@@ -379,9 +331,95 @@ NTAPI
 HalpQueryResources(IN PDEVICE_OBJECT DeviceObject,
                    OUT PCM_RESOURCE_LIST *Resources)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_NO_SUCH_DEVICE;
+    PPDO_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+    NTSTATUS Status;
+    PCM_RESOURCE_LIST ResourceList;
+    PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
+    PIO_RESOURCE_DESCRIPTOR Descriptor;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDesc;
+    ULONG i;
+    PAGED_CODE();
+    
+    /* Only the ACPI PDO has requirements */
+    if (DeviceExtension->PdoType == AcpiPdo)
+    {
+        /* Query ACPI requirements */
+        Status = HalpQueryAcpiResourceRequirements(&RequirementsList);
+        ASSERT(RequirementsList->AlternativeLists == 1);
+        if (!NT_SUCCESS(Status)) return Status;
+        
+        /* Allocate the resourcel ist */
+        ResourceList = ExAllocatePoolWithTag(PagedPool,
+                                             sizeof(CM_RESOURCE_LIST),
+                                             ' laH');
+        if (!ResourceList )
+        {
+            /* Fail, no memory */
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            ExFreePoolWithTag(RequirementsList, 0);
+            return Status;
+        }
+        
+        /* Initialize it */
+        RtlZeroMemory(ResourceList, sizeof(CM_RESOURCE_LIST));
+        ResourceList->Count = 1;
+
+        /* Setup the list fields */
+        ResourceList->List[0].BusNumber = -1;
+        ResourceList->List[0].InterfaceType = PNPBus;
+        ResourceList->List[0].PartialResourceList.Version = 1;
+        ResourceList->List[0].PartialResourceList.Revision = 1;
+        ResourceList->List[0].PartialResourceList.Count = 1;
+
+        /* Setup the first descriptor */
+        PartialDesc = ResourceList->List[0].PartialResourceList.PartialDescriptors;
+        PartialDesc->Type = CmResourceTypeInterrupt;
+
+        /* Find the requirement descriptor for the SCI */
+        for (i = 0; i < RequirementsList->List[0].Count; i++)
+        {
+            /* Get this descriptor */
+            Descriptor = &RequirementsList->List[0].Descriptors[i];
+            if (Descriptor->Type == CmResourceTypeInterrupt) break;
+            Descriptor = NULL;
+        }
+        
+        /* Make sure we found the descriptor */
+        if (Descriptor)
+        { 
+            /* Copy requirements descriptor into resource descriptor */
+            PartialDesc->ShareDisposition = Descriptor->ShareDisposition;
+            PartialDesc->Flags = Descriptor->Flags;
+            ASSERT(Descriptor->u.Interrupt.MinimumVector ==
+                   Descriptor->u.Interrupt.MaximumVector);
+            PartialDesc->u.Interrupt.Vector = Descriptor->u.Interrupt.MinimumVector;
+            PartialDesc->u.Interrupt.Level = Descriptor->u.Interrupt.MinimumVector;
+            PartialDesc->u.Interrupt.Affinity = 0xFFFFFFFF;
+            
+            /* Return resources and success */
+            *Resources = ResourceList;
+            ExFreePoolWithTag(RequirementsList, 0);
+            return STATUS_SUCCESS;
+        }
+        
+        /* Free memory and fail */
+        ExFreePoolWithTag(RequirementsList, 0);
+        ExFreePoolWithTag(ResourceList, 0);
+        Status = STATUS_NOT_FOUND;
+    }
+    else if (DeviceExtension->PdoType == WdPdo)
+    {
+        /* Watchdog doesn't */
+        return STATUS_NOT_SUPPORTED;    
+    }
+    else
+    {
+        /* This shouldn't happen */
+        return STATUS_UNSUCCESSFUL;
+    }
+    
+    /* Return the status */
+    return Status;
 }
 
 NTSTATUS
@@ -389,9 +427,29 @@ NTAPI
 HalpQueryResourceRequirements(IN PDEVICE_OBJECT DeviceObject,
                               OUT PIO_RESOURCE_REQUIREMENTS_LIST *Requirements)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_NO_SUCH_DEVICE;
+    PPDO_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+    NTSTATUS Status;
+    PAGED_CODE();
+    
+    /* Only the ACPI PDO has requirements */
+    if (DeviceExtension->PdoType == AcpiPdo)
+    {
+        /* Query ACPI requirements */
+        Status = HalpQueryAcpiResourceRequirements(Requirements);
+    }
+    else if (DeviceExtension->PdoType == WdPdo)
+    {
+        /* Watchdog doesn't */
+        return STATUS_NOT_SUPPORTED;    
+    }
+    else
+    {
+        /* This shouldn't happen */
+        return STATUS_UNSUCCESSFUL;
+    }
+    
+    /* Return the status */
+    return Status;
 }
 
 NTSTATUS

@@ -654,6 +654,8 @@ BEGIN
 	IDS_RESTART_PROMPT          "是否重新启动系统?"
 	IDS_SHUTDOWN_TITLE          "关机"
 	IDS_SHUTDOWN_PROMPT         "是否关闭系统?"
+	IDS_LOGOFF_TITLE            "Log Off"
+	IDS_LOGOFF_PROMPT           "Do you want to log off?"
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Start Menu\\Programs"

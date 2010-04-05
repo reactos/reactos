@@ -16,9 +16,88 @@
 
 BOOLEAN HalpNMIInProgress;
 
+UCHAR HalpSerialLen;
+CHAR HalpSerialNumber[31];
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 #ifndef _MINIHAL_
+VOID
+NTAPI
+HalpReportSerialNumber(VOID)
+{
+    NTSTATUS Status;
+    UNICODE_STRING KeyString;
+    HANDLE Handle;
+
+    /* Make sure there is a serial number */
+    if (!HalpSerialLen) return;
+
+    /* Open the system key */
+    RtlInitUnicodeString(&KeyString, L"\\Registry\\Machine\\Hardware\\Description\\System");
+    Status = HalpOpenRegistryKey(&Handle, 0, &KeyString, KEY_ALL_ACCESS, FALSE);
+    if (NT_SUCCESS(Status))
+    {
+        /* Add the serial number */
+        RtlInitUnicodeString(&KeyString, L"Serial Number");
+        ZwSetValueKey(Handle,
+                      &KeyString,
+                      0,
+                      REG_BINARY,
+                      HalpSerialNumber,
+                      HalpSerialLen);
+                      
+        /* Close the handle */
+        ZwClose(Handle);
+    }
+}
+
+NTSTATUS
+NTAPI
+HalpMarkAcpiHal(VOID)
+{
+    NTSTATUS Status;
+    UNICODE_STRING KeyString;
+    HANDLE KeyHandle;
+    HANDLE Handle;
+    
+    /* Open the control set key */
+    RtlInitUnicodeString(&KeyString,
+                         L"\\REGISTRY\\MACHINE\\SYSTEM\\CURRENTCONTROLSET");
+    Status = HalpOpenRegistryKey(&Handle, 0, &KeyString, KEY_ALL_ACCESS, FALSE);
+    if (NT_SUCCESS(Status))
+    {
+        /* Open the PNP key */
+        RtlInitUnicodeString(&KeyString, L"Control\\Pnp");
+        Status = HalpOpenRegistryKey(&KeyHandle,
+                                     Handle,
+                                     &KeyString,
+                                     KEY_ALL_ACCESS,
+                                     TRUE);
+        /* Close root key */
+        ZwClose(Handle);
+        
+        /* Check if PNP BIOS key exists */
+        if (NT_SUCCESS(Status))
+        {
+            /* Set the disable value to false -- we need the mapper */
+            RtlInitUnicodeString(&KeyString, L"DisableFirmwareMapper");
+            Status = ZwSetValueKey(KeyHandle,
+                                   &KeyString,
+                                   0,
+                                   REG_DWORD,
+                                   &HalDisableFirmwareMapper,
+                                   sizeof(HalDisableFirmwareMapper));
+            
+            /* Close subkey */
+            ZwClose(KeyHandle);
+        }
+    }
+    
+    /* Return status */
+    return Status;
+}
+
 NTSTATUS 
 NTAPI
 HalpOpenRegistryKey(IN PHANDLE KeyHandle,

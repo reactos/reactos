@@ -487,10 +487,12 @@ drivers\base\beep\beep.sys                          2
 drivers\base\null\null.sys                          2
 drivers\base\nmidebug\nmidebug.sys                  2
 
-drivers\battery\cmbatt\cmbatt.sys                   2
 drivers\battery\battc\battc.sys                     2
 
 drivers\bus\isapnp\isapnp.sys                       2
+
+drivers\bus\acpi\cmbatt\cmbatt.sys                  2
+drivers\bus\acpi\compbatt\compbatt.sys              2
 
 drivers\directx\dxapi\dxapi.sys                     2
 drivers\directx\dxg\dxg.sys                         2

@@ -666,6 +666,8 @@ BEGIN
 	IDS_RESTART_PROMPT          "Do you want to restart the system?"
 	IDS_SHUTDOWN_TITLE          "Shutdown"
 	IDS_SHUTDOWN_PROMPT         "Do you want to shutdown?"
+	IDS_LOGOFF_TITLE            "Log Off"
+	IDS_LOGOFF_PROMPT           "Do you want to log off?"
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Start Menu\\Programs"

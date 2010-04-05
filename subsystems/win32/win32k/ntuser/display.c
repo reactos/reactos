@@ -772,9 +772,6 @@ UserChangeDisplaySettings(
 
         pdesk = IntGetActiveDesktop();
         IntHideDesktop(pdesk);
-        co_IntShowDesktop(pdesk, ppdev->gdiinfo.ulHorzRes, ppdev->gdiinfo.ulVertRes);
-
-        UserRedrawDesktop();
 
         /* Send WM_DISPLAYCHANGE to all toplevel windows */
         co_IntSendMessageTimeout(HWND_BROADCAST,
@@ -784,6 +781,10 @@ UserChangeDisplaySettings(
                                  SMTO_NORMAL,
                                  100,
                                  &ulResult);
+
+        co_IntShowDesktop(pdesk, ppdev->gdiinfo.ulHorzRes, ppdev->gdiinfo.ulVertRes);
+
+        UserRedrawDesktop();
     }
 
 leave:

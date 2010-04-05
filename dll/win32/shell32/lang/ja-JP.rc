@@ -665,6 +665,8 @@ BEGIN
 	IDS_RESTART_PROMPT          "システムを再起動しますか?"
 	IDS_SHUTDOWN_TITLE          "シャットダウン"
 	IDS_SHUTDOWN_PROMPT         "シャットダウンしますか?"
+	IDS_LOGOFF_TITLE            "Log Off"
+	IDS_LOGOFF_PROMPT           "Do you want to log off?"
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "スタート メニュー\\プログラム"

@@ -1548,7 +1548,6 @@ COutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
         OutputDebugStringW(L"COutputPin::Connect no IMemInputPin interface\n");
 #endif
 
-        DebugBreak();
         return hr;
     }
 
@@ -1946,13 +1945,26 @@ COutputPin::CreatePin(
     // query for pin medium
     hr = KsQueryMediums(&MediumList);
     if (FAILED(hr))
+    {
+#ifdef KSPROXY_TRACE
+        WCHAR Buffer[100];
+        swprintf(Buffer, L"COutputPin::CreatePin KsQueryMediums failed %lx\n", hr);
+        OutputDebugStringW(Buffer);
+#endif
         return hr;
+    }
 
     // query for pin interface
     hr = KsQueryInterfaces(&InterfaceList);
     if (FAILED(hr))
     {
         // failed
+#ifdef KSPROXY_TRACE
+        WCHAR Buffer[100];
+        swprintf(Buffer, L"COutputPin::CreatePin KsQueryInterfaces failed %lx\n", hr);
+        OutputDebugStringW(Buffer);
+#endif
+
         CoTaskMemFree(MediumList);
         return hr;
     }
@@ -2003,6 +2015,12 @@ COutputPin::CreatePin(
                 CoTaskMemFree(MediumList);
                 CoTaskMemFree(InterfaceList);
 
+#ifdef KSPROXY_TRACE
+                WCHAR Buffer[100];
+                swprintf(Buffer, L"COutputPin::CreatePin failed to create interface handler %lx\n", hr);
+                OutputDebugStringW(Buffer);
+#endif
+
                 return hr;
             }
 
@@ -2010,7 +2028,12 @@ COutputPin::CreatePin(
             hr = InterfaceHandler->KsSetPin((IKsPin*)this);
             if (FAILED(hr))
             {
-                // failed to load interface handler plugin
+                // failed to initialize interface handler plugin
+#ifdef KSPROXY_TRACE
+                WCHAR Buffer[100];
+                swprintf(Buffer, L"COutputPin::CreatePin failed to initialize interface handler %lx\n", hr);
+                OutputDebugStringW(Buffer);
+#endif
                 InterfaceHandler->Release();
                 CoTaskMemFree(MediumList);
                 CoTaskMemFree(InterfaceList);
@@ -2027,7 +2050,6 @@ COutputPin::CreatePin(
         WCHAR Buffer[100];
         swprintf(Buffer, L"COutputPin::CreatePin unexpected communication %u %s\n", m_Communication, m_PinName);
         OutputDebugStringW(Buffer);
-        DebugBreak();
 #endif
 
         hr = E_FAIL;
@@ -2036,6 +2058,12 @@ COutputPin::CreatePin(
     // free medium / interface / dataformat
     CoTaskMemFree(MediumList);
     CoTaskMemFree(InterfaceList);
+
+#ifdef KSPROXY_TRACE
+    WCHAR Buffer[100];
+    swprintf(Buffer, L"COutputPin::CreatePin Result %lx\n", hr);
+    OutputDebugStringW(Buffer);
+#endif
 
     return hr;
 }
@@ -2057,6 +2085,8 @@ COutputPin::CreatePinHandle(
     //KSALLOCATOR_FRAMING Framing;
     //KSPROPERTY Property;
     //ULONG BytesReturned;
+
+    OutputDebugStringW(L"COutputPin::CreatePinHandle\n");
 
     if (m_hPin != INVALID_HANDLE_VALUE)
     {
@@ -2173,7 +2203,6 @@ COutputPin::CreatePinHandle(
         if (FAILED(InitializeIOThread()))
         {
             OutputDebugStringW(L"COutputPin::CreatePinHandle failed to initialize i/o thread\n");
-            DebugBreak();
         }
 
         LPGUID pGuid;
@@ -2184,8 +2213,7 @@ COutputPin::CreatePinHandle(
         if (FAILED(hr))
         {
 #ifdef KSPROXY_TRACE
-            OutputDebugStringW(L"CInputPin::CreatePinHandle GetSupportedSets failed\n");
-            DebugBreak();
+            OutputDebugStringW(L"COutputPin::CreatePinHandle GetSupportedSets failed\n");
 #endif
             return hr;
         }
@@ -2195,8 +2223,7 @@ COutputPin::CreatePinHandle(
         if (FAILED(hr))
         {
 #ifdef KSPROXY_TRACE
-            OutputDebugStringW(L"CInputPin::CreatePinHandle LoadProxyPlugins failed\n");
-            DebugBreak();
+            OutputDebugStringW(L"COutputPin::CreatePinHandle LoadProxyPlugins failed\n");
 #endif
             return hr;
         }
@@ -2338,7 +2365,6 @@ COutputPin::LoadProxyPlugins(
         {
             // store plugin
             m_Plugins.push_back(pUnknown);
-DebugBreak();
         }
         // close key
         RegCloseKey(hSubKey);

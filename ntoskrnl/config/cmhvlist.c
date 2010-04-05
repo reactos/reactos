@@ -14,4 +14,11 @@
 
 /* FUNCTIONS *****************************************************************/
 
+NTSTATUS
+NTAPI
+CmpAddToHiveFileList(IN PCMHIVE Hive)
+{
+    return STATUS_SUCCESS;
+}
+
 /* EOF */

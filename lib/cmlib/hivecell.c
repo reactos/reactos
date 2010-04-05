@@ -113,7 +113,7 @@ HvMarkCellDirty(
        __FUNCTION__, RegistryHive, CellIndex, HoldingLock);
 
    if ((CellIndex & HCELL_TYPE_MASK) >> HCELL_TYPE_SHIFT != Stable)
-      return FALSE;
+      return TRUE;
 
    CellBlock = (CellIndex & HCELL_BLOCK_MASK) >> HCELL_BLOCK_SHIFT;
    CellLastBlock = ((CellIndex + HV_BLOCK_SIZE - 1) & HCELL_BLOCK_MASK) >> HCELL_BLOCK_SHIFT;
@@ -524,4 +524,57 @@ HvFreeCell(
 
    if (CellType == Stable)
       HvMarkCellDirty(RegistryHive, CellIndex, FALSE);
+}
+
+BOOLEAN
+CMAPI
+HvTrackCellRef(PHV_TRACK_CELL_REF CellRef,
+               PHHIVE Hive,
+               HCELL_INDEX Cell)
+{
+    /* Sanity checks */
+    ASSERT(CellRef);
+    ASSERT(Hive );
+    ASSERT(Cell != HCELL_NIL);
+
+    /* Less than 4? */
+    if (CellRef->StaticCount < STATIC_CELL_PAIR_COUNT)
+    {
+        /* Add reference */
+        CellRef->StaticArray[CellRef->StaticCount].Hive = Hive;
+        CellRef->StaticArray[CellRef->StaticCount].Cell = Cell;
+        CellRef->StaticCount++;
+        return TRUE;
+    }
+    
+    /* FIXME: TODO */
+    DPRINT1("ERROR: Too many references\n");
+    while (TRUE);
+    return FALSE;
+}
+
+VOID
+CMAPI
+HvReleaseFreeCellRefArray(PHV_TRACK_CELL_REF CellRef)
+{
+    ULONG i;
+    ASSERT(CellRef);
+
+    /* Any references? */
+    if (CellRef->StaticCount > 0)
+    { 
+        /* Sanity check */
+        ASSERT(CellRef->StaticCount <= STATIC_CELL_PAIR_COUNT);
+        
+        /* Loop them */
+        for (i = 0; i < CellRef->StaticCount;i++)
+        {
+            /* Release them */
+            HvReleaseCell(CellRef->StaticArray[i].Hive,
+                          CellRef->StaticArray[i].Cell);
+        }
+
+        /* Free again */
+        CellRef->StaticCount = 0;
+    }
 }

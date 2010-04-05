@@ -666,6 +666,8 @@ BEGIN
 	IDS_RESTART_PROMPT          "Ви хочете перезавантажити систему?"
 	IDS_SHUTDOWN_TITLE          "Вимкнути"
 	IDS_SHUTDOWN_PROMPT         "Ви хочете вимкнути комп'ютер?"
+	IDS_LOGOFF_TITLE            "Log Off"
+	IDS_LOGOFF_PROMPT           "Do you want to log off?"
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Start Menu\\Programs"

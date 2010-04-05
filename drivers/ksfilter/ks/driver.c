@@ -37,11 +37,14 @@ NTAPI
 KsGetDevice(
     IN PVOID Object)
 {
-    PKSBASIC_HEADER BasicHeader = (PKSBASIC_HEADER)(ULONG_PTR)Object - sizeof(KSBASIC_HEADER);
+    PKSBASIC_HEADER BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)Object - sizeof(KSBASIC_HEADER));
 
-    DPRINT("KsGetDevice %p\n", Object);
+    DPRINT("KsGetDevice\n");
 
-    ASSERT(BasicHeader->Type == KsObjectTypeFilterFactory || BasicHeader->Type == KsObjectTypeFilter || BasicHeader->Type == BasicHeader->Type);
+    ASSERT(BasicHeader->Type == KsObjectTypeFilterFactory || BasicHeader->Type == KsObjectTypeFilter || BasicHeader->Type == KsObjectTypePin);
+    ASSERT(BasicHeader->KsDevice);
+    ASSERT(BasicHeader->KsDevice->Started);
+    ASSERT(BasicHeader->KsDevice->PhysicalDeviceObject);
 
     return BasicHeader->KsDevice;
 }
@@ -150,6 +153,8 @@ KsInitializeDriver(
 {
     PKS_DRIVER_EXTENSION DriverObjectExtension;
     NTSTATUS Status = STATUS_SUCCESS;
+
+    DPRINT("KsInitializeDriver\n");
 
     if (Descriptor)
     {

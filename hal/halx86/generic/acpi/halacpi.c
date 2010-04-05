@@ -37,6 +37,13 @@ LIST_ENTRY HalpAcpiTableMatchList;
 
 ULONG HalpInvalidAcpiTable;
 
+ULONG HalpPicVectorRedirect[] = {0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15};
+
+/* This determines the HAL type */
+BOOLEAN HalDisableFirmwareMapper = TRUE;
+PWCHAR HalHardwareIdString = L"acpipic_up";
+PWCHAR HalName = L"ACPI Compatible Eisa/Isa HAL";
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 PDESCRIPTION_HEADER
@@ -859,6 +866,181 @@ HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Return success */
     return STATUS_SUCCESS;
+}
+
+VOID
+NTAPI
+HalpInitializePciBus(VOID)
+{
+    /* Setup the PCI stub support */
+    HalpInitializePciStubs();
+    
+    /* Set the NMI crash flag */
+    HalpGetNMICrashFlag();
+}
+
+VOID
+NTAPI
+HalpBuildAddressMap(VOID)
+{
+    /* ACPI is magic baby */
+}
+
+BOOLEAN
+NTAPI
+HalpGetDebugPortTable(VOID)
+{
+    return ((HalpDebugPortTable) &&
+            (HalpDebugPortTable->BaseAddress.AddressSpaceID == 1));
+}
+
+ULONG
+NTAPI
+HalpIs16BitPortDecodeSupported(VOID)
+{
+    /* All ACPI systems are at least "EISA" so they support this */
+    return CM_RESOURCE_PORT_16_BIT_DECODE;
+}
+
+VOID
+NTAPI
+HalpAcpiDetectResourceListSize(OUT PULONG ListSize)
+{
+    PAGED_CODE();
+    
+    /* One element if there is a SCI */
+    *ListSize = HalpFixedAcpiDescTable.sci_int_vector ? 1: 0;
+}
+
+NTSTATUS
+NTAPI
+HalpBuildAcpiResourceList(IN PIO_RESOURCE_REQUIREMENTS_LIST ResourceList)
+{
+    ULONG Interrupt;
+    PAGED_CODE();
+    ASSERT(ResourceList != NULL);
+
+    /* Initialize the list */
+    ResourceList->BusNumber = -1;
+    ResourceList->AlternativeLists = 1;
+    ResourceList->InterfaceType = PNPBus;
+    ResourceList->List[0].Version = 1;
+    ResourceList->List[0].Revision = 1;
+    
+    /* Is there a SCI? */
+    if (HalpFixedAcpiDescTable.sci_int_vector)
+    {
+        /* Fill out the entry for it */
+        ResourceList->List[0].Descriptors[0].Flags = CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE;
+        ResourceList->List[0].Descriptors[0].Type = CmResourceTypeInterrupt;
+        ResourceList->List[0].Descriptors[0].ShareDisposition = CmResourceShareShared;
+        
+        /* Get the interrupt number */
+        Interrupt = HalpPicVectorRedirect[HalpFixedAcpiDescTable.sci_int_vector];
+        ResourceList->List[0].Descriptors[0].u.Interrupt.MinimumVector = Interrupt;
+        ResourceList->List[0].Descriptors[0].u.Interrupt.MaximumVector = Interrupt;
+        
+        /* One more */
+        ++ResourceList->List[0].Count;
+    }
+    
+    /* All good */
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+HalpQueryAcpiResourceRequirements(OUT PIO_RESOURCE_REQUIREMENTS_LIST *Requirements)
+{
+    PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
+    ULONG Count = 0, ListSize;
+    NTSTATUS Status;
+    PAGED_CODE();
+  
+    /* Get ACPI resources */
+    HalpAcpiDetectResourceListSize(&Count);
+    
+    /* Compute size of the list and allocate it */
+    ListSize = sizeof(IO_RESOURCE_LIST) * (Count - 1) +
+               sizeof(IO_RESOURCE_REQUIREMENTS_LIST);
+    RequirementsList = ExAllocatePoolWithTag(PagedPool, ListSize, ' laH');
+    if (RequirementsList)
+    {
+        /* Initialize it */
+        RtlZeroMemory(RequirementsList, ListSize);
+        RequirementsList->ListSize = ListSize;
+        
+        /* Build it */
+        Status = HalpBuildAcpiResourceList(RequirementsList);
+        if (NT_SUCCESS(Status))
+        {
+            /* It worked, return it */
+            *Requirements = RequirementsList;
+        }
+        else
+        {
+            /* Fail */
+            ExFreePoolWithTag(RequirementsList, 0);
+            Status = STATUS_NO_SUCH_DEVICE;
+        }
+    }
+    else
+    {
+        /* Not enough memory */
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+    }
+    
+    /* Return the status */
+    return Status;
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+HalReportResourceUsage(VOID)
+{
+    INTERFACE_TYPE InterfaceType;
+    UNICODE_STRING HalString;
+
+    /* FIXME: Initialize DMA 64-bit support */
+
+    /* FIXME: Initialize MCA bus */
+
+    /* Initialize PCI bus. */
+    HalpInitializePciBus();
+
+    /* What kind of bus is this? */
+    switch (HalpBusType)
+    {
+        /* ISA Machine */
+        case MACHINE_TYPE_ISA:
+            InterfaceType = Isa;
+            break;
+
+        /* EISA Machine */
+        case MACHINE_TYPE_EISA:
+            InterfaceType = Eisa;
+            break;
+
+        /* MCA Machine */
+        case MACHINE_TYPE_MCA:
+            InterfaceType = MicroChannel;
+            break;
+
+        /* Unknown */
+        default:
+            InterfaceType = Internal;
+            break;
+    }
+
+    /* Build HAL usage */
+    RtlInitUnicodeString(&HalString, HalName);
+    HalpReportResourceUsage(&HalString, InterfaceType);
+
+    /* Setup PCI debugging and Hibernation */
+    HalpRegisterPciDebuggingDeviceInfo();
 }
 
 /* EOF */

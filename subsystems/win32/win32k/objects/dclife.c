@@ -734,13 +734,73 @@ NtGdiDeleteObjectApp(HANDLE DCHandle)
 }
 
 BOOL
+FASTCALL
+MakeInfoDC(PDC pdc, BOOL bSet)
+{
+    PSURFACE pSurface;
+    SIZEL sizl;
+
+    /* Can not be a display DC. */
+    if (pdc->fs & DC_FLAG_DISPLAY) return FALSE;
+    if (bSet)
+    {
+        if (pdc->fs & DC_FLAG_TEMPINFODC || pdc->dctype == DC_TYPE_DIRECT)
+            return FALSE;
+
+        pSurface = pdc->dclevel.pSurface;
+        pdc->fs |= DC_FLAG_TEMPINFODC;
+        pdc->pSurfInfo = pSurface;
+        pdc->dctype = DC_TYPE_INFO;
+        pdc->dclevel.pSurface = NULL;
+
+        PDEVOBJ_sizl(pdc->ppdev, &sizl);
+
+        if ( sizl.cx == pdc->dclevel.sizl.cx &&
+             sizl.cy == pdc->dclevel.sizl.cy )
+            return TRUE;
+
+        pdc->dclevel.sizl.cx = sizl.cx;
+        pdc->dclevel.sizl.cy = sizl.cy;
+    }
+    else
+    {
+        if (!(pdc->fs & DC_FLAG_TEMPINFODC) || pdc->dctype != DC_TYPE_INFO)
+            return FALSE;
+
+        pSurface = pdc->pSurfInfo;
+        pdc->fs &= ~DC_FLAG_TEMPINFODC;
+        pdc->dclevel.pSurface = pSurface;
+        pdc->dctype = DC_TYPE_DIRECT;
+        pdc->pSurfInfo = NULL;
+
+        if ( !pSurface ||
+             (pSurface->SurfObj.sizlBitmap.cx == pdc->dclevel.sizl.cx &&
+              pSurface->SurfObj.sizlBitmap.cy == pdc->dclevel.sizl.cy) )
+            return TRUE;
+
+        pdc->dclevel.sizl.cx = pSurface->SurfObj.sizlBitmap.cx;
+        pdc->dclevel.sizl.cy = pSurface->SurfObj.sizlBitmap.cy;
+    }
+    return IntSetDefaultRegion(pdc);
+}
+
+/*
+* @implemented
+*/
+BOOL
 APIENTRY
 NtGdiMakeInfoDC(
     IN HDC hdc,
     IN BOOL bSet)
 {
-    UNIMPLEMENTED;
-    ASSERT(FALSE);
+    BOOL Ret;
+    PDC pdc = DC_LockDc(hdc);
+    if (pdc)
+    {
+        Ret = MakeInfoDC(pdc, bSet);
+        DC_UnlockDc(pdc);
+        return Ret;
+    }
     return FALSE;
 }
 

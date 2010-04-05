@@ -786,3 +786,20 @@ NtGdiGetDhpdev(
 
     return dhpdev;
 }
+
+PSIZEL
+FASTCALL
+PDEVOBJ_sizl(PPDEVOBJ ppdev, PSIZEL psizl)
+{
+    if (ppdev->flFlags & PDEV_META_DEVICE)
+    {
+        psizl->cx = ppdev->ulHorzRes;
+        psizl->cy = ppdev->ulVertRes;
+    }
+    else
+    {
+        psizl->cx = ppdev->gdiinfo.ulHorzRes;
+        psizl->cy = ppdev->gdiinfo.ulVertRes;
+    }
+    return psizl;
+}

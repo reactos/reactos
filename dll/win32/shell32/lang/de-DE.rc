@@ -669,6 +669,8 @@ BEGIN
 	IDS_RESTART_PROMPT          "Möchten Sie das System neu starten?"
 	IDS_SHUTDOWN_TITLE          "Herunterfahren"
 	IDS_SHUTDOWN_PROMPT         "Möchten Sie das System herunterfahren?"
+	IDS_LOGOFF_TITLE            "Ausloggen"
+	IDS_LOGOFF_PROMPT           "Möchten Sie sich ausloggen?"
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Startmenü\\Programme"

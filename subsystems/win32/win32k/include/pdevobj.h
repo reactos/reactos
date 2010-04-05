@@ -48,7 +48,7 @@ typedef struct
 {
     DWORD dwFlags;
     PDEVMODEW pdm;
-    
+
 } DEVMODEENTRY, *PDEVMODEENTRY;
 
 typedef struct _GRAPHICS_DEVICE
@@ -104,8 +104,8 @@ typedef struct _PDEVOBJ
 //  PVOID                     TypeOneInfo;
     PVOID                     pvGammaRamp;    /* Gamma ramp pointer. */
 //  PVOID                     RemoteTypeOne;
-//  ULONG                     ulHorzRes;
-//  ULONG                     ulVertRes;
+    ULONG                     ulHorzRes;
+    ULONG                     ulVertRes;
 //  PFN_DrvSetPointerShape    pfnDrvSetPointerShape;
 //  PFN_DrvMovePointer        pfnDrvMovePointer;
     PFN_DrvMovePointer        pfnMovePointer;
@@ -123,7 +123,7 @@ typedef struct _PDEVOBJ
 //  HANDLE                    hSpooler;       /* Handle to spooler, if spooler dev driver. */
 //  PVOID                     pDesktopId;
     PGRAPHICS_DEVICE          pGraphicsDevice;
-//  POINTL                    ptlOrigion;
+    POINTL                    ptlOrigion;
     PDEVMODEW                 pdmwDev;        /* Ptr->DEVMODEW.dmSize + dmDriverExtra == alloc size. */
 //  DWORD                     Unknown3;
     FLONG                     DxDd_Flags;     /* DxDD active status flags. */
@@ -185,5 +185,9 @@ InitLDEVImpl();
 BOOL
 NTAPI
 InitDeviceImpl();
+
+PSIZEL
+FASTCALL
+PDEVOBJ_sizl(PPDEVOBJ, PSIZEL);
 
 #endif /* !__WIN32K_PDEVOBJ_H */

@@ -18,7 +18,7 @@ KspSetDeviceInterfacesState(
         /* set device interface state */
         Status = IoSetDeviceInterfaceState(&SymEntry->SymbolicLink, Enable);
 
-        DPRINT("KspSetDeviceInterfacesState SymbolicLink %S Status %lx\n", SymEntry->SymbolicLink.Buffer, Status, Enable);
+        DPRINT("KspSetDeviceInterfacesState SymbolicLink '%S' Status %lx\n", SymEntry->SymbolicLink.Buffer, Status, Enable);
 
         /* check for success */
         if (!NT_SUCCESS(Status))
