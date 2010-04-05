@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * ReactOS shell32 fork translation updated by Caemyr -
- * - Olaf Siejka (Jan,Mar,Apr,Jul, Aug 2008)
+ * - Olaf Siejka (Jan,Mar,Apr,Jul, Aug 2008; Apr, 2010)
  * Use ReactOS forum PM or IRC to contact me
  * http://www.reactos.org
  * IRC: irc.freenode.net #reactos-pl;
@@ -672,8 +672,8 @@ BEGIN
 	IDS_RESTART_PROMPT          "Czy chcesz zrestartowaæ system?"
 	IDS_SHUTDOWN_TITLE          "Wy³¹cz"
 	IDS_SHUTDOWN_PROMPT         "Czy chcesz wy³¹czyæ system?"
-	IDS_LOGOFF_TITLE            "Log Off"
-	IDS_LOGOFF_PROMPT           "Do you want to log off?"
+	IDS_LOGOFF_TITLE            "Wyloguj"
+	IDS_LOGOFF_PROMPT           "Czy chcesz siê wylogowaæ z systemu?"
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Menu Start\\Programy"
