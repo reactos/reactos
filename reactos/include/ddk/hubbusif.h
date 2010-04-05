@@ -1,5 +1,7 @@
 #pragma once
 
+#include "usbdi.h"
+
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 
 typedef PVOID PUSB_DEVICE_HANDLE;
