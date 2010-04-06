@@ -1,10 +1,16 @@
 #pragma once
 
+#define _USBBUSIF_
+
 #ifndef USB_BUSIFFN
 #define USB_BUSIFFN __stdcall
 #endif
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
+
+#if !defined(_USBBUSIF_)
+typedef PVOID PUSB_DEVICE_HANDLE;
+#endif
 
 typedef NTSTATUS
 (USB_BUSIFFN *PUSB_BUSIFFN_SUBMIT_ISO_OUT_URB) (
