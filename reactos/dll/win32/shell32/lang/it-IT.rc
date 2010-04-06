@@ -434,8 +434,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUPWIND
 CAPTION "Conferma della sovrascrittura dei file"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	DEFPUSHBUTTON "&Si", IDYES, 20, 122, 60, 14
-	PUSHBUTTON "Si &tutti", 12807, 85, 122, 60, 14
+	DEFPUSHBUTTON "&Sì", IDYES, 20, 122, 60, 14
+	PUSHBUTTON "Sì &tutti", 12807, 85, 122, 60, 14
 	PUSHBUTTON "&No", IDNO, 150, 122, 60, 14
 	PUSHBUTTON "Annulla", IDCANCEL, 215, 122, 60, 14
 	ICON 146, -1, 11, 10, 21, 20, SS_REALSIZECONTROL
@@ -555,13 +555,13 @@ BEGIN
 	LTEXT "&File system", -1, 7, 35, 170, 9
 	COMBOBOX 28677, 7, 46, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 	CONTROL "", 28678, "MSCTLS_PROGRESS32", 0, 7, 181, 170, 8
-	LTEXT "Dimensione dell'unità di &Allocazione", -1, 7, 64, 170, 9
+	LTEXT "Dimensione dell'unità di &allocazione", -1, 7, 64, 170, 9
 	COMBOBOX 28680, 7, 75, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 	LTEXT "&Etichetta del Volume", -1, 7, 93, 170, 9
 	EDITTEXT 28679, 7, 103, 170, 13, ES_AUTOHSCROLL
-	GROUPBOX "Opzioni di &Formattazione", 4610, 7, 121, 170, 49
+	GROUPBOX "Opzioni di &formattazione", 4610, 7, 121, 170, 49
 	AUTOCHECKBOX "Formattazione &rapida", 28674, 16, 135, 155, 10
-	AUTOCHECKBOX "Abilita la &Compressione", 28675, 16, 152, 155, 10
+	AUTOCHECKBOX "Abilita la &compressione", 28675, 16, 152, 155, 10
 END
 
 CHKDSK_DLG DIALOGEX 50, 50, 194, 120
@@ -645,7 +645,7 @@ BEGIN
 
 	IDS_CREATEFOLDER_DENIED     "Impossibile creare la cartella: Accesso negato."
 	IDS_CREATEFOLDER_CAPTION    "Errore durante la creazione della cartella"
-	IDS_DELETEITEM_CAPTION      "Confermare la cancallazione del file"
+	IDS_DELETEITEM_CAPTION      "Confermare la cancellazione del file"
 	IDS_DELETEFOLDER_CAPTION    "Confermare la cancellazione della cartella"
 	IDS_DELETEITEM_TEXT         "Sei sicuro di voler cancellare '%1'?"
 	IDS_DELETEMULTIPLE_TEXT     "Sei sicuro di voler cancellare questi %1 elementi?"
@@ -664,10 +664,10 @@ BEGIN
 	/* message box strings */
 	IDS_RESTART_TITLE           "Riavvia"
 	IDS_RESTART_PROMPT          "Volete riavviare il sistema?"
-	IDS_SHUTDOWN_TITLE          "Termina sessione"
-	IDS_SHUTDOWN_PROMPT         "Volete terminare la sessione di ReactOS?"
-	IDS_LOGOFF_TITLE            "Log Off"
-	IDS_LOGOFF_PROMPT           "Do you want to log off?"
+	IDS_SHUTDOWN_TITLE          "Arresta sistema"
+	IDS_SHUTDOWN_PROMPT         "Volete arrestare il sistema?"
+	IDS_LOGOFF_TITLE            "Disconnetti"
+	IDS_LOGOFF_PROMPT           "Volete disconnettervi?"
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Menu Avvio\\Programmi"
