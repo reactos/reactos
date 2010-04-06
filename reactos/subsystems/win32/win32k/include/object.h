@@ -157,7 +157,7 @@ extern struct event *create_event( struct directory *root, const struct unicode_
                                    const struct security_descriptor *sd );
 extern struct event *get_event_obj( PPROCESSINFO process, obj_handle_t handle, unsigned int access );
 extern void pulse_event( struct event *event );
-extern void set_event( struct event *event );
+extern void set_event( PKEVENT event );
 extern void reset_event( struct event *event );
 
 /* mutex functions */

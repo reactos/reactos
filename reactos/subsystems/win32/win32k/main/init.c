@@ -38,6 +38,8 @@ Win32kProcessCallout(PEPROCESS Process,
                      BOOLEAN Create)
 {
     PPROCESSINFO Win32Process;
+    NTSTATUS Status;
+    HANDLE IdleHandle;
     struct handle_table *handles;
 
     DPRINT("Enter Win32kProcessCallback\n");
@@ -62,6 +64,19 @@ Win32kProcessCallout(PEPROCESS Process,
         Win32Process->peProcess = Process;
         /* FIXME - unlock the process */
 
+        /* Create an idle event */
+        Status = ZwCreateEvent(&IdleHandle, EVENT_ALL_ACCESS, NULL, SynchronizationEvent, TRUE);
+        if (!NT_SUCCESS(Status)) DPRINT1("Creating idle event failed with status 0x%08X\n", Status);
+
+        /* Get a pointer to the object itself */
+        Status = ObReferenceObjectByHandle(IdleHandle,
+                                           EVENT_ALL_ACCESS,
+                                           NULL,
+                                           KernelMode,
+                                           (PVOID*)&Win32Process->idle_event,
+                                           NULL);
+        if (!NT_SUCCESS(Status)) ZwClose(IdleHandle);
+
         list_init(&Win32Process->Classes);
         Win32Process->handles = alloc_handle_table(Win32Process, 0);
         connect_process_winstation(Win32Process);
@@ -79,6 +94,8 @@ Win32kProcessCallout(PEPROCESS Process,
 
         /* Destroy its classes */
         destroy_process_classes(Win32Process);
+
+        if (Win32Process->idle_event) ZwClose(Win32Process->idle_event);
 
         UserLeave();
 

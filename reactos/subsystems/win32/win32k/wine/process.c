@@ -1,7 +1,7 @@
 /*
  * Server-side process management
  *
- * Copyright (C) 1998 Alexandre Julliard
+ * Copyright (C) 2010 Aleksey Bragin
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -32,30 +32,35 @@
 /* retrieve the process idle event */
 DECL_HANDLER(get_process_idle_event)
 {
-    PEPROCESS process_obj;
-    PPROCESSINFO process;
-    NTSTATUS status;
+    PEPROCESS ProcessObject;
+    PPROCESSINFO Process;
+    NTSTATUS Status;
 
     reply->event = 0;
 
     /* Reference the process */
-    status = ObReferenceObjectByHandle((HANDLE)req->handle,
+    Status = ObReferenceObjectByHandle((HANDLE)req->handle,
                                        PROCESS_QUERY_INFORMATION,
                                        PsProcessType,
                                        KernelMode,
-                                       (PVOID*)&process_obj,
+                                       (PVOID*)&ProcessObject,
                                        NULL);
-DPRINT1("status 0x%08X\n", status);
-    if (NT_SUCCESS(status))
-    {
-        process = PsGetProcessWin32Process(process_obj);
 
-        if (process->idle_event && process_obj != PsGetCurrentProcess())
+    if (NT_SUCCESS(Status))
+    {
+        Process = PsGetProcessWin32Process(ProcessObject);
+
+        if (Process->idle_event && ProcessObject != PsGetCurrentProcess())
         {
-            UNIMPLEMENTED;
-            //reply->event = alloc_handle( PsGetCurrentProcess(), process->idle_event,
-            //                             EVENT_ALL_ACCESS, 0 );
+            /* Get a handle to the idle event (in another process) */
+            Status = ObOpenObjectByPointer(Process->idle_event,
+                                           0,
+                                           NULL,
+                                           EVENT_ALL_ACCESS,
+                                           0,
+                                           KernelMode,
+                                           (PHANDLE)&reply->event);
         }
-        ObDereferenceObject( process_obj );
+        ObDereferenceObject( ProcessObject );
     }
 }

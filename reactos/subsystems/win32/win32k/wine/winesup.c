@@ -125,9 +125,9 @@ void remove_queue( struct object *obj, struct wait_queue_entry *entry )
 #endif
 }
 
-void set_event( struct event *event )
+void set_event( PKEVENT event )
 {
-    UNIMPLEMENTED;
+    KeSetEvent(event, EVENT_INCREMENT, FALSE);
 }
 
 void reset_event( struct event *event )

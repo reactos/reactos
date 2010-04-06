@@ -18,7 +18,7 @@ typedef struct _PROCESSINFO
   W32HEAP_USER_MAPPING HeapMappings;
   struct list          Classes;         /* window classes owned by the process */
   struct handle_table *handles;         /* handle entries */
-  struct event        *idle_event;      /* event for input idle */
+  PKEVENT              idle_event;      /* event for input idle */
   struct msg_queue    *queue;           /* main message queue */
   obj_handle_t         winstation;      /* main handle to process window station */
   obj_handle_t         desktop;         /* handle to desktop to use for new threads */

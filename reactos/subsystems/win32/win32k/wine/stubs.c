@@ -558,11 +558,6 @@ DECL_HANDLER(get_selector_entry)
     UNIMPLEMENTED;
 }
 
-DECL_HANDLER(get_process_idle_event)
-{
-    UNIMPLEMENTED;
-}
-
 DECL_HANDLER(get_serial_info)
 {
     UNIMPLEMENTED;

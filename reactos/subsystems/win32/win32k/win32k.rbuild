@@ -144,6 +144,7 @@
 		<file>hook.c</file>
 		<file>main.c</file>
 		<file>object.c</file>
+		<file>process.c</file>
 		<file>queue.c</file>
 		<file>region.c</file>
 		<file>stubs.c</file>
