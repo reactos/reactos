@@ -86,6 +86,24 @@ DllUnregisterServer(void)
     return hr;
 }
 
+VOID
+RegisterBDAComponent(
+    HKEY hFilter,
+    LPCWSTR ComponentClsid,
+    LPCWSTR ComponentName)
+{
+    HKEY hComp;
+
+    // create network provider filter key
+    if (RegCreateKeyExW(hFilter, ComponentClsid, 0, NULL, 0, KEY_WRITE, NULL, &hComp, NULL) == ERROR_SUCCESS)
+    {
+        // store class id
+        RegSetValueExW(hComp, L"CLSID", 0, REG_SZ, (const BYTE*)ComponentClsid, (wcslen(ComponentClsid)+1) * sizeof(WCHAR));
+        RegSetValueExW(hComp, L"FriendlyName", 0, REG_SZ, (const BYTE*)ComponentName, (wcslen(ComponentName)+1) * sizeof(WCHAR));
+        RegCloseKey(hComp);
+    }
+}
+
 extern "C"
 KSDDKAPI
 HRESULT
@@ -95,7 +113,7 @@ DllRegisterServer(void)
     ULONG Index = 0;
     LPOLESTR pStr;
     HRESULT hr = S_OK;
-    HKEY hClass, hKey, hSubKey, hProvider, hInstance;
+    HKEY hClass, hKey, hSubKey, hProvider, hInstance, hFilter;
     static LPCWSTR ModuleName = L"msdvbnp.ax";
     static LPCWSTR ThreadingModel = L"Both";
 
@@ -125,6 +143,21 @@ DllRegisterServer(void)
     }
     RegCloseKey(hProvider);
 
+    /* open active movie filter category key */
+    if (RegCreateKeyExW(hClass, L"{da4e3da0-d07d-11d0-bd50-00a0c911ce86}\\Instance", 0, NULL, 0, KEY_WRITE, NULL, &hFilter, NULL) != ERROR_SUCCESS)
+    {
+        RegCloseKey(hClass);
+        RegCloseKey(hInstance);
+        return E_FAIL;
+    }
+
+    RegisterBDAComponent(hFilter, L"{71985F4A-1CA1-11d3-9CC8-00C04F7971E0}", L"BDA Playback Filter");
+    RegisterBDAComponent(hFilter, L"{71985F4B-1CA1-11D3-9CC8-00C04F7971E0}", L"BDA Network Providerss");
+    RegisterBDAComponent(hFilter, L"{71985F48-1CA1-11d3-9CC8-00C04F7971E0}", L"BDA Source Filter");
+    RegisterBDAComponent(hFilter, L"{A2E3074F-6C3D-11D3-B653-00C04F79498E}", L"BDA Transport Information Renderers");
+    RegisterBDAComponent(hFilter, L"{FD0A5AF4-B41D-11d2-9C95-00C04F7971E0}", L"BDA Receiver Component");
+    RegCloseKey(hKey);
+
     do
     {
         hr = StringFromCLSID(*InterfaceTable[Index].riid, &pStr);
@@ -149,6 +182,9 @@ DllRegisterServer(void)
             RegSetValueExW(hKey, L"CLSID", 0, REG_SZ, (const BYTE*)pStr, (wcslen(pStr)+1) * sizeof(WCHAR));
             RegCloseKey(hKey);
         }
+
+
+
 
         CoTaskMemFree(pStr);
         Index++;
