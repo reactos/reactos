@@ -301,3 +301,7 @@
 #if !defined(__MINGW32__) || defined(__NO_ISOCEXT)
 #define vsnprintf _vsnprintf
 #endif
+
+#if defined(__MINGW32__)
+#include <windows.h>
+#endif
