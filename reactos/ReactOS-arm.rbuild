@@ -28,6 +28,7 @@
 		<if property="OPTIMIZE" value="1">
 			<compilerflag>-ftracer</compilerflag>
 		</if>
+		<compilerflag>-fms-extensions</compilerflag>
         <compilerflag>-Wno-attributes</compilerflag>
         <compilerflag>-U_UNICODE</compilerflag>
         <compilerflag>-UUNICODE</compilerflag>
