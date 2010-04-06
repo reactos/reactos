@@ -153,6 +153,15 @@ Win32kThreadCallout(PETHREAD Thread,
     else
     {
         DPRINT("Destroying W32 thread TID:%d at IRQ level: %lu\n", Thread->Tcb.Teb->ClientId.UniqueThread, KeGetCurrentIrql());
+
+        /* USER thread-level cleanup */
+        UserEnterExclusive();
+            //cleanup_clipboard_thread();
+            destroy_thread_windows(Win32Thread);
+            free_msg_queue(Win32Thread);
+            close_thread_desktop(Win32Thread);
+        UserLeave();
+
         PsSetThreadWin32Thread(Thread, NULL);
     }
 
