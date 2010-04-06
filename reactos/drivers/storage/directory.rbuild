@@ -13,7 +13,9 @@
 <directory name="port">
 	<xi:include href="port/directory.rbuild" />
 </directory>
-<directory name="scsiport">
-	<xi:include href="scsiport/scsiport.rbuild" />
-</directory>
+<ifnot property="ARCH" value="arm">
+	<directory name="scsiport">
+		<xi:include href="scsiport/scsiport.rbuild" />
+	</directory>
+</ifnot>
 </group>
