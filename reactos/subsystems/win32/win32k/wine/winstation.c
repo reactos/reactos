@@ -355,8 +355,7 @@ void set_process_default_desktop( PPROCESSINFO process, struct desktop *desktop,
     ExfReleasePushLockShared(&eProcess->ProcessLock);
     KeLeaveCriticalRegion();
 
-#if 0
-    if (!process->is_system)
+    if (desktop)
     {
         desktop->users++;
         if (desktop->close_timeout)
@@ -366,9 +365,6 @@ void set_process_default_desktop( PPROCESSINFO process, struct desktop *desktop,
         }
         if (old_desktop) old_desktop->users--;
     }
-#else
-    DPRINT1("close_timeout for this process is not done yet!\n");
-#endif
 
     if (old_desktop) release_object( old_desktop );
 }
