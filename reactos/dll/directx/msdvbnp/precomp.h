@@ -28,6 +28,7 @@ typedef struct
 {
     const GUID* riid;
     LPFNCREATEINSTANCE lpfnCI;
+    LPCWSTR ProviderName;
 } INTERFACE_TABLE;
 
 /* classfactory.cpp */
