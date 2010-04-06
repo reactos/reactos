@@ -661,12 +661,6 @@ IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
                 DPRINT("RtlAppendUnicodeStringToString() failed with status 0x%08lx\n", Status);
                 goto cleanup;
             }
-            /* RtlAppendUnicodeStringToString added a NULL at the end of the
-            * destination string, but didn't increase the Length field.
-            * Do it for it.
-            */
-            ReturnBuffer.Length += sizeof(WCHAR);
-
 NextReferenceString:
             ExFreePool(ReferenceBi);
             ReferenceBi = NULL;
