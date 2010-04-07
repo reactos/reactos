@@ -1199,6 +1199,9 @@ PdoStartDevice(
   PPDO_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
   UCHAR Irq;
 
+  if (!RawResList)
+      return STATUS_SUCCESS;
+
   /* TODO: Assign the other resources we get to the card */
 
   for (i = 0; i < RawResList->Count; i++)
