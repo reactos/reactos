@@ -677,6 +677,16 @@ extern "C" {
 
 /* TYPES */
 
+typedef struct _OPTPARAM {
+  WORD cbSize;
+  BYTE Flags;
+  BYTE Style;
+  LPTSTR pData;
+  ULONG_PTR IconID;
+  LPARAM lParam;
+  ULONG_PTR dwReserved[2];
+} OPTPARAM, *POPTPARAM;
+
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 typedef struct _OPTCOMBO {
   WORD cbSize;
@@ -687,16 +697,6 @@ typedef struct _OPTCOMBO {
   DWORD dwReserved[3];
 } OPTCOMBO, *POPTCOMBO;
 #endif
-
-typedef struct _OPTPARAM {
-  WORD cbSize;
-  BYTE Flags;
-  BYTE Style;
-  LPTSTR pData;
-  ULONG_PTR IconID;
-  LPARAM lParam;
-  ULONG_PTR dwReserved[2];
-} OPTPARAM, *POPTPARAM;
 
 typedef struct _OPTTYPE {
   WORD cbSize;

@@ -15,17 +15,16 @@ extern "C" {
 
 #define _WSPIAPI_STRCPY_S strcpy_s
 #define _WSPIAPI_STRCAT_S strcat_s
-#define _WSPIAPI_STRNCPY_S strncpy_s
-#define _WSPIAPI_SPRINTF_S_1 sprintf_s
 
 #else
 
 #define _WSPIAPI_STRCPY_S(_Dst, _Size, _Src) strcpy((_Dst), (_Src))
 #define _WSPIAPI_STRCAT_S(_Dst, _Size, _Src) strcat((_Dst), (_Src))
-#define _WSPIAPI_STRNCPY_S(_Dst, _Size, _Src, _Count) strncpy((_Dst), (_Src), (_Count)); (_Dst)[(_Size) - 1] = 0
-#define _WSPIAPI_SPRINTF_S_1(_Dst, _Size, _Format, _Arg1) sprintf((_Dst), (_Format), (_Arg1))
 
-#endif /* #if defined(__GOT_SECURE_LIB__) && __GOT_SECURE_LIB__ >= 200402L */
+#endif /* defined(__GOT_SECURE_LIB__) && __GOT_SECURE_LIB__ >= 200402L */
+
+#define _WSPIAPI_STRNCPY_S(_Dst, _Size, _Src, _Count) strncpy((_Dst), (_Src), (_Count)); (_Dst)[(_Size) - 1] = 0 //FIXME
+#define _WSPIAPI_SPRINTF_S_1(_Dst, _Size, _Format, _Arg1) sprintf((_Dst), (_Format), (_Arg1)) //FIXME
 
 #if !defined(_WSPIAPI_COUNTOF)
 
@@ -67,7 +66,7 @@ typedef void
 (WINAPI *WSPIAPI_PFREEADDRINFO)(
   IN struct addrinfo *ai);
 
-__inline
+FORCEINLINE
 char *
 WINAPI
 WspiapiStrdup(
@@ -84,7 +83,7 @@ WspiapiStrdup(
   return pszMemory;
 }
 
-__inline
+FORCEINLINE
 BOOL
 WINAPI
 WspiapiParseV4Address(
@@ -104,7 +103,7 @@ WspiapiParseV4Address(
   return TRUE;
 }
 
-__inline
+FORCEINLINE
 struct addrinfo *
 WINAPI
 WspiapiNewAddrInfo(
@@ -135,7 +134,7 @@ WspiapiNewAddrInfo(
   return ptNew;
 }
 
-__inline
+FORCEINLINE
 int
 WINAPI
 WspiapiQueryDNS(
@@ -174,7 +173,7 @@ WspiapiQueryDNS(
   }
 }
 
-__inline
+FORCEINLINE
 int
 WINAPI
 WspiapiLookupNode(
@@ -214,7 +213,7 @@ WspiapiLookupNode(
 
 
 
-__inline
+FORCEINLINE
 int
 WINAPI
 WspiapiClone(
@@ -237,7 +236,7 @@ WspiapiClone(
   return 0;
 }
 
-__inline
+FORCEINLINE
 void
 WINAPI
 WspiapiLegacyFreeAddrInfo(
@@ -253,7 +252,7 @@ WspiapiLegacyFreeAddrInfo(
   }
 }
 
-__inline
+FORCEINLINE
 int
 WINAPI
 WspiapiLegacyGetAddrInfo(
@@ -353,7 +352,7 @@ WspiapiLegacyGetAddrInfo(
   return (iError);
 }
 
-__inline
+FORCEINLINE
 int
 WINAPI
 WspiapiLegacyGetNameInfo(
@@ -442,7 +441,7 @@ typedef struct {
   "freeaddrinfo", (FARPROC) WspiapiLegacyFreeAddrInfo,   \
 }
 
-__inline
+FORCEINLINE
 FARPROC
 WINAPI
 WspiapiLoad(
@@ -504,7 +503,7 @@ WspiapiLoad(
   return (rgtGlobal[wFunction].pfAddress);
 }
 
-__inline
+FORCEINLINE
 int
 WINAPI
 WspiapiGetAddrInfo(
@@ -523,7 +522,7 @@ WspiapiGetAddrInfo(
   return iError;
 }
 
-__inline
+FORCEINLINE
 int
 WINAPI
 WspiapiGetNameInfo(
@@ -545,7 +544,7 @@ WspiapiGetNameInfo(
   return iError;
 }
 
-__inline
+FORCEINLINE
 void
 WINAPI
 WspiapiFreeAddrInfo(
