@@ -23,6 +23,7 @@ typedef struct _PROCESSINFO
   obj_handle_t         winstation;      /* main handle to process window station */
   obj_handle_t         desktop;         /* handle to desktop to use for new threads */
   LONG                 GDIHandleCount;  /* kernelmode GDI handles count */
+  HANDLE               idle_event_handle; /* handle for idle_event */
 } PROCESSINFO;
 
 #include <pshpack1.h>

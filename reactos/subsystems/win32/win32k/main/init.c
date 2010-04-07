@@ -39,7 +39,6 @@ Win32kProcessCallout(PEPROCESS Process,
 {
     PPROCESSINFO Win32Process;
     NTSTATUS Status;
-    HANDLE IdleHandle;
     struct handle_table *handles;
 
     DPRINT("Enter Win32kProcessCallback\n");
@@ -65,17 +64,17 @@ Win32kProcessCallout(PEPROCESS Process,
         /* FIXME - unlock the process */
 
         /* Create an idle event */
-        Status = ZwCreateEvent(&IdleHandle, EVENT_ALL_ACCESS, NULL, SynchronizationEvent, TRUE);
+        Status = ZwCreateEvent(&Win32Process->idle_event_handle, EVENT_ALL_ACCESS, NULL, SynchronizationEvent, TRUE);
         if (!NT_SUCCESS(Status)) DPRINT1("Creating idle event failed with status 0x%08X\n", Status);
 
         /* Get a pointer to the object itself */
-        Status = ObReferenceObjectByHandle(IdleHandle,
+        Status = ObReferenceObjectByHandle(Win32Process->idle_event_handle,
                                            EVENT_ALL_ACCESS,
                                            NULL,
                                            KernelMode,
                                            (PVOID*)&Win32Process->idle_event,
                                            NULL);
-        if (!NT_SUCCESS(Status)) ZwClose(IdleHandle);
+        if (!NT_SUCCESS(Status)) ZwClose(Win32Process->idle_event_handle);
 
         list_init(&Win32Process->Classes);
         Win32Process->handles = alloc_handle_table(Win32Process, 0);
@@ -95,7 +94,11 @@ Win32kProcessCallout(PEPROCESS Process,
         /* Destroy its classes */
         destroy_process_classes(Win32Process);
 
-        if (Win32Process->idle_event) ZwClose(Win32Process->idle_event);
+        if (Win32Process->idle_event)
+        {
+            ObDereferenceObject(Win32Process->idle_event);
+            ZwClose(Win32Process->idle_event_handle);
+        }
 
         UserLeave();
 
