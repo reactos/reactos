@@ -58,6 +58,10 @@ CreateUsbDevice(PVOID BusContext,
                 USHORT PortStatus, USHORT PortNumber)
 {
     DPRINT1("CreateUsbDevice called\n");
+    DPRINT1("PortStatus %x\n", PortStatus);
+    DPRINT1("PortNumber %x\n", PortNumber);
+    *NewDevice = ExAllocatePoolWithTag(NonPagedPool, sizeof(USB_DEVICE), USB_POOL_TAG);
+
     return STATUS_SUCCESS;
 }
 
@@ -100,7 +104,7 @@ USB_BUSIFFN
 RemoveUsbDevice(PVOID BusContext, PUSB_DEVICE_HANDLE DeviceHandle, ULONG Flags)
 {
     DPRINT1("RemoveUsbDevice called\n");
-    return STATUS_SUCCESS;
+    return STATUS_NOT_SUPPORTED;
 }
 
 NTSTATUS
@@ -108,7 +112,7 @@ USB_BUSIFFN
 RestoreUsbDevice(PVOID BusContext, PUSB_DEVICE_HANDLE OldDeviceHandle, PUSB_DEVICE_HANDLE NewDeviceHandle)
 {
     DPRINT1("RestoreUsbDevice called\n");
-    return STATUS_SUCCESS;
+    return STATUS_NOT_SUPPORTED;
 }
 
 NTSTATUS
@@ -116,7 +120,7 @@ USB_BUSIFFN
 GetPortHackFlags(PVOID BusContext, PULONG Flags)
 {
     DPRINT1("GetPortHackFlags called\n");
-    return STATUS_SUCCESS;
+    return STATUS_NOT_SUPPORTED;
 }
 
 NTSTATUS
@@ -172,7 +176,6 @@ QueryDeviceInformation(PVOID BusContext,
     {
         RtlCopyMemory(&DeviceInfo->PipeList[i].EndpointDescriptor, &UsbDevice->ActiveInterface->EndPoints[i]->EndPointDescriptor, sizeof(USB_ENDPOINT_DESCRIPTOR));
     }
-
     return STATUS_SUCCESS;
 }
 
@@ -230,7 +233,7 @@ GetExtendedHubInformation(PVOID BusContext,
     PPDO_DEVICE_EXTENSION PdoDeviceExtension = (PPDO_DEVICE_EXTENSION)((PDEVICE_OBJECT)BusContext)->DeviceExtension;
     PFDO_DEVICE_EXTENSION FdoDeviceExntension = (PFDO_DEVICE_EXTENSION)PdoDeviceExtension->ControllerFdo->DeviceExtension;
     LONG i;
-
+    DPRINT1("GetExtendedHubInformation\n");
     /* Set the default return value */
     *LengthReturned = 0;
     /* Caller must have set InformationLevel to 0 */
@@ -266,7 +269,7 @@ GetRootHubSymbolicName(PVOID BusContext,
 
     if (HubSymNameBufferLength < 20)
         return STATUS_UNSUCCESSFUL;
-    //RtlStringCbCopy(HubSymNameBuffer, HubSymNameBufferLength, L"ROOT_HUB20");
+    RtlCopyMemory(HubSymNameBuffer, L"ROOT_HUB20", HubSymNameBufferLength);
     *HubSymNameActualLength = 20;
 
     return STATUS_SUCCESS;
@@ -284,7 +287,12 @@ NTSTATUS
 USB_BUSIFFN
 Initialize20Hub(PVOID BusContext, PUSB_DEVICE_HANDLE HubDeviceHandle, ULONG TtCount)
 {
-    DPRINT1("Initialize20Hub called\n");
+    DPRINT1("Initialize20Hub called, HubDeviceHandle: %x\n", HubDeviceHandle);
+
+    /* FIXME: */
+    /* Create the Irp Queue for SCE */
+    /* Should queue be created for each device or each enpoint??? */
+
     return STATUS_SUCCESS;
 }
 
@@ -331,7 +339,7 @@ USB_BUSIFFN
 QueryBusTime(PVOID BusContext, PULONG CurrentFrame)
 {
     DPRINT1("QueryBusTime called\n");
-    return STATUS_SUCCESS;
+    return STATUS_NOT_SUPPORTED;
 }
 
 NTSTATUS
@@ -339,7 +347,7 @@ USB_BUSIFFN
 SubmitIsoOutUrb(PVOID BusContext, PURB Urb)
 {
     DPRINT1("SubmitIsoOutUrb called\n");
-    return STATUS_SUCCESS;
+    return STATUS_NOT_SUPPORTED;
 }
 
 NTSTATUS
@@ -351,7 +359,7 @@ QueryBusInformation(PVOID BusContext,
                     PULONG BusInformationActualLength)
 {
     DPRINT1("QueryBusInformation called\n");
-    return STATUS_SUCCESS;
+    return STATUS_NOT_SUPPORTED;
 }
 
 BOOLEAN
@@ -367,6 +375,6 @@ USB_BUSIFFN
 EnumLogEntry(PVOID BusContext, ULONG DriverTag, ULONG EnumTag, ULONG P1, ULONG P2)
 {
     DPRINT1("EnumLogEntry called\n");
-    return STATUS_SUCCESS;
+    return STATUS_NOT_SUPPORTED;
 }
 

@@ -17,6 +17,7 @@
 #include <wdmguid.h>
 #include <stdio.h>
 #include <debug.h>
+#include <guiddef.h>
 
 /* Lifted from Linux with slight changes */
 const UCHAR ROOTHUB2_DEVICE_DESCRIPTOR [] =
@@ -98,7 +99,8 @@ UrbWorkerThread(PVOID Context)
 PVOID InternalCreateUsbDevice(UCHAR DeviceNumber, ULONG Port, PUSB_DEVICE Parent, BOOLEAN Hub)
 {
     PUSB_DEVICE UsbDevicePointer = NULL;
-    UsbDevicePointer = ExAllocatePool(NonPagedPool, sizeof(USB_DEVICE));
+    UsbDevicePointer = ExAllocatePoolWithTag(NonPagedPool, sizeof(USB_DEVICE), USB_POOL_TAG);
+
     if (!UsbDevicePointer)
     {
         DPRINT1("Out of memory\n");
@@ -538,75 +540,132 @@ PdoDispatchPnp(
         case IRP_MN_QUERY_INTERFACE:
         {
             UNICODE_STRING GuidString;
+            UNICODE_STRING InterfacMatchString;
             PUSB_BUS_INTERFACE_HUB_V5 InterfaceHub;
             PUSB_BUS_INTERFACE_USBDI_V2 InterfaceDI;
             PPDO_DEVICE_EXTENSION PdoDeviceExtension;
             PFDO_DEVICE_EXTENSION FdoDeviceExtension;
+            NTSTATUS CompareStatus;
 
             PdoDeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
             FdoDeviceExtension = (PFDO_DEVICE_EXTENSION)PdoDeviceExtension->ControllerFdo->DeviceExtension;
 
-            Status = RtlStringFromGUID(Stack->Parameters.QueryInterface.InterfaceType, &GuidString);
-            if (!NT_SUCCESS(Status))
+            /* Assume success */
+            Status = STATUS_SUCCESS;
+            Information = 0;
+
+            CompareStatus = RtlStringFromGUID(Stack->Parameters.QueryInterface.InterfaceType, &GuidString);
+            if (!NT_SUCCESS(CompareStatus))
             {
                 DPRINT1("Failed to create string from GUID!\n");
             }
+
             DPRINT1("Interface GUID requested %wZ\n", &GuidString);
             DPRINT1("QueryInterface.Size %x\n", Stack->Parameters.QueryInterface.Size);
             DPRINT1("QueryInterface.Version %x\n", Stack->Parameters.QueryInterface.Version);
 
-            Status = STATUS_SUCCESS;
-            Information = 0;
-
-            /* FIXME: Check the actual Guid */
-            if (Stack->Parameters.QueryInterface.Size == sizeof(USB_BUS_INTERFACE_USBDI_V2) && (Stack->Parameters.QueryInterface.Version == 2))
+            CompareStatus = RtlStringFromGUID(&USB_BUS_INTERFACE_HUB_GUID, &InterfacMatchString);
+            if (!NT_SUCCESS(CompareStatus))
             {
-                InterfaceDI = (PUSB_BUS_INTERFACE_USBDI_V2) Stack->Parameters.QueryInterface.Interface;
-                InterfaceDI->Size = sizeof(USB_BUS_INTERFACE_USBDI_V2);
-                InterfaceDI->Version = 2;
-                InterfaceDI->BusContext = PdoDeviceExtension->DeviceObject;
-                InterfaceDI->InterfaceReference = (PINTERFACE_REFERENCE)InterfaceReference;
-                InterfaceDI->InterfaceDereference = (PINTERFACE_DEREFERENCE)InterfaceDereference;
-                InterfaceDI->GetUSBDIVersion = GetUSBDIVersion;
-                InterfaceDI->QueryBusTime = QueryBusTime;
-                InterfaceDI->SubmitIsoOutUrb = SubmitIsoOutUrb;
-                InterfaceDI->QueryBusInformation = QueryBusInformation;
-                InterfaceDI->IsDeviceHighSpeed = IsDeviceHighSpeed;
-                InterfaceDI->EnumLogEntry = EnumLogEntry;
+                DPRINT1("Failed to create string from GUID!\n");
             }
-            /* FIXME: Check the actual Guid */
-            else if (Stack->Parameters.QueryInterface.Size == sizeof(USB_BUS_INTERFACE_HUB_V5) &&
-                    (Stack->Parameters.QueryInterface.Version == 5))
+
+            CompareStatus = RtlCompareUnicodeString(&InterfacMatchString, &GuidString, TRUE);
+
+            if (NT_SUCCESS(CompareStatus))
             {
                 InterfaceHub = (PUSB_BUS_INTERFACE_HUB_V5)Stack->Parameters.QueryInterface.Interface;
-                InterfaceHub->Version = 5;
-                InterfaceHub->Size = sizeof(USB_BUS_INTERFACE_HUB_V5);
-                InterfaceHub->BusContext = PdoDeviceExtension->DeviceObject;
-                InterfaceHub->InterfaceReference = (PINTERFACE_REFERENCE)InterfaceReference;
-                InterfaceHub->InterfaceDereference = (PINTERFACE_DEREFERENCE)InterfaceDereference;
-                InterfaceHub->CreateUsbDevice = CreateUsbDevice;
-                InterfaceHub->InitializeUsbDevice = InitializeUsbDevice;
-                InterfaceHub->GetUsbDescriptors = GetUsbDescriptors;
-                InterfaceHub->RemoveUsbDevice = RemoveUsbDevice;
-                InterfaceHub->RestoreUsbDevice = RestoreUsbDevice;
-                InterfaceHub->GetPortHackFlags = GetPortHackFlags;
-                InterfaceHub->QueryDeviceInformation = QueryDeviceInformation;
-                InterfaceHub->GetControllerInformation = GetControllerInformation;
-                InterfaceHub->ControllerSelectiveSuspend = ControllerSelectiveSuspend;
-                InterfaceHub->GetExtendedHubInformation = GetExtendedHubInformation;
-                InterfaceHub->GetRootHubSymbolicName = GetRootHubSymbolicName;
-                InterfaceHub->GetDeviceBusContext = GetDeviceBusContext;
-                InterfaceHub->Initialize20Hub = Initialize20Hub;
-                InterfaceHub->RootHubInitNotification = RootHubInitNotification;
-                InterfaceHub->FlushTransfers = FlushTransfers;
-                InterfaceHub->SetDeviceHandleData = SetDeviceHandleData;
+                InterfaceHub->Version = Stack->Parameters.QueryInterface.Version;
+                if (Stack->Parameters.QueryInterface.Version >= 0)
+                {
+                    InterfaceHub->Size = Stack->Parameters.QueryInterface.Size;
+                    InterfaceHub->BusContext = PdoDeviceExtension->DeviceObject;
+                    InterfaceHub->InterfaceReference = (PINTERFACE_REFERENCE)InterfaceReference;
+                    InterfaceHub->InterfaceDereference = (PINTERFACE_DEREFERENCE)InterfaceDereference;
+                }
+                if (Stack->Parameters.QueryInterface.Version >= 1)
+                {
+                    InterfaceHub->CreateUsbDevice = CreateUsbDevice;
+                    InterfaceHub->InitializeUsbDevice = InitializeUsbDevice;
+                    InterfaceHub->GetUsbDescriptors = GetUsbDescriptors;
+                    InterfaceHub->RemoveUsbDevice = RemoveUsbDevice;
+                    InterfaceHub->RestoreUsbDevice = RestoreUsbDevice;
+                    InterfaceHub->GetPortHackFlags = GetPortHackFlags;
+                    InterfaceHub->QueryDeviceInformation = QueryDeviceInformation;
+                }
+                if (Stack->Parameters.QueryInterface.Version >= 2)
+                {
+                    InterfaceHub->GetControllerInformation = GetControllerInformation;
+                    InterfaceHub->ControllerSelectiveSuspend = ControllerSelectiveSuspend;
+                    InterfaceHub->GetExtendedHubInformation = GetExtendedHubInformation;
+                    InterfaceHub->GetRootHubSymbolicName = GetRootHubSymbolicName;
+                    InterfaceHub->GetDeviceBusContext = GetDeviceBusContext;
+                    InterfaceHub->Initialize20Hub = Initialize20Hub;
+
+                }
+                if (Stack->Parameters.QueryInterface.Version >= 3)
+                {
+                    InterfaceHub->RootHubInitNotification = RootHubInitNotification;
+                }
+                if (Stack->Parameters.QueryInterface.Version >= 4)
+                {
+                    InterfaceHub->FlushTransfers = FlushTransfers;
+                }
+                if (Stack->Parameters.QueryInterface.Version >= 5)
+                {
+                    InterfaceHub->SetDeviceHandleData = SetDeviceHandleData;
+                }
+                if (Stack->Parameters.QueryInterface.Version >= 6)
+                {
+                    DPRINT1("Unknown version!\n");
+                }
+                break;
             }
-            else
+
+            CompareStatus = RtlStringFromGUID(&USB_BUS_INTERFACE_USBDI_GUID, &InterfacMatchString);
+            if (!NT_SUCCESS(CompareStatus))
             {
-                DPRINT1("Not Supported\n");
-                Status = Irp->IoStatus.Status;
-                Information = Irp->IoStatus.Information;
+                DPRINT1("Failed to create string from GUID!\n");
             }
+
+            CompareStatus = RtlCompareUnicodeString(&InterfacMatchString, &GuidString, TRUE);
+
+            if (NT_SUCCESS(CompareStatus))
+            {
+                InterfaceDI = (PUSB_BUS_INTERFACE_USBDI_V2) Stack->Parameters.QueryInterface.Interface;
+                InterfaceDI->Version = Stack->Parameters.QueryInterface.Version;
+                if (Stack->Parameters.QueryInterface.Version >= 0)
+                {
+                    //InterfaceDI->Size = sizeof(USB_BUS_INTERFACE_USBDI_V2);
+                    InterfaceDI->Size = Stack->Parameters.QueryInterface.Size;
+                    InterfaceDI->BusContext = PdoDeviceExtension->DeviceObject;
+                    InterfaceDI->InterfaceReference = (PINTERFACE_REFERENCE)InterfaceReference;
+                    InterfaceDI->InterfaceDereference = (PINTERFACE_DEREFERENCE)InterfaceDereference;
+                    InterfaceDI->GetUSBDIVersion = GetUSBDIVersion;
+                    InterfaceDI->QueryBusTime = QueryBusTime;
+                    InterfaceDI->SubmitIsoOutUrb = SubmitIsoOutUrb;
+                    InterfaceDI->QueryBusInformation = QueryBusInformation;
+                }
+                if (Stack->Parameters.QueryInterface.Version >= 1)
+                {
+                    InterfaceDI->IsDeviceHighSpeed = IsDeviceHighSpeed;
+                }
+                if (Stack->Parameters.QueryInterface.Version >= 2)
+                {
+                    InterfaceDI->EnumLogEntry = EnumLogEntry;
+                }
+
+                if (Stack->Parameters.QueryInterface.Version >= 3)
+                {
+                    DPRINT1("Not Supported!\n");
+                }
+                break;
+            }
+
+            DPRINT1("Not Supported\n");
+            Status = Irp->IoStatus.Status;
+            Information = Irp->IoStatus.Information;
+
             break;
         }
         case IRP_MN_QUERY_BUS_INFORMATION:
