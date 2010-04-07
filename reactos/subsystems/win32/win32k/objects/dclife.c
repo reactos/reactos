@@ -119,6 +119,8 @@ DC_AllocDC(PUNICODE_STRING Driver)
 
     pdcattr->hlfntNew = NtGdiGetStockObject(SYSTEM_FONT);
     TextIntRealizeFont(pdcattr->hlfntNew,NULL);
+    NewDC->hlfntCur = pdcattr->hlfntNew;
+    NewDC->dclevel.plfnt = GDIOBJ_GetKernelObj(pdcattr->hlfntNew);
 
     NewDC->dclevel.hpal = NtGdiGetStockObject(DEFAULT_PALETTE);
     NewDC->dclevel.ppal = PALETTE_ShareLockPalette(NewDC->dclevel.hpal);
@@ -763,32 +765,14 @@ BOOL
 APIENTRY
 NtGdiDeleteObjectApp(HANDLE DCHandle)
 {
-    /* Complete all pending operations */
-    NtGdiFlushUserBatch();
-
-    if (GDI_HANDLE_IS_STOCKOBJ(DCHandle)) return TRUE;
-
-    if (GDI_HANDLE_GET_TYPE(DCHandle) != GDI_OBJECT_TYPE_DC)
-        return GreDeleteObject((HGDIOBJ) DCHandle);
-
-    if (IsObjectDead((HGDIOBJ)DCHandle)) return TRUE;
-
-    if (!GDIOBJ_OwnedByCurrentProcess(DCHandle))
-    {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
-        return FALSE;
-    }
-
-    return IntGdiDeleteDC(DCHandle, FALSE);
-}
-
-BOOL
-APIENTRY
-NewNtGdiDeleteObjectApp(HANDLE DCHandle)
-{
   GDIOBJTYPE ObjType;
 
+  /* Complete all pending operations */
+  NtGdiFlushUserBatch();
+
   if (GDI_HANDLE_IS_STOCKOBJ(DCHandle)) return TRUE;
+
+  if (IsObjectDead((HGDIOBJ)DCHandle)) return TRUE;
 
   ObjType = GDI_HANDLE_GET_TYPE(DCHandle) >> GDI_ENTRY_UPPER_SHIFT;
 
