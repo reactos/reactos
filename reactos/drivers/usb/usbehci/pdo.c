@@ -17,7 +17,6 @@
 #include <wdmguid.h>
 #include <stdio.h>
 #include <debug.h>
-#include <guiddef.h>
 
 /* Lifted from Linux with slight changes */
 const UCHAR ROOTHUB2_DEVICE_DESCRIPTOR [] =
@@ -540,22 +539,16 @@ PdoDispatchPnp(
         case IRP_MN_QUERY_INTERFACE:
         {
             UNICODE_STRING GuidString;
-            UNICODE_STRING InterfacMatchString;
             PUSB_BUS_INTERFACE_HUB_V5 InterfaceHub;
             PUSB_BUS_INTERFACE_USBDI_V2 InterfaceDI;
             PPDO_DEVICE_EXTENSION PdoDeviceExtension;
             PFDO_DEVICE_EXTENSION FdoDeviceExtension;
-            NTSTATUS CompareStatus;
 
             PdoDeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
             FdoDeviceExtension = (PFDO_DEVICE_EXTENSION)PdoDeviceExtension->ControllerFdo->DeviceExtension;
 
-            /* Assume success */
-            Status = STATUS_SUCCESS;
-            Information = 0;
-
-            CompareStatus = RtlStringFromGUID(Stack->Parameters.QueryInterface.InterfaceType, &GuidString);
-            if (!NT_SUCCESS(CompareStatus))
+            Status = RtlStringFromGUID(Stack->Parameters.QueryInterface.InterfaceType, &GuidString);
+            if (!NT_SUCCESS(Status))
             {
                 DPRINT1("Failed to create string from GUID!\n");
             }
@@ -564,15 +557,11 @@ PdoDispatchPnp(
             DPRINT1("QueryInterface.Size %x\n", Stack->Parameters.QueryInterface.Size);
             DPRINT1("QueryInterface.Version %x\n", Stack->Parameters.QueryInterface.Version);
 
-            CompareStatus = RtlStringFromGUID(&USB_BUS_INTERFACE_HUB_GUID, &InterfacMatchString);
-            if (!NT_SUCCESS(CompareStatus))
-            {
-                DPRINT1("Failed to create string from GUID!\n");
-            }
+            /* Assume success */
+            Status = STATUS_SUCCESS;
+            Information = 0;
 
-            CompareStatus = RtlCompareUnicodeString(&InterfacMatchString, &GuidString, TRUE);
-
-            if (NT_SUCCESS(CompareStatus))
+            if (IsEqualGUIDAligned(Stack->Parameters.QueryInterface.InterfaceType, &USB_BUS_INTERFACE_HUB_GUID))
             {
                 InterfaceHub = (PUSB_BUS_INTERFACE_HUB_V5)Stack->Parameters.QueryInterface.Interface;
                 InterfaceHub->Version = Stack->Parameters.QueryInterface.Version;
@@ -622,15 +611,7 @@ PdoDispatchPnp(
                 break;
             }
 
-            CompareStatus = RtlStringFromGUID(&USB_BUS_INTERFACE_USBDI_GUID, &InterfacMatchString);
-            if (!NT_SUCCESS(CompareStatus))
-            {
-                DPRINT1("Failed to create string from GUID!\n");
-            }
-
-            CompareStatus = RtlCompareUnicodeString(&InterfacMatchString, &GuidString, TRUE);
-
-            if (NT_SUCCESS(CompareStatus))
+            if (IsEqualGUIDAligned(Stack->Parameters.QueryInterface.InterfaceType, &USB_BUS_INTERFACE_USBDI_GUID))
             {
                 InterfaceDI = (PUSB_BUS_INTERFACE_USBDI_V2) Stack->Parameters.QueryInterface.Interface;
                 InterfaceDI->Version = Stack->Parameters.QueryInterface.Version;
