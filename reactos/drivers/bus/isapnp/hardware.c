@@ -352,7 +352,7 @@ TryIsolate(PUCHAR ReadDataPort)
         HwDelay();
         Data = ((Data << 8) | ReadData(ReadDataPort));
         HwDelay();
-        Data >>= 1;
+        Byte >>= 1;
 
         if (Data != 0xFFFF)
         {
