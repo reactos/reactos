@@ -451,7 +451,6 @@ DECL_HANDLER(set_hook)
     {
         ObReferenceObjectByPointer(current->peThread, 0, NULL, KernelMode);
         hook->owner = current;
-        //hook->process = process ? (struct process *)grab_object( process ) : NULL;
         if (process)
             ObReferenceObjectByPointer(process->peProcess, 0, NULL, KernelMode);
         hook->process = process;

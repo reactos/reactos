@@ -408,7 +408,7 @@ static struct window *create_window( struct window *parent, struct window *owner
 
     if (!(desktop = get_thread_desktop( current, DESKTOP_CREATEWINDOW ))) return NULL;
 
-    if (!(class = grab_class( (PPROCESSINFO)PsGetCurrentProcessWin32Process(), atom, instance, &extra_bytes )))
+    if (!(class = grab_class( current->process, atom, instance, &extra_bytes )))
     {
         release_object( desktop );
         return NULL;
@@ -1778,7 +1778,7 @@ DECL_HANDLER(destroy_window)
     if (win)
     {
         if (!is_desktop_window(win)) destroy_window( win );
-        else if (win->thread == (PTHREADINFO)PsGetCurrentThreadWin32Thread()) detach_window_thread( win );
+        else if (win->thread == PsGetCurrentThreadWin32Thread()) detach_window_thread( win );
         else set_error( STATUS_ACCESS_DENIED );
     }
 }
@@ -1787,7 +1787,7 @@ DECL_HANDLER(destroy_window)
 /* retrieve the desktop window for the current thread */
 DECL_HANDLER(get_desktop_window)
 {
-    struct desktop *desktop = get_thread_desktop( (PTHREADINFO)PsGetCurrentThreadWin32Thread(), 0 );
+    struct desktop *desktop = get_thread_desktop( PsGetCurrentThreadWin32Thread(), 0 );
 
     if (!desktop) return;
 
@@ -1865,7 +1865,7 @@ DECL_HANDLER(set_window_info)
     struct window *win = get_window( req->handle );
 
     if (!win) return;
-    if (req->flags && is_desktop_window(win) && win->thread != (PTHREADINFO)PsGetCurrentThreadWin32Thread())
+    if (req->flags && is_desktop_window(win) && win->thread != PsGetCurrentThreadWin32Thread())
     {
         set_error( STATUS_ACCESS_DENIED );
         return;
@@ -1941,21 +1941,20 @@ DECL_HANDLER(get_window_children)
     struct unicode_str cls_name;
     atom_t atom = req->atom;
     struct desktop *desktop = NULL;
-    PTHREADINFO current_thread = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
-    PPROCESSINFO current_process = (PPROCESSINFO)PsGetCurrentProcessWin32Process();
+    PTHREADINFO current = PsGetCurrentThreadWin32Thread();
 
     get_req_unicode_str( (void*)req, &cls_name );
     if (cls_name.len && !(atom = find_global_atom( NULL, &cls_name ))) return;
 
     if (req->desktop)
     {
-        if (!(desktop = get_desktop_obj( current_process, req->desktop, DESKTOP_ENUMERATE ))) return;
+        if (!(desktop = get_desktop_obj( current->process, req->desktop, DESKTOP_ENUMERATE ))) return;
         parent = desktop->top_window;
     }
     else
     {
         if (req->parent && !(parent = get_window( req->parent ))) return;
-        if (!parent && !(desktop = get_thread_desktop( current_thread, 0 ))) return;
+        if (!parent && !(desktop = get_thread_desktop( current, 0 ))) return;
     }
 
     if (parent)

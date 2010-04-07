@@ -536,7 +536,7 @@ obj_handle_t open_object( const struct namespace *namespace, const struct unicod
         if (ops && obj->ops != ops)
             set_error( STATUS_OBJECT_TYPE_MISMATCH );
         else
-            handle = alloc_handle( (PPROCESSINFO)PsGetCurrentProcessWin32Process() , obj, access, attr );
+            handle = alloc_handle( PsGetCurrentProcessWin32Process() , obj, access, attr );
         release_object( obj );
     }
     else
@@ -554,14 +554,14 @@ unsigned int get_handle_table_count( PPROCESSINFO process )
 /* close a handle */
 DECL_HANDLER(close_handle)
 {
-    unsigned int err = close_handle( (PPROCESSINFO)PsGetCurrentProcessWin32Process(), req->handle );
+    unsigned int err = close_handle( PsGetCurrentProcessWin32Process(), req->handle );
     set_error( err );
 }
 
 /* set a handle information */
 DECL_HANDLER(set_handle_info)
 {
-    reply->old_flags = set_handle_flags( (PPROCESSINFO)PsGetCurrentProcessWin32Process() , req->handle, req->mask, req->flags );
+    reply->old_flags = set_handle_flags( PsGetCurrentProcessWin32Process() , req->handle, req->mask, req->flags );
 }
 
 /* duplicate a handle */
@@ -597,9 +597,9 @@ DECL_HANDLER(get_object_info)
     struct object *obj;
     WCHAR *name;
 
-    if (!(obj = get_handle_obj( (PPROCESSINFO)PsGetCurrentProcessWin32Process(), req->handle, 0, NULL ))) return;
+    if (!(obj = get_handle_obj( PsGetCurrentProcessWin32Process(), req->handle, 0, NULL ))) return;
 
-    reply->access = get_handle_access( (PPROCESSINFO)PsGetCurrentProcessWin32Process(), req->handle );
+    reply->access = get_handle_access( PsGetCurrentProcessWin32Process(), req->handle );
     reply->ref_count = obj->refcount;
     if ((name = get_object_full_name( obj, &reply->total )))
         set_reply_data_ptr( (void*)req, name, min( reply->total, get_reply_max_size((void*)req) ));
@@ -627,7 +627,7 @@ DECL_HANDLER(set_security_object)
     if (req->security_info & DACL_SECURITY_INFORMATION)
         access |= WRITE_DAC;
 
-    if (!(obj = get_handle_obj( (PPROCESSINFO)PsGetCurrentProcessWin32Process(), req->handle, access, NULL ))) return;
+    if (!(obj = get_handle_obj( PsGetCurrentProcessWin32Process(), req->handle, access, NULL ))) return;
 
     obj->ops->set_sd( obj, sd, req->security_info );
     release_object( obj );

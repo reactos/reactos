@@ -1674,7 +1674,7 @@ DECL_HANDLER(set_queue_mask)
             /* if skip wait is set, do what would have been done in the subsequent wait */
             if (req->skip_wait)
             {
-                msg_queue_satisfied( &queue->obj, (PTHREADINFO)PsGetCurrentThreadWin32Thread() );
+                msg_queue_satisfied( &queue->obj, PsGetCurrentThreadWin32Thread() );
             }
             else
             {
@@ -2087,7 +2087,7 @@ DECL_HANDLER(kill_win_timer)
     }
     else
     {
-        thread = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
+        thread = PsGetCurrentThreadWin32Thread();
         ObReferenceObjectByPointer(thread->peThread, 0, NULL, KernelMode);
     }
 

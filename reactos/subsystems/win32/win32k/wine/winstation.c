@@ -532,7 +532,7 @@ DECL_HANDLER(create_winstation)
     get_req_unicode_str( (void*)req, &name );
     if ((winstation = create_winstation( &name, req->attributes, req->flags )))
     {
-        reply->handle = alloc_handle( (PPROCESSINFO)PsGetCurrentProcessWin32Process(), winstation, req->access, req->attributes );
+        reply->handle = alloc_handle( PsGetCurrentProcessWin32Process(), winstation, req->access, req->attributes );
         release_object( winstation );
     }
 }
@@ -555,11 +555,12 @@ DECL_HANDLER(open_winstation)
 DECL_HANDLER(close_winstation)
 {
     struct winstation *winstation;
+    PTHREADINFO current = PsGetCurrentThreadWin32Thread();
 
-    if ((winstation = (struct winstation *)get_handle_obj( (PPROCESSINFO)PsGetCurrentProcessWin32Process(), req->handle,
+    if ((winstation = (struct winstation *)get_handle_obj( current->process, req->handle,
                                                            0, &winstation_ops )))
     {
-        if (close_handle( PsGetCurrentProcessWin32Process(), req->handle )) set_error( STATUS_ACCESS_DENIED );
+        if (close_handle( current->process, req->handle )) set_error( STATUS_ACCESS_DENIED );
         release_object( winstation );
     }
 }
@@ -576,12 +577,13 @@ DECL_HANDLER(get_process_winstation)
 DECL_HANDLER(set_process_winstation)
 {
     struct winstation *winstation;
+    PTHREADINFO current = PsGetCurrentThreadWin32Thread();
 
-    if ((winstation = (struct winstation *)get_handle_obj( (PPROCESSINFO)PsGetCurrentProcessWin32Process(), req->handle,
+    if ((winstation = (struct winstation *)get_handle_obj( current->process, req->handle,
                                                            0, &winstation_ops )))
     {
         /* FIXME: should we close the old one? */
-        ((PPROCESSINFO)PsGetCurrentProcessWin32Process())->winstation = req->handle;
+        current->process->winstation = req->handle;
         release_object( winstation );
     }
 }
@@ -592,15 +594,15 @@ DECL_HANDLER(create_desktop)
     struct desktop *desktop;
     struct winstation *winstation;
     struct unicode_str name;
-    PPROCESSINFO current = (PPROCESSINFO)PsGetCurrentProcessWin32Process();
+    PTHREADINFO current = PsGetCurrentThreadWin32Thread();
 
     reply->handle = 0;
     get_req_unicode_str( (void*)req, &name );
-    if ((winstation = get_process_winstation( current, WINSTA_CREATEDESKTOP )))
+    if ((winstation = get_process_winstation( current->process, WINSTA_CREATEDESKTOP )))
     {
         if ((desktop = create_desktop( &name, req->attributes, req->flags, winstation )))
         {
-            reply->handle = alloc_handle( current, desktop, req->access, req->attributes );
+            reply->handle = alloc_handle( current->process, desktop, req->access, req->attributes );
             release_object( desktop );
         }
         release_object( winstation );
@@ -612,14 +614,15 @@ DECL_HANDLER(open_desktop)
 {
     struct winstation *winstation;
     struct unicode_str name;
+    PTHREADINFO current = PsGetCurrentThreadWin32Thread();
 
     get_req_unicode_str( (void*)req, &name );
 
     /* FIXME: check access rights */
     if (!req->winsta)
-        winstation = get_process_winstation( (PPROCESSINFO)PsGetCurrentProcessWin32Process(), 0 );
+        winstation = get_process_winstation( current->process, 0 );
     else
-        winstation = (struct winstation *)get_handle_obj( (PPROCESSINFO)PsGetCurrentProcessWin32Process(), req->winsta, 0, &winstation_ops );
+        winstation = (struct winstation *)get_handle_obj( current->process, req->winsta, 0, &winstation_ops );
 
     if (winstation)
     {
@@ -641,12 +644,13 @@ DECL_HANDLER(open_desktop)
 DECL_HANDLER(close_desktop)
 {
     struct desktop *desktop;
+    PTHREADINFO current = PsGetCurrentThreadWin32Thread();
 
     /* make sure it is a desktop handle */
-    if ((desktop = (struct desktop *)get_handle_obj( (PPROCESSINFO)PsGetCurrentProcessWin32Process(), req->handle,
+    if ((desktop = (struct desktop *)get_handle_obj( current->process, req->handle,
                                                      0, &desktop_ops )))
     {
-        if (close_handle( PsGetCurrentProcessWin32Process(), req->handle )) set_error( STATUS_DEVICE_BUSY );
+        if (close_handle( current->process, req->handle )) set_error( STATUS_DEVICE_BUSY );
         release_object( desktop );
     }
 }
@@ -678,7 +682,7 @@ DECL_HANDLER(set_thread_desktop)
 {
     struct desktop *old_desktop, *new_desktop;
     struct winstation *winstation;
-    PTHREADINFO current = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
+    PTHREADINFO current = PsGetCurrentThreadWin32Thread();
 
     if (!(winstation = get_process_winstation( current->process, 0 /* FIXME: access rights? */ )))
         return;
@@ -723,7 +727,7 @@ DECL_HANDLER(set_user_object_info)
 {
     struct object *obj;
 
-    if (!(obj = get_handle_obj( (PPROCESSINFO)PsGetCurrentProcessWin32Process(), req->handle, 0, NULL ))) return;
+    if (!(obj = get_handle_obj( PsGetCurrentProcessWin32Process(), req->handle, 0, NULL ))) return;
 
     if (obj->ops == &desktop_ops)
     {
@@ -777,7 +781,7 @@ DECL_HANDLER(enum_desktop)
     struct desktop *desktop;
     unsigned int index = 0;
 
-    if (!(winstation = (struct winstation *)get_handle_obj( (PPROCESSINFO)PsGetCurrentProcessWin32Process(), req->winstation,
+    if (!(winstation = (struct winstation *)get_handle_obj( PsGetCurrentProcessWin32Process(), req->winstation,
                                                             WINSTA_ENUMDESKTOPS, &winstation_ops )))
         return;
 
