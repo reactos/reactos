@@ -4,7 +4,8 @@
 
 #include <ntifs.h>
 #include <ntddk.h>
-#define NDEBUG
+//#define NDEBUG
+#define YDEBUG
 #include <debug.h>
 #include <portcls.h>
 #include <ks.h>
@@ -16,8 +17,11 @@
 #include "kstypes.h"
 #include "ksiface.h"
 
+#include "ksmedia.h"
 
 #define TAG_DEVICE_HEADER 'KSDH'
+#define REG_PINFLAG_B_MANY 0x4 /* strmif.h */
+#define MERIT_DO_NOT_USE 0x200000 /* dshow.h */
 
 #define DEFINE_KSPROPERTY_PINPROPOSEDATAFORMAT(PinSet,\
     PropGeneral, PropInstances, PropIntersection)\

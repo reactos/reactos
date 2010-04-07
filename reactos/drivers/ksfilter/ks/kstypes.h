@@ -108,6 +108,8 @@ typedef struct
     LIST_ENTRY PowerDispatchList;
     LIST_ENTRY ObjectBags;
 
+    PADAPTER_OBJECT AdapterObject;
+
 }KSIDEVICE_HEADER, *PKSIDEVICE_HEADER;
 
 typedef struct
@@ -120,6 +122,7 @@ typedef struct
 {
     LIST_ENTRY Entry;
     UNICODE_STRING SymbolicLink;
+    CLSID DeviceInterfaceClass;
 }SYMBOLIC_LINK_ENTRY, *PSYMBOLIC_LINK_ENTRY;
 
 typedef struct
@@ -157,3 +160,51 @@ typedef struct
 
     WCHAR BusIdentifier[1];
 }BUS_ENUM_DEVICE_EXTENSION, *PBUS_ENUM_DEVICE_EXTENSION;
+
+typedef struct
+{
+    PUCHAR FilterData;
+    ULONG FilterLength;
+    ULONG FilterOffset;
+
+    PUCHAR DataCache;
+    ULONG DataLength;
+    ULONG DataOffset;
+
+}KSPCACHE_DESCRIPTOR, *PKSPCACHE_DESCRIPTOR;
+
+typedef struct
+{
+    DWORD dwVersion;
+    DWORD dwMerit;
+    DWORD dwPins;
+    DWORD dwUnused;
+}KSPCACHE_FILTER_HEADER, *PKSPCACHE_FILTER_HEADER;
+
+typedef struct
+{
+    ULONG Signature;
+    ULONG Flags;
+    ULONG Instances;
+    ULONG MediaTypes;
+    ULONG Mediums;
+    DWORD Category;
+}KSPCACHE_PIN_HEADER, *PKSPCACHE_PIN_HEADER;
+
+
+typedef struct
+{
+    ULONG Signature;
+    ULONG dwUnused;
+    ULONG OffsetMajor;
+    ULONG OffsetMinor;
+}KSPCACHE_DATARANGE, *PKSPCACHE_DATARANGE;
+
+
+typedef struct
+{
+    CLSID Medium;
+    ULONG dw1;
+    ULONG dw2;
+}KSPCACHE_MEDIUM;
+

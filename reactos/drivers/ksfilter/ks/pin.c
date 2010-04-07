@@ -17,6 +17,9 @@ typedef struct _KSISTREAM_POINTER
     KDPC TimerDpc;
     struct _KSISTREAM_POINTER *Next;
     PKSPIN Pin;
+    PVOID Data;
+    ULONG Offset;
+    ULONG Length;
     KSSTREAM_POINTER StreamPointer;
 }KSISTREAM_POINTER, *PKSISTREAM_POINTER;
 
@@ -40,10 +43,11 @@ typedef struct
 
     LIST_ENTRY IrpList;
     KSPIN_LOCK IrpListLock;
+    volatile LONG IrpCount;
 
     PKSISTREAM_POINTER ClonedStreamPointer;
-    PKSISTREAM_POINTER LeadingEdgeStreamPointer;
-    PKSISTREAM_POINTER TrailingStreamPointer;
+    KSISTREAM_POINTER LeadingEdgeStreamPointer;
+    KSISTREAM_POINTER TrailingStreamPointer;
 
     PFNKSPINPOWER  Sleep;
     PFNKSPINPOWER  Wake;
@@ -58,9 +62,11 @@ typedef struct
 
     PKSWORKER PinWorker;
     WORK_QUEUE_ITEM PinWorkQueueItem;
-    IRP * Irp;
     KEVENT FrameComplete;
-
+    ULONG FrameSize;
+    ULONG NumFrames;
+    PDMA_ADAPTER Dma;
+    ULONG MapRegisters;
 
 }IKsPinImpl;
 
@@ -1202,6 +1208,84 @@ KsProcessPinUpdate(
     return FALSE;
 }
 
+NTSTATUS
+IKsPin_PrepareStreamHeader(
+    IN IKsPinImpl * This,
+    IN PKSISTREAM_POINTER StreamPointer)
+{
+    PKSSTREAM_HEADER Header;
+    ULONG Length;
+
+    /* grab new irp */
+    StreamPointer->Irp = KsRemoveIrpFromCancelableQueue(&This->IrpList, &This->IrpListLock, KsListEntryHead, KsAcquireAndRemoveOnlySingleItem);
+    if (!StreamPointer->Irp)
+    {
+        /* run out of mappings */
+        DPRINT("OutOfMappings\n");
+        return STATUS_DEVICE_NOT_READY;
+    }
+
+    InterlockedDecrement(&This->IrpCount);
+
+    /* get stream header */
+    if (StreamPointer->Irp->RequestorMode == UserMode)
+        Header = (PKSSTREAM_HEADER)StreamPointer->Irp->AssociatedIrp.SystemBuffer;
+    else
+        Header = (PKSSTREAM_HEADER)StreamPointer->Irp->UserBuffer;
+
+    /* initialize stream pointer */
+    StreamPointer->Callback = NULL;
+    StreamPointer->Length = max(Header->DataUsed, Header->FrameExtent);
+    StreamPointer->Next = NULL;
+    StreamPointer->Offset = 0;
+    StreamPointer->Pin = &This->Pin;
+    StreamPointer->Data = Header->Data;
+
+    StreamPointer->StreamPointer.Context = NULL;
+    StreamPointer->StreamPointer.Pin = &This->Pin;
+    StreamPointer->StreamPointer.StreamHeader = Header;
+
+    if (This->Pin.Descriptor->PinDescriptor.DataFlow == KSPIN_DATAFLOW_IN)
+        StreamPointer->StreamPointer.Offset = &StreamPointer->StreamPointer.OffsetIn;
+    else
+    StreamPointer->StreamPointer.Offset = &StreamPointer->StreamPointer.OffsetOut;
+
+    StreamPointer->StreamPointer.Offset->Alignment = 0;
+    StreamPointer->StreamPointer.Offset->Count = 0;
+    StreamPointer->StreamPointer.Offset->Data = NULL;
+    StreamPointer->StreamPointer.Offset->Remaining = 0;
+
+    ASSERT(StreamPointer->StreamPointer.Offset->Remaining == 0);
+
+    //StreamPointer->Offset += StreamPointer->StreamPointer.Offset->Count;
+
+    ASSERT(StreamPointer->Length > StreamPointer->Offset);
+    ASSERT(StreamPointer->StreamPointer.StreamHeader);
+    ASSERT(This->FrameSize);
+
+    /* calculate length */
+    /* TODO split into frames */
+    Length = StreamPointer->Length;
+
+    /* FIXME */
+    ASSERT(Length);
+
+    StreamPointer->StreamPointer.Offset->Alignment = 0;
+    StreamPointer->StreamPointer.Context = NULL;
+    StreamPointer->StreamPointer.Pin = &This->Pin;
+    StreamPointer->StreamPointer.Offset->Count = Length;
+    StreamPointer->StreamPointer.Offset->Remaining = Length;
+    StreamPointer->StreamPointer.Offset->Data = (PVOID)((ULONG_PTR)StreamPointer->Data + StreamPointer->Offset);
+    StreamPointer->StreamPointer.StreamHeader->FrameExtent = Length;
+    if (StreamPointer->StreamPointer.StreamHeader->DataUsed)
+        StreamPointer->StreamPointer.StreamHeader->DataUsed = Length;
+
+    StreamPointer->StreamPointer.StreamHeader->Data = StreamPointer->StreamPointer.Offset->Data;
+
+    return STATUS_SUCCESS;
+}
+
+
 /*
     @unimplemented
 */
@@ -1213,32 +1297,30 @@ KsPinGetLeadingEdgeStreamPointer(
     IN KSSTREAM_POINTER_STATE State)
 {
     IKsPinImpl * This;
+    NTSTATUS Status;
 
     This = (IKsPinImpl*)CONTAINING_RECORD(Pin, IKsPinImpl, Pin);
 
-    DPRINT("KsPinGetLeadingEdgeStreamPointer Pin %p State %x Count %lu Remaining %lu\n", Pin, State, 
-           This->LeadingEdgeStreamPointer->StreamPointer.Offset->Count,
-           This->LeadingEdgeStreamPointer->StreamPointer.Offset->Remaining);
+    DPRINT("KsPinGetLeadingEdgeStreamPointer Pin %p State %x Count %lu Remaining %lu\n", Pin, State,
+           This->LeadingEdgeStreamPointer.Length,
+           This->LeadingEdgeStreamPointer.Offset);
 
     /* sanity check */
-    ASSERT(This->LeadingEdgeStreamPointer);
     ASSERT(State == KSSTREAM_POINTER_STATE_LOCKED);
 
     if (State == KSSTREAM_POINTER_STATE_LOCKED)
     {
-        /* do we have an irp packet */
-        if (!This->Irp)
+        if (!This->LeadingEdgeStreamPointer.Irp || This->LeadingEdgeStreamPointer.StreamPointer.Offset->Remaining == 0)
         {
-            /* run out of packets */
-            return NULL;
+            Status = IKsPin_PrepareStreamHeader(This, &This->LeadingEdgeStreamPointer);
+            if (!NT_SUCCESS(Status))
+                return NULL;
         }
 
-        if (!This->LeadingEdgeStreamPointer->StreamPointer.Offset->Remaining)
-            return NULL;
-     }
-     DPRINT("LeadingEdge %p\n", &This->LeadingEdgeStreamPointer->StreamPointer);
-     This->LeadingEdgeStreamPointer->Pin = &This->Pin;
-    return &This->LeadingEdgeStreamPointer->StreamPointer;
+        DPRINT("KsPinGetLeadingEdgeStreamPointer NewOffset %lu TotalLength %lu\n", This->LeadingEdgeStreamPointer.Offset, This->LeadingEdgeStreamPointer.Length);
+    }
+
+     return &This->LeadingEdgeStreamPointer.StreamPointer;
 }
 
 /*
@@ -1293,7 +1375,7 @@ KsStreamPointerUnlock(
     IN BOOLEAN Eject)
 {
     UNIMPLEMENTED
-    DPRINT("KsStreamPointerUnlock Eject %lu\n", Eject);
+    DPRINT("KsStreamPointerUnlock StreamPointer %pEject %lu\n", StreamPointer, Eject);
     DbgBreakPoint();
 }
 
@@ -1328,7 +1410,7 @@ KsStreamPointerDelete(
     PKSISTREAM_POINTER Pointer = (PKSISTREAM_POINTER)CONTAINING_RECORD(StreamPointer, KSISTREAM_POINTER, StreamPointer);
 
     DPRINT("KsStreamPointerDelete %p\n", Pointer);
-
+DbgBreakPoint();
     This = (IKsPinImpl*)CONTAINING_RECORD(Pointer->StreamPointer.Pin, IKsPinImpl, Pin);
 
     /* point to first stream pointer */
@@ -1378,6 +1460,7 @@ KsStreamPointerClone(
     PKSISTREAM_POINTER CurFrame;
     PKSISTREAM_POINTER NewFrame;
     ULONG RefCount;
+    NTSTATUS Status;
     ULONG Size;
 
     DPRINT("KsStreamPointerClone StreamPointer %p CancelCallback %p ContextSize %p CloneStreamPointer %p\n", StreamPointer, CancelCallback, ContextSize, CloneStreamPointer);
@@ -1404,11 +1487,30 @@ KsStreamPointerClone(
     /* copy stream pointer */
     RtlMoveMemory(NewFrame, CurFrame, sizeof(KSISTREAM_POINTER));
 
+    /* locate pin */
+    This = (IKsPinImpl*)CONTAINING_RECORD(CurFrame->Pin, IKsPinImpl, Pin);
+
+    /* prepare stream header in case required */
+    if (CurFrame->StreamPointer.Offset->Remaining == 0)
+    {
+        Status = IKsPin_PrepareStreamHeader(This, NewFrame);
+        if (!NT_SUCCESS(Status))
+        {
+            FreeItem(NewFrame);
+            return STATUS_DEVICE_NOT_READY;
+        }
+    }
+
     if (ContextSize)
         NewFrame->StreamPointer.Context = (NewFrame + 1);
 
-    /* locate pin */
-    This = (IKsPinImpl*)CONTAINING_RECORD(CurFrame->Pin, IKsPinImpl, Pin);
+
+    if (This->Pin.Descriptor->PinDescriptor.DataFlow == KSPIN_DATAFLOW_IN)
+        NewFrame->StreamPointer.Offset = &NewFrame->StreamPointer.OffsetIn;
+    else
+        NewFrame->StreamPointer.Offset = &NewFrame->StreamPointer.OffsetOut;
+
+
 
     NewFrame->StreamPointer.Pin = &This->Pin;
 
@@ -1419,6 +1521,8 @@ KsStreamPointerClone(
 
     /* store result */
     *CloneStreamPointer = &NewFrame->StreamPointer;
+
+    DPRINT("KsStreamPointerClone CloneStreamPointer %p\n", *CloneStreamPointer);
 
     return STATUS_SUCCESS;
 }
@@ -1437,52 +1541,46 @@ KsStreamPointerAdvanceOffsets(
 {
     PKSISTREAM_POINTER CurFrame;
     IKsPinImpl * This;
+    NTSTATUS Status;
 
-    DPRINT("KsStreamPointerAdvanceOffsets	InUsed %lu OutUsed %lu Eject %lu\n", InUsed, OutUsed, Eject);
+    DPRINT("KsStreamPointerAdvanceOffsets StreamPointer %p InUsed %lu OutUsed %lu Eject %lu\n", StreamPointer, InUsed, OutUsed, Eject);
 
     /* get stream pointer */
     CurFrame = (PKSISTREAM_POINTER)CONTAINING_RECORD(StreamPointer, KSISTREAM_POINTER, StreamPointer);
 
-    CurFrame->StreamPointer.OffsetIn.Remaining -= InUsed;
-    CurFrame->StreamPointer.OffsetOut.Remaining -= OutUsed;
-    CurFrame->StreamPointer.OffsetIn.Count -= InUsed;
-    CurFrame->StreamPointer.OffsetOut.Count -= OutUsed;
-    CurFrame->StreamPointer.OffsetIn.Data = (PVOID)((ULONG_PTR)CurFrame->StreamPointer.OffsetIn.Data + InUsed);
-    CurFrame->StreamPointer.OffsetOut.Data = (PVOID)((ULONG_PTR)CurFrame->StreamPointer.OffsetOut.Data + OutUsed);
-
-    if (!CurFrame->StreamPointer.OffsetIn.Remaining)
-        CurFrame->StreamPointer.OffsetIn.Data = NULL;
-
-    if (!CurFrame->StreamPointer.OffsetOut.Remaining)
-        CurFrame->StreamPointer.OffsetOut.Data = NULL;
-
     /* locate pin */
     This = (IKsPinImpl*)CONTAINING_RECORD(CurFrame->Pin, IKsPinImpl, Pin);
 
+    /* TODO */
+    ASSERT(InUsed == 0);
+    ASSERT(Eject == 0);
+    ASSERT(OutUsed);
+
+    DPRINT("KsStreamPointerAdvanceOffsets Offset %lu Length %lu NewOffset %lu Remaining %lu LeadingEdge %p DataUsed %lu\n", CurFrame->Offset, CurFrame->Length, CurFrame->Offset + OutUsed,
+CurFrame->StreamPointer.OffsetOut.Remaining, &This->LeadingEdgeStreamPointer.StreamPointer, CurFrame->StreamPointer.StreamHeader->DataUsed);
+DbgBreakPoint();
+
     if (This->Pin.Descriptor->PinDescriptor.DataFlow == KSPIN_DATAFLOW_IN)
     {
-        if (CurFrame->StreamPointer.OffsetIn.Remaining == 0)
-        {
-            /* get next mapping */
-            This->Irp = KsRemoveIrpFromCancelableQueue(&This->IrpList, &This->IrpListLock, KsListEntryHead, KsAcquireAndRemoveOnlySingleItem);
-            if (!This->Irp)
-                return STATUS_DEVICE_NOT_READY;
-
-            /* FIXME handle me */
-            ASSERT(0);
-        }
+        ASSERT(CurFrame->StreamPointer.OffsetIn.Remaining >= InUsed);
+        CurFrame->StreamPointer.OffsetIn.Remaining -= InUsed;
+        CurFrame->StreamPointer.OffsetIn.Data = (PVOID)((ULONG_PTR)CurFrame->StreamPointer.OffsetIn.Data + InUsed);
     }
     else
     {
-        if (CurFrame->StreamPointer.OffsetOut.Remaining == 0)
+        if (!CurFrame->StreamPointer.OffsetOut.Remaining)
         {
-            /* get next mapping */
-            This->Irp = KsRemoveIrpFromCancelableQueue(&This->IrpList, &This->IrpListLock, KsListEntryHead, KsAcquireAndRemoveOnlySingleItem);
-            if (!This->Irp)
+            Status = IKsPin_PrepareStreamHeader(This, CurFrame);
+            if (!NT_SUCCESS(Status))
+            {
                 return STATUS_DEVICE_NOT_READY;
-
-            /* FIXME handle me */
-            ASSERT(0);
+            }
+        }
+        else
+        {
+            ASSERT(CurFrame->StreamPointer.OffsetOut.Remaining >= OutUsed);
+            CurFrame->StreamPointer.OffsetOut.Remaining -= OutUsed;
+            CurFrame->StreamPointer.OffsetOut.Data = (PVOID)((ULONG_PTR)CurFrame->StreamPointer.OffsetOut.Data + OutUsed);
         }
     }
 
@@ -1499,6 +1597,7 @@ KsStreamPointerAdvance(
     IN PKSSTREAM_POINTER StreamPointer)
 {
     UNIMPLEMENTED
+    DbgBreakPoint();
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -1542,7 +1641,10 @@ KsStreamPointerScheduleTimeout(
     IN ULONGLONG Interval)
 {
     LARGE_INTEGER DueTime;
-    PKSISTREAM_POINTER Pointer = (PKSISTREAM_POINTER)StreamPointer;
+    PKSISTREAM_POINTER Pointer;
+
+    /* get stream pointer */
+    Pointer = (PKSISTREAM_POINTER)CONTAINING_RECORD(StreamPointer, KSISTREAM_POINTER, StreamPointer);
 
     /* setup timer callback */
     Pointer->Callback = Callback;
@@ -1564,7 +1666,10 @@ NTAPI
 KsStreamPointerCancelTimeout(
     IN PKSSTREAM_POINTER StreamPointer)
 {
-    PKSISTREAM_POINTER Pointer = (PKSISTREAM_POINTER)StreamPointer;
+    PKSISTREAM_POINTER Pointer;
+
+    /* get stream pointer */
+    Pointer = (PKSISTREAM_POINTER)CONTAINING_RECORD(StreamPointer, KSISTREAM_POINTER, StreamPointer);
 
     KeCancelTimer(&Pointer->Timer);
 
@@ -1582,7 +1687,7 @@ KsPinGetFirstCloneStreamPointer(
     IKsPinImpl * This;
 
     DPRINT("KsPinGetFirstCloneStreamPointer %p\n", Pin);
-    DbgBreakPoint();
+DbgBreakPoint();
     This = (IKsPinImpl*)CONTAINING_RECORD(Pin, IKsPinImpl, Pin);
     /* return first cloned stream pointer */
     return &This->ClonedStreamPointer->StreamPointer;
@@ -1597,10 +1702,14 @@ NTAPI
 KsStreamPointerGetNextClone(
     IN PKSSTREAM_POINTER StreamPointer)
 {
-    PKSISTREAM_POINTER Pointer = (PKSISTREAM_POINTER)StreamPointer;
+    PKSISTREAM_POINTER Pointer;
 
     DPRINT("KsStreamPointerGetNextClone\n");
-    DbgBreakPoint();
+DbgBreakPoint();
+    /* get stream pointer */
+    Pointer = (PKSISTREAM_POINTER)CONTAINING_RECORD(StreamPointer, KSISTREAM_POINTER, StreamPointer);
+
+
     /* is there a another cloned stream pointer */
     if (!Pointer->Next)
         return NULL;
@@ -1614,11 +1723,7 @@ NTAPI
 IKsPin_PinCentricWorker(
     IN PVOID Parameter)
 {
-    PIO_STACK_LOCATION IoStack;
-    PKSSTREAM_HEADER Header;
-    ULONG NumHeaders;
     NTSTATUS Status;
-    PIRP Irp;
     IKsPinImpl * This = (IKsPinImpl*)Parameter;
 
     DPRINT("IKsPin_PinCentricWorker\n");
@@ -1630,76 +1735,21 @@ IKsPin_PinCentricWorker(
     ASSERT(This->Pin.Descriptor->Dispatch->Process);
     ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
     ASSERT(!(This->Pin.Descriptor->Flags & KSPIN_FLAG_DISPATCH_LEVEL_PROCESSING));
-    ASSERT(This->LeadingEdgeStreamPointer);
+    ASSERT(!(This->Pin.Descriptor->Flags & KSPIN_FLAG_GENERATE_MAPPINGS));
 
     do
     {
-        /* do we have an irp packet */
-        if (!This->Irp)
-        {
-            /* fetch new irp packet */
-            This->Irp = KsRemoveIrpFromCancelableQueue(&This->IrpList, &This->IrpListLock, KsListEntryHead, KsAcquireAndRemoveOnlySingleItem);
-
-            if (!This->Irp)
-            {
-                /* reached last packet */
-                break;
-            }
-        }
-
-        /* get current irp stack location */
-        IoStack = IoGetCurrentIrpStackLocation(This->Irp);
-
-       if (This->Irp->RequestorMode == UserMode)
-           This->LeadingEdgeStreamPointer->StreamPointer.StreamHeader = Header = (PKSSTREAM_HEADER)This->Irp->AssociatedIrp.SystemBuffer;
-       else
-           This->LeadingEdgeStreamPointer->StreamPointer.StreamHeader = Header = (PKSSTREAM_HEADER)This->Irp->UserBuffer;
-
-        /* calculate num headers */
-        NumHeaders = IoStack->Parameters.DeviceIoControl.OutputBufferLength / Header->Size;
-
-        /* assume headers of same length */
-        ASSERT(IoStack->Parameters.DeviceIoControl.OutputBufferLength % Header->Size == 0);
-
-        /* FIXME support multiple stream headers */
-       ASSERT(NumHeaders == 1);
-
-        if (This->Irp->RequestorMode == UserMode)
-        {
-            /* prepare header */
-            Header->Data = MmGetSystemAddressForMdlSafe(This->Irp->MdlAddress, NormalPagePriority);
-        }
-
-        /* set up stream pointer */
-        This->LeadingEdgeStreamPointer->Irp = Irp = This->Irp;
-        This->LeadingEdgeStreamPointer->StreamPointer.Context = NULL;
-        This->LeadingEdgeStreamPointer->StreamPointer.Pin = &This->Pin;
-        This->LeadingEdgeStreamPointer->StreamPointer.OffsetOut.Count = max(Header->DataUsed, Header->FrameExtent);
-        This->LeadingEdgeStreamPointer->StreamPointer.OffsetOut.Data = Header->Data;
-        This->LeadingEdgeStreamPointer->StreamPointer.OffsetOut.Count = max(Header->DataUsed, Header->FrameExtent);
-        This->LeadingEdgeStreamPointer->StreamPointer.OffsetOut.Remaining = max(Header->DataUsed, Header->FrameExtent);
-        This->LeadingEdgeStreamPointer->Pin = &This->Pin;
-
         DPRINT("IKsPin_PinCentricWorker calling Pin Process Routine\n");
 
-            Status = This->Pin.Descriptor->Dispatch->Process(&This->Pin);
-            DPRINT("IKsPin_PinCentricWorker Status %lx, Count %lu Remaining %lu\n", Status,
-                   This->LeadingEdgeStreamPointer->StreamPointer.Offset->Count,
-                   This->LeadingEdgeStreamPointer->StreamPointer.Offset->Remaining);
-
-        ASSERT(Status != STATUS_PENDING);
-
-        // HACK complete irp
-        Irp->IoStatus.Information = max(Header->DataUsed, Header->FrameExtent);
-        Irp->IoStatus.Status = Status;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        KsDecrementCountedWorker(This->PinWorker);
-
-
+        Status = This->Pin.Descriptor->Dispatch->Process(&This->Pin);
+        DPRINT("IKsPin_PinCentricWorker Status %lx, Offset %lu Length %lu\n", Status,
+               This->LeadingEdgeStreamPointer.Offset,
+               This->LeadingEdgeStreamPointer.Length);
         break;
 
-    }while(TRUE);
+    }while(This->IrpCount);
 }
+
 
 NTSTATUS
 NTAPI
@@ -1709,6 +1759,8 @@ IKsPin_DispatchKsStream(
     IKsPinImpl * This)
 {
     PKSPROCESSPIN_INDEXENTRY ProcessPinIndex;
+    PKSSTREAM_HEADER Header;
+    ULONG NumHeaders;
     PKSFILTER Filter;
     PIO_STACK_LOCATION IoStack;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -1721,6 +1773,7 @@ IKsPin_DispatchKsStream(
     /* get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
+    /* probe stream pointer */
     if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_WRITE_STREAM)
         Status = KsProbeStreamIrp(Irp, KSSTREAM_WRITE | KSPROBE_ALLOCATEMDL | KSPROBE_PROBEANDLOCK | KSPROBE_SYSTEMADDRESS, This->Pin.StreamHeaderSize);
     else
@@ -1735,6 +1788,46 @@ IKsPin_DispatchKsStream(
         return Status;
     }
 
+    if (Irp->RequestorMode == UserMode)
+        Header = (PKSSTREAM_HEADER)Irp->AssociatedIrp.SystemBuffer;
+    else
+        Header = (PKSSTREAM_HEADER)Irp->UserBuffer;
+
+    if (!Header)
+    {
+        DPRINT("NoHeader Canceling Irp %p\n", Irp);
+        Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
+
+    /* calculate num headers */
+    NumHeaders = IoStack->Parameters.DeviceIoControl.OutputBufferLength / Header->Size;
+
+    /* assume headers of same length */
+    ASSERT(IoStack->Parameters.DeviceIoControl.OutputBufferLength % Header->Size == 0);
+
+    /* FIXME support multiple stream headers */
+    ASSERT(NumHeaders == 1);
+
+    if (Irp->RequestorMode == UserMode)
+    {
+        /* prepare header */
+        ASSERT(Irp->MdlAddress);
+        Header->Data = MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
+
+        if (!Header->Data)
+        {
+            DPRINT("NoHeader->Data Canceling Irp %p\n", Irp);
+            Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return Status;
+        }
+
+    }
+
+
+
     if (This->Pin.Descriptor->Dispatch->Process)
     {
         /* it is a pin centric avstream */
@@ -1748,6 +1841,10 @@ IKsPin_DispatchKsStream(
         /* sanity checks */
         ASSERT(!(This->Pin.Descriptor->Flags & KSPIN_FLAG_DISPATCH_LEVEL_PROCESSING));
         ASSERT(This->PinWorker);
+
+        InterlockedIncrement(&This->IrpCount);
+
+        DPRINT("IKsPin_DispatchKsStream IrpCount %lu\n", This->IrpCount);
 
         /* start the processing loop */
         KsIncrementCountedWorker(This->PinWorker);
@@ -1781,7 +1878,6 @@ IKsPin_DispatchKsStream(
 
         /* add irp to cancelable queue */
         KsAddIrpToCancelableQueue(&This->IrpList, &This->IrpListLock, Irp, KsListEntryTail, NULL /* FIXME */);
-
 
         Status = Filter->Descriptor->Dispatch->Process(Filter, ProcessPinIndex);
 
@@ -2110,6 +2206,9 @@ KspCreatePin(
     NTSTATUS Status;
     PKSDATAFORMAT DataFormat;
     PKSBASIC_HEADER BasicHeader;
+    ULONG Index;
+    ULONG FrameSize = 0;
+    ULONG NumFrames = 0;
 
     /* sanity checks */
     ASSERT(Descriptor->Dispatch);
@@ -2118,6 +2217,52 @@ KspCreatePin(
 
 //Output Pin: KSPIN_FLAG_PROCESS_IN_RUN_STATE_ONLY
 //Input Pin: KSPIN_FLAG_FIXED_FORMAT|KSPIN_FLAG_DO_NOT_USE_STANDARD_TRANSPORT|KSPIN_FLAG_FRAMES_NOT_REQUIRED_FOR_PROCESSING
+
+
+    if (Descriptor->AllocatorFraming)
+    {
+        DPRINT("KspCreatePin Dataflow %lu\n", Descriptor->PinDescriptor.DataFlow);
+        DPRINT("KspCreatePin CountItems %lu\n", Descriptor->AllocatorFraming->CountItems);
+        DPRINT("KspCreatePin PinFlags %lx\n", Descriptor->AllocatorFraming->PinFlags);
+        DPRINT("KspCreatePin OutputCompression RatioNumerator %lu RatioDenominator  %lu RatioConstantMargin %lu\n", Descriptor->AllocatorFraming->OutputCompression.RatioNumerator,
+               Descriptor->AllocatorFraming->OutputCompression.RatioDenominator, Descriptor->AllocatorFraming->OutputCompression.RatioConstantMargin);
+        DPRINT("KspCreatePin PinWeight %lx\n", Descriptor->AllocatorFraming->PinWeight);
+
+        for(Index = 0; Index < Descriptor->AllocatorFraming->CountItems; Index++)
+        {
+            DPRINT("KspCreatePin Index %lu MemoryFlags %lx\n", Index, Descriptor->AllocatorFraming->FramingItem[Index].MemoryFlags);
+            DPRINT("KspCreatePin Index %lu BusFlags %lx\n", Index, Descriptor->AllocatorFraming->FramingItem[Index].BusFlags);
+            DPRINT("KspCreatePin Index %lu Flags %lx\n", Index, Descriptor->AllocatorFraming->FramingItem[Index].Flags);
+            DPRINT("KspCreatePin Index %lu Frames %lu\n", Index, Descriptor->AllocatorFraming->FramingItem[Index].Frames);
+            DPRINT("KspCreatePin Index %lu FileAlignment %lx\n", Index, Descriptor->AllocatorFraming->FramingItem[Index].FileAlignment);
+            DPRINT("KspCreatePin Index %lu MemoryTypeWeight %lx\n", Index, Descriptor->AllocatorFraming->FramingItem[Index].MemoryTypeWeight);
+            DPRINT("KspCreatePin Index %lu PhysicalRange MinFrameSize %lu MaxFrameSize %lu Stepping %lu\n", Index, Descriptor->AllocatorFraming->FramingItem[Index].PhysicalRange.MinFrameSize,
+                   Descriptor->AllocatorFraming->FramingItem[Index].PhysicalRange.MaxFrameSize, 
+                   Descriptor->AllocatorFraming->FramingItem[Index].PhysicalRange.Stepping);
+
+            DPRINT("KspCreatePin Index %lu FramingRange  MinFrameSize %lu MaxFrameSize %lu Stepping %lu InPlaceWeight %lu NotInPlaceWeight %lu\n", 
+                   Index,
+                   Descriptor->AllocatorFraming->FramingItem[Index].FramingRange.Range.MinFrameSize,
+                   Descriptor->AllocatorFraming->FramingItem[Index].FramingRange.Range.MaxFrameSize,
+                   Descriptor->AllocatorFraming->FramingItem[Index].FramingRange.Range.Stepping,
+                   Descriptor->AllocatorFraming->FramingItem[Index].FramingRange.InPlaceWeight,
+                   Descriptor->AllocatorFraming->FramingItem[Index].FramingRange.NotInPlaceWeight);
+
+           FrameSize = Descriptor->AllocatorFraming->FramingItem[Index].FramingRange.Range.MaxFrameSize;
+           NumFrames = Descriptor->AllocatorFraming->FramingItem[Index].Frames;
+        }
+    }
+
+    if (!FrameSize)
+    {
+        /* default to 50 * 188 (MPEG2 TS packet size) */
+        FrameSize = 9400;
+    }
+
+    if (!NumFrames)
+    {
+        NumFrames = 8;
+    }
 
     /* get current irp stack */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -2158,12 +2303,13 @@ KspCreatePin(
     This->BasicHeader.ControlMutex = BasicHeader->ControlMutex;
     ASSERT(This->BasicHeader.ControlMutex);
 
-
     InitializeListHead(&This->BasicHeader.EventList);
     KeInitializeSpinLock(&This->BasicHeader.EventListLock);
 
     /* initialize pin */
     This->lpVtbl = &vt_IKsPin;
+    This->FrameSize = FrameSize;
+    This->NumFrames = NumFrames;
     This->lpVtblReferenceClock = &vt_ReferenceClock;
     This->ref = 1;
     This->FileObject = IoStack->FileObject;
@@ -2171,7 +2317,6 @@ KspCreatePin(
     KeInitializeMutex(&This->ProcessingMutex, 0);
     InitializeListHead(&This->IrpList);
     KeInitializeSpinLock(&This->IrpListLock);
-
 
     /* allocate object bag */
     This->Pin.Bag = AllocateItem(NonPagedPool, sizeof(KSIOBJECT_BAG));
@@ -2270,7 +2415,7 @@ KspCreatePin(
         This->ProcessPin.Flags = 0;
         This->ProcessPin.InPlaceCounterpart = NULL;
         This->ProcessPin.Pin = &This->Pin;
-        This->ProcessPin.StreamPointer = (PKSSTREAM_POINTER)This->LeadingEdgeStreamPointer;
+        This->ProcessPin.StreamPointer = (PKSSTREAM_POINTER)&This->LeadingEdgeStreamPointer.StreamPointer;
         This->ProcessPin.Terminate = FALSE;
 
         Status = Filter->lpVtbl->AddProcessPin(Filter, &This->ProcessPin);
@@ -2291,18 +2436,6 @@ KspCreatePin(
     {
         /* pin centric processing filter */
 
-        /* allocate leading stream pointer */
-        Status = _KsEdit(This->Pin.Bag, (PVOID*)&This->LeadingEdgeStreamPointer, sizeof(KSISTREAM_POINTER), sizeof(KSISTREAM_POINTER), 0);
-
-        /* FIXME cleanup */
-        ASSERT(Status == STATUS_SUCCESS);
-
-        /* FIXME cleanup */
-        ASSERT(Status == STATUS_SUCCESS);
-
-        /* setup stream pointer offset */
-         This->LeadingEdgeStreamPointer->StreamPointer.Offset = &This->LeadingEdgeStreamPointer->StreamPointer.OffsetOut;
-
         /* initialize work item */
         ExInitializeWorkItem(&This->PinWorkQueueItem, IKsPin_PinCentricWorker, (PVOID)This);
 
@@ -2318,6 +2451,12 @@ KspCreatePin(
             FreeItem(CreateItem);
             return Status;
         }
+
+        if (This->Pin.Descriptor->PinDescriptor.DataFlow == KSPIN_DATAFLOW_IN)
+            This->LeadingEdgeStreamPointer.StreamPointer.Offset = &This->LeadingEdgeStreamPointer.StreamPointer.OffsetIn;
+        else
+            This->LeadingEdgeStreamPointer.StreamPointer.Offset = &This->LeadingEdgeStreamPointer.StreamPointer.OffsetOut;
+
 
         KeInitializeEvent(&This->FrameComplete, NotificationEvent, FALSE);
 

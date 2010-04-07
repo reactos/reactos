@@ -112,14 +112,15 @@ NTSTATUS
 NTAPI
 IKsDevice_fnGetAdapterObject(
     IN IKsDevice * iface,
-    IN PADAPTER_OBJECT Object,
+    IN PADAPTER_OBJECT * Object,
     IN PULONG Unknown1,
     IN PULONG Unknown2)
 {
-    //PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, lpVtblIKsDevice);
+    PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, lpVtblIKsDevice);
 
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    *Object = This->AdapterObject;
+
+    return STATUS_SUCCESS;
 
 }
 
@@ -169,15 +170,24 @@ NTSTATUS
 NTAPI
 IKsDevice_fnArbitrateAdapterChannel(
     IN IKsDevice * iface,
-    IN ULONG ControlCode,
-    IN IO_ALLOCATION_ACTION Action,
+    IN ULONG NumberOfMapRegisters,
+    IN PDRIVER_CONTROL ExecutionRoutine,
     IN PVOID Context)
 {
-    //PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, lpVtblIKsDevice);
+    PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, lpVtblIKsDevice);
+    NTSTATUS Status;
 
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    DPRINT("IKsDevice_fnArbitrateAdapterChannel NumberOfMapRegisters %lu ExecutionRoutine %p Context %p Irql %lu\n", NumberOfMapRegisters, ExecutionRoutine, Context, KeGetCurrentIrql());
 
+    /* sanity check */
+    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    ASSERT(This->AdapterObject);
+
+    /* allocate adapter channel */
+    Status = IoAllocateAdapterChannel(This->AdapterObject, This->KsDevice.FunctionalDeviceObject, NumberOfMapRegisters, ExecutionRoutine, Context);
+
+    /* done */
+    return Status;
 }
 
 NTSTATUS
@@ -518,7 +528,6 @@ IKsDevice_Pnp(
             Status = KspForwardIrpSynchronous(DeviceObject, Irp);
 
             DPRINT1("IRP_MN_QUERY_INTERFACE Next Device: Status %x\n", Status);
-
             Irp->IoStatus.Status = Status;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
             return Status;
@@ -687,6 +696,23 @@ KsInitializeDevice(
 
     DPRINT("DeviceHeader %p\n", DeviceExtension->DeviceHeader);
 
+    if (Descriptor && Descriptor->Dispatch)
+    {
+        DPRINT("Descriptor Add %p\n", Descriptor->Dispatch->Add);
+        DPRINT("Descriptor Start %p\n", Descriptor->Dispatch->Start);
+        DPRINT("Descriptor PostStart %p\n", Descriptor->Dispatch->PostStart);
+        DPRINT("Descriptor QueryStop %p\n", Descriptor->Dispatch->QueryStop);
+        DPRINT("Descriptor CancelStop %p\n", Descriptor->Dispatch->CancelStop);
+        DPRINT("Descriptor Stop %p\n", Descriptor->Dispatch->Stop);
+        DPRINT("Descriptor QueryRemove %p\n", Descriptor->Dispatch->QueryRemove);
+        DPRINT("Descriptor CancelRemove %p\n", Descriptor->Dispatch->CancelRemove);
+        DPRINT("Descriptor Remove %p\n", Descriptor->Dispatch->Remove);
+        DPRINT("Descriptor QueryCapabilities %p\n", Descriptor->Dispatch->QueryCapabilities);
+        DPRINT("Descriptor SurpriseRemoval %p\n", Descriptor->Dispatch->SurpriseRemoval);
+        DPRINT("Descriptor QueryPower %p\n", Descriptor->Dispatch->QueryPower);
+        DPRINT("Descriptor SetPower %p\n", Descriptor->Dispatch->SetPower);
+        DPRINT("Descriptor QueryInterface %p\n", Descriptor->Dispatch->QueryInterface);
+    }
 
     /* check for success */
     if (!NT_SUCCESS(Status))

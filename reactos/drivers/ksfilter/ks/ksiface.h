@@ -282,7 +282,7 @@ DECLARE_INTERFACE_(IKsDevice, IUnknown)
     STDMETHOD_(NTSTATUS,ReleaseDevice)(THIS) PURE;
 
     STDMETHOD_(NTSTATUS, GetAdapterObject)(THIS_
-        IN PADAPTER_OBJECT Object,
+        IN PADAPTER_OBJECT * Object,
         IN PULONG Unknown1,
         IN PULONG Unknown2) PURE;
 
@@ -300,8 +300,8 @@ DECLARE_INTERFACE_(IKsDevice, IUnknown)
         IN KSSTATE NewState)PURE;
 
     STDMETHOD_(NTSTATUS, ArbitrateAdapterChannel)(THIS_
-        IN ULONG ControlCode,
-        IN IO_ALLOCATION_ACTION Action,
+        IN ULONG NumberOfMapRegisters,
+        IN PDRIVER_CONTROL ExecutionRoutine,
         IN PVOID Context)PURE;
 
     STDMETHOD_(NTSTATUS, CheckIoCapability)(THIS_
