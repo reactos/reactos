@@ -22,6 +22,7 @@ c_1252.nls=,,,,,,,,,,,,2
 cdfs.sys=,,,,,,x,,,,,,4
 cdrom.sys=,,,,,,x,,,,,,4
 class2.sys=,,,,,,x,,,,,,4
+isapnp.sys=,,,,,,,,,,,,4
 kdcom.dll=,,,,,,,,,,,,2
 disk.sys=,,,,,,x,,,,,,4
 floppy.sys=,,,,,,x,,,,,,4
@@ -36,13 +37,16 @@ ramdisk.sys=,,,,,,x,,,,,,4
 ext2.sys=,,,,,,x,,,,,,4
 
 [HardwareIdsDatabase]
-*PNP0C08 = acpi
+*PNP0A00 = isapnp
 *PNP0A03 = pci
+*PNP0C08 = acpi
+PCI\CC_0601 = isapnp
 PCI\CC_0604 = pci
 
 [BootBusExtenders.Load]
 acpi = acpi.sys
 pci = pci.sys
+isapnp = isapnp.sys
 
 [Cabinets]
 Cabinet=reactos.cab
