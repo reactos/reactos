@@ -54,6 +54,27 @@ BOOL PerfDataGetText(ULONG Index, ULONG ColumnIndex, LPTSTR lpText, int nMaxCoun
 DWORD WINAPI ProcessPageRefreshThread(void *lpParameter);
 int ProcessRunning(ULONG ProcessId);
 
+int ProcGetIndexByProcessId(DWORD dwProcessId)
+{
+    int     i;
+    LVITEM  item;
+    LPPROCESS_PAGE_LIST_ITEM pData;
+
+    for (i=0; i<ListView_GetItemCount(hProcessPageListCtrl); i++)
+    {
+        memset(&item, 0, sizeof(LV_ITEM));
+        item.mask = LVIF_PARAM;
+        item.iItem = i;
+        (void)ListView_GetItem(hProcessPageListCtrl, &item);
+        pData = (LPPROCESS_PAGE_LIST_ITEM)item.lParam;
+        if (PerfDataGetProcessId(pData->Index) == dwProcessId)
+        {
+            return i;
+        }
+    }
+    return 0;
+}
+
 DWORD GetSelectedProcessId(void)
 {
     int     Index;
@@ -427,7 +448,9 @@ void UpdateProcesses()
         pData = (LPPROCESS_PAGE_LIST_ITEM)item.lParam;
         if (!ProcessRunning(pData->ProcessId))
         {
-            (void)ListView_DeleteItem(hProcessPageListCtrl, i);
+            MessageBox(NULL, L"Processs is dead", L"HM?", MB_OK);
+            if (ListView_DeleteItem(hProcessPageListCtrl, i) == FALSE)
+                MessageBox(NULL, L"Deletion failed", L"HM!", MB_OK);
             HeapFree(GetProcessHeap(), 0, pData);
         }
     }
