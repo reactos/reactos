@@ -4,8 +4,8 @@
 
 #include <ntifs.h>
 #include <ntddk.h>
-//#define NDEBUG
-#define YDEBUG
+#define NDEBUG
+//#define YDEBUG
 #include <debug.h>
 #include <portcls.h>
 #include <ks.h>
