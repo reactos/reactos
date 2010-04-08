@@ -44,6 +44,11 @@ const GUID IID_IKsFilter  = {0x3ef6ee44L, 0x0D41, 0x11d2, {0xbe, 0xDA, 0x00, 0xc
 const GUID KSPROPSETID_Topology                = {0x720D4AC0L, 0x7533, 0x11D0, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 const GUID KSPROPSETID_Pin                     = {0x8C134960L, 0x51AD, 0x11CF, {0x87, 0x8A, 0x94, 0xF8, 0x01, 0xC1, 0x00, 0x00}};
 
+VOID
+IKsFilter_RemoveFilterFromFilterFactory(
+    IKsFilterImpl * This,
+    PKSFILTERFACTORY FilterFactory);
+
 
 DEFINE_KSPROPERTY_TOPOLOGYSET(IKsFilterTopologySet, KspTopologyPropertyHandler);
 DEFINE_KSPROPERTY_PINPROPOSEDATAFORMAT(IKsFilterPinSet, KspPinPropertyHandler, KspPinPropertyHandler, KspPinPropertyHandler);
@@ -506,8 +511,8 @@ IKsFilter_DispatchClose(
         /* complete irp */
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-        /* FIXME remove our instance from the filter factory */
-        ASSERT(0);
+        /* remove our instance from the filter factory */
+        IKsFilter_RemoveFilterFromFilterFactory(This, This->Factory);
 
         /* free object header */
         KsFreeObjectHeader(This->ObjectHeader);
@@ -605,6 +610,9 @@ KspHandleDataIntersection(
     MultipleItem = (PKSMULTIPLE_ITEM)(Pin + 1);
     DataRange = (PKSDATARANGE)(MultipleItem + 1);
 
+    /* FIXME make sure its 64 bit aligned */
+    ASSERT(((ULONG_PTR)DataRange & 0x3F) == 0);
+
     if (!This->Factory->FilterDescriptor || !This->PinDescriptorCount)
     {
         /* no filter / pin descriptor */
@@ -632,7 +640,7 @@ KspHandleDataIntersection(
                                                                      Irp,
                                                                      Pin,
                                                                      DataRange,
-                                                                    (PKSDATAFORMAT)This->Factory->FilterDescriptor->PinDescriptors[Pin->PinId].PinDescriptor.DataRanges,
+                                                                    (PKSDATAFORMAT)This->PinDescriptorsEx[Pin->PinId].PinDescriptor.DataRanges,
                                                                      DataLength,
                                                                      Data,
                                                                      &Length);
@@ -643,6 +651,8 @@ KspHandleDataIntersection(
             break;
         }
         DataRange =  UlongToPtr(PtrToUlong(DataRange) + DataRange->FormatSize);
+        /* FIXME make sure its 64 bit aligned */
+        ASSERT(((ULONG_PTR)DataRange & 0x3F) == 0);
     }
 
     IoStatus->Status = Status;
@@ -718,6 +728,8 @@ IKsFilter_DispatchDeviceIoControl(
     IKsFilterImpl * This;
     NTSTATUS Status;
     PKSFILTER FilterInstance;
+    UNICODE_STRING GuidString;
+    PKSPROPERTY Property;
 
     /* obtain filter from object header */
     Status = IKsFilter_GetFilterFromIrp(Irp, &Filter);
@@ -729,6 +741,14 @@ IKsFilter_DispatchDeviceIoControl(
 
     /* current irp stack */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* property was not handled */
+    Property = (PKSPROPERTY)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
+
+    RtlStringFromGUID(&Property->Set, &GuidString);
+    DPRINT("IKsFilter_DispatchDeviceIoControl property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
+    RtlFreeUnicodeString(&GuidString);
+
 
     if (IoStack->Parameters.DeviceIoControl.IoControlCode != IOCTL_KS_PROPERTY)
     {
@@ -1126,10 +1146,70 @@ IKsFilter_AttachFilterToFilterFactory(
             /* found last entry */
             break;
         }
-    }while(FilterFactory);
+    }while(TRUE);
 
     /* attach filter factory */
     BasicHeader->Next.Filter = &This->Filter;
+}
+
+VOID
+IKsFilter_RemoveFilterFromFilterFactory(
+    IKsFilterImpl * This,
+    PKSFILTERFACTORY FilterFactory)
+{
+    PKSBASIC_HEADER BasicHeader;
+    PKSFILTER Filter, LastFilter;
+
+    /* get filter factory basic header */
+    BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)FilterFactory - sizeof(KSBASIC_HEADER));
+
+    /* sanity check */
+    ASSERT(BasicHeader->Type == KsObjectTypeFilterFactory);
+    ASSERT(BasicHeader->FirstChild.Filter != NULL);
+
+
+    /* set to first entry */
+    Filter = BasicHeader->FirstChild.Filter;
+    LastFilter = NULL;
+
+    do
+    {
+         if (Filter == &This->Filter)
+         {
+             if (LastFilter)
+             {
+                 /* get basic header */
+                 BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)LastFilter - sizeof(KSBASIC_HEADER));
+                 /* remove filter instance */
+                 BasicHeader->Next.Filter = This->Header.Next.Filter;
+                 break;
+             }
+             else
+             {
+                 /* remove filter instance */
+                 BasicHeader->FirstChild.Filter = This->Header.Next.Filter;
+                 break;
+             }
+         }
+
+        /* get basic header */
+        BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)Filter - sizeof(KSBASIC_HEADER));
+        /* sanity check */
+        ASSERT(BasicHeader->Type == KsObjectTypeFilter);
+
+        LastFilter = Filter;
+        if (BasicHeader->Next.Filter)
+        {
+            /* iterate to next filter factory */
+            Filter = BasicHeader->Next.Filter;
+        }
+        else
+        {
+            /* filter is not in list */
+            ASSERT(0);
+            break;
+        }
+    }while(TRUE);
 }
 
 NTSTATUS
