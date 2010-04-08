@@ -448,9 +448,7 @@ void UpdateProcesses()
         pData = (LPPROCESS_PAGE_LIST_ITEM)item.lParam;
         if (!ProcessRunning(pData->ProcessId))
         {
-            MessageBox(NULL, L"Processs is dead", L"HM?", MB_OK);
-            if (ListView_DeleteItem(hProcessPageListCtrl, i) == FALSE)
-                MessageBox(NULL, L"Deletion failed", L"HM!", MB_OK);
+            (void)ListView_DeleteItem(hProcessPageListCtrl, i);
             HeapFree(GetProcessHeap(), 0, pData);
         }
     }
