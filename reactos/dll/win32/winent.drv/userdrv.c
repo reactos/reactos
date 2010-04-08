@@ -85,6 +85,23 @@ void move_window_bits( struct ntdrv_win_data *data, const RECT *old_rect, const 
     }
 }
 
+void swm_move_whole_window( struct ntdrv_win_data *data, const RECT *old_rect )
+{
+    HDC hdc_src, hdc_dst;
+    HWND parent;
+
+    parent = GetAncestor( data->hwnd, GA_PARENT );
+    hdc_src = GetDCEx( parent, 0, DCX_CACHE );
+    hdc_dst = GetDCEx( data->hwnd, 0, DCX_CACHE | DCX_WINDOW );
+
+    BitBlt( hdc_dst, 0, 0,
+        data->whole_rect.right - data->whole_rect.left, data->whole_rect.bottom - data->whole_rect.top,
+        hdc_src, old_rect->left, old_rect->top, SRCCOPY );
+
+    ReleaseDC( data->hwnd, hdc_dst );
+    ReleaseDC( parent, hdc_src );
+}
+
 HKL CDECL RosDrv_ActivateKeyboardLayout( HKL layout, UINT flags )
 {
     return RosUserActivateKeyboardLayout(layout, flags);
@@ -936,7 +953,12 @@ void CDECL RosDrv_WindowPosChanged( HWND hwnd, HWND insert_after, UINT swp_flags
 
     /* Sync position change */
     if (!(swp_flags & SWP_NOREDRAW)) // HACK: When removing this, explorer's start menu starts to appear partially. Investigate!
+    {
         SwmPosChanged(hwnd, &data->whole_rect, &old_whole_rect, insert_after, swp_flags);
+
+        /* SWM: Move whole window bits */
+        swm_move_whole_window( data, &old_whole_rect );
+    }
 
     /* Pass show/hide information to the window manager */
     if (swp_flags & SWP_SHOWWINDOW)
