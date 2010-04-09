@@ -21,6 +21,7 @@ typedef struct _KSISTREAM_POINTER
     ULONG Offset;
     ULONG Length;
     KSSTREAM_POINTER StreamPointer;
+    KSPIN_LOCK Lock;
 }KSISTREAM_POINTER, *PKSISTREAM_POINTER;
 
 typedef struct
@@ -307,6 +308,7 @@ IKsPin_PinStatePropertyHandler(
                 /* revert to old state */
                 This->Pin.ClientState = OldState;
                 This->Pin.DeviceState = OldState;
+                DPRINT("IKsPin_PinStatePropertyHandler failed to set state %lx Result %lx\n", *NewState, Status);
                 DbgBreakPoint();
             }
             else
@@ -429,6 +431,7 @@ IKsPin_fnQueryInterface(
         _InterlockedIncrement(&This->ref);
         return STATUS_SUCCESS;
     }
+DPRINT("IKsPin_fnQueryInterface\n");
     DbgBreakPoint();
     return STATUS_UNSUCCESSFUL;
 }
@@ -674,6 +677,9 @@ IKsReferenceClock_fnGetTime(
 
     IKsPinImpl * This = (IKsPinImpl*)CONTAINING_RECORD(iface, IKsPinImpl, lpVtblReferenceClock);
 
+
+    DPRINT1("IKsReferenceClock_fnGetTime\n");
+
     if (!This->ClockFileObject || !This->ClockTable.GetTime)
     {
         Result = 0;
@@ -694,6 +700,9 @@ IKsReferenceClock_fnGetPhysicalTime(
     LONGLONG Result;
 
     IKsPinImpl * This = (IKsPinImpl*)CONTAINING_RECORD(iface, IKsPinImpl, lpVtblReferenceClock);
+
+    DPRINT1("IKsReferenceClock_fnGetPhysicalTime\n");
+
 
     if (!This->ClockFileObject || !This->ClockTable.GetPhysicalTime)
     {
@@ -718,6 +727,8 @@ IKsReferenceClock_fnGetCorrelatedTime(
 
     IKsPinImpl * This = (IKsPinImpl*)CONTAINING_RECORD(iface, IKsPinImpl, lpVtblReferenceClock);
 
+    DPRINT1("IKsReferenceClock_fnGetCorrelatedTime\n");
+
     if (!This->ClockFileObject || !This->ClockTable.GetCorrelatedTime)
     {
         Result = 0;
@@ -740,6 +751,8 @@ IKsReferenceClock_fnGetCorrelatedPhysicalTime(
     LONGLONG Result;
 
     IKsPinImpl * This = (IKsPinImpl*)CONTAINING_RECORD(iface, IKsPinImpl, lpVtblReferenceClock);
+
+    DPRINT1("IKsReferenceClock_fnGetCorrelatedPhysicalTime\n");
 
     if (!This->ClockFileObject || !This->ClockTable.GetCorrelatedPhysicalTime)
     {
@@ -1226,6 +1239,7 @@ IKsPin_PrepareStreamHeader(
     }
 
     InterlockedDecrement(&This->IrpCount);
+    KsDecrementCountedWorker(This->PinWorker);
 
     /* get stream header */
     if (StreamPointer->Irp->RequestorMode == UserMode)
@@ -1374,9 +1388,11 @@ KsStreamPointerUnlock(
     IN PKSSTREAM_POINTER StreamPointer,
     IN BOOLEAN Eject)
 {
-    UNIMPLEMENTED
+    PKSISTREAM_POINTER Pointer = (PKSISTREAM_POINTER)CONTAINING_RECORD(StreamPointer, KSISTREAM_POINTER, StreamPointer);
+
     DPRINT("KsStreamPointerUnlock StreamPointer %pEject %lu\n", StreamPointer, Eject);
-    DbgBreakPoint();
+
+    Pointer->Irp = NULL;
 }
 
 /*
@@ -1687,8 +1703,12 @@ KsPinGetFirstCloneStreamPointer(
     IKsPinImpl * This;
 
     DPRINT("KsPinGetFirstCloneStreamPointer %p\n", Pin);
-DbgBreakPoint();
+
     This = (IKsPinImpl*)CONTAINING_RECORD(Pin, IKsPinImpl, Pin);
+
+    if (!This->ClonedStreamPointer)
+        return NULL;
+
     /* return first cloned stream pointer */
     return &This->ClonedStreamPointer->StreamPointer;
 }
@@ -1708,7 +1728,6 @@ KsStreamPointerGetNextClone(
 DbgBreakPoint();
     /* get stream pointer */
     Pointer = (PKSISTREAM_POINTER)CONTAINING_RECORD(StreamPointer, KSISTREAM_POINTER, StreamPointer);
-
 
     /* is there a another cloned stream pointer */
     if (!Pointer->Next)

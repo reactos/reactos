@@ -2195,8 +2195,8 @@ KspCountPropertySets(
         return AutomationTableA->PropertySetsCount;
 
     /* sanity check */
-    DPRINT("AutomationTableA EventItemSize %lu PropertySetsCount %lu\n", AutomationTableA->PropertyItemSize, AutomationTableA->PropertySetsCount);
-    DPRINT("AutomationTableB EventItemSize %lu PropertySetsCount %lu\n", AutomationTableB->PropertyItemSize, AutomationTableB->PropertySetsCount);
+    DPRINT("AutomationTableA PropertyItemSize %lu PropertySetsCount %lu\n", AutomationTableA->PropertyItemSize, AutomationTableA->PropertySetsCount);
+    DPRINT("AutomationTableB PropertyItemSize %lu PropertySetsCount %lu\n", AutomationTableB->PropertyItemSize, AutomationTableB->PropertySetsCount);
     ASSERT(AutomationTableA->PropertyItemSize == AutomationTableB->PropertyItemSize);
 
     /* now iterate all property sets and compare their guids */

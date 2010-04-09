@@ -156,3 +156,12 @@ KspSetFilterFactoriesState(
     IN PKSIDEVICE_HEADER DeviceHeader,
     IN BOOLEAN NewState);
 
+NTSTATUS
+NTAPI
+KspMethodHandlerWithAllocator(
+    IN  PIRP Irp,
+    IN  ULONG MethodSetsCount,
+    IN  const KSMETHOD_SET *MethodSet,
+    IN  PFNKSALLOCATOR Allocator OPTIONAL,
+    IN  ULONG MethodItemSize OPTIONAL);
+

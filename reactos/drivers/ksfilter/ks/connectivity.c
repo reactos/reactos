@@ -287,11 +287,13 @@ KsPinPropertyHandler(
     PKSDATAFORMAT_WAVEFORMATEX WaveFormatIn;
     PKEY_VALUE_PARTIAL_INFORMATION KeyInfo;
     NTSTATUS Status = STATUS_NOT_SUPPORTED;
+    ULONG Count;
+    const PKSDATARANGE* DataRanges;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     Buffer = Irp->UserBuffer;
 
-    DPRINT("KsPinPropertyHandler Irp %p Property %p Data %p DescriptorsCount %u Descriptor %p OutputLength %u Id %u\n", Irp, Property, Data, DescriptorsCount, Descriptor, IoStack->Parameters.DeviceIoControl.OutputBufferLength, Property->Id);
+    //DPRINT("KsPinPropertyHandler Irp %p Property %p Data %p DescriptorsCount %u Descriptor %p OutputLength %u Id %u\n", Irp, Property, Data, DescriptorsCount, Descriptor, IoStack->Parameters.DeviceIoControl.OutputBufferLength, Property->Id);
 
     switch(Property->Id)
     {
@@ -322,6 +324,7 @@ KsPinPropertyHandler(
             break;
 
         case KSPROPERTY_PIN_DATARANGES:
+        case KSPROPERTY_PIN_CONSTRAINEDDATARANGES:
             Pin = (KSP_PIN*)Property;
             if (Pin->PinId >= DescriptorsCount)
             {
@@ -330,9 +333,20 @@ KsPinPropertyHandler(
                 break;
             }
             Size = sizeof(KSMULTIPLE_ITEM);
-            for (Index = 0; Index < Descriptor[Pin->PinId].DataRangesCount; Index++)
+            if (Property->Id == KSPROPERTY_PIN_DATARANGES || Descriptor[Pin->PinId].ConstrainedDataRangesCount == 0)
             {
-                Size += Descriptor[Pin->PinId].DataRanges[Index]->FormatSize;
+                DataRanges = Descriptor[Pin->PinId].DataRanges;
+                Count = Descriptor[Pin->PinId].DataRangesCount;
+            }
+            else
+            {
+                DataRanges = Descriptor[Pin->PinId].ConstrainedDataRanges;
+                Count = Descriptor[Pin->PinId].ConstrainedDataRangesCount;
+            }
+
+            for (Index = 0; Index < Count; Index++)
+            {
+                Size += ((DataRanges[Index]->FormatSize + 0x7) & ~0x7);
             }
 
             if (IoStack->Parameters.DeviceIoControl.OutputBufferLength == 0)
@@ -354,16 +368,9 @@ KsPinPropertyHandler(
                 break;
             }
 
-            if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(KSMULTIPLE_ITEM))
-            {
-                /* buffer too small */
-                Status = STATUS_BUFFER_TOO_SMALL;
-                break;
-            }
-
             /* store descriptor size */
             Item->Size = Size;
-            Item->Count = Descriptor[Pin->PinId].DataRangesCount;
+            Item->Count = Count;
 
             if (IoStack->Parameters.DeviceIoControl.OutputBufferLength == sizeof(KSMULTIPLE_ITEM))
             {
@@ -374,10 +381,29 @@ KsPinPropertyHandler(
 
             /* now copy all dataranges */
             Data = (PUCHAR)(Item +1);
-            for (Index = 0; Index < Descriptor[Pin->PinId].DataRangesCount; Index++)
+
+            /* alignment assert */
+            ASSERT(((ULONG_PTR)Data & 0x7) == 0);
+
+            for (Index = 0; Index < Count; Index++)
             {
-                RtlMoveMemory(Data, Descriptor[Pin->PinId].DataRanges[Index], Descriptor[Pin->PinId].DataRanges[Index]->FormatSize);
-                Data = ((PUCHAR)Data + Descriptor[Pin->PinId].DataRanges[Index]->FormatSize);
+                UNICODE_STRING GuidString;
+                /* convert the guid to string */
+                RtlStringFromGUID(&DataRanges[Index]->MajorFormat, &GuidString);
+                DPRINT("Index %lu MajorFormat %S\n", Index, GuidString.Buffer);
+                RtlStringFromGUID(&DataRanges[Index]->SubFormat, &GuidString);
+                DPRINT("Index %lu SubFormat %S\n", Index, GuidString.Buffer);
+                RtlStringFromGUID(&DataRanges[Index]->Specifier, &GuidString);
+                DPRINT("Index %lu Specifier %S\n", Index, GuidString.Buffer);
+                RtlStringFromGUID(&DataRanges[Index]->Specifier, &GuidString);
+                DPRINT("Index %lu FormatSize %lu Flags %lu SampleSize %lu Reserved %lu KSDATAFORMAT %lu\n", Index,
+                       DataRanges[Index]->FormatSize, DataRanges[Index]->Flags, DataRanges[Index]->SampleSize, DataRanges[Index]->Reserved, sizeof(KSDATAFORMAT));
+
+                RtlMoveMemory(Data, DataRanges[Index], DataRanges[Index]->FormatSize);
+                Data = ((PUCHAR)Data + DataRanges[Index]->FormatSize);
+                /* alignment assert */
+                ASSERT(((ULONG_PTR)Data & 0x7) == 0);
+                Data = (PVOID)(((ULONG_PTR)Data + 0x7) & ~0x7);
             }
 
             Status = STATUS_SUCCESS;
@@ -442,7 +468,9 @@ KsPinPropertyHandler(
                 break;
             }
 
+            //DPRINT("Pin %lu Communication %lu\n", Pin->PinId, Descriptor[Pin->PinId].Communication);
             *((KSPIN_COMMUNICATION*)Buffer) = Descriptor[Pin->PinId].Communication;
+
             Status = STATUS_SUCCESS;
             Irp->IoStatus.Information = Size;
             break;

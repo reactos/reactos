@@ -567,8 +567,12 @@ IKsDevice_Pnp(
        }
        default:
           DPRINT1("unhandled function %u\n", IoStack->MinorFunction);
+          /* pass the irp down the driver stack */
+          Status = KspForwardIrpSynchronous(DeviceObject, Irp);
+
+          Irp->IoStatus.Status = Status;
           IoCompleteRequest(Irp, IO_NO_INCREMENT);
-          return STATUS_NOT_SUPPORTED;
+          return Status;
     }
 }
 

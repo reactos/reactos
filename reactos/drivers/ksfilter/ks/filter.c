@@ -611,7 +611,7 @@ KspHandleDataIntersection(
     DataRange = (PKSDATARANGE)(MultipleItem + 1);
 
     /* FIXME make sure its 64 bit aligned */
-    ASSERT(((ULONG_PTR)DataRange & 0x3F) == 0);
+    ASSERT(((ULONG_PTR)DataRange & 0x7) == 0);
 
     if (!This->Factory->FilterDescriptor || !This->PinDescriptorCount)
     {
@@ -635,29 +635,63 @@ KspHandleDataIntersection(
 
     for(Index = 0; Index < MultipleItem->Count; Index++)
     {
+        UNICODE_STRING MajorFormat, SubFormat, Specifier;
+        /* convert the guid to string */
+        RtlStringFromGUID(&DataRange->MajorFormat, &MajorFormat);
+        RtlStringFromGUID(&DataRange->SubFormat, &SubFormat);
+        RtlStringFromGUID(&DataRange->Specifier, &Specifier);
+
+        DPRINT("Index %lu MajorFormat %S SubFormat %S Specifier %S FormatSize %lu SampleSize %lu Align %lu Flags %lx Reserved %lx DataLength %lu\n", Index, MajorFormat.Buffer, SubFormat.Buffer, Specifier.Buffer,
+			DataRange->FormatSize, DataRange->SampleSize, DataRange->Alignment, DataRange->Flags, DataRange->Reserved, DataLength);
+
+        /* FIXME implement KsPinDataIntersectionEx */
         /* Call miniport's properitary handler */
-        Status = This->PinDescriptorsEx[Pin->PinId].IntersectHandler(NULL, /* context */
+        Status = This->PinDescriptorsEx[Pin->PinId].IntersectHandler(&This->Filter,
                                                                      Irp,
                                                                      Pin,
                                                                      DataRange,
-                                                                    (PKSDATAFORMAT)This->PinDescriptorsEx[Pin->PinId].PinDescriptor.DataRanges,
+                                                                     This->PinDescriptorsEx[Pin->PinId].PinDescriptor.DataRanges[0], /* HACK */
                                                                      DataLength,
                                                                      Data,
                                                                      &Length);
 
-        if (Status == STATUS_SUCCESS || Status == STATUS_BUFFER_OVERFLOW)
+        if (Status == STATUS_SUCCESS || Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
         {
+            ASSERT(Length);
             IoStatus->Information = Length;
+            if (Status != STATUS_SUCCESS)
+                Status = STATUS_MORE_ENTRIES;
             break;
         }
+
         DataRange =  UlongToPtr(PtrToUlong(DataRange) + DataRange->FormatSize);
         /* FIXME make sure its 64 bit aligned */
-        ASSERT(((ULONG_PTR)DataRange & 0x3F) == 0);
+        ASSERT(((ULONG_PTR)DataRange & 0x7) == 0);
     }
 
     IoStatus->Status = Status;
     return Status;
 }
+
+NTSTATUS
+NTAPI
+KspTopologyPropertyHandler(
+    IN PIRP Irp,
+    IN PKSIDENTIFIER  Request,
+    IN OUT PVOID  Data)
+{
+    IKsFilterImpl * This;
+
+    /* get filter implementation */
+    This = (IKsFilterImpl*)KSPROPERTY_ITEM_IRP_STORAGE(Irp);
+
+    /* sanity check */
+    ASSERT(This);
+
+    return KsTopologyPropertyHandler(Irp, Request, Data, &This->Topology);
+
+}
+
 
 NTSTATUS
 NTAPI
@@ -673,6 +707,9 @@ KspPinPropertyHandler(
     /* get filter implementation */
     This = (IKsFilterImpl*)KSPROPERTY_ITEM_IRP_STORAGE(Irp);
 
+    /* sanity check */
+    ASSERT(This);
+
     /* get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
@@ -686,7 +723,7 @@ KspPinPropertyHandler(
         case KSPROPERTY_PIN_COMMUNICATION:
         case KSPROPERTY_PIN_CATEGORY:
         case KSPROPERTY_PIN_NAME:
-        case KSPROPERTY_PIN_PROPOSEDATAFORMAT:
+        case KSPROPERTY_PIN_CONSTRAINEDDATARANGES:
             Status = KsPinPropertyHandler(Irp, Request, Data, This->PinDescriptorCount, This->PinDescriptors);
             break;
         case KSPROPERTY_PIN_GLOBALCINSTANCES:
@@ -702,16 +739,11 @@ KspPinPropertyHandler(
         case KSPROPERTY_PIN_DATAINTERSECTION:
             Status = KspHandleDataIntersection(Irp, &Irp->IoStatus, Request, Data, IoStack->Parameters.DeviceIoControl.OutputBufferLength, This);
             break;
-        case KSPROPERTY_PIN_PHYSICALCONNECTION:
-        case KSPROPERTY_PIN_CONSTRAINEDDATARANGES:
-            UNIMPLEMENTED
-            Status = STATUS_NOT_IMPLEMENTED;
-            break;
         default:
             UNIMPLEMENTED
-            Status = STATUS_UNSUCCESSFUL;
+            Status = STATUS_NOT_FOUND;
     }
-    DPRINT("KspPinPropertyHandler Pins %lu Request->Id %lu Status %lx\n", This->PinDescriptorCount, Request->Id, Status);
+    //DPRINT("KspPinPropertyHandler Pins %lu Request->Id %lu Status %lx\n", This->PinDescriptorCount, Request->Id, Status);
 
 
     return Status;
@@ -730,6 +762,7 @@ IKsFilter_DispatchDeviceIoControl(
     PKSFILTER FilterInstance;
     UNICODE_STRING GuidString;
     PKSPROPERTY Property;
+    ULONG SetCount = 0;
 
     /* obtain filter from object header */
     Status = IKsFilter_GetFilterFromIrp(Irp, &Filter);
@@ -742,47 +775,70 @@ IKsFilter_DispatchDeviceIoControl(
     /* current irp stack */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    /* property was not handled */
+    /* get property from input buffer */
     Property = (PKSPROPERTY)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
+
+    /* sanity check */
+    ASSERT(IoStack->Parameters.DeviceIoControl.InputBufferLength >= sizeof(KSIDENTIFIER));
+
+    /* get filter instance */
+    FilterInstance = Filter->lpVtbl->GetStruct(Filter);
 
     RtlStringFromGUID(&Property->Set, &GuidString);
     DPRINT("IKsFilter_DispatchDeviceIoControl property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
     RtlFreeUnicodeString(&GuidString);
 
-
-    if (IoStack->Parameters.DeviceIoControl.IoControlCode != IOCTL_KS_PROPERTY)
+    if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_METHOD)
     {
-        UNIMPLEMENTED;
+        const KSMETHOD_SET *MethodSet = NULL;
+        ULONG MethodItemSize = 0;
 
-        /* release filter interface */
-        Filter->lpVtbl->Release(Filter);
+        /* check if the driver supports method sets */
+        if (FilterInstance->Descriptor->AutomationTable && FilterInstance->Descriptor->AutomationTable->MethodSetsCount)
+        {
+            SetCount = FilterInstance->Descriptor->AutomationTable->MethodSetsCount;
+            MethodSet = FilterInstance->Descriptor->AutomationTable->MethodSets;
+            MethodItemSize = FilterInstance->Descriptor->AutomationTable->MethodItemSize;
+        }
 
-        /* complete and forget irp */
-        Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        return STATUS_NOT_IMPLEMENTED;
+        /* call method set handler */
+        Status = KspMethodHandlerWithAllocator(Irp, SetCount, MethodSet, NULL, MethodItemSize);
     }
-
-    /* call property handler supported by ks */
-    KSPROPERTY_ITEM_IRP_STORAGE(Irp) = (KSPROPERTY_ITEM*)This;
-    Status = KspPropertyHandler(Irp, 2, FilterPropertySet, NULL, sizeof(KSPROPERTY_ITEM));
-
-    if (Status == STATUS_NOT_FOUND)
+    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_PROPERTY)
     {
-        /* get filter instance */
-        FilterInstance = Filter->lpVtbl->GetStruct(Filter);
+        const KSPROPERTY_SET *PropertySet = NULL;
+        ULONG PropertyItemSize = 0;
 
-        /* check if the driver supports property sets */
+        /* check if the driver supports method sets */
         if (FilterInstance->Descriptor->AutomationTable && FilterInstance->Descriptor->AutomationTable->PropertySetsCount)
         {
-            /* call driver's filter property handler */
-            Status = KspPropertyHandler(Irp, 
-                                        FilterInstance->Descriptor->AutomationTable->PropertySetsCount,
-                                        FilterInstance->Descriptor->AutomationTable->PropertySets, 
-                                        NULL,
-                                        FilterInstance->Descriptor->AutomationTable->PropertyItemSize);
+            SetCount = FilterInstance->Descriptor->AutomationTable->PropertySetsCount;
+            PropertySet = FilterInstance->Descriptor->AutomationTable->PropertySets;
+            PropertyItemSize = FilterInstance->Descriptor->AutomationTable->PropertyItemSize;
         }
+
+        /* needed for our property handlers */
+        KSPROPERTY_ITEM_IRP_STORAGE(Irp) = (KSPROPERTY_ITEM*)This;
+
+        /* call property handler */
+        Status = KspPropertyHandler(Irp, SetCount, PropertySet, NULL, PropertyItemSize);
     }
+    else
+    {
+        /* sanity check */
+        ASSERT(IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_ENABLE_EVENT ||
+               IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_DISABLE_EVENT);
+
+        Status = STATUS_NOT_FOUND;
+        UNIMPLEMENTED;
+    }
+
+    RtlStringFromGUID(&Property->Set, &GuidString);
+    DPRINT("IKsFilter_DispatchDeviceIoControl property Set |%S| Id %u Flags %x Status %lx ResultLength %lu\n", GuidString.Buffer, Property->Id, Property->Flags, Status, Irp->IoStatus.Information);
+    RtlFreeUnicodeString(&GuidString);
+
+    /* release filter */
+    Filter->lpVtbl->Release(Filter);
 
     if (Status != STATUS_PENDING)
     {
@@ -953,6 +1009,7 @@ IKsFilter_CopyFilterDescriptor(
     const KSFILTER_DESCRIPTOR* FilterDescriptor)
 {
     NTSTATUS Status;
+    KSAUTOMATION_TABLE AutomationTable;
 
     This->Filter.Descriptor = AllocateItem(NonPagedPool, sizeof(KSFILTER_DESCRIPTOR));
     if (!This->Filter.Descriptor)
@@ -968,6 +1025,17 @@ IKsFilter_CopyFilterDescriptor(
 
     /* copy filter descriptor fields */
     RtlMoveMemory((PVOID)This->Filter.Descriptor, FilterDescriptor, sizeof(KSFILTER_DESCRIPTOR));
+
+    /* zero automation table */
+    RtlZeroMemory(&AutomationTable, sizeof(KSAUTOMATION_TABLE));
+
+    /* setup filter property sets */
+    AutomationTable.PropertyItemSize = sizeof(KSPROPERTY_ITEM);
+    AutomationTable.PropertySetsCount = 2;
+    AutomationTable.PropertySets = FilterPropertySet;
+
+    /* merge filter automation table */
+    Status = KsMergeAutomationTables((PKSAUTOMATION_TABLE*)&This->Filter.Descriptor->AutomationTable, (PKSAUTOMATION_TABLE)FilterDescriptor->AutomationTable, &AutomationTable, This->Filter.Bag);
 
     return Status;
 }
@@ -1303,7 +1371,6 @@ KspCreateFilter(
     This->lpVtbl = &vt_IKsFilter;
     This->lpVtblKsControl = &vt_IKsControl;
 
-    This->Filter.Descriptor = Factory->FilterDescriptor;
     This->Factory = Factory;
     This->FilterFactory = iface;
     This->FileObject = IoStack->FileObject;

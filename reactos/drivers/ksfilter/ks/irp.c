@@ -1720,9 +1720,11 @@ FindMatchingCreateItem(
     PLIST_ENTRY Entry;
     PCREATE_ITEM_ENTRY CreateItemEntry;
 
+#ifndef MS_KSUSER
     /* remove '\' slash */
     Buffer++;
     BufferSize -= sizeof(WCHAR);
+#endif
 
     /* point to first entry */
     Entry = ListHead->Flink;
