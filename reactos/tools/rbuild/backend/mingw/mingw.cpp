@@ -483,7 +483,7 @@ MingwBackend::GenerateGlobalVariables () const
 
 		// We use our proprietary "ofmt_stub.a" to implement a stub for "_get_output_format" required by "libmingwex.a".
 		// This archive just contains the compiled "ofmt_stub.s" supplied with the MinGW Runtime sources.
-		fprintf ( fMakefile, "PROJECT_CXXLIBS := \"$(shell ${TARGET_CPP} -print-file-name=libstdc++.a)\" \"$(shell ${TARGET_CPP} -print-libgcc-file-name)\" \"$(shell ${TARGET_CPP} -print-file-name=libmingw32.a)\" \"$(shell ${TARGET_CPP} -print-file-name=libmingwex.a)\" " );
+		fprintf ( fMakefile, "PROJECT_CXXLIBS := \"$(shell ${TARGET_CPP} -print-file-name=libsupc++.a)\" \"$(shell ${TARGET_CPP} -print-file-name=libstdc++.a)\" \"$(shell ${TARGET_CPP} -print-libgcc-file-name)\" \"$(shell ${TARGET_CPP} -print-file-name=libmingw32.a)\" \"$(shell ${TARGET_CPP} -print-file-name=libmingwex.a)\" " );
 		
 		/* hack to get libgcc_eh.a, should check mingw version or something */
 		if (Environment::GetArch() == "amd64")
