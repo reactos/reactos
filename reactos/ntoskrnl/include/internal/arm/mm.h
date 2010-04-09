@@ -87,7 +87,7 @@ typedef struct _PAGE_TABLE_ARM
 
 typedef struct _PAGE_DIRECTORY_ARM
 {
-    union
+    union 
     {
         HARDWARE_PDE_ARMV6 Pde[4096];
         HARDWARE_LARGE_PTE_ARMV6 Pte[4096];
