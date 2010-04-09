@@ -34,7 +34,7 @@ WmiCompleteRequest(IN PDEVICE_OBJECT DeviceObject,
 NTSTATUS
 NTAPI
 WmiFireEvent(IN PDEVICE_OBJECT DeviceObject,
-             IN LPGUID Guid,
+             IN LPCGUID Guid,
              IN ULONG InstanceIndex,
              IN ULONG EventDataSize,
              IN PVOID EventData)

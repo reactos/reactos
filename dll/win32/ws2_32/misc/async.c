@@ -34,7 +34,6 @@
  */
 
 #include <windows.h>
-#include <winsock.h>
 
 #define WS_FD_SETSIZE FD_SETSIZE
 #define HAVE_GETPROTOBYNAME
