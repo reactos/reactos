@@ -1568,9 +1568,18 @@ MingwModuleHandler::GenerateArchiveTarget ()
 						  clean_files,
 						  backend->GetFullName ( *definitionFilename ).c_str () );
 
-		fprintf ( fMakefile,
-		          "\t${dlltool} --def %s --kill-at --output-lib $@\n",
-		          backend->GetFullName ( *definitionFilename ).c_str () );
+        if (Environment::GetArch() == "amd64")
+        {
+		    fprintf ( fMakefile,
+		              "\t${dlltool} --def %s --no-leading-underscore --output-lib $@\n",
+		              backend->GetFullName ( *definitionFilename ).c_str () );
+        }
+        else
+        {
+		    fprintf ( fMakefile,
+		              "\t${dlltool} --def %s --kill-at --output-lib $@\n",
+		              backend->GetFullName ( *definitionFilename ).c_str () );
+        }
 	}
 	else
 		arRule1.Execute ( fMakefile, backend, module, archiveFilename, clean_files );
