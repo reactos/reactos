@@ -414,7 +414,10 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
    UNICODE_STRING FullServiceName;
    UNICODE_STRING LegacyPrefix = RTL_CONSTANT_STRING(L"LEGACY_");
    UNICODE_STRING UnknownDeviceName = RTL_CONSTANT_STRING(L"UNKNOWN");
-   HANDLE TempHandle;
+   UNICODE_STRING KeyName, ClassName, ClassGUID;
+   PUNICODE_STRING ServiceName1;
+   ULONG LegacyValue;
+   HANDLE InstanceHandle;
 
    DPRINT("ParentNode 0x%p PhysicalDeviceObject 0x%p ServiceName %wZ\n",
       ParentNode, PhysicalDeviceObject, ServiceName);
@@ -428,11 +431,13 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
    RtlZeroMemory(Node, sizeof(DEVICE_NODE));
 
    if (!ServiceName)
-       ServiceName = &UnknownDeviceName;
+       ServiceName1 = &UnknownDeviceName;
+   else
+       ServiceName1 = ServiceName;
 
    if (!PhysicalDeviceObject)
    {
-      FullServiceName.MaximumLength = LegacyPrefix.Length + ServiceName->Length;
+      FullServiceName.MaximumLength = LegacyPrefix.Length + ServiceName1->Length;
       FullServiceName.Length = 0;
       FullServiceName.Buffer = ExAllocatePool(PagedPool, FullServiceName.MaximumLength);
       if (!FullServiceName.Buffer)
@@ -442,7 +447,7 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
       }
 
       RtlAppendUnicodeStringToString(&FullServiceName, &LegacyPrefix);
-      RtlAppendUnicodeStringToString(&FullServiceName, ServiceName);
+      RtlAppendUnicodeStringToString(&FullServiceName, ServiceName1);
 
       Status = PnpRootCreateDevice(&FullServiceName, &PhysicalDeviceObject, &Node->InstancePath);
       if (!NT_SUCCESS(Status))
@@ -453,14 +458,67 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
       }
 
       /* Create the device key for legacy drivers */
-      Status = IopCreateDeviceKeyPath(&Node->InstancePath, &TempHandle);
-      if (NT_SUCCESS(Status))
-          ZwClose(TempHandle);
+      Status = IopCreateDeviceKeyPath(&Node->InstancePath, &InstanceHandle);
+      if (!NT_SUCCESS(Status))
+      {
+          ZwClose(InstanceHandle);
+          ExFreePool(Node);
+          ExFreePool(FullServiceName.Buffer);
+          return Status;
+      }
 
+      Node->ServiceName.Buffer = ExAllocatePool(PagedPool, ServiceName1->Length);
+      if (!Node->ServiceName.Buffer)
+      {
+          ZwClose(InstanceHandle);
+          ExFreePool(Node);
+          ExFreePool(FullServiceName.Buffer);
+          return Status;
+      }
+
+      Node->ServiceName.MaximumLength = ServiceName1->Length;
+      Node->ServiceName.Length = 0;
+
+      RtlAppendUnicodeStringToString(&Node->ServiceName, ServiceName1);
+
+      if (ServiceName)
+      {
+          RtlInitUnicodeString(&KeyName, L"Service");
+          Status = ZwSetValueKey(InstanceHandle, &KeyName, 0, REG_SZ, ServiceName->Buffer, ServiceName->Length);
+      }
+
+      if (NT_SUCCESS(Status))
+      {
+          RtlInitUnicodeString(&KeyName, L"Legacy");
+
+          LegacyValue = 1;
+          Status = ZwSetValueKey(InstanceHandle, &KeyName, 0, REG_DWORD, &LegacyValue, sizeof(LegacyValue));
+          if (NT_SUCCESS(Status))
+          {
+              RtlInitUnicodeString(&KeyName, L"Class");
+
+              RtlInitUnicodeString(&ClassName, L"LegacyDriver");
+              Status = ZwSetValueKey(InstanceHandle, &KeyName, 0, REG_SZ, ClassName.Buffer, ClassName.Length);
+              if (NT_SUCCESS(Status))
+              {
+                  RtlInitUnicodeString(&KeyName, L"ClassGUID");
+
+                  RtlInitUnicodeString(&ClassGUID, L"{8ECC055D-047F-11D1-A537-0000F8753ED1}");
+                  Status = ZwSetValueKey(InstanceHandle, &KeyName, 0, REG_SZ, ClassGUID.Buffer, ClassGUID.Length);
+              }
+          }
+      }
+
+      ZwClose(InstanceHandle);
       ExFreePool(FullServiceName.Buffer);
 
+      if (!NT_SUCCESS(Status))
+      {
+          ExFreePool(Node);
+          return Status;
+      }
+
       /* This is for drivers passed on the command line to ntoskrnl.exe */
-      IopDeviceNodeSetFlag(Node, DNF_STARTED);
       IopDeviceNodeSetFlag(Node, DNF_LEGACY_DRIVER);
    }
 
@@ -2710,14 +2768,8 @@ IopActionConfigureChildServices(PDEVICE_NODE DeviceNode,
             DPRINT1("%wZ is using parent bus driver (%wZ)\n", &DeviceNode->InstancePath, &ParentDeviceNode->ServiceName);
 
             DeviceNode->ServiceName.Length = 0;
-            DeviceNode->ServiceName.MaximumLength = ParentDeviceNode->ServiceName.MaximumLength;
-            DeviceNode->ServiceName.Buffer = ExAllocatePool(PagedPool, DeviceNode->ServiceName.MaximumLength);
-            if (!DeviceNode->ServiceName.Buffer)
-                return STATUS_SUCCESS;
-
-            RtlCopyUnicodeString(&DeviceNode->ServiceName, &ParentDeviceNode->ServiceName);
-
-            IopDeviceNodeSetFlag(DeviceNode, DNF_LEGACY_DRIVER);
+            DeviceNode->ServiceName.MaximumLength = 0;
+            DeviceNode->ServiceName.Buffer = NULL;
          }
          else if (ClassGUID.Length != 0)
          {
@@ -2796,10 +2848,23 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
       return STATUS_UNSUCCESSFUL;
    }
 #endif
+   if (IopDeviceNodeHasFlag(DeviceNode, DNF_STARTED) ||
+       IopDeviceNodeHasFlag(DeviceNode, DNF_ADDED) ||
+       IopDeviceNodeHasFlag(DeviceNode, DNF_DISABLED))
+       return STATUS_SUCCESS;
 
-   if (!IopDeviceNodeHasFlag(DeviceNode, DNF_DISABLED) &&
-       !IopDeviceNodeHasFlag(DeviceNode, DNF_ADDED) &&
-       !IopDeviceNodeHasFlag(DeviceNode, DNF_STARTED))
+   if (DeviceNode->ServiceName.Buffer == NULL)
+   {
+      /* We don't need to worry about loading the driver because we're
+       * being driven in raw mode so our parent must be loaded to get here */
+      Status = IopStartDevice(DeviceNode);
+      if (!NT_SUCCESS(Status))
+      {
+          DPRINT1("IopStartDevice(%wZ) failed with status 0x%08x\n",
+                  &DeviceNode->InstancePath, Status);
+      }
+   }
+   else
    {
       PLDR_DATA_TABLE_ENTRY ModuleObject;
       PDRIVER_OBJECT DriverObject;
@@ -2844,6 +2909,7 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
       {
          /* Attach lower level filter drivers. */
          IopAttachFilterDrivers(DeviceNode, TRUE);
+
          /* Initialize the function driver for the device node */
          Status = IopInitializeDevice(DeviceNode, DriverObject);
 
@@ -2851,9 +2917,13 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
          {
             /* Attach upper level filter drivers. */
             IopAttachFilterDrivers(DeviceNode, FALSE);
-            IopDeviceNodeSetFlag(DeviceNode, DNF_STARTED);
 
             Status = IopStartDevice(DeviceNode);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("IopStartDevice(%wZ) failed with status 0x%08x\n",
+                        &DeviceNode->InstancePath, Status);
+            }
          }
          else
          {
@@ -2875,11 +2945,6 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
               DeviceNode->ServiceName.Buffer, Status);
          }
       }
-   }
-   else
-   {
-      DPRINT("Device %wZ is disabled or already initialized\n",
-         &DeviceNode->InstancePath);
    }
 
    return STATUS_SUCCESS;
