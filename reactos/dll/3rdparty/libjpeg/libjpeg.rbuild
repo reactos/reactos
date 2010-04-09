@@ -6,6 +6,10 @@
 	<define name="_WINDOWS" />
 	<define name="_MBCS" />
 	<define name="JPEG_DLL" />
+	<if property="ARCH" value="amd64">
+		<!-- Gross hack to work around broken autoexport -->
+		<define name="dllexport">aligned(1)</define>
+	</if>
 	<include base="libjpeg">.</include>
 	<file>jcapimin.c</file>
 	<file>jcapistd.c</file>
