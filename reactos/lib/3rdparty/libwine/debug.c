@@ -262,7 +262,7 @@ static char *get_temp_buffer( size_t size )
     char *ret;
     int idx;
 
-    idx = InterlockedExchangeAdd( &pos, 1 ) % (sizeof(list)/sizeof(list[0]));
+    idx = interlocked_xchg_add( &pos, 1 ) % (sizeof(list)/sizeof(list[0]));
     if ((ret = realloc( list[idx], size ))) list[idx] = ret;
     return ret;
 }
