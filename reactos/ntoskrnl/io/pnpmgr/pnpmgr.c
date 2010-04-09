@@ -246,6 +246,13 @@ IopStartDevice(
    RtlInitUnicodeString(&KeyName, L"ActiveService");
    Status = ZwSetValueKey(ControlHandle, &KeyName, 0, REG_SZ, DeviceNode->ServiceName.Buffer, DeviceNode->ServiceName.Length);
 
+   if (NT_SUCCESS(Status) && DeviceNode->ResourceList)
+   {
+       RtlInitUnicodeString(&KeyName, L"AllocConfig");
+       Status = ZwSetValueKey(ControlHandle, &KeyName, 0, REG_RESOURCE_LIST,
+                              DeviceNode->ResourceList, CM_RESOURCE_LIST_SIZE(DeviceNode->ResourceList));
+   }
+
    if (NT_SUCCESS(Status))
        IopDeviceNodeSetFlag(DeviceNode, DNF_STARTED);
 
