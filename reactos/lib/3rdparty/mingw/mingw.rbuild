@@ -41,6 +41,7 @@
 	<file>xthdloc.c</file>
 	<file>xtxtmode.c</file>
 	<file>ofmt_stub.c</file>
+	<file>cxa_pure_virtual.c</file>
 </module>
 <module name="mingw_main" type="staticlibrary" isstartuplib="true" crt="dll">
 	<define name="_CRTBLD" />

@@ -3700,7 +3700,7 @@ typedef enum _CM_ERROR_CONTROL_TYPE {
 
 #if defined(_WIN64)
 
-#ifndef USE_DMA_MACROS
+#if !defined(USE_DMA_MACROS) && !defined(_NTHAL_)
 #define USE_DMA_MACROS
 #endif
 
