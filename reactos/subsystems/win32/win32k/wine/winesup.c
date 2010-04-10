@@ -18,16 +18,18 @@
 timeout_t current_time = 0ULL;
 int debug_level = 0;
 
+unsigned int global_error;
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 void set_error( unsigned int err )
 {
-    SetLastNtError(err);
+    global_error = err;
 }
 
 unsigned int get_error(void)
 {
-    return GetLastNtError();
+    return global_error;
 }
 
 const SID *token_get_user( void *token )

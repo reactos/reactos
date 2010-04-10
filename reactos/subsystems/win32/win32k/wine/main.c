@@ -85,8 +85,8 @@ wine_server_call(void *req_ptr)
     /* Acquire lock */
     UserEnterExclusive();
 
-    /* Clear error status */
-    set_error(0);
+    /* Clear internal error status */
+    clear_error();
 
     if (reqinfo->data_count > 1)
     {

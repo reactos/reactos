@@ -46,7 +46,6 @@
 #define snprintfW _snwprintf
 #define vsnprintfW _vsnwprintf
 
-#define set_win32_error(x) SetLastWin32Error(x)
 #define assert ASSERT
 
 /* HACK */
@@ -64,6 +63,7 @@ int memcmp(const void *s1, const void *s2, size_t n);
 void set_error( unsigned int err );
 unsigned int get_error(void);
 static inline void clear_error(void)             { set_error(0); }
+static inline void set_win32_error( unsigned int err ) { set_error( 0xc0010000 | err ); }
 struct window_class* get_window_class( user_handle_t window );
 
 /* gets the discretionary access control list from a security descriptor */
