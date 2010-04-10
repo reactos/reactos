@@ -40,6 +40,15 @@ SYSTEM_HANDLE_INFORMATION                  SystemHandleInfo;
 PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION  SystemProcessorTimeInfo = NULL;
 PSID                                       SystemUserSid = NULL;
 
+typedef struct _SIDTOUSERNAME
+{
+    LIST_ENTRY List;
+    LPWSTR pszName;
+    BYTE Data[0];
+} SIDTOUSERNAME, *PSIDTOUSERNAME;
+
+static LIST_ENTRY SidToUserNameHead = {&SidToUserNameHead, &SidToUserNameHead};
+
 BOOL PerfDataInitialize(void)
 {
     SID_IDENTIFIER_AUTHORITY NtSidAuthority = {SECURITY_NT_AUTHORITY};
@@ -63,6 +72,8 @@ BOOL PerfDataInitialize(void)
 
 void PerfDataUninitialize(void)
 {
+    PLIST_ENTRY pCur;
+    PSIDTOUSERNAME pEntry;
 
     if (pPerfData != NULL)
         HeapFree(GetProcessHeap(), 0, pPerfData);
@@ -74,6 +85,15 @@ void PerfDataUninitialize(void)
         FreeSid(SystemUserSid);
         SystemUserSid = NULL;
     }
+
+    /* Free user names cache list */
+    pCur = SidToUserNameHead.Flink;
+    while (pCur != &SidToUserNameHead)
+    {
+        pEntry = CONTAINING_RECORD(pCur, SIDTOUSERNAME, List);
+        pCur = pCur->Flink;
+        HeapFree(GetProcessHeap(), 0, pEntry);
+    }
 }
 
 static void SidToUserName(PSID Sid, LPWSTR szBuffer, DWORD BufferSize)
@@ -84,6 +104,56 @@ static void SidToUserName(PSID Sid, LPWSTR szBuffer, DWORD BufferSize)
 
     if (Sid != NULL)
         LookupAccountSidW(NULL, Sid, szBuffer, &BufferSize, szDomainNameUnused, &DomainNameLen, &Use);
+}
+
+VOID
+WINAPI
+CachedGetUserFromSid(
+    PSID pSid,
+    LPWSTR pUserName,
+    PULONG pcwcUserName)
+{
+    PLIST_ENTRY pCur;
+    PSIDTOUSERNAME pEntry;
+    ULONG cbSid, cwcUserName;
+
+    cwcUserName = *pcwcUserName;
+
+    /* Walk through the list */
+    for(pCur = SidToUserNameHead.Flink;
+        pCur != &SidToUserNameHead;
+        pCur = pCur->Flink)
+    {
+        pEntry = CONTAINING_RECORD(pCur, SIDTOUSERNAME, List);
+        if (EqualSid((PSID)&pEntry->Data, pSid))
+        {
+            wcsncpy(pUserName, pEntry->pszName, cwcUserName);
+            *pcwcUserName = cwcUserName;
+            return;
+        }
+    }
+
+    /* We didn't find the SID in the list, get the name conventional */
+    SidToUserName(pSid, pUserName, cwcUserName);
+
+    /* Allocate a new entry */
+    *pcwcUserName = wcslen(pUserName);
+    cwcUserName = *pcwcUserName + 1;
+    cbSid = GetLengthSid(pSid);
+    pEntry = HeapAlloc(GetProcessHeap(), 0, sizeof(SIDTOUSERNAME) + cbSid + cwcUserName * sizeof(WCHAR));
+
+    /* Copy the Sid and name to our entry */
+    CopySid(cbSid, (PSID)&pEntry->Data, pSid);
+    pEntry->pszName = (LPWSTR)(pEntry->Data + cbSid);
+    wcsncpy(pEntry->pszName, pUserName, cwcUserName);
+
+    /* Insert the new entry */
+    pEntry->List.Flink = &SidToUserNameHead;
+    pEntry->List.Blink = SidToUserNameHead.Blink;
+    SidToUserNameHead.Blink->Flink = &pEntry->List;
+    SidToUserNameHead.Blink = &pEntry->List;
+
+    return;
 }
 
 void PerfDataRefresh(void)
@@ -106,6 +176,7 @@ void PerfDataRefresh(void)
     PSECURITY_DESCRIPTOR                       ProcessSD;
     PSID                                       ProcessUser;
     ULONG                                      Buffer[64]; /* must be 4 bytes aligned! */
+    ULONG                                      cwcUserName;
 
     /* Get new system time */
     status = NtQuerySystemInformation(SystemTimeOfDayInformation, &SysTimeInfo, sizeof(SysTimeInfo), 0);
@@ -341,7 +412,8 @@ ClearInfo:
             ZeroMemory(&pPerfData[Idx].IOCounters, sizeof(IO_COUNTERS));
         }
 
-        SidToUserName(ProcessUser, pPerfData[Idx].UserName, sizeof(pPerfData[0].UserName) / sizeof(pPerfData[0].UserName[0]));
+        cwcUserName = sizeof(pPerfData[0].UserName) / sizeof(pPerfData[0].UserName[0]);
+        CachedGetUserFromSid(ProcessUser, pPerfData[Idx].UserName, &cwcUserName);
 
         if (ProcessSD != NULL)
         {
