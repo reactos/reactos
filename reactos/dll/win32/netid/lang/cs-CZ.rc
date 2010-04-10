@@ -1,6 +1,6 @@
 /* FILE:        dll/win32/netid/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2008-06-26
+ * UPDATED:     2010-03-14
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -18,10 +18,9 @@ BEGIN
     LTEXT       "(Implicitní)", IDC_COMPUTERNAME, 98, 68, 144, 11
     LTEXT       "Pracovní skupina:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
     LTEXT       "(prázdné)", IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 9
-    LTEXT       "Pokud chcete pouít Prùvodce síovou identifikací k pøipojení se k doménì a vytvoøení místního uivatele, kliknìte na ""Síová ID"".", IDC_STATIC, 6, 113, 172, 24
-    //musi zustat jako sitova ID, jinak se nevejde na tlacitko!
-    PUSHBUTTON  "&Síová ID...", IDC_NETWORK_ID, 190, 114, 58, 15
-    LTEXT       "Pokud chcete pøejmenovat tento poèítaè nebo se pøipojit k doménì, kliknìte na ""Zmìnit"".", IDC_STATIC, 6, 149, 170, 17
+    LTEXT       "Kliknutím na ""Síová ID"" lze pouít Prùvodce síovou identifikací k pøipojení se k doménì a vytvoøení místního uivatele.", IDC_STATIC, 6, 113, 172, 24
+    PUSHBUTTON  "&Síová ID...", IDC_NETWORK_ID, 190, 114, 58, 15 //FIXME nic vic nez "sitova ID" se nevejde na tlacitko!
+    LTEXT       "Kliknutím na ""Zmìnit"" lze pøejmenovat tento poèítaè nebo se pøipojit k doménì.", IDC_STATIC, 6, 149, 170, 17
     PUSHBUTTON  "&Zmìnit...",IDC_NETWORK_PROPERTY, 190, 149, 58, 15
     LTEXT       "Poznámka: Identifikaci tohoto poèítaèe mohou zmìnit pouze administrátoøi.", IDC_STATIC, 6, 179, 300, 9
 END
@@ -31,7 +30,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTIO
 CAPTION "Zmìna názvu poèítaèe"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "(message goes here)", 1017, 7, 5, 218, 30
+    LTEXT "(sem patøí zpráva)", 1017, 7, 5, 218, 30
     LTEXT "&Název poèítaèe:", -1, 7, 41, 219, 8
     EDITTEXT 1002, 7, 53, 218, 14, ES_AUTOHSCROLL | ES_OEMCONVERT
     LTEXT "Úplnı název poèítaèe:", 1016, 7, 72, 218, 10
@@ -41,7 +40,7 @@ BEGIN
     AUTORADIOBUTTON "&Domény:", 1008, 17, 132, 192, 10, WS_GROUP
     AUTORADIOBUTTON "&Pracovní skupiny:", 1004, 17, 161, 191, 10
     EDITTEXT 116, 28, 144, 181, 14, ES_AUTOHSCROLL | WS_GROUP
-    PUSHBUTTON "Najít moj&i doménu", 1010, 7, 203, 109, 14, NOT WS_VISIBLE | WS_DISABLED
+    PUSHBUTTON "Najít &moji doménu", 1010, 7, 203, 109, 14, NOT WS_VISIBLE | WS_DISABLED
     EDITTEXT 1007, 28, 172, 181, 14, ES_UPPERCASE | ES_AUTOHSCROLL | ES_OEMCONVERT
     DEFPUSHBUTTON "OK", 1, 121, 203, 50, 14, WS_GROUP
     PUSHBUTTON "Storno", 2, 176, 203, 50, 14
@@ -65,7 +64,7 @@ END
 STRINGTABLE
 BEGIN
     1 "* Neznámé *"
-    2 "WORKGROUP"
+    2 "SKUPINA"
     3 "Pøi pokusu o naètení informací o èlenství v doménì nastala následující chyba:"
     4 "Zmìna názvu poèítaèe"
     5 "Pracovní skupina:"
@@ -73,12 +72,12 @@ BEGIN
     22 "Vítejte v pracovní skupinì %1."
     23 "Vítejte v doménì %1."
     24 "Aby se zmìny mohly projevit, musí bıt poèítaè restartován."
-	25 "You can change the name and the membership of this computer. Changes may affect access to network resources."
+    25 "Lze zmìnit název a èlenství tohoto poèítaèe. Zmìny mohou mít vliv na pøístup k síovım prostøedkùm."
     1021 "Poznámka: Identifikaci tohoto poèítaèe mohou zmìnit pouze administrátoøi."
     1022 "Poznámka: Identifikace poèítaèe nemùe bıt zmìnìna z následujících dùvodù:"
-	1030 "The new computer name ""%s"" contains characters which are not allowed. Characters which are not allowed include ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' \" , . < > / and ?"
+    1030 "Novı název poèítaèe ""%s"" obsahuje nepovolené znaky. Mezi nepovolené znaky patøí ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' \" , . < > / ?"
     3210 "&Detaily >>"
     3220 "<< &Detaily"
-	4000 "Information"
-	4001 "Can't set new a computer name!"
+    4000 "Informace"
+    4001 "Nelze nastavit novı název poèítaèe!"
 END

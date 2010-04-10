@@ -1,21 +1,7 @@
-/*
- * Copyright 1998 Juergen Schmied
- * Copyright 2003 Filip Navara
- * Copyright 2008 Radek Liska
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+/* FILE:        dll/win32/shell32/lang/cs-CZ.rc
+ * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * UPDATED:     2010-04-05
+ * THANKS TO:   navaraf, who translated major part of this file
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -208,18 +194,18 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON "", 14000, 10, 3, 30, 30, WS_VISIBLE
 	EDITTEXT 14001, 70, 9, 158, 14, ES_LEFT | ES_READONLY
-	LTEXT "Type of file:", 14004, 8, 35, 50, 10
-	LTEXT "Folder", 14005, 68, 35, 160, 10
-	LTEXT "Location:", 14006, 8, 53, 50, 10
+	LTEXT "Typ souboru:", 14004, 8, 35, 50, 10
+	LTEXT "Sloûka", 14005, 68, 35, 160, 10
+	LTEXT "UmÌstÏnÌ:", 14006, 8, 53, 50, 10
 	LTEXT "", 14007, 68, 53, 315, 10
-	LTEXT "Size:", 14008, 8, 72, 45, 10
+	LTEXT "Velikost:", 14008, 8, 72, 45, 10
 	LTEXT "", 14009, 68, 72, 315, 10
-	LTEXT "Contains:", 14010, 8, 93, 45, 10
+	LTEXT "Obsahuje:", 14010, 8, 93, 45, 10
 	LTEXT "", 14011, 68, 93, 160, 10
-	LTEXT "Created:", 14014, 8, 118, 45, 10
+	LTEXT "Vytvo¯eno:", 14014, 8, 118, 45, 10
 	LTEXT "", 14015, 68, 118, 160, 10
-	AUTOCHECKBOX "&Read-only", 14021, 45, 150, 67, 10
-	AUTOCHECKBOX "&Hidden", 14022, 126, 150, 50, 10
+	AUTOCHECKBOX "&Jen pro ËtenÌ", 14021, 45, 150, 67, 10
+	AUTOCHECKBOX "&Skryt˝", 14022, 126, 150, 50, 10
 END
 
 SHELL_FILE_GENERAL_DLG DIALOGEX 0, 0, 240, 205
@@ -546,7 +532,7 @@ END
 
 FORMAT_DLG DIALOGEX 50, 50, 184, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Format"
+CAPTION "Form·tov·nÌ"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	DEFPUSHBUTTON "&Spustit", IDOK, 53, 198, 60, 14
@@ -567,14 +553,14 @@ END
 
 CHKDSK_DLG DIALOGEX 50, 50, 194, 120
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Check Disk"
+CAPTION "Zkontrolovat disk"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	DEFPUSHBUTTON "Start", IDOK, 53, 100, 60, 14
-	GROUPBOX "Check disk options", -1, 7, 6, 179, 50
-	PUSHBUTTON "Cancel", IDCANCEL, 118, 100, 60, 14
-	AUTOCHECKBOX "Automatically fix file system errors", 14000, 16, 15, 155, 10
-	AUTOCHECKBOX "&Scan for and attempt recovery of bad sectors", 14001, 16, 30, 165, 10
+	GROUPBOX "Moûnosti kontroly disku", -1, 7, 6, 179, 50
+	PUSHBUTTON "Storno", IDCANCEL, 118, 100, 60, 14
+	AUTOCHECKBOX "Automaticky opravovat chyby souborovÈho systÈmu", 14000, 16, 15, 155, 10
+	AUTOCHECKBOX "&Vyhledat a pokusit se obnovit vadnÈ sektory", 14001, 16, 30, 165, 10
 	CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 170, 8
 	LTEXT "", 14003, 60, 80, 170, 10
 END
@@ -607,17 +593,17 @@ BEGIN
 	IDS_SHV_COLUMN9             "Koment·¯"
 	IDS_SHV_COLUMN10            "VlastnÌk"
 	IDS_SHV_COLUMN11            "Skupina"
-	IDS_SHV_COLUMN12            "Filename"
-	IDS_SHV_COLUMN13            "Category"
+	IDS_SHV_COLUMN12            "N·zev souboru"
+	IDS_SHV_COLUMN13            "Kategorie"
 	IDS_SHV_COLUMN_DELFROM      "P˘vodnÌ umÌstÏnÌ"
 	IDS_SHV_COLUMN_DELDATE      "OdstranÏno"
 	IDS_SHV_COLUMN_FONTTYPE     "Fonttype"
-	IDS_SHV_COLUMN_WORKGROUP    "Workgroup"
-	IDS_SHV_NETWORKLOCATION     "Network Location"
-	IDS_SHV_COLUMN_DOCUMENTS    "Documents"
+	IDS_SHV_COLUMN_WORKGROUP    "PracovnÌ skupina"
+	IDS_SHV_NETWORKLOCATION     "SÌùovÈ umÌstÏnÌ"
+	IDS_SHV_COLUMN_DOCUMENTS    "Dokumenty"
 	IDS_SHV_COLUMN_STATUS       "Status"
-	IDS_SHV_COLUMN_COMMENTS     "Comments"
-	IDS_SHV_COLUMN_LOCATION     "Location"
+	IDS_SHV_COLUMN_COMMENTS     "Koment·¯e"
+	IDS_SHV_COLUMN_LOCATION     "UmÌstÏnÌ"
 	IDS_SHV_COLUMN_MODEL        "Model"
 
 	/* special folders */
@@ -625,7 +611,7 @@ BEGIN
 	IDS_MYCOMPUTER              "Tento poËÌtaË"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Koö"
 	IDS_CONTROLPANEL            "Ovl·dacÌ panely"
-	IDS_ADMINISTRATIVETOOLS     "Administrative Tools"
+	IDS_ADMINISTRATIVETOOLS     "N·stroje spr·vy"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&Vedle sebe"
@@ -634,15 +620,15 @@ BEGIN
 	IDS_VIEW_DETAILS            "&Podrobnosti"
 	IDS_SELECT                  "Vybrat"
 	IDS_OPEN                    "Otev¯Ìt"
-        IDS_CREATELINK              "Vytvo¯it z·stupc&e"
+	IDS_CREATELINK              "Vytvo¯it z·stupc&e"
 	IDS_COPY                    "&KopÌrovat"
 	IDS_DELETE                  "O&dstranit"
 	IDS_PROPERTIES              "&Vlastnosti"
 	IDS_CUT                     "Vyj&mout"
-	IDS_RESTORE                 "Restore"
-	IDS_FORMATDRIVE             "Format..."
-	IDS_RENAME                  "Rename"
-	IDS_INSERT                  "Insert"
+	IDS_RESTORE                 "Obnovit"
+	IDS_FORMATDRIVE             "Form·tovat..."
+	IDS_RENAME                  "P¯ejmenovat"
+	IDS_INSERT                  "Vloûit"
 
 	IDS_CREATEFOLDER_DENIED     "Nelze vytvo¯it novou sloûku, protoûe p¯Ìstup byl odep¯en."
 	IDS_CREATEFOLDER_CAPTION    "Chyba p¯i pokusu vytvo¯it nov˝ adres·¯"
@@ -666,8 +652,8 @@ BEGIN
 	IDS_RESTART_PROMPT          "Opravdu chcete restartovat systÈm?"
 	IDS_SHUTDOWN_TITLE          "Vypnout"
 	IDS_SHUTDOWN_PROMPT         "Opravdu chcete vypnout poËÌtaË?"
-	IDS_LOGOFF_TITLE            "Log Off"
-	IDS_LOGOFF_PROMPT           "Do you want to log off?"
+	IDS_LOGOFF_TITLE            "Odhl·sit se"
+	IDS_LOGOFF_PROMPT           "Opravdu se chcete odhl·sit?"
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "NabÌdka Start\\Programy"
@@ -737,19 +723,19 @@ BEGIN
 	IDS_LNK_FILE                "Z·stupce"
 	IDS_SYS_FILE                "SystÈmov˝ soubor"
 
-	IDS_OPEN_VERB               "Open"
-	IDS_RUNAS_VERB              "Run as "
-	IDS_EDIT_VERB               "Edit"
-	IDS_FIND_VERB               "Find"
-	IDS_PRINT_VERB              "Print"
-	IDS_PLAY_VERB               "Play"
-	IDS_PREVIEW_VERB            "Preview"
+	IDS_OPEN_VERB               "Otev¯Ìt"
+	IDS_RUNAS_VERB              "Spustit jako "
+	IDS_EDIT_VERB               "Upravit"
+	IDS_FIND_VERB               "NajÌt"
+	IDS_PRINT_VERB              "Tisknout"
+	IDS_PLAY_VERB               "P¯ehr·t"
+	IDS_PREVIEW_VERB            "N·hled"
 
-	IDS_FILE_FOLDER             "%u Files, %u Folders"
-	IDS_PRINTERS                "Printers"
-	IDS_FONTS                   "Fonts"
-	IDS_INSTALLNEWFONT          "Install New Font..."
+	IDS_FILE_FOLDER             "%u soubor˘, %u sloûek"
+	IDS_PRINTERS                "Tisk·rny"
+	IDS_FONTS                   "Fonty"
+	IDS_INSTALLNEWFONT          "Nainstalovat nov˝ font..."
 
-	IDS_DEFAULT_CLUSTER_SIZE    "Default allocation size"
-	IDS_COPY_OF                 "Copy of"
+	IDS_DEFAULT_CLUSTER_SIZE    "V˝chozÌ alokaËnÌ velikost"
+	IDS_COPY_OF                 "Kopie "
 END
