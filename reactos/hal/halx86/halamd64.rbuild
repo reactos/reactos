@@ -28,7 +28,7 @@
 		<file>processor_mp.c</file>
 		<file>halmp.rc</file>
 		<directory name="amd64">
-			<!-- file>mps.S</file -->
+			<file>mps.S</file>
 		</directory>
 	</directory -->
 </module>
