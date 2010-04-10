@@ -90,11 +90,11 @@ VCProjMaker::_get_file_path( FileLocation* file, std::string relative_path)
 	}
 	else if(file->directory == IntermediateDirectory)
 	{
-		return std::string("$(obj)\\") + file->relative_path;
+		return std::string("$(RootIntDir)\\") + file->relative_path;
 	}
 	else if(file->directory == OutputDirectory)
 	{
-		return std::string("$(out)\\") + file->relative_path;
+		return std::string("$(RootOutDir)\\") + file->relative_path;
 	}
 
 	return std::string("");
@@ -107,51 +107,30 @@ VCProjMaker::_generate_proj_file ( const Module& module )
 {
 	size_t i;
 
-	string computername;
-	string username;
-
 	// make sure the containers are empty
 	header_files.clear();
 	includes.clear();
 	libraries.clear();
 	common_defines.clear();
 
-	if (getenv ( "USERNAME" ) != NULL)
-		username = getenv ( "USERNAME" );
-	if (getenv ( "COMPUTERNAME" ) != NULL)
-		computername = getenv ( "COMPUTERNAME" );
-	else if (getenv ( "HOSTNAME" ) != NULL)
-		computername = getenv ( "HOSTNAME" );
-
-	string vcproj_file_user = "";
-
-	if ((computername != "") && (username != ""))
-		vcproj_file_user = vcproj_file + "." + computername + "." + username + ".user";
-
 	printf ( "Creating MSVC project: '%s'\n", vcproj_file.c_str() );
 
 	string path_basedir = module.GetPathToBaseDir ();
-	string vcdir;
-
-
-	if ( configuration.UseVSVersionInPath )
-	{
-		vcdir = DEF_SSEP + _get_vc_dir();
-	}
 
 	bool include_idl = false;
 
-	vector<string> source_files, resource_files;
-	vector<const IfableData*> ifs_list;
+	vector<string> source_files, resource_files, generated_files;
 
-	const IfableData& data = module.non_if_data/**ifs_list.back()*/;
+	const IfableData& data = module.non_if_data;
 	const vector<File*>& files = data.files;
 	for ( i = 0; i < files.size(); i++ )
 	{
 		string path = _get_file_path(&files[i]->file, module.output->relative_path);
 		string file = path + std::string("\\") + files[i]->file.name;
 
-		if ( !stricmp ( Right(file,3).c_str(), ".rc" ) )
+		if (files[i]->file.directory != SourceDirectory)
+			generated_files.push_back ( file );
+		else if ( !stricmp ( Right(file,3).c_str(), ".rc" ) )
 			resource_files.push_back ( file );
 		else if ( !stricmp ( Right(file,2).c_str(), ".h" ) )
 			header_files.push_back ( file );
@@ -176,7 +155,7 @@ VCProjMaker::_generate_proj_file ( const Module& module )
 	const vector<Library*>& libs = data.libraries;
 	for ( i = 0; i < libs.size(); i++ )
 	{
-		string libpath = "$(out)\\" + libs[i]->importedModule->output->relative_path + "\\" + _get_vc_dir() + "\\$(ConfigurationName)\\" + libs[i]->name + ".lib";
+		string libpath = "$(RootOutDir)\\" + libs[i]->importedModule->output->relative_path + "\\" + _get_vc_dir() + "\\$(ConfigurationName)\\" + libs[i]->name + ".lib";
 		libraries.push_back ( libpath );
 	}
 	const vector<Define*>& defs = data.defines;
@@ -197,10 +176,20 @@ VCProjMaker::_generate_proj_file ( const Module& module )
 			baseaddr = prop.value;
 	}
 
-	if(module.IsSpecDefinitionFile())
+	if(module.importLibrary)
 	{
-		std::string path = _get_file_path(module.importLibrary->source, module.output->relative_path);
-		source_files.push_back ( path + std::string("\\") + module.importLibrary->source->name );
+		std::string ImportLibraryPath = _get_file_path(module.importLibrary->source, module.output->relative_path);
+
+		switch (module.IsSpecDefinitionFile())
+		{
+		case PSpec:
+			generated_files.push_back("$(IntDir)\\" + ReplaceExtension(module.importLibrary->source->name,".spec"));
+		case Spec:
+			generated_files.push_back("$(IntDir)\\" + ReplaceExtension(module.importLibrary->source->name,".stubs.c"));
+			generated_files.push_back("$(IntDir)\\" + ReplaceExtension(module.importLibrary->source->name,".def"));
+		default:
+			source_files.push_back(ImportLibraryPath + std::string("\\") + module.importLibrary->source->name);
+		}
 	}
 
 	fprintf ( OUT, "<?xml version=\"1.0\" encoding = \"Windows-1252\"?>\r\n" );
@@ -262,6 +251,19 @@ VCProjMaker::_generate_proj_file ( const Module& module )
 
 	// Write out the project files
 	fprintf ( OUT, "\t<Files>\r\n" );
+
+	// Generated files
+	fprintf ( OUT, "\t\t<Filter\r\n" );
+	fprintf ( OUT, "\t\t\tName=\"Generated Files\">\r\n" );
+	for( i = 0; i < generated_files.size(); i++)
+	{
+		string source_file = DosSeparator(generated_files[i]);
+
+		fprintf ( OUT, "\t\t\t<File\r\n");
+		fprintf ( OUT, "\t\t\t\tRelativePath=\"%s\">\r\n", source_file.c_str() );
+		fprintf ( OUT, "\t\t\t</File>\r\n");
+	}
+	fprintf ( OUT, "\t\t</Filter>\r\n" );
 
 	// Source files
 	fprintf ( OUT, "\t\t<Filter\r\n" );
@@ -328,9 +330,10 @@ VCProjMaker::_generate_proj_file ( const Module& module )
 				if ((source_file.find(".idl") != string::npos) || ((source_file.find(".asm") != string::npos)))
 				{
 					fprintf ( OUT, "%s\t<FileConfiguration\r\n", indent_tab.c_str() );
-					fprintf ( OUT, "%s\t\tName=\"", indent_tab.c_str() );
-					fprintf ( OUT, config.name.c_str() );
-					fprintf ( OUT, "|Win32\">\r\n" );
+					fprintf ( OUT, "%s\t\tName=\"%s|Win32\"\r\n", indent_tab.c_str(),config.name.c_str() );
+					fprintf ( OUT, "%s\t\tExcludedFromBuild=\"true\"\r\n",indent_tab.c_str());
+					fprintf ( OUT, ">\r\n" );
+#if 0
 					fprintf ( OUT, "%s\t\t<Tool\r\n", indent_tab.c_str() );
 					if (source_file.find(".idl") != string::npos)
 					{
@@ -364,6 +367,7 @@ VCProjMaker::_generate_proj_file ( const Module& module )
 						fprintf ( OUT, "%s\t\t\tCommandLine=\"nasmw $(InputPath) -f coff -o &quot;$(OutDir)\\$(InputName).obj&quot;\"\r\n", indent_tab.c_str() );
 						fprintf ( OUT, "%s\t\t\tOutputs=\"$(OutDir)\\$(InputName).obj\"/>\r\n", indent_tab.c_str() );
 					}
+#endif
 					fprintf ( OUT, "%s\t</FileConfiguration>\r\n", indent_tab.c_str() );
 				}
 			//}
@@ -430,6 +434,11 @@ void VCProjMaker::_generate_standard_configuration( const Module& module,
 	string intermediatedir = "";
 	string importLib;
 
+	if ( configuration.UseVSVersionInPath )
+	{
+		vcdir = DEF_SSEP + _get_vc_dir();
+	}
+
 	if(module.IsSpecDefinitionFile())
 	{
 		importLib = "$(IntDir)\\$(ProjectName).def";
@@ -456,23 +465,18 @@ void VCProjMaker::_generate_standard_configuration( const Module& module,
 	else
 		CfgType = ConfigUnknown;
 
-	if ( configuration.UseVSVersionInPath )
-	{
-		vcdir = DEF_SSEP + _get_vc_dir();
-	}
-
 	fprintf ( OUT, "\t\t<Configuration\r\n" );
 	fprintf ( OUT, "\t\t\tName=\"%s|Win32\"\r\n", cfg.name.c_str() );
 
 	if ( configuration.UseConfigurationInPath )
 	{
-		fprintf ( OUT, "\t\t\tOutputDirectory=\"$(out)\\%s%s\\$(ConfigurationName)\"\r\n", module.output->relative_path.c_str (), vcdir.c_str () );
-		fprintf ( OUT, "\t\t\tIntermediateDirectory=\"$(obj)\\%s%s\\$(ConfigurationName)\"\r\n", module.output->relative_path.c_str (), vcdir.c_str () );
+		fprintf ( OUT, "\t\t\tOutputDirectory=\"$(RootOutDir)\\%s%s\\$(ConfigurationName)\"\r\n", module.output->relative_path.c_str (), vcdir.c_str () );
+		fprintf ( OUT, "\t\t\tIntermediateDirectory=\"$(RootIntDir)\\%s%s\\$(ConfigurationName)\"\r\n", module.output->relative_path.c_str (), vcdir.c_str () );
 	}
 	else
 	{
-		fprintf ( OUT, "\t\t\tOutputDirectory=\"$(out)\\%s%s\"\r\n", module.output->relative_path.c_str (), vcdir.c_str () );
-		fprintf ( OUT, "\t\t\tIntermediateDirectory=\"$(obj)\\%s%s\"\r\n", module.output->relative_path.c_str (), vcdir.c_str () );
+		fprintf ( OUT, "\t\t\tOutputDirectory=\"$(RootOutDir)\\%s%s\"\r\n", module.output->relative_path.c_str (), vcdir.c_str () );
+		fprintf ( OUT, "\t\t\tIntermediateDirectory=\"$(RootIntDir)\\%s%s\"\r\n", module.output->relative_path.c_str (), vcdir.c_str () );
 	}
 
 	fprintf ( OUT, "\t\t\tConfigurationType=\"%d\"\r\n", CfgType );
@@ -751,8 +755,6 @@ VCProjMaker::_generate_makefile_configuration( const Module& module, const MSVCC
 
 	string outdir;
 	string intdir;
-	string vcdir;
-
 
 	if ( intenv == "obj-i386" )
 		intdir = path_basedir + "obj-i386"; /* append relative dir from project dir */
@@ -763,11 +765,6 @@ VCProjMaker::_generate_makefile_configuration( const Module& module, const MSVCC
 		outdir = path_basedir + "output-i386";
 	else
 		outdir = outenv;
-
-	if ( configuration.UseVSVersionInPath )
-	{
-		vcdir = DEF_SSEP + _get_vc_dir();
-	}
 
 	fprintf ( OUT, "\t\t<Configuration\r\n" );
 	fprintf ( OUT, "\t\t\tName=\"%s|Win32\"\r\n", cfg.name.c_str() );

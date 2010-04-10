@@ -69,6 +69,20 @@ void
 ProjMaker::_generate_user_configuration()
 {
 #if 0
+	string computername;
+	string username;
+	string vcproj_file_user = "";
+
+	if (getenv ( "USERNAME" ) != NULL)
+		username = getenv ( "USERNAME" );
+	if (getenv ( "COMPUTERNAME" ) != NULL)
+		computername = getenv ( "COMPUTERNAME" );
+	else if (getenv ( "HOSTNAME" ) != NULL)
+		computername = getenv ( "HOSTNAME" );
+
+	if ((computername != "") && (username != ""))
+		vcproj_file_user = vcproj_file + "." + computername + "." + username + ".user";
+
 	/* User configuration file */
 	if (vcproj_file_user != "")
 	{

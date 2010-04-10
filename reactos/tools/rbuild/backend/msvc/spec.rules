@@ -7,26 +7,33 @@
 		<CustomBuildRule
 			Name="spec"
 			DisplayName="Spec"
-			CommandLine="$(Tools)\winebuild\winebuild.exe -o &quot;[$Output]&quot; --def -k -E [inputs]"
-			Outputs="[$Output]"
+			CommandLine="&quot;$(Tools)\winebuild\winebuild.exe&quot; -F $(TargetFileName) -o  [DefFile] --def -k -E [inputs] | &quot;$(Tools)\winebuild\winebuild.exe&quot; -F $(TargetFileName) -o [StubsFile] --pedll -k -E [inputs]"
+			Outputs="[DefFile]"
 			FileExtensions="*.spec"
 			ExecutionDescription="Generating module definition file"
 			>
 			<Properties>
 				<StringProperty
-					Name="Output"
-					DisplayName="Output"
+					Name="DefFile"
+					DisplayName="DefFile"
 					Description="The path of the def file"
-					Switch="[value]"
+					Switch="&quot;[value]&quot;"
 					DefaultValue="$(IntDir)\$(InputName).def"
+				/>
+				<StringProperty
+					Name="StubsFile"
+					DisplayName="StubsFile"
+					Description="The path of the spec file"
+					Switch="&quot;[value]&quot;"
+					DefaultValue="$(IntDir)\$(InputName).stubs.c"
 				/>
 			</Properties>
 		</CustomBuildRule>
 		<CustomBuildRule
 			Name="Pspec"
 			DisplayName="pspec"
-			CommandLine="cl /nologo /E [includes] [inputs] &gt; &quot;[Specfile]&quot; | $(Tools)\winebuild\winebuild.exe -o &quot;[Output]&quot; --def -k -E &quot;[Specfile]&quot;"
-			Outputs="&quot;[$Output]&quot;"
+			CommandLine="cl /nologo /EP [includes] [inputs] &gt; [Specfile]"
+			Outputs="[Specfile]"
 			FileExtensions="*.pspec"
 			ExecutionDescription="Generating module definition file"
 			>
@@ -38,17 +45,10 @@
 					Delimited="true"
 				/>
 				<StringProperty
-					Name="Output"
-					DisplayName="Output"
-					Description="The path to the def file"
-					Switch="[value]"
-					DefaultValue="$(IntDir)/$(InputName).def"
-				/>
-				<StringProperty
 					Name="Specfile"
 					DisplayName="Spec file"
 					Description="Spec file"
-					Switch="[value]"
+					Switch="&quot;[value]&quot;"
 					DefaultValue="$(IntDir)\$(InputName).spec"
 				/>
 			</Properties>
