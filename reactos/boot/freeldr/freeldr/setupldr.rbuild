@@ -11,7 +11,9 @@
 	<library>cmlib</library>
 	<library>rtl</library>
 	<library>libcntpr</library>
+<if property="ARCH" value="i386">
 	<library>mini_hal</library>
+</if>
 	<group linkerset="ld">
 		<linkerflag>-nostartfiles</linkerflag>
 		<linkerflag>-nostdlib</linkerflag>
