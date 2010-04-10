@@ -63,3 +63,9 @@ FrLdrStartup(ULONG Magic)
     for(;;);
 }
 
+ULONG
+LoadBootDeviceDriver(VOID)
+{
+    return ESUCCESS;
+}
+

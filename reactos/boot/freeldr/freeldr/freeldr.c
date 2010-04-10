@@ -46,8 +46,9 @@ VOID BootMain(LPSTR CmdLine)
 		UiMessageBoxCritical("Unable to initialize memory manager");
 		return;
 	}
-
+#ifdef _M_IX86
 	HalpInitializePciStubs();
 	HalpInitBusHandler();
+#endif
 	RunLoader();
 }
