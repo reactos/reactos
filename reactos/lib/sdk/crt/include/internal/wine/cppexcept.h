@@ -26,7 +26,12 @@
 /* Macros to define assembler functions somewhat portably */
 
 #define __ASM_FUNC(name) ".def " __ASM_NAME(name) "; .scl 2; .type 32; .endef"
+
+#ifdef _M_AMD64
+#define __ASM_NAME(name) name
+#else
 #define __ASM_NAME(name) "_" name
+#endif
 
 #ifdef __GNUC__
 # define __ASM_GLOBAL_FUNC(name,code) \

@@ -17,40 +17,40 @@
 
 /* GLOBALS *******************************************************************/
 
-.globl __global_unwind2
-.globl __local_unwind2
-.globl __abnormal_termination
-.globl __except_handler2
-.globl __except_handler3
+.globl _global_unwind2
+.globl _local_unwind2
+.globl _abnormal_termination
+.globl _except_handler2
+.globl _except_handler3
 
 /* FUNCTIONS *****************************************************************/
 
-.func unwind_handler
+.func _unwind_handler
 _unwind_handler:
     ret
 .endfunc
 
 .func _global_unwind2
-__global_unwind2:
+_global_unwind2:
     ret
 .endfunc
 
 .func _abnormal_termination
-__abnormal_termination:
+_abnormal_termination:
     ret
 .endfunc
 
 .func _local_unwind2
-__local_unwind2:
+_local_unwind2:
     ret
 .endfunc
 
 .func _except_handler2
-__except_handler2:
+_except_handler2:
     ret
 .endfunc
 
 .func _except_handler3
-__except_handler3:
+_except_handler3:
     ret
 .endfunc
