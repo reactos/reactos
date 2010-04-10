@@ -1,3 +1,4 @@
+
 @ stdcall AcquireSRWLockExclusive(ptr) ntdll.RtlAcquireSRWLockExclusive
 @ stdcall AcquireSRWLockShare(ptr) ntdll.RtlAcquireSRWLockShared
 @ stdcall ActivateActCtx(ptr ptr)
@@ -201,6 +202,7 @@
 @ stdcall CreateWaitableTimerA(ptr long str)
 @ stdcall CreateWaitableTimerExA (ptr str long long)
 @ stdcall CreateWaitableTimerExW (ptr wstr long long)
+@ stdcall CreateWaitableTimerW(ptr long str)
 @ stdcall DeactivateActCtx(long ptr)
 @ stdcall DebugActiveProcess(long)
 @ stdcall DebugActiveProcessStop(long)
