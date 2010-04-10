@@ -151,11 +151,14 @@ IKsPin_PinMasterClock(
     /* get the object header */
     ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext2;
 
+    /* sanity check */
+    ASSERT(ObjectHeader);
+
     /* locate ks pin implemention from KSPIN offset */
     This = (IKsPinImpl*)CONTAINING_RECORD(ObjectHeader->ObjectType, IKsPinImpl, Pin);
 
-    /* acquire control mutex */
-    KeWaitForSingleObject(This->BasicHeader.ControlMutex, Executive, KernelMode, FALSE, NULL);
+    /* sanity check */
+    ASSERT(This);
 
     Handle = (PHANDLE)Data;
 
@@ -226,10 +229,7 @@ IKsPin_PinMasterClock(
         }
     }
 
-    /* release processing mutex */
-    KeReleaseMutex(This->BasicHeader.ControlMutex, FALSE);
-
-    DPRINT("IKsPin_PinStatePropertyHandler Status %lx\n", Status);
+    DPRINT("IKsPin_PinMasterClock Status %lx\n", Status);
     return Status;
 }
 
@@ -1907,86 +1907,6 @@ IKsPin_DispatchKsStream(
     return Status;
 }
 
-
-NTSTATUS
-IKsPin_DispatchKsProperty(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp,
-    IKsPinImpl * This)
-{
-    NTSTATUS Status;
-    PKSPROPERTY Property;
-    PIO_STACK_LOCATION IoStack;
-    UNICODE_STRING GuidString;
-    ULONG PropertySetsCount = 0, PropertyItemSize = 0;
-    const KSPROPERTY_SET* PropertySets = NULL;
-
-    /* sanity check */
-    ASSERT(This->Pin.Descriptor);
-
-    /* get current irp stack */
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-
-    if (This->Pin.Descriptor->AutomationTable)
-    {
-        /* use available driver property sets */
-        PropertySetsCount = This->Pin.Descriptor->AutomationTable->PropertySetsCount;
-        PropertySets = This->Pin.Descriptor->AutomationTable->PropertySets;
-        PropertyItemSize = This->Pin.Descriptor->AutomationTable->PropertyItemSize;
-    }
-
-
-    /* try driver provided property sets */
-    Status = KspPropertyHandler(Irp,
-                                PropertySetsCount,
-                                PropertySets,
-                                NULL,
-                                PropertyItemSize);
-
-    if (Status != STATUS_NOT_FOUND)
-    {
-        /* property was handled by driver */
-        if (Status != STATUS_PENDING)
-        {
-            Irp->IoStatus.Status = Status;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        }
-        return Status;
-    }
-
-    /* try our properties */
-    Status = KspPropertyHandler(Irp,
-                                sizeof(PinPropertySet) / sizeof(KSPROPERTY_SET),
-                                PinPropertySet,
-                                NULL,
-                                0);
-
-    if (Status != STATUS_NOT_FOUND)
-    {
-        /* property was handled by driver */
-        if (Status != STATUS_PENDING)
-        {
-            Irp->IoStatus.Status = Status;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        }
-        return Status;
-    }
-
-    /* property was not handled */
-    Property = (PKSPROPERTY)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
-
-    RtlStringFromGUID(&Property->Set, &GuidString);
-    DPRINT("IKsPin_DispatchKsProperty Unhandled property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
-    RtlFreeUnicodeString(&GuidString);
-
-    Irp->IoStatus.Status = STATUS_NOT_FOUND;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-    return STATUS_NOT_FOUND;
-
-}
-
 NTSTATUS
 NTAPI
 IKsPin_DispatchDeviceIoControl(
@@ -1996,6 +1916,10 @@ IKsPin_DispatchDeviceIoControl(
     PIO_STACK_LOCATION IoStack;
     PKSIOBJECT_HEADER ObjectHeader;
     IKsPinImpl * This;
+    NTSTATUS Status;
+    UNICODE_STRING GuidString;
+    PKSPROPERTY Property;
+    ULONG SetCount = 0;
 
     /* get current irp stack */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -2010,23 +1934,93 @@ IKsPin_DispatchDeviceIoControl(
     /* locate ks pin implemention from KSPIN offset */
     This = (IKsPinImpl*)CONTAINING_RECORD(ObjectHeader->ObjectType, IKsPinImpl, Pin);
 
-    if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_PROPERTY)
+    /* current irp stack */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* get property from input buffer */
+    Property = (PKSPROPERTY)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
+
+    /* sanity check */
+    ASSERT(IoStack->Parameters.DeviceIoControl.InputBufferLength >= sizeof(KSIDENTIFIER));
+    ASSERT(This->Pin.Descriptor->AutomationTable);
+
+    RtlStringFromGUID(&Property->Set, &GuidString);
+    DPRINT("IKsPin_DispatchDeviceIoControl property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
+    RtlFreeUnicodeString(&GuidString);
+
+
+    if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_METHOD)
     {
-        /* handle ks properties */
-        return IKsPin_DispatchKsProperty(DeviceObject, Irp, This);
+        const KSMETHOD_SET *MethodSet = NULL;
+        ULONG MethodItemSize = 0;
+
+        /* check if the driver supports method sets */
+        if (This->Pin.Descriptor->AutomationTable->MethodSetsCount)
+        {
+            SetCount = This->Pin.Descriptor->AutomationTable->MethodSetsCount;
+            MethodSet = This->Pin.Descriptor->AutomationTable->MethodSets;
+            MethodItemSize = This->Pin.Descriptor->AutomationTable->MethodItemSize;
+        }
+
+        /* call method set handler */
+        Status = KspMethodHandlerWithAllocator(Irp, SetCount, MethodSet, NULL, MethodItemSize);
+    }
+    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_PROPERTY)
+    {
+        const KSPROPERTY_SET *PropertySet = NULL;
+        ULONG PropertyItemSize = 0;
+
+        /* check if the driver supports method sets */
+        if (This->Pin.Descriptor->AutomationTable->PropertySetsCount)
+        {
+            SetCount = This->Pin.Descriptor->AutomationTable->PropertySetsCount;
+            PropertySet = This->Pin.Descriptor->AutomationTable->PropertySets;
+            PropertyItemSize = This->Pin.Descriptor->AutomationTable->PropertyItemSize;
+        }
+
+        /* needed for our property handlers */
+        KSPROPERTY_ITEM_IRP_STORAGE(Irp) = (KSPROPERTY_ITEM*)This;
+
+        /* call property handler */
+        Status = KspPropertyHandler(Irp, SetCount, PropertySet, NULL, PropertyItemSize);
+    }
+    else
+    {
+        /* sanity check */
+        ASSERT(IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_ENABLE_EVENT ||
+               IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_DISABLE_EVENT);
+
+        if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_ENABLE_EVENT)
+        {
+            /* call enable event handlers */
+            Status = KspEnableEvent(Irp,
+                                    This->Pin.Descriptor->AutomationTable->EventSetsCount,
+                                    (PKSEVENT_SET)This->Pin.Descriptor->AutomationTable->EventSets,
+                                    &This->BasicHeader.EventList,
+                                    KSEVENTS_SPINLOCK,
+                                    (PVOID)&This->BasicHeader.EventListLock,
+                                    NULL,
+                                    This->Pin.Descriptor->AutomationTable->EventItemSize);
+        }
+        else
+        {
+            /* disable event handler */
+            Status = KsDisableEvent(Irp, &This->BasicHeader.EventList, KSEVENTS_SPINLOCK, &This->BasicHeader.EventListLock);
+        }
     }
 
-    if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_WRITE_STREAM ||
-        IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_READ_STREAM)
+    RtlStringFromGUID(&Property->Set, &GuidString);
+    DPRINT("IKsPin_DispatchDeviceIoControl property Set |%S| Id %u Flags %x Status %lx ResultLength %lu\n", GuidString.Buffer, Property->Id, Property->Flags, Status, Irp->IoStatus.Information);
+    RtlFreeUnicodeString(&GuidString);
+
+    if (Status != STATUS_PENDING)
     {
-        /* handle ks properties */
-        return IKsPin_DispatchKsStream(DeviceObject, Irp, This);
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
 
-    UNIMPLEMENTED;
-    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_NOT_IMPLEMENTED;
+    /* done */
+    return Status;
 }
 
 NTSTATUS
@@ -2053,9 +2047,6 @@ IKsPin_Close(
     /* locate ks pin implemention fro KSPIN offset */
     This = (IKsPinImpl*)CONTAINING_RECORD(ObjectHeader->ObjectType, IKsPinImpl, Pin);
 
-    /* acquire filter control mutex */
-    KsFilterAcquireControl(&This->Pin);
-
     if (This->Pin.Descriptor->Dispatch->Close)
     {
         /* call pin close routine */
@@ -2069,7 +2060,8 @@ IKsPin_Close(
             return Status;
         }
 
-        /* FIXME remove pin from filter pin list and decrement reference count */
+        /* remove pin from filter pin list and decrement reference count */
+        IKsFilter_RemovePin(This->Filter->lpVtbl->GetStruct(This->Filter), &This->Pin);
 
         if (Status != STATUS_PENDING)
         {
@@ -2078,9 +2070,6 @@ IKsPin_Close(
             return Status;
         }
     }
-
-    /* release filter control mutex */
-    KsFilterReleaseControl(&This->Pin);
 
     return Status;
 }
@@ -2228,6 +2217,7 @@ KspCreatePin(
     ULONG Index;
     ULONG FrameSize = 0;
     ULONG NumFrames = 0;
+    KSAUTOMATION_TABLE AutomationTable;
 
     /* sanity checks */
     ASSERT(Descriptor->Dispatch);
@@ -2314,6 +2304,8 @@ KspCreatePin(
     This->BasicHeader.KsDevice = KsDevice;
     This->BasicHeader.Type = KsObjectTypePin;
     This->BasicHeader.Parent.KsFilter = Filter->lpVtbl->GetStruct(Filter);
+    InitializeListHead(&This->BasicHeader.EventList);
+    KeInitializeSpinLock(&This->BasicHeader.EventListLock);
 
     ASSERT(This->BasicHeader.Parent.KsFilter);
 
@@ -2350,11 +2342,43 @@ KspCreatePin(
     /* initialize object bag */
     Device->lpVtbl->InitializeObjectBag(Device, This->Pin.Bag, NULL);
 
+    /* allocate pin descriptor */
+    This->Pin.Descriptor = AllocateItem(NonPagedPool, sizeof(KSPIN_DESCRIPTOR_EX));
+    if (!This->Pin.Descriptor)
+    {
+        /* not enough memory */
+        KsFreeObjectBag(This->Pin.Bag);
+        FreeItem(This);
+        FreeItem(CreateItem);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* copy pin descriptor */
+    RtlMoveMemory((PVOID)This->Pin.Descriptor, Descriptor, sizeof(KSPIN_DESCRIPTOR_EX));
+
+    /* initialize automation table */
+    RtlZeroMemory(&AutomationTable, sizeof(KSAUTOMATION_TABLE));
+
+    AutomationTable.PropertyItemSize = sizeof(KSPROPERTY_ITEM);
+    AutomationTable.PropertySets = PinPropertySet;
+    AutomationTable.PropertySetsCount = sizeof(PinPropertySet) / sizeof(KSPROPERTY_SET);
+
+    /* merge in pin property sets */
+    Status = KsMergeAutomationTables((PKSAUTOMATION_TABLE*)&This->Pin.Descriptor->AutomationTable, (PKSAUTOMATION_TABLE)Descriptor->AutomationTable, &AutomationTable, This->Pin.Bag);
+
+    if (!NT_SUCCESS(Status))
+    {
+        /* not enough memory */
+        KsFreeObjectBag(This->Pin.Bag);
+        FreeItem(This);
+        FreeItem(CreateItem);
+        return Status;
+    }
+
     /* get format */
     DataFormat = (PKSDATAFORMAT)(Connect + 1);
 
     /* initialize pin descriptor */
-    This->Pin.Descriptor = Descriptor;
     This->Pin.Context = NULL;
     This->Pin.Id = Connect->PinId;
     This->Pin.Communication = Descriptor->PinDescriptor.Communication;
@@ -2482,7 +2506,7 @@ KspCreatePin(
     }
 
     /* FIXME add pin instance to filter instance */
-
+    IKsFilter_AddPin(Filter->lpVtbl->GetStruct(Filter), &This->Pin);
 
     if (Descriptor->Dispatch && Descriptor->Dispatch->SetDataFormat)
     {
@@ -2505,6 +2529,7 @@ KspCreatePin(
     if (!NT_SUCCESS(Status) && Status != STATUS_PENDING)
     {
         /* failed to create pin, release resources */
+        IKsFilter_RemovePin(Filter->lpVtbl->GetStruct(Filter), &This->Pin);
         KsFreeObjectHeader((KSOBJECT_HEADER)This->ObjectHeader);
         KsFreeObjectBag((KSOBJECT_BAG)This->Pin.Bag);
         FreeItem(This);

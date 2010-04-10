@@ -778,11 +778,15 @@ IKsFilter_DispatchDeviceIoControl(
     /* get property from input buffer */
     Property = (PKSPROPERTY)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
 
-    /* sanity check */
-    ASSERT(IoStack->Parameters.DeviceIoControl.InputBufferLength >= sizeof(KSIDENTIFIER));
-
     /* get filter instance */
     FilterInstance = Filter->lpVtbl->GetStruct(Filter);
+
+
+    /* sanity check */
+    ASSERT(IoStack->Parameters.DeviceIoControl.InputBufferLength >= sizeof(KSIDENTIFIER));
+    ASSERT(FilterInstance);
+    ASSERT(FilterInstance->Descriptor);
+    ASSERT(FilterInstance->Descriptor->AutomationTable);
 
     RtlStringFromGUID(&Property->Set, &GuidString);
     DPRINT("IKsFilter_DispatchDeviceIoControl property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
@@ -794,7 +798,7 @@ IKsFilter_DispatchDeviceIoControl(
         ULONG MethodItemSize = 0;
 
         /* check if the driver supports method sets */
-        if (FilterInstance->Descriptor->AutomationTable && FilterInstance->Descriptor->AutomationTable->MethodSetsCount)
+        if (FilterInstance->Descriptor->AutomationTable->MethodSetsCount)
         {
             SetCount = FilterInstance->Descriptor->AutomationTable->MethodSetsCount;
             MethodSet = FilterInstance->Descriptor->AutomationTable->MethodSets;
@@ -810,7 +814,7 @@ IKsFilter_DispatchDeviceIoControl(
         ULONG PropertyItemSize = 0;
 
         /* check if the driver supports method sets */
-        if (FilterInstance->Descriptor->AutomationTable && FilterInstance->Descriptor->AutomationTable->PropertySetsCount)
+        if (FilterInstance->Descriptor->AutomationTable->PropertySetsCount)
         {
             SetCount = FilterInstance->Descriptor->AutomationTable->PropertySetsCount;
             PropertySet = FilterInstance->Descriptor->AutomationTable->PropertySets;
@@ -829,8 +833,23 @@ IKsFilter_DispatchDeviceIoControl(
         ASSERT(IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_ENABLE_EVENT ||
                IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_DISABLE_EVENT);
 
-        Status = STATUS_NOT_FOUND;
-        UNIMPLEMENTED;
+        if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_ENABLE_EVENT)
+        {
+            /* call enable event handlers */
+            Status = KspEnableEvent(Irp,
+                                    FilterInstance->Descriptor->AutomationTable->EventSetsCount,
+                                    (PKSEVENT_SET)FilterInstance->Descriptor->AutomationTable->EventSets,
+                                    &This->Header.EventList,
+                                    KSEVENTS_SPINLOCK,
+                                    (PVOID)&This->Header.EventListLock,
+                                    NULL,
+                                    FilterInstance->Descriptor->AutomationTable->EventItemSize);
+        }
+        else
+        {
+            /* disable event handler */
+            Status = KsDisableEvent(Irp, &This->Header.EventList, KSEVENTS_SPINLOCK, &This->Header.EventListLock);
+        }
     }
 
     RtlStringFromGUID(&Property->Set, &GuidString);
@@ -1041,14 +1060,14 @@ IKsFilter_CopyFilterDescriptor(
 }
 
 
-NTSTATUS
+VOID
 IKsFilter_AddPin(
-    IKsFilter * Filter,
+    PKSFILTER Filter,
     PKSPIN Pin)
 {
     PKSPIN NextPin, CurPin;
     PKSBASIC_HEADER BasicHeader;
-    IKsFilterImpl * This = (IKsFilterImpl*)Filter;
+    IKsFilterImpl * This = (IKsFilterImpl*)CONTAINING_RECORD(Filter, IKsFilterImpl, Filter);
 
     /* sanity check */
     ASSERT(Pin->Id < This->PinDescriptorCount);
@@ -1057,7 +1076,8 @@ IKsFilter_AddPin(
     {
         /* welcome first pin */
         This->FirstPin[Pin->Id] = Pin;
-        return STATUS_SUCCESS;
+        This->PinInstanceCount[Pin->Id]++;
+        return;
     }
 
     /* get first pin */
@@ -1079,8 +1099,58 @@ IKsFilter_AddPin(
 
     /* store pin */
     BasicHeader->Next.Pin = Pin;
+}
 
-    return STATUS_SUCCESS;
+VOID
+IKsFilter_RemovePin(
+    PKSFILTER Filter,
+    PKSPIN Pin)
+{
+    PKSPIN NextPin, CurPin, LastPin;
+    PKSBASIC_HEADER BasicHeader;
+    IKsFilterImpl * This = (IKsFilterImpl*)CONTAINING_RECORD(Filter, IKsFilterImpl, Filter);
+
+    /* sanity check */
+    ASSERT(Pin->Id < This->PinDescriptorCount);
+
+    /* get first pin */
+    CurPin = This->FirstPin[Pin->Id];
+
+    LastPin = NULL;
+    do
+    {
+        /* get next instantiated pin */
+        NextPin = KsPinGetNextSiblingPin(CurPin);
+
+        if (CurPin == Pin)
+        {
+            if (LastPin)
+            {
+                /* get basic header of last pin */
+                BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)LastPin - sizeof(KSBASIC_HEADER));
+
+                BasicHeader->Next.Pin = NextPin;
+            }
+            else
+            {
+                /* erase last pin */
+                This->FirstPin[Pin->Id] = NextPin;
+            }
+            /* decrement pin instance count */
+            This->PinInstanceCount[Pin->Id]--;
+            return;
+        }
+
+        if (!NextPin)
+            break;
+
+        LastPin = CurPin;
+        NextPin = CurPin;
+
+    }while(NextPin != NULL);
+
+    /* pin not found */
+    ASSERT(0);
 }
 
 
@@ -1129,12 +1199,6 @@ IKsFilter_DispatchCreatePin(
             Status = KspCreatePin(DeviceObject, Irp, This->Header.KsDevice, This->FilterFactory, (IKsFilter*)&This->lpVtbl, Connect, &This->PinDescriptorsEx[Connect->PinId]);
 
             DPRINT("IKsFilter_DispatchCreatePin  KspCreatePin %lx\n", Status);
-
-            if (NT_SUCCESS(Status))
-            {
-                /* successfully created pin, increment pin instance count */
-                This->PinInstanceCount[Connect->PinId]++;
-            }
         }
         else
         {
@@ -1470,6 +1534,7 @@ KsFilterReleaseProcessingMutex(
 
     KeReleaseMutex(&This->ProcessingMutex, FALSE);
 }
+
 
 /*
     @implemented

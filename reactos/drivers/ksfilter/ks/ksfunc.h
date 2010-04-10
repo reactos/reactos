@@ -123,11 +123,6 @@ KspCreatePin(
     IN KSPIN_DESCRIPTOR_EX* Descriptor);
 
 NTSTATUS
-IKsFilter_AddPin(
-    IKsFilter * Filter,
-    PKSPIN Pin);
-
-NTSTATUS
 KspAddCreateItemToList(
     OUT PLIST_ENTRY ListHead,
     IN ULONG ItemsCount,
@@ -164,4 +159,25 @@ KspMethodHandlerWithAllocator(
     IN  const KSMETHOD_SET *MethodSet,
     IN  PFNKSALLOCATOR Allocator OPTIONAL,
     IN  ULONG MethodItemSize OPTIONAL);
+
+VOID
+IKsFilter_AddPin(
+    PKSFILTER Filter,
+    PKSPIN Pin);
+
+VOID
+IKsFilter_RemovePin(
+    PKSFILTER Filter,
+    PKSPIN Pin);
+
+NTSTATUS
+KspEnableEvent(
+    IN  PIRP Irp,
+    IN  ULONG EventSetsCount,
+    IN  PKSEVENT_SET EventSet,
+    IN  OUT PLIST_ENTRY EventsList OPTIONAL,
+    IN  KSEVENTS_LOCKTYPE EventsFlags OPTIONAL,
+    IN  PVOID EventsLock OPTIONAL,
+    IN  PFNKSALLOCATOR Allocator OPTIONAL,
+    IN  ULONG EventItemSize OPTIONAL);
 

@@ -22,9 +22,6 @@ FindMethodHandler(
 {
     ULONG Index, ItemIndex;
 
-    /* TODO */
-    ASSERT((Method->Flags & KSMETHOD_TYPE_SETSUPPORT) == 0);
-
     for(Index = 0; Index < MethodSetCount; Index++)
     {
         ASSERT(MethodSet[Index].Set);
