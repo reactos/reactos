@@ -113,6 +113,7 @@
 		<file>adjust.c</file>
 		<file>asin.c</file>
 		<file>cabs.c</file>
+		<file>cosf.c</file>
 		<file>cosh.c</file>
 		<file>div.c</file>
 		<file>fdivbug.c</file>
@@ -123,6 +124,7 @@
 		<file>modf.c</file>
 		<file>rand.c</file>
 		<file>s_modf.c</file>
+		<file>sinf.c</file>
 		<file>sinh.c</file>
 		<file>tanh.c</file>
 		<file>pow_asm.c</file>
@@ -156,12 +158,10 @@
 
 				<file>atan2.c</file>
 				<file>ci.c</file>
-				<file>cosf.c</file>
 				<file>exp.c</file>
 				<file>fmod.c</file>
 				<file>fmodf.c</file>
 				<file>ldexp.c</file>
-				<file>sinf.c</file>
 				<file>sqrtf.c</file>
 			</directory>
 			<!-- FIXME: we don't actually implement these... they recursively call themselves through an alias -->
