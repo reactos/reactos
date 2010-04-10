@@ -139,29 +139,19 @@ PnpRootCreateDevice(
     WCHAR InstancePath[5];
     PPNPROOT_DEVICE Device = NULL;
     NTSTATUS Status;
-    ULONG i;
     UNICODE_STRING PathSep = RTL_CONSTANT_STRING(L"\\");
+    ULONG NextInstance;
+    UNICODE_STRING EnumKeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\" REGSTR_PATH_SYSTEMENUM);
+    HANDLE EnumHandle, DeviceKeyHandle = INVALID_HANDLE_VALUE;
+    RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+    OBJECT_ATTRIBUTES ObjectAttributes;
 
     DeviceExtension = PnpRootDeviceObject->DeviceExtension;
     KeAcquireGuardedMutex(&DeviceExtension->DeviceListLock);
 
     DPRINT("Creating a PnP root device for service '%wZ'\n", ServiceName);
 
-    /* Search for a free instance ID */
     _snwprintf(DevicePath, sizeof(DevicePath) / sizeof(WCHAR), L"%s\\%wZ", REGSTR_KEY_ROOTENUM, ServiceName);
-    for (i = 0; i < 9999; i++)
-    {
-        _snwprintf(InstancePath, sizeof(InstancePath) / sizeof(WCHAR), L"%04lu", i);
-        Status = LocateChildDevice(DeviceExtension, DevicePath, InstancePath, &Device);
-        if (Status == STATUS_NO_SUCH_DEVICE)
-            break;
-    }
-    if (i == 9999)
-    {
-        DPRINT1("Too much legacy devices reported for service '%wZ'\n", ServiceName);
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto cleanup;
-    }
 
     /* Initialize a PNPROOT_DEVICE structure */
     Device = ExAllocatePoolWithTag(PagedPool, sizeof(PNPROOT_DEVICE), TAG_PNP_ROOT);
@@ -177,6 +167,74 @@ PnpRootCreateDevice(
         Status = STATUS_NO_MEMORY;
         goto cleanup;
     }
+
+    Status = IopOpenRegistryKeyEx(&EnumHandle, NULL, &EnumKeyName, KEY_READ);
+    if (NT_SUCCESS(Status))
+    {
+        InitializeObjectAttributes(&ObjectAttributes, &Device->DeviceID, OBJ_CASE_INSENSITIVE, EnumHandle, NULL);
+        Status = ZwCreateKey(&DeviceKeyHandle, KEY_SET_VALUE, &ObjectAttributes, 0, NULL, 0, NULL);
+        ZwClose(EnumHandle);
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to open registry key\n");
+        goto cleanup;
+    }
+
+tryagain:
+    RtlZeroMemory(QueryTable, sizeof(QueryTable));
+    QueryTable[0].Name = L"NextInstance";
+    QueryTable[0].EntryContext = &NextInstance;
+    QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
+
+    Status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
+                                    (PWSTR)DeviceKeyHandle,
+                                    QueryTable,
+                                    NULL,
+                                    NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        for (NextInstance = 0; NextInstance <= 9999; NextInstance++)
+        {
+             _snwprintf(InstancePath, sizeof(InstancePath) / sizeof(WCHAR), L"%04lu", NextInstance);
+             Status = LocateChildDevice(DeviceExtension, DevicePath, InstancePath, &Device);
+             if (Status == STATUS_NO_SUCH_DEVICE)
+                 break;
+        }
+
+        if (NextInstance > 9999)
+        {
+            DPRINT1("Too many legacy devices reported for service '%wZ'\n", ServiceName);
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto cleanup;
+        }
+    }
+
+    _snwprintf(InstancePath, sizeof(InstancePath) / sizeof(WCHAR), L"%04lu", NextInstance);
+    Status = LocateChildDevice(DeviceExtension, DevicePath, InstancePath, &Device);
+    if (Status != STATUS_NO_SUCH_DEVICE || NextInstance > 9999)
+    {
+        DPRINT1("NextInstance value is corrupt! (%d)\n", NextInstance);
+        RtlDeleteRegistryValue(RTL_REGISTRY_HANDLE,
+                               (PWSTR)DeviceKeyHandle,
+                               L"NextInstance");
+        goto tryagain;
+    }
+
+    NextInstance++;
+    Status = RtlWriteRegistryValue(RTL_REGISTRY_HANDLE,
+                                   (PWSTR)DeviceKeyHandle,
+                                   L"NextInstance",
+                                   REG_DWORD,
+                                   &NextInstance,
+                                   sizeof(NextInstance));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to write new NextInstance value! (0x%x)\n", Status);
+        goto cleanup;
+    }
+
     if (!RtlCreateUnicodeString(&Device->InstanceID, InstancePath))
     {
         Status = STATUS_NO_MEMORY;
@@ -243,6 +301,8 @@ cleanup:
         RtlFreeUnicodeString(&Device->InstanceID);
         ExFreePoolWithTag(Device, TAG_PNP_ROOT);
     }
+    if (DeviceKeyHandle != INVALID_HANDLE_VALUE)
+        ZwClose(DeviceKeyHandle);
     return Status;
 }
 
