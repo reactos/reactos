@@ -481,7 +481,7 @@ MingwBackend::GenerateGlobalVariables () const
 
 		fprintf ( fMakefile, "PROJECT_CCLIBS := \"$(shell ${TARGET_CC} -print-libgcc-file-name)\"\n" );
 
-		fprintf ( fMakefile, "PROJECT_CXXLIBS := \"$(shell ${TARGET_CPP} -print-file-name=libstdc++.a)\" \"$(shell ${TARGET_CPP} -print-libgcc-file-name)\" \"$(shell ${TARGET_CPP} -print-file-name=libmingw32.a)\" \"$(shell ${TARGET_CPP} -print-file-name=libmingwex.a)\"" );
+		fprintf ( fMakefile, "PROJECT_CXXLIBS := \"$(shell ${TARGET_CPP} -print-file-name=libsupc++.a)\" \"$(shell ${TARGET_CPP} -print-file-name=libstdc++.a)\" \"$(shell ${TARGET_CPP} -print-libgcc-file-name)\" \"$(shell ${TARGET_CPP} -print-file-name=libmingw32.a)\" \"$(shell ${TARGET_CPP} -print-file-name=libmingwex.a)\" " );
 		
 		/* hack to get libgcc_eh.a, should check mingw version or something */
 		if (Environment::GetArch() == "amd64")
