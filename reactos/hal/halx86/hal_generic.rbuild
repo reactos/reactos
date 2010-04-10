@@ -93,7 +93,6 @@
 					<file>systimer.S</file>
 				</directory>
 			</if>
-<<<<<<< .working
 			<if property="ARCH" value="amd64">
 				<directory name="amd64">
 					<file>halinit.c</file>
@@ -105,9 +104,6 @@
 				</directory>
 			</if>
 		</directory>
-=======
-				</directory>
->>>>>>> .merge-rechts.r46603
 		<directory name="up">
 			<file>halinit_up.c</file>
 			<file>pic.c</file>
