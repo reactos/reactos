@@ -23,6 +23,8 @@ BOOLEAN HalpPciLockSettings;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+#if 0
+
 VOID
 NTAPI
 HalpGetParameters(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -143,6 +145,22 @@ HalReportResourceUsage(VOID)
     //HaliReconfigurePciInterrupts();
 
     /* FIXME: Report HAL Usage to kernel */
+}
+#endif
+
+VOID
+HalpInitPhase0(PLOADER_PARAMETER_BLOCK LoaderBlock)
+
+{
+
+   DPRINT("HalpInitPhase0()\n");
+
+
+}
+
+VOID
+HalpInitPhase1(VOID)
+{
 }
 
 /* EOF */

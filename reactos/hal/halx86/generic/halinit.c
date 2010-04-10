@@ -134,6 +134,7 @@ HalpAllocPhysicalMemory(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     return PhysicalAddress;
 }
 
+// FIXME: bugs!
 PVOID
 NTAPI
 HalpMapPhysicalMemory64(IN PHYSICAL_ADDRESS PhysicalAddress,
@@ -161,7 +162,7 @@ HalpMapPhysicalMemory64(IN PHYSICAL_ADDRESS PhysicalAddress,
         {
             /* Get the PTE for this address and check if it's available */
             PointerPte = HalAddressToPte(VirtualAddress);
-            if (*(PULONG)PointerPte)
+            if (*(PULONG_PTR)PointerPte)
             {
                 /* PTE has data, skip it and start with a new base address */
                 BaseAddress = (PVOID)((ULONG_PTR)VirtualAddress + PAGE_SIZE);
@@ -373,6 +374,7 @@ HalInitSystem(IN ULONG BootPhase,
         HalpInitBusHandler();
 
 #ifndef _MINIHAL_
+#ifdef _M_IX86
         /* Enable IRQ 0 */
         HalpEnableInterruptHandler(IDT_DEVICE,
                                    0,
@@ -380,7 +382,7 @@ HalInitSystem(IN ULONG BootPhase,
                                    CLOCK2_LEVEL,
                                    HalpClockInterrupt,
                                    Latched);
-
+#endif
         /* Enable IRQ 8 */
         HalpEnableInterruptHandler(IDT_DEVICE,
                                    0,

@@ -211,6 +211,7 @@ HalpFlushTLB(VOID)
     __writeeflags(Flags);
 }
 
+#ifdef _M_IX86
 VOID
 NTAPI
 HalpSetInterruptGate(ULONG index, PVOID address)
@@ -231,6 +232,7 @@ HalpSetInterruptGate(ULONG index, PVOID address)
   idt->Access = Access.Value;
   idt->ExtendedOffset = (USHORT)((ULONG_PTR)address >> 16);
 }
+#endif
 
 /* FUNCTIONS *****************************************************************/
 

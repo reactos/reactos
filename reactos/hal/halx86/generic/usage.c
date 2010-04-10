@@ -517,9 +517,14 @@ HalpEnableInterruptHandler(IN UCHAR Flags,
     /* Register the vector */
     HalpRegisterVector(Flags, BusVector, SystemVector, Irql);
 
+// FIXME use an architecture specific inline function
+#ifdef _M_IX86
     /* Connect the interrupt */
     ((PKIPCR)KeGetPcr())->IDT[Entry].ExtendedOffset = (USHORT)(((ULONG_PTR)Handler >> 16) & 0xFFFF);
     ((PKIPCR)KeGetPcr())->IDT[Entry].Offset = (USHORT)((ULONG_PTR)Handler);
+#else
+    // TODO
+#endif
 
     /* Enable the interrupt */
     HalEnableSystemInterrupt(SystemVector, Irql, Mode);
