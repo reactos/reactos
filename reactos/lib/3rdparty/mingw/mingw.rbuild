@@ -3,6 +3,7 @@
 <group>
 <module name="mingw_common" type="staticlibrary" isstartuplib="true" crt="dll">
 	<library>oldnames</library>
+	<library>ntdll</library>
 	<define name="_CRTBLD" />
 
 	<!-- This is to prevent from using data imports directly -->
