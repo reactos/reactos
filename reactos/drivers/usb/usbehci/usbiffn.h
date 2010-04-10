@@ -1,77 +1,9 @@
 #pragma once
 
-#define USB_BUSIFFN __stdcall
 #include <ntifs.h>
 #include <ntddk.h>
 #include <usb.h>
-
-/* usbbusif.h and hubbusif.h need to be imported */
-typedef PVOID PUSB_DEVICE_HANDLE;
-
-typedef
-VOID
-USB_BUSIFFN
-RH_INIT_CALLBACK (PVOID CallBackContext);
-
-typedef RH_INIT_CALLBACK *PRH_INIT_CALLBACK;
-
-typedef struct _USB_EXTPORT_INFORMATION_0
-{
-    ULONG PhysicalPortNumber;
-    ULONG PortLabelNumber;
-    USHORT VidOverride;
-    USHORT PidOverride;
-    ULONG PortAttributes;
-} USB_EXTPORT_INFORMATION_0, *PUSB_EXTPORT_INFORMATION;
-
-typedef struct _USB_EXTHUB_INFORMATION_0
-{
-    ULONG InformationLevel;
-    ULONG NumberOfPorts;
-    USB_EXTPORT_INFORMATION_0 Port[255];
-} USB_EXTHUB_INFORMATION_0, *PUSB_EXTHUB_INFORMATION_0;
-
-typedef struct _USB_BUS_INTERFACE_USBDI_V2
-{
-    USHORT Size;
-    USHORT Version;
-    PVOID BusContext;
-    PINTERFACE_REFERENCE InterfaceReference;
-    PINTERFACE_DEREFERENCE InterfaceDereference;
-
-    PVOID GetUSBDIVersion;
-    PVOID QueryBusTime;
-    PVOID SubmitIsoOutUrb;
-    PVOID QueryBusInformation;
-    PVOID IsDeviceHighSpeed;
-    PVOID EnumLogEntry;
-} USB_BUS_INTERFACE_USBDI_V2, *PUSB_BUS_INTERFACE_USBDI_V2;
-
-typedef struct _USB_BUS_INTERFACE_HUB_V5
-{
-    USHORT Size;
-    USHORT Version;
-    PVOID BusContext;
-    PINTERFACE_REFERENCE InterfaceReference;
-    PINTERFACE_DEREFERENCE InterfaceDereference;
-
-    PVOID CreateUsbDevice;
-    PVOID InitializeUsbDevice;
-    PVOID GetUsbDescriptors;
-    PVOID RemoveUsbDevice;
-    PVOID RestoreUsbDevice;
-    PVOID GetPortHackFlags;
-    PVOID QueryDeviceInformation;
-    PVOID GetControllerInformation;
-    PVOID ControllerSelectiveSuspend;
-    PVOID GetExtendedHubInformation;
-    PVOID GetRootHubSymbolicName;
-    PVOID GetDeviceBusContext;
-    PVOID Initialize20Hub;
-    PVOID RootHubInitNotification;
-    PVOID FlushTransfers;
-    PVOID SetDeviceHandleData;
-} USB_BUS_INTERFACE_HUB_V5, *PUSB_BUS_INTERFACE_HUB_V5;
+#include <usbbusif.h>
 
 VOID
 USB_BUSIFFN
@@ -167,7 +99,7 @@ VOID
 USB_BUSIFFN
 SetDeviceHandleData(PVOID BusContext, PVOID DeviceHandle, PDEVICE_OBJECT UsbDevicePdo);
 
-NTSTATUS
+VOID
 USB_BUSIFFN
 GetUSBDIVersion(PVOID BusContext, PUSBD_VERSION_INFORMATION VersionInformation, PULONG HcdCapabilites);
 

@@ -612,9 +612,11 @@ int WINAPI RestartDialogEx(HWND hWndOwner, LPCWSTR lpwstrReason, DWORD uFlags, D
 
 int WINAPI LogoffWindowsDialog(HWND hWndOwner)
 {
-   UNIMPLEMENTED;
-   ExitWindowsEx(EWX_LOGOFF, 0);
-   return 0;
+    if (ConfirmDialog(hWndOwner, IDS_LOGOFF_PROMPT, IDS_LOGOFF_TITLE))
+    {
+        ExitWindowsEx(EWX_LOGOFF, 0);
+    }
+    return 0;
 }
 
 /*************************************************************************

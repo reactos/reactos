@@ -144,3 +144,24 @@ KspPropertyHandler(
     IN  const KSPROPERTY_SET* PropertySet,
     IN  PFNKSALLOCATOR Allocator OPTIONAL,
     IN  ULONG PropertyItemSize OPTIONAL);
+
+NTSTATUS
+NTAPI
+IKsFilterFactory_Create(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp);
+
+NTSTATUS
+KspSetFilterFactoriesState(
+    IN PKSIDEVICE_HEADER DeviceHeader,
+    IN BOOLEAN NewState);
+
+NTSTATUS
+NTAPI
+KspMethodHandlerWithAllocator(
+    IN  PIRP Irp,
+    IN  ULONG MethodSetsCount,
+    IN  const KSMETHOD_SET *MethodSet,
+    IN  PFNKSALLOCATOR Allocator OPTIONAL,
+    IN  ULONG MethodItemSize OPTIONAL);
+

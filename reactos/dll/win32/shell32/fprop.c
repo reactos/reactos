@@ -114,7 +114,7 @@ SH_FileGeneralSetFileType(HWND hwndDlg, WCHAR *filext)
     {
         /* the file extension is unknown, so default to string "FileExtension File" */
         SendMessageW(hDlgCtrl, WM_GETTEXT, (WPARAM)MAX_PATH, (LPARAM)value);
-        swprintf(name, value, &filext[1]);
+        swprintf(name, L"%s %s", &filext[1], value);
         SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)name);
         return TRUE;
     }

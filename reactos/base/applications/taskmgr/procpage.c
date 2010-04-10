@@ -54,6 +54,27 @@ BOOL PerfDataGetText(ULONG Index, ULONG ColumnIndex, LPTSTR lpText, int nMaxCoun
 DWORD WINAPI ProcessPageRefreshThread(void *lpParameter);
 int ProcessRunning(ULONG ProcessId);
 
+int ProcGetIndexByProcessId(DWORD dwProcessId)
+{
+    int     i;
+    LVITEM  item;
+    LPPROCESS_PAGE_LIST_ITEM pData;
+
+    for (i=0; i<ListView_GetItemCount(hProcessPageListCtrl); i++)
+    {
+        memset(&item, 0, sizeof(LV_ITEM));
+        item.mask = LVIF_PARAM;
+        item.iItem = i;
+        (void)ListView_GetItem(hProcessPageListCtrl, &item);
+        pData = (LPPROCESS_PAGE_LIST_ITEM)item.lParam;
+        if (PerfDataGetProcessId(pData->Index) == dwProcessId)
+        {
+            return i;
+        }
+    }
+    return 0;
+}
+
 DWORD GetSelectedProcessId(void)
 {
     int     Index;

@@ -48,6 +48,7 @@
 
 #include "wine/debug.h"
 #include "mmddk.h"
+#include <regstr.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(devenum);
 
@@ -124,6 +125,7 @@ HRESULT WINAPI DEVENUM_ICreateDevEnum_CreateClassEnumerator(
     WCHAR wszRegKey[MAX_PATH];
     HKEY hkey;
     HKEY hbasekey;
+    BOOL bInterface = FALSE;
     CreateDevEnumImpl *This = (CreateDevEnumImpl *)iface;
 
     TRACE("(%p)->(%s, %p, %lx)\n\tDeviceClass:\t%s\n", This, debugstr_guid(clsidDeviceClass), ppEnumMoniker, dwFlags, debugstr_guid(clsidDeviceClass));
@@ -174,12 +176,23 @@ HRESULT WINAPI DEVENUM_ICreateDevEnum_CreateClassEnumerator(
         }
         else
         {
-            FIXME("Category %s not found\n", debugstr_guid(clsidDeviceClass));
-            return S_FALSE;
+             wcscpy(wszRegKey, REGSTR_PATH_DEVICE_CLASSES);
+             wcscat(wszRegKey, L"\\");
+
+            if (!StringFromGUID2(clsidDeviceClass, wszRegKey + wcslen(wszRegKey), MAX_PATH - CLSID_STR_LEN))
+                return E_OUTOFMEMORY;
+
+            if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, wszRegKey, 0, KEY_READ, &hkey) != ERROR_SUCCESS)
+            {
+                FIXME("Category %s not found\n", debugstr_guid(clsidDeviceClass));
+                return S_FALSE;
+            }
+
+            bInterface = TRUE;
         }
     }
 
-    return DEVENUM_IEnumMoniker_Construct(hkey, ppEnumMoniker);
+    return DEVENUM_IEnumMoniker_Construct(hkey, ppEnumMoniker, bInterface);
 }
 
 /**********************************************************************

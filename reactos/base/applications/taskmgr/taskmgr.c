@@ -869,6 +869,7 @@ void TaskManager_OnTabWndSelChange(void)
     HMENU  hViewMenu;
     HMENU  hSubMenu;
     WCHAR  szTemp[256];
+    SYSTEM_INFO sysInfo;
 
     hMenu = GetMenu(hMainWnd);
     hViewMenu = GetSubMenu(hMenu, 2);
@@ -947,16 +948,28 @@ void TaskManager_OnTabWndSelChange(void)
             DeleteMenu(hMenu, 3, MF_BYPOSITION);
             DrawMenuBar(hMainWnd);
         }
-        hSubMenu = CreatePopupMenu();
 
-        LoadStringW(hInst, IDS_MENU_ONEGRAPHALLCPUS, szTemp, 256);
-        AppendMenuW(hSubMenu, MF_STRING, ID_VIEW_CPUHISTORY_ONEGRAPHALL, szTemp);
+        GetSystemInfo(&sysInfo);
 
-        LoadStringW(hInst, IDS_MENU_ONEGRAPHPERCPU, szTemp, 256);
-        AppendMenuW(hSubMenu, MF_STRING, ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, szTemp);
+        /* Hide CPU graph options on single CPU systems */
+        if (sysInfo.dwNumberOfProcessors > 1)
+        {
+            hSubMenu = CreatePopupMenu();
 
-        LoadStringW(hInst, IDS_MENU_CPUHISTORY, szTemp, 256);
-        AppendMenuW(hViewMenu, MF_STRING|MF_POPUP, (UINT_PTR) hSubMenu, szTemp);
+            LoadStringW(hInst, IDS_MENU_ONEGRAPHALLCPUS, szTemp, 256);
+            AppendMenuW(hSubMenu, MF_STRING, ID_VIEW_CPUHISTORY_ONEGRAPHALL, szTemp);
+
+            LoadStringW(hInst, IDS_MENU_ONEGRAPHPERCPU, szTemp, 256);
+            AppendMenuW(hSubMenu, MF_STRING, ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, szTemp);
+
+            LoadStringW(hInst, IDS_MENU_CPUHISTORY, szTemp, 256);
+            AppendMenuW(hViewMenu, MF_STRING|MF_POPUP, (UINT_PTR) hSubMenu, szTemp);
+
+            if (TaskManagerSettings.CPUHistory_OneGraphPerCPU)
+                CheckMenuRadioItem(hSubMenu, ID_VIEW_CPUHISTORY_ONEGRAPHALL, ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, MF_BYCOMMAND);
+            else
+                CheckMenuRadioItem(hSubMenu, ID_VIEW_CPUHISTORY_ONEGRAPHALL, ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, ID_VIEW_CPUHISTORY_ONEGRAPHALL, MF_BYCOMMAND);
+        }
 
         LoadStringW(hInst, IDS_MENU_SHOWKERNELTIMES, szTemp, 256);
         AppendMenuW(hViewMenu, MF_STRING, ID_VIEW_SHOWKERNELTIMES, szTemp);
@@ -965,10 +978,7 @@ void TaskManager_OnTabWndSelChange(void)
             CheckMenuItem(hViewMenu, ID_VIEW_SHOWKERNELTIMES, MF_BYCOMMAND|MF_CHECKED);
         else
             CheckMenuItem(hViewMenu, ID_VIEW_SHOWKERNELTIMES, MF_BYCOMMAND|MF_UNCHECKED);
-        if (TaskManagerSettings.CPUHistory_OneGraphPerCPU)
-            CheckMenuRadioItem(hSubMenu, ID_VIEW_CPUHISTORY_ONEGRAPHALL, ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, MF_BYCOMMAND);
-        else
-            CheckMenuRadioItem(hSubMenu, ID_VIEW_CPUHISTORY_ONEGRAPHALL, ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, ID_VIEW_CPUHISTORY_ONEGRAPHALL, MF_BYCOMMAND);
+
         /*
          * Give the tab control focus
          */

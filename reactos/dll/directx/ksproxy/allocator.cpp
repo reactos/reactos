@@ -357,6 +357,7 @@ CKsAllocator::GetBuffer(
 
         if (!m_FreeList.empty())
         {
+            OutputDebugStringW(L"CKsAllocator::GetBuffer HACK\n");
             Sample = m_FreeList.top();
             m_FreeList.pop();
         }

@@ -1133,6 +1133,16 @@ IntCalcFillOrigin(PDC pdc)
     return pdc->ptlFillOrigin.y;
 }
 
+PPOINTL
+FASTCALL
+IntptlBrushOrigin(PDC pdc, LONG x, LONG y )
+{
+    pdc->dclevel.ptlBrushOrigin.x = x;
+    pdc->dclevel.ptlBrushOrigin.y = y;
+    IntCalcFillOrigin(pdc);
+    return &pdc->dclevel.ptlBrushOrigin;
+}
+
 VOID
 APIENTRY
 GdiSetDCOrg(HDC hDC, LONG Left, LONG Top, PRECTL prc)

@@ -67,13 +67,14 @@ ExFreeToZone(
 #define ExIsResourceAcquired ExIsResourceAcquiredSharedLite
 #define ExReleaseResourceForThread ExReleaseResourceForThreadLite
 
+#ifdef _X86_
+
 typedef enum _INTERLOCKED_RESULT {
   ResultNegative = RESULT_NEGATIVE,
   ResultZero = RESULT_ZERO,
   ResultPositive = RESULT_POSITIVE
 } INTERLOCKED_RESULT;
 
-#ifdef _X86_
 NTKERNELAPI
 INTERLOCKED_RESULT
 FASTCALL

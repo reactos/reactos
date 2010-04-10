@@ -3,6 +3,7 @@
 <group>
 <module name="msdvbnp" type="win32dll" baseaddress="${BASEADDRESS_MSDVBNP}" installbase="system32" installname="msdvbnp.ax">
 	<importlibrary definition="msdvbnp.spec" />
+	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<include base="msdvbnp">.</include>
 	<library>ntdll</library>
 	<library>kernel32</library>

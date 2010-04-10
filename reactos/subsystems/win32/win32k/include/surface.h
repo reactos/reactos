@@ -3,6 +3,8 @@
 #include "win32.h"
 #include "gdiobj.h"
 
+#define PDEV_SURFACE              0x80000000
+
 /* GDI surface object */
 typedef struct _SURFACE
 {

@@ -104,7 +104,6 @@ BOOL
 FASTCALL
 DeleteRegion( HRGN hRgn )
 {
-//#if 0
   PRGN_ATTR Rgn_Attr;
 
   if ((GdiGetHandleUserData((HGDIOBJ) hRgn, GDI_OBJECT_TYPE_REGION, (PVOID) &Rgn_Attr)) &&
@@ -128,7 +127,6 @@ DeleteRegion( HRGN hRgn )
         }
      }
   }
-//#endif
   return NtGdiDeleteObjectApp((HGDIOBJ) hRgn);
 }
 
@@ -581,8 +579,110 @@ INT
 WINAPI
 ExtSelectClipRgn( IN HDC hdc, IN HRGN hrgn, IN INT iMode)
 {
-    /* FIXME some part need be done on user mode size */
-    return NtGdiExtSelectClipRgn(hdc,hrgn, iMode);
+  INT Ret;
+  HRGN NewRgn = NULL;
+
+#if 0
+// Handle something other than a normal dc object.
+  if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
+  {
+    if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
+      return MFDRV_ExtSelectClipRgn( hdc, );
+    else
+    {
+      PLDC pLDC = GdiGetLDC(hdc);
+      if ( pLDC )
+      {
+         if (pLDC->iType != LDC_EMFLDC || EMFDRV_ExtSelectClipRgn( hdc, ))
+             return NtGdiExtSelectClipRgn(hdc, );
+      }
+      else
+        SetLastError(ERROR_INVALID_HANDLE);
+      return ERROR;
+    }
+  }
+#endif
+#if 0
+  if ( hrgn )
+  {
+     if ( GetLayout(hdc) & LAYOUT_RTL )
+     {
+        if ( MirrorRgnDC(hdc, hrgn, &NewRgn) )
+        {
+           if ( NewRgn ) hrgn = NewRgn;
+        }
+     }
+  }
+#endif
+  /* Batch handles RGN_COPY only! */
+  if (iMode == RGN_COPY)
+  {
+#if 0
+     PDC_ATTR pDc_Attr;
+     PRGN_ATTR pRgn_Attr = NULL;
+
+     /* hrgn can be NULL unless the RGN_COPY mode is specified. */
+     if (hrgn)
+        GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr);
+
+     if ( GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &pDc_Attr) &&
+          pDc_Attr )
+     {
+        PGDI_TABLE_ENTRY pEntry = GdiHandleTable + GDI_HANDLE_GET_INDEX(hdc);
+        PTEB pTeb = NtCurrentTeb();
+        
+        if ( pTeb->Win32ThreadInfo != NULL &&
+             pTeb->GdiTebBatch.HDC == hdc &&
+            !(pDc_Attr->ulDirty_ & DC_DIBSECTION) &&
+            !(pEntry->Flags & GDI_ENTRY_VALIDATE_VIS) )
+        {
+           if (!hrgn ||
+                (hrgn && pRgn_Attr && pRgn_Attr->Flags <= SIMPLEREGION) )
+           {
+              if ((pTeb->GdiTebBatch.Offset + sizeof(GDIBSEXTSELCLPRGN)) <= GDIBATCHBUFSIZE)
+              {
+                 PGDIBSEXTSELCLPRGN pgO = (PGDIBSEXTSELCLPRGN)(&pTeb->GdiTebBatch.Buffer[0] +
+                                                      pTeb->GdiTebBatch.Offset);
+                 pgO->gbHdr.Cmd = GdiBCExtSelClipRgn;
+                 pgO->gbHdr.Size = sizeof(GDIBSEXTSELCLPRGN);
+                 pgO->fnMode = iMode;
+
+                 if ( hrgn && pRgn_Attr )
+                 {
+                    Ret = pRgn_Attr->Flags;
+
+                    if ( pDc_Attr->VisRectRegion.Rect.left   >= pRgn_Attr->Rect.right  ||
+                         pDc_Attr->VisRectRegion.Rect.top    >= pRgn_Attr->Rect.bottom ||
+                         pDc_Attr->VisRectRegion.Rect.right  <= pRgn_Attr->Rect.left   ||
+                         pDc_Attr->VisRectRegion.Rect.bottom <= pRgn_Attr->Rect.top )
+                       Ret = NULLREGION;
+
+                    pgO->left   = pRgn_Attr->Rect.left;
+                    pgO->top    = pRgn_Attr->Rect.top;
+                    pgO->right  = pRgn_Attr->Rect.right;
+                    pgO->bottom = pRgn_Attr->Rect.bottom;
+                 }
+                 else
+                 {
+                    Ret = pDc_Attr->VisRectRegion.Flags;
+                    pgO->fnMode |= 0x80000000; // Set no hrgn mode.
+                 }
+                 pTeb->GdiTebBatch.Offset += sizeof(GDIBSEXTSELCLPRGN);
+                 pTeb->GdiBatchCount++;
+                 if (pTeb->GdiBatchCount >= GDI_BatchLimit) NtGdiFlush();
+                 if ( NewRgn ) DeleteObject(NewRgn);
+                 return Ret;
+              }
+           }
+        }
+     }
+#endif
+  }
+  Ret = NtGdiExtSelectClipRgn(hdc, hrgn, iMode);
+
+  if ( NewRgn ) DeleteObject(NewRgn);
+
+  return Ret;
 }
 
 /*

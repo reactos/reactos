@@ -16,7 +16,129 @@
 
 BOOLEAN HalpNMIInProgress;
 
+UCHAR HalpSerialLen;
+CHAR HalpSerialNumber[31];
+
 /* PRIVATE FUNCTIONS **********************************************************/
+
+#ifndef _MINIHAL_
+VOID
+NTAPI
+HalpReportSerialNumber(VOID)
+{
+    NTSTATUS Status;
+    UNICODE_STRING KeyString;
+    HANDLE Handle;
+
+    /* Make sure there is a serial number */
+    if (!HalpSerialLen) return;
+
+    /* Open the system key */
+    RtlInitUnicodeString(&KeyString, L"\\Registry\\Machine\\Hardware\\Description\\System");
+    Status = HalpOpenRegistryKey(&Handle, 0, &KeyString, KEY_ALL_ACCESS, FALSE);
+    if (NT_SUCCESS(Status))
+    {
+        /* Add the serial number */
+        RtlInitUnicodeString(&KeyString, L"Serial Number");
+        ZwSetValueKey(Handle,
+                      &KeyString,
+                      0,
+                      REG_BINARY,
+                      HalpSerialNumber,
+                      HalpSerialLen);
+                      
+        /* Close the handle */
+        ZwClose(Handle);
+    }
+}
+
+NTSTATUS
+NTAPI
+HalpMarkAcpiHal(VOID)
+{
+    NTSTATUS Status;
+    UNICODE_STRING KeyString;
+    HANDLE KeyHandle;
+    HANDLE Handle;
+    
+    /* Open the control set key */
+    RtlInitUnicodeString(&KeyString,
+                         L"\\REGISTRY\\MACHINE\\SYSTEM\\CURRENTCONTROLSET");
+    Status = HalpOpenRegistryKey(&Handle, 0, &KeyString, KEY_ALL_ACCESS, FALSE);
+    if (NT_SUCCESS(Status))
+    {
+        /* Open the PNP key */
+        RtlInitUnicodeString(&KeyString, L"Control\\Pnp");
+        Status = HalpOpenRegistryKey(&KeyHandle,
+                                     Handle,
+                                     &KeyString,
+                                     KEY_ALL_ACCESS,
+                                     TRUE);
+        /* Close root key */
+        ZwClose(Handle);
+        
+        /* Check if PNP BIOS key exists */
+        if (NT_SUCCESS(Status))
+        {
+            /* Set the disable value to false -- we need the mapper */
+            RtlInitUnicodeString(&KeyString, L"DisableFirmwareMapper");
+            Status = ZwSetValueKey(KeyHandle,
+                                   &KeyString,
+                                   0,
+                                   REG_DWORD,
+                                   &HalDisableFirmwareMapper,
+                                   sizeof(HalDisableFirmwareMapper));
+            
+            /* Close subkey */
+            ZwClose(KeyHandle);
+        }
+    }
+    
+    /* Return status */
+    return Status;
+}
+
+NTSTATUS 
+NTAPI
+HalpOpenRegistryKey(IN PHANDLE KeyHandle,
+                    IN HANDLE RootKey,
+                    IN PUNICODE_STRING KeyName,
+                    IN ACCESS_MASK DesiredAccess, 
+                    IN BOOLEAN Create)
+{
+    NTSTATUS Status;
+    ULONG Disposition;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    
+    /* Setup the attributes we received */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               RootKey,
+                               NULL);
+
+    /* What to do? */
+    if ( Create )
+    {
+        /* Create the key */
+        Status = ZwCreateKey(KeyHandle,
+                             DesiredAccess,
+                             &ObjectAttributes,
+                             0,
+                             NULL,
+                             REG_OPTION_VOLATILE,
+                             &Disposition);
+    }
+    else
+    {
+        /* Open the key */
+        Status = ZwOpenKey(KeyHandle, DesiredAccess, &ObjectAttributes);
+    }
+        
+    /* We're done */
+    return Status;
+}
+#endif
 
 VOID
 NTAPI
@@ -27,32 +149,6 @@ HalpCheckPowerButton(VOID)
     //
     return;
 }
-
-#ifndef _MINIHAL_
-PVOID
-NTAPI
-HalpMapPhysicalMemory64(IN PHYSICAL_ADDRESS PhysicalAddress,
-                        IN ULONG NumberPage)
-{
-    //
-    // Use kernel memory manager I/O map facilities
-    //
-    return MmMapIoSpace(PhysicalAddress,
-                        NumberPage << PAGE_SHIFT,
-                        MmNonCached);
-}
-
-VOID
-NTAPI
-HalpUnmapVirtualAddress(IN PVOID VirtualAddress,
-                        IN ULONG NumberPages)
-{
-    //
-    // Use kernel memory manager I/O map facilities
-    //
-    MmUnmapIoSpace(VirtualAddress, NumberPages << PAGE_SHIFT);
-}
-#endif
 
 VOID
 NTAPI

@@ -54,13 +54,16 @@ extern ULONG_PTR MmUserProbeAddress;
 //
 #define MAXIMUM_VECTOR          16
 
+#define KERNEL_STACK_SIZE                   12288
+#define KERNEL_LARGE_STACK_SIZE             61440
+#define KERNEL_LARGE_STACK_COMMIT           12288
 
 //
 // Used to contain PFNs and PFN counts
 //
-typedef ULONG PFN_COUNT;
-typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
-typedef LONG SPFN_NUMBER, *PSPFN_NUMBER;
+//typedef ULONG PFN_COUNT;
+//typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
+//typedef LONG SPFN_NUMBER, *PSPFN_NUMBER;
 
 //
 // Stub
@@ -124,11 +127,25 @@ typedef struct _CONTEXT {
 #ifdef _WINNT_H
 #define KIRQL ULONG
 #endif
+
+typedef struct _NT_TIB_KPCR {
+	struct _EXCEPTION_REGISTRATION_RECORD *ExceptionList;
+	PVOID StackBase;
+	PVOID StackLimit;
+	PVOID SubSystemTib;
+	_ANONYMOUS_UNION union {
+		PVOID FiberData;
+		ULONG Version;
+	} DUMMYUNIONNAME;
+	PVOID ArbitraryUserPointer;
+	struct _NT_TIB_KPCR *Self;
+} NT_TIB_KPCR,*PNT_TIB_KPCR;
+
 typedef struct _KPCR
 {
     union
     {
-        NT_TIB NtTib;
+        NT_TIB_KPCR NtTib;
         struct
         {
             struct _EXCEPTION_REGISTRATION_RECORD *Used_ExceptionList; // Unused
@@ -166,6 +183,11 @@ struct _TEB* NtCurrentTeb(VOID)
 {
     return (struct _TEB*)USERPCR->Used_Self;
 }
+
+NTSYSAPI
+PKTHREAD
+NTAPI
+KeGetCurrentThread(VOID);
 
 #ifndef _WINNT_H
 //

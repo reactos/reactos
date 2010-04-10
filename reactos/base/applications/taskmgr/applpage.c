@@ -49,7 +49,7 @@ void            ApplicationPageOnNotify(WPARAM wParam, LPARAM lParam);
 void            ApplicationPageShowContextMenu1(void);
 void            ApplicationPageShowContextMenu2(void);
 int CALLBACK    ApplicationPageCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
-int             PerfGetIndexByProcessId(DWORD dwProcessId);
+int             ProcGetIndexByProcessId(DWORD dwProcessId);
 
 #if 0
 void SwitchToThisWindow (
@@ -878,7 +878,6 @@ void ApplicationPage_OnGotoProcess(void)
     LPAPPLICATION_PAGE_LIST_ITEM  pAPLI = NULL;
     LV_ITEM                       item;
     int                           i;
-    /* NMHDR nmhdr; */
 
     for (i=0; i<ListView_GetItemCount(hApplicationPageListCtrl); i++) {
         memset(&item, 0, sizeof(LV_ITEM));
@@ -902,7 +901,7 @@ void ApplicationPage_OnGotoProcess(void)
         /*
          * Select the process item in the list
          */
-        i = PerfGetIndexByProcessId(dwProcessId);
+        i = ProcGetIndexByProcessId(dwProcessId);
         if (i != -1)
         {
             ListView_SetItemState(hProcessPageListCtrl,

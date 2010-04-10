@@ -136,17 +136,27 @@ Ke386FnInit(VOID)
 
 FORCEINLINE
 VOID
-Ke386GetGlobalDescriptorTable(OUT PVOID Descriptor)
+__sgdt(OUT PVOID Descriptor)
 {
-    __asm sgdt [Descriptor];
+    __asm
+    {
+        mov eax, Descriptor
+        sgdt [eax]
+    }
 }
+#define Ke386GetGlobalDescriptorTable __sgdt
 
 FORCEINLINE
 VOID
-Ke386SetGlobalDescriptorTable(IN PVOID Descriptor)
+__lgdt(IN PVOID Descriptor)
 {
-    __asm lgdt [Descriptor];
+    __asm
+    {
+        mov eax, Descriptor
+        lgdt [eax]
+    }
 }
+#define Ke386SetGlobalDescriptorTable __lgdt
 
 FORCEINLINE
 USHORT

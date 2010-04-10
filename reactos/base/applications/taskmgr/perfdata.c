@@ -387,27 +387,6 @@ BOOL PerfDataGetImageName(ULONG Index, LPWSTR lpImageName, int nMaxCount)
     return bSuccessful;
 }
 
-int PerfGetIndexByProcessId(DWORD dwProcessId)
-{
-    int FoundIndex = -1;
-    ULONG Index;
-
-    EnterCriticalSection(&PerfDataCriticalSection);
-
-    for (Index = 0; Index < ProcessCount; Index++)
-    {
-        if (PtrToUlong(pPerfData[Index].ProcessId) == dwProcessId)
-        {
-            FoundIndex = Index;
-            break;
-        }
-    }
-
-    LeaveCriticalSection(&PerfDataCriticalSection);
-
-    return FoundIndex;
-}
-
 ULONG PerfDataGetProcessId(ULONG Index)
 {
     ULONG  ProcessId;

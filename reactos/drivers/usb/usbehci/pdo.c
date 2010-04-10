@@ -11,8 +11,10 @@
 #define NDEBUG
 
 #include "usbehci.h"
-#include <wdmguid.h>
+#include <hubbusif.h>
+#include <usbbusif.h>
 #include "usbiffn.h"
+#include <wdmguid.h>
 #include <stdio.h>
 #include <debug.h>
 
@@ -51,8 +53,11 @@ const UCHAR ROOTHUB2_CONFIGURATION_DESCRIPTOR [] =
         6: Self-powered,
         5: Remote wakeup,
         4..0: reserved */
-    0x00,       /* MaxPower; */
+    0x00       /* MaxPower; */
+};
 
+const UCHAR ROOTHUB2_INTERFACE_DESCRIPTOR [] = 
+{
     /* one interface */
     0x09,       /* bLength: Interface; */
     0x04,       /* bDescriptorType; Interface */
@@ -62,8 +67,11 @@ const UCHAR ROOTHUB2_CONFIGURATION_DESCRIPTOR [] =
     0x09,       /* bInterfaceClass; HUB_CLASSCODE */
     0x01,       /* bInterfaceSubClass; */
     0x00,       /* bInterfaceProtocol: */
-    0x00,       /* iInterface; */
+    0x00       /* iInterface; */
+};
 
+const UCHAR ROOTHUB2_ENDPOINT_DESCRIPTOR [] =
+{
     /* one endpoint (status change endpoint) */
     0x07,       /* bLength; */
     0x05,       /* bDescriptorType; Endpoint */
@@ -87,16 +95,18 @@ UrbWorkerThread(PVOID Context)
     DPRINT1("Thread terminated\n");
 }
 
-/* FIXME: Do something better */
 PVOID InternalCreateUsbDevice(UCHAR DeviceNumber, ULONG Port, PUSB_DEVICE Parent, BOOLEAN Hub)
 {
     PUSB_DEVICE UsbDevicePointer = NULL;
-    UsbDevicePointer = ExAllocatePool(NonPagedPool, sizeof(USB_DEVICE));
+    UsbDevicePointer = ExAllocatePoolWithTag(NonPagedPool, sizeof(USB_DEVICE), USB_POOL_TAG);
+
     if (!UsbDevicePointer)
     {
         DPRINT1("Out of memory\n");
         return NULL;
     }
+
+    RtlZeroMemory(UsbDevicePointer, sizeof(USB_DEVICE));
 
     if ((Hub) && (!Parent))
     {
@@ -172,19 +182,31 @@ PdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
         }
         case IOCTL_INTERNAL_USB_GET_DEVICE_HANDLE:
         {
-            DPRINT1("IOCTL_INTERNAL_USB_GET_DEVICE_HANDLE\n");
+            DPRINT1("IOCTL_INTERNAL_USB_GET_DEVICE_HANDLE %x\n", IOCTL_INTERNAL_USB_GET_DEVICE_HANDLE);
+            if (Stack->Parameters.Others.Argument1)
+            {
+                /* Return the root hubs devicehandle */
+                DPRINT1("Returning RootHub Handle %x\n", PdoDeviceExtension->UsbDevices[0]);
+                *(PVOID *)Stack->Parameters.Others.Argument1 = (PVOID)PdoDeviceExtension->UsbDevices[0];
+                Status = STATUS_SUCCESS;
+            }
+            else
+                Status = STATUS_INVALID_DEVICE_REQUEST;
+
             break;
+
         }
         case IOCTL_INTERNAL_USB_GET_HUB_COUNT:
         {
-            DPRINT1("IOCTL_INTERNAL_USB_GET_HUB_COUNT\n");
-
+            DPRINT1("IOCTL_INTERNAL_USB_GET_HUB_COUNT %x\n", IOCTL_INTERNAL_USB_GET_HUB_COUNT);
+            ASSERT(Stack->Parameters.Others.Argument1 != NULL);
             if (Stack->Parameters.Others.Argument1)
             {
                 /* FIXME: Determine the number of hubs between the usb device and root hub */
-                /* For now return 0 */
-                *(PVOID *)Stack->Parameters.Others.Argument1 = 0;
+                DPRINT1("RootHubCount %x\n", *(PULONG)Stack->Parameters.Others.Argument1);
+                *(PULONG)Stack->Parameters.Others.Argument1 = 0;
             }
+            Status = STATUS_SUCCESS;
             break;
         }
         case IOCTL_INTERNAL_USB_GET_HUB_NAME:
@@ -214,11 +236,10 @@ PdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
             if (Stack->Parameters.Others.Argument1)
                 *(PVOID *)Stack->Parameters.Others.Argument1 = FdoDeviceExtension->Pdo;
             if (Stack->Parameters.Others.Argument2)
-                *(PVOID *)Stack->Parameters.Others.Argument2 = IoGetAttachedDevice(FdoDeviceExtension->DeviceObject);
+                *(PVOID *)Stack->Parameters.Others.Argument2 = IoGetAttachedDeviceReference(FdoDeviceExtension->DeviceObject);
 
-            Irp->IoStatus.Information = 0;
-            Irp->IoStatus.Status = STATUS_SUCCESS;
-            return STATUS_SUCCESS;
+            Information = 0;
+            Status = STATUS_SUCCESS;
             break;
         }
         case IOCTL_INTERNAL_USB_SUBMIT_IDLE_NOTIFICATION:
@@ -270,6 +291,7 @@ PdoQueryId(PDEVICE_OBJECT DeviceObject, PIRP Irp, ULONG_PTR* Information)
             SourceString.Length = SourceString.MaximumLength = Index * sizeof(WCHAR);
             SourceString.Buffer = Buffer;
             break;
+
         }
         case BusQueryCompatibleIDs:
         {
@@ -287,7 +309,6 @@ PdoQueryId(PDEVICE_OBJECT DeviceObject, PIRP Irp, ULONG_PTR* Information)
         }
     }
 
-    /* Lifted from hpoussin */
     Status = DuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
                                     &SourceString,
                                     &String);
@@ -350,12 +371,19 @@ PdoDispatchPnp(
             PPDO_DEVICE_EXTENSION PdoDeviceExtension;
             PFDO_DEVICE_EXTENSION FdoDeviceExtension;
             UNICODE_STRING InterfaceSymLinkName;
+            LONG i;
 
             PdoDeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
             FdoDeviceExtension = (PFDO_DEVICE_EXTENSION)PdoDeviceExtension->ControllerFdo->DeviceExtension;
 
             /* Create the root hub */
             RootHubDevice = InternalCreateUsbDevice(1, 0, NULL, TRUE);
+
+            for (i = 0; i < 8; i++)
+            {
+                PdoDeviceExtension->Ports[i].PortStatus = USB_PORT_STATUS_ENABLE;
+                PdoDeviceExtension->Ports[i].PortChange = 0;
+            }
 
             RtlCopyMemory(&RootHubDevice->DeviceDescriptor,
                           ROOTHUB2_DEVICE_DESCRIPTOR,
@@ -364,9 +392,43 @@ PdoDispatchPnp(
             RootHubDevice->DeviceDescriptor.idVendor = FdoDeviceExtension->VendorId;
             RootHubDevice->DeviceDescriptor.idProduct = FdoDeviceExtension->DeviceId;
 
-            RtlCopyMemory(&RootHubDevice->ConfigurationDescriptor,
+            RootHubDevice->Configs = ExAllocatePoolWithTag(NonPagedPool,
+                                                            sizeof(PVOID) * RootHubDevice->DeviceDescriptor.bNumConfigurations,
+                                                            USB_POOL_TAG);
+
+            RootHubDevice->Configs[0] = ExAllocatePoolWithTag(NonPagedPool,
+                                                            sizeof(USB_CONFIGURATION) + sizeof(PVOID) * ROOTHUB2_CONFIGURATION_DESCRIPTOR[5],
+                                                            USB_POOL_TAG);
+
+            RootHubDevice->Configs[0]->Interfaces[0] = ExAllocatePoolWithTag(NonPagedPool,
+                                                            sizeof(USB_INTERFACE) + sizeof(PVOID) * ROOTHUB2_INTERFACE_DESCRIPTOR[3],
+                                                            USB_POOL_TAG);
+
+            RootHubDevice->Configs[0]->Interfaces[0]->EndPoints[0] = ExAllocatePoolWithTag(NonPagedPool,
+                                                            sizeof(USB_ENDPOINT),
+                                                            USB_POOL_TAG);
+
+            DPRINT1("before: ActiveConfig %x\n", RootHubDevice->ActiveConfig);
+            RootHubDevice->ActiveConfig = RootHubDevice->Configs[0];
+            DPRINT1("after: ActiveConfig %x\n", RootHubDevice->ActiveConfig);
+
+            DPRINT1("before: ActiveConfig->Interfaces[0] %x\n", RootHubDevice->ActiveConfig->Interfaces[0]);
+            RootHubDevice->ActiveInterface = RootHubDevice->ActiveConfig->Interfaces[0];
+
+
+            RtlCopyMemory(&RootHubDevice->ActiveConfig->ConfigurationDescriptor,
                           ROOTHUB2_CONFIGURATION_DESCRIPTOR,
                           sizeof(ROOTHUB2_CONFIGURATION_DESCRIPTOR));
+
+            RtlCopyMemory(&RootHubDevice->ActiveConfig->Interfaces[0]->InterfaceDescriptor,
+                         ROOTHUB2_INTERFACE_DESCRIPTOR,
+                         sizeof(ROOTHUB2_INTERFACE_DESCRIPTOR));
+
+            RtlCopyMemory(&RootHubDevice->ActiveConfig->Interfaces[0]->EndPoints[0]->EndPointDescriptor,
+                         ROOTHUB2_ENDPOINT_DESCRIPTOR,
+                         sizeof(ROOTHUB2_ENDPOINT_DESCRIPTOR));
+            RootHubDevice->DeviceSpeed = UsbHighSpeed;
+            RootHubDevice->DeviceType = Usb20Device;
 
             PdoDeviceExtension->UsbDevices[0] = RootHubDevice;
 
@@ -386,13 +448,14 @@ PdoDispatchPnp(
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("Failed to register interface\n");
+                ASSERT(FALSE);
             }
             else
             {
                 Status = IoSetDeviceInterfaceState(&InterfaceSymLinkName, TRUE);
                 DPRINT1("Set interface state %x\n", Status);
+                if (!NT_SUCCESS(Status)) ASSERT(FALSE);
             }
-
 
             Status = STATUS_SUCCESS;
             break;
@@ -409,8 +472,16 @@ PdoDispatchPnp(
                     break;
                 }
                 case BusRelations:
+                    DPRINT1("BusRelations!!!!!\n");
                 case RemovalRelations:
                 case EjectionRelations:
+                {
+                    /* Ignore the request */
+                    Information = Irp->IoStatus.Information;
+                    Status = Irp->IoStatus.Status;
+                    break;
+
+                }
                 default:
                 {
                     DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / Unhandled type 0x%lx\n",
@@ -481,61 +552,101 @@ PdoDispatchPnp(
             {
                 DPRINT1("Failed to create string from GUID!\n");
             }
+
             DPRINT1("Interface GUID requested %wZ\n", &GuidString);
             DPRINT1("QueryInterface.Size %x\n", Stack->Parameters.QueryInterface.Size);
             DPRINT1("QueryInterface.Version %x\n", Stack->Parameters.QueryInterface.Version);
 
+            /* Assume success */
             Status = STATUS_SUCCESS;
             Information = 0;
 
-            /* FIXME: Check the actual Guid */
-            if (Stack->Parameters.QueryInterface.Size == sizeof(USB_BUS_INTERFACE_USBDI_V2) && (Stack->Parameters.QueryInterface.Version == 2))
-            {
-                InterfaceDI = (PUSB_BUS_INTERFACE_USBDI_V2) Stack->Parameters.QueryInterface.Interface;
-                InterfaceDI->Size = sizeof(USB_BUS_INTERFACE_USBDI_V2);
-                InterfaceDI->Version = 2;
-                InterfaceDI->BusContext = PdoDeviceExtension->DeviceObject;
-                InterfaceDI->InterfaceReference = (PINTERFACE_REFERENCE)InterfaceReference;
-                InterfaceDI->InterfaceDereference = (PINTERFACE_DEREFERENCE)InterfaceDereference;
-                InterfaceDI->GetUSBDIVersion = GetUSBDIVersion;
-                InterfaceDI->QueryBusTime = QueryBusTime;
-                InterfaceDI->SubmitIsoOutUrb = SubmitIsoOutUrb;
-                InterfaceDI->QueryBusInformation = QueryBusInformation;
-                InterfaceDI->IsDeviceHighSpeed = IsDeviceHighSpeed;
-                InterfaceDI->EnumLogEntry = EnumLogEntry;
-            }
-            /* FIXME: Check the actual Guid */
-            else if (Stack->Parameters.QueryInterface.Size == sizeof(USB_BUS_INTERFACE_HUB_V5) &&
-                    (Stack->Parameters.QueryInterface.Version == 5))
+            if (IsEqualGUIDAligned(Stack->Parameters.QueryInterface.InterfaceType, &USB_BUS_INTERFACE_HUB_GUID))
             {
                 InterfaceHub = (PUSB_BUS_INTERFACE_HUB_V5)Stack->Parameters.QueryInterface.Interface;
-                InterfaceHub->Version = 5;
-                InterfaceHub->Size = sizeof(USB_BUS_INTERFACE_HUB_V5);
-                InterfaceHub->BusContext = PdoDeviceExtension->DeviceObject;
-                InterfaceHub->InterfaceReference = (PINTERFACE_REFERENCE)InterfaceReference;
-                InterfaceHub->InterfaceDereference = (PINTERFACE_DEREFERENCE)InterfaceDereference;
-                InterfaceHub->CreateUsbDevice = CreateUsbDevice;
-                InterfaceHub->InitializeUsbDevice = InitializeUsbDevice;
-                InterfaceHub->GetUsbDescriptors = GetUsbDescriptors;
-                InterfaceHub->RemoveUsbDevice = RemoveUsbDevice;
-                InterfaceHub->RestoreUsbDevice = RestoreUsbDevice;
-                InterfaceHub->GetPortHackFlags = GetPortHackFlags;
-                InterfaceHub->QueryDeviceInformation = QueryDeviceInformation;
-                InterfaceHub->GetControllerInformation = GetControllerInformation;
-                InterfaceHub->ControllerSelectiveSuspend = ControllerSelectiveSuspend;
-                InterfaceHub->GetExtendedHubInformation = GetExtendedHubInformation;
-                InterfaceHub->GetRootHubSymbolicName = GetRootHubSymbolicName;
-                InterfaceHub->GetDeviceBusContext = GetDeviceBusContext;
-                InterfaceHub->Initialize20Hub = Initialize20Hub;
-                InterfaceHub->RootHubInitNotification = RootHubInitNotification;
-                InterfaceHub->FlushTransfers = FlushTransfers;
-                InterfaceHub->SetDeviceHandleData = SetDeviceHandleData;
+                InterfaceHub->Version = Stack->Parameters.QueryInterface.Version;
+                if (Stack->Parameters.QueryInterface.Version >= 0)
+                {
+                    InterfaceHub->Size = Stack->Parameters.QueryInterface.Size;
+                    InterfaceHub->BusContext = PdoDeviceExtension->DeviceObject;
+                    InterfaceHub->InterfaceReference = (PINTERFACE_REFERENCE)InterfaceReference;
+                    InterfaceHub->InterfaceDereference = (PINTERFACE_DEREFERENCE)InterfaceDereference;
+                }
+                if (Stack->Parameters.QueryInterface.Version >= 1)
+                {
+                    InterfaceHub->CreateUsbDevice = CreateUsbDevice;
+                    InterfaceHub->InitializeUsbDevice = InitializeUsbDevice;
+                    InterfaceHub->GetUsbDescriptors = GetUsbDescriptors;
+                    InterfaceHub->RemoveUsbDevice = RemoveUsbDevice;
+                    InterfaceHub->RestoreUsbDevice = RestoreUsbDevice;
+                    InterfaceHub->GetPortHackFlags = GetPortHackFlags;
+                    InterfaceHub->QueryDeviceInformation = QueryDeviceInformation;
+                }
+                if (Stack->Parameters.QueryInterface.Version >= 2)
+                {
+                    InterfaceHub->GetControllerInformation = GetControllerInformation;
+                    InterfaceHub->ControllerSelectiveSuspend = ControllerSelectiveSuspend;
+                    InterfaceHub->GetExtendedHubInformation = GetExtendedHubInformation;
+                    InterfaceHub->GetRootHubSymbolicName = GetRootHubSymbolicName;
+                    InterfaceHub->GetDeviceBusContext = GetDeviceBusContext;
+                    InterfaceHub->Initialize20Hub = Initialize20Hub;
+
+                }
+                if (Stack->Parameters.QueryInterface.Version >= 3)
+                {
+                    InterfaceHub->RootHubInitNotification = RootHubInitNotification;
+                }
+                if (Stack->Parameters.QueryInterface.Version >= 4)
+                {
+                    InterfaceHub->FlushTransfers = FlushTransfers;
+                }
+                if (Stack->Parameters.QueryInterface.Version >= 5)
+                {
+                    InterfaceHub->SetDeviceHandleData = SetDeviceHandleData;
+                }
+                if (Stack->Parameters.QueryInterface.Version >= 6)
+                {
+                    DPRINT1("Unknown version!\n");
+                }
+                break;
             }
-            else
+
+            if (IsEqualGUIDAligned(Stack->Parameters.QueryInterface.InterfaceType, &USB_BUS_INTERFACE_USBDI_GUID))
             {
-                DPRINT1("Not Supported\n");
-                Status = STATUS_NOT_SUPPORTED;
+                InterfaceDI = (PUSB_BUS_INTERFACE_USBDI_V2) Stack->Parameters.QueryInterface.Interface;
+                InterfaceDI->Version = Stack->Parameters.QueryInterface.Version;
+                if (Stack->Parameters.QueryInterface.Version >= 0)
+                {
+                    //InterfaceDI->Size = sizeof(USB_BUS_INTERFACE_USBDI_V2);
+                    InterfaceDI->Size = Stack->Parameters.QueryInterface.Size;
+                    InterfaceDI->BusContext = PdoDeviceExtension->DeviceObject;
+                    InterfaceDI->InterfaceReference = (PINTERFACE_REFERENCE)InterfaceReference;
+                    InterfaceDI->InterfaceDereference = (PINTERFACE_DEREFERENCE)InterfaceDereference;
+                    InterfaceDI->GetUSBDIVersion = GetUSBDIVersion;
+                    InterfaceDI->QueryBusTime = QueryBusTime;
+                    InterfaceDI->SubmitIsoOutUrb = SubmitIsoOutUrb;
+                    InterfaceDI->QueryBusInformation = QueryBusInformation;
+                }
+                if (Stack->Parameters.QueryInterface.Version >= 1)
+                {
+                    InterfaceDI->IsDeviceHighSpeed = IsDeviceHighSpeed;
+                }
+                if (Stack->Parameters.QueryInterface.Version >= 2)
+                {
+                    InterfaceDI->EnumLogEntry = EnumLogEntry;
+                }
+
+                if (Stack->Parameters.QueryInterface.Version >= 3)
+                {
+                    DPRINT1("Not Supported!\n");
+                }
+                break;
             }
+
+            DPRINT1("Not Supported\n");
+            Status = Irp->IoStatus.Status;
+            Information = Irp->IoStatus.Information;
+
             break;
         }
         case IRP_MN_QUERY_BUS_INFORMATION:
@@ -573,4 +684,3 @@ PdoDispatchPnp(
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return Status;
 }
-

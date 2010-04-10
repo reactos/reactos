@@ -89,6 +89,8 @@ KsAddItemToObjectBag(
     PKSIOBJECT_BAG Bag;
     PKSIOBJECT_BAG_ENTRY BagEntry;
 
+    DPRINT("KsAddItemToObjectBag\n");
+
     /* get real object bag */
     Bag = (PKSIOBJECT_BAG)ObjectBag;
 
@@ -127,7 +129,7 @@ KsAddItemToObjectBag(
         BagEntry->Free = ExFreePool;
 
     /* insert item */
-    InsertTailList(&Bag->ObjectList, &Bag->Entry);
+    InsertTailList(&Bag->ObjectList, &BagEntry->Entry);
 
     /* release mutex */
     KeReleaseMutex(Bag->BagMutex, FALSE);
@@ -362,6 +364,8 @@ _KsEdit(
     PKSIOBJECT_BAG_ENTRY BagEntry;
     PVOID Item;
     NTSTATUS Status;
+
+    DPRINT("_KsEdit\n");
 
     /* get real object bag */
     Bag = (PKSIOBJECT_BAG)ObjectBag;

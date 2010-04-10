@@ -70,7 +70,7 @@ KspForwardIrpSynchronous(
     IoSetCompletionRoutine(Irp, KspForwardIrpSynchronousCompletion, (PVOID)&Event, TRUE, TRUE, TRUE);
 
     /* now call the driver */
-    Status = IoCallDriver(DeviceHeader->BaseDevice, Irp);
+    Status = IoCallDriver(DeviceHeader->KsDevice.NextDeviceObject, Irp);
     /* did the request complete yet */
     if (Status == STATUS_PENDING)
     {

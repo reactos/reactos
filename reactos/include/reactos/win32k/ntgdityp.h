@@ -523,10 +523,7 @@ typedef struct _GDIBSEXTSELCLPRGN
 {
   GDIBATCHHDR gbHdr;
   int fnMode;
-  LONG right;
-  LONG bottom;
-  LONG left;
-  LONG top;
+  RECTL;
 } GDIBSEXTSELCLPRGN, *PGDIBSEXTSELCLPRGN;
 //
 //   Use with GdiBCSelObj, GdiBCDelObj and GdiBCDelRgn.

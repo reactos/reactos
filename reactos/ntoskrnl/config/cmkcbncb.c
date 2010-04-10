@@ -1135,3 +1135,62 @@ DelistKeyBodyFromKCB(IN PCM_KEY_BODY KeyBody,
     /* Unlock it it if we did a manual lock */
     if (!LockHeld) CmpReleaseKcbLock(KeyBody->KeyControlBlock);
 }
+
+VOID
+NTAPI
+CmpFlushNotifiesOnKeyBodyList(IN PCM_KEY_CONTROL_BLOCK Kcb,
+                              IN BOOLEAN LockHeld)
+{
+    PLIST_ENTRY NextEntry, ListHead;
+    PCM_KEY_BODY KeyBody;
+
+    /* Sanity check */
+    LockHeld ? CMP_ASSERT_EXCLUSIVE_REGISTRY_LOCK() : CmpIsKcbLockedExclusive(Kcb);
+    while (TRUE)
+    {
+        /* Is the list empty? */
+        ListHead = &Kcb->KeyBodyListHead;
+        if (!IsListEmpty(ListHead))
+        {
+            /* Loop the list */
+            NextEntry = ListHead->Flink;
+            while (NextEntry != ListHead)
+            {
+                /* Get the key body */
+                KeyBody = CONTAINING_RECORD(NextEntry, CM_KEY_BODY, KeyBodyList);
+                ASSERT(KeyBody->Type == '20yk');
+
+                /* Check for notifications */
+                if (KeyBody->NotifyBlock)
+                {
+                    /* Is the lock held? */
+                    if (LockHeld)
+                    {
+                        /* Flush it */
+                        CmpFlushNotify(KeyBody, LockHeld);
+                        ASSERT(KeyBody->NotifyBlock == NULL);
+                        continue;
+                    }
+                    
+                    /* Lock isn't held, so we need to take a reference */
+                    if (ObReferenceObjectSafe(KeyBody))
+                    {
+                        /* Now we can flush */
+                        CmpFlushNotify(KeyBody, LockHeld);
+                        ASSERT(KeyBody->NotifyBlock == NULL);
+                        
+                        /* Release the reference we took */
+    				    ObDereferenceObjectDeferDelete(KeyBody);
+                        continue;
+                    }
+                }
+
+                /* Try the next entry */
+                NextEntry = NextEntry->Flink;
+            }
+        }
+        
+        /* List has been parsed, exit */
+        break;
+    }
+}

@@ -88,8 +88,8 @@ typedef struct _PDEVOBJ
 //  PVOID                     TypeOneInfo;
     PVOID                     pvGammaRamp;    /* Gamma ramp pointer. */
 //  PVOID                     RemoteTypeOne;
-//  ULONG                     ulHorzRes;
-//  ULONG                     ulVertRes;
+    ULONG                     ulHorzRes;
+    ULONG                     ulVertRes;
 //  PFN_DrvSetPointerShape    pfnDrvSetPointerShape;
 //  PFN_DrvMovePointer        pfnDrvMovePointer;
     PFN_DrvMovePointer        pfnMovePointer;
@@ -107,7 +107,7 @@ typedef struct _PDEVOBJ
 //  HANDLE                    hSpooler;       /* Handle to spooler, if spooler dev driver. */
 //  PVOID                     pDesktopId;
     PGRAPHICS_DEVICE          pGraphicsDevice;
-//  POINTL                    ptlOrigion;
+    POINTL                    ptlOrigion;
     PVOID                     pdmwDev;        /* Ptr->DEVMODEW.dmSize + dmDriverExtra == alloc size. */
 //  DWORD                     Unknown3;
     FLONG                     DxDd_Flags;     /* DxDD active status flags. */
@@ -140,5 +140,7 @@ typedef struct _PDEVEDD
     PDEVOBJ pdevobj;
     EDD_DIRECTDRAW_GLOBAL EDDgpl;
 } PDEVEDD, *PPDEVEDD;
+
+PSIZEL FASTCALL PDEV_sizl(PPDEVOBJ, PSIZEL);
 
 extern ULONG gdwDirectDrawContext;

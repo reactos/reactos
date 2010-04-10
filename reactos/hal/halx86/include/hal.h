@@ -50,5 +50,6 @@
 #include "halp.h"
 #include "mps.h"
 #include "ioapic.h"
+#include "halacpi.h"
 
 /* EOF */

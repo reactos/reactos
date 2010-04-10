@@ -3,6 +3,7 @@
 <group>
 <module name="ksproxy" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_KSPROXY}" installbase="system32" installname="ksproxy.ax">
 	<importlibrary definition="ksproxy.spec" />
+	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<include base="ksproxy">.</include>
 	<library>ntdll</library>
 	<library>kernel32</library>

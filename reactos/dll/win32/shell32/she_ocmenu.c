@@ -719,12 +719,12 @@ static INT_PTR CALLBACK OpenWithProgrammDlg(HWND hwndDlg, UINT uMsg, WPARAM wPar
 
                  if (lpdis->itemID == index)
                  {
-                     /* paint focused item with blue background */
+                     /* paint focused item with standard background colour */
                      HBRUSH hBrush;
-                     hBrush = CreateSolidBrush(RGB(0, 0, 255));
+                     hBrush = CreateSolidBrush(RGB(46, 104, 160));
                      FillRect(lpdis->hDC, &lpdis->rcItem, hBrush);
                      DeleteObject(hBrush);
-                     preBkColor = SetBkColor(lpdis->hDC, RGB(255, 255, 255));
+                     preBkColor = SetBkColor(lpdis->hDC, RGB(46, 104, 160));
                  }
                  else
                  {
@@ -756,6 +756,10 @@ static INT_PTR CALLBACK OpenWithProgrammDlg(HWND hwndDlg, UINT uMsg, WPARAM wPar
                  break;
          }
          break;
+    case WM_DESTROY:
+        FreeListItems(hwndDlg);
+        EndDialog(hwndDlg, 0);
+        return TRUE;
     default:
         break;
     }
