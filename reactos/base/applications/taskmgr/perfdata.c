@@ -356,6 +356,29 @@ ClearInfo:
     LeaveCriticalSection(&PerfDataCriticalSection);
 }
 
+ULONG PerfDataGetProcessIndex(ULONG pid)
+{
+    ULONG idx;
+
+    EnterCriticalSection(&PerfDataCriticalSection);
+
+    for (idx = 0; idx < ProcessCount; idx++)
+    {
+        if (PtrToUlong(pPerfData[idx].ProcessId) == pid)
+        {
+            break;
+        }
+    }
+
+    LeaveCriticalSection(&PerfDataCriticalSection);
+
+    if (idx == ProcessCount)
+    {
+        return -1;
+    }
+    return idx;
+}
+
 ULONG PerfDataGetProcessCount(void)
 {
     return ProcessCount;
