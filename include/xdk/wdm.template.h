@@ -25,6 +25,9 @@
 #ifndef _WDMDDK_
 #define _WDMDDK_
 
+#define WDM_MAJORVERSION        0x06
+#define WDM_MINORVERSION        0x00
+
 /* Included via ntddk.h? */
 #ifndef _NTDDK_
 #define _NTDDK_
@@ -124,6 +127,15 @@ extern "C" {
 
 #endif
 
+#if defined(_WIN64)
+#if !defined(USE_DMA_MACROS) && !defined(_NTHAL_)
+#define USE_DMA_MACROS
+#endif
+#ifndef NO_LEGACY_DRIVERS
+#define NO_LEGACY_DRIVERS
+#endif
+#endif /* defined(_WIN64) */
+
 /* Forward declarations */
 struct _IRP;
 struct _MDL;
@@ -153,7 +165,7 @@ typedef struct _KPROCESS *PKPROCESS;
 typedef struct _KTHREAD *PKTHREAD, *PRKTHREAD;
 typedef struct _CONTEXT *PCONTEXT;
 
-#if defined(USE_DMA_MACROS) && !defined(_NTHAL_) && ( defined(_NTDDK_) || defined(_NTDRIVER_) || defined(_NTOSP_))
+#if defined(USE_DMA_MACROS) && !defined(_NTHAL_)
 typedef struct _DMA_ADAPTER *PADAPTER_OBJECT;
 #elif defined(_WDM_INCLUDED_)
 typedef struct _DMA_ADAPTER *PADAPTER_OBJECT;
