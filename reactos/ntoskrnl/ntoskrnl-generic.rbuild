@@ -319,8 +319,6 @@
 						<group>
 							<file>i386-dis.c</file>
 							<file>kdb_help.S</file>
-							<file>longjmp.S</file>
-							<file>setjmp.S</file>
 						</group>
 					</if>
 				</directory>
@@ -332,7 +330,6 @@
 							<file>i386-dis.c</file>
 							<file>kdb_help.S</file>
 							<file>kdb.c</file>
-							<file>setjmp.S</file>
 						</group>
 					</if>
 				</directory>
