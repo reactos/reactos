@@ -43,6 +43,10 @@ PUBLIC ExpInterlockedPopEntrySListEnd16
 PUBLIC ExpInterlockedPushEntrySList
 PUBLIC ExpInterlockedFlushSList
 
+PUBLIC RtlInterlockedFlushSList
+PUBLIC RtlInterlockedPopEntrySList
+PUBLIC RtlInterlockedPushEntrySList
+
 /* PSLIST_ENTRY
  * NTAPI
  * RtlInterlockedPopEntrySList(
