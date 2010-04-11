@@ -266,9 +266,6 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
     /* Write the resource information to the registry */
     IopSetDeviceInstanceData(InstanceKey, DeviceNode);
 
-    /* Close the instance key handle */
-    ZwClose(InstanceKey);
-
     /* If the caller didn't get the resources assigned for us, do it now */
     if (!ResourceAssigned)
     {
@@ -278,7 +275,19 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
        {
           Status = IopTranslateDeviceResources(DeviceNode, RequiredLength);
           if (NT_SUCCESS(Status))
+          {
               Status = IopUpdateResourceMapForPnPDevice(DeviceNode);
+              if (NT_SUCCESS(Status) && DeviceNode->ResourceList)
+              {
+                 RtlInitUnicodeString(&ValueName, L"AllocConfig");
+                 Status = ZwSetValueKey(InstanceKey,
+                                        &ValueName,
+                                        0,
+                                        REG_RESOURCE_LIST,
+                                        DeviceNode->ResourceList,
+                                        CM_RESOURCE_LIST_SIZE(DeviceNode->ResourceList));
+              }
+          }
        }
        IopDeviceNodeClearFlag(DeviceNode, DNF_ASSIGNING_RESOURCES);
 
@@ -286,9 +295,13 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
        if (!NT_SUCCESS(Status))
        {
            DPRINT("Assigning resources failed: 0x%x\n", Status);
+           ZwClose(InstanceKey);
            return Status;
        }
     }
+
+    /* Close the instance key handle */
+    ZwClose(InstanceKey);
 
     /* Report the device's enumeration to umpnpmgr */
     IopQueueTargetDeviceEvent(&GUID_DEVICE_ENUMERATED,
