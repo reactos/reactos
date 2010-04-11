@@ -63,6 +63,7 @@ IopUpdateResourceMapForPnPDevice(
 NTSTATUS
 NTAPI
 IopCreateDeviceKeyPath(IN PCUNICODE_STRING RegistryPath,
+                       IN ULONG CreateOptions,
                        OUT PHANDLE Handle);
 
 PDEVICE_NODE
@@ -226,7 +227,7 @@ IopStartDevice(
       }
    }
 
-   Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, &InstanceHandle);
+   Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, 0, &InstanceHandle);
    if (!NT_SUCCESS(Status))
        return Status;
 
@@ -458,7 +459,7 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
       }
 
       /* Create the device key for legacy drivers */
-      Status = IopCreateDeviceKeyPath(&Node->InstancePath, &InstanceHandle);
+      Status = IopCreateDeviceKeyPath(&Node->InstancePath, REG_OPTION_VOLATILE, &InstanceHandle);
       if (!NT_SUCCESS(Status))
       {
           ZwClose(InstanceHandle);
@@ -761,6 +762,7 @@ IopTraverseDeviceTree(PDEVICETREE_TRAVERSE_CONTEXT Context)
 NTSTATUS
 NTAPI
 IopCreateDeviceKeyPath(IN PCUNICODE_STRING RegistryPath,
+                       IN ULONG CreateOptions,
                        OUT PHANDLE Handle)
 {
     UNICODE_STRING EnumU = RTL_CONSTANT_STRING(ENUM_ROOT);
@@ -811,7 +813,7 @@ IopCreateDeviceKeyPath(IN PCUNICODE_STRING RegistryPath,
                              &ObjectAttributes,
                              0,
                              NULL,
-                             0,
+                             CreateOptions,
                              NULL);
 
         /* Close parent key handle, we don't need it anymore */
@@ -2244,7 +2246,7 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
    /*
     * Create registry key for the instance id, if it doesn't exist yet
     */
-   Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, &InstanceKey);
+   Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, 0, &InstanceKey);
    if (!NT_SUCCESS(Status))
    {
       DPRINT1("Failed to create the instance key! (Status %lx)\n", Status);

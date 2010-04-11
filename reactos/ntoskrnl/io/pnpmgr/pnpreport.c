@@ -15,6 +15,7 @@
 NTSTATUS
 NTAPI
 IopCreateDeviceKeyPath(IN PCUNICODE_STRING RegistryPath,
+                       IN ULONG CreateOptions,
                        OUT PHANDLE Handle);
 
 NTSTATUS
@@ -196,7 +197,7 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
     IopActionConfigureChildServices(DeviceNode, DeviceNode->Parent);
 
     /* Open a handle to the instance path key */
-    Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, &InstanceKey);
+    Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, 0, &InstanceKey);
     if (!NT_SUCCESS(Status))
         return Status;
 

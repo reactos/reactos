@@ -172,7 +172,7 @@ PnpRootCreateDevice(
     if (NT_SUCCESS(Status))
     {
         InitializeObjectAttributes(&ObjectAttributes, &Device->DeviceID, OBJ_CASE_INSENSITIVE, EnumHandle, NULL);
-        Status = ZwCreateKey(&DeviceKeyHandle, KEY_SET_VALUE, &ObjectAttributes, 0, NULL, 0, NULL);
+        Status = ZwCreateKey(&DeviceKeyHandle, KEY_SET_VALUE, &ObjectAttributes, 0, NULL, REG_OPTION_VOLATILE, NULL);
         ZwClose(EnumHandle);
     }
 
