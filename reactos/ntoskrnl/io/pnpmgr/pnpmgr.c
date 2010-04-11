@@ -147,7 +147,7 @@ IopStartDevice(
    IO_STACK_LOCATION Stack;
    ULONG RequiredLength;
    NTSTATUS Status;
-   HANDLE InstanceHandle, ControlHandle;
+   HANDLE InstanceHandle = INVALID_HANDLE_VALUE, ControlHandle = INVALID_HANDLE_VALUE;
    UNICODE_STRING KeyName;
    OBJECT_ATTRIBUTES ObjectAttributes;
 
@@ -162,6 +162,7 @@ IopStartDevice(
    if (!NT_SUCCESS(Status) && Status != STATUS_NOT_SUPPORTED)
    {
       DPRINT("IopInitiatePnpIrp(IRP_MN_FILTER_RESOURCE_REQUIREMENTS) failed\n");
+      IopDeviceNodeClearFlag(DeviceNode, DNF_ASSIGNING_RESOURCES);
       return Status;
    }
    else if (NT_SUCCESS(Status))
@@ -192,6 +193,9 @@ IopStartDevice(
    }
    IopDeviceNodeClearFlag(DeviceNode, DNF_ASSIGNING_RESOURCES);
 
+   if (!NT_SUCCESS(Status))
+       goto ByeBye;
+
    DPRINT("Sending IRP_MN_START_DEVICE to driver\n");
    Stack.Parameters.StartDevice.AllocatedResources = DeviceNode->ResourceList;
    Stack.Parameters.StartDevice.AllocatedResourcesTranslated = DeviceNode->ResourceListTranslated;
@@ -213,7 +217,9 @@ IopStartDevice(
 
    if (!NT_SUCCESS(Status))
    {
-      DPRINT("IopInitiatePnpIrp() failed\n");
+      DPRINT1("IRP_MN_START_DEVICE failed for %wZ\n", &DeviceNode->InstancePath);
+      IopDeviceNodeClearFlag(DeviceNode, DNF_NEED_ENUMERATION_ONLY);
+      goto ByeBye;
    }
    else
    {
@@ -229,7 +235,7 @@ IopStartDevice(
 
    Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, 0, &InstanceHandle);
    if (!NT_SUCCESS(Status))
-       return Status;
+       goto ByeBye;
 
    RtlInitUnicodeString(&KeyName, L"Control");
    InitializeObjectAttributes(&ObjectAttributes,
@@ -239,10 +245,7 @@ IopStartDevice(
                               NULL);
    Status = ZwCreateKey(&ControlHandle, KEY_SET_VALUE, &ObjectAttributes, 0, NULL, REG_OPTION_VOLATILE, NULL);
    if (!NT_SUCCESS(Status))
-   {
-       ZwClose(InstanceHandle);
-       return Status;
-   }
+       goto ByeBye;
 
    RtlInitUnicodeString(&KeyName, L"ActiveService");
    Status = ZwSetValueKey(ControlHandle, &KeyName, 0, REG_SZ, DeviceNode->ServiceName.Buffer, DeviceNode->ServiceName.Length);
@@ -254,11 +257,17 @@ IopStartDevice(
                               DeviceNode->ResourceList, CM_RESOURCE_LIST_SIZE(DeviceNode->ResourceList));
    }
 
+ByeBye:
    if (NT_SUCCESS(Status))
        IopDeviceNodeSetFlag(DeviceNode, DNF_STARTED);
+   else
+       IopDeviceNodeSetFlag(DeviceNode, DNF_START_FAILED);
 
-   ZwClose(ControlHandle);
-   ZwClose(InstanceHandle);
+   if (ControlHandle != INVALID_HANDLE_VALUE)
+       ZwClose(ControlHandle);
+
+   if (InstanceHandle != INVALID_HANDLE_VALUE)
+       ZwClose(InstanceHandle);
 
    return Status;
 }
@@ -2497,7 +2506,7 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
    {
       DeviceNode->BootResources =
          (PCM_RESOURCE_LIST)IoStatusBlock.Information;
-      DeviceNode->Flags |= DNF_HAS_BOOT_CONFIG;
+      IopDeviceNodeSetFlag(DeviceNode, DNF_HAS_BOOT_CONFIG);
    }
    else
    {
