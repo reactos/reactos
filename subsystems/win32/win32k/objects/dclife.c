@@ -377,8 +377,7 @@ ASSERT(pdc->rosdc.hGCClipRgn);
 
     PATH_Delete(pdc->dclevel.hPath);
 
-    /* Ideally, no DC should hold a lock on a surface when being deleted */
-    if(pdc->dclevel.pSurface && pdc->dctype != DCTYPE_DIRECT)
+    if(pdc->dclevel.pSurface)
         SURFACE_ShareUnlockSurface(pdc->dclevel.pSurface);
 
     PDEVOBJ_vRelease(pdc->ppdev) ;

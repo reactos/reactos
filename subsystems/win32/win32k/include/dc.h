@@ -176,9 +176,12 @@ DC_LockDc(HDC hdc)
         /* Acquire shared PDEV lock */
         EngAcquireSemaphoreShared(pdc->ppdev->hsemDevLock);
 
-        /* Assign Surface */
-        pdc->dclevel.pSurface = PDEVOBJ_pSurface(pdc->ppdev);
-
+        /* Update Surface if needed */
+        if(pdc->dclevel.pSurface != pdc->ppdev->pSurface)
+        {
+            if(pdc->dclevel.pSurface) SURFACE_ShareUnlockSurface(pdc->dclevel.pSurface);
+            pdc->dclevel.pSurface = PDEVOBJ_pSurface(pdc->ppdev);
+        }
     }
     return pdc;
 }
@@ -189,8 +192,6 @@ DC_UnlockDc(PDC pdc)
 {
     if(pdc->dctype == DCTYPE_DIRECT)
     {
-        /* Release surface lock */
-        SURFACE_ShareUnlockSurface(pdc->dclevel.pSurface);
         /* Release PDEV lock */
         EngReleaseSemaphore(pdc->ppdev->hsemDevLock);
     }
