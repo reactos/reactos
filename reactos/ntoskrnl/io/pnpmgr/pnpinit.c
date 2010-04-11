@@ -219,4 +219,116 @@ Quickie:
     return i;
 }
 
+NTSTATUS
+NTAPI
+PipCallDriverAddDevice(IN PDEVICE_NODE DeviceNode,
+                       IN BOOLEAN LoadDriver,     
+                       IN PDRIVER_OBJECT DriverObject)
+{ 
+    NTSTATUS Status;
+    HANDLE EnumRootKey, SubKey, ControlKey, ClassKey, PropertiesKey;
+    UNICODE_STRING ClassGuid, Properties;
+    UNICODE_STRING EnumRoot = RTL_CONSTANT_STRING(ENUM_ROOT);
+    UNICODE_STRING ControlClass =
+    RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Class");
+    PKEY_VALUE_FULL_INFORMATION KeyValueInformation = NULL;
+    PWCHAR Buffer;
+    
+    /* Open enumeration root key */
+    Status = IopOpenRegistryKeyEx(&EnumRootKey,
+                                  NULL,
+                                  &EnumRoot,
+                                  KEY_READ);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("IopOpenRegistryKeyEx() failed with Status %08X\n", Status);
+        return Status;
+    }
+    
+    /* Open instance subkey */
+    Status = IopOpenRegistryKeyEx(&SubKey,
+                                  EnumRootKey,
+                                  &DeviceNode->InstancePath,
+                                  KEY_READ);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("IopOpenRegistryKeyEx() failed with Status %08X\n", Status);
+        ZwClose(EnumRootKey);
+        return Status;
+    }
+    
+    /* Get class GUID */
+    Status = IopGetRegistryValue(SubKey,
+                                 REGSTR_VAL_CLASSGUID,
+                                 &KeyValueInformation);
+    if (NT_SUCCESS(Status))
+    {
+        /* Convert to unicode string */
+        Buffer = (PVOID)((ULONG_PTR)KeyValueInformation + KeyValueInformation->DataOffset);
+        PnpRegSzToString(Buffer, KeyValueInformation->DataLength, &ClassGuid.Length);
+        ClassGuid.MaximumLength = KeyValueInformation->DataLength;
+        ClassGuid.Buffer = Buffer;
+        
+        /* Open the key */
+        Status = IopOpenRegistryKeyEx(&ControlKey,
+                                      NULL,
+                                      &ControlClass,
+                                      KEY_READ);
+        if (!NT_SUCCESS(Status))
+        {
+            /* No class key */
+            DPRINT1("IopOpenRegistryKeyEx() failed with Status %08X\n", Status);
+            ClassKey = NULL;
+        }
+        else
+        {
+            /* Open the class key */
+            Status = IopOpenRegistryKeyEx(&ClassKey,
+                                          ControlKey,
+                                          &ClassGuid,
+                                          KEY_READ);
+            ZwClose(ControlKey);
+            if (!NT_SUCCESS(Status))
+            {
+                /* No class key */
+                DPRINT1("IopOpenRegistryKeyEx() failed with Status %08X\n", Status);
+                ClassKey = NULL;
+            }
+        }
+        
+        /* Check if we made it till here */
+        if (ClassKey)
+        {
+            /* Get the device properties */
+            RtlInitUnicodeString(&Properties, REGSTR_KEY_DEVICE_PROPERTIES);
+            Status = IopOpenRegistryKeyEx(&PropertiesKey,
+                                          ClassKey,
+                                          &Properties,
+                                          KEY_READ);
+            if (!NT_SUCCESS(Status))
+            {
+                /* No properties */
+                DPRINT("IopOpenRegistryKeyEx() failed with Status %08X\n", Status);
+                PropertiesKey = NULL;
+            }
+        }
+        
+        /* Free the registry data */
+        ExFreePool(KeyValueInformation);
+    }
+    
+    /* Do ReactOS-style setup */
+    IopAttachFilterDrivers(DeviceNode, TRUE);
+    Status = IopInitializeDevice(DeviceNode, DriverObject);
+    if (NT_SUCCESS(Status))
+    {
+        IopAttachFilterDrivers(DeviceNode, FALSE);
+        IopDeviceNodeSetFlag(DeviceNode, DNF_STARTED);
+        Status = IopStartDevice(DeviceNode);
+    }
+    
+    /* Return status */
+    return Status;
+}
+
 /* EOF */

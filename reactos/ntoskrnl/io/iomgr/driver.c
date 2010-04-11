@@ -438,7 +438,6 @@ IopInitializeDriverModule(
    UNICODE_STRING RegistryKey;
    PDRIVER_INITIALIZE DriverEntry;
    PDRIVER_OBJECT Driver;
-   PDEVICE_OBJECT DeviceObject;
    NTSTATUS Status;
 
    DriverEntry = ModuleObject->EntryPoint;
@@ -495,14 +494,7 @@ IopInitializeDriverModule(
    }
 
    /* Set the driver as initialized */
-   Driver->Flags |= DRVO_INITIALIZED;
-   DeviceObject = Driver->DeviceObject;
-   while (DeviceObject)
-   {
-       /* Set every device as initialized too */
-       DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
-       DeviceObject = DeviceObject->NextDevice;
-   }
+   IopReadyDeviceObjects(Driver);
 
    if (PnpSystemInit) IopReinitializeDrivers();
 

@@ -618,69 +618,90 @@ IopFreeDeviceNode(PDEVICE_NODE DeviceNode)
 }
 
 NTSTATUS
-IopInitiatePnpIrp(PDEVICE_OBJECT DeviceObject,
-                  PIO_STATUS_BLOCK IoStatusBlock,
-                  ULONG MinorFunction,
-                  PIO_STACK_LOCATION Stack OPTIONAL)
+NTAPI
+IopSynchronousCall(IN PDEVICE_OBJECT DeviceObject,
+                   IN PIO_STACK_LOCATION IoStackLocation,
+                   OUT PVOID *Information)
 {
-   PDEVICE_OBJECT TopDeviceObject;
-   PIO_STACK_LOCATION IrpSp;
-   NTSTATUS Status;
-   KEVENT Event;
-   PIRP Irp;
-
-   /* Always call the top of the device stack */
-   TopDeviceObject = IoGetAttachedDeviceReference(DeviceObject);
-
-   KeInitializeEvent(
-      &Event,
-      NotificationEvent,
-      FALSE);
-
-   Irp = IoBuildSynchronousFsdRequest(
-      IRP_MJ_PNP,
-      TopDeviceObject,
-      NULL,
-      0,
-      NULL,
-      &Event,
-      IoStatusBlock);
-
-   /* PNP IRPs are initialized with a status code of STATUS_NOT_SUPPORTED */
-   Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
-   Irp->IoStatus.Information = 0;
-
-   if (MinorFunction == IRP_MN_FILTER_RESOURCE_REQUIREMENTS)
-   {
-      Irp->IoStatus.Information = (ULONG_PTR)Stack->Parameters.FilterResourceRequirements.IoResourceRequirementList;
-   }
-
-   IrpSp = IoGetNextIrpStackLocation(Irp);
-   IrpSp->MinorFunction = (UCHAR)MinorFunction;
-
-   if (Stack)
-   {
-      RtlCopyMemory(&IrpSp->Parameters,
-                    &Stack->Parameters,
-                    sizeof(Stack->Parameters));
-   }
-
-   Status = IoCallDriver(TopDeviceObject, Irp);
-   if (Status == STATUS_PENDING)
-   {
-      KeWaitForSingleObject(&Event,
-                            Executive,
-                            KernelMode,
-                            FALSE,
-                            NULL);
-      Status = IoStatusBlock->Status;
-   }
-
-   ObDereferenceObject(TopDeviceObject);
-
-   return Status;
+    PIRP Irp;
+    PIO_STACK_LOCATION IrpStack;
+    IO_STATUS_BLOCK IoStatusBlock;
+    KEVENT Event;
+    NTSTATUS Status;
+    PDEVICE_OBJECT TopDeviceObject;
+    PAGED_CODE();
+    
+    /* Call the top of the device stack */
+    TopDeviceObject = IoGetAttachedDeviceReference(DeviceObject);
+    
+    /* Allocate an IRP */
+    Irp = IoAllocateIrp(TopDeviceObject->StackSize, FALSE);
+    if (!Irp) return STATUS_INSUFFICIENT_RESOURCES;
+    
+    /* Initialize to failure */
+    Irp->IoStatus.Status = IoStatusBlock.Status = STATUS_NOT_SUPPORTED;
+    Irp->IoStatus.Information = IoStatusBlock.Information = 0;
+    
+    /* Initialize the event */
+    KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
+    
+    /* Set them up */
+    Irp->UserIosb = &IoStatusBlock;
+    Irp->UserEvent = &Event;
+    
+    /* Queue the IRP */
+    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+    IoQueueThreadIrp(Irp);
+    
+    /* Copy-in the stack */
+    IrpStack = IoGetNextIrpStackLocation(Irp);
+    *IrpStack = *IoStackLocation;
+    
+    /* Call the driver */
+    Status = IoCallDriver(TopDeviceObject, Irp);
+    if (Status == STATUS_PENDING)
+    {
+        /* Wait for it */
+        KeWaitForSingleObject(&Event,
+                              Executive,
+                              KernelMode,
+                              FALSE,
+                              NULL);
+        Status = IoStatusBlock.Status;
+    }
+    
+    /* Return the information */
+    *Information = (PVOID)IoStatusBlock.Information;
+    return Status;
 }
 
+NTSTATUS
+NTAPI
+IopInitiatePnpIrp(IN PDEVICE_OBJECT DeviceObject,
+                  IN OUT PIO_STATUS_BLOCK IoStatusBlock,
+                  IN ULONG MinorFunction,
+                  IN PIO_STACK_LOCATION Stack OPTIONAL)
+{
+    IO_STACK_LOCATION IoStackLocation;
+    
+    /* Fill out the stack information */
+    RtlZeroMemory(&IoStackLocation, sizeof(IO_STACK_LOCATION));
+    IoStackLocation.MajorFunction = IRP_MJ_PNP;
+    IoStackLocation.MinorFunction = MinorFunction;
+    if (Stack)
+    {
+        /* Copy the rest */
+        RtlCopyMemory(&IoStackLocation.Parameters,
+                      &Stack->Parameters,
+                      sizeof(Stack->Parameters));
+    }
+    
+    /* Do the PnP call */
+    IoStatusBlock->Status = IopSynchronousCall(DeviceObject,
+                                               &IoStackLocation,
+                                               (PVOID)&IoStatusBlock->Information);
+    return IoStatusBlock->Status;
+}
 
 NTSTATUS
 IopTraverseDeviceTreeNode(PDEVICETREE_TRAVERSE_CONTEXT Context)
@@ -2909,29 +2930,8 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
       /* Driver is loaded and initialized at this point */
       if (NT_SUCCESS(Status))
       {
-         /* Attach lower level filter drivers. */
-         IopAttachFilterDrivers(DeviceNode, TRUE);
-
-         /* Initialize the function driver for the device node */
-         Status = IopInitializeDevice(DeviceNode, DriverObject);
-
-         if (NT_SUCCESS(Status))
-         {
-            /* Attach upper level filter drivers. */
-            IopAttachFilterDrivers(DeviceNode, FALSE);
-
-            Status = IopStartDevice(DeviceNode);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("IopStartDevice(%wZ) failed with status 0x%08x\n",
-                        &DeviceNode->InstancePath, Status);
-            }
-         }
-         else
-         {
-            DPRINT1("IopInitializeDevice(%wZ) failed with status 0x%08x\n",
-                    &DeviceNode->InstancePath, Status);
-         }
+          /* Initialize the device, including all filters */
+          Status = PipCallDriverAddDevice(DeviceNode, FALSE, DriverObject);
       }
       else
       {

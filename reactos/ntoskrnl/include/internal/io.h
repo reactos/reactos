@@ -509,6 +509,14 @@ typedef struct _DEVICETREE_TRAVERSE_CONTEXT
 //
 // PNP Routines
 //
+NTSTATUS
+NTAPI
+PipCallDriverAddDevice(
+    IN PDEVICE_NODE DeviceNode,
+    IN BOOLEAN LoadDriver,     
+    IN PDRIVER_OBJECT DriverObject
+);
+
 VOID
 PnpInit(
     VOID
@@ -563,6 +571,15 @@ IopFreeDeviceNode(
 );
 
 NTSTATUS
+NTAPI
+IopSynchronousCall(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    OUT PVOID *Information
+);
+
+NTSTATUS
+NTAPI
 IopInitiatePnpIrp(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIO_STATUS_BLOCK IoStatusBlock,
@@ -694,6 +711,12 @@ IoInitSystem(
 //
 // Device/Volume Routines
 //
+VOID
+NTAPI
+IopReadyDeviceObjects(
+    IN PDRIVER_OBJECT Driver
+);
+
 NTSTATUS
 FASTCALL
 IopInitializeDevice(
