@@ -517,8 +517,9 @@ PipCallDriverAddDevice(
     IN PDRIVER_OBJECT DriverObject
 );
 
-VOID
-PnpInit(
+NTSTATUS
+NTAPI
+IopInitializePlugPlayServices(
     VOID
 );
 
@@ -555,6 +556,12 @@ IopNotifyPlugPlayNotification(
 NTSTATUS
 IopGetSystemPowerDeviceObject(
     IN PDEVICE_OBJECT *DeviceObject
+);
+
+PDEVICE_NODE
+NTAPI
+PipAllocateDeviceNode(
+    IN PDEVICE_OBJECT PhysicalDeviceObject
 );
 
 NTSTATUS
@@ -644,14 +651,32 @@ IopOpenRegistryKeyEx(
 
 NTSTATUS
 NTAPI
-IopGetRegistryValue(IN HANDLE Handle,
-                    IN PWSTR ValueName,
-                    OUT PKEY_VALUE_FULL_INFORMATION *Information);
+IopGetRegistryValue(
+    IN HANDLE Handle,
+    IN PWSTR ValueName,
+    OUT PKEY_VALUE_FULL_INFORMATION *Information
+);
 
+NTSTATUS
+NTAPI
+IopCreateRegistryKeyEx(
+    OUT PHANDLE Handle,
+    IN HANDLE BaseHandle OPTIONAL,
+    IN PUNICODE_STRING KeyName,
+    IN ACCESS_MASK DesiredAccess,
+    IN ULONG CreateOptions,
+    OUT PULONG Disposition OPTIONAL
+);
 
 //
 // PnP Routines
 //
+NTSTATUS
+NTAPI
+IopUpdateRootKey(
+    VOID
+);
+
 NTSTATUS
 NTAPI
 PiInitCacheGroupInformation(
@@ -1138,6 +1163,7 @@ IopStartRamdisk(
 //
 extern POBJECT_TYPE IoCompletionType;
 extern PDEVICE_NODE IopRootDeviceNode;
+extern KSPIN_LOCK IopDeviceTreeLock;
 extern ULONG IopTraceLevel;
 extern GENERAL_LOOKASIDE IopMdlLookasideList;
 extern GENERIC_MAPPING IopCompletionMapping;
@@ -1147,6 +1173,8 @@ extern HAL_DISPATCH _HalDispatchTable;
 extern LIST_ENTRY IopErrorLogListHead;
 extern ULONG IopNumTriageDumpDataBlocks;
 extern PVOID IopTriageDumpDataBlocks[64];
+extern PIO_BUS_TYPE_GUID_LIST PnpBusTypeGuidList;
+extern PDRIVER_OBJECT IopRootDriverObject;
 
 //
 // Inlined Functions

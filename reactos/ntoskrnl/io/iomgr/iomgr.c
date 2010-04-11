@@ -488,10 +488,7 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     if (!IopCreateRootDirectories()) return FALSE;
 
     /* Initialize PnP manager */
-    PnpInit();
-    
-    /* Setup the group cache */
-    if (!NT_SUCCESS(PiInitCacheGroupInformation())) return FALSE;
+    IopInitializePlugPlayServices();
 
     /* Load boot start drivers */
     IopInitializeBootDrivers();

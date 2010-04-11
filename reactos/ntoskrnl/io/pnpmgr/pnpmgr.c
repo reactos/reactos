@@ -29,8 +29,7 @@ extern BOOLEAN PnpSystemInit;
 /* DATA **********************************************************************/
 
 PDRIVER_OBJECT IopRootDriverObject;
-FAST_MUTEX IopBusTypeGuidListLock;
-PIO_BUS_TYPE_GUID_LIST IopBusTypeGuidList = NULL;
+PIO_BUS_TYPE_GUID_LIST PnpBusTypeGuidList = NULL;
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, PnpInit)
@@ -340,14 +339,14 @@ IopGetBusTypeGuidIndex(LPGUID BusTypeGuid)
    PVOID NewList;
 
    /* Acquire the lock */
-   ExAcquireFastMutex(&IopBusTypeGuidListLock);
+   ExAcquireFastMutex(&PnpBusTypeGuidList->Lock);
 
    /* Loop all entries */
-   while (i < IopBusTypeGuidList->GuidCount)
+   while (i < PnpBusTypeGuidList->GuidCount)
    {
        /* Try to find a match */
        if (RtlCompareMemory(BusTypeGuid,
-                            &IopBusTypeGuidList->Guids[i],
+                            &PnpBusTypeGuidList->Guids[i],
                             sizeof(GUID)) == sizeof(GUID))
        {
            /* Found it */
@@ -358,43 +357,43 @@ IopGetBusTypeGuidIndex(LPGUID BusTypeGuid)
    }
 
    /* Check if we have to grow the list */
-   if (IopBusTypeGuidList->GuidCount)
+   if (PnpBusTypeGuidList->GuidCount)
    {
        /* Calculate the new size */
        NewSize = sizeof(IO_BUS_TYPE_GUID_LIST) +
-                (sizeof(GUID) * IopBusTypeGuidList->GuidCount);
+                (sizeof(GUID) * PnpBusTypeGuidList->GuidCount);
 
        /* Allocate the new copy */
        NewList = ExAllocatePool(PagedPool, NewSize);
 
        if (!NewList) {
 	   /* Fail */
-	   ExFreePool(IopBusTypeGuidList);
+	   ExFreePool(PnpBusTypeGuidList);
 	   goto Quickie;
        }
 
        /* Now copy them, decrease the size too */
        NewSize -= sizeof(GUID);
-       RtlCopyMemory(NewList, IopBusTypeGuidList, NewSize);
+       RtlCopyMemory(NewList, PnpBusTypeGuidList, NewSize);
 
        /* Free the old list */
-       ExFreePool(IopBusTypeGuidList);
+       ExFreePool(PnpBusTypeGuidList);
 
        /* Use the new buffer */
-       IopBusTypeGuidList = NewList;
+       PnpBusTypeGuidList = NewList;
    }
 
    /* Copy the new GUID */
-   RtlCopyMemory(&IopBusTypeGuidList->Guids[IopBusTypeGuidList->GuidCount],
+   RtlCopyMemory(&PnpBusTypeGuidList->Guids[PnpBusTypeGuidList->GuidCount],
                  BusTypeGuid,
                  sizeof(GUID));
 
    /* The new entry is the index */
-   FoundIndex = (USHORT)IopBusTypeGuidList->GuidCount;
-   IopBusTypeGuidList->GuidCount++;
+   FoundIndex = (USHORT)PnpBusTypeGuidList->GuidCount;
+   PnpBusTypeGuidList->GuidCount++;
 
 Quickie:
-   ExReleaseFastMutex(&IopBusTypeGuidListLock);
+   ExReleaseFastMutex(&PnpBusTypeGuidList->Lock);
    return FoundIndex;
 }
 
@@ -1671,7 +1670,7 @@ IopCreateResourceListFromRequirements(
    {
       PIO_RESOURCE_LIST ResList = &RequirementsList->List[i];
       Size += FIELD_OFFSET(CM_FULL_RESOURCE_DESCRIPTOR, PartialResourceList.PartialDescriptors)
-            + ResList->Count * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+        + ResList->Count * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
    }
 
    *ResourceList = ExAllocatePool(PagedPool, Size);
@@ -1821,8 +1820,8 @@ IopAssignDeviceResources(
       for (i = 0; i < DeviceNode->BootResources->Count; i++)
       {
          pPartialResourceList = &DeviceNode->BootResources->List[i].PartialResourceList;
-         Size += FIELD_OFFSET(CM_FULL_RESOURCE_DESCRIPTOR, PartialResourceList.PartialDescriptors)
-            + pPartialResourceList->Count * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+         Size += FIELD_OFFSET(CM_FULL_RESOURCE_DESCRIPTOR, PartialResourceList.PartialDescriptors) +
+                 pPartialResourceList->Count * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
          for (j = 0; j < pPartialResourceList->Count; j++)
          {
             if (pPartialResourceList->PartialDescriptors[j].Type == CmResourceTypeDeviceSpecific)
@@ -1865,8 +1864,8 @@ IopAssignDeviceResources(
    for (i = 0; i < DeviceNode->ResourceList->Count; i++)
    {
       pPartialResourceList = &DeviceNode->ResourceList->List[i].PartialResourceList;
-      Size += FIELD_OFFSET(CM_FULL_RESOURCE_DESCRIPTOR, PartialResourceList.PartialDescriptors)
-          + pPartialResourceList->Count * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+      Size += FIELD_OFFSET(CM_FULL_RESOURCE_DESCRIPTOR, PartialResourceList.PartialDescriptors) +
+              pPartialResourceList->Count * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
    }
 
    Status = IopDetectResourceConflict(DeviceNode->ResourceList, FALSE, NULL);
@@ -3153,7 +3152,7 @@ IopEnumerateDetectedDevices(
             BootResourcesLength = pValueInformation->DataLength;
          else
             BootResourcesLength = ParentBootResourcesLength
-               + pValueInformation->DataLength
+            + pValueInformation->DataLength
                - Header;
          BootResources = ExAllocatePool(PagedPool, BootResourcesLength);
          if (!BootResources)
@@ -3585,7 +3584,8 @@ cleanup:
 #endif
 }
 
-static NTSTATUS INIT_FUNCTION
+NTSTATUS
+NTAPI
 IopUpdateRootKey(VOID)
 {
    UNICODE_STRING EnumU = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Enum");
@@ -3694,6 +3694,131 @@ IopOpenRegistryKeyEx(PHANDLE KeyHandle,
 
 NTSTATUS
 NTAPI
+IopCreateRegistryKeyEx(OUT PHANDLE Handle,
+                       IN HANDLE RootHandle OPTIONAL,
+                       IN PUNICODE_STRING KeyName,
+                       IN ACCESS_MASK DesiredAccess,
+                       IN ULONG CreateOptions,
+                       OUT PULONG Disposition OPTIONAL)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    ULONG KeyDisposition, RootHandleIndex = 0, i = 1, NestedCloseLevel = 0, Length;
+    HANDLE HandleArray[2];
+    BOOLEAN Recursing = TRUE;
+    PWCHAR pp, p, p1;
+    UNICODE_STRING KeyString;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PAGED_CODE();
+    
+    /* P1 is start, pp is end */
+    p1 = KeyName->Buffer;
+    pp = (PVOID)((ULONG_PTR)p1 + KeyName->Length);
+    
+    /* Create the target key */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               KeyName,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               RootHandle,
+                               NULL);
+    Status = ZwCreateKey(&HandleArray[i],
+                         DesiredAccess,
+                         &ObjectAttributes,
+                         0,
+                         NULL,
+                         CreateOptions,
+                         &KeyDisposition);
+
+    /* Now we check if this failed */
+    if ((Status == STATUS_OBJECT_NAME_NOT_FOUND) && (RootHandle))
+    {
+        /* Target key failed, so we'll need to create its parent. Setup array */
+        HandleArray[0] = NULL;
+        HandleArray[1] = RootHandle;
+        
+        /* Keep recursing for each missing parent */
+        while (Recursing)
+        {
+            /* And if we're deep enough, close the last handle */
+            if (NestedCloseLevel > 1) ZwClose(HandleArray[RootHandleIndex]);
+ 
+            /* We're setup to ping-pong between the two handle array entries */
+            RootHandleIndex = i;
+            i = (i + 1) & 1;
+            
+            /* Clear the one we're attempting to open now */
+            HandleArray[i] = NULL;
+            
+            /* Process the parent key name */
+            for (p = p1; ((p < pp) && (*p != OBJ_NAME_PATH_SEPARATOR)); p++);
+            Length = (p - p1) * sizeof(WCHAR);
+            
+            /* Is there a parent name? */
+            if (Length)
+            {
+                /* Build the unicode string for it */
+                KeyString.Buffer = p1;
+                KeyString.Length = KeyString.MaximumLength = Length;
+                
+                /* Now try opening the parent */
+                InitializeObjectAttributes(&ObjectAttributes,
+                                           &KeyString,
+                                           OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                                           HandleArray[RootHandleIndex],
+                                           NULL);
+                Status = ZwCreateKey(&HandleArray[i],
+                                     DesiredAccess,
+                                     &ObjectAttributes,
+                                     0,
+                                     NULL,
+                                     CreateOptions,
+                                     &KeyDisposition);
+                if (NT_SUCCESS(Status))
+                {
+                    /* It worked, we have one more handle */
+                    NestedCloseLevel++;
+                }
+                else
+                {
+                    /* Parent key creation failed, abandon loop */
+                    Recursing = FALSE;
+                    continue;
+                }
+            }
+            else
+            {
+                /* We don't have a parent name, probably corrupted key name */
+                Status = STATUS_INVALID_PARAMETER;
+                Recursing = FALSE;
+                continue;
+            }
+            
+            /* Now see if there's more parents to create */
+            p1 = p + 1;
+            if ((p == pp) || (p1 == pp))
+            {
+                /* We're done, hopefully successfully, so stop */
+                Recursing = FALSE;
+            }
+        }
+        
+        /* Outer loop check for handle nesting that requires closing the top handle */
+        if (NestedCloseLevel > 1) ZwClose(HandleArray[RootHandleIndex]);
+    }
+    
+    /* Check if we broke out of the loop due to success */
+    if (NT_SUCCESS(Status))
+    {
+        /* Return the target handle (we closed all the parent ones) and disposition */
+        *Handle = HandleArray[i];
+        if (Disposition) *Disposition = KeyDisposition;
+    }
+    
+    /* Return the success state */
+    return Status;
+}
+
+NTSTATUS
+NTAPI
 IopGetRegistryValue(IN HANDLE Handle,
                     IN PWSTR ValueName,
                     OUT PKEY_VALUE_FULL_INFORMATION *Information)
@@ -3735,95 +3860,6 @@ IopGetRegistryValue(IN HANDLE Handle,
 
     *Information = FullInformation;
     return STATUS_SUCCESS;
-}
-
-static NTSTATUS INIT_FUNCTION
-NTAPI
-PnpDriverInitializeEmpty(IN struct _DRIVER_OBJECT *DriverObject, IN PUNICODE_STRING RegistryPath)
-{
-   return STATUS_SUCCESS;
-}
-
-VOID INIT_FUNCTION
-PnpInit(VOID)
-{
-    PDEVICE_OBJECT Pdo;
-    NTSTATUS Status;
-
-    DPRINT("PnpInit()\n");
-
-    KeInitializeSpinLock(&IopDeviceTreeLock);
-	ExInitializeFastMutex(&IopBusTypeGuidListLock);
-	
-    /* Initialize the Bus Type GUID List */
-    IopBusTypeGuidList = ExAllocatePool(NonPagedPool, sizeof(IO_BUS_TYPE_GUID_LIST));
-    if (!IopBusTypeGuidList) {
-	DPRINT1("ExAllocatePool() failed\n");
-	KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, STATUS_NO_MEMORY, 0, 0, 0);
-    }
-
-    RtlZeroMemory(IopBusTypeGuidList, sizeof(IO_BUS_TYPE_GUID_LIST));
-    ExInitializeFastMutex(&IopBusTypeGuidList->Lock);
-
-    /* Initialize PnP-Event notification support */
-    Status = IopInitPlugPlayEvents();
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("IopInitPlugPlayEvents() failed\n");
-        KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
-    }
-
-    /*
-    * Create root device node
-    */
-
-    Status = IopCreateDriver(NULL, PnpDriverInitializeEmpty, NULL, 0, 0, &IopRootDriverObject);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("IoCreateDriverObject() failed\n");
-        KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
-    }
-
-    Status = IoCreateDevice(IopRootDriverObject, 0, NULL, FILE_DEVICE_CONTROLLER,
-        0, FALSE, &Pdo);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("IoCreateDevice() failed\n");
-        KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
-    }
-
-    Status = IopCreateDeviceNode(NULL, Pdo, NULL, &IopRootDeviceNode);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Insufficient resources\n");
-        KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
-    }
-
-    if (!RtlCreateUnicodeString(&IopRootDeviceNode->InstancePath,
-        L"HTREE\\ROOT\\0"))
-    {
-        DPRINT1("Failed to create the instance path!\n");
-        KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, STATUS_NO_MEMORY, 0, 0, 0);
-    }
-
-    /* Report the device to the user-mode pnp manager */
-    IopQueueTargetDeviceEvent(&GUID_DEVICE_ARRIVAL,
-        &IopRootDeviceNode->InstancePath);
-
-    IopRootDeviceNode->PhysicalDeviceObject->Flags |= DO_BUS_ENUMERATED_DEVICE;
-    PnpRootDriverEntry(IopRootDriverObject, NULL);
-    IopRootDeviceNode->PhysicalDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
-    IopRootDriverObject->DriverExtension->AddDevice(
-        IopRootDriverObject,
-        IopRootDeviceNode->PhysicalDeviceObject);
-
-    /* Move information about devices detected by Freeloader to SYSTEM\CurrentControlSet\Root\ */
-    Status = IopUpdateRootKey();
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("IopUpdateRootKey() failed\n");
-        KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
-    }
 }
 
 RTL_GENERIC_COMPARE_RESULTS
@@ -3913,6 +3949,49 @@ PpInitSystem(VOID)
     }
 }
 
+LONG IopNumberDeviceNodes;
+
+PDEVICE_NODE
+NTAPI
+PipAllocateDeviceNode(IN PDEVICE_OBJECT PhysicalDeviceObject)
+{
+    PDEVICE_NODE DeviceNode;
+    PAGED_CODE();
+    
+    /* Allocate it */
+    DeviceNode = ExAllocatePoolWithTag(NonPagedPool, sizeof(DEVICE_NODE), 'donD');
+    if (!DeviceNode) return DeviceNode;
+    
+    /* Statistics */
+    InterlockedIncrement(&IopNumberDeviceNodes);
+    
+    /* Set it up */
+    RtlZeroMemory(DeviceNode, sizeof(DEVICE_NODE));
+    DeviceNode->InterfaceType = InterfaceTypeUndefined;
+    DeviceNode->BusNumber = -1;
+    DeviceNode->ChildInterfaceType = InterfaceTypeUndefined;
+    DeviceNode->ChildBusNumber = -1;
+    DeviceNode->ChildBusTypeIndex = -1;
+//    KeInitializeEvent(&DeviceNode->EnumerationMutex, SynchronizationEvent, TRUE);
+    InitializeListHead(&DeviceNode->DeviceArbiterList);
+    InitializeListHead(&DeviceNode->DeviceTranslatorList);
+    InitializeListHead(&DeviceNode->TargetDeviceNotify);
+    InitializeListHead(&DeviceNode->DockInfo.ListEntry);
+    InitializeListHead(&DeviceNode->PendedSetInterfaceState);
+    
+    /* Check if there is a PDO */
+    if (PhysicalDeviceObject)
+    {
+        /* Link it and remove the init flag */
+        DeviceNode->PhysicalDeviceObject = PhysicalDeviceObject;
+        ((PEXTENDED_DEVOBJ_EXTENSION)PhysicalDeviceObject->DeviceObjectExtension)->DeviceNode = DeviceNode;
+        PhysicalDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
+    }
+    
+    /* Return the node */
+    return DeviceNode;
+}
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*
@@ -3953,7 +4032,7 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
     case DevicePropertyBusTypeGuid:
         /* Sanity check */
         if ((DeviceNode->ChildBusTypeIndex != 0xFFFF) &&
-            (DeviceNode->ChildBusTypeIndex < IopBusTypeGuidList->GuidCount))
+            (DeviceNode->ChildBusTypeIndex < PnpBusTypeGuidList->GuidCount))
         {
             /* Return the GUID */
             *ResultLength = sizeof(GUID);
@@ -3966,7 +4045,7 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
 
             /* Copy the GUID */
             RtlCopyMemory(PropertyBuffer,
-                &(IopBusTypeGuidList->Guids[DeviceNode->ChildBusTypeIndex]),
+                &(PnpBusTypeGuidList->Guids[DeviceNode->ChildBusTypeIndex]),
                 sizeof(GUID));
             return STATUS_SUCCESS;
         }

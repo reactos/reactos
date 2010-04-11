@@ -1185,6 +1185,8 @@ PnpRootDriverEntry(
 {
     DPRINT("PnpRootDriverEntry(%p %wZ)\n", DriverObject, RegistryPath);
 
+    IopRootDriverObject = DriverObject;
+    
     DriverObject->DriverExtension->AddDevice = PnpRootAddDevice;
 
     DriverObject->MajorFunction[IRP_MJ_PNP] = PnpRootPnpControl;
