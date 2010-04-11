@@ -526,7 +526,7 @@ KsDiscardEvent(
     {
         /* release object */
         ObDereferenceObject(EventEntry->Object);
-}
+    }
 
     /* free event entry */
     ExFreePool(EventEntry);
@@ -608,7 +608,7 @@ KsGenerateEvent(
     {
         /* signal event */
         KeSetEvent(EntryEvent->Object, EntryEvent->Reserved, FALSE);
-}
+    }
     else if (EntryEvent->NotificationType == KSEVENTF_SEMAPHORE_HANDLE || EntryEvent->NotificationType == KSEVENTF_SEMAPHORE_OBJECT)
     {
         /* release semaphore */
