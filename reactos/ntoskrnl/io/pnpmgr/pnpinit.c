@@ -323,7 +323,6 @@ PipCallDriverAddDevice(IN PDEVICE_NODE DeviceNode,
     if (NT_SUCCESS(Status))
     {
         IopAttachFilterDrivers(DeviceNode, FALSE);
-        IopDeviceNodeSetFlag(DeviceNode, DNF_STARTED);
         Status = IopStartDevice(DeviceNode);
     }
     
