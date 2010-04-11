@@ -5,6 +5,10 @@
 	<include base="notifyhook">.</include>
 	<define name="_NOTIFYHOOK_IMPL" />
 	<library>user32</library>
+	<if property="ARCH" value="amd64">
+		<!-- Gross hack to work around broken autoexport -->
+		<define name="dllexport">aligned(1)</define>
+	</if>	
 	<file>notifyhook.c</file>
 	<file>notifyhook.rc</file>
 </module>
