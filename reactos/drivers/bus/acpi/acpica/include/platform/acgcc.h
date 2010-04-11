@@ -134,33 +134,6 @@
  */
 #define ACPI_UNUSED_VAR __attribute__ ((unused))
 
-#if defined (_AMD64_)
-
-#define COMPILER_DEPENDENT_INT64   long long int
-#define COMPILER_DEPENDENT_UINT64  unsigned long long int
-
-// FIXME: These are only sonly stubs to make it compile
-
-#define ACPI_ACQUIRE_GLOBAL_LOCK(GLptr, Acq) \
-	do { \
-		int dummy; \
-		asm("1:     movl (%1),%%eax;" \
-			"movl   %%eax,%%edx;" \
-			:"=a"(Acq),"=c"(dummy):"c"(GLptr),"i"(~1L):"dx"); \
-	} while(0)
-
-#define ACPI_RELEASE_GLOBAL_LOCK(GLptr, Acq) \
-	do { \
-		int dummy; \
-		asm("1:     movl (%1),%%eax;" \
-			"movl   %%eax,%%edx;" \
-			:"=a"(Acq),"=c"(dummy):"c"(GLptr),"i"(~3L):"dx"); \
-	} while(0)
-
-/*! [End] no source code translation !*/
-
-#else /* DO IA32 */
-
 #define COMPILER_DEPENDENT_INT64   long long int
 #define COMPILER_DEPENDENT_UINT64  unsigned long long int
 
@@ -190,9 +163,6 @@
 			"andl   $0x1,%%eax" \
 			:"=a"(Acq),"=c"(dummy):"c"(GLptr),"i"(~3L):"dx"); \
 	} while(0)
-
-#endif /* IA 32 */
-
 
 #define ACPI_DIV_64_BY_32(n_hi, n_lo, d32, q32, r32) \
 {                           \
