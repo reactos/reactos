@@ -138,6 +138,114 @@ IopInitializeDevice(PDEVICE_NODE DeviceNode,
    return STATUS_SUCCESS;
 }
 
+VOID
+NTAPI
+IopStartDevice2(IN PDEVICE_OBJECT DeviceObject)
+{
+    IO_STACK_LOCATION Stack;
+    PDEVICE_NODE DeviceNode;
+    NTSTATUS Status;
+    PVOID Dummy;
+    
+    /* Get the device node */
+    DeviceNode = IopGetDeviceNode(DeviceObject);
+    
+    /* Build the I/O stack locaiton */
+    RtlZeroMemory(&Stack, sizeof(IO_STACK_LOCATION));
+    Stack.MajorFunction = IRP_MJ_PNP;
+    Stack.MinorFunction = IRP_MN_START_DEVICE;
+    
+    /* Check if we didn't already report the resources */
+   // if (!DeviceNode->Flags & DNF_RESOURCE_REPORTED)
+    {
+        /* Report them */
+        if (DeviceNode->Flags & DNF_RESOURCE_REPORTED)
+        {
+            DPRINT1("Warning: Setting resource pointers even though DNF_RESOURCE_REPORTED is set\n");
+        }
+        Stack.Parameters.StartDevice.AllocatedResources =
+            DeviceNode->ResourceList;
+        Stack.Parameters.StartDevice.AllocatedResourcesTranslated =
+            DeviceNode->ResourceListTranslated;
+    }
+    
+    /* I don't think we set this flag yet */
+    ASSERT(!(DeviceNode->Flags & DNF_STOPPED));
+    
+    /* Do the call */
+    Status = IopSynchronousCall(DeviceObject, &Stack, &Dummy);
+    if (!NT_SUCCESS(Status))
+    {
+        /* FIXME: TODO */
+        DPRINT1("Warning: PnP Start failed\n");
+        //ASSERT(FALSE);
+        return;
+    }
+    
+    /* Otherwise, mark us as started */
+    DeviceNode->Flags |= DNF_STARTED;
+    
+    /* We now need enumeration */
+    DeviceNode->Flags |= DNF_NEED_ENUMERATION_ONLY;
+}
+
+NTSTATUS
+NTAPI
+IopStartAndEnumerateDevice(IN PDEVICE_NODE DeviceNode)
+{
+    PDEVICE_OBJECT DeviceObject;
+    NTSTATUS Status;
+    PAGED_CODE();
+    
+    /* Sanity check */
+  //  ASSERT((DeviceNode->Flags & DNF_ADDED));
+    if (!(DeviceNode->Flags & DNF_ADDED)) DPRINT1("Warning: Starting a device node without DNF_ADDED\n");
+    ASSERT((DeviceNode->Flags & (DNF_RESOURCE_ASSIGNED |
+                                 DNF_RESOURCE_REPORTED |
+                                 DNF_NO_RESOURCE_REQUIRED |
+                                 DNF_NO_RESOURCE_REQUIRED)));
+    ASSERT((!(DeviceNode->Flags & (DNF_HAS_PROBLEM |
+                                   DNF_STARTED |
+                                   DNF_START_REQUEST_PENDING))));
+           
+    /* Get the device object */
+    DeviceObject = DeviceNode->PhysicalDeviceObject;
+    
+    /* Check if we're not started yet */
+    //if (!DeviceNode->Flags & DNF_STARTED)
+    {
+        /* Start us */
+        IopStartDevice2(DeviceObject);
+    }
+    
+    /* Do we need to query IDs? This happens in the case of manual reporting */
+    //if (DeviceNode->Flags & DNF_NEED_QUERY_IDS)
+    //{
+     //   DPRINT1("Warning: Device node has DNF_NEED_QUERY_IDS\n");
+        /* And that case shouldn't happen yet */
+       // ASSERT(FALSE);
+    //}
+    
+    /* Make sure we're started, and check if we need enumeration */
+    if ((DeviceNode->Flags & DNF_STARTED) &&
+        (DeviceNode->Flags & DNF_NEED_ENUMERATION_ONLY))
+    {
+        /* Enumerate us */
+        //Status = IopEnumerateDevice(DeviceObject);
+        IoSynchronousInvalidateDeviceRelations(DeviceObject, BusRelations);
+        IopDeviceNodeClearFlag(DeviceNode, DNF_NEED_ENUMERATION_ONLY);
+        Status = STATUS_SUCCESS;
+    }
+    else
+    {
+        /* Nothing to do */
+        Status = STATUS_SUCCESS;
+    }
+    
+    /* Return */
+    return Status;
+}
+
 NTSTATUS
 IopStartDevice(
    PDEVICE_NODE DeviceNode)
@@ -195,47 +303,16 @@ IopStartDevice(
    if (!NT_SUCCESS(Status))
        goto ByeBye;
 
-   DPRINT("Sending IRP_MN_START_DEVICE to driver\n");
-   Stack.Parameters.StartDevice.AllocatedResources = DeviceNode->ResourceList;
-   Stack.Parameters.StartDevice.AllocatedResourcesTranslated = DeviceNode->ResourceListTranslated;
+   /* New PnP ABI */
+   IopStartAndEnumerateDevice(DeviceNode);
 
-   /*
-    * Windows NT Drivers receive IRP_MN_START_DEVICE in a critical region and
-    * actually _depend_ on this!. This is because NT will lock the Device Node
-    * with an ERESOURCE, which of course requires APCs to be disabled.
-    */
-   KeEnterCriticalRegion();
-
-   Status = IopInitiatePnpIrp(
-      DeviceNode->PhysicalDeviceObject,
-      &IoStatusBlock,
-      IRP_MN_START_DEVICE,
-      &Stack);
-
-   KeLeaveCriticalRegion();
-
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT1("IRP_MN_START_DEVICE failed for %wZ\n", &DeviceNode->InstancePath);
-      IopDeviceNodeClearFlag(DeviceNode, DNF_NEED_ENUMERATION_ONLY);
-      goto ByeBye;
-   }
-   else
-   {
-      if (IopDeviceNodeHasFlag(DeviceNode, DNF_NEED_ENUMERATION_ONLY))
-      {
-         DPRINT("Device needs enumeration, invalidating bus relations\n");
-         /* Invalidate device relations synchronously
-            (otherwise there will be dirty read of DeviceNode) */
-         IopEnumerateDevice(DeviceNode->PhysicalDeviceObject);
-         IopDeviceNodeClearFlag(DeviceNode, DNF_NEED_ENUMERATION_ONLY);
-      }
-   }
-
+   /* FIX: Should be done in new device instance code */
    Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, 0, &InstanceHandle);
    if (!NT_SUCCESS(Status))
        goto ByeBye;
 
+   /* FIX: Should be done in IoXxxPrepareDriverLoading */
+   // {
    RtlInitUnicodeString(&KeyName, L"Control");
    InitializeObjectAttributes(&ObjectAttributes,
                               &KeyName,
@@ -248,7 +325,9 @@ IopStartDevice(
 
    RtlInitUnicodeString(&KeyName, L"ActiveService");
    Status = ZwSetValueKey(ControlHandle, &KeyName, 0, REG_SZ, DeviceNode->ServiceName.Buffer, DeviceNode->ServiceName.Length);
-
+   // }
+   
+   /* FIX: Should be done somewhere in resoure code? */
    if (NT_SUCCESS(Status) && DeviceNode->ResourceList)
    {
        RtlInitUnicodeString(&KeyName, L"AllocConfig");
