@@ -145,33 +145,31 @@ HalpMapPhysicalMemory64(IN PHYSICAL_ADDRESS PhysicalAddress,
 
     /* Start at the current HAL heap base */
     BaseAddress = HalpHeapStart;
+    VirtualAddress = BaseAddress;
 
     /* Loop until we have all the pages required */
     while (UsedPages < PageCount)
     {
-        /* Begin a new loop cycle */
-        UsedPages = 0;
-        VirtualAddress = BaseAddress;
-
         /* If this overflows past the HAL heap, it means there's no space */
-        if (BaseAddress == NULL) return NULL;
+        if (VirtualAddress == NULL) return NULL;
 
-        /* Loop until we have all the pages required in a single run */
-        while (UsedPages < PageCount)
+        /* Get the PTE for this address */
+        PointerPte = HalAddressToPte(VirtualAddress);
+
+        /* Go to the next page */
+        VirtualAddress = (PVOID)((ULONG_PTR)VirtualAddress + PAGE_SIZE);
+
+        /* Check if the page is available */
+        if (PointerPte->Valid)
         {
-            /* Get the PTE for this address and check if it's available */
-            PointerPte = HalAddressToPte(VirtualAddress);
-            if (*(PULONG)PointerPte)
-            {
-                /* PTE has data, skip it and start with a new base address */
-                BaseAddress = (PVOID)((ULONG_PTR)VirtualAddress + PAGE_SIZE);
-                break;
-            }
-         
-            /* PTE is available, keep going on this run */
-            VirtualAddress = (PVOID)((ULONG_PTR)VirtualAddress + PAGE_SIZE);
-            UsedPages++;
+            /* PTE has data, skip it and start with a new base address */
+            BaseAddress = VirtualAddress;
+            UsedPages = 0;
+            continue;
         }
+
+        /* PTE is available, keep going on this run */
+        UsedPages++;
     }
 
     /* Take the base address of the page plus the actual offset in the address */
