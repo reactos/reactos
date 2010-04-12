@@ -752,6 +752,8 @@ BEGIN
 	IDS_FONTS                   "Skrifttyper"
 	IDS_INSTALLNEWFONT          "Installere nye skrifttyper..."
 
-        IDS_DEFAULT_CLUSTER_SIZE    "Standard tildelingsstørrelse"
+	IDS_DEFAULT_CLUSTER_SIZE    "Standard tildelingsstørrelse"
 	IDS_COPY_OF                 "Copy of"
+    
+	IDS_SHLEXEC_NOASSOC         "Intet Windows-program er satt opp til å åpne denne filtypen."
 END

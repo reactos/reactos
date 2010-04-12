@@ -752,4 +752,6 @@ BEGIN
 
 	IDS_DEFAULT_CLUSTER_SIZE    "Dimensione predefinita di allocazione"
 	IDS_COPY_OF                 "Copia di"
+
+	IDS_SHLEXEC_NOASSOC         "There is no Windows program configured to open this type of file."
 END

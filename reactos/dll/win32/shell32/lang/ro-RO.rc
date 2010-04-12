@@ -753,6 +753,8 @@ BEGIN
 	IDS_INSTALLNEWFONT          "Instalare font nou..."
 
 	IDS_DEFAULT_CLUSTER_SIZE    "Mărime de alocare implicită"
+
+	IDS_SHLEXEC_NOASSOC         "There is no Windows program configured to open this type of file."
 END
 
 #pragma code_page(default)

@@ -755,4 +755,6 @@ BEGIN
 
 	IDS_DEFAULT_CLUSTER_SIZE    "Standardgröße"
 	IDS_COPY_OF                 "Kopie von"
+
+    IDS_SHLEXEC_NOASSOC         "Es ist kein Programm mit diesem Dateityp verknüpft."
 END
