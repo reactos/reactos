@@ -106,8 +106,6 @@ DC_InitHack(PDC pdc)
     GdiSelectVisRgn(pdc->BaseObject.hHmgr, hVisRgn);
     GreDeleteObject(hVisRgn);
     ASSERT(pdc->prgnVis);
-    pdc->rosdc.bitsPerPixel = pdc->ppdev->gdiinfo.cBitsPixel *
-                              pdc->ppdev->gdiinfo.cPlanes;
 }
 
 VOID
