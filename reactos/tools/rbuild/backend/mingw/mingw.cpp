@@ -483,11 +483,8 @@ MingwBackend::GenerateGlobalVariables () const
 
 		fprintf ( fMakefile, "PROJECT_CXXLIBS := \"$(shell ${TARGET_CPP} -print-file-name=libsupc++.a)\" \"$(shell ${TARGET_CPP} -print-file-name=libstdc++.a)\" \"$(shell ${TARGET_CPP} -print-libgcc-file-name)\" \"$(shell ${TARGET_CPP} -print-file-name=libmingw32.a)\" \"$(shell ${TARGET_CPP} -print-file-name=libmingwex.a)\" " );
 		
-		/* hack to get libgcc_eh.a, should check mingw version or something */
-		if (Environment::GetArch() == "amd64")
-			fprintf ( fMakefile, " \"$(shell ${TARGET_CPP} -print-file-name=libgcc_eh.a)\"" );
 		/* hack to get _get_output_format, needed by libmingwex */
-		else if (Environment::GetArch() == "i386")
+		if (Environment::GetArch() == "i386")
 			fprintf ( fMakefile, "\"$(shell ${TARGET_CPP} -print-file-name=ofmt_stub.a)\"");
 		fprintf ( fMakefile,"\n");
 	}
