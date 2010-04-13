@@ -529,6 +529,8 @@ result_timeout_worker( PVOID Context )
 {
     struct message_result *result = Context;
 
+    UserEnterExclusive();
+
     assert( !result->replied );
 
     result->timeout = NULL;
@@ -547,11 +549,13 @@ result_timeout_worker( PVOID Context )
         if (!result->sender)
         {
             free_result( result );
+            UserLeave();
             return;
         }
     }
 
     store_message_result( result, 0, STATUS_TIMEOUT );
+    UserLeave();
 }
 
 /* message timed out without getting a reply */
@@ -1060,6 +1064,8 @@ timer_callback_worker( PVOID Context )
     struct msg_queue *queue = Context;
     struct list *ptr;
 
+    UserEnterExclusive();
+
     /* Free workitem */
     ExFreePool(queue->work_item);
 
@@ -1069,6 +1075,8 @@ timer_callback_worker( PVOID Context )
     list_remove( ptr );
     list_add_tail( &queue->expired_timers, ptr );
     set_next_timer( queue );
+
+    UserLeave();
 }
 
 static
