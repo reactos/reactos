@@ -1,0 +1,117 @@
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{88D9BED7-30C5-4683-A6C6-6F2EB55B8F26}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>SysGen.RBuild.Framework</RootNamespace>
+    <AssemblyName>SysGen.RBuild.Framework</AssemblyName>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>2.0</OldToolsVersion>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Collections\RBuildModuleInfoCollection.cs" />
+    <Compile Include="Collections\RBuildDebugChannelCollection.cs" />
+    <Compile Include="Collections\RBuildFolderCollection.cs" />
+    <Compile Include="Collections\RBuildPlatformFileCollection.cs" />
+    <Compile Include="Collections\RBuildExportedFunctionsCollection.cs" />
+    <Compile Include="Collections\RBuildBuildFamilyCollection.cs" />
+    <Compile Include="Collections\RBuildFamilyCollection.cs" />
+    <Compile Include="Collections\RBuildAPIStatusCollection.cs" />
+    <Compile Include="Collections\RBuildPropertyCollection.cs" />
+    <Compile Include="Collections\RBuildInstallFolderCollection.cs" />
+    <Compile Include="Collections\RBuildAuthorCollection.cs" />
+    <Compile Include="Collections\RBuildContributorCollection.cs" />
+    <Compile Include="Collections\RBuildLanguageCollection.cs" />
+    <Compile Include="Collections\RBuildLocalizationFileCollection.cs" />
+    <Compile Include="Collections\RBuildSourceFileCollection.cs" />
+    <Compile Include="Collections\RBuildDefineCollection.cs" />
+    <Compile Include="Collections\RBuildIncludeFolderCollection.cs" />
+    <Compile Include="Collections\RBuildFileCollection.cs" />
+    <Compile Include="Collections\RBuildModuleCollection.cs" />
+    <Compile Include="RBuildDebugChannel.cs" />
+    <Compile Include="Interfaces\IRBuildInstallable.cs" />
+    <Compile Include="RBuildInfInstallerFile.cs" />
+    <Compile Include="RBuildModuleGroup.cs" />
+    <Compile Include="RBuildModuleInfo.cs" />
+    <Compile Include="RBuildSetup.cs" />
+    <Compile Include="RBuildSetupFile.cs" />
+    <Compile Include="RBuildCDFileBase.cs" />
+    <Compile Include="RBuildPlatform.cs" />
+    <Compile Include="RBuildUnAttendSetup.cs" />
+    <Compile Include="Interfaces\IRBuildModulesContainer.cs" />
+    <Compile Include="NotImplementedYet\RBuildPatch.cs" />
+    <Compile Include="NotImplementedYet\RBuildModuleGroup.cs" />
+    <Compile Include="RBuildExportFunction.cs" />
+    <Compile Include="Interfaces\IRBuildNamed.cs" />
+    <Compile Include="RBuildBuildFamily.cs" />
+    <Compile Include="RBuildFamily.cs" />
+    <Compile Include="RBuildAPIInfo.cs" />
+    <Compile Include="RBuildSolution.cs" />
+    <Compile Include="RBuildProperty.cs" />
+    <Compile Include="RBuildInstallFolder.cs" />
+    <Compile Include="RBuildContributor.cs" />
+    <Compile Include="RBuildAuthor.cs" />
+    <Compile Include="RBuildLocalizationFile.cs" />
+    <Compile Include="RBuildMetadata.cs" />
+    <Compile Include="RBuildPlatformFile.cs" />
+    <Compile Include="Interfaces\IRBuildSourceFilesContainer.cs" />
+    <Compile Include="RBuildBootstrapFile.cs" />
+    <Compile Include="RBuildTarget.cs" />
+    <Compile Include="RBuildCompilationUnit.cs" />
+    <Compile Include="RBuildAutoRegister.cs" />
+    <Compile Include="RBuildInstallFile.cs" />
+    <Compile Include="RBuildCDFile.cs" />
+    <Compile Include="Obsolete\PlatformCatalog.cs" />
+    <Compile Include="Base\RBuildElement.cs" />
+    <Compile Include="RBuildFile.cs" />
+    <Compile Include="RBuildImportLibrary.cs" />
+    <Compile Include="RBuildProject.cs" />
+    <Compile Include="Obsolete\RosArchitecture.cs" />
+    <Compile Include="RBuildModule.cs" />
+    <Compile Include="RBuildLanguage.cs" />
+    <Compile Include="Obsolete\RosOSImage.cs" />
+    <Compile Include="Obsolete\RosPlatform.cs" />
+    <Compile Include="RBuildRegistryKey.cs" />
+    <Compile Include="Obsolete\SoftwareCatalog.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Misc\Utility.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

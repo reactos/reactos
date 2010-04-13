@@ -1,0 +1,41 @@
+		   Copyright 1999-2004, SIL International
+			    All rights reserved.
+
+    This library is free software; you can redistribute it and/or modify
+    it under the terms of either:
+
+	a) the Common Public License as published by the "Agreement
+         Steward" for that license (currently IBM); either version 0.5
+         of the License, or (at your option) any later version,
+
+    or 
+
+	b) the GNU Lesser General Public License as published by the 
+         Free Software Foundation; either version 2.1 of License, or
+         (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See either
+    the Common Public License or the GNU Lesser General Public License 
+    for more details.
+
+    You should have received a plain text copy of the Common Public License
+    Version 0.5 with this distribution in the file named "License_CPLv05.txt".
+    That text came from http://www.opensource.org/licenses/cpl.html. The 
+    initial "Agreement Steward" for the CPL displays currently the license at
+    http://www-124.ibm.com/developerworks/oss/license-cpl.html. 
+
+    You should also have received a copy of the GNU Lesser General Public
+    License along with this library in the file named "License_LGPLv21.txt".
+    If not, write to the Free Software Foundation, Inc., 59 Temple Place, 
+    Suite 330, Boston, MA 02111-1307, USA or visit their web page on the 
+    internet at http://www.fsf.org/licenses/lgpl.html.
+
+    The GNU General Public License to which the GNU Lesser General Public 
+    License refers can be found at http://www.gnu.org/copyleft/gpl.html. 
+    For convenient reference, a text version has been included with this 
+    distribution in the file named "License_GPLv2.txt".  All of the licenses 
+    mentioned above can also be found at http://www.opensource.org/licenses/.
+
+--------------------------------------------------------------------------

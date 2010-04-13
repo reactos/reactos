@@ -1,0 +1,66 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TriStateTreeView", "TriStateTreeView\TriStateTreeView.csproj", "{99CEE41D-B76D-4102-B0AD-C81069509D17}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SysGen.Designer", "RosBuilder\SysGen.Designer.csproj", "{78A0F196-A5BD-469A-B901-B269671AFB0A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SysGen.RBuild.Framework", "RosFramework\SysGen.RBuild.Framework.csproj", "{88D9BED7-30C5-4683-A6C6-6F2EB55B8F26}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SysGen.Framework", "SysGen.BuildEngine\SysGen.Framework.csproj", "{8F5F8375-4097-4952-B860-784EB9961ABE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SysGen.Make", "SysGen.Make\SysGen.Make.csproj", "{8B1229C7-6188-4621-A648-843CB9B5C72E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug Main NAnt BuildFile|Any CPU = Debug Main NAnt BuildFile|Any CPU
+		Debug NAnt Tests|Any CPU = Debug NAnt Tests|Any CPU
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{99CEE41D-B76D-4102-B0AD-C81069509D17}.Debug Main NAnt BuildFile|Any CPU.ActiveCfg = Debug|Any CPU
+		{99CEE41D-B76D-4102-B0AD-C81069509D17}.Debug Main NAnt BuildFile|Any CPU.Build.0 = Debug|Any CPU
+		{99CEE41D-B76D-4102-B0AD-C81069509D17}.Debug NAnt Tests|Any CPU.ActiveCfg = Debug|Any CPU
+		{99CEE41D-B76D-4102-B0AD-C81069509D17}.Debug NAnt Tests|Any CPU.Build.0 = Debug|Any CPU
+		{99CEE41D-B76D-4102-B0AD-C81069509D17}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{99CEE41D-B76D-4102-B0AD-C81069509D17}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{99CEE41D-B76D-4102-B0AD-C81069509D17}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{99CEE41D-B76D-4102-B0AD-C81069509D17}.Release|Any CPU.Build.0 = Release|Any CPU
+		{78A0F196-A5BD-469A-B901-B269671AFB0A}.Debug Main NAnt BuildFile|Any CPU.ActiveCfg = Debug|Any CPU
+		{78A0F196-A5BD-469A-B901-B269671AFB0A}.Debug Main NAnt BuildFile|Any CPU.Build.0 = Debug|Any CPU
+		{78A0F196-A5BD-469A-B901-B269671AFB0A}.Debug NAnt Tests|Any CPU.ActiveCfg = Debug|Any CPU
+		{78A0F196-A5BD-469A-B901-B269671AFB0A}.Debug NAnt Tests|Any CPU.Build.0 = Debug|Any CPU
+		{78A0F196-A5BD-469A-B901-B269671AFB0A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{78A0F196-A5BD-469A-B901-B269671AFB0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{78A0F196-A5BD-469A-B901-B269671AFB0A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{78A0F196-A5BD-469A-B901-B269671AFB0A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{88D9BED7-30C5-4683-A6C6-6F2EB55B8F26}.Debug Main NAnt BuildFile|Any CPU.ActiveCfg = Debug|Any CPU
+		{88D9BED7-30C5-4683-A6C6-6F2EB55B8F26}.Debug Main NAnt BuildFile|Any CPU.Build.0 = Debug|Any CPU
+		{88D9BED7-30C5-4683-A6C6-6F2EB55B8F26}.Debug NAnt Tests|Any CPU.ActiveCfg = Debug|Any CPU
+		{88D9BED7-30C5-4683-A6C6-6F2EB55B8F26}.Debug NAnt Tests|Any CPU.Build.0 = Debug|Any CPU
+		{88D9BED7-30C5-4683-A6C6-6F2EB55B8F26}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88D9BED7-30C5-4683-A6C6-6F2EB55B8F26}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88D9BED7-30C5-4683-A6C6-6F2EB55B8F26}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88D9BED7-30C5-4683-A6C6-6F2EB55B8F26}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8F5F8375-4097-4952-B860-784EB9961ABE}.Debug Main NAnt BuildFile|Any CPU.ActiveCfg = Debug Main NAnt BuildFile|Any CPU
+		{8F5F8375-4097-4952-B860-784EB9961ABE}.Debug Main NAnt BuildFile|Any CPU.Build.0 = Debug Main NAnt BuildFile|Any CPU
+		{8F5F8375-4097-4952-B860-784EB9961ABE}.Debug NAnt Tests|Any CPU.ActiveCfg = Debug Main NAnt BuildFile|Any CPU
+		{8F5F8375-4097-4952-B860-784EB9961ABE}.Debug NAnt Tests|Any CPU.Build.0 = Debug Main NAnt BuildFile|Any CPU
+		{8F5F8375-4097-4952-B860-784EB9961ABE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8F5F8375-4097-4952-B860-784EB9961ABE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8F5F8375-4097-4952-B860-784EB9961ABE}.Release|Any CPU.ActiveCfg = Debug Main NAnt BuildFile|Any CPU
+		{8F5F8375-4097-4952-B860-784EB9961ABE}.Release|Any CPU.Build.0 = Debug Main NAnt BuildFile|Any CPU
+		{8B1229C7-6188-4621-A648-843CB9B5C72E}.Debug Main NAnt BuildFile|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B1229C7-6188-4621-A648-843CB9B5C72E}.Debug Main NAnt BuildFile|Any CPU.Build.0 = Debug|Any CPU
+		{8B1229C7-6188-4621-A648-843CB9B5C72E}.Debug NAnt Tests|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B1229C7-6188-4621-A648-843CB9B5C72E}.Debug NAnt Tests|Any CPU.Build.0 = Debug|Any CPU
+		{8B1229C7-6188-4621-A648-843CB9B5C72E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B1229C7-6188-4621-A648-843CB9B5C72E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B1229C7-6188-4621-A648-843CB9B5C72E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B1229C7-6188-4621-A648-843CB9B5C72E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

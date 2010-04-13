@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type='text/xsl' href='_UpgradeReport_Files/UpgradeReport.xslt'?><UpgradeLog>
+<Properties><Property Name="Solution" Value="TriStateTreeViewDemo">
+</Property><Property Name="Solution File" Value="C:\SoftwarePorter\TriStateTreeView\TriStateTreeViewDemo\TriStateTreeViewDemo.sln">
+</Property><Property Name="Date" Value="Monday, August 06, 2007">
+</Property><Property Name="Time" Value="3:34:57 AM">
+</Property></Properties><Event ErrorLevel="1" Project="C:\SoftwarePorter\TriStateTreeView\TriStateTreeViewDemo\TriStateTreeViewDemo.csproj" Source="TriStateTreeViewDemo.csproj" Description="MSB2013: The project-to-project reference with GUID {99CEE41D-B76D-4102-B0AD-C81069509D17} could not be converted because a valid .SLN file containing all projects could not be found.">
+</Event><Event ErrorLevel="0" Project="TriStateTreeViewDemo" Source="TriStateTreeViewDemo.csproj" Description="Project file successfully backed up as C:\SoftwarePorter\TriStateTreeView\TriStateTreeViewDemo\Backup\TriStateTreeViewDemo.csproj">
+</Event><Event ErrorLevel="0" Project="TriStateTreeViewDemo" Source="Form1.cs" Description="File successfully backed up as C:\SoftwarePorter\TriStateTreeView\TriStateTreeViewDemo\Backup\Form1.cs">
+</Event><Event ErrorLevel="0" Project="TriStateTreeViewDemo" Source="App.ico" Description="File successfully backed up as C:\SoftwarePorter\TriStateTreeView\TriStateTreeViewDemo\Backup\App.ico">
+</Event><Event ErrorLevel="0" Project="TriStateTreeViewDemo" Source="Form1.resx" Description="File successfully backed up as C:\SoftwarePorter\TriStateTreeView\TriStateTreeViewDemo\Backup\Form1.resx">
+</Event><Event ErrorLevel="0" Project="TriStateTreeViewDemo" Source="TriStateTreeViewDemo.csproj" Description="Project converted successfully">
+</Event><Event ErrorLevel="3" Project="TriStateTreeViewDemo" Source="TriStateTreeViewDemo.csproj" Description="Converted">
+</Event><Event ErrorLevel="0" Project="TriStateTreeViewDemo" Source="TriStateTreeViewDemo.csproj" Description="Scan complete: Upgrade not required for project files.">
+</Event></UpgradeLog>
