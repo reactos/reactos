@@ -36,7 +36,6 @@
 		<compilerflag>-U_X86_</compilerflag>
 		<compilerflag>-UWIN32</compilerflag>
 		<compilerflag>-Wno-format</compilerflag>
-		<compilerflag>-fno-leading-underscore</compilerflag>
 	</group>
 
 	<group linkerset="ld">
