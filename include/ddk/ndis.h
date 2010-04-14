@@ -388,22 +388,22 @@ typedef struct _NDIS_PACKET_PRIVATE {
 } NDIS_PACKET_PRIVATE, * PNDIS_PACKET_PRIVATE;
 
 typedef struct _NDIS_PACKET {
-  NDIS_PACKET_PRIVATE  Private;
-  __GNU_EXTENSION union {
-    __GNU_EXTENSION struct {
-      UCHAR  MiniportReserved[2 * sizeof(PVOID)];
-      UCHAR  WrapperReserved[2 * sizeof(PVOID)];
-    };
-    __GNU_EXTENSION struct {
-      UCHAR  MiniportReservedEx[3 * sizeof(PVOID)];
-      UCHAR  WrapperReservedEx[sizeof(PVOID)];
-    };
-    __GNU_EXTENSION struct {
-      UCHAR  MacReserved[4 * sizeof(PVOID)];
-    };
-  };
-  ULONG_PTR  Reserved[2];
-  UCHAR  ProtocolReserved[1];
+  NDIS_PACKET_PRIVATE Private;
+  _ANONYMOUS_UNION union {
+    _ANONYMOUS_STRUCT struct {
+      UCHAR MiniportReserved[2 * sizeof(PVOID)];
+      UCHAR WrapperReserved[2 * sizeof(PVOID)];
+    } DUMMYSTRUCTNAME;
+    _ANONYMOUS_STRUCT struct {
+      UCHAR MiniportReservedEx[3 * sizeof(PVOID)];
+      UCHAR WrapperReservedEx[sizeof(PVOID)];
+    } DUMMYSTRUCTNAME;
+    _ANONYMOUS_STRUCT struct {
+      UCHAR MacReserved[4 * sizeof(PVOID)];
+    } DUMMYSTRUCTNAME;
+  } DUMMYUNIONNAME;
+  ULONG_PTR Reserved[2];
+  UCHAR ProtocolReserved[1];
 } NDIS_PACKET, *PNDIS_PACKET, **PPNDIS_PACKET;
 
 typedef enum _NDIS_CLASS_ID {
@@ -936,18 +936,6 @@ typedef struct _NDIS_TASK_IPSEC {
   } V4ESP;
 } NDIS_TASK_IPSEC, *PNDIS_TASK_IPSEC;
 
-typedef struct _NDIS_TASK_OFFLOAD {
-  ULONG  Version;
-  ULONG  Size;
-  NDIS_TASK  Task;
-  ULONG  OffsetNextTask;
-  ULONG  TaskBufferLength;
-  UCHAR  TaskBuffer[1];
-} NDIS_TASK_OFFLOAD, *PNDIS_TASK_OFFLOAD;
-
-/* NDIS_TASK_OFFLOAD_HEADER.Version constants */
-#define NDIS_TASK_OFFLOAD_VERSION 1
-
 typedef enum _NDIS_ENCAPSULATION {
   UNSPECIFIED_Encapsulation,
   NULL_Encapsulation,
@@ -966,14 +954,25 @@ typedef struct _NDIS_ENCAPSULATION_FORMAT {
   ULONG  EncapsulationHeaderSize;
 } NDIS_ENCAPSULATION_FORMAT, *PNDIS_ENCAPSULATION_FORMAT;
 
-typedef struct _NDIS_TASK_OFFLOAD_HEADER
-{
-    ULONG       Version;
-    ULONG       Size;
-    ULONG       Reserved;
-    ULONG       OffsetFirstTask;
-    NDIS_ENCAPSULATION_FORMAT  EncapsulationFormat;
+typedef struct _NDIS_TASK_OFFLOAD_HEADER {
+  ULONG Version;
+  ULONG Size;
+  ULONG Reserved;
+  ULONG OffsetFirstTask;
+  NDIS_ENCAPSULATION_FORMAT  EncapsulationFormat;
 } NDIS_TASK_OFFLOAD_HEADER, *PNDIS_TASK_OFFLOAD_HEADER;
+
+typedef struct _NDIS_TASK_OFFLOAD {
+  ULONG Version;
+  ULONG Size;
+  NDIS_TASK Task;
+  ULONG OffsetNextTask;
+  ULONG TaskBufferLength;
+  UCHAR TaskBuffer[1];
+} NDIS_TASK_OFFLOAD, *PNDIS_TASK_OFFLOAD;
+
+/* NDIS_TASK_OFFLOAD_HEADER.Version constants */
+#define NDIS_TASK_OFFLOAD_VERSION 1
 
 typedef struct _NDIS_TASK_TCP_IP_CHECKSUM {
   struct {
@@ -1572,6 +1571,8 @@ NdisAllocatePacketPool(
   IN UINT  NumberOfDescriptors,
   IN UINT  ProtocolReservedLength);
 
+#define PROTOCOL_RESERVED_SIZE_IN_PACKET (4 * sizeof(PVOID))
+
 NDISAPI
 VOID
 NTAPI
@@ -1738,6 +1739,46 @@ NdisGetFirstBufferFromPacket(
   OUT PVOID  *_FirstBufferVA,
   OUT PUINT  _FirstBufferLength,
   OUT PUINT  _TotalBufferLength);
+
+/*
+ * VOID
+ * NdisGetFirstBufferFromPacketSafe(
+ * IN PNDIS_PACKET  _Packet,
+ * OUT PNDIS_BUFFER  * _FirstBuffer,
+ * OUT PVOID  * _FirstBufferVA,
+ * OUT PUINT  _FirstBufferLength,
+ * OUT PUINT  _TotalBufferLength),
+ * IN MM_PAGE_PRIORITY _Priority)
+ */
+#define NdisGetFirstBufferFromPacketSafe(_Packet,         \
+                                     _FirstBuffer,        \
+                                     _FirstBufferVA,      \
+                                     _FirstBufferLength,  \
+                                     _TotalBufferLength,  \
+                                     _Priority)           \
+{                                                         \
+  PNDIS_BUFFER _Buffer;                                   \
+                                                          \
+  _Buffer         = (_Packet)->Private.Head;              \
+  *(_FirstBuffer) = _Buffer;                              \
+  if (_Buffer != NULL)                                    \
+    {                                                     \
+            *(_FirstBufferVA)     = MmGetSystemAddressForMdlSafe(_Buffer, _Priority);  \
+            *(_FirstBufferLength) = MmGetMdlByteCount(_Buffer);         \
+            _Buffer = _Buffer->Next;                                    \
+                  *(_TotalBufferLength) = *(_FirstBufferLength);              \
+                  while (_Buffer != NULL) {                                   \
+                    *(_TotalBufferLength) += MmGetMdlByteCount(_Buffer);      \
+                    _Buffer = _Buffer->Next;                                  \
+                  }                                                           \
+    }                             \
+  else                            \
+    {                             \
+      *(_FirstBufferVA) = 0;      \
+      *(_FirstBufferLength) = 0;  \
+      *(_TotalBufferLength) = 0;  \
+    } \
+}
 
 NDISAPI
 VOID
@@ -2972,6 +3013,13 @@ NdisAllocatePacketPoolEx(
   IN UINT  NumberOfDescriptors,
   IN UINT  NumberOfOverflowDescriptors,
   IN UINT  ProtocolReservedLength);
+
+NDISAPI
+VOID
+NTAPI
+NdisSetPacketPoolProtocolId(
+  IN NDIS_HANDLE PacketPoolHandle,
+  IN UINT ProtocolId);
 
 NDISAPI
 VOID
@@ -4781,15 +4829,15 @@ NDISAPI
 VOID
 NTAPI
 NdisMSetPeriodicTimer(
-  IN PNDIS_MINIPORT_TIMER  Timer,
-  IN UINT  MillisecondPeriod);
+  IN PNDIS_MINIPORT_TIMER Timer,
+  IN UINT MillisecondPeriod);
 
 NDISAPI
 VOID
 NTAPI
 NdisMCancelTimer(
-  IN PNDIS_MINIPORT_TIMER  Timer,
-  OUT PBOOLEAN  TimerCancelled);
+  IN PNDIS_MINIPORT_TIMER Timer,
+  OUT PBOOLEAN TimerCancelled);
 
 #if !defined(NDIS_WRAPPER)
 
