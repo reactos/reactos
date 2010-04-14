@@ -1278,6 +1278,13 @@ typedef struct _SENSE_DATA {
 #define IOCTL_SCSI_MINIPORT_NOT_QUORUM_CAPABLE  ((FILE_DEVICE_SCSI << 16) + 0x0520)
 #define IOCTL_SCSI_MINIPORT_NOT_CLUSTER_CAPABLE ((FILE_DEVICE_SCSI << 16) + 0x0521)
 
+/* READ_TOC formats */
+#define READ_TOC_FORMAT_TOC         0x00
+#define READ_TOC_FORMAT_SESSION     0x01
+#define READ_TOC_FORMAT_FULL_TOC    0x02
+#define READ_TOC_FORMAT_PMA         0x03
+#define READ_TOC_FORMAT_ATIP        0x04
+
 /* Read Capacity Data. Returned in Big Endian format */
 typedef struct _READ_CAPACITY_DATA {
   ULONG  LogicalBlockAddress;
