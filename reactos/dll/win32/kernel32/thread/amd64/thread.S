@@ -6,11 +6,11 @@
  * PROGRAMMER: Alex Ionescu (alex@relsoft.net)
  */
 
-.globl _BaseThreadStartupThunk
-.globl _BaseProcessStartThunk
+.globl BaseThreadStartupThunk
+.globl BaseProcessStartThunk
 .intel_syntax noprefix
 
-_BaseThreadStartupThunk:
+BaseThreadStartupThunk:
     
     /* Start out fresh */
     xor rbp, rbp
@@ -18,15 +18,15 @@ _BaseThreadStartupThunk:
     push rbx                  /* lpParameter */
     push rax                  /* lpStartAddress */
     push 0                    /* Return RIP */
-    jmp _BaseThreadStartup
+    jmp BaseThreadStartup
 
-_BaseProcessStartThunk:
+BaseProcessStartThunk:
 
     /* Start out fresh */
     xor rbp, rbp
     
     push rax                  /* lpStartAddress */
     push 0                    /* Return RIP */
-    jmp _BaseProcessStartup
+    jmp BaseProcessStartup
 
 /* EOF */

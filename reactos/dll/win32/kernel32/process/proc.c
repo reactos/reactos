@@ -284,7 +284,7 @@ DWORD
 WINAPI
 GetCurrentProcessId(VOID)
 {
-    return (DWORD)GetTeb()->ClientId.UniqueProcess;
+    return HandleToUlong(GetTeb()->ClientId.UniqueProcess);
 }
 
 
@@ -355,7 +355,7 @@ OpenProcess(DWORD dwDesiredAccess,
     OBJECT_ATTRIBUTES ObjectAttributes;
     CLIENT_ID ClientId;
 
-    ClientId.UniqueProcess = (HANDLE)dwProcessId;
+    ClientId.UniqueProcess = UlongToHandle(dwProcessId);
     ClientId.UniqueThread = 0;
 
     InitializeObjectAttributes(&ObjectAttributes,
@@ -559,7 +559,7 @@ BOOL
 WINAPI
 FlushInstructionCache(HANDLE hProcess,
                       LPCVOID lpBaseAddress,
-                      DWORD dwSize)
+                      SIZE_T dwSize)
 {
     NTSTATUS Status;
 

@@ -232,7 +232,7 @@ CreateRemoteThread(HANDLE hProcess,
     }
     
     /* Success */
-    if(lpThreadId) *lpThreadId = (DWORD)ClientId.UniqueThread;
+    if(lpThreadId) *lpThreadId = HandleToUlong(ClientId.UniqueThread);
 
     /* Resume it if asked */
     if (!(dwCreationFlags & CREATE_SUSPENDED))
@@ -344,7 +344,7 @@ DWORD
 WINAPI
 GetCurrentThreadId(VOID)
 {
-    return (DWORD)(NtCurrentTeb()->ClientId).UniqueThread;
+    return HandleToUlong(NtCurrentTeb()->ClientId.UniqueThread);
 }
 
 /*
@@ -754,7 +754,7 @@ GetProcessIdOfThread(HANDLE Thread)
     return 0;
   }
 
-  return (DWORD)ThreadBasic.ClientId.UniqueProcess;
+  return HandleToUlong(ThreadBasic.ClientId.UniqueProcess);
 }
 
 /*
@@ -777,7 +777,7 @@ GetThreadId(HANDLE Thread)
     return 0;
   }
 
-  return (DWORD)ThreadBasic.ClientId.UniqueThread;
+  return HandleToUlong(ThreadBasic.ClientId.UniqueThread);
 }
 
 /*

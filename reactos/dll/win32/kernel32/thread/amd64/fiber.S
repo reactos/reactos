@@ -9,9 +9,9 @@
 
 #include <ndk/asm.h>
 
-.globl _SwitchToFiber
+.globl SwitchToFiber
 .intel_syntax noprefix
 
-_SwitchToFiber:
+SwitchToFiber:
     /* FIXME: TODO */
     ret 4
