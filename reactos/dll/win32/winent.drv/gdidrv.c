@@ -229,6 +229,10 @@ BOOL CDECL RosDrv_CreateDC( HDC hdc, NTDRV_PDEVICE **pdev, LPCWSTR driver, LPCWS
     /* No font is selected */
     physDev->cache_index = -1;
 
+    /* Create a usermode clipping region (same as kernelmode one, just to reduce
+       amount of syscalls) */
+    physDev->region = CreateRectRgn( 0, 0, 0, 0 );
+
     /* Return allocated physical DC to the caller */
     *pdev = physDev;
 
@@ -262,6 +266,9 @@ BOOL CDECL RosDrv_DeleteBitmap( HBITMAP hbitmap )
 BOOL CDECL RosDrv_DeleteDC( NTDRV_PDEVICE *physDev )
 {
     BOOL res;
+
+    /* Delete usermode copy of a clipping region */
+    DeleteObject( physDev->region );
 
     /* Delete kernel DC */
     res = RosGdiDeleteDC(physDev->hKernelDC);
@@ -798,37 +805,25 @@ INT CDECL RosDrv_SetDIBitsToDevice( NTDRV_PDEVICE *physDev, INT xDest, INT yDest
 void CDECL RosDrv_SetDeviceClipping( NTDRV_PDEVICE *physDev, HRGN vis_rgn, HRGN clip_rgn )
 {
     RGNDATA *data;
-    HRGN dc_rgn;
     DWORD size;
 
     //FIXME("SetDeviceClipping hdc %x\n", physDev->hUserDC);
 
-    /* Create a dummy region (FIXME: create it once!) */
-    dc_rgn = CreateRectRgn(0,0,0,0);
-    if (!dc_rgn) return;
-
-    /* Update dcRegion to become a combined region */
-    CombineRgn( dc_rgn, vis_rgn, clip_rgn, clip_rgn ? RGN_AND : RGN_COPY );
+    /* Update dc region to become a combined region */
+    CombineRgn( physDev->region, vis_rgn, clip_rgn, clip_rgn ? RGN_AND : RGN_COPY );
 
     /* Get region data size */
-    if (!(size = GetRegionData( dc_rgn, 0, NULL )))
-    {
-        DeleteObject(dc_rgn);
+    if (!(size = GetRegionData( physDev->region, 0, NULL )))
         return;
-    }
 
     /* Allocate memory for it */
     if (!(data = HeapAlloc( GetProcessHeap(), 0, size )))
-    {
-        DeleteObject(dc_rgn);
         return;
-    }
 
     /* Get region data */
-    if (!GetRegionData( dc_rgn, size, data ))
+    if (!GetRegionData( physDev->region, size, data ))
     {
         HeapFree( GetProcessHeap(), 0, data );
-        DeleteObject(dc_rgn);
         return;
     }
 
@@ -837,7 +832,6 @@ void CDECL RosDrv_SetDeviceClipping( NTDRV_PDEVICE *physDev, HRGN vis_rgn, HRGN 
 
     /* Free memory and delete clipping region */
     HeapFree( GetProcessHeap(), 0, data );
-    DeleteObject(dc_rgn);
 }
 
 BOOL CDECL RosDrv_SetDeviceGammaRamp(NTDRV_PDEVICE *physDev, LPVOID ramp)

@@ -10,9 +10,10 @@
 
 typedef struct _NTDRV_PDEVICE
 {
-    HDC hUserDC;
-    HDC hKernelDC;
-    int cache_index; /* cache of a currently selected font */
+    HDC  hUserDC;
+    HDC  hKernelDC;
+    HRGN region;      /* Device region (visible region & clip region) */
+    int  cache_index; /* cache of a currently selected font */
 } NTDRV_PDEVICE, *PNTDRV_PDEVICE;
 
 typedef struct _ROS_DCINFO
