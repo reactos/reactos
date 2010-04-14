@@ -62,26 +62,26 @@ CompletePendingURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension)
 
     KeAcquireSpinLock(&DeviceExtension->IrpQueueLock, &oldIrql);
 
-    while(!IsListEmpty(&DeviceExtension->IrpQueue))
+    while (!IsListEmpty(&DeviceExtension->IrpQueue))
     {
         NextIrp = RemoveHeadList(&DeviceExtension->IrpQueue);
         Irp = CONTAINING_RECORD(NextIrp, IRP, Tail.Overlay.ListEntry);
 
         if (!Irp)
             break;
-
         Stack = IoGetCurrentIrpStackLocation(Irp);
         ASSERT(Stack);
 
         Urb = (PURB) Stack->Parameters.Others.Argument1;
+
         ASSERT(Urb);
 
         Information = 0;
         Status = STATUS_SUCCESS;
 
-        DPRINT1("TransferBuffer %x\n", Urb->UrbControlDescriptorRequest.TransferBuffer);
-        DPRINT1("TransferBufferLength %x\n", Urb->UrbControlDescriptorRequest.TransferBufferLength);
-        DPRINT1("UsbdDeviceHandle = %x\n", Urb->UrbHeader.UsbdDeviceHandle);
+        DPRINT("TransferBuffer %x\n", Urb->UrbControlDescriptorRequest.TransferBuffer);
+        DPRINT("TransferBufferLength %x\n", Urb->UrbControlDescriptorRequest.TransferBufferLength);
+        DPRINT("UsbdDeviceHandle = %x\n", Urb->UrbHeader.UsbdDeviceHandle);
 
         UsbDevice = Urb->UrbHeader.UsbdDeviceHandle;
         /* UsbdDeviceHandle of 0 is root hub */
@@ -97,14 +97,15 @@ CompletePendingURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension)
         {
             case URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER:
             {
-                DPRINT1("URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER:\n");
-                DPRINT1("--->TransferBufferLength %x\n",Urb->UrbBulkOrInterruptTransfer.TransferBufferLength);
-                DPRINT1("--->TransferBuffer %x\n",Urb->UrbBulkOrInterruptTransfer.TransferBuffer);
-                DPRINT1("--->PipeHandle %x\n",Urb->UrbBulkOrInterruptTransfer.PipeHandle);
-                DPRINT1("---->(PVOID)&UsbDevice->EndPointDescriptor %x\n", (PVOID)&UsbDevice->ActiveInterface->EndPoints[0]->EndPointDescriptor);
-                DPRINT1("--->TransferFlags %x\n", Urb->UrbBulkOrInterruptTransfer.TransferFlags);
-
+                DPRINT("URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER:\n");
+                DPRINT("--->TransferBufferLength %x\n",Urb->UrbBulkOrInterruptTransfer.TransferBufferLength);
+                DPRINT("--->TransferBuffer %x\n",Urb->UrbBulkOrInterruptTransfer.TransferBuffer);
+                DPRINT("--->PipeHandle %x\n",Urb->UrbBulkOrInterruptTransfer.PipeHandle);
+                DPRINT("---->(PVOID)&UsbDevice->EndPointDescriptor %x\n", (PVOID)&UsbDevice->ActiveInterface->EndPoints[0]->EndPointDescriptor);
+                DPRINT("--->TransferFlags %x\n", Urb->UrbBulkOrInterruptTransfer.TransferFlags);
+                ASSERT(Urb->UrbBulkOrInterruptTransfer.TransferBuffer != NULL);
                 RtlZeroMemory(Urb->UrbBulkOrInterruptTransfer.TransferBuffer, Urb->UrbBulkOrInterruptTransfer.TransferBufferLength);
+
                 if (UsbDevice == DeviceExtension->UsbDevices[0])
                 {
                     if (Urb->UrbBulkOrInterruptTransfer.TransferFlags & (USBD_TRANSFER_DIRECTION_IN | USBD_SHORT_TRANSFER_OK))
@@ -112,10 +113,13 @@ CompletePendingURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension)
                         LONG i;
                         for (i = 0; i < 8; i++)
                         {
+                            if (i == 0){
+                            DPRINT("PortStatus %x\n", DeviceExtension->Ports[i].PortStatus);
+                            DPRINT("PortChange %x\n", DeviceExtension->Ports[i].PortChange);}
                             if (DeviceExtension->Ports[i].PortChange)
                             {
                                 DPRINT1("Inform hub driver that port %d has changed\n", i+1);
-                                ((PUCHAR)Urb->UrbBulkOrInterruptTransfer.TransferBuffer)[0] = 1 << (i + 1);
+                                ((PUCHAR)Urb->UrbBulkOrInterruptTransfer.TransferBuffer)[0] = 1 << ((i + 1) & 7);
                             }
                         }
                     }
@@ -123,8 +127,11 @@ CompletePendingURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension)
                     {
                         Urb->UrbHeader.Status = USBD_STATUS_INVALID_PARAMETER;
                         Status = STATUS_UNSUCCESSFUL;
+                        DPRINT1("Invalid transfer flags for SCE\n");
                     }
                 }
+                else
+                    DPRINT1("Interrupt Transfer not for hub\n");
                 break;
             }
             case URB_FUNCTION_GET_STATUS_FROM_DEVICE:
@@ -132,9 +139,9 @@ CompletePendingURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension)
                 DPRINT("Get Status from Device\n");
                 DPRINT("Index : %d\n", Urb->UrbControlGetStatusRequest.Index);
 
-                /* Copied from pvdrivers */
                 if (Urb->UrbControlGetStatusRequest.Index == 0)
                 {
+                    ASSERT(Urb->UrbBulkOrInterruptTransfer.TransferBuffer != NULL);
                     *(PUSHORT)Urb->UrbControlGetStatusRequest.TransferBuffer = USB_PORT_STATUS_CONNECT | USB_PORT_STATUS_ENABLE;
                 }
                 else
@@ -142,7 +149,6 @@ CompletePendingURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension)
                     DPRINT1("Uknown identifier\n");
                     Urb->UrbHeader.Status = USBD_STATUS_INVALID_URB_FUNCTION;
                     Status = STATUS_UNSUCCESSFUL;
-                    ASSERT(FALSE);
                 }
                 break;
             }
@@ -157,7 +163,7 @@ CompletePendingURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension)
                         {
                             Urb->UrbControlDescriptorRequest.TransferBufferLength = sizeof(USB_DEVICE_DESCRIPTOR);
                         }
-
+                        ASSERT(Urb->UrbControlDescriptorRequest.TransferBuffer != NULL);
                         RtlCopyMemory(Urb->UrbControlDescriptorRequest.TransferBuffer,
                                       &UsbDevice->DeviceDescriptor,
                                       Urb->UrbControlDescriptorRequest.TransferBufferLength);
@@ -177,9 +183,10 @@ CompletePendingURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension)
                         else
                         {
                             DPRINT1("Buffer to small!!!\n");
-                            ASSERT(FALSE);
+                            //ASSERT(FALSE);
                         }
 
+                        ASSERT(Urb->UrbControlDescriptorRequest.TransferBuffer);
                         BufPtr = (PUCHAR)Urb->UrbControlDescriptorRequest.TransferBuffer;
 
                         /* Copy the Configuration Descriptor */
@@ -339,7 +346,9 @@ CompletePendingURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension)
                                 DPRINT1("Reserved!!!\n");
                             case USB_DEVICE_CLASS_HUB:
                             {
+
                                 PUSB_HUB_DESCRIPTOR UsbHubDescr = Urb->UrbControlVendorClassRequest.TransferBuffer;
+                                ASSERT(Urb->UrbControlVendorClassRequest.TransferBuffer != 0);
                                 /* FIXME: Handle more than root hub? */
                                 if(Urb->UrbControlVendorClassRequest.TransferBufferLength >= sizeof(USB_HUB_DESCRIPTOR))
                                 {
@@ -377,6 +386,7 @@ CompletePendingURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension)
 
                         if (Urb->UrbControlVendorClassRequest.Index == 1)
                         {
+                            ASSERT(Urb->UrbControlVendorClassRequest.TransferBuffer != 0);
                             ((PULONG)Urb->UrbControlVendorClassRequest.TransferBuffer)[0] = 0;
                         }
                         break;
@@ -396,7 +406,7 @@ CompletePendingURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension)
                     case USB_REQUEST_GET_STATUS:
                     {
                         DPRINT1("OTHER: USB_REQUEST_GET_STATUS for port %d\n", Urb->UrbControlVendorClassRequest.Index);
-
+                        ASSERT(Urb->UrbControlVendorClassRequest.TransferBuffer != 0);
                         ((PUSHORT)Urb->UrbControlVendorClassRequest.TransferBuffer)[0] = DeviceExtension->Ports[Urb->UrbControlVendorClassRequest.Index-1].PortStatus;
                         ((PUSHORT)Urb->UrbControlVendorClassRequest.TransferBuffer)[1] = DeviceExtension->Ports[Urb->UrbControlVendorClassRequest.Index-1].PortChange;
                         break;
@@ -487,7 +497,6 @@ CompletePendingURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension)
                     default:
                     {
                         DPRINT1("Unknown Function Class Unknown request\n");
-                        ASSERT(FALSE);
                         break;
                     }
                 }
@@ -497,12 +506,9 @@ CompletePendingURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension)
             {
                 DPRINT1("Unhandled URB %x\n", Urb->UrbHeader.Function);
                 Urb->UrbHeader.Status = USBD_STATUS_INVALID_URB_FUNCTION;
-                ASSERT(FALSE);
             }
 
         }
-
-        KeReleaseSpinLock(&DeviceExtension->IrpQueueLock, oldIrql);
 
         Irp->IoStatus.Status = Status;
         Irp->IoStatus.Information = Information;
@@ -514,10 +520,16 @@ CompletePendingURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension)
             Urb->UrbHeader.UsbdFlags = 0;
         }
 
+        KeReleaseSpinLock(&DeviceExtension->IrpQueueLock, oldIrql);
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         KeAcquireSpinLock(&DeviceExtension->IrpQueueLock, &oldIrql);
+
+        if (DeviceExtension->HaltQueue)
+            break;
     }
 
     KeReleaseSpinLock(&DeviceExtension->IrpQueueLock, oldIrql);
+    if (!DeviceExtension->HaltQueue)
+        KeSetEvent(&DeviceExtension->QueueDrainedEvent, 0, FALSE);
 }
 

@@ -11,26 +11,6 @@
 #include "usbehci.h"
 #include <stdio.h>
 
-//#include "ntstrsafe.h"
-
-VOID NTAPI
-DeviceArrivalWorkItem(PDEVICE_OBJECT DeviceObject, PVOID Context)
-{
-    PWORKITEM_DATA WorkItemData;
-    PPDO_DEVICE_EXTENSION PdoDeviceExtension;
-
-    WorkItemData = (PWORKITEM_DATA)Context;
-    PdoDeviceExtension = (PPDO_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
-
-    if (PdoDeviceExtension->CallbackRoutine)
-        PdoDeviceExtension->CallbackRoutine(PdoDeviceExtension->CallbackContext);
-    else
-        DPRINT1("PdoDeviceExtension->CallbackRoutine is NULL!\n");
-
-    IoFreeWorkItem(WorkItemData->IoWorkItem);
-    ExFreePool(WorkItemData);
-}
-
 VOID NTAPI
 EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVOID SystemArgument2)
 {
@@ -60,7 +40,6 @@ EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVO
             /* Check for port change on this port */
             if (tmp & 0x02)
             {
-                PWORKITEM_DATA WorkItemData = NULL;
                 /* Connect or Disconnect? */
                 if (tmp & 0x01)
                 {
@@ -100,17 +79,12 @@ EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVO
 
                     tmp = READ_REGISTER_ULONG((PULONG)((Base + EHCI_PORTSC) + (4 * i)));
 
-                    GetDeviceDescriptor(FdoDeviceExtension, 0, 0, FALSE);
                     PdoDeviceExtension->ChildDeviceCount++;
-                    PdoDeviceExtension->Ports[i].PortStatus |= USB_PORT_STATUS_HIGH_SPEED | USB_PORT_STATUS_CONNECT | USB_PORT_STATUS_ENABLE;
-                    WorkItemData = ExAllocatePool(NonPagedPool, sizeof(WORKITEM_DATA));
-                    if (!WorkItemData) ASSERT(FALSE);
-                    WorkItemData->IoWorkItem = IoAllocateWorkItem(PdoDeviceExtension->DeviceObject);
-                    WorkItemData->PdoDeviceExtension = PdoDeviceExtension;
-                    IoQueueWorkItem(WorkItemData->IoWorkItem,
-                                    (PIO_WORKITEM_ROUTINE)DeviceArrivalWorkItem,
-                                    DelayedWorkQueue,
-                                    WorkItemData);
+                    PdoDeviceExtension->Ports[i].PortStatus |= USB_PORT_STATUS_HIGH_SPEED | USB_PORT_STATUS_CONNECT;
+                    PdoDeviceExtension->Ports[i].PortChange |= USB_PORT_STATUS_CONNECT;
+
+                    PdoDeviceExtension->HaltQueue = FALSE;
+                    KeSetEvent(&PdoDeviceExtension->QueueDrainedEvent, 0, FALSE);
                 }
                 else
                 {
@@ -610,6 +584,10 @@ FdoQueryBusRelations(
 
     InitializeListHead(&PdoDeviceExtension->IrpQueue);
     KeInitializeSpinLock(&PdoDeviceExtension->IrpQueueLock);
+
+    KeInitializeEvent(&PdoDeviceExtension->QueueDrainedEvent, SynchronizationEvent, TRUE);
+
+    ExInitializeFastMutex(&PdoDeviceExtension->ListLock);
 
     Pdo->Flags &= ~DO_DEVICE_INITIALIZING;
 
