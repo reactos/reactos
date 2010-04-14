@@ -1,5 +1,4 @@
-/* $Id: effappdlg.c 24836 2007-02-12 03:12:56Z tkreuzer $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Display Control Panel
  * FILE:            dll/cpl/desk/effappdlg.c
