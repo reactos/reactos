@@ -586,7 +586,7 @@ BOOL FeTextOut( NTDRV_PDEVICE *physDev, INT x, INT y, UINT flags,
     BOOL retv = FALSE;
     //HDC hdc = physDev->hUserDC;
     //int textPixel, backgroundPixel;
-    //HRGN saved_region = 0;
+    HRGN saved_region = 0;
     BOOL disable_antialias = FALSE;
     AA_Type aa_type = AA_None;
     //DIBSECTION bmp;
@@ -662,12 +662,10 @@ BOOL FeTextOut( NTDRV_PDEVICE *physDev, INT x, INT y, UINT flags,
         HRGN clip_region;
 
         clip_region = CreateRectRgnIndirect( lprect );
-#if 0
         /* make a copy of the current device region */
         saved_region = CreateRectRgn( 0, 0, 0, 0 );
         CombineRgn( saved_region, physDev->region, 0, RGN_COPY );
         RosDrv_SetDeviceClipping( physDev, saved_region, clip_region );
-#endif
         DeleteObject( clip_region );
     }
 
@@ -848,10 +846,8 @@ no_image:
     if (flags & ETO_CLIPPED)
     {
         /* restore the device region */
-#if 0
         RosDrv_SetDeviceClipping( physDev, saved_region, 0 );
         DeleteObject( saved_region );
-#endif
     }
 
     retv = TRUE;

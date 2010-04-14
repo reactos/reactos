@@ -45,6 +45,7 @@ int DIB_GetBitmapInfoEx( const BITMAPINFOHEADER *header, LONG *width,
 int DIB_GetBitmapInfo( const BITMAPINFOHEADER *header, LONG *width,
                               LONG *height, WORD *bpp, WORD *compr );
 
+void CDECL RosDrv_SetDeviceClipping( NTDRV_PDEVICE *physDev, HRGN vis_rgn, HRGN clip_rgn );
 
 /* font.c */
 VOID
