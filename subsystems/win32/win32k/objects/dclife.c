@@ -117,8 +117,8 @@ DC_vInitDc(
 {
     if (dctype == DCTYPE_DIRECT)
     {
-        /* Lock ppdev */
-        EngAcquireSemaphoreShared(ppdev->hsemDevLock);
+        /* Lock ppdev exclusively */
+        EngAcquireSemaphore(ppdev->hsemDevLock);
     }
 
     /* Setup some basic fields */
@@ -161,6 +161,30 @@ DC_vInitDc(
     {
         /* Direct DCs get the surface from the PDEV */
         pdc->dclevel.pSurface = PDEVOBJ_pSurface(ppdev);
+
+        /* Maintain a list of DC attached to this device */
+        if(!pdc->dclevel.pSurface->hDC)
+            pdc->dclevel.pSurface->hDC = pdc->BaseObject.hHmgr ;
+        else
+        {
+            PDC Surf_Dc = DC_LockDc(pdc->dclevel.pSurface->hDC);
+            if(!Surf_Dc)
+            {
+                DPRINT1("Something went wrong with device DC list!\n");
+                /* Save what can be saved ... */
+                pdc->dclevel.pSurface->hDC = pdc->BaseObject.hHmgr;
+            }
+            else
+            {
+                /* Insert this one at the head of the list */
+                pdc->hdcNext = Surf_Dc->BaseObject.hHmgr;
+                /* Sanity check */
+                ASSERT(NULL == Surf_Dc->hdcPrev);
+                Surf_Dc->hdcPrev = pdc->BaseObject.hHmgr ;
+                pdc->dclevel.pSurface->hDC = pdc->BaseObject.hHmgr;
+                DC_UnlockDc(Surf_Dc);
+            }
+        }
 
         pdc->erclBounds.left = 0x7fffffff;
         pdc->erclBounds.top = 0x7fffffff;
@@ -324,8 +348,6 @@ DC_vInitDc(
 //	pdc->dclevel.pFont = LFONT_ShareLockFont(pdc->dcattr.hlfntNew);
 
     /* Other stuff */
-    pdc->hdcNext = NULL;
-    pdc->hdcPrev = NULL;
     pdc->ipfdDevMax = 0x0000ffff;
     pdc->ulCopyCount = -1;
     pdc->ptlDoBanding.x = 0;
@@ -375,9 +397,34 @@ ASSERT(pdc->rosdc.hGCClipRgn);
 
     PATH_Delete(pdc->dclevel.hPath);
 
+    if(pdc->dctype == DCTYPE_DIRECT)
+    {
+        EngAcquireSemaphore(pdc->ppdev->hsemDevLock);
+        /* Remove it from the list of DC attached to the Device */
+        PDC tmpDC = DC_LockDc(pdc->hdcNext);
+        if(tmpDC != NULL)
+        {
+            tmpDC->hdcPrev = pdc->hdcPrev ;
+            DC_UnlockDc(tmpDC);
+        }
+        tmpDC = DC_LockDc(pdc->hdcPrev);
+        if(tmpDC != NULL)
+        {
+            tmpDC->hdcNext = pdc->hdcNext ;
+            DC_UnlockDc(tmpDC);
+        }
+        /* Reassign list head if needed */
+        if(pdc->BaseObject.hHmgr == pdc->dclevel.pSurface->hDC)
+        {
+            /* Sanity check */
+            ASSERT(pdc->hdcPrev == NULL);
+            pdc->dclevel.pSurface->hDC = pdc->hdcNext;
+        }
+        EngReleaseSemaphore(pdc->ppdev->hsemDevLock) ;
+    }
+
     if(pdc->dclevel.pSurface)
         SURFACE_ShareUnlockSurface(pdc->dclevel.pSurface);
-
     PDEVOBJ_vRelease(pdc->ppdev) ;
 
     return TRUE;
