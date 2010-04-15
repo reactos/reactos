@@ -84,19 +84,17 @@ VOID
 FreeItem(
     IN PVOID Item);
 
-NTSTATUS
-NTAPI
-KspTopologyPropertyHandler(
-    IN PIRP Irp,
-    IN PKSIDENTIFIER  Request,
-    IN OUT PVOID  Data);
-
+KSDDKAPI
 NTSTATUS
 NTAPI
 KspPinPropertyHandler(
-    IN PIRP Irp,
-    IN PKSIDENTIFIER  Request,
-    IN OUT PVOID  Data);
+    IN  PIRP Irp,
+    IN  PKSPROPERTY Property,
+    IN  OUT PVOID Data,
+    IN  ULONG DescriptorsCount,
+    IN  const KSPIN_DESCRIPTOR* Descriptors,
+    IN  ULONG DescriptorSize);
+
 
 NTSTATUS
 FindMatchingCreateItem(
@@ -181,3 +179,10 @@ KspEnableEvent(
     IN  PFNKSALLOCATOR Allocator OPTIONAL,
     IN  ULONG EventItemSize OPTIONAL);
 
+NTSTATUS
+KspValidateConnectRequest(
+    IN PIRP Irp,
+    IN ULONG DescriptorsCount,
+    IN PVOID Descriptors,
+    IN ULONG DescriptorSize,
+    OUT PKSPIN_CONNECT* Connect);

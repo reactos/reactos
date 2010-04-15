@@ -32,7 +32,6 @@ typedef struct
     KSPROCESSPIN ProcessPin;
     LIST_ENTRY Entry;
 
-    IKsPinVtbl *lpVtbl;
     LONG ref;
 
     IKsFilter * Filter;
@@ -296,7 +295,7 @@ IKsPin_PinStatePropertyHandler(
 
             /* set new state */
             This->Pin.ClientState  = *NewState;
-            This->Pin.DeviceState = *NewState;
+            This->Pin.DeviceState = KSSTATE_RUN;
 
             /* check if it supported */
             Status = This->Pin.Descriptor->Dispatch->SetDeviceState(&This->Pin, *NewState, OldState);
@@ -339,8 +338,67 @@ IKsPin_PinAllocatorFramingPropertyHandler(
     IN PKSIDENTIFIER Request,
     IN OUT PVOID Data)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    PIO_STACK_LOCATION IoStack;
+    PKSIOBJECT_HEADER ObjectHeader;
+    IKsPinImpl * This;
+    ULONG Size;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    /* get current irp stack */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* sanity check */
+    ASSERT(IoStack->FileObject);
+    ASSERT(IoStack->FileObject->FsContext2);
+
+    /* get the object header */
+    ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext2;
+
+    /* locate ks pin implemention from KSPIN offset */
+    This = (IKsPinImpl*)CONTAINING_RECORD(ObjectHeader->ObjectType, IKsPinImpl, Pin);
+
+    /* setting allocator flags is not supported */
+    ASSERT(!(Request->Flags & KSPROPERTY_TYPE_SET));
+
+    /* acquire control mutex */
+    KeWaitForSingleObject(This->BasicHeader.ControlMutex, Executive, KernelMode, FALSE, NULL);
+
+    if (This->Pin.Descriptor->AllocatorFraming)
+    {
+        /* calculate size */
+        Size = FIELD_OFFSET(KSALLOCATOR_FRAMING_EX, FramingItem[0]) + This->Pin.Descriptor->AllocatorFraming->CountItems * sizeof(KS_FRAMING_ITEM);
+
+        if (IoStack->Parameters.DeviceIoControl.OutputBufferLength == 0)
+        {
+            /* no buffer */
+            Status = STATUS_BUFFER_OVERFLOW;
+        }
+        else if (Size > IoStack->Parameters.DeviceIoControl.OutputBufferLength)
+        {
+            /* buffer too small */
+            Status = STATUS_BUFFER_TOO_SMALL;
+        }
+        else
+        {
+            /* copy buffer */
+            RtlMoveMemory(Data, This->Pin.Descriptor->AllocatorFraming, Size);
+        }
+
+        /* store size */
+        Irp->IoStatus.Information = Size;
+    }
+    else
+    {
+        /* no allocator framing details */
+        Status = STATUS_NOT_FOUND;
+    }
+
+    /* release processing mutex */
+    KeReleaseMutex(This->BasicHeader.ControlMutex, FALSE);
+
+    DPRINT("IKsPin_PinAllocatorFramingPropertyHandler Status %lx\n", Status);
+
+    return Status;
 }
 
 NTSTATUS
@@ -423,17 +481,31 @@ IKsPin_fnQueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
-    IKsPinImpl * This = (IKsPinImpl*)CONTAINING_RECORD(iface, IKsPinImpl, lpVtbl);
+    NTSTATUS Status;
+    IKsPinImpl * This = (IKsPinImpl*)CONTAINING_RECORD(iface, IKsPinImpl, BasicHeader.OuterUnknown);
 
     if (IsEqualGUIDAligned(refiid, &IID_IUnknown))
     {
-        *Output = &This->lpVtbl;
+        *Output = &This->BasicHeader.OuterUnknown;
         _InterlockedIncrement(&This->ref);
         return STATUS_SUCCESS;
     }
-DPRINT("IKsPin_fnQueryInterface\n");
-    DbgBreakPoint();
-    return STATUS_UNSUCCESSFUL;
+
+
+    if (This->BasicHeader.ClientAggregate)
+    {
+         /* using client aggregate */
+         Status = This->BasicHeader.ClientAggregate->lpVtbl->QueryInterface(This->BasicHeader.ClientAggregate, refiid, Output);
+
+         if (NT_SUCCESS(Status))
+         {
+             /* client aggregate supports interface */
+             return Status;
+         }
+    }
+
+    DPRINT("IKsPin_fnQueryInterface no interface\n");
+    return STATUS_NOT_SUPPORTED;
 }
 
 ULONG
@@ -441,7 +513,7 @@ NTAPI
 IKsPin_fnAddRef(
     IKsPin * iface)
 {
-    IKsPinImpl * This = (IKsPinImpl*)CONTAINING_RECORD(iface, IKsPinImpl, lpVtbl);
+    IKsPinImpl * This = (IKsPinImpl*)CONTAINING_RECORD(iface, IKsPinImpl, BasicHeader.OuterUnknown);
 
     return InterlockedIncrement(&This->ref);
 }
@@ -451,7 +523,7 @@ NTAPI
 IKsPin_fnRelease(
     IKsPin * iface)
 {
-    IKsPinImpl * This = (IKsPinImpl*)CONTAINING_RECORD(iface, IKsPinImpl, lpVtbl);
+    IKsPinImpl * This = (IKsPinImpl*)CONTAINING_RECORD(iface, IKsPinImpl, BasicHeader.OuterUnknown);
 
     InterlockedDecrement(&This->ref);
 
@@ -645,7 +717,7 @@ IKsReferenceClock_fnQueryInterface(
 {
     IKsPinImpl * This = (IKsPinImpl*)CONTAINING_RECORD(iface, IKsPinImpl, lpVtblReferenceClock);
 
-    return IKsPin_fnQueryInterface((IKsPin*)&This->lpVtbl, refiid, Output);
+    return IKsPin_fnQueryInterface((IKsPin*)&This->BasicHeader.OuterUnknown, refiid, Output);
 }
 
 ULONG
@@ -655,7 +727,7 @@ IKsReferenceClock_fnAddRef(
 {
     IKsPinImpl * This = (IKsPinImpl*)CONTAINING_RECORD(iface, IKsPinImpl, lpVtblReferenceClock);
 
-    return IKsPin_fnAddRef((IKsPin*)&This->lpVtbl);
+    return IKsPin_fnAddRef((IKsPin*)&This->BasicHeader.OuterUnknown);
 }
 
 ULONG
@@ -665,7 +737,7 @@ IKsReferenceClock_fnRelease(
 {
     IKsPinImpl * This = (IKsPinImpl*)CONTAINING_RECORD(iface, IKsPinImpl, lpVtblReferenceClock);
 
-    return IKsPin_fnRelease((IKsPin*)&This->lpVtbl);
+    return IKsPin_fnRelease((IKsPin*)&This->BasicHeader.OuterUnknown);
 }
 
 LONGLONG
@@ -1032,7 +1104,7 @@ KsPinGetParentFilter(
 */
 NTSTATUS
 NTAPI
-  KsPinGetReferenceClockInterface(
+KsPinGetReferenceClockInterface(
     IN PKSPIN  Pin,
     OUT PIKSREFERENCECLOCK*  Interface)
 {
@@ -1045,12 +1117,8 @@ NTAPI
         *Interface = (PIKSREFERENCECLOCK)&This->lpVtblReferenceClock;
         Status = STATUS_SUCCESS;
     }
-//HACK
-        *Interface = (PIKSREFERENCECLOCK)&This->lpVtblReferenceClock;
-        Status = STATUS_SUCCESS;
 
     DPRINT("KsPinGetReferenceClockInterface Pin %p Interface %p Status %x\n", Pin, Interface, Status);
-
     return Status;
 }
 
@@ -1937,6 +2005,13 @@ IKsPin_DispatchDeviceIoControl(
     /* current irp stack */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
+    if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_READ_STREAM ||
+        IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_WRITE_STREAM)
+    {
+        /* handle ks stream packets */
+        return IKsPin_DispatchKsStream(DeviceObject, Irp, This);
+    }
+
     /* get property from input buffer */
     Property = (PKSPROPERTY)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
 
@@ -2227,10 +2302,10 @@ KspCreatePin(
 //Output Pin: KSPIN_FLAG_PROCESS_IN_RUN_STATE_ONLY
 //Input Pin: KSPIN_FLAG_FIXED_FORMAT|KSPIN_FLAG_DO_NOT_USE_STANDARD_TRANSPORT|KSPIN_FLAG_FRAMES_NOT_REQUIRED_FOR_PROCESSING
 
-
+    DPRINT("KspCreatePin Dataflow %lu\n", Descriptor->PinDescriptor.DataFlow);
+    DPRINT("KspCreatePin Communication %lu\n", Descriptor->PinDescriptor.Communication);
     if (Descriptor->AllocatorFraming)
     {
-        DPRINT("KspCreatePin Dataflow %lu\n", Descriptor->PinDescriptor.DataFlow);
         DPRINT("KspCreatePin CountItems %lu\n", Descriptor->AllocatorFraming->CountItems);
         DPRINT("KspCreatePin PinFlags %lx\n", Descriptor->AllocatorFraming->PinFlags);
         DPRINT("KspCreatePin OutputCompression RatioNumerator %lu RatioDenominator  %lu RatioConstantMargin %lu\n", Descriptor->AllocatorFraming->OutputCompression.RatioNumerator,
@@ -2262,6 +2337,27 @@ KspCreatePin(
         }
     }
 
+     for (Index = 0; Index < Descriptor->PinDescriptor.DataRangesCount; Index++)
+     {
+         UNICODE_STRING GuidString;
+         /* convert the guid to string */
+         RtlStringFromGUID(&Descriptor->PinDescriptor.DataRanges[Index]->MajorFormat, &GuidString);
+         DPRINT("Index %lu MajorFormat %S\n", Index, GuidString.Buffer);
+         RtlStringFromGUID(&Descriptor->PinDescriptor.DataRanges[Index]->SubFormat, &GuidString);
+         DPRINT("Index %lu SubFormat %S\n", Index, GuidString.Buffer);
+         RtlStringFromGUID(&Descriptor->PinDescriptor.DataRanges[Index]->Specifier, &GuidString);
+         DPRINT("Index %lu Specifier %S\n", Index, GuidString.Buffer);
+         RtlStringFromGUID(&Descriptor->PinDescriptor.DataRanges[Index]->Specifier, &GuidString);
+         DPRINT("Index %lu FormatSize %lu Flags %lu SampleSize %lu Reserved %lu KSDATAFORMAT %lu\n", Index,
+                Descriptor->PinDescriptor.DataRanges[Index]->FormatSize, Descriptor->PinDescriptor.DataRanges[Index]->Flags, Descriptor->PinDescriptor.DataRanges[Index]->SampleSize, Descriptor->PinDescriptor.DataRanges[Index]->Reserved, sizeof(KSDATAFORMAT));
+
+         if (IsEqualGUIDAligned(&Descriptor->PinDescriptor.DataRanges[Index]->SubFormat, &KSDATAFORMAT_SUBTYPE_BDA_MPEG2_TRANSPORT))
+         {
+             PKS_DATARANGE_BDA_TRANSPORT Transport = (PKS_DATARANGE_BDA_TRANSPORT)&Descriptor->PinDescriptor.DataRanges[Index];
+             DPRINT("KSDATAFORMAT_SUBTYPE_BDA_MPEG2_TRANSPORT AvgTimePerFrame %I64u ulcbPhyiscalFrame %lu ulcbPhyiscalFrameAlignment %lu ulcbPhyiscalPacket %lu\n", Transport->BdaTransportInfo.AvgTimePerFrame, Transport->BdaTransportInfo.ulcbPhyiscalFrame,
+                    Transport->BdaTransportInfo.ulcbPhyiscalFrameAlignment, Transport->BdaTransportInfo.ulcbPhyiscalPacket);
+         }
+    }
     if (!FrameSize)
     {
         /* default to 50 * 188 (MPEG2 TS packet size) */
@@ -2280,7 +2376,7 @@ KspCreatePin(
     DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     /* get ks device interface */
-    Device = (IKsDevice*)&DeviceExtension->DeviceHeader->lpVtblIKsDevice;
+    Device = (IKsDevice*)&DeviceExtension->DeviceHeader->BasicHeader.OuterUnknown;
 
     /* first allocate pin ctx */
     This = AllocateItem(NonPagedPool, sizeof(IKsPinImpl));
@@ -2304,6 +2400,7 @@ KspCreatePin(
     This->BasicHeader.KsDevice = KsDevice;
     This->BasicHeader.Type = KsObjectTypePin;
     This->BasicHeader.Parent.KsFilter = Filter->lpVtbl->GetStruct(Filter);
+    This->BasicHeader.OuterUnknown = (PUNKNOWN)&vt_IKsPin;
     InitializeListHead(&This->BasicHeader.EventList);
     KeInitializeSpinLock(&This->BasicHeader.EventListLock);
 
@@ -2318,7 +2415,6 @@ KspCreatePin(
     KeInitializeSpinLock(&This->BasicHeader.EventListLock);
 
     /* initialize pin */
-    This->lpVtbl = &vt_IKsPin;
     This->FrameSize = FrameSize;
     This->NumFrames = NumFrames;
     This->lpVtblReferenceClock = &vt_ReferenceClock;
@@ -2442,7 +2538,7 @@ KspCreatePin(
 
      /* add extra info to object header */
     This->ObjectHeader->Type = KsObjectTypePin;
-    This->ObjectHeader->Unknown = (PUNKNOWN)&This->lpVtbl;
+    This->ObjectHeader->Unknown = (PUNKNOWN)&This->BasicHeader.OuterUnknown;
     This->ObjectHeader->ObjectType = (PVOID)&This->Pin;
 
     if (!Descriptor->Dispatch || !Descriptor->Dispatch->Process)
@@ -2524,7 +2620,7 @@ KspCreatePin(
     }
 
 
-    DPRINT("KspCreatePin Status %lx\n", Status);
+    DPRINT("KspCreatePin Status %lx KsDevice %p\n", Status, KsDevice);
 
     if (!NT_SUCCESS(Status) && Status != STATUS_PENDING)
     {

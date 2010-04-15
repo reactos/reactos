@@ -283,8 +283,8 @@ DECLARE_INTERFACE_(IKsDevice, IUnknown)
 
     STDMETHOD_(NTSTATUS, GetAdapterObject)(THIS_
         IN PADAPTER_OBJECT * Object,
-        IN PULONG Unknown1,
-        IN PULONG Unknown2) PURE;
+        IN PULONG MaxMappingsByteCount,
+        IN PULONG MappingTableStride) PURE;
 
     STDMETHOD_(NTSTATUS, AddPowerEntry)(THIS_
         IN struct KSPOWER_ENTRY * Entry,

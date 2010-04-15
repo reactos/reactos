@@ -39,12 +39,19 @@ KsGetDevice(
 {
     PKSBASIC_HEADER BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)Object - sizeof(KSBASIC_HEADER));
 
-    DPRINT("KsGetDevice\n");
+    DPRINT("KsGetDevice Type %lu KsDevice %p\n", BasicHeader->Type, BasicHeader->KsDevice);
 
     ASSERT(BasicHeader->Type == KsObjectTypeFilterFactory || BasicHeader->Type == KsObjectTypeFilter || BasicHeader->Type == KsObjectTypePin);
     ASSERT(BasicHeader->KsDevice);
-    ASSERT(BasicHeader->KsDevice->Started);
+    ASSERT(BasicHeader->KsDevice->Descriptor);
+    ASSERT(BasicHeader->KsDevice->Bag);
+    ASSERT(BasicHeader->KsDevice->Context);
+    ASSERT(BasicHeader->KsDevice->FunctionalDeviceObject);
     ASSERT(BasicHeader->KsDevice->PhysicalDeviceObject);
+    ASSERT(BasicHeader->KsDevice->NextDeviceObject);
+    ASSERT(BasicHeader->KsDevice->Started);
+    ASSERT(BasicHeader->KsDevice->SystemPowerState == PowerSystemWorking);
+    ASSERT(BasicHeader->KsDevice->DevicePowerState == PowerDeviceD0);
 
     return BasicHeader->KsDevice;
 }

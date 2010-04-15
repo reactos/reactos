@@ -14,7 +14,6 @@ typedef struct
     KSBASIC_HEADER Header;
     KSFILTERFACTORY FilterFactory;
 
-    IKsFilterFactoryVtbl *lpVtbl;
     LONG ref;
     PKSIDEVICE_HEADER DeviceHeader;
     PFNKSFILTERFACTORYPOWER SleepCallback;
@@ -59,7 +58,7 @@ IKsFilterFactory_Create(
     Factory = (IKsFilterFactoryImpl*)CONTAINING_RECORD(CreateItem->Context, IKsFilterFactoryImpl, FilterFactory);
 
     /* get interface */
-    iface = (IKsFilterFactory*)&Factory->lpVtbl;
+    iface = (IKsFilterFactory*)&Factory->Header.OuterUnknown;
 
     /* create a filter instance */
     Status = KspCreateFilter(DeviceObject, Irp, iface);
@@ -84,15 +83,31 @@ IKsFilterFactory_fnQueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
-    IKsFilterFactoryImpl * This = (IKsFilterFactoryImpl*)CONTAINING_RECORD(iface, IKsFilterFactoryImpl, lpVtbl);
+    NTSTATUS Status;
+
+    IKsFilterFactoryImpl * This = (IKsFilterFactoryImpl*)CONTAINING_RECORD(iface, IKsFilterFactoryImpl, Header.OuterUnknown);
 
     if (IsEqualGUIDAligned(refiid, &IID_IUnknown))
     {
-        *Output = &This->lpVtbl;
+        *Output = &This->Header.OuterUnknown;
         _InterlockedIncrement(&This->ref);
         return STATUS_SUCCESS;
     }
-    return STATUS_UNSUCCESSFUL;
+
+    if (This->Header.ClientAggregate)
+    {
+         /* using client aggregate */
+         Status = This->Header.ClientAggregate->lpVtbl->QueryInterface(This->Header.ClientAggregate, refiid, Output);
+
+         if (NT_SUCCESS(Status))
+         {
+             /* client aggregate supports interface */
+             return Status;
+         }
+    }
+
+    DPRINT("IKsFilterFactory_fnQueryInterface no interface\n");
+    return STATUS_NOT_SUPPORTED;
 }
 
 ULONG
@@ -100,7 +115,7 @@ NTAPI
 IKsFilterFactory_fnAddRef(
     IKsFilterFactory * iface)
 {
-    IKsFilterFactoryImpl * This = (IKsFilterFactoryImpl*)CONTAINING_RECORD(iface, IKsFilterFactoryImpl, lpVtbl);
+    IKsFilterFactoryImpl * This = (IKsFilterFactoryImpl*)CONTAINING_RECORD(iface, IKsFilterFactoryImpl, Header.OuterUnknown);
 
     return InterlockedIncrement(&This->ref);
 }
@@ -110,7 +125,7 @@ NTAPI
 IKsFilterFactory_fnRelease(
     IKsFilterFactory * iface)
 {
-    IKsFilterFactoryImpl * This = (IKsFilterFactoryImpl*)CONTAINING_RECORD(iface, IKsFilterFactoryImpl, lpVtbl);
+    IKsFilterFactoryImpl * This = (IKsFilterFactoryImpl*)CONTAINING_RECORD(iface, IKsFilterFactoryImpl, Header.OuterUnknown);
 
     InterlockedDecrement(&This->ref);
 
@@ -136,7 +151,7 @@ NTAPI
 IKsFilterFactory_fnGetStruct(
     IKsFilterFactory * iface)
 {
-    IKsFilterFactoryImpl * This = (IKsFilterFactoryImpl*)CONTAINING_RECORD(iface, IKsFilterFactoryImpl, lpVtbl);
+    IKsFilterFactoryImpl * This = (IKsFilterFactoryImpl*)CONTAINING_RECORD(iface, IKsFilterFactoryImpl, Header.OuterUnknown);
 
     return &This->FilterFactory;
 }
@@ -147,7 +162,7 @@ IKsFilterFactory_fnSetDeviceClassesState(
     IKsFilterFactory * iface,
     IN BOOLEAN Enable)
 {
-    IKsFilterFactoryImpl * This = (IKsFilterFactoryImpl*)CONTAINING_RECORD(iface, IKsFilterFactoryImpl, lpVtbl);
+    IKsFilterFactoryImpl * This = (IKsFilterFactoryImpl*)CONTAINING_RECORD(iface, IKsFilterFactoryImpl, Header.OuterUnknown);
 
     return KspSetDeviceInterfacesState(&This->SymbolicLinkList, Enable);
 }
@@ -213,7 +228,7 @@ IKsFilterFactory_fnInitialize(
     BOOL FreeString = FALSE;
     IKsDevice * KsDevice;
 
-    IKsFilterFactoryImpl * This = (IKsFilterFactoryImpl*)CONTAINING_RECORD(iface, IKsFilterFactoryImpl, lpVtbl);
+    IKsFilterFactoryImpl * This = (IKsFilterFactoryImpl*)CONTAINING_RECORD(iface, IKsFilterFactoryImpl, Header.OuterUnknown);
 
     /* get device extension */
     DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -306,7 +321,7 @@ IKsFilterFactory_fnInitialize(
         if (This->FilterFactory.Bag)
         {
             /* initialize object bag */
-            KsDevice = (IKsDevice*)&DeviceExtension->DeviceHeader->lpVtblIKsDevice;
+            KsDevice = (IKsDevice*)&DeviceExtension->DeviceHeader->BasicHeader.OuterUnknown;
             KsDevice->lpVtbl->InitializeObjectBag(KsDevice, (PKSIOBJECT_BAG)This->FilterFactory.Bag, NULL);
         }
     }
@@ -357,10 +372,10 @@ KspCreateFilterFactory(
 
     /* initialize struct */
     This->ref = 1;
-    This->lpVtbl = &vt_IKsFilterFactoryVtbl;
+    This->Header.OuterUnknown = (PUNKNOWN)&vt_IKsFilterFactoryVtbl;
 
     /* map to com object */
-    Filter = (IKsFilterFactory*)&This->lpVtbl;
+    Filter = (IKsFilterFactory*)&This->Header.OuterUnknown;
 
     /* initialize filter */
     Status = Filter->lpVtbl->Initialize(Filter, DeviceObject, Descriptor, RefString, SecurityDescriptor, CreateItemFlags, SleepCallback, WakeCallback, FilterFactory);
@@ -412,7 +427,7 @@ KsFilterFactorySetDeviceClassesState(
     IKsFilterFactory * Factory;
     IKsFilterFactoryImpl * This = (IKsFilterFactoryImpl*)CONTAINING_RECORD(FilterFactory, IKsFilterFactoryImpl, FilterFactory);
 
-    Factory = (IKsFilterFactory*)&This->lpVtbl;
+    Factory = (IKsFilterFactory*)&This->Header.OuterUnknown;
     return Factory->lpVtbl->SetDeviceClassesState(Factory, NewState);
 }
 

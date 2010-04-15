@@ -61,6 +61,8 @@ typedef struct
     PRKMUTEX ControlMutex;
     LIST_ENTRY EventList;
     KSPIN_LOCK EventListLock;
+    PUNKNOWN ClientAggregate;
+    PUNKNOWN OuterUnknown;
     union
     {
         PKSDEVICE KsDevice;
@@ -87,7 +89,6 @@ typedef struct
 {
     KSBASIC_HEADER BasicHeader;
     KSDEVICE KsDevice;
-    IKsDeviceVtbl *lpVtblIKsDevice;
 
     LONG ref;
     ERESOURCE SecurityLock;
@@ -109,6 +110,8 @@ typedef struct
     LIST_ENTRY ObjectBags;
 
     PADAPTER_OBJECT AdapterObject;
+    ULONG MaxMappingsByteCount;
+    ULONG MappingTableStride;
 
 }KSIDEVICE_HEADER, *PKSIDEVICE_HEADER;
 

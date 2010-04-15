@@ -18,6 +18,7 @@
 #include "ksiface.h"
 
 #include "ksmedia.h"
+#include "bdamedia.h"
 
 #define TAG_DEVICE_HEADER 'KSDH'
 #define REG_PINFLAG_B_MANY 0x4 /* strmif.h */
@@ -45,7 +46,7 @@ DEFINE_KSPROPERTY_TABLE(PinSet) {\
 DEFINE_KSPROPERTY_TABLE(PinSet) {\
     DEFINE_KSPROPERTY_ITEM_CONNECTION_STATE(PropStateHandler, PropStateHandler),\
     DEFINE_KSPROPERTY_ITEM_CONNECTION_DATAFORMAT(PropDataFormatHandler, PropDataFormatHandler),\
-    DEFINE_KSPROPERTY_ITEM_CONNECTION_ALLOCATORFRAMING(PropAllocatorFraming)\
+    DEFINE_KSPROPERTY_ITEM_CONNECTION_ALLOCATORFRAMING_EX(PropAllocatorFraming)\
 }
 
 

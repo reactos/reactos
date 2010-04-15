@@ -1629,7 +1629,7 @@ KsAcquireDevice(
     DeviceHeader = (PKSIDEVICE_HEADER)CONTAINING_RECORD(Device, KSIDEVICE_HEADER, KsDevice);
 
     /* get device interface*/
-    KsDevice = (IKsDevice*)&DeviceHeader->lpVtblIKsDevice;
+    KsDevice = (IKsDevice*)&DeviceHeader->BasicHeader.OuterUnknown;
 
     /* acquire device mutex */
     KsDevice->lpVtbl->AcquireDevice(KsDevice);
@@ -1647,7 +1647,7 @@ KsReleaseDevice(
     PKSIDEVICE_HEADER DeviceHeader = (PKSIDEVICE_HEADER)CONTAINING_RECORD(Device, KSIDEVICE_HEADER, KsDevice);
 
     /* get device interface*/
-    KsDevice = (IKsDevice*)&DeviceHeader->lpVtblIKsDevice;
+    KsDevice = (IKsDevice*)&DeviceHeader->BasicHeader.OuterUnknown;
 
     /* release device mutex */
     KsDevice->lpVtbl->ReleaseDevice(KsDevice);
@@ -1670,7 +1670,7 @@ KsTerminateDevice(
     DeviceHeader = DeviceExtension->DeviceHeader;
 
     /* get device interface*/
-    KsDevice = (IKsDevice*)&DeviceHeader->lpVtblIKsDevice;
+    KsDevice = (IKsDevice*)&DeviceHeader->BasicHeader.OuterUnknown;
 
     /* now free device header */
     KsFreeDeviceHeader((KSDEVICE_HEADER)DeviceHeader);
@@ -1960,7 +1960,7 @@ KsDeviceGetBusData(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 void
@@ -1971,7 +1971,12 @@ KsDeviceRegisterAdapterObject(
     IN ULONG MaxMappingsByteCount,
     IN ULONG MappingTableStride)
 {
-    UNIMPLEMENTED
+    PKSIDEVICE_HEADER DeviceHeader = (PKSIDEVICE_HEADER)CONTAINING_RECORD(Device, KSIDEVICE_HEADER, KsDevice);
+
+    DeviceHeader->AdapterObject = AdapterObject;
+    DeviceHeader->MaxMappingsByteCount = MaxMappingsByteCount;
+    DeviceHeader->MappingTableStride = MappingTableStride;
+
 }
 
 /*
@@ -1984,6 +1989,7 @@ KsGetBusEnumIdentifier(
     IN PIRP Irp)
 {
     UNIMPLEMENTED
+
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -2700,8 +2706,26 @@ KsRegisterAggregatedClientUnknown(
     IN PVOID  Object,
     IN PUNKNOWN  ClientUnknown)
 {
-    UNIMPLEMENTED
-    return NULL;
+    PKSBASIC_HEADER BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)Object - sizeof(KSBASIC_HEADER));
+
+    /* sanity check */
+    ASSERT(BasicHeader->Type == KsObjectTypeDevice || BasicHeader->Type == KsObjectTypeFilterFactory || 
+           BasicHeader->Type == KsObjectTypeFilter || BasicHeader->Type == KsObjectTypePin);
+
+    if (BasicHeader->ClientAggregate)
+    {
+        /* release existing aggregate */
+        BasicHeader->ClientAggregate->lpVtbl->Release(BasicHeader->ClientAggregate);
+    }
+
+    /* increment reference count */
+    ClientUnknown->lpVtbl->AddRef(ClientUnknown);
+
+    /* store client aggregate */
+    BasicHeader->ClientAggregate = ClientUnknown;
+
+    /* return objects outer unknown */
+    return BasicHeader->OuterUnknown;
 }
 
 /*
