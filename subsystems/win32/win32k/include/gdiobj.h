@@ -34,6 +34,7 @@ extern PGDI_HANDLE_TABLE GdiHandleTable;
 typedef PVOID PGDIOBJ;
 
 typedef BOOL (INTERNAL_CALL *GDICLEANUPPROC)(PVOID ObjectBody);
+typedef VOID (INTERNAL_CALL *GDILOCKOBJPROC)(PVOID ObjectBody);
 
 /* Every GDI Object must have this standard type of header.
  * It's for thread locking. */
@@ -71,6 +72,7 @@ VOID    INTERNAL_CALL GDIOBJ_FreeObj (POBJ pObj, UCHAR ObjectType);
 BOOL    INTERNAL_CALL GDIOBJ_FreeObjByHandle (HGDIOBJ hObj, DWORD ObjectType);
 PGDIOBJ INTERNAL_CALL GDIOBJ_LockObj (HGDIOBJ hObj, DWORD ObjectType);
 PGDIOBJ INTERNAL_CALL GDIOBJ_ShareLockObj (HGDIOBJ hObj, DWORD ObjectType);
+VOID    INTERNAL_CALL GDIOBJ_LockMultipleObjs(ULONG ulCount, IN HGDIOBJ* ahObj, OUT PGDIOBJ* apObj);
 
 PVOID   INTERNAL_CALL GDI_MapHandleTable(PSECTION_OBJECT SectionObject, PEPROCESS Process);
 
@@ -87,7 +89,7 @@ BOOL FASTCALL IntGdiSetDCOwnerEx( HDC, DWORD, BOOL);
 BOOL FASTCALL IntGdiSetRegionOwner(HRGN,DWORD);
 
 /*!
- * Release GDI object. Every object locked by GDIOBJ_LockObj() must be unlocked. 
+ * Release GDI object. Every object locked by GDIOBJ_LockObj() must be unlocked.
  * You should unlock the object
  * as soon as you don't need to have access to it's data.
 

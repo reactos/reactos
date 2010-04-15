@@ -1625,6 +1625,40 @@ GDI_MapHandleTable(PSECTION_OBJECT SectionObject, PEPROCESS Process)
     return MappedView;
 }
 
+/* Locks multiple objects at a time */
+VOID
+INTERNAL_CALL
+GDIOBJ_LockMultipleObjs(ULONG ulCount,
+                        IN HGDIOBJ* ahObj,
+                        OUT PGDIOBJ* apObj)
+{
+    UINT i;
+    HGDIOBJ hTmp ;
+    BOOL unsorted = TRUE;
+    /* We bubble-sort them */
+    while(unsorted)
+    {
+        unsorted = FALSE ;
+        for(i=0; i<ulCount - 1; i++)
+        {
+            /* The greatest the first */
+            if((ULONG_PTR)ahObj[i] < (ULONG_PTR)ahObj[i+1])
+            {
+                hTmp = ahObj[i];
+                ahObj[i]=ahObj[i+1];
+                ahObj[i+1] = hTmp;
+                unsorted = TRUE ;
+            }
+        }
+    }
+    /* Then we lock them */
+    for(i=0; i<ulCount; i++)
+    {
+        apObj[i]=GDIOBJ_LockObj(ahObj[i], GDI_OBJECT_TYPE_DONTCARE);
+    }
+}
+
+
 /** PUBLIC FUNCTIONS **********************************************************/
 
 BOOL

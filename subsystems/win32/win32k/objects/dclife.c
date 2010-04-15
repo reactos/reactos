@@ -159,30 +159,52 @@ DC_vInitDc(
 
     if (dctype == DCTYPE_DIRECT)
     {
+        PDC pdcTmp;
         /* Direct DCs get the surface from the PDEV */
         pdc->dclevel.pSurface = PDEVOBJ_pSurface(ppdev);
 
         /* Maintain a list of DC attached to this device */
-        if(!pdc->dclevel.pSurface->hDC)
+        /* We must sort them so when locking them one after the other we don't risk deadlocks */
+        /* The greatest the first, as in GDIOBJ_LockMultiplObjs */
+        if((ULONG_PTR)pdc->dclevel.pSurface->hDC < (ULONG_PTR)pdc->BaseObject.hHmgr)
+        {
+            /* Insert it at the head of the list */
+            pdc->hdcNext = pdc->dclevel.pSurface->hDC ;
             pdc->dclevel.pSurface->hDC = pdc->BaseObject.hHmgr ;
+            pdcTmp = DC_LockDc(pdc->hdcNext);
+            if(pdcTmp)
+            {
+                pdcTmp->hdcPrev = pdc->BaseObject.hHmgr ;
+                DC_UnlockDc(pdcTmp);
+            }
+        }
         else
         {
-            PDC Surf_Dc = DC_LockDc(pdc->dclevel.pSurface->hDC);
-            if(!Surf_Dc)
+            HDC hdcTmp = pdc->dclevel.pSurface->hDC;
+            HDC hdcNext = NULL ;
+            HDC hdcPrev = NULL ;
+            /* Find its place */
+            while((ULONG_PTR)hdcTmp > (ULONG_PTR)pdc->BaseObject.hHmgr)
             {
-                DPRINT1("Something went wrong with device DC list!\n");
-                /* Save what can be saved ... */
-                pdc->dclevel.pSurface->hDC = pdc->BaseObject.hHmgr;
+                pdcTmp = DC_LockDc(hdcTmp);
+                hdcNext = hdcTmp ;
+                hdcPrev = pdcTmp->hdcPrev ;
+                hdcTmp = pdcTmp->hdcNext ;
+                DC_UnlockDc(pdcTmp);
             }
-            else
+            pdc->hdcPrev = hdcPrev;
+            pdc->hdcNext = hdcNext;
+            /* Insert it */
+            pdcTmp = DC_LockDc(hdcPrev);
+            ASSERT(pdcTmp) ; /* There should always be a previous */
+            pdcTmp->hdcNext = pdc->BaseObject.hHmgr ;
+            DC_UnlockDc(pdcTmp) ;
+
+            pdcTmp = DC_LockDc(hdcNext);
+            if(pdcTmp) /* Last one is NULL */
             {
-                /* Insert this one at the head of the list */
-                pdc->hdcNext = Surf_Dc->BaseObject.hHmgr;
-                /* Sanity check */
-                ASSERT(NULL == Surf_Dc->hdcPrev);
-                Surf_Dc->hdcPrev = pdc->BaseObject.hHmgr ;
-                pdc->dclevel.pSurface->hDC = pdc->BaseObject.hHmgr;
-                DC_UnlockDc(Surf_Dc);
+                pdcTmp->hdcPrev = pdc->BaseObject.hHmgr;
+                DC_UnlockDc(pdcTmp);
             }
         }
 
