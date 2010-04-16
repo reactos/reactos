@@ -117,8 +117,8 @@ DC_vInitDc(
 {
     if (dctype == DCTYPE_DIRECT)
     {
-        /* Lock ppdev exclusively */
-        EngAcquireSemaphore(ppdev->hsemDevLock);
+        /* Lock ppdev */
+        EngAcquireSemaphoreShared(ppdev->hsemDevLock);
     }
 
     /* Setup some basic fields */
@@ -159,54 +159,8 @@ DC_vInitDc(
 
     if (dctype == DCTYPE_DIRECT)
     {
-        PDC pdcTmp;
         /* Direct DCs get the surface from the PDEV */
         pdc->dclevel.pSurface = PDEVOBJ_pSurface(ppdev);
-
-        /* Maintain a list of DC attached to this device */
-        /* We must sort them so when locking them one after the other we don't risk deadlocks */
-        /* The greatest the first, as in GDIOBJ_LockMultiplObjs */
-        if((ULONG_PTR)pdc->dclevel.pSurface->hDC < (ULONG_PTR)pdc->BaseObject.hHmgr)
-        {
-            /* Insert it at the head of the list */
-            pdc->hdcNext = pdc->dclevel.pSurface->hDC ;
-            pdc->dclevel.pSurface->hDC = pdc->BaseObject.hHmgr ;
-            pdcTmp = DC_LockDc(pdc->hdcNext);
-            if(pdcTmp)
-            {
-                pdcTmp->hdcPrev = pdc->BaseObject.hHmgr ;
-                DC_UnlockDc(pdcTmp);
-            }
-        }
-        else
-        {
-            HDC hdcTmp = pdc->dclevel.pSurface->hDC;
-            HDC hdcNext = NULL ;
-            HDC hdcPrev = NULL ;
-            /* Find its place */
-            while((ULONG_PTR)hdcTmp > (ULONG_PTR)pdc->BaseObject.hHmgr)
-            {
-                pdcTmp = DC_LockDc(hdcTmp);
-                hdcNext = hdcTmp ;
-                hdcPrev = pdcTmp->hdcPrev ;
-                hdcTmp = pdcTmp->hdcNext ;
-                DC_UnlockDc(pdcTmp);
-            }
-            pdc->hdcPrev = hdcPrev;
-            pdc->hdcNext = hdcNext;
-            /* Insert it */
-            pdcTmp = DC_LockDc(hdcPrev);
-            ASSERT(pdcTmp) ; /* There should always be a previous */
-            pdcTmp->hdcNext = pdc->BaseObject.hHmgr ;
-            DC_UnlockDc(pdcTmp) ;
-
-            pdcTmp = DC_LockDc(hdcNext);
-            if(pdcTmp) /* Last one is NULL */
-            {
-                pdcTmp->hdcPrev = pdc->BaseObject.hHmgr;
-                DC_UnlockDc(pdcTmp);
-            }
-        }
 
         pdc->erclBounds.left = 0x7fffffff;
         pdc->erclBounds.top = 0x7fffffff;
@@ -370,6 +324,8 @@ DC_vInitDc(
 //	pdc->dclevel.pFont = LFONT_ShareLockFont(pdc->dcattr.hlfntNew);
 
     /* Other stuff */
+    pdc->hdcNext = NULL;
+    pdc->hdcPrev = NULL;
     pdc->ipfdDevMax = 0x0000ffff;
     pdc->ulCopyCount = -1;
     pdc->ptlDoBanding.x = 0;
@@ -419,34 +375,9 @@ ASSERT(pdc->rosdc.hGCClipRgn);
 
     PATH_Delete(pdc->dclevel.hPath);
 
-    if(pdc->dctype == DCTYPE_DIRECT)
-    {
-        EngAcquireSemaphore(pdc->ppdev->hsemDevLock);
-        /* Remove it from the list of DC attached to the Device */
-        PDC tmpDC = DC_LockDc(pdc->hdcNext);
-        if(tmpDC != NULL)
-        {
-            tmpDC->hdcPrev = pdc->hdcPrev ;
-            DC_UnlockDc(tmpDC);
-        }
-        tmpDC = DC_LockDc(pdc->hdcPrev);
-        if(tmpDC != NULL)
-        {
-            tmpDC->hdcNext = pdc->hdcNext ;
-            DC_UnlockDc(tmpDC);
-        }
-        /* Reassign list head if needed */
-        if(pdc->BaseObject.hHmgr == pdc->dclevel.pSurface->hDC)
-        {
-            /* Sanity check */
-            ASSERT(pdc->hdcPrev == NULL);
-            pdc->dclevel.pSurface->hDC = pdc->hdcNext;
-        }
-        EngReleaseSemaphore(pdc->ppdev->hsemDevLock) ;
-    }
-
     if(pdc->dclevel.pSurface)
         SURFACE_ShareUnlockSurface(pdc->dclevel.pSurface);
+
     PDEVOBJ_vRelease(pdc->ppdev) ;
 
     return TRUE;
