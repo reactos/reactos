@@ -76,7 +76,7 @@ EngTransparentBlt(SURFOBJ *psoDest,
     OutputRect.top = DestRect->bottom;
     OutputRect.bottom = DestRect->top;
   }
-    
+
   if(Clip)
   {
     if(OutputRect.left < Clip->rclBounds.left)
@@ -287,12 +287,8 @@ IntEngTransparentBlt(SURFOBJ *psoDest,
   if(psoSource != psoDest)
   {
     SURFACE_LockBitmapBits(psurfSource);
-    MouseSafetyOnDrawStart(psoSource, InputRect.left, InputRect.top,
-                           InputRect.right, InputRect.bottom);
   }
   SURFACE_LockBitmapBits(psurfDest);
-  MouseSafetyOnDrawStart(psoDest, OutputRect.left, OutputRect.top,
-                         OutputRect.right, OutputRect.bottom);
 
   if(psurfDest->flHooks & HOOK_TRANSPARENTBLT)
   {
@@ -309,11 +305,9 @@ IntEngTransparentBlt(SURFOBJ *psoDest,
                             &OutputRect, &InputRect, iTransColor, Reserved);
   }
 
-  MouseSafetyOnDrawEnd(psoDest);
   SURFACE_UnlockBitmapBits(psurfDest);
   if(psoSource != psoDest)
   {
-    MouseSafetyOnDrawEnd(psoSource);
     SURFACE_UnlockBitmapBits(psurfSource);
   }
 

@@ -307,6 +307,8 @@ NtGdiTransparentBlt(
     COLORREF TransColor)
 {
     PDC DCDest, DCSrc;
+    HDC ahDC[2];
+    PGDIOBJ apObj[2];
     RECTL rcDest, rcSrc;
     SURFACE *BitmapDest, *BitmapSrc = NULL;
     HPALETTE SourcePalette = 0, DestPalette = 0;
@@ -316,42 +318,54 @@ NtGdiTransparentBlt(
     BOOL Ret = FALSE;
     EXLATEOBJ exlo;
 
-    if(!(DCDest = DC_LockDc(hdcDst)))
+    DPRINT("Locking DCs\n");
+    ahDC[0] = hdcDst;
+    ahDC[1] = hdcSrc ;
+    GDIOBJ_LockMultipleObjs(2, ahDC, apObj);
+    DCDest = apObj[0];
+    DCSrc = apObj[1];
+
+    if ((NULL == DCDest) || (NULL == DCSrc))
     {
-        DPRINT1("Invalid destination dc handle (0x%08x) passed to NtGdiTransparentBlt\n", hdcDst);
+        DPRINT1("Invalid dc handle (dest=0x%08x, src=0x%08x) passed to NtGdiAlphaBlend\n", hdcDst, hdcSrc);
         SetLastWin32Error(ERROR_INVALID_HANDLE);
+        if(DCSrc) GDIOBJ_UnlockObjByPtr(&DCSrc->BaseObject);
+        if(DCDest) GDIOBJ_UnlockObjByPtr(&DCDest->BaseObject);
         return FALSE;
     }
-    if (DCDest->dctype == DC_TYPE_INFO)
+
+    if (DCDest->dctype == DC_TYPE_INFO || DCDest->dctype == DCTYPE_INFO)
     {
-        DC_UnlockDc(DCDest);
+        GDIOBJ_UnlockObjByPtr(&DCSrc->BaseObject);
+        GDIOBJ_UnlockObjByPtr(&DCDest->BaseObject);
         /* Yes, Windows really returns TRUE in this case */
         return TRUE;
     }
 
-    if((hdcDst != hdcSrc) && !(DCSrc = DC_LockDc(hdcSrc)))
-    {
-        DC_UnlockDc(DCDest);
-        DPRINT1("Invalid source dc handle (0x%08x) passed to NtGdiTransparentBlt\n", hdcSrc);
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
-        return FALSE;
-    }
+    rcDest.left   = xDst;
+    rcDest.top    = yDst;
+    rcDest.right  = rcDest.left + cxDst;
+    rcDest.bottom = rcDest.top + cyDst;
+    IntLPtoDP(DCDest, (LPPOINT)&rcDest, 2);
 
-    if(hdcDst == hdcSrc)
-    {
-        DCSrc = DCDest;
-    }
+    rcDest.left   += DCDest->ptlDCOrig.x;
+    rcDest.top    += DCDest->ptlDCOrig.y;
+    rcDest.right  += DCDest->ptlDCOrig.x;
+    rcDest.bottom += DCDest->ptlDCOrig.y;
 
-    if (DCSrc->dctype == DC_TYPE_INFO)
-    {
-        DC_UnlockDc(DCSrc);
-        if(hdcDst != hdcSrc)
-        {
-            DC_UnlockDc(DCDest);
-        }
-        /* Yes, Windows really returns TRUE in this case */
-        return TRUE;
-    }
+    rcSrc.left   = xSrc;
+    rcSrc.top    = ySrc;
+    rcSrc.right  = rcSrc.left + cxSrc;
+    rcSrc.bottom = rcSrc.top + cySrc;
+    IntLPtoDP(DCSrc, (LPPOINT)&rcSrc, 2);
+
+    rcSrc.left   += DCSrc->ptlDCOrig.x;
+    rcSrc.top    += DCSrc->ptlDCOrig.y;
+    rcSrc.right  += DCSrc->ptlDCOrig.x;
+    rcSrc.bottom += DCSrc->ptlDCOrig.y;
+
+    /* Prepare for blit */
+    DC_vPrepareDCsForBlit(DCDest, rcDest, DCSrc, rcSrc);
 
     BitmapDest = DCDest->dclevel.pSurface;
     if (!BitmapDest)
@@ -402,39 +416,17 @@ NtGdiTransparentBlt(
 
     EXLATEOBJ_vInitialize(&exlo, PalSourceGDI, PalDestGDI, 0, 0, 0);
 
-    rcDest.left   = xDst;
-    rcDest.top    = yDst;
-    rcDest.right  = rcDest.left + cxDst;
-    rcDest.bottom = rcDest.top + cyDst;
-    IntLPtoDP(DCDest, (LPPOINT)&rcDest, 2);
-
-    rcDest.left   += DCDest->ptlDCOrig.x;
-    rcDest.top    += DCDest->ptlDCOrig.y;
-    rcDest.right  += DCDest->ptlDCOrig.x;
-    rcDest.bottom += DCDest->ptlDCOrig.y;
-
-    rcSrc.left   = xSrc;
-    rcSrc.top    = ySrc;
-    rcSrc.right  = rcSrc.left + cxSrc;
-    rcSrc.bottom = rcSrc.top + cySrc;
-    IntLPtoDP(DCSrc, (LPPOINT)&rcSrc, 2);
-
-    rcSrc.left   += DCSrc->ptlDCOrig.x;
-    rcSrc.top    += DCSrc->ptlDCOrig.y;
-    rcSrc.right  += DCSrc->ptlDCOrig.x;
-    rcSrc.bottom += DCSrc->ptlDCOrig.y;
-
     Ret = IntEngTransparentBlt(&BitmapDest->SurfObj, &BitmapSrc->SurfObj,
         DCDest->rosdc.CombinedClip, &exlo.xlo, &rcDest, &rcSrc,
         TransparentColor, 0);
 
-done:
-    DC_UnlockDc(DCSrc);
-    if(hdcDst != hdcSrc)
-    {
-        DC_UnlockDc(DCDest);
-    }
     EXLATEOBJ_vCleanup(&exlo);
+
+done:
+    DC_vFinishBlit(DCDest, DCSrc);
+    GDIOBJ_UnlockObjByPtr(&DCDest->BaseObject);
+    GDIOBJ_UnlockObjByPtr(&DCSrc->BaseObject);
+
     return Ret;
 }
 
