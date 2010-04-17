@@ -451,6 +451,49 @@ leave:
     return ret;
 }
 
+/* Prepare a blit for up to 2 DCs */
+/* rc1 and rc2 are the rectangles where we want to draw or
+ * from where we take pixels. */
+VOID
+FASTCALL
+DC_vPrepareDCsForBlit(PDC pdc1,
+                      RECT rc1,
+                      PDC pdc2,
+                      RECT rc2)
+{
+    if(pdc1->dctype == DCTYPE_DIRECT)
+    {
+        EngAcquireSemaphore(pdc1->ppdev->hsemDevLock);
+        MouseSafetyOnDrawStart(&pdc1->dclevel.pSurface->SurfObj, rc1.left, rc1.top, rc1.right, rc1.bottom) ;
+    }
+    if(pdc2 && pdc2->dctype == DCTYPE_DIRECT)
+    {
+        EngAcquireSemaphore(pdc2->ppdev->hsemDevLock);
+        MouseSafetyOnDrawStart(&pdc2->dclevel.pSurface->SurfObj, rc2.left, rc2.top, rc2.right, rc2.bottom) ;
+    }
+}
+
+/* Finishes a blit for one or two DCs */
+VOID
+FASTCALL
+DC_vFinishBlit(PDC pdc1, PDC pdc2)
+{
+    if(pdc1->dctype == DCTYPE_DIRECT)
+    {
+        MouseSafetyOnDrawEnd(&pdc1->dclevel.pSurface->SurfObj);
+        EngReleaseSemaphore(pdc1->ppdev->hsemDevLock);
+    }
+
+    if(pdc2)
+    {
+        if(pdc2->dctype == DCTYPE_DIRECT)
+        {
+            MouseSafetyOnDrawEnd(&pdc2->dclevel.pSurface->SurfObj);
+            EngReleaseSemaphore(pdc2->ppdev->hsemDevLock);
+        }
+    }
+}
+
 HDC
 NTAPI
 GreOpenDCW(

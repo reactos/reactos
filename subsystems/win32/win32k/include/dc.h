@@ -220,6 +220,8 @@ VOID FASTCALL DC_vUpdateFillBrush(PDC pdc);
 VOID FASTCALL DC_vUpdateLineBrush(PDC pdc);
 VOID FASTCALL DC_vUpdateTextBrush(PDC pdc);
 VOID FASTCALL DC_vUpdateBackgroundBrush(PDC pdc);
+VOID FASTCALL DC_vFinishBlit(PDC pdc1, PDC pdc2);
+VOID FASTCALL DC_vPrepareDCsForBlit(PDC pdc1, RECT rc1, PDC pdc2, RECT rc2);
 
 VOID NTAPI DC_vRestoreDC(IN PDC pdc, INT iSaveLevel);
 

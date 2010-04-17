@@ -1625,39 +1625,35 @@ GDI_MapHandleTable(PSECTION_OBJECT SectionObject, PEPROCESS Process)
     return MappedView;
 }
 
-/* Locks up to 3 objects at a time */
+/* Locks 2 or 3 objects at a time */
 VOID
 INTERNAL_CALL
 GDIOBJ_LockMultipleObjs(ULONG ulCount,
                         IN HGDIOBJ* ahObj,
                         OUT PGDIOBJ* apObj)
 {
-    UINT iFirst = 0, iSecond = 0, iThird = 0;
-    UINT i ;
+    UINT auiIndices[3] = {0,1,2};
+    UINT i, tmp ;
+    BOOL bUnsorted = TRUE;
 
     /* First is greatest */
-    for(i=1; i<ulCount; i++)
+    while(bUnsorted)
     {
-        if((ULONG_PTR)ahObj[i] >= (ULONG_PTR)ahObj[iFirst])
+        bUnsorted = FALSE;
+        for(i=1; i<ulCount; i++)
         {
-            iSecond = iFirst ;
-            iFirst = i;
-            continue ;
+            if((ULONG_PTR)ahObj[auiIndices[i-1]] < (ULONG_PTR)ahObj[auiIndices[i]])
+            {
+                tmp = auiIndices[i-1];
+                auiIndices[i-1] = auiIndices[i];
+                auiIndices[i] = tmp;
+                bUnsorted = TRUE;
+            }
         }
-        if((ULONG_PTR)ahObj[i] >= (ULONG_PTR)ahObj[iSecond])
-        {
-            iSecond = i;
-            continue;
-        }
-        iThird = i;
     }
 
-    /* We consider that at least two handles were passed */
-    apObj[iFirst] = GDIOBJ_LockObj(ahObj[iFirst], GDI_OBJECT_TYPE_DONTCARE);
-    apObj[iSecond] = GDIOBJ_LockObj(ahObj[iSecond], GDI_OBJECT_TYPE_DONTCARE);
-    if(ulCount == 3)
-        apObj[iThird] = GDIOBJ_LockObj(ahObj[iThird], GDI_OBJECT_TYPE_DONTCARE);
-
+    for(i=0;i<ulCount;i++)
+        apObj[auiIndices[i]] = GDIOBJ_LockObj(ahObj[auiIndices[i]], GDI_OBJECT_TYPE_DONTCARE);
 }
 
 

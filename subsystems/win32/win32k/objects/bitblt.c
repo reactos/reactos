@@ -42,6 +42,8 @@ NtGdiAlphaBlend(
 {
     PDC DCDest;
     PDC DCSrc;
+    HDC ahDC[2];
+    PGDIOBJ apObj[2];
     SURFACE *BitmapDest, *BitmapSrc;
     RECTL DestRect, SourceRect;
     BOOL bResult;
@@ -55,43 +57,29 @@ NtGdiAlphaBlend(
         return FALSE;
     }
 
-    DCDest = DC_LockDc(hDCDest);
-    if (NULL == DCDest)
+    DPRINT("Locking DCs\n");
+    ahDC[0] = hDCDest;
+    ahDC[1] = hDCSrc ;
+    GDIOBJ_LockMultipleObjs(2, ahDC, apObj);
+    DCDest = apObj[0];
+    DCSrc = apObj[1];
+
+    if ((NULL == DCDest) || (NULL == DCSrc))
     {
-        DPRINT1("Invalid destination dc handle (0x%08x) passed to NtGdiAlphaBlend\n", hDCDest);
+        DPRINT1("Invalid dc handle (dest=0x%08x, src=0x%08x) passed to NtGdiAlphaBlend\n", hDCDest, hDCSrc);
         SetLastWin32Error(ERROR_INVALID_HANDLE);
+        if(DCSrc) GDIOBJ_UnlockObjByPtr(&DCSrc->BaseObject);
+        if(DCDest) GDIOBJ_UnlockObjByPtr(&DCDest->BaseObject);
         return FALSE;
     }
 
-    if (DCDest->dctype == DC_TYPE_INFO)
+    if (DCDest->dctype == DC_TYPE_INFO || DCDest->dctype == DCTYPE_INFO)
     {
-        DC_UnlockDc(DCDest);
+        GDIOBJ_UnlockObjByPtr(&DCSrc->BaseObject);
+        GDIOBJ_UnlockObjByPtr(&DCDest->BaseObject);
         /* Yes, Windows really returns TRUE in this case */
-        return TRUE;
-    }
-
-    if (hDCSrc != hDCDest)
-    {
-        DCSrc = DC_LockDc(hDCSrc);
-        if (NULL == DCSrc)
-        {
-            DC_UnlockDc(DCDest);
-            DPRINT1("Invalid source dc handle (0x%08x) passed to NtGdiAlphaBlend\n", hDCSrc);
-            SetLastWin32Error(ERROR_INVALID_HANDLE);
-            return FALSE;
-        }
-
-        if (DCSrc->dctype == DC_TYPE_INFO)
-        {
-            DC_UnlockDc(DCSrc);
-            DC_UnlockDc(DCDest);
-            /* Yes, Windows really returns TRUE in this case */
-            return TRUE;
-        }
-    }
-    else
-    {
-        DCSrc = DCDest;
+        bResult = TRUE;
+        goto leave;
     }
 
     DestRect.left   = XOriginDest;
@@ -121,35 +109,35 @@ NtGdiAlphaBlend(
         !SourceRect.right ||
         !SourceRect.bottom)
     {
-        if (hDCSrc != hDCDest)
-            DC_UnlockDc(DCSrc);
-        DC_UnlockDc(DCDest);
+        GDIOBJ_UnlockObjByPtr(&DCSrc->BaseObject);
+        GDIOBJ_UnlockObjByPtr(&DCDest->BaseObject);
         return TRUE;
     }
+
+    /* Prepare DCs for blit */
+    DPRINT("Preparing DCs for blit\n");
+    DC_vPrepareDCsForBlit(DCDest, DestRect, DCSrc, SourceRect);
 
     /* Determine surfaces to be used in the bitblt */
     BitmapDest = DCDest->dclevel.pSurface;
     if (!BitmapDest)
     {
-        if (hDCSrc != hDCDest)
-            DC_UnlockDc(DCSrc);
-        DC_UnlockDc(DCDest);
-        return FALSE;
+        bResult = FALSE ;
+        goto leave ;
     }
 
     BitmapSrc = DCSrc->dclevel.pSurface;
     if (!BitmapSrc)
     {
-        if (hDCSrc != hDCDest)
-            DC_UnlockDc(DCSrc);
-        DC_UnlockDc(DCDest);
-        return FALSE;
+        bResult = FALSE;
+        goto leave;
     }
 
     /* Create the XLATEOBJ. */
     EXLATEOBJ_vInitXlateFromDCs(&exlo, DCSrc, DCDest);
 
     /* Perform the alpha blend operation */
+    DPRINT("Performing the alpha Blend\n");
     bResult = IntEngAlphaBlend(&BitmapDest->SurfObj,
                                &BitmapSrc->SurfObj,
                                DCDest->rosdc.CombinedClip,
@@ -159,9 +147,11 @@ NtGdiAlphaBlend(
                                &BlendObj);
 
     EXLATEOBJ_vCleanup(&exlo);
-    DC_UnlockDc(DCDest);
-    if (hDCSrc != hDCDest)
-        DC_UnlockDc(DCSrc);
+leave :
+    DPRINT("Finishing blit\n");
+    DC_vFinishBlit(DCDest, DCSrc);
+    GDIOBJ_UnlockObjByPtr(&DCSrc->BaseObject);
+    GDIOBJ_UnlockObjByPtr(&DCDest->BaseObject);
 
     return bResult;
 }
@@ -833,8 +823,8 @@ GreStretchBltMask(
                 (BitmapMask->SurfObj.sizlBitmap.cx < WidthSrc ||
                  BitmapMask->SurfObj.sizlBitmap.cy < HeightSrc))
             {
-                DPRINT1("%dx%d mask is smaller than %dx%d bitmap\n", 
-                        BitmapMask->SurfObj.sizlBitmap.cx, BitmapMask->SurfObj.sizlBitmap.cy, 
+                DPRINT1("%dx%d mask is smaller than %dx%d bitmap\n",
+                        BitmapMask->SurfObj.sizlBitmap.cx, BitmapMask->SurfObj.sizlBitmap.cy,
                         WidthSrc, HeightSrc);
                 goto failed;
             }

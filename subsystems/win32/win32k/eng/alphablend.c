@@ -1,4 +1,4 @@
-/* 
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          GDI alpha blending functions
@@ -71,7 +71,7 @@ EngAlphaBlend(IN SURFOBJ *psoDest,
     InputRect = *SourceRect;
     if ( (InputRect.top < 0) || (InputRect.bottom < 0) ||
          (InputRect.left < 0) || (InputRect.right < 0) ||
-         InputRect.right > psoSource->sizlBitmap.cx || 
+         InputRect.right > psoSource->sizlBitmap.cx ||
          InputRect.bottom > psoSource->sizlBitmap.cy )
     {
         SetLastWin32Error(ERROR_INVALID_PARAMETER);
@@ -306,13 +306,9 @@ IntEngAlphaBlend(IN SURFOBJ *psoDest,
     }
 
     SURFACE_LockBitmapBits(psurfDest);
-    MouseSafetyOnDrawStart(psoDest, DestRect->left, DestRect->top,
-                           DestRect->right, DestRect->bottom);
 
     if (psoSource != psoDest)
         SURFACE_LockBitmapBits(psurfSource);
-    MouseSafetyOnDrawStart(psoSource, SourceRect->left, SourceRect->top,
-                           SourceRect->right, SourceRect->bottom);
 
     /* Call the driver's DrvAlphaBlend if available */
     if (psurfDest->flHooks & HOOK_ALPHABLEND)
@@ -328,10 +324,8 @@ IntEngAlphaBlend(IN SURFOBJ *psoDest,
                             DestRect, SourceRect, BlendObj);
     }
 
-    MouseSafetyOnDrawEnd(psoSource);
     if (psoSource != psoDest)
         SURFACE_UnlockBitmapBits(psurfSource);
-    MouseSafetyOnDrawEnd(psoDest);
     SURFACE_UnlockBitmapBits(psurfDest);
 
     return ret;
