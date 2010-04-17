@@ -502,9 +502,12 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
    UNICODE_STRING FullServiceName;
    UNICODE_STRING LegacyPrefix = RTL_CONSTANT_STRING(L"LEGACY_");
    UNICODE_STRING UnknownDeviceName = RTL_CONSTANT_STRING(L"UNKNOWN");
-   UNICODE_STRING KeyName, ClassName, ClassGUID;
+   UNICODE_STRING KeyName, ClassName;
    PUNICODE_STRING ServiceName1;
    ULONG LegacyValue;
+#if 0
+   UNICODE_STRING ClassGUID;
+#endif
    HANDLE InstanceHandle;
 
    DPRINT("ParentNode 0x%p PhysicalDeviceObject 0x%p ServiceName %wZ\n",
@@ -587,6 +590,7 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
 
               RtlInitUnicodeString(&ClassName, L"LegacyDriver");
               Status = ZwSetValueKey(InstanceHandle, &KeyName, 0, REG_SZ, ClassName.Buffer, ClassName.Length);
+#if 0
               if (NT_SUCCESS(Status))
               {
                   RtlInitUnicodeString(&KeyName, L"ClassGUID");
@@ -594,6 +598,7 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
                   RtlInitUnicodeString(&ClassGUID, L"{8ECC055D-047F-11D1-A537-0000F8753ED1}");
                   Status = ZwSetValueKey(InstanceHandle, &KeyName, 0, REG_SZ, ClassGUID.Buffer, ClassGUID.Length);
               }
+#endif
           }
       }
 
