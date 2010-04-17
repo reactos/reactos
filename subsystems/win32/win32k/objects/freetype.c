@@ -3187,6 +3187,9 @@ GreExtTextOutW(
         return TRUE;
     }
 
+    /* FIXME : This is ugly, but this function must be rewritten anyway */
+    DC_vPrepareDCsForBlit(dc, dc->rosdc.CombinedClip->rclBounds, NULL, DestRect);
+
     pdcattr = dc->pdcattr;
 
     if (pdcattr->ulDirty_ & DIRTY_TEXT)
@@ -3613,6 +3616,7 @@ GreExtTextOutW(
     if (TextObj != NULL)
         TEXTOBJ_UnlockText(TextObj);
 good:
+    DC_vFinishBlit(dc, NULL);
     DC_UnlockDc( dc );
 
     return TRUE;
@@ -3623,6 +3627,7 @@ fail2:
 fail:
     if (TextObj != NULL)
         TEXTOBJ_UnlockText(TextObj);
+    DC_vFinishBlit(dc, NULL);
     DC_UnlockDc(dc);
 
     return FALSE;

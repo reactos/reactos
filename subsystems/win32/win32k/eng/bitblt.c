@@ -973,8 +973,6 @@ IntEngMaskBlt(SURFOBJ *psoDest,
     psurfDest = CONTAINING_RECORD(psoDest, SURFACE, SurfObj);
 
     SURFACE_LockBitmapBits(psurfDest);
-    MouseSafetyOnDrawStart(psoDest, OutputRect.left, OutputRect.top,
-                           OutputRect.right, OutputRect.bottom);
 
     /* Dummy BitBlt to let driver know that it should flush its changes.
        This should really be done using a call to DrvSynchronizeSurface,
@@ -991,7 +989,6 @@ IntEngMaskBlt(SURFOBJ *psoDest,
                    DestRect, pptlMask, pptlMask, pbo, BrushOrigin,
                    R4_NOOP, FALSE);
 
-    MouseSafetyOnDrawEnd(psoDest);
     SURFACE_UnlockBitmapBits(psurfDest);
 
     return ret;
