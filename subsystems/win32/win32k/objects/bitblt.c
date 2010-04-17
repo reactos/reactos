@@ -78,8 +78,7 @@ NtGdiAlphaBlend(
         GDIOBJ_UnlockObjByPtr(&DCSrc->BaseObject);
         GDIOBJ_UnlockObjByPtr(&DCDest->BaseObject);
         /* Yes, Windows really returns TRUE in this case */
-        bResult = TRUE;
-        goto leave;
+        return TRUE;
     }
 
     DestRect.left   = XOriginDest;
