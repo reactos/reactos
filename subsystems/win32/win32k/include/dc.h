@@ -152,12 +152,12 @@ typedef struct _DC
 
 /* Internal functions *********************************************************/
 
-#if 0
+#if 1
 #define  DC_LockDc(hDC)  \
   ((PDC) GDIOBJ_LockObj ((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC))
 #define  DC_UnlockDc(pDC)  \
   GDIOBJ_UnlockObjByPtr ((POBJ)pDC)
-#endif
+#else
 
 VOID NTAPI EngAcquireSemaphoreShared(IN HSEMAPHORE hsem);
 
@@ -196,6 +196,7 @@ DC_UnlockDc(PDC pdc)
 
     GDIOBJ_UnlockObjByPtr(&pdc->BaseObject);
 }
+#endif
 
 
 extern PDC defaultDCstate;

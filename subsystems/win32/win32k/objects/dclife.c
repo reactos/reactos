@@ -115,11 +115,13 @@ DC_vInitDc(
     DCTYPE dctype,
     PPDEVOBJ ppdev)
 {
+#if 0
     if (dctype == DCTYPE_DIRECT)
     {
         /* Lock ppdev */
         EngAcquireSemaphoreShared(ppdev->hsemDevLock);
     }
+#endif
 
     /* Setup some basic fields */
     pdc->dctype = dctype;

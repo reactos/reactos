@@ -171,52 +171,60 @@ NtGdiBitBlt(
 {
     PDC DCDest;
     PDC DCSrc = NULL;
+    HDC ahDC[2];
+    PGDIOBJ apObj[2];
     PDC_ATTR pdcattr = NULL;
     SURFACE *BitmapDest, *BitmapSrc = NULL;
-    RECTL DestRect;
+    RECTL DestRect, SourceRect;
     POINTL SourcePoint;
     BOOL Status = FALSE;
     EXLATEOBJ exlo;
     XLATEOBJ *XlateObj = NULL;
     BOOL UsesSource = ROP3_USES_SOURCE(ROP);
 
-    DCDest = DC_LockDc(hDCDest);
+    DPRINT("Locking DCs\n");
+    ahDC[0] = hDCDest;
+    ahDC[1] = hDCSrc ;
+    GDIOBJ_LockMultipleObjs(2, ahDC, apObj);
+    DCDest = apObj[0];
+    DCSrc = apObj[1];
+
     if (NULL == DCDest)
     {
+        if(DCSrc) GDIOBJ_UnlockObjByPtr(&DCSrc->BaseObject);
         DPRINT("Invalid destination dc handle (0x%08x) passed to NtGdiBitBlt\n", hDCDest);
         return FALSE;
     }
 
     if (DCDest->dctype == DC_TYPE_INFO)
     {
-        DC_UnlockDc(DCDest);
+        if(DCSrc) GDIOBJ_UnlockObjByPtr(&DCSrc->BaseObject);
+        GDIOBJ_UnlockObjByPtr(&DCDest->BaseObject);
         /* Yes, Windows really returns TRUE in this case */
         return TRUE;
     }
 
     if (UsesSource)
     {
-        if (hDCSrc != hDCDest)
+        if (NULL == DCSrc)
         {
-            DCSrc = DC_LockDc(hDCSrc);
-            if (NULL == DCSrc)
-            {
-                DC_UnlockDc(DCDest);
-                DPRINT("Invalid source dc handle (0x%08x) passed to NtGdiBitBlt\n", hDCSrc);
-                return FALSE;
-            }
-            if (DCSrc->dctype == DC_TYPE_INFO)
-            {
-                DC_UnlockDc(DCSrc);
-                DC_UnlockDc(DCDest);
-                /* Yes, Windows really returns TRUE in this case */
-                return TRUE;
-            }
+            GDIOBJ_UnlockObjByPtr(&DCDest->BaseObject);
+            DPRINT("Invalid source dc handle (0x%08x) passed to NtGdiBitBlt\n", hDCSrc);
+            return FALSE;
         }
-        else
+        if (DCSrc->dctype == DC_TYPE_INFO)
         {
-            DCSrc = DCDest;
+            GDIOBJ_UnlockObjByPtr(&DCDest->BaseObject);
+            GDIOBJ_UnlockObjByPtr(&DCSrc->BaseObject);
+            /* Yes, Windows really returns TRUE in this case */
+            return TRUE;
         }
+    }
+    else if(DCSrc)
+    {
+        DPRINT1("Getting a valid Source handle without using source!!!");
+        GDIOBJ_UnlockObjByPtr(&DCSrc->BaseObject);
+        DCSrc = NULL ;
     }
 
     pdcattr = DCDest->pdcattr;
@@ -244,7 +252,15 @@ NtGdiBitBlt(
 
         SourcePoint.x += DCSrc->ptlDCOrig.x;
         SourcePoint.y += DCSrc->ptlDCOrig.y;
+        /* Calculate Source Rect */
+        SourceRect.left = SourcePoint.x;
+        SourceRect.top = SourcePoint.y;
+        SourceRect.right = SourcePoint.x + DestRect.right - DestRect.left;
+        SourceRect.bottom = SourcePoint.y + DestRect.bottom - DestRect.top ;
     }
+
+    /* Prepare blit */
+    DC_vPrepareDCsForBlit(DCDest, DestRect, DCSrc, SourceRect);
 
     /* Determine surfaces to be used in the bitblt */
     BitmapDest = DCDest->dclevel.pSurface;
@@ -280,14 +296,15 @@ NtGdiBitBlt(
                           &DCDest->dclevel.pbrFill->ptOrigin,
                           ROP3_TO_ROP4(ROP));
 
-cleanup:
     if (UsesSource)
         EXLATEOBJ_vCleanup(&exlo);
-    if (UsesSource && hDCSrc != hDCDest)
+cleanup:
+    DC_vFinishBlit(DCDest, DCSrc);
+    if (UsesSource)
     {
-        DC_UnlockDc(DCSrc);
+        GDIOBJ_UnlockObjByPtr(&DCSrc->BaseObject);
     }
-    DC_UnlockDc(DCDest);
+    GDIOBJ_UnlockObjByPtr(&DCDest->BaseObject);
 
     return Status;
 }
@@ -958,6 +975,8 @@ IntPatBlt(
 
     EBRUSHOBJ_vInit(&eboFill, pbrush, pdc);
 
+    DC_vPrepareDCsForBlit(pdc, DestRect, NULL, DestRect);
+
     ret = IntEngBitBlt(
         &psurf->SurfObj,
         NULL,
@@ -972,6 +991,8 @@ IntPatBlt(
         ROP3_TO_ROP4(dwRop));
 
     EBRUSHOBJ_vCleanup(&eboFill);
+
+    DC_vFinishBlit(pdc, NULL);
 
     return ret;
 }

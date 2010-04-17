@@ -592,11 +592,7 @@ IntEngBitBltEx(
             {
                 SURFACE_LockBitmapBits(psurfSrc);
             }
-            MouseSafetyOnDrawStart(psoSrc, rclSrc.left, rclSrc.top,
-                                   rclSrc.right, rclSrc.bottom);
         }
-        MouseSafetyOnDrawStart(psoTrg, rclClipped.left, rclClipped.top,
-                               rclClipped.right, rclClipped.bottom);
     }
 
     /* Is the target surface device managed? */
@@ -638,16 +634,13 @@ IntEngBitBltEx(
 
     if (bRemoveMouse)
     {
-        MouseSafetyOnDrawEnd(psoTrg);
         if (psoSrc)
         {
-            MouseSafetyOnDrawEnd(psoSrc);
             if (psoSrc != psoTrg)
             {
                 SURFACE_UnlockBitmapBits(psurfSrc);
             }
         }
-
         SURFACE_UnlockBitmapBits(psurfTrg);
     }
 
