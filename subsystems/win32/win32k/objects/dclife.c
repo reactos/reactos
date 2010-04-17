@@ -463,15 +463,50 @@ DC_vPrepareDCsForBlit(PDC pdc1,
                       PDC pdc2,
                       RECT rc2)
 {
-    if(pdc1->dctype == DCTYPE_DIRECT)
+    PDC pdcFirst, pdcSecond;
+    PRECT prcFirst, prcSecond;
+    /* Lock them in good order */
+    if(pdc2)
     {
-        EngAcquireSemaphore(pdc1->ppdev->hsemDevLock);
-        MouseSafetyOnDrawStart(&pdc1->dclevel.pSurface->SurfObj, rc1.left, rc1.top, rc1.right, rc1.bottom) ;
+        if((ULONG_PTR)pdc1->BaseObject.hHmgr >= (ULONG_PTR)pdc2->BaseObject.hHmgr)
+        {
+            pdcFirst = pdc1;
+            prcFirst = &rc1;
+            pdcSecond = pdc2;
+            prcSecond = &rc2;
+        }
+        else
+        {
+            pdcFirst = pdc2;
+            prcFirst = &rc2;
+            pdcSecond = pdc1;
+            prcSecond = &rc1;
+        }
     }
-    if(pdc2 && pdc2->dctype == DCTYPE_DIRECT)
+    else
     {
-        EngAcquireSemaphore(pdc2->ppdev->hsemDevLock);
-        MouseSafetyOnDrawStart(&pdc2->dclevel.pSurface->SurfObj, rc2.left, rc2.top, rc2.right, rc2.bottom) ;
+        pdcFirst = pdc1 ;
+        prcFirst = &rc1;
+        pdcSecond = NULL ;
+    }
+
+    if(pdcFirst && pdcFirst->dctype == DCTYPE_DIRECT)
+    {
+        EngAcquireSemaphore(pdcFirst->ppdev->hsemDevLock);
+        MouseSafetyOnDrawStart(&pdcFirst->dclevel.pSurface->SurfObj,
+                                    prcFirst->left,
+                                    prcFirst->top,
+                                    prcFirst->right,
+                                    prcFirst->bottom) ;
+    }
+    if(pdcSecond && pdcSecond->dctype == DCTYPE_DIRECT)
+    {
+        EngAcquireSemaphore(pdcSecond->ppdev->hsemDevLock);
+        MouseSafetyOnDrawStart(&pdcSecond->dclevel.pSurface->SurfObj,
+                                    prcSecond->left,
+                                    prcSecond->top,
+                                    prcSecond->right,
+                                    prcSecond->bottom) ;
     }
 }
 

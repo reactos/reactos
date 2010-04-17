@@ -952,6 +952,10 @@ GDIOBJ_LockObj(HGDIOBJ hObj, DWORD ExpectedType)
     POBJ Object = NULL;
     ULONG HandleType, HandleUpper;
 
+    /* Check for dummy call */
+    if(hObj == NULL)
+        return NULL ;
+
     GDIDBG_INITLOOPTRACE();
 
     HandleIndex = GDI_HANDLE_GET_INDEX(hObj);
@@ -959,7 +963,7 @@ GDIOBJ_LockObj(HGDIOBJ hObj, DWORD ExpectedType)
     HandleUpper = GDI_HANDLE_GET_UPPER(hObj);
 
     /* Check that the handle index is valid. */
-    if (HandleIndex >= GDI_HANDLE_COUNT)
+    if (HandleIndex >= GDI_HANDLE_COUNT )
         return NULL;
 
     Entry = &GdiHandleTable->Entries[HandleIndex];
