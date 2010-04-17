@@ -708,6 +708,8 @@ GreStretchBltMask(
     PDC DCDest;
     PDC DCSrc  = NULL;
     PDC DCMask = NULL;
+    HDC ahDC[3];
+    PGDIOBJ apObj[3];
     PDC_ATTR pdcattr;
     SURFACE *BitmapDest, *BitmapSrc = NULL;
     SURFACE *BitmapMask = NULL;
@@ -726,45 +728,55 @@ GreStretchBltMask(
         return FALSE;
     }
 
-    DCDest = DC_LockDc(hDCDest);
+    DPRINT("Locking DCs\n");
+    ahDC[0] = hDCDest;
+    ahDC[1] = hDCSrc ;
+    ahDC[2] = hDCMask ;
+    GDIOBJ_LockMultipleObjs(3, ahDC, apObj);
+    DCDest = apObj[0];
+    DCSrc = apObj[1];
+    DCMask = apObj[2];
+
     if (NULL == DCDest)
     {
-        DPRINT1("Invalid destination dc handle (0x%08x) passed to NtGdiStretchBlt\n", hDCDest);
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        if(DCSrc) GDIOBJ_UnlockObjByPtr(&DCSrc->BaseObject);
+        if(DCMask) GDIOBJ_UnlockObjByPtr(&DCMask->BaseObject);
+        DPRINT("Invalid destination dc handle (0x%08x) passed to NtGdiBitBlt\n", hDCDest);
         return FALSE;
     }
 
     if (DCDest->dctype == DC_TYPE_INFO)
     {
-        DC_UnlockDc(DCDest);
+        if(DCSrc) GDIOBJ_UnlockObjByPtr(&DCSrc->BaseObject);
+        if(DCMask) GDIOBJ_UnlockObjByPtr(&DCMask->BaseObject);
+        GDIOBJ_UnlockObjByPtr(&DCDest->BaseObject);
         /* Yes, Windows really returns TRUE in this case */
         return TRUE;
     }
 
     if (UsesSource)
     {
-        if (hDCSrc != hDCDest)
+        if (NULL == DCSrc)
         {
-            DCSrc = DC_LockDc(hDCSrc);
-            if (NULL == DCSrc)
-            {
-                DC_UnlockDc(DCDest);
-                DPRINT1("Invalid source dc handle (0x%08x) passed to NtGdiStretchBlt\n", hDCSrc);
-                SetLastWin32Error(ERROR_INVALID_HANDLE);
-                return FALSE;
-            }
-            if (DCSrc->dctype == DC_TYPE_INFO)
-            {
-                DC_UnlockDc(DCSrc);
-                DC_UnlockDc(DCDest);
-                /* Yes, Windows really returns TRUE in this case */
-                return TRUE;
-            }
+            GDIOBJ_UnlockObjByPtr(&DCDest->BaseObject);
+            if(DCMask) GDIOBJ_UnlockObjByPtr(&DCMask->BaseObject);
+            DPRINT("Invalid source dc handle (0x%08x) passed to NtGdiBitBlt\n", hDCSrc);
+            return FALSE;
         }
-        else
+        if (DCSrc->dctype == DC_TYPE_INFO)
         {
-            DCSrc = DCDest;
+            GDIOBJ_UnlockObjByPtr(&DCDest->BaseObject);
+            GDIOBJ_UnlockObjByPtr(&DCSrc->BaseObject);
+            if(DCMask) GDIOBJ_UnlockObjByPtr(&DCMask->BaseObject);
+            /* Yes, Windows really returns TRUE in this case */
+            return TRUE;
         }
+    }
+    else if(DCSrc)
+    {
+        DPRINT1("Getting a valid Source handle without using source!!!");
+        GDIOBJ_UnlockObjByPtr(&DCSrc->BaseObject);
+        DCSrc = NULL ;
     }
 
     pdcattr = DCDest->pdcattr;
@@ -801,6 +813,9 @@ GreStretchBltMask(
     BrushOrigin.x = 0;
     BrushOrigin.y = 0;
 
+    /* Only prepare Source and Dest, hdcMask represents a DIB */
+    DC_vPrepareDCsForBlit(DCDest, DestRect, DCSrc, SourceRect);
+
     /* Determine surfaces to be used in the bitblt */
     BitmapDest = DCDest->dclevel.pSurface;
     if (BitmapDest == NULL)
@@ -821,28 +836,25 @@ GreStretchBltMask(
     BrushOrigin.y += DCDest->ptlDCOrig.y;
 
     /* Make mask surface for source surface */
-    if (BitmapSrc && hDCMask)
+    if (BitmapSrc && DCMask)
     {
-        DCMask = DC_LockDc(hDCMask);
-        if (DCMask)
+        BitmapMask = DCMask->dclevel.pSurface;
+        if (BitmapMask &&
+            (BitmapMask->SurfObj.sizlBitmap.cx < WidthSrc ||
+             BitmapMask->SurfObj.sizlBitmap.cy < HeightSrc))
         {
-            BitmapMask = DCMask->dclevel.pSurface;
-            if (BitmapMask &&
-                (BitmapMask->SurfObj.sizlBitmap.cx < WidthSrc ||
-                 BitmapMask->SurfObj.sizlBitmap.cy < HeightSrc))
-            {
-                DPRINT1("%dx%d mask is smaller than %dx%d bitmap\n",
-                        BitmapMask->SurfObj.sizlBitmap.cx, BitmapMask->SurfObj.sizlBitmap.cy,
-                        WidthSrc, HeightSrc);
-                goto failed;
-            }
-            /* Create mask offset point */
-            MaskPoint.x = XOriginMask;
-            MaskPoint.y = YOriginMask;
-            IntLPtoDP(DCMask, &MaskPoint, 1);
-            MaskPoint.x += DCMask->ptlDCOrig.x;
-            MaskPoint.y += DCMask->ptlDCOrig.x;
+            DPRINT1("%dx%d mask is smaller than %dx%d bitmap\n",
+                    BitmapMask->SurfObj.sizlBitmap.cx, BitmapMask->SurfObj.sizlBitmap.cy,
+                    WidthSrc, HeightSrc);
+            EXLATEOBJ_vCleanup(&exlo);
+            goto failed;
         }
+        /* Create mask offset point */
+        MaskPoint.x = XOriginMask;
+        MaskPoint.y = YOriginMask;
+        IntLPtoDP(DCMask, &MaskPoint, 1);
+        MaskPoint.x += DCMask->ptlDCOrig.x;
+        MaskPoint.y += DCMask->ptlDCOrig.x;
     }
 
     /* Perform the bitblt operation */
@@ -857,13 +869,14 @@ GreStretchBltMask(
                               &DCDest->eboFill.BrushObject,
                               &BrushOrigin,
                               ROP3_TO_ROP4(ROP));
-
-failed:
     if (UsesSource)
     {
         EXLATEOBJ_vCleanup(&exlo);
     }
-    if (UsesSource && hDCSrc != hDCDest)
+
+failed:
+    DC_vFinishBlit(DCDest, DCSrc);
+    if (UsesSource)
     {
         DC_UnlockDc(DCSrc);
     }

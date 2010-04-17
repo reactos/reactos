@@ -463,8 +463,6 @@ IntEngStretchBlt(SURFOBJ *psoDest,
     /* No success yet */
     ret = FALSE;
     SURFACE_LockBitmapBits(psurfDest);
-    MouseSafetyOnDrawStart(psoDest, OutputRect.left, OutputRect.top,
-                           OutputRect.right, OutputRect.bottom);
 
     if (UsesSource)
     {
@@ -473,8 +471,6 @@ IntEngStretchBlt(SURFOBJ *psoDest,
         {
             SURFACE_LockBitmapBits(psurfSource);
         }
-        MouseSafetyOnDrawStart(psoSource, InputRect.left, InputRect.top,
-                               InputRect.right, InputRect.bottom);
     }
 
     /* Prepare color adjustment */
@@ -516,13 +512,11 @@ IntEngStretchBlt(SURFOBJ *psoDest,
 
     if (UsesSource)
     {
-        MouseSafetyOnDrawEnd(psoSource);
         if (psoSource != psoDest)
         {
             SURFACE_UnlockBitmapBits(psurfSource);
         }
     }
-    MouseSafetyOnDrawEnd(psoDest);
     SURFACE_UnlockBitmapBits(psurfDest);
 
     return ret;
