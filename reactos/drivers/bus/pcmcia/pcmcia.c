@@ -11,6 +11,8 @@
 //#define NDEBUG
 #include <debug.h>
 
+BOOLEAN IoctlEnabled;
+
 NTSTATUS
 NTAPI
 PcmciaCreateClose(PDEVICE_OBJECT DeviceObject,
@@ -202,6 +204,11 @@ NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject,
             PUNICODE_STRING RegistryPath)
 {
+  RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+  NTSTATUS Status;
+
+  DPRINT1("PCMCIA: DriverEntry\n");
+
   DriverObject->MajorFunction[IRP_MJ_CREATE] = PcmciaCreateClose;
   DriverObject->MajorFunction[IRP_MJ_CLOSE] = PcmciaCreateClose;
   DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = PcmciaDeviceControl;
@@ -211,7 +218,25 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
   DriverObject->DriverExtension->AddDevice = PcmciaAddDevice;
   DriverObject->DriverUnload = PcmciaUnload;
 
-  DPRINT1("PCMCIA: DriverEntry\n");
+  RtlZeroMemory(QueryTable, sizeof(RTL_QUERY_REGISTRY_TABLE) * 2);
+
+  QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
+  QueryTable[0].Name = L"IoctlInterface";
+  QueryTable[0].EntryContext = &IoctlEnabled;
+
+  Status = RtlQueryRegistryValues(RTL_REGISTRY_SERVICES,
+                                  L"Pcmcia\\Parameters",
+                                  QueryTable,
+                                  NULL,
+                                  NULL);
+  if (!NT_SUCCESS(Status))
+  {
+      /* Key not present so assume disabled */
+      IoctlEnabled = FALSE;
+  }
+
+  DPRINT("PCMCIA: Ioctl interface %s\n",
+         (IoctlEnabled ? "enabled" : "disabled"));
 
   return STATUS_SUCCESS;
 }
