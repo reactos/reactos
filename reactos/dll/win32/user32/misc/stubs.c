@@ -174,7 +174,7 @@ DWORD_PTR
 WINAPI
 SetSysColorsTemp(const COLORREF *pPens,
                  const HBRUSH *pBrushes,
-				 DWORD n)
+				 DWORD_PTR n)
 {
     DWORD i;
 
@@ -183,7 +183,7 @@ SetSysColorsTemp(const COLORREF *pPens,
         /* allocate our structure to remember old colors */
         LPVOID pOldCol = HeapAlloc(GetProcessHeap(), 0, sizeof(DWORD)+n*sizeof(HPEN)+n*sizeof(HBRUSH));
         LPVOID p = pOldCol;
-        *(DWORD *)p = n; p = (char*)p + sizeof(DWORD);
+        *(DWORD_PTR *)p = n; p = (char*)p + sizeof(DWORD);
         memcpy(p, SysColorPens, n*sizeof(HPEN)); p = (char*)p + n*sizeof(HPEN);
         memcpy(p, SysColorBrushes, n*sizeof(HBRUSH)); p = (char*)p + n*sizeof(HBRUSH);
 
