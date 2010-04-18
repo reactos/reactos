@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="mplay32" type="win32gui" installbase="system32" installname="mplay32.exe" unicode="yes">
 	<include base="mplay32">.</include>
 	<library>advapi32</library>

@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE project SYSTEM "../../../tools/rbuild/project.dtd">
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="magnify" type="win32gui" installbase="system32" installname="magnify.exe">
 	<include base="magnify">.</include>
 	<library>user32</library>

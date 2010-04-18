@@ -10,7 +10,7 @@
 <directory name="compbatt">
 	<xi:include href="compbatt/compbatt.rbuild" />
 </directory>
-</group>
+
 
 <module name="acpi" type="kernelmodedriver" installbase="system32/drivers" installname="acpi.sys" allowwarnings="true">
 	<bootstrap installbase="$(CDOUTPUT)" />
@@ -36,3 +36,4 @@
 	<file>buspdo.c</file>
 	<file>main.c</file>
 </module>
+</group>
