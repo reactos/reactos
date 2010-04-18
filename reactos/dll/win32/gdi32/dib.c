@@ -332,21 +332,26 @@ INT WINAPI SetDIBits( HDC hdc, HBITMAP hbitmap, UINT startscan,
 		      UINT lines, LPCVOID bits, const BITMAPINFO *info,
 		      UINT coloruse )
 {
-    DC *dc;
+    DC *dc = get_dc_ptr( hdc );
+    BOOL delete_hdc = FALSE;
     BITMAPOBJ *bitmap;
     INT result = 0;
 
-    if (coloruse == DIB_RGB_COLORS) hdc = CreateCompatibleDC(0);
+    if (coloruse == DIB_RGB_COLORS && !dc)
+    {
+        hdc = CreateCompatibleDC(0);
+        dc = get_dc_ptr( hdc );
+        delete_hdc = TRUE;
+    }
 
-    if (!(dc = get_dc_ptr( hdc )))
-        return 0;
+    if (!dc) return 0;
 
     update_dc( dc );
 
     if (!(bitmap = GDI_GetObjPtr( hbitmap, OBJ_BITMAP )))
     {
         release_dc_ptr( dc );
-        if (coloruse == DIB_RGB_COLORS) DeleteDC(hdc);
+        if (delete_hdc) DeleteDC(hdc);
         return 0;
     }
 
@@ -365,7 +370,7 @@ INT WINAPI SetDIBits( HDC hdc, HBITMAP hbitmap, UINT startscan,
  done:
     GDI_ReleaseObj( hbitmap );
     release_dc_ptr( dc );
-    if (coloruse == DIB_RGB_COLORS) DeleteDC(hdc);
+    if (delete_hdc) DeleteDC(hdc);
     return result;
 }
 

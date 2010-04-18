@@ -836,22 +836,58 @@ static void set_icon_hints( Display *display, struct x11drv_win_data *data, HICO
     {
         HBITMAP hbmOrig;
         RECT rcMask;
-        BITMAP bmMask;
+        BITMAP bm;
         ICONINFO ii;
         HDC hDC;
 
         GetIconInfo(hIcon, &ii);
 
-        GetObjectA(ii.hbmMask, sizeof(bmMask), &bmMask);
+        GetObjectW(ii.hbmMask, sizeof(bm), &bm);
         rcMask.top    = 0;
         rcMask.left   = 0;
-        rcMask.right  = bmMask.bmWidth;
-        rcMask.bottom = bmMask.bmHeight;
+        rcMask.right  = bm.bmWidth;
+        rcMask.bottom = bm.bmHeight;
 
         hDC = CreateCompatibleDC(0);
         hbmOrig = SelectObject(hDC, ii.hbmMask);
         InvertRect(hDC, &rcMask);
         SelectObject(hDC, ii.hbmColor);  /* force the color bitmap to x11drv mode too */
+
+        GetObjectW(ii.hbmColor, sizeof(bm), &bm);
+        if (bm.bmBitsPixel == 32)  /* FIXME: do this for other depths too */
+        {
+            BITMAPINFO info;
+            unsigned int size, *bits;
+
+            info.bmiHeader.biSize = sizeof(info);
+            info.bmiHeader.biWidth = bm.bmWidth;
+            info.bmiHeader.biHeight = -bm.bmHeight;
+            info.bmiHeader.biPlanes = 1;
+            info.bmiHeader.biBitCount = 32;
+            info.bmiHeader.biCompression = BI_RGB;
+            info.bmiHeader.biSizeImage = bm.bmWidth * bm.bmHeight * 4;
+            info.bmiHeader.biXPelsPerMeter = 0;
+            info.bmiHeader.biYPelsPerMeter = 0;
+            info.bmiHeader.biClrUsed = 0;
+            info.bmiHeader.biClrImportant = 0;
+            size = bm.bmWidth * bm.bmHeight + 2;
+            bits = HeapAlloc( GetProcessHeap(), 0, size * sizeof(long) );
+            if (bits && GetDIBits( hDC, ii.hbmColor, 0, bm.bmHeight, bits + 2, &info, DIB_RGB_COLORS ))
+            {
+                bits[0] = bm.bmWidth;
+                bits[1] = bm.bmHeight;
+                if (sizeof(long) > sizeof(int))  /* convert to array of longs */
+                {
+                    int i = size;
+                    while (--i >= 0) ((unsigned long *)bits)[i] = bits[i];
+                }
+                wine_tsx11_lock();
+                XChangeProperty( display, data->whole_window, x11drv_atom(_NET_WM_ICON),
+                                 XA_CARDINAL, 32, PropModeReplace, (unsigned char *)bits, size );
+                wine_tsx11_unlock();
+            }
+            HeapFree( GetProcessHeap(), 0, bits );
+        }
         SelectObject(hDC, hbmOrig);
         DeleteDC(hDC);
 
@@ -1074,9 +1110,12 @@ static void set_wm_hints( Display *display, struct x11drv_win_data *data )
     mwm_hints.decorations = get_mwm_decorations( data, style, ex_style );
     mwm_hints.functions = MWM_FUNC_MOVE;
     if (is_window_resizable( data, style )) mwm_hints.functions |= MWM_FUNC_RESIZE;
-    if (style & WS_MINIMIZEBOX) mwm_hints.functions |= MWM_FUNC_MINIMIZE;
-    if (style & WS_MAXIMIZEBOX) mwm_hints.functions |= MWM_FUNC_MAXIMIZE;
-    if (style & WS_SYSMENU)     mwm_hints.functions |= MWM_FUNC_CLOSE;
+    if (!(style & WS_DISABLED))
+    {
+        if (style & WS_MINIMIZEBOX) mwm_hints.functions |= MWM_FUNC_MINIMIZE;
+        if (style & WS_MAXIMIZEBOX) mwm_hints.functions |= MWM_FUNC_MAXIMIZE;
+        if (style & WS_SYSMENU)     mwm_hints.functions |= MWM_FUNC_CLOSE;
+    }
 
     XChangeProperty( display, data->whole_window, x11drv_atom(_MOTIF_WM_HINTS),
                      x11drv_atom(_MOTIF_WM_HINTS), 32, PropModeReplace,
@@ -1661,13 +1700,8 @@ void CDECL X11DRV_SetWindowStyle( HWND hwnd, INT offset, STYLESTRUCT *style )
     if (offset == GWL_STYLE && (changed & WS_DISABLED))
     {
         data = X11DRV_get_win_data( hwnd );
-        if (data && data->wm_hints)
-        {
-            wine_tsx11_lock();
-            data->wm_hints->input = !(style->styleNew & WS_DISABLED);
-            XSetWMHints( thread_display(), data->whole_window, data->wm_hints );
-            wine_tsx11_unlock();
-        }
+        if (data && data->whole_window)
+            set_wm_hints( thread_display(), data );
     }
 
     if (offset == GWL_EXSTYLE && (changed & WS_EX_LAYERED))
@@ -1954,16 +1988,16 @@ void CDECL X11DRV_GetDC( HDC hdc, HWND hwnd, HWND top, const RECT *win_rect,
     escape.pixmap      = 0;
     escape.gl_copy     = FALSE;
 
-    if (top == hwnd && data && IsIconic( hwnd ) && data->icon_window)
-    {
-        escape.drawable = data->icon_window;
-    }
-    else if (top == hwnd)
+    if (top == hwnd)
     {
         escape.fbconfig_id = data ? data->fbconfig_id : (XID)GetPropA( hwnd, fbconfig_id_prop );
         /* GL draws to the client area even for window DCs */
         escape.gl_drawable = data ? data->client_window : X11DRV_get_client_window( hwnd );
-        if (flags & DCX_WINDOW)
+        if (data && IsIconic( hwnd ) && data->icon_window)
+        {
+            escape.drawable = data->icon_window;
+        }
+        else if (flags & DCX_WINDOW)
             escape.drawable = data ? data->whole_window : X11DRV_get_whole_window( hwnd );
         else
             escape.drawable = escape.gl_drawable;

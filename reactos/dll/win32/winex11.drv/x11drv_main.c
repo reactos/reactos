@@ -139,6 +139,7 @@ static const char * const atom_names[NB_XATOMS - FIRST_XATOM] =
     "_NET_SUPPORTED",
     "_NET_SYSTEM_TRAY_OPCODE",
     "_NET_SYSTEM_TRAY_S0",
+    "_NET_WM_ICON",
     "_NET_WM_MOVERESIZE",
     "_NET_WM_NAME",
     "_NET_WM_PID",

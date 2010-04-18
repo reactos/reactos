@@ -2235,7 +2235,7 @@ static void WINAPI X11DRV_wglFlush(void)
  *
  * WGL_ARB_create_context: wglCreateContextAttribsARB
  */
-HGLRC X11DRV_wglCreateContextAttribsARB(X11DRV_PDEVICE *physDev, HGLRC hShareContext, const int* attribList)
+HGLRC CDECL X11DRV_wglCreateContextAttribsARB(X11DRV_PDEVICE *physDev, HGLRC hShareContext, const int* attribList)
 {
     Wine_GLContext *ret;
     WineGLPixelFormat *fmt;
@@ -3865,7 +3865,7 @@ HGLRC CDECL X11DRV_wglCreateContext(X11DRV_PDEVICE *physDev) {
  *
  * WGL_ARB_create_context: wglCreateContextAttribsARB
  */
-HGLRC X11DRV_wglCreateContextAttribsARB(X11DRV_PDEVICE *physDev, HGLRC hShareContext, const int* attribList)
+HGLRC CDECL X11DRV_wglCreateContextAttribsARB(X11DRV_PDEVICE *physDev, HGLRC hShareContext, const int* attribList)
 {
     opengl_error();
     return NULL;

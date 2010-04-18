@@ -539,7 +539,7 @@ static XcursorImage *create_cursor_image( CURSORICONINFO *ptr )
                     tmp = (*xor_ptr++ & 0xe0) >> 5;
                     tmp |= (*xor_ptr & 0x07) << 3;
                     *pixel_ptr |= convert_6to8[tmp] << 16;
-                    *pixel_ptr |= convert_5to8[*xor_ptr & 0xf8] << 24;
+                    *pixel_ptr |= convert_5to8[*xor_ptr++ >> 3] << 24;
                     break;
 
                 case 1:

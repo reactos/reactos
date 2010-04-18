@@ -11,6 +11,7 @@
 	<define name="_WINE" />
 	<library>wine</library>
 	<library>ntdll</library>
+	<library>usp10</library>
 	<library>user32</library>
 	<library>win32ksys</library>
 	<library>pseh</library>

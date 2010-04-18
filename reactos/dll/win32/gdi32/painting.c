@@ -854,8 +854,8 @@ BOOL WINAPI AngleArc(HDC hdc, INT x, INT y, DWORD dwRadius, FLOAT eStartAngle, F
     if(!dc) return FALSE;
 
     /* Calculate the end point */
-    x2 = x + cos((eStartAngle+eSweepAngle)*M_PI/180) * dwRadius;
-    y2 = y - sin((eStartAngle+eSweepAngle)*M_PI/180) * dwRadius;
+    x2 = GDI_ROUND( x + cos((eStartAngle+eSweepAngle)*M_PI/180) * dwRadius );
+    y2 = GDI_ROUND( y - sin((eStartAngle+eSweepAngle)*M_PI/180) * dwRadius );
 
     if(!PATH_IsPathOpen(dc->path) && dc->funcs->pAngleArc)
     {
@@ -863,8 +863,8 @@ BOOL WINAPI AngleArc(HDC hdc, INT x, INT y, DWORD dwRadius, FLOAT eStartAngle, F
         result = dc->funcs->pAngleArc( dc->physDev, x, y, dwRadius, eStartAngle, eSweepAngle );
     }
     else { /* do it using ArcTo */
-        x1 = x + cos(eStartAngle*M_PI/180) * dwRadius;
-        y1 = y - sin(eStartAngle*M_PI/180) * dwRadius;
+        x1 = GDI_ROUND( x + cos(eStartAngle*M_PI/180) * dwRadius );
+        y1 = GDI_ROUND( y - sin(eStartAngle*M_PI/180) * dwRadius );
 
         arcdir = SetArcDirection( hdc, eSweepAngle >= 0 ? AD_COUNTERCLOCKWISE : AD_CLOCKWISE);
         result = ArcTo( hdc, x-dwRadius, y-dwRadius, x+dwRadius, y+dwRadius,

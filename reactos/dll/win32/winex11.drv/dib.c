@@ -4749,7 +4749,7 @@ HBITMAP CDECL X11DRV_CreateDIBSection( X11DRV_PDEVICE *physDev, HBITMAP hbitmap,
                                                          &physBitmap->nColorMap );
     }
 
-    if (!X11DRV_XRender_SetPhysBitmapDepth( physBitmap, &dib ))
+    if (!X11DRV_XRender_SetPhysBitmapDepth( physBitmap, dib.dsBm.bmBitsPixel, &dib ))
     {
         if (dib.dsBm.bmBitsPixel == 1)
         {

@@ -169,6 +169,15 @@ typedef struct
     struct xrender_info *xrender;
 } X11DRV_PDEVICE;
 
+struct bitblt_coords
+{
+    int  x;      /* original position and width */
+    int  y;
+    int  width;
+    int  height;
+    RECT visrect;   /* rectangle clipped to the visible part */
+};
+
 
 extern X_PHYSBITMAP BITMAP_stock_phys_bitmap;  /* phys bitmap for the default stock bitmap */
 
@@ -290,13 +299,14 @@ extern void X11DRV_XRender_CopyBrush(X11DRV_PDEVICE *physDev, X_PHYSBITMAP *phys
 extern BOOL X11DRV_XRender_ExtTextOut(X11DRV_PDEVICE *physDev, INT x, INT y, UINT flags,
 				      const RECT *lprect, LPCWSTR wstr,
 				      UINT count, const INT *lpDx);
-extern BOOL X11DRV_XRender_SetPhysBitmapDepth(X_PHYSBITMAP *physBitmap, const DIBSECTION *dib);
+extern BOOL X11DRV_XRender_SetPhysBitmapDepth(X_PHYSBITMAP *physBitmap, int bits_pixel, const DIBSECTION *dib);
 BOOL X11DRV_XRender_GetSrcAreaStretch(X11DRV_PDEVICE *physDevSrc, X11DRV_PDEVICE *physDevDst,
                                       Pixmap pixmap, GC gc,
-                                      INT widthSrc, INT heightSrc,
-                                      INT widthDst, INT heightDst,
-                                      RECT *visRectSrc, RECT *visRectDst);
+                                      const struct bitblt_coords *src, const struct bitblt_coords *dst );
 extern void X11DRV_XRender_UpdateDrawable(X11DRV_PDEVICE *physDev);
+extern BOOL XRender_AlphaBlend( X11DRV_PDEVICE *devDst, X11DRV_PDEVICE *devSrc,
+                                struct bitblt_coords *dst, struct bitblt_coords *src,
+                                BLENDFUNCTION blendfn );
 
 extern Drawable get_glxdrawable(X11DRV_PDEVICE *physDev);
 extern BOOL destroy_glxpixmap(Display *display, XID glxpixmap);
@@ -631,6 +641,7 @@ enum x11drv_atoms
     XATOM__NET_SUPPORTED,
     XATOM__NET_SYSTEM_TRAY_OPCODE,
     XATOM__NET_SYSTEM_TRAY_S0,
+    XATOM__NET_WM_ICON,
     XATOM__NET_WM_MOVERESIZE,
     XATOM__NET_WM_NAME,
     XATOM__NET_WM_PID,

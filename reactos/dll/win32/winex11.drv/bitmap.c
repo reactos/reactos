@@ -158,19 +158,23 @@ BOOL CDECL X11DRV_CreateBitmap( X11DRV_PDEVICE *physDev, HBITMAP hbitmap, LPVOID
 
     if (!(physBitmap = X11DRV_init_phys_bitmap( hbitmap ))) return FALSE;
 
-      /* Create the pixmap */
+    if (!X11DRV_XRender_SetPhysBitmapDepth( physBitmap, bitmap.bmBitsPixel, NULL ))
+    {
+        if(bitmap.bmBitsPixel == 1)
+        {
+            physBitmap->pixmap_depth = 1;
+            physBitmap->trueColor = FALSE;
+        }
+        else
+        {
+            physBitmap->pixmap_depth = screen_depth;
+            physBitmap->pixmap_color_shifts = X11DRV_PALETTE_default_shifts;
+            physBitmap->trueColor = (visual->class == TrueColor || visual->class == DirectColor);
+        }
+    }
+
     wine_tsx11_lock();
-    if(bitmap.bmBitsPixel == 1)
-    {
-        physBitmap->pixmap_depth = 1;
-        physBitmap->trueColor = FALSE;
-    }
-    else
-    {
-        physBitmap->pixmap_depth = screen_depth;
-        physBitmap->pixmap_color_shifts = X11DRV_PALETTE_default_shifts;
-        physBitmap->trueColor = (visual->class == TrueColor || visual->class == DirectColor);
-    }
+    /* Create the pixmap */
     physBitmap->pixmap = XCreatePixmap(gdi_display, root_window,
                                        bitmap.bmWidth, bitmap.bmHeight, physBitmap->pixmap_depth);
     wine_tsx11_unlock();
