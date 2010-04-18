@@ -142,13 +142,9 @@ IntEngPaint(IN SURFOBJ *pso,
   {
     // Call the driver's DrvPaint
     SURFACE_LockBitmapBits(psurf);
-    MouseSafetyOnDrawStart(pso, ClipRegion->rclBounds.left,
-	                         ClipRegion->rclBounds.top, ClipRegion->rclBounds.right,
-							 ClipRegion->rclBounds.bottom);
 
     ret = GDIDEVFUNCS(pso).Paint(
       pso, ClipRegion, Brush, BrushOrigin, Mix);
-    MouseSafetyOnDrawEnd(pso);
     SURFACE_UnlockBitmapBits(psurf);
     return ret;
   }

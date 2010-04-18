@@ -408,7 +408,7 @@ BOOL FASTCALL PATH_RoundRect(DC *dc, INT x1, INT y1, INT x2, INT y2, INT ell_wid
    FLOAT_POINT ellCorners[2];
 
    pPath = PATH_LockPath( dc->dclevel.hPath );
-   if (!pPath) return FALSE;   
+   if (!pPath) return FALSE;
 
    /* Check that path is open */
    if(pPath->state!=PATH_Open)
@@ -544,7 +544,7 @@ PATH_Arc ( PDC dc, INT x1, INT y1, INT x2, INT y2,
   if ( pPath->state != PATH_Open )
   {
     Ret = FALSE;
-    goto ArcExit;    
+    goto ArcExit;
   }
 
   /* Check for zero height / width */
@@ -697,7 +697,7 @@ PATH_PolyBezierTo ( PDC dc, const POINT *pts, DWORD cbPoints )
 
    pPath = PATH_LockPath( dc->dclevel.hPath );
    if (!pPath) return FALSE;
-   
+
   /* Check that path is open */
   if ( pPath->state != PATH_Open )
   {
@@ -805,7 +805,7 @@ PATH_PolylineTo ( PDC dc, const POINT *pts, DWORD cbPoints )
 
   pPath = PATH_LockPath( dc->dclevel.hPath );
   if (!pPath) return FALSE;
-   
+
   /* Check that path is open */
   if ( pPath->state != PATH_Open )
   {
@@ -1594,7 +1594,7 @@ PATH_WidenPath(DC *dc)
                 numStrokes++;
                 j = 0;
                 if (numStrokes == 1)
-                   pStrokes = ExAllocatePoolWithTag(PagedPool, numStrokes * sizeof(PPATH), TAG_PATH);                
+                   pStrokes = ExAllocatePoolWithTag(PagedPool, numStrokes * sizeof(PPATH), TAG_PATH);
                 else
                 {
                    pOldStrokes = pStrokes; // Save old pointer.
@@ -1624,7 +1624,7 @@ PATH_WidenPath(DC *dc)
         }
     }
 
-    pNewPath = ExAllocatePoolWithTag(PagedPool, sizeof(PATH), TAG_PATH);  
+    pNewPath = ExAllocatePoolWithTag(PagedPool, sizeof(PATH), TAG_PATH);
     PATH_InitGdiPath(pNewPath);
     pNewPath->state = PATH_Open;
 
@@ -2009,7 +2009,7 @@ PATH_add_outline(PDC dc, INT x, INT y, TTPOLYGONHEADER *header, DWORD size)
   }
 
   IntGdiCloseFigure( pPath );
-  PATH_UnlockPath( pPath );     
+  PATH_UnlockPath( pPath );
   return TRUE;
 }
 
@@ -2017,7 +2017,7 @@ PATH_add_outline(PDC dc, INT x, INT y, TTPOLYGONHEADER *header, DWORD size)
  *      PATH_ExtTextOut
  */
 BOOL
-FASTCALL 
+FASTCALL
 PATH_ExtTextOut(PDC dc, INT x, INT y, UINT flags, const RECTL *lprc,
                      LPCWSTR str, UINT count, const INT *dx)
 {
@@ -2207,7 +2207,7 @@ NtGdiCloseFigure(HDC hDC)
   {
      SetLastWin32Error(ERROR_INVALID_PARAMETER);
      return FALSE;
-  }   
+  }
   pPath = PATH_LockPath( pDc->dclevel.hPath );
   if (!pPath)
   {
@@ -2278,7 +2278,7 @@ NtGdiFillPath(HDC  hDC)
   PPATH pPath;
   PDC_ATTR pdcattr;
   PDC dc = DC_LockDc ( hDC );
- 
+
   if ( !dc )
   {
      SetLastWin32Error(ERROR_INVALID_PARAMETER);
@@ -2299,6 +2299,9 @@ NtGdiFillPath(HDC  hDC)
   if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
       DC_vUpdateFillBrush(dc);
 
+  DC_vPrepareDCsForBlit(dc, dc->rosdc.CombinedClip->rclBounds,
+                            NULL, dc->rosdc.CombinedClip->rclBounds);
+
   ret = PATH_FillPath( dc, pPath );
   if ( ret )
   {
@@ -2308,6 +2311,7 @@ NtGdiFillPath(HDC  hDC)
   }
 
   PATH_UnlockPath( pPath );
+  DC_vFinishBlit(dc, NULL);
   DC_UnlockDc ( dc );
   return ret;
 }
@@ -2325,7 +2329,7 @@ NtGdiFlattenPath(HDC  hDC)
    pDc = DC_LockDc(hDC);
    if (!pDc)
    {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);  
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
    }
 
@@ -2577,11 +2581,15 @@ NtGdiStrokeAndFillPath(HDC hDC)
   if (pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
     DC_vUpdateLineBrush(pDc);
 
+  DC_vPrepareDCsForBlit(dc, dc->rosdc.CombinedClip->rclBounds,
+                            NULL, dc->rosdc.CombinedClip->rclBounds);
+
   bRet = PATH_FillPath(pDc, pPath);
   if (bRet) bRet = PATH_StrokePath(pDc, pPath);
   if (bRet) PATH_EmptyPath(pPath);
 
   PATH_UnlockPath( pPath );
+  DC_vFinishBlit(dc, NULL);
   DC_UnlockDc(pDc);
   return bRet;
 }
@@ -2627,7 +2635,7 @@ APIENTRY
 NtGdiWidenPath(HDC  hDC)
 {
   BOOL Ret;
-  PDC pdc = DC_LockDc ( hDC );    
+  PDC pdc = DC_LockDc ( hDC );
   if ( !pdc )
   {
      SetLastWin32Error(ERROR_INVALID_PARAMETER);
