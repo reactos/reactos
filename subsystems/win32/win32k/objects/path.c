@@ -2622,7 +2622,12 @@ NtGdiStrokePath(HDC hDC)
   if (pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
      DC_vUpdateLineBrush(pDc);
 
+  DC_vPrepareDCsForBlit(pDc, pDc->rosdc.CombinedClip->rclBounds,
+                            NULL, pDc->rosdc.CombinedClip->rclBounds);
+
   bRet = PATH_StrokePath(pDc, pPath);
+
+  DC_vFinishBlit(pDc, NULL);
   PATH_EmptyPath(pPath);
 
   PATH_UnlockPath( pPath );

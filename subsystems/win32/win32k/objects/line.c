@@ -435,8 +435,6 @@ NtGdiPolyDraw(
     dc = DC_LockDc(hdc);
     if (!dc) return FALSE;
     pdcattr = dc->pdcattr;
-    DC_vPrepareDCsForBlit(dc, dc->rosdc.CombinedClip->rclBounds,
-                            NULL, dc->rosdc.CombinedClip->rclBounds);
 
     _SEH2_TRY
     {
@@ -503,7 +501,6 @@ NtGdiPolyDraw(
     }
     _SEH2_END;
 
-    DC_vFinishBlit(dc, NULL);
     DC_UnlockDc(dc);
 
     return result;
