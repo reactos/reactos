@@ -1842,6 +1842,7 @@ BOOL UserDrawCaption(
             goto cleanup;
          }
 
+         /* There is no need to call DC_vPrepareDCsForBlit for memory DC */
          if(!IntGdiGradientFill(pMemDc, vert, 2, &gcap,
             1, GRADIENT_FILL_RECT_H))
          {

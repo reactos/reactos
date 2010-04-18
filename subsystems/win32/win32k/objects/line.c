@@ -265,6 +265,8 @@ IntGdiPolyline(DC      *dc,
         Points = EngAllocMem(0, Count * sizeof(POINT), TAG_COORD);
         if (Points != NULL)
         {
+            DC_vPrepareDCsForBlit(dc, dc->rosdc.CombinedClip->rclBounds,
+                                    NULL, dc->rosdc.CombinedClip->rclBounds);
             psurf = dc->dclevel.pSurface;
             /* FIXME - psurf can be NULL!!!!
                Don't assert but handle this case gracefully! */
@@ -288,6 +290,7 @@ IntGdiPolyline(DC      *dc,
                                  ROP2_TO_MIX(pdcattr->jROP2));
 
             EngFreeMem(Points);
+            DC_vFinishBlit(dc, NULL);
         }
         else
         {
@@ -376,6 +379,7 @@ NtGdiLineTo(HDC  hDC,
 {
     DC *dc;
     BOOL Ret;
+    RECT rcLockRect ;
 
     dc = DC_LockDc(hDC);
     if (!dc)
@@ -390,7 +394,24 @@ NtGdiLineTo(HDC  hDC,
         return TRUE;
     }
 
+    rcLockRect.left = dc->pdcattr->ptlCurrent.x;
+    rcLockRect.top = dc->pdcattr->ptlCurrent.y;
+    rcLockRect.right = XEnd;
+    rcLockRect.bottom = YEnd;
+
+    IntLPtoDP(dc, &rcLockRect, 2);
+
+    /* The DCOrg is in device coordinates */
+    rcLockRect.left += dc->ptlDCOrig.x;
+    rcLockRect.top += dc->ptlDCOrig.y;
+    rcLockRect.right += dc->ptlDCOrig.x;
+    rcLockRect.bottom += dc->ptlDCOrig.y;
+
+    DC_vPrepareDCsForBlit(dc, rcLockRect, NULL, rcLockRect);
+
     Ret = IntGdiLineTo(dc, XEnd, YEnd);
+
+    DC_vFinishBlit(dc, NULL);
 
     DC_UnlockDc(dc);
     return Ret;
@@ -414,6 +435,8 @@ NtGdiPolyDraw(
     dc = DC_LockDc(hdc);
     if (!dc) return FALSE;
     pdcattr = dc->pdcattr;
+    DC_vPrepareDCsForBlit(dc, dc->rosdc.CombinedClip->rclBounds,
+                            NULL, dc->rosdc.CombinedClip->rclBounds);
 
     _SEH2_TRY
     {
@@ -480,6 +503,7 @@ NtGdiPolyDraw(
     }
     _SEH2_END;
 
+    DC_vFinishBlit(dc, NULL);
     DC_UnlockDc(dc);
 
     return result;

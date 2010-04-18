@@ -566,7 +566,6 @@ IntEngLineTo(SURFOBJ *psoDest,
     if (b.top == b.bottom) b.bottom++;
 
     SURFACE_LockBitmapBits(psurfDest);
-    MouseSafetyOnDrawStart(psoDest, x1, y1, x2, y2);
 
     if (psurfDest->flHooks & HOOK_LINETO)
     {
@@ -587,7 +586,6 @@ IntEngLineTo(SURFOBJ *psoDest,
         ret = EngLineTo(psoDest, ClipObj, pbo, x1, y1, x2, y2, RectBounds, Mix);
     }
 
-    MouseSafetyOnDrawEnd(psoDest);
     SURFACE_UnlockBitmapBits(psurfDest);
 
     return ret;

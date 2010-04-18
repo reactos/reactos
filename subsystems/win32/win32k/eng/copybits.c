@@ -198,20 +198,7 @@ IntEngCopyBits(
     RECTL *prclDest,
     POINTL *ptlSource)
 {
-    BOOL bResult;
-
-    MouseSafetyOnDrawStart(psoSource, ptlSource->x, ptlSource->y,
-                           (ptlSource->x + abs(prclDest->right - prclDest->left)),
-                           (ptlSource->y + abs(prclDest->bottom - prclDest->top)));
-
-    MouseSafetyOnDrawStart(psoDest, prclDest->left, prclDest->top, prclDest->right, prclDest->bottom);
-
-    bResult = EngCopyBits(psoDest, psoSource, pco, pxlo, prclDest, ptlSource);
-
-    MouseSafetyOnDrawEnd(psoDest);
-    MouseSafetyOnDrawEnd(psoSource);
-
-    return bResult;
+    return EngCopyBits(psoDest, psoSource, pco, pxlo, prclDest, ptlSource);
 }
 
 

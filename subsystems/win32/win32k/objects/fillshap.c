@@ -110,7 +110,7 @@ IntGdiPolygon(PDC    dc,
                                   psurf,
                                   &dc->eboFill.BrushObject,
                                   Points,
-                                  Count, 
+                                  Count,
                                   DestRect,
                                   &BrushOrigin);
         }
@@ -271,15 +271,15 @@ NtGdiEllipse(
     }
 
     if (!PenWidth) PenWidth = 1;
-    pbrush->ptPenWidth.x = PenWidth;  
+    pbrush->ptPenWidth.x = PenWidth;
 
     RectBounds.left   = Left;
     RectBounds.right  = Right;
     RectBounds.top    = Top;
     RectBounds.bottom = Bottom;
-                
+
     IntLPtoDP(dc, (LPPOINT)&RectBounds, 2);
- 
+
     RectBounds.left += dc->ptlDCOrig.x;
     RectBounds.right += dc->ptlDCOrig.x;
     RectBounds.top += dc->ptlDCOrig.y;
@@ -298,7 +298,7 @@ NtGdiEllipse(
                CenterX - RadiusX, CenterY + RadiusY, RadiusX*2, RadiusY*2);
 
     pFillBrushObj = BRUSH_LockBrush(pdcattr->hbrush);
-    if (NULL == pFillBrushObj)   
+    if (NULL == pFillBrushObj)
     {
         DPRINT1("FillEllipse Fail\n");
         SetLastWin32Error(ERROR_INTERNAL_ERROR);
@@ -478,6 +478,9 @@ NtGdiPolyPolyDraw( IN HDC hDC,
         return TRUE;
     }
 
+    DC_vPrepareDCsForBlit(dc, dc->rosdc.CombinedClip->rclBounds,
+                            NULL, dc->rosdc.CombinedClip->rclBounds);
+
     /* Perform the actual work */
     switch (iFunc)
     {
@@ -502,6 +505,7 @@ NtGdiPolyPolyDraw( IN HDC hDC,
     }
 
     /* Cleanup and return */
+    DC_vFinishBlit(dc, NULL);
     DC_UnlockDc(dc);
     ExFreePool(pTemp);
 
@@ -661,6 +665,7 @@ NtGdiRectangle(HDC  hDC,
 {
     DC   *dc;
     BOOL ret; // default to failure
+    RECT rect = {LeftRect, TopRect, RightRect, BottomRect} ;
 
     dc = DC_LockDc(hDC);
     if (!dc)
@@ -675,7 +680,9 @@ NtGdiRectangle(HDC  hDC,
         return TRUE;
     }
 
+    DC_vPrepareDCsForBlit(dc, rect, NULL, rect);
     ret = IntRectangle ( dc, LeftRect, TopRect, RightRect, BottomRect );
+    DC_vFinishBlit(dc, NULL);
     DC_UnlockDc ( dc );
 
     return ret;
@@ -750,7 +757,7 @@ IntRoundRect(
     }
 
     if (!PenWidth) PenWidth = 1;
-    pbrushLine->ptPenWidth.x = PenWidth;  
+    pbrushLine->ptPenWidth.x = PenWidth;
 
     RectBounds.left = Left;
     RectBounds.top = Top;
@@ -765,12 +772,12 @@ IntRoundRect(
     RectBounds.bottom += dc->ptlDCOrig.y;
 
     pbrushFill = BRUSH_LockBrush(pdcattr->hbrush);
-    if (NULL == pbrushFill)   
+    if (NULL == pbrushFill)
     {
         DPRINT1("FillRound Fail\n");
         SetLastWin32Error(ERROR_INTERNAL_ERROR);
         ret = FALSE;
-    } 
+    }
     else
     {
         RtlCopyMemory(&brushTemp, pbrushFill, sizeof(brushTemp));
@@ -1048,8 +1055,12 @@ NtGdiGradientFill(
         return FALSE;
     }
 
+    DC_vPrepareDCsForBlit(dc, dc->rosdc.CombinedClip->rclBounds,
+                              NULL, dc->rosdc.CombinedClip->rclBounds);
+
     Ret = IntGdiGradientFill(dc, SafeVertex, uVertex, SafeMesh, uMesh, ulMode);
 
+    DC_vFinishBlit(dc, NULL) ;
     DC_UnlockDc(dc);
     ExFreePool(SafeVertex);
     return Ret;
@@ -1115,7 +1126,7 @@ NtGdiExtFloodFill(
     hpal = dc->dclevel.pSurface->hDIBPalette;
     if (!hpal) hpal = pPrimarySurface->devinfo.hpalDefault;
     ppal = PALETTE_ShareLockPalette(hpal);
-    
+
     EXLATEOBJ_vInitialize(&exlo, &gpalRGB, ppal, 0, 0xffffff, 0);
 
     /* Only solid fills supported for now

@@ -549,12 +549,6 @@ IntEngGradientFill(
   ASSERT(psurf);
 
   SURFACE_LockBitmapBits(psurf);
-  MouseSafetyOnDrawStart(
-	  psoDest,
-	  pco->rclBounds.left,
-	  pco->rclBounds.top,
-      pco->rclBounds.right,
-	  pco->rclBounds.bottom);
   if(psurf->flHooks & HOOK_GRADIENTFILL)
   {
     Ret = GDIDEVFUNCS(psoDest).GradientFill(
@@ -566,7 +560,6 @@ IntEngGradientFill(
     Ret = EngGradientFill(psoDest, pco, pxlo, pVertex, nVertex, pMesh, nMesh, prclExtents,
                           pptlDitherOrg, ulMode);
   }
-  MouseSafetyOnDrawEnd(psoDest);
   SURFACE_UnlockBitmapBits(psurf);
 
   return Ret;
