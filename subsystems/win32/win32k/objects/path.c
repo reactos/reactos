@@ -2581,15 +2581,15 @@ NtGdiStrokeAndFillPath(HDC hDC)
   if (pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
     DC_vUpdateLineBrush(pDc);
 
-  DC_vPrepareDCsForBlit(dc, dc->rosdc.CombinedClip->rclBounds,
-                            NULL, dc->rosdc.CombinedClip->rclBounds);
+  DC_vPrepareDCsForBlit(pDc, pDc->rosdc.CombinedClip->rclBounds,
+                            NULL, pDc->rosdc.CombinedClip->rclBounds);
 
   bRet = PATH_FillPath(pDc, pPath);
   if (bRet) bRet = PATH_StrokePath(pDc, pPath);
   if (bRet) PATH_EmptyPath(pPath);
 
   PATH_UnlockPath( pPath );
-  DC_vFinishBlit(dc, NULL);
+  DC_vFinishBlit(pDc, NULL);
   DC_UnlockDc(pDc);
   return bRet;
 }
