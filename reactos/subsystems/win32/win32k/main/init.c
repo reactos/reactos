@@ -21,7 +21,6 @@
 #include <debug.h>
 
 void init_directories(void);
-BOOL FASTCALL IntCreatePrimarySurface();
 NTSTATUS FASTCALL InitDcImpl(VOID);
 
 /* GLOBALS *******************************************************************/

@@ -274,8 +274,8 @@ CSR_API(CsrCreateDesktop)
         nmh.hdr.idFrom = 0;
         nmh.hdr.code = PM_SHOW_DESKTOP;
 
-        nmh.ShowDesktop.Width = 800;
-        nmh.ShowDesktop.Height = 600;
+        nmh.ShowDesktop.Width = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+        nmh.ShowDesktop.Height = GetSystemMetrics(SM_CYVIRTUALSCREEN);
 
         SendMessageW(BackgroundWnd,
                      WM_NOTIFY,
