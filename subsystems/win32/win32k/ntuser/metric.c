@@ -24,22 +24,18 @@ FASTCALL
 InitMetrics(VOID)
 {
     INT *piSysMet;
-    PPDEVOBJ ppdev;
     ULONG Width, Height;
 
     /* FIXME: HACK, due to missing PDEV on first init */
-    ppdev = EngpGetPDEV(NULL);
-
-    if (!ppdev)
+    if (!pPrimarySurface)
     {
         Width = 640;
         Height = 480;
     }
     else
     {
-        Width = ppdev->gdiinfo.ulHorzRes;
-        Height = ppdev->gdiinfo.ulVertRes;
-        PDEVOBJ_vRelease(ppdev);
+        Width = pPrimarySurface->gdiinfo.ulHorzRes;
+        Height = pPrimarySurface->gdiinfo.ulVertRes;
     }
 
     piSysMet = gpsi->aiSysMet;

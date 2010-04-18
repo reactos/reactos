@@ -45,7 +45,7 @@ CLIPPING_UpdateGCRegion(DC* Dc)
       Dc->rosdc.hGCClipRgn = IntSysCreateRectRgn(0, 0, 0, 0);
 
    if (Dc->rosdc.hClipRgn == NULL)
-      NtGdiCombineRgn(Dc->rosdc.hGCClipRgn, ((PROSRGNDATA)Dc->prgnVis)->BaseObject.hHmgr, 0, RGN_COPY);
+      NtGdiCombineRgn(Dc->rosdc.hGCClipRgn, hRgnVis, 0, RGN_COPY);
    else // FYI: Vis == NULL! source of "IntGdiCombineRgn requires hSrc2 != NULL for combine mode 1!"
       NtGdiCombineRgn(Dc->rosdc.hGCClipRgn, Dc->rosdc.hClipRgn, hRgnVis, RGN_AND);
    NtGdiOffsetRgn(Dc->rosdc.hGCClipRgn, Dc->ptlDCOrig.x, Dc->ptlDCOrig.y);

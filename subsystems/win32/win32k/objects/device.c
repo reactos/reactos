@@ -41,10 +41,11 @@ IntCreatePrimarySurface()
     /* attach monitor */
     IntAttachMonitor(gppdevPrimary, 0);
 
-DPRINT1("IntCreatePrimarySurface, pPrimarySurface=%p, pPrimarySurface->pSurface = %p\n",
+    DPRINT1("IntCreatePrimarySurface, pPrimarySurface=%p, pPrimarySurface->pSurface = %p\n",
         pPrimarySurface, pPrimarySurface->pSurface);
 
-    pso = &pPrimarySurface->pSurface->SurfObj;
+    /* Create surface */
+    pso = &PDEVOBJ_pSurface(pPrimarySurface)->SurfObj;
     SurfSize = pso->sizlBitmap;
 
     /* Put the pointer in the center of the screen */
