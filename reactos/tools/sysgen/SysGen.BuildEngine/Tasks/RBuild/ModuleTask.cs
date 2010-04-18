@@ -176,6 +176,7 @@ namespace SysGen.BuildEngine.Tasks
                 (Module.Type == ModuleType.BootSector) ||
                 (Module.Type == ModuleType.EmbeddedTypeLib) ||
                 (Module.Type == ModuleType.IdlHeader) ||
+                (Module.Type == ModuleType.IdlInterface) ||
                 (Module.Type == ModuleType.Kernel) ||
                 (Module.Type == ModuleType.KernelModeDLL) ||
                 (Module.Type == ModuleType.KernelModeDriver) ||

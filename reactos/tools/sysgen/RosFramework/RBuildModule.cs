@@ -224,6 +224,7 @@ namespace SysGen.RBuild.Framework
                     case ModuleType.Alias:
                     case ModuleType.BootProgram:
                     case ModuleType.IdlHeader:
+                    case ModuleType.IdlInterface:
                     case ModuleType.MessageHeader:
                     case ModuleType.Package:
                     case ModuleType.ModuleGroup:
@@ -234,7 +235,7 @@ namespace SysGen.RBuild.Framework
                     case ModuleType.Cabinet:
                         return ".cab";
                     default:
-                        throw new Exception("Unknown module type");
+                        throw new Exception("Unknown Module Type: " + Type.ToString());
                 }
             }
         }
@@ -431,6 +432,7 @@ namespace SysGen.RBuild.Framework
                     case ModuleType.RpcProxy:
                     case ModuleType.Alias:
                     case ModuleType.IdlHeader:
+                    case ModuleType.IdlInterface:
                     case ModuleType.MessageHeader:
                     case ModuleType.EmbeddedTypeLib:
                     case ModuleType.Cabinet:
@@ -439,7 +441,7 @@ namespace SysGen.RBuild.Framework
                     case ModuleType.PlatformProfile:
                         return false;
                     default:
-                        throw new Exception("Unknown Module Type");
+                        throw new Exception("Unknown Module Type: " + Type.ToString());
                 }
             }
         }
@@ -479,6 +481,7 @@ namespace SysGen.RBuild.Framework
                     case ModuleType.RpcProxy:
                     case ModuleType.Alias:
                     case ModuleType.IdlHeader:
+                    case ModuleType.IdlInterface:
                     case ModuleType.MessageHeader:
                     case ModuleType.EmbeddedTypeLib:
                     case ModuleType.Cabinet:
@@ -487,7 +490,7 @@ namespace SysGen.RBuild.Framework
                     case ModuleType.PlatformProfile:
                         return false;
                     default:
-                        throw new Exception("Unknown Module Type");
+                        throw new Exception("Unknown Module Type: " + Type.ToString());
                 }
             }
         }
@@ -531,6 +534,7 @@ namespace SysGen.RBuild.Framework
                     case ModuleType.Alias:
                     case ModuleType.BootProgram:
                     case ModuleType.IdlHeader:
+                    case ModuleType.IdlInterface:
                     case ModuleType.MessageHeader:
                     case ModuleType.EmbeddedTypeLib:
                     case ModuleType.Cabinet:
@@ -539,7 +543,7 @@ namespace SysGen.RBuild.Framework
                     case ModuleType.PlatformProfile:
                         return string.Empty;
                     default:
-                        throw new Exception("Unknown Module Type");
+                        throw new Exception("Unknown Module Type: " + Type.ToString());
                 }
             }
         }
@@ -593,6 +597,7 @@ namespace SysGen.RBuild.Framework
                     case ModuleType.Alias:
                     case ModuleType.BootProgram:
                     case ModuleType.IdlHeader:
+                    case ModuleType.IdlInterface:
                     case ModuleType.MessageHeader:
                     case ModuleType.EmbeddedTypeLib:
                     case ModuleType.Cabinet:
@@ -601,7 +606,7 @@ namespace SysGen.RBuild.Framework
                     case ModuleType.PlatformProfile:
                         return string.Empty;
                     default:
-                        throw new Exception("Unknown Module Type");
+                        throw new Exception("Unknown Module Type: " + Type.ToString());
                 }
             }
         }
