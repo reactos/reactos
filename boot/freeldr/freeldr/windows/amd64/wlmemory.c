@@ -252,28 +252,36 @@ WinLdrSetupGdt(PVOID GdtBase, ULONG64 TssBase)
 	PKGDTENTRY64 Entry;
 	KDESCRIPTOR GdtDesc;
 
-	/* Setup KGDT_64_R0_CODE */
-	Entry = KiGetGdtEntry(GdtBase, KGDT_64_R0_CODE);
+	/* Setup KGDT64_NULL */
+	Entry = KiGetGdtEntry(GdtBase, KGDT64_NULL);
+	*(PULONG64)Entry = 0x0000000000000000ULL;
+
+	/* Setup KGDT64_R0_CODE */
+	Entry = KiGetGdtEntry(GdtBase, KGDT64_R0_CODE);
 	*(PULONG64)Entry = 0x00209b0000000000ULL;
 
-	/* Setup KGDT_64_R0_SS */
-	Entry = KiGetGdtEntry(GdtBase, KGDT_64_R0_SS);
+	/* Setup KGDT64_R0_DATA */
+	Entry = KiGetGdtEntry(GdtBase, KGDT64_R0_DATA);
 	*(PULONG64)Entry = 0x00cf93000000ffffULL;
 
-	/* Setup KGDT_64_DATA */
-	Entry = KiGetGdtEntry(GdtBase, KGDT_64_DATA);
+	/* Setup KGDT64_R3_CMCODE */
+	Entry = KiGetGdtEntry(GdtBase, KGDT64_R3_CMCODE);
+	*(PULONG64)Entry = 0x00cffb000000ffffULL;
+
+	/* Setup KGDT64_R3_DATA */
+	Entry = KiGetGdtEntry(GdtBase, KGDT64_R3_DATA);
 	*(PULONG64)Entry = 0x00cff3000000ffffULL;
 
-	/* Setup KGDT_64_R3_CODE */
-	Entry = KiGetGdtEntry(GdtBase, KGDT_64_R3_CODE);
+	/* Setup KGDT64_R3_CODE */
+	Entry = KiGetGdtEntry(GdtBase, KGDT64_R3_CODE);
 	*(PULONG64)Entry = 0x0020fb0000000000ULL;
 
-	/* Setup KGDT_32_R3_TEB */
-	Entry = KiGetGdtEntry(GdtBase, KGDT_32_R3_TEB);
+	/* Setup KGDT64_R3_CMTEB */
+	Entry = KiGetGdtEntry(GdtBase, KGDT64_R3_CMTEB);
 	*(PULONG64)Entry = 0xff40f3fd50003c00ULL;
 
 	/* Setup TSS entry */
-	Entry = KiGetGdtEntry(GdtBase, KGDT_TSS);
+	Entry = KiGetGdtEntry(GdtBase, KGDT64_SYS_TSS);
 	KiInitGdtEntry(Entry, TssBase, sizeof(KTSS), I386_TSS, 0);
 
     /* Setup GDT descriptor */
@@ -333,15 +341,8 @@ WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG64 Pcr, IN ULONG64 Tss)
     /* LDT is unused */
 //    __lldt(0);
 
-    /* Load selectors for DS/ES/FS/GS/SS */
-    Ke386SetDs(KGDT_64_DATA | RPL_MASK);   // 0x2b
-    Ke386SetEs(KGDT_64_DATA | RPL_MASK);   // 0x2b
-    Ke386SetFs(KGDT_32_R3_TEB | RPL_MASK); // 0x53
-	Ke386SetGs(KGDT_64_DATA | RPL_MASK);   // 0x2b
-	Ke386SetSs(KGDT_64_R0_SS);             // 0x18
-
 	/* Load TSR */
-	__ltr(KGDT_TSS);
+	__ltr(KGDT64_SYS_TSS);
 
     DPRINTM(DPRINT_WINDOWS, "leave WinLdrSetProcessorContext\n");
 }

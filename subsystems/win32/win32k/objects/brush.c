@@ -709,6 +709,7 @@ NtGdiSetBrushOrg(HDC hDC, INT XOrg, INT YOrg, LPPOINT Point)
 
     pdcattr->ptlBrushOrigin.x = XOrg;
     pdcattr->ptlBrushOrigin.y = YOrg;
+    IntptlBrushOrigin(dc, XOrg, YOrg );
     DC_UnlockDc(dc);
 
     return TRUE;

@@ -336,6 +336,7 @@ CBDAPinControl_fnConstructor(
             if (SUCCEEDED(hr))
             {
                 // register device filter
+                OutputDebugStringW(L"CBDAPinControl_fnConstructor registering device filter with network provider\n");
                 hr = pNetworkProvider->RegisterDeviceFilter(pUnknown, &RegistrationCtx);
                 if (SUCCEEDED(hr))
                 {
@@ -361,7 +362,6 @@ CBDAPinControl_fnConstructor(
                     WCHAR Buffer[100];
                     swprintf(Buffer, L"CBDAPinControl_fnConstructor failed to register filter with %lx\n", hr);
                     OutputDebugStringW(Buffer);
-                    DebugBreak();
                 }
             }
         }

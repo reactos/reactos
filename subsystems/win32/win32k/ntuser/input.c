@@ -713,6 +713,7 @@ KeyboardThreadMain(PVOID StartContext)
          for (;NumKeys;memcpy(&KeyInput, &NextKeyInput, sizeof(KeyInput)),
                NumKeys--)
          {
+            PKBL keyboardLayout = NULL;
             lParam = 0;
 
             IntKeyboardUpdateLeds(KeyboardDeviceHandle,
@@ -783,29 +784,30 @@ KeyboardThreadMain(PVOID StartContext)
             }
 
             /* Find the target thread whose locale is in effect */
-               FocusQueue = IntGetFocusMessageQueue();
+            FocusQueue = IntGetFocusMessageQueue();
 
-            /* This might cause us to lose hot keys, which are important
-             * (ctrl-alt-del secure attention sequence). Not sure if it
-             * can happen though.
-             */
-            if (!FocusQueue)
-               continue;
+            if (FocusQueue)
+            {
+                msg.hwnd = FocusQueue->FocusWindow;
+
+                FocusThread = FocusQueue->Thread;
+                if (FocusThread && FocusThread->Tcb.Win32Thread)
+                {
+                    keyboardLayout = ((PTHREADINFO)FocusThread->Tcb.Win32Thread)->KeyboardLayout;
+                }
+            }
+            if (!keyboardLayout)
+            {
+                keyboardLayout = W32kGetDefaultKeyLayout();
+            }
 
             msg.lParam = lParam;
-            msg.hwnd = FocusQueue->FocusWindow;
-
-            FocusThread = FocusQueue->Thread;
-
-            if (!(FocusThread && FocusThread->Tcb.Win32Thread &&
-                  ((PTHREADINFO)FocusThread->Tcb.Win32Thread)->KeyboardLayout))
-               continue;
 
             /* This function uses lParam to fill wParam according to the
              * keyboard layout in use.
              */
             W32kKeyProcessMessage(&msg,
-                                  ((PTHREADINFO)FocusThread->Tcb.Win32Thread)->KeyboardLayout->KBTables,
+                                  keyboardLayout->KBTables,
                                   KeyInput.Flags & KEY_E0 ? 0xE0 :
                                   (KeyInput.Flags & KEY_E1 ? 0xE1 : 0));
 
@@ -827,6 +829,11 @@ KeyboardThreadMain(PVOID StartContext)
                continue; /* Eat key up motion too */
             }
 
+            if (!FocusQueue)
+            {
+                /* There is no focused window to receive a keyboard message */
+                continue;
+            }
             /*
              * Post a keyboard message.
              */

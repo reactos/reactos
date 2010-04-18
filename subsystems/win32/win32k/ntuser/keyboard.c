@@ -88,12 +88,12 @@ static VOID APIENTRY SetKeyState(DWORD key, DWORD vk, DWORD ext, BOOL down)
          gQueueKeyStateTable[vk] ^= KS_LOCK_BIT;
    }
 
-   if (ext && vk == VK_LSHIFT)
-      vk = VK_RSHIFT;
-   if (ext && vk == VK_LCONTROL)
-      vk = VK_RCONTROL;
-   if (ext && vk == VK_LMENU)
-      vk = VK_RMENU;
+   if (vk == VK_SHIFT)
+      vk = ext ? VK_RSHIFT : VK_LSHIFT;
+   if (vk == VK_CONTROL)
+      vk = ext ? VK_RCONTROL : VK_LCONTROL;
+   if (vk == VK_MENU)
+      vk = ext ? VK_RMENU : VK_LMENU;
 
    if (down)
       gQueueKeyStateTable[vk] |= KS_DOWN_BIT;

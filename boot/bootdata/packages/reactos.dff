@@ -489,8 +489,6 @@ drivers\base\nmidebug\nmidebug.sys                  2
 
 drivers\battery\battc\battc.sys                     2
 
-drivers\bus\isapnp\isapnp.sys                       2
-
 drivers\bus\acpi\cmbatt\cmbatt.sys                  2
 drivers\bus\acpi\compbatt\compbatt.sys              2
 

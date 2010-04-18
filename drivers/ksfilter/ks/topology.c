@@ -270,13 +270,3 @@ KsTopologyPropertyHandler(
     return Status;
 }
 
-NTSTATUS
-NTAPI
-KspTopologyPropertyHandler(
-    IN PIRP Irp,
-    IN PKSIDENTIFIER  Request,
-    IN OUT PVOID  Data)
-{
-
-    return STATUS_NOT_IMPLEMENTED;
-}

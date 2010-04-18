@@ -16,12 +16,12 @@ BEGIN
     GROUPBOX "Popis", -1, 9, 153, 230, 46, BS_GROUPBOX
     LTEXT "Tak tady bude popis komponenty...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
     CHECKBOX "Po p¯ipojenÌ zobrazit ikonu na hlavnÌm panelu", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "&Notify me when this connection has limited or no connectivity", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 24, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "&Upozornit, kdyû toto p¯ipojenÌ bude mÌt omezenou nebo û·dnou konektivitu", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 24, BS_AUTOCHECKBOX | WS_TABSTOP
 END
 
 IDD_STATUS DIALOGEX DISCARDABLE  0, 0, 200, 280
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "General"
+CAPTION "ObecnÈ nastavenÌ"
 FONT 8, "MS Shell Dlg"
 BEGIN
 END
@@ -65,62 +65,62 @@ BEGIN
     RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 122, 48, 80, 8
     RTEXT "", IDC_DETAILSGATEWAY, 122, 62, 80, 8
 
-    PUSHBUTTON "&Detaily...", IDC_DETAILS, 22, 76, 62, 14
+    PUSHBUTTON "&Podrobnosti...", IDC_DETAILS, 22, 76, 62, 14
 END
 
 IDD_LAN_NETSTATUSDETAILS DIALOGEX DISCARDABLE  0, 0, 200,200
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "Network Connection Details"
+CAPTION "Podrobnosti sÌùovÈho p¯ipojenÌ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Network Connection &Details:", -1, 15, 9, 170, 12
+    LTEXT "&Podrobnosti sÌùovÈho p¯ipojenÌ:", -1, 15, 9, 170, 12
     CONTROL "", IDC_DETAILS, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 25, 170, 130
-    PUSHBUTTON "&Close", IDC_CLOSE, 125, 165, 62, 14
+    PUSHBUTTON "&zav¯Ìt", IDC_CLOSE, 125, 165, 62, 14
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_PHYSICAL_ADDRESS        "Physical Address"
-    IDS_IP_ADDRESS              "IP Address"
-    IDS_SUBNET_MASK             "Subnet Mask"
-    IDS_DEF_GATEWAY             "Default Gateway"
-    IDS_DHCP_SERVER             "DHCP Server"
-    IDS_LEASE_OBTAINED          "Lease Obtained"
-    IDS_LEASE_EXPIRES           "Lease Expires"
-    IDS_DNS_SERVERS             "DNS Servers"
-    IDS_WINS_SERVERS            "WINS Servers"
-    IDS_PROPERTY                "Property"
-    IDS_VALUE                   "Value"
-    IDS_NETWORKCONNECTION       "Network Connection"
-    IDS_SHV_COLUMN_NAME         "Name"
-    IDS_SHV_COLUMN_TYPE         "Type"
+    IDS_PHYSICAL_ADDRESS        "Fyzick· adresa"
+    IDS_IP_ADDRESS              "IP Adresa"
+    IDS_SUBNET_MASK             "Maska podsÌtÏ"
+    IDS_DEF_GATEWAY             "V˝chozÌ br·na"
+    IDS_DHCP_SERVER             "DHCP server"
+    IDS_LEASE_OBTAINED          "Zap˘jËeno"
+    IDS_LEASE_EXPIRES           "Zap˘jËenÌ vypröÌ"
+    IDS_DNS_SERVERS             "DNS servery"
+    IDS_WINS_SERVERS            "WINS servery"
+    IDS_PROPERTY                "Vlastnost"
+    IDS_VALUE                   "Hodnota"
+    IDS_NETWORKCONNECTION       "SÌùov· p¯ipojenÌ"
+    IDS_SHV_COLUMN_NAME         "N·zev"
+    IDS_SHV_COLUMN_TYPE         "Typ"
     IDS_SHV_COLUMN_STATE        "Status"
-    IDS_SHV_COLUMN_DEVNAME      "Device Name"
-    IDS_SHV_COLUMN_PHONE        "Phone # or Host Address"
-    IDS_SHV_COLUMN_OWNER        "Owner"
-    IDS_TYPE_ETHERNET           "LAN or High-Speed Internet"
-    IDS_STATUS_NON_OPERATIONAL  "Disabled"
-    IDS_STATUS_UNREACHABLE      "Not Connected"
-    IDS_STATUS_DISCONNECTED     "Network cable unplugged"
-    IDS_STATUS_CONNECTING       "Acquiring network address"
-    IDS_STATUS_CONNECTED        "Connected"
-    IDS_STATUS_OPERATIONAL      "Connected"
+    IDS_SHV_COLUMN_DEVNAME      "N·zev za¯ÌzenÌ"
+    IDS_SHV_COLUMN_PHONE        "TelefonnÌ ËÌslo nebo adresa hostitele"
+    IDS_SHV_COLUMN_OWNER        "VlastnÌk"
+    IDS_TYPE_ETHERNET           "LAN nebo vysokorychlostnÌ internet"
+    IDS_STATUS_NON_OPERATIONAL  "Vypnuto"
+    IDS_STATUS_UNREACHABLE      "Nep¯ipojeno"
+    IDS_STATUS_DISCONNECTED     "SÌùov˝ kabel byl odpojen"
+    IDS_STATUS_CONNECTING       "ZÌsk·v·m sÌùovou adresu"
+    IDS_STATUS_CONNECTED        "P¯ipojeno"
+    IDS_STATUS_OPERATIONAL      "P¯ipojeno"
 
-    IDS_NET_ACTIVATE            "Enable"
-    IDS_NET_DEACTIVATE          "Disable"
+    IDS_NET_ACTIVATE            "Zapnout"
+    IDS_NET_DEACTIVATE          "Vypnout"
     IDS_NET_STATUS              "Status"
-    IDS_NET_REPAIR              "Repair"
-    IDS_NET_CREATELINK          "Create Shortcut"
-    IDS_NET_DELETE              "Delete"
-    IDS_NET_RENAME              "Rename"
-    IDS_NET_PROPERTIES          "Properties"
+    IDS_NET_REPAIR              "Opravit"
+    IDS_NET_CREATELINK          "Vytvo¯it z·stupce"
+    IDS_NET_DELETE              "Smazat"
+    IDS_NET_RENAME              "P¯ejmenovat"
+    IDS_NET_PROPERTIES          "Vlasnosti"
 
     IDS_FORMAT_BIT              "%u Bit/s"
     IDS_FORMAT_KBIT             "%u KBit/s"
     IDS_FORMAT_MBIT             "%u MBit/s"
     IDS_FORMAT_GBIT             "%u GBit/s"
-    IDS_DURATION_DAY            "%d Day %s"
-    IDS_DURATION_DAYS           "%d Days %s"
+    IDS_DURATION_DAY            "%d Den %s"
+    IDS_DURATION_DAYS           "%d Dn˘ %s"
     IDS_ASSIGNED_DHCP           "P¯i¯azeno DHCP"
     IDS_ASSIGNED_MANUAL         "RuËnÏ nastaveno"
 END

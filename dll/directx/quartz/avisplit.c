@@ -692,7 +692,7 @@ static HRESULT AVISplitter_ProcessStreamList(AVISplitterImpl * This, const BYTE 
                     amt.formattype = FORMAT_WaveFormatEx;
                     break;
                 default:
-                    FIXME("fccType %.4s not handled yet\n", (char *)&pStrHdr->fccType);
+                    FIXME("fccType %.4s not handled yet\n", (const char *)&pStrHdr->fccType);
                     amt.formattype = FORMAT_None;
                 }
                 amt.majortype = MEDIATYPE_Video;
@@ -793,7 +793,7 @@ static HRESULT AVISplitter_ProcessStreamList(AVISplitterImpl * This, const BYTE 
             TRACE("bIndexSubType: %hd\n", pIndex->bIndexSubType);
             TRACE("bIndexType: %hd\n", pIndex->bIndexType);
             TRACE("nEntriesInUse: %u\n", pIndex->nEntriesInUse);
-            TRACE("dwChunkId: %.4s\n", (char *)&pIndex->dwChunkId);
+            TRACE("dwChunkId: %.4s\n", (const char *)&pIndex->dwChunkId);
             if (pIndex->dwReserved[0])
                 TRACE("dwReserved[0]: %u\n", pIndex->dwReserved[0]);
             if (pIndex->dwReserved[2])

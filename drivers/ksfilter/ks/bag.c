@@ -41,7 +41,7 @@ KsAllocateObjectBag(
         return STATUS_INSUFFICIENT_RESOURCES;
 
     /* get device interface */
-    KsDevice = (IKsDevice*)&DeviceHeader->lpVtblIKsDevice;
+    KsDevice = (IKsDevice*)&DeviceHeader->BasicHeader.OuterUnknown;
 
     /* initialize object bag */
     return KsDevice->lpVtbl->InitializeObjectBag(KsDevice, Bag, NULL);

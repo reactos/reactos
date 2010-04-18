@@ -51,7 +51,7 @@ BOOL ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, int *piEncoding
 {
 	DWORD dwSize;
 	LPBYTE pBytes = NULL;
-	LPCWSTR pszText;
+	LPWSTR pszText;
 	LPWSTR pszAllocText = NULL;
 	DWORD dwPos, i;
 	DWORD dwCharCount;
@@ -110,7 +110,7 @@ BOOL ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, int *piEncoding
 		/* fall through */
 
 	case ENCODING_UNICODE:
-		pszText = (LPCWSTR) &pBytes[dwPos];
+		pszText = (LPWSTR) &pBytes[dwPos];
 		dwCharCount = (dwSize - dwPos) / sizeof(WCHAR);
 		break;
 
@@ -173,6 +173,10 @@ BOOL ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, int *piEncoding
 				adwEolnCount[EOLN_CR]++;
 			else
 				adwEolnCount[EOLN_LF]++;
+			break;
+
+		case '\0':
+			pszText[i] = ' ';
 			break;
 		}
 	}

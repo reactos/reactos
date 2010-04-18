@@ -246,8 +246,16 @@ COutputPin::COutputPin(
 
     ZeroMemory(m_FramingProp, sizeof(m_FramingProp));
     ZeroMemory(m_FramingEx, sizeof(m_FramingEx));
+    ZeroMemory(&m_MediaFormat, sizeof(AM_MEDIA_TYPE));
 
     hr = KsGetMediaType(0, &m_MediaFormat, KsObjectParent->KsGetObjectHandle(), m_PinId);
+
+#ifdef KSPROXY_TRACE
+    WCHAR Buffer[100];
+    swprintf(Buffer, L"COutputPin::COutputPin Format %p pbFormat %lu\n", &m_MediaFormat, m_MediaFormat.cbFormat);
+    OutputDebugStringW(Buffer);
+#endif
+
     assert(hr == S_OK);
 
     InitializeCriticalSection(&m_Lock);
@@ -1518,6 +1526,8 @@ COutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
     HRESULT hr;
     ALLOCATOR_PROPERTIES Properties;
     IMemAllocatorCallbackTemp *pMemCallback;
+    LPGUID pGuid;
+    ULONG NumGuids = 0;
 
 #ifdef KSPROXY_TRACE
     WCHAR Buffer[200];
@@ -1539,6 +1549,20 @@ COutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
 
          pmt = &m_MediaFormat;
     }
+
+    if (m_hPin == INVALID_HANDLE_VALUE)
+    {
+        hr = CreatePin(pmt);
+        if (FAILED(hr))
+        {
+#ifdef KSPROXY_TRACE
+            swprintf(Buffer, L"COutputPin::Connect CreatePin handle failed with %lx\n", hr);
+            OutputDebugStringW(Buffer);
+#endif
+            return hr;
+        }
+    }
+
 
     // query for IMemInput interface
     hr = pReceivePin->QueryInterface(IID_IMemInputPin, (void**)&m_MemInputPin);
@@ -1648,10 +1672,24 @@ COutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
         return hr;
     }
 
-    if (!m_hPin)
+
+    assert(m_hPin != INVALID_HANDLE_VALUE);
+
+    // get all supported sets
+    if (m_Plugins.size() == 0)
     {
-        //FIXME create pin handle
-        assert(0);
+        if (GetSupportedSets(&pGuid, &NumGuids))
+        {
+            // load all proxy plugins
+            if (FAILED(LoadProxyPlugins(pGuid, NumGuids)));
+            {
+#ifdef KSPROXY_TRACE
+                OutputDebugStringW(L"COutputPin::Connect LoadProxyPlugins failed\n");
+#endif
+            }
+            // free sets
+            CoTaskMemFree(pGuid);
+        }
     }
 
     // receive connection;
@@ -2093,6 +2131,7 @@ COutputPin::CreatePinHandle(
         // pin already exists
         //CloseHandle(m_hPin);
         //m_hPin = INVALID_HANDLE_VALUE;
+        OutputDebugStringW(L"COutputPin::CreatePinHandle pin already exists\n");
         return S_OK;
     }
 
@@ -2105,9 +2144,10 @@ COutputPin::CreatePinHandle(
     if (!PinConnect)
     {
         // failed
+        OutputDebugStringW(L"COutputPin::CreatePinHandle out of memory\n");
         return E_OUTOFMEMORY;
     }
-
+        OutputDebugStringW(L"COutputPin::CreatePinHandle copy pinconnect\n");
     // setup request
     CopyMemory(&PinConnect->Interface, Interface, sizeof(KSPIN_INTERFACE));
     CopyMemory(&PinConnect->Medium, Medium, sizeof(KSPIN_MEDIUM));
@@ -2118,7 +2158,7 @@ COutputPin::CreatePinHandle(
 
     // get dataformat offset
     DataFormat = (PKSDATAFORMAT)(PinConnect + 1);
-
+        OutputDebugStringW(L"COutputPin::CreatePinHandle copy format\n");
     // copy data format
     DataFormat->FormatSize = sizeof(KSDATAFORMAT) + pmt->cbFormat;
     DataFormat->Flags = 0;
@@ -2131,13 +2171,19 @@ COutputPin::CreatePinHandle(
     if (pmt->cbFormat)
     {
         // copy extended format
+        WCHAR Buffer[100];
+        swprintf(Buffer, L"COutputPin::CreatePinHandle copy format %p pbFormat %lu\n", pmt, pmt->cbFormat);
+        OutputDebugStringW(Buffer);
         CopyMemory((DataFormat + 1), pmt->pbFormat, pmt->cbFormat);
     }
 
     // get IKsObject interface
     hr = m_ParentFilter->QueryInterface(IID_IKsObject, (LPVOID*)&KsObjectParent);
     if (FAILED(hr))
+    {
+        OutputDebugStringW(L"COutputPin::CreatePinHandle no IID_IKsObject interface\n");
         return hr;
+    }
 
     // get parent filter handle
     hFilter = KsObjectParent->KsGetObjectHandle();
@@ -2146,13 +2192,19 @@ COutputPin::CreatePinHandle(
     KsObjectParent->Release();
 
     if (!hFilter)
-        return E_HANDLE;
-
-    // create pin
-    hr = KsCreatePin(hFilter, PinConnect, GENERIC_READ, &m_hPin);
-
-    if (SUCCEEDED(hr))
     {
+        OutputDebugStringW(L"COutputPin::CreatePinHandle no filter handle\n");
+        return E_HANDLE;
+    }
+
+    OutputDebugStringW(L"COutputPin::CreatePinHandle before creating pin\n");
+    // create pin
+    DWORD dwError = KsCreatePin(hFilter, PinConnect, GENERIC_READ, &m_hPin);
+
+    if (dwError == ERROR_SUCCESS)
+    {
+        OutputDebugStringW(L"COutputPin::CreatePinHandle created pin\n");
+
         // store current interface / medium
         CopyMemory(&m_Medium, Medium, sizeof(KSPIN_MEDIUM));
         CopyMemory(&m_Interface, Interface, sizeof(KSPIN_INTERFACE));
@@ -2205,37 +2257,12 @@ COutputPin::CreatePinHandle(
             OutputDebugStringW(L"COutputPin::CreatePinHandle failed to initialize i/o thread\n");
         }
 
-        LPGUID pGuid;
-        ULONG NumGuids = 0;
-
-        // get all supported sets
-        hr = GetSupportedSets(&pGuid, &NumGuids);
-        if (FAILED(hr))
-        {
-#ifdef KSPROXY_TRACE
-            OutputDebugStringW(L"COutputPin::CreatePinHandle GetSupportedSets failed\n");
-#endif
-            return hr;
-        }
-
-        // load all proxy plugins
-        hr = LoadProxyPlugins(pGuid, NumGuids);
-        if (FAILED(hr))
-        {
-#ifdef KSPROXY_TRACE
-            OutputDebugStringW(L"COutputPin::CreatePinHandle LoadProxyPlugins failed\n");
-#endif
-            return hr;
-        }
-
-        // free sets
-        CoTaskMemFree(pGuid);
-
-
         //TODO
         // connect pin pipes
 
     }
+    else
+        OutputDebugStringW(L"COutputPin::CreatePinHandle failed to create pin\n");
     // free pin connect
      CoTaskMemFree(PinConnect);
 
@@ -2383,16 +2410,47 @@ COutputPin::IoProcessRoutine()
     IMediaSample *Sample;
     LONG SampleCount;
     HRESULT hr;
-    PKSSTREAM_SEGMENT StreamSegment;
+    PKSSTREAM_SEGMENT * StreamSegment;
     HANDLE hEvent;
-    IMediaSample * Samples[1];
+    IMediaSample ** Samples;
+    LONG NumHandles;
+    DWORD dwStatus;
 
 #ifdef KSPROXY_TRACE
     WCHAR Buffer[200];
 #endif
 
+    NumHandles = m_Properties.cBuffers / 2;
+
+    if (!NumHandles)
+        NumHandles = 8;
+
+    assert(NumHandles);
+
+    //allocate stream segment array
+    StreamSegment = (PKSSTREAM_SEGMENT*)CoTaskMemAlloc(sizeof(PKSSTREAM_SEGMENT) * NumHandles);
+    if (!StreamSegment)
+    {
+        OutputDebugStringW(L"COutputPin::IoProcessRoutine out of memory\n");
+        return E_FAIL;
+    }
+
+    // allocate handle array
+    Samples = (IMediaSample**)CoTaskMemAlloc(sizeof(IMediaSample*) * NumHandles);
+    if (!Samples)
+    {
+        OutputDebugStringW(L"COutputPin::IoProcessRoutine out of memory\n");
+        return E_FAIL;
+    }
+
+    // zero handles array
+    ZeroMemory(StreamSegment, sizeof(PKSSTREAM_SEGMENT) * NumHandles);
+    ZeroMemory(Samples, sizeof(IMediaSample*) * NumHandles);
+
     // first wait for the start event to signal
     WaitForSingleObject(m_hStartEvent, INFINITE);
+
+    m_IoCount = 0;
 
     assert(m_InterfaceHandler);
     do
@@ -2418,14 +2476,14 @@ COutputPin::IoProcessRoutine()
 
         // fill buffer
         SampleCount = 1;
-        Samples[0] = Sample;
+        Samples[m_IoCount] = Sample;
 
         Sample->SetTime(NULL, NULL);
         hr = m_InterfaceHandler->KsProcessMediaSamples(NULL, /* FIXME */
-                                                       Samples,
+                                                       &Samples[m_IoCount],
                                                        &SampleCount,
                                                        KsIoOperation_Read,
-                                                       &StreamSegment);
+                                                       &StreamSegment[m_IoCount]);
         if (FAILED(hr) || !StreamSegment)
         {
 #ifdef KSPROXY_TRACE
@@ -2435,14 +2493,26 @@ COutputPin::IoProcessRoutine()
             break;
         }
 
-        // get completion event
-        hEvent = StreamSegment->CompletionEvent;
+        // interface handle should increment pending i/o count
+        assert(m_IoCount >= 1);
+
+        swprintf(Buffer, L"COutputPin::IoProcessRoutine m_IoCount %lu NumHandles %lu\n", m_IoCount, NumHandles);
+        OutputDebugStringW(Buffer);
+
+        if (m_IoCount != NumHandles)
+            continue;
+
+        // get completion handle
+        hEvent = StreamSegment[0]->CompletionEvent;
 
         // wait for i/o completion
-        WaitForSingleObject(hEvent, INFINITE);
+        dwStatus = WaitForSingleObject(hEvent, INFINITE);
+
+        swprintf(Buffer, L"COutputPin::IoProcessRoutine dwStatus %lx Error %lx NumHandles %lu\n", dwStatus, GetLastError(), NumHandles);
+        OutputDebugStringW(Buffer);
 
         // perform completion
-        m_InterfaceHandler->KsCompleteIo(StreamSegment);
+        m_InterfaceHandler->KsCompleteIo(StreamSegment[0]);
 
         // close completion event
         CloseHandle(hEvent);
@@ -2452,7 +2522,7 @@ COutputPin::IoProcessRoutine()
             assert(m_MemInputPin);
 
             // now deliver the sample
-            hr = m_MemInputPin->Receive(Sample);
+            hr = m_MemInputPin->Receive(Samples[0]);
 
 #ifdef KSPROXY_TRACE
             swprintf(Buffer, L"COutputPin::IoProcessRoutine PinName %s IMemInputPin::Receive hr %lx Sample %p m_MemAllocator %p\n", m_PinName, hr, Sample, m_MemAllocator);
@@ -2464,6 +2534,11 @@ COutputPin::IoProcessRoutine()
 
             Sample = NULL;
         }
+
+        //circular stream segment array
+        RtlMoveMemory(StreamSegment, &StreamSegment[1], sizeof(PKSSTREAM_SEGMENT) * (NumHandles - 1));
+        RtlMoveMemory(Samples, &Samples[1], sizeof(IMediaSample*) * (NumHandles - 1));
+
     }while(TRUE);
 
     // signal end of i/o thread

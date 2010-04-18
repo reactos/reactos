@@ -40,7 +40,7 @@
 
 /* Make the code cleaner with some definitions for size multiples */
 #define _1KB (1024)
-#define _1MB (1000 * _1KB)
+#define _1MB (1024 * _1KB)
 
 /* Size of a PDE directory, and size of a page table */
 #define PDE_SIZE (PDE_COUNT * sizeof(MMPDE))
@@ -126,6 +126,12 @@ extern PVOID PoolTrackTable;
 //
 // END FIXFIX
 //
+
+typedef struct _MI_LARGE_PAGE_DRIVER_ENTRY
+{
+    LIST_ENTRY Links;
+    UNICODE_STRING BaseName;
+} MI_LARGE_PAGE_DRIVER_ENTRY, *PMI_LARGE_PAGE_DRIVER_ENTRY;
 
 typedef enum _MMSYSTEM_PTE_POOL_TYPE
 {
@@ -235,6 +241,9 @@ extern PFN_NUMBER MiLowNonPagedPoolThreshold;
 extern PFN_NUMBER MiHighNonPagedPoolThreshold;
 extern PFN_NUMBER MmMinimumFreePages;
 extern PFN_NUMBER MmPlentyFreePages;
+extern PFN_NUMBER MiExpansionPoolPagesInitialCharge;
+extern PFN_NUMBER MmResidentAvailablePages;
+extern PFN_NUMBER MmResidentAvailablePagesAtInit;
 
 #define MI_PFN_TO_PFNENTRY(x)     (&MmPfnDatabase[1][x])
 #define MI_PFNENTRY_TO_PFN(x)     (x - MmPfnDatabase[1])

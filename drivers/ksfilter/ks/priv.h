@@ -5,6 +5,7 @@
 #include <ntifs.h>
 #include <ntddk.h>
 #define NDEBUG
+//#define YDEBUG
 #include <debug.h>
 #include <portcls.h>
 #include <ks.h>
@@ -16,8 +17,12 @@
 #include "kstypes.h"
 #include "ksiface.h"
 
+#include "ksmedia.h"
+#include "bdamedia.h"
 
 #define TAG_DEVICE_HEADER 'KSDH'
+#define REG_PINFLAG_B_MANY 0x4 /* strmif.h */
+#define MERIT_DO_NOT_USE 0x200000 /* dshow.h */
 
 #define DEFINE_KSPROPERTY_PINPROPOSEDATAFORMAT(PinSet,\
     PropGeneral, PropInstances, PropIntersection)\
@@ -41,7 +46,7 @@ DEFINE_KSPROPERTY_TABLE(PinSet) {\
 DEFINE_KSPROPERTY_TABLE(PinSet) {\
     DEFINE_KSPROPERTY_ITEM_CONNECTION_STATE(PropStateHandler, PropStateHandler),\
     DEFINE_KSPROPERTY_ITEM_CONNECTION_DATAFORMAT(PropDataFormatHandler, PropDataFormatHandler),\
-    DEFINE_KSPROPERTY_ITEM_CONNECTION_ALLOCATORFRAMING(PropAllocatorFraming)\
+    DEFINE_KSPROPERTY_ITEM_CONNECTION_ALLOCATORFRAMING_EX(PropAllocatorFraming)\
 }
 
 

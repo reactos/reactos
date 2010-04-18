@@ -359,7 +359,7 @@ BEGIN
 END
 
 OPEN_WITH_PROGRAMM_DLG DIALOGEX 0, 0, 264, 256
-STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Open With"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
@@ -752,6 +752,8 @@ BEGIN
 
 	IDS_DEFAULT_CLUSTER_SIZE    "Default allocation size"
 	IDS_COPY_OF                 "Copy of"
+
+	IDS_SHLEXEC_NOASSOC         "There is no Windows program configured to open this type of file."
 END
 
 #pragma code_page(default)

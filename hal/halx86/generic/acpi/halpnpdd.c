@@ -848,9 +848,6 @@ HalpDriverEntry(IN PDRIVER_OBJECT DriverObject,
 
     /* Now add us */
     if (NT_SUCCESS(Status)) Status = HalpAddDevice(DriverObject, TargetDevice);
-    
-    /* Force re-enumeration??? */
-    IoInvalidateDeviceRelations(TargetDevice, 0);
 
     /* Return to kernel */
     return Status;

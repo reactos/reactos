@@ -854,7 +854,7 @@ SampleGrabber_ISampleGrabber_GetCurrentBuffer(ISampleGrabber *iface, LONG *bufSi
 static HRESULT WINAPI
 SampleGrabber_ISampleGrabber_GetCurrentSample(ISampleGrabber *iface, IMediaSample **sample)
 {
-    /* MS doesn't implement it either, noone should call it */
+    /* MS doesn't implement it either, no one should call it */
     WARN("(%p): not implemented\n", sample);
     return E_NOTIMPL;
 }
@@ -1264,7 +1264,7 @@ SampleGrabber_IPin_EnumMediaTypes(IPin *iface, IEnumMediaTypes **mtypes)
     TRACE("(%p)->(%p)\n", This, mtypes);
     if (!mtypes)
         return E_POINTER;
-    *mtypes = mediaenum_create(This->sg->pin_in.pair ? &This->sg->mtype : (const AM_MEDIA_TYPE *)NULL);
+    *mtypes = mediaenum_create(This->sg->pin_in.pair ? &This->sg->mtype : NULL);
     return *mtypes ? S_OK : E_OUTOFMEMORY;
 }
 
