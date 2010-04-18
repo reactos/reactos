@@ -170,7 +170,7 @@ UserRealizePalette ( HDC hDC )
 static HPEN SysColorPens[COLOR_MENUBAR + 1];
 static HBRUSH SysColorBrushes[COLOR_MENUBAR + 1];
 
-DWORD
+DWORD_PTR
 WINAPI
 SetSysColorsTemp(const COLORREF *pPens,
                  const HBRUSH *pBrushes,
@@ -193,7 +193,7 @@ SetSysColorsTemp(const COLORREF *pPens,
             SysColorBrushes[i] = pBrushes[i];
         }
 
-        return (DWORD) pOldCol; /* FIXME: pointer truncation */
+        return (DWORD_PTR) pOldCol;
     }
     if (!pPens && !pBrushes) /* "restore" call */
     {
