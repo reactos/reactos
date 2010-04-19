@@ -37,23 +37,17 @@ EngSetPointerTag(
  */
 INT INTERNAL_CALL
 MouseSafetyOnDrawStart(
-    SURFOBJ *pso,
+    PPDEVOBJ ppdev,
     LONG HazardX1,
     LONG HazardY1,
     LONG HazardX2,
     LONG HazardY2)
 {
     LONG tmp;
-    PDEVOBJ *ppdev;
     GDIPOINTER *pgp;
 
-    ASSERT(pso != NULL);
-
-    ppdev = GDIDEV(pso);
-    if (ppdev == NULL)
-    {
-        return FALSE;
-    }
+    ASSERT(ppdev != NULL);
+    ASSERT(ppdev->pSurface != NULL);
 
     pgp = &ppdev->Pointer;
 
@@ -88,7 +82,7 @@ MouseSafetyOnDrawStart(
             && pgp->Exclude.top <= HazardY2)
     {
         ppdev->SafetyRemoveLevel = ppdev->SafetyRemoveCount;
-        ppdev->pfnMovePointer(pso, -1, -1, NULL);
+        ppdev->pfnMovePointer(&ppdev->pSurface->SurfObj, -1, -1, NULL);
     }
 
     return(TRUE);
@@ -99,19 +93,12 @@ MouseSafetyOnDrawStart(
  */
 INT INTERNAL_CALL
 MouseSafetyOnDrawEnd(
-    SURFOBJ *pso)
+    PPDEVOBJ ppdev)
 {
-    PDEVOBJ *ppdev;
     GDIPOINTER *pgp;
 
-    ASSERT(pso != NULL);
-
-    ppdev = (PDEVOBJ*)pso->hdev;
-
-    if (ppdev == NULL)
-    {
-        return(FALSE);
-    }
+    ASSERT(ppdev != NULL);
+    ASSERT(ppdev->pSurface != NULL);
 
     pgp = &ppdev->Pointer;
 
@@ -125,7 +112,7 @@ MouseSafetyOnDrawEnd(
         return FALSE;
     }
 
-    ppdev->pfnMovePointer(pso, gpsi->ptCursor.x, gpsi->ptCursor.y, &pgp->Exclude);
+    ppdev->pfnMovePointer(&ppdev->pSurface->SurfObj, gpsi->ptCursor.x, gpsi->ptCursor.y, &pgp->Exclude);
 
     ppdev->SafetyRemoveLevel = 0;
 
@@ -635,7 +622,9 @@ GreSetPointerShape(
         return 0;
     }
 
-    psurf = pdc->dclevel.pSurface;
+    ASSERT(pdc->dctype == DCTYPE_DIRECT);
+    /* We're not sure DC surface is the good one */
+    psurf = pdc->ppdev->pSurface;
     if (!psurf)
     {
         DPRINT1("DC has no surface.\n");
@@ -710,12 +699,13 @@ GreMovePointer(
         DPRINT1("Failed to lock the DC.\n");
         return;
     }
+    ASSERT(pdc->dctype == DCTYPE_DIRECT);
 
     /* Store the cursor exclude position in the PDEV */
     prcl = &pdc->ppdev->Pointer.Exclude;
 
     /* Call Eng/Drv function */
-    IntEngMovePointer(&pdc->dclevel.pSurface->SurfObj, x, y, prcl);
+    IntEngMovePointer(&pdc->ppdev->pSurface->SurfObj, x, y, prcl);
 
     /* Unlock the DC */
     DC_UnlockDc(pdc);

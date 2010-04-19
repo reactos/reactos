@@ -493,20 +493,32 @@ DC_vPrepareDCsForBlit(PDC pdc1,
     if(pdcFirst && pdcFirst->dctype == DCTYPE_DIRECT)
     {
         EngAcquireSemaphore(pdcFirst->ppdev->hsemDevLock);
-        MouseSafetyOnDrawStart(&pdcFirst->dclevel.pSurface->SurfObj,
+        MouseSafetyOnDrawStart(pdcFirst->ppdev,
                                     prcFirst->left,
                                     prcFirst->top,
                                     prcFirst->right,
                                     prcFirst->bottom) ;
+        /* Update surface if needed */
+        if(pdcFirst->ppdev->pSurface != pdcFirst->dclevel.pSurface)
+        {
+            SURFACE_ShareUnlockSurface(pdcFirst->dclevel.pSurface);
+            pdcFirst->dclevel.pSurface = PDEVOBJ_pSurface(pdcFirst->ppdev);
+        }
     }
     if(pdcSecond && pdcSecond->dctype == DCTYPE_DIRECT)
     {
         EngAcquireSemaphore(pdcSecond->ppdev->hsemDevLock);
-        MouseSafetyOnDrawStart(&pdcSecond->dclevel.pSurface->SurfObj,
+        MouseSafetyOnDrawStart(pdcSecond->ppdev,
                                     prcSecond->left,
                                     prcSecond->top,
                                     prcSecond->right,
                                     prcSecond->bottom) ;
+        /* Update surface if needed */
+        if(pdcSecond->ppdev->pSurface != pdcSecond->dclevel.pSurface)
+        {
+            SURFACE_ShareUnlockSurface(pdcSecond->dclevel.pSurface);
+            pdcSecond->dclevel.pSurface = PDEVOBJ_pSurface(pdcSecond->ppdev);
+        }
     }
 }
 
@@ -517,7 +529,7 @@ DC_vFinishBlit(PDC pdc1, PDC pdc2)
 {
     if(pdc1->dctype == DCTYPE_DIRECT)
     {
-        MouseSafetyOnDrawEnd(&pdc1->dclevel.pSurface->SurfObj);
+        MouseSafetyOnDrawEnd(pdc1->ppdev);
         EngReleaseSemaphore(pdc1->ppdev->hsemDevLock);
     }
 
@@ -525,7 +537,7 @@ DC_vFinishBlit(PDC pdc1, PDC pdc2)
     {
         if(pdc2->dctype == DCTYPE_DIRECT)
         {
-            MouseSafetyOnDrawEnd(&pdc2->dclevel.pSurface->SurfObj);
+            MouseSafetyOnDrawEnd(pdc2->ppdev);
             EngReleaseSemaphore(pdc2->ppdev->hsemDevLock);
         }
     }
