@@ -777,7 +777,7 @@ UserChangeDisplaySettings(
         co_IntSendMessageTimeout(HWND_BROADCAST,
                                  WM_DISPLAYCHANGE,
                                  (WPARAM)ppdev->gdiinfo.cBitsPixel,
-                                 (LPARAM)(ppdev->gdiinfo.ulHorzRes + (ppdev->gdiinfo.ulHorzRes << 16)),
+                                 (LPARAM)(ppdev->gdiinfo.ulHorzRes + (ppdev->gdiinfo.ulVertRes << 16)),
                                  SMTO_NORMAL,
                                  100,
                                  &ulResult);
