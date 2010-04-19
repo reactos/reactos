@@ -986,9 +986,9 @@ IntPatBlt(
     BrushOrigin.x = pbrush->ptOrigin.x + pdc->ptlDCOrig.x;
     BrushOrigin.y = pbrush->ptOrigin.y + pdc->ptlDCOrig.y;
 
-    EBRUSHOBJ_vInit(&eboFill, pbrush, pdc);
-
     DC_vPrepareDCsForBlit(pdc, DestRect, NULL, DestRect);
+
+    EBRUSHOBJ_vInit(&eboFill, pbrush, pdc);
 
     ret = IntEngBitBlt(
         &psurf->SurfObj,
