@@ -1566,7 +1566,7 @@ static HRESULT __CLSIDFromString(LPCWSTR s, CLSID *id)
 
 /*****************************************************************************/
 
-HRESULT WINAPI CLSIDFromString(LPOLESTR idstr, CLSID *id )
+HRESULT WINAPI CLSIDFromString(LPCOLESTR idstr, LPCLSID id )
 {
     HRESULT ret;
 
