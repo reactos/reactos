@@ -385,7 +385,7 @@ EngSetPointerShape(
     pgp->HotSpot.y = yHot;
 
     /* Calculate lDelta for our surfaces. */
-    lDelta = DIB_GetDIBWidthBytes(pgp->Size.cx, 
+    lDelta = DIB_GetDIBWidthBytes(pgp->Size.cx,
                                   BitsPerFormat(pso->iBitmapFormat));
 
     rcl.left = 0;
@@ -526,7 +526,7 @@ EngMovePointer(
             prcl->right = prcl->left + pgp->Size.cx;
             prcl->bottom = prcl->top + pgp->Size.cy;
         }
-    } 
+    }
     else if (prcl != NULL)
     {
         prcl->left = prcl->top = prcl->right = prcl->bottom = -1;
@@ -542,6 +542,8 @@ IntEngMovePointer(
 {
     SURFACE *psurf = CONTAINING_RECORD(pso, SURFACE, SurfObj);
     PPDEVOBJ ppdev = (PPDEVOBJ)pso->hdev;
+    if(ppdev->SafetyRemoveLevel)
+        return ;
 
     SURFACE_LockBitmapBits(psurf);
     ppdev->pfnMovePointer(pso, x, y, prcl);
@@ -654,7 +656,7 @@ GreSetPointerShape(
     {
         /* We have one, lock it */
         psurfColor = SURFACE_ShareLockSurface(hbmColor);
-        
+
         if (psurfColor)
         {
             /* Create an XLATEOBJ, no mono support */
