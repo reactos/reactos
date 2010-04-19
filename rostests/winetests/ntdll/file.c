@@ -1473,7 +1473,8 @@ START_TEST(file)
     pNtQueryDirectoryFile   = (void *)GetProcAddress(hntdll, "NtQueryDirectoryFile");
 
     create_file_test();
-    open_file_test();
+    ok(0, "broken test: open_file_test\n");
+    //open_file_test();
     delete_file_test();
     read_file_test();
     nt_mailslot_test();
@@ -1482,5 +1483,6 @@ START_TEST(file)
     test_file_all_information();
     test_file_both_information();
     test_file_name_information();
-    test_file_all_name_information();
+    ok(0, "broken test: test_file_all_name_information \n");
+    //test_file_all_name_information();
 }
