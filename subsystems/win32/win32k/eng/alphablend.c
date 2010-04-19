@@ -140,8 +140,8 @@ EngAlphaBlend(IN SURFOBJ *psoDest,
         SourceStretchedRect.top = 0;
         SourceStretchedRect.bottom = SourceStretchedSize.cy;
         if (!IntEngStretchBlt(SourceStretchedObj, psoSource, NULL, NULL, NULL,
-                           NULL, NULL, &SourceStretchedRect, &InputRect,
-                           NULL, COLORONCOLOR))
+                           &SourceStretchedRect, SourceRect,
+                           NULL, NULL, NULL, ROP3_TO_ROP4(SRCCOPY)))
         {
             DPRINT1("EngStretchBlt failed!\n");
             EngFreeMem(SourceStretchedObj->pvBits);
