@@ -453,6 +453,34 @@ leave:
     return ret;
 }
 
+
+int FASTCALL
+CLIPPING_UpdateGCRegion(DC* Dc);
+
+static
+void
+DC_vUpdateDC(PDC pdc)
+{
+    HRGN hVisRgn ;
+    PPDEVOBJ ppdev = pdc->ppdev ;
+
+    pdc->dhpdev = ppdev->dhpdev;
+
+    SURFACE_ShareUnlockSurface(pdc->dclevel.pSurface);
+    pdc->dclevel.pSurface = PDEVOBJ_pSurface(ppdev);
+
+    PDEVOBJ_sizl(pdc->ppdev, &pdc->dclevel.sizl);
+    hVisRgn = NtGdiCreateRectRgn(0, 0, pdc->dclevel.sizl.cx, pdc->dclevel.sizl.cy);
+    ASSERT(hVisRgn);
+    GdiSelectVisRgn(pdc->BaseObject.hHmgr, hVisRgn);
+    GreDeleteObject(hVisRgn);
+
+    pdc->flGraphicsCaps = ppdev->devinfo.flGraphicsCaps;
+    pdc->flGraphicsCaps2 = ppdev->devinfo.flGraphicsCaps2;
+
+    pdc->pdcattr->ulDirty_ |= DIRTY_DEFAULT;
+}
+
 /* Prepare a blit for up to 2 DCs */
 /* rc1 and rc2 are the rectangles where we want to draw or
  * from where we take pixels. */
@@ -501,8 +529,7 @@ DC_vPrepareDCsForBlit(PDC pdc1,
         /* Update surface if needed */
         if(pdcFirst->ppdev->pSurface != pdcFirst->dclevel.pSurface)
         {
-            SURFACE_ShareUnlockSurface(pdcFirst->dclevel.pSurface);
-            pdcFirst->dclevel.pSurface = PDEVOBJ_pSurface(pdcFirst->ppdev);
+            DC_vUpdateDC(pdcFirst);
         }
     }
     if(pdcSecond && pdcSecond->dctype == DCTYPE_DIRECT)
@@ -516,8 +543,7 @@ DC_vPrepareDCsForBlit(PDC pdc1,
         /* Update surface if needed */
         if(pdcSecond->ppdev->pSurface != pdcSecond->dclevel.pSurface)
         {
-            SURFACE_ShareUnlockSurface(pdcSecond->dclevel.pSurface);
-            pdcSecond->dclevel.pSurface = PDEVOBJ_pSurface(pdcSecond->ppdev);
+            DC_vUpdateDC(pdcSecond);
         }
     }
 }
