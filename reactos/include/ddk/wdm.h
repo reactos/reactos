@@ -515,6 +515,34 @@ typedef enum _MODE {
 #define SINGLE_GROUP_LEGACY_API        1
 #endif
 
+#define SEMAPHORE_QUERY_STATE (0x0001)
+#define SEMAPHORE_MODIFY_STATE (0x0002)
+#define SEMAPHORE_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x3)
+
+typedef enum _LOGICAL_PROCESSOR_RELATIONSHIP {
+  RelationProcessorCore,
+  RelationNumaNode,
+  RelationCache,
+  RelationProcessorPackage,
+  RelationGroup,
+  RelationAll = 0xffff
+} LOGICAL_PROCESSOR_RELATIONSHIP;
+
+typedef enum _PROCESSOR_CACHE_TYPE {
+  CacheUnified,
+  CacheInstruction,
+  CacheData,
+  CacheTrace
+} PROCESSOR_CACHE_TYPE;
+
+typedef struct _CACHE_DESCRIPTOR {
+  UCHAR Level;
+  UCHAR Associativity;
+  USHORT LineSize;
+  ULONG Size;
+  PROCESSOR_CACHE_TYPE Type;
+} CACHE_DESCRIPTOR, *PCACHE_DESCRIPTOR;
+
 /* Processor features */
 #define PF_FLOATING_POINT_PRECISION_ERRATA  0   
 #define PF_FLOATING_POINT_EMULATED          1   
@@ -12579,10 +12607,6 @@ typedef enum {
 #define EVENT_QUERY_STATE (0x0001)
 #define EVENT_MODIFY_STATE (0x0002)
 #define EVENT_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x3)
-
-#define SEMAPHORE_QUERY_STATE (0x0001)
-#define SEMAPHORE_MODIFY_STATE (0x0002)
-#define SEMAPHORE_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x3)
 
 #define SYMBOLIC_LINK_QUERY               0x0001
 #define SYMBOLIC_LINK_ALL_ACCESS          (STANDARD_RIGHTS_REQUIRED | 0x1)

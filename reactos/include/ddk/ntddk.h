@@ -72,6 +72,19 @@ typedef struct _BUS_HANDLER *PBUS_HANDLER;
 
 typedef struct _PEB *PPEB;
 
+#ifndef _NTIMAGE_
+
+typedef struct _IMAGE_NT_HEADERS *PIMAGE_NT_HEADERS32;
+typedef struct _IMAGE_NT_HEADERS64 *PIMAGE_NT_HEADERS64;
+
+#ifdef _WIN64
+typedef PIMAGE_NT_HEADERS64 PIMAGE_NT_HEADERS;
+#else
+typedef PIMAGE_NT_HEADERS32 PIMAGE_NT_HEADERS;
+#endif
+
+#endif /* _NTIMAGE_ */
+
 #define EXCEPTION_READ_FAULT    0
 #define EXCEPTION_WRITE_FAULT   1
 #define EXCEPTION_EXECUTE_FAULT 8
