@@ -162,7 +162,7 @@ IntHideMousePointer(
     ptlSave.x = rclDest.left - pt.x;
     ptlSave.y = rclDest.top - pt.y;
 
-    IntEngBitBltEx(psoDest,
+    IntEngBitBlt(psoDest,
                    &pgp->psurfSave->SurfObj,
                    NULL,
                    NULL,
@@ -172,8 +172,7 @@ IntHideMousePointer(
                    &ptlSave,
                    NULL,
                    NULL,
-                   ROP3_TO_ROP4(SRCCOPY),
-                   FALSE);
+                   ROP3_TO_ROP4(SRCCOPY));
 }
 
 VOID
@@ -213,7 +212,7 @@ IntShowMousePointer(PDEVOBJ *ppdev, SURFOBJ *psoDest)
     rclPointer.bottom = min(pgp->Size.cy, psoDest->sizlBitmap.cy - pt.y);
 
     /* Copy the pixels under the cursor to temporary surface. */
-    IntEngBitBltEx(&pgp->psurfSave->SurfObj,
+    IntEngBitBlt(&pgp->psurfSave->SurfObj,
                    psoDest,
                    NULL,
                    NULL,
@@ -223,13 +222,12 @@ IntShowMousePointer(PDEVOBJ *ppdev, SURFOBJ *psoDest)
                    NULL,
                    NULL,
                    NULL,
-                   ROP3_TO_ROP4(SRCCOPY),
-                   FALSE);
+                   ROP3_TO_ROP4(SRCCOPY));
 
     /* Blt the pointer on the screen. */
     if (pgp->psurfColor)
     {
-        IntEngBitBltEx(psoDest,
+        IntEngBitBlt(psoDest,
                        &pgp->psurfMask->SurfObj,
                        NULL,
                        NULL,
@@ -239,10 +237,9 @@ IntShowMousePointer(PDEVOBJ *ppdev, SURFOBJ *psoDest)
                        NULL,
                        NULL,
                        NULL,
-                       ROP3_TO_ROP4(SRCAND),
-                       FALSE);
+                       ROP3_TO_ROP4(SRCAND));
 
-        IntEngBitBltEx(psoDest,
+        IntEngBitBlt(psoDest,
                        &pgp->psurfColor->SurfObj,
                        NULL,
                        NULL,
@@ -252,12 +249,11 @@ IntShowMousePointer(PDEVOBJ *ppdev, SURFOBJ *psoDest)
                        NULL,
                        NULL,
                        NULL,
-                       ROP3_TO_ROP4(SRCINVERT),
-                       FALSE);
+                       ROP3_TO_ROP4(SRCINVERT));
     }
     else
     {
-        IntEngBitBltEx(psoDest,
+        IntEngBitBlt(psoDest,
                        &pgp->psurfMask->SurfObj,
                        NULL,
                        NULL,
@@ -267,12 +263,11 @@ IntShowMousePointer(PDEVOBJ *ppdev, SURFOBJ *psoDest)
                        NULL,
                        NULL,
                        NULL,
-                       ROP3_TO_ROP4(SRCAND),
-                       FALSE);
+                       ROP3_TO_ROP4(SRCAND));
 
         rclPointer.top += pgp->Size.cy;
 
-        IntEngBitBltEx(psoDest,
+        IntEngBitBlt(psoDest,
                        &pgp->psurfMask->SurfObj,
                        NULL,
                        NULL,
@@ -282,8 +277,7 @@ IntShowMousePointer(PDEVOBJ *ppdev, SURFOBJ *psoDest)
                        NULL,
                        NULL,
                        NULL,
-                       ROP3_TO_ROP4(SRCINVERT),
-                       FALSE);
+                       ROP3_TO_ROP4(SRCINVERT));
     }
 }
 

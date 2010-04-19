@@ -521,7 +521,7 @@ EngBitBlt(SURFOBJ *DestObj,
 }
 
 BOOL APIENTRY
-IntEngBitBltEx(
+IntEngBitBlt(
     SURFOBJ *psoTrg,
     SURFOBJ *psoSrc,
     SURFOBJ *psoMask,
@@ -532,8 +532,7 @@ IntEngBitBltEx(
     POINTL *pptlMask,
     BRUSHOBJ *pbo,
     POINTL *pptlBrush,
-    ROP4 rop4,
-    BOOL bRemoveMouse)
+    ROP4 rop4)
 {
     SURFACE *psurfTrg;
     SURFACE *psurfSrc = NULL;
@@ -950,17 +949,17 @@ IntEngMaskBlt(SURFOBJ *psoDest,
     /* Dummy BitBlt to let driver know that it should flush its changes.
        This should really be done using a call to DrvSynchronizeSurface,
        but the VMware driver doesn't hook that call. */
-    IntEngBitBltEx(psoDest, NULL, psoMask, ClipRegion, DestColorTranslation,
+    IntEngBitBlt(psoDest, NULL, psoMask, ClipRegion, DestColorTranslation,
                    DestRect, pptlMask, pptlMask, pbo, BrushOrigin,
-                   R4_NOOP, FALSE);
+                   R4_NOOP);
 
     ret = EngMaskBitBlt(psoDest, psoMask, ClipRegion, DestColorTranslation, SourceColorTranslation,
                         &OutputRect, &InputPoint, pbo, BrushOrigin);
 
     /* Dummy BitBlt to let driver know that something has changed. */
-    IntEngBitBltEx(psoDest, NULL, psoMask, ClipRegion, DestColorTranslation,
+    IntEngBitBlt(psoDest, NULL, psoMask, ClipRegion, DestColorTranslation,
                    DestRect, pptlMask, pptlMask, pbo, BrushOrigin,
-                   R4_NOOP, FALSE);
+                   R4_NOOP);
 
     return ret;
 }

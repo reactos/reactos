@@ -45,7 +45,7 @@ IntEngLineTo(SURFOBJ *Surface,
              MIX mix);
 
 BOOL APIENTRY
-IntEngBitBltEx(SURFOBJ *DestObj,
+IntEngBitBlt(SURFOBJ *DestObj,
                SURFOBJ *SourceObj,
                SURFOBJ *Mask,
                CLIPOBJ *ClipRegion,
@@ -55,14 +55,7 @@ IntEngBitBltEx(SURFOBJ *DestObj,
                POINTL *MaskOrigin,
                BRUSHOBJ *Brush,
                POINTL *BrushOrigin,
-               ROP4 Rop4,
-               BOOL RemoveMouse);
-#define IntEngBitBlt(DestObj, SourceObj, Mask, ClipRegion, ColorTranslation, \
-                     DestRect, SourcePoint, MaskOrigin, Brush, BrushOrigin, \
-                     Rop4) \
-        IntEngBitBltEx((DestObj), (SourceObj), (Mask), (ClipRegion), \
-                       (ColorTranslation), (DestRect), (SourcePoint), \
-                       (MaskOrigin), (Brush), (BrushOrigin), (Rop4), TRUE)
+               ROP4 Rop4);
 
 BOOL APIENTRY
 IntEngStretchBlt(SURFOBJ *DestObj,
