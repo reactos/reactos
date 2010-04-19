@@ -942,13 +942,6 @@ IntPatBlt(
 
     ASSERT(pbrush);
 
-    psurf = pdc->dclevel.pSurface;
-    if (psurf == NULL)
-    {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
-        return FALSE;
-    }
-
     if (pbrush->flAttrs & GDIBRUSH_IS_NULL)
     {
         return TRUE;
@@ -987,6 +980,8 @@ IntPatBlt(
     BrushOrigin.y = pbrush->ptOrigin.y + pdc->ptlDCOrig.y;
 
     DC_vPrepareDCsForBlit(pdc, DestRect, NULL, DestRect);
+
+    psurf = pdc->dclevel.pSurface;
 
     EBRUSHOBJ_vInit(&eboFill, pbrush, pdc);
 
