@@ -139,12 +139,7 @@ EngAlphaBlend(IN SURFOBJ *psoDest,
         SourceStretchedRect.right = SourceStretchedSize.cx;
         SourceStretchedRect.top = 0;
         SourceStretchedRect.bottom = SourceStretchedSize.cy;
-        /* FIXME: IntEngStretchBlt isn't used here atm because it results in a
-                  try to acquire an already acquired mutex (lock the already locked source surface) */
-        /*if (!IntEngStretchBlt(SourceStretchedObj, psoSource, NULL, NULL,
-                              NULL, &SourceStretchedRect, SourceRect, NULL,
-                              NULL, NULL, COLORONCOLOR))*/
-        if (!EngStretchBlt(SourceStretchedObj, psoSource, NULL, NULL, NULL,
+        if (!IntEngStretchBlt(SourceStretchedObj, psoSource, NULL, NULL, NULL,
                            NULL, NULL, &SourceStretchedRect, &InputRect,
                            NULL, COLORONCOLOR))
         {
