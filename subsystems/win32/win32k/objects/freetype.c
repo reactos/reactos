@@ -3187,9 +3187,6 @@ GreExtTextOutW(
         return TRUE;
     }
 
-    /* FIXME : This is ugly, but this function must be rewritten anyway */
-    DC_vPrepareDCsForBlit(dc, dc->rosdc.CombinedClip->rclBounds, NULL, DestRect);
-
     pdcattr = dc->pdcattr;
 
     if (pdcattr->ulDirty_ & DIRTY_TEXT)
@@ -3263,6 +3260,8 @@ GreExtTextOutW(
         DestRect.right  += dc->ptlDCOrig.x;
         DestRect.bottom += dc->ptlDCOrig.y;
 
+        DC_vPrepareDCsForBlit(dc, DestRect, NULL, DestRect);
+
         IntEngBitBlt(
             &psurf->SurfObj,
             NULL,
@@ -3276,6 +3275,7 @@ GreExtTextOutW(
             &BrushOrigin,
             ROP3_TO_ROP4(PATCOPY));
         fuOptions &= ~ETO_OPAQUE;
+        DC_vFinishBlit(dc, NULL);
     }
     else
     {
@@ -3454,7 +3454,6 @@ GreExtTextOutW(
     /*
      * The main rendering loop.
      */
-
     for (i = 0; i < Count; i++)
     {
         if (fuOptions & ETO_GLYPH_INDEX)
@@ -3503,6 +3502,7 @@ GreExtTextOutW(
             DestRect.right = (TextLeft + (realglyph->root.advance.x >> 10) + 32) >> 6;
             DestRect.top = TextTop + yoff - ((face->size->metrics.ascender + 32) >> 6);
             DestRect.bottom = TextTop + yoff + ((32 - face->size->metrics.descender) >> 6);
+            DC_vPrepareDCsForBlit(dc, DestRect, NULL, DestRect);
             IntEngBitBlt(
                 &psurf->SurfObj,
                 NULL,
@@ -3515,7 +3515,9 @@ GreExtTextOutW(
                 &dc->eboBackground.BrushObject,
                 &BrushOrigin,
                 ROP3_TO_ROP4(PATCOPY));
+            DC_vFinishBlit(dc, NULL);
             BackgroundLeft = DestRect.right;
+
         }
 
         DestRect.left = ((TextLeft + 32) >> 6) + realglyph->left;
@@ -3568,7 +3570,7 @@ GreExtTextOutW(
             DestRect.right = lprc->right + dc->ptlDCOrig.x;
             DoBreak = TRUE;
         }
-
+        DC_vPrepareDCsForBlit(dc, DestRect, NULL, DestRect);
         IntEngMaskBlt(
             SurfObj,
             SourceGlyphSurf,
@@ -3579,6 +3581,7 @@ GreExtTextOutW(
             (PPOINTL)&MaskRect,
             &dc->eboText.BrushObject,
             &BrushOrigin);
+        DC_vFinishBlit(dc, NULL);
 
         EngUnlockSurface(SourceGlyphSurf);
         EngDeleteSurface((HSURF)HSourceGlyph);
@@ -3608,7 +3611,6 @@ GreExtTextOutW(
 
         String++;
     }
-
     IntUnLockFreeType;
 
     EXLATEOBJ_vCleanup(&exloRGB2Dst);
@@ -3616,7 +3618,6 @@ GreExtTextOutW(
     if (TextObj != NULL)
         TEXTOBJ_UnlockText(TextObj);
 good:
-    DC_vFinishBlit(dc, NULL);
     DC_UnlockDc( dc );
 
     return TRUE;
@@ -3627,7 +3628,7 @@ fail2:
 fail:
     if (TextObj != NULL)
         TEXTOBJ_UnlockText(TextObj);
-    DC_vFinishBlit(dc, NULL);
+
     DC_UnlockDc(dc);
 
     return FALSE;
