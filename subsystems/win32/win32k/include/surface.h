@@ -26,7 +26,7 @@ typedef struct _SURFACE
                                to get width/height of bitmap, use
                                bitmap.bmWidth/bitmap.bmHeight for
                                that */
-  
+
   HDC         hDC; // Doc in "Undocumented Windows", page 546, seems to be supported with XP.
   ULONG       cRef;         // 0x064
   HPALETTE    hpalHint;
@@ -37,8 +37,6 @@ typedef struct _SURFACE
   DWORD       dwOffset;
 
   /* reactos specific */
-  PFAST_MUTEX BitsLock;     /* You need to hold this lock before you touch
-                               the actual bits in the bitmap */
   HPALETTE hDIBPalette;
   DWORD dsBitfields[3]; // hack, should probably use palette instead
   DWORD biClrUsed;
@@ -64,12 +62,7 @@ typedef struct _SURFACE
 #define  SURFACE_ShareUnlockSurface(pBMObj)  \
   GDIOBJ_ShareUnlockObjByPtr ((POBJ)pBMObj)
 
-#define SURFACE_LockBitmapBits(pBMObj) ExEnterCriticalRegionAndAcquireFastMutexUnsafe((pBMObj)->BitsLock)
-#define SURFACE_UnlockBitmapBits(pBMObj) ExReleaseFastMutexUnsafeAndLeaveCriticalRegion((pBMObj)->BitsLock)
-
 BOOL INTERNAL_CALL SURFACE_Cleanup(PVOID ObjectBody);
-BOOL INTERNAL_CALL SURFACE_InitBitsLock(SURFACE *pBMObj);
-void INTERNAL_CALL SURFACE_CleanupBitsLock(SURFACE *pBMObj);
 
 #define GDIDEV(SurfObj) ((PDEVOBJ *)((SurfObj)->hdev))
 #define GDIDEVFUNCS(SurfObj) ((PDEVOBJ *)((SurfObj)->hdev))->DriverFunctions

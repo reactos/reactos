@@ -284,12 +284,6 @@ IntEngTransparentBlt(SURFOBJ *psoDest,
     OutputRect = InputClippedRect;
   }
 
-  if(psoSource != psoDest)
-  {
-    SURFACE_LockBitmapBits(psurfSource);
-  }
-  SURFACE_LockBitmapBits(psurfDest);
-
   if(psurfDest->flHooks & HOOK_TRANSPARENTBLT)
   {
     Ret = GDIDEVFUNCS(psoDest).TransparentBlt(
@@ -303,12 +297,6 @@ IntEngTransparentBlt(SURFOBJ *psoDest,
   {
     Ret = EngTransparentBlt(psoDest, psoSource, Clip, ColorTranslation,
                             &OutputRect, &InputRect, iTransColor, Reserved);
-  }
-
-  SURFACE_UnlockBitmapBits(psurfDest);
-  if(psoSource != psoDest)
-  {
-    SURFACE_UnlockBitmapBits(psurfSource);
   }
 
   return Ret;

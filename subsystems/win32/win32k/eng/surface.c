@@ -136,41 +136,8 @@ SURFACE_Cleanup(PVOID ObjectBody)
         }
     }
 
-    if (NULL != psurf->BitsLock)
-    {
-        ExFreePoolWithTag(psurf->BitsLock, TAG_SURFACE);
-        psurf->BitsLock = NULL;
-    }
-
     return TRUE;
 }
-
-BOOL INTERNAL_CALL
-SURFACE_InitBitsLock(PSURFACE psurf)
-{
-    psurf->BitsLock = ExAllocatePoolWithTag(NonPagedPool,
-                          sizeof(FAST_MUTEX),
-                          TAG_SURFACE);
-    if (NULL == psurf->BitsLock)
-    {
-        return FALSE;
-    }
-
-    ExInitializeFastMutex(psurf->BitsLock);
-
-    return TRUE;
-}
-
-void INTERNAL_CALL
-SURFACE_CleanupBitsLock(PSURFACE psurf)
-{
-    if (NULL != psurf->BitsLock)
-    {
-        ExFreePoolWithTag(psurf->BitsLock, TAG_SURFACE);
-        psurf->BitsLock = NULL;
-    }
-}
-
 
 /*
  * @implemented
@@ -348,12 +315,6 @@ IntCreateBitmap(IN SIZEL Size,
     }
     hbmp = psurf->BaseObject.hHmgr;
 
-    if (! SURFACE_InitBitsLock(psurf))
-    {
-        SURFACE_UnlockSurface(psurf);
-        SURFACE_FreeSurfaceByHandle(hbmp);
-        return 0;
-    }
     pso = &psurf->SurfObj;
 
     if (Format == BMF_4RLE)
@@ -436,7 +397,7 @@ IntCreateBitmap(IN SIZEL Size,
     psurf->flFlags = 0;
     psurf->dimension.cx = 0;
     psurf->dimension.cy = 0;
-    
+
     psurf->hSecure = NULL;
     psurf->hDIBSection = NULL;
 
@@ -526,7 +487,7 @@ SURFMEM_bCreateDib(IN PDEVBITMAPINFO BitmapInfo,
             /* The height times the bytes for each scanline */
             Size = BitmapInfo->Height * ScanLine;
         }
-        
+
         if (Size)
         {
             /* Check for allocation flag */
@@ -567,15 +528,6 @@ SURFMEM_bCreateDib(IN PDEVBITMAPINFO BitmapInfo,
         return NULL;
     }
 
-    /* Lock down the surface */
-    if (!SURFACE_InitBitsLock(psurf))
-    {
-        /* Bail out if that failed */
-        SURFACE_UnlockSurface(psurf);
-        SURFACE_FreeSurfaceByHandle(psurf->BaseObject.hHmgr);
-        return NULL;
-    }
-
     /* We should now have our surface object */
     pso = &psurf->SurfObj;
 
@@ -588,7 +540,7 @@ SURFMEM_bCreateDib(IN PDEVBITMAPINFO BitmapInfo,
     LocalSize.cx = BitmapInfo->Width;
     pso->sizlBitmap = LocalSize;
     pso->iType = STYPE_BITMAP;
-    
+
     /* Device-managed surface, no flags or dimension */
     pso->dhsurf = 0;
     pso->dhpdev = NULL;
@@ -599,10 +551,10 @@ SURFMEM_bCreateDib(IN PDEVBITMAPINFO BitmapInfo,
     psurf->hSecure = NULL;
     psurf->hDIBSection = NULL;
     psurf->flHooks = 0;
-    
+
     /* Set bits */
     pso->pvBits = Bits;
-    
+
     /* Check for bitmap type */
     if (!Compressed)
     {
@@ -626,7 +578,7 @@ SURFMEM_bCreateDib(IN PDEVBITMAPINFO BitmapInfo,
         /* Compressed surfaces don't have scanlines! */
         pso->lDelta = 0;
         pso->cjBits = BitmapInfo->Size;
-        
+
         /* Check for JPG or PNG */
         if ((BitmapInfo->Format != BMF_JPEG) && (BitmapInfo->Format != BMF_PNG))
         {
@@ -640,11 +592,11 @@ SURFMEM_bCreateDib(IN PDEVBITMAPINFO BitmapInfo,
             ASSERT(FALSE); // ENGDDI shouldn't be creating PNGs for drivers ;-)
         }
     }
-    
+
     /* Finally set the handle and uniq */
     pso->hsurf = (HSURF)psurf->BaseObject.hHmgr;
     pso->iUniq = 0;
-    
+
     /* Unlock and return the surface */
     SURFACE_UnlockSurface(psurf);
     return pso;
@@ -663,7 +615,7 @@ EngCreateBitmap(IN SIZEL Size,
 {
     SURFOBJ* Surface;
     DEVBITMAPINFO BitmapInfo;
-    
+
     /* Capture the parameters */
     BitmapInfo.Format = Format;
     BitmapInfo.Width = Size.cx;
@@ -700,7 +652,7 @@ EngCreateBitmap(IN SIZEL Size,
                 break;
         }
     }
-    
+
     /* Now create the surface */
     Surface = SURFMEM_bCreateDib(&BitmapInfo, Bits);
     if (!Surface) return 0;
@@ -731,12 +683,6 @@ EngCreateDeviceSurface(IN DHSURF dhsurf,
     hsurf = psurf->BaseObject.hHmgr;
     GDIOBJ_SetOwnership(hsurf, NULL);
 
-    if (!SURFACE_InitBitsLock(psurf))
-    {
-        SURFACE_UnlockSurface(psurf);
-        SURFACE_FreeSurfaceByHandle(hsurf);
-        return 0;
-    }
     pso = &psurf->SurfObj;
 
     pso->dhsurf = dhsurf;

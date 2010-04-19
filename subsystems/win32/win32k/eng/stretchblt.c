@@ -462,15 +462,10 @@ IntEngStretchBlt(SURFOBJ *psoDest,
 
     /* No success yet */
     ret = FALSE;
-    SURFACE_LockBitmapBits(psurfDest);
 
     if (UsesSource)
     {
         psurfSource = CONTAINING_RECORD(psoSource, SURFACE, SurfObj);
-        if (psoSource != psoDest)
-        {
-            SURFACE_LockBitmapBits(psurfSource);
-        }
     }
 
     /* Prepare color adjustment */
@@ -509,15 +504,6 @@ IntEngStretchBlt(SURFOBJ *psoDest,
                                pbo,
                                ROP);
     }
-
-    if (UsesSource)
-    {
-        if (psoSource != psoDest)
-        {
-            SURFACE_UnlockBitmapBits(psurfSource);
-        }
-    }
-    SURFACE_UnlockBitmapBits(psurfDest);
 
     return ret;
 }

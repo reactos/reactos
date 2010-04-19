@@ -582,19 +582,6 @@ IntEngBitBltEx(
         psurfSrc = NULL;
     }
 
-    if (bRemoveMouse)
-    {
-        SURFACE_LockBitmapBits(psurfTrg);
-
-        if (psoSrc)
-        {
-            if (psoSrc != psoTrg)
-            {
-                SURFACE_LockBitmapBits(psurfSrc);
-            }
-        }
-    }
-
     /* Is the target surface device managed? */
     if (psurfTrg->flHooks & HOOK_BITBLT)
     {
@@ -631,18 +618,6 @@ IntEngBitBltEx(
                         rop4);
 
     // FIXME: cleanup temp surface!
-
-    if (bRemoveMouse)
-    {
-        if (psoSrc)
-        {
-            if (psoSrc != psoTrg)
-            {
-                SURFACE_UnlockBitmapBits(psurfSrc);
-            }
-        }
-        SURFACE_UnlockBitmapBits(psurfTrg);
-    }
 
     return bResult;
 }
@@ -972,8 +947,6 @@ IntEngMaskBlt(SURFOBJ *psoDest,
     ASSERT(psoDest);
     psurfDest = CONTAINING_RECORD(psoDest, SURFACE, SurfObj);
 
-    SURFACE_LockBitmapBits(psurfDest);
-
     /* Dummy BitBlt to let driver know that it should flush its changes.
        This should really be done using a call to DrvSynchronizeSurface,
        but the VMware driver doesn't hook that call. */
@@ -988,8 +961,6 @@ IntEngMaskBlt(SURFOBJ *psoDest,
     IntEngBitBltEx(psoDest, NULL, psoMask, ClipRegion, DestColorTranslation,
                    DestRect, pptlMask, pptlMask, pbo, BrushOrigin,
                    R4_NOOP, FALSE);
-
-    SURFACE_UnlockBitmapBits(psurfDest);
 
     return ret;
 }

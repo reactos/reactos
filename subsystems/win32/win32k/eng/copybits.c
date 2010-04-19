@@ -53,13 +53,7 @@ EngCopyBits(SURFOBJ *psoDest,
     ASSERT(psoDest != NULL && psoSource != NULL && DestRect != NULL && SourcePoint != NULL);
 
     psurfSource = CONTAINING_RECORD(psoSource, SURFACE, SurfObj);
-    SURFACE_LockBitmapBits(psurfSource);
-
     psurfDest = CONTAINING_RECORD(psoDest, SURFACE, SurfObj);
-    if (psoDest != psoSource)
-    {
-        SURFACE_LockBitmapBits(psurfDest);
-    }
 
     // FIXME: Don't punt to the driver's DrvCopyBits immediately. Instead,
     //        mark the copy block function to be DrvCopyBits instead of the
@@ -180,12 +174,6 @@ EngCopyBits(SURFOBJ *psoDest,
     }
 
 cleanup:
-    if (psoDest != psoSource)
-    {
-        SURFACE_UnlockBitmapBits(psurfDest);
-    }
-    SURFACE_UnlockBitmapBits(psurfSource);
-
     return ret;
 }
 

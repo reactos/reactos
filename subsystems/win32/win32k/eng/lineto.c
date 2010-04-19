@@ -565,8 +565,6 @@ IntEngLineTo(SURFOBJ *psoDest,
     if (b.left == b.right) b.right++;
     if (b.top == b.bottom) b.bottom++;
 
-    SURFACE_LockBitmapBits(psurfDest);
-
     if (psurfDest->flHooks & HOOK_LINETO)
     {
         /* Call the driver's DrvLineTo */
@@ -585,8 +583,6 @@ IntEngLineTo(SURFOBJ *psoDest,
     {
         ret = EngLineTo(psoDest, ClipObj, pbo, x1, y1, x2, y2, RectBounds, Mix);
     }
-
-    SURFACE_UnlockBitmapBits(psurfDest);
 
     return ret;
 }

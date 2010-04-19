@@ -305,11 +305,6 @@ IntEngAlphaBlend(IN SURFOBJ *psoDest,
         return TRUE;
     }
 
-    SURFACE_LockBitmapBits(psurfDest);
-
-    if (psoSource != psoDest)
-        SURFACE_LockBitmapBits(psurfSource);
-
     /* Call the driver's DrvAlphaBlend if available */
     if (psurfDest->flHooks & HOOK_ALPHABLEND)
     {
@@ -323,10 +318,6 @@ IntEngAlphaBlend(IN SURFOBJ *psoDest,
         ret = EngAlphaBlend(psoDest, psoSource, ClipRegion, ColorTranslation,
                             DestRect, SourceRect, BlendObj);
     }
-
-    if (psoSource != psoDest)
-        SURFACE_UnlockBitmapBits(psurfSource);
-    SURFACE_UnlockBitmapBits(psurfDest);
 
     return ret;
 }

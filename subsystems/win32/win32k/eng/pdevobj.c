@@ -373,15 +373,12 @@ PDEVOBJ_bSwitchMode(
         goto leave;
     }
 
-    ASSERT(pSurface->BitsLock);
-
     /* 4. Get DirectDraw information */
     /* 5. Enable DirectDraw Not traced */
     /* 6. Copy old PDEV state to new PDEV instance */
 
     /* 7. Switch the PDEVs */
     PDEVOBJ_vSwitchPdev(ppdev, ppdevTmp);
-    ASSERT(ppdev->pSurface->BitsLock);
 
     /* 8. Disable DirectDraw */
 
@@ -395,7 +392,6 @@ leave:
     EngReleaseSemaphore(ghsemPDEV);
 
     DPRINT1("leave, ppdev = %p, pSurface = %p\n", ppdev, ppdev->pSurface);
-    ASSERT(ppdev->pSurface->BitsLock);
 
     return retval;
 }

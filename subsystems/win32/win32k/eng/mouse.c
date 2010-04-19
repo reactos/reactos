@@ -540,14 +540,13 @@ IntEngMovePointer(
     IN LONG y,
     IN RECTL *prcl)
 {
-    SURFACE *psurf = CONTAINING_RECORD(pso, SURFACE, SurfObj);
     PPDEVOBJ ppdev = (PPDEVOBJ)pso->hdev;
     if(ppdev->SafetyRemoveLevel)
         return ;
 
-    SURFACE_LockBitmapBits(psurf);
+    EngAcquireSemaphore(ppdev->hsemDevLock);
     ppdev->pfnMovePointer(pso, x, y, prcl);
-    SURFACE_UnlockBitmapBits(psurf);
+    EngReleaseSemaphore(ppdev->hsemDevLock);
 }
 
 ULONG APIENTRY
@@ -564,13 +563,12 @@ IntEngSetPointerShape(
    IN FLONG fl)
 {
     ULONG ulResult = SPS_DECLINE;
-    SURFACE *psurf = CONTAINING_RECORD(pso, SURFACE, SurfObj);
     PFN_DrvSetPointerShape pfnSetPointerShape;
     PPDEVOBJ ppdev = GDIDEV(pso);
 
     pfnSetPointerShape = GDIDEVFUNCS(pso).SetPointerShape;
 
-    SURFACE_LockBitmapBits(psurf);
+    EngAcquireSemaphore(ppdev->hsemDevLock);
     if (pfnSetPointerShape)
     {
         ulResult = pfnSetPointerShape(pso,
@@ -608,7 +606,7 @@ IntEngSetPointerShape(
         ppdev->pfnMovePointer = EngMovePointer;
     }
 
-    SURFACE_UnlockBitmapBits(psurf);
+    EngReleaseSemaphore(ppdev->hsemDevLock);
 
     return ulResult;
 }
