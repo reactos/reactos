@@ -531,9 +531,7 @@ IntEngMovePointer(
     if(ppdev->SafetyRemoveLevel)
         return ;
 
-    EngAcquireSemaphore(ppdev->hsemDevLock);
     ppdev->pfnMovePointer(pso, x, y, prcl);
-    EngReleaseSemaphore(ppdev->hsemDevLock);
 }
 
 ULONG APIENTRY
@@ -555,7 +553,6 @@ IntEngSetPointerShape(
 
     pfnSetPointerShape = GDIDEVFUNCS(pso).SetPointerShape;
 
-    EngAcquireSemaphore(ppdev->hsemDevLock);
     if (pfnSetPointerShape)
     {
         ulResult = pfnSetPointerShape(pso,
@@ -593,8 +590,6 @@ IntEngSetPointerShape(
         ppdev->pfnMovePointer = EngMovePointer;
     }
 
-    EngReleaseSemaphore(ppdev->hsemDevLock);
-
     return ulResult;
 }
 
@@ -623,11 +618,13 @@ GreSetPointerShape(
     }
 
     ASSERT(pdc->dctype == DCTYPE_DIRECT);
+    EngAcquireSemaphore(pdc->ppdev->hsemDevLock);
     /* We're not sure DC surface is the good one */
     psurf = pdc->ppdev->pSurface;
     if (!psurf)
     {
         DPRINT1("DC has no surface.\n");
+        EngReleaseSemaphore(pdc->ppdev->hsemDevLock);
         DC_UnlockDc(pdc);
         return 0;
     }
@@ -675,6 +672,8 @@ GreSetPointerShape(
     if (psurfMask)
         SURFACE_ShareUnlockSurface(psurfMask);
 
+    EngReleaseSemaphore(pdc->ppdev->hsemDevLock);
+
     /* Unlock the DC */
     DC_UnlockDc(pdc);
 
@@ -701,12 +700,14 @@ GreMovePointer(
     }
     ASSERT(pdc->dctype == DCTYPE_DIRECT);
 
+    EngAcquireSemaphore(pdc->ppdev->hsemDevLock);
     /* Store the cursor exclude position in the PDEV */
     prcl = &pdc->ppdev->Pointer.Exclude;
 
     /* Call Eng/Drv function */
     IntEngMovePointer(&pdc->ppdev->pSurface->SurfObj, x, y, prcl);
 
+    EngReleaseSemaphore(pdc->ppdev->hsemDevLock);
     /* Unlock the DC */
     DC_UnlockDc(pdc);
 }
