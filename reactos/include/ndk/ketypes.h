@@ -547,6 +547,17 @@ typedef enum _KAPC_ENVIRONMENT
 } KAPC_ENVIRONMENT;
 
 //
+// CPU Cache Types 	 
+// 	 
+typedef enum _PROCESSOR_CACHE_TYPE 	 
+{
+    CacheUnified, 	 
+    CacheInstruction, 	 
+    CacheData, 	 
+    CacheTrace, 	 
+} PROCESSOR_CACHE_TYPE;
+
+//
 // PRCB DPC Data
 //
 typedef struct _KDPC_DATA
@@ -565,6 +576,18 @@ typedef struct _PP_LOOKASIDE_LIST
     struct _GENERAL_LOOKASIDE *P;
     struct _GENERAL_LOOKASIDE *L;
 } PP_LOOKASIDE_LIST, *PPP_LOOKASIDE_LIST;
+
+//
+// CPU Cache Descriptor 	 
+// 	 
+typedef struct _CACHE_DESCRIPTOR 	 
+{
+    UCHAR Level; 	 
+    UCHAR Associativity; 	 
+    USHORT LineSize; 	 
+    ULONG Size; 	 
+    PROCESSOR_CACHE_TYPE Type; 	 
+} CACHE_DESCRIPTOR, *PCACHE_DESCRIPTOR;
 
 //
 // Architectural Types
