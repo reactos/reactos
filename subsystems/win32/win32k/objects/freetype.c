@@ -3506,7 +3506,7 @@ GreExtTextOutW(
             DestRect.right = (TextLeft + (realglyph->root.advance.x >> 10) + 32) >> 6;
             DestRect.top = TextTop + yoff - ((face->size->metrics.ascender + 32) >> 6);
             DestRect.bottom = TextTop + yoff + ((32 - face->size->metrics.descender) >> 6);
-            DC_vPrepareDCsForBlit(dc, DestRect, NULL, DestRect);
+            MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
             IntEngBitBlt(
                 &psurf->SurfObj,
                 NULL,
@@ -3519,7 +3519,7 @@ GreExtTextOutW(
                 &dc->eboBackground.BrushObject,
                 &BrushOrigin,
                 ROP3_TO_ROP4(PATCOPY));
-            DC_vFinishBlit(dc, NULL);
+            MouseSafetyOnDrawEnd(dc->ppdev);
             BackgroundLeft = DestRect.right;
 
         }
@@ -3574,7 +3574,7 @@ GreExtTextOutW(
             DestRect.right = lprc->right + dc->ptlDCOrig.x;
             DoBreak = TRUE;
         }
-        DC_vPrepareDCsForBlit(dc, DestRect, NULL, DestRect);
+        MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
         IntEngMaskBlt(
             SurfObj,
             SourceGlyphSurf,
@@ -3585,7 +3585,7 @@ GreExtTextOutW(
             (PPOINTL)&MaskRect,
             &dc->eboText.BrushObject,
             &BrushOrigin);
-        DC_vFinishBlit(dc, NULL);
+        MouseSafetyOnDrawEnd(dc->ppdev) ;
 
         EngUnlockSurface(SourceGlyphSurf);
         EngDeleteSurface((HSURF)HSourceGlyph);

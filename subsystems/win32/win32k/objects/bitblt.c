@@ -936,6 +936,7 @@ IntPatBlt(
 {
     RECTL DestRect;
     SURFACE *psurf;
+    EBRUSHOBJ eboFill ;
     POINTL BrushOrigin;
     BOOL ret;
 
@@ -985,6 +986,8 @@ IntPatBlt(
     if (pdc->pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
         DC_vUpdateFillBrush(pdc);
 
+    EBRUSHOBJ_vInit(&eboFill, pbrush, pdc);
+
     ret = IntEngBitBlt(
         &psurf->SurfObj,
         NULL,
@@ -994,11 +997,13 @@ IntPatBlt(
         &DestRect,
         NULL,
         NULL,
-        &pdc->eboFill.BrushObject,
+        &eboFill.BrushObject,
         &BrushOrigin,
         ROP3_TO_ROP4(dwRop));
 
     DC_vFinishBlit(pdc, NULL);
+
+    EBRUSHOBJ_vCleanup(&eboFill);
 
     return ret;
 }
