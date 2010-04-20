@@ -110,9 +110,6 @@ DC_vUpdateTextBrush(PDC pdc)
 {
     PDC_ATTR pdcattr = pdc->pdcattr;
 
-    if(pdcattr->ulDirty_ & DIRTY_TEXT)
-        EBRUSHOBJ_vUpdate(&pdc->eboText, pbrDefaultBrush, pdc);
-
     /* Update the eboText's solid color */
     EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboText, pdcattr->crForegroundClr);
 
