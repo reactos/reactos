@@ -2291,6 +2291,9 @@ NtGdiFillPath(HDC  hDC)
      return FALSE;
   }
 
+  DC_vPrepareDCsForBlit(dc, dc->rosdc.CombinedClip->rclBounds,
+                            NULL, dc->rosdc.CombinedClip->rclBounds);
+
   pdcattr = dc->pdcattr;
 
   if (pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
@@ -2298,9 +2301,6 @@ NtGdiFillPath(HDC  hDC)
 
   if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
       DC_vUpdateFillBrush(dc);
-
-  DC_vPrepareDCsForBlit(dc, dc->rosdc.CombinedClip->rclBounds,
-                            NULL, dc->rosdc.CombinedClip->rclBounds);
 
   ret = PATH_FillPath( dc, pPath );
   if ( ret )
@@ -2573,6 +2573,9 @@ NtGdiStrokeAndFillPath(HDC hDC)
      return FALSE;
   }
 
+  DC_vPrepareDCsForBlit(pDc, pDc->rosdc.CombinedClip->rclBounds,
+                            NULL, pDc->rosdc.CombinedClip->rclBounds);
+
   pdcattr = pDc->pdcattr;
 
   if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
@@ -2580,9 +2583,6 @@ NtGdiStrokeAndFillPath(HDC hDC)
 
   if (pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
     DC_vUpdateLineBrush(pDc);
-
-  DC_vPrepareDCsForBlit(pDc, pDc->rosdc.CombinedClip->rclBounds,
-                            NULL, pDc->rosdc.CombinedClip->rclBounds);
 
   bRet = PATH_FillPath(pDc, pPath);
   if (bRet) bRet = PATH_StrokePath(pDc, pPath);
@@ -2617,13 +2617,13 @@ NtGdiStrokePath(HDC hDC)
      return FALSE;
   }
 
+  DC_vPrepareDCsForBlit(pDc, pDc->rosdc.CombinedClip->rclBounds,
+                            NULL, pDc->rosdc.CombinedClip->rclBounds);
+
   pdcattr = pDc->pdcattr;
 
   if (pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
      DC_vUpdateLineBrush(pDc);
-
-  DC_vPrepareDCsForBlit(pDc, pDc->rosdc.CombinedClip->rclBounds,
-                            NULL, pDc->rosdc.CombinedClip->rclBounds);
 
   bRet = PATH_StrokePath(pDc, pPath);
 

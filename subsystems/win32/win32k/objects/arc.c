@@ -219,12 +219,6 @@ IntGdiArcInternal(
 
   pdcattr = dc->pdcattr;
 
-  if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
-    DC_vUpdateFillBrush(dc);
-
-  if (pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
-    DC_vUpdateLineBrush(dc);
-
   if (arctype == GdiTypeArcTo)
   {
     if (dc->dclevel.flPath & DCPATH_CLOCKWISE)
@@ -331,6 +325,10 @@ NtGdiAngleArc(
   worker1.l = dwSweepAngle;
   DC_vPrepareDCsForBlit(pDC, pDC->rosdc.CombinedClip->rclBounds,
                            NULL, pDC->rosdc.CombinedClip->rclBounds);
+  if (pDC->pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+    DC_vUpdateFillBrush(pDC);
+  if (pDC->pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
+    DC_vUpdateLineBrush(pDC);
   Ret = IntGdiAngleArc( pDC, x, y, dwRadius, worker.f, worker1.f);
   DC_vFinishBlit(pDC, NULL);
   DC_UnlockDc( pDC );
@@ -369,6 +367,12 @@ NtGdiArcInternal(
 
   DC_vPrepareDCsForBlit(dc, dc->rosdc.CombinedClip->rclBounds,
                             NULL, dc->rosdc.CombinedClip->rclBounds);
+
+  if (dc->pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+    DC_vUpdateFillBrush(dc);
+
+  if (dc->pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
+    DC_vUpdateLineBrush(dc);
 
   Ret = IntGdiArcInternal(
                   arctype,

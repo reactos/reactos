@@ -113,9 +113,6 @@ IntGdiLineTo(DC  *dc,
     }
     else
     {
-       if (pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
-          DC_vUpdateLineBrush(dc);
-
         psurf = dc->dclevel.pSurface;
         if (NULL == psurf)
         {
@@ -250,6 +247,9 @@ IntGdiPolyline(DC      *dc,
     if (PATH_IsPathOpen(dc->dclevel))
         return PATH_Polyline(dc, pt, Count);
 
+    DC_vPrepareDCsForBlit(dc, dc->rosdc.CombinedClip->rclBounds,
+                            NULL, dc->rosdc.CombinedClip->rclBounds);
+
     if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
         DC_vUpdateFillBrush(dc);
 
@@ -265,8 +265,6 @@ IntGdiPolyline(DC      *dc,
         Points = EngAllocMem(0, Count * sizeof(POINT), TAG_COORD);
         if (Points != NULL)
         {
-            DC_vPrepareDCsForBlit(dc, dc->rosdc.CombinedClip->rclBounds,
-                                    NULL, dc->rosdc.CombinedClip->rclBounds);
             psurf = dc->dclevel.pSurface;
             /* FIXME - psurf can be NULL!!!!
                Don't assert but handle this case gracefully! */
@@ -290,13 +288,14 @@ IntGdiPolyline(DC      *dc,
                                  ROP2_TO_MIX(pdcattr->jROP2));
 
             EngFreeMem(Points);
-            DC_vFinishBlit(dc, NULL);
         }
         else
         {
             Ret = FALSE;
         }
     }
+
+    DC_vFinishBlit(dc, NULL);
 
     return Ret;
 }
@@ -408,6 +407,9 @@ NtGdiLineTo(HDC  hDC,
     rcLockRect.bottom += dc->ptlDCOrig.y;
 
     DC_vPrepareDCsForBlit(dc, rcLockRect, NULL, rcLockRect);
+
+    if (dc->pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
+        DC_vUpdateLineBrush(dc);
 
     Ret = IntGdiLineTo(dc, XEnd, YEnd);
 

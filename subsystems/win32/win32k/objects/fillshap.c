@@ -481,6 +481,12 @@ NtGdiPolyPolyDraw( IN HDC hDC,
     DC_vPrepareDCsForBlit(dc, dc->rosdc.CombinedClip->rclBounds,
                             NULL, dc->rosdc.CombinedClip->rclBounds);
 
+    if (dc->pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+        DC_vUpdateFillBrush(dc);
+
+    if (dc->pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
+        DC_vUpdateLineBrush(dc);
+
     /* Perform the actual work */
     switch (iFunc)
     {
@@ -681,6 +687,12 @@ NtGdiRectangle(HDC  hDC,
     }
 
     DC_vPrepareDCsForBlit(dc, rect, NULL, rect);
+    if (dc->pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+        DC_vUpdateFillBrush(dc);
+
+    if (dc->pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
+        DC_vUpdateLineBrush(dc);
+
     ret = IntRectangle ( dc, LeftRect, TopRect, RightRect, BottomRect );
     DC_vFinishBlit(dc, NULL);
     DC_UnlockDc ( dc );

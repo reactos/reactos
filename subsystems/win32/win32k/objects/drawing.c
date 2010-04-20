@@ -64,14 +64,14 @@ typedef struct _Rect
 } Rect, *PRect;
 
 int FASTCALL IntFillRect(DC *dc, INT XLeft, INT YLeft, INT Width, INT Height, PBRUSH pbrush, BOOL Pen);
-int FASTCALL app_fill_rect(DC *dc, Rect r, PBRUSH pbrush, BOOL Pen);
+//int FASTCALL app_fill_rect(DC *dc, Rect r, PBRUSH pbrush, BOOL Pen);
 
 static
 POINT
 INTERNAL_CALL
 app_new_point(int x, int y)
 {
-	POINT p;	
+	POINT p;
 	p.x = x;
 	p.y = y;
 	return p;
@@ -332,7 +332,7 @@ app_draw_ellipse(DC *g, Rect r, PBRUSH pbrush)
  *
  *  The draw_arc algorithm is based on draw_ellipse, but unlike
  *  that algorithm is not symmetric in the general case, since
- *  an angular portion is clipped from the shape. 
+ *  an angular portion is clipped from the shape.
  *  This clipping is performed by keeping track of two hypothetical
  *  lines joining the centre point to the enclosing rectangle,
  *  at the angles start_angle and end_angle, using a line-intersection
@@ -376,7 +376,7 @@ app_fill_arc_rect(DC *g,
 	rise2 = p2.y - p0.y;
 	run2  = p2.x - p0.x;
 
-	if (r.y <= p0.y) // 
+	if (r.y <= p0.y) //
         {
 		/* in top half of arc ellipse */
 
@@ -599,7 +599,7 @@ app_fill_arc_rect(DC *g,
  *  between an outer and inner ellipse, and also the draw_arc and
  *  fill_arc operations which additionally clip drawing between
  *  a start_angle and an end_angle.
- *  
+ *
  */
 static
 int
@@ -912,7 +912,7 @@ app_fill_arc(DC *g, Rect r, int start_angle, int end_angle, PBRUSH pbrush, BOOL 
 		r1.height = r1.y+r1.height-r2.y;
 		r1.y = r2.y;
 		while (r1.height > 0) {
-			result &= app_fill_arc_rect(g, 
+			result &= app_fill_arc_rect(g,
 				rect(r1.x, r1.y, r1.width, 1),
 				p0, p1, p2, start_angle, end_angle, pbrush, FALSE);
 			r1.y += 1;
@@ -1273,7 +1273,7 @@ IntFillArc( PDC dc,
   pdcattr = dc->pdcattr;
 
   pbrush = BRUSH_LockBrush(pdcattr->hbrush);
-  if (!pbrush)   
+  if (!pbrush)
   {
       DPRINT1("FillArc Fail\n");
       SetLastWin32Error(ERROR_INTERNAL_ERROR);
@@ -1285,7 +1285,7 @@ IntFillArc( PDC dc,
                     (dc->dclevel.flPath & DCPATH_CLOCKWISE) ? -Start : -End,
                      pbrush, Chord);
 
-  BRUSH_UnlockBrush(pbrush);    
+  BRUSH_UnlockBrush(pbrush);
   return ret;
 }
 
@@ -1329,7 +1329,7 @@ IntFillEllipse( PDC dc,
                 INT XLeft,
                 INT YLeft,
                 INT Width,
-                INT Height, 
+                INT Height,
                 PBRUSH pbrush)
 {
   return (BOOL)app_fill_ellipse(dc, rect( XLeft, YLeft, Width, Height), pbrush);
@@ -1343,7 +1343,7 @@ IntFillRoundRect( PDC dc,
                   INT Right,
                   INT Bottom,
                   INT Wellipse,
-                  INT Hellipse, 
+                  INT Hellipse,
                   PBRUSH pbrush)
 {
   Rect r;
@@ -1385,7 +1385,7 @@ IntFillRoundRect( PDC dc,
                       270, 360, pbrush,FALSE);
 
      app_fill_arc(dc, rect(r.x+r.width-rx-rx, r.y, rx+rx, ry+ry),
-                      0, 90, pbrush,FALSE);   
+                      0, 90, pbrush,FALSE);
   }
   if (Wellipse < r.width)
   {
@@ -1419,7 +1419,7 @@ IntDrawRoundRect( PDC dc,
   r = rect( Left, Top, abs(Right-Left), abs(Bottom-Top));
   rx = Wellipse/2;
   ry = Hellipse/2;
-  
+
   if (Wellipse > r.width)
   {
      if (Hellipse > r.height) // > W > H
@@ -1437,7 +1437,7 @@ IntDrawRoundRect( PDC dc,
         app_draw_arc(dc, rect(r.x, r.y, Wellipse - 1, r.height - 1),
                          90, 270, pbrushPen, FALSE);
         app_draw_arc(dc, rect(Right - Wellipse, r.y, Wellipse - 1, r.height - 1),
-                         270, 90, pbrushPen, FALSE);        
+                         270, 90, pbrushPen, FALSE);
   }
   else // < W < H
   {
