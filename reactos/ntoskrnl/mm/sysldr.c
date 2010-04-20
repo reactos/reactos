@@ -44,6 +44,9 @@ PVOID MmLastUnloadedDrivers;
 PVOID MmTriageActionTaken;
 PVOID KernelVerifier;
 
+BOOLEAN MmMakeLowMemory;
+BOOLEAN MmEnforceWriteProtection = TRUE;
+
 /* FUNCTIONS ******************************************************************/
 
 PVOID
@@ -2040,6 +2043,87 @@ Quickie:
     return Status;
 }
 
+PLDR_DATA_TABLE_ENTRY
+NTAPI
+MiLookupDataTableEntry(IN PVOID Address)
+{
+    PLDR_DATA_TABLE_ENTRY LdrEntry, FoundEntry = NULL;
+    PLIST_ENTRY NextEntry;
+    PAGED_CODE();
+    
+    /* Loop entries */
+    NextEntry = PsLoadedModuleList.Flink;
+    do
+    {
+        /* Get the loader entry */
+        LdrEntry =  CONTAINING_RECORD(NextEntry,
+                                      LDR_DATA_TABLE_ENTRY,
+                                      InLoadOrderLinks);
+        
+        /* Check if the address matches */
+        if ((Address >= LdrEntry->DllBase) &&
+            (Address < (PVOID)((ULONG_PTR)LdrEntry->DllBase +
+                               LdrEntry->SizeOfImage)))
+        {
+            /* Found a match */
+            FoundEntry = LdrEntry;
+            break;
+        }
+        
+        /* Move on */
+        NextEntry = NextEntry->Flink;
+    } while(NextEntry != &PsLoadedModuleList);
+    
+    /* Return the entry */
+    return FoundEntry;
+}
+
+/*
+ * @implemented
+ */
+PVOID
+NTAPI
+MmPageEntireDriver(IN PVOID AddressWithinSection)
+{
+    PMMPTE StartPte, EndPte;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    PAGED_CODE();
+
+    /* Get the loader entry */
+    LdrEntry = MiLookupDataTableEntry(AddressWithinSection);
+    if (!LdrEntry) return NULL;
+
+    /* Check if paging of kernel mode is disabled or if the driver is mapped as an image */
+    if ((MmDisablePagingExecutive) || (LdrEntry->SectionPointer))
+    {
+        /* Don't do anything, just return the base address */
+        return LdrEntry->DllBase;
+    }
+
+    /* Wait for active DPCs to finish before we page out the driver */
+    KeFlushQueuedDpcs();
+
+    /* Get the PTE range for the whole driver image */
+    StartPte = MiAddressToPte((ULONG_PTR)LdrEntry->DllBase);
+    EndPte = MiAddressToPte((ULONG_PTR)LdrEntry->DllBase + LdrEntry->SizeOfImage);
+#if 0
+    /* Enable paging for the PTE range */
+    ASSERT(MI_IS_SESSION_IMAGE_ADDRESS(AddressWithinSection) == FALSE);
+    MiSetPagingOfDriver(StartPte, EndPte);
+#endif
+    /* Return the base address */
+    return LdrEntry->DllBase;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+NTAPI
+MmResetDriverPaging(IN PVOID AddressWithinSection)
+{
+    UNIMPLEMENTED;
+}
 /*
  * @implemented
  */

@@ -394,6 +394,7 @@
 			<file>expool.c</file>
 			<file>hypermap.c</file>
 			<file>iosup.c</file>
+			<file>largepag.c</file>
 			<file>mdlsup.c</file>
 			<file>mminit.c</file>
 			<file>mmsup.c</file>
