@@ -109,11 +109,11 @@ static nsrefcnt NSAPI nsDOMEventListener_Release(nsIDOMEventListener *iface)
     return release_listener(This);
 }
 
-static BOOL is_doc_child_focus(HTMLDocumentObj *doc)
+static BOOL is_doc_child_focus(NSContainer *nscontainer)
 {
     HWND hwnd;
 
-    for(hwnd = GetFocus(); hwnd && hwnd != doc->hwnd; hwnd = GetParent(hwnd));
+    for(hwnd = GetFocus(); hwnd && hwnd != nscontainer->hwnd; hwnd = GetParent(hwnd));
 
     return hwnd != NULL;
 }
@@ -129,7 +129,7 @@ static nsresult NSAPI handle_blur(nsIDOMEventListener *iface, nsIDOMEvent *event
         return NS_ERROR_FAILURE;
     doc_obj = doc->basedoc.doc_obj;
 
-    if(!doc_obj->nscontainer->reset_focus && doc_obj->focus && !is_doc_child_focus(doc_obj)) {
+    if(doc_obj->focus && !is_doc_child_focus(doc_obj->nscontainer)) {
         doc_obj->focus = FALSE;
         notif_focus(doc_obj);
     }
@@ -148,7 +148,7 @@ static nsresult NSAPI handle_focus(nsIDOMEventListener *iface, nsIDOMEvent *even
         return NS_ERROR_FAILURE;
     doc_obj = doc->basedoc.doc_obj;
 
-    if(!doc_obj->nscontainer->reset_focus && !doc_obj->focus) {
+    if(!doc_obj->focus) {
         doc_obj->focus = TRUE;
         notif_focus(doc_obj);
     }

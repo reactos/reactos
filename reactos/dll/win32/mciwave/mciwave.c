@@ -47,6 +47,8 @@ typedef struct {
     WAVEFORMATEX		wfxRef;
     LPWAVEFORMATEX		lpWaveFormat;	/* Points to wfxRef until set by OPEN or RECORD */
     BOOL			fInput;		/* FALSE = Output, TRUE = Input */
+    WORD			wInput;		/* wave input device */
+    WORD			wOutput;	/* wave output device */
     volatile WORD		dwStatus;	/* one from MCI_MODE_xxxx */
     DWORD			dwMciTimeFormat;/* One of the supported MCI_FORMAT_xxxx */
     DWORD			dwPosition;	/* position in bytes in chunk */
@@ -529,6 +531,7 @@ static LRESULT WAVE_mciOpen(MCIDEVICEID wDevID, DWORD dwFlags, LPMCI_WAVE_OPEN_P
 
     wmw->nUseCount++;
 
+    wmw->wInput = wmw->wOutput = WAVE_MAPPER;
     wmw->fInput = FALSE;
     wmw->hWave = 0;
     wmw->dwStatus = MCI_MODE_NOT_READY;
@@ -831,8 +834,7 @@ static DWORD WAVE_mciPlay(MCIDEVICEID wDevID, DWORD_PTR dwFlags, DWORD_PTR pmt, 
      */
     mmioSeek(wmw->hFile, wmw->ckWaveData.dwDataOffset + wmw->dwPosition, SEEK_SET); /* >= 0 */
 
-    /* FIXME: how to choose between several output channels ? here mapper is forced */
-    dwRet = waveOutOpen((HWAVEOUT *)&wmw->hWave, WAVE_MAPPER, wmw->lpWaveFormat,
+    dwRet = waveOutOpen((HWAVEOUT *)&wmw->hWave, wmw->wOutput, wmw->lpWaveFormat,
 			(DWORD_PTR)WAVE_mciPlayCallback, (DWORD_PTR)wmw, CALLBACK_FUNCTION);
 
     if (dwRet != 0) {
@@ -1064,11 +1066,7 @@ static DWORD WAVE_mciRecord(MCIDEVICEID wDevID, DWORD_PTR dwFlags, DWORD_PTR pmt
      */
     mmioSeek(wmw->hFile, wmw->ckWaveData.dwDataOffset + wmw->dwPosition, SEEK_SET); /* >= 0 */
 
-    /* By default the device will be opened for output, the MCI_CUE function is there to
-     * change from output to input and back
-     */
-    /* FIXME: how to choose between several output channels ? here mapper is forced */
-    dwRet = waveInOpen((HWAVEIN*)&wmw->hWave, WAVE_MAPPER, wmw->lpWaveFormat,
+    dwRet = waveInOpen((HWAVEIN*)&wmw->hWave, wmw->wInput, wmw->lpWaveFormat,
 			(DWORD_PTR)WAVE_mciRecordCallback, (DWORD_PTR)wmw, CALLBACK_FUNCTION);
 
     if (dwRet != MMSYSERR_NOERROR) {
@@ -1279,7 +1277,7 @@ static DWORD WAVE_mciSeek(MCIDEVICEID wDevID, DWORD dwFlags, LPMCI_SEEK_PARMS lp
 /**************************************************************************
  * 				WAVE_mciSet			[internal]
  */
-static DWORD WAVE_mciSet(MCIDEVICEID wDevID, DWORD dwFlags, LPMCI_SET_PARMS lpParms)
+static DWORD WAVE_mciSet(MCIDEVICEID wDevID, DWORD dwFlags, LPMCI_WAVE_SET_PARMS lpParms)
 {
     WINE_MCIWAVE*	wmw = WAVE_mciGetOpenDev(wDevID);
 
@@ -1337,44 +1335,64 @@ static DWORD WAVE_mciSet(MCIDEVICEID wDevID, DWORD dwFlags, LPMCI_SET_PARMS lpPa
         default:                        WARN("Unknown audio channel %u\n", lpParms->dwAudio); break;
         }
     }
-    if (dwFlags & MCI_WAVE_INPUT)
-	TRACE("MCI_WAVE_INPUT !\n");
-    if (dwFlags & MCI_WAVE_OUTPUT)
-	TRACE("MCI_WAVE_OUTPUT !\n");
-    if (dwFlags & MCI_WAVE_SET_ANYINPUT)
-	TRACE("MCI_WAVE_SET_ANYINPUT !\n");
-    if (dwFlags & MCI_WAVE_SET_ANYOUTPUT)
-	TRACE("MCI_WAVE_SET_ANYOUTPUT !\n");
+    if (dwFlags & MCI_WAVE_INPUT) {
+	TRACE("MCI_WAVE_INPUT = %d\n", lpParms->wInput);
+	if (lpParms->wInput >= waveInGetNumDevs())
+	    return MCIERR_OUTOFRANGE;
+	if (wmw->wInput != (WORD)lpParms->wInput)
+	    WAVE_mciStop(wDevID, MCI_WAIT, NULL);
+	wmw->wInput = lpParms->wInput;
+    }
+    if (dwFlags & MCI_WAVE_OUTPUT) {
+	TRACE("MCI_WAVE_OUTPUT = %d\n", lpParms->wOutput);
+	if (lpParms->wOutput >= waveOutGetNumDevs())
+	    return MCIERR_OUTOFRANGE;
+	if (wmw->wOutput != (WORD)lpParms->wOutput)
+	    WAVE_mciStop(wDevID, MCI_WAIT, NULL);
+	wmw->wOutput = lpParms->wOutput;
+    }
+    if (dwFlags & MCI_WAVE_SET_ANYINPUT) {
+	TRACE("MCI_WAVE_SET_ANYINPUT\n");
+	if (wmw->wInput != (WORD)lpParms->wInput)
+	    WAVE_mciStop(wDevID, MCI_WAIT, NULL);
+	wmw->wInput = WAVE_MAPPER;
+    }
+    if (dwFlags & MCI_WAVE_SET_ANYOUTPUT) {
+	TRACE("MCI_WAVE_SET_ANYOUTPUT\n");
+	if (wmw->wOutput != (WORD)lpParms->wOutput)
+	    WAVE_mciStop(wDevID, MCI_WAIT, NULL);
+	wmw->wOutput = WAVE_MAPPER;
+    }
     /* Set wave format parameters is refused after Open or Record.*/
     if (dwFlags & MCI_WAVE_SET_FORMATTAG) {
-	TRACE("MCI_WAVE_SET_FORMATTAG = %d\n", ((LPMCI_WAVE_SET_PARMS)lpParms)->wFormatTag);
+	TRACE("MCI_WAVE_SET_FORMATTAG = %d\n", lpParms->wFormatTag);
 	if (wmw->lpWaveFormat != &wmw->wfxRef) return MCIERR_NONAPPLICABLE_FUNCTION;
-	if (((LPMCI_WAVE_SET_PARMS)lpParms)->wFormatTag != WAVE_FORMAT_PCM)
+	if (lpParms->wFormatTag != WAVE_FORMAT_PCM)
 	    return MCIERR_OUTOFRANGE;
     }
     if (dwFlags & MCI_WAVE_SET_AVGBYTESPERSEC) {
 	if (wmw->lpWaveFormat != &wmw->wfxRef) return MCIERR_NONAPPLICABLE_FUNCTION;
-	wmw->wfxRef.nAvgBytesPerSec = ((LPMCI_WAVE_SET_PARMS)lpParms)->nAvgBytesPerSec;
+	wmw->wfxRef.nAvgBytesPerSec = lpParms->nAvgBytesPerSec;
 	TRACE("MCI_WAVE_SET_AVGBYTESPERSEC = %d\n", wmw->wfxRef.nAvgBytesPerSec);
     }
     if (dwFlags & MCI_WAVE_SET_BITSPERSAMPLE) {
 	if (wmw->lpWaveFormat != &wmw->wfxRef) return MCIERR_NONAPPLICABLE_FUNCTION;
-	wmw->wfxRef.wBitsPerSample = ((LPMCI_WAVE_SET_PARMS)lpParms)->wBitsPerSample;
+	wmw->wfxRef.wBitsPerSample = lpParms->wBitsPerSample;
 	TRACE("MCI_WAVE_SET_BITSPERSAMPLE = %d\n", wmw->wfxRef.wBitsPerSample);
     }
     if (dwFlags & MCI_WAVE_SET_BLOCKALIGN) {
 	if (wmw->lpWaveFormat != &wmw->wfxRef) return MCIERR_NONAPPLICABLE_FUNCTION;
-	wmw->wfxRef.nBlockAlign = ((LPMCI_WAVE_SET_PARMS)lpParms)->nBlockAlign;
+	wmw->wfxRef.nBlockAlign = lpParms->nBlockAlign;
 	TRACE("MCI_WAVE_SET_BLOCKALIGN = %d\n", wmw->wfxRef.nBlockAlign);
     }
     if (dwFlags & MCI_WAVE_SET_CHANNELS) {
 	if (wmw->lpWaveFormat != &wmw->wfxRef) return MCIERR_NONAPPLICABLE_FUNCTION;
-	wmw->wfxRef.nChannels = ((LPMCI_WAVE_SET_PARMS)lpParms)->nChannels;
+	wmw->wfxRef.nChannels = lpParms->nChannels;
 	TRACE("MCI_WAVE_SET_CHANNELS = %d\n", wmw->wfxRef.nChannels);
     }
     if (dwFlags & MCI_WAVE_SET_SAMPLESPERSEC) {
 	if (wmw->lpWaveFormat != &wmw->wfxRef) return MCIERR_NONAPPLICABLE_FUNCTION;
-	wmw->wfxRef.nSamplesPerSec = ((LPMCI_WAVE_SET_PARMS)lpParms)->nSamplesPerSec;
+	wmw->wfxRef.nSamplesPerSec = lpParms->nSamplesPerSec;
 	TRACE("MCI_WAVE_SET_SAMPLESPERSEC = %d\n", wmw->wfxRef.nSamplesPerSec);
     }
     if (dwFlags & MCI_NOTIFY)
@@ -1500,24 +1518,34 @@ static DWORD WAVE_mciStatus(MCIDEVICEID wDevID, DWORD dwFlags, LPMCI_STATUS_PARM
 	    ret = MCI_RESOURCE_RETURNED;
 	    break;
 	case MCI_WAVE_INPUT:
-	    TRACE("MCI_WAVE_INPUT !\n");
-	    lpParms->dwReturn = 0;
-	    ret = MCIERR_WAVE_INPUTUNSPECIFIED;
+	    if (wmw->wInput != (WORD)WAVE_MAPPER)
+		lpParms->dwReturn = wmw->wInput;
+	    else {
+		lpParms->dwReturn = MAKEMCIRESOURCE(WAVE_MAPPER, WAVE_MAPPER_S);
+		ret = MCI_RESOURCE_RETURNED;
+	    }
+	    TRACE("MCI_WAVE_INPUT => %d\n", (signed)wmw->wInput);
 	    break;
 	case MCI_WAVE_OUTPUT:
-	    TRACE("MCI_WAVE_OUTPUT !\n");
-	    {
-		UINT	id;
-		if (waveOutGetID(wmw->hWave, &id) == MMSYSERR_NOERROR) {
-		    lpParms->dwReturn = id;
-		} else {
-		    lpParms->dwReturn = 0;
-		    ret = MCIERR_WAVE_OUTPUTUNSPECIFIED;
-		}
+	    if (wmw->wOutput != (WORD)WAVE_MAPPER)
+		lpParms->dwReturn = wmw->wOutput;
+	    else {
+		lpParms->dwReturn = MAKEMCIRESOURCE(WAVE_MAPPER, WAVE_MAPPER_S);
+		ret = MCI_RESOURCE_RETURNED;
 	    }
+	    TRACE("MCI_WAVE_OUTPUT => %d\n", (signed)wmw->wOutput);
 	    break;
 	/* It is always ok to query wave format parameters,
 	 * except on auto-open yield MCIERR_UNSUPPORTED_FUNCTION. */
+	case MCI_WAVE_STATUS_FORMATTAG:
+	    if (wmw->lpWaveFormat->wFormatTag != WAVE_FORMAT_PCM)
+		lpParms->dwReturn = wmw->lpWaveFormat->wFormatTag;
+	    else {
+		lpParms->dwReturn = MAKEMCIRESOURCE(WAVE_FORMAT_PCM, WAVE_FORMAT_PCM_S);
+		ret = MCI_RESOURCE_RETURNED;
+	    }
+	    TRACE("MCI_WAVE_FORMATTAG => %lu\n", lpParms->dwReturn);
+	    break;
 	case MCI_WAVE_STATUS_AVGBYTESPERSEC:
 	    lpParms->dwReturn = wmw->lpWaveFormat->nAvgBytesPerSec;
 	    TRACE("MCI_WAVE_STATUS_AVGBYTESPERSEC => %lu\n", lpParms->dwReturn);
@@ -1533,10 +1561,6 @@ static DWORD WAVE_mciStatus(MCIDEVICEID wDevID, DWORD dwFlags, LPMCI_STATUS_PARM
 	case MCI_WAVE_STATUS_CHANNELS:
 	    lpParms->dwReturn = wmw->lpWaveFormat->nChannels;
 	    TRACE("MCI_WAVE_STATUS_CHANNELS => %lu\n", lpParms->dwReturn);
-	    break;
-	case MCI_WAVE_STATUS_FORMATTAG:
-	    lpParms->dwReturn = wmw->lpWaveFormat->wFormatTag;
-	    TRACE("MCI_WAVE_FORMATTAG => %lu\n", lpParms->dwReturn);
 	    break;
 	case MCI_WAVE_STATUS_SAMPLESPERSEC:
 	    lpParms->dwReturn = wmw->lpWaveFormat->nSamplesPerSec;
@@ -1705,7 +1729,7 @@ LRESULT CALLBACK MCIWAVE_DriverProc(DWORD_PTR dwDevID, HDRVR hDriv, UINT wMsg,
     case MCI_PLAY:		return WAVE_mciPlay      (dwDevID, dwParam1, dwParam2, NULL);
     case MCI_RECORD:		return WAVE_mciRecord    (dwDevID, dwParam1, dwParam2, NULL);
     case MCI_STOP:		return WAVE_mciStop      (dwDevID, dwParam1, (LPMCI_GENERIC_PARMS)     dwParam2);
-    case MCI_SET:		return WAVE_mciSet       (dwDevID, dwParam1, (LPMCI_SET_PARMS)         dwParam2);
+    case MCI_SET:		return WAVE_mciSet       (dwDevID, dwParam1, (LPMCI_WAVE_SET_PARMS)    dwParam2);
     case MCI_PAUSE:		return WAVE_mciPause     (dwDevID, dwParam1, (LPMCI_GENERIC_PARMS)     dwParam2);
     case MCI_RESUME:		return WAVE_mciResume    (dwDevID, dwParam1, (LPMCI_GENERIC_PARMS)     dwParam2);
     case MCI_STATUS:		return WAVE_mciStatus    (dwDevID, dwParam1, (LPMCI_STATUS_PARMS)      dwParam2);

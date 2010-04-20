@@ -80,8 +80,6 @@ static const WCHAR wszNsContainer[] = {'N','s','C','o','n','t','a','i','n','e','
 
 static ATOM nscontainer_class;
 
-#define WM_RESETFOCUS_HACK WM_USER+600
-
 static LRESULT WINAPI nsembed_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     NSContainer *This;
@@ -106,20 +104,13 @@ static LRESULT WINAPI nsembed_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
             WARN("SetSize failed: %08x\n", nsres);
         break;
 
-    case WM_RESETFOCUS_HACK:
-        /*
-         * FIXME
-         * Gecko grabs focus in edit mode and some apps don't like it.
-         * We should somehow prevent grabbing focus.
-         */
+    case WM_PARENTNOTIFY:
+        TRACE("WM_PARENTNOTIFY %x\n", (unsigned)wParam);
 
-        TRACE("WM_RESETFOCUS_HACK\n");
-
-        if(This->reset_focus) {
-            SetFocus(This->reset_focus);
-            This->reset_focus = NULL;
-            if(This->doc)
-                This->doc->focus = FALSE;
+        switch(wParam) {
+        case WM_LBUTTONDOWN:
+        case WM_RBUTTONDOWN:
+            nsIWebBrowserFocus_Activate(This->focus);
         }
     }
 
@@ -776,46 +767,6 @@ void get_editor_controller(NSContainer *This)
     }
 }
 
-void set_ns_editmode(NSContainer *This)
-{
-    nsIEditingSession *editing_session = NULL;
-    nsIURIContentListener *listener = NULL;
-    nsIDOMWindow *dom_window = NULL;
-    nsresult nsres;
-
-    nsres = get_nsinterface((nsISupports*)This->webbrowser, &IID_nsIEditingSession,
-            (void**)&editing_session);
-    if(NS_FAILED(nsres)) {
-        ERR("Could not get nsIEditingSession: %08x\n", nsres);
-        return;
-    }
-
-    nsres = nsIWebBrowser_GetContentDOMWindow(This->webbrowser, &dom_window);
-    if(NS_FAILED(nsres)) {
-        ERR("Could not get content DOM window: %08x\n", nsres);
-        nsIEditingSession_Release(editing_session);
-        return;
-    }
-
-    nsres = nsIEditingSession_MakeWindowEditable(editing_session, dom_window,
-            NULL, FALSE, TRUE, TRUE);
-    nsIEditingSession_Release(editing_session);
-    nsIDOMWindow_Release(dom_window);
-    if(NS_FAILED(nsres)) {
-        ERR("MakeWindowEditable failed: %08x\n", nsres);
-        return;
-    }
-
-    /* MakeWindowEditable changes WebBrowser's parent URI content listener.
-     * It seams to be a bug in Gecko. To workaround it we set our content
-     * listener again and Gecko's one as its parent.
-     */
-    nsIWebBrowser_GetParentURIContentListener(This->webbrowser, &listener);
-    nsIURIContentListener_SetParentContentListener(NSURICL(This), listener);
-    nsIURIContentListener_Release(listener);
-    nsIWebBrowser_SetParentURIContentListener(This->webbrowser, NSURICL(This));
-}
-
 void close_gecko(void)
 {
     TRACE("()\n");
@@ -1315,9 +1266,6 @@ static nsresult NSAPI nsEmbeddingSiteWindow_SetFocus(nsIEmbeddingSiteWindow *ifa
     NSContainer *This = NSEMBWNDS_THIS(iface);
 
     TRACE("(%p)\n", This);
-
-    if(This->reset_focus)
-        PostMessageW(This->hwnd, WM_RESETFOCUS_HACK, 0, 0);
 
     return nsIBaseWindow_SetFocus(This->window);
 }
