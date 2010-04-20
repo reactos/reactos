@@ -46,8 +46,6 @@ __declspec(dllimport) void __setusermatherr(int (__cdecl *)(struct _exception *)
 extern int * __MINGW_IMP_SYMBOL(_fmode);
 extern int * __MINGW_IMP_SYMBOL(_commode);
 
-#undef _fmode
-extern int _fmode;
 extern int * __MINGW_IMP_SYMBOL(_commode);
 #define _commode (* __MINGW_IMP_SYMBOL(_commode))
 extern int _dowildcard;

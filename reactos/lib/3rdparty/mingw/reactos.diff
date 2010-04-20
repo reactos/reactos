@@ -45,6 +45,19 @@ Index: crtexe.c
  
  #ifndef __winitenv
  extern wchar_t *** __MINGW_IMP_SYMBOL(__winitenv);
+ 
+@@ -40,6 +40,7 @@
+ extern void _fpreset (void);
+ #define SPACECHAR _T(' ')
+ #define DQUOTECHAR _T('\"')
+
+ __declspec(dllimport) void __setusermatherr(int (__cdecl *)(struct _exception *));
+
+ extern int * __MINGW_IMP_SYMBOL(_fmode);
+ extern int * __MINGW_IMP_SYMBOL(_commode);
+
+-#undef _fmode
+-extern int _fmode;
 @@ -51,7 +52,11 @@
  #define _commode (* __MINGW_IMP_SYMBOL(_commode))
  extern int _dowildcard;
