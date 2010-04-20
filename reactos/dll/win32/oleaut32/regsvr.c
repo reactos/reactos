@@ -480,6 +480,12 @@ static struct regsvr_coclass const coclass_list[] = {
 	"Obsolete Font",
 	"OldFont"
     },
+    {   &IID_ISupportErrorInfo,
+	"PSSupportErrorInfo",
+	"ole2disp.dll",
+	"oleaut32.dll",
+	NULL
+    },
     { NULL }			/* list terminator */
 };
 
