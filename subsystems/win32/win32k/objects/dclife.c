@@ -478,15 +478,8 @@ DC_vUpdateDC(PDC pdc)
     pdc->flGraphicsCaps = ppdev->devinfo.flGraphicsCaps;
     pdc->flGraphicsCaps2 = ppdev->devinfo.flGraphicsCaps2;
 
-    /* re-Initialize EBRUSHOBJs */
-    EBRUSHOBJ_vCleanup(&pdc->eboFill);
-    EBRUSHOBJ_vInit(&pdc->eboFill, pdc->dclevel.pbrFill, pdc);
-    EBRUSHOBJ_vCleanup(&pdc->eboLine);
-    EBRUSHOBJ_vInit(&pdc->eboLine, pdc->dclevel.pbrLine, pdc);
-    EBRUSHOBJ_vCleanup(&pdc->eboText);
-    EBRUSHOBJ_vInit(&pdc->eboText, pbrDefaultBrush, pdc);
-    EBRUSHOBJ_vCleanup(&pdc->eboBackground);
-    EBRUSHOBJ_vInit(&pdc->eboBackground, pbrDefaultBrush, pdc);
+    /* Mark EBRUSHOBJs as dirty */
+    pdc->pdcattr->ulDirty_ |= DIRTY_DEFAULT ;
 }
 
 /* Prepare a blit for up to 2 DCs */

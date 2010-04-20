@@ -229,9 +229,6 @@ NtGdiBitBlt(
 
     pdcattr = DCDest->pdcattr;
 
-    if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
-        DC_vUpdateFillBrush(DCDest);
-
     DestRect.left   = XDest;
     DestRect.top    = YDest;
     DestRect.right  = XDest+Width;
@@ -261,6 +258,9 @@ NtGdiBitBlt(
 
     /* Prepare blit */
     DC_vPrepareDCsForBlit(DCDest, DestRect, DCSrc, SourceRect);
+
+    if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+        DC_vUpdateFillBrush(DCDest);
 
     /* Determine surfaces to be used in the bitblt */
     BitmapDest = DCDest->dclevel.pSurface;
@@ -781,9 +781,6 @@ GreStretchBltMask(
 
     pdcattr = DCDest->pdcattr;
 
-    if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
-        DC_vUpdateFillBrush(DCDest);
-
     DestRect.left   = XOriginDest;
     DestRect.top    = YOriginDest;
     DestRect.right  = XOriginDest+WidthDest;
@@ -815,6 +812,9 @@ GreStretchBltMask(
 
     /* Only prepare Source and Dest, hdcMask represents a DIB */
     DC_vPrepareDCsForBlit(DCDest, DestRect, DCSrc, SourceRect);
+
+    if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+        DC_vUpdateFillBrush(DCDest);
 
     /* Determine surfaces to be used in the bitblt */
     BitmapDest = DCDest->dclevel.pSurface;
@@ -936,7 +936,6 @@ IntPatBlt(
 {
     RECTL DestRect;
     SURFACE *psurf;
-    EBRUSHOBJ eboFill;
     POINTL BrushOrigin;
     BOOL ret;
 
@@ -983,7 +982,8 @@ IntPatBlt(
 
     psurf = pdc->dclevel.pSurface;
 
-    EBRUSHOBJ_vInit(&eboFill, pbrush, pdc);
+    if (pdc->pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+        DC_vUpdateFillBrush(pdc);
 
     ret = IntEngBitBlt(
         &psurf->SurfObj,
@@ -994,11 +994,9 @@ IntPatBlt(
         &DestRect,
         NULL,
         NULL,
-        &eboFill.BrushObject, // use pDC->eboFill
+        &pdc->eboFill.BrushObject,
         &BrushOrigin,
         ROP3_TO_ROP4(dwRop));
-
-    EBRUSHOBJ_vCleanup(&eboFill);
 
     DC_vFinishBlit(pdc, NULL);
 

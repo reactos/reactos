@@ -3153,7 +3153,7 @@ GreExtTextOutW(
     LONGLONG TextLeft, RealXStart;
     ULONG TextTop, previous, BackgroundLeft;
     FT_Bool use_kerning;
-    RECTL DestRect, MaskRect;
+    RECTL DestRect, MaskRect, DummyRect = {0, 0, 0, 0};
     POINTL SourcePoint, BrushOrigin;
     HBITMAP HSourceGlyph;
     SURFOBJ *SourceGlyphSurf;
@@ -3189,9 +3189,6 @@ GreExtTextOutW(
 
     pdcattr = dc->pdcattr;
 
-    if (pdcattr->ulDirty_ & DIRTY_TEXT)
-        DC_vUpdateTextBrush(dc);
-
     if ((fuOptions & ETO_OPAQUE) || pdcattr->jBkMode == OPAQUE)
     {
         if (pdcattr->ulDirty_ & DIRTY_BACKGROUND)
@@ -3225,13 +3222,6 @@ GreExtTextOutW(
         IntLPtoDP(dc, (POINT *)lprc, 2);
     }
 
-    psurf = dc->dclevel.pSurface;
-    if (!psurf)
-    {
-        goto fail;
-    }
-    SurfObj = &psurf->SurfObj;
-
     Start.x = XStart;
     Start.y = YStart;
     IntLPtoDP(dc, &Start, 1);
@@ -3262,8 +3252,11 @@ GreExtTextOutW(
 
         DC_vPrepareDCsForBlit(dc, DestRect, NULL, DestRect);
 
+        if (pdcattr->ulDirty_ & DIRTY_BACKGROUND)
+            DC_vUpdateBackgroundBrush(dc);
+
         IntEngBitBlt(
-            &psurf->SurfObj,
+            &dc->dclevel.pSurface->SurfObj,
             NULL,
             NULL,
             dc->rosdc.CombinedClip,
@@ -3440,6 +3433,12 @@ GreExtTextOutW(
     TextTop = YStart;
     BackgroundLeft = (RealXStart + 32) >> 6;
 
+    /* Lock blit with a dummy rect */
+    DC_vPrepareDCsForBlit(dc, DummyRect, NULL, DummyRect);
+
+    psurf = dc->dclevel.pSurface ;
+    SurfObj = &psurf->SurfObj ;
+
     /* Create the xlateobj */
     hDestPalette = psurf->hDIBPalette;
     if (!hDestPalette) hDestPalette = pPrimarySurface->devinfo.hpalDefault;
@@ -3450,6 +3449,11 @@ GreExtTextOutW(
     EXLATEOBJ_vInitialize(&exloDst2RGB, ppalDst, &gpalRGB, 0, 0, 0);
     PALETTE_UnlockPalette(ppalDst);
 
+    if ((fuOptions & ETO_OPAQUE) && (dc->pdcattr->ulDirty_ & DIRTY_BACKGROUND))
+        DC_vUpdateBackgroundBrush(dc) ;
+
+    if(dc->pdcattr->ulDirty_ & DIRTY_TEXT)
+        DC_vUpdateTextBrush(dc) ;
 
     /*
      * The main rendering loop.
@@ -3613,6 +3617,7 @@ GreExtTextOutW(
     }
     IntUnLockFreeType;
 
+    DC_vFinishBlit(dc, NULL) ;
     EXLATEOBJ_vCleanup(&exloRGB2Dst);
     EXLATEOBJ_vCleanup(&exloDst2RGB);
     if (TextObj != NULL)
