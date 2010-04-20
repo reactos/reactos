@@ -196,12 +196,12 @@ static void add_func_info(dispex_data_t *data, DWORD *size, tid_t tid, DISPID id
 
 static int dispid_cmp(const void *p1, const void *p2)
 {
-    return ((func_info_t*)p1)->id - ((func_info_t*)p2)->id;
+    return ((const func_info_t*)p1)->id - ((const func_info_t*)p2)->id;
 }
 
 static int func_name_cmp(const void *p1, const void *p2)
 {
-    return strcmpiW((*(func_info_t**)p1)->name, (*(func_info_t**)p2)->name);
+    return strcmpiW((*(func_info_t* const*)p1)->name, (*(func_info_t* const*)p2)->name);
 }
 
 static dispex_data_t *preprocess_dispex_data(DispatchEx *This)

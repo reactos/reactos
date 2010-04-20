@@ -934,8 +934,9 @@ static HRESULT WINAPI xmlnode_get_specified(
     VARIANT_BOOL* isSpecified)
 {
     xmlnode *This = impl_from_IXMLDOMNode( iface );
-    FIXME("(%p)->(%p)\n", This, isSpecified);
-    return E_NOTIMPL;
+    FIXME("(%p)->(%p) stub!\n", This, isSpecified);
+    *isSpecified = VARIANT_TRUE;
+    return S_OK;
 }
 
 static HRESULT WINAPI xmlnode_get_definition(
@@ -1190,8 +1191,8 @@ static HRESULT WINAPI xmlnode_get_dataType(
     switch ( This->node->type )
     {
     case XML_ELEMENT_NODE:
-        pVal = xmlGetNsProp(This->node, (xmlChar*)"dt",
-                            (xmlChar*)"urn:schemas-microsoft-com:datatypes");
+        pVal = xmlGetNsProp(This->node, (const xmlChar*)"dt",
+                            (const xmlChar*)"urn:schemas-microsoft-com:datatypes");
         if (pVal)
         {
             V_VT(dataTypeName) = VT_BSTR;
@@ -1260,20 +1261,20 @@ static HRESULT WINAPI xmlnode_put_dataType(
         xmlAttrPtr pAttr = NULL;
         xmlChar* str = xmlChar_from_wchar(dataTypeName);
 
-        pAttr = xmlHasNsProp(This->node, (xmlChar*)"dt",
-                            (xmlChar*)"urn:schemas-microsoft-com:datatypes");
+        pAttr = xmlHasNsProp(This->node, (const xmlChar*)"dt",
+                            (const xmlChar*)"urn:schemas-microsoft-com:datatypes");
         if (pAttr)
         {
-            pAttr = xmlSetNsProp(This->node, pAttr->ns, (xmlChar*)"dt", str);
+            pAttr = xmlSetNsProp(This->node, pAttr->ns, (const xmlChar*)"dt", str);
 
             hr = S_OK;
         }
         else
         {
-            pNS = xmlNewNs(This->node, (xmlChar*)"urn:schemas-microsoft-com:datatypes", (xmlChar*)"dt");
+            pNS = xmlNewNs(This->node, (const xmlChar*)"urn:schemas-microsoft-com:datatypes", (const xmlChar*)"dt");
             if(pNS)
             {
-                pAttr = xmlNewNsProp(This->node, pNS, (xmlChar*)"dt", str);
+                pAttr = xmlNewNsProp(This->node, pNS, (const xmlChar*)"dt", str);
                 if(pAttr)
                 {
                     xmlAddChild(This->node, (xmlNodePtr)pAttr);
@@ -1294,8 +1295,6 @@ static HRESULT WINAPI xmlnode_put_dataType(
 
 static BSTR EnsureCorrectEOL(BSTR sInput)
 {
-    static const WCHAR SZ_RETURN[] = {'\n',0};
-    static const WCHAR SZ_LINEFEED[] = {'\r',0};
     int nNum = 0;
     BSTR sNew;
     int nLen;
@@ -1305,7 +1304,7 @@ static BSTR EnsureCorrectEOL(BSTR sInput)
     /* Count line endings */
     for(i=0; i < nLen; i++)
     {
-        if(sInput[i] == SZ_RETURN[0])
+        if(sInput[i] == '\n')
             nNum++;
     }
 
@@ -1318,9 +1317,9 @@ static BSTR EnsureCorrectEOL(BSTR sInput)
         sNew = SysAllocStringLen(NULL, nLen + nNum+1);
         for(i=0; i < nLen; i++)
         {
-            if(sInput[i] == SZ_RETURN[0])
+            if(sInput[i] == '\n')
             {
-                sNew[i+nPlace] = SZ_LINEFEED[0];
+                sNew[i+nPlace] = '\r';
                 nPlace++;
             }
             sNew[i+nPlace] = sInput[i];
@@ -1371,7 +1370,7 @@ static BSTR EnsureNoEncoding(BSTR sInput)
 
 /*
  * We are trying to replicate the same behaviour as msxml by converting
- * line endings to \r\n and using idents as \t. The problem is that msxml
+ * line endings to \r\n and using indents as \t. The problem is that msxml
  * only formats nodes that have a line ending. Using libxml we cannot
  * reproduce behaviour exactly.
  *
@@ -1402,7 +1401,7 @@ static HRESULT WINAPI xmlnode_get_xml(
 
             /* Attribute Nodes return a space in front of their name */
             pContent = xmlBufferContent(pXmlBuf);
-            if( ((char*)pContent)[0] == ' ')
+            if( ((const char*)pContent)[0] == ' ')
                 bstrContent = bstr_from_xmlChar(pContent+1);
             else
                 bstrContent = bstr_from_xmlChar(pContent);
@@ -1550,8 +1549,9 @@ static HRESULT WINAPI xmlnode_get_parsed(
     VARIANT_BOOL* isParsed)
 {
     xmlnode *This = impl_from_IXMLDOMNode( iface );
-    FIXME("(%p)->(%p)\n", This, isParsed);
-    return E_NOTIMPL;
+    FIXME("(%p)->(%p) stub!\n", This, isParsed);
+    *isParsed = VARIANT_TRUE;
+    return S_OK;
 }
 
 static HRESULT WINAPI xmlnode_get_namespaceURI(
