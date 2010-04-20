@@ -297,4 +297,6 @@ DC_vSelectPalette(PDC pdc, PPALETTE ppal)
     pdc->dclevel.ppal = ppal;
 }
 
+extern PBRUSH pbrDefaultBrush ;
+
 #endif /* not __WIN32K_DC_H */
