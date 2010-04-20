@@ -986,9 +986,9 @@ static DWORD URLCache_CopyEntry(
         ZeroMemory((LPBYTE)lpCacheEntryInfo + dwRequiredSize, 4 - (dwRequiredSize % 4));
     dwRequiredSize = DWORD_ALIGN(dwRequiredSize);
     if (bUnicode)
-        lenUrl = MultiByteToWideChar(CP_ACP, 0, (LPSTR)pUrlEntry + pUrlEntry->dwOffsetUrl, -1, NULL, 0);
+        lenUrl = MultiByteToWideChar(CP_ACP, 0, (LPCSTR)pUrlEntry + pUrlEntry->dwOffsetUrl, -1, NULL, 0);
     else
-        lenUrl = strlen((LPSTR)pUrlEntry + pUrlEntry->dwOffsetUrl);
+        lenUrl = strlen((LPCSTR)pUrlEntry + pUrlEntry->dwOffsetUrl);
     dwRequiredSize += (lenUrl + 1) * (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
 
     /* FIXME: is source url optional? */
@@ -998,9 +998,9 @@ static DWORD URLCache_CopyEntry(
 
         lpCacheEntryInfo->lpszSourceUrlName = (LPSTR)lpCacheEntryInfo + dwRequiredSize - lenUrlBytes;
         if (bUnicode)
-            MultiByteToWideChar(CP_ACP, 0, (LPSTR)pUrlEntry + pUrlEntry->dwOffsetUrl, -1, (LPWSTR)lpCacheEntryInfo->lpszSourceUrlName, lenUrl + 1);
+            MultiByteToWideChar(CP_ACP, 0, (LPCSTR)pUrlEntry + pUrlEntry->dwOffsetUrl, -1, (LPWSTR)lpCacheEntryInfo->lpszSourceUrlName, lenUrl + 1);
         else
-            memcpy(lpCacheEntryInfo->lpszSourceUrlName, (LPSTR)pUrlEntry + pUrlEntry->dwOffsetUrl, lenUrlBytes);
+            memcpy(lpCacheEntryInfo->lpszSourceUrlName, (LPCSTR)pUrlEntry + pUrlEntry->dwOffsetUrl, lenUrlBytes);
     }
 
     if ((dwRequiredSize % 4) && (dwRequiredSize < *lpdwBufferSize))
@@ -1029,7 +1029,7 @@ static DWORD URLCache_CopyEntry(
     if (*lpdwBufferSize >= dwRequiredSize)
     {
         lpCacheEntryInfo->lpHeaderInfo = (LPBYTE)lpCacheEntryInfo + dwRequiredSize - pUrlEntry->dwHeaderInfoSize - 1;
-        memcpy(lpCacheEntryInfo->lpHeaderInfo, (LPSTR)pUrlEntry + pUrlEntry->dwOffsetHeaderInfo, pUrlEntry->dwHeaderInfoSize);
+        memcpy(lpCacheEntryInfo->lpHeaderInfo, (LPCSTR)pUrlEntry + pUrlEntry->dwOffsetHeaderInfo, pUrlEntry->dwHeaderInfoSize);
         ((LPBYTE)lpCacheEntryInfo)[dwRequiredSize - 1] = '\0';
     }
     if ((dwRequiredSize % 4) && (dwRequiredSize < *lpdwBufferSize))
@@ -1041,18 +1041,18 @@ static DWORD URLCache_CopyEntry(
         int lenExtension;
 
         if (bUnicode)
-            lenExtension = MultiByteToWideChar(CP_ACP, 0, (LPSTR)pUrlEntry + pUrlEntry->dwOffsetFileExtension, -1, NULL, 0);
+            lenExtension = MultiByteToWideChar(CP_ACP, 0, (LPCSTR)pUrlEntry + pUrlEntry->dwOffsetFileExtension, -1, NULL, 0);
         else
-            lenExtension = strlen((LPSTR)pUrlEntry + pUrlEntry->dwOffsetFileExtension) + 1;
+            lenExtension = strlen((LPCSTR)pUrlEntry + pUrlEntry->dwOffsetFileExtension) + 1;
         dwRequiredSize += lenExtension * (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
 
         if (*lpdwBufferSize >= dwRequiredSize)
         {
             lpCacheEntryInfo->lpszFileExtension = (LPSTR)lpCacheEntryInfo + dwRequiredSize - lenExtension;
             if (bUnicode)
-                MultiByteToWideChar(CP_ACP, 0, (LPSTR)pUrlEntry + pUrlEntry->dwOffsetFileExtension, -1, (LPWSTR)lpCacheEntryInfo->lpszSourceUrlName, lenExtension);
+                MultiByteToWideChar(CP_ACP, 0, (LPCSTR)pUrlEntry + pUrlEntry->dwOffsetFileExtension, -1, (LPWSTR)lpCacheEntryInfo->lpszSourceUrlName, lenExtension);
             else
-                memcpy(lpCacheEntryInfo->lpszFileExtension, (LPSTR)pUrlEntry + pUrlEntry->dwOffsetFileExtension, lenExtension * sizeof(CHAR));
+                memcpy(lpCacheEntryInfo->lpszFileExtension, (LPCSTR)pUrlEntry + pUrlEntry->dwOffsetFileExtension, lenExtension * sizeof(CHAR));
         }
 
         if ((dwRequiredSize % 4) && (dwRequiredSize < *lpdwBufferSize))
@@ -1175,8 +1175,8 @@ static inline HASH_CACHEFILE_ENTRY * URLCache_HashEntryFromOffset(LPCURLCACHE_HE
 static inline BOOL URLCache_IsHashEntryValid(LPCURLCACHE_HEADER pHeader, const HASH_CACHEFILE_ENTRY *pHashEntry)
 {
     /* check pHashEntry located within acceptable bounds in the URL cache mapping */
-    return ((DWORD)((LPBYTE)pHashEntry - (LPBYTE)pHeader) >= ENTRY_START_OFFSET) &&
-           ((DWORD)((LPBYTE)pHashEntry - (LPBYTE)pHeader) < pHeader->dwFileSize);
+    return ((DWORD)((const BYTE*)pHashEntry - (const BYTE*)pHeader) >= ENTRY_START_OFFSET) &&
+           ((DWORD)((const BYTE*)pHashEntry - (const BYTE*)pHeader) < pHeader->dwFileSize);
 }
 
 static BOOL URLCache_FindHash(LPCURLCACHE_HEADER pHeader, LPCSTR lpszUrl, struct _HASH_ENTRY ** ppHashEntry)
@@ -1557,15 +1557,15 @@ BOOL WINAPI GetUrlCacheEntryInfoA(
     if (pEntry->dwSignature != URL_SIGNATURE)
     {
         URLCacheContainer_UnlockIndex(pContainer, pHeader);
-        FIXME("Trying to retrieve entry of unknown format %s\n", debugstr_an((LPSTR)&pEntry->dwSignature, sizeof(DWORD)));
+        FIXME("Trying to retrieve entry of unknown format %s\n", debugstr_an((LPCSTR)&pEntry->dwSignature, sizeof(DWORD)));
         SetLastError(ERROR_FILE_NOT_FOUND);
         return FALSE;
     }
 
     pUrlEntry = (const URL_CACHEFILE_ENTRY *)pEntry;
-    TRACE("Found URL: %s\n", debugstr_a((LPSTR)pUrlEntry + pUrlEntry->dwOffsetUrl));
+    TRACE("Found URL: %s\n", debugstr_a((LPCSTR)pUrlEntry + pUrlEntry->dwOffsetUrl));
     if (pUrlEntry->dwOffsetHeaderInfo)
-        TRACE("Header info: %s\n", debugstr_a((LPSTR)pUrlEntry + pUrlEntry->dwOffsetHeaderInfo));
+        TRACE("Header info: %s\n", debugstr_a((LPCSTR)pUrlEntry + pUrlEntry->dwOffsetHeaderInfo));
 
     if (lpdwCacheEntryInfoBufferSize)
     {
@@ -1639,14 +1639,14 @@ BOOL WINAPI GetUrlCacheEntryInfoW(LPCWSTR lpszUrl,
     if (pEntry->dwSignature != URL_SIGNATURE)
     {
         URLCacheContainer_UnlockIndex(pContainer, pHeader);
-        FIXME("Trying to retrieve entry of unknown format %s\n", debugstr_an((LPSTR)&pEntry->dwSignature, sizeof(DWORD)));
+        FIXME("Trying to retrieve entry of unknown format %s\n", debugstr_an((LPCSTR)&pEntry->dwSignature, sizeof(DWORD)));
         SetLastError(ERROR_FILE_NOT_FOUND);
         return FALSE;
     }
 
     pUrlEntry = (const URL_CACHEFILE_ENTRY *)pEntry;
-    TRACE("Found URL: %s\n", debugstr_a((LPSTR)pUrlEntry + pUrlEntry->dwOffsetUrl));
-    TRACE("Header info: %s\n", debugstr_a((LPSTR)pUrlEntry + pUrlEntry->dwOffsetHeaderInfo));
+    TRACE("Found URL: %s\n", debugstr_a((LPCSTR)pUrlEntry + pUrlEntry->dwOffsetUrl));
+    TRACE("Header info: %s\n", debugstr_a((LPCSTR)pUrlEntry + pUrlEntry->dwOffsetHeaderInfo));
 
     if (lpdwCacheEntryInfoBufferSize)
     {
@@ -3265,9 +3265,9 @@ BOOL WINAPI FindNextUrlCacheEntryA(
                 if (pEntry->dwSignature != URL_SIGNATURE)
                     continue;
 
-                pUrlEntry = (URL_CACHEFILE_ENTRY *)pEntry;
-                TRACE("Found URL: %s\n", (LPSTR)pUrlEntry + pUrlEntry->dwOffsetUrl);
-                TRACE("Header info: %s\n", (LPBYTE)pUrlEntry + pUrlEntry->dwOffsetHeaderInfo);
+                pUrlEntry = (const URL_CACHEFILE_ENTRY *)pEntry;
+                TRACE("Found URL: %s\n", (LPCSTR)pUrlEntry + pUrlEntry->dwOffsetUrl);
+                TRACE("Header info: %s\n", (LPCSTR)pUrlEntry + pUrlEntry->dwOffsetHeaderInfo);
 
                 error = URLCache_CopyEntry(
                     pContainer,
@@ -3563,7 +3563,7 @@ BOOL WINAPI IsUrlCacheEntryExpiredA( LPCSTR url, DWORD dwFlags, FILETIME* pftLas
     if (pEntry->dwSignature != URL_SIGNATURE)
     {
         URLCacheContainer_UnlockIndex(pContainer, pHeader);
-        FIXME("Trying to retrieve entry of unknown format %s\n", debugstr_an((LPSTR)&pEntry->dwSignature, sizeof(DWORD)));
+        FIXME("Trying to retrieve entry of unknown format %s\n", debugstr_an((LPCSTR)&pEntry->dwSignature, sizeof(DWORD)));
         SetLastError(ERROR_FILE_NOT_FOUND);
         return FALSE;
     }
@@ -3625,7 +3625,7 @@ BOOL WINAPI IsUrlCacheEntryExpiredW( LPCWSTR url, DWORD dwFlags, FILETIME* pftLa
     if (pEntry->dwSignature != URL_SIGNATURE)
     {
         URLCacheContainer_UnlockIndex(pContainer, pHeader);
-        FIXME("Trying to retrieve entry of unknown format %s\n", debugstr_an((LPSTR)&pEntry->dwSignature, sizeof(DWORD)));
+        FIXME("Trying to retrieve entry of unknown format %s\n", debugstr_an((LPCSTR)&pEntry->dwSignature, sizeof(DWORD)));
         SetLastError(ERROR_FILE_NOT_FOUND);
         return FALSE;
     }

@@ -40,6 +40,7 @@ typedef struct {
     UINT count;
     WICColor *colors;
     WICBitmapPaletteType type;
+    CRITICAL_SECTION lock; /* must be held when count, colors, or type is accessed */
 } PaletteImpl;
 
 static HRESULT WINAPI PaletteImpl_QueryInterface(IWICPalette *iface, REFIID iid,
@@ -83,6 +84,8 @@ static ULONG WINAPI PaletteImpl_Release(IWICPalette *iface)
 
     if (ref == 0)
     {
+        This->lock.DebugInfo->Spare[0] = 0;
+        DeleteCriticalSection(&This->lock);
         HeapFree(GetProcessHeap(), 0, This->colors);
         HeapFree(GetProcessHeap(), 0, This);
     }
@@ -117,10 +120,12 @@ static HRESULT WINAPI PaletteImpl_InitializeCustom(IWICPalette *iface,
         memcpy(new_colors, pColors, sizeof(WICColor) * colorCount);
     }
 
+    EnterCriticalSection(&This->lock);
     HeapFree(GetProcessHeap(), 0, This->colors);
     This->colors = new_colors;
     This->count = colorCount;
     This->type = WICBitmapPaletteTypeCustom;
+    LeaveCriticalSection(&This->lock);
 
     return S_OK;
 }
@@ -148,7 +153,9 @@ static HRESULT WINAPI PaletteImpl_GetType(IWICPalette *iface,
 
     if (!pePaletteType) return E_INVALIDARG;
 
+    EnterCriticalSection(&This->lock);
     *pePaletteType = This->type;
+    LeaveCriticalSection(&This->lock);
 
     return S_OK;
 }
@@ -161,7 +168,9 @@ static HRESULT WINAPI PaletteImpl_GetColorCount(IWICPalette *iface, UINT *pcCoun
 
     if (!pcCount) return E_INVALIDARG;
 
+    EnterCriticalSection(&This->lock);
     *pcCount = This->count;
+    LeaveCriticalSection(&This->lock);
 
     return S_OK;
 }
@@ -175,11 +184,15 @@ static HRESULT WINAPI PaletteImpl_GetColors(IWICPalette *iface, UINT colorCount,
 
     if (!pColors || !pcActualColors) return E_INVALIDARG;
 
+    EnterCriticalSection(&This->lock);
+
     if (This->count < colorCount) colorCount = This->count;
 
     memcpy(pColors, This->colors, sizeof(WICColor) * colorCount);
 
     *pcActualColors = colorCount;
+
+    LeaveCriticalSection(&This->lock);
 
     return S_OK;
 }
@@ -192,10 +205,12 @@ static HRESULT WINAPI PaletteImpl_IsBlackWhite(IWICPalette *iface, BOOL *pfIsBla
 
     if (!pfIsBlackWhite) return E_INVALIDARG;
 
+    EnterCriticalSection(&This->lock);
     if (This->type == WICBitmapPaletteTypeFixedBW)
         *pfIsBlackWhite = TRUE;
     else
         *pfIsBlackWhite = FALSE;
+    LeaveCriticalSection(&This->lock);
 
     return S_OK;
 }
@@ -208,6 +223,7 @@ static HRESULT WINAPI PaletteImpl_IsGrayscale(IWICPalette *iface, BOOL *pfIsGray
 
     if (!pfIsGrayscale) return E_INVALIDARG;
 
+    EnterCriticalSection(&This->lock);
     switch(This->type)
     {
         case WICBitmapPaletteTypeFixedBW:
@@ -219,6 +235,7 @@ static HRESULT WINAPI PaletteImpl_IsGrayscale(IWICPalette *iface, BOOL *pfIsGray
         default:
             *pfIsGrayscale = FALSE;
     }
+    LeaveCriticalSection(&This->lock);
 
     return S_OK;
 }
@@ -234,12 +251,14 @@ static HRESULT WINAPI PaletteImpl_HasAlpha(IWICPalette *iface, BOOL *pfHasAlpha)
 
     *pfHasAlpha = FALSE;
 
+    EnterCriticalSection(&This->lock);
     for (i=0; i<This->count; i++)
         if ((This->colors[i]&0xff000000) != 0xff000000)
         {
             *pfHasAlpha = TRUE;
             break;
         }
+    LeaveCriticalSection(&This->lock);
 
     return S_OK;
 }
@@ -272,6 +291,8 @@ HRESULT PaletteImpl_Create(IWICPalette **palette)
     This->count = 0;
     This->colors = NULL;
     This->type = WICBitmapPaletteTypeCustom;
+    InitializeCriticalSection(&This->lock);
+    This->lock.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": PaletteImpl.lock");
 
     *palette = (IWICPalette*)This;
 

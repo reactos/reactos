@@ -1,5 +1,7 @@
 /*
- * Copyright 2009 Piotr Caban for CodeWeavers
+ * Implementation of Uniscribe Script Processor (usp10.dll)
+ *
+ * Copyright 2010 CodeWeavers, Aric Stewart
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -14,6 +16,13 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
  */
 
-#include "urlmon.idl"
+#define odd(x) ((x) & 1)
+
+BOOL BIDI_DetermineLevels( LPCWSTR lpString, INT uCount, const SCRIPT_STATE *s,
+                const SCRIPT_CONTROL *c, WORD *lpOutLevels );
+
+INT BIDI_ReorderV2lLevel(int level, int *pIndexs, const BYTE* plevel, int cch, BOOL fReverse);
+INT BIDI_ReorderL2vLevel(int level, int *pIndexs, const BYTE* plevel, int cch, BOOL fReverse);

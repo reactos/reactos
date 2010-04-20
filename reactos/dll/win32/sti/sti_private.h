@@ -1,5 +1,7 @@
 /*
- * Copyright 2009 Piotr Caban for CodeWeavers
+ * STI private definitions
+ *
+ * Copyright 2009 Damjan Jovanovic
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,4 +18,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "urlmon.idl"
+#ifndef __STI_PRIVATE__
+#define __STI_PRIVATE__
+
+typedef struct _stillimage
+{
+    const struct IStillImageWVtbl *lpVtbl;
+    const struct IUnknownVtbl *lpInternalUnkVtbl;
+    IUnknown *pUnkOuter;
+    LONG ref;
+} stillimage;
+
+#endif /* __STI_PRIVATE__ */

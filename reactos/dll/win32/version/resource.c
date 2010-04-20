@@ -199,7 +199,11 @@ static BOOL find_ne_resource( HFILE lzfd, DWORD *resLen, DWORD *resOff )
  */
 static BOOL find_pe_resource( HFILE lzfd, DWORD *resLen, DWORD *resOff )
 {
-    IMAGE_NT_HEADERS pehd;
+    union
+    {
+        IMAGE_NT_HEADERS32 nt32;
+        IMAGE_NT_HEADERS64 nt64;
+    } pehd;
     DWORD pehdoffset;
     PIMAGE_DATA_DIRECTORY resDataDir;
     PIMAGE_SECTION_HEADER sections;
@@ -208,14 +212,27 @@ static BOOL find_pe_resource( HFILE lzfd, DWORD *resLen, DWORD *resOff )
     const void *resDir;
     const IMAGE_RESOURCE_DIRECTORY *resPtr;
     const IMAGE_RESOURCE_DATA_ENTRY *resData;
-    int i, nSections;
+    int i, len, nSections;
     BOOL ret = FALSE;
 
     /* Read in PE header */
     pehdoffset = LZSeek( lzfd, 0, SEEK_CUR );
-    if ( sizeof(pehd) != LZRead( lzfd, (LPSTR)&pehd, sizeof(pehd) ) ) return 0;
+    len = LZRead( lzfd, (LPSTR)&pehd, sizeof(pehd) );
+    if (len < sizeof(pehd.nt32.FileHeader)) return 0;
+    if (len < sizeof(pehd)) memset( (char *)&pehd + len, 0, sizeof(pehd) - len );
 
-    resDataDir = pehd.OptionalHeader.DataDirectory+IMAGE_DIRECTORY_ENTRY_RESOURCE;
+    switch (pehd.nt32.OptionalHeader.Magic)
+    {
+    case IMAGE_NT_OPTIONAL_HDR32_MAGIC:
+        resDataDir = pehd.nt32.OptionalHeader.DataDirectory + IMAGE_DIRECTORY_ENTRY_RESOURCE;
+        break;
+    case IMAGE_NT_OPTIONAL_HDR64_MAGIC:
+        resDataDir = pehd.nt64.OptionalHeader.DataDirectory + IMAGE_DIRECTORY_ENTRY_RESOURCE;
+        break;
+    default:
+        return 0;
+    }
+
     if ( !resDataDir->Size )
     {
         TRACE("No resources in PE dll\n" );
@@ -223,15 +240,13 @@ static BOOL find_pe_resource( HFILE lzfd, DWORD *resLen, DWORD *resOff )
     }
 
     /* Read in section table */
-    nSections = pehd.FileHeader.NumberOfSections;
+    nSections = pehd.nt32.FileHeader.NumberOfSections;
     sections = HeapAlloc( GetProcessHeap(), 0,
                           nSections * sizeof(IMAGE_SECTION_HEADER) );
     if ( !sections ) return FALSE;
 
-    LZSeek( lzfd, pehdoffset +
-                    sizeof(DWORD) + /* Signature */
-                    sizeof(IMAGE_FILE_HEADER) +
-                    pehd.FileHeader.SizeOfOptionalHeader, SEEK_SET );
+    len = FIELD_OFFSET( IMAGE_NT_HEADERS32, OptionalHeader ) + pehd.nt32.FileHeader.SizeOfOptionalHeader;
+    LZSeek( lzfd, pehdoffset + len, SEEK_SET );
 
     if ( nSections * sizeof(IMAGE_SECTION_HEADER) !=
          LZRead( lzfd, (LPSTR)sections, nSections * sizeof(IMAGE_SECTION_HEADER) ) )

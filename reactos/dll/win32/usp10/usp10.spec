@@ -1,4 +1,4 @@
-@ stdcall LpkPresent()
+@ stub LpkPresent
 @ stdcall ScriptApplyDigitSubstitution(ptr ptr ptr)
 @ stdcall ScriptApplyLogicalWidth(ptr long long ptr ptr ptr ptr ptr ptr)
 @ stdcall ScriptBreak(ptr long ptr ptr)

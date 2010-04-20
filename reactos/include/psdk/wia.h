@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Piotr Caban for CodeWeavers
+ * Copyright (C) 2009 Damjan Jovanovic
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,4 +16,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "urlmon.idl"
+
+#ifdef __WINESRC__
+#error Specify wia_lh.h or wia_xp.h explicitly in Wine
+#endif
+
+#if (_WIN32_WINNT >= 0x0600)
+#include <wia_lh.h>
+#elif (_WIN32_WINNT >= 0x0501)
+#include <wia_xp.h>
+#endif
