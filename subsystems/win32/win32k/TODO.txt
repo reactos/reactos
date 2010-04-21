@@ -8,12 +8,18 @@ Please also note, where to find the problem (file / function), and possible
 requirements before it can be handled.
 
 
-# Lock the PDEV lock only when we are going to touch the PDEV or the Surface
-  Currently the PDEV is locked (shared HSEM == ERESOURCE) when we lock the DC,
-  this is only a minimal implementation, as we don't need to do that, when we
-  don't even touch anything from the PDEV or the surface. This should be
-  optimized. (see dc.h, DC_LockDc)
+Before the merge:
+-----------------
+# Fix mouse pointer regression
+# Hide the mouse pointer during mode switch
+# Resize the desktop window after mode switch
+# Update mouse area after mode switch
+# Invalidate the whole Window content after mode switch
+# Validate object type in GDIOBJ_LockMultipleObjs
 
+
+Generic:
+--------
 # Get rid of all float and double in win32k.
   We can't use the fpu on x86 in the kernel, as fpu state is not saved in
   user/kernel transitions. There are 3 possible solutions:
@@ -21,7 +27,20 @@ requirements before it can be handled.
   2.) Use FLOATOBJ
   3.) Use KeSaveFloatingPointState (slow, avoid!)
 
+# Seperate GDI debug to be usable in all modules.
+  Current version is hardwired into gdiobjects.c
+
 # Rewrite the handle manager! Once and for all!
+  Improve naming ("reference" vs "shared lock")
+  Refactor the locking code to share a single inlined function
+  Fix user mode object handling
+  Fix locking order of different object types and same object types.
+  Add debug code to verify locking order.
+  Add checks for immutable objects vs locks
 
-
+# Review the global USER lock
+  Currently we lock almost everything with a single lock. This should be
+  reviewed for the possibility to split it into a number of smaller locks to
+  increase scalability. Handle with care, the current solution is a good safety
+  solution.
 

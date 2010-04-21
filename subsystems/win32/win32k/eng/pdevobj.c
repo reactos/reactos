@@ -126,6 +126,13 @@ PDEVOBJ_bEnablePDEV(
                                   ppdev->pGraphicsDevice->pwszDescription,
                                   ppdev->pGraphicsDevice->DeviceObject);
 
+    /* Fix up some values */
+    if (ppdev->gdiinfo.ulLogPixelsX == 0)
+        ppdev->gdiinfo.ulLogPixelsX = 96;
+
+    if (ppdev->gdiinfo.ulLogPixelsY == 0)
+        ppdev->gdiinfo.ulLogPixelsY = 96;
+
     DPRINT1("PDEVOBJ_bEnablePDEV - dhpdev = %p\n", ppdev->dhpdev);
 
     return TRUE;
@@ -236,7 +243,8 @@ EngpCreatePDEV(
     ppdev->pldev = EngLoadDriver(pdm->dmDeviceName, LDEV_DEVICE_DISPLAY);
     if (!ppdev->pldev)
     {
-        DPRINT1("Could not load diplsay driver '%ls'\n", pGraphicsDevice->pDiplayDrivers);
+        DPRINT1("Could not load display driver '%ls'\n",
+                pGraphicsDevice->pDiplayDrivers);
         ExFreePoolWithTag(ppdev, GDITAG_PDEV);
         return NULL;
     }
@@ -266,13 +274,6 @@ EngpCreatePDEV(
         ASSERT(FALSE);
     }
 
-    /* Fix up some values */
-    if (ppdev->gdiinfo.ulLogPixelsX == 0)
-        ppdev->gdiinfo.ulLogPixelsX = 96;
-
-    if (ppdev->gdiinfo.ulLogPixelsY == 0)
-        ppdev->gdiinfo.ulLogPixelsY = 96;
-
     /* FIXME: this must be done in a better way */
     pGraphicsDevice->StateFlags |= DISPLAY_DEVICE_ATTACHED_TO_DESKTOP;
 
@@ -290,7 +291,6 @@ PDEVOBJ_vSwitchPdev(
     PPDEVOBJ ppdev2)
 {
     PDEVOBJ pdevTmp;
-    HDEV hdev;
 
     /* Exchange data */
     pdevTmp = *ppdev;
@@ -307,12 +307,11 @@ PDEVOBJ_vSwitchPdev(
     ppdev->dhpdev = ppdev2->dhpdev;
     ppdev2->dhpdev = pdevTmp.dhpdev;
 
-    /* Exchange surface */
+    /* Exchange surfaces and associate them with their new PDEV */
     ppdev->pSurface = ppdev2->pSurface;
     ppdev2->pSurface = pdevTmp.pSurface;
-    hdev = ppdev->pSurface->SurfObj.hdev;
-    ppdev->pSurface->SurfObj.hdev = ppdev2->pSurface->SurfObj.hdev;
-    ppdev2->pSurface->SurfObj.hdev = hdev;
+    ppdev->pSurface->SurfObj.hdev = (HDEV)ppdev;
+    ppdev2->pSurface->SurfObj.hdev = (HDEV)ppdev2;
 
     /* Exchange devinfo */
     ppdev->devinfo = ppdev2->devinfo;

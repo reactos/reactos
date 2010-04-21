@@ -369,7 +369,6 @@ DC_Cleanup(PVOID ObjectBody)
         GreDeleteObject(pdc->rosdc.hClipRgn);
     if (pdc->prgnVis)
         REGION_FreeRgnByHandle(pdc->prgnVis->BaseObject.hHmgr);
-ASSERT(pdc->rosdc.hGCClipRgn);
     if (pdc->rosdc.hGCClipRgn)
         GreDeleteObject(pdc->rosdc.hGCClipRgn);
     if (NULL != pdc->rosdc.CombinedClip)
